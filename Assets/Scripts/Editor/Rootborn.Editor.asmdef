@@ -4,7 +4,10 @@
     "references": [
         "Rootborn.Game",
         "Rootborn.UI",
-        "Rootborn.Network"
+        "Rootborn.Network",
+        "Unity.Netcode.Runtime",
+        "Unity.Networking.Transport",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [
         "Editor"
