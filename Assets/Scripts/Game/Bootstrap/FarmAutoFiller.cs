@@ -181,19 +181,54 @@ namespace Rootborn.Game.Bootstrap
             node.BindForRuntime(def, sr);
         }
 
-        private static void EnsurePlayer(GameDataRegistry registry, DataManager data)
+        private async void EnsurePlayer(GameDataRegistry registry, DataManager data)
         {
             if (FindObjectByName("Player") != null) return;
 
-            Sprite sprite = data != null ? data.PlayerSprite : null;
-            if (sprite == null) sprite = registry.PlayerSprite;
+            // 1) Addressables로 Player.prefab 시도 (Animator 포함)
+            GameObject playerInstance = null;
+            if (Managers.Managers.Resource != null)
+            {
+                var prefab = await Managers.Managers.Resource.LoadAsync<GameObject>("prefabs/player");
+                if (prefab != null)
+                {
+                    playerInstance = Instantiate(prefab);
+                    playerInstance.name = "Player";
+                }
+            }
 
-            var go = new GameObject("Player");
-            go.transform.position = new Vector3(GroundCols * 0.5f, GroundRows * 0.5f, 0f);
-            var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = sprite;
-            sr.sortingOrder = 5;
-            go.AddComponent<Rootborn.Game.Player.PlayerController>();
+            // 2) fallback — sprite 단독 GameObject
+            if (playerInstance == null)
+            {
+                Sprite sprite = data != null ? data.PlayerSprite : null;
+                if (sprite == null) sprite = registry.PlayerSprite;
+
+                playerInstance = new GameObject("Player");
+                var sr = playerInstance.AddComponent<SpriteRenderer>();
+                sr.sprite = sprite;
+                sr.sortingOrder = 5;
+                playerInstance.AddComponent<Rootborn.Game.Player.PlayerController>();
+            }
+
+            playerInstance.transform.position = new Vector3(GroundCols * 0.5f, GroundRows * 0.5f, 0f);
+
+            // GatherInteractor + KnowledgeProgress 와이어링
+            var interactor = playerInstance.GetComponent<Rootborn.Game.Player.GatherInteractor>();
+            if (interactor == null) interactor = playerInstance.AddComponent<Rootborn.Game.Player.GatherInteractor>();
+
+            if (data != null && data.Registry != null)
+            {
+                var progress = new Rootborn.Game.Knowledge.KnowledgeProgress(data.Registry.Knowledge);
+                progress.OnUnlocked += node =>
+                {
+                    Debug.Log($"[ROOTBORN/Knowledge] Unlocked: {node.Id}");
+                };
+                interactor.Bind(progress);
+                if (data.ToolById.TryGetValue("BareHand", out var bareHand))
+                {
+                    interactor.EquippedTool = bareHand;
+                }
+            }
         }
 
         private static GameObject FindObjectByName(string name)
