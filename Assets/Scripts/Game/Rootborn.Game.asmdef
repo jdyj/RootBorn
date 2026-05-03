@@ -2,7 +2,9 @@
     "name": "Rootborn.Game",
     "rootNamespace": "Rootborn.Game",
     "references": [
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "Unity.Addressables",
+        "Unity.ResourceManager"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

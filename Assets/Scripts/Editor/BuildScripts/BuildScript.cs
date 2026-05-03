@@ -1,5 +1,8 @@
 using System.IO;
 using UnityEditor;
+using UnityEditor.AddressableAssets;
+using UnityEditor.AddressableAssets.Build;
+using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.Build;
 using UnityEngine;
 
@@ -7,6 +10,25 @@ namespace Rootborn.Editor.BuildScripts
 {
     public static class BuildScript
     {
+        private static void BuildAddressables()
+        {
+            var settings = AddressableAssetSettingsDefaultObject.Settings;
+            if (settings == null)
+            {
+                Debug.LogWarning("[ROOTBORN] No AddressableAssetSettings — skipping Addressables build.");
+                return;
+            }
+            AddressableAssetSettings.BuildPlayerContent(out AddressablesPlayerBuildResult result);
+            if (!string.IsNullOrEmpty(result.Error))
+            {
+                Debug.LogError($"[ROOTBORN] Addressables build error: {result.Error}");
+            }
+            else
+            {
+                Debug.Log($"[ROOTBORN] Addressables built: duration={result.Duration:F2}s");
+            }
+        }
+
         private const string ClientName = "rootborn";
         private const string ServerName = "rootborn-server";
 
@@ -45,6 +67,7 @@ namespace Rootborn.Editor.BuildScripts
         private static void BuildClient(BuildTarget target, string outputPath)
         {
             EnsureDir(outputPath);
+            BuildAddressables();
             var opts = new BuildPlayerOptions
             {
                 scenes = ClientScenes,

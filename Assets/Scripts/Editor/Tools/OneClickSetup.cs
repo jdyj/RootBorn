@@ -31,9 +31,13 @@ namespace Rootborn.Editor.Tools
                 EditorUtility.DisplayProgressBar("ROOTBORN", "Building Farm tilemap + resource nodes...", 0.75f);
                 FarmSceneBuilder.Build();
 
-                Debug.Log("[ROOTBORN/OneClick] Step 5/5 — building Player prefab + Animator...");
-                EditorUtility.DisplayProgressBar("ROOTBORN", "Building Player prefab + Animator...", 0.9f);
+                Debug.Log("[ROOTBORN/OneClick] Step 5/6 — building Player prefab + Animator...");
+                EditorUtility.DisplayProgressBar("ROOTBORN", "Building Player prefab + Animator...", 0.85f);
                 PlayerSetup.Setup();
+
+                Debug.Log("[ROOTBORN/OneClick] Step 6/6 — wiring Addressables groups...");
+                EditorUtility.DisplayProgressBar("ROOTBORN", "Wiring Addressables groups...", 0.95f);
+                AddressablesSetup.WireAll();
 
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();

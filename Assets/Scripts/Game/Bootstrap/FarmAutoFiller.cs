@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Rootborn.Game.Common;
+using Rootborn.Game.Managers;
 using Rootborn.Game.Resources;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -12,41 +13,43 @@ namespace Rootborn.Game.Bootstrap
         private const int GroundCols = 30;
         private const int GroundRows = 20;
 
-        [SerializeField] private string _registryAddress = "GameDataRegistry";
-        [SerializeField] private string _registryResourcePath = "GameDataRegistry";
-
-        private void Awake()
+        private async void Awake()
         {
             if (SceneManager.GetActiveScene().name != "Farm") return;
+
+            // Managers 가 아직 부팅 안 된 경우 (씬 직접 Play 로 들어온 경우) 부트스트랩 보장
+            if (Managers.Managers.Instance == null || Managers.Managers.Instance.IsBootstrapped == false)
+            {
+                await Managers.Managers.BootstrapAsync();
+            }
             FillIfEmpty();
         }
 
         private void FillIfEmpty()
         {
-            var registry = LoadRegistry();
+            var data = Managers.Managers.Data;
+            var registry = data?.Registry ?? LoadRegistryFallback();
             if (registry == null)
             {
-                Debug.LogWarning("[ROOTBORN/AutoFiller] GameDataRegistry not found anywhere. Skipping auto-fill.");
+                Debug.LogWarning("[ROOTBORN/AutoFiller] GameDataRegistry not found via DataManager or Resources. Skipping auto-fill.");
                 return;
             }
 
             EnsureCamera();
             var groundTilemap = EnsureGroundTilemap();
-            EnsureGroundFilled(groundTilemap, registry);
+            EnsureGroundFilled(groundTilemap, registry, data);
             EnsureResourceNodes(registry);
-            EnsurePlayer(registry);
+            EnsurePlayer(registry, data);
 
             Debug.Log("[ROOTBORN/AutoFiller] Farm scene auto-fill complete.");
         }
 
-        private GameDataRegistry LoadRegistry()
+        private static GameDataRegistry LoadRegistryFallback()
         {
-            var fromResources = UnityEngine.Resources.Load<GameDataRegistry>(_registryResourcePath);
+            var fromResources = UnityEngine.Resources.Load<GameDataRegistry>("GameDataRegistry");
             if (fromResources != null) return fromResources;
-
             var allRegistries = UnityEngine.Resources.FindObjectsOfTypeAll<GameDataRegistry>();
-            if (allRegistries != null && allRegistries.Length > 0) return allRegistries[0];
-            return null;
+            return (allRegistries != null && allRegistries.Length > 0) ? allRegistries[0] : null;
         }
 
         private static void EnsureCamera()
@@ -82,13 +85,14 @@ namespace Rootborn.Game.Bootstrap
             return tm;
         }
 
-        private static void EnsureGroundFilled(Tilemap tm, GameDataRegistry registry)
+        private static void EnsureGroundFilled(Tilemap tm, GameDataRegistry registry, DataManager data)
         {
             if (tm == null) return;
             var bounds = tm.cellBounds;
             if (bounds.size.x >= GroundCols && bounds.size.y >= GroundRows) return;
 
-            Sprite groundSprite = registry.GroundSprite;
+            Sprite groundSprite = data != null ? data.GroundSprite : null;
+            if (groundSprite == null) groundSprite = registry.GroundSprite;
             if (groundSprite == null)
             {
                 for (int i = 0; i < registry.Resources.Length; i++)
@@ -177,14 +181,17 @@ namespace Rootborn.Game.Bootstrap
             node.BindForRuntime(def, sr);
         }
 
-        private static void EnsurePlayer(GameDataRegistry registry)
+        private static void EnsurePlayer(GameDataRegistry registry, DataManager data)
         {
             if (FindObjectByName("Player") != null) return;
+
+            Sprite sprite = data != null ? data.PlayerSprite : null;
+            if (sprite == null) sprite = registry.PlayerSprite;
 
             var go = new GameObject("Player");
             go.transform.position = new Vector3(GroundCols * 0.5f, GroundRows * 0.5f, 0f);
             var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = registry.PlayerSprite;
+            sr.sprite = sprite;
             sr.sortingOrder = 5;
             go.AddComponent<Rootborn.Game.Player.PlayerController>();
         }

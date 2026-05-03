@@ -13,6 +13,23 @@
 
 ---
 
+## 2026-05-04 — Addressables 도입 (SlimeMaster 패턴 차용)
+- 피드백: "C:\Users\jdyj\Downloads\SlimeMaster ... addressable을 사용했는데 동일한 구조로 해볼 수 있겠어?"
+- 원인: ROOTBORN이 GameDataRegistry를 `Assets/Resources/`로만 로드 → 빌드 시 메모리 적재, 핫업데이트 불가, 헌법 `path-based/assets-addressables.md` 위반
+- 변경:
+  - `Packages/manifest.json` — `com.unity.addressables` 2.4.6 추가
+  - `Assets/Scripts/Game/Managers/Managers.cs` 신규 — 싱글톤 진입점 (`@Managers` + DontDestroyOnLoad, `BootstrapAsync()`)
+  - `Assets/Scripts/Game/Managers/ResourceManager.cs` 신규 — async/await Addressables 래퍼, 캐시, Release 명시
+  - `Assets/Scripts/Game/Managers/DataManager.cs` 신규 — `GameDataRegistry` + 도메인별 Dictionary lookup
+  - `Assets/Scripts/Editor/Tools/AddressablesSetup.cs` 신규 — 그룹(Data/Sprites/Prefabs/Tiles) + `PreLoad` 라벨 + 자산 자동 등록
+  - `GameBootstrap.Start` async, `Managers.BootstrapAsync()` 호출
+  - `FarmAutoFiller` Resources.Load → `Managers.Data.Registry` 사용 (Resources fallback 유지)
+  - `BuildScript` Client 빌드 시 `AddressableAssetSettings.BuildPlayerContent()` 자동 호출
+  - `OneClickSetup` Step 6/6 추가 (`AddressablesSetup.WireAll`)
+  - `rules/path-based/assets-addressables.md` — ROOTBORN 매니저 구조와 주소 규약 명시
+- 일반화: "동적 에셋 로딩은 Addressables 일원화. SlimeMaster의 단순 콜백 래퍼 대신 async/await + Release 명시. fallback Resources.Load는 단 한 번만 허용."
+
+
 ## 2026-05-04 — ROOTBORN 프로젝트 분기 (coin-defense → farmer)
 - 변경: coin-defense 하네스를 ROOTBORN(세대 진화 농장 생존 게임)용으로 fork
 - `constitution.md` — 헤더 "ROOTBORN", 원칙 2번 "코인 데이터드리븐" → "엔티티(작물·도구·지식·특성·세대) 데이터드리븐", 네임스페이스 `Rootborn.*`, 패시브 ADR-0002 절 삭제
