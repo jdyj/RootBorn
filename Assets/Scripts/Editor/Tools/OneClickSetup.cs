@@ -10,28 +10,39 @@ namespace Rootborn.Editor.Tools
         {
             if (!EnsureNotPlaying()) return;
 
+            Debug.Log("[ROOTBORN/OneClick] === START ===");
             try
             {
+                Debug.Log("[ROOTBORN/OneClick] Step 1/5 — slicing Pixelwood sprite sheets...");
                 EditorUtility.DisplayProgressBar("ROOTBORN", "Slicing Pixelwood sprite sheets...", 0.1f);
                 PixelwoodSliceSetup.SliceAll();
 
+                Debug.Log("[ROOTBORN/OneClick] Step 2/5 — generating default data SOs...");
                 EditorUtility.DisplayProgressBar("ROOTBORN", "Generating default data SOs...", 0.3f);
                 GenerateDefaultData.Generate();
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
 
+                Debug.Log("[ROOTBORN/OneClick] Step 3/5 — setting up scenes...");
                 EditorUtility.DisplayProgressBar("ROOTBORN", "Setting up scenes (Boot/MainMenu/HostLobby/Farm)...", 0.5f);
                 SceneSetup.SetupAll();
 
+                Debug.Log("[ROOTBORN/OneClick] Step 4/5 — building Farm tilemap + resource nodes...");
                 EditorUtility.DisplayProgressBar("ROOTBORN", "Building Farm tilemap + resource nodes...", 0.75f);
                 FarmSceneBuilder.Build();
 
+                Debug.Log("[ROOTBORN/OneClick] Step 5/5 — building Player prefab + Animator...");
                 EditorUtility.DisplayProgressBar("ROOTBORN", "Building Player prefab + Animator...", 0.9f);
                 PlayerSetup.Setup();
 
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
-                Debug.Log("[ROOTBORN] One-Click setup complete. Open Assets/Scenes/Boot.unity and Play.");
+                Debug.Log("[ROOTBORN/OneClick] === COMPLETE === Open Assets/Scenes/Boot.unity and Play.");
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"[ROOTBORN/OneClick] FAILED: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
+                throw;
             }
             finally
             {
