@@ -31,6 +31,8 @@ namespace Rootborn.Editor.Tools
         {
             if (!OneClickSetup.EnsureNotPlaying()) return;
             var scene = OpenScene($"{ScenesRoot}/Boot.unity");
+            EnsureCamera(scene);
+            EnsureEventSystem(scene);
             EnsureBootstrapRoot(scene);
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Rootborn.Game.Bootstrap;
 using Rootborn.Game.Common;
 using Rootborn.Game.Resources;
 using Rootborn.Game.Time;
@@ -39,6 +40,7 @@ namespace Rootborn.Editor.Tools
             EnsureCamera();
             EnsureEventSystem();
             EnsureGameClock();
+            EnsureDiagnostics();
             var grid = EnsureGrid();
             var tilemap = EnsureGroundTilemap(grid);
             FillGround(tilemap, groundTile);
@@ -107,6 +109,13 @@ namespace Rootborn.Editor.Tools
             if (GameObject.Find("[GameClock]") != null) return;
             var go = new GameObject("[GameClock]");
             go.AddComponent<GameClock>();
+        }
+
+        private static void EnsureDiagnostics()
+        {
+            if (GameObject.Find("[SceneDiagnostics]") != null) return;
+            var go = new GameObject("[SceneDiagnostics]");
+            go.AddComponent<SceneDiagnostics>();
         }
 
         private static Grid EnsureGrid()

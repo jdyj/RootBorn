@@ -18,22 +18,15 @@ namespace Rootborn.Game.Bootstrap
             Config = ArgsParser.Parse(Environment.GetCommandLineArgs());
             OnBootstrapped?.Invoke(Config);
 
-            Debug.Log($"[ROOTBORN] Bootstrap mode={Config.Mode} port={Config.Port} maxPlayers={Config.MaxPlayers} saveSlot={Config.SaveSlot}");
-
-            switch (Config.Mode)
+            string nextScene = Config.Mode switch
             {
-                case SessionMode.None:
-                    SceneManager.LoadScene(_mainMenuScene);
-                    break;
-                case SessionMode.Single:
-                case SessionMode.Host:
-                case SessionMode.Server:
-                    SceneManager.LoadScene(_farmScene);
-                    break;
-                case SessionMode.Client:
-                    SceneManager.LoadScene(_hostLobbyScene);
-                    break;
-            }
+                SessionMode.None => _mainMenuScene,
+                SessionMode.Client => _hostLobbyScene,
+                _ => _farmScene
+            };
+
+            Debug.Log($"[ROOTBORN] Bootstrap mode={Config.Mode} port={Config.Port} maxPlayers={Config.MaxPlayers} saveSlot={Config.SaveSlot} → loading scene '{nextScene}'");
+            SceneManager.LoadScene(nextScene);
         }
     }
 }
