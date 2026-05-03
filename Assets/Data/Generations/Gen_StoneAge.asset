@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 395f7e30af8953045acd6ad6a077f699, type: 3}
+  m_Name: Gen_StoneAge
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Generation.GenerationProfile
+  _generationIndex: 2
+  _displayKey: generation.stoneAge
+  _lifetimeSec: 1800
+  _startingKnowledge:
+  - {fileID: 11400000, guid: 83000c80ee557bc4c8edf1bb6a390a3a, type: 2}
+  _startingInventory:
+  - {fileID: 11400000, guid: 58d3c252b9385d546922d09ce0b6cc49, type: 2}
+  - {fileID: 11400000, guid: e46a4ff10413c624d98c902ee02a5e74, type: 2}
+  _nextGeneration: {fileID: 0}

@@ -1,7 +1,9 @@
 {
     "name": "Rootborn.Game",
     "rootNamespace": "Rootborn.Game",
-    "references": [],
+    "references": [
+        "Unity.InputSystem"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

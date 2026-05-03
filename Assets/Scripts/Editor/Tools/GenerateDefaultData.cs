@@ -17,10 +17,19 @@ namespace Rootborn.Editor.Tools
     public static class GenerateDefaultData
     {
         private const string DataRoot = "Assets/Data";
+        private const string CropSheetPath = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Farm/Crops/crops 16x16.png";
+        private const string ItemSheetPath = "Assets/Pixelwood Valley Icon Pack 1.0/1.0/Items 16x16.png";
+        private const string TreeSpritePath = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Trees/2.png";
+        private const string RockSpritePath = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Rocks/1.png";
 
         [MenuItem("Rootborn/Data/Generate Default Data")]
         public static void Generate()
         {
+            // 1) Make sure sprite sheets are sliced first
+            PixelwoodSliceSetup.SliceAll();
+            EnsureSingleSpriteImporter(TreeSpritePath);
+            EnsureSingleSpriteImporter(RockSpritePath);
+
             EnsureFolder(DataRoot);
             EnsureFolder($"{DataRoot}/Tools");
             EnsureFolder($"{DataRoot}/Crops");
@@ -32,12 +41,19 @@ namespace Rootborn.Editor.Tools
             EnsureFolder($"{DataRoot}/Generations");
             EnsureFolder($"{DataRoot}/Registry");
 
+            // 2) Sprite lookups
+            var itemSprites = LoadSubSprites(ItemSheetPath);
+            var cropSprites = LoadSubSprites(CropSheetPath);
+            var treeSprite = AssetDatabase.LoadAssetAtPath<Sprite>(TreeSpritePath);
+            var rockSprite = AssetDatabase.LoadAssetAtPath<Sprite>(RockSpritePath);
+
             var bareHand = CreateOrLoad<ToolDefinition>($"{DataRoot}/Tools/Tool_BareHand.asset", t =>
             {
                 SetField(t, "_id", "BareHand");
                 SetField(t, "_displayKey", "tool.bareHand");
                 SetField(t, "_powerMultiplier", 0.3f);
                 SetField(t, "_isStartingTool", true);
+                SetField(t, "_icon", PickItemSprite(itemSprites, 8));
             });
 
             var stoneAxe = CreateOrLoad<ToolDefinition>($"{DataRoot}/Tools/Tool_StoneAxe.asset", t =>
@@ -45,6 +61,7 @@ namespace Rootborn.Editor.Tools
                 SetField(t, "_id", "StoneAxe");
                 SetField(t, "_displayKey", "tool.stoneAxe");
                 SetField(t, "_powerMultiplier", 1.2f);
+                SetField(t, "_icon", PickItemSprite(itemSprites, 0));
             });
 
             var stoneHoe = CreateOrLoad<ToolDefinition>($"{DataRoot}/Tools/Tool_StoneHoe.asset", t =>
@@ -52,6 +69,7 @@ namespace Rootborn.Editor.Tools
                 SetField(t, "_id", "StoneHoe");
                 SetField(t, "_displayKey", "tool.stoneHoe");
                 SetField(t, "_powerMultiplier", 1.0f);
+                SetField(t, "_icon", PickItemSprite(itemSprites, 16));
             });
 
             var crop = CreateOrLoad<CropDefinition>($"{DataRoot}/Crops/Crop_Wheat.asset", c =>
@@ -59,6 +77,7 @@ namespace Rootborn.Editor.Tools
                 SetField(c, "_id", "Wheat");
                 SetField(c, "_displayKey", "crop.wheat");
                 SetField(c, "_stageDurationsSec", new float[] { 30f, 30f, 30f, 30f });
+                SetField(c, "_growthStageSprites", PickCropStages(cropSprites, rowFromBottom: 0, count: 4));
             });
 
             var resTree = CreateOrLoad<ResourceNodeDefinition>($"{DataRoot}/Resources/Resource_Tree.asset", r =>
@@ -68,6 +87,7 @@ namespace Rootborn.Editor.Tools
                 SetField(r, "_baseHitsToBreak", 5f);
                 SetField(r, "_preferredTool", stoneAxe);
                 SetField(r, "_surfaceTag", "ground");
+                SetField(r, "_sprite", treeSprite);
                 SetField(r, "_drops", new[] { MakeDrop("Wood", 1, 3) });
             });
 
@@ -79,6 +99,7 @@ namespace Rootborn.Editor.Tools
                 SetField(r, "_preferredTool", null);
                 SetField(r, "_surfaceTag", "ground");
                 SetField(r, "_drops", new[] { MakeDrop("Stone", 1, 2) });
+                SetField(r, "_sprite", rockSprite);
             });
 
             var triggerHitGround = CreateOrLoad<HitGroundWithRockTrigger>($"{DataRoot}/Knowledge/Triggers/Trigger_HitGroundWithRock.asset", t =>
@@ -225,6 +246,78 @@ namespace Rootborn.Editor.Tools
             if (field == null) return;
             field.SetValue(boxed, value);
             target = (TStruct)boxed;
+        }
+
+        private static Sprite[] LoadSubSprites(string assetPath)
+        {
+            var assets = AssetDatabase.LoadAllAssetsAtPath(assetPath);
+            var list = new List<Sprite>();
+            foreach (var a in assets)
+            {
+                if (a is Sprite s) list.Add(s);
+            }
+            list.Sort((x, y) => string.CompareOrdinal(x.name, y.name));
+            return list.ToArray();
+        }
+
+        private static Sprite[] PickCropStages(Sprite[] cropSprites, int rowFromBottom, int count)
+        {
+            if (cropSprites == null || cropSprites.Length == 0) return System.Array.Empty<Sprite>();
+            int cols = 0;
+            foreach (var s in cropSprites)
+            {
+                if (s.name.StartsWith("Crop_r0_c"))
+                {
+                    cols++;
+                }
+            }
+            if (cols == 0) cols = 6;
+
+            int row = rowFromBottom;
+            int totalRows = cropSprites.Length / cols;
+            int rowFromTop = Mathf.Max(0, totalRows - 1 - row);
+
+            var stages = new List<Sprite>();
+            int taken = 0;
+            foreach (var s in cropSprites)
+            {
+                string prefix = $"Crop_r{rowFromTop}_c";
+                if (s.name.StartsWith(prefix))
+                {
+                    stages.Add(s);
+                    taken++;
+                    if (taken >= count) break;
+                }
+            }
+            if (stages.Count < count)
+            {
+                int needed = count - stages.Count;
+                for (int i = 0; i < needed && i < cropSprites.Length; i++)
+                {
+                    stages.Add(cropSprites[i]);
+                }
+            }
+            return stages.ToArray();
+        }
+
+        private static Sprite PickItemSprite(Sprite[] itemSprites, int index)
+        {
+            if (itemSprites == null || itemSprites.Length == 0) return null;
+            return itemSprites[Mathf.Clamp(index, 0, itemSprites.Length - 1)];
+        }
+
+        private static void EnsureSingleSpriteImporter(string assetPath)
+        {
+            var importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+            if (importer == null) return;
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.spritePixelsPerUnit = 16;
+            importer.filterMode = FilterMode.Point;
+            importer.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.mipmapEnabled = false;
+            importer.alphaIsTransparency = true;
+            importer.SaveAndReimport();
         }
 
         private static void EnsureFolder(string path)

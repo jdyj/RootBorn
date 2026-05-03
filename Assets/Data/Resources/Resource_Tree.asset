@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d01dd25437ae80e488f4cd6ac0234c29, type: 3}
+  m_Name: Resource_Tree
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Resources.ResourceNodeDefinition
+  _id: Tree
+  _displayKey: resource.tree
+  _sprite: {fileID: 0}
+  _baseHitsToBreak: 5
+  _preferredTool: {fileID: 11400000, guid: 58d3c252b9385d546922d09ce0b6cc49, type: 2}
+  _bareHandPenaltyMul: 0.3
+  _drops:
+  - _resourceId: Wood
+    _minCount: 1
+    _maxCount: 3
+  _surfaceTag: ground
