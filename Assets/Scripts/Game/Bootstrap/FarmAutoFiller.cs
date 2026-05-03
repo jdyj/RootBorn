@@ -25,7 +25,7 @@ namespace Rootborn.Game.Bootstrap
             FillIfEmpty();
         }
 
-        private void FillIfEmpty()
+        public void FillIfEmpty()
         {
             var data = Managers.Managers.Data;
             var registry = data?.Registry ?? LoadRegistryFallback();
@@ -181,40 +181,24 @@ namespace Rootborn.Game.Bootstrap
             node.BindForRuntime(def, sr);
         }
 
-        private async void EnsurePlayer(GameDataRegistry registry, DataManager data)
+        private void EnsurePlayer(GameDataRegistry registry, DataManager data)
         {
             if (FindObjectByName("Player") != null) return;
 
-            // 1) Addressables로 Player.prefab 시도 (Animator 포함)
-            GameObject playerInstance = null;
-            if (Managers.Managers.Resource != null)
-            {
-                var prefab = await Managers.Managers.Resource.LoadAsync<GameObject>("prefabs/player");
-                if (prefab != null)
-                {
-                    playerInstance = Instantiate(prefab);
-                    playerInstance.name = "Player";
-                }
-            }
+            // 즉시 sprite 단독 Player 생성 (Addressables 비동기 로드 대기 안 함)
+            // Animator 포함 프리팹은 후속 PR에서 동기 로드 가능한 경로로 전환.
+            Sprite sprite = data != null ? data.PlayerSprite : null;
+            if (sprite == null) sprite = registry.PlayerSprite;
 
-            // 2) fallback — sprite 단독 GameObject
-            if (playerInstance == null)
-            {
-                Sprite sprite = data != null ? data.PlayerSprite : null;
-                if (sprite == null) sprite = registry.PlayerSprite;
-
-                playerInstance = new GameObject("Player");
-                var sr = playerInstance.AddComponent<SpriteRenderer>();
-                sr.sprite = sprite;
-                sr.sortingOrder = 5;
-                playerInstance.AddComponent<Rootborn.Game.Player.PlayerController>();
-            }
-
+            var playerInstance = new GameObject("Player");
+            var sr = playerInstance.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = 5;
             playerInstance.transform.position = new Vector3(GroundCols * 0.5f, GroundRows * 0.5f, 0f);
 
-            // GatherInteractor + KnowledgeProgress 와이어링
-            var interactor = playerInstance.GetComponent<Rootborn.Game.Player.GatherInteractor>();
-            if (interactor == null) interactor = playerInstance.AddComponent<Rootborn.Game.Player.GatherInteractor>();
+            playerInstance.AddComponent<Rootborn.Game.Player.PlayerController>();
+
+            var interactor = playerInstance.AddComponent<Rootborn.Game.Player.GatherInteractor>();
 
             if (data != null && data.Registry != null)
             {
@@ -229,6 +213,8 @@ namespace Rootborn.Game.Bootstrap
                     interactor.EquippedTool = bareHand;
                 }
             }
+
+            Debug.Log("[ROOTBORN/AutoFiller] Player spawned with GatherInteractor + KnowledgeProgress.");
         }
 
         private static GameObject FindObjectByName(string name)
