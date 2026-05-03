@@ -17,7 +17,7 @@
 ## Rules Reference (`.claude/rules/`)
 
 - `coding-standards.md` — Unity C# 표준 (sealed, [SerializeField] private, Update 내 GetComponent 금지)
-- `ui-standards.md` — 모바일 타이포 ≥40, 터치 타겟 ≥96px (PC 전용 전환 시 후속 갱신)
+- `ui-standards.md` — PC 1920×1080 기본, Borderless Fullscreen, Canvas Scaler 1920×1080 기준
 - `testing-discipline.md` — Tier 1~4 테스트, 시나리오 카탈로그 (GEN/HEIR/TOOL/CROP/KNOW/STATUS/NET)
 - `path-based/assets-gameplay.md`, `assets-data.md`, `assets-ui.md`, `assets-addressables.md`
 - `unity-cli.md` — batchmode 빌드/테스트
