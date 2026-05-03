@@ -12,14 +12,14 @@ namespace Rootborn.Game.Save
         {
             _slot = string.IsNullOrEmpty(slot) ? "default" : slot;
             _dir = Path.Combine(Application.persistentDataPath, "saves", _slot);
-            if (!Directory.Exists(_dir))
+            if (!System.IO.Directory.Exists(_dir))
             {
-                Directory.CreateDirectory(_dir);
+                System.IO.Directory.CreateDirectory(_dir);
             }
         }
 
         public string Slot => _slot;
-        public string Directory => _dir;
+        public string DirectoryPath => _dir;
 
         public void WriteJson(string fileName, string json)
         {
