@@ -34,7 +34,7 @@ namespace Rootborn.Editor.Tools
             }
 
             var groundTile = CreateOrLoadGroundTile(groundSprite);
-            var registry = AssetDatabase.LoadAssetAtPath<GameDataRegistry>("Assets/Data/Registry/GameDataRegistry.asset");
+            var registry = LoadRegistry();
 
             var scene = EditorSceneManager.OpenScene(FarmScenePath, OpenSceneMode.Single);
             EnsureCamera();
@@ -50,6 +50,36 @@ namespace Rootborn.Editor.Tools
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             Debug.Log("[ROOTBORN] Farm scene built — ground tilemap + resource nodes placed.");
+        }
+
+        private static GameDataRegistry LoadRegistry()
+        {
+            const string defaultPath = "Assets/Data/Registry/GameDataRegistry.asset";
+
+            var direct = AssetDatabase.LoadAssetAtPath<GameDataRegistry>(defaultPath);
+            if (direct != null) return direct;
+
+            // Fallback: search by type GUID (handles renamed/moved assets and AssetDatabase timing).
+            var guids = AssetDatabase.FindAssets("t:GameDataRegistry");
+            foreach (var guid in guids)
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var reg = AssetDatabase.LoadAssetAtPath<GameDataRegistry>(path);
+                if (reg != null)
+                {
+                    Debug.Log($"[ROOTBORN/FarmBuilder] Registry loaded via fallback search: {path}");
+                    return reg;
+                }
+            }
+
+            // Final diagnostic: load as raw Object to verify the asset exists at the path.
+            var raw = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(defaultPath);
+            Debug.LogError($"[ROOTBORN/FarmBuilder] LoadRegistry FAILED. " +
+                           $"Path '{defaultPath}' raw load = {(raw == null ? "null (asset missing)" : raw.GetType().FullName)}. " +
+                           $"FindAssets matches = {guids.Length}. " +
+                           $"Likely cause: GameDataRegistry script reference broken or asset import pending. " +
+                           $"Try: Assets > Reimport All, then run Setup Everything again.");
+            return null;
         }
 
         private static Sprite PickGrassSprite()
