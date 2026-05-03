@@ -40,6 +40,7 @@ namespace Rootborn.Editor.Tools
             EnsureFolder($"{DataRoot}/Traits");
             EnsureFolder($"{DataRoot}/Generations");
             EnsureFolder($"{DataRoot}/Registry");
+            EnsureFolder("Assets/Resources");
 
             // 2) Sprite lookups
             var itemSprites = LoadSubSprites(ItemSheetPath);
@@ -184,7 +185,26 @@ namespace Rootborn.Editor.Tools
                 SetField(g, "_nextGeneration", genStone);
             });
 
-            var registry = CreateOrLoad<GameDataRegistry>($"{DataRoot}/Registry/GameDataRegistry.asset", r =>
+            // Pixelwood 시트에서 ground/player sprite 추출 (sliced sub-sprite 중에서)
+            var tileSprites = LoadSubSprites(TileSheetPath);
+            Sprite groundSprite = null;
+            for (int i = 0; i < tileSprites.Length; i++)
+            {
+                if (tileSprites[i].name == "Tile_r2_c4" || tileSprites[i].name == "Tile_r3_c4")
+                {
+                    groundSprite = tileSprites[i];
+                    break;
+                }
+            }
+            if (groundSprite == null && tileSprites.Length > 0) groundSprite = tileSprites[0];
+
+            const string PlayerIdleDownPath = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Idle/Down.png";
+            var playerSprites = LoadSubSprites(PlayerIdleDownPath);
+            Sprite playerSprite = playerSprites.Length > 0 ? playerSprites[0] : null;
+
+            // 기존 Assets/Data/Registry 위치의 SO가 있으면 정리 (Resources/로 옮길 예정)
+            DeleteIfExists($"{DataRoot}/Registry/GameDataRegistry.asset");
+            var registry = CreateOrLoad<GameDataRegistry>("Assets/Resources/GameDataRegistry.asset", r =>
             {
                 SetField(r, "_crops", new[] { crop });
                 SetField(r, "_tools", new[] { bareHand, stoneAxe, stoneHoe });
@@ -193,11 +213,21 @@ namespace Rootborn.Editor.Tools
                 SetField(r, "_traits", new[] { hardy, greenThumb, quickLearner });
                 SetField(r, "_statuses", new[] { hunger, fatigue, loneliness });
                 SetField(r, "_generations", new[] { genDefault, genStone });
+                SetField(r, "_groundSprite", groundSprite);
+                SetField(r, "_playerSprite", playerSprite);
             });
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log($"[ROOTBORN] Default data generated under {DataRoot}/. Registry: {AssetDatabase.GetAssetPath(registry)}");
+        }
+
+        private static void DeleteIfExists(string path)
+        {
+            if (AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path) != null)
+            {
+                AssetDatabase.DeleteAsset(path);
+            }
         }
 
         private static T CreateOrLoad<T>(string path, System.Action<T> configure) where T : ScriptableObject

@@ -19,6 +19,8 @@ namespace Rootborn.Game.Common
         [SerializeField] private HeirTrait[] _traits = System.Array.Empty<HeirTrait>();
         [SerializeField] private StatusEffectDefinition[] _statuses = System.Array.Empty<StatusEffectDefinition>();
         [SerializeField] private GenerationProfile[] _generations = System.Array.Empty<GenerationProfile>();
+        [SerializeField] private Sprite _groundSprite;
+        [SerializeField] private Sprite _playerSprite;
 
         public CropDefinition[] Crops => _crops;
         public ToolDefinition[] Tools => _tools;
@@ -27,5 +29,7 @@ namespace Rootborn.Game.Common
         public HeirTrait[] Traits => _traits;
         public StatusEffectDefinition[] Statuses => _statuses;
         public GenerationProfile[] Generations => _generations;
+        public Sprite GroundSprite => _groundSprite;
+        public Sprite PlayerSprite => _playerSprite;
     }
 }

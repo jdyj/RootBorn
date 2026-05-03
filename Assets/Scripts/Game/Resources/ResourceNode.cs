@@ -17,6 +17,12 @@ namespace Rootborn.Game.Resources
         public event Action<ResourceNode, ToolDefinition> OnGathered;
         public event Action<ResourceNode> OnBroken;
 
+        public void BindForRuntime(ResourceNodeDefinition def, SpriteRenderer renderer)
+        {
+            _definition = def;
+            _renderer = renderer;
+        }
+
         private void Start()
         {
             if (_renderer != null && _definition != null && _definition.Sprite != null)
