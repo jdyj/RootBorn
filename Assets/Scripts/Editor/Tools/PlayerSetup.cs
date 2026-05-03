@@ -238,6 +238,19 @@ namespace Rootborn.Editor.Tools
             var instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
             instance.name = "Player";
             instance.transform.position = new Vector3(15f, 10f, 0f);
+
+            int treeCount = 0, rockCount = 0;
+            var resRoot = GameObject.Find("[Resources]");
+            if (resRoot != null)
+            {
+                foreach (Transform t in resRoot.transform)
+                {
+                    if (t.name.StartsWith("Tree_")) treeCount++;
+                    else if (t.name.StartsWith("Rock_")) rockCount++;
+                }
+            }
+            Debug.Log($"[ROOTBORN/PlayerSetup] Spawned Player at (15, 10). Existing resources: trees={treeCount}, rocks={rockCount}");
+
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
         }

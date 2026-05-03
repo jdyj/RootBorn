@@ -17,6 +17,8 @@ namespace Rootborn.Editor.Tools
 
                 EditorUtility.DisplayProgressBar("ROOTBORN", "Generating default data SOs...", 0.3f);
                 GenerateDefaultData.Generate();
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
 
                 EditorUtility.DisplayProgressBar("ROOTBORN", "Setting up scenes (Boot/MainMenu/HostLobby/Farm)...", 0.5f);
                 SceneSetup.SetupAll();

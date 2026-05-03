@@ -41,6 +41,7 @@ namespace Rootborn.Editor.Tools
             EnsureEventSystem();
             EnsureGameClock();
             EnsureDiagnostics();
+            Debug.Log($"[ROOTBORN/FarmBuilder] groundSprite={groundSprite?.name ?? "null"}, registry={(registry != null ? registry.name : "null")}, treeSprite={(registry != null && registry.Resources.Length > 0 ? "ok" : "missing")}");
             var grid = EnsureGrid();
             var tilemap = EnsureGroundTilemap(grid);
             FillGround(tilemap, groundTile);
@@ -187,14 +188,21 @@ namespace Rootborn.Editor.Tools
             var rng = new System.Random(20260504);
             int treeTarget = 12;
             int rockTarget = 8;
+            int treesSpawned = 0;
+            int rocksSpawned = 0;
+
+            if (treeDef == null) Debug.LogWarning("[ROOTBORN/FarmBuilder] Tree definition not found in registry.");
+            if (rockDef == null) Debug.LogWarning("[ROOTBORN/FarmBuilder] Rock definition not found in registry.");
+
             for (int i = 0; i < treeTarget && treeDef != null; i++)
             {
-                SpawnNode(rootGo.transform, treeDef, RandomCellPos(rng), $"Tree_{i:00}");
+                if (SpawnNode(rootGo.transform, treeDef, RandomCellPos(rng), $"Tree_{i:00}")) treesSpawned++;
             }
             for (int i = 0; i < rockTarget && rockDef != null; i++)
             {
-                SpawnNode(rootGo.transform, rockDef, RandomCellPos(rng), $"Rock_{i:00}");
+                if (SpawnNode(rootGo.transform, rockDef, RandomCellPos(rng), $"Rock_{i:00}")) rocksSpawned++;
             }
+            Debug.Log($"[ROOTBORN/FarmBuilder] Resource nodes spawned: trees={treesSpawned}, rocks={rocksSpawned} under '{rootName}'");
         }
 
         private static Vector3 RandomCellPos(System.Random rng)
@@ -204,7 +212,7 @@ namespace Rootborn.Editor.Tools
             return new Vector3(x, y, 0f);
         }
 
-        private static void SpawnNode(Transform parent, ResourceNodeDefinition def, Vector3 position, string name)
+        private static bool SpawnNode(Transform parent, ResourceNodeDefinition def, Vector3 position, string name)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
@@ -212,11 +220,16 @@ namespace Rootborn.Editor.Tools
             var sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = def.Sprite;
             sr.sortingOrder = 1;
+            if (def.Sprite == null)
+            {
+                Debug.LogWarning($"[ROOTBORN/FarmBuilder] {name}: ResourceNodeDefinition '{def.Id}' has no Sprite. Will be invisible.");
+            }
             var node = go.AddComponent<ResourceNode>();
             var so = new SerializedObject(node);
             so.FindProperty("_definition").objectReferenceValue = def;
             so.FindProperty("_renderer").objectReferenceValue = sr;
             so.ApplyModifiedPropertiesWithoutUndo();
+            return true;
         }
 
         private static void EnsureFolder(string path)
