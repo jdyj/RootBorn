@@ -19,6 +19,8 @@ namespace Rootborn.Editor.Tools
         private const string DataRoot = "Assets/Data";
         private const string CropSheetPath = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Farm/Crops/crops 16x16.png";
         private const string ItemSheetPath = "Assets/Pixelwood Valley Icon Pack 1.0/1.0/Items 16x16.png";
+        private const string TileSheetPath = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Tiles/Tile.png";
+        private const string PlayerIdleDownPath = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Idle/Down.png";
         private const string TreeSpritePath = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Trees/2.png";
         private const string RockSpritePath = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Rocks/1.png";
 
@@ -198,7 +200,6 @@ namespace Rootborn.Editor.Tools
             }
             if (groundSprite == null && tileSprites.Length > 0) groundSprite = tileSprites[0];
 
-            const string PlayerIdleDownPath = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Idle/Down.png";
             var playerSprites = LoadSubSprites(PlayerIdleDownPath);
             Sprite playerSprite = playerSprites.Length > 0 ? playerSprites[0] : null;
 
