@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Resources.ResourceNodeDefinition
   _id: Rock
   _displayKey: resource.rock
-  _sprite: {fileID: 0}
+  _sprite: {fileID: 21300000, guid: 21fdc7fcd3575014ca1e272a677967c0, type: 3}
   _baseHitsToBreak: 6
   _preferredTool: {fileID: 0}
   _bareHandPenaltyMul: 0.3

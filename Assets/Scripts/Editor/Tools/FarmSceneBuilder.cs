@@ -22,6 +22,7 @@ namespace Rootborn.Editor.Tools
         [MenuItem("Rootborn/Scene/Build Farm Scene")]
         public static void Build()
         {
+            if (!OneClickSetup.EnsureNotPlaying()) return;
             EnsureFolder(GroundTileFolder);
 
             var groundSprite = PickGrassSprite();

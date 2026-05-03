@@ -18,6 +18,7 @@ namespace Rootborn.Editor.Tools
         [MenuItem("Rootborn/Scene/Setup All Scenes")]
         public static void SetupAll()
         {
+            if (!OneClickSetup.EnsureNotPlaying()) return;
             SetupBoot();
             SetupMainMenu();
             SetupHostLobby();
@@ -28,6 +29,7 @@ namespace Rootborn.Editor.Tools
         [MenuItem("Rootborn/Scene/Setup Boot")]
         public static void SetupBoot()
         {
+            if (!OneClickSetup.EnsureNotPlaying()) return;
             var scene = OpenScene($"{ScenesRoot}/Boot.unity");
             EnsureBootstrapRoot(scene);
             EditorSceneManager.MarkSceneDirty(scene);
@@ -37,6 +39,7 @@ namespace Rootborn.Editor.Tools
         [MenuItem("Rootborn/Scene/Setup MainMenu")]
         public static void SetupMainMenu()
         {
+            if (!OneClickSetup.EnsureNotPlaying()) return;
             var scene = OpenScene($"{ScenesRoot}/MainMenu.unity");
             EnsureCamera(scene);
             EnsureEventSystem(scene);
@@ -48,6 +51,7 @@ namespace Rootborn.Editor.Tools
         [MenuItem("Rootborn/Scene/Setup HostLobby")]
         public static void SetupHostLobby()
         {
+            if (!OneClickSetup.EnsureNotPlaying()) return;
             var scene = OpenScene($"{ScenesRoot}/HostLobby.unity");
             EnsureCamera(scene);
             EnsureEventSystem(scene);
@@ -58,6 +62,7 @@ namespace Rootborn.Editor.Tools
         [MenuItem("Rootborn/Scene/Setup Farm")]
         public static void SetupFarm()
         {
+            if (!OneClickSetup.EnsureNotPlaying()) return;
             var scene = OpenScene($"{ScenesRoot}/Farm.unity");
             EnsureCamera(scene);
             EnsureEventSystem(scene);

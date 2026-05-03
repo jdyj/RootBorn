@@ -8,6 +8,8 @@ namespace Rootborn.Editor.Tools
         [MenuItem("Rootborn/Setup Everything (One Click)", priority = 0)]
         public static void Run()
         {
+            if (!EnsureNotPlaying()) return;
+
             try
             {
                 EditorUtility.DisplayProgressBar("ROOTBORN", "Slicing Pixelwood sprite sheets...", 0.1f);
@@ -33,6 +35,27 @@ namespace Rootborn.Editor.Tools
             {
                 EditorUtility.ClearProgressBar();
             }
+        }
+
+        public static bool EnsureNotPlaying()
+        {
+            if (!EditorApplication.isPlayingOrWillChangePlaymode) return true;
+
+            bool stop = EditorUtility.DisplayDialog(
+                "ROOTBORN — Play 모드 감지",
+                "Setup 도구는 Edit 모드에서만 동작합니다.\n\nPlay 모드를 정지할까요?",
+                "정지하고 계속",
+                "취소");
+
+            if (!stop)
+            {
+                Debug.LogWarning("[ROOTBORN] Setup canceled — still in Play mode.");
+                return false;
+            }
+
+            EditorApplication.isPlaying = false;
+            Debug.LogWarning("[ROOTBORN] Play mode stopped. Click 'Setup Everything' again now that the editor is in Edit mode.");
+            return false;
         }
     }
 }

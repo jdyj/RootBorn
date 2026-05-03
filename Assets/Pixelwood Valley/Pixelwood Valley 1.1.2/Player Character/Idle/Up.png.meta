@@ -1,5 +1,12 @@
 fileFormatVersion: 2
 guid: 2a8cac1ced7b29f45bf54e8d6f1c9fdb
+AssetOrigin:
+  serializedVersion: 1
+  productId: 295129
+  packageName: Pixelwood Valley 1.1.2 | 16x16 Pixel Art Asset Pack
+  packageVersion: 1.1.2
+  assetPath: Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Idle/Up.png
+  uploadId: 862570
 TextureImporter:
   internalIDToNameTable:
   - first:
@@ -14,6 +21,48 @@ TextureImporter:
   - first:
       213: -2605162699692701695
     second: Up_3
+  - first:
+      213: 4403994502856576778
+    second: Idle_Up_0
+  - first:
+      213: -1449208870189521827
+    second: Idle_Up_1
+  - first:
+      213: 657758929619049217
+    second: Idle_Up_2
+  - first:
+      213: -8980191105990132313
+    second: Idle_Up_3
+  - first:
+      213: -3158571003894827690
+    second: Idle_Up_4
+  - first:
+      213: -5192498216851720720
+    second: Idle_Up_5
+  - first:
+      213: -270580907151570081
+    second: Idle_Up_6
+  - first:
+      213: -2323090306049078005
+    second: Idle_Up_7
+  - first:
+      213: -8291183820309714705
+    second: Idle_Up_8
+  - first:
+      213: -7444337177667736680
+    second: Idle_Up_9
+  - first:
+      213: -5871698962577040681
+    second: Idle_Up_10
+  - first:
+      213: -6717128232199448515
+    second: Idle_Up_11
+  - first:
+      213: -7812901254923023558
+    second: Idle_Up_12
+  - first:
+      213: 7480041705326248206
+    second: Idle_Up_13
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -33,7 +82,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 0
+  isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -84,7 +133,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: 4
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -135,89 +184,309 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Up_0
+      name: Idle_Up_0
       rect:
         serializedVersion: 2
         x: 0
-        y: 0
-        width: 59
-        height: 49
+        y: 33
+        width: 16
+        height: 16
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 19461def9f5e1fad0800000000000000
-      internalID: -2670100242169240431
+      spriteID: a0f0a8fbaa12e1d30800000000000000
+      internalID: 4403994502856576778
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Up_1
+      name: Idle_Up_1
       rect:
         serializedVersion: 2
-        x: 59
-        y: 0
-        width: 59
-        height: 49
+        x: 16
+        y: 33
+        width: 16
+        height: 16
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 6b5ea8f5c09b723a0800000000000000
-      internalID: -6690175258641898058
+      spriteID: d542207f53063ebe0800000000000000
+      internalID: -1449208870189521827
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Up_2
+      name: Idle_Up_2
       rect:
         serializedVersion: 2
-        x: 118
-        y: 0
-        width: 59
-        height: 49
+        x: 32
+        y: 33
+        width: 16
+        height: 16
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: adf1c0e446df6c830800000000000000
-      internalID: 4091235918760648666
+      spriteID: 10bd8c3f244d02900800000000000000
+      internalID: 657758929619049217
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Up_3
+      name: Idle_Up_3
       rect:
         serializedVersion: 2
-        x: 177
-        y: 0
-        width: 59
-        height: 49
+        x: 48
+        y: 33
+        width: 16
+        height: 16
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 10808bec35a98dbd0800000000000000
-      internalID: -2605162699692701695
+      spriteID: 7adf558a4c3ff5380800000000000000
+      internalID: -8980191105990132313
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Idle_Up_4
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 655fff228608a24d0800000000000000
+      internalID: -3158571003894827690
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Idle_Up_5
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0f534bff16a80f7b0800000000000000
+      internalID: -5192498216851720720
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Idle_Up_6
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f5b4a3a3914be3cf0800000000000000
+      internalID: -270580907151570081
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Idle_Up_7
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b0d8ac6cca9b2cfd0800000000000000
+      internalID: -2323090306049078005
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Idle_Up_8
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fe829f67e3ccfec80800000000000000
+      internalID: -8291183820309714705
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Idle_Up_9
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 89b61e857c660b890800000000000000
+      internalID: -7444337177667736680
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Idle_Up_10
+      rect:
+        serializedVersion: 2
+        x: 160
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7dad09337e8838ea0800000000000000
+      internalID: -5871698962577040681
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Idle_Up_11
+      rect:
+        serializedVersion: 2
+        x: 176
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d3811013677f7c2a0800000000000000
+      internalID: -6717128232199448515
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Idle_Up_12
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a3b0c1304bff29390800000000000000
+      internalID: -7812901254923023558
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Idle_Up_13
+      rect:
+        serializedVersion: 2
+        x: 208
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e01041fcc427ec760800000000000000
+      internalID: 7480041705326248206
       vertices: []
       indices: 
       edges: []
@@ -238,6 +507,20 @@ TextureImporter:
       - key: SpriteEditor.SliceSettings
         value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":59.0,"y":49.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
+      Idle_Up_0: 4403994502856576778
+      Idle_Up_1: -1449208870189521827
+      Idle_Up_10: -5871698962577040681
+      Idle_Up_11: -6717128232199448515
+      Idle_Up_12: -7812901254923023558
+      Idle_Up_13: 7480041705326248206
+      Idle_Up_2: 657758929619049217
+      Idle_Up_3: -8980191105990132313
+      Idle_Up_4: -3158571003894827690
+      Idle_Up_5: -5192498216851720720
+      Idle_Up_6: -270580907151570081
+      Idle_Up_7: -2323090306049078005
+      Idle_Up_8: -8291183820309714705
+      Idle_Up_9: -7444337177667736680
       Up_0: -2670100242169240431
       Up_1: -6690175258641898058
       Up_2: 4091235918760648666
@@ -247,10 +530,3 @@ TextureImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 295129
-  packageName: Pixelwood Valley 1.1.2 | 16x16 Pixel Art Asset Pack
-  packageVersion: 1.1.2
-  assetPath: Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Idle/Up.png
-  uploadId: 862570

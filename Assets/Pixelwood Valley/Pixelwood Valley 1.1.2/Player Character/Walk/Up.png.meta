@@ -1,5 +1,12 @@
 fileFormatVersion: 2
 guid: ce847a732a3ea1f4c83a85e5a916017b
+AssetOrigin:
+  serializedVersion: 1
+  productId: 295129
+  packageName: Pixelwood Valley 1.1.2 | 16x16 Pixel Art Asset Pack
+  packageVersion: 1.1.2
+  assetPath: Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Walk/Up.png
+  uploadId: 862570
 TextureImporter:
   internalIDToNameTable:
   - first:
@@ -14,6 +21,48 @@ TextureImporter:
   - first:
       213: -2605162699692701695
     second: Up_3
+  - first:
+      213: 7714249875774879904
+    second: Walk_Up_0
+  - first:
+      213: -9038629444792736143
+    second: Walk_Up_1
+  - first:
+      213: -7381862696768708892
+    second: Walk_Up_2
+  - first:
+      213: 1501965924689594842
+    second: Walk_Up_3
+  - first:
+      213: -2048238967713510335
+    second: Walk_Up_4
+  - first:
+      213: -8834634479458255802
+    second: Walk_Up_5
+  - first:
+      213: 88416035207106595
+    second: Walk_Up_6
+  - first:
+      213: 802210138808794822
+    second: Walk_Up_7
+  - first:
+      213: -967085291147777834
+    second: Walk_Up_8
+  - first:
+      213: 2444156448424858962
+    second: Walk_Up_9
+  - first:
+      213: -301611969931887394
+    second: Walk_Up_10
+  - first:
+      213: -3774388495635428750
+    second: Walk_Up_11
+  - first:
+      213: 1054338026012491252
+    second: Walk_Up_12
+  - first:
+      213: 5310637325722930882
+    second: Walk_Up_13
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -33,7 +82,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 0
+  isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -84,7 +133,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: 4
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -135,89 +184,309 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Up_0
+      name: Walk_Up_0
       rect:
         serializedVersion: 2
         x: 0
-        y: 0
-        width: 59
-        height: 49
+        y: 33
+        width: 16
+        height: 16
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 19461def9f5e1fad0800000000000000
-      internalID: -2670100242169240431
+      spriteID: 0a8b922e3658e0b60800000000000000
+      internalID: 7714249875774879904
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Up_1
+      name: Walk_Up_1
       rect:
         serializedVersion: 2
-        x: 59
-        y: 0
-        width: 59
-        height: 49
+        x: 16
+        y: 33
+        width: 16
+        height: 16
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 6b5ea8f5c09b723a0800000000000000
-      internalID: -6690175258641898058
+      spriteID: 1762ebe9866509280800000000000000
+      internalID: -9038629444792736143
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Up_2
+      name: Walk_Up_2
       rect:
         serializedVersion: 2
-        x: 118
-        y: 0
-        width: 59
-        height: 49
+        x: 32
+        y: 33
+        width: 16
+        height: 16
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: adf1c0e446df6c830800000000000000
-      internalID: 4091235918760648666
+      spriteID: 4eed462fcfa5e8990800000000000000
+      internalID: -7381862696768708892
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Up_3
+      name: Walk_Up_3
       rect:
         serializedVersion: 2
-        x: 177
-        y: 0
-        width: 59
-        height: 49
+        x: 48
+        y: 33
+        width: 16
+        height: 16
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 10808bec35a98dbd0800000000000000
-      internalID: -2605162699692701695
+      spriteID: ad94dddfc0e08d410800000000000000
+      internalID: 1501965924689594842
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Walk_Up_4
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 14cc25ac2813393e0800000000000000
+      internalID: -2048238967713510335
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Walk_Up_5
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 64cf873bfb2156580800000000000000
+      internalID: -8834634479458255802
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Walk_Up_6
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 320d7f26aed1a3100800000000000000
+      internalID: 88416035207106595
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Walk_Up_7
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6ce3ae6fed5022b00800000000000000
+      internalID: 802210138808794822
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Walk_Up_8
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6d8a1a13d093492f0800000000000000
+      internalID: -967085291147777834
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Walk_Up_9
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 25518d317536be120800000000000000
+      internalID: 2444156448424858962
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Walk_Up_10
+      rect:
+        serializedVersion: 2
+        x: 160
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: edc3438e28570dbf0800000000000000
+      internalID: -301611969931887394
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Walk_Up_11
+      rect:
+        serializedVersion: 2
+        x: 176
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 27a445929adae9bc0800000000000000
+      internalID: -3774388495635428750
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Walk_Up_12
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4fd39a939d2c1ae00800000000000000
+      internalID: 1054338026012491252
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Walk_Up_13
+      rect:
+        serializedVersion: 2
+        x: 208
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2ce45a2c28c23b940800000000000000
+      internalID: 5310637325722930882
       vertices: []
       indices: 
       edges: []
@@ -242,15 +511,22 @@ TextureImporter:
       Up_1: -6690175258641898058
       Up_2: 4091235918760648666
       Up_3: -2605162699692701695
+      Walk_Up_0: 7714249875774879904
+      Walk_Up_1: -9038629444792736143
+      Walk_Up_10: -301611969931887394
+      Walk_Up_11: -3774388495635428750
+      Walk_Up_12: 1054338026012491252
+      Walk_Up_13: 5310637325722930882
+      Walk_Up_2: -7381862696768708892
+      Walk_Up_3: 1501965924689594842
+      Walk_Up_4: -2048238967713510335
+      Walk_Up_5: -8834634479458255802
+      Walk_Up_6: 88416035207106595
+      Walk_Up_7: 802210138808794822
+      Walk_Up_8: -967085291147777834
+      Walk_Up_9: 2444156448424858962
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 295129
-  packageName: Pixelwood Valley 1.1.2 | 16x16 Pixel Art Asset Pack
-  packageVersion: 1.1.2
-  assetPath: Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Walk/Up.png
-  uploadId: 862570

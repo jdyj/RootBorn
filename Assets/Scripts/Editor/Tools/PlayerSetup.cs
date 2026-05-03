@@ -25,6 +25,7 @@ namespace Rootborn.Editor.Tools
         [MenuItem("Rootborn/Player/Setup Player Prefab + Spawn In Farm")]
         public static void Setup()
         {
+            if (!OneClickSetup.EnsureNotPlaying()) return;
             EnsureFolder(AnimationsFolder);
             EnsureFolder(PrefabFolder);
 

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Resources.ResourceNodeDefinition
   _id: Tree
   _displayKey: resource.tree
-  _sprite: {fileID: 0}
+  _sprite: {fileID: 21300000, guid: b5c90915f3d3a5d439c47fa67517bd46, type: 3}
   _baseHitsToBreak: 5
   _preferredTool: {fileID: 11400000, guid: 58d3c252b9385d546922d09ce0b6cc49, type: 2}
   _bareHandPenaltyMul: 0.3

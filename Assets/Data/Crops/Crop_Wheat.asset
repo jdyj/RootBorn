@@ -14,7 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Crops.CropDefinition
   _id: Wheat
   _displayKey: crop.wheat
-  _growthStageSprites: []
+  _growthStageSprites:
+  - {fileID: -3111858015528647964, guid: 12a202ee0ad84a44283317d0e49c0881, type: 3}
+  - {fileID: -1534829400217140026, guid: 12a202ee0ad84a44283317d0e49c0881, type: 3}
+  - {fileID: 1778295051076493461, guid: 12a202ee0ad84a44283317d0e49c0881, type: 3}
+  - {fileID: 6123796852431889199, guid: 12a202ee0ad84a44283317d0e49c0881, type: 3}
   _stageDurationsSec:
   - 30
   - 30

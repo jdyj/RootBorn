@@ -1,5 +1,12 @@
 fileFormatVersion: 2
 guid: 03cee3e6dbce0a14ba5810f9a223486d
+AssetOrigin:
+  serializedVersion: 1
+  productId: 295129
+  packageName: Pixelwood Valley 1.1.2 | 16x16 Pixel Art Asset Pack
+  packageVersion: 1.1.2
+  assetPath: Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Walk/Down.png
+  uploadId: 862570
 TextureImporter:
   internalIDToNameTable:
   - first:
@@ -14,6 +21,48 @@ TextureImporter:
   - first:
       213: 6794834511678964113
     second: Down_3
+  - first:
+      213: -2552124079042640952
+    second: Walk_Down_0
+  - first:
+      213: 7393945022160921464
+    second: Walk_Down_1
+  - first:
+      213: 2127659032470182028
+    second: Walk_Down_2
+  - first:
+      213: -4241166664574320460
+    second: Walk_Down_3
+  - first:
+      213: -4685979422728927703
+    second: Walk_Down_4
+  - first:
+      213: -5208022382498550526
+    second: Walk_Down_5
+  - first:
+      213: 7839089781559572045
+    second: Walk_Down_6
+  - first:
+      213: -1284474841241798095
+    second: Walk_Down_7
+  - first:
+      213: -5148968211168469266
+    second: Walk_Down_8
+  - first:
+      213: -7082898931484773722
+    second: Walk_Down_9
+  - first:
+      213: 1308082820784181801
+    second: Walk_Down_10
+  - first:
+      213: -101974534573810904
+    second: Walk_Down_11
+  - first:
+      213: 9215709284977858617
+    second: Walk_Down_12
+  - first:
+      213: 4354733497795379152
+    second: Walk_Down_13
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -33,7 +82,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 0
+  isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -84,7 +133,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: 4
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -135,89 +184,309 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Down_0
+      name: Walk_Down_0
       rect:
         serializedVersion: 2
         x: 0
-        y: 0
-        width: 59
-        height: 49
+        y: 33
+        width: 16
+        height: 16
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 5cce9415b760a6820800000000000000
-      internalID: 2912147235762990277
+      spriteID: 8c341fdfba8059cd0800000000000000
+      internalID: -2552124079042640952
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Down_1
+      name: Walk_Down_1
       rect:
         serializedVersion: 2
-        x: 59
-        y: 0
-        width: 59
-        height: 49
+        x: 16
+        y: 33
+        width: 16
+        height: 16
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 28cf92e0e86a4b8b0800000000000000
-      internalID: -5137298145869693822
+      spriteID: 8736ba6a2d19c9660800000000000000
+      internalID: 7393945022160921464
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Down_2
+      name: Walk_Down_2
       rect:
         serializedVersion: 2
-        x: 118
-        y: 0
-        width: 59
-        height: 49
+        x: 32
+        y: 33
+        width: 16
+        height: 16
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3510e49b6ea18be10800000000000000
-      internalID: 2213548795106296147
+      spriteID: c8859810e96f68d10800000000000000
+      internalID: 2127659032470182028
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Down_3
+      name: Walk_Down_3
       rect:
         serializedVersion: 2
-        x: 177
-        y: 0
-        width: 59
-        height: 49
+        x: 48
+        y: 33
+        width: 16
+        height: 16
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 1918030ecf91c4e50800000000000000
-      internalID: 6794834511678964113
+      spriteID: 4b0c1d4a3695425c0800000000000000
+      internalID: -4241166664574320460
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Walk_Down_4
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 926c37bda8e08feb0800000000000000
+      internalID: -4685979422728927703
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Walk_Down_5
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 20de3e48c3369b7b0800000000000000
+      internalID: -5208022382498550526
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Walk_Down_6
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d46b0408f9a0acc60800000000000000
+      internalID: 7839089781559572045
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Walk_Down_7
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 13a3bd4ffe0ac2ee0800000000000000
+      internalID: -1284474841241798095
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Walk_Down_8
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eee568d31b03b88b0800000000000000
+      internalID: -5148968211168469266
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Walk_Down_9
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6a23bd8d2fc74bd90800000000000000
+      internalID: -7082898931484773722
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Walk_Down_10
+      rect:
+        serializedVersion: 2
+        x: 160
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 922d1ad156e372210800000000000000
+      internalID: 1308082820784181801
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Walk_Down_11
+      rect:
+        serializedVersion: 2
+        x: 176
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 82b979a73b6b59ef0800000000000000
+      internalID: -101974534573810904
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Walk_Down_12
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 938df5c84c6c4ef70800000000000000
+      internalID: 9215709284977858617
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Walk_Down_13
+      rect:
+        serializedVersion: 2
+        x: 208
+        y: 33
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0df769b3b0f1f6c30800000000000000
+      internalID: 4354733497795379152
       vertices: []
       indices: 
       edges: []
@@ -242,15 +511,22 @@ TextureImporter:
       Down_1: -5137298145869693822
       Down_2: 2213548795106296147
       Down_3: 6794834511678964113
+      Walk_Down_0: -2552124079042640952
+      Walk_Down_1: 7393945022160921464
+      Walk_Down_10: 1308082820784181801
+      Walk_Down_11: -101974534573810904
+      Walk_Down_12: 9215709284977858617
+      Walk_Down_13: 4354733497795379152
+      Walk_Down_2: 2127659032470182028
+      Walk_Down_3: -4241166664574320460
+      Walk_Down_4: -4685979422728927703
+      Walk_Down_5: -5208022382498550526
+      Walk_Down_6: 7839089781559572045
+      Walk_Down_7: -1284474841241798095
+      Walk_Down_8: -5148968211168469266
+      Walk_Down_9: -7082898931484773722
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 295129
-  packageName: Pixelwood Valley 1.1.2 | 16x16 Pixel Art Asset Pack
-  packageVersion: 1.1.2
-  assetPath: Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Walk/Down.png
-  uploadId: 862570
