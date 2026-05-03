@@ -1,0 +1,20 @@
+{
+    "name": "Rootborn.Editor",
+    "rootNamespace": "Rootborn.Editor",
+    "references": [
+        "Rootborn.Game",
+        "Rootborn.UI",
+        "Rootborn.Network"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
