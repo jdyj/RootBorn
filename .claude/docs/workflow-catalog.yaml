@@ -1,0 +1,50 @@
+# 한국어 요약: 경로별 파이프라인 카탈로그. /gs-start 가 참조하여 라우팅.
+# 작성일: 2026-04-17 (P1)
+
+version: 1
+
+pipelines:
+  game_content:
+    description: "Unity Assets/ 경로 작업: 게임 콘텐츠·시스템 개발"
+    path_patterns:
+      - "Assets/Scripts/**"
+      - "Assets/Prefabs/**"
+      - "Assets/Data/**"
+      - "design/gdd/**"
+      - "production/**"
+    stages:
+      - { name: brainstorm,            skill: "/gs-brainstorm" }
+      - { name: design_system,         skill: "/gs-design-system" }
+      - { name: architecture_decision, skill: "/gs-architecture-decision" }
+      - { name: consistency_check,     skill: "/gs-consistency-check" }
+      - { name: gate_check,            skill: "/gs-gate-check" }
+      - { name: create_epics,          skill: "/gs-create-epics" }
+      - { name: create_stories,        skill: "/gs-create-stories" }
+      - { name: dev_story,             skill: "/gs-dev-story" }
+      - { name: code_review,           skill: "/gs-code-review" }
+      - { name: smoke_or_balance,      skill: "/gs-smoke-check|/gs-balance-check" }
+      - { name: story_done,            skill: "/gs-story-done" }
+      - { name: release_checklist,     skill: "/gs-release-checklist" }
+      - { name: patch_notes,           skill: "/gs-patch-notes" }
+
+  server_backend:
+    description: "server/ 경로 작업: Python/Flask 서버 기능"
+    path_patterns:
+      - "server/**/*.py"
+      - "web/**/*.ts*"
+    stages:
+      - { name: specify,   skill: "speckit.specify" }
+      - { name: clarify,   skill: "speckit.clarify" }
+      - { name: plan,      skill: "speckit.plan" }
+      - { name: tasks,     skill: "speckit.tasks" }
+      - { name: implement, skill: "speckit.implement" }
+      - { name: analyze,   skill: "speckit.analyze" }
+
+cross_cutting:
+  feedback_loop:
+    trigger_skill: "feedback-constitution-update"
+    trigger_phrases_ko: ["잘못됐다", "틀렸다", "그렇게 하지 마"]
+    trigger_phrases_en: ["wrong", "incorrect", "don't do that"]
+  dev_iteration:
+    skill: "dev-iteration-loop"
+    invoked_by: "/gs-dev-story Phase 4 (Implement)"

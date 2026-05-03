@@ -1,0 +1,54 @@
+# Unity
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vs/
+.idea/
+.vscode/
+
+# Brainstorm/local state
+.superpowers/
+.worktrees/
+.omc/
+**/.omc/
+_workspace/
+.claude/_workspace/
+.claude/scheduled_tasks.lock
+
+# Local-only secrets
+.env
+.env.local
+.env.dev
+.env.prod
+.env.*
+
+# Build artifacts
+Builds/
+Builds/Server/
+Builds/Client/
+Builds/Logs/
+artifacts/

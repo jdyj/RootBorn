@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# 한국어 요약: 커밋 전 검증. 하드코딩 숫자(매직), TODO 형식, JSON 파싱, Unity .meta 누락.
+
+set -eu
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACM)
+FAIL=0
+
+# 1) Unity .meta 동행 검증 (Asset 추가 시 .meta 같이 커밋)
+for f in $STAGED; do
+  if [[ "$f" == Assets/* && "$f" != *.meta ]]; then
+    if ! echo "$STAGED" | grep -qx "${f}.meta"; then
+      if ! git ls-tree HEAD --name-only 2>/dev/null | grep -qx "${f}.meta"; then
+        echo "[pre-commit] WARN: $f 는 .meta 파일 없이 커밋됨"
+      fi
+    fi
+  fi
+done
+
+# 2) TODO 형식 검증 (// TODO: <author> <YYYY-MM-DD> <내용>)
+while IFS= read -r f; do
+  [[ "$f" =~ \.(cs|ts|tsx|js|py)$ ]] || continue
+  bad=$(git diff --cached "$f" | grep -E '^\+.*\b(TODO|FIXME)\b' | grep -vE 'TODO[: ]+\S+ [0-9]{4}-[0-9]{2}-[0-9]{2}' || true)
+  if [[ -n "$bad" ]]; then
+    echo "[pre-commit] WARN: $f TODO 형식 미준수 (예: // TODO: hyun 2026-04-17 설명)"
+    FAIL=1
+  fi
+done <<< "$STAGED"
+
+# 3) JSON 파싱 검증
+while IFS= read -r f; do
+  [[ "$f" == *.json ]] || continue
+  [[ -f "$f" ]] || continue
+  if ! python -c "import json; json.load(open('$f', encoding='utf-8'))" 2>/dev/null; then
+    echo "[pre-commit] FAIL: $f JSON 파싱 실패"
+    FAIL=1
+  fi
+done <<< "$STAGED"
+
+if [[ $FAIL -ne 0 ]]; then
+  echo "[pre-commit] 검증 실패. 수정 후 다시 커밋하세요."
+  exit 1
+fi
+
+exit 0

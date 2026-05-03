@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# 한국어 요약: push 전 Unity Editor 락·최근 테스트 결과 확인.
+
+set -eu
+
+# Unity Editor 실행 중 확인
+if command -v tasklist >/dev/null 2>&1; then
+  if tasklist 2>/dev/null | grep -qi "Unity.exe"; then
+    echo "[pre-push] WARN: Unity Editor 실행 중. 빌드/테스트 CLI 와 락 충돌 가능."
+    echo "[pre-push]   계속 푸시하려면 이 경고는 무시 가능. Ctrl+C 로 중단."
+    sleep 2
+  fi
+fi
+
+# 최근 테스트 결과 확인 (있으면)
+LATEST_JUNIT=$(ls -t Logs/test-*.xml 2>/dev/null | head -1 || true)
+if [[ -n "$LATEST_JUNIT" ]]; then
+  if grep -q "<failure" "$LATEST_JUNIT" 2>/dev/null; then
+    echo "[pre-push] FAIL: 최근 테스트($LATEST_JUNIT)에 실패 케이스 존재."
+    echo "[pre-push]   tests 통과 후 다시 push 하세요. 긴급 시 --no-verify 사용."
+    exit 1
+  fi
+fi
+
+echo "[pre-push] OK"
+exit 0
