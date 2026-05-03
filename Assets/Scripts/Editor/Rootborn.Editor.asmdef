@@ -7,9 +7,7 @@
         "Rootborn.Network",
         "Unity.Netcode.Runtime",
         "Unity.Networking.Transport",
-        "Unity.InputSystem",
-        "Unity.2D.Sprite.Editor",
-        "Unity.2D.Tilemap.Editor"
+        "Unity.InputSystem"
     ],
     "includePlatforms": [
         "Editor"

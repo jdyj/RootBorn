@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEditor;
-using UnityEditor.U2D.Sprites;
 using UnityEngine;
 
 namespace Rootborn.Editor.Tools
@@ -99,7 +98,7 @@ namespace Rootborn.Editor.Tools
             importer.alphaIsTransparency = true;
             importer.isReadable = true;
 
-            EditorUtility.SetDirty(importer);
+            // First reimport so width/height are accurate before slicing.
             importer.SaveAndReimport();
 
             var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(target.AssetPath);
@@ -109,15 +108,10 @@ namespace Rootborn.Editor.Tools
                 return false;
             }
 
-            var factory = new SpriteDataProviderFactories();
-            factory.Init();
-            var provider = factory.GetSpriteEditorDataProviderFromObject(importer);
-            provider.InitSpriteEditorDataProvider();
-
             int cols = Mathf.Max(1, tex.width / target.CellW);
             int rows = target.SingleRow ? 1 : Mathf.Max(1, tex.height / target.CellH);
 
-            var rects = new List<SpriteRect>();
+            var metas = new List<SpriteMetaData>();
             for (int row = 0; row < rows; row++)
             {
                 for (int col = 0; col < cols; col++)
@@ -131,35 +125,24 @@ namespace Rootborn.Editor.Tools
                         ? $"{target.LabelPrefix}_{col}"
                         : $"{target.LabelPrefix}_r{row}_c{col}";
 
-                    rects.Add(new SpriteRect
+                    metas.Add(new SpriteMetaData
                     {
                         name = name,
-                        spriteID = GUID.Generate(),
                         rect = new Rect(x, yFromBottom, target.CellW, target.CellH),
-                        alignment = SpriteAlignment.Center,
+                        alignment = (int)SpriteAlignment.Center,
                         pivot = new Vector2(0.5f, 0.5f),
                         border = Vector4.zero
                     });
                 }
             }
 
-            provider.SetSpriteRects(rects.ToArray());
-
-            var nameFileIdProvider = provider.GetDataProvider<ISpriteNameFileIdDataProvider>();
-            if (nameFileIdProvider != null)
-            {
-                var pairs = new List<SpriteNameFileIdPair>();
-                foreach (var r in rects)
-                {
-                    pairs.Add(new SpriteNameFileIdPair(r.name, r.spriteID));
-                }
-                nameFileIdProvider.SetNameFileIdPairs(pairs);
-            }
-
-            provider.Apply();
+#pragma warning disable CS0618
+            importer.spritesheet = metas.ToArray();
+#pragma warning restore CS0618
+            EditorUtility.SetDirty(importer);
             importer.SaveAndReimport();
 
-            Debug.Log($"[ROOTBORN] Sliced {target.AssetPath} → {rects.Count} sprites ({cols}x{rows})");
+            Debug.Log($"[ROOTBORN] Sliced {target.AssetPath} → {metas.Count} sprites ({cols}x{rows})");
             return true;
         }
 
