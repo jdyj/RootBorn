@@ -54,15 +54,27 @@ namespace Rootborn.Game.Bootstrap
 
         private static void EnsureCamera()
         {
-            if (Camera.main != null) return;
-            var go = new GameObject("Main Camera");
-            var cam = go.AddComponent<Camera>();
+            // 기존 Main Camera가 있으면 재사용하되 Orthographic + 위치/배경 강제 셋업.
+            // SampleScene에서 복사한 Farm 씬은 3D 원근 카메라 + Skybox 클리어를 가지고 있을 수 있음.
+            Camera cam = Camera.main;
+            if (cam == null)
+            {
+                var go = new GameObject("Main Camera");
+                cam = go.AddComponent<Camera>();
+                go.tag = "MainCamera";
+            }
             cam.orthographic = true;
             cam.orthographicSize = 8f;
-            cam.backgroundColor = new Color(0.1f, 0.13f, 0.1f, 1f);
+            cam.backgroundColor = new Color(0.45f, 0.65f, 0.45f, 1f);
             cam.clearFlags = CameraClearFlags.SolidColor;
-            go.tag = "MainCamera";
-            go.transform.position = new Vector3(GroundCols * 0.5f, GroundRows * 0.5f, -10f);
+            cam.nearClipPlane = -50f;
+            cam.farClipPlane = 100f;
+            cam.transform.position = new Vector3(GroundCols * 0.5f, GroundRows * 0.5f, -10f);
+            cam.transform.rotation = Quaternion.identity;
+
+            // Skybox 끄기 + Audio Listener 한 개로 정리
+            var skybox = cam.GetComponent<Skybox>();
+            if (skybox != null) skybox.enabled = false;
         }
 
         private static Tilemap EnsureGroundTilemap()
@@ -186,14 +198,21 @@ namespace Rootborn.Game.Bootstrap
             if (FindObjectByName("Player") != null) return;
 
             // 즉시 sprite 단독 Player 생성 (Addressables 비동기 로드 대기 안 함)
-            // Animator 포함 프리팹은 후속 PR에서 동기 로드 가능한 경로로 전환.
             Sprite sprite = data != null ? data.PlayerSprite : null;
             if (sprite == null) sprite = registry.PlayerSprite;
+            if (sprite == null)
+            {
+                // Sprite를 못 찾으면 코드로 빨간 8x8 fallback sprite 생성 (시각적으로 명확히 보이도록)
+                sprite = MakeFallbackSprite(new Color(1f, 0.2f, 0.2f, 1f));
+                Debug.LogWarning("[ROOTBORN/AutoFiller] Player sprite not found. Using red fallback square.");
+            }
 
             var playerInstance = new GameObject("Player");
             var sr = playerInstance.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
             sr.sortingOrder = 5;
+            // Sprite가 너무 작으면(16x16, scale 1) 0.5x0.5 world unit. 보기 쉽게 2배 스케일.
+            playerInstance.transform.localScale = new Vector3(2f, 2f, 1f);
             playerInstance.transform.position = new Vector3(GroundCols * 0.5f, GroundRows * 0.5f, 0f);
 
             playerInstance.AddComponent<Rootborn.Game.Player.PlayerController>();
@@ -214,7 +233,15 @@ namespace Rootborn.Game.Bootstrap
                 }
             }
 
-            Debug.Log("[ROOTBORN/AutoFiller] Player spawned with GatherInteractor + KnowledgeProgress.");
+            // CameraFollow — Main Camera가 Player를 부드럽게 따라가도록
+            if (Camera.main != null)
+            {
+                var follow = Camera.main.GetComponent<Rootborn.Game.Player.CameraFollow>();
+                if (follow == null) follow = Camera.main.gameObject.AddComponent<Rootborn.Game.Player.CameraFollow>();
+                follow.SetTarget(playerInstance.transform);
+            }
+
+            Debug.Log("[ROOTBORN/AutoFiller] Player spawned with GatherInteractor + KnowledgeProgress + CameraFollow.");
         }
 
         private static GameObject FindObjectByName(string name)
@@ -228,6 +255,17 @@ namespace Rootborn.Game.Bootstrap
                 if (t != null) return t.gameObject;
             }
             return null;
+        }
+
+        private static Sprite MakeFallbackSprite(Color color)
+        {
+            const int size = 16;
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
+            var pixels = new Color[size * size];
+            for (int i = 0; i < pixels.Length; i++) pixels[i] = color;
+            tex.SetPixels(pixels);
+            tex.Apply();
+            return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 16f);
         }
     }
 }
