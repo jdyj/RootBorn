@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Tools.ToolDefinition
   _id: StoneAxe
   _displayKey: tool.stoneAxe
-  _icon: {fileID: 4085098624575878100, guid: ed5e6ce81f0627a43b6a20b711c2e1af, type: 3}
+  _icon: {fileID: 0}
   _powerMultiplier: 1.2
   _effects: []
   _isStartingTool: 0

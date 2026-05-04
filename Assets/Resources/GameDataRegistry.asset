@@ -36,4 +36,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 9f819980b0725a3458c06feefcb99dd4, type: 2}
   - {fileID: 11400000, guid: a05a1b60140b5694d8bc39ea94a1c6dd, type: 2}
   _groundSprite: {fileID: 8458300517651169097, guid: 176d930965cfdf64eb5cfdd08db865ab, type: 3}
-  _playerSprite: {fileID: 5903488652781262050, guid: 6935e6186fac5a04a902a407a7a7973a, type: 3}
+  _playerSprite: {fileID: -7212397726981208026, guid: 6935e6186fac5a04a902a407a7a7973a, type: 3}

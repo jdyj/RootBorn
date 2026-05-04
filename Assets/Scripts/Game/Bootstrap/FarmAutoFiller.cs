@@ -233,8 +233,9 @@ namespace Rootborn.Game.Bootstrap
             // sortingOrder 매우 크게 — 자원 노드(1)보다 무조건 위
             sr.sortingOrder = 1000;
             sr.sortingLayerID = 0;
-            // 16x16 픽셀 ÷ 16ppu = 1 world unit. 4배 스케일 → 4 world unit (자원 0.5~1보다 훨씬 큼)
-            playerInstance.transform.localScale = new Vector3(4f, 4f, 1f);
+            // 캐릭터 sheet는 49 PPU (CharCellH)로 임포트되어 1 world unit 정사각형.
+            // 자원 노드(16 ppu, 16x16 = 1 unit)와 비슷한 크기. 1.5배 정도 키워 인식성 보강.
+            playerInstance.transform.localScale = new Vector3(1.5f, 1.5f, 1f);
             // 자원 스폰 범위(2~28, 2~18)와 안 겹치는 가장자리에 스폰 (왼쪽 아래 코너)
             playerInstance.transform.position = new Vector3(1f, 1f, 0f);
 

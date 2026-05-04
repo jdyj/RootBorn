@@ -7,6 +7,9 @@ namespace Rootborn.Editor.Tools
     public static class PixelwoodSliceSetup
     {
         private const int CellSize = 16;
+        // Pixelwood Player Character: 236x49 (4프레임 × 59x49) — SlimeMaster 분석 보고서 기준
+        private const int CharCellW = 59;
+        private const int CharCellH = 49;
 
         private struct SliceTarget
         {
@@ -15,6 +18,7 @@ namespace Rootborn.Editor.Tools
             public int CellH;
             public bool SingleRow;
             public string LabelPrefix;
+            public int PixelsPerUnit; // 0이면 16 기본
         }
 
         private static readonly SliceTarget[] Targets = new[]
@@ -37,32 +41,32 @@ namespace Rootborn.Editor.Tools
             new SliceTarget
             {
                 AssetPath = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Idle/Down.png",
-                CellW = CellSize, CellH = CellSize, SingleRow = true, LabelPrefix = "Idle_Down"
+                CellW = CharCellW, CellH = CharCellH, SingleRow = true, LabelPrefix = "Idle_Down", PixelsPerUnit = CharCellH
             },
             new SliceTarget
             {
                 AssetPath = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Idle/Side.png",
-                CellW = CellSize, CellH = CellSize, SingleRow = true, LabelPrefix = "Idle_Side"
+                CellW = CharCellW, CellH = CharCellH, SingleRow = true, LabelPrefix = "Idle_Side", PixelsPerUnit = CharCellH
             },
             new SliceTarget
             {
                 AssetPath = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Idle/Up.png",
-                CellW = CellSize, CellH = CellSize, SingleRow = true, LabelPrefix = "Idle_Up"
+                CellW = CharCellW, CellH = CharCellH, SingleRow = true, LabelPrefix = "Idle_Up", PixelsPerUnit = CharCellH
             },
             new SliceTarget
             {
                 AssetPath = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Walk/Down.png",
-                CellW = CellSize, CellH = CellSize, SingleRow = true, LabelPrefix = "Walk_Down"
+                CellW = CharCellW, CellH = CharCellH, SingleRow = true, LabelPrefix = "Walk_Down", PixelsPerUnit = CharCellH
             },
             new SliceTarget
             {
                 AssetPath = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Walk/Side.png",
-                CellW = CellSize, CellH = CellSize, SingleRow = true, LabelPrefix = "Walk_Side"
+                CellW = CharCellW, CellH = CharCellH, SingleRow = true, LabelPrefix = "Walk_Side", PixelsPerUnit = CharCellH
             },
             new SliceTarget
             {
                 AssetPath = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Walk/Up.png",
-                CellW = CellSize, CellH = CellSize, SingleRow = true, LabelPrefix = "Walk_Up"
+                CellW = CharCellW, CellH = CharCellH, SingleRow = true, LabelPrefix = "Walk_Up", PixelsPerUnit = CharCellH
             }
         };
 
@@ -90,7 +94,7 @@ namespace Rootborn.Editor.Tools
 
             importer.textureType = TextureImporterType.Sprite;
             importer.spriteImportMode = SpriteImportMode.Multiple;
-            importer.spritePixelsPerUnit = 16;
+            importer.spritePixelsPerUnit = target.PixelsPerUnit > 0 ? target.PixelsPerUnit : 16;
             importer.filterMode = FilterMode.Point;
             importer.textureCompression = TextureImporterCompression.Uncompressed;
             importer.mipmapEnabled = false;

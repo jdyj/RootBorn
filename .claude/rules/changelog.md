@@ -30,6 +30,15 @@
 - 일반화: "동적 에셋 로딩은 Addressables 일원화. SlimeMaster의 단순 콜백 래퍼 대신 async/await + Release 명시. fallback Resources.Load는 단 한 번만 허용."
 
 
+## 2026-05-04 — Sprite sheet 셀 크기 추정 금지 (Pixelwood Idle/Down 사건)
+- 피드백: "idle down은 236x49인데 16으로 잘라도 되는거야?"
+- 원인: PixelwoodSliceSetup이 모든 sheet에 일괄 16×16 셀 적용. 캐릭터 sheet는 실제 59×49 셀이라 sliced sub-sprite가 잘못됨. 화면에 캐릭터가 안 보임.
+- 변경:
+  - `PixelwoodSliceSetup.cs` — 캐릭터 sheet 6개를 59×49 + PPU 49로 변경. SliceTarget에 PixelsPerUnit 필드 추가.
+  - `FarmAutoFiller` — Player scale 4 → 1.5 (PPU 49로 1 unit 정사각형이 됨).
+  - `rules/path-based/sprite-slicing.md` 신규 — Sheet별 실측 의무, PPU 통일 1 world unit 원칙, 정수 분할 검증, Pixelwood 구체 데이터 표.
+- 일반화: "외부 sprite sheet 추가 시 셀 크기 추정 금지. 텍스처 픽셀 크기 + 한 프레임 셀 크기 + PPU 셋 다 실측. 파일명에 적힌 숫자도 우연일 수 있음."
+
 ## 2026-05-04 — ROOTBORN 프로젝트 분기 (coin-defense → farmer)
 - 변경: coin-defense 하네스를 ROOTBORN(세대 진화 농장 생존 게임)용으로 fork
 - `constitution.md` — 헤더 "ROOTBORN", 원칙 2번 "코인 데이터드리븐" → "엔티티(작물·도구·지식·특성·세대) 데이터드리븐", 네임스페이스 `Rootborn.*`, 패시브 ADR-0002 절 삭제
