@@ -24,6 +24,15 @@
 - `Rootborn.Game.Managers.DataManager` — `GameDataRegistry` + 도메인별 Dictionary lookup
 - 부팅: `await Managers.BootstrapAsync()` (GameBootstrap.Start에서 호출)
 
+## Sub-sprite 로드 패턴 (Pixelwood multi-sprite PNG)
+
+Pixelwood처럼 한 PNG 안에 여러 sub-sprite를 가진 sheet를 사용할 때:
+1. **Editor**: `AddressablesSetup`이 sheet 자체를 그룹에 등록 (예: `sheet/Down`, `sheet/Tile`)
+2. **Runtime**: `Managers.Resource.LoadSubSpriteAsync(sheetAddress, subName)` 호출
+   - 내부적으로 `Addressables.LoadAssetAsync<IList<Sprite>>(sheetAddress)` → sub-sprite를 이름으로 매칭 + 캐시
+3. **상수 위치**: `DataManager.AddrSheetTile`, `AddrSheetIdleDown`, `SubGroundTile`, `SubPlayerIdle`
+   - 또는 `AddressableManifest` SO (사용자가 Inspector에서 sub-name 변경 가능)
+
 ## 금지
 - `Resources.Load<T>()` 신규 사용
   - **예외**: 부팅 실패 시 fallback (DataManager.InitAsync에서 Addressables 실패 시 Resources fallback 1회)

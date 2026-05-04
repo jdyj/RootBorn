@@ -16,8 +16,12 @@ namespace Rootborn.Game.Managers
     public sealed class DataManager
     {
         public const string AddrRegistry = "data/registry";
-        public const string AddrPlayerIdle = "sprites/player/idle_down";
-        public const string AddrGroundSprite = "sprites/ground";
+
+        // Sheet 주소 + sub-sprite 이름 (Pixelwood multi-sprite PNG에서 sliced sub 추출)
+        public const string AddrSheetTile = "sheet/Tile";
+        public const string AddrSheetIdleDown = "sheet/Down";
+        public const string SubGroundTile = "Tile_r2_c4";
+        public const string SubPlayerIdle = "Idle_Down_1";
 
         public GameDataRegistry Registry { get; private set; }
         public Sprite PlayerSprite { get; private set; }
@@ -56,19 +60,16 @@ namespace Rootborn.Game.Managers
 
             BuildLookups();
 
-            // 2) Sprite preload — 핵심 sprite (ground / player idle down)
-            //    Registry 자체에 직렬화된 GroundSprite/PlayerSprite 가 있으면 그것 우선.
-            GroundSprite = Registry.GroundSprite;
-            PlayerSprite = Registry.PlayerSprite;
+            // 2) Sprite preload — Addressables 우선 (sheet 주소 + sub-sprite 이름)
+            //    SlimeMaster 패턴: sheet 자체를 Addressables에 등록하고 sub-sprite는 이름으로 조회.
+            GroundSprite = await resource.LoadSubSpriteAsync(AddrSheetTile, SubGroundTile);
+            PlayerSprite = await resource.LoadSubSpriteAsync(AddrSheetIdleDown, SubPlayerIdle);
 
-            if (GroundSprite == null)
-            {
-                GroundSprite = await resource.LoadAsync<Sprite>(AddrGroundSprite);
-            }
-            if (PlayerSprite == null)
-            {
-                PlayerSprite = await resource.LoadAsync<Sprite>(AddrPlayerIdle);
-            }
+            // Fallback — Addressables 실패 시 Registry 직접참조 (개발 편의)
+            if (GroundSprite == null) GroundSprite = Registry.GroundSprite;
+            if (PlayerSprite == null) PlayerSprite = Registry.PlayerSprite;
+
+            Debug.Log($"[ROOTBORN/DataManager] Sprites loaded — Ground={(GroundSprite != null ? GroundSprite.name : "null")}, Player={(PlayerSprite != null ? PlayerSprite.name : "null")}");
 
             IsInitialized = true;
         }
