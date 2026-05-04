@@ -2,6 +2,71 @@
 
 이 문서는 모든 에이전트와 개발자가 따라야 하는 최상위 규칙이다. 구체적 가이드라인은 `.claude/rules/` 하위 파일을 참조한다.
 
+## 게임 비전 (One-liner)
+
+> **"한 캐릭터가 아니라, 세대를 통해 문명을 키우는 농장 생존 게임"**
+
+플레이어는 한 인물이 아니라 **가문/세대/문명**이다. 1세대는 맨손에서 시작하고, 후계자가 일부 능력·지식을 계승하며, 세대를 거듭할수록 도구·기반시설이 누적되어 문명이 발전한다.
+
+## 핵심 메카닉
+
+### 세대 시스템
+- **세대 = 진행 단위** (레벨 ❌ / 세대 ⭕)
+- 1세대 lifetimeSec(기본 1800초 ≈ 30분) 경과 시 자동 세대 교체
+- 세대 교체 시 `LineageBook`에 조상 기록 + `GenerationProfile.NextGeneration`으로 전환
+
+### 후계자 추상화 방식 (직접 육아 X)
+- `HeirGenerator.Generate(parentTraits, traitPool, seed)` 결정론적 생성
+- 부모의 inheritable trait를 **50% 확률로 1~2개 계승** + 랜덤 풀에서 1개 보너스
+- `isRandomOnly` trait는 부모로부터 계승 불가 (랜덤 풀에만 등장)
+- 동일 시드 → 동일 후계자 (테스트 결정론)
+
+### 도구 해금 (지식 기반)
+- 특정 행동 N회 반복 → 새로운 개념 발견 → 도구 제작 가능
+- 예: 맨손으로 돌을 땅에서 10회 타격 → `Knowledge_StoneTool` 해금 → `Tool_StoneAxe`/`Tool_StoneHoe` 제작 가능
+- `KnowledgeProgress` 액션 버스 + `KnowledgeTriggerBase[]` SO 다형 평가
+- AND 조건 (모든 trigger 만족 시 해금)
+
+### 상태 기반 제한
+- 배고픔/피로/외로움 (StatusEffectDefinition SO)
+- 100% 도달 시 행동 페널티 (이동 속도, 작업 실패율)
+- `StatusValue.Tick`으로 시간 누적, `Restore`로 회복
+
+### 단계 분해 제작
+- 모든 행동을 세분화 (예: 도끼 = 채집→가공→건조→조립)
+- `RecipeDefinition` SO + `CraftStepBase[]` 전략
+
+### 가문 특성 / 조상 시스템 (후속)
+- `LineageBook`에 누적된 조상이 영구 버프 제공 (예: 묘지 시스템)
+- 가문 trait는 모든 후계자에 자동 적용
+
+## 타겟 플랫폼
+
+- **PC 데스크톱 1순위** (Windows 64-bit, macOS/Linux 후속)
+- **기본 해상도**: 1920×1080 Borderless Fullscreen
+- **종횡비**: 16:9 우선, 16:10/21:9 그레이스풀 디그레이드
+- **입력**: 키보드+마우스 (WASD 이동, E/Space 채집, ESC 메뉴, F11 풀스크린)
+- **멀티플레이**: Unity Netcode for GameObjects (NGO) — 싱글/호스트/클라이언트/dedicated server 4모드. `rootborn-server.exe -mode server -port 7777 -maxPlayers 4 -saveSlot myfarm` 형태 실행.
+
+## 그래픽 자산
+
+- **Pixelwood Valley 1.1.2** + **Icon Pack 1.0** (Unity Asset Store, 16×16 픽셀아트)
+- 작물 80종, 도구 아이콘 315개, 타일 180종, 캐릭터 6방향(Idle/Walk × Down/Side/Up) × 4프레임
+- Sprite sheet 슬라이스 규칙: `rules/path-based/sprite-slicing.md`
+- **캐릭터 sheet는 59×49** (16×16 아님), Tile/Crops/Items만 16×16
+
+## MVP 스코프 (현재)
+
+1. **1세대 + 2세대 + 도구 해금** (지식 기반)
+2. 맨손 농사 + 자원 채집(나무/돌)
+3. 배고픔/피로/외로움 상태
+4. 시간/일자 시스템 (`GameClock`)
+5. 후계자 추상화 + 가문 누적
+6. dedicated server 빌드 + 클라 접속
+
+후속 (post-MVP):
+- 직접 육아 옵션, 마을/NPC, 문화/신념(비 부르는 의식, 작물 숭배), 조상 묘지 버프
+
 ## 기술 스택
 
 - **Unity 6000.3.13f1 (Unity 6)** 2D

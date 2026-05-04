@@ -73,7 +73,8 @@ namespace Rootborn.Game.Player
 
             if (_renderer != null && Mathf.Abs(_input.x) > 0.01f)
             {
-                _renderer.flipX = _input.x < 0f;
+                // Pixelwood Side.png 원본은 왼쪽을 향함 → 오른쪽 입력일 때 flipX
+                _renderer.flipX = _input.x > 0f;
             }
         }
 

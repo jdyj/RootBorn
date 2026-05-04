@@ -30,6 +30,14 @@
 - 일반화: "동적 에셋 로딩은 Addressables 일원화. SlimeMaster의 단순 콜백 래퍼 대신 async/await + Release 명시. fallback Resources.Load는 단 한 번만 허용."
 
 
+## 2026-05-04 — Sprite 원본 방향 실측 (Pixelwood Side flipX 사건)
+- 피드백: "왼쪽 오른쪽 뛰는게 반대야"
+- 원인: Pixelwood Player Character Side.png 원본이 왼쪽을 향함. 일반 관례(원본=오른쪽) 가정으로 flipX = (input.x < 0)로 작성 → 좌우 반대 동작.
+- 변경:
+  - `PlayerController.cs` — flipX 조건 부호 반전 + 주석 명시
+  - `rules/path-based/sprite-slicing.md` — "Sprite 원본 방향 (flipX 부호)" 섹션 추가, 원본 확인 절차 + 부호 규칙
+- 일반화: "Side-view sprite의 원본 방향은 일반 관례에 의존하지 말고 PNG를 직접 보고 실측. 코드에 주석으로 원본 방향 명시."
+
 ## 2026-05-04 — Sprite sheet 셀 크기 추정 금지 (Pixelwood Idle/Down 사건)
 - 피드백: "idle down은 236x49인데 16으로 잘라도 되는거야?"
 - 원인: PixelwoodSliceSetup이 모든 sheet에 일괄 16×16 셀 적용. 캐릭터 sheet는 실제 59×49 셀이라 sliced sub-sprite가 잘못됨. 화면에 캐릭터가 안 보임.

@@ -97,6 +97,24 @@ public static void Verify() {
 }
 ```
 
+## Sprite 원본 방향 (flipX 부호)
+
+**Side-view 캐릭터 sprite는 원본이 어느 방향을 보는지 실측**해야 flipX 부호가 정확하다.
+
+### 사례 (2026-05-04)
+Pixelwood `Player Character/Idle/Side.png`, `Walk/Side.png`는 **원본이 왼쪽을 향함**.
+처음에 일반적 관례(원본 = 오른쪽)로 가정해 `flipX = (input.x < 0)`로 작성 → 게임에서 좌우 반대로 보임.
+
+### 규칙
+1. 새 sprite 추가 시 **PNG를 직접 보고** 원본 방향 확인 (Read 도구로 텍스처 표시 가능)
+2. 원본이 오른쪽을 향함 → `flipX = (input.x < 0)`
+3. 원본이 왼쪽을 향함 → `flipX = (input.x > 0)` ← **Pixelwood Player**
+4. 코드에 주석으로 어느 방향이 원본인지 명시:
+   ```csharp
+   // Pixelwood Side.png 원본은 왼쪽을 향함 → 오른쪽 입력일 때 flipX
+   _renderer.flipX = _input.x > 0f;
+   ```
+
 ## Pixelwood Valley 구체 데이터
 
 | Sheet | 크기 | Cell | PPU | Frames |
