@@ -197,23 +197,30 @@ namespace Rootborn.Game.Bootstrap
         {
             if (FindObjectByName("Player") != null) return;
 
-            // 즉시 sprite 단독 Player 생성 (Addressables 비동기 로드 대기 안 함)
+            // Sprite 우선순위: DataManager → Registry → fallback red square
             Sprite sprite = data != null ? data.PlayerSprite : null;
             if (sprite == null) sprite = registry.PlayerSprite;
+
+            string spriteSource = sprite != null ? sprite.name : "<null>";
             if (sprite == null)
             {
-                // Sprite를 못 찾으면 코드로 빨간 8x8 fallback sprite 생성 (시각적으로 명확히 보이도록)
                 sprite = MakeFallbackSprite(new Color(1f, 0.2f, 0.2f, 1f));
-                Debug.LogWarning("[ROOTBORN/AutoFiller] Player sprite not found. Using red fallback square.");
+                spriteSource = "fallback-red-16x16";
+                Debug.LogWarning("[ROOTBORN/AutoFiller] Player sprite not found in Registry. Using red fallback square.");
             }
 
             var playerInstance = new GameObject("Player");
             var sr = playerInstance.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
-            sr.sortingOrder = 5;
-            // Sprite가 너무 작으면(16x16, scale 1) 0.5x0.5 world unit. 보기 쉽게 2배 스케일.
-            playerInstance.transform.localScale = new Vector3(2f, 2f, 1f);
-            playerInstance.transform.position = new Vector3(GroundCols * 0.5f, GroundRows * 0.5f, 0f);
+            // sortingOrder 매우 크게 — 자원 노드(1)보다 무조건 위
+            sr.sortingOrder = 1000;
+            sr.sortingLayerID = 0;
+            // 16x16 픽셀 ÷ 16ppu = 1 world unit. 4배 스케일 → 4 world unit (자원 0.5~1보다 훨씬 큼)
+            playerInstance.transform.localScale = new Vector3(4f, 4f, 1f);
+            // 자원 스폰 범위(2~28, 2~18)와 안 겹치는 가장자리에 스폰 (왼쪽 아래 코너)
+            playerInstance.transform.position = new Vector3(1f, 1f, 0f);
+
+            Debug.Log($"[ROOTBORN/AutoFiller] Player sprite='{spriteSource}', size={sprite.rect.size}, ppu={sprite.pixelsPerUnit}, position=(1,1), scale=4x.");
 
             playerInstance.AddComponent<Rootborn.Game.Player.PlayerController>();
 
