@@ -197,16 +197,34 @@ namespace Rootborn.Game.Bootstrap
         {
             if (FindObjectByName("Player") != null) return;
 
-            // Sprite 우선순위: DataManager → Registry → fallback red square
+            // Sprite 우선순위: DataManager → Registry → 런타임 동적 검색 → fallback red square
             Sprite sprite = data != null ? data.PlayerSprite : null;
             if (sprite == null) sprite = registry.PlayerSprite;
+            string spriteSource = sprite != null ? sprite.name : null;
 
-            string spriteSource = sprite != null ? sprite.name : "<null>";
+            if (sprite == null)
+            {
+                // Registry 와이어링 실패 시 — 메모리에 로드된 모든 Sprite 중에서 'Idle_Down_'으로 시작하는
+                // sub-sprite를 검색 (Pixelwood Slice 결과가 메모리에 있다면 잡힘)
+                var allSprites = UnityEngine.Resources.FindObjectsOfTypeAll<Sprite>();
+                foreach (var s in allSprites)
+                {
+                    if (s == null) continue;
+                    if (s.name.StartsWith("Idle_Down_"))
+                    {
+                        sprite = s;
+                        spriteSource = $"runtime-search:{s.name}";
+                        break;
+                    }
+                }
+            }
+
             if (sprite == null)
             {
                 sprite = MakeFallbackSprite(new Color(1f, 0.2f, 0.2f, 1f));
                 spriteSource = "fallback-red-16x16";
-                Debug.LogWarning("[ROOTBORN/AutoFiller] Player sprite not found in Registry. Using red fallback square.");
+                Debug.LogWarning("[ROOTBORN/AutoFiller] Player sprite not found in Registry or runtime search. " +
+                                 "Run 'Rootborn → Setup Everything' to wire PlayerSprite.");
             }
 
             var playerInstance = new GameObject("Player");

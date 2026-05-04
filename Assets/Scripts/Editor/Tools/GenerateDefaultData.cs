@@ -200,8 +200,28 @@ namespace Rootborn.Editor.Tools
             }
             if (groundSprite == null && tileSprites.Length > 0) groundSprite = tileSprites[0];
 
+            // PlayerSprite — Pixelwood Idle/Down.png의 sub-sprite. Slice가 끝났는지 확인.
             var playerSprites = LoadSubSprites(PlayerIdleDownPath);
-            Sprite playerSprite = playerSprites.Length > 0 ? playerSprites[0] : null;
+            if (playerSprites.Length == 0)
+            {
+                Debug.LogWarning($"[ROOTBORN/GenerateData] No sub-sprites found at {PlayerIdleDownPath}. " +
+                                 "Reimporting and retrying...");
+                AssetDatabase.ImportAsset(PlayerIdleDownPath, ImportAssetOptions.ForceUpdate);
+                AssetDatabase.Refresh();
+                playerSprites = LoadSubSprites(PlayerIdleDownPath);
+            }
+            Sprite playerSprite = null;
+            if (playerSprites.Length > 0)
+            {
+                // 중간 프레임(인덱스 1)을 우선 — 첫 프레임이 빈 공간일 수 있음
+                playerSprite = playerSprites.Length > 1 ? playerSprites[1] : playerSprites[0];
+                Debug.Log($"[ROOTBORN/GenerateData] PlayerSprite wired: '{playerSprite.name}' from {PlayerIdleDownPath} ({playerSprites.Length} sub-sprites available).");
+            }
+            else
+            {
+                Debug.LogError($"[ROOTBORN/GenerateData] Could not load any sub-sprite from {PlayerIdleDownPath}. " +
+                               "Player will use red fallback. Re-run 'Rootborn → Pixelwood → Slice Sprite Sheets' manually.");
+            }
 
             // 기존 Assets/Data/Registry 위치의 SO가 있으면 정리 (Resources/로 옮길 예정)
             DeleteIfExists($"{DataRoot}/Registry/GameDataRegistry.asset");

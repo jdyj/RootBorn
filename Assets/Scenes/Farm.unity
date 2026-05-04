@@ -588,7 +588,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &1178267096
+--- !u!1001 &1346910230
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -873,4 +873,4 @@ SceneRoots:
   - {fileID: 1469218972}
   - {fileID: 679711434}
   - {fileID: 1393491378}
-  - {fileID: 1178267096}
+  - {fileID: 1346910230}
