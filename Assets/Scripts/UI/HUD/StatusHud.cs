@@ -8,6 +8,26 @@ using UnityEngine.UI;
 
 namespace Rootborn.UI.HUD
 {
+    /// <summary>
+    /// HUD 폰트 캐시. Pixelwood Wood UI 의 VaultUI.ttf 를 Resources/Fonts/ 에서 로드,
+    /// 없으면 LegacyRuntime.ttf fallback. UnityEngine.UI.Text 가 .ttf 를 직접 사용하므로
+    /// SDF 변환 불필요. Static 캐싱으로 매번 Resources.Load 비용 회피.
+    /// </summary>
+    internal static class HudFonts
+    {
+        private static Font _cached;
+        public static Font Pixel
+        {
+            get
+            {
+                if (_cached != null) return _cached;
+                _cached = Resources.Load<Font>("Fonts/VaultUI");
+                if (_cached == null) _cached = HudFonts.Pixel;
+                return _cached;
+            }
+        }
+    }
+
     public sealed class StatusHud : MonoBehaviour
     {
         [SerializeField] private PlayerStatus _playerStatus;
@@ -238,7 +258,7 @@ namespace Rootborn.UI.HUD
             t.text = isLeft ? "▶" : "◀";
             t.alignment = TextAnchor.MiddleCenter;
             t.color = new Color(0.85f, 0.2f, 0.15f, 1f);
-            t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            t.font = HudFonts.Pixel;
             t.fontStyle = FontStyle.Bold;
             t.fontSize = 22;
             t.raycastTarget = false;
@@ -268,7 +288,7 @@ namespace Rootborn.UI.HUD
             var lbl = labelGo.GetComponent<Text>();
             lbl.alignment = TextAnchor.LowerRight;
             lbl.color = Color.white;
-            lbl.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            lbl.font = HudFonts.Pixel;
             lbl.fontSize = 14;
             return go;
         }
@@ -860,7 +880,7 @@ namespace Rootborn.UI.HUD
             t.alignment = TextAnchor.UpperLeft;
             t.fontSize = 18;
             t.color = new Color(0.3f, 0.2f, 0.1f, 1f);
-            t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            t.font = HudFonts.Pixel;
 
             _rightPagesByCat[BookCategory.Equipment] = rightStats;
         }
@@ -1038,7 +1058,7 @@ namespace Rootborn.UI.HUD
             _selectedDescriptionLabel.alignment = TextAnchor.UpperLeft;
             _selectedDescriptionLabel.fontSize = 16;
             _selectedDescriptionLabel.color = new Color(0.3f, 0.2f, 0.1f, 1f);
-            _selectedDescriptionLabel.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _selectedDescriptionLabel.font = HudFonts.Pixel;
             _selectedDescriptionLabel.text = "";
 
             // EQUIP 버튼 — 우측 페이지 하단 중앙. 도구 선택 시에만 OnSlotSelected 가 활성화.
@@ -1150,7 +1170,7 @@ namespace Rootborn.UI.HUD
             lbl.alignment = TextAnchor.MiddleCenter;
             lbl.fontSize = 18;
             lbl.color = new Color(0.3f, 0.2f, 0.1f, 1f);
-            lbl.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            lbl.font = HudFonts.Pixel;
             lbl.fontStyle = FontStyle.Bold;
             lbl.raycastTarget = false;
             return go;
@@ -1192,7 +1212,7 @@ namespace Rootborn.UI.HUD
             var lbl = labelGo.GetComponent<Text>();
             lbl.alignment = TextAnchor.LowerRight;
             lbl.color = new Color(1f, 1f, 1f, 0.95f);
-            lbl.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            lbl.font = HudFonts.Pixel;
             lbl.fontSize = 18;
             lbl.fontStyle = FontStyle.Bold;
             lbl.raycastTarget = false;
@@ -1278,7 +1298,7 @@ namespace Rootborn.UI.HUD
             t.fontSize = fontSize;
             t.alignment = align;
             t.color = Color.white;
-            t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            t.font = HudFonts.Pixel;
             return t;
         }
 

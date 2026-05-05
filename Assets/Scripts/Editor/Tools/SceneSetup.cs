@@ -194,7 +194,7 @@ namespace Rootborn.Editor.Tools
             text.alignment = TextAnchor.MiddleCenter;
             text.fontSize = 22;
             text.color = new Color(0.95f, 0.92f, 0.85f, 1f);
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = Resources.Load<Font>("Fonts/VaultUI") ?? Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
             return btn;
         }
