@@ -23,3 +23,5 @@ MonoBehaviour:
     _minCount: 1
     _maxCount: 2
   _surfaceTag: ground
+  _isWalkable: 0
+  _colliderSize: {x: 1, y: 1}

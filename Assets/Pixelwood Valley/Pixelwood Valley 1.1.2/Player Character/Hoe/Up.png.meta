@@ -1,5 +1,12 @@
 fileFormatVersion: 2
 guid: 741cab4018270d54ba4409a227db5cba
+AssetOrigin:
+  serializedVersion: 1
+  productId: 295129
+  packageName: Pixelwood Valley 1.1.2 | 16x16 Pixel Art Asset Pack
+  packageVersion: 1.1.2
+  assetPath: Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Hoe/Up.png
+  uploadId: 862570
 TextureImporter:
   internalIDToNameTable:
   - first:
@@ -20,6 +27,24 @@ TextureImporter:
   - first:
       213: -9094157908607221786
     second: Up_5
+  - first:
+      213: -1742521449576792347
+    second: Hoe_Up_0
+  - first:
+      213: -1321939289214999260
+    second: Hoe_Up_1
+  - first:
+      213: 3551717432580209874
+    second: Hoe_Up_2
+  - first:
+      213: 4073522499088041037
+    second: Hoe_Up_3
+  - first:
+      213: 9165852073447325789
+    second: Hoe_Up_4
+  - first:
+      213: -2868870895316536221
+    second: Hoe_Up_5
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -39,7 +64,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 0
+  isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -66,7 +91,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 16
+  spritePixelsToUnits: 49
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -90,7 +115,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: 4
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -141,7 +166,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Up_0
+      name: Hoe_Up_0
       rect:
         serializedVersion: 2
         x: 0
@@ -149,21 +174,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 19461def9f5e1fad0800000000000000
-      internalID: -2670100242169240431
+      spriteID: 5eef97059f151d7e0800000000000000
+      internalID: -1742521449576792347
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Up_1
+      name: Hoe_Up_1
       rect:
         serializedVersion: 2
         x: 59
@@ -171,21 +196,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 6b5ea8f5c09b723a0800000000000000
-      internalID: -6690175258641898058
+      spriteID: 42525bb683787ade0800000000000000
+      internalID: -1321939289214999260
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Up_2
+      name: Hoe_Up_2
       rect:
         serializedVersion: 2
         x: 118
@@ -193,21 +218,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: adf1c0e446df6c830800000000000000
-      internalID: 4091235918760648666
+      spriteID: 2dc7187ef2c3a4130800000000000000
+      internalID: 3551717432580209874
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Up_3
+      name: Hoe_Up_3
       rect:
         serializedVersion: 2
         x: 177
@@ -215,21 +240,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 10808bec35a98dbd0800000000000000
-      internalID: -2605162699692701695
+      spriteID: d4444b6612f088830800000000000000
+      internalID: 4073522499088041037
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Up_4
+      name: Hoe_Up_4
       rect:
         serializedVersion: 2
         x: 236
@@ -237,21 +262,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3ac9ba6331db18e40800000000000000
-      internalID: 5657010497173298339
+      spriteID: d500b95e5e5a33f70800000000000000
+      internalID: 9165852073447325789
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Up_5
+      name: Hoe_Up_5
       rect:
         serializedVersion: 2
         x: 295
@@ -259,15 +284,15 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 6ef3826a09f0bc180800000000000000
-      internalID: -9094157908607221786
+      spriteID: 3647332ee19bf28d0800000000000000
+      internalID: -2868870895316536221
       vertices: []
       indices: 
       edges: []
@@ -288,6 +313,12 @@ TextureImporter:
       - key: SpriteEditor.SliceSettings
         value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":59.0,"y":49.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
+      Hoe_Up_0: -1742521449576792347
+      Hoe_Up_1: -1321939289214999260
+      Hoe_Up_2: 3551717432580209874
+      Hoe_Up_3: 4073522499088041037
+      Hoe_Up_4: 9165852073447325789
+      Hoe_Up_5: -2868870895316536221
       Up_0: -2670100242169240431
       Up_1: -6690175258641898058
       Up_2: 4091235918760648666
@@ -299,10 +330,3 @@ TextureImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 295129
-  packageName: Pixelwood Valley 1.1.2 | 16x16 Pixel Art Asset Pack
-  packageVersion: 1.1.2
-  assetPath: Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Hoe/Up.png
-  uploadId: 862570

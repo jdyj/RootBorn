@@ -215,14 +215,35 @@ namespace Rootborn.Editor.Tools
             var sr = template.AddComponent<SpriteRenderer>();
             sr.sprite = defaultSprite;
             sr.sortingOrder = 5;
+
+            // 시각 크기를 자원(16ppu, art 거의 가득)과 맞추기 위해 2.0×.
+            template.transform.localScale = new Vector3(2.0f, 2.0f, 1f);
+
             var animator = template.AddComponent<Animator>();
             animator.runtimeAnimatorController = controller;
             animator.applyRootMotion = false;
+
+            // Rigidbody2D (Dynamic) + BoxCollider2D — 자원 collider 와 자동 차단.
+            var rb = template.AddComponent<Rigidbody2D>();
+            rb.bodyType = RigidbodyType2D.Dynamic;
+            rb.gravityScale = 0f;
+            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+            rb.interpolation = RigidbodyInterpolation2D.Interpolate;
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+            rb.linearDamping = 8f;
+
+            var pcol = template.AddComponent<BoxCollider2D>();
+            pcol.size = new Vector2(0.6f, 0.5f);
+            pcol.offset = new Vector2(0f, -0.25f);
+            pcol.isTrigger = false;
+
             var ctrl = template.AddComponent<PlayerController>();
 
             var so = new SerializedObject(ctrl);
             so.FindProperty("_animator").objectReferenceValue = animator;
             so.FindProperty("_renderer").objectReferenceValue = sr;
+            var rbProp = so.FindProperty("_rb");
+            if (rbProp != null) rbProp.objectReferenceValue = rb;
             so.ApplyModifiedPropertiesWithoutUndo();
 
             var prefab = PrefabUtility.SaveAsPrefabAsset(template, PrefabPath);

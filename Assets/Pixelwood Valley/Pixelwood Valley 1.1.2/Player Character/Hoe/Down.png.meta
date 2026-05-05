@@ -1,5 +1,12 @@
 fileFormatVersion: 2
 guid: 1f26009cbe8bfb841acd274640589f9d
+AssetOrigin:
+  serializedVersion: 1
+  productId: 295129
+  packageName: Pixelwood Valley 1.1.2 | 16x16 Pixel Art Asset Pack
+  packageVersion: 1.1.2
+  assetPath: Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Hoe/Down.png
+  uploadId: 862570
 TextureImporter:
   internalIDToNameTable:
   - first:
@@ -23,6 +30,27 @@ TextureImporter:
   - first:
       213: 7353181526286870562
     second: Down_6
+  - first:
+      213: -413632805273072064
+    second: Hoe_Down_0
+  - first:
+      213: 4275119874142350648
+    second: Hoe_Down_1
+  - first:
+      213: -4620259025277398517
+    second: Hoe_Down_2
+  - first:
+      213: -9176820872455916404
+    second: Hoe_Down_3
+  - first:
+      213: 2070157369183509601
+    second: Hoe_Down_4
+  - first:
+      213: 5518419032662123517
+    second: Hoe_Down_5
+  - first:
+      213: 3278842039292335996
+    second: Hoe_Down_6
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -42,7 +70,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 0
+  isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -69,7 +97,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 16
+  spritePixelsToUnits: 49
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -93,7 +121,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: 4
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -144,7 +172,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Down_0
+      name: Hoe_Down_0
       rect:
         serializedVersion: 2
         x: 0
@@ -152,21 +180,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 5cce9415b760a6820800000000000000
-      internalID: 2912147235762990277
+      spriteID: 04e0046b72b724af0800000000000000
+      internalID: -413632805273072064
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Down_1
+      name: Hoe_Down_1
       rect:
         serializedVersion: 2
         x: 59
@@ -174,21 +202,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 28cf92e0e86a4b8b0800000000000000
-      internalID: -5137298145869693822
+      spriteID: 83da77effd6445b30800000000000000
+      internalID: 4275119874142350648
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Down_2
+      name: Hoe_Down_2
       rect:
         serializedVersion: 2
         x: 118
@@ -196,21 +224,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3510e49b6ea18be10800000000000000
-      internalID: 2213548795106296147
+      spriteID: b025c0c45ea81efb0800000000000000
+      internalID: -4620259025277398517
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Down_3
+      name: Hoe_Down_3
       rect:
         serializedVersion: 2
         x: 177
@@ -218,21 +246,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 1918030ecf91c4e50800000000000000
-      internalID: 6794834511678964113
+      spriteID: c84ffd1990265a080800000000000000
+      internalID: -9176820872455916404
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Down_4
+      name: Hoe_Down_4
       rect:
         serializedVersion: 2
         x: 236
@@ -240,21 +268,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 2fdb64ddce2463fb0800000000000000
-      internalID: -4668470378630824462
+      spriteID: 16c175bb82daabc10800000000000000
+      internalID: 2070157369183509601
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Down_5
+      name: Hoe_Down_5
       rect:
         serializedVersion: 2
         x: 295
@@ -262,21 +290,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3434d63243f4b30d0800000000000000
-      internalID: -3442070404843355325
+      spriteID: df3a4935fdc559c40800000000000000
+      internalID: 5518419032662123517
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Down_6
+      name: Hoe_Down_6
       rect:
         serializedVersion: 2
         x: 354
@@ -284,15 +312,15 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 2282b4ba3afbb0660800000000000000
-      internalID: 7353181526286870562
+      spriteID: c7713a27679c08d20800000000000000
+      internalID: 3278842039292335996
       vertices: []
       indices: 
       edges: []
@@ -320,15 +348,15 @@ TextureImporter:
       Down_4: -4668470378630824462
       Down_5: -3442070404843355325
       Down_6: 7353181526286870562
+      Hoe_Down_0: -413632805273072064
+      Hoe_Down_1: 4275119874142350648
+      Hoe_Down_2: -4620259025277398517
+      Hoe_Down_3: -9176820872455916404
+      Hoe_Down_4: 2070157369183509601
+      Hoe_Down_5: 5518419032662123517
+      Hoe_Down_6: 3278842039292335996
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 295129
-  packageName: Pixelwood Valley 1.1.2 | 16x16 Pixel Art Asset Pack
-  packageVersion: 1.1.2
-  assetPath: Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Hoe/Down.png
-  uploadId: 862570

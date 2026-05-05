@@ -14,7 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Tools.ToolDefinition
   _id: StoneHoe
   _displayKey: tool.stoneHoe
-  _icon: {fileID: 0}
+  _icon: {fileID: -9219709590976465790, guid: ed5e6ce81f0627a43b6a20b711c2e1af, type: 3}
   _powerMultiplier: 1
-  _effects: []
+  _effects:
+  - {fileID: 11400000, guid: 9991dbf28548bc34b98b3eb158b9f7a1, type: 2}
+  - {fileID: 11400000, guid: b2b7c056623f5e84d977f893486e2d08, type: 2}
   _isStartingTool: 0
+  _description: Power x1.0. Tills the soil for planting crops.

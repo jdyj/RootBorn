@@ -25,4 +25,10 @@ MonoBehaviour:
   - 30
   - 30
   _requiredHarvestTool: {fileID: 0}
-  _behaviors: []
+  _behaviors:
+  - {fileID: 11400000, guid: da99148f879dcab46ba9a957c5a2b7ad, type: 2}
+  - {fileID: 11400000, guid: c25c9e4189b4912428227105d737d36f, type: 2}
+  _seedItem: {fileID: 11400000, guid: de7ab58f46b31e044aa7f8349785515d, type: 2}
+  _harvestItem: {fileID: 11400000, guid: 64681a5dbbf386240a61ed88c3b3ff95, type: 2}
+  _harvestYieldMin: 1
+  _harvestYieldMax: 2

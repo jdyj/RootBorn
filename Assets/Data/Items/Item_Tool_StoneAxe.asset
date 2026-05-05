@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4de13b4451ac7ee45b96ce4941eee002, type: 3}
+  m_Name: Item_Tool_StoneAxe
+  m_EditorClassIdentifier: Rootborn.Game:Rootborn.Game.Common:ItemDefinition
+  _id: StoneAxe
+  _displayKey: tool.stoneAxe
+  _icon: {fileID: 4765772163910845476, guid: ed5e6ce81f0627a43b6a20b711c2e1af, type: 3}
+  _maxStack: 1
+  _category: 1
+  _description: A sharpened stone lashed to a sturdy stick. Cuts through tree trunks
+    where bare hands would only bruise.

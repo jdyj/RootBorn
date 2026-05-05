@@ -18,6 +18,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 5e36fb0bfb8264044bb95e1c8de70da2, type: 2}
   - {fileID: 11400000, guid: 58d3c252b9385d546922d09ce0b6cc49, type: 2}
   - {fileID: 11400000, guid: e46a4ff10413c624d98c902ee02a5e74, type: 2}
+  - {fileID: 11400000, guid: 89c4756a622ce0744bd813366d4cf7eb, type: 2}
+  - {fileID: 11400000, guid: aa8baa823dbbaeb4da52709db41b8f69, type: 2}
+  - {fileID: 11400000, guid: d4f0708c9bc563c44bca8f612d05cb4c, type: 2}
   _resources:
   - {fileID: 11400000, guid: eb231f93a6f0fe5418e8c0754b131733, type: 2}
   - {fileID: 11400000, guid: 5a341bbcb8c7a8e49a3be09dda21cf30, type: 2}
@@ -35,5 +38,13 @@ MonoBehaviour:
   _generations:
   - {fileID: 11400000, guid: 9f819980b0725a3458c06feefcb99dd4, type: 2}
   - {fileID: 11400000, guid: a05a1b60140b5694d8bc39ea94a1c6dd, type: 2}
+  _items:
+  - {fileID: 11400000, guid: 704ab36b76618c444bb49c6bcff56993, type: 2}
+  - {fileID: 11400000, guid: a612e54fcdc092a43a184aa357c8fbaf, type: 2}
+  - {fileID: 11400000, guid: 6c981352b9004d74aa432f3ebedec29e, type: 2}
+  - {fileID: 11400000, guid: 9b1a1df6b1cacd5408271379327b45fd, type: 2}
+  - {fileID: 11400000, guid: de7ab58f46b31e044aa7f8349785515d, type: 2}
+  - {fileID: 11400000, guid: 64681a5dbbf386240a61ed88c3b3ff95, type: 2}
+  - {fileID: 11400000, guid: d97d52a17ccd71d428b24f868e7b34e0, type: 2}
   _groundSprite: {fileID: 8458300517651169097, guid: 176d930965cfdf64eb5cfdd08db865ab, type: 3}
   _playerSprite: {fileID: -7212397726981208026, guid: 6935e6186fac5a04a902a407a7a7973a, type: 3}

@@ -23,6 +23,82 @@ namespace Rootborn.Editor.Tools
         private const string AddrPlayerPrefab = "prefabs/player";
         private const string AddrGroundTile = "tiles/ground";
 
+        // Fantasy Book UI V2 — UI sprite addresses (모두 PreLoad 라벨로 부팅 시 일괄 로드).
+        private const string FantasyBookRoot = "Assets/Pixelwood Valley/Fantasy Book UI V2/1.0/Sprites";
+        private static readonly (string assetPath, string address)[] UiSpriteEntries = new[]
+        {
+            // Book pages — Page1~9 는 페이지 넘김 9프레임 애니메이션. Page1=정지, 1→9 책장 넘김.
+            ($"{FantasyBookRoot}/Page + Animation/Page1.png",           "sprites/ui/book/page-1"),
+            ($"{FantasyBookRoot}/Page + Animation/Page2.png",           "sprites/ui/book/page-2"),
+            ($"{FantasyBookRoot}/Page + Animation/Page3.png",           "sprites/ui/book/page-3"),
+            ($"{FantasyBookRoot}/Page + Animation/Page4.png",           "sprites/ui/book/page-4"),
+            ($"{FantasyBookRoot}/Page + Animation/Page5.png",           "sprites/ui/book/page-5"),
+            ($"{FantasyBookRoot}/Page + Animation/Page6.png",           "sprites/ui/book/page-6"),
+            ($"{FantasyBookRoot}/Page + Animation/Page7.png",           "sprites/ui/book/page-7"),
+            ($"{FantasyBookRoot}/Page + Animation/Page8.png",           "sprites/ui/book/page-8"),
+            ($"{FantasyBookRoot}/Page + Animation/Page9.png",           "sprites/ui/book/page-9"),
+            ($"{FantasyBookRoot}/Unique/DarkerPage.png",                "sprites/ui/book/spine"),
+
+            // Sizeable boxes (HUD/단축키 패널/PREV·NEXT 버튼)
+            ($"{FantasyBookRoot}/Sizeable Boxes/3.png",                 "sprites/ui/panel/hud"),
+            ($"{FantasyBookRoot}/Sizeable Boxes/2.png",                 "sprites/ui/panel/hint"),
+            ($"{FantasyBookRoot}/Sizeable Boxes/10.png",                "sprites/ui/button/small"),
+
+            // Slots
+            ($"{FantasyBookRoot}/Unique/Icon Container/1.png",          "sprites/ui/slot/item"),
+            ($"{FantasyBookRoot}/Unique/Icon Container/4.png",          "sprites/ui/slot/equipment"),
+
+            // Titles & Decoration
+            ($"{FantasyBookRoot}/Titles/5.png",                         "sprites/ui/ribbon/items"),
+            ($"{FantasyBookRoot}/Titles/10.png",                        "sprites/ui/ribbon/description"),
+            ($"{FantasyBookRoot}/Titles/15.png",                        "sprites/ui/ribbon/equipment"),
+            ($"{FantasyBookRoot}/Unique/Cutter1.1.png",                 "sprites/ui/decor/cutter-short"),
+            ($"{FantasyBookRoot}/Unique/Cutter1.2.png",                 "sprites/ui/decor/cutter-long"),
+            ($"{FantasyBookRoot}/Fancy Inscriptions/Plus.PNG",          "sprites/ui/decor/inscription-plus"),
+
+            // Bookmark sheet (sliced 5색)
+            ($"{FantasyBookRoot}/Bookmarks/1 22x20.png",                "sprites/ui/sheet/bookmark"),
+
+            // Character silhouette
+            ($"{FantasyBookRoot}/Unique/Character.png",                 "sprites/ui/character"),
+        };
+
+        // 도구 장착 캐릭터 sheet — Axe/Hoe/Pickaxe/Pickup × Down/Side/Up. 12개 sheet (각 sheet 안에 다수 sub-sprite frame).
+        private const string ToolCharRoot = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character";
+        private static readonly (string assetPath, string address)[] PlayerToolSheetEntries = new[]
+        {
+            ($"{ToolCharRoot}/Axe/Down.png",      "sprites/player/tool/axe-down"),
+            ($"{ToolCharRoot}/Axe/Side.png",      "sprites/player/tool/axe-side"),
+            ($"{ToolCharRoot}/Axe/Up.png",        "sprites/player/tool/axe-up"),
+            ($"{ToolCharRoot}/Hoe/Down.png",      "sprites/player/tool/hoe-down"),
+            ($"{ToolCharRoot}/Hoe/Side.png",      "sprites/player/tool/hoe-side"),
+            ($"{ToolCharRoot}/Hoe/Up.png",        "sprites/player/tool/hoe-up"),
+            ($"{ToolCharRoot}/pickaxe/Down.png",  "sprites/player/tool/pickaxe-down"),
+            ($"{ToolCharRoot}/pickaxe/Side.png",  "sprites/player/tool/pickaxe-side"),
+            ($"{ToolCharRoot}/pickaxe/Up.png",    "sprites/player/tool/pickaxe-up"),
+            ($"{ToolCharRoot}/Pickup/Down.png",   "sprites/player/tool/pickup-down"),
+            ($"{ToolCharRoot}/Pickup/Side.png",   "sprites/player/tool/pickup-side"),
+            ($"{ToolCharRoot}/Pickup/Up.png",     "sprites/player/tool/pickup-up"),
+        };
+
+        /// <summary>
+        /// 테스트용: 등록된 모든 UI sprite address 반환. UISpriteAddresses 상수와 일관성 검증에 사용.
+        /// </summary>
+        public static System.Collections.Generic.IReadOnlyList<string> GetUiSpriteAddresses()
+        {
+            var list = new System.Collections.Generic.List<string>(UiSpriteEntries.Length);
+            foreach (var (_, addr) in UiSpriteEntries) list.Add(addr);
+            return list;
+        }
+
+        /// <summary>
+        /// 테스트용: (assetPath, address) 쌍 반환. Asset 파일 존재 여부 검증에 사용.
+        /// </summary>
+        public static System.Collections.Generic.IReadOnlyList<(string assetPath, string address)> GetUiSpriteEntries()
+        {
+            return UiSpriteEntries;
+        }
+
         [MenuItem("Rootborn/Addressables/Wire All")]
         public static void WireAll()
         {
@@ -64,6 +140,36 @@ namespace Rootborn.Editor.Tools
 
             // Ground tile
             RegisterAsset(settings, groupTiles, "Assets/Data/Tiles/GroundTile.asset", AddrGroundTile);
+
+            // Fantasy Book UI sprite 일괄 등록 — 모두 Sprites 그룹 + PreLoad 라벨.
+            int uiOk = 0, uiMiss = 0;
+            foreach (var (path, addr) in UiSpriteEntries)
+            {
+                if (AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path) == null)
+                {
+                    Debug.LogWarning($"[ROOTBORN/Addressables] UI sprite missing: {path}");
+                    uiMiss++;
+                    continue;
+                }
+                RegisterAsset(settings, groupSprites, path, addr, addLabel: LabelPreLoad);
+                uiOk++;
+            }
+            Debug.Log($"[ROOTBORN/Addressables] UI sprites registered: {uiOk} ok, {uiMiss} missing.");
+
+            // 도구 장착 캐릭터 sheet — Axe/Hoe/Pickaxe/Pickup × Down/Side/Up. PreLoad 로 부팅 시 일괄 사전 로드.
+            int toolOk = 0, toolMiss = 0;
+            foreach (var (path, addr) in PlayerToolSheetEntries)
+            {
+                if (AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path) == null)
+                {
+                    Debug.LogWarning($"[ROOTBORN/Addressables] Player tool sheet missing: {path}");
+                    toolMiss++;
+                    continue;
+                }
+                RegisterAsset(settings, groupSprites, path, addr, addLabel: LabelPreLoad);
+                toolOk++;
+            }
+            Debug.Log($"[ROOTBORN/Addressables] Player tool sheets registered: {toolOk} ok, {toolMiss} missing.");
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();

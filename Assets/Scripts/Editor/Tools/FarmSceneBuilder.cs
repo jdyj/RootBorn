@@ -254,6 +254,15 @@ namespace Rootborn.Editor.Tools
             {
                 Debug.LogWarning($"[ROOTBORN/FarmBuilder] {name}: ResourceNodeDefinition '{def.Id}' has no Sprite. Will be invisible.");
             }
+
+            // 데이터 기반 충돌: SO _isWalkable=false 자원에만 collider.
+            if (!def.IsWalkable && Rootborn.Game.Common.ResourceCollisionToggle.Enabled)
+            {
+                var col = go.AddComponent<BoxCollider2D>();
+                col.size = def.ColliderSize;
+                col.isTrigger = false;
+            }
+
             var node = go.AddComponent<ResourceNode>();
             var so = new SerializedObject(node);
             so.FindProperty("_definition").objectReferenceValue = def;

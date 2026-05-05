@@ -15,14 +15,224 @@ MonoBehaviour:
   m_GroupName: Sprites
   m_GUID: 04f641b57fbe2c8438c7ae2a523c0ab5
   m_SerializeEntries:
+  - m_GUID: 09cc52776c4c6e64686d7f46aeb0a78e
+    m_Address: sprites/ui/book/spine
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0d13dd7f1400331418cbdaf8cfde4162
+    m_Address: sprites/ui/slot/equipment
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0f45aeb1b6dd0ac4090eb820cb8e022e
+    m_Address: sprites/ui/book/page-5
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 16176cdb3a2e36147944d056e72bc094
+    m_Address: sprites/ui/book/page-9
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 176d930965cfdf64eb5cfdd08db865ab
     m_Address: sheet/Tile
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1f26009cbe8bfb841acd274640589f9d
+    m_Address: sprites/player/tool/hoe-down
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1fcdeec43a46d414099a1a21a993e357
+    m_Address: sprites/ui/book/page-2
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 214e757da6a477940b663bbd92980813
+    m_Address: sprites/ui/decor/cutter-short
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3353bc1d407ea3d4a9968b96c7d694dd
+    m_Address: sprites/player/tool/axe-side
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 366484a031787004484a2ef505815b49
+    m_Address: sprites/ui/book/page-4
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3937709f3c791aa4a866484cef44cd73
+    m_Address: sprites/ui/book/page-6
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4c475c78f13476a4ba52200b61c92c1b
+    m_Address: sprites/ui/book/page-7
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 62d8a068b1ce8e041ad3df4681fff145
+    m_Address: sprites/ui/panel/hud
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6935e6186fac5a04a902a407a7a7973a
     m_Address: sheet/Down
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6b27e4050ec6a7f48aff9e0f7fa8659b
+    m_Address: sprites/ui/decor/inscription-plus
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6f199b672a02abc478f2465690f79a9a
+    m_Address: sprites/ui/panel/hint
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6ff7e8f282af66645902f587dec8987e
+    m_Address: sprites/ui/sheet/bookmark
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 70b8c269cd001a84b8d25bd4d32c25a6
+    m_Address: sprites/player/tool/pickup-up
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 741cab4018270d54ba4409a227db5cba
+    m_Address: sprites/player/tool/hoe-up
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 78d2e65192bf8294b9c3c59b1afa714d
+    m_Address: sprites/player/tool/pickaxe-down
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7f1dec0f329c59440b570cddf794692e
+    m_Address: sprites/player/tool/pickaxe-up
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 80cc6a60d2aa7e045b20ae0cc6f5046b
+    m_Address: sprites/ui/ribbon/equipment
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a4c32940f296e8840904a8273d747ed9
+    m_Address: sprites/ui/ribbon/description
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a571baff076edf340bbfc87493ca302b
+    m_Address: sprites/ui/book/page-8
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ac027ce4c65c8b74ea38dfa1adbec658
+    m_Address: sprites/player/tool/axe-down
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b7cbc2be7b0f3514c81d120aa8d0e1b8
+    m_Address: sprites/ui/character
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ba5f72287d6dbbe40a72035bd0356b2c
+    m_Address: sprites/ui/book/page-1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c3883d3730e40524d9ab84bd54f8f35c
+    m_Address: sprites/ui/ribbon/items
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cd33c17424ab27d48b01ec0299e044a9
+    m_Address: sprites/ui/slot/item
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ce5046f3fcd727d409665cba38ce6478
+    m_Address: sprites/player/tool/pickup-down
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d1d355677e7332542a1a66fc620f8732
+    m_Address: sprites/player/tool/pickaxe-side
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d82cd26c380aa8e46936108f0dc55da4
+    m_Address: sprites/player/tool/axe-up
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d979824b38fb7144dab030079e6252b2
+    m_Address: sprites/player/tool/pickup-side
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: da4636f3f1256874ba355a8571074325
+    m_Address: sprites/player/tool/hoe-side
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e56f07a0c84d03749a08853a3c7f9163
+    m_Address: sprites/ui/decor/cutter-long
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: edf822f54d14b394aa6476e6dfe13d5b
+    m_Address: sprites/ui/button/small
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f128013b3392fac47913b913c7cc7333
+    m_Address: sprites/ui/book/page-3
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad

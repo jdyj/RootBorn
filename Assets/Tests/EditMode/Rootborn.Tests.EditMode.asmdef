@@ -3,6 +3,8 @@
     "rootNamespace": "Rootborn.Tests.EditMode",
     "references": [
         "Rootborn.Game",
+        "Rootborn.Editor",
+        "Rootborn.UI",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

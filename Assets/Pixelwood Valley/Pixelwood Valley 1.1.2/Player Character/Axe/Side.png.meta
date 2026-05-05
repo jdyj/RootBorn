@@ -1,5 +1,12 @@
 fileFormatVersion: 2
 guid: 3353bc1d407ea3d4a9968b96c7d694dd
+AssetOrigin:
+  serializedVersion: 1
+  productId: 295129
+  packageName: Pixelwood Valley 1.1.2 | 16x16 Pixel Art Asset Pack
+  packageVersion: 1.1.2
+  assetPath: Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Axe/Side.png
+  uploadId: 862570
 TextureImporter:
   internalIDToNameTable:
   - first:
@@ -26,6 +33,24 @@ TextureImporter:
   - first:
       213: -3210798331946944938
     second: Side_7
+  - first:
+      213: -8199204918687529675
+    second: Axe_Side_0
+  - first:
+      213: 6279318149249321232
+    second: Axe_Side_1
+  - first:
+      213: 597994430711863830
+    second: Axe_Side_2
+  - first:
+      213: 6811173840614784952
+    second: Axe_Side_3
+  - first:
+      213: 4602948652219591267
+    second: Axe_Side_4
+  - first:
+      213: 6312515328775674845
+    second: Axe_Side_5
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -45,7 +70,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 0
+  isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -72,7 +97,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 16
+  spritePixelsToUnits: 49
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -96,7 +121,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: 4
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -147,7 +172,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Side_0
+      name: Axe_Side_0
       rect:
         serializedVersion: 2
         x: 0
@@ -155,21 +180,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: e86e674dfe865e430800000000000000
-      internalID: 3811568038910027406
+      spriteID: 5358ef45192963e80800000000000000
+      internalID: -8199204918687529675
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Side_1
+      name: Axe_Side_1
       rect:
         serializedVersion: 2
         x: 59
@@ -177,21 +202,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 4fc411d1ca9e342e0800000000000000
-      internalID: -2142612072266904332
+      spriteID: 0194ba5669e942750800000000000000
+      internalID: 6279318149249321232
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Side_2
+      name: Axe_Side_2
       rect:
         serializedVersion: 2
         x: 118
@@ -199,21 +224,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 95cfc8650eb583300800000000000000
-      internalID: 232036399892462681
+      spriteID: 61a1e3434c08c4800800000000000000
+      internalID: 597994430711863830
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Side_3
+      name: Axe_Side_3
       rect:
         serializedVersion: 2
         x: 177
@@ -221,21 +246,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 5adb28ca192288700800000000000000
-      internalID: 542721764157996453
+      spriteID: 8bff6495586268e50800000000000000
+      internalID: 6811173840614784952
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Side_4
+      name: Axe_Side_4
       rect:
         serializedVersion: 2
         x: 236
@@ -243,21 +268,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 080db2b8b853c1500800000000000000
-      internalID: 368228142989168768
+      spriteID: 36a69e66965f0ef30800000000000000
+      internalID: 4602948652219591267
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Side_5
+      name: Axe_Side_5
       rect:
         serializedVersion: 2
         x: 295
@@ -265,15 +290,15 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 278fa1e466ba78560800000000000000
-      internalID: 7316004575572064370
+      spriteID: ddbd1e21f3f8a9750800000000000000
+      internalID: 6312515328775674845
       vertices: []
       indices: 
       edges: []
@@ -294,6 +319,12 @@ TextureImporter:
       - key: SpriteEditor.SliceSettings
         value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":59.0,"y":49.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
+      Axe_Side_0: -8199204918687529675
+      Axe_Side_1: 6279318149249321232
+      Axe_Side_2: 597994430711863830
+      Axe_Side_3: 6811173840614784952
+      Axe_Side_4: 4602948652219591267
+      Axe_Side_5: 6312515328775674845
       Side_0: 3811568038910027406
       Side_1: -2142612072266904332
       Side_2: 232036399892462681
@@ -305,10 +336,3 @@ TextureImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 295129
-  packageName: Pixelwood Valley 1.1.2 | 16x16 Pixel Art Asset Pack
-  packageVersion: 1.1.2
-  assetPath: Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Axe/Side.png
-  uploadId: 862570

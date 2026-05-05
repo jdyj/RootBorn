@@ -1,0 +1,15 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fdb6d8c5eaffe840b77c432578c2fc5, type: 3}
+  m_Name: Effect_WaterCrop
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Tools.Effects.WaterCropEffect
+  _waterLevel01: 1

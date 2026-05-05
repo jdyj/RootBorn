@@ -11,6 +11,7 @@ namespace Rootborn.Game.Tools
         [SerializeField] private float _powerMultiplier = 1f;
         [SerializeField] private ToolEffectBase[] _effects = System.Array.Empty<ToolEffectBase>();
         [SerializeField] private bool _isStartingTool;
+        [SerializeField, TextArea(2, 4)] private string _description;
 
         public string Id => _id;
         public string DisplayKey => _displayKey;
@@ -18,6 +19,7 @@ namespace Rootborn.Game.Tools
         public float PowerMultiplier => _powerMultiplier;
         public ToolEffectBase[] Effects => _effects;
         public bool IsStartingTool => _isStartingTool;
+        public string Description => _description;
 
         public void ApplyEffects(in ToolUseContext ctx)
         {

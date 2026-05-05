@@ -44,5 +44,42 @@ Pixelwood처럼 한 PNG 안에 여러 sub-sprite를 가진 sheet를 사용할 �
 - `Assets/Resources/GameDataRegistry.asset` 은 Addressables 등록과 병행 보관 (DataManager fallback용)
 - 후속 PR에서 Resources 폴더 자체 제거 예정
 
+## 라이프사이클 — 동기 조회는 BootstrapAsync 완료 후
+
+`ResourceManager.Load<T>(addr)` 는 **사전 로드된 캐시만 동기 조회** 하므로, 호출 시점에 `Managers.BootstrapAsync` 가 끝나있어야 한다.
+
+### 안티패턴 (금지)
+```csharp
+private void Awake()
+{
+    BuildUI(); // ← 같은 씬 GameBootstrap.Start 가 BootstrapAsync 시작하는데
+               //    Unity 라이프사이클 상 모든 Awake 가 모든 Start 보다 먼저 실행됨
+               //    → 캐시 미스 → 모든 sprite null → 단색 fallback UI
+}
+```
+
+### 권장 패턴
+```csharp
+private async void Start()
+{
+    await Rootborn.Game.Managers.Managers.BootstrapAsync(); // 멱등 (IsBootstrapped 캐시) — 중복 await 안전
+    if (this == null || !isActiveAndEnabled) return;        // 그 사이 destroy 됐을 수 있음
+    BuildUI();
+}
+```
+
+`Awake` 단계의 작업은 sprite 가 필요 없는 것 (canvas 검색, 입력 시스템 등록 등) 으로 한정. UI 트리 빌드는 `Start` 이후로 미룬다.
+
+## 일관성 검증 (필수 테스트)
+
+UI sprite 주소 상수 파일 (`UISpriteAddresses`) 과 등록 파일 (`AddressablesSetup`) 이 **둘 다 수정되어야** 빌드 시 sprite 가 캐시에 들어간다. 한 쪽만 수정하면 런타임 캐시 미스 → 모든 UI 가 단색 fallback 으로 그려지는 회귀 사고 발생.
+
+따라서 EditMode 테스트로 강제 (`Assets/Tests/EditMode/UISpriteAddressesTests.cs`):
+- `AllSingleSprites_AreAllRegisteredInAddressablesSetup`
+- `AllSheets_AreAllRegisteredInAddressablesSetup`
+- `AllUiSpriteEntries_HaveAssetFileOnDisk`
+
+신규 sprite 추가 시 두 파일 모두 갱신 + 위 테스트 통과 확인 의무.
+
 ## CI 게이트 (TODO)
 - 후속: `Scripts/ci/check-no-resources-load.sh` — `Resources.Load` 신규 호출 금지 정규식

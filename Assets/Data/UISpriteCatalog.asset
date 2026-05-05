@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: UISpriteCatalog
+  m_EditorClassIdentifier: Rootborn.Game:Rootborn.Game.Common:UISpriteCatalog
+  _hudPanel: {fileID: 21300000, guid: 62d8a068b1ce8e041ad3df4681fff145, type: 3}
+  _hotkeyHintPanel: {fileID: 21300000, guid: 6f199b672a02abc478f2465690f79a9a, type: 3}
+  _bookLeftPage: {fileID: 21300000, guid: ba5f72287d6dbbe40a72035bd0356b2c, type: 3}
+  _bookRightPage: {fileID: 0}
+  _bookSpine: {fileID: 0}
+  _itemSlot: {fileID: 21300000, guid: cd33c17424ab27d48b01ec0299e044a9, type: 3}
+  _equipmentSlot: {fileID: 21300000, guid: 0d13dd7f1400331418cbdaf8cfde4162, type: 3}
+  _itemsTitleRibbon: {fileID: 21300000, guid: c3883d3730e40524d9ab84bd54f8f35c, type: 3}
+  _descriptionRibbon: {fileID: 21300000, guid: a4c32940f296e8840904a8273d747ed9, type: 3}
+  _equipmentTitleRibbon: {fileID: 21300000, guid: 80cc6a60d2aa7e045b20ae0cc6f5046b, type: 3}
+  _cutterShort: {fileID: 21300000, guid: 214e757da6a477940b663bbd92980813, type: 3}
+  _cutterLong: {fileID: 21300000, guid: e56f07a0c84d03749a08853a3c7f9163, type: 3}
+  _inscriptionPlus: {fileID: 21300000, guid: 6b27e4050ec6a7f48aff9e0f7fa8659b, type: 3}
+  _smallButton: {fileID: 21300000, guid: edf822f54d14b394aa6476e6dfe13d5b, type: 3}
+  _bookmarkRed: {fileID: 5503008200692930730, guid: 6ff7e8f282af66645902f587dec8987e, type: 3}
+  _bookmarkBlue: {fileID: -1018340917505282727, guid: 6ff7e8f282af66645902f587dec8987e, type: 3}
+  _bookmarkGreen: {fileID: 7826374706008583241, guid: 6ff7e8f282af66645902f587dec8987e, type: 3}
+  _bookmarkYellow: {fileID: -5904460342240780768, guid: 6ff7e8f282af66645902f587dec8987e, type: 3}
+  _bookmarkPurple: {fileID: 0}
+  _characterSilhouette: {fileID: 21300000, guid: b7cbc2be7b0f3514c81d120aa8d0e1b8, type: 3}

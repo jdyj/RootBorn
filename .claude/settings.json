@@ -1,5 +1,26 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:package.openupm.com)",
+      "PowerShell($procs = Get-Process | Where-Object { $_.Name -match 'Unity' } | Select-Object Name, Id, MainWindowTitle; if \\($procs\\) { $procs | Format-Table -AutoSize } else { \"No Unity processes running\" })",
+      "PowerShell(& 'C:\\\\Program Files\\\\nodejs\\\\npm.cmd' install -g unity-mcp-cli 2>&1)",
+      "PowerShell($cache = \"c:\\\\Users\\\\jdyj\\\\farmer\\\\Library\\\\PackageCache\"; if \\(Test-Path $cache\\) { Get-ChildItem $cache -Directory | Where-Object { $_.Name -match 'ivanmurzak' } | Select-Object Name, FullName } else { \"PackageCache not found\" }; \"\"; $srv = \"c:\\\\Users\\\\jdyj\\\\farmer\\\\Library\\\\mcp-server\"; if \\(Test-Path $srv\\) { Get-ChildItem -Recurse $srv | Select-Object FullName } else { \"mcp-server folder not yet present\" })",
+      "PowerShell($cli = \\(Get-Command unity-mcp-cli -ErrorAction SilentlyContinue\\); if \\($cli\\) { \"found: $\\($cli.Source\\)\"; & unity-mcp-cli --help 2>&1 | Select-Object -First 40 } else { \"unity-mcp-cli not on PATH\"; & 'C:\\\\Program Files\\\\nodejs\\\\npm.cmd' root -g | ForEach-Object { Get-ChildItem \\(Join-Path $_ 'unity-mcp-cli'\\) -ErrorAction SilentlyContinue } })",
+      "PowerShell(& 'C:\\\\Users\\\\jdyj\\\\AppData\\\\Roaming\\\\npm\\\\unity-mcp-cli.cmd' --help 2>&1)",
+      "PowerShell(& 'C:\\\\Users\\\\jdyj\\\\AppData\\\\Roaming\\\\npm\\\\unity-mcp-cli.cmd' setup-mcp --help 2>&1)",
+      "PowerShell(& 'C:\\\\Users\\\\jdyj\\\\AppData\\\\Roaming\\\\npm\\\\unity-mcp-cli.cmd' status --project 'c:/Users/jdyj/farmer' 2>&1)",
+      "Bash(where unity-mcp-cli *)",
+      "Bash(unity-mcp-cli status *)",
+      "mcp__ai-game-developer__editor-application-getstate",
+      "mcp__ai-game-developer__editor-application-get-state",
+      "mcp__ai-game-developer__scene-list-opened",
+      "mcp__ai-game-developer__tests-run",
+      "mcp__ai-game-developer__console-get-logs",
+      "mcp__ai-game-developer__package-search",
+      "mcp__ai-game-developer__script-update-or-create"
+    ]
+  },
   "hooks": {
     "UserPromptSubmit": [
       {

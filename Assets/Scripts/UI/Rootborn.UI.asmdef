@@ -2,7 +2,8 @@
     "name": "Rootborn.UI",
     "rootNamespace": "Rootborn.UI",
     "references": [
-        "Rootborn.Game"
+        "Rootborn.Game",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

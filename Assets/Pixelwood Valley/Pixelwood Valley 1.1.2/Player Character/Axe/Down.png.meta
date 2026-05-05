@@ -1,5 +1,12 @@
 fileFormatVersion: 2
 guid: ac027ce4c65c8b74ea38dfa1adbec658
+AssetOrigin:
+  serializedVersion: 1
+  productId: 295129
+  packageName: Pixelwood Valley 1.1.2 | 16x16 Pixel Art Asset Pack
+  packageVersion: 1.1.2
+  assetPath: Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Axe/Down.png
+  uploadId: 862570
 TextureImporter:
   internalIDToNameTable:
   - first:
@@ -20,6 +27,24 @@ TextureImporter:
   - first:
       213: -3442070404843355325
     second: Down_5
+  - first:
+      213: -6077429687791506194
+    second: Axe_Down_0
+  - first:
+      213: 8873679406561189179
+    second: Axe_Down_1
+  - first:
+      213: 6321026399282442710
+    second: Axe_Down_2
+  - first:
+      213: -3078580819057820704
+    second: Axe_Down_3
+  - first:
+      213: -6072841530001550734
+    second: Axe_Down_4
+  - first:
+      213: 3583300391135277227
+    second: Axe_Down_5
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -39,7 +64,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 0
+  isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -66,7 +91,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 16
+  spritePixelsToUnits: 49
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -90,7 +115,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: 4
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -141,7 +166,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Down_0
+      name: Axe_Down_0
       rect:
         serializedVersion: 2
         x: 0
@@ -149,21 +174,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 5cce9415b760a6820800000000000000
-      internalID: 2912147235762990277
+      spriteID: eec26c706e1a8aba0800000000000000
+      internalID: -6077429687791506194
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Down_1
+      name: Axe_Down_1
       rect:
         serializedVersion: 2
         x: 59
@@ -171,21 +196,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 28cf92e0e86a4b8b0800000000000000
-      internalID: -5137298145869693822
+      spriteID: b3d57cec764a52b70800000000000000
+      internalID: 8873679406561189179
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Down_2
+      name: Axe_Down_2
       rect:
         serializedVersion: 2
         x: 118
@@ -193,21 +218,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3510e49b6ea18be10800000000000000
-      internalID: 2213548795106296147
+      spriteID: 6d1b819150cc8b750800000000000000
+      internalID: 6321026399282442710
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Down_3
+      name: Axe_Down_3
       rect:
         serializedVersion: 2
         x: 177
@@ -215,21 +240,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 1918030ecf91c4e50800000000000000
-      internalID: 6794834511678964113
+      spriteID: 0eb3abb5e0fa645d0800000000000000
+      internalID: -3078580819057820704
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Down_4
+      name: Axe_Down_4
       rect:
         serializedVersion: 2
         x: 236
@@ -237,21 +262,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 2fdb64ddce2463fb0800000000000000
-      internalID: -4668470378630824462
+      spriteID: 2729403cdcee8bba0800000000000000
+      internalID: -6072841530001550734
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Down_5
+      name: Axe_Down_5
       rect:
         serializedVersion: 2
         x: 295
@@ -259,15 +284,15 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3434d63243f4b30d0800000000000000
-      internalID: -3442070404843355325
+      spriteID: ba0f22978b07ab130800000000000000
+      internalID: 3583300391135277227
       vertices: []
       indices: 
       edges: []
@@ -288,6 +313,12 @@ TextureImporter:
       - key: SpriteEditor.SliceSettings
         value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":59.0,"y":49.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
+      Axe_Down_0: -6077429687791506194
+      Axe_Down_1: 8873679406561189179
+      Axe_Down_2: 6321026399282442710
+      Axe_Down_3: -3078580819057820704
+      Axe_Down_4: -6072841530001550734
+      Axe_Down_5: 3583300391135277227
       Down_0: 2912147235762990277
       Down_1: -5137298145869693822
       Down_2: 2213548795106296147
@@ -299,10 +330,3 @@ TextureImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 295129
-  packageName: Pixelwood Valley 1.1.2 | 16x16 Pixel Art Asset Pack
-  packageVersion: 1.1.2
-  assetPath: Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Axe/Down.png
-  uploadId: 862570

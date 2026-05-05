@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Tools.ToolDefinition
   _id: StoneAxe
   _displayKey: tool.stoneAxe
-  _icon: {fileID: 0}
+  _icon: {fileID: 4765772163910845476, guid: ed5e6ce81f0627a43b6a20b711c2e1af, type: 3}
   _powerMultiplier: 1.2
   _effects: []
   _isStartingTool: 0
+  _description: Power x1.2. Designed for chopping wood.

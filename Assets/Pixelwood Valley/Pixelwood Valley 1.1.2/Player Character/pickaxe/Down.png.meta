@@ -1,5 +1,12 @@
 fileFormatVersion: 2
 guid: 78d2e65192bf8294b9c3c59b1afa714d
+AssetOrigin:
+  serializedVersion: 1
+  productId: 295129
+  packageName: Pixelwood Valley 1.1.2 | 16x16 Pixel Art Asset Pack
+  packageVersion: 1.1.2
+  assetPath: Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/pickaxe/Down.png
+  uploadId: 862570
 TextureImporter:
   internalIDToNameTable:
   - first:
@@ -20,6 +27,24 @@ TextureImporter:
   - first:
       213: -3442070404843355325
     second: Down_5
+  - first:
+      213: 1393566593367387467
+    second: Pickaxe_Down_0
+  - first:
+      213: 4530038277245452917
+    second: Pickaxe_Down_1
+  - first:
+      213: 2732355096029282478
+    second: Pickaxe_Down_2
+  - first:
+      213: -7043424845415739749
+    second: Pickaxe_Down_3
+  - first:
+      213: -6052926420436170015
+    second: Pickaxe_Down_4
+  - first:
+      213: -4162380548724665503
+    second: Pickaxe_Down_5
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -39,7 +64,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 0
+  isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -66,7 +91,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 16
+  spritePixelsToUnits: 49
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -90,7 +115,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: 4
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -141,7 +166,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Down_0
+      name: Pickaxe_Down_0
       rect:
         serializedVersion: 2
         x: 0
@@ -149,21 +174,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 5cce9415b760a6820800000000000000
-      internalID: 2912147235762990277
+      spriteID: b4da388ee61f65310800000000000000
+      internalID: 1393566593367387467
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Down_1
+      name: Pickaxe_Down_1
       rect:
         serializedVersion: 2
         x: 59
@@ -171,21 +196,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 28cf92e0e86a4b8b0800000000000000
-      internalID: -5137298145869693822
+      spriteID: 572432edfcdedde30800000000000000
+      internalID: 4530038277245452917
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Down_2
+      name: Pickaxe_Down_2
       rect:
         serializedVersion: 2
         x: 118
@@ -193,21 +218,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3510e49b6ea18be10800000000000000
-      internalID: 2213548795106296147
+      spriteID: ea0cd03bb764be520800000000000000
+      internalID: 2732355096029282478
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Down_3
+      name: Pickaxe_Down_3
       rect:
         serializedVersion: 2
         x: 177
@@ -215,21 +240,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 1918030ecf91c4e50800000000000000
-      internalID: 6794834511678964113
+      spriteID: b9e85d6bb6ab04e90800000000000000
+      internalID: -7043424845415739749
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Down_4
+      name: Pickaxe_Down_4
       rect:
         serializedVersion: 2
         x: 236
@@ -237,21 +262,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 2fdb64ddce2463fb0800000000000000
-      internalID: -4668470378630824462
+      spriteID: 1ea435a8d7faffba0800000000000000
+      internalID: -6052926420436170015
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Down_5
+      name: Pickaxe_Down_5
       rect:
         serializedVersion: 2
         x: 295
@@ -259,15 +284,15 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3434d63243f4b30d0800000000000000
-      internalID: -3442070404843355325
+      spriteID: 1635545b1f04c36c0800000000000000
+      internalID: -4162380548724665503
       vertices: []
       indices: 
       edges: []
@@ -294,15 +319,14 @@ TextureImporter:
       Down_3: 6794834511678964113
       Down_4: -4668470378630824462
       Down_5: -3442070404843355325
+      Pickaxe_Down_0: 1393566593367387467
+      Pickaxe_Down_1: 4530038277245452917
+      Pickaxe_Down_2: 2732355096029282478
+      Pickaxe_Down_3: -7043424845415739749
+      Pickaxe_Down_4: -6052926420436170015
+      Pickaxe_Down_5: -4162380548724665503
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 295129
-  packageName: Pixelwood Valley 1.1.2 | 16x16 Pixel Art Asset Pack
-  packageVersion: 1.1.2
-  assetPath: Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/pickaxe/Down.png
-  uploadId: 862570

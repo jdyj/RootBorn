@@ -45,6 +45,20 @@ namespace Rootborn.Game.Managers
             return null;
         }
 
+        /// <summary>
+        /// 사전 로드된 sheet 에서 sub-sprite 동기 조회. Preload 안 됐으면 null.
+        /// FarmHudController 같은 UI 가 Awake/Start 에서 즉시 sprite 결정해야 할 때 사용.
+        /// </summary>
+        public Sprite GetCachedSubSprite(string sheetAddress, string subName)
+        {
+            if (!_sheetSprites.TryGetValue(sheetAddress, out var sprites)) return null;
+            for (int i = 0; i < sprites.Count; i++)
+            {
+                if (sprites[i] != null && sprites[i].name == subName) return sprites[i];
+            }
+            return null;
+        }
+
         public async Task<T> LoadAsync<T>(string address) where T : UnityEngine.Object
         {
             if (string.IsNullOrEmpty(address)) return null;

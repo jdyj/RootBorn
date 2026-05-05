@@ -13,6 +13,64 @@
 
 ---
 
+## 2026-05-05 — 외부 프레임 sprite 자식 UI anchor 는 panel 가장자리 X, 시각 영역 UV O
+- 피드백: "북마크의 위치가 회색부분이 아니라 완전 옆면 책의 맨 뒤 완전 갈색부분 보다 왼쪽으로 와야하는데 너무 오른쪽으로 가져있어 딱 북마크 책 옆에 놓는것처럼 해야하는데 그게 안되고있어"
+- 원인: 책 BookPanel sprite (Page1.png 290×184) 가 **외부 어두운 프레임 + 갈색 spine 측면 + 내부 베이지 페이지** 를 한 sprite 에 통합. AI 가 BookPanel sizeDelta(=1248×792 = sprite 전체)의 우측 가장자리 (anchor=1.0) 를 "책 우측" 으로 착각하고 북마크를 거기에 붙임. 결과: 북마크가 회색 외부 프레임 위/바깥에 떠있음. 베이지 페이지 우측 끝은 sprite 픽셀 263/290 = UV 0.907 인데 이 차이를 측정 안 함.
+- 변경:
+  - `Assets/Scripts/UI/HUD/StatusHud.cs` BuildBookmarks: anchorMin/Max `(1, 0.5)` → **`(0.907, 0.5)`** (베이지 페이지 우측 끝 UV). `BookmarkRestX=-10` (베이지 안쪽으로 10px), `BookmarkSelectedX=+14` (회색 프레임 위로 살짝).
+  - `rules/path-based/sprite-slicing.md` 신규 섹션 "외부 프레임 sprite 의 자식 UI 배치 — anchor 기준은 시각 영역, panel sizeDelta 아님". 안티패턴/권장 패턴/일반화 3 항목 + 픽셀 측정 절차.
+- 일반화:
+  - "외부 프레임이 두꺼운 sprite (책/패널/UI 카드) 에서 자식 UI 의 anchor 기준은 panel sizeDelta 가장자리가 아니라 **sprite 안쪽 시각 영역 UV**. PNG 픽셀 측정 후 UV 비율(예: 263/290 = 0.907) 을 anchor 로 사용."
+  - "사용자가 'X 영역이 아니라 Y 영역에 붙여' 라고 지적하면 anchor UV 부터 점검 (panel sizeDelta 변경이 아님)."
+  - "Pixelwood Page sprite 같은 외부 프레임 통합 sprite 는 콘텐츠 안전 영역의 UV 좌표를 코드 주석에 명시 의무 (재사용 시 디버깅 용이)."
+
+## 2026-05-05 — UI 부팅 타이밍 (Awake → async Start) + 책 패널 1248×792 + Equipment 페이지 통합
+- 피드백: "현재는 인벤토리나 장비 등 ui가 제대로 안나오는 경우가 대다수 / Assets/Pixelwood Valley/Fantasy Book UI V2 경로에 있는 sprite를 이용하여 UI 나올 수 있도록 설계 및 테스트 필요 / addressable 사용하는지도 꼭 확인하고 진행해"
+- 원인:
+  - (A) **타이밍 버그**: `FarmHudController.Awake` 가 `BuildTree` 호출 → `Spr()` (= `ResourceManager.Load<T>` 동기 캐시 조회). 그러나 `Managers.BootstrapAsync` 는 같은 씬 `GameBootstrap.Start` 에서 시작 — Unity 라이프사이클상 모든 MonoBehaviour `Awake` 이후. 결과: 캐시 미스 → 모든 sprite null fallback (단색 사각형) 으로 빌드 → 책/리본/슬롯 sprite 안 보임.
+  - (B) **Equipment 페이지 충돌**: `BuildRightPageContent` 가 `_equipmentPageContent` (캐릭터+장착슬롯) 를 우측 ITEMS 페이지 안에 만들고 `SetActive(false)` 로 마감. `ApplyCategory` 는 `_leftPagesByCat`/`_rightPagesByCat` 만 토글 — `_equipmentPageContent` 는 어디서도 켜지지 않음. 별도로 `BuildEquipmentCategoryPages` 가 만든 `RightStats` 만 매핑 → 캐릭터+장착슬롯 영영 안 보임.
+  - (C) 책 panel 950×600 + Page1.png 290×184 + `preserveAspect=true` 라 letterboxing 무시했지만, anchor 비율 (0.083~0.493) 이 실제 sprite 안쪽 베이지 영역과 1픽셀 단위로 안 맞아 콘텐츠가 spine 또는 프레임 위로 약간 새어나옴.
+  - (D) 폰트 11/12/13/14 다수 — 헌법 `ui-standards.md` 절대 하한선 14, 본문 권장 18 위반.
+  - (E) 북마크 `BookmarkRestX=-32`/`SelectedX=-8` (음수, pivot=(1,0.5)) 로 책 panel 안쪽으로 들어가 박혀있어 샘플 이미지의 "책 바깥쪽 우측에 튀어나옴" 효과 안 남.
+- 변경:
+  - `Assets/Scripts/UI/HUD/StatusHud.cs`:
+    - `Awake` 제거 → `async void Start` 한 곳에서 `await Managers.BootstrapAsync()` 후 `BuildTree`. Sprite 캐시가 보장된 후에만 UI 빌드.
+    - 책 panel 950×600 → **1248×792** (화면 65%). Page1.png 290×184 실측 기반 anchor 재계산 (좌측 0.103~0.466, 우측 0.545~0.907, y 0.120~0.880).
+    - 북마크: pivot `(1, 0.5)` → `(0, 0.5)` 변경 + `BookmarkRestX=0`, `SelectedX=+28` (양수). 책 우측 가장자리에서 바깥쪽으로 튀어나옴.
+    - `_equipmentPageContent` 필드 제거 + `BuildRightPageContent` 의 캐릭터/장착슬롯 블록 제거. `BuildEquipmentCategoryPages` 가 좌(캐릭터+6슬롯)+우(STATS) 모두 책임. `_equippedSlotIcon` 는 첫 슬롯(Head) 에 연결.
+    - 폰트 11/12/13/14 → 16/18/22 일괄 상향. 책 크기 증가 따라 ribbon 280×48, slot grid cell 84, button 108×44 도 비례 확대.
+  - `Assets/Scripts/Editor/Tools/AddressablesSetup.cs` — 테스트용 public 헬퍼 `GetUiSpriteAddresses()` / `GetUiSpriteEntries()` 추가 (UISpriteAddresses 와 일관성 검증).
+  - `Assets/Tests/EditMode/UISpriteAddressesTests.cs` 신규 — 6개 EditMode 테스트:
+    1. AllSingleSprites 가 모두 AddressablesSetup 에 등록됐는지
+    2. AllSheets 도 등록됐는지
+    3. UiSpriteEntries 의 모든 asset 파일이 디스크에 존재하는지
+    4. BookFlipFrames 9개가 AllSingleSprites 에 포함됐는지
+    5. SubBookmark0..4 명명 규약이 PixelwoodSliceSetup 의 `Bookmark_{0..4}` 와 일치하는지
+    6. AllSheets 의 BookmarkSheet 가 5개 sub-sprite 선언했는지
+  - `Assets/Tests/EditMode/Rootborn.Tests.EditMode.asmdef` — `Rootborn.Editor`, `Rootborn.UI` 참조 추가.
+- 일반화:
+  - "Addressables 동기 조회 (`Load<T>`) 는 `BootstrapAsync` 완료 후에만 캐시 hit. UI 빌드 코드는 `Awake` 가 아니라 `async Start` + `await BootstrapAsync` 후 실행. 이는 SlimeMaster 패턴 차용 시 라이프사이클 순서 검증 의무."
+  - "한 카테고리 콘텐츠는 한 컨테이너에. ITEMS 우측 페이지 안에 EQUIPMENT 콘텐츠를 끼워넣고 별도 토글 변수로 관리하는 패턴은 사이드이펙트(어느 카테고리에서 어떤 GameObject 가 켜지는지) 가 분산돼 누락되기 쉽다 — `_pagesByCat[Category]` Dictionary 단일 진입점에서만 SetActive."
+  - "Sprite 시각 검증 의무: 새 sprite asset 와이어링 전 `Read` 도구로 PNG 직접 시각 확인 (290×184 같은 작은 sprite 도 베이지 안전 영역을 픽셀 단위로 측정해서 anchor 비율 결정)."
+  - "UISpriteAddresses 같은 상수 파일과 AddressablesSetup 같은 등록 파일은 자동 일관성 검증 테스트 의무 — 한 쪽만 수정하면 런타임 캐시 미스 → 단색 fallback UI 가 빌드되는 회귀 사고."
+
+## 2026-05-04 — Sprite sheet 균등 분할 안 되는 경우 + 카테고리 컨테이너 분리 + 선택 시각 표시
+- 피드백: "오른쪽 북마크는 슬라이스 다시 해야할거같고 / 각 북마크에 맞는 페이지는 하나도 안나오고 헤당 북마크를 했을때 북마크가 선택되었다는 것도 보여줘야해 / 두번째 세번째 오른쪽 북마크를 보면 선택된 북마크가 좀 더 오른쪽으로 나왔다는걸 볼 수 있어 / 그 외에도 아이템칸, 장비칸, 설정칸 등 나오도록 UI 배치가 필요해"
+- 원인:
+  - (1) Bookmark sheet (22×99, 5색) 가 cell 19px × 5 = 95 + 4 leftover 인데 SliceOne 의 균등 cell 슬라이스로는 마지막 셀이 잘리거나 어긋남.
+  - (2) 카테고리(북마크) 5개가 있는데 한 개 페이지 콘텐츠만 만들고 InventoryView 필터로만 분기 → Equipment 같은 다른 구조 카테고리에서 화면 깨짐.
+  - (3) 선택된 북마크 시각 표시 부재 — 5개가 모두 같은 위치에 있어 어느 것이 활성인지 식별 불가.
+- 변경:
+  - `Assets/Scripts/Editor/Tools/PixelwoodSliceSetup.cs` — `SliceBookmarkSheet()` 신규 (명시 rect 5개, 마지막 셀 leftover 흡수)
+  - `Assets/Scripts/Game/Common/GameDataRegistry.cs` — Sub-sprite 이름 `Bookmark_r{0..4}_c0` → `Bookmark_{0..4}` 단순화
+  - `Assets/Scripts/UI/HUD/StatusHud.cs` — `_leftPagesByCat`/`_rightPagesByCat`/`_bookmarkRectsByCat` Dictionary, `BuildItemsCategoryPages`/`BuildEquipmentCategoryPages` 분리, `ApplyCategory` 가 카테고리별 컨테이너 토글 + 선택 북마크 anchoredPosition.x 변경 (`BookmarkRestX=-32`, `BookmarkSelectedX=-8`)
+  - `rules/path-based/sprite-slicing.md` — "6. Sheet 가 cell 균등 분할이 안 되는 경우 — 명시 rect 사용" 섹션 추가, 판별 기준 + 코드 예시
+  - `rules/ui-standards.md` — "선택된 탭/북마크는 위치 offset 또는 색조 강조" 명시 + "카테고리/탭 콘텐츠 컨테이너 분리" 섹션 추가 (Dictionary<Category, GameObject> 패턴)
+- 일반화:
+  - "Sheet 픽셀 크기 % cell 크기 != 0 이면 즉시 명시 rect 슬라이스 메서드 작성. 파일명 추정값보다 실제 sheet 픽셀 크기가 우선."
+  - "여러 카테고리 UI 패널은 카테고리당 별도 GameObject 컨테이너 + SetActive 토글. 한 페이지에 모든 콘텐츠 혼재 + sprite/text 만 갈아끼우는 패턴 금지."
+  - "선택된 항목은 정적 색만으로 부족 — 위치 offset 또는 채도/색조 강조 중 하나 이상 필수."
+
 ## 2026-05-04 — Addressables 도입 (SlimeMaster 패턴 차용)
 - 피드백: "C:\Users\jdyj\Downloads\SlimeMaster ... addressable을 사용했는데 동일한 구조로 해볼 수 있겠어?"
 - 원인: ROOTBORN이 GameDataRegistry를 `Assets/Resources/`로만 로드 → 빌드 시 메모리 적재, 핫업데이트 불가, 헌법 `path-based/assets-addressables.md` 위반

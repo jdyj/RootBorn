@@ -1,5 +1,12 @@
 fileFormatVersion: 2
 guid: d82cd26c380aa8e46936108f0dc55da4
+AssetOrigin:
+  serializedVersion: 1
+  productId: 295129
+  packageName: Pixelwood Valley 1.1.2 | 16x16 Pixel Art Asset Pack
+  packageVersion: 1.1.2
+  assetPath: Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Axe/Up.png
+  uploadId: 862570
 TextureImporter:
   internalIDToNameTable:
   - first:
@@ -23,6 +30,24 @@ TextureImporter:
   - first:
       213: -3551056945580125587
     second: Up_6
+  - first:
+      213: -3262869770947861904
+    second: Axe_Up_0
+  - first:
+      213: -9088648352650150258
+    second: Axe_Up_1
+  - first:
+      213: 7905982388216415710
+    second: Axe_Up_2
+  - first:
+      213: 5502660457454029859
+    second: Axe_Up_3
+  - first:
+      213: -7581638582856347769
+    second: Axe_Up_4
+  - first:
+      213: -8778750999143728479
+    second: Axe_Up_5
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -42,7 +67,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 0
+  isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -69,7 +94,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 16
+  spritePixelsToUnits: 49
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -93,7 +118,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: 4
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -144,7 +169,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Up_0
+      name: Axe_Up_0
       rect:
         serializedVersion: 2
         x: 0
@@ -152,21 +177,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 19461def9f5e1fad0800000000000000
-      internalID: -2670100242169240431
+      spriteID: 072ea421b35f7b2d0800000000000000
+      internalID: -3262869770947861904
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Up_1
+      name: Axe_Up_1
       rect:
         serializedVersion: 2
         x: 59
@@ -174,21 +199,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 6b5ea8f5c09b723a0800000000000000
-      internalID: -6690175258641898058
+      spriteID: e8e39db1a72aed180800000000000000
+      internalID: -9088648352650150258
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Up_2
+      name: Axe_Up_2
       rect:
         serializedVersion: 2
         x: 118
@@ -196,21 +221,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: adf1c0e446df6c830800000000000000
-      internalID: 4091235918760648666
+      spriteID: ed5422a2811b7bd60800000000000000
+      internalID: 7905982388216415710
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Up_3
+      name: Axe_Up_3
       rect:
         serializedVersion: 2
         x: 177
@@ -218,21 +243,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 10808bec35a98dbd0800000000000000
-      internalID: -2605162699692701695
+      spriteID: 32cc22e18806d5c40800000000000000
+      internalID: 5502660457454029859
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Up_4
+      name: Axe_Up_4
       rect:
         serializedVersion: 2
         x: 236
@@ -240,21 +265,21 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3ac9ba6331db18e40800000000000000
-      internalID: 5657010497173298339
+      spriteID: 78f837dc0eb98c690800000000000000
+      internalID: -7581638582856347769
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Up_5
+      name: Axe_Up_5
       rect:
         serializedVersion: 2
         x: 295
@@ -262,15 +287,15 @@ TextureImporter:
         width: 59
         height: 49
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 6ef3826a09f0bc180800000000000000
-      internalID: -9094157908607221786
+      spriteID: 1aabe646a7c9b2680800000000000000
+      internalID: -8778750999143728479
       vertices: []
       indices: 
       edges: []
@@ -291,6 +316,12 @@ TextureImporter:
       - key: SpriteEditor.SliceSettings
         value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":59.0,"y":49.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
+      Axe_Up_0: -3262869770947861904
+      Axe_Up_1: -9088648352650150258
+      Axe_Up_2: 7905982388216415710
+      Axe_Up_3: 5502660457454029859
+      Axe_Up_4: -7581638582856347769
+      Axe_Up_5: -8778750999143728479
       Up_0: -2670100242169240431
       Up_1: -6690175258641898058
       Up_2: 4091235918760648666
@@ -302,10 +333,3 @@ TextureImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 295129
-  packageName: Pixelwood Valley 1.1.2 | 16x16 Pixel Art Asset Pack
-  packageVersion: 1.1.2
-  assetPath: Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Axe/Up.png
-  uploadId: 862570

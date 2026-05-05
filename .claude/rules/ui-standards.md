@@ -52,6 +52,39 @@ ROOTBORN은 **PC 데스크톱** 기준이다 (Windows 64-bit 1순위, macOS/Linu
 - 탭 바: 활성 탭은 AccentColor 배경 + Bold, 비활성 탭은 테두리(Outline) + 구분 가능한 배경색
 - 텍스트와 버튼이 시각적으로 구분 불가능하면 안 된다
 - 비활성 탭에도 최소한의 배경색(Surface보다 밝은)과 테두리를 적용한다
+- **선택된 탭/북마크/카테고리 버튼은 위치 offset 또는 색조 강조 중 하나 이상**으로 시각 표시 의무 (정적 색만으로 부족 — 사용자가 어느 항목이 활성인지 한눈에 식별 가능해야 함)
+  - 예: 선택된 북마크는 비선택 대비 24~32px 더 튀어나옴 + 채도 ↑
+
+## 카테고리/탭 콘텐츠 컨테이너 분리
+
+여러 카테고리(탭/북마크) 가 있는 UI 패널은 **카테고리당 별도 GameObject 컨테이너** 를 만들고, 카테고리 전환 시 SetActive 토글 한다.
+
+### 금지
+- 한 페이지에 모든 카테고리 콘텐츠를 혼재 시키고 일부만 enable 토글 (디버깅 어렵고 anchor 충돌)
+- 카테고리 전환 시 sprite/text 만 갈아끼우는 패턴 (페이지 구조 자체가 카테고리마다 다른 경우 부적합)
+
+### 허용
+```csharp
+// 카테고리당 컨테이너 1개. ApplyCategory 시 토글.
+private readonly Dictionary<Category, GameObject> _pagesByCat = new();
+
+void BuildItemsPage(...) { _pagesByCat[Category.Items] = leftItems; }
+void BuildEquipmentPage(...) { _pagesByCat[Category.Equipment] = leftEquip; }
+
+void ApplyCategory(Category cat) {
+    foreach (var kv in _pagesByCat) {
+        kv.Value.SetActive(kv.Key == cat);
+    }
+}
+```
+
+### 같은 콘텐츠를 여러 카테고리가 공유 시
+같은 컨테이너를 여러 카테고리 키에 매핑 — 필터만 다른 케이스에서 유용.
+```csharp
+_pagesByCat[Category.All]      = sharedItemsPage;
+_pagesByCat[Category.Resource] = sharedItemsPage; // 같은 GameObject
+_pagesByCat[Category.Tool]     = sharedItemsPage;
+```
 
 ## 직렬화 참조 완전성 (Serialized Reference Completeness)
 

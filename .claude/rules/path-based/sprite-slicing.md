@@ -97,6 +97,40 @@ public static void Verify() {
 }
 ```
 
+### 6. Sheet 가 cell 균등 분할이 **안 되는** 경우 — 명시 rect 사용
+
+파일명에 적힌 cell 크기와 sheet 실제 크기가 1픽셀 단위로 안 맞는 경우(예: "1 22x20.png" sheet 실제 22×99, 5 셀 = 5×20=100 ≠ 99) 가 흔하다. 이 때 균등 cell 슬라이스(SliceOne)를 그대로 적용하면:
+- **마지막 cell이 잘려나가 sub-sprite 누락**
+- **각 cell의 내용이 한 픽셀씩 어긋나 시각적으로 잘려 보임**
+
+**해결**: sheet 별 전용 슬라이스 메서드 작성 — 명시 rect 으로 5개 셀을 위→아래로 분할, 마지막 셀에 leftover 픽셀 흡수.
+
+```csharp
+private static bool SliceBookmarkSheet()
+{
+    int W = tex.width, H = tex.height; // 22, 99
+    int n = 5;
+    int cellH = H / n;                 // 19
+    var metas = new List<SpriteMetaData>();
+    for (int i = 0; i < n; i++)
+    {
+        int yTop = i * cellH;
+        int yBottom = H - yTop - cellH;
+        if (i == n - 1) { cellH = H - yTop; yBottom = 0; } // 마지막 셀 leftover 흡수
+        metas.Add(new SpriteMetaData {
+            name = $"Bookmark_{i}",
+            rect = new Rect(0, yBottom, W, cellH),
+            ...
+        });
+    }
+    importer.spritesheet = metas.ToArray();
+    importer.SaveAndReimport();
+}
+```
+
+**판별 기준**: sheet 실제 픽셀 크기 % cell 크기 != 0 일 때 즉시 명시 rect 메서드 작성.
+파일명 추정값보다 **실제 sheet 픽셀 크기가 우선**.
+
 ## Sprite 원본 방향 (flipX 부호)
 
 **Side-view 캐릭터 sprite는 원본이 어느 방향을 보는지 실측**해야 flipX 부호가 정확하다.
@@ -114,6 +148,38 @@ Pixelwood `Player Character/Idle/Side.png`, `Walk/Side.png`는 **원본이 왼�
    // Pixelwood Side.png 원본은 왼쪽을 향함 → 오른쪽 입력일 때 flipX
    _renderer.flipX = _input.x > 0f;
    ```
+
+## 외부 프레임 sprite 의 자식 UI 배치 — anchor 기준은 시각 영역, panel sizeDelta 아님
+
+Pixelwood Page1.png 같은 sprite 는 **외부 어두운 프레임 + 갈색 spine 측면 + 내부 베이지 페이지** 가 한 sprite 에 통합돼있다. 자식 UI (북마크/슬롯/리본 등) 를 panel 의 외곽 (anchor 1.0 또는 0.0) 에 붙이면 회색 프레임 바깥에 떠있게 된다 — 사용자 의도는 거의 항상 **시각적 콘텐츠 영역(베이지 페이지) 가장자리** 기준.
+
+### 사례 (2026-05-05)
+ROOTBORN 책 UI 의 5색 북마크를 BookPanel anchor=(1, 0.5) 로 잡았더니, 북마크가 회색 외부 프레임 바깥쪽 빈 공간에 떠있었음. 사용자: "회색부분이 아니라 완전 옆면 책의 맨 뒤 갈색부분 보다 왼쪽으로 와야하는데". BookPanel sizeDelta=1248×792 = sprite 전체이고, 베이지 페이지 우측 끝은 sprite 픽셀 263/290 = UV **0.907** 에 있음.
+
+### 안티패턴 (외부 panel 크기 = 시각 가장자리로 착각)
+```csharp
+rt.anchorMin = new Vector2(1f, 0.5f); // ← BookPanel 의 외부 회색 프레임 끝
+rt.anchorMax = new Vector2(1f, 0.5f);
+rt.pivot = new Vector2(0f, 0.5f);
+rt.anchoredPosition = new Vector2(-22f, y); // 회색 프레임 위로 22px 좌측
+// 결과: 북마크가 회색 프레임/갈색 측면 위에 떠있음 — 베이지 페이지에 안 닿음
+```
+
+### 권장 — sprite 픽셀 측정 후 UV 비율 사용
+1. PNG 를 Read 도구로 시각 확인 (또는 Sprite Editor 에서 픽셀 좌표 측정).
+2. 시각적 콘텐츠 영역 가장자리의 픽셀 좌표를 기록 (예: Page1.png 290×184 의 우측 베이지 페이지 끝 = x=263 → UV 263/290 = 0.907).
+3. UV 비율을 anchor 로 사용:
+```csharp
+rt.anchorMin = new Vector2(0.907f, 0.5f); // 베이지 페이지 우측 끝
+rt.anchorMax = new Vector2(0.907f, 0.5f);
+rt.pivot = new Vector2(0f, 0.5f);
+rt.anchoredPosition = new Vector2(-10f, y); // 베이지 안쪽으로 10px
+```
+
+### 일반화
+- 9-slice 패널 sprite — sliced border 바깥 픽셀(외부 프레임)은 시각 영역 아님. 자식 anchor 는 border 안쪽 UV 기준.
+- 외부 프레임이 두꺼운 모든 UI sprite 에서 자식 anchor 는 **panel sizeDelta 가장자리(0/1)** 가 아니라 **sprite 안쪽 시각 영역 UV** 사용.
+- 사용자가 "프레임 위가 아니라 콘텐츠 옆에 붙여" 라고 지적하면 anchor UV 부터 점검.
 
 ## Pixelwood Valley 구체 데이터
 
