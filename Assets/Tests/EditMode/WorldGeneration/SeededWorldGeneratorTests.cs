@@ -47,6 +47,28 @@ namespace Rootborn.Tests.EditMode.WorldGeneration
         }
 
         [Test]
+        public void Generate_TileSeedControlsTileVariants()
+        {
+            var def = MakeVariantSensitiveDefinition();
+            var a = SeededWorldGenerator.Generate(def, 10, 20);
+            var b = SeededWorldGenerator.Generate(def, 10, 21);
+
+            Assert.AreNotSame(a.GetTile(0, 0), b.GetTile(0, 0));
+            Assert.AreEqual(PropSignature(a), PropSignature(b));
+        }
+
+        [Test]
+        public void Generate_WorldSeedControlsNaturalPropLayout()
+        {
+            var def = MakeVariantSensitiveDefinition();
+            var a = SeededWorldGenerator.Generate(def, 10, 20);
+            var b = SeededWorldGenerator.Generate(def, 11, 20);
+
+            Assert.AreSame(a.GetTile(0, 0), b.GetTile(0, 0));
+            Assert.AreNotEqual(PropSignature(a), PropSignature(b));
+        }
+
+        [Test]
         public void Registry_DefaultFarmTerrainGeneration_IsAssigned()
         {
             var registry = UnityEditor.AssetDatabase.LoadAssetAtPath<Rootborn.Game.Common.GameDataRegistry>(
@@ -74,6 +96,37 @@ namespace Rootborn.Tests.EditMode.WorldGeneration
             var def = ScriptableObject.CreateInstance<TerrainGenerationDefinition>();
             def.SetTestData(10, 10, pattern, new[] { new TerrainReservedArea(new RectInt(0, 0, 4, 4), 0) }, new[] { spawn });
             return def;
+        }
+
+        private static TerrainGenerationDefinition MakeVariantSensitiveDefinition()
+        {
+            var tileA = ScriptableObject.CreateInstance<Tile>();
+            var tileB = ScriptableObject.CreateInstance<Tile>();
+            var set = ScriptableObject.CreateInstance<TileVariantSetDefinition>();
+            set.SetTestData(new[] { new WeightedTileVariant(tileA, 1), new WeightedTileVariant(tileB, 1) });
+
+            var pattern = ScriptableObject.CreateInstance<TilePatternDefinition>();
+            pattern.SetTestData(1, 1, new[] { set });
+
+            var resource = ScriptableObject.CreateInstance<ResourceNodeDefinition>();
+            var spawn = ScriptableObject.CreateInstance<NaturalPropSpawnDefinition>();
+            spawn.SetTestData(resource, 4, new RectInt(0, 0, 12, 12), 1, 64);
+
+            var def = ScriptableObject.CreateInstance<TerrainGenerationDefinition>();
+            def.SetTestData(4, 4, pattern, new[] { new TerrainReservedArea(new RectInt(0, 0, 2, 2), 0) }, new[] { spawn });
+            return def;
+        }
+
+        private static string PropSignature(SeededWorldGenerator.GeneratedWorld world)
+        {
+            var parts = new string[world.Props.Length];
+            for (int i = 0; i < world.Props.Length; i++)
+            {
+                parts[i] = world.Props[i].Cell.x + ":" + world.Props[i].Cell.y;
+            }
+
+            System.Array.Sort(parts, System.StringComparer.Ordinal);
+            return string.Join("|", parts);
         }
     }
 }

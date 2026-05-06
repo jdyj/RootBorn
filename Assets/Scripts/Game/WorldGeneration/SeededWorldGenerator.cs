@@ -71,7 +71,7 @@ namespace Rootborn.Game.WorldGeneration
             }
         }
 
-        public static GeneratedWorld Generate(TerrainGenerationDefinition definition, int terrainSeed, int propSeed)
+        public static GeneratedWorld Generate(TerrainGenerationDefinition definition, int worldSeed, int tileSeed)
         {
             if (definition == null)
             {
@@ -86,11 +86,11 @@ namespace Rootborn.Game.WorldGeneration
                 for (int x = 0; x < width; x++)
                 {
                     var variants = definition.BasePattern != null ? definition.BasePattern.GetVariantSet(x, y) : null;
-                    tiles[x, y] = variants != null ? variants.Pick(terrainSeed, x, y, 0) : null;
+                    tiles[x, y] = variants != null ? variants.Pick(tileSeed, x, y, 0) : null;
                 }
             }
 
-            var props = GenerateProps(definition, propSeed);
+            var props = GenerateProps(definition, worldSeed);
             return new GeneratedWorld(width, height, tiles, props.ToArray());
         }
 
