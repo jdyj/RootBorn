@@ -93,6 +93,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 35d47fd4b64f14d47b264093442617d9
+    m_Address: sprites/interiors/modern/16/ui
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 366484a031787004484a2ef505815b49
     m_Address: sprites/ui/book/page-4
     m_ReadOnly: 0
@@ -261,6 +267,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ba1466455cd48644eb35d02c4f39dfbb
+    m_Address: sprites/interiors/modern/16/floors
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ba5f72287d6dbbe40a72035bd0356b2c
     m_Address: sprites/ui/book/page-1
     m_ReadOnly: 0
@@ -317,6 +329,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e56f07a0c84d03749a08853a3c7f9163
     m_Address: sprites/ui/decor/cutter-long
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ea5b695cf01daa1459886eb31f40fd54
+    m_Address: sprites/interiors/modern/16/walls
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
