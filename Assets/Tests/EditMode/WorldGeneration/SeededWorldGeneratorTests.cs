@@ -113,6 +113,17 @@ namespace Rootborn.Tests.EditMode.WorldGeneration
             Assert.IsNotNull(registry.DefaultFarmTerrainGeneration);
         }
 
+        [Test]
+        public void ResourcesRegistry_DefaultFarmTerrainGeneration_IsRuntimeReady()
+        {
+            var registry = UnityEditor.AssetDatabase.LoadAssetAtPath<Rootborn.Game.Common.GameDataRegistry>(
+                "Assets/Resources/GameDataRegistry.asset");
+            Assert.IsNotNull(registry);
+            Assert.IsNotNull(registry.DefaultFarmTerrainGeneration);
+            Assert.IsNotNull(registry.DefaultFarmTerrainGeneration.BasePattern);
+            Assert.Greater(registry.DefaultFarmTerrainGeneration.NaturalPropSpawns.Length, 0);
+        }
+
         private static TerrainGenerationDefinition MakeDefinition()
         {
             var tileA = ScriptableObject.CreateInstance<Tile>();
