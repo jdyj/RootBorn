@@ -15,4 +15,4 @@ MonoBehaviour:
   _requiredRepeats: 1
   _expectedTargetResourceId: Rock
   _expectedSurface: ground
-  _expectedTool: {fileID: 11400000, guid: 5e36fb0bfb8264044bb95e1c8de70da2, type: 2}
+  _expectedTool: {fileID: 0}

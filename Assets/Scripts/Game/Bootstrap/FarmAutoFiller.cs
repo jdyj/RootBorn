@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Rootborn.Game.Common;
 using Rootborn.Game.Managers;
 using Rootborn.Game.Resources;
+using Rootborn.Game.Save;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
@@ -177,11 +178,18 @@ namespace Rootborn.Game.Bootstrap
             var rootName = "[Resources]";
             var existing = FindObjectByName(rootName);
 
-            // 기존 [Resources] 자식이 있으면 spawn 은 스킵하지만 collider/_definition 은 보강.
             if (existing != null && existing.transform.childCount > 0)
             {
-                ReinforceExistingResources(existing.transform, registry);
-                return;
+                if (ActiveSaveContext.Metadata == null)
+                {
+                    ReinforceExistingResources(existing.transform, registry);
+                    return;
+                }
+
+                for (int i = existing.transform.childCount - 1; i >= 0; i--)
+                {
+                    Object.DestroyImmediate(existing.transform.GetChild(i).gameObject);
+                }
             }
 
             var rootGo = existing != null ? existing : new GameObject(rootName);
@@ -202,7 +210,8 @@ namespace Rootborn.Game.Bootstrap
                 return;
             }
 
-            var rng = new System.Random(20260504);
+            int seed = ActiveSaveContext.Metadata != null ? ActiveSaveContext.Metadata.WorldSeed : 20260504;
+            var rng = new System.Random(seed);
             int treeTarget = treeDef != null ? 12 : 0;
             int rockTarget = rockDef != null ? 8 : 0;
 
@@ -501,11 +510,11 @@ namespace Rootborn.Game.Bootstrap
                 }
             }
 
-            // PlayerInventory 누락 시 부착 + GatherInteractor wiring + 시작 도구 장착.
-            if (player.GetComponent<Rootborn.Game.Player.PlayerInventory>() == null)
+            var registry = Rootborn.Game.Managers.Managers.Data?.Registry ?? LoadRegistryFallback();
+            var inv = player.GetComponent<Rootborn.Game.Player.PlayerInventory>();
+            if (inv == null)
             {
-                var registry = Rootborn.Game.Managers.Managers.Data?.Registry ?? LoadRegistryFallback();
-                var inv = player.AddComponent<Rootborn.Game.Player.PlayerInventory>();
+                inv = player.AddComponent<Rootborn.Game.Player.PlayerInventory>();
                 inv.Bind(registry);
                 inv.TryAddById("BareHand", 1);
                 inv.TryAddById("StoneAxe", 1);
@@ -513,9 +522,19 @@ namespace Rootborn.Game.Bootstrap
                 inv.TryAddById("Stone", 3);
                 var bareHandItem = inv.FindById("BareHand");
                 if (bareHandItem != null) inv.EquipTool(bareHandItem);
-                var interactor = player.GetComponent<Rootborn.Game.Player.GatherInteractor>();
-                if (interactor != null) interactor.BindInventory(inv);
                 added++;
+            }
+
+            var interactor = player.GetComponent<Rootborn.Game.Player.GatherInteractor>();
+            if (interactor == null)
+            {
+                interactor = player.AddComponent<Rootborn.Game.Player.GatherInteractor>();
+                added++;
+            }
+            interactor.BindInventory(inv);
+            if (interactor.KnowledgeProgress == null && registry != null)
+            {
+                interactor.Bind(new Rootborn.Game.Knowledge.KnowledgeProgress(registry.Knowledge));
             }
 
             if (added > 0)
