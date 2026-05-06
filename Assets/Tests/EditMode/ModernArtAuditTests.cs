@@ -34,5 +34,26 @@ namespace Rootborn.Tests.EditMode
             Assert.AreEqual("icon", farmIcon.Role);
             Assert.AreEqual("core", farmIcon.Priority);
         }
+
+        [Test]
+        public void FindPixelwoodReferences_FindsCurrentCodeReferences()
+        {
+            var references = ModernArtAudit.FindPixelwoodReferences();
+
+            Assert.IsTrue(references.Any(x => x.Path == "Assets/Scripts/Editor/Tools/PixelwoodSliceSetup.cs"));
+            Assert.IsTrue(references.Any(x => x.Path == "Assets/Scripts/Editor/Tools/AddressablesSetup.cs"));
+            Assert.IsTrue(references.Any(x => x.Text.Contains("Pixelwood")));
+        }
+
+        [Test]
+        public void PixelwoodReferenceMarkdown_ContainsFileAndLine()
+        {
+            var references = ModernArtAudit.FindPixelwoodReferences();
+            string markdown = ModernArtAudit.BuildPixelwoodReferenceMarkdown(references);
+
+            Assert.IsTrue(markdown.Contains("# Pixelwood Reference Report"));
+            Assert.IsTrue(markdown.Contains("Assets/Scripts/Editor/Tools/PixelwoodSliceSetup.cs"));
+            Assert.IsTrue(markdown.Contains("| Line |"));
+        }
     }
 }
