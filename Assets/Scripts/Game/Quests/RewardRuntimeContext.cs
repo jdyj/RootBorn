@@ -1,5 +1,6 @@
 using Rootborn.Game.Common;
 using Rootborn.Game.Knowledge;
+using Rootborn.Game.Story;
 
 namespace Rootborn.Game.Quests
 {
@@ -8,13 +9,13 @@ namespace Rootborn.Game.Quests
         public readonly QuestLog QuestLog;
         public readonly Inventory Inventory;
         public readonly KnowledgeProgress KnowledgeProgress;
-        public readonly object StoryFlags;
+        public readonly StoryFlagSet StoryFlags;
 
         public RewardRuntimeContext(
             QuestLog questLog,
             Inventory inventory,
             KnowledgeProgress knowledgeProgress,
-            object storyFlags)
+            StoryFlagSet storyFlags)
         {
             QuestLog = questLog;
             Inventory = inventory;
