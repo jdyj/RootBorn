@@ -27,9 +27,7 @@ namespace Rootborn.Editor.Tools
         [MenuItem("Rootborn/Data/Generate Default Data")]
         public static void Generate()
         {
-            // 1) Make sure sprite sheets are sliced first
             PixelwoodSliceSetup.SliceAll();
-            // Fantasy Book UI 9-slice 자동 설정 (Sizeable Boxes / Icon Container / Pages 등)
             PixelwoodSliceSetup.ConfigureFantasyBookUI();
             EnsureSingleSpriteImporter(TreeSpritePath);
             EnsureSingleSpriteImporter(RockSpritePath);
@@ -47,7 +45,6 @@ namespace Rootborn.Editor.Tools
             EnsureFolder($"{DataRoot}/Items");
             EnsureFolder("Assets/Resources");
 
-            // 2) Sprite lookups
             var itemSprites = LoadSubSprites(ItemSheetPath);
             var cropSprites = LoadSubSprites(CropSheetPath);
             var treeSprite = AssetDatabase.LoadAssetAtPath<Sprite>(TreeSpritePath);
@@ -190,7 +187,6 @@ namespace Rootborn.Editor.Tools
                 SetField(g, "_nextGeneration", genStone);
             });
 
-            // Pixelwood 시트에서 ground/player sprite 추출 (sliced sub-sprite 중에서)
             var tileSprites = LoadSubSprites(TileSheetPath);
             Sprite groundSprite = null;
             for (int i = 0; i < tileSprites.Length; i++)
@@ -203,12 +199,10 @@ namespace Rootborn.Editor.Tools
             }
             if (groundSprite == null && tileSprites.Length > 0) groundSprite = tileSprites[0];
 
-            // PlayerSprite — Pixelwood Idle/Down.png의 sub-sprite. Slice가 끝났는지 확인.
             var playerSprites = LoadSubSprites(PlayerIdleDownPath);
             if (playerSprites.Length == 0)
             {
-                Debug.LogWarning($"[ROOTBORN/GenerateData] No sub-sprites found at {PlayerIdleDownPath}. " +
-                                 "Reimporting and retrying...");
+                Debug.LogWarning($"[ROOTBORN/GenerateData] No sub-sprites found at {PlayerIdleDownPath}. Reimporting and retrying...");
                 AssetDatabase.ImportAsset(PlayerIdleDownPath, ImportAssetOptions.ForceUpdate);
                 AssetDatabase.Refresh();
                 playerSprites = LoadSubSprites(PlayerIdleDownPath);
@@ -216,17 +210,14 @@ namespace Rootborn.Editor.Tools
             Sprite playerSprite = null;
             if (playerSprites.Length > 0)
             {
-                // 중간 프레임(인덱스 1)을 우선 — 첫 프레임이 빈 공간일 수 있음
                 playerSprite = playerSprites.Length > 1 ? playerSprites[1] : playerSprites[0];
                 Debug.Log($"[ROOTBORN/GenerateData] PlayerSprite wired: '{playerSprite.name}' from {PlayerIdleDownPath} ({playerSprites.Length} sub-sprites available).");
             }
             else
             {
-                Debug.LogError($"[ROOTBORN/GenerateData] Could not load any sub-sprite from {PlayerIdleDownPath}. " +
-                               "Player will use red fallback. Re-run 'Rootborn → Pixelwood → Slice Sprite Sheets' manually.");
+                Debug.LogError($"[ROOTBORN/GenerateData] Could not load any sub-sprite from {PlayerIdleDownPath}. Player will use red fallback. Re-run 'Rootborn -> Pixelwood -> Slice Sprite Sheets' manually.");
             }
 
-            // Item SO — 자원·도구 인벤토리 표시용. ID 는 ResourceDrop / ToolDefinition 과 동일 키.
             var itemWood = CreateOrLoad<ItemDefinition>($"{DataRoot}/Items/Item_Wood.asset", it =>
             {
                 SetField(it, "_id", "Wood");
@@ -250,6 +241,7 @@ namespace Rootborn.Editor.Tools
                 SetField(it, "_icon", bareHand != null ? bareHand.Icon : null);
                 SetField(it, "_maxStack", 1);
                 SetField(it, "_category", ItemCategory.Tool);
+                SetField(it, "_toolSpritePrefix", string.Empty);
             });
             var itemStoneAxe = CreateOrLoad<ItemDefinition>($"{DataRoot}/Items/Item_Tool_StoneAxe.asset", it =>
             {
@@ -258,14 +250,10 @@ namespace Rootborn.Editor.Tools
                 SetField(it, "_icon", stoneAxe != null ? stoneAxe.Icon : null);
                 SetField(it, "_maxStack", 1);
                 SetField(it, "_category", ItemCategory.Tool);
+                SetField(it, "_toolSpritePrefix", "Axe");
             });
 
-            // UI sprite 는 Addressables 에서 직접 로드 (UISpriteAddresses 상수).
-            // AddressablesSetup.WireAll() 이 Sprites 그룹 + PreLoad 라벨로 등록.
-            // 더 이상 SO catalog 로 직접 참조하지 않음 (헌법 §addressables 준수).
             DeleteIfExists($"{DataRoot}/UISpriteCatalog.asset");
-
-            // 기존 Assets/Data/Registry 위치의 SO가 있으면 정리 (Resources/로 옮길 예정)
             DeleteIfExists($"{DataRoot}/Registry/GameDataRegistry.asset");
             var registry = CreateOrLoad<GameDataRegistry>("Assets/Resources/GameDataRegistry.asset", r =>
             {
@@ -294,17 +282,13 @@ namespace Rootborn.Editor.Tools
             }
         }
 
-        // ScriptableObject .asset 의 m_Script 가 broken (fileID: 0) 일 때 복구.
-        // 발생 원인: 클래스가 컴파일된 직후 .asset 이 만들어지면 MonoScript GUID 가 미해결 채로 직렬화됨.
         private static void EnsureMonoScriptWired<T>(T asset) where T : ScriptableObject
         {
             var so = new SerializedObject(asset);
             var scriptProp = so.FindProperty("m_Script");
             if (scriptProp == null) return;
-            // 이미 정상이면 스킵.
             if (scriptProp.objectReferenceValue != null) return;
 
-            // 클래스 이름과 같은 MonoScript 검색.
             var typeName = typeof(T).Name;
             var guids = AssetDatabase.FindAssets($"t:MonoScript {typeName}");
             foreach (var guid in guids)
@@ -332,8 +316,6 @@ namespace Rootborn.Editor.Tools
             }
             else
             {
-                // 기존 .asset 의 m_Script 가 broken (fileID:0) 인 경우 복구.
-                // SerializedObject 로 m_Script 를 명시적으로 MonoScript 에 재연결.
                 EnsureMonoScriptWired(asset);
             }
             configure?.Invoke(asset);
@@ -432,30 +414,6 @@ namespace Rootborn.Editor.Tools
         {
             if (itemSprites == null || itemSprites.Length == 0) return null;
             return itemSprites[Mathf.Clamp(index, 0, itemSprites.Length - 1)];
-        }
-
-        private const string FantasyBookRoot = "Assets/Pixelwood Valley/Fantasy Book UI V2/1.0/Sprites";
-        private static Sprite LoadFantasyBookSprite(string relativePath)
-        {
-            var full = $"{FantasyBookRoot}/{relativePath}";
-            var s = AssetDatabase.LoadAssetAtPath<Sprite>(full);
-            if (s == null) Debug.LogWarning($"[ROOTBORN/UI] Fantasy Book sprite missing: {full}");
-            return s;
-        }
-
-        private static Sprite[] LoadFantasyBookSubSprites(string relativePath)
-        {
-            var full = $"{FantasyBookRoot}/{relativePath}";
-            var all = AssetDatabase.LoadAllAssetsAtPath(full);
-            var list = new List<Sprite>();
-            foreach (var a in all)
-            {
-                if (a is Sprite s) list.Add(s);
-            }
-            // Sprite 이름 순서로 정렬 (Bookmark_0, _1, ...).
-            list.Sort((a, b) => string.CompareOrdinal(a.name, b.name));
-            if (list.Count == 0) Debug.LogWarning($"[ROOTBORN/UI] No sub-sprites at {full} — sliced multi-sprite 인지 확인.");
-            return list.ToArray();
         }
 
         private static void EnsureSingleSpriteImporter(string assetPath)

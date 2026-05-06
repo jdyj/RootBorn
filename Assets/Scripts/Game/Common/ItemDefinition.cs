@@ -20,6 +20,7 @@ namespace Rootborn.Game.Common
         [SerializeField, TextArea(3, 6)] private string _description;
         // Category==Seed 인 아이템이 어떤 작물의 씨앗인지. PlantSeedEffect 가 ID 분기 없이 작물 조회.
         [SerializeField] private CropDefinition _seedFor;
+        [SerializeField] private string _toolSpritePrefix;
 
         public string Id => _id;
         public string DisplayKey => _displayKey;
@@ -28,5 +29,6 @@ namespace Rootborn.Game.Common
         public ItemCategory Category => _category;
         public string Description => _description;
         public CropDefinition SeedFor => _seedFor;
+        public string ToolSpritePrefix => _toolSpritePrefix;
     }
 }

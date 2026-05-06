@@ -19,3 +19,5 @@ MonoBehaviour:
   _category: 1
   _description: A sharpened stone lashed to a sturdy stick. Cuts through tree trunks
     where bare hands would only bruise.
+  _seedFor: {fileID: 0}
+  _toolSpritePrefix: Axe
