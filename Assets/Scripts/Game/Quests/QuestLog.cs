@@ -61,6 +61,66 @@ namespace Rootborn.Game.Quests
             }
         }
 
+        public bool CanClaimReward(QuestDefinition quest, in RewardRuntimeContext context)
+        {
+            if (!TryGetProgress(quest, out var progress) || progress.State != QuestState.Completed)
+            {
+                return false;
+            }
+
+            if (quest.Rewards != null)
+            {
+                for (int i = 0; i < quest.Rewards.Length; i++)
+                {
+                    var reward = quest.Rewards[i];
+                    if (reward != null && !reward.CanApply(in context))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            if (quest.CompletionEffects != null)
+            {
+                for (int i = 0; i < quest.CompletionEffects.Length; i++)
+                {
+                    var effect = quest.CompletionEffects[i];
+                    if (effect != null && !effect.CanApply(in context))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        public bool ClaimReward(QuestDefinition quest, in RewardRuntimeContext context)
+        {
+            if (!CanClaimReward(quest, in context))
+            {
+                return false;
+            }
+
+            if (quest.Rewards != null)
+            {
+                for (int i = 0; i < quest.Rewards.Length; i++)
+                {
+                    quest.Rewards[i]?.Apply(in context);
+                }
+            }
+
+            if (quest.CompletionEffects != null)
+            {
+                for (int i = 0; i < quest.CompletionEffects.Length; i++)
+                {
+                    quest.CompletionEffects[i]?.Apply(in context);
+                }
+            }
+
+            return TryGetProgress(quest, out var progress) && progress.TryMarkRewardClaimed();
+        }
+
         private bool TryGetProgress(QuestDefinition quest, out QuestProgress progress)
         {
             if (quest != null)

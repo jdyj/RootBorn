@@ -71,6 +71,17 @@ namespace Rootborn.Game.Quests
             return true;
         }
 
+        public bool TryMarkRewardClaimed()
+        {
+            if (State != QuestState.Completed)
+            {
+                return false;
+            }
+
+            State = QuestState.RewardClaimed;
+            return true;
+        }
+
         private bool AllObjectivesComplete()
         {
             if (_objectiveComplete.Length == 0)
