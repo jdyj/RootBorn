@@ -87,8 +87,8 @@ namespace Rootborn.Game.Managers
             return string.Join("_", parts) + "_0";
         }
 
-        // UI sprite 일괄 사전 로드. UISpriteAddresses 의 모든 single sprite + sheet 을
-        // Addressables 로 로드해 캐시. FarmHudController 가 동기 GetCached 로 조회.
+        // UI sprite 일괄 사전 로드. 기존 Pixelwood UI와 Modern UI sheet를 모두 캐시한다.
+        // StatusHud 전환 중에는 두 주소 체계가 공존한다.
         private static async Task PreloadUiSpritesAsync(ResourceManager rm)
         {
             int singleOk = 0, singleMiss = 0;
@@ -98,7 +98,32 @@ namespace Rootborn.Game.Managers
                 if (s != null) singleOk++; else singleMiss++;
             }
             int sheetOk = 0, sheetMiss = 0;
-            foreach (var (sheet, subs) in UISpriteAddresses.AllSheets)
+            PreloadSheetResult legacySheets = await PreloadSheetsAsync(rm, UISpriteAddresses.AllSheets);
+            sheetOk += legacySheets.Ok;
+            sheetMiss += legacySheets.Miss;
+            PreloadSheetResult modernSheets = await PreloadSheetsAsync(rm, ModernUISpriteAddresses.AllSheets);
+            sheetOk += modernSheets.Ok;
+            sheetMiss += modernSheets.Miss;
+            Debug.Log($"[ROOTBORN/Managers] UI sprites preloaded: single {singleOk}/{singleOk + singleMiss}, sheets {sheetOk}/{sheetOk + sheetMiss}.");
+        }
+
+        private readonly struct PreloadSheetResult
+        {
+            public PreloadSheetResult(int ok, int miss)
+            {
+                Ok = ok;
+                Miss = miss;
+            }
+
+            public int Ok { get; }
+            public int Miss { get; }
+        }
+
+        private static async Task<PreloadSheetResult> PreloadSheetsAsync(ResourceManager rm, (string sheetAddress, string[] subNames)[] sheets)
+        {
+            int sheetOk = 0;
+            int sheetMiss = 0;
+            foreach (var (sheet, subs) in sheets)
             {
                 bool ok = true;
                 foreach (var sub in subs)
@@ -108,7 +133,8 @@ namespace Rootborn.Game.Managers
                 }
                 if (ok) sheetOk++; else sheetMiss++;
             }
-            Debug.Log($"[ROOTBORN/Managers] UI sprites preloaded: single {singleOk}/{singleOk + singleMiss}, sheets {sheetOk}/{sheetOk + sheetMiss}.");
+
+            return new PreloadSheetResult(sheetOk, sheetMiss);
         }
     }
 }
