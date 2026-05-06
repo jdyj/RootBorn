@@ -31,6 +31,11 @@ namespace Rootborn.Game.Quests
             return TryGetProgress(quest, out var progress) ? progress.State : QuestState.NotStarted;
         }
 
+        public int GetObjectiveCount(QuestDefinition quest, int objectiveIndex)
+        {
+            return TryGetProgress(quest, out var progress) ? progress.GetObjectiveCount(objectiveIndex) : 0;
+        }
+
         public bool Accept(QuestDefinition quest)
         {
             return TryGetProgress(quest, out var progress) && progress.TryAccept();
@@ -119,6 +124,48 @@ namespace Rootborn.Game.Quests
             }
 
             return TryGetProgress(quest, out var progress) && progress.TryMarkRewardClaimed();
+        }
+
+        public QuestLogSaveData ToSaveData()
+        {
+            var list = new List<QuestProgressSaveData>(_progressByQuest.Count);
+            foreach (var pair in _progressByQuest)
+            {
+                if (pair.Key == null || string.IsNullOrEmpty(pair.Key.Id))
+                {
+                    continue;
+                }
+
+                list.Add(pair.Value.ToSaveData(pair.Key.Id));
+            }
+
+            return new QuestLogSaveData { Quests = list.ToArray() };
+        }
+
+        public void LoadFromSaveData(QuestLogSaveData saveData)
+        {
+            if (saveData == null || saveData.Quests == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < saveData.Quests.Length; i++)
+            {
+                var saved = saveData.Quests[i];
+                if (saved == null || string.IsNullOrEmpty(saved.QuestId))
+                {
+                    continue;
+                }
+
+                foreach (var pair in _progressByQuest)
+                {
+                    if (pair.Key != null && pair.Key.Id == saved.QuestId)
+                    {
+                        pair.Value.LoadFromSaveData(saved);
+                        break;
+                    }
+                }
+            }
         }
 
         private bool TryGetProgress(QuestDefinition quest, out QuestProgress progress)

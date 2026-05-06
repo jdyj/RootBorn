@@ -82,6 +82,56 @@ namespace Rootborn.Game.Quests
             return true;
         }
 
+        public QuestProgressSaveData ToSaveData(string questId)
+        {
+            return new QuestProgressSaveData
+            {
+                QuestId = questId,
+                State = State,
+                ObjectiveCounts = (int[])_objectiveCounts.Clone(),
+                ProcessedEventKeys = new List<string>(_processedEventKeys).ToArray(),
+            };
+        }
+
+        public void LoadFromSaveData(QuestProgressSaveData data)
+        {
+            if (data == null)
+            {
+                return;
+            }
+
+            State = data.State;
+            bool savedAsFinished = State == QuestState.Completed || State == QuestState.RewardClaimed;
+            for (int i = 0; i < _objectiveCounts.Length; i++)
+            {
+                _objectiveCounts[i] = 0;
+                _objectiveComplete[i] = savedAsFinished;
+            }
+
+            if (data.ObjectiveCounts != null)
+            {
+                for (int i = 0; i < _objectiveCounts.Length && i < data.ObjectiveCounts.Length; i++)
+                {
+                    _objectiveCounts[i] = data.ObjectiveCounts[i] < 0 ? 0 : data.ObjectiveCounts[i];
+                }
+            }
+
+            _processedEventKeys.Clear();
+            if (data.ProcessedEventKeys == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < data.ProcessedEventKeys.Length; i++)
+            {
+                string key = data.ProcessedEventKeys[i];
+                if (!string.IsNullOrEmpty(key))
+                {
+                    _processedEventKeys.Add(key);
+                }
+            }
+        }
+
         private bool AllObjectivesComplete()
         {
             if (_objectiveComplete.Length == 0)
