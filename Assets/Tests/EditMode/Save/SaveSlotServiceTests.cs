@@ -81,6 +81,29 @@ namespace Rootborn.Tests.EditMode.Save
         }
 
         [Test]
+        public void CreateDeterministicMetadata_UsesStableSeedsForCliSlotFallback()
+        {
+            var root = MakeTempRoot();
+            try
+            {
+                var service = new SaveService("myfarm", root);
+                var a = service.CreateDeterministicMetadata("myfarm", new CharacterCustomization { BodyVariant = 2 });
+                var b = service.CreateDeterministicMetadata("myfarm", new CharacterCustomization { BodyVariant = 2 });
+                var c = service.CreateDeterministicMetadata("otherfarm", new CharacterCustomization { BodyVariant = 2 });
+
+                Assert.AreEqual("myfarm", a.SlotId);
+                Assert.AreEqual(a.WorldSeed, b.WorldSeed);
+                Assert.AreEqual(a.TileSeed, b.TileSeed);
+                Assert.AreNotEqual(a.WorldSeed, c.WorldSeed);
+                Assert.AreEqual(2, a.Character.BodyVariant);
+            }
+            finally
+            {
+                Directory.Delete(root, true);
+            }
+        }
+
+        [Test]
         public void DeleteSlot_RemovesMetadata()
         {
             var root = MakeTempRoot();

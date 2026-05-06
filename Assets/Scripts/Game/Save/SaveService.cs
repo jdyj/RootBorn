@@ -67,6 +67,14 @@ namespace Rootborn.Game.Save
             return CreateMetadata(safeSlotId, character, worldSeed, tileSeed);
         }
 
+        public SaveSlotMetadata CreateDeterministicMetadata(string slotId, CharacterCustomization character)
+        {
+            string safeSlotId = SanitizeOrThrow(slotId);
+            int worldSeed = StableHash(safeSlotId, 0x13579BDF);
+            int tileSeed = StableHash(safeSlotId, 0x2468ACE);
+            return CreateMetadata(safeSlotId, character, worldSeed, tileSeed);
+        }
+
         public SaveSlotMetadata CreateMetadata(string slotId, CharacterCustomization character, int worldSeed, int tileSeed)
         {
             string safeSlotId = SanitizeOrThrow(slotId);
@@ -191,6 +199,20 @@ namespace Rootborn.Game.Save
             }
 
             return slotId;
+        }
+
+        private static int StableHash(string value, int salt)
+        {
+            unchecked
+            {
+                int hash = salt;
+                for (int i = 0; i < value.Length; i++)
+                {
+                    hash = (hash * 16777619) ^ value[i];
+                }
+
+                return hash;
+            }
         }
     }
 }

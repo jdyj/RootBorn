@@ -1,3 +1,4 @@
+using Rootborn.Game.Bootstrap;
 using Rootborn.Game.Common;
 using Rootborn.Game.Resources;
 using Rootborn.Game.Save;
@@ -34,7 +35,7 @@ namespace Rootborn.Game.WorldGeneration
 
         public void ApplyFromActiveContext()
         {
-            var metadata = Rootborn.Game.Save.ActiveSaveContext.Metadata;
+            var metadata = ResolveMetadata();
             if (metadata == null)
             {
                 return;
@@ -54,6 +55,23 @@ namespace Rootborn.Game.WorldGeneration
             var generated = SeededWorldGenerator.Generate(registry.DefaultFarmTerrainGeneration, metadata.WorldSeed, metadata.TileSeed);
             ApplyTiles(generated);
             ApplyProps(generated);
+        }
+
+        private static SaveSlotMetadata ResolveMetadata()
+        {
+            var metadata = Rootborn.Game.Save.ActiveSaveContext.Metadata;
+            if (metadata != null)
+            {
+                return metadata;
+            }
+
+            string slotId = GameBootstrap.Config != null && !string.IsNullOrEmpty(GameBootstrap.Config.SaveSlot)
+                ? GameBootstrap.Config.SaveSlot
+                : "default";
+            var service = new SaveService(slotId);
+            metadata = service.LoadMetadata(slotId) ?? service.CreateDeterministicMetadata(slotId, new Rootborn.Game.Player.CharacterCustomization());
+            Rootborn.Game.Save.ActiveSaveContext.Set(metadata);
+            return metadata;
         }
 
         private static void ApplyTiles(SeededWorldGenerator.GeneratedWorld generated)
