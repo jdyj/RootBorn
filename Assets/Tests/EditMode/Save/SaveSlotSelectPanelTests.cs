@@ -4,6 +4,7 @@ using Rootborn.Game.Player;
 using Rootborn.Game.Save;
 using Rootborn.UI.MainMenu;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Rootborn.Tests.EditMode.Save
 {
@@ -52,11 +53,41 @@ namespace Rootborn.Tests.EditMode.Save
             StringAssert.Contains("Outfit 3", preview);
         }
 
+        [Test]
+        public void BuildCharacterPreviewImage_CreatesVisibleImageFromCharacterVariants()
+        {
+            var parent = new GameObject("Card", typeof(RectTransform));
+            try
+            {
+                var character = new CharacterCustomization { BodyVariant = 1, HairVariant = 2, OutfitVariant = 3 };
+                var metadata = new SaveSlotMetadata { Character = character };
+
+                InvokeBuildCharacterPreviewImage(parent.transform, metadata);
+
+                var preview = parent.transform.Find("CharacterPreviewImage");
+                Assert.IsNotNull(preview);
+                var image = preview.GetComponent<Image>();
+                Assert.IsNotNull(image);
+                Assert.Greater(image.color.a, 0f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(parent);
+            }
+        }
+
         private static string InvokeFormatCharacterPreview(SaveSlotMetadata metadata)
         {
             var method = typeof(SaveSlotSelectPanel).GetMethod("FormatCharacterPreview", BindingFlags.Static | BindingFlags.NonPublic);
             Assert.IsNotNull(method);
             return (string)method.Invoke(null, new object[] { metadata });
+        }
+
+        private static void InvokeBuildCharacterPreviewImage(Transform parent, SaveSlotMetadata metadata)
+        {
+            var method = typeof(SaveSlotSelectPanel).GetMethod("BuildCharacterPreviewImage", BindingFlags.Static | BindingFlags.NonPublic);
+            Assert.IsNotNull(method);
+            method.Invoke(null, new object[] { parent, metadata });
         }
     }
 }

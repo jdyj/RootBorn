@@ -95,10 +95,11 @@ namespace Rootborn.UI.MainMenu
             string seedText = summary.Exists
                 ? $"World {summary.Metadata.WorldSeed}\nTile {summary.Metadata.TileSeed}"
                 : "No save data";
-            MakeText(card.transform, "SeedText", seedText, new Vector2(0f, -120f), new Vector2(340f, 90f), 24, TextAnchor.MiddleCenter,
+            MakeText(card.transform, "SeedText", seedText, new Vector2(0f, -112f), new Vector2(340f, 78f), 24, TextAnchor.MiddleCenter,
                 new Vector2(0.5f, 1f), new Vector2(0.5f, 1f));
 
-            MakeText(card.transform, "CharacterPreview", FormatCharacterPreview(summary.Metadata), new Vector2(0f, -220f), new Vector2(340f, 92f), 22, TextAnchor.MiddleCenter,
+            BuildCharacterPreviewImage(card.transform, summary.Metadata);
+            MakeText(card.transform, "CharacterPreview", FormatCharacterPreview(summary.Metadata), new Vector2(0f, -292f), new Vector2(340f, 78f), 22, TextAnchor.MiddleCenter,
                 new Vector2(0.5f, 1f), new Vector2(0.5f, 1f));
 
             if (summary.Exists)
@@ -141,6 +142,32 @@ namespace Rootborn.UI.MainMenu
             }
 
             return $"Body {character.BodyVariant}\nHair {character.HairVariant}\nOutfit {character.OutfitVariant}";
+        }
+
+        private static void BuildCharacterPreviewImage(Transform parent, SaveSlotMetadata metadata)
+        {
+            var go = new GameObject("CharacterPreviewImage", typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(parent, false);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = new Vector2(0.5f, 1f);
+            rt.anchorMax = new Vector2(0.5f, 1f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = new Vector2(0f, -210f);
+            rt.sizeDelta = new Vector2(72f, 72f);
+
+            var character = metadata != null ? metadata.Character : null;
+            int bodyVariant = character != null ? character.BodyVariant : 0;
+            int hairVariant = character != null ? character.HairVariant : 0;
+            int outfitVariant = character != null ? character.OutfitVariant : 0;
+            go.GetComponent<Image>().color = CharacterPreviewColor(bodyVariant, hairVariant, outfitVariant);
+        }
+
+        private static Color CharacterPreviewColor(int bodyVariant, int hairVariant, int outfitVariant)
+        {
+            float red = 0.35f + Mathf.Repeat(bodyVariant * 0.11f, 0.45f);
+            float green = 0.35f + Mathf.Repeat(hairVariant * 0.13f, 0.45f);
+            float blue = 0.35f + Mathf.Repeat(outfitVariant * 0.17f, 0.45f);
+            return new Color(red, green, blue, 1f);
         }
 
         private static Canvas EnsureCanvas()
