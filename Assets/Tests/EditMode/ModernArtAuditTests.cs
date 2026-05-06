@@ -55,5 +55,28 @@ namespace Rootborn.Tests.EditMode
             Assert.IsTrue(markdown.Contains("Assets/Scripts/Editor/Tools/PixelwoodSliceSetup.cs"));
             Assert.IsTrue(markdown.Contains("| Line |"));
         }
+
+        [Test]
+        public void GenerateReports_WritesDocsArtFiles()
+        {
+            ModernArtAudit.GenerateReports();
+
+            Assert.IsTrue(System.IO.File.Exists(ModernArtAudit.InventoryMarkdownPath));
+            Assert.IsTrue(System.IO.File.Exists(ModernArtAudit.InventoryJsonPath));
+            Assert.IsTrue(System.IO.File.Exists(ModernArtAudit.PixelwoodReferenceReportPath));
+
+            string markdown = System.IO.File.ReadAllText(ModernArtAudit.InventoryMarkdownPath);
+            Assert.IsTrue(markdown.Contains("# Modern Asset Inventory"));
+            Assert.IsTrue(markdown.Contains("Modern Farm"));
+            Assert.IsTrue(markdown.Contains("Modern User Interface"));
+
+            string json = System.IO.File.ReadAllText(ModernArtAudit.InventoryJsonPath);
+            Assert.IsTrue(json.StartsWith("["));
+            Assert.IsTrue(json.Contains("\"sourcePack\": \"Modern Farm\""));
+
+            string refs = System.IO.File.ReadAllText(ModernArtAudit.PixelwoodReferenceReportPath);
+            Assert.IsTrue(refs.Contains("# Pixelwood Reference Report"));
+            Assert.IsTrue(refs.Contains("Pixelwood"));
+        }
     }
 }
