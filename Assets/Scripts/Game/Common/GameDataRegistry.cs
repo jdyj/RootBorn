@@ -4,6 +4,7 @@ using Rootborn.Game.Crops;
 using Rootborn.Game.Generation;
 using Rootborn.Game.Heir;
 using Rootborn.Game.Knowledge;
+using Rootborn.Game.Quests;
 using Rootborn.Game.Resources;
 using Rootborn.Game.Status;
 using Rootborn.Game.Tools;
@@ -16,13 +17,15 @@ namespace Rootborn.Game.Common
 
     public sealed class Inventory
     {
+        public const int MaxSlots = 32;
+
         public sealed class Slot
         {
             public ItemDefinition Item;
             public int Count;
         }
 
-        private readonly List<Slot> _slots = new List<Slot>(32);
+        private readonly List<Slot> _slots = new List<Slot>(MaxSlots);
 
         public IReadOnlyList<Slot> Slots => _slots;
         public event Action OnChanged;
@@ -37,12 +40,13 @@ namespace Rootborn.Game.Common
                 var slot = _slots[i];
                 if (slot.Item != item) continue;
                 int room = max - slot.Count;
-                if (room < remaining) continue;
-                slot.Count += remaining;
-                remaining = 0;
+                if (room <= 0) continue;
+                int put = Mathf.Min(room, remaining);
+                slot.Count += put;
+                remaining -= put;
             }
 
-            while (remaining > 0)
+            while (remaining > 0 && _slots.Count < MaxSlots)
             {
                 int put = Mathf.Min(max, remaining);
                 _slots.Add(new Slot { Item = item, Count = put });
@@ -50,6 +54,64 @@ namespace Rootborn.Game.Common
             }
 
             OnChanged?.Invoke();
+        }
+
+        public bool CanAdd(ItemDefinition item, int count = 1)
+        {
+            if (item == null || count <= 0) return false;
+
+            int remaining = count;
+            int max = item.MaxStack;
+            int occupiedSlots = 0;
+
+            for (int i = 0; i < _slots.Count; i++)
+            {
+                var slot = _slots[i];
+                if (slot.Item != null && slot.Count > 0)
+                {
+                    occupiedSlots++;
+                }
+
+                if (slot.Item != item) continue;
+                int room = max - slot.Count;
+                if (room <= 0) continue;
+                int put = Mathf.Min(room, remaining);
+                remaining -= put;
+                if (remaining <= 0) return true;
+            }
+
+            int freeSlots = MaxSlots - occupiedSlots;
+            while (remaining > 0 && freeSlots > 0)
+            {
+                remaining -= Mathf.Min(max, remaining);
+                freeSlots--;
+            }
+
+            return remaining <= 0;
+        }
+
+        public bool CanAddAll(IReadOnlyList<InventoryGrant> grants)
+        {
+            if (grants == null) return true;
+
+            var clone = new Inventory();
+            for (int i = 0; i < _slots.Count; i++)
+            {
+                var slot = _slots[i];
+                if (slot.Item != null && slot.Count > 0)
+                {
+                    clone.Add(slot.Item, slot.Count);
+                }
+            }
+
+            for (int i = 0; i < grants.Count; i++)
+            {
+                var grant = grants[i];
+                if (!clone.CanAdd(grant.Item, grant.Count)) return false;
+                clone.Add(grant.Item, grant.Count);
+            }
+
+            return true;
         }
 
         public bool TryMoveSlot(int sourceIndex, int targetIndex)
@@ -122,7 +184,7 @@ namespace Rootborn.Game.Common
 
         private void EnsureSlotCount(int count)
         {
-            while (_slots.Count < count)
+            while (_slots.Count < count && _slots.Count < MaxSlots)
             {
                 _slots.Add(new Slot());
             }
