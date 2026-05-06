@@ -47,6 +47,24 @@ namespace Rootborn.Tests.EditMode.WorldGeneration
         }
 
         [Test]
+        public void Generate_DoesNotPlacePropsInsideStartSafeRadius()
+        {
+            var resource = ScriptableObject.CreateInstance<ResourceNodeDefinition>();
+            var spawn = ScriptableObject.CreateInstance<NaturalPropSpawnDefinition>();
+            spawn.SetTestData(resource, 20, new RectInt(0, 0, 12, 12), 0, 256);
+
+            var def = ScriptableObject.CreateInstance<TerrainGenerationDefinition>();
+            var startArea = new TerrainReservedArea(new RectInt(5, 5, 1, 1), 2);
+            def.SetTestData(12, 12, null, new[] { startArea }, new[] { spawn });
+
+            var world = SeededWorldGenerator.Generate(def, 10, 20);
+            foreach (var prop in world.Props)
+            {
+                Assert.IsFalse(startArea.Contains(prop.Cell));
+            }
+        }
+
+        [Test]
         public void Generate_TileSeedControlsTileVariants()
         {
             var def = MakeVariantSensitiveDefinition();
