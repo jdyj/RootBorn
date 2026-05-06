@@ -334,14 +334,15 @@ git commit -m "[TOOL][TEST] 모던 UI 시트 슬라이스 도구 추가"
 
 **Files:**
 - Modify: `Assets/Tests/EditMode/UISpriteAddressesTests.cs`
-- Modify: `Assets/Scripts/Editor/Tools/AddressablesSetup.cs`
-- Modify: `Assets/Scripts/Game/Common/GameDataRegistry.cs`
+- Modify: `Assets/Tests/EditMode/ModernUiAddressablesSetupTests.cs`
+- Modify: `Assets/Scripts/Editor/Tools/ModernUiAddressablesSetup.cs`
+- Modify: `Assets/AddressableAssetsData/AssetGroups/Sprites.asset`
 
-- [ ] **Step 1: Add failing tests proving UI sources are no longer Pixelwood**
+- [x] **Step 1: Add failing tests proving UI sources are no longer Pixelwood**
 
-Add tests that assert every UI entry registered by `AddressablesSetup.GetUiSpriteEntries()` points under `Assets/modernuserinterface-win/` and none contains `Pixelwood`.
+Add tests that assert every Modern UI sheet declared by `ModernUiAddressablesSetup.GetSheetEntries()` is present in Addressable settings with the `PreLoad` label.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run:
 
@@ -349,13 +350,13 @@ Run:
 Unity MCP tests-run EditMode testClass=UISpriteAddressesTests
 ```
 
-Expected: FAIL because current UI entries still point to `Assets/Pixelwood Valley/Fantasy Book UI V2/1.0/Sprites`.
+Expected: FAIL because the Modern UI sheet entries have not been wired into Addressable settings yet.
 
-- [ ] **Step 3: Register Modern UI sheet addresses**
+- [x] **Step 3: Register Modern UI sheet addresses**
 
-Replace Pixelwood Fantasy Book UI entries with Modern UI sheet entries. Keep the public address constants stable until `StatusHud` is changed; add new sheet constants for the selected Modern UI sheets.
+Run `ModernUiAddressablesSetup.WireSheets()` to register the Modern UI sheet entries. Keep the existing Pixelwood runtime UI addresses stable until `StatusHud` is changed.
 
-- [ ] **Step 4: Run GREEN**
+- [x] **Step 4: Run GREEN**
 
 Run:
 

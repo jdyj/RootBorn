@@ -30,6 +30,55 @@ namespace Rootborn.Editor.Tools
             return SheetEntries;
         }
 
+        public static IReadOnlyList<string> FindMissingRegisteredSheetAddresses()
+        {
+            var missing = new List<string>();
+            var settings = AddressableAssetSettingsDefaultObject.Settings;
+            if (settings == null)
+            {
+                foreach (var (_, address) in SheetEntries)
+                {
+                    missing.Add(address);
+                }
+
+                return missing;
+            }
+
+            foreach (var (assetPath, address) in SheetEntries)
+            {
+                string guid = AssetDatabase.AssetPathToGUID(assetPath);
+                var entry = settings.FindAssetEntry(guid);
+                if (entry == null || entry.address != address)
+                {
+                    missing.Add(address);
+                }
+            }
+
+            return missing;
+        }
+
+        public static IReadOnlyList<string> FindRegisteredSheetAddressesMissingPreloadLabel()
+        {
+            var missing = new List<string>();
+            var settings = AddressableAssetSettingsDefaultObject.Settings;
+            if (settings == null)
+            {
+                return missing;
+            }
+
+            foreach (var (assetPath, address) in SheetEntries)
+            {
+                string guid = AssetDatabase.AssetPathToGUID(assetPath);
+                var entry = settings.FindAssetEntry(guid);
+                if (entry != null && entry.address == address && !entry.labels.Contains(AddressablesSetup.LabelPreLoad))
+                {
+                    missing.Add(address);
+                }
+            }
+
+            return missing;
+        }
+
         [MenuItem("Rootborn/Modern UI/Wire Addressables")]
         public static void WireSheets()
         {

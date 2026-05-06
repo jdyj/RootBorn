@@ -63,6 +63,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 32b2711d02079df4390d11fb55ed6825
+    m_Address: sprites/ui/modern/48/style-1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3353bc1d407ea3d4a9968b96c7d694dd
     m_Address: sprites/player/tool/axe-side
     m_ReadOnly: 0
@@ -77,6 +83,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3937709f3c791aa4a866484cef44cd73
     m_Address: sprites/ui/book/page-6
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4a186d9bcd7aba54f80dd8b83cff7f90
+    m_Address: sprites/ui/modern/16/style-2
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
@@ -135,14 +147,50 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7c0b26c995080bf40b6eff778d6ea6e8
+    m_Address: sprites/ui/modern/32/style-2
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7f1dec0f329c59440b570cddf794692e
     m_Address: sprites/player/tool/pickaxe-up
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7f3ce2b5c0bb69343be7a5a41b38f444
+    m_Address: sprites/ui/modern/16/style-1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 80cc6a60d2aa7e045b20ae0cc6f5046b
     m_Address: sprites/ui/ribbon/equipment
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9b65f4418d5ba8d41ae3ac21c6cc0eaa
+    m_Address: sprites/ui/modern/16/gamepad
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a005f285266d8d746bc7210d9ff2fab8
+    m_Address: sprites/ui/modern/32/style-1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a164551219b2a934ba6f5bf4a63c3720
+    m_Address: sprites/ui/modern/48/gamepad
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a47c71503bb663a4a9125b256962129b
+    m_Address: sprites/ui/modern/48/style-2
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
@@ -215,6 +263,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: da4636f3f1256874ba355a8571074325
     m_Address: sprites/player/tool/hoe-side
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e1fe966029525924aa188b5d47d71c9e
+    m_Address: sprites/ui/modern/32/gamepad
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad

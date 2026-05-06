@@ -81,5 +81,15 @@ namespace Rootborn.Tests.EditMode
 
             Assert.IsEmpty(missing, "Modern UI declared sub-sprites missing from sliced sheets: " + string.Join(", ", missing));
         }
+
+        [Test]
+        public void ModernUiSheets_ArePresentInAddressableSettingsWithPreloadLabel()
+        {
+            var missing = ModernUiAddressablesSetup.FindMissingRegisteredSheetAddresses();
+            var missingLabel = ModernUiAddressablesSetup.FindRegisteredSheetAddressesMissingPreloadLabel();
+
+            Assert.IsEmpty(missing, "Modern UI sheets not registered in Addressable settings: " + string.Join(", ", missing));
+            Assert.IsEmpty(missingLabel, "Modern UI sheets missing PreLoad label: " + string.Join(", ", missingLabel));
+        }
     }
 }
