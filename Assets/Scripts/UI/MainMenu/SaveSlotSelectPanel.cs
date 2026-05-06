@@ -1,3 +1,4 @@
+using Rootborn.Game.Player;
 using Rootborn.Game.Save;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -38,6 +39,12 @@ namespace Rootborn.UI.MainMenu
             {
                 _root.SetActive(false);
             }
+        }
+
+        public SaveSlotMetadata CreateMetadataForNewSlot(string slotId, CharacterCustomization character, int worldSeed, int tileSeed)
+        {
+            var service = new SaveService(slotId);
+            return service.CreateUiMetadata(slotId, character, worldSeed, tileSeed);
         }
 
         private void BuildOrRebuild()
@@ -91,10 +98,7 @@ namespace Rootborn.UI.MainMenu
             MakeText(card.transform, "SeedText", seedText, new Vector2(0f, -120f), new Vector2(340f, 90f), 24, TextAnchor.MiddleCenter,
                 new Vector2(0.5f, 1f), new Vector2(0.5f, 1f));
 
-            string characterText = summary.Exists && summary.Metadata.Character != null
-                ? $"Body {summary.Metadata.Character.BodyVariant}\nHair {summary.Metadata.Character.HairVariant}\nOutfit {summary.Metadata.Character.OutfitVariant}"
-                : "Character Preview";
-            MakeText(card.transform, "CharacterPreview", characterText, new Vector2(0f, -220f), new Vector2(340f, 92f), 22, TextAnchor.MiddleCenter,
+            MakeText(card.transform, "CharacterPreview", FormatCharacterPreview(summary.Metadata), new Vector2(0f, -220f), new Vector2(340f, 92f), 22, TextAnchor.MiddleCenter,
                 new Vector2(0.5f, 1f), new Vector2(0.5f, 1f));
 
             if (summary.Exists)
@@ -116,7 +120,7 @@ namespace Rootborn.UI.MainMenu
         {
             int worldSeed = unchecked(System.Environment.TickCount * 397) ^ slotId.GetHashCode();
             int tileSeed = unchecked(System.Environment.TickCount * 491) ^ (slotId.GetHashCode() << 1);
-            var metadata = service.CreateUiMetadata(slotId, new Rootborn.Game.Player.CharacterCustomization(), worldSeed, tileSeed);
+            var metadata = CreateMetadataForNewSlot(slotId, new CharacterCustomization(), worldSeed, tileSeed);
             service.SaveMetadata(metadata);
             LoadSlot(metadata);
         }
@@ -126,6 +130,17 @@ namespace Rootborn.UI.MainMenu
             ActiveSaveContext.Set(metadata);
             Hide();
             SceneManager.LoadScene(_farmScene);
+        }
+
+        private static string FormatCharacterPreview(SaveSlotMetadata metadata)
+        {
+            var character = metadata != null ? metadata.Character : null;
+            if (character == null)
+            {
+                return "Character Preview";
+            }
+
+            return $"Body {character.BodyVariant}\nHair {character.HairVariant}\nOutfit {character.OutfitVariant}";
         }
 
         private static Canvas EnsureCanvas()
