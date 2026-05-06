@@ -25,7 +25,8 @@ namespace Rootborn.UI.MainMenu
         private void OnSingle()
         {
             ApplyMode(SessionMode.Single);
-            SceneManager.LoadScene(_farmScene);
+            var slots = SaveSlotSelectPanel.EnsureInScene();
+            slots.Show();
         }
 
         private void OnHost()
@@ -51,6 +52,7 @@ namespace Rootborn.UI.MainMenu
             {
                 return;
             }
+
             GameBootstrap.Config.Mode = mode;
         }
     }
