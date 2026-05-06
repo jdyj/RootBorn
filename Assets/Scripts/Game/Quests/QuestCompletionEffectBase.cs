@@ -1,0 +1,10 @@
+using UnityEngine;
+
+namespace Rootborn.Game.Quests
+{
+    public abstract class QuestCompletionEffectBase : ScriptableObject
+    {
+        public abstract bool CanApply(in RewardRuntimeContext context);
+        public abstract void Apply(in RewardRuntimeContext context);
+    }
+}
