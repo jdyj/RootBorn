@@ -1,25 +1,135 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
+using Rootborn.Game.Player;
 using UnityEngine;
 
 namespace Rootborn.Game.Save
 {
     public sealed class SaveService
     {
+        public const int MaxUiSlots = 3;
+
+        private const string MetadataFileName = "metadata.json";
+
         private readonly string _slot;
+        private readonly string _rootDir;
         private readonly string _dir;
 
         public SaveService(string slot)
+            : this(slot, Path.Combine(Application.persistentDataPath, "saves"))
         {
-            _slot = string.IsNullOrEmpty(slot) ? "default" : slot;
-            _dir = Path.Combine(Application.persistentDataPath, "saves", _slot);
-            if (!System.IO.Directory.Exists(_dir))
-            {
-                System.IO.Directory.CreateDirectory(_dir);
-            }
+        }
+
+        public SaveService(string slot, string rootDirectory)
+        {
+            _slot = SanitizeOrThrow(string.IsNullOrEmpty(slot) ? "default" : slot);
+            _rootDir = string.IsNullOrEmpty(rootDirectory)
+                ? Path.Combine(Application.persistentDataPath, "saves")
+                : rootDirectory;
+            _dir = Path.Combine(_rootDir, _slot);
+            Directory.CreateDirectory(_dir);
         }
 
         public string Slot => _slot;
         public string DirectoryPath => _dir;
+
+        public IReadOnlyList<SaveSlotSummary> ListUiSlots()
+        {
+            var result = new List<SaveSlotSummary>(MaxUiSlots);
+            for (int i = 0; i < MaxUiSlots; i++)
+            {
+                string slotId = $"slot-{i}";
+                result.Add(new SaveSlotSummary(slotId, LoadMetadata(slotId)));
+            }
+
+            return result;
+        }
+
+        public SaveSlotMetadata CreateMetadata(string slotId, CharacterCustomization character, int worldSeed, int tileSeed)
+        {
+            string safeSlotId = SanitizeOrThrow(slotId);
+            long now = DateTime.UtcNow.Ticks;
+            return new SaveSlotMetadata
+            {
+                SlotId = safeSlotId,
+                DisplayName = safeSlotId,
+                CreatedAtUtcTicks = now,
+                UpdatedAtUtcTicks = now,
+                WorldSeed = worldSeed,
+                TileSeed = tileSeed,
+                Character = character ?? new CharacterCustomization(),
+            };
+        }
+
+        public void SaveMetadata(SaveSlotMetadata metadata)
+        {
+            if (metadata == null)
+            {
+                throw new ArgumentNullException(nameof(metadata));
+            }
+
+            metadata.SlotId = SanitizeOrThrow(metadata.SlotId);
+            if (string.IsNullOrEmpty(metadata.DisplayName))
+            {
+                metadata.DisplayName = metadata.SlotId;
+            }
+
+            if (metadata.CreatedAtUtcTicks <= 0)
+            {
+                metadata.CreatedAtUtcTicks = DateTime.UtcNow.Ticks;
+            }
+
+            metadata.UpdatedAtUtcTicks = DateTime.UtcNow.Ticks;
+
+            string slotDir = SlotDirectory(metadata.SlotId);
+            Directory.CreateDirectory(slotDir);
+            File.WriteAllText(Path.Combine(slotDir, MetadataFileName), JsonUtility.ToJson(metadata, true));
+        }
+
+        public SaveSlotMetadata LoadMetadata(string slotId)
+        {
+            string safeSlotId = SanitizeOrThrow(slotId);
+            string path = Path.Combine(SlotDirectory(safeSlotId), MetadataFileName);
+            if (!File.Exists(path))
+            {
+                return null;
+            }
+
+            try
+            {
+                var metadata = JsonUtility.FromJson<SaveSlotMetadata>(File.ReadAllText(path));
+                if (metadata == null || string.IsNullOrEmpty(metadata.SlotId))
+                {
+                    return null;
+                }
+
+                metadata.SlotId = SanitizeOrThrow(metadata.SlotId);
+                if (metadata.Character == null)
+                {
+                    metadata.Character = new CharacterCustomization();
+                }
+
+                return metadata;
+            }
+            catch (Exception ex) when (ex is ArgumentException || ex is IOException)
+            {
+                return null;
+            }
+        }
+
+        public bool DeleteSlot(string slotId)
+        {
+            string safeSlotId = SanitizeOrThrow(slotId);
+            string slotDir = SlotDirectory(safeSlotId);
+            if (!Directory.Exists(slotDir))
+            {
+                return false;
+            }
+
+            Directory.Delete(slotDir, true);
+            return true;
+        }
 
         public void WriteJson(string fileName, string json)
         {
@@ -31,6 +141,35 @@ namespace Rootborn.Game.Save
         {
             var path = Path.Combine(_dir, fileName);
             return File.Exists(path) ? File.ReadAllText(path) : null;
+        }
+
+        private string SlotDirectory(string slotId)
+        {
+            return Path.Combine(_rootDir, SanitizeOrThrow(slotId));
+        }
+
+        private static string SanitizeOrThrow(string slotId)
+        {
+            if (string.IsNullOrEmpty(slotId))
+            {
+                throw new ArgumentException("Slot id must not be empty.", nameof(slotId));
+            }
+
+            for (int i = 0; i < slotId.Length; i++)
+            {
+                char c = slotId[i];
+                bool valid = (c >= 'a' && c <= 'z')
+                    || (c >= 'A' && c <= 'Z')
+                    || (c >= '0' && c <= '9')
+                    || c == '_'
+                    || c == '-';
+                if (!valid)
+                {
+                    throw new ArgumentException($"Unsafe save slot id: {slotId}", nameof(slotId));
+                }
+            }
+
+            return slotId;
         }
     }
 }
