@@ -46,6 +46,15 @@ namespace Rootborn.Tests.EditMode.WorldGeneration
             }
         }
 
+        [Test]
+        public void Registry_DefaultFarmTerrainGeneration_IsAssigned()
+        {
+            var registry = UnityEditor.AssetDatabase.LoadAssetAtPath<Rootborn.Game.Common.GameDataRegistry>(
+                "Assets/Data/Registry/GameDataRegistry.asset");
+            Assert.IsNotNull(registry);
+            Assert.IsNotNull(registry.DefaultFarmTerrainGeneration);
+        }
+
         private static TerrainGenerationDefinition MakeDefinition()
         {
             var tileA = ScriptableObject.CreateInstance<Tile>();
