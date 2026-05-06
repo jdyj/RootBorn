@@ -12,6 +12,7 @@ namespace Rootborn.UI.MainMenu
     {
         [SerializeField] private string _farmScene = "Farm";
 
+        private readonly CharacterCustomization _selectedCharacter = new CharacterCustomization();
         private GameObject _root;
 
         public static SaveSlotSelectPanel EnsureInScene()
@@ -41,10 +42,23 @@ namespace Rootborn.UI.MainMenu
             }
         }
 
+        public void SetSelectedCharacterSelection(int bodyVariant, int hairVariant, int outfitVariant, CharacterCustomization.Facing facing)
+        {
+            _selectedCharacter.BodyVariant = bodyVariant;
+            _selectedCharacter.HairVariant = hairVariant;
+            _selectedCharacter.OutfitVariant = outfitVariant;
+            _selectedCharacter.DefaultFacing = facing;
+        }
+
+        public SaveSlotMetadata CreateMetadataForSelectedCharacter(string slotId, int worldSeed, int tileSeed)
+        {
+            return CreateMetadataForNewSlot(slotId, CopyCharacter(_selectedCharacter), worldSeed, tileSeed);
+        }
+
         public SaveSlotMetadata CreateMetadataForNewSlot(string slotId, CharacterCustomization character, int worldSeed, int tileSeed)
         {
             var service = new SaveService(slotId);
-            return service.CreateUiMetadata(slotId, character, worldSeed, tileSeed);
+            return service.CreateUiMetadata(slotId, CopyCharacter(character), worldSeed, tileSeed);
         }
 
         private void BuildOrRebuild()
@@ -68,6 +82,8 @@ namespace Rootborn.UI.MainMenu
             MakeText(_root.transform, "Title", "Save Slots", new Vector2(0f, -90f), new Vector2(600f, 80f), 44, TextAnchor.MiddleCenter,
                 new Vector2(0.5f, 1f), new Vector2(0.5f, 1f));
 
+            BuildCharacterSelectionControls(_root.transform);
+
             var service = new SaveService("slot-0");
             var slots = service.ListUiSlots();
             for (int i = 0; i < slots.Count; i++)
@@ -85,7 +101,7 @@ namespace Rootborn.UI.MainMenu
             rt.anchorMax = new Vector2(0.5f, 0.5f);
             rt.pivot = new Vector2(0.5f, 0.5f);
             rt.sizeDelta = new Vector2(420f, 420f);
-            rt.anchoredPosition = new Vector2((index - 1) * 460f, 0f);
+            rt.anchoredPosition = new Vector2((index - 1) * 460f, -30f);
             card.GetComponent<Image>().color = new Color(0.20f, 0.24f, 0.25f, 1f);
 
             string title = summary.Exists ? summary.Metadata.DisplayName : "Empty Slot";
@@ -121,7 +137,7 @@ namespace Rootborn.UI.MainMenu
         {
             int worldSeed = unchecked(System.Environment.TickCount * 397) ^ slotId.GetHashCode();
             int tileSeed = unchecked(System.Environment.TickCount * 491) ^ (slotId.GetHashCode() << 1);
-            var metadata = CreateMetadataForNewSlot(slotId, new CharacterCustomization(), worldSeed, tileSeed);
+            var metadata = CreateMetadataForSelectedCharacter(slotId, worldSeed, tileSeed);
             service.SaveMetadata(metadata);
             LoadSlot(metadata);
         }
@@ -131,6 +147,37 @@ namespace Rootborn.UI.MainMenu
             ActiveSaveContext.Set(metadata);
             Hide();
             SceneManager.LoadScene(_farmScene);
+        }
+
+        private void BuildCharacterSelectionControls(Transform parent)
+        {
+            var panel = new GameObject("CharacterSelectionPanel", typeof(RectTransform), typeof(Image));
+            panel.transform.SetParent(parent, false);
+            var rt = (RectTransform)panel.transform;
+            rt.anchorMin = new Vector2(0.5f, 1f);
+            rt.anchorMax = new Vector2(0.5f, 1f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = new Vector2(0f, -168f);
+            rt.sizeDelta = new Vector2(720f, 64f);
+            panel.GetComponent<Image>().color = new Color(0.15f, 0.18f, 0.18f, 1f);
+
+            MakeText(panel.transform, "SelectionLabel", FormatCharacterPreview(new SaveSlotMetadata { Character = _selectedCharacter }), new Vector2(-240f, 0f), new Vector2(180f, 52f), 18, TextAnchor.MiddleCenter,
+                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            MakeButton(panel.transform, "BodyNextButton", "Body +", new Vector2(-60f, 0f), new Vector2(120f, 44f), () =>
+            {
+                _selectedCharacter.BodyVariant++;
+                BuildOrRebuild();
+            });
+            MakeButton(panel.transform, "HairNextButton", "Hair +", new Vector2(80f, 0f), new Vector2(120f, 44f), () =>
+            {
+                _selectedCharacter.HairVariant++;
+                BuildOrRebuild();
+            });
+            MakeButton(panel.transform, "OutfitNextButton", "Outfit +", new Vector2(220f, 0f), new Vector2(120f, 44f), () =>
+            {
+                _selectedCharacter.OutfitVariant++;
+                BuildOrRebuild();
+            });
         }
 
         private static string FormatCharacterPreview(SaveSlotMetadata metadata)
@@ -168,6 +215,18 @@ namespace Rootborn.UI.MainMenu
             float green = 0.35f + Mathf.Repeat(hairVariant * 0.13f, 0.45f);
             float blue = 0.35f + Mathf.Repeat(outfitVariant * 0.17f, 0.45f);
             return new Color(red, green, blue, 1f);
+        }
+
+        private static CharacterCustomization CopyCharacter(CharacterCustomization source)
+        {
+            var character = source ?? new CharacterCustomization();
+            return new CharacterCustomization
+            {
+                BodyVariant = character.BodyVariant,
+                HairVariant = character.HairVariant,
+                OutfitVariant = character.OutfitVariant,
+                DefaultFacing = character.DefaultFacing,
+            };
         }
 
         private static Canvas EnsureCanvas()

@@ -41,6 +41,53 @@ namespace Rootborn.Tests.EditMode.Save
         }
 
         [Test]
+        public void CreateMetadataForSelectedCharacter_UsesPanelSelectionAndCopiesIt()
+        {
+            var panel = new GameObject("SaveSlotSelectPanelTest").AddComponent<SaveSlotSelectPanel>();
+            try
+            {
+                panel.SetSelectedCharacterSelection(2, 3, 4, CharacterCustomization.Facing.Right);
+
+                var metadata = panel.CreateMetadataForSelectedCharacter("slot-2", 100, 200);
+                panel.SetSelectedCharacterSelection(8, 9, 10, CharacterCustomization.Facing.Up);
+
+                Assert.AreEqual("slot-2", metadata.SlotId);
+                Assert.AreEqual(100, metadata.WorldSeed);
+                Assert.AreEqual(200, metadata.TileSeed);
+                Assert.AreEqual(2, metadata.Character.BodyVariant);
+                Assert.AreEqual(3, metadata.Character.HairVariant);
+                Assert.AreEqual(4, metadata.Character.OutfitVariant);
+                Assert.AreEqual(CharacterCustomization.Facing.Right, metadata.Character.DefaultFacing);
+            }
+            finally
+            {
+                Object.DestroyImmediate(panel.gameObject);
+            }
+        }
+
+        [Test]
+        public void Show_BuildsCharacterSelectionControls()
+        {
+            var panel = new GameObject("SaveSlotSelectPanelTest").AddComponent<SaveSlotSelectPanel>();
+            try
+            {
+                panel.Show();
+
+                Assert.IsNotNull(GameObject.Find("CharacterSelectionPanel"));
+                Assert.IsNotNull(GameObject.Find("BodyNextButton"));
+                Assert.IsNotNull(GameObject.Find("HairNextButton"));
+                Assert.IsNotNull(GameObject.Find("OutfitNextButton"));
+            }
+            finally
+            {
+                panel.Hide();
+                Object.DestroyImmediate(panel.gameObject);
+                DestroyIfFound("SaveSlotCanvas");
+                DestroyIfFound("EventSystem");
+            }
+        }
+
+        [Test]
         public void FormatCharacterPreview_IncludesCharacterVariants()
         {
             var character = new CharacterCustomization { BodyVariant = 1, HairVariant = 2, OutfitVariant = 3 };
@@ -88,6 +135,15 @@ namespace Rootborn.Tests.EditMode.Save
             var method = typeof(SaveSlotSelectPanel).GetMethod("BuildCharacterPreviewImage", BindingFlags.Static | BindingFlags.NonPublic);
             Assert.IsNotNull(method);
             method.Invoke(null, new object[] { parent, metadata });
+        }
+
+        private static void DestroyIfFound(string name)
+        {
+            var go = GameObject.Find(name);
+            if (go != null)
+            {
+                Object.DestroyImmediate(go);
+            }
         }
     }
 }
