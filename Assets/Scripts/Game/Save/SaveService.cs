@@ -46,6 +46,27 @@ namespace Rootborn.Game.Save
             return result;
         }
 
+        public SaveSlotMetadata CreateUiMetadata(string slotId, CharacterCustomization character, int worldSeed, int tileSeed)
+        {
+            string safeSlotId = SanitizeOrThrow(slotId);
+            bool uiSlot = false;
+            for (int i = 0; i < MaxUiSlots; i++)
+            {
+                if (safeSlotId == $"slot-{i}")
+                {
+                    uiSlot = true;
+                    break;
+                }
+            }
+
+            if (!uiSlot)
+            {
+                throw new ArgumentException($"UI save slot must be slot-0 through slot-{MaxUiSlots - 1}: {slotId}", nameof(slotId));
+            }
+
+            return CreateMetadata(safeSlotId, character, worldSeed, tileSeed);
+        }
+
         public SaveSlotMetadata CreateMetadata(string slotId, CharacterCustomization character, int worldSeed, int tileSeed)
         {
             string safeSlotId = SanitizeOrThrow(slotId);

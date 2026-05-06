@@ -91,6 +91,12 @@ namespace Rootborn.UI.MainMenu
             MakeText(card.transform, "SeedText", seedText, new Vector2(0f, -120f), new Vector2(340f, 90f), 24, TextAnchor.MiddleCenter,
                 new Vector2(0.5f, 1f), new Vector2(0.5f, 1f));
 
+            string characterText = summary.Exists && summary.Metadata.Character != null
+                ? $"Body {summary.Metadata.Character.BodyVariant}\nHair {summary.Metadata.Character.HairVariant}\nOutfit {summary.Metadata.Character.OutfitVariant}"
+                : "Character Preview";
+            MakeText(card.transform, "CharacterPreview", characterText, new Vector2(0f, -220f), new Vector2(340f, 92f), 22, TextAnchor.MiddleCenter,
+                new Vector2(0.5f, 1f), new Vector2(0.5f, 1f));
+
             if (summary.Exists)
             {
                 MakeButton(card.transform, "LoadButton", "Load", new Vector2(-90f, 60f), new Vector2(150f, 58f), () => LoadSlot(summary.Metadata));
@@ -110,7 +116,7 @@ namespace Rootborn.UI.MainMenu
         {
             int worldSeed = unchecked(System.Environment.TickCount * 397) ^ slotId.GetHashCode();
             int tileSeed = unchecked(System.Environment.TickCount * 491) ^ (slotId.GetHashCode() << 1);
-            var metadata = service.CreateMetadata(slotId, new Rootborn.Game.Player.CharacterCustomization(), worldSeed, tileSeed);
+            var metadata = service.CreateUiMetadata(slotId, new Rootborn.Game.Player.CharacterCustomization(), worldSeed, tileSeed);
             service.SaveMetadata(metadata);
             LoadSlot(metadata);
         }

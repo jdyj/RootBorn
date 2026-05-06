@@ -63,6 +63,24 @@ namespace Rootborn.Tests.EditMode.Save
         }
 
         [Test]
+        public void CreateUiMetadata_RejectsFourthUiSlotButAllowsCliMetadataThroughGeneralApi()
+        {
+            var root = MakeTempRoot();
+            try
+            {
+                var service = new SaveService("slot-0", root);
+                Assert.Throws<System.ArgumentException>(() => service.CreateUiMetadata("slot-3", new CharacterCustomization(), 1, 2));
+
+                var cliMetadata = service.CreateMetadata("myfarm", new CharacterCustomization(), 1, 2);
+                Assert.AreEqual("myfarm", cliMetadata.SlotId);
+            }
+            finally
+            {
+                Directory.Delete(root, true);
+            }
+        }
+
+        [Test]
         public void DeleteSlot_RemovesMetadata()
         {
             var root = MakeTempRoot();
