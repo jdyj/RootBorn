@@ -8,12 +8,13 @@ namespace Rootborn.Game.Dialogue
     {
         [SerializeField] private string _id;
         [SerializeField] private string _displayNameKey;
-        [SerializeField] private DialogueDefinition _dialogue;
+        [SerializeField] private DialogueDefinition _defaultDialogue;
         [SerializeField] private QuestDefinition[] _quests = System.Array.Empty<QuestDefinition>();
 
         public string Id => _id;
         public string DisplayNameKey => _displayNameKey;
-        public DialogueDefinition Dialogue => _dialogue;
+        public DialogueDefinition DefaultDialogue => _defaultDialogue;
+        public DialogueDefinition Dialogue => _defaultDialogue;
         public QuestDefinition[] Quests => _quests;
     }
 }
