@@ -20,5 +20,17 @@ namespace Rootborn.Tests.EditMode.Quests
             Assert.IsNotNull(registry.Dialogues);
             Assert.IsNotNull(registry.StoryFlags);
         }
+
+        [Test]
+        public void QUEST_014_DefaultQuestData_IsRegistered()
+        {
+            var registry = Resources.Load<GameDataRegistry>("GameDataRegistry");
+
+            Assert.IsNotNull(registry);
+            Assert.IsNotEmpty(registry.Quests);
+            Assert.IsNotEmpty(registry.Npcs);
+            Assert.IsNotEmpty(registry.Dialogues);
+            Assert.IsNotEmpty(registry.StoryFlags);
+        }
     }
 }

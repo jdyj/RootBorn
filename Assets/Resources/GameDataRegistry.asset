@@ -21,6 +21,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 89c4756a622ce0744bd813366d4cf7eb, type: 2}
   - {fileID: 11400000, guid: aa8baa823dbbaeb4da52709db41b8f69, type: 2}
   - {fileID: 11400000, guid: d4f0708c9bc563c44bca8f612d05cb4c, type: 2}
+  - {fileID: 11400000, guid: 440e90155c98f3242b77566fd0da0519, type: 2}
   _resources:
   - {fileID: 11400000, guid: eb231f93a6f0fe5418e8c0754b131733, type: 2}
   - {fileID: 11400000, guid: 5a341bbcb8c7a8e49a3be09dda21cf30, type: 2}
@@ -46,6 +47,22 @@ MonoBehaviour:
   - {fileID: 11400000, guid: de7ab58f46b31e044aa7f8349785515d, type: 2}
   - {fileID: 11400000, guid: 64681a5dbbf386240a61ed88c3b3ff95, type: 2}
   - {fileID: 11400000, guid: d97d52a17ccd71d428b24f868e7b34e0, type: 2}
+  - {fileID: 11400000, guid: 0cd403dc68abf4a45b664a12381a81f7, type: 2}
+  _quests:
+  - {fileID: 11400000, guid: 0fd216a6cdf0c724fa2101fd28dc3a5c, type: 2}
+  _questObjectives:
+  - {fileID: 11400000, guid: 7e0c5cb9a7c4e80489227c6cc056ee0a, type: 2}
+  _questRewards:
+  - {fileID: 11400000, guid: 16f45589fdcd2534dae0cb1401cacf3c, type: 2}
+  _questCompletionEffects:
+  - {fileID: 11400000, guid: 28cbbe21d02b32649996767f5d13b4b1, type: 2}
+  _questConditions: []
+  _npcs:
+  - {fileID: 11400000, guid: c43188909a889884792a60a1a0e1d0ba, type: 2}
+  _dialogues:
+  - {fileID: 11400000, guid: 8142bab72b18c8d46b226b2da4f7561d, type: 2}
+  _storyFlags:
+  - {fileID: 11400000, guid: 91dcbb6650abb87408dc7932e7bc24e0, type: 2}
   _groundSprite: {fileID: 8458300517651169097, guid: 176d930965cfdf64eb5cfdd08db865ab, type: 3}
   _playerSprite: {fileID: -7212397726981208026, guid: 6935e6186fac5a04a902a407a7a7973a, type: 3}
   _defaultFarmTerrainGeneration: {fileID: 11400000, guid: b26cde69cfb426841aef41ae7a6f128f, type: 2}
