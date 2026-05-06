@@ -97,6 +97,7 @@ namespace Rootborn.Game.WorldGeneration
         private static List<PropPlacement> GenerateProps(TerrainGenerationDefinition definition, int propSeed)
         {
             var placements = new List<PropPlacement>();
+            var occupied = new HashSet<Vector2Int>();
             var spawns = definition.NaturalPropSpawns;
             if (spawns == null || spawns.Length == 0)
             {
@@ -106,15 +107,16 @@ namespace Rootborn.Game.WorldGeneration
             for (int i = 0; i < spawns.Length; i++)
             {
                 var spawn = spawns[i];
-                if (spawn == null || spawn.Resource == null || spawn.TargetCount <= 0)
+                int targetCount = spawn != null ? spawn.TargetCount : 0;
+                if (spawn == null || spawn.Resource == null || targetCount <= 0)
                 {
                     continue;
                 }
 
-                var rng = new System.Random(Hash(propSeed, i, spawn.TargetCount, spawn.SpawnableArea.xMin));
-                int placed = 0;
+                var rng = new System.Random(Hash(propSeed, i, targetCount, spawn.SpawnableArea.xMin));
+                int placedForRule = 0;
                 int attempts = 0;
-                while (placed < spawn.TargetCount && attempts < spawn.MaxAttempts)
+                while (placedForRule < targetCount && attempts < spawn.MaxAttempts)
                 {
                     attempts++;
                     var area = spawn.SpawnableArea;
@@ -123,15 +125,23 @@ namespace Rootborn.Game.WorldGeneration
                         break;
                     }
 
-                    var cell = new Vector2Int(
+                    var anchor = new Vector2Int(
                         rng.Next(area.xMin, area.xMax),
                         rng.Next(area.yMin, area.yMax));
 
-                    if (IsReserved(definition.ReservedAreas, cell)) continue;
-                    if (!IsSpaced(placements, cell, spawn.MinDistanceBetweenProps)) continue;
+                    if (!TryAddPlacement(definition, spawn, anchor, placements, occupied))
+                    {
+                        continue;
+                    }
 
-                    placements.Add(new PropPlacement(spawn.Resource, cell));
-                    placed++;
+                    placedForRule++;
+                    for (int clusterIndex = 1; clusterIndex < spawn.ClusterSize && placedForRule < targetCount; clusterIndex++)
+                    {
+                        if (TryAddClusterNeighbor(definition, spawn, anchor, clusterIndex, placements, occupied))
+                        {
+                            placedForRule++;
+                        }
+                    }
                 }
             }
 
@@ -141,6 +151,48 @@ namespace Rootborn.Game.WorldGeneration
                 return y != 0 ? y : a.Cell.x.CompareTo(b.Cell.x);
             });
             return placements;
+        }
+
+        private static bool TryAddClusterNeighbor(TerrainGenerationDefinition definition, NaturalPropSpawnDefinition spawn, Vector2Int anchor, int clusterIndex, List<PropPlacement> placements, HashSet<Vector2Int> occupied)
+        {
+            int radius = spawn.ClusterRadius;
+            if (radius <= 0)
+            {
+                return false;
+            }
+
+            int diameter = radius * 2 + 1;
+            int candidateCount = diameter * diameter - 1;
+            for (int i = 0; i < candidateCount; i++)
+            {
+                int offsetIndex = (clusterIndex + i) % candidateCount;
+                int ox = offsetIndex % diameter - radius;
+                int oy = offsetIndex / diameter - radius;
+                if (ox == 0 && oy == 0)
+                {
+                    continue;
+                }
+
+                var cell = new Vector2Int(anchor.x + ox, anchor.y + oy);
+                if (TryAddPlacement(definition, spawn, cell, placements, occupied))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool TryAddPlacement(TerrainGenerationDefinition definition, NaturalPropSpawnDefinition spawn, Vector2Int cell, List<PropPlacement> placements, HashSet<Vector2Int> occupied)
+        {
+            if (!spawn.SpawnableArea.Contains(cell)) return false;
+            if (occupied.Contains(cell)) return false;
+            if (IsReserved(definition.ReservedAreas, cell)) return false;
+            if (!IsSpaced(placements, cell, spawn.MinDistanceBetweenProps)) return false;
+
+            placements.Add(new PropPlacement(spawn.Resource, cell));
+            occupied.Add(cell);
+            return true;
         }
 
         private static bool IsReserved(TerrainReservedArea[] reservedAreas, Vector2Int cell)

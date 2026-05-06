@@ -69,6 +69,24 @@ namespace Rootborn.Tests.EditMode.WorldGeneration
         }
 
         [Test]
+        public void Generate_DensityPermilleComputesTargetCountWhenExplicitCountIsZero()
+        {
+            var def = MakeDensityDefinition();
+            var world = SeededWorldGenerator.Generate(def, 100, 200);
+            Assert.AreEqual(10, world.Props.Length);
+        }
+
+        [Test]
+        public void Generate_ClusteredSpawnPlacesNeighboringPropsWithinClusterRadius()
+        {
+            var def = MakeClusterDefinition();
+            var world = SeededWorldGenerator.Generate(def, 100, 200);
+
+            Assert.AreEqual(3, world.Props.Length);
+            Assert.IsTrue(HasNeighborWithinChebyshevDistance(world, 1));
+        }
+
+        [Test]
         public void Registry_DefaultFarmTerrainGeneration_IsAssigned()
         {
             var registry = UnityEditor.AssetDatabase.LoadAssetAtPath<Rootborn.Game.Common.GameDataRegistry>(
@@ -117,6 +135,28 @@ namespace Rootborn.Tests.EditMode.WorldGeneration
             return def;
         }
 
+        private static TerrainGenerationDefinition MakeDensityDefinition()
+        {
+            var resource = ScriptableObject.CreateInstance<ResourceNodeDefinition>();
+            var spawn = ScriptableObject.CreateInstance<NaturalPropSpawnDefinition>();
+            spawn.SetTestData(resource, 0, new RectInt(0, 0, 10, 10), 0, 256, 1, 0, 100);
+
+            var def = ScriptableObject.CreateInstance<TerrainGenerationDefinition>();
+            def.SetTestData(10, 10, null, System.Array.Empty<TerrainReservedArea>(), new[] { spawn });
+            return def;
+        }
+
+        private static TerrainGenerationDefinition MakeClusterDefinition()
+        {
+            var resource = ScriptableObject.CreateInstance<ResourceNodeDefinition>();
+            var spawn = ScriptableObject.CreateInstance<NaturalPropSpawnDefinition>();
+            spawn.SetTestData(resource, 3, new RectInt(5, 5, 10, 10), 0, 256, 3, 1, 0);
+
+            var def = ScriptableObject.CreateInstance<TerrainGenerationDefinition>();
+            def.SetTestData(20, 20, null, System.Array.Empty<TerrainReservedArea>(), new[] { spawn });
+            return def;
+        }
+
         private static string PropSignature(SeededWorldGenerator.GeneratedWorld world)
         {
             var parts = new string[world.Props.Length];
@@ -127,6 +167,24 @@ namespace Rootborn.Tests.EditMode.WorldGeneration
 
             System.Array.Sort(parts, System.StringComparer.Ordinal);
             return string.Join("|", parts);
+        }
+
+        private static bool HasNeighborWithinChebyshevDistance(SeededWorldGenerator.GeneratedWorld world, int distance)
+        {
+            for (int i = 0; i < world.Props.Length; i++)
+            {
+                for (int j = i + 1; j < world.Props.Length; j++)
+                {
+                    int dx = Mathf.Abs(world.Props[i].Cell.x - world.Props[j].Cell.x);
+                    int dy = Mathf.Abs(world.Props[i].Cell.y - world.Props[j].Cell.y);
+                    if (dx <= distance && dy <= distance)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
     }
 }
