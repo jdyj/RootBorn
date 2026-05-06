@@ -15,8 +15,20 @@ MonoBehaviour:
   m_GroupName: Sprites
   m_GUID: 04f641b57fbe2c8438c7ae2a523c0ab5
   m_SerializeEntries:
+  - m_GUID: 08f4773e3ccd5ba4b86f3e97f4df9414
+    m_Address: sprites/farm/modern/16/terrain
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 09cc52776c4c6e64686d7f46aeb0a78e
     m_Address: sprites/ui/book/spine
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0b665df52943c8244a50c919148f82b2
+    m_Address: sprites/farm/modern/16/trees
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
@@ -29,6 +41,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0f45aeb1b6dd0ac4090eb820cb8e022e
     m_Address: sprites/ui/book/page-5
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 10d3073974ed20443b4d0984a40b483d
+    m_Address: sprites/farm/modern/16/crops
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
@@ -99,6 +117,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5884dbc611a433e4980541e6cb739cd0
+    m_Address: sprites/farm/modern/16/props
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 62d8a068b1ce8e041ad3df4681fff145
     m_Address: sprites/ui/panel/hud
     m_ReadOnly: 0
@@ -131,6 +155,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 70b8c269cd001a84b8d25bd4d32c25a6
     m_Address: sprites/player/tool/pickup-up
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 722fbf8756586704da3dc3c7d91c498e
+    m_Address: sprites/farm/modern/16/fences
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
@@ -171,6 +201,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 984a6305430019e40839795192e1d824
+    m_Address: sprites/farm/modern/16/pickups
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9b65f4418d5ba8d41ae3ac21c6cc0eaa
     m_Address: sprites/ui/modern/16/gamepad
     m_ReadOnly: 0
@@ -203,6 +239,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a571baff076edf340bbfc87493ca302b
     m_Address: sprites/ui/book/page-8
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a8e6826424773484a837da12be452625
+    m_Address: sprites/farm/modern/16/fruit-trees
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
