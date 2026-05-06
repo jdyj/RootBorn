@@ -37,10 +37,9 @@ namespace Rootborn.Game.Common
                 var slot = _slots[i];
                 if (slot.Item != item) continue;
                 int room = max - slot.Count;
-                if (room <= 0) continue;
-                int put = Mathf.Min(room, remaining);
-                slot.Count += put;
-                remaining -= put;
+                if (room < remaining) continue;
+                slot.Count += remaining;
+                remaining = 0;
             }
 
             while (remaining > 0)
@@ -51,6 +50,43 @@ namespace Rootborn.Game.Common
             }
 
             OnChanged?.Invoke();
+        }
+
+        public bool TryMoveSlot(int sourceIndex, int targetIndex)
+        {
+            if (sourceIndex < 0 || targetIndex < 0) return false;
+            EnsureSlotCount(Mathf.Max(sourceIndex, targetIndex) + 1);
+
+            var source = _slots[sourceIndex];
+            if (source.Item == null || source.Count <= 0) return false;
+            if (sourceIndex == targetIndex) return true;
+
+            var target = _slots[targetIndex];
+            if (target.Item != null && target.Count > 0)
+            {
+                if (target.Item != source.Item) return false;
+                int room = source.Item.MaxStack - target.Count;
+                if (room <= 0) return false;
+
+                int moved = Mathf.Min(room, source.Count);
+                target.Count += moved;
+                source.Count -= moved;
+                if (source.Count <= 0)
+                {
+                    source.Item = null;
+                    source.Count = 0;
+                }
+
+                OnChanged?.Invoke();
+                return true;
+            }
+
+            target.Item = source.Item;
+            target.Count = source.Count;
+            source.Item = null;
+            source.Count = 0;
+            OnChanged?.Invoke();
+            return true;
         }
 
         public bool Remove(ItemDefinition item, int count = 1)
@@ -82,6 +118,14 @@ namespace Rootborn.Game.Common
             }
 
             return sum;
+        }
+
+        private void EnsureSlotCount(int count)
+        {
+            while (_slots.Count < count)
+            {
+                _slots.Add(new Slot());
+            }
         }
     }
 
