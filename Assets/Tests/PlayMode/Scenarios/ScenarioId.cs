@@ -10,6 +10,21 @@ namespace Rootborn.Tests.PlayMode.Scenarios
         public const string STATUS_002 = "STATUS-002";
         public const string HEIR_001 = "HEIR-001";
         public const string NET_001 = "NET-001";
+        public const string QUEST_001 = "QUEST-001";
+        public const string QUEST_002 = "QUEST-002";
+        public const string QUEST_003 = "QUEST-003";
+        public const string QUEST_004 = "QUEST-004";
+        public const string QUEST_005 = "QUEST-005";
+        public const string QUEST_006 = "QUEST-006";
+        public const string QUEST_007 = "QUEST-007";
+        public const string QUEST_008 = "QUEST-008";
+        public const string QUEST_009 = "QUEST-009";
+        public const string QUEST_010 = "QUEST-010";
+        public const string QUEST_011 = "QUEST-011";
+        public const string QUEST_012 = "QUEST-012";
+        public const string QUEST_013 = "QUEST-013";
+        public const string QUEST_014 = "QUEST-014";
+        public const string QUEST_015 = "QUEST-015";
         // [PENDING] NET-002 ~ NET-005, TOOL-001 (post-MVP)
     }
 }
