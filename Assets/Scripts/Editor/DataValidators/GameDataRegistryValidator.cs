@@ -27,6 +27,14 @@ namespace Rootborn.Editor.DataValidators
                 issues += CheckUnique(reg.Knowledge, "Knowledge", path);
                 issues += CheckUnique(reg.Traits, "Trait", path);
                 issues += CheckUnique(reg.Statuses, "Status", path);
+                issues += CheckUnique(reg.Quests, "Quest", path);
+                issues += CheckUnique(reg.Npcs, "NPC", path);
+                issues += CheckUnique(reg.StoryFlags, "StoryFlag", path);
+                issues += CheckNonNull(reg.QuestObjectives, "QuestObjective", path);
+                issues += CheckNonNull(reg.QuestRewards, "QuestReward", path);
+                issues += CheckNonNull(reg.QuestCompletionEffects, "QuestCompletionEffect", path);
+                issues += CheckNonNull(reg.QuestConditions, "QuestCondition", path);
+                issues += CheckNonNull(reg.Dialogues, "Dialogue", path);
             }
             Debug.Log($"[ROOTBORN] Registry validation complete. issues={issues}");
         }
@@ -62,6 +70,27 @@ namespace Rootborn.Editor.DataValidators
                     issues++;
                 }
             }
+            return issues;
+        }
+
+        private static int CheckNonNull<T>(T[] items, string kind, string registryPath) where T : UnityEngine.Object
+        {
+            int issues = 0;
+            if (items == null)
+            {
+                Debug.LogWarning($"[ROOTBORN] {kind} array is null in {registryPath}");
+                return 1;
+            }
+
+            for (int i = 0; i < items.Length; i++)
+            {
+                if (items[i] == null)
+                {
+                    Debug.LogWarning($"[ROOTBORN] {kind} index {i} is null in {registryPath}");
+                    issues++;
+                }
+            }
+
             return issues;
         }
     }
