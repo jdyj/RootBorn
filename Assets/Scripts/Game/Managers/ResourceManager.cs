@@ -4,16 +4,11 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using UnityEngine.U2D;
 
 namespace Rootborn.Game.Managers
 {
     /// <summary>
-    /// Addressables 래퍼. 캐시 + Release 명시 + async/await.
-    /// SlimeMaster의 ResourceManager를 차용하되 다음을 보강:
-    ///  - async/await (콜백 지옥 회피)
-    ///  - Release 명시 (메모리 누수 차단)
-    ///  - 에러 핸들링 (실패 시 default(T) 반환 + 경고)
+    /// Addressables helper with explicit cache/release ownership.
     /// </summary>
     public sealed class ResourceManager
     {
@@ -45,10 +40,6 @@ namespace Rootborn.Game.Managers
             return null;
         }
 
-        /// <summary>
-        /// 사전 로드된 sheet 에서 sub-sprite 동기 조회. Preload 안 됐으면 null.
-        /// FarmHudController 같은 UI 가 Awake/Start 에서 즉시 sprite 결정해야 할 때 사용.
-        /// </summary>
         public Sprite GetCachedSubSprite(string sheetAddress, string subName)
         {
             if (!_sheetSprites.TryGetValue(sheetAddress, out var sprites)) return null;
@@ -106,39 +97,34 @@ namespace Rootborn.Game.Managers
             }
         }
 
-        /// <summary>
-        /// Sheet (Pixelwood multi-sprite PNG)에서 sub-sprite를 이름으로 찾는다.
-        /// 첫 호출 시 LoadAssetsAsync로 sheet의 sub-sprite 전체를 로드하고 cache.
-        /// </summary>
-        public async Task<Sprite> LoadSubSpriteAsync(string sheetAddress, string subName)
+        public Task<Sprite> LoadSubSpriteAsync(string sheetAddress, string subName)
         {
+            if (string.IsNullOrEmpty(sheetAddress)) return Task.FromResult<Sprite>(null);
+
+            Sprite cached = GetCachedSubSprite(sheetAddress, subName);
+            if (cached != null) return Task.FromResult(cached);
+
             IList<Sprite> sprites;
             if (!_sheetSprites.TryGetValue(sheetAddress, out sprites))
             {
-                try
+                sprites = LoadSpriteSheet(sheetAddress);
+                if (sprites == null || sprites.Count == 0)
                 {
-                    var handle = Addressables.LoadAssetAsync<IList<Sprite>>(sheetAddress);
-                    await handle.Task;
-                    if (handle.Status != AsyncOperationStatus.Succeeded || handle.Result == null)
-                    {
-                        Debug.LogWarning($"[ROOTBORN/ResourceManager] LoadSubSpriteAsync sheet '{sheetAddress}' failed.");
-                        return null;
-                    }
-                    sprites = handle.Result;
-                    _sheetSprites[sheetAddress] = sprites;
-                    _handles[$"sheet:{sheetAddress}"] = handle;
-                }
-                catch (Exception e)
-                {
-                    Debug.LogWarning($"[ROOTBORN/ResourceManager] LoadSubSpriteAsync exception '{sheetAddress}': {e.Message}");
-                    return null;
+                    return Task.FromResult<Sprite>(null);
                 }
             }
+
+            if (string.IsNullOrEmpty(subName))
+            {
+                return Task.FromResult(sprites.Count > 0 ? sprites[0] : null);
+            }
+
             for (int i = 0; i < sprites.Count; i++)
             {
-                if (sprites[i] != null && sprites[i].name == subName) return sprites[i];
+                if (sprites[i] != null && sprites[i].name == subName) return Task.FromResult(sprites[i]);
             }
-            return null;
+
+            return Task.FromResult(LoadAddressableSubSprite(sheetAddress, subName));
         }
 
         public void Release(string address)
@@ -160,6 +146,88 @@ namespace Rootborn.Game.Managers
             _handles.Clear();
             _cache.Clear();
             _sheetSprites.Clear();
+        }
+
+        private IList<Sprite> LoadSpriteSheet(string sheetAddress)
+        {
+            try
+            {
+                var handle = Addressables.LoadAssetAsync<IList<Sprite>>(sheetAddress);
+                IList<Sprite> result = handle.WaitForCompletion();
+                if (handle.Status != AsyncOperationStatus.Succeeded || result == null)
+                {
+                    Debug.LogWarning($"[ROOTBORN/ResourceManager] LoadSubSpriteAsync sheet '{sheetAddress}' failed: status={handle.Status}");
+                    Addressables.Release(handle);
+                    return null;
+                }
+
+                var sprites = new List<Sprite>(result.Count);
+                for (int i = 0; i < result.Count; i++)
+                {
+                    if (result[i] != null)
+                    {
+                        sprites.Add(result[i]);
+                    }
+                }
+
+                _sheetSprites[sheetAddress] = sprites;
+                _handles[$"sheet:{sheetAddress}"] = handle;
+                return sprites;
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[ROOTBORN/ResourceManager] LoadSubSpriteAsync exception '{sheetAddress}': {e.Message}");
+                return null;
+            }
+        }
+
+        private Sprite LoadAddressableSubSprite(string sheetAddress, string subName)
+        {
+            if (string.IsNullOrEmpty(subName)) return null;
+
+            string subAddress = $"{sheetAddress}[{subName}]";
+            try
+            {
+                var handle = Addressables.LoadAssetAsync<Sprite>(subAddress);
+                Sprite result = handle.WaitForCompletion();
+                if (handle.Status != AsyncOperationStatus.Succeeded || result == null)
+                {
+                    Addressables.Release(handle);
+                    return null;
+                }
+
+                CacheSubSprite(sheetAddress, result);
+                _handles[$"sub:{subAddress}"] = handle;
+                return result;
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[ROOTBORN/ResourceManager] LoadSubSpriteAsync sub-sprite exception '{subAddress}': {e.Message}");
+                return null;
+            }
+        }
+
+        private void CacheSubSprite(string sheetAddress, Sprite sprite)
+        {
+            if (sprite == null) return;
+            if (!_sheetSprites.TryGetValue(sheetAddress, out var sprites))
+            {
+                sprites = new List<Sprite>();
+                _sheetSprites[sheetAddress] = sprites;
+            }
+
+            for (int i = 0; i < sprites.Count; i++)
+            {
+                if (sprites[i] == sprite || (sprites[i] != null && sprites[i].name == sprite.name))
+                {
+                    return;
+                }
+            }
+
+            if (sprites is List<Sprite> list)
+            {
+                list.Add(sprite);
+            }
         }
     }
 }
