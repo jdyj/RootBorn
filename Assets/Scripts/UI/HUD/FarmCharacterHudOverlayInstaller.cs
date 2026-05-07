@@ -34,7 +34,7 @@ namespace Rootborn.UI.HUD
             var canvas = FindFarmCanvas();
             if (canvas == null) return;
             canvas.gameObject.SetActive(true);
-            HideLegacyHud(canvas.transform);
+            HideDefaultBlockingPanels(canvas.transform);
             var hud = canvas.transform.Find(HudName);
             if (hud == null) hud = BuildHud(canvas.transform);
             hud.gameObject.SetActive(true);
@@ -56,10 +56,18 @@ namespace Rootborn.UI.HUD
             return canvases.Length > 0 ? canvases[0] : null;
         }
 
-        private static void HideLegacyHud(Transform canvasRoot)
+        private static void HideDefaultBlockingPanels(Transform canvasRoot)
         {
-            var legacy = canvasRoot.Find("HUD");
-            if (legacy != null) legacy.gameObject.SetActive(false);
+            HideChild(canvasRoot, "HUD");
+            HideChild(canvasRoot, "HotkeyHint");
+            HideChild(canvasRoot, "QuestLogPanel");
+            HideChild(canvasRoot, "BookPanel");
+        }
+
+        private static void HideChild(Transform canvasRoot, string childName)
+        {
+            var child = canvasRoot.Find(childName);
+            if (child != null) child.gameObject.SetActive(false);
         }
 
         private static Transform BuildHud(Transform canvasRoot)

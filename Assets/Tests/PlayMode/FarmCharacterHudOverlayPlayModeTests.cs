@@ -14,11 +14,7 @@ namespace Rootborn.Tests.PlayMode
         [UnityTest]
         public IEnumerator FarmScene_InstallsTopLeftLayeredCharacterThumbnailHud()
         {
-            yield return SceneManager.LoadSceneAsync("Farm");
-            yield return Managers.BootstrapAsync().AsIEnumerator();
-            var fillerGo = new GameObject("[FarmAutoFiller-Test]");
-            fillerGo.AddComponent<FarmAutoFiller>().FillIfEmpty();
-            yield return WaitForHud();
+            yield return LoadFarmAndBuildHud();
 
             var hud = GameObject.Find("TopLeftCharacterHud");
             Assert.IsNotNull(hud);
@@ -26,6 +22,26 @@ namespace Rootborn.Tests.PlayMode
             var thumbnail = hud.transform.Find("CharacterThumbnailFrame/CharacterThumbnail");
             Assert.IsNotNull(thumbnail);
             Assert.GreaterOrEqual(CountHudPartImages(thumbnail), 3);
+        }
+
+        [UnityTest]
+        public IEnumerator FarmScene_HidesBlockingPanelsAroundTopLeftCharacterHud()
+        {
+            yield return LoadFarmAndBuildHud();
+
+            AssertMissingOrInactive("HUD");
+            AssertMissingOrInactive("HotkeyHint");
+            AssertMissingOrInactive("QuestLogPanel");
+            AssertMissingOrInactive("BookPanel");
+        }
+
+        private static IEnumerator LoadFarmAndBuildHud()
+        {
+            yield return SceneManager.LoadSceneAsync("Farm");
+            yield return Managers.BootstrapAsync().AsIEnumerator();
+            var fillerGo = new GameObject("[FarmAutoFiller-Test]");
+            fillerGo.AddComponent<FarmAutoFiller>().FillIfEmpty();
+            yield return WaitForHud();
         }
 
         private static IEnumerator WaitForHud()
@@ -40,6 +56,24 @@ namespace Rootborn.Tests.PlayMode
 
                 yield return null;
             }
+        }
+
+        private static void AssertMissingOrInactive(string objectName)
+        {
+            var go = FindByNameIncludingInactive(objectName);
+            if (go == null) return;
+            Assert.IsFalse(go.activeInHierarchy, objectName + " should not block the default Farm gameplay view.");
+        }
+
+        private static GameObject FindByNameIncludingInactive(string objectName)
+        {
+            var transforms = Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            for (int i = 0; i < transforms.Length; i++)
+            {
+                if (transforms[i] != null && transforms[i].name == objectName) return transforms[i].gameObject;
+            }
+
+            return null;
         }
 
         private static int CountHudPartImages(Transform thumbnail)
