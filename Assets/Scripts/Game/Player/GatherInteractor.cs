@@ -4,6 +4,7 @@ using Rootborn.Game.Knowledge;
 using Rootborn.Game.Quests;
 using Rootborn.Game.Resources;
 using Rootborn.Game.Tools;
+using Rootborn.Game.World;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -106,6 +107,8 @@ namespace Rootborn.Game.Player
 
     public sealed class GatherInteractor : MonoBehaviour
     {
+        private const string DefaultSurface = "Soil";
+
         [SerializeField] private float _interactRadius = 1.5f;
         [SerializeField] private ToolDefinition _equippedTool;
         [SerializeField] private PlayerInventory _inventory;
@@ -206,25 +209,47 @@ namespace Rootborn.Game.Player
 
             var clock = Rootborn.Game.Time.GameClock.Instance;
             var grid = Rootborn.Game.Farming.FarmGrid.Instance;
+            Vector2 facing = ResolveFacing();
+            Vector3 targetWorld = transform.position + (Vector3)(facing.normalized * 0.75f);
+            string surface = ResolveSurface(targetWorld);
+
             if (grid == null || grid.GroundTilemap == null)
             {
                 var targetOnlyCtx = new ToolUseContext(
-                    _equippedTool, gameObject, "Soil",
+                    _equippedTool, gameObject, surface,
                     default, null, null, _inventory, clock, _questEvents);
                 _equippedTool.ApplyEffects(in targetOnlyCtx);
                 return;
             }
 
-            var pc = GetComponent<PlayerController>();
-            Vector2 facing = pc != null ? pc.LastFacing : new Vector2(0f, -1f);
-            if (facing.sqrMagnitude < 0.0001f) facing = new Vector2(0f, -1f);
-            Vector3 targetWorld = transform.position + (Vector3)(facing.normalized * 0.75f);
             Vector3Int cell = grid.WorldToCell(targetWorld);
 
             var ctx = new ToolUseContext(
-                _equippedTool, gameObject, "Soil",
+                _equippedTool, gameObject, surface,
                 cell, grid.GroundTilemap, grid, _inventory, clock, _questEvents);
             _equippedTool.ApplyEffects(in ctx);
+        }
+
+        private Vector2 ResolveFacing()
+        {
+            var pc = GetComponent<PlayerController>();
+            Vector2 facing = pc != null ? pc.LastFacing : new Vector2(0f, -1f);
+            return facing.sqrMagnitude < 0.0001f ? new Vector2(0f, -1f) : facing;
+        }
+
+        private static string ResolveSurface(Vector3 targetWorld)
+        {
+            var colliders = Physics2D.OverlapPointAll(targetWorld);
+            for (int i = 0; i < colliders.Length; i++)
+            {
+                var zone = colliders[i] != null ? colliders[i].GetComponent<SurfaceTagZone>() : null;
+                if (zone != null)
+                {
+                    return zone.Surface;
+                }
+            }
+
+            return DefaultSurface;
         }
 
         private ResourceNode FindNearestNode()
