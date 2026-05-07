@@ -47,5 +47,16 @@ namespace Rootborn.Tests.EditMode.Family
             StringAssert.Contains("_toolRenderer.sprite = s", source);
             StringAssert.DoesNotContain("_renderer.sprite = s", source);
         }
+
+        [Test]
+        public void PlayerController_BindsEquipmentEventsEvenWhenInventoryWasFoundInAwake()
+        {
+            string source = File.ReadAllText("Assets/Scripts/Game/Player/PlayerController.cs");
+
+            StringAssert.Contains("_inventoryEventsBound", source);
+            StringAssert.DoesNotContain("if (_inventory != null) return;", source);
+            StringAssert.Contains("_inventory.OnEquipmentChanged += OnEquipmentChanged", source);
+            StringAssert.Contains("OnEquipmentChanged();", source);
+        }
     }
 }

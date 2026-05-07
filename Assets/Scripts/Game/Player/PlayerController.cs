@@ -27,6 +27,7 @@ namespace Rootborn.Game.Player
         private string _activeToolId;
         private string _activeToolSpritePrefix;
         private CharacterPartAnimationClipDefinition _activeCharacterPartAnimationClip;
+        private bool _inventoryEventsBound;
 
         private bool _isAttacking;
         private float _attackTime;
@@ -107,10 +108,13 @@ namespace Rootborn.Game.Player
 
         private void TryBindInventory()
         {
-            if (_inventory != null) return;
-            _inventory = GetComponent<PlayerInventory>();
-            if (_inventory == null) return;
+            if (_inventory == null)
+            {
+                _inventory = GetComponent<PlayerInventory>();
+            }
+            if (_inventory == null || _inventoryEventsBound) return;
             _inventory.OnEquipmentChanged += OnEquipmentChanged;
+            _inventoryEventsBound = true;
             OnEquipmentChanged();
         }
 
@@ -135,7 +139,11 @@ namespace Rootborn.Game.Player
                 _pointerAction.Dispose();
                 _pointerAction = null;
             }
-            if (_inventory != null) _inventory.OnEquipmentChanged -= OnEquipmentChanged;
+            if (_inventory != null && _inventoryEventsBound)
+            {
+                _inventory.OnEquipmentChanged -= OnEquipmentChanged;
+                _inventoryEventsBound = false;
+            }
         }
 
         private void OnEquipmentChanged()
