@@ -10,6 +10,7 @@ namespace Rootborn.Game.Player
         [SerializeField] private float _moveSpeed = 4f;
         [SerializeField] private Animator _animator;
         [SerializeField] private SpriteRenderer _renderer;
+        [SerializeField] private SpriteRenderer _toolRenderer;
         [SerializeField] private CharacterPartComposer _partComposer;
         [SerializeField] private CharacterPartAnimator _partAnimator;
         [SerializeField] private Rigidbody2D _rb;
@@ -157,6 +158,11 @@ namespace Rootborn.Game.Player
             {
                 _animator.enabled = !HasToolSprites(_activeToolSpritePrefix);
             }
+            if (!HasToolSprites(_activeToolSpritePrefix) && _toolRenderer != null)
+            {
+                _toolRenderer.sprite = null;
+                _toolRenderer.enabled = false;
+            }
         }
 
         private static bool HasToolSprites(string spritePrefix)
@@ -217,17 +223,53 @@ namespace Rootborn.Game.Player
             {
                 _renderer.flipX = flipX;
             }
+            if (_toolRenderer != null)
+            {
+                _toolRenderer.flipX = flipX;
+            }
             if (_partComposer != null)
             {
                 _partComposer.SetFlipX(flipX);
             }
         }
 
+        private SpriteRenderer EnsureToolRenderer()
+        {
+            if (_toolRenderer != null)
+            {
+                return _toolRenderer;
+            }
+
+            var child = transform.Find("Part_tool");
+            if (child == null)
+            {
+                var go = new GameObject("Part_tool");
+                go.transform.SetParent(transform, false);
+                child = go.transform;
+            }
+
+            _toolRenderer = child.GetComponent<SpriteRenderer>();
+            if (_toolRenderer == null)
+            {
+                _toolRenderer = child.gameObject.AddComponent<SpriteRenderer>();
+            }
+            _toolRenderer.sortingOrder = 10;
+            _toolRenderer.enabled = false;
+            return _toolRenderer;
+        }
+
         private void UpdateToolSprite()
         {
-            if (_renderer == null) return;
             string prefix = _activeToolSpritePrefix;
-            if (!HasToolSprites(prefix)) return;
+            if (!HasToolSprites(prefix))
+            {
+                if (_toolRenderer != null)
+                {
+                    _toolRenderer.sprite = null;
+                    _toolRenderer.enabled = false;
+                }
+                return;
+            }
 
             var rm = Rootborn.Game.Managers.Managers.Resource;
             if (rm == null) return;
@@ -269,7 +311,9 @@ namespace Rootborn.Game.Player
             }
             if (s != null)
             {
-                _renderer.sprite = s;
+                EnsureToolRenderer();
+                _toolRenderer.sprite = s;
+                _toolRenderer.enabled = true;
             }
         }
 

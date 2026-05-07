@@ -35,5 +35,17 @@ namespace Rootborn.Tests.EditMode.Family
             StringAssert.Contains("CharacterPartAnimationClip", source);
             StringAssert.Contains("_partAnimator.PlayClip", source);
         }
+
+        [Test]
+        public void PlayerController_RendersHeldToolOnDedicatedLayerWhenPartCharacterDisablesRootRenderer()
+        {
+            string source = File.ReadAllText("Assets/Scripts/Game/Player/PlayerController.cs");
+
+            StringAssert.Contains("_toolRenderer", source);
+            StringAssert.Contains("EnsureToolRenderer", source);
+            StringAssert.Contains("Part_tool", source);
+            StringAssert.Contains("_toolRenderer.sprite = s", source);
+            StringAssert.DoesNotContain("_renderer.sprite = s", source);
+        }
     }
 }
