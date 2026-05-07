@@ -37,11 +37,12 @@ namespace Rootborn.Tests.EditMode
         }
 
         [Test]
-        public void FishingAnimationEffectAsset_IsConfiguredForThrowHook()
+        public void FishingAnimationEffectAsset_IsConfiguredForThrowHookOnWaterSurface()
         {
             var effect = AssetDatabase.LoadAssetAtPath<FishingAnimationEffect>(FishingEffectPath);
             Assert.IsNotNull(effect, FishingEffectPath);
             Assert.AreEqual(FishingAnimationPhase.ThrowHook, effect.Phase);
+            Assert.AreEqual("Water", effect.RequiredSurface);
         }
 
         [Test]

@@ -10,7 +10,7 @@ namespace Rootborn.Tests.EditMode
     public sealed class FishingAnimationEffectTests
     {
         [Test]
-        public void FishingAnimationEffect_PlaysConfiguredFishingPhaseOnTargetController()
+        public void FishingAnimationEffect_PlaysConfiguredFishingPhaseOnMatchingSurface()
         {
             var player = new GameObject("Player");
             var definition = ScriptableObject.CreateInstance<FishingAnimationDefinition>();
@@ -25,11 +25,45 @@ namespace Rootborn.Tests.EditMode
                 var animator = player.AddComponent<CharacterPartAnimator>();
                 var controller = player.AddComponent<FishingAnimationController>();
                 controller.Configure(animator, definition);
-                SetPhase(effect, FishingAnimationPhase.ThrowHook);
+                SetEffect(effect, FishingAnimationPhase.ThrowHook, "Water");
 
                 effect.Apply(new ToolUseContext(null, player, "Water"));
 
                 Assert.AreSame(throwHook, animator.ActiveClip);
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
+                Object.DestroyImmediate(definition);
+                Object.DestroyImmediate(throwHook);
+                Object.DestroyImmediate(idle);
+                Object.DestroyImmediate(pullHook);
+                Object.DestroyImmediate(caught);
+                Object.DestroyImmediate(effect);
+            }
+        }
+
+        [Test]
+        public void FishingAnimationEffect_IgnoresMismatchedSurface()
+        {
+            var player = new GameObject("Player");
+            var definition = ScriptableObject.CreateInstance<FishingAnimationDefinition>();
+            var throwHook = CreateClip("character.action.fishing.throw_hook.side", 6, 40, 8f, false);
+            var idle = CreateClip("character.action.fishing.idle.side", 7, 24, 6f, true);
+            var pullHook = CreateClip("character.action.fishing.pull_hook.side", 8, 8, 10f, false);
+            var caught = CreateClip("character.action.fishing.caught.side", 9, 40, 8f, false);
+            var effect = ScriptableObject.CreateInstance<FishingAnimationEffect>();
+            try
+            {
+                SetDefinition(definition, "character.fishing.default", throwHook, idle, pullHook, caught);
+                var animator = player.AddComponent<CharacterPartAnimator>();
+                var controller = player.AddComponent<FishingAnimationController>();
+                controller.Configure(animator, definition);
+                SetEffect(effect, FishingAnimationPhase.ThrowHook, "Water");
+
+                effect.Apply(new ToolUseContext(null, player, "Soil"));
+
+                Assert.IsNull(animator.ActiveClip);
             }
             finally
             {
@@ -59,7 +93,7 @@ namespace Rootborn.Tests.EditMode
                 var animator = player.AddComponent<CharacterPartAnimator>();
                 var controller = player.AddComponent<FishingAnimationController>();
                 controller.Configure(animator, definition);
-                SetPhase(effect, FishingAnimationPhase.Caught);
+                SetEffect(effect, FishingAnimationPhase.Caught, "Water");
 
                 effect.Apply(new ToolUseContext(null, player, "Water"));
 
@@ -107,10 +141,11 @@ namespace Rootborn.Tests.EditMode
             serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private static void SetPhase(FishingAnimationEffect effect, FishingAnimationPhase phase)
+        private static void SetEffect(FishingAnimationEffect effect, FishingAnimationPhase phase, string requiredSurface)
         {
             var serialized = new SerializedObject(effect);
             serialized.FindProperty("_phase").enumValueIndex = (int)phase;
+            serialized.FindProperty("_requiredSurface").stringValue = requiredSurface;
             serialized.ApplyModifiedPropertiesWithoutUndo();
         }
     }

@@ -15,12 +15,14 @@ namespace Rootborn.Game.Tools.Effects
     public sealed class FishingAnimationEffect : ToolEffectBase
     {
         [SerializeField] private FishingAnimationPhase _phase = FishingAnimationPhase.ThrowHook;
+        [SerializeField] private string _requiredSurface = "Water";
 
         public FishingAnimationPhase Phase => _phase;
+        public string RequiredSurface => _requiredSurface;
 
         public override void Apply(in ToolUseContext ctx)
         {
-            if (ctx.Target == null)
+            if (!MatchesSurface(ctx.Surface) || ctx.Target == null)
             {
                 return;
             }
@@ -46,6 +48,11 @@ namespace Rootborn.Game.Tools.Effects
                     controller.PlayPullHook(true);
                     break;
             }
+        }
+
+        private bool MatchesSurface(string surface)
+        {
+            return string.IsNullOrEmpty(_requiredSurface) || string.Equals(_requiredSurface, surface, System.StringComparison.OrdinalIgnoreCase);
         }
     }
 }

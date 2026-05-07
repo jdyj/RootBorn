@@ -13,3 +13,4 @@ MonoBehaviour:
   m_Name: Effect_FishingThrowHook
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Tools.Effects.FishingAnimationEffect
   _phase: 0
+  _requiredSurface: Water
