@@ -109,6 +109,23 @@ namespace Rootborn.Tests.PlayMode
             Assert.GreaterOrEqual(tileImage.TileCount, 9, objectName);
             Assert.AreEqual(4, tileImage.CornerTileCount, objectName);
             Assert.IsFalse(tileImage.HasStretchedCornerTiles, objectName);
+            AssertAllGeneratedTileSpritesResolved(go.transform, objectName);
+        }
+
+        private static void AssertAllGeneratedTileSpritesResolved(Transform root, string objectName)
+        {
+            int imageCount = 0;
+            for (int i = 0; i < root.childCount; i++)
+            {
+                var child = root.GetChild(i);
+                if (!child.name.StartsWith("Tile_")) continue;
+                var image = child.GetComponent<Image>();
+                Assert.IsNotNull(image, child.name);
+                Assert.IsNotNull(image.sprite, objectName + "/" + child.name);
+                imageCount++;
+            }
+
+            Assert.GreaterOrEqual(imageCount, 9, objectName);
         }
 
         private static GameObject FindByNameIncludingInactive(string objectName)
