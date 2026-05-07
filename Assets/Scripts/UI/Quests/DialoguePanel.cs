@@ -1,3 +1,4 @@
+using System;
 using Rootborn.Game.Dialogue;
 using UnityEngine;
 
@@ -10,6 +11,7 @@ namespace Rootborn.UI.Quests
         private DialogueChoiceContext _context;
 
         public bool IsOpen { get; private set; }
+        public event Action<bool> OnChoiceExecuted;
 
         public void Open(DialogueDefinition dialogue, DialogueChoiceContext context)
         {
@@ -30,16 +32,20 @@ namespace Rootborn.UI.Quests
         {
             if (_dialogue == null || _dialogue.Choices == null)
             {
+                OnChoiceExecuted?.Invoke(false);
                 return false;
             }
 
             if (choiceIndex < 0 || choiceIndex >= _dialogue.Choices.Length)
             {
+                OnChoiceExecuted?.Invoke(false);
                 return false;
             }
 
-            return _dialogue.Choices[choiceIndex] != null
+            bool result = _dialogue.Choices[choiceIndex] != null
                 && _dialogue.Choices[choiceIndex].TryExecute(in _context);
+            OnChoiceExecuted?.Invoke(result);
+            return result;
         }
     }
 }

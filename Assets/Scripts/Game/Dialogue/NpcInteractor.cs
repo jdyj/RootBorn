@@ -1,3 +1,4 @@
+using System;
 using Rootborn.Game.Quests;
 using UnityEngine;
 
@@ -13,6 +14,7 @@ namespace Rootborn.Game.Dialogue
 
         public DialogueSession Session => _session;
         public NpcDefinition Npc => _npc;
+        public event Action<NpcInteractor> OnInteracted;
 
         public void Bind(NpcDefinition npc)
         {
@@ -32,6 +34,7 @@ namespace Rootborn.Game.Dialogue
             }
 
             _session.Open(_npc.DefaultDialogue);
+            OnInteracted?.Invoke(this);
         }
 
         public void CompleteTalk(string eventKey)
