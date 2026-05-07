@@ -35,6 +35,7 @@ namespace Rootborn.Game.Farming
             _tilledTile = tilledTile;
             _plotPrefab = plotPrefab;
             _cropsParent = cropsParent;
+            TrySubscribe();
         }
 
         private void Awake()
@@ -64,7 +65,7 @@ namespace Rootborn.Game.Farming
         private void TrySubscribe()
         {
             if (_subscribed) return;
-            _clock = GameClock.Instance;
+            _clock = GameClock.Instance != null ? GameClock.Instance : Object.FindFirstObjectByType<GameClock>();
             if (_clock == null) return;
             _clock.OnDayRolled += OnDayRolled;
             _subscribed = true;

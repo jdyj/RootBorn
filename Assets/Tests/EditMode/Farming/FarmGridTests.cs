@@ -1,12 +1,13 @@
 using NUnit.Framework;
 using Rootborn.Game.Crops;
 using Rootborn.Game.Farming;
+using Rootborn.Game.Time;
 using UnityEngine;
 
 namespace Rootborn.Tests.EditMode.Farming
 {
     /// <summary>
-    /// FARM-010~015: FarmGrid 의 till/plant/water/fertilize/harvest/day-roll 거동.
+    /// FARM-010~015/CROP-006~007: FarmGrid 의 till/plant/water/fertilize/harvest/day-roll 거동.
     /// Tilemap 없이 (null 주입) 데이터 상태만 검증 — 사용자 결정 #2 준수 (수확 후 Tilled 유지).
     /// </summary>
     public sealed class FarmGridTests
@@ -30,11 +31,17 @@ namespace Rootborn.Tests.EditMode.Farming
 
         private static CropDefinition MakeCrop(float[] durations)
         {
+            return MakeCrop(durations, System.Array.Empty<GrowthBehaviorBase>());
+        }
+
+        private static CropDefinition MakeCrop(float[] durations, GrowthBehaviorBase[] behaviors)
+        {
             var c = ScriptableObject.CreateInstance<CropDefinition>();
             var bind = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
             typeof(CropDefinition).GetField("_id", bind).SetValue(c, "TestCrop");
             typeof(CropDefinition).GetField("_stageDurationsSec", bind).SetValue(c, durations);
             typeof(CropDefinition).GetField("_growthStageSprites", bind).SetValue(c, new Sprite[durations.Length]);
+            typeof(CropDefinition).GetField("_behaviors", bind).SetValue(c, behaviors);
             return c;
         }
 
@@ -117,6 +124,73 @@ namespace Rootborn.Tests.EditMode.Farming
             Assert.AreEqual(1.5f, _grid.GetFertilizerMultiplier(cell, 2));
             // day 3 — 만료 (expiresOnDay=2, currentDay>2).
             Assert.AreEqual(1f, _grid.GetFertilizerMultiplier(cell, 3));
+        }
+
+        [Test]
+        public void CROP_006_GameClockRollClearsWaterAndDailyWaterCropStopsGrowingWhenDry()
+        {
+            var clockGo = new GameObject("clock");
+            try
+            {
+                var clock = clockGo.AddComponent<GameClock>();
+                _grid.enabled = false;
+                Object.DestroyImmediate(_go);
+                _go = new GameObject("FarmGrid");
+                _grid = _go.AddComponent<FarmGrid>();
+                _grid.Configure(null, null, null, null);
+
+                var cell = new Vector3Int(6, 0, 0);
+                var waterBehavior = ScriptableObject.CreateInstance<RequiresDailyWaterBehavior>();
+                var crop = MakeCrop(new[] { 10f, 10f }, new GrowthBehaviorBase[] { waterBehavior });
+
+                _grid.Till(cell);
+                Assert.IsTrue(_grid.TryPlant(cell, crop));
+                _grid.Water(cell, currentDay: clock.Day, level01: 1f);
+
+                clock.Tick(1200f);
+
+                Assert.AreEqual(3, clock.Day);
+                Assert.AreEqual(0f, _grid.GetWaterLevel01(cell));
+
+                var plot = _grid.GetPlot(cell);
+                plot.Tick(50f, _grid.GetWaterLevel01(cell), false, 1f);
+                Assert.AreEqual(0, plot.CurrentStage);
+            }
+            finally
+            {
+                Object.DestroyImmediate(clockGo);
+            }
+        }
+
+        [Test]
+        public void CROP_007_FertilizerDurationExpiresByGameClockDay()
+        {
+            var clockGo = new GameObject("clock");
+            try
+            {
+                var clock = clockGo.AddComponent<GameClock>();
+                _grid.enabled = false;
+                Object.DestroyImmediate(_go);
+                _go = new GameObject("FarmGrid");
+                _grid = _go.AddComponent<FarmGrid>();
+                _grid.Configure(null, null, null, null);
+
+                var cell = new Vector3Int(7, 0, 0);
+                _grid.Till(cell);
+                _grid.Fertilize(cell, currentDay: clock.Day, multiplier: 1.5f, durationDays: 1);
+
+                clock.Tick(600f);
+                Assert.AreEqual(2, clock.Day);
+                Assert.AreEqual(1.5f, _grid.GetFertilizerMultiplier(cell, clock.Day));
+
+                clock.Tick(600f);
+                Assert.AreEqual(3, clock.Day);
+                Assert.AreEqual(1f, _grid.GetFertilizerMultiplier(cell, clock.Day));
+            }
+            finally
+            {
+                Object.DestroyImmediate(clockGo);
+            }
         }
     }
 }
