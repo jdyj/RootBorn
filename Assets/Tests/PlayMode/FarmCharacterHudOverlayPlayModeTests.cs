@@ -14,6 +14,8 @@ namespace Rootborn.Tests.PlayMode
 {
     public sealed class FarmCharacterHudOverlayPlayModeTests
     {
+        private const string TopLeftReferencePath = "docs/art/reference/pixelwood-reference-frame0-top-left.png";
+
         [UnityTest]
         public IEnumerator FarmScene_InstallsTopLeftLayeredCharacterThumbnailHud()
         {
@@ -102,6 +104,43 @@ namespace Rootborn.Tests.PlayMode
             string screenshotPath = CaptureHudScreenshot("farm-top-left-hud.png");
             Assert.IsTrue(File.Exists(screenshotPath), "Expected screenshot at " + screenshotPath);
             Assert.Greater(CountVisiblePixels(screenshotPath), 1000);
+        }
+
+        [UnityTest]
+        public IEnumerator FarmScene_TopLeftHudReferenceComparison_WritesReport()
+        {
+            yield return LoadFarmAndBuildHud();
+            yield return new WaitForEndOfFrame();
+
+            Assert.IsTrue(File.Exists(TopLeftReferencePath), TopLeftReferencePath);
+            var reference = LoadTexture(TopLeftReferencePath);
+            try
+            {
+                string cropPath = CaptureTopLeftCrop("farm-top-left-hud-crop.png", reference.width, reference.height);
+                Assert.IsTrue(File.Exists(cropPath), "Expected crop at " + cropPath);
+                var candidate = LoadTexture(cropPath);
+                try
+                {
+                    Assert.AreEqual(reference.width, candidate.width);
+                    Assert.AreEqual(reference.height, candidate.height);
+                    Assert.Greater(CountVisiblePixels(candidate), 1000);
+                    string reportPath = WriteReferenceComparisonReport("farm-top-left-hud-reference-report.json", TopLeftReferencePath, cropPath, reference, candidate);
+                    Assert.IsTrue(File.Exists(reportPath), "Expected report at " + reportPath);
+                    string report = File.ReadAllText(reportPath);
+                    StringAssert.Contains("\"referencePath\"", report);
+                    StringAssert.Contains("\"candidatePath\"", report);
+                    StringAssert.Contains("\"referenceVisiblePixels\"", report);
+                    StringAssert.Contains("\"candidateVisiblePixels\"", report);
+                }
+                finally
+                {
+                    Object.Destroy(candidate);
+                }
+            }
+            finally
+            {
+                Object.Destroy(reference);
+            }
         }
 
         private static IEnumerator LoadFarmAndBuildHud()
@@ -211,11 +250,60 @@ namespace Rootborn.Tests.PlayMode
             return path;
         }
 
+        private static string CaptureTopLeftCrop(string fileName, int width, int height)
+        {
+            var texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            texture.ReadPixels(new Rect(0, Screen.height - height, width, height), 0, 0);
+            texture.Apply();
+            string directory = "Builds/Logs/modern-ui";
+            Directory.CreateDirectory(directory);
+            string path = Path.Combine(directory, fileName);
+            File.WriteAllBytes(path, texture.EncodeToPNG());
+            Object.Destroy(texture);
+            return path;
+        }
+
+        private static string WriteReferenceComparisonReport(string fileName, string referencePath, string candidatePath, Texture2D reference, Texture2D candidate)
+        {
+            string directory = "Builds/Logs/modern-ui";
+            Directory.CreateDirectory(directory);
+            string path = Path.Combine(directory, fileName);
+            string json = "{\n" +
+                "  \"referencePath\": \"" + referencePath.Replace("\\", "/") + "\",\n" +
+                "  \"candidatePath\": \"" + candidatePath.Replace("\\", "/") + "\",\n" +
+                "  \"referenceWidth\": " + reference.width + ",\n" +
+                "  \"referenceHeight\": " + reference.height + ",\n" +
+                "  \"candidateWidth\": " + candidate.width + ",\n" +
+                "  \"candidateHeight\": " + candidate.height + ",\n" +
+                "  \"referenceVisiblePixels\": " + CountVisiblePixels(reference) + ",\n" +
+                "  \"candidateVisiblePixels\": " + CountVisiblePixels(candidate) + "\n" +
+                "}\n";
+            File.WriteAllText(path, json);
+            return path;
+        }
+
+        private static Texture2D LoadTexture(string path)
+        {
+            var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            texture.LoadImage(File.ReadAllBytes(path));
+            return texture;
+        }
+
         private static int CountVisiblePixels(string screenshotPath)
         {
-            var bytes = File.ReadAllBytes(screenshotPath);
-            var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-            texture.LoadImage(bytes);
+            var texture = LoadTexture(screenshotPath);
+            try
+            {
+                return CountVisiblePixels(texture);
+            }
+            finally
+            {
+                Object.Destroy(texture);
+            }
+        }
+
+        private static int CountVisiblePixels(Texture2D texture)
+        {
             int count = 0;
             foreach (var pixel in texture.GetPixels32())
             {
@@ -225,7 +313,6 @@ namespace Rootborn.Tests.PlayMode
                 }
             }
 
-            Object.Destroy(texture);
             return count;
         }
 

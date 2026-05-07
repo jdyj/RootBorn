@@ -90,5 +90,18 @@ namespace Rootborn.Tests.EditMode
             StringAssert.Contains("CountTextOverflows", source);
             StringAssert.Contains("Builds/Logs/modern-ui", source);
         }
+
+        [Test]
+        public void FarmHudOverlay_PlayModeAuditWritesReferenceComparisonReport()
+        {
+            Assert.IsTrue(File.Exists(CharacterHudPlayModeTestPath), CharacterHudPlayModeTestPath);
+            string source = File.ReadAllText(CharacterHudPlayModeTestPath);
+            StringAssert.Contains("FarmScene_TopLeftHudReferenceComparison_WritesReport", source);
+            StringAssert.Contains("docs/art/reference/pixelwood-reference-frame0-top-left.png", source);
+            StringAssert.Contains("farm-top-left-hud-crop.png", source);
+            StringAssert.Contains("farm-top-left-hud-reference-report.json", source);
+            StringAssert.Contains("CaptureTopLeftCrop", source);
+            StringAssert.Contains("WriteReferenceComparisonReport", source);
+        }
     }
 }
