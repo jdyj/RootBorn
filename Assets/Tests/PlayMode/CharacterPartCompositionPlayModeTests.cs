@@ -105,6 +105,37 @@ namespace Rootborn.Tests.PlayMode
         [UnityTest]
         public IEnumerator CHAR_PART_005_FarmPlayerRestoresSavedLayeredAppearance()
         {
+            var metadata = MakeSavedAppearanceMetadata();
+            ActiveSaveContext.Set(metadata);
+
+            yield return LoadFarmAndBootstrap();
+            yield return WaitForPartSprites();
+
+            var player = GameObject.Find("Player");
+            AssertSavedLayeredPlayer(player);
+        }
+
+        [UnityTest]
+        public IEnumerator CHAR_PART_005_FarmPlayerLayeredRenderScreenshot_WritesEvidence()
+        {
+            var metadata = MakeSavedAppearanceMetadata();
+            ActiveSaveContext.Set(metadata);
+
+            yield return LoadFarmAndBootstrap();
+            yield return WaitForPartSprites();
+            yield return new WaitForEndOfFrame();
+
+            var player = GameObject.Find("Player");
+            AssertSavedLayeredPlayer(player);
+            Assert.GreaterOrEqual(CountVisiblePartRenderers(player), 5);
+
+            string screenshotPath = CapturePlayerScreenshot("character-layered-player.png");
+            Assert.IsTrue(File.Exists(screenshotPath), "Expected screenshot at " + screenshotPath);
+            Assert.Greater(CountVisiblePixels(screenshotPath), 1000);
+        }
+
+        private static SaveSlotMetadata MakeSavedAppearanceMetadata()
+        {
             var metadata = new SaveSlotMetadata
             {
                 SlotId = "character-parts-playmode",
@@ -119,12 +150,11 @@ namespace Rootborn.Tests.PlayMode
             metadata.Appearance.SetSelectedPart("hair", "character.hair.short.brown_dark");
             metadata.Appearance.SetSelectedPart("outfit", "character.outfit.braces.green");
             metadata.Appearance.SetSelectedPart("accessory", "character.accessory.straw.black");
-            ActiveSaveContext.Set(metadata);
+            return metadata;
+        }
 
-            yield return LoadFarmAndBootstrap();
-            yield return WaitForPartSprites();
-
-            var player = GameObject.Find("Player");
+        private static void AssertSavedLayeredPlayer(GameObject player)
+        {
             Assert.IsNotNull(player);
             var composer = player.GetComponent<CharacterPartComposer>();
             Assert.IsNotNull(composer);
@@ -217,6 +247,50 @@ namespace Rootborn.Tests.PlayMode
             Assert.IsNotNull(renderer, childName);
             Assert.IsNotNull(renderer.sprite, childName);
             Assert.AreEqual(spriteName, renderer.sprite.name, childName);
+        }
+
+        private static int CountVisiblePartRenderers(GameObject player)
+        {
+            int count = 0;
+            foreach (var renderer in player.GetComponentsInChildren<SpriteRenderer>(true))
+            {
+                if (!renderer.name.StartsWith("Part_")) continue;
+                if (renderer.enabled && renderer.sprite != null) count++;
+            }
+            return count;
+        }
+
+        private static string CapturePlayerScreenshot(string fileName)
+        {
+            int width = Mathf.Max(1, Screen.width);
+            int height = Mathf.Max(1, Screen.height);
+            var texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            texture.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+            texture.Apply();
+            string directory = "Builds/Logs/character-parts";
+            Directory.CreateDirectory(directory);
+            string path = Path.Combine(directory, fileName);
+            File.WriteAllBytes(path, texture.EncodeToPNG());
+            Object.Destroy(texture);
+            return path;
+        }
+
+        private static int CountVisiblePixels(string screenshotPath)
+        {
+            var bytes = File.ReadAllBytes(screenshotPath);
+            var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            texture.LoadImage(bytes);
+            int count = 0;
+            foreach (var pixel in texture.GetPixels32())
+            {
+                if (pixel.a > 0 && (pixel.r > 4 || pixel.g > 4 || pixel.b > 4))
+                {
+                    count++;
+                }
+            }
+
+            Object.Destroy(texture);
+            return count;
         }
 
         private static void DestroyIfFound(string name)
