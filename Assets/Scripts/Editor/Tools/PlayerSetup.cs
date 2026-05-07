@@ -215,7 +215,7 @@ namespace Rootborn.Editor.Tools
             var sr = template.AddComponent<SpriteRenderer>();
             sr.sprite = defaultSprite;
             sr.sortingOrder = 5;
-            template.transform.localScale = new Vector3(2.0f, 2.0f, 1f);
+            template.transform.localScale = Vector3.one;
 
             var toolPart = new GameObject("Part_tool");
             toolPart.transform.SetParent(template.transform, false);

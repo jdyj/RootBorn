@@ -16,6 +16,7 @@ namespace Rootborn.Tests.EditMode.Family
             Assert.IsNotNull(prefab.GetComponent<CharacterPartComposer>());
             Assert.IsNotNull(prefab.GetComponent<CharacterPartAnimator>());
             Assert.IsNotNull(prefab.GetComponent<FishingAnimationController>());
+            Assert.AreEqual(Vector3.one, prefab.transform.localScale, "16x16 part-composed characters must render at 1x scale.");
             var rootRenderer = prefab.GetComponent<SpriteRenderer>();
             Assert.IsTrue(rootRenderer == null || !rootRenderer.enabled || rootRenderer.sprite == null,
                 "Player prefab root renderer must not display a complete single-character sprite.");

@@ -18,5 +18,15 @@ namespace Rootborn.Tests.EditMode.Family
             StringAssert.Contains("animator.Configure", source);
             StringAssert.Contains("BuildFrameSubSpriteName", source);
         }
+
+        [Test]
+        public void FarmAutoFiller_KeepsStrictSixteenPixelCharacterScaleAtOne()
+        {
+            string source = File.ReadAllText("Assets/Scripts/Game/Bootstrap/FarmAutoFiller.cs");
+
+            Assert.IsFalse(source.Contains("new Vector3(2.0f, 2.0f, 1f)"));
+            Assert.IsFalse(source.Contains("scale=2x"));
+            StringAssert.Contains("new Vector3(1f, 1f, 1f)", source);
+        }
     }
 }

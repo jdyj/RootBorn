@@ -347,14 +347,11 @@ namespace Rootborn.Game.Bootstrap
             sr.sortingOrder = 1000;
             sr.sortingLayerID = 0;
             ConfigureCharacterParts(playerInstance, registry);
-            // 캐릭터 sheet 는 PPU 49 라 1 unit 정사각형이지만, sheet 안의 캐릭터 art 가
-            // 셀의 ~30%만 차지함. 자원 sprite(16x16 PPU 16, art 거의 가득)와 시각 크기를
-            // 맞추기 위해 2.0× 스케일. 미세 조정은 Inspector 에서.
-            playerInstance.transform.localScale = new Vector3(2.0f, 2.0f, 1f);
+            playerInstance.transform.localScale = new Vector3(1f, 1f, 1f);
             // 자원 스폰 범위(2~28, 2~18)와 안 겹치는 가장자리에 스폰 (왼쪽 아래 코너)
             playerInstance.transform.position = new Vector3(1f, 1f, 0f);
 
-            Debug.Log($"[ROOTBORN/AutoFiller] Player sprite='{spriteSource}', size={sprite.rect.size}, ppu={sprite.pixelsPerUnit}, position=(1,1), scale=2x.");
+            Debug.Log($"[ROOTBORN/AutoFiller] Player sprite='{spriteSource}', size={sprite.rect.size}, ppu={sprite.pixelsPerUnit}, position=(1,1), scale=1x.");
 
             // Rigidbody2D (Dynamic) + BoxCollider2D — 자원 collider 와 부딪쳐 자동 차단.
             // Dynamic + MovePosition: 정적 collider 와의 충돌 해소를 물리 엔진이 처리.
@@ -545,16 +542,17 @@ namespace Rootborn.Game.Bootstrap
             }
         }
 
-        // 기존 Player 인스턴스(prefab 등)에 Rigidbody2D + BoxCollider2D + scale 누락 시 보강.
+        // 기존 Player 인스턴스(prefab 등)에 Rigidbody2D + BoxCollider2D 누락 시 보강.
         // Setup Everything 을 다시 안 돌려도 다음 Play 에서 collider 동작.
         private static void ReinforcePlayer(GameObject player)
         {
             int added = 0;
 
-            // Scale 1 이면 2.0 으로 (자원 16ppu sprite 와 시각 크기 맞춤).
-            if (Mathf.Approximately(player.transform.localScale.x, 1f))
+            if (!Mathf.Approximately(player.transform.localScale.x, 1f) ||
+                !Mathf.Approximately(player.transform.localScale.y, 1f) ||
+                !Mathf.Approximately(player.transform.localScale.z, 1f))
             {
-                player.transform.localScale = new Vector3(2.0f, 2.0f, 1f);
+                player.transform.localScale = new Vector3(1f, 1f, 1f);
                 added++;
             }
 
