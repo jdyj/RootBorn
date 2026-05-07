@@ -14,6 +14,8 @@
 
 5. **커밋 prefix 카탈로그 (한글 본문 의무).** `[FEATURE] [BUGFIX] [REFACTOR] [UI] [ASSET] [BALANCE] [TEST] [DOCS] [CHORE] [NETWORK] [META]` — 11종. 복수 가능 (예: `[ASSET][BALANCE]`). 다중 카테고리 변경은 분리 커밋 권장. (`.claude/rules/commit-conventions.md`)
 
+6. **보상·인벤토리 트랜잭션 원칙.** 퀘스트/스토리/미션/지식/툴 해금 등 모든 보상 수령은 지급 전에 인벤토리 수용 가능 여부와 중복 수령 여부를 검증한다. 검증 실패 시 인벤토리와 보상 상태를 변경하지 않는다. 보상 지급은 아이템 복사·삭제·부분 지급·이중 지급이 발생하지 않도록 원자적으로 처리하고, 저장/로드 후 재호출해도 멱등이어야 한다. (`.claude/rules/testing-discipline.md`)
+
 ## Rules Reference (`.claude/rules/`)
 
 - `coding-standards.md` — Unity C# 표준 (sealed, [SerializeField] private, Update 내 GetComponent 금지)

@@ -13,6 +13,47 @@
 
 ---
 
+## 2026-05-06 — 보상 수령 전 인벤토리 검증과 멱등성 헌법화
+- 피드백: "기본적으로 보상받을 때 인벤토리 있는진 검증은 해야해 아이템이 복사/삭제 되지 않도록 이건 헌법에도 추가해줘"
+- 원인: 퀘스트 시스템 설계에서 보상 지급은 핵심 상태 전이지만, 기존 헌법에는 인벤토리 수용 가능성 preflight, 부분 지급 방지, 저장/로드 후 재지급 방지 같은 일반 원칙이 명시되어 있지 않았다.
+- 변경:
+  - `AGENTS.md` Constitutional Rules 에 "보상·인벤토리 트랜잭션 원칙" 추가.
+  - `rules/testing-discipline.md` 절대 원칙과 시나리오 추가 의무에 보상 지급 멱등성/인벤토리 검증 테스트 의무 추가.
+  - `rules/path-based/assets-data.md` 에 보상 데이터와 인벤토리 안전성 섹션 추가.
+- 일반화: "인벤토리를 변경하는 모든 보상 경로는 지급 전 수용 가능 여부와 중복 수령 여부를 검증하고, 실패 시 무변경, 성공 시 원자적 지급, 반복 호출 시 멱등이어야 한다."
+
+---
+
+## 2026-05-06 — 도구 액션 (도끼-나무 / 곡괭이-돌) 매칭 완성 + Control 키 바인딩 + TDD
+- 피드백: "지금 특정 키(control, 마우스 좌클릭)등 을 눌렀을 때 도끼를 들고있다면 나무를 벨 수 있고 곡괭이를 들고있다면 돌을 캘 수 있고 등의 액션을 구현하도록 해줘 기존 시나리오 테스트는 다 성공해야함"
+- 원인:
+  - (A) **도구-자원 매칭 부분 작동**: `ResourceNodeDefinition.ComputeEffectivePower(usedTool)` 와 `_preferredTool` 필드가 이미 있고 `Resource_Tree._preferredTool: Tool_StoneAxe` 와이어링됨 (도끼=1.2x, 다른 도구=0.6x, 맨손=0.3x). 그러나 **Resource_Rock._preferredTool: {fileID: 0}** 비어있어 모든 도구가 돌을 풀파워로 깸 — "곡괭이만 잘 깬다" 로직이 데이터 부재로 무력화. **Tool_StonePickaxe.asset / Item_Tool_StonePickaxe.asset 자체가 부재**.
+  - (B) **마우스 좌클릭 휘두르기 흐름은 이미 동작**: `PlayerController.OnAttackPerformed` 가 좌클릭 시 휘두르기 애니메이션 시작 → 마지막 프레임에 `_interactor.TriggerInteract()` → `GatherInteractor.DoInteract()` → `node.Hit(_equippedTool)`. 그러나 **Control 키는 미바인딩** — 사용자 요청은 "Control 또는 마우스 좌클릭" 둘 다.
+  - (C) **EditMode 에서 MonoBehaviour OnEnable 자동 호출 미보장** — InputAction 바인딩 검증 테스트에서 `_interactAction == null` 회귀. EditMode 라이프사이클이 PlayMode 와 다름.
+- 변경:
+  - **신규 자산 (2개)**: `Tool_StoneAxe.asset` 복제 → `Tool_StonePickaxe.asset` (`_id=StonePickaxe`, `_powerMultiplier=1.2`, description "Power x1.2. Designed for breaking rocks."). `Item_Tool_StoneAxe.asset` 복제 → `Item_Tool_StonePickaxe.asset` (`_id=StonePickaxe`, `_category=Tool`).
+  - **와이어링**: `Resource_Rock.asset` `_preferredTool` → `Tool_StonePickaxe` GUID 참조. `Resources/GameDataRegistry.asset` `_tools` / `_items` 배열 끝에 신규 SO 두 개 GUID 한 줄씩 추가 (자동 등록 안 되는 환경에서 안전한 YAML 직접 편집).
+  - **GatherInteractor.cs OnEnable**: `<Keyboard>/leftCtrl` + `<Keyboard>/rightCtrl` 바인딩 추가. 기존 E/Space 바인딩 그대로 유지 (회귀 가드 테스트 통과).
+  - **신규 EditMode 테스트 (12개)**:
+    - `Assets/Tests/EditMode/ToolResourceMatchingTests.cs` (10 테스트):
+      - TOOL_MATCH_001~004: 합성 SO — 선호 도구=풀파워(1.2) / 불일치=0.6 / 맨손=0.3 / 선호 도구 미설정=풀파워.
+      - WIRING_001~005: 디스크 자산 와이어링 — Tool_StonePickaxe 존재/ID/PowerMul, Item ID/Category, Rock.PreferredTool=Pickaxe, Tree.PreferredTool=Axe (회귀), Registry 에 Tool/Item 등록.
+      - INTEGRATION: 디스크 자산 기준 곡괭이→돌 풀파워 vs 도끼→돌 0.6x mismatch.
+    - `Assets/Tests/EditMode/GatherInteractorInputBindingTests.cs` (2 테스트):
+      - CTRL_BIND_001: `<Keyboard>/leftCtrl` 바인딩 검증.
+      - CTRL_BIND_002: 기존 `<Keyboard>/e`, `<Keyboard>/space` 바인딩 회귀 가드.
+    - **EditMode OnEnable 미호출 회피**: reflection 으로 `OnEnable.Invoke(interactor)` 직접 호출 후 `_interactAction.bindings` 도 reflection 으로 IEnumerable 순회 (Unity.InputSystem 어셈블리 정적 의존 회피 — `Rootborn.Tests.EditMode.asmdef` 추가 참조 불필요).
+- 검증 (TDD 흐름):
+  - **RED**: 7 테스트 실패 (ToolResourceMatching 5 wiring + CTRL_BIND 2). TOOL_MATCH 4개 합성 단위는 즉시 통과 (`ResourceNodeDefinition.ComputeEffectivePower` 로직 자체는 옳음).
+  - **GREEN**: 자산 생성 + 와이어링 + Control 바인딩 + Registry 등록 후 — EditMode **124/124 통과**, PlayMode **12/12 통과**, 신규 12 테스트 모두 GREEN. 사용자 요청 "기존 시나리오 테스트 다 성공" 달성.
+- 일반화:
+  - "마우스 좌클릭 + 키보드 액션 키는 한 코드 경로 (`DoInteract`) 로 수렴 — 입력 바인딩 다중화는 GatherInteractor 에서, 휘두르기 애니메이션은 PlayerController 에서 분리. 도구 매칭 로직은 한 곳 (`ResourceNodeDefinition.ComputeEffectivePower`)."
+  - "EditMode 에서 MonoBehaviour OnEnable/Awake 자동 호출이 보장 안 됨 — InputSystem 같은 라이프사이클 의존 컴포넌트 검증은 reflection 으로 OnEnable 직접 Invoke. PlayMode 테스트로 격상하기보다 EditMode 빠른 피드백 유지."
+  - "InputSystem 같은 외부 어셈블리 정적 의존을 피하려면 reflection 으로 InputAction.bindings 순회 (path 프로퍼티는 string). asmdef 추가 참조 없이도 검증 가능 — 테스트 어셈블리 가벼움 유지."
+  - "데이터 자산 (.asset) 신규 추가 = `assets-copy` (기존 자산 GUID 보존 안전) + `assets-modify pathPatches` (ID/desc 갱신). YAML 직접 편집은 GameDataRegistry 같은 등록 배열에 한 줄 추가 시에만 (assets-modify 가 배열 추가 미지원하는 케이스)."
+
+---
+
 ## 2026-05-05 — 외부 프레임 sprite 자식 UI anchor 는 panel 가장자리 X, 시각 영역 UV O
 - 피드백: "북마크의 위치가 회색부분이 아니라 완전 옆면 책의 맨 뒤 완전 갈색부분 보다 왼쪽으로 와야하는데 너무 오른쪽으로 가져있어 딱 북마크 책 옆에 놓는것처럼 해야하는데 그게 안되고있어"
 - 원인: 책 BookPanel sprite (Page1.png 290×184) 가 **외부 어두운 프레임 + 갈색 spine 측면 + 내부 베이지 페이지** 를 한 sprite 에 통합. AI 가 BookPanel sizeDelta(=1248×792 = sprite 전체)의 우측 가장자리 (anchor=1.0) 를 "책 우측" 으로 착각하고 북마크를 거기에 붙임. 결과: 북마크가 회색 외부 프레임 위/바깥에 떠있음. 베이지 페이지 우측 끝은 sprite 픽셀 263/290 = UV 0.907 인데 이 차이를 측정 안 함.
