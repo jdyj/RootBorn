@@ -75,22 +75,22 @@ namespace Rootborn.UI.HUD
 
         private static Transform BuildHud(Transform canvasRoot)
         {
-            var root = TileBox(canvasRoot, HudName, new Vector2(18f, -18f), new Vector2(132f, 86f));
+            var root = TileBox(canvasRoot, HudName, new Vector2(18f, -18f), new Vector2(248f, 158f));
             root.SetAsLastSibling();
-            var frame = TileBox(root, "CharacterThumbnailFrame", new Vector2(8f, -12f), new Vector2(42f, 42f));
+            var frame = TileBox(root, "CharacterThumbnailFrame", new Vector2(14f, -20f), new Vector2(78f, 78f));
             var thumbnail = new GameObject("CharacterThumbnail", typeof(RectTransform));
             thumbnail.transform.SetParent(frame, false);
             var trt = (RectTransform)thumbnail.transform;
             trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
-            trt.offsetMin = new Vector2(4f, 4f); trt.offsetMax = new Vector2(-4f, -4f);
+            trt.offsetMin = new Vector2(8f, 8f); trt.offsetMax = new Vector2(-8f, -8f);
 
-            MakeHudText(root, "TimeLabel", "00:00", new Vector2(60f, -10f), new Vector2(58f, 16f), 10, TextAnchor.MiddleLeft);
-            MakeHudText(root, "CurrencyLabel", "0G", new Vector2(60f, -28f), new Vector2(58f, 16f), 10, TextAnchor.MiddleLeft);
-            MakeHudText(root, "DayLabel", "DAY 1", new Vector2(60f, -46f), new Vector2(62f, 14f), 9, TextAnchor.MiddleLeft);
+            MakeHudText(root, "TimeLabel", "00:00", new Vector2(110f, -18f), new Vector2(110f, 28f), 18, TextAnchor.MiddleLeft);
+            MakeHudText(root, "CurrencyLabel", "0G", new Vector2(110f, -50f), new Vector2(110f, 28f), 18, TextAnchor.MiddleLeft);
+            MakeHudText(root, "DayLabel", "DAY 1", new Vector2(110f, -82f), new Vector2(118f, 24f), 16, TextAnchor.MiddleLeft);
 
-            BuildHudSlot(root, "HudSlot_Inventory", new Vector2(28f, -60f), new Color(0.2f, 0.58f, 0.38f, 1f), "I");
-            BuildHudSlot(root, "HudSlot_Health", new Vector2(56f, -60f), new Color(0.78f, 0.14f, 0.18f, 1f), string.Empty);
-            BuildHudSlot(root, "HudSlot_Tool", new Vector2(92f, -55f), new Color(0.52f, 0.34f, 0.18f, 1f), string.Empty, new Vector2(30f, 30f), 14f);
+            BuildHudSlot(root, "HudSlot_Inventory", new Vector2(50f, -110f), new Color(0.2f, 0.58f, 0.38f, 1f), "I", new Vector2(36f, 36f));
+            BuildHudSlot(root, "HudSlot_Health", new Vector2(96f, -110f), new Color(0.78f, 0.14f, 0.18f, 1f), string.Empty, new Vector2(36f, 36f));
+            BuildHudSlot(root, "HudSlot_Tool", new Vector2(160f, -100f), new Color(0.52f, 0.34f, 0.18f, 1f), string.Empty, new Vector2(54f, 54f), 14f);
             return root;
         }
 

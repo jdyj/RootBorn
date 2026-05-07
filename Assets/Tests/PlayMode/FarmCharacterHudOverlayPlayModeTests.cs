@@ -52,8 +52,8 @@ namespace Rootborn.Tests.PlayMode
             rt.GetWorldCorners(corners);
             float screenWidth = Mathf.Abs(corners[2].x - corners[0].x);
             float screenHeight = Mathf.Abs(corners[2].y - corners[0].y);
-            Assert.LessOrEqual(screenWidth, 150f);
-            Assert.LessOrEqual(screenHeight, 95f);
+            Assert.LessOrEqual(screenWidth, 260f);
+            Assert.LessOrEqual(screenHeight, 170f);
             Assert.IsNotNull(hud.transform.Find("TimeLabel"));
             Assert.IsNotNull(hud.transform.Find("CurrencyLabel"));
             Assert.IsNotNull(hud.transform.Find("HudSlot_Inventory"));
@@ -124,6 +124,7 @@ namespace Rootborn.Tests.PlayMode
                     Assert.AreEqual(reference.width, candidate.width);
                     Assert.AreEqual(reference.height, candidate.height);
                     Assert.Greater(CountVisiblePixels(candidate), 1000);
+                    AssertReferenceScaleFillBounds(candidate);
                     string reportPath = WriteReferenceComparisonReport("farm-top-left-hud-reference-report.json", TopLeftReferencePath, cropPath, reference, candidate);
                     Assert.IsTrue(File.Exists(reportPath), "Expected report at " + reportPath);
                     string report = File.ReadAllText(reportPath);
@@ -220,9 +221,39 @@ namespace Rootborn.Tests.PlayMode
             var corners = new Vector3[4];
             hud.GetWorldCorners(corners);
             Assert.GreaterOrEqual(corners[0].x, -1f, "HUD must stay inside left screen edge.");
-            Assert.LessOrEqual(corners[2].x, 170f, "HUD must remain a compact top-left reference element.");
-            Assert.GreaterOrEqual(corners[2].y, Screen.height - 115f, "HUD must stay in the top-left band.");
+            Assert.LessOrEqual(corners[2].x, 260f, "HUD must remain a compact top-left reference element.");
+            Assert.GreaterOrEqual(corners[2].y, Screen.height - 175f, "HUD must stay in the top-left band.");
             Assert.LessOrEqual(corners[2].y, Screen.height + 1f, "HUD must stay inside top screen edge.");
+        }
+
+        private static void AssertReferenceScaleFillBounds(Texture2D texture)
+        {
+            var bounds = BrightBeigeBounds(texture);
+            Assert.GreaterOrEqual(bounds.width, 120, "HUD bright panel area must match the reference crop scale.");
+            Assert.GreaterOrEqual(bounds.height, 70, "HUD bright panel area must match the reference crop scale.");
+        }
+
+        private static RectInt BrightBeigeBounds(Texture2D texture)
+        {
+            int minX = texture.width;
+            int minY = texture.height;
+            int maxX = -1;
+            int maxY = -1;
+            for (int y = 0; y < texture.height; y++)
+            {
+                for (int x = 0; x < texture.width; x++)
+                {
+                    var pixel = texture.GetPixel(x, y);
+                    if (pixel.r <= 0.70f || pixel.g <= 0.58f || pixel.b <= 0.45f) continue;
+                    minX = Mathf.Min(minX, x);
+                    minY = Mathf.Min(minY, y);
+                    maxX = Mathf.Max(maxX, x);
+                    maxY = Mathf.Max(maxY, y);
+                }
+            }
+
+            if (maxX < minX || maxY < minY) return new RectInt(0, 0, 0, 0);
+            return new RectInt(minX, minY, maxX - minX + 1, maxY - minY + 1);
         }
 
         private static int CountTextOverflows(GameObject root)
