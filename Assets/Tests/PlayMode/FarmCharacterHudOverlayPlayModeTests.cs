@@ -119,6 +119,7 @@ namespace Rootborn.Tests.PlayMode
                     Assert.Greater(CountVisiblePixels(candidate), 1000);
                     AssertReferenceScaleFillBounds(candidate);
                     AssertReferenceDarkFrameDensity(candidate);
+                    AssertReferenceDarkColorAlignment(reference, candidate);
                     string reportPath = WriteReferenceComparisonReport("farm-top-left-hud-reference-report.json", TopLeftReferencePath, cropPath, reference, candidate);
                     Assert.IsTrue(File.Exists(reportPath), "Expected report at " + reportPath);
                     string report = File.ReadAllText(reportPath);
@@ -230,6 +231,28 @@ namespace Rootborn.Tests.PlayMode
             Assert.GreaterOrEqual(totalDark, 1800, "HUD crop must retain the dark frame density visible in the reference crop.");
             Assert.GreaterOrEqual(topDark, 650, "HUD crop must retain the dark top strip visible in the reference crop.");
             Assert.GreaterOrEqual(leftDark, 300, "HUD crop must retain the dark left strip visible in the reference crop.");
+        }
+
+        private static void AssertReferenceDarkColorAlignment(Texture2D reference, Texture2D candidate)
+        {
+            var referenceDark = new Color32(58, 58, 80, 255);
+            int exactDarkPixels = 0;
+            for (int y = 0; y < reference.height; y++)
+            {
+                for (int x = 0; x < reference.width; x++)
+                {
+                    if (Approximately(reference.GetPixel(x, y), referenceDark) && Approximately(candidate.GetPixel(x, y), referenceDark)) exactDarkPixels++;
+                }
+            }
+            Assert.GreaterOrEqual(exactDarkPixels, 24, "HUD dark frame color must retain exact reference dark frame pixels at the matched HUD edge positions.");
+        }
+
+        private static bool Approximately(Color color, Color32 expected)
+        {
+            return Mathf.RoundToInt(color.r * 255f) == expected.r
+                && Mathf.RoundToInt(color.g * 255f) == expected.g
+                && Mathf.RoundToInt(color.b * 255f) == expected.b
+                && Mathf.RoundToInt(color.a * 255f) == expected.a;
         }
 
         private static int CountDarkPixels(Texture2D texture, RectInt region)

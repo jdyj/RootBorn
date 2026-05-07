@@ -13,6 +13,7 @@ namespace Rootborn.UI.HUD
     public sealed class FarmCharacterHudOverlayInstaller : MonoBehaviour
     {
         private const string HudName = "TopLeftCharacterHud";
+        private static readonly Color ReferenceDarkFrameColor = new Color32(58, 58, 80, 255);
         private float _nextRefreshTime;
 
         private IEnumerator Start()
@@ -43,6 +44,34 @@ namespace Rootborn.UI.HUD
             hud.SetAsLastSibling();
             RefreshHudData(hud);
             BuildCharacterThumbnail(hud);
+            NormalizeReferenceHudPresentation(hud);
+        }
+
+        private static void NormalizeReferenceHudPresentation(Transform hudRoot)
+        {
+            foreach (var image in hudRoot.GetComponentsInChildren<Image>(true))
+            {
+                if (image.name.StartsWith("Tile_")) image.color = Color.white;
+            }
+
+            BringBackplateToFront(hudRoot, "CharacterThumbnailBackplate", new Vector2(-16f, 15f), new Vector2(170f, 10f));
+            BringBackplateToFront(hudRoot, "CharacterThumbnailLeftBackplate", new Vector2(-18f, -6f), new Vector2(24f, 76f));
+        }
+
+        private static void BringBackplateToFront(Transform hudRoot, string childName, Vector2 anchoredPosition, Vector2 size)
+        {
+            var child = hudRoot.Find(childName);
+            if (child == null) return;
+            var rect = (RectTransform)child;
+            rect.anchoredPosition = anchoredPosition;
+            rect.sizeDelta = size;
+            var image = child.GetComponent<Image>();
+            if (image != null)
+            {
+                image.color = ReferenceDarkFrameColor;
+                image.raycastTarget = false;
+            }
+            child.SetAsLastSibling();
         }
 
         private static Canvas FindFarmCanvas()
@@ -72,15 +101,13 @@ namespace Rootborn.UI.HUD
         {
             var root = TileBox(canvasRoot, HudName, new Vector2(18f, -18f), new Vector2(248f, 158f));
             root.SetAsLastSibling();
-            var topBackplate = Box(root, "CharacterThumbnailBackplate", new Vector2(-18f, 18f), new Vector2(170f, 10f), new Color(0.23f, 0.23f, 0.31f, 1f));
-            var leftBackplate = Box(root, "CharacterThumbnailLeftBackplate", new Vector2(-18f, -6f), new Vector2(24f, 76f), new Color(0.23f, 0.23f, 0.31f, 1f));
-            topBackplate.SetAsFirstSibling();
-            leftBackplate.SetSiblingIndex(1);
+            var topBackplate = Box(root, "CharacterThumbnailBackplate", new Vector2(-16f, 15f), new Vector2(170f, 10f), ReferenceDarkFrameColor);
+            var leftBackplate = Box(root, "CharacterThumbnailLeftBackplate", new Vector2(-18f, -6f), new Vector2(24f, 76f), ReferenceDarkFrameColor);
             topBackplate.GetComponent<Image>().raycastTarget = false;
             leftBackplate.GetComponent<Image>().raycastTarget = false;
-            Box(root, "CharacterThumbnailMidBackplateA", new Vector2(0f, -34f), new Vector2(104f, 4f), new Color(0.23f, 0.23f, 0.31f, 1f)).GetComponent<Image>().raycastTarget = false;
-            Box(root, "CharacterThumbnailMidBackplateB", new Vector2(0f, -48f), new Vector2(104f, 4f), new Color(0.23f, 0.23f, 0.31f, 1f)).GetComponent<Image>().raycastTarget = false;
-            Box(root, "CharacterThumbnailBottomBackplate", new Vector2(-18f, -70f), new Vector2(180f, 12f), new Color(0.23f, 0.23f, 0.31f, 1f)).GetComponent<Image>().raycastTarget = false;
+            Box(root, "CharacterThumbnailMidBackplateA", new Vector2(0f, -34f), new Vector2(104f, 4f), ReferenceDarkFrameColor).GetComponent<Image>().raycastTarget = false;
+            Box(root, "CharacterThumbnailMidBackplateB", new Vector2(0f, -48f), new Vector2(104f, 4f), ReferenceDarkFrameColor).GetComponent<Image>().raycastTarget = false;
+            Box(root, "CharacterThumbnailBottomBackplate", new Vector2(-18f, -70f), new Vector2(180f, 12f), ReferenceDarkFrameColor).GetComponent<Image>().raycastTarget = false;
 
             var frame = TileBox(root, "CharacterThumbnailFrame", new Vector2(14f, -20f), new Vector2(78f, 78f));
             var thumbnail = new GameObject("CharacterThumbnail", typeof(RectTransform));
@@ -95,6 +122,8 @@ namespace Rootborn.UI.HUD
             BuildHudSlot(root, "HudSlot_Inventory", new Vector2(50f, -110f), new Color(0.2f, 0.58f, 0.38f, 1f), "I", new Vector2(36f, 36f));
             BuildHudSlot(root, "HudSlot_Health", new Vector2(96f, -110f), new Color(0.78f, 0.14f, 0.18f, 1f), string.Empty, new Vector2(36f, 36f));
             BuildHudSlot(root, "HudSlot_Tool", new Vector2(160f, -100f), new Color(0.52f, 0.34f, 0.18f, 1f), string.Empty, new Vector2(54f, 54f), 14f);
+            topBackplate.SetAsLastSibling();
+            leftBackplate.SetAsLastSibling();
             return root;
         }
 
