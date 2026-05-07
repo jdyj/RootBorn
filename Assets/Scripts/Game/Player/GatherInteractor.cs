@@ -9,10 +9,6 @@ using UnityEngine.InputSystem;
 
 namespace Rootborn.Game.Player
 {
-    /// <summary>
-    /// 플레이어 인벤토리 컨테이너. Player GameObject 에 부착.
-    /// GameDataRegistry 의 Items[] 를 ID 매핑한다.
-    /// </summary>
     public sealed class PlayerInventory : MonoBehaviour
     {
         public Inventory Inventory { get; } = new Inventory();
@@ -108,9 +104,6 @@ namespace Rootborn.Game.Player
         }
     }
 
-    /// <summary>
-    /// 플레이어 근처 가장 가까운 ResourceNode를 입력으로 타격하고 농사 도구 효과를 dispatch한다.
-    /// </summary>
     public sealed class GatherInteractor : MonoBehaviour
     {
         [SerializeField] private float _interactRadius = 1.5f;
@@ -211,8 +204,16 @@ namespace Rootborn.Game.Player
             var effects = _equippedTool.Effects;
             if (effects == null || effects.Length == 0) return;
 
+            var clock = Rootborn.Game.Time.GameClock.Instance;
             var grid = Rootborn.Game.Farming.FarmGrid.Instance;
-            if (grid == null || grid.GroundTilemap == null) return;
+            if (grid == null || grid.GroundTilemap == null)
+            {
+                var targetOnlyCtx = new ToolUseContext(
+                    _equippedTool, gameObject, "Soil",
+                    default, null, null, _inventory, clock, _questEvents);
+                _equippedTool.ApplyEffects(in targetOnlyCtx);
+                return;
+            }
 
             var pc = GetComponent<PlayerController>();
             Vector2 facing = pc != null ? pc.LastFacing : new Vector2(0f, -1f);
@@ -220,7 +221,6 @@ namespace Rootborn.Game.Player
             Vector3 targetWorld = transform.position + (Vector3)(facing.normalized * 0.75f);
             Vector3Int cell = grid.WorldToCell(targetWorld);
 
-            var clock = Rootborn.Game.Time.GameClock.Instance;
             var ctx = new ToolUseContext(
                 _equippedTool, gameObject, "Soil",
                 cell, grid.GroundTilemap, grid, _inventory, clock, _questEvents);
