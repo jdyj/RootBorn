@@ -49,12 +49,7 @@ namespace Rootborn.UI.HUD
         {
             var farmCanvas = GameObject.Find("[FarmCanvas]");
             if (farmCanvas != null && farmCanvas.TryGetComponent(out Canvas canvas)) return canvas;
-
-            foreach (var candidate in Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-            {
-                if (candidate != null && candidate.name == "[FarmCanvas]") return candidate;
-            }
-
+            foreach (var candidate in Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None)) if (candidate != null && candidate.name == "[FarmCanvas]") return candidate;
             var canvases = Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             return canvases.Length > 0 ? canvases[0] : null;
         }
@@ -77,6 +72,16 @@ namespace Rootborn.UI.HUD
         {
             var root = TileBox(canvasRoot, HudName, new Vector2(18f, -18f), new Vector2(248f, 158f));
             root.SetAsLastSibling();
+            var topBackplate = Box(root, "CharacterThumbnailBackplate", new Vector2(-18f, 18f), new Vector2(170f, 10f), new Color(0.23f, 0.23f, 0.31f, 1f));
+            var leftBackplate = Box(root, "CharacterThumbnailLeftBackplate", new Vector2(-18f, -6f), new Vector2(24f, 76f), new Color(0.23f, 0.23f, 0.31f, 1f));
+            topBackplate.SetAsFirstSibling();
+            leftBackplate.SetSiblingIndex(1);
+            topBackplate.GetComponent<Image>().raycastTarget = false;
+            leftBackplate.GetComponent<Image>().raycastTarget = false;
+            Box(root, "CharacterThumbnailMidBackplateA", new Vector2(0f, -34f), new Vector2(104f, 4f), new Color(0.23f, 0.23f, 0.31f, 1f)).GetComponent<Image>().raycastTarget = false;
+            Box(root, "CharacterThumbnailMidBackplateB", new Vector2(0f, -48f), new Vector2(104f, 4f), new Color(0.23f, 0.23f, 0.31f, 1f)).GetComponent<Image>().raycastTarget = false;
+            Box(root, "CharacterThumbnailBottomBackplate", new Vector2(-18f, -70f), new Vector2(180f, 12f), new Color(0.23f, 0.23f, 0.31f, 1f)).GetComponent<Image>().raycastTarget = false;
+
             var frame = TileBox(root, "CharacterThumbnailFrame", new Vector2(14f, -20f), new Vector2(78f, 78f));
             var thumbnail = new GameObject("CharacterThumbnail", typeof(RectTransform));
             thumbnail.transform.SetParent(frame, false);
@@ -87,7 +92,6 @@ namespace Rootborn.UI.HUD
             MakeHudText(root, "TimeLabel", "00:00", new Vector2(110f, -18f), new Vector2(110f, 28f), 18, TextAnchor.MiddleLeft);
             MakeHudText(root, "CurrencyLabel", "0G", new Vector2(110f, -50f), new Vector2(110f, 28f), 18, TextAnchor.MiddleLeft);
             MakeHudText(root, "DayLabel", "DAY 1", new Vector2(110f, -82f), new Vector2(118f, 24f), 16, TextAnchor.MiddleLeft);
-
             BuildHudSlot(root, "HudSlot_Inventory", new Vector2(50f, -110f), new Color(0.2f, 0.58f, 0.38f, 1f), "I", new Vector2(36f, 36f));
             BuildHudSlot(root, "HudSlot_Health", new Vector2(96f, -110f), new Color(0.78f, 0.14f, 0.18f, 1f), string.Empty, new Vector2(36f, 36f));
             BuildHudSlot(root, "HudSlot_Tool", new Vector2(160f, -100f), new Color(0.52f, 0.34f, 0.18f, 1f), string.Empty, new Vector2(54f, 54f), 14f);
@@ -102,7 +106,6 @@ namespace Rootborn.UI.HUD
                 SetText(hudRoot, "TimeLabel", FormatClockTime(clock.DayProgress01));
                 SetText(hudRoot, "DayLabel", "DAY " + clock.Day);
             }
-
             SetText(hudRoot, "CurrencyLabel", "0G");
         }
 

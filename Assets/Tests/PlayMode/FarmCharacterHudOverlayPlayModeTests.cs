@@ -15,12 +15,12 @@ namespace Rootborn.Tests.PlayMode
     public sealed class FarmCharacterHudOverlayPlayModeTests
     {
         private const string TopLeftReferencePath = "docs/art/reference/pixelwood-reference-frame0-top-left.png";
+        private const string EvidenceDirectory = "Builds/Logs/modern-ui";
 
         [UnityTest]
         public IEnumerator FarmScene_InstallsTopLeftLayeredCharacterThumbnailHud()
         {
             yield return LoadFarmAndBuildHud();
-
             var hud = GameObject.Find("TopLeftCharacterHud");
             Assert.IsNotNull(hud);
             Assert.IsNotNull(hud.transform.Find("CharacterThumbnailFrame"));
@@ -33,7 +33,6 @@ namespace Rootborn.Tests.PlayMode
         public IEnumerator FarmScene_HidesBlockingPanelsAroundTopLeftCharacterHud()
         {
             yield return LoadFarmAndBuildHud();
-
             AssertMissingOrInactive("HUD");
             AssertMissingOrInactive("HotkeyHint");
             AssertMissingOrInactive("QuestLogPanel");
@@ -44,7 +43,6 @@ namespace Rootborn.Tests.PlayMode
         public IEnumerator FarmScene_TopLeftHudMatchesReferenceScaleAndStructure()
         {
             yield return LoadFarmAndBuildHud();
-
             var hud = GameObject.Find("TopLeftCharacterHud");
             Assert.IsNotNull(hud);
             var rt = (RectTransform)hud.transform;
@@ -54,6 +52,7 @@ namespace Rootborn.Tests.PlayMode
             float screenHeight = Mathf.Abs(corners[2].y - corners[0].y);
             Assert.LessOrEqual(screenWidth, 260f);
             Assert.LessOrEqual(screenHeight, 170f);
+            Assert.IsNotNull(hud.transform.Find("CharacterThumbnailBackplate"));
             Assert.IsNotNull(hud.transform.Find("TimeLabel"));
             Assert.IsNotNull(hud.transform.Find("CurrencyLabel"));
             Assert.IsNotNull(hud.transform.Find("HudSlot_Inventory"));
@@ -65,7 +64,6 @@ namespace Rootborn.Tests.PlayMode
         public IEnumerator FarmScene_TopLeftHudUsesModern16x16TileImages()
         {
             yield return LoadFarmAndBuildHud();
-
             AssertModernTileImage("TopLeftCharacterHud");
             AssertModernTileImage("CharacterThumbnailFrame");
             AssertModernTileImage("HudSlot_Inventory");
@@ -77,12 +75,10 @@ namespace Rootborn.Tests.PlayMode
         public IEnumerator FarmScene_TopLeftHudReflectsGameClockLabels()
         {
             yield return LoadFarmAndBuildHud();
-
             var hud = GameObject.Find("TopLeftCharacterHud");
             Assert.IsNotNull(hud);
             var clock = GameClock.Instance;
             Assert.IsNotNull(clock);
-
             string expectedDay = "DAY " + clock.Day;
             string expectedTime = FormatClockTime(clock.DayProgress01);
             Assert.AreEqual(expectedDay, hud.transform.Find("DayLabel").GetComponent<Text>().text);
@@ -95,12 +91,10 @@ namespace Rootborn.Tests.PlayMode
         {
             yield return LoadFarmAndBuildHud();
             yield return new WaitForEndOfFrame();
-
             var hud = GameObject.Find("TopLeftCharacterHud");
             Assert.IsNotNull(hud);
             Assert.Zero(CountTextOverflows(hud));
             AssertHudWithinTopLeftReferenceBounds((RectTransform)hud.transform);
-
             string screenshotPath = CaptureHudScreenshot("farm-top-left-hud.png");
             Assert.IsTrue(File.Exists(screenshotPath), "Expected screenshot at " + screenshotPath);
             Assert.Greater(CountVisiblePixels(screenshotPath), 1000);
@@ -111,7 +105,6 @@ namespace Rootborn.Tests.PlayMode
         {
             yield return LoadFarmAndBuildHud();
             yield return new WaitForEndOfFrame();
-
             Assert.IsTrue(File.Exists(TopLeftReferencePath), TopLeftReferencePath);
             var reference = LoadTexture(TopLeftReferencePath);
             try
@@ -125,6 +118,7 @@ namespace Rootborn.Tests.PlayMode
                     Assert.AreEqual(reference.height, candidate.height);
                     Assert.Greater(CountVisiblePixels(candidate), 1000);
                     AssertReferenceScaleFillBounds(candidate);
+                    AssertReferenceDarkFrameDensity(candidate);
                     string reportPath = WriteReferenceComparisonReport("farm-top-left-hud-reference-report.json", TopLeftReferencePath, cropPath, reference, candidate);
                     Assert.IsTrue(File.Exists(reportPath), "Expected report at " + reportPath);
                     string report = File.ReadAllText(reportPath);
@@ -163,11 +157,7 @@ namespace Rootborn.Tests.PlayMode
             for (int frame = 0; frame < 1200; frame++)
             {
                 var thumbnail = GameObject.Find("TopLeftCharacterHud")?.transform.Find("CharacterThumbnailFrame/CharacterThumbnail");
-                if (thumbnail != null && CountHudPartImages(thumbnail) >= 3)
-                {
-                    yield break;
-                }
-
+                if (thumbnail != null && CountHudPartImages(thumbnail) >= 3) yield break;
                 yield return null;
             }
         }
@@ -212,7 +202,6 @@ namespace Rootborn.Tests.PlayMode
                 Assert.IsNotNull(image.sprite, objectName + "/" + child.name);
                 imageCount++;
             }
-
             Assert.GreaterOrEqual(imageCount, 9, objectName);
         }
 
@@ -233,6 +222,32 @@ namespace Rootborn.Tests.PlayMode
             Assert.GreaterOrEqual(bounds.height, 70, "HUD bright panel area must match the reference crop scale.");
         }
 
+        private static void AssertReferenceDarkFrameDensity(Texture2D texture)
+        {
+            int totalDark = CountDarkPixels(texture, new RectInt(0, 0, texture.width, texture.height));
+            int topDark = CountDarkPixels(texture, new RectInt(0, texture.height - 24, texture.width, 24));
+            int leftDark = CountDarkPixels(texture, new RectInt(0, 0, 24, texture.height));
+            Assert.GreaterOrEqual(totalDark, 1800, "HUD crop must retain the dark frame density visible in the reference crop.");
+            Assert.GreaterOrEqual(topDark, 650, "HUD crop must retain the dark top strip visible in the reference crop.");
+            Assert.GreaterOrEqual(leftDark, 300, "HUD crop must retain the dark left strip visible in the reference crop.");
+        }
+
+        private static int CountDarkPixels(Texture2D texture, RectInt region)
+        {
+            int count = 0;
+            int maxX = Mathf.Min(texture.width, region.xMax);
+            int maxY = Mathf.Min(texture.height, region.yMax);
+            for (int y = Mathf.Max(0, region.yMin); y < maxY; y++)
+            {
+                for (int x = Mathf.Max(0, region.xMin); x < maxX; x++)
+                {
+                    var pixel = texture.GetPixel(x, y);
+                    if (pixel.r < 0.36f && pixel.g < 0.36f && pixel.b < 0.40f) count++;
+                }
+            }
+            return count;
+        }
+
         private static RectInt BrightBeigeBounds(Texture2D texture)
         {
             int minX = texture.width;
@@ -251,7 +266,6 @@ namespace Rootborn.Tests.PlayMode
                     maxY = Mathf.Max(maxY, y);
                 }
             }
-
             if (maxX < minX || maxY < minY) return new RectInt(0, 0, 0, 0);
             return new RectInt(minX, minY, maxX - minX + 1, maxY - minY + 1);
         }
@@ -262,12 +276,8 @@ namespace Rootborn.Tests.PlayMode
             foreach (var text in root.GetComponentsInChildren<Text>(true))
             {
                 var rt = (RectTransform)text.transform;
-                if (text.preferredWidth > rt.rect.width + 1f || text.preferredHeight > rt.rect.height + 1f)
-                {
-                    overflow++;
-                }
+                if (text.preferredWidth > rt.rect.width + 1f || text.preferredHeight > rt.rect.height + 1f) overflow++;
             }
-
             return overflow;
         }
 
@@ -278,9 +288,8 @@ namespace Rootborn.Tests.PlayMode
             var texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
             texture.ReadPixels(new Rect(0, 0, width, height), 0, 0);
             texture.Apply();
-            string directory = "Builds/Logs/modern-ui";
-            Directory.CreateDirectory(directory);
-            string path = Path.Combine(directory, fileName);
+            string path = Path.Combine(EvidenceDirectory, fileName);
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
             File.WriteAllBytes(path, texture.EncodeToPNG());
             Object.Destroy(texture);
             return path;
@@ -288,82 +297,28 @@ namespace Rootborn.Tests.PlayMode
 
         private static string CaptureTopLeftCrop(string fileName, int width, int height)
         {
-            var texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
-            texture.ReadPixels(new Rect(0, Screen.height - height, width, height), 0, 0);
+            int readWidth = Mathf.Min(width, Mathf.Max(1, Screen.width));
+            int readHeight = Mathf.Min(height, Mathf.Max(1, Screen.height));
+            var texture = new Texture2D(readWidth, readHeight, TextureFormat.RGBA32, false);
+            texture.ReadPixels(new Rect(0, Screen.height - readHeight, readWidth, readHeight), 0, 0);
             texture.Apply();
-            string directory = "Builds/Logs/modern-ui";
-            Directory.CreateDirectory(directory);
-            string path = Path.Combine(directory, fileName);
+            string path = Path.Combine(EvidenceDirectory, fileName);
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
             File.WriteAllBytes(path, texture.EncodeToPNG());
             Object.Destroy(texture);
             return path;
         }
 
-        private static string WriteReferenceComparisonReport(string fileName, string referencePath, string candidatePath, Texture2D reference, Texture2D candidate)
-        {
-            string directory = "Builds/Logs/modern-ui";
-            Directory.CreateDirectory(directory);
-            string path = Path.Combine(directory, fileName);
-            string metrics = BuildPixelDifferenceMetrics(reference, candidate);
-            string json = "{\n" +
-                "  \"referencePath\": \"" + referencePath.Replace("\\", "/") + "\",\n" +
-                "  \"candidatePath\": \"" + candidatePath.Replace("\\", "/") + "\",\n" +
-                "  \"referenceWidth\": " + reference.width + ",\n" +
-                "  \"referenceHeight\": " + reference.height + ",\n" +
-                "  \"candidateWidth\": " + candidate.width + ",\n" +
-                "  \"candidateHeight\": " + candidate.height + ",\n" +
-                "  \"referenceVisiblePixels\": " + CountVisiblePixels(reference) + ",\n" +
-                "  \"candidateVisiblePixels\": " + CountVisiblePixels(candidate) + ",\n" +
-                metrics + "\n" +
-                "}\n";
-            File.WriteAllText(path, json);
-            return path;
-        }
-
-        private static string BuildPixelDifferenceMetrics(Texture2D reference, Texture2D candidate)
-        {
-            var refPixels = reference.GetPixels32();
-            var candidatePixels = candidate.GetPixels32();
-            int count = Mathf.Min(refPixels.Length, candidatePixels.Length);
-            int exactMatchingPixels = 0;
-            long channelErrorSum = 0;
-            int maxChannelError = 0;
-            for (int i = 0; i < count; i++)
-            {
-                var a = refPixels[i];
-                var b = candidatePixels[i];
-                int dr = Mathf.Abs(a.r - b.r);
-                int dg = Mathf.Abs(a.g - b.g);
-                int db = Mathf.Abs(a.b - b.b);
-                int da = Mathf.Abs(a.a - b.a);
-                if (dr == 0 && dg == 0 && db == 0 && da == 0)
-                {
-                    exactMatchingPixels++;
-                }
-                channelErrorSum += dr + dg + db + da;
-                maxChannelError = Mathf.Max(maxChannelError, dr, dg, db, da);
-            }
-
-            int differentPixels = count - exactMatchingPixels;
-            float exactMatchRatio = count > 0 ? (float)exactMatchingPixels / count : 0f;
-            float meanChannelError = count > 0 ? (float)channelErrorSum / (count * 4f) : 0f;
-            return "  \"exactMatchingPixels\": " + exactMatchingPixels + ",\n" +
-                "  \"differentPixels\": " + differentPixels + ",\n" +
-                "  \"meanChannelError\": " + meanChannelError.ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + ",\n" +
-                "  \"maxChannelError\": " + maxChannelError + ",\n" +
-                "  \"exactMatchRatio\": " + exactMatchRatio.ToString("0.000000", System.Globalization.CultureInfo.InvariantCulture);
-        }
-
         private static Texture2D LoadTexture(string path)
         {
             var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-            texture.LoadImage(File.ReadAllBytes(path));
+            Assert.IsTrue(texture.LoadImage(File.ReadAllBytes(path)), path);
             return texture;
         }
 
-        private static int CountVisiblePixels(string screenshotPath)
+        private static int CountVisiblePixels(string path)
         {
-            var texture = LoadTexture(screenshotPath);
+            var texture = LoadTexture(path);
             try
             {
                 return CountVisiblePixels(texture);
@@ -377,40 +332,105 @@ namespace Rootborn.Tests.PlayMode
         private static int CountVisiblePixels(Texture2D texture)
         {
             int count = 0;
-            foreach (var pixel in texture.GetPixels32())
+            for (int y = 0; y < texture.height; y++)
             {
-                if (pixel.a > 0 && (pixel.r > 4 || pixel.g > 4 || pixel.b > 4))
+                for (int x = 0; x < texture.width; x++)
                 {
-                    count++;
+                    if (texture.GetPixel(x, y).a > 0f) count++;
                 }
             }
+            return count;
+        }
 
+        private static int CountHudPartImages(Transform thumbnail)
+        {
+            int count = 0;
+            foreach (var image in thumbnail.GetComponentsInChildren<Image>(true))
+            {
+                if (image.name.StartsWith("HudPart_") && image.sprite != null) count++;
+            }
             return count;
         }
 
         private static GameObject FindByNameIncludingInactive(string objectName)
         {
-            var transforms = Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            for (int i = 0; i < transforms.Length; i++)
+            foreach (var transform in Resources.FindObjectsOfTypeAll<Transform>())
             {
-                if (transforms[i] != null && transforms[i].name == objectName) return transforms[i].gameObject;
+                if (transform.name == objectName && transform.hideFlags == HideFlags.None) return transform.gameObject;
             }
-
             return null;
         }
 
-        private static int CountHudPartImages(Transform thumbnail)
+        private static string WriteReferenceComparisonReport(string fileName, string referencePath, string candidatePath, Texture2D reference, Texture2D candidate)
         {
-            if (thumbnail == null) return 0;
-            int count = 0;
-            for (int i = 0; i < thumbnail.childCount; i++)
+            int referenceVisible = CountVisiblePixels(reference);
+            int candidateVisible = CountVisiblePixels(candidate);
+            var diff = BuildPixelDifferenceMetrics(reference, candidate);
+            string path = Path.Combine(EvidenceDirectory, fileName);
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            string json = "{\n"
+                + "  \"referencePath\": \"" + referencePath.Replace("\\", "/") + "\",\n"
+                + "  \"candidatePath\": \"" + candidatePath.Replace("\\", "/") + "\",\n"
+                + "  \"referenceWidth\": " + reference.width + ",\n"
+                + "  \"referenceHeight\": " + reference.height + ",\n"
+                + "  \"candidateWidth\": " + candidate.width + ",\n"
+                + "  \"candidateHeight\": " + candidate.height + ",\n"
+                + "  \"referenceVisiblePixels\": " + referenceVisible + ",\n"
+                + "  \"candidateVisiblePixels\": " + candidateVisible + ",\n"
+                + "  \"exactMatchingPixels\": " + diff.exactMatchingPixels + ",\n"
+                + "  \"differentPixels\": " + diff.differentPixels + ",\n"
+                + "  \"meanChannelError\": " + diff.meanChannelError.ToString("F4", System.Globalization.CultureInfo.InvariantCulture) + ",\n"
+                + "  \"maxChannelError\": " + diff.maxChannelError + ",\n"
+                + "  \"exactMatchRatio\": " + diff.exactMatchRatio.ToString("F6", System.Globalization.CultureInfo.InvariantCulture) + "\n"
+                + "}\n";
+            File.WriteAllText(path, json);
+            return path;
+        }
+
+        private static PixelDifference BuildPixelDifferenceMetrics(Texture2D reference, Texture2D candidate)
+        {
+            Assert.AreEqual(reference.width, candidate.width);
+            Assert.AreEqual(reference.height, candidate.height);
+            var referencePixels = reference.GetPixels32();
+            var candidatePixels = candidate.GetPixels32();
+            Assert.AreEqual(referencePixels.Length, candidatePixels.Length);
+            int exact = 0;
+            int different = 0;
+            int maxChannelError = 0;
+            long totalChannelError = 0;
+            int totalChannels = referencePixels.Length * 4;
+            for (int i = 0; i < referencePixels.Length; i++)
             {
-                var child = thumbnail.GetChild(i);
-                if (!child.name.StartsWith("HudPart_")) continue;
-                var image = child.GetComponent<Image>();
-                if (image != null && image.sprite != null) count++;
+                var a = referencePixels[i];
+                var b = candidatePixels[i];
+                int dr = Mathf.Abs(a.r - b.r);
+                int dg = Mathf.Abs(a.g - b.g);
+                int db = Mathf.Abs(a.b - b.b);
+                int da = Mathf.Abs(a.a - b.a);
+                int pixelMax = Mathf.Max(Mathf.Max(dr, dg), Mathf.Max(db, da));
+                if (pixelMax == 0) exact++;
+                else different++;
+                maxChannelError = Mathf.Max(maxChannelError, pixelMax);
+                totalChannelError += dr + dg + db + da;
             }
-            return count;
+            return new PixelDifference(exact, different, totalChannelError / (float)totalChannels, maxChannelError, exact / (float)referencePixels.Length);
+        }
+
+        private readonly struct PixelDifference
+        {
+            public PixelDifference(int exactMatchingPixels, int differentPixels, float meanChannelError, int maxChannelError, float exactMatchRatio)
+            {
+                this.exactMatchingPixels = exactMatchingPixels;
+                this.differentPixels = differentPixels;
+                this.meanChannelError = meanChannelError;
+                this.maxChannelError = maxChannelError;
+                this.exactMatchRatio = exactMatchRatio;
+            }
+            public readonly int exactMatchingPixels;
+            public readonly int differentPixels;
+            public readonly float meanChannelError;
+            public readonly int maxChannelError;
+            public readonly float exactMatchRatio;
         }
     }
 }
