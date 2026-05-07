@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using Rootborn.Game.Family;
+using Rootborn.Game.Player;
 using UnityEditor;
 using UnityEngine;
 
@@ -24,13 +25,21 @@ namespace Rootborn.Tests.EditMode.Family
             AssertPart(prefab, "Part_hair");
             AssertPart(prefab, "Part_outfit");
             AssertPart(prefab, "Part_accessory");
+            var toolRenderer = AssertPart(prefab, "Part_tool");
+
+            var controller = prefab.GetComponent<PlayerController>();
+            Assert.IsNotNull(controller);
+            var serialized = new SerializedObject(controller);
+            Assert.AreSame(toolRenderer, serialized.FindProperty("_toolRenderer").objectReferenceValue);
         }
 
-        private static void AssertPart(GameObject prefab, string childName)
+        private static SpriteRenderer AssertPart(GameObject prefab, string childName)
         {
             var child = prefab.transform.Find(childName);
             Assert.IsNotNull(child, childName);
-            Assert.IsNotNull(child.GetComponent<SpriteRenderer>(), childName);
+            var renderer = child.GetComponent<SpriteRenderer>();
+            Assert.IsNotNull(renderer, childName);
+            return renderer;
         }
     }
 }
