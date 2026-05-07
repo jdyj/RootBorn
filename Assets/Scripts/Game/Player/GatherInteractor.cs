@@ -19,20 +19,27 @@ namespace Rootborn.Game.Player
 
         public ItemDefinition EquippedSeed { get; private set; }
         private Dictionary<string, ItemDefinition> _byId;
+        private bool _inventoryEventsBound;
 
         public event System.Action OnEquipmentChanged;
 
         public void Bind(GameDataRegistry registry)
         {
             _byId = new Dictionary<string, ItemDefinition>(16);
-            if (registry == null || registry.Items == null) return;
-            for (int i = 0; i < registry.Items.Length; i++)
+            if (registry != null && registry.Items != null)
             {
-                var it = registry.Items[i];
-                if (it == null || string.IsNullOrEmpty(it.Id)) continue;
-                _byId[it.Id] = it;
+                for (int i = 0; i < registry.Items.Length; i++)
+                {
+                    var it = registry.Items[i];
+                    if (it == null || string.IsNullOrEmpty(it.Id)) continue;
+                    _byId[it.Id] = it;
+                }
             }
-            Inventory.OnChanged += RefreshEquippedSeed;
+            if (!_inventoryEventsBound)
+            {
+                Inventory.OnChanged += RefreshEquippedSeed;
+                _inventoryEventsBound = true;
+            }
             RefreshEquippedSeed();
         }
 
@@ -72,7 +79,9 @@ namespace Rootborn.Game.Player
 
         public ItemDefinition FindById(string id)
         {
-            if (_byId == null || string.IsNullOrEmpty(id)) return null;
+            if (string.IsNullOrEmpty(id)) return null;
+            EnsureBoundToRuntimeRegistry(id);
+            if (_byId == null) return null;
             _byId.TryGetValue(id, out var def);
             return def;
         }
@@ -102,6 +111,16 @@ namespace Rootborn.Game.Player
                 }
             }
             OnEquipmentChanged?.Invoke();
+        }
+
+        private void EnsureBoundToRuntimeRegistry(string requiredId)
+        {
+            if (_byId != null && (string.IsNullOrEmpty(requiredId) || _byId.ContainsKey(requiredId))) return;
+            var registry = Rootborn.Game.Managers.Managers.Data?.Registry;
+            if (registry != null)
+            {
+                Bind(registry);
+            }
         }
     }
 

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.IO;
+using System.Reflection;
 using NUnit.Framework;
 using Rootborn.Game.Bootstrap;
 using Rootborn.Game.Family;
@@ -134,6 +135,77 @@ namespace Rootborn.Tests.PlayMode
             Assert.Greater(CountVisiblePixels(screenshotPath), 1000);
         }
 
+        [UnityTest]
+        public IEnumerator CHAR_PART_006_FarmPlayerRightMotionKeepsLayeredCharacterUpright()
+        {
+            var metadata = MakeSavedAppearanceMetadata();
+            ActiveSaveContext.Set(metadata);
+
+            yield return LoadFarmAndBootstrap();
+            yield return WaitForPartSprites();
+
+            var player = GameObject.Find("Player");
+            AssertSavedLayeredPlayer(player);
+            Assert.AreEqual(Vector3.one, player.transform.localScale, "16x16 part-composed player must stay at 1x scale in Farm.");
+            Assert.AreEqual(0f, player.transform.localEulerAngles.z, 0.001f, "Farm player must not spin when facing right.");
+
+            var rb = player.GetComponent<Rigidbody2D>();
+            Assert.IsNotNull(rb, "Farm player must have Rigidbody2D for real in-game movement.");
+            Assert.IsTrue((rb.constraints & RigidbodyConstraints2D.FreezeRotation) == RigidbodyConstraints2D.FreezeRotation,
+                "Farm player Rigidbody2D must freeze rotation so right movement cannot spin the sprite.");
+
+            var controller = player.GetComponent<PlayerController>();
+            Assert.IsNotNull(controller);
+            SetPrivateField(controller, "_lastFacing", new Vector2(1f, 0f));
+            InvokePrivate(controller, "Update");
+
+            Assert.AreEqual(0f, player.transform.localEulerAngles.z, 0.001f, "Right-facing controller update must not rotate the player root.");
+            AssertPartUprightAndFlipped(player, "Part_body");
+            AssertPartUprightAndFlipped(player, "Part_eyes");
+            AssertPartUprightAndFlipped(player, "Part_hair");
+            AssertPartUprightAndFlipped(player, "Part_outfit");
+            AssertPartUprightAndFlipped(player, "Part_accessory");
+        }
+
+        [UnityTest]
+        public IEnumerator CHAR_PART_007_EquippedToolSpriteStaysVisibleWhileFacingRight()
+        {
+            var metadata = MakeSavedAppearanceMetadata();
+            ActiveSaveContext.Set(metadata);
+
+            yield return LoadFarmAndBootstrap();
+            yield return WaitForPartSprites();
+            yield return Managers.Resource.LoadSubSpriteAsync("sprites/player/tool/axe-side", "Axe_Side_0").AsIEnumerator();
+
+            var player = GameObject.Find("Player");
+            AssertSavedLayeredPlayer(player);
+            var inventory = player.GetComponent<PlayerInventory>();
+            Assert.IsNotNull(inventory);
+            if (inventory.FindById("StoneAxe") == null)
+            {
+                Assert.IsTrue(inventory.TryAddById("StoneAxe", 1), "StoneAxe item definition must be registered for held-tool rendering.");
+            }
+            var axe = inventory.FindById("StoneAxe");
+            Assert.IsNotNull(axe, "Held-tool rendering test must be able to put StoneAxe in the player inventory.");
+
+            var controller = player.GetComponent<PlayerController>();
+            Assert.IsNotNull(controller);
+            InvokePrivate(controller, "Update");
+            inventory.EquipTool(axe);
+            yield return null;
+
+            SetPrivateField(controller, "_lastFacing", new Vector2(1f, 0f));
+            InvokePrivate(controller, "Update");
+
+            var toolRenderer = AssertToolRenderer(player);
+            Assert.IsTrue(toolRenderer.enabled, "Equipped tool renderer must remain enabled while the player is facing/moving right.");
+            Assert.IsNotNull(toolRenderer.sprite, "Equipped tool renderer must keep a sprite while the player is facing/moving right.");
+            Assert.AreEqual("Axe_Side_0", toolRenderer.sprite.name);
+            Assert.IsTrue(toolRenderer.flipX, "Right-facing tool sprite must flip with the character instead of rotating.");
+            AssertPartUprightAndFlipped(player, "Part_body");
+            AssertPartUprightAndFlipped(player, "Part_outfit");
+        }
+
         private static SaveSlotMetadata MakeSavedAppearanceMetadata()
         {
             var metadata = new SaveSlotMetadata
@@ -247,6 +319,40 @@ namespace Rootborn.Tests.PlayMode
             Assert.IsNotNull(renderer, childName);
             Assert.IsNotNull(renderer.sprite, childName);
             Assert.AreEqual(spriteName, renderer.sprite.name, childName);
+        }
+
+        private static void AssertPartUprightAndFlipped(GameObject player, string childName)
+        {
+            var child = player.transform.Find(childName);
+            Assert.IsNotNull(child, childName);
+            Assert.AreEqual(0f, child.localEulerAngles.z, 0.001f, childName + " must not rotate when facing right.");
+            var renderer = child.GetComponent<SpriteRenderer>();
+            Assert.IsNotNull(renderer, childName);
+            Assert.IsTrue(renderer.flipX, childName + " must flip horizontally when facing right.");
+        }
+
+        private static SpriteRenderer AssertToolRenderer(GameObject player)
+        {
+            var child = player.transform.Find("Part_tool");
+            Assert.IsNotNull(child, "Part_tool");
+            var renderer = child.GetComponent<SpriteRenderer>();
+            Assert.IsNotNull(renderer, "Part_tool renderer");
+            Assert.AreEqual(0f, child.localEulerAngles.z, 0.001f, "Part_tool must not rotate when facing right.");
+            return renderer;
+        }
+
+        private static void SetPrivateField(object target, string fieldName, object value)
+        {
+            var field = target.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(field, fieldName);
+            field.SetValue(target, value);
+        }
+
+        private static void InvokePrivate(object target, string methodName)
+        {
+            var method = target.GetType().GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(method, methodName);
+            method.Invoke(target, null);
         }
 
         private static int CountVisiblePartRenderers(GameObject player)
