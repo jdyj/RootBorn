@@ -49,6 +49,17 @@ namespace Rootborn.Tests.EditMode.Family
         }
 
         [Test]
+        public void PlayerController_KeepsHeldToolSpriteVisibleWhileWalkingWithoutAttack()
+        {
+            string source = File.ReadAllText("Assets/Scripts/Game/Player/PlayerController.cs");
+
+            StringAssert.Contains("UpdateToolSprite();", source);
+            StringAssert.Contains("var facing = _isAttacking ? _attackFacing : _lastFacing;", source);
+            StringAssert.Contains("else\n            {\n                frame = 0;\n            }", source);
+            StringAssert.Contains("_toolRenderer.enabled = true", source);
+        }
+
+        [Test]
         public void PlayerController_BindsEquipmentEventsEvenWhenInventoryWasFoundInAwake()
         {
             string source = File.ReadAllText("Assets/Scripts/Game/Player/PlayerController.cs");
