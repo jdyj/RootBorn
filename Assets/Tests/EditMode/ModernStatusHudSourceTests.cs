@@ -103,5 +103,18 @@ namespace Rootborn.Tests.EditMode
             StringAssert.Contains("CaptureTopLeftCrop", source);
             StringAssert.Contains("WriteReferenceComparisonReport", source);
         }
+
+        [Test]
+        public void FarmHudOverlay_ReferenceComparisonReportIncludesPixelDifferenceMetrics()
+        {
+            Assert.IsTrue(File.Exists(CharacterHudPlayModeTestPath), CharacterHudPlayModeTestPath);
+            string source = File.ReadAllText(CharacterHudPlayModeTestPath);
+            StringAssert.Contains("BuildPixelDifferenceMetrics", source);
+            StringAssert.Contains("exactMatchingPixels", source);
+            StringAssert.Contains("differentPixels", source);
+            StringAssert.Contains("meanChannelError", source);
+            StringAssert.Contains("maxChannelError", source);
+            StringAssert.Contains("exactMatchRatio", source);
+        }
     }
 }

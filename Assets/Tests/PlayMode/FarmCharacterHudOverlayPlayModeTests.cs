@@ -131,6 +131,11 @@ namespace Rootborn.Tests.PlayMode
                     StringAssert.Contains("\"candidatePath\"", report);
                     StringAssert.Contains("\"referenceVisiblePixels\"", report);
                     StringAssert.Contains("\"candidateVisiblePixels\"", report);
+                    StringAssert.Contains("\"exactMatchingPixels\"", report);
+                    StringAssert.Contains("\"differentPixels\"", report);
+                    StringAssert.Contains("\"meanChannelError\"", report);
+                    StringAssert.Contains("\"maxChannelError\"", report);
+                    StringAssert.Contains("\"exactMatchRatio\"", report);
                 }
                 finally
                 {
@@ -268,6 +273,7 @@ namespace Rootborn.Tests.PlayMode
             string directory = "Builds/Logs/modern-ui";
             Directory.CreateDirectory(directory);
             string path = Path.Combine(directory, fileName);
+            string metrics = BuildPixelDifferenceMetrics(reference, candidate);
             string json = "{\n" +
                 "  \"referencePath\": \"" + referencePath.Replace("\\", "/") + "\",\n" +
                 "  \"candidatePath\": \"" + candidatePath.Replace("\\", "/") + "\",\n" +
@@ -276,10 +282,45 @@ namespace Rootborn.Tests.PlayMode
                 "  \"candidateWidth\": " + candidate.width + ",\n" +
                 "  \"candidateHeight\": " + candidate.height + ",\n" +
                 "  \"referenceVisiblePixels\": " + CountVisiblePixels(reference) + ",\n" +
-                "  \"candidateVisiblePixels\": " + CountVisiblePixels(candidate) + "\n" +
+                "  \"candidateVisiblePixels\": " + CountVisiblePixels(candidate) + ",\n" +
+                metrics + "\n" +
                 "}\n";
             File.WriteAllText(path, json);
             return path;
+        }
+
+        private static string BuildPixelDifferenceMetrics(Texture2D reference, Texture2D candidate)
+        {
+            var refPixels = reference.GetPixels32();
+            var candidatePixels = candidate.GetPixels32();
+            int count = Mathf.Min(refPixels.Length, candidatePixels.Length);
+            int exactMatchingPixels = 0;
+            long channelErrorSum = 0;
+            int maxChannelError = 0;
+            for (int i = 0; i < count; i++)
+            {
+                var a = refPixels[i];
+                var b = candidatePixels[i];
+                int dr = Mathf.Abs(a.r - b.r);
+                int dg = Mathf.Abs(a.g - b.g);
+                int db = Mathf.Abs(a.b - b.b);
+                int da = Mathf.Abs(a.a - b.a);
+                if (dr == 0 && dg == 0 && db == 0 && da == 0)
+                {
+                    exactMatchingPixels++;
+                }
+                channelErrorSum += dr + dg + db + da;
+                maxChannelError = Mathf.Max(maxChannelError, dr, dg, db, da);
+            }
+
+            int differentPixels = count - exactMatchingPixels;
+            float exactMatchRatio = count > 0 ? (float)exactMatchingPixels / count : 0f;
+            float meanChannelError = count > 0 ? (float)channelErrorSum / (count * 4f) : 0f;
+            return "  \"exactMatchingPixels\": " + exactMatchingPixels + ",\n" +
+                "  \"differentPixels\": " + differentPixels + ",\n" +
+                "  \"meanChannelError\": " + meanChannelError.ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + ",\n" +
+                "  \"maxChannelError\": " + maxChannelError + ",\n" +
+                "  \"exactMatchRatio\": " + exactMatchRatio.ToString("0.000000", System.Globalization.CultureInfo.InvariantCulture);
         }
 
         private static Texture2D LoadTexture(string path)
