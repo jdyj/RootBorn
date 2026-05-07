@@ -2,6 +2,7 @@ using System.Collections;
 using NUnit.Framework;
 using Rootborn.Game.Bootstrap;
 using Rootborn.Game.Managers;
+using Rootborn.Game.Time;
 using Rootborn.UI.Modern;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -69,6 +70,23 @@ namespace Rootborn.Tests.PlayMode
             AssertModernTileImage("HudSlot_Tool");
         }
 
+        [UnityTest]
+        public IEnumerator FarmScene_TopLeftHudReflectsGameClockLabels()
+        {
+            yield return LoadFarmAndBuildHud();
+
+            var hud = GameObject.Find("TopLeftCharacterHud");
+            Assert.IsNotNull(hud);
+            var clock = GameClock.Instance;
+            Assert.IsNotNull(clock);
+
+            string expectedDay = "DAY " + clock.Day;
+            string expectedTime = FormatClockTime(clock.DayProgress01);
+            Assert.AreEqual(expectedDay, hud.transform.Find("DayLabel").GetComponent<Text>().text);
+            Assert.AreEqual(expectedTime, hud.transform.Find("TimeLabel").GetComponent<Text>().text);
+            Assert.AreEqual("0G", hud.transform.Find("CurrencyLabel").GetComponent<Text>().text);
+        }
+
         private static IEnumerator LoadFarmAndBuildHud()
         {
             yield return SceneManager.LoadSceneAsync("Farm");
@@ -90,6 +108,14 @@ namespace Rootborn.Tests.PlayMode
 
                 yield return null;
             }
+        }
+
+        private static string FormatClockTime(float dayProgress01)
+        {
+            int totalMinutes = Mathf.FloorToInt(Mathf.Repeat(dayProgress01, 1f) * 24f * 60f);
+            int hour = totalMinutes / 60;
+            int minute = totalMinutes % 60;
+            return hour.ToString("00") + ":" + minute.ToString("00");
         }
 
         private static void AssertMissingOrInactive(string objectName)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Rootborn.Game.Common;
 using Rootborn.Game.Family;
 using Rootborn.Game.Save;
+using Rootborn.Game.Time;
 using Rootborn.UI.Modern;
 using UnityEngine;
 using UnityEngine.UI;
@@ -40,6 +41,7 @@ namespace Rootborn.UI.HUD
             if (hud == null) hud = BuildHud(canvas.transform);
             hud.gameObject.SetActive(true);
             hud.SetAsLastSibling();
+            RefreshHudData(hud);
             BuildCharacterThumbnail(hud);
         }
 
@@ -82,7 +84,7 @@ namespace Rootborn.UI.HUD
             trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
             trt.offsetMin = new Vector2(4f, 4f); trt.offsetMax = new Vector2(-4f, -4f);
 
-            MakeHudText(root, "TimeLabel", "12:00", new Vector2(60f, -10f), new Vector2(58f, 16f), 10, TextAnchor.MiddleLeft);
+            MakeHudText(root, "TimeLabel", "00:00", new Vector2(60f, -10f), new Vector2(58f, 16f), 10, TextAnchor.MiddleLeft);
             MakeHudText(root, "CurrencyLabel", "0G", new Vector2(60f, -28f), new Vector2(58f, 16f), 10, TextAnchor.MiddleLeft);
             MakeHudText(root, "DayLabel", "DAY 1", new Vector2(60f, -46f), new Vector2(62f, 14f), 9, TextAnchor.MiddleLeft);
 
@@ -90,6 +92,32 @@ namespace Rootborn.UI.HUD
             BuildHudSlot(root, "HudSlot_Health", new Vector2(56f, -60f), new Color(0.78f, 0.14f, 0.18f, 1f), string.Empty);
             BuildHudSlot(root, "HudSlot_Tool", new Vector2(92f, -55f), new Color(0.52f, 0.34f, 0.18f, 1f), string.Empty, new Vector2(30f, 30f), 14f);
             return root;
+        }
+
+        private static void RefreshHudData(Transform hudRoot)
+        {
+            var clock = GameClock.Instance;
+            if (clock != null)
+            {
+                SetText(hudRoot, "TimeLabel", FormatClockTime(clock.DayProgress01));
+                SetText(hudRoot, "DayLabel", "DAY " + clock.Day);
+            }
+
+            SetText(hudRoot, "CurrencyLabel", "0G");
+        }
+
+        private static string FormatClockTime(float dayProgress01)
+        {
+            int totalMinutes = Mathf.FloorToInt(Mathf.Repeat(dayProgress01, 1f) * 24f * 60f);
+            int hour = totalMinutes / 60;
+            int minute = totalMinutes % 60;
+            return hour.ToString("00") + ":" + minute.ToString("00");
+        }
+
+        private static void SetText(Transform root, string childName, string value)
+        {
+            var label = root.Find(childName)?.GetComponent<Text>();
+            if (label != null) label.text = value;
         }
 
         private static RectTransform TileBox(Transform parent, string name, Vector2 pos, Vector2 size)

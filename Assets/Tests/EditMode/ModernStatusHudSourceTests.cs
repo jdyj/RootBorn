@@ -62,5 +62,19 @@ namespace Rootborn.Tests.EditMode
             StringAssert.Contains("TileBox", source);
             StringAssert.Contains("tileImage.Rebuild();", source);
         }
+
+        [Test]
+        public void FarmHudOverlay_BindsTimeAndDayLabelsToRuntimeStateWithoutCurrencyIdBranching()
+        {
+            Assert.IsTrue(File.Exists(CharacterHudOverlayPath), CharacterHudOverlayPath);
+            string source = File.ReadAllText(CharacterHudOverlayPath);
+            StringAssert.Contains("Rootborn.Game.Time", source);
+            StringAssert.Contains("RefreshHudData", source);
+            StringAssert.Contains("GameClock.Instance", source);
+            StringAssert.Contains("DayProgress01", source);
+            StringAssert.Contains("SetText(hudRoot, \"CurrencyLabel\", \"0G\")", source);
+            StringAssert.DoesNotContain("FindCurrencyItem", source);
+            StringAssert.DoesNotContain("item.Id ==", source);
+        }
     }
 }
