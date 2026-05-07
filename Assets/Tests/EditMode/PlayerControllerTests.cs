@@ -104,6 +104,40 @@ namespace Rootborn.Tests.EditMode
             }
         }
 
+        [Test]
+        public void Update_WhenFacingRight_DoesNotRotatePlayerOrPartLayers()
+        {
+            var go = new GameObject("player");
+            try
+            {
+                var pc = go.AddComponent<PlayerController>();
+                var sr = go.AddComponent<SpriteRenderer>();
+                var composer = go.AddComponent<CharacterPartComposer>();
+                composer.EnsureLayers(new[]
+                {
+                    CreateDefinition("character.body.01", "body", 0),
+                    CreateDefinition("character.outfit.braces.brown", "outfit", 2),
+                });
+                pc.Bind(null, sr);
+
+                var bind = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+                typeof(PlayerController).GetField("_lastFacing", bind).SetValue(pc, new Vector2(1f, 0f));
+                for (int i = 0; i < 5; i++)
+                {
+                    typeof(PlayerController).GetMethod("Update", bind).Invoke(pc, null);
+                }
+
+                Assert.AreEqual(0f, go.transform.localEulerAngles.z, 0.001f);
+                Assert.AreEqual(Vector3.one, go.transform.localScale);
+                Assert.AreEqual(0f, go.transform.Find("Part_body").localEulerAngles.z, 0.001f);
+                Assert.AreEqual(0f, go.transform.Find("Part_outfit").localEulerAngles.z, 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+            }
+        }
+
         private static CharacterPartDefinition CreateDefinition(string id, string categoryId, int layerOrder)
         {
             var definition = ScriptableObject.CreateInstance<CharacterPartDefinition>();
