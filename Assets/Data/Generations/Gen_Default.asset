@@ -15,6 +15,7 @@ MonoBehaviour:
   _generationIndex: 1
   _displayKey: generation.primal
   _lifetimeSec: 1800
+  _lifetimeGameDays: 14
   _startingKnowledge: []
   _startingInventory:
   - {fileID: 11400000, guid: 5e36fb0bfb8264044bb95e1c8de70da2, type: 2}
