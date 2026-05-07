@@ -74,6 +74,84 @@ namespace Rootborn.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator FarmWaterSurfaceInstaller_IsIdempotentAndUsesTriggerCollider()
+        {
+            yield return LoadFarmAndBootstrap();
+
+            DestroyWaterSurfaceZones();
+            FarmWaterSurfaceInstaller.EnsureWaterSurfaceForActiveScene();
+            FarmWaterSurfaceInstaller.EnsureWaterSurfaceForActiveScene();
+            yield return null;
+
+            var zones = Object.FindObjectsByType<SurfaceTagZone>(FindObjectsSortMode.None);
+            Assert.AreEqual(1, zones.Length, "Repeated installer calls must not duplicate water zones.");
+            Assert.AreEqual("Water", zones[0].Surface);
+            var collider = zones[0].GetComponent<BoxCollider2D>();
+            Assert.IsNotNull(collider, "Water surface should use a 2D box trigger for point overlap checks.");
+            Assert.IsTrue(collider.isTrigger, "Water surface should tag surface without blocking movement.");
+            Assert.AreEqual(new Vector2(4f, 1f), collider.size);
+        }
+
+        [UnityTest]
+        public IEnumerator FarmScene_PlayerRuntimeDependenciesAreBound()
+        {
+            yield return LoadFarmAndBootstrap();
+
+            var player = GameObject.Find("Player");
+            Assert.IsNotNull(player);
+            Assert.AreEqual(1, CountObjectsNamed("Player"));
+
+            var inventory = player.GetComponent<PlayerInventory>();
+            var interactor = player.GetComponent<GatherInteractor>();
+            var controller = player.GetComponent<PlayerController>();
+            Assert.IsNotNull(inventory, "Player should have runtime inventory.");
+            Assert.IsNotNull(interactor, "Player should have gather interactor.");
+            Assert.IsNotNull(controller, "Player should have controller.");
+            Assert.AreSame(inventory, interactor.Inventory, "GatherInteractor should dispatch drops into PlayerInventory.");
+            Assert.IsNotNull(interactor.KnowledgeProgress, "Knowledge progress should be bound for unlock scenarios.");
+            Assert.IsNotNull(inventory.EquippedToolItem, "Starting tool item should be equipped.");
+            Assert.IsNotNull(interactor.EquippedTool, "Starting ToolDefinition should be resolved from registry.");
+            Assert.AreEqual(inventory.EquippedToolItem.Id, interactor.EquippedTool.Id);
+            Assert.IsNotNull(player.GetComponent<Rigidbody2D>(), "Player should have physics body for runtime movement.");
+            Assert.IsNotNull(player.GetComponent<Collider2D>(), "Player should have collider for runtime collisions.");
+        }
+
+        [UnityTest]
+        public IEnumerator FarmScene_ResourceNodesHaveDefinitionsSpritesAndBlockingColliders()
+        {
+            yield return LoadFarmAndBootstrap();
+
+            var nodes = Object.FindObjectsByType<ResourceNode>(FindObjectsSortMode.None);
+            Assert.AreEqual(20, nodes.Length, "Farm should expose all runtime gatherable nodes.");
+            for (int i = 0; i < nodes.Length; i++)
+            {
+                var node = nodes[i];
+                Assert.IsNotNull(node.Definition, node.name + " should be data-driven by ResourceNodeDefinition.");
+                Assert.IsNotNull(node.GetComponent<SpriteRenderer>(), node.name + " should render in PlayMode.");
+                if (!node.Definition.IsWalkable)
+                {
+                    Assert.IsNotNull(node.GetComponent<Collider2D>(), node.name + " should block movement when definition is not walkable.");
+                }
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator FarmAutoFiller_ReentryDoesNotDuplicateCoreRuntimeObjects()
+        {
+            yield return LoadFarmAndBootstrap();
+
+            var extraFiller = new GameObject("[FarmAutoFiller]");
+            extraFiller.AddComponent<FarmAutoFiller>();
+            FarmWaterSurfaceInstaller.EnsureWaterSurfaceForActiveScene();
+            FarmWaterSurfaceInstaller.EnsureWaterSurfaceForActiveScene();
+            yield return WaitSeconds(1f);
+
+            Assert.AreEqual(1, CountObjectsNamed("Player"), "Farm auto-fill reentry should not duplicate Player.");
+            Assert.AreEqual(20, Object.FindObjectsByType<ResourceNode>(FindObjectsSortMode.None).Length, "Farm auto-fill reentry should not duplicate resource nodes.");
+            Assert.AreEqual(1, Object.FindObjectsByType<SurfaceTagZone>(FindObjectsSortMode.None).Length, "Water surface installer reentry should not duplicate surface zones.");
+        }
+
+        [UnityTest]
         public IEnumerator Player_Position_Persists_After_Manual_Translate()
         {
             yield return LoadFarmAndBootstrap();
@@ -181,13 +259,28 @@ namespace Rootborn.Tests.PlayMode
             var go = new GameObject("[FarmAutoFiller]");
             go.AddComponent<FarmAutoFiller>();
 
-            float timeout = 2f;
-            elapsed = 0f;
-            while (elapsed < timeout)
+            yield return WaitSeconds(2f);
+        }
+
+        private static IEnumerator WaitSeconds(float seconds)
+        {
+            float elapsed = 0f;
+            while (elapsed < seconds)
             {
                 yield return null;
                 elapsed += UnityEngine.Time.deltaTime;
             }
+        }
+
+        private static int CountObjectsNamed(string name)
+        {
+            int count = 0;
+            var transforms = Object.FindObjectsByType<Transform>(FindObjectsSortMode.None);
+            for (int i = 0; i < transforms.Length; i++)
+            {
+                if (transforms[i].name == name) count++;
+            }
+            return count;
         }
 
         private static void DestroyWaterSurfaceZones()
