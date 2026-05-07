@@ -2,6 +2,7 @@ using System.Collections;
 using NUnit.Framework;
 using Rootborn.Game.Bootstrap;
 using Rootborn.Game.Managers;
+using Rootborn.UI.Modern;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
@@ -56,6 +57,18 @@ namespace Rootborn.Tests.PlayMode
             Assert.IsNotNull(hud.transform.Find("HudSlot_Tool"));
         }
 
+        [UnityTest]
+        public IEnumerator FarmScene_TopLeftHudUsesModern16x16TileImages()
+        {
+            yield return LoadFarmAndBuildHud();
+
+            AssertModernTileImage("TopLeftCharacterHud");
+            AssertModernTileImage("CharacterThumbnailFrame");
+            AssertModernTileImage("HudSlot_Inventory");
+            AssertModernTileImage("HudSlot_Health");
+            AssertModernTileImage("HudSlot_Tool");
+        }
+
         private static IEnumerator LoadFarmAndBuildHud()
         {
             yield return SceneManager.LoadSceneAsync("Farm");
@@ -84,6 +97,18 @@ namespace Rootborn.Tests.PlayMode
             var go = FindByNameIncludingInactive(objectName);
             if (go == null) return;
             Assert.IsFalse(go.activeInHierarchy, objectName + " should not block the default Farm gameplay view.");
+        }
+
+        private static void AssertModernTileImage(string objectName)
+        {
+            var go = FindByNameIncludingInactive(objectName);
+            Assert.IsNotNull(go, objectName);
+            var tileImage = go.GetComponent<ModernUiTileImage>();
+            Assert.IsNotNull(tileImage, objectName);
+            Assert.AreEqual(new Vector2(16f, 16f), tileImage.TileSize, objectName);
+            Assert.GreaterOrEqual(tileImage.TileCount, 9, objectName);
+            Assert.AreEqual(4, tileImage.CornerTileCount, objectName);
+            Assert.IsFalse(tileImage.HasStretchedCornerTiles, objectName);
         }
 
         private static GameObject FindByNameIncludingInactive(string objectName)

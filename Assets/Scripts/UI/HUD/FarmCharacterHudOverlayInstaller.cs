@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Rootborn.Game.Common;
 using Rootborn.Game.Family;
 using Rootborn.Game.Save;
+using Rootborn.UI.Modern;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -72,9 +73,9 @@ namespace Rootborn.UI.HUD
 
         private static Transform BuildHud(Transform canvasRoot)
         {
-            var root = Box(canvasRoot, HudName, new Vector2(18f, -18f), new Vector2(132f, 86f), new Color(0.16f, 0.11f, 0.08f, 0.92f));
+            var root = TileBox(canvasRoot, HudName, new Vector2(18f, -18f), new Vector2(132f, 86f));
             root.SetAsLastSibling();
-            var frame = Box(root, "CharacterThumbnailFrame", new Vector2(8f, -12f), new Vector2(42f, 42f), new Color(0.78f, 0.62f, 0.42f, 1f));
+            var frame = TileBox(root, "CharacterThumbnailFrame", new Vector2(8f, -12f), new Vector2(42f, 42f));
             var thumbnail = new GameObject("CharacterThumbnail", typeof(RectTransform));
             thumbnail.transform.SetParent(frame, false);
             var trt = (RectTransform)thumbnail.transform;
@@ -89,6 +90,19 @@ namespace Rootborn.UI.HUD
             BuildHudSlot(root, "HudSlot_Health", new Vector2(56f, -60f), new Color(0.78f, 0.14f, 0.18f, 1f), string.Empty);
             BuildHudSlot(root, "HudSlot_Tool", new Vector2(92f, -55f), new Color(0.52f, 0.34f, 0.18f, 1f), string.Empty, new Vector2(30f, 30f), 14f);
             return root;
+        }
+
+        private static RectTransform TileBox(Transform parent, string name, Vector2 pos, Vector2 size)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(ModernUiTileImage));
+            go.transform.SetParent(parent, false);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = new Vector2(0f, 1f); rt.anchorMax = new Vector2(0f, 1f); rt.pivot = new Vector2(0f, 1f);
+            rt.anchoredPosition = pos; rt.sizeDelta = size;
+            var tileImage = go.GetComponent<ModernUiTileImage>();
+            tileImage.SetRecipe(ModernUiRecipes.CommonPanel);
+            tileImage.Rebuild();
+            return rt;
         }
 
         private static RectTransform Box(Transform parent, string name, Vector2 pos, Vector2 size, Color color)
@@ -122,7 +136,7 @@ namespace Rootborn.UI.HUD
         private static void BuildHudSlot(Transform parent, string name, Vector2 pos, Color fillColor, string label, Vector2? sizeOverride = null, float rotation = 0f)
         {
             var size = sizeOverride ?? new Vector2(20f, 20f);
-            var frame = Box(parent, name, pos, size, new Color(0.82f, 0.64f, 0.42f, 1f));
+            var frame = TileBox(parent, name, pos, size);
             frame.localEulerAngles = new Vector3(0f, 0f, rotation);
             var fill = Box(frame, "Fill", new Vector2(4f, -4f), size - new Vector2(8f, 8f), fillColor);
             fill.GetComponent<Image>().raycastTarget = false;

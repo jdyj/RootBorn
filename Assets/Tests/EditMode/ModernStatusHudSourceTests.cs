@@ -50,5 +50,17 @@ namespace Rootborn.Tests.EditMode
             StringAssert.DoesNotContain("EnergyGauge", source);
             StringAssert.DoesNotContain("ToolGauge", source);
         }
+
+        [Test]
+        public void FarmHudOverlay_UsesModern16x16TileRecipesInsteadOfSolidPanels()
+        {
+            Assert.IsTrue(File.Exists(CharacterHudOverlayPath), CharacterHudOverlayPath);
+            string source = File.ReadAllText(CharacterHudOverlayPath);
+            StringAssert.Contains("Rootborn.UI.Modern", source);
+            StringAssert.Contains("ModernUiTileImage", source);
+            StringAssert.Contains("ModernUiRecipes.CommonPanel", source);
+            StringAssert.Contains("TileBox", source);
+            StringAssert.Contains("tileImage.Rebuild();", source);
+        }
     }
 }
