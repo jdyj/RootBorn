@@ -1,0 +1,45 @@
+{
+  "sourceReferences": [
+    {
+      "name": "settings",
+      "url": "https://img.itch.zone/aW1hZ2UvMTg2NTgzOS8xMDk4NTA0OC5naWY=/original/ZFWQBO.gif",
+      "localFrame": "docs/art/reference-modern-ui/settings-frame37.png",
+      "size": "352x272"
+    },
+    {
+      "name": "inventory",
+      "url": "https://img.itch.zone/aW1hZ2UvMTg2NTgzOS8xMDk2MjY0OC5naWY=/original/dztsAE.gif",
+      "localFrame": "docs/art/reference-modern-ui/inventory-frame61.png",
+      "size": "358x348"
+    },
+    {
+      "name": "status",
+      "url": "https://img.itch.zone/aW1hZ2UvMTg2NTgzOS8xMDk2MjY0Ni5naWY=/original/Z9nBBy.gif",
+      "localFrame": "docs/art/reference-modern-ui/status-frame37.png",
+      "size": "352x288"
+    }
+  ],
+  "sprites": [
+    { "id": "panel.tl", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r0_c0", "row": 0, "column": 0, "role": "corner-tl", "usage": "common panel top-left corner" },
+    { "id": "panel.t", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r0_c1", "row": 0, "column": 1, "role": "edge-t", "usage": "common panel top edge" },
+    { "id": "panel.tr", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r0_c2", "row": 0, "column": 2, "role": "corner-tr", "usage": "common panel top-right corner" },
+    { "id": "panel.l", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r1_c0", "row": 1, "column": 0, "role": "edge-l", "usage": "common panel left edge" },
+    { "id": "panel.fill", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r1_c1", "row": 1, "column": 1, "role": "fill", "usage": "common panel fill" },
+    { "id": "panel.r", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r1_c2", "row": 1, "column": 2, "role": "edge-r", "usage": "common panel right edge" },
+    { "id": "panel.bl", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r2_c0", "row": 2, "column": 0, "role": "corner-bl", "usage": "common panel bottom-left corner" },
+    { "id": "panel.b", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r2_c1", "row": 2, "column": 1, "role": "edge-b", "usage": "common panel bottom edge" },
+    { "id": "panel.br", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r2_c2", "row": 2, "column": 2, "role": "corner-br", "usage": "common panel bottom-right corner" },
+    { "id": "button.base", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r1_c7", "row": 1, "column": 7, "role": "button", "usage": "settings and inventory command button face" },
+    { "id": "button.close", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r1_c9", "row": 1, "column": 9, "role": "close-button", "usage": "settings close button" },
+    { "id": "slot.base", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r3_c0", "row": 3, "column": 0, "role": "slot", "usage": "inventory item slot frame" },
+    { "id": "tab.base", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r2_c8", "row": 2, "column": 8, "role": "tab", "usage": "top title tab and category tab" },
+    { "id": "gauge.fill", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r4_c3", "row": 4, "column": 3, "role": "gauge-fill", "usage": "status gauge fill tile" },
+    { "id": "scrollbar.thumb", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r2_c3", "row": 2, "column": 3, "role": "scrollbar", "usage": "inventory scrollbar thumb" }
+  ],
+  "recipes": {
+    "commonPanel": ["panel.tl", "panel.t", "panel.tr", "panel.l", "panel.fill", "panel.r", "panel.bl", "panel.b", "panel.br"],
+    "settings": ["commonPanel", "title-tabs", "close-button", "toggle-row", "slider-row"],
+    "inventory": ["commonPanel", "title-tabs", "slot-grid", "scrollbar", "selection-cursor"],
+    "status": ["commonPanel", "title-tabs", "portrait-frame", "gauge-row", "bottom-buttons"]
+  }
+}

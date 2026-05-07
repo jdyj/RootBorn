@@ -15,14 +15,18 @@ MonoBehaviour:
   m_GroupName: Sprites
   m_GUID: 04f641b57fbe2c8438c7ae2a523c0ab5
   m_SerializeEntries:
+  - m_GUID: 021f2e20784b55242af275c1abab2113
+    m_Address: sprites/character/eyes/eyes-brown
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 02a93c453c9ba9241b22bc69c4ea6a33
+    m_Address: sprites/character/outfit/outfit-braces-green
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 08f4773e3ccd5ba4b86f3e97f4df9414
     m_Address: sprites/farm/modern/16/terrain
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 09cc52776c4c6e64686d7f46aeb0a78e
-    m_Address: sprites/ui/book/spine
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
@@ -33,17 +37,10 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 0d13dd7f1400331418cbdaf8cfde4162
-    m_Address: sprites/ui/slot/equipment
+  - m_GUID: 0fef600f252926647bf5086e5f8901d6
+    m_Address: sprites/character/hair/hairstyle-short-brown-dark
     m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 0f45aeb1b6dd0ac4090eb820cb8e022e
-    m_Address: sprites/ui/book/page-5
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 10d3073974ed20443b4d0984a40b483d
     m_Address: sprites/farm/modern/16/crops
@@ -51,32 +48,13 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 16176cdb3a2e36147944d056e72bc094
-    m_Address: sprites/ui/book/page-9
+  - m_GUID: 11279c6f6fdc98649bd0be5bd79cbb0d
+    m_Address: sprites/character/eyes/eyes-blue
     m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 176d930965cfdf64eb5cfdd08db865ab
-    m_Address: sheet/Tile
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 1f26009cbe8bfb841acd274640589f9d
-    m_Address: sprites/player/tool/hoe-down
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 1fcdeec43a46d414099a1a21a993e357
-    m_Address: sprites/ui/book/page-2
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 214e757da6a477940b663bbd92980813
-    m_Address: sprites/ui/decor/cutter-short
+  - m_GUID: 182d2491cffa0c14e9e007f7a5992da6
+    m_Address: sprites/player/tool/pickaxe-side
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
@@ -87,26 +65,25 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 3353bc1d407ea3d4a9968b96c7d694dd
-    m_Address: sprites/player/tool/axe-side
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 35d47fd4b64f14d47b264093442617d9
     m_Address: sprites/interiors/modern/16/ui
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 366484a031787004484a2ef505815b49
-    m_Address: sprites/ui/book/page-4
+  - m_GUID: 383bf52c7a0263141b5ac05e28c03e85
+    m_Address: sprites/player/tool/pickup-side
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 3937709f3c791aa4a866484cef44cd73
-    m_Address: sprites/ui/book/page-6
+  - m_GUID: 455852ded0fe2ad4ea3c68d8adf5cfbf
+    m_Address: sprites/character/body/body-2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 45dbecceb20fe2348a872396f93a70c0
+    m_Address: sprites/player/tool/pickup-down
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
@@ -117,8 +94,8 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4c475c78f13476a4ba52200b61c92c1b
-    m_Address: sprites/ui/book/page-7
+  - m_GUID: 4d1b529918371454da58df563e3e4d95
+    m_Address: sprites/player/tool/pickaxe-down
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
@@ -129,38 +106,31 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 62d8a068b1ce8e041ad3df4681fff145
-    m_Address: sprites/ui/panel/hud
+  - m_GUID: 588aede3dd5ccdd4daa2ec9d174a3dad
+    m_Address: sprites/player/tool/hoe-down
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6935e6186fac5a04a902a407a7a7973a
-    m_Address: sheet/Down
+  - m_GUID: 5a2a0e51c9310be46987e12097f09dbd
+    m_Address: sprites/player/tool/axe-down
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6b27e4050ec6a7f48aff9e0f7fa8659b
-    m_Address: sprites/ui/decor/inscription-plus
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6f199b672a02abc478f2465690f79a9a
-    m_Address: sprites/ui/panel/hint
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6ff7e8f282af66645902f587dec8987e
-    m_Address: sprites/ui/sheet/bookmark
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 70b8c269cd001a84b8d25bd4d32c25a6
+  - m_GUID: 67d0d63e8d888eb439df39022fddf1a9
     m_Address: sprites/player/tool/pickup-up
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 70d409f637e8a9549b34c68975307d56
+    m_Address: sprites/character/outfit/outfit-braces-brown
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 71ac4ded033c94d4cae6378054094469
+    m_Address: sprites/player/tool/axe-side
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
@@ -171,26 +141,8 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 741cab4018270d54ba4409a227db5cba
-    m_Address: sprites/player/tool/hoe-up
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 78d2e65192bf8294b9c3c59b1afa714d
-    m_Address: sprites/player/tool/pickaxe-down
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7c0b26c995080bf40b6eff778d6ea6e8
     m_Address: sprites/ui/modern/32/style-2
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7f1dec0f329c59440b570cddf794692e
-    m_Address: sprites/player/tool/pickaxe-up
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
@@ -201,8 +153,8 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 80cc6a60d2aa7e045b20ae0cc6f5046b
-    m_Address: sprites/ui/ribbon/equipment
+  - m_GUID: 823afbea2e4c05446936cd54bc8dbd3e
+    m_Address: sprites/player/tool/axe-up
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
@@ -237,35 +189,16 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a4c32940f296e8840904a8273d747ed9
-    m_Address: sprites/ui/ribbon/description
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a571baff076edf340bbfc87493ca302b
-    m_Address: sprites/ui/book/page-8
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a8e6826424773484a837da12be452625
     m_Address: sprites/farm/modern/16/fruit-trees
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ac027ce4c65c8b74ea38dfa1adbec658
-    m_Address: sprites/player/tool/axe-down
+  - m_GUID: b01b3f2261b6020438d574907f1dbcd7
+    m_Address: sprites/character/body/body-1
     m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: b7cbc2be7b0f3514c81d120aa8d0e1b8
-    m_Address: sprites/ui/character
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ba1466455cd48644eb35d02c4f39dfbb
     m_Address: sprites/interiors/modern/16/floors
@@ -273,62 +206,31 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ba5f72287d6dbbe40a72035bd0356b2c
-    m_Address: sprites/ui/book/page-1
+  - m_GUID: bc8ea096bcbaa4745a09bd1b50930ca8
+    m_Address: sprites/player/tool/pickaxe-up
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c3883d3730e40524d9ab84bd54f8f35c
-    m_Address: sprites/ui/ribbon/items
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: cd33c17424ab27d48b01ec0299e044a9
-    m_Address: sprites/ui/slot/item
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ce5046f3fcd727d409665cba38ce6478
-    m_Address: sprites/player/tool/pickup-down
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d1d355677e7332542a1a66fc620f8732
-    m_Address: sprites/player/tool/pickaxe-side
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d82cd26c380aa8e46936108f0dc55da4
-    m_Address: sprites/player/tool/axe-up
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d979824b38fb7144dab030079e6252b2
-    m_Address: sprites/player/tool/pickup-side
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: da4636f3f1256874ba355a8571074325
+  - m_GUID: cd241a959adfddf4483cb3eb01585f30
     m_Address: sprites/player/tool/hoe-side
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e1fe966029525924aa188b5d47d71c9e
-    m_Address: sprites/ui/modern/32/gamepad
+  - m_GUID: d33b3158d6e1918438f09f5e3425ffb3
+    m_Address: sprites/player/tool/hoe-up
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e56f07a0c84d03749a08853a3c7f9163
-    m_Address: sprites/ui/decor/cutter-long
+  - m_GUID: e1b8e1d5c54dde149b2d578197912965
+    m_Address: sprites/character/hair/hairstyle-short-blonde
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e1fe966029525924aa188b5d47d71c9e
+    m_Address: sprites/ui/modern/32/gamepad
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
@@ -339,17 +241,15 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: edf822f54d14b394aa6476e6dfe13d5b
-    m_Address: sprites/ui/button/small
+  - m_GUID: ef113c1db18e20540a257c50cd95542c
+    m_Address: sprites/character/accessory/accessory-straw-hat-black
     m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f128013b3392fac47913b913c7cc7333
-    m_Address: sprites/ui/book/page-3
+  - m_GUID: ffe26c7ac9502e94f87bc63cdd4b74fa
+    m_Address: sprites/character/accessory/accessory-bamboo-hat-brown
     m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 2f14a7c3f9f8dc44c9d41564a87df795, type: 2}

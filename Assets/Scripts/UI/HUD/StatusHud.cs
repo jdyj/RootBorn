@@ -3,6 +3,7 @@ using Rootborn.Game.Common;
 using Rootborn.Game.Player;
 using Rootborn.Game.Status;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
@@ -121,19 +122,15 @@ namespace Rootborn.UI.HUD
     public sealed class InventoryView : MonoBehaviour
     {
         public enum Filter { All, ResourceOnly, ToolOnly }
-
+        private const int VisibleSlotCount = 16;
         [SerializeField] private PlayerInventory _inventory;
         [SerializeField] private RectTransform _slotsRoot;
         [SerializeField] private GameObject _slotPrefab;
         [SerializeField] private Filter _filter = Filter.All;
-
-        // 선택된 슬롯 — 클릭 시 갱신, Refresh() 가 강조 표시 (빨간 ▶◀ 화살표 자식 GameObject + 외곽 색조).
-        // ItemDefinition reference 비교로 매칭 (Slot 인스턴스는 Refresh 시 destroy → 재생성됨).
         private ItemDefinition _selectedItem;
+        private int _dragSourceIndex = -1;
         public ItemDefinition SelectedItem => _selectedItem;
-
         public event System.Action<Inventory.Slot> OnSlotSelected;
-
         public void Bind(PlayerInventory inv)
         {
             if (_inventory != null) _inventory.Inventory.OnChanged -= Refresh;
@@ -141,159 +138,173 @@ namespace Rootborn.UI.HUD
             if (_inventory != null) _inventory.Inventory.OnChanged += Refresh;
             Refresh();
         }
-
         public void BindElements(RectTransform slotsRoot, GameObject slotPrefab, Filter filter = Filter.All)
         {
             _slotsRoot = slotsRoot;
             _slotPrefab = slotPrefab;
             _filter = filter;
         }
-
         public void SetFilter(Filter filter)
         {
             if (_filter == filter) return;
             _filter = filter;
             Refresh();
         }
-
         private void OnDestroy()
         {
             if (_inventory != null) _inventory.Inventory.OnChanged -= Refresh;
         }
-
         public void Refresh()
         {
             if (_slotsRoot == null || _inventory == null) return;
-            // 기존 자식 제거
             for (int i = _slotsRoot.childCount - 1; i >= 0; i--)
             {
-                Object.Destroy(_slotsRoot.GetChild(i).gameObject);
+                Object.DestroyImmediate(_slotsRoot.GetChild(i).gameObject);
             }
             var slots = _inventory.Inventory.Slots;
+            int visibleIndex = 0;
             for (int i = 0; i < slots.Count; i++)
             {
-                var s = slots[i];
-                if (s.Item == null || s.Count <= 0) continue;
-                if (_filter == Filter.ToolOnly && s.Item.Category != ItemCategory.Tool) continue;
-                if (_filter == Filter.ResourceOnly && s.Item.Category == ItemCategory.Tool) continue;
-                CreateSlotView(s);
+                var slot = slots[i];
+                if (slot.Item == null || slot.Count <= 0) continue;
+                if (_filter == Filter.ToolOnly && slot.Item.Category != ItemCategory.Tool) continue;
+                if (_filter == Filter.ResourceOnly && slot.Item.Category == ItemCategory.Tool) continue;
+                CreateSlotView(slot, visibleIndex++, i);
+            }
+            while (visibleIndex < VisibleSlotCount)
+            {
+                CreateSlotView(null, visibleIndex++, visibleIndex - 1);
             }
         }
-
-        private void CreateSlotView(Inventory.Slot s)
+        private void CreateSlotView(Inventory.Slot slot, int visibleIndex, int slotIndex)
         {
-            GameObject go;
-            if (_slotPrefab != null)
-            {
-                go = Object.Instantiate(_slotPrefab, _slotsRoot);
-                go.SetActive(true);
-                go.name = $"Slot_{s.Item.Id}";
-            }
-            else go = MakeDefaultSlotGO(_slotsRoot);
-
+            GameObject go = _slotPrefab != null ? Object.Instantiate(_slotPrefab, _slotsRoot) : MakeFallbackSlotGO(_slotsRoot);
+            go.SetActive(true);
+            bool hasItem = slot != null && slot.Item != null && slot.Count > 0;
+            go.name = hasItem ? "Slot_" + slot.Item.Id : "Slot_Empty_" + visibleIndex;
             var icon = FindChildImage(go.transform, "Icon");
             var label = FindChildText(go.transform, "Count");
-            if (icon != null) { icon.sprite = s.Item.Icon; icon.enabled = icon.sprite != null; }
-            if (label != null) label.text = s.Count > 1 ? s.Count.ToString() : string.Empty;
-
-            // 선택 강조 — 빨간 ▶◀ 화살표 + 슬롯 배경 살짝 빨간 톤. 비선택 시 화살표 비활성.
-            bool isSelected = s.Item == _selectedItem;
-            ApplySelectionHighlight(go, isSelected);
-
-            // 슬롯 클릭 → 선택만 갱신 (장착은 EQUIP 버튼이 별도 처리).
+            if (icon != null)
+            {
+                icon.sprite = hasItem ? slot.Item.Icon : null;
+                icon.enabled = icon.sprite != null;
+            }
+            if (label != null) label.text = hasItem && slot.Count > 1 ? slot.Count.ToString() : string.Empty;
+            ApplySelectionHighlight(go, hasItem && slot.Item == _selectedItem);
+            var drag = go.GetComponent<InventorySlotDragHandler>() ?? go.AddComponent<InventorySlotDragHandler>();
+            drag.Bind(this, slotIndex);
             var btn = go.GetComponent<Button>() ?? go.AddComponent<Button>();
-            var captured = s;
             btn.onClick.RemoveAllListeners();
+            if (!hasItem) return;
+            var captured = slot;
             btn.onClick.AddListener(() =>
             {
                 _selectedItem = captured.Item;
                 OnSlotSelected?.Invoke(captured);
-                Refresh(); // 강조 표시 갱신 — 슬롯 재빌드.
+                Refresh();
             });
         }
+        private void BeginDragSlot(int slotIndex)
+        {
+            _dragSourceIndex = slotIndex;
+        }
 
-        // 선택된 슬롯에 빨간 ▶◀ 화살표 자식 + 배경 빨간 톤. Refresh 마다 호출.
+        private void DropOnSlot(int targetIndex)
+        {
+            if (_inventory == null || _dragSourceIndex < 0 || targetIndex < 0) return;
+            _inventory.Inventory.TryMoveSlot(_dragSourceIndex, targetIndex);
+            _dragSourceIndex = -1;
+            Refresh();
+        }
+
+        public sealed class InventorySlotDragHandler : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDropHandler
+        {
+            private InventoryView _owner;
+            private int _slotIndex;
+
+            public void Bind(InventoryView owner, int slotIndex)
+            {
+                _owner = owner;
+                _slotIndex = slotIndex;
+            }
+
+            public void OnBeginDrag(PointerEventData eventData)
+            {
+                _owner?.BeginDragSlot(_slotIndex);
+            }
+
+            public void OnEndDrag(PointerEventData eventData)
+            {
+            }
+
+            public void OnDrop(PointerEventData eventData)
+            {
+                _owner?.DropOnSlot(_slotIndex);
+            }
+        }
+
         private static void ApplySelectionHighlight(GameObject slotGo, bool selected)
         {
-            // 좌우 ▶◀ 두 개를 자식으로 만들어두고 활성/비활성 토글. 이미 만들어져 있으면 재사용.
             var arrowL = slotGo.transform.Find("ArrowL");
             var arrowR = slotGo.transform.Find("ArrowR");
             if (arrowL == null) arrowL = MakeArrow(slotGo.transform, "ArrowL", isLeft: true).transform;
             if (arrowR == null) arrowR = MakeArrow(slotGo.transform, "ArrowR", isLeft: false).transform;
             arrowL.gameObject.SetActive(selected);
             arrowR.gameObject.SetActive(selected);
-
-            // 배경 색조 — 선택 시 살짝 빨간 톤.
             var bg = slotGo.GetComponent<Image>();
-            if (bg != null)
-            {
-                bg.color = selected
-                    ? new Color(1.0f, 0.7f, 0.6f, 1f)   // 빨간 톤 강조
-                    : new Color(0.85f, 0.75f, 0.55f, 1f); // 평소 베이지
-            }
+            if (bg != null) bg.color = selected ? new Color(1.0f, 0.7f, 0.6f, 1f) : new Color(0.85f, 0.75f, 0.55f, 1f);
         }
-
         private static GameObject MakeArrow(Transform parent, string name, bool isLeft)
         {
             var go = new GameObject(name, typeof(RectTransform), typeof(Text));
             go.transform.SetParent(parent, false);
             var rt = (RectTransform)go.transform;
-            // 좌측 ▶ 는 슬롯 좌측 바깥, 우측 ◀ 는 슬롯 우측 바깥.
-            if (isLeft)
-            {
-                rt.anchorMin = new Vector2(0f, 0.5f);
-                rt.anchorMax = new Vector2(0f, 0.5f);
-                rt.pivot = new Vector2(1f, 0.5f);
-                rt.anchoredPosition = new Vector2(-2f, 0f);
-            }
-            else
-            {
-                rt.anchorMin = new Vector2(1f, 0.5f);
-                rt.anchorMax = new Vector2(1f, 0.5f);
-                rt.pivot = new Vector2(0f, 0.5f);
-                rt.anchoredPosition = new Vector2(2f, 0f);
-            }
-            rt.sizeDelta = new Vector2(20f, 28f);
+            rt.anchorMin = new Vector2(isLeft ? 0f : 1f, 0.5f);
+            rt.anchorMax = new Vector2(isLeft ? 0f : 1f, 0.5f);
+            rt.pivot = new Vector2(isLeft ? 1f : 0f, 0.5f);
+            rt.anchoredPosition = new Vector2(isLeft ? -6f : 6f, 0f);
+            rt.sizeDelta = new Vector2(24f, 36f);
             var t = go.GetComponent<Text>();
-            t.text = isLeft ? "▶" : "◀";
+            t.text = isLeft ? ">" : "<";
             t.alignment = TextAnchor.MiddleCenter;
-            t.color = new Color(0.85f, 0.2f, 0.15f, 1f);
+            t.color = new Color(0.85f, 0.05f, 0.02f, 1f);
             t.font = HudFonts.Pixel;
             t.fontStyle = FontStyle.Bold;
             t.fontSize = 22;
             t.raycastTarget = false;
             return go;
         }
-
-        private static GameObject MakeDefaultSlotGO(Transform parent)
-        {
-            var go = new GameObject("Slot", typeof(RectTransform), typeof(Image));
-            go.transform.SetParent(parent, false);
-            var bg = go.GetComponent<Image>();
-            bg.color = new Color(0f, 0f, 0f, 0.4f);
-            var iconGo = new GameObject("Icon", typeof(RectTransform), typeof(Image));
-            iconGo.transform.SetParent(go.transform, false);
-            var rt = (RectTransform)iconGo.transform;
-            rt.anchorMin = new Vector2(0.1f, 0.1f);
-            rt.anchorMax = new Vector2(0.9f, 0.9f);
-            rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
-            var iconImg = iconGo.GetComponent<Image>();
-            iconImg.preserveAspect = true;
-            var labelGo = new GameObject("Count", typeof(RectTransform), typeof(Text));
-            labelGo.transform.SetParent(go.transform, false);
-            var lrt = (RectTransform)labelGo.transform;
-            lrt.anchorMin = new Vector2(0.5f, 0f);
-            lrt.anchorMax = new Vector2(1f, 0.4f);
-            lrt.offsetMin = Vector2.zero; lrt.offsetMax = Vector2.zero;
-            var lbl = labelGo.GetComponent<Text>();
-            lbl.alignment = TextAnchor.LowerRight;
-            lbl.color = Color.white;
-            lbl.font = HudFonts.Pixel;
-            lbl.fontSize = 14;
-            return go;
-        }
-
-        private static Image FindChildImage(Transform t, string name)
+        private static GameObject MakeFallbackSlotGO(Transform parent)
+                {
+                    var go = new GameObject("Slot", typeof(RectTransform), typeof(Image), typeof(Button), typeof(Rootborn.UI.Modern.ModernUiTileImage));
+                    go.transform.SetParent(parent, false);
+                    var bg = go.GetComponent<Image>();
+                    bg.color = Color.clear;
+                    var tileImage = go.GetComponent<Rootborn.UI.Modern.ModernUiTileImage>();
+                    tileImage.SetRecipe(Rootborn.UI.Modern.ModernUiRecipes.CommonPanel);
+                    tileImage.Rebuild();
+        
+                    var iconGo = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+                    iconGo.transform.SetParent(go.transform, false);
+                    var rt = (RectTransform)iconGo.transform;
+                    rt.anchorMin = new Vector2(0.1f, 0.1f);
+                    rt.anchorMax = new Vector2(0.9f, 0.9f);
+                    rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
+                    iconGo.GetComponent<Image>().preserveAspect = true;
+                    var labelGo = new GameObject("Count", typeof(RectTransform), typeof(Text));
+                    labelGo.transform.SetParent(go.transform, false);
+                    var lrt = (RectTransform)labelGo.transform;
+                    lrt.anchorMin = new Vector2(0.5f, 0f);
+                    lrt.anchorMax = new Vector2(1f, 0.4f);
+                    lrt.offsetMin = Vector2.zero; lrt.offsetMax = Vector2.zero;
+                    var lbl = labelGo.GetComponent<Text>();
+                    lbl.alignment = TextAnchor.LowerRight;
+                    lbl.color = Color.white;
+                    lbl.font = HudFonts.Pixel;
+                    lbl.fontSize = 14;
+                    return go;
+                }
+                private static Image FindChildImage(Transform t, string name)
         {
             var c = t.Find(name);
             return c != null ? c.GetComponent<Image>() : null;
@@ -304,7 +315,6 @@ namespace Rootborn.UI.HUD
             return c != null ? c.GetComponent<Text>() : null;
         }
     }
-
     /// <summary>
     /// Farm 씬 UI 자동 구축. 책 펼침 레이아웃 (좌측 ITEMS 그리드 + 우측 Description/Equipment).
     /// I 키로 토글, 카테고리 북마크 5개로 좌측 페이지 필터 전환 (All/Resource/Tool/Equipment...).
@@ -350,6 +360,8 @@ namespace Rootborn.UI.HUD
         private const float FlipDuration = 0.45f; // 9프레임 × 0.05s
 
         private InputAction _toggleInventory;
+        private InputAction _toggleSettings;
+        private Rootborn.UI.Modern.SettingsPanel _settingsPanel;
 
         private PlayerInventory _playerInv;
 
@@ -439,6 +451,11 @@ namespace Rootborn.UI.HUD
             _toggleInventory.AddBinding("<Keyboard>/tab");
             _toggleInventory.performed += _ => ToggleBook();
             _toggleInventory.Enable();
+
+            _toggleSettings = new InputAction(type: InputActionType.Button);
+            _toggleSettings.AddBinding("<Keyboard>/escape");
+            _toggleSettings.performed += _ => ToggleSettings();
+            _toggleSettings.Enable();
         }
 
         // 책 열고 닫기 — 책이 열리면 HUD/HotkeyHint 숨김 (집중도 ↑) + 페이지 넘김 애니메이션.
@@ -452,11 +469,21 @@ namespace Rootborn.UI.HUD
             if (willOpen) _flipTime = 0f; // 책 펼침 애니메이션
         }
 
+        private void ToggleSettings()
+        {
+            if (_settingsPanel == null) return;
+            if (_settingsPanel.IsVisible) _settingsPanel.Hide();
+            else _settingsPanel.Show();
+        }
+
         private void OnDisable()
         {
             _toggleInventory?.Disable();
             _toggleInventory?.Dispose();
             _toggleInventory = null;
+            _toggleSettings?.Disable();
+            _toggleSettings?.Dispose();
+            _toggleSettings = null;
             if (_playerInv != null)
             {
                 _playerInv.OnEquipmentChanged -= UpdateEquippedSlot;
@@ -590,13 +617,13 @@ namespace Rootborn.UI.HUD
         private void Update()
         {
             // 페이지 넘김 9프레임 sprite 교체 (Page1 → Page9 → Page1 정지).
-            if (_bookImage == null) return;
+
             if (_flipTime < 0f) return; // 비활성
             if (_flipTime >= FlipDuration)
             {
                 // 애니메이션 끝 — 정지 프레임(Page1) 으로 복귀 + 콘텐츠 다시 표시.
-                var rest = Spr(UISpriteAddresses.BookPage1);
-                if (rest != null && _bookImage.sprite != rest) _bookImage.sprite = rest;
+                var rest = ModernHudSprite(ModernHudSpriteKeys.HudPanel);
+
                 _flipTime = -1f;
                 SetContentVisible(true);
                 return;
@@ -604,10 +631,8 @@ namespace Rootborn.UI.HUD
             // 애니메이션 진행 중 — 콘텐츠는 가려져야 자연스러움.
             SetContentVisible(false);
             _flipTime += UnityEngine.Time.deltaTime;
-            int frame = Mathf.Clamp(Mathf.FloorToInt(_flipTime / (FlipDuration / 9f)), 0, 8);
-            var addr = UISpriteAddresses.BookFlipFrames[frame];
-            var s = Spr(addr);
-            if (s != null) _bookImage.sprite = s;
+            var s = ModernHudSprite(ModernHudSpriteKeys.HudPanel);
+
         }
 
         private void SetContentVisible(bool visible)
@@ -624,7 +649,7 @@ namespace Rootborn.UI.HUD
             var templates = new GameObject("[Templates]", typeof(RectTransform));
             templates.transform.SetParent(canvasRoot, false);
             templates.SetActive(false);
-            _slotPrefab = MakeSlotPrefab(Spr(UISpriteAddresses.ItemSlot));
+            _slotPrefab = MakeSlotPrefab(ModernHudSprite(ModernHudSpriteKeys.ItemSlot));
             _slotPrefab.transform.SetParent(templates.transform, false);
 
             // 1) 좌상단 HUD
@@ -633,15 +658,18 @@ namespace Rootborn.UI.HUD
             // 2) 책 패널 (중앙)
             BuildBookPanel(canvasRoot);
 
+            _settingsPanel = canvasRoot.gameObject.AddComponent<Rootborn.UI.Modern.SettingsPanel>();
+            _settingsPanel.Hide();
+
             // 3) 단축키 힌트 (하단) — 760×60 (이전 440×36 너무 작음)
             var hintPanel = MakePanel(canvasRoot, "HotkeyHint",
                 anchorMin: new Vector2(0.5f, 0f), anchorMax: new Vector2(0.5f, 0f),
                 pivot: new Vector2(0.5f, 0f),
                 pos: new Vector2(0f, 30f), size: new Vector2(760f, 60f),
-                sprite: Spr(UISpriteAddresses.HintPanel),
+                sprite: ModernHudSprite(ModernHudSpriteKeys.HintPanel),
                 fallbackColor: new Color(0f, 0f, 0f, 0.45f));
             var hint = MakeText(hintPanel, "Text", new Vector2(0f, 0f), new Vector2(740f, 48f),
-                "I / Tab: Book   E: Interact   WASD: Move", 22, TextAnchor.MiddleCenter);
+                "I / Tab: Book   Esc: Settings   E: Interact   WASD: Move", 22, TextAnchor.MiddleCenter);
             ((RectTransform)hint.transform).anchorMin = new Vector2(0.5f, 0.5f);
             ((RectTransform)hint.transform).anchorMax = new Vector2(0.5f, 0.5f);
             ((RectTransform)hint.transform).pivot = new Vector2(0.5f, 0.5f);
@@ -657,7 +685,7 @@ namespace Rootborn.UI.HUD
                 anchorMin: new Vector2(0f, 1f), anchorMax: new Vector2(0f, 1f),
                 pivot: new Vector2(0f, 1f),
                 pos: new Vector2(30f, -30f), size: new Vector2(480f, 200f),
-                sprite: Spr(UISpriteAddresses.HudPanel),
+                sprite: ModernHudSprite(ModernHudSpriteKeys.HudPanel),
                 fallbackColor: new Color(0f, 0f, 0f, 0.55f));
 
             var woodLabel = MakeText(hudPanel, "Wood", new Vector2(30f, -22f), new Vector2(420f, 32f), "Wood: 0", 24, TextAnchor.UpperLeft);
@@ -683,7 +711,7 @@ namespace Rootborn.UI.HUD
             // Page1.png 실측 290×184 (16:10.14). 1920×1080 기준 화면 폭 65% 노출 → 1248×792 (≈ pixelScale 4.3, 비율 보존).
             // Sprite preserveAspect 로 letterboxing 거의 없음. 실 Anchor 비율 = sprite 픽셀 비율 그대로.
             const float bookW = 1248f, bookH = 792f;
-            _bookPanel = new GameObject("BookPanel", typeof(RectTransform), typeof(Image));
+            _bookPanel = new GameObject("BookPanel", typeof(RectTransform), typeof(Image), typeof(Rootborn.UI.Modern.ModernUiTileImage));
             _bookPanel.transform.SetParent(canvasRoot, false);
             var bookRt = (RectTransform)_bookPanel.transform;
             bookRt.anchorMin = new Vector2(0.5f, 0.5f);
@@ -693,51 +721,13 @@ namespace Rootborn.UI.HUD
             bookRt.sizeDelta = new Vector2(bookW, bookH);
 
             _bookImage = _bookPanel.GetComponent<Image>();
-            var bookSprite = Spr(UISpriteAddresses.BookPage1);
-            if (bookSprite != null)
-            {
-                _bookImage.sprite = bookSprite;
-                _bookImage.type = Image.Type.Simple;
-                _bookImage.preserveAspect = true;
-                _bookImage.color = Color.white;
-                _bookImage.raycastTarget = true;
-            }
-            else
-            {
-                Debug.LogWarning("[ROOTBORN/UI] BookPage1 sprite 캐시 미스 — Addressables PreLoad 확인.");
-                _bookImage.color = new Color(0.94f, 0.86f, 0.68f, 1f);
-            }
-
-            // Page1 픽셀 290×184 실측 (Read 도구 시각 확인) — 페이지 안쪽 베이지 영역(테두리 inscription 안쪽 콘텐츠 안전 영역):
-            //  외부 회색 모서리 + 어두운 프레임이 ~22px 좌우, ~16px 상하.
-            //  좌측 베이지 페이지 콘텐츠 안전 영역: x ≈ 30~135  / y ≈ 22~162
-            //  우측 베이지 페이지 콘텐츠 안전 영역: x ≈ 158~263 / y ≈ 22~162
-            //  spine 가운데 ≈ 143~150
-            //  → UV anchor (0,0=좌하):
-            //    좌측 페이지: x 30/290~135/290 = 0.103~0.466,  y (184-162)/184~(184-22)/184 = 0.120~0.880
-            //    우측 페이지: x 158/290~263/290 = 0.545~0.907, y 동일
-            _leftContent = new GameObject("LeftPageContent", typeof(RectTransform));
-            _leftContent.transform.SetParent(_bookPanel.transform, false);
-            var leftRt = (RectTransform)_leftContent.transform;
-            leftRt.anchorMin = new Vector2(0.103f, 0.120f);
-            leftRt.anchorMax = new Vector2(0.466f, 0.880f);
-            leftRt.offsetMin = Vector2.zero; leftRt.offsetMax = Vector2.zero;
-
-            _rightContent = new GameObject("RightPageContent", typeof(RectTransform));
-            _rightContent.transform.SetParent(_bookPanel.transform, false);
-            var rightRt = (RectTransform)_rightContent.transform;
-            rightRt.anchorMin = new Vector2(0.545f, 0.120f);
-            rightRt.anchorMax = new Vector2(0.907f, 0.880f);
-            rightRt.offsetMin = Vector2.zero; rightRt.offsetMax = Vector2.zero;
-
-            // 카테고리별 좌/우 페이지 컨테이너 — ApplyCategory 시 해당 카테고리만 활성.
-            BuildItemsCategoryPages(leftRt, rightRt);     // All / Resource / Tool / Misc 공유 (필터만 다름)
-            BuildEquipmentCategoryPages(leftRt, rightRt); // Equipment 전용
-
-            // 우측 책 가장자리 북마크 5색 (책 panel 자체에 우측 바깥쪽 배치).
-            BuildBookmarks(_bookPanel.transform);
-
-            _bookPanel.SetActive(false);
+                    _bookImage.sprite = null;
+                    _bookImage.color = Color.clear;
+                    _bookImage.raycastTarget = true;
+                    var bookTiles = _bookPanel.GetComponent<Rootborn.UI.Modern.ModernUiTileImage>();
+                    bookTiles.SetRecipe(Rootborn.UI.Modern.ModernUiRecipes.CommonPanel);
+                    bookTiles.Rebuild();
+                    _bookPanel.SetActive(false);
         }
 
         // ITEMS 카테고리 페이지 — All/Resource/Tool/Misc 4개에서 같은 페이지를 공유 (필터만 변경).
@@ -778,10 +768,10 @@ namespace Rootborn.UI.HUD
             lert.anchorMin = Vector2.zero; lert.anchorMax = Vector2.one;
             lert.offsetMin = Vector2.zero; lert.offsetMax = Vector2.zero;
 
-            MakeRibbonHeader(lert, UISpriteAddresses.EquipmentRibbon, "EQUIPMENT");
+            MakeRibbonHeader(lert, ModernHudSpriteKeys.EquipmentRibbon, "EQUIPMENT");
 
             // 캐릭터 실루엣 (가운데). Character.png 21×37 → ratio ≈ 1.76. 책 LeftPage 안 콘텐츠 영역에서 220×270 노출.
-            var characterSprite = Spr(UISpriteAddresses.Character);
+            var characterSprite = ModernHudSprite(ModernHudSpriteKeys.Character);
             var ch = new GameObject("Character", typeof(RectTransform), typeof(Image));
             ch.transform.SetParent(lert, false);
             var crt = (RectTransform)ch.transform;
@@ -812,7 +802,7 @@ namespace Rootborn.UI.HUD
                 ("Slot_Shield",   new Vector2( 130f,   30f)),
                 ("Slot_Trinket",  new Vector2( 130f, -100f)),
             };
-            var equipSlotSprite = Spr(UISpriteAddresses.EquipmentSlot);
+            var equipSlotSprite = ModernHudSprite(ModernHudSpriteKeys.EquipmentSlot);
             for (int i = 0; i < equipSlotPositions.Length; i++)
             {
                 var (slotName, slotPos) = equipSlotPositions[i];
@@ -828,7 +818,6 @@ namespace Rootborn.UI.HUD
                 if (equipSlotSprite != null)
                 {
                     img.sprite = equipSlotSprite;
-                    img.type = Image.Type.Sliced;
                     img.color = Color.white;
                 }
                 else { img.color = new Color(0.7f, 0.55f, 0.35f, 1f); }
@@ -866,7 +855,7 @@ namespace Rootborn.UI.HUD
             rsrt.anchorMin = Vector2.zero; rsrt.anchorMax = Vector2.one;
             rsrt.offsetMin = Vector2.zero; rsrt.offsetMax = Vector2.zero;
 
-            MakeRibbonHeader(rsrt, UISpriteAddresses.EquipmentRibbon, "STATS");
+            MakeRibbonHeader(rsrt, ModernHudSpriteKeys.EquipmentRibbon, "STATS");
 
             var statsText = new GameObject("StatsText", typeof(RectTransform), typeof(Text));
             statsText.transform.SetParent(rsrt, false);
@@ -886,56 +875,50 @@ namespace Rootborn.UI.HUD
         }
 
         // 페이지 상단 중앙 리본 헤더 — 라벨 텍스트 + Titles sprite.
-        private void MakeRibbonHeader(RectTransform parent, string ribbonAddr, string label)
+        private void MakeRibbonHeader(RectTransform parent, ModernHudSpriteKey ribbonKey, string label)
+                {
+                    var ribbon = new GameObject("RibbonHeader", typeof(RectTransform), typeof(Rootborn.UI.Modern.ModernUiTileImage));
+                    ribbon.transform.SetParent(parent, false);
+                    var rt = (RectTransform)ribbon.transform;
+                    rt.anchorMin = new Vector2(0.5f, 1f);
+                    rt.anchorMax = new Vector2(0.5f, 1f);
+                    rt.pivot = new Vector2(0.5f, 1f);
+                    rt.anchoredPosition = new Vector2(0f, -16f);
+                    rt.sizeDelta = new Vector2(280f, 48f);
+                    var tiles = ribbon.GetComponent<Rootborn.UI.Modern.ModernUiTileImage>();
+                    tiles.SetRecipe(Rootborn.UI.Modern.ModernUiRecipes.CommonPanel);
+                    tiles.Rebuild();
+                    var txt = MakeText(rt, "Text", Vector2.zero, new Vector2(260f, 36f), label, 22, TextAnchor.MiddleCenter);
+                    ((RectTransform)txt.transform).anchorMin = new Vector2(0.5f, 0.5f);
+                    ((RectTransform)txt.transform).anchorMax = new Vector2(0.5f, 0.5f);
+                    ((RectTransform)txt.transform).pivot = new Vector2(0.5f, 0.5f);
+                    txt.color = new Color(0.4f, 0.25f, 0.1f, 1f);
+                    txt.fontStyle = FontStyle.Bold;
+                }
+        
+                private void BuildLeftPageContent(RectTransform leftRt)
         {
-            var ribbon = new GameObject("RibbonHeader", typeof(RectTransform), typeof(Image));
-            ribbon.transform.SetParent(parent, false);
-            var rt = (RectTransform)ribbon.transform;
-            rt.anchorMin = new Vector2(0.5f, 1f);
-            rt.anchorMax = new Vector2(0.5f, 1f);
-            rt.pivot = new Vector2(0.5f, 1f);
-            rt.anchoredPosition = new Vector2(0f, -16f);
-            rt.sizeDelta = new Vector2(280f, 48f);
-            var img = ribbon.GetComponent<Image>();
-            var sprite = Spr(ribbonAddr);
-            if (sprite != null) { img.sprite = sprite; img.color = Color.white; }
-            else { img.color = new Color(0.65f, 0.5f, 0.3f, 1f); }
-            var txt = MakeText(rt, "Text", Vector2.zero, new Vector2(260f, 36f), label, 22, TextAnchor.MiddleCenter);
-            ((RectTransform)txt.transform).anchorMin = new Vector2(0.5f, 0.5f);
-            ((RectTransform)txt.transform).anchorMax = new Vector2(0.5f, 0.5f);
-            ((RectTransform)txt.transform).pivot = new Vector2(0.5f, 0.5f);
-            txt.color = new Color(0.4f, 0.25f, 0.1f, 1f);
-            txt.fontStyle = FontStyle.Bold;
-        }
-
-        private void BuildLeftPageContent(RectTransform leftRt)
-        {
-            // ITEMS 리본 (상단 중앙). 책 1248×792 → LeftPage 콘텐츠 영역 ≈ 452×600. 리본 280×48.
-            var itemsRibbon = new GameObject("ItemsRibbon", typeof(RectTransform), typeof(Image));
-            itemsRibbon.transform.SetParent(leftRt, false);
-            var rrt = (RectTransform)itemsRibbon.transform;
-            rrt.anchorMin = new Vector2(0.5f, 1f);
-            rrt.anchorMax = new Vector2(0.5f, 1f);
-            rrt.pivot = new Vector2(0.5f, 1f);
-            rrt.anchoredPosition = new Vector2(0f, -16f);
-            rrt.sizeDelta = new Vector2(280f, 48f);
-            var itemsImg = itemsRibbon.GetComponent<Image>();
-            var itemsRibbonSprite = Spr(UISpriteAddresses.ItemsRibbon);
-            if (itemsRibbonSprite != null)
-            {
-                itemsImg.sprite = itemsRibbonSprite;
-                itemsImg.color = Color.white;
-            }
-            else { itemsImg.color = new Color(0.65f, 0.5f, 0.3f, 1f); }
-            var itemsText = MakeText(rrt, "Text", Vector2.zero, new Vector2(260f, 36f),
-                "ITEMS", 22, TextAnchor.MiddleCenter);
-            ((RectTransform)itemsText.transform).anchorMin = new Vector2(0.5f, 0.5f);
-            ((RectTransform)itemsText.transform).anchorMax = new Vector2(0.5f, 0.5f);
-            ((RectTransform)itemsText.transform).pivot = new Vector2(0.5f, 0.5f);
-            itemsText.color = new Color(0.4f, 0.25f, 0.1f, 1f);
-            itemsText.fontStyle = FontStyle.Bold;
-
-            // 슬롯 그리드 4×3 — 리본 아래. cell 84×84 + spacing 12 → 4열 = 372 + 36 = 408 (LeftPage 안쪽 fit)
+            // ITEMS 리본 (상단 중앙). 16x16 tiled panel로 구성.
+                    var itemsRibbon = new GameObject("ItemsRibbon", typeof(RectTransform), typeof(Rootborn.UI.Modern.ModernUiTileImage));
+                    itemsRibbon.transform.SetParent(leftRt, false);
+                    var rrt = (RectTransform)itemsRibbon.transform;
+                    rrt.anchorMin = new Vector2(0.5f, 1f);
+                    rrt.anchorMax = new Vector2(0.5f, 1f);
+                    rrt.pivot = new Vector2(0.5f, 1f);
+                    rrt.anchoredPosition = new Vector2(0f, -16f);
+                    rrt.sizeDelta = new Vector2(280f, 48f);
+                    var itemsTiles = itemsRibbon.GetComponent<Rootborn.UI.Modern.ModernUiTileImage>();
+                    itemsTiles.SetRecipe(Rootborn.UI.Modern.ModernUiRecipes.CommonPanel);
+                    itemsTiles.Rebuild();
+                    var itemsText = MakeText(rrt, "Text", Vector2.zero, new Vector2(260f, 36f),
+                        "ITEMS", 22, TextAnchor.MiddleCenter);
+                    ((RectTransform)itemsText.transform).anchorMin = new Vector2(0.5f, 0.5f);
+                    ((RectTransform)itemsText.transform).anchorMax = new Vector2(0.5f, 0.5f);
+                    ((RectTransform)itemsText.transform).pivot = new Vector2(0.5f, 0.5f);
+                    itemsText.color = new Color(0.4f, 0.25f, 0.1f, 1f);
+                    itemsText.fontStyle = FontStyle.Bold;
+        
+                    // 슬롯 그리드 4×3 — 리본 아래. cell 84×84 + spacing 12 → 4열 = 372 + 36 = 408 (LeftPage 안쪽 fit)
             var slotsRoot = new GameObject("Slots", typeof(RectTransform), typeof(GridLayoutGroup));
             slotsRoot.transform.SetParent(leftRt, false);
             var srt = (RectTransform)slotsRoot.transform;
@@ -980,11 +963,10 @@ namespace Rootborn.UI.HUD
             srt.anchoredPosition = new Vector2(0f, -10f);
             srt.sizeDelta = new Vector2(80f, 80f);
             var selBoxImg = selBoxGo.GetComponent<Image>();
-            var equipSlotSprite = Spr(UISpriteAddresses.EquipmentSlot);
+            var equipSlotSprite = ModernHudSprite(ModernHudSpriteKeys.EquipmentSlot);
             if (equipSlotSprite != null)
             {
                 selBoxImg.sprite = equipSlotSprite;
-                selBoxImg.type = Image.Type.Sliced;
                 selBoxImg.color = Color.white;
             }
             else
@@ -1013,7 +995,7 @@ namespace Rootborn.UI.HUD
             drt.anchoredPosition = new Vector2(10f, -150f);
             drt.sizeDelta = new Vector2(260f, 36f);
             var dimg = descRibbon.GetComponent<Image>();
-            var descRibbonSprite = Spr(UISpriteAddresses.DescriptionRibbon);
+            var descRibbonSprite = ModernHudSprite(ModernHudSpriteKeys.DescriptionRibbon);
             if (descRibbonSprite != null)
             {
                 dimg.sprite = descRibbonSprite;
@@ -1087,11 +1069,11 @@ namespace Rootborn.UI.HUD
             // 북마크 — sheet 의 5색 sub-sprite 직접 사용 (Addressables 캐시 조회).
             var entries = new (BookCategory cat, Sprite sprite, string label)[]
             {
-                (BookCategory.All,       SubSpr(UISpriteAddresses.BookmarkSheet, UISpriteAddresses.SubBookmark0), "All"),
-                (BookCategory.Resource,  SubSpr(UISpriteAddresses.BookmarkSheet, UISpriteAddresses.SubBookmark1), "Res"),
-                (BookCategory.Tool,      SubSpr(UISpriteAddresses.BookmarkSheet, UISpriteAddresses.SubBookmark2), "Tool"),
-                (BookCategory.Equipment, SubSpr(UISpriteAddresses.BookmarkSheet, UISpriteAddresses.SubBookmark3), "Eq"),
-                (BookCategory.Misc,      SubSpr(UISpriteAddresses.BookmarkSheet, UISpriteAddresses.SubBookmark4), "Misc"),
+                (BookCategory.All,       ModernHudSprite(ModernHudSpriteKeys.BookmarkAll), "All"),
+                (BookCategory.Resource,  ModernHudSprite(ModernHudSpriteKeys.BookmarkResource), "Res"),
+                (BookCategory.Tool,      ModernHudSprite(ModernHudSpriteKeys.BookmarkTool), "Tool"),
+                (BookCategory.Equipment, ModernHudSprite(ModernHudSpriteKeys.BookmarkEquipment), "Eq"),
+                (BookCategory.Misc,      ModernHudSprite(ModernHudSpriteKeys.BookmarkMisc), "Misc"),
             };
 
             // sprite cell native 22×20. 책 1248×792 기준.
@@ -1145,84 +1127,71 @@ namespace Rootborn.UI.HUD
         }
 
         private GameObject MakeBookButton(RectTransform parent, string name, Vector2 pos, Vector2 size, string label)
-        {
-            var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
-            go.transform.SetParent(parent, false);
-            var rt = (RectTransform)go.transform;
-            rt.anchoredPosition = pos;
-            rt.sizeDelta = size;
-            var img = go.GetComponent<Image>();
-            var smallBtnSprite = Spr(UISpriteAddresses.SmallButton);
-            if (smallBtnSprite != null)
-            {
-                img.sprite = smallBtnSprite;
-                img.type = Image.Type.Sliced;
-                img.color = Color.white;
-            }
-            else { img.color = new Color(0.5f, 0.4f, 0.25f, 1f); }
-            var lblGo = new GameObject("Label", typeof(RectTransform), typeof(Text));
-            lblGo.transform.SetParent(go.transform, false);
-            var lrt = (RectTransform)lblGo.transform;
-            lrt.anchorMin = Vector2.zero; lrt.anchorMax = Vector2.one;
-            lrt.offsetMin = Vector2.zero; lrt.offsetMax = Vector2.zero;
-            var lbl = lblGo.GetComponent<Text>();
-            lbl.text = label;
-            lbl.alignment = TextAnchor.MiddleCenter;
-            lbl.fontSize = 18;
-            lbl.color = new Color(0.3f, 0.2f, 0.1f, 1f);
-            lbl.font = HudFonts.Pixel;
-            lbl.fontStyle = FontStyle.Bold;
-            lbl.raycastTarget = false;
-            return go;
-        }
-
-        // 슬롯 prefab — 단순 GameObject 트리 (Instantiate 가능). InventoryView 가 사용.
+                {
+                    var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button), typeof(Rootborn.UI.Modern.ModernUiTileImage));
+                    go.transform.SetParent(parent, false);
+                    var rt = (RectTransform)go.transform;
+                    rt.anchoredPosition = pos;
+                    rt.sizeDelta = size;
+                    go.GetComponent<Image>().color = Color.clear;
+                    var tiles = go.GetComponent<Rootborn.UI.Modern.ModernUiTileImage>();
+                    tiles.SetRecipe(Rootborn.UI.Modern.ModernUiRecipes.CommonPanel);
+                    tiles.Rebuild();
+                    var lblGo = new GameObject("Label", typeof(RectTransform), typeof(Text));
+                    lblGo.transform.SetParent(go.transform, false);
+                    var lrt = (RectTransform)lblGo.transform;
+                    lrt.anchorMin = Vector2.zero; lrt.anchorMax = Vector2.one;
+                    lrt.offsetMin = Vector2.zero; lrt.offsetMax = Vector2.zero;
+                    var lbl = lblGo.GetComponent<Text>();
+                    lbl.text = label;
+                    lbl.alignment = TextAnchor.MiddleCenter;
+                    lbl.fontSize = 18;
+                    lbl.color = new Color(0.3f, 0.2f, 0.1f, 1f);
+                    lbl.font = HudFonts.Pixel;
+                    lbl.fontStyle = FontStyle.Bold;
+                    lbl.raycastTarget = false;
+                    return go;
+                }
+        
+                // 슬롯 prefab — 단순 GameObject 트리 (Instantiate 가능). InventoryView 가 사용.
         private static GameObject MakeSlotPrefab(Sprite slotSprite)
-        {
-            var go = new GameObject("Slot", typeof(RectTransform), typeof(Image), typeof(Button));
-            var bg = go.GetComponent<Image>();
-            if (slotSprite != null)
-            {
-                bg.sprite = slotSprite;
-                bg.type = Image.Type.Sliced;
-                // 살짝 어두운 베이지로 책 페이지 배경과 대비.
-                bg.color = new Color(0.85f, 0.75f, 0.55f, 1f);
-            }
-            else
-            {
-                bg.color = new Color(0f, 0f, 0f, 0.4f);
-            }
-
-            var iconGo = new GameObject("Icon", typeof(RectTransform), typeof(Image));
-            iconGo.transform.SetParent(go.transform, false);
-            var rt = (RectTransform)iconGo.transform;
-            rt.anchorMin = new Vector2(0.15f, 0.15f);
-            rt.anchorMax = new Vector2(0.85f, 0.85f);
-            rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
-            var iconImg = iconGo.GetComponent<Image>();
-            iconImg.preserveAspect = true;
-            iconImg.raycastTarget = false;
-
-            var labelGo = new GameObject("Count", typeof(RectTransform), typeof(Text));
-            labelGo.transform.SetParent(go.transform, false);
-            var lrt = (RectTransform)labelGo.transform;
-            lrt.anchorMin = new Vector2(0.4f, 0f);
-            lrt.anchorMax = new Vector2(1f, 0.4f);
-            lrt.offsetMin = new Vector2(0, 2); lrt.offsetMax = new Vector2(-4, 0);
-            var lbl = labelGo.GetComponent<Text>();
-            lbl.alignment = TextAnchor.LowerRight;
-            lbl.color = new Color(1f, 1f, 1f, 0.95f);
-            lbl.font = HudFonts.Pixel;
-            lbl.fontSize = 18;
-            lbl.fontStyle = FontStyle.Bold;
-            lbl.raycastTarget = false;
-
-            // Disable so it doesn't render on its own (used as Instantiate template).
-            go.SetActive(false);
-            return go;
-        }
-
-        private static GameObject MakeSlotImageOnly(RectTransform parent, string name, Vector2 pos, Vector2 size, Sprite slotSprite)
+                {
+                    var go = new GameObject("Slot", typeof(RectTransform), typeof(Image), typeof(Button), typeof(Rootborn.UI.Modern.ModernUiTileImage));
+                    var bg = go.GetComponent<Image>();
+                    bg.color = Color.clear;
+                    var tileImage = go.GetComponent<Rootborn.UI.Modern.ModernUiTileImage>();
+                    tileImage.SetRecipe(Rootborn.UI.Modern.ModernUiRecipes.CommonPanel);
+                    tileImage.Rebuild();
+        
+                    var iconGo = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+                    iconGo.transform.SetParent(go.transform, false);
+                    var rt = (RectTransform)iconGo.transform;
+                    rt.anchorMin = new Vector2(0.15f, 0.15f);
+                    rt.anchorMax = new Vector2(0.85f, 0.85f);
+                    rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
+                    var iconImg = iconGo.GetComponent<Image>();
+                    iconImg.preserveAspect = true;
+                    iconImg.raycastTarget = false;
+        
+                    var labelGo = new GameObject("Count", typeof(RectTransform), typeof(Text));
+                    labelGo.transform.SetParent(go.transform, false);
+                    var lrt = (RectTransform)labelGo.transform;
+                    lrt.anchorMin = new Vector2(0.4f, 0f);
+                    lrt.anchorMax = new Vector2(1f, 0.4f);
+                    lrt.offsetMin = new Vector2(0, 2); lrt.offsetMax = new Vector2(-4, 0);
+                    var lbl = labelGo.GetComponent<Text>();
+                    lbl.alignment = TextAnchor.LowerRight;
+                    lbl.color = new Color(1f, 1f, 1f, 0.95f);
+                    lbl.font = HudFonts.Pixel;
+                    lbl.fontSize = 18;
+                    lbl.fontStyle = FontStyle.Bold;
+                    lbl.raycastTarget = false;
+        
+                    go.SetActive(false);
+                    return go;
+                }
+        
+                private static GameObject MakeSlotImageOnly(RectTransform parent, string name, Vector2 pos, Vector2 size, Sprite slotSprite)
         {
             var go = new GameObject(name, typeof(RectTransform), typeof(Image));
             go.transform.SetParent(parent, false);
@@ -1233,7 +1202,7 @@ namespace Rootborn.UI.HUD
             rt.anchoredPosition = pos;
             rt.sizeDelta = size;
             var bg = go.GetComponent<Image>();
-            if (slotSprite != null) { bg.sprite = slotSprite; bg.type = Image.Type.Sliced; bg.color = Color.white; }
+            if (slotSprite != null) { bg.sprite = slotSprite; bg.color = Color.white; }
             else bg.color = new Color(0f, 0f, 0f, 0.5f);
 
             var iconGo = new GameObject("Icon", typeof(RectTransform), typeof(Image));
@@ -1255,33 +1224,30 @@ namespace Rootborn.UI.HUD
 
         // ========== UGUI 헬퍼 ==========
 
-        private static RectTransform MakePanel(Transform parent, string name,
-            Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 pos, Vector2 size,
-            Sprite sprite = null, Color? fallbackColor = null)
+        private static Sprite ModernHudSprite(ModernHudSpriteKey key)
         {
-            var go = new GameObject(name, typeof(RectTransform), typeof(Image));
-            go.transform.SetParent(parent, false);
-            var rt = (RectTransform)go.transform;
-            rt.anchorMin = anchorMin;
-            rt.anchorMax = anchorMax;
-            rt.pivot = pivot;
-            rt.anchoredPosition = pos;
-            rt.sizeDelta = size;
-            var img = go.GetComponent<Image>();
-            if (sprite != null)
-            {
-                img.sprite = sprite;
-                img.type = Image.Type.Sliced;
-                img.color = Color.white;
-            }
-            else
-            {
-                img.color = fallbackColor ?? new Color(0f, 0f, 0f, 0.5f);
-            }
-            return rt;
+            return SubSpr(key.SheetAddress, key.SubSpriteName);
         }
-
-        private static Text MakeText(RectTransform parent, string name, Vector2 pos, Vector2 size,
+        
+        private static RectTransform MakePanel(Transform parent, string name,
+                    Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 pos, Vector2 size,
+                    Sprite sprite = null, Color? fallbackColor = null)
+                {
+                    var go = new GameObject(name, typeof(RectTransform), typeof(Rootborn.UI.Modern.ModernUiTileImage));
+                    go.transform.SetParent(parent, false);
+                    var rt = (RectTransform)go.transform;
+                    rt.anchorMin = anchorMin;
+                    rt.anchorMax = anchorMax;
+                    rt.pivot = pivot;
+                    rt.anchoredPosition = pos;
+                    rt.sizeDelta = size;
+                    var tileImage = go.GetComponent<Rootborn.UI.Modern.ModernUiTileImage>();
+                    tileImage.SetRecipe(Rootborn.UI.Modern.ModernUiRecipes.CommonPanel);
+                    tileImage.Rebuild();
+                    return rt;
+                }
+        
+                private static Text MakeText(RectTransform parent, string name, Vector2 pos, Vector2 size,
             string text, int fontSize, TextAnchor align)
         {
             if (parent == null) return null;

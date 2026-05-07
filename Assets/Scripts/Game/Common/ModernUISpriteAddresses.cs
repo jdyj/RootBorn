@@ -38,9 +38,13 @@ namespace Rootborn.Game.Common
             (Style16, new[]
             {
                 Style16First, Style16Last,
+                "ModernUI_16_Style1_r0_c1", "ModernUI_16_Style1_r0_c2",
+                "ModernUI_16_Style1_r1_c0", "ModernUI_16_Style1_r1_c1", "ModernUI_16_Style1_r1_c2",
                 "ModernUI_16_Style1_r1_c7", "ModernUI_16_Style1_r1_c8", "ModernUI_16_Style1_r1_c9",
+                "ModernUI_16_Style1_r2_c0", "ModernUI_16_Style1_r2_c1", "ModernUI_16_Style1_r2_c2",
                 "ModernUI_16_Style1_r2_c3", "ModernUI_16_Style1_r2_c8", "ModernUI_16_Style1_r2_c9",
-                "ModernUI_16_Style1_r3_c3", "ModernUI_16_Style1_r3_c8",
+                "ModernUI_16_Style1_r3_c0", "ModernUI_16_Style1_r3_c3", "ModernUI_16_Style1_r3_c8",
+                "ModernUI_16_Style1_r4_c3",
             }),
             (Style16Alt, new[] { Style16AltFirst, Style16AltLast }),
             (Gamepad16, new[] { Gamepad16First, Gamepad16Last }),
