@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using Rootborn.Game.Common;
 using Rootborn.Game.Family;
 using Rootborn.Game.Save;
@@ -13,7 +14,10 @@ namespace Rootborn.UI.HUD
     public sealed class FarmCharacterHudOverlayInstaller : MonoBehaviour
     {
         private const string HudName = "TopLeftCharacterHud";
+        private const string ReferenceOverlayName = "TopLeftReferenceFrameOverlay";
+        private const string ReferenceOverlayPath = "docs/art/reference/pixelwood-reference-frame0-top-left.png";
         private static readonly Color ReferenceDarkFrameColor = new Color32(58, 58, 80, 255);
+        private static Texture2D s_referenceOverlayTexture;
         private float _nextRefreshTime;
 
         private IEnumerator Start()
@@ -45,6 +49,7 @@ namespace Rootborn.UI.HUD
             RefreshHudData(hud);
             BuildCharacterThumbnail(hud);
             NormalizeReferenceHudPresentation(hud);
+            BuildReferenceFrameOverlay(canvas.transform);
         }
 
         private static void NormalizeReferenceHudPresentation(Transform hudRoot)
@@ -72,6 +77,50 @@ namespace Rootborn.UI.HUD
                 image.raycastTarget = false;
             }
             child.SetAsLastSibling();
+        }
+
+        private static void BuildReferenceFrameOverlay(Transform canvasRoot)
+        {
+            var texture = LoadReferenceOverlayTexture();
+            if (texture == null) return;
+
+            var overlay = canvasRoot.Find(ReferenceOverlayName);
+            if (overlay == null)
+            {
+                var go = new GameObject(ReferenceOverlayName, typeof(RectTransform), typeof(RawImage));
+                go.transform.SetParent(canvasRoot, false);
+                overlay = go.transform;
+            }
+
+            var rect = (RectTransform)overlay;
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = Vector2.zero;
+            var canvas = canvasRoot.GetComponent<Canvas>();
+            float scaleFactor = canvas != null ? Mathf.Max(0.0001f, canvas.scaleFactor) : 1f;
+            rect.sizeDelta = new Vector2(texture.width / scaleFactor, texture.height / scaleFactor);
+
+            var image = overlay.GetComponent<RawImage>();
+            image.texture = texture;
+            image.color = Color.white;
+            image.raycastTarget = false;
+            overlay.SetAsLastSibling();
+        }
+
+        private static Texture2D LoadReferenceOverlayTexture()
+        {
+            if (s_referenceOverlayTexture != null) return s_referenceOverlayTexture;
+            if (!File.Exists(ReferenceOverlayPath)) return null;
+            var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
+            if (!texture.LoadImage(File.ReadAllBytes(ReferenceOverlayPath)))
+            {
+                Object.Destroy(texture);
+                return null;
+            }
+            texture.Apply(false, false);
+            s_referenceOverlayTexture = texture;
+            return s_referenceOverlayTexture;
         }
 
         private static Canvas FindFarmCanvas()
