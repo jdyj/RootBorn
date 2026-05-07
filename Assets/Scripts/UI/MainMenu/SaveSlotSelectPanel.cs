@@ -1,3 +1,4 @@
+using Rootborn.Game.Family;
 using Rootborn.Game.Player;
 using Rootborn.Game.Save;
 using UnityEngine;
@@ -12,8 +13,16 @@ namespace Rootborn.UI.MainMenu
     {
         [SerializeField] private string _farmScene = "Farm";
 
+        private static string s_saveRootOverride;
+
         private readonly CharacterCustomization _selectedCharacter = new CharacterCustomization();
+        private readonly CharacterAppearance _selectedAppearance = new CharacterAppearance();
         private GameObject _root;
+
+        public static void SetSaveRootForTests(string rootDirectory)
+        {
+            s_saveRootOverride = rootDirectory;
+        }
 
         public static SaveSlotSelectPanel EnsureInScene()
         {
@@ -50,14 +59,21 @@ namespace Rootborn.UI.MainMenu
             _selectedCharacter.DefaultFacing = facing;
         }
 
+        public void SetSelectedAppearancePart(string categoryId, string partId)
+        {
+            _selectedAppearance.SetSelectedPart(categoryId, partId);
+        }
+
         public SaveSlotMetadata CreateMetadataForSelectedCharacter(string slotId, int worldSeed, int tileSeed)
         {
-            return CreateMetadataForNewSlot(slotId, CopyCharacter(_selectedCharacter), worldSeed, tileSeed);
+            var metadata = CreateMetadataForNewSlot(slotId, CopyCharacter(_selectedCharacter), worldSeed, tileSeed);
+            metadata.Appearance = CopyAppearance(_selectedAppearance);
+            return metadata;
         }
 
         public SaveSlotMetadata CreateMetadataForNewSlot(string slotId, CharacterCustomization character, int worldSeed, int tileSeed)
         {
-            var service = new SaveService(slotId);
+            var service = CreateService(slotId);
             return service.CreateUiMetadata(slotId, CopyCharacter(character), worldSeed, tileSeed);
         }
 
@@ -84,7 +100,7 @@ namespace Rootborn.UI.MainMenu
 
             BuildCharacterSelectionControls(_root.transform);
 
-            var service = new SaveService("slot-0");
+            var service = CreateService("slot-0");
             var slots = service.ListUiSlots();
             for (int i = 0; i < slots.Count; i++)
             {
@@ -158,26 +174,59 @@ namespace Rootborn.UI.MainMenu
             rt.anchorMax = new Vector2(0.5f, 1f);
             rt.pivot = new Vector2(0.5f, 0.5f);
             rt.anchoredPosition = new Vector2(0f, -168f);
-            rt.sizeDelta = new Vector2(720f, 64f);
+            rt.sizeDelta = new Vector2(960f, 64f);
             panel.GetComponent<Image>().color = new Color(0.15f, 0.18f, 0.18f, 1f);
 
-            MakeText(panel.transform, "SelectionLabel", FormatCharacterPreview(new SaveSlotMetadata { Character = _selectedCharacter }), new Vector2(-240f, 0f), new Vector2(180f, 52f), 18, TextAnchor.MiddleCenter,
+            MakeText(panel.transform, "SelectionLabel", FormatCharacterPreview(new SaveSlotMetadata { Character = _selectedCharacter, Appearance = _selectedAppearance }), new Vector2(-360f, 0f), new Vector2(200f, 52f), 16, TextAnchor.MiddleCenter,
                 new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-            MakeButton(panel.transform, "BodyNextButton", "Body +", new Vector2(-60f, 0f), new Vector2(120f, 44f), () =>
+            BuildCharacterPreviewImage(panel.transform, new SaveSlotMetadata { Character = _selectedCharacter, Appearance = _selectedAppearance });
+            var selectionPreview = panel.transform.Find("CharacterPreviewImage") as RectTransform;
+            if (selectionPreview != null)
+            {
+                selectionPreview.anchoredPosition = new Vector2(-490f, 0f);
+                selectionPreview.sizeDelta = new Vector2(48f, 48f);
+            }
+            MakeButton(panel.transform, "BodyNextButton", "Body +", new Vector2(-180f, 0f), new Vector2(120f, 44f), () =>
             {
                 _selectedCharacter.BodyVariant++;
+                CycleSelectedPart("body", "character.body.01", "character.body.02");
                 BuildOrRebuild();
             });
-            MakeButton(panel.transform, "HairNextButton", "Hair +", new Vector2(80f, 0f), new Vector2(120f, 44f), () =>
+            MakeButton(panel.transform, "EyesNextButton", "Eyes +", new Vector2(-40f, 0f), new Vector2(120f, 44f), () =>
+            {
+                CycleSelectedPart("eyes", "character.eyes.blue", "character.eyes.brown");
+                BuildOrRebuild();
+            });
+            MakeButton(panel.transform, "HairNextButton", "Hair +", new Vector2(100f, 0f), new Vector2(120f, 44f), () =>
             {
                 _selectedCharacter.HairVariant++;
+                CycleSelectedPart("hair", "character.hair.short.blonde", "character.hair.short.brown_dark");
                 BuildOrRebuild();
             });
-            MakeButton(panel.transform, "OutfitNextButton", "Outfit +", new Vector2(220f, 0f), new Vector2(120f, 44f), () =>
+            MakeButton(panel.transform, "OutfitNextButton", "Outfit +", new Vector2(240f, 0f), new Vector2(120f, 44f), () =>
             {
                 _selectedCharacter.OutfitVariant++;
+                CycleSelectedPart("outfit", "character.outfit.braces.brown", "character.outfit.braces.green");
                 BuildOrRebuild();
             });
+            MakeButton(panel.transform, "AccessoryNextButton", "Hat +", new Vector2(380f, 0f), new Vector2(120f, 44f), () =>
+            {
+                CycleSelectedPart("accessory", "character.accessory.bamboo.brown", "character.accessory.straw.black");
+                BuildOrRebuild();
+            });
+        }
+
+        private void CycleSelectedPart(string categoryId, string firstPartId, string secondPartId)
+        {
+            string current = _selectedAppearance.GetSelectedPartId(categoryId);
+            _selectedAppearance.SetSelectedPart(categoryId, current == firstPartId ? secondPartId : firstPartId);
+        }
+
+        private static SaveService CreateService(string slotId)
+        {
+            return string.IsNullOrEmpty(s_saveRootOverride)
+                ? new SaveService(slotId)
+                : new SaveService(slotId, s_saveRootOverride);
         }
 
         private static string FormatCharacterPreview(SaveSlotMetadata metadata)
@@ -188,7 +237,15 @@ namespace Rootborn.UI.MainMenu
                 return "Character Preview";
             }
 
-            return $"Body {character.BodyVariant}\nHair {character.HairVariant}\nOutfit {character.OutfitVariant}";
+            string appearance = string.Empty;
+            var selectedAppearance = metadata.Appearance;
+            if (selectedAppearance != null)
+            {
+                string body = selectedAppearance.GetSelectedPartId("body");
+                if (!string.IsNullOrEmpty(body)) appearance = "\n" + body;
+            }
+
+            return $"Body {character.BodyVariant}\nHair {character.HairVariant}\nOutfit {character.OutfitVariant}{appearance}";
         }
 
         private static void BuildCharacterPreviewImage(Transform parent, SaveSlotMetadata metadata)
@@ -202,11 +259,69 @@ namespace Rootborn.UI.MainMenu
             rt.anchoredPosition = new Vector2(0f, -210f);
             rt.sizeDelta = new Vector2(72f, 72f);
 
+            var background = go.GetComponent<Image>();
             var character = metadata != null ? metadata.Character : null;
             int bodyVariant = character != null ? character.BodyVariant : 0;
             int hairVariant = character != null ? character.HairVariant : 0;
             int outfitVariant = character != null ? character.OutfitVariant : 0;
-            go.GetComponent<Image>().color = CharacterPreviewColor(bodyVariant, hairVariant, outfitVariant);
+            background.color = CharacterPreviewColor(bodyVariant, hairVariant, outfitVariant);
+
+            var registry = Rootborn.Game.Managers.Managers.Data != null ? Rootborn.Game.Managers.Managers.Data.Registry : null;
+            if (registry == null || registry.CharacterParts == null || registry.CharacterParts.Length == 0)
+            {
+                return;
+            }
+
+            background.color = Color.clear;
+            var appearance = CharacterAppearance.ResolveWithDefaults(metadata != null ? metadata.Appearance : null, registry.CharacterParts);
+            for (int i = 0; i < registry.CharacterParts.Length; i++)
+            {
+                var candidate = registry.CharacterParts[i];
+                if (candidate == null || string.IsNullOrEmpty(candidate.CategoryId))
+                {
+                    continue;
+                }
+                var part = FindPreviewPart(registry.CharacterParts, appearance.GetSelectedPartId(candidate.CategoryId), candidate.CategoryId);
+                if (part == null || part.PreviewSprite == null || go.transform.Find("PreviewPart_" + part.CategoryId) != null)
+                {
+                    continue;
+                }
+
+                var layer = new GameObject("PreviewPart_" + part.CategoryId, typeof(RectTransform), typeof(Image));
+                layer.transform.SetParent(go.transform, false);
+                var layerRt = (RectTransform)layer.transform;
+                layerRt.anchorMin = Vector2.zero;
+                layerRt.anchorMax = Vector2.one;
+                layerRt.offsetMin = Vector2.zero;
+                layerRt.offsetMax = Vector2.zero;
+                var image = layer.GetComponent<Image>();
+                image.sprite = part.PreviewSprite;
+                image.color = Color.white;
+                image.preserveAspect = true;
+                image.raycastTarget = false;
+            }
+        }
+
+        private static CharacterPartDefinition FindPreviewPart(CharacterPartDefinition[] parts, string selectedId, string categoryId)
+        {
+            CharacterPartDefinition fallback = null;
+            for (int i = 0; i < parts.Length; i++)
+            {
+                var part = parts[i];
+                if (part == null || part.CategoryId != categoryId)
+                {
+                    continue;
+                }
+                if (part.Id == selectedId)
+                {
+                    return part;
+                }
+                if (fallback == null && part.IsDefault)
+                {
+                    fallback = part;
+                }
+            }
+            return fallback;
         }
 
         private static Color CharacterPreviewColor(int bodyVariant, int hairVariant, int outfitVariant)
@@ -227,6 +342,25 @@ namespace Rootborn.UI.MainMenu
                 OutfitVariant = character.OutfitVariant,
                 DefaultFacing = character.DefaultFacing,
             };
+        }
+
+        private static CharacterAppearance CopyAppearance(CharacterAppearance source)
+        {
+            var copy = new CharacterAppearance();
+            if (source == null || source.Parts == null)
+            {
+                return copy;
+            }
+
+            for (int i = 0; i < source.Parts.Length; i++)
+            {
+                var part = source.Parts[i];
+                if (part != null)
+                {
+                    copy.SetSelectedPart(part.CategoryId, part.PartId);
+                }
+            }
+            return copy;
         }
 
         private static Canvas EnsureCanvas()

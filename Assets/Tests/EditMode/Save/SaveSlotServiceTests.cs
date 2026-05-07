@@ -1,5 +1,6 @@
 using System.IO;
 using NUnit.Framework;
+using Rootborn.Game.Family;
 using Rootborn.Game.Player;
 using Rootborn.Game.Save;
 using UnityEngine;
@@ -55,6 +56,62 @@ namespace Rootborn.Tests.EditMode.Save
                 Assert.AreEqual(2, loaded.Character.HairVariant);
                 Assert.AreEqual(3, loaded.Character.OutfitVariant);
                 Assert.AreEqual(CharacterCustomization.Facing.Up, loaded.Character.DefaultFacing);
+            }
+            finally
+            {
+                Directory.Delete(root, true);
+            }
+        }
+
+        [Test]
+        public void SaveAndLoadMetadata_PreservesAppearancePartIds()
+        {
+            var root = MakeTempRoot();
+            try
+            {
+                var service = new SaveService("slot-0", root);
+                var metadata = service.CreateMetadata("slot-0", new CharacterCustomization(), 1234, 5678);
+                metadata.Appearance.SetSelectedPart("body", "character.body.01");
+                metadata.Appearance.SetSelectedPart("eyes", "character.eyes.blue");
+                metadata.Appearance.SetSelectedPart("hair", "character.hair.short.blonde");
+                metadata.Appearance.SetSelectedPart("outfit", "character.outfit.braces.brown");
+                metadata.Appearance.SetSelectedPart("accessory", "character.accessory.bamboo.brown");
+
+                service.SaveMetadata(metadata);
+
+                var loaded = service.LoadMetadata("slot-0");
+                Assert.IsNotNull(loaded);
+                Assert.AreEqual("character.body.01", loaded.Appearance.GetSelectedPartId("body"));
+                Assert.AreEqual("character.eyes.blue", loaded.Appearance.GetSelectedPartId("eyes"));
+                Assert.AreEqual("character.hair.short.blonde", loaded.Appearance.GetSelectedPartId("hair"));
+                Assert.AreEqual("character.outfit.braces.brown", loaded.Appearance.GetSelectedPartId("outfit"));
+                Assert.AreEqual("character.accessory.bamboo.brown", loaded.Appearance.GetSelectedPartId("accessory"));
+            }
+            finally
+            {
+                Directory.Delete(root, true);
+            }
+        }
+
+        [Test]
+        public void LoadMetadata_LegacyMetadataWithoutAppearanceGetsEmptyAppearanceFallback()
+        {
+            var root = MakeTempRoot();
+            try
+            {
+                var slotDir = Path.Combine(root, "slot-0");
+                Directory.CreateDirectory(slotDir);
+                File.WriteAllText(Path.Combine(slotDir, "metadata.json"),
+                    "{\"SlotId\":\"slot-0\",\"DisplayName\":\"slot-0\",\"CreatedAtUtcTicks\":1,\"UpdatedAtUtcTicks\":1,\"WorldSeed\":11,\"TileSeed\":22,\"Character\":{\"_bodyVariant\":2}}"
+                );
+
+                var service = new SaveService("slot-0", root);
+                var loaded = service.LoadMetadata("slot-0");
+
+                Assert.IsNotNull(loaded);
+                Assert.IsNotNull(loaded.Character);
+                Assert.IsNotNull(loaded.Appearance);
+                Assert.AreEqual(string.Empty, loaded.Appearance.GetSelectedPartId("body"));
             }
             finally
             {

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Rootborn.Game.Family;
 using Rootborn.Game.Player;
 using UnityEngine;
 
@@ -12,12 +13,14 @@ namespace Rootborn.Game.Save
 
         private const string MetadataFileName = "metadata.json";
 
+        private static string s_rootDirectoryOverride;
+
         private readonly string _slot;
         private readonly string _rootDir;
         private readonly string _dir;
 
         public SaveService(string slot)
-            : this(slot, Path.Combine(Application.persistentDataPath, "saves"))
+            : this(slot, ResolveDefaultRootDirectory())
         {
         }
 
@@ -25,7 +28,7 @@ namespace Rootborn.Game.Save
         {
             _slot = SanitizeOrThrow(string.IsNullOrEmpty(slot) ? "default" : slot);
             _rootDir = string.IsNullOrEmpty(rootDirectory)
-                ? Path.Combine(Application.persistentDataPath, "saves")
+                ? ResolveDefaultRootDirectory()
                 : rootDirectory;
             _dir = Path.Combine(_rootDir, _slot);
             Directory.CreateDirectory(_dir);
@@ -33,6 +36,11 @@ namespace Rootborn.Game.Save
 
         public string Slot => _slot;
         public string DirectoryPath => _dir;
+
+        public static void SetRootDirectoryForTests(string rootDirectory)
+        {
+            s_rootDirectoryOverride = rootDirectory;
+        }
 
         public IReadOnlyList<SaveSlotSummary> ListUiSlots()
         {
@@ -88,6 +96,7 @@ namespace Rootborn.Game.Save
                 WorldSeed = worldSeed,
                 TileSeed = tileSeed,
                 Character = character ?? new CharacterCustomization(),
+                Appearance = new CharacterAppearance(),
             };
         }
 
@@ -107,6 +116,15 @@ namespace Rootborn.Game.Save
             if (metadata.CreatedAtUtcTicks <= 0)
             {
                 metadata.CreatedAtUtcTicks = DateTime.UtcNow.Ticks;
+            }
+
+            if (metadata.Character == null)
+            {
+                metadata.Character = new CharacterCustomization();
+            }
+            if (metadata.Appearance == null)
+            {
+                metadata.Appearance = new CharacterAppearance();
             }
 
             metadata.UpdatedAtUtcTicks = DateTime.UtcNow.Ticks;
@@ -137,6 +155,10 @@ namespace Rootborn.Game.Save
                 if (metadata.Character == null)
                 {
                     metadata.Character = new CharacterCustomization();
+                }
+                if (metadata.Appearance == null)
+                {
+                    metadata.Appearance = new CharacterAppearance();
                 }
 
                 return metadata;
@@ -175,6 +197,13 @@ namespace Rootborn.Game.Save
         private string SlotDirectory(string slotId)
         {
             return Path.Combine(_rootDir, SanitizeOrThrow(slotId));
+        }
+
+        private static string ResolveDefaultRootDirectory()
+        {
+            return string.IsNullOrEmpty(s_rootDirectoryOverride)
+                ? Path.Combine(Application.persistentDataPath, "saves")
+                : s_rootDirectoryOverride;
         }
 
         private static string SanitizeOrThrow(string slotId)

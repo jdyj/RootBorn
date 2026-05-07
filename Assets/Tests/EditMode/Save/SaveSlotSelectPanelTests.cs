@@ -1,5 +1,6 @@
 using System.Reflection;
 using NUnit.Framework;
+using Rootborn.Game.Family;
 using Rootborn.Game.Player;
 using Rootborn.Game.Save;
 using Rootborn.UI.MainMenu;
@@ -66,6 +67,27 @@ namespace Rootborn.Tests.EditMode.Save
         }
 
         [Test]
+        public void CreateMetadataForSelectedCharacter_CopiesSelectedAppearanceParts()
+        {
+            var panel = new GameObject("SaveSlotSelectPanelTest").AddComponent<SaveSlotSelectPanel>();
+            try
+            {
+                panel.SetSelectedAppearancePart("body", "character.body.01");
+                panel.SetSelectedAppearancePart("eyes", "character.eyes.blue");
+
+                var metadata = panel.CreateMetadataForSelectedCharacter("slot-2", 100, 200);
+                panel.SetSelectedAppearancePart("body", "character.body.02");
+
+                Assert.AreEqual("character.body.01", metadata.Appearance.GetSelectedPartId("body"));
+                Assert.AreEqual("character.eyes.blue", metadata.Appearance.GetSelectedPartId("eyes"));
+            }
+            finally
+            {
+                Object.DestroyImmediate(panel.gameObject);
+            }
+        }
+
+        [Test]
         public void Show_BuildsCharacterSelectionControls()
         {
             var panel = new GameObject("SaveSlotSelectPanelTest").AddComponent<SaveSlotSelectPanel>();
@@ -77,6 +99,8 @@ namespace Rootborn.Tests.EditMode.Save
                 Assert.IsNotNull(GameObject.Find("BodyNextButton"));
                 Assert.IsNotNull(GameObject.Find("HairNextButton"));
                 Assert.IsNotNull(GameObject.Find("OutfitNextButton"));
+                Assert.IsNotNull(GameObject.Find("EyesNextButton"));
+                Assert.IsNotNull(GameObject.Find("AccessoryNextButton"));
             }
             finally
             {
@@ -92,12 +116,14 @@ namespace Rootborn.Tests.EditMode.Save
         {
             var character = new CharacterCustomization { BodyVariant = 1, HairVariant = 2, OutfitVariant = 3 };
             var metadata = new SaveSlotMetadata { Character = character };
+            metadata.Appearance.SetSelectedPart("body", "character.body.01");
 
             string preview = InvokeFormatCharacterPreview(metadata);
 
             StringAssert.Contains("Body 1", preview);
             StringAssert.Contains("Hair 2", preview);
             StringAssert.Contains("Outfit 3", preview);
+            StringAssert.Contains("character.body.01", preview);
         }
 
         [Test]
