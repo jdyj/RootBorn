@@ -15,9 +15,11 @@ MonoBehaviour:
   _generationIndex: 2
   _displayKey: generation.stoneAge
   _lifetimeSec: 1800
+  _lifetimeGameDays: 14
   _startingKnowledge:
   - {fileID: 11400000, guid: 83000c80ee557bc4c8edf1bb6a390a3a, type: 2}
   _startingInventory:
   - {fileID: 11400000, guid: 58d3c252b9385d546922d09ce0b6cc49, type: 2}
   - {fileID: 11400000, guid: e46a4ff10413c624d98c902ee02a5e74, type: 2}
+  - {fileID: 11400000, guid: 440e90155c98f3242b77566fd0da0519, type: 2}
   _nextGeneration: {fileID: 0}

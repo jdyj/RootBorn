@@ -19,3 +19,4 @@ MonoBehaviour:
   _unlocksTools:
   - {fileID: 11400000, guid: 58d3c252b9385d546922d09ce0b6cc49, type: 2}
   - {fileID: 11400000, guid: e46a4ff10413c624d98c902ee02a5e74, type: 2}
+  - {fileID: 11400000, guid: 440e90155c98f3242b77566fd0da0519, type: 2}

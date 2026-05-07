@@ -16,7 +16,7 @@ MonoBehaviour:
   _displayKey: resource.rock
   _sprite: {fileID: 21300000, guid: 21fdc7fcd3575014ca1e272a677967c0, type: 3}
   _baseHitsToBreak: 6
-  _preferredTool: {fileID: 0}
+  _preferredTool: {fileID: 11400000, guid: 440e90155c98f3242b77566fd0da0519, type: 2}
   _bareHandPenaltyMul: 0.3
   _drops:
   - _resourceId: Stone
