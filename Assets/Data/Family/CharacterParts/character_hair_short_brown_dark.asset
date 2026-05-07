@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a5c1e8c50e8642489945fb8792ea664, type: 3}
+  m_Name: character_hair_short_brown_dark
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Family.CharacterPartDefinition
+  _id: character.hair.short.brown_dark
+  _categoryId: hair
+  _displayNameKey: loc.character.character.hair.short.brown_dark
+  _sheetAddress: sprites/character/hair/hairstyle-short-brown-dark
+  _subSpriteName: Hairstyle_Short_Brown_Dark_r0_c0
+  _editorAssetPath: Assets/Modern_Farm_v1.2/Farmer_Generator_Pieces/Character Pieces/Hairstyles/16x16/Hairstyle_Short_Brown_Dark.png
+  _previewSprite: {fileID: -2743824887706347065, guid: 0fef600f252926647bf5086e5f8901d6, type: 3}
+  _layerOrder: 4
+  _isDefault: 0

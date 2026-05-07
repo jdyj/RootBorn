@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Rootborn.Game.Crops;
 using Rootborn.Game.Dialogue;
+using Rootborn.Game.Family;
 using Rootborn.Game.Generation;
 using Rootborn.Game.Heir;
 using Rootborn.Game.Knowledge;
@@ -293,6 +294,9 @@ namespace Rootborn.Game.Common
         [SerializeField] private NpcDefinition[] _npcs = Array.Empty<NpcDefinition>();
         [SerializeField] private DialogueDefinition[] _dialogues = Array.Empty<DialogueDefinition>();
         [SerializeField] private StoryFlagDefinition[] _storyFlags = Array.Empty<StoryFlagDefinition>();
+        [SerializeField] private CharacterPartDefinition[] _characterParts = Array.Empty<CharacterPartDefinition>();
+        [SerializeField] private CharacterPartAnimationClipDefinition[] _characterPartAnimationClips = Array.Empty<CharacterPartAnimationClipDefinition>();
+        [SerializeField] private FishingAnimationDefinition[] _fishingAnimations = Array.Empty<FishingAnimationDefinition>();
         [SerializeField] private Sprite _groundSprite;
         [SerializeField] private Sprite _playerSprite;
         [SerializeField] private TerrainGenerationDefinition _defaultFarmTerrainGeneration;
@@ -313,6 +317,9 @@ namespace Rootborn.Game.Common
         public NpcDefinition[] Npcs => _npcs;
         public DialogueDefinition[] Dialogues => _dialogues;
         public StoryFlagDefinition[] StoryFlags => _storyFlags;
+        public CharacterPartDefinition[] CharacterParts => _characterParts;
+        public CharacterPartAnimationClipDefinition[] CharacterPartAnimationClips => _characterPartAnimationClips;
+        public FishingAnimationDefinition[] FishingAnimations => _fishingAnimations;
         public Sprite GroundSprite => _groundSprite;
         public Sprite PlayerSprite => _playerSprite;
         public TerrainGenerationDefinition DefaultFarmTerrainGeneration => _defaultFarmTerrainGeneration;

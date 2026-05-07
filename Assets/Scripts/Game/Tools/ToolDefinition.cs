@@ -1,3 +1,4 @@
+using Rootborn.Game.Family;
 using UnityEngine;
 
 namespace Rootborn.Game.Tools
@@ -10,6 +11,7 @@ namespace Rootborn.Game.Tools
         [SerializeField] private Sprite _icon;
         [SerializeField] private float _powerMultiplier = 1f;
         [SerializeField] private ToolEffectBase[] _effects = System.Array.Empty<ToolEffectBase>();
+        [SerializeField] private CharacterPartAnimationClipDefinition _characterPartAnimationClip;
         [SerializeField] private bool _isStartingTool;
         [SerializeField, TextArea(2, 4)] private string _description;
 
@@ -18,6 +20,7 @@ namespace Rootborn.Game.Tools
         public Sprite Icon => _icon;
         public float PowerMultiplier => _powerMultiplier;
         public ToolEffectBase[] Effects => _effects;
+        public CharacterPartAnimationClipDefinition CharacterPartAnimationClip => _characterPartAnimationClip;
         public bool IsStartingTool => _isStartingTool;
         public string Description => _description;
 

@@ -1,4 +1,5 @@
 using Rootborn.Game.Common;
+using Rootborn.Game.Family;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -9,6 +10,8 @@ namespace Rootborn.Game.Player
         [SerializeField] private float _moveSpeed = 4f;
         [SerializeField] private Animator _animator;
         [SerializeField] private SpriteRenderer _renderer;
+        [SerializeField] private CharacterPartComposer _partComposer;
+        [SerializeField] private CharacterPartAnimator _partAnimator;
         [SerializeField] private Rigidbody2D _rb;
         [SerializeField] private PlayerInventory _inventory;
         [SerializeField] private GatherInteractor _interactor;
@@ -22,6 +25,7 @@ namespace Rootborn.Game.Player
         private Vector2 _lastFacing = new Vector2(0f, -1f);
         private string _activeToolId;
         private string _activeToolSpritePrefix;
+        private CharacterPartAnimationClipDefinition _activeCharacterPartAnimationClip;
 
         private bool _isAttacking;
         private float _attackTime;
@@ -39,6 +43,8 @@ namespace Rootborn.Game.Player
         {
             if (_animator == null) _animator = GetComponent<Animator>();
             if (_renderer == null) _renderer = GetComponent<SpriteRenderer>();
+            if (_partComposer == null) _partComposer = GetComponent<CharacterPartComposer>();
+            if (_partAnimator == null) _partAnimator = GetComponent<CharacterPartAnimator>();
             if (_rb == null) _rb = GetComponent<Rigidbody2D>();
             if (_inventory == null) _inventory = GetComponent<PlayerInventory>();
             if (_interactor == null) _interactor = GetComponent<GatherInteractor>();
@@ -88,9 +94,13 @@ namespace Rootborn.Game.Player
             _isAttacking = true;
             _attackTime = 0f;
             _attackTriggered = false;
-            if (_renderer != null && Mathf.Abs(_attackFacing.x) > Mathf.Abs(_attackFacing.y))
+            if (_partAnimator != null && _activeCharacterPartAnimationClip != null)
             {
-                _renderer.flipX = _attackFacing.x > 0f;
+                _partAnimator.PlayClip(_activeCharacterPartAnimationClip);
+            }
+            if (Mathf.Abs(_attackFacing.x) > Mathf.Abs(_attackFacing.y))
+            {
+                ApplyFlipX(_attackFacing.x > 0f);
             }
         }
 
@@ -134,6 +144,12 @@ namespace Rootborn.Game.Player
             if (newId == _activeToolId) return;
             _activeToolId = newId;
             _activeToolSpritePrefix = tool != null ? tool.ToolSpritePrefix : null;
+            _activeCharacterPartAnimationClip = null;
+            var data = Rootborn.Game.Managers.Managers.Data;
+            if (data != null && tool != null && data.ToolById.TryGetValue(tool.Id, out var toolDefinition))
+            {
+                _activeCharacterPartAnimationClip = toolDefinition.CharacterPartAnimationClip;
+            }
             _isAttacking = false;
             _attackTime = 0f;
 
@@ -160,6 +176,8 @@ namespace Rootborn.Game.Player
         private void Update()
         {
             TryBindInventory();
+            if (_partComposer == null) _partComposer = GetComponent<CharacterPartComposer>();
+            if (_partAnimator == null) _partAnimator = GetComponent<CharacterPartAnimator>();
 
             _input = _moveAction != null ? _moveAction.ReadValue<Vector2>() : Vector2.zero;
 
@@ -180,15 +198,29 @@ namespace Rootborn.Game.Player
                 _animator.SetFloat(HashSpeed, _input.sqrMagnitude);
             }
 
-            if (_renderer != null)
+            var facingForFlip = _isAttacking ? _attackFacing : _lastFacing;
+            bool isSide = Mathf.Abs(facingForFlip.x) > Mathf.Abs(facingForFlip.y);
+            ApplyFlipX(isSide && facingForFlip.x > 0f);
+
+            if (_partAnimator != null)
             {
-                var facingForFlip = _isAttacking ? _attackFacing : _lastFacing;
-                bool isSide = Mathf.Abs(facingForFlip.x) > Mathf.Abs(facingForFlip.y);
-                if (isSide) _renderer.flipX = facingForFlip.x > 0f;
-                else _renderer.flipX = false;
+                _partAnimator.SetMotion(_isAttacking ? Vector2.zero : _input, facingForFlip);
+                _partAnimator.Tick(UnityEngine.Time.deltaTime);
             }
 
             UpdateToolSprite();
+        }
+
+        private void ApplyFlipX(bool flipX)
+        {
+            if (_renderer != null)
+            {
+                _renderer.flipX = flipX;
+            }
+            if (_partComposer != null)
+            {
+                _partComposer.SetFlipX(flipX);
+            }
         }
 
         private void UpdateToolSprite()

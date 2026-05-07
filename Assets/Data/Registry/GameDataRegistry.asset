@@ -18,9 +18,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 5e36fb0bfb8264044bb95e1c8de70da2, type: 2}
   - {fileID: 11400000, guid: 58d3c252b9385d546922d09ce0b6cc49, type: 2}
   - {fileID: 11400000, guid: e46a4ff10413c624d98c902ee02a5e74, type: 2}
-  - {fileID: 11400000, guid: 89c4756a622ce0744bd813366d4cf7eb, type: 2}
-  - {fileID: 11400000, guid: aa8baa823dbbaeb4da52709db41b8f69, type: 2}
-  - {fileID: 11400000, guid: d4f0708c9bc563c44bca8f612d05cb4c, type: 2}
+  - {fileID: 11400000, guid: 440e90155c98f3242b77566fd0da0519, type: 2}
   _resources:
   - {fileID: 11400000, guid: eb231f93a6f0fe5418e8c0754b131733, type: 2}
   - {fileID: 11400000, guid: 5a341bbcb8c7a8e49a3be09dda21cf30, type: 2}
@@ -43,9 +41,45 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a612e54fcdc092a43a184aa357c8fbaf, type: 2}
   - {fileID: 11400000, guid: 6c981352b9004d74aa432f3ebedec29e, type: 2}
   - {fileID: 11400000, guid: 9b1a1df6b1cacd5408271379327b45fd, type: 2}
-  - {fileID: 11400000, guid: de7ab58f46b31e044aa7f8349785515d, type: 2}
-  - {fileID: 11400000, guid: 64681a5dbbf386240a61ed88c3b3ff95, type: 2}
-  - {fileID: 11400000, guid: d97d52a17ccd71d428b24f868e7b34e0, type: 2}
-  _groundSprite: {fileID: 8458300517651169097, guid: 176d930965cfdf64eb5cfdd08db865ab, type: 3}
-  _playerSprite: {fileID: -7212397726981208026, guid: 6935e6186fac5a04a902a407a7a7973a, type: 3}
+  - {fileID: 11400000, guid: 0cd403dc68abf4a45b664a12381a81f7, type: 2}
+  _quests:
+  - {fileID: 11400000, guid: 0fd216a6cdf0c724fa2101fd28dc3a5c, type: 2}
+  _questObjectives:
+  - {fileID: 11400000, guid: 7e0c5cb9a7c4e80489227c6cc056ee0a, type: 2}
+  _questRewards:
+  - {fileID: 11400000, guid: 16f45589fdcd2534dae0cb1401cacf3c, type: 2}
+  _questCompletionEffects:
+  - {fileID: 11400000, guid: 28cbbe21d02b32649996767f5d13b4b1, type: 2}
+  _questConditions: []
+  _npcs:
+  - {fileID: 11400000, guid: c43188909a889884792a60a1a0e1d0ba, type: 2}
+  _dialogues:
+  - {fileID: 11400000, guid: 8142bab72b18c8d46b226b2da4f7561d, type: 2}
+  _storyFlags:
+  - {fileID: 11400000, guid: 91dcbb6650abb87408dc7932e7bc24e0, type: 2}
+  _characterParts:
+  - {fileID: 11400000, guid: e75df9e38569a3345b7ac3b14900d9f1, type: 2}
+  - {fileID: 11400000, guid: 63237f3df29014e42abe0f4c4f2aae25, type: 2}
+  - {fileID: 11400000, guid: f246268599991274fb7e2788096bb6e8, type: 2}
+  - {fileID: 11400000, guid: 2b670a279e586e44db1c58035a5860e3, type: 2}
+  - {fileID: 11400000, guid: cbbe4fe537a437149a2ad5132c3b4f56, type: 2}
+  - {fileID: 11400000, guid: eaa9769c1ffa16649a535f2d88b31038, type: 2}
+  - {fileID: 11400000, guid: 77e0776bce5034e4f8690d62b8f55cb5, type: 2}
+  - {fileID: 11400000, guid: ff32da434c4d3b44488c37bad88c3ff2, type: 2}
+  - {fileID: 11400000, guid: dd16f0c05718b5a4aac2ef45c4fccef7, type: 2}
+  - {fileID: 11400000, guid: 6ff5728ee62403b438a8c7c277d4d62a, type: 2}
+  _characterPartAnimationClips:
+  - {fileID: 11400000, guid: e2eda45368eae424393bf47b4d89af44, type: 2}
+  - {fileID: 11400000, guid: 362284ccfd176004dbaf04ad216ef3aa, type: 2}
+  - {fileID: 11400000, guid: 73bc9fa22aab97f459e4c4e72bf19e91, type: 2}
+  - {fileID: 11400000, guid: a07866dca4c55324abcdd854124570f8, type: 2}
+  - {fileID: 11400000, guid: 653799999ff6771429a37563fb6b9786, type: 2}
+  - {fileID: 11400000, guid: a0f7eeeddae3ba04caa006f030544a88, type: 2}
+  - {fileID: 11400000, guid: 863a3702a2671e245a0fc17132ec922d, type: 2}
+  - {fileID: 11400000, guid: d9497f5c1c47420438ce8f140860db08, type: 2}
+  - {fileID: 11400000, guid: 0f82d6935541c2a44b102f9a53cca412, type: 2}
+  _fishingAnimations:
+  - {fileID: 11400000, guid: 4d492c31c33bd2b4fa9e3e22ed110534, type: 2}
+  _groundSprite: {fileID: 21300000, guid: 71df351b8cfdac24b9dd030d2f35abac, type: 3}
+  _playerSprite: {fileID: 21300000, guid: 5f439540e7f27e24f8b0856cc24ea6ab, type: 3}
   _defaultFarmTerrainGeneration: {fileID: 11400000, guid: b26cde69cfb426841aef41ae7a6f128f, type: 2}

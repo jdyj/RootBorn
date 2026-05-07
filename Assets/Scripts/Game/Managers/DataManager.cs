@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Rootborn.Game.Common;
 using Rootborn.Game.Crops;
+using Rootborn.Game.Family;
 using Rootborn.Game.Knowledge;
 using Rootborn.Game.Resources;
 using Rootborn.Game.Tools;
@@ -10,18 +11,11 @@ using UnityEngine;
 namespace Rootborn.Game.Managers
 {
     /// <summary>
-    /// 게임 부팅 시 한 번 GameDataRegistry 를 Addressables 로 로드한 뒤
-    /// 도메인별 Dictionary 로 빠르게 lookup 한다 (SlimeMaster 의 DataManager 패턴).
+    /// 게임 부팅 시 한 번 GameDataRegistry 를 로드한 뒤 도메인별 Dictionary 로 lookup 한다.
     /// </summary>
     public sealed class DataManager
     {
         public const string AddrRegistry = "data/registry";
-
-        // Sheet 주소 + sub-sprite 이름 (Pixelwood multi-sprite PNG에서 sliced sub 추출)
-        public const string AddrSheetTile = "sheet/Tile";
-        public const string AddrSheetIdleDown = "sheet/Down";
-        public const string SubGroundTile = "Tile_r2_c4";
-        public const string SubPlayerIdle = "Idle_Down_1";
 
         public GameDataRegistry Registry { get; private set; }
         public Sprite PlayerSprite { get; private set; }
@@ -31,6 +25,10 @@ namespace Rootborn.Game.Managers
         public Dictionary<string, ToolDefinition> ToolById { get; } = new Dictionary<string, ToolDefinition>();
         public Dictionary<string, ResourceNodeDefinition> ResourceById { get; } = new Dictionary<string, ResourceNodeDefinition>();
         public Dictionary<string, KnowledgeNode> KnowledgeById { get; } = new Dictionary<string, KnowledgeNode>();
+        public Dictionary<string, CharacterPartDefinition> CharacterPartById { get; } = new Dictionary<string, CharacterPartDefinition>();
+        public Dictionary<string, List<CharacterPartDefinition>> CharacterPartsByCategory { get; } = new Dictionary<string, List<CharacterPartDefinition>>();
+        public Dictionary<string, CharacterPartAnimationClipDefinition> CharacterPartAnimationClipById { get; } = new Dictionary<string, CharacterPartAnimationClipDefinition>();
+        public Dictionary<string, FishingAnimationDefinition> FishingAnimationById { get; } = new Dictionary<string, FishingAnimationDefinition>();
 
         public bool IsInitialized { get; private set; }
 
@@ -38,7 +36,6 @@ namespace Rootborn.Game.Managers
         {
             if (IsInitialized) return;
 
-            // 1) Registry — Addressables 우선, 실패 시 Resources.Load fallback
             Registry = await resource.LoadAsync<GameDataRegistry>(AddrRegistry);
             if (Registry == null)
             {
@@ -55,21 +52,15 @@ namespace Rootborn.Game.Managers
             }
             else
             {
-                Debug.Log($"[ROOTBORN/DataManager] Registry loaded: crops={Registry.Crops?.Length}, tools={Registry.Tools?.Length}, resources={Registry.Resources?.Length}");
+                Debug.Log($"[ROOTBORN/DataManager] Registry loaded: crops={Registry.Crops?.Length}, tools={Registry.Tools?.Length}, resources={Registry.Resources?.Length}, characterParts={Registry.CharacterParts?.Length}");
             }
 
             BuildLookups();
 
-            // 2) Sprite preload — Addressables 우선 (sheet 주소 + sub-sprite 이름)
-            //    SlimeMaster 패턴: sheet 자체를 Addressables에 등록하고 sub-sprite는 이름으로 조회.
-            GroundSprite = await resource.LoadSubSpriteAsync(AddrSheetTile, SubGroundTile);
-            PlayerSprite = await resource.LoadSubSpriteAsync(AddrSheetIdleDown, SubPlayerIdle);
+            GroundSprite = Registry.GroundSprite;
+            PlayerSprite = Registry.PlayerSprite;
 
-            // Fallback — Addressables 실패 시 Registry 직접참조 (개발 편의)
-            if (GroundSprite == null) GroundSprite = Registry.GroundSprite;
-            if (PlayerSprite == null) PlayerSprite = Registry.PlayerSprite;
-
-            Debug.Log($"[ROOTBORN/DataManager] Sprites loaded — Ground={(GroundSprite != null ? GroundSprite.name : "null")}, Player={(PlayerSprite != null ? PlayerSprite.name : "null")}");
+            Debug.Log($"[ROOTBORN/DataManager] Sprites loaded - Ground={(GroundSprite != null ? GroundSprite.name : "null")}, Player={(PlayerSprite != null ? PlayerSprite.name : "null")}");
 
             IsInitialized = true;
         }
@@ -80,6 +71,10 @@ namespace Rootborn.Game.Managers
             ToolById.Clear();
             ResourceById.Clear();
             KnowledgeById.Clear();
+            CharacterPartById.Clear();
+            CharacterPartsByCategory.Clear();
+            CharacterPartAnimationClipById.Clear();
+            FishingAnimationById.Clear();
 
             if (Registry.Crops != null)
             {
@@ -111,6 +106,47 @@ namespace Rootborn.Game.Managers
                 {
                     var k = Registry.Knowledge[i];
                     if (k != null && !string.IsNullOrEmpty(k.Id)) KnowledgeById[k.Id] = k;
+                }
+            }
+            if (Registry.CharacterParts != null)
+            {
+                for (int i = 0; i < Registry.CharacterParts.Length; i++)
+                {
+                    var part = Registry.CharacterParts[i];
+                    if (part == null || string.IsNullOrEmpty(part.Id) || string.IsNullOrEmpty(part.CategoryId))
+                    {
+                        continue;
+                    }
+
+                    CharacterPartById[part.Id] = part;
+                    if (!CharacterPartsByCategory.TryGetValue(part.CategoryId, out var categoryParts))
+                    {
+                        categoryParts = new List<CharacterPartDefinition>();
+                        CharacterPartsByCategory[part.CategoryId] = categoryParts;
+                    }
+                    categoryParts.Add(part);
+                }
+            }
+            if (Registry.CharacterPartAnimationClips != null)
+            {
+                for (int i = 0; i < Registry.CharacterPartAnimationClips.Length; i++)
+                {
+                    var clip = Registry.CharacterPartAnimationClips[i];
+                    if (clip != null && !string.IsNullOrEmpty(clip.Id))
+                    {
+                        CharacterPartAnimationClipById[clip.Id] = clip;
+                    }
+                }
+            }
+            if (Registry.FishingAnimations != null)
+            {
+                for (int i = 0; i < Registry.FishingAnimations.Length; i++)
+                {
+                    var animation = Registry.FishingAnimations[i];
+                    if (animation != null && !string.IsNullOrEmpty(animation.Id))
+                    {
+                        FishingAnimationById[animation.Id] = animation;
+                    }
                 }
             }
         }

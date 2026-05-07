@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Rootborn.Game.Common;
+using Rootborn.Game.Family;
 using Rootborn.Game.Managers;
 using Rootborn.Game.Resources;
 using Rootborn.Game.Save;
@@ -345,6 +346,7 @@ namespace Rootborn.Game.Bootstrap
             // sortingOrder 매우 크게 — 자원 노드(1)보다 무조건 위
             sr.sortingOrder = 1000;
             sr.sortingLayerID = 0;
+            ConfigureCharacterParts(playerInstance, registry);
             // 캐릭터 sheet 는 PPU 49 라 1 unit 정사각형이지만, sheet 안의 캐릭터 art 가
             // 셀의 ~30%만 차지함. 자원 sprite(16x16 PPU 16, art 거의 가득)와 시각 크기를
             // 맞추기 위해 2.0× 스케일. 미세 조정은 Inspector 에서.
@@ -363,10 +365,10 @@ namespace Rootborn.Game.Bootstrap
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
             rb.interpolation = RigidbodyInterpolation2D.Interpolate;
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
-            rb.linearDamping = 8f; // 멈춤 즉각성 (관성 최소화)
+            rb.linearDamping = 8f;
 
             var pcol = playerInstance.AddComponent<BoxCollider2D>();
-            pcol.size = new Vector2(0.6f, 0.5f); // 발 부근 작은 박스
+            pcol.size = new Vector2(0.6f, 0.5f);
             pcol.offset = new Vector2(0f, -0.25f);
             pcol.isTrigger = false;
 
@@ -418,6 +420,86 @@ namespace Rootborn.Game.Bootstrap
             }
 
             Debug.Log("[ROOTBORN/AutoFiller] Player spawned with GatherInteractor + KnowledgeProgress + CameraFollow.");
+        }
+
+        private static async void ConfigureCharacterParts(GameObject playerInstance, GameDataRegistry registry)
+        {
+            if (playerInstance == null || registry == null || registry.CharacterParts == null || registry.CharacterParts.Length == 0)
+            {
+                return;
+            }
+
+            var composer = playerInstance.GetComponent<CharacterPartComposer>();
+            if (composer == null)
+            {
+                composer = playerInstance.AddComponent<CharacterPartComposer>();
+            }
+
+            composer.EnsureLayers(registry.CharacterParts);
+            var animator = playerInstance.GetComponent<CharacterPartAnimator>();
+            if (animator == null)
+            {
+                animator = playerInstance.AddComponent<CharacterPartAnimator>();
+            }
+
+            var rootRenderer = playerInstance.GetComponent<SpriteRenderer>();
+            if (rootRenderer != null)
+            {
+                rootRenderer.sprite = null;
+                rootRenderer.enabled = false;
+            }
+            var saved = ActiveSaveContext.Metadata != null ? ActiveSaveContext.Metadata.Appearance : null;
+            var appearance = CharacterAppearance.ResolveWithDefaults(saved, registry.CharacterParts);
+            var resource = Managers.Managers.Resource;
+            if (resource == null)
+            {
+                animator.Configure(composer, appearance, registry.CharacterParts, (part, subSpriteName) => ResolveLoadedCharacterPartSprite(subSpriteName));
+                animator.SetMotion(Vector2.zero, new Vector2(0f, -1f));
+                animator.Tick(0f);
+                return;
+            }
+
+            for (int i = 0; i < registry.CharacterParts.Length; i++)
+            {
+                var part = registry.CharacterParts[i];
+                if (part != null)
+                {
+                    await resource.LoadSubSpriteAsync(part.SheetAddress, CharacterPartComposer.BuildFrameSubSpriteName(part, 0, 0));
+                    if (playerInstance == null || composer == null || animator == null)
+                    {
+                        return;
+                    }
+                }
+            }
+
+            if (playerInstance == null || composer == null || animator == null)
+            {
+                return;
+            }
+
+            animator.Configure(composer, appearance, registry.CharacterParts, (part, subSpriteName) => resource.GetCachedSubSprite(part.SheetAddress, subSpriteName));
+            animator.SetMotion(Vector2.zero, new Vector2(0f, -1f));
+            animator.Tick(0f);
+        }
+
+        private static Sprite ResolveLoadedCharacterPartSprite(string subSpriteName)
+        {
+            if (string.IsNullOrEmpty(subSpriteName))
+            {
+                return null;
+            }
+
+            var allSprites = UnityEngine.Resources.FindObjectsOfTypeAll<Sprite>();
+            for (int i = 0; i < allSprites.Length; i++)
+            {
+                var sprite = allSprites[i];
+                if (sprite != null && sprite.name == subSpriteName)
+                {
+                    return sprite;
+                }
+            }
+
+            return null;
         }
 
         // Farm UI Canvas + FarmHudController 절차 생성. 이미 있으면 스킵.
@@ -511,6 +593,7 @@ namespace Rootborn.Game.Bootstrap
             }
 
             var registry = Rootborn.Game.Managers.Managers.Data?.Registry ?? LoadRegistryFallback();
+            ConfigureCharacterParts(player, registry);
             var inv = player.GetComponent<Rootborn.Game.Player.PlayerInventory>();
             if (inv == null)
             {
@@ -532,6 +615,14 @@ namespace Rootborn.Game.Bootstrap
                 added++;
             }
             interactor.BindInventory(inv);
+            if (interactor.EquippedTool == null && inv.EquippedToolItem != null)
+            {
+                var data = Rootborn.Game.Managers.Managers.Data;
+                if (data != null && data.ToolById.TryGetValue(inv.EquippedToolItem.Id, out var equippedTool))
+                {
+                    interactor.EquippedTool = equippedTool;
+                }
+            }
             if (interactor.KnowledgeProgress == null && registry != null)
             {
                 interactor.Bind(new Rootborn.Game.Knowledge.KnowledgeProgress(registry.Knowledge));

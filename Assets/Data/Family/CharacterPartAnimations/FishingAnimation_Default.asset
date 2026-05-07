@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 945bf3168cb69914c89599475e8400d1, type: 3}
+  m_Name: FishingAnimation_Default
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Family.FishingAnimationDefinition
+  _id: character.fishing.default
+  _throwHookClip: {fileID: 11400000, guid: 863a3702a2671e245a0fc17132ec922d, type: 2}
+  _waitingIdleClip: {fileID: 11400000, guid: a07866dca4c55324abcdd854124570f8, type: 2}
+  _pullHookClip: {fileID: 11400000, guid: 653799999ff6771429a37563fb6b9786, type: 2}
+  _caughtClip: {fileID: 11400000, guid: 73bc9fa22aab97f459e4c4e72bf19e91, type: 2}
