@@ -35,5 +35,20 @@ namespace Rootborn.Tests.EditMode
             StringAssert.Contains("PreviewSprite", source);
             StringAssert.Contains("HudPart_", source);
         }
+
+        [Test]
+        public void FarmHudOverlay_FollowsPixelwoodReferenceTopLeftHudStructure()
+        {
+            Assert.IsTrue(File.Exists(CharacterHudOverlayPath), CharacterHudOverlayPath);
+            string source = File.ReadAllText(CharacterHudOverlayPath);
+            StringAssert.Contains("TimeLabel", source);
+            StringAssert.Contains("CurrencyLabel", source);
+            StringAssert.Contains("HudSlot_Inventory", source);
+            StringAssert.Contains("HudSlot_Health", source);
+            StringAssert.Contains("HudSlot_Tool", source);
+            StringAssert.DoesNotContain("HealthGauge", source);
+            StringAssert.DoesNotContain("EnergyGauge", source);
+            StringAssert.DoesNotContain("ToolGauge", source);
+        }
     }
 }

@@ -72,17 +72,22 @@ namespace Rootborn.UI.HUD
 
         private static Transform BuildHud(Transform canvasRoot)
         {
-            var root = Box(canvasRoot, HudName, new Vector2(24f, -24f), new Vector2(228f, 96f), new Color(0.13f, 0.09f, 0.06f, 0.78f));
+            var root = Box(canvasRoot, HudName, new Vector2(18f, -18f), new Vector2(132f, 86f), new Color(0.16f, 0.11f, 0.08f, 0.92f));
             root.SetAsLastSibling();
-            var frame = Box(root, "CharacterThumbnailFrame", new Vector2(12f, -12f), new Vector2(72f, 72f), new Color(0.78f, 0.62f, 0.42f, 0.95f));
+            var frame = Box(root, "CharacterThumbnailFrame", new Vector2(8f, -12f), new Vector2(42f, 42f), new Color(0.78f, 0.62f, 0.42f, 1f));
             var thumbnail = new GameObject("CharacterThumbnail", typeof(RectTransform));
             thumbnail.transform.SetParent(frame, false);
             var trt = (RectTransform)thumbnail.transform;
             trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
-            trt.offsetMin = new Vector2(8f, 8f); trt.offsetMax = new Vector2(-8f, -8f);
-            Gauge(root, "HealthGauge", new Vector2(100f, -18f), new Color(0.72f, 0.18f, 0.16f, 1f));
-            Gauge(root, "EnergyGauge", new Vector2(100f, -42f), new Color(0.28f, 0.62f, 0.28f, 1f));
-            Gauge(root, "ToolGauge", new Vector2(100f, -66f), new Color(0.82f, 0.58f, 0.24f, 1f));
+            trt.offsetMin = new Vector2(4f, 4f); trt.offsetMax = new Vector2(-4f, -4f);
+
+            MakeHudText(root, "TimeLabel", "12:00", new Vector2(60f, -10f), new Vector2(58f, 16f), 10, TextAnchor.MiddleLeft);
+            MakeHudText(root, "CurrencyLabel", "0G", new Vector2(60f, -28f), new Vector2(58f, 16f), 10, TextAnchor.MiddleLeft);
+            MakeHudText(root, "DayLabel", "DAY 1", new Vector2(60f, -46f), new Vector2(62f, 14f), 9, TextAnchor.MiddleLeft);
+
+            BuildHudSlot(root, "HudSlot_Inventory", new Vector2(28f, -60f), new Color(0.2f, 0.58f, 0.38f, 1f), "I");
+            BuildHudSlot(root, "HudSlot_Health", new Vector2(56f, -60f), new Color(0.78f, 0.14f, 0.18f, 1f), string.Empty);
+            BuildHudSlot(root, "HudSlot_Tool", new Vector2(92f, -55f), new Color(0.52f, 0.34f, 0.18f, 1f), string.Empty, new Vector2(30f, 30f), 14f);
             return root;
         }
 
@@ -97,11 +102,35 @@ namespace Rootborn.UI.HUD
             return rt;
         }
 
-        private static void Gauge(Transform parent, string name, Vector2 pos, Color color)
+        private static Text MakeHudText(Transform parent, string name, string value, Vector2 pos, Vector2 size, int fontSize, TextAnchor alignment)
         {
-            var frame = Box(parent, name, pos, new Vector2(106f, 14f), new Color(0.22f, 0.16f, 0.1f, 0.9f));
-            var fill = Box(frame, "Fill", new Vector2(4f, -4f), new Vector2(98f, 6f), color).GetComponent<Image>();
-            fill.raycastTarget = false;
+            var go = new GameObject(name, typeof(RectTransform), typeof(Text));
+            go.transform.SetParent(parent, false);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = new Vector2(0f, 1f); rt.anchorMax = new Vector2(0f, 1f); rt.pivot = new Vector2(0f, 1f);
+            rt.anchoredPosition = pos; rt.sizeDelta = size;
+            var text = go.GetComponent<Text>();
+            text.text = value;
+            text.font = HudFonts.Pixel;
+            text.fontSize = fontSize;
+            text.alignment = alignment;
+            text.color = new Color(0.2f, 0.13f, 0.09f, 1f);
+            text.raycastTarget = false;
+            return text;
+        }
+
+        private static void BuildHudSlot(Transform parent, string name, Vector2 pos, Color fillColor, string label, Vector2? sizeOverride = null, float rotation = 0f)
+        {
+            var size = sizeOverride ?? new Vector2(20f, 20f);
+            var frame = Box(parent, name, pos, size, new Color(0.82f, 0.64f, 0.42f, 1f));
+            frame.localEulerAngles = new Vector3(0f, 0f, rotation);
+            var fill = Box(frame, "Fill", new Vector2(4f, -4f), size - new Vector2(8f, 8f), fillColor);
+            fill.GetComponent<Image>().raycastTarget = false;
+            if (!string.IsNullOrEmpty(label))
+            {
+                var text = MakeHudText(frame, "Label", label, new Vector2(0f, -1f), size, 9, TextAnchor.MiddleCenter);
+                text.color = Color.white;
+            }
         }
 
         private static void BuildCharacterThumbnail(Transform hudRoot)

@@ -35,6 +35,27 @@ namespace Rootborn.Tests.PlayMode
             AssertMissingOrInactive("BookPanel");
         }
 
+        [UnityTest]
+        public IEnumerator FarmScene_TopLeftHudMatchesReferenceScaleAndStructure()
+        {
+            yield return LoadFarmAndBuildHud();
+
+            var hud = GameObject.Find("TopLeftCharacterHud");
+            Assert.IsNotNull(hud);
+            var rt = (RectTransform)hud.transform;
+            var corners = new Vector3[4];
+            rt.GetWorldCorners(corners);
+            float screenWidth = Mathf.Abs(corners[2].x - corners[0].x);
+            float screenHeight = Mathf.Abs(corners[2].y - corners[0].y);
+            Assert.LessOrEqual(screenWidth, 150f);
+            Assert.LessOrEqual(screenHeight, 95f);
+            Assert.IsNotNull(hud.transform.Find("TimeLabel"));
+            Assert.IsNotNull(hud.transform.Find("CurrencyLabel"));
+            Assert.IsNotNull(hud.transform.Find("HudSlot_Inventory"));
+            Assert.IsNotNull(hud.transform.Find("HudSlot_Health"));
+            Assert.IsNotNull(hud.transform.Find("HudSlot_Tool"));
+        }
+
         private static IEnumerator LoadFarmAndBuildHud()
         {
             yield return SceneManager.LoadSceneAsync("Farm");
