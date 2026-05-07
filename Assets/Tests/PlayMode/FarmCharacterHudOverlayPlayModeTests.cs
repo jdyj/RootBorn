@@ -1,4 +1,5 @@
 using System.Collections;
+using System.IO;
 using NUnit.Framework;
 using Rootborn.Game.Bootstrap;
 using Rootborn.Game.Managers;
@@ -87,6 +88,22 @@ namespace Rootborn.Tests.PlayMode
             Assert.AreEqual("0G", hud.transform.Find("CurrencyLabel").GetComponent<Text>().text);
         }
 
+        [UnityTest]
+        public IEnumerator FarmScene_TopLeftHudScreenshotAudit_WritesEvidence()
+        {
+            yield return LoadFarmAndBuildHud();
+            yield return new WaitForEndOfFrame();
+
+            var hud = GameObject.Find("TopLeftCharacterHud");
+            Assert.IsNotNull(hud);
+            Assert.Zero(CountTextOverflows(hud));
+            AssertHudWithinTopLeftReferenceBounds((RectTransform)hud.transform);
+
+            string screenshotPath = CaptureHudScreenshot("farm-top-left-hud.png");
+            Assert.IsTrue(File.Exists(screenshotPath), "Expected screenshot at " + screenshotPath);
+            Assert.Greater(CountVisiblePixels(screenshotPath), 1000);
+        }
+
         private static IEnumerator LoadFarmAndBuildHud()
         {
             yield return SceneManager.LoadSceneAsync("Farm");
@@ -152,6 +169,64 @@ namespace Rootborn.Tests.PlayMode
             }
 
             Assert.GreaterOrEqual(imageCount, 9, objectName);
+        }
+
+        private static void AssertHudWithinTopLeftReferenceBounds(RectTransform hud)
+        {
+            var corners = new Vector3[4];
+            hud.GetWorldCorners(corners);
+            Assert.GreaterOrEqual(corners[0].x, -1f, "HUD must stay inside left screen edge.");
+            Assert.LessOrEqual(corners[2].x, 170f, "HUD must remain a compact top-left reference element.");
+            Assert.GreaterOrEqual(corners[2].y, Screen.height - 115f, "HUD must stay in the top-left band.");
+            Assert.LessOrEqual(corners[2].y, Screen.height + 1f, "HUD must stay inside top screen edge.");
+        }
+
+        private static int CountTextOverflows(GameObject root)
+        {
+            int overflow = 0;
+            foreach (var text in root.GetComponentsInChildren<Text>(true))
+            {
+                var rt = (RectTransform)text.transform;
+                if (text.preferredWidth > rt.rect.width + 1f || text.preferredHeight > rt.rect.height + 1f)
+                {
+                    overflow++;
+                }
+            }
+
+            return overflow;
+        }
+
+        private static string CaptureHudScreenshot(string fileName)
+        {
+            int width = Mathf.Max(1, Screen.width);
+            int height = Mathf.Max(1, Screen.height);
+            var texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            texture.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+            texture.Apply();
+            string directory = "Builds/Logs/modern-ui";
+            Directory.CreateDirectory(directory);
+            string path = Path.Combine(directory, fileName);
+            File.WriteAllBytes(path, texture.EncodeToPNG());
+            Object.Destroy(texture);
+            return path;
+        }
+
+        private static int CountVisiblePixels(string screenshotPath)
+        {
+            var bytes = File.ReadAllBytes(screenshotPath);
+            var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            texture.LoadImage(bytes);
+            int count = 0;
+            foreach (var pixel in texture.GetPixels32())
+            {
+                if (pixel.a > 0 && (pixel.r > 4 || pixel.g > 4 || pixel.b > 4))
+                {
+                    count++;
+                }
+            }
+
+            Object.Destroy(texture);
+            return count;
         }
 
         private static GameObject FindByNameIncludingInactive(string objectName)

@@ -7,6 +7,7 @@ namespace Rootborn.Tests.EditMode
     {
         private const string StatusHudPath = "Assets/Scripts/UI/HUD/StatusHud.cs";
         private const string CharacterHudOverlayPath = "Assets/Scripts/UI/HUD/FarmCharacterHudOverlayInstaller.cs";
+        private const string CharacterHudPlayModeTestPath = "Assets/Tests/PlayMode/FarmCharacterHudOverlayPlayModeTests.cs";
 
         [Test]
         public void StatusHud_UsesModernHudSpriteKeysInsteadOfLegacyUiSpriteAddresses()
@@ -75,6 +76,19 @@ namespace Rootborn.Tests.EditMode
             StringAssert.Contains("SetText(hudRoot, \"CurrencyLabel\", \"0G\")", source);
             StringAssert.DoesNotContain("FindCurrencyItem", source);
             StringAssert.DoesNotContain("item.Id ==", source);
+        }
+
+        [Test]
+        public void FarmHudOverlay_PlayModeAuditCapturesTopLeftHudScreenshotEvidence()
+        {
+            Assert.IsTrue(File.Exists(CharacterHudPlayModeTestPath), CharacterHudPlayModeTestPath);
+            string source = File.ReadAllText(CharacterHudPlayModeTestPath);
+            StringAssert.Contains("FarmScene_TopLeftHudScreenshotAudit_WritesEvidence", source);
+            StringAssert.Contains("CaptureHudScreenshot", source);
+            StringAssert.Contains("farm-top-left-hud.png", source);
+            StringAssert.Contains("CountVisiblePixels", source);
+            StringAssert.Contains("CountTextOverflows", source);
+            StringAssert.Contains("Builds/Logs/modern-ui", source);
         }
     }
 }
