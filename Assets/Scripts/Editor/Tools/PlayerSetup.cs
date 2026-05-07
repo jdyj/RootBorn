@@ -215,15 +215,18 @@ namespace Rootborn.Editor.Tools
             var sr = template.AddComponent<SpriteRenderer>();
             sr.sprite = defaultSprite;
             sr.sortingOrder = 5;
-
-            // 시각 크기를 자원(16ppu, art 거의 가득)과 맞추기 위해 2.0×.
             template.transform.localScale = new Vector3(2.0f, 2.0f, 1f);
+
+            var toolPart = new GameObject("Part_tool");
+            toolPart.transform.SetParent(template.transform, false);
+            var toolRenderer = toolPart.AddComponent<SpriteRenderer>();
+            toolRenderer.enabled = false;
+            toolRenderer.sortingOrder = 10;
 
             var animator = template.AddComponent<Animator>();
             animator.runtimeAnimatorController = controller;
             animator.applyRootMotion = false;
 
-            // Rigidbody2D (Dynamic) + BoxCollider2D — 자원 collider 와 자동 차단.
             var rb = template.AddComponent<Rigidbody2D>();
             rb.bodyType = RigidbodyType2D.Dynamic;
             rb.gravityScale = 0f;
@@ -238,10 +241,10 @@ namespace Rootborn.Editor.Tools
             pcol.isTrigger = false;
 
             var ctrl = template.AddComponent<PlayerController>();
-
             var so = new SerializedObject(ctrl);
             so.FindProperty("_animator").objectReferenceValue = animator;
             so.FindProperty("_renderer").objectReferenceValue = sr;
+            so.FindProperty("_toolRenderer").objectReferenceValue = toolRenderer;
             var rbProp = so.FindProperty("_rb");
             if (rbProp != null) rbProp.objectReferenceValue = rb;
             so.ApplyModifiedPropertiesWithoutUndo();
