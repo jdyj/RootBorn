@@ -42,15 +42,15 @@ namespace Rootborn.UI.Modern
     {
         public static readonly ModernUiTileRecipe CommonPanel = new ModernUiTileRecipe(new[]
         {
-            new ModernUiSpriteKey(ModernUISpriteAddresses.Style16, "ModernUI_16_Style1_r0_c0", 0, 0, "corner-tl"),
-            new ModernUiSpriteKey(ModernUISpriteAddresses.Style16, "ModernUI_16_Style1_r0_c1", 0, 1, "edge-t"),
-            new ModernUiSpriteKey(ModernUISpriteAddresses.Style16, "ModernUI_16_Style1_r0_c2", 0, 2, "corner-tr"),
-            new ModernUiSpriteKey(ModernUISpriteAddresses.Style16, "ModernUI_16_Style1_r1_c0", 1, 0, "edge-l"),
-            new ModernUiSpriteKey(ModernUISpriteAddresses.Style16, "ModernUI_16_Style1_r1_c1", 1, 1, "fill"),
-            new ModernUiSpriteKey(ModernUISpriteAddresses.Style16, "ModernUI_16_Style1_r1_c2", 1, 2, "edge-r"),
-            new ModernUiSpriteKey(ModernUISpriteAddresses.Style16, "ModernUI_16_Style1_r2_c0", 2, 0, "corner-bl"),
-            new ModernUiSpriteKey(ModernUISpriteAddresses.Style16, "ModernUI_16_Style1_r2_c1", 2, 1, "edge-b"),
-            new ModernUiSpriteKey(ModernUISpriteAddresses.Style16, "ModernUI_16_Style1_r2_c2", 2, 2, "corner-br"),
+            new ModernUiSpriteKey(ModernUISpriteAddresses.Style16Alt, "ModernUI_16_Style2_r0_c0", 0, 0, "corner-tl"),
+            new ModernUiSpriteKey(ModernUISpriteAddresses.Style16Alt, "ModernUI_16_Style2_r0_c1", 0, 1, "edge-t"),
+            new ModernUiSpriteKey(ModernUISpriteAddresses.Style16Alt, "ModernUI_16_Style2_r0_c2", 0, 2, "corner-tr"),
+            new ModernUiSpriteKey(ModernUISpriteAddresses.Style16Alt, "ModernUI_16_Style2_r1_c0", 1, 0, "edge-l"),
+            new ModernUiSpriteKey(ModernUISpriteAddresses.Style16Alt, "ModernUI_16_Style2_r1_c1", 1, 1, "fill"),
+            new ModernUiSpriteKey(ModernUISpriteAddresses.Style16Alt, "ModernUI_16_Style2_r1_c2", 1, 2, "edge-r"),
+            new ModernUiSpriteKey(ModernUISpriteAddresses.Style16Alt, "ModernUI_16_Style2_r2_c0", 2, 0, "corner-bl"),
+            new ModernUiSpriteKey(ModernUISpriteAddresses.Style16Alt, "ModernUI_16_Style2_r2_c1", 2, 1, "edge-b"),
+            new ModernUiSpriteKey(ModernUISpriteAddresses.Style16Alt, "ModernUI_16_Style2_r2_c2", 2, 2, "corner-br"),
         });
 
         public static readonly ModernUiWindowRecipe SettingsWindow = new ModernUiWindowRecipe(
