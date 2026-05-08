@@ -40,13 +40,14 @@ Technical renames are deferred until the default town path is green. This avoids
 
 | Gate | Result | Evidence |
 | --- | --- | --- |
-| TownConcept EditMode | PASS | `Rootborn.Tests.EditMode.TownConcept`: 8 passed, 0 failed. |
+| TownConcept EditMode | PASS | `Rootborn.Tests.EditMode.TownConcept`: 11 passed, 0 failed. |
 | ModernSociety EditMode | PASS | `Rootborn.Tests.EditMode.ModernSociety`: 1 passed, 0 failed. |
 | TownConcept PlayMode | PASS | `Rootborn.Tests.PlayMode.TownConcept`: 3 passed, 0 failed. |
 | Entity ID branching gate | PASS | `Scripts/ci/check-no-entity-id-branching.sh`: `OK: no entity-id branching in system code.` |
 | Forbidden runtime lookup audit | PASS | No matches for `Resources.Load`, `GameObject.Find`, `FindObjectOfType`, or `FindObjectsOfType` in the town conversion files. |
 | Style2 runtime source audit | PASS | First-scope runtime UI files do not reference Style1 sprite sheets or Style1 sprite names. |
 | Style2 recipe manifest audit | PASS | Settings, inventory, status, quest, and popup runtime recipes match the Style2 manifest. |
+| Default Town flow audit | PASS | Main menu, save slot load, bootstrap default, Modern UI auto installer, and build settings prioritize `Town` before legacy `Farm`. |
 
 ## Remaining Farm Residue
 

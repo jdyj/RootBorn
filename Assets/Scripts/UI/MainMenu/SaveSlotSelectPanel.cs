@@ -11,7 +11,7 @@ namespace Rootborn.UI.MainMenu
 {
     public sealed class SaveSlotSelectPanel : MonoBehaviour
     {
-        [SerializeField] private string _farmScene = "Farm";
+        [SerializeField] private string _townScene = "Town";
 
         private static string s_saveRootOverride;
 
@@ -162,7 +162,7 @@ namespace Rootborn.UI.MainMenu
         {
             ActiveSaveContext.Set(metadata);
             Hide();
-            SceneManager.LoadScene(_farmScene);
+            SceneManager.LoadScene(_townScene);
         }
 
         private void BuildCharacterSelectionControls(Transform parent)

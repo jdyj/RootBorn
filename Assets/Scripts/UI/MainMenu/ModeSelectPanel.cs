@@ -11,7 +11,7 @@ namespace Rootborn.UI.MainMenu
         [SerializeField] private Button _hostButton;
         [SerializeField] private Button _clientButton;
         [SerializeField] private Button _quitButton;
-        [SerializeField] private string _farmScene = "Farm";
+        [SerializeField] private string _townScene = "Town";
         [SerializeField] private string _hostLobbyScene = "HostLobby";
 
         private void Awake()
@@ -32,7 +32,7 @@ namespace Rootborn.UI.MainMenu
         private void OnHost()
         {
             ApplyMode(SessionMode.Host);
-            SceneManager.LoadScene(_farmScene);
+            SceneManager.LoadScene(_townScene);
         }
 
         private void OnClient()
