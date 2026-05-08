@@ -11,6 +11,8 @@ ROOTBORN Unity 프로젝트에서 기존 NPC/대화/퀘스트 구현을 확인�
 3. NPC와 대화한 뒤 퀘스트를 수령할 수 있어야 한다.
 4. 테스트를 만들고 Unity Test Runner로 직접 실행해서 결과를 보고해야 한다.
 5. 퀘스트 진행, 대화 상태, 보상 수령 상태는 세이브 파일마다 분리되어야 한다. saveSlot A에서 수락/완료/보상 수령한 상태가 saveSlot B에 섞이면 안 된다.
+6. 멀티플레이 동기화 테스트를 항상 함께 진행해야 한다. NPC 상호작용, 대화 선택, 퀘스트 수락/진행/완료/보상 상태가 서버 권한 기준으로 올바르게 브로드캐스트되는지 검증한다.
+7. 멀티플레이 성능 회귀 테스트를 항상 함께 진행해야 한다. 브로드캐스트가 불필요하게 반복되지 않고, 플레이어 수 증가 시 네트워크 메시지/상태 갱신이 중복 폭증하지 않도록 검증한다.
 
 절대 규칙:
 - AGENTS.md와 .claude/rules/*를 따른다.
@@ -19,6 +21,7 @@ ROOTBORN Unity 프로젝트에서 기존 NPC/대화/퀘스트 구현을 확인�
 - NPC, Dialogue, Quest, Reward, StoryFlag, Knowledge 등 게임 엔티티는 ScriptableObject 데이터 기반이어야 한다.
 - questId/npcId/saveSlot/resourceId/toolId/cropId 같은 문자열/enum별 if/switch 분기 로직을 만들지 않는다.
 - 보상 지급은 지급 전 인벤토리 수용 가능 여부와 중복 수령 여부를 검증하고, 실패 시 상태를 변경하지 않는다.
+- 네트워크 상태 변경은 서버 권한을 기준으로 처리하고, 클라이언트별 UI 표시와 서버 저장 상태를 혼동하지 않는다.
 - 기존 사용자 변경, dirty 파일, 생성된 에셋을 되돌리지 않는다. 작업 범위와 충돌하는 변경만 읽고 맞춰 수정한다.
 
 먼저 확인할 기존 구현:
@@ -33,6 +36,7 @@ ROOTBORN Unity 프로젝트에서 기존 NPC/대화/퀘스트 구현을 확인�
 - Assets/Scripts/UI/Quests/QuestHudAutoFiller.cs
 - Assets/Scripts/Game/Quests/QuestLog.cs
 - Assets/Scripts/Game/Quests/QuestSaveData.cs
+- Assets/Scripts/Network/
 - Assets/Data/NPCs/
 - Assets/Data/Dialogue/
 - Assets/Data/Quests/
@@ -61,6 +65,8 @@ ROOTBORN Unity 프로젝트에서 기존 NPC/대화/퀘스트 구현을 확인�
 8. 이미 수락한 퀘스트는 중복 수락되지 않는다.
 9. 완료 후 보상 수령은 기존 QuestLog.CanClaimReward/ClaimReward preflight와 idempotency 규칙을 유지한다.
 10. 저장/로드 경로가 있다면 QuestLogSaveData는 선택된 saveSlot에 종속되어 저장/복원된다. saveSlot 간 진행도, 보상 수령 상태, 대화/스토리 진행 상태가 공유되지 않도록 검증한다.
+11. 멀티플레이에서는 퀘스트 수락/진행/완료/보상 상태 변경이 서버 권한 상태에서 시작되고 모든 관련 클라이언트에 브로드캐스트된다.
+12. 브로드캐스트는 상태 변경 단위로 최소화한다. 같은 선택지 반복 실행, 중복 이벤트, 이미 반영된 saveSlot 상태 로드가 불필요한 추가 브로드캐스트를 만들면 안 된다.
 
 필수 테스트:
 - NPC-QUEST-001: 플레이 씬 로드 후 NPC가 존재하고 SpriteRenderer, Collider2D, NpcInteractor, QuestProvider를 가진다.
@@ -70,12 +76,18 @@ ROOTBORN Unity 프로젝트에서 기존 NPC/대화/퀘스트 구현을 확인�
 - NPC-QUEST-005: GameDataRegistry에 NpcDefinition, DialogueDefinition, QuestDefinition이 등록되어 있고 null 참조가 없다.
 - NPC-QUEST-006: saveSlot A에서 퀘스트를 수락/진행/보상 수령해도 saveSlot B의 QuestLog/저장 데이터는 NotStarted 또는 독립 상태를 유지한다.
 - NPC-QUEST-007: 저장/로드 후 같은 saveSlot에서는 Active/Completed/RewardClaimed 상태와 objective 진행도가 유지된다.
-- NPC-QUEST-008: 기존 QUEST_001~QUEST_015 테스트와 NPC/Dialogue/Quest 관련 E2E 테스트가 계속 통과한다.
+- NPC-QUEST-008: 멀티플레이 host/client 구성에서 NPC 대화 후 퀘스트 수락 상태가 모든 관련 클라이언트에 브로드캐스트된다.
+- NPC-QUEST-009: 멀티플레이에서 퀘스트 진행/완료/보상 수령 상태가 서버 권한으로 처리되고 모든 관련 클라이언트의 표시 상태와 일치한다.
+- NPC-QUEST-010: 중복 대화 선택, 중복 objective 이벤트, 재접속/재로드 상황에서 브로드캐스트가 중복 폭증하지 않는다.
+- NPC-QUEST-011: 멀티플레이 성능 회귀를 확인한다. 테스트 가능한 범위에서 브로드캐스트 횟수, 상태 갱신 횟수, 할당 또는 프레임 지연이 기준을 넘지 않는지 검증한다.
+- NPC-QUEST-012: 기존 QUEST_001~QUEST_015 테스트와 NPC/Dialogue/Quest 관련 E2E 테스트가 계속 통과한다.
 
 테스트 작성 기준:
 - 가능하면 기존 테스트 구조를 확장한다.
 - 실제 씬 동작은 PlayMode 테스트로 검증한다.
 - 순수 QuestLog, DialogueChoiceDefinition, saveSlot 분리는 EditMode 테스트로 먼저 검증한다.
+- 멀티플레이 브로드캐스트와 서버 권한 흐름은 PlayMode 또는 NGO 테스트 유틸리티로 검증한다.
+- 성능 검증은 가능한 한 결정적 카운터를 사용한다. 예: 상태 변경당 브로드캐스트 횟수, 중복 이벤트 처리 횟수, 관련 NetworkVariable/RPC 호출 횟수.
 - 테스트 이름에는 위 시나리오 ID를 포함한다.
 - 테스트가 임의 대기 시간에 의존하지 않도록 씬 로드/오브젝트 생성/바인딩 완료 조건을 명확히 기다린다.
 
@@ -88,8 +100,9 @@ ROOTBORN Unity 프로젝트에서 기존 NPC/대화/퀘스트 구현을 확인�
 6. 최소 구현/수정으로 테스트를 통과시킨다.
 7. 관련 EditMode 테스트를 실행한다.
 8. 관련 PlayMode 테스트를 실행한다.
-9. 가능하면 전체 Quest/NPC/Dialogue 관련 테스트 묶음을 실행한다.
-10. entity ID 분기 금지 CI도 실행한다: Scripts/ci/check-no-entity-id-branching.sh
+9. 멀티플레이 브로드캐스트/서버 권한/성능 회귀 테스트를 실행한다.
+10. 가능하면 전체 Quest/NPC/Dialogue/Network 관련 테스트 묶음을 실행한다.
+11. entity ID 분기 금지 CI도 실행한다: Scripts/ci/check-no-entity-id-branching.sh
 
 완료 조건:
 - 실제 플레이 씬에서 NPC가 존재한다.
@@ -98,8 +111,10 @@ ROOTBORN Unity 프로젝트에서 기존 NPC/대화/퀘스트 구현을 확인�
 - 수령한 퀘스트 상태가 Active로 전환된다.
 - 같은 퀘스트가 중복 수락되지 않는다.
 - 세이브 파일별로 퀘스트/대화/보상 상태가 분리된다.
+- 멀티플레이에서 NPC 대화, 퀘스트 수락, 진행, 완료, 보상 상태가 서버 권한 기준으로 올바르게 브로드캐스트된다.
+- 멀티플레이 브로드캐스트가 중복 폭증하지 않고, 성능 회귀 테스트 기준을 만족한다.
 - 기존 보상 원자성/idempotency 테스트가 깨지지 않는다.
-- 관련 EditMode/PlayMode 테스트 결과를 직접 실행 로그 기준으로 보고한다.
+- 관련 EditMode/PlayMode/Network 테스트 결과를 직접 실행 로그 기준으로 보고한다.
 - 최종 보고에는 수정 파일, 추가/수정 테스트, 실행한 테스트 명령, 통과/실패 결과, 남은 리스크를 포함한다.
 ```
 
