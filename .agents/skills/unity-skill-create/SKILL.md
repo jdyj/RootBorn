@@ -1,6 +1,6 @@
 ---
 name: unity-skill-create
-description: Create a Unity MCP skill tool from C# code, compiled by Unity and exposed after compilation.
+description: Use when creating Unity MCP skill tools from C# code that must compile in Unity and be exposed after compilation.
 ---
 
 ## Authoring Notes
