@@ -47,7 +47,7 @@ Technical renames are deferred until the default town path is green. This avoids
 | Forbidden runtime lookup audit | PASS | No matches for `Resources.Load`, `GameObject.Find`, `FindObjectOfType`, or `FindObjectsOfType` in the town conversion files. |
 | Style2 runtime source audit | PASS | First-scope runtime UI files do not reference Style1 sprite sheets or Style1 sprite names. |
 | Style2 recipe manifest audit | PASS | Settings, inventory, status, quest, and popup runtime recipes match the Style2 manifest. |
-| Default Town flow audit | PASS | Main menu, save slot load, bootstrap default, Modern UI auto installer, and build settings prioritize `Town` before legacy `Farm`. |
+| Default Town flow audit | PASS | Main menu, save slot load, bootstrap default, Town-only Modern UI auto installer, and build settings prioritize `Town` before legacy `Farm`. |
 
 ## Remaining Farm Residue
 

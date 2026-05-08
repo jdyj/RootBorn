@@ -8,7 +8,6 @@ namespace Rootborn.UI.Modern
 {
     public static class ModernUiPanelAutoInstaller
     {
-        private const string FarmSceneName = "Farm";
         private const string TownSceneName = "Town";
         private const string RunnerName = "[ModernUiPanelAutoInstaller]";
 
@@ -75,7 +74,7 @@ namespace Rootborn.UI.Modern
 
         private static bool ShouldInstallForScene(Scene scene)
         {
-            return scene.name == TownSceneName || scene.name == FarmSceneName;
+            return scene.name == TownSceneName;
         }
 
         private static void StartRunner(Scene scene)

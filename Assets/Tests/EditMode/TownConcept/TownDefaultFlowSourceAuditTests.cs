@@ -14,12 +14,14 @@ namespace Rootborn.Tests.EditMode.TownConcept
         }
 
         [Test]
-        public void ModernUiPanelAutoInstaller_RunsOnTownScene()
+        public void ModernUiPanelAutoInstaller_RunsOnlyOnTownScene()
         {
             string source = File.ReadAllText("Assets/Scripts/UI/Modern/ModernUiPanelAutoInstaller.cs");
 
             StringAssert.Contains("TownSceneName", source);
             StringAssert.Contains("\"Town\"", source);
+            StringAssert.DoesNotContain("FarmSceneName", source);
+            StringAssert.DoesNotContain("\"Farm\"", source);
         }
 
         private static void AssertDefaultTownScene(string path)
