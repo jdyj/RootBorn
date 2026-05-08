@@ -38,6 +38,16 @@ namespace Rootborn.Tests.EditMode
         }
 
         [Test]
+        public void AllKeys_UseStyle2SheetsForTownBaseline()
+        {
+            foreach (var key in ModernHudSpriteKeys.All)
+            {
+                StringAssert.Contains("style-2", key.SheetAddress, key.Purpose);
+                StringAssert.Contains("Style2", key.SubSpriteName, key.Purpose);
+            }
+        }
+
+        [Test]
         public void AllKeys_ExistInSlicedModernUiSheets()
         {
             var entriesByAddress = ModernUiAddressablesSetup.GetSheetEntries()

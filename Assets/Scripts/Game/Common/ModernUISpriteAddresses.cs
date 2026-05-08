@@ -46,7 +46,17 @@ namespace Rootborn.Game.Common
                 "ModernUI_16_Style1_r3_c0", "ModernUI_16_Style1_r3_c3", "ModernUI_16_Style1_r3_c8",
                 "ModernUI_16_Style1_r4_c3",
             }),
-            (Style16Alt, new[] { Style16AltFirst, Style16AltLast }),
+            (Style16Alt, new[]
+            {
+                Style16AltFirst, Style16AltLast,
+                "ModernUI_16_Style2_r0_c1", "ModernUI_16_Style2_r0_c2",
+                "ModernUI_16_Style2_r1_c0", "ModernUI_16_Style2_r1_c1", "ModernUI_16_Style2_r1_c2",
+                "ModernUI_16_Style2_r1_c7", "ModernUI_16_Style2_r1_c8", "ModernUI_16_Style2_r1_c9",
+                "ModernUI_16_Style2_r2_c0", "ModernUI_16_Style2_r2_c1", "ModernUI_16_Style2_r2_c2",
+                "ModernUI_16_Style2_r2_c3", "ModernUI_16_Style2_r2_c8", "ModernUI_16_Style2_r2_c9",
+                "ModernUI_16_Style2_r3_c0", "ModernUI_16_Style2_r3_c3", "ModernUI_16_Style2_r3_c8",
+                "ModernUI_16_Style2_r4_c3",
+            }),
             (Gamepad16, new[] { Gamepad16First, Gamepad16Last }),
             (Style32, new[]
             {
@@ -54,7 +64,13 @@ namespace Rootborn.Game.Common
                 "ModernUI_32_Style1_r0_c1", "ModernUI_32_Style1_r0_c2", "ModernUI_32_Style1_r0_c3",
                 "ModernUI_32_Style1_r0_c4", "ModernUI_32_Style1_r0_c5", "ModernUI_32_Style1_r0_c8",
             }),
-            (Style32Alt, new[] { Style32AltFirst, Style32AltLast, "ModernUI_32_Style2_r1_c0" }),
+            (Style32Alt, new[]
+            {
+                Style32AltFirst, Style32AltLast,
+                "ModernUI_32_Style2_r0_c1", "ModernUI_32_Style2_r0_c2", "ModernUI_32_Style2_r0_c3",
+                "ModernUI_32_Style2_r0_c4", "ModernUI_32_Style2_r0_c5", "ModernUI_32_Style2_r0_c8",
+                "ModernUI_32_Style2_r1_c0",
+            }),
             (Gamepad32, new[] { Gamepad32First, Gamepad32Last }),
             (Style48, new[] { Style48First, Style48Last }),
             (Style48Alt, new[] { Style48AltFirst, Style48AltLast }),
