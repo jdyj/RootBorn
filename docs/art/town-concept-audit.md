@@ -18,6 +18,10 @@ The first town UI baseline uses `sprites/ui/modern/16/style-2`.
 
 Style1 remains available only for legacy comparison and migration tests.
 
+First-scope runtime UI files are guarded by `ModernUiStyle2RuntimeSourceAuditTests`.
+The remaining Style1 references are limited to the legacy sprite catalog constants
+and editor setup tools used to slice/register the old sheets.
+
 ## Deferred Technical Renames
 
 Technical renames are deferred until the default town path is green. This avoids broad scene, prefab, asmdef, and serialized reference churn before behavior is verified.
@@ -36,11 +40,12 @@ Technical renames are deferred until the default town path is green. This avoids
 
 | Gate | Result | Evidence |
 | --- | --- | --- |
-| TownConcept EditMode | PASS | `Rootborn.Tests.EditMode.TownConcept`: 5 passed, 0 failed. |
+| TownConcept EditMode | PASS | `Rootborn.Tests.EditMode.TownConcept`: 7 passed, 0 failed. |
 | ModernSociety EditMode | PASS | `Rootborn.Tests.EditMode.ModernSociety`: 1 passed, 0 failed. |
 | TownConcept PlayMode | PASS | `Rootborn.Tests.PlayMode.TownConcept`: 3 passed, 0 failed. |
 | Entity ID branching gate | PASS | `Scripts/ci/check-no-entity-id-branching.sh`: `OK: no entity-id branching in system code.` |
 | Forbidden runtime lookup audit | PASS | No matches for `Resources.Load`, `GameObject.Find`, `FindObjectOfType`, or `FindObjectsOfType` in the town conversion files. |
+| Style2 runtime source audit | PASS | First-scope runtime UI files do not reference Style1 sprite sheets or Style1 sprite names. |
 
 ## Remaining Farm Residue
 
