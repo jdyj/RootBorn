@@ -57,9 +57,15 @@ namespace Rootborn.UI.Modern
             "settings", new[] { "commonPanel", "title-tabs", "close-button", "toggle-row", "slider-row" });
 
         public static readonly ModernUiWindowRecipe InventoryWindow = new ModernUiWindowRecipe(
-            "inventory", new[] { "commonPanel", "title-tabs", "slot-grid", "scrollbar", "selection-cursor" });
+            "inventory", new[] { "commonPanel", "title-tabs", "slot-grid", "scrollbar", "selection-cursor", "popup" });
 
         public static readonly ModernUiWindowRecipe StatusWindow = new ModernUiWindowRecipe(
-            "status", new[] { "commonPanel", "title-tabs", "portrait-frame", "gauge-row", "bottom-buttons" });
+            "status", new[] { "commonPanel", "title-tabs", "portrait-frame", "gauge-row", "icon-frame", "bottom-buttons" });
+
+        public static readonly ModernUiWindowRecipe QuestWindow = new ModernUiWindowRecipe(
+            "quest", new[] { "commonPanel", "quest-list", "quest-detail", "objective-progress", "reward-row", "claim-button", "scrollbar" });
+
+        public static readonly ModernUiWindowRecipe PopupWindow = new ModernUiWindowRecipe(
+            "popup", new[] { "commonPanel", "item-icon", "item-name", "item-description", "item-count", "action-buttons" });
     }
 }
