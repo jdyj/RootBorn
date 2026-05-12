@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 549c6b560b8551844bfa4d075f2684e6, type: 3}
+  m_Name: EncyclopediaEntry_FirstDiscovery
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Encyclopedia.EncyclopediaEntryDefinition
+  _id: ency.location.first-discovery
+  _category: {fileID: 11400000, guid: c1e9e5f494aca684e8a5ddcd36b6a07a, type: 2}
+  _displayName: discovery.clocktower-notice
+  _lockedDisplayName: ???
+  _description: A town discovery record unlocked through actual discovery interaction.
+  _lockedHint: Find a town discovery point.
+  _detailLines:
+  - Discovery details are persisted by save slot and player.
+  _unlockConditions:
+  - {fileID: 11400000, guid: b98e7b1e85847544e8c9f89ad6b78311, type: 2}
+  _revealStage: 1

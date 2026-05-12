@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Rootborn.Game.Crops;
 using Rootborn.Game.Dialogue;
+using Rootborn.Game.Encyclopedia;
 using Rootborn.Game.Family;
 using Rootborn.Game.Generation;
 using Rootborn.Game.Heir;
@@ -31,7 +32,6 @@ namespace Rootborn.Game.Common
         }
 
         private readonly List<Slot> _slots = new List<Slot>(MaxSlots);
-
         public IReadOnlyList<Slot> Slots => _slots;
         public event Action OnChanged;
 
@@ -130,7 +130,6 @@ namespace Rootborn.Game.Common
                     source.Item = null;
                     source.Count = 0;
                 }
-
                 OnChanged?.Invoke();
                 return true;
             }
@@ -157,7 +156,6 @@ namespace Rootborn.Game.Common
                 remaining -= take;
                 if (slot.Count == 0) _slots.RemoveAt(i);
             }
-
             OnChanged?.Invoke();
             return true;
         }
@@ -284,6 +282,8 @@ namespace Rootborn.Game.Common
         [SerializeField] private MilestoneObjectiveBase[] _milestoneObjectives = Array.Empty<MilestoneObjectiveBase>();
         [SerializeField] private MilestoneRouteDefinition[] _milestoneRoutes = Array.Empty<MilestoneRouteDefinition>();
         [SerializeField] private MilestoneRewardBase[] _milestoneRewards = Array.Empty<MilestoneRewardBase>();
+        [SerializeField] private EncyclopediaCategoryDefinition[] _encyclopediaCategories = Array.Empty<EncyclopediaCategoryDefinition>();
+        [SerializeField] private EncyclopediaEntryDefinition[] _encyclopediaEntries = Array.Empty<EncyclopediaEntryDefinition>();
         [SerializeField] private Sprite _groundSprite;
         [SerializeField] private Sprite _playerSprite;
         [SerializeField] private TerrainGenerationDefinition _defaultFarmTerrainGeneration;
@@ -332,6 +332,8 @@ namespace Rootborn.Game.Common
         public MilestoneObjectiveBase[] MilestoneObjectives => _milestoneObjectives;
         public MilestoneRouteDefinition[] MilestoneRoutes => _milestoneRoutes;
         public MilestoneRewardBase[] MilestoneRewards => _milestoneRewards;
+        public EncyclopediaCategoryDefinition[] EncyclopediaCategories => _encyclopediaCategories;
+        public EncyclopediaEntryDefinition[] EncyclopediaEntries => _encyclopediaEntries;
         public Sprite GroundSprite => _groundSprite;
         public Sprite PlayerSprite => _playerSprite;
         public TerrainGenerationDefinition DefaultFarmTerrainGeneration => _defaultFarmTerrainGeneration;

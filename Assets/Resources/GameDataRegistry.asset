@@ -179,6 +179,17 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 1e5390d8e64d57c43b331ef32abd9ec9, type: 2}
   - {fileID: 11400000, guid: f482d7c9312fa0d4e9a0a7c1df8df5a2, type: 2}
   _milestoneRewards: []
+  _encyclopediaCategories:
+  - {fileID: 11400000, guid: c1e9e5f494aca684e8a5ddcd36b6a07a, type: 2}
+  - {fileID: 11400000, guid: 18046b2c79307df4e87c6be4efe99723, type: 2}
+  - {fileID: 11400000, guid: ba8914cb8a8aa3042af987aee46de56a, type: 2}
+  - {fileID: 11400000, guid: 133427119c48bc74190c9891e516b336, type: 2}
+  - {fileID: 11400000, guid: 5347f2857c1ed2b428e58ce2b5dadfa9, type: 2}
+  - {fileID: 11400000, guid: dcad1bb6dbd1fe44196f56543144de34, type: 2}
+  _encyclopediaEntries:
+  - {fileID: 11400000, guid: 5dace5d8c37a0044293533c469cf4cf3, type: 2}
+  - {fileID: 11400000, guid: 90a8505b4813f6c46955c2cffa3e5cfd, type: 2}
+  - {fileID: 11400000, guid: 287643eb97bf04c4f82ddadc24189e49, type: 2}
   _groundSprite: {fileID: 21300000, guid: 71df351b8cfdac24b9dd030d2f35abac, type: 3}
   _playerSprite: {fileID: 21300000, guid: 5f439540e7f27e24f8b0856cc24ea6ab, type: 3}
   _defaultFarmTerrainGeneration: {fileID: 11400000, guid: b26cde69cfb426841aef41ae7a6f128f, type: 2}
