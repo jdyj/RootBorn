@@ -14,65 +14,42 @@ namespace Rootborn.Editor.Tools
         private const string ControllerPath = "Assets/Data/Animations/PlayerAnimator.controller";
         private const string PrefabFolder = "Assets/Prefabs";
         private const string PrefabPath = "Assets/Prefabs/Player.prefab";
+        private const string ModernPlayerSpritePath = "Assets/Modern_Farm_v1.2/Generated/ModernFarmer_IdleDown_16x16.png";
 
-        private const string IdleDownPath = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Idle/Down.png";
-        private const string IdleSidePath = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Idle/Side.png";
-        private const string IdleUpPath = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Idle/Up.png";
-        private const string WalkDownPath = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Walk/Down.png";
-        private const string WalkSidePath = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Walk/Side.png";
-        private const string WalkUpPath = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Walk/Up.png";
-
-        [MenuItem("Rootborn/Player/Setup Player Prefab + Spawn In Farm")]
+        [MenuItem("Rootborn/Player/Setup Modern Player Prefab + Spawn In Farm")]
         public static void Setup()
         {
             if (!OneClickSetup.EnsureNotPlaying()) return;
             EnsureFolder(AnimationsFolder);
             EnsureFolder(PrefabFolder);
+            EnsureSingleSpriteImporter(ModernPlayerSpritePath);
 
-            var idleDown = LoadFrames(IdleDownPath);
-            var idleSide = LoadFrames(IdleSidePath);
-            var idleUp = LoadFrames(IdleUpPath);
-            var walkDown = LoadFrames(WalkDownPath);
-            var walkSide = LoadFrames(WalkSidePath);
-            var walkUp = LoadFrames(WalkUpPath);
-
-            if (idleDown.Length == 0 || walkDown.Length == 0)
+            var modernPlayerSprite = AssetDatabase.LoadAssetAtPath<Sprite>(ModernPlayerSpritePath);
+            if (modernPlayerSprite == null)
             {
-                Debug.LogError("[ROOTBORN] Player sprites not sliced. Run 'Rootborn/Pixelwood/Slice Sprite Sheets' first.");
+                Debug.LogError($"[ROOTBORN] Modern player sprite missing: {ModernPlayerSpritePath}");
                 return;
             }
 
+            var frames = new[] { modernPlayerSprite };
             var clips = new Dictionary<string, AnimationClip>
             {
-                { "Idle_Down", BuildLoopClip("Idle_Down", idleDown, 4f) },
-                { "Idle_Side", BuildLoopClip("Idle_Side", idleSide, 4f) },
-                { "Idle_Up", BuildLoopClip("Idle_Up", idleUp, 4f) },
-                { "Walk_Down", BuildLoopClip("Walk_Down", walkDown, 8f) },
-                { "Walk_Side", BuildLoopClip("Walk_Side", walkSide, 8f) },
-                { "Walk_Up", BuildLoopClip("Walk_Up", walkUp, 8f) }
+                { "Idle_Down", BuildLoopClip("Idle_Down", frames, 4f) },
+                { "Idle_Side", BuildLoopClip("Idle_Side", frames, 4f) },
+                { "Idle_Up", BuildLoopClip("Idle_Up", frames, 4f) },
+                { "Walk_Down", BuildLoopClip("Walk_Down", frames, 8f) },
+                { "Walk_Side", BuildLoopClip("Walk_Side", frames, 8f) },
+                { "Walk_Up", BuildLoopClip("Walk_Up", frames, 8f) }
             };
 
             var controller = BuildController(clips);
-
-            var prefab = BuildPlayerPrefab(controller, idleDown[0]);
+            var prefab = BuildPlayerPrefab(controller, modernPlayerSprite);
 
             SpawnInFarm(prefab);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log("[ROOTBORN] Player prefab built and spawned in Farm scene.");
-        }
-
-        private static Sprite[] LoadFrames(string path)
-        {
-            var assets = AssetDatabase.LoadAllAssetsAtPath(path);
-            var list = new List<Sprite>();
-            foreach (var a in assets)
-            {
-                if (a is Sprite s) list.Add(s);
-            }
-            list.Sort((x, y) => string.CompareOrdinal(x.name, y.name));
-            return list.ToArray();
+            Debug.Log("[ROOTBORN] Modern player prefab built and spawned in Farm scene.");
         }
 
         private static AnimationClip BuildLoopClip(string name, Sprite[] frames, float fps)
@@ -146,13 +123,11 @@ namespace Rootborn.Editor.Tools
 
             sm.defaultState = idleDown;
 
-            AddBidirectional(idleDown, walkDown, "Speed", AnimatorConditionMode.Greater, 0.01f, "Less", 0.01f);
-            AddBidirectional(idleSide, walkSide, "Speed", AnimatorConditionMode.Greater, 0.01f, "Less", 0.01f);
-            AddBidirectional(idleUp, walkUp, "Speed", AnimatorConditionMode.Greater, 0.01f, "Less", 0.01f);
-
-            // Direction switch among idle states based on MoveY (last input direction held by Speed-zero)
-            AddDirectionalIdle(sm, idleDown, idleSide, idleUp);
-            AddDirectionalWalk(sm, walkDown, walkSide, walkUp);
+            AddBidirectional(idleDown, walkDown, "Speed", AnimatorConditionMode.Greater, 0.01f, 0.01f);
+            AddBidirectional(idleSide, walkSide, "Speed", AnimatorConditionMode.Greater, 0.01f, 0.01f);
+            AddBidirectional(idleUp, walkUp, "Speed", AnimatorConditionMode.Greater, 0.01f, 0.01f);
+            AddDirectionalIdle(idleDown, idleSide, idleUp);
+            AddDirectionalWalk(walkDown, walkSide, walkUp);
 
             EditorUtility.SetDirty(controller);
             return controller;
@@ -160,8 +135,7 @@ namespace Rootborn.Editor.Tools
 
         private static void AddBidirectional(
             AnimatorState a, AnimatorState b,
-            string param, AnimatorConditionMode aToBMode, float aToBThreshold,
-            string _unusedMode, float bToAThreshold)
+            string param, AnimatorConditionMode aToBMode, float aToBThreshold, float bToAThreshold)
         {
             var aToB = a.AddTransition(b);
             aToB.hasExitTime = false;
@@ -174,22 +148,19 @@ namespace Rootborn.Editor.Tools
             bToA.AddCondition(AnimatorConditionMode.Less, bToAThreshold, param);
         }
 
-        private static void AddDirectionalIdle(AnimatorStateMachine sm, AnimatorState down, AnimatorState side, AnimatorState up)
+        private static void AddDirectionalIdle(AnimatorState down, AnimatorState side, AnimatorState up)
         {
-            // From any idle to up if MoveY > 0.5 and Speed < 0.01
             AddDirectional(down, up, "MoveY", AnimatorConditionMode.Greater, 0.5f);
             AddDirectional(side, up, "MoveY", AnimatorConditionMode.Greater, 0.5f);
-            // To down if MoveY < -0.5
             AddDirectional(side, down, "MoveY", AnimatorConditionMode.Less, -0.5f);
             AddDirectional(up, down, "MoveY", AnimatorConditionMode.Less, -0.5f);
-            // To side if abs(MoveX) > 0.5
             AddDirectional(down, side, "MoveX", AnimatorConditionMode.Greater, 0.5f);
             AddDirectional(up, side, "MoveX", AnimatorConditionMode.Greater, 0.5f);
             AddDirectional(down, side, "MoveX", AnimatorConditionMode.Less, -0.5f);
             AddDirectional(up, side, "MoveX", AnimatorConditionMode.Less, -0.5f);
         }
 
-        private static void AddDirectionalWalk(AnimatorStateMachine sm, AnimatorState down, AnimatorState side, AnimatorState up)
+        private static void AddDirectionalWalk(AnimatorState down, AnimatorState side, AnimatorState up)
         {
             AddDirectional(down, up, "MoveY", AnimatorConditionMode.Greater, 0.5f);
             AddDirectional(side, up, "MoveY", AnimatorConditionMode.Greater, 0.5f);
@@ -273,10 +244,24 @@ namespace Rootborn.Editor.Tools
                     else if (t.name.StartsWith("Rock_")) rockCount++;
                 }
             }
-            Debug.Log($"[ROOTBORN/PlayerSetup] Spawned Player at (15, 10). Existing resources: trees={treeCount}, rocks={rockCount}");
+            Debug.Log($"[ROOTBORN/PlayerSetup] Spawned modern Player at (15, 10). Existing resources: trees={treeCount}, rocks={rockCount}");
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
+        }
+
+        private static void EnsureSingleSpriteImporter(string assetPath)
+        {
+            var importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+            if (importer == null) return;
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.spritePixelsPerUnit = 16;
+            importer.filterMode = FilterMode.Point;
+            importer.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.mipmapEnabled = false;
+            importer.alphaIsTransparency = true;
+            importer.SaveAndReimport();
         }
 
         private static void EnsureFolder(string path)

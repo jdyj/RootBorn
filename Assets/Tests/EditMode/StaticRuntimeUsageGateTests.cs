@@ -40,7 +40,15 @@ namespace Rootborn.Tests.EditMode
             "Assets/Scripts/UI/HUD/StatusHud.cs :: var playerGo = GameObject.Find(\"Player\");",
             "Assets/Scripts/UI/MainMenu/SaveSlotSelectPanel.cs :: var existing = Object.FindFirstObjectByType<SaveSlotSelectPanel>(FindObjectsInactive.Include);",
             "Assets/Scripts/UI/MainMenu/SaveSlotSelectPanel.cs :: var canvas = Object.FindFirstObjectByType<Canvas>();",
-            "Assets/Scripts/UI/MainMenu/SaveSlotSelectPanel.cs :: if (Object.FindFirstObjectByType<EventSystem>() != null)"
+            "Assets/Scripts/UI/MainMenu/SaveSlotSelectPanel.cs :: if (Object.FindFirstObjectByType<EventSystem>() != null)",
+            "Assets/Scripts/Game/Player/GatherInteractor.cs :: var all = UnityEngine.Object.FindObjectsByType<ResourceNode>(FindObjectsSortMode.None);",
+            "Assets/Scripts/Game/Player/PlayerInteractionRouter.cs :: var behaviours = Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);",
+            "Assets/Scripts/UI/MainMenu/SaveSlotSelectPanel.cs :: var eventSystem = Object.FindFirstObjectByType<EventSystem>();",
+            "Assets/Scripts/UI/StudentLife/StudentDayEndInteractor.cs :: var questPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);",
+            "Assets/Scripts/UI/StudentLife/StudentDayQuestInventoryTracker.cs :: var player = GameObject.Find(\"Player\");",
+            "Assets/Scripts/UI/StudentLife/StudentDayQuestInventoryTracker.cs :: var questPanel = UnityEngine.Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);",
+            "Assets/Scripts/UI/StudentLife/StudentDayResultPanel.cs :: var existing = Object.FindFirstObjectByType<StudentDayResultPanel>(FindObjectsInactive.Include);",
+            "Assets/Scripts/UI/StudentLife/StudentDayResultPanel.cs :: var questPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);"
         };
 
         [Test]

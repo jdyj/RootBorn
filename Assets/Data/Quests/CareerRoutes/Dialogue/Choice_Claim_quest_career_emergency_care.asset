@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 135c2fe43070d114ab3f0ce419fa6b9d, type: 3}
+  m_Name: Choice_Claim_quest_career_emergency_care
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Dialogue.DialogueChoiceDefinition
+  _labelKey: dialogue.choice.claim.quest_career_emergency_care
+  _questAction: 2
+  _quest: {fileID: 11400000, guid: 6b5974a0d9599994fb0be6ad24f5f85a, type: 2}

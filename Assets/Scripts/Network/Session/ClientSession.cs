@@ -37,7 +37,15 @@ namespace Rootborn.Network.Session
             if (!nm.StartClient())
             {
                 Debug.LogError($"[ROOTBORN] StartClient failed (joinIp={config.JoinIp} port={config.Port}).");
+                return Task.CompletedTask;
             }
+
+            if (nm.SceneManager != null)
+            {
+                nm.SceneManager.OnSceneEvent += HandleSceneEvent;
+            }
+
+            Debug.Log($"[ROOTBORN] Client started - joinIp={config.JoinIp} port={config.Port} saveSlot={config.SaveSlot}");
             return Task.CompletedTask;
         }
 
@@ -46,6 +54,11 @@ namespace Rootborn.Network.Session
             var nm = NetworkManager.Singleton;
             if (nm != null)
             {
+                if (nm.SceneManager != null)
+                {
+                    nm.SceneManager.OnSceneEvent -= HandleSceneEvent;
+                }
+
                 nm.OnClientConnectedCallback -= HandleConnected;
                 nm.OnClientDisconnectCallback -= HandleDisconnected;
                 nm.Shutdown();
@@ -53,7 +66,21 @@ namespace Rootborn.Network.Session
             return Task.CompletedTask;
         }
 
-        private void HandleConnected(ulong id) => OnPlayerConnected?.Invoke(id);
-        private void HandleDisconnected(ulong id) => OnPlayerDisconnected?.Invoke(id);
+        private void HandleConnected(ulong id)
+        {
+            Debug.Log($"[ROOTBORN] Client connected callback id={id} localClientId={NetworkManager.Singleton?.LocalClientId}");
+            OnPlayerConnected?.Invoke(id);
+        }
+
+        private void HandleDisconnected(ulong id)
+        {
+            Debug.Log($"[ROOTBORN] Client disconnected callback id={id} localClientId={NetworkManager.Singleton?.LocalClientId}");
+            OnPlayerDisconnected?.Invoke(id);
+        }
+
+        private void HandleSceneEvent(SceneEvent sceneEvent)
+        {
+            Debug.Log($"[ROOTBORN] Client scene event type={sceneEvent.SceneEventType} scene={sceneEvent.SceneName} client={sceneEvent.ClientId}");
+        }
     }
 }

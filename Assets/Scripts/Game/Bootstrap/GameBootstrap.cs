@@ -27,15 +27,14 @@ namespace Rootborn.Game.Bootstrap
 
             await Managers.Managers.BootstrapAsync();
 
-            string nextScene = Config.Mode switch
+            if (Config.Mode != SessionMode.None)
             {
-                SessionMode.None => _mainMenuScene,
-                SessionMode.Client => _hostLobbyScene,
-                _ => _townScene
-            };
+                Debug.Log($"[ROOTBORN] Bootstrap mode={Config.Mode} port={Config.Port} maxPlayers={Config.MaxPlayers} saveSlot={Config.SaveSlot} -> waiting for network scene sync");
+                return;
+            }
 
-            Debug.Log($"[ROOTBORN] Bootstrap mode={Config.Mode} port={Config.Port} maxPlayers={Config.MaxPlayers} saveSlot={Config.SaveSlot} -> loading scene '{nextScene}'");
-            SceneManager.LoadScene(nextScene);
+            Debug.Log($"[ROOTBORN] Bootstrap mode={Config.Mode} port={Config.Port} maxPlayers={Config.MaxPlayers} saveSlot={Config.SaveSlot} -> loading scene '{_mainMenuScene}'");
+            SceneManager.LoadScene(_mainMenuScene);
         }
     }
 }

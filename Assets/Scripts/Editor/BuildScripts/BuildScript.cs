@@ -37,12 +37,14 @@ namespace Rootborn.Editor.BuildScripts
             "Assets/Scenes/Boot.unity",
             "Assets/Scenes/MainMenu.unity",
             "Assets/Scenes/HostLobby.unity",
+            "Assets/Scenes/Town.unity",
             "Assets/Scenes/Farm.unity"
         };
 
         private static readonly string[] ServerScenes =
         {
             "Assets/Scenes/Boot.unity",
+            "Assets/Scenes/Town.unity",
             "Assets/Scenes/Farm.unity"
         };
 

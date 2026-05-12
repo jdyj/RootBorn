@@ -10,6 +10,7 @@ namespace Rootborn.Network.StudentLife
         public readonly string SaveSlot;
         public readonly string PlayerId;
         public readonly string ActivityId;
+        public readonly string ChoiceId;
         public readonly string RequestId;
         public readonly LifeActivityResultKind Kind;
 
@@ -18,6 +19,7 @@ namespace Rootborn.Network.StudentLife
             string saveSlot,
             string playerId,
             string activityId,
+            string choiceId,
             string requestId,
             LifeActivityResultKind kind)
         {
@@ -25,6 +27,7 @@ namespace Rootborn.Network.StudentLife
             SaveSlot = string.IsNullOrEmpty(saveSlot) ? "default" : saveSlot;
             PlayerId = string.IsNullOrEmpty(playerId) ? "player" : playerId;
             ActivityId = string.IsNullOrEmpty(activityId) ? string.Empty : activityId;
+            ChoiceId = string.IsNullOrEmpty(choiceId) ? string.Empty : choiceId;
             RequestId = string.IsNullOrEmpty(requestId) ? string.Empty : requestId;
             Kind = kind;
         }
@@ -44,6 +47,7 @@ namespace Rootborn.Network.StudentLife
             LastSaveSlot = _saveSlot;
             LastPlayerId = string.Empty;
             LastActivityId = string.Empty;
+            LastChoiceId = string.Empty;
         }
 
         public event Action<StudentLifeNetworkStateBroadcast> OnBroadcast;
@@ -55,6 +59,7 @@ namespace Rootborn.Network.StudentLife
         public string LastSaveSlot { get; private set; }
         public string LastPlayerId { get; private set; }
         public string LastActivityId { get; private set; }
+        public string LastChoiceId { get; private set; }
 
         public void RegisterClient(ulong clientId)
         {
@@ -73,7 +78,7 @@ namespace Rootborn.Network.StudentLife
                 return false;
             }
 
-            string key = result.SaveSlot + "|" + result.PlayerId + "|" + result.ActivityId + "|" + result.RequestId + "|" + result.Kind;
+            string key = result.SaveSlot + "|" + result.PlayerId + "|" + result.ActivityId + "|" + result.ChoiceId + "|" + result.RequestId + "|" + result.Kind;
             if (!_emittedKeys.Add(key))
             {
                 DuplicateSuppressedCount++;
@@ -84,6 +89,7 @@ namespace Rootborn.Network.StudentLife
             LastSaveSlot = result.SaveSlot;
             LastPlayerId = result.PlayerId;
             LastActivityId = result.ActivityId;
+            LastChoiceId = result.ChoiceId;
 
             foreach (ulong clientId in _clients)
             {
@@ -92,6 +98,7 @@ namespace Rootborn.Network.StudentLife
                     result.SaveSlot,
                     result.PlayerId,
                     result.ActivityId,
+                    result.ChoiceId,
                     result.RequestId,
                     result.Kind);
 

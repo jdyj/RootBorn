@@ -4,11 +4,14 @@ using Rootborn.Game.Bootstrap;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Rootborn.Network.Session
 {
     public sealed class HostSession : INetworkSession
     {
+        private const string TownSceneName = "Town";
+
         public SessionMode Mode => SessionMode.Host;
         public bool IsServer => NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer;
         public bool IsClient => NetworkManager.Singleton != null && NetworkManager.Singleton.IsClient;
@@ -37,7 +40,23 @@ namespace Rootborn.Network.Session
             if (!nm.StartHost())
             {
                 Debug.LogError($"[ROOTBORN] StartHost failed (port={config.Port}).");
+                return Task.CompletedTask;
             }
+
+            if (nm.SceneManager != null)
+            {
+                nm.SceneManager.OnSceneEvent += HandleSceneEvent;
+            }
+
+            Debug.Log($"[ROOTBORN] Host started - port={config.Port} saveSlot={config.SaveSlot}");
+            if (nm.SceneManager == null)
+            {
+                Debug.LogError("[ROOTBORN] Host network SceneManager missing after StartHost.");
+                return Task.CompletedTask;
+            }
+
+            var status = nm.SceneManager.LoadScene(TownSceneName, LoadSceneMode.Single);
+            Debug.Log($"[ROOTBORN] Host requested network scene load scene={TownSceneName} status={status}");
             return Task.CompletedTask;
         }
 
@@ -46,6 +65,11 @@ namespace Rootborn.Network.Session
             var nm = NetworkManager.Singleton;
             if (nm != null)
             {
+                if (nm.SceneManager != null)
+                {
+                    nm.SceneManager.OnSceneEvent -= HandleSceneEvent;
+                }
+
                 nm.OnClientConnectedCallback -= HandleConnected;
                 nm.OnClientDisconnectCallback -= HandleDisconnected;
                 nm.Shutdown();
@@ -53,7 +77,21 @@ namespace Rootborn.Network.Session
             return Task.CompletedTask;
         }
 
-        private void HandleConnected(ulong id) => OnPlayerConnected?.Invoke(id);
-        private void HandleDisconnected(ulong id) => OnPlayerDisconnected?.Invoke(id);
+        private void HandleConnected(ulong id)
+        {
+            Debug.Log($"[ROOTBORN] Host client connected id={id}");
+            OnPlayerConnected?.Invoke(id);
+        }
+
+        private void HandleDisconnected(ulong id)
+        {
+            Debug.Log($"[ROOTBORN] Host client disconnected id={id}");
+            OnPlayerDisconnected?.Invoke(id);
+        }
+
+        private void HandleSceneEvent(SceneEvent sceneEvent)
+        {
+            Debug.Log($"[ROOTBORN] Host scene event type={sceneEvent.SceneEventType} scene={sceneEvent.SceneName} client={sceneEvent.ClientId}");
+        }
     }
 }

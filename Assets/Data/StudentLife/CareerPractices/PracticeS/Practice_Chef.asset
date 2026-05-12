@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e67ac1c70aa3c9540afc81121183c731, type: 3}
+  m_Name: Practice_Chef
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.CareerPracticeDefinition
+  _id: practice.chef
+  _displayNameKey: practice.chef
+  _activity: {fileID: 11400000, guid: acf6249e7dee124418b5fdff0659ffb4, type: 2}
+  _careerHint: {fileID: 11400000, guid: f30c8bdaba711d24c91db6d0481a38ea, type: 2}
+  _steps:
+  - {fileID: 11400000, guid: 65a26c1fd7a786d45ad2bbf18ef1e9ed, type: 2}
+  - {fileID: 11400000, guid: b084ec1ccb776294f8b8aea19e49ae94, type: 2}
+  - {fileID: 11400000, guid: 4fa0d48e3f4e74443b32842b444b9b7a, type: 2}

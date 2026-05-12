@@ -34,8 +34,33 @@ namespace Rootborn.Game.Dialogue
         public DialogueQuestAction QuestAction => _questAction;
         public QuestDefinition Quest => _quest;
 
+        public bool IsAvailable(in DialogueChoiceContext context)
+        {
+            if (_questAction == DialogueQuestAction.AcceptQuest)
+            {
+                return context.QuestLog != null
+                    && _quest != null
+                    && context.QuestLog.GetState(_quest) == QuestState.NotStarted;
+            }
+
+            if (_questAction == DialogueQuestAction.ClaimReward)
+            {
+                var rewardContext = context.RewardContext;
+                return context.QuestLog != null
+                    && _quest != null
+                    && context.QuestLog.CanClaimReward(_quest, in rewardContext);
+            }
+
+            return true;
+        }
+
         public bool TryExecute(in DialogueChoiceContext context)
         {
+            if (!IsAvailable(in context))
+            {
+                return false;
+            }
+
             if (_questAction == DialogueQuestAction.AcceptQuest)
             {
                 return context.QuestLog != null && context.QuestLog.Accept(_quest);

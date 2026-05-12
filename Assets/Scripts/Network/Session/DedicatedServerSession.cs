@@ -4,11 +4,14 @@ using Rootborn.Game.Bootstrap;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Rootborn.Network.Session
 {
     public sealed class DedicatedServerSession : INetworkSession
     {
+        private const string TownSceneName = "Town";
+
         public SessionMode Mode => SessionMode.Server;
         public bool IsServer => NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer;
         public bool IsClient => false;
@@ -46,11 +49,23 @@ namespace Rootborn.Network.Session
             if (!nm.StartServer())
             {
                 Debug.LogError($"[ROOTBORN] StartServer failed (port={config.Port}).");
+                return Task.CompletedTask;
             }
-            else
+
+            if (nm.SceneManager != null)
             {
-                Debug.Log($"[ROOTBORN] Dedicated server started — port={config.Port} maxPlayers={MaxPlayers} saveSlot={SaveSlot}");
+                nm.SceneManager.OnSceneEvent += HandleSceneEvent;
             }
+
+            Debug.Log($"[ROOTBORN] Dedicated server started - port={config.Port} maxPlayers={MaxPlayers} saveSlot={SaveSlot}");
+            if (nm.SceneManager == null)
+            {
+                Debug.LogError("[ROOTBORN] Dedicated server network SceneManager missing after StartServer.");
+                return Task.CompletedTask;
+            }
+
+            var status = nm.SceneManager.LoadScene(TownSceneName, LoadSceneMode.Single);
+            Debug.Log($"[ROOTBORN] Dedicated server requested network scene load scene={TownSceneName} status={status}");
             return Task.CompletedTask;
         }
 
@@ -59,6 +74,11 @@ namespace Rootborn.Network.Session
             var nm = NetworkManager.Singleton;
             if (nm != null)
             {
+                if (nm.SceneManager != null)
+                {
+                    nm.SceneManager.OnSceneEvent -= HandleSceneEvent;
+                }
+
                 nm.OnClientConnectedCallback -= HandleConnected;
                 nm.OnClientDisconnectCallback -= HandleDisconnected;
                 nm.ConnectionApprovalCallback = null;
@@ -67,8 +87,17 @@ namespace Rootborn.Network.Session
             return Task.CompletedTask;
         }
 
-        private void HandleConnected(ulong id) => OnPlayerConnected?.Invoke(id);
-        private void HandleDisconnected(ulong id) => OnPlayerDisconnected?.Invoke(id);
+        private void HandleConnected(ulong id)
+        {
+            Debug.Log($"[ROOTBORN] Dedicated server client connected id={id}");
+            OnPlayerConnected?.Invoke(id);
+        }
+
+        private void HandleDisconnected(ulong id)
+        {
+            Debug.Log($"[ROOTBORN] Dedicated server client disconnected id={id}");
+            OnPlayerDisconnected?.Invoke(id);
+        }
 
         private void HandleApproval(NetworkManager.ConnectionApprovalRequest req, NetworkManager.ConnectionApprovalResponse res)
         {
@@ -77,6 +106,11 @@ namespace Rootborn.Network.Session
             res.Approved = currentPlayers < MaxPlayers;
             res.CreatePlayerObject = res.Approved;
             res.Reason = res.Approved ? string.Empty : "server full";
+        }
+
+        private void HandleSceneEvent(SceneEvent sceneEvent)
+        {
+            Debug.Log($"[ROOTBORN] Dedicated server scene event type={sceneEvent.SceneEventType} scene={sceneEvent.SceneName} client={sceneEvent.ClientId}");
         }
     }
 }

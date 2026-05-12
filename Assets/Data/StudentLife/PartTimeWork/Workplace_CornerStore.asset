@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d54872aaf95583c4bbd22bbe925368dc, type: 3}
+  m_Name: Workplace_CornerStore
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.WorkplaceDefinition
+  _id: workplace.corner-store
+  _displayNameKey: workplace.corner-store
+  _locationId: location.town-store
+  _npcId: npc.first-guide
+  _availableWorks:
+  - {fileID: 11400000, guid: 119069712aee6c745ae6c6ebebc67e3c, type: 2}

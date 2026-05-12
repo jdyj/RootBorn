@@ -1,0 +1,112 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-7672766230608609999
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53fd71ed58f41f94cbffb7c78ad58bd1, type: 3}
+  m_Name: Practice_Interior_SkillProgressActivityEffect
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.SkillProgressActivityEffect
+  _skill: {fileID: 11400000, guid: 1e1c85b8e544bf64ea17d7eb7220d8a1, type: 2}
+  _delta: 2
+--- !u!114 &-6178160358694897337
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53fd71ed58f41f94cbffb7c78ad58bd1, type: 3}
+  m_Name: Practice_Interior_SkillProgressActivityEffect
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.SkillProgressActivityEffect
+  _skill: {fileID: 11400000, guid: 66d4eb84e13bf244eabd222a3bf52423, type: 2}
+  _delta: 2
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1434b49c661d12478f3cb1c76df0aba, type: 3}
+  m_Name: Practice_Interior_Activity
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.LifeActivityDefinition
+  _id: practice.interior
+  _displayNameKey: practice.interior
+  _category: 0
+  _timeCostMinutes: 45
+  _energyCost: 1
+  _focusCost: 1
+  _stressDelta: 0
+  _requirements: []
+  _effects:
+  - {fileID: 7428984632396201305}
+  - {fileID: 3714153290417805989}
+  - {fileID: 6571111354304560506}
+  - {fileID: -6178160358694897337}
+  - {fileID: -7672766230608609999}
+  - {fileID: 4212938864528800065}
+--- !u!114 &3714153290417805989
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e7975ee693971b48aea32d922e3bbb8, type: 3}
+  m_Name: Practice_Interior_TraitDeltaActivityEffect
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.TraitDeltaActivityEffect
+  _trait: {fileID: 11400000, guid: fa89084a9014702479c9175d3a946fe9, type: 2}
+  _delta: 2
+--- !u!114 &4212938864528800065
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b5f6e22122318a42808f534d0ca69c2, type: 3}
+  m_Name: Practice_Interior_CareerHintUnlockActivityEffect
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.CareerHintUnlockActivityEffect
+  _career: {fileID: 11400000, guid: 37f1e84574c16e64ab6dfb6390833d6f, type: 2}
+--- !u!114 &6571111354304560506
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53fd71ed58f41f94cbffb7c78ad58bd1, type: 3}
+  m_Name: Practice_Interior_SkillProgressActivityEffect
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.SkillProgressActivityEffect
+  _skill: {fileID: 11400000, guid: 9bddf27df8391bb4a912da8efaef341d, type: 2}
+  _delta: 3
+--- !u!114 &7428984632396201305
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e7975ee693971b48aea32d922e3bbb8, type: 3}
+  m_Name: Practice_Interior_TraitDeltaActivityEffect
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.TraitDeltaActivityEffect
+  _trait: {fileID: 11400000, guid: a2243b210dac3a143af352cdb8bc167c, type: 2}
+  _delta: 2

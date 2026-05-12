@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e04c345ff3cead4ca2735b322a7d79b, type: 3}
+  m_Name: Location_TownSquare
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.LocationDefinition
+  _id: location.town-square
+  _displayNameKey: location.town-square
+  _worldPosition: {x: -3.8, y: -1.8}
+  _discoveries:
+  - {fileID: 11400000, guid: 13978bd72ab75cb47949497ef5d56aca, type: 2}

@@ -6,6 +6,7 @@ namespace Rootborn.Game.Quests
         Defeat,
         Collect,
         Harvest,
-        Talk
+        Talk,
+        TilePlaced
     }
 }

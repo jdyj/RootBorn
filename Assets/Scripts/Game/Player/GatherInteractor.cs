@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Rootborn.Game.Common;
 using Rootborn.Game.Knowledge;
@@ -10,9 +11,34 @@ using UnityEngine.InputSystem;
 
 namespace Rootborn.Game.Player
 {
+    [Serializable]
+    public sealed class PlayerInventorySaveData
+    {
+        public PlayerInventoryItemSaveData[] Items = Array.Empty<PlayerInventoryItemSaveData>();
+        public string EquippedToolItemId;
+    }
+
+    [Serializable]
+    public struct PlayerInventoryItemSaveData
+    {
+        public string ItemId;
+        public int Count;
+    }
+
     public sealed class PlayerInventory : MonoBehaviour
     {
-        public Inventory Inventory { get; } = new Inventory();
+        private readonly Inventory _localInventory = new Inventory();
+        private Inventory _inventory;
+
+        public Inventory Inventory
+        {
+            get
+            {
+                EnsureInventoryStorage();
+                return _inventory;
+            }
+        }
+
         public ItemDefinition EquippedToolItem { get; private set; }
         [SerializeField] private Rootborn.Game.Tools.ToolDefinition _plantingHandTool;
         private Rootborn.Game.Tools.ToolDefinition _lastEquippedToolDef;
@@ -25,6 +51,7 @@ namespace Rootborn.Game.Player
 
         public void Bind(GameDataRegistry registry)
         {
+            BindInventoryStorage();
             _byId = new Dictionary<string, ItemDefinition>(16);
             if (registry != null && registry.Items != null)
             {
@@ -34,11 +61,6 @@ namespace Rootborn.Game.Player
                     if (it == null || string.IsNullOrEmpty(it.Id)) continue;
                     _byId[it.Id] = it;
                 }
-            }
-            if (!_inventoryEventsBound)
-            {
-                Inventory.OnChanged += RefreshEquippedSeed;
-                _inventoryEventsBound = true;
             }
             RefreshEquippedSeed();
         }
@@ -113,6 +135,54 @@ namespace Rootborn.Game.Player
             OnEquipmentChanged?.Invoke();
         }
 
+        public PlayerInventorySaveData ToSaveData()
+        {
+            var slots = Inventory.Slots;
+            var items = new List<PlayerInventoryItemSaveData>(slots.Count);
+            for (int i = 0; i < slots.Count; i++)
+            {
+                var slot = slots[i];
+                if (slot.Item == null || slot.Count <= 0 || string.IsNullOrEmpty(slot.Item.Id))
+                {
+                    continue;
+                }
+
+                items.Add(new PlayerInventoryItemSaveData { ItemId = slot.Item.Id, Count = slot.Count });
+            }
+
+            return new PlayerInventorySaveData
+            {
+                Items = items.ToArray(),
+                EquippedToolItemId = EquippedToolItem != null ? EquippedToolItem.Id : string.Empty,
+            };
+        }
+
+        public void LoadFromSaveData(PlayerInventorySaveData saveData)
+        {
+            if (saveData == null)
+            {
+                return;
+            }
+
+            Inventory.Clear();
+            if (saveData.Items != null)
+            {
+                for (int i = 0; i < saveData.Items.Length; i++)
+                {
+                    var item = saveData.Items[i];
+                    TryAddById(item.ItemId, item.Count);
+                }
+            }
+
+            EquipTool(FindById(saveData.EquippedToolItemId));
+            RefreshEquippedSeed();
+        }
+
+        private void OnDestroy()
+        {
+            UnbindInventoryEvents();
+        }
+
         private void EnsureBoundToRuntimeRegistry(string requiredId)
         {
             if (_byId != null && (string.IsNullOrEmpty(requiredId) || _byId.ContainsKey(requiredId))) return;
@@ -121,6 +191,54 @@ namespace Rootborn.Game.Player
             {
                 Bind(registry);
             }
+        }
+
+        private void EnsureInventoryStorage()
+        {
+            if (_inventory != null)
+            {
+                return;
+            }
+
+            _inventory = PlayerGlobalState.TryGetInventoryForActiveSaveSlot(ResolvePlayerId()) ?? _localInventory;
+        }
+
+        private void BindInventoryStorage()
+        {
+            var nextInventory = PlayerGlobalState.TryGetInventoryForActiveSaveSlot(ResolvePlayerId()) ?? _localInventory;
+            if (_inventory == nextInventory && _inventoryEventsBound)
+            {
+                return;
+            }
+
+            if (_inventory != nextInventory)
+            {
+                UnbindInventoryEvents();
+                _inventory = nextInventory;
+            }
+
+            if (!_inventoryEventsBound)
+            {
+                _inventory.OnChanged += RefreshEquippedSeed;
+                _inventoryEventsBound = true;
+            }
+        }
+
+        private void UnbindInventoryEvents()
+        {
+            if (!_inventoryEventsBound || _inventory == null)
+            {
+                return;
+            }
+
+            _inventory.OnChanged -= RefreshEquippedSeed;
+            _inventoryEventsBound = false;
+        }
+
+        private string ResolvePlayerId()
+        {
+            var identity = GetComponent<PlayerIdentity>();
+            return identity != null ? identity.PlayerId : PlayerIdentity.DefaultPlayerId;
         }
     }
 
@@ -135,6 +253,7 @@ namespace Rootborn.Game.Player
         private InputAction _interactAction;
         private KnowledgeProgress _knowledgeProgress;
         private IQuestEventSink _questEvents;
+        private bool _wasKeyboardInteractPressed;
         private static readonly System.Random s_dropRng = new System.Random();
 
         public KnowledgeProgress KnowledgeProgress => _knowledgeProgress;
@@ -144,24 +263,36 @@ namespace Rootborn.Game.Player
 
         private void OnEnable()
         {
+            if (GetComponent<PlayerInteractionRouter>() == null)
+            {
+                gameObject.AddComponent<PlayerInteractionRouter>();
+            }
+
+            _wasKeyboardInteractPressed = false;
             _interactAction = new InputAction(type: InputActionType.Button);
             _interactAction.AddBinding("<Keyboard>/e");
             _interactAction.AddBinding("<Keyboard>/space");
             _interactAction.AddBinding("<Keyboard>/leftCtrl");
             _interactAction.AddBinding("<Keyboard>/rightCtrl");
-            _interactAction.performed += OnInteract;
-            _interactAction.Enable();
         }
 
         private void OnDisable()
         {
             if (_interactAction != null)
             {
-                _interactAction.performed -= OnInteract;
-                _interactAction.Disable();
                 _interactAction.Dispose();
                 _interactAction = null;
             }
+        }
+
+        private void Update()
+        {
+            bool pressed = IsKeyboardInteractPressed();
+            if (pressed && !_wasKeyboardInteractPressed)
+            {
+                DoInteract();
+            }
+            _wasKeyboardInteractPressed = pressed;
         }
 
         public void Bind(KnowledgeProgress progress)
@@ -178,8 +309,28 @@ namespace Rootborn.Game.Player
 
         private void OnInteract(InputAction.CallbackContext ctx) => DoInteract();
 
+        private static bool IsKeyboardInteractPressed()
+        {
+            var keyboard = Keyboard.current;
+            if (keyboard == null)
+            {
+                return false;
+            }
+
+            return keyboard.eKey.isPressed ||
+                keyboard.spaceKey.isPressed ||
+                keyboard.leftCtrlKey.isPressed ||
+                keyboard.rightCtrlKey.isPressed;
+        }
+
         private void DoInteract()
         {
+            var interactionRouter = GetComponent<PlayerInteractionRouter>();
+            if (interactionRouter != null && interactionRouter.TryInteractWithNearest())
+            {
+                return;
+            }
+
             var node = FindNearestNode();
             if (node != null && !node.IsBroken)
             {
@@ -273,7 +424,7 @@ namespace Rootborn.Game.Player
 
         private ResourceNode FindNearestNode()
         {
-            var all = Object.FindObjectsByType<ResourceNode>(FindObjectsSortMode.None);
+            var all = UnityEngine.Object.FindObjectsByType<ResourceNode>(FindObjectsSortMode.None);
             ResourceNode nearest = null;
             float bestSqr = _interactRadius * _interactRadius;
             for (int i = 0; i < all.Length; i++)

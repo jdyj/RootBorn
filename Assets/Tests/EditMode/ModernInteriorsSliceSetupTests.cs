@@ -11,9 +11,10 @@ namespace Rootborn.Tests.EditMode
     public sealed class ModernInteriorsSliceSetupTests
     {
         [Test]
-        public void Catalog_ContainsCoreInteriorSheets()
+        public void Catalog_ContainsCoreInteriorSheetsWhenPackIsInstalled()
         {
-            Assert.AreEqual(3, ModernInteriorsSliceSetup.Targets.Count);
+            int expected = ModernInteriorsSliceSetup.IsPackInstalled() ? 3 : 0;
+            Assert.AreEqual(expected, ModernInteriorsSliceSetup.Targets.Count);
         }
 
         [Test]
@@ -27,7 +28,7 @@ namespace Rootborn.Tests.EditMode
         }
 
         [Test]
-        public void Catalog_AssetsExistOnDisk()
+        public void Catalog_AssetsExistOnDiskWhenPackIsInstalled()
         {
             var missing = new List<string>();
             foreach (var target in ModernInteriorsSliceSetup.Targets)
@@ -42,7 +43,7 @@ namespace Rootborn.Tests.EditMode
         }
 
         [Test]
-        public void Catalog_ExpectedGridSizesMatchPngDimensions()
+        public void Catalog_ExpectedGridSizesMatchPngDimensionsWhenPackIsInstalled()
         {
             foreach (var target in ModernInteriorsSliceSetup.Targets)
             {
@@ -60,7 +61,7 @@ namespace Rootborn.Tests.EditMode
         }
 
         [Test]
-        public void SlicedSheets_ExposeFirstAndLastNamedSubSprites()
+        public void SlicedSheets_ExposeFirstAndLastNamedSubSpritesWhenPackIsInstalled()
         {
             var missing = new List<string>();
             foreach (var target in ModernInteriorsSliceSetup.Targets)

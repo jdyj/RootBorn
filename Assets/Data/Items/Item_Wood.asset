@@ -14,8 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game:Rootborn.Game.Common:ItemDefinition
   _id: Wood
   _displayKey: item.wood
-  _icon: {fileID: 8148834838211071500, guid: ed5e6ce81f0627a43b6a20b711c2e1af, type: 3}
+  _icon: {fileID: 21300000, guid: feb2cf028c20d27409c1238e63ed9d91, type: 3}
   _maxStack: 99
   _category: 0
   _description: A bundle of wood gathered from felled trees. The foundation of any
     homestead.
+  _seedFor: {fileID: 0}
+  _toolSpritePrefix: 

@@ -12,7 +12,7 @@ namespace Rootborn.Editor.Tools
     {
         private const string GroupSprites = "Sprites";
 
-        private static readonly (string assetPath, string address)[] SheetEntries = new[]
+        private static readonly (string assetPath, string address)[] InstalledSheetEntries = new[]
         {
             ("Assets/moderninteriors-win/1_Interiors/16x16/Room_Builder_subfiles/Room_Builder_Floors_16x16.png", ModernInteriorsSpriteAddresses.Floors16),
             ("Assets/moderninteriors-win/1_Interiors/16x16/Room_Builder_subfiles/Room_Builder_Walls_16x16.png", ModernInteriorsSpriteAddresses.Walls16),
@@ -21,16 +21,19 @@ namespace Rootborn.Editor.Tools
 
         public static IReadOnlyList<(string assetPath, string address)> GetSheetEntries()
         {
-            return SheetEntries;
+            return ModernInteriorsSliceSetup.IsPackInstalled()
+                ? InstalledSheetEntries
+                : System.Array.Empty<(string assetPath, string address)>();
         }
 
         public static IReadOnlyList<string> FindMissingRegisteredSheetAddresses()
         {
             var missing = new List<string>();
             var settings = AddressableAssetSettingsDefaultObject.Settings;
+            var sheetEntries = GetSheetEntries();
             if (settings == null)
             {
-                foreach (var (_, address) in SheetEntries)
+                foreach (var (_, address) in sheetEntries)
                 {
                     missing.Add(address);
                 }
@@ -38,7 +41,7 @@ namespace Rootborn.Editor.Tools
                 return missing;
             }
 
-            foreach (var (assetPath, address) in SheetEntries)
+            foreach (var (assetPath, address) in sheetEntries)
             {
                 string guid = AssetDatabase.AssetPathToGUID(assetPath);
                 var entry = settings.FindAssetEntry(guid);
@@ -60,7 +63,7 @@ namespace Rootborn.Editor.Tools
                 return missing;
             }
 
-            foreach (var (assetPath, address) in SheetEntries)
+            foreach (var (assetPath, address) in GetSheetEntries())
             {
                 string guid = AssetDatabase.AssetPathToGUID(assetPath);
                 var entry = settings.FindAssetEntry(guid);
@@ -82,7 +85,7 @@ namespace Rootborn.Editor.Tools
 
             int ok = 0;
             int missing = 0;
-            foreach (var (assetPath, address) in SheetEntries)
+            foreach (var (assetPath, address) in GetSheetEntries())
             {
                 if (AssetDatabase.LoadAssetAtPath<Object>(assetPath) == null)
                 {

@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ea7f145ea529384680bc49bb230fe5f, type: 3}
+  m_Name: Effect_CareerTrait_EmergencyCare
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Quests.Effects.TraitDeltaCompletionEffect
+  _trait: {fileID: 11400000, guid: edaa308e1119e69489e1e0145c619caf, type: 2}
+  _delta: 2
+  _careerHint: {fileID: 11400000, guid: 7f32a7bd1e4fbf04aaf38b3bf1889cc5, type: 2}

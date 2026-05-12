@@ -24,6 +24,18 @@ ROOTBORN은 **PC 데스크톱** 기준이다 (Windows 64-bit 1순위, macOS/Linu
 - `Screen Match Mode`: Match Width Or Height = 0.5 (균형)
 - `Reference Pixels Per Unit`: 16 (Pixelwood 16x16 타일 기준)
 
+## Modern UI Style2 공통 패널
+
+공통 패널 배경은 반드시 `Assets/modernuserinterface-win/16x16/Modern_UI_Style_2.png`의 16x16 Style2 패널 블록을 사용한다.
+
+- 소스 address: `sprites/ui/modern/16/style-2` (`ModernUISpriteAddresses.Style16Alt`)
+- 구현 경로: `ModernUiTileImage + ModernUiRecipes.CommonPanel`
+- 좌상단/상단/우상단: `ModernUI_16_Style2_r2_c0`, `ModernUI_16_Style2_r2_c1`, `ModernUI_16_Style2_r2_c2`
+- 좌측/중앙 fill/우측: `ModernUI_16_Style2_r3_c0`, `ModernUI_16_Style2_r3_c1`, `ModernUI_16_Style2_r3_c2`
+- 좌하단/하단/우하단: `ModernUI_16_Style2_r4_c0`, `ModernUI_16_Style2_r4_c1`, `ModernUI_16_Style2_r4_c2`
+- `r3_c1`은 패널 내부 fill tile로 16x16 반복 배치한다.
+- 공통 패널에 `Image.sprite`로 단일 corner/edge sprite를 직접 넣는 방식은 금지한다. 크기가 변하는 패널은 `ModernUiTileImage`가 3x3 역할 타일을 반복 생성해야 한다.
+
 ## PC 타이포그래피 (1920×1080 기준)
 
 | 용도 | 최소 fontSize | 권장 fontSize |

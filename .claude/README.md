@@ -1,4 +1,4 @@
-# ROOTBORN Harness — 세대 진화 농장 생존 게임
+# ROOTBORN Harness — 도시 생활 성장 시뮬레이션
 
 Unity 6000.3.13f1 (URP 2D) + Unity Netcode for GameObjects 기반 ROOTBORN 프로젝트용 에이전트 하네스. 게임 개발, 빌드·배포, 자동화 테스트, 개발 반복 루프, 피드백 기반 헌법 갱신, 코드 리뷰까지 커버한다. (백엔드/관리자 웹은 미사용.)
 
@@ -64,8 +64,8 @@ Unity 6000.3.13f1 (URP 2D) + Unity Netcode for GameObjects 기반 ROOTBORN 프�
 - `dev-iteration-loop` 스킬이 빌드→테스트→분석→수정을 최대 5회 자동 반복
 
 ### CI 게이트 (`Scripts/ci/`)
-- `check-no-entity-id-branching.sh` — 작물/도구/지식/특성 ID에 시스템 코드가 분기 시 빌드 실패 (데이터-드리븐 위반 검출)
-- `check-scenario-registry-sync.sh` — `testing-discipline.md`의 시나리오 ID(GEN/HEIR/TOOL/CROP/KNOW/STATUS/NET-XXX) ↔ `Assets/Tests/.../ScenarioId.cs` 동기화 검증
+- `check-no-entity-id-branching.sh` — 생활 활동/선택지/작물/도구/지식/특성 ID에 시스템 코드가 분기 시 빌드 실패 (데이터-드리븐 위반 검출)
+- `check-scenario-registry-sync.sh` — `testing-discipline.md`의 시나리오 ID(TOWN/LIFE/CAREER/REL/JOB/KNOW/STATUS/NET-XXX, 레거시 GEN/HEIR/CROP-XXX) ↔ `Assets/Tests/.../ScenarioId.cs` 동기화 검증
 
 ### Git 훅 (`Scripts/git-hooks/`)
 - `pre-commit` — Unity .meta 동행 검증, TODO 형식, JSON 파싱
@@ -108,7 +108,7 @@ iter-N: [개발/수정] → [빌드] → [테스트] + [QA(병렬)] → [분석]
 ## 원칙 요약 (헌법에서 발췌)
 
 1. **변경 가능성 우선** — 이른 추상화 금지, 3회 이상 반복될 때만
-2. **엔티티 데이터-드리븐** — 작물/도구/지식/특성/세대 모두 SO. 시스템 코드는 ID 분기 금지 (CI 게이트로 강제)
+2. **엔티티 데이터-드리븐** — 생활 활동/선택지/특성/기술/진로/관계/직무/도구/지식/상태 모두 SO. 레거시 작물/세대도 SO 유지. 시스템 코드는 ID 분기 금지 (CI 게이트로 강제)
 3. **Scene은 조립, Prefab은 부품** — Scene YAML 직접 수정 금지
 4. **PlayMode 우선 테스트** — 물리/코루틴은 PlayMode, 순수 로직은 EditMode
 5. **증분 QA** — 모듈 완성 직후 즉시 경계면 검증
@@ -118,7 +118,7 @@ iter-N: [개발/수정] → [빌드] → [테스트] + [QA(병렬)] → [분석]
 ## 사용법
 
 ```
-사용자: "1세대 농사 시스템 만들어줘"
+사용자: "도시 생활 활동으로 특성이 오르는 시스템 만들어줘"
   → unity-game-dev 스킬 호출
 
 사용자: "EditMode 테스트 통과할 때까지 고쳐줘"

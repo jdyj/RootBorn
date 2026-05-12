@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e67ac1c70aa3c9540afc81121183c731, type: 3}
+  m_Name: Practice_EmergencyCare
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.CareerPracticeDefinition
+  _id: practice.emergency-care
+  _displayNameKey: practice.emergency-care
+  _activity: {fileID: 11400000, guid: 580395b449da0a342b2792693973afca, type: 2}
+  _careerHint: {fileID: 11400000, guid: 7f32a7bd1e4fbf04aaf38b3bf1889cc5, type: 2}
+  _steps:
+  - {fileID: 11400000, guid: acdf26710ef41344db5b37716cc53847, type: 2}
+  - {fileID: 11400000, guid: 007c339b04259a1479d46f739b5b5221, type: 2}
+  - {fileID: 11400000, guid: eb09a5c87fcdb004587c0505cc5e55e8, type: 2}

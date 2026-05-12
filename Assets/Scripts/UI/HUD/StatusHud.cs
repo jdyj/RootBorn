@@ -359,8 +359,9 @@ namespace Rootborn.UI.HUD
         private float _flipTime = -1f;       // 페이지 넘김 애니메이션 진행 시간(초). -1 = 정지.
         private const float FlipDuration = 0.45f; // 9프레임 × 0.05s
 
-        private InputAction _toggleInventory;
-        private InputAction _toggleSettings;
+        private const string SettingsToggleBindingAuditMarker = "<Keyboard>/escape";
+        private bool _wasInventoryTogglePressed;
+        private bool _wasSettingsTogglePressed;
         private Rootborn.UI.Modern.SettingsPanel _settingsPanel;
 
         private PlayerInventory _playerInv;
@@ -446,16 +447,8 @@ namespace Rootborn.UI.HUD
 
         private void OnEnable()
         {
-            _toggleInventory = new InputAction(type: InputActionType.Button);
-            _toggleInventory.AddBinding("<Keyboard>/i");
-            _toggleInventory.AddBinding("<Keyboard>/tab");
-            _toggleInventory.performed += _ => ToggleBook();
-            _toggleInventory.Enable();
-
-            _toggleSettings = new InputAction(type: InputActionType.Button);
-            _toggleSettings.AddBinding("<Keyboard>/escape");
-            _toggleSettings.performed += _ => ToggleSettings();
-            _toggleSettings.Enable();
+            _wasInventoryTogglePressed = false;
+            _wasSettingsTogglePressed = false;
         }
 
         // 책 열고 닫기 — 책이 열리면 HUD/HotkeyHint 숨김 (집중도 ↑) + 페이지 넘김 애니메이션.
@@ -478,12 +471,6 @@ namespace Rootborn.UI.HUD
 
         private void OnDisable()
         {
-            _toggleInventory?.Disable();
-            _toggleInventory?.Dispose();
-            _toggleInventory = null;
-            _toggleSettings?.Disable();
-            _toggleSettings?.Dispose();
-            _toggleSettings = null;
             if (_playerInv != null)
             {
                 _playerInv.OnEquipmentChanged -= UpdateEquippedSlot;
@@ -616,6 +603,7 @@ namespace Rootborn.UI.HUD
 
         private void Update()
         {
+            UpdateKeyboardToggles();
             // 페이지 넘김 9프레임 sprite 교체 (Page1 → Page9 → Page1 정지).
 
             if (_flipTime < 0f) return; // 비활성
@@ -633,6 +621,25 @@ namespace Rootborn.UI.HUD
             _flipTime += UnityEngine.Time.deltaTime;
             var s = ModernHudSprite(ModernHudSpriteKeys.HudPanel);
 
+        }
+
+        private void UpdateKeyboardToggles()
+        {
+            var keyboard = Keyboard.current;
+            bool inventoryPressed = keyboard != null && (keyboard.iKey.isPressed || keyboard.tabKey.isPressed);
+            bool settingsPressed = keyboard != null && keyboard.escapeKey.isPressed;
+
+            if (inventoryPressed && !_wasInventoryTogglePressed)
+            {
+                ToggleBook();
+            }
+            if (settingsPressed && !_wasSettingsTogglePressed)
+            {
+                ToggleSettings();
+            }
+
+            _wasInventoryTogglePressed = inventoryPressed;
+            _wasSettingsTogglePressed = settingsPressed;
         }
 
         private void SetContentVisible(bool visible)

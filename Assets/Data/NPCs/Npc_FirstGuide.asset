@@ -14,6 +14,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Dialogue.NpcDefinition
   _id: npc.firstGuide
   _displayNameKey: npc.firstGuide.name
-  _defaultDialogue: {fileID: 11400000, guid: 8142bab72b18c8d46b226b2da4f7561d, type: 2}
+  _defaultDialogue: {fileID: 11400000, guid: cfad8f701cdf1f842a17deb8b46a4274, type: 2}
+  _stageDialogues:
+  - {fileID: 11400000, guid: 5a6836b650177104d9289c2b7081c136, type: 2}
   _quests:
   - {fileID: 11400000, guid: 0fd216a6cdf0c724fa2101fd28dc3a5c, type: 2}
+  - {fileID: 11400000, guid: 85316b6d954ac22419bcfc5e37733ba9, type: 2}
+  - {fileID: 11400000, guid: a32eee29e87d7934d8c0d47b6a96b4d7, type: 2}
+  - {fileID: 11400000, guid: cac87b1032845394cb09b7f010a7cd9d, type: 2}
+  - {fileID: 11400000, guid: 6b5974a0d9599994fb0be6ad24f5f85a, type: 2}
+  _worldTexture: {fileID: 2800000, guid: 5f439540e7f27e24f8b0856cc24ea6ab, type: 3}
+  _worldSpriteRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 16
+    height: 16
+  _worldSpritePixelsPerUnit: 16

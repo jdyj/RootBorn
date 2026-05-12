@@ -30,11 +30,17 @@ Technical renames are deferred until the default town path is green. This avoids
 
 - Town scene loaded in PlayMode.
 - Visual roots were present.
+- Persistent Town baseline roots now include `Player`, `[TownCanvas]`, `EventSystem`, `TownGrid`, `TownSpawnPoint`, `TownStreet`, `TownApartment`, `TownShop`, and `TownCommunityBoard`.
+- `[TownCanvas]/TownHud` provides the first visible Town HUD root while Tab-driven inventory/status panels are installed at runtime.
+- `TownGrid` is split into `TownGroundTilemap`, `TownDecorationTilemap`, and `TownCollisionTilemap`.
+- `TownPlayableBaselineRuntimeInstaller` reinforces runtime-only player inventory/UI binding for the Town scene without copying the Farm auto-filler path.
+- `Player/TownPlayerMarker` provides a visible baseline player marker until the final town character art pass replaces it.
 - Modern UI common panel recipe uses `sprites/ui/modern/16/style-2`.
 - PlayMode smoke tests passed:
+  - `Rootborn.Tests.PlayMode.TownConcept.TownSceneBootTests.TownScene_LoadsAsPlayableTownBaseline`
   - `Rootborn.Tests.PlayMode.TownConcept.TownStyle2UiSmokeTests.TownScene_HasNonEmptyVisualRoots`
   - `Rootborn.Tests.PlayMode.TownConcept.TownStyle2UiSmokeTests.TownScene_ModernUiCommonPanelUsesStyle2`
-- Screenshot artifact: `Builds/Logs/town-concept/town-style2-smoke.png`
+- Unity MCP `screenshot-camera` visual check shows a non-empty Town view with floor tiles, street lines, apartment/shop/community-board blocks, and visible player marker.
 
 ## Final Verification
 

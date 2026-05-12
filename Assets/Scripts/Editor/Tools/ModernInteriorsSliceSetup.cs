@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 
@@ -6,6 +7,8 @@ namespace Rootborn.Editor.Tools
 {
     public static class ModernInteriorsSliceSetup
     {
+        private const string PackRoot = "Assets/moderninteriors-win";
+
         public readonly struct SliceTarget
         {
             public SliceTarget(string assetPath, int cellSize, string labelPrefix, int columns, int rows)
@@ -24,12 +27,19 @@ namespace Rootborn.Editor.Tools
             public int Rows { get; }
         }
 
-        public static readonly IReadOnlyList<SliceTarget> Targets = new[]
+        private static readonly IReadOnlyList<SliceTarget> InstalledTargets = new[]
         {
             new SliceTarget("Assets/moderninteriors-win/1_Interiors/16x16/Room_Builder_subfiles/Room_Builder_Floors_16x16.png", 16, "ModernInterior_Floor", 15, 40),
             new SliceTarget("Assets/moderninteriors-win/1_Interiors/16x16/Room_Builder_subfiles/Room_Builder_Walls_16x16.png", 16, "ModernInterior_Wall", 32, 40),
             new SliceTarget("Assets/moderninteriors-win/4_User_Interface_Elements/UI_16x16.png", 16, "ModernInterior_UI", 18, 16),
         };
+
+        public static IReadOnlyList<SliceTarget> Targets => IsPackInstalled() ? InstalledTargets : System.Array.Empty<SliceTarget>();
+
+        public static bool IsPackInstalled()
+        {
+            return Directory.Exists(PackRoot);
+        }
 
         [MenuItem("Rootborn/Modern Interiors/Slice Core 16x16 Sheets")]
         public static void SliceCore16()

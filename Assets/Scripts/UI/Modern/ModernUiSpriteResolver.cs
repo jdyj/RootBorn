@@ -14,9 +14,19 @@ namespace Rootborn.UI.Modern
         public Sprite Resolve(ModernUiSpriteKey key)
         {
             var resourceManager = Managers.Resource;
-            return resourceManager != null
-                ? resourceManager.GetCachedSubSprite(key.SheetAddress, key.SubSpriteName)
-                : null;
+            if (resourceManager == null)
+            {
+                return null;
+            }
+
+            var sprite = resourceManager.GetCachedSubSprite(key.SheetAddress, key.SubSpriteName);
+            if (sprite != null)
+            {
+                return sprite;
+            }
+
+            var load = resourceManager.LoadSubSpriteAsync(key.SheetAddress, key.SubSpriteName);
+            return load.IsCompleted && !load.IsFaulted && !load.IsCanceled ? load.Result : null;
         }
     }
 }

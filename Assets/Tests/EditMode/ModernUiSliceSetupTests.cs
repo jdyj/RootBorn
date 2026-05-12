@@ -11,9 +11,9 @@ namespace Rootborn.Tests.EditMode
     public sealed class ModernUiSliceSetupTests
     {
         [Test]
-        public void Catalog_ContainsNineModernUiSheets()
+        public void Catalog_ContainsThreeRuntimeModernUi16Sheets()
         {
-            Assert.AreEqual(9, ModernUiSliceSetup.Targets.Count);
+            Assert.AreEqual(3, ModernUiSliceSetup.Targets.Count);
         }
 
         [Test]
@@ -21,8 +21,9 @@ namespace Rootborn.Tests.EditMode
         {
             foreach (var target in ModernUiSliceSetup.Targets)
             {
-                StringAssert.StartsWith("Assets/modernuserinterface-win/", target.AssetPath);
+                StringAssert.StartsWith("Assets/modernuserinterface-win/16x16/", target.AssetPath);
                 Assert.IsFalse(target.AssetPath.Contains("Pixelwood"));
+                Assert.AreEqual(16, target.CellSize, target.AssetPath);
             }
         }
 

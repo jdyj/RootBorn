@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99190211f16d86d41bc19413f9dd24b9, type: 3}
+  m_Name: Dialogue_CareerMentor
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Dialogue.DialogueDefinition
+  _lineKeys:
+  - dialogue.careerMentor.greeting
+  _choices:
+  - {fileID: 11400000, guid: b8f92a5be0c0d674a8122cd3f14c606d, type: 2}
+  - {fileID: 11400000, guid: f482287c1f5f2554ca10eaa94c5247ba, type: 2}
+  - {fileID: 11400000, guid: 8326f948da27df74488c07de4c1d8c42, type: 2}
+  - {fileID: 11400000, guid: a65e56c713d5cb141bdc708b2b4375ad, type: 2}
+  - {fileID: 11400000, guid: 5521406ddf6e2bf46af892e9fbc89cdc, type: 2}
+  - {fileID: 11400000, guid: 1ad142ee35cbcd3448c5b43baf9f94b3, type: 2}
+  - {fileID: 11400000, guid: 26d991595fc95ae408020a1facfbc2c6, type: 2}
+  - {fileID: 11400000, guid: 2a9987840141b82408b15cd7d0f19b32, type: 2}

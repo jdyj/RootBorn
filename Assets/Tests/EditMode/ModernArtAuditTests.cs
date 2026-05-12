@@ -7,14 +7,22 @@ namespace Rootborn.Tests.EditMode
     public sealed class ModernArtAuditTests
     {
         [Test]
-        public void BuildInventory_IncludesCoreModernPacks()
+        public void BuildInventory_IncludesInstalledCoreModernPacks()
         {
             var inventory = ModernArtAudit.BuildInventory();
 
             Assert.Greater(inventory.Length, 0);
-            Assert.IsTrue(inventory.Any(x => x.SourcePack == "Modern Interiors" && x.Path.StartsWith("Assets/moderninteriors-win/")));
             Assert.IsTrue(inventory.Any(x => x.SourcePack == "Modern Farm" && x.Path.StartsWith("Assets/Modern_Farm_v1.2/")));
             Assert.IsTrue(inventory.Any(x => x.SourcePack == "Modern User Interface" && x.Path.StartsWith("Assets/modernuserinterface-win/")));
+
+            if (ModernInteriorsSliceSetup.IsPackInstalled())
+            {
+                Assert.IsTrue(inventory.Any(x => x.SourcePack == "Modern Interiors" && x.Path.StartsWith("Assets/moderninteriors-win/")));
+            }
+            else
+            {
+                Assert.IsFalse(inventory.Any(x => x.Path.StartsWith("Assets/moderninteriors-win/")));
+            }
         }
 
         [Test]
@@ -36,13 +44,13 @@ namespace Rootborn.Tests.EditMode
         }
 
         [Test]
-        public void FindPixelwoodReferences_FindsCurrentCodeReferences()
+        public void FindPixelwoodReferences_FindsLegacyAuditOnlyCodeReferences()
         {
             var references = ModernArtAudit.FindPixelwoodReferences();
 
             Assert.IsTrue(references.Any(x => x.Path == "Assets/Scripts/Editor/Tools/PixelwoodSliceSetup.cs"));
-            Assert.IsTrue(references.Any(x => x.Path == "Assets/Scripts/Editor/Tools/AddressablesSetup.cs"));
             Assert.IsTrue(references.Any(x => x.Text.Contains("Pixelwood")));
+            Assert.IsFalse(references.Any(x => x.Path == "Assets/Scripts/Editor/Tools/AddressablesSetup.cs"));
         }
 
         [Test]

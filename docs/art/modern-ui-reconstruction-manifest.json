@@ -29,17 +29,32 @@
     { "id": "panel.bl", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r2_c0", "row": 2, "column": 0, "role": "corner-bl", "usage": "common panel bottom-left corner" },
     { "id": "panel.b", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r2_c1", "row": 2, "column": 1, "role": "edge-b", "usage": "common panel bottom edge" },
     { "id": "panel.br", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r2_c2", "row": 2, "column": 2, "role": "corner-br", "usage": "common panel bottom-right corner" },
-    { "id": "button.base", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r1_c7", "row": 1, "column": 7, "role": "button", "usage": "settings and inventory command button face" },
+    { "id": "button.base", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r1_c8", "row": 1, "column": 8, "role": "button", "usage": "settings and inventory command button face" },
     { "id": "button.close", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r1_c9", "row": 1, "column": 9, "role": "close-button", "usage": "settings close button" },
     { "id": "slot.base", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r3_c0", "row": 3, "column": 0, "role": "slot", "usage": "inventory item slot frame" },
     { "id": "tab.base", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r2_c8", "row": 2, "column": 8, "role": "tab", "usage": "top title tab and category tab" },
-    { "id": "gauge.fill", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r4_c3", "row": 4, "column": 3, "role": "gauge-fill", "usage": "status gauge fill tile" },
-    { "id": "scrollbar.thumb", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r2_c3", "row": 2, "column": 3, "role": "scrollbar", "usage": "inventory scrollbar thumb" }
+    { "id": "gauge.fill", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r5_c3", "row": 5, "column": 3, "role": "gauge-fill", "usage": "status gauge fill tile" },
+    { "id": "scrollbar.thumb", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r2_c3", "row": 2, "column": 3, "role": "scrollbar", "usage": "inventory scrollbar thumb" },
+    { "id": "title.tab", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r2_c8", "row": 2, "column": 8, "role": "title-tab", "usage": "inventory status quest title tab" },
+    { "id": "selection.cursor", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r2_c9", "row": 2, "column": 9, "role": "selection-cursor", "usage": "selected inventory slot cursor" },
+    { "id": "scrollbar.track", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r3_c3", "row": 3, "column": 3, "role": "scrollbar-track", "usage": "inventory and quest scrollbar track" },
+    { "id": "scrollbar.thumb.panel", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r2_c3", "row": 2, "column": 3, "role": "scrollbar-thumb", "usage": "inventory and quest scrollbar thumb" },
+    { "id": "popup.frame", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r1_c1", "row": 1, "column": 1, "role": "popup-frame", "usage": "item detail popup tiled fill" },
+    { "id": "item.action.button", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r1_c8", "row": 1, "column": 8, "role": "item-action-button", "usage": "item detail popup action button" },
+    { "id": "portrait.frame", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r3_c9", "row": 3, "column": 9, "role": "portrait-frame", "usage": "status portrait frame" },
+    { "id": "icon.frame", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r3_c0", "row": 3, "column": 0, "role": "icon-frame", "usage": "status icon and reward icon frame" },
+    { "id": "gauge.track", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r3_c3", "row": 3, "column": 3, "role": "gauge-track", "usage": "status gauge track tile" },
+    { "id": "quest.row", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r1_c8", "row": 1, "column": 8, "role": "quest-row", "usage": "quest list selectable row" },
+    { "id": "quest.detail.frame", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r1_c1", "row": 1, "column": 1, "role": "quest-detail-frame", "usage": "selected quest detail frame fill" },
+    { "id": "reward.frame", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r2_c8", "row": 2, "column": 8, "role": "reward-frame", "usage": "quest reward row icon and amount frame" },
+    { "id": "claim.button", "sheetAddress": "sprites/ui/modern/16/style-1", "subSpriteName": "ModernUI_16_Style1_r1_c8", "row": 1, "column": 8, "role": "claim-button", "usage": "quest reward claim button" }
   ],
   "recipes": {
     "commonPanel": ["panel.tl", "panel.t", "panel.tr", "panel.l", "panel.fill", "panel.r", "panel.bl", "panel.b", "panel.br"],
     "settings": ["commonPanel", "title-tabs", "close-button", "toggle-row", "slider-row"],
-    "inventory": ["commonPanel", "title-tabs", "slot-grid", "scrollbar", "selection-cursor"],
-    "status": ["commonPanel", "title-tabs", "portrait-frame", "gauge-row", "bottom-buttons"]
+    "inventory": ["commonPanel", "title-tabs", "slot-grid", "scrollbar", "selection-cursor", "popup"],
+    "status": ["commonPanel", "title-tabs", "portrait-frame", "gauge-row", "icon-frame", "bottom-buttons"],
+    "quest": ["commonPanel", "quest-list", "quest-detail", "objective-progress", "reward-row", "claim-button", "scrollbar"],
+    "popup": ["commonPanel", "item-icon", "item-name", "item-description", "item-count", "action-buttons"]
   }
 }

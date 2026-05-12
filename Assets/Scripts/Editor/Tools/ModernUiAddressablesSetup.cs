@@ -17,12 +17,6 @@ namespace Rootborn.Editor.Tools
             ("Assets/modernuserinterface-win/16x16/Modern_UI_Style_1.png", ModernUISpriteAddresses.Style16),
             ("Assets/modernuserinterface-win/16x16/Modern_UI_Style_2.png", ModernUISpriteAddresses.Style16Alt),
             ("Assets/modernuserinterface-win/16x16/Modern_UI_Gamepad.png", ModernUISpriteAddresses.Gamepad16),
-            ("Assets/modernuserinterface-win/32x32/Modern_UI_Style_1_32x32.png", ModernUISpriteAddresses.Style32),
-            ("Assets/modernuserinterface-win/32x32/Modern_UI_Style_2_32x32.png", ModernUISpriteAddresses.Style32Alt),
-            ("Assets/modernuserinterface-win/32x32/Modern_UI_Gamepad_32x32.png", ModernUISpriteAddresses.Gamepad32),
-            ("Assets/modernuserinterface-win/48x48/Modern_UI_Style_1_48x48.png", ModernUISpriteAddresses.Style48),
-            ("Assets/modernuserinterface-win/48x48/Modern_UI_Style_2_48x48.png", ModernUISpriteAddresses.Style48Alt),
-            ("Assets/modernuserinterface-win/48x48/Modern_UI_Gamepad_48x48.png", ModernUISpriteAddresses.Gamepad48),
         };
 
         public static IReadOnlyList<(string assetPath, string address)> GetSheetEntries()

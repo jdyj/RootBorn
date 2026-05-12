@@ -9,6 +9,8 @@
 3. **PR 차단 게이트**: 테스트가 빠진 PR은 머지 금지. CI가 강제.
 4. **AI 생성 코드도 예외 없음**: AI 에이전트가 작성한 코드도 동일 게이트. 에이전트가 테스트를 동시 작성하지 않으면 작업 미완료로 간주.
 5. **보상·인벤토리 멱등성 의무**: 퀘스트/스토리/미션/지식/툴 해금 등 보상 지급 코드는 지급 전에 인벤토리 수용 가능 여부와 중복 수령 상태를 검증해야 한다. 인벤토리 공간 부족, 유효하지 않은 보상, 이미 수령한 보상은 인벤토리와 진행 상태를 변경하지 않아야 한다. 보상 지급 테스트는 정상 지급, 공간 부족, 부분 지급 방지, 반복 호출 이중 지급 방지, 저장/로드 후 재지급 방지를 포함한다.
+6. **플레이어 대리 테스트 의무**: 모든 유저 여정/코어 루프/PlayMode 시나리오는 에이전트가 플레이어를 대리해 실제 플레이 방식으로 진행한다. 마우스/키보드/게임패드 입력, 캐릭터 이동, 콜라이더/트리거 진입, 버튼 클릭, UI 선택, NPC/오브젝트 상호작용, 씬 전환 관찰이 요구사항에 포함되면 테스트도 그 경로를 사용해야 한다. 내부 메서드 직접 호출, 상태 강제 세팅, 씬 강제 로드, UI 생략은 준비 단계 fixture로만 제한하며, 완료 판정은 실제 플레이 경로 테스트로 한다.
+7. **사용자 지정 플레이 흐름 우회 금지**: 사용자가 구체적인 조작 경로를 지정한 시나리오는 그 경로를 자동화 테스트가 재현해야 한다. "직접 포탈로 가서", "버튼을 눌러", "NPC와 대화해서", "인벤토리 UI에서 확인" 같은 요구를 내부 메서드 직접 호출, 상태 강제 세팅, 씬 강제 로드, UI 생략으로 대체하면 테스트 통과로 인정하지 않는다. 단위 테스트가 필요하더라도 완료 판정은 PlayMode/입력/물리/트리거/UI 등 사용자 관찰 경로를 포함한 시나리오 테스트로 한다.
 
 ## 테스트 계층
 
@@ -40,19 +42,31 @@
 
 게임의 모든 코어 루프 상태 전이를 명명된 시나리오로 표현한다. 각 시나리오는 PlayMode에서 헤드리스 실행 가능해야 한다.
 
-### ROOTBORN 농장 시나리오 (필수 커버, prefix: GEN/HEIR/TOOL/CROP/KNOW/STATUS/NET)
+### ROOTBORN 도시 생활 시나리오 (필수 커버, prefix: TOWN/LIFE/CAREER/REL/JOB/KNOW/STATUS/NET)
+| ID | 시나리오 | 검증 |
+|---|---|---|
+| TOWN-001 | 기본 진입 흐름이 Town 생활 화면으로 연결되고 user-facing farm/crop 용어를 노출하지 않음 | TownFlowTests |
+| LIFE-001 | LifeActivityDefinition 실행 → 비용 preflight → trait/skill/status/reward 결과가 원자적으로 반영 | StudentLifeActivityTests |
+| LIFE-002 | 같은 activity request id 재호출 → trait/skill/status/reward 이중 적용 없음 | StudentLifeActivityTests |
+| CAREER-001 | 활동과 선택 누적 → CareerPracticeDefinition 또는 career hint가 조건 충족 시 해금 | StudentLifeCareerPracticeTests |
+| REL-001 | 관계 활동 선택 → 관계 수치/상태가 데이터 정의에 따라 변경되고 중복 선택은 멱등 처리 | RelationshipScenarioTests |
+| JOB-001 | 알바/직무 활동 → 시간·체력·돈·평판 변화가 데이터 정의와 일치 | JobActivityScenarioTests |
+| KNOW-001 | 생활 활동 반복 N회 → Knowledge trigger 평가 통과 | KnowledgeTriggerTests |
+| KNOW-002 | KnowledgeProgress가 임계 도달 시 OnUnlocked 1회 발화, 이후 누적해도 이중 발화 X | KnowledgeProgressTests |
+| TOOL-001 | ToolDefinition.ApplyEffects가 SO 전략 배열을 순서대로 호출 | ToolEffectTests |
+| STATUS-001 | StatusValue.Tick 누적, max 클램프, Restore 0 floor, Penalty 곡선 | StatusValueTests |
+| STATUS-002 | GameClock.Tick의 Day/DayProgress 결정론 | GameClockTests |
+| NET-001 | ArgsParser가 -mode/-port/-maxPlayers/-saveSlot/-joinIp 파싱, Unity 예약 인자 무시 | ArgsParserTests |
+| NET-002 | dedicated server 빌드 → 클라 loopback 접속 → 플레이어 spawn 및 생활 활동 결과 동기화 (PlayMode) | StudentLifeNetworkTests |
+
+### ROOTBORN 레거시 농장/세대 시나리오 (격리 유지, prefix: GEN/HEIR/CROP)
+레거시 Farm/Crop/Generation 코드는 삭제 전까지 회귀 방지를 위해 테스트를 유지한다. 단, 신규 코어 루프의 기본 판타지나 MVP 완료 조건으로 승격하지 않는다.
+
 | ID | 시나리오 | 검증 |
 |---|---|---|
 | GEN-001 | 1세대 lifetimeSec 경과 → 2세대 자동 전환 + Lineage 기록 | GenerationManagerTests |
 | HEIR-001 | 같은 시드 입력 → 동일 후계자 생성, 비계승 특성은 부모로부터 전달 안 됨 | HeirGeneratorTests |
-| KNOW-001 | 맨손 + 돌 + 땅 표면 반복 N회 → Knowledge_StoneTool 트리거 평가 통과 | KnowledgeTriggerTests |
-| KNOW-002 | KnowledgeProgress가 임계 도달 시 OnUnlocked 1회 발화, 이후 누적해도 이중 발화 X | KnowledgeProgressTests |
-| TOOL-001 | ToolDefinition.ApplyEffects가 SO 전략 배열을 순서대로 호출 | (Phase 8 추가 예정) |
 | CROP-001 | CropPlot.Tick이 stageDurations에 따라 결정론적으로 단계 전환 | CropGrowthTests |
-| STATUS-001 | StatusValue.Tick 누적, max 클램프, Restore 0 floor, Penalty 곡선 | StatusValueTests |
-| STATUS-002 | GameClock.Tick의 Day/DayProgress 결정론 | GameClockTests |
-| NET-001 | ArgsParser가 -mode/-port/-maxPlayers/-saveSlot/-joinIp 파싱, Unity 예약 인자 무시 | ArgsParserTests |
-| NET-002 | dedicated server 빌드 → 클라 loopback 접속 → 플레이어 spawn (PlayMode) | (Phase 8 추가 예정) |
 
 ### 매치 시나리오 (참고 — coin-defense 호환 보존, ROOTBORN 미사용)
 | ID | 시나리오 | 검증 |
@@ -261,13 +275,15 @@ PR 통과 조건:
 
 ## 시나리오 추가 의무
 
+- 신규 생활 활동/선택지/특성/기술/진로/관계/직무 메카닉 → 시나리오 ≥ 1개
+- 신규 보상 지급 경로(퀘스트/미션/스토리/해금/출석/생활 활동/진로 연습 등) → 인벤토리 수용 가능성, 원자적 지급, 반복 호출 멱등성, 저장/로드 후 재지급 방지 시나리오 각 1개 이상
+- 레거시 Farm/Crop/Generation 수정 → 해당 레거시 회귀 시나리오 ≥ 1개
 - 신규 코인 메카닉 → 시나리오 ≥ 2개
 - 신규 적·보스 → 시나리오 ≥ 1개
 - 신규 머지 룰 → 시나리오 ≥ 1개
 - 신규 수익화 항목 (가챠 풀·패스 보상·IAP·광고) → 시나리오 ≥ 1개
 - 신규 라우트 (서버) → 해피 + 에러 + 멱등 시나리오 각 1개
 - 신규 맵 → 적 진행 + 코인 배치 검증 시나리오 1개
-- 신규 보상 지급 경로(퀘스트/미션/스토리/해금/출석 등) → 인벤토리 수용 가능성, 원자적 지급, 반복 호출 멱등성, 저장/로드 후 재지급 방지 시나리오 각 1개 이상
 
 ## 관련 문서
 

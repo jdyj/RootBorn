@@ -525,8 +525,8 @@ namespace Rootborn.Game.Bootstrap
             if (Object.FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
             {
                 var es = new GameObject("EventSystem",
-                    typeof(UnityEngine.EventSystems.EventSystem),
-                    typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
+                    typeof(UnityEngine.EventSystems.EventSystem));
+                Rootborn.Game.Common.UiInputModuleInstaller.AddPreferredInputModule(es);
             }
 
             // FarmHudController 를 reflection 으로 추가 (Game 어셈블리는 UI 어셈블리를 참조하지 않음).
@@ -596,14 +596,17 @@ namespace Rootborn.Game.Bootstrap
             if (inv == null)
             {
                 inv = player.AddComponent<Rootborn.Game.Player.PlayerInventory>();
-                inv.Bind(registry);
-                inv.TryAddById("BareHand", 1);
-                inv.TryAddById("StoneAxe", 1);
-                inv.TryAddById("Wood", 5);
-                inv.TryAddById("Stone", 3);
-                var bareHandItem = inv.FindById("BareHand");
-                if (bareHandItem != null) inv.EquipTool(bareHandItem);
                 added++;
+            }
+            if (registry != null)
+            {
+                inv.Bind(registry);
+                EnsureInventoryContains(inv, "BareHand", 1);
+                EnsureInventoryContains(inv, "StoneAxe", 1);
+                EnsureInventoryContains(inv, "Wood", 5);
+                EnsureInventoryContains(inv, "Stone", 3);
+                var bareHandItem = inv.FindById("BareHand");
+                if (inv.EquippedToolItem == null && bareHandItem != null) inv.EquipTool(bareHandItem);
             }
 
             var interactor = player.GetComponent<Rootborn.Game.Player.GatherInteractor>();
@@ -630,6 +633,13 @@ namespace Rootborn.Game.Bootstrap
             {
                 Debug.Log($"[ROOTBORN/AutoFiller] Reinforced existing Player with {added} missing component(s) (Rigidbody2D / BoxCollider2D / scale).");
             }
+        }
+
+        private static void EnsureInventoryContains(Rootborn.Game.Player.PlayerInventory inventory, string itemId, int count)
+        {
+            var item = inventory.FindById(itemId);
+            if (item == null || inventory.Inventory.CountOf(item) > 0) return;
+            inventory.Inventory.Add(item, count);
         }
 
         private static GameObject FindObjectByName(string name)

@@ -13,6 +13,7 @@ namespace Rootborn.Game.Quests
     {
         public string QuestId;
         public QuestState State;
+        public string StateName;
         public int[] ObjectiveCounts = Array.Empty<int>();
         public string[] ProcessedEventKeys = Array.Empty<string>();
     }

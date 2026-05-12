@@ -1,6 +1,6 @@
 # Assets/Data/** (ScriptableObject 데이터) 규칙
 
-> **한국어 요약**: 게임 엔티티(작물·도구·자원·지식·특성·세대·상태)는 모두 SO. 코드 수정 없이 디자이너가 조정 가능해야 한다.
+> **한국어 요약**: 게임 엔티티(생활 활동·선택지·특성·기술·진로·관계·직무·장소·도구·자원·지식·상태)는 모두 SO. 코드 수정 없이 디자이너가 조정 가능해야 한다.
 
 ## 적용 경로
 - `Assets/Data/**`
@@ -26,20 +26,23 @@
 ROOTBORN의 **모든 게임 엔티티는 100% 데이터로 정의**된다. 시스템 코드는 절대 특정 엔티티를 알지 못해야 한다.
 
 ### 적용 대상
-작물(Crop), 도구(Tool), 자원 노드(Resource), 레시피(Recipe), 지식 노드(Knowledge), 후계자 특성(Trait), 세대 프로필(Generation), 상태이상(Status), 가문 특성(FamilyTrait).
+생활 활동(LifeActivity), 선택지(LifeChoice), 특성(Trait), 기술(Skill), 진로(Career), 직무/알바(Job), 관계(Relationship), 장소(Location), 도구(Tool), 자원 노드(Resource), 레시피/절차(Recipe), 지식 노드(Knowledge), 상태이상(Status), 가문 특성(FamilyTrait), 레거시 작물(Crop), 레거시 세대 프로필(Generation).
 
 ### 금지
-- `if (crop.id == "Wheat") { ... }` — 특정 엔티티 ID 분기
-- `switch (toolId)` / `switch (knowledgeId)` — 엔티티별 switch
-- `class WheatController : CropController` — 엔티티별 C# 클래스
-- `enum CropId { Wheat, Carrot ... }` / `enum ToolId { ... }` — 엔티티 ID enum (enum 값은 코드 파일이라 핫스왑 불가)
+- `if (activity.id == "Study") { ... }`, `if (crop.id == "Wheat") { ... }` — 특정 엔티티 ID 분기
+- `switch (choiceId)` / `switch (toolId)` / `switch (knowledgeId)` — 엔티티별 switch
+- `class StudyActivityController : LifeActivityController`, `class WheatController : CropController` — 엔티티별 C# 클래스
+- `enum ActivityId { Study, PartTime ... }` / `enum CropId { Wheat, Carrot ... }` / `enum ToolId { ... }` — 엔티티 ID enum (enum 값은 코드 파일이라 핫스왑 불가)
 
 ### 허용
-- `[CreateAssetMenu] CropDefinition` SO + `GrowthBehaviorBase[]` 전략 SO 배열
+- `[CreateAssetMenu] LifeActivityDefinition` SO + `LifeActivityRequirementBase[]` / `LifeActivityEffectBase[]` 전략 SO 배열
+- `LifeChoiceDefinition` SO + `LifeChoiceOutcomeBase[]` 전략 SO 배열
+- `CareerPracticeDefinition` SO + `PracticeStepDefinition[]` 또는 전략 SO 배열
 - `ToolDefinition` SO + `ToolEffectBase[]` 전략 SO 배열
 - `KnowledgeNode` SO + `KnowledgeTriggerBase[]` 전략 SO 배열
 - 메카닉은 SO 필드(growthCurve, powerMultiplier, decayPerSecond 등)로 표현
 - 신규 엔티티 추가 = SO 1개 생성 + GameDataRegistry 등록 (코드 X)
+- 레거시 Farm/Crop 시스템은 `CropDefinition` SO + `GrowthBehaviorBase[]` 전략 SO 배열 유지 가능. 신규 기본 루프에는 사용하지 않는다.
 
 ## 보상 데이터와 인벤토리 안전성
 
@@ -72,12 +75,18 @@ ROOTBORN의 **모든 게임 엔티티는 100% 데이터로 정의**된다. 시�
 - 같은 클래스의 다른 .asset이 **인스턴스별 다른 수치**를 가진다 (Inspector 입력만으로).
 
 ### 작명 규약 (예시)
-- 작물: `Crop_Wheat.asset`, `Crop_Carrot.asset`
+- 생활 활동: `LifeActivity_StudyAtLibrary.asset`, `LifeActivity_PartTimeCafe.asset`
+- 선택지: `LifeChoice_HelpNeighbor.asset`, `LifeChoice_StayLateAtWork.asset`
+- 기술: `Skill_Communication.asset`, `Skill_Planning.asset`
+- 진로: `Career_Designer.asset`, `Career_Nurse.asset`
+- 관계: `Relationship_Neighbor.asset`, `Relationship_Classmate.asset`
+- 장소: `Location_Library.asset`, `Location_Cafe.asset`
+- 레거시 작물: `Crop_Wheat.asset`, `Crop_Carrot.asset`
 - 도구: `Tool_BareHand.asset`, `Tool_StoneAxe.asset`, `Tool_StoneHoe.asset`
 - 지식: `Knowledge_StoneTool.asset`, `Knowledge_Fire.asset`
 - 지식 트리거: `Knowledge/Triggers/Trigger_HitGroundWithRock.asset`
 - 특성: `Trait_Hardy.asset`, `Trait_GreenThumb.asset`, `Trait_QuickLearner.asset`
-- 세대: `Gen_Default.asset`, `Gen_StoneAge.asset`
+- 레거시 세대: `Gen_Default.asset`, `Gen_StoneAge.asset`
 - 상태: `Status_Hunger.asset`, `Status_Fatigue.asset`, `Status_Loneliness.asset`
 
 ### 와이어링 절차

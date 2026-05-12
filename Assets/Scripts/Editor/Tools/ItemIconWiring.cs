@@ -6,97 +6,89 @@ using UnityEngine;
 
 namespace Rootborn.Editor.Tools
 {
-    /// <summary>
-    /// ItemDefinition / ToolDefinition .asset 의 _icon 필드를 Pixelwood Items 16x16 sheet 의
-    /// sub-sprite 로 자동 와이어링. ID → sub-sprite 이름 매핑 테이블은 코드 안에 데이터로 보관.
-    /// 새 ID 추가 시 IconMap 만 갱신 → 메뉴 한 번 실행하면 모든 .asset 갱신.
-    /// </summary>
     public static class ItemIconWiring
     {
-        private const string ItemsSheetPath = "Assets/Pixelwood Valley/Pixelwood Valley Icon Pack 1.0/1.0/Items 16x16.png";
+        private const string ModernFarmRoot = "Assets/Modern_Farm_v1.2";
 
-        // ID 별 추정 sub-sprite 이름. 실제 sheet 칸 위치는 PNG 시각 검증 후 보정.
-        // SliceOne 의 row=0 = TOP, col=0 = LEFT 규칙. Items 16x16 = 21cols × 15rows.
         private static readonly Dictionary<string, string> IconMap = new()
         {
-            // Resources
-            { "Wood",     "Icon_r14_c0" }, // 마지막 줄 좌측 — 통나무 추정
-            { "Stone",    "Icon_r14_c1" },
-            // Tools
-            { "BareHand", "Icon_r0_c19" }, // 추정 — 손 모양 cell
-            { "StoneAxe", "Icon_r0_c2" },  // 추정 — 도끼 cell
-            { "StoneHoe", "Icon_r0_c5" },  // 추정 — 곡괭이/괭이 cell
+            { "Wood", ModernFarmRoot + "/16x16/Single_Files_16x16/Pickup_Items_16x16/Pickup_Fishing_Branch_16x16.png" },
+            { "Stone", ModernFarmRoot + "/16x16/Single_Files_16x16/Pickup_Items_16x16/Pickup_Resource_1_16x16.png" },
+            { "BareHand", ModernFarmRoot + "/Icons/Icons_16x16/Icons_16x16_Singles/Icons_16x16_Tools_Bag.png" },
+            { "StoneAxe", ModernFarmRoot + "/Icons/Icons_16x16/Icons_16x16_Singles/Icons_16x16_Tools_Axe.png" },
+            { "StoneHoe", ModernFarmRoot + "/Icons/Icons_16x16/Icons_16x16_Singles/Icons_16x16_Tools_Shovel.png" },
+            { "StonePickaxe", ModernFarmRoot + "/Icons/Icons_16x16/Icons_16x16_Singles/Icons_16x16_Tools_Shovel.png" },
         };
 
-        [MenuItem("Rootborn/Items/Wire Icons From Pixelwood")]
+        [MenuItem("Rootborn/Items/Wire Icons From Modern Farm")]
         public static void WireAll()
         {
-            // 1) 모든 sub-sprite 로드 → 이름 lookup 가능하도록 dictionary 구성.
-            var spritesByName = new Dictionary<string, Sprite>(512);
-            var assets = AssetDatabase.LoadAllAssetsAtPath(ItemsSheetPath);
-            int totalSubs = 0;
-            foreach (var a in assets)
-            {
-                if (a is Sprite s)
-                {
-                    spritesByName[s.name] = s;
-                    totalSubs++;
-                }
-            }
-            if (totalSubs == 0)
-            {
-                Debug.LogError($"[ROOTBORN/IconWire] No sub-sprites found at {ItemsSheetPath}. Run 'Rootborn/Pixelwood/Slice Sprite Sheets' first.");
-                return;
-            }
-            Debug.Log($"[ROOTBORN/IconWire] Items sheet has {totalSubs} sub-sprites.");
+            int wiredItems = 0;
+            int wiredTools = 0;
+            int missing = 0;
 
-            int wiredItems = 0, wiredTools = 0, missing = 0;
-
-            // 2) ItemDefinition 순회.
             var itemGuids = AssetDatabase.FindAssets("t:ItemDefinition");
             foreach (var guid in itemGuids)
             {
                 var path = AssetDatabase.GUIDToAssetPath(guid);
                 var def = AssetDatabase.LoadAssetAtPath<ItemDefinition>(path);
-                if (def == null) continue;
-                if (string.IsNullOrEmpty(def.Id))
+                if (def == null || string.IsNullOrEmpty(def.Id))
                 {
-                    Debug.LogWarning($"[ROOTBORN/IconWire] {path} has empty _id — skip.");
                     continue;
                 }
-                if (!IconMap.TryGetValue(def.Id, out var subName))
+
+                if (!TryGetIcon(def.Id, out var sprite))
                 {
-                    Debug.LogWarning($"[ROOTBORN/IconWire] No icon mapping for ItemDefinition '{def.Id}' ({path}).");
                     missing++;
                     continue;
                 }
-                if (!spritesByName.TryGetValue(subName, out var sprite))
-                {
-                    Debug.LogWarning($"[ROOTBORN/IconWire] Sub-sprite '{subName}' not found in sheet for '{def.Id}'.");
-                    missing++;
-                    continue;
-                }
+
                 AssignIconField(def, sprite);
                 wiredItems++;
             }
 
-            // 3) ToolDefinition 순회 (도구는 Item 과 ID 공유).
             var toolGuids = AssetDatabase.FindAssets("t:ToolDefinition");
             foreach (var guid in toolGuids)
             {
                 var path = AssetDatabase.GUIDToAssetPath(guid);
                 var def = AssetDatabase.LoadAssetAtPath<ToolDefinition>(path);
-                if (def == null) continue;
-                if (string.IsNullOrEmpty(def.Id)) continue;
-                if (!IconMap.TryGetValue(def.Id, out var subName)) continue;
-                if (!spritesByName.TryGetValue(subName, out var sprite)) continue;
+                if (def == null || string.IsNullOrEmpty(def.Id))
+                {
+                    continue;
+                }
+
+                if (!TryGetIcon(def.Id, out var sprite))
+                {
+                    continue;
+                }
+
                 AssignIconField(def, sprite);
                 wiredTools++;
             }
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log($"[ROOTBORN/IconWire] Wired {wiredItems} ItemDefinition + {wiredTools} ToolDefinition icons. {missing} missing mappings.");
+            Debug.Log($"[ROOTBORN/IconWire] Wired {wiredItems} ItemDefinition + {wiredTools} ToolDefinition Modern Farm icons. {missing} missing mappings.");
+        }
+
+        private static bool TryGetIcon(string id, out Sprite sprite)
+        {
+            sprite = null;
+            if (!IconMap.TryGetValue(id, out var assetPath))
+            {
+                Debug.LogWarning($"[ROOTBORN/IconWire] No Modern Farm icon mapping for '{id}'.");
+                return false;
+            }
+
+            EnsureSingleSpriteImporter(assetPath);
+            sprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+            if (sprite == null)
+            {
+                Debug.LogWarning($"[ROOTBORN/IconWire] Modern Farm icon missing for '{id}': {assetPath}");
+                return false;
+            }
+
+            return true;
         }
 
         private static void AssignIconField(Object asset, Sprite sprite)
@@ -111,6 +103,20 @@ namespace Rootborn.Editor.Tools
             prop.objectReferenceValue = sprite;
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(asset);
+        }
+
+        private static void EnsureSingleSpriteImporter(string assetPath)
+        {
+            var importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+            if (importer == null) return;
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.spritePixelsPerUnit = 16;
+            importer.filterMode = FilterMode.Point;
+            importer.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.mipmapEnabled = false;
+            importer.alphaIsTransparency = true;
+            importer.SaveAndReimport();
         }
     }
 }

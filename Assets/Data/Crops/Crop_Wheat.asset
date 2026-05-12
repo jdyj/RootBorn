@@ -15,10 +15,10 @@ MonoBehaviour:
   _id: Wheat
   _displayKey: crop.wheat
   _growthStageSprites:
-  - {fileID: -3111858015528647964, guid: 12a202ee0ad84a44283317d0e49c0881, type: 3}
-  - {fileID: -1534829400217140026, guid: 12a202ee0ad84a44283317d0e49c0881, type: 3}
-  - {fileID: 1778295051076493461, guid: 12a202ee0ad84a44283317d0e49c0881, type: 3}
-  - {fileID: 6123796852431889199, guid: 12a202ee0ad84a44283317d0e49c0881, type: 3}
+  - {fileID: 21300000, guid: 350e196d9333115459230d18268ee658, type: 3}
+  - {fileID: 21300000, guid: 5489490d5e07f0f449bd7cd22a4d36ff, type: 3}
+  - {fileID: 21300000, guid: 0191715c5e68b0645a8a9363e11c3d50, type: 3}
+  - {fileID: 21300000, guid: ae050e67031770e409a429b6c15134b9, type: 3}
   _stageDurationsSec:
   - 30
   - 30

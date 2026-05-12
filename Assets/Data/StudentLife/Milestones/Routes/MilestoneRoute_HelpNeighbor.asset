@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f4bff8407a2c3d46821435d4f21af18, type: 3}
+  m_Name: MilestoneRoute_HelpNeighbor
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.MilestoneRouteDefinition
+  _id: milestone.route.help-neighbor
+  _displayNameKey: milestone.route.help-neighbor
+  _objective: {fileID: 11400000, guid: 07c7294df342e184e84e345c503c5e82, type: 2}
+  _recommendedActionId: outside.help-neighbor

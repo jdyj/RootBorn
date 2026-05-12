@@ -1,44 +1,53 @@
-# 프로젝트 헌법 — ROOTBORN (세대 진화 농장 생존 게임)
+# 프로젝트 헌법 — ROOTBORN (도시 생활 성장 시뮬레이션)
 
 이 문서는 모든 에이전트와 개발자가 따라야 하는 최상위 규칙이다. 구체적 가이드라인은 `.claude/rules/` 하위 파일을 참조한다.
 
 ## 게임 비전 (One-liner)
 
-> **"한 캐릭터가 아니라, 세대를 통해 문명을 키우는 농장 생존 게임"**
+> **"도시에서 살아가는 한 사람의 생활 선택이 성격, 관계, 진로, 평판을 바꾸는 생활 성장 시뮬레이션"**
 
-플레이어는 한 인물이 아니라 **가문/세대/문명**이다. 1세대는 맨손에서 시작하고, 후계자가 일부 능력·지식을 계승하며, 세대를 거듭할수록 도구·기반시설이 누적되어 문명이 발전한다.
+플레이어는 우선 **도시에서 살아가는 개인 또는 가구**다. 핵심 판타지는 농장 경영이나 세대 교체가 아니라, 집·거리·상점·학교·알바·직장·이웃 사이에서 시간을 쓰고 선택을 반복하며 **특성, 기술, 관계, 돈, 평판, 진로 가능성**을 키우는 것이다.
+
+세대·가문·계승은 1차 코어 루프가 아니다. 기존 Generation/Family 구현은 레거시 또는 장기 메타 시스템으로 보존할 수 있지만, 신규 기능은 기본적으로 Town/StudentLife/LifeActivity 중심으로 설계한다.
 
 ## 핵심 메카닉
 
-### 세대 시스템
-- **세대 = 진행 단위** (레벨 ❌ / 세대 ⭕)
-- 1세대 lifetimeSec(기본 1800초 ≈ 30분) 경과 시 자동 세대 교체
-- 세대 교체 시 `LineageBook`에 조상 기록 + `GenerationProfile.NextGeneration`으로 전환
+### 생활 활동과 선택
+- 플레이어는 학교, 알바, 취미, 심부름, 휴식, 관계, 자기계발 같은 `LifeActivityDefinition`을 수행한다.
+- 활동은 시간·돈·체력·불안·관계·평판을 비용 또는 보상으로 사용한다.
+- 선택지는 `LifeChoiceDefinition` 또는 동등한 SO 데이터로 정의하고, 결과는 trait/skill/career hint/status/reward에 반영한다.
+- 활동 완료와 선택 결과는 중복 적용되지 않도록 request id 또는 명시 상태로 멱등 처리한다.
 
-### 후계자 추상화 방식 (직접 육아 X)
-- `HeirGenerator.Generate(parentTraits, traitPool, seed)` 결정론적 생성
-- 부모의 inheritable trait를 **50% 확률로 1~2개 계승** + 랜덤 풀에서 1개 보너스
-- `isRandomOnly` trait는 부모로부터 계승 불가 (랜덤 풀에만 등장)
-- 동일 시드 → 동일 후계자 (테스트 결정론)
+### 자유 경로 성장
+- 학생 생활은 학교 수업·등교 루트 하나만 정답인 선형 진행으로 설계하지 않는다.
+- 플레이어는 학교를 중간에 나가거나, 마을 활동, 관계, 알바, 탐험, 제작, 도움 행동, 독학, 휴식, 이벤트 선택 같은 다양한 경로로 특성·성향·스킬·진로 힌트·관계·컨디션을 성장시킬 수 있어야 한다.
+- 동일한 핵심 성장 목표에는 가능한 한 2개 이상의 대체 경로를 제공한다. 예: 성실함은 수업 참여뿐 아니라 도서관 독학, NPC 도움, 반복 작업으로도 성장할 수 있다.
+- 학교 밖 활동은 보조 보상 전용이 아니라 핵심 성장·진로·관계 진행에 참여할 수 있어야 한다.
+- 모든 성장 경로는 ScriptableObject 데이터와 전략 배열로 표현하며, 특정 활동/장소/퀘스트 ID별 C# 분기로 진행 경로를 제한하지 않는다.
 
-### 도구 해금 (지식 기반)
-- 특정 행동 N회 반복 → 새로운 개념 발견 → 도구 제작 가능
-- 예: 맨손으로 돌을 땅에서 10회 타격 → `Knowledge_StoneTool` 해금 → `Tool_StoneAxe`/`Tool_StoneHoe` 제작 가능
-- `KnowledgeProgress` 액션 버스 + `KnowledgeTriggerBase[]` SO 다형 평가
-- AND 조건 (모든 trigger 만족 시 해금)
+### 특성·기술·진로 성장
+- 특성은 단순 스탯 보너스가 아니라 플레이 스타일과 선택 경향을 표현한다.
+- 기술은 활동 성공률, 선택지 접근성, 보상 품질, 진로 힌트 해금에 영향을 준다.
+- 진로는 고정 직업 트리가 아니라 반복 활동과 선택의 누적으로 드러나는 후보군이다.
+
+### 지식과 정보 해금
+- 특정 행동 N회 반복 또는 생활 활동 완료 → 새로운 생활 정보, 지역 정보, 직무 힌트, 관계 팁 발견.
+- `KnowledgeProgress` 액션 버스 + `KnowledgeTriggerBase[]` SO 다형 평가.
+- AND 조건은 모든 trigger 만족 시 해금한다.
 
 ### 상태 기반 제한
-- 배고픔/피로/외로움 (StatusEffectDefinition SO)
-- 100% 도달 시 행동 페널티 (이동 속도, 작업 실패율)
+- 체력/피로/불안/집중/외로움/돈 압박 같은 `StatusEffectDefinition` SO.
+- 임계 도달 시 행동 페널티, 선택지 제한, 활동 실패율, 관계 반응에 영향을 준다.
 - `StatusValue.Tick`으로 시간 누적, `Restore`로 회복
 
-### 단계 분해 제작
-- 모든 행동을 세분화 (예: 도끼 = 채집→가공→건조→조립)
+### 단계 분해 행동
+- 중요한 생활 행동은 세분화한다. 예: 알바 준비 = 이동→복장/도구 확인→업무 수행→정산.
 - `RecipeDefinition` SO + `CraftStepBase[]` 전략
 
-### 가문 특성 / 조상 시스템 (후속)
-- `LineageBook`에 누적된 조상이 영구 버프 제공 (예: 묘지 시스템)
-- 가문 trait는 모든 후계자에 자동 적용
+### 세대·가문 시스템 (후속 메타)
+- `LineageBook`, `GenerationProfile`, `HeirGenerator` 계열은 후속 메타 시스템으로 취급한다.
+- 1차 MVP와 신규 생활 기능은 세대 교체를 필수 진행 단위로 요구하지 않는다.
+- 세대·가문 보상은 생활 성장의 장기 기록 또는 엔딩 이후 계승으로만 도입한다.
 
 ## 타겟 플랫폼
 
@@ -46,26 +55,32 @@
 - **기본 해상도**: 1920×1080 Borderless Fullscreen
 - **종횡비**: 16:9 우선, 16:10/21:9 그레이스풀 디그레이드
 - **입력**: 키보드+마우스 (WASD 이동, E/Space 채집, ESC 메뉴, F11 풀스크린)
-- **멀티플레이**: Unity Netcode for GameObjects (NGO) — 싱글/호스트/클라이언트/dedicated server 4모드. `rootborn-server.exe -mode server -port 7777 -maxPlayers 4 -saveSlot myfarm` 형태 실행.
+- **멀티플레이**: Unity Netcode for GameObjects (NGO) — 싱글/호스트/클라이언트/dedicated server 4모드. `rootborn-server.exe -mode server -port 7777 -maxPlayers 4 -saveSlot town-slot` 형태 실행.
 
 ## 그래픽 자산
 
 - **Pixelwood Valley 1.1.2** + **Icon Pack 1.0** (Unity Asset Store, 16×16 픽셀아트)
-- 작물 80종, 도구 아이콘 315개, 타일 180종, 캐릭터 6방향(Idle/Walk × Down/Side/Up) × 4프레임
+- 타일, 실내/도시 소품, 아이콘, 캐릭터 6방향(Idle/Walk × Down/Side/Up) × 4프레임
 - Sprite sheet 슬라이스 규칙: `rules/path-based/sprite-slicing.md`
-- **캐릭터 sheet는 59×49** (16×16 아님), Tile/Crops/Items만 16×16
+- **캐릭터 sheet는 59×49** (16×16 아님), Tile/Items 계열은 자산별 PPU와 slice 규칙을 따른다.
+
+### Modern UI Style2 공통 패널
+- 공통 패널은 `Assets/modernuserinterface-win/16x16/Modern_UI_Style_2.png`의 16x16 Style2 패널 블록을 사용한다.
+- 3x3 좌표는 top=`r2_c0/r2_c1/r2_c2`, middle=`r3_c0/r3_c1/r3_c2`, bottom=`r4_c0/r4_c1/r4_c2`로 고정한다.
+- `r3_c1`은 패널 내부 fill tile로 반복 배치한다.
+- 크기 가변 패널은 단일 `Image.sprite`가 아니라 `ModernUiTileImage + ModernUiRecipes.CommonPanel`로 생성한다.
 
 ## MVP 스코프 (현재)
 
-1. **1세대 + 2세대 + 도구 해금** (지식 기반)
-2. 맨손 농사 + 자원 채집(나무/돌)
-3. 배고픔/피로/외로움 상태
-4. 시간/일자 시스템 (`GameClock`)
-5. 후계자 추상화 + 가문 누적
-6. dedicated server 빌드 + 클라 접속
+1. **Town 기본 진입 흐름**: Boot/MainMenu 이후 기본 플레이 경험은 도시 생활 화면이어야 한다.
+2. **학생/도시 생활 활동 루프**: 학교, 알바, 취미, 심부름, 휴식, 관계 활동.
+3. **특성·기술·진로 힌트 성장**: 활동과 선택이 trait/skill/career hint에 누적된다.
+4. **상태와 시간 관리**: `GameClock` 기반 일정, 체력/피로/불안/집중/돈 압박.
+5. **보상·인벤토리 멱등성**: 활동/퀘스트/지식/진로 보상은 지급 전 검증과 원자적 지급을 보장한다.
+6. **dedicated server 빌드 + 클라 접속**
 
 후속 (post-MVP):
-- 직접 육아 옵션, 마을/NPC, 문화/신념(비 부르는 의식, 작물 숭배), 조상 묘지 버프
+- 관계 심화, 직업 루트, 주거/소비 확장, 도시 이벤트, 세대·가문 메타, 레거시 Farm/Crop 기능 삭제 또는 격리
 
 ## 기술 스택
 
@@ -82,19 +97,36 @@
 게임은 반복 수정이 빈번하다. 재사용보다 **수정 용이성**이 우선이다. 이른 추상화를 피하고, 3회 이상 반복될 때만 추상화한다.
 
 ### 2. 엔티티 데이터-드리븐 (Entity Data-Driven Design)
-모든 게임 엔티티(작물·도구·자원·지식·특성·세대 프로필·상태이상·레시피)는 **ScriptableObject**로 정의한다. 시스템 코드는 특정 엔티티 ID에 분기하지 않는다.
+모든 게임 엔티티(생활 활동·선택지·특성·기술·진로·직업·관계·장소·도구·자원·지식·상태이상·레시피·레거시 작물/세대 프로필)는 **ScriptableObject**로 정의한다. 시스템 코드는 특정 엔티티 ID에 분기하지 않는다.
 
 **금지** (CI 게이트 `Scripts/ci/check-no-entity-id-branching.sh`로 강제):
-- `if (cropId == "Wheat")`, `switch (toolId)` — 작물별/도구별 if·switch
-- `enum CropId { Wheat, Carrot ... }` — 엔티티별 enum
-- 작물/도구/지식별 C# 클래스 (모두 SO + 전략 SO 배열로 표현)
+- `if (activityId == "Study")`, `if (cropId == "Wheat")`, `switch (toolId)` — 활동/작물/도구별 if·switch
+- `enum ActivityId { Study, PartTime ... }`, `enum CropId { Wheat, Carrot ... }` — 엔티티별 enum
+- 활동/선택지/작물/도구/지식별 C# 클래스 (모두 SO + 전략 SO 배열로 표현)
 
 **허용**:
-- `CropDefinition` SO + `GrowthBehaviorBase[]` (전략 SO 배열)
+- `LifeActivityDefinition` SO + `LifeActivityEffectBase[]` 또는 `LifeActivityRequirementBase[]` (전략 SO 배열)
+- `LifeChoiceDefinition` SO + `LifeChoiceOutcomeBase[]`
 - `ToolDefinition` SO + `ToolEffectBase[]`
 - `KnowledgeNode` SO + `KnowledgeTriggerBase[]`
+- 레거시 `CropDefinition` SO + `GrowthBehaviorBase[]`
 
-**SO 와이어링 경로**: `Assets/Data/{Crops|Tools|Resources|Recipes|Knowledge|Traits|Generations|Status|Family}/`. 모든 SO는 `GameDataRegistry.asset`에 등록.
+**SO 와이어링 경로**: `Assets/Data/{StudentLife|LifeActivities|Choices|Skills|Careers|Jobs|Relationships|Locations|Tools|Resources|Recipes|Knowledge|Traits|Status|Family|Generations|Crops}/`. 모든 SO는 `GameDataRegistry.asset`에 등록.
+
+### 2-1. 자유 경로 성장 원칙 (Open-Ended Progression)
+학생 생활, 퀘스트, 진로 힌트, 특성·성향·스킬 성장은 단일 필수 루트가 아니라 복수 경로로 진행 가능해야 한다. 학교 수업은 중요한 경로 중 하나지만 유일한 정답이 아니다.
+
+**금지**:
+- 특정 성장이나 퀘스트 진행을 "학교 수업 완료" 하나에만 종속시키는 설계
+- 정해진 순서대로 등교→수업→퀘스트→하루 종료를 따라야만 핵심 성장이 가능한 일직선 구조
+- 학교 밖 활동을 핵심 성장/진로/관계 진행에서 배제하고 보조 보상으로만 취급하는 설계
+- route/activity/location/quest ID별 C# 분기로 특정 경로만 통과시키는 구현
+
+**필수**:
+- 핵심 성장 목표에는 가능한 한 2개 이상의 대체 경로를 제공한다.
+- 학교, 독학, 마을 활동, 관계, 알바, 탐험, 제작, 도움 행동, 휴식, 이벤트 선택을 성장 경로로 조합할 수 있게 한다.
+- 퀘스트와 활동은 조건 기반 선택지, 대체 목표, 복수 해결 방식을 지원한다.
+- 신규 코어 루프 PlayMode 테스트는 최소 1개 이상의 학교 밖 경로로도 성장/퀘스트/진로 힌트가 진행되는지 실제 플레이 방식으로 검증한다.
 
 ### 3. Scene은 조립, Prefab은 부품
 Scene 파일에 로직을 하드코딩하지 말고 **Prefab 조립**으로 구성한다. Scene diff 충돌을 최소화한다.
@@ -102,8 +134,36 @@ Scene 파일에 로직을 하드코딩하지 말고 **Prefab 조립**으로 구�
 ### 4. 테스트는 PlayMode 우선
 순수 로직은 EditMode, 게임플레이/물리/코루틴은 **PlayMode**에서 검증한다. 빌드 전 전체 테스트 통과 필수.
 
+### 4-0. 플레이어 대리 테스트와 사용자 지정 플레이 흐름 우회 금지
+모든 유저 여정, 코어 루프, PlayMode 시나리오의 완료 판정은 에이전트가 플레이어를 대리해 실제 조작 경로를 재현하는 테스트로 증명한다. 즉 저장 슬롯 선택, 메뉴 버튼 클릭, 마우스/키보드/게임패드 입력, 캐릭터 이동, 콜라이더/트리거 진입, NPC/오브젝트 상호작용, UI 선택, 씬 전환 관찰이 검증 대상이면 테스트도 같은 경로를 통과해야 한다.
+
+사용자가 재현 순서나 조작 경로를 지정하면 자동화 테스트는 그 경로를 그대로 검증한다. 예를 들어 "Town에서 나무 획득 → 퀘스트 진행 → 직접 포탈로 가서 Farm으로 씬 변경 → 인벤토리/퀘스트 유지 확인"은 내부 `Travel()` 직접 호출이나 `SceneManager.LoadScene()` 강제 호출이 아니라, 플레이어 이동·트리거·상호작용 라우터·UI 갱신까지 실제 플레이 경로로 증명해야 한다.
+
+테스트 통과를 위해 사용자 경로를 더 낮은 레벨의 메서드 호출, 상태 강제 세팅, 프리패스 fixture로 대체하지 않는다. 자동화가 어려운 조작은 먼저 제한을 명시하고, 최소한 PlayMode에서 물리/입력/UI/씬 전환 중 사용자가 요구한 관찰 지점을 포함하는 회귀 테스트를 작성한다.
+
+### 4-1. Sprite 런타임 전수 검증
+UI/HUD/캐릭터/타일 등 런타임에서 주소로 로드되는 sprite는 **개별 sprite 픽셀/주소 전체를 PlayMode에서 전수 검증**한다. 단순 manifest/EditMode 검증이나 대표 샘플 smoke test만으로 완료 처리하지 않는다.
+
+필수 검증:
+- 선언된 모든 sheet address와 sub-sprite name이 PlayMode에서 실제 Addressables/런타임 로더로 resolve 된다.
+- resolve 된 `Sprite.name`이 선언 sub-sprite name과 일치한다.
+- 각 sprite의 `textureRect` 전체 픽셀 배열을 읽어 width × height pixel count가 유효함을 확인한다.
+- sprite asset 검증만으로는 부족하다. 실제 UI/Image/SpriteRenderer 같은 렌더 대상에 sprite가 할당되는지 PlayMode에서 검증한다.
+- 대표 화면 또는 핵심 패널은 PlayMode에서 열어 `Image.sprite != null` 및 기대 sprite name/prefix를 확인한다.
+- 신규 sprite 주소/manifest/recipe를 추가하면 대응 PlayMode 전수 테스트를 같은 변경 단위에 포함한다.
+
 ### 5. 증분 QA (Incremental QA)
 모듈 완성 직후 즉시 QA. 전체 완성 후 일괄 QA는 금지. 경계면 버그는 조기에 잡는다.
+
+### 6. 성능·최적화 동시 설계
+신규 시스템은 기능 구현 후 뒤늦게 최적화하지 않는다. 기획, 데이터 구조, UI 목업, 테스트 작성 단계부터 성능 예산과 확장 비용을 함께 고려한다.
+
+필수 원칙:
+- 대량 항목 UI(도감, 인벤토리, 퀘스트, 마일스톤, 관계 목록)는 가상화, 페이징, 검색/필터 캐싱, 지연 로딩, dirty 갱신을 우선 검토한다.
+- 매 프레임 전체 목록 스캔, `Update()` 기반 폴링, 런타임 문자열 조립 반복, LINQ/할당이 큰 열거, 불필요한 Instantiate/Destroy 루프를 피한다.
+- ScriptableObject 데이터는 런타임 조회용 캐시/인덱스를 별도로 구성하고, 항목 해금/변경 이벤트가 발생했을 때만 UI를 갱신한다.
+- Addressables/sprite 로딩은 중복 로드를 피하고, 필요한 화면/항목만 로드한다.
+- 신규 goal과 최종 보고는 성능 리스크, 검증 범위, 남은 최적화 과제를 명시한다.
 
 ## 에이전트 작업 원칙
 
@@ -152,7 +212,7 @@ Scene 파일에 로직을 하드코딩하지 말고 **Prefab 조립**으로 구�
 
 ## 코딩 규약 (요약)
 
-- **네임스페이스**: `Rootborn.{Domain}` (예: `Rootborn.Generation`, `Rootborn.Heir`, `Rootborn.Crops`, `Rootborn.Tools`, `Rootborn.Knowledge`, `Rootborn.Network`)
+- **네임스페이스**: `Rootborn.{Domain}` (예: `Rootborn.Game.StudentLife`, `Rootborn.Game.Town`, `Rootborn.Game.Activities`, `Rootborn.Game.Knowledge`, `Rootborn.Network`; 레거시는 `Rootborn.Generation`, `Rootborn.Crops` 유지 가능)
 - **MonoBehaviour**: 1파일 1클래스, `[SerializeField] private` 우선 (public 필드 금지)
 - **null 체크**: `if (x == null)` 보다 `if (!x)` 는 Unity 오브젝트에만 허용 (일반 객체는 ReferenceEquals 사용)
 - **GC 주의**: `Update()`에서 `new`, `foreach on Dictionary`, `string +` 금지

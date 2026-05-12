@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Rootborn.Game.Bootstrap;
 using Rootborn.Game.Common;
 using Rootborn.Game.Resources;
@@ -13,7 +12,7 @@ namespace Rootborn.Editor.Tools
     public static class FarmSceneBuilder
     {
         private const string FarmScenePath = "Assets/Scenes/Farm.unity";
-        private const string TileSheetPath = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Tiles/Tile.png";
+        private const string ModernGroundSpritePath = "Assets/Modern_Farm_v1.2/16x16/Single_Files_16x16/0_Complete_Tileset_Singles_16x16/Topsoil_16x16.png";
         private const string GroundTileAssetPath = "Assets/Data/Tiles/GroundTile.asset";
         private const string GroundTileFolder = "Assets/Data/Tiles";
 
@@ -26,22 +25,22 @@ namespace Rootborn.Editor.Tools
             if (!OneClickSetup.EnsureNotPlaying()) return;
             EnsureFolder(GroundTileFolder);
 
-            var groundSprite = PickGrassSprite();
+            var scene = EditorSceneManager.OpenScene(FarmScenePath, OpenSceneMode.Single);
+            var registry = LoadRegistry();
+            var groundSprite = PickGrassSprite(registry);
             if (groundSprite == null)
             {
-                Debug.LogError("[ROOTBORN] Tile sheet not sliced. Run 'Rootborn/Pixelwood/Slice Sprite Sheets' first.");
+                Debug.LogError("[ROOTBORN] Modern Farm ground sprite is missing. Run 'Rootborn/Modern Farm/Slice Core 16x16 Sheets' and regenerate default data.");
                 return;
             }
 
             var groundTile = CreateOrLoadGroundTile(groundSprite);
-            var registry = LoadRegistry();
 
-            var scene = EditorSceneManager.OpenScene(FarmScenePath, OpenSceneMode.Single);
             EnsureCamera();
             EnsureEventSystem();
             EnsureGameClock();
             EnsureDiagnostics();
-            Debug.Log($"[ROOTBORN/FarmBuilder] groundSprite={groundSprite?.name ?? "null"}, registry={(registry != null ? registry.name : "null")}, treeSprite={(registry != null && registry.Resources.Length > 0 ? "ok" : "missing")}");
+            Debug.Log($"[ROOTBORN/FarmBuilder] groundSprite={groundSprite.name}, registry={(registry != null ? registry.name : "null")}, resources={(registry != null ? registry.Resources.Length : 0)}");
             var grid = EnsureGrid();
             var tilemap = EnsureGroundTilemap(grid);
             FillGround(tilemap, groundTile);
@@ -49,17 +48,20 @@ namespace Rootborn.Editor.Tools
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
-            Debug.Log("[ROOTBORN] Farm scene built — ground tilemap + resource nodes placed.");
+            Debug.Log("[ROOTBORN] Farm scene built with Modern Farm ground tilemap + resource nodes placed.");
         }
 
         private static GameDataRegistry LoadRegistry()
         {
-            const string defaultPath = "Assets/Data/Registry/GameDataRegistry.asset";
+            const string resourcesPath = "Assets/Resources/GameDataRegistry.asset";
+            const string dataPath = "Assets/Data/Registry/GameDataRegistry.asset";
 
-            var direct = AssetDatabase.LoadAssetAtPath<GameDataRegistry>(defaultPath);
+            var direct = AssetDatabase.LoadAssetAtPath<GameDataRegistry>(resourcesPath);
             if (direct != null) return direct;
 
-            // Fallback: search by type GUID (handles renamed/moved assets and AssetDatabase timing).
+            var legacyLocation = AssetDatabase.LoadAssetAtPath<GameDataRegistry>(dataPath);
+            if (legacyLocation != null) return legacyLocation;
+
             var guids = AssetDatabase.FindAssets("t:GameDataRegistry");
             foreach (var guid in guids)
             {
@@ -72,31 +74,19 @@ namespace Rootborn.Editor.Tools
                 }
             }
 
-            // Final diagnostic: load as raw Object to verify the asset exists at the path.
-            var raw = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(defaultPath);
-            Debug.LogError($"[ROOTBORN/FarmBuilder] LoadRegistry FAILED. " +
-                           $"Path '{defaultPath}' raw load = {(raw == null ? "null (asset missing)" : raw.GetType().FullName)}. " +
-                           $"FindAssets matches = {guids.Length}. " +
-                           $"Likely cause: GameDataRegistry script reference broken or asset import pending. " +
-                           $"Try: Assets > Reimport All, then run Setup Everything again.");
+            Debug.LogError($"[ROOTBORN/FarmBuilder] LoadRegistry FAILED. Expected '{resourcesPath}'. FindAssets matches = {guids.Length}. Run default data generation first.");
             return null;
         }
 
-        private static Sprite PickGrassSprite()
+        private static Sprite PickGrassSprite(GameDataRegistry registry)
         {
-            var assets = AssetDatabase.LoadAllAssetsAtPath(TileSheetPath);
-            Sprite best = null;
-            foreach (var a in assets)
+            if (registry != null && registry.GroundSprite != null)
             {
-                var s = a as Sprite;
-                if (s == null) continue;
-                if (best == null) best = s;
-                if (s.name == "Tile_r2_c4" || s.name == "Tile_r3_c4")
-                {
-                    return s;
-                }
+                return registry.GroundSprite;
             }
-            return best;
+
+            EnsureSingleSpriteImporter(ModernGroundSpritePath);
+            return AssetDatabase.LoadAssetAtPath<Sprite>(ModernGroundSpritePath);
         }
 
         private static TileBase CreateOrLoadGroundTile(Sprite sprite)
@@ -116,15 +106,26 @@ namespace Rootborn.Editor.Tools
 
         private static void EnsureCamera()
         {
-            if (Camera.main != null) return;
-            var go = new GameObject("Main Camera");
-            var cam = go.AddComponent<Camera>();
+            var cam = Camera.main;
+            GameObject go;
+            if (cam == null)
+            {
+                go = new GameObject("Main Camera");
+                cam = go.AddComponent<Camera>();
+            }
+            else
+            {
+                go = cam.gameObject;
+            }
+
+            go.name = "Main Camera";
+            go.tag = "MainCamera";
+            go.transform.position = new Vector3(GroundCols * 0.5f, GroundRows * 0.5f, -10f);
+            go.transform.rotation = Quaternion.identity;
             cam.orthographic = true;
             cam.orthographicSize = 8f;
             cam.backgroundColor = new Color(0.1f, 0.13f, 0.1f, 1f);
             cam.clearFlags = CameraClearFlags.SolidColor;
-            go.tag = "MainCamera";
-            go.transform.position = new Vector3(GroundCols * 0.5f, GroundRows * 0.5f, -10f);
         }
 
         private static void EnsureEventSystem()
@@ -202,7 +203,7 @@ namespace Rootborn.Editor.Tools
 
             if (registry == null)
             {
-                Debug.LogWarning("[ROOTBORN] GameDataRegistry not found — run 'Rootborn/Data/Generate Default Data' first.");
+                Debug.LogWarning("[ROOTBORN] GameDataRegistry not found. Run 'Rootborn/Data/Generate Default Data' first.");
                 return;
             }
 
@@ -255,7 +256,6 @@ namespace Rootborn.Editor.Tools
                 Debug.LogWarning($"[ROOTBORN/FarmBuilder] {name}: ResourceNodeDefinition '{def.Id}' has no Sprite. Will be invisible.");
             }
 
-            // 데이터 기반 충돌: SO _isWalkable=false 자원에만 collider.
             if (!def.IsWalkable && Rootborn.Game.Common.ResourceCollisionToggle.Enabled)
             {
                 var col = go.AddComponent<BoxCollider2D>();
@@ -269,6 +269,20 @@ namespace Rootborn.Editor.Tools
             so.FindProperty("_renderer").objectReferenceValue = sr;
             so.ApplyModifiedPropertiesWithoutUndo();
             return true;
+        }
+
+        private static void EnsureSingleSpriteImporter(string assetPath)
+        {
+            var importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+            if (importer == null) return;
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.spritePixelsPerUnit = 16;
+            importer.filterMode = FilterMode.Point;
+            importer.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.mipmapEnabled = false;
+            importer.alphaIsTransparency = true;
+            importer.SaveAndReimport();
         }
 
         private static void EnsureFolder(string path)

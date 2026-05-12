@@ -155,6 +155,30 @@ namespace Rootborn.Tests.EditMode.StudentLife
             Assert.IsFalse(otherSlot.IsCareerHintUnlocked(career));
         }
 
+        [Test]
+        public void LIFE_STUDENT_009_SaveLoadRecordsLastActivityAndProgressLogWithoutCodeBuiltStage()
+        {
+            var school = ScriptableObject.CreateInstance<LifeActivityDefinition>();
+            SetActivity(school, "activity.attend-school", LifeActivityCategory.School);
+            var study = ScriptableObject.CreateInstance<LifeActivityDefinition>();
+            SetActivity(study, "activity.study-basics", LifeActivityCategory.SelfStudy);
+            var progress = new StudentLifeProgress("slot-a", "player-1", energy: 10, focus: 10);
+            var runner = new LifeActivityRunner();
+
+            Assert.IsTrue(runner.TryPerform(school, progress, "request-school", out _));
+            Assert.IsTrue(runner.TryPerform(study, progress, "request-study", out _));
+
+            var save = progress.ToSaveData();
+            Assert.AreEqual("activity.study-basics", save.LastActivityId);
+            Assert.AreEqual(string.Empty, save.TutorialStageId);
+            CollectionAssert.AreEqual(new[] { "activity.attend-school", "activity.study-basics" }, save.ActivityLogIds);
+
+            var loaded = StudentLifeProgress.FromSaveData(save, System.Array.Empty<TraitDefinition>(), System.Array.Empty<SkillDefinition>(), System.Array.Empty<CareerDefinition>());
+            Assert.AreEqual("activity.study-basics", loaded.LastActivityId);
+            Assert.AreEqual(string.Empty, loaded.TutorialStageId);
+            CollectionAssert.AreEqual(new[] { "activity.attend-school", "activity.study-basics" }, loaded.GetActivityLogIds());
+        }
+
         private static TraitDefinition CreateTrait(string id)
         {
             var trait = ScriptableObject.CreateInstance<TraitDefinition>();

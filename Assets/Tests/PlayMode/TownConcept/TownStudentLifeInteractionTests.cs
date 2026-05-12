@@ -1,5 +1,6 @@
 using System.Collections;
 using NUnit.Framework;
+using Rootborn.Game.Player;
 using Rootborn.Game.StudentLife;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -76,6 +77,68 @@ namespace Rootborn.Tests.PlayMode.TownConcept
             Assert.AreEqual(traitAfterFirst, playerProgress.Progress.GetTraitValue(studyDesk.PrimaryTrait));
         }
 
+        [UnityTest]
+        public IEnumerator LIFE_STUDENT_PM_004_TownStudyActivityShowsPromptAndEInteractionChangesProgress()
+        {
+            yield return SceneManager.LoadSceneAsync("Town", LoadSceneMode.Single);
+            yield return WaitForStudentLifeRuntime();
+
+            var player = GameObject.Find("Player");
+            var progress = player.GetComponent<StudentLifeProgressComponent>();
+            var gather = player.GetComponent<GatherInteractor>();
+            var router = player.GetComponent<PlayerInteractionRouter>();
+            var studyDesk = GameObject.Find("StudyBasicsActivity").GetComponent<StudentLifeActivityInteractor>();
+            int initialTrait = progress.Progress.GetTraitValue(studyDesk.PrimaryTrait);
+            int initialSkill = progress.Progress.GetSkillValue(studyDesk.PrimarySkill);
+
+            player.transform.position = studyDesk.transform.position;
+            yield return null;
+            router.RefreshPromptNow();
+
+            Assert.IsTrue(router.PromptVisible);
+            StringAssert.Contains("Study", router.PromptText);
+
+            gather.TriggerInteract();
+            yield return null;
+
+            Assert.AreEqual(LifeActivityResultKind.Applied, studyDesk.LastResult.Kind);
+            Assert.Greater(progress.Progress.GetTraitValue(studyDesk.PrimaryTrait), initialTrait);
+            Assert.Greater(progress.Progress.GetSkillValue(studyDesk.PrimarySkill), initialSkill);
+            Assert.IsTrue(progress.Progress.IsCareerHintUnlocked(studyDesk.PrimaryCareer));
+        }
+
+        [UnityTest]
+        public IEnumerator LIFE_TRAIT_ACTIVITY_PM_001_TownSceneInstallsLifeActivityBoard()
+        {
+            yield return SceneManager.LoadSceneAsync("Town", LoadSceneMode.Single);
+            yield return WaitForLifeActivityBoard();
+
+            var board = GameObject.Find("LifeActivityBoard").GetComponent<LifeActivityBoard>();
+
+            Assert.IsNotNull(board);
+            Assert.GreaterOrEqual(board.Activities.Count, 8);
+        }
+
+        [UnityTest]
+        public IEnumerator LIFE_TRAIT_ACTIVITY_PM_002_TownLifeActivityChoiceChangesProgressAndExposesLastState()
+        {
+            yield return SceneManager.LoadSceneAsync("Town", LoadSceneMode.Single);
+            yield return WaitForLifeActivityBoard();
+
+            var playerProgress = GameObject.Find("Player").GetComponent<StudentLifeProgressComponent>();
+            var board = GameObject.Find("LifeActivityBoard").GetComponent<LifeActivityBoard>();
+
+            Assert.IsTrue(board.RunChoice(playerProgress, 1, 0, "town-life-choice-request"));
+            yield return null;
+
+            Assert.AreEqual("activity.class-time", board.LastActivityId);
+            Assert.AreEqual("choice.focus-notes", board.LastChoiceId);
+            Assert.AreEqual("town-life-choice-request", board.LastRequestId);
+            Assert.AreEqual(LifeActivityResultKind.Applied, board.LastResultKind);
+            CollectionAssert.Contains(board.ChangedTraitIds, "trait.focus");
+            Assert.Greater(playerProgress.Progress.GetTraitValueById("trait.focus"), 0);
+        }
+
         private static IEnumerator WaitForStudentLifeRuntime()
         {
             for (int i = 0; i < 240; i++)
@@ -85,6 +148,8 @@ namespace Rootborn.Tests.PlayMode.TownConcept
                 var studyDesk = GameObject.Find("StudyBasicsActivity");
                 if (player != null &&
                     player.GetComponent<StudentLifeProgressComponent>() != null &&
+                    player.GetComponent<GatherInteractor>() != null &&
+                    player.GetComponent<PlayerInteractionRouter>() != null &&
                     schoolEntry != null && schoolEntry.GetComponent<StudentLifeActivityInteractor>() != null &&
                     studyDesk != null && studyDesk.GetComponent<StudentLifeActivityInteractor>() != null)
                 {
@@ -95,6 +160,26 @@ namespace Rootborn.Tests.PlayMode.TownConcept
             }
 
             Assert.Fail("Town StudentLife runtime did not install player progress and activity interactors within timeout.");
+        }
+
+        private static IEnumerator WaitForLifeActivityBoard()
+        {
+            for (int i = 0; i < 240; i++)
+            {
+                var player = GameObject.Find("Player");
+                var board = GameObject.Find("LifeActivityBoard");
+                if (player != null &&
+                    player.GetComponent<StudentLifeProgressComponent>() != null &&
+                    board != null &&
+                    board.GetComponent<LifeActivityBoard>() != null)
+                {
+                    yield break;
+                }
+
+                yield return null;
+            }
+
+            Assert.Fail("Town LifeActivityBoard did not install within timeout.");
         }
     }
 }

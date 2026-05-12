@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99190211f16d86d41bc19413f9dd24b9, type: 3}
+  m_Name: Dialogue_OrderedQuestProvider
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Dialogue.DialogueDefinition
+  _lineKeys:
+  - dialogue.questProvider.greeting
+  _choices:
+  - {fileID: 11400000, guid: 24fef21ebaac5a340995c3e8869026f5, type: 2}
+  - {fileID: 11400000, guid: 88e9e3f9320d66a4183e33879d6fb9c3, type: 2}
+  - {fileID: 11400000, guid: e14c5159492ea474ca0161f5536a368c, type: 2}
+  - {fileID: 11400000, guid: 18bcc247fc22bc846b59758024a095a5, type: 2}
+  - {fileID: 11400000, guid: 5e25a0d18de8106428aa8dc0f4b2a209, type: 2}
+  - {fileID: 11400000, guid: dc69508fc7d7e894797b96f719e4cbaf, type: 2}
+  - {fileID: 11400000, guid: f4f37db7423c0da4b94635f75e7ce33f, type: 2}
+  - {fileID: 11400000, guid: eaee4afae8830394dac96b1671431305, type: 2}
+  - {fileID: 11400000, guid: bfa3e444d8c69d940a4158656a1f0faf, type: 2}
+  - {fileID: 11400000, guid: dfccce194f70618488e4609878c314e1, type: 2}

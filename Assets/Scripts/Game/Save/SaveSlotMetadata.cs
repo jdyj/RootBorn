@@ -37,11 +37,21 @@ namespace Rootborn.Game.Save
 
         public static void Set(SaveSlotMetadata metadata)
         {
+            if (!ReferenceEquals(Metadata, metadata))
+            {
+                PlayerGlobalState.HandleActiveSaveContextChanged();
+            }
+
             Metadata = metadata;
         }
 
         public static void Clear()
         {
+            if (Metadata != null)
+            {
+                PlayerGlobalState.HandleActiveSaveContextChanged();
+            }
+
             Metadata = null;
         }
     }

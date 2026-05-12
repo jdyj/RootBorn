@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4efd359ef1b61840bb57d70d293996d, type: 3}
+  m_Name: OutsideActivity_LibrarySelfStudy
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.OutsideSchoolActivityDefinition
+  _id: outside.self-study.library
+  _displayNameKey: outside.self-study.library
+  _category: {fileID: 11400000, guid: dc5c809d7746f87459c7f27decdb1b63, type: 2}
+  _timeCostMinutes: 45
+  _energyCost: 1
+  _focusCost: 2
+  _stressDelta: 1
+  _requirements: []
+  _outcomes:
+  - {fileID: 11400000, guid: 79a33f236e57f8f43a5621bc5a5a0635, type: 2}
+  - {fileID: 11400000, guid: 1d02eae729aa3b7488acfda4014dc1fc, type: 2}

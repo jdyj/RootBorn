@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3783a479aef42364d91ade19b310cbc5, type: 3}
+  m_Name: Milestone_VillageAdaptation
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.MilestoneDefinition
+  _id: milestone.village-adaptation
+  _displayNameKey: milestone.village-adaptation
+  _objectives:
+  - {fileID: 11400000, guid: 07c7294df342e184e84e345c503c5e82, type: 2}
+  _rewards: []
+  _routes:
+  - {fileID: 11400000, guid: 1e5390d8e64d57c43b331ef32abd9ec9, type: 2}
+  - {fileID: 11400000, guid: f482d7c9312fa0d4e9a0a7c1df8df5a2, type: 2}
+  _requiredObjectiveCount: 1

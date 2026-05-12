@@ -112,7 +112,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
 
             ClickButtonNamed("NewGameButton");
-            yield return WaitForScene("Farm", 10f);
+            yield return WaitForScene("Town", 10f);
 
             var service = new SaveService("slot-0", root);
             var metadata = service.LoadMetadata("slot-0");
@@ -125,7 +125,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             SaveSlotSelectPanel.EnsureInScene().Show();
             yield return null;
             ClickButtonNamed("LoadButton");
-            yield return WaitForScene("Farm", 10f);
+            yield return WaitForScene("Town", 10f);
 
             var loaded = ActiveSaveContext.Metadata;
             Assert.IsNotNull(loaded);
@@ -160,7 +160,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             SaveSlotSelectPanel.EnsureInScene().Show();
             yield return null;
             ClickButtonNamed("LoadButton");
-            yield return WaitForScene("Farm", 10f);
+            yield return WaitForScene("Town", 10f);
 
             var loaded = ActiveSaveContext.Metadata;
             Assert.IsNotNull(loaded);
@@ -173,7 +173,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         }
 
         [UnityTest]
-        public IEnumerator SAVE_E2E_003_NewGameCreatesFarmRuntimeGraphAndSlotMetadata()
+        public IEnumerator SAVE_E2E_003_NewGameCreatesTownRuntimeGraphAndSlotMetadata()
         {
             string root = NewSaveRoot("rootborn-new-game-runtime-e2e");
             SetTestSaveRoot(root);
@@ -182,16 +182,16 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             SaveSlotSelectPanel.EnsureInScene().Show();
             yield return null;
             ClickButtonNamed("NewGameButton");
-            yield return WaitForScene("Farm", 10f);
-            yield return WaitForFarmAutoFill(10f);
+            yield return WaitForScene("Town", 10f);
+            yield return WaitForTownRuntime(10f);
 
             var metadata = ActiveSaveContext.Metadata;
             Assert.IsNotNull(metadata);
             Assert.AreEqual("slot-0", metadata.SlotId);
             Assert.IsTrue(File.Exists(Path.Combine(root, "slot-0", "metadata.json")));
             Assert.AreEqual(1, CountObjectsNamed("Player"));
-            Assert.AreEqual(20, Object.FindObjectsByType<ResourceNode>(FindObjectsSortMode.None).Length);
-            Assert.AreEqual(1, Object.FindObjectsByType<SurfaceTagZone>(FindObjectsSortMode.None).Length);
+            Assert.IsNotNull(GameObject.Find("StudyBasicsActivity"));
+            Assert.IsNotNull(GameObject.Find("StudentDayEndBoard"));
             Assert.IsNotNull(Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include));
             Assert.IsNotNull(Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include));
             Assert.IsNotNull(Object.FindFirstObjectByType<NpcInteractor>(FindObjectsInactive.Include));
@@ -230,6 +230,9 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.IsTrue(dialoguePanel.Choose(0));
             CompleteFirstObjective(questLogPanel.QuestLog, quest);
             Assert.AreEqual(QuestState.Completed, questLogPanel.QuestLog.GetState(quest));
+            npc.Interact();
+            yield return null;
+            Assert.IsTrue(dialoguePanel.IsOpen);
             Assert.IsTrue(dialoguePanel.Choose(1));
             Assert.AreEqual(before + rewardCount, playerInventory.Inventory.CountOf(rewardItem));
             Assert.AreEqual(QuestState.RewardClaimed, questLogPanel.QuestLog.GetState(quest));
@@ -392,6 +395,31 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 yield return null;
             }
             Assert.AreEqual(sceneName, SceneManager.GetActiveScene().name);
+        }
+
+        private static IEnumerator WaitForTownRuntime(float timeoutSeconds)
+        {
+            float elapsed = 0f;
+            while (elapsed < timeoutSeconds)
+            {
+                var player = GameObject.Find("Player");
+                if (player != null &&
+                    player.GetComponent<PlayerInventory>() != null &&
+                    player.GetComponent<Rootborn.Game.StudentLife.StudentLifeProgressComponent>() != null &&
+                    GameObject.Find("StudyBasicsActivity") != null &&
+                    GameObject.Find("StudentDayEndBoard") != null &&
+                    Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include) != null &&
+                    Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include) != null &&
+                    Object.FindFirstObjectByType<NpcInteractor>(FindObjectsInactive.Include) != null)
+                {
+                    yield break;
+                }
+
+                elapsed += Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            Assert.Fail("Town runtime did not expose player, student life, quest UI, and guide NPC within timeout.");
         }
 
         private static IEnumerator WaitForFarmAutoFill(float timeoutSeconds)

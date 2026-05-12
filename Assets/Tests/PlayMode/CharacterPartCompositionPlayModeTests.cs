@@ -78,7 +78,7 @@ namespace Rootborn.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator CHAR_PART_004_NewSlotUiSavesSelectedAppearanceBeforeFarmEntry()
+        public IEnumerator CHAR_PART_004_NewSlotUiSavesSelectedAppearanceBeforeTownEntry()
         {
             yield return SceneManager.LoadSceneAsync("MainMenu");
             var panel = SaveSlotSelectPanel.EnsureInScene();
@@ -91,7 +91,7 @@ namespace Rootborn.Tests.PlayMode
             ClickButtonNamed("OutfitNextButton");
             ClickButtonNamed("AccessoryNextButton");
             ClickButtonNamed("NewGameButton");
-            yield return WaitForScene("Farm", 10f);
+            yield return WaitForScene("Town", 10f);
 
             var service = new SaveService("slot-0", _saveRoot);
             var metadata = service.LoadMetadata("slot-0");

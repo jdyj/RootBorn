@@ -13,31 +13,36 @@ namespace Rootborn.Editor.Tools
             Debug.Log("[ROOTBORN/OneClick] === START ===");
             try
             {
-                Debug.Log("[ROOTBORN/OneClick] Step 1/5 — slicing Pixelwood sprite sheets...");
-                EditorUtility.DisplayProgressBar("ROOTBORN", "Slicing Pixelwood sprite sheets...", 0.1f);
-                PixelwoodSliceSetup.SliceAll();
+                Debug.Log("[ROOTBORN/OneClick] Step 1/6 - slicing Modern UI/Farm/Interiors sprite sheets...");
+                EditorUtility.DisplayProgressBar("ROOTBORN", "Slicing Modern sprite sheets...", 0.1f);
+                ModernUiSliceSetup.SliceAll();
+                ModernFarmSliceSetup.SliceCore16();
+                ModernInteriorsSliceSetup.SliceCore16();
 
-                Debug.Log("[ROOTBORN/OneClick] Step 2/5 — generating default data SOs...");
+                Debug.Log("[ROOTBORN/OneClick] Step 2/6 - generating default data SOs...");
                 EditorUtility.DisplayProgressBar("ROOTBORN", "Generating default data SOs...", 0.3f);
                 GenerateDefaultData.Generate();
+                ModernWorldGenerationDataSetup.WireRegistry();
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
 
-                Debug.Log("[ROOTBORN/OneClick] Step 3/5 — setting up scenes...");
+                Debug.Log("[ROOTBORN/OneClick] Step 3/6 - setting up scenes...");
                 EditorUtility.DisplayProgressBar("ROOTBORN", "Setting up scenes (Boot/MainMenu/HostLobby/Farm)...", 0.5f);
                 SceneSetup.SetupAll();
 
-                Debug.Log("[ROOTBORN/OneClick] Step 4/5 — building Farm tilemap + resource nodes...");
+                Debug.Log("[ROOTBORN/OneClick] Step 4/6 - building Farm tilemap + resource nodes...");
                 EditorUtility.DisplayProgressBar("ROOTBORN", "Building Farm tilemap + resource nodes...", 0.75f);
                 FarmSceneBuilder.Build();
 
-                Debug.Log("[ROOTBORN/OneClick] Step 5/6 — building Player prefab + Animator...");
+                Debug.Log("[ROOTBORN/OneClick] Step 5/6 - building Player prefab + Animator...");
                 EditorUtility.DisplayProgressBar("ROOTBORN", "Building Player prefab + Animator...", 0.85f);
                 PlayerSetup.Setup();
 
-                Debug.Log("[ROOTBORN/OneClick] Step 6/6 — wiring Addressables groups...");
-                EditorUtility.DisplayProgressBar("ROOTBORN", "Wiring Addressables groups...", 0.95f);
-                AddressablesSetup.WireAll();
+                Debug.Log("[ROOTBORN/OneClick] Step 6/6 - wiring Modern Addressables groups...");
+                EditorUtility.DisplayProgressBar("ROOTBORN", "Wiring Modern Addressables groups...", 0.95f);
+                ModernUiAddressablesSetup.WireSheets();
+                ModernFarmAddressablesSetup.WireSheets();
+                ModernInteriorsAddressablesSetup.WireSheets();
 
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
@@ -59,14 +64,14 @@ namespace Rootborn.Editor.Tools
             if (!EditorApplication.isPlayingOrWillChangePlaymode) return true;
 
             bool stop = EditorUtility.DisplayDialog(
-                "ROOTBORN — Play 모드 감지",
-                "Setup 도구는 Edit 모드에서만 동작합니다.\n\nPlay 모드를 정지할까요?",
-                "정지하고 계속",
-                "취소");
+                "ROOTBORN - Play mode detected",
+                "Setup tools run in Edit mode only.\n\nStop Play mode and continue?",
+                "Stop and continue",
+                "Cancel");
 
             if (!stop)
             {
-                Debug.LogWarning("[ROOTBORN] Setup canceled — still in Play mode.");
+                Debug.LogWarning("[ROOTBORN] Setup canceled because the editor is still in Play mode.");
                 return false;
             }
 

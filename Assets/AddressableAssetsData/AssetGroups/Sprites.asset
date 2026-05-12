@@ -59,18 +59,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 32b2711d02079df4390d11fb55ed6825
-    m_Address: sprites/ui/modern/48/style-1
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 35d47fd4b64f14d47b264093442617d9
-    m_Address: sprites/interiors/modern/16/ui
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 383bf52c7a0263141b5ac05e28c03e85
     m_Address: sprites/player/tool/pickup-side
     m_ReadOnly: 0
@@ -141,12 +129,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7c0b26c995080bf40b6eff778d6ea6e8
-    m_Address: sprites/ui/modern/32/style-2
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7f3ce2b5c0bb69343be7a5a41b38f444
     m_Address: sprites/ui/modern/16/style-1
     m_ReadOnly: 0
@@ -171,24 +153,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a005f285266d8d746bc7210d9ff2fab8
-    m_Address: sprites/ui/modern/32/style-1
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a164551219b2a934ba6f5bf4a63c3720
-    m_Address: sprites/ui/modern/48/gamepad
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a47c71503bb663a4a9125b256962129b
-    m_Address: sprites/ui/modern/48/style-2
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a8e6826424773484a837da12be452625
     m_Address: sprites/farm/modern/16/fruit-trees
     m_ReadOnly: 0
@@ -199,12 +163,6 @@ MonoBehaviour:
     m_Address: sprites/character/body/body-1
     m_ReadOnly: 0
     m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ba1466455cd48644eb35d02c4f39dfbb
-    m_Address: sprites/interiors/modern/16/floors
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bc8ea096bcbaa4745a09bd1b50930ca8
     m_Address: sprites/player/tool/pickaxe-up
@@ -228,18 +186,6 @@ MonoBehaviour:
     m_Address: sprites/character/hair/hairstyle-short-blonde
     m_ReadOnly: 0
     m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e1fe966029525924aa188b5d47d71c9e
-    m_Address: sprites/ui/modern/32/gamepad
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ea5b695cf01daa1459886eb31f40fd54
-    m_Address: sprites/interiors/modern/16/walls
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ef113c1db18e20540a257c50cd95542c
     m_Address: sprites/character/accessory/accessory-straw-hat-black

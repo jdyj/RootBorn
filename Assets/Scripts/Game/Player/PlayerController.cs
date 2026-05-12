@@ -33,6 +33,7 @@ namespace Rootborn.Game.Player
         private float _attackTime;
         private Vector2 _attackFacing;
         private bool _attackTriggered;
+        private bool _wasMouseAttackPressed;
 
         private static readonly int HashMoveX = Animator.StringToHash("MoveX");
         private static readonly int HashMoveY = Animator.StringToHash("MoveY");
@@ -55,37 +56,21 @@ namespace Rootborn.Game.Player
 
         private void OnEnable()
         {
-            _moveAction = new InputAction(type: InputActionType.Value, expectedControlType: "Vector2");
-            _moveAction.AddCompositeBinding("2DVector")
-                .With("Up", "<Keyboard>/w")
-                .With("Down", "<Keyboard>/s")
-                .With("Left", "<Keyboard>/a")
-                .With("Right", "<Keyboard>/d");
-            _moveAction.AddCompositeBinding("2DVector")
-                .With("Up", "<Keyboard>/upArrow")
-                .With("Down", "<Keyboard>/downArrow")
-                .With("Left", "<Keyboard>/leftArrow")
-                .With("Right", "<Keyboard>/rightArrow");
-            _moveAction.Enable();
-
-            _attackAction = new InputAction(type: InputActionType.Button);
-            _attackAction.AddBinding("<Mouse>/leftButton");
-            _attackAction.performed += OnAttackPerformed;
-            _attackAction.Enable();
-
-            _pointerAction = new InputAction(type: InputActionType.Value, expectedControlType: "Vector2");
-            _pointerAction.AddBinding("<Mouse>/position");
-            _pointerAction.Enable();
-
+            _wasMouseAttackPressed = false;
             TryBindInventory();
         }
 
         private void OnAttackPerformed(InputAction.CallbackContext ctx)
         {
+            Vector2 screenPos = _pointerAction != null ? _pointerAction.ReadValue<Vector2>() : ReadPointerScreenPosition();
+            BeginAttack(screenPos);
+        }
+
+        private void BeginAttack(Vector2 screenPos)
+        {
             if (!HasToolSprites(_activeToolSpritePrefix)) return;
             if (_isAttacking) return;
 
-            var screenPos = _pointerAction != null ? _pointerAction.ReadValue<Vector2>() : Vector2.zero;
             if (_camera == null) _camera = Camera.main;
             if (_camera == null) return;
             var worldPos = _camera.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, 0f));
@@ -120,30 +105,31 @@ namespace Rootborn.Game.Player
 
         private void OnDisable()
         {
-            if (_moveAction != null)
-            {
-                _moveAction.Disable();
-                _moveAction.Dispose();
-                _moveAction = null;
-            }
+            DisposeAction(ref _moveAction);
             if (_attackAction != null)
             {
                 _attackAction.performed -= OnAttackPerformed;
-                _attackAction.Disable();
-                _attackAction.Dispose();
-                _attackAction = null;
             }
-            if (_pointerAction != null)
-            {
-                _pointerAction.Disable();
-                _pointerAction.Dispose();
-                _pointerAction = null;
-            }
+            DisposeAction(ref _attackAction);
+            DisposeAction(ref _pointerAction);
+
             if (_inventory != null && _inventoryEventsBound)
             {
                 _inventory.OnEquipmentChanged -= OnEquipmentChanged;
                 _inventoryEventsBound = false;
             }
+        }
+
+        private static void DisposeAction(ref InputAction action)
+        {
+            if (action == null)
+            {
+                return;
+            }
+
+            action.Disable();
+            action.Dispose();
+            action = null;
         }
 
         private void OnEquipmentChanged()
@@ -193,7 +179,8 @@ namespace Rootborn.Game.Player
             if (_partComposer == null) _partComposer = GetComponent<CharacterPartComposer>();
             if (_partAnimator == null) _partAnimator = GetComponent<CharacterPartAnimator>();
 
-            _input = _moveAction != null ? _moveAction.ReadValue<Vector2>() : Vector2.zero;
+            _input = ReadMoveInput();
+            UpdateMouseAttackInput();
 
             if (_rb == null)
             {
@@ -223,6 +210,52 @@ namespace Rootborn.Game.Player
             }
 
             UpdateToolSprite();
+        }
+
+        private void UpdateMouseAttackInput()
+        {
+            var mouse = Mouse.current;
+            bool pressed = mouse != null && mouse.leftButton.isPressed;
+            if (pressed && !_wasMouseAttackPressed)
+            {
+                BeginAttack(ReadPointerScreenPosition());
+            }
+            _wasMouseAttackPressed = pressed;
+        }
+
+        private static Vector2 ReadPointerScreenPosition()
+        {
+            var mouse = Mouse.current;
+            return mouse != null ? mouse.position.ReadValue() : Vector2.zero;
+        }
+
+        private Vector2 ReadMoveInput()
+        {
+            var keyboard = Keyboard.current;
+            if (keyboard == null)
+            {
+                return Vector2.zero;
+            }
+
+            Vector2 input = Vector2.zero;
+            if (keyboard.aKey.isPressed || keyboard.leftArrowKey.isPressed)
+            {
+                input.x -= 1f;
+            }
+            if (keyboard.dKey.isPressed || keyboard.rightArrowKey.isPressed)
+            {
+                input.x += 1f;
+            }
+            if (keyboard.sKey.isPressed || keyboard.downArrowKey.isPressed)
+            {
+                input.y -= 1f;
+            }
+            if (keyboard.wKey.isPressed || keyboard.upArrowKey.isPressed)
+            {
+                input.y += 1f;
+            }
+
+            return input.sqrMagnitude > 1f ? input.normalized : input;
         }
 
         private void ApplyFlipX(bool flipX)

@@ -16,6 +16,7 @@ namespace Rootborn.Game.Quests
         public readonly ToolDefinition Tool;
         public readonly ScriptableObject Npc;
         public readonly ScriptableObject DefeatTarget;
+        public readonly ScriptableObject Tile;
         public readonly int Count;
 
         public QuestEvent(
@@ -27,7 +28,8 @@ namespace Rootborn.Game.Quests
             CropDefinition crop = null,
             ToolDefinition tool = null,
             ScriptableObject npc = null,
-            ScriptableObject defeatTarget = null)
+            ScriptableObject defeatTarget = null,
+            ScriptableObject tile = null)
         {
             Kind = kind;
             EventKey = eventKey;
@@ -38,6 +40,7 @@ namespace Rootborn.Game.Quests
             Tool = tool;
             Npc = npc;
             DefeatTarget = defeatTarget;
+            Tile = tile;
         }
     }
 }

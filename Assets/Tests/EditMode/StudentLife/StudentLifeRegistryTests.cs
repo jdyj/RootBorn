@@ -1,6 +1,5 @@
 using NUnit.Framework;
 using Rootborn.Game.Common;
-using Rootborn.Game.StudentLife;
 using UnityEngine;
 
 namespace Rootborn.Tests.EditMode.StudentLife
@@ -13,9 +12,12 @@ namespace Rootborn.Tests.EditMode.StudentLife
             var registry = ScriptableObject.CreateInstance<GameDataRegistry>();
 
             Assert.IsNotNull(registry.LifeActivities);
+            Assert.IsNotNull(registry.StudentLifeChoices);
             Assert.IsNotNull(registry.StudentLifeTraits);
             Assert.IsNotNull(registry.StudentLifeSkills);
             Assert.IsNotNull(registry.Careers);
+            Assert.IsNotNull(registry.CareerPractices);
+            Assert.IsNotNull(registry.PracticeSteps);
         }
     }
 }

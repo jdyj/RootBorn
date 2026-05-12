@@ -46,19 +46,41 @@ MonoBehaviour:
   - {fileID: 11400000, guid: bf15625b6cf5fc34b808844388438c22, type: 2}
   _quests:
   - {fileID: 11400000, guid: 0fd216a6cdf0c724fa2101fd28dc3a5c, type: 2}
+  - {fileID: 11400000, guid: 85316b6d954ac22419bcfc5e37733ba9, type: 2}
+  - {fileID: 11400000, guid: a32eee29e87d7934d8c0d47b6a96b4d7, type: 2}
+  - {fileID: 11400000, guid: cac87b1032845394cb09b7f010a7cd9d, type: 2}
+  - {fileID: 11400000, guid: 6b5974a0d9599994fb0be6ad24f5f85a, type: 2}
+  - {fileID: 11400000, guid: 5987365cd0256f140aadfb5562601626, type: 2}
   _questObjectives:
   - {fileID: 11400000, guid: 7e0c5cb9a7c4e80489227c6cc056ee0a, type: 2}
+  - {fileID: 11400000, guid: 5da8c4bad8a30e34b9302757e6c626f4, type: 2}
+  - {fileID: 11400000, guid: 437b3172928c5d047b49845d122e60d7, type: 2}
+  - {fileID: 11400000, guid: 1db42988595eec64bb0cb3944e4ac5d1, type: 2}
+  - {fileID: 11400000, guid: e9321afeb5955e84fa037d6852815456, type: 2}
+  - {fileID: 11400000, guid: 5f2de75c4df902342a119d0c500a34f7, type: 2}
   _questRewards:
   - {fileID: 11400000, guid: 16f45589fdcd2534dae0cb1401cacf3c, type: 2}
   _questCompletionEffects:
   - {fileID: 11400000, guid: 28cbbe21d02b32649996767f5d13b4b1, type: 2}
+  - {fileID: 11400000, guid: 014b38e70e778b4459fac561ab254fc1, type: 2}
+  - {fileID: 11400000, guid: a0fa1ef3b8a069a4ab05288055a13cfd, type: 2}
+  - {fileID: 11400000, guid: 3b6e58340799b4443bc0d2a560cec959, type: 2}
+  - {fileID: 11400000, guid: e663b1c87bd8efd47bcde839477f0364, type: 2}
+  - {fileID: 11400000, guid: fddfeb9d65983ee43bc403e9f9c6b908, type: 2}
   _questConditions: []
   _npcs:
   - {fileID: 11400000, guid: c43188909a889884792a60a1a0e1d0ba, type: 2}
   _dialogues:
   - {fileID: 11400000, guid: 8142bab72b18c8d46b226b2da4f7561d, type: 2}
+  - {fileID: 11400000, guid: 6f7094d2e3d8c4f4daa30dad1602cbaf, type: 2}
+  - {fileID: 11400000, guid: cfad8f701cdf1f842a17deb8b46a4274, type: 2}
+  - {fileID: 11400000, guid: 5a6836b650177104d9289c2b7081c136, type: 2}
   _storyFlags:
   - {fileID: 11400000, guid: 91dcbb6650abb87408dc7932e7bc24e0, type: 2}
+  _tutorialStages:
+  - {fileID: 11400000, guid: 7d73f556819dccb4d90d42e9ae8ff781, type: 2}
+  - {fileID: 11400000, guid: 5c80dab5d61aa9b41b686335899c45ba, type: 2}
+  _defaultTutorialStage: {fileID: 11400000, guid: 7d73f556819dccb4d90d42e9ae8ff781, type: 2}
   _characterParts:
   - {fileID: 11400000, guid: e75df9e38569a3345b7ac3b14900d9f1, type: 2}
   - {fileID: 11400000, guid: 63237f3df29014e42abe0f4c4f2aae25, type: 2}
@@ -82,6 +104,93 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 0f82d6935541c2a44b102f9a53cca412, type: 2}
   _fishingAnimations:
   - {fileID: 11400000, guid: 4d492c31c33bd2b4fa9e3e22ed110534, type: 2}
+  _lifeActivities:
+  - {fileID: 11400000, guid: acf6249e7dee124418b5fdff0659ffb4, type: 2}
+  - {fileID: 11400000, guid: de7a64c7a82e5c44eb1195bd01dd1dc7, type: 2}
+  - {fileID: 11400000, guid: bc867c47ebbcd674895fa7c1e87e3a11, type: 2}
+  - {fileID: 11400000, guid: 580395b449da0a342b2792693973afca, type: 2}
+  _studentLifeChoices: []
+  _studentLifeTraits:
+  - {fileID: 11400000, guid: e1d5370ed0b0dd945bbe00582c0f249e, type: 2}
+  - {fileID: 11400000, guid: 277fbff77fdf6364da4253321bb8a369, type: 2}
+  - {fileID: 11400000, guid: a2243b210dac3a143af352cdb8bc167c, type: 2}
+  - {fileID: 11400000, guid: fa89084a9014702479c9175d3a946fe9, type: 2}
+  - {fileID: 11400000, guid: 9d5d3a0ce8076144e99300045afc13ea, type: 2}
+  - {fileID: 11400000, guid: 71e6eb7372196ef4991f18f0852abbfc, type: 2}
+  - {fileID: 11400000, guid: 82b98f654b803c3468b3aa21026ae8f0, type: 2}
+  - {fileID: 11400000, guid: cf1e520608b05f44099272ade92966bf, type: 2}
+  - {fileID: 11400000, guid: edaa308e1119e69489e1e0145c619caf, type: 2}
+  - {fileID: 11400000, guid: 58489f437c429684ba12497434cca068, type: 2}
+  _studentLifeSkills:
+  - {fileID: 11400000, guid: 828f93d59f8dfc54fb739f6b3be3e704, type: 2}
+  - {fileID: 11400000, guid: d614117f1e9d9184590d72eb98f8a48b, type: 2}
+  - {fileID: 11400000, guid: 22816269bd8888b46840bd15d8dcbc87, type: 2}
+  - {fileID: 11400000, guid: 9bddf27df8391bb4a912da8efaef341d, type: 2}
+  - {fileID: 11400000, guid: 66d4eb84e13bf244eabd222a3bf52423, type: 2}
+  - {fileID: 11400000, guid: 1e1c85b8e544bf64ea17d7eb7220d8a1, type: 2}
+  - {fileID: 11400000, guid: 5e83860c1ad0d594e93e12f2fde1c796, type: 2}
+  - {fileID: 11400000, guid: f8b0faa9885d15c4787c43fe5360a986, type: 2}
+  - {fileID: 11400000, guid: d1f5f48d603a90f4a95ce716fe3e7f32, type: 2}
+  - {fileID: 11400000, guid: e82e01827ab454946bbf267f92d1cf00, type: 2}
+  - {fileID: 11400000, guid: 2f5e2ea989b5ee9459b1cfb85c915d63, type: 2}
+  - {fileID: 11400000, guid: 21f9dafb1fb98dc44bd9acda59246a2b, type: 2}
+  - {fileID: 11400000, guid: 77f62469ffcf6fc43851b9731142feed, type: 2}
+  _careers:
+  - {fileID: 11400000, guid: f30c8bdaba711d24c91db6d0481a38ea, type: 2}
+  - {fileID: 11400000, guid: 37f1e84574c16e64ab6dfb6390833d6f, type: 2}
+  - {fileID: 11400000, guid: 320eb5fca1391b547bfa841e95f162c2, type: 2}
+  - {fileID: 11400000, guid: 7f32a7bd1e4fbf04aaf38b3bf1889cc5, type: 2}
+  _careerPractices:
+  - {fileID: 11400000, guid: 75b7be06795b66f41a79d129ea2d535e, type: 2}
+  - {fileID: 11400000, guid: ce45720502d20b341b3fa3d47d7a8b04, type: 2}
+  - {fileID: 11400000, guid: e23bc0d461cecff4b89f45e50428c3a3, type: 2}
+  - {fileID: 11400000, guid: 24e565ede31965041b6b215095a6e622, type: 2}
+  _practiceSteps:
+  - {fileID: 11400000, guid: 65a26c1fd7a786d45ad2bbf18ef1e9ed, type: 2}
+  - {fileID: 11400000, guid: b084ec1ccb776294f8b8aea19e49ae94, type: 2}
+  - {fileID: 11400000, guid: 4fa0d48e3f4e74443b32842b444b9b7a, type: 2}
+  - {fileID: 11400000, guid: f8c167bafb667e148a07f3dead4535ad, type: 2}
+  - {fileID: 11400000, guid: f4c4fb62b5e87004a88306afc8cb01d5, type: 2}
+  - {fileID: 11400000, guid: 70d670119a970ad4890d571ddf44716a, type: 2}
+  - {fileID: 11400000, guid: 506437810108a904bb479180d1ed2814, type: 2}
+  - {fileID: 11400000, guid: caf921a90669ce44aad175039b0f7f9c, type: 2}
+  - {fileID: 11400000, guid: b11c847f937f871418a3a25011a191f9, type: 2}
+  - {fileID: 11400000, guid: acdf26710ef41344db5b37716cc53847, type: 2}
+  - {fileID: 11400000, guid: 007c339b04259a1479d46f739b5b5221, type: 2}
+  - {fileID: 11400000, guid: eb09a5c87fcdb004587c0505cc5e55e8, type: 2}
+  _dayEndRules:
+  - {fileID: 11400000, guid: 57f8f491c002762408a8852c50f43d2d, type: 2}
+  _defaultDayEndRule: {fileID: 11400000, guid: 57f8f491c002762408a8852c50f43d2d, type: 2}
+  _relationships:
+  - {fileID: 11400000, guid: 3fe25332108980742b1b38dfa7f31086, type: 2}
+  _studentConditionStatuses:
+  - {fileID: 11400000, guid: ed3e552f686df6045b740803f6633b47, type: 2}
+  _outsideSchoolActivityCategories:
+  - {fileID: 11400000, guid: fb55a486f8ce53c4587b5d08cfd71516, type: 2}
+  - {fileID: 11400000, guid: dc5c809d7746f87459c7f27decdb1b63, type: 2}
+  _outsideSchoolActivities:
+  - {fileID: 11400000, guid: 97d168e42234c5b47b01fa919815b2b2, type: 2}
+  - {fileID: 11400000, guid: 4704e3df6f051864cb63c884d00cee68, type: 2}
+  _townHelpActions:
+  - {fileID: 11400000, guid: fbea5e29cdabdf74fb3533af14a045d2, type: 2}
+  _workplaces:
+  - {fileID: 11400000, guid: 4bd88d3a7405a00428e7b74f1a87ce37, type: 2}
+  _partTimeWorks:
+  - {fileID: 11400000, guid: 119069712aee6c745ae6c6ebebc67e3c, type: 2}
+  _locations:
+  - {fileID: 11400000, guid: 0b792f8bcf32340469cd64320136e59b, type: 2}
+  _discoveries:
+  - {fileID: 11400000, guid: 13978bd72ab75cb47949497ef5d56aca, type: 2}
+  _placeableTiles:
+  - {fileID: 11400000, guid: 5afd0267d2492ff44b7d2664170ba2ad, type: 2}
+  _milestones:
+  - {fileID: 11400000, guid: e964618ac9e20234598c35ded949ca42, type: 2}
+  _milestoneObjectives:
+  - {fileID: 11400000, guid: 07c7294df342e184e84e345c503c5e82, type: 2}
+  _milestoneRoutes:
+  - {fileID: 11400000, guid: 1e5390d8e64d57c43b331ef32abd9ec9, type: 2}
+  - {fileID: 11400000, guid: f482d7c9312fa0d4e9a0a7c1df8df5a2, type: 2}
+  _milestoneRewards: []
   _groundSprite: {fileID: 21300000, guid: 71df351b8cfdac24b9dd030d2f35abac, type: 3}
   _playerSprite: {fileID: 21300000, guid: 5f439540e7f27e24f8b0856cc24ea6ab, type: 3}
   _defaultFarmTerrainGeneration: {fileID: 11400000, guid: b26cde69cfb426841aef41ae7a6f128f, type: 2}

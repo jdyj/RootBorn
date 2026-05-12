@@ -1,0 +1,127 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-6477192719902551244
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e7975ee693971b48aea32d922e3bbb8, type: 3}
+  m_Name: Practice_EmergencyCare_TraitDeltaActivityEffect
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.TraitDeltaActivityEffect
+  _trait: {fileID: 11400000, guid: edaa308e1119e69489e1e0145c619caf, type: 2}
+  _delta: 2
+--- !u!114 &-5421630756975606417
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53fd71ed58f41f94cbffb7c78ad58bd1, type: 3}
+  m_Name: Practice_EmergencyCare_SkillProgressActivityEffect
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.SkillProgressActivityEffect
+  _skill: {fileID: 11400000, guid: 21f9dafb1fb98dc44bd9acda59246a2b, type: 2}
+  _delta: 2
+--- !u!114 &-4041229093008748920
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e7975ee693971b48aea32d922e3bbb8, type: 3}
+  m_Name: Practice_EmergencyCare_TraitDeltaActivityEffect
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.TraitDeltaActivityEffect
+  _trait: {fileID: 11400000, guid: 58489f437c429684ba12497434cca068, type: 2}
+  _delta: 1
+--- !u!114 &-13810273810284271
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53fd71ed58f41f94cbffb7c78ad58bd1, type: 3}
+  m_Name: Practice_EmergencyCare_SkillProgressActivityEffect
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.SkillProgressActivityEffect
+  _skill: {fileID: 11400000, guid: 2f5e2ea989b5ee9459b1cfb85c915d63, type: 2}
+  _delta: 2
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1434b49c661d12478f3cb1c76df0aba, type: 3}
+  m_Name: Practice_EmergencyCare_Activity
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.LifeActivityDefinition
+  _id: practice.emergency-care
+  _displayNameKey: practice.emergency-care
+  _category: 0
+  _timeCostMinutes: 45
+  _energyCost: 1
+  _focusCost: 1
+  _stressDelta: 0
+  _requirements: []
+  _effects:
+  - {fileID: 3974800988128145071}
+  - {fileID: -6477192719902551244}
+  - {fileID: -4041229093008748920}
+  - {fileID: 3582166585568600527}
+  - {fileID: -13810273810284271}
+  - {fileID: -5421630756975606417}
+  - {fileID: 8720889565563295494}
+--- !u!114 &3582166585568600527
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53fd71ed58f41f94cbffb7c78ad58bd1, type: 3}
+  m_Name: Practice_EmergencyCare_SkillProgressActivityEffect
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.SkillProgressActivityEffect
+  _skill: {fileID: 11400000, guid: e82e01827ab454946bbf267f92d1cf00, type: 2}
+  _delta: 3
+--- !u!114 &3974800988128145071
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e7975ee693971b48aea32d922e3bbb8, type: 3}
+  m_Name: Practice_EmergencyCare_TraitDeltaActivityEffect
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.TraitDeltaActivityEffect
+  _trait: {fileID: 11400000, guid: cf1e520608b05f44099272ade92966bf, type: 2}
+  _delta: 2
+--- !u!114 &8720889565563295494
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b5f6e22122318a42808f534d0ca69c2, type: 3}
+  m_Name: Practice_EmergencyCare_CareerHintUnlockActivityEffect
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.CareerHintUnlockActivityEffect
+  _career: {fileID: 11400000, guid: 7f32a7bd1e4fbf04aaf38b3bf1889cc5, type: 2}

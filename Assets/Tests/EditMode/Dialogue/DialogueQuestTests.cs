@@ -4,6 +4,7 @@ using Rootborn.Game.Common;
 using Rootborn.Game.Dialogue;
 using Rootborn.Game.Quests;
 using Rootborn.Game.Quests.Rewards;
+using Rootborn.Game.StudentLife;
 using UnityEngine;
 
 namespace Rootborn.Tests.EditMode.Dialogue
@@ -68,6 +69,35 @@ namespace Rootborn.Tests.EditMode.Dialogue
             Assert.AreEqual(QuestState.RewardClaimed, log.GetState(quest));
             Assert.IsFalse(choice.TryExecute(in context));
             Assert.AreEqual(1, inventory.CountOf(item));
+        }
+
+        [Test]
+        public void QUEST_013_NpcDialogueResolvesFromTutorialStageDataWithoutStageBranching()
+        {
+            var day2 = ScriptableObject.CreateInstance<TutorialStageDefinition>();
+            day2.ConfigureForTests("tutorial.day2", "tutorial.day2", "Day 2 guide text");
+            var defaultDialogue = ScriptableObject.CreateInstance<DialogueDefinition>();
+            SetField(defaultDialogue, "_lineKeys", new[] { "dialogue.guide.day1" });
+            var day2Dialogue = ScriptableObject.CreateInstance<DialogueDefinition>();
+            SetField(day2Dialogue, "_lineKeys", new[] { "dialogue.guide.day2" });
+            SetField(day2Dialogue, "_requiredTutorialStage", day2);
+            var npc = ScriptableObject.CreateInstance<NpcDefinition>();
+            SetField(npc, "_defaultDialogue", defaultDialogue);
+            SetField(npc, "_stageDialogues", new[] { day2Dialogue });
+            var progress = new StudentLifeProgress("slot-dialogue", "player-dialogue", 10, 10);
+
+            Assert.AreSame(defaultDialogue, InvokeResolveDialogue(npc, progress));
+
+            progress.SetTutorialStage(day2, "goal.talk-to-guide-day2");
+
+            Assert.AreSame(day2Dialogue, InvokeResolveDialogue(npc, progress));
+        }
+
+        private static DialogueDefinition InvokeResolveDialogue(NpcDefinition npc, StudentLifeProgress progress)
+        {
+            var method = typeof(NpcDefinition).GetMethod("ResolveDialogue", BindingFlags.Instance | BindingFlags.Public, null, new[] { typeof(StudentLifeProgress) }, null);
+            Assert.IsNotNull(method, "NpcDefinition must resolve dialogue from data using the current tutorial stage.");
+            return method.Invoke(npc, new object[] { progress }) as DialogueDefinition;
         }
 
         private sealed class AlwaysMatchObjective : QuestObjectiveBase

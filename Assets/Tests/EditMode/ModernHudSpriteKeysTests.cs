@@ -96,10 +96,11 @@ namespace Rootborn.Tests.EditMode
         }
 
         [Test]
-        public void ManagersPreload_ReferencesModernUiPreloadDeclarations()
+        public void ManagersBootstrap_LeavesModernUiSpriteSheetsToOnDemandLoading()
         {
             string source = File.ReadAllText("Assets/Scripts/Game/Managers/Managers.cs");
-            StringAssert.Contains("ModernUISpriteAddresses.AllSheets", source);
+            Assert.IsFalse(source.Contains("PreloadSheetsAsync"));
+            Assert.IsFalse(source.Contains("ModernUISpriteAddresses.AllSheets"));
         }
     }
 }

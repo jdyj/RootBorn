@@ -88,6 +88,7 @@ namespace Rootborn.Game.Quests
             {
                 QuestId = questId,
                 State = State,
+                StateName = State.ToString(),
                 ObjectiveCounts = (int[])_objectiveCounts.Clone(),
                 ProcessedEventKeys = new List<string>(_processedEventKeys).ToArray(),
             };
@@ -101,6 +102,11 @@ namespace Rootborn.Game.Quests
             }
 
             State = data.State;
+            if (!string.IsNullOrEmpty(data.StateName) && Enum.TryParse(data.StateName, out QuestState namedState))
+            {
+                State = namedState;
+            }
+
             bool savedAsFinished = State == QuestState.Completed || State == QuestState.RewardClaimed;
             for (int i = 0; i < _objectiveCounts.Length; i++)
             {

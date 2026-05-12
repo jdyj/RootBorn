@@ -29,12 +29,6 @@ namespace Rootborn.Editor.Tools
             new SliceTarget("Assets/modernuserinterface-win/16x16/Modern_UI_Style_1.png", 16, "ModernUI_16_Style1", 61, 43),
             new SliceTarget("Assets/modernuserinterface-win/16x16/Modern_UI_Style_2.png", 16, "ModernUI_16_Style2", 49, 34),
             new SliceTarget("Assets/modernuserinterface-win/16x16/Modern_UI_Gamepad.png", 16, "ModernUI_16_Gamepad", 51, 51),
-            new SliceTarget("Assets/modernuserinterface-win/32x32/Modern_UI_Style_1_32x32.png", 32, "ModernUI_32_Style1", 61, 43),
-            new SliceTarget("Assets/modernuserinterface-win/32x32/Modern_UI_Style_2_32x32.png", 32, "ModernUI_32_Style2", 49, 34),
-            new SliceTarget("Assets/modernuserinterface-win/32x32/Modern_UI_Gamepad_32x32.png", 32, "ModernUI_32_Gamepad", 51, 51),
-            new SliceTarget("Assets/modernuserinterface-win/48x48/Modern_UI_Style_1_48x48.png", 48, "ModernUI_48_Style1", 61, 43),
-            new SliceTarget("Assets/modernuserinterface-win/48x48/Modern_UI_Style_2_48x48.png", 48, "ModernUI_48_Style2", 49, 34),
-            new SliceTarget("Assets/modernuserinterface-win/48x48/Modern_UI_Gamepad_48x48.png", 48, "ModernUI_48_Gamepad", 51, 51),
         };
 
         [MenuItem("Rootborn/Modern UI/Slice Sprite Sheets")]

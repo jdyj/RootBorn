@@ -7,7 +7,7 @@ namespace Rootborn.Editor.Tools
     public static class PixelwoodSliceSetup
     {
         private const int CellSize = 16;
-        // Pixelwood Player Character: 236x49 (4프레임 × 59x49) — SlimeMaster 분석 보고서 기준
+        // Pixelwood Player Character: 236x49 (4 frames x 59x49) - SlimeMaster reference data.
         private const int CharCellW = 59;
         private const int CharCellH = 49;
 
@@ -18,7 +18,7 @@ namespace Rootborn.Editor.Tools
             public int CellH;
             public bool SingleRow;
             public string LabelPrefix;
-            public int PixelsPerUnit; // 0이면 16 기본
+            public int PixelsPerUnit;
         }
 
         private static readonly SliceTarget[] Targets = new[]
@@ -68,8 +68,6 @@ namespace Rootborn.Editor.Tools
                 AssetPath = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Walk/Up.png",
                 CellW = CharCellW, CellH = CharCellH, SingleRow = true, LabelPrefix = "Walk_Up", PixelsPerUnit = CharCellH
             },
-            // 도구 장착 모션 — Axe/Hoe/Pickaxe/Pickup × Down/Side/Up. 모두 59x49 cell, PPU 49.
-            // Frame 수는 sheet 마다 다름 (Axe/Pickaxe = 6f, Hoe/Down = 7f, Pickup = 3f). SliceOne 가 width/CellW 로 자동 계산.
             new SliceTarget {
                 AssetPath = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Axe/Down.png",
                 CellW = CharCellW, CellH = CharCellH, SingleRow = true, LabelPrefix = "Axe_Down", PixelsPerUnit = CharCellH
@@ -118,22 +116,18 @@ namespace Rootborn.Editor.Tools
                 AssetPath = "Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/Player Character/Pickup/Up.png",
                 CellW = CharCellW, CellH = CharCellH, SingleRow = true, LabelPrefix = "Pickup_Up", PixelsPerUnit = CharCellH
             },
-            // Fantasy Book UI V2 — Icons sheet (224x80 = 14x5 cells, 16x16 each).
             new SliceTarget
             {
                 AssetPath = "Assets/Pixelwood Valley/Fantasy Book UI V2/1.0/Sprites/Buttons & Icons/Icons 16x16.png",
                 CellW = CellSize, CellH = CellSize, LabelPrefix = "BookIcon"
             },
-            // Fantasy Book UI V2 — Index sheet (64x64 = 4x4 cells, 16x16 each).
             new SliceTarget
             {
                 AssetPath = "Assets/Pixelwood Valley/Fantasy Book UI V2/1.0/Sprites/Buttons & Icons/Index 16x16.png",
                 CellW = CellSize, CellH = CellSize, LabelPrefix = "BookIndex"
             },
-            // Fantasy Book UI V2 — Bookmark sheet (별도 SliceBookmarkSheet 메서드 사용, Targets 에서 제외).
         };
 
-        [MenuItem("Rootborn/Pixelwood/Slice Sprite Sheets")]
         public static void SliceAll()
         {
             int sliced = 0;
@@ -141,14 +135,12 @@ namespace Rootborn.Editor.Tools
             {
                 if (SliceOne(t)) sliced++;
             }
-            // Bookmark sheet — 22×99 가 5×19 셀 균등 분할이 아니라 (전체 99 / 5 = 19.8), 명시 rect 으로 슬라이스.
             if (SliceBookmarkSheet()) sliced++;
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log($"[ROOTBORN] Pixelwood slice complete. {sliced} sheets processed.");
+            Debug.Log($"[ROOTBORN] Legacy Pixelwood audit-only slice complete. {sliced} sheets processed.");
         }
 
-        // Bookmark sheet (22×99) — 5색을 위→아래로 명시 rect 슬라이스. 마지막 셀은 21px 로 약간 큼 (잔여 픽셀 흡수).
         private static bool SliceBookmarkSheet()
         {
             const string assetPath = "Assets/Pixelwood Valley/Fantasy Book UI V2/1.0/Sprites/Bookmarks/1 22x20.png";
@@ -168,21 +160,14 @@ namespace Rootborn.Editor.Tools
             var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(assetPath);
             if (tex == null) return false;
 
-            // 사용자 지정 rect — Unity sprite rect 는 left-bottom origin.
-            // (yBottom, height) 쌍, 모두 width=22:
-            //   Bookmark_0: y=79, h=20  (가장 위)
-            //   Bookmark_1: y=59, h=20
-            //   Bookmark_2: y=39, h=20
-            //   Bookmark_3: y=19, h=20
-            //   Bookmark_4: y=0,  h=19  (가장 아래)
-            int W = tex.width; // 22
+            int W = tex.width;
             var rects = new (int yBottom, int height)[]
             {
                 (79, 20),
                 (59, 20),
                 (39, 20),
                 (19, 20),
-                ( 0, 19),
+                (0, 19),
             };
             var metas = new List<SpriteMetaData>();
             for (int i = 0; i < rects.Length; i++)
@@ -202,7 +187,7 @@ namespace Rootborn.Editor.Tools
 #pragma warning restore CS0618
             EditorUtility.SetDirty(importer);
             importer.SaveAndReimport();
-            Debug.Log($"[ROOTBORN] Bookmark sheet sliced: 5 sub-sprites (Bookmark_0..4) {W}x{tex.height}");
+            Debug.Log($"[ROOTBORN] Legacy bookmark sheet sliced: 5 sub-sprites (Bookmark_0..4) {W}x{tex.height}");
             return true;
         }
 
@@ -224,8 +209,6 @@ namespace Rootborn.Editor.Tools
             importer.wrapMode = TextureWrapMode.Clamp;
             importer.alphaIsTransparency = true;
             importer.isReadable = true;
-
-            // First reimport so width/height are accurate before slicing.
             importer.SaveAndReimport();
 
             var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(target.AssetPath);
@@ -269,7 +252,7 @@ namespace Rootborn.Editor.Tools
             EditorUtility.SetDirty(importer);
             importer.SaveAndReimport();
 
-            Debug.Log($"[ROOTBORN] Sliced {target.AssetPath} → {metas.Count} sprites ({cols}x{rows})");
+            Debug.Log($"[ROOTBORN] Sliced legacy reference {target.AssetPath} -> {metas.Count} sprites ({cols}x{rows})");
             return true;
         }
 
@@ -282,9 +265,6 @@ namespace Rootborn.Editor.Tools
             }
         }
 
-        /// <summary>
-        /// 9-slice border 와 single-sprite 임포트 일괄 설정. ConfigureFantasyBookUI 가 호출.
-        /// </summary>
         public static bool ConfigureSingleSprite(string assetPath, Vector4 border, int pixelsPerUnit = 16)
         {
             var importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
@@ -311,41 +291,34 @@ namespace Rootborn.Editor.Tools
             return true;
         }
 
-        [MenuItem("Rootborn/Pixelwood/Configure Fantasy Book UI 9-slice")]
         public static void ConfigureFantasyBookUI()
         {
             int ok = 0;
 
-            // Sizeable Boxes — 모두 16x16 또는 20x20 픽셀, border 4px (네 모서리 4px 안쪽 stretch).
             for (int i = 1; i <= 71; i++)
             {
                 var p = $"Assets/Pixelwood Valley/Fantasy Book UI V2/1.0/Sprites/Sizeable Boxes/{i}.png";
                 if (ConfigureSingleSprite(p, new Vector4(4, 4, 4, 4))) ok++;
             }
 
-            // Icon Container — 슬롯 테두리, border 6px.
             for (int i = 1; i <= 12; i++)
             {
                 var p = $"Assets/Pixelwood Valley/Fantasy Book UI V2/1.0/Sprites/Unique/Icon Container/{i}.png";
                 if (ConfigureSingleSprite(p, new Vector4(6, 6, 6, 6))) ok++;
             }
 
-            // Page + Animation — 290x184 책 sprite (외부 프레임 + 좌우 페이지 + spine 모두 통합).
-            // 9-slice 불가 (모서리 회색 장식이 박혀있어 늘리면 깨짐) → border 0, Simple + preserveAspect.
             for (int i = 1; i <= 9; i++)
             {
                 var p = $"Assets/Pixelwood Valley/Fantasy Book UI V2/1.0/Sprites/Page + Animation/Page{i}.png";
                 if (ConfigureSingleSprite(p, Vector4.zero)) ok++;
             }
 
-            // Titles — 리본은 stretch 안 함, single 사용.
             for (int i = 1; i <= 30; i++)
             {
                 var p = $"Assets/Pixelwood Valley/Fantasy Book UI V2/1.0/Sprites/Titles/{i}.png";
                 if (ConfigureSingleSprite(p, Vector4.zero)) ok++;
             }
 
-            // Bookmarks 는 sliced multi-sprite (PixelwoodSliceSetup.SliceAll 가 처리) — 여기서 설정 안 함.
             ConfigureSingleSprite("Assets/Pixelwood Valley/Fantasy Book UI V2/1.0/Sprites/Unique/DarkerPage.png", new Vector4(20, 20, 20, 20));
             ConfigureSingleSprite("Assets/Pixelwood Valley/Fantasy Book UI V2/1.0/Sprites/Unique/Character.png", Vector4.zero);
             for (int i = 1; i <= 3; i++)
@@ -353,7 +326,6 @@ namespace Rootborn.Editor.Tools
                 ConfigureSingleSprite($"Assets/Pixelwood Valley/Fantasy Book UI V2/1.0/Sprites/Unique/Box1.{i}.png", Vector4.zero);
             }
 
-            // Fancy Inscriptions — Cutter / Plus / Triangle / Inscriptions sheets
             ConfigureSingleSprite("Assets/Pixelwood Valley/Fantasy Book UI V2/1.0/Sprites/Fancy Inscriptions/Cutter 16x16.png", Vector4.zero);
             ConfigureSingleSprite("Assets/Pixelwood Valley/Fantasy Book UI V2/1.0/Sprites/Fancy Inscriptions/Plus.PNG", Vector4.zero);
             ConfigureSingleSprite("Assets/Pixelwood Valley/Fantasy Book UI V2/1.0/Sprites/Fancy Inscriptions/Trinagle.png", Vector4.zero);
@@ -365,7 +337,7 @@ namespace Rootborn.Editor.Tools
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log($"[ROOTBORN] Fantasy Book UI 9-slice configured: {ok} sprites.");
+            Debug.Log($"[ROOTBORN] Legacy Fantasy Book UI reference configuration complete: {ok} sprites.");
         }
     }
 }

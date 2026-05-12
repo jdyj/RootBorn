@@ -3,6 +3,8 @@
     "rootNamespace": "Rootborn.UI",
     "references": [
         "Rootborn.Game",
+        "Rootborn.Network",
+        "Unity.Netcode.Runtime",
         "Unity.InputSystem"
     ],
     "includePlatforms": [],

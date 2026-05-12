@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Tools.ToolDefinition
   _id: BareHand
   _displayKey: tool.bareHand
-  _icon: {fileID: 1862445508698260062, guid: ed5e6ce81f0627a43b6a20b711c2e1af, type: 3}
+  _icon: {fileID: 21300000, guid: 1ea0abe0eb387c649841ca27e83114b5, type: 3}
   _powerMultiplier: 0.3
   _effects: []
   _isStartingTool: 1

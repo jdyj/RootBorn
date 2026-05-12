@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc80898b930dcd445871a97a441a1b80, type: 3}
   m_Name: Objective_GatherWood
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Quests.Objectives.GatherQuestObjective
-  _displayKey: 
+  _displayKey: quest.gatherWood.objective
   _requiredCount: 1
   _targetResource: {fileID: 11400000, guid: eb231f93a6f0fe5418e8c0754b131733, type: 2}

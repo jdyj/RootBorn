@@ -2,7 +2,9 @@ using System.Reflection;
 using NUnit.Framework;
 using Rootborn.Game.Common;
 using Rootborn.Game.Quests;
+using Rootborn.Game.Quests.Effects;
 using Rootborn.Game.Quests.Rewards;
+using Rootborn.Game.StudentLife;
 using UnityEngine;
 
 namespace Rootborn.Tests.EditMode.Quests
@@ -100,6 +102,32 @@ namespace Rootborn.Tests.EditMode.Quests
 
             Assert.AreEqual(0, inventory.CountOf(rewardItem));
             Assert.AreEqual(QuestState.Completed, log.GetState(quest));
+        }
+
+        [Test]
+        public void QUEST_STUDENT_001_QuestCompletionEffectRaisesStudentLifeTraitAtomically()
+        {
+            var trait = ScriptableObject.CreateInstance<TraitDefinition>();
+            trait.ConfigureForTests("trait.service-sense", "trait.service-sense");
+            var effect = ScriptableObject.CreateInstance<TraitDeltaCompletionEffect>();
+            SetField(effect, "_trait", trait);
+            SetField(effect, "_delta", 2);
+            var objective = ScriptableObject.CreateInstance<AlwaysMatchObjective>();
+            SetField(objective, "_requiredCount", 1);
+            var quest = ScriptableObject.CreateInstance<QuestDefinition>();
+            SetField(quest, "_objectives", new QuestObjectiveBase[] { objective });
+            SetField(quest, "_completionEffects", new QuestCompletionEffectBase[] { effect });
+            var log = new QuestLog(new[] { quest });
+            var progress = new StudentLifeProgress("slot-a", "player-1", 10, 10);
+            var context = new RewardRuntimeContext(log, null, null, null, progress);
+
+            log.Accept(quest);
+            log.RecordEvent(new QuestEvent(QuestEventKind.Talk, "career-mentor"));
+
+            Assert.IsTrue(log.ClaimReward(quest, in context));
+            Assert.AreEqual(2, progress.GetTraitValue(trait));
+            Assert.IsFalse(log.ClaimReward(quest, in context));
+            Assert.AreEqual(2, progress.GetTraitValue(trait));
         }
 
         private sealed class AlwaysMatchObjective : QuestObjectiveBase

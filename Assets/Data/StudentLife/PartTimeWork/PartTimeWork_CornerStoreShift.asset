@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4723852554500a4eb6747ba22f333f8, type: 3}
+  m_Name: PartTimeWork_CornerStoreShift
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.PartTimeWorkDefinition
+  _id: work.shift.corner-store
+  _displayNameKey: work.shift.corner-store
+  _workplace: {fileID: 11400000, guid: 4bd88d3a7405a00428e7b74f1a87ce37, type: 2}
+  _timeCostMinutes: 45
+  _energyCost: 2
+  _focusCost: 1
+  _stressDelta: 1
+  _rewardItems:
+  - {fileID: 11400000, guid: 704ab36b76618c444bb49c6bcff56993, type: 2}
+  _rewardCounts: 03000000
+  _requirements: []
+  _outcomes:
+  - {fileID: 11400000, guid: 431dcc04d0b67d14ca6d46ceae4fdd1e, type: 2}

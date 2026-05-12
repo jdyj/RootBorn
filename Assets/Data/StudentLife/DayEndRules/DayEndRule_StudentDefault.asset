@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f468e71670424fbb79ccde836cbce, type: 3}
+  m_Name: DayEndRule_StudentDefault
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.DayEndRuleDefinition
+  _id: day-rule.student-default
+  _displayNameKey: day-rule.student-default
+  _nextDayEntryPointId: home-entry
+  _rules:
+  - {fileID: 11400000, guid: eb1e2cf87b578cd4ea5a7436f93adcde, type: 2}
+  - {fileID: 11400000, guid: fb39f888161b96d48bdec18770cf5a28, type: 2}
+  - {fileID: 11400000, guid: 8dedfa69f4e578b42a1c3f682181a57a, type: 2}

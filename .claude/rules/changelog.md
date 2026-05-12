@@ -13,6 +13,62 @@
 
 ---
 
+## 2026-05-12 — 성능·최적화 동시 설계 원칙 헌법화
+- 피드백: "최적화도 같이 생각하면서 진행하는걸로 헌법에도 추가해주고 프롬프트도 같이 작성해줘"
+- 원인: 도감, 마일스톤, 퀘스트, 인벤토리처럼 항목 수가 늘어나는 시스템은 기능 구현 뒤에 최적화를 붙이면 UI 구조와 저장/조회 구조를 다시 갈아엎을 위험이 크다.
+- 변경:
+  - `AGENTS.md` Constitutional Rules에 "성능·최적화 동시 설계 원칙" 추가.
+  - `.claude/constitution.md` 핵심 원칙에 성능 예산, 대량 목록 UI, dirty 갱신, 캐싱, Addressables 중복 로드 방지 원칙 추가.
+  - `.claude/rules/game-design.md`에 금지/필수 성능 설계 규칙 추가.
+- 일반화: "신규 시스템은 기획·데이터 구조·UI 목업·테스트 단계부터 성능과 확장 비용을 함께 고려한다. 대량 목록 UI는 가상화/페이징/캐싱/지연 로딩/dirty 갱신을 우선 검토하고, 완료 보고에는 성능 리스크와 검증 범위를 포함한다."
+
+---
+
+## 2026-05-11 — 플레이어 대리 테스트 의무 헌법화
+- 피드백: "모든 테스트 시나리오를 유저가 플레이하듯 모든 상호작용 테스트와 함께 했어?" 이후 "실제 플레이 방식으로 테스트하도록 헌법에도 수정하고 테스트진행해"
+- 원인: 기존 규칙은 사용자가 구체적 조작 경로를 말한 경우의 우회 금지를 다뤘지만, 모든 유저 여정/코어 루프/PlayMode 시나리오의 완료 판정이 실제 입력·UI·트리거 기반이어야 한다는 기본 원칙이 약했다.
+- 변경:
+  - `AGENTS.md` Constitutional Rules 에 "플레이어 대리 테스트"를 추가.
+  - `constitution.md` 테스트 원칙에 저장 슬롯 선택, UI 클릭, 입력, 이동, 트리거, 상호작용, 씬 전환 관찰을 실제 플레이 경로로 검증해야 한다고 명시.
+  - `rules/testing-discipline.md` 절대 원칙에 모든 유저 여정/코어 루프/PlayMode 시나리오의 완료 판정은 실제 플레이 경로 테스트로 한다는 조항 추가.
+- 일반화: "시나리오 테스트는 결과 상태만 확인하지 않는다. 플레이어가 실제로 통과해야 하는 조작 경로 자체가 검증 대상이다."
+
+---
+
+## 2026-05-10 — 사용자 지정 플레이 흐름 우회 금지 헌법화
+- 피드백: "방금도 내가 의사소통이 잘 안됐던거같은데 좀 정제해서 헌법에 넣어줄수있어?"
+- 원인: 사용자는 "직접 포탈로 가서 Farm으로 씬 변경"을 요구했지만, 검증 과정에서 포탈 내부 메서드를 직접 호출해 테스트를 통과시킨 적이 있었다. 이는 상태 보존 일부만 확인했을 뿐 실제 사용자 조작 경로를 증명하지 못했다.
+- 변경:
+  - `AGENTS.md` Constitutional Rules 에 "사용자 지정 플레이 흐름 우회 금지" 추가.
+  - `constitution.md` 테스트 원칙에 사용자 재현 순서와 조작 경로를 실제 PlayMode/입력/트리거/UI 경로로 검증해야 한다는 항목 추가.
+  - `rules/testing-discipline.md` 절대 원칙에 내부 메서드 호출, 상태 강제 세팅, 씬 강제 로드 등 우회 검증 금지 추가.
+- 일반화: "사용자가 플레이 흐름을 지정하면 테스트는 결과 상태만이 아니라 사용자가 지정한 조작 경로 자체를 검증 대상으로 삼는다. 자동화가 어렵다면 우회하지 말고 한계를 먼저 알린 뒤 관찰 가능한 사용자 경로 테스트를 만든다."
+
+---
+
+## 2026-05-09 — Modern UI Style2 공통 패널 좌표 헌법화
+- 피드백: "이제 공통 패널은 저렇게 하는걸로 헌법이나 메모리에 넣어줘"
+- 원인: Style1과 Style2의 패널 3x3 블록 좌표가 달라, Style2에서 `r0/r1/r2` 블록을 공통 패널로 쓰면 의도한 프레임이 아니라 다른 UI 조각이 들어갈 수 있었다.
+- 변경:
+  - `constitution.md` 그래픽 자산 섹션에 "Modern UI Style2 공통 패널" 원칙 추가.
+  - `AGENTS.md` Constitutional Rules 에 "Modern UI Style2 공통 패널 규약" 추가.
+  - `rules/ui-standards.md` 에 Style2 공통 패널 3x3 좌표와 `r3_c1` fill 반복 규칙 명시.
+- 일반화: "공통 UI 패널은 source sheet별 좌표 차이를 헌법 문서에 고정하고, 크기 가변 패널은 단일 Image sprite가 아니라 3x3 tiled builder로 생성한다."
+
+---
+
+## 2026-05-09 — ROOTBORN 헌법 Town-first 전환
+- 피드백: "지금 헌법에 Farm 관련한거 어떻게 되어있어? 지금 내가 생각하기로는 세대의 느낌보다는 일단 도시느낌으로 가는게 좋을거같아서" 이후 "수정해줘"
+- 원인: `constitution.md`와 AGENTS 요약은 여전히 "세대 진화 농장 생존 게임"을 최상위 비전으로 두고 있었지만, 최근 town concept 전환 문서와 구현은 이미 도시 생활, 학생 활동, 특성·기술·진로 성장 중심으로 이동했다. 이 불일치가 신규 기능 판단 기준을 흔들 수 있었다.
+- 변경:
+  - `constitution.md` 게임 비전, 핵심 메카닉, MVP, 데이터-드리븐 대상, SO 경로를 Town/StudentLife/LifeActivity 중심으로 수정.
+  - `rules/testing-discipline.md` 코어 시나리오 카탈로그를 TOWN/LIFE/CAREER/REL/JOB 중심으로 갱신하고 GEN/HEIR/CROP은 레거시 격리 시나리오로 이동.
+  - `rules/path-based/assets-data.md` 데이터-드리븐 적용 대상을 생활 활동, 선택지, 기술, 진로, 관계, 직무, 장소로 확장하고 레거시 작물/세대는 유지 가능 대상으로 명시.
+  - `AGENTS.md`와 `.claude/README.md`의 헌법 요약, 테스트 prefix, 데이터 경로 설명을 Town-first 기준으로 동기화.
+- 일반화: "상위 비전이 바뀌면 헌법, 테스트 카탈로그, 데이터 와이어링 규칙, 에이전트 요약을 함께 갱신한다. 기존 시스템은 삭제 전까지 레거시 회귀 테스트로 보호하되, 신규 기본 루프의 판단 기준으로 승격하지 않는다."
+
+---
+
 ## 2026-05-06 — 보상 수령 전 인벤토리 검증과 멱등성 헌법화
 - 피드백: "기본적으로 보상받을 때 인벤토리 있는진 검증은 해야해 아이템이 복사/삭제 되지 않도록 이건 헌법에도 추가해줘"
 - 원인: 퀘스트 시스템 설계에서 보상 지급은 핵심 상태 전이지만, 기존 헌법에는 인벤토리 수용 가능성 preflight, 부분 지급 방지, 저장/로드 후 재지급 방지 같은 일반 원칙이 명시되어 있지 않았다.
@@ -248,6 +304,25 @@
   - `production/epics/EPIC-032-balance-metrics-pipeline.md` 신규
   - `.claude/rules/testing-discipline.md` STAR-001~015, ECON-001~006, MYT-A~D-001, BAL-001~027, SYN-* 시나리오 추가
 - 일반화: "수치 곡선은 systems-index.md immutable 상수, 코인 SO는 디폴트 사용 + 예외 시만 오버라이드. 곡선 변경은 ADR 신설 + EPIC-032 시뮬 게이트 통과 의무."
+
+## 2026-05-11 — 자유 경로 성장 원칙 헌법화
+- 피드백: "오픈월드 식으로 자유를 줘서 학교만 다니는 하나의 경로가 아니라, 학교 중간에 나와 다른 특성/성향을 직접 올리는 다양한 요소가 있었으면 한다."
+- 원인: 기존 학생 생활 목표가 학교/수업 중심으로 읽힐 수 있어, 성장·퀘스트·진로 힌트가 단일 등교 루트에 종속될 위험이 있었다.
+- 변경:
+  - `AGENTS.md` Constitutional Rules에 "자유 경로 성장 원칙" 추가.
+  - `.claude/constitution.md`에 "자유 경로 성장" 핵심 메카닉과 "Open-Ended Progression" 원칙 추가.
+  - `.claude/rules/game-design.md`에 금지/필수 설계 규칙 추가.
+- 일반화: "학교 수업은 중요한 경로 중 하나일 뿐 유일한 정답이 아니다. 핵심 성장 목표에는 가능한 한 2개 이상의 대체 경로를 제공하고, 학교 밖 활동도 핵심 성장·진로·관계 진행에 참여해야 한다. 신규 코어 루프는 학교 밖 경로 실제 플레이 검증을 포함한다."
+
+## 2026-05-08 — Sprite PlayMode 전수 검증 헌법화
+- 피드백: "개별 sprite 픽셀/주소 전체를 PlayMode에서 전수 검증"
+- 원인: 기존 Style2 sprite 검증은 EditMode manifest/source audit와 PlayMode smoke에 머물러, 런타임 Addressables 경로에서 모든 개별 sprite 주소와 픽셀 rect가 실제로 resolve/read 가능한지 전수 확인하지 못했다.
+- 변경:
+  - `.claude/constitution.md`에 "Sprite 런타임 전수 검증" 절 추가.
+  - `Assets/Tests/PlayMode/TownConcept/TownStyle2SpriteExhaustivePlayModeTests.cs` 신규 — `ModernUISpriteAddresses.AllSheets`의 모든 sheet address/sub-sprite를 PlayMode에서 로드하고, 이름 일치와 `textureRect` 전체 픽셀 배열 count를 검증.
+  - `Assets/Tests/PlayMode/TownConcept/TownStyle2UiSmokeTests.cs` 강화 — Town 인벤토리 패널을 실제로 열고 생성된 UI tile `Image.sprite`가 Style2 sprite로 resolve 되었는지 검증.
+  - `Assets/Scripts/UI/Modern/ModernUiPanelAutoInstaller.cs` 수정 — Town UI 패널 설치 전에 `Managers.BootstrapAsync()` 완료를 기다려 Addressables sprite cache가 준비된 뒤 패널을 빌드.
+- 일반화: "sprite 완료 판정은 manifest 존재나 대표 smoke가 아니라 PlayMode 런타임 로더 기준 주소 resolve + 개별 sprite 전체 픽셀 rect 읽기 + 실제 렌더 대상(Image/SpriteRenderer) sprite 할당 확인까지 포함한다."
 
 ## 2026-04-29 — 커밋 메시지 컨벤션 신설
 - 피드백: "커밋명 규칙 추가 [FEATURE], [BUGFIX]. [UI], [DB], [ASSET] 등의 prefix 활용. 제목+내용 모두 한글로"

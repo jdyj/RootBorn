@@ -22,5 +22,23 @@ namespace Rootborn.Game.Quests
         public QuestObjectiveBase[] Objectives => _objectives;
         public QuestRewardBase[] Rewards => _rewards;
         public QuestCompletionEffectBase[] CompletionEffects => _completionEffects;
+
+        public void ConfigureForRuntime(
+            string id,
+            string displayNameKey,
+            string descriptionKey,
+            QuestObjectiveBase[] objectives,
+            QuestRewardBase[] rewards,
+            QuestCompletionEffectBase[] completionEffects)
+        {
+            _id = id;
+            _displayNameKey = displayNameKey;
+            _descriptionKey = descriptionKey;
+            _objectives = objectives ?? System.Array.Empty<QuestObjectiveBase>();
+            _rewards = rewards ?? System.Array.Empty<QuestRewardBase>();
+            _completionEffects = completionEffects ?? System.Array.Empty<QuestCompletionEffectBase>();
+            _providerConditions = System.Array.Empty<QuestConditionBase>();
+            _prerequisites = System.Array.Empty<QuestConditionBase>();
+        }
     }
 }

@@ -18,11 +18,20 @@ namespace Rootborn.UI.Quests
             EnsureButton();
         }
 
+        private void OnDestroy()
+        {
+            if (_button != null)
+            {
+                _button.onClick.RemoveListener(HandleButtonClicked);
+            }
+        }
+
         public void Bind(QuestLog questLog, QuestDefinition quest, RewardRuntimeContext context)
         {
             _questLog = questLog;
             _quest = quest;
             _context = context;
+            EnsureButton();
             Refresh();
         }
 
@@ -48,6 +57,17 @@ namespace Rootborn.UI.Quests
             {
                 _button = GetComponent<Button>();
             }
+
+            if (_button != null)
+            {
+                _button.onClick.RemoveListener(HandleButtonClicked);
+                _button.onClick.AddListener(HandleButtonClicked);
+            }
+        }
+
+        private void HandleButtonClicked()
+        {
+            Click();
         }
     }
 }

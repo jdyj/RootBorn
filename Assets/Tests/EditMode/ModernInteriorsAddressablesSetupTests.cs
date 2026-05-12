@@ -12,11 +12,17 @@ namespace Rootborn.Tests.EditMode
     public sealed class ModernInteriorsAddressablesSetupTests
     {
         [Test]
-        public void AllModernInteriorsSheets_AreRegisteredInModernInteriorsAddressablesSetup()
+        public void ModernInteriorsSheets_AreRegisteredOnlyWhenPackIsInstalled()
         {
             var registered = ModernInteriorsAddressablesSetup.GetSheetEntries()
                 .Select(entry => entry.address)
                 .ToHashSet();
+
+            if (!ModernInteriorsSliceSetup.IsPackInstalled())
+            {
+                Assert.IsEmpty(registered);
+                return;
+            }
 
             var missing = new List<string>();
             foreach (var (sheetAddress, _) in ModernInteriorsSpriteAddresses.AllSheets)
@@ -41,7 +47,7 @@ namespace Rootborn.Tests.EditMode
         }
 
         [Test]
-        public void ModernInteriorsAddressableEntries_HaveAssetFilesOnDisk()
+        public void ModernInteriorsAddressableEntries_HaveAssetFilesOnDiskWhenPackIsInstalled()
         {
             var missing = new List<string>();
             foreach (var (assetPath, _) in ModernInteriorsAddressablesSetup.GetSheetEntries())
@@ -56,8 +62,14 @@ namespace Rootborn.Tests.EditMode
         }
 
         [Test]
-        public void AllModernInteriorsSubSprites_ExistInSlicedSheets()
+        public void AllModernInteriorsSubSprites_ExistInSlicedSheetsWhenPackIsInstalled()
         {
+            if (!ModernInteriorsSliceSetup.IsPackInstalled())
+            {
+                Assert.IsEmpty(ModernInteriorsAddressablesSetup.GetSheetEntries());
+                return;
+            }
+
             var missing = new List<string>();
             var entriesByAddress = ModernInteriorsAddressablesSetup.GetSheetEntries()
                 .ToDictionary(entry => entry.address, entry => entry.assetPath);
@@ -83,7 +95,7 @@ namespace Rootborn.Tests.EditMode
         }
 
         [Test]
-        public void ModernInteriorsSheets_ArePresentInAddressableSettingsWithPreloadLabel()
+        public void ModernInteriorsSheets_ArePresentInAddressableSettingsWithPreloadLabelWhenPackIsInstalled()
         {
             var missing = ModernInteriorsAddressablesSetup.FindMissingRegisteredSheetAddresses();
             var missingLabel = ModernInteriorsAddressablesSetup.FindRegisteredSheetAddressesMissingPreloadLabel();

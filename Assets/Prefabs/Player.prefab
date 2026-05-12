@@ -472,6 +472,12 @@ GameObject:
   - component: {fileID: 6735423024639536156}
   - component: {fileID: 507124032853071634}
   - component: {fileID: 6648590890737219894}
+  - component: {fileID: 7033432447557357620}
+  - component: {fileID: 6819499319452771163}
+  - component: {fileID: 7038321651904404434}
+  - component: {fileID: 9089469977953492741}
+  - component: {fileID: 4885765691639228018}
+  - component: {fileID: 4482702469712385393}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -718,6 +724,97 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Family.FishingAnimationController
   _animator: {fileID: 507124032853071634}
   _definition: {fileID: 11400000, guid: 4d492c31c33bd2b4fa9e3e22ed110534, type: 2}
+--- !u!114 &7033432447557357620
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6584721302760826571}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
+  GlobalObjectIdHash: 3811617833
+  InScenePlacedSourceGlobalObjectIdHash: 2097586827
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 0
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
+--- !u!114 &6819499319452771163
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6584721302760826571}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4adb769c3f5d0a94ababb368d91e549e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Player.PlayerIdentity
+  _playerId: local-player
+  _clientId: 0
+--- !u!114 &7038321651904404434
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6584721302760826571}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 192e5b5752b61604a944ae54dcdc449b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Rootborn.Network::Rootborn.Network.Player.NetworkPlayerIdentityBinder
+  ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &9089469977953492741
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6584721302760826571}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c844f45672ec2f41a56f0f97de3bd23, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Rootborn.Network::Rootborn.Network.Time.NetworkWorldTimeState
+  ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &4885765691639228018
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6584721302760826571}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ddfd32c3940198c45842219aa8705527, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Rootborn.Network::Rootborn.Network.Player.NetworkLocalPlayerInputGate
+  ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &4482702469712385393
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6584721302760826571}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b33586615375aa4696b8f964059798a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Rootborn.Network::Rootborn.Network.Player.NetworkLocalPlayerViewBinder
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &7879842297577872743
 GameObject:
   m_ObjectHideFlags: 0

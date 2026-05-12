@@ -16,6 +16,11 @@ namespace Rootborn.UI.MainMenu
 
         private void Awake()
         {
+            DisableButtonLabelRaycasts(_singleButton);
+            DisableButtonLabelRaycasts(_hostButton);
+            DisableButtonLabelRaycasts(_clientButton);
+            DisableButtonLabelRaycasts(_quitButton);
+
             if (_singleButton != null) _singleButton.onClick.AddListener(OnSingle);
             if (_hostButton != null) _hostButton.onClick.AddListener(OnHost);
             if (_clientButton != null) _clientButton.onClick.AddListener(OnClient);
@@ -44,6 +49,20 @@ namespace Rootborn.UI.MainMenu
         private void OnQuit()
         {
             Application.Quit();
+        }
+
+        private static void DisableButtonLabelRaycasts(Button button)
+        {
+            if (button == null)
+            {
+                return;
+            }
+
+            var labels = button.GetComponentsInChildren<Text>(true);
+            for (int i = 0; i < labels.Length; i++)
+            {
+                labels[i].raycastTarget = false;
+            }
         }
 
         private static void ApplyMode(SessionMode mode)

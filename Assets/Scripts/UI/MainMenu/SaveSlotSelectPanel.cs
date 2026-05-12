@@ -1,3 +1,4 @@
+using Rootborn.Game.Common;
 using Rootborn.Game.Family;
 using Rootborn.Game.Player;
 using Rootborn.Game.Save;
@@ -383,12 +384,23 @@ namespace Rootborn.UI.MainMenu
 
         private static void EnsureEventSystem()
         {
-            if (Object.FindFirstObjectByType<EventSystem>() != null)
+            var eventSystem = Object.FindFirstObjectByType<EventSystem>();
+            if (eventSystem != null)
             {
+                if (eventSystem.GetComponent<BaseInputModule>() == null)
+                {
+                    AddUiInputModule(eventSystem.gameObject);
+                }
                 return;
             }
 
-            new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
+            var go = new GameObject("EventSystem", typeof(EventSystem));
+            AddUiInputModule(go);
+        }
+
+        private static void AddUiInputModule(GameObject go)
+        {
+            UiInputModuleInstaller.AddPreferredInputModule(go);
         }
 
         private static Text MakeText(Transform parent, string name, string text, Vector2 position, Vector2 size, int fontSize, TextAnchor alignment, Vector2 anchorMin, Vector2 anchorMax)
@@ -407,6 +419,7 @@ namespace Rootborn.UI.MainMenu
             label.fontSize = fontSize;
             label.alignment = alignment;
             label.color = new Color(0.96f, 0.93f, 0.84f, 1f);
+            label.raycastTarget = false;
             return label;
         }
 

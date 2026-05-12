@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6d24edc6bd4d0140969019310ef7b9c, type: 3}
+  m_Name: Quest_CareerRoute_Interior
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Quests.QuestDefinition
+  _id: quest.career.interior
+  _displayNameKey: quest.career.interior.name
+  _descriptionKey: quest.career.interior.desc
+  _providerConditions: []
+  _prerequisites: []
+  _objectives:
+  - {fileID: 11400000, guid: 437b3172928c5d047b49845d122e60d7, type: 2}
+  _rewards: []
+  _completionEffects:
+  - {fileID: 11400000, guid: a0fa1ef3b8a069a4ab05288055a13cfd, type: 2}

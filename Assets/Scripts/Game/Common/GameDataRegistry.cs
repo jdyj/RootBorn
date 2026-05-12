@@ -11,6 +11,7 @@ using Rootborn.Game.Resources;
 using Rootborn.Game.Status;
 using Rootborn.Game.Story;
 using Rootborn.Game.StudentLife;
+using Rootborn.Game.Tiles;
 using Rootborn.Game.Tools;
 using Rootborn.Game.WorldGeneration;
 using UnityEngine;
@@ -63,19 +64,13 @@ namespace Rootborn.Game.Common
         public bool CanAdd(ItemDefinition item, int count = 1)
         {
             if (item == null || count <= 0) return false;
-
             int remaining = count;
             int max = item.MaxStack;
             int occupiedSlots = 0;
-
             for (int i = 0; i < _slots.Count; i++)
             {
                 var slot = _slots[i];
-                if (slot.Item != null && slot.Count > 0)
-                {
-                    occupiedSlots++;
-                }
-
+                if (slot.Item != null && slot.Count > 0) occupiedSlots++;
                 if (slot.Item != item) continue;
                 int room = max - slot.Count;
                 if (room <= 0) continue;
@@ -97,15 +92,11 @@ namespace Rootborn.Game.Common
         public bool CanAddAll(IReadOnlyList<InventoryGrant> grants)
         {
             if (grants == null) return true;
-
             var clone = new Inventory();
             for (int i = 0; i < _slots.Count; i++)
             {
                 var slot = _slots[i];
-                if (slot.Item != null && slot.Count > 0)
-                {
-                    clone.Add(slot.Item, slot.Count);
-                }
+                if (slot.Item != null && slot.Count > 0) clone.Add(slot.Item, slot.Count);
             }
 
             for (int i = 0; i < grants.Count; i++)
@@ -122,18 +113,15 @@ namespace Rootborn.Game.Common
         {
             if (sourceIndex < 0 || targetIndex < 0) return false;
             EnsureSlotCount(Mathf.Max(sourceIndex, targetIndex) + 1);
-
             var source = _slots[sourceIndex];
             if (source.Item == null || source.Count <= 0) return false;
             if (sourceIndex == targetIndex) return true;
-
             var target = _slots[targetIndex];
             if (target.Item != null && target.Count > 0)
             {
                 if (target.Item != source.Item) return false;
                 int room = source.Item.MaxStack - target.Count;
                 if (room <= 0) return false;
-
                 int moved = Mathf.Min(room, source.Count);
                 target.Count += moved;
                 source.Count -= moved;
@@ -178,20 +166,20 @@ namespace Rootborn.Game.Common
         {
             if (item == null) return 0;
             int sum = 0;
-            for (int i = 0; i < _slots.Count; i++)
-            {
-                if (_slots[i].Item == item) sum += _slots[i].Count;
-            }
-
+            for (int i = 0; i < _slots.Count; i++) if (_slots[i].Item == item) sum += _slots[i].Count;
             return sum;
+        }
+
+        public void Clear()
+        {
+            if (_slots.Count == 0) return;
+            _slots.Clear();
+            OnChanged?.Invoke();
         }
 
         private void EnsureSlotCount(int count)
         {
-            while (_slots.Count < count && _slots.Count < MaxSlots)
-            {
-                _slots.Add(new Slot());
-            }
+            while (_slots.Count < count && _slots.Count < MaxSlots) _slots.Add(new Slot());
         }
     }
 
@@ -207,13 +195,7 @@ namespace Rootborn.Game.Common
         public const string BookPage8 = "sprites/ui/book/page-8";
         public const string BookPage9 = "sprites/ui/book/page-9";
         public const string BookSpine = "sprites/ui/book/spine";
-
-        public static readonly string[] BookFlipFrames = new[]
-        {
-            BookPage1, BookPage2, BookPage3, BookPage4, BookPage5,
-            BookPage6, BookPage7, BookPage8, BookPage9,
-        };
-
+        public static readonly string[] BookFlipFrames = new[] { BookPage1, BookPage2, BookPage3, BookPage4, BookPage5, BookPage6, BookPage7, BookPage8, BookPage9 };
         public const string BookLeftPage = BookPage1;
         public const string HudPanel = "sprites/ui/panel/hud";
         public const string HintPanel = "sprites/ui/panel/hint";
@@ -234,22 +216,8 @@ namespace Rootborn.Game.Common
         public const string SubBookmark3 = "Bookmark_3";
         public const string SubBookmark4 = "Bookmark_4";
         public const string LabelPreLoad = "PreLoad";
-
-        public static readonly string[] AllSingleSprites = new[]
-        {
-            BookPage1, BookPage2, BookPage3, BookPage4, BookPage5,
-            BookPage6, BookPage7, BookPage8, BookPage9, BookSpine,
-            HudPanel, HintPanel, SmallButton,
-            ItemSlot, EquipmentSlot,
-            ItemsRibbon, DescriptionRibbon, EquipmentRibbon,
-            CutterShort, CutterLong, InscriptionPlus,
-            Character,
-        };
-
-        public static readonly (string sheetAddress, string[] subNames)[] AllSheets = new[]
-        {
-            (BookmarkSheet, new[] { SubBookmark0, SubBookmark1, SubBookmark2, SubBookmark3, SubBookmark4 }),
-        };
+        public static readonly string[] AllSingleSprites = new[] { BookPage1, BookPage2, BookPage3, BookPage4, BookPage5, BookPage6, BookPage7, BookPage8, BookPage9, BookSpine, HudPanel, HintPanel, SmallButton, ItemSlot, EquipmentSlot, ItemsRibbon, DescriptionRibbon, EquipmentRibbon, CutterShort, CutterLong, InscriptionPlus, Character };
+        public static readonly (string sheetAddress, string[] subNames)[] AllSheets = new[] { (BookmarkSheet, new[] { SubBookmark0, SubBookmark1, SubBookmark2, SubBookmark3, SubBookmark4 }) };
     }
 
     public static class PlayerToolSpriteAddresses
@@ -266,14 +234,7 @@ namespace Rootborn.Game.Common
         public const string PickupDown = "sprites/player/tool/pickup-down";
         public const string PickupSide = "sprites/player/tool/pickup-side";
         public const string PickupUp = "sprites/player/tool/pickup-up";
-
-        public static readonly string[] AllSheets = new[]
-        {
-            AxeDown, AxeSide, AxeUp,
-            HoeDown, HoeSide, HoeUp,
-            PickaxeDown, PickaxeSide, PickaxeUp,
-            PickupDown, PickupSide, PickupUp,
-        };
+        public static readonly string[] AllSheets = new[] { AxeDown, AxeSide, AxeUp, HoeDown, HoeSide, HoeUp, PickaxeDown, PickaxeSide, PickaxeUp, PickupDown, PickupSide, PickupUp };
     }
 
     [CreateAssetMenu(fileName = "GameDataRegistry", menuName = "Rootborn/Common/Game Data Registry")]
@@ -295,13 +256,34 @@ namespace Rootborn.Game.Common
         [SerializeField] private NpcDefinition[] _npcs = Array.Empty<NpcDefinition>();
         [SerializeField] private DialogueDefinition[] _dialogues = Array.Empty<DialogueDefinition>();
         [SerializeField] private StoryFlagDefinition[] _storyFlags = Array.Empty<StoryFlagDefinition>();
+        [SerializeField] private TutorialStageDefinition[] _tutorialStages = Array.Empty<TutorialStageDefinition>();
+        [SerializeField] private TutorialStageDefinition _defaultTutorialStage;
         [SerializeField] private CharacterPartDefinition[] _characterParts = Array.Empty<CharacterPartDefinition>();
         [SerializeField] private CharacterPartAnimationClipDefinition[] _characterPartAnimationClips = Array.Empty<CharacterPartAnimationClipDefinition>();
         [SerializeField] private FishingAnimationDefinition[] _fishingAnimations = Array.Empty<FishingAnimationDefinition>();
         [SerializeField] private LifeActivityDefinition[] _lifeActivities = Array.Empty<LifeActivityDefinition>();
+        [SerializeField] private LifeChoiceDefinition[] _studentLifeChoices = Array.Empty<LifeChoiceDefinition>();
         [SerializeField] private TraitDefinition[] _studentLifeTraits = Array.Empty<TraitDefinition>();
         [SerializeField] private SkillDefinition[] _studentLifeSkills = Array.Empty<SkillDefinition>();
         [SerializeField] private CareerDefinition[] _careers = Array.Empty<CareerDefinition>();
+        [SerializeField] private CareerPracticeDefinition[] _careerPractices = Array.Empty<CareerPracticeDefinition>();
+        [SerializeField] private PracticeStepDefinition[] _practiceSteps = Array.Empty<PracticeStepDefinition>();
+        [SerializeField] private DayEndRuleDefinition[] _dayEndRules = Array.Empty<DayEndRuleDefinition>();
+        [SerializeField] private DayEndRuleDefinition _defaultDayEndRule;
+        [SerializeField] private RelationshipDefinition[] _relationships = Array.Empty<RelationshipDefinition>();
+        [SerializeField] private StatusDefinition[] _studentConditionStatuses = Array.Empty<StatusDefinition>();
+        [SerializeField] private OutsideSchoolActivityCategoryDefinition[] _outsideSchoolActivityCategories = Array.Empty<OutsideSchoolActivityCategoryDefinition>();
+        [SerializeField] private OutsideSchoolActivityDefinition[] _outsideSchoolActivities = Array.Empty<OutsideSchoolActivityDefinition>();
+        [SerializeField] private TownHelpActionDefinition[] _townHelpActions = Array.Empty<TownHelpActionDefinition>();
+        [SerializeField] private WorkplaceDefinition[] _workplaces = Array.Empty<WorkplaceDefinition>();
+        [SerializeField] private PartTimeWorkDefinition[] _partTimeWorks = Array.Empty<PartTimeWorkDefinition>();
+        [SerializeField] private LocationDefinition[] _locations = Array.Empty<LocationDefinition>();
+        [SerializeField] private DiscoveryDefinition[] _discoveries = Array.Empty<DiscoveryDefinition>();
+        [SerializeField] private PlaceableTileDefinition[] _placeableTiles = Array.Empty<PlaceableTileDefinition>();
+        [SerializeField] private MilestoneDefinition[] _milestones = Array.Empty<MilestoneDefinition>();
+        [SerializeField] private MilestoneObjectiveBase[] _milestoneObjectives = Array.Empty<MilestoneObjectiveBase>();
+        [SerializeField] private MilestoneRouteDefinition[] _milestoneRoutes = Array.Empty<MilestoneRouteDefinition>();
+        [SerializeField] private MilestoneRewardBase[] _milestoneRewards = Array.Empty<MilestoneRewardBase>();
         [SerializeField] private Sprite _groundSprite;
         [SerializeField] private Sprite _playerSprite;
         [SerializeField] private TerrainGenerationDefinition _defaultFarmTerrainGeneration;
@@ -322,13 +304,34 @@ namespace Rootborn.Game.Common
         public NpcDefinition[] Npcs => _npcs;
         public DialogueDefinition[] Dialogues => _dialogues;
         public StoryFlagDefinition[] StoryFlags => _storyFlags;
+        public TutorialStageDefinition[] TutorialStages => _tutorialStages;
+        public TutorialStageDefinition DefaultTutorialStage => _defaultTutorialStage;
         public CharacterPartDefinition[] CharacterParts => _characterParts;
         public CharacterPartAnimationClipDefinition[] CharacterPartAnimationClips => _characterPartAnimationClips;
         public FishingAnimationDefinition[] FishingAnimations => _fishingAnimations;
         public LifeActivityDefinition[] LifeActivities => _lifeActivities;
+        public LifeChoiceDefinition[] StudentLifeChoices => _studentLifeChoices;
         public TraitDefinition[] StudentLifeTraits => _studentLifeTraits;
         public SkillDefinition[] StudentLifeSkills => _studentLifeSkills;
         public CareerDefinition[] Careers => _careers;
+        public CareerPracticeDefinition[] CareerPractices => _careerPractices;
+        public PracticeStepDefinition[] PracticeSteps => _practiceSteps;
+        public DayEndRuleDefinition[] DayEndRules => _dayEndRules;
+        public DayEndRuleDefinition DefaultDayEndRule => _defaultDayEndRule;
+        public RelationshipDefinition[] Relationships => _relationships;
+        public StatusDefinition[] StudentConditionStatuses => _studentConditionStatuses;
+        public OutsideSchoolActivityCategoryDefinition[] OutsideSchoolActivityCategories => _outsideSchoolActivityCategories;
+        public OutsideSchoolActivityDefinition[] OutsideSchoolActivities => _outsideSchoolActivities;
+        public TownHelpActionDefinition[] TownHelpActions => _townHelpActions;
+        public WorkplaceDefinition[] Workplaces => _workplaces;
+        public PartTimeWorkDefinition[] PartTimeWorks => _partTimeWorks;
+        public LocationDefinition[] Locations => _locations;
+        public DiscoveryDefinition[] Discoveries => _discoveries;
+        public PlaceableTileDefinition[] PlaceableTiles => _placeableTiles;
+        public MilestoneDefinition[] Milestones => _milestones;
+        public MilestoneObjectiveBase[] MilestoneObjectives => _milestoneObjectives;
+        public MilestoneRouteDefinition[] MilestoneRoutes => _milestoneRoutes;
+        public MilestoneRewardBase[] MilestoneRewards => _milestoneRewards;
         public Sprite GroundSprite => _groundSprite;
         public Sprite PlayerSprite => _playerSprite;
         public TerrainGenerationDefinition DefaultFarmTerrainGeneration => _defaultFarmTerrainGeneration;

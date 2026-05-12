@@ -29,6 +29,7 @@ namespace Rootborn.Tests.PlayMode
                 Assert.IsTrue(panel.IsVisible);
                 Assert.GreaterOrEqual(panel.PanelTileCount, 30);
                 Assert.AreEqual(4, panel.CornerTileCount);
+                Assert.IsNull(canvasGo.transform.Find("SettingsPanelRoot/ReferenceAuditOverlay"), "SettingsPanel must not render captured reference PNG overlays.");
                 Assert.Zero(CountMissingTileSprites(canvasGo));
                 Assert.Zero(CountStretchedTileImages(canvasGo));
                 Assert.Zero(CountTextOverflows(canvasGo));
