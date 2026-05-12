@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using Rootborn.Game.Common;
@@ -13,7 +12,8 @@ namespace Rootborn.Tests.EditMode.TownConcept
     {
         private const string CatalogJsonPath = "docs/art/modern-ui-style2-icon-catalog.json";
         private const string CatalogMarkdownPath = "docs/art/modern-ui-style2-icon-catalog.md";
-        private static readonly Regex EntryRegex = new Regex("\\{\\s*\"row\"\\s*:\\s*(\\d+),\\s*\"column\"\\s*:\\s*(\\d+),\\s*\"coordinate\"\\s*:\\s*\"(r\\d+_c\\d+)\",\\s*\"spriteName\"\\s*:\\s*\"(ModernUI_16_Style2_r\\d+_c\\d+)\",\\s*\"semanticId\"\\s*:\\s*\"([^\"]+)\",\\s*\"enumName\"\\s*:\\s*\"([^\"]+)\",\\s*\"category\"\\s*:\\s*\"([^\"]+)\",\\s*\"stateGroupId\"\\s*:\\s*(null|\"[^\"]*\"),\\s*\"stateRole\"\\s*:\\s*(null|\"[^\"]*\"),\\s*\"confidence\"\\s*:\\s*\"([^\"]+)\",", RegexOptions.Compiled);
+        private static readonly Regex EntryObjectRegex = new Regex("\\{[^{}]*\\\"row\\\"\\s*:\\s*\\d+[^{}]*\\}", RegexOptions.Compiled | RegexOptions.Singleline);
+        private static readonly Regex FieldRegex = new Regex("\\\"(?<name>row|column|coordinate|spriteName|semanticId|enumName|category|stateGroupId|stateRole|confidence)\\\"\\s*:\\s*(?<value>null|\\d+|\\\"[^\\\"]*\\\")", RegexOptions.Compiled);
 
         [Test]
         public void IconCatalogJson_CoversEveryStyle2CoordinateExactlyOnce()
@@ -65,41 +65,41 @@ namespace Rootborn.Tests.EditMode.TownConcept
         }
 
         [Test]
-        public void IconCatalog_GroupsR3C42ToR3C44AsPressedButtonFrames()
+        public void IconCatalog_GroupsR3C40ToR3C45AsPlusMinusButtonStates()
         {
             string json = File.ReadAllText(CatalogJsonPath);
             IReadOnlyList<Entry> entries = ReadEntries(json);
 
-            Entry first = entries.Single(entry => entry.Coordinate == "r3_c42");
-            Entry second = entries.Single(entry => entry.Coordinate == "r3_c43");
-            Entry third = entries.Single(entry => entry.Coordinate == "r3_c44");
-
-            Assert.AreEqual("button.icon.heightFrame", first.StateGroupId);
-            Assert.AreEqual(first.StateGroupId, second.StateGroupId);
-            Assert.AreEqual(first.StateGroupId, third.StateGroupId);
-            Assert.AreEqual("frame0", first.StateRole);
-            Assert.AreEqual("frame1", second.StateRole);
-            Assert.AreEqual("frame2", third.StateRole);
-            Assert.AreEqual("confirmed", first.Confidence);
-            Assert.AreEqual("confirmed", second.Confidence);
-            Assert.AreEqual("confirmed", third.Confidence);
+            AssertButtonState(entries, "r3_c40", "button.plus.state", "normal");
+            AssertButtonState(entries, "r3_c41", "button.plus.state", "hover");
+            AssertButtonState(entries, "r3_c42", "button.plus.state", "pressed");
+            AssertButtonState(entries, "r3_c43", "button.minus.state", "normal");
+            AssertButtonState(entries, "r3_c44", "button.minus.state", "hover");
+            AssertButtonState(entries, "r3_c45", "button.minus.state", "pressed");
         }
 
         [Test]
         public void IconCatalog_ExposesSemanticEnumAndResolverForKnownControls()
         {
-            Assert.AreEqual("ModernUI_16_Style2_r3_c42", ModernUiStyle2IconCatalog.GetSpriteKey(ModernUiStyle2Icon.ButtonIconHeightFrame0).SubSpriteName);
-            Assert.AreEqual("ModernUI_16_Style2_r3_c43", ModernUiStyle2IconCatalog.GetSpriteKey(ModernUiStyle2Icon.ButtonIconHeightFrame1).SubSpriteName);
-            Assert.AreEqual("ModernUI_16_Style2_r3_c44", ModernUiStyle2IconCatalog.GetSpriteKey(ModernUiStyle2Icon.ButtonIconHeightFrame2).SubSpriteName);
+            Assert.AreEqual("ModernUI_16_Style2_r3_c42", ModernUiStyle2IconCatalog.GetSpriteKey(ModernUiStyle2Icon.ButtonPlusPressed).SubSpriteName);
+            Assert.AreEqual("ModernUI_16_Style2_r3_c43", ModernUiStyle2IconCatalog.GetSpriteKey(ModernUiStyle2Icon.ButtonMinusNormal).SubSpriteName);
+            Assert.AreEqual("ModernUI_16_Style2_r3_c44", ModernUiStyle2IconCatalog.GetSpriteKey(ModernUiStyle2Icon.ButtonMinusHover).SubSpriteName);
             Assert.AreEqual("ModernUI_16_Style2_r1_c13", ModernUiStyle2IconCatalog.GetSpriteKey(ModernUiStyle2Icon.FurnitureChair).SubSpriteName);
             Assert.AreEqual("ModernUI_16_Style2_r1_c14", ModernUiStyle2IconCatalog.GetSpriteKey(ModernUiStyle2Icon.FurnitureBed).SubSpriteName);
 
             IReadOnlyList<ModernUiStyle2IconCatalog.Entry> entries = ModernUiStyle2IconCatalog.Entries;
             Assert.GreaterOrEqual(entries.Count, 20, "C# catalog should expose confirmed semantic entries for UI use.");
-            Assert.IsTrue(entries.Any(entry => entry.Category == "button"));
-            Assert.IsTrue(entries.Any(entry => entry.Category == "cursor"));
+            Assert.IsTrue(entries.Any(entry => entry.Category == "panel"));
+            Assert.IsTrue(entries.Any(entry => entry.Category == "item"));
+            Assert.IsTrue(entries.Any(entry => entry.Category == "glyph"));
+            Assert.IsTrue(entries.Any(entry => entry.Category == "buttonMatrix"));
+            Assert.IsTrue(entries.Any(entry => entry.Category == "status"));
             Assert.IsTrue(entries.Any(entry => entry.Category == "toggle"));
             Assert.IsTrue(entries.Any(entry => entry.Category == "direction"));
+            Assert.IsTrue(entries.Any(entry => entry.Category == "cursor"));
+            Assert.IsTrue(entries.Any(entry => entry.Category == "ribbon"));
+            Assert.IsTrue(entries.Any(entry => entry.Category == "slot"));
+            Assert.IsTrue(entries.Any(entry => entry.Category == "furniture"));
         }
 
         [Test]
@@ -116,19 +116,33 @@ namespace Rootborn.Tests.EditMode.TownConcept
             Assert.AreEqual("ModernUI_16_Style2_r4_c2", ModernUiStyle2Sprites.CommonPanel.BottomRightName);
         }
 
+        private static void AssertButtonState(IReadOnlyList<Entry> entries, string coordinate, string groupId, string role)
+        {
+            Entry entry = entries.Single(item => item.Coordinate == coordinate);
+            Assert.AreEqual(groupId, entry.StateGroupId);
+            Assert.AreEqual(role, entry.StateRole);
+            Assert.AreEqual("confirmed", entry.Confidence);
+        }
+
         private static IReadOnlyList<Entry> ReadEntries(string json)
         {
-            return EntryRegex.Matches(json).Cast<Match>().Select(match => new Entry(
-                int.Parse(match.Groups[1].Value),
-                int.Parse(match.Groups[2].Value),
-                match.Groups[3].Value,
-                match.Groups[4].Value,
-                match.Groups[5].Value,
-                match.Groups[6].Value,
-                match.Groups[7].Value,
-                TrimNullable(match.Groups[8].Value),
-                TrimNullable(match.Groups[9].Value),
-                match.Groups[10].Value)).ToArray();
+            return EntryObjectRegex.Matches(json).Cast<Match>().Select(match => CreateEntry(match.Value)).ToArray();
+        }
+
+        private static Entry CreateEntry(string jsonObject)
+        {
+            Dictionary<string, string> fields = FieldRegex.Matches(jsonObject).Cast<Match>().ToDictionary(match => match.Groups["name"].Value, match => TrimNullable(match.Groups["value"].Value));
+            return new Entry(
+                int.Parse(fields["row"]),
+                int.Parse(fields["column"]),
+                fields["coordinate"],
+                fields["spriteName"],
+                fields["semanticId"],
+                fields["enumName"],
+                fields["category"],
+                fields["stateGroupId"],
+                fields["stateRole"],
+                fields["confidence"]);
         }
 
         private static string TrimNullable(string value)

@@ -8,9 +8,9 @@
   "generator": "Gemini Nano Banana (7 batches) + auto-fill unknowns",
   "policy": "Gemini wins on conflicts; missing cells auto-filled as unknown.",
   "confidenceCounts": {
-    "confirmed": 424,
-    "probable": 5,
-    "unknown": 1237
+    "confirmed": 420,
+    "probable": 3,
+    "unknown": 1243
   },
   "entries": [
     {
@@ -784,7 +784,7 @@
       "row": 1,
       "column": 10,
       "coordinate": "r1_c10",
-      "spriteName": "ModernUI_16_Style2_r1_c10",
+      "spriteName": "ModernUI_16_Style2_r10_c10",
       "semanticId": "unknown.r1.c10",
       "enumName": "UnknownR1C10",
       "category": "unknown",
@@ -824,26 +824,26 @@
       "column": 13,
       "coordinate": "r1_c13",
       "spriteName": "ModernUI_16_Style2_r1_c13",
-      "semanticId": "item.furnitureChair",
-      "enumName": "FurnitureChair",
-      "category": "furniture",
+      "semanticId": "unknown.r1.c13",
+      "enumName": "UnknownR1C13",
+      "category": "unknown",
       "stateGroupId": null,
       "stateRole": null,
-      "confidence": "probable",
-      "note": "Visual audit shows a chair-like furniture icon."
+      "confidence": "unknown",
+      "note": "Empty cell."
     },
     {
       "row": 1,
       "column": 14,
       "coordinate": "r1_c14",
       "spriteName": "ModernUI_16_Style2_r1_c14",
-      "semanticId": "item.furnitureBed",
-      "enumName": "FurnitureBed",
-      "category": "furniture",
+      "semanticId": "unknown.r1.c14",
+      "enumName": "UnknownR1C14",
+      "category": "unknown",
       "stateGroupId": null,
       "stateRole": null,
-      "confidence": "probable",
-      "note": "Visual audit shows a bed-like furniture icon."
+      "confidence": "unknown",
+      "note": "Empty cell."
     },
     {
       "row": 1,
@@ -1292,39 +1292,39 @@
       "column": 0,
       "coordinate": "r2_c0",
       "spriteName": "ModernUI_16_Style2_r2_c0",
-      "semanticId": "panel.common.topLeft",
-      "enumName": "PanelCommonTopLeft",
+      "semanticId": "panel.cornerBottomLeft",
+      "enumName": "PanelCornerBottomLeftR2C0",
       "category": "panel",
       "stateGroupId": null,
       "stateRole": null,
       "confidence": "confirmed",
-      "note": "ROOTBORN CommonPanel top-left tile per repository UI standard."
+      "note": "Dark outline 9-slice bottom-left corner."
     },
     {
       "row": 2,
       "column": 1,
       "coordinate": "r2_c1",
       "spriteName": "ModernUI_16_Style2_r2_c1",
-      "semanticId": "panel.common.top",
-      "enumName": "PanelCommonTop",
+      "semanticId": "panel.edgeBottom",
+      "enumName": "PanelEdgeBottomR2C1",
       "category": "panel",
       "stateGroupId": null,
       "stateRole": null,
       "confidence": "confirmed",
-      "note": "ROOTBORN CommonPanel top edge tile per repository UI standard."
+      "note": "Horizontal bottom edge segment."
     },
     {
       "row": 2,
       "column": 2,
       "coordinate": "r2_c2",
       "spriteName": "ModernUI_16_Style2_r2_c2",
-      "semanticId": "panel.common.topRight",
-      "enumName": "PanelCommonTopRight",
+      "semanticId": "panel.cornerBottomRight",
+      "enumName": "PanelCornerBottomRightR2C2",
       "category": "panel",
       "stateGroupId": null,
       "stateRole": null,
       "confidence": "confirmed",
-      "note": "ROOTBORN CommonPanel top-right tile per repository UI standard."
+      "note": "Dark outline 9-slice bottom-right corner."
     },
     {
       "row": 2,
@@ -1929,39 +1929,39 @@
       "column": 0,
       "coordinate": "r3_c0",
       "spriteName": "ModernUI_16_Style2_r3_c0",
-      "semanticId": "panel.common.left",
-      "enumName": "PanelCommonLeft",
+      "semanticId": "panel.baseSquare",
+      "enumName": "PanelBaseSquareLargeR3C0",
       "category": "panel",
       "stateGroupId": null,
       "stateRole": null,
       "confidence": "confirmed",
-      "note": "ROOTBORN CommonPanel left edge tile per repository UI standard."
+      "note": "Large base square panel."
     },
     {
       "row": 3,
       "column": 1,
       "coordinate": "r3_c1",
       "spriteName": "ModernUI_16_Style2_r3_c1",
-      "semanticId": "panel.common.fill",
-      "enumName": "PanelCommonFill",
-      "category": "panel",
+      "semanticId": "unknown.r3.c1",
+      "enumName": "UnknownR3C1",
+      "category": "unknown",
       "stateGroupId": null,
       "stateRole": null,
-      "confidence": "confirmed",
-      "note": "ROOTBORN CommonPanel repeated fill tile per repository UI standard."
+      "confidence": "unknown",
+      "note": "Empty cell."
     },
     {
       "row": 3,
       "column": 2,
       "coordinate": "r3_c2",
       "spriteName": "ModernUI_16_Style2_r3_c2",
-      "semanticId": "panel.common.right",
-      "enumName": "PanelCommonRight",
-      "category": "panel",
+      "semanticId": "unknown.r3.c2",
+      "enumName": "UnknownR3C2",
+      "category": "unknown",
       "stateGroupId": null,
       "stateRole": null,
-      "confidence": "confirmed",
-      "note": "ROOTBORN CommonPanel right edge tile per repository UI standard."
+      "confidence": "unknown",
+      "note": "Empty cell."
     },
     {
       "row": 3,
@@ -2449,78 +2449,78 @@
       "column": 40,
       "coordinate": "r3_c40",
       "spriteName": "ModernUI_16_Style2_r3_c40",
-      "semanticId": "button.plus.normal",
-      "enumName": "ButtonPlusNormal",
+      "semanticId": "button.chevronUp",
+      "enumName": "ButtonChevronUpNormalR3C40",
       "category": "button",
-      "stateGroupId": "button.plus.state",
+      "stateGroupId": "button.chevronUp.state.r3",
       "stateRole": "normal",
       "confidence": "confirmed",
-      "note": "Brightest plus button state."
+      "note": "Brightest up chevron button."
     },
     {
       "row": 3,
       "column": 41,
       "coordinate": "r3_c41",
       "spriteName": "ModernUI_16_Style2_r3_c41",
-      "semanticId": "button.plus.hover",
-      "enumName": "ButtonPlusHover",
+      "semanticId": "button.chevronUp",
+      "enumName": "ButtonChevronUpHoverR3C41",
       "category": "button",
-      "stateGroupId": "button.plus.state",
+      "stateGroupId": "button.chevronUp.state.r3",
       "stateRole": "hover",
       "confidence": "confirmed",
-      "note": "Intermediate plus button state."
+      "note": "Intermediate brightness up chevron button."
     },
     {
       "row": 3,
       "column": 42,
       "coordinate": "r3_c42",
       "spriteName": "ModernUI_16_Style2_r3_c42",
-      "semanticId": "button.plus.pressed",
-      "enumName": "ButtonPlusPressed",
+      "semanticId": "button.chevronUp",
+      "enumName": "ButtonChevronUpPressedR3C42",
       "category": "button",
-      "stateGroupId": "button.plus.state",
+      "stateGroupId": "button.chevronUp.state.r3",
       "stateRole": "pressed",
       "confidence": "confirmed",
-      "note": "Darkest plus button state."
+      "note": "Darkest, pressed up chevron button."
     },
     {
       "row": 3,
       "column": 43,
       "coordinate": "r3_c43",
       "spriteName": "ModernUI_16_Style2_r3_c43",
-      "semanticId": "button.minus.normal",
-      "enumName": "ButtonMinusNormal",
+      "semanticId": "button.chevronDown",
+      "enumName": "ButtonChevronDownNormalR3C43",
       "category": "button",
-      "stateGroupId": "button.minus.state",
+      "stateGroupId": "button.chevronDown.state.r3",
       "stateRole": "normal",
       "confidence": "confirmed",
-      "note": "Brightest minus button state."
+      "note": "Brightest down chevron button."
     },
     {
       "row": 3,
       "column": 44,
       "coordinate": "r3_c44",
       "spriteName": "ModernUI_16_Style2_r3_c44",
-      "semanticId": "button.minus.hover",
-      "enumName": "ButtonMinusHover",
+      "semanticId": "button.chevronDown",
+      "enumName": "ButtonChevronDownHoverR3C44",
       "category": "button",
-      "stateGroupId": "button.minus.state",
+      "stateGroupId": "button.chevronDown.state.r3",
       "stateRole": "hover",
       "confidence": "confirmed",
-      "note": "Intermediate minus button state."
+      "note": "Intermediate brightness down chevron button."
     },
     {
       "row": 3,
       "column": 45,
       "coordinate": "r3_c45",
       "spriteName": "ModernUI_16_Style2_r3_c45",
-      "semanticId": "button.minus.pressed",
-      "enumName": "ButtonMinusPressed",
+      "semanticId": "button.chevronDown",
+      "enumName": "ButtonChevronDownPressedR3C45",
       "category": "button",
-      "stateGroupId": "button.minus.state",
+      "stateGroupId": "button.chevronDown.state.r3",
       "stateRole": "pressed",
       "confidence": "confirmed",
-      "note": "Darkest minus button state."
+      "note": "Darkest, pressed down chevron button."
     },
     {
       "row": 3,
@@ -2566,39 +2566,39 @@
       "column": 0,
       "coordinate": "r4_c0",
       "spriteName": "ModernUI_16_Style2_r4_c0",
-      "semanticId": "panel.common.bottomLeft",
-      "enumName": "PanelCommonBottomLeft",
+      "semanticId": "panel.baseRectangleHorizontal",
+      "enumName": "PanelBaseRectHorizR4C0",
       "category": "panel",
       "stateGroupId": null,
       "stateRole": null,
       "confidence": "confirmed",
-      "note": "ROOTBORN CommonPanel bottom-left tile per repository UI standard."
+      "note": "Horizontal rectangular panel base."
     },
     {
       "row": 4,
       "column": 1,
       "coordinate": "r4_c1",
       "spriteName": "ModernUI_16_Style2_r4_c1",
-      "semanticId": "panel.common.bottom",
-      "enumName": "PanelCommonBottom",
-      "category": "panel",
+      "semanticId": "unknown.r4.c1",
+      "enumName": "UnknownR4C1",
+      "category": "unknown",
       "stateGroupId": null,
       "stateRole": null,
-      "confidence": "confirmed",
-      "note": "ROOTBORN CommonPanel bottom edge tile per repository UI standard."
+      "confidence": "unknown",
+      "note": "Auto-filled empty cell (not emitted by Gemini)."
     },
     {
       "row": 4,
       "column": 2,
       "coordinate": "r4_c2",
       "spriteName": "ModernUI_16_Style2_r4_c2",
-      "semanticId": "panel.common.bottomRight",
-      "enumName": "PanelCommonBottomRight",
-      "category": "panel",
+      "semanticId": "unknown.r4.c2",
+      "enumName": "UnknownR4C2",
+      "category": "unknown",
       "stateGroupId": null,
       "stateRole": null,
-      "confidence": "confirmed",
-      "note": "ROOTBORN CommonPanel bottom-right tile per repository UI standard."
+      "confidence": "unknown",
+      "note": "Auto-filled empty cell (not emitted by Gemini)."
     },
     {
       "row": 4,
