@@ -1,3 +1,4 @@
+using Rootborn.UI.Objectives;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -9,21 +10,29 @@ namespace Rootborn.UI.Modern
         [SerializeField] private ModernUiInventoryPanel _inventoryPanel;
         [SerializeField] private ModernUiStatusPanel _statusPanel;
         [SerializeField] private SettingsPanel _settingsPanel;
+        [SerializeField] private ObjectiveJournalPanel _objectiveJournalPanel;
 
         private bool _wasInventoryKeyPressed;
         private bool _wasStatusKeyPressed;
         private bool _wasSettingsKeyPressed;
+        private bool _wasObjectiveJournalKeyPressed;
 
         public void Bind(ModernUiInventoryPanel inventoryPanel, ModernUiStatusPanel statusPanel)
         {
-            Bind(inventoryPanel, statusPanel, null);
+            Bind(inventoryPanel, statusPanel, null, null);
         }
 
         public void Bind(ModernUiInventoryPanel inventoryPanel, ModernUiStatusPanel statusPanel, SettingsPanel settingsPanel)
         {
+            Bind(inventoryPanel, statusPanel, settingsPanel, null);
+        }
+
+        public void Bind(ModernUiInventoryPanel inventoryPanel, ModernUiStatusPanel statusPanel, SettingsPanel settingsPanel, ObjectiveJournalPanel objectiveJournalPanel)
+        {
             _inventoryPanel = inventoryPanel;
             _statusPanel = statusPanel;
             _settingsPanel = settingsPanel;
+            _objectiveJournalPanel = objectiveJournalPanel;
         }
 
         private void OnEnable()
@@ -31,6 +40,7 @@ namespace Rootborn.UI.Modern
             _wasInventoryKeyPressed = false;
             _wasStatusKeyPressed = false;
             _wasSettingsKeyPressed = false;
+            _wasObjectiveJournalKeyPressed = false;
         }
 
         private void Update()
@@ -38,6 +48,7 @@ namespace Rootborn.UI.Modern
             bool inventoryPressed = IsAnyKeyboardPressed(KeyboardKey.Inventory);
             bool statusPressed = IsAnyKeyboardPressed(KeyboardKey.Status);
             bool settingsPressed = IsAnyKeyboardPressed(KeyboardKey.Settings);
+            bool objectiveJournalPressed = IsAnyKeyboardPressed(KeyboardKey.ObjectiveJournal);
 
             if (inventoryPressed && !_wasInventoryKeyPressed)
             {
@@ -51,10 +62,15 @@ namespace Rootborn.UI.Modern
             {
                 ToggleSettingsPanel();
             }
+            if (objectiveJournalPressed && !_wasObjectiveJournalKeyPressed)
+            {
+                ToggleObjectiveJournalPanel();
+            }
 
             _wasInventoryKeyPressed = inventoryPressed;
             _wasStatusKeyPressed = statusPressed;
             _wasSettingsKeyPressed = settingsPressed;
+            _wasObjectiveJournalKeyPressed = objectiveJournalPressed;
         }
 
         public void ToggleInventoryPanel()
@@ -65,14 +81,7 @@ namespace Rootborn.UI.Modern
             }
 
             bool willShow = !_inventoryPanel.IsVisible;
-            if (_statusPanel != null && _statusPanel.IsVisible)
-            {
-                _statusPanel.Hide();
-            }
-            if (_settingsPanel != null && _settingsPanel.IsVisible)
-            {
-                _settingsPanel.Hide();
-            }
+            HideOtherFullPanels(_inventoryPanel);
 
             if (willShow)
             {
@@ -92,14 +101,7 @@ namespace Rootborn.UI.Modern
             }
 
             bool willShow = !_statusPanel.IsVisible;
-            if (_inventoryPanel != null && _inventoryPanel.IsVisible)
-            {
-                _inventoryPanel.Hide();
-            }
-            if (_settingsPanel != null && _settingsPanel.IsVisible)
-            {
-                _settingsPanel.Hide();
-            }
+            HideOtherFullPanels(_statusPanel);
 
             if (willShow)
             {
@@ -119,14 +121,7 @@ namespace Rootborn.UI.Modern
             }
 
             bool willShow = !_settingsPanel.IsVisible;
-            if (_inventoryPanel != null && _inventoryPanel.IsVisible)
-            {
-                _inventoryPanel.Hide();
-            }
-            if (_statusPanel != null && _statusPanel.IsVisible)
-            {
-                _statusPanel.Hide();
-            }
+            HideOtherFullPanels(_settingsPanel);
 
             if (willShow)
             {
@@ -135,6 +130,46 @@ namespace Rootborn.UI.Modern
             else
             {
                 _settingsPanel.Hide();
+            }
+        }
+
+        public void ToggleObjectiveJournalPanel()
+        {
+            if (_objectiveJournalPanel == null)
+            {
+                return;
+            }
+
+            bool willShow = !_objectiveJournalPanel.IsVisible;
+            HideOtherFullPanels(_objectiveJournalPanel);
+
+            if (willShow)
+            {
+                _objectiveJournalPanel.Show();
+            }
+            else
+            {
+                _objectiveJournalPanel.Hide();
+            }
+        }
+
+        private void HideOtherFullPanels(Component except)
+        {
+            if (_inventoryPanel != null && _inventoryPanel != except && _inventoryPanel.IsVisible)
+            {
+                _inventoryPanel.Hide();
+            }
+            if (_statusPanel != null && _statusPanel != except && _statusPanel.IsVisible)
+            {
+                _statusPanel.Hide();
+            }
+            if (_settingsPanel != null && _settingsPanel != except && _settingsPanel.IsVisible)
+            {
+                _settingsPanel.Hide();
+            }
+            if (_objectiveJournalPanel != null && _objectiveJournalPanel != except && _objectiveJournalPanel.IsVisible)
+            {
+                _objectiveJournalPanel.Hide();
             }
         }
 
@@ -153,11 +188,15 @@ namespace Rootborn.UI.Modern
                 {
                     return true;
                 }
-                if (key == KeyboardKey.Status && keyboard.tabKey.isPressed)
+                if (key == KeyboardKey.Status && keyboard.cKey.isPressed)
                 {
                     return true;
                 }
                 if (key == KeyboardKey.Settings && keyboard.escapeKey.isPressed)
+                {
+                    return true;
+                }
+                if (key == KeyboardKey.ObjectiveJournal && keyboard.tabKey.isPressed)
                 {
                     return true;
                 }
@@ -170,7 +209,8 @@ namespace Rootborn.UI.Modern
         {
             Inventory,
             Status,
-            Settings
+            Settings,
+            ObjectiveJournal
         }
     }
 }

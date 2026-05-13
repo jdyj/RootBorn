@@ -1,5 +1,6 @@
 using System.Collections;
 using Rootborn.Game.Player;
+using Rootborn.UI.Objectives;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -14,6 +15,8 @@ namespace Rootborn.UI.Modern
         private const string InventoryPanelName = "ModernInventoryPanel";
         private const string StatusPanelName = "ModernStatusPanel";
         private const string SettingsPanelName = "ModernSettingsPanel";
+        private const string ObjectiveJournalPanelName = "ObjectiveJournalPanel";
+        private const string TrackedObjectiveHudName = "TrackedObjectiveHud";
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Register()
@@ -37,6 +40,10 @@ namespace Rootborn.UI.Modern
             var inventoryPanel = EnsurePanelHost<ModernUiInventoryPanel>(canvas.transform, InventoryPanelName);
             var statusPanel = EnsurePanelHost<ModernUiStatusPanel>(canvas.transform, StatusPanelName);
             var settingsPanel = EnsurePanelHost<SettingsPanel>(canvas.transform, SettingsPanelName);
+            var objectiveJournalPanel = EnsurePanelHost<ObjectiveJournalPanel>(canvas.transform, ObjectiveJournalPanelName);
+            var trackedObjectiveHud = EnsurePanelHost<TrackedObjectiveHud>(canvas.transform, TrackedObjectiveHudName);
+            PositionTrackedObjectiveHud(trackedObjectiveHud.transform as RectTransform);
+            objectiveJournalPanel.BindTrackedHud(trackedObjectiveHud);
 
             var router = host.GetComponent<ModernUiPanelInputRouter>();
             if (router == null)
@@ -50,9 +57,12 @@ namespace Rootborn.UI.Modern
             }
 
             router.Bind(inventoryPanel, statusPanel, settingsPanel);
+            router.Bind(inventoryPanel, statusPanel, settingsPanel, objectiveJournalPanel);
             inventoryPanel.Hide();
             statusPanel.Hide();
             settingsPanel.Hide();
+            objectiveJournalPanel.Hide();
+            trackedObjectiveHud.Hide();
             host.SetActive(true);
         }
 
@@ -75,11 +85,29 @@ namespace Rootborn.UI.Modern
             rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.anchoredPosition = Vector2.zero;
-            rect.sizeDelta = typeof(T) == typeof(ModernUiInventoryPanel)
-                ? new Vector2(520f, 420f)
-                : typeof(T) == typeof(SettingsPanel)
-                    ? new Vector2(660f, 510f)
-                    : new Vector2(440f, 320f);
+            // Inventory panel sizes itself from its own DefaultSize constant (see
+            // ModernUiInventoryPanel.EnsureBuilt). Leaving sizeDelta at zero lets it
+            // pick up its own size; other panels keep the AutoInstaller defaults.
+            if (typeof(T) == typeof(ModernUiInventoryPanel))
+            {
+                rect.sizeDelta = Vector2.zero;
+            }
+            else if (typeof(T) == typeof(SettingsPanel))
+            {
+                rect.sizeDelta = new Vector2(660f, 510f);
+            }
+            else if (typeof(T) == typeof(ObjectiveJournalPanel))
+            {
+                rect.sizeDelta = new Vector2(1180f, 720f);
+            }
+            else if (typeof(T) == typeof(TrackedObjectiveHud))
+            {
+                rect.sizeDelta = new Vector2(360f, 96f);
+            }
+            else
+            {
+                rect.sizeDelta = new Vector2(440f, 320f);
+            }
             rect.SetAsLastSibling();
 
             var panel = panelGo.GetComponent<T>();
@@ -89,6 +117,19 @@ namespace Rootborn.UI.Modern
             }
 
             return panel;
+        }
+
+        private static void PositionTrackedObjectiveHud(RectTransform rect)
+        {
+            if (rect == null)
+            {
+                return;
+            }
+
+            rect.anchorMin = new Vector2(1f, 1f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.pivot = new Vector2(1f, 1f);
+            rect.anchoredPosition = new Vector2(-24f, -24f);
         }
 
         private static void HandleSceneLoaded(Scene scene, LoadSceneMode mode)

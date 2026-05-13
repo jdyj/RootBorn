@@ -24,10 +24,13 @@
 
 10. **성능·최적화 동시 설계 원칙.** 신규 시스템은 기능 구현 후 뒤늦게 최적화하지 않고, 기획·데이터 구조·UI 목업·테스트 단계부터 성능 예산과 확장 비용을 함께 고려한다. 대량 도감/퀘스트/인벤토리/마일스톤 UI는 가상화·페이징·캐싱·지연 로딩·dirty 갱신을 우선 검토하고, `Update()` 폴링, 반복 전체 스캔, 런타임 문자열 조립/할당 폭증, 불필요한 Instantiate/Destroy 루프를 금지한다. 완료 보고에는 관련 성능 리스크와 검증 범위를 포함한다. (`.claude/rules/game-design.md`, `.claude/rules/coding-standards.md`)
 
+11. **Objective Journal 목표성 UI 소유권.** 목표·퀘스트·캠페인·진로 힌트처럼 "플레이어가 지금 무엇을 하면 되는가"를 설명하는 UI는 `Tab`으로 여는 `ObjectiveJournalPanel`이 소유한다. 상시 HUD는 `TrackedObjectiveHud` 하나만 사용하고 추적 중인 목표 1개만 표시한다. 신규 goal/quest/campaign/hint UI가 각자 Canvas·좌표·크기를 직접 들고 상시 패널을 만드는 것은 금지한다. (`.claude/rules/objective-journal-ui.md`)
+
 ## Rules Reference (`.claude/rules/`)
 
 - `coding-standards.md` — Unity C# 표준 (sealed, [SerializeField] private, Update 내 GetComponent 금지)
 - `ui-standards.md` — PC 1920×1080 기본, Borderless Fullscreen, Canvas Scaler 1920×1080 기준
+- `objective-journal-ui.md` — Tab 목표 저널, 추적 목표 HUD, 목표성 UI 소유권 규약
 - `testing-discipline.md` — Tier 1~4 테스트, 시나리오 카탈로그 (TOWN/LIFE/CAREER/REL/JOB/KNOW/STATUS/NET, 레거시 GEN/HEIR/CROP)
 - `path-based/assets-gameplay.md`, `assets-data.md`, `assets-ui.md`, `assets-addressables.md`
 - `unity-cli.md` — batchmode 빌드/테스트
