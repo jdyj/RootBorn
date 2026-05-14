@@ -1,3 +1,5 @@
+using Rootborn.Game.Characters;
+using Rootborn.Game.Characters.Spum;
 using Rootborn.Game.Common;
 using Rootborn.Game.Family;
 using Rootborn.Game.Player;
@@ -19,6 +21,7 @@ namespace Rootborn.UI.MainMenu
         private readonly CharacterCustomization _selectedCharacter = new CharacterCustomization();
         private readonly CharacterAppearance _selectedAppearance = new CharacterAppearance();
         private GameObject _root;
+        private SpumCharacterCreatorPanel _spumCreatorPanel;
 
         public static void SetSaveRootForTests(string rootDirectory)
         {
@@ -87,6 +90,7 @@ namespace Rootborn.UI.MainMenu
                 Destroy(_root);
             }
 
+            _spumCreatorPanel = null;
             _root = new GameObject("SaveSlotSelectRoot", typeof(RectTransform), typeof(Image));
             _root.transform.SetParent(canvas.transform, false);
             var rootRt = (RectTransform)_root.transform;
@@ -146,15 +150,35 @@ namespace Rootborn.UI.MainMenu
             }
             else
             {
-                MakeButton(card.transform, "NewGameButton", "New Game", new Vector2(0f, 60f), new Vector2(220f, 62f), () => CreateSlot(service, summary.SlotId));
+                MakeButton(card.transform, "NewGameButton", "New Game", new Vector2(0f, 60f), new Vector2(220f, 62f), () => OpenSpumCreator(service, summary.SlotId));
             }
         }
 
-        private void CreateSlot(SaveService service, string slotId)
+        private void OpenSpumCreator(SaveService service, string slotId)
+        {
+            if (_spumCreatorPanel != null)
+            {
+                Destroy(_spumCreatorPanel.gameObject);
+            }
+
+            var go = new GameObject("SpumCharacterCreatorPanel", typeof(RectTransform));
+            go.transform.SetParent(_root.transform, false);
+            var rect = (RectTransform)go.transform;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+
+            _spumCreatorPanel = go.AddComponent<SpumCharacterCreatorPanel>();
+            _spumCreatorPanel.Build(CreateDefaultSpumCatalog(), snapshot => ConfirmSpumCreator(service, slotId, snapshot), () => Destroy(go));
+        }
+
+        private void ConfirmSpumCreator(SaveService service, string slotId, CharacterAppearanceSnapshot snapshot)
         {
             int worldSeed = unchecked(System.Environment.TickCount * 397) ^ slotId.GetHashCode();
             int tileSeed = unchecked(System.Environment.TickCount * 491) ^ (slotId.GetHashCode() << 1);
             var metadata = CreateMetadataForSelectedCharacter(slotId, worldSeed, tileSeed);
+            metadata.CharacterAppearanceSnapshot = snapshot;
             service.SaveMetadata(metadata);
             LoadSlot(metadata);
         }
@@ -228,6 +252,30 @@ namespace Rootborn.UI.MainMenu
             return string.IsNullOrEmpty(s_saveRootOverride)
                 ? new SaveService(slotId)
                 : new SaveService(slotId, s_saveRootOverride);
+        }
+
+        private static SpumPartCatalogDefinition CreateDefaultSpumCatalog()
+        {
+            var catalog = ScriptableObject.CreateInstance<SpumPartCatalogDefinition>();
+            catalog.ConfigureForTests("spum.catalog.newgame.generated", new[]
+            {
+                CreateSpumPart("spum.body.default", "body", true),
+                CreateSpumPart("spum.skin.default", "skin", true),
+                CreateSpumPart("spum.eye.default", "eye", true),
+                CreateSpumPart("spum.hair.short", "hair", true),
+                CreateSpumPart("spum.hair.long", "hair", false),
+                CreateSpumPart("spum.outfit.default", "outfit", true),
+                CreateSpumPart("spum.accessory.none", "accessory", true),
+                CreateSpumPart("spum.weapon.none", "weapon", true),
+            });
+            return catalog;
+        }
+
+        private static SpumPartDefinition CreateSpumPart(string stableId, string categoryId, bool isDefault)
+        {
+            var part = ScriptableObject.CreateInstance<SpumPartDefinition>();
+            part.ConfigureForTests(stableId, categoryId, isDefault);
+            return part;
         }
 
         private static string FormatCharacterPreview(SaveSlotMetadata metadata)

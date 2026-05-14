@@ -91,6 +91,8 @@ namespace Rootborn.Tests.PlayMode
             ClickButtonNamed("OutfitNextButton");
             ClickButtonNamed("AccessoryNextButton");
             ClickButtonNamed("NewGameButton");
+            yield return null;
+            ClickButtonNamed("ConfirmButton");
             yield return WaitForScene("Town", 10f);
 
             var service = new SaveService("slot-0", _saveRoot);

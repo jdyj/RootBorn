@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Game.Characters;
 using Rootborn.Game.Characters.Spum;
 using Rootborn.UI.Modern;
 using UnityEngine;
@@ -20,21 +21,33 @@ namespace Rootborn.UI.MainMenu
             new CategoryGroup("Accessory", "Tab_AccessoryBackHelmet", new[] { "accessory", "back", "helmet" }),
         };
 
+        private readonly Dictionary<string, string> _selectedPartIds = new Dictionary<string, string>();
         private SpumPartCatalogDefinition _catalog;
         private Transform _partGrid;
         private GameObject _nextPageButton;
         private GameObject _previousPageButton;
         private string[] _selectedCategoryIds = Array.Empty<string>();
         private int _currentPageIndex;
+        private Action<CharacterAppearanceSnapshot> _confirm;
+        private Action _cancel;
 
         public ModernUiTileRecipe RootPanelRecipe => ModernUiRecipes.CommonPanel;
         public int CurrentPageIndex => _currentPageIndex;
 
         public void Build(SpumPartCatalogDefinition catalog)
         {
+            Build(catalog, null, null);
+        }
+
+        public void Build(SpumPartCatalogDefinition catalog, Action<CharacterAppearanceSnapshot> onConfirm, Action onCancel)
+        {
             _catalog = catalog;
+            _confirm = onConfirm;
+            _cancel = onCancel;
             _currentPageIndex = 0;
+            _selectedPartIds.Clear();
             ClearGeneratedChildren(transform);
+            EnsureDefaultSelections();
 
             GameObject root = CreatePanel(transform, "SpumCharacterCreatorRoot", new Vector2(1280f, 760f));
             CreateCategoryTabs(root.transform);
@@ -69,6 +82,38 @@ namespace Rootborn.UI.MainMenu
             RebuildPartGrid();
         }
 
+        public void RandomizeSelection()
+        {
+            if (_catalog == null || _catalog.Parts == null)
+                return;
+
+            for (int i = 0; i < _catalog.Parts.Length; i++)
+            {
+                SpumPartDefinition part = _catalog.Parts[i];
+                if (part != null && !string.IsNullOrWhiteSpace(part.CategoryId))
+                {
+                    _selectedPartIds[part.CategoryId] = part.StableId;
+                }
+            }
+
+            RebuildPartGrid();
+        }
+
+        public CharacterAppearanceSnapshot CreateSnapshot()
+        {
+            var selections = new List<CharacterAppearancePartSelection>();
+            foreach (KeyValuePair<string, string> selected in _selectedPartIds)
+            {
+                if (!string.IsNullOrWhiteSpace(selected.Key) && !string.IsNullOrWhiteSpace(selected.Value))
+                {
+                    selections.Add(new CharacterAppearancePartSelection(selected.Key, selected.Value));
+                }
+            }
+
+            string catalogId = _catalog != null ? _catalog.Id : string.Empty;
+            return new CharacterAppearanceSnapshot(1, "spum", "appearance.spum.generated", catalogId, selections.ToArray());
+        }
+
         private void CreateCategoryTabs(Transform root)
         {
             Transform tabs = CreateContainer(root, "CategoryTabs", new Vector2(240f, 560f), new Vector2(-480f, -20f)).transform;
@@ -78,7 +123,9 @@ namespace Rootborn.UI.MainMenu
                 if (!CatalogContainsAny(group.CategoryIds))
                     continue;
 
+                string firstCategoryId = group.CategoryIds[0];
                 GameObject tab = CreateButton(tabs, group.ObjectName, group.Label, new Vector2(220f, 56f));
+                tab.GetComponent<Button>().onClick.AddListener(() => SelectCategory(firstCategoryId));
                 var rect = (RectTransform)tab.transform;
                 rect.anchoredPosition = new Vector2(0f, -i * 66f);
             }
@@ -95,11 +142,26 @@ namespace Rootborn.UI.MainMenu
 
         private void CreatePageControls(Transform root)
         {
-            Transform controls = CreateContainer(root, "PageControls", new Vector2(360f, 64f), new Vector2(180f, -338f)).transform;
-            _previousPageButton = CreateButton(controls, "PreviousPageButton", "<", new Vector2(96f, 48f));
-            ((RectTransform)_previousPageButton.transform).anchoredPosition = new Vector2(-70f, 0f);
-            _nextPageButton = CreateButton(controls, "NextPageButton", ">", new Vector2(96f, 48f));
-            ((RectTransform)_nextPageButton.transform).anchoredPosition = new Vector2(70f, 0f);
+            Transform controls = CreateContainer(root, "PageControls", new Vector2(520f, 64f), new Vector2(180f, -338f)).transform;
+            _previousPageButton = CreateButton(controls, "PreviousPageButton", "<", new Vector2(72f, 48f));
+            _previousPageButton.GetComponent<Button>().onClick.AddListener(PreviousPage);
+            ((RectTransform)_previousPageButton.transform).anchoredPosition = new Vector2(-210f, 0f);
+
+            _nextPageButton = CreateButton(controls, "NextPageButton", ">", new Vector2(72f, 48f));
+            _nextPageButton.GetComponent<Button>().onClick.AddListener(NextPage);
+            ((RectTransform)_nextPageButton.transform).anchoredPosition = new Vector2(-126f, 0f);
+
+            GameObject random = CreateButton(controls, "RandomButton", "Random", new Vector2(120f, 48f));
+            random.GetComponent<Button>().onClick.AddListener(RandomizeSelection);
+            ((RectTransform)random.transform).anchoredPosition = new Vector2(0f, 0f);
+
+            GameObject confirm = CreateButton(controls, "ConfirmButton", "Confirm", new Vector2(132f, 48f));
+            confirm.GetComponent<Button>().onClick.AddListener(() => _confirm?.Invoke(CreateSnapshot()));
+            ((RectTransform)confirm.transform).anchoredPosition = new Vector2(142f, 0f);
+
+            GameObject cancel = CreateButton(controls, "CancelButton", "Cancel", new Vector2(112f, 48f));
+            cancel.GetComponent<Button>().onClick.AddListener(() => _cancel?.Invoke());
+            ((RectTransform)cancel.transform).anchoredPosition = new Vector2(274f, 0f);
         }
 
         private void RebuildPartGrid()
@@ -116,6 +178,8 @@ namespace Rootborn.UI.MainMenu
                 SpumPartDefinition part = parts[start + i];
                 string cellName = "PartCell_" + SanitizeName(part != null ? part.StableId : "empty");
                 GameObject cell = CreateButton(_partGrid, cellName, ShortPartLabel(part), new Vector2(180f, 74f));
+                SpumPartDefinition selectedPart = part;
+                cell.GetComponent<Button>().onClick.AddListener(() => SelectPart(selectedPart));
                 var rect = (RectTransform)cell.transform;
                 int column = i % 4;
                 int row = i / 4;
@@ -127,6 +191,29 @@ namespace Rootborn.UI.MainMenu
                 _previousPageButton.SetActive(_currentPageIndex > 0);
             if (_nextPageButton != null)
                 _nextPageButton.SetActive(_currentPageIndex < maxPage);
+        }
+
+        private void SelectPart(SpumPartDefinition part)
+        {
+            if (part == null || string.IsNullOrWhiteSpace(part.CategoryId))
+                return;
+
+            _selectedPartIds[part.CategoryId] = part.StableId;
+        }
+
+        private void EnsureDefaultSelections()
+        {
+            if (_catalog == null || _catalog.Parts == null)
+                return;
+
+            for (int i = 0; i < _catalog.Parts.Length; i++)
+            {
+                SpumPartDefinition part = _catalog.Parts[i];
+                if (part == null || string.IsNullOrWhiteSpace(part.CategoryId) || _selectedPartIds.ContainsKey(part.CategoryId))
+                    continue;
+
+                _selectedPartIds.Add(part.CategoryId, part.StableId);
+            }
         }
 
         private CategoryGroup? FindFirstAvailableGroup()
