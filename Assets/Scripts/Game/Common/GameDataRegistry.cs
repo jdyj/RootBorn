@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Game.Characters;
+using Rootborn.Game.Characters.Spum;
 using Rootborn.Game.Crops;
 using Rootborn.Game.Dialogue;
 using Rootborn.Game.Encyclopedia;
@@ -240,6 +242,7 @@ namespace Rootborn.Game.Common
     {
         [SerializeField] private CropDefinition[] _crops = Array.Empty<CropDefinition>();
         [SerializeField] private ToolDefinition[] _tools = Array.Empty<ToolDefinition>();
+        [SerializeField] private ToolVisualMappingDefinition[] _toolVisualMappings = Array.Empty<ToolVisualMappingDefinition>();
         [SerializeField] private ResourceNodeDefinition[] _resources = Array.Empty<ResourceNodeDefinition>();
         [SerializeField] private KnowledgeNode[] _knowledge = Array.Empty<KnowledgeNode>();
         [SerializeField] private HeirTrait[] _traits = Array.Empty<HeirTrait>();
@@ -259,6 +262,9 @@ namespace Rootborn.Game.Common
         [SerializeField] private CharacterPartDefinition[] _characterParts = Array.Empty<CharacterPartDefinition>();
         [SerializeField] private CharacterPartAnimationClipDefinition[] _characterPartAnimationClips = Array.Empty<CharacterPartAnimationClipDefinition>();
         [SerializeField] private FishingAnimationDefinition[] _fishingAnimations = Array.Empty<FishingAnimationDefinition>();
+        [SerializeField] private CharacterAppearanceDefinition[] _characterAppearances = Array.Empty<CharacterAppearanceDefinition>();
+        [SerializeField] private SpumPartCatalogDefinition[] _spumPartCatalogs = Array.Empty<SpumPartCatalogDefinition>();
+        [SerializeField] private SpumCharacterCreatorPresetDefinition[] _spumCharacterCreatorPresets = Array.Empty<SpumCharacterCreatorPresetDefinition>();
         [SerializeField] private LifeActivityDefinition[] _lifeActivities = Array.Empty<LifeActivityDefinition>();
         [SerializeField] private LifeChoiceDefinition[] _studentLifeChoices = Array.Empty<LifeChoiceDefinition>();
         [SerializeField] private TraitDefinition[] _studentLifeTraits = Array.Empty<TraitDefinition>();
@@ -290,6 +296,7 @@ namespace Rootborn.Game.Common
 
         public CropDefinition[] Crops => _crops;
         public ToolDefinition[] Tools => _tools;
+        public ToolVisualMappingDefinition[] ToolVisualMappings => _toolVisualMappings;
         public ResourceNodeDefinition[] Resources => _resources;
         public KnowledgeNode[] Knowledge => _knowledge;
         public HeirTrait[] Traits => _traits;
@@ -309,6 +316,9 @@ namespace Rootborn.Game.Common
         public CharacterPartDefinition[] CharacterParts => _characterParts;
         public CharacterPartAnimationClipDefinition[] CharacterPartAnimationClips => _characterPartAnimationClips;
         public FishingAnimationDefinition[] FishingAnimations => _fishingAnimations;
+        public CharacterAppearanceDefinition[] CharacterAppearances => _characterAppearances;
+        public SpumPartCatalogDefinition[] SpumPartCatalogs => _spumPartCatalogs;
+        public SpumCharacterCreatorPresetDefinition[] SpumCharacterCreatorPresets => _spumCharacterCreatorPresets;
         public LifeActivityDefinition[] LifeActivities => _lifeActivities;
         public LifeChoiceDefinition[] StudentLifeChoices => _studentLifeChoices;
         public TraitDefinition[] StudentLifeTraits => _studentLifeTraits;

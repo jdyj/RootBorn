@@ -1,4 +1,5 @@
 using System;
+using Rootborn.Game.Characters;
 using Rootborn.Game.Family;
 using Rootborn.Game.Player;
 
@@ -15,6 +16,7 @@ namespace Rootborn.Game.Save
         public int TileSeed;
         public CharacterCustomization Character = new CharacterCustomization();
         public CharacterAppearance Appearance = new CharacterAppearance();
+        public CharacterAppearanceSnapshot CharacterAppearanceSnapshot;
     }
 
     public sealed class SaveSlotSummary
