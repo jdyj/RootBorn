@@ -113,6 +113,8 @@ namespace Rootborn.Editor.Tools
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+            ApplyGeneratedAssetDataAfterRefresh(request, prefabAddress, partPath, catalogPath, appearancePath);
+            AssetDatabase.SaveAssets();
 
             return new SpumAddressablesMigrationResult(CharacterVisualsGroupName, partPath, catalogPath, appearancePath);
         }
@@ -201,13 +203,37 @@ namespace Rootborn.Editor.Tools
             return address;
         }
 
+        private static void ApplyGeneratedAssetDataAfterRefresh(SpumAddressablesMigrationRequest request, string prefabAddress, string partPath, string catalogPath, string appearancePath)
+        {
+            SpumPartDefinition part = AssetDatabase.LoadAssetAtPath<SpumPartDefinition>(partPath);
+            if (part == null)
+                throw new InvalidOperationException("SPUM migration failed to reload generated part asset: " + partPath);
+
+            ConfigurePart(part, request, prefabAddress, ResolvePreviewSprite(request.SourcePreviewSpritePaths));
+
+            SpumPartCatalogDefinition catalog = AssetDatabase.LoadAssetAtPath<SpumPartCatalogDefinition>(catalogPath);
+            if (catalog == null)
+                throw new InvalidOperationException("SPUM migration failed to reload generated catalog asset: " + catalogPath);
+
+            ConfigureCatalog(catalog, request.CatalogId, part);
+
+            SpumAppearanceDefinition appearance = AssetDatabase.LoadAssetAtPath<SpumAppearanceDefinition>(appearancePath);
+            if (appearance == null)
+                throw new InvalidOperationException("SPUM migration failed to reload generated appearance asset: " + appearancePath);
+
+            ConfigureAppearance(appearance, request.AppearanceId, catalog);
+        }
+
         private static void ConfigurePart(SpumPartDefinition part, SpumAddressablesMigrationRequest request, string addressableKey, Sprite previewSprite)
         {
             part.name = request.PartId;
             var serializedObject = new SerializedObject(part);
+            serializedObject.FindProperty("_stableId").stringValue = request.PartId;
+            serializedObject.FindProperty("_categoryId").stringValue = request.CategoryId;
             serializedObject.FindProperty("_displayNameKey").stringValue = request.DisplayNameKey;
             serializedObject.FindProperty("_addressableKey").stringValue = addressableKey;
             serializedObject.FindProperty("_previewSprite").objectReferenceValue = previewSprite;
+            serializedObject.FindProperty("_isDefault").boolValue = request.IsDefaultPart;
             serializedObject.ApplyModifiedPropertiesWithoutUndo();
             part.ConfigureForTests(request.PartId, request.CategoryId, request.IsDefaultPart);
             EditorUtility.SetDirty(part);
@@ -271,7 +297,7 @@ namespace Rootborn.Editor.Tools
                 source = source.Replace(invalid, '_');
             }
 
-            return source.Replace('.', '_').Replace('/', '_').Replace('\\', '_');
+            return source.Replace('/', '_').Replace('\\', '_');
         }
 
         private static string NormalizeAssetPath(string path)
