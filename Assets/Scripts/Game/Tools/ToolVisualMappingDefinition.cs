@@ -8,9 +8,11 @@ namespace Rootborn.Game.Tools
     {
         [SerializeField] private ToolDefinition _tool;
         [SerializeField] private CharacterPartAnimationClipDefinition _pixelwoodAttackClip;
+        [SerializeField] private int _spumAttackClipIndex = -1;
 
         public ToolDefinition Tool => _tool;
         public CharacterPartAnimationClipDefinition PixelwoodAttackClip => _pixelwoodAttackClip;
+        public int SpumAttackClipIndex => _spumAttackClipIndex;
 
         public void ConfigureForTests(CharacterPartAnimationClipDefinition pixelwoodAttackClip)
         {
@@ -21,6 +23,11 @@ namespace Rootborn.Game.Tools
         {
             _tool = tool;
             _pixelwoodAttackClip = pixelwoodAttackClip;
+        }
+
+        public void ConfigureSpumForTests(int attackClipIndex)
+        {
+            _spumAttackClipIndex = attackClipIndex;
         }
     }
 }
