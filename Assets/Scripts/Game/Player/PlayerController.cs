@@ -1,5 +1,7 @@
+using Rootborn.Game.Characters;
 using Rootborn.Game.Common;
 using Rootborn.Game.Family;
+using Rootborn.Game.Tools;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -13,6 +15,7 @@ namespace Rootborn.Game.Player
         [SerializeField] private SpriteRenderer _toolRenderer;
         [SerializeField] private CharacterPartComposer _partComposer;
         [SerializeField] private CharacterPartAnimator _partAnimator;
+        [SerializeField] private PlayerCharacterVisualAdapter _visualAdapter;
         [SerializeField] private Rigidbody2D _rb;
         [SerializeField] private PlayerInventory _inventory;
         [SerializeField] private GatherInteractor _interactor;
@@ -48,6 +51,7 @@ namespace Rootborn.Game.Player
             if (_renderer == null) _renderer = GetComponent<SpriteRenderer>();
             if (_partComposer == null) _partComposer = GetComponent<CharacterPartComposer>();
             if (_partAnimator == null) _partAnimator = GetComponent<CharacterPartAnimator>();
+            if (_visualAdapter == null) _visualAdapter = GetComponent<PlayerCharacterVisualAdapter>();
             if (_rb == null) _rb = GetComponent<Rigidbody2D>();
             if (_inventory == null) _inventory = GetComponent<PlayerInventory>();
             if (_interactor == null) _interactor = GetComponent<GatherInteractor>();
@@ -68,7 +72,9 @@ namespace Rootborn.Game.Player
 
         private void BeginAttack(Vector2 screenPos)
         {
-            if (!HasToolSprites(_activeToolSpritePrefix)) return;
+            bool hasToolSprites = HasToolSprites(_activeToolSpritePrefix);
+            var visualAdapter = ResolveVisualAdapter();
+            if (!hasToolSprites && visualAdapter == null) return;
             if (_isAttacking) return;
 
             if (_camera == null) _camera = Camera.main;
@@ -84,6 +90,12 @@ namespace Rootborn.Game.Player
             if (_partAnimator != null && _activeCharacterPartAnimationClip != null)
             {
                 _partAnimator.PlayClip(_activeCharacterPartAnimationClip);
+            }
+            visualAdapter?.PlayAction(CharacterVisualAction.Attack);
+            if (!hasToolSprites && _interactor != null)
+            {
+                _interactor.TriggerInteract();
+                _attackTriggered = true;
             }
             if (Mathf.Abs(_attackFacing.x) > Mathf.Abs(_attackFacing.y))
             {
@@ -140,10 +152,17 @@ namespace Rootborn.Game.Player
             _activeToolId = newId;
             _activeToolSpritePrefix = tool != null ? tool.ToolSpritePrefix : null;
             _activeCharacterPartAnimationClip = null;
+            ToolDefinition toolDefinition = null;
             var data = Rootborn.Game.Managers.Managers.Data;
-            if (data != null && tool != null && data.ToolById.TryGetValue(tool.Id, out var toolDefinition))
+            if (data != null && tool != null && data.ToolById.TryGetValue(tool.Id, out toolDefinition))
             {
                 _activeCharacterPartAnimationClip = toolDefinition.CharacterPartAnimationClip;
+            }
+            var visualAdapter = ResolveVisualAdapter();
+            if (visualAdapter != null)
+            {
+                var mapping = data != null && data.Registry != null ? data.Registry.FindToolVisualMapping(toolDefinition) : null;
+                visualAdapter.ApplyEquippedToolVisual(mapping);
             }
             _isAttacking = false;
             _attackTime = 0f;
@@ -178,6 +197,7 @@ namespace Rootborn.Game.Player
             TryBindInventory();
             if (_partComposer == null) _partComposer = GetComponent<CharacterPartComposer>();
             if (_partAnimator == null) _partAnimator = GetComponent<CharacterPartAnimator>();
+            if (_visualAdapter == null) _visualAdapter = GetComponent<PlayerCharacterVisualAdapter>();
 
             _input = ReadMoveInput();
             UpdateMouseAttackInput();
@@ -208,14 +228,14 @@ namespace Rootborn.Game.Player
                 _partAnimator.SetMotion(_isAttacking ? Vector2.zero : _input, facingForFlip);
                 _partAnimator.Tick(UnityEngine.Time.deltaTime);
             }
+            _visualAdapter?.SetMotion(_isAttacking ? Vector2.zero : _input, facingForFlip);
 
             UpdateToolSprite();
         }
 
         private void UpdateMouseAttackInput()
         {
-            var mouse = Mouse.current;
-            bool pressed = mouse != null && mouse.leftButton.isPressed;
+            bool pressed = IsAnyMouseAttackPressed();
             if (pressed && !_wasMouseAttackPressed)
             {
                 BeginAttack(ReadPointerScreenPosition());
@@ -223,21 +243,68 @@ namespace Rootborn.Game.Player
             _wasMouseAttackPressed = pressed;
         }
 
+        private static bool IsAnyMouseAttackPressed()
+        {
+            for (int i = 0; i < InputSystem.devices.Count; i++)
+            {
+                var mouse = InputSystem.devices[i] as Mouse;
+                if (mouse != null && mouse.leftButton.isPressed)
+                {
+                    return true;
+                }
+            }
+
+            var current = Mouse.current;
+            return current != null && current.leftButton.isPressed;
+        }
+
         private static Vector2 ReadPointerScreenPosition()
         {
-            var mouse = Mouse.current;
-            return mouse != null ? mouse.position.ReadValue() : Vector2.zero;
+            for (int i = 0; i < InputSystem.devices.Count; i++)
+            {
+                var mouse = InputSystem.devices[i] as Mouse;
+                if (mouse != null && mouse.leftButton.isPressed)
+                {
+                    return mouse.position.ReadValue();
+                }
+            }
+
+            var current = Mouse.current;
+            return current != null ? current.position.ReadValue() : Vector2.zero;
         }
 
         private Vector2 ReadMoveInput()
         {
-            var keyboard = Keyboard.current;
-            if (keyboard == null)
+            Vector2 input = Vector2.zero;
+            bool foundKeyboard = false;
+            for (int i = 0; i < InputSystem.devices.Count; i++)
             {
-                return Vector2.zero;
+                var keyboard = InputSystem.devices[i] as Keyboard;
+                if (keyboard == null)
+                {
+                    continue;
+                }
+
+                foundKeyboard = true;
+                AddKeyboardInput(keyboard, ref input);
             }
 
-            Vector2 input = Vector2.zero;
+            if (!foundKeyboard)
+            {
+                var current = Keyboard.current;
+                if (current == null)
+                {
+                    return Vector2.zero;
+                }
+
+                AddKeyboardInput(current, ref input);
+            }
+
+            return input.sqrMagnitude > 1f ? input.normalized : input;
+        }
+
+        private static void AddKeyboardInput(Keyboard keyboard, ref Vector2 input)
+        {
             if (keyboard.aKey.isPressed || keyboard.leftArrowKey.isPressed)
             {
                 input.x -= 1f;
@@ -254,8 +321,6 @@ namespace Rootborn.Game.Player
             {
                 input.y += 1f;
             }
-
-            return input.sqrMagnitude > 1f ? input.normalized : input;
         }
 
         private void ApplyFlipX(bool flipX)
@@ -272,6 +337,7 @@ namespace Rootborn.Game.Player
             {
                 _partComposer.SetFlipX(flipX);
             }
+            _visualAdapter?.SetFlipX(flipX);
         }
 
         private SpriteRenderer EnsureToolRenderer()
@@ -308,6 +374,15 @@ namespace Rootborn.Game.Player
                 {
                     _toolRenderer.sprite = null;
                     _toolRenderer.enabled = false;
+                }
+                if (_isAttacking && _visualAdapter != null)
+                {
+                    _attackTime += UnityEngine.Time.deltaTime;
+                    if (_attackTime >= Mathf.Max(0.01f, _attackFrameDuration))
+                    {
+                        _isAttacking = false;
+                        _attackTime = 0f;
+                    }
                 }
                 return;
             }
@@ -356,6 +431,16 @@ namespace Rootborn.Game.Player
                 _toolRenderer.sprite = s;
                 _toolRenderer.enabled = true;
             }
+        }
+
+        private PlayerCharacterVisualAdapter ResolveVisualAdapter()
+        {
+            if (_visualAdapter == null)
+            {
+                _visualAdapter = GetComponent<PlayerCharacterVisualAdapter>();
+            }
+
+            return _visualAdapter;
         }
 
         private static int GetSheetFrameCount(string prefix, string dir, Rootborn.Game.Managers.ResourceManager rm, string sheetAddr)

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Rootborn.Game.Characters;
 using Rootborn.Game.Common;
 using Rootborn.Game.Family;
 using Rootborn.Game.Knowledge;
@@ -282,6 +283,20 @@ namespace Rootborn.Game.Bootstrap
             {
                 animator = player.AddComponent<CharacterPartAnimator>();
             }
+
+            var pixelwoodView = player.GetComponent<PixelwoodCharacterVisualView>();
+            if (pixelwoodView == null)
+            {
+                pixelwoodView = player.AddComponent<PixelwoodCharacterVisualView>();
+            }
+            pixelwoodView.ConfigureForTests(animator, composer);
+
+            var visualAdapter = player.GetComponent<PlayerCharacterVisualAdapter>();
+            if (visualAdapter == null)
+            {
+                visualAdapter = player.AddComponent<PlayerCharacterVisualAdapter>();
+            }
+            visualAdapter.ConfigureForTests(pixelwoodView);
 
             var appearance = CharacterAppearance.ResolveWithDefaults(ActiveSaveContext.Metadata != null ? ActiveSaveContext.Metadata.Appearance : null, registry.CharacterParts);
             for (int i = 0; i < registry.CharacterParts.Length; i++)
