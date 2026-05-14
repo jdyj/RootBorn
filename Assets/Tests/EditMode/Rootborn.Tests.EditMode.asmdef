@@ -6,6 +6,9 @@
         "Rootborn.Editor",
         "Rootborn.Network",
         "Rootborn.UI",
+        "Unity.Addressables",
+        "Unity.Addressables.Editor",
+        "Unity.ResourceManager",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],
