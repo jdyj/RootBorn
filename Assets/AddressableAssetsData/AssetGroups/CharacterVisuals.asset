@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: CharacterVisuals
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: CharacterVisuals
+  m_GUID: 6ac54a7b1cc3ea04cb9b6f608a9955aa
+  m_SerializeEntries:
+  - m_GUID: 25c0cb7d869fed54c9991705fe6b306c
+    m_Address: spum/prefabs/BNBancer
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5fa777919e804474080fad7ccf0cb5b4
+    m_Address: spum/animations/ATTACK
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7b2a35216b7e533458ba5e38b8621354
+    m_Address: spum/animations/OTHER
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9cb5dea9706a1964fbb1986cd1d8c4b2
+    m_Address: spum/animations/DAMAGED
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: acb3bfd86ae6c41b084245f578292734
+    m_Address: spum/sprites/Shadow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b1692a522a645ad488394d241ad662df
+    m_Address: spum/animations/MOVE
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b81ad915777074048bdcc320f687ee1e
+    m_Address: spum/animations/IDLE
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: df7347d9a26250f49a9dab946bc4b0a4
+    m_Address: spum/animations/DEBUFF
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e23bc41dfc64fef439b0a9d4b49d7d6a
+    m_Address: spum/animations/DEATH
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 2f14a7c3f9f8dc44c9d41564a87df795, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: e6e08375b47f7e14ca9e2343a43c7495, type: 2}
+    - {fileID: 11400000, guid: 279ccd62e2a51a149b33c0b806c70035, type: 2}
