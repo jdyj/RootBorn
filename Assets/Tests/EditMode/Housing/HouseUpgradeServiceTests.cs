@@ -102,7 +102,7 @@ namespace Rootborn.Tests.EditMode.Housing
         {
             var blueprint = CreateBlueprintForTests();
             var stage = HouseUpgradeStageDefinition.CreateForTests("house.stage.1", 1, 300, 120, InteriorGenerationProfile.CreateDefaultOfficeForTests(), null, blueprint);
-            SetDirectConditionsForTests(stage, null);
+            SetDirectConditionsForTests(stage, new HouseUpgradeConditionBase[] { null });
             var state = new HouseStateSaveData();
             var wallet = new HouseCurrencyWallet(500);
             var service = new HouseUpgradeService(new[] { stage });
