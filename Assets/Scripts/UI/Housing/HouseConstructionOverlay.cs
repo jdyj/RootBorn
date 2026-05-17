@@ -1,6 +1,8 @@
 using Rootborn.Game.Housing;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 
 namespace Rootborn.UI.Housing
@@ -14,6 +16,8 @@ namespace Rootborn.UI.Housing
         private Text _progressText;
         private Button _completeButton;
         private Button _cancelButton;
+        private Tilemap _placementTilemap;
+        private bool _leftMouseWasPressed;
 
         public string ProgressTextForTests => _progressText != null ? _progressText.text : string.Empty;
         public bool CompleteButtonInteractableForTests => _completeButton != null && _completeButton.interactable;
@@ -34,6 +38,7 @@ namespace Rootborn.UI.Housing
 
             _blueprint = blueprint;
             _session = new HouseConstructionSession(blueprint);
+            _placementTilemap = GameObject.Find("HouseGroundTilemap")?.GetComponent<Tilemap>();
             gameObject.SetActive(true);
             Refresh();
         }
@@ -58,6 +63,61 @@ namespace Rootborn.UI.Housing
             bool placed = _session != null && _session.TryPlace(cell, kind);
             Refresh();
             return placed;
+        }
+
+        private void Update()
+        {
+            var mouse = Mouse.current;
+            if (mouse == null)
+            {
+                _leftMouseWasPressed = false;
+                return;
+            }
+
+            bool pressed = mouse.leftButton.isPressed;
+            if (pressed && !_leftMouseWasPressed)
+            {
+                TryPlaceFromScreen(mouse.position.ReadValue());
+            }
+
+            _leftMouseWasPressed = pressed;
+        }
+
+        private bool TryPlaceFromScreen(Vector2 screenPosition)
+        {
+            if (_blueprint == null || _session == null)
+            {
+                return false;
+            }
+
+            var camera = Camera.main;
+            if (camera == null)
+            {
+                return false;
+            }
+
+            if (_placementTilemap == null)
+            {
+                _placementTilemap = GameObject.Find("HouseGroundTilemap")?.GetComponent<Tilemap>();
+            }
+
+            var world = camera.ScreenToWorldPoint(new Vector3(screenPosition.x, screenPosition.y, Mathf.Abs(camera.transform.position.z)));
+            var cell3 = _placementTilemap != null ? _placementTilemap.WorldToCell(world) : Vector3Int.RoundToInt(world);
+            var cell = new Vector2Int(cell3.x, cell3.y);
+            var required = _blueprint.RequiredCells;
+            for (int i = 0; i < required.Count; i++)
+            {
+                if (required[i].Cell != cell)
+                {
+                    continue;
+                }
+
+                bool placed = _session.TryPlace(cell, required[i].Kind);
+                Refresh();
+                return placed;
+            }
+
+            return false;
         }
 
         private static HouseConstructionOverlay Create()

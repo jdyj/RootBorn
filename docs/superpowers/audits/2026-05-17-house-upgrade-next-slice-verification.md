@@ -7,7 +7,7 @@
   - Summary: 17 passed, 0 failed.
 - House upgrade PlayMode: PASS
   - Command: `unity-mcp-cli.cmd run-tool tests-run` with `testNamespace=Rootborn.Tests.PlayMode.Housing`, `testClass=HouseUpgradeFlowPlayModeTests`
-  - Summary: 6 passed, 0 failed.
+  - Summary after mouse-placement closure: 7 passed, 0 failed.
 - Camera PlayMode: PASS by method-level runs
   - `HouseScene_InstallsPlacementCameraControllerAndFramesAllTiles`: PASS
   - `HousePlacementCamera_KeyboardZoomAndPanMoveCameraThroughPlayerInput`: PASS
@@ -25,6 +25,7 @@
 - Direct construction overlay started in House: PASS by `HOUSE_UPGRADE_PM_005`.
 - Required construction cells validated and progress displayed: PASS by `HOUSE_UPGRADE_PM_005`.
 - Direct completion saved stage 1 and cleared progress: PASS by `HOUSE_UPGRADE_PM_006`.
+- Direct construction required cell placed through actual mouse input: PASS by `HOUSE_UPGRADE_PM_007`.
 - Reloaded House shows expanded layout: PASS by `HOUSE_UPGRADE_PM_001` and runtime probe after reload.
 
 ## Visual Evidence
@@ -42,7 +43,7 @@
 - Reloaded expanded House probe:
   - `floor=380 walls=127 decor=14 collision=130 stage=1 route=DirectConstruction active= placed=0 screenshot=reloaded-expanded-house.png`
 
-## Blocked or Residual Risk
+## Residual Risk
 
-- Direct construction cell placement is not yet driven by actual mouse/tilemap placement input. The current direct construction PlayMode tests and visual setup place blueprint cells through `HouseConstructionOverlay.TryPlaceForTests`, then complete through the same overlay flow. This is sufficient for service, save, and overlay state validation, but it does not satisfy the full direct visual play verification gate for user-facing construction input.
+- Direct construction now has a PlayMode mouse input proof for required-cell placement. The visual screenshot setup still used an overlay helper to fill all required cells before completion, so the screenshot evidence and the mouse-input proof are separate artifacts rather than one continuous captured run.
 - The generated House runtime currently has ground, wall, decoration, and collision Tilemaps. There is no `HouseDoorTilemap` object in the inspected runtime scene, so door count was recorded as `doors=-1` and the existing decoration layer count was recorded separately.

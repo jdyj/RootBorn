@@ -6,6 +6,8 @@ using Rootborn.Game.Interiors;
 using Rootborn.Game.Save;
 using Rootborn.UI.Housing;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.Tilemaps;
@@ -170,6 +172,37 @@ namespace Rootborn.Tests.PlayMode.Housing
             Assert.AreEqual(0, saved.PlacedConstructionCells.Length);
             Assert.AreEqual(HouseUpgradeRouteKind.DirectConstruction, saved.LatestRoute);
         }
+        [UnityTest]
+        public IEnumerator HOUSE_UPGRADE_PM_007_DirectConstructionPlacesRequiredCellThroughMouseInput()
+        {
+            yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
+            yield return null;
+            yield return null;
+
+            var blueprint = HouseConstructionBlueprintDefinition.CreateForTests(
+                "blueprint.direct.mouse",
+                new RectInt(0, 0, 4, 4),
+                new[] { HouseConstructionCellRequirement.Floor(1, 1), HouseConstructionCellRequirement.Wall(1, 2), HouseConstructionCellRequirement.Door(2, 1) });
+            var overlay = HouseConstructionOverlay.EnsureForTests(blueprint);
+            var tilemap = GameObject.Find("HouseGroundTilemap")?.GetComponent<Tilemap>();
+            Assert.IsNotNull(tilemap);
+            Assert.AreEqual("0/3", overlay.ProgressTextForTests);
+
+            var mouse = InputSystem.AddDevice<Mouse>();
+            try
+            {
+                var screenPosition = (Vector2)Camera.main.WorldToScreenPoint(tilemap.GetCellCenterWorld(new Vector3Int(1, 1, 0)));
+                yield return DriveMouseClick(mouse, screenPosition);
+                Assert.AreEqual("1/3", overlay.ProgressTextForTests);
+            }
+            finally
+            {
+                if (mouse.added)
+                {
+                    InputSystem.RemoveDevice(mouse);
+                }
+            }
+        }
         private static HouseUpgradeStageDefinition CreateStageForPanelTests(bool includeDirectCondition)
         {
             var blueprint = HouseConstructionBlueprintDefinition.CreateForTests(
@@ -185,6 +218,20 @@ namespace Rootborn.Tests.PlayMode.Housing
             return stage;
         }
 
+        private static IEnumerator DriveMouseClick(Mouse mouse, Vector2 position)
+        {
+            var driver = new GameObject("HouseConstructionMouseClickInputDriver").AddComponent<MouseClickInputDriver>();
+            driver.Configure(mouse, position);
+            for (int i = 0; i < 5; i++)
+            {
+                yield return null;
+            }
+
+            if (driver != null)
+            {
+                Object.Destroy(driver.gameObject);
+            }
+        }
         private static int CountTiles(Tilemap tilemap)
         {
             Assert.IsNotNull(tilemap, "HouseGroundTilemap should exist for House generation checks.");
@@ -198,6 +245,45 @@ namespace Rootborn.Tests.PlayMode.Housing
             }
 
             return count;
+        }
+        [DefaultExecutionOrder(-10000)]
+        private sealed class MouseClickInputDriver : MonoBehaviour
+        {
+            private Mouse _mouse;
+            private Vector2 _position;
+            private int _frame;
+
+            public void Configure(Mouse mouse, Vector2 position)
+            {
+                _mouse = mouse;
+                _position = position;
+            }
+
+            private void Update()
+            {
+                if (_mouse == null || !_mouse.added)
+                {
+                    Destroy(gameObject);
+                    return;
+                }
+
+                _mouse.MakeCurrent();
+                if (_frame == 0)
+                {
+                    InputSystem.QueueStateEvent(_mouse, new MouseState
+                    {
+                        position = _position,
+                        buttons = (ushort)(1u << (int)MouseButton.Left)
+                    });
+                    InputSystem.Update();
+                    _frame++;
+                    return;
+                }
+
+                InputSystem.QueueStateEvent(_mouse, new MouseState { position = _position });
+                InputSystem.Update();
+                Destroy(gameObject);
+            }
         }
     }
 }
