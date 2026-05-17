@@ -9,6 +9,8 @@ namespace Rootborn.UI.Housing
     {
         private HouseConstructionBlueprintDefinition _blueprint;
         private HouseConstructionSession _session;
+        private HouseUpgradeStageDefinition _stage;
+        private string _saveSlot;
         private Text _progressText;
         private Button _completeButton;
         private Button _cancelButton;
@@ -34,6 +36,21 @@ namespace Rootborn.UI.Housing
             _session = new HouseConstructionSession(blueprint);
             gameObject.SetActive(true);
             Refresh();
+        }
+
+        public void BindCompletionForTests(string saveSlot, HouseUpgradeStageDefinition stage)
+        {
+            _saveSlot = string.IsNullOrEmpty(saveSlot) ? "default" : saveSlot;
+            _stage = stage;
+            if (_stage != null && _stage.Blueprint != null)
+            {
+                Bind(_stage.Blueprint);
+            }
+        }
+
+        public void CompleteForTests()
+        {
+            Complete();
         }
 
         public bool TryPlaceForTests(Vector2Int cell, HouseConstructionCellKind kind)
@@ -74,7 +91,30 @@ namespace Rootborn.UI.Housing
             _progressText = MakeText("ConstructionProgressText", new Vector2(0f, 18f), new Vector2(380f, 36f));
             _completeButton = MakeButton("CompleteConstructionButton", "Complete", new Vector2(-90f, -26f));
             _cancelButton = MakeButton("CancelConstructionButton", "Cancel", new Vector2(90f, -26f));
+            _completeButton.onClick.AddListener(Complete);
             _cancelButton.onClick.AddListener(() => gameObject.SetActive(false));
+        }
+
+        private void Complete()
+        {
+            if (_stage == null || _session == null)
+            {
+                return;
+            }
+
+            var state = HouseStatePersistence.Load(_saveSlot);
+            var wallet = new HouseCurrencyWallet(state.Currency != null ? state.Currency.Balance : 0);
+            var service = new HouseUpgradeService(new[] { _stage });
+            var result = service.TryCompleteDirect(_stage, state, wallet, _session);
+            if (result.Kind != HouseUpgradeResultKind.Applied)
+            {
+                Refresh();
+                return;
+            }
+
+            state.Currency.Balance = wallet.Balance;
+            HouseStatePersistence.Save(_saveSlot, state);
+            gameObject.SetActive(false);
         }
 
         private void Refresh()

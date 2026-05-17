@@ -139,6 +139,37 @@ namespace Rootborn.Tests.PlayMode.Housing
             Assert.AreEqual("1/3", overlay.ProgressTextForTests);
             Assert.IsFalse(overlay.CompleteButtonInteractableForTests);
         }
+        [UnityTest]
+        public IEnumerator HOUSE_UPGRADE_PM_006_DirectConstructionCompletesSavesStageAndClearsProgress()
+        {
+            yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
+            yield return null;
+            yield return null;
+
+            var blueprint = HouseConstructionBlueprintDefinition.CreateForTests(
+                "blueprint.direct.complete",
+                new RectInt(0, 0, 4, 4),
+                new[] { HouseConstructionCellRequirement.Floor(1, 1), HouseConstructionCellRequirement.Wall(1, 2), HouseConstructionCellRequirement.Door(2, 1) });
+            var stage = HouseUpgradeStageDefinition.CreateForTests("house.stage.direct.complete", 1, 300, 120, InteriorGenerationProfile.CreateExpandedOfficeForTests(), null, blueprint);
+            stage.ConfigureConditionsForTests(null, new[] { ScriptableObject.CreateInstance<HouseAlwaysCondition>() });
+            HouseStatePersistence.Save("slot-0", new HouseStateSaveData { Currency = new HouseCurrencySaveData { Balance = 500 } });
+
+            var overlay = HouseConstructionOverlay.EnsureForTests(blueprint);
+            overlay.BindCompletionForTests("slot-0", stage);
+            Assert.IsTrue(overlay.TryPlaceForTests(new Vector2Int(1, 1), HouseConstructionCellKind.Floor));
+            Assert.IsTrue(overlay.TryPlaceForTests(new Vector2Int(1, 2), HouseConstructionCellKind.Wall));
+            Assert.IsTrue(overlay.TryPlaceForTests(new Vector2Int(2, 1), HouseConstructionCellKind.Door));
+            Assert.IsTrue(overlay.CompleteButtonInteractableForTests);
+            overlay.CompleteForTests();
+            yield return null;
+
+            var saved = HouseStatePersistence.Load("slot-0");
+            Assert.AreEqual(1, saved.CurrentStageIndex);
+            Assert.AreEqual(380, saved.Currency.Balance);
+            Assert.AreEqual(string.Empty, saved.ActiveConstructionStageId);
+            Assert.AreEqual(0, saved.PlacedConstructionCells.Length);
+            Assert.AreEqual(HouseUpgradeRouteKind.DirectConstruction, saved.LatestRoute);
+        }
         private static HouseUpgradeStageDefinition CreateStageForPanelTests(bool includeDirectCondition)
         {
             var blueprint = HouseConstructionBlueprintDefinition.CreateForTests(
