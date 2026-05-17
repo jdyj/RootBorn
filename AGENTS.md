@@ -1,5 +1,21 @@
 # Repository Guidelines
 
+## Constitutional Addendum — Direct Visual Play Verification Gate
+
+Visible gameplay, UI, sprite, tilemap, placement, scene, prefab, camera, or interaction changes are not complete until they are verified through the actual player-facing flow.
+
+- Automated EditMode/PlayMode tests are required, but they are not enough by themselves for visible or interactive work.
+- This verification gate is always on by default. The user does not need to ask for "actual PlayMode testing" again for visible gameplay, UI, camera, tilemap, placement, scene, prefab, or interaction work.
+- The agent must reproduce the user-facing path in PlayMode: input, movement, trigger, UI click/selection, placement, scene transition, or the exact flow the user described.
+- The agent must capture or inspect a Game View or Camera screenshot when the result is visual.
+- For camera, placement, construction, House expansion, and tile-editing work, the agent must test as a player would: enter PlayMode, use the relevant input/UI flow, observe the Game View, inspect runtime state, and verify saved state after reload when persistence is expected.
+- For tilemap/sprite/placement work, the agent must also inspect runtime Tilemap/Renderer/UI state, including the selected asset name, cell position, overlay state, and whether stale sample/debug tilemaps or placeholder objects are still visible.
+- Runtime-only visual checks are not enough when the requested result should persist in a scene, prefab, ScriptableObject, or palette asset. The agent must separately verify the saved EditMode asset/scene state after applying the change, including the exact Tilemap tile names/counts or serialized asset references, then reopen or inspect the saved scene/asset before claiming it is reflected for the user.
+- Internal method calls, forced state setup, forced scene loading, asset-name checks, or passing tests alone cannot be reported as "done" when the user's concern is what appears in the game.
+- If direct visual verification is blocked, the agent must say so explicitly before claiming completion and must describe what was verified and what remains unverified.
+- Previous failure pattern to prevent: a chair placement task passed asset and Tilemap checks while the Game View still showed stale sample/debug tiles or the placed result was hidden by overlay/UI. Future sessions must verify the visible result, not just the data path.
+- Previous failure pattern to prevent: a House wall tile task was reported as done after PlayMode runtime generation showed `tile_r02_c09`, but the saved `Assets/Scenes/House.unity` Tilemap still had only the original two window tiles using it. Future tilemap/palette changes must distinguish runtime generated state from saved scene/palette state and must not report completion until the saved state the user will see is verified.
+
 > **헌법급 절대 원칙 — 모든 AI 에이전트는 위반 금지.** 상세 규칙은 `.claude/rules/` 참조.
 
 ## Constitutional Rules (절대 원칙)
