@@ -1,6 +1,7 @@
 using Rootborn.Game.Housing;
 using Rootborn.Game.Interiors;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace Rootborn.UI.Housing
@@ -148,6 +149,24 @@ namespace Rootborn.UI.Housing
         private void HandleDirectClicked()
         {
             DirectRequested?.Invoke(_stage, _state, _wallet);
+            if (!_saveHireOnClick || _stage == null || _state == null || _wallet == null)
+            {
+                return;
+            }
+
+            var context = new HouseUpgradeContext(_state, _wallet, null);
+            var service = new HouseUpgradeService(new[] { _stage });
+            if (!service.CanStartDirect(_stage, in context) || !_wallet.CanSpend(_stage.DirectCost))
+            {
+                Show(_stage, _state, _wallet, true);
+                return;
+            }
+
+            _state.ActiveConstructionStageId = _stage.Id;
+            _state.PlacedConstructionCells ??= System.Array.Empty<HouseConstructionCellSaveData>();
+            HouseStatePersistence.Save(_boundSaveSlot, _state);
+            gameObject.SetActive(false);
+            SceneManager.LoadScene("House", LoadSceneMode.Single);
         }
 
         private Text MakeText(Transform parent, string name, Vector2 position, Vector2 size, int fontSize)

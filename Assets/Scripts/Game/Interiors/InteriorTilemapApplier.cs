@@ -5,6 +5,7 @@ using Rootborn.Game.Save;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
+using UnityEngine.Rendering;
 
 namespace Rootborn.Game.Interiors
 {
@@ -342,9 +343,9 @@ namespace Rootborn.Game.Interiors
             _decorations = _decorations != null ? _decorations : GameObject.Find("HouseDecorationTilemap")?.GetComponent<Tilemap>();
             _collision = _collision != null ? _collision : GameObject.Find("HouseCollisionTilemap")?.GetComponent<Tilemap>();
 
-            if (_doors == null)
+            if (_doors == null || _doors == _walls)
             {
-                _doors = _walls;
+                _doors = CreateDoorTilemap();
             }
 
             var collisionRenderer = _collision != null ? _collision.GetComponent<TilemapRenderer>() : null;
@@ -354,6 +355,28 @@ namespace Rootborn.Game.Interiors
             }
         }
 
+        private Tilemap CreateDoorTilemap()
+        {
+            var parent = _floor != null ? _floor.transform.parent : _walls != null ? _walls.transform.parent : null;
+            var go = new GameObject("HouseDoorTilemap", typeof(Tilemap), typeof(TilemapRenderer));
+            SceneManager.MoveGameObjectToScene(go, gameObject.scene);
+            if (parent != null)
+            {
+                go.transform.SetParent(parent, false);
+            }
+
+            var renderer = go.GetComponent<TilemapRenderer>();
+            var wallRenderer = _walls != null ? _walls.GetComponent<TilemapRenderer>() : null;
+            if (renderer != null)
+            {
+                renderer.sortOrder = TilemapRenderer.SortOrder.BottomLeft;
+                renderer.mode = TilemapRenderer.Mode.Chunk;
+                renderer.sortingLayerID = wallRenderer != null ? wallRenderer.sortingLayerID : SortingLayer.NameToID("Default");
+                renderer.sortingOrder = wallRenderer != null ? wallRenderer.sortingOrder + 1 : 1;
+            }
+
+            return go.GetComponent<Tilemap>();
+        }
         private void ClearAll()
         {
             _floor.ClearAllTiles();

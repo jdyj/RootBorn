@@ -129,11 +129,7 @@ namespace Rootborn.Tests.PlayMode.Housing
             yield return null;
             yield return null;
 
-            var blueprint = HouseConstructionBlueprintDefinition.CreateForTests(
-                "blueprint.direct",
-                new RectInt(0, 0, 4, 4),
-                new[] { HouseConstructionCellRequirement.Floor(1, 1), HouseConstructionCellRequirement.Wall(1, 2), HouseConstructionCellRequirement.Door(2, 1) });
-
+            var blueprint = CreateBlueprintForTests("blueprint.direct");
             var overlay = HouseConstructionOverlay.EnsureForTests(blueprint);
             Assert.IsNotNull(overlay);
             Assert.AreEqual("0/3", overlay.ProgressTextForTests);
@@ -141,6 +137,7 @@ namespace Rootborn.Tests.PlayMode.Housing
             Assert.AreEqual("1/3", overlay.ProgressTextForTests);
             Assert.IsFalse(overlay.CompleteButtonInteractableForTests);
         }
+
         [UnityTest]
         public IEnumerator HOUSE_UPGRADE_PM_006_DirectConstructionCompletesSavesStageAndClearsProgress()
         {
@@ -148,12 +145,8 @@ namespace Rootborn.Tests.PlayMode.Housing
             yield return null;
             yield return null;
 
-            var blueprint = HouseConstructionBlueprintDefinition.CreateForTests(
-                "blueprint.direct.complete",
-                new RectInt(0, 0, 4, 4),
-                new[] { HouseConstructionCellRequirement.Floor(1, 1), HouseConstructionCellRequirement.Wall(1, 2), HouseConstructionCellRequirement.Door(2, 1) });
-            var stage = HouseUpgradeStageDefinition.CreateForTests("house.stage.direct.complete", 1, 300, 120, InteriorGenerationProfile.CreateExpandedOfficeForTests(), null, blueprint);
-            stage.ConfigureConditionsForTests(null, new[] { ScriptableObject.CreateInstance<HouseAlwaysCondition>() });
+            var blueprint = CreateBlueprintForTests("blueprint.direct.complete");
+            var stage = CreateDirectStageForTests("house.stage.direct.complete", blueprint);
             HouseStatePersistence.Save("slot-0", new HouseStateSaveData { Currency = new HouseCurrencySaveData { Balance = 500 } });
 
             var overlay = HouseConstructionOverlay.EnsureForTests(blueprint);
@@ -172,18 +165,20 @@ namespace Rootborn.Tests.PlayMode.Housing
             Assert.AreEqual(0, saved.PlacedConstructionCells.Length);
             Assert.AreEqual(HouseUpgradeRouteKind.DirectConstruction, saved.LatestRoute);
         }
+
         [UnityTest]
-        public IEnumerator HOUSE_UPGRADE_PM_007_DirectConstructionPlacesRequiredCellThroughMouseInput()
+        public IEnumerator HOUSE_UPGRADE_PM_007_DirectConstructionPlacesRequiredCellsAndCompletesThroughMouseInput()
         {
             yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
             yield return null;
             yield return null;
 
-            var blueprint = HouseConstructionBlueprintDefinition.CreateForTests(
-                "blueprint.direct.mouse",
-                new RectInt(0, 0, 4, 4),
-                new[] { HouseConstructionCellRequirement.Floor(1, 1), HouseConstructionCellRequirement.Wall(1, 2), HouseConstructionCellRequirement.Door(2, 1) });
+            var blueprint = CreateBlueprintForTests("blueprint.direct.mouse");
+            var stage = CreateDirectStageForTests("house.stage.direct.mouse", blueprint);
+            HouseStatePersistence.Save("slot-0", new HouseStateSaveData { Currency = new HouseCurrencySaveData { Balance = 500 } });
+
             var overlay = HouseConstructionOverlay.EnsureForTests(blueprint);
+            overlay.BindCompletionForTests("slot-0", stage);
             var tilemap = GameObject.Find("HouseGroundTilemap")?.GetComponent<Tilemap>();
             Assert.IsNotNull(tilemap);
             Assert.AreEqual("0/3", overlay.ProgressTextForTests);
@@ -191,9 +186,24 @@ namespace Rootborn.Tests.PlayMode.Housing
             var mouse = InputSystem.AddDevice<Mouse>();
             try
             {
-                var screenPosition = (Vector2)Camera.main.WorldToScreenPoint(tilemap.GetCellCenterWorld(new Vector3Int(1, 1, 0)));
-                yield return DriveMouseClick(mouse, screenPosition);
+                yield return DriveMouseClick(mouse, (Vector2)Camera.main.WorldToScreenPoint(tilemap.GetCellCenterWorld(new Vector3Int(1, 1, 0))));
                 Assert.AreEqual("1/3", overlay.ProgressTextForTests);
+                yield return DriveMouseClick(mouse, (Vector2)Camera.main.WorldToScreenPoint(tilemap.GetCellCenterWorld(new Vector3Int(1, 2, 0))));
+                Assert.AreEqual("2/3", overlay.ProgressTextForTests);
+                yield return DriveMouseClick(mouse, (Vector2)Camera.main.WorldToScreenPoint(tilemap.GetCellCenterWorld(new Vector3Int(2, 1, 0))));
+                Assert.AreEqual("3/3", overlay.ProgressTextForTests);
+                Assert.IsTrue(overlay.CompleteButtonInteractableForTests);
+
+                var completeButton = GameObject.Find("CompleteConstructionButton").GetComponent<Button>();
+                completeButton.onClick.Invoke();
+                yield return null;
+
+                var saved = HouseStatePersistence.Load("slot-0");
+                Assert.AreEqual(1, saved.CurrentStageIndex);
+                Assert.AreEqual(380, saved.Currency.Balance);
+                Assert.AreEqual(string.Empty, saved.ActiveConstructionStageId);
+                Assert.AreEqual(0, saved.PlacedConstructionCells.Length);
+                Assert.AreEqual(HouseUpgradeRouteKind.DirectConstruction, saved.LatestRoute);
             }
             finally
             {
@@ -203,6 +213,73 @@ namespace Rootborn.Tests.PlayMode.Housing
                 }
             }
         }
+
+        [UnityTest]
+        public IEnumerator HOUSE_UPGRADE_PM_008_DirectButtonStartsSavedConstructionAndLoadsHouseOverlay()
+        {
+            yield return SceneManager.LoadSceneAsync("Town", LoadSceneMode.Single);
+            yield return null;
+            yield return null;
+
+            HouseStatePersistence.Save("slot-0", new HouseStateSaveData { Currency = new HouseCurrencySaveData { Balance = 500 } });
+            var panel = Object.FindFirstObjectByType<HouseUpgradePanel>(FindObjectsInactive.Include);
+            Assert.IsNotNull(panel);
+            panel.OpenDefaultOfferForTests("slot-0", directEligible: true);
+            yield return null;
+
+            var directButton = GameObject.Find("DirectConstructionButton").GetComponent<Button>();
+            Assert.IsTrue(directButton.interactable);
+            directButton.onClick.Invoke();
+            yield return null;
+            yield return null;
+            yield return null;
+
+            var saved = HouseStatePersistence.Load("slot-0");
+            Assert.AreEqual(0, saved.CurrentStageIndex);
+            Assert.AreEqual("house.stage.expanded_room.01", saved.ActiveConstructionStageId);
+            Assert.AreEqual(0, saved.PlacedConstructionCells.Length);
+            Assert.AreEqual(500, saved.Currency.Balance);
+            Assert.AreEqual("House", SceneManager.GetActiveScene().name);
+
+            var overlay = Object.FindFirstObjectByType<HouseConstructionOverlay>(FindObjectsInactive.Include);
+            Assert.IsNotNull(overlay);
+            Assert.AreEqual("0/3", overlay.ProgressTextForTests);
+            Assert.AreEqual(3, overlay.ValidMarkerCountForTests);
+            Assert.AreEqual(0, overlay.PlacedMarkerCountForTests);
+        }
+
+        [UnityTest]
+        public IEnumerator HOUSE_UPGRADE_PM_009_ActiveConstructionRestoresPlacedCellsAndCancelPreservesProgress()
+        {
+            var stage = LoadDefaultStageAssetForTests();
+            Assert.IsNotNull(stage);
+            HouseStatePersistence.Save("slot-0", new HouseStateSaveData
+            {
+                ActiveConstructionStageId = stage.Id,
+                PlacedConstructionCells = new[] { new HouseConstructionCellSaveData { X = 1, Y = 1, Kind = HouseConstructionCellKind.Floor } },
+                Currency = new HouseCurrencySaveData { Balance = 500 }
+            });
+
+            yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
+            yield return null;
+            yield return null;
+            yield return null;
+
+            var overlay = Object.FindFirstObjectByType<HouseConstructionOverlay>(FindObjectsInactive.Include);
+            Assert.IsNotNull(overlay);
+            Assert.AreEqual("1/3", overlay.ProgressTextForTests);
+            Assert.AreEqual(3, overlay.ValidMarkerCountForTests);
+            Assert.AreEqual(1, overlay.PlacedMarkerCountForTests);
+
+            var cancelButton = GameObject.Find("CancelConstructionButton").GetComponent<Button>();
+            cancelButton.onClick.Invoke();
+            yield return null;
+
+            var saved = HouseStatePersistence.Load("slot-0");
+            Assert.AreEqual(stage.Id, saved.ActiveConstructionStageId);
+            Assert.AreEqual(1, saved.PlacedConstructionCells.Length);
+        }
+
         private static HouseUpgradeStageDefinition CreateStageForPanelTests(bool includeDirectCondition)
         {
             var blueprint = HouseConstructionBlueprintDefinition.CreateForTests(
@@ -216,6 +293,30 @@ namespace Rootborn.Tests.PlayMode.Housing
             }
 
             return stage;
+        }
+
+        private static HouseConstructionBlueprintDefinition CreateBlueprintForTests(string id)
+        {
+            return HouseConstructionBlueprintDefinition.CreateForTests(
+                id,
+                new RectInt(0, 0, 4, 4),
+                new[] { HouseConstructionCellRequirement.Floor(1, 1), HouseConstructionCellRequirement.Wall(1, 2), HouseConstructionCellRequirement.Door(2, 1) });
+        }
+
+        private static HouseUpgradeStageDefinition CreateDirectStageForTests(string id, HouseConstructionBlueprintDefinition blueprint)
+        {
+            var stage = HouseUpgradeStageDefinition.CreateForTests(id, 1, 300, 120, InteriorGenerationProfile.CreateExpandedOfficeForTests(), null, blueprint);
+            stage.ConfigureConditionsForTests(null, new[] { ScriptableObject.CreateInstance<HouseAlwaysCondition>() });
+            return stage;
+        }
+
+        private static HouseUpgradeStageDefinition LoadDefaultStageAssetForTests()
+        {
+#if UNITY_EDITOR
+            return UnityEditor.AssetDatabase.LoadAssetAtPath<HouseUpgradeStageDefinition>("Assets/Data/Housing/UpgradeStages/HouseStage_ExpandedRoom_01.asset");
+#else
+            return null;
+#endif
         }
 
         private static IEnumerator DriveMouseClick(Mouse mouse, Vector2 position)
@@ -232,6 +333,7 @@ namespace Rootborn.Tests.PlayMode.Housing
                 Object.Destroy(driver.gameObject);
             }
         }
+
         private static int CountTiles(Tilemap tilemap)
         {
             Assert.IsNotNull(tilemap, "HouseGroundTilemap should exist for House generation checks.");
@@ -246,6 +348,7 @@ namespace Rootborn.Tests.PlayMode.Housing
 
             return count;
         }
+
         [DefaultExecutionOrder(-10000)]
         private sealed class MouseClickInputDriver : MonoBehaviour
         {
