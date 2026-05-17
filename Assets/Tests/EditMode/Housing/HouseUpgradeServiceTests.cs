@@ -1,6 +1,7 @@
 using System.IO;
 using NUnit.Framework;
 using Rootborn.Game.Housing;
+using Rootborn.Game.Interiors;
 using Rootborn.Game.Save;
 using UnityEngine;
 
@@ -50,6 +51,48 @@ namespace Rootborn.Tests.EditMode.Housing
             Assert.AreEqual("house.stage.1", loaded.ActiveConstructionStageId);
             Assert.AreEqual(HouseUpgradeRouteKind.DirectConstruction, loaded.LatestRoute);
             Assert.AreEqual("house.stage.1:direct", loaded.CompletionHistoryIds[0]);
+        }
+
+        [Test]
+        public void HOUSE_UPGRADE_030_HireRouteRejectsInsufficientFundsWithoutStageChange()
+        {
+            var stage = HouseUpgradeStageDefinition.CreateForTests("house.stage.1", 1, 300, 120, InteriorGenerationProfile.CreateDefaultOfficeForTests(), null, null);
+            var state = new HouseStateSaveData();
+            var wallet = new HouseCurrencyWallet(100);
+            var service = new HouseUpgradeService(new[] { stage });
+
+            var result = service.TryHire(stage, state, wallet);
+
+            Assert.AreEqual(HouseUpgradeResultKind.InsufficientCurrency, result.Kind);
+            Assert.AreEqual(0, state.CurrentStageIndex);
+            Assert.AreEqual(100, wallet.Balance);
+        }
+
+        [Test]
+        public void HOUSE_UPGRADE_031_HireRoutePaysAndRaisesStageAtomically()
+        {
+            var stage = HouseUpgradeStageDefinition.CreateForTests("house.stage.1", 1, 300, 120, InteriorGenerationProfile.CreateDefaultOfficeForTests(), null, null);
+            var state = new HouseStateSaveData();
+            var wallet = new HouseCurrencyWallet(500);
+            var service = new HouseUpgradeService(new[] { stage });
+
+            var result = service.TryHire(stage, state, wallet);
+
+            Assert.AreEqual(HouseUpgradeResultKind.Applied, result.Kind);
+            Assert.AreEqual(1, state.CurrentStageIndex);
+            Assert.AreEqual(200, wallet.Balance);
+            Assert.AreEqual(HouseUpgradeRouteKind.HireConstruction, state.LatestRoute);
+        }
+
+        [Test]
+        public void HOUSE_UPGRADE_032_DirectRouteIsUnavailableWithoutDirectCondition()
+        {
+            var stage = HouseUpgradeStageDefinition.CreateForTests("house.stage.1", 1, 300, 120, InteriorGenerationProfile.CreateDefaultOfficeForTests(), null, null);
+            var state = new HouseStateSaveData();
+            var wallet = new HouseCurrencyWallet(500);
+            var service = new HouseUpgradeService(new[] { stage });
+
+            Assert.IsFalse(service.CanStartDirect(stage, new HouseUpgradeContext(state, wallet, null)));
         }
     }
 }
