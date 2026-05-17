@@ -120,6 +120,25 @@ namespace Rootborn.Tests.PlayMode.Housing
             Assert.Greater(CountTiles(GameObject.Find("HouseGroundTilemap")?.GetComponent<Tilemap>()), 120);
         }
 
+        [UnityTest]
+        public IEnumerator HOUSE_UPGRADE_PM_005_DirectRouteStartsConstructionOverlayAndTracksProgress()
+        {
+            yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
+            yield return null;
+            yield return null;
+
+            var blueprint = HouseConstructionBlueprintDefinition.CreateForTests(
+                "blueprint.direct",
+                new RectInt(0, 0, 4, 4),
+                new[] { HouseConstructionCellRequirement.Floor(1, 1), HouseConstructionCellRequirement.Wall(1, 2), HouseConstructionCellRequirement.Door(2, 1) });
+
+            var overlay = HouseConstructionOverlay.EnsureForTests(blueprint);
+            Assert.IsNotNull(overlay);
+            Assert.AreEqual("0/3", overlay.ProgressTextForTests);
+            Assert.IsTrue(overlay.TryPlaceForTests(new Vector2Int(1, 1), HouseConstructionCellKind.Floor));
+            Assert.AreEqual("1/3", overlay.ProgressTextForTests);
+            Assert.IsFalse(overlay.CompleteButtonInteractableForTests);
+        }
         private static HouseUpgradeStageDefinition CreateStageForPanelTests(bool includeDirectCondition)
         {
             var blueprint = HouseConstructionBlueprintDefinition.CreateForTests(
