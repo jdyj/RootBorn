@@ -60,12 +60,18 @@ namespace Rootborn.Game.Housing
             if (stage == null || stage.Blueprint == null) return false;
             var conditions = stage.DirectConditions;
             if (conditions.Count == 0) return false;
+
+            bool hasCondition = false;
             for (int i = 0; i < conditions.Count; i++)
             {
-                if (conditions[i] != null && !conditions[i].IsMet(in context)) return false;
+                var condition = conditions[i];
+                if (condition == null) return false;
+
+                hasCondition = true;
+                if (!condition.IsMet(in context)) return false;
             }
 
-            return true;
+            return hasCondition;
         }
 
         public HouseUpgradeResult TryHire(HouseUpgradeStageDefinition stage, HouseStateSaveData state, HouseCurrencyWallet wallet)

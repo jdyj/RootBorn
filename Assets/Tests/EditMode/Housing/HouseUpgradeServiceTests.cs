@@ -1,4 +1,5 @@
 using System.IO;
+using System.Reflection;
 using NUnit.Framework;
 using Rootborn.Game.Housing;
 using Rootborn.Game.Interiors;
@@ -87,12 +88,41 @@ namespace Rootborn.Tests.EditMode.Housing
         [Test]
         public void HOUSE_UPGRADE_032_DirectRouteIsUnavailableWithoutDirectCondition()
         {
-            var stage = HouseUpgradeStageDefinition.CreateForTests("house.stage.1", 1, 300, 120, InteriorGenerationProfile.CreateDefaultOfficeForTests(), null, null);
+            var blueprint = CreateBlueprintForTests();
+            var stage = HouseUpgradeStageDefinition.CreateForTests("house.stage.1", 1, 300, 120, InteriorGenerationProfile.CreateDefaultOfficeForTests(), null, blueprint);
             var state = new HouseStateSaveData();
             var wallet = new HouseCurrencyWallet(500);
             var service = new HouseUpgradeService(new[] { stage });
 
             Assert.IsFalse(service.CanStartDirect(stage, new HouseUpgradeContext(state, wallet, null)));
+        }
+
+        [Test]
+        public void HOUSE_UPGRADE_033_DirectRouteFailsClosedWhenDirectConditionReferenceIsNull()
+        {
+            var blueprint = CreateBlueprintForTests();
+            var stage = HouseUpgradeStageDefinition.CreateForTests("house.stage.1", 1, 300, 120, InteriorGenerationProfile.CreateDefaultOfficeForTests(), null, blueprint);
+            SetDirectConditionsForTests(stage, null);
+            var state = new HouseStateSaveData();
+            var wallet = new HouseCurrencyWallet(500);
+            var service = new HouseUpgradeService(new[] { stage });
+
+            Assert.IsFalse(service.CanStartDirect(stage, new HouseUpgradeContext(state, wallet, null)));
+        }
+
+        private static HouseConstructionBlueprintDefinition CreateBlueprintForTests()
+        {
+            return HouseConstructionBlueprintDefinition.CreateForTests(
+                "blueprint.stage.1",
+                new RectInt(0, 0, 2, 2),
+                new[] { HouseConstructionCellRequirement.Floor(0, 0) });
+        }
+
+        private static void SetDirectConditionsForTests(HouseUpgradeStageDefinition stage, params HouseUpgradeConditionBase[] conditions)
+        {
+            var directConditions = typeof(HouseUpgradeStageDefinition).GetField("_directConditions", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.NotNull(directConditions);
+            directConditions.SetValue(stage, conditions);
         }
     }
 }
