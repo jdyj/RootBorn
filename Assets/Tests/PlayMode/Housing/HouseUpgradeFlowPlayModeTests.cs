@@ -9,6 +9,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.Tilemaps;
+using UnityEngine.UI;
 
 namespace Rootborn.Tests.PlayMode.Housing
 {
@@ -87,6 +88,36 @@ namespace Rootborn.Tests.PlayMode.Housing
             Assert.IsTrue(panel.DirectButtonVisibleForTests);
             Assert.IsTrue(panel.DirectButtonInteractableForTests);
             StringAssert.Contains("120", panel.VisibleTextForTests);
+        }
+
+        [UnityTest]
+        public IEnumerator HOUSE_UPGRADE_PM_004_HireRoutePaysSavesStageAndReloadsExpandedHouse()
+        {
+            yield return SceneManager.LoadSceneAsync("Town", LoadSceneMode.Single);
+            yield return null;
+            yield return null;
+
+            HouseStatePersistence.Save("slot-0", new HouseStateSaveData { Currency = new HouseCurrencySaveData { Balance = 500 } });
+
+            var panel = Object.FindFirstObjectByType<HouseUpgradePanel>(FindObjectsInactive.Include);
+            Assert.IsNotNull(panel);
+            panel.OpenDefaultOfferForTests("slot-0", directEligible: false);
+            yield return null;
+
+            var hireButton = GameObject.Find("HireConstructionButton").GetComponent<Button>();
+            Assert.IsTrue(hireButton.interactable);
+            hireButton.onClick.Invoke();
+            yield return null;
+
+            var saved = HouseStatePersistence.Load("slot-0");
+            Assert.AreEqual(1, saved.CurrentStageIndex);
+            Assert.AreEqual(HouseUpgradeRouteKind.HireConstruction, saved.LatestRoute);
+            Assert.AreEqual(200, saved.Currency.Balance);
+
+            yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
+            yield return null;
+            yield return null;
+            Assert.Greater(CountTiles(GameObject.Find("HouseGroundTilemap")?.GetComponent<Tilemap>()), 120);
         }
 
         private static HouseUpgradeStageDefinition CreateStageForPanelTests(bool includeDirectCondition)

@@ -1,4 +1,5 @@
 using Rootborn.Game.Housing;
+using Rootborn.Game.Interiors;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -6,6 +7,8 @@ namespace Rootborn.UI.Housing
 {
     public sealed class HouseUpgradePanel : MonoBehaviour
     {
+        private const string DefaultStageAssetPath = "Assets/Data/Housing/UpgradeStages/HouseStage_ExpandedRoom_01.asset";
+
         private Text _summaryText;
         private Button _hireButton;
         private Button _directButton;
@@ -13,6 +16,8 @@ namespace Rootborn.UI.Housing
         private HouseUpgradeStageDefinition _stage;
         private HouseStateSaveData _state;
         private HouseCurrencyWallet _wallet;
+        private string _boundSaveSlot;
+        private bool _saveHireOnClick;
 
         public bool HireButtonVisibleForTests => _hireButton != null && _hireButton.gameObject.activeSelf;
         public bool DirectButtonVisibleForTests => _directButton != null && _directButton.gameObject.activeSelf;
@@ -48,7 +53,19 @@ namespace Rootborn.UI.Housing
 
         public void ShowForTests(HouseUpgradeStageDefinition stage, HouseStateSaveData state, HouseCurrencyWallet wallet, bool directEligible)
         {
+            _saveHireOnClick = false;
+            _boundSaveSlot = null;
             Show(stage, state, wallet, directEligible);
+        }
+
+        public void OpenDefaultOfferForTests(string saveSlot, bool directEligible)
+        {
+            var stage = LoadDefaultStageForTests();
+            var state = HouseStatePersistence.Load(saveSlot);
+            var balance = state.Currency != null ? state.Currency.Balance : 0;
+            _boundSaveSlot = string.IsNullOrEmpty(saveSlot) ? "default" : saveSlot;
+            _saveHireOnClick = true;
+            Show(stage, state, new HouseCurrencyWallet(balance), directEligible);
         }
 
         public void Show(HouseUpgradeStageDefinition stage, HouseStateSaveData state, HouseCurrencyWallet wallet, bool directEligible)
@@ -77,15 +94,60 @@ namespace Rootborn.UI.Housing
             _directButton.interactable = canDirect;
         }
 
+        private static HouseUpgradeStageDefinition LoadDefaultStageForTests()
+        {
+#if UNITY_EDITOR
+            var asset = UnityEditor.AssetDatabase.LoadAssetAtPath<HouseUpgradeStageDefinition>(DefaultStageAssetPath);
+            if (asset != null)
+            {
+                return asset;
+            }
+#endif
+            return HouseUpgradeStageDefinition.CreateForTests(
+                "house.stage.expanded_room.01",
+                1,
+                300,
+                120,
+                InteriorGenerationProfile.CreateExpandedOfficeForTests(),
+                null,
+                null);
+        }
+
         private void Build()
         {
             _summaryText = MakeText(transform, "Summary", new Vector2(0f, 62f), new Vector2(460f, 110f), 22);
             _hireButton = MakeButton("HireConstructionButton", "Hire", new Vector2(-115f, -52f));
             _directButton = MakeButton("DirectConstructionButton", "Direct", new Vector2(115f, -52f));
             _closeButton = MakeButton("CloseHouseUpgradeButton", "Close", new Vector2(0f, -112f));
-            _hireButton.onClick.AddListener(() => HireRequested?.Invoke(_stage, _state, _wallet));
-            _directButton.onClick.AddListener(() => DirectRequested?.Invoke(_stage, _state, _wallet));
+            _hireButton.onClick.AddListener(HandleHireClicked);
+            _directButton.onClick.AddListener(HandleDirectClicked);
             _closeButton.onClick.AddListener(() => gameObject.SetActive(false));
+        }
+
+        private void HandleHireClicked()
+        {
+            HireRequested?.Invoke(_stage, _state, _wallet);
+            if (!_saveHireOnClick || _stage == null || _state == null || _wallet == null)
+            {
+                return;
+            }
+
+            var service = new HouseUpgradeService(new[] { _stage });
+            var result = service.TryHire(_stage, _state, _wallet);
+            if (result.Kind != HouseUpgradeResultKind.Applied)
+            {
+                Show(_stage, _state, _wallet, _directButton != null && _directButton.gameObject.activeSelf);
+                return;
+            }
+
+            _state.Currency.Balance = _wallet.Balance;
+            HouseStatePersistence.Save(_boundSaveSlot, _state);
+            gameObject.SetActive(false);
+        }
+
+        private void HandleDirectClicked()
+        {
+            DirectRequested?.Invoke(_stage, _state, _wallet);
         }
 
         private Text MakeText(Transform parent, string name, Vector2 position, Vector2 size, int fontSize)
