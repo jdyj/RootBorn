@@ -97,6 +97,18 @@ namespace Rootborn.Game.Housing
             definition._blueprint = blueprint;
             return definition;
         }
+
+        public void ConfigureConditionsForTests(HouseUpgradeConditionBase[] generalConditions, HouseUpgradeConditionBase[] directConditions)
+        {
+            _generalConditions = generalConditions ?? Array.Empty<HouseUpgradeConditionBase>();
+            _directConditions = directConditions ?? Array.Empty<HouseUpgradeConditionBase>();
+        }
+
+        public void ConfigureEffectsForTests(HouseUpgradeEffectBase[] hireEffects, HouseUpgradeEffectBase[] directEffects)
+        {
+            _hireEffects = hireEffects ?? Array.Empty<HouseUpgradeEffectBase>();
+            _directEffects = directEffects ?? Array.Empty<HouseUpgradeEffectBase>();
+        }
     }
 
     [CreateAssetMenu(fileName = "HouseBlueprint_New", menuName = "Rootborn/Housing/Construction Blueprint")]
