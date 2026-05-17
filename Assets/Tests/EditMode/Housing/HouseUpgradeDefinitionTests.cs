@@ -32,5 +32,29 @@ namespace Rootborn.Tests.EditMode.Housing
             Assert.IsFalse(blueprint.IsCellAllowed(new Vector2Int(5, 5), HouseConstructionCellKind.Floor));
             Assert.IsTrue(blueprint.IsCellAllowed(new Vector2Int(1, 1), HouseConstructionCellKind.Floor));
         }
+
+#if UNITY_EDITOR
+        [Test]
+        public void HOUSE_UPGRADE_040_FirstSliceAssetsExistAndAreValid()
+        {
+            var stage = UnityEditor.AssetDatabase.LoadAssetAtPath<HouseUpgradeStageDefinition>("Assets/Data/Housing/UpgradeStages/HouseStage_ExpandedRoom_01.asset");
+            var blueprint = UnityEditor.AssetDatabase.LoadAssetAtPath<HouseConstructionBlueprintDefinition>("Assets/Data/Housing/Blueprints/HouseBlueprint_ExpandedRoom_01.asset");
+            var condition = UnityEditor.AssetDatabase.LoadAssetAtPath<HouseUpgradeConditionBase>("Assets/Data/Housing/Conditions/HouseCondition_InteriorEligible_Test.asset");
+            var effect = UnityEditor.AssetDatabase.LoadAssetAtPath<HouseUpgradeEffectBase>("Assets/Data/Housing/Effects/HouseEffect_DirectConstructionReward.asset");
+            var profile = UnityEditor.AssetDatabase.LoadAssetAtPath<InteriorGenerationProfile>("Assets/Data/Housing/Profiles/InteriorProfile_ExpandedRoom_01.asset");
+
+            Assert.IsNotNull(stage);
+            Assert.IsNotNull(blueprint);
+            Assert.IsNotNull(condition);
+            Assert.IsNotNull(effect);
+            Assert.IsNotNull(profile);
+            Assert.AreEqual(1, stage.StageIndex);
+            Assert.AreEqual(300, stage.HireCost);
+            Assert.AreEqual(120, stage.DirectCost);
+            Assert.AreSame(profile, stage.Profile);
+            Assert.AreSame(blueprint, stage.Blueprint);
+            Assert.GreaterOrEqual(blueprint.RequiredCells.Count, 3);
+        }
+#endif
     }
 }
