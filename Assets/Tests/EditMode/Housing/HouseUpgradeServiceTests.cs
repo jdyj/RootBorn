@@ -73,6 +73,8 @@ namespace Rootborn.Tests.EditMode.Housing
         public void HOUSE_UPGRADE_031_HireRoutePaysAndRaisesStageAtomically()
         {
             var stage = HouseUpgradeStageDefinition.CreateForTests("house.stage.1", 1, 300, 120, InteriorGenerationProfile.CreateDefaultOfficeForTests(), null, null);
+            var effect = ScriptableObject.CreateInstance<CountingHouseEffect>();
+            SetHireEffectsForTests(stage, effect);
             var state = new HouseStateSaveData();
             var wallet = new HouseCurrencyWallet(500);
             var service = new HouseUpgradeService(new[] { stage });
@@ -83,6 +85,7 @@ namespace Rootborn.Tests.EditMode.Housing
             Assert.AreEqual(1, state.CurrentStageIndex);
             Assert.AreEqual(200, wallet.Balance);
             Assert.AreEqual(HouseUpgradeRouteKind.HireConstruction, state.LatestRoute);
+            Assert.AreEqual(1, effect.ApplyCount);
         }
 
         [Test]
@@ -110,6 +113,121 @@ namespace Rootborn.Tests.EditMode.Housing
             Assert.IsFalse(service.CanStartDirect(stage, new HouseUpgradeContext(state, wallet, null)));
         }
 
+        [Test]
+        public void HOUSE_UPGRADE_034_DirectCompletionRejectsUnavailableRouteWithoutSpending()
+        {
+            var blueprint = CreateBlueprintForTests();
+            var stage = HouseUpgradeStageDefinition.CreateForTests("house.stage.1", 1, 300, 120, InteriorGenerationProfile.CreateDefaultOfficeForTests(), null, blueprint);
+            var state = new HouseStateSaveData();
+            var wallet = new HouseCurrencyWallet(500);
+            var session = CreateCompletedSession(blueprint);
+            var service = new HouseUpgradeService(new[] { stage });
+
+            var result = service.TryCompleteDirect(stage, state, wallet, session);
+
+            Assert.AreEqual(HouseUpgradeResultKind.RequirementFailed, result.Kind);
+            Assert.AreEqual(0, state.CurrentStageIndex);
+            Assert.AreEqual(500, wallet.Balance);
+            Assert.AreEqual(HouseUpgradeRouteKind.None, state.LatestRoute);
+        }
+
+        [Test]
+        public void HOUSE_UPGRADE_035_DirectCompletionRejectsIncompleteSessionWithoutSpending()
+        {
+            var blueprint = CreateBlueprintForTests();
+            var stage = HouseUpgradeStageDefinition.CreateForTests("house.stage.1", 1, 300, 120, InteriorGenerationProfile.CreateDefaultOfficeForTests(), null, blueprint);
+            SetDirectConditionsForTests(stage, ScriptableObject.CreateInstance<AlwaysHouseConditionForTests>());
+            var state = new HouseStateSaveData();
+            var wallet = new HouseCurrencyWallet(500);
+            var session = new HouseConstructionSession(blueprint);
+            var service = new HouseUpgradeService(new[] { stage });
+
+            var result = service.TryCompleteDirect(stage, state, wallet, session);
+
+            Assert.AreEqual(HouseUpgradeResultKind.ConstructionIncomplete, result.Kind);
+            Assert.AreEqual(0, state.CurrentStageIndex);
+            Assert.AreEqual(500, wallet.Balance);
+        }
+
+        [Test]
+        public void HOUSE_UPGRADE_036_DirectCompletionRejectsUnregisteredStageWithoutSpending()
+        {
+            var blueprint = CreateBlueprintForTests();
+            var registeredStage = HouseUpgradeStageDefinition.CreateForTests("house.stage.registered", 1, 300, 120, InteriorGenerationProfile.CreateDefaultOfficeForTests(), null, blueprint);
+            var requestedStage = HouseUpgradeStageDefinition.CreateForTests("house.stage.external", 1, 300, 120, InteriorGenerationProfile.CreateDefaultOfficeForTests(), null, blueprint);
+            SetDirectConditionsForTests(requestedStage, ScriptableObject.CreateInstance<AlwaysHouseConditionForTests>());
+            var state = new HouseStateSaveData();
+            var wallet = new HouseCurrencyWallet(500);
+            var session = CreateCompletedSession(blueprint);
+            var service = new HouseUpgradeService(new[] { registeredStage });
+
+            var result = service.TryCompleteDirect(requestedStage, state, wallet, session);
+
+            Assert.AreEqual(HouseUpgradeResultKind.InvalidStage, result.Kind);
+            Assert.AreEqual(0, state.CurrentStageIndex);
+            Assert.AreEqual(500, wallet.Balance);
+        }
+
+        [Test]
+        public void HOUSE_UPGRADE_037_DirectCompletionPaysAndRaisesStageAtomically()
+        {
+            var blueprint = CreateBlueprintForTests();
+            var stage = HouseUpgradeStageDefinition.CreateForTests("house.stage.1", 1, 300, 120, InteriorGenerationProfile.CreateDefaultOfficeForTests(), null, blueprint);
+            var effect = ScriptableObject.CreateInstance<CountingHouseEffect>();
+            SetDirectConditionsForTests(stage, ScriptableObject.CreateInstance<AlwaysHouseConditionForTests>());
+            SetDirectEffectsForTests(stage, effect);
+            var state = new HouseStateSaveData
+            {
+                ActiveConstructionStageId = "house.stage.1",
+                PlacedConstructionCells = new[] { new HouseConstructionCellSaveData { X = 0, Y = 0, Kind = HouseConstructionCellKind.Floor } }
+            };
+            var wallet = new HouseCurrencyWallet(500);
+            var session = CreateCompletedSession(blueprint);
+            var service = new HouseUpgradeService(new[] { stage });
+
+            var result = service.TryCompleteDirect(stage, state, wallet, session);
+
+            Assert.AreEqual(HouseUpgradeResultKind.Applied, result.Kind);
+            Assert.AreEqual(1, state.CurrentStageIndex);
+            Assert.AreEqual(380, wallet.Balance);
+            Assert.AreEqual(string.Empty, state.ActiveConstructionStageId);
+            Assert.AreEqual(0, state.PlacedConstructionCells.Length);
+            Assert.AreEqual(HouseUpgradeRouteKind.DirectConstruction, state.LatestRoute);
+            Assert.AreEqual(1, effect.ApplyCount);
+        }
+
+        [Test]
+        public void HOUSE_UPGRADE_038_HireRouteRejectsStageSkippingWithoutSpending()
+        {
+            var stageOne = HouseUpgradeStageDefinition.CreateForTests("house.stage.1", 1, 300, 120, InteriorGenerationProfile.CreateDefaultOfficeForTests(), null, null);
+            var stageTwo = HouseUpgradeStageDefinition.CreateForTests("house.stage.2", 2, 600, 240, InteriorGenerationProfile.CreateDefaultOfficeForTests(), null, null);
+            var state = new HouseStateSaveData();
+            var wallet = new HouseCurrencyWallet(1000);
+            var service = new HouseUpgradeService(new[] { stageOne, stageTwo });
+
+            var result = service.TryHire(stageTwo, state, wallet);
+
+            Assert.AreEqual(HouseUpgradeResultKind.InvalidStage, result.Kind);
+            Assert.AreEqual(0, state.CurrentStageIndex);
+            Assert.AreEqual(1000, wallet.Balance);
+        }
+
+        [Test]
+        public void HOUSE_UPGRADE_039_HireRouteRejectsFailedGeneralConditionWithoutSpending()
+        {
+            var stage = HouseUpgradeStageDefinition.CreateForTests("house.stage.1", 1, 300, 120, InteriorGenerationProfile.CreateDefaultOfficeForTests(), null, null);
+            SetGeneralConditionsForTests(stage, ScriptableObject.CreateInstance<NeverHouseConditionForTests>());
+            var state = new HouseStateSaveData();
+            var wallet = new HouseCurrencyWallet(500);
+            var service = new HouseUpgradeService(new[] { stage });
+
+            var result = service.TryHire(stage, state, wallet);
+
+            Assert.AreEqual(HouseUpgradeResultKind.RequirementFailed, result.Kind);
+            Assert.AreEqual(0, state.CurrentStageIndex);
+            Assert.AreEqual(500, wallet.Balance);
+        }
+
         private static HouseConstructionBlueprintDefinition CreateBlueprintForTests()
         {
             return HouseConstructionBlueprintDefinition.CreateForTests(
@@ -118,11 +236,60 @@ namespace Rootborn.Tests.EditMode.Housing
                 new[] { HouseConstructionCellRequirement.Floor(0, 0) });
         }
 
+        private static HouseConstructionSession CreateCompletedSession(HouseConstructionBlueprintDefinition blueprint)
+        {
+            var session = new HouseConstructionSession(blueprint);
+            Assert.IsTrue(session.TryPlace(new Vector2Int(0, 0), HouseConstructionCellKind.Floor));
+            return session;
+        }
+
+        private static void SetGeneralConditionsForTests(HouseUpgradeStageDefinition stage, params HouseUpgradeConditionBase[] conditions)
+        {
+            SetPrivateArray(stage, "_generalConditions", conditions);
+        }
+
         private static void SetDirectConditionsForTests(HouseUpgradeStageDefinition stage, params HouseUpgradeConditionBase[] conditions)
         {
-            var directConditions = typeof(HouseUpgradeStageDefinition).GetField("_directConditions", BindingFlags.Instance | BindingFlags.NonPublic);
-            Assert.NotNull(directConditions);
-            directConditions.SetValue(stage, conditions);
+            SetPrivateArray(stage, "_directConditions", conditions);
+        }
+
+        private static void SetHireEffectsForTests(HouseUpgradeStageDefinition stage, params HouseUpgradeEffectBase[] effects)
+        {
+            SetPrivateArray(stage, "_hireEffects", effects);
+        }
+
+        private static void SetDirectEffectsForTests(HouseUpgradeStageDefinition stage, params HouseUpgradeEffectBase[] effects)
+        {
+            SetPrivateArray(stage, "_directEffects", effects);
+        }
+
+        private static void SetPrivateArray<T>(HouseUpgradeStageDefinition stage, string fieldName, T[] value)
+        {
+            var field = typeof(HouseUpgradeStageDefinition).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.NotNull(field);
+            field.SetValue(stage, value);
+        }
+
+        private sealed class AlwaysHouseConditionForTests : HouseUpgradeConditionBase
+        {
+            public override bool IsMet(in HouseUpgradeContext context) => true;
+        }
+
+        private sealed class NeverHouseConditionForTests : HouseUpgradeConditionBase
+        {
+            public override bool IsMet(in HouseUpgradeContext context) => false;
+        }
+
+        private sealed class CountingHouseEffect : HouseUpgradeEffectBase
+        {
+            public int ApplyCount { get; private set; }
+
+            public override bool CanApply(in HouseUpgradeContext context) => true;
+
+            public override void Apply(in HouseUpgradeContext context)
+            {
+                ApplyCount++;
+            }
         }
     }
 }

@@ -13,6 +13,7 @@ namespace Rootborn.Game.Housing
             _blueprint = blueprint;
         }
 
+        public HouseConstructionBlueprintDefinition Blueprint => _blueprint;
         public bool IsComplete => _blueprint != null && HasAllRequiredCells();
 
         public bool TryPlace(Vector2Int cell, HouseConstructionCellKind kind)

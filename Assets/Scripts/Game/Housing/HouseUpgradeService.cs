@@ -78,6 +78,11 @@ namespace Rootborn.Game.Housing
         {
             if (stage == null || state == null || wallet == null) return new HouseUpgradeResult(HouseUpgradeResultKind.InvalidStage, "Invalid stage");
             if (state.CurrentStageIndex >= stage.StageIndex) return new HouseUpgradeResult(HouseUpgradeResultKind.AlreadyApplied, "Already applied");
+            if (!IsRequestedNextStage(stage, state)) return new HouseUpgradeResult(HouseUpgradeResultKind.InvalidStage, "Stage is not available");
+
+            var context = new HouseUpgradeContext(state, wallet, null);
+            if (!AreConditionsMet(stage.GeneralConditions, in context)) return new HouseUpgradeResult(HouseUpgradeResultKind.RequirementFailed, "Requirement failed");
+            if (!CanApplyEffects(stage.HireEffects, in context)) return new HouseUpgradeResult(HouseUpgradeResultKind.RequirementFailed, "Effect requirement failed");
             if (!wallet.CanSpend(stage.HireCost)) return new HouseUpgradeResult(HouseUpgradeResultKind.InsufficientCurrency, "Insufficient currency");
             if (!wallet.TrySpend(stage.HireCost)) return new HouseUpgradeResult(HouseUpgradeResultKind.InsufficientCurrency, "Insufficient currency");
 
@@ -85,6 +90,7 @@ namespace Rootborn.Game.Housing
             state.ActiveConstructionStageId = string.Empty;
             state.PlacedConstructionCells = Array.Empty<HouseConstructionCellSaveData>();
             state.LatestRoute = HouseUpgradeRouteKind.HireConstruction;
+            ApplyEffects(stage.HireEffects, in context);
             return new HouseUpgradeResult(HouseUpgradeResultKind.Applied, "Applied");
         }
 
@@ -92,7 +98,14 @@ namespace Rootborn.Game.Housing
         {
             if (stage == null || state == null || wallet == null || session == null) return new HouseUpgradeResult(HouseUpgradeResultKind.InvalidStage, "Invalid direct construction");
             if (state.CurrentStageIndex >= stage.StageIndex) return new HouseUpgradeResult(HouseUpgradeResultKind.AlreadyApplied, "Already applied");
+            if (!IsRequestedNextStage(stage, state)) return new HouseUpgradeResult(HouseUpgradeResultKind.InvalidStage, "Stage is not available");
+            if (session.Blueprint != stage.Blueprint) return new HouseUpgradeResult(HouseUpgradeResultKind.InvalidStage, "Construction blueprint mismatch");
+
+            var context = new HouseUpgradeContext(state, wallet, null);
+            if (!AreConditionsMet(stage.GeneralConditions, in context)) return new HouseUpgradeResult(HouseUpgradeResultKind.RequirementFailed, "Requirement failed");
+            if (!CanStartDirect(stage, in context)) return new HouseUpgradeResult(HouseUpgradeResultKind.RequirementFailed, "Direct construction unavailable");
             if (!session.IsComplete) return new HouseUpgradeResult(HouseUpgradeResultKind.ConstructionIncomplete, "Construction incomplete");
+            if (!CanApplyEffects(stage.DirectEffects, in context)) return new HouseUpgradeResult(HouseUpgradeResultKind.RequirementFailed, "Effect requirement failed");
             if (!wallet.CanSpend(stage.DirectCost)) return new HouseUpgradeResult(HouseUpgradeResultKind.InsufficientCurrency, "Insufficient currency");
             if (!wallet.TrySpend(stage.DirectCost)) return new HouseUpgradeResult(HouseUpgradeResultKind.InsufficientCurrency, "Insufficient currency");
 
@@ -100,7 +113,42 @@ namespace Rootborn.Game.Housing
             state.ActiveConstructionStageId = string.Empty;
             state.PlacedConstructionCells = Array.Empty<HouseConstructionCellSaveData>();
             state.LatestRoute = HouseUpgradeRouteKind.DirectConstruction;
+            ApplyEffects(stage.DirectEffects, in context);
             return new HouseUpgradeResult(HouseUpgradeResultKind.Applied, "Applied");
+        }
+
+        private bool IsRequestedNextStage(HouseUpgradeStageDefinition stage, HouseStateSaveData state)
+        {
+            if (stage == null || state == null) return false;
+            if (stage.StageIndex != state.CurrentStageIndex + 1) return false;
+            return ReferenceEquals(ResolveNextStage(state), stage);
+        }
+
+        private static bool AreConditionsMet(IReadOnlyList<HouseUpgradeConditionBase> conditions, in HouseUpgradeContext context)
+        {
+            for (int i = 0; i < conditions.Count; i++)
+            {
+                var condition = conditions[i];
+                if (condition == null || !condition.IsMet(in context)) return false;
+            }
+
+            return true;
+        }
+
+        private static bool CanApplyEffects(IReadOnlyList<HouseUpgradeEffectBase> effects, in HouseUpgradeContext context)
+        {
+            for (int i = 0; i < effects.Count; i++)
+            {
+                var effect = effects[i];
+                if (effect == null || !effect.CanApply(in context)) return false;
+            }
+
+            return true;
+        }
+
+        private static void ApplyEffects(IReadOnlyList<HouseUpgradeEffectBase> effects, in HouseUpgradeContext context)
+        {
+            for (int i = 0; i < effects.Count; i++) effects[i].Apply(in context);
         }
     }
 }
