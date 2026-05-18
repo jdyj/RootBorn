@@ -75,5 +75,16 @@ namespace Rootborn.Tests.EditMode.Scenarios
             StringAssert.Contains("qa", town);
             StringAssert.Contains("evidence", town);
         }
+
+        [Test]
+        public void COVERAGE_005_HouseFlowWritesBeforeAndAfterReloadEvidencePaths()
+        {
+            string house = File.ReadAllText("Assets/Tests/PlayMode/EndToEnd/HousePlacementSaveLoadE2EScenarioTests.cs");
+
+            StringAssert.Contains("house-interior-placement-before-reload.png", house);
+            StringAssert.Contains("house-interior-placement-after-reload.png", house);
+            StringAssert.Contains("house-interior-placement-before-reload-probe.txt", house);
+            StringAssert.Contains("house-interior-placement-after-reload-probe.txt", house);
+        }
     }
 }

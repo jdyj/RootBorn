@@ -1,7 +1,8 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
+using Rootborn.Tests.PlayMode.Scenarios;
 using Rootborn.Game.Placement;
 using Rootborn.Game.Save;
 using Rootborn.UI.Interiors;
@@ -56,8 +57,11 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         }
 
         [UnityTest]
-        public IEnumerator HOUSE_PLACEMENT_E2E_001_NewGamePlaceSaveExitLoadRestoresHouseFurniture()
+        public IEnumerator HOUSE_FLOW_001_003_NewGamePlaceSaveExitLoadRestoresHouseFurnitureWithVisualEvidence()
         {
+            Assert.AreEqual("HOUSE-FLOW-001", ScenarioId.HOUSE_FLOW_001);
+            Assert.AreEqual("HOUSE-FLOW-002", ScenarioId.HOUSE_FLOW_002);
+            Assert.AreEqual("HOUSE-FLOW-003", ScenarioId.HOUSE_FLOW_003);
             yield return OpenCreatorFromMainMenu();
             yield return ClickButtonNamed("ConfirmButton");
             yield return WaitForScene("Town", 10f);
@@ -78,6 +82,13 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var layoutPath = Path.Combine(_saveRoot, "slot-0", LayoutFileName);
             Assert.IsTrue(File.Exists(layoutPath), "House furniture save must persist to the active save slot, not only a runtime static list.");
             StringAssert.Contains(placedTileName, File.ReadAllText(layoutPath), "The saved layout JSON should identify the same furniture tile placed by the player-facing world click.");
+            yield return CaptureVisualEvidence(
+                "house-interior-placement-before-reload.png",
+                "house-interior-placement-before-reload-probe.txt",
+                furnitureTilemap,
+                occupancyTilemap,
+                placedCell,
+                placedTileName);
 
             ClearStaticFurnitureLayoutCache();
             ActiveSaveContext.Clear();
@@ -101,7 +112,13 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.AreEqual(occupiedBefore, CountTiles(restoredOccupancyTilemap), "Restored occupancy should match the saved placement footprint without duplicates.");
             Assert.IsNotNull(restoredOccupancyTilemap.GetTile(restoredCell), "Restored furniture must also restore occupancy for gameplay collision/placement rules.");
             Assert.IsNull(GameObject.Find("ModernOfficeChairSampleTilemap"), "Stale sample/debug furniture tilemaps must not be visible after saved-game House reload.");
-            yield return CaptureVisualEvidence(restoredFurnitureTilemap, restoredOccupancyTilemap, restoredCell, restoredTileName);
+            yield return CaptureVisualEvidence(
+                "house-interior-placement-after-reload.png",
+                "house-interior-placement-after-reload-probe.txt",
+                restoredFurnitureTilemap,
+                restoredOccupancyTilemap,
+                restoredCell,
+                restoredTileName);
         }
 
         private IEnumerator OpenCreatorFromMainMenu()
@@ -141,12 +158,12 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.AreEqual(0, overlay.InvalidCellCount, "Successful world click placement should clear invalid overlay cells.");
         }
 
-        private static IEnumerator CaptureVisualEvidence(Tilemap furnitureTilemap, Tilemap occupancyTilemap, Vector3Int restoredCell, string restoredTileName)
+        private static IEnumerator CaptureVisualEvidence(string screenshotFileName, string probeFileName, Tilemap furnitureTilemap, Tilemap occupancyTilemap, Vector3Int restoredCell, string restoredTileName)
         {
-            string evidenceDirectory = Path.Combine("Builds", "Logs", "house-placement-save-load-e2e");
+            string evidenceDirectory = Path.Combine(Application.dataPath, "..", "production", "qa", "evidence");
             Directory.CreateDirectory(evidenceDirectory);
-            string screenshotPath = Path.Combine(evidenceDirectory, "restored-house-placement-game-view.png");
-            string probePath = Path.Combine(evidenceDirectory, "restored-house-placement-probe.txt");
+            string screenshotPath = Path.Combine(evidenceDirectory, screenshotFileName);
+            string probePath = Path.Combine(evidenceDirectory, probeFileName);
             if (File.Exists(screenshotPath))
             {
                 File.Delete(screenshotPath);
