@@ -130,7 +130,7 @@ namespace Rootborn.UI.Interiors
             {
                 var map = sourceProfile != null ? InteriorGenerator.Generate(profile, _seed) : GenerateManualPlacementMap(profile, _seed);
                 CurrentMap = map;
-                return new InteriorFurnitureGenerationResult(true, "Generated", string.Empty, map);
+                return new InteriorFurnitureGenerationResult(true, "Generated", BuildSummary(map), map);
             }
             catch (Exception ex) when (ex is InteriorPlacementException || ex is InvalidOperationException)
             {
@@ -143,6 +143,20 @@ namespace Rootborn.UI.Interiors
                     UnityEngine.Object.DestroyImmediate(profile);
                 }
             }
+        }
+
+        private static string BuildSummary(InteriorGeneratedMap map)
+        {
+            if (map == null)
+            {
+                return string.Empty;
+            }
+
+            return "Desk: " + map.CountObjects(InteriorObjectKind.Desk)
+                + ", Chair: " + map.CountObjects(InteriorObjectKind.Chair)
+                + ", Computer: " + map.CountObjects(InteriorObjectKind.Computer)
+                + ", Sofa: " + map.CountObjects(InteriorObjectKind.Sofa)
+                + ", Plant: " + map.CountObjects(InteriorObjectKind.Plant);
         }
 
         private static InteriorGeneratedMap GenerateManualPlacementMap(InteriorGenerationProfile profile, int seed)

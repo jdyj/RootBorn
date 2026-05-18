@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82c6e6c70399ec34fa191697c98d7e4c, type: 3}
+  m_Name: Hint_Technical_Workshop
+  m_EditorClassIdentifier: Rootborn.Game:Rootborn.Game.StudentLife:CareerHintDefinition
+  _id: career.hint.technical.workshop
+  _displayNameKey: career.hint.technical.workshop
+  _candidate: {fileID: 11400000, guid: 2dc81fd4d5d4d9b479224c737728ff77, type: 2}
+  _route: {fileID: 11400000, guid: 078d13b864a112e4098e66f860d53245, type: 2}
+  _insightKey: insight.career.hint.technical.workshop
+  _understandingDelta: 1
+  _sources:
+  - {fileID: 11400000, guid: bb989b4d269583f439c22970f3a7205a, type: 2}

@@ -22,12 +22,12 @@ namespace Rootborn.Tests.EditMode
                 Invoke(fixture.Panel, "Show");
 
                 Assert.IsTrue((bool)GetProperty(fixture.Panel, "IsVisible"));
-                AssertChildHasTiles(fixture.Host.transform, "InventoryTitleTab");
-                AssertChildHasTiles(fixture.Host.transform, "InventorySlotGrid");
-                AssertChildHasTiles(fixture.Host.transform, "InventoryScrollbar");
-                AssertChildHasTiles(fixture.Host.transform, "InventoryBottomControls");
+                Assert.IsNotNull(FindDeep(fixture.Host.transform, "Cell_TL"), "Missing inventory tab chrome.");
+                AssertChildHasTiles(fixture.Host.transform, "InventoryInnerPanel");
+                Assert.IsNotNull(FindDeep(fixture.Host.transform, "ScrollTrackTop"), "Missing inventory scrollbar.");
+                Assert.IsNotNull(fixture.Host.transform.Find("SearchField"), "Missing inventory bottom controls/search row.");
                 Assert.GreaterOrEqual((int)GetProperty(fixture.Panel, "TileCount"), 80);
-                Assert.IsNotNull(fixture.Host.transform.Find("InventorySlotGrid/Slot_Wood"));
+                Assert.IsNotNull(FindDeep(fixture.Host.transform, "Slot_Wood"));
             }
             finally
             {
@@ -48,7 +48,7 @@ namespace Rootborn.Tests.EditMode
                 Invoke(fixture.Panel, "Bind", fixture.Inventory);
                 Invoke(fixture.Panel, "Show");
 
-                fixture.Host.transform.Find("InventorySlotGrid/Slot_Wood").GetComponent<Button>().onClick.Invoke();
+                FindDeep(fixture.Host.transform, "Slot_Wood").GetComponent<Button>().onClick.Invoke();
 
                 var popup = fixture.Host.transform.Find("ItemDetailPopup");
                 Assert.IsNotNull(popup, "Item slot click should open popup.");
@@ -58,7 +58,7 @@ namespace Rootborn.Tests.EditMode
                 StringAssert.Contains("12", popup.Find("ItemCount").GetComponent<Text>().text);
                 Assert.IsNotNull(popup.Find("ActionButton").GetComponent<ModernUiTileImage>());
 
-                fixture.Host.transform.Find("InventorySlotGrid/Slot_Empty_1").GetComponent<Button>().onClick.Invoke();
+                FindDeep(fixture.Host.transform, "Slot_Empty_1").GetComponent<Button>().onClick.Invoke();
                 Assert.IsNull(fixture.Host.transform.Find("ItemDetailPopup"));
             }
             finally
@@ -86,6 +86,30 @@ namespace Rootborn.Tests.EditMode
             var tiles = child.GetComponent<ModernUiTileImage>();
             Assert.IsNotNull(tiles, name + " must use ModernUiTileImage.");
             Assert.Greater(tiles.TileCount, 0, name + " must build 16x16 tiles.");
+        }
+
+        private static Transform FindDeep(Transform root, string name)
+        {
+            if (root == null)
+            {
+                return null;
+            }
+
+            if (root.name == name)
+            {
+                return root;
+            }
+
+            for (int i = 0; i < root.childCount; i++)
+            {
+                var found = FindDeep(root.GetChild(i), name);
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+
+            return null;
         }
 
         private static void Invoke(Component target, string methodName, params object[] args)

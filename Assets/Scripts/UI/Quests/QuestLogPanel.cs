@@ -10,8 +10,11 @@ namespace Rootborn.UI.Quests
     [DisallowMultipleComponent]
     public sealed class QuestLogPanel : MonoBehaviour
     {
+        private const string WindowName = "QuestWindow";
+        private static readonly Vector2 WindowSize = new Vector2(560f, 400f);
         private static readonly string[] GeneratedChildNames =
         {
+            WindowName,
             "QuestTitleTab",
             "QuestList",
             "QuestDetail",
@@ -84,21 +87,19 @@ namespace Rootborn.UI.Quests
             ClearGeneratedChildren();
 
             var root = transform as RectTransform;
-            if (root != null)
+            if (root != null && root.sizeDelta == Vector2.zero)
             {
-                if (root.sizeDelta == Vector2.zero)
-                {
-                    root.sizeDelta = new Vector2(520f, 360f);
-                }
+                root.sizeDelta = WindowSize;
             }
 
-            MakeTilePanel("QuestTitleTab", new Vector2(0f, 154f), new Vector2(192f, 40f));
-            MakeTilePanel("QuestList", new Vector2(-146f, 24f), new Vector2(208f, 256f));
-            MakeTilePanel("QuestDetail", new Vector2(120f, 58f), new Vector2(256f, 188f));
-            MakeTilePanel("ObjectiveProgress", new Vector2(120f, -62f), new Vector2(256f, 48f));
-            MakeTilePanel("RewardRow", new Vector2(72f, -124f), new Vector2(160f, 48f));
-            MakeTilePanel("QuestScrollbar", new Vector2(-22f, 24f), new Vector2(24f, 256f));
-            MakeClaimButton(new Vector2(196f, -124f), new Vector2(96f, 48f), null);
+            var window = ModernUiPanelBuilder.CreateCommonPanel48(transform, WindowName, Vector2.zero, WindowSize).transform;
+            MakeTilePanel(window, "QuestTitleTab", new Vector2(0f, 166f), new Vector2(216f, 40f));
+            MakeTilePanel(window, "QuestList", new Vector2(-156f, 26f), new Vector2(212f, 268f));
+            MakeTilePanel(window, "QuestDetail", new Vector2(120f, 70f), new Vector2(260f, 180f));
+            MakeTilePanel(window, "ObjectiveProgress", new Vector2(120f, -44f), new Vector2(260f, 48f));
+            MakeTilePanel(window, "RewardRow", new Vector2(72f, -112f), new Vector2(164f, 48f));
+            MakeTilePanel(window, "QuestScrollbar", new Vector2(-32f, 26f), new Vector2(24f, 268f));
+            MakeClaimButton(window, new Vector2(198f, -112f), new Vector2(100f, 48f), null);
         }
 
         private void PopulateQuestContent()
@@ -157,46 +158,38 @@ namespace Rootborn.UI.Quests
 
         private void MakeQuestRow(QuestDefinition quest, int index)
         {
-            var list = transform.Find("QuestList");
+            var list = FindWindowChild("QuestList");
             if (list == null)
             {
                 return;
             }
 
-            var row = new GameObject("QuestRow_" + quest.Id, typeof(RectTransform), typeof(ModernUiTileImage));
-            row.transform.SetParent(list, false);
+            var row = ModernUiPanelBuilder.CreatePlainContainer(list, "QuestRow_" + quest.Id, new Vector2(0f, -12f - index * 40f), new Vector2(184f, 32f));
             var rect = (RectTransform)row.transform;
             rect.anchorMin = new Vector2(0.5f, 1f);
             rect.anchorMax = new Vector2(0.5f, 1f);
             rect.pivot = new Vector2(0.5f, 1f);
-            rect.anchoredPosition = new Vector2(0f, -12f - index * 40f);
-            rect.sizeDelta = new Vector2(184f, 32f);
-
-            var tiles = row.GetComponent<ModernUiTileImage>();
-            tiles.SetRecipe(ModernUiRecipes.CommonPanel);
-            tiles.Rebuild();
-            DisableGeneratedTileSprites(row.transform);
 
             MakeText(row.transform, "QuestRowText", quest.DisplayNameKey, Vector2.zero, rect.sizeDelta - new Vector2(16f, 8f));
         }
 
         private void PopulateQuestDetail(QuestDefinition quest)
         {
-            var detail = transform.Find("QuestDetail");
+            var detail = FindWindowChild("QuestDetail");
             if (detail != null)
             {
                 string detailText = quest == null ? string.Empty : BuildQuestDetailText(quest);
                 SetOrMakeText(detail, "DetailText", detailText, Vector2.zero, new Vector2(224f, 156f));
             }
 
-            var objective = transform.Find("ObjectiveProgress");
+            var objective = FindWindowChild("ObjectiveProgress");
             if (objective != null)
             {
                 string objectiveText = quest == null || _questLog == null ? string.Empty : BuildObjectiveText(quest);
                 SetOrMakeText(objective, "ObjectiveText", objectiveText, Vector2.zero, new Vector2(224f, 32f));
             }
 
-            var reward = transform.Find("RewardRow");
+            var reward = FindWindowChild("RewardRow");
             if (reward != null)
             {
                 string rewardText = quest == null ? string.Empty : BuildRewardText(quest);
@@ -262,11 +255,17 @@ namespace Rootborn.UI.Quests
 
         private void BindClaimButton(QuestDefinition quest)
         {
-            var rewardButton = transform.Find("ClaimButton")?.GetComponent<QuestRewardButton>();
+            var rewardButton = FindWindowChild("ClaimButton")?.GetComponent<QuestRewardButton>();
             if (rewardButton != null)
             {
                 rewardButton.Bind(_questLog, quest, _rewardContext);
             }
+        }
+
+        private Transform FindWindowChild(string childName)
+        {
+            var window = transform.Find(WindowName);
+            return window != null ? window.Find(childName) : null;
         }
 
         private void ClearGeneratedChildren()
@@ -303,44 +302,15 @@ namespace Rootborn.UI.Quests
             return false;
         }
 
-        private GameObject MakeTilePanel(string name, Vector2 position, Vector2 size)
+        private static GameObject MakeTilePanel(Transform parent, string name, Vector2 position, Vector2 size)
         {
-            var go = new GameObject(name, typeof(RectTransform), typeof(ModernUiTileImage));
-            go.transform.SetParent(transform, false);
-            var rect = (RectTransform)go.transform;
-            rect.anchorMin = new Vector2(0.5f, 0.5f);
-            rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = position;
-            rect.sizeDelta = size;
-            var tiles = go.GetComponent<ModernUiTileImage>();
-            tiles.SetRecipe(ModernUiRecipes.CommonPanel);
-            tiles.Rebuild();
-            DisableGeneratedTileSprites(go.transform);
-            return go;
+            return ModernUiPanelBuilder.CreatePlainContainer(parent, name, position, size);
         }
 
-        private void MakeClaimButton(Vector2 position, Vector2 size, QuestDefinition quest)
+        private void MakeClaimButton(Transform parent, Vector2 position, Vector2 size, QuestDefinition quest)
         {
-            var go = new GameObject("ClaimButton", typeof(RectTransform), typeof(Image), typeof(Button), typeof(ModernUiTileImage), typeof(QuestRewardButton));
-            go.transform.SetParent(transform, false);
-            var rect = (RectTransform)go.transform;
-            rect.anchorMin = new Vector2(0.5f, 0.5f);
-            rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = position;
-            rect.sizeDelta = size;
-
-            var image = go.GetComponent<Image>();
-            image.color = Color.clear;
-            image.raycastTarget = true;
-
-            var tiles = go.GetComponent<ModernUiTileImage>();
-            tiles.SetRecipe(ModernUiRecipes.CommonPanel);
-            tiles.Rebuild();
-            DisableGeneratedTileSprites(go.transform);
-
-            go.GetComponent<QuestRewardButton>().Bind(_questLog, quest, _rewardContext);
+            var go = ModernUiPanelBuilder.CreatePlainButton(parent, "ClaimButton", position, size);
+            go.AddComponent<QuestRewardButton>().Bind(_questLog, quest, _rewardContext);
         }
 
         private static Text SetOrMakeText(Transform parent, string name, string text, Vector2 position, Vector2 size)
@@ -372,18 +342,6 @@ namespace Rootborn.UI.Quests
             label.color = Color.white;
             label.fontSize = 14;
             return label;
-        }
-
-        private static void DisableGeneratedTileSprites(Transform root)
-        {
-            for (int i = 0; i < root.childCount; i++)
-            {
-                var child = root.GetChild(i);
-                if (child.name.StartsWith("Tile_", StringComparison.Ordinal) && child.TryGetComponent<Image>(out var image))
-                {
-                    image.enabled = false;
-                }
-            }
         }
 
         private static string SafeText(string primary, string fallback)

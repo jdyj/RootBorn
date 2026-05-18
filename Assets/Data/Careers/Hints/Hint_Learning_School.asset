@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82c6e6c70399ec34fa191697c98d7e4c, type: 3}
+  m_Name: Hint_Learning_School
+  m_EditorClassIdentifier: Rootborn.Game:Rootborn.Game.StudentLife:CareerHintDefinition
+  _id: career.hint.learning.school
+  _displayNameKey: career.hint.learning.school
+  _candidate: {fileID: 11400000, guid: bb36cde6997c04e4280469195d29dfba, type: 2}
+  _route: {fileID: 11400000, guid: eb32175d7d98008468640bc5db3c8122, type: 2}
+  _insightKey: insight.career.hint.learning.school
+  _understandingDelta: 1
+  _sources:
+  - {fileID: 11400000, guid: bdde168aba01dbf4eb1bf72e8d19e4e9, type: 2}

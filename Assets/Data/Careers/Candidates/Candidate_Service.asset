@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c54ebbb815885b428ff36a2f71f0adc, type: 3}
+  m_Name: Candidate_Service
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.CareerCandidateDefinition
+  _id: career.candidate.service
+  _displayNameKey: candidate.service
+  _descriptionKey: candidate.service.desc
+  _lockedTeaserKey: ???
+  _revealedHintThreshold: 2
+  _deepeningHintThreshold: 3
+  _readyHintThreshold: 4
+  _relatedLocations:
+  - {fileID: 11400000, guid: 0b792f8bcf32340469cd64320136e59b, type: 2}
+  - {fileID: 11400000, guid: 7825bb6a05ae8ef41afeb40a32ce4570, type: 2}
+  _relatedActivities: []
+  _routes:
+  - {fileID: 11400000, guid: 8c551d459bbb52a40a0def720eafd21c, type: 2}
+  _requirements: []
+  _recommendedActionKeys:
+  - action.help-npc
+  - action.visit-store
+  _rewards: []

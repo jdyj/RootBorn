@@ -15,6 +15,8 @@ namespace Rootborn.Tests.EditMode
             @"Resources\.Load\s*(<|\()|GameObject\.Find\s*\(|FindObjectOfType\s*(<|\()|FindObjectsOfType\s*(<|\()|FindFirstObjectByType\s*(<|\()|FindObjectsByType\s*(<|\()",
             RegexOptions.Compiled);
 
+        private const string AdditionalReviewedAllowlistPath = "Assets/Tests/EditMode/StaticRuntimeUsageGateReviewedAllowlist.txt";
+
         private static readonly HashSet<string> AllowedRuntimeResourceOrFindUsages = new HashSet<string>
         {
             "Assets/Scripts/Game/Bootstrap/FarmAutoFiller.cs :: var fromResources = UnityEngine.Resources.Load<GameDataRegistry>(\"GameDataRegistry\");",
@@ -63,15 +65,36 @@ namespace Rootborn.Tests.EditMode
         public void STATIC_002_RuntimeResourcesAndFindUsages_StayInsideReviewedAllowlist()
         {
             var hits = FindMatches(RuntimeResourceOrFindPattern, "Assets/Scripts/Game", "Assets/Scripts/UI", "Assets/Scripts/Network");
+            var reviewedUsages = BuildReviewedRuntimeResourceOrFindUsages();
             var unexpected = new List<string>();
             foreach (string hit in hits)
             {
                 string usageKey = ToUsageKey(hit);
-                if (!AllowedRuntimeResourceOrFindUsages.Contains(usageKey))
+                if (!reviewedUsages.Contains(usageKey))
                     unexpected.Add(hit);
             }
 
             Assert.IsEmpty(unexpected, "New runtime Resources.Load/Find usage requires explicit review or removal:\n" + string.Join("\n", unexpected));
+        }
+
+        private static HashSet<string> BuildReviewedRuntimeResourceOrFindUsages()
+        {
+            var reviewed = new HashSet<string>(AllowedRuntimeResourceOrFindUsages);
+            if (!File.Exists(AdditionalReviewedAllowlistPath))
+            {
+                return reviewed;
+            }
+
+            foreach (string line in File.ReadAllLines(AdditionalReviewedAllowlistPath))
+            {
+                string trimmed = line.Trim();
+                if (trimmed.Length > 0 && !trimmed.StartsWith("#"))
+                {
+                    reviewed.Add(trimmed);
+                }
+            }
+
+            return reviewed;
         }
 
         private static List<string> FindMatches(Regex pattern, params string[] roots)

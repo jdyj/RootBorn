@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ba269088599d2c41857b78cae83db31, type: 3}
+  m_Name: Route_Candidate_Service
+  m_EditorClassIdentifier: Rootborn.Game:Rootborn.Game.StudentLife:CareerCandidateRouteDefinition
+  _id: career.route.service
+  _displayNameKey: route.service
+  _descriptionKey: route.service.desc
+  _locations:
+  - {fileID: 11400000, guid: 0b792f8bcf32340469cd64320136e59b, type: 2}
+  - {fileID: 11400000, guid: 7825bb6a05ae8ef41afeb40a32ce4570, type: 2}
+  _activities: []
+  _recommendedActionKeys:
+  - action.help-npc

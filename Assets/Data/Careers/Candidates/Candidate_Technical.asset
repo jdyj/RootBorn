@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c54ebbb815885b428ff36a2f71f0adc, type: 3}
+  m_Name: Candidate_Technical
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.CareerCandidateDefinition
+  _id: career.candidate.technical
+  _displayNameKey: candidate.technical
+  _descriptionKey: candidate.technical.desc
+  _lockedTeaserKey: ???
+  _revealedHintThreshold: 2
+  _deepeningHintThreshold: 3
+  _readyHintThreshold: 4
+  _relatedLocations:
+  - {fileID: 11400000, guid: 8256340ca6973cf47a485ef358a78792, type: 2}
+  _relatedActivities: []
+  _routes:
+  - {fileID: 11400000, guid: 078d13b864a112e4098e66f860d53245, type: 2}
+  _requirements: []
+  _recommendedActionKeys:
+  - action.try-workshop
+  _rewards: []

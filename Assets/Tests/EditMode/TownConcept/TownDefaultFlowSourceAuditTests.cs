@@ -6,11 +6,29 @@ namespace Rootborn.Tests.EditMode.TownConcept
     public sealed class TownDefaultFlowSourceAuditTests
     {
         [Test]
-        public void MainMenuAndBootstrap_DefaultPlayableSceneIsTown()
+        public void MainMenuAndBootstrap_DefaultUserFlowReachesTown()
         {
             AssertDefaultTownScene("Assets/Scripts/UI/MainMenu/ModeSelectPanel.cs");
             AssertDefaultTownScene("Assets/Scripts/UI/MainMenu/SaveSlotSelectPanel.cs");
-            AssertDefaultTownScene("Assets/Scripts/Game/Bootstrap/GameBootstrap.cs");
+            AssertBootstrapLoadsMainMenu("Assets/Scripts/Game/Bootstrap/GameBootstrap.cs");
+        }
+
+        [Test]
+        public void MainMenuSceneEventSystem_HasUiInputModuleForPointerClicks()
+        {
+            string scene = File.ReadAllText("Assets/Scenes/MainMenu.unity");
+
+            StringAssert.Contains("m_Name: EventSystem", scene, "MainMenu must contain an EventSystem for UI pointer routing.");
+            StringAssert.Contains("Unity.InputSystem::UnityEngine.InputSystem.UI.InputSystemUIInputModule", scene, "MainMenu EventSystem must serialize a real UI input module so Boot -> MainMenu mouse clicks work.");
+        }
+
+        [Test]
+        public void SceneSetup_RepairsExistingEventSystemWithoutInputModule()
+        {
+            string source = File.ReadAllText("Assets/Scripts/Editor/Tools/SceneSetup.cs");
+
+            StringAssert.Contains("BaseInputModule", source, "Scene setup must detect an EventSystem that exists without a UI input module.");
+            StringAssert.Contains("UiInputModuleInstaller.AddPreferredInputModule", source, "Scene setup should use the shared input module installer instead of only fixing newly-created EventSystems.");
         }
 
         [Test]
@@ -91,6 +109,15 @@ namespace Rootborn.Tests.EditMode.TownConcept
             StringAssert.Contains("\"Town\"", source, path + " should name Town as the default playable scene.");
             StringAssert.DoesNotContain("_farmScene = \"Farm\"", source, path + " should not default to Farm.");
             StringAssert.DoesNotContain("LoadScene(_farmScene)", source, path + " should not load Farm through the old default field.");
+        }
+
+        private static void AssertBootstrapLoadsMainMenu(string path)
+        {
+            string source = File.ReadAllText(path);
+
+            StringAssert.Contains("\"MainMenu\"", source, path + " should enter the player-facing main menu before save slot/SPUM/Town flow.");
+            StringAssert.Contains("LoadScene(_mainMenuScene)", source, path + " should load the configured main menu scene.");
+            StringAssert.DoesNotContain("_farmScene = \"Farm\"", source, path + " should not default to Farm.");
         }
 
         private static void AssertRuntimeEventSystemInstaller(string path)

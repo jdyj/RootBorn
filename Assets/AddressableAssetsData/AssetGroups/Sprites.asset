@@ -53,6 +53,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1295fc2b1a4313d41a8603b17cdcd184
+    m_Address: sprites/ui/modern/48/common-panel/l
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 14bc86a29bcf3204eb49a1f87f1eb6cb
+    m_Address: sprites/ui/modern/48/common-panel/fill
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 182d2491cffa0c14e9e007f7a5992da6
     m_Address: sprites/player/tool/pickaxe-side
     m_ReadOnly: 0
@@ -61,6 +73,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 383bf52c7a0263141b5ac05e28c03e85
     m_Address: sprites/player/tool/pickup-side
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 390d26f965b86b24faafea471d9f3912
+    m_Address: sprites/ui/modern/48/common-panel/br
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
@@ -106,6 +124,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 64a8fbfb3111d1f4aa36ca5198c71177
+    m_Address: sprites/interiors/modern/16/floors
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 67d0d63e8d888eb439df39022fddf1a9
     m_Address: sprites/player/tool/pickup-up
     m_ReadOnly: 0
@@ -135,8 +159,20 @@ MonoBehaviour:
     m_SerializedLabels:
     - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 819f4f94f41db3c42b7e83a48fb93844
+    m_Address: sprites/ui/modern/48/common-panel/tl
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 823afbea2e4c05446936cd54bc8dbd3e
     m_Address: sprites/player/tool/axe-up
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 910aed23733185e408e7691178290f57
+    m_Address: sprites/ui/modern/48/common-panel/r
     m_ReadOnly: 0
     m_SerializedLabels:
     - PreLoad
@@ -164,6 +200,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ba4d2acf74ff9334c8dada5339b455d8
+    m_Address: sprites/ui/modern/48/common-panel/tr
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bada4e437a77da440b0aa7f804873ada
+    m_Address: sprites/ui/modern/48/common-panel/bl
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bc8ea096bcbaa4745a09bd1b50930ca8
     m_Address: sprites/player/tool/pickaxe-up
     m_ReadOnly: 0
@@ -187,10 +235,34 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e9306d28d119526438e9ce304adeb488
+    m_Address: sprites/interiors/modern/16/walls
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ea4f974ffe64f2040bd1b4506d8ef623
+    m_Address: sprites/interiors/modern/16/ui
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ec5076ec0a2008b44a0237a3c709f06e
+    m_Address: sprites/ui/modern/48/common-panel/b
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ef113c1db18e20540a257c50cd95542c
     m_Address: sprites/character/accessory/accessory-straw-hat-black
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f1561222226fa4f4caa86217aeb9a4ce
+    m_Address: sprites/ui/modern/48/common-panel/t
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PreLoad
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ffe26c7ac9502e94f87bc63cdd4b74fa
     m_Address: sprites/character/accessory/accessory-bamboo-hat-brown

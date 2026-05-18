@@ -15,6 +15,7 @@ namespace Rootborn.Game.Managers
         private readonly Dictionary<string, UnityEngine.Object> _cache = new Dictionary<string, UnityEngine.Object>();
         private readonly Dictionary<string, AsyncOperationHandle> _handles = new Dictionary<string, AsyncOperationHandle>();
         private readonly Dictionary<string, IList<Sprite>> _sheetSprites = new Dictionary<string, IList<Sprite>>();
+        private readonly HashSet<string> _missingSpriteSheets = new HashSet<string>();
 
         public bool IsInitialized { get; private set; }
 
@@ -45,7 +46,7 @@ namespace Rootborn.Game.Managers
             if (!_sheetSprites.TryGetValue(sheetAddress, out var sprites)) return null;
             for (int i = 0; i < sprites.Count; i++)
             {
-                if (sprites[i] != null && sprites[i].name == subName) return sprites[i];
+                if (sprites[i] != null && (string.IsNullOrEmpty(subName) || sprites[i].name == subName)) return sprites[i];
             }
             return null;
         }
@@ -99,24 +100,32 @@ namespace Rootborn.Game.Managers
 
         public Task<Sprite> LoadSubSpriteAsync(string sheetAddress, string subName)
         {
-            if (string.IsNullOrEmpty(sheetAddress)) return Task.FromResult<Sprite>(null);
+            if (string.IsNullOrEmpty(sheetAddress) || _missingSpriteSheets.Contains(sheetAddress)) return Task.FromResult<Sprite>(null);
 
             Sprite cached = GetCachedSubSprite(sheetAddress, subName);
             if (cached != null) return Task.FromResult(cached);
 
+            Sprite editorSprite = LoadEditorSubSprite(sheetAddress, subName);
+            if (editorSprite != null) return Task.FromResult(editorSprite);
+
             IList<Sprite> sprites;
             if (!_sheetSprites.TryGetValue(sheetAddress, out sprites))
             {
+                if (!string.IsNullOrEmpty(subName))
+                {
+                    return Task.FromResult<Sprite>(null);
+                }
+
                 sprites = LoadSpriteSheet(sheetAddress);
                 if (sprites == null || sprites.Count == 0)
                 {
-                    return Task.FromResult<Sprite>(null);
+                    return Task.FromResult(LoadAddressableSubSprite(sheetAddress, subName));
                 }
             }
 
             if (string.IsNullOrEmpty(subName))
             {
-                return Task.FromResult(sprites.Count > 0 ? sprites[0] : null);
+                return Task.FromResult(sprites.Count > 0 ? sprites[0] : LoadAddressableSprite(sheetAddress, subName));
             }
 
             for (int i = 0; i < sprites.Count; i++)
@@ -146,17 +155,25 @@ namespace Rootborn.Game.Managers
             _handles.Clear();
             _cache.Clear();
             _sheetSprites.Clear();
+            _missingSpriteSheets.Clear();
         }
 
         private IList<Sprite> LoadSpriteSheet(string sheetAddress)
         {
+            if (_missingSpriteSheets.Contains(sheetAddress)) return null;
+            if (!HasResourceLocation(sheetAddress))
+            {
+                _missingSpriteSheets.Add(sheetAddress);
+                Debug.LogWarning($"[ROOTBORN/ResourceManager] LoadSubSpriteAsync sheet '{sheetAddress}' has no Addressables location.");
+                return null;
+            }
+
             try
             {
                 var handle = Addressables.LoadAssetAsync<IList<Sprite>>(sheetAddress);
                 IList<Sprite> result = handle.WaitForCompletion();
                 if (handle.Status != AsyncOperationStatus.Succeeded || result == null)
                 {
-                    Debug.LogWarning($"[ROOTBORN/ResourceManager] LoadSubSpriteAsync sheet '{sheetAddress}' failed: status={handle.Status}");
                     Addressables.Release(handle);
                     return null;
                 }
@@ -176,16 +193,44 @@ namespace Rootborn.Game.Managers
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"[ROOTBORN/ResourceManager] LoadSubSpriteAsync exception '{sheetAddress}': {e.Message}");
+                Debug.LogWarning($"[ROOTBORN/ResourceManager] LoadSubSpriteAsync sheet fallback for '{sheetAddress}': {e.Message}");
+                return null;
+            }
+        }
+
+        private Sprite LoadAddressableSprite(string address, string cacheName)
+        {
+            if (string.IsNullOrEmpty(address) || !address.StartsWith("sprites/ui/modern/48/common-panel/", StringComparison.Ordinal) || !HasResourceLocation(address)) return null;
+
+            try
+            {
+                var handle = Addressables.LoadAssetAsync<Sprite>(address);
+                Sprite result = handle.WaitForCompletion();
+                if (handle.Status != AsyncOperationStatus.Succeeded || result == null)
+                {
+                    Addressables.Release(handle);
+                    return null;
+                }
+
+                CacheSubSprite(address, result);
+                _cache[address] = result;
+                _handles[$"sprite:{address}"] = handle;
+                return result;
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[ROOTBORN/ResourceManager] LoadSubSpriteAsync sprite exception '{address}': {e.Message}");
                 return null;
             }
         }
 
         private Sprite LoadAddressableSubSprite(string sheetAddress, string subName)
         {
-            if (string.IsNullOrEmpty(subName)) return null;
+            if (string.IsNullOrEmpty(subName)) return LoadAddressableSprite(sheetAddress, subName);
 
             string subAddress = $"{sheetAddress}[{subName}]";
+            if (!HasResourceLocation(subAddress)) return null;
+
             try
             {
                 var handle = Addressables.LoadAssetAsync<Sprite>(subAddress);
@@ -204,6 +249,61 @@ namespace Rootborn.Game.Managers
             {
                 Debug.LogWarning($"[ROOTBORN/ResourceManager] LoadSubSpriteAsync sub-sprite exception '{subAddress}': {e.Message}");
                 return null;
+            }
+        }
+
+#if UNITY_EDITOR
+                private Sprite LoadEditorSubSprite(string sheetAddress, string subName)
+                {
+                    if (string.IsNullOrEmpty(subName))
+                    {
+                        return null;
+                    }
+        
+                    string[] paths = UnityEditor.AssetDatabase.GetAllAssetPaths();
+                    for (int i = 0; i < paths.Length; i++)
+                    {
+                        string assetPath = paths[i];
+                        if (string.IsNullOrEmpty(assetPath) || !assetPath.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue;
+                        }
+        
+                        var assets = UnityEditor.AssetDatabase.LoadAllAssetsAtPath(assetPath);
+                        for (int j = 0; j < assets.Length; j++)
+                        {
+                            if (assets[j] is Sprite sprite && sprite.name == subName)
+                            {
+                                CacheSubSprite(sheetAddress, sprite);
+                                return sprite;
+                            }
+                        }
+                    }
+        
+                    return null;
+                }
+        #else
+                private Sprite LoadEditorSubSprite(string sheetAddress, string subName)
+                {
+                    return null;
+                }
+        #endif
+        
+                private static bool HasResourceLocation(string address)
+        {
+            if (string.IsNullOrEmpty(address)) return false;
+            try
+            {
+                var handle = Addressables.LoadResourceLocationsAsync(address);
+                var locations = handle.WaitForCompletion();
+                bool found = handle.Status == AsyncOperationStatus.Succeeded && locations != null && locations.Count > 0;
+                Addressables.Release(handle);
+                return found;
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[ROOTBORN/ResourceManager] Addressables location lookup failed for '{address}': {e.Message}");
+                return false;
             }
         }
 

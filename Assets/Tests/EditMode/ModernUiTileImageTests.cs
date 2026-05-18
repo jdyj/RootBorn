@@ -1,7 +1,11 @@
+using System;
+using System.IO;
 using System.Linq;
 using NUnit.Framework;
+using Rootborn.Game.Common;
 using Rootborn.UI.Modern;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Rootborn.Tests.EditMode
 {
@@ -27,8 +31,65 @@ namespace Rootborn.Tests.EditMode
             }
             finally
             {
-                Object.DestroyImmediate(go);
+                UnityEngine.Object.DestroyImmediate(go);
             }
+        }
+
+        [Test]
+        public void Builder_CreateCommonPanel48_UsesReusable48RecipeAndTileSize()
+        {
+            var parent = new GameObject("Parent", typeof(RectTransform));
+            try
+            {
+                var panel = ModernUiPanelBuilder.CreateCommonPanel48(parent.transform, "Panel", Vector2.zero, new Vector2(192f, 96f));
+                var tileImage = panel.GetComponent<ModernUiTileImage>();
+
+                Assert.IsNotNull(tileImage);
+                Assert.AreSame(ModernUiRecipes.CommonPanel48, tileImage.Recipe);
+                Assert.AreEqual(new Vector2(48f, 48f), tileImage.TileSize);
+                Assert.Greater(tileImage.TileCount, 0);
+                Assert.IsNull(panel.GetComponent<Image>(), "Static panels should not add a root Image unless they need a hit target.");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(parent);
+            }
+        }
+
+        [Test]
+        public void Builder_CreateCommonPanel48Button_UsesTransparentHitTargetAndReusablePanelArt()
+        {
+            var parent = new GameObject("Parent", typeof(RectTransform));
+            try
+            {
+                var button = ModernUiPanelBuilder.CreateCommonPanel48Button(parent.transform, "Button", Vector2.zero, new Vector2(144f, 48f));
+                var tileImage = button.GetComponent<ModernUiTileImage>();
+                var image = button.GetComponent<Image>();
+                var unityButton = button.GetComponent<Button>();
+
+                Assert.IsNotNull(tileImage);
+                Assert.AreSame(ModernUiRecipes.CommonPanel48, tileImage.Recipe);
+                Assert.AreEqual(new Vector2(48f, 48f), tileImage.TileSize);
+                Assert.IsNotNull(image);
+                Assert.AreEqual(0f, image.color.a);
+                Assert.IsTrue(image.raycastTarget);
+                Assert.AreSame(image, unityButton.targetGraphic);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(parent);
+            }
+        }
+
+        [Test]
+        public void QuestLogPanel_UsesReusableModernPanelBuilderForPanelChrome()
+        {
+            string source = File.ReadAllText("Assets/Scripts/UI/Quests/QuestLogPanel.cs");
+
+            StringAssert.Contains("ModernUiPanelBuilder.CreateCommonPanel48", source);
+            StringAssert.Contains("ModernUiPanelBuilder.CreatePlainButton", source);
+            StringAssert.DoesNotContain("new GameObject(\"QuestTitleTab\", typeof(RectTransform), typeof(ModernUiTileImage))", source);
+            StringAssert.DoesNotContain("SetRecipe(ModernUiRecipes.CommonPanel48)", source);
         }
 
         [Test]
@@ -57,7 +118,7 @@ namespace Rootborn.Tests.EditMode
             }
             finally
             {
-                Object.DestroyImmediate(go);
+                UnityEngine.Object.DestroyImmediate(go);
             }
         }
 
@@ -84,7 +145,7 @@ namespace Rootborn.Tests.EditMode
             }
             finally
             {
-                Object.DestroyImmediate(go);
+                UnityEngine.Object.DestroyImmediate(go);
             }
         }
 
@@ -109,7 +170,37 @@ namespace Rootborn.Tests.EditMode
             }
             finally
             {
-                Object.DestroyImmediate(go);
+                UnityEngine.Object.DestroyImmediate(go);
+            }
+        }
+
+        [Test]
+        public void Rebuild_UsesFallbackSpriteWhenResolverCannotLoadStyle2()
+        {
+            var go = new GameObject("ModernTileFallbackTest", typeof(RectTransform), typeof(ModernUiTileImage));
+            try
+            {
+                go.GetComponent<RectTransform>().sizeDelta = new Vector2(48f, 48f);
+                var tileImage = go.GetComponent<ModernUiTileImage>();
+                tileImage.SetResolver(new ThrowingResolver());
+
+                Assert.DoesNotThrow(() => tileImage.Rebuild());
+
+                var images = go.GetComponentsInChildren<Image>(true).Where(image => image.gameObject.name.StartsWith("Tile_")).ToArray();
+                Assert.IsNotEmpty(images);
+                Assert.IsTrue(images.All(image => image.sprite != null));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(go);
+            }
+        }
+
+        private sealed class ThrowingResolver : IModernUiSpriteResolver
+        {
+            public Sprite Resolve(ModernUiSpriteKey key)
+            {
+                throw new InvalidOperationException("missing style2 sprite");
             }
         }
     }
