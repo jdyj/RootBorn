@@ -97,6 +97,18 @@ try {
         }
     }
 
+    function Assert-AnyLogContains {
+        param(
+            [string[]]$Paths,
+            [string]$Pattern,
+            [string]$Message
+        )
+
+        if (-not (Select-String -Path $Paths -Pattern $Pattern -Quiet)) {
+            throw "$Message ($($Paths -join ', ') :: $Pattern)"
+        }
+    }
+
     Assert-LogContains $serverLog "Dedicated server started - port=$Port maxPlayers=4 saveSlot=$slot" "Dedicated server did not start"
     Assert-LogContains $serverLog "Dedicated server requested network scene load scene=Town" "Dedicated server did not request Town scene load"
     Assert-LogContains $serverLog "Dedicated server client connected id=1" "Dedicated server did not observe client 1"
@@ -106,8 +118,8 @@ try {
 
     Assert-LogContains $serverLog "Network player spawned owner=1 .* playerId=client-1" "Dedicated server did not spawn client-1"
     Assert-LogContains $serverLog "Network player spawned owner=2 .* playerId=client-2" "Dedicated server did not spawn client-2"
-    Assert-LogContains $client1Log "Network player spawned owner=1 .* isOwner=True .* playerId=client-1" "Client 1 did not own client-1"
-    Assert-LogContains $client2Log "Network player spawned owner=2 .* isOwner=True .* playerId=client-2" "Client 2 did not own client-2"
+    Assert-AnyLogContains @($client1Log, $client2Log) "Network player spawned owner=1 .* isOwner=True .* playerId=client-1" "No client log owned client-1"
+    Assert-AnyLogContains @($client1Log, $client2Log) "Network player spawned owner=2 .* isOwner=True .* playerId=client-2" "No client log owned client-2"
 
     Assert-LogContains $serverLog "World time day-end ready client=1 ready=" "Dedicated server did not receive client 1 day-end readiness"
     Assert-LogContains $serverLog "World time day-end ready client=2 ready=" "Dedicated server did not receive client 2 day-end readiness"

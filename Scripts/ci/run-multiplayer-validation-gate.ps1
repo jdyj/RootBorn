@@ -70,6 +70,18 @@ try {
         }
     }
 
+    function Invoke-CheckedPowerShell {
+        param(
+            [string]$Label,
+            [string[]]$Arguments
+        )
+
+        powershell.exe @Arguments
+        if ($LASTEXITCODE -ne 0) {
+            throw "$Label failed with exit code $LASTEXITCODE"
+        }
+    }
+
     if (-not $SkipClientBuild) {
         Invoke-UnityBuild "Rootborn.Editor.BuildScripts.BuildScript.BuildClientWindows64" $clientBuildLog
         Assert-LogContains $clientBuildLog "Build Finished, Result: Success" "Client build did not finish successfully"
@@ -79,10 +91,13 @@ try {
         Write-Host "Skipping client build."
     }
 
-    powershell.exe -ExecutionPolicy Bypass -File "Scripts\qa\run-direct-multiplayer-smoke.ps1" `
-        -Port $SmokePort `
-        -RunName $SmokeRunName `
-        -WaitSeconds $SmokeWaitSeconds
+    Invoke-CheckedPowerShell "Direct multiplayer smoke" @(
+        "-ExecutionPolicy", "Bypass",
+        "-File", "Scripts\qa\run-direct-multiplayer-smoke.ps1",
+        "-Port", "$SmokePort",
+        "-RunName", "$SmokeRunName",
+        "-WaitSeconds", "$SmokeWaitSeconds"
+    )
 
     if (-not $SkipServerBuild) {
         Invoke-UnityBuild "Rootborn.Editor.BuildScripts.BuildScript.BuildServerWindows64" $serverBuildLog
@@ -90,10 +105,13 @@ try {
         if (Select-String -Path $serverBuildLog -Pattern "\[ROOTBORN\] Server build .* result=Succeeded" -Quiet) {
             Write-Host "Dedicated server build passed."
             if ($effectiveRequireDedicatedServer) {
-                powershell.exe -ExecutionPolicy Bypass -File "Scripts\qa\run-dedicated-multiplayer-smoke.ps1" `
-                    -Port ($SmokePort + 1) `
-                    -RunName "$SmokeRunName-dedicated" `
-                    -WaitSeconds $SmokeWaitSeconds
+                Invoke-CheckedPowerShell "Dedicated multiplayer smoke" @(
+                    "-ExecutionPolicy", "Bypass",
+                    "-File", "Scripts\qa\run-dedicated-multiplayer-smoke.ps1",
+                    "-Port", "$($SmokePort + 1)",
+                    "-RunName", "$SmokeRunName-dedicated",
+                    "-WaitSeconds", "$SmokeWaitSeconds"
+                )
             }
         }
         elseif (Select-String -Path $serverBuildLog -Pattern "Dedicated Server support for Win is not installed" -Quiet) {
@@ -111,10 +129,13 @@ try {
     else {
         Write-Host "Skipping dedicated server build."
         if ($effectiveRequireDedicatedServer) {
-            powershell.exe -ExecutionPolicy Bypass -File "Scripts\qa\run-dedicated-multiplayer-smoke.ps1" `
-                -Port ($SmokePort + 1) `
-                -RunName "$SmokeRunName-dedicated" `
-                -WaitSeconds $SmokeWaitSeconds
+            Invoke-CheckedPowerShell "Dedicated multiplayer smoke" @(
+                "-ExecutionPolicy", "Bypass",
+                "-File", "Scripts\qa\run-dedicated-multiplayer-smoke.ps1",
+                "-Port", "$($SmokePort + 1)",
+                "-RunName", "$SmokeRunName-dedicated",
+                "-WaitSeconds", "$SmokeWaitSeconds"
+            )
         }
     }
 
@@ -142,7 +163,7 @@ try {
             $longRunArgs += "-RequireSaveReloadEvidence"
         }
 
-        powershell.exe @longRunArgs
+        Invoke-CheckedPowerShell "Dedicated multiplayer long-run" $longRunArgs
     }
 
     [PSCustomObject]@{

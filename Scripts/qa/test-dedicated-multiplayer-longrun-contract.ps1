@@ -6,6 +6,7 @@ $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
 Push-Location $repoRoot
 try {
     $longRunScript = "Scripts\qa\run-dedicated-multiplayer-longrun.ps1"
+    $dedicatedSmokeScript = "Scripts\qa\run-dedicated-multiplayer-smoke.ps1"
     $ciGateScript = "Scripts\ci\run-multiplayer-validation-gate.ps1"
 
     function Assert-FileContains {
@@ -36,14 +37,21 @@ try {
     Assert-FileContains $longRunScript "Failed to bind|Address already in use|owner mismatch" "Long-run script must scan fatal multiplayer patterns"
     Assert-FileContains $longRunScript "Select-String -Path \`$Paths -Pattern \`$fatalPatterns -CaseSensitive" "Fatal log scanning must be case-sensitive so benign Error/error text does not match ERROR"
 
+    Assert-FileContains $dedicatedSmokeScript "function Assert-AnyLogContains" "Dedicated smoke must support cross-client ownership assertions"
+    Assert-FileContains $dedicatedSmokeScript "Assert-AnyLogContains @\(\`$client1Log, \`$client2Log\) `"Network player spawned owner=1 .* isOwner=True .* playerId=client-1`"" "Dedicated smoke must not assume the first launched client owns client-1"
+    Assert-FileContains $dedicatedSmokeScript "Assert-AnyLogContains @\(\`$client1Log, \`$client2Log\) `"Network player spawned owner=2 .* isOwner=True .* playerId=client-2`"" "Dedicated smoke must not assume the second launched client owns client-2"
+
     Assert-FileContains $ciGateScript "\[switch\]\`$RequireDedicatedLongRun" "CI gate must expose long-run switch"
     Assert-FileContains $ciGateScript "\[int\]\`$LongRunClientCount = 4" "CI gate must default long-run client count to four"
     Assert-FileContains $ciGateScript "\[int\]\`$LongRunWaitSeconds = 600" "CI gate must default long-run wait to ten minutes"
     Assert-FileContains $ciGateScript "run-dedicated-multiplayer-longrun.ps1" "CI gate must invoke the long-run script"
+    Assert-FileContains $ciGateScript "function Invoke-CheckedPowerShell" "CI gate must check child PowerShell exit codes"
+    Assert-FileContains $ciGateScript "if \(\`$LASTEXITCODE -ne 0\)" "CI gate must fail when a child validation script fails"
 
     [PSCustomObject]@{
         Result = "Passed"
         LongRunScript = $longRunScript
+        DedicatedSmokeScript = $dedicatedSmokeScript
         CiGateScript = $ciGateScript
     } | Format-List
 }

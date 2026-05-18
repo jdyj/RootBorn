@@ -157,6 +157,72 @@ DedicatedLongRunRequired: True
 
 Note: this run revealed that the final `DedicatedSmokeLogDir` summary field was blank when `-SkipServerBuild` was used, even though the dedicated smoke executed and passed. The summary field was corrected after this run so future skip-build validations still report the dedicated smoke log directory.
 
+Fresh build release/nightly gate:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass `
+  -File Scripts\ci\run-multiplayer-validation-gate.ps1 `
+  -SmokePort 7870 `
+  -SmokeRunName multiplayer-ci-release-longrun-20260518 `
+  -SmokeWaitSeconds 125 `
+  -RequireDedicatedServer `
+  -RequireDedicatedLongRun `
+  -LongRunClientCount 4 `
+  -LongRunWaitSeconds 600 `
+  -LongRunReconnect `
+  -LongRunRestartServer
+```
+
+Observed: client build, direct multiplayer smoke, server build, and dedicated long-run passed. The run exposed two QA harness issues before the result could be treated as trustworthy:
+
+- The dedicated smoke assumed `client1-player.log` must own `client-1`, but NGO can assign local client IDs in the opposite order while still producing correct per-client ownership. The smoke now asserts ownership coverage across both client logs instead of relying on process launch order.
+- The CI wrapper invoked child PowerShell scripts without checking `$LASTEXITCODE`, so a child smoke failure could be followed by a passing long-run and final `Result: Passed`. The wrapper now uses `Invoke-CheckedPowerShell` for direct smoke, dedicated smoke, and long-run invocations.
+
+Fix verification:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File Scripts\qa\test-dedicated-multiplayer-longrun-contract.ps1
+```
+
+Observed: `Result: Passed`.
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass `
+  -File Scripts\qa\run-dedicated-multiplayer-smoke.ps1 `
+  -Port 7875 `
+  -RunName dedicated-smoke-owner-flex-20260518 `
+  -WaitSeconds 125
+```
+
+Observed: `Result: Passed`.
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass `
+  -File Scripts\ci\run-multiplayer-validation-gate.ps1 `
+  -SmokePort 7876 `
+  -SmokeRunName multiplayer-ci-fixed-wrapper-longrun-20260518 `
+  -SmokeWaitSeconds 125 `
+  -SkipClientBuild `
+  -SkipServerBuild `
+  -RequireDedicatedServer `
+  -RequireDedicatedLongRun `
+  -LongRunClientCount 4 `
+  -LongRunWaitSeconds 600 `
+  -LongRunReconnect `
+  -LongRunRestartServer
+```
+
+Observed:
+
+```text
+Result: Passed
+SmokeLogDir: Builds\Logs\multiplayer-ci-fixed-wrapper-longrun-20260518
+DedicatedSmokeLogDir: Builds\Logs\multiplayer-ci-fixed-wrapper-longrun-20260518-dedicated
+DedicatedLongRunLogDir: Builds\Logs\multiplayer-ci-fixed-wrapper-longrun-20260518-dedicated-longrun
+DedicatedServerRequired: True
+DedicatedLongRunRequired: True
+```
+
 ## Remaining Risk
 
-The CI wrapper verification used `-SkipClientBuild` and `-SkipServerBuild` because fresh artifacts already existed from the previous dedicated server work. A release/nightly run without skip flags should still be used when validating fresh build production readiness.
+Fresh build production readiness has now been exercised once through the release/nightly gate. The post-fix wrapper verification reused those fresh artifacts because the QA harness script changes do not affect player binaries.
