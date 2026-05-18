@@ -5,7 +5,12 @@ param(
     [string]$SmokeRunName = "",
     [switch]$SkipClientBuild,
     [switch]$SkipServerBuild,
-    [switch]$RequireDedicatedServer
+    [switch]$RequireDedicatedServer,
+    [switch]$RequireDedicatedLongRun,
+    [int]$LongRunClientCount = 4,
+    [int]$LongRunWaitSeconds = 600,
+    [switch]$LongRunReconnect,
+    [switch]$LongRunRestartServer
 )
 
 $ErrorActionPreference = "Stop"
@@ -16,6 +21,8 @@ try {
     if ([string]::IsNullOrWhiteSpace($SmokeRunName)) {
         $SmokeRunName = "direct-multiplayer-ci-" + (Get-Date -Format "yyyyMMdd-HHmmss")
     }
+
+    $effectiveRequireDedicatedServer = [bool]($RequireDedicatedServer -or $RequireDedicatedLongRun)
 
     $logsRoot = Resolve-Path "Builds\Logs"
     $clientBuildLog = Join-Path $logsRoot "$SmokeRunName-client-build.log"
@@ -82,7 +89,7 @@ try {
 
         if (Select-String -Path $serverBuildLog -Pattern "\[ROOTBORN\] Server build .* result=Succeeded" -Quiet) {
             Write-Host "Dedicated server build passed."
-            if ($RequireDedicatedServer) {
+            if ($effectiveRequireDedicatedServer) {
                 powershell.exe -ExecutionPolicy Bypass -File "Scripts\qa\run-dedicated-multiplayer-smoke.ps1" `
                     -Port ($SmokePort + 1) `
                     -RunName "$SmokeRunName-dedicated" `
@@ -91,7 +98,7 @@ try {
         }
         elseif (Select-String -Path $serverBuildLog -Pattern "Dedicated Server support for Win is not installed" -Quiet) {
             $message = "Dedicated server build is blocked because Unity Windows Dedicated Server support is not installed."
-            if ($RequireDedicatedServer) {
+            if ($effectiveRequireDedicatedServer) {
                 throw $message
             }
 
@@ -103,15 +110,50 @@ try {
     }
     else {
         Write-Host "Skipping dedicated server build."
+        if ($effectiveRequireDedicatedServer) {
+            powershell.exe -ExecutionPolicy Bypass -File "Scripts\qa\run-dedicated-multiplayer-smoke.ps1" `
+                -Port ($SmokePort + 1) `
+                -RunName "$SmokeRunName-dedicated" `
+                -WaitSeconds $SmokeWaitSeconds
+        }
+    }
+
+    if ($RequireDedicatedLongRun) {
+        $longRunArgs = @(
+            "-NoProfile",
+            "-ExecutionPolicy", "Bypass",
+            "-File", "Scripts\qa\run-dedicated-multiplayer-longrun.ps1",
+            "-Port", "$($SmokePort + 2)",
+            "-RunName", "$SmokeRunName-dedicated-longrun",
+            "-SaveSlot", "$SmokeRunName-dedicated-longrun",
+            "-ClientCount", "$LongRunClientCount",
+            "-WaitSeconds", "$LongRunWaitSeconds"
+        )
+
+        if ($LongRunReconnect) {
+            $longRunArgs += @("-ReconnectClientIndex", "2")
+        }
+        else {
+            $longRunArgs += @("-ReconnectClientIndex", "0")
+        }
+
+        if ($LongRunRestartServer) {
+            $longRunArgs += "-RestartServerAfterFirstPass"
+            $longRunArgs += "-RequireSaveReloadEvidence"
+        }
+
+        powershell.exe @longRunArgs
     }
 
     [PSCustomObject]@{
         Result = "Passed"
         ClientBuildLog = if ($SkipClientBuild) { "" } else { $clientBuildLog }
         SmokeLogDir = Join-Path $logsRoot $SmokeRunName
-        DedicatedSmokeLogDir = if ($RequireDedicatedServer -and -not $SkipServerBuild) { Join-Path $logsRoot "$SmokeRunName-dedicated" } else { "" }
+        DedicatedSmokeLogDir = if ($effectiveRequireDedicatedServer) { Join-Path $logsRoot "$SmokeRunName-dedicated" } else { "" }
+        DedicatedLongRunLogDir = if ($RequireDedicatedLongRun) { Join-Path $logsRoot "$SmokeRunName-dedicated-longrun" } else { "" }
         ServerBuildLog = if ($SkipServerBuild) { "" } else { $serverBuildLog }
-        DedicatedServerRequired = [bool]$RequireDedicatedServer
+        DedicatedServerRequired = $effectiveRequireDedicatedServer
+        DedicatedLongRunRequired = [bool]$RequireDedicatedLongRun
     } | Format-List
 }
 finally {

@@ -199,6 +199,55 @@ Logs are written to:
 Builds\Logs\dedicated-multiplayer-runbook
 ```
 
+## Automated Long-Run
+
+Run the dedicated server long-run simulation when validating release or nightly multiplayer stability. This starts one dedicated server and up to four clients, optionally disconnects and reconnects one client, and can restart the server with the same save slot.
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass `
+  -File Scripts\qa\run-dedicated-multiplayer-longrun.ps1 `
+  -Port 7861 `
+  -RunName dedicated-longrun-runbook `
+  -SaveSlot dedicated-longrun-runbook `
+  -ClientCount 4 `
+  -WaitSeconds 600 `
+  -ReconnectClientIndex 2 `
+  -DisconnectAfterSeconds 180 `
+  -ReconnectAfterSeconds 45 `
+  -RestartServerAfterFirstPass `
+  -RequireSaveReloadEvidence
+```
+
+This validates:
+
+- four separate client player processes connecting to `rootborn-server.exe`;
+- server-side player spawn evidence for every client;
+- client owner spawn evidence for every client;
+- per-player `Student day result` evidence;
+- server-authoritative Day 2 transition;
+- client world-time sync;
+- scheduled disconnect and reconnect evidence;
+- same `saveSlot` evidence after server restart;
+- fatal log pattern absence.
+
+Logs are written to:
+
+```text
+Builds\Logs\dedicated-longrun-runbook
+```
+
+For a shorter local smoke of the long-run harness, reduce `-WaitSeconds` and disable restart. This is useful for script syntax and process wiring only; it does not replace the 600-second release/nightly validation.
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass `
+  -File Scripts\qa\run-dedicated-multiplayer-longrun.ps1 `
+  -Port 7861 `
+  -RunName dedicated-longrun-local `
+  -ClientCount 2 `
+  -WaitSeconds 125 `
+  -ReconnectClientIndex 0
+```
+
 ## CI Validation Gate
 
 Run the full executable multiplayer gate with the dedicated server requirement:
@@ -212,12 +261,29 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -RequireDedicatedServer
 ```
 
+Run the release/nightly long-run gate:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass `
+  -File Scripts\ci\run-multiplayer-validation-gate.ps1 `
+  -SmokePort 7854 `
+  -SmokeRunName multiplayer-ci-dedicated-longrun `
+  -SmokeWaitSeconds 125 `
+  -RequireDedicatedServer `
+  -RequireDedicatedLongRun `
+  -LongRunClientCount 4 `
+  -LongRunWaitSeconds 600 `
+  -LongRunReconnect `
+  -LongRunRestartServer
+```
+
 This gate runs:
 
 - Client build unless `-SkipClientBuild` is set.
 - Host + two Client smoke through `Scripts\qa\run-direct-multiplayer-smoke.ps1`.
 - Dedicated server build unless `-SkipServerBuild` is set.
 - Dedicated server + two Client smoke through `Scripts\qa\run-dedicated-multiplayer-smoke.ps1`.
+- Dedicated server long-run through `Scripts\qa\run-dedicated-multiplayer-longrun.ps1` only when `-RequireDedicatedLongRun` is set.
 
 Use `-SkipClientBuild` only when a fresh client build has already succeeded in the same validation pass.
 
