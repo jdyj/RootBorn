@@ -25,6 +25,15 @@ namespace Rootborn.Tests.PlayMode.Scenarios
         public const string QUEST_013 = "QUEST-013";
         public const string QUEST_014 = "QUEST-014";
         public const string QUEST_015 = "QUEST-015";
+        public const string TOWN_FLOW_001 = "TOWN-FLOW-001";
+        public const string TOWN_FLOW_002 = "TOWN-FLOW-002";
+        public const string TOWN_FLOW_003 = "TOWN-FLOW-003";
+        public const string HOUSE_FLOW_001 = "HOUSE-FLOW-001";
+        public const string HOUSE_FLOW_002 = "HOUSE-FLOW-002";
+        public const string HOUSE_FLOW_003 = "HOUSE-FLOW-003";
+        public const string COVERAGE_001 = "COVERAGE-001";
+        public const string COVERAGE_002 = "COVERAGE-002";
+        public const string COVERAGE_003 = "COVERAGE-003";
         // [PENDING] NET-002 ~ NET-005, TOOL-001 (post-MVP)
     }
 }
