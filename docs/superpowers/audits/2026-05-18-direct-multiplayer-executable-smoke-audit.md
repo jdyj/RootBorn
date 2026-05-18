@@ -26,6 +26,20 @@ Port       : 7842
 SaveSlot   : direct-multiplayer-script-20260518
 ```
 
+CI wrapper command:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File Scripts\ci\run-multiplayer-validation-gate.ps1 -SkipClientBuild -SkipServerBuild -SmokePort 7844 -SmokeRunName direct-multiplayer-ci-gate-20260518 -SmokeWaitSeconds 125
+```
+
+Result:
+
+```text
+Result                  : Passed
+SmokeLogDir             : C:\Users\jdyj\farmer\Builds\Logs\direct-multiplayer-ci-gate-20260518
+DedicatedServerRequired : False
+```
+
 ## Evidence
 
 Log directory:
@@ -82,17 +96,61 @@ No fatal pattern was found in the passed run.
 
 ## Build Note
 
-An attempt to rebuild through CLI batchmode was blocked because the Unity Editor already had the same project open:
+The first attempt to rebuild through CLI batchmode was blocked because the Unity Editor already had the same project open:
 
 ```text
 Multiple Unity instances cannot open the same project.
 Project: C:/Users/jdyj/farmer
 ```
 
-The smoke therefore used the existing Windows player at `Builds\Client\Windows\rootborn.exe`. This validates real separate executable processes against the currently available player build, but it is not a fresh rebuild of the latest workspace state. A later build-validation pass should close the fresh-build side after closing the open Editor or running from an isolated workspace.
+After closing the open Editor, the fresh client build completed:
+
+```text
+Builds\Logs\client-build-fresh-20260518.log
+Build Finished, Result: Success.
+[ROOTBORN] Client build -> Builds/Client/Windows/rootborn.exe result=Succeeded
+```
+
+The refreshed runtime assemblies include:
+
+```text
+Builds\Client\Windows\rootborn_Data\Managed\Rootborn.Game.dll    2026-05-18 18:28
+Builds\Client\Windows\rootborn_Data\Managed\Rootborn.Network.dll 2026-05-18 18:28
+Builds\Client\Windows\rootborn_Data\Managed\Rootborn.UI.dll      2026-05-18 18:28
+```
+
+The fresh client build was then revalidated with:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File Scripts\qa\run-direct-multiplayer-smoke.ps1 -Port 7843 -RunName direct-multiplayer-fresh-client-20260518 -WaitSeconds 125
+```
+
+Result:
+
+```text
+Result : Passed
+LogDir : C:\Users\jdyj\farmer\Builds\Logs\direct-multiplayer-fresh-client-20260518
+```
 
 `Builds\Server\Windows\rootborn-server.exe` is not present in the local workspace, so this run used Host + two Clients rather than a dedicated server executable plus external clients.
 
+A fresh Windows dedicated server build was attempted:
+
+```text
+Builds\Logs\server-build-windows-20260518.log
+Build Finished, Result: Failure.
+[ROOTBORN] Server build -> Builds/Server/Windows/rootborn-server.exe result=Failed
+Error building Player: Dedicated Server support for Win is not installed.
+```
+
+Installed playback engines under the local Unity editor currently include only:
+
+```text
+C:\Program Files\Unity\Hub\Editor\6000.3.13f1\Editor\Data\PlaybackEngines\windowsstandalonesupport
+```
+
+The new CI wrapper treats this as an explicit local environment block unless `-RequireDedicatedServer` is passed, in which case the missing module fails the gate.
+
 ## Outcome
 
-Direct executable multiplayer smoke is passed for Host + two Client processes, including identity separation, player-owned activity results, server-authoritative all-ready day transition, and Day 2 synchronization on both clients.
+Direct executable multiplayer smoke is passed for Host + two Client processes on the refreshed Windows client build, including identity separation, player-owned activity results, server-authoritative all-ready day transition, and Day 2 synchronization on both clients. Dedicated server executable validation remains blocked by the missing local Unity Windows Dedicated Server support module, and the block is now represented in the CI wrapper instead of being a silent omission.
