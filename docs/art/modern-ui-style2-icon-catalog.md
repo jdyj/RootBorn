@@ -14,7 +14,7 @@ Unknown policy: full-grid JSON keeps empty cells as `unknown.r{row}.c{column}`; 
 | r0_c5 | ModernUI_16_Style2_r0_c5 | unknown.r0.c5 | UnknownR0C5 | unknown |  |  | unknown | Empty cell. |
 | r0_c6 | ModernUI_16_Style2_r0_c6 | unknown.r0.c6 | UnknownR0C6 | unknown |  |  | unknown | Empty cell. |
 | r0_c7 | ModernUI_16_Style2_r0_c7 | panel.innerLight | PanelInnerLightR0C7 | panel |  |  | probable | Light lilac background fill. |
-| r0_c8 | ModernUI_16_Style2_r0_c8 | unknown.r0.c8 | UnknownR0C8 | unknown |  |  | unknown | Empty cell. |
+| r0_c8 | ModernUI_16_Style2_r0_c8 | icon.question | IconQuestionR0C8 | icon |  |  | confirmed | Question mark icon (visual verification, 2026-05-13). |
 | r0_c9 | ModernUI_16_Style2_r0_c9 | unknown.r0.c9 | UnknownR0C9 | unknown |  |  | unknown | Empty cell. |
 | r0_c10 | ModernUI_16_Style2_r0_c10 | unknown.r0.c10 | UnknownR0C10 | unknown |  |  | unknown | Empty cell. |
 | r0_c11 | ModernUI_16_Style2_r0_c11 | unknown.r0.c11 | UnknownR0C11 | unknown |  |  | unknown | Empty cell. |

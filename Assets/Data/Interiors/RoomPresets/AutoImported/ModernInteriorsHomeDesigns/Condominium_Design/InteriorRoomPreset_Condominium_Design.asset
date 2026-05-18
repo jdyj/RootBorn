@@ -1,0 +1,326 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02609238e42dfef478ac171c8cbfe19a, type: 3}
+  m_Name: InteriorRoomPreset_Condominium_Design
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Interiors.InteriorRoomPresetDefinition
+  _stableId: modern.home-designs.condominium-design
+  _displayName: Condominium Design
+  _size: {x: 14, y: 11}
+  _baseLayerCells:
+  - _cell: {x: 0, y: 10}
+    _tile: {fileID: 11400000, guid: 382fc0f4664ba3149ad44383dbaff485, type: 2}
+  - _cell: {x: 1, y: 10}
+    _tile: {fileID: 11400000, guid: aa2b4f71061e6734b9fe5c6b442f358c, type: 2}
+  - _cell: {x: 2, y: 10}
+    _tile: {fileID: 11400000, guid: e2a62ae467d018d4aa2cbd113a37ab6b, type: 2}
+  - _cell: {x: 3, y: 10}
+    _tile: {fileID: 11400000, guid: b236221c5475b7046934c6f94706dbb3, type: 2}
+  - _cell: {x: 4, y: 10}
+    _tile: {fileID: 11400000, guid: 0d2f234473b0132448987e50d6888013, type: 2}
+  - _cell: {x: 5, y: 10}
+    _tile: {fileID: 11400000, guid: 2a12bf0d8c2767d45923858495f1262d, type: 2}
+  - _cell: {x: 6, y: 10}
+    _tile: {fileID: 11400000, guid: b272a13677d3d594e9295cd4ad793807, type: 2}
+  - _cell: {x: 7, y: 10}
+    _tile: {fileID: 11400000, guid: 36df20ec91f6f2d4da0761999ae9916f, type: 2}
+  - _cell: {x: 8, y: 10}
+    _tile: {fileID: 11400000, guid: a952924e14607fa4ea27062d5abe807c, type: 2}
+  - _cell: {x: 9, y: 10}
+    _tile: {fileID: 11400000, guid: 2ee70b1c94822d648ac7293c757bdb1c, type: 2}
+  - _cell: {x: 10, y: 10}
+    _tile: {fileID: 11400000, guid: 9972cdad99480a54283ba468519d9821, type: 2}
+  - _cell: {x: 11, y: 10}
+    _tile: {fileID: 11400000, guid: c85d7410a64f6b1458b15bd9fc71043d, type: 2}
+  - _cell: {x: 12, y: 10}
+    _tile: {fileID: 11400000, guid: c9a4236d5ea1e56478d3d8f9d7d2470b, type: 2}
+  - _cell: {x: 13, y: 10}
+    _tile: {fileID: 11400000, guid: 310dd463cbf3c9045b746da0a3ba1bca, type: 2}
+  - _cell: {x: 0, y: 9}
+    _tile: {fileID: 11400000, guid: 11be38f1c2d86b846969942299bda263, type: 2}
+  - _cell: {x: 1, y: 9}
+    _tile: {fileID: 11400000, guid: 0ac05598d95b2024f8d975e01bb21a82, type: 2}
+  - _cell: {x: 2, y: 9}
+    _tile: {fileID: 11400000, guid: e93ab33f1ce528949aa89906ae3c9e27, type: 2}
+  - _cell: {x: 3, y: 9}
+    _tile: {fileID: 11400000, guid: d0383b6ecefdf1146b28eb3d8090c0fa, type: 2}
+  - _cell: {x: 4, y: 9}
+    _tile: {fileID: 11400000, guid: 72a89ae404899c744b40c04cc2bb379f, type: 2}
+  - _cell: {x: 5, y: 9}
+    _tile: {fileID: 11400000, guid: 49df7171307ae184a8ec8abb8d8e1660, type: 2}
+  - _cell: {x: 6, y: 9}
+    _tile: {fileID: 11400000, guid: 90dba9c912dc86a418cfb0a422949361, type: 2}
+  - _cell: {x: 7, y: 9}
+    _tile: {fileID: 11400000, guid: 3666a9a5033fe3c41a9d3f374c60a2dd, type: 2}
+  - _cell: {x: 8, y: 9}
+    _tile: {fileID: 11400000, guid: a66f02fe6e482bd44821406c4d9ca0b8, type: 2}
+  - _cell: {x: 9, y: 9}
+    _tile: {fileID: 11400000, guid: 84777bb31c5505c43b6dbc84028cc990, type: 2}
+  - _cell: {x: 10, y: 9}
+    _tile: {fileID: 11400000, guid: c3964896e624b89448cd6ea8344ee4bc, type: 2}
+  - _cell: {x: 11, y: 9}
+    _tile: {fileID: 11400000, guid: ccae4c43a42d2084fb9e55b817d0d2bf, type: 2}
+  - _cell: {x: 12, y: 9}
+    _tile: {fileID: 11400000, guid: ab203a9e2a078cd41a82ba1001de6dd2, type: 2}
+  - _cell: {x: 13, y: 9}
+    _tile: {fileID: 11400000, guid: d7150adf5ce04b54baceecd60872729f, type: 2}
+  - _cell: {x: 0, y: 8}
+    _tile: {fileID: 11400000, guid: 49cae2ab5ae1817499543ba008956c24, type: 2}
+  - _cell: {x: 1, y: 8}
+    _tile: {fileID: 11400000, guid: fb821f27219c96a4eb9955d0c1f34b30, type: 2}
+  - _cell: {x: 2, y: 8}
+    _tile: {fileID: 11400000, guid: de5348d32e8299b41b917709d1959e36, type: 2}
+  - _cell: {x: 3, y: 8}
+    _tile: {fileID: 11400000, guid: bf18f0f952a39334ca8411d0a3e6d914, type: 2}
+  - _cell: {x: 4, y: 8}
+    _tile: {fileID: 11400000, guid: 88b59acb44a90704c9cc507618265602, type: 2}
+  - _cell: {x: 5, y: 8}
+    _tile: {fileID: 11400000, guid: 04ba688ebbb051549ab0a8bc255ef1b8, type: 2}
+  - _cell: {x: 6, y: 8}
+    _tile: {fileID: 11400000, guid: 5849ef1f413bb48469054e2666a031d3, type: 2}
+  - _cell: {x: 7, y: 8}
+    _tile: {fileID: 11400000, guid: cd9a0faf6a5bb134d9edd25d7ad46c6f, type: 2}
+  - _cell: {x: 8, y: 8}
+    _tile: {fileID: 11400000, guid: 493eacc7870827040b475a2047ca1e10, type: 2}
+  - _cell: {x: 9, y: 8}
+    _tile: {fileID: 11400000, guid: e85d4286d7da275429c2224573db231f, type: 2}
+  - _cell: {x: 10, y: 8}
+    _tile: {fileID: 11400000, guid: a7329b26d1ad5544f807cc7f3038e27d, type: 2}
+  - _cell: {x: 11, y: 8}
+    _tile: {fileID: 11400000, guid: 2e542aa8810ae844a9624d65e207b3d5, type: 2}
+  - _cell: {x: 12, y: 8}
+    _tile: {fileID: 11400000, guid: c6452d949989cb54e92ef2e79c406f06, type: 2}
+  - _cell: {x: 13, y: 8}
+    _tile: {fileID: 11400000, guid: 785ba912230eac84889379658e6da88a, type: 2}
+  - _cell: {x: 0, y: 7}
+    _tile: {fileID: 11400000, guid: e45625ebea3023644af0f32f79809925, type: 2}
+  - _cell: {x: 1, y: 7}
+    _tile: {fileID: 11400000, guid: e6d9a4b7bab9f92448d006a50cd08852, type: 2}
+  - _cell: {x: 2, y: 7}
+    _tile: {fileID: 11400000, guid: 8c6d46e165094954b91ebd32d5b4267d, type: 2}
+  - _cell: {x: 3, y: 7}
+    _tile: {fileID: 11400000, guid: 51d03ae90e4876e41a548f7fbf667368, type: 2}
+  - _cell: {x: 4, y: 7}
+    _tile: {fileID: 11400000, guid: 268f832fad941c644b2a9d28de859708, type: 2}
+  - _cell: {x: 5, y: 7}
+    _tile: {fileID: 11400000, guid: 831cff53564996745b298bc8170bca12, type: 2}
+  - _cell: {x: 6, y: 7}
+    _tile: {fileID: 11400000, guid: 8bf29314a58b1bc47870456218e9384d, type: 2}
+  - _cell: {x: 7, y: 7}
+    _tile: {fileID: 11400000, guid: f8c10c20f1b1b884f80c1ae749d622e1, type: 2}
+  - _cell: {x: 8, y: 7}
+    _tile: {fileID: 11400000, guid: ca28e063053495c4da08e57cfc115a21, type: 2}
+  - _cell: {x: 9, y: 7}
+    _tile: {fileID: 11400000, guid: adefda689c3eec64aa4b3523d134eff7, type: 2}
+  - _cell: {x: 10, y: 7}
+    _tile: {fileID: 11400000, guid: e2b67738f2884094b8b97d00cc4ea17f, type: 2}
+  - _cell: {x: 11, y: 7}
+    _tile: {fileID: 11400000, guid: 077d79738ffb73248bf51416ee301b90, type: 2}
+  - _cell: {x: 12, y: 7}
+    _tile: {fileID: 11400000, guid: 3fa63fed4220d914aaad6fdf78366745, type: 2}
+  - _cell: {x: 13, y: 7}
+    _tile: {fileID: 11400000, guid: 06348c9251df84f4e9530107d39ebaf5, type: 2}
+  - _cell: {x: 0, y: 6}
+    _tile: {fileID: 11400000, guid: 67a33e44a438dbe44a1f4a2bb06f71e0, type: 2}
+  - _cell: {x: 1, y: 6}
+    _tile: {fileID: 11400000, guid: ebdaf7d7a19627043bb1549efdc86f62, type: 2}
+  - _cell: {x: 2, y: 6}
+    _tile: {fileID: 11400000, guid: ccea97ad671ac7a499ecc03a6f5cef00, type: 2}
+  - _cell: {x: 3, y: 6}
+    _tile: {fileID: 11400000, guid: 03e55c0edc6b483488b4b79aa9f98e50, type: 2}
+  - _cell: {x: 4, y: 6}
+    _tile: {fileID: 11400000, guid: 15166983a8dd54a48a4f362a2208e218, type: 2}
+  - _cell: {x: 5, y: 6}
+    _tile: {fileID: 11400000, guid: 5a505500cbfd2a24abc34f6913931a73, type: 2}
+  - _cell: {x: 6, y: 6}
+    _tile: {fileID: 11400000, guid: 1adc7ecd7001f474e90c15793c309ce9, type: 2}
+  - _cell: {x: 7, y: 6}
+    _tile: {fileID: 11400000, guid: 86d6532470a498c48b7f41a4b351a8d0, type: 2}
+  - _cell: {x: 8, y: 6}
+    _tile: {fileID: 11400000, guid: 3088fa3ffb131454f9cae151750b70f9, type: 2}
+  - _cell: {x: 9, y: 6}
+    _tile: {fileID: 11400000, guid: 3c6045f7c2f8d7a498c1770b9c3afb2b, type: 2}
+  - _cell: {x: 10, y: 6}
+    _tile: {fileID: 11400000, guid: 09f095b381e56804f9e94de8c6382a2f, type: 2}
+  - _cell: {x: 11, y: 6}
+    _tile: {fileID: 11400000, guid: 21c81eeb78d92e44d8c6587f07fd226a, type: 2}
+  - _cell: {x: 12, y: 6}
+    _tile: {fileID: 11400000, guid: 9ee30dfcd06a78e47a91c1a9b4eaa9f1, type: 2}
+  - _cell: {x: 13, y: 6}
+    _tile: {fileID: 11400000, guid: 5472f96fe0307f84e8eeb4a3b797b67c, type: 2}
+  - _cell: {x: 0, y: 5}
+    _tile: {fileID: 11400000, guid: 9800420c2b27e6e49804e0710c10cf2d, type: 2}
+  - _cell: {x: 1, y: 5}
+    _tile: {fileID: 11400000, guid: f80648ec8fef65c4284cc24b0e7c9523, type: 2}
+  - _cell: {x: 2, y: 5}
+    _tile: {fileID: 11400000, guid: 561b9c2718df3ff429ea2847eaf85eb1, type: 2}
+  - _cell: {x: 3, y: 5}
+    _tile: {fileID: 11400000, guid: 63ceefdd77c8e9c409f648512b1e65c0, type: 2}
+  - _cell: {x: 4, y: 5}
+    _tile: {fileID: 11400000, guid: 89e67d5fe029b2c47b89256fa3b7d174, type: 2}
+  - _cell: {x: 5, y: 5}
+    _tile: {fileID: 11400000, guid: bcff6d64a91bd9e4e9918a8d549954cf, type: 2}
+  - _cell: {x: 6, y: 5}
+    _tile: {fileID: 11400000, guid: 0db8258796bd3e3479da307afbee79bf, type: 2}
+  - _cell: {x: 7, y: 5}
+    _tile: {fileID: 11400000, guid: e657bdf862f1bcb48854392291b85171, type: 2}
+  - _cell: {x: 8, y: 5}
+    _tile: {fileID: 11400000, guid: d81856877e38d274492f6853a254d7a6, type: 2}
+  - _cell: {x: 9, y: 5}
+    _tile: {fileID: 11400000, guid: 8f8b9a12fbcec6d44a2d0959fa5a306f, type: 2}
+  - _cell: {x: 10, y: 5}
+    _tile: {fileID: 11400000, guid: c78124fffba51744cbb86ac30f3e8c86, type: 2}
+  - _cell: {x: 11, y: 5}
+    _tile: {fileID: 11400000, guid: 3882e20317af85a468cf334eeb903038, type: 2}
+  - _cell: {x: 12, y: 5}
+    _tile: {fileID: 11400000, guid: 39adb5e280288844fa4381e144bfbe06, type: 2}
+  - _cell: {x: 13, y: 5}
+    _tile: {fileID: 11400000, guid: aeda7294e31ed5c499aeb35f6260e523, type: 2}
+  - _cell: {x: 0, y: 4}
+    _tile: {fileID: 11400000, guid: 2f0aa87804b4c404b9a93a695b0e10dd, type: 2}
+  - _cell: {x: 1, y: 4}
+    _tile: {fileID: 11400000, guid: 6964d958831021d44b1e060f01b9aea5, type: 2}
+  - _cell: {x: 2, y: 4}
+    _tile: {fileID: 11400000, guid: 8ff2bc104123718459d93153c4504df8, type: 2}
+  - _cell: {x: 3, y: 4}
+    _tile: {fileID: 11400000, guid: 45ce1f18602cd9a4cb650bbadc957a86, type: 2}
+  - _cell: {x: 4, y: 4}
+    _tile: {fileID: 11400000, guid: bce6ec0009a554540a310d5ec6b518dc, type: 2}
+  - _cell: {x: 5, y: 4}
+    _tile: {fileID: 11400000, guid: 88fa84337e062954e9bacfd36b2cea70, type: 2}
+  - _cell: {x: 6, y: 4}
+    _tile: {fileID: 11400000, guid: 56914030966239e43bb73952f72503e5, type: 2}
+  - _cell: {x: 7, y: 4}
+    _tile: {fileID: 11400000, guid: 078e5b53bd70abe498c3e70c57f44e7d, type: 2}
+  - _cell: {x: 8, y: 4}
+    _tile: {fileID: 11400000, guid: 71c19f412f8f5ad4ea7af2581d71452b, type: 2}
+  - _cell: {x: 9, y: 4}
+    _tile: {fileID: 11400000, guid: d06abcbfa9d3c2c459772b41da9e0f1c, type: 2}
+  - _cell: {x: 10, y: 4}
+    _tile: {fileID: 11400000, guid: 24d427bbcfbb46a4fb9ee2b6b331d676, type: 2}
+  - _cell: {x: 11, y: 4}
+    _tile: {fileID: 11400000, guid: e30837fcf40427040b22f52d44012139, type: 2}
+  - _cell: {x: 12, y: 4}
+    _tile: {fileID: 11400000, guid: 38776134688a2fb4c9d89787715e570c, type: 2}
+  - _cell: {x: 13, y: 4}
+    _tile: {fileID: 11400000, guid: cccc8ffaa5810b5449a55918e4ef4adb, type: 2}
+  - _cell: {x: 0, y: 3}
+    _tile: {fileID: 11400000, guid: 14270f97cf231974aa9775e160b2b0ba, type: 2}
+  - _cell: {x: 1, y: 3}
+    _tile: {fileID: 11400000, guid: 50318f413869c4b43b173c23bba744d1, type: 2}
+  - _cell: {x: 2, y: 3}
+    _tile: {fileID: 11400000, guid: c6fff29c787c8bc42b6596c38d7c79cd, type: 2}
+  - _cell: {x: 3, y: 3}
+    _tile: {fileID: 11400000, guid: b359854656f732141a313164b606aca4, type: 2}
+  - _cell: {x: 4, y: 3}
+    _tile: {fileID: 11400000, guid: a11a5e28eba60044cb3fcbc72150bcfc, type: 2}
+  - _cell: {x: 5, y: 3}
+    _tile: {fileID: 11400000, guid: 1c9372fc5e884f44f917ba7d31ba0149, type: 2}
+  - _cell: {x: 6, y: 3}
+    _tile: {fileID: 11400000, guid: b0550409eff2689469663b3b7497a677, type: 2}
+  - _cell: {x: 7, y: 3}
+    _tile: {fileID: 11400000, guid: 0f6aa0bf5182e594e9873a9aa4d95e62, type: 2}
+  - _cell: {x: 8, y: 3}
+    _tile: {fileID: 11400000, guid: c283c0ee3e5ba3b4a830d0a2c7f6fb52, type: 2}
+  - _cell: {x: 9, y: 3}
+    _tile: {fileID: 11400000, guid: 9f745fd10ef22d841848102fe7dea748, type: 2}
+  - _cell: {x: 10, y: 3}
+    _tile: {fileID: 11400000, guid: f85530977b47fc646af9a17d827551c5, type: 2}
+  - _cell: {x: 11, y: 3}
+    _tile: {fileID: 11400000, guid: 45f47a75b9424694ab52624cbda76f82, type: 2}
+  - _cell: {x: 12, y: 3}
+    _tile: {fileID: 11400000, guid: 109ecb03644a6e94d812ecce76a8b11e, type: 2}
+  - _cell: {x: 13, y: 3}
+    _tile: {fileID: 11400000, guid: cdb088cce878a644c9487efd204fe720, type: 2}
+  - _cell: {x: 0, y: 2}
+    _tile: {fileID: 11400000, guid: 6e8b9f547cff1ae448174c1799286f26, type: 2}
+  - _cell: {x: 1, y: 2}
+    _tile: {fileID: 11400000, guid: 8aa743474c2d2074787ca5418b42cc27, type: 2}
+  - _cell: {x: 2, y: 2}
+    _tile: {fileID: 11400000, guid: 71102487705bae845a16736a18faf1c7, type: 2}
+  - _cell: {x: 3, y: 2}
+    _tile: {fileID: 11400000, guid: d76b1821584006047888057d855c82ab, type: 2}
+  - _cell: {x: 4, y: 2}
+    _tile: {fileID: 11400000, guid: 52035725372949f47818853e40b7082f, type: 2}
+  - _cell: {x: 5, y: 2}
+    _tile: {fileID: 11400000, guid: 019386906b1137640a951783032509bf, type: 2}
+  - _cell: {x: 6, y: 2}
+    _tile: {fileID: 11400000, guid: c6ec77fffdf3beb4a92f25bc5f28bca1, type: 2}
+  - _cell: {x: 7, y: 2}
+    _tile: {fileID: 11400000, guid: 9b0689d6923e0cd4f98fa57b4517b019, type: 2}
+  - _cell: {x: 8, y: 2}
+    _tile: {fileID: 11400000, guid: 0335956018c3fcb479a0b36b2d840dde, type: 2}
+  - _cell: {x: 9, y: 2}
+    _tile: {fileID: 11400000, guid: 00e0f70dfb5421249ba1fe6a0fbc43d8, type: 2}
+  - _cell: {x: 10, y: 2}
+    _tile: {fileID: 11400000, guid: 8da218241d8b45a449fec1b354b46a1d, type: 2}
+  - _cell: {x: 11, y: 2}
+    _tile: {fileID: 11400000, guid: 0e6c27559a52cb84e8f812a58f347df2, type: 2}
+  - _cell: {x: 12, y: 2}
+    _tile: {fileID: 11400000, guid: ec5dcede70ac2d44380181e3bd095372, type: 2}
+  - _cell: {x: 13, y: 2}
+    _tile: {fileID: 11400000, guid: 1357346a958aabb4ab9bd342a2cebee6, type: 2}
+  - _cell: {x: 0, y: 1}
+    _tile: {fileID: 11400000, guid: 3bfe6901e9dd7594285cb12ce8a37a19, type: 2}
+  - _cell: {x: 1, y: 1}
+    _tile: {fileID: 11400000, guid: f7b9f2939d218cf489ae3bd1fe02423e, type: 2}
+  - _cell: {x: 2, y: 1}
+    _tile: {fileID: 11400000, guid: f9ce5ad1fef30e64fb2d10ed816acae8, type: 2}
+  - _cell: {x: 3, y: 1}
+    _tile: {fileID: 11400000, guid: 24a22435706476b4298d9a8519d36ec5, type: 2}
+  - _cell: {x: 4, y: 1}
+    _tile: {fileID: 11400000, guid: 55d298ce394776344b71f57a68154eb0, type: 2}
+  - _cell: {x: 5, y: 1}
+    _tile: {fileID: 11400000, guid: d75c3a743625f154fa66199da1e7daa9, type: 2}
+  - _cell: {x: 6, y: 1}
+    _tile: {fileID: 11400000, guid: 433ccad5c2cd5e649aa87ab86a20f39a, type: 2}
+  - _cell: {x: 7, y: 1}
+    _tile: {fileID: 11400000, guid: 9ebc2d77bb6d1a348ae8deb328098f81, type: 2}
+  - _cell: {x: 8, y: 1}
+    _tile: {fileID: 11400000, guid: 797fcf5070c2a084f910ba10f2e0f3fa, type: 2}
+  - _cell: {x: 9, y: 1}
+    _tile: {fileID: 11400000, guid: b19868cd1a09fc243a7a270882e0c165, type: 2}
+  - _cell: {x: 10, y: 1}
+    _tile: {fileID: 11400000, guid: 6b6caa63806c4a049880090bdb036e5b, type: 2}
+  - _cell: {x: 11, y: 1}
+    _tile: {fileID: 11400000, guid: 45fb23a452e8b284b94721b7f1976298, type: 2}
+  - _cell: {x: 12, y: 1}
+    _tile: {fileID: 11400000, guid: 4be6a93bfed5d3840b1098cddce11f8c, type: 2}
+  - _cell: {x: 13, y: 1}
+    _tile: {fileID: 11400000, guid: fc08124f50b03b54491293c4e191cff9, type: 2}
+  - _cell: {x: 0, y: 0}
+    _tile: {fileID: 11400000, guid: 05c0f163399893a48b544ba02ed88a59, type: 2}
+  - _cell: {x: 1, y: 0}
+    _tile: {fileID: 11400000, guid: 2e448318839fed448b82a2836a77a61d, type: 2}
+  - _cell: {x: 2, y: 0}
+    _tile: {fileID: 11400000, guid: 170d60bf08e237e4885b5463d097b147, type: 2}
+  - _cell: {x: 3, y: 0}
+    _tile: {fileID: 11400000, guid: 33b6efeca577f5448ba1f4839db8463f, type: 2}
+  - _cell: {x: 4, y: 0}
+    _tile: {fileID: 11400000, guid: 039255f6826e1b94cbf832e097d53812, type: 2}
+  - _cell: {x: 5, y: 0}
+    _tile: {fileID: 11400000, guid: 6aa5ab7216b4db843b470006455c369a, type: 2}
+  - _cell: {x: 6, y: 0}
+    _tile: {fileID: 11400000, guid: 3c741f0f5133054449bc7dd66b392336, type: 2}
+  - _cell: {x: 7, y: 0}
+    _tile: {fileID: 11400000, guid: a51fa582de853f848962461e631497f3, type: 2}
+  - _cell: {x: 8, y: 0}
+    _tile: {fileID: 11400000, guid: 712594bdedc77284b9299307dc291a72, type: 2}
+  - _cell: {x: 9, y: 0}
+    _tile: {fileID: 11400000, guid: 2a1f74069a98b67439073a8a914f2c45, type: 2}
+  - _cell: {x: 10, y: 0}
+    _tile: {fileID: 11400000, guid: 9fc3203dcc799bf419a6ef03ea5793f9, type: 2}
+  - _cell: {x: 11, y: 0}
+    _tile: {fileID: 11400000, guid: dc25d6502dc872a418f6aa14840789c1, type: 2}
+  - _cell: {x: 12, y: 0}
+    _tile: {fileID: 11400000, guid: 6f228884432ca4e4c84060ce00491f09, type: 2}
+  - _cell: {x: 13, y: 0}
+    _tile: {fileID: 11400000, guid: 56642e05fd0a79c48a3fb1ed36b3b13b, type: 2}

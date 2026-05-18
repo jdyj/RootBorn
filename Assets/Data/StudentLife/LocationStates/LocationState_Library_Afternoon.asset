@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-6260244183208110819
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52a620ac715682a44909579770c513b4, type: 3}
+  m_Name: Condition_ActivityLog
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.LocationStateActivityLogCondition
+  _requiredActivityId: location.activity.library-hard-book
+  _minimumCount: 1
+--- !u!114 &-3158871814148780658
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78b122456c9e6444587b47111d0157cf, type: 3}
+  m_Name: Effect_Availability
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.LocationStateAvailabilityEffect
+  _activities:
+  - {fileID: 11400000, guid: 9261dd8cefccadf458a9e564b07de057, type: 2}
+  _npcs:
+  - {fileID: 11400000, guid: abc5d2422253d9d488d9327c7bec126a, type: 2}
+  _clues:
+  - {fileID: 11400000, guid: 1296943870c0b2a41a76a2490f3df858, type: 2}
+  _interactableObjectIds:
+  - object.reading-table
+  _portalIds:
+  - portal.library-afternoon
+  _shopItemIds:
+  - shop.library-afternoon
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1bba9fa3abe85124d876640452b87a06, type: 3}
+  m_Name: LocationState_Library_Afternoon
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.LocationStateDefinition
+  _id: location.state.library-afternoon
+  _displayNameKey: Library Afternoon
+  _descriptionKey: Reference desk hour
+  _location: {fileID: 11400000, guid: cbc6489c83f1f1440a50f2f18914cd32, type: 2}
+  _priority: 15
+  _conditions:
+  - {fileID: -6260244183208110819}
+  _effects:
+  - {fileID: -3158871814148780658}

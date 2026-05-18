@@ -11,11 +11,12 @@ using UnityEngine;
 namespace Rootborn.Game.Managers
 {
     /// <summary>
-    /// 게임 부팅 시 한 번 GameDataRegistry 를 로드한 뒤 도메인별 Dictionary 로 lookup 한다.
+    /// 게임 부팅 시 한 번 GameDataRegistry를 로드한 뒤 도메인별 Dictionary로 lookup한다.
     /// </summary>
     public sealed class DataManager
     {
         public const string AddrRegistry = "data/registry";
+        private const string EditorRegistryPath = "Assets/Data/Registry/GameDataRegistry.asset";
 
         public GameDataRegistry Registry { get; private set; }
         public Sprite PlayerSprite { get; private set; }
@@ -36,7 +37,11 @@ namespace Rootborn.Game.Managers
         {
             if (IsInitialized) return;
 
-            Registry = await resource.LoadAsync<GameDataRegistry>(AddrRegistry);
+            Registry = LoadEditorRegistry();
+            if (Registry == null)
+            {
+                Registry = await resource.LoadAsync<GameDataRegistry>(AddrRegistry);
+            }
             if (Registry == null)
             {
                 Registry = UnityEngine.Resources.Load<GameDataRegistry>("GameDataRegistry");
@@ -47,7 +52,7 @@ namespace Rootborn.Game.Managers
             }
             if (Registry == null)
             {
-                Debug.LogError("[ROOTBORN/DataManager] GameDataRegistry not found. Run 'Rootborn → Setup Everything (One Click)'.");
+                Debug.LogError("[ROOTBORN/DataManager] GameDataRegistry not found. Run 'Rootborn -> Setup Everything (One Click)'.");
                 return;
             }
             else
@@ -63,6 +68,17 @@ namespace Rootborn.Game.Managers
             Debug.Log($"[ROOTBORN/DataManager] Sprites loaded - Ground={(GroundSprite != null ? GroundSprite.name : "null")}, Player={(PlayerSprite != null ? PlayerSprite.name : "null")}");
 
             IsInitialized = true;
+        }
+
+        private static GameDataRegistry LoadEditorRegistry()
+        {
+#if UNITY_EDITOR
+            if (Application.isEditor)
+            {
+                return UnityEditor.AssetDatabase.LoadAssetAtPath<GameDataRegistry>(EditorRegistryPath);
+            }
+#endif
+            return null;
         }
 
         private void BuildLookups()

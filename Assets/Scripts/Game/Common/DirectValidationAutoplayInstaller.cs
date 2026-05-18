@@ -3,11 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using Rootborn.Game.Player;
+using Rootborn.Game.Save;
 using Rootborn.Game.StudentLife;
+using Rootborn.Game.WorldState;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace Rootborn.Game.Common
 {
@@ -15,6 +19,8 @@ namespace Rootborn.Game.Common
     {
         private const string Flag = "-directValidationAutoplay";
         private const string QuestInventoryFlag = "-directValidationAutoplayQuestInventory";
+        private const string WorldStateClaimFlag = "-directValidationAutoplayWorldStateClaim";
+        private const string WorldStateObserveFlag = "-directValidationAutoplayWorldStateObserve";
         private const string DelayFlag = "-directValidationAutoplayDelaySeconds";
         private const string RunnerName = "[DirectValidationAutoplay]";
         private const string TownSceneName = "Town";
@@ -22,6 +28,8 @@ namespace Rootborn.Game.Common
         private const string DayEndObjectName = "StudentDayEndBoard";
         private const string GuideNpcObjectName = "GuideNpc";
         private const string QuestResourceObjectName = "QuestResource_00";
+        private const string WorldStateLogButtonName = "WorldStateLogButton";
+        private const string WorldStateMarkerPrefix = "WorldStateChange_";
         private static bool? s_enabled;
 
         private static bool Enabled
@@ -30,7 +38,7 @@ namespace Rootborn.Game.Common
             {
                 if (!s_enabled.HasValue)
                 {
-                    s_enabled = HasFlag();
+                    s_enabled = HasFlag(Flag);
                 }
 
                 return s_enabled.Value;
@@ -74,26 +82,12 @@ namespace Rootborn.Game.Common
             runner.AddComponent<Runner>();
         }
 
-        private static bool HasFlag()
+        private static bool HasFlag(string flag)
         {
             string[] args = Environment.GetCommandLineArgs();
             for (int i = 0; i < args.Length; i++)
             {
-                if (string.Equals(args[i], Flag, StringComparison.OrdinalIgnoreCase))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static bool HasQuestInventoryFlag()
-        {
-            string[] args = Environment.GetCommandLineArgs();
-            for (int i = 0; i < args.Length; i++)
-            {
-                if (string.Equals(args[i], QuestInventoryFlag, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(args[i], flag, StringComparison.OrdinalIgnoreCase))
                 {
                     return true;
                 }
@@ -163,7 +157,23 @@ namespace Rootborn.Game.Common
                     yield break;
                 }
 
-                if (HasQuestInventoryFlag())
+                if (HasFlag(WorldStateClaimFlag))
+                {
+                    yield return RunWorldStateClaimPath(identity);
+                    ReleaseAllKeys();
+                    DirectValidationTrace.Log("autoplay completed world-state-claim player=" + identity.PlayerId);
+                    yield break;
+                }
+
+                if (HasFlag(WorldStateObserveFlag))
+                {
+                    yield return RunWorldStateObservePath(identity);
+                    ReleaseAllKeys();
+                    DirectValidationTrace.Log("autoplay completed world-state-observe player=" + identity.PlayerId);
+                    yield break;
+                }
+
+                if (HasFlag(QuestInventoryFlag))
                 {
                     yield return RunQuestInventoryPath(identity);
                     ReleaseAllKeys();
@@ -221,6 +231,110 @@ namespace Rootborn.Game.Common
                 DirectValidationTrace.Log("autoplay completed player=" + identity.PlayerId);
             }
 
+            private static IEnumerator RunWorldStateClaimPath(PlayerIdentity identity)
+            {
+                yield return RunQuestInventoryPath(identity);
+                GameObject guideNpc = null;
+                float elapsed = 0f;
+                while (guideNpc == null && elapsed < 10f)
+                {
+                    guideNpc = FindSceneObjectByName(SceneManager.GetActiveScene(), GuideNpcObjectName);
+                    if (guideNpc == null)
+                    {
+                        elapsed += UnityEngine.Time.unscaledDeltaTime;
+                        yield return null;
+                    }
+                }
+
+                if (guideNpc == null)
+                {
+                    DirectValidationTrace.Log("autoplay failed: guide npc not found for world-state claim");
+                    yield break;
+                }
+
+                DirectValidationTrace.Log("autoplay move target=" + GuideNpcObjectName + " claim player=" + identity.PlayerId);
+                yield return MovePlayerTo(identity.transform, guideNpc.transform.position + new Vector3(0.75f, 0f, 0f), 0.35f, 12f);
+                yield return PressKey(Key.E);
+                yield return new WaitForSecondsRealtime(0.75f);
+                yield return ClickFirstDialogueChoiceButton("world-state-claim", identity);
+                yield return new WaitForSecondsRealtime(1f);
+                yield return ClickWorldStateLogButton(identity, "world-state-claim-refresh");
+                yield return WaitForWorldStateMarker(5f);
+                DirectValidationTrace.Log("autoplay world-state snapshot player=" + identity.PlayerId + " " + WorldStateSnapshot(identity));
+                DirectValidationTrace.Log("autoplay world-state marker snapshot player=" + identity.PlayerId + " " + WorldStateMarkerSnapshot());
+            }
+
+            private static IEnumerator RunWorldStateObservePath(PlayerIdentity identity)
+            {
+                GameObject buttonObject = null;
+                float elapsed = 0f;
+                while (buttonObject == null && elapsed < 15f)
+                {
+                    buttonObject = FindSceneObjectByName(SceneManager.GetActiveScene(), WorldStateLogButtonName);
+                    if (buttonObject == null)
+                    {
+                        elapsed += UnityEngine.Time.unscaledDeltaTime;
+                        yield return null;
+                    }
+                }
+
+                if (buttonObject == null)
+                {
+                    DirectValidationTrace.Log("autoplay failed: WorldStateLogButton not found player=" + identity.PlayerId);
+                    DirectValidationTrace.Log("autoplay world-state snapshot player=" + identity.PlayerId + " " + WorldStateSnapshot(identity));
+                    yield break;
+                }
+
+                var button = buttonObject.GetComponent<Button>();
+                if (button != null && EventSystem.current != null)
+                {
+                    ExecuteEvents.Execute(buttonObject, new PointerEventData(EventSystem.current) { button = PointerEventData.InputButton.Left }, ExecuteEvents.pointerClickHandler);
+                    yield return null;
+                    DirectValidationTrace.Log("autoplay clicked WorldStateLogButton player=" + identity.PlayerId);
+                }
+                else
+                {
+                    DirectValidationTrace.Log("autoplay skipped WorldStateLogButton click player=" + identity.PlayerId + " button=" + (button != null) + " eventSystem=" + (EventSystem.current != null));
+                }
+
+                yield return new WaitForSecondsRealtime(0.5f);
+                DirectValidationTrace.Log("autoplay world-state snapshot player=" + identity.PlayerId + " " + WorldStateSnapshot(identity));
+                DirectValidationTrace.Log("autoplay world-state marker snapshot player=" + identity.PlayerId + " " + WorldStateMarkerSnapshot());
+            }
+
+            private static IEnumerator ClickWorldStateLogButton(PlayerIdentity identity, string purpose)
+            {
+                GameObject buttonObject = null;
+                float elapsed = 0f;
+                while (buttonObject == null && elapsed < 15f)
+                {
+                    buttonObject = FindSceneObjectByName(SceneManager.GetActiveScene(), WorldStateLogButtonName);
+                    if (buttonObject == null)
+                    {
+                        elapsed += UnityEngine.Time.unscaledDeltaTime;
+                        yield return null;
+                    }
+                }
+
+                if (buttonObject == null)
+                {
+                    DirectValidationTrace.Log("autoplay failed: WorldStateLogButton not found purpose=" + purpose + " player=" + identity.PlayerId);
+                    yield break;
+                }
+
+                var button = buttonObject.GetComponent<Button>();
+                if (button != null && EventSystem.current != null)
+                {
+                    ExecuteEvents.Execute(buttonObject, new PointerEventData(EventSystem.current) { button = PointerEventData.InputButton.Left }, ExecuteEvents.pointerClickHandler);
+                    yield return null;
+                    DirectValidationTrace.Log("autoplay clicked WorldStateLogButton purpose=" + purpose + " player=" + identity.PlayerId);
+                }
+                else
+                {
+                    DirectValidationTrace.Log("autoplay skipped WorldStateLogButton click purpose=" + purpose + " player=" + identity.PlayerId + " button=" + (button != null) + " eventSystem=" + (EventSystem.current != null));
+                }
+            }
+
             private static IEnumerator RunQuestInventoryPath(PlayerIdentity identity)
             {
                 GameObject guideNpc = null;
@@ -242,10 +356,11 @@ namespace Rootborn.Game.Common
                 }
 
                 DirectValidationTrace.Log("autoplay move target=" + GuideNpcObjectName + " player=" + identity.PlayerId);
-                yield return MovePlayerTo(identity.transform, guideNpc.transform.position, 0.45f, 12f);
+                yield return MovePlayerTo(identity.transform, guideNpc.transform.position + new Vector3(0.75f, 0f, 0f), 0.35f, 12f);
                 yield return PressKey(Key.E);
-                yield return new WaitForSecondsRealtime(0.35f);
-                yield return PressKey(Key.E);
+                yield return new WaitForSecondsRealtime(0.75f);
+                yield return ClickFirstDialogueChoiceButton("quest-accept", identity);
+                yield return new WaitForSecondsRealtime(0.5f);
                 DirectValidationTrace.Log("autoplay interacted target=" + GuideNpcObjectName + " player=" + identity.PlayerId);
 
                 GameObject resourceObject = null;
@@ -267,12 +382,73 @@ namespace Rootborn.Game.Common
                 }
 
                 DirectValidationTrace.Log("autoplay move target=" + QuestResourceObjectName + " player=" + identity.PlayerId);
-                yield return MovePlayerTo(identity.transform, resourceObject.transform.position, 0.45f, 12f);
-                yield return PressKeyRepeated(Key.E, 28, 0.08f);
+                yield return MovePlayerTo(identity.transform, resourceObject.transform.position + new Vector3(0.35f, 0f, 0f), 0.3f, 12f);
+                for (int i = 0; i < 80 && InventorySnapshot(identity) == "inventory=empty"; i++)
+                {
+                    yield return PressKey(Key.E);
+                    yield return new WaitForSecondsRealtime(0.08f);
+                }
                 DirectValidationTrace.Log("autoplay interacted target=" + QuestResourceObjectName + " player=" + identity.PlayerId);
                 DirectValidationTrace.Log("autoplay inventory snapshot player=" + identity.PlayerId + " " + InventorySnapshot(identity));
             }
 
+            private static IEnumerator ClickFirstDialogueChoiceButton(string purpose, PlayerIdentity identity)
+            {
+                GameObject buttonObject = null;
+                float elapsed = 0f;
+                while (buttonObject == null && elapsed < 5f)
+                {
+                    buttonObject = FindFirstActiveDialogueChoiceButtonObject();
+                    if (buttonObject == null)
+                    {
+                        elapsed += UnityEngine.Time.unscaledDeltaTime;
+                        yield return null;
+                    }
+                }
+
+                if (buttonObject == null)
+                {
+                    DirectValidationTrace.Log("autoplay failed: dialogue choice not found purpose=" + purpose + " player=" + identity.PlayerId);
+                    yield break;
+                }
+
+                var button = buttonObject.GetComponent<Button>();
+                if (button != null && button.interactable && EventSystem.current != null)
+                {
+                    string buttonName = buttonObject.name;
+                    ExecuteEvents.Execute(buttonObject, new PointerEventData(EventSystem.current) { button = PointerEventData.InputButton.Left }, ExecuteEvents.pointerClickHandler);
+                    yield return null;
+                    DirectValidationTrace.Log("autoplay clicked dialogue choice purpose=" + purpose + " player=" + identity.PlayerId + " button=" + buttonName);
+                }
+                else
+                {
+                    DirectValidationTrace.Log("autoplay skipped dialogue choice purpose=" + purpose + " player=" + identity.PlayerId + " button=" + (button != null) + " interactable=" + (button != null && button.interactable) + " eventSystem=" + (EventSystem.current != null));
+                }
+            }
+
+            private static GameObject FindFirstActiveDialogueChoiceButtonObject()
+            {
+                var roots = SceneManager.GetActiveScene().GetRootGameObjects();
+                for (int i = 0; i < roots.Length; i++)
+                {
+                    var choiceRoot = FindChildByName(roots[i].transform, "ChoiceButtons");
+                    if (choiceRoot == null || !choiceRoot.gameObject.activeInHierarchy)
+                    {
+                        continue;
+                    }
+
+                    for (int childIndex = 0; childIndex < choiceRoot.childCount; childIndex++)
+                    {
+                        var child = choiceRoot.GetChild(childIndex);
+                        if (child != null && child.gameObject.activeInHierarchy && child.GetComponent<Button>() != null)
+                        {
+                            return child.gameObject;
+                        }
+                    }
+                }
+
+                return null;
+            }
             private static IEnumerator WaitForLocalInputPlayer(Action<PlayerIdentity> assign)
             {
                 PlayerIdentity identity = null;
@@ -338,18 +514,6 @@ namespace Rootborn.Game.Common
                 yield return null;
             }
 
-            private static IEnumerator PressKeyRepeated(Key key, int count, float intervalSeconds)
-            {
-                for (int i = 0; i < count; i++)
-                {
-                    yield return PressKey(key);
-                    if (intervalSeconds > 0f)
-                    {
-                        yield return new WaitForSecondsRealtime(intervalSeconds);
-                    }
-                }
-            }
-
             private static string InventorySnapshot(PlayerIdentity identity)
             {
                 var inventory = identity != null ? identity.GetComponent<PlayerInventory>() : null;
@@ -377,6 +541,51 @@ namespace Rootborn.Game.Common
                 }
 
                 return summary == "inventory=" ? "inventory=empty" : summary;
+            }
+
+            private static string WorldStateSnapshot(PlayerIdentity identity)
+            {
+                string playerId = identity != null ? identity.PlayerId : PlayerIdentity.DefaultPlayerId;
+                string saveSlot = ActiveSaveContext.Metadata != null && !string.IsNullOrEmpty(ActiveSaveContext.Metadata.SlotId) ? ActiveSaveContext.Metadata.SlotId : "default";
+                var progress = WorldStateProgressPersistence.LoadOrCreate(saveSlot, playerId);
+                var saveData = progress.ToSaveData();
+                if (saveData == null || saveData.Records == null || saveData.Records.Length == 0)
+                {
+                    return "worldState=empty saveSlot=" + saveSlot;
+                }
+
+                string summary = "worldState=";
+                for (int i = 0; i < saveData.Records.Length; i++)
+                {
+                    var record = saveData.Records[i];
+                    if (record == null || string.IsNullOrEmpty(record.FlagId)) continue;
+                    summary += (summary == "worldState=" ? string.Empty : ",") + record.FlagId + ":" + record.Scope;
+                }
+
+                return summary + " saveSlot=" + saveSlot;
+            }
+
+            private static IEnumerator WaitForWorldStateMarker(float timeoutSeconds)
+            {
+                float elapsed = 0f;
+                while (elapsed < timeoutSeconds && WorldStateMarkerSnapshot() == "markers=empty")
+                {
+                    elapsed += UnityEngine.Time.unscaledDeltaTime;
+                    yield return null;
+                }
+            }
+
+            private static string WorldStateMarkerSnapshot()
+            {
+                var roots = SceneManager.GetActiveScene().GetRootGameObjects();
+                string summary = "markers=";
+                for (int i = 0; i < roots.Length; i++)
+                {
+                    if (roots[i] == null || !roots[i].name.StartsWith(WorldStateMarkerPrefix, StringComparison.Ordinal)) continue;
+                    summary += (summary == "markers=" ? string.Empty : ",") + roots[i].name;
+                }
+
+                return summary == "markers=" ? "markers=empty" : summary;
             }
 
             private static string StudentProgressSnapshot(PlayerIdentity identity)

@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23d21008197b3684eb9ccef9f4f47b40, type: 3}
+  m_Name: Furniture_Kitchen_Singles_Shadowless_48x48_313
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Placement.FurnitureDefinition
+  _stableId: modern.interiors.shadowless.kitchen.kitchen.singles.shadowless.48x48.313
+  _displayName: Kitchen Singles Shadowless 48x48 313
+  _category: Kitchen
+  _allowedSurfaceIds:
+  - house
+  - town-test
+  _tileParts:
+  - _localCell: {x: 0, y: 0}
+    _tile: {fileID: 11400000, guid: 2a4e81500b8f8aa4bbb956c5f0c15f1c, type: 2}
+  _footprintCells:
+  - {x: 0, y: 0}
+  - {x: 0, y: 1}
+  _blocksMovement: 1
+  _placementPreference: 0
+  _unlockToken: 

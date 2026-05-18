@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23d21008197b3684eb9ccef9f4f47b40, type: 3}
+  m_Name: Furniture_Bedroom_Singles_Shadowless_48x48_423
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Placement.FurnitureDefinition
+  _stableId: modern.interiors.shadowless.bedroom.bedroom.singles.shadowless.48x48.423
+  _displayName: Bedroom Singles Shadowless 48x48 423
+  _category: Bedroom
+  _allowedSurfaceIds:
+  - house
+  - town-test
+  _tileParts:
+  - _localCell: {x: 0, y: 0}
+    _tile: {fileID: 11400000, guid: 6d9270c6dbd9cd8429b4b45bcb7df070, type: 2}
+  _footprintCells:
+  - {x: 0, y: 0}
+  - {x: 1, y: 0}
+  - {x: 0, y: 1}
+  - {x: 1, y: 1}
+  - {x: 0, y: 2}
+  - {x: 1, y: 2}
+  _blocksMovement: 1
+  _placementPreference: 0
+  _unlockToken: 

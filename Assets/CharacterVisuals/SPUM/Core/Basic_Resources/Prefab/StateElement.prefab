@@ -13,7 +13,6 @@ GameObject:
   - component: {fileID: 4231029384813585514}
   - component: {fileID: 939342986585802665}
   - component: {fileID: 3068623717302681295}
-  - component: {fileID: 9213375439519822520}
   m_Layer: 5
   m_Name: StateElement
   m_TagString: Untagged
@@ -120,28 +119,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_HorizontalFit: 0
   m_VerticalFit: 2
---- !u!114 &9213375439519822520
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 147651248036989893}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0b6a404b8ce3e7d4e973fd3b3f3d8300, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  StateIndexText: {fileID: 7658542130205662216}
-  StateNameText: {fileID: 7285057397723976598}
-  NameToggleGroup: {fileID: 0}
-  NameButton: {fileID: 3148812420250557801}
-  UpButton: {fileID: 8676638181074284123}
-  DownButton: {fileID: 361568461248879091}
-  RemoveButton: {fileID: 3265623299429847643}
-  StateSubTypeText: {fileID: 5757981551285392132}
-  StatePackageText: {fileID: 5205134663123355316}
-  EditButton: {fileID: 0}
 --- !u!1 &364444501642563534
 GameObject:
   m_ObjectHideFlags: 0
@@ -736,7 +713,6 @@ GameObject:
   - component: {fileID: 6767018673751165784}
   - component: {fileID: 8725182724270157473}
   - component: {fileID: 2827384533163747764}
-  - component: {fileID: 9181865128036792965}
   m_Layer: 5
   m_Name: SubStatePanel
   m_TagString: Untagged
@@ -829,28 +805,6 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
---- !u!114 &9181865128036792965
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2473380603396520341}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0b6a404b8ce3e7d4e973fd3b3f3d8300, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  StateIndexText: {fileID: 0}
-  StateNameText: {fileID: 0}
-  NameToggleGroup: {fileID: 0}
-  NameButton: {fileID: 0}
-  UpButton: {fileID: 0}
-  DownButton: {fileID: 0}
-  RemoveButton: {fileID: 0}
-  StateSubTypeText: {fileID: 0}
-  StatePackageText: {fileID: 0}
-  EditButton: {fileID: 0}
 --- !u!1 &3191706520733485064
 GameObject:
   m_ObjectHideFlags: 0
@@ -1178,7 +1132,6 @@ GameObject:
   - component: {fileID: 9178080675586783920}
   - component: {fileID: 7531135916721550571}
   - component: {fileID: 7546524789346724941}
-  - component: {fileID: 8828717204698561746}
   m_Layer: 5
   m_Name: SubStatePanel
   m_TagString: Untagged
@@ -1274,28 +1227,6 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
---- !u!114 &8828717204698561746
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5475215575683521656}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0b6a404b8ce3e7d4e973fd3b3f3d8300, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  StateIndexText: {fileID: 7658542130205662216}
-  StateNameText: {fileID: 7285057397723976598}
-  NameToggleGroup: {fileID: 0}
-  NameButton: {fileID: 3148812420250557801}
-  UpButton: {fileID: 0}
-  DownButton: {fileID: 0}
-  RemoveButton: {fileID: 3265623299429847643}
-  StateSubTypeText: {fileID: 5757981551285392132}
-  StatePackageText: {fileID: 5205134663123355316}
-  EditButton: {fileID: 0}
 --- !u!1 &6181838839105065435
 GameObject:
   m_ObjectHideFlags: 0

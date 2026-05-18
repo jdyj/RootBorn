@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d370f150658c5b5469e846a5f77808b1, type: 3}
+  m_Name: DailyEventChoice_LibraryReadToEnd
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.DailyEventChoiceDefinition
+  _id: daily-event-choice.library-read-to-end
+  _displayNameKey: Read to the end
+  _resultSummaryKey: Focus grows, but fatigue rises.
+  _timeCostMinutes: 30
+  _energyCost: 1
+  _focusCost: 1
+  _stressDelta: 0
+  _isDeferChoice: 0
+  _isDeclineChoice: 0
+  _availabilityRules: []
+  _outcomes:
+  - {fileID: 11400000, guid: 098b9d7ec24b29a498c3db39481b3f91, type: 2}
+  - {fileID: 11400000, guid: 1a2535022c7095049bffb42077c26fe5, type: 2}

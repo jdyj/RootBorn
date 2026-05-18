@@ -1,4 +1,4 @@
-using Rootborn.UI.Modern;
+﻿using Rootborn.UI.Modern;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -63,7 +63,7 @@ namespace Rootborn.UI.Objectives
             rootRect.anchoredPosition = Vector2.zero;
             rootRect.sizeDelta = rect != null && rect.sizeDelta != Vector2.zero ? rect.sizeDelta : DefaultSize;
             var tile = _root.GetComponent<ModernUiTileImage>();
-            tile.SetRecipe(ModernUiRecipes.CommonPanel);
+            tile.SetRecipe(ModernUiRecipes.CommonPanel48);
             tile.Rebuild();
 
             _title = MakeText(rootRect, "TrackedObjectiveTitle", string.Empty, new Vector2(18f, -14f), new Vector2(324f, 24f), 16, TextAnchor.UpperLeft);

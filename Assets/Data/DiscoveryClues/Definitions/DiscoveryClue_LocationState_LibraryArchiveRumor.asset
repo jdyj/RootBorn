@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f15acb9812c24d64da1667a93d09a506, type: 3}
+  m_Name: DiscoveryClue_LocationState_LibraryArchiveRumor
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.DiscoveryClues.DiscoveryClueDefinition
+  _id: clue.library-archive-rumor
+  _displayNameKey: Library Archive Rumor
+  _descriptionKey: Location state archive rumor
+  _relatedWorldState: {fileID: 0}
+  _relatedQuest: {fileID: 0}
+  _relatedLocation: {fileID: 11400000, guid: cbc6489c83f1f1440a50f2f18914cd32, type: 2}
+  _strength: 1
+  _publicTextKey: clue.public.library-archive-rumor
+  _hiddenTextKey: clue.hidden.library-archive-rumor
+  _sources: []
+  _conditions: []
+  _completions: []
+  _outcomes: []
+  _visibleSurfaces: 
+  _sortPriority: 1

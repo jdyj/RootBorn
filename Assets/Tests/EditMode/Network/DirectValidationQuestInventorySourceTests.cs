@@ -58,7 +58,7 @@ namespace Rootborn.Tests.EditMode.Network
             StringAssert.Contains("-directValidationAutoplayQuestInventory", source);
             StringAssert.Contains("GuideNpc", source);
             StringAssert.Contains("QuestResource_00", source);
-            StringAssert.Contains("PressKeyRepeated", source);
+            StringAssert.Contains("InventorySnapshot(identity) == \"inventory=empty\"", source);
             Assert.IsFalse(source.Contains("QuestLog.Accept"), "Autoplay must accept quests through dialogue input, not direct QuestLog APIs.");
             Assert.IsFalse(source.Contains("Inventory.Add"), "Autoplay must gain items through resource interaction, not direct inventory mutation.");
         }

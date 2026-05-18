@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8eeb495c79392c844b41fa17497f7231, type: 3}
+  m_Name: Choice_Exploration_TestDiscovery
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.ExplorationChoiceDefinition
+  _id: choice.test.discovery
+  _displayNameKey: choice.test.discovery
+  _descriptionKey: choice.test.discovery.desc
+  _conditions: []
+  _outcomes:
+  - {fileID: 11400000, guid: 1d5464b8e716336419f13a43b3a39e8a, type: 2}
+  - {fileID: 11400000, guid: b7f46002b0b4ed343a7c3cd32a62081b, type: 2}
+  - {fileID: 11400000, guid: d143f7b070f84534995ea28d924566a9, type: 2}
+  _riskPolicy: {fileID: 11400000, guid: 5a7700890de97d14d9050d84ef15a6c9, type: 2}
+  _repeatable: 0
+  _previewHintKey: choice.test.discovery.preview

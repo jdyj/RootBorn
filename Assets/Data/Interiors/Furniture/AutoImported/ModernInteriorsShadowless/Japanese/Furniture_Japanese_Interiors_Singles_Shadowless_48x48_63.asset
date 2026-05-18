@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23d21008197b3684eb9ccef9f4f47b40, type: 3}
+  m_Name: Furniture_Japanese_Interiors_Singles_Shadowless_48x48_63
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Placement.FurnitureDefinition
+  _stableId: modern.interiors.shadowless.japanese.japanese.interiors.singles.shadowless.48x48.63
+  _displayName: Japanese Interiors Singles Shadowless 48x48 63
+  _category: Japanese
+  _allowedSurfaceIds:
+  - house
+  - town-test
+  _tileParts:
+  - _localCell: {x: 0, y: 0}
+    _tile: {fileID: 11400000, guid: 37bdd62f4fa524a49b883efa55851129, type: 2}
+  _footprintCells:
+  - {x: 0, y: 0}
+  _blocksMovement: 1
+  _placementPreference: 0
+  _unlockToken: 

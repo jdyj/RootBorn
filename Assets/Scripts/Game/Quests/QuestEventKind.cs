@@ -7,6 +7,7 @@ namespace Rootborn.Game.Quests
         Collect,
         Harvest,
         Talk,
-        TilePlaced
+        TilePlaced,
+        LocationActivity
     }
 }

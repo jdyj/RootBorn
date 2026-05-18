@@ -1,3 +1,4 @@
+using System;
 using System.Reflection;
 using NUnit.Framework;
 using Rootborn.Game.Common;
@@ -105,6 +106,51 @@ namespace Rootborn.Tests.EditMode.Quests
         }
 
         [Test]
+        public void QUEST_CHAIN_EDIT_008_CompletionRewardPreflightAndDuplicateClaimAreAtomic()
+        {
+            var item = MakeItem(maxStack: 99);
+            var reward = ScriptableObject.CreateInstance<ItemQuestReward>();
+            SetField(reward, "_item", item);
+            SetField(reward, "_count", 2);
+            var chain = MakeCompletedChainWithReward(reward);
+            var log = new QuestChainLog(new ScriptableObject[] { chain });
+            var inventory = new Inventory();
+            var context = new RewardRuntimeContext(null, inventory, null, null);
+
+            log.Accept(chain);
+            log.RecordEvent(new QuestEvent(QuestEventKind.Gather, "chain-reward-progress"));
+
+            Assert.IsTrue(log.CanClaimCompletionRewards(chain, in context));
+            Assert.IsTrue(log.ClaimCompletionRewards(chain, in context));
+            Assert.IsFalse(log.ClaimCompletionRewards(chain, in context), "QUEST_CHAIN_EDIT_008 failed: duplicate reward claim should be rejected.");
+            Assert.AreEqual(2, inventory.CountOf(item));
+            Assert.IsTrue(log.IsRewardClaimed(chain, "completion"));
+        }
+
+        [Test]
+        public void QUEST_CHAIN_EDIT_008_FullInventoryCompletionRewardMutatesNothing()
+        {
+            var filler = MakeItem(maxStack: 1);
+            var rewardItem = MakeItem(maxStack: 1);
+            var inventory = new Inventory();
+            for (int i = 0; i < Inventory.MaxSlots; i++) inventory.Add(filler, 1);
+            var reward = ScriptableObject.CreateInstance<ItemQuestReward>();
+            SetField(reward, "_item", rewardItem);
+            SetField(reward, "_count", 1);
+            var chain = MakeCompletedChainWithReward(reward);
+            var log = new QuestChainLog(new ScriptableObject[] { chain });
+            var context = new RewardRuntimeContext(null, inventory, null, null);
+
+            log.Accept(chain);
+            log.RecordEvent(new QuestEvent(QuestEventKind.Gather, "chain-full-inventory-progress"));
+
+            Assert.IsFalse(log.CanClaimCompletionRewards(chain, in context));
+            Assert.IsFalse(log.ClaimCompletionRewards(chain, in context));
+            Assert.AreEqual(0, inventory.CountOf(rewardItem));
+            Assert.IsFalse(log.IsRewardClaimed(chain, "completion"));
+        }
+
+        [Test]
         public void QUEST_STUDENT_001_QuestCompletionEffectRaisesStudentLifeTraitAtomically()
         {
             var trait = ScriptableObject.CreateInstance<TraitDefinition>();
@@ -133,6 +179,17 @@ namespace Rootborn.Tests.EditMode.Quests
         private sealed class AlwaysMatchObjective : QuestObjectiveBase
         {
             public override bool Matches(in QuestEvent questEvent) => true;
+        }
+
+        private static QuestChainDefinition MakeCompletedChainWithReward(QuestRewardBase reward)
+        {
+            var objective = ScriptableObject.CreateInstance<AlwaysMatchObjective>();
+            objective.ConfigureForRuntime("objective.chain.reward", 1);
+            var step = ScriptableObject.CreateInstance<QuestStepDefinition>();
+            step.ConfigureForTests("step.chain.reward", "step.chain.reward", "step.chain.reward.desc", new QuestObjectiveBase[] { objective }, Array.Empty<QuestConditionBase>(), Array.Empty<QuestConditionBase>(), Array.Empty<QuestRewardBase>(), Array.Empty<ScriptableObject>());
+            var chain = ScriptableObject.CreateInstance<QuestChainDefinition>();
+            chain.ConfigureForTests("chain.reward", "chain.reward", "chain.reward.desc", "interest.learning", new ScriptableObject[] { step }, Array.Empty<QuestConditionBase>(), Array.Empty<QuestConditionBase>(), Array.Empty<QuestConditionBase>(), new QuestRewardBase[] { reward }, 0);
+            return chain;
         }
 
         private static ItemDefinition MakeItem(int maxStack)

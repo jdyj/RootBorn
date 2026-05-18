@@ -1,4 +1,5 @@
 using Rootborn.Game.Bootstrap;
+using Rootborn.Game.Common;
 using Rootborn.Game.Time;
 using Rootborn.Network.Session;
 using Rootborn.UI.MainMenu;
@@ -7,6 +8,7 @@ using Unity.Netcode.Transports.UTP;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 
 namespace Rootborn.Editor.Tools
@@ -115,10 +117,17 @@ namespace Rootborn.Editor.Tools
 
         private static void EnsureEventSystem(UnityEngine.SceneManagement.Scene scene)
         {
-            if (Object.FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() != null) return;
-            var go = new GameObject("EventSystem");
-            go.AddComponent<UnityEngine.EventSystems.EventSystem>();
-            go.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+            var eventSystem = Object.FindFirstObjectByType<EventSystem>();
+            if (eventSystem == null)
+            {
+                var go = new GameObject("EventSystem");
+                eventSystem = go.AddComponent<EventSystem>();
+            }
+
+            if (eventSystem.GetComponent<BaseInputModule>() == null)
+            {
+                UiInputModuleInstaller.AddPreferredInputModule(eventSystem.gameObject);
+            }
         }
 
         private static void EnsureGameClock()
@@ -162,7 +171,7 @@ namespace Rootborn.Editor.Tools
             so.FindProperty("_hostButton").objectReferenceValue = host;
             so.FindProperty("_clientButton").objectReferenceValue = client;
             so.FindProperty("_quitButton").objectReferenceValue = quit;
-            so.FindProperty("_farmScene").stringValue = "Farm";
+            so.FindProperty("_townScene").stringValue = "Town";
             so.FindProperty("_hostLobbyScene").stringValue = "HostLobby";
             so.ApplyModifiedPropertiesWithoutUndo();
         }

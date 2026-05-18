@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 958a6b9cc66fd54418d1526ead98ffc9, type: 3}
+  m_Name: Usage_LibraryArchiveTable
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.WorldState.WorldStateUsageDefinition
+  _id: usage.library.archive-table
+  _displayNameKey: Library Archive Table
+  _descriptionKey: Review the archive opened by the town change.
+  _sourceFlag: {fileID: 11400000, guid: 6eacd2546c27e3b40a09334d6d25d02f, type: 2}
+  _relatedLocation: {fileID: 0}
+  _interactionPromptKey: Inspect archive table
+  _nextActionKey: Check old records for a follow-up clue
+  _conditions:
+  - {fileID: 11400000, guid: d4e953d9d5f16d24bb739b2162ceb0a9, type: 2}
+  _outcomes:
+  - {fileID: 11400000, guid: 4d704b4b617ce0b41a0fb4b39c710242, type: 2}
+  - {fileID: 11400000, guid: ec155c4651b2af44991bd743ee3e7ca1, type: 2}
+  - {fileID: 11400000, guid: 6be078e2e63efe442b8c3dfeffad41f0, type: 2}
+  _repeatPolicy: {fileID: 11400000, guid: c2b150c53fcce1e4bb6a13df24a628c1, type: 2}
+  _visibleSurfaces: 
+  _sortPriority: 10

@@ -42,7 +42,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         }
 
         [UnityTearDown]
-        public IEnumerator TearDown()
+        public new IEnumerator TearDown()
         {
             ActiveSaveContext.Clear();
             PlayerGlobalState.ClearForTests();
@@ -66,7 +66,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
-            yield return WaitForScene("Town", 10f, "RELCOND-E2E-001 failed: 저장 슬롯 UI 새 게임이 Town에 진입하지 못했다.");
+            yield return WaitForScene("Town", 10f, "RELCOND-E2E-001 failed: ?�???�롯 UI ??게임??Town??진입?��? 못했??");
             yield return WaitForDayRuntime(10f);
             LogAssert.ignoreFailingMessages = true;
 
@@ -75,37 +75,37 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             int initialRelationship = runtime.Student.Progress.GetRelationshipValue(relationship);
             int initialStatus = runtime.Student.Progress.GetStatusValue(status);
 
-            yield return WalkPlayerWithKeyboardTo(runtime.Player, keyboard, runtime.Study.transform.position, 0.25f, "RELCOND-E2E-002 failed: NPC/도움 행동 지점까지 실제 키보드 이동 실패");
+            yield return WalkPlayerWithKeyboardTo(runtime.Player, keyboard, runtime.Study.transform.position, 0.25f, "RELCOND-E2E-002 failed: NPC/?��? ?�동 지?�까지 ?�제 ?�보???�동 ?�패");
             runtime.Router.RefreshPromptNow();
-            Assert.IsTrue(runtime.Router.PromptVisible, "RELCOND-E2E-002 failed: 상호작용 프롬프트 없음");
+            Assert.IsTrue(runtime.Router.PromptVisible, "RELCOND-E2E-002 failed: ?�호?�용 ?�롬?�트 ?�음");
             yield return PressInteractKey(keyboard);
             yield return null;
 
             int changedRelationship = runtime.Student.Progress.GetRelationshipValue(relationship);
             int changedStatus = runtime.Student.Progress.GetStatusValue(status);
-            Assert.Greater(changedRelationship, initialRelationship, "RELCOND-E2E-004 failed: 관계 변화 미기록");
-            Assert.Greater(changedStatus, initialStatus, "RELCOND-E2E-004 failed: 컨디션 변화 미기록");
-            CollectionAssert.Contains(runtime.Student.Progress.GetTodayResultLogIds(), runtime.Study.Activity.Id + ":+" + relationship.Id + "=2", "RELCOND-E2E-004 failed: 오늘 관계 변화 로그 누락");
-            CollectionAssert.Contains(runtime.Student.Progress.GetTodayResultLogIds(), runtime.Study.Activity.Id + ":+" + status.Id + "=3", "RELCOND-E2E-004 failed: 오늘 컨디션 변화 로그 누락");
+            Assert.Greater(changedRelationship, initialRelationship, "RELCOND-E2E-004 failed: relationship value did not increase.");
+            Assert.Greater(changedStatus, initialStatus, "RELCOND-E2E-004 failed: status value did not increase.");
+            CollectionAssert.Contains(runtime.Student.Progress.GetTodayResultLogIds(), runtime.Study.Activity.Id + ":+" + relationship.Id + "=2", "RELCOND-E2E-004 failed: ?�늘 관�?변??로그 ?�락");
+            CollectionAssert.Contains(runtime.Student.Progress.GetTodayResultLogIds(), runtime.Study.Activity.Id + ":+" + status.Id + "=3", "RELCOND-E2E-004 failed: ?�늘 컨디??변??로그 ?�락");
 
-            yield return WalkPlayerWithKeyboardTo(runtime.Player, keyboard, runtime.DayEnd.transform.position, 0.25f, "RELCOND-E2E-005 failed: 하루 종료 지점까지 실제 키보드 이동 실패");
+            yield return WalkPlayerWithKeyboardTo(runtime.Player, keyboard, runtime.DayEnd.transform.position, 0.25f, "RELCOND-E2E-005 failed: ?�루 종료 지?�까지 ?�제 ?�보???�동 ?�패");
             runtime.Router.RefreshPromptNow();
-            Assert.IsTrue(runtime.Router.PromptVisible, "RELCOND-E2E-005 failed: 하루 종료 프롬프트 없음");
+            Assert.IsTrue(runtime.Router.PromptVisible, "RELCOND-E2E-005 failed: ?�루 종료 ?�롬?�트 ?�음");
             yield return PressInteractKey(keyboard);
-            yield return WaitForDayResultPanel(2f, "RELCOND-E2E-007 failed: 실제 하루 종료 입력 후 결과 UI가 열리지 않음");
+            yield return WaitForDayResultPanel(2f, "RELCOND-E2E-007 failed: ?�제 ?�루 종료 ?�력 ??결과 UI가 ?�리지 ?�음");
 
             var panel = Object.FindFirstObjectByType<StudentDayResultPanel>(FindObjectsInactive.Include);
-            AssertPanelContains(panel.transform, relationship.DisplayNameKey, "RELCOND-E2E-007 failed: 하루 결과 관계 요약 누락");
-            AssertPanelContains(panel.transform, initialRelationship + " -> " + changedRelationship, "RELCOND-E2E-007 failed: 하루 결과 관계 이전/이후 값 누락");
-            AssertPanelContains(panel.transform, status.DisplayNameKey, "RELCOND-E2E-007 failed: 컨디션 변화 미표시");
-            AssertPanelContains(panel.transform, initialStatus + " -> " + changedStatus, "RELCOND-E2E-007 failed: 하루 결과 컨디션 이전/이후 값 누락");
-            AssertPanelContains(panel.transform, "tomorrow", "RELCOND-E2E-007 failed: 다음 날 영향 표시 누락");
+            AssertPanelContains(panel.transform, relationship.DisplayNameKey, "RELCOND-E2E-007 failed: ?�루 결과 관�??�약 ?�락");
+            AssertPanelContains(panel.transform, initialRelationship + " -> " + changedRelationship, "RELCOND-E2E-007 failed: ?�루 결과 관�??�전/?�후 �??�락");
+            AssertPanelContains(panel.transform, status.DisplayNameKey, "RELCOND-E2E-007 failed: day result status summary missing.");
+            AssertPanelContains(panel.transform, initialStatus + " -> " + changedStatus, "RELCOND-E2E-007 failed: ?�루 결과 컨디???�전/?�후 �??�락");
+            AssertPanelContains(panel.transform, "tomorrow", "RELCOND-E2E-007 failed: ?�음 ???�향 ?�시 ?�락");
 
             string studentFile = Path.Combine(_saveRoot, TestSlotId, "student-life-progress.json");
-            Assert.IsTrue(File.Exists(studentFile), "RELCOND-E2E-010 failed: 저장 파일 없음");
+            Assert.IsTrue(File.Exists(studentFile), "RELCOND-E2E-010 failed: ?�???�일 ?�음");
             string resultReadyJson = File.ReadAllText(studentFile);
-            StringAssert.Contains(relationship.Id, resultReadyJson, "RELCOND-E2E-010 failed: 저장 후 관계 복원 데이터 누락");
-            StringAssert.Contains(status.Id, resultReadyJson, "RELCOND-E2E-010 failed: 저장 후 컨디션 복원 데이터 누락");
+            StringAssert.Contains(relationship.Id, resultReadyJson, "RELCOND-E2E-010 failed: ?�????관�?복원 ?�이???�락");
+            StringAssert.Contains(status.Id, resultReadyJson, "RELCOND-E2E-010 failed: ?�????컨디??복원 ?�이???�락");
 
             ActiveSaveContext.Clear();
             PlayerGlobalState.ClearForTests();
@@ -115,29 +115,29 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "LoadButton"));
-            yield return WaitForScene("Town", 10f, "RELCOND-E2E-010 failed: 저장 슬롯 UI 로드 후 Town 재진입 실패");
+            yield return WaitForScene("Town", 10f, "RELCOND-E2E-010 failed: ?�???�롯 UI 로드 ??Town ?�진???�패");
             yield return WaitForDayRuntime(10f);
 
             var reloaded = FindDayRuntime();
-            Assert.AreEqual(changedRelationship, reloaded.Student.Progress.GetRelationshipValue(relationship), "RELCOND-E2E-010 failed: 저장 후 관계 복원 실패");
-            Assert.AreEqual(changedStatus, reloaded.Student.Progress.GetStatusValue(status), "RELCOND-E2E-010 failed: 저장 후 컨디션 복원 실패");
-            Assert.AreEqual(1, reloaded.Student.Progress.GetPreviousDayRelationshipDeltas().Length, "RELCOND-E2E-011 failed: 중복 관계 정산 발생");
-            Assert.AreEqual(1, reloaded.Student.Progress.GetPreviousDayStatusDeltas().Length, "RELCOND-E2E-011 failed: 중복 컨디션 정산 발생");
+            Assert.AreEqual(changedRelationship, reloaded.Student.Progress.GetRelationshipValue(relationship), "RELCOND-E2E-010 failed: ?�????관�?복원 ?�패");
+            Assert.AreEqual(changedStatus, reloaded.Student.Progress.GetStatusValue(status), "RELCOND-E2E-010 failed: ?�????컨디??복원 ?�패");
+            Assert.AreEqual(1, reloaded.Student.Progress.GetPreviousDayRelationshipDeltas().Length, "RELCOND-E2E-011 failed: 중복 관�??�산 발생");
+            Assert.AreEqual(1, reloaded.Student.Progress.GetPreviousDayStatusDeltas().Length, "RELCOND-E2E-011 failed: 중복 컨디???�산 발생");
 
-            yield return WalkPlayerWithKeyboardTo(reloaded.Player, keyboard, reloaded.DayEnd.transform.position, 0.25f, "RELCOND-E2E-011 failed: 저장/로드 후 하루 결과 재확인 지점 이동 실패");
+            yield return WalkPlayerWithKeyboardTo(reloaded.Player, keyboard, reloaded.DayEnd.transform.position, 0.25f, "RELCOND-E2E-011 failed: ?�??로드 ???�루 결과 ?�확??지???�동 ?�패");
             reloaded.Router.RefreshPromptNow();
             yield return PressInteractKey(keyboard);
-            yield return WaitForDayResultPanel(2f, "RELCOND-E2E-011 failed: 저장/로드 후 결과 UI 재확인 실패");
-            Assert.AreEqual(changedRelationship, reloaded.Student.Progress.GetRelationshipValue(relationship), "RELCOND-E2E-011 failed: 결과 재확인으로 관계 중복 적용");
-            Assert.AreEqual(changedStatus, reloaded.Student.Progress.GetStatusValue(status), "RELCOND-E2E-011 failed: 결과 재확인으로 컨디션 중복 적용");
+            yield return WaitForDayResultPanel(2f, "RELCOND-E2E-011 failed: ?�??로드 ??결과 UI ?�확???�패");
+            Assert.AreEqual(changedRelationship, reloaded.Student.Progress.GetRelationshipValue(relationship), "RELCOND-E2E-011 failed: 결과 ?�확?�으�?관�?중복 ?�용");
+            Assert.AreEqual(changedStatus, reloaded.Student.Progress.GetStatusValue(status), "RELCOND-E2E-011 failed: 결과 ?�확?�으�?컨디??중복 ?�용");
 
             panel = Object.FindFirstObjectByType<StudentDayResultPanel>(FindObjectsInactive.Include);
             yield return ClickButton(FindButton(panel.transform, "NextDayButton"));
-            yield return WalkPlayerWithKeyboardTo(reloaded.Player, keyboard, reloaded.Npc.transform.position, 0.25f, "RELCOND-E2E-009 failed: 2일차 NPC까지 실제 키보드 이동 실패");
+            yield return WalkPlayerWithKeyboardTo(reloaded.Player, keyboard, reloaded.Npc.transform.position, 0.25f, "RELCOND-E2E-009 failed: 2?�차 NPC까�? ?�제 ?�보???�동 ?�패");
             reloaded.Router.RefreshPromptNow();
             yield return PressInteractKey(keyboard);
-            yield return WaitForDialoguePanel(reloaded.DialoguePanel, 3f, "RELCOND-E2E-009 failed: 2일차 NPC 대화 UI 열림 실패");
-            AssertPanelContains(reloaded.DialoguePanel.transform, "dialogue.guide.day2", "RELCOND-E2E-009 failed: 2일차 대사 변화 없음");
+            yield return WaitForDialoguePanel(reloaded.DialoguePanel, 3f, "RELCOND-E2E-009 failed: 2?�차 NPC ?�??UI ?�림 ?�패");
+            AssertPanelContains(reloaded.DialoguePanel.transform, "dialogue.guide.day2", "RELCOND-E2E-009 failed: 2?�차 ?�??변???�음");
         }
 
         private static IEnumerator WaitForDayRuntime(float timeoutSeconds)

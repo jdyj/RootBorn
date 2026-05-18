@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 549c6b560b8551844bfa4d075f2684e6, type: 3}
+  m_Name: Encyclopedia_DiscoveryClue_PlayLoop
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Encyclopedia.EncyclopediaEntryDefinition
+  _id: encyclopedia.discovery.play-clue
+  _category: {fileID: 0}
+  _displayName: Play clue entry
+  _lockedDisplayName: ???
+  _description: A discovered clue entry.
+  _lockedHint: Find clue
+  _detailLines: []
+  _unlockConditions: []
+  _revealStage: 1

@@ -1,5 +1,6 @@
 using System.Linq;
 using NUnit.Framework;
+using Rootborn.Game.Characters;
 using Rootborn.Game.Characters.Spum;
 using Rootborn.UI.MainMenu;
 using UnityEngine;
@@ -67,6 +68,75 @@ namespace Rootborn.Tests.EditMode.UI.Spum
                 Assert.AreEqual(1, panel.CurrentPageIndex);
                 Assert.Greater(grid.childCount, 0);
                 Assert.LessOrEqual(grid.childCount, SpumCharacterCreatorPanel.VisiblePartCellBudget);
+            }
+            finally
+            {
+                Object.DestroyImmediate(host);
+            }
+        }
+
+        [Test]
+        public void SPUM_CREATOR_PANEL_003_BuildsHeaderFooterAndPartStepControls()
+        {
+            var host = new GameObject("CreatorHost", typeof(RectTransform));
+            try
+            {
+                var panel = host.AddComponent<SpumCharacterCreatorPanel>();
+                panel.Build(CreateCatalog(
+                    Part("spum.hair.short", "hair"),
+                    Part("spum.hair.long", "hair"),
+                    Part("spum.body.default", "body")));
+
+                Assert.IsNotNull(host.transform.Find("SpumCharacterCreatorRoot/Header/Title"));
+                Assert.IsNotNull(host.transform.Find("SpumCharacterCreatorRoot/Header/BackButton"));
+                Assert.IsNotNull(host.transform.Find("SpumCharacterCreatorRoot/Header/RandomButton"));
+                Assert.IsNotNull(host.transform.Find("SpumCharacterCreatorRoot/Header/ConfirmButton"));
+                Assert.IsNotNull(host.transform.Find("SpumCharacterCreatorRoot/PageControls/PreviousPartButton"));
+                Assert.IsNotNull(host.transform.Find("SpumCharacterCreatorRoot/PageControls/NextPartButton"));
+                Assert.IsNotNull(host.transform.Find("SpumCharacterCreatorRoot/Footer/SelectedPartChips"));
+                Assert.IsNotNull(host.transform.Find("SpumCharacterCreatorRoot/Footer/StatusLine"));
+            }
+            finally
+            {
+                Object.DestroyImmediate(host);
+            }
+        }
+
+        [Test]
+        public void SPUM_CREATOR_PANEL_004_NextPartSelectsStableNextPartAndUpdatesPreview()
+        {
+            var host = new GameObject("CreatorHost", typeof(RectTransform));
+            try
+            {
+                var panel = host.AddComponent<SpumCharacterCreatorPanel>();
+                panel.Build(CreateCatalog(
+                    Part("spum.hair.short", "hair"),
+                    Part("spum.hair.long", "hair")));
+                panel.SelectCategory("hair");
+
+                panel.NextPart();
+
+                Assert.AreEqual("spum.hair.long", panel.CreateSnapshot().GetSelectedPartId("hair"));
+                Assert.IsNotNull(host.transform.Find("SpumCharacterCreatorRoot/Preview/PreviewSelected_hair"));
+            }
+            finally
+            {
+                Object.DestroyImmediate(host);
+            }
+        }
+
+        [Test]
+        public void SPUM_CREATOR_PANEL_005_PreviewRootUsesCharacterVisualViewBoundary()
+        {
+            var host = new GameObject("CreatorHost", typeof(RectTransform));
+            try
+            {
+                var panel = host.AddComponent<SpumCharacterCreatorPanel>();
+                panel.Build(CreateCatalog(Part("spum.body.default", "body")));
+
+                Transform preview = host.transform.Find("SpumCharacterCreatorRoot/Preview");
+                Assert.IsNotNull(preview);
+                Assert.IsNotNull(preview.GetComponent<ICharacterVisualView>(), "Creator preview must use the same visual view boundary as runtime character visuals.");
             }
             finally
             {

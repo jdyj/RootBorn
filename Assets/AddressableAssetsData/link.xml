@@ -1,0 +1,202 @@
+<linker>
+  <assembly fullname="Rootborn.Game, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+    <type fullname="Rootborn.Game.Common.GameDataRegistry" preserve="all" />
+    <type fullname="Rootborn.Game.Common.ItemDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.Crops.CropDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.Crops.FertilizerSpeedupBehavior" preserve="all" />
+    <type fullname="Rootborn.Game.Crops.RequiresDailyWaterBehavior" preserve="all" />
+    <type fullname="Rootborn.Game.Dialogue.DialogueChoiceDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.Dialogue.DialogueDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.Dialogue.NpcDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.Dialogue.NpcRoleDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.Dialogue.NpcScheduleDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.Dialogue.TimeSlotScheduleRule" preserve="all" />
+    <type fullname="Rootborn.Game.DiscoveryClues.ClueInterpretationCareerHintOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.DiscoveryClues.ClueInterpretationClueSeenCondition" preserve="all" />
+    <type fullname="Rootborn.Game.DiscoveryClues.ClueInterpretationDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.DiscoveryClues.ClueInterpretationEncyclopediaOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.DiscoveryClues.ClueInterpretationPolicyDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.DiscoveryClues.ClueInterpretationQuestUnlockOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.DiscoveryClues.ClueInterpretationRelationshipDeltaOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.DiscoveryClues.ClueInterpretationRelationshipThresholdCondition" preserve="all" />
+    <type fullname="Rootborn.Game.DiscoveryClues.ClueInterpretationSourceDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.DiscoveryClues.ClueInterpretationStatusDeltaOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.DiscoveryClues.ClueInterpretationWorldStateOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.DiscoveryClues.DiscoveryClueCareerHintOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.DiscoveryClues.DiscoveryClueDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.DiscoveryClues.DiscoveryClueEncyclopediaOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.DiscoveryClues.DiscoveryClueLocationVisitCompletion" preserve="all" />
+    <type fullname="Rootborn.Game.DiscoveryClues.DiscoveryClueQuestUnlockOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.DiscoveryClues.DiscoveryClueSourceDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.DiscoveryClues.DiscoveryClueWorldStateActiveCondition" preserve="all" />
+    <type fullname="Rootborn.Game.DiscoveryClues.DiscoveryClueWorldStateRevealOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.Encyclopedia.EncyclopediaCategoryDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.Encyclopedia.EncyclopediaDiscoveryCompletedCondition" preserve="all" />
+    <type fullname="Rootborn.Game.Encyclopedia.EncyclopediaEntryDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.Family.CharacterPartAnimationClipDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.Family.CharacterPartAnimator" preserve="all" />
+    <type fullname="Rootborn.Game.Family.CharacterPartComposer" preserve="all" />
+    <type fullname="Rootborn.Game.Family.CharacterPartDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.Family.FishingAnimationController" preserve="all" />
+    <type fullname="Rootborn.Game.Family.FishingAnimationDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.Generation.GenerationProfile" preserve="all" />
+    <type fullname="Rootborn.Game.Heir.HeirTrait" preserve="all" />
+    <type fullname="Rootborn.Game.Knowledge.KnowledgeNode" preserve="all" />
+    <type fullname="Rootborn.Game.Knowledge.Triggers.HitGroundWithRockTrigger" preserve="all" />
+    <type fullname="Rootborn.Game.Placement.FurnitureDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.Player.PlayerController" preserve="all" />
+    <type fullname="Rootborn.Game.Player.PlayerIdentity" preserve="all" />
+    <type fullname="Rootborn.Game.Quests.Conditions.LocationActivityCompletedCondition" preserve="all" />
+    <type fullname="Rootborn.Game.Quests.Effects.SetStoryFlagCompletionEffect" preserve="all" />
+    <type fullname="Rootborn.Game.Quests.Effects.TraitDeltaCompletionEffect" preserve="all" />
+    <type fullname="Rootborn.Game.Quests.Objectives.GatherQuestObjective" preserve="all" />
+    <type fullname="Rootborn.Game.Quests.Objectives.LocationActivityQuestObjective" preserve="all" />
+    <type fullname="Rootborn.Game.Quests.Objectives.TalkQuestObjective" preserve="all" />
+    <type fullname="Rootborn.Game.Quests.Objectives.TilePlacedQuestObjective" preserve="all" />
+    <type fullname="Rootborn.Game.Quests.QuestChainDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.Quests.QuestDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.Quests.QuestStepDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.Quests.Rewards.ItemQuestReward" preserve="all" />
+    <type fullname="Rootborn.Game.Quests.Rewards.WorldStateChangeQuestReward" preserve="all" />
+    <type fullname="Rootborn.Game.Resources.ResourceNodeDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.Status.StatusEffectDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.Story.StoryFlagDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.CampaignActivityLogObjective" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.CampaignCareerHintReward" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.CampaignDayDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.CampaignDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.CampaignLocationVisitObjective" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.CampaignRouteDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.CareerCandidateDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.CareerCandidateRouteDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.CareerDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.CareerHintDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.CareerHintUnlockActivityEffect" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.CareerInterestDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.CareerPracticeDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.CareerResultLogHintSource" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.DailyEventChoiceDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.DailyEventDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.DailyEventKindDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.DailyEventLocationAvailabilityRule" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.DailyEventRelationshipDeltaOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.DailyEventStatusDeltaOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.DailyEventTraitDeltaOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.DayEndRuleDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.DiscoveryDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.DiscoveryTraitDeltaOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.EnergyRestoreDayEndRule" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.ExplorationCareerHintOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.ExplorationChoiceDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.ExplorationClueOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.ExplorationEncyclopediaOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.ExplorationFollowUpQuestOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.ExplorationInteractionDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.ExplorationItemGrantOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.ExplorationRiskPolicyDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.ExplorationTraitDeltaOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.ExplorationTraitThresholdCondition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.FocusRestoreDayEndRule" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.HelpActionTraitDeltaOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.LifeActivityDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.LocationActivityDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.LocationActivityProgressDeltaOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.LocationCategoryDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.LocationDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.LocationIdentityDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.LocationStateActivityLogCondition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.LocationStateAvailabilityEffect" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.LocationStateConflictPolicyDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.LocationStateDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.LocationStateTimeSlotCondition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.MilestoneDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.MilestoneRouteDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.OutsideSchoolActivityCategoryDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.OutsideSchoolActivityDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.OutsideSchoolLogMilestoneObjective" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.OutsideSchoolSkillDeltaOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.OutsideSchoolTraitDeltaOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.PartTimeWorkDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.PracticeStepDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.RelationshipDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.SkillDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.SkillProgressActivityEffect" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.StatusDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.TimeSlotDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.TownHelpActionDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.TraitDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.TraitDeltaActivityEffect" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.TutorialStageAdvanceDayEndRule" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.TutorialStageDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.WorkplaceDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.WorkTraitDeltaOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.Tiles.PlaceableTileDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.Tools.Effects.FishingAnimationEffect" preserve="all" />
+    <type fullname="Rootborn.Game.Tools.Effects.HarvestCropEffect" preserve="all" />
+    <type fullname="Rootborn.Game.Tools.Effects.TillSoilEffect" preserve="all" />
+    <type fullname="Rootborn.Game.Tools.ToolDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.WorldGeneration.NaturalPropSpawnDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.WorldGeneration.TerrainGenerationDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.WorldGeneration.TilePatternDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.WorldGeneration.TileVariantSetDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.WorldState.WorldStateFlagDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.WorldState.WorldStateScopeDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.WorldState.WorldStateUsageCareerHintOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.WorldState.WorldStateUsageDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.WorldState.WorldStateUsageEncyclopediaOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.WorldState.WorldStateUsageFlagActiveCondition" preserve="all" />
+    <type fullname="Rootborn.Game.WorldState.WorldStateUsageQuestUnlockOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.WorldState.WorldStateUsageRepeatPolicyDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.Dialogue.NpcScheduleEntry" preserve="nothing" serialized="true" />
+    <type fullname="Rootborn.Game.Placement.FurnitureDefinition/FurnitureTilePartData" preserve="nothing" serialized="true" />
+    <type fullname="Rootborn.Game.Resources.ResourceDrop" preserve="nothing" serialized="true" />
+    <type fullname="Rootborn.Game.StudentLife.LocationHintEntry" preserve="nothing" serialized="true" />
+    <type fullname="Rootborn.Game.WorldGeneration.TerrainReservedArea" preserve="nothing" serialized="true" />
+    <type fullname="Rootborn.Game.WorldGeneration.WeightedTileVariant" preserve="nothing" serialized="true" />
+  </assembly>
+  <assembly fullname="Rootborn.Network, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+    <type fullname="Rootborn.Network.Player.NetworkLocalPlayerInputGate" preserve="all" />
+    <type fullname="Rootborn.Network.Player.NetworkLocalPlayerViewBinder" preserve="all" />
+    <type fullname="Rootborn.Network.Player.NetworkPlayerIdentityBinder" preserve="all" />
+    <type fullname="Rootborn.Network.Time.NetworkWorldTimeState" preserve="all" />
+  </assembly>
+  <assembly fullname="Unity.Addressables, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null" preserve="all">
+    <type fullname="UnityEngine.AddressableAssets.Addressables" preserve="all" />
+  </assembly>
+  <assembly fullname="Unity.Netcode.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+    <type fullname="Unity.Netcode.NetworkObject" preserve="all" />
+  </assembly>
+  <assembly fullname="Unity.ResourceManager, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null" preserve="all">
+    <type fullname="UnityEngine.ResourceManagement.ResourceProviders.AssetBundleProvider" preserve="all" />
+    <type fullname="UnityEngine.ResourceManagement.ResourceProviders.BundledAssetProvider" preserve="all" />
+    <type fullname="UnityEngine.ResourceManagement.ResourceProviders.InstanceProvider" preserve="all" />
+    <type fullname="UnityEngine.ResourceManagement.ResourceProviders.SceneProvider" preserve="all" />
+  </assembly>
+  <assembly fullname="UnityEngine.AnimationModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+    <type fullname="UnityEngine.AnimationClip" preserve="all" />
+    <type fullname="UnityEngine.Animator" preserve="all" />
+    <type fullname="UnityEngine.RuntimeAnimatorController" preserve="all" />
+  </assembly>
+  <assembly fullname="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+    <type fullname="UnityEngine.GameObject" preserve="all" />
+    <type fullname="UnityEngine.Material" preserve="all" />
+    <type fullname="UnityEngine.Object" preserve="all" />
+    <type fullname="UnityEngine.RectTransform" preserve="all" />
+    <type fullname="UnityEngine.Rendering.SortingGroup" preserve="all" />
+    <type fullname="UnityEngine.Shader" preserve="all" />
+    <type fullname="UnityEngine.Sprite" preserve="all" />
+    <type fullname="UnityEngine.SpriteRenderer" preserve="all" />
+    <type fullname="UnityEngine.Texture2D" preserve="all" />
+    <type fullname="UnityEngine.Transform" preserve="all" />
+  </assembly>
+  <assembly fullname="UnityEngine.Physics2DModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+    <type fullname="UnityEngine.BoxCollider2D" preserve="all" />
+    <type fullname="UnityEngine.Rigidbody2D" preserve="all" />
+  </assembly>
+  <assembly fullname="UnityEngine.SpriteMaskModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+    <type fullname="UnityEngine.SpriteMask" preserve="all" />
+  </assembly>
+  <assembly fullname="UnityEngine.TilemapModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+    <type fullname="UnityEngine.Tilemaps.Tile" preserve="all" />
+  </assembly>
+</linker>

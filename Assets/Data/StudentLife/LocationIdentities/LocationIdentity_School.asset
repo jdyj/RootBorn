@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59462f3cc8aa4c24992d3c662397813d, type: 3}
+  m_Name: LocationIdentity_School
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.LocationIdentityDefinition
+  _id: location.identity.school
+  _displayNameKey: location.identity.school.name
+  _location: {fileID: 11400000, guid: 74f05b36a5f69964e97495038a29176d, type: 2}
+  _descriptionKey: location.identity.school.desc
+  _availableActivities:
+  - {fileID: 11400000, guid: b6bbf341c8dd0f748989d3c6f7507e5d, type: 2}
+  _hints:
+  - _displayKey: hint.school.teacher-career
+    _growthRoute: 0
+    _milestone: {fileID: 0}
+  _recommendedVisitStartMinute: 480
+  _recommendedVisitEndMinute: 1140

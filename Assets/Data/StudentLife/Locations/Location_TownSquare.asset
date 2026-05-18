@@ -14,6 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.LocationDefinition
   _id: location.town-square
   _displayNameKey: location.town-square
-  _worldPosition: {x: -3.8, y: -1.8}
-  _discoveries:
-  - {fileID: 11400000, guid: 13978bd72ab75cb47949497ef5d56aca, type: 2}
+  _descriptionKey: location.town-square.desc
+  _category: {fileID: 11400000, guid: 5ddd44723d4457945ae76b30e113423d, type: 2}
+  _worldAnchorId: anchor.town-square
+  _worldPosition: {x: 5, y: -4}
+  _relatedRoles:
+  - {fileID: 11400000, guid: 720b0c466a484a7469601e7254a75e32, type: 2}
+  _relatedNpcs:
+  - {fileID: 11400000, guid: c43188909a889884792a60a1a0e1d0ba, type: 2}
+  _discoveries: []
+  _visitRules: []

@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8eeb495c79392c844b41fa17497f7231, type: 3}
+  m_Name: Choice_Exploration_TestInspect
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.ExplorationChoiceDefinition
+  _id: choice.test.inspect
+  _displayNameKey: choice.test.inspect
+  _descriptionKey: choice.test.inspect.desc
+  _conditions: []
+  _outcomes:
+  - {fileID: 11400000, guid: 9a03fe75eb7269d43bd0f91b8cdead44, type: 2}
+  - {fileID: 11400000, guid: 2cc83fa0a49c6484b99756210e0ae0b0, type: 2}
+  _riskPolicy: {fileID: 11400000, guid: 5a7700890de97d14d9050d84ef15a6c9, type: 2}
+  _repeatable: 0
+  _previewHintKey: choice.test.inspect.preview

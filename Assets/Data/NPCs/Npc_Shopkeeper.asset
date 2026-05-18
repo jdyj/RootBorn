@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3b1e15c7abef1840836bfc97d9de3d6, type: 3}
+  m_Name: Npc_Shopkeeper
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Dialogue.NpcDefinition
+  _id: npc.shopkeeper
+  _displayNameKey: npc.shopkeeper.name
+  _introductionKey: npc.shopkeeper.intro
+  _homeLocation: {fileID: 11400000, guid: 7825bb6a05ae8ef41afeb40a32ce4570, type: 2}
+  _roles:
+  - {fileID: 11400000, guid: d7b5f0787fd03f946ab91c3cde93c03d, type: 2}
+  _defaultDialogue: {fileID: 11400000, guid: 3554f7d8231f2354ea4de9580611e65a, type: 2}
+  _defaultDialogueConditions: []
+  _stageDialogues: []
+  _quests: []
+  _worldTexture: {fileID: 0}
+  _worldSpriteRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 16
+    height: 16
+  _worldSpritePixelsPerUnit: 16

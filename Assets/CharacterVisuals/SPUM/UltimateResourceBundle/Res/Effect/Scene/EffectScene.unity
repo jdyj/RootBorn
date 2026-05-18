@@ -13,7 +13,7 @@ OcclusionCullingSettings:
 --- !u!104 &2
 RenderSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 9
+  serializedVersion: 10
   m_Fog: 0
   m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   m_FogMode: 3
@@ -42,8 +42,8 @@ RenderSettings:
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 12
-  m_GIWorkflowMode: 1
+  serializedVersion: 13
+  m_BakeOnSceneLoad: 0
   m_GISettings:
     serializedVersion: 2
     m_BounceScale: 1
@@ -66,9 +66,6 @@ LightmapSettings:
     m_LightmapParameters: {fileID: 0}
     m_LightmapsBakeMode: 1
     m_TextureCompression: 1
-    m_FinalGather: 0
-    m_FinalGatherFiltering: 1
-    m_FinalGatherRayCount: 256
     m_ReflectionCompression: 2
     m_MixedBakeMode: 2
     m_BakeBackend: 1
@@ -316,7 +313,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 355281054}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: EffectSampleManager, Assembly-CSharp
         m_MethodName: PlayEffectSample
         m_Mode: 3
@@ -375,7 +372,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 355281053}
-  - component: {fileID: 355281054}
   m_Layer: 0
   m_Name: EffectManager
   m_TagString: Untagged
@@ -398,31 +394,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &355281054
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 355281052}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4c711c0c0d755467a9f73248cdf7310b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  effectSamples:
-  - {fileID: 6280952405451712682, guid: 6196587a7a509404ca07d065fa3e5a44, type: 3}
-  - {fileID: 5177810881878475479, guid: e3ec1e231e49647d3a7e5ec25ccf8369, type: 3}
-  - {fileID: 8835165145697310631, guid: 5fb8df51ceab24677a6ee56c61000117, type: 3}
-  - {fileID: 6435615949110808572, guid: 50a865dd4f6524147827d4af8ee1aba9, type: 3}
-  - {fileID: 3759865235785287946, guid: 4aac3658d8a414cbebe93c402c13cf5d, type: 3}
-  - {fileID: 8852317036030865052, guid: 576198ea9dedc445fa23b00f1a129ab2, type: 3}
-  - {fileID: 6368214991088122221, guid: 8fe17a6736819401b8b4266d80e654ca, type: 3}
-  - {fileID: 2504457565880169854, guid: 70c3a06a6c50d45d69c130d77e992a74, type: 3}
-  - {fileID: 5879601273712411035, guid: 72059c37aa41d4fb3a5424520a156393, type: 3}
-  - {fileID: 224310021326524565, guid: 052554fe8266646848c63b03a9adcde0, type: 3}
-  - {fileID: 3253112666094814500, guid: f13481aeab0d149449a4abe35ea67b9a, type: 3}
-  effectPool: {fileID: 2126365265}
 --- !u!1 &418187827
 GameObject:
   m_ObjectHideFlags: 0
@@ -552,7 +523,6 @@ MonoBehaviour:
   m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
   m_RequiresDepthTexture: 0
   m_RequiresColorTexture: 0
-  m_Version: 2
   m_TaaSettings:
     m_Quality: 3
     m_FrameInfluence: 0.1
@@ -560,6 +530,7 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
+  m_Version: 2
 --- !u!1 &464155741
 GameObject:
   m_ObjectHideFlags: 0
@@ -1269,7 +1240,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 355281054}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: EffectSampleManager, Assembly-CSharp
         m_MethodName: PlayEffectSample
         m_Mode: 3
@@ -1581,7 +1552,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 355281054}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: EffectSampleManager, Assembly-CSharp
         m_MethodName: PlayEffectSample
         m_Mode: 3
@@ -1714,7 +1685,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 355281054}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: EffectSampleManager, Assembly-CSharp
         m_MethodName: PlayEffectSample
         m_Mode: 3
@@ -1958,7 +1929,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 355281054}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: EffectSampleManager, Assembly-CSharp
         m_MethodName: PlayEffectSample
         m_Mode: 3
@@ -2091,7 +2062,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 355281054}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: EffectSampleManager, Assembly-CSharp
         m_MethodName: PlayEffectSample
         m_Mode: 3
@@ -2335,7 +2306,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 355281054}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: EffectSampleManager, Assembly-CSharp
         m_MethodName: PlayEffectSample
         m_Mode: 3
@@ -2468,7 +2439,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 355281054}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: EffectSampleManager, Assembly-CSharp
         m_MethodName: PlayEffectSample
         m_Mode: 3
@@ -2712,7 +2683,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 355281054}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: EffectSampleManager, Assembly-CSharp
         m_MethodName: PlayEffectSample
         m_Mode: 3
@@ -2845,7 +2816,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 355281054}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: EffectSampleManager, Assembly-CSharp
         m_MethodName: PlayEffectSample
         m_Mode: 3
@@ -3302,7 +3273,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 355281054}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: EffectSampleManager, Assembly-CSharp
         m_MethodName: PlayEffectSample
         m_Mode: 3

@@ -1,5 +1,13 @@
 # 규칙 변경 이력
 
+## 2026-05-16 - Runtime-only tilemap verification false completion
+- Feedback: "전혀 안됐는데 어딜 했다고하는거야?"
+- Cause: In the House wall tile task, the agent verified only the PlayMode runtime-generated result and reported completion before checking the saved `Assets/Scenes/House.unity` EditMode Tilemap. The saved scene still had `tile_r02_c09` only on the original two window cells, so the user's visible scene/palette had not actually changed.
+- Change: Added a Direct Visual Play Verification Gate rule in `AGENTS.md`: when a visual change must persist in a scene, prefab, ScriptableObject, or palette asset, runtime-only verification is insufficient. The saved EditMode asset/scene state must be separately verified, including exact Tilemap tile names/counts or serialized asset references.
+- Generalization: Before reporting tilemap/palette/scene work as complete, verify and distinguish (1) runtime Game View or Camera output, (2) saved scene/asset serialized state, and (3) scene/asset reopen or re-inspection when persistence matters. Never claim a user-visible saved change from runtime generated state alone.
+
+---
+
 `feedback-constitution-update` 스킬에 의한 헌법 및 규칙 문서 변경 이력.
 
 형식:
@@ -10,6 +18,18 @@
 - 변경: {어느 파일 어떤 섹션이 어떻게 수정됐는지}
 - 일반화: {오버피팅 방지를 위해 원리 수준에서 어떻게 정리했는지}
 ```
+
+---
+
+## 2026-05-13 — NPC 대화창 Style2 9-slice recipe (r14_c3~r16_c5)
+- 피드백: "r14_c3 ~ r14_c5  r15 r16 둘다 c3~5 를 가지고 npc 대화창 기본 sprite를 만들고싶어"
+- 원인/배경: NPC 대화창은 `LocationNpcRuntimeInstaller.EnsureDialoguePanel`이 만든 빈 panel 위에 `Image.color`만 어두운 단색으로 깔고 있었다. 헌법 `rules/ui-standards.md` "Modern UI Style2 공통 패널" 절은 크기 가변 패널은 `Image.sprite` 단일 대신 `ModernUiTileImage` 3x3 tiled 빌더를 써야 한다고 강제하지만, 대화창은 이 규약 밖에 있었다. Style2 sheet의 r14_c3~r16_c5 (시각 검증: 둥근 모서리 + 어두운 outline + 흰 fill의 9-slice speech panel) 좌표가 비어있어 dialogue 전용 9-slice로 사용 가능.
+- 변경:
+  - `Assets/Scripts/Game/Common/ModernUiStyle2Sprites.cs`에 `DialoguePanel` 정적 클래스 (9칸 9-slice 카탈로그) 추가, `PreloadSubSprites` 배열에 9개 sub-sprite 이름 추가.
+  - `Assets/Scripts/UI/Modern/ModernUiRecipes.cs`에 `ModernUiRecipes.DialoguePanel` recipe 1줄 등록.
+  - `Assets/Scripts/UI/Quests/DialoguePanel.cs`에 `EnsureBackground()` 메서드 추가 — `ModernUiTileImage` 자식을 부모 전체로 stretch한 뒤 `SetRecipe(ModernUiRecipes.DialoguePanel)` + `Rebuild()`. 기존 root `Image` 색은 투명화하여 9-slice를 가리지 않도록 처리. 호출은 `Open()` 진입부.
+  - `Assets/Tests/EditMode/UI/Modern/DialoguePanelRecipeTests.cs` 신규 4 케이스 — 9칸 (row,col) 매칭, 9개 role 존재, PreloadSubSprites 포함, recipe registry 동등성. 신규 4개 모두 통과.
+- 일반화: "신규 9-slice 패널 추가 = (1) Style2 카탈로그 정적 클래스 + Tile() 헬퍼 (2) ModernUiRecipes에 ModernUiTileRecipe 등록 (3) PreloadSubSprites 9개 이름 추가 (4) 일관성 EditMode 테스트 4축(좌표 범위/role 9개/preload 포함/registry 동등). PlayMode `TownStyle2SpriteExhaustivePlayModeTests`가 AllSheets 기준 전수 검증을 이미 수행하므로 별도 PlayMode 추가 불필요."
 
 ---
 
@@ -394,3 +414,8 @@
 - 피드백 없음 (CoinDefense 프로젝트 시작 시점 결정)
 - 변경: `rules/path-based/server-node.md` 신규 생성 (Node 20 + Fastify + TS + Drizzle + Zod + vitest 표준), `path-based/server.md` 상단에 deprecation 배너
 - 일반화: "스택 변경 시 신규 규칙 + 기존 규칙 deprecation 명시 의무"
+## 2026-05-16 — Direct Visual Play Verification Gate
+
+- Feedback: repeated completion claims were made before the actual in-game visual result was verified, causing long loops around chair placement, sliced sprites, stale sample Tilemaps, and overlay/UI coverage.
+- Change: added a constitutional addendum to `AGENTS.md` and a matching gate to `rules/testing-discipline.md`.
+- General rule: visible gameplay/UI/sprite/tilemap/placement work must be verified through the real PlayMode player flow, with Game View or Camera screenshot inspection plus runtime Tilemap/Renderer/UI state checks. Passing tests, asset-name checks, or internal calls alone are not enough to claim completion.

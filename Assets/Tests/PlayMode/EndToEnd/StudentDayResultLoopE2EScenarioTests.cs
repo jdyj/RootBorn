@@ -43,7 +43,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         }
 
         [UnityTearDown]
-        public IEnumerator TearDown()
+        public new IEnumerator TearDown()
         {
             ActiveSaveContext.Clear();
             PlayerGlobalState.ClearForTests();
@@ -186,7 +186,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 var study = GameObject.Find("StudyBasicsActivity");
                 var dayEnd = GameObject.Find("StudentDayEndBoard");
                 var panel = Object.FindFirstObjectByType<StudentDayResultPanel>(FindObjectsInactive.Include);
-                var npc = Object.FindFirstObjectByType<NpcInteractor>(FindObjectsInactive.Include);
+                var npc = FindGuideNpc();
                 var dialoguePanel = Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include);
                 if (player != null && player.GetComponent<PlayerController>() != null && player.GetComponent<PlayerInteractionRouter>() != null && player.GetComponent<StudentLifeProgressComponent>() != null &&
                     study != null && study.GetComponent<StudentLifeActivityInteractor>() != null &&
@@ -208,7 +208,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var player = GameObject.Find("Player");
             var study = GameObject.Find("StudyBasicsActivity");
             var dayEnd = GameObject.Find("StudentDayEndBoard");
-            var npc = Object.FindFirstObjectByType<NpcInteractor>(FindObjectsInactive.Include);
+            var npc = FindGuideNpc();
             var dialoguePanel = Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include);
             Assert.IsNotNull(player);
             Assert.IsNotNull(study);
@@ -216,6 +216,17 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.IsNotNull(npc);
             Assert.IsNotNull(dialoguePanel);
             return new DayRuntime(player, player.GetComponent<PlayerInteractionRouter>(), player.GetComponent<StudentLifeProgressComponent>(), study.GetComponent<StudentLifeActivityInteractor>(), dayEnd.GetComponent<StudentDayEndInteractor>(), npc, dialoguePanel);
+        }
+
+        private static NpcInteractor FindGuideNpc()
+        {
+            var npcs = Object.FindObjectsByType<NpcInteractor>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            for (int i = 0; i < npcs.Length; i++)
+            {
+                var npc = npcs[i];
+                if (npc != null && npc.Npc != null && npc.Npc.Id == "npc.first-guide") return npc;
+            }
+            return npcs.Length > 0 ? npcs[0] : null;
         }
 
         private static IEnumerator WaitForDayResultPanel(float timeoutSeconds, string failure)

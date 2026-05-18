@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18e0d570a58a86d419152dee2c14959c, type: 3}
+  m_Name: DailyEvent_SquareFriendRequest
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.DailyEventDefinition
+  _id: daily-event.square-friend-request
+  _displayNameKey: 'Town Square: Friend Request'
+  _descriptionKey: A friend asks for help near the square.
+  _location: {fileID: 11400000, guid: 0b792f8bcf32340469cd64320136e59b, type: 2}
+  _npc: {fileID: 0}
+  _kind: {fileID: 11400000, guid: ed18e207eda63274c9e088a81763d933, type: 2}
+  _availabilityRules:
+  - {fileID: 11400000, guid: 39b5247e3180c584eb05f93176d1984c, type: 2}
+  _choices:
+  - {fileID: 11400000, guid: 407889065830da241a6c1139bed8df7a, type: 2}
+  - {fileID: 11400000, guid: c2ef71cf008b8674ca54a85d4e8ee9ce, type: 2}

@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3b1e15c7abef1840836bfc97d9de3d6, type: 3}
+  m_Name: Npc_Teacher
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Dialogue.NpcDefinition
+  _id: npc.teacher
+  _displayNameKey: npc.teacher.name
+  _introductionKey: npc.teacher.intro
+  _homeLocation: {fileID: 11400000, guid: 74f05b36a5f69964e97495038a29176d, type: 2}
+  _roles:
+  - {fileID: 11400000, guid: f5eb3b918d399ff44b61abe2111dd8d0, type: 2}
+  _defaultDialogue: {fileID: 11400000, guid: 6ba0d80b2c3251f4dacf78244f2566ee, type: 2}
+  _defaultDialogueConditions: []
+  _stageDialogues: []
+  _quests: []
+  _worldTexture: {fileID: 0}
+  _worldSpriteRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 16
+    height: 16
+  _worldSpritePixelsPerUnit: 16

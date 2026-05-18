@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
@@ -11,7 +11,7 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
     public sealed class ObjectiveJournalPanelTests
     {
         [Test]
-        public void ObjectiveJournalPanel_ShowBuildsSharedRailListDetailAndStyle2Shell()
+        public void ObjectiveJournalPanel_ShowBuildsSingleShellWithPlainRailListAndDetailContent()
         {
             var panelType = Type.GetType("Rootborn.UI.Objectives.ObjectiveJournalPanel, Rootborn.UI");
             Assert.IsNotNull(panelType, "Missing Rootborn.UI.Objectives.ObjectiveJournalPanel.");
@@ -24,9 +24,12 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
 
                 Assert.IsTrue((bool)panelType.GetProperty("IsVisible").GetValue(panel));
                 AssertChildHasTiles(host.transform, "ObjectiveJournalRoot");
-                AssertChildHasTiles(host.transform, "ObjectiveCategoryRail");
-                AssertChildHasTiles(host.transform, "ObjectiveList");
-                AssertChildHasTiles(host.transform, "ObjectiveDetail");
+                Assert.AreEqual(1, CountCommonPanel48(host), "Objective Journal should use exactly one CommonPanel48: the outer root shell.");
+                var rootShell = host.transform.Find("ObjectiveJournalRoot");
+                Assert.IsNotNull(rootShell, "Objective content must live inside ObjectiveJournalRoot.");
+                AssertPlainChild(rootShell, "ObjectiveCategoryRail");
+                AssertPlainChild(rootShell, "ObjectiveList");
+                AssertPlainChild(rootShell, "ObjectiveDetail");
 
                 string visibleText = (string)panelType.GetProperty("VisibleText").GetValue(panel);
                 StringAssert.Contains("Goals", visibleText);
@@ -115,13 +118,54 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
             }
         }
 
+        [Test]
+        public void ModernUiPanelAutoInstaller_InstallsObjectiveJournalHiddenUntilTabToggle()
+        {
+            var canvasGo = new GameObject("ObjectiveJournalAutoInstallFixture", typeof(RectTransform), typeof(Canvas));
+            try
+            {
+                var canvas = canvasGo.GetComponent<Canvas>();
+                ModernUiPanelAutoInstaller.InstallOnCanvas(canvas, null);
+
+                var journal = canvasGo.GetComponentInChildren<Rootborn.UI.Objectives.ObjectiveJournalPanel>(true);
+                var router = canvasGo.GetComponent<ModernUiPanelInputRouter>();
+                Assert.IsNotNull(journal, "Auto installer must create the Objective Journal panel.");
+                Assert.IsNotNull(router, "Auto installer must create the input router.");
+                Assert.IsFalse(journal.IsVisible, "Objective Journal must not start visible in the middle of gameplay.");
+                Assert.IsFalse(journal.gameObject.activeSelf, "Objective Journal GameObject must stay inactive until the player presses Tab.");
+
+                router.ToggleObjectiveJournalPanel();
+
+                Assert.IsTrue(journal.gameObject.activeSelf, "Tab toggle must activate the hidden Objective Journal GameObject.");
+                Assert.IsTrue(journal.IsVisible, "Tab toggle must show the Objective Journal.");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(canvasGo);
+            }
+        }
+
+        private static int CountCommonPanel48(GameObject root)
+        {
+            return root.GetComponentsInChildren<ModernUiTileImage>(true)
+                .Count(tile => tile.Recipe == ModernUiRecipes.CommonPanel48);
+        }
+
         private static void AssertChildHasTiles(Transform root, string name)
         {
             var child = root.Find(name);
             Assert.IsNotNull(child, "Missing " + name + ".");
             var tileImage = child.GetComponent<ModernUiTileImage>();
             Assert.IsNotNull(tileImage, name + " must use ModernUiTileImage.");
+            Assert.AreSame(ModernUiRecipes.CommonPanel48, tileImage.Recipe, name + " must use CommonPanel48.");
             Assert.Greater(tileImage.TileCount, 0, name + " must build Style2 tiled sprites.");
+        }
+
+        private static void AssertPlainChild(Transform root, string name)
+        {
+            var child = root.Find(name);
+            Assert.IsNotNull(child, "Missing " + name + ".");
+            Assert.IsNull(child.GetComponent<ModernUiTileImage>(), name + " must be plain content inside the outer CommonPanel, not another CommonPanel.");
         }
     }
 }

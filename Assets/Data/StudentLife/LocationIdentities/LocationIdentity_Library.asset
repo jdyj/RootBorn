@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59462f3cc8aa4c24992d3c662397813d, type: 3}
+  m_Name: LocationIdentity_Library
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.LocationIdentityDefinition
+  _id: location.identity.library
+  _displayNameKey: location.identity.library.name
+  _location: {fileID: 11400000, guid: cbc6489c83f1f1440a50f2f18914cd32, type: 2}
+  _descriptionKey: location.identity.library.desc
+  _availableActivities:
+  - {fileID: 11400000, guid: 9261dd8cefccadf458a9e564b07de057, type: 2}
+  _hints:
+  - _displayKey: hint.library.self-study
+    _growthRoute: 1
+    _milestone: {fileID: 0}
+  _recommendedVisitStartMinute: 480
+  _recommendedVisitEndMinute: 1140

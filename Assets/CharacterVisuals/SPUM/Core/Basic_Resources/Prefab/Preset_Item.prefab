@@ -148,7 +148,6 @@ GameObject:
   - component: {fileID: 6800768090876150231}
   - component: {fileID: 5300816302445440450}
   - component: {fileID: 4692289997456056233}
-  - component: {fileID: 1902127773982403474}
   m_Layer: 5
   m_Name: Preset_Item
   m_TagString: Untagged
@@ -244,32 +243,6 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
---- !u!114 &1902127773982403474
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2097176993820819351}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0f4b9dfd61362cb4584de483eb62a903, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Name: 
-  Type: 
-  UnitType: {fileID: 8409019723968584519}
-  PresetName: {fileID: 5205595867907888164}
-  EditName: {fileID: 3905039320435005089}
-  InputSave: {fileID: 176035101506098077}
-  Delete: {fileID: 2290947795261344197}
-  OK: {fileID: 6150501151917637479}
-  ApplyPreset: {fileID: 5733958934157336884}
-  NamePanel: {fileID: 6881311279358817586}
-  inputName: {fileID: 5125680923461711993}
-  NameEditPanel: {fileID: 7123665882824653844}
-  spumPackages: []
-  animationManager: {fileID: 0}
 --- !u!1 &2111498829300376818
 GameObject:
   m_ObjectHideFlags: 0

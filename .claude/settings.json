@@ -18,7 +18,25 @@
       "mcp__ai-game-developer__tests-run",
       "mcp__ai-game-developer__console-get-logs",
       "mcp__ai-game-developer__package-search",
-      "mcp__ai-game-developer__script-update-or-create"
+      "mcp__ai-game-developer__script-update-or-create",
+      "Bash(mkdir -p c:/Users/jdyj/farmer/docs/art/style2-gemini-batches)",
+      "Bash(cp c:/Users/jdyj/farmer/Assets/modernuserinterface-win/16x16/gemini-code-1778575761854.json c:/Users/jdyj/farmer/docs/art/style2-gemini-batches/batch-01-r0-r5.json)",
+      "mcp__ai-game-developer__editor-application-set-state",
+      "mcp__ai-game-developer__assets-refresh",
+      "PowerShell($j = Get-Content \"C:\\\\Users\\\\jdyj\\\\.claude\\\\projects\\\\c--Users-jdyj-farmer\\\\1d08a6c7-0a80-4dd4-ac11-d4072a45a266\\\\tool-results\\\\mcp-ai-game-developer-console-get-logs-1778597803822.txt\" -Raw | ConvertFrom-Json; $j.result | Where-Object { $_.message -match 'error CS' } | Select-Object -ExpandProperty message -Unique | Select-Object -First 30)",
+      "mcp__ai-game-developer__console-clear-logs",
+      "mcp__ai-game-developer__gameobject-find",
+      "mcp__ai-game-developer__gameobject-component-get",
+      "Bash(magick identify *)",
+      "Bash(python c:/tmp/slice_modern_ui_style2.py)",
+      "mcp__ai-game-developer__script-read",
+      "Bash(cp \"Assets/modernuserinterface-win/16x16/Sliced_UI_Result/button/ModernUI_16_Style2_r0_c8.png\" \"Assets/modernuserinterface-win/16x16/Sliced_UI_Result/button/IconQuestionR0C8.png\" && ls -la \"Assets/modernuserinterface-win/16x16/Sliced_UI_Result/button/IconQuestionR0C8.png\" \"Assets/modernuserinterface-win/16x16/Sliced_UI_Result/button/ModernUI_16_Style2_r0_c8.png\")",
+      "Bash(python -c 'import json; json.load\\(open\\('\\\\''__TRACKED_VAR__'\\\\''\\)\\); print\\('\\\\''OK'\\\\''\\)')",
+      "Bash(cat)",
+      "Bash(python /tmp/check.py)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\jdyj\\farmer\\Assets\\modernuserinterface-win\\16x16\\Sliced_UI_Result\\button"
     ]
   },
   "hooks": {

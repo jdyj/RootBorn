@@ -33,6 +33,18 @@ namespace Rootborn.UI.StudentLife
             Refresh(milestones, milestoneProgress, default);
         }
 
+        public void Hide()
+        {
+            BuildIfNeeded();
+            if (_root != null) _root.SetActive(false);
+        }
+
+        public void Show()
+        {
+            BuildIfNeeded();
+            if (_root != null) _root.SetActive(true);
+        }
+
         public void Refresh(MilestoneDefinition[] milestones, MilestoneProgress milestoneProgress, MilestoneApplyResult applyResult)
         {
             if (milestones == null || milestones.Length == 0)

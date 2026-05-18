@@ -9,6 +9,8 @@ namespace Rootborn.Game.Managers
     public sealed class Managers : MonoBehaviour
     {
         private static Managers s_instance;
+        private static Task s_bootstrapTask;
+
         public static Managers Instance => s_instance;
 
         private readonly ResourceManager _resource = new ResourceManager();
@@ -37,15 +39,34 @@ namespace Rootborn.Game.Managers
             return s_instance;
         }
 
-        public static async Task BootstrapAsync()
+        public static Task BootstrapAsync()
         {
             var managers = EnsureExists();
-            if (managers.IsBootstrapped) return;
+            if (managers.IsBootstrapped) return Task.CompletedTask;
+            if (s_bootstrapTask != null && !s_bootstrapTask.IsCompleted) return s_bootstrapTask;
 
-            await managers._resource.InitializeAsync();
-            await managers._data.InitAsync(managers._resource);
-            managers.IsBootstrapped = true;
-            Debug.Log("[ROOTBORN/Managers] Bootstrap complete.");
+            s_bootstrapTask = managers.BootstrapInternalAsync();
+            return s_bootstrapTask;
+        }
+
+        private async Task BootstrapInternalAsync()
+        {
+            try
+            {
+                if (IsBootstrapped) return;
+
+                await _resource.InitializeAsync();
+                await _data.InitAsync(_resource);
+                IsBootstrapped = true;
+                Debug.Log("[ROOTBORN/Managers] Bootstrap complete.");
+            }
+            finally
+            {
+                if (!IsBootstrapped)
+                {
+                    s_bootstrapTask = null;
+                }
+            }
         }
     }
 }

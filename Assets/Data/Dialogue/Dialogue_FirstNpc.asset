@@ -17,3 +17,5 @@ MonoBehaviour:
   _choices:
   - {fileID: 11400000, guid: 7d3360f5fc30e8340964b63b23e276ef, type: 2}
   - {fileID: 11400000, guid: 406a8da1b0e69f246b1f904864863d14, type: 2}
+  _requiredTutorialStage: {fileID: 0}
+  _conditions: []

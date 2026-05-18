@@ -12,9 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f3b1e15c7abef1840836bfc97d9de3d6, type: 3}
   m_Name: Npc_FirstGuide
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Dialogue.NpcDefinition
-  _id: npc.firstGuide
-  _displayNameKey: npc.firstGuide.name
-  _defaultDialogue: {fileID: 11400000, guid: cfad8f701cdf1f842a17deb8b46a4274, type: 2}
+  _id: npc.first-guide
+  _displayNameKey: npc.first-guide.name
+  _introductionKey: npc.first-guide.intro
+  _homeLocation: {fileID: 11400000, guid: 0b792f8bcf32340469cd64320136e59b, type: 2}
+  _roles:
+  - {fileID: 11400000, guid: 720b0c466a484a7469601e7254a75e32, type: 2}
+  _defaultDialogue: {fileID: 11400000, guid: 8142bab72b18c8d46b226b2da4f7561d, type: 2}
+  _defaultDialogueConditions: []
   _stageDialogues:
   - {fileID: 11400000, guid: 5a6836b650177104d9289c2b7081c136, type: 2}
   _quests:

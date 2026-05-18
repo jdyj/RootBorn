@@ -1,4 +1,5 @@
-using System.IO;
+﻿using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using Rootborn.Game.Quests;
 using Rootborn.Game.Quests.Effects;
@@ -6,8 +7,12 @@ using Rootborn.Game.Quests.Objectives;
 using Rootborn.Game.Story;
 using Rootborn.Game.StudentLife;
 using Rootborn.Game.Tiles;
+using Rootborn.UI.Modern;
+using Rootborn.UI.Quests;
+using Rootborn.UI.Tiles;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using UnityEngine.UI;
 
 namespace Rootborn.Tests.EditMode.TownConcept
 {
@@ -54,6 +59,47 @@ namespace Rootborn.Tests.EditMode.TownConcept
             StringAssert.Contains("StudentLifeFileNameFor(playerId)", source);
             StringAssert.Contains("quest-log-", source);
             StringAssert.Contains("student-life-progress-", source);
+        }
+
+        [Test]
+        public void TILE_PLACE_UI_001_TilePlacementPanelUsesOneCommonPanelAndPlainButtons()
+        {
+            var panelGo = new GameObject("TilePlacementPanel", typeof(RectTransform), typeof(Image), typeof(TownTilePlacementRuntimeInstaller.TilePlacementPanel));
+            var questGo = new GameObject("QuestLogPanel", typeof(RectTransform));
+            var tilemapGo = new GameObject("TownDecorationTilemap", typeof(Tilemap));
+            var trait = CreateTrait("trait.creativity");
+            var career = CreateCareer("career.interior");
+            var quest = CreateTileQuest(trait, career);
+            try
+            {
+                var questLogPanel = questGo.AddComponent<QuestLogPanel>();
+                var questLog = new QuestLog(new[] { quest });
+                questLogPanel.Bind(questLog, new[] { quest }, default);
+
+                var tile = CreateTile("tile.floor");
+                var panel = panelGo.GetComponent<TownTilePlacementRuntimeInstaller.TilePlacementPanel>();
+                panel.Bind(questLogPanel, quest, default, tilemapGo.GetComponent<Tilemap>(), new[] { tile }, "tile.json", "quest.json", "student.json");
+
+                var rootTiles = panelGo.GetComponent<ModernUiTileImage>();
+                Assert.IsNotNull(rootTiles, "Tile placement panel root must use ModernUiTileImage.");
+                Assert.AreEqual(new Vector2(48f, 48f), rootTiles.TileSize, "Tile placement panel root should use the 48px CommonPanel tile scale.");
+                Assert.Greater(rootTiles.TileCount, 0);
+
+                var buttons = panelGo.GetComponentsInChildren<Button>(true);
+                Assert.GreaterOrEqual(buttons.Length, 3, "Tile placement should expose accept, tile select, and claim buttons.");
+                Assert.AreEqual(1, panelGo.GetComponentsInChildren<ModernUiTileImage>(true).Count(tileImage => tileImage.Recipe == ModernUiRecipes.CommonPanel48), "Tile placement should use exactly one CommonPanel48: the panel root.");
+                Assert.IsTrue(buttons.All(button => button.GetComponent<ModernUiTileImage>() == null), "TilePlacementPanel buttons must be plain controls inside the outer CommonPanel, not nested CommonPanel backgrounds.");
+                Assert.IsTrue(buttons.All(button => button.GetComponent<Image>().color.a == 0f), "Button root Image should be a transparent hit target, not a flat panel color.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(panelGo);
+                Object.DestroyImmediate(questGo);
+                Object.DestroyImmediate(tilemapGo);
+                Object.DestroyImmediate(quest);
+                Object.DestroyImmediate(trait);
+                Object.DestroyImmediate(career);
+            }
         }
 
         private static QuestDefinition CreateTileQuest(TraitDefinition trait, CareerDefinition career)

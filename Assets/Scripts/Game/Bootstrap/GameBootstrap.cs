@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Rootborn.Game.Managers;
+using Rootborn.Game.Save;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -9,8 +10,6 @@ namespace Rootborn.Game.Bootstrap
     public sealed class GameBootstrap : MonoBehaviour
     {
         [SerializeField] private string _mainMenuScene = "MainMenu";
-        [SerializeField] private string _townScene = "Town";
-        [SerializeField] private string _hostLobbyScene = "HostLobby";
 
         public static AppConfig Config { get; private set; }
         public static event Action<AppConfig> OnBootstrapped;
@@ -23,6 +22,7 @@ namespace Rootborn.Game.Bootstrap
         private async void Start()
         {
             Config = ArgsParser.Parse(Environment.GetCommandLineArgs());
+            ApplyCommandLineSaveSlot(Config);
             OnBootstrapped?.Invoke(Config);
 
             await Managers.Managers.BootstrapAsync();
@@ -35,6 +35,18 @@ namespace Rootborn.Game.Bootstrap
 
             Debug.Log($"[ROOTBORN] Bootstrap mode={Config.Mode} port={Config.Port} maxPlayers={Config.MaxPlayers} saveSlot={Config.SaveSlot} -> loading scene '{_mainMenuScene}'");
             SceneManager.LoadScene(_mainMenuScene);
+        }
+
+        private static void ApplyCommandLineSaveSlot(AppConfig config)
+        {
+            if (config == null || string.IsNullOrEmpty(config.SaveSlot)) return;
+            ActiveSaveContext.Set(new SaveSlotMetadata
+            {
+                SlotId = config.SaveSlot,
+                DisplayName = config.SaveSlot,
+                CreatedAtUtcTicks = DateTime.UtcNow.Ticks,
+                UpdatedAtUtcTicks = DateTime.UtcNow.Ticks,
+            });
         }
     }
 }

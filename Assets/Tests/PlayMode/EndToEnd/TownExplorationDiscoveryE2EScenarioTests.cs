@@ -40,7 +40,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         }
 
         [UnityTearDown]
-        public IEnumerator TearDown()
+        public new IEnumerator TearDown()
         {
             ActiveSaveContext.Clear();
             PlayerGlobalState.ClearForTests();

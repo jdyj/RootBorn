@@ -41,7 +41,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1257445596637278934}
-  - component: {fileID: 8993294641581049639}
   m_Layer: 0
   m_Name: PivotFront
   m_TagString: Untagged
@@ -65,18 +64,6 @@ Transform:
   - {fileID: 7357065466498353684}
   m_Father: {fileID: 2957823564599499368}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8993294641581049639
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 233092202008207525}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c562f92f3b8b435d98ac3b65547b755, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &396715476207792463
 GameObject:
   m_ObjectHideFlags: 0
@@ -144,6 +131,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &126039148379210684
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -159,6 +147,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -180,9 +173,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 5
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: d3fa5454509bfe9428ccc7066d86d0f3, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -192,7 +187,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &630600384727788924
 GameObject:
@@ -229,6 +223,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &7539003564711685358
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -244,6 +239,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -265,9 +265,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 5
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 3923885903126733222, guid: d24756e433435b249be5737019648d69, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -277,7 +279,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!331 &6041360494364772544
 SpriteMask:
@@ -296,6 +297,11 @@ SpriteMask:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -317,9 +323,11 @@ SpriteMask:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 3923885903126733222, guid: d24756e433435b249be5737019648d69, type: 3}
   m_MaskAlphaCutoff: 0.01
   m_FrontSortingLayerID: 0
@@ -330,6 +338,7 @@ SpriteMask:
   m_BackSortingOrder: 0
   m_IsCustomRangeActive: 0
   m_SpriteSortPoint: 0
+  m_MaskSource: 0
 --- !u!1 &812909789014056590
 GameObject:
   m_ObjectHideFlags: 0
@@ -339,7 +348,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 509391252862266767}
-  - component: {fileID: 991290385805672642}
   m_Layer: 0
   m_Name: PivotFront
   m_TagString: Untagged
@@ -363,18 +371,6 @@ Transform:
   - {fileID: 2503882830249410673}
   m_Father: {fileID: 7865062587480991441}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &991290385805672642
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 812909789014056590}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c562f92f3b8b435d98ac3b65547b755, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1080483268653064337
 GameObject:
   m_ObjectHideFlags: 0
@@ -443,6 +439,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &1700998469644013282
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -458,6 +455,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -479,9 +481,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 2792606791867966216, guid: d24756e433435b249be5737019648d69, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -491,7 +495,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &1176182748543867831
 GameObject:
@@ -527,6 +530,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &7563743092883002638
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -542,6 +546,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -563,9 +572,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -3
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 1583482623376728253, guid: d24756e433435b249be5737019648d69, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -575,7 +586,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &1260088540503720921
 GameObject:
@@ -587,7 +597,6 @@ GameObject:
   m_Component:
   - component: {fileID: 7456911924487216634}
   - component: {fileID: 8699140138053719064}
-  - component: {fileID: 1251657820171458427}
   m_Layer: 0
   m_Name: Front
   m_TagString: Untagged
@@ -612,6 +621,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &8699140138053719064
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -627,6 +637,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -648,9 +663,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 6
+  m_MaskInteraction: 0
   m_Sprite: {fileID: -227387616865308203, guid: e2579aadb18ab4cf1b2461fb9e0f0cdf, type: 3}
   m_Color: {r: 0.4431373, g: 0.14901961, b: 0.14901961, a: 1}
   m_FlipX: 0
@@ -660,20 +677,7 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &1251657820171458427
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1260088540503720921}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c562f92f3b8b435d98ac3b65547b755, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1261354994740434553
 GameObject:
   m_ObjectHideFlags: 0
@@ -773,6 +777,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &4513393729216800973
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -788,6 +793,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -809,9 +819,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 25
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -821,7 +833,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 0
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &1366286837812838489
 GameObject:
@@ -857,6 +868,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &2950013340967838287
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -872,6 +884,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -893,9 +910,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 6
+  m_MaskInteraction: 1
   m_Sprite: {fileID: 21300000, guid: ef566990d29ef9b43a69464e4e475232, type: 3}
   m_Color: {r: 0.4431373, g: 0.14901961, b: 0.14901961, a: 1}
   m_FlipX: 0
@@ -905,7 +924,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 1
   m_SpriteSortPoint: 0
 --- !u!1 &1660388529907591239
 GameObject:
@@ -1038,6 +1056,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &3105685734298428608
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -1053,6 +1072,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -1074,9 +1098,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -2
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 2227563860517246555, guid: e17d600fcd74948bd8547a87f8f5839a, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -1086,7 +1112,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &1873968263173970512
 GameObject:
@@ -1156,6 +1181,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &8077420803368346494
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -1171,6 +1197,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -1192,9 +1223,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 12
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 592285ae38234d24fa51fd7b0c0934ca, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -1204,7 +1237,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &2070063482562469517
 GameObject:
@@ -1249,7 +1281,6 @@ GameObject:
   m_Component:
   - component: {fileID: 9080389884624682926}
   - component: {fileID: 2264050988276513019}
-  - component: {fileID: 287732134741476036}
   m_Layer: 0
   m_Name: Back
   m_TagString: Untagged
@@ -1274,6 +1305,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &2264050988276513019
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -1289,6 +1321,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -1310,9 +1347,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 6
+  m_MaskInteraction: 0
   m_Sprite: {fileID: -7692467856717486879, guid: e2579aadb18ab4cf1b2461fb9e0f0cdf, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -1322,20 +1361,7 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &287732134741476036
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2425529265079970613}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c562f92f3b8b435d98ac3b65547b755, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &2484316686141989107
 GameObject:
   m_ObjectHideFlags: 0
@@ -1408,6 +1434,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &2815317062960698526
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -1423,6 +1450,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -1444,9 +1476,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 20
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 5223213533427645220, guid: d24756e433435b249be5737019648d69, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -1456,7 +1490,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &2985150238069419242
 GameObject:
@@ -1588,6 +1621,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &3669976029715920080
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -1603,6 +1637,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -1624,9 +1663,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -19
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 53f9341ce3f0dae04034586b6a984430, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -1636,7 +1677,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &3412741837231735290
 GameObject:
@@ -1738,6 +1778,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &4576353584512559756
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -1753,6 +1794,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -1774,9 +1820,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 25
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 436b67d0e7d48459a9b5c4c09ef38c66, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -1786,7 +1834,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &3637068417758694344
 GameObject:
@@ -1854,6 +1901,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &1293430670264366056
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -1869,6 +1917,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -1890,9 +1943,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -12
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 5053251350606442050, guid: d24756e433435b249be5737019648d69, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -1902,7 +1957,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &3783758078716577311
 GameObject:
@@ -2005,6 +2059,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &3407658912011751867
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -2020,6 +2075,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -2041,9 +2101,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 21
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 2c402550c4d874960af0ace346f141c0, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -2053,7 +2115,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &4138331072742426857
 GameObject:
@@ -2089,6 +2150,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &7438704432744454923
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -2104,6 +2166,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -2125,9 +2192,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 2
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 224a4e267652e9f318d465c1244360d7, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -2137,7 +2206,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &4150130120189125967
 GameObject:
@@ -2207,6 +2275,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &601139407040464559
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -2222,6 +2291,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -2243,9 +2317,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -20
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 2554473656886179314, guid: d24756e433435b249be5737019648d69, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -2255,7 +2331,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &4388444728300650753
 GameObject:
@@ -2304,9 +2379,10 @@ SortingGroup:
   m_SortingLayer: 0
   m_SortingOrder: 5
   m_SortAtRoot: 0
+  m_Sort3DAs2D: 0
 --- !u!95 &4771713934731698027
 Animator:
-  serializedVersion: 5
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -2320,6 +2396,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
@@ -2335,7 +2412,6 @@ GameObject:
   m_Component:
   - component: {fileID: 2503882830249410673}
   - component: {fileID: 4113437992788611280}
-  - component: {fileID: 2558622448699110726}
   m_Layer: 0
   m_Name: Front
   m_TagString: Untagged
@@ -2360,6 +2436,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &4113437992788611280
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -2375,6 +2452,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -2396,9 +2478,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 7
+  m_MaskInteraction: 0
   m_Sprite: {fileID: -227387616865308203, guid: e2579aadb18ab4cf1b2461fb9e0f0cdf, type: 3}
   m_Color: {r: 0.4431373, g: 0.14901961, b: 0.14901961, a: 1}
   m_FlipX: 0
@@ -2408,20 +2492,7 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &2558622448699110726
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4535385949672354551}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c562f92f3b8b435d98ac3b65547b755, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &4549004607333970762
 GameObject:
   m_ObjectHideFlags: 0
@@ -2520,6 +2591,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &4155748792851694348
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -2535,6 +2607,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -2556,9 +2633,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 19
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -2568,7 +2647,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 0
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &5207059445969219045
 GameObject:
@@ -2604,6 +2682,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &2394326885189886746
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -2619,6 +2698,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -2640,9 +2724,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -21
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -2652,7 +2738,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 0
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &5437935218860171251
 GameObject:
@@ -2664,7 +2749,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1098840357353813705}
   - component: {fileID: 6630067573102573472}
-  - component: {fileID: 8266557972888575885}
   m_Layer: 0
   m_Name: Back
   m_TagString: Untagged
@@ -2689,6 +2773,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &6630067573102573472
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -2704,6 +2789,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -2725,9 +2815,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 6
+  m_MaskInteraction: 0
   m_Sprite: {fileID: -7692467856717486879, guid: e2579aadb18ab4cf1b2461fb9e0f0cdf, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -2737,20 +2829,7 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &8266557972888575885
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5437935218860171251}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c562f92f3b8b435d98ac3b65547b755, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &5505504802021453251
 GameObject:
   m_ObjectHideFlags: 0
@@ -2760,7 +2839,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2454737339137755162}
-  - component: {fileID: 6627831928664242316}
   m_Layer: 0
   m_Name: BodySet
   m_TagString: Untagged
@@ -2784,18 +2862,6 @@ Transform:
   - {fileID: 8291598549600774213}
   m_Father: {fileID: 2010908753566771018}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6627831928664242316
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5505504802021453251}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c562f92f3b8b435d98ac3b65547b755, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &5776604397524993602
 GameObject:
   m_ObjectHideFlags: 0
@@ -2862,6 +2928,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &6356636351955947160
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -2877,6 +2944,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -2898,9 +2970,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -50
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: acb3bfd86ae6c41b084245f578292734, type: 3}
   m_Color: {r: 0, g: 0, b: 0, a: 0.56078434}
   m_FlipX: 0
@@ -2910,7 +2984,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &5846417119165642209
 GameObject:
@@ -2946,6 +3019,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &4738245620662852333
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -2961,6 +3035,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -2982,9 +3061,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 11
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -2994,7 +3075,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 0
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &6038053000431390531
 GameObject:
@@ -3005,7 +3085,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7406504535729582095}
-  - component: {fileID: 5724623916919809637}
   m_Layer: 0
   m_Name: PivotFront
   m_TagString: Untagged
@@ -3029,18 +3108,6 @@ Transform:
   - {fileID: 3538352037516517094}
   m_Father: {fileID: 6200374566260596371}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5724623916919809637
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6038053000431390531}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c562f92f3b8b435d98ac3b65547b755, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &6154482530353633067
 GameObject:
   m_ObjectHideFlags: 0
@@ -3082,7 +3149,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3901882185511030209}
-  - component: {fileID: 3149321162311331626}
   m_Layer: 0
   m_Name: PivotBack
   m_TagString: Untagged
@@ -3106,18 +3172,6 @@ Transform:
   - {fileID: 9080389884624682926}
   m_Father: {fileID: 7865062587480991441}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3149321162311331626
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6240141828786717446}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c562f92f3b8b435d98ac3b65547b755, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &6320603070870931118
 GameObject:
   m_ObjectHideFlags: 0
@@ -3226,7 +3280,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8270973658468247303}
-  - component: {fileID: 8041430097417943308}
   m_Layer: 0
   m_Name: PivotBack
   m_TagString: Untagged
@@ -3250,18 +3303,6 @@ Transform:
   - {fileID: 1098840357353813705}
   m_Father: {fileID: 916701258680833870}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8041430097417943308
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7106917796706165914}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c562f92f3b8b435d98ac3b65547b755, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &7108397277025291102
 GameObject:
   m_ObjectHideFlags: 0
@@ -3296,6 +3337,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &2557735343900025140
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -3311,6 +3353,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -3332,9 +3379,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -100
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 55bcacee5fd41654190caeb4abc46562, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -3344,7 +3393,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &7342711075099943135
 GameObject:
@@ -3387,7 +3435,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3985968558322286105}
-  - component: {fileID: 8123564366354754570}
   m_Layer: 0
   m_Name: PivotFront
   m_TagString: Untagged
@@ -3411,18 +3458,6 @@ Transform:
   - {fileID: 7456911924487216634}
   m_Father: {fileID: 916701258680833870}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8123564366354754570
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7540020716145197607}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c562f92f3b8b435d98ac3b65547b755, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &7812205211730900977
 GameObject:
   m_ObjectHideFlags: 0
@@ -3490,6 +3525,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &6525601151578213241
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -3505,6 +3541,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -3526,9 +3567,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -11
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 142443694952996111, guid: e17d600fcd74948bd8547a87f8f5839a, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -3538,7 +3581,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &7934942811555704911
 GameObject:
@@ -3582,7 +3624,6 @@ GameObject:
   m_Component:
   - component: {fileID: 3538352037516517094}
   - component: {fileID: 390087844553573358}
-  - component: {fileID: 769824759627697303}
   m_Layer: 0
   m_Name: Front
   m_TagString: Untagged
@@ -3607,6 +3648,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &390087844553573358
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -3622,6 +3664,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -3643,9 +3690,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 7
+  m_MaskInteraction: 0
   m_Sprite: {fileID: -659639939, guid: 36f759892f0769b42aeec738b5a2fce9, type: 3}
   m_Color: {r: 0.2784314, g: 0.101960786, b: 0.101960786, a: 1}
   m_FlipX: 0
@@ -3655,20 +3704,7 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &769824759627697303
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8022743759705025628}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c562f92f3b8b435d98ac3b65547b755, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &8043523429204040037
 GameObject:
   m_ObjectHideFlags: 0
@@ -3710,7 +3746,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2010908753566771018}
-  - component: {fileID: 2301770551668183435}
   m_Layer: 0
   m_Name: Root
   m_TagString: Untagged
@@ -3736,535 +3771,6 @@ Transform:
   - {fileID: 2704990831573676511}
   m_Father: {fileID: 863728045429105316}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: -3.285}
---- !u!114 &2301770551668183435
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8053450317747095867}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5084db87f5a3218479da5aa1e18581d6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  matchingTables:
-  - UnitType: Unit
-    PartType: Eye
-    PartSubType: 
-    Index: 0
-    Dir: 
-    Structure: Back
-    ItemPath: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye0
-    MaskIndex: 0
-    renderer: {fileID: 2264050988276513019}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Eye
-    PartSubType: 
-    Index: 0
-    Dir: 
-    Structure: Front
-    ItemPath: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye0
-    MaskIndex: 0
-    renderer: {fileID: 4113437992788611280}
-    Color:
-      serializedVersion: 2
-      rgba: 4280690289
-  - UnitType: Unit
-    PartType: Eye
-    PartSubType: 
-    Index: 0
-    Dir: 
-    Structure: Back
-    ItemPath: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye0
-    MaskIndex: 0
-    renderer: {fileID: 6630067573102573472}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Eye
-    PartSubType: 
-    Index: 0
-    Dir: 
-    Structure: Front
-    ItemPath: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye0
-    MaskIndex: 0
-    renderer: {fileID: 8699140138053719064}
-    Color:
-      serializedVersion: 2
-      rgba: 4280690289
-  - UnitType: Unit
-    PartType: Body
-    PartSubType: 
-    Index: 1
-    Dir: 
-    Structure: Head
-    ItemPath: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_1
-    MaskIndex: 0
-    renderer: {fileID: 7539003564711685358}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Body
-    PartSubType: 
-    Index: 1
-    Dir: 
-    Structure: Body
-    ItemPath: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_1
-    MaskIndex: 0
-    renderer: {fileID: 1700998469644013282}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Body
-    PartSubType: 
-    Index: 1
-    Dir: 
-    Structure: Arm_L
-    ItemPath: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_1
-    MaskIndex: 0
-    renderer: {fileID: 2815317062960698526}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Body
-    PartSubType: 
-    Index: 1
-    Dir: 
-    Structure: Arm_R
-    ItemPath: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_1
-    MaskIndex: 0
-    renderer: {fileID: 601139407040464559}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Body
-    PartSubType: 
-    Index: 1
-    Dir: 
-    Structure: Foot_L
-    ItemPath: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_1
-    MaskIndex: 0
-    renderer: {fileID: 1293430670264366056}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Body
-    PartSubType: 
-    Index: 1
-    Dir: 
-    Structure: Foot_R
-    ItemPath: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_1
-    MaskIndex: 0
-    renderer: {fileID: 7563743092883002638}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Hair
-    PartSubType: 
-    Index: 2
-    Dir: 
-    Structure: Hair
-    ItemPath: Addons/Ver121/0_Unit/0_Sprite/0_Hair/Normal_Hair1
-    MaskIndex: 0
-    renderer: {fileID: 2950013340967838287}
-    Color:
-      serializedVersion: 2
-      rgba: 4280690289
-  - UnitType: Unit
-    PartType: FaceHair
-    PartSubType: 
-    Index: 3
-    Dir: 
-    Structure: FaceHair
-    ItemPath: Addons/Legacy/0_Unit/0_Sprite/1_FaceHair/FaceHair_5
-    MaskIndex: 0
-    renderer: {fileID: 126039148379210684}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Cloth
-    PartSubType: 
-    Index: 4
-    Dir: 
-    Structure: Left
-    ItemPath: Addons/PaladinSet/Unit/0_Sprite/2_Cloth/Cloth_Left_03
-    MaskIndex: 0
-    renderer: {fileID: 3407658912011751867}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Cloth
-    PartSubType: 
-    Index: 4
-    Dir: 
-    Structure: Right
-    ItemPath: Addons/PaladinSet/Unit/0_Sprite/2_Cloth/Cloth_Right_03
-    MaskIndex: 0
-    renderer: {fileID: 3669976029715920080}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Cloth
-    PartSubType: 
-    Index: 4
-    Dir: 
-    Structure: Body
-    ItemPath: Addons/PaladinSet/Unit/0_Sprite/2_Cloth/Cloth_Body_03
-    MaskIndex: 0
-    renderer: {fileID: 9034525983511276127}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Pant
-    PartSubType: 
-    Index: 5
-    Dir: 
-    Structure: Right
-    ItemPath: Addons/Legacy/0_Unit/0_Sprite/3_Pant/Foot_4
-    MaskIndex: 0
-    renderer: {fileID: 6525601151578213241}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Pant
-    PartSubType: 
-    Index: 5
-    Dir: 
-    Structure: Left
-    ItemPath: Addons/Legacy/0_Unit/0_Sprite/3_Pant/Foot_4
-    MaskIndex: 0
-    renderer: {fileID: 3105685734298428608}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Helmet
-    PartSubType: 
-    Index: 6
-    Dir: Back
-    Structure: Helmet
-    ItemPath: 
-    MaskIndex: 0
-    renderer: {fileID: 4738245620662852333}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Helmet
-    PartSubType: 
-    Index: 6
-    Dir: Front
-    Structure: Helmet
-    ItemPath: Addons/PaladinSet/Unit/0_Sprite/4_Helmet/Helmet_02
-    MaskIndex: 0
-    renderer: {fileID: 8077420803368346494}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Armor
-    PartSubType: 
-    Index: 7
-    Dir: 
-    Structure: Body
-    ItemPath: Addons/PaladinSet/Unit/0_Sprite/5_Armor/Armor_Body_02
-    MaskIndex: 0
-    renderer: {fileID: 7438704432744454923}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Armor
-    PartSubType: 
-    Index: 7
-    Dir: 
-    Structure: Left
-    ItemPath: 
-    MaskIndex: 0
-    renderer: {fileID: 4513393729216800973}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Armor
-    PartSubType: 
-    Index: 7
-    Dir: 
-    Structure: Right
-    ItemPath: 
-    MaskIndex: 0
-    renderer: {fileID: 981336275029918398}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Back
-    PartSubType: 
-    Index: 9
-    Dir: 
-    Structure: Back
-    ItemPath: Addons/Legacy/0_Unit/0_Sprite/7_Back/Back_3
-    MaskIndex: 0
-    renderer: {fileID: 2557735343900025140}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Weapons
-    PartSubType: Sword
-    Index: 10
-    Dir: Left
-    Structure: Weapons
-    ItemPath: 
-    MaskIndex: 0
-    renderer: {fileID: 4155748792851694348}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Weapons
-    PartSubType: Sword
-    Index: 10
-    Dir: Right
-    Structure: Weapons
-    ItemPath: Addons/PaladinSet/Unit/0_Sprite/6_Weapons/0_Sword/Weapons_Sword_04
-    MaskIndex: 0
-    renderer: {fileID: 4235947446912057754}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Weapons
-    PartSubType: Axe
-    Index: 11
-    Dir: Left
-    Structure: Weapons
-    ItemPath: 
-    MaskIndex: 0
-    renderer: {fileID: 4155748792851694348}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Weapons
-    PartSubType: Axe
-    Index: 11
-    Dir: Right
-    Structure: Weapons
-    ItemPath: 
-    MaskIndex: 0
-    renderer: {fileID: 4235947446912057754}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Weapons
-    PartSubType: Bow
-    Index: 12
-    Dir: Left
-    Structure: Weapons
-    ItemPath: 
-    MaskIndex: 0
-    renderer: {fileID: 4155748792851694348}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Weapons
-    PartSubType: Bow
-    Index: 12
-    Dir: Right
-    Structure: Weapons
-    ItemPath: 
-    MaskIndex: 0
-    renderer: {fileID: 4235947446912057754}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Weapons
-    PartSubType: Shield
-    Index: 13
-    Dir: Left
-    Structure: Weapons
-    ItemPath: Addons/PaladinSet/Unit/0_Sprite/6_Weapons/3_Shield/Shield_01
-    MaskIndex: 0
-    renderer: {fileID: 4576353584512559756}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Weapons
-    PartSubType: Shield
-    Index: 13
-    Dir: Right
-    Structure: Weapons
-    ItemPath: 
-    MaskIndex: 0
-    renderer: {fileID: 2394326885189886746}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Weapons
-    PartSubType: Spear
-    Index: 14
-    Dir: Left
-    Structure: Weapons
-    ItemPath: 
-    MaskIndex: 0
-    renderer: {fileID: 4155748792851694348}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Weapons
-    PartSubType: Spear
-    Index: 14
-    Dir: Right
-    Structure: Weapons
-    ItemPath: 
-    MaskIndex: 0
-    renderer: {fileID: 4235947446912057754}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Weapons
-    PartSubType: Wand
-    Index: 15
-    Dir: Left
-    Structure: Weapons
-    ItemPath: 
-    MaskIndex: 0
-    renderer: {fileID: 4155748792851694348}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Weapons
-    PartSubType: Wand
-    Index: 15
-    Dir: Right
-    Structure: Weapons
-    ItemPath: 
-    MaskIndex: 0
-    renderer: {fileID: 4235947446912057754}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Weapons
-    PartSubType: Hammer
-    Index: 16
-    Dir: Left
-    Structure: Weapons
-    ItemPath: 
-    MaskIndex: 0
-    renderer: {fileID: 4155748792851694348}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Weapons
-    PartSubType: Hammer
-    Index: 16
-    Dir: Right
-    Structure: Weapons
-    ItemPath: 
-    MaskIndex: 0
-    renderer: {fileID: 4235947446912057754}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Weapons
-    PartSubType: Dagger
-    Index: 17
-    Dir: Left
-    Structure: Weapons
-    ItemPath: 
-    MaskIndex: 0
-    renderer: {fileID: 4155748792851694348}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Weapons
-    PartSubType: Dagger
-    Index: 17
-    Dir: Right
-    Structure: Weapons
-    ItemPath: 
-    MaskIndex: 0
-    renderer: {fileID: 4235947446912057754}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Weapons
-    PartSubType: Mace
-    Index: 18
-    Dir: Left
-    Structure: Weapons
-    ItemPath: 
-    MaskIndex: 0
-    renderer: {fileID: 4155748792851694348}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Weapons
-    PartSubType: Mace
-    Index: 18
-    Dir: Right
-    Structure: Weapons
-    ItemPath: 
-    MaskIndex: 0
-    renderer: {fileID: 4235947446912057754}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Weapons
-    PartSubType: Others
-    Index: 19
-    Dir: Left
-    Structure: Weapons
-    ItemPath: 
-    MaskIndex: 0
-    renderer: {fileID: 4155748792851694348}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
-  - UnitType: Unit
-    PartType: Weapons
-    PartSubType: Others
-    Index: 19
-    Dir: Right
-    Structure: Weapons
-    ItemPath: 
-    MaskIndex: 0
-    renderer: {fileID: 4235947446912057754}
-    Color:
-      serializedVersion: 2
-      rgba: 4294967295
 --- !u!1 &8194202660314168396
 GameObject:
   m_ObjectHideFlags: 0
@@ -4338,7 +3844,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2856179712875484857}
-  - component: {fileID: 82758077756564101}
   m_Layer: 5
   m_Name: SPUM_20251119180622555
   m_TagString: Untagged
@@ -4366,3341 +3871,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -170}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &82758077756564101
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8403924883201368723}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 28ac21711b0ec40a0812d33a586eb7ec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _version: 182
-  EditChk: 0
-  _code: SPUM_20251119180622555
-  _anim: {fileID: 4771713934731698027}
-  OverrideController: {fileID: 0}
-  UnitType: Unit
-  spumPackages:
-  - Name: Legacy
-    Path: Assets/SPUM/Resources/Addons
-    Version: 
-    CreationDate: 2025-11-19 13:34:15
-    SpumAnimationData:
-    - index: 0
-      Name: 0_idle.anim
-      StateType: IDLE
-      ClipPath: Addons/Legacy/0_Unit/1_Animation/00_Idle/0_idle.anim
-      HasData: 0
-      UnitType: Unit
-      SubCategory: 
-    - index: 0
-      Name: 0_move.anim
-      StateType: MOVE
-      ClipPath: Addons/Legacy/0_Unit/1_Animation/01_Move/0_move.anim
-      HasData: 0
-      UnitType: Unit
-      SubCategory: 
-    - index: 0
-      Name: 0_Attack_Normal.anim
-      StateType: ATTACK
-      ClipPath: Addons/Legacy/0_Unit/1_Animation/02_Attack/00_MeleeAttack/0_Attack_Normal.anim
-      HasData: 0
-      UnitType: Unit
-      SubCategory: MeleeAttack
-    - index: 2
-      Name: 1_Skill_Normal.anim
-      StateType: ATTACK
-      ClipPath: Addons/Legacy/0_Unit/1_Animation/02_Attack/00_MeleeAttack/1_Skill_Normal.anim
-      HasData: 0
-      UnitType: Unit
-      SubCategory: MeleeAttack
-    - index: 2
-      Name: 0_Attack_Bow.anim
-      StateType: ATTACK
-      ClipPath: Addons/Legacy/0_Unit/1_Animation/02_Attack/01_LongRangeAttack/0_Attack_Bow.anim
-      HasData: 0
-      UnitType: Unit
-      SubCategory: LongRangeAttack
-    - index: 2
-      Name: 1_Skill_Bow.anim
-      StateType: ATTACK
-      ClipPath: Addons/Legacy/0_Unit/1_Animation/02_Attack/01_LongRangeAttack/1_Skill_Bow.anim
-      HasData: 0
-      UnitType: Unit
-      SubCategory: LongRangeAttack
-    - index: 2
-      Name: 0_Attack_Magic.anim
-      StateType: ATTACK
-      ClipPath: Addons/Legacy/0_Unit/1_Animation/02_Attack/02_MagicAttack/0_Attack_Magic.anim
-      HasData: 0
-      UnitType: Unit
-      SubCategory: MagicAttack
-    - index: 2
-      Name: 1_Skill_Magic.anim
-      StateType: ATTACK
-      ClipPath: Addons/Legacy/0_Unit/1_Animation/02_Attack/02_MagicAttack/1_Skill_Magic.anim
-      HasData: 0
-      UnitType: Unit
-      SubCategory: MagicAttack
-    - index: 0
-      Name: 0_Damaged.anim
-      StateType: DAMAGED
-      ClipPath: Addons/Legacy/0_Unit/1_Animation/03_Damaged/0_Damaged.anim
-      HasData: 1
-      UnitType: Unit
-      SubCategory: 
-    - index: 0
-      Name: 0_Die.anim
-      StateType: DEATH
-      ClipPath: Addons/Legacy/0_Unit/1_Animation/04_Death/0_Die.anim
-      HasData: 1
-      UnitType: Unit
-      SubCategory: 
-    - index: 0
-      Name: 0_Debuff_Stun.anim
-      StateType: DEBUFF
-      ClipPath: Addons/Legacy/0_Unit/1_Animation/05_Debuff/0_Debuff_Stun.anim
-      HasData: 1
-      UnitType: Unit
-      SubCategory: 
-    - index: 0
-      Name: 0_Conecntrate.anim
-      StateType: OTHER
-      ClipPath: Addons/Legacy/0_Unit/1_Animation/06_Other/00_Concentrate/0_Conecntrate.anim
-      HasData: 1
-      UnitType: Unit
-      SubCategory: Concentrate
-    - index: 0
-      Name: 0_Buff.anim
-      StateType: OTHER
-      ClipPath: Addons/Legacy/0_Unit/1_Animation/06_Other/01_Buff/0_Buff.anim
-      HasData: 1
-      UnitType: Unit
-      SubCategory: Buff
-    - index: 0
-      Name: 0_Sit.anim
-      StateType: OTHER
-      ClipPath: Addons/Legacy/0_Unit/1_Animation/06_Other/02_Etc/0_Sit.anim
-      HasData: 1
-      UnitType: Unit
-      SubCategory: Etc
-    - index: 0
-      Name: 0_idle.anim
-      StateType: IDLE
-      ClipPath: Addons/Legacy/1_Horse/1_Animation/00_Idle/0_idle.anim
-      HasData: 1
-      UnitType: Horse
-      SubCategory: 
-    - index: 0
-      Name: 1_run.anim
-      StateType: MOVE
-      ClipPath: Addons/Legacy/1_Horse/1_Animation/01_Move/1_run.anim
-      HasData: 1
-      UnitType: Horse
-      SubCategory: 
-    - index: 0
-      Name: Walk_Run 1.anim
-      StateType: MOVE
-      ClipPath: Addons/Legacy/1_Horse/1_Animation/01_Move/Walk_Run 1.anim
-      HasData: 1
-      UnitType: Horse
-      SubCategory: 
-    - index: 0
-      Name: 2_Attack_Normal.anim
-      StateType: ATTACK
-      ClipPath: Addons/Legacy/1_Horse/1_Animation/02_Attack/00_MeleeAttack/2_Attack_Normal.anim
-      HasData: 1
-      UnitType: Horse
-      SubCategory: MeleeAttack
-    - index: 0
-      Name: 2_Attack_Bow.anim
-      StateType: ATTACK
-      ClipPath: Addons/Legacy/1_Horse/1_Animation/02_Attack/01_LongRangeAttack/2_Attack_Bow.anim
-      HasData: 1
-      UnitType: Horse
-      SubCategory: LongRangeAttack
-    - index: 0
-      Name: 2_Attack_Magic.anim
-      StateType: ATTACK
-      ClipPath: Addons/Legacy/1_Horse/1_Animation/02_Attack/02_MagicAttack/2_Attack_Magic.anim
-      HasData: 1
-      UnitType: Horse
-      SubCategory: MagicAttack
-    - index: 0
-      Name: 3_damaged.anim
-      StateType: DAMAGED
-      ClipPath: Addons/Legacy/1_Horse/1_Animation/03_Damaged/3_damaged.anim
-      HasData: 1
-      UnitType: Horse
-      SubCategory: 
-    - index: 0
-      Name: 4_Death.anim
-      StateType: DEATH
-      ClipPath: Addons/Legacy/1_Horse/1_Animation/04_Death/4_Death.anim
-      HasData: 1
-      UnitType: Horse
-      SubCategory: 
-    - index: 0
-      Name: 5_debuff.anim
-      StateType: DEBUFF
-      ClipPath: Addons/Legacy/1_Horse/1_Animation/05_Debuff/5_debuff.anim
-      HasData: 1
-      UnitType: Horse
-      SubCategory: 
-    - index: 0
-      Name: Conventrate.anim
-      StateType: OTHER
-      ClipPath: Addons/Legacy/1_Horse/1_Animation/06_Other/00_Concentrate/Conventrate.anim
-      HasData: 1
-      UnitType: Horse
-      SubCategory: Concentrate
-    - index: 0
-      Name: OTHER 1.anim
-      StateType: OTHER
-      ClipPath: Addons/Legacy/1_Horse/1_Animation/06_Other/01_Buff/OTHER 1.anim
-      HasData: 1
-      UnitType: Horse
-      SubCategory: Buff
-    - index: 0
-      Name: Ect.anim
-      StateType: OTHER
-      ClipPath: Addons/Legacy/1_Horse/1_Animation/06_Other/02_Etc/Ect.anim
-      HasData: 1
-      UnitType: Horse
-      SubCategory: Etc
-    SpumTextureData:
-    - Name: Eye
-      UnitType: Unit
-      PartType: Eye
-      SubType: Back
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye
-    - Name: Eye
-      UnitType: Unit
-      PartType: Eye
-      SubType: Front
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye
-    - Name: Eye0
-      UnitType: Unit
-      PartType: Eye
-      SubType: Back
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye0
-    - Name: Eye0
-      UnitType: Unit
-      PartType: Eye
-      SubType: Front
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye0
-    - Name: Eye1
-      UnitType: Unit
-      PartType: Eye
-      SubType: Back
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye1
-    - Name: Eye1
-      UnitType: Unit
-      PartType: Eye
-      SubType: Front
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye1
-    - Name: Eye2
-      UnitType: Unit
-      PartType: Eye
-      SubType: Back
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye2
-    - Name: Eye2
-      UnitType: Unit
-      PartType: Eye
-      SubType: Front
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye2
-    - Name: Eye3
-      UnitType: Unit
-      PartType: Eye
-      SubType: Back
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye3
-    - Name: Eye3
-      UnitType: Unit
-      PartType: Eye
-      SubType: Front
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye3
-    - Name: Eye4
-      UnitType: Unit
-      PartType: Eye
-      SubType: Back
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye4
-    - Name: Eye4
-      UnitType: Unit
-      PartType: Eye
-      SubType: Front
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye4
-    - Name: Eye5
-      UnitType: Unit
-      PartType: Eye
-      SubType: Back
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye5
-    - Name: Eye5
-      UnitType: Unit
-      PartType: Eye
-      SubType: Front
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye5
-    - Name: Eye6
-      UnitType: Unit
-      PartType: Eye
-      SubType: Back
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye6
-    - Name: Eye6
-      UnitType: Unit
-      PartType: Eye
-      SubType: Front
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye6
-    - Name: Eye7
-      UnitType: Unit
-      PartType: Eye
-      SubType: Back
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye7
-    - Name: Eye7
-      UnitType: Unit
-      PartType: Eye
-      SubType: Front
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye7
-    - Name: Eye8
-      UnitType: Unit
-      PartType: Eye
-      SubType: Back
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye8
-    - Name: Eye8
-      UnitType: Unit
-      PartType: Eye
-      SubType: Front
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye8
-    - Name: Eye9
-      UnitType: Unit
-      PartType: Eye
-      SubType: Back
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye9
-    - Name: Eye9
-      UnitType: Unit
-      PartType: Eye
-      SubType: Front
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye9
-    - Name: Eye10
-      UnitType: Unit
-      PartType: Eye
-      SubType: Back
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye10
-    - Name: Eye10
-      UnitType: Unit
-      PartType: Eye
-      SubType: Front
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye10
-    - Name: Eye11
-      UnitType: Unit
-      PartType: Eye
-      SubType: Back
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye11
-    - Name: Eye11
-      UnitType: Unit
-      PartType: Eye
-      SubType: Front
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye11
-    - Name: Eye16
-      UnitType: Unit
-      PartType: Eye
-      SubType: Back
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye16
-    - Name: Eye16
-      UnitType: Unit
-      PartType: Eye
-      SubType: Front
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye16
-    - Name: Eye_Close
-      UnitType: Unit
-      PartType: Eye
-      SubType: Back
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye_Close
-    - Name: Eye_Close
-      UnitType: Unit
-      PartType: Eye
-      SubType: Front
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye_Close
-    - Name: Hair_1
-      UnitType: Unit
-      PartType: Hair
-      SubType: Hair_1
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Hair/Hair_1
-    - Name: Hair_2
-      UnitType: Unit
-      PartType: Hair
-      SubType: Hair_2
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Hair/Hair_2
-    - Name: Hair_3
-      UnitType: Unit
-      PartType: Hair
-      SubType: Hair_3
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Hair/Hair_3
-    - Name: Hair_4
-      UnitType: Unit
-      PartType: Hair
-      SubType: Hair_4
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Hair/Hair_4
-    - Name: Hair_5
-      UnitType: Unit
-      PartType: Hair
-      SubType: Hair_5
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Hair/Hair_5
-    - Name: Hair_6
-      UnitType: Unit
-      PartType: Hair
-      SubType: Hair_6
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Hair/Hair_6
-    - Name: Hair_7
-      UnitType: Unit
-      PartType: Hair
-      SubType: Hair_7
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Hair/Hair_7
-    - Name: Hair_8
-      UnitType: Unit
-      PartType: Hair
-      SubType: Hair_8
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Hair/Hair_8
-    - Name: Hair_9
-      UnitType: Unit
-      PartType: Hair
-      SubType: Hair_9
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/0_Hair/Hair_9
-    - Name: Devil_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Arm_L
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Devil_1
-    - Name: Devil_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Arm_R
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Devil_1
-    - Name: Devil_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Devil_1
-    - Name: Devil_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Foot_L
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Devil_1
-    - Name: Devil_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Foot_R
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Devil_1
-    - Name: Devil_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Head
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Devil_1
-    - Name: Elf_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Arm_L
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Elf_1
-    - Name: Elf_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Arm_R
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Elf_1
-    - Name: Elf_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Elf_1
-    - Name: Elf_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Foot_L
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Elf_1
-    - Name: Elf_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Foot_R
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Elf_1
-    - Name: Elf_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Head
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Elf_1
-    - Name: Elf_2
-      UnitType: Unit
-      PartType: Body
-      SubType: Arm_L
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Elf_2
-    - Name: Elf_2
-      UnitType: Unit
-      PartType: Body
-      SubType: Arm_R
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Elf_2
-    - Name: Elf_2
-      UnitType: Unit
-      PartType: Body
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Elf_2
-    - Name: Elf_2
-      UnitType: Unit
-      PartType: Body
-      SubType: Foot_L
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Elf_2
-    - Name: Elf_2
-      UnitType: Unit
-      PartType: Body
-      SubType: Foot_R
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Elf_2
-    - Name: Elf_2
-      UnitType: Unit
-      PartType: Body
-      SubType: Head
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Elf_2
-    - Name: Human_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Arm_R
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_1
-    - Name: Human_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Arm_L
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_1
-    - Name: Human_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Foot_R
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_1
-    - Name: Human_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_1
-    - Name: Human_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Foot_L
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_1
-    - Name: Human_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Head
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_1
-    - Name: Human_2
-      UnitType: Unit
-      PartType: Body
-      SubType: Arm_L
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_2
-    - Name: Human_2
-      UnitType: Unit
-      PartType: Body
-      SubType: Arm_R
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_2
-    - Name: Human_2
-      UnitType: Unit
-      PartType: Body
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_2
-    - Name: Human_2
-      UnitType: Unit
-      PartType: Body
-      SubType: Foot_L
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_2
-    - Name: Human_2
-      UnitType: Unit
-      PartType: Body
-      SubType: Foot_R
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_2
-    - Name: Human_2
-      UnitType: Unit
-      PartType: Body
-      SubType: Head
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_2
-    - Name: Human_3
-      UnitType: Unit
-      PartType: Body
-      SubType: Arm_L
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_3
-    - Name: Human_3
-      UnitType: Unit
-      PartType: Body
-      SubType: Arm_R
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_3
-    - Name: Human_3
-      UnitType: Unit
-      PartType: Body
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_3
-    - Name: Human_3
-      UnitType: Unit
-      PartType: Body
-      SubType: Foot_L
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_3
-    - Name: Human_3
-      UnitType: Unit
-      PartType: Body
-      SubType: Foot_R
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_3
-    - Name: Human_3
-      UnitType: Unit
-      PartType: Body
-      SubType: Head
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_3
-    - Name: Human_4
-      UnitType: Unit
-      PartType: Body
-      SubType: Arm_L
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_4
-    - Name: Human_4
-      UnitType: Unit
-      PartType: Body
-      SubType: Arm_R
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_4
-    - Name: Human_4
-      UnitType: Unit
-      PartType: Body
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_4
-    - Name: Human_4
-      UnitType: Unit
-      PartType: Body
-      SubType: Foot_L
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_4
-    - Name: Human_4
-      UnitType: Unit
-      PartType: Body
-      SubType: Foot_R
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_4
-    - Name: Human_4
-      UnitType: Unit
-      PartType: Body
-      SubType: Head
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_4
-    - Name: Human_5
-      UnitType: Unit
-      PartType: Body
-      SubType: Arm_L
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_5
-    - Name: Human_5
-      UnitType: Unit
-      PartType: Body
-      SubType: Arm_R
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_5
-    - Name: Human_5
-      UnitType: Unit
-      PartType: Body
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_5
-    - Name: Human_5
-      UnitType: Unit
-      PartType: Body
-      SubType: Foot_L
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_5
-    - Name: Human_5
-      UnitType: Unit
-      PartType: Body
-      SubType: Foot_R
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_5
-    - Name: Human_5
-      UnitType: Unit
-      PartType: Body
-      SubType: Head
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_5
-    - Name: Orc_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Arm_L
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Orc_1
-    - Name: Orc_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Arm_R
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Orc_1
-    - Name: Orc_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Orc_1
-    - Name: Orc_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Foot_L
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Orc_1
-    - Name: Orc_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Foot_R
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Orc_1
-    - Name: Orc_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Head
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Orc_1
-    - Name: Orc_2
-      UnitType: Unit
-      PartType: Body
-      SubType: Arm_L
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Orc_2
-    - Name: Orc_2
-      UnitType: Unit
-      PartType: Body
-      SubType: Arm_R
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Orc_2
-    - Name: Orc_2
-      UnitType: Unit
-      PartType: Body
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Orc_2
-    - Name: Orc_2
-      UnitType: Unit
-      PartType: Body
-      SubType: Foot_L
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Orc_2
-    - Name: Orc_2
-      UnitType: Unit
-      PartType: Body
-      SubType: Foot_R
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Orc_2
-    - Name: Orc_2
-      UnitType: Unit
-      PartType: Body
-      SubType: Head
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Orc_2
-    - Name: Orc_3
-      UnitType: Unit
-      PartType: Body
-      SubType: Arm_L
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Orc_3
-    - Name: Orc_3
-      UnitType: Unit
-      PartType: Body
-      SubType: Arm_R
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Orc_3
-    - Name: Orc_3
-      UnitType: Unit
-      PartType: Body
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Orc_3
-    - Name: Orc_3
-      UnitType: Unit
-      PartType: Body
-      SubType: Foot_L
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Orc_3
-    - Name: Orc_3
-      UnitType: Unit
-      PartType: Body
-      SubType: Foot_R
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Orc_3
-    - Name: Orc_3
-      UnitType: Unit
-      PartType: Body
-      SubType: Head
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Orc_3
-    - Name: Orc_4
-      UnitType: Unit
-      PartType: Body
-      SubType: Arm_L
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Orc_4
-    - Name: Orc_4
-      UnitType: Unit
-      PartType: Body
-      SubType: Arm_R
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Orc_4
-    - Name: Orc_4
-      UnitType: Unit
-      PartType: Body
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Orc_4
-    - Name: Orc_4
-      UnitType: Unit
-      PartType: Body
-      SubType: Foot_L
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Orc_4
-    - Name: Orc_4
-      UnitType: Unit
-      PartType: Body
-      SubType: Foot_R
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Orc_4
-    - Name: Orc_4
-      UnitType: Unit
-      PartType: Body
-      SubType: Head
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Orc_4
-    - Name: Skelton_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Arm_L
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Skelton_1
-    - Name: Skelton_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Arm_R
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Skelton_1
-    - Name: Skelton_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Skelton_1
-    - Name: Skelton_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Foot_L
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Skelton_1
-    - Name: Skelton_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Foot_R
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Skelton_1
-    - Name: Skelton_1
-      UnitType: Unit
-      PartType: Body
-      SubType: Head
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_Body/Skelton_1
-    - Name: FaceHair_1
-      UnitType: Unit
-      PartType: FaceHair
-      SubType: FaceHair_1
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_FaceHair/FaceHair_1
-    - Name: FaceHair_2
-      UnitType: Unit
-      PartType: FaceHair
-      SubType: FaceHair_2
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_FaceHair/FaceHair_2
-    - Name: FaceHair_3
-      UnitType: Unit
-      PartType: FaceHair
-      SubType: FaceHair_3
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_FaceHair/FaceHair_3
-    - Name: FaceHair_4
-      UnitType: Unit
-      PartType: FaceHair
-      SubType: FaceHair_4
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_FaceHair/FaceHair_4
-    - Name: FaceHair_5
-      UnitType: Unit
-      PartType: FaceHair
-      SubType: FaceHair_5
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/1_FaceHair/FaceHair_5
-    - Name: Cloth1
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_1
-    - Name: Cloth1
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_1
-    - Name: Cloth1
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_1
-    - Name: Cloth2
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_2
-    - Name: Cloth2
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_2
-    - Name: Cloth2
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_2
-    - Name: Cloth3
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_3
-    - Name: Cloth3
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_3
-    - Name: Cloth3
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_3
-    - Name: Cloth4
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_4
-    - Name: Cloth4
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_4
-    - Name: Cloth4
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_4
-    - Name: Cloth5
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_5
-    - Name: Cloth5
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_5
-    - Name: Cloth5
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_5
-    - Name: Cloth6
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_6
-    - Name: Cloth6
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_6
-    - Name: Cloth6
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_6
-    - Name: Cloth7
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_7
-    - Name: Cloth7
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_7
-    - Name: Cloth7
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_7
-    - Name: Cloth8
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_8
-    - Name: Cloth8
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_8
-    - Name: Cloth8
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_8
-    - Name: Cloth9
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_9
-    - Name: Cloth10
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_10
-    - Name: Cloth10
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_10
-    - Name: Cloth10
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_10
-    - Name: Cloth11
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_11
-    - Name: Cloth11
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_11
-    - Name: Cloth11
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_11
-    - Name: Cloth12
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_12
-    - Name: Cloth12
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_12
-    - Name: Cloth12
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/Cloth_12
-    - Name: FSRCloth
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/F_SR_Cloth
-    - Name: FSRCloth
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/F_SR_Cloth
-    - Name: FSRCloth
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/2_Cloth/F_SR_Cloth
-    - Name: FSRPants
-      UnitType: Unit
-      PartType: Pant
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/3_Pant/F_SR_Pants
-    - Name: FSRPants
-      UnitType: Unit
-      PartType: Pant
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/3_Pant/F_SR_Pants
-    - Name: Foot1
-      UnitType: Unit
-      PartType: Pant
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/3_Pant/Foot_1
-    - Name: Foot1
-      UnitType: Unit
-      PartType: Pant
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/3_Pant/Foot_1
-    - Name: Foot2
-      UnitType: Unit
-      PartType: Pant
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/3_Pant/Foot_2
-    - Name: Foot2
-      UnitType: Unit
-      PartType: Pant
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/3_Pant/Foot_2
-    - Name: Foot3
-      UnitType: Unit
-      PartType: Pant
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/3_Pant/Foot_3
-    - Name: Foot3
-      UnitType: Unit
-      PartType: Pant
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/3_Pant/Foot_3
-    - Name: Foot4
-      UnitType: Unit
-      PartType: Pant
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/3_Pant/Foot_4
-    - Name: Foot4
-      UnitType: Unit
-      PartType: Pant
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/3_Pant/Foot_4
-    - Name: F_SR_Helmet
-      UnitType: Unit
-      PartType: Helmet
-      SubType: F_SR_Helmet
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/4_Helmet/F_SR_Helmet
-    - Name: Helmet_1
-      UnitType: Unit
-      PartType: Helmet
-      SubType: Helmet_1
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/4_Helmet/Helmet_1
-    - Name: Helmet_2
-      UnitType: Unit
-      PartType: Helmet
-      SubType: Helmet_2
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/4_Helmet/Helmet_2
-    - Name: Helmet_3
-      UnitType: Unit
-      PartType: Helmet
-      SubType: Helmet_3
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/4_Helmet/Helmet_3
-    - Name: Helmet_4
-      UnitType: Unit
-      PartType: Helmet
-      SubType: Helmet_4
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/4_Helmet/Helmet_4
-    - Name: Helmet_5
-      UnitType: Unit
-      PartType: Helmet
-      SubType: Helmet_5
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/4_Helmet/Helmet_5
-    - Name: Helmet_6
-      UnitType: Unit
-      PartType: Helmet
-      SubType: Helmet_6
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/4_Helmet/Helmet_6
-    - Name: Helmet_7
-      UnitType: Unit
-      PartType: Helmet
-      SubType: Helmet_7
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/4_Helmet/Helmet_7
-    - Name: Helmet_8
-      UnitType: Unit
-      PartType: Helmet
-      SubType: Helmet_8
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/4_Helmet/Helmet_8
-    - Name: Helmet_9
-      UnitType: Unit
-      PartType: Helmet
-      SubType: Helmet_9
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/4_Helmet/Helmet_9
-    - Name: Armor1
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/5_Armor/Armor_1
-    - Name: Armor1
-      UnitType: Unit
-      PartType: Armor
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/5_Armor/Armor_1
-    - Name: Armor1
-      UnitType: Unit
-      PartType: Armor
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/5_Armor/Armor_1
-    - Name: Armor2
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/5_Armor/Armor_2
-    - Name: Armor2
-      UnitType: Unit
-      PartType: Armor
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/5_Armor/Armor_2
-    - Name: Armor2
-      UnitType: Unit
-      PartType: Armor
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/5_Armor/Armor_2
-    - Name: Armor3
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/5_Armor/Armor_3
-    - Name: Armor3
-      UnitType: Unit
-      PartType: Armor
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/5_Armor/Armor_3
-    - Name: Armor3
-      UnitType: Unit
-      PartType: Armor
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/5_Armor/Armor_3
-    - Name: Armor4
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/5_Armor/Armor_4
-    - Name: Armor4
-      UnitType: Unit
-      PartType: Armor
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/5_Armor/Armor_4
-    - Name: Armor4
-      UnitType: Unit
-      PartType: Armor
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/5_Armor/Armor_4
-    - Name: Armor5
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/5_Armor/Armor_5
-    - Name: Armor6
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/5_Armor/Armor_6
-    - Name: Armor7
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/5_Armor/Armor_7
-    - Name: Armor8
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/5_Armor/Armor_8
-    - Name: Armor8
-      UnitType: Unit
-      PartType: Armor
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/5_Armor/Armor_8
-    - Name: Armor8
-      UnitType: Unit
-      PartType: Armor
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/5_Armor/Armor_8
-    - Name: Sword_1
-      UnitType: Unit
-      PartType: Weapons
-      SubType: Sword_1
-      PartSubType: Sword
-      Path: Addons/Legacy/0_Unit/0_Sprite/6_Weapons/0_Sword/Sword_1
-    - Name: Sword_2
-      UnitType: Unit
-      PartType: Weapons
-      SubType: Sword_2
-      PartSubType: Sword
-      Path: Addons/Legacy/0_Unit/0_Sprite/6_Weapons/0_Sword/Sword_2
-    - Name: Sword_3
-      UnitType: Unit
-      PartType: Weapons
-      SubType: Sword_3
-      PartSubType: Sword
-      Path: Addons/Legacy/0_Unit/0_Sprite/6_Weapons/0_Sword/Sword_3
-    - Name: Sword_4
-      UnitType: Unit
-      PartType: Weapons
-      SubType: Sword_4
-      PartSubType: Sword
-      Path: Addons/Legacy/0_Unit/0_Sprite/6_Weapons/0_Sword/Sword_4
-    - Name: Sword_5
-      UnitType: Unit
-      PartType: Weapons
-      SubType: Sword_5
-      PartSubType: Sword
-      Path: Addons/Legacy/0_Unit/0_Sprite/6_Weapons/0_Sword/Sword_5
-    - Name: Sword_6
-      UnitType: Unit
-      PartType: Weapons
-      SubType: Sword_6
-      PartSubType: Sword
-      Path: Addons/Legacy/0_Unit/0_Sprite/6_Weapons/0_Sword/Sword_6
-    - Name: Axe_1
-      UnitType: Unit
-      PartType: Weapons
-      SubType: Axe_1
-      PartSubType: Axe
-      Path: Addons/Legacy/0_Unit/0_Sprite/6_Weapons/1_Axe/Axe_1
-    - Name: Bow_1
-      UnitType: Unit
-      PartType: Weapons
-      SubType: Bow_1
-      PartSubType: Bow
-      Path: Addons/Legacy/0_Unit/0_Sprite/6_Weapons/2_Bow/Bow_1
-    - Name: Shield_1
-      UnitType: Unit
-      PartType: Weapons
-      SubType: Shield_1
-      PartSubType: Shield
-      Path: Addons/Legacy/0_Unit/0_Sprite/6_Weapons/3_Shield/Shield_1
-    - Name: Soon_Spear
-      UnitType: Unit
-      PartType: Weapons
-      SubType: Soon_Spear
-      PartSubType: Spear
-      Path: Addons/Legacy/0_Unit/0_Sprite/6_Weapons/4_Spear/Soon_Spear
-    - Name: Spear_1
-      UnitType: Unit
-      PartType: Weapons
-      SubType: Spear_1
-      PartSubType: Spear
-      Path: Addons/Legacy/0_Unit/0_Sprite/6_Weapons/4_Spear/Spear_1
-    - Name: Ward_1
-      UnitType: Unit
-      PartType: Weapons
-      SubType: Ward_1
-      PartSubType: Wand
-      Path: Addons/Legacy/0_Unit/0_Sprite/6_Weapons/5_Wand/Ward_1
-    - Name: F_SR_Hammer
-      UnitType: Unit
-      PartType: Weapons
-      SubType: F_SR_Hammer
-      PartSubType: Hammer
-      Path: Addons/Legacy/0_Unit/0_Sprite/6_Weapons/6_Hammer/F_SR_Hammer
-    - Name: Back_1
-      UnitType: Unit
-      PartType: Back
-      SubType: Back_1
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/7_Back/Back_1
-    - Name: Back_2
-      UnitType: Unit
-      PartType: Back
-      SubType: Back_2
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/7_Back/Back_2
-    - Name: Back_3
-      UnitType: Unit
-      PartType: Back
-      SubType: Back_3
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/7_Back/Back_3
-    - Name: BowBack_1
-      UnitType: Unit
-      PartType: Back
-      SubType: BowBack_1
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/7_Back/BowBack_1
-    - Name: Soon_Back1
-      UnitType: Unit
-      PartType: Back
-      SubType: Soon_Back1
-      PartSubType: 
-      Path: Addons/Legacy/0_Unit/0_Sprite/7_Back/Soon_Back1
-    - Name: BlackHorse
-      UnitType: Horse
-      PartType: Body
-      SubType: Acc
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/BlackHorse
-    - Name: BlackHorse
-      UnitType: Horse
-      PartType: Body
-      SubType: BodyBack
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/BlackHorse
-    - Name: BlackHorse
-      UnitType: Horse
-      PartType: Body
-      SubType: BodyFront
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/BlackHorse
-    - Name: BlackHorse
-      UnitType: Horse
-      PartType: Body
-      SubType: FootBackBottom
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/BlackHorse
-    - Name: BlackHorse
-      UnitType: Horse
-      PartType: Body
-      SubType: FootBackTop
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/BlackHorse
-    - Name: BlackHorse
-      UnitType: Horse
-      PartType: Body
-      SubType: FootFrontBottom
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/BlackHorse
-    - Name: BlackHorse
-      UnitType: Horse
-      PartType: Body
-      SubType: FootFrontTop
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/BlackHorse
-    - Name: BlackHorse
-      UnitType: Horse
-      PartType: Body
-      SubType: Head
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/BlackHorse
-    - Name: BlackHorse
-      UnitType: Horse
-      PartType: Body
-      SubType: Neck
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/BlackHorse
-    - Name: BlackHorse
-      UnitType: Horse
-      PartType: Body
-      SubType: Tail
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/BlackHorse
-    - Name: Horse1
-      UnitType: Horse
-      PartType: Body
-      SubType: FootFrontBottom
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/Horse1
-    - Name: Horse1
-      UnitType: Horse
-      PartType: Body
-      SubType: BodyFront
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/Horse1
-    - Name: Horse1
-      UnitType: Horse
-      PartType: Body
-      SubType: FootBackBottom
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/Horse1
-    - Name: Horse1
-      UnitType: Horse
-      PartType: Body
-      SubType: FootFrontTop
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/Horse1
-    - Name: Horse1
-      UnitType: Horse
-      PartType: Body
-      SubType: Head
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/Horse1
-    - Name: Horse1
-      UnitType: Horse
-      PartType: Body
-      SubType: BodyBack
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/Horse1
-    - Name: Horse1
-      UnitType: Horse
-      PartType: Body
-      SubType: FootBackTop
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/Horse1
-    - Name: Horse1
-      UnitType: Horse
-      PartType: Body
-      SubType: Neck
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/Horse1
-    - Name: Horse1
-      UnitType: Horse
-      PartType: Body
-      SubType: Tail
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/Horse1
-    - Name: Horse1
-      UnitType: Horse
-      PartType: Body
-      SubType: Acc
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/Horse1
-    - Name: Horse2
-      UnitType: Horse
-      PartType: Body
-      SubType: Acc
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/Horse2
-    - Name: Horse2
-      UnitType: Horse
-      PartType: Body
-      SubType: BodyBack
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/Horse2
-    - Name: Horse2
-      UnitType: Horse
-      PartType: Body
-      SubType: BodyFront
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/Horse2
-    - Name: Horse2
-      UnitType: Horse
-      PartType: Body
-      SubType: FootBackBottom
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/Horse2
-    - Name: Horse2
-      UnitType: Horse
-      PartType: Body
-      SubType: FootBackTop
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/Horse2
-    - Name: Horse2
-      UnitType: Horse
-      PartType: Body
-      SubType: FootFrontBottom
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/Horse2
-    - Name: Horse2
-      UnitType: Horse
-      PartType: Body
-      SubType: FootFrontTop
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/Horse2
-    - Name: Horse2
-      UnitType: Horse
-      PartType: Body
-      SubType: Head
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/Horse2
-    - Name: Horse2
-      UnitType: Horse
-      PartType: Body
-      SubType: Neck
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/Horse2
-    - Name: Horse2
-      UnitType: Horse
-      PartType: Body
-      SubType: Tail
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/Horse2
-    - Name: RedHorse
-      UnitType: Horse
-      PartType: Body
-      SubType: Acc
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/RedHorse
-    - Name: RedHorse
-      UnitType: Horse
-      PartType: Body
-      SubType: BodyBack
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/RedHorse
-    - Name: RedHorse
-      UnitType: Horse
-      PartType: Body
-      SubType: BodyFront
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/RedHorse
-    - Name: RedHorse
-      UnitType: Horse
-      PartType: Body
-      SubType: FootBackBottom
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/RedHorse
-    - Name: RedHorse
-      UnitType: Horse
-      PartType: Body
-      SubType: FootBackTop
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/RedHorse
-    - Name: RedHorse
-      UnitType: Horse
-      PartType: Body
-      SubType: FootFrontBottom
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/RedHorse
-    - Name: RedHorse
-      UnitType: Horse
-      PartType: Body
-      SubType: FootFrontTop
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/RedHorse
-    - Name: RedHorse
-      UnitType: Horse
-      PartType: Body
-      SubType: Head
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/RedHorse
-    - Name: RedHorse
-      UnitType: Horse
-      PartType: Body
-      SubType: Neck
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/RedHorse
-    - Name: RedHorse
-      UnitType: Horse
-      PartType: Body
-      SubType: Tail
-      PartSubType: 
-      Path: Addons/Legacy/1_Horse/0_Sprite/0_Body/RedHorse
-  - Name: PaladinSet
-    Path: Assets/SPUM/Resources/Addons
-    Version: 
-    CreationDate: 2025-11-19 13:34:15
-    SpumAnimationData: []
-    SpumTextureData:
-    - Name: Cloth01
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/2_Cloth/Cloth_Body_01
-    - Name: Cloth02
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/2_Cloth/Cloth_Body_02
-    - Name: Cloth03
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/2_Cloth/Cloth_Body_03
-    - Name: Cloth04
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/2_Cloth/Cloth_Body_04
-    - Name: Cloth05
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/2_Cloth/Cloth_Body_05
-    - Name: Cloth06
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/2_Cloth/Cloth_Body_06
-    - Name: Cloth01
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/2_Cloth/Cloth_Left_01
-    - Name: Cloth02
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/2_Cloth/Cloth_Left_02
-    - Name: Cloth03
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/2_Cloth/Cloth_Left_03
-    - Name: Cloth04
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/2_Cloth/Cloth_Left_04
-    - Name: Cloth05
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/2_Cloth/Cloth_Left_05
-    - Name: Cloth06
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/2_Cloth/Cloth_Left_06
-    - Name: Cloth01
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/2_Cloth/Cloth_Right_01
-    - Name: Cloth02
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/2_Cloth/Cloth_Right_02
-    - Name: Cloth03
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/2_Cloth/Cloth_Right_03
-    - Name: Cloth04
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/2_Cloth/Cloth_Right_04
-    - Name: Cloth05
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/2_Cloth/Cloth_Right_05
-    - Name: Cloth06
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/2_Cloth/Cloth_Right_06
-    - Name: Pant001
-      UnitType: Unit
-      PartType: Pant
-      SubType: Left
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/3_Pant/Pant_Left_001
-    - Name: Pant002
-      UnitType: Unit
-      PartType: Pant
-      SubType: Left
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/3_Pant/Pant_Left_002
-    - Name: Pant003
-      UnitType: Unit
-      PartType: Pant
-      SubType: Left
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/3_Pant/Pant_Left_003
-    - Name: Pant001
-      UnitType: Unit
-      PartType: Pant
-      SubType: Right
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/3_Pant/Pant_Right_001
-    - Name: Pant002
-      UnitType: Unit
-      PartType: Pant
-      SubType: Right
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/3_Pant/Pant_Right_002
-    - Name: Pant003
-      UnitType: Unit
-      PartType: Pant
-      SubType: Right
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/3_Pant/Pant_Right_003
-    - Name: Helmet_01
-      UnitType: Unit
-      PartType: Helmet
-      SubType: Helmet_01
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/4_Helmet/Helmet_01
-    - Name: Helmet_02
-      UnitType: Unit
-      PartType: Helmet
-      SubType: Helmet_02
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/4_Helmet/Helmet_02
-    - Name: Helmet_03
-      UnitType: Unit
-      PartType: Helmet
-      SubType: Helmet_03
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/4_Helmet/Helmet_03
-    - Name: Helmet_04
-      UnitType: Unit
-      PartType: Helmet
-      SubType: Helmet_04
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/4_Helmet/Helmet_04
-    - Name: Armor01
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/5_Armor/Armor_Body_01
-    - Name: Armor02
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/5_Armor/Armor_Body_02
-    - Name: Armor03
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/5_Armor/Armor_Body_03
-    - Name: Armor04
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/5_Armor/Armor_Body_04
-    - Name: Armor05
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/5_Armor/Armor_Body_05
-    - Name: Armor06
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/5_Armor/Armor_Body_06
-    - Name: Armor07
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/5_Armor/Armor_Body_07
-    - Name: Armor07
-      UnitType: Unit
-      PartType: Armor
-      SubType: Left
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/5_Armor/Armor_Left_07
-    - Name: Armor07
-      UnitType: Unit
-      PartType: Armor
-      SubType: Right
-      PartSubType: 
-      Path: Addons/PaladinSet/Unit/0_Sprite/5_Armor/Armor_Right_07
-    - Name: Weapons_Sword_01
-      UnitType: Unit
-      PartType: Weapons
-      SubType: Weapons_Sword_01
-      PartSubType: Sword
-      Path: Addons/PaladinSet/Unit/0_Sprite/6_Weapons/0_Sword/Weapons_Sword_01
-    - Name: Weapons_Sword_02
-      UnitType: Unit
-      PartType: Weapons
-      SubType: Weapons_Sword_02
-      PartSubType: Sword
-      Path: Addons/PaladinSet/Unit/0_Sprite/6_Weapons/0_Sword/Weapons_Sword_02
-    - Name: Weapons_Sword_03
-      UnitType: Unit
-      PartType: Weapons
-      SubType: Weapons_Sword_03
-      PartSubType: Sword
-      Path: Addons/PaladinSet/Unit/0_Sprite/6_Weapons/0_Sword/Weapons_Sword_03
-    - Name: Weapons_Sword_04
-      UnitType: Unit
-      PartType: Weapons
-      SubType: Weapons_Sword_04
-      PartSubType: Sword
-      Path: Addons/PaladinSet/Unit/0_Sprite/6_Weapons/0_Sword/Weapons_Sword_04
-    - Name: Shield_01
-      UnitType: Unit
-      PartType: Weapons
-      SubType: Shield_01
-      PartSubType: Shield
-      Path: Addons/PaladinSet/Unit/0_Sprite/6_Weapons/3_Shield/Shield_01
-    - Name: Shield_02
-      UnitType: Unit
-      PartType: Weapons
-      SubType: Shield_02
-      PartSubType: Shield
-      Path: Addons/PaladinSet/Unit/0_Sprite/6_Weapons/3_Shield/Shield_02
-    - Name: Shield_03
-      UnitType: Unit
-      PartType: Weapons
-      SubType: Shield_03
-      PartSubType: Shield
-      Path: Addons/PaladinSet/Unit/0_Sprite/6_Weapons/3_Shield/Shield_03
-    - Name: Shield_04
-      UnitType: Unit
-      PartType: Weapons
-      SubType: Shield_04
-      PartSubType: Shield
-      Path: Addons/PaladinSet/Unit/0_Sprite/6_Weapons/3_Shield/Shield_04
-    - Name: Shield_05
-      UnitType: Unit
-      PartType: Weapons
-      SubType: Shield_05
-      PartSubType: Shield
-      Path: Addons/PaladinSet/Unit/0_Sprite/6_Weapons/3_Shield/Shield_05
-    - Name: Shield_06
-      UnitType: Unit
-      PartType: Weapons
-      SubType: Shield_06
-      PartSubType: Shield
-      Path: Addons/PaladinSet/Unit/0_Sprite/6_Weapons/3_Shield/Shield_06
-  - Name: Ver121
-    Path: Assets/SPUM/Resources/Addons
-    Version: 
-    CreationDate: 2025-11-19 17:30:07
-    SpumAnimationData: []
-    SpumTextureData:
-    - Name: Normal_Hair1
-      UnitType: Unit
-      PartType: Hair
-      SubType: Normal_Hair1
-      PartSubType: 
-      Path: Addons/Ver121/0_Unit/0_Sprite/0_Hair/Normal_Hair1
-    - Name: Normal_Hair2
-      UnitType: Unit
-      PartType: Hair
-      SubType: Normal_Hair2
-      PartSubType: 
-      Path: Addons/Ver121/0_Unit/0_Sprite/0_Hair/Normal_Hair2
-    - Name: Normal_Hair3
-      UnitType: Unit
-      PartType: Hair
-      SubType: Normal_Hair3
-      PartSubType: 
-      Path: Addons/Ver121/0_Unit/0_Sprite/0_Hair/Normal_Hair3
-    - Name: Normal_Hair4
-      UnitType: Unit
-      PartType: Hair
-      SubType: Normal_Hair4
-      PartSubType: 
-      Path: Addons/Ver121/0_Unit/0_Sprite/0_Hair/Normal_Hair4
-    - Name: Normal_Hair5
-      UnitType: Unit
-      PartType: Hair
-      SubType: Normal_Hair5
-      PartSubType: 
-      Path: Addons/Ver121/0_Unit/0_Sprite/0_Hair/Normal_Hair5
-    - Name: Normal_Hair6
-      UnitType: Unit
-      PartType: Hair
-      SubType: Normal_Hair6
-      PartSubType: 
-      Path: Addons/Ver121/0_Unit/0_Sprite/0_Hair/Normal_Hair6
-    - Name: Normal_Hair7
-      UnitType: Unit
-      PartType: Hair
-      SubType: Normal_Hair7
-      PartSubType: 
-      Path: Addons/Ver121/0_Unit/0_Sprite/0_Hair/Normal_Hair7
-    - Name: Normal_Hair8
-      UnitType: Unit
-      PartType: Hair
-      SubType: Normal_Hair8
-      PartSubType: 
-      Path: Addons/Ver121/0_Unit/0_Sprite/0_Hair/Normal_Hair8
-    - Name: Normal_Hair9
-      UnitType: Unit
-      PartType: Hair
-      SubType: Normal_Hair9
-      PartSubType: 
-      Path: Addons/Ver121/0_Unit/0_Sprite/0_Hair/Normal_Hair9
-    - Name: Normal_Hair10
-      UnitType: Unit
-      PartType: Hair
-      SubType: Normal_Hair10
-      PartSubType: 
-      Path: Addons/Ver121/0_Unit/0_Sprite/0_Hair/Normal_Hair10
-    - Name: Normal_Hair11
-      UnitType: Unit
-      PartType: Hair
-      SubType: Normal_Hair11
-      PartSubType: 
-      Path: Addons/Ver121/0_Unit/0_Sprite/0_Hair/Normal_Hair11
-    - Name: Normal_Hair12
-      UnitType: Unit
-      PartType: Hair
-      SubType: Normal_Hair12
-      PartSubType: 
-      Path: Addons/Ver121/0_Unit/0_Sprite/0_Hair/Normal_Hair12
-    - Name: Normal_Hair13
-      UnitType: Unit
-      PartType: Hair
-      SubType: Normal_Hair13
-      PartSubType: 
-      Path: Addons/Ver121/0_Unit/0_Sprite/0_Hair/Normal_Hair13
-    - Name: Normal_Mustache1
-      UnitType: Unit
-      PartType: FaceHair
-      SubType: Normal_Mustache1
-      PartSubType: 
-      Path: Addons/Ver121/0_Unit/0_Sprite/1_FaceHair/Normal_Mustache1
-    - Name: Normal_Mustache2
-      UnitType: Unit
-      PartType: FaceHair
-      SubType: Normal_Mustache2
-      PartSubType: 
-      Path: Addons/Ver121/0_Unit/0_Sprite/1_FaceHair/Normal_Mustache2
-    - Name: Normal_Cloth1
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Ver121/0_Unit/0_Sprite/2_Cloth/Normal_Cloth1
-    - Name: Normal_Cloth1
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver121/0_Unit/0_Sprite/2_Cloth/Normal_Cloth1
-    - Name: Normal_Cloth1
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver121/0_Unit/0_Sprite/2_Cloth/Normal_Cloth1
-    - Name: Normal_Helmet1
-      UnitType: Unit
-      PartType: Helmet
-      SubType: Normal_Helmet1
-      PartSubType: 
-      Path: Addons/Ver121/0_Unit/0_Sprite/4_Helmet/Normal_Helmet1
-    - Name: Normal_Helmet2
-      UnitType: Unit
-      PartType: Helmet
-      SubType: Normal_Helmet2
-      PartSubType: 
-      Path: Addons/Ver121/0_Unit/0_Sprite/4_Helmet/Normal_Helmet2
-    - Name: Normal_Helmet3
-      UnitType: Unit
-      PartType: Helmet
-      SubType: Normal_Helmet3
-      PartSubType: 
-      Path: Addons/Ver121/0_Unit/0_Sprite/4_Helmet/Normal_Helmet3
-    - Name: Normal_Armor1
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Ver121/0_Unit/0_Sprite/5_Armor/Normal_Armor1
-    - Name: Normal_Armor1
-      UnitType: Unit
-      PartType: Armor
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver121/0_Unit/0_Sprite/5_Armor/Normal_Armor1
-    - Name: Normal_Armor1
-      UnitType: Unit
-      PartType: Armor
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver121/0_Unit/0_Sprite/5_Armor/Normal_Armor1
-    - Name: AxeLong1
-      UnitType: Unit
-      PartType: Weapons
-      SubType: AxeLong1
-      PartSubType: Axe
-      Path: Addons/Ver121/0_Unit/0_Sprite/6_Weapons/2_Axe/AxeLong1
-    - Name: AxeNormal1
-      UnitType: Unit
-      PartType: Weapons
-      SubType: AxeNormal1
-      PartSubType: Axe
-      Path: Addons/Ver121/0_Unit/0_Sprite/6_Weapons/2_Axe/AxeNormal1
-    - Name: AxeSmall1
-      UnitType: Unit
-      PartType: Weapons
-      SubType: AxeSmall1
-      PartSubType: Axe
-      Path: Addons/Ver121/0_Unit/0_Sprite/6_Weapons/2_Axe/AxeSmall1
-    - Name: SteelShield1
-      UnitType: Unit
-      PartType: Weapons
-      SubType: SteelShield1
-      PartSubType: Shield
-      Path: Addons/Ver121/0_Unit/0_Sprite/6_Weapons/7_Shield/SteelShield1
-    - Name: WoodShield1
-      UnitType: Unit
-      PartType: Weapons
-      SubType: WoodShield1
-      PartSubType: Shield
-      Path: Addons/Ver121/0_Unit/0_Sprite/6_Weapons/7_Shield/WoodShield1
-    - Name: WoodShield2
-      UnitType: Unit
-      PartType: Weapons
-      SubType: WoodShield2
-      PartSubType: Shield
-      Path: Addons/Ver121/0_Unit/0_Sprite/6_Weapons/7_Shield/WoodShield2
-    - Name: WoodShield3
-      UnitType: Unit
-      PartType: Weapons
-      SubType: WoodShield3
-      PartSubType: Shield
-      Path: Addons/Ver121/0_Unit/0_Sprite/6_Weapons/7_Shield/WoodShield3
-    - Name: WoodShield4
-      UnitType: Unit
-      PartType: Weapons
-      SubType: WoodShield4
-      PartSubType: Shield
-      Path: Addons/Ver121/0_Unit/0_Sprite/6_Weapons/7_Shield/WoodShield4
-  - Name: Ver300
-    Path: Assets/SPUM/Resources/Addons
-    Version: 
-    CreationDate: 2025-11-19 17:30:07
-    SpumAnimationData:
-    - index: 0
-      Name: LongSpear_idle.anim
-      StateType: IDLE
-      ClipPath: Addons/Ver300/0_Unit/1_Animation/00_Idle/LongSpear_idle.anim
-      HasData: 1
-      UnitType: Unit
-      SubCategory: 
-    - index: 0
-      Name: LongSpear_Walk.anim
-      StateType: MOVE
-      ClipPath: Addons/Ver300/0_Unit/1_Animation/01_Move/LongSpear_Walk.anim
-      HasData: 1
-      UnitType: Unit
-      SubCategory: 
-    - index: 0
-      Name: AxeAttack_1.anim
-      StateType: ATTACK
-      ClipPath: Addons/Ver300/0_Unit/1_Animation/02_Attack/00_MeleeAttack/AxeAttack_1.anim
-      HasData: 1
-      UnitType: Unit
-      SubCategory: MeleeAttack
-    - index: 1
-      Name: LongSpearAttack_1.anim
-      StateType: ATTACK
-      ClipPath: Addons/Ver300/0_Unit/1_Animation/02_Attack/00_MeleeAttack/LongSpearAttack_1.anim
-      HasData: 1
-      UnitType: Unit
-      SubCategory: MeleeAttack
-    - index: 0
-      Name: ShotSwordAttack_1.anim
-      StateType: ATTACK
-      ClipPath: Addons/Ver300/0_Unit/1_Animation/02_Attack/00_MeleeAttack/ShotSwordAttack_1.anim
-      HasData: 0
-      UnitType: Unit
-      SubCategory: MeleeAttack
-    SpumTextureData:
-    - Name: New_Hair_01
-      UnitType: Unit
-      PartType: Hair
-      SubType: New_Hair_01
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/2_Hair/New_Hair_01
-    - Name: New_Hair_02
-      UnitType: Unit
-      PartType: Hair
-      SubType: New_Hair_02
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/2_Hair/New_Hair_02
-    - Name: New_Hair_03
-      UnitType: Unit
-      PartType: Hair
-      SubType: New_Hair_03
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/2_Hair/New_Hair_03
-    - Name: New_Hair_04
-      UnitType: Unit
-      PartType: Hair
-      SubType: New_Hair_04
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/2_Hair/New_Hair_04
-    - Name: New_Hair_05
-      UnitType: Unit
-      PartType: Hair
-      SubType: New_Hair_05
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/2_Hair/New_Hair_05
-    - Name: New_Hair_06
-      UnitType: Unit
-      PartType: Hair
-      SubType: New_Hair_06
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/2_Hair/New_Hair_06
-    - Name: New_Hair_07
-      UnitType: Unit
-      PartType: Hair
-      SubType: New_Hair_07
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/2_Hair/New_Hair_07
-    - Name: New_Hair_08
-      UnitType: Unit
-      PartType: Hair
-      SubType: New_Hair_08
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/2_Hair/New_Hair_08
-    - Name: New_Hair_09
-      UnitType: Unit
-      PartType: Hair
-      SubType: New_Hair_09
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/2_Hair/New_Hair_09
-    - Name: New_Hair_10
-      UnitType: Unit
-      PartType: Hair
-      SubType: New_Hair_10
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/2_Hair/New_Hair_10
-    - Name: New_Hair_11
-      UnitType: Unit
-      PartType: Hair
-      SubType: New_Hair_11
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/2_Hair/New_Hair_11
-    - Name: New_Hair_12
-      UnitType: Unit
-      PartType: Hair
-      SubType: New_Hair_12
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/2_Hair/New_Hair_12
-    - Name: New_Hair_13
-      UnitType: Unit
-      PartType: Hair
-      SubType: New_Hair_13
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/2_Hair/New_Hair_13
-    - Name: New_Hair_14
-      UnitType: Unit
-      PartType: Hair
-      SubType: New_Hair_14
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/2_Hair/New_Hair_14
-    - Name: New_Hair_15
-      UnitType: Unit
-      PartType: Hair
-      SubType: New_Hair_15
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/2_Hair/New_Hair_15
-    - Name: New_Hair_16
-      UnitType: Unit
-      PartType: Hair
-      SubType: New_Hair_16
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/2_Hair/New_Hair_16
-    - Name: New_Hair_17
-      UnitType: Unit
-      PartType: Hair
-      SubType: New_Hair_17
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/2_Hair/New_Hair_17
-    - Name: New_Hair_18
-      UnitType: Unit
-      PartType: Hair
-      SubType: New_Hair_18
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/2_Hair/New_Hair_18
-    - Name: New_Hair_19
-      UnitType: Unit
-      PartType: Hair
-      SubType: New_Hair_19
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/2_Hair/New_Hair_19
-    - Name: New_Hair_20
-      UnitType: Unit
-      PartType: Hair
-      SubType: New_Hair_20
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/2_Hair/New_Hair_20
-    - Name: New_Cloth_01
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_01
-    - Name: New_Cloth_01
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_01
-    - Name: New_Cloth_01
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_01
-    - Name: New_Cloth_02
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_02
-    - Name: New_Cloth_02
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_02
-    - Name: New_Cloth_02
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_02
-    - Name: New_Cloth_03
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_03
-    - Name: New_Cloth_03
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_03
-    - Name: New_Cloth_03
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_03
-    - Name: New_Cloth_04
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_04
-    - Name: New_Cloth_05
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_05
-    - Name: New_Cloth_05
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_05
-    - Name: New_Cloth_05
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_05
-    - Name: New_Cloth_06
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_06
-    - Name: New_Cloth_06
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_06
-    - Name: New_Cloth_06
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_06
-    - Name: New_Cloth_07
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_07
-    - Name: New_Cloth_07
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_07
-    - Name: New_Cloth_07
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_07
-    - Name: New_Cloth_08
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_08
-    - Name: New_Cloth_08
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_08
-    - Name: New_Cloth_08
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_08
-    - Name: New_Cloth_09
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_09
-    - Name: New_Cloth_09
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_09
-    - Name: New_Cloth_09
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_09
-    - Name: New_Cloth_10
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_10
-    - Name: New_Cloth_10
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_10
-    - Name: New_Cloth_10
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_10
-    - Name: New_Cloth_11
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_11
-    - Name: New_Cloth_11
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_11
-    - Name: New_Cloth_11
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_11
-    - Name: New_Cloth_12
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_12
-    - Name: New_Cloth_12
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_12
-    - Name: New_Cloth_12
-      UnitType: Unit
-      PartType: Cloth
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_12
-    - Name: New_Helmet_01
-      UnitType: Unit
-      PartType: Helmet
-      SubType: New_Helmet_01
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Helmet/New_Helmet_01
-    - Name: New_Helmet_02
-      UnitType: Unit
-      PartType: Helmet
-      SubType: New_Helmet_02
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Helmet/New_Helmet_02
-    - Name: New_Helmet_03
-      UnitType: Unit
-      PartType: Helmet
-      SubType: New_Helmet_03
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Helmet/New_Helmet_03
-    - Name: New_Helmet_04
-      UnitType: Unit
-      PartType: Helmet
-      SubType: New_Helmet_04
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Helmet/New_Helmet_04
-    - Name: New_Helmet_05
-      UnitType: Unit
-      PartType: Helmet
-      SubType: New_Helmet_05
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Helmet/New_Helmet_05
-    - Name: New_Helmet_06
-      UnitType: Unit
-      PartType: Helmet
-      SubType: New_Helmet_06
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Helmet/New_Helmet_06
-    - Name: New_Helmet_07
-      UnitType: Unit
-      PartType: Helmet
-      SubType: New_Helmet_07
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Helmet/New_Helmet_07
-    - Name: New_Helmet_08
-      UnitType: Unit
-      PartType: Helmet
-      SubType: New_Helmet_08
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Helmet/New_Helmet_08
-    - Name: New_Helmet_09
-      UnitType: Unit
-      PartType: Helmet
-      SubType: New_Helmet_09
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Helmet/New_Helmet_09
-    - Name: New_Helmet_10
-      UnitType: Unit
-      PartType: Helmet
-      SubType: New_Helmet_10
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/4_Helmet/New_Helmet_10
-    - Name: New_Pant_01
-      UnitType: Unit
-      PartType: Pant
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/5_Pant/New_Pant_01
-    - Name: New_Pant_01
-      UnitType: Unit
-      PartType: Pant
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/5_Pant/New_Pant_01
-    - Name: New_Pant_02
-      UnitType: Unit
-      PartType: Pant
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/5_Pant/New_Pant_02
-    - Name: New_Pant_02
-      UnitType: Unit
-      PartType: Pant
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/5_Pant/New_Pant_02
-    - Name: New_Pant_03
-      UnitType: Unit
-      PartType: Pant
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/5_Pant/New_Pant_03
-    - Name: New_Pant_03
-      UnitType: Unit
-      PartType: Pant
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/5_Pant/New_Pant_03
-    - Name: New_Pant_04
-      UnitType: Unit
-      PartType: Pant
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/5_Pant/New_Pant_04
-    - Name: New_Pant_04
-      UnitType: Unit
-      PartType: Pant
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/5_Pant/New_Pant_04
-    - Name: New_Pant_05
-      UnitType: Unit
-      PartType: Pant
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/5_Pant/New_Pant_05
-    - Name: New_Pant_05
-      UnitType: Unit
-      PartType: Pant
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/5_Pant/New_Pant_05
-    - Name: New_Pant_06
-      UnitType: Unit
-      PartType: Pant
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/5_Pant/New_Pant_06
-    - Name: New_Pant_06
-      UnitType: Unit
-      PartType: Pant
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/5_Pant/New_Pant_06
-    - Name: New_Pant_07
-      UnitType: Unit
-      PartType: Pant
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/5_Pant/New_Pant_07
-    - Name: New_Pant_07
-      UnitType: Unit
-      PartType: Pant
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/5_Pant/New_Pant_07
-    - Name: New_Pant_08
-      UnitType: Unit
-      PartType: Pant
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/5_Pant/New_Pant_08
-    - Name: New_Pant_08
-      UnitType: Unit
-      PartType: Pant
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/5_Pant/New_Pant_08
-    - Name: New_Pant_09
-      UnitType: Unit
-      PartType: Pant
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/5_Pant/New_Pant_09
-    - Name: New_Pant_09
-      UnitType: Unit
-      PartType: Pant
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/5_Pant/New_Pant_09
-    - Name: New_Pant_10
-      UnitType: Unit
-      PartType: Pant
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/5_Pant/New_Pant_10
-    - Name: New_Pant_10
-      UnitType: Unit
-      PartType: Pant
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/5_Pant/New_Pant_10
-    - Name: New_Pant_11
-      UnitType: Unit
-      PartType: Pant
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/5_Pant/New_Pant_11
-    - Name: New_Pant_11
-      UnitType: Unit
-      PartType: Pant
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/5_Pant/New_Pant_11
-    - Name: New_Pant_12
-      UnitType: Unit
-      PartType: Pant
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/5_Pant/New_Pant_12
-    - Name: New_Pant_12
-      UnitType: Unit
-      PartType: Pant
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/5_Pant/New_Pant_12
-    - Name: New_Armor_01
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_01
-    - Name: New_Armor_01
-      UnitType: Unit
-      PartType: Armor
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_01
-    - Name: New_Armor_01
-      UnitType: Unit
-      PartType: Armor
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_01
-    - Name: New_Armor_02
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_02
-    - Name: New_Armor_02
-      UnitType: Unit
-      PartType: Armor
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_02
-    - Name: New_Armor_02
-      UnitType: Unit
-      PartType: Armor
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_02
-    - Name: New_Armor_03
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_03
-    - Name: New_Armor_04
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_04
-    - Name: New_Armor_04
-      UnitType: Unit
-      PartType: Armor
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_04
-    - Name: New_Armor_05
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_05
-    - Name: New_Armor_05
-      UnitType: Unit
-      PartType: Armor
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_05
-    - Name: New_Armor_05
-      UnitType: Unit
-      PartType: Armor
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_05
-    - Name: New_Armor_06
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_06
-    - Name: New_Armor_06
-      UnitType: Unit
-      PartType: Armor
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_06
-    - Name: New_Armor_06
-      UnitType: Unit
-      PartType: Armor
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_06
-    - Name: New_Armor_07
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_07
-    - Name: New_Armor_07
-      UnitType: Unit
-      PartType: Armor
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_07
-    - Name: New_Armor_07
-      UnitType: Unit
-      PartType: Armor
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_07
-    - Name: New_Armor_08
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_08
-    - Name: New_Armor_08
-      UnitType: Unit
-      PartType: Armor
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_08
-    - Name: New_Armor_08
-      UnitType: Unit
-      PartType: Armor
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_08
-    - Name: New_Armor_09
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_09
-    - Name: New_Armor_09
-      UnitType: Unit
-      PartType: Armor
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_09
-    - Name: New_Armor_09
-      UnitType: Unit
-      PartType: Armor
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_09
-    - Name: New_Armor_10
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_10
-    - Name: New_Armor_10
-      UnitType: Unit
-      PartType: Armor
-      SubType: Left
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_10
-    - Name: New_Armor_10
-      UnitType: Unit
-      PartType: Armor
-      SubType: Right
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_10
-    - Name: New_Armor_12
-      UnitType: Unit
-      PartType: Armor
-      SubType: Body
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/7_Armor/New_Armor_12
-    - Name: New_Weapon_01
-      UnitType: Unit
-      PartType: Weapons
-      SubType: New_Weapon_01
-      PartSubType: Sword
-      Path: Addons/Ver300/0_Unit/0_Sprite/8_Weapons/0_Sword/New_Weapon_01
-    - Name: New_Weapon_06
-      UnitType: Unit
-      PartType: Weapons
-      SubType: New_Weapon_06
-      PartSubType: Sword
-      Path: Addons/Ver300/0_Unit/0_Sprite/8_Weapons/0_Sword/New_Weapon_06
-    - Name: New_Weapon_17
-      UnitType: Unit
-      PartType: Weapons
-      SubType: New_Weapon_17
-      PartSubType: Sword
-      Path: Addons/Ver300/0_Unit/0_Sprite/8_Weapons/0_Sword/New_Weapon_17
-    - Name: New_Weapon_18
-      UnitType: Unit
-      PartType: Weapons
-      SubType: New_Weapon_18
-      PartSubType: Sword
-      Path: Addons/Ver300/0_Unit/0_Sprite/8_Weapons/0_Sword/New_Weapon_18
-    - Name: New_Weapon_19
-      UnitType: Unit
-      PartType: Weapons
-      SubType: New_Weapon_19
-      PartSubType: Sword
-      Path: Addons/Ver300/0_Unit/0_Sprite/8_Weapons/0_Sword/New_Weapon_19
-    - Name: New_Weapon_20
-      UnitType: Unit
-      PartType: Weapons
-      SubType: New_Weapon_20
-      PartSubType: Sword
-      Path: Addons/Ver300/0_Unit/0_Sprite/8_Weapons/0_Sword/New_Weapon_20
-    - Name: New_Weapon_09
-      UnitType: Unit
-      PartType: Weapons
-      SubType: New_Weapon_09
-      PartSubType: Spear
-      Path: Addons/Ver300/0_Unit/0_Sprite/8_Weapons/1_Spear/New_Weapon_09
-    - Name: New_Weapon_13
-      UnitType: Unit
-      PartType: Weapons
-      SubType: New_Weapon_13
-      PartSubType: Spear
-      Path: Addons/Ver300/0_Unit/0_Sprite/8_Weapons/1_Spear/New_Weapon_13
-    - Name: New_Weapon_14
-      UnitType: Unit
-      PartType: Weapons
-      SubType: New_Weapon_14
-      PartSubType: Spear
-      Path: Addons/Ver300/0_Unit/0_Sprite/8_Weapons/1_Spear/New_Weapon_14
-    - Name: New_Weapon_16
-      UnitType: Unit
-      PartType: Weapons
-      SubType: New_Weapon_16
-      PartSubType: Spear
-      Path: Addons/Ver300/0_Unit/0_Sprite/8_Weapons/1_Spear/New_Weapon_16
-    - Name: New_weapon_02
-      UnitType: Unit
-      PartType: Weapons
-      SubType: New_weapon_02
-      PartSubType: Axe
-      Path: Addons/Ver300/0_Unit/0_Sprite/8_Weapons/2_Axe/New_weapon_02
-    - Name: New_Weapon_04
-      UnitType: Unit
-      PartType: Weapons
-      SubType: New_Weapon_04
-      PartSubType: Axe
-      Path: Addons/Ver300/0_Unit/0_Sprite/8_Weapons/2_Axe/New_Weapon_04
-    - Name: New_Weapon_08
-      UnitType: Unit
-      PartType: Weapons
-      SubType: New_Weapon_08
-      PartSubType: Axe
-      Path: Addons/Ver300/0_Unit/0_Sprite/8_Weapons/2_Axe/New_Weapon_08
-    - Name: New_Weapon_10
-      UnitType: Unit
-      PartType: Weapons
-      SubType: New_Weapon_10
-      PartSubType: Bow
-      Path: Addons/Ver300/0_Unit/0_Sprite/8_Weapons/3_Bow/New_Weapon_10
-    - Name: New_Weapon_12
-      UnitType: Unit
-      PartType: Weapons
-      SubType: New_Weapon_12
-      PartSubType: Bow
-      Path: Addons/Ver300/0_Unit/0_Sprite/8_Weapons/3_Bow/New_Weapon_12
-    - Name: New_Weapon_15
-      UnitType: Unit
-      PartType: Weapons
-      SubType: New_Weapon_15
-      PartSubType: Bow
-      Path: Addons/Ver300/0_Unit/0_Sprite/8_Weapons/3_Bow/New_Weapon_15
-    - Name: New_Weapon_03
-      UnitType: Unit
-      PartType: Weapons
-      SubType: New_Weapon_03
-      PartSubType: Wand
-      Path: Addons/Ver300/0_Unit/0_Sprite/8_Weapons/5_Wand/New_Weapon_03
-    - Name: New_Weapon_05
-      UnitType: Unit
-      PartType: Weapons
-      SubType: New_Weapon_05
-      PartSubType: Dagger
-      Path: Addons/Ver300/0_Unit/0_Sprite/8_Weapons/6_Dagger/New_Weapon_05
-    - Name: New_Weapon_11
-      UnitType: Unit
-      PartType: Weapons
-      SubType: New_Weapon_11
-      PartSubType: Dagger
-      Path: Addons/Ver300/0_Unit/0_Sprite/8_Weapons/6_Dagger/New_Weapon_11
-    - Name: New_Shield_01
-      UnitType: Unit
-      PartType: Weapons
-      SubType: New_Shield_01
-      PartSubType: Shield
-      Path: Addons/Ver300/0_Unit/0_Sprite/8_Weapons/7_Shield/New_Shield_01
-    - Name: New_Shield_02
-      UnitType: Unit
-      PartType: Weapons
-      SubType: New_Shield_02
-      PartSubType: Shield
-      Path: Addons/Ver300/0_Unit/0_Sprite/8_Weapons/7_Shield/New_Shield_02
-    - Name: New_Shield_03
-      UnitType: Unit
-      PartType: Weapons
-      SubType: New_Shield_03
-      PartSubType: Shield
-      Path: Addons/Ver300/0_Unit/0_Sprite/8_Weapons/7_Shield/New_Shield_03
-    - Name: New_Shield_04
-      UnitType: Unit
-      PartType: Weapons
-      SubType: New_Shield_04
-      PartSubType: Shield
-      Path: Addons/Ver300/0_Unit/0_Sprite/8_Weapons/7_Shield/New_Shield_04
-    - Name: New_Weapon_07
-      UnitType: Unit
-      PartType: Weapons
-      SubType: New_Weapon_07
-      PartSubType: Mace
-      Path: Addons/Ver300/0_Unit/0_Sprite/8_Weapons/8_Mace/New_Weapon_07
-    - Name: New_Back_01
-      UnitType: Unit
-      PartType: Back
-      SubType: New_Back_01
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/10_Back/New_Back_01
-    - Name: New_Back_02
-      UnitType: Unit
-      PartType: Back
-      SubType: New_Back_02
-      PartSubType: 
-      Path: Addons/Ver300/0_Unit/0_Sprite/10_Back/New_Back_02
-  ImageElement:
-  - UnitType: Unit
-    PartType: Body
-    PartSubType: 
-    Index: 0
-    Dir: 
-    Structure: Arm_R
-    ItemPath: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_1
-    MaskIndex: 0
-    image: {fileID: 0}
-    Color: {r: 1, g: 1, b: 1, a: 1}
-  - UnitType: Unit
-    PartType: Body
-    PartSubType: 
-    Index: 0
-    Dir: 
-    Structure: Arm_L
-    ItemPath: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_1
-    MaskIndex: 0
-    image: {fileID: 0}
-    Color: {r: 1, g: 1, b: 1, a: 1}
-  - UnitType: Unit
-    PartType: Body
-    PartSubType: 
-    Index: 0
-    Dir: 
-    Structure: Foot_R
-    ItemPath: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_1
-    MaskIndex: 0
-    image: {fileID: 0}
-    Color: {r: 1, g: 1, b: 1, a: 1}
-  - UnitType: Unit
-    PartType: Body
-    PartSubType: 
-    Index: 0
-    Dir: 
-    Structure: Body
-    ItemPath: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_1
-    MaskIndex: 0
-    image: {fileID: 0}
-    Color: {r: 1, g: 1, b: 1, a: 1}
-  - UnitType: Unit
-    PartType: Body
-    PartSubType: 
-    Index: 0
-    Dir: 
-    Structure: Foot_L
-    ItemPath: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_1
-    MaskIndex: 0
-    image: {fileID: 0}
-    Color: {r: 1, g: 1, b: 1, a: 1}
-  - UnitType: Unit
-    PartType: Body
-    PartSubType: 
-    Index: 0
-    Dir: 
-    Structure: Head
-    ItemPath: Addons/Legacy/0_Unit/0_Sprite/1_Body/Human_1
-    MaskIndex: 0
-    image: {fileID: 0}
-    Color: {r: 1, g: 1, b: 1, a: 1}
-  - UnitType: Unit
-    PartType: Eye
-    PartSubType: 
-    Index: 0
-    Dir: 
-    Structure: Back
-    ItemPath: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye0
-    MaskIndex: 0
-    image: {fileID: 0}
-    Color: {r: 1, g: 1, b: 1, a: 1}
-  - UnitType: Unit
-    PartType: Eye
-    PartSubType: 
-    Index: 0
-    Dir: 
-    Structure: Front
-    ItemPath: Addons/Legacy/0_Unit/0_Sprite/0_Eye/Eye0
-    MaskIndex: 0
-    image: {fileID: 0}
-    Color: {r: 0.4431373, g: 0.14901961, b: 0.14901961, a: 1}
-  - UnitType: Unit
-    PartType: Helmet
-    PartSubType: 
-    Index: 6
-    Dir: Front
-    Structure: Helmet
-    ItemPath: Addons/PaladinSet/Unit/0_Sprite/4_Helmet/Helmet_02
-    MaskIndex: 0
-    image: {fileID: 0}
-    Color: {r: 1, g: 1, b: 1, a: 1}
-  - UnitType: Unit
-    PartType: Hair
-    PartSubType: 
-    Index: 0
-    Dir: 
-    Structure: Hair
-    ItemPath: Addons/Ver121/0_Unit/0_Sprite/0_Hair/Normal_Hair1
-    MaskIndex: 1
-    image: {fileID: 0}
-    Color: {r: 0.4431373, g: 0.14901961, b: 0.14901961, a: 1}
-  - UnitType: Unit
-    PartType: FaceHair
-    PartSubType: 
-    Index: 3
-    Dir: 
-    Structure: FaceHair
-    ItemPath: Addons/Legacy/0_Unit/0_Sprite/1_FaceHair/FaceHair_5
-    MaskIndex: 0
-    image: {fileID: 0}
-    Color: {r: 1, g: 1, b: 1, a: 1}
-  - UnitType: Unit
-    PartType: Cloth
-    PartSubType: 
-    Index: 4
-    Dir: 
-    Structure: Body
-    ItemPath: Addons/PaladinSet/Unit/0_Sprite/2_Cloth/Cloth_Body_03
-    MaskIndex: 0
-    image: {fileID: 0}
-    Color: {r: 1, g: 1, b: 1, a: 1}
-  - UnitType: Unit
-    PartType: Cloth
-    PartSubType: 
-    Index: 4
-    Dir: 
-    Structure: Left
-    ItemPath: Addons/PaladinSet/Unit/0_Sprite/2_Cloth/Cloth_Left_03
-    MaskIndex: 0
-    image: {fileID: 0}
-    Color: {r: 1, g: 1, b: 1, a: 1}
-  - UnitType: Unit
-    PartType: Cloth
-    PartSubType: 
-    Index: 4
-    Dir: 
-    Structure: Right
-    ItemPath: Addons/PaladinSet/Unit/0_Sprite/2_Cloth/Cloth_Right_03
-    MaskIndex: 0
-    image: {fileID: 0}
-    Color: {r: 1, g: 1, b: 1, a: 1}
-  - UnitType: Unit
-    PartType: Pant
-    PartSubType: 
-    Index: 5
-    Dir: 
-    Structure: Left
-    ItemPath: Addons/Legacy/0_Unit/0_Sprite/3_Pant/Foot_4
-    MaskIndex: 0
-    image: {fileID: 0}
-    Color: {r: 1, g: 1, b: 1, a: 1}
-  - UnitType: Unit
-    PartType: Pant
-    PartSubType: 
-    Index: 5
-    Dir: 
-    Structure: Right
-    ItemPath: Addons/Legacy/0_Unit/0_Sprite/3_Pant/Foot_4
-    MaskIndex: 0
-    image: {fileID: 0}
-    Color: {r: 1, g: 1, b: 1, a: 1}
-  - UnitType: Unit
-    PartType: Armor
-    PartSubType: 
-    Index: 7
-    Dir: 
-    Structure: Body
-    ItemPath: Addons/PaladinSet/Unit/0_Sprite/5_Armor/Armor_Body_02
-    MaskIndex: 0
-    image: {fileID: 0}
-    Color: {r: 1, g: 1, b: 1, a: 1}
-  - UnitType: Unit
-    PartType: Back
-    PartSubType: 
-    Index: 9
-    Dir: 
-    Structure: Back
-    ItemPath: Addons/Legacy/0_Unit/0_Sprite/7_Back/Back_3
-    MaskIndex: 0
-    image: {fileID: 0}
-    Color: {r: 1, g: 1, b: 1, a: 1}
-  - UnitType: Unit
-    PartType: Weapons
-    PartSubType: Sword
-    Index: 8
-    Dir: Right
-    Structure: Weapons
-    ItemPath: Addons/PaladinSet/Unit/0_Sprite/6_Weapons/0_Sword/Weapons_Sword_04
-    MaskIndex: 0
-    image: {fileID: 0}
-    Color: {r: 1, g: 1, b: 1, a: 1}
-  - UnitType: Unit
-    PartType: Weapons
-    PartSubType: Shield
-    Index: 8
-    Dir: Left
-    Structure: Weapons
-    ItemPath: Addons/PaladinSet/Unit/0_Sprite/6_Weapons/3_Shield/Shield_01
-    MaskIndex: 0
-    image: {fileID: 0}
-    Color: {r: 1, g: 1, b: 1, a: 1}
-  SpumAnimationData: []
-  IDLE_List:
-  - {fileID: 7400000, guid: 2bfcb60165a9d48c3b94f739b47501a9, type: 2}
-  MOVE_List:
-  - {fileID: 7400000, guid: 993da53478a6b4e47a444f26baf14067, type: 2}
-  ATTACK_List:
-  - {fileID: 7400000, guid: 41d208b3a13cf418991132bfbfb7208e, type: 2}
-  - {fileID: 7400000, guid: 475b498316ec84dbfa264be76ffe1ae2, type: 2}
-  DAMAGED_List:
-  - {fileID: 7400000, guid: eeb8ba3a0a6cb63499a6fa72e6ad7358, type: 2}
-  DEBUFF_List:
-  - {fileID: 7400000, guid: 40f00165003e54cb08d55abfa92b88ef, type: 2}
-  DEATH_List:
-  - {fileID: 7400000, guid: d98f7c88116e94c1597806a94b475144, type: 2}
-  OTHER_List:
-  - {fileID: 7400000, guid: 4c70df3312bb83346a1bf065b30d3467, type: 2}
-  - {fileID: 7400000, guid: 1ef525d53ae254f7d82ef364ced85490, type: 2}
-  - {fileID: 7400000, guid: fabe4f140fdb9cb448bc941c7c93e8b6, type: 2}
 --- !u!1 &8568367592368361497
 GameObject:
   m_ObjectHideFlags: 0
@@ -7735,6 +3905,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &4235947446912057754
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -7750,6 +3921,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -7771,9 +3947,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -15
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 0ce0e7cddf96e47baa50d6054628a2d0, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -7783,7 +3961,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &8579766136174554002
 GameObject:
@@ -7819,6 +3996,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &981336275029918398
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -7834,6 +4012,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -7855,9 +4038,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -15
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -7867,7 +4052,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 0
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &8590775280234921196
 GameObject:
@@ -7903,6 +4087,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &9034525983511276127
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -7918,6 +4103,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -7939,9 +4129,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 1
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: fbaa7162d02c075e4cc8dac61260db6d, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -7951,7 +4143,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &8677607103816059973
 GameObject:
@@ -7996,7 +4187,6 @@ GameObject:
   m_Component:
   - component: {fileID: 7357065466498353684}
   - component: {fileID: 3170657816871668875}
-  - component: {fileID: 7250804947770839812}
   m_Layer: 0
   m_Name: Front
   m_TagString: Untagged
@@ -8021,6 +4211,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &3170657816871668875
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -8036,6 +4227,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -8057,9 +4253,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 6
+  m_MaskInteraction: 0
   m_Sprite: {fileID: -659639939, guid: 36f759892f0769b42aeec738b5a2fce9, type: 3}
   m_Color: {r: 0.2784314, g: 0.101960786, b: 0.101960786, a: 1}
   m_FlipX: 0
@@ -8069,20 +4267,7 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &7250804947770839812
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8963546753031835679}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c562f92f3b8b435d98ac3b65547b755, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &9061940425836597593
 GameObject:
   m_ObjectHideFlags: 0

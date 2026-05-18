@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using Rootborn.Game.Common;
@@ -11,6 +11,7 @@ using Rootborn.Game.Save;
 using Rootborn.Game.Story;
 using Rootborn.Game.StudentLife;
 using Rootborn.Game.Tiles;
+using Rootborn.UI.Modern;
 using Rootborn.UI.Quests;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -146,7 +147,7 @@ namespace Rootborn.UI.Tiles
             private static TilePlacementPanel EnsurePanel(Transform canvas)
             {
                 var existing = FindByName(canvas, PanelName);
-                GameObject go = existing != null ? existing.gameObject : new GameObject(PanelName, typeof(RectTransform), typeof(Image), typeof(TilePlacementPanel));
+                GameObject go = existing != null ? existing.gameObject : new GameObject(PanelName, typeof(RectTransform), typeof(Image), typeof(ModernUiTileImage), typeof(TilePlacementPanel));
                 go.transform.SetParent(canvas, false);
                 var rect = (RectTransform)go.transform;
                 rect.anchorMin = new Vector2(0f, 1f);
@@ -155,7 +156,7 @@ namespace Rootborn.UI.Tiles
                 rect.anchoredPosition = new Vector2(24f, -220f);
                 rect.sizeDelta = new Vector2(360f, 260f);
                 var image = go.GetComponent<Image>();
-                image.color = new Color(0.08f, 0.10f, 0.12f, 0.88f);
+                image.color = Color.clear;
                 image.raycastTarget = true;
                 return go.GetComponent<TilePlacementPanel>();
             }
@@ -554,6 +555,7 @@ namespace Rootborn.UI.Tiles
 
         public sealed class TilePlacementPanel : MonoBehaviour, IPointerClickHandler
         {
+            private static readonly Vector2 CommonPanelTileSize = new Vector2(48f, 48f);
             private readonly List<TilePlacementEntry> _placedEntries = new List<TilePlacementEntry>();
             private QuestLogPanel _questLogPanel;
             private QuestDefinition _quest;
@@ -710,6 +712,7 @@ namespace Rootborn.UI.Tiles
 
             private void BuildUi()
             {
+                EnsureCommonPanelChrome();
                 ClearChildren();
                 MakeText(transform, "Title", "Tile Placement", new Vector2(0f, -18f), new Vector2(320f, 28f), 18);
                 _statusText = MakeText(transform, "Status", string.Empty, new Vector2(0f, -52f), new Vector2(320f, 42f), 14);
@@ -722,6 +725,26 @@ namespace Rootborn.UI.Tiles
                 }
 
                 _claimButton = MakeButton(transform, "ClaimButton", "Claim Reward", new Vector2(0f, -226f), new Vector2(260f, 34f), ClaimReward);
+            }
+
+            private void EnsureCommonPanelChrome()
+            {
+                var image = GetComponent<Image>();
+                if (image == null)
+                {
+                    image = gameObject.AddComponent<Image>();
+                }
+                image.color = Color.clear;
+                image.raycastTarget = true;
+
+                var tiles = GetComponent<ModernUiTileImage>();
+                if (tiles == null)
+                {
+                    tiles = gameObject.AddComponent<ModernUiTileImage>();
+                }
+                tiles.SetRecipe(ModernUiRecipes.CommonPanel48);
+                tiles.SetTileSize(CommonPanelTileSize);
+                tiles.Rebuild();
             }
 
             private void AcceptQuest()
@@ -857,6 +880,11 @@ namespace Rootborn.UI.Tiles
             {
                 for (int i = transform.childCount - 1; i >= 0; i--)
                 {
+                    var child = transform.GetChild(i);
+                    if (child.name.StartsWith("Tile_", StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
                     Destroy(transform.GetChild(i).gameObject);
                 }
             }
@@ -890,8 +918,13 @@ namespace Rootborn.UI.Tiles
                 rect.pivot = new Vector2(0.5f, 1f);
                 rect.anchoredPosition = position;
                 rect.sizeDelta = size;
-                go.GetComponent<Image>().color = new Color(0.22f, 0.24f, 0.28f, 0.96f);
+
+                var image = go.GetComponent<Image>();
+                image.color = Color.clear;
+                image.raycastTarget = true;
+
                 var button = go.GetComponent<Button>();
+                button.targetGraphic = image;
                 button.onClick.AddListener(action);
                 MakeText(go.transform, "Text", text, Vector2.zero, size, 14);
                 return button;

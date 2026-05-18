@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b3356428d8f5684b987492f593ddf6e, type: 3}
+  m_Name: LocationActivity_School_Class
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.LocationActivityDefinition
+  _id: location.activity.school-class
+  _displayNameKey: location.activity.school-class.name
+  _location: {fileID: 11400000, guid: 74f05b36a5f69964e97495038a29176d, type: 2}
+  _growthRoute: 0
+  _timeCostMinutes: 45
+  _energyCost: 1
+  _focusCost: 2
+  _stressDelta: 1
+  _requirements: []
+  _outcomes:
+  - {fileID: 11400000, guid: 02dbfc1b6aa1e314db22c55796ffbea4, type: 2}
+  - {fileID: 11400000, guid: cdc19e5c01f4dff42ac629cf2690ece5, type: 2}

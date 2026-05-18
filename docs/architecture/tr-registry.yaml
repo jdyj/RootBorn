@@ -1,0 +1,10 @@
+traceability_records:
+  - id: TR-0001
+    title: SPUM 캐릭터 통합 의사결정
+    status: proposed
+    adr: ADR-0001
+    epic: EPIC-001
+    created: 2026-05-14
+    summary: >
+      SPUM 1.8.8 캐릭터를 ROOTBORN Player/NPC 외관으로 통합할 때
+      Resources 의존성, PPU, 데이터 드리븐 규약, 테스트 의무를 추적한다.

@@ -50,15 +50,27 @@ namespace Rootborn.Tests.EditMode.TownConcept
         [Test]
         public void Style2Catalog_ExposesSemanticControlGroupsForButtonsAndRelatedUi()
         {
+            // Slot/Tab/Scrollbar are mapped onto Gemini-confirmed semantic coordinates from
+            // docs/art/modern-ui-style2-icon-catalog.json. The legacy r0_c4..r2_c9 region was
+            // empty cells, which caused inventory slots and tabs to render as white boxes.
             AssertHudKey("Button", "Small", "ModernUI_16_Style2_r0_c8");
             AssertHudKey("Button", "Action", "ModernUI_16_Style2_r1_c8");
             AssertHudKey("Button", "Close", "ModernUI_16_Style2_r1_c9");
-            AssertHudKey("Slot", "Item", "ModernUI_16_Style2_r0_c4");
-            AssertHudKey("Slot", "Equipment", "ModernUI_16_Style2_r0_c5");
-            AssertHudKey("Tab", "Title", "ModernUI_16_Style2_r2_c8");
-            AssertHudKey("Tab", "Selected", "ModernUI_16_Style2_r2_c9");
-            AssertHudKey("Scrollbar", "Thumb", "ModernUI_16_Style2_r2_c3");
-            AssertHudKey("Scrollbar", "Track", "ModernUI_16_Style2_r3_c3");
+            AssertHudKey("Slot", "Item", "ModernUI_16_Style2_r6_c0");
+            AssertHudKey("Slot", "Equipment", "ModernUI_16_Style2_r6_c0");
+            AssertHudKey("Slot", "Base", "ModernUI_16_Style2_r6_c0");
+            AssertHudKey("Slot", "Highlight", "ModernUI_16_Style2_r7_c0");
+            AssertHudKey("Tab", "Title", "ModernUI_16_Style2_r1_c5");
+            AssertHudKey("Tab", "Selected", "ModernUI_16_Style2_r1_c5");
+            AssertHudKey("TabRibbon", "Left", "ModernUI_16_Style2_r1_c4");
+            AssertHudKey("TabRibbon", "Middle", "ModernUI_16_Style2_r1_c5");
+            AssertHudKey("TabRibbon", "Right", "ModernUI_16_Style2_r1_c6");
+            AssertHudKey("Scrollbar", "TrackTop", "ModernUI_16_Style2_r3_c3");
+            AssertHudKey("Scrollbar", "TrackMiddle", "ModernUI_16_Style2_r4_c3");
+            AssertHudKey("Scrollbar", "TrackBottom", "ModernUI_16_Style2_r5_c3");
+            AssertHudKey("IconButton", "Search", "ModernUI_16_Style2_r12_c46");
+            AssertHudKey("IconButton", "Delete", "ModernUI_16_Style2_r13_c46");
+            AssertHudKey("IconButton", "Settings", "ModernUI_16_Style2_r6_c46");
             AssertHudKey("Gauge", "Fill", "ModernUI_16_Style2_r5_c3");
         }
 

@@ -1,10 +1,10 @@
 using System.Collections;
 using System.IO;
 using NUnit.Framework;
-using Rootborn.Game.Characters.Spum;
 using Rootborn.Game.Save;
 using Rootborn.UI.MainMenu;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
@@ -44,29 +44,26 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         }
 
         [UnityTest]
-        public IEnumerator SPUM_SAVE_LOAD_001_LoadedSpumSnapshotRestoresTownPlayerVisualBoundary()
+        public IEnumerator SPUM_UI_PM_006_SaveLoadKeepsAppearance()
         {
-            yield return SceneManager.LoadSceneAsync("MainMenu");
-            SaveSlotSelectPanel.EnsureInScene().Show();
-            yield return null;
-
-            ClickButtonNamed("NewGameButton");
-            yield return null;
-            ClickButtonNamed("Tab_Hair");
-            ClickFirstPartCell();
-            ClickButtonNamed("ConfirmButton");
+            yield return OpenCreatorFromMainMenu();
+            yield return ClickButtonNamed("Tab_Hair");
+            yield return ClickButtonNamed("PartCell_spum_hair_long");
+            yield return ClickButtonNamed("ConfirmButton");
             yield return WaitForScene("Town", 10f);
 
-            var service = new SaveService("slot-0", _saveRoot);
-            SaveSlotMetadata firstLoad = service.LoadMetadata("slot-0");
+            SaveSlotMetadata firstLoad = new SaveService("slot-0", _saveRoot).LoadMetadata("slot-0");
             Assert.IsNotNull(firstLoad.CharacterAppearanceSnapshot);
             string savedHair = firstLoad.CharacterAppearanceSnapshot.GetSelectedPartId("hair");
-            Assert.IsNotEmpty(savedHair);
+            Assert.AreEqual("spum.hair.long", savedHair);
 
             ActiveSaveContext.Clear();
-            ActiveSaveContext.Set(firstLoad);
-            yield return SceneManager.LoadSceneAsync("Town");
+            yield return SceneManager.LoadSceneAsync("MainMenu");
+            yield return WaitForStableScene("MainMenu", 0.25f, 5f);
+            SaveSlotSelectPanel.EnsureInScene().Show();
             yield return null;
+            yield return ClickButtonNamed("LoadButton");
+            yield return WaitForScene("Town", 10f);
 
             SaveSlotMetadata loaded = ActiveSaveContext.Metadata;
             Assert.IsNotNull(loaded);
@@ -75,7 +72,18 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
 
             GameObject player = GameObject.Find("Player");
             Assert.IsNotNull(player);
-            Assert.IsNotNull(player.GetComponent<SpumCharacterVisualView>(), "Loaded SPUM snapshots must attach the SPUM visual boundary to the Town player.");
+            Assert.IsNotNull(player.GetComponent<Rootborn.Game.Characters.Spum.SpumCharacterVisualView>(), "Loaded SPUM snapshots must attach the SPUM visual boundary to the Town player.");
+        }
+
+        private IEnumerator OpenCreatorFromMainMenu()
+        {
+            yield return SceneManager.LoadSceneAsync("MainMenu");
+            yield return WaitForStableScene("MainMenu", 0.25f, 5f);
+            SaveSlotSelectPanel.EnsureInScene().Show();
+            yield return null;
+            yield return ClickButtonNamed("NewGameButton");
+            yield return null;
+            Assert.IsNotNull(GameObject.Find("SpumCharacterCreatorRoot"));
         }
 
         private static IEnumerator WaitForScene(string sceneName, float timeout)
@@ -90,28 +98,41 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.AreEqual(sceneName, SceneManager.GetActiveScene().name);
         }
 
-        private static void ClickFirstPartCell()
+        private static IEnumerator WaitForStableScene(string sceneName, float stableSeconds, float timeout)
         {
-            Button[] buttons = Object.FindObjectsByType<Button>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-            for (int i = 0; i < buttons.Length; i++)
+            float elapsed = 0f;
+            float stable = 0f;
+            while (elapsed < timeout)
             {
-                if (buttons[i].name.StartsWith("PartCell_"))
+                if (SceneManager.GetActiveScene().name == sceneName)
                 {
-                    buttons[i].onClick.Invoke();
-                    return;
+                    stable += Time.deltaTime;
+                    if (stable >= stableSeconds)
+                        yield break;
                 }
+                else
+                {
+                    stable = 0f;
+                }
+
+                elapsed += Time.deltaTime;
+                yield return null;
             }
 
-            Assert.Fail("Expected at least one selectable SPUM part cell.");
+            Assert.AreEqual(sceneName, SceneManager.GetActiveScene().name);
         }
 
-        private static void ClickButtonNamed(string name)
+        private static IEnumerator ClickButtonNamed(string name)
         {
             var go = GameObject.Find(name);
             Assert.IsNotNull(go, name);
             var button = go.GetComponent<Button>();
             Assert.IsNotNull(button, name);
-            button.onClick.Invoke();
+            Assert.IsTrue(button.IsInteractable(), name + " must be interactable.");
+            Assert.IsNotNull(EventSystem.current, "UI click tests require an EventSystem.");
+            var eventData = new PointerEventData(EventSystem.current) { button = PointerEventData.InputButton.Left };
+            ExecuteEvents.Execute(button.gameObject, eventData, ExecuteEvents.pointerClickHandler);
+            yield return null;
         }
 
         private static void DestroyIfFound(string name)

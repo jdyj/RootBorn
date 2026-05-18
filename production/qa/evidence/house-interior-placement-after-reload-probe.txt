@@ -1,9 +1,9 @@
 scene=House
 tilemap=HouseFurnitureObjectTilemap
-tileName=Bathroom_Singles_Shadowless_48x48_137_Tile
+tileName=Bathroom_Singles_Shadowless_48x48_107_Tile
 cell=(-9, -3, 0)
 objectTileCount=1
-occupancyTileCount=3
+occupancyTileCount=2
 availabilityOverlayTileCount=0
 ghostTileCount=0
 footprintTileCount=0

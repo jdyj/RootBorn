@@ -15,7 +15,7 @@
     { "id": "panel.common.bottomLeft", "name": "ModernUI_16_Style2_r4_c0", "row": 4, "column": 0 },
     { "id": "panel.common.bottom", "name": "ModernUI_16_Style2_r4_c1", "row": 4, "column": 1 },
     { "id": "panel.common.bottomRight", "name": "ModernUI_16_Style2_r4_c2", "row": 4, "column": 2 },
-    { "id": "button.small", "name": "ModernUI_16_Style2_r0_c8", "row": 0, "column": 8 },
+    { "id": "icon.question", "name": "ModernUI_16_Style2_r0_c8", "row": 0, "column": 8 },
     { "id": "button.action", "name": "ModernUI_16_Style2_r1_c8", "row": 1, "column": 8 },
     { "id": "button.close", "name": "ModernUI_16_Style2_r1_c9", "row": 1, "column": 9 },
     { "id": "button.selected", "name": "ModernUI_16_Style2_r2_c9", "row": 2, "column": 9 },

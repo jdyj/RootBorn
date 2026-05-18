@@ -98,7 +98,7 @@ namespace Rootborn.Game.World
                     continue;
                 }
 
-                SpawnNode(root.transform, target, new Vector3(4.5f + i * 1.25f, -1.25f, 0f), nodeName);
+                SpawnNode(root.transform, target, new Vector3(14f + i * 1.25f, -1.25f, 0f), nodeName);
             }
         }
 

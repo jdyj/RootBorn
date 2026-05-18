@@ -31,9 +31,23 @@ namespace Rootborn.Tests.EditMode
         }
 
         [Test]
+        public void CommonPanel48Pieces_AreRegisteredInModernAddressablesSetup()
+        {
+            var registered = ModernUiAddressablesSetup.GetCommonPanel48Entries()
+                .Select(entry => entry.address)
+                .ToHashSet();
+
+            var expected = ModernUiCommonPanel48Sprites.Tiles
+                .Select(tile => tile.SheetAddress)
+                .ToHashSet();
+
+            CollectionAssert.AreEquivalent(expected, registered, "48px CommonPanel PNG pieces must be explicit Addressable entries.");
+        }
+
+        [Test]
         public void ModernUiAddressableEntries_PointOnlyToModernUiPack()
         {
-            foreach (var (assetPath, _) in ModernUiAddressablesSetup.GetSheetEntries())
+            foreach (var (assetPath, _) in ModernUiAddressablesSetup.GetAllEntries())
             {
                 StringAssert.StartsWith("Assets/modernuserinterface-win/", assetPath);
                 Assert.IsFalse(assetPath.Contains("Pixelwood"), assetPath);
@@ -44,7 +58,7 @@ namespace Rootborn.Tests.EditMode
         public void ModernUiAddressableEntries_HaveAssetFilesOnDisk()
         {
             var missing = new List<string>();
-            foreach (var (assetPath, _) in ModernUiAddressablesSetup.GetSheetEntries())
+            foreach (var (assetPath, _) in ModernUiAddressablesSetup.GetAllEntries())
             {
                 if (!File.Exists(assetPath))
                 {
@@ -80,6 +94,22 @@ namespace Rootborn.Tests.EditMode
             }
 
             Assert.IsEmpty(missing, "Modern UI declared sub-sprites missing from sliced sheets: " + string.Join(", ", missing));
+        }
+
+        [Test]
+        public void CommonPanel48Entries_AreSingleSpritePngAssets()
+        {
+            var missingSprites = new List<string>();
+            foreach (var (assetPath, address) in ModernUiAddressablesSetup.GetCommonPanel48Entries())
+            {
+                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+                if (sprite == null)
+                {
+                    missingSprites.Add(address + " => " + assetPath);
+                }
+            }
+
+            Assert.IsEmpty(missingSprites, "48px CommonPanel Addressables must point to Sprite-imported PNG pieces: " + string.Join(", ", missingSprites));
         }
 
         [Test]

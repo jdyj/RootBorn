@@ -2,6 +2,7 @@ using Rootborn.Game.Common;
 using Rootborn.Game.Crops;
 using Rootborn.Game.Resources;
 using Rootborn.Game.Tools;
+using Rootborn.Game.StudentLife;
 using UnityEngine;
 
 namespace Rootborn.Game.Quests
@@ -17,6 +18,7 @@ namespace Rootborn.Game.Quests
         public readonly ScriptableObject Npc;
         public readonly ScriptableObject DefeatTarget;
         public readonly ScriptableObject Tile;
+        public readonly LocationActivityDefinition Activity;
         public readonly int Count;
 
         public QuestEvent(
@@ -29,7 +31,8 @@ namespace Rootborn.Game.Quests
             ToolDefinition tool = null,
             ScriptableObject npc = null,
             ScriptableObject defeatTarget = null,
-            ScriptableObject tile = null)
+            ScriptableObject tile = null,
+            LocationActivityDefinition activity = null)
         {
             Kind = kind;
             EventKey = eventKey;
@@ -41,6 +44,7 @@ namespace Rootborn.Game.Quests
             Npc = npc;
             DefeatTarget = defeatTarget;
             Tile = tile;
+            Activity = activity;
         }
     }
 }

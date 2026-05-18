@@ -41,6 +41,10 @@ namespace Rootborn.UI.Modern
     public static class ModernUiRecipes
     {
         public static readonly ModernUiTileRecipe CommonPanel = new ModernUiTileRecipe(ModernUiStyle2Sprites.CommonPanel.Tiles);
+        public static readonly ModernUiTileRecipe CommonPanel48 = new ModernUiTileRecipe(ModernUiCommonPanel48Sprites.Tiles);
+        public static readonly ModernUiTileRecipe InnerPanel = new ModernUiTileRecipe(ModernUiStyle2Sprites.InnerPanel.Tiles);
+        public static readonly ModernUiTileRecipe SlotPanel = new ModernUiTileRecipe(ModernUiStyle2Sprites.SlotPanel.Tiles);
+        public static readonly ModernUiTileRecipe DialoguePanel = new ModernUiTileRecipe(ModernUiStyle2Sprites.DialoguePanel.Tiles);
 
         public static readonly ModernUiWindowRecipe SettingsWindow = new ModernUiWindowRecipe(
             "settings", new[] { "commonPanel", "title-tabs", "close-button", "toggle-row", "slider-row" });

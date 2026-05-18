@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59462f3cc8aa4c24992d3c662397813d, type: 3}
+  m_Name: LocationIdentity_TownSquare
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.LocationIdentityDefinition
+  _id: location.identity.square
+  _displayNameKey: location.identity.square.name
+  _location: {fileID: 11400000, guid: 0b792f8bcf32340469cd64320136e59b, type: 2}
+  _descriptionKey: location.identity.square.desc
+  _availableActivities:
+  - {fileID: 11400000, guid: 34b84450861e625488a4559ed8a08277, type: 2}
+  _hints:
+  - _displayKey: hint.square.social-help
+    _growthRoute: 4
+    _milestone: {fileID: 0}
+  _recommendedVisitStartMinute: 480
+  _recommendedVisitEndMinute: 1140

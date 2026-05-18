@@ -291,3 +291,14 @@ PR 통과 조건:
 - `rules/path-based/server-node.md` (서버)
 - `contracts/sim-protocol.md` (결정론 규약)
 - 플랜의 EPIC-031 — Automated Test Coverage Sweep
+## Direct Visual Play Verification Gate (Constitutional)
+
+Visible gameplay, UI, sprite, tilemap, placement, scene, prefab, camera, or interaction changes require direct player-facing verification before completion is reported.
+
+- EditMode and PlayMode tests remain mandatory, but they are not sufficient by themselves for visible or interactive work.
+- Verification must follow the actual player flow in PlayMode: input, movement, trigger, UI click/selection, placement, scene transition, or the exact route requested by the user.
+- The agent must capture or inspect a Game View or Camera screenshot for visual results.
+- Tilemap/sprite/placement work must include runtime state inspection: selected asset name, target cell, Tilemap layer, overlay valid/invalid state, default decoration under the object, and whether stale sample/debug Tilemaps or placeholder GameObjects remain visible.
+- Internal method calls, forced state setup, forced scene loading, asset-name equality, or passing tests alone are not acceptable completion evidence when the user asked about what appears in game.
+- If direct visual verification cannot be completed, the agent must report the blocker and separate verified facts from unverified visual behavior.
+- Failure pattern recorded on 2026-05-16: chair placement appeared complete because asset names and Tilemap writes passed, but the visible Game View was affected by stale sample/debug Tilemap objects and overlay/UI coverage. Future work must verify the screen-visible result and absence of debug artifacts.

@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e04c345ff3cead4ca2735b322a7d79b, type: 3}
+  m_Name: Location_Library
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.LocationDefinition
+  _id: location.library
+  _displayNameKey: location.library.name
+  _descriptionKey: location.library.desc
+  _category: {fileID: 11400000, guid: a1c7f1fa8f1cca246a40a012fa779906, type: 2}
+  _worldAnchorId: anchor.library
+  _worldPosition: {x: 5, y: -6}
+  _relatedRoles:
+  - {fileID: 11400000, guid: d4276595328877a499d04b59a4ca13bf, type: 2}
+  _relatedNpcs:
+  - {fileID: 11400000, guid: abc5d2422253d9d488d9327c7bec126a, type: 2}
+  _discoveries: []
+  _visitRules: []

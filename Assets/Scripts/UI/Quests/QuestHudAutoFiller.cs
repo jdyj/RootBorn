@@ -8,6 +8,7 @@ using Rootborn.Game.Quests;
 using Rootborn.Game.Save;
 using Rootborn.Game.Story;
 using Rootborn.Game.StudentLife;
+using Rootborn.Game.WorldState;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
@@ -130,6 +131,9 @@ namespace Rootborn.UI.Quests
                 var questLog = metadata != null && !string.IsNullOrEmpty(metadata.SlotId)
                     ? PlayerGlobalState.GetQuestLog(metadata.SlotId, playerId, registry != null ? registry.Quests : null)
                     : new QuestLog(registry != null ? registry.Quests : null);
+                var worldStateProgress = metadata != null && !string.IsNullOrEmpty(metadata.SlotId)
+                    ? WorldStateProgressPersistence.LoadOrCreate(metadata.SlotId, playerId)
+                    : new WorldStateProgress("default", playerId);
                 LoadQuestLog(questLog, playerId);
 
                 var scene = SceneManager.GetActiveScene();
@@ -149,32 +153,37 @@ namespace Rootborn.UI.Quests
                     questPanel = questPanelGo.AddComponent<QuestLogPanel>();
                 }
                 var inventory = playerInventory != null ? playerInventory.Inventory : null;
-                var rewardContext = new RewardRuntimeContext(questLog, inventory, null, storyFlags, studentLife != null ? studentLife.EnsureProgress() : null);
+                var studentProgress = studentLife != null ? studentLife.EnsureProgress() : null;
+                var rewardContext = new RewardRuntimeContext(questLog, inventory, null, storyFlags, studentProgress, worldStateProgress);
                 questPanel.Bind(questLog, registry != null ? registry.Quests : null, rewardContext);
 
-                var dialogueGo = FindByName(scene, "DialoguePanel");
-                if (dialogueGo == null)
+                // Reuse any DialoguePanel that another installer (e.g. LocationNpcRuntimeInstaller)
+                // already created. Searching by component type, not name, avoids the duplicate-panel
+                // bug where this installer created a second "DialoguePanel" GameObject because
+                // LocationNpcRuntimeInstaller names its panel "LocationNpcDialoguePanel".
+                var dialoguePanel = FindComponentInScene<DialoguePanel>(scene);
+                GameObject dialogueGo;
+                if (dialoguePanel != null)
+                {
+                    dialogueGo = dialoguePanel.gameObject;
+                }
+                else
                 {
                     dialogueGo = CreatePanel(canvas.transform, "DialoguePanel", new Vector2(760f, 190f), new Vector2(-580f, -820f));
                     CreateText(dialogueGo.transform, "Speaker", "Guide", new Vector2(0f, -24f), new Vector2(700f, 40f), 24, TextAnchor.MiddleCenter);
                     CreateText(dialogueGo.transform, "Choice", "Accept Quest", new Vector2(0f, -92f), new Vector2(700f, 72f), 20, TextAnchor.MiddleCenter);
-                }
-                dialogueGo.transform.SetParent(canvas.transform, false);
-                dialogueGo.transform.SetAsLastSibling();
-
-                var dialoguePanel = dialogueGo.GetComponent<DialoguePanel>();
-                if (dialoguePanel == null)
-                {
+                    dialogueGo.transform.SetParent(canvas.transform, false);
+                    dialogueGo.transform.SetAsLastSibling();
                     dialoguePanel = dialogueGo.AddComponent<DialoguePanel>();
+                    dialogueGo.SetActive(false);
                 }
-                dialogueGo.SetActive(false);
 
                 var binder = runner.GetComponent<QuestDialogueUiBinder>();
                 if (binder == null)
                 {
                     binder = runner.AddComponent<QuestDialogueUiBinder>();
                 }
-                binder.Bind(dialoguePanel, questLog, playerInventory, studentLife, storyFlags, playerId);
+                binder.Bind(dialoguePanel, questLog, playerInventory, studentLife, storyFlags, playerId, worldStateProgress);
                 binder.AttachSceneNpcs();
             }
 
@@ -294,25 +303,31 @@ namespace Rootborn.UI.Quests
             private QuestLog _questLog;
             private PlayerInventory _playerInventory;
             private StudentLifeProgressComponent _studentLife;
+            private WorldStateProgress _worldStateProgress;
             private string _playerId = PlayerIdentity.DefaultPlayerId;
             private NpcInteractor[] _attached = System.Array.Empty<NpcInteractor>();
 
             public void Bind(DialoguePanel dialoguePanel, QuestLog questLog, PlayerInventory playerInventory)
             {
-                Bind(dialoguePanel, questLog, playerInventory, null, _storyFlags, ResolvePlayerId(playerInventory));
+                Bind(dialoguePanel, questLog, playerInventory, null, _storyFlags, ResolvePlayerId(playerInventory), null);
             }
 
             public void Bind(DialoguePanel dialoguePanel, QuestLog questLog, PlayerInventory playerInventory, StoryFlagSet storyFlags)
             {
-                Bind(dialoguePanel, questLog, playerInventory, null, storyFlags, ResolvePlayerId(playerInventory));
+                Bind(dialoguePanel, questLog, playerInventory, null, storyFlags, ResolvePlayerId(playerInventory), null);
             }
 
             public void Bind(DialoguePanel dialoguePanel, QuestLog questLog, PlayerInventory playerInventory, StudentLifeProgressComponent studentLife, StoryFlagSet storyFlags)
             {
-                Bind(dialoguePanel, questLog, playerInventory, studentLife, storyFlags, ResolvePlayerId(playerInventory));
+                Bind(dialoguePanel, questLog, playerInventory, studentLife, storyFlags, ResolvePlayerId(playerInventory), null);
             }
 
             public void Bind(DialoguePanel dialoguePanel, QuestLog questLog, PlayerInventory playerInventory, StudentLifeProgressComponent studentLife, StoryFlagSet storyFlags, string playerId)
+            {
+                Bind(dialoguePanel, questLog, playerInventory, studentLife, storyFlags, playerId, null);
+            }
+
+            public void Bind(DialoguePanel dialoguePanel, QuestLog questLog, PlayerInventory playerInventory, StudentLifeProgressComponent studentLife, StoryFlagSet storyFlags, string playerId, WorldStateProgress worldStateProgress)
             {
                 if (_dialoguePanel != null)
                 {
@@ -325,6 +340,7 @@ namespace Rootborn.UI.Quests
                 _studentLife = studentLife;
                 _storyFlags = storyFlags ?? new StoryFlagSet();
                 _playerId = string.IsNullOrEmpty(playerId) ? PlayerIdentity.DefaultPlayerId : playerId;
+                _worldStateProgress = worldStateProgress;
 
                 if (_dialoguePanel != null)
                 {
@@ -375,7 +391,7 @@ namespace Rootborn.UI.Quests
 
                 var inventory = _playerInventory != null ? _playerInventory.Inventory : null;
                 var progress = _studentLife != null ? _studentLife.EnsureProgress() : null;
-                var rewardContext = new RewardRuntimeContext(_questLog, inventory, null, _storyFlags, progress);
+                var rewardContext = new RewardRuntimeContext(_questLog, inventory, null, _storyFlags, progress, _worldStateProgress);
                 _dialoguePanel.Open(npc.Npc.ResolveDialogue(progress), new DialogueChoiceContext(_questLog, rewardContext));
             }
 
@@ -394,6 +410,10 @@ namespace Rootborn.UI.Quests
 
                 var json = JsonUtility.ToJson(_questLog.ToSaveData(), true);
                 new SaveService(metadata.SlotId).WriteJson(QuestLogFileNameFor(_playerId), json);
+                if (_worldStateProgress != null)
+                {
+                    WorldStateProgressPersistence.Save(_worldStateProgress);
+                }
             }
         }
 

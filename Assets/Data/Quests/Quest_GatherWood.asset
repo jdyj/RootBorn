@@ -21,5 +21,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 7e0c5cb9a7c4e80489227c6cc056ee0a, type: 2}
   _rewards:
   - {fileID: 11400000, guid: 16f45589fdcd2534dae0cb1401cacf3c, type: 2}
+  - {fileID: 11400000, guid: d07f48d225f98d748aaba239e9d237be, type: 2}
   _completionEffects:
   - {fileID: 11400000, guid: 28cbbe21d02b32649996767f5d13b4b1, type: 2}

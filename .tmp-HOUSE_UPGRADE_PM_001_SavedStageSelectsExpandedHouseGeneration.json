@@ -1,0 +1,9 @@
+{
+    "testMode":  "PlayMode",
+    "includePassingTests":  true,
+    "testMethod":  "Rootborn.Tests.PlayMode.Housing.HouseUpgradeFlowPlayModeTests.HOUSE_UPGRADE_PM_001_SavedStageSelectsExpandedHouseGeneration",
+    "includeLogs":  true,
+    "includeMessages":  true,
+    "logType":  "Error",
+    "includeStacktrace":  true
+}

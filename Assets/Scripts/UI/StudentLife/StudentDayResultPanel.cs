@@ -1,5 +1,6 @@
 using Rootborn.Game.Player;
 using Rootborn.Game.StudentLife;
+using Rootborn.Game.VerticalSlice;
 using Rootborn.UI.Modern;
 using Rootborn.UI.Quests;
 using UnityEngine;
@@ -23,6 +24,8 @@ namespace Rootborn.UI.StudentLife
         private StudentLifeProgressComponent _progressComponent;
 
         public bool IsOpen => _root != null && _root.activeSelf;
+        public string ResultsTextForTests => _results != null ? _results.text : string.Empty;
+        public string NextGuideTextForTests => _nextGuide != null ? _nextGuide.text : string.Empty;
 
         public static StudentDayResultPanel EnsureInScene(Canvas canvas)
         {
@@ -60,7 +63,9 @@ namespace Rootborn.UI.StudentLife
             BuildIfNeeded();
             _title.text = "Day " + summary.DayNumber + " Result";
             _activities.text = FormatList("Activities", summary.CompletedActivityIds, "No activities recorded");
-            _results.text = FormatList("Growth", summary.ResultLogIds, "No growth recorded") + "\n\n" + FormatOutsideSchoolList(summary.ResultLogIds);
+            var careerCandidates = progressComponent != null ? progressComponent.GetComponent<CareerCandidateProgressComponent>() : null;
+            var careerInterests = progressComponent != null ? progressComponent.GetComponent<CareerInterestProgressComponent>() : null;
+            _results.text = FormatList("Growth", summary.ResultLogIds, "No growth recorded") + "\n\n" + FormatOutsideSchoolList(summary.ResultLogIds) + "\n\n" + FormatCareerCandidateList(careerCandidates != null && careerCandidates.Progress != null ? careerCandidates.Progress.TodayHintResultLines : null) + "\n\n" + FormatCareerInterestList(careerInterests);
             _quests.text = FormatQuestList(questInventorySummary.QuestEntries);
             _rewards.text = FormatRewardList(questInventorySummary.RewardEntries);
             _inventory.text = FormatInventoryList(questInventorySummary.InventoryDeltas);
@@ -74,6 +79,13 @@ namespace Rootborn.UI.StudentLife
         public void Hide()
         {
             if (_root != null) _root.SetActive(false);
+        }
+
+        public void AppendVerticalSliceGuide(VerticalSliceSummary summary)
+        {
+            BuildIfNeeded();
+            string prefix = _nextGuide != null && !string.IsNullOrEmpty(_nextGuide.text) ? _nextGuide.text + "\n" : string.Empty;
+            _nextGuide.text = prefix + summary.FollowUpMotivationText;
         }
 
         private void StartNextDay()
@@ -166,6 +178,35 @@ namespace Rootborn.UI.StudentLife
             string text = title;
             if (values == null || values.Length == 0) return text + "\n" + emptyText;
             for (int i = 0; i < values.Length; i++) if (!string.IsNullOrEmpty(values[i])) text += "\n" + values[i];
+            return text;
+        }
+
+        private static string FormatCareerCandidateList(string[] resultLines)
+        {
+            string text = "Career Candidates";
+            if (resultLines == null || resultLines.Length == 0) return text + "\nNo career candidate changes";
+            for (int i = 0; i < resultLines.Length; i++) if (!string.IsNullOrEmpty(resultLines[i])) text += "\n" + resultLines[i];
+            return text;
+        }
+
+        private static string FormatCareerInterestList(CareerInterestProgressComponent component)
+        {
+            string text = "Career Interest";
+            if (component == null || component.Progress == null || string.IsNullOrEmpty(component.Progress.CurrentInterestId)) return text + "\nNo selected interest";
+            text += "\n" + component.Progress.CurrentInterestId;
+            var interests = component.Interests;
+            if (interests != null)
+            {
+                for (int i = 0; i < interests.Length; i++)
+                {
+                    var interest = interests[i];
+                    if (interest == null || interest.Id != component.Progress.CurrentInterestId) continue;
+                    var recommendations = interest.BuildRecommendations(component.Progress, null, null, component.Progress.LastChangedDay);
+                    for (int r = 0; r < recommendations.Length; r++) if (!string.IsNullOrEmpty(recommendations[r])) text += "\n" + recommendations[r];
+                    break;
+                }
+            }
+
             return text;
         }
 

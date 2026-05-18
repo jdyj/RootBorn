@@ -24,13 +24,26 @@ namespace Rootborn.Editor.Tools
             return SheetEntries;
         }
 
+        public static IReadOnlyList<(string assetPath, string address)> GetCommonPanel48Entries()
+        {
+            return ModernUiCommonPanel48Sprites.AddressableEntries;
+        }
+
+        public static IReadOnlyList<(string assetPath, string address)> GetAllEntries()
+        {
+            var entries = new List<(string assetPath, string address)>();
+            entries.AddRange(SheetEntries);
+            entries.AddRange(ModernUiCommonPanel48Sprites.AddressableEntries);
+            return entries;
+        }
+
         public static IReadOnlyList<string> FindMissingRegisteredSheetAddresses()
         {
             var missing = new List<string>();
             var settings = AddressableAssetSettingsDefaultObject.Settings;
             if (settings == null)
             {
-                foreach (var (_, address) in SheetEntries)
+                foreach (var (_, address) in GetAllEntries())
                 {
                     missing.Add(address);
                 }
@@ -38,7 +51,7 @@ namespace Rootborn.Editor.Tools
                 return missing;
             }
 
-            foreach (var (assetPath, address) in SheetEntries)
+            foreach (var (assetPath, address) in GetAllEntries())
             {
                 string guid = AssetDatabase.AssetPathToGUID(assetPath);
                 var entry = settings.FindAssetEntry(guid);
@@ -60,7 +73,7 @@ namespace Rootborn.Editor.Tools
                 return missing;
             }
 
-            foreach (var (assetPath, address) in SheetEntries)
+            foreach (var (assetPath, address) in GetAllEntries())
             {
                 string guid = AssetDatabase.AssetPathToGUID(assetPath);
                 var entry = settings.FindAssetEntry(guid);
@@ -82,7 +95,7 @@ namespace Rootborn.Editor.Tools
 
             int ok = 0;
             int missing = 0;
-            foreach (var (assetPath, address) in SheetEntries)
+            foreach (var (assetPath, address) in GetAllEntries())
             {
                 if (AssetDatabase.LoadAssetAtPath<Object>(assetPath) == null)
                 {

@@ -1,5 +1,7 @@
 using System;
 using Rootborn.Game.Dialogue;
+using Rootborn.UI.Modern;
+using Rootborn.UI.StudentLife;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -13,6 +15,7 @@ namespace Rootborn.UI.Quests
         private DialogueChoiceContext _context;
         private RectTransform _choiceRoot;
         private Text _lineText;
+        private ModernUiTileImage _backgroundTiles;
         private bool _wasKeyboardChoicePressed;
 
         public bool IsOpen { get; private set; }
@@ -25,10 +28,12 @@ namespace Rootborn.UI.Quests
             IsOpen = true;
             _wasKeyboardChoicePressed = IsKeyboardChoicePressed();
             gameObject.SetActive(true);
+            EnsureBackground();
             EnsureLineText();
             EnsureCloseButton();
             RebuildLineText();
             RebuildChoiceButtons();
+            SetBackgroundHudsVisible(false);
         }
 
         public void Close()
@@ -38,6 +43,22 @@ namespace Rootborn.UI.Quests
             _wasKeyboardChoicePressed = false;
             ClearChoiceButtons();
             gameObject.SetActive(false);
+            SetBackgroundHudsVisible(true);
+        }
+
+        private static void SetBackgroundHudsVisible(bool visible)
+        {
+            var milestone = UnityEngine.Object.FindFirstObjectByType<MilestoneHudPanel>(FindObjectsInactive.Include);
+            if (milestone != null)
+            {
+                if (visible) milestone.Show(); else milestone.Hide();
+            }
+
+            var campaign = UnityEngine.Object.FindFirstObjectByType<CampaignHudPanel>(FindObjectsInactive.Include);
+            if (campaign != null)
+            {
+                if (visible) campaign.Show(); else campaign.Hide();
+            }
         }
 
         public bool Choose(int choiceIndex)
@@ -156,6 +177,48 @@ namespace Rootborn.UI.Quests
             }
         }
 
+        private void EnsureBackground()
+        {
+            if (_backgroundTiles != null)
+            {
+                return;
+            }
+
+            // Suppress the dark fallback color the installer drops on the panel root —
+            // the 9-slice sprite is the new background.
+            var rootImage = GetComponent<Image>();
+            if (rootImage != null)
+            {
+                rootImage.color = new Color(0f, 0f, 0f, 0f);
+                rootImage.raycastTarget = false;
+            }
+
+            var existing = transform.Find("Background");
+            if (existing != null && existing.TryGetComponent(out _backgroundTiles))
+            {
+                _backgroundTiles.SetRecipe(ModernUiRecipes.DialoguePanel);
+                _backgroundTiles.SetTileSize(new Vector2(48f, 48f));
+                _backgroundTiles.Rebuild();
+                existing.SetAsFirstSibling();
+                return;
+            }
+
+            var go = new GameObject("Background", typeof(RectTransform), typeof(ModernUiTileImage));
+            go.transform.SetParent(transform, false);
+            var rect = (RectTransform)go.transform;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            go.transform.SetAsFirstSibling();
+
+            _backgroundTiles = go.GetComponent<ModernUiTileImage>();
+            _backgroundTiles.SetRecipe(ModernUiRecipes.DialoguePanel);
+            _backgroundTiles.SetTileSize(new Vector2(48f, 48f));
+            _backgroundTiles.Rebuild();
+        }
+
         private void EnsureLineText()
         {
             if (_lineText != null)
@@ -181,7 +244,7 @@ namespace Rootborn.UI.Quests
             _lineText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             _lineText.fontSize = 20;
             _lineText.alignment = TextAnchor.UpperLeft;
-            _lineText.color = new Color(0.96f, 0.93f, 0.84f, 1f);
+            _lineText.color = Color.black;
             _lineText.raycastTarget = false;
         }
 
@@ -252,7 +315,7 @@ namespace Rootborn.UI.Quests
             label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             label.fontSize = 18;
             label.alignment = TextAnchor.MiddleCenter;
-            label.color = new Color(0.96f, 0.93f, 0.84f, 1f);
+            label.color = Color.black;
         }
 
         private void CreateChoiceButton(int choiceIndex, int visibleIndex, DialogueChoiceDefinition choice)
@@ -286,7 +349,7 @@ namespace Rootborn.UI.Quests
             label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             label.fontSize = 18;
             label.alignment = TextAnchor.MiddleCenter;
-            label.color = new Color(0.96f, 0.93f, 0.84f, 1f);
+            label.color = Color.black;
         }
 
         private void ClearChoiceButtons()

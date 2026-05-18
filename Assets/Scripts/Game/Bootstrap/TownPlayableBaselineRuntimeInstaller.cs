@@ -165,8 +165,12 @@ namespace Rootborn.Game.Bootstrap
         private static Vector3 ResolveLocalPlayerSpawnPosition(Scene scene)
         {
             var spawn = FindRoot(scene, "TownSpawnPoint");
-            return spawn != null ? spawn.transform.position : Vector3.zero;
+            if (spawn != null) return spawn.transform.position;
+            return new Vector3(TownSquareSpawnX, TownSquareSpawnY, 0f);
         }
+
+        private const float TownSquareSpawnX = 5f;
+        private const float TownSquareSpawnY = -4f;
 
         private static bool ShouldCreateLocalPlayerFallback()
         {

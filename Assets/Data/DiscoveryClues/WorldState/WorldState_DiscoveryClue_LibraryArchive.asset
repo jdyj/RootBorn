@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 933d8baaccd73054e9a0072c8cf54cca, type: 3}
+  m_Name: WorldState_DiscoveryClue_LibraryArchive
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.WorldState.WorldStateFlagDefinition
+  _id: 
+  _displayNameKey: 
+  _descriptionKey: 
+  _relatedLocation: {fileID: 0}
+  _relatedNpcs: []
+  _relatedQuestChains: []
+  _scopeDefinition: {fileID: 0}
+  _scope: 1
+  _changeKind: 0
+  _nextActionKey: 
+  _visibleSurfaces: 
+  _badges: 
+  _sortPriority: 0
+  _effectVersion: 1

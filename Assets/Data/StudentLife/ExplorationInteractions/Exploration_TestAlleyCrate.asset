@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78ad1c9127451ec419051cecac7a9949, type: 3}
+  m_Name: Exploration_TestAlleyCrate
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.ExplorationInteractionDefinition
+  _id: exploration.test.alley-crate
+  _displayNameKey: Exploration Test Alley Crate
+  _descriptionKey: Exploration Test Alley Crate
+  _worldPosition: {x: 5.25, y: -3.25}
+  _interactionRadius: 1
+  _repeatable: 0
+  _cooldownDays: 0
+  _defaultRiskPolicy: {fileID: 11400000, guid: 5a7700890de97d14d9050d84ef15a6c9, type: 2}
+  _choices:
+  - {fileID: 11400000, guid: f9f8318e1119a124f9538cbe2f21af8f, type: 2}
+  - {fileID: 11400000, guid: 18d505be67de8a34c866d1c9e3e9c546, type: 2}
+  - {fileID: 11400000, guid: 6c00eff74fb5a13488b03a62f14bfda2, type: 2}
+  - {fileID: 11400000, guid: 2650a04f8aebf9c4f8f865947e8b6ac6, type: 2}

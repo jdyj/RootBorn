@@ -15,10 +15,12 @@
     }
   ],
   "dependencies": {
-    "com.ivanmurzak.unity.mcp": "0.70.0",
+    "com.ivanmurzak.unity.mcp": "0.72.1",
     "com.ivanmurzak.unity.mcp.animation": "1.1.33",
     "com.ivanmurzak.unity.mcp.particlesystem": "1.0.60",
     "com.ivanmurzak.unity.mcp.probuilder": "1.0.72",
+    "com.unity.2d.tilemap": "1.0.0",
+    "com.unity.2d.tilemap.extras": "6.0.2",
     "com.unity.addressables": "2.4.6",
     "com.unity.ai.navigation": "2.0.12",
     "com.unity.collab-proxy": "2.12.4",

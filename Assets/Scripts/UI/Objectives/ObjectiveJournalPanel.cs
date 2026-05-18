@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Game.VerticalSlice;
 using Rootborn.UI.Modern;
 using UnityEngine;
 using UnityEngine.UI;
@@ -41,10 +42,34 @@ namespace Rootborn.UI.Objectives
             _trackedHud = trackedHud;
         }
 
+        public void SetItems(string categoryId, ObjectiveJournalItem[] items)
+        {
+            SeedDefaultItems();
+            if (string.IsNullOrEmpty(categoryId)) return;
+            _itemsByCategory[categoryId] = items ?? Array.Empty<ObjectiveJournalItem>();
+            if (_selectedCategory == categoryId && _root != null) RefreshCategory(categoryId);
+        }
+
+        public void SetVerticalSliceSummary(VerticalSliceSummary summary)
+        {
+            var item = new ObjectiveJournalItem(
+                summary.StableKey,
+                "Goals",
+                string.IsNullOrEmpty(summary.NextObjectiveText) ? "Next objective" : summary.NextObjectiveText,
+                summary.DayResultGuideText,
+                summary.ChangedDomainIds.Length >= 2 ? "Linked" : "Started",
+                summary.ChangedDomainIds.Length + " domains changed",
+                string.IsNullOrEmpty(summary.NextActionText) ? summary.FollowUpMotivationText : summary.NextActionText,
+                false,
+                0);
+
+            SetItems("Goals", new[] { item });
+        }
+
         public void Show()
         {
-            EnsureBuilt();
             gameObject.SetActive(true);
+            EnsureBuilt();
             if (_root != null)
             {
                 _root.SetActive(true);
@@ -55,12 +80,12 @@ namespace Rootborn.UI.Objectives
 
         public void Hide()
         {
-            EnsureBuilt();
             if (_root != null)
             {
                 _root.SetActive(false);
             }
             _isVisible = false;
+            gameObject.SetActive(false);
         }
 
         public void SelectCategory(string categoryId)
@@ -141,9 +166,9 @@ namespace Rootborn.UI.Objectives
             }
 
             _root = MakeTilePanel(transform, "ObjectiveJournalRoot", Vector2.zero, rect != null && rect.sizeDelta != Vector2.zero ? rect.sizeDelta : DefaultSize);
-            _categoryRail = (RectTransform)MakeTilePanel(transform, "ObjectiveCategoryRail", new Vector2(-500f, 0f), new Vector2(180f, 640f)).transform;
-            _list = (RectTransform)MakeTilePanel(transform, "ObjectiveList", new Vector2(-220f, 0f), new Vector2(340f, 640f)).transform;
-            _detail = (RectTransform)MakeTilePanel(transform, "ObjectiveDetail", new Vector2(230f, 0f), new Vector2(520f, 640f)).transform;
+            _categoryRail = (RectTransform)MakePlainPanel(_root.transform, "ObjectiveCategoryRail", new Vector2(-500f, 0f), new Vector2(180f, 640f)).transform;
+            _list = (RectTransform)MakePlainPanel(_root.transform, "ObjectiveList", new Vector2(-220f, 0f), new Vector2(340f, 640f)).transform;
+            _detail = (RectTransform)MakePlainPanel(_root.transform, "ObjectiveDetail", new Vector2(230f, 0f), new Vector2(520f, 640f)).transform;
 
             BuildCategoryRail();
             BuildDetailTexts();
@@ -176,7 +201,7 @@ namespace Rootborn.UI.Objectives
 
             for (int i = 0; i < items.Length; i++)
             {
-                var row = MakeTilePanel(_list, "ObjectiveRow_" + i, new Vector2(0f, 282f - i * 58f), new Vector2(292f, 46f));
+                var row = MakePlainPanel(_list, "ObjectiveRow_" + i, new Vector2(0f, 282f - i * 58f), new Vector2(292f, 46f));
                 _listRows.Add(row);
                 MakeText((RectTransform)row.transform, "ObjectiveRowText", items[i].Title + "\n" + items[i].ProgressText, new Vector2(12f, -7f), new Vector2(268f, 34f), 13, TextAnchor.UpperLeft);
             }
@@ -230,10 +255,11 @@ namespace Rootborn.UI.Objectives
                 text += (text.Length == 0 ? string.Empty : "\n") + DefaultCategoryIds[i];
             }
 
-            if (_detailTitle != null && !string.IsNullOrEmpty(_detailTitle.text))
-            {
-                text += "\n" + _detailTitle.text;
-            }
+            AppendVisibleText(ref text, _detailTitle);
+            AppendVisibleText(ref text, _detailBody);
+            AppendVisibleText(ref text, _detailProgress);
+            AppendVisibleText(ref text, _detailReward);
+            AppendVisibleText(ref text, _detailAction);
 
             return text;
         }
@@ -249,9 +275,14 @@ namespace Rootborn.UI.Objectives
             rect.anchoredPosition = position;
             rect.sizeDelta = size;
             var tile = go.GetComponent<ModernUiTileImage>();
-            tile.SetRecipe(ModernUiRecipes.CommonPanel);
+            tile.SetRecipe(ModernUiRecipes.CommonPanel48);
             tile.Rebuild();
             return go;
+        }
+
+        private static GameObject MakePlainPanel(Transform parent, string name, Vector2 position, Vector2 size)
+        {
+            return ModernUiPanelBuilder.CreatePlainContainer(parent, name, position, size);
         }
 
         private static Text MakeText(RectTransform parent, string name, string value, Vector2 position, Vector2 size, int fontSize, TextAnchor alignment)
@@ -272,6 +303,16 @@ namespace Rootborn.UI.Objectives
             text.color = new Color(0.25f, 0.18f, 0.12f, 1f);
             text.raycastTarget = false;
             return text;
+        }
+
+        private static void AppendVisibleText(ref string text, Text value)
+        {
+            if (value == null || string.IsNullOrEmpty(value.text))
+            {
+                return;
+            }
+
+            text += "\n" + value.text;
         }
 
         private static void DestroyObject(GameObject go)

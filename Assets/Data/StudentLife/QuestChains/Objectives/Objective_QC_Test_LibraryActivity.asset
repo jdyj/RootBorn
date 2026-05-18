@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dcf0a2659cc097444933c6add92db01a, type: 3}
+  m_Name: Objective_QC_Test_LibraryActivity
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Quests.Objectives.LocationActivityQuestObjective
+  _displayKey: objective.questchain.library.activity
+  _requiredCount: 1
+  _targetActivity: {fileID: 0}

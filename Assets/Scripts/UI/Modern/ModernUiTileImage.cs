@@ -1,3 +1,4 @@
+using System;
 using Rootborn.Game.Common;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,9 +8,11 @@ namespace Rootborn.UI.Modern
     [ExecuteAlways]
     public sealed class ModernUiTileImage : MonoBehaviour
     {
-        private static readonly Vector2 FixedTileSize = new Vector2(16f, 16f);
+        private static readonly Vector2 DefaultTileSize = new Vector2(16f, 16f);
+        private static Sprite s_fallbackSprite;
 
         [SerializeField] private bool _rebuildOnEnable = true;
+        [SerializeField] private Vector2 _tileSize = DefaultTileSize;
 
         private ModernUiTileRecipe _recipe = ModernUiRecipes.CommonPanel;
         private IModernUiSpriteResolver _resolver = new ModernUiSpriteResolver();
@@ -19,12 +22,18 @@ namespace Rootborn.UI.Modern
 
         public int TileCount => _tileCount;
         public int CornerTileCount => _cornerTileCount;
-        public Vector2 TileSize => FixedTileSize;
+        public Vector2 TileSize => _tileSize;
+        public ModernUiTileRecipe Recipe => _recipe;
         public bool HasStretchedCornerTiles => _hasStretchedCornerTiles;
 
         public void SetRecipe(ModernUiTileRecipe recipe)
         {
             _recipe = recipe ?? ModernUiRecipes.CommonPanel;
+        }
+
+        public void SetTileSize(Vector2 size)
+        {
+            _tileSize = new Vector2(Mathf.Max(1f, size.x), Mathf.Max(1f, size.y));
         }
 
         public void SetResolver(IModernUiSpriteResolver resolver)
@@ -46,8 +55,8 @@ namespace Rootborn.UI.Modern
 
             var rect = (RectTransform)transform;
             Rect bounds = rect.rect;
-            int columns = Mathf.Max(3, Mathf.CeilToInt(bounds.width / FixedTileSize.x));
-            int rows = Mathf.Max(3, Mathf.CeilToInt(bounds.height / FixedTileSize.y));
+            int columns = Mathf.Max(3, Mathf.CeilToInt(bounds.width / _tileSize.x));
+            int rows = Mathf.Max(3, Mathf.CeilToInt(bounds.height / _tileSize.y));
             _tileCount = 0;
             _cornerTileCount = 0;
             _hasStretchedCornerTiles = false;
@@ -64,7 +73,7 @@ namespace Rootborn.UI.Modern
                     {
                         _cornerTileCount++;
                         var tileRect = (RectTransform)tile.transform;
-                        if (tileRect.sizeDelta != FixedTileSize)
+                        if (tileRect.sizeDelta != _tileSize)
                         {
                             _hasStretchedCornerTiles = true;
                         }
@@ -84,16 +93,40 @@ namespace Rootborn.UI.Modern
             rect.anchorMax = parentPivot;
             rect.pivot = new Vector2(0f, 1f);
             rect.anchoredPosition = new Vector2(
-                parentBounds.xMin + column * FixedTileSize.x,
-                parentBounds.yMax - row * FixedTileSize.y);
-            rect.sizeDelta = FixedTileSize;
+                parentBounds.xMin + column * _tileSize.x,
+                parentBounds.yMax - row * _tileSize.y);
+            rect.sizeDelta = _tileSize;
 
             var image = go.GetComponent<Image>();
-            image.sprite = _resolver.Resolve(spriteKey);
+            image.sprite = ResolveSprite(spriteKey);
             image.color = Color.white;
             image.preserveAspect = false;
             image.raycastTarget = false;
             return go;
+        }
+
+        private Sprite ResolveSprite(ModernUiSpriteKey spriteKey)
+        {
+            try
+            {
+                var sprite = _resolver.Resolve(spriteKey);
+                return sprite != null ? sprite : EnsureFallbackSprite();
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning("[ROOTBORN] Modern UI Style2 sprite could not be resolved; using fallback tile. " + exception.Message, this);
+                return EnsureFallbackSprite();
+            }
+        }
+
+        private static Sprite EnsureFallbackSprite()
+        {
+            if (s_fallbackSprite != null) return s_fallbackSprite;
+            var texture = new Texture2D(1, 1, TextureFormat.RGBA32, false);
+            texture.SetPixel(0, 0, Color.white);
+            texture.Apply();
+            s_fallbackSprite = Sprite.Create(texture, new Rect(0f, 0f, 1f, 1f), new Vector2(0.5f, 0.5f), 1f);
+            return s_fallbackSprite;
         }
 
         private void ClearGeneratedTiles()
