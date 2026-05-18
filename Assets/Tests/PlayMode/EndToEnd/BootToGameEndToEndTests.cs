@@ -112,6 +112,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
 
             ClickButtonNamed("NewGameButton");
+            yield return null;
+            ClickButtonNamed("ConfirmButton");
             yield return WaitForScene("Town", 10f);
 
             var service = new SaveService("slot-0", root);
@@ -182,6 +184,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             SaveSlotSelectPanel.EnsureInScene().Show();
             yield return null;
             ClickButtonNamed("NewGameButton");
+            yield return null;
+            ClickButtonNamed("ConfirmButton");
             yield return WaitForScene("Town", 10f);
             yield return WaitForTownRuntime(10f);
 
