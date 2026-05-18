@@ -27,6 +27,7 @@ Implement the goal in `docs/superpowers/goals/2026-05-18-dedicated-server-long-r
 | Server restart with same save slot | `-RestartServerAfterFirstPass` restarts `rootborn-server.exe` with the same `-saveSlot` |
 | Save reload evidence switch | `-RequireSaveReloadEvidence` requires same `saveSlot` evidence in restart logs |
 | Server/client spawn evidence | Script asserts server `Network player spawned` and client owner logs |
+| Ownership guard evidence | Script asserts server-observed `isOwner=False isServer=True` spawn logs and client `isOwner=True` owner logs |
 | Player day-result evidence | Script asserts `Student day result player=client-` logs |
 | World time/day progression evidence | Script asserts server Day 2 confirmation and client Day 2 sync |
 | Fatal log scan | Script scans start failures, exceptions, bind errors, address-in-use, and owner mismatch |

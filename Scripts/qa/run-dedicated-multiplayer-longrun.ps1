@@ -198,7 +198,7 @@ try {
 
         for ($i = 1; $i -le $ClientCount; $i++) {
             Assert-LogContains $serverLog "Dedicated server client connected id=$i" "Dedicated server did not observe client $i"
-            Assert-LogContains $serverLog "Network player spawned owner=$i .* playerId=client-$i" "Dedicated server did not spawn client-$i"
+            Assert-LogContains $serverLog "Network player spawned owner=$i .* isOwner=False isServer=True playerId=client-$i" "Dedicated server did not spawn client-$i as a server-observed non-owner"
 
             $clientLog = $clientLogs[$i]
             Assert-LogContains $clientLog "Client started - joinIp=127.0.0.1 port=$Port" "Client $i did not start"

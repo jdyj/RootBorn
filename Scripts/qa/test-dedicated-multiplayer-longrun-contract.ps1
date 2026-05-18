@@ -32,6 +32,7 @@ try {
     Assert-FileContains $longRunScript "Dedicated server client disconnected id=" "Long-run script must assert disconnect evidence"
     Assert-FileContains $longRunScript "World time next day confirmed by server day=2" "Long-run script must assert day progression"
     Assert-FileContains $longRunScript "Student day result player=client-" "Long-run script must assert player activity results"
+    Assert-FileContains $longRunScript "isOwner=False isServer=True" "Long-run script must assert server-observed non-owner player spawn evidence"
     Assert-FileContains $longRunScript "Failed to bind|Address already in use|owner mismatch" "Long-run script must scan fatal multiplayer patterns"
     Assert-FileContains $longRunScript "Select-String -Path \`$Paths -Pattern \`$fatalPatterns -CaseSensitive" "Fatal log scanning must be case-sensitive so benign Error/error text does not match ERROR"
 
