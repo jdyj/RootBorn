@@ -43,6 +43,15 @@ namespace Rootborn.Tests.PlayMode
             UiInputModuleInstaller.PreferPassiveInputModule = false;
         }
 
+        public static void UseRealInputSystemForCurrentTest()
+        {
+            s_installed = false;
+            SceneManager.sceneLoaded -= HandleSceneLoaded;
+            UiInputModuleInstaller.PreferPassiveInputModule = false;
+            DestroyGuardEventSystems();
+            s_eventSystem = null;
+        }
+
         private static void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             EnsurePassiveEventSystemSurvivesSceneLoads();
@@ -137,6 +146,24 @@ namespace Rootborn.Tests.PlayMode
                 }
 
                 Object.DestroyImmediate(eventSystem.gameObject);
+            }
+        }
+
+        private static void DestroyGuardEventSystems()
+        {
+            var eventSystems = Object.FindObjectsByType<EventSystem>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            for (int i = eventSystems.Length - 1; i >= 0; i--)
+            {
+                var eventSystem = eventSystems[i];
+                if (eventSystem == null)
+                {
+                    continue;
+                }
+
+                if (eventSystem.GetComponent<PassiveInputModule>() != null)
+                {
+                    Object.DestroyImmediate(eventSystem.gameObject);
+                }
             }
         }
 
