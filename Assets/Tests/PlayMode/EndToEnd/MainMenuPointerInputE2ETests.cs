@@ -6,6 +6,7 @@ using Rootborn.UI.MainMenu;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
@@ -31,6 +32,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
 
             var button = GameObject.Find("SinglePlayButton");
             Assert.IsNotNull(button, "MainMenu should expose the SinglePlayButton entry point.");
+            Assert.IsTrue(button.activeInHierarchy, "SinglePlayButton must be active for a player-facing pointer click.");
 
             Vector2 clickPoint = FindRaycastPointFor(button, eventSystem);
             yield return ClickWithMouse(clickPoint);
@@ -102,23 +104,16 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             return Vector2.zero;
         }
 
-        private IEnumerator ClickWithMouse(Vector2 screenPoint)
+        private static IEnumerator ClickWithMouse(Vector2 screenPoint)
         {
             var mouse = InputSystem.AddDevice<Mouse>();
-            Set(mouse.position, screenPoint);
-            InputSystem.Update();
+            mouse.MakeCurrent();
+            var driver = new GameObject("MainMenuPointerClickDriver").AddComponent<MouseClickFrameDriver>();
+            driver.Configure(mouse, screenPoint);
             yield return null;
             yield return null;
-
-            Press(mouse.leftButton);
-            InputSystem.Update();
             yield return null;
-            yield return null;
-
-            Release(mouse.leftButton);
-            InputSystem.Update();
-            yield return null;
-            yield return null;
+            InputSystem.RemoveDevice(mouse);
         }
 
         private static IEnumerator CaptureEvidence(string relativePath)
@@ -135,6 +130,50 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             }
 
             Assert.IsTrue(File.Exists(fullPath), "MainMenu pointer evidence screenshot was not written: " + fullPath);
+        }
+
+        [DefaultExecutionOrder(-10000)]
+        private sealed class MouseClickFrameDriver : MonoBehaviour
+        {
+            private Mouse _mouse;
+            private Vector2 _screenPosition;
+            private int _frame;
+
+            public void Configure(Mouse mouse, Vector2 screenPosition)
+            {
+                _mouse = mouse;
+                _screenPosition = screenPosition;
+            }
+
+            private void Update()
+            {
+                if (_mouse == null)
+                {
+                    Destroy(gameObject);
+                    return;
+                }
+
+                _mouse.MakeCurrent();
+                if (_frame == 0)
+                {
+                    InputSystem.QueueStateEvent(_mouse, new MouseState { position = _screenPosition });
+                    InputSystem.Update();
+                    _frame++;
+                    return;
+                }
+
+                if (_frame == 1)
+                {
+                    InputSystem.QueueStateEvent(_mouse, new MouseState { position = _screenPosition, buttons = 1 });
+                    InputSystem.Update();
+                    _frame++;
+                    return;
+                }
+
+                InputSystem.QueueStateEvent(_mouse, new MouseState { position = _screenPosition });
+                InputSystem.Update();
+                Destroy(gameObject);
+            }
         }
     }
 }

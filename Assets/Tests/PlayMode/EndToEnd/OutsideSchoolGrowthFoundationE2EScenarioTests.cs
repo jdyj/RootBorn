@@ -41,7 +41,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         }
 
         [UnityTearDown]
-        public IEnumerator TearDown()
+        public new IEnumerator TearDown()
         {
             ActiveSaveContext.Clear();
             PlayerGlobalState.ClearForTests();
@@ -62,6 +62,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
+            yield return null;
+            yield return ClickButton(FindButton("SpumCharacterCreatorPanel", "ConfirmButton"));
             yield return WaitForScene("Town", 10f, "OUTSIDE-FOUNDATION-E2E-001 failed: SaveSlot New Game did not enter Town.");
             yield return WaitForOutsideRuntime(10f);
             LogAssert.ignoreFailingMessages = true;

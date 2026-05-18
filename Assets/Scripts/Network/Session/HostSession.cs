@@ -49,14 +49,15 @@ namespace Rootborn.Network.Session
             }
 
             Debug.Log($"[ROOTBORN] Host started - port={config.Port} saveSlot={config.SaveSlot}");
-            if (nm.SceneManager == null)
+            if (nm.NetworkConfig != null && nm.NetworkConfig.EnableSceneManagement && nm.SceneManager != null)
             {
-                Debug.LogError("[ROOTBORN] Host network SceneManager missing after StartHost.");
-                return Task.CompletedTask;
+                var status = nm.SceneManager.LoadScene(TownSceneName, LoadSceneMode.Single);
+                Debug.Log($"[ROOTBORN] Host requested network scene load scene={TownSceneName} status={status}");
             }
-
-            var status = nm.SceneManager.LoadScene(TownSceneName, LoadSceneMode.Single);
-            Debug.Log($"[ROOTBORN] Host requested network scene load scene={TownSceneName} status={status}");
+            else
+            {
+                Debug.Log("[ROOTBORN] Host skipped network scene load because Netcode scene management is disabled.");
+            }
             return Task.CompletedTask;
         }
 
