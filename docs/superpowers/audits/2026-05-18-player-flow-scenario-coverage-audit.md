@@ -102,7 +102,14 @@ They may support Phase B and Phase C, but completion requires the PlayMode paths
 
 ## Verification Results
 
-- EditMode `ScenarioCoverageMappingTests`: PASS, 5 passed, 0 failed, duration `00:00:01.0874420`.
-- PlayMode `IntegratedVerticalSliceFoundationE2ETests.TOWN_FLOW_001_003_NewGameTownObjectiveJournalDayResultReloadAndDedupe`: PASS, 1 passed, 0 failed, duration `00:00:18.0991935`.
-- PlayMode `HousePlacementSaveLoadE2EScenarioTests.HOUSE_FLOW_001_003_NewGamePlaceSaveExitLoadRestoresHouseFurnitureWithVisualEvidence`: PASS, 1 passed, 0 failed, duration `00:00:22.1442292`.
-- Entity branching gate: pending final run.
+- EditMode `ScenarioCoverageMappingTests`: PASS, 5 passed, 0 failed, duration `00:00:01.0821011`.
+- PlayMode `IntegratedVerticalSliceFoundationE2ETests.TOWN_FLOW_001_003_NewGameTownObjectiveJournalDayResultReloadAndDedupe`: PASS, 1 passed, 0 failed, duration `00:00:17.9917226`.
+- PlayMode `HousePlacementSaveLoadE2EScenarioTests.HOUSE_FLOW_001_003_NewGamePlaceSaveExitLoadRestoresHouseFurnitureWithVisualEvidence`: PASS, 1 passed, 0 failed, duration `00:00:20.0391699`.
+- Entity branching gate `Scripts/ci/check-no-entity-id-branching.sh`: PASS, `OK: no entity-id branching in system code.`
+- Evidence files refreshed:
+  - `production/qa/evidence/town-core-flow-objective-journal.png` length `39525`
+  - `production/qa/evidence/town-core-flow-day-result.png` length `60090`
+  - `production/qa/evidence/house-interior-placement-before-reload.png` length `111507`
+  - `production/qa/evidence/house-interior-placement-before-reload-probe.txt` length `251`
+  - `production/qa/evidence/house-interior-placement-after-reload.png` length `113739`
+  - `production/qa/evidence/house-interior-placement-after-reload-probe.txt` length `251`
