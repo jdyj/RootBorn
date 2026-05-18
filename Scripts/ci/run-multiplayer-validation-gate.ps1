@@ -82,6 +82,12 @@ try {
 
         if (Select-String -Path $serverBuildLog -Pattern "\[ROOTBORN\] Server build .* result=Succeeded" -Quiet) {
             Write-Host "Dedicated server build passed."
+            if ($RequireDedicatedServer) {
+                powershell.exe -ExecutionPolicy Bypass -File "Scripts\qa\run-dedicated-multiplayer-smoke.ps1" `
+                    -Port ($SmokePort + 1) `
+                    -RunName "$SmokeRunName-dedicated" `
+                    -WaitSeconds $SmokeWaitSeconds
+            }
         }
         elseif (Select-String -Path $serverBuildLog -Pattern "Dedicated Server support for Win is not installed" -Quiet) {
             $message = "Dedicated server build is blocked because Unity Windows Dedicated Server support is not installed."
@@ -103,6 +109,7 @@ try {
         Result = "Passed"
         ClientBuildLog = if ($SkipClientBuild) { "" } else { $clientBuildLog }
         SmokeLogDir = Join-Path $logsRoot $SmokeRunName
+        DedicatedSmokeLogDir = if ($RequireDedicatedServer -and -not $SkipServerBuild) { Join-Path $logsRoot "$SmokeRunName-dedicated" } else { "" }
         ServerBuildLog = if ($SkipServerBuild) { "" } else { $serverBuildLog }
         DedicatedServerRequired = [bool]$RequireDedicatedServer
     } | Format-List
