@@ -183,7 +183,9 @@ namespace Rootborn.UI.Objectives
             for (int i = 0; i < DefaultCategoryIds.Length; i++)
             {
                 string category = DefaultCategoryIds[i];
-                MakeText(_categoryRail, "ObjectiveCategory_" + category, category, new Vector2(18f, -24f - i * 48f), new Vector2(144f, 34f), 16, TextAnchor.MiddleLeft);
+                var categoryButton = ModernUiPanelBuilder.CreatePlainButton(_categoryRail, "ObjectiveCategory_" + category, new Vector2(90f, 292f - i * 48f), new Vector2(144f, 34f));
+                categoryButton.GetComponent<Button>().onClick.AddListener(() => SelectCategory(category));
+                MakeText((RectTransform)categoryButton.transform, "ObjectiveCategoryLabel_" + category, category, new Vector2(8f, -5f), new Vector2(128f, 24f), 16, TextAnchor.MiddleLeft);
             }
         }
 
@@ -223,7 +225,9 @@ namespace Rootborn.UI.Objectives
             _detailProgress = MakeText(_detail, "ObjectiveDetailProgress", string.Empty, new Vector2(24f, -214f), new Vector2(472f, 36f), 15, TextAnchor.UpperLeft);
             _detailReward = MakeText(_detail, "ObjectiveDetailReward", string.Empty, new Vector2(24f, -266f), new Vector2(472f, 36f), 15, TextAnchor.UpperLeft);
             _detailAction = MakeText(_detail, "ObjectiveDetailAction", string.Empty, new Vector2(24f, -318f), new Vector2(472f, 54f), 15, TextAnchor.UpperLeft);
-            MakeText(_detail, "ObjectiveTrackButtonLabel", "Track", new Vector2(24f, -560f), new Vector2(120f, 32f), 16, TextAnchor.MiddleCenter);
+            var trackButton = ModernUiPanelBuilder.CreatePlainButton(_detail, "ObjectiveTrackButton", new Vector2(-176f, -258f), new Vector2(120f, 32f));
+            trackButton.GetComponent<Button>().onClick.AddListener(TrackSelectedItem);
+            MakeText((RectTransform)trackButton.transform, "ObjectiveTrackButtonLabel", "Track", new Vector2(8f, -4f), new Vector2(104f, 24f), 16, TextAnchor.MiddleCenter);
         }
 
         private void RefreshDetail(ObjectiveJournalItem item)

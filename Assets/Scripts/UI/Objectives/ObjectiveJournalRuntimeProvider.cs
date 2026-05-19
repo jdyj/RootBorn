@@ -41,11 +41,7 @@ namespace Rootborn.UI.Objectives
                 return;
             }
 
-            if (_aggregator == null)
-            {
-                RebuildAggregator();
-            }
-
+            RebuildAggregator();
             GameDataRegistryProvider.TryGet(out var registry);
             var metadata = ActiveSaveContext.Metadata;
             string trackedStableKey = string.Empty;
@@ -65,7 +61,7 @@ namespace Rootborn.UI.Objectives
         private IEnumerable<IObjectiveJournalSource> BuildSources()
         {
             yield return new StudentDayGuideObjectiveSource();
-            yield return new QuestLogObjectiveSource(FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include));
+            yield return new QuestLogObjectiveSource();
             yield return new CampaignObjectiveSource();
             yield return new MilestoneObjectiveSource();
         }
@@ -98,34 +94,29 @@ namespace Rootborn.UI.Objectives
         private sealed class QuestLogObjectiveSource : IObjectiveJournalSource
         {
             private static readonly ObjectiveJournalCategory CategoryValue = new ObjectiveJournalCategory("Quests", "Quests");
-            private readonly QuestLogPanel _questPanel;
-
-            public QuestLogObjectiveSource(QuestLogPanel questPanel)
-            {
-                _questPanel = questPanel;
-            }
 
             public string SourceId => "quest-log";
             public ObjectiveJournalCategory Category => CategoryValue;
 
             public ObjectiveJournalItem[] BuildItems(ObjectiveJournalContext context)
             {
-                if (_questPanel == null || _questPanel.QuestLog == null || _questPanel.Quests == null)
+                var questPanel = FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
+                if (questPanel == null || questPanel.QuestLog == null || questPanel.Quests == null)
                 {
                     return Array.Empty<ObjectiveJournalItem>();
                 }
 
                 var items = new List<ObjectiveJournalItem>();
-                for (int i = 0; i < _questPanel.Quests.Length; i++)
+                for (int i = 0; i < questPanel.Quests.Length; i++)
                 {
-                    var quest = _questPanel.Quests[i];
+                    var quest = questPanel.Quests[i];
                     if (quest == null || string.IsNullOrEmpty(quest.Id))
                     {
                         continue;
                     }
 
-                    var state = _questPanel.QuestLog.GetState(quest);
-                    if (state == QuestState.NotStarted || state == QuestState.RewardClaimed)
+                    var state = questPanel.QuestLog.GetState(quest);
+                    if (state == QuestState.RewardClaimed)
                     {
                         continue;
                     }
@@ -135,11 +126,11 @@ namespace Rootborn.UI.Objectives
                         Category.CategoryId,
                         SafeText(quest.DisplayNameKey, quest.Id),
                         SafeText(quest.DescriptionKey, string.Empty),
-                        state.ToString(),
-                        BuildObjectiveText(_questPanel.QuestLog, quest),
-                        "Review the quest detail and complete the next objective.",
+                        state == QuestState.NotStarted ? "Available" : state.ToString(),
+                        BuildObjectiveText(questPanel.QuestLog, quest),
+                        state == QuestState.NotStarted ? "Accept this quest from its provider." : "Review the quest detail and complete the next objective.",
                         false,
-                        state == QuestState.Completed ? 10 : 20));
+                        state == QuestState.Completed ? 10 : state == QuestState.Active ? 20 : 40));
                 }
 
                 return items.ToArray();
