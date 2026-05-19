@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Game.Save;
 using Rootborn.Game.VerticalSlice;
 using Rootborn.UI.Modern;
 using UnityEngine;
@@ -123,7 +124,9 @@ namespace Rootborn.UI.Objectives
                 return;
             }
 
-            _trackedHud.Show(items[_selectedItemIndex]);
+            var selected = items[_selectedItemIndex];
+            _trackedHud.Show(selected);
+            ObjectiveJournalTrackingStore.Save(ActiveSaveContext.Metadata, selected.CategoryId, selected.StableKey);
         }
 
         private void SeedDefaultItems()

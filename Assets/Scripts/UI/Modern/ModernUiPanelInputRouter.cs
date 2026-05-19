@@ -11,6 +11,7 @@ namespace Rootborn.UI.Modern
         [SerializeField] private ModernUiStatusPanel _statusPanel;
         [SerializeField] private SettingsPanel _settingsPanel;
         [SerializeField] private ObjectiveJournalPanel _objectiveJournalPanel;
+        [SerializeField] private ObjectiveJournalRuntimeProvider _objectiveJournalProvider;
 
         private bool _wasInventoryKeyPressed;
         private bool _wasStatusKeyPressed;
@@ -33,6 +34,7 @@ namespace Rootborn.UI.Modern
             _statusPanel = statusPanel;
             _settingsPanel = settingsPanel;
             _objectiveJournalPanel = objectiveJournalPanel;
+            _objectiveJournalProvider = objectiveJournalPanel != null ? objectiveJournalPanel.GetComponentInParent<ObjectiveJournalRuntimeProvider>() : null;
         }
 
         private void OnEnable()
@@ -145,6 +147,11 @@ namespace Rootborn.UI.Modern
 
             if (willShow)
             {
+                if (_objectiveJournalProvider == null)
+                {
+                    _objectiveJournalProvider = _objectiveJournalPanel.GetComponentInParent<ObjectiveJournalRuntimeProvider>();
+                }
+                _objectiveJournalProvider?.RefreshNow();
                 _objectiveJournalPanel.Show();
             }
             else

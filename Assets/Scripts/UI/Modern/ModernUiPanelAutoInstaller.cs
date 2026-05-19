@@ -45,6 +45,13 @@ namespace Rootborn.UI.Modern
             PositionTrackedObjectiveHud(trackedObjectiveHud.transform as RectTransform);
             objectiveJournalPanel.BindTrackedHud(trackedObjectiveHud);
 
+            var objectiveProvider = host.GetComponent<ObjectiveJournalRuntimeProvider>();
+            if (objectiveProvider == null)
+            {
+                objectiveProvider = host.AddComponent<ObjectiveJournalRuntimeProvider>();
+            }
+            objectiveProvider.Bind(objectiveJournalPanel, trackedObjectiveHud, playerInventory != null ? playerInventory.gameObject : null);
+
             var router = host.GetComponent<ModernUiPanelInputRouter>();
             if (router == null)
             {
@@ -85,9 +92,6 @@ namespace Rootborn.UI.Modern
             rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.anchoredPosition = Vector2.zero;
-            // Inventory panel sizes itself from its own DefaultSize constant (see
-            // ModernUiInventoryPanel.EnsureBuilt). Leaving sizeDelta at zero lets it
-            // pick up its own size; other panels keep the AutoInstaller defaults.
             if (typeof(T) == typeof(ModernUiInventoryPanel))
             {
                 rect.sizeDelta = Vector2.zero;
