@@ -1,0 +1,9 @@
+{
+    "testMethod":  "Rootborn.Tests.EditMode.StaticRuntimeUsageGateTests.STATIC_002_RuntimeResourcesAndFindUsages_StayInsideReviewedAllowlist",
+    "testMode":  "EditMode",
+    "includePassingTests":  true,
+    "includeLogs":  true,
+    "includeMessages":  true,
+    "logType":  "Error",
+    "includeStacktrace":  true
+}
