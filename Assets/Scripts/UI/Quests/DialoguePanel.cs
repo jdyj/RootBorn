@@ -53,12 +53,6 @@ namespace Rootborn.UI.Quests
             {
                 if (visible) milestone.Show(); else milestone.Hide();
             }
-
-            var campaign = UnityEngine.Object.FindFirstObjectByType<CampaignHudPanel>(FindObjectsInactive.Include);
-            if (campaign != null)
-            {
-                if (visible) campaign.Show(); else campaign.Hide();
-            }
         }
 
         public bool Choose(int choiceIndex)
@@ -184,8 +178,7 @@ namespace Rootborn.UI.Quests
                 return;
             }
 
-            // Suppress the dark fallback color the installer drops on the panel root —
-            // the 9-slice sprite is the new background.
+            // Suppress the dark fallback color the installer drops on the panel root.
             var rootImage = GetComponent<Image>();
             if (rootImage != null)
             {

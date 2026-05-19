@@ -114,6 +114,7 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
                 var items = BuildItemsFromSource("CampaignObjectiveSource", player, null);
 
                 Assert.AreEqual(1, items.Length);
+                Assert.AreEqual("Campaign", items[0].CategoryId);
                 Assert.AreEqual("Active", items[0].State);
                 StringAssert.Contains("Campaign day 2", items[0].ProgressText);
                 StringAssert.Contains("Library route", items[0].ProgressText);
@@ -126,6 +127,45 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
                 UnityEngine.Object.DestroyImmediate(visitObjective);
                 UnityEngine.Object.DestroyImmediate(talkObjective);
                 UnityEngine.Object.DestroyImmediate(route);
+                UnityEngine.Object.DestroyImmediate(day);
+                UnityEngine.Object.DestroyImmediate(campaign);
+            }
+        }
+
+        [Test]
+        public void CampaignObjectiveSource_DisplaysAvailableRoutesBeforeRouteSelection()
+        {
+            var visitObjective = ScriptableObject.CreateInstance<CampaignActivityLogObjective>();
+            visitObjective.ConfigureForTests("campaign.objective.visit-town", "location.town-square", 1, false);
+            var townRoute = ScriptableObject.CreateInstance<CampaignRouteDefinition>();
+            townRoute.ConfigureForTests("campaign.route.town", "Town square path", "Visit town square", new CampaignObjectiveBase[] { visitObjective });
+            var libraryRoute = ScriptableObject.CreateInstance<CampaignRouteDefinition>();
+            libraryRoute.ConfigureForTests("campaign.route.library", "Library path", "Use the library", new CampaignObjectiveBase[] { visitObjective });
+            var day = ScriptableObject.CreateInstance<CampaignDayDefinition>();
+            day.ConfigureForTests("campaign.day.one", 1, "Town adaptation", "Choose a route", "Find growth", new[] { townRoute, libraryRoute });
+            var campaign = ScriptableObject.CreateInstance<CampaignDefinition>();
+            campaign.ConfigureForTests("campaign.test", "Test Campaign", "Campaign description", new[] { day }, Array.Empty<CampaignRewardBase>());
+            var player = new GameObject("CampaignPlayer");
+
+            try
+            {
+                var student = player.AddComponent<StudentLifeProgressComponent>();
+                student.ConfigureForTests("campaign-slot", "player", 10, 10, 0, 8 * 60);
+                player.AddComponent<CampaignProgressComponent>().EnsureProgress(campaign, student.Progress);
+
+                var items = BuildItemsFromSource("CampaignObjectiveSource", player, null);
+
+                Assert.AreEqual(1, items.Length);
+                StringAssert.Contains("Town square path", items[0].ProgressText);
+                StringAssert.Contains("Library path", items[0].ProgressText);
+                StringAssert.Contains("Find growth", items[0].NextHintText);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(player);
+                UnityEngine.Object.DestroyImmediate(visitObjective);
+                UnityEngine.Object.DestroyImmediate(townRoute);
+                UnityEngine.Object.DestroyImmediate(libraryRoute);
                 UnityEngine.Object.DestroyImmediate(day);
                 UnityEngine.Object.DestroyImmediate(campaign);
             }

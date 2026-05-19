@@ -7,6 +7,7 @@ using Rootborn.Game.Managers;
 using Rootborn.Game.Save;
 using Rootborn.Game.StudentLife;
 using Rootborn.UI.MainMenu;
+using Rootborn.UI.Objectives;
 using Rootborn.UI.Quests;
 using Rootborn.UI.StudentLife;
 using UnityEngine;
@@ -172,7 +173,9 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                     player != null &&
                     player.GetComponent<StudentLifeProgressComponent>() != null &&
                     Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include) != null &&
-                    Object.FindFirstObjectByType<CampaignHudPanel>(FindObjectsInactive.Include) != null &&
+                    Object.FindFirstObjectByType<ObjectiveJournalPanel>(FindObjectsInactive.Include) != null &&
+                    Object.FindFirstObjectByType<ObjectiveJournalRuntimeProvider>(FindObjectsInactive.Include) != null &&
+                    Object.FindFirstObjectByType<TrackedObjectiveHud>(FindObjectsInactive.Include) != null &&
                     Object.FindFirstObjectByType<DailyEventPanel>(FindObjectsInactive.Include) != null)
                 {
                     yield break;
@@ -182,7 +185,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 yield return null;
             }
 
-            Assert.Fail("Town runtime did not expose provider-backed player, quest UI, campaign HUD, and daily event panel within timeout.");
+            Assert.Fail("Town runtime did not expose provider-backed player, quest UI, Objective Journal, tracked objective HUD, and daily event panel within timeout.");
         }
 
         private static bool TryFindRaycastPointFor(GameObject target, EventSystem eventSystem, out Vector2 screenPoint)

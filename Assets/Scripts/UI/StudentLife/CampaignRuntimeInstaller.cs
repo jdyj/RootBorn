@@ -8,7 +8,6 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
 namespace Rootborn.UI.StudentLife
 {
@@ -57,7 +56,6 @@ namespace Rootborn.UI.StudentLife
         private sealed class Runner : MonoBehaviour
         {
             private Scene _scene;
-            private CampaignHudPanel _hud;
             private CampaignProgressComponent _campaignProgress;
             private StudentLifeProgressComponent _student;
             private CampaignDefinition _campaign;
@@ -75,9 +73,7 @@ namespace Rootborn.UI.StudentLife
                     yield return null;
                 }
 
-                var canvas = EnsureCanvas(_scene);
                 EnsureEventSystem(_scene);
-                _hud = CampaignHudPanel.EnsureInScene(canvas);
                 if (player != null) BindPlayer(player);
                 Refresh();
             }
@@ -140,9 +136,10 @@ namespace Rootborn.UI.StudentLife
 
             private void Refresh()
             {
-                if (_hud == null) return;
-                if (_student != null && _campaignProgress != null) _campaignProgress.Progress.SetCurrentDayNumber(_student.EnsureProgress().CurrentDay);
-                _hud.Refresh(CampaignSummaryBuilder.BuildHudSummary(_campaign, _campaignProgress != null ? _campaignProgress.Progress : null));
+                if (_student != null && _campaignProgress != null)
+                {
+                    _campaignProgress.Progress.SetCurrentDayNumber(_student.EnsureProgress().CurrentDay);
+                }
             }
         }
 
@@ -182,23 +179,6 @@ namespace Rootborn.UI.StudentLife
         private static GameDataRegistry ResolveRegistry()
         {
             return GameDataRegistryProvider.TryGet(out var registry) ? registry : null;
-        }
-
-        private static Canvas EnsureCanvas(Scene scene)
-        {
-            var canvas = FindComponentInScene<Canvas>(scene);
-            if (canvas != null) return canvas;
-            var canvasGo = new GameObject("[CampaignCanvas]", typeof(RectTransform));
-            SceneManager.MoveGameObjectToScene(canvasGo, scene);
-            canvas = canvasGo.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 82;
-            var scaler = canvasGo.AddComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920f, 1080f);
-            scaler.matchWidthOrHeight = 0.5f;
-            canvasGo.AddComponent<GraphicRaycaster>();
-            return canvas;
         }
 
         private static void EnsureEventSystem(Scene scene)

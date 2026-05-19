@@ -211,6 +211,12 @@ namespace Rootborn.UI.Objectives
                     return Array.Empty<ObjectiveJournalItem>();
                 }
 
+                var student = context.Player.GetComponent<StudentLifeProgressComponent>()?.Progress;
+                if (student != null)
+                {
+                    component.Progress.SetCurrentDayNumber(student.CurrentDay);
+                }
+
                 var day = component.Campaign.GetDayByNumber(component.Progress.CurrentDayNumber);
                 if (day == null)
                 {
@@ -240,6 +246,14 @@ namespace Rootborn.UI.Objectives
                 {
                     text += " | Route: " + SafeText(selectedRoute.DisplayNameKey, selectedRoute.Id);
                 }
+                else
+                {
+                    string routesText = BuildAvailableRouteText(day);
+                    if (!string.IsNullOrEmpty(routesText))
+                    {
+                        text += " | Routes: " + routesText;
+                    }
+                }
 
                 var completed = progress != null ? progress.LastProgressLogIds : Array.Empty<string>();
                 if (completed.Length > 0)
@@ -248,6 +262,26 @@ namespace Rootborn.UI.Objectives
                 }
 
                 return text;
+            }
+
+            private static string BuildAvailableRouteText(CampaignDayDefinition day)
+            {
+                if (day == null || day.Routes == null || day.Routes.Length == 0)
+                {
+                    return string.Empty;
+                }
+
+                var names = new List<string>();
+                for (int i = 0; i < day.Routes.Length; i++)
+                {
+                    var route = day.Routes[i];
+                    if (route != null)
+                    {
+                        names.Add(SafeText(route.DisplayNameKey, route.Id));
+                    }
+                }
+
+                return string.Join(", ", names.ToArray());
             }
 
             private static CampaignRouteDefinition ResolveSelectedRoute(CampaignProgress progress, CampaignDayDefinition day)
