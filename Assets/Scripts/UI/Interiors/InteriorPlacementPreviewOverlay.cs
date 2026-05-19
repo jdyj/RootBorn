@@ -166,6 +166,21 @@ namespace Rootborn.UI.Interiors
             return false;
         }
 
+        public bool SelectFirstFurnitureForTests()
+        {
+            var catalog = InteriorFurnitureCatalog.LoadFurniture();
+            for (int i = 0; i < catalog.Count; i++)
+            {
+                if (catalog[i] != null && catalog[i].PlacementDefinition != null)
+                {
+                    RefreshFurniture(_map, _request, _applier, catalog[i]);
+                    return true;
+                }
+            }
+
+            LastMessage = "No furniture definition available";
+            return false;
+        }
         public bool MoveSelectedFurniture()
         {
             if (!_hasSelectedInstance || _surface == null || _map == null || _activeFurniture == null)
