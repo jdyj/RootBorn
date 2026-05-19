@@ -24,12 +24,14 @@ namespace Rootborn.Tests.EditMode
         private static readonly HashSet<string> MigratedRegistryProviderCallers = new HashSet<string>
         {
             "Assets/Scripts/UI/StudentLife/CampaignRuntimeInstaller.cs",
-            "Assets/Scripts/UI/StudentLife/DailyEventRuntimeInstaller.cs"
+            "Assets/Scripts/UI/StudentLife/DailyEventRuntimeInstaller.cs",
+            "Assets/Scripts/UI/HUD/FarmCharacterHudOverlayInstaller.cs",
+            "Assets/Scripts/Game/WorldGeneration/SeededFarmWorldApplier.cs",
+            "Assets/Scripts/Game/Bootstrap/FarmAutoFiller.cs"
         };
 
         private static readonly HashSet<string> AllowedRuntimeResourceOrFindUsages = new HashSet<string>
         {
-            "Assets/Scripts/Game/Bootstrap/FarmAutoFiller.cs :: var fromResources = UnityEngine.Resources.Load<GameDataRegistry>(\"GameDataRegistry\");",
             "Assets/Scripts/Game/Bootstrap/FarmAutoFiller.cs :: var allRegistries = UnityEngine.Resources.FindObjectsOfTypeAll<GameDataRegistry>();",
             "Assets/Scripts/Game/Bootstrap/FarmAutoFiller.cs :: var allSprites = UnityEngine.Resources.FindObjectsOfTypeAll<Sprite>();",
             "Assets/Scripts/Game/Bootstrap/FarmAutoFiller.cs :: if (Object.FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() == null)",
@@ -41,13 +43,11 @@ namespace Rootborn.Tests.EditMode
             "Assets/Scripts/Game/Managers/Managers.cs :: var existing = GameObject.Find(\"@Managers\");",
             "Assets/Scripts/Game/Player/GatherInteractor.cs :: var all = Object.FindObjectsByType<ResourceNode>(FindObjectsSortMode.None);",
             "Assets/Scripts/Game/WorldGeneration/SeededFarmWorldApplier.cs :: if (Object.FindFirstObjectByType<SeededFarmWorldApplier>() != null)",
-            "Assets/Scripts/Game/WorldGeneration/SeededFarmWorldApplier.cs :: registry = global::UnityEngine.Resources.Load<GameDataRegistry>(\"GameDataRegistry\");",
             "Assets/Scripts/Game/WorldGeneration/SeededFarmWorldApplier.cs :: var tilemap = Object.FindFirstObjectByType<Tilemap>();",
             "Assets/Scripts/Game/WorldGeneration/SeededFarmWorldApplier.cs :: var root = GameObject.Find(\"[Resources]\");",
             "Assets/Scripts/UI/HUD/FarmCharacterHudOverlayInstaller.cs :: var farmCanvas = GameObject.Find(\"[FarmCanvas]\");",
             "Assets/Scripts/UI/HUD/FarmCharacterHudOverlayInstaller.cs :: foreach (var candidate in Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None)) if (candidate != null && candidate.name == \"[FarmCanvas]\") return candidate;",
             "Assets/Scripts/UI/HUD/FarmCharacterHudOverlayInstaller.cs :: var canvases = Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);",
-            "Assets/Scripts/UI/HUD/FarmCharacterHudOverlayInstaller.cs :: var registry = Rootborn.Game.Managers.Managers.Data?.Registry ?? Resources.Load<GameDataRegistry>(\"GameDataRegistry\");",
             "Assets/Scripts/UI/HUD/StatusHud.cs :: _cached = Resources.Load<Font>(\"Fonts/VaultUI\");",
             "Assets/Scripts/UI/HUD/StatusHud.cs :: var playerGo = GameObject.Find(\"Player\");",
             "Assets/Scripts/UI/MainMenu/SaveSlotSelectPanel.cs :: var existing = Object.FindFirstObjectByType<SaveSlotSelectPanel>(FindObjectsInactive.Include);",

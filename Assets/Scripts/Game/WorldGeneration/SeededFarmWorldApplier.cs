@@ -41,10 +41,9 @@ namespace Rootborn.Game.WorldGeneration
                 return;
             }
 
-            var registry = Rootborn.Game.Managers.Managers.Data != null ? Rootborn.Game.Managers.Managers.Data.Registry : null;
-            if (registry == null)
+            if (!GameDataRegistryProvider.TryGet(out var registry))
             {
-                registry = global::UnityEngine.Resources.Load<GameDataRegistry>("GameDataRegistry");
+                return;
             }
 
             if (registry == null || registry.DefaultFarmTerrainGeneration == null)

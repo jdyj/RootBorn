@@ -260,7 +260,7 @@ namespace Rootborn.UI.HUD
         {
             var thumbnailRoot = hudRoot.Find("CharacterThumbnailFrame/CharacterThumbnail");
             if (thumbnailRoot == null) return;
-            var registry = Rootborn.Game.Managers.Managers.Data?.Registry ?? Resources.Load<GameDataRegistry>("GameDataRegistry");
+            if (!GameDataRegistryProvider.TryGet(out var registry)) return;
             if (registry == null || registry.CharacterParts == null) return;
             var saved = ActiveSaveContext.Metadata != null ? ActiveSaveContext.Metadata.Appearance : null;
             var appearance = CharacterAppearance.ResolveWithDefaults(saved, registry.CharacterParts);

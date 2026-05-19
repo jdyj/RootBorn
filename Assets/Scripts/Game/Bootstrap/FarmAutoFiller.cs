@@ -19,7 +19,7 @@ namespace Rootborn.Game.Bootstrap
         {
             if (SceneManager.GetActiveScene().name != "Farm") return;
 
-            // Managers 가 아직 부팅 안 된 경우 (씬 직접 Play 로 들어온 경우) 부트스트랩 보장
+            // Managers 媛 ?꾩쭅 遺??????寃쎌슦 (??吏곸젒 Play 濡??ㅼ뼱??寃쎌슦) 遺?몄뒪?몃옪 蹂댁옣
             if (Managers.Managers.Instance == null || Managers.Managers.Instance.IsBootstrapped == false)
             {
                 await Managers.Managers.BootstrapAsync();
@@ -30,7 +30,7 @@ namespace Rootborn.Game.Bootstrap
         public void FillIfEmpty()
         {
             var data = Managers.Managers.Data;
-            var registry = data?.Registry ?? LoadRegistryFallback();
+            var registry = GameDataRegistryProvider.TryGet(out var activeRegistry) ? activeRegistry : LoadRegistryFallback();
             if (registry == null)
             {
                 Debug.LogWarning("[ROOTBORN/AutoFiller] GameDataRegistry not found via DataManager or Resources. Skipping auto-fill.");
@@ -50,16 +50,14 @@ namespace Rootborn.Game.Bootstrap
 
         private static GameDataRegistry LoadRegistryFallback()
         {
-            var fromResources = UnityEngine.Resources.Load<GameDataRegistry>("GameDataRegistry");
-            if (fromResources != null) return fromResources;
             var allRegistries = UnityEngine.Resources.FindObjectsOfTypeAll<GameDataRegistry>();
             return (allRegistries != null && allRegistries.Length > 0) ? allRegistries[0] : null;
         }
 
         private static void EnsureCamera()
         {
-            // 기존 Main Camera가 있으면 재사용하되 Orthographic + 위치/배경 강제 셋업.
-            // SampleScene에서 복사한 Farm 씬은 3D 원근 카메라 + Skybox 클리어를 가지고 있을 수 있음.
+            // 湲곗〈 Main Camera媛 ?덉쑝硫??ъ궗?⑺븯??Orthographic + ?꾩튂/諛곌꼍 媛뺤젣 ?뗭뾽.
+            // SampleScene?먯꽌 蹂듭궗??Farm ?ъ? 3D ?먭렐 移대찓??+ Skybox ?대━?대? 媛吏怨??덉쓣 ???덉쓬.
             Camera cam = Camera.main;
             if (cam == null)
             {
@@ -76,7 +74,7 @@ namespace Rootborn.Game.Bootstrap
             cam.transform.position = new Vector3(GroundCols * 0.5f, GroundRows * 0.5f, -10f);
             cam.transform.rotation = Quaternion.identity;
 
-            // Skybox 끄기 + Audio Listener 한 개로 정리
+            // Skybox ?꾧린 + Audio Listener ??媛쒕줈 ?뺣━
             var skybox = cam.GetComponent<Skybox>();
             if (skybox != null) skybox.enabled = false;
         }
@@ -153,14 +151,14 @@ namespace Rootborn.Game.Bootstrap
                 grid = fgRoot.AddComponent<Rootborn.Game.Farming.FarmGrid>();
             }
 
-            // [Crops] parent — CropPlot 인스턴스가 spawn 될 위치.
+            // [Crops] parent ??CropPlot ?몄뒪?댁뒪媛 spawn ???꾩튂.
             var cropsParent = FindObjectByName("[Crops]");
             if (cropsParent == null)
             {
                 cropsParent = new GameObject("[Crops]");
             }
 
-            // Ground Tilemap 의 현재 첫 셀 tile 을 "tilledTile" 로 임시 사용 — fallback (TODO(asset): 전용 tilled-tile sprite 필요).
+            // Ground Tilemap ???꾩옱 泥?? tile ??"tilledTile" 濡??꾩떆 ?ъ슜 ??fallback (TODO(asset): ?꾩슜 tilled-tile sprite ?꾩슂).
             UnityEngine.Tilemaps.TileBase tilledTile = null;
             if (groundTilemap != null)
             {
@@ -234,8 +232,8 @@ namespace Rootborn.Game.Bootstrap
             return new Vector3(x, y, 0f);
         }
 
-        // 이미 씬에 있는 기존 자원 GameObject 에 collider 가 누락됐으면 부여.
-        // Setup Everything 을 다시 안 돌려도 다음 Play 에서 자동 보강.
+        // ?대? ?ъ뿉 ?덈뒗 湲곗〈 ?먯썝 GameObject ??collider 媛 ?꾨씫?먯쑝硫?遺??
+        // Setup Everything ???ㅼ떆 ???뚮젮???ㅼ쓬 Play ?먯꽌 ?먮룞 蹂닿컯.
         private static void ReinforceExistingResources(Transform root, GameDataRegistry registry)
         {
             if (!Common.ResourceCollisionToggle.Enabled) return;
@@ -247,7 +245,7 @@ namespace Rootborn.Game.Bootstrap
                 if (node == null) continue;
 
                 var def = node.Definition;
-                // 직렬화 누락: 이름 prefix(Tree_/Rock_) 로 registry 에서 정의 복원.
+                // 吏곷젹???꾨씫: ?대쫫 prefix(Tree_/Rock_) 濡?registry ?먯꽌 ?뺤쓽 蹂듭썝.
                 if (def == null && registry != null)
                 {
                     string n = child.name;
@@ -288,8 +286,8 @@ namespace Rootborn.Game.Bootstrap
             sr.sprite = def.Sprite;
             sr.sortingOrder = 1;
 
-            // 데이터 기반 충돌: SO 의 _isWalkable=false 자원에만 collider.
-            // 전역 토글 ResourceCollisionToggle.Enabled=false 이면 모두 통과.
+            // ?곗씠??湲곕컲 異⑸룎: SO ??_isWalkable=false ?먯썝?먮쭔 collider.
+            // ?꾩뿭 ?좉? ResourceCollisionToggle.Enabled=false ?대㈃ 紐⑤몢 ?듦낵.
             if (!def.IsWalkable && Common.ResourceCollisionToggle.Enabled)
             {
                 var col = go.AddComponent<BoxCollider2D>();
@@ -310,15 +308,15 @@ namespace Rootborn.Game.Bootstrap
                 return;
             }
 
-            // Sprite 우선순위: DataManager → Registry → 런타임 동적 검색 → fallback red square
+            // Sprite ?곗꽑?쒖쐞: DataManager ??Registry ???고????숈쟻 寃????fallback red square
             Sprite sprite = data != null ? data.PlayerSprite : null;
             if (sprite == null) sprite = registry.PlayerSprite;
             string spriteSource = sprite != null ? sprite.name : null;
 
             if (sprite == null)
             {
-                // Registry 와이어링 실패 시 — 메모리에 로드된 모든 Sprite 중에서 'Idle_Down_'으로 시작하는
-                // sub-sprite를 검색 (Pixelwood Slice 결과가 메모리에 있다면 잡힘)
+                // Registry ??댁뼱留??ㅽ뙣 ????硫붾え由ъ뿉 濡쒕뱶??紐⑤뱺 Sprite 以묒뿉??'Idle_Down_'?쇰줈 ?쒖옉?섎뒗
+                // sub-sprite瑜?寃??(Pixelwood Slice 寃곌낵媛 硫붾え由ъ뿉 ?덈떎硫??≫옒)
                 var allSprites = UnityEngine.Resources.FindObjectsOfTypeAll<Sprite>();
                 foreach (var s in allSprites)
                 {
@@ -337,25 +335,24 @@ namespace Rootborn.Game.Bootstrap
                 sprite = MakeFallbackSprite(new Color(1f, 0.2f, 0.2f, 1f));
                 spriteSource = "fallback-red-16x16";
                 Debug.LogWarning("[ROOTBORN/AutoFiller] Player sprite not found in Registry or runtime search. " +
-                                 "Run 'Rootborn → Setup Everything' to wire PlayerSprite.");
+                                 "Run 'Rootborn ??Setup Everything' to wire PlayerSprite.");
             }
 
             var playerInstance = new GameObject("Player");
             var sr = playerInstance.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
-            // sortingOrder 매우 크게 — 자원 노드(1)보다 무조건 위
-            sr.sortingOrder = 1000;
+            // sortingOrder 留ㅼ슦 ?ш쾶 ???먯썝 ?몃뱶(1)蹂대떎 臾댁“嫄???            sr.sortingOrder = 1000;
             sr.sortingLayerID = 0;
             ConfigureCharacterParts(playerInstance, registry);
             playerInstance.transform.localScale = new Vector3(1f, 1f, 1f);
-            // 자원 스폰 범위(2~28, 2~18)와 안 겹치는 가장자리에 스폰 (왼쪽 아래 코너)
+            // ?먯썝 ?ㅽ룿 踰붿쐞(2~28, 2~18)? ??寃뱀튂??媛?μ옄由ъ뿉 ?ㅽ룿 (?쇱そ ?꾨옒 肄붾꼫)
             playerInstance.transform.position = new Vector3(1f, 1f, 0f);
 
             Debug.Log($"[ROOTBORN/AutoFiller] Player sprite='{spriteSource}', size={sprite.rect.size}, ppu={sprite.pixelsPerUnit}, position=(1,1), scale=1x.");
 
-            // Rigidbody2D (Dynamic) + BoxCollider2D — 자원 collider 와 부딪쳐 자동 차단.
-            // Dynamic + MovePosition: 정적 collider 와의 충돌 해소를 물리 엔진이 처리.
-            // (Kinematic 은 MovePosition 시 정적 collider 를 밀고 들어갈 수 있어 차단이 약함.)
+            // Rigidbody2D (Dynamic) + BoxCollider2D ???먯썝 collider ? 遺?れ퀜 ?먮룞 李⑤떒.
+            // Dynamic + MovePosition: ?뺤쟻 collider ???異⑸룎 ?댁냼瑜?臾쇰━ ?붿쭊??泥섎━.
+            // (Kinematic ? MovePosition ???뺤쟻 collider 瑜?諛怨??ㅼ뼱媛????덉뼱 李⑤떒???쏀븿.)
             var rb = playerInstance.AddComponent<Rigidbody2D>();
             rb.bodyType = RigidbodyType2D.Dynamic;
             rb.gravityScale = 0f;
@@ -373,11 +370,11 @@ namespace Rootborn.Game.Bootstrap
 
             var interactor = playerInstance.AddComponent<Rootborn.Game.Player.GatherInteractor>();
 
-            // PlayerInventory 부착 + 시작 도구 장착 (BareHand).
+            // PlayerInventory 遺李?+ ?쒖옉 ?꾧뎄 ?μ갑 (BareHand).
             var playerInv = playerInstance.AddComponent<Rootborn.Game.Player.PlayerInventory>();
             playerInv.Bind(registry);
             interactor.BindInventory(playerInv);
-            // 시작 시 인벤토리 데모 데이터 (UI 검증용 — 후속 본격 게임플레이에서는 제거).
+            // ?쒖옉 ???몃깽?좊━ ?곕え ?곗씠??(UI 寃利앹슜 ???꾩냽 蹂멸꺽 寃뚯엫?뚮젅?댁뿉?쒕뒗 ?쒓굅).
             playerInv.TryAddById("BareHand", 1);
             playerInv.TryAddById("StoneAxe", 1);
             playerInv.TryAddById("Wood", 5);
@@ -391,7 +388,7 @@ namespace Rootborn.Game.Bootstrap
                 progress.OnUnlocked += node =>
                 {
                     Debug.Log($"[ROOTBORN/Knowledge] Unlocked: {node.Id}");
-                    // 신규 해금된 도구를 인벤토리에 자동 추가 (데이터드리븐 — ID 분기 없음).
+                    // ?좉퇋 ?닿툑???꾧뎄瑜??몃깽?좊━???먮룞 異붽? (?곗씠?곕뱶由щ툙 ??ID 遺꾧린 ?놁쓬).
                     if (node.UnlocksTools != null)
                     {
                         for (int i = 0; i < node.UnlocksTools.Length; i++)
@@ -408,7 +405,7 @@ namespace Rootborn.Game.Bootstrap
                 }
             }
 
-            // CameraFollow — Main Camera가 Player를 부드럽게 따라가도록
+            // CameraFollow ??Main Camera媛 Player瑜?遺?쒕읇寃??곕씪媛?꾨줉
             if (Camera.main != null)
             {
                 var follow = Camera.main.GetComponent<Rootborn.Game.Player.CameraFollow>();
@@ -499,8 +496,8 @@ namespace Rootborn.Game.Bootstrap
             return null;
         }
 
-        // Farm UI Canvas + FarmHudController 절차 생성. 이미 있으면 스킵.
-        // Canvas 만 만들고 UI 컴포넌트(자식 트리 절차 생성)는 FarmHudController.Awake 위임.
+        // Farm UI Canvas + FarmHudController ?덉감 ?앹꽦. ?대? ?덉쑝硫??ㅽ궢.
+        // Canvas 留?留뚮뱾怨?UI 而댄룷?뚰듃(?먯떇 ?몃━ ?덉감 ?앹꽦)??FarmHudController.Awake ?꾩엫.
         private static void EnsureFarmCanvas(GameDataRegistry registry)
         {
             const string CanvasName = "[FarmCanvas]";
@@ -521,7 +518,7 @@ namespace Rootborn.Game.Bootstrap
             scaler.referenceResolution = new Vector2(1920f, 1080f);
             scaler.matchWidthOrHeight = 0.5f;
 
-            // EventSystem 보장 (Farm 씬에 이미 있을 수 있음).
+            // EventSystem 蹂댁옣 (Farm ?ъ뿉 ?대? ?덉쓣 ???덉쓬).
             if (Object.FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
             {
                 var es = new GameObject("EventSystem",
@@ -529,7 +526,7 @@ namespace Rootborn.Game.Bootstrap
                 Rootborn.Game.Common.UiInputModuleInstaller.AddPreferredInputModule(es);
             }
 
-            // FarmHudController 를 reflection 으로 추가 (Game 어셈블리는 UI 어셈블리를 참조하지 않음).
+            // FarmHudController 瑜?reflection ?쇰줈 異붽? (Game ?댁뀍釉붾━??UI ?댁뀍釉붾━瑜?李몄“?섏? ?딆쓬).
             var hudType = System.Type.GetType("Rootborn.UI.HUD.FarmHudController, Rootborn.UI");
             if (hudType != null)
             {
@@ -538,12 +535,12 @@ namespace Rootborn.Game.Bootstrap
             }
             else
             {
-                Debug.LogWarning("[ROOTBORN/AutoFiller] FarmHudController type not found — UI 어셈블리 컴파일 확인 필요.");
+                Debug.LogWarning("[ROOTBORN/AutoFiller] FarmHudController type not found ??UI ?댁뀍釉붾━ 而댄뙆???뺤씤 ?꾩슂.");
             }
         }
 
-        // 기존 Player 인스턴스(prefab 등)에 Rigidbody2D + BoxCollider2D 누락 시 보강.
-        // Setup Everything 을 다시 안 돌려도 다음 Play 에서 collider 동작.
+        // 湲곗〈 Player ?몄뒪?댁뒪(prefab ????Rigidbody2D + BoxCollider2D ?꾨씫 ??蹂닿컯.
+        // Setup Everything ???ㅼ떆 ???뚮젮???ㅼ쓬 Play ?먯꽌 collider ?숈옉.
         private static void ReinforcePlayer(GameObject player)
         {
             int added = 0;
@@ -578,7 +575,7 @@ namespace Rootborn.Game.Bootstrap
                 added++;
             }
 
-            // PlayerController._rb 직렬화 필드도 보강 (없으면 Awake 가 GetComponent 로 재시도하지만 명시적으로).
+            // PlayerController._rb 吏곷젹???꾨뱶??蹂닿컯 (?놁쑝硫?Awake 媛 GetComponent 濡??ъ떆?꾪븯吏留?紐낆떆?곸쑝濡?.
             var ctrl = player.GetComponent<Rootborn.Game.Player.PlayerController>();
             if (ctrl != null)
             {
@@ -590,7 +587,7 @@ namespace Rootborn.Game.Bootstrap
                 }
             }
 
-            var registry = Rootborn.Game.Managers.Managers.Data?.Registry ?? LoadRegistryFallback();
+            var registry = GameDataRegistryProvider.TryGet(out var playerRegistry) ? playerRegistry : LoadRegistryFallback();
             ConfigureCharacterParts(player, registry);
             var inv = player.GetComponent<Rootborn.Game.Player.PlayerInventory>();
             if (inv == null)

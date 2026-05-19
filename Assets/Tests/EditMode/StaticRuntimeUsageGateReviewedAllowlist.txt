@@ -1,5 +1,4 @@
 ﻿Assets/Scripts/Game/Bootstrap/FarmAutoFiller.cs :: if (Object.FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
-Assets/Scripts/Game/Bootstrap/FarmAutoFiller.cs :: var fromResources = UnityEngine.Resources.Load<GameDataRegistry>("GameDataRegistry");
 Assets/Scripts/Game/Bootstrap/SceneDiagnostics.cs :: int cameraCount = Object.FindObjectsByType<Camera>(FindObjectsSortMode.None).Length;
 Assets/Scripts/Game/Bootstrap/SceneDiagnostics.cs :: int rendererCount = Object.FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None).Length;
 Assets/Scripts/Game/Bootstrap/SceneDiagnostics.cs :: int tilemapCount = Object.FindObjectsByType<UnityEngine.Tilemaps.Tilemap>(FindObjectsSortMode.None).Length;
@@ -28,7 +27,6 @@ Assets/Scripts/Game/StudentLife/MilestoneGrowth.cs :: var interactor = UnityEngi
 Assets/Scripts/Game/StudentLife/PartTimeWorkRuntimeInstaller.cs :: var existing = GameObject.Find(WorkPointName);
 Assets/Scripts/Game/StudentLife/PartTimeWorkRuntimeInstaller.cs :: var player = GameObject.Find("Player");
 Assets/Scripts/Game/WorldGeneration/SeededFarmWorldApplier.cs :: if (Object.FindFirstObjectByType<SeededFarmWorldApplier>() != null)
-Assets/Scripts/Game/WorldGeneration/SeededFarmWorldApplier.cs :: registry = global::UnityEngine.Resources.Load<GameDataRegistry>("GameDataRegistry");
 Assets/Scripts/Game/WorldGeneration/SeededFarmWorldApplier.cs :: var root = GameObject.Find("[Resources]");
 Assets/Scripts/Game/WorldGeneration/SeededFarmWorldApplier.cs :: var tilemap = Object.FindFirstObjectByType<Tilemap>();
 Assets/Scripts/UI/DiscoveryClues/ClueInterpretationInteractor.cs :: var canvas = Object.FindFirstObjectByType<Canvas>(FindObjectsInactive.Include);
@@ -40,7 +38,6 @@ Assets/Scripts/UI/Housing/HouseUpgradeRuntimeInstaller.cs :: var canvas = FindFi
 Assets/Scripts/UI/HUD/FarmCharacterHudOverlayInstaller.cs :: foreach (var candidate in Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None)) if (candidate != null && candidate.name == "[FarmCanvas]") return candidate;
 Assets/Scripts/UI/HUD/FarmCharacterHudOverlayInstaller.cs :: var canvases = Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
 Assets/Scripts/UI/HUD/FarmCharacterHudOverlayInstaller.cs :: var farmCanvas = GameObject.Find("[FarmCanvas]");
-Assets/Scripts/UI/HUD/FarmCharacterHudOverlayInstaller.cs :: var registry = Rootborn.Game.Managers.Managers.Data?.Registry ?? Resources.Load<GameDataRegistry>("GameDataRegistry");
 Assets/Scripts/UI/HUD/StatusHud.cs :: _cached = Resources.Load<Font>("Fonts/VaultUI");
 Assets/Scripts/UI/HUD/StatusHud.cs :: var playerGo = GameObject.Find("Player");
 Assets/Scripts/UI/Interiors/FurniturePlacementPointerRouter.cs :: if (scene.name != "House" || FindFirstObjectByType<FurniturePlacementPointerRouter>() != null)
@@ -78,7 +75,6 @@ Assets/Scripts/UI/Quests/DialoguePanel.cs :: var milestone = UnityEngine.Object.
 Assets/Scripts/UI/Quests/QuestDialogueChoiceRuntimeRestorer.cs :: var dialoguePanel = Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include);
 Assets/Scripts/UI/Quests/QuestDialogueChoiceRuntimeRestorer.cs :: var questPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
 Assets/Scripts/UI/StudentLife/CampaignHudPanel.cs :: var existing = Object.FindFirstObjectByType<CampaignHudPanel>(FindObjectsInactive.Include);
-Assets/Scripts/UI/StudentLife/CampaignRuntimeInstaller.cs :: return Resources.Load<GameDataRegistry>("GameDataRegistry");
 Assets/Scripts/UI/StudentLife/CareerCandidatePanel.cs :: var existing = Object.FindFirstObjectByType<CareerCandidatePanel>(FindObjectsInactive.Include);
 Assets/Scripts/UI/StudentLife/CareerCandidateRuntimeInstaller.cs :: var canvas = Object.FindFirstObjectByType<Canvas>(FindObjectsInactive.Include);
 Assets/Scripts/UI/StudentLife/CareerCandidateRuntimeInstaller.cs :: var player = GameObject.Find("Player");
@@ -88,7 +84,6 @@ Assets/Scripts/UI/StudentLife/CareerInterestPanel.cs :: var questPanel = Object.
 Assets/Scripts/UI/StudentLife/CareerInterestRuntimeInstaller.cs :: var canvas = Object.FindFirstObjectByType<Canvas>(FindObjectsInactive.Include);
 Assets/Scripts/UI/StudentLife/CareerInterestRuntimeInstaller.cs :: var player = GameObject.Find("Player");
 Assets/Scripts/UI/StudentLife/DailyEventPanel.cs :: var existing = Object.FindFirstObjectByType<DailyEventPanel>(FindObjectsInactive.Include);
-Assets/Scripts/UI/StudentLife/DailyEventRuntimeInstaller.cs :: return Resources.Load<GameDataRegistry>("GameDataRegistry");
 Assets/Scripts/UI/StudentLife/ExplorationChoicePanel.cs :: var existing = UnityEngine.Object.FindFirstObjectByType<ExplorationChoicePanel>(FindObjectsInactive.Include);
 Assets/Scripts/UI/StudentLife/ExplorationInteractionPointInteractor.cs :: var canvas = Object.FindFirstObjectByType<Canvas>(FindObjectsInactive.Include);
 Assets/Scripts/UI/StudentLife/ExplorationInteractionPointInteractor.cs :: var questLog = Object.FindFirstObjectByType<Rootborn.UI.Quests.QuestLogPanel>(FindObjectsInactive.Include)?.QuestLog;
