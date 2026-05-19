@@ -18,7 +18,6 @@ Assets/Scripts/Game/Interiors/InteriorTilemapApplier.cs :: var spawn = GameObjec
 Assets/Scripts/Game/Interiors/HouseInteriorLoopProbe.cs :: var behaviours = Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None);
 Assets/Scripts/Game/Interiors/HouseInteriorLoopProbe.cs :: var tilemap = GameObject.Find(name)?.GetComponent<Tilemap>();
 Assets/Scripts/Game/Interiors/HouseInteriorLoopProbe.cs :: var tilemaps = Object.FindObjectsByType<TilemapRenderer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-Assets/Scripts/Game/Managers/DataManager.cs :: Registry = UnityEngine.Resources.Load<GameDataRegistry>("GameDataRegistry");
 Assets/Scripts/Game/Managers/Managers.cs :: var existing = GameObject.Find("@Managers");
 Assets/Scripts/Game/Player/GatherInteractor.cs :: var all = UnityEngine.Object.FindObjectsByType<ResourceNode>(FindObjectsSortMode.None);
 Assets/Scripts/Game/Player/PlayerInteractionRouter.cs :: var behaviours = Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);

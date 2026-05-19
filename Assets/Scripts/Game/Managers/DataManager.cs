@@ -11,7 +11,7 @@ using UnityEngine;
 namespace Rootborn.Game.Managers
 {
     /// <summary>
-    /// 게임 부팅 시 한 번 GameDataRegistry를 로드한 뒤 도메인별 Dictionary로 lookup한다.
+    /// Loads GameDataRegistry once during boot and builds domain lookup dictionaries.
     /// </summary>
     public sealed class DataManager
     {
@@ -42,14 +42,7 @@ namespace Rootborn.Game.Managers
             {
                 Registry = await resource.LoadAsync<GameDataRegistry>(AddrRegistry);
             }
-            if (Registry == null)
-            {
-                Registry = UnityEngine.Resources.Load<GameDataRegistry>("GameDataRegistry");
-                if (Registry != null)
-                {
-                    Debug.Log("[ROOTBORN/DataManager] Registry loaded via Resources.Load fallback.");
-                }
-            }
+
             if (Registry == null)
             {
                 Debug.LogError("[ROOTBORN/DataManager] GameDataRegistry not found. Run 'Rootborn -> Setup Everything (One Click)'.");

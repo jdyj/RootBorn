@@ -27,7 +27,8 @@ namespace Rootborn.Tests.EditMode
             "Assets/Scripts/UI/StudentLife/DailyEventRuntimeInstaller.cs",
             "Assets/Scripts/UI/HUD/FarmCharacterHudOverlayInstaller.cs",
             "Assets/Scripts/Game/WorldGeneration/SeededFarmWorldApplier.cs",
-            "Assets/Scripts/Game/Bootstrap/FarmAutoFiller.cs"
+            "Assets/Scripts/Game/Bootstrap/FarmAutoFiller.cs",
+            "Assets/Scripts/Game/Managers/DataManager.cs"
         };
 
         private static readonly HashSet<string> AllowedRuntimeResourceOrFindUsages = new HashSet<string>
@@ -39,7 +40,6 @@ namespace Rootborn.Tests.EditMode
             "Assets/Scripts/Game/Bootstrap/SceneDiagnostics.cs :: int rendererCount = Object.FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None).Length;",
             "Assets/Scripts/Game/Bootstrap/SceneDiagnostics.cs :: int tilemapCount = Object.FindObjectsByType<UnityEngine.Tilemaps.Tilemap>(FindObjectsSortMode.None).Length;",
             "Assets/Scripts/Game/Farming/FarmGrid.cs :: _clock = GameClock.Instance != null ? GameClock.Instance : Object.FindFirstObjectByType<GameClock>();",
-            "Assets/Scripts/Game/Managers/DataManager.cs :: Registry = UnityEngine.Resources.Load<GameDataRegistry>(\"GameDataRegistry\");",
             "Assets/Scripts/Game/Managers/Managers.cs :: var existing = GameObject.Find(\"@Managers\");",
             "Assets/Scripts/Game/Player/GatherInteractor.cs :: var all = Object.FindObjectsByType<ResourceNode>(FindObjectsSortMode.None);",
             "Assets/Scripts/Game/WorldGeneration/SeededFarmWorldApplier.cs :: if (Object.FindFirstObjectByType<SeededFarmWorldApplier>() != null)",
