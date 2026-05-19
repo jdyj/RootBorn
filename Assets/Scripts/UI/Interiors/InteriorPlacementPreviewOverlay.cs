@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using Rootborn.Game.Housing;
 using Rootborn.Game.Interiors;
+using Rootborn.Game.Save;
 using Rootborn.Game.Placement;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -216,7 +218,7 @@ namespace Rootborn.UI.Interiors
                 SavedFurnitureLayout.Add(saveData);
             }
 
-            FurniturePlacementLayoutPersistence.SaveHouseLayout(SavedFurnitureLayout);
+            FurniturePlacementLayoutPersistence.SaveHouseLayoutForStage(ResolveCurrentHouseStageIndex(), SavedFurnitureLayout);
             LastMessage = "Saved " + SavedFurnitureLayout.Count + " furniture";
             return SavedFurnitureLayout.Count > 0;
         }
@@ -228,7 +230,7 @@ namespace Rootborn.UI.Interiors
 
         public bool LoadFurnitureLayout()
         {
-            FurniturePlacementLayoutPersistence.TryLoadHouseLayout(SavedFurnitureLayout);
+            FurniturePlacementLayoutPersistence.TryLoadHouseLayoutForStage(ResolveCurrentHouseStageIndex(), SavedFurnitureLayout);
             if (SavedFurnitureLayout.Count == 0 || _map == null)
             {
                 LastMessage = "No saved furniture";
@@ -1121,6 +1123,11 @@ namespace Rootborn.UI.Interiors
             InvalidCellCount = 0;
         }
 
+        private static int ResolveCurrentHouseStageIndex()
+        {
+            string slot = !string.IsNullOrEmpty(ActiveSaveContext.SlotId) ? ActiveSaveContext.SlotId : "default";
+            return HouseStatePersistence.Load(slot).CurrentStageIndex;
+        }
         private static Tilemap FindTilemapByName(string objectName)
         {
             var tilemaps = FindObjectsByType<Tilemap>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);

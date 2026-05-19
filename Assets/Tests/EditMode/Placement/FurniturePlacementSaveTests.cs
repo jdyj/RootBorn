@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using Rootborn.Game.Placement;
+using Rootborn.Game.Save;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -139,6 +140,41 @@ namespace Rootborn.Tests.EditMode.Placement
             }
         }
 
+        [Test]
+        public void HOUSE_FURNITURE_SAVE_001_StageScopedLayoutsDoNotOverwriteEachOther()
+        {
+            ActiveSaveContext.Set(new SaveSlotMetadata { SlotId = "house-furniture-stage-scope", DisplayName = "house-furniture-stage-scope" });
+
+            var stage0 = new[]
+            {
+                new FurniturePlacementSaveData
+                {
+                    FurnitureId = "chair",
+                    AnchorX = 0,
+                    AnchorY = 0,
+                    Direction = FurniturePlacementDirection.North
+                }
+            };
+
+            var stage1 = new[]
+            {
+                new FurniturePlacementSaveData
+                {
+                    FurnitureId = "desk",
+                    AnchorX = 2,
+                    AnchorY = 2,
+                    Direction = FurniturePlacementDirection.East
+                }
+            };
+
+            FurniturePlacementLayoutPersistence.SaveHouseLayoutForStage(0, stage0);
+            FurniturePlacementLayoutPersistence.SaveHouseLayoutForStage(1, stage1);
+
+            var loaded = new List<FurniturePlacementSaveData>();
+            Assert.IsTrue(FurniturePlacementLayoutPersistence.TryLoadHouseLayoutForStage(1, loaded));
+            Assert.AreEqual(1, loaded.Count);
+            Assert.AreEqual("desk", loaded[0].FurnitureId);
+        }
         private static int CountInstances(FurniturePlacementRegistry registry)
         {
             int count = 0;

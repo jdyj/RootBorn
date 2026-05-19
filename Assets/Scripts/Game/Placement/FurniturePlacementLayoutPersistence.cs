@@ -20,24 +20,49 @@ namespace Rootborn.Game.Placement
             return !string.IsNullOrEmpty(CreateService().ReadJson(HouseLayoutFileName));
         }
 
+        public static string GetHouseLayoutFileNameForStage(int stageIndex)
+        {
+            return "house-furniture-layout-stage-" + Mathf.Max(0, stageIndex) + ".json";
+        }
+
         public static void SaveHouseLayout(IReadOnlyList<FurniturePlacementSaveData> items)
+        {
+            SaveLayout(HouseLayoutFileName, items);
+        }
+
+        public static bool TryLoadHouseLayout(List<FurniturePlacementSaveData> destination)
+        {
+            return TryLoadLayout(HouseLayoutFileName, destination);
+        }
+
+        public static void SaveHouseLayoutForStage(int stageIndex, IReadOnlyList<FurniturePlacementSaveData> items)
+        {
+            SaveLayout(GetHouseLayoutFileNameForStage(stageIndex), items);
+        }
+
+        public static bool TryLoadHouseLayoutForStage(int stageIndex, List<FurniturePlacementSaveData> destination)
+        {
+            return TryLoadLayout(GetHouseLayoutFileNameForStage(stageIndex), destination);
+        }
+
+        private static void SaveLayout(string fileName, IReadOnlyList<FurniturePlacementSaveData> items)
         {
             var layout = new FurniturePlacementLayoutSaveData
             {
                 Items = ToArray(items)
             };
 
-            CreateService().WriteJson(HouseLayoutFileName, JsonUtility.ToJson(layout, true));
+            CreateService().WriteJson(fileName, JsonUtility.ToJson(layout, true));
         }
 
-        public static bool TryLoadHouseLayout(List<FurniturePlacementSaveData> destination)
+        private static bool TryLoadLayout(string fileName, List<FurniturePlacementSaveData> destination)
         {
             if (destination == null)
             {
                 return false;
             }
 
-            string json = CreateService().ReadJson(HouseLayoutFileName);
+            string json = CreateService().ReadJson(fileName);
             if (string.IsNullOrEmpty(json))
             {
                 return false;
