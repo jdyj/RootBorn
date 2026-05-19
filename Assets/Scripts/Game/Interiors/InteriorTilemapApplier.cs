@@ -24,6 +24,9 @@ namespace Rootborn.Game.Interiors
         [SerializeField] private Transform _interactorRoot;
 
         private InteriorInteractionDefinition _runtimeComputerInteraction;
+        private InteriorGeneratedMap _lastGeneratedMap;
+
+        public InteriorGeneratedMap LastGeneratedMap => _lastGeneratedMap;
 
         public void ApplyGeneratedInterior(int seed)
         {
@@ -106,6 +109,8 @@ namespace Rootborn.Game.Interiors
             {
                 return;
             }
+
+            _lastGeneratedMap = map;
 
             ResolveTilemaps();
             if (_floor == null || _walls == null || _doors == null || _decorations == null || _collision == null)

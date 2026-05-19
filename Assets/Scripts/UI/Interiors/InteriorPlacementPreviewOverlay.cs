@@ -46,6 +46,7 @@ namespace Rootborn.UI.Interiors
         public int InvalidCellCount { get; private set; }
         public string LastMessage { get; private set; }
         public FurniturePlacementDirection ActiveDirection => _activeDirection;
+        public int ActiveSurfaceCellCountForTests => _surface != null ? _surface.Bounds.size.x * _surface.Bounds.size.y : 0;
 
         public static InteriorPlacementPreviewOverlay Ensure()
         {

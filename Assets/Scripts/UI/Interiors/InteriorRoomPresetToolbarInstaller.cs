@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Rootborn.Game.Interiors;
+using Rootborn.Game.Save;
 using Rootborn.UI.Modern;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -123,11 +124,32 @@ namespace Rootborn.UI.Interiors
             return displayName.Length <= 18 ? displayName : displayName.Substring(0, 18);
         }
 
+        public static bool ApplyPresetForTests(InteriorRoomPresetDefinition preset)
+        {
+            return ApplyPresetAndPersist(preset);
+        }
+
         private static void ApplyPreset(InteriorRoomPresetDefinition preset)
+        {
+            ApplyPresetAndPersist(preset);
+        }
+
+        private static bool ApplyPresetAndPersist(InteriorRoomPresetDefinition preset)
         {
             if (preset == null)
             {
-                return;
+                return false;
+            }
+
+            var applier = FindFirstObjectByType<InteriorTilemapApplier>();
+            if (applier == null || applier.LastGeneratedMap == null)
+            {
+                return false;
+            }
+
+            if (!InteriorRoomPresetRuntimeUtility.CanFitPreset(preset, applier.LastGeneratedMap))
+            {
+                return false;
             }
 
             var floor = FindTilemap("HouseGroundTilemap");
@@ -137,7 +159,7 @@ namespace Rootborn.UI.Interiors
             var collision = FindTilemap("HouseCollisionTilemap");
             if (floor == null)
             {
-                return;
+                return false;
             }
 
             walls?.ClearAllTiles();
@@ -146,14 +168,19 @@ namespace Rootborn.UI.Interiors
             collision?.ClearAllTiles();
             InteriorRoomPresetApplier.ApplyBaseLayer(preset, floor);
             InteriorRoomPresetRuntimeProbe.Record(preset, floor);
+            InteriorRoomPresetRuntimeUtility.SaveSelectedPreset(ActiveSaveContext.SlotId, preset.StableId);
+
+            var overlay = InteriorPlacementPreviewOverlay.Ensure();
+            overlay?.BindGeneratedMapForPersistence(applier.LastGeneratedMap, applier);
 
             var status = GameObject.Find("InteriorPlacementStatusText")?.GetComponent<Text>();
             if (status != null)
             {
                 status.text = "Applied " + preset.DisplayName;
             }
-        }
 
+            return true;
+        }
         private static Tilemap FindTilemap(string name)
         {
             return GameObject.Find(name)?.GetComponent<Tilemap>();

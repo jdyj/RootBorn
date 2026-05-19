@@ -1,6 +1,10 @@
 using System.Collections;
+using System.Linq;
 using NUnit.Framework;
+using Rootborn.Game.Housing;
 using Rootborn.Game.Interiors;
+using Rootborn.Game.Save;
+using Rootborn.UI.Interiors;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
@@ -47,6 +51,35 @@ namespace Rootborn.Tests.PlayMode.Interiors
             Assert.AreEqual(new Vector2Int(14, 6), mapProbe.LastPresetSize);
         }
 
+        [UnityTest]
+        public IEnumerator HOUSE_LOOP_PM_002_RoomPresetAppliesToExpandedHouseWithoutClearingFurniture()
+        {
+            const string saveSlot = "house-loop-preset-playmode";
+            ActiveSaveContext.Set(new SaveSlotMetadata { SlotId = saveSlot, DisplayName = saveSlot, WorldSeed = 1205, TileSeed = 1205 });
+
+            var state = new HouseStateSaveData { CurrentStageIndex = 1 };
+            HouseStatePersistence.Save(saveSlot, state);
+
+            yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
+            yield return null;
+            yield return null;
+
+            var applier = Object.FindFirstObjectByType<InteriorTilemapApplier>();
+            Assert.IsNotNull(applier);
+
+            var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>(FindObjectsInactive.Include);
+            Assert.IsNotNull(overlay);
+            Assert.Greater(overlay.ActiveSurfaceCellCountForTests, 0);
+
+            var preset = InteriorRoomPresetCatalog.LoadPresets().FirstOrDefault();
+            Assert.IsNotNull(preset, "At least one imported room preset is required for the House loop.");
+
+            Assert.IsTrue(InteriorRoomPresetToolbarInstaller.ApplyPresetForTests(preset));
+
+            var loaded = HouseStatePersistence.Load(saveSlot);
+            Assert.AreEqual(preset.StableId, loaded.SelectedRoomPresetId);
+            Assert.Greater(overlay.ActiveSurfaceCellCountForTests, 0);
+        }
         private static IEnumerator WaitForFrames(int frames)
         {
             for (int i = 0; i < frames; i++)
