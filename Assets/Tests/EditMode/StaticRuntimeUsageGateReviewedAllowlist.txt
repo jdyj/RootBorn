@@ -16,6 +16,9 @@ Assets/Scripts/Game/Interiors/InteriorTilemapApplier.cs :: if (FindFirstObjectBy
 Assets/Scripts/Game/Interiors/InteriorTilemapApplier.cs :: var existing = GameObject.Find("[HouseInteriorInteractors]");
 Assets/Scripts/Game/Interiors/InteriorTilemapApplier.cs :: var player = GameObject.Find("Player");
 Assets/Scripts/Game/Interiors/InteriorTilemapApplier.cs :: var spawn = GameObject.Find("HouseSpawnPoint");
+Assets/Scripts/Game/Interiors/HouseInteriorLoopProbe.cs :: var behaviours = Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+Assets/Scripts/Game/Interiors/HouseInteriorLoopProbe.cs :: var tilemap = GameObject.Find(name)?.GetComponent<Tilemap>();
+Assets/Scripts/Game/Interiors/HouseInteriorLoopProbe.cs :: var tilemaps = Object.FindObjectsByType<TilemapRenderer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
 Assets/Scripts/Game/Managers/DataManager.cs :: Registry = UnityEngine.Resources.Load<GameDataRegistry>("GameDataRegistry");
 Assets/Scripts/Game/Managers/Managers.cs :: var existing = GameObject.Find("@Managers");
 Assets/Scripts/Game/Player/GatherInteractor.cs :: var all = UnityEngine.Object.FindObjectsByType<ResourceNode>(FindObjectsSortMode.None);
@@ -63,6 +66,7 @@ Assets/Scripts/UI/Interiors/InteriorPlacementPreviewOverlay.cs :: var existing =
 Assets/Scripts/UI/Interiors/InteriorPlacementPreviewOverlay.cs :: var surfaces = FindObjectsByType<TilePlacementSurface>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
 Assets/Scripts/UI/Interiors/InteriorPlacementPreviewOverlay.cs :: var tilemaps = FindObjectsByType<Tilemap>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
 Assets/Scripts/UI/Interiors/InteriorRoomPresetToolbarInstaller.cs :: if (FindFirstObjectByType<InteriorRoomPresetToolbarInstaller>() != null)
+Assets/Scripts/UI/Interiors/InteriorRoomPresetToolbarInstaller.cs :: var applier = FindFirstObjectByType<InteriorTilemapApplier>();
 Assets/Scripts/UI/Interiors/InteriorRoomPresetToolbarInstaller.cs :: return GameObject.Find(name)?.GetComponent<Tilemap>();
 Assets/Scripts/UI/Interiors/InteriorRoomPresetToolbarInstaller.cs :: var status = GameObject.Find("InteriorPlacementStatusText")?.GetComponent<Text>();
 Assets/Scripts/UI/Interiors/InteriorRoomPresetToolbarInstaller.cs :: var toolbar = GameObject.Find("InteriorPlacementToolbar");

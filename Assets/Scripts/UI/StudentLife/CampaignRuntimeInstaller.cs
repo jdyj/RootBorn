@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using Rootborn.Game.Common;
 using Rootborn.Game.Dialogue;
-using Rootborn.Game.Managers;
 using Rootborn.Game.StudentLife;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -182,8 +181,7 @@ namespace Rootborn.UI.StudentLife
 
         private static GameDataRegistry ResolveRegistry()
         {
-            if (Managers.Data != null && Managers.Data.Registry != null) return Managers.Data.Registry;
-            return Resources.Load<GameDataRegistry>("GameDataRegistry");
+            return GameDataRegistryProvider.TryGet(out var registry) ? registry : null;
         }
 
         private static Canvas EnsureCanvas(Scene scene)

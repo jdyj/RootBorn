@@ -15,7 +15,17 @@ namespace Rootborn.Tests.EditMode
             @"Resources\.Load\s*(<|\()|GameObject\.Find\s*\(|FindObjectOfType\s*(<|\()|FindObjectsOfType\s*(<|\()|FindFirstObjectByType\s*(<|\()|FindObjectsByType\s*(<|\()",
             RegexOptions.Compiled);
 
+        private static readonly Regex DirectRegistryResourcesLoadPattern = new Regex(
+            @"Resources\.Load\s*<\s*GameDataRegistry\s*>\s*\(",
+            RegexOptions.Compiled);
+
         private const string AdditionalReviewedAllowlistPath = "Assets/Tests/EditMode/StaticRuntimeUsageGateReviewedAllowlist.txt";
+
+        private static readonly HashSet<string> MigratedRegistryProviderCallers = new HashSet<string>
+        {
+            "Assets/Scripts/UI/StudentLife/CampaignRuntimeInstaller.cs",
+            "Assets/Scripts/UI/StudentLife/DailyEventRuntimeInstaller.cs"
+        };
 
         private static readonly HashSet<string> AllowedRuntimeResourceOrFindUsages = new HashSet<string>
         {
@@ -75,6 +85,24 @@ namespace Rootborn.Tests.EditMode
             }
 
             Assert.IsEmpty(unexpected, "New runtime Resources.Load/Find usage requires explicit review or removal:\n" + string.Join("\n", unexpected));
+        }
+
+        [Test]
+        public void STATIC_003_MigratedRuntimeCallers_DoNotDirectlyResourcesLoadGameDataRegistry()
+        {
+            var hits = FindMatches(DirectRegistryResourcesLoadPattern, "Assets/Scripts/Game", "Assets/Scripts/UI", "Assets/Scripts/Network");
+            var unexpected = new List<string>();
+            foreach (string hit in hits)
+            {
+                int firstColon = hit.IndexOf(':');
+                string path = firstColon >= 0 ? hit.Substring(0, firstColon).Replace('\\', '/') : hit.Replace('\\', '/');
+                if (MigratedRegistryProviderCallers.Contains(path))
+                {
+                    unexpected.Add(hit);
+                }
+            }
+
+            Assert.IsEmpty(unexpected, "Runtime code must use GameDataRegistryProvider instead of direct Resources.Load<GameDataRegistry>:\n" + string.Join("\n", unexpected));
         }
 
         private static HashSet<string> BuildReviewedRuntimeResourceOrFindUsages()
