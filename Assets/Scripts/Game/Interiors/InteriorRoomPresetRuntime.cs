@@ -32,6 +32,28 @@ namespace Rootborn.Game.Interiors
         }
     }
 
+    public static class InteriorRoomPresetRuntimeUtility
+    {
+        public static bool CanFitPreset(InteriorRoomPresetDefinition preset, InteriorGeneratedMap map)
+        {
+            if (preset == null || map == null)
+            {
+                return false;
+            }
+
+            return preset.Size.x > 0 &&
+                   preset.Size.y > 0 &&
+                   preset.Size.x <= map.Width &&
+                   preset.Size.y <= map.Height;
+        }
+
+        public static void SaveSelectedPreset(string saveSlot, string presetId)
+        {
+            var state = Rootborn.Game.Housing.HouseStatePersistence.Load(saveSlot);
+            state.SelectedRoomPresetId = presetId ?? string.Empty;
+            Rootborn.Game.Housing.HouseStatePersistence.Save(saveSlot, state);
+        }
+    }
     public sealed class InteriorRoomPresetRuntimeProbe : MonoBehaviour
     {
         [SerializeField] private string _lastPresetId = string.Empty;

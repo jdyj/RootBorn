@@ -1,3 +1,4 @@
+using System;
 using NUnit.Framework;
 using Rootborn.Game.Interiors;
 using UnityEngine;
@@ -105,6 +106,25 @@ namespace Rootborn.Tests.EditMode.Interiors
             Assert.IsTrue(map.IsWalkable(new Vector2Int(7, 2)), "Interior cells should remain valid furniture placement candidates.");
         }
 
+        [Test]
+        public void HOUSE_PRESET_001_FitValidationRejectsPresetOutsideGeneratedBounds()
+        {
+            var preset = InteriorRoomPresetDefinition.CreateForTests("preset.too-large", "Too Large", new Vector2Int(40, 40), Array.Empty<InteriorRoomPresetTileCell>());
+
+            var map = InteriorGenerator.Generate(InteriorGenerationProfile.CreateDefaultOfficeForTests(), 1205);
+
+            Assert.IsFalse(InteriorRoomPresetRuntimeUtility.CanFitPreset(preset, map));
+        }
+
+        [Test]
+        public void HOUSE_PRESET_002_FitValidationAcceptsPresetInsideGeneratedBounds()
+        {
+            var preset = InteriorRoomPresetDefinition.CreateForTests("preset.fits", "Fits", new Vector2Int(6, 6), Array.Empty<InteriorRoomPresetTileCell>());
+
+            var map = InteriorGenerator.Generate(InteriorGenerationProfile.CreateDefaultOfficeForTests(), 1205);
+
+            Assert.IsTrue(InteriorRoomPresetRuntimeUtility.CanFitPreset(preset, map));
+        }
         private static int CountTiles(Tilemap tilemap)
         {
             int count = 0;
