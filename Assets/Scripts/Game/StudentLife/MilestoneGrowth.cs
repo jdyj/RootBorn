@@ -333,13 +333,12 @@ namespace Rootborn.Game.StudentLife
                 }
             }
 
-            var fallback = UnityEngine.Resources.Load<Rootborn.Game.Common.GameDataRegistry>("GameDataRegistry");
-            if (fallback != null && fallback.Milestones != null && fallback.Milestones.Length > 0)
+            if (GameDataRegistryProvider.TryGet(out var providerRegistry) && providerRegistry != registry && providerRegistry.Milestones != null && providerRegistry.Milestones.Length > 0)
             {
-                return fallback.Milestones;
+                return providerRegistry.Milestones;
             }
 
-            return CreateRuntimeFallback(registry ?? fallback);
+            return CreateRuntimeFallback(registry ?? providerRegistry);
         }
 
         private static MilestoneDefinition[] CreateRuntimeFallback(Rootborn.Game.Common.GameDataRegistry registry)

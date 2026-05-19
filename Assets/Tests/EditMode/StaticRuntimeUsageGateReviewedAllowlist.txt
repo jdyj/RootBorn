@@ -21,7 +21,6 @@ Assets/Scripts/Game/Interiors/HouseInteriorLoopProbe.cs :: var tilemaps = Object
 Assets/Scripts/Game/Managers/Managers.cs :: var existing = GameObject.Find("@Managers");
 Assets/Scripts/Game/Player/GatherInteractor.cs :: var all = UnityEngine.Object.FindObjectsByType<ResourceNode>(FindObjectsSortMode.None);
 Assets/Scripts/Game/Player/PlayerInteractionRouter.cs :: var behaviours = Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-Assets/Scripts/Game/StudentLife/MilestoneGrowth.cs :: var fallback = UnityEngine.Resources.Load<Rootborn.Game.Common.GameDataRegistry>("GameDataRegistry");
 Assets/Scripts/Game/StudentLife/MilestoneGrowth.cs :: var interactor = UnityEngine.Object.FindFirstObjectByType<OutsideSchoolActivityInteractor>(UnityEngine.FindObjectsInactive.Include);
 Assets/Scripts/Game/StudentLife/PartTimeWorkRuntimeInstaller.cs :: var existing = GameObject.Find(WorkPointName);
 Assets/Scripts/Game/StudentLife/PartTimeWorkRuntimeInstaller.cs :: var player = GameObject.Find("Player");

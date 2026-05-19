@@ -16,7 +16,7 @@ namespace Rootborn.Tests.EditMode
             RegexOptions.Compiled);
 
         private static readonly Regex DirectRegistryResourcesLoadPattern = new Regex(
-            @"Resources\.Load\s*<\s*GameDataRegistry\s*>\s*\(",
+            @"Resources\.Load\s*<\s*(Rootborn\.Game\.Common\.)?GameDataRegistry\s*>\s*\(",
             RegexOptions.Compiled);
 
         private const string AdditionalReviewedAllowlistPath = "Assets/Tests/EditMode/StaticRuntimeUsageGateReviewedAllowlist.txt";
@@ -28,7 +28,8 @@ namespace Rootborn.Tests.EditMode
             "Assets/Scripts/UI/HUD/FarmCharacterHudOverlayInstaller.cs",
             "Assets/Scripts/Game/WorldGeneration/SeededFarmWorldApplier.cs",
             "Assets/Scripts/Game/Bootstrap/FarmAutoFiller.cs",
-            "Assets/Scripts/Game/Managers/DataManager.cs"
+            "Assets/Scripts/Game/Managers/DataManager.cs",
+            "Assets/Scripts/Game/StudentLife/MilestoneGrowth.cs"
         };
 
         private static readonly HashSet<string> AllowedRuntimeResourceOrFindUsages = new HashSet<string>
