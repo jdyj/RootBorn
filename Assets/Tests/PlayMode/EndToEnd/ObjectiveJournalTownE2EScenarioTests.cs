@@ -84,14 +84,20 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return ClickButton(FindButton(runtime.Journal.transform, "ObjectiveCategory_Quests"));
             StringAssert.Contains("Quest", runtime.Journal.VisibleText, "OBJECTIVE-JOURNAL-E2E-001 failed: Quest category did not display available quest objective entries.");
             AssertNoEmptyCategory(runtime.Journal, "Quests");
+            yield return ClickButton(FindButton(runtime.Journal.transform, "ObjectiveRow_0"));
+            StringAssert.Contains("Quest", runtime.Journal.VisibleText, "OBJECTIVE-JOURNAL-E2E-001 failed: Quest row click did not keep a quest detail selected.");
 
             yield return ClickButton(FindButton(runtime.Journal.transform, "ObjectiveCategory_Campaign"));
             StringAssert.Contains("Campaign", runtime.Journal.VisibleText, "OBJECTIVE-JOURNAL-E2E-001 failed: Campaign category did not display campaign objective entries.");
             AssertNoEmptyCategory(runtime.Journal, "Campaign");
+            yield return ClickButton(FindButton(runtime.Journal.transform, "ObjectiveRow_0"));
+            StringAssert.Contains("Campaign", runtime.Journal.VisibleText, "OBJECTIVE-JOURNAL-E2E-001 failed: Campaign row click did not keep a campaign detail selected.");
 
             yield return ClickButton(FindButton(runtime.Journal.transform, "ObjectiveCategory_Hints"));
             StringAssert.Contains("Milestone", runtime.Journal.VisibleText, "OBJECTIVE-JOURNAL-E2E-001 failed: Hints category did not display milestone objective entries.");
             AssertNoEmptyCategory(runtime.Journal, "Hints");
+            yield return ClickButton(FindButton(runtime.Journal.transform, "ObjectiveRow_0"));
+            StringAssert.Contains("Milestone", runtime.Journal.VisibleText, "OBJECTIVE-JOURNAL-E2E-001 failed: Milestone row click did not keep a milestone detail selected.");
 
             yield return ClickButton(FindButton(runtime.Journal.transform, "ObjectiveCategory_Goals"));
             yield return ClickButton(FindButton(runtime.Journal.transform, "ObjectiveTrackButton"));

@@ -116,35 +116,83 @@ namespace Rootborn.UI.Objectives
                     }
 
                     var state = questPanel.QuestLog.GetState(quest);
-                    if (state == QuestState.RewardClaimed)
-                    {
-                        continue;
-                    }
-
                     items.Add(new ObjectiveJournalItem(
                         "quest." + quest.Id,
                         Category.CategoryId,
                         SafeText(quest.DisplayNameKey, quest.Id),
                         SafeText(quest.DescriptionKey, string.Empty),
-                        state == QuestState.NotStarted ? "Available" : state.ToString(),
+                        BuildQuestStateText(state),
                         BuildObjectiveText(questPanel.QuestLog, quest),
-                        state == QuestState.NotStarted ? "Accept this quest from its provider." : "Review the quest detail and complete the next objective.",
+                        BuildQuestHintText(state),
                         false,
-                        state == QuestState.Completed ? 10 : state == QuestState.Active ? 20 : 40));
+                        BuildQuestSortPriority(state)));
                 }
 
                 return items.ToArray();
             }
 
+            private static string BuildQuestStateText(QuestState state)
+            {
+                return state == QuestState.NotStarted ? "Available" : state.ToString();
+            }
+
+            private static string BuildQuestHintText(QuestState state)
+            {
+                if (state == QuestState.NotStarted)
+                {
+                    return "Accept this quest from its provider.";
+                }
+
+                if (state == QuestState.RewardClaimed)
+                {
+                    return "Reward claimed. Review this completed quest history.";
+                }
+
+                return state == QuestState.Completed ? "Claim the quest reward when inventory can accept it." : "Review the quest detail and complete the next objective.";
+            }
+
+            private static int BuildQuestSortPriority(QuestState state)
+            {
+                if (state == QuestState.Completed)
+                {
+                    return 10;
+                }
+
+                if (state == QuestState.Active)
+                {
+                    return 20;
+                }
+
+                if (state == QuestState.NotStarted)
+                {
+                    return 40;
+                }
+
+                return 60;
+            }
+
             private static string BuildObjectiveText(QuestLog questLog, QuestDefinition quest)
             {
-                if (quest.Objectives == null || quest.Objectives.Length == 0 || quest.Objectives[0] == null)
+                if (quest.Objectives == null || quest.Objectives.Length == 0)
                 {
                     return questLog.GetState(quest).ToString();
                 }
 
-                var objective = quest.Objectives[0];
-                return SafeText(objective.DisplayKey, objective.GetType().Name) + " " + questLog.GetObjectiveCount(quest, 0) + " / " + objective.RequiredCount;
+                string text = string.Empty;
+                for (int i = 0; i < quest.Objectives.Length; i++)
+                {
+                    var objective = quest.Objectives[i];
+                    if (objective == null)
+                    {
+                        continue;
+                    }
+
+                    string label = SafeText(objective.DisplayKey, objective.GetType().Name);
+                    string line = label + " " + questLog.GetObjectiveCount(quest, i) + " / " + objective.RequiredCount;
+                    text += string.IsNullOrEmpty(text) ? line : " | " + line;
+                }
+
+                return string.IsNullOrEmpty(text) ? questLog.GetState(quest).ToString() : text;
             }
         }
 
@@ -177,11 +225,54 @@ namespace Rootborn.UI.Objectives
                         SafeText(day.ThemeKey, component.Campaign.DisplayNameKey),
                         SafeText(day.DirectionText, component.Campaign.DescriptionKey),
                         "Active",
-                        "Campaign day " + day.DayNumber,
+                        BuildCampaignProgressText(component.Progress, day),
                         day.NextGuideText,
                         false,
                         0)
                 };
+            }
+
+            private static string BuildCampaignProgressText(CampaignProgress progress, CampaignDayDefinition day)
+            {
+                string text = "Campaign day " + day.DayNumber;
+                var selectedRoute = ResolveSelectedRoute(progress, day);
+                if (selectedRoute != null)
+                {
+                    text += " | Route: " + SafeText(selectedRoute.DisplayNameKey, selectedRoute.Id);
+                }
+
+                var completed = progress != null ? progress.LastProgressLogIds : Array.Empty<string>();
+                if (completed.Length > 0)
+                {
+                    text += " | Completed: " + string.Join(", ", completed);
+                }
+
+                return text;
+            }
+
+            private static CampaignRouteDefinition ResolveSelectedRoute(CampaignProgress progress, CampaignDayDefinition day)
+            {
+                if (progress == null || day == null)
+                {
+                    return null;
+                }
+
+                string selectedRouteId = progress.GetSelectedRouteId(day.Id);
+                if (string.IsNullOrEmpty(selectedRouteId) || day.Routes == null)
+                {
+                    return null;
+                }
+
+                for (int i = 0; i < day.Routes.Length; i++)
+                {
+                    var route = day.Routes[i];
+                    if (route != null && route.Id == selectedRouteId)
+                    {
+                        return route;
+                    }
+                }
+
+                return null;
             }
         }
 
@@ -206,7 +297,7 @@ namespace Rootborn.UI.Objectives
                 for (int i = 0; i < milestones.Length; i++)
                 {
                     var milestone = milestones[i];
-                    if (milestone == null || string.IsNullOrEmpty(milestone.Id) || progress.IsRewardClaimed(milestone))
+                    if (milestone == null || string.IsNullOrEmpty(milestone.Id))
                     {
                         continue;
                     }
@@ -216,14 +307,44 @@ namespace Rootborn.UI.Objectives
                         Category.CategoryId,
                         SafeText(milestone.DisplayNameKey, milestone.Id),
                         "Milestone growth route",
-                        progress.IsCompleted(milestone) ? "Completed" : "Active",
+                        BuildMilestoneStateText(progress, milestone),
                         BuildMilestoneProgressText(progress, milestone),
-                        "Use any matching growth route; school is not the only path.",
+                        BuildMilestoneHintText(progress, milestone),
                         false,
-                        progress.IsCompleted(milestone) ? 10 : 30));
+                        BuildMilestoneSortPriority(progress, milestone)));
                 }
 
                 return items.ToArray();
+            }
+
+            private static string BuildMilestoneStateText(MilestoneProgress progress, MilestoneDefinition milestone)
+            {
+                if (progress.IsRewardClaimed(milestone))
+                {
+                    return "RewardClaimed";
+                }
+
+                return progress.IsCompleted(milestone) ? "Completed" : "Active";
+            }
+
+            private static string BuildMilestoneHintText(MilestoneProgress progress, MilestoneDefinition milestone)
+            {
+                if (progress.IsRewardClaimed(milestone))
+                {
+                    return "Reward claimed. Review this completed growth route.";
+                }
+
+                return progress.IsCompleted(milestone) ? "Claim the milestone reward when inventory can accept it." : "Use any matching growth route; school is not the only path.";
+            }
+
+            private static int BuildMilestoneSortPriority(MilestoneProgress progress, MilestoneDefinition milestone)
+            {
+                if (progress.IsCompleted(milestone) && !progress.IsRewardClaimed(milestone))
+                {
+                    return 10;
+                }
+
+                return progress.IsRewardClaimed(milestone) ? 60 : 30;
             }
 
             private static string BuildMilestoneProgressText(MilestoneProgress progress, MilestoneDefinition milestone)
@@ -234,7 +355,7 @@ namespace Rootborn.UI.Objectives
                     return progress.IsCompleted(milestone) ? "Completed" : "Available";
                 }
 
-                int completed = 0;
+                string text = string.Empty;
                 for (int i = 0; i < objectives.Length; i++)
                 {
                     var objective = objectives[i];
@@ -243,13 +364,11 @@ namespace Rootborn.UI.Objectives
                         continue;
                     }
 
-                    if (progress.GetObjectiveProgress(milestone, objective) > 0)
-                    {
-                        completed++;
-                    }
+                    string line = objective.Id + " " + progress.GetObjectiveProgress(milestone, objective) + " / " + objective.RequiredValue;
+                    text += string.IsNullOrEmpty(text) ? line : " | " + line;
                 }
 
-                return completed + " / " + Mathf.Max(1, milestone.RequiredObjectiveCount) + " objectives";
+                return string.IsNullOrEmpty(text) ? (progress.IsCompleted(milestone) ? "Completed" : "Available") : text;
             }
         }
 

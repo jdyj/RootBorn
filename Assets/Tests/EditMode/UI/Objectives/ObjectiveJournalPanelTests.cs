@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using Rootborn.UI.Modern;
+using Rootborn.UI.Objectives;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -36,6 +37,38 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
                 StringAssert.Contains("Quests", visibleText);
                 StringAssert.Contains("Campaign", visibleText);
                 StringAssert.Contains("Hints", visibleText);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(host);
+            }
+        }
+
+        [Test]
+        public void ObjectiveJournalPanel_RowButtonClickUpdatesSelectedDetail()
+        {
+            var host = new GameObject("ObjectiveJournalRowClickFixture", typeof(RectTransform));
+            try
+            {
+                var panel = host.AddComponent<ObjectiveJournalPanel>();
+                panel.SetItems("Quests", new[]
+                {
+                    new ObjectiveJournalItem("quest.first", "Quests", "First Quest", "First detail", "Active", "0 / 1", "Do first", false, 0),
+                    new ObjectiveJournalItem("quest.second", "Quests", "Second Quest", "Second detail", "Active", "1 / 2", "Do second", false, 1),
+                });
+                panel.Show();
+                panel.SelectCategory("Quests");
+
+                var secondRow = host.transform.Find("ObjectiveJournalRoot/ObjectiveList/ObjectiveRow_1");
+                Assert.IsNotNull(secondRow, "Second objective row must be built.");
+                var button = secondRow.GetComponent<Button>();
+                Assert.IsNotNull(button, "Objective row must be a real Button so player UI click can select it.");
+
+                button.onClick.Invoke();
+
+                StringAssert.Contains("Second Quest", panel.VisibleText);
+                StringAssert.Contains("Second detail", panel.VisibleText);
+                StringAssert.Contains("1 / 2", panel.VisibleText);
             }
             finally
             {

@@ -206,7 +206,9 @@ namespace Rootborn.UI.Objectives
 
             for (int i = 0; i < items.Length; i++)
             {
-                var row = MakePlainPanel(_list, "ObjectiveRow_" + i, new Vector2(0f, 282f - i * 58f), new Vector2(292f, 46f));
+                int rowIndex = i;
+                var row = ModernUiPanelBuilder.CreatePlainButton(_list, "ObjectiveRow_" + i, new Vector2(0f, 282f - i * 58f), new Vector2(292f, 46f));
+                row.GetComponent<Button>().onClick.AddListener(() => SelectItem(rowIndex));
                 _listRows.Add(row);
                 MakeText((RectTransform)row.transform, "ObjectiveRowText", items[i].Title + "\n" + items[i].ProgressText, new Vector2(12f, -7f), new Vector2(268f, 34f), 13, TextAnchor.UpperLeft);
             }

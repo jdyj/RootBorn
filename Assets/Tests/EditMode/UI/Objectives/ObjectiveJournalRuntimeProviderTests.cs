@@ -1,6 +1,14 @@
+using System;
+using System.IO;
+using System.Reflection;
 using NUnit.Framework;
+using Rootborn.Game.Common;
+using Rootborn.Game.Quests;
+using Rootborn.Game.Save;
+using Rootborn.Game.StudentLife;
 using Rootborn.UI.Modern;
 using Rootborn.UI.Objectives;
+using Rootborn.UI.Quests;
 using UnityEngine;
 
 namespace Rootborn.Tests.EditMode.UI.Objectives
@@ -28,6 +36,177 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
             finally
             {
                 UnityEngine.Object.DestroyImmediate(canvasGo);
+            }
+        }
+
+        [Test]
+        public void QuestLogObjectiveSource_DisplaysRewardClaimedQuestsAndAllObjectiveProgress()
+        {
+            var firstObjective = ScriptableObject.CreateInstance<KeyedQuestObjective>();
+            var secondObjective = ScriptableObject.CreateInstance<KeyedQuestObjective>();
+            firstObjective.Configure("Gather herbs", 2, "herbs");
+            secondObjective.Configure("Talk to guide", 1, "guide");
+
+            var claimedQuest = ScriptableObject.CreateInstance<QuestDefinition>();
+            claimedQuest.ConfigureForRuntime(
+                "quest.claimed",
+                "Claimed Quest",
+                "Completed quest detail",
+                new QuestObjectiveBase[] { firstObjective, secondObjective },
+                Array.Empty<QuestRewardBase>(),
+                Array.Empty<QuestCompletionEffectBase>());
+
+            var log = new QuestLog(new[] { claimedQuest });
+            log.Accept(claimedQuest);
+            log.RecordEvent(new QuestEvent(QuestEventKind.Gather, "herbs-1"));
+            log.RecordEvent(new QuestEvent(QuestEventKind.Gather, "herbs-2"));
+            log.RecordEvent(new QuestEvent(QuestEventKind.Talk, "guide"));
+            Assert.AreEqual(QuestState.Completed, log.GetState(claimedQuest));
+            Assert.IsTrue(log.ClaimReward(claimedQuest, default));
+
+            var panelGo = new GameObject("QuestLogPanel", typeof(RectTransform));
+            try
+            {
+                panelGo.AddComponent<QuestLogPanel>().Bind(log, new[] { claimedQuest }, default);
+
+                var items = BuildItemsFromSource("QuestLogObjectiveSource", null, null);
+
+                Assert.AreEqual(1, items.Length, "RewardClaimed quests should remain visible in Objective Journal history.");
+                Assert.AreEqual("RewardClaimed", items[0].State);
+                StringAssert.Contains("Gather herbs 2 / 2", items[0].ProgressText);
+                StringAssert.Contains("Talk to guide 1 / 1", items[0].ProgressText);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(panelGo);
+                UnityEngine.Object.DestroyImmediate(firstObjective);
+                UnityEngine.Object.DestroyImmediate(secondObjective);
+                UnityEngine.Object.DestroyImmediate(claimedQuest);
+            }
+        }
+
+        [Test]
+        public void CampaignObjectiveSource_DisplaysCurrentDaySelectedRouteCompletedObjectiveAndNextGuide()
+        {
+            var visitObjective = ScriptableObject.CreateInstance<CampaignActivityLogObjective>();
+            visitObjective.ConfigureForTests("campaign.objective.visit-library", "activity.library", 1, false);
+            var talkObjective = ScriptableObject.CreateInstance<CampaignActivityLogObjective>();
+            talkObjective.ConfigureForTests("campaign.objective.talk-guide", "npc.guide", 1, false);
+
+            var route = ScriptableObject.CreateInstance<CampaignRouteDefinition>();
+            route.ConfigureForTests("campaign.route.library", "Library route", "Use the library route", new CampaignObjectiveBase[] { visitObjective, talkObjective });
+            var day = ScriptableObject.CreateInstance<CampaignDayDefinition>();
+            day.ConfigureForTests("campaign.day.two", 2, "Day Two Theme", "Choose a route", "Ask the guide after library study", new[] { route });
+            var campaign = ScriptableObject.CreateInstance<CampaignDefinition>();
+            campaign.ConfigureForTests("campaign.test", "Test Campaign", "Campaign description", new[] { day }, Array.Empty<CampaignRewardBase>());
+
+            var player = new GameObject("CampaignPlayer");
+            try
+            {
+                var student = player.AddComponent<StudentLifeProgressComponent>();
+                student.ConfigureForTests("campaign-slot", "player", 10, 10, 0, 8 * 60);
+                student.Progress.TryStartNextDay();
+                var component = player.AddComponent<CampaignProgressComponent>();
+                var progress = component.EnsureProgress(campaign, student.Progress);
+                progress.SelectRoute(day, route);
+                progress.CompleteObjective(visitObjective.Id);
+
+                var items = BuildItemsFromSource("CampaignObjectiveSource", player, null);
+
+                Assert.AreEqual(1, items.Length);
+                Assert.AreEqual("Active", items[0].State);
+                StringAssert.Contains("Campaign day 2", items[0].ProgressText);
+                StringAssert.Contains("Library route", items[0].ProgressText);
+                StringAssert.Contains("campaign.objective.visit-library", items[0].ProgressText);
+                StringAssert.Contains("Ask the guide after library study", items[0].NextHintText);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(player);
+                UnityEngine.Object.DestroyImmediate(visitObjective);
+                UnityEngine.Object.DestroyImmediate(talkObjective);
+                UnityEngine.Object.DestroyImmediate(route);
+                UnityEngine.Object.DestroyImmediate(day);
+                UnityEngine.Object.DestroyImmediate(campaign);
+            }
+        }
+
+        [Test]
+        public void MilestoneObjectiveSource_DisplaysRewardClaimedStateAndPerObjectiveProgress()
+        {
+            string rootDirectory = Path.Combine(Path.GetTempPath(), "rootborn-objective-milestone-source-" + Guid.NewGuid().ToString("N"));
+            SaveService.SetRootDirectoryForTests(rootDirectory);
+
+            var firstObjective = ScriptableObject.CreateInstance<OutsideSchoolLogMilestoneObjective>();
+            firstObjective.ConfigureForTests("milestone.objective.study", "skill-study", 3);
+            var secondObjective = ScriptableObject.CreateInstance<OutsideSchoolLogMilestoneObjective>();
+            secondObjective.ConfigureForTests("milestone.objective.help", "trait-help", 1);
+            var milestone = ScriptableObject.CreateInstance<MilestoneDefinition>();
+            milestone.ConfigureForTests("milestone.claimed", "Claimed Milestone", new MilestoneObjectiveBase[] { firstObjective, secondObjective }, Array.Empty<MilestoneRewardBase>(), Array.Empty<MilestoneRouteDefinition>(), 2);
+            var registry = ScriptableObject.CreateInstance<GameDataRegistry>();
+            var player = new GameObject("MilestonePlayer");
+
+            try
+            {
+                SetPrivateField(registry, "_milestones", new[] { milestone });
+                var student = player.AddComponent<StudentLifeProgressComponent>();
+                student.ConfigureForTests("milestone-slot", "player", 10, 10, 0, 8 * 60);
+                var progress = new MilestoneProgress("milestone-slot", "player", new[] { milestone });
+                progress.SetObjectiveProgressForTests(milestone, firstObjective, 2);
+                progress.SetObjectiveProgressForTests(milestone, secondObjective, 1);
+                progress.MarkCompletedForTests(milestone);
+                progress.MarkRewardClaimedForTests(milestone);
+                MilestoneProgressPersistence.Save(progress);
+
+                var items = BuildItemsFromSource("MilestoneObjectiveSource", player, registry);
+
+                Assert.AreEqual(1, items.Length, "RewardClaimed milestones should remain visible in Objective Journal history.");
+                Assert.AreEqual("RewardClaimed", items[0].State);
+                StringAssert.Contains("milestone.objective.study 2 / 3", items[0].ProgressText);
+                StringAssert.Contains("milestone.objective.help 1 / 1", items[0].ProgressText);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(player);
+                UnityEngine.Object.DestroyImmediate(registry);
+                UnityEngine.Object.DestroyImmediate(firstObjective);
+                UnityEngine.Object.DestroyImmediate(secondObjective);
+                UnityEngine.Object.DestroyImmediate(milestone);
+                SaveService.SetRootDirectoryForTests(null);
+                if (Directory.Exists(rootDirectory)) Directory.Delete(rootDirectory, true);
+            }
+        }
+
+        private static ObjectiveJournalItem[] BuildItemsFromSource(string nestedSourceTypeName, GameObject player, GameDataRegistry registry)
+        {
+            var sourceType = typeof(ObjectiveJournalRuntimeProvider).GetNestedType(nestedSourceTypeName, BindingFlags.NonPublic);
+            Assert.IsNotNull(sourceType, nestedSourceTypeName + " must remain available to build runtime objective items.");
+            var source = Activator.CreateInstance(sourceType, true);
+            var method = sourceType.GetMethod("BuildItems", BindingFlags.Instance | BindingFlags.Public);
+            Assert.IsNotNull(method, nestedSourceTypeName + " must expose BuildItems through IObjectiveJournalSource.");
+            return (ObjectiveJournalItem[])method.Invoke(source, new object[] { new ObjectiveJournalContext(registry, player, null) });
+        }
+
+        private static void SetPrivateField(object target, string fieldName, object value)
+        {
+            var field = target.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(field, fieldName);
+            field.SetValue(target, value);
+        }
+
+        private sealed class KeyedQuestObjective : QuestObjectiveBase
+        {
+            private string _requiredKey;
+
+            public void Configure(string displayKey, int requiredCount, string requiredKey)
+            {
+                ConfigureForRuntime(displayKey, requiredCount);
+                _requiredKey = requiredKey;
+            }
+
+            public override bool Matches(in QuestEvent questEvent)
+            {
+                return !string.IsNullOrEmpty(questEvent.EventKey) && questEvent.EventKey.StartsWith(_requiredKey, StringComparison.Ordinal);
             }
         }
     }

@@ -5,6 +5,7 @@ using NUnit.Framework;
 using Rootborn.Game.Save;
 using Rootborn.UI.Objectives;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Rootborn.Tests.EditMode.UI.Objectives
 {
@@ -123,6 +124,52 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
                 Assert.IsTrue(ObjectiveJournalTrackingStore.TryLoad(ActiveSaveContext.Metadata, out var categoryId, out var stableKey));
                 Assert.AreEqual("Quests", categoryId);
                 Assert.AreEqual("quest.persisted", stableKey);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+                ActiveSaveContext.Clear();
+                SaveService.SetRootDirectoryForTests(null);
+                if (Directory.Exists(rootDirectory)) Directory.Delete(rootDirectory, true);
+            }
+        }
+
+        [Test]
+        public void ObjectiveJournalPanel_TrackButtonTracksClickedRowAndPersistsStableKey()
+        {
+            string rootDirectory = Path.Combine(Path.GetTempPath(), "rootborn-objective-track-button-" + Guid.NewGuid().ToString("N"));
+            SaveService.SetRootDirectoryForTests(rootDirectory);
+            ActiveSaveContext.Set(new SaveSlotMetadata { SlotId = "slot-track-button", DisplayName = "Track Button" });
+            var root = new GameObject("ObjectiveJournalTrackButtonFixture", typeof(RectTransform));
+
+            try
+            {
+                var panelGo = new GameObject("ObjectiveJournalPanel", typeof(RectTransform));
+                panelGo.transform.SetParent(root.transform, false);
+                var panel = panelGo.AddComponent<ObjectiveJournalPanel>();
+
+                var hudGo = new GameObject("TrackedObjectiveHud", typeof(RectTransform));
+                hudGo.transform.SetParent(root.transform, false);
+                var hud = hudGo.AddComponent<TrackedObjectiveHud>();
+                panel.BindTrackedHud(hud);
+
+                panel.SetItems("Quests", new[]
+                {
+                    new ObjectiveJournalItem("quest.first", "Quests", "First Quest", string.Empty, "Active", "0 / 1", "Continue first", false, 0),
+                    new ObjectiveJournalItem("quest.second", "Quests", "Second Quest", string.Empty, "Active", "1 / 2", "Continue second", false, 1),
+                });
+                panel.Show();
+                panel.SelectCategory("Quests");
+
+                root.transform.Find("ObjectiveJournalPanel/ObjectiveJournalRoot/ObjectiveList/ObjectiveRow_1").GetComponent<Button>().onClick.Invoke();
+                root.transform.Find("ObjectiveJournalPanel/ObjectiveJournalRoot/ObjectiveDetail/ObjectiveTrackButton").GetComponent<Button>().onClick.Invoke();
+
+                Assert.IsTrue(hud.IsVisible);
+                StringAssert.Contains("Second Quest", hud.VisibleText);
+                StringAssert.Contains("1 / 2", hud.VisibleText);
+                Assert.IsTrue(ObjectiveJournalTrackingStore.TryLoad(ActiveSaveContext.Metadata, out var categoryId, out var stableKey));
+                Assert.AreEqual("Quests", categoryId);
+                Assert.AreEqual("quest.second", stableKey);
             }
             finally
             {
