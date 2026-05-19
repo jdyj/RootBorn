@@ -33,6 +33,21 @@ namespace Rootborn.Tests.EditMode.Housing
             Assert.IsTrue(blueprint.IsCellAllowed(new Vector2Int(1, 1), HouseConstructionCellKind.Floor));
         }
 
+        [Test]
+        public void HOUSE_STATE_001_SelectedRoomPresetIdPersistsThroughNormalize()
+        {
+            var state = new HouseStateSaveData
+            {
+                CurrentStageIndex = 1,
+                SelectedRoomPresetId = "preset.expanded.study"
+            };
+
+            HouseStatePersistence.Save("house-state-preset-test", state);
+            var loaded = HouseStatePersistence.Load("house-state-preset-test");
+
+            Assert.AreEqual(1, loaded.CurrentStageIndex);
+            Assert.AreEqual("preset.expanded.study", loaded.SelectedRoomPresetId);
+        }
 #if UNITY_EDITOR
         [Test]
         public void HOUSE_UPGRADE_040_FirstSliceAssetsExistAndAreValid()

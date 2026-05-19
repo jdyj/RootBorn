@@ -25,6 +25,7 @@ namespace Rootborn.Game.Housing
     {
         public int CurrentStageIndex;
         public string ActiveConstructionStageId;
+        public string SelectedRoomPresetId = string.Empty;
         public HouseConstructionCellSaveData[] PlacedConstructionCells = Array.Empty<HouseConstructionCellSaveData>();
         public HouseUpgradeRouteKind LatestRoute;
         public string[] CompletionHistoryIds = Array.Empty<string>();
@@ -55,6 +56,7 @@ namespace Rootborn.Game.Housing
         {
             state ??= new HouseStateSaveData();
             state.CurrentStageIndex = Math.Max(0, state.CurrentStageIndex);
+            state.SelectedRoomPresetId ??= string.Empty;
             state.PlacedConstructionCells ??= Array.Empty<HouseConstructionCellSaveData>();
             state.CompletionHistoryIds ??= Array.Empty<string>();
             state.Currency ??= new HouseCurrencySaveData();
