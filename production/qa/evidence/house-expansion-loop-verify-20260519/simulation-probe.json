@@ -1,0 +1,11 @@
+{
+    "RunName":  "house-expansion-loop-verify-20260519",
+    "RequiredScreenshots":  [
+                                "after-expansion.png",
+                                "after-placement.png",
+                                "after-reload.png"
+                            ],
+    "EvidenceDir":  "C:\\Users\\jdyj\\farmer\\production\\qa\\evidence\\house-expansion-loop-verify-20260519",
+    "SaveSlot":  "house-expansion-loop-verify-20260519",
+    "ReloadCount":  1
+}
