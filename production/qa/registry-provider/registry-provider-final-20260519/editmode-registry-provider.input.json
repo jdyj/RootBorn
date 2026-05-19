@@ -1,0 +1,9 @@
+{
+    "testMode":  "EditMode",
+    "testNamespace":  "Rootborn.Tests.EditMode.Registry",
+    "includePassingTests":  true,
+    "includeLogs":  true,
+    "includeMessages":  true,
+    "logType":  "Error",
+    "includeStacktrace":  true
+}

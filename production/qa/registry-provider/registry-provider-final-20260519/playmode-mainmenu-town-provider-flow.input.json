@@ -1,0 +1,9 @@
+{
+    "testMethod":  "Rootborn.Tests.PlayMode.EndToEnd.RegistryProviderUnifiedFlowE2ETests.REGISTRY_PROVIDER_E2E_001_MainMenuNewGameEntersTownWithProviderBackedRuntimeInstallers",
+    "testMode":  "PlayMode",
+    "includePassingTests":  true,
+    "includeLogs":  true,
+    "includeMessages":  true,
+    "logType":  "Error",
+    "includeStacktrace":  true
+}

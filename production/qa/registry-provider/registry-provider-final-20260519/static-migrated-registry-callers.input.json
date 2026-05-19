@@ -1,0 +1,9 @@
+{
+    "testMethod":  "Rootborn.Tests.EditMode.StaticRuntimeUsageGateTests.STATIC_003_MigratedRuntimeCallers_DoNotDirectlyResourcesLoadGameDataRegistry",
+    "testMode":  "EditMode",
+    "includePassingTests":  true,
+    "includeLogs":  true,
+    "includeMessages":  true,
+    "logType":  "Error",
+    "includeStacktrace":  true
+}
