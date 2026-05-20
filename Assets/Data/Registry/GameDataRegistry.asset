@@ -1775,11 +1775,14 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 92944bf0cb89c25478f539cbfcd72ed8, type: 2}
   _milestones:
   - {fileID: 11400000, guid: e964618ac9e20234598c35ded949ca42, type: 2}
+  - {fileID: 11400000, guid: 432758444c01664419db00e22986f34f, type: 2}
   _milestoneObjectives:
   - {fileID: 11400000, guid: 07c7294df342e184e84e345c503c5e82, type: 2}
+  - {fileID: 11400000, guid: fee1b49764af0fb40a74ad1cb592586c, type: 2}
   _milestoneRoutes:
   - {fileID: 11400000, guid: 1e5390d8e64d57c43b331ef32abd9ec9, type: 2}
   - {fileID: 11400000, guid: f482d7c9312fa0d4e9a0a7c1df8df5a2, type: 2}
+  - {fileID: 11400000, guid: 23be89d8bfea3f44f8296763b1001845, type: 2}
   _milestoneRewards: []
   _encyclopediaCategories:
   - {fileID: 11400000, guid: c1e9e5f494aca684e8a5ddcd36b6a07a, type: 2}
