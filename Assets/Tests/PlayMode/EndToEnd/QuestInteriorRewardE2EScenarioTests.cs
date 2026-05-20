@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -22,6 +23,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
@@ -102,10 +104,17 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             AssertPanelContains(runtime.ChainPanel.transform, "Completed", "QUEST-INTERIOR-REWARD-E2E-001 failed: actual location activity did not complete quest chain.");
 
             yield return PlayerFlowE2EDriver.ClickButton(FindRootButton("QuestChainLogOpenButton"));
-            yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(runtime.ChainPanel.transform, "QuestChainClaimRewardButton"));
+            var claimButton = PlayerFlowE2EDriver.FindButton(runtime.ChainPanel.transform, "QuestChainClaimRewardButton");
+            yield return PlayerFlowE2EDriver.ClickButton(claimButton);
             AssertPanelContains(runtime.ChainPanel.transform, "Reward: Claimed", "QUEST-INTERIOR-REWARD-E2E-001 failed: claim button did not mark quest-chain reward claimed.");
-            Assert.IsFalse(PlayerFlowE2EDriver.FindButton(runtime.ChainPanel.transform, "QuestChainClaimRewardButton").interactable, "QUEST-INTERIOR-REWARD-E2E-001 failed: completion reward stayed claimable after claim.");
+            Assert.IsFalse(claimButton.interactable, "QUEST-INTERIOR-REWARD-E2E-001 failed: completion reward stayed claimable after claim.");
             Assert.IsTrue(FurnitureUnlockProgressPersistence.LoadOrCreate(TestSlotId, playerId).IsUnlocked(UnlockToken), "QUEST-INTERIOR-REWARD-E2E-001 failed: reward claim did not persist the furniture unlock token.");
+            string unlockFileName = FurnitureUnlockProgressPersistence.FileNameFor(playerId);
+            AssertFileContainsExactlyOnce(unlockFileName, UnlockToken, "QUEST-INTERIOR-REWARD-E2E-001 failed: furniture unlock file must contain exactly one reward unlock token after claim.");
+            string unlockBeforeDuplicateClick = ReadSaveFile(unlockFileName);
+            yield return ClickDisabledButton(claimButton);
+            Assert.AreEqual(unlockBeforeDuplicateClick, ReadSaveFile(unlockFileName), "QUEST-INTERIOR-REWARD-E2E-001 failed: disabled duplicate reward claim mutated the unlock save file.");
+            AssertFileContainsExactlyOnce(unlockFileName, UnlockToken, "QUEST-INTERIOR-REWARD-E2E-001 failed: duplicate reward claim created extra unlock tokens.");
             AssertFurnitureCatalogState(true, "QUEST-INTERIOR-REWARD-E2E-001 failed: unlocked quest reward furniture was not visible in runtime catalog after reward claim.");
             runtime.ObjectiveProvider.RefreshNow();
             yield return PlayerFlowE2EDriver.PressTab(keyboard);
@@ -114,7 +123,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return ScreenshotEvidence.WaitForNonZeroFile(ScreenshotPath, 3f, "QUEST-INTERIOR-REWARD-E2E-001 failed: Town quest reward Game View screenshot evidence was not written.");
             runtime.ChainPanel.Hide();
 
-            AssertFileContains(FurnitureUnlockProgressPersistence.FileNameFor(playerId), UnlockToken, "QUEST-INTERIOR-REWARD-E2E-001 failed: furniture unlock file did not contain the unlock token.");
+            AssertFileContainsExactlyOnce(unlockFileName, UnlockToken, "QUEST-INTERIOR-REWARD-E2E-001 failed: furniture unlock file did not contain exactly one unlock token before House placement.");
 
             yield return PlayerFlowE2EDriver.LoadScene("House");
             yield return WaitForStableScene("House", 0.3f, 10f, "QUEST-INTERIOR-REWARD-E2E-001 failed: project-supported House scene transition did not stabilize after quest reward claim.");
@@ -124,6 +133,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var occupancyTilemap = RequiredTilemap("HouseFurnitureOccupancyTilemap");
             Assert.IsTrue(ContainsTile(furnitureTilemap, FurnitureTileName, out var placedCell), "QUEST-INTERIOR-REWARD-E2E-001 failed: unlocked furniture was not visibly placed in House tilemap.");
             Assert.IsNotNull(occupancyTilemap.GetTile(placedCell), "QUEST-INTERIOR-REWARD-E2E-001 failed: placed unlocked furniture did not write occupancy.");
+            Assert.AreEqual(1, CountTiles(furnitureTilemap, FurnitureTileName), "QUEST-INTERIOR-REWARD-E2E-001 failed: initial placement duplicated the visible unlocked furniture tile.");
+            Assert.AreEqual(1, CountOccupiedCells(occupancyTilemap), "QUEST-INTERIOR-REWARD-E2E-001 failed: initial placement duplicated occupancy cells.");
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
             Assert.IsNotNull(overlay);
             StringAssert.Contains(FurnitureId, overlay.LastMessage, "QUEST-INTERIOR-REWARD-E2E-001 failed: placement runtime state did not record selected furniture id.");
@@ -131,9 +142,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return PlayerFlowE2EDriver.ClickButton(FindRootButton("SaveFurnitureLayoutButton"));
             string layoutPath = FindLayoutFilePath();
             Assert.IsTrue(File.Exists(layoutPath), "QUEST-INTERIOR-REWARD-E2E-001 failed: House furniture layout save file was not written.");
-            string layoutJson = File.ReadAllText(layoutPath);
-            StringAssert.Contains(FurnitureId, layoutJson, "QUEST-INTERIOR-REWARD-E2E-001 failed: saved furniture layout did not include unlocked furniture id.");
-            StringAssert.Contains(FurnitureTileName, layoutJson, "QUEST-INTERIOR-REWARD-E2E-001 failed: saved furniture layout did not include placed tile name.");
+            AssertLayoutContainsExactlyOnce(layoutPath, "FurnitureId", FurnitureId, "QUEST-INTERIOR-REWARD-E2E-001 failed: saved furniture layout must include exactly one reward furniture id field.");
+            AssertLayoutContainsExactlyOnce(layoutPath, "TileName", FurnitureTileName, "QUEST-INTERIOR-REWARD-E2E-001 failed: saved furniture layout must include exactly one placed tile name field.");
             ScreenshotEvidence.Capture(ScreenshotPath);
             yield return ScreenshotEvidence.WaitForNonZeroFile(ScreenshotPath, 3f, "QUEST-INTERIOR-REWARD-E2E-001 failed: House placement Game View screenshot evidence was not written.");
 
@@ -153,18 +163,22 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var reloadedTown = FindTownRuntime();
             string reloadedPlayerId = ResolvePlayerId(reloadedTown.Player);
             Assert.IsTrue(FurnitureUnlockProgressPersistence.LoadOrCreate(TestSlotId, reloadedPlayerId).IsUnlocked(UnlockToken), "QUEST-INTERIOR-REWARD-E2E-001 failed: furniture unlock token did not survive SaveSlot reload.");
+            AssertFileContainsExactlyOnce(FurnitureUnlockProgressPersistence.FileNameFor(reloadedPlayerId), UnlockToken, "QUEST-INTERIOR-REWARD-E2E-001 failed: reload duplicated or removed the unlock token.");
             yield return PlayerFlowE2EDriver.ClickButton(FindRootButton("QuestChainLogOpenButton"));
             AssertPanelContains(reloadedTown.ChainPanel.transform, "Reward: Claimed", "QUEST-INTERIOR-REWARD-E2E-001 failed: reward claim state did not survive reload.");
             Assert.IsFalse(PlayerFlowE2EDriver.FindButton(reloadedTown.ChainPanel.transform, "QuestChainClaimRewardButton").interactable, "QUEST-INTERIOR-REWARD-E2E-001 failed: reward became claimable again after reload.");
 
             yield return PlayerFlowE2EDriver.LoadScene("House");
             yield return WaitForStableScene("House", 0.3f, 10f, "QUEST-INTERIOR-REWARD-E2E-001 failed: House scene did not stabilize after reload.");
+            AssertLayoutContainsExactlyOnce(layoutPath, "FurnitureId", FurnitureId, "QUEST-INTERIOR-REWARD-E2E-001 failed: reload duplicated or removed the saved reward furniture id field.");
+            AssertLayoutContainsExactlyOnce(layoutPath, "TileName", FurnitureTileName, "QUEST-INTERIOR-REWARD-E2E-001 failed: reload duplicated or removed the saved reward furniture tile field.");
             var restoredTilemap = RequiredTilemap("HouseFurnitureObjectTilemap");
             var restoredOccupancy = RequiredTilemap("HouseFurnitureOccupancyTilemap");
             Assert.IsTrue(ContainsTile(restoredTilemap, FurnitureTileName, out var restoredCell), "QUEST-INTERIOR-REWARD-E2E-001 failed: placed unlocked furniture did not restore visibly after reload.");
             Assert.AreEqual(placedCell, restoredCell, "QUEST-INTERIOR-REWARD-E2E-001 failed: restored unlocked furniture moved after reload.");
             Assert.IsNotNull(restoredOccupancy.GetTile(restoredCell), "QUEST-INTERIOR-REWARD-E2E-001 failed: restored unlocked furniture did not restore occupancy.");
             Assert.AreEqual(1, CountTiles(restoredTilemap, FurnitureTileName), "QUEST-INTERIOR-REWARD-E2E-001 failed: reload duplicated the placed unlocked furniture tile.");
+            Assert.AreEqual(1, CountOccupiedCells(restoredOccupancy), "QUEST-INTERIOR-REWARD-E2E-001 failed: reload duplicated occupancy cells.");
         }
 
         private IEnumerator StartNewTownFromSaveSlotUi()
@@ -301,6 +315,15 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.AreEqual(0, overlay.ValidCellCount, "QUEST-INTERIOR-REWARD-E2E-001 failed: successful world click placement should clear availability overlay. Last message: " + overlay.LastMessage);
         }
 
+        private static IEnumerator ClickDisabledButton(Button button)
+        {
+            Assert.IsNotNull(button);
+            Assert.IsTrue(button.gameObject.activeInHierarchy, button.name + " must be visible before verifying disabled click behavior.");
+            Assert.IsFalse(button.interactable, button.name + " must be disabled before verifying duplicate claim is blocked.");
+            ExecuteEvents.Execute(button.gameObject, new PointerEventData(EventSystem.current) { button = PointerEventData.InputButton.Left }, ExecuteEvents.pointerClickHandler);
+            yield return null;
+        }
+
         private static bool TryFindVisibleValidOverlayCell(Tilemap tilemap, Camera camera, out Vector3Int foundCell, out Vector2 screenPosition)
         {
             foreach (var position in tilemap.cellBounds.allPositionsWithin)
@@ -364,6 +387,16 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             return count;
         }
 
+        private static int CountOccupiedCells(Tilemap tilemap)
+        {
+            int count = 0;
+            foreach (var position in tilemap.cellBounds.allPositionsWithin)
+            {
+                if (tilemap.GetTile(position) != null) count++;
+            }
+            return count;
+        }
+
         private static string ResolvePlayerId(GameObject player)
         {
             var identity = player != null ? player.GetComponent<PlayerIdentity>() : null;
@@ -394,11 +427,41 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.AreEqual(expectedVisible, visible, failure + " Catalog ids=" + string.Join(",", ids));
         }
 
-        private void AssertFileContains(string fileName, string expected, string failure)
+        private string ReadSaveFile(string fileName)
         {
             string path = Path.Combine(_saveRoot, TestSlotId, fileName);
-            Assert.IsTrue(File.Exists(path), failure + " Missing file: " + path);
-            StringAssert.Contains(expected, File.ReadAllText(path), failure);
+            Assert.IsTrue(File.Exists(path), "Expected save file to exist: " + path);
+            return File.ReadAllText(path);
+        }
+
+        private void AssertFileContainsExactlyOnce(string fileName, string expected, string failure)
+        {
+            string text = ReadSaveFile(fileName);
+            Assert.AreEqual(1, CountOccurrences(text, expected), failure + " File: " + fileName + " Expected: " + expected + " Text: " + text);
+        }
+
+        private static void AssertLayoutContainsExactlyOnce(string layoutPath, string fieldName, string expectedValue, string failure)
+        {
+            Assert.IsTrue(File.Exists(layoutPath), failure + " Missing file: " + layoutPath);
+            string json = File.ReadAllText(layoutPath);
+            string expectedField = "\"" + fieldName + "\": \"" + expectedValue + "\"";
+            Assert.AreEqual(1, CountOccurrences(json, expectedField), failure + " Field: " + expectedField + " Json: " + json);
+        }
+
+        private static int CountOccurrences(string text, string expected)
+        {
+            if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(expected)) return 0;
+            int count = 0;
+            int index = 0;
+            while (index < text.Length)
+            {
+                int found = text.IndexOf(expected, index, StringComparison.Ordinal);
+                if (found < 0) break;
+                count++;
+                index = found + expected.Length;
+            }
+
+            return count;
         }
 
         private string FindLayoutFilePath()
