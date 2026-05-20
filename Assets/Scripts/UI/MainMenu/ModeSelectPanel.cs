@@ -1,4 +1,7 @@
+using System;
 using Rootborn.Game.Bootstrap;
+using Rootborn.Game.Save;
+using Rootborn.Network.Session;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -34,9 +37,11 @@ namespace Rootborn.UI.MainMenu
             slots.Show();
         }
 
-        private void OnHost()
+        private async void OnHost()
         {
             ApplyMode(SessionMode.Host);
+            EnsureSaveContext(GameBootstrap.Config);
+            await NetworkBootstrap.StartSessionAsync(GameBootstrap.Config);
             SceneManager.LoadScene(_townScene);
         }
 
@@ -73,6 +78,28 @@ namespace Rootborn.UI.MainMenu
             }
 
             GameBootstrap.Config.Mode = mode;
+        }
+
+        private static void EnsureSaveContext(AppConfig config)
+        {
+            if (config == null || string.IsNullOrEmpty(config.SaveSlot))
+            {
+                return;
+            }
+
+            var existing = ActiveSaveContext.Metadata;
+            if (existing != null && existing.SlotId == config.SaveSlot)
+            {
+                return;
+            }
+
+            ActiveSaveContext.Set(new SaveSlotMetadata
+            {
+                SlotId = config.SaveSlot,
+                DisplayName = config.SaveSlot,
+                CreatedAtUtcTicks = DateTime.UtcNow.Ticks,
+                UpdatedAtUtcTicks = DateTime.UtcNow.Ticks,
+            });
         }
     }
 }

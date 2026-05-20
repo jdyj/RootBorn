@@ -44,7 +44,8 @@ namespace Rootborn.Game.Bootstrap
             var player = new GameObject("Player");
             player.transform.position = ResolveSpawnPosition(scene);
             SceneManager.MoveGameObjectToScene(player, scene);
-            player.AddComponent<PlayerIdentity>();
+            var identity = player.AddComponent<PlayerIdentity>();
+            ConfigureIdentityForSession(identity);
             player.AddComponent<PlayerController>();
             player.AddComponent<PlayerInteractionRouter>();
         }
@@ -72,6 +73,17 @@ namespace Rootborn.Game.Bootstrap
 
         private static bool ShouldCreateLocalPlayerFallback()
         {
+            var config = GameBootstrap.Config;
+            if (config != null)
+            {
+                if (config.Mode == SessionMode.Host || config.Mode == SessionMode.Single || config.Mode == SessionMode.None)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+
             string[] args = Environment.GetCommandLineArgs();
             for (int i = 0; i < args.Length; i++)
             {
@@ -98,6 +110,16 @@ namespace Rootborn.Game.Bootstrap
                    (!string.Equals(mode, "host", StringComparison.OrdinalIgnoreCase) &&
                     !string.Equals(mode, "client", StringComparison.OrdinalIgnoreCase) &&
                     !string.Equals(mode, "server", StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static void ConfigureIdentityForSession(PlayerIdentity identity)
+        {
+            if (identity == null || GameBootstrap.Config == null || GameBootstrap.Config.Mode != SessionMode.Host)
+            {
+                return;
+            }
+
+            identity.Configure("client-0", 0UL);
         }
 
         private static GameObject FindRoot(Scene scene, string rootName)

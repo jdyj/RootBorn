@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Rootborn.Game.Bootstrap;
 using UnityEngine;
 
@@ -17,11 +18,18 @@ namespace Rootborn.Network.Session
             GameBootstrap.OnBootstrapped -= HandleBootstrapped;
         }
 
-        private async void HandleBootstrapped(AppConfig config)
+        public static async Task StartSessionAsync(AppConfig config)
         {
-            if (config.Mode == SessionMode.None) return;
+            if (config == null || config.Mode == SessionMode.None) return;
+            if (ActiveSession != null && ActiveSession.Mode == config.Mode && ActiveSession.IsServer == (config.Mode == SessionMode.Host || config.Mode == SessionMode.Server) && ActiveSession.IsClient == (config.Mode == SessionMode.Host || config.Mode == SessionMode.Client)) return;
+
             ActiveSession = NetworkSessionFactory.Create(config.Mode);
             await ActiveSession.StartAsync(config);
+        }
+
+        private async void HandleBootstrapped(AppConfig config)
+        {
+            await StartSessionAsync(config);
         }
     }
 }
