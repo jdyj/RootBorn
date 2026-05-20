@@ -105,17 +105,17 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.IsTrue(runtime.Router.PromptVisible, "DISCOVERY-ROUTE-E2E-001 failed: Daily Plan board prompt was not visible.");
             yield return PlayerFlowE2EDriver.PressInteractKey(keyboard);
             yield return WaitForDailyPlanPanelOpen(3f, "DISCOVERY-ROUTE-E2E-001 failed: Daily Plan panel did not open.");
-            var routeButton = FindRouteButton(runtime.DailyPanel, RouteLabel);
-            Assert.IsNotNull(routeButton, "DISCOVERY-ROUTE-E2E-001 failed: unlocked route was not visible in Daily Plan choices.");
+            var routeButton = DailyPlanE2EDriver.FindRouteButton(runtime.DailyPanel, RouteLabel, "DISCOVERY-ROUTE-E2E-001 failed: unlocked route was not visible in Daily Plan choices.");
             yield return PlayerFlowE2EDriver.ClickButton(routeButton);
             Assert.AreEqual(RouteId, runtime.Daily.Progress.SelectedRouteId, "DISCOVERY-ROUTE-E2E-001 failed: clicked unlocked route was not selected.");
 
             runtime.ObjectiveProvider.RefreshNow();
             yield return PlayerFlowE2EDriver.PressTab(keyboard);
             yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(runtime.Journal.transform, "ObjectiveCategory_Goals"));
-            yield return PlayerFlowE2EDriver.ClickButton(FindObjectiveRowButton(runtime.Journal, RouteObjectiveTitle));
+            yield return PlayerFlowE2EDriver.ClickButton(ObjectiveJournalE2EDriver.FindRowButtonContaining(runtime.Journal, RouteObjectiveTitle, "DISCOVERY-ROUTE-E2E-001 failed: Objective Journal Goals did not include selected unlocked route guidance."));
             StringAssert.Contains(RouteObjectiveTitle, runtime.Journal.VisibleText, "DISCOVERY-ROUTE-E2E-001 failed: Objective Journal Goals did not include selected unlocked route guidance.");
             yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(runtime.Journal.transform, "ObjectiveTrackButton"));
+            Assert.AreEqual(1, Object.FindObjectsByType<TrackedObjectiveHud>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length, "DISCOVERY-ROUTE-E2E-001 failed: tracking created more than one HUD instance.");
             Assert.IsTrue(runtime.TrackedHud.IsVisible, "DISCOVERY-ROUTE-E2E-001 failed: tracked HUD did not show one tracked route objective.");
             StringAssert.Contains(RouteObjectiveTitle, runtime.TrackedHud.VisibleText);
             ScreenshotEvidence.Capture(ScreenshotPath);
@@ -141,7 +141,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             reloaded.Router.RefreshPromptNow();
             yield return PlayerFlowE2EDriver.PressInteractKey(keyboard);
             yield return WaitForDailyPlanPanelOpen(3f, "DISCOVERY-ROUTE-E2E-001 failed: Daily Plan panel did not open after reload.");
-            Assert.IsNotNull(FindRouteButton(reloaded.DailyPanel, RouteLabel), "DISCOVERY-ROUTE-E2E-001 failed: unlocked route availability did not restore after reload.");
+            DailyPlanE2EDriver.FindRouteButton(reloaded.DailyPanel, RouteLabel, "DISCOVERY-ROUTE-E2E-001 failed: unlocked route availability did not restore after reload.");
         }
 
         private IEnumerator StartNewTownFromSaveSlotUi()
@@ -257,33 +257,6 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             }
 
             Assert.Fail("Missing visible clue interpretation choice containing: " + containsLower + "\n" + panel.TextForTests);
-            return null;
-        }
-
-        private static Button FindRouteButton(DailyPlanPanel panel, string label)
-        {
-            if (panel == null) return null;
-            for (int i = 0; i < panel.RouteRowCountForTests; i++)
-            {
-                var button = panel.GetRouteButtonForTests(i);
-                if (button == null) continue;
-                var text = button.GetComponentInChildren<Text>();
-                if (text != null && text.text == label) return button;
-            }
-
-            return null;
-        }
-
-        private static Button FindObjectiveRowButton(ObjectiveJournalPanel panel, string contains)
-        {
-            var buttons = panel.GetComponentsInChildren<Button>(true);
-            for (int i = 0; i < buttons.Length; i++)
-            {
-                var text = buttons[i].GetComponentInChildren<Text>(true);
-                if (text != null && text.text.Contains(contains)) return buttons[i];
-            }
-
-            Assert.Fail("Missing Objective Journal row containing: " + contains + "\n" + panel.VisibleText);
             return null;
         }
 

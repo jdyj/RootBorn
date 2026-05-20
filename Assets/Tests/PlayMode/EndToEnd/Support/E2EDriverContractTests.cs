@@ -60,6 +60,30 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             }
         }
 
+        [Test]
+        public void PlayerFlowE2EDriver_FindButtonFailureListsAvailableButtonNamesAndText()
+        {
+            var root = new GameObject("ContractRoot", typeof(RectTransform));
+            try
+            {
+                CreateButton(root.transform, "AcceptButton", "Accept Quest");
+                CreateButton(root.transform, "TrackButton", "Track Route");
+
+                var ex = Assert.Throws<AssertionException>(() => PlayerFlowE2EDriver.FindButton(root.transform, "MissingButton"));
+
+                StringAssert.Contains("UI button missing: MissingButton", ex.Message);
+                StringAssert.Contains("Available buttons:", ex.Message);
+                StringAssert.Contains("AcceptButton", ex.Message);
+                StringAssert.Contains("Accept Quest", ex.Message);
+                StringAssert.Contains("TrackButton", ex.Message);
+                StringAssert.Contains("Track Route", ex.Message);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
         [UnityTest]
         public IEnumerator ScreenshotEvidence_WaitsForNonZeroFile()
         {
@@ -92,6 +116,15 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
 
             StringAssert.Contains("Goal Two", panel.VisibleText);
             Object.DestroyImmediate(root);
+        }
+
+        private static void CreateButton(Transform parent, string name, string label)
+        {
+            var buttonGo = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
+            buttonGo.transform.SetParent(parent, false);
+            var labelGo = new GameObject("Label", typeof(RectTransform), typeof(Text));
+            labelGo.transform.SetParent(buttonGo.transform, false);
+            labelGo.GetComponent<Text>().text = label;
         }
     }
 }

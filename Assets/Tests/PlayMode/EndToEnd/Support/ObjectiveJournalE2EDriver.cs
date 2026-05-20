@@ -1,3 +1,4 @@
+using NUnit.Framework;
 using Rootborn.UI.Objectives;
 using UnityEngine.UI;
 
@@ -11,6 +12,20 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             categoryButton.onClick.Invoke();
             var rowButton = PlayerFlowE2EDriver.FindButton(panel.transform, "ObjectiveRow_" + rowIndex);
             rowButton.onClick.Invoke();
+        }
+
+        public static Button FindRowButtonContaining(ObjectiveJournalPanel panel, string contains, string failurePrefix)
+        {
+            Assert.IsNotNull(panel, failurePrefix + " Objective Journal panel was missing.");
+            var buttons = panel.GetComponentsInChildren<Button>(true);
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                var text = buttons[i].GetComponentInChildren<Text>(true);
+                if (text != null && text.text.Contains(contains)) return buttons[i];
+            }
+
+            Assert.Fail(failurePrefix + " Missing Objective Journal row containing: " + contains + "\nVisible Journal Text:\n" + panel.VisibleText + "\n" + PlayerFlowE2EDriver.DescribeButtons(panel.transform));
+            return null;
         }
 
         public static Button FindTrackButton(ObjectiveJournalPanel panel)

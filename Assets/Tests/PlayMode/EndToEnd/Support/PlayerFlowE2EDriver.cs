@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Text;
 using NUnit.Framework;
 using Rootborn.Game.Common;
 using UnityEngine;
@@ -58,10 +59,43 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
         public static Button FindButton(Transform root, string name)
         {
             var child = FindChild(root, name);
-            Assert.IsNotNull(child, "UI button missing: " + name);
+            Assert.IsNotNull(child, "UI button missing: " + name + "\n" + DescribeButtons(root));
             var button = child.GetComponent<Button>();
-            Assert.IsNotNull(button, name + " does not have Button component.");
+            Assert.IsNotNull(button, name + " does not have Button component.\n" + DescribeButtons(root));
             return button;
+        }
+
+        public static string DescribeButtons(Transform root)
+        {
+            if (root == null) return "Available buttons: <root missing>";
+            var builder = new StringBuilder();
+            builder.Append("Available buttons:");
+            var buttons = root.GetComponentsInChildren<Button>(true);
+            if (buttons.Length == 0)
+            {
+                builder.Append(" <none>");
+                return builder.ToString();
+            }
+
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                var button = buttons[i];
+                var text = button.GetComponentInChildren<Text>(true);
+                builder.Append("\n- ");
+                builder.Append(button.name);
+                builder.Append(" active=");
+                builder.Append(button.gameObject.activeInHierarchy);
+                builder.Append(" interactable=");
+                builder.Append(button.interactable);
+                if (text != null && !string.IsNullOrEmpty(text.text))
+                {
+                    builder.Append(" text='");
+                    builder.Append(text.text);
+                    builder.Append("'");
+                }
+            }
+
+            return builder.ToString();
         }
 
         public static Transform FindChild(Transform root, string name)
