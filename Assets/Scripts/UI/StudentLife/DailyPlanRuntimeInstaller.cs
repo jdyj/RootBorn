@@ -1,6 +1,7 @@
 using System.Collections;
 using Rootborn.Game.Common;
 using Rootborn.Game.Managers;
+using Rootborn.Game.Player;
 using Rootborn.Game.StudentLife;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -47,11 +48,12 @@ namespace Rootborn.UI.StudentLife
 
         public static void EnsureSceneForTests(Scene scene, Canvas canvas, GameDataRegistry registry, GameObject player)
         {
+            var runtimePlayer = player != null ? player : FindRuntimePlayer(scene);
             var visibleCanvas = canvas != null ? canvas : EnsureCanvas(scene);
             var panel = EnsurePanel(scene, visibleCanvas);
             var board = EnsureBoard(scene);
-            var daily = EnsureDailyPlanProgress(player);
-            var student = player != null ? player.GetComponent<StudentLifeProgressComponent>() : null;
+            var daily = EnsureDailyPlanProgress(runtimePlayer);
+            var student = runtimePlayer != null ? runtimePlayer.GetComponent<StudentLifeProgressComponent>() : null;
             board.Bind(panel, registry != null ? registry.DailyPlanRouteSets : System.Array.Empty<DailyPlanRouteSetDefinition>(), daily, student);
         }
 
@@ -69,7 +71,7 @@ namespace Rootborn.UI.StudentLife
                 float elapsed = 0f;
                 while (player == null && elapsed < 5f)
                 {
-                    player = FindRoot(scene, "Player");
+                    player = FindRuntimePlayer(scene);
                     elapsed += Time.unscaledDeltaTime;
                     yield return null;
                 }
@@ -163,6 +165,29 @@ namespace Rootborn.UI.StudentLife
             }
 
             return null;
+        }
+
+        private static GameObject FindRuntimePlayer(Scene scene)
+        {
+            var roots = scene.GetRootGameObjects();
+            for (int i = 0; i < roots.Length; i++)
+            {
+                var identities = roots[i].GetComponentsInChildren<PlayerIdentity>(false);
+                for (int j = 0; j < identities.Length; j++)
+                {
+                    var identity = identities[j];
+                    if (identity == null) continue;
+                    var go = identity.gameObject;
+                    var controller = go.GetComponent<PlayerController>();
+                    var router = go.GetComponent<PlayerInteractionRouter>();
+                    if (controller != null && controller.enabled && router != null && router.enabled)
+                    {
+                        return go;
+                    }
+                }
+            }
+
+            return FindRoot(scene, "Player");
         }
 
         private static GameObject FindRoot(Scene scene, string rootName)

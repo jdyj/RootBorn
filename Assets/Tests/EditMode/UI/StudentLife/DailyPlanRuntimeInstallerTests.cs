@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using Rootborn.Game.Common;
+using Rootborn.Game.Player;
 using Rootborn.Game.StudentLife;
 using Rootborn.UI.StudentLife;
 using UnityEditor;
@@ -63,6 +64,33 @@ namespace Rootborn.Tests.EditMode.UI.StudentLife
             {
                 DestroyByName("DailyPlanInstallerTestCanvas");
                 DestroyByName("DailyPlanInstallerTestPlayer");
+                DestroyByName("DailyPlanBoard");
+                DestroyByName("DailyPlanPanel");
+            }
+        }
+
+        [Test]
+        public void EnsureSceneForTests_FindsNetworkNamedLocalPlayerWhenExplicitPlayerMissing()
+        {
+            var scene = SceneManager.GetActiveScene();
+            var canvasGo = new GameObject("DailyPlanInstallerTestCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            SceneManager.MoveGameObjectToScene(canvasGo, scene);
+            var player = new GameObject("NetworkPlayer(Clone)", typeof(PlayerIdentity), typeof(PlayerController), typeof(PlayerInteractionRouter), typeof(StudentLifeProgressComponent));
+            player.GetComponent<PlayerIdentity>().Configure("client-1", 1UL);
+            player.GetComponent<StudentLifeProgressComponent>().ConfigureForTests("slot-a", "client-1", 100, 100, 0, 8 * 60);
+            SceneManager.MoveGameObjectToScene(player, scene);
+            var registry = AssetDatabase.LoadAssetAtPath<GameDataRegistry>("Assets/Data/Registry/GameDataRegistry.asset");
+
+            try
+            {
+                DailyPlanRuntimeInstaller.EnsureSceneForTests(scene, canvasGo.GetComponent<Canvas>(), registry, null);
+
+                Assert.IsNotNull(player.GetComponent<DailyPlanProgressComponent>(), "Dedicated client player is network-named, so Daily Plan runtime install must discover the local input player instead of only root name Player.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
+                DestroyByName("DailyPlanInstallerTestCanvas");
                 DestroyByName("DailyPlanBoard");
                 DestroyByName("DailyPlanPanel");
             }

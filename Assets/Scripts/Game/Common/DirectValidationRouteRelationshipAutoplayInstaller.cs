@@ -16,6 +16,7 @@ namespace Rootborn.Game.Common
     public static class DirectValidationRouteRelationshipAutoplayInstaller
     {
         private const string Flag = "-directValidationAutoplayRouteRelationship";
+        private const string ObserveOnlyFlag = "-directValidationAutoplayRouteRelationshipObserveOnly";
         private const string ScreenshotFlag = "-directValidationScreenshot";
         private const string RunnerName = "[DirectValidationRouteRelationshipAutoplay]";
         private const string TownSceneName = "Town";
@@ -30,7 +31,7 @@ namespace Rootborn.Game.Common
             {
                 if (!s_enabled.HasValue)
                 {
-                    s_enabled = HasFlag(Flag);
+                    s_enabled = HasFlag(Flag) || HasFlag(ObserveOnlyFlag);
                 }
 
                 return s_enabled.Value;
@@ -116,13 +117,19 @@ namespace Rootborn.Game.Common
             private IEnumerator Start()
             {
                 EnsureKeyboardDevice();
-                DirectValidationTrace.Log("autoplay started route-relationship scene=" + SceneManager.GetActiveScene().name);
+                DirectValidationTrace.Log("autoplay started route-relationship scene=" + SceneManager.GetActiveScene().name + " observeOnly=" + HasFlag(ObserveOnlyFlag));
 
                 PlayerIdentity identity = null;
                 yield return WaitForLocalInputPlayer(value => identity = value);
                 if (identity == null)
                 {
                     DirectValidationTrace.Log("autoplay failed: route-relationship local player not found");
+                    yield break;
+                }
+
+                if (HasFlag(ObserveOnlyFlag))
+                {
+                    yield return CaptureAndLogObserveOnly(identity);
                     yield break;
                 }
 
@@ -135,6 +142,26 @@ namespace Rootborn.Game.Common
                     yield break;
                 }
 
+                yield return CaptureAndLogActionCompletion(identity);
+            }
+
+            private static IEnumerator CaptureAndLogObserveOnly(PlayerIdentity identity)
+            {
+                string screenshotPath = ReadArgumentValue(ScreenshotFlag);
+                if (!string.IsNullOrEmpty(screenshotPath))
+                {
+                    CaptureScreenshotEvidence(screenshotPath);
+                    yield return null;
+                    yield return null;
+                }
+
+                DirectValidationTrace.Log("autoplay route snapshot player=" + identity.PlayerId + " " + DailyPlanSnapshot(identity));
+                DirectValidationTrace.Log("autoplay relationship snapshot player=" + identity.PlayerId + " " + StudentProgressSnapshot(identity));
+                DirectValidationTrace.Log("autoplay completed route-relationship-observe player=" + identity.PlayerId);
+            }
+
+            private static IEnumerator CaptureAndLogActionCompletion(PlayerIdentity identity)
+            {
                 string screenshotPath = ReadArgumentValue(ScreenshotFlag);
                 if (!string.IsNullOrEmpty(screenshotPath))
                 {
