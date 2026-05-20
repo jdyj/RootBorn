@@ -131,11 +131,16 @@ namespace Rootborn.Game.StudentLife
     {
         public DailyPlanRouteDefinition[] GetAvailableRoutes(DailyPlanRouteSetDefinition[] routeSets, StudentLifeProgress progress)
         {
-            if (routeSets == null || progress == null) return Array.Empty<DailyPlanRouteDefinition>();
+            return GetAvailableRoutes(routeSets, new DailyPlanRouteContext(progress));
+        }
+
+        public DailyPlanRouteDefinition[] GetAvailableRoutes(DailyPlanRouteSetDefinition[] routeSets, in DailyPlanRouteContext context)
+        {
+            if (routeSets == null || context.StudentProgress == null) return Array.Empty<DailyPlanRouteDefinition>();
             var routes = new List<DailyPlanRouteDefinition>();
             for (int i = 0; i < routeSets.Length; i++)
             {
-                if (routeSets[i] != null) routes.AddRange(routeSets[i].GetAvailableRoutes(progress));
+                if (routeSets[i] != null) routes.AddRange(routeSets[i].GetAvailableRoutes(in context));
             }
 
             return routes.ToArray();
@@ -143,7 +148,12 @@ namespace Rootborn.Game.StudentLife
 
         public bool TrySelectRoute(DailyPlanProgress dailyProgress, DailyPlanRouteDefinition route, StudentLifeProgress studentProgress)
         {
-            if (dailyProgress == null || route == null || !route.IsAvailable(studentProgress)) return false;
+            return TrySelectRoute(dailyProgress, route, new DailyPlanRouteContext(studentProgress));
+        }
+
+        public bool TrySelectRoute(DailyPlanProgress dailyProgress, DailyPlanRouteDefinition route, in DailyPlanRouteContext context)
+        {
+            if (dailyProgress == null || route == null || !route.IsAvailable(in context)) return false;
             return dailyProgress.SelectRoute(route);
         }
 

@@ -15,12 +15,17 @@ namespace Rootborn.Game.StudentLife
 
         public DailyPlanRouteDefinition[] GetAvailableRoutes(StudentLifeProgress progress)
         {
-            if (progress == null) return Array.Empty<DailyPlanRouteDefinition>();
+            return GetAvailableRoutes(new DailyPlanRouteContext(progress));
+        }
+
+        public DailyPlanRouteDefinition[] GetAvailableRoutes(in DailyPlanRouteContext context)
+        {
+            if (context.StudentProgress == null) return Array.Empty<DailyPlanRouteDefinition>();
             var routes = new List<DailyPlanRouteDefinition>();
             for (int i = 0; i < _routes.Length; i++)
             {
                 var route = _routes[i];
-                if (route != null && route.IsAvailable(progress)) routes.Add(route);
+                if (route != null && route.IsAvailable(in context)) routes.Add(route);
             }
 
             return routes.ToArray();

@@ -1,9 +1,36 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Game.DiscoveryClues;
+using Rootborn.Game.WorldState;
 using UnityEngine;
 
 namespace Rootborn.Game.StudentLife
 {
+    public readonly struct DailyPlanRouteContext
+    {
+        public DailyPlanRouteContext(StudentLifeProgress studentProgress)
+            : this(studentProgress, null, null, null)
+        {
+        }
+
+        public DailyPlanRouteContext(
+            StudentLifeProgress studentProgress,
+            WorldStateProgress worldStateProgress,
+            DiscoveryClueProgress discoveryClueProgress,
+            ClueInterpretationProgress interpretationProgress)
+        {
+            StudentProgress = studentProgress;
+            WorldStateProgress = worldStateProgress;
+            DiscoveryClueProgress = discoveryClueProgress;
+            InterpretationProgress = interpretationProgress;
+        }
+
+        public StudentLifeProgress StudentProgress { get; }
+        public WorldStateProgress WorldStateProgress { get; }
+        public DiscoveryClueProgress DiscoveryClueProgress { get; }
+        public ClueInterpretationProgress InterpretationProgress { get; }
+    }
+
     [CreateAssetMenu(fileName = "DailyPlanRoute_New", menuName = "Rootborn/Student Life/Daily Plan/Route")]
     public sealed class DailyPlanRouteDefinition : StudentLifeDefinitionBase
     {
@@ -27,11 +54,16 @@ namespace Rootborn.Game.StudentLife
 
         public bool IsAvailable(StudentLifeProgress progress)
         {
-            if (progress == null) return false;
+            return IsAvailable(new DailyPlanRouteContext(progress));
+        }
+
+        public bool IsAvailable(in DailyPlanRouteContext context)
+        {
+            if (context.StudentProgress == null) return false;
             for (int i = 0; i < _requirements.Length; i++)
             {
                 var requirement = _requirements[i];
-                if (requirement != null && !requirement.IsSatisfied(progress, this)) return false;
+                if (requirement != null && !requirement.IsSatisfied(in context, this)) return false;
             }
 
             return true;
@@ -90,6 +122,36 @@ namespace Rootborn.Game.StudentLife
     public abstract class DailyPlanRouteRequirementBase : ScriptableObject
     {
         public abstract bool IsSatisfied(StudentLifeProgress progress, DailyPlanRouteDefinition route);
+
+        public virtual bool IsSatisfied(in DailyPlanRouteContext context, DailyPlanRouteDefinition route)
+        {
+            return IsSatisfied(context.StudentProgress, route);
+        }
+    }
+
+    [CreateAssetMenu(fileName = "DailyPlanRequirement_WorldState", menuName = "Rootborn/Student Life/Daily Plan/Requirements/World State")]
+    public sealed class DailyPlanWorldStateRequirement : DailyPlanRouteRequirementBase
+    {
+        [SerializeField] private WorldStateFlagDefinition _flag;
+        [SerializeField] private bool _expectedActive = true;
+
+        public override bool IsSatisfied(StudentLifeProgress progress, DailyPlanRouteDefinition route)
+        {
+            return false;
+        }
+
+        public override bool IsSatisfied(in DailyPlanRouteContext context, DailyPlanRouteDefinition route)
+        {
+            if (_flag == null || context.WorldStateProgress == null) return false;
+            bool active = context.WorldStateProgress.IsActive(_flag);
+            return active == _expectedActive;
+        }
+
+        public void ConfigureForTests(WorldStateFlagDefinition flag, bool expectedActive)
+        {
+            _flag = flag;
+            _expectedActive = expectedActive;
+        }
     }
 
     public abstract class DailyPlanRouteOutcomeBase : ScriptableObject
