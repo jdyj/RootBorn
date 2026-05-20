@@ -82,6 +82,9 @@
     <type fullname="Rootborn.Game.StudentLife.DailyEventRelationshipDeltaOutcome" preserve="all" />
     <type fullname="Rootborn.Game.StudentLife.DailyEventStatusDeltaOutcome" preserve="all" />
     <type fullname="Rootborn.Game.StudentLife.DailyEventTraitDeltaOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.DailyPlanRouteDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.DailyPlanRouteSetDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.DailyPlanWorldStateRequirement" preserve="all" />
     <type fullname="Rootborn.Game.StudentLife.DayEndRuleDefinition" preserve="all" />
     <type fullname="Rootborn.Game.StudentLife.DiscoveryDefinition" preserve="all" />
     <type fullname="Rootborn.Game.StudentLife.DiscoveryTraitDeltaOutcome" preserve="all" />
@@ -140,6 +143,7 @@
     <type fullname="Rootborn.Game.WorldGeneration.TilePatternDefinition" preserve="all" />
     <type fullname="Rootborn.Game.WorldGeneration.TileVariantSetDefinition" preserve="all" />
     <type fullname="Rootborn.Game.WorldState.WorldStateFlagDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.WorldState.WorldStateProgress" preserve="all" />
     <type fullname="Rootborn.Game.WorldState.WorldStateScopeDefinition" preserve="all" />
     <type fullname="Rootborn.Game.WorldState.WorldStateUsageCareerHintOutcome" preserve="all" />
     <type fullname="Rootborn.Game.WorldState.WorldStateUsageDefinition" preserve="all" />
