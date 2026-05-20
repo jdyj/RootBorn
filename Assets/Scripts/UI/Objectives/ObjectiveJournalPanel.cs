@@ -36,6 +36,10 @@ namespace Rootborn.UI.Objectives
 
         public bool IsVisible => _isVisible;
         public string VisibleText => BuildVisibleText();
+        public string SelectedCategoryIdForTests => _selectedCategory;
+        public string SelectedStableKeyForTests => _selectedStableKey;
+        public int SelectedItemIndexForTests => _selectedItemIndex;
+        public int VisibleRowCountForTests => _listRows.Count;
 
         private void Awake()
         {
@@ -311,12 +315,14 @@ namespace Rootborn.UI.Objectives
                         return;
                     }
                 }
-            }
 
-            if (_selectedItemIndex < 0 || _selectedItemIndex >= items.Length)
+                _selectedItemIndex = 0;
+            }
+            else if (_selectedItemIndex < 0 || _selectedItemIndex >= items.Length)
             {
                 _selectedItemIndex = 0;
             }
+
             _selectedStableKey = items[_selectedItemIndex].StableKey ?? string.Empty;
         }
 
