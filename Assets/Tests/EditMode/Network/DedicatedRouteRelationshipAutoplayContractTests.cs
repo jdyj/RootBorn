@@ -88,5 +88,23 @@ namespace Rootborn.Tests.EditMode.Network
             StringAssert.Contains("Assert-NoTrackedProcessesAlive", source);
             StringAssert.Contains("autoplay completed route-relationship-observe", source);
         }
+
+        [Test]
+        public void DEDICATED_ROUTE_AUTOPLAY_EDIT_008_SmokeScriptFailsBeforeLaunchOnStaleArtifacts()
+        {
+            Assert.IsTrue(File.Exists(SmokeScriptPath), "Dedicated route/relationship persistence smoke must have a repository-level runner script.");
+            string source = File.ReadAllText(SmokeScriptPath);
+
+            StringAssert.Contains("Assert-FreshBuildArtifacts", source, "Dedicated route/relationship smoke must fail before process launch if build artifacts are stale or incomplete.");
+            StringAssert.Contains("Assert-RequiredArtifact", source, "Dedicated route/relationship smoke must validate required executable, managed assembly, and Addressables runtime files.");
+            StringAssert.Contains("rootborn-server_Data\\Managed\\Rootborn.Game.dll", source);
+            StringAssert.Contains("rootborn_Data\\Managed\\Rootborn.Game.dll", source);
+            StringAssert.Contains("rootborn-server_Data\\StreamingAssets\\aa\\settings.json", source);
+            StringAssert.Contains("rootborn_Data\\StreamingAssets\\aa\\settings.json", source);
+            StringAssert.Contains("DirectValidationRouteRelationshipAutoplayInstaller.cs", source, "Freshness guard must compare artifacts against the autoplay source required by this runner.");
+            StringAssert.Contains("run-dedicated-route-relationship-smoke.ps1", source, "Freshness guard must compare artifacts against the runner script itself.");
+            StringAssert.Contains("BuildServerWindows64", source, "Freshness failure output must name the server build remediation command.");
+            StringAssert.Contains("BuildClientWindows64", source, "Freshness failure output must name the client build remediation command.");
+        }
     }
 }
