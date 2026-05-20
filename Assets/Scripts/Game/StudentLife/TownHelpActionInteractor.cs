@@ -6,8 +6,10 @@ using UnityEngine;
 namespace Rootborn.Game.StudentLife
 {
     [DisallowMultipleComponent]
-    public sealed class TownHelpActionInteractor : MonoBehaviour, IPlayerInteractable
+    public sealed class TownHelpActionInteractor : MonoBehaviour, IPlayerInteractable, IPrioritizedPlayerInteractable
     {
+        private const int TownHelpInteractionPriority = 85;
+
         [SerializeField] private TownHelpActionDefinition _action;
 
         private readonly TownHelpActionRunner _runner = new TownHelpActionRunner();
@@ -18,6 +20,7 @@ namespace Rootborn.Game.StudentLife
         public string InteractionPrompt => "[E] " + HumanizeDisplayKey(_action != null ? _action.DisplayNameKey : string.Empty);
         public Vector3 InteractionPromptOffset => new Vector3(0f, 1.05f, 0f);
         public Transform InteractionTransform => transform;
+        public int InteractionPriority => TownHelpInteractionPriority;
 
         public void Bind(TownHelpActionDefinition action)
         {

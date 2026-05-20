@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using Rootborn.Game.Common;
 using Rootborn.Game.StudentLife;
@@ -10,6 +11,8 @@ namespace Rootborn.Tests.EditMode.StudentLife
     public sealed class TownHelpActionGrowthTests
     {
         private const string RegistryPath = "Assets/Data/Registry/GameDataRegistry.asset";
+        private const string FirstGuideHelpActionId = "town.help.first-guide-errand";
+        private const string FirstGuideRelationshipId = "relationship.first-guide.trust";
 
         [Test]
         public void HELP_EDIT_001_HelpActionDefinitionsLoadFromRegistryDataPath()
@@ -23,7 +26,24 @@ namespace Rootborn.Tests.EditMode.StudentLife
         }
 
         [Test]
-        public void HELP_EDIT_002_RequirementsAndOutcomesRunWithoutEntityIdBranching()
+        public void HELP_EDIT_002_FirstGuideHelpActionWiresRelationshipOutcomeAsset()
+        {
+            var registry = AssetDatabase.LoadAssetAtPath<GameDataRegistry>(RegistryPath);
+            var action = registry.TownHelpActions.FirstOrDefault(candidate => candidate != null && candidate.Id == FirstGuideHelpActionId);
+            var relationship = registry.Relationships.FirstOrDefault(candidate => candidate != null && candidate.Id == FirstGuideRelationshipId);
+
+            Assert.IsNotNull(action, "First Guide town help action must be registered.");
+            Assert.IsNotNull(relationship, "First Guide relationship definition must be registered.");
+
+            var relationshipOutcome = action.Outcomes.OfType<HelpActionRelationshipDeltaOutcome>().FirstOrDefault();
+            Assert.IsNotNull(relationshipOutcome, "First Guide help action must include a relationship delta outcome asset.");
+            Assert.AreSame(relationship, relationshipOutcome.Relationship, "Relationship outcome must reference the registered First Guide trust relationship.");
+            Assert.Greater(relationshipOutcome.Delta, 0, "Relationship outcome must increase trust for the help action.");
+            CollectionAssert.Contains(action.Outcomes.ToArray(), relationshipOutcome, "Relationship outcome must be wired on the action, not only exist as an orphan asset.");
+        }
+
+        [Test]
+        public void HELP_EDIT_003_RequirementsAndOutcomesRunWithoutEntityIdBranching()
         {
             var relationship = ScriptableObject.CreateInstance<RelationshipDefinition>();
             var requirement = ScriptableObject.CreateInstance<HelpActionRelationshipThresholdRequirement>();
@@ -45,7 +65,7 @@ namespace Rootborn.Tests.EditMode.StudentLife
         }
 
         [Test]
-        public void HELP_EDIT_003_HelpActionOutcomeChangesGenericGrowthState()
+        public void HELP_EDIT_004_HelpActionOutcomeChangesGenericGrowthState()
         {
             var trait = ScriptableObject.CreateInstance<TraitDefinition>();
             var outcome = ScriptableObject.CreateInstance<HelpActionTraitDeltaOutcome>();
@@ -77,7 +97,7 @@ namespace Rootborn.Tests.EditMode.StudentLife
         }
 
         [Test]
-        public void HELP_EDIT_004_RelationshipOutcomeChangesGenericRelationshipState()
+        public void HELP_EDIT_005_RelationshipOutcomeChangesGenericRelationshipState()
         {
             var relationship = ScriptableObject.CreateInstance<RelationshipDefinition>();
             var outcome = ScriptableObject.CreateInstance<HelpActionRelationshipDeltaOutcome>();
@@ -107,7 +127,7 @@ namespace Rootborn.Tests.EditMode.StudentLife
         }
 
         [Test]
-        public void HELP_EDIT_005_DuplicateRequestIdDoesNotApplyTwice()
+        public void HELP_EDIT_006_DuplicateRequestIdDoesNotApplyTwice()
         {
             var trait = ScriptableObject.CreateInstance<TraitDefinition>();
             var outcome = ScriptableObject.CreateInstance<HelpActionTraitDeltaOutcome>();
@@ -137,7 +157,7 @@ namespace Rootborn.Tests.EditMode.StudentLife
         }
 
         [Test]
-        public void HELP_EDIT_006_SourceAvoidsEntityIdBranchingPatterns()
+        public void HELP_EDIT_007_SourceAvoidsEntityIdBranchingPatterns()
         {
             string[] files =
             {

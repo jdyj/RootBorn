@@ -138,7 +138,7 @@ namespace Rootborn.UI.StudentLife
                 SceneManager.MoveGameObjectToScene(go, scene);
             }
 
-            go.transform.position = new Vector3(-2.4f, -3.0f, 0f);
+            go.transform.position = new Vector3(-4.25f, -3.2f, 0f);
             var renderer = go.GetComponent<SpriteRenderer>();
             if (renderer == null)
             {
