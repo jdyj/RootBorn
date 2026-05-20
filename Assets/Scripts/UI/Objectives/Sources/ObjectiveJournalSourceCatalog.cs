@@ -7,6 +7,7 @@ namespace Rootborn.UI.Objectives
             return new IObjectiveJournalSource[]
             {
                 new StudentDayGuideObjectiveSource(),
+                new DailyPlanObjectiveSource(),
                 new QuestLogObjectiveSource(),
                 new QuestChainObjectiveSource(),
                 new CampaignObjectiveSource(),

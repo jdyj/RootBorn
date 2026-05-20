@@ -21,7 +21,7 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
             for (int i = 0; i < sources.Length; i++) ids.Add(sources[i].SourceId);
 
             CollectionAssert.AreEqual(
-                new[] { "student-day-guide", "quest-log", "quest-chain-log", "campaign-progress", "milestones", "career-interests" },
+                new[] { "student-day-guide", "daily-plan", "quest-log", "quest-chain-log", "campaign-progress", "milestones", "career-interests" },
                 ids,
                 "Default Objective Journal source order is part of the player-facing category and tracked-restore behavior.");
         }
@@ -32,6 +32,7 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
             string[] typeNames =
             {
                 "Rootborn.UI.Objectives.StudentDayGuideObjectiveSource, Rootborn.UI",
+                "Rootborn.UI.Objectives.DailyPlanObjectiveSource, Rootborn.UI",
                 "Rootborn.UI.Objectives.QuestLogObjectiveSource, Rootborn.UI",
                 "Rootborn.UI.Objectives.QuestChainObjectiveSource, Rootborn.UI",
                 "Rootborn.UI.Objectives.CampaignObjectiveSource, Rootborn.UI",
