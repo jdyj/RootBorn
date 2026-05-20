@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
@@ -15,9 +16,11 @@ namespace Rootborn.Tests.EditMode.StudentLife
     public sealed class CareerPracticeDailyPlanRouteAssetWiringTests
     {
         private const string RegistryPath = "Assets/Data/Registry/GameDataRegistry.asset";
+        private const string CareerRouteE2EPath = "Assets/Tests/PlayMode/EndToEnd/CareerDailyPlanRouteE2EScenarioTests.cs";
         private const string RequirementTypeName = "Rootborn.Game.StudentLife.DailyPlanCareerHintRequirement, Rootborn.Game";
         private const string CareerId = "career.interior";
         private const string RouteId = "daily.route.career.interior-practice";
+        private const string WorkshopRouteId = "daily.workshop.shift";
 
         [Test]
         public void DailyPlanCareerHintRequirement_ReturnsFalseBeforeCareerHintUnlock()
@@ -87,18 +90,35 @@ namespace Rootborn.Tests.EditMode.StudentLife
             var registry = LoadRegistry();
             var route = FindRoute(registry, RouteId);
 
-            Assert.IsNotNull(route);
-            Assert.IsNotNull(route.TargetLocation, "Career-gated route must target an existing location.");
-            CollectionAssert.Contains(registry.Locations, route.TargetLocation, "Route target location must be registered.");
-            Assert.IsTrue(route.MatchingActivities.Count > 0 || route.TargetLocation != null, "Route must be matchable by activity or target location route.");
-            if (route.MatchingActivities.Count > 0)
-            {
-                Assert.IsTrue(route.MatchingActivities.All(activity => activity != null && registry.LocationActivities.Contains(activity)), "All route matching activities must be registered.");
-            }
+            AssertRouteIsReadyForDailyPlan(registry, route, "Career-gated route");
+        }
 
-            Assert.IsFalse(string.IsNullOrEmpty(route.ObjectiveTitleKey));
-            Assert.IsFalse(string.IsNullOrEmpty(route.ObjectiveDetailKey));
-            Assert.IsFalse(string.IsNullOrEmpty(route.NextHintKey));
+        [Test]
+        public void RegisteredWorkshopShiftRoute_HasReachableTargetAndObjectiveText()
+        {
+            var registry = LoadRegistry();
+            var route = FindRoute(registry, WorkshopRouteId);
+
+            AssertRouteIsReadyForDailyPlan(registry, route, "Workshop/job route");
+        }
+
+        [Test]
+        public void CareerDailyPlanRouteE2E_ContainsExactOnceSavedStateAssertions()
+        {
+            string source = File.ReadAllText(CareerRouteE2EPath);
+
+            StringAssert.Contains(
+                "AssertSaveContainsExactlyOnce",
+                source,
+                "Career Daily Plan E2E must assert StudentLife and DailyPlan save files contain career/route state exactly once, not merely that they contain it.");
+            StringAssert.Contains(
+                "CountOccurrences",
+                source,
+                "Career Daily Plan E2E exact-once assertions must use an explicit occurrence counter so duplicate serialized route or hint records fail visibly.");
+            StringAssert.Contains(
+                "AssertObjectiveRowsContainExactlyOnce",
+                source,
+                "Career Daily Plan E2E must assert Objective Journal rows do not duplicate the selected career route before or after reload.");
         }
 
         [Test]
@@ -126,12 +146,12 @@ namespace Rootborn.Tests.EditMode.StudentLife
 
                 var unselected = aggregator.Build(context);
                 Assert.AreEqual("daily-plan:choose", unselected["Goals"][0].StableKey);
-                Assert.IsTrue(unselected["Hints"].Any(item => item.StableKey == "daily-plan-route-hint:" + route.Id));
+                Assert.AreEqual(1, unselected["Hints"].Count(item => item.StableKey == "daily-plan-route-hint:" + route.Id), "Unlocked unselected career route hint must be emitted exactly once.");
 
                 daily.RestoreFromSaveData(new DailyPlanProgressSaveData { SaveSlot = "slot-career-route-objective", PlayerId = "player-career-route-objective", CurrentDay = 1, SelectedRouteId = route.Id }, "slot-career-route-objective", "player-career-route-objective", 1);
                 var selected = aggregator.Build(context);
 
-                Assert.IsTrue(selected["Goals"].Any(item => item.StableKey == "daily-plan:" + route.Id));
+                Assert.AreEqual(1, selected["Goals"].Count(item => item.StableKey == "daily-plan:" + route.Id), "Selected career route goal must be emitted exactly once.");
                 Assert.IsFalse(selected["Hints"].Any(item => item.StableKey == "daily-plan-route-hint:" + route.Id));
             }
             finally
@@ -160,6 +180,22 @@ namespace Rootborn.Tests.EditMode.StudentLife
                 .Where(set => set != null)
                 .SelectMany(set => set.Routes)
                 .FirstOrDefault(route => route != null && route.Id == id);
+        }
+
+        private static void AssertRouteIsReadyForDailyPlan(GameDataRegistry registry, DailyPlanRouteDefinition route, string label)
+        {
+            Assert.IsNotNull(route, label + " must be registered in a route set.");
+            Assert.IsNotNull(route.TargetLocation, label + " must target an existing location.");
+            CollectionAssert.Contains(registry.Locations, route.TargetLocation, label + " target location must be registered.");
+            Assert.IsTrue(route.MatchingActivities.Count > 0 || route.TargetLocation != null, label + " must be matchable by activity or target location route.");
+            if (route.MatchingActivities.Count > 0)
+            {
+                Assert.IsTrue(route.MatchingActivities.All(activity => activity != null && registry.LocationActivities.Contains(activity)), label + " matching activities must be registered.");
+            }
+
+            Assert.IsFalse(string.IsNullOrEmpty(route.ObjectiveTitleKey), label + " must expose Objective Journal title text key.");
+            Assert.IsFalse(string.IsNullOrEmpty(route.ObjectiveDetailKey), label + " must expose Objective Journal detail text key.");
+            Assert.IsFalse(string.IsNullOrEmpty(route.NextHintKey), label + " must expose Objective Journal next hint text key.");
         }
 
         private static DailyPlanRouteRequirementBase CreateRequirement(CareerDefinition career, bool expectedUnlocked)

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.IO;
 using NUnit.Framework;
@@ -14,6 +15,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
@@ -94,17 +96,18 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             runtime.ObjectiveProvider.RefreshNow();
             yield return PlayerFlowE2EDriver.PressTab(keyboard);
             yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(runtime.Journal.transform, "ObjectiveCategory_Goals"));
+            AssertObjectiveRowsContainExactlyOnce(runtime.Journal, RouteObjectiveTitle, "CAREER-DAILY-PLAN-E2E-001 failed: Objective Journal Goals duplicated or omitted selected career route.");
             yield return PlayerFlowE2EDriver.ClickButton(ObjectiveJournalE2EDriver.FindRowButtonContaining(runtime.Journal, RouteObjectiveTitle, "CAREER-DAILY-PLAN-E2E-001 failed: Objective Journal Goals did not include selected career route."));
             StringAssert.Contains(RouteObjectiveTitle, runtime.Journal.VisibleText, "CAREER-DAILY-PLAN-E2E-001 failed: Objective Journal did not show selected career route detail.");
             yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(runtime.Journal.transform, "ObjectiveTrackButton"));
-            Assert.AreEqual(1, Object.FindObjectsByType<TrackedObjectiveHud>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length, "CAREER-DAILY-PLAN-E2E-001 failed: tracking created more than one HUD instance.");
+            AssertOneTrackedHud("CAREER-DAILY-PLAN-E2E-001 failed: tracking created more than one HUD instance.");
             Assert.IsTrue(runtime.TrackedHud.IsVisible, "CAREER-DAILY-PLAN-E2E-001 failed: tracked HUD did not show selected career route.");
             StringAssert.Contains(RouteObjectiveTitle, runtime.TrackedHud.VisibleText, "CAREER-DAILY-PLAN-E2E-001 failed: tracked HUD did not include selected career route title.");
             ScreenshotEvidence.Capture(ScreenshotPath);
             yield return ScreenshotEvidence.WaitForNonZeroFile(ScreenshotPath, 3f, "CAREER-DAILY-PLAN-E2E-001 failed: Game View screenshot evidence was not written.");
 
-            AssertStudentSaveContains(CareerId, "CAREER-DAILY-PLAN-E2E-001 failed: StudentLife save did not include unlocked interior career hint.");
-            AssertDailySaveContains(RouteId, "CAREER-DAILY-PLAN-E2E-001 failed: Daily Plan save did not include selected career route.");
+            AssertSaveContainsExactlyOnce("student-life-progress.json", CareerId, "CAREER-DAILY-PLAN-E2E-001 failed: StudentLife save must include the unlocked interior career hint exactly once.");
+            AssertSaveContainsExactlyOnce(DailyPlanProgressPersistence.FileNameFor(PlayerIdentity.DefaultPlayerId), RouteId, "CAREER-DAILY-PLAN-E2E-001 failed: Daily Plan save must include selected career route exactly once.");
 
             ActiveSaveContext.Clear();
             PlayerGlobalState.ClearForTests();
@@ -121,10 +124,15 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var reloaded = FindRuntime();
             Assert.IsTrue(reloaded.Student.Progress.IsCareerHintUnlocked(FindCareer(reloaded.Board, CareerId)), "CAREER-DAILY-PLAN-E2E-001 failed: interior career hint did not survive reload.");
             Assert.AreEqual(RouteId, reloaded.Daily.Progress.SelectedRouteId, "CAREER-DAILY-PLAN-E2E-001 failed: selected career route did not survive reload.");
+            AssertSaveContainsExactlyOnce("student-life-progress.json", CareerId, "CAREER-DAILY-PLAN-E2E-001 failed: reload duplicated or removed the saved interior career hint.");
+            AssertSaveContainsExactlyOnce(DailyPlanProgressPersistence.FileNameFor(PlayerIdentity.DefaultPlayerId), RouteId, "CAREER-DAILY-PLAN-E2E-001 failed: reload duplicated or removed the selected career route.");
             yield return OpenDailyPlanBoard(reloaded, keyboard, "CAREER-DAILY-PLAN-E2E-001 failed: Daily Plan board did not open after reload.");
             DailyPlanE2EDriver.FindRouteButton(reloaded.DailyPanel, RouteLabel, "CAREER-DAILY-PLAN-E2E-001 failed: career route availability did not restore after reload.");
             reloaded.DailyPanel.gameObject.SetActive(false);
             yield return PlayerFlowE2EDriver.PressTab(keyboard);
+            yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(reloaded.Journal.transform, "ObjectiveCategory_Goals"));
+            AssertObjectiveRowsContainExactlyOnce(reloaded.Journal, RouteObjectiveTitle, "CAREER-DAILY-PLAN-E2E-001 failed: reload duplicated or omitted selected career route Objective Journal row.");
+            AssertOneTrackedHud("CAREER-DAILY-PLAN-E2E-001 failed: reload created duplicate tracked HUD instances.");
             Assert.IsTrue(reloaded.TrackedHud.IsVisible, "CAREER-DAILY-PLAN-E2E-001 failed: tracked career route HUD did not restore after reload.");
             StringAssert.Contains(RouteObjectiveTitle, reloaded.TrackedHud.VisibleText, "CAREER-DAILY-PLAN-E2E-001 failed: tracked HUD did not restore career route context after reload.");
         }
@@ -250,18 +258,49 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             }
         }
 
-        private void AssertStudentSaveContains(string expected, string failure)
+        private void AssertSaveContainsExactlyOnce(string fileName, string expected, string failure)
         {
-            string path = Path.Combine(_saveRoot, TestSlotId, "student-life-progress.json");
+            string path = Path.Combine(_saveRoot, TestSlotId, fileName);
             Assert.IsTrue(File.Exists(path), failure + " Missing file: " + path);
-            StringAssert.Contains(expected, File.ReadAllText(path), failure);
+            string text = File.ReadAllText(path);
+            string expectedJsonValue = "\"" + expected + "\"";
+            Assert.AreEqual(1, CountOccurrences(text, expectedJsonValue), failure + " File: " + fileName + " Expected JSON value: " + expectedJsonValue + " Text: " + text);
         }
 
-        private void AssertDailySaveContains(string expected, string failure)
+        private static void AssertObjectiveRowsContainExactlyOnce(ObjectiveJournalPanel panel, string expected, string failure)
         {
-            string path = Path.Combine(_saveRoot, TestSlotId, DailyPlanProgressPersistence.FileNameFor(PlayerIdentity.DefaultPlayerId));
-            Assert.IsTrue(File.Exists(path), failure + " Missing file: " + path);
-            StringAssert.Contains(expected, File.ReadAllText(path), failure);
+            Assert.IsNotNull(panel, failure + " Objective Journal panel missing.");
+            var buttons = panel.GetComponentsInChildren<Button>(true);
+            int count = 0;
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                if (buttons[i] == null || !buttons[i].name.StartsWith("ObjectiveRow_", StringComparison.Ordinal)) continue;
+                var text = buttons[i].GetComponentInChildren<Text>(true);
+                if (text != null && text.text.Contains(expected)) count++;
+            }
+
+            Assert.AreEqual(1, count, failure + "\nVisible Journal Text:\n" + panel.VisibleText + "\n" + PlayerFlowE2EDriver.DescribeButtons(panel.transform));
+        }
+
+        private static int CountOccurrences(string text, string expected)
+        {
+            if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(expected)) return 0;
+            int count = 0;
+            int index = 0;
+            while (index < text.Length)
+            {
+                int found = text.IndexOf(expected, index, StringComparison.Ordinal);
+                if (found < 0) break;
+                count++;
+                index = found + expected.Length;
+            }
+
+            return count;
+        }
+
+        private static void AssertOneTrackedHud(string failure)
+        {
+            Assert.AreEqual(1, Object.FindObjectsByType<TrackedObjectiveHud>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length, failure);
         }
 
         private static void CleanupResidue()
