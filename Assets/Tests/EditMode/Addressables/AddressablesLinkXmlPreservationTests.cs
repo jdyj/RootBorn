@@ -10,6 +10,8 @@ namespace Rootborn.Tests.EditMode.Addressables
     public sealed class AddressablesLinkXmlPreservationTests
     {
         private const string LinkXmlPath = "Assets/AddressableAssetsData/link.xml";
+        private const string LinkXmlMetaPath = "Assets/AddressableAssetsData/link.xml.meta";
+        private const string RepositoryGuardPath = "Scripts/ci/check-addressables-linkxml-preserved.ps1";
 
         private static readonly string[] RequiredPreservedTypes =
         {
@@ -45,6 +47,14 @@ namespace Rootborn.Tests.EditMode.Addressables
                     preservedTypes.Contains(requiredType),
                     $"{LinkXmlPath} must preserve '{requiredType}' with preserve=\"all\" so registry-driven route unlock data survives managed stripping.");
             }
+        }
+
+        [Test]
+        public void LINKXML_EDIT_002_LinkXmlAssetAndRepositoryGuardArePresent()
+        {
+            Assert.IsTrue(File.Exists(LinkXmlPath), $"Expected linker preserve file at {LinkXmlPath}.");
+            Assert.IsTrue(File.Exists(LinkXmlMetaPath), $"Expected linker preserve meta file at {LinkXmlMetaPath}; Unity tooling must not leave this asset deleted without its meta.");
+            Assert.IsTrue(File.Exists(RepositoryGuardPath), $"Expected repository-level guard at {RepositoryGuardPath} so non-Unity verification catches accidental link.xml deletion.");
         }
     }
 }
