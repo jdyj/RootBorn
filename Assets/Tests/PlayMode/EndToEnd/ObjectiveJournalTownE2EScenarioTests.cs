@@ -55,6 +55,12 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         }
 
         [UnityTest]
+        public IEnumerator OBJECTIVE_JOURNAL_E2E_001_OpenTrackRefreshAndReload()
+        {
+            return OBJECTIVE_JOURNAL_E2E_001_TownFlowTracksStudentDayObjectiveRefreshesAfterActivityAndRestoresAfterReload();
+        }
+
+        [UnityTest]
         public IEnumerator OBJECTIVE_JOURNAL_E2E_001_TownFlowTracksStudentDayObjectiveRefreshesAfterActivityAndRestoresAfterReload()
         {
             var keyboard = InputSystem.AddDevice<Keyboard>();
