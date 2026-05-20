@@ -2,6 +2,14 @@ param()
 
 $ErrorActionPreference = "Stop"
 
+$restoreCommand = "git restore -- Assets/AddressableAssetsData/link.xml Assets/AddressableAssetsData/link.xml.meta"
+
+function Throw-WithRemediation {
+    param([string] $Message)
+
+    throw "$Message`nRemediation: run '$restoreCommand' from the repository root, then re-run this guard."
+}
+
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
 Push-Location $repoRoot
 try {
@@ -12,18 +20,18 @@ try {
 
     foreach ($path in $requiredPaths) {
         if (-not (Test-Path -LiteralPath $path)) {
-            throw "Missing required Addressables linker asset: $path"
+            Throw-WithRemediation "Missing required Addressables linker asset: $path"
         }
 
         git ls-files --error-unmatch -- $path *> $null
         if ($LASTEXITCODE -ne 0) {
-            throw "Required Addressables linker asset is not tracked by git: $path"
+            Throw-WithRemediation "Required Addressables linker asset is not tracked by git: $path"
         }
 
         $status = git status --porcelain -- $path
         foreach ($line in $status) {
             if ($line.Length -ge 2 -and $line.Substring(0, 2).Contains("D")) {
-                throw "Required Addressables linker asset is marked deleted in git status: $path :: $line"
+                Throw-WithRemediation "Required Addressables linker asset is marked deleted in git status: $path :: $line"
             }
         }
     }
