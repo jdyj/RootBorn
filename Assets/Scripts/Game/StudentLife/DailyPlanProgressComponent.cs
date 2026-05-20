@@ -47,7 +47,8 @@ namespace Rootborn.Game.StudentLife
         public bool TrySelect(DailyPlanRouteDefinition route, StudentLifeProgress studentProgress)
         {
             var progress = EnsureProgress(studentProgress);
-            bool changed = new DailyPlanRouteRunner().TrySelectRoute(progress, route, studentProgress);
+            var context = DailyPlanRouteContextBuilder.Build(gameObject, studentProgress);
+            bool changed = new DailyPlanRouteRunner().TrySelectRoute(progress, route, in context);
             if (!changed) return false;
 
             DailyPlanProgressPersistence.Save(progress);

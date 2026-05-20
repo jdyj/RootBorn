@@ -40,15 +40,16 @@ namespace Rootborn.UI.StudentLife
             var daily = _dailyProgress != null ? _dailyProgress : player != null ? player.GetComponent<DailyPlanProgressComponent>() : null;
             var student = _studentProgress != null ? _studentProgress : player != null ? player.GetComponent<StudentLifeProgressComponent>() : null;
             _panel.gameObject.SetActive(true);
-            _panel.Bind(GetAvailableRoutes(student), daily, student);
+            _panel.Bind(GetAvailableRoutes(player, student), daily, student);
             return true;
         }
 
-        private DailyPlanRouteDefinition[] GetAvailableRoutes(StudentLifeProgressComponent student)
+        private DailyPlanRouteDefinition[] GetAvailableRoutes(GameObject player, StudentLifeProgressComponent student)
         {
             var progress = student != null ? student.Progress : null;
             if (progress == null) return System.Array.Empty<DailyPlanRouteDefinition>();
-            return new DailyPlanRouteRunner().GetAvailableRoutes(_routeSets, progress);
+            var context = DailyPlanRouteContextBuilder.Build(player, progress);
+            return new DailyPlanRouteRunner().GetAvailableRoutes(_routeSets, in context);
         }
     }
 }
