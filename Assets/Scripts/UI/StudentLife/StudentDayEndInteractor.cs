@@ -83,11 +83,36 @@ namespace Rootborn.UI.StudentLife
             var worldStateSummaries = BuildWorldStateSummary(player, progress, registry);
             var locationStateSummaries = BuildLocationStateSummary(player, progress);
             _resultPanel.Show(progressComponent, summary, questInventorySummary, relationshipConditionSummary, milestoneSummary);
+            _resultPanel.AppendDailyPlanSummary(BuildDailyPlanSummary(player, registry));
             _resultPanel.ShowWorldStateChanges(worldStateSummaries);
             _resultPanel.ShowLocationStates(locationStateSummaries);
             AppendCampaignSummary(_resultPanel.transform, campaignSummary);
             AppendQuestChainSummary(_resultPanel.transform, QuestChainRuntimeInstaller.BuildDayEndSummary());
             return true;
+        }
+
+        public static DailyPlanDaySummary BuildDailyPlanSummaryForTests(GameObject player, Rootborn.Game.Common.GameDataRegistry registry)
+        {
+            return BuildDailyPlanSummary(player, registry);
+        }
+
+        private static DailyPlanDaySummary BuildDailyPlanSummary(GameObject player, Rootborn.Game.Common.GameDataRegistry registry)
+        {
+            var daily = player != null ? player.GetComponent<DailyPlanProgressComponent>() : null;
+            var progress = daily != null ? daily.Progress : null;
+            if (progress == null || registry == null || string.IsNullOrEmpty(progress.SelectedRouteId)) return default;
+            var route = new DailyPlanRouteRunner().FindRoute(registry.DailyPlanRouteSets, progress.SelectedRouteId);
+            if (route == null) return default;
+            var activity = FindLocationActivity(registry.LocationActivities, progress.MatchedActivityId);
+            bool completed = progress.CompletedRouteId == route.Id;
+            return new DailyPlanDaySummary(route.DisplayNameKey, activity != null ? activity.DisplayNameKey : progress.MatchedActivityId, completed, System.Array.Empty<string>(), route.NextHintKey);
+        }
+
+        private static LocationActivityDefinition FindLocationActivity(LocationActivityDefinition[] activities, string activityId)
+        {
+            if (activities == null || string.IsNullOrEmpty(activityId)) return null;
+            for (int i = 0; i < activities.Length; i++) if (activities[i] != null && activities[i].Id == activityId) return activities[i];
+            return null;
         }
 
         private static WorldStateSummaryModel[] BuildWorldStateSummary(GameObject player, StudentLifeProgress progress, Rootborn.Game.Common.GameDataRegistry registry)

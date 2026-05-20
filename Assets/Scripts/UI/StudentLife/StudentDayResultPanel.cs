@@ -8,6 +8,24 @@ using UnityEngine.UI;
 
 namespace Rootborn.UI.StudentLife
 {
+    public readonly struct DailyPlanDaySummary
+    {
+        public DailyPlanDaySummary(string routeDisplayNameKey, string activityDisplayNameKey, bool completed, string[] resultLogs, string nextHintKey)
+        {
+            RouteDisplayNameKey = routeDisplayNameKey ?? string.Empty;
+            ActivityDisplayNameKey = activityDisplayNameKey ?? string.Empty;
+            Completed = completed;
+            ResultLogs = resultLogs ?? System.Array.Empty<string>();
+            NextHintKey = nextHintKey ?? string.Empty;
+        }
+
+        public string RouteDisplayNameKey { get; }
+        public string ActivityDisplayNameKey { get; }
+        public bool Completed { get; }
+        public string[] ResultLogs { get; }
+        public string NextHintKey { get; }
+    }
+
     public sealed class StudentDayResultPanel : MonoBehaviour
     {
         private GameObject _root;
@@ -86,6 +104,23 @@ namespace Rootborn.UI.StudentLife
             BuildIfNeeded();
             string prefix = _nextGuide != null && !string.IsNullOrEmpty(_nextGuide.text) ? _nextGuide.text + "\n" : string.Empty;
             _nextGuide.text = prefix + summary.FollowUpMotivationText;
+        }
+
+        public void AppendDailyPlanSummary(DailyPlanDaySummary summary)
+        {
+            BuildIfNeeded();
+            if (string.IsNullOrEmpty(summary.RouteDisplayNameKey)) return;
+            string resultPrefix = _results != null && !string.IsNullOrEmpty(_results.text) ? _results.text + "\n\n" : string.Empty;
+            string text = "Daily Plan\n" + summary.RouteDisplayNameKey;
+            if (!string.IsNullOrEmpty(summary.ActivityDisplayNameKey)) text += "\n" + summary.ActivityDisplayNameKey;
+            text += "\n" + (summary.Completed ? "Completed" : "Selected");
+            for (int i = 0; i < summary.ResultLogs.Length; i++) if (!string.IsNullOrEmpty(summary.ResultLogs[i])) text += "\n" + summary.ResultLogs[i];
+            _results.text = resultPrefix + text;
+            if (!string.IsNullOrEmpty(summary.NextHintKey))
+            {
+                string guidePrefix = _nextGuide != null && !string.IsNullOrEmpty(_nextGuide.text) ? _nextGuide.text + "\n" : string.Empty;
+                _nextGuide.text = guidePrefix + summary.NextHintKey;
+            }
         }
 
         private void StartNextDay()
