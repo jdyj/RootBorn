@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Game.Housing;
 using Rootborn.Game.Save;
 using UnityEngine;
 
@@ -18,8 +19,14 @@ namespace Rootborn.Game.Placement
         public static bool HasHouseLayout()
         {
             var service = CreateService();
-            return !string.IsNullOrEmpty(service.ReadJson(HouseLayoutFileName))
-                || !string.IsNullOrEmpty(service.ReadJson(GetHouseLayoutFileNameForStage(0)));
+            if (!string.IsNullOrEmpty(service.ReadJson(HouseLayoutFileName))
+                || !string.IsNullOrEmpty(service.ReadJson(GetHouseLayoutFileNameForStage(0))))
+            {
+                return true;
+            }
+
+            var state = HouseStatePersistence.Load(ResolveSaveSlot());
+            return !string.IsNullOrEmpty(service.ReadJson(GetHouseLayoutFileNameForStage(state.CurrentStageIndex)));
         }
 
         public static bool HasHouseLayoutForStage(int stageIndex)
@@ -102,8 +109,12 @@ namespace Rootborn.Game.Placement
 
         private static SaveService CreateService()
         {
-            string slot = !string.IsNullOrEmpty(ActiveSaveContext.SlotId) ? ActiveSaveContext.SlotId : "default";
-            return new SaveService(slot);
+            return new SaveService(ResolveSaveSlot());
+        }
+
+        private static string ResolveSaveSlot()
+        {
+            return !string.IsNullOrEmpty(ActiveSaveContext.SlotId) ? ActiveSaveContext.SlotId : "default";
         }
 
         private static FurniturePlacementSaveData[] ToArray(IReadOnlyList<FurniturePlacementSaveData> items)

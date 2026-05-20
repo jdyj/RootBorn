@@ -1,3 +1,4 @@
+using System.IO;
 using NUnit.Framework;
 using Rootborn.Game.Housing;
 using Rootborn.Game.Interiors;
@@ -7,6 +8,8 @@ namespace Rootborn.Tests.EditMode.Housing
 {
     public sealed class HouseUpgradeDefinitionTests
     {
+        private const string HouseUpgradeInteriorLoopE2EPath = "Assets/Tests/PlayMode/EndToEnd/HouseUpgradeInteriorLoopE2EScenarioTests.cs";
+
         [Test]
         public void HOUSE_UPGRADE_010_StageDefinitionClampsCostsAndRequiresPositiveStage()
         {
@@ -47,6 +50,21 @@ namespace Rootborn.Tests.EditMode.Housing
 
             Assert.AreEqual(1, loaded.CurrentStageIndex);
             Assert.AreEqual("preset.expanded.study", loaded.SelectedRoomPresetId);
+        }
+
+        [Test]
+        public void HOUSE_LOOP_EDIT_050_IntegratedE2EContainsSavedVisualAndOverlayAssertions()
+        {
+            Assert.IsTrue(File.Exists(HouseUpgradeInteriorLoopE2EPath), "House upgrade/interior loop requires an EndToEnd PlayMode test file for the integrated stage, preset, furniture, reload, and visual cleanup flow.");
+            string source = File.ReadAllText(HouseUpgradeInteriorLoopE2EPath);
+
+            StringAssert.Contains("HOUSE_UPGRADE_E2E_001_UpgradePresetPlaceReload", source, "Integrated House E2E must expose the named scenario from the goal.");
+            StringAssert.Contains("AssertHouseStateContainsExactlyOnce", source, "Integrated House E2E must assert saved House stage/preset values exactly once, not only by containment.");
+            StringAssert.Contains("AssertFurnitureLayoutContainsExactlyOnce", source, "Integrated House E2E must assert saved furniture layout records exactly once.");
+            StringAssert.Contains("AssertRuntimeTilemapsMatchSavedLayout", source, "Integrated House E2E must compare runtime object/occupancy tilemaps with saved furniture layout.");
+            StringAssert.Contains("AssertNoVisibleOverlayArtifacts", source, "Integrated House E2E must verify construction, preview, sample, and debug overlays are not visible after reload.");
+            StringAssert.Contains("house-upgrade-interior-loop-e2e.png", source, "Integrated House E2E must capture Game View screenshot evidence.");
+            StringAssert.Contains("CountOccurrences", source, "Integrated House E2E exact-once assertions must use an explicit occurrence counter.");
         }
 #if UNITY_EDITOR
         [Test]
