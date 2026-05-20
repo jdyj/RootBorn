@@ -1,0 +1,115 @@
+using System;
+using System.Collections.Generic;
+using Rootborn.Game.Quests;
+using Rootborn.UI.Quests;
+using UnityEngine;
+
+namespace Rootborn.UI.Objectives
+{
+    public sealed class QuestChainObjectiveSource : IObjectiveJournalSource
+    {
+        private static readonly ObjectiveJournalCategory CategoryValue = new ObjectiveJournalCategory("Quests", "Quests");
+
+        public string SourceId => "quest-chain-log";
+        public ObjectiveJournalCategory Category => CategoryValue;
+
+        public ObjectiveJournalItem[] BuildItems(ObjectiveJournalContext context)
+        {
+            var chainPanel = UnityEngine.Object.FindFirstObjectByType<QuestChainLogPanel>(FindObjectsInactive.Include);
+            var chains = chainPanel != null ? chainPanel.Chains : null;
+            var log = chainPanel != null ? chainPanel.Log : null;
+            if (chains == null || log == null)
+            {
+                return Array.Empty<ObjectiveJournalItem>();
+            }
+
+            var items = new List<ObjectiveJournalItem>();
+            for (int i = 0; i < chains.Length; i++)
+            {
+                var chain = chains[i];
+                if (chain == null || string.IsNullOrEmpty(chain.Id))
+                {
+                    continue;
+                }
+
+                var state = log.GetState(chain);
+                items.Add(new ObjectiveJournalItem(
+                    "questchain." + chain.Id,
+                    Category.CategoryId,
+                    ObjectiveJournalSourceText.SafeText(chain.DisplayNameKey, chain.Id),
+                    ObjectiveJournalSourceText.SafeText(chain.DescriptionKey, chain.RelatedCareerInterestId),
+                    state.ToString(),
+                    BuildQuestChainObjectiveText(log, chain),
+                    BuildQuestChainHintText(log, chain, state),
+                    log.IsTracked(chain),
+                    BuildQuestChainSortPriority(chain, state)));
+            }
+
+            return items.ToArray();
+        }
+
+        private static string BuildQuestChainObjectiveText(QuestChainLog log, QuestChainDefinition chain)
+        {
+            var step = chain != null && chain.Steps != null && chain.Steps.Length > 0 ? chain.Steps[0] : null;
+            var objectives = step != null ? step.Objectives : null;
+            if (objectives == null || objectives.Length == 0)
+            {
+                return chain != null ? log.GetState(chain).ToString() : string.Empty;
+            }
+
+            string text = string.Empty;
+            for (int i = 0; i < objectives.Length; i++)
+            {
+                var objective = objectives[i];
+                if (objective == null)
+                {
+                    continue;
+                }
+
+                string line = ObjectiveJournalSourceText.SafeText(objective.DisplayKey, objective.GetType().Name) + " " + log.GetObjectiveProgress(chain, i) + " / " + objective.RequiredCount;
+                text += string.IsNullOrEmpty(text) ? line : " | " + line;
+            }
+
+            return string.IsNullOrEmpty(text) ? log.GetState(chain).ToString() : text;
+        }
+
+        private static string BuildQuestChainHintText(QuestChainLog log, QuestChainDefinition chain, QuestChainState state)
+        {
+            if (state == QuestChainState.Completed)
+            {
+                return "Claim rewards or review the next route.";
+            }
+
+            if (state == QuestChainState.Blocked)
+            {
+                string summary = log.GetBlockedSummary(chain);
+                return string.IsNullOrEmpty(summary) ? "Review the blocked quest-chain condition." : summary;
+            }
+
+            var step = chain != null && chain.Steps != null && chain.Steps.Length > 0 ? chain.Steps[0] : null;
+            var objective = step != null && step.Objectives != null && step.Objectives.Length > 0 ? step.Objectives[0] : null;
+            return objective != null ? "Next: " + ObjectiveJournalSourceText.SafeText(objective.DisplayKey, objective.GetType().Name) : "Open quest chain log.";
+        }
+
+        private static int BuildQuestChainSortPriority(QuestChainDefinition chain, QuestChainState state)
+        {
+            if (state == QuestChainState.Completed)
+            {
+                return 10;
+            }
+
+            if (state == QuestChainState.Tracked)
+            {
+                return 20;
+            }
+
+            if (state == QuestChainState.Active || state == QuestChainState.Paused)
+            {
+                return 30;
+            }
+
+            int priority = chain != null ? chain.SortPriority : 0;
+            return priority == 0 ? 50 : priority;
+        }
+    }
+}

@@ -40,6 +40,32 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
         }
 
         [Test]
+        public void ObjectiveJournalAggregator_RestoresTrackedStableKeyAfterSourceReorder()
+        {
+            var canvasGo = new GameObject("ObjectiveJournalTrackedRestoreFixture", typeof(RectTransform), typeof(Canvas));
+            try
+            {
+                var panel = canvasGo.AddComponent<ObjectiveJournalPanel>();
+                var hud = canvasGo.AddComponent<TrackedObjectiveHud>();
+                panel.BindTrackedHud(hud);
+                var source = new StaticSource("Quests", new[]
+                {
+                    new ObjectiveJournalItem("quest.z", "Quests", "Z Quest", "", "Active", "0 / 1", "Z next", false, 50),
+                    new ObjectiveJournalItem("quest.a", "Quests", "A Quest", "", "Active", "0 / 1", "A next", false, 10)
+                });
+
+                new ObjectiveJournalAggregator(new IObjectiveJournalSource[] { source }).Refresh(panel, new ObjectiveJournalContext(null, null, null), "quest.z");
+
+                Assert.IsTrue(hud.IsVisible, "Tracked stable key restore must update the compact HUD.");
+                StringAssert.Contains("Z Quest", hud.VisibleText, "Tracked stable key restore must select the matching item, not the first sorted row.");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(canvasGo);
+            }
+        }
+
+        [Test]
         public void QuestLogObjectiveSource_DisplaysRewardClaimedQuestsAndAllObjectiveProgress()
         {
             var firstObjective = ScriptableObject.CreateInstance<KeyedQuestObjective>();
@@ -349,13 +375,13 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
             }
         }
 
-        private static ObjectiveJournalItem[] BuildItemsFromSource(string nestedSourceTypeName, GameObject player, GameDataRegistry registry)
+        private static ObjectiveJournalItem[] BuildItemsFromSource(string sourceTypeName, GameObject player, GameDataRegistry registry)
         {
-            var sourceType = typeof(ObjectiveJournalRuntimeProvider).GetNestedType(nestedSourceTypeName, BindingFlags.NonPublic);
-            Assert.IsNotNull(sourceType, nestedSourceTypeName + " must remain available to build runtime objective items.");
-            var source = Activator.CreateInstance(sourceType, true);
+            var sourceType = Type.GetType("Rootborn.UI.Objectives." + sourceTypeName + ", Rootborn.UI");
+            Assert.IsNotNull(sourceType, sourceTypeName + " must remain available as a standalone runtime objective source.");
+            var source = Activator.CreateInstance(sourceType);
             var method = sourceType.GetMethod("BuildItems", BindingFlags.Instance | BindingFlags.Public);
-            Assert.IsNotNull(method, nestedSourceTypeName + " must expose BuildItems through IObjectiveJournalSource.");
+            Assert.IsNotNull(method, sourceTypeName + " must expose BuildItems through IObjectiveJournalSource.");
             return (ObjectiveJournalItem[])method.Invoke(source, new object[] { new ObjectiveJournalContext(registry, player, null) });
         }
 
@@ -380,6 +406,21 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
             {
                 return !string.IsNullOrEmpty(questEvent.EventKey) && questEvent.EventKey.StartsWith(_requiredKey, StringComparison.Ordinal);
             }
+        }
+
+        private sealed class StaticSource : IObjectiveJournalSource
+        {
+            private readonly ObjectiveJournalItem[] _items;
+
+            public StaticSource(string categoryId, ObjectiveJournalItem[] items)
+            {
+                Category = new ObjectiveJournalCategory(categoryId, categoryId);
+                _items = items ?? Array.Empty<ObjectiveJournalItem>();
+            }
+
+            public string SourceId => "static-test";
+            public ObjectiveJournalCategory Category { get; }
+            public ObjectiveJournalItem[] BuildItems(ObjectiveJournalContext context) => _items;
         }
     }
 }
