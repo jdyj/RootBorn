@@ -19,6 +19,7 @@ namespace Rootborn.Tests.EditMode.Addressables
             "Rootborn.Game.StudentLife.DailyPlanRouteDefinition",
             "Rootborn.Game.StudentLife.DailyPlanRouteSetDefinition",
             "Rootborn.Game.StudentLife.DailyPlanWorldStateRequirement",
+            "Rootborn.Game.StudentLife.HelpActionRelationshipDeltaOutcome",
             "Rootborn.Game.StudentLife.LocationActivityDefinition",
             "Rootborn.Game.StudentLife.LocationDefinition",
             "Rootborn.Game.WorldState.WorldStateFlagDefinition",

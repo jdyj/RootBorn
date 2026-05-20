@@ -77,7 +77,37 @@ namespace Rootborn.Tests.EditMode.StudentLife
         }
 
         [Test]
-        public void HELP_EDIT_004_DuplicateRequestIdDoesNotApplyTwice()
+        public void HELP_EDIT_004_RelationshipOutcomeChangesGenericRelationshipState()
+        {
+            var relationship = ScriptableObject.CreateInstance<RelationshipDefinition>();
+            var outcome = ScriptableObject.CreateInstance<HelpActionRelationshipDeltaOutcome>();
+            var action = ScriptableObject.CreateInstance<TownHelpActionDefinition>();
+            var progress = new StudentLifeProgress("slot-help", "player-help", 8, 8);
+            var runner = new TownHelpActionRunner();
+            try
+            {
+                relationship.ConfigureForTests("relationship.neighbor.trust", "Neighbor Trust", "npc.neighbor");
+                outcome.ConfigureForTests(relationship, 2);
+                action.ConfigureForTests("town.help.neighbor", "town.help.neighbor", "npc.neighbor", "location.square", 20, 0, 0, 0, null, new HelpActionOutcomeBase[] { outcome });
+
+                Assert.IsTrue(runner.TryPerform(action, progress, "relationship-help-1", out var result));
+
+                string expected = "town-help:town.help.neighbor:+relationship.neighbor.trust=2";
+                Assert.AreEqual(LifeActivityResultKind.Applied, result.Kind);
+                Assert.AreEqual(2, progress.GetRelationshipValue(relationship));
+                CollectionAssert.Contains(result.OutcomeLogIds, expected);
+                CollectionAssert.Contains(progress.GetTodayResultLogIds(), expected);
+            }
+            finally
+            {
+                Object.DestroyImmediate(action);
+                Object.DestroyImmediate(outcome);
+                Object.DestroyImmediate(relationship);
+            }
+        }
+
+        [Test]
+        public void HELP_EDIT_005_DuplicateRequestIdDoesNotApplyTwice()
         {
             var trait = ScriptableObject.CreateInstance<TraitDefinition>();
             var outcome = ScriptableObject.CreateInstance<HelpActionTraitDeltaOutcome>();
@@ -107,7 +137,7 @@ namespace Rootborn.Tests.EditMode.StudentLife
         }
 
         [Test]
-        public void HELP_EDIT_005_SourceAvoidsEntityIdBranchingPatterns()
+        public void HELP_EDIT_006_SourceAvoidsEntityIdBranchingPatterns()
         {
             string[] files =
             {

@@ -100,6 +100,7 @@
     <type fullname="Rootborn.Game.StudentLife.ExplorationTraitDeltaOutcome" preserve="all" />
     <type fullname="Rootborn.Game.StudentLife.ExplorationTraitThresholdCondition" preserve="all" />
     <type fullname="Rootborn.Game.StudentLife.FocusRestoreDayEndRule" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.HelpActionRelationshipDeltaOutcome" preserve="all" />
     <type fullname="Rootborn.Game.StudentLife.HelpActionTraitDeltaOutcome" preserve="all" />
     <type fullname="Rootborn.Game.StudentLife.LifeActivityDefinition" preserve="all" />
     <type fullname="Rootborn.Game.StudentLife.LocationActivityDefinition" preserve="all" />
