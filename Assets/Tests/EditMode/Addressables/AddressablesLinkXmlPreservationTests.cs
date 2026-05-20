@@ -15,6 +15,10 @@ namespace Rootborn.Tests.EditMode.Addressables
 
         private static readonly string[] RequiredPreservedTypes =
         {
+            "Rootborn.Game.Common.DirectValidationAutoplayInstaller",
+            "Rootborn.Game.Common.DirectValidationRouteRelationshipAutoplayInstaller",
+            "Rootborn.Game.Common.DirectValidationTrace",
+            "Rootborn.Game.Common.DirectValidationTraceInstaller",
             "Rootborn.Game.Common.GameDataRegistry",
             "Rootborn.Game.DiscoveryClues.ClueInterpretationDefinition",
             "Rootborn.Game.DiscoveryClues.ClueInterpretationWorldStateOutcome",
@@ -45,7 +49,7 @@ namespace Rootborn.Tests.EditMode.Addressables
             {
                 Assert.IsTrue(
                     preservedTypes.Contains(requiredType),
-                    $"{LinkXmlPath} must preserve '{requiredType}' with preserve=\"all\" so registry-driven route unlock data survives managed stripping.");
+                    $"{LinkXmlPath} must preserve '{requiredType}' with preserve=\"all\" so registry-driven data and direct executable validation runners survive managed stripping.");
             }
         }
 
