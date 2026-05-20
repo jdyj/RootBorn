@@ -87,7 +87,7 @@ namespace Rootborn.Tests.PlayMode.Network.Support
 
         public static string RouteRelationshipAutoplayArgs(string screenshotPath)
         {
-            return "-directValidationTrace -directValidationAutoplay -directValidationAutoplayRouteRelationship -directValidationScreenshot " + (string.IsNullOrEmpty(screenshotPath) ? string.Empty : screenshotPath);
+            return "-directValidationTrace -directValidationAutoplayRouteRelationship -directValidationScreenshot " + (string.IsNullOrEmpty(screenshotPath) ? string.Empty : screenshotPath);
         }
 
         public static string ServerLogPath(DedicatedServerClientProcessHarnessConfig config)

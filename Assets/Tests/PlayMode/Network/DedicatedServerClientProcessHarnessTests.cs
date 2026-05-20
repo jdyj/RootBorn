@@ -119,26 +119,26 @@ namespace Rootborn.Tests.PlayMode.Network
                 "dedicated-harness-slot",
                 "127.0.0.1",
                 4,
-                "-directValidationTrace -directValidationAutoplay -directValidationAutoplayRouteRelationship -directValidationScreenshot Builds/Logs/network-dedicated-route-relationship-e2e.png");
+                "-directValidationTrace -directValidationAutoplayRouteRelationship -directValidationScreenshot Builds/Logs/network-dedicated-route-relationship-e2e.png");
 
             var client = DedicatedServerClientProcessHarness.BuildClientStartInfo(config);
 
             StringAssert.Contains("-mode client -joinIp 127.0.0.1 -port 7791 -saveSlot dedicated-harness-slot", client.Arguments);
             StringAssert.Contains("-directValidationTrace", client.Arguments);
-            StringAssert.Contains("-directValidationAutoplay", client.Arguments);
             StringAssert.Contains("-directValidationAutoplayRouteRelationship", client.Arguments);
             StringAssert.Contains("-directValidationScreenshot Builds/Logs/network-dedicated-route-relationship-e2e.png", client.Arguments);
+            StringAssert.DoesNotContain("-directValidationAutoplay ", client.Arguments + " ", "Route/relationship preset must not start the generic autoplay runner.");
         }
 
         [Test]
-        public void DEDICATED_HARNESS_PM_007_RouteRelationshipAutoplayPresetIncludesEvidenceArgs()
+        public void DEDICATED_HARNESS_PM_007_RouteRelationshipAutoplayPresetIncludesEvidenceArgsWithoutGenericAutoplay()
         {
             string args = DedicatedServerClientProcessHarness.RouteRelationshipAutoplayArgs("Builds/Logs/network-dedicated-route-relationship-e2e.png");
 
             StringAssert.Contains("-directValidationTrace", args);
-            StringAssert.Contains("-directValidationAutoplay", args);
             StringAssert.Contains("-directValidationAutoplayRouteRelationship", args);
             StringAssert.Contains("-directValidationScreenshot Builds/Logs/network-dedicated-route-relationship-e2e.png", args);
+            StringAssert.DoesNotContain("-directValidationAutoplay ", args + " ", "Route/relationship preset must not start the generic autoplay runner.");
         }
 
         [Test]
