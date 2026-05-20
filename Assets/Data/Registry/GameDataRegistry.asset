@@ -214,6 +214,7 @@ MonoBehaviour:
   _defaultDayEndRule: {fileID: 11400000, guid: 57f8f491c002762408a8852c50f43d2d, type: 2}
   _relationships:
   - {fileID: 11400000, guid: 3fe25332108980742b1b38dfa7f31086, type: 2}
+  - {fileID: 11400000, guid: 5cff86774994c8f4b943ba4a8fe5664c, type: 2}
   _studentConditionStatuses:
   - {fileID: 11400000, guid: ed3e552f686df6045b740803f6633b47, type: 2}
   _outsideSchoolActivityCategories:
@@ -224,6 +225,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 4704e3df6f051864cb63c884d00cee68, type: 2}
   _townHelpActions:
   - {fileID: 11400000, guid: fbea5e29cdabdf74fb3533af14a045d2, type: 2}
+  - {fileID: 11400000, guid: df0a9b71de064d1469982c4bc7d0b11a, type: 2}
   _workplaces:
   - {fileID: 11400000, guid: 4bd88d3a7405a00428e7b74f1a87ce37, type: 2}
   _partTimeWorks:
@@ -1779,13 +1781,16 @@ MonoBehaviour:
   _milestones:
   - {fileID: 11400000, guid: e964618ac9e20234598c35ded949ca42, type: 2}
   - {fileID: 11400000, guid: 432758444c01664419db00e22986f34f, type: 2}
+  - {fileID: 11400000, guid: de4f2cd003d1c4040a9b40d97e726e87, type: 2}
   _milestoneObjectives:
   - {fileID: 11400000, guid: 07c7294df342e184e84e345c503c5e82, type: 2}
   - {fileID: 11400000, guid: fee1b49764af0fb40a74ad1cb592586c, type: 2}
+  - {fileID: 11400000, guid: fdef0d6e31f53b049baeafae7f24e907, type: 2}
   _milestoneRoutes:
   - {fileID: 11400000, guid: 1e5390d8e64d57c43b331ef32abd9ec9, type: 2}
   - {fileID: 11400000, guid: f482d7c9312fa0d4e9a0a7c1df8df5a2, type: 2}
   - {fileID: 11400000, guid: 23be89d8bfea3f44f8296763b1001845, type: 2}
+  - {fileID: 11400000, guid: 3c16643bd4bebd348af0a30cb1da4eec, type: 2}
   _milestoneRewards: []
   _encyclopediaCategories:
   - {fileID: 11400000, guid: c1e9e5f494aca684e8a5ddcd36b6a07a, type: 2}

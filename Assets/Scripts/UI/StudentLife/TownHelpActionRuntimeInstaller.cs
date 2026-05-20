@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using Rootborn.Game.Common;
 using Rootborn.Game.Managers;
 using Rootborn.Game.StudentLife;
@@ -44,21 +45,28 @@ namespace Rootborn.UI.StudentLife
 
         public static TownHelpActionDefinition ResolveFirstActionForTests(GameDataRegistry registry)
         {
+            var actions = ResolveActionsForTests(registry);
+            return actions.Length > 0 ? actions[0] : null;
+        }
+
+        public static TownHelpActionDefinition[] ResolveActionsForTests(GameDataRegistry registry)
+        {
             if (registry == null || registry.TownHelpActions == null)
             {
-                return null;
+                return new TownHelpActionDefinition[0];
             }
 
+            var actions = new List<TownHelpActionDefinition>();
             for (int i = 0; i < registry.TownHelpActions.Length; i++)
             {
                 var action = registry.TownHelpActions[i];
                 if (HasUsableOutcomes(action))
                 {
-                    return action;
+                    actions.Add(action);
                 }
             }
 
-            return null;
+            return actions.ToArray();
         }
 
         private static void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -71,12 +79,12 @@ namespace Rootborn.UI.StudentLife
             private IEnumerator Start()
             {
                 Scene scene = SceneManager.GetActiveScene();
-                TownHelpActionDefinition action = null;
+                TownHelpActionDefinition[] actions = new TownHelpActionDefinition[0];
                 float elapsed = 0f;
                 while (elapsed < 8f)
                 {
-                    action = ResolveFirstAction();
-                    if (FindRoot(scene, "Player") != null && action != null)
+                    actions = ResolveActions();
+                    if (FindRoot(scene, "Player") != null && actions.Length > 0)
                     {
                         break;
                     }
@@ -85,24 +93,24 @@ namespace Rootborn.UI.StudentLife
                     yield return null;
                 }
 
-                EnsureHelpPoint(scene, action);
+                EnsureHelpPoints(scene, actions);
             }
         }
 
-        private static TownHelpActionDefinition ResolveFirstAction()
+        private static TownHelpActionDefinition[] ResolveActions()
         {
             var registry = Managers.Data != null ? Managers.Data.Registry : null;
-            var action = ResolveFirstActionForTests(registry);
-            if (action != null)
+            var actions = ResolveActionsForTests(registry);
+            if (actions.Length > 0)
             {
-                return action;
+                return actions;
             }
 
 #if UNITY_EDITOR
             registry = UnityEditor.AssetDatabase.LoadAssetAtPath<GameDataRegistry>("Assets/Data/Registry/GameDataRegistry.asset");
-            return ResolveFirstActionForTests(registry);
+            return ResolveActionsForTests(registry);
 #else
-            return null;
+            return new TownHelpActionDefinition[0];
 #endif
         }
 
@@ -124,21 +132,35 @@ namespace Rootborn.UI.StudentLife
             return false;
         }
 
-        private static void EnsureHelpPoint(Scene scene, TownHelpActionDefinition action)
+        private static void EnsureHelpPoints(Scene scene, TownHelpActionDefinition[] actions)
+        {
+            if (actions == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < actions.Length; i++)
+            {
+                EnsureHelpPoint(scene, actions[i], i);
+            }
+        }
+
+        private static void EnsureHelpPoint(Scene scene, TownHelpActionDefinition action, int index)
         {
             if (action == null)
             {
                 return;
             }
 
-            var go = FindByName(scene, HelpPointName);
+            string objectName = index == 0 ? HelpPointName : HelpPointName + "_" + Sanitize(action.Id);
+            var go = FindByName(scene, objectName);
             if (go == null)
             {
-                go = new GameObject(HelpPointName);
+                go = new GameObject(objectName);
                 SceneManager.MoveGameObjectToScene(go, scene);
             }
 
-            go.transform.position = new Vector3(-4.25f, -3.2f, 0f);
+            go.transform.position = new Vector3(-4.25f + index * 1.2f, -3.2f, 0f);
             var renderer = go.GetComponent<SpriteRenderer>();
             if (renderer == null)
             {
@@ -228,6 +250,17 @@ namespace Rootborn.UI.StudentLife
             }
 
             return null;
+        }
+
+        private static string Sanitize(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return "action";
+            var chars = value.ToCharArray();
+            for (int i = 0; i < chars.Length; i++)
+            {
+                if (!char.IsLetterOrDigit(chars[i])) chars[i] = '_';
+            }
+            return new string(chars);
         }
     }
 }

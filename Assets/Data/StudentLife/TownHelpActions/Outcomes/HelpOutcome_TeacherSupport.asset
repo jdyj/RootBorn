@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 940b81f578e96b949b2e2bf6e895777c, type: 3}
+  m_Name: HelpOutcome_TeacherSupport
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.HelpActionRelationshipDeltaOutcome
+  _relationship: {fileID: 11400000, guid: 5cff86774994c8f4b943ba4a8fe5664c, type: 2}
+  _delta: 2
