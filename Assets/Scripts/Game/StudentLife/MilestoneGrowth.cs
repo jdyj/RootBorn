@@ -107,6 +107,7 @@ namespace Rootborn.Game.StudentLife
                         {
                             evaluatedCurrent = evaluation.Required;
                         }
+
                         int after = Mathf.Max(before, evaluatedCurrent);
                         record.SetObjectiveProgress(objective.Id, after);
                         if (after >= evaluation.Required) completedCount++;
@@ -229,6 +230,7 @@ namespace Rootborn.Game.StudentLife
 
             return false;
         }
+
         private void EnsureRecords(IReadOnlyList<MilestoneDefinition> milestones)
         {
             if (milestones == null) return;
@@ -251,14 +253,16 @@ namespace Rootborn.Game.StudentLife
             return record;
         }
 
-        private static string[] CollectRecommendations(IReadOnlyList<MilestoneDefinition> milestones)
+        private string[] CollectRecommendations(IReadOnlyList<MilestoneDefinition> milestones)
         {
             var list = new List<string>();
             if (milestones != null)
             {
                 for (int i = 0; i < milestones.Count; i++)
                 {
-                    var routes = milestones[i] != null ? milestones[i].Routes : null;
+                    var milestone = milestones[i];
+                    if (milestone == null || string.IsNullOrEmpty(milestone.Id) || GetOrCreateRecord(milestone.Id).Completed) continue;
+                    var routes = milestone.Routes;
                     if (routes == null) continue;
                     for (int j = 0; j < routes.Length; j++)
                     {
@@ -352,8 +356,8 @@ namespace Rootborn.Game.StudentLife
                 var interactor = UnityEngine.Object.FindFirstObjectByType<OutsideSchoolActivityInteractor>(UnityEngine.FindObjectsInactive.Include);
                 activity = interactor != null ? interactor.Activity : null;
             }
-            string recommendedActionId = activity != null && !string.IsNullOrEmpty(activity.Id) ? activity.Id : "outside-school";
 
+            string recommendedActionId = activity != null && !string.IsNullOrEmpty(activity.Id) ? activity.Id : "outside-school";
             var objective = ScriptableObject.CreateInstance<OutsideSchoolLogMilestoneObjective>();
             objective.ConfigureForTests("milestone.objective.any-outside-school-log", string.Empty, 1);
             var route = ScriptableObject.CreateInstance<MilestoneRouteDefinition>();
@@ -362,7 +366,9 @@ namespace Rootborn.Game.StudentLife
             milestone.ConfigureForTests("milestone.open-ended-town-growth", "milestone.open-ended-town-growth", new MilestoneObjectiveBase[] { objective }, Array.Empty<MilestoneRewardBase>(), new[] { route }, 1);
             _runtimeFallbackMilestones = new[] { milestone };
             return _runtimeFallbackMilestones;
-        }    }
+        }
+    }
+
     public static class MilestoneProgressPersistence
     {
         private const string FileName = "milestone-progress.json";
@@ -412,6 +418,7 @@ namespace Rootborn.Game.StudentLife
             return new string(chars);
         }
     }
+
     public readonly struct MilestoneDaySummary
     {
         public readonly string[] ProgressLines;

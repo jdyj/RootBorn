@@ -144,7 +144,7 @@ namespace Rootborn.Tests.EditMode.StudentLife
         }
 
         [Test]
-        public void MILESTONE_EDIT_008_DaySummaryIncludesMilestoneProgressChangesAndRecommendations()
+        public void MILESTONE_EDIT_008_DaySummaryIncludesMilestoneProgressChangesAndFiltersCompletedRecommendations()
         {
             var objective = OutsideSchoolLogObjective("study-anywhere", "skill-study", 2);
             var route = Route("library-route", objective, "library-study");
@@ -157,7 +157,26 @@ namespace Rootborn.Tests.EditMode.StudentLife
             var summary = MilestoneDaySummary.FromApplyResult(result, new[] { milestone });
 
             Assert.That(summary.ProgressLines.Any(line => line.Contains("find-my-study") && line.Contains("complete")), Is.True, "Day result milestone summary missing progress/completion line.");
-            Assert.That(summary.RecommendedActionIds, Does.Contain("library-study"));
+            Assert.That(summary.RecommendedActionIds, Does.Not.Contain("library-study"), "Completed milestones should not keep recommending the route that just completed them.");
+        }
+
+        [Test]
+        public void MILESTONE_EDIT_012_CompletedMilestoneRoutesDoNotRemainRecommended()
+        {
+            var completedObjective = OutsideSchoolLogObjective("completed-objective", "completed-growth", 1);
+            var completedRoute = Route("completed-route", completedObjective, "completed-action");
+            var completedMilestone = Milestone("completed-milestone", new[] { completedObjective }, Array.Empty<MilestoneRewardBase>(), new[] { completedRoute }, 1);
+            var activeObjective = OutsideSchoolLogObjective("active-objective", "active-growth", 2);
+            var activeRoute = Route("active-route", activeObjective, "active-action");
+            var activeMilestone = Milestone("active-milestone", new[] { activeObjective }, Array.Empty<MilestoneRewardBase>(), new[] { activeRoute }, 1);
+            var milestones = new[] { completedMilestone, activeMilestone };
+            var milestoneProgress = new MilestoneProgress("slot-a", "player-a", milestones);
+            milestoneProgress.MarkCompletedForTests(completedMilestone);
+
+            var result = milestoneProgress.ApplyDayResult(milestones, new StudentLifeProgress("slot-a", "player-a", 12, 10), null, "day-1");
+
+            Assert.That(result.RecommendedActionIds, Does.Contain("active-action"), "Incomplete milestones should continue to emit their route recommendations.");
+            Assert.That(result.RecommendedActionIds, Does.Not.Contain("completed-action"), "Completed milestones must not keep stale route recommendations in day-result next-action guidance.");
         }
 
         private static bool Complete(MilestoneObjectiveBase objective, MilestoneEvaluationContext context)
