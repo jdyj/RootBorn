@@ -14,6 +14,7 @@ namespace Rootborn.Editor.BuildScripts
     {
         private const string ClientName = "rootborn";
         private const string ServerName = "rootborn-server";
+        private const string ClientAddressablesRuntimeDataPath = "Builds/Client/Windows/rootborn_Data/StreamingAssets/aa";
 
         private static readonly string[] ClientScenes =
         {
@@ -111,6 +112,11 @@ namespace Rootborn.Editor.BuildScripts
             }
         }
 
+        private static void CopyExistingClientAddressablesRuntimeDataToPlayer(string outputPath)
+        {
+            CopyAddressablesRuntimeDataToPlayer(ClientAddressablesRuntimeDataPath, outputPath);
+        }
+
         private static void CopyAddressablesRuntimeDataToPlayer(string addressablesRuntimePath, string outputPath)
         {
             if (string.IsNullOrWhiteSpace(addressablesRuntimePath) || !Directory.Exists(addressablesRuntimePath))
@@ -122,7 +128,7 @@ namespace Rootborn.Editor.BuildScripts
             var playerName = Path.GetFileNameWithoutExtension(outputPath);
             if (string.IsNullOrEmpty(playerDirectory) || string.IsNullOrEmpty(playerName))
             {
-                throw new InvalidOperationException($"[ROOTBORN] Invalid client output path: {outputPath}");
+                throw new InvalidOperationException($"[ROOTBORN] Invalid output path: {outputPath}");
             }
 
             var streamingAssetsAaPath = Path.Combine(playerDirectory, $"{playerName}_Data", "StreamingAssets", "aa");
@@ -135,7 +141,7 @@ namespace Rootborn.Editor.BuildScripts
             var settingsPath = Path.Combine(streamingAssetsAaPath, "settings.json");
             if (!File.Exists(settingsPath))
             {
-                throw new FileNotFoundException("[ROOTBORN] Copied client Addressables runtime data is missing settings.json.", settingsPath);
+                throw new FileNotFoundException("[ROOTBORN] Copied Addressables runtime data is missing settings.json.", settingsPath);
             }
 
             Debug.Log($"[ROOTBORN] Addressables runtime data copied -> {streamingAssetsAaPath}");
@@ -168,7 +174,8 @@ namespace Rootborn.Editor.BuildScripts
                 locationPathName = outputPath,
                 options = BuildOptions.None
             };
-            var report = BuildPipeline.BuildPlayer(opts);
+            var report = BuildPlayerWithAddressablesHookDisabled(opts);
+            CopyExistingClientAddressablesRuntimeDataToPlayer(outputPath);
             Debug.Log($"[ROOTBORN] Server build -> {outputPath} result={report.summary.result}");
         }
 

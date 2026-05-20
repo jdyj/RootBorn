@@ -41,9 +41,41 @@ namespace Rootborn.Tests.EditMode.Addressables
             string source = File.ReadAllText(BuildScriptPath);
 
             StringAssert.Contains("Path.Combine(runtimePath, \"settings.json\")", source, "Addressables content build must verify generated runtime settings before player build.");
-            StringAssert.Contains("Path.Combine(streamingAssetsAaPath, \"settings.json\")", source, "Client build must verify copied StreamingAssets/aa settings before reporting success.");
-            StringAssert.Contains("Directory.Delete(streamingAssetsAaPath, true)", source, "Client build must remove stale player Addressables runtime data before copying fresh output.");
-            StringAssert.Contains("CopyDirectory(addressablesRuntimePath, streamingAssetsAaPath)", source, "Client build must recursively copy all generated Addressables runtime files.");
+            StringAssert.Contains("Path.Combine(streamingAssetsAaPath, \"settings.json\")", source, "Client and server builds must verify copied StreamingAssets/aa settings before reporting success.");
+            StringAssert.Contains("Directory.Delete(streamingAssetsAaPath, true)", source, "Builds must remove stale player Addressables runtime data before copying fresh output.");
+            StringAssert.Contains("CopyDirectory(addressablesRuntimePath, streamingAssetsAaPath)", source, "Builds must recursively copy all generated Addressables runtime files.");
+        }
+
+        [Test]
+        public void SERVER_BUILD_ADDRESSABLES_EDIT_004_ServerBuildDisablesAddressablesPlayerHook()
+        {
+            string source = File.ReadAllText(BuildScriptPath);
+            string buildServerBody = GetBuildServerBody(source);
+
+            StringAssert.Contains("BuildPlayerWithAddressablesHookDisabled", buildServerBody, "Dedicated server builds must disable the Addressables player-build hook so server artifact generation cannot enter Addressables content build loops.");
+            StringAssert.DoesNotContain("BuildPipeline.BuildPlayer(opts)", buildServerBody, "Dedicated server builds must not call BuildPipeline.BuildPlayer directly while Addressables player-build hooks may be enabled.");
+        }
+
+        [Test]
+        public void SERVER_BUILD_ADDRESSABLES_EDIT_005_ServerBuildCopiesExistingClientAddressablesRuntimeData()
+        {
+            string source = File.ReadAllText(BuildScriptPath);
+            string buildServerBody = GetBuildServerBody(source);
+
+            StringAssert.DoesNotContain("BuildAddressables();", buildServerBody, "Dedicated server builds must not rebuild Addressables content; this previously stalled in Generate Bundle Maps.");
+            StringAssert.Contains("CopyExistingClientAddressablesRuntimeDataToPlayer(outputPath)", buildServerBody, "Dedicated server builds must copy existing client Addressables runtime data into rootborn-server_Data/StreamingAssets/aa before smoke tests launch.");
+            StringAssert.Contains("Builds/Client/Windows/rootborn_Data/StreamingAssets/aa", source, "Server builds must use the current client Addressables runtime data as the source for dedicated smoke artifacts.");
+        }
+
+        private static string GetBuildServerBody(string source)
+        {
+            int buildServerIndex = source.IndexOf("private static void BuildServer", System.StringComparison.Ordinal);
+            Assert.GreaterOrEqual(buildServerIndex, 0, "BuildScript must keep a BuildServer implementation for dedicated server builds.");
+
+            int ensureDirIndex = source.IndexOf("private static void EnsureDir", buildServerIndex, System.StringComparison.Ordinal);
+            Assert.Greater(ensureDirIndex, buildServerIndex, "BuildServer body boundary should be discoverable before EnsureDir.");
+
+            return source.Substring(buildServerIndex, ensureDirIndex - buildServerIndex);
         }
     }
 }
