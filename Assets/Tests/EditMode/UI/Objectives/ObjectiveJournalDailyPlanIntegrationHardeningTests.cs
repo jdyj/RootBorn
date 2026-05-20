@@ -7,12 +7,18 @@ using Rootborn.Game.Save;
 using Rootborn.Game.StudentLife;
 using Rootborn.Game.WorldState;
 using Rootborn.UI.Objectives;
+using UnityEditor;
 using UnityEngine;
 
 namespace Rootborn.Tests.EditMode.UI.Objectives
 {
     public sealed class ObjectiveJournalDailyPlanIntegrationHardeningTests
     {
+        private const string LibraryArchiveRouteId = "daily.route.library.archive-research";
+        private const string WorkshopRepairLedgerRouteId = "daily.route.workshop.repair-ledger";
+        private const string LibraryArchiveWorldStateId = "world.library.archive-open";
+        private const string WorkshopRepairLedgerWorldStateId = "world.workshop.repair-ledger-open";
+
         [Test]
         public void SelectedUnlockedRoute_AppearsInGoalsAndIsRemovedFromHints()
         {
@@ -50,6 +56,40 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
                 Assert.AreEqual("daily-plan:choose", result["Goals"][0].StableKey);
                 Assert.AreEqual(1, result["Hints"].Length);
                 Assert.AreEqual("daily-plan-route-hint:" + fixture.Route.Id, result["Hints"][0].StableKey);
+            }
+        }
+
+        [Test]
+        public void RealDiscoveryRouteUnlocks_UseSingleHintAndGoalSourceContract()
+        {
+            var aggregator = new ObjectiveJournalAggregator(new IObjectiveJournalSource[]
+            {
+                new DailyPlanObjectiveSource(),
+                new DailyPlanRouteHintObjectiveSource()
+            });
+
+            using (var fixture = new RealDiscoveryRouteFixture(string.Empty))
+            {
+                var result = aggregator.Build(fixture.Context);
+
+                Assert.AreEqual("daily-plan:choose", result["Goals"][0].StableKey, "Without a selected Daily Plan route, the Journal must keep the choose-route goal.");
+                Assert.IsTrue(result.TryGetValue("Hints", out var hints), "Unlocked real Discovery routes must be emitted through Hints.");
+                int libraryIndex = IndexOfStableKey(hints, "daily-plan-route-hint:" + LibraryArchiveRouteId);
+                int workshopIndex = IndexOfStableKey(hints, "daily-plan-route-hint:" + WorkshopRepairLedgerRouteId);
+                Assert.GreaterOrEqual(libraryIndex, 0, "First Discovery route unlock data must participate in route hint source output.");
+                Assert.GreaterOrEqual(workshopIndex, 0, "Second Discovery route unlock data must participate in route hint source output.");
+                Assert.Less(libraryIndex, workshopIndex, "Real route hint ordering must remain deterministic for the first and second Discovery route unlocks.");
+            }
+
+            using (var fixture = new RealDiscoveryRouteFixture(WorkshopRepairLedgerRouteId))
+            {
+                var result = aggregator.Build(fixture.Context);
+
+                Assert.IsTrue(result.TryGetValue("Goals", out var goals), "Selected real route must be emitted through Goals.");
+                Assert.GreaterOrEqual(IndexOfStableKey(goals, "daily-plan:" + WorkshopRepairLedgerRouteId), 0, "Selected second route must move into Goals.");
+                Assert.IsTrue(result.TryGetValue("Hints", out var hints), "Other unlocked real routes must remain available through Hints.");
+                Assert.GreaterOrEqual(IndexOfStableKey(hints, "daily-plan-route-hint:" + LibraryArchiveRouteId), 0, "Unselected first route must remain hinted when the second route is selected.");
+                Assert.AreEqual(-1, IndexOfStableKey(hints, "daily-plan-route-hint:" + WorkshopRepairLedgerRouteId), "Selected second route must not be duplicated as a Hint.");
             }
         }
 
@@ -108,6 +148,17 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
             Assert.IsEmpty(new DailyPlanRouteHintObjectiveSource().BuildItems(context));
         }
 
+        private static int IndexOfStableKey(ObjectiveJournalItem[] items, string stableKey)
+        {
+            if (items == null) return -1;
+            for (int i = 0; i < items.Length; i++)
+            {
+                if (string.Equals(items[i].StableKey, stableKey, StringComparison.Ordinal)) return i;
+            }
+
+            return -1;
+        }
+
         private sealed class MutableSource : IObjectiveJournalSource
         {
             public MutableSource(string sourceId, ObjectiveJournalCategory category, ObjectiveJournalItem[] items)
@@ -124,6 +175,84 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
             public ObjectiveJournalItem[] BuildItems(ObjectiveJournalContext context)
             {
                 return Items;
+            }
+        }
+
+        private sealed class RealDiscoveryRouteFixture : IDisposable
+        {
+            private const string SaveSlot = "slot-real-discovery-route-contract";
+            private const string PlayerId = "player-real-discovery-route-contract";
+
+            private readonly string _rootDirectory;
+            private readonly GameObject _player;
+
+            public RealDiscoveryRouteFixture(string selectedRouteId)
+            {
+                _rootDirectory = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "rootborn-real-route-contract-" + Guid.NewGuid().ToString("N"));
+                SaveService.SetRootDirectoryForTests(_rootDirectory);
+                ActiveSaveContext.Set(new SaveSlotMetadata { SlotId = SaveSlot, DisplayName = "Real Route Contract" });
+                Registry = AssetDatabase.LoadAssetAtPath<GameDataRegistry>("Assets/Data/Registry/GameDataRegistry.asset");
+                Assert.IsNotNull(Registry, "GameDataRegistry asset must exist for real route source contract coverage.");
+                AssertRouteExists(Registry, LibraryArchiveRouteId);
+                AssertRouteExists(Registry, WorkshopRepairLedgerRouteId);
+
+                _player = new GameObject("Player");
+                var student = _player.AddComponent<StudentLifeProgressComponent>();
+                student.ConfigureForTests(SaveSlot, PlayerId, 100, 100, 0, 480);
+                var daily = _player.AddComponent<DailyPlanProgressComponent>();
+                daily.RestoreFromSaveData(
+                    new DailyPlanProgressSaveData
+                    {
+                        SaveSlot = SaveSlot,
+                        PlayerId = PlayerId,
+                        CurrentDay = 1,
+                        SelectedRouteId = selectedRouteId ?? string.Empty
+                    },
+                    SaveSlot,
+                    PlayerId,
+                    1);
+
+                var world = new WorldStateProgress(SaveSlot, PlayerId);
+                ActivateFlag(world, Registry, LibraryArchiveWorldStateId);
+                ActivateFlag(world, Registry, WorkshopRepairLedgerWorldStateId);
+                WorldStateProgressPersistence.Save(world);
+
+                Context = new ObjectiveJournalContext(Registry, _player, ActiveSaveContext.Metadata);
+            }
+
+            public GameDataRegistry Registry { get; }
+            public ObjectiveJournalContext Context { get; }
+
+            public void Dispose()
+            {
+                UnityEngine.Object.DestroyImmediate(_player);
+                ActiveSaveContext.Clear();
+                SaveService.SetRootDirectoryForTests(null);
+                if (System.IO.Directory.Exists(_rootDirectory)) System.IO.Directory.Delete(_rootDirectory, true);
+            }
+
+            private static void ActivateFlag(WorldStateProgress world, GameDataRegistry registry, string flagId)
+            {
+                var flag = FindFlag(registry, flagId);
+                Assert.IsTrue(world.TryActivate(flag, new WorldStateActivationSource(string.Empty, string.Empty, "objective-journal-contract", 1)), "Real route unlock world-state flag should activate: " + flagId);
+            }
+
+            private static WorldStateFlagDefinition FindFlag(GameDataRegistry registry, string flagId)
+            {
+                var flags = registry.WorldStateFlags;
+                for (int i = 0; i < flags.Length; i++)
+                {
+                    if (flags[i] != null && string.Equals(flags[i].Id, flagId, StringComparison.Ordinal)) return flags[i];
+                }
+
+                Assert.Fail("Missing real route unlock world-state flag in registry: " + flagId);
+                return null;
+            }
+
+            private static void AssertRouteExists(GameDataRegistry registry, string routeId)
+            {
+                var route = new DailyPlanRouteRunner().FindRoute(registry.DailyPlanRouteSets, routeId);
+                Assert.IsNotNull(route, "Missing real Daily Plan route in registry: " + routeId);
             }
         }
 
