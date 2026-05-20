@@ -1,3 +1,4 @@
+using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using Rootborn.Game.Common;
@@ -12,6 +13,7 @@ namespace Rootborn.Tests.EditMode.StudentLife
     public sealed class SecondNpcRelationshipRouteTests
     {
         private const string RegistryPath = "Assets/Data/Registry/GameDataRegistry.asset";
+        private const string SecondNpcE2EPath = "Assets/Tests/PlayMode/EndToEnd/SecondNpcRelationshipMilestoneE2EScenarioTests.cs";
         private const string TeacherNpcId = "npc.teacher";
         private const string FirstGuideRelationshipId = "relationship.first-guide.trust";
         private const string TeacherRelationshipId = "relationship.teacher.support";
@@ -46,6 +48,7 @@ namespace Rootborn.Tests.EditMode.StudentLife
             Assert.AreSame(relationship, objective.Relationship, "Teacher relationship objective must evaluate the registered Teacher support relationship.");
             Assert.GreaterOrEqual(objective.RequiredValue, 2, "Teacher relationship objective should require the help action's support gain.");
             Assert.IsNotNull(route, "Teacher support milestone route must be registered.");
+            Assert.IsFalse(string.IsNullOrEmpty(route.DisplayNameKey), "Teacher milestone route must expose an Objective Journal display key.");
             Assert.AreSame(objective, route.Objective, "Teacher milestone route must point at the relationship objective.");
             Assert.AreEqual(TeacherHelpActionId, route.RecommendedActionId, "Teacher milestone route must recommend the data-driven help action.");
             CollectionAssert.Contains(milestone.Objectives, objective, "Teacher milestone must own the relationship objective.");
@@ -72,6 +75,29 @@ namespace Rootborn.Tests.EditMode.StudentLife
             Assert.AreEqual(1, matching.Length, "Objective Journal milestone source must expose exactly one Teacher relationship route Hint.");
             StringAssert.Contains(TeacherHelpActionId, matching[0].NextHintText, "Teacher milestone Journal hint must point at the Teacher help action route.");
             Assert.AreEqual("Hints", matching[0].CategoryId, "Relationship route guidance must remain owned by ObjectiveJournalPanel Hints.");
+        }
+
+        [Test]
+        public void NPC_RELATIONSHIP_EDIT_005_E2EContainsExactOnceSavedStateAssertions()
+        {
+            string source = File.ReadAllText(SecondNpcE2EPath);
+
+            StringAssert.Contains(
+                "AssertStudentSaveContainsExactlyOnce",
+                source,
+                "Second NPC relationship E2E must assert the Teacher relationship save record appears exactly once, not merely that it exists.");
+            StringAssert.Contains(
+                "AssertMilestoneSaveContainsExactlyOnce",
+                source,
+                "Second NPC relationship E2E must assert Teacher milestone and objective save records appear exactly once.");
+            StringAssert.Contains(
+                "AssertObjectiveRowsContainExactlyOnce",
+                source,
+                "Second NPC relationship E2E must assert Objective Journal Teacher milestone rows do not duplicate.");
+            StringAssert.Contains(
+                "CountOccurrences",
+                source,
+                "Second NPC relationship E2E exact-once assertions must use an explicit occurrence counter.");
         }
 
         private static GameDataRegistry LoadRegistry()

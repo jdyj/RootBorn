@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.IO;
 using System.Linq;
@@ -16,6 +17,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
@@ -89,10 +91,11 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return PlayerFlowE2EDriver.PressTab(keyboard);
             Assert.IsTrue(runtime.Journal.IsVisible, "NPC-REL-E2E-002 failed: actual Tab input did not open Objective Journal.");
             yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(runtime.Journal.transform, "ObjectiveCategory_Hints"));
+            AssertObjectiveRowsContainExactlyOnce(runtime.Journal, MilestoneId, "NPC-REL-E2E-002 failed: Journal Hints duplicated or omitted the Teacher milestone before play.");
             yield return PlayerFlowE2EDriver.ClickButton(ObjectiveJournalE2EDriver.FindRowButtonContaining(runtime.Journal, MilestoneId, "NPC-REL-E2E-002 failed: Journal Hints did not include Teacher milestone."));
             StringAssert.Contains(HelpActionId, runtime.Journal.VisibleText, "NPC-REL-E2E-002 failed: Hints did not expose the Teacher help route before play.");
             yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(runtime.Journal.transform, "ObjectiveTrackButton"));
-            Assert.AreEqual(1, Object.FindObjectsByType<TrackedObjectiveHud>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length, "NPC-REL-E2E-002 failed: tracking created more than one TrackedObjectiveHud.");
+            AssertOneTrackedHud("NPC-REL-E2E-002 failed: tracking created more than one TrackedObjectiveHud.");
             StringAssert.Contains(MilestoneId, runtime.TrackedHud.VisibleText, "NPC-REL-E2E-002 failed: tracked HUD did not show the Teacher milestone route.");
             yield return PlayerFlowE2EDriver.PressTab(keyboard);
 
@@ -125,17 +128,19 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             AssertPanelContains(panel.transform, MilestoneId, "NPC-REL-E2E-002 failed: result UI did not show completed Teacher milestone.");
             AssertPanelContains(panel.transform, ObjectiveId, "NPC-REL-E2E-002 failed: result UI did not show Teacher relationship objective progress.");
             yield return OpenJournalRowContaining(keyboard, MilestoneId);
+            AssertObjectiveRowsContainExactlyOnce(FindRuntime().Journal, MilestoneId, "NPC-REL-E2E-002 failed: Objective Journal duplicated or omitted the Teacher milestone after completion.");
             StringAssert.Contains("Completed", FindRuntime().Journal.VisibleText, "NPC-REL-E2E-002 failed: Objective Journal did not show Teacher milestone completion.");
+            AssertOneTrackedHud("NPC-REL-E2E-002 failed: completion created duplicate tracked HUDs.");
             ScreenshotEvidence.Capture(ScreenshotPath);
             yield return ScreenshotEvidence.WaitForNonZeroFile(ScreenshotPath, 3f, "NPC-REL-E2E-002 failed: Game View screenshot evidence was not written.");
 
             var milestoneFile = ResolveMilestoneFile(runtime.Student.Progress.PlayerId);
             Assert.IsTrue(File.Exists(milestoneFile), "NPC-REL-E2E-002 failed: milestone save file missing after day end.");
             string savedJson = File.ReadAllText(milestoneFile);
-            StringAssert.Contains(MilestoneId, savedJson, "NPC-REL-E2E-002 failed: saved milestone state missing Teacher milestone id.");
-            StringAssert.Contains(ObjectiveId, savedJson, "NPC-REL-E2E-002 failed: saved milestone state missing Teacher objective id.");
+            AssertMilestoneSaveContainsExactlyOnce(milestoneFile, MilestoneId, "NPC-REL-E2E-002 failed: saved milestone state must contain Teacher milestone exactly once.");
+            AssertMilestoneSaveContainsExactlyOnce(milestoneFile, ObjectiveId, "NPC-REL-E2E-002 failed: saved milestone state must contain Teacher objective exactly once.");
             StringAssert.Contains("\"Completed\": true", savedJson, "NPC-REL-E2E-002 failed: saved milestone state did not mark completion.");
-            AssertStudentSaveContains(runtime.Student.Progress.PlayerId, RelationshipId, "NPC-REL-E2E-002 failed: student save missing Teacher relationship state.");
+            AssertStudentSaveContainsExactlyOnce(runtime.Student.Progress.PlayerId, RelationshipId, "NPC-REL-E2E-002 failed: student save must contain Teacher relationship exactly once.");
 
             ActiveSaveContext.Clear();
             PlayerGlobalState.ClearForTests();
@@ -151,9 +156,13 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
 
             var reloaded = FindRuntime();
             Assert.AreEqual(changedRelationship, reloaded.Student.Progress.GetRelationshipValue(relationshipOutcome.Relationship), "NPC-REL-E2E-002 failed: Teacher relationship value did not survive reload.");
+            AssertStudentSaveContainsExactlyOnce(reloaded.Student.Progress.PlayerId, RelationshipId, "NPC-REL-E2E-002 failed: reload duplicated or removed Teacher relationship save data.");
+            AssertMilestoneSaveContainsExactlyOnce(milestoneFile, MilestoneId, "NPC-REL-E2E-002 failed: reload duplicated or removed Teacher milestone save data.");
+            AssertMilestoneSaveContainsExactlyOnce(milestoneFile, ObjectiveId, "NPC-REL-E2E-002 failed: reload duplicated or removed Teacher objective save data.");
             yield return OpenJournalRowContaining(keyboard, MilestoneId);
+            AssertObjectiveRowsContainExactlyOnce(FindRuntime().Journal, MilestoneId, "NPC-REL-E2E-002 failed: reload duplicated or omitted the Teacher milestone row.");
             StringAssert.Contains("Completed", FindRuntime().Journal.VisibleText, "NPC-REL-E2E-002 failed: reloaded Journal did not preserve Teacher milestone completion.");
-            Assert.AreEqual(1, Object.FindObjectsByType<TrackedObjectiveHud>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length, "NPC-REL-E2E-002 failed: reload created duplicate tracked HUDs.");
+            AssertOneTrackedHud("NPC-REL-E2E-002 failed: reload created duplicate tracked HUDs.");
 
             yield return PlayerFlowE2EDriver.WalkPlayerWithKeyboardTo(reloaded.Player, keyboard, reloaded.DayEnd.transform.position, 0.25f, 720, "NPC-REL-E2E-002 failed: actual movement could not return to day-end board after reload.");
             reloaded.Router.RefreshPromptNow();
@@ -161,6 +170,9 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return WaitForDayResultPanel(3f, "NPC-REL-E2E-002 failed: result UI did not reopen after reload.");
             Assert.AreEqual(savedJson, File.ReadAllText(milestoneFile), "NPC-REL-E2E-002 failed: repeated result interaction changed milestone save data.");
             Assert.AreEqual(changedRelationship, reloaded.Student.Progress.GetRelationshipValue(relationshipOutcome.Relationship), "NPC-REL-E2E-002 failed: repeated result interaction reapplied Teacher relationship growth.");
+            AssertStudentSaveContainsExactlyOnce(reloaded.Student.Progress.PlayerId, RelationshipId, "NPC-REL-E2E-002 failed: repeated result interaction duplicated Teacher relationship save data.");
+            AssertMilestoneSaveContainsExactlyOnce(milestoneFile, MilestoneId, "NPC-REL-E2E-002 failed: repeated result interaction duplicated Teacher milestone save data.");
+            AssertMilestoneSaveContainsExactlyOnce(milestoneFile, ObjectiveId, "NPC-REL-E2E-002 failed: repeated result interaction duplicated Teacher objective save data.");
         }
 
         private static void EnsureTownRelationshipInstallers()
@@ -179,6 +191,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             }
 
             yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(runtime.Journal.transform, "ObjectiveCategory_Hints"));
+            AssertObjectiveRowsContainExactlyOnce(runtime.Journal, text, "NPC-REL-E2E-002 failed: Journal Hints duplicated or omitted expected row before selection.");
             yield return PlayerFlowE2EDriver.ClickButton(ObjectiveJournalE2EDriver.FindRowButtonContaining(runtime.Journal, text, "NPC-REL-E2E-002"));
         }
 
@@ -275,11 +288,57 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             return Path.Combine(_saveRoot, TestSlotId, "milestone-progress.json");
         }
 
-        private void AssertStudentSaveContains(string playerId, string expected, string failure)
+        private void AssertStudentSaveContainsExactlyOnce(string playerId, string expected, string failure)
         {
             string path = Path.Combine(_saveRoot, TestSlotId, StudentLifeProgressFileNameFor(playerId));
             Assert.IsTrue(File.Exists(path), failure + " Missing file: " + path);
-            StringAssert.Contains(expected, File.ReadAllText(path), failure);
+            string text = File.ReadAllText(path);
+            string expectedJsonValue = "\"" + expected + "\"";
+            Assert.AreEqual(1, CountOccurrences(text, expectedJsonValue), failure + " File: " + path + " Expected JSON value: " + expectedJsonValue + " Text: " + text);
+        }
+
+        private static void AssertMilestoneSaveContainsExactlyOnce(string path, string expected, string failure)
+        {
+            Assert.IsTrue(File.Exists(path), failure + " Missing file: " + path);
+            string text = File.ReadAllText(path);
+            string expectedJsonValue = "\"" + expected + "\"";
+            Assert.AreEqual(1, CountOccurrences(text, expectedJsonValue), failure + " File: " + path + " Expected JSON value: " + expectedJsonValue + " Text: " + text);
+        }
+
+        private static void AssertObjectiveRowsContainExactlyOnce(ObjectiveJournalPanel panel, string expected, string failure)
+        {
+            Assert.IsNotNull(panel, failure + " Objective Journal panel missing.");
+            var buttons = panel.GetComponentsInChildren<Button>(true);
+            int count = 0;
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                if (buttons[i] == null || !buttons[i].name.StartsWith("ObjectiveRow_", StringComparison.Ordinal)) continue;
+                var text = buttons[i].GetComponentInChildren<Text>(true);
+                if (text != null && text.text.Contains(expected)) count++;
+            }
+
+            Assert.AreEqual(1, count, failure + "\nVisible Journal Text:\n" + panel.VisibleText + "\n" + PlayerFlowE2EDriver.DescribeButtons(panel.transform));
+        }
+
+        private static int CountOccurrences(string text, string expected)
+        {
+            if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(expected)) return 0;
+            int count = 0;
+            int index = 0;
+            while (index < text.Length)
+            {
+                int found = text.IndexOf(expected, index, StringComparison.Ordinal);
+                if (found < 0) break;
+                count++;
+                index = found + expected.Length;
+            }
+
+            return count;
+        }
+
+        private static void AssertOneTrackedHud(string failure)
+        {
+            Assert.AreEqual(1, Object.FindObjectsByType<TrackedObjectiveHud>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length, failure);
         }
 
         private static string StudentLifeProgressFileNameFor(string playerId)
