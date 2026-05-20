@@ -108,6 +108,67 @@ namespace Rootborn.Tests.PlayMode.Network
             Assert.AreEqual("Builds/Logs/dedicated-harness-test/dedicated-client.log", NormalizeForSlash(DedicatedServerClientProcessHarness.ClientLogPath(config)));
         }
 
+        [Test]
+        public void DEDICATED_HARNESS_PM_006_ClientStartInfoAppendsAutoplayEvidenceArgs()
+        {
+            var config = new DedicatedServerClientProcessHarnessConfig(
+                "Builds/Server/Windows/rootborn-server.exe",
+                "Builds/Client/Windows/rootborn.exe",
+                "Builds/Logs/dedicated-harness-test",
+                7791,
+                "dedicated-harness-slot",
+                "127.0.0.1",
+                4,
+                "-directValidationTrace -directValidationAutoplay -directValidationAutoplayRouteRelationship -directValidationScreenshot Builds/Logs/network-dedicated-route-relationship-e2e.png");
+
+            var client = DedicatedServerClientProcessHarness.BuildClientStartInfo(config);
+
+            StringAssert.Contains("-mode client -joinIp 127.0.0.1 -port 7791 -saveSlot dedicated-harness-slot", client.Arguments);
+            StringAssert.Contains("-directValidationTrace", client.Arguments);
+            StringAssert.Contains("-directValidationAutoplay", client.Arguments);
+            StringAssert.Contains("-directValidationAutoplayRouteRelationship", client.Arguments);
+            StringAssert.Contains("-directValidationScreenshot Builds/Logs/network-dedicated-route-relationship-e2e.png", client.Arguments);
+        }
+
+        [Test]
+        public void DEDICATED_HARNESS_PM_007_RouteRelationshipAutoplayPresetIncludesEvidenceArgs()
+        {
+            string args = DedicatedServerClientProcessHarness.RouteRelationshipAutoplayArgs("Builds/Logs/network-dedicated-route-relationship-e2e.png");
+
+            StringAssert.Contains("-directValidationTrace", args);
+            StringAssert.Contains("-directValidationAutoplay", args);
+            StringAssert.Contains("-directValidationAutoplayRouteRelationship", args);
+            StringAssert.Contains("-directValidationScreenshot Builds/Logs/network-dedicated-route-relationship-e2e.png", args);
+        }
+
+        [Test]
+        public void DEDICATED_HARNESS_PM_008_ReadinessSeparatesNetworkReadyFromPlayerFlowEvidence()
+        {
+            string serverLog = "[ROOTBORN] Dedicated server started - port=7791 maxPlayers=4 saveSlot=dedicated-harness-slot\n[ROOTBORN] Dedicated server scene event type=LoadEventCompleted scene=Town client=0\n[ROOTBORN] Dedicated server client connected id=1";
+            string clientLog = "[ROOTBORN] Client started - joinIp=127.0.0.1 port=7791 saveSlot=dedicated-harness-slot\n[ROOTBORN] Client connected callback id=1 localClientId=1\n[ROOTBORN] Client scene event type=LoadEventCompleted scene=Town client=1\n[ROOTBORN/DIRECT-TRACE] autoplay completed route-relationship player=client-1\n[ROOTBORN/DIRECT-TRACE] autoplay screenshot path=Builds/Logs/network-dedicated-route-relationship-e2e.png";
+
+            var readiness = DedicatedServerClientReadinessProbe.FromLogs(serverLog, clientLog);
+
+            Assert.IsTrue(readiness.IsReady);
+            Assert.IsTrue(readiness.ClientAutoplayCompleted);
+            Assert.IsFalse(readiness.ClientAutoplayFailed);
+            Assert.IsTrue(readiness.PlayerFlowEvidenceReady);
+        }
+
+        [Test]
+        public void DEDICATED_HARNESS_PM_009_FailedAutoplayCannotPassPlayerFlowEvidenceReadiness()
+        {
+            string serverLog = "[ROOTBORN] Dedicated server started - port=7791 maxPlayers=4 saveSlot=dedicated-harness-slot\n[ROOTBORN] Dedicated server scene event type=LoadEventCompleted scene=Town client=0\n[ROOTBORN] Dedicated server client connected id=1";
+            string clientLog = "[ROOTBORN] Client started - joinIp=127.0.0.1 port=7791 saveSlot=dedicated-harness-slot\n[ROOTBORN] Client connected callback id=1 localClientId=1\n[ROOTBORN] Client scene event type=LoadEventCompleted scene=Town client=1\n[ROOTBORN/DIRECT-TRACE] autoplay failed: local player not found";
+
+            var readiness = DedicatedServerClientReadinessProbe.FromLogs(serverLog, clientLog);
+
+            Assert.IsTrue(readiness.IsReady);
+            Assert.IsFalse(readiness.ClientAutoplayCompleted);
+            Assert.IsTrue(readiness.ClientAutoplayFailed);
+            Assert.IsFalse(readiness.PlayerFlowEvidenceReady);
+        }
+
         private static string NormalizeForDirectory(string path)
         {
             return (path ?? string.Empty).Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar).TrimEnd(Path.DirectorySeparatorChar);

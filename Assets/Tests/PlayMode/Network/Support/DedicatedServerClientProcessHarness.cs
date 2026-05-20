@@ -8,6 +8,11 @@ namespace Rootborn.Tests.PlayMode.Network.Support
     public readonly struct DedicatedServerClientProcessHarnessConfig
     {
         public DedicatedServerClientProcessHarnessConfig(string serverExecutablePath, string clientExecutablePath, string logDirectory, int port, string saveSlot, string joinIp, int maxPlayers)
+            : this(serverExecutablePath, clientExecutablePath, logDirectory, port, saveSlot, joinIp, maxPlayers, string.Empty)
+        {
+        }
+
+        public DedicatedServerClientProcessHarnessConfig(string serverExecutablePath, string clientExecutablePath, string logDirectory, int port, string saveSlot, string joinIp, int maxPlayers, string clientExtraArguments)
         {
             ServerExecutablePath = string.IsNullOrEmpty(serverExecutablePath) ? string.Empty : serverExecutablePath;
             ClientExecutablePath = string.IsNullOrEmpty(clientExecutablePath) ? string.Empty : clientExecutablePath;
@@ -16,6 +21,7 @@ namespace Rootborn.Tests.PlayMode.Network.Support
             SaveSlot = string.IsNullOrEmpty(saveSlot) ? string.Empty : saveSlot;
             JoinIp = string.IsNullOrEmpty(joinIp) ? "127.0.0.1" : joinIp;
             MaxPlayers = maxPlayers <= 0 ? 1 : maxPlayers;
+            ClientExtraArguments = string.IsNullOrEmpty(clientExtraArguments) ? string.Empty : clientExtraArguments.Trim();
         }
 
         public string ServerExecutablePath { get; }
@@ -25,6 +31,7 @@ namespace Rootborn.Tests.PlayMode.Network.Support
         public string SaveSlot { get; }
         public string JoinIp { get; }
         public int MaxPlayers { get; }
+        public string ClientExtraArguments { get; }
     }
 
     public static class DedicatedServerClientProcessHarness
@@ -69,9 +76,18 @@ namespace Rootborn.Tests.PlayMode.Network.Support
 
         public static ProcessStartInfo BuildClientStartInfo(DedicatedServerClientProcessHarnessConfig config)
         {
-            return BuildStartInfo(
-                config.ClientExecutablePath,
-                "-mode client -joinIp " + config.JoinIp + " -port " + config.Port + " -saveSlot " + config.SaveSlot);
+            string arguments = "-mode client -joinIp " + config.JoinIp + " -port " + config.Port + " -saveSlot " + config.SaveSlot;
+            if (!string.IsNullOrEmpty(config.ClientExtraArguments))
+            {
+                arguments += " " + config.ClientExtraArguments;
+            }
+
+            return BuildStartInfo(config.ClientExecutablePath, arguments);
+        }
+
+        public static string RouteRelationshipAutoplayArgs(string screenshotPath)
+        {
+            return "-directValidationTrace -directValidationAutoplay -directValidationAutoplayRouteRelationship -directValidationScreenshot " + (string.IsNullOrEmpty(screenshotPath) ? string.Empty : screenshotPath);
         }
 
         public static string ServerLogPath(DedicatedServerClientProcessHarnessConfig config)
@@ -135,19 +151,24 @@ namespace Rootborn.Tests.PlayMode.Network.Support
 
     public readonly struct DedicatedServerClientReadiness
     {
-        public DedicatedServerClientReadiness(bool serverStarted, bool clientStarted, bool clientConnected, bool townSynchronized)
+        public DedicatedServerClientReadiness(bool serverStarted, bool clientStarted, bool clientConnected, bool townSynchronized, bool clientAutoplayCompleted, bool clientAutoplayFailed)
         {
             ServerStarted = serverStarted;
             ClientStarted = clientStarted;
             ClientConnected = clientConnected;
             TownSynchronized = townSynchronized;
+            ClientAutoplayCompleted = clientAutoplayCompleted;
+            ClientAutoplayFailed = clientAutoplayFailed;
         }
 
         public bool ServerStarted { get; }
         public bool ClientStarted { get; }
         public bool ClientConnected { get; }
         public bool TownSynchronized { get; }
+        public bool ClientAutoplayCompleted { get; }
+        public bool ClientAutoplayFailed { get; }
         public bool IsReady => ServerStarted && ClientStarted && ClientConnected && TownSynchronized;
+        public bool PlayerFlowEvidenceReady => IsReady && ClientAutoplayCompleted && !ClientAutoplayFailed;
     }
 
     public static class DedicatedServerClientReadinessProbe
@@ -160,7 +181,9 @@ namespace Rootborn.Tests.PlayMode.Network.Support
             bool clientStarted = client.Contains("Client started");
             bool clientConnected = server.Contains("Dedicated server client connected") && client.Contains("Client connected callback");
             bool townSynchronized = ContainsTownSynchronization(server) && ContainsTownSynchronization(client);
-            return new DedicatedServerClientReadiness(serverStarted, clientStarted, clientConnected, townSynchronized);
+            bool clientAutoplayCompleted = client.Contains("autoplay completed route-relationship");
+            bool clientAutoplayFailed = client.Contains("autoplay failed");
+            return new DedicatedServerClientReadiness(serverStarted, clientStarted, clientConnected, townSynchronized, clientAutoplayCompleted, clientAutoplayFailed);
         }
 
         private static bool ContainsTownSynchronization(string log)
