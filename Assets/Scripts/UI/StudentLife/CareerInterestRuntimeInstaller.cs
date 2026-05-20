@@ -93,14 +93,32 @@ namespace Rootborn.UI.StudentLife
                 _interestComponent = player.GetComponent<CareerInterestProgressComponent>();
                 if (_interestComponent == null) _interestComponent = player.AddComponent<CareerInterestProgressComponent>();
                 _interestComponent.Bind(_registry.CareerInterests);
-                var canvas = EnsureCanvas();
-                ModernUiPanelAutoInstaller.InstallOnCanvas(canvas, player.GetComponent<PlayerInventory>());
-                _objectiveProvider = canvas.GetComponent<ObjectiveJournalRuntimeProvider>();
+                var canvas = EnsureObjectiveCanvas(player, gameObject.scene);
                 _panel = CareerInterestPanel.EnsureInScene(canvas);
                 _panel.SelectionChanged -= RefreshObjectiveJournal;
                 _panel.SelectionChanged += RefreshObjectiveJournal;
                 RefreshObjectiveJournal();
                 EnsureOpenButton(canvas);
+            }
+
+            private Canvas EnsureObjectiveCanvas(GameObject player, Scene scene)
+            {
+                _objectiveProvider = FindComponentInScene<ObjectiveJournalRuntimeProvider>(scene, true);
+                if (_objectiveProvider != null)
+                {
+                    var existingCanvas = _objectiveProvider.GetComponent<Canvas>();
+                    if (existingCanvas == null) existingCanvas = _objectiveProvider.GetComponentInParent<Canvas>(true);
+                    if (existingCanvas != null) return existingCanvas;
+                }
+
+                var canvas = EnsureCanvas(scene);
+                ModernUiPanelAutoInstaller.InstallOnCanvas(canvas, player.GetComponent<PlayerInventory>());
+                _objectiveProvider = canvas.GetComponent<ObjectiveJournalRuntimeProvider>();
+                if (_objectiveProvider == null)
+                {
+                    _objectiveProvider = FindComponentInScene<ObjectiveJournalRuntimeProvider>(scene, true);
+                }
+                return canvas;
             }
 
             private void RefreshObjectiveJournal()
@@ -156,11 +174,12 @@ namespace Rootborn.UI.StudentLife
             return registry;
         }
 
-        private static Canvas EnsureCanvas()
+        private static Canvas EnsureCanvas(Scene scene)
         {
-            var canvas = Object.FindFirstObjectByType<Canvas>(FindObjectsInactive.Include);
+            var canvas = FindComponentInScene<Canvas>(scene, true);
             if (canvas != null) return canvas;
             var go = new GameObject("CareerInterestCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            SceneManager.MoveGameObjectToScene(go, scene);
             var created = go.GetComponent<Canvas>();
             created.renderMode = RenderMode.ScreenSpaceOverlay;
             go.GetComponent<CanvasScaler>().referenceResolution = new Vector2(1920f, 1080f);
@@ -171,6 +190,17 @@ namespace Rootborn.UI.StudentLife
         {
             var roots = scene.GetRootGameObjects();
             for (int i = 0; i < roots.Length; i++) if (roots[i].name == rootName) return roots[i];
+            return null;
+        }
+
+        private static T FindComponentInScene<T>(Scene scene, bool includeInactive) where T : Component
+        {
+            var roots = scene.GetRootGameObjects();
+            for (int i = 0; i < roots.Length; i++)
+            {
+                var component = roots[i].GetComponentInChildren<T>(includeInactive);
+                if (component != null) return component;
+            }
             return null;
         }
 
