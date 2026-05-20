@@ -48,5 +48,27 @@ namespace Rootborn.Tests.EditMode.Network
             StringAssert.Contains("autoplay completed route-relationship-observe", source);
             StringAssert.DoesNotContain("-directValidationAutoplay\"", source, "Dedicated route/relationship smoke must not launch the generic autoplay runner.");
         }
+
+        [Test]
+        public void DEDICATED_ROUTE_AUTOPLAY_EDIT_005_RouteSelectionFailureLogsPanelAndRouteState()
+        {
+            string source = File.ReadAllText(SourcePath);
+
+            StringAssert.Contains("DescribeDailyPlanUiState", source, "Dedicated route selection failures must include Daily Plan panel and row diagnostics, not only a generic selectable-button failure.");
+            StringAssert.Contains("Daily Plan route button not selectable ", source);
+            StringAssert.Contains("RouteRowCountForTests", source);
+            StringAssert.Contains("EmptyStateTextForTests", source);
+            StringAssert.Contains("GetRouteButtonForTests", source);
+        }
+
+        [Test]
+        public void DEDICATED_ROUTE_AUTOPLAY_EDIT_006_ObserveOnlyWaitsForDailyPlanRuntimeBeforeSnapshot()
+        {
+            string source = File.ReadAllText(SourcePath);
+
+            StringAssert.Contains("WaitForDailyPlanProgress", source, "Observe-only reload evidence must wait for DailyPlanProgressComponent instead of snapshotting dailyPlan=missing before runtime installers finish.");
+            StringAssert.Contains("DailyPlanProgressComponent", source);
+            StringAssert.Contains("route-relationship daily plan progress not ready", source);
+        }
     }
 }

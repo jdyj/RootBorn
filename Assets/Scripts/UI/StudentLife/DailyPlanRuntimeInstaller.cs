@@ -48,13 +48,18 @@ namespace Rootborn.UI.StudentLife
 
         public static void EnsureSceneForTests(Scene scene, Canvas canvas, GameDataRegistry registry, GameObject player)
         {
+            if (registry == null)
+            {
+                return;
+            }
+
             var runtimePlayer = player != null ? player : FindRuntimePlayer(scene);
             var visibleCanvas = canvas != null ? canvas : EnsureCanvas(scene);
             var panel = EnsurePanel(scene, visibleCanvas);
             var board = EnsureBoard(scene);
             var daily = EnsureDailyPlanProgress(runtimePlayer);
             var student = runtimePlayer != null ? runtimePlayer.GetComponent<StudentLifeProgressComponent>() : null;
-            board.Bind(panel, registry != null ? registry.DailyPlanRouteSets : System.Array.Empty<DailyPlanRouteSetDefinition>(), daily, student);
+            board.Bind(panel, registry.DailyPlanRouteSets, daily, student);
         }
 
         private static void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -68,16 +73,23 @@ namespace Rootborn.UI.StudentLife
             {
                 var scene = SceneManager.GetActiveScene();
                 GameObject player = null;
+                GameDataRegistry registry = null;
                 float elapsed = 0f;
-                while (player == null && elapsed < 5f)
+                while ((player == null || registry == null) && elapsed < 12f)
                 {
-                    player = FindRuntimePlayer(scene);
+                    if (player == null) player = FindRuntimePlayer(scene);
+                    if (registry == null && Managers.Data != null) registry = Managers.Data.Registry;
                     elapsed += Time.unscaledDeltaTime;
                     yield return null;
                 }
 
+                if (registry == null)
+                {
+                    Debug.LogWarning("[ROOTBORN] Daily Plan runtime install skipped: registry not loaded.");
+                    yield break;
+                }
+
                 var canvas = FindComponentInScene<Canvas>(scene);
-                var registry = Managers.Data != null ? Managers.Data.Registry : null;
                 EnsureSceneForTests(scene, canvas, registry, player);
             }
         }

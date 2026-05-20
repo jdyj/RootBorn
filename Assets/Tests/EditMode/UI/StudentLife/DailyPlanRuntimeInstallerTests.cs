@@ -44,6 +44,34 @@ namespace Rootborn.Tests.EditMode.UI.StudentLife
         }
 
         [Test]
+        public void EnsureSceneForTests_DoesNotInstallEmptyBoardBeforeRegistryLoads()
+        {
+            var scene = SceneManager.GetActiveScene();
+            var beforePanels = CountComponents<DailyPlanPanel>(scene);
+            var beforeBoards = CountComponents<DailyPlanBoardInteractor>(scene);
+            var canvasGo = new GameObject("DailyPlanInstallerTestCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            SceneManager.MoveGameObjectToScene(canvasGo, scene);
+            var player = new GameObject("DailyPlanInstallerTestPlayer", typeof(StudentLifeProgressComponent), typeof(DailyPlanProgressComponent));
+            player.GetComponent<StudentLifeProgressComponent>().ConfigureForTests("slot-a", "player-a", 100, 100, 0, 8 * 60);
+            SceneManager.MoveGameObjectToScene(player, scene);
+
+            try
+            {
+                DailyPlanRuntimeInstaller.EnsureSceneForTests(scene, canvasGo.GetComponent<Canvas>(), null, player);
+
+                Assert.That(CountComponents<DailyPlanPanel>(scene), Is.EqualTo(beforePanels), "Daily Plan runtime install must not create a player-visible empty panel before registry route data is loaded.");
+                Assert.That(CountComponents<DailyPlanBoardInteractor>(scene), Is.EqualTo(beforeBoards), "Daily Plan runtime install must wait for registry route data instead of binding the board to an empty route set.");
+            }
+            finally
+            {
+                DestroyByName("DailyPlanInstallerTestCanvas");
+                DestroyByName("DailyPlanInstallerTestPlayer");
+                DestroyByName("DailyPlanBoard");
+                DestroyByName("DailyPlanPanel");
+            }
+        }
+
+        [Test]
         public void EnsureSceneForTests_AddsDailyPlanProgressComponentToRuntimePlayer()
         {
             var scene = SceneManager.GetActiveScene();

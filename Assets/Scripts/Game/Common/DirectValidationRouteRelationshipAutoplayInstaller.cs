@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using Rootborn.Game.Player;
 using Rootborn.Game.StudentLife;
 using UnityEngine;
@@ -23,6 +24,7 @@ namespace Rootborn.Game.Common
         private const string CareerPracticeBoardName = "CareerPracticeBoard";
         private const string DailyPlanBoardName = "DailyPlanBoard";
         private const string DailyPlanRouteRowName = "DailyPlanRouteRow";
+        private const string DailyPlanPanelTypeName = "Rootborn.UI.StudentLife.DailyPlanPanel";
         private static bool? s_enabled;
 
         private static bool Enabled
@@ -127,6 +129,14 @@ namespace Rootborn.Game.Common
                     yield break;
                 }
 
+                DailyPlanProgressComponent dailyPlan = null;
+                yield return WaitForDailyPlanProgress(identity, value => dailyPlan = value);
+                if (dailyPlan == null)
+                {
+                    DirectValidationTrace.Log("autoplay failed: route-relationship daily plan progress not ready player=" + identity.PlayerId);
+                    yield break;
+                }
+
                 if (HasFlag(ObserveOnlyFlag))
                 {
                     yield return CaptureAndLogObserveOnly(identity);
@@ -209,7 +219,7 @@ namespace Rootborn.Game.Common
                 yield return WaitForRouteButton(value => routeButton = value);
                 if (routeButton == null)
                 {
-                    DirectValidationTrace.Log("autoplay failed: Daily Plan route button not selectable");
+                    DirectValidationTrace.Log("autoplay failed: Daily Plan route button not selectable " + DescribeDailyPlanUiState());
                     assign(false);
                     yield break;
                 }
@@ -248,6 +258,23 @@ namespace Rootborn.Game.Common
                 }
 
                 assign(identity);
+            }
+
+            private static IEnumerator WaitForDailyPlanProgress(PlayerIdentity identity, Action<DailyPlanProgressComponent> assign)
+            {
+                DailyPlanProgressComponent component = null;
+                float elapsed = 0f;
+                while (component == null && elapsed < 12f)
+                {
+                    component = identity != null ? identity.GetComponent<DailyPlanProgressComponent>() : null;
+                    if (component == null)
+                    {
+                        elapsed += UnityEngine.Time.unscaledDeltaTime;
+                        yield return null;
+                    }
+                }
+
+                assign(component);
             }
 
             private static PlayerIdentity FindLocalInputPlayer()
@@ -383,6 +410,69 @@ namespace Rootborn.Game.Common
                 yield return new WaitForFixedUpdate();
                 ReleaseAllKeys();
                 yield return null;
+            }
+
+            private static string DescribeDailyPlanUiState()
+            {
+                var panel = FindDailyPlanPanel();
+                if (panel == null)
+                {
+                    return "dailyPlanUi=panel:missing";
+                }
+
+                int rowCount = ReadInt(panel, "RouteRowCountForTests");
+                string summary = "dailyPlanUi=panel:present,active:" + panel.gameObject.activeInHierarchy
+                    + ",rows:" + rowCount
+                    + ",empty:" + Safe(ReadString(panel, "EmptyStateTextForTests"));
+                for (int i = 0; i < rowCount; i++)
+                {
+                    var button = InvokeGetRouteButtonForTests(panel, i);
+                    var text = button != null ? button.GetComponentInChildren<Text>(true) : null;
+                    summary += " row" + i + "=";
+                    if (button == null)
+                    {
+                        summary += "missing";
+                    }
+                    else
+                    {
+                        summary += "active:" + button.gameObject.activeInHierarchy + ",interactable:" + button.interactable + ",text:" + Safe(text != null ? text.text : string.Empty);
+                    }
+                }
+
+                return summary;
+            }
+
+            private static MonoBehaviour FindDailyPlanPanel()
+            {
+                var behaviours = UnityEngine.Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                for (int i = 0; i < behaviours.Length; i++)
+                {
+                    var behaviour = behaviours[i];
+                    if (behaviour != null && behaviour.GetType().FullName == DailyPlanPanelTypeName)
+                    {
+                        return behaviour;
+                    }
+                }
+
+                return null;
+            }
+
+            private static int ReadInt(MonoBehaviour target, string propertyName)
+            {
+                var property = target.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                return property != null && property.GetValue(target) is int value ? value : 0;
+            }
+
+            private static string ReadString(MonoBehaviour target, string propertyName)
+            {
+                var property = target.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                return property != null ? property.GetValue(target) as string : string.Empty;
+            }
+
+            private static Button InvokeGetRouteButtonForTests(MonoBehaviour target, int index)
+            {
+                var method = target.GetType().GetMethod("GetRouteButtonForTests", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { typeof(int) }, null);
+                return method != null ? method.Invoke(target, new object[] { index }) as Button : null;
             }
 
             private static string DailyPlanSnapshot(PlayerIdentity identity)
