@@ -7,6 +7,7 @@ namespace Rootborn.Tests.EditMode.Network
     {
         private const string SourcePath = "Assets/Scripts/Game/Common/DirectValidationRouteRelationshipAutoplayInstaller.cs";
         private const string SmokeScriptPath = "Scripts/qa/run-dedicated-route-relationship-smoke.ps1";
+        private const string LongRunScriptPath = "Scripts/qa/run-dedicated-route-relationship-longrun.ps1";
 
         [Test]
         public void DEDICATED_ROUTE_AUTOPLAY_EDIT_001_RouteRelationshipAutoplayInstallerExists()
@@ -69,6 +70,23 @@ namespace Rootborn.Tests.EditMode.Network
             StringAssert.Contains("WaitForDailyPlanProgress", source, "Observe-only reload evidence must wait for DailyPlanProgressComponent instead of snapshotting dailyPlan=missing before runtime installers finish.");
             StringAssert.Contains("DailyPlanProgressComponent", source);
             StringAssert.Contains("route-relationship daily plan progress not ready", source);
+        }
+
+        [Test]
+        public void DEDICATED_ROUTE_AUTOPLAY_EDIT_007_LongRunScriptRunsActionThenObserveCyclesWithScreenshotsAndCleanup()
+        {
+            Assert.IsTrue(File.Exists(LongRunScriptPath), "Dedicated route/relationship long-run regression script must exist.");
+            string source = File.ReadAllText(LongRunScriptPath);
+
+            StringAssert.Contains("param(", source);
+            StringAssert.Contains("[int]$Cycles", source);
+            StringAssert.Contains("[int]$StartPort", source);
+            StringAssert.Contains("-directValidationAutoplayRouteRelationship", source);
+            StringAssert.Contains("-directValidationAutoplayRouteRelationshipObserveOnly", source);
+            StringAssert.Contains("network-dedicated-route-relationship-longrun-cycle", source);
+            StringAssert.Contains("Assert-Screenshot", source);
+            StringAssert.Contains("Assert-NoTrackedProcessesAlive", source);
+            StringAssert.Contains("autoplay completed route-relationship-observe", source);
         }
     }
 }
