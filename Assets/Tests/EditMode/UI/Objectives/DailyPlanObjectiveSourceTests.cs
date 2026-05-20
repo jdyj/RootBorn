@@ -71,7 +71,7 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
         }
 
         [Test]
-        public void Source_CompletedRoute_ShowsNextHint()
+        public void Source_CompletedRoute_DoesNotRemainActiveGoal()
         {
             var player = new GameObject("Player");
             try
@@ -96,9 +96,7 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
 
                 var items = source.BuildItems(new ObjectiveJournalContext(registry, player, null));
 
-                Assert.That(items.Length, Is.EqualTo(1));
-                Assert.That(items[0].State, Is.EqualTo("Completed"));
-                Assert.That(items[0].NextHintText, Is.EqualTo(route.NextHintKey));
+                Assert.That(items, Is.Empty, "Completed Daily Plan routes should leave active Goals and move to result feedback instead of remaining trackable guidance.");
             }
             finally
             {

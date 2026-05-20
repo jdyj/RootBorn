@@ -98,13 +98,13 @@ namespace Rootborn.UI.Objectives
                 panel.SetItems(pair.Key, pair.Value);
             }
 
-            if (!string.IsNullOrEmpty(trackedStableKey))
+            if (!string.IsNullOrEmpty(trackedStableKey) && !TrackStableKey(panel, itemsByCategory, trackedStableKey))
             {
-                TrackStableKey(panel, itemsByCategory, trackedStableKey);
+                panel.HideTrackedObjective();
             }
         }
 
-        private static void TrackStableKey(ObjectiveJournalPanel panel, Dictionary<string, ObjectiveJournalItem[]> itemsByCategory, string stableKey)
+        private static bool TrackStableKey(ObjectiveJournalPanel panel, Dictionary<string, ObjectiveJournalItem[]> itemsByCategory, string stableKey)
         {
             foreach (var pair in itemsByCategory)
             {
@@ -119,9 +119,11 @@ namespace Rootborn.UI.Objectives
                     panel.SelectCategory(pair.Key);
                     panel.SelectItem(i);
                     panel.TrackSelectedItem();
-                    return;
+                    return true;
                 }
             }
+
+            return false;
         }
 
         private static int CompareItems(ObjectiveJournalItem left, ObjectiveJournalItem right)

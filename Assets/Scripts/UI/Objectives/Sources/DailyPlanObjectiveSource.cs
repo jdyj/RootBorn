@@ -25,12 +25,11 @@ namespace Rootborn.UI.Objectives
                 return new[] { BuildChooseItem() };
             }
 
-            bool completed = progress.CompletedRouteId == route.Id;
-            string state = completed ? "Completed" : "Selected";
-            string progressText = completed
-                ? "Completed with " + (string.IsNullOrEmpty(progress.MatchedActivityId) ? "matching activity" : progress.MatchedActivityId)
-                : "Selected for day " + progress.CurrentDay;
-            string hint = completed ? route.NextHintKey : route.ObjectiveDetailKey;
+            if (progress.CompletedRouteId == route.Id)
+            {
+                return Array.Empty<ObjectiveJournalItem>();
+            }
+
             return new[]
             {
                 new ObjectiveJournalItem(
@@ -38,11 +37,11 @@ namespace Rootborn.UI.Objectives
                     Category.CategoryId,
                     route.ObjectiveTitleKey,
                     route.DisplayNameKey,
-                    state,
-                    progressText,
-                    hint,
+                    "Selected",
+                    "Selected for day " + progress.CurrentDay,
+                    route.ObjectiveDetailKey,
                     false,
-                    completed ? 7 : 5)
+                    5)
             };
         }
 

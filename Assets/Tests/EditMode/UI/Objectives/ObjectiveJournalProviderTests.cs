@@ -72,6 +72,40 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
         }
 
         [Test]
+        public void ObjectiveJournalAggregator_HidesTrackedHudWhenTrackedStableKeyDisappears()
+        {
+            var activeSource = new FakeSource("goal-source", new ObjectiveJournalCategory("Goals", "Goals"), new[]
+            {
+                new ObjectiveJournalItem("daily-plan:route", "Goals", "Daily Route", string.Empty, "Selected", "Selected for day 1", "Do the route", false, 0),
+            });
+            var emptySource = new FakeSource("goal-source", new ObjectiveJournalCategory("Goals", "Goals"), Array.Empty<ObjectiveJournalItem>());
+            var root = new GameObject("ObjectiveJournalTrackedRemovalFixture", typeof(RectTransform));
+
+            try
+            {
+                var panelGo = new GameObject("ObjectiveJournalPanel", typeof(RectTransform));
+                panelGo.transform.SetParent(root.transform, false);
+                var panel = panelGo.AddComponent<ObjectiveJournalPanel>();
+
+                var hudGo = new GameObject("TrackedObjectiveHud", typeof(RectTransform));
+                hudGo.transform.SetParent(root.transform, false);
+                var hud = hudGo.AddComponent<TrackedObjectiveHud>();
+                panel.BindTrackedHud(hud);
+
+                new ObjectiveJournalAggregator(new IObjectiveJournalSource[] { activeSource }).Refresh(panel, new ObjectiveJournalContext(null, null, null), "daily-plan:route");
+                Assert.IsTrue(hud.IsVisible);
+
+                new ObjectiveJournalAggregator(new IObjectiveJournalSource[] { emptySource }).Refresh(panel, new ObjectiveJournalContext(null, null, null), "daily-plan:route");
+
+                Assert.IsFalse(hud.IsVisible, "TrackedObjectiveHud should hide when its tracked stable key no longer exists in active Objective Journal sources.");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
         public void ObjectiveJournalTrackingStore_RoundTripsTrackedStableKeyPerSaveSlot()
         {
             string rootDirectory = Path.Combine(Path.GetTempPath(), "rootborn-objective-tracking-" + Guid.NewGuid().ToString("N"));

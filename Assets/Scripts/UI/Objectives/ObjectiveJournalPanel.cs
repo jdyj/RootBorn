@@ -59,6 +59,14 @@ namespace Rootborn.UI.Objectives
             if (_selectedCategory == categoryId && _root != null) RefreshCategory(categoryId);
         }
 
+        public void HideTrackedObjective()
+        {
+            if (_trackedHud != null)
+            {
+                _trackedHud.Hide();
+            }
+        }
+
         public void SetVerticalSliceSummary(VerticalSliceSummary summary)
         {
             var item = new ObjectiveJournalItem(
