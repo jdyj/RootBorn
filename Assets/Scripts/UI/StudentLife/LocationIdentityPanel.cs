@@ -1,4 +1,5 @@
 using System;
+using Rootborn.Game.Managers;
 using Rootborn.Game.Player;
 using Rootborn.Game.Quests;
 using Rootborn.Game.Save;
@@ -24,6 +25,7 @@ namespace Rootborn.UI.StudentLife
         private LocationIdentityDefinition _identity;
         private GameObject _player;
         private StudentLifeProgressComponent _progressComponent;
+        private DailyPlanRouteSetDefinition[] _dailyPlanRouteSets = Array.Empty<DailyPlanRouteSetDefinition>();
         private int _requestSequence;
         private readonly LocationActivityRunner _runner = new LocationActivityRunner();
 
@@ -45,6 +47,20 @@ namespace Rootborn.UI.StudentLife
         {
             BuildIfNeeded();
             Hide();
+        }
+
+        public void BindDailyPlanRouteSetsForTests(DailyPlanRouteSetDefinition[] routeSets)
+        {
+            _dailyPlanRouteSets = routeSets ?? Array.Empty<DailyPlanRouteSetDefinition>();
+        }
+
+        public void ClickActivityForTests(int index)
+        {
+            BuildIfNeeded();
+            if (index >= 0 && index < _activityButtons.Length)
+            {
+                _activityButtons[index].onClick.Invoke();
+            }
         }
 
         public void Show(LocationIdentityDefinition identity, GameObject player)
@@ -81,10 +97,27 @@ namespace Rootborn.UI.StudentLife
                 StudentLifeProgressPersistence.Save(_progressComponent);
                 var careerCandidates = _player != null ? _player.GetComponent<CareerCandidateProgressComponent>() : null;
                 if (careerCandidates != null) careerCandidates.ApplyHintsFromResult(progress, result.RequestId, result.OutcomeLogIds);
+                RecordDailyPlanActivity(activity, requestId, progress);
                 RecordQuestActivity(activity, requestId);
                 OnAnyActivityApplied?.Invoke(activity, requestId);
             }
             _result.text = FormatResult(result);
+        }
+
+        private void RecordDailyPlanActivity(LocationActivityDefinition activity, string requestId, StudentLifeProgress progress)
+        {
+            var dailyPlan = _player != null ? _player.GetComponent<DailyPlanProgressComponent>() : null;
+            if (dailyPlan == null || activity == null || progress == null) return;
+            var routeSets = ResolveDailyPlanRouteSets();
+            if (routeSets.Length == 0) return;
+            dailyPlan.TryRecordActivity(routeSets, activity, progress, requestId, out _);
+        }
+
+        private DailyPlanRouteSetDefinition[] ResolveDailyPlanRouteSets()
+        {
+            if (_dailyPlanRouteSets != null && _dailyPlanRouteSets.Length > 0) return _dailyPlanRouteSets;
+            var registry = Managers.Data != null ? Managers.Data.Registry : null;
+            return registry != null ? registry.DailyPlanRouteSets : Array.Empty<DailyPlanRouteSetDefinition>();
         }
 
         private void RecordQuestActivity(LocationActivityDefinition activity, string requestId)
