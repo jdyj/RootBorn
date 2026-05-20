@@ -4,8 +4,11 @@ using NUnit.Framework;
 using Rootborn.Game.Player;
 using Rootborn.Game.Save;
 using Rootborn.Game.StudentLife;
+using Rootborn.Tests.PlayMode.EndToEnd.Support;
 using Rootborn.UI.MainMenu;
+using Rootborn.Tests.PlayMode.EndToEnd.Support;
 using Rootborn.UI.Objectives;
+using Rootborn.Tests.PlayMode.EndToEnd.Support;
 using Rootborn.UI.StudentLife;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -275,112 +278,54 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.Fail(failure);
         }
 
-        private IEnumerator PressTab(Keyboard keyboard)
+                private IEnumerator PressTab(Keyboard keyboard)
         {
-            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Tab));
-            InputSystem.Update();
-            yield return null;
-            yield return new WaitForFixedUpdate();
-            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
-            InputSystem.Update();
-            yield return null;
+            return PlayerFlowE2EDriver.PressTab(keyboard);
         }
 
-        private IEnumerator PressInteractKey(Keyboard keyboard)
+                private IEnumerator PressInteractKey(Keyboard keyboard)
         {
-            Press(keyboard.eKey);
-            InputSystem.Update();
-            yield return null;
-            yield return new WaitForFixedUpdate();
-            Release(keyboard.eKey);
-            InputSystem.Update();
-            yield return null;
+            return PlayerFlowE2EDriver.PressInteractKey(keyboard);
         }
 
-        private IEnumerator WalkPlayerWithKeyboardTo(GameObject player, Keyboard keyboard, Vector3 targetPosition, float tolerance, string failure)
+                private IEnumerator WalkPlayerWithKeyboardTo(GameObject player, Keyboard keyboard, Vector3 targetPosition, float tolerance, string failure)
         {
-            Key activeKey = Key.None;
-            for (int i = 0; i < 540 && Vector3.Distance(player.transform.position, targetPosition) > tolerance; i++)
-            {
-                Vector3 delta = targetPosition - player.transform.position;
-                Key key = Mathf.Abs(delta.x) >= Mathf.Abs(delta.y) ? (delta.x >= 0f ? Key.D : Key.A) : (delta.y >= 0f ? Key.W : Key.S);
-                if (activeKey != key)
-                {
-                    if (activeKey != Key.None) Release(ControlFor(keyboard, activeKey));
-                    Press(ControlFor(keyboard, key));
-                    activeKey = key;
-                }
-                InputSystem.Update();
-                yield return null;
-                yield return new WaitForFixedUpdate();
-            }
-            if (activeKey != Key.None) Release(ControlFor(keyboard, activeKey));
-            InputSystem.Update();
-            yield return new WaitForFixedUpdate();
-            Assert.LessOrEqual(Vector3.Distance(player.transform.position, targetPosition), tolerance, failure);
+            return PlayerFlowE2EDriver.WalkPlayerWithKeyboardTo(player, keyboard, targetPosition, tolerance, 720, failure);
         }
 
-        private static IEnumerator LoadScene(string sceneName)
+                private static IEnumerator LoadScene(string sceneName)
         {
-            var op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
-            Assert.IsNotNull(op, sceneName + " should be present in BuildSettings.");
-            while (!op.isDone) yield return null;
+            return PlayerFlowE2EDriver.LoadScene(sceneName);
         }
 
-        private static IEnumerator WaitForScene(string sceneName, float timeoutSeconds, string failure)
+                private static IEnumerator WaitForScene(string sceneName, float timeoutSeconds, string failure)
         {
-            float elapsed = 0f;
-            while (SceneManager.GetActiveScene().name != sceneName && elapsed < timeoutSeconds)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                yield return null;
-            }
-            Assert.AreEqual(sceneName, SceneManager.GetActiveScene().name, failure);
+            return PlayerFlowE2EDriver.WaitForScene(sceneName, timeoutSeconds, failure);
         }
 
-        private static IEnumerator ClickButton(Button button)
+                private static IEnumerator ClickButton(Button button)
         {
-            Assert.IsNotNull(button);
-            ExecuteEvents.Execute(button.gameObject, new PointerEventData(EventSystem.current) { button = PointerEventData.InputButton.Left }, ExecuteEvents.pointerClickHandler);
-            yield return null;
+            return PlayerFlowE2EDriver.ClickButton(button);
         }
 
-        private static Button FindButton(string cardName, string buttonName)
+                private static Button FindButton(string cardName, string buttonName)
         {
-            var card = GameObject.Find(cardName);
-            Assert.IsNotNull(card, "UI card missing: " + cardName);
-            return FindButton(card.transform, buttonName);
+            return PlayerFlowE2EDriver.FindButton(cardName, buttonName);
         }
 
-        private static Button FindButton(Transform root, string name)
+                private static Button FindButton(Transform root, string name)
         {
-            var child = FindChild(root, name);
-            Assert.IsNotNull(child, "UI button missing: " + name);
-            var button = child.GetComponent<Button>();
-            Assert.IsNotNull(button, name + " does not have Button component.");
-            return button;
+            return PlayerFlowE2EDriver.FindButton(root, name);
         }
 
-        private static Transform FindChild(Transform root, string name)
+                private static Transform FindChild(Transform root, string name)
         {
-            if (root == null) return null;
-            if (root.name == name) return root;
-            for (int i = 0; i < root.childCount; i++)
-            {
-                var match = FindChild(root.GetChild(i), name);
-                if (match != null) return match;
-            }
-            return null;
+            return PlayerFlowE2EDriver.FindChild(root, name);
         }
 
-        private static KeyControl ControlFor(Keyboard keyboard, Key key)
+                private static KeyControl ControlFor(Keyboard keyboard, Key key)
         {
-            if (key == Key.A) return keyboard.aKey;
-            if (key == Key.D) return keyboard.dKey;
-            if (key == Key.W) return keyboard.wKey;
-            if (key == Key.S) return keyboard.sKey;
-            Assert.Fail("Unsupported key: " + key);
-            return keyboard.eKey;
+            return PlayerFlowE2EDriver.ControlFor(keyboard, key);
         }
 
         private void AssertDailySaveContains(DailyPlanProgressComponent daily, string expected, string failure)
@@ -397,35 +342,24 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             return Path.Combine(_saveRoot, TestSlotId, DailyPlanProgressPersistence.FileNameFor(daily.Progress.PlayerId));
         }
 
-        private static void CaptureScreenshot()
+                private static void CaptureScreenshot()
         {
-            var dir = Path.GetDirectoryName(ScreenshotPath);
-            if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-            ScreenCapture.CaptureScreenshot(ScreenshotPath);
+            ScreenshotEvidence.Capture(ScreenshotPath);
         }
 
-        private static IEnumerator WaitForScreenshot(float timeoutSeconds)
+                private static IEnumerator WaitForScreenshot(float timeoutSeconds)
         {
-            float elapsed = 0f;
-            while (elapsed < timeoutSeconds)
-            {
-                if (File.Exists(ScreenshotPath) && new FileInfo(ScreenshotPath).Length > 0) yield break;
-                elapsed += Time.unscaledDeltaTime;
-                yield return null;
-            }
-            Assert.Fail("DAILY-PLAN-E2E-001 failed: Game View screenshot evidence was not written: " + ScreenshotPath);
+            return ScreenshotEvidence.WaitForNonZeroFile(ScreenshotPath, timeoutSeconds, "Game View screenshot evidence was not written");
         }
 
-        private static void DeleteScreenshot()
+                private static void DeleteScreenshot()
         {
-            if (File.Exists(ScreenshotPath)) File.Delete(ScreenshotPath);
+            ScreenshotEvidence.DeleteIfExists(ScreenshotPath);
         }
 
-        private static void EnsurePassiveEventSystem()
+                private static void EnsurePassiveEventSystem()
         {
-            if (EventSystem.current != null) return;
-            var go = new GameObject("EventSystem", typeof(EventSystem));
-            go.AddComponent<Rootborn.Game.Common.PassiveInputModule>();
+            PlayerFlowE2EDriver.EnsurePassiveEventSystem();
         }
 
         private static void CleanupResidue()
@@ -437,14 +371,9 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             DestroyAllNamed("Player");
         }
 
-        private static void DestroyAllNamed(string objectName)
+                private static void DestroyAllNamed(string objectName)
         {
-            var transforms = Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            for (int i = transforms.Length - 1; i >= 0; i--)
-            {
-                var transform = transforms[i];
-                if (transform != null && transform.name == objectName) Object.DestroyImmediate(transform.gameObject);
-            }
+            PlayerFlowE2EDriver.DestroyAllNamed(objectName);
         }
 
         private readonly struct DailyPlanRuntime
