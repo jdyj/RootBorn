@@ -87,7 +87,7 @@ namespace Rootborn.Game.Dialogue
 
         public void Interact(StudentLifeProgress progress)
         {
-            var dialogue = _scheduledDialogue != null ? _scheduledDialogue : (_npc != null ? _npc.ResolveDialogue(progress) : null);
+            var dialogue = ResolveInteractionDialogue(progress);
             _session.Open(dialogue);
             RecordTalkEvent();
             OnInteracted?.Invoke(this);
@@ -107,6 +107,17 @@ namespace Rootborn.Game.Dialogue
         public void Close()
         {
             _session.Close();
+        }
+
+        private DialogueDefinition ResolveInteractionDialogue(StudentLifeProgress progress)
+        {
+            var stageDialogue = _npc != null ? _npc.ResolveDialogue(progress) : null;
+            if (stageDialogue != null && _npc != null && !ReferenceEquals(stageDialogue, _npc.DefaultDialogue))
+            {
+                return stageDialogue;
+            }
+
+            return _scheduledDialogue != null ? _scheduledDialogue : stageDialogue;
         }
 
         private void RecordTalkEvent()
