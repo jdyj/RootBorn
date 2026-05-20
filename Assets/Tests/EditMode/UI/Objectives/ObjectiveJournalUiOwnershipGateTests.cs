@@ -27,8 +27,7 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
             // Reviewed legacy or non-always-visible surfaces. New objective-like HUD/Panel/Widget types must not be added here without design review.
             "Assets/Scripts/UI/Quests/QuestLogPanel.cs :: QuestLogPanel",
             "Assets/Scripts/UI/Quests/QuestChainLogPanel.cs :: QuestChainLogPanel",
-            "Assets/Scripts/UI/StudentLife/CareerInterestPanel.cs :: CareerInterestPanel",
-            "Assets/Scripts/UI/StudentLife/CareerInterestHudWidget.cs :: CareerInterestHudWidget"
+            "Assets/Scripts/UI/StudentLife/CareerInterestPanel.cs :: CareerInterestPanel"
         };
 
         private static readonly HashSet<string> AllowedObjectiveUiFactories = new HashSet<string>
@@ -40,8 +39,6 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
             "Assets/Scripts/UI/Quests/QuestChainRuntimeInstaller.cs :: _panel = QuestChainLogPanel.EnsureInScene(canvas);",
             "Assets/Scripts/UI/StudentLife/CareerInterestPanel.cs :: public static CareerInterestPanel EnsureInScene(Canvas canvas)",
             "Assets/Scripts/UI/StudentLife/CareerInterestRuntimeInstaller.cs :: _panel = CareerInterestPanel.EnsureInScene(canvas);",
-            "Assets/Scripts/UI/StudentLife/CareerInterestRuntimeInstaller.cs :: _hud = CareerInterestHudWidget.EnsureInScene(canvas);",
-            "Assets/Scripts/UI/StudentLife/CareerInterestHudWidget.cs :: public static CareerInterestHudWidget EnsureInScene(Canvas canvas)",
             "Assets/Scripts/UI/StudentLife/StudentDayEndInteractor.cs :: go = new GameObject(\"CampaignResultSummary\", typeof(RectTransform), typeof(Text));",
             "Assets/Scripts/UI/StudentLife/StudentDayEndInteractor.cs :: go = new GameObject(\"QuestChainResultSummary\", typeof(RectTransform), typeof(Text));"
         };

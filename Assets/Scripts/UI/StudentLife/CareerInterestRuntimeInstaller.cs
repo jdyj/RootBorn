@@ -1,7 +1,10 @@
 using System.Collections;
 using Rootborn.Game.Common;
 using Rootborn.Game.Managers;
+using Rootborn.Game.Player;
 using Rootborn.Game.StudentLife;
+using Rootborn.UI.Modern;
+using Rootborn.UI.Objectives;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -48,7 +51,7 @@ namespace Rootborn.UI.StudentLife
             private CareerCandidateProgressComponent _candidateComponent;
             private StudentLifeProgressComponent _studentComponent;
             private CareerInterestPanel _panel;
-            private CareerInterestHudWidget _hud;
+            private ObjectiveJournalRuntimeProvider _objectiveProvider;
 
             private IEnumerator Start()
             {
@@ -91,21 +94,21 @@ namespace Rootborn.UI.StudentLife
                 if (_interestComponent == null) _interestComponent = player.AddComponent<CareerInterestProgressComponent>();
                 _interestComponent.Bind(_registry.CareerInterests);
                 var canvas = EnsureCanvas();
+                ModernUiPanelAutoInstaller.InstallOnCanvas(canvas, player.GetComponent<PlayerInventory>());
+                _objectiveProvider = canvas.GetComponent<ObjectiveJournalRuntimeProvider>();
                 _panel = CareerInterestPanel.EnsureInScene(canvas);
-                _panel.SelectionChanged -= RefreshHud;
-                _panel.SelectionChanged += RefreshHud;
-                _hud = CareerInterestHudWidget.EnsureInScene(canvas);
-                RefreshHud();
+                _panel.SelectionChanged -= RefreshObjectiveJournal;
+                _panel.SelectionChanged += RefreshObjectiveJournal;
+                RefreshObjectiveJournal();
                 EnsureOpenButton(canvas);
             }
 
-            private void RefreshHud()
+            private void RefreshObjectiveJournal()
             {
-                if (_hud == null || _interestComponent == null) return;
-                var student = _studentComponent != null ? _studentComponent.Progress : null;
-                var candidates = _candidateComponent != null ? _candidateComponent.Progress : null;
-                int day = student != null ? student.CurrentDay : 0;
-                _hud.Refresh(_registry.CareerInterests, _interestComponent.Progress, candidates, student, day);
+                if (_objectiveProvider != null)
+                {
+                    _objectiveProvider.RefreshNow();
+                }
             }
 
             private void EnsureOpenButton(Canvas canvas)
@@ -139,7 +142,7 @@ namespace Rootborn.UI.StudentLife
                     var candidates = _candidateComponent != null ? _candidateComponent.Progress : null;
                     int day = student != null ? student.CurrentDay : 0;
                     _panel.Show(_registry.CareerInterests, _interestComponent, candidates, student, day);
-                    RefreshHud();
+                    RefreshObjectiveJournal();
                 });
             }
         }

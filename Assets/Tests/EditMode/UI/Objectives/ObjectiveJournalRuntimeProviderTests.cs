@@ -308,6 +308,47 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
             }
         }
 
+        [Test]
+        public void CareerInterestObjectiveSource_DisplaysSelectedInterestRecommendationsInHintsCategory()
+        {
+            var candidate = ScriptableObject.CreateInstance<CareerCandidateDefinition>();
+            var recommendation = ScriptableObject.CreateInstance<CareerInterestStaticRecommendation>();
+            var interest = ScriptableObject.CreateInstance<CareerInterestDefinition>();
+            var player = new GameObject("CareerInterestObjectivePlayer");
+
+            try
+            {
+                candidate.ConfigureForTests("candidate.learning", "candidate.learning", "desc.candidate.learning", null, null, new[] { "candidate.route.study" }, null, null, null, 1, 2, 3);
+                recommendation.ConfigureForTests(new[] { "action.visit-library" });
+                interest.ConfigureForTests("interest.learning", "Learning Interest", "desc.interest.learning", candidate, null, null, null, null, new CareerInterestRecommendationBase[] { recommendation }, null);
+
+                var student = player.AddComponent<StudentLifeProgressComponent>();
+                student.ConfigureForTests("career-interest-slot", "player", 10, 10, 0, 8 * 60);
+                var candidates = player.AddComponent<CareerCandidateProgressComponent>();
+                candidates.Bind(new[] { candidate }, Array.Empty<CareerHintDefinition>());
+                var interests = player.AddComponent<CareerInterestProgressComponent>();
+                interests.Bind(new[] { interest });
+                Assert.IsTrue(interests.Progress.TrySelect(interest, candidates.Progress, student.Progress, student.Progress.CurrentDay, "test-select").Applied);
+
+                var items = BuildItemsFromSource("CareerInterestObjectiveSource", player, null);
+
+                Assert.AreEqual(1, items.Length);
+                Assert.AreEqual("Hints", items[0].CategoryId);
+                Assert.AreEqual("Selected", items[0].State);
+                Assert.IsTrue(items[0].IsTracked);
+                StringAssert.Contains("interest.learning", items[0].StableKey);
+                StringAssert.Contains("action.visit-library", items[0].NextHintText);
+                StringAssert.Contains("candidate.route.study", items[0].NextHintText);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(player);
+                UnityEngine.Object.DestroyImmediate(candidate);
+                UnityEngine.Object.DestroyImmediate(recommendation);
+                UnityEngine.Object.DestroyImmediate(interest);
+            }
+        }
+
         private static ObjectiveJournalItem[] BuildItemsFromSource(string nestedSourceTypeName, GameObject player, GameDataRegistry registry)
         {
             var sourceType = typeof(ObjectiveJournalRuntimeProvider).GetNestedType(nestedSourceTypeName, BindingFlags.NonPublic);

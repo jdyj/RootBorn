@@ -12,6 +12,7 @@ using Rootborn.Game.Quests.Rewards;
 using Rootborn.Game.Save;
 using Rootborn.Game.StudentLife;
 using Rootborn.UI.MainMenu;
+using Rootborn.UI.Objectives;
 using Rootborn.UI.Quests;
 using Rootborn.UI.StudentLife;
 using UnityEngine;
@@ -27,6 +28,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
     public sealed class CareerInterestSelectionLoopE2EScenarioTests : InputTestFixture
     {
         private const string TestSlotId = "slot-0";
+        private const string ObjectiveJournalScreenshotPath = "Builds/Logs/career-interest-objective-journal-e2e.png";
         private string _saveRoot;
 
         [UnitySetUp]
@@ -69,11 +71,15 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
+            yield return null;
+            var creator = GameObject.Find("SpumCharacterCreatorPanel");
+            if (creator != null) yield return ClickButton(FindButton(creator.transform, "ConfirmButton"));
             yield return WaitForScene("Town", 10f, "CAREER-INTEREST-E2E-001 failed: SaveSlot New Game did not enter Town.");
             StudentDayRuntimeInstaller.EnsureForActiveScene();
             LocationNpcRuntimeInstaller.EnsureForActiveScene();
             CareerInterestRuntimeInstaller.EnsureForActiveScene();
             yield return WaitForRuntime(10f);
+            AssertNoLegacyCareerInterestHudObjects();
 
             data.AttachReward(FindRegistryRewardItem());
             var runtime = FindRuntime();
@@ -83,8 +89,10 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var interestComponent = runtime.Player.GetComponent<CareerInterestProgressComponent>();
             if (interestComponent == null) interestComponent = runtime.Player.AddComponent<CareerInterestProgressComponent>();
             interestComponent.Bind(data.Interests);
+            var provider = Object.FindFirstObjectByType<ObjectiveJournalRuntimeProvider>(FindObjectsInactive.Include);
+            Assert.IsNotNull(provider, "CAREER-INTEREST-E2E-007 failed: Objective Journal provider missing.");
+            provider.RefreshNow();
             var interestPanel = CareerInterestPanel.EnsureInScene(EnsureCanvas());
-            var interestHud = CareerInterestHudWidget.EnsureInScene(EnsureCanvas());
             var openButton = MakeCareerInterestButton(EnsureCanvas(), () => interestPanel.Show(data.Interests, interestComponent, candidateComponent.Progress, runtime.Student.Progress, runtime.Student.Progress.CurrentDay));
             var library = RequireObject(LocationNpcRuntimeInstaller.LocationObjectName("location.library"), "CAREER-INTEREST-E2E-002 failed: library location object missing.");
             var locationPanel = Object.FindFirstObjectByType<LocationIdentityPanel>(FindObjectsInactive.Include);
@@ -105,6 +113,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return ClickButton(openButton);
             Assert.IsTrue(interestPanel.IsOpen, "CAREER-INTEREST-E2E-005 failed: career interest UI did not open from actual UI button.");
             yield return ClickButton(FindButton(interestPanel.transform, "InterestButton_0"));
+            provider.RefreshNow();
             Assert.AreEqual("interest.learning", interestComponent.Progress.CurrentInterestId, "CAREER-INTEREST-E2E-006 failed: interest was not selected through UI button.");
             yield return ClickButton(FindButton(interestPanel.transform, "InterestButton_1"));
             Assert.AreEqual("interest.learning", interestComponent.Progress.CurrentInterestId, "CAREER-INTEREST-E2E-015 failed: same-day change limit allowed a second interest selection through UI.");
@@ -112,9 +121,19 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return ClickButton(FindButton(interestPanel.transform, "InterestButton_0"));
             AssertPanelContains(interestPanel.transform, "Selected", "CAREER-INTEREST-E2E-006 failed: interest panel did not show selected state.");
             AssertPanelContains(interestPanel.transform, "action.visit-library", "CAREER-INTEREST-E2E-007 failed: interest panel did not show recommended next action.");
-            interestHud.Refresh(data.Interests, interestComponent.Progress, candidateComponent.Progress, runtime.Student.Progress, runtime.Student.Progress.CurrentDay);
-            AssertPanelContains(interestHud.transform, "interest.learning", "CAREER-INTEREST-E2E-007 failed: interest HUD omitted selected interest.");
-            AssertPanelContains(interestHud.transform, "action.visit-library", "CAREER-INTEREST-E2E-007 failed: interest HUD omitted recommended next action.");
+            provider.RefreshNow();
+            yield return PressTab(keyboard);
+            Assert.IsTrue(provider.Panel.IsVisible, "CAREER-INTEREST-E2E-007 failed: actual Tab input did not open Objective Journal.");
+            yield return ClickButton(FindButton(provider.Panel.transform, "ObjectiveCategory_Hints"));
+            yield return ClickButton(FindButtonContaining(provider.Panel.transform, "ObjectiveRow_", "interest.learning"));
+            StringAssert.Contains("interest.learning", provider.Panel.VisibleText, "CAREER-INTEREST-E2E-007 failed: Objective Journal omitted selected interest.");
+            StringAssert.Contains("action.visit-library", provider.Panel.VisibleText, "CAREER-INTEREST-E2E-007 failed: Objective Journal omitted recommended next action.");
+            yield return ClickButton(FindButton(provider.Panel.transform, "ObjectiveTrackButton"));
+            Assert.IsTrue(provider.TrackedHud.IsVisible, "CAREER-INTEREST-E2E-007 failed: Track click did not update TrackedObjectiveHud.");
+            StringAssert.Contains("interest.learning", provider.TrackedHud.VisibleText, "CAREER-INTEREST-E2E-007 failed: tracked HUD omitted selected interest.");
+            StringAssert.Contains("action.visit-library", provider.TrackedHud.VisibleText, "CAREER-INTEREST-E2E-007 failed: tracked HUD omitted recommended next action.");
+            yield return CaptureScreenshot(ObjectiveJournalScreenshotPath);
+            yield return PressTab(keyboard);
 
             string interestFile = Path.Combine(_saveRoot, TestSlotId, "career-interest-progress.json");
             Assert.IsTrue(File.Exists(interestFile), "CAREER-INTEREST-E2E-008 failed: interest selection did not save through slot file.");
@@ -129,6 +148,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return ClickButton(FindButton(interestPanel.transform, "CloseButton"));
             yield return ClickButton(FindButton(locationPanel.transform, "LocationActivityButton_0"));
             yield return null;
+            provider.RefreshNow();
             Assert.AreEqual(LifeActivityResultKind.Applied, locationPanel.LastResult.Kind, "CAREER-INTEREST-E2E-012 failed: actual location button did not apply after interest selection.");
             Assert.AreEqual(QuestState.Active, questPanel.QuestLog.GetState(data.InterestQuest), "CAREER-INTEREST-E2E-012 failed: partial linked quest progress should remain active.");
             Assert.AreEqual(1, questPanel.QuestLog.GetObjectiveCount(data.InterestQuest, 0), "CAREER-INTEREST-E2E-012 failed: actual location activity did not advance linked quest to 1/2.");
@@ -158,6 +178,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             LocationNpcRuntimeInstaller.EnsureForActiveScene();
             CareerInterestRuntimeInstaller.EnsureForActiveScene();
             yield return WaitForRuntime(10f);
+            AssertNoLegacyCareerInterestHudObjects();
 
             var reloaded = FindRuntime();
             var reloadedCandidate = reloaded.Player.GetComponent<CareerCandidateProgressComponent>();
@@ -167,6 +188,16 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             if (reloadedInterest == null) reloadedInterest = reloaded.Player.AddComponent<CareerInterestProgressComponent>();
             reloadedInterest.Bind(data.Interests);
             Assert.AreEqual("interest.learning", reloadedInterest.Progress.CurrentInterestId, "CAREER-INTEREST-E2E-010 failed: selected interest did not survive save/load.");
+
+            var reloadedProvider = Object.FindFirstObjectByType<ObjectiveJournalRuntimeProvider>(FindObjectsInactive.Include);
+            reloadedProvider.RefreshNow();
+            yield return PressTab(keyboard);
+            yield return ClickButton(FindButton(reloadedProvider.Panel.transform, "ObjectiveCategory_Hints"));
+            yield return ClickButton(FindButtonContaining(reloadedProvider.Panel.transform, "ObjectiveRow_", "interest.learning"));
+            StringAssert.Contains("interest.learning", reloadedProvider.Panel.VisibleText, "CAREER-INTEREST-E2E-010 failed: reloaded Objective Journal omitted selected interest.");
+            Assert.IsTrue(reloadedProvider.TrackedHud.IsVisible, "CAREER-INTEREST-E2E-010 failed: tracked career interest was not restored after reload.");
+            StringAssert.Contains("interest.learning", reloadedProvider.TrackedHud.VisibleText, "CAREER-INTEREST-E2E-010 failed: restored tracked HUD omitted selected interest.");
+            yield return PressTab(keyboard);
 
             var reloadedInterestPanel = CareerInterestPanel.EnsureInScene(EnsureCanvas());
             var reloadedOpenButton = MakeCareerInterestButton(EnsureCanvas(), () => reloadedInterestPanel.Show(data.Interests, reloadedInterest, reloadedCandidate.Progress, reloaded.Student.Progress, reloaded.Student.Progress.CurrentDay));
@@ -211,6 +242,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             LocationNpcRuntimeInstaller.EnsureForActiveScene();
             CareerInterestRuntimeInstaller.EnsureForActiveScene();
             yield return WaitForRuntime(10f);
+            AssertNoLegacyCareerInterestHudObjects();
 
             var claimedReload = FindRuntime();
             var claimedInterest = claimedReload.Player.GetComponent<CareerInterestProgressComponent>();
@@ -244,11 +276,14 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 var dayEnd = GameObject.Find("StudentDayEndBoard");
                 var panel = Object.FindFirstObjectByType<LocationIdentityPanel>(FindObjectsInactive.Include);
                 var questPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
-                if (player != null && player.GetComponent<PlayerController>() != null && player.GetComponent<PlayerInteractionRouter>() != null && player.GetComponent<PlayerInventory>() != null && player.GetComponent<StudentLifeProgressComponent>() != null && library != null && library.GetComponent<LocationActivityInteractor>() != null && dayEnd != null && dayEnd.GetComponent<StudentDayEndInteractor>() != null && panel != null && questPanel != null && questPanel.QuestLog != null && EventSystem.current != null) yield break;
+                var journal = Object.FindFirstObjectByType<ObjectiveJournalPanel>(FindObjectsInactive.Include);
+                var provider = Object.FindFirstObjectByType<ObjectiveJournalRuntimeProvider>(FindObjectsInactive.Include);
+                var trackedHud = Object.FindFirstObjectByType<TrackedObjectiveHud>(FindObjectsInactive.Include);
+                if (player != null && player.GetComponent<PlayerController>() != null && player.GetComponent<PlayerInteractionRouter>() != null && player.GetComponent<PlayerInventory>() != null && player.GetComponent<StudentLifeProgressComponent>() != null && library != null && library.GetComponent<LocationActivityInteractor>() != null && dayEnd != null && dayEnd.GetComponent<StudentDayEndInteractor>() != null && panel != null && questPanel != null && questPanel.QuestLog != null && journal != null && provider != null && trackedHud != null && EventSystem.current != null) yield break;
                 elapsed += Time.unscaledDeltaTime;
                 yield return null;
             }
-            Assert.Fail("CAREER-INTEREST-E2E runtime did not expose player, library, day-end point, QuestLog, and UI within timeout.");
+            Assert.Fail("CAREER-INTEREST-E2E runtime did not expose player, library, day-end point, QuestLog, Objective Journal, tracked HUD, and UI within timeout.");
         }
 
         private static RuntimeState FindRuntime()
@@ -327,6 +362,17 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
+        private IEnumerator PressTab(Keyboard keyboard)
+        {
+            Press(keyboard.tabKey);
+            InputSystem.Update();
+            yield return null;
+            yield return new WaitForFixedUpdate();
+            Release(keyboard.tabKey);
+            InputSystem.Update();
+            yield return null;
+        }
+
         private static IEnumerator LoadScene(string sceneName)
         {
             var op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
@@ -360,6 +406,22 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
+        private static IEnumerator CaptureScreenshot(string relativePath)
+        {
+            string absolutePath = Path.GetFullPath(relativePath);
+            string directory = Path.GetDirectoryName(absolutePath);
+            if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
+            if (File.Exists(absolutePath)) File.Delete(absolutePath);
+            ScreenCapture.CaptureScreenshot(relativePath);
+            float elapsed = 0f;
+            while (!File.Exists(absolutePath) && elapsed < 3f)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                yield return null;
+            }
+            Assert.IsTrue(File.Exists(absolutePath), "CAREER-INTEREST-E2E failed: screenshot evidence was not written: " + absolutePath);
+        }
+
         private static Button FindButton(string cardName, string buttonName)
         {
             var card = GameObject.Find(cardName);
@@ -374,6 +436,24 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var button = child.GetComponent<Button>();
             Assert.IsNotNull(button, name + " does not have Button component.");
             return button;
+        }
+
+        private static Button FindButtonContaining(Transform root, string namePrefix, string expectedText)
+        {
+            var buttons = root.GetComponentsInChildren<Button>(true);
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                var button = buttons[i];
+                if (button == null || !button.name.StartsWith(namePrefix, System.StringComparison.Ordinal)) continue;
+                var texts = button.GetComponentsInChildren<Text>(true);
+                for (int j = 0; j < texts.Length; j++)
+                {
+                    if (texts[j] != null && !string.IsNullOrEmpty(texts[j].text) && texts[j].text.Contains(expectedText)) return button;
+                }
+            }
+
+            Assert.Fail("UI button containing text missing: " + expectedText);
+            return null;
         }
 
         private static Transform FindChild(Transform root, string name)
@@ -447,6 +527,18 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             }
             Assert.Fail("CAREER-INTEREST-E2E-013 setup failed: registry has no reward item.");
             return null;
+        }
+
+        private static void AssertNoLegacyCareerInterestHudObjects()
+        {
+            var objects = Object.FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            for (int i = 0; i < objects.Length; i++)
+            {
+                var go = objects[i];
+                if (go == null) continue;
+                Assert.AreNotEqual("CareerInterestHudWidget", go.name, "CAREER-INTEREST-E2E failed: legacy CareerInterestHudWidget object should not exist.");
+                Assert.AreNotEqual("CareerInterestHudRoot", go.name, "CAREER-INTEREST-E2E failed: legacy CareerInterestHudRoot object should not exist.");
+            }
         }
 
         private static KeyControl ControlFor(Keyboard keyboard, Key key)
