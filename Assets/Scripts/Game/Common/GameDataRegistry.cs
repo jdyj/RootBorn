@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Rootborn.Game.Characters;
 using Rootborn.Game.Characters.Spum;
@@ -296,6 +296,7 @@ namespace Rootborn.Game.Common
         [SerializeField] private LocationDefinition[] _locations = Array.Empty<LocationDefinition>();
         [SerializeField] private LocationIdentityDefinition[] _locationIdentities = Array.Empty<LocationIdentityDefinition>();
         [SerializeField] private LocationActivityDefinition[] _locationActivities = Array.Empty<LocationActivityDefinition>();
+        [SerializeField] private DailyPlanRouteSetDefinition[] _dailyPlanRouteSets = Array.Empty<DailyPlanRouteSetDefinition>();
         [SerializeField] private ExplorationInteractionDefinition[] _explorationInteractions = Array.Empty<ExplorationInteractionDefinition>();
         [SerializeField] private ExplorationChoiceDefinition[] _explorationChoices = Array.Empty<ExplorationChoiceDefinition>();
         [SerializeField] private ExplorationConditionBase[] _explorationConditions = Array.Empty<ExplorationConditionBase>();
@@ -394,6 +395,7 @@ namespace Rootborn.Game.Common
         public LocationDefinition[] Locations => _locations;
         public LocationIdentityDefinition[] LocationIdentities => _locationIdentities;
         public LocationActivityDefinition[] LocationActivities => _locationActivities;
+        public DailyPlanRouteSetDefinition[] DailyPlanRouteSets => _dailyPlanRouteSets;
         public ExplorationInteractionDefinition[] ExplorationInteractions => _explorationInteractions;
         public ExplorationChoiceDefinition[] ExplorationChoices => _explorationChoices;
         public ExplorationConditionBase[] ExplorationConditions => _explorationConditions;

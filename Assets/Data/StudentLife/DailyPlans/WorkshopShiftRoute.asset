@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de7c95d014f124147aec20bce37318ba, type: 3}
+  m_Name: WorkshopShiftRoute
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.DailyPlanRouteDefinition
+  _id: daily.workshop.shift
+  _displayNameKey: daily.route.workshop.shift
+  _targetLocation: {fileID: 11400000, guid: 8256340ca6973cf47a485ef358a78792, type: 2}
+  _growthRoute: 2
+  _matchingActivities:
+  - {fileID: 11400000, guid: f137d0c0631cda840b1d16e38c8114f8, type: 2}
+  _requirements: []
+  _outcomes: []
+  _objectiveTitleKey: objective.daily.workshop.title
+  _objectiveDetailKey: objective.daily.workshop.detail
+  _nextHintKey: objective.daily.workshop.next
