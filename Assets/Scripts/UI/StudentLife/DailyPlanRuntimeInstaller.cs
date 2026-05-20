@@ -14,6 +14,7 @@ namespace Rootborn.UI.StudentLife
         private const string RunnerName = "[DailyPlanRuntimeInstaller]";
         private const string BoardName = "DailyPlanBoard";
         private const string PanelName = "DailyPlanPanel";
+        private const string CanvasName = "DailyPlanCanvas";
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Register()
@@ -46,9 +47,10 @@ namespace Rootborn.UI.StudentLife
 
         public static void EnsureSceneForTests(Scene scene, Canvas canvas, GameDataRegistry registry, GameObject player)
         {
-            var panel = EnsurePanel(scene, canvas);
+            var visibleCanvas = canvas != null ? canvas : EnsureCanvas(scene);
+            var panel = EnsurePanel(scene, visibleCanvas);
             var board = EnsureBoard(scene);
-            var daily = player != null ? player.GetComponent<DailyPlanProgressComponent>() : null;
+            var daily = EnsureDailyPlanProgress(player);
             var student = player != null ? player.GetComponent<StudentLifeProgressComponent>() : null;
             board.Bind(panel, registry != null ? registry.DailyPlanRouteSets : System.Array.Empty<DailyPlanRouteSetDefinition>(), daily, student);
         }
@@ -76,6 +78,30 @@ namespace Rootborn.UI.StudentLife
                 var registry = Managers.Data != null ? Managers.Data.Registry : null;
                 EnsureSceneForTests(scene, canvas, registry, player);
             }
+        }
+
+        private static DailyPlanProgressComponent EnsureDailyPlanProgress(GameObject player)
+        {
+            if (player == null) return null;
+            var daily = player.GetComponent<DailyPlanProgressComponent>();
+            if (daily == null) daily = player.AddComponent<DailyPlanProgressComponent>();
+            return daily;
+        }
+
+        private static Canvas EnsureCanvas(Scene scene)
+        {
+            var existing = FindComponentInScene<Canvas>(scene);
+            if (existing != null) return existing;
+
+            var go = new GameObject(CanvasName, typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            SceneManager.MoveGameObjectToScene(go, scene);
+            var canvas = go.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            var scaler = go.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920f, 1080f);
+            scaler.matchWidthOrHeight = 0.5f;
+            return canvas;
         }
 
         private static DailyPlanPanel EnsurePanel(Scene scene, Canvas canvas)

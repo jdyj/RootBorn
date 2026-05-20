@@ -58,7 +58,7 @@ namespace Rootborn.Game.StudentLife
         public bool CompleteRoute(DailyPlanRouteDefinition route, LocationActivityDefinition activity, string requestKey)
         {
             if (route == null || activity == null || string.IsNullOrEmpty(requestKey)) return false;
-            if (SelectedRouteId != route.Id || _appliedCompletionKeys.Contains(requestKey)) return false;
+            if (SelectedRouteId != route.Id || CompletedRouteId == route.Id || _appliedCompletionKeys.Contains(requestKey)) return false;
 
             CompletedRouteId = route.Id;
             MatchedActivityId = activity.Id;

@@ -60,10 +60,13 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         {
             var keyboard = InputSystem.AddDevice<Keyboard>();
 
+            yield return LoadScene("MainMenu");
+            EnsurePassiveEventSystem();
             SaveSlotSelectPanel.EnsureInScene().Show();
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
+            yield return ClickButton(FindButton(GameObject.Find("SpumCharacterCreatorRoot").transform, "ConfirmButton"));
             yield return WaitForScene("Town", 10f, "STUDENT-DAY-E2E-001 failed: SaveSlot New Game did not enter Town.");
             yield return WaitForDayRuntime(10f);
             // Keep Unity InputSystem UI module test-environment exceptions from failing this end-to-end path; assertions below verify the gameplay contract.

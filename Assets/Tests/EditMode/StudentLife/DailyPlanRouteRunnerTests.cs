@@ -179,6 +179,33 @@ namespace Rootborn.Tests.EditMode.StudentLife
         }
 
         [Test]
+        public void CompletionWithDifferentRequestAfterRouteCompleted_DoesNotDuplicate()
+        {
+            var location = CreateLocation("library", "location.library");
+            var activity = CreateActivity(
+                "activity.library.read",
+                "activity.library.read",
+                location,
+                LocationGrowthRoute.SelfStudy);
+            var route = CreateRoute(
+                "daily.library.self-study",
+                "daily.route.library",
+                location,
+                LocationGrowthRoute.SelfStudy);
+            var set = ScriptableObject.CreateInstance<DailyPlanRouteSetDefinition>();
+            set.ConfigureForTests("daily.default", "daily.default", new[] { route }, 1);
+            var student = CreateProgress();
+            var daily = new DailyPlanProgress("slot-a", "player-a", 1);
+            var runner = new DailyPlanRouteRunner();
+
+            runner.TrySelectRoute(daily, route, student);
+            Assert.That(runner.TryRecordActivity(daily, new[] { set }, activity, student, "request-1", out _), Is.True);
+            Assert.That(runner.TryRecordActivity(daily, new[] { set }, activity, student, "request-2", out _), Is.False);
+
+            Assert.That(daily.AppliedCompletionKeys, Is.EquivalentTo(new[] { "request-1" }));
+        }
+
+        [Test]
         public void SaveDataRoundTrip_PreservesCompletionWithoutReapply()
         {
             var progress = new DailyPlanProgress("slot-a", "player-a", 2);

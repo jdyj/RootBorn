@@ -63,6 +63,30 @@ namespace Rootborn.Tests.EditMode.UI.StudentLife
         }
 
         [Test]
+        public void RouteButton_Click_ClosesPanelAfterSelection()
+        {
+            var go = new GameObject("DailyPlanPanel", typeof(RectTransform));
+            var panel = go.AddComponent<DailyPlanPanel>();
+            string runId = System.Guid.NewGuid().ToString("N");
+            var progressGo = new GameObject("Progress");
+            var daily = progressGo.AddComponent<DailyPlanProgressComponent>();
+            daily.Load("slot-close-" + runId, "player-close", 1);
+            var studentGo = new GameObject("Student");
+            var student = studentGo.AddComponent<StudentLifeProgressComponent>();
+            student.ConfigureForTests("slot-close-" + runId, "player-close", 100, 100, 0, 8 * 60);
+            var route = CreateRoute("daily.library.close-check." + runId, "daily.route.library");
+            go.SetActive(true);
+
+            panel.Bind(new[] { route }, daily, student);
+            panel.GetRouteButtonForTests(0).onClick.Invoke();
+
+            Assert.That(go.activeSelf, Is.False);
+            Object.DestroyImmediate(go);
+            Object.DestroyImmediate(progressGo);
+            Object.DestroyImmediate(studentGo);
+        }
+
+        [Test]
         public void BoardInteractor_TryInteract_OpensPanel()
         {
             var panelGo = new GameObject("DailyPlanPanel");

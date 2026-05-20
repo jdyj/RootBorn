@@ -49,9 +49,9 @@ namespace Rootborn.UI.StudentLife
                 var selectedRoute = route;
                 button.onClick.AddListener(() =>
                 {
-                    if (progressComponent != null && studentProgressComponent != null)
+                    if (progressComponent != null && studentProgressComponent != null && progressComponent.TrySelect(selectedRoute, studentProgressComponent.Progress))
                     {
-                        progressComponent.TrySelect(selectedRoute, studentProgressComponent.Progress);
+                        gameObject.SetActive(false);
                     }
                 });
             }

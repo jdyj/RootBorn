@@ -38,6 +38,61 @@ namespace Rootborn.Tests.EditMode.UI.StudentLife
                 DestroyByName("DailyPlanInstallerTestCanvas");
                 DestroyByName("DailyPlanInstallerTestPlayer");
                 DestroyByName("DailyPlanBoard");
+                DestroyByName("DailyPlanPanel");
+            }
+        }
+
+        [Test]
+        public void EnsureSceneForTests_AddsDailyPlanProgressComponentToRuntimePlayer()
+        {
+            var scene = SceneManager.GetActiveScene();
+            var canvasGo = new GameObject("DailyPlanInstallerTestCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            SceneManager.MoveGameObjectToScene(canvasGo, scene);
+            var player = new GameObject("DailyPlanInstallerTestPlayer", typeof(StudentLifeProgressComponent));
+            player.GetComponent<StudentLifeProgressComponent>().ConfigureForTests("slot-a", "player-a", 100, 100, 0, 8 * 60);
+            SceneManager.MoveGameObjectToScene(player, scene);
+            var registry = AssetDatabase.LoadAssetAtPath<GameDataRegistry>("Assets/Data/Registry/GameDataRegistry.asset");
+
+            try
+            {
+                DailyPlanRuntimeInstaller.EnsureSceneForTests(scene, canvasGo.GetComponent<Canvas>(), registry, player);
+
+                Assert.IsNotNull(player.GetComponent<DailyPlanProgressComponent>(), "Town runtime installer must attach DailyPlanProgressComponent so player-facing board selection can persist.");
+            }
+            finally
+            {
+                DestroyByName("DailyPlanInstallerTestCanvas");
+                DestroyByName("DailyPlanInstallerTestPlayer");
+                DestroyByName("DailyPlanBoard");
+                DestroyByName("DailyPlanPanel");
+            }
+        }
+
+        [Test]
+        public void EnsureSceneForTests_CreatesCanvasWhenSceneHasNone()
+        {
+            var scene = SceneManager.GetActiveScene();
+            var beforeCanvases = CountComponents<Canvas>(scene);
+            var player = new GameObject("DailyPlanInstallerTestPlayer", typeof(StudentLifeProgressComponent));
+            player.GetComponent<StudentLifeProgressComponent>().ConfigureForTests("slot-a", "player-a", 100, 100, 0, 8 * 60);
+            SceneManager.MoveGameObjectToScene(player, scene);
+            var registry = AssetDatabase.LoadAssetAtPath<GameDataRegistry>("Assets/Data/Registry/GameDataRegistry.asset");
+
+            try
+            {
+                DailyPlanRuntimeInstaller.EnsureSceneForTests(scene, null, registry, player);
+
+                Assert.That(CountComponents<Canvas>(scene), Is.EqualTo(beforeCanvases + 1));
+                var panel = Object.FindFirstObjectByType<DailyPlanPanel>(FindObjectsInactive.Include);
+                Assert.IsNotNull(panel);
+                Assert.IsNotNull(panel.GetComponentInParent<Canvas>(), "Daily Plan panel must be under a Canvas for player-visible UI.");
+            }
+            finally
+            {
+                DestroyByName("DailyPlanInstallerTestPlayer");
+                DestroyByName("DailyPlanBoard");
+                DestroyByName("DailyPlanPanel");
+                DestroyByName("DailyPlanCanvas");
             }
         }
 
@@ -55,8 +110,12 @@ namespace Rootborn.Tests.EditMode.UI.StudentLife
 
         private static void DestroyByName(string objectName)
         {
-            var go = GameObject.Find(objectName);
-            if (go != null) Object.DestroyImmediate(go);
+            var transforms = Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            for (int i = transforms.Length - 1; i >= 0; i--)
+            {
+                var transform = transforms[i];
+                if (transform != null && transform.name == objectName) Object.DestroyImmediate(transform.gameObject);
+            }
         }
     }
 }
