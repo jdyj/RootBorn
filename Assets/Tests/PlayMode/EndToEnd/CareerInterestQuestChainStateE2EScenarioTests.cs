@@ -23,8 +23,10 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
     public sealed class CareerInterestQuestChainStateE2EScenarioTests : InputTestFixture
     {
         private const string TestSlotId = "slot-0";
+        private const string LibraryChainId = "questchain.test.career-interest.library";
         private const string BlockedChainId = "questchain.test.career-interest.blocked-library-access";
         private const string BlockedChainCardName = "QuestChainCard_questchain_test_career_interest_blocked_library_access";
+        private const string QuestChainJournalScreenshotPath = "Builds/Logs/quest-chain-objective-journal-e2e.png";
         private string _saveRoot;
 
         [UnitySetUp]
@@ -66,7 +68,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
-            yield return WaitForScene("Town", 10f, "QUEST-CHAIN-E2E-001 failed: SaveSlot New Game did not enter Town.");
+            yield return ClickButton(FindButton("SpumCharacterCreatorPanel", "ConfirmButton"));
+            yield return WaitForScene("Town", 10f, "QUEST-CHAIN-E2E-001 failed: SaveSlot New Game and SPUM confirm did not enter Town.");
             StudentDayRuntimeInstaller.EnsureForActiveScene();
             LocationNpcRuntimeInstaller.EnsureForActiveScene();
             QuestChainRuntimeInstaller.EnsureForActiveScene();
@@ -78,17 +81,28 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var hud = Object.FindFirstObjectByType<TrackedObjectiveHud>(FindObjectsInactive.Include);
             Assert.IsNotNull(chainPanel, "QUEST-CHAIN-E2E-004 failed: quest chain log panel missing.");
             Assert.IsNotNull(hud, "QUEST-CHAIN-E2E-008 failed: tracked objective HUD missing.");
+            AssertNoLegacyQuestChainHudObjects();
 
             yield return ClickButton(FindButton("QuestChainLogOpenButton"));
-            AssertPanelContains(chainPanel.transform, "questchain.test.career-interest.library", "QUEST-CHAIN-E2E-004 failed: chain log did not show registry-authored test chain.");
+            AssertPanelContains(chainPanel.transform, LibraryChainId, "QUEST-CHAIN-E2E-004 failed: chain log did not show registry-authored test chain.");
             AssertPanelContains(chainPanel.transform, "Available", "QUEST-CHAIN-E2E-004 failed: chain did not start as Available in UI.");
 
             yield return ClickButton(FindButton(chainPanel.transform, "QuestChainAcceptButton"));
             AssertPanelContains(chainPanel.transform, "Active", "QUEST-CHAIN-E2E-005 failed: accept button did not make chain active.");
             yield return ClickButton(FindButton(chainPanel.transform, "QuestChainTrackButton"));
             AssertPanelContains(chainPanel.transform, "Tracked", "QUEST-CHAIN-E2E-005 failed: track button did not make chain tracked.");
-            AssertPanelContains(hud.transform, "questchain.test.career-interest.library", "QUEST-CHAIN-E2E-008 failed: tracked chain did not appear in HUD.");
-            AssertPanelContains(hud.transform, "0 / 1", "QUEST-CHAIN-E2E-008 failed: HUD did not show current objective progress.");
+            chainPanel.Hide();
+            yield return PressTab(keyboard);
+            var journal = Object.FindFirstObjectByType<ObjectiveJournalPanel>(FindObjectsInactive.Include);
+            Assert.IsNotNull(journal, "QUEST-CHAIN-E2E-008 failed: Objective Journal panel missing after Tab.");
+            Assert.IsTrue(journal.IsVisible, "QUEST-CHAIN-E2E-008 failed: Tab did not open Objective Journal.");
+            yield return ClickButton(FindButton("ObjectiveCategory_Quests"));
+            yield return null;
+            yield return ClickButton(FindButtonContaining(journal.transform, "ObjectiveRow_", LibraryChainId));
+            yield return WaitForObjectiveJournalText("0 / 1", 2f, "QUEST-CHAIN-E2E-008 failed: Objective Journal omitted quest-chain progress.");
+            yield return ClickButton(FindButton(journal.transform, "ObjectiveTrackButton"));
+            AssertPanelContains(hud.transform, LibraryChainId, "QUEST-CHAIN-E2E-008 failed: Objective Journal track button did not update single tracked HUD.");
+            yield return CaptureScreenshot(QuestChainJournalScreenshotPath);
 
             yield return WalkPlayerWithKeyboardTo(runtime.Player, keyboard, library.transform.position, 0.25f, "QUEST-CHAIN-E2E-002 failed: actual keyboard movement could not reach library.");
             runtime.Router.RefreshPromptNow();
@@ -100,12 +114,13 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
 
             AssertPanelContains(chainPanel.transform, "Completed", "QUEST-CHAIN-E2E-006 failed: actual location button did not complete the tracked chain.");
-            AssertPanelContains(hud.transform, "Completed", "QUEST-CHAIN-E2E-006 failed: HUD did not update after location progress.");
+            AssertPanelContains(hud.transform, "Claim rewards", "QUEST-CHAIN-E2E-006 failed: HUD did not update completion guidance after location progress.");
             string chainFile = Path.Combine(_saveRoot, TestSlotId, "quest-chain-progress.json");
             Assert.IsTrue(File.Exists(chainFile), "QUEST-CHAIN-E2E-012 failed: quest chain progress save file missing.");
-            StringAssert.Contains("questchain.test.career-interest.library", File.ReadAllText(chainFile), "QUEST-CHAIN-E2E-012 failed: save file omitted chain id.");
+            StringAssert.Contains(LibraryChainId, File.ReadAllText(chainFile), "QUEST-CHAIN-E2E-012 failed: save file omitted chain id.");
             StringAssert.Contains("Completed", File.ReadAllText(chainFile), "QUEST-CHAIN-E2E-012 failed: save file omitted completed state.");
 
+            yield return ClickButton(FindButton("QuestChainLogOpenButton"));
             yield return ClickButton(FindButton(chainPanel.transform, "QuestChainClaimRewardButton"));
             AssertPanelContains(chainPanel.transform, "Reward: Claimed", "QUEST-CHAIN-E2E-013 failed: actual claim button did not update reward claimed UI state.");
             string claimedJson = File.ReadAllText(chainFile);
@@ -118,7 +133,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return PressInteractKey(keyboard);
             yield return WaitForDayResultPanel(2f, "QUEST-CHAIN-E2E-011 failed: day result UI did not open from actual day-end interaction.");
             var resultPanel = Object.FindFirstObjectByType<StudentDayResultPanel>(FindObjectsInactive.Include);
-            AssertPanelContains(resultPanel.transform, "questchain.test.career-interest.library", "QUEST-CHAIN-E2E-011 failed: day result UI omitted quest chain summary.");
+            AssertPanelContains(resultPanel.transform, LibraryChainId, "QUEST-CHAIN-E2E-011 failed: day result UI omitted quest chain summary.");
             AssertPanelContains(resultPanel.transform, "Completed", "QUEST-CHAIN-E2E-011 failed: day result UI omitted quest chain completed state.");
 
             ActiveSaveContext.Clear();
@@ -136,11 +151,20 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return WaitForQuestChainRuntime(10f);
 
             var reloadedPanel = Object.FindFirstObjectByType<QuestChainLogPanel>(FindObjectsInactive.Include);
+            var reloadedHud = Object.FindFirstObjectByType<TrackedObjectiveHud>(FindObjectsInactive.Include);
             yield return ClickButton(FindButton("QuestChainLogOpenButton"));
             AssertPanelContains(reloadedPanel.transform, "Completed", "QUEST-CHAIN-E2E-012 failed: completed chain state did not restore after save/load.");
             AssertPanelContains(reloadedPanel.transform, "Reward: Claimed", "QUEST-CHAIN-E2E-013 failed: reward claimed state did not restore after save/load.");
             Assert.IsFalse(FindButton(reloadedPanel.transform, "QuestChainClaimRewardButton").interactable, "QUEST-CHAIN-E2E-013 failed: reward became claimable again after save/load.");
-            AssertPanelContains(reloadedPanel.transform, "questchain.test.career-interest.library", "QUEST-CHAIN-E2E-014 failed: SO-only registered test chain did not reload through actual UI path.");
+            AssertPanelContains(reloadedPanel.transform, LibraryChainId, "QUEST-CHAIN-E2E-014 failed: SO-only registered test chain did not reload through actual UI path.");
+            AssertPanelContains(reloadedHud.transform, LibraryChainId, "QUEST-CHAIN-E2E-014 failed: tracked objective HUD did not restore quest-chain tracking after save/load.");
+            yield return PressTab(keyboard);
+            yield return ClickButton(FindButton("ObjectiveCategory_Quests"));
+            yield return null;
+            var reloadedJournal = Object.FindFirstObjectByType<ObjectiveJournalPanel>(FindObjectsInactive.Include);
+            yield return ClickButton(FindButtonContaining(reloadedJournal.transform, "ObjectiveRow_", LibraryChainId));
+            yield return WaitForObjectiveJournalText("Completed", 2f, "QUEST-CHAIN-E2E-014 failed: Objective Journal did not restore completed quest-chain state after save/load.");
+            AssertNoLegacyQuestChainHudObjects();
         }
 
         [UnityTest]
@@ -152,7 +176,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
-            yield return WaitForScene("Town", 10f, "QUEST-CHAIN-E2E-009 failed: SaveSlot New Game did not enter Town.");
+            yield return ClickButton(FindButton("SpumCharacterCreatorPanel", "ConfirmButton"));
+            yield return WaitForScene("Town", 10f, "QUEST-CHAIN-E2E-009 failed: SaveSlot New Game and SPUM confirm did not enter Town.");
             StudentDayRuntimeInstaller.EnsureForActiveScene();
             LocationNpcRuntimeInstaller.EnsureForActiveScene();
             QuestChainRuntimeInstaller.EnsureForActiveScene();
@@ -197,14 +222,15 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 var dayEnd = GameObject.Find("StudentDayEndBoard");
                 var locationPanel = Object.FindFirstObjectByType<LocationIdentityPanel>(FindObjectsInactive.Include);
                 var chainPanel = Object.FindFirstObjectByType<QuestChainLogPanel>(FindObjectsInactive.Include);
+                var journal = Object.FindFirstObjectByType<ObjectiveJournalPanel>(FindObjectsInactive.Include);
                 var hud = Object.FindFirstObjectByType<TrackedObjectiveHud>(FindObjectsInactive.Include);
                 var openButton = GameObject.Find("QuestChainLogOpenButton");
-                if (player != null && player.GetComponent<PlayerController>() != null && player.GetComponent<PlayerInteractionRouter>() != null && player.GetComponent<StudentLifeProgressComponent>() != null && library != null && locationPanel != null && chainPanel != null && hud != null && openButton != null && dayEnd != null && EventSystem.current != null) yield break;
+                if (player != null && player.GetComponent<PlayerController>() != null && player.GetComponent<PlayerInteractionRouter>() != null && player.GetComponent<StudentLifeProgressComponent>() != null && library != null && locationPanel != null && chainPanel != null && journal != null && hud != null && openButton != null && dayEnd != null && EventSystem.current != null) yield break;
                 elapsed += Time.unscaledDeltaTime;
                 yield return null;
             }
 
-            Assert.Fail("QUEST-CHAIN-E2E runtime did not expose player, library, day-end point, quest chain UI, and open button within timeout.");
+            Assert.Fail("QUEST-CHAIN-E2E runtime did not expose player, library, day-end point, quest chain UI, Objective Journal, and open button within timeout.");
         }
 
         private static RuntimeState FindRuntime()
@@ -249,6 +275,19 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.Fail(failure);
         }
 
+        private static IEnumerator WaitForObjectiveJournalText(string expected, float timeoutSeconds, string failure)
+        {
+            float elapsed = 0f;
+            while (elapsed < timeoutSeconds)
+            {
+                var journal = Object.FindFirstObjectByType<ObjectiveJournalPanel>(FindObjectsInactive.Include);
+                if (journal != null && journal.IsVisible && journal.VisibleText.Contains(expected)) yield break;
+                elapsed += Time.unscaledDeltaTime;
+                yield return null;
+            }
+            Assert.Fail(failure);
+        }
+
         private IEnumerator WalkPlayerWithKeyboardTo(GameObject player, Keyboard keyboard, Vector3 targetPosition, float tolerance, string failure)
         {
             Key activeKey = Key.None;
@@ -283,6 +322,17 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
+        private IEnumerator PressTab(Keyboard keyboard)
+        {
+            Press(keyboard.tabKey);
+            InputSystem.Update();
+            yield return null;
+            yield return new WaitForFixedUpdate();
+            Release(keyboard.tabKey);
+            InputSystem.Update();
+            yield return null;
+        }
+
         private static IEnumerator LoadScene(string sceneName)
         {
             var op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
@@ -310,6 +360,22 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
+        private static IEnumerator CaptureScreenshot(string relativePath)
+        {
+            string absolutePath = Path.GetFullPath(relativePath);
+            string directory = Path.GetDirectoryName(absolutePath);
+            if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
+            if (File.Exists(absolutePath)) File.Delete(absolutePath);
+            ScreenCapture.CaptureScreenshot(relativePath);
+            float elapsed = 0f;
+            while (!File.Exists(absolutePath) && elapsed < 3f)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                yield return null;
+            }
+            Assert.IsTrue(File.Exists(absolutePath), "QUEST-CHAIN-E2E failed: screenshot evidence was not written: " + absolutePath);
+        }
+
         private static Button FindButton(string name)
         {
             var go = GameObject.Find(name);
@@ -335,6 +401,24 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             return button;
         }
 
+        private static Button FindButtonContaining(Transform root, string namePrefix, string expectedText)
+        {
+            var buttons = root.GetComponentsInChildren<Button>(true);
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                var button = buttons[i];
+                if (button == null || !button.name.StartsWith(namePrefix, System.StringComparison.Ordinal)) continue;
+                var texts = button.GetComponentsInChildren<Text>(true);
+                for (int j = 0; j < texts.Length; j++)
+                {
+                    if (texts[j] != null && !string.IsNullOrEmpty(texts[j].text) && texts[j].text.Contains(expectedText)) return button;
+                }
+            }
+
+            Assert.Fail("UI button containing text missing: " + expectedText);
+            return null;
+        }
+
         private static Transform FindChild(Transform root, string name)
         {
             if (root.name == name) return root;
@@ -356,6 +440,18 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 if (!string.IsNullOrEmpty(texts[i].text) && texts[i].text.Contains(expected)) return;
             }
             Assert.Fail(message + " Expected '" + expected + "' in text: " + string.Join(" | ", all));
+        }
+
+        private static void AssertNoLegacyQuestChainHudObjects()
+        {
+            var objects = Object.FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            for (int i = 0; i < objects.Length; i++)
+            {
+                var go = objects[i];
+                if (go == null) continue;
+                Assert.AreNotEqual("QuestChainHudWidget", go.name, "QUEST-CHAIN-E2E failed: legacy QuestChainHudWidget object should not exist.");
+                Assert.AreNotEqual("QuestChainHudRoot", go.name, "QUEST-CHAIN-E2E failed: legacy QuestChainHudRoot object should not exist.");
+            }
         }
 
         private static KeyControl ControlFor(Keyboard keyboard, Key key)

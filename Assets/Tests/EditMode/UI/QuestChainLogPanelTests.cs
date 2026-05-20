@@ -41,35 +41,6 @@ namespace Rootborn.Tests.EditMode.UI
         }
 
         [Test]
-        public void QUEST_CHAIN_EDIT_010_HudWidgetShowsOnlyOneTrackedChainCurrentObjective()
-        {
-            var canvasGo = new GameObject("quest-chain-hud-canvas", typeof(Canvas));
-            try
-            {
-                var learning = CreateChain("chain.learning", "career.learning", CreateAnyEventObjective(2));
-                var service = CreateChain("chain.service", "career.service", CreateAnyEventObjective(1));
-                var log = new QuestChainLog(new ScriptableObject[] { learning, service });
-                log.EvaluateAvailability(learning, default);
-                log.EvaluateAvailability(service, default);
-                log.Accept(learning);
-                log.Track(learning);
-                log.Accept(service);
-
-                var hud = QuestChainHudWidget.EnsureInScene(canvasGo.GetComponent<Canvas>());
-                hud.Refresh(new[] { learning, service }, log);
-
-                StringAssert.Contains("chain.learning", hud.VisibleText);
-                StringAssert.Contains("objective.any", hud.VisibleText);
-                StringAssert.Contains("0 / 2", hud.VisibleText);
-                StringAssert.DoesNotContain("chain.service", hud.VisibleText);
-            }
-            finally
-            {
-                Object.DestroyImmediate(canvasGo);
-            }
-        }
-
-        [Test]
         public void QUEST_CHAIN_EDIT_011_LogPanelClaimsCompletedChainRewardThroughButtonOnce()
         {
             var canvasGo = new GameObject("quest-chain-reward-canvas", typeof(Canvas));

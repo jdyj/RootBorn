@@ -62,8 +62,7 @@ namespace Rootborn.UI.Quests
             private QuestChainDefinition[] _chains;
             private QuestChainLog _log;
             private QuestChainLogPanel _panel;
-            private ObjectiveJournalPanel _journal;
-            private TrackedObjectiveHud _trackedHud;
+            private ObjectiveJournalRuntimeProvider _objectiveProvider;
             private StudentLifeProgressComponent _student;
             private PlayerInventory _playerInventory;
 
@@ -86,9 +85,7 @@ namespace Rootborn.UI.Quests
 
                 var canvas = EnsureCanvas(_scene);
                 ModernUiPanelAutoInstaller.InstallOnCanvas(canvas, ResolvePlayerInventory());
-                _journal = canvas.GetComponentInChildren<ObjectiveJournalPanel>(true);
-                _trackedHud = canvas.GetComponentInChildren<TrackedObjectiveHud>(true);
-                if (_journal != null) _journal.BindTrackedHud(_trackedHud);
+                _objectiveProvider = canvas.GetComponent<ObjectiveJournalRuntimeProvider>();
                 _panel = QuestChainLogPanel.EnsureInScene(canvas);
                 _panel.Bind(_chains, _log, SaveAndRefresh, ResolveRewardContext());
                 _panel.Hide();
@@ -153,34 +150,10 @@ namespace Rootborn.UI.Quests
 
             private void RefreshObjectiveJournal()
             {
-                if (_chains == null || _log == null || _journal == null) return;
-                var items = new ObjectiveJournalItem[_chains.Length];
-                ObjectiveJournalItem? tracked = null;
-                for (int i = 0; i < _chains.Length; i++)
+                if (_objectiveProvider != null)
                 {
-                    var chain = _chains[i];
-                    var state = chain != null ? _log.GetState(chain) : QuestChainState.Available;
-                    string objectiveProgress = chain != null ? BuildObjectiveSummary(chain) : string.Empty;
-                    string progress = string.IsNullOrEmpty(objectiveProgress) ? state.ToString() : state + " | " + objectiveProgress;
-                    bool isTracked = chain != null && _log.IsTracked(chain);
-                    var item = new ObjectiveJournalItem(
-                        chain != null ? chain.Id : "questchain.empty",
-                        "Quests",
-                        chain != null ? chain.Id : "Quest Chain",
-                        chain != null ? chain.RelatedCareerInterestId : string.Empty,
-                        state.ToString(),
-                        progress,
-                        state == QuestChainState.Completed ? "Claim rewards or review the next route" : "Open quest details or visit the related location",
-                        isTracked,
-                        chain != null ? chain.SortPriority : 0);
-                    items[i] = item;
-                    if (isTracked || (tracked == null && state == QuestChainState.Completed)) tracked = item;
+                    _objectiveProvider.RefreshNow();
                 }
-
-                _journal.SetItems("Quests", items);
-                if (_trackedHud == null) return;
-                if (tracked.HasValue) _trackedHud.Show(tracked.Value);
-                else _trackedHud.Hide();
             }
 
             private RewardRuntimeContext ResolveRewardContext()

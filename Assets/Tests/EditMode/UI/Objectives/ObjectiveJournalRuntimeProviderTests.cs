@@ -86,6 +86,55 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
         }
 
         [Test]
+        public void QuestChainObjectiveSource_DisplaysTrackedChainProgressAndNextAction()
+        {
+            var objective = ScriptableObject.CreateInstance<KeyedQuestObjective>();
+            objective.Configure("questchain.objective.help", 2, "help");
+            var step = ScriptableObject.CreateInstance<QuestStepDefinition>();
+            step.ConfigureForTests("questchain.step.help", "questchain.step.help", "questchain.step.help.desc", new QuestObjectiveBase[] { objective }, null, null, null, null);
+            var chain = ScriptableObject.CreateInstance<QuestChainDefinition>();
+            chain.ConfigureForTests(
+                "questchain.source.help",
+                "questchain.source.help",
+                "questchain.source.help.desc",
+                "career.helper",
+                new ScriptableObject[] { step },
+                null,
+                null,
+                null,
+                Array.Empty<QuestRewardBase>(),
+                7);
+
+            var canvasGo = new GameObject("QuestChainSourceCanvas", typeof(RectTransform), typeof(Canvas));
+            try
+            {
+                var log = new QuestChainLog(new ScriptableObject[] { chain });
+                Assert.IsTrue(log.Accept(chain));
+                Assert.IsTrue(log.Track(chain));
+                log.RecordEvent(new QuestEvent(QuestEventKind.LocationActivity, "help-1"));
+
+                var panel = QuestChainLogPanel.EnsureInScene(canvasGo.GetComponent<Canvas>());
+                panel.Bind(new[] { chain }, log, null, default);
+
+                var items = BuildItemsFromSource("QuestChainObjectiveSource", null, null);
+
+                Assert.AreEqual(1, items.Length);
+                Assert.AreEqual("Quests", items[0].CategoryId);
+                Assert.AreEqual("Tracked", items[0].State);
+                Assert.IsTrue(items[0].IsTracked);
+                StringAssert.Contains("questchain.objective.help 1 / 2", items[0].ProgressText);
+                StringAssert.Contains("questchain.objective.help", items[0].NextHintText);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(canvasGo);
+                UnityEngine.Object.DestroyImmediate(objective);
+                UnityEngine.Object.DestroyImmediate(step);
+                UnityEngine.Object.DestroyImmediate(chain);
+            }
+        }
+
+        [Test]
         public void CampaignObjectiveSource_DisplaysCurrentDaySelectedRouteCompletedObjectiveAndNextGuide()
         {
             var visitObjective = ScriptableObject.CreateInstance<CampaignActivityLogObjective>();

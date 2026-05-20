@@ -30,6 +30,8 @@ namespace Rootborn.UI.Quests
         private readonly Button[] _chainButtons = new Button[MaxVisibleChainCards];
         private readonly Text[] _chainButtonLabels = new Text[MaxVisibleChainCards];
 
+        public QuestChainDefinition[] Chains => _chains;
+        public QuestChainLog Log => _log;
         public string VisibleText => ((_careerText != null ? _careerText.text : string.Empty) + "\n" + (_stateText != null ? _stateText.text : string.Empty) + "\n" + (_listText != null ? _listText.text : string.Empty) + "\n" + (_detailText != null ? _detailText.text : string.Empty)).Trim();
 
         public static QuestChainLogPanel EnsureInScene(Canvas canvas)

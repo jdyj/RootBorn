@@ -27,7 +27,6 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
             // Reviewed legacy or non-always-visible surfaces. New objective-like HUD/Panel/Widget types must not be added here without design review.
             "Assets/Scripts/UI/Quests/QuestLogPanel.cs :: QuestLogPanel",
             "Assets/Scripts/UI/Quests/QuestChainLogPanel.cs :: QuestChainLogPanel",
-            "Assets/Scripts/UI/Quests/QuestChainHudWidget.cs :: QuestChainHudWidget",
             "Assets/Scripts/UI/StudentLife/CareerInterestPanel.cs :: CareerInterestPanel",
             "Assets/Scripts/UI/StudentLife/CareerInterestHudWidget.cs :: CareerInterestHudWidget"
         };
@@ -38,9 +37,6 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
             "Assets/Scripts/UI/Quests/QuestChainLogPanel.cs :: public static QuestChainLogPanel EnsureInScene(Canvas canvas)",
             "Assets/Scripts/UI/Quests/QuestChainLogPanel.cs :: var go = new GameObject(\"QuestChainLogPanel\", typeof(RectTransform));",
             "Assets/Scripts/UI/Quests/QuestChainLogPanel.cs :: _root = new GameObject(\"QuestChainLogRoot\", typeof(RectTransform), typeof(ModernUiTileImage));",
-            "Assets/Scripts/UI/Quests/QuestChainHudWidget.cs :: public static QuestChainHudWidget EnsureInScene(Canvas canvas)",
-            "Assets/Scripts/UI/Quests/QuestChainHudWidget.cs :: var go = new GameObject(\"QuestChainHudWidget\", typeof(RectTransform));",
-            "Assets/Scripts/UI/Quests/QuestChainHudWidget.cs :: _root = new GameObject(\"QuestChainHudRoot\", typeof(RectTransform), typeof(ModernUiTileImage));",
             "Assets/Scripts/UI/Quests/QuestChainRuntimeInstaller.cs :: _panel = QuestChainLogPanel.EnsureInScene(canvas);",
             "Assets/Scripts/UI/StudentLife/CareerInterestPanel.cs :: public static CareerInterestPanel EnsureInScene(Canvas canvas)",
             "Assets/Scripts/UI/StudentLife/CareerInterestRuntimeInstaller.cs :: _panel = CareerInterestPanel.EnsureInScene(canvas);",
