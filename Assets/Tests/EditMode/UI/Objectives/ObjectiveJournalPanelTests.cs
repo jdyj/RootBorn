@@ -59,7 +59,8 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
                 panel.Show();
                 panel.SelectCategory("Quests");
 
-                var secondRow = host.transform.Find("ObjectiveJournalRoot/ObjectiveList/ObjectiveRow_1");
+                var secondRow = host.transform.Find("ObjectiveJournalRoot/ObjectiveList/ObjectiveListViewport/ObjectiveListContent/ObjectiveRow_1")
+                    ?? host.transform.Find("ObjectiveJournalRoot/ObjectiveList/ObjectiveRow_1");
                 Assert.IsNotNull(secondRow, "Second objective row must be built.");
                 var button = secondRow.GetComponent<Button>();
                 Assert.IsNotNull(button, "Objective row must be a real Button so player UI click can select it.");
@@ -69,6 +70,152 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
                 StringAssert.Contains("Second Quest", panel.VisibleText);
                 StringAssert.Contains("Second detail", panel.VisibleText);
                 StringAssert.Contains("1 / 2", panel.VisibleText);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(host);
+            }
+        }
+
+        [Test]
+        public void ObjectiveJournalPanel_SelectedStableKeySurvivesRefreshReorder()
+        {
+            var host = new GameObject("ObjectiveJournalStableSelectionFixture", typeof(RectTransform));
+            try
+            {
+                var panel = host.AddComponent<ObjectiveJournalPanel>();
+                panel.SetItems("Quests", new[]
+                {
+                    new ObjectiveJournalItem("quest.alpha", "Quests", "Alpha Quest", "Alpha detail", "Active", "0 / 1", "Alpha next", false, 0),
+                    new ObjectiveJournalItem("quest.target", "Quests", "Target Quest", "Target detail", "Active", "1 / 2", "Target next", false, 1),
+                });
+                panel.Show();
+                panel.SelectCategory("Quests");
+                panel.SelectItem(1);
+
+                panel.SetItems("Quests", new[]
+                {
+                    new ObjectiveJournalItem("quest.target", "Quests", "Target Quest", "Target detail after refresh", "Active", "2 / 3", "Target next after refresh", false, 0),
+                    new ObjectiveJournalItem("quest.alpha", "Quests", "Alpha Quest", "Alpha detail after refresh", "Active", "0 / 1", "Alpha next", false, 1),
+                });
+
+                StringAssert.Contains("Target Quest", panel.VisibleText);
+                StringAssert.Contains("Target detail after refresh", panel.VisibleText);
+                StringAssert.Contains("2 / 3", panel.VisibleText);
+                Assert.IsFalse(panel.VisibleText.Contains("Alpha detail after refresh"), "Refresh reorder must not move selection to the same index when the stable key still exists.");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(host);
+            }
+        }
+
+        [Test]
+        public void ObjectiveJournalPanel_TrackedSelectionPersistsSameStableKeyAfterRefreshReorder()
+        {
+            var root = new GameObject("ObjectiveJournalTrackedReorderFixture", typeof(RectTransform));
+            try
+            {
+                var panel = root.AddComponent<ObjectiveJournalPanel>();
+                var hudGo = new GameObject("TrackedObjectiveHud", typeof(RectTransform));
+                hudGo.transform.SetParent(root.transform, false);
+                var hud = hudGo.AddComponent<TrackedObjectiveHud>();
+                panel.BindTrackedHud(hud);
+                panel.SetItems("Quests", new[]
+                {
+                    new ObjectiveJournalItem("quest.alpha", "Quests", "Alpha Quest", string.Empty, "Active", "0 / 1", "Alpha next", false, 0),
+                    new ObjectiveJournalItem("quest.target", "Quests", "Target Quest", string.Empty, "Active", "1 / 2", "Target next", false, 1),
+                });
+                panel.Show();
+                panel.SelectCategory("Quests");
+                panel.SelectItem(1);
+
+                panel.SetItems("Quests", new[]
+                {
+                    new ObjectiveJournalItem("quest.target", "Quests", "Target Quest", string.Empty, "Active", "2 / 3", "Target next after refresh", false, 0),
+                    new ObjectiveJournalItem("quest.alpha", "Quests", "Alpha Quest", string.Empty, "Active", "0 / 1", "Alpha next", false, 1),
+                });
+                panel.TrackSelectedItem();
+
+                Assert.IsTrue(hud.IsVisible);
+                StringAssert.Contains("Target Quest", hud.VisibleText);
+                StringAssert.Contains("2 / 3", hud.VisibleText);
+                Assert.IsFalse(hud.VisibleText.Contains("Alpha Quest"), "Track after refresh must keep the selected stable key, not the old row index.");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void ObjectiveJournalPanel_EmptyCategoryShowsExplicitEmptyText()
+        {
+            var host = new GameObject("ObjectiveJournalEmptyCategoryFixture", typeof(RectTransform));
+            try
+            {
+                var panel = host.AddComponent<ObjectiveJournalPanel>();
+                panel.SetItems("Hints", Array.Empty<ObjectiveJournalItem>());
+                panel.Show();
+                panel.SelectCategory("Hints");
+
+                StringAssert.Contains("No objectives in this category", panel.VisibleText);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(host);
+            }
+        }
+
+        [Test]
+        public void ObjectiveJournalPanel_RepeatedRefreshDoesNotDuplicateRows()
+        {
+            var host = new GameObject("ObjectiveJournalRefreshRowsFixture", typeof(RectTransform));
+            try
+            {
+                var panel = host.AddComponent<ObjectiveJournalPanel>();
+                panel.SetItems("Quests", new[]
+                {
+                    new ObjectiveJournalItem("quest.one", "Quests", "One", string.Empty, "Active", "0 / 1", string.Empty, false, 0),
+                    new ObjectiveJournalItem("quest.two", "Quests", "Two", string.Empty, "Active", "0 / 1", string.Empty, false, 1),
+                });
+                panel.Show();
+                panel.SelectCategory("Quests");
+                panel.SetItems("Quests", new[]
+                {
+                    new ObjectiveJournalItem("quest.one", "Quests", "One", string.Empty, "Active", "0 / 1", string.Empty, false, 0),
+                    new ObjectiveJournalItem("quest.two", "Quests", "Two", string.Empty, "Active", "0 / 1", string.Empty, false, 1),
+                });
+
+                Assert.AreEqual(2, CountObjectiveRows(host.transform), "Refreshing Objective Journal rows must replace stale row GameObjects instead of stacking duplicates.");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(host);
+            }
+        }
+
+        [Test]
+        public void ObjectiveJournalPanel_ManyRowsAreHostedInScrollableList()
+        {
+            var host = new GameObject("ObjectiveJournalManyRowsFixture", typeof(RectTransform));
+            try
+            {
+                var panel = host.AddComponent<ObjectiveJournalPanel>();
+                var many = new ObjectiveJournalItem[18];
+                for (int i = 0; i < many.Length; i++)
+                {
+                    many[i] = new ObjectiveJournalItem("quest." + i, "Quests", "Quest " + i, string.Empty, "Active", i + " / 18", string.Empty, false, i);
+                }
+
+                panel.SetItems("Quests", many);
+                panel.Show();
+                panel.SelectCategory("Quests");
+
+                var list = host.transform.Find("ObjectiveJournalRoot/ObjectiveList");
+                Assert.IsNotNull(list, "Objective Journal must build a list area.");
+                Assert.IsNotNull(list.GetComponent<ScrollRect>(), "Large objective categories must be scrollable instead of placing rows outside the visible list area.");
+                Assert.AreEqual(18, CountObjectiveRows(host.transform));
             }
             finally
             {
@@ -176,6 +323,11 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
             {
                 UnityEngine.Object.DestroyImmediate(canvasGo);
             }
+        }
+
+        private static int CountObjectiveRows(Transform root)
+        {
+            return root.GetComponentsInChildren<Button>(true).Count(button => button.name.StartsWith("ObjectiveRow_", StringComparison.Ordinal));
         }
 
         private static int CountCommonPanel48(GameObject root)

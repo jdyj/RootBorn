@@ -13,12 +13,15 @@ namespace Rootborn.UI.Objectives
     {
         private static readonly Vector2 DefaultSize = new Vector2(1180f, 720f);
         private static readonly string[] DefaultCategoryIds = { "Goals", "Quests", "Campaign", "Hints" };
+        private const float RowStep = 58f;
+        private const float RowTop = 282f;
 
         private readonly Dictionary<string, ObjectiveJournalItem[]> _itemsByCategory = new Dictionary<string, ObjectiveJournalItem[]>(StringComparer.Ordinal);
         private readonly List<GameObject> _listRows = new List<GameObject>();
         private GameObject _root;
         private RectTransform _categoryRail;
         private RectTransform _list;
+        private RectTransform _listContent;
         private RectTransform _detail;
         private Text _detailTitle;
         private Text _detailBody;
@@ -27,6 +30,7 @@ namespace Rootborn.UI.Objectives
         private Text _detailAction;
         private TrackedObjectiveHud _trackedHud;
         private string _selectedCategory = "Goals";
+        private string _selectedStableKey = string.Empty;
         private int _selectedItemIndex;
         private bool _isVisible;
 
@@ -99,6 +103,7 @@ namespace Rootborn.UI.Objectives
 
             _selectedCategory = categoryId;
             _selectedItemIndex = 0;
+            _selectedStableKey = string.Empty;
             RefreshCategory(_selectedCategory);
         }
 
@@ -112,6 +117,7 @@ namespace Rootborn.UI.Objectives
             }
 
             _selectedItemIndex = index;
+            _selectedStableKey = items[index].StableKey ?? string.Empty;
             RefreshDetail(items[_selectedItemIndex]);
         }
 
@@ -125,6 +131,7 @@ namespace Rootborn.UI.Objectives
             }
 
             var selected = items[_selectedItemIndex];
+            _selectedStableKey = selected.StableKey ?? string.Empty;
             _trackedHud.Show(selected);
             ObjectiveJournalTrackingStore.Save(ActiveSaveContext.Metadata, selected.CategoryId, selected.StableKey);
         }
@@ -171,6 +178,7 @@ namespace Rootborn.UI.Objectives
             _root = MakeTilePanel(transform, "ObjectiveJournalRoot", Vector2.zero, rect != null && rect.sizeDelta != Vector2.zero ? rect.sizeDelta : DefaultSize);
             _categoryRail = (RectTransform)MakePlainPanel(_root.transform, "ObjectiveCategoryRail", new Vector2(-500f, 0f), new Vector2(180f, 640f)).transform;
             _list = (RectTransform)MakePlainPanel(_root.transform, "ObjectiveList", new Vector2(-220f, 0f), new Vector2(340f, 640f)).transform;
+            BuildScrollableList();
             _detail = (RectTransform)MakePlainPanel(_root.transform, "ObjectiveDetail", new Vector2(230f, 0f), new Vector2(520f, 640f)).transform;
 
             BuildCategoryRail();
@@ -189,6 +197,37 @@ namespace Rootborn.UI.Objectives
             }
         }
 
+        private void BuildScrollableList()
+        {
+            var scrollRect = _list.gameObject.AddComponent<ScrollRect>();
+            scrollRect.horizontal = false;
+            scrollRect.vertical = true;
+            scrollRect.movementType = ScrollRect.MovementType.Clamped;
+            scrollRect.inertia = false;
+
+            var viewportGo = new GameObject("ObjectiveListViewport", typeof(RectTransform), typeof(RectMask2D));
+            viewportGo.transform.SetParent(_list, false);
+            var viewport = (RectTransform)viewportGo.transform;
+            viewport.anchorMin = Vector2.zero;
+            viewport.anchorMax = Vector2.one;
+            viewport.pivot = new Vector2(0.5f, 0.5f);
+            viewport.offsetMin = new Vector2(12f, 12f);
+            viewport.offsetMax = new Vector2(-12f, -12f);
+
+            var contentGo = new GameObject("ObjectiveListContent", typeof(RectTransform));
+            contentGo.transform.SetParent(viewport, false);
+            _listContent = (RectTransform)contentGo.transform;
+            _listContent.anchorMin = new Vector2(0f, 1f);
+            _listContent.anchorMax = new Vector2(1f, 1f);
+            _listContent.pivot = new Vector2(0.5f, 1f);
+            _listContent.anchoredPosition = Vector2.zero;
+            _listContent.offsetMin = new Vector2(0f, _listContent.offsetMin.y);
+            _listContent.offsetMax = new Vector2(0f, _listContent.offsetMax.y);
+
+            scrollRect.viewport = viewport;
+            scrollRect.content = _listContent;
+        }
+
         private void RefreshCategory(string categoryId)
         {
             for (int i = 0; i < _listRows.Count; i++)
@@ -200,23 +239,32 @@ namespace Rootborn.UI.Objectives
             var items = GetSelectedItems();
             if (items.Length == 0)
             {
+                _selectedItemIndex = 0;
+                _selectedStableKey = string.Empty;
+                ResizeListContent(0);
                 RefreshEmptyDetail(categoryId);
                 return;
             }
 
+            RestoreSelectionByStableKey(items);
+            ResizeListContent(items.Length);
+
+            var rowParent = _listContent != null ? _listContent : _list;
             for (int i = 0; i < items.Length; i++)
             {
                 int rowIndex = i;
-                var row = ModernUiPanelBuilder.CreatePlainButton(_list, "ObjectiveRow_" + i, new Vector2(0f, 282f - i * 58f), new Vector2(292f, 46f));
+                var row = ModernUiPanelBuilder.CreatePlainButton(rowParent, "ObjectiveRow_" + i, new Vector2(0f, -i * RowStep), new Vector2(292f, 46f));
+                var rowRect = (RectTransform)row.transform;
+                rowRect.anchorMin = new Vector2(0.5f, 1f);
+                rowRect.anchorMax = new Vector2(0.5f, 1f);
+                rowRect.pivot = new Vector2(0.5f, 1f);
                 row.GetComponent<Button>().onClick.AddListener(() => SelectItem(rowIndex));
                 _listRows.Add(row);
-                MakeText((RectTransform)row.transform, "ObjectiveRowText", items[i].Title + "\n" + items[i].ProgressText, new Vector2(12f, -7f), new Vector2(268f, 34f), 13, TextAnchor.UpperLeft);
+                var rowText = MakeText((RectTransform)row.transform, "ObjectiveRowText", items[i].Title + "\n" + items[i].ProgressText, new Vector2(12f, -7f), new Vector2(268f, 34f), 13, TextAnchor.UpperLeft);
+                rowText.horizontalOverflow = HorizontalWrapMode.Wrap;
+                rowText.verticalOverflow = VerticalWrapMode.Truncate;
             }
 
-            if (_selectedItemIndex < 0 || _selectedItemIndex >= items.Length)
-            {
-                _selectedItemIndex = 0;
-            }
             RefreshDetail(items[_selectedItemIndex]);
         }
 
@@ -249,6 +297,39 @@ namespace Rootborn.UI.Objectives
             _detailProgress.text = string.Empty;
             _detailReward.text = string.Empty;
             _detailAction.text = string.Empty;
+        }
+
+        private void RestoreSelectionByStableKey(ObjectiveJournalItem[] items)
+        {
+            if (!string.IsNullOrEmpty(_selectedStableKey))
+            {
+                for (int i = 0; i < items.Length; i++)
+                {
+                    if (string.Equals(items[i].StableKey, _selectedStableKey, StringComparison.Ordinal))
+                    {
+                        _selectedItemIndex = i;
+                        return;
+                    }
+                }
+            }
+
+            if (_selectedItemIndex < 0 || _selectedItemIndex >= items.Length)
+            {
+                _selectedItemIndex = 0;
+            }
+            _selectedStableKey = items[_selectedItemIndex].StableKey ?? string.Empty;
+        }
+
+        private void ResizeListContent(int itemCount)
+        {
+            if (_listContent == null)
+            {
+                return;
+            }
+
+            float height = Mathf.Max(616f, itemCount <= 0 ? 0f : (itemCount - 1) * RowStep + 46f);
+            _listContent.sizeDelta = new Vector2(0f, height);
+            _listContent.anchoredPosition = Vector2.zero;
         }
 
         private ObjectiveJournalItem[] GetSelectedItems()

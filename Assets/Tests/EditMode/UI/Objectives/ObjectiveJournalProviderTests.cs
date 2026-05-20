@@ -161,7 +161,7 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
                 panel.Show();
                 panel.SelectCategory("Quests");
 
-                root.transform.Find("ObjectiveJournalPanel/ObjectiveJournalRoot/ObjectiveList/ObjectiveRow_1").GetComponent<Button>().onClick.Invoke();
+                FindObjectiveRow(root.transform, 1).GetComponent<Button>().onClick.Invoke();
                 root.transform.Find("ObjectiveJournalPanel/ObjectiveJournalRoot/ObjectiveDetail/ObjectiveTrackButton").GetComponent<Button>().onClick.Invoke();
 
                 Assert.IsTrue(hud.IsVisible);
@@ -178,6 +178,14 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
                 SaveService.SetRootDirectoryForTests(null);
                 if (Directory.Exists(rootDirectory)) Directory.Delete(rootDirectory, true);
             }
+        }
+
+        private static Transform FindObjectiveRow(Transform root, int index)
+        {
+            var row = root.Find("ObjectiveJournalPanel/ObjectiveJournalRoot/ObjectiveList/ObjectiveListViewport/ObjectiveListContent/ObjectiveRow_" + index)
+                ?? root.Find("ObjectiveJournalPanel/ObjectiveJournalRoot/ObjectiveList/ObjectiveRow_" + index);
+            Assert.IsNotNull(row, "Missing ObjectiveRow_" + index + ".");
+            return row;
         }
 
         private sealed class FakeSource : IObjectiveJournalSource
