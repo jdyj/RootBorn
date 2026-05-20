@@ -27,6 +27,37 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
         }
 
         [Test]
+        public void SourceCatalog_DefaultSourcesExposeExpectedCategories()
+        {
+            var sources = ObjectiveJournalSourceCatalog.CreateDefaultSources();
+            var categoriesById = new Dictionary<string, string>(StringComparer.Ordinal);
+            for (int i = 0; i < sources.Length; i++)
+            {
+                categoriesById.Add(sources[i].SourceId, sources[i].Category.CategoryId);
+            }
+
+            Assert.AreEqual("Goals", categoriesById["student-day-guide"]);
+            Assert.AreEqual("Goals", categoriesById["daily-plan"]);
+            Assert.AreEqual("Quests", categoriesById["quest-log"]);
+            Assert.AreEqual("Quests", categoriesById["quest-chain-log"]);
+            Assert.AreEqual("Campaign", categoriesById["campaign-progress"]);
+            Assert.AreEqual("Hints", categoriesById["milestones"]);
+            Assert.AreEqual("Hints", categoriesById["career-interests"]);
+        }
+
+        [Test]
+        public void SourceCatalog_DefaultSourcesDegradeWithNullContext()
+        {
+            var sources = ObjectiveJournalSourceCatalog.CreateDefaultSources();
+            var context = new ObjectiveJournalContext(null, null, null);
+
+            for (int i = 0; i < sources.Length; i++)
+            {
+                Assert.DoesNotThrow(() => sources[i].BuildItems(context), sources[i].SourceId + " must tolerate null registry/player/save context.");
+            }
+        }
+
+        [Test]
         public void SourceTypes_AreStandaloneClassesOutsideRuntimeProvider()
         {
             string[] typeNames =
