@@ -65,6 +65,7 @@ MonoBehaviour:
   _questRewards:
   - {fileID: 11400000, guid: 16f45589fdcd2534dae0cb1401cacf3c, type: 2}
   - {fileID: 11400000, guid: 27daf492911bf8346bbb4df09d09f75f, type: 2}
+  - {fileID: 11400000, guid: 7db93ab5428cbcc4a9ca04a27236a702, type: 2}
   _questCompletionEffects:
   - {fileID: 11400000, guid: 28cbbe21d02b32649996767f5d13b4b1, type: 2}
   - {fileID: 11400000, guid: 014b38e70e778b4459fac561ab254fc1, type: 2}
@@ -1774,6 +1775,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 9def66b31779bfa4ebb018300009438b, type: 2}
   - {fileID: 11400000, guid: 8ccdc76080d52814d971f51032ad37f4, type: 2}
   - {fileID: 11400000, guid: 92944bf0cb89c25478f539cbfcd72ed8, type: 2}
+  - {fileID: 11400000, guid: a745250267b2be84182d8a7182cf1cf1, type: 2}
   _milestones:
   - {fileID: 11400000, guid: e964618ac9e20234598c35ded949ca42, type: 2}
   - {fileID: 11400000, guid: 432758444c01664419db00e22986f34f, type: 2}

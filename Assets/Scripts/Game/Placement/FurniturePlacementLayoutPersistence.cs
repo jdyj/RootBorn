@@ -17,7 +17,14 @@ namespace Rootborn.Game.Placement
 
         public static bool HasHouseLayout()
         {
-            return !string.IsNullOrEmpty(CreateService().ReadJson(HouseLayoutFileName));
+            var service = CreateService();
+            return !string.IsNullOrEmpty(service.ReadJson(HouseLayoutFileName))
+                || !string.IsNullOrEmpty(service.ReadJson(GetHouseLayoutFileNameForStage(0)));
+        }
+
+        public static bool HasHouseLayoutForStage(int stageIndex)
+        {
+            return !string.IsNullOrEmpty(CreateService().ReadJson(GetHouseLayoutFileNameForStage(stageIndex)));
         }
 
         public static string GetHouseLayoutFileNameForStage(int stageIndex)

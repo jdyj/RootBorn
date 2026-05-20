@@ -25,4 +25,5 @@ MonoBehaviour:
   _expirationConditions: []
   _completionRewards:
   - {fileID: 11400000, guid: 27daf492911bf8346bbb4df09d09f75f, type: 2}
+  - {fileID: 11400000, guid: 7db93ab5428cbcc4a9ca04a27236a702, type: 2}
   _sortPriority: 10

@@ -5,6 +5,8 @@ using Rootborn.Game.Common;
 using Rootborn.Game.Interiors;
 using Rootborn.Game.Managers;
 using Rootborn.Game.Placement;
+using Rootborn.Game.Player;
+using Rootborn.Game.Save;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 #if UNITY_EDITOR
@@ -89,13 +91,18 @@ namespace Rootborn.UI.Interiors
 
         public static List<InteriorFurnitureDefinition> LoadFurniture(GameDataRegistry registry)
         {
+            return LoadFurniture(registry, ResolveUnlockProgress());
+        }
+
+        public static List<InteriorFurnitureDefinition> LoadFurniture(GameDataRegistry registry, FurnitureUnlockProgress unlockProgress)
+        {
             if (registry == null || registry.FurnitureDefinitions == null)
             {
                 return new List<InteriorFurnitureDefinition>();
             }
 
             return registry.FurnitureDefinitions
-                .Where(definition => definition != null)
+                .Where(definition => definition != null && IsUnlocked(definition, unlockProgress))
                 .OrderBy(definition => definition.Category, StringComparer.Ordinal)
                 .ThenBy(definition => definition.StableId, StringComparer.Ordinal)
                 .Select(Convert)
@@ -113,6 +120,20 @@ namespace Rootborn.UI.Interiors
             return LoadFurniture(registry)
                 .Where(definition => definition.ObjectKind == InteriorObjectKind.Chair)
                 .ToList();
+        }
+
+        private static bool IsUnlocked(FurnitureDefinition definition, FurnitureUnlockProgress unlockProgress)
+        {
+            if (definition == null) return false;
+            string token = definition.UnlockToken;
+            return string.IsNullOrEmpty(token) || (unlockProgress != null && unlockProgress.IsUnlocked(token));
+        }
+
+        private static FurnitureUnlockProgress ResolveUnlockProgress()
+        {
+            var metadata = ActiveSaveContext.Metadata;
+            if (metadata == null || string.IsNullOrEmpty(metadata.SlotId)) return null;
+            return FurnitureUnlockProgressPersistence.LoadOrCreate(metadata.SlotId, PlayerIdentity.DefaultPlayerId);
         }
 
         private static InteriorFurnitureDefinition Convert(FurnitureDefinition definition)

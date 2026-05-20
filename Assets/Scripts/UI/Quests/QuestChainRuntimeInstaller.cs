@@ -1,6 +1,7 @@
 using System.Collections;
 using Rootborn.Game.Common;
 using Rootborn.Game.Managers;
+using Rootborn.Game.Placement;
 using Rootborn.Game.Player;
 using Rootborn.Game.Quests;
 using Rootborn.Game.Save;
@@ -67,6 +68,7 @@ namespace Rootborn.UI.Quests
             private StudentLifeProgressComponent _student;
             private PlayerInventory _playerInventory;
             private WorldStateProgress _worldStateProgress;
+            private FurnitureUnlockProgress _furnitureUnlockProgress;
 
             private IEnumerator Start()
             {
@@ -119,6 +121,7 @@ namespace Rootborn.UI.Quests
                 if (_panel != null) _panel.Bind(_chains, _log, SaveAndRefresh, ResolveRewardContext());
                 SaveProgress();
                 WorldStateProgressPersistence.Save(_worldStateProgress);
+                FurnitureUnlockProgressPersistence.Save(_furnitureUnlockProgress);
                 if (_panel != null) _panel.Refresh();
                 RefreshObjectiveJournal();
             }
@@ -162,7 +165,14 @@ namespace Rootborn.UI.Quests
             private RewardRuntimeContext ResolveRewardContext()
             {
                 var inventory = ResolvePlayerInventory();
-                return new RewardRuntimeContext(null, inventory != null ? inventory.Inventory : null, null, null, ResolveStudentProgress(), ResolveWorldStateProgress());
+                return new RewardRuntimeContext(
+                    null,
+                    inventory != null ? inventory.Inventory : null,
+                    null,
+                    null,
+                    ResolveStudentProgress(),
+                    ResolveWorldStateProgress(),
+                    ResolveFurnitureUnlockProgress());
             }
 
             private PlayerInventory ResolvePlayerInventory()
@@ -197,6 +207,18 @@ namespace Rootborn.UI.Quests
                 }
 
                 return _worldStateProgress;
+            }
+
+            private FurnitureUnlockProgress ResolveFurnitureUnlockProgress()
+            {
+                var studentProgress = ResolveStudentProgress();
+                if (studentProgress == null) return null;
+                if (_furnitureUnlockProgress == null || _furnitureUnlockProgress.SaveSlot != studentProgress.SaveSlot || _furnitureUnlockProgress.PlayerId != studentProgress.PlayerId)
+                {
+                    _furnitureUnlockProgress = FurnitureUnlockProgressPersistence.LoadOrCreate(studentProgress.SaveSlot, studentProgress.PlayerId);
+                }
+
+                return _furnitureUnlockProgress;
             }
 
             private string BuildObjectiveSummary(QuestChainDefinition chain)

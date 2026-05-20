@@ -1,5 +1,6 @@
 using Rootborn.Game.Common;
 using Rootborn.Game.Knowledge;
+using Rootborn.Game.Placement;
 using Rootborn.Game.Story;
 using Rootborn.Game.StudentLife;
 using Rootborn.Game.WorldState;
@@ -14,13 +15,14 @@ namespace Rootborn.Game.Quests
         public readonly StoryFlagSet StoryFlags;
         public readonly StudentLifeProgress StudentLifeProgress;
         public readonly WorldStateProgress WorldStateProgress;
+        public readonly FurnitureUnlockProgress FurnitureUnlockProgress;
 
         public RewardRuntimeContext(
             QuestLog questLog,
             Inventory inventory,
             KnowledgeProgress knowledgeProgress,
             StoryFlagSet storyFlags)
-            : this(questLog, inventory, knowledgeProgress, storyFlags, null, null)
+            : this(questLog, inventory, knowledgeProgress, storyFlags, null, null, null)
         {
         }
 
@@ -30,7 +32,7 @@ namespace Rootborn.Game.Quests
             KnowledgeProgress knowledgeProgress,
             StoryFlagSet storyFlags,
             StudentLifeProgress studentLifeProgress)
-            : this(questLog, inventory, knowledgeProgress, storyFlags, studentLifeProgress, null)
+            : this(questLog, inventory, knowledgeProgress, storyFlags, studentLifeProgress, null, null)
         {
         }
 
@@ -41,6 +43,18 @@ namespace Rootborn.Game.Quests
             StoryFlagSet storyFlags,
             StudentLifeProgress studentLifeProgress,
             WorldStateProgress worldStateProgress)
+            : this(questLog, inventory, knowledgeProgress, storyFlags, studentLifeProgress, worldStateProgress, null)
+        {
+        }
+
+        public RewardRuntimeContext(
+            QuestLog questLog,
+            Inventory inventory,
+            KnowledgeProgress knowledgeProgress,
+            StoryFlagSet storyFlags,
+            StudentLifeProgress studentLifeProgress,
+            WorldStateProgress worldStateProgress,
+            FurnitureUnlockProgress furnitureUnlockProgress)
         {
             QuestLog = questLog;
             Inventory = inventory;
@@ -48,6 +62,7 @@ namespace Rootborn.Game.Quests
             StoryFlags = storyFlags;
             StudentLifeProgress = studentLifeProgress;
             WorldStateProgress = worldStateProgress;
+            FurnitureUnlockProgress = furnitureUnlockProgress;
         }
     }
 }
