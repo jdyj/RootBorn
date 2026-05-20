@@ -65,36 +65,10 @@ namespace Rootborn.UI.StudentLife
                 var canvas = EnsureCanvas(scene);
                 EnsureEventSystem(scene);
                 var panel = StudentDayResultPanel.EnsureInScene(canvas);
-                var hud = MilestoneHudPanel.EnsureInScene(canvas);
                 EnsureDayEndBoard(scene, panel);
-                elapsed = 0f;
-                while (elapsed < 5f)
-                {
-                    RefreshMilestoneHud(scene, hud);
-                    var registry = Managers.Data != null ? Managers.Data.Registry : null;
-                    if (registry != null && registry.Milestones != null && registry.Milestones.Length > 0)
-                    {
-                        break;
-                    }
-                    elapsed += Time.unscaledDeltaTime;
-                    yield return null;
-                }
             }
         }
 
-        private static void RefreshMilestoneHud(Scene scene, MilestoneHudPanel hud)
-        {
-            if (hud == null) return;
-            var registry = Managers.Data != null ? Managers.Data.Registry : null;
-            var milestones = MilestoneRegistryResolver.ResolveMilestones(registry);
-            var player = FindRoot(scene, "Player");
-            var progressComponent = player != null ? player.GetComponent<StudentLifeProgressComponent>() : null;
-            var progress = progressComponent != null ? progressComponent.EnsureProgress() : null;
-            var milestoneProgress = progress != null
-                ? MilestoneProgressPersistence.LoadOrCreate(progress.SaveSlot, progress.PlayerId, milestones)
-                : new MilestoneProgress("default", "player", milestones);
-            hud.Refresh(milestones, milestoneProgress, default);
-        }
         private static void EnsureDayEndBoard(Scene scene, StudentDayResultPanel panel)
         {
             var go = FindByName(scene, DayEndBoardName);

@@ -368,7 +368,35 @@ namespace Rootborn.UI.Objectives
                     return "Reward claimed. Review this completed growth route.";
                 }
 
-                return progress.IsCompleted(milestone) ? "Claim the milestone reward when inventory can accept it." : "Use any matching growth route; school is not the only path.";
+                if (progress.IsCompleted(milestone))
+                {
+                    return "Claim the milestone reward when inventory can accept it.";
+                }
+
+                string routeText = BuildMilestoneRouteText(milestone);
+                string hint = "Use any matching growth route; school is not the only path.";
+                return string.IsNullOrEmpty(routeText) ? hint : hint + " Routes: " + routeText;
+            }
+
+            private static string BuildMilestoneRouteText(MilestoneDefinition milestone)
+            {
+                var routes = milestone != null ? milestone.Routes : null;
+                if (routes == null || routes.Length == 0)
+                {
+                    return string.Empty;
+                }
+
+                var ids = new List<string>();
+                for (int i = 0; i < routes.Length; i++)
+                {
+                    string id = routes[i] != null ? routes[i].RecommendedActionId : string.Empty;
+                    if (!string.IsNullOrEmpty(id) && !ids.Contains(id))
+                    {
+                        ids.Add(id);
+                    }
+                }
+
+                return string.Join(" | ", ids.ToArray());
             }
 
             private static int BuildMilestoneSortPriority(MilestoneProgress progress, MilestoneDefinition milestone)

@@ -5,11 +5,13 @@ using Rootborn.Game.Player;
 using Rootborn.Game.Save;
 using Rootborn.Game.StudentLife;
 using Rootborn.UI.MainMenu;
+using Rootborn.UI.Objectives;
 using Rootborn.UI.StudentLife;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
@@ -19,13 +21,14 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
     public sealed class OpenEndedMilestoneGrowthE2EScenarioTests : InputTestFixture
     {
         private const string TestSlotId = "slot-0";
+        private const string ScreenshotPath = "Builds/Logs/milestone-objective-journal-e2e.png";
         private string _saveRoot;
 
         [UnitySetUp]
         public IEnumerator SetUp()
         {
             LogAssert.ignoreFailingMessages = true;
-            Time.timeScale = 1f;
+            Time.timeScale = 8f;
             CleanupResidue();
             EnsurePassiveEventSystem();
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
@@ -41,6 +44,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         [UnityTearDown]
         public new IEnumerator TearDown()
         {
+            Time.timeScale = 1f;
             ActiveSaveContext.Clear();
             PlayerGlobalState.ClearForTests();
             SaveService.SetRootDirectoryForTests(null);
@@ -52,21 +56,37 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         }
 
         [UnityTest]
+        [Timeout(600000)]
         public IEnumerator MILESTONE_E2E_001_010_PlayOutsideSchoolMilestoneResultReloadAndDedupe()
         {
             var keyboard = InputSystem.AddDevice<Keyboard>();
 
+            yield return LoadScene("MainMenu");
+            EnsurePassiveEventSystem();
             SaveSlotSelectPanel.EnsureInScene().Show();
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
+            yield return null;
+            var creatorConfirm = FindOptionalButton("SpumCharacterCreatorPanel", "ConfirmButton");
+            if (creatorConfirm != null) yield return ClickButton(creatorConfirm);
             yield return WaitForScene("Town", 10f, "MILESTONE-E2E-001 failed: SaveSlot New Game did not enter Town.");
             yield return WaitForMilestoneRuntime(10f);
+            AssertNoLegacyMilestoneHudObjects("MILESTONE-E2E-010 failed: legacy Milestone HUD objects should not exist at runtime.");
             LogAssert.ignoreFailingMessages = true;
 
             var runtime = FindMilestoneRuntime();
-            AssertPanelContains(runtime.Hud.transform, "milestone.village-adaptation", "MILESTONE-E2E-002 failed: milestone HUD missing active milestone.");
-            AssertPanelContains(runtime.Hud.transform, "outside.help-neighbor", "MILESTONE-E2E-002 failed: milestone HUD missing next recommended outside-school action.");
+            yield return PressTab(keyboard);
+            Assert.IsTrue(runtime.Journal.IsVisible, "MILESTONE-E2E-002 failed: actual Tab input did not open Objective Journal.");
+            yield return ClickButton(FindButton(runtime.Journal.transform, "ObjectiveCategory_Hints"));
+            StringAssert.Contains("milestone.village-adaptation", runtime.Journal.VisibleText, "MILESTONE-E2E-002 failed: Hints category missing active milestone.");
+            StringAssert.Contains("outside.help-neighbor", runtime.Journal.VisibleText, "MILESTONE-E2E-002 failed: Hints category missing next recommended outside-school action.");
+            yield return ClickButton(FindButton(runtime.Journal.transform, "ObjectiveRow_0"));
+            yield return ClickButton(FindButton(runtime.Journal.transform, "ObjectiveTrackButton"));
+            Assert.IsTrue(runtime.TrackedHud.IsVisible, "MILESTONE-E2E-002 failed: Track click did not update TrackedObjectiveHud.");
+            StringAssert.Contains("milestone.village-adaptation", runtime.TrackedHud.VisibleText, "MILESTONE-E2E-002 failed: tracked HUD did not show milestone text.");
+            yield return PressTab(keyboard);
+            Assert.IsFalse(runtime.Journal.IsVisible, "MILESTONE-E2E-002 failed: second Tab should close Objective Journal before movement.");
 
             yield return WalkPlayerWithKeyboardTo(runtime.Player, keyboard, runtime.Outside.transform.position, 0.25f, "MILESTONE-E2E-003 failed: actual keyboard movement could not reach outside-school point.");
             runtime.Router.RefreshPromptNow();
@@ -85,6 +105,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             AssertPanelContains(panel.transform, "Milestones", "MILESTONE-E2E-006 failed: result UI missing milestone summary section.");
             AssertPanelContains(panel.transform, "milestone.village-adaptation", "MILESTONE-E2E-006 failed: result UI missing completed milestone id.");
             AssertPanelContains(panel.transform, "outside.help-neighbor", "MILESTONE-E2E-006 failed: result UI missing next recommended action.");
+            yield return WaitForMilestoneJournalText(keyboard, "Completed", 3f, "MILESTONE-E2E-006 failed: Objective Journal did not refresh milestone completion after day end.");
 
             string milestoneFile = Path.Combine(_saveRoot, TestSlotId, "milestone-progress-" + runtime.Student.Progress.PlayerId + ".json");
             if (!File.Exists(milestoneFile)) milestoneFile = Path.Combine(_saveRoot, TestSlotId, "milestone-progress.json");
@@ -104,15 +125,27 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "LoadButton"));
             yield return WaitForScene("Town", 10f, "MILESTONE-E2E-007 failed: SaveSlot Load did not re-enter Town.");
             yield return WaitForMilestoneRuntime(10f);
+            AssertNoLegacyMilestoneHudObjects("MILESTONE-E2E-010 failed: legacy Milestone HUD objects should not exist after reload.");
 
             var reloaded = FindMilestoneRuntime();
-            AssertPanelContains(reloaded.Hud.transform, "milestone.village-adaptation", "MILESTONE-E2E-007 failed: reloaded HUD missing milestone.");
+            yield return PressTab(keyboard);
+            yield return ClickButton(FindButton(reloaded.Journal.transform, "ObjectiveCategory_Hints"));
+            yield return ClickButton(FindButton(reloaded.Journal.transform, "ObjectiveRow_0"));
+            StringAssert.Contains("milestone.village-adaptation", reloaded.Journal.VisibleText, "MILESTONE-E2E-007 failed: reloaded Journal missing milestone.");
+            Assert.IsTrue(reloaded.TrackedHud.IsVisible, "MILESTONE-E2E-007 failed: tracked milestone objective was not restored after reload.");
+            StringAssert.Contains("milestone.village-adaptation", reloaded.TrackedHud.VisibleText, "MILESTONE-E2E-007 failed: restored tracked HUD did not show milestone text.");
+            yield return PressTab(keyboard);
+
             yield return WalkPlayerWithKeyboardTo(reloaded.Player, keyboard, reloaded.DayEnd.transform.position, 0.25f, "MILESTONE-E2E-008 failed: movement could not return to day-end point after reload.");
             reloaded.Router.RefreshPromptNow();
             yield return PressInteractKey(keyboard);
             yield return WaitForDayResultPanel(2f, "MILESTONE-E2E-008 failed: result UI did not reopen after reload.");
             string savedAgainJson = File.ReadAllText(milestoneFile);
             Assert.AreEqual(savedJson, savedAgainJson, "MILESTONE-E2E-008 failed: repeated result interaction changed milestone save data.");
+
+            CaptureScreenshot();
+            for (int i = 0; i < 5; i++) yield return null;
+            Assert.IsTrue(File.Exists(ScreenshotPath), "MILESTONE-E2E-010 failed: Game View screenshot evidence was not written.");
         }
 
         private static IEnumerator WaitForMilestoneRuntime(float timeoutSeconds)
@@ -125,7 +158,9 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 var outside = GameObject.Find("OutsideSchoolActivityPoint");
                 var dayEnd = GameObject.Find("StudentDayEndBoard");
                 var result = Object.FindFirstObjectByType<StudentDayResultPanel>(FindObjectsInactive.Include);
-                var hud = Object.FindFirstObjectByType<MilestoneHudPanel>(FindObjectsInactive.Include);
+                var journal = Object.FindFirstObjectByType<ObjectiveJournalPanel>(FindObjectsInactive.Include);
+                var provider = Object.FindFirstObjectByType<ObjectiveJournalRuntimeProvider>(FindObjectsInactive.Include);
+                var trackedHud = Object.FindFirstObjectByType<TrackedObjectiveHud>(FindObjectsInactive.Include);
                 lastState = "scene=" + SceneManager.GetActiveScene().name
                     + " player=" + (player != null)
                     + " controller=" + (player != null && player.GetComponent<PlayerController>() != null)
@@ -136,13 +171,23 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                     + " dayEnd=" + (dayEnd != null)
                     + " dayEndInteractor=" + (dayEnd != null && dayEnd.GetComponent<StudentDayEndInteractor>() != null)
                     + " result=" + (result != null)
-                    + " hud=" + (hud != null)
-                    + " hudText=" + (hud != null ? hud.VisibleText : "<none>")
+                    + " journal=" + (journal != null)
+                    + " provider=" + (provider != null)
+                    + " trackedHud=" + (trackedHud != null)
                     + " eventSystem=" + (EventSystem.current != null);
-                if (player != null && player.GetComponent<PlayerController>() != null && player.GetComponent<PlayerInteractionRouter>() != null && player.GetComponent<StudentLifeProgressComponent>() != null &&
-                    outside != null && outside.GetComponent<OutsideSchoolActivityInteractor>() != null &&
-                    dayEnd != null && dayEnd.GetComponent<StudentDayEndInteractor>() != null &&
-                    result != null && hud != null && hud.VisibleText.Contains("milestone.village-adaptation") && EventSystem.current != null)
+                if (player != null
+                    && player.GetComponent<PlayerController>() != null
+                    && player.GetComponent<PlayerInteractionRouter>() != null
+                    && player.GetComponent<StudentLifeProgressComponent>() != null
+                    && outside != null
+                    && outside.GetComponent<OutsideSchoolActivityInteractor>() != null
+                    && dayEnd != null
+                    && dayEnd.GetComponent<StudentDayEndInteractor>() != null
+                    && result != null
+                    && journal != null
+                    && provider != null
+                    && trackedHud != null
+                    && EventSystem.current != null)
                 {
                     yield break;
                 }
@@ -151,7 +196,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 yield return null;
             }
 
-            Assert.Fail("MILESTONE-E2E setup failed: milestone runtime did not expose player, outside-school point, day-end point, HUD, result panel, and event system. Last state: " + lastState);
+            Assert.Fail("MILESTONE-E2E setup failed: milestone runtime did not expose player, outside-school point, day-end point, Objective Journal, tracked HUD, result panel, and event system. Last state: " + lastState);
         }
 
         private static MilestoneRuntime FindMilestoneRuntime()
@@ -159,12 +204,49 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var player = GameObject.Find("Player");
             var outside = GameObject.Find("OutsideSchoolActivityPoint");
             var dayEnd = GameObject.Find("StudentDayEndBoard");
-            var hud = Object.FindFirstObjectByType<MilestoneHudPanel>(FindObjectsInactive.Include);
+            var journal = Object.FindFirstObjectByType<ObjectiveJournalPanel>(FindObjectsInactive.Include);
+            var trackedHud = Object.FindFirstObjectByType<TrackedObjectiveHud>(FindObjectsInactive.Include);
             Assert.IsNotNull(player);
             Assert.IsNotNull(outside);
             Assert.IsNotNull(dayEnd);
-            Assert.IsNotNull(hud);
-            return new MilestoneRuntime(player, player.GetComponent<PlayerInteractionRouter>(), player.GetComponent<StudentLifeProgressComponent>(), outside.GetComponent<OutsideSchoolActivityInteractor>(), dayEnd.GetComponent<StudentDayEndInteractor>(), hud);
+            Assert.IsNotNull(journal);
+            Assert.IsNotNull(trackedHud);
+            return new MilestoneRuntime(player, player.GetComponent<PlayerInteractionRouter>(), player.GetComponent<StudentLifeProgressComponent>(), outside.GetComponent<OutsideSchoolActivityInteractor>(), dayEnd.GetComponent<StudentDayEndInteractor>(), journal, trackedHud);
+        }
+
+        private IEnumerator WaitForMilestoneJournalText(Keyboard keyboard, string expected, float timeoutSeconds, string failure)
+        {
+            float elapsed = 0f;
+            while (elapsed < timeoutSeconds)
+            {
+                var runtime = FindMilestoneRuntime();
+                if (!runtime.Journal.IsVisible)
+                {
+                    yield return PressTab(keyboard);
+                }
+
+                yield return ClickButton(FindButton(runtime.Journal.transform, "ObjectiveCategory_Hints"));
+                yield return ClickButton(FindButton(runtime.Journal.transform, "ObjectiveRow_0"));
+                if (runtime.Journal.VisibleText.Contains(expected) || runtime.TrackedHud.VisibleText.Contains(expected))
+                {
+                    yield return ClickButton(FindButton(runtime.Journal.transform, "ObjectiveTrackButton"));
+                    if (runtime.Journal.IsVisible)
+                    {
+                        yield return PressTab(keyboard);
+                    }
+                    yield break;
+                }
+
+                if (runtime.Journal.IsVisible)
+                {
+                    yield return PressTab(keyboard);
+                }
+
+                elapsed += Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            Assert.Fail(failure);
         }
 
         private static IEnumerator WaitForDayResultPanel(float timeoutSeconds, string failure)
@@ -183,7 +265,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         private IEnumerator WalkPlayerWithKeyboardTo(GameObject player, Keyboard keyboard, Vector3 targetPosition, float tolerance, string failure)
         {
             Key activeKey = Key.None;
-            for (int i = 0; i < 360 && Vector3.Distance(player.transform.position, targetPosition) > tolerance; i++)
+            for (int i = 0; i < 480 && Vector3.Distance(player.transform.position, targetPosition) > tolerance; i++)
             {
                 Vector3 delta = targetPosition - player.transform.position;
                 Key key = Mathf.Abs(delta.x) >= Mathf.Abs(delta.y) ? (delta.x >= 0f ? Key.D : Key.A) : (delta.y >= 0f ? Key.W : Key.S);
@@ -210,6 +292,17 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             yield return new WaitForFixedUpdate();
             Release(keyboard.eKey);
+            InputSystem.Update();
+            yield return null;
+        }
+
+        private IEnumerator PressTab(Keyboard keyboard)
+        {
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Tab));
+            InputSystem.Update();
+            yield return null;
+            yield return new WaitForFixedUpdate();
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             InputSystem.Update();
             yield return null;
         }
@@ -249,6 +342,12 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             return FindButton(card.transform, buttonName);
         }
 
+        private static Button FindOptionalButton(string rootName, string buttonName)
+        {
+            var root = GameObject.Find(rootName);
+            return root != null ? FindButton(root.transform, buttonName) : null;
+        }
+
         private static Button FindButton(Transform root, string buttonName)
         {
             if (root.name == buttonName && root.TryGetComponent<Button>(out var button)) return button;
@@ -270,27 +369,51 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.Fail(failure + " Expected text: " + expected);
         }
 
+        private static void AssertNoLegacyMilestoneHudObjects(string message)
+        {
+            Assert.IsNull(GameObject.Find("MilestoneHudPanel"), message + " MilestoneHudPanel exists.");
+            Assert.IsNull(GameObject.Find("MilestoneHudRoot"), message + " MilestoneHudRoot exists.");
+        }
+
         private static ButtonControl ControlFor(Keyboard keyboard, Key key)
         {
             return (ButtonControl)keyboard[key];
         }
 
+        private static void CaptureScreenshot()
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(ScreenshotPath));
+            if (File.Exists(ScreenshotPath)) File.Delete(ScreenshotPath);
+            ScreenCapture.CaptureScreenshot(ScreenshotPath);
+        }
+
         private static void EnsurePassiveEventSystem()
         {
             if (EventSystem.current != null) return;
-            var go = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
+            var go = new GameObject("EventSystem", typeof(EventSystem));
+            go.AddComponent<Rootborn.Game.Common.PassiveInputModule>();
             Object.DontDestroyOnLoad(go);
         }
 
         private static void CleanupResidue()
         {
-            var objects = Object.FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            for (int i = 0; i < objects.Length; i++)
+            DestroyAllNamed("SaveSlotSelectPanel");
+            DestroyAllNamed("SaveSlotCanvas");
+            DestroyAllNamed("SaveSlotSelectRoot");
+            DestroyAllNamed("SpumCharacterCreatorPanel");
+            DestroyAllNamed("EventSystem");
+            DestroyAllNamed("Player");
+            DestroyAllNamed("MilestoneHudPanel");
+            DestroyAllNamed("MilestoneHudRoot");
+        }
+
+        private static void DestroyAllNamed(string objectName)
+        {
+            var transforms = Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            for (int i = transforms.Length - 1; i >= 0; i--)
             {
-                if (objects[i] != null && (objects[i].name.StartsWith("SaveSlotSelectPanel") || objects[i].name == "EventSystem"))
-                {
-                    Object.Destroy(objects[i]);
-                }
+                var transform = transforms[i];
+                if (transform != null && transform.name == objectName) Object.DestroyImmediate(transform.gameObject);
             }
         }
 
@@ -301,16 +424,18 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             public readonly StudentLifeProgressComponent Student;
             public readonly OutsideSchoolActivityInteractor Outside;
             public readonly StudentDayEndInteractor DayEnd;
-            public readonly MilestoneHudPanel Hud;
+            public readonly ObjectiveJournalPanel Journal;
+            public readonly TrackedObjectiveHud TrackedHud;
 
-            public MilestoneRuntime(GameObject player, PlayerInteractionRouter router, StudentLifeProgressComponent student, OutsideSchoolActivityInteractor outside, StudentDayEndInteractor dayEnd, MilestoneHudPanel hud)
+            public MilestoneRuntime(GameObject player, PlayerInteractionRouter router, StudentLifeProgressComponent student, OutsideSchoolActivityInteractor outside, StudentDayEndInteractor dayEnd, ObjectiveJournalPanel journal, TrackedObjectiveHud trackedHud)
             {
                 Player = player;
                 Router = router;
                 Student = student;
                 Outside = outside;
                 DayEnd = dayEnd;
-                Hud = hud;
+                Journal = journal;
+                TrackedHud = trackedHud;
             }
         }
     }

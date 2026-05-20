@@ -77,8 +77,6 @@ namespace Rootborn.UI.StudentLife
             var milestoneApplyResult = milestoneProgress.ApplyDayResult(milestones, progress, inventory != null ? inventory.Inventory : null, endedCurrentDay ? "day:" + summary.DayNumber.ToString() : string.Empty);
             if (endedCurrentDay) MilestoneProgressPersistence.Save(milestoneProgress);
             var milestoneSummary = MilestoneDaySummary.FromApplyResult(milestoneApplyResult, milestones);
-            var hud = UnityEngine.Object.FindFirstObjectByType<MilestoneHudPanel>(FindObjectsInactive.Include);
-            if (hud != null) hud.Refresh(milestones, milestoneProgress, milestoneApplyResult);
 
             var campaignSummary = CampaignRuntimeInstaller.BuildDayEndSummary(player, progress, endedCurrentDay);
             var relationshipConditionSummary = BuildRelationshipConditionSummary(progress, summary.ResultLogIds);

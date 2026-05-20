@@ -172,6 +172,48 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
         }
 
         [Test]
+        public void MilestoneObjectiveSource_DisplaysActiveStateRoutesAndHintsCategory()
+        {
+            string rootDirectory = Path.Combine(Path.GetTempPath(), "rootborn-objective-milestone-active-source-" + Guid.NewGuid().ToString("N"));
+            SaveService.SetRootDirectoryForTests(rootDirectory);
+
+            var objective = ScriptableObject.CreateInstance<OutsideSchoolLogMilestoneObjective>();
+            objective.ConfigureForTests("milestone.objective.outside", "outside-school", 2);
+            var route = ScriptableObject.CreateInstance<MilestoneRouteDefinition>();
+            route.ConfigureForTests("milestone.route.outside", objective, "outside.help-neighbor");
+            var milestone = ScriptableObject.CreateInstance<MilestoneDefinition>();
+            milestone.ConfigureForTests("milestone.active", "Active Milestone", new MilestoneObjectiveBase[] { objective }, Array.Empty<MilestoneRewardBase>(), new[] { route }, 1);
+            var registry = ScriptableObject.CreateInstance<GameDataRegistry>();
+            var player = new GameObject("MilestonePlayer");
+
+            try
+            {
+                SetPrivateField(registry, "_milestones", new[] { milestone });
+                var student = player.AddComponent<StudentLifeProgressComponent>();
+                student.ConfigureForTests("milestone-slot", "player", 10, 10, 0, 8 * 60);
+                MilestoneProgressPersistence.Save(new MilestoneProgress("milestone-slot", "player", new[] { milestone }));
+
+                var items = BuildItemsFromSource("MilestoneObjectiveSource", player, registry);
+
+                Assert.AreEqual(1, items.Length);
+                Assert.AreEqual("Hints", items[0].CategoryId);
+                Assert.AreEqual("Active", items[0].State);
+                StringAssert.Contains("milestone.objective.outside 0 / 2", items[0].ProgressText);
+                StringAssert.Contains("outside.help-neighbor", items[0].NextHintText);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(player);
+                UnityEngine.Object.DestroyImmediate(registry);
+                UnityEngine.Object.DestroyImmediate(objective);
+                UnityEngine.Object.DestroyImmediate(route);
+                UnityEngine.Object.DestroyImmediate(milestone);
+                SaveService.SetRootDirectoryForTests(null);
+                if (Directory.Exists(rootDirectory)) Directory.Delete(rootDirectory, true);
+            }
+        }
+
+        [Test]
         public void MilestoneObjectiveSource_DisplaysRewardClaimedStateAndPerObjectiveProgress()
         {
             string rootDirectory = Path.Combine(Path.GetTempPath(), "rootborn-objective-milestone-source-" + Guid.NewGuid().ToString("N"));

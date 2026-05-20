@@ -1,7 +1,6 @@
 using System;
 using Rootborn.Game.Dialogue;
 using Rootborn.UI.Modern;
-using Rootborn.UI.StudentLife;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -48,11 +47,6 @@ namespace Rootborn.UI.Quests
 
         private static void SetBackgroundHudsVisible(bool visible)
         {
-            var milestone = UnityEngine.Object.FindFirstObjectByType<MilestoneHudPanel>(FindObjectsInactive.Include);
-            if (milestone != null)
-            {
-                if (visible) milestone.Show(); else milestone.Hide();
-            }
         }
 
         public bool Choose(int choiceIndex)
