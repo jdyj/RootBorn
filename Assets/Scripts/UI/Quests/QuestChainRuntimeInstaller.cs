@@ -5,6 +5,7 @@ using Rootborn.Game.Player;
 using Rootborn.Game.Quests;
 using Rootborn.Game.Save;
 using Rootborn.Game.StudentLife;
+using Rootborn.Game.WorldState;
 using Rootborn.UI.Modern;
 using Rootborn.UI.Objectives;
 using Rootborn.UI.StudentLife;
@@ -65,6 +66,7 @@ namespace Rootborn.UI.Quests
             private ObjectiveJournalRuntimeProvider _objectiveProvider;
             private StudentLifeProgressComponent _student;
             private PlayerInventory _playerInventory;
+            private WorldStateProgress _worldStateProgress;
 
             private IEnumerator Start()
             {
@@ -116,6 +118,7 @@ namespace Rootborn.UI.Quests
                 EvaluateAllStates();
                 if (_panel != null) _panel.Bind(_chains, _log, SaveAndRefresh, ResolveRewardContext());
                 SaveProgress();
+                WorldStateProgressPersistence.Save(_worldStateProgress);
                 if (_panel != null) _panel.Refresh();
                 RefreshObjectiveJournal();
             }
@@ -159,7 +162,7 @@ namespace Rootborn.UI.Quests
             private RewardRuntimeContext ResolveRewardContext()
             {
                 var inventory = ResolvePlayerInventory();
-                return new RewardRuntimeContext(null, inventory != null ? inventory.Inventory : null, null, null, ResolveStudentProgress());
+                return new RewardRuntimeContext(null, inventory != null ? inventory.Inventory : null, null, null, ResolveStudentProgress(), ResolveWorldStateProgress());
             }
 
             private PlayerInventory ResolvePlayerInventory()
@@ -182,6 +185,18 @@ namespace Rootborn.UI.Quests
                 }
 
                 return _student != null ? _student.EnsureProgress() : null;
+            }
+
+            private WorldStateProgress ResolveWorldStateProgress()
+            {
+                var studentProgress = ResolveStudentProgress();
+                if (studentProgress == null) return null;
+                if (_worldStateProgress == null || _worldStateProgress.SaveSlot != studentProgress.SaveSlot || _worldStateProgress.PlayerId != studentProgress.PlayerId)
+                {
+                    _worldStateProgress = WorldStateProgressPersistence.LoadOrCreate(studentProgress.SaveSlot, studentProgress.PlayerId);
+                }
+
+                return _worldStateProgress;
             }
 
             private string BuildObjectiveSummary(QuestChainDefinition chain)

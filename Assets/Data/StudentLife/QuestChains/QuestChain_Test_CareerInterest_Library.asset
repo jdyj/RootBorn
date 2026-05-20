@@ -21,5 +21,8 @@ MonoBehaviour:
   _startConditions: []
   _unblockConditions: []
   _blockConditions: []
-  _completionRewards: []
+  _failureConditions: []
+  _expirationConditions: []
+  _completionRewards:
+  - {fileID: 11400000, guid: 27daf492911bf8346bbb4df09d09f75f, type: 2}
   _sortPriority: 10
