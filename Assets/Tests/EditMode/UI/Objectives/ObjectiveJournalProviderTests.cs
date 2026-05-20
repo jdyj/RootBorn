@@ -39,6 +39,29 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
         }
 
         [Test]
+        public void ObjectiveJournalAggregator_DeduplicatesStableKeysAcrossSources()
+        {
+            var goals = new ObjectiveJournalCategory("Goals", "Goals");
+            var sources = new IObjectiveJournalSource[]
+            {
+                new FakeSource("daily-plan-source", goals, new[]
+                {
+                    new ObjectiveJournalItem("shared.route", "Goals", "Daily Plan Route", string.Empty, "Active", "0 / 1", "Do route", false, 0),
+                }),
+                new FakeSource("quest-source", goals, new[]
+                {
+                    new ObjectiveJournalItem("shared.route", "Goals", "Quest Route Duplicate", string.Empty, "Active", "0 / 1", "Do duplicate", false, 1),
+                }),
+            };
+
+            var aggregator = new ObjectiveJournalAggregator(sources);
+            var result = aggregator.Build(new ObjectiveJournalContext(null, null, null));
+
+            Assert.AreEqual(1, result["Goals"].Length, "Objective Journal must keep stable keys unique across all source outputs so reload/tracking cannot bind to duplicate rows.");
+            Assert.AreEqual("Daily Plan Route", result["Goals"][0].Title, "When duplicate stable keys exist, the first registered source keeps ownership.");
+        }
+
+        [Test]
         public void ObjectiveJournalAggregator_AppliesItemsAndRestoresTrackedStableKeyToPanelHud()
         {
             var source = new FakeSource("quest-source", new ObjectiveJournalCategory("Quests", "Quests"), new[]

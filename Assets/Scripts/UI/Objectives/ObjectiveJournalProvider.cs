@@ -50,6 +50,7 @@ namespace Rootborn.UI.Objectives
         public Dictionary<string, ObjectiveJournalItem[]> Build(ObjectiveJournalContext context)
         {
             var byCategory = new Dictionary<string, List<ObjectiveJournalItem>>(StringComparer.Ordinal);
+            var seenStableKeys = new HashSet<string>(StringComparer.Ordinal);
             for (int i = 0; i < _sources.Count; i++)
             {
                 var source = _sources[i];
@@ -68,7 +69,8 @@ namespace Rootborn.UI.Objectives
                 var sourceItems = source.BuildItems(context) ?? Array.Empty<ObjectiveJournalItem>();
                 for (int j = 0; j < sourceItems.Length; j++)
                 {
-                    if (!string.IsNullOrEmpty(sourceItems[j].StableKey))
+                    var stableKey = sourceItems[j].StableKey;
+                    if (!string.IsNullOrEmpty(stableKey) && seenStableKeys.Add(stableKey))
                     {
                         items.Add(sourceItems[j]);
                     }
