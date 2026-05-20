@@ -128,10 +128,13 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
 
         private IEnumerator StartNewTownFromSaveSlotUi()
         {
+            yield return LoadScene("MainMenu");
             SaveSlotSelectPanel.EnsureInScene().Show();
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
+            var creator = GameObject.Find("SpumCharacterCreatorRoot");
+            if (creator != null) yield return ClickButton(FindButton(creator.transform, "ConfirmButton"));
             yield return WaitForScene("Town", 15f, "CLUE-INTERPRET-E2E-012 failed: save slot UI did not enter Town.");
             yield return WaitForTownRuntime(15f);
         }
