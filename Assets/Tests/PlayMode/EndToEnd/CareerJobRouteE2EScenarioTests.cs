@@ -108,8 +108,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             ScreenshotEvidence.Capture(ScreenshotPath);
             yield return ScreenshotEvidence.WaitForNonZeroFile(ScreenshotPath, 3f, "CAREER-JOB-ROUTE-E2E-001 failed: Game View screenshot evidence was not written.");
 
-            AssertSaveContains(DailyPlanProgressPersistence.FileNameFor(PlayerIdentity.DefaultPlayerId), RouteId, "CAREER-JOB-ROUTE-E2E-001 failed: Daily Plan save must include selected workshop route.");
-            AssertSaveContains("student-life-progress.json", WorkId, "CAREER-JOB-ROUTE-E2E-001 failed: StudentLife save must include part-time work progress.");
+            AssertSaveContainsExactlyOnce(DailyPlanProgressPersistence.FileNameFor(PlayerIdentity.DefaultPlayerId), RouteId, "CAREER-JOB-ROUTE-E2E-001 failed: Daily Plan save must include selected workshop route exactly once.");
+            AssertStudentLifeSaveContainsWorkStateExactlyOnce("CAREER-JOB-ROUTE-E2E-001 failed: StudentLife save must include part-time work progress exactly once.");
 
             ActiveSaveContext.Clear();
             PlayerGlobalState.ClearForTests();
@@ -126,6 +126,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var reloaded = FindRuntime();
             Assert.AreEqual(RouteId, reloaded.Daily.Progress.SelectedRouteId, "CAREER-JOB-ROUTE-E2E-001 failed: selected workshop route did not survive reload.");
             Assert.AreEqual(1, PartTimeWorkDayLog.FromResultLogs(reloaded.Student.Progress.GetTodayResultLogIds()).WorkIds.Count(id => id == WorkId), "CAREER-JOB-ROUTE-E2E-001 failed: reload duplicated or removed the work result log.");
+            AssertSaveContainsExactlyOnce(DailyPlanProgressPersistence.FileNameFor(PlayerIdentity.DefaultPlayerId), RouteId, "CAREER-JOB-ROUTE-E2E-001 failed: reload duplicated or removed the selected workshop route save state.");
+            AssertStudentLifeSaveContainsWorkStateExactlyOnce("CAREER-JOB-ROUTE-E2E-001 failed: reload duplicated or removed the part-time work save state.");
             yield return OpenDailyPlanBoard(reloaded, keyboard, "CAREER-JOB-ROUTE-E2E-001 failed: Daily Plan board did not open after reload.");
             DailyPlanE2EDriver.FindRouteButton(reloaded.DailyPanel, RouteLabel, "CAREER-JOB-ROUTE-E2E-001 failed: workshop route availability did not restore after reload.");
             reloaded.DailyPanel.gameObject.SetActive(false);
@@ -245,11 +247,50 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             }
         }
 
-        private void AssertSaveContains(string fileName, string expected, string failure)
+        private void AssertStudentLifeSaveContainsWorkStateExactlyOnce(string failure)
+        {
+            string path = Path.Combine(_saveRoot, TestSlotId, "student-life-progress.json");
+            Assert.IsTrue(File.Exists(path), failure + " Missing file: " + path);
+            string text = File.ReadAllText(path);
+            Assert.AreEqual(1, CountOccurrences(ExtractJsonArrayBlock(text, "AppliedRequestIds"), "\"" + WorkId + ":0\""), failure + " AppliedRequestIds should contain the work request exactly once. Text: " + text);
+            Assert.AreEqual(1, CountOccurrences(ExtractJsonArrayBlock(text, "ActivityLogIds"), "\"" + WorkId + "\""), failure + " ActivityLogIds should contain the work id exactly once. Text: " + text);
+            Assert.AreEqual(1, CountOccurrences(ExtractJsonArrayBlock(text, "TodayActivityIds"), "\"" + WorkId + "\""), failure + " TodayActivityIds should contain the work id exactly once. Text: " + text);
+        }
+
+        private void AssertSaveContainsExactlyOnce(string fileName, string expected, string failure)
         {
             string path = Path.Combine(_saveRoot, TestSlotId, fileName);
             Assert.IsTrue(File.Exists(path), failure + " Missing file: " + path);
-            StringAssert.Contains(expected, File.ReadAllText(path), failure + " File: " + fileName);
+            string text = File.ReadAllText(path);
+            string expectedJsonValue = "\"" + expected + "\"";
+            Assert.AreEqual(1, CountOccurrences(text, expectedJsonValue), failure + " File: " + fileName + " Expected JSON value: " + expectedJsonValue + " Text: " + text);
+        }
+
+        private static string ExtractJsonArrayBlock(string text, string fieldName)
+        {
+            string marker = "\"" + fieldName + "\": [";
+            int start = text.IndexOf(marker, StringComparison.Ordinal);
+            Assert.GreaterOrEqual(start, 0, "Missing JSON array field: " + fieldName + " Text: " + text);
+            int blockStart = start + marker.Length;
+            int end = text.IndexOf("]", blockStart, StringComparison.Ordinal);
+            Assert.Greater(end, blockStart, "JSON array field was not closed: " + fieldName + " Text: " + text);
+            return text.Substring(blockStart, end - blockStart);
+        }
+
+        private static int CountOccurrences(string text, string expected)
+        {
+            if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(expected)) return 0;
+            int count = 0;
+            int index = 0;
+            while (index < text.Length)
+            {
+                int found = text.IndexOf(expected, index, StringComparison.Ordinal);
+                if (found < 0) break;
+                count++;
+                index = found + expected.Length;
+            }
+
+            return count;
         }
 
         private static void AssertObjectiveRowsContainExactlyOnce(ObjectiveJournalPanel panel, string expected, string failure)
