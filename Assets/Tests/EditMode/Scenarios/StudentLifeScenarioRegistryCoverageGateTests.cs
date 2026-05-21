@@ -159,7 +159,19 @@ namespace Rootborn.Tests.EditMode.Scenarios
                     StringAssert.Contains("Builds/Logs/network-dedicated-core-gameplay-matrix-after-smoke-freshness-normalization-rerun", catalog, "Dedicated core matrix catalog row must reference the latest matrix smoke rerun log directory.");
                 }
 
-                private static void AssertCategory(string catalog, string category)
+        [Test]
+        public void SCENARIO_REGISTRY_EDIT_011_CatalogActivatesRelationshipCommitmentScenario()
+        {
+            Assert.IsTrue(File.Exists(CatalogPath), "The current Student Life scenario coverage catalog must exist.");
+            string catalog = File.ReadAllText(CatalogPath);
+
+            StringAssert.Contains("| Active | REL-COMMITMENT-001 | REL | Relationship Commitment | PlayMode | Assets/Tests/PlayMode/EndToEnd/RelationshipActivityCommitmentE2EScenarioTests.cs |", catalog, "Relationship commitment must be active catalog evidence after the PlayMode scenario landed.");
+            StringAssert.Contains("REL_COMMITMENT_E2E_001_TeacherHelpCommitmentReload", catalog);
+            StringAssert.Contains("Builds/Logs/relationship-activity-commitment-e2e.png", catalog);
+            StringAssert.DoesNotContain("| Deferred | REL-COMMITMENT-001 |", catalog, "Relationship commitment must not remain deferred after executable PlayMode coverage landed.");
+        }
+
+        private static void AssertCategory(string catalog, string category)
         {
             StringAssert.Contains("| " + category + " |", catalog, "Catalog must include category " + category + ".");
         }
