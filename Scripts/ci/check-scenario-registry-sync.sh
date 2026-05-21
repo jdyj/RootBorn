@@ -63,3 +63,8 @@ if [ "$missing" -gt 0 ]; then
 fi
 
 echo "OK: scenario registry check complete."
+
+PS_GATE="Scripts/ci/check-scenario-registry-sync.ps1"
+if [ -f "$PS_GATE" ] && command -v powershell.exe >/dev/null 2>&1; then
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$PS_GATE"
+fi
