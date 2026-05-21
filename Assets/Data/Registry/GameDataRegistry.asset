@@ -24,6 +24,8 @@ MonoBehaviour:
   _resources:
   - {fileID: 11400000, guid: eb231f93a6f0fe5418e8c0754b131733, type: 2}
   - {fileID: 11400000, guid: 5a341bbcb8c7a8e49a3be09dda21cf30, type: 2}
+  _recipes:
+  - {fileID: 11400000, guid: d0c3f78b43674ee40b4b59fcf6c5f02b, type: 2}
   _knowledge:
   - {fileID: 11400000, guid: 83000c80ee557bc4c8edf1bb6a390a3a, type: 2}
   - {fileID: 11400000, guid: c88d10affec11784996e4bc6ce3d82d4, type: 2}

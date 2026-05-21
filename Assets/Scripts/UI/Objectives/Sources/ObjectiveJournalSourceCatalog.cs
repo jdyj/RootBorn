@@ -9,6 +9,7 @@ namespace Rootborn.UI.Objectives
                 new StudentDayGuideObjectiveSource(),
                 new DailyPlanObjectiveSource(),
                 new DailyPlanRouteHintObjectiveSource(),
+                new ResourceRecipeObjectiveSource(),
                 new QuestLogObjectiveSource(),
                 new QuestChainObjectiveSource(),
                 new CampaignObjectiveSource(),

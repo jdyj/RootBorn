@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f92ad547f86f95c4b8de98f58ce4ed20, type: 3}
+  m_Name: Outcome_Square_FieldNotesRecipe
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.LocationActivityResourceRecipeOutcome
+  _resource: {fileID: 11400000, guid: 5a341bbcb8c7a8e49a3be09dda21cf30, type: 2}
+  _recipe: {fileID: 11400000, guid: d0c3f78b43674ee40b4b59fcf6c5f02b, type: 2}
+  _nextHintKey: objective.recipe.field-notes.next

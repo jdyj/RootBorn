@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Rootborn.Game.Characters;
 using Rootborn.Game.Characters.Spum;
 using Rootborn.Game.Crops;
+using Rootborn.Game.Crafting;
 using Rootborn.Game.Dialogue;
 using Rootborn.Game.DiscoveryClues;
 using Rootborn.Game.Encyclopedia;
@@ -247,6 +248,7 @@ namespace Rootborn.Game.Common
         [SerializeField] private ToolDefinition[] _tools = Array.Empty<ToolDefinition>();
         [SerializeField] private ToolVisualMappingDefinition[] _toolVisualMappings = Array.Empty<ToolVisualMappingDefinition>();
         [SerializeField] private ResourceNodeDefinition[] _resources = Array.Empty<ResourceNodeDefinition>();
+        [SerializeField] private RecipeDefinition[] _recipes = Array.Empty<RecipeDefinition>();
         [SerializeField] private KnowledgeNode[] _knowledge = Array.Empty<KnowledgeNode>();
         [SerializeField] private HeirTrait[] _traits = Array.Empty<HeirTrait>();
         [SerializeField] private StatusEffectDefinition[] _statuses = Array.Empty<StatusEffectDefinition>();
@@ -346,6 +348,7 @@ namespace Rootborn.Game.Common
         public ToolDefinition[] Tools => _tools;
         public ToolVisualMappingDefinition[] ToolVisualMappings => _toolVisualMappings;
         public ResourceNodeDefinition[] Resources => _resources;
+        public RecipeDefinition[] Recipes => _recipes;
         public KnowledgeNode[] Knowledge => _knowledge;
         public HeirTrait[] Traits => _traits;
         public StatusEffectDefinition[] Statuses => _statuses;
