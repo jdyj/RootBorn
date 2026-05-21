@@ -155,8 +155,8 @@ namespace Rootborn.Tests.EditMode.Scenarios
                     string catalog = File.ReadAllText(CatalogPath);
 
                     StringAssert.Contains("| Active | NET-CORE-MATRIX-001 | NET | Dedicated Core Matrix | QA runner | Scripts/qa/run-dedicated-core-gameplay-matrix.ps1 |", catalog, "Dedicated core matrix must remain active catalog evidence.");
-                    StringAssert.Contains("docs/superpowers/audits/2026-05-21-dedicated-core-gameplay-matrix-evidence-refresh.md", catalog, "Dedicated core matrix catalog row must reference the latest matrix evidence refresh audit.");
-                    StringAssert.Contains("Builds/Logs/network-dedicated-core-gameplay-matrix-refresh", catalog, "Dedicated core matrix catalog row must reference the latest matrix evidence log directory.");
+                    StringAssert.Contains("docs/superpowers/audits/2026-05-21-dedicated-core-gameplay-matrix-smoke-rerun-after-freshness-normalization.md", catalog, "Dedicated core matrix catalog row must reference the latest matrix smoke rerun audit.");
+                    StringAssert.Contains("Builds/Logs/network-dedicated-core-gameplay-matrix-after-smoke-freshness-normalization-rerun", catalog, "Dedicated core matrix catalog row must reference the latest matrix smoke rerun log directory.");
                 }
 
                 private static void AssertCategory(string catalog, string category)
