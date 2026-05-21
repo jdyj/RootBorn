@@ -8,7 +8,7 @@ namespace Rootborn.Tests.EditMode.Network
         private const string MatrixScriptPath = "Scripts/qa/run-dedicated-core-gameplay-matrix.ps1";
 
         [Test]
-        public void DEDICATED_CORE_MATRIX_EDIT_001_MatrixRunnerDefinesThreeDedicatedSlicesAndInputs()
+        public void DEDICATED_CORE_MATRIX_EDIT_001_MatrixRunnerDefinesCurrentDedicatedSlicesAndInputs()
         {
             Assert.IsTrue(File.Exists(MatrixScriptPath), "Dedicated core gameplay matrix runner must exist.");
             string source = File.ReadAllText(MatrixScriptPath);
@@ -19,9 +19,13 @@ namespace Rootborn.Tests.EditMode.Network
             StringAssert.Contains("run-dedicated-route-relationship-smoke.ps1", source);
             StringAssert.Contains("run-dedicated-career-daily-plan-route-smoke.ps1", source);
             StringAssert.Contains("run-dedicated-daily-plan-completion-smoke.ps1", source);
+            StringAssert.Contains("run-dedicated-discovery-route-unlock-smoke.ps1", source);
+            StringAssert.Contains("run-dedicated-resource-recipe-activity-smoke.ps1", source);
             StringAssert.Contains("route-relationship", source);
             StringAssert.Contains("career-daily-plan-route", source);
             StringAssert.Contains("daily-plan-completion", source);
+            StringAssert.Contains("discovery-route-unlock", source);
+            StringAssert.Contains("resource-recipe-activity", source);
             StringAssert.Contains("$StartPort +", source, "Matrix slices must not compete for the same port.");
             StringAssert.Contains("SaveSlot", source, "Matrix slices must use isolated save slots.");
         }
@@ -40,11 +44,21 @@ namespace Rootborn.Tests.EditMode.Network
             StringAssert.Contains("autoplay completed career-daily-plan-route-observe", source);
             StringAssert.Contains("autoplay completed daily-plan-completion", source);
             StringAssert.Contains("autoplay completed daily-plan-completion-observe", source);
+            StringAssert.Contains("autoplay completed discovery-route-unlock", source);
+            StringAssert.Contains("autoplay completed discovery-route-unlock-observe", source);
+            StringAssert.Contains("autoplay completed resource-recipe-activity", source);
+            StringAssert.Contains("autoplay completed resource-recipe-activity-observe", source);
             StringAssert.Contains("network-dedicated-route-relationship-e2e.png", source);
             StringAssert.Contains("network-dedicated-career-daily-plan-route-e2e.png", source);
             StringAssert.Contains("network-dedicated-daily-plan-completion-e2e.png", source);
-            StringAssert.Contains("duplicateRows:0", source, "Matrix must preserve Daily Plan completion duplicate-state evidence.");
+            StringAssert.Contains("network-dedicated-discovery-route-unlock-e2e.png", source);
+            StringAssert.Contains("network-dedicated-resource-recipe-activity-e2e.png", source);
+            StringAssert.Contains("duplicateRows:0", source, "Matrix must preserve duplicate-state evidence.");
             StringAssert.Contains("hud=.*duplicates:0", source, "Matrix must preserve HUD duplicate-state evidence.");
+            StringAssert.Contains("recipe=recipe.town.field-notes revealed:true", source, "Matrix must preserve Resource/Recipe recipe evidence.");
+            StringAssert.Contains("resource=Rock seen:true", source, "Matrix must preserve Resource/Recipe resource evidence.");
+            StringAssert.Contains("clue=.*seen:true", source, "Matrix must preserve Discovery clue evidence.");
+            StringAssert.Contains("worldState=.*active:true", source, "Matrix must preserve Discovery world-state evidence.");
         }
 
         [Test]

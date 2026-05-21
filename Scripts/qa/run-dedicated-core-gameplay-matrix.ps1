@@ -53,6 +53,32 @@ try {
             ObserveMarker = "autoplay completed daily-plan-completion-observe"
             StatePattern = "dailyPlan=day:.*selected:(?!empty).*completed:(?!empty)"
             ExtraPatterns = @("result=.*Daily Plan", "duplicateRows:0", "hud=.*duplicates:0")
+        },
+        [PSCustomObject]@{
+            Name = "discovery-route-unlock"
+            Script = "Scripts\qa\run-dedicated-discovery-route-unlock-smoke.ps1"
+            RunName = "$RunName\discovery-route-unlock"
+            SaveSlot = "$RunName-discovery-route-unlock"
+            Port = $StartPort + 3
+            FirstScreenshot = "network-dedicated-discovery-route-unlock-e2e.png"
+            ReloadScreenshot = "network-dedicated-discovery-route-unlock-e2e-reload.png"
+            ActionMarker = "autoplay completed discovery-route-unlock"
+            ObserveMarker = "autoplay completed discovery-route-unlock-observe"
+            StatePattern = "dailyPlan=day:.*selected:(?!empty)"
+            ExtraPatterns = @("clue=.*seen:true", "interpretation=.*completed:true", "worldState=.*active:true", "journal=.*duplicateRows:0", "hud=.*duplicates:0")
+        },
+        [PSCustomObject]@{
+            Name = "resource-recipe-activity"
+            Script = "Scripts\qa\run-dedicated-resource-recipe-activity-smoke.ps1"
+            RunName = "$RunName\resource-recipe-activity"
+            SaveSlot = "$RunName-resource-recipe-activity"
+            Port = $StartPort + 4
+            FirstScreenshot = "network-dedicated-resource-recipe-activity-e2e.png"
+            ReloadScreenshot = "network-dedicated-resource-recipe-activity-e2e-reload.png"
+            ActionMarker = "autoplay completed resource-recipe-activity"
+            ObserveMarker = "autoplay completed resource-recipe-activity-observe"
+            StatePattern = "recipe=recipe.town.field-notes revealed:true"
+            ExtraPatterns = @("resource=Rock seen:true", "journal=resource-recipe duplicateRows:0", "hud=tracked duplicates:0", "save=resource-recipe exists:true")
         }
     )
 
