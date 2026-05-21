@@ -1,0 +1,173 @@
+param(
+    [int]$StartPort = 7901,
+    [int]$WaitSeconds = 120,
+    [string]$RunName = "network-dedicated-core-gameplay-matrix"
+)
+
+$ErrorActionPreference = "Stop"
+
+$repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
+Push-Location $repoRoot
+try {
+    $logsRoot = "Builds\Logs"
+    New-Item -ItemType Directory -Path $logsRoot -Force | Out-Null
+    $matrixLogDir = Join-Path (Resolve-Path $logsRoot) $RunName
+    New-Item -ItemType Directory -Path $matrixLogDir -Force | Out-Null
+
+    $slices = @(
+        [PSCustomObject]@{
+            Name = "route-relationship"
+            Script = "Scripts\qa\run-dedicated-route-relationship-smoke.ps1"
+            RunName = "$RunName\route-relationship"
+            SaveSlot = "$RunName-route-relationship"
+            Port = $StartPort + 0
+            FirstScreenshot = "network-dedicated-route-relationship-e2e.png"
+            ReloadScreenshot = "network-dedicated-route-relationship-e2e-reload.png"
+            ActionMarker = "autoplay completed route-relationship"
+            ObserveMarker = "autoplay completed route-relationship-observe"
+            StatePattern = "dailyPlan=day:.*selected:(?!empty)"
+            ExtraPatterns = @("relationships=(?!empty)")
+        },
+        [PSCustomObject]@{
+            Name = "career-daily-plan-route"
+            Script = "Scripts\qa\run-dedicated-career-daily-plan-route-smoke.ps1"
+            RunName = "$RunName\career-daily-plan-route"
+            SaveSlot = "$RunName-career-daily-plan-route"
+            Port = $StartPort + 1
+            FirstScreenshot = "network-dedicated-career-daily-plan-route-e2e.png"
+            ReloadScreenshot = "network-dedicated-career-daily-plan-route-e2e-reload.png"
+            ActionMarker = "autoplay completed career-daily-plan-route"
+            ObserveMarker = "autoplay completed career-daily-plan-route-observe"
+            StatePattern = "dailyPlan=day:.*selected:(?!empty)"
+            ExtraPatterns = @("careerHints=(?!empty)")
+        },
+        [PSCustomObject]@{
+            Name = "daily-plan-completion"
+            Script = "Scripts\qa\run-dedicated-daily-plan-completion-smoke.ps1"
+            RunName = "$RunName\daily-plan-completion"
+            SaveSlot = "$RunName-daily-plan-completion"
+            Port = $StartPort + 2
+            FirstScreenshot = "network-dedicated-daily-plan-completion-e2e.png"
+            ReloadScreenshot = "network-dedicated-daily-plan-completion-e2e-reload.png"
+            ActionMarker = "autoplay completed daily-plan-completion"
+            ObserveMarker = "autoplay completed daily-plan-completion-observe"
+            StatePattern = "dailyPlan=day:.*selected:(?!empty).*completed:(?!empty)"
+            ExtraPatterns = @("result=.*Daily Plan", "duplicateRows:0", "hud=.*duplicates:0")
+        }
+    )
+
+    function Assert-LogContains {
+        param(
+            [string[]]$Paths,
+            [string]$Pattern,
+            [string]$Message
+        )
+
+        foreach ($path in $Paths) {
+            if (-not (Test-Path -LiteralPath $path)) {
+                throw "$Message. Missing log: $path"
+            }
+        }
+
+        if (-not (Select-String -Path $Paths -Pattern $Pattern -Quiet)) {
+            throw "$Message ($($Paths -join ', ') :: $Pattern)"
+        }
+    }
+
+    function Assert-Screenshot {
+        param(
+            [string]$Path,
+            [string]$Message
+        )
+
+        if (-not (Test-Path -LiteralPath $Path)) {
+            throw "${Message}: $Path"
+        }
+
+        $item = Get-Item -LiteralPath $Path
+        if ($item.Length -le 0) {
+            throw "${Message}: zero-byte screenshot at $Path"
+        }
+    }
+
+    function Assert-SliceEvidence {
+        param([object]$Slice)
+
+        $sliceLogDir = Join-Path (Resolve-Path $logsRoot) $Slice.RunName
+        if (-not (Test-Path -LiteralPath $sliceLogDir)) {
+            throw "Slice '$($Slice.Name)' log directory missing: $sliceLogDir"
+        }
+
+        $clientFirstLog = Join-Path $sliceLogDir "client-first-player.log"
+        $clientReloadLog = Join-Path $sliceLogDir "client-reload-player.log"
+        $serverFirstLog = Join-Path $sliceLogDir "server-first-player.log"
+        $serverReloadLog = Join-Path $sliceLogDir "server-reload-player.log"
+        $firstScreenshot = Join-Path $sliceLogDir $Slice.FirstScreenshot
+        $reloadScreenshot = Join-Path $sliceLogDir $Slice.ReloadScreenshot
+
+        Assert-LogContains @($serverFirstLog) "Dedicated server started - port=$($Slice.Port)" "Slice '$($Slice.Name)' server readiness marker missing"
+        Assert-LogContains @($clientFirstLog) "Client started - joinIp=127.0.0.1 port=$($Slice.Port)" "Slice '$($Slice.Name)' client readiness marker missing"
+        Assert-LogContains @($clientFirstLog) $Slice.ActionMarker "Slice '$($Slice.Name)' action completion marker missing"
+        Assert-LogContains @($clientReloadLog) $Slice.ObserveMarker "Slice '$($Slice.Name)' observe completion marker missing"
+        Assert-LogContains @($clientFirstLog, $clientReloadLog) $Slice.StatePattern "Slice '$($Slice.Name)' state marker missing"
+
+        foreach ($pattern in $Slice.ExtraPatterns) {
+            Assert-LogContains @($clientFirstLog, $clientReloadLog) $pattern "Slice '$($Slice.Name)' required extra evidence missing"
+        }
+
+        Assert-Screenshot $firstScreenshot "Slice '$($Slice.Name)' action screenshot missing"
+        Assert-Screenshot $reloadScreenshot "Slice '$($Slice.Name)' reload screenshot missing"
+
+        return [PSCustomObject]@{
+            Slice = $Slice.Name
+            Result = "Passed"
+            Port = $Slice.Port
+            SaveSlot = $Slice.SaveSlot
+            LogDir = $sliceLogDir
+            FirstScreenshot = $firstScreenshot
+            ReloadScreenshot = $reloadScreenshot
+        }
+    }
+
+    function Invoke-Slice {
+        param([object]$Slice)
+
+        if (-not (Test-Path -LiteralPath $Slice.Script)) {
+            throw "Slice '$($Slice.Name)' script missing: $($Slice.Script)"
+        }
+
+        Write-Host "=== Running dedicated matrix slice: $($Slice.Name) port=$($Slice.Port) saveSlot=$($Slice.SaveSlot) ==="
+        $process = Start-Process -FilePath "powershell.exe" -ArgumentList @(
+            "-NoProfile",
+            "-ExecutionPolicy", "Bypass",
+            "-File", $Slice.Script,
+            "-RunName", $Slice.RunName,
+            "-SaveSlot", $Slice.SaveSlot,
+            "-Port", "$($Slice.Port)",
+            "-WaitSeconds", "$WaitSeconds"
+        ) -PassThru -Wait -NoNewWindow
+
+        if ($process.ExitCode -ne 0) {
+            throw "Slice '$($Slice.Name)' failed with ExitCode=$($process.ExitCode). Inspect Builds/Logs/$($Slice.RunName)."
+        }
+
+        return Assert-SliceEvidence $Slice
+    }
+
+    $sliceResults = @()
+    foreach ($slice in $slices) {
+        $sliceResults += Invoke-Slice $slice
+    }
+
+    [PSCustomObject]@{
+        Result = "Passed"
+        RunName = $RunName
+        StartPort = $StartPort
+        WaitSeconds = $WaitSeconds
+        MatrixLogDir = $matrixLogDir
+        SliceResults = $sliceResults
+    } | Format-List
+}
+finally {
+    Pop-Location
+}
