@@ -148,7 +148,18 @@ namespace Rootborn.Tests.EditMode.Scenarios
             StringAssert.Contains("Builds/Logs/network-dedicated-route-relationship-longrun-refresh", catalog);
         }
 
-        private static void AssertCategory(string catalog, string category)
+        [Test]
+                public void SCENARIO_REGISTRY_EDIT_010_CatalogReferencesDedicatedCoreMatrixRefreshEvidence()
+                {
+                    Assert.IsTrue(File.Exists(CatalogPath), "The current Student Life scenario coverage catalog must exist.");
+                    string catalog = File.ReadAllText(CatalogPath);
+
+                    StringAssert.Contains("| Active | NET-CORE-MATRIX-001 | NET | Dedicated Core Matrix | QA runner | Scripts/qa/run-dedicated-core-gameplay-matrix.ps1 |", catalog, "Dedicated core matrix must remain active catalog evidence.");
+                    StringAssert.Contains("docs/superpowers/audits/2026-05-21-dedicated-core-gameplay-matrix-evidence-refresh.md", catalog, "Dedicated core matrix catalog row must reference the latest matrix evidence refresh audit.");
+                    StringAssert.Contains("Builds/Logs/network-dedicated-core-gameplay-matrix-refresh", catalog, "Dedicated core matrix catalog row must reference the latest matrix evidence log directory.");
+                }
+
+                private static void AssertCategory(string catalog, string category)
         {
             StringAssert.Contains("| " + category + " |", catalog, "Catalog must include category " + category + ".");
         }
