@@ -91,7 +91,7 @@ namespace Rootborn.Game.StudentLife
                 for (int i = 0; i < milestones.Count; i++)
                 {
                     var milestone = milestones[i];
-                    if (milestone == null || string.IsNullOrEmpty(milestone.Id)) continue;
+                    if (milestone == null || string.IsNullOrEmpty(milestone.Id) || !PrerequisitesSatisfied(milestone)) continue;
                     var record = GetOrCreateRecord(milestone.Id);
                     bool wasCompleted = record.Completed;
                     int completedCount = 0;
@@ -253,6 +253,19 @@ namespace Rootborn.Game.StudentLife
             return record;
         }
 
+        private bool PrerequisitesSatisfied(MilestoneDefinition milestone)
+        {
+            var prerequisites = milestone != null ? milestone.PrerequisiteMilestones : null;
+            if (prerequisites == null || prerequisites.Length == 0) return true;
+            for (int i = 0; i < prerequisites.Length; i++)
+            {
+                var prerequisite = prerequisites[i];
+                if (prerequisite != null && !IsCompleted(prerequisite)) return false;
+            }
+
+            return true;
+        }
+
         private string[] CollectRecommendations(IReadOnlyList<MilestoneDefinition> milestones)
         {
             var list = new List<string>();
@@ -261,7 +274,7 @@ namespace Rootborn.Game.StudentLife
                 for (int i = 0; i < milestones.Count; i++)
                 {
                     var milestone = milestones[i];
-                    if (milestone == null || string.IsNullOrEmpty(milestone.Id) || GetOrCreateRecord(milestone.Id).Completed) continue;
+                    if (milestone == null || string.IsNullOrEmpty(milestone.Id) || GetOrCreateRecord(milestone.Id).Completed || !PrerequisitesSatisfied(milestone)) continue;
                     var routes = milestone.Routes;
                     if (routes == null) continue;
                     for (int j = 0; j < routes.Length; j++)

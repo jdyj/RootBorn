@@ -25,7 +25,7 @@ namespace Rootborn.UI.Objectives
             for (int i = 0; i < milestones.Length; i++)
             {
                 var milestone = milestones[i];
-                if (milestone == null || string.IsNullOrEmpty(milestone.Id))
+                if (milestone == null || string.IsNullOrEmpty(milestone.Id) || !PrerequisitesSatisfied(progress, milestone))
                 {
                     continue;
                 }
@@ -43,6 +43,26 @@ namespace Rootborn.UI.Objectives
             }
 
             return items.ToArray();
+        }
+
+        private static bool PrerequisitesSatisfied(MilestoneProgress progress, MilestoneDefinition milestone)
+        {
+            var prerequisites = milestone != null ? milestone.PrerequisiteMilestones : null;
+            if (prerequisites == null || prerequisites.Length == 0)
+            {
+                return true;
+            }
+
+            for (int i = 0; i < prerequisites.Length; i++)
+            {
+                var prerequisite = prerequisites[i];
+                if (prerequisite != null && !progress.IsCompleted(prerequisite))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private static string BuildMilestoneStateText(MilestoneProgress progress, MilestoneDefinition milestone)

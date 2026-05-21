@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3783a479aef42364d91ade19b310cbc5, type: 3}
+  m_Name: Milestone_TeacherCommitment
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.MilestoneDefinition
+  _id: milestone.teacher-commitment
+  _displayNameKey: milestone.teacher-commitment
+  _objectives:
+  - {fileID: 11400000, guid: f3ccffb973022b44781428ced39fa933, type: 2}
+  _rewards: []
+  _routes:
+  - {fileID: 11400000, guid: fe90b32a3729448449f7d0d6d8306ecf, type: 2}
+  _prerequisiteMilestones:
+  - {fileID: 11400000, guid: de4f2cd003d1c4040a9b40d97e726e87, type: 2}
+  _requiredObjectiveCount: 1
