@@ -72,5 +72,16 @@ namespace Rootborn.Tests.EditMode.Network
             StringAssert.Contains("BuildServerWindows64", source, "Freshness failure output must name the server build remediation command.");
             StringAssert.Contains("BuildClientWindows64", source, "Freshness failure output must name the client build remediation command.");
         }
+
+        [Test]
+        public void DEDICATED_DAILY_PLAN_COMPLETION_EDIT_004_AutoplaySelectsCanonicalLibraryRouteByVisibleRowText()
+        {
+            Assert.IsTrue(File.Exists(SourcePath), "Dedicated Daily Plan completion autoplay installer must exist.");
+            string source = File.ReadAllText(SourcePath);
+
+            StringAssert.Contains("daily.route.library.self-study", source, "Dedicated Daily Plan completion smoke must select the same stable Library route used by the player-facing E2E.");
+            StringAssert.Contains("WaitForRouteButtonContaining", source, "Dedicated Daily Plan completion smoke must select a visible route row by text instead of the first generated row.");
+            StringAssert.Contains("Library", source, "Failure output must identify the intended Library route when the visible row is missing.");
+        }
     }
 }

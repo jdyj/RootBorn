@@ -23,6 +23,7 @@ namespace Rootborn.Game.Common
         private const string TownSceneName = "Town";
         private const string DailyPlanBoardName = "DailyPlanBoard";
         private const string DailyPlanRouteRowName = "DailyPlanRouteRow";
+        private const string CanonicalRouteLabel = "daily.route.library.self-study";
         private const string DayEndObjectName = "StudentDayEndBoard";
         private const string DailyPlanPanelTypeName = "Rootborn.UI.StudentLife.DailyPlanPanel";
         private const string LocationPanelTypeName = "Rootborn.UI.StudentLife.LocationIdentityPanel";
@@ -192,10 +193,10 @@ namespace Rootborn.Game.Common
                 yield return PressKey(Key.E);
 
                 Button routeButton = null;
-                yield return WaitForRouteButton(value => routeButton = value);
+                yield return WaitForRouteButtonContaining(CanonicalRouteLabel, value => routeButton = value);
                 if (routeButton == null)
                 {
-                    DirectValidationTrace.Log("autoplay failed: Daily Plan route button not selectable " + DescribeDailyPlanUiState());
+                    DirectValidationTrace.Log("autoplay failed: Library Daily Plan route button not selectable label=" + CanonicalRouteLabel + " " + DescribeDailyPlanUiState());
                     assign(false);
                     yield break;
                 }
@@ -379,7 +380,7 @@ namespace Rootborn.Game.Common
                 assign(found);
             }
 
-            private static IEnumerator WaitForRouteButton(Action<Button> assign)
+            private static IEnumerator WaitForRouteButtonContaining(string label, Action<Button> assign)
             {
                 Button found = null;
                 float elapsed = 0f;
@@ -389,7 +390,13 @@ namespace Rootborn.Game.Common
                     for (int i = 0; i < buttons.Length; i++)
                     {
                         var button = buttons[i];
-                        if (button != null && button.interactable && button.gameObject.activeInHierarchy && button.gameObject.name == DailyPlanRouteRowName)
+                        if (button == null || !button.interactable || !button.gameObject.activeInHierarchy || button.gameObject.name != DailyPlanRouteRowName)
+                        {
+                            continue;
+                        }
+
+                        var text = button.GetComponentInChildren<Text>(true);
+                        if (text != null && !string.IsNullOrEmpty(text.text) && text.text.Contains(label))
                         {
                             found = button;
                             break;

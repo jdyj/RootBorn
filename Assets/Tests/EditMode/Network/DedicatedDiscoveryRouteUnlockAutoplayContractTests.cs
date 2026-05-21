@@ -79,5 +79,16 @@ namespace Rootborn.Tests.EditMode.Network
             StringAssert.Contains("BuildServerWindows64", source, "Freshness failure output must name the server build remediation command.");
             StringAssert.Contains("BuildClientWindows64", source, "Freshness failure output must name the client build remediation command.");
         }
+
+        [Test]
+        public void DEDICATED_DISCOVERY_ROUTE_UNLOCK_EDIT_004_AutoplayTreatsAlreadyCompletedInterpretationAsIdempotentProgress()
+        {
+            Assert.IsTrue(File.Exists(SourcePath), "Dedicated discovery route unlock autoplay installer must exist.");
+            string source = File.ReadAllText(SourcePath);
+
+            StringAssert.Contains("IsInterpretationCompleted", source, "Discovery autoplay must inspect saved interpretation progress before failing on a missing choice button.");
+            StringAssert.Contains("autoplay interpretation already completed", source, "Discovery autoplay must log the idempotent already-completed interpretation path for matrix diagnostics.");
+            StringAssert.Contains("WaitForWorldState", source, "Already-completed interpretation must continue through world-state, route selection, screenshot, and evidence logging.");
+        }
     }
 }

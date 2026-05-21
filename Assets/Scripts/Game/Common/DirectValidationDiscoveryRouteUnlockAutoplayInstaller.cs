@@ -201,12 +201,20 @@ namespace Rootborn.Game.Common
                 yield return WaitForButtonContaining(InterpretationButtonText, 5f, value => choiceButton = value);
                 if (choiceButton == null)
                 {
-                    DirectValidationTrace.Log("autoplay failed: interpretation choice button missing text=" + InterpretationButtonText + " " + InterpretationSnapshot(identity));
-                    assign(false);
-                    yield break;
+                    if (!IsInterpretationCompleted(identity))
+                    {
+                        DirectValidationTrace.Log("autoplay failed: interpretation choice button missing text=" + InterpretationButtonText + " " + InterpretationSnapshot(identity));
+                        assign(false);
+                        yield break;
+                    }
+
+                    DirectValidationTrace.Log("autoplay interpretation already completed player=" + identity.PlayerId + " " + InterpretationSnapshot(identity));
+                }
+                else
+                {
+                    yield return ClickButton(choiceButton);
                 }
 
-                yield return ClickButton(choiceButton);
                 bool worldActive = false;
                 yield return WaitForWorldState(identity, worldFlag, value => worldActive = value);
                 if (!worldActive)
@@ -603,13 +611,19 @@ namespace Rootborn.Game.Common
                 return "clue=id:" + ClueId + ",seen:" + BoolText(record.Seen) + ",completed:" + BoolText(record.Completed) + ",records:" + progress.ToSaveData().Records.Length;
             }
 
+            private static bool IsInterpretationCompleted(PlayerIdentity identity)
+            {
+                var progress = ClueInterpretationProgressPersistence.LoadOrCreate(ResolveSaveSlot(identity), ResolvePlayerId(identity));
+                var data = progress.ToSaveData();
+                for (int i = 0; i < data.Records.Length; i++) if (data.Records[i] != null && data.Records[i].Completed) return true;
+                return false;
+            }
+
             private static string InterpretationSnapshot(PlayerIdentity identity)
             {
                 var progress = ClueInterpretationProgressPersistence.LoadOrCreate(ResolveSaveSlot(identity), ResolvePlayerId(identity));
                 var data = progress.ToSaveData();
-                bool completed = false;
-                for (int i = 0; i < data.Records.Length; i++) if (data.Records[i] != null && data.Records[i].Completed) completed = true;
-                return "interpretation=completed:" + BoolText(completed) + ",records:" + data.Records.Length;
+                return "interpretation=completed:" + BoolText(IsInterpretationCompleted(identity)) + ",records:" + data.Records.Length;
             }
 
             private static string WorldStateSnapshot(PlayerIdentity identity, GameDataRegistry registry)
