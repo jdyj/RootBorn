@@ -1,6 +1,7 @@
 <linker>
   <assembly fullname="Rootborn.Game, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
     <type fullname="Rootborn.Game.Common.DirectValidationAutoplayInstaller" preserve="all" />
+    <type fullname="Rootborn.Game.Common.DirectValidationDailyPlanCompletionAutoplayInstaller" preserve="all" />
     <type fullname="Rootborn.Game.Common.DirectValidationRouteRelationshipAutoplayInstaller" preserve="all" />
     <type fullname="Rootborn.Game.Common.DirectValidationTrace" preserve="all" />
     <type fullname="Rootborn.Game.Common.DirectValidationTraceInstaller" preserve="all" />
@@ -60,6 +61,7 @@
     <type fullname="Rootborn.Game.Quests.QuestChainDefinition" preserve="all" />
     <type fullname="Rootborn.Game.Quests.QuestDefinition" preserve="all" />
     <type fullname="Rootborn.Game.Quests.QuestStepDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.Quests.Rewards.FurnitureUnlockQuestReward" preserve="all" />
     <type fullname="Rootborn.Game.Quests.Rewards.ItemQuestReward" preserve="all" />
     <type fullname="Rootborn.Game.Quests.Rewards.WorldStateChangeQuestReward" preserve="all" />
     <type fullname="Rootborn.Game.Resources.ResourceNodeDefinition" preserve="all" />
@@ -86,6 +88,7 @@
     <type fullname="Rootborn.Game.StudentLife.DailyEventRelationshipDeltaOutcome" preserve="all" />
     <type fullname="Rootborn.Game.StudentLife.DailyEventStatusDeltaOutcome" preserve="all" />
     <type fullname="Rootborn.Game.StudentLife.DailyEventTraitDeltaOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.DailyPlanCareerHintRequirement" preserve="all" />
     <type fullname="Rootborn.Game.StudentLife.DailyPlanRouteDefinition" preserve="all" />
     <type fullname="Rootborn.Game.StudentLife.DailyPlanRouteSetDefinition" preserve="all" />
     <type fullname="Rootborn.Game.StudentLife.DailyPlanWorldStateRequirement" preserve="all" />
@@ -127,6 +130,7 @@
     <type fullname="Rootborn.Game.StudentLife.PartTimeWorkDefinition" preserve="all" />
     <type fullname="Rootborn.Game.StudentLife.PracticeStepDefinition" preserve="all" />
     <type fullname="Rootborn.Game.StudentLife.RelationshipDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.RelationshipMilestoneObjective" preserve="all" />
     <type fullname="Rootborn.Game.StudentLife.SkillDefinition" preserve="all" />
     <type fullname="Rootborn.Game.StudentLife.SkillProgressActivityEffect" preserve="all" />
     <type fullname="Rootborn.Game.StudentLife.StatusDefinition" preserve="all" />
@@ -148,7 +152,6 @@
     <type fullname="Rootborn.Game.WorldGeneration.TilePatternDefinition" preserve="all" />
     <type fullname="Rootborn.Game.WorldGeneration.TileVariantSetDefinition" preserve="all" />
     <type fullname="Rootborn.Game.WorldState.WorldStateFlagDefinition" preserve="all" />
-    <type fullname="Rootborn.Game.WorldState.WorldStateProgress" preserve="all" />
     <type fullname="Rootborn.Game.WorldState.WorldStateScopeDefinition" preserve="all" />
     <type fullname="Rootborn.Game.WorldState.WorldStateUsageCareerHintOutcome" preserve="all" />
     <type fullname="Rootborn.Game.WorldState.WorldStateUsageDefinition" preserve="all" />
