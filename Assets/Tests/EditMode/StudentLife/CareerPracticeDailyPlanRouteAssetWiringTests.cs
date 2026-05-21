@@ -5,6 +5,7 @@ using System.Reflection;
 using NUnit.Framework;
 using Rootborn.Game.Common;
 using Rootborn.Game.Player;
+using Rootborn.Game.Quests;
 using Rootborn.Game.Save;
 using Rootborn.Game.StudentLife;
 using Rootborn.UI.Objectives;
@@ -18,9 +19,11 @@ namespace Rootborn.Tests.EditMode.StudentLife
         private const string RegistryPath = "Assets/Data/Registry/GameDataRegistry.asset";
         private const string CareerRouteE2EPath = "Assets/Tests/PlayMode/EndToEnd/CareerDailyPlanRouteE2EScenarioTests.cs";
         private const string RequirementTypeName = "Rootborn.Game.StudentLife.DailyPlanCareerHintRequirement, Rootborn.Game";
+        private const string WorkRequirementTypeName = "Rootborn.Game.StudentLife.DailyPlanPartTimeWorkRequirement, Rootborn.Game";
         private const string CareerId = "career.interior";
         private const string RouteId = "daily.route.career.interior-practice";
         private const string WorkshopRouteId = "daily.workshop.shift";
+        private const string CornerStoreWorkId = "work.shift.corner-store";
 
         [Test]
         public void DailyPlanCareerHintRequirement_ReturnsFalseBeforeCareerHintUnlock()
@@ -65,6 +68,33 @@ namespace Rootborn.Tests.EditMode.StudentLife
         }
 
         [Test]
+        public void DailyPlanPartTimeWorkRequirement_ReturnsFalseBeforeWorkAndTrueAfterWorkLog()
+        {
+            var work = CreateWork(CornerStoreWorkId);
+            var requirement = CreateWorkRequirement(work, true);
+            var route = CreateRoute(WorkshopRouteId, requirement);
+            var progress = new StudentLifeProgress("slot-work-route", "player-work-route", 100, 100);
+            var inventory = new Inventory();
+            var runner = new PartTimeWorkRunner();
+            try
+            {
+                Assert.IsFalse(requirement.IsSatisfied(new DailyPlanRouteContext(progress), route), "Workshop route must be locked before the configured work is completed.");
+
+                Assert.IsTrue(runner.TryPerform(work, progress, inventory, "work-route-request", out var result));
+                Assert.AreEqual(LifeActivityResultKind.Applied, result.Kind);
+
+                Assert.IsTrue(requirement.IsSatisfied(new DailyPlanRouteContext(progress), route), "Workshop route must unlock from the data-defined part-time work completion log.");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(work.Workplace);
+                UnityEngine.Object.DestroyImmediate(work);
+                UnityEngine.Object.DestroyImmediate(requirement);
+                UnityEngine.Object.DestroyImmediate(route);
+            }
+        }
+
+        [Test]
         public void RegisteredCareerPracticeRoute_IsGatedByInteriorCareerHint()
         {
             var registry = LoadRegistry();
@@ -82,6 +112,28 @@ namespace Rootborn.Tests.EditMode.StudentLife
             progress.UnlockCareerHint(career);
             var unlocked = new DailyPlanRouteContext(progress);
             Assert.IsTrue(route.IsAvailable(in unlocked), "Career-gated route must be available after the career hint is unlocked.");
+        }
+
+        [Test]
+        public void RegisteredWorkshopShiftRoute_IsGatedByCornerStorePartTimeWork()
+        {
+            var registry = LoadRegistry();
+            var work = FindWork(registry, CornerStoreWorkId);
+            var route = FindRoute(registry, WorkshopRouteId);
+
+            Assert.IsNotNull(work, "Corner Store part-time work must be registered.");
+            Assert.IsNotNull(route, "Workshop/job route must be registered in a route set.");
+            Assert.IsTrue(route.Requirements.Any(requirement => RequirementReferencesWork(requirement, work)), "Workshop/job route must have a DailyPlanPartTimeWorkRequirement referencing the data-defined part-time work.");
+
+            var locked = new DailyPlanRouteContext(new StudentLifeProgress("slot-work-route", "player-work-route", 100, 100));
+            Assert.IsFalse(route.IsAvailable(in locked), "Workshop/job route must be unavailable before the configured part-time work is completed.");
+
+            var progress = new StudentLifeProgress("slot-work-route", "player-work-route", 100, 100);
+            var inventory = new Inventory();
+            Assert.IsTrue(new PartTimeWorkRunner().TryPerform(work, progress, inventory, "registered-work-route-request", out var result));
+            Assert.AreEqual(LifeActivityResultKind.Applied, result.Kind);
+            var unlocked = new DailyPlanRouteContext(progress);
+            Assert.IsTrue(route.IsAvailable(in unlocked), "Workshop/job route must be available after the configured part-time work is completed.");
         }
 
         [Test]
@@ -174,6 +226,11 @@ namespace Rootborn.Tests.EditMode.StudentLife
             return registry.Careers.FirstOrDefault(career => career != null && career.Id == id);
         }
 
+        private static PartTimeWorkDefinition FindWork(GameDataRegistry registry, string id)
+        {
+            return registry.PartTimeWorks.FirstOrDefault(work => work != null && work.Id == id);
+        }
+
         private static DailyPlanRouteDefinition FindRoute(GameDataRegistry registry, string id)
         {
             return registry.DailyPlanRouteSets
@@ -210,6 +267,18 @@ namespace Rootborn.Tests.EditMode.StudentLife
             return requirement;
         }
 
+        private static DailyPlanRouteRequirementBase CreateWorkRequirement(PartTimeWorkDefinition work, bool expectedCompleted)
+        {
+            var type = Type.GetType(WorkRequirementTypeName);
+            Assert.IsNotNull(type, WorkRequirementTypeName + " must exist.");
+            var requirement = ScriptableObject.CreateInstance(type) as DailyPlanRouteRequirementBase;
+            Assert.IsNotNull(requirement, WorkRequirementTypeName + " must derive from DailyPlanRouteRequirementBase.");
+            var method = type.GetMethod("ConfigureForTests", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { typeof(PartTimeWorkDefinition), typeof(bool) }, null);
+            Assert.IsNotNull(method, WorkRequirementTypeName + " must expose ConfigureForTests(PartTimeWorkDefinition, bool) for test wiring.");
+            method.Invoke(requirement, new object[] { work, expectedCompleted });
+            return requirement;
+        }
+
         private static bool RequirementReferencesCareer(DailyPlanRouteRequirementBase requirement, CareerDefinition career)
         {
             if (requirement == null || career == null) return false;
@@ -219,11 +288,29 @@ namespace Rootborn.Tests.EditMode.StudentLife
             return field != null && ReferenceEquals(field.GetValue(requirement), career);
         }
 
+        private static bool RequirementReferencesWork(DailyPlanRouteRequirementBase requirement, PartTimeWorkDefinition work)
+        {
+            if (requirement == null || work == null) return false;
+            var type = Type.GetType(WorkRequirementTypeName);
+            if (type == null || !type.IsInstanceOfType(requirement)) return false;
+            var field = type.GetField("_work", BindingFlags.Instance | BindingFlags.NonPublic);
+            return field != null && ReferenceEquals(field.GetValue(requirement), work);
+        }
+
         private static CareerDefinition CreateCareer(string id)
         {
             var career = ScriptableObject.CreateInstance<CareerDefinition>();
             career.ConfigureForTests(id, id + ".name", Array.Empty<CareerUnlockRequirementBase>());
             return career;
+        }
+
+        private static PartTimeWorkDefinition CreateWork(string id)
+        {
+            var workplace = ScriptableObject.CreateInstance<WorkplaceDefinition>();
+            workplace.ConfigureForTests("workplace.corner-store", "workplace.corner-store", "location.town-store", "npc.first-guide", Array.Empty<PartTimeWorkDefinition>());
+            var work = ScriptableObject.CreateInstance<PartTimeWorkDefinition>();
+            work.ConfigureForTests(id, id, workplace, 45, 0, 0, 0, Array.Empty<InventoryGrant>(), Array.Empty<WorkRequirementBase>(), Array.Empty<WorkOutcomeBase>());
+            return work;
         }
 
         private static DailyPlanRouteDefinition CreateRoute(string id, DailyPlanRouteRequirementBase requirement)

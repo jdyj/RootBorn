@@ -58,10 +58,14 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         {
             var keyboard = InputSystem.AddDevice<Keyboard>();
 
+            yield return LoadScene("MainMenu");
+            EnsurePassiveEventSystem();
             SaveSlotSelectPanel.EnsureInScene().Show();
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
+            var creator = GameObject.Find("SpumCharacterCreatorRoot") ?? GameObject.Find("SpumCharacterCreatorPanel");
+            if (creator != null) yield return ClickButton(FindButton(creator.transform, "ConfirmButton"));
             yield return WaitForScene("Town", 10f, "WORK-E2E-001 failed: SaveSlot New Game did not enter Town.");
             PartTimeWorkRuntimeInstaller.EnsureForActiveScene();
             yield return null;

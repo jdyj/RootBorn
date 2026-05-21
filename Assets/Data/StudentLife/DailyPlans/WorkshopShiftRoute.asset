@@ -18,7 +18,8 @@ MonoBehaviour:
   _growthRoute: 2
   _matchingActivities:
   - {fileID: 11400000, guid: f137d0c0631cda840b1d16e38c8114f8, type: 2}
-  _requirements: []
+  _requirements:
+  - {fileID: 11400000, guid: 02117a36ca0168a46b853ef3ca7ae56a, type: 2}
   _outcomes: []
   _objectiveTitleKey: objective.daily.workshop.title
   _objectiveDetailKey: objective.daily.workshop.detail

@@ -68,7 +68,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var runtime = FindRuntime();
 
             yield return OpenDailyPlanBoard(runtime, keyboard, "DAILY-PLAN-E2E-001 failed: Daily Plan board did not open.");
-            Assert.GreaterOrEqual(runtime.DailyPanel.RouteRowCountForTests, 3, "DAILY-PLAN-E2E-001 failed: Daily Plan panel did not show data-defined route choices.");
+            Assert.GreaterOrEqual(runtime.DailyPanel.RouteRowCountForTests, 2, "DAILY-PLAN-E2E-001 failed: Daily Plan panel did not show the available data-defined route choices.");
             var routeButton = DailyPlanE2EDriver.FindRouteButton(runtime.DailyPanel, RouteLabel, "DAILY-PLAN-E2E-001 failed: library route was not visible.");
             yield return PlayerFlowE2EDriver.ClickButton(routeButton);
             Assert.IsFalse(runtime.DailyPanel.gameObject.activeSelf, "DAILY-PLAN-E2E-001 failed: route selection did not close the Daily Plan panel for continued play.");
