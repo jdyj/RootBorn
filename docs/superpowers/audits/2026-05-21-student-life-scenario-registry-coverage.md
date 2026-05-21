@@ -22,11 +22,14 @@ This catalog maps active ROOTBORN player-flow, domain, and dedicated validation 
 | Active | KNOW-002 | KNOW | Discovery Route Unlock | PlayMode | Assets/Tests/PlayMode/EndToEnd/DiscoveryRouteUnlockE2EScenarioTests.cs | Clue interpretation unlocks Daily Plan route and reloads |  |  |
 | Active | STATUS-001 | STATUS | Student Condition | PlayMode | Assets/Tests/PlayMode/EndToEnd/StudentRelationshipConditionDayLoopE2EScenarioTests.cs | Relationship and condition day loop through player-facing route |  |  |
 | Active | STATUS-002 | STATUS | Day Result State | PlayMode | Assets/Tests/PlayMode/EndToEnd/StudentDayResultLoopE2EScenarioTests.cs | Day result state appears and survives reload |  |  |
+| Active | RESOURCE-RECIPE-001 | LIFE | Resources/Recipes | PlayMode | Assets/Tests/PlayMode/EndToEnd/TownResourceRecipeActivityE2EScenarioTests.cs | Town resource recipe activity reveals recipe/resource, Objective Journal hint, screenshot, reload, and duplicate prevention |  |  |
 | Active | NET-ROUTE-REL-001 | NET | Dedicated Route Relationship | QA runner | Scripts/qa/run-dedicated-route-relationship-smoke.ps1 | Built client/server action and observe-only reload screenshots |  |  |
 | Active | NET-CAREER-DAILY-001 | NET | Dedicated Career Daily Plan | QA runner | Scripts/qa/run-dedicated-career-daily-plan-route-smoke.ps1 | Built client/server route unlock and reload screenshots |  |  |
 | Active | NET-DAILY-COMPLETE-001 | NET | Dedicated Daily Plan Completion | QA runner | Scripts/qa/run-dedicated-daily-plan-completion-smoke.ps1 | Built client/server route completion and reload screenshots |  |  |
 | Active | NET-DISCOVERY-ROUTE-001 | NET | Dedicated Discovery Route Unlock | QA runner | Scripts/qa/run-dedicated-discovery-route-unlock-smoke.ps1 | Built client/server clue route unlock and observe-only reload screenshots |  |  |
-| Active | NET-CORE-MATRIX-001 | NET | Dedicated Core Matrix | QA runner | Scripts/qa/run-dedicated-core-gameplay-matrix.ps1 | Matrix runner composes dedicated route, career, completion, and discovery slices |  |  |
+| Active | NET-RESOURCE-RECIPE-001 | NET | Dedicated Resource/Recipe | QA runner | Scripts/qa/run-dedicated-resource-recipe-activity-smoke.ps1 | Built client/server resource recipe action and observe-only reload screenshots |  |  |
+| Active | NET-CORE-MATRIX-001 | NET | Dedicated Core Matrix | QA runner | Scripts/qa/run-dedicated-core-gameplay-matrix.ps1 | Matrix runner composes dedicated route/relationship, career, completion, discovery, and Resource/Recipe slices |  |  |
+| Active | NET-CORE-MATRIX-RESOURCE-001 | NET | Dedicated Core Matrix Resource/Recipe Slice | QA runner | Scripts/qa/run-dedicated-core-gameplay-matrix.ps1 | Resource/Recipe slice is included in matrix action/reload evidence with recipe/resource, save, Journal, HUD, and cleanup markers |  |  |
 | Active | GEN-001 | GEN | Legacy Generation | EditMode | Assets/Tests/EditMode/GenerationManagerTests.cs | Legacy domain regression; no player-facing change in this gate |  |  |
 | Active | HEIR-001 | HEIR | Legacy Heir | EditMode | Assets/Tests/EditMode/HeirGeneratorTests.cs | Legacy domain regression; no player-facing change in this gate |  |  |
 | Active | CROP-001 | CROP | Legacy Crops | PlayMode | Assets/Tests/PlayMode/Farming/FarmingScenarioTests.cs | Legacy Farm/Crop regression path retained for migration safety |  |  |
@@ -36,8 +39,6 @@ This catalog maps active ROOTBORN player-flow, domain, and dedicated validation 
 | Status | ID | Category | Owner | Evidence Type | Evidence | Player-Facing Verification | Deferred Reason | Future Validation |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Deferred | JOB-CAREER-BRIDGE-001 | JOB | Part-Time Work/Career Bridge | doc-only deferred |  |  | No committed player-facing job-to-career bridge slice yet | PlayMode plus dedicated smoke after feature slice |
-| Deferred | RESOURCE-RECIPE-001 | LIFE | Resources/Recipes | doc-only deferred |  |  | Resource/recipe Town activity slice is the next feature after stabilization | PlayMode E2E with screenshot and reload |
-| Deferred | NET-RESOURCE-RECIPE-001 | NET | Dedicated Resource/Recipe | doc-only deferred |  |  | Dedicated smoke depends on the resource/recipe feature slice | QA runner with action and observe-only reload screenshots |
 
 ## Gate Rules
 

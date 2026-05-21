@@ -50,7 +50,23 @@ namespace Rootborn.Tests.EditMode.Scenarios
         }
 
         [Test]
-        public void SCENARIO_REGISTRY_EDIT_003_PowerShellGateExistsAndFailsClosedForMissingMappings()
+        public void SCENARIO_REGISTRY_EDIT_003_CatalogMapsResourceRecipeScenariosAfterFeatureAndDedicatedSmoke()
+        {
+            Assert.IsTrue(File.Exists(CatalogPath), "The current Student Life scenario coverage catalog must exist.");
+            string catalog = File.ReadAllText(CatalogPath);
+
+            StringAssert.Contains("RESOURCE-RECIPE-001", catalog, "Resource/Recipe PlayMode scenario must be active after the Town activity slice landed.");
+            StringAssert.Contains("TownResourceRecipeActivityE2EScenarioTests", catalog);
+            StringAssert.Contains("NET-RESOURCE-RECIPE-001", catalog, "Resource/Recipe dedicated smoke must be active after the runner landed.");
+            StringAssert.Contains("Scripts/qa/run-dedicated-resource-recipe-activity-smoke.ps1", catalog);
+            StringAssert.Contains("NET-CORE-MATRIX-RESOURCE-001", catalog, "Core matrix must explicitly document the Resource/Recipe slice evidence.");
+            StringAssert.Contains("Resource/Recipe slice", catalog);
+            StringAssert.DoesNotContain("Resource/recipe Town activity slice is the next feature after stabilization", catalog, "Resource/Recipe must no longer be deferred as future work.");
+            StringAssert.DoesNotContain("Dedicated smoke depends on the resource/recipe feature slice", catalog, "Resource/Recipe dedicated smoke must no longer be deferred as future work.");
+        }
+
+        [Test]
+        public void SCENARIO_REGISTRY_EDIT_004_PowerShellGateExistsAndFailsClosedForMissingMappings()
         {
             Assert.IsTrue(File.Exists(PowerShellGatePath), "The scenario registry sync PowerShell gate must exist.");
             string gate = File.ReadAllText(PowerShellGatePath);
@@ -69,7 +85,7 @@ namespace Rootborn.Tests.EditMode.Scenarios
         }
 
         [Test]
-        public void SCENARIO_REGISTRY_EDIT_004_ScenarioIdAndLegacyBashGateRemainConnected()
+        public void SCENARIO_REGISTRY_EDIT_005_ScenarioIdAndLegacyBashGateRemainConnected()
         {
             Assert.IsTrue(File.Exists(ScenarioIdPath), "ScenarioId.cs must remain available for PlayMode scenario constants.");
             Assert.IsTrue(File.Exists(BashGatePath), "The legacy Bash gate must remain available or be intentionally updated.");
