@@ -31,6 +31,7 @@ This catalog maps active ROOTBORN player-flow, domain, and dedicated validation 
 | Active | NET-RESOURCE-RECIPE-001 | NET | Dedicated Resource/Recipe | QA runner | Scripts/qa/run-dedicated-resource-recipe-activity-smoke.ps1 | Built client/server resource recipe action and observe-only reload screenshots |  |  |
 | Active | NET-CORE-MATRIX-001 | NET | Dedicated Core Matrix | QA runner | Scripts/qa/run-dedicated-core-gameplay-matrix.ps1 | Matrix runner composes dedicated route/relationship, career, completion, discovery, and Resource/Recipe slices |  |  |
 | Active | NET-CORE-MATRIX-RESOURCE-001 | NET | Dedicated Core Matrix Resource/Recipe Slice | QA runner | Scripts/qa/run-dedicated-core-gameplay-matrix.ps1 | Resource/Recipe slice is included in matrix action/reload evidence with recipe/resource, save, Journal, HUD, and cleanup markers |  |  |
+| Active | OBJECTIVE-JOURNAL-REGRESSION-001 | UI | Objective Journal Regression | PlayMode | Assets/Tests/PlayMode/EndToEnd/ObjectiveJournalRegressionE2EScenarioTests.cs | `OBJECTIVE_JOURNAL_SOURCE_COLLISION_PM_001_MultiSourceReloadNoDuplicateHud` verifies Tab-opened Objective Journal multi-source stable keys, legacy HUD absence, single TrackedObjectiveHud, screenshot `Builds/Logs/objective-journal-source-collision-e2e.png`, and reload row/HUD persistence |  |  |
 | Active | GEN-001 | GEN | Legacy Generation | EditMode | Assets/Tests/EditMode/GenerationManagerTests.cs | Legacy domain regression; no player-facing change in this gate |  |  |
 | Active | HEIR-001 | HEIR | Legacy Heir | EditMode | Assets/Tests/EditMode/HeirGeneratorTests.cs | Legacy domain regression; no player-facing change in this gate |  |  |
 | Active | CROP-001 | CROP | Legacy Crops | PlayMode | Assets/Tests/PlayMode/Farming/FarmingScenarioTests.cs | Legacy Farm/Crop regression path retained for migration safety |  |  |
@@ -46,5 +47,5 @@ This catalog maps active ROOTBORN player-flow, domain, and dedicated validation 
 - File-backed active evidence must exist in the repository.
 - Deferred rows must have a non-empty `Deferred Reason`.
 - Deferred rows must have a non-empty `Future Validation`.
-- Required categories are `TOWN`, `LIFE`, `CAREER`, `REL`, `JOB`, `KNOW`, `STATUS`, `NET`, `GEN`, `HEIR`, and `CROP`.
+- Required categories are `TOWN`, `LIFE`, `CAREER`, `REL`, `JOB`, `KNOW`, `STATUS`, `NET`, `UI`, `GEN`, `HEIR`, and `CROP`.
 - Goal-like UI scenarios remain owned by `ObjectiveJournalPanel` and `TrackedObjectiveHud`.

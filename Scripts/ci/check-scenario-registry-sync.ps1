@@ -4,7 +4,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$requiredCategories = @("TOWN", "LIFE", "CAREER", "REL", "JOB", "KNOW", "STATUS", "NET", "GEN", "HEIR", "CROP")
+$requiredCategories = @("TOWN", "LIFE", "CAREER", "REL", "JOB", "KNOW", "STATUS", "NET", "UI", "GEN", "HEIR", "CROP")
 $root = (& git rev-parse --show-toplevel).Trim()
 Set-Location $root
 
@@ -85,6 +85,7 @@ $knownCategorySignals = @{
     KNOW = "KNOW_"
     STATUS = "STATUS_"
     NET = "NET_"
+    UI = "OBJECTIVE_JOURNAL_"
     GEN = "GEN_"
     HEIR = "HEIR_"
     CROP = "CROP_"

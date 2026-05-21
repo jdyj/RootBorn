@@ -24,6 +24,7 @@ namespace Rootborn.Tests.EditMode.Scenarios
             AssertCategory(catalog, "KNOW");
             AssertCategory(catalog, "STATUS");
             AssertCategory(catalog, "NET");
+            AssertCategory(catalog, "UI");
             AssertCategory(catalog, "GEN");
             AssertCategory(catalog, "HEIR");
             AssertCategory(catalog, "CROP");
@@ -82,6 +83,7 @@ namespace Rootborn.Tests.EditMode.Scenarios
             StringAssert.Contains("REL", gate);
             StringAssert.Contains("JOB", gate);
             StringAssert.Contains("NET", gate);
+            StringAssert.Contains("UI", gate);
         }
 
         [Test]
@@ -122,6 +124,17 @@ namespace Rootborn.Tests.EditMode.Scenarios
             StringAssert.Contains("NET-004", scenarioIds);
             StringAssert.Contains("NET-005", scenarioIds);
             StringAssert.Contains("TOOL-001", scenarioIds);
+        }
+
+        [Test]
+        public void SCENARIO_REGISTRY_EDIT_008_CatalogActivatesObjectiveJournalRegressionScenario()
+        {
+            Assert.IsTrue(File.Exists(CatalogPath), "The current Student Life scenario coverage catalog must exist.");
+            string catalog = File.ReadAllText(CatalogPath);
+
+            StringAssert.Contains("| Active | OBJECTIVE-JOURNAL-REGRESSION-001 | UI | Objective Journal Regression | PlayMode | Assets/Tests/PlayMode/EndToEnd/ObjectiveJournalRegressionE2EScenarioTests.cs |", catalog, "Objective Journal regression must be active catalog evidence because it protects goal-like UI ownership.");
+            StringAssert.Contains("OBJECTIVE_JOURNAL_SOURCE_COLLISION_PM_001_MultiSourceReloadNoDuplicateHud", catalog);
+            StringAssert.Contains("Builds/Logs/objective-journal-source-collision-e2e.png", catalog);
         }
 
         private static void AssertCategory(string catalog, string category)
