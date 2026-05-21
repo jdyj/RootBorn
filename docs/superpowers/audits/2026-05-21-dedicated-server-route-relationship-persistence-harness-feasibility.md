@@ -2,6 +2,33 @@
 
 Date: 2026-05-21
 
+## Current Status Refresh
+
+Status as of the later 2026-05-21 stabilization cycles: the original blocker recorded in this audit has been superseded for the route/relationship and core gameplay smoke paths.
+
+The project now has executable server/client process evidence through:
+
+- `Scripts/qa/run-dedicated-route-relationship-smoke.ps1`
+  - launches `rootborn-server.exe` with `-mode server`, `-port`, `-maxPlayers`, `-saveSlot`, and `-directValidationTrace`;
+  - launches a separate `rootborn.exe` client with `-mode client`, `-joinIp 127.0.0.1`, `-port`, `-saveSlot`, route/relationship autoplay flags, and screenshot capture;
+  - runs an action pass and an observe-only reload pass;
+  - verifies server start, client connection, Town synchronization, screenshots, state markers, fatal log absence, and cleanup.
+- `Scripts/qa/run-dedicated-core-gameplay-matrix.ps1`
+  - composes route/relationship, career Daily Plan route, Daily Plan completion, discovery route unlock, and resource/recipe dedicated smoke slices;
+  - checks action/reload markers, screenshots, state patterns, and duplicate Journal/HUD evidence per slice.
+- `Assets/Tests/EditMode/Network/DedicatedRouteRelationshipAutoplayContractTests.cs`
+  - protects the route/relationship smoke runner, autoplay flags, observe-only reload contract, screenshot contract, freshness guard, and long-run cleanup contract.
+- `Assets/Tests/EditMode/Network/DedicatedCoreGameplayMatrixContractTests.cs`
+  - protects matrix composition across the dedicated gameplay slices.
+- `docs/superpowers/audits/2026-05-21-student-life-scenario-registry-coverage.md`
+  - tracks the dedicated route/relationship smoke and core gameplay matrix as active executable `NET` coverage.
+- `Builds/Logs/network-dedicated-core-gameplay-matrix`
+  - contains the latest matrix action/reload logs and nonzero screenshot artifacts for the dedicated slices.
+
+The historical analysis below remains useful as the reason the first attempt should not have been reported as complete. It should no longer be read as the current project state for route/relationship dedicated process coverage.
+
+Remaining network work is now future expansion rather than a missing harness prerequisite: extending long-run/reconnect/restart coverage, adding more gameplay slices to the matrix, and keeping build freshness/process cleanup gates strict.
+
 ## Decision
 
 Do not implement `NETWORK_DEDICATED_PERSISTENCE_PM_001_RouteRelationshipReload` yet.
@@ -48,7 +75,7 @@ Host mode has strict E2E coverage:
 
 Session unit coverage exists for host startup and owned local player identity.
 
-No current test starts a dedicated server process and a separate client process for player-facing route/relationship persistence.
+At the time of this original feasibility decision, no current test started a dedicated server process and a separate client process for player-facing route/relationship persistence. This historical statement is superseded by the current-status refresh above.
 
 ## Why Server-Only Is Not Enough
 
