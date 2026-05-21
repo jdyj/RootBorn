@@ -195,7 +195,20 @@ namespace Rootborn.Tests.EditMode.Scenarios
             StringAssert.Contains("TrackedObjectiveHud", catalog, "Daily Plan completion catalog row must document tracked HUD cleanup evidence.");
         }
 
-        private static void AssertCategory(string catalog, string category)
+        [Test]
+                public void SCENARIO_REGISTRY_EDIT_014_CatalogActivatesQuestInteriorRewardScenario()
+                {
+                    Assert.IsTrue(File.Exists(CatalogPath), "The current Student Life scenario coverage catalog must exist.");
+                    string catalog = File.ReadAllText(CatalogPath);
+
+                    StringAssert.Contains("| Active | QUEST-INTERIOR-REWARD-001 | LIFE | Quest/Interior Reward | PlayMode | Assets/Tests/PlayMode/EndToEnd/QuestInteriorRewardE2EScenarioTests.cs |", catalog, "Quest/Interior reward must be active catalog evidence after the PlayMode scenario landed.");
+                    StringAssert.Contains("QUEST_INTERIOR_REWARD_E2E_001_ClaimUnlockPlaceReload", catalog);
+                    StringAssert.Contains("Builds/Logs/quest-interior-reward-e2e.png", catalog);
+                    StringAssert.Contains("exact-once", catalog, "Quest/Interior reward catalog row must document exact-once reward and saved-state evidence.");
+                    StringAssert.DoesNotContain("| Deferred | QUEST-INTERIOR-REWARD-001 |", catalog, "Quest/Interior reward must not remain deferred after executable PlayMode coverage landed.");
+                }
+
+                private static void AssertCategory(string catalog, string category)
         {
             StringAssert.Contains("| " + category + " |", catalog, "Catalog must include category " + category + ".");
         }
