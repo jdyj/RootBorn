@@ -19,6 +19,7 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
                 {
                     new ObjectiveJournalItem("daily-plan:daily.library.self-study", "Goals", "Selected Daily Plan Route", string.Empty, "Selected", "Day 1", "Complete Library route", false, 0),
                 }),
+                new MatrixSource("completed-route-filter", goals, Array.Empty<ObjectiveJournalItem>()),
                 new MatrixSource("daily-plan-route-hints", hints, new[]
                 {
                     new ObjectiveJournalItem("daily-plan-route-hint:daily.workshop.practice", "Hints", "Unlocked Workshop Route", string.Empty, "Available", "Unlocked", "Select route", false, 10),
@@ -26,6 +27,10 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
                 new MatrixSource("milestones", hints, new[]
                 {
                     new ObjectiveJournalItem("milestone:first-guide-trust", "Hints", "Relationship Milestone", string.Empty, "Available", "0 / 1", "Help First Guide", false, 20),
+                }),
+                new MatrixSource("career-interests", hints, new[]
+                {
+                    new ObjectiveJournalItem("career-interest:chef", "Hints", "Career Hint", string.Empty, "Available", "Candidate", "Practice cooking", false, 30),
                 }),
                 new MatrixSource("quest-chain-log", quests, new[]
                 {
@@ -40,11 +45,13 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
             var result = aggregator.Build(new ObjectiveJournalContext(null, null, null));
 
             Assert.AreEqual(1, CountStableKey(result, "daily-plan:daily.library.self-study"), "Selected Daily Plan goal must not be duplicated by later source outputs.");
+            Assert.AreEqual(0, CountStableKey(result, "completed-route:daily.library.self-study"), "A completed-route source must not emit active Daily Plan guidance.");
             Assert.AreEqual(1, CountStableKey(result, "daily-plan-route-hint:daily.workshop.practice"), "Unlocked route hints must keep their own stable key namespace.");
             Assert.AreEqual(1, CountStableKey(result, "milestone:first-guide-trust"), "Relationship milestone hints must coexist with route hints.");
+            Assert.AreEqual(1, CountStableKey(result, "career-interest:chef"), "Career hints must coexist with route and relationship hints.");
             Assert.AreEqual(1, CountStableKey(result, "quest-chain:daily-plan-route"), "Quest-chain rows must keep their own stable key namespace.");
             Assert.AreEqual("Selected Daily Plan Route", result["Goals"][0].Title, "The first registered source owns duplicate stable-key output.");
-            Assert.AreEqual(2, result["Hints"].Length, "Route hints and relationship milestone hints must coexist in Hints without collision.");
+            Assert.AreEqual(3, result["Hints"].Length, "Route hints, relationship milestone hints, and career hints must coexist in Hints without collision.");
         }
 
         private static int CountStableKey(Dictionary<string, ObjectiveJournalItem[]> result, string stableKey)

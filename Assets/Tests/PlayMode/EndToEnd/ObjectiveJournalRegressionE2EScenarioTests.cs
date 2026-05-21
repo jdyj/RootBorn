@@ -20,7 +20,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
     {
         private const string TestSlotId = "slot-0";
         private const string HintRouteTitle = "objective.daily.library.title";
-        private const string ScreenshotPath = "Builds/Logs/objective-journal-regression-e2e.png";
+        private const string ScreenshotPath = "Builds/Logs/objective-journal-source-collision-e2e.png";
         private string _saveRoot;
 
         [UnitySetUp]
@@ -31,7 +31,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             CleanupResidue();
             PlayerFlowE2EDriver.EnsurePassiveEventSystem();
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
-            _saveRoot = Path.Combine(Application.temporaryCachePath, "rootborn-objective-journal-regression-e2e", System.Guid.NewGuid().ToString("N"));
+            _saveRoot = Path.Combine(Application.temporaryCachePath, "rootborn-objective-journal-source-collision-e2e", System.Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_saveRoot);
             SaveService.SetRootDirectoryForTests(_saveRoot);
             SaveSlotSelectPanel.SetSaveRootForTests(_saveRoot);
@@ -57,7 +57,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
 
         [UnityTest]
         [Timeout(600000)]
-        public IEnumerator OBJECTIVE_JOURNAL_REGRESSION_PM_001_MultiSourceReloadNoDuplicateHud()
+        public IEnumerator OBJECTIVE_JOURNAL_SOURCE_COLLISION_PM_001_MultiSourceReloadNoDuplicateHud()
         {
             var keyboard = InputSystem.AddDevice<Keyboard>();
 
@@ -66,37 +66,37 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             runtime.ObjectiveProvider.RefreshNow();
 
             yield return PlayerFlowE2EDriver.PressTab(keyboard);
-            Assert.IsTrue(runtime.Journal.IsVisible, "OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: Tab did not open Objective Journal.");
-            AssertNoLegacyObjectiveHudObjects("OBJECTIVE-JOURNAL-REGRESSION-PM-001 before tracking");
-            Assert.AreEqual(1, Object.FindObjectsByType<TrackedObjectiveHud>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length, "OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: Town created duplicate tracked HUD instances.");
+            Assert.IsTrue(runtime.Journal.IsVisible, "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Tab did not open Objective Journal.");
+            AssertNoLegacyObjectiveHudObjects("OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 before tracking");
+            Assert.AreEqual(1, Object.FindObjectsByType<TrackedObjectiveHud>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length, "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Town created duplicate tracked HUD instances.");
 
-            yield return SelectCategoryAndAssertRowContaining(runtime.Journal, "Goals", "Student Day Guide", "OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: Goals source was missing.");
+            yield return SelectCategoryAndAssertRowContaining(runtime.Journal, "Goals", "Student Day Guide", "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Goals source was missing.");
             string goalStableKey = runtime.Journal.SelectedStableKeyForTests;
-            Assert.IsFalse(string.IsNullOrEmpty(goalStableKey), "OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: Goals row had blank stable key.");
+            Assert.IsFalse(string.IsNullOrEmpty(goalStableKey), "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Goals row had blank stable key.");
             int goalsRowsBefore = runtime.Journal.VisibleRowCountForTests;
 
-            yield return SelectCategoryAndAssertRowContaining(runtime.Journal, "Hints", HintRouteTitle, "OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: Hints route source was missing.");
+            yield return SelectCategoryAndAssertRowContaining(runtime.Journal, "Hints", HintRouteTitle, "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Hints route source was missing.");
             string hintStableKey = runtime.Journal.SelectedStableKeyForTests;
-            Assert.IsFalse(string.IsNullOrEmpty(hintStableKey), "OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: Hints row had blank stable key.");
-            Assert.AreNotEqual(goalStableKey, hintStableKey, "OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: Goals and Hints sources emitted colliding stable keys.");
+            Assert.IsFalse(string.IsNullOrEmpty(hintStableKey), "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Hints row had blank stable key.");
+            Assert.AreNotEqual(goalStableKey, hintStableKey, "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Goals and Hints sources emitted colliding stable keys.");
             int hintsRowsBefore = runtime.Journal.VisibleRowCountForTests;
 
-            yield return SelectCategoryAndAssertRowContaining(runtime.Journal, "Quests", "Quest", "OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: Quest source was missing.");
+            yield return SelectCategoryAndAssertRowContaining(runtime.Journal, "Quests", "Quest", "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Quest source was missing.");
             string questStableKey = runtime.Journal.SelectedStableKeyForTests;
-            Assert.IsFalse(string.IsNullOrEmpty(questStableKey), "OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: Quest row had blank stable key.");
-            Assert.AreNotEqual(goalStableKey, questStableKey, "OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: Goals and Quests sources emitted colliding stable keys.");
-            Assert.AreNotEqual(hintStableKey, questStableKey, "OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: Hints and Quests sources emitted colliding stable keys.");
+            Assert.IsFalse(string.IsNullOrEmpty(questStableKey), "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Quest row had blank stable key.");
+            Assert.AreNotEqual(goalStableKey, questStableKey, "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Goals and Quests sources emitted colliding stable keys.");
+            Assert.AreNotEqual(hintStableKey, questStableKey, "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Hints and Quests sources emitted colliding stable keys.");
 
-            yield return SelectCategoryAndAssertRowContaining(runtime.Journal, "Hints", HintRouteTitle, "OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: Hints source disappeared before tracking.");
+            yield return SelectCategoryAndAssertRowContaining(runtime.Journal, "Hints", HintRouteTitle, "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Hints source disappeared before tracking.");
             yield return PlayerFlowE2EDriver.ClickButton(ObjectiveJournalE2EDriver.FindTrackButton(runtime.Journal));
-            Assert.IsTrue(runtime.TrackedHud.IsVisible, "OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: Track button did not update TrackedObjectiveHud.");
-            Assert.AreEqual(1, Object.FindObjectsByType<TrackedObjectiveHud>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length, "OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: tracking created duplicate tracked HUD instances.");
-            Assert.IsTrue(ObjectiveJournalTrackingStore.TryLoad(ActiveSaveContext.Metadata, out var trackedCategory, out var trackedStableKey), "OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: tracked stable key was not saved.");
+            Assert.IsTrue(runtime.TrackedHud.IsVisible, "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Track button did not update TrackedObjectiveHud.");
+            Assert.AreEqual(1, Object.FindObjectsByType<TrackedObjectiveHud>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length, "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: tracking created duplicate tracked HUD instances.");
+            Assert.IsTrue(ObjectiveJournalTrackingStore.TryLoad(ActiveSaveContext.Metadata, out var trackedCategory, out var trackedStableKey), "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: tracked stable key was not saved.");
             Assert.AreEqual("Hints", trackedCategory);
             Assert.AreEqual(hintStableKey, trackedStableKey);
 
             ScreenshotEvidence.Capture(ScreenshotPath);
-            yield return ScreenshotEvidence.WaitForNonZeroFile(ScreenshotPath, 3f, "OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: Game View screenshot evidence was not written.");
+            yield return ScreenshotEvidence.WaitForNonZeroFile(ScreenshotPath, 3f, "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Game View screenshot evidence was not written.");
 
             ActiveSaveContext.Clear();
             PlayerGlobalState.ClearForTests();
@@ -106,25 +106,25 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton("SaveSlotCard_" + TestSlotId, "LoadButton"));
-            yield return PlayerFlowE2EDriver.WaitForScene("Town", 15f, "OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: SaveSlot Load did not re-enter Town.");
+            yield return PlayerFlowE2EDriver.WaitForScene("Town", 15f, "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: SaveSlot Load did not re-enter Town.");
             EnsureTownInstallers();
             yield return WaitForRuntime(15f);
 
             var reloaded = FindRuntime();
             reloaded.ObjectiveProvider.RefreshNow();
             yield return PlayerFlowE2EDriver.PressTab(keyboard);
-            Assert.IsTrue(reloaded.Journal.IsVisible, "OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: Tab did not open Objective Journal after reload.");
-            AssertNoLegacyObjectiveHudObjects("OBJECTIVE-JOURNAL-REGRESSION-PM-001 after reload");
-            Assert.AreEqual(1, Object.FindObjectsByType<TrackedObjectiveHud>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length, "OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: reload created duplicate tracked HUD instances.");
-            Assert.IsTrue(reloaded.TrackedHud.IsVisible, "OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: tracked HUD did not restore after reload.");
-            Assert.IsTrue(ObjectiveJournalTrackingStore.TryLoad(ActiveSaveContext.Metadata, out var reloadedCategory, out var reloadedStableKey), "OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: tracked stable key was missing after reload.");
+            Assert.IsTrue(reloaded.Journal.IsVisible, "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Tab did not open Objective Journal after reload.");
+            AssertNoLegacyObjectiveHudObjects("OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 after reload");
+            Assert.AreEqual(1, Object.FindObjectsByType<TrackedObjectiveHud>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length, "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: reload created duplicate tracked HUD instances.");
+            Assert.IsTrue(reloaded.TrackedHud.IsVisible, "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: tracked HUD did not restore after reload.");
+            Assert.IsTrue(ObjectiveJournalTrackingStore.TryLoad(ActiveSaveContext.Metadata, out var reloadedCategory, out var reloadedStableKey), "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: tracked stable key was missing after reload.");
             Assert.AreEqual(trackedCategory, reloadedCategory);
             Assert.AreEqual(trackedStableKey, reloadedStableKey);
 
-            yield return SelectCategoryAndAssertRowContaining(reloaded.Journal, "Goals", "Student Day Guide", "OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: Goals row missing after reload.");
-            Assert.AreEqual(goalsRowsBefore, reloaded.Journal.VisibleRowCountForTests, "OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: reload duplicated or removed Goals rows.");
-            yield return SelectCategoryAndAssertRowContaining(reloaded.Journal, "Hints", HintRouteTitle, "OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: Hints row missing after reload.");
-            Assert.AreEqual(hintsRowsBefore, reloaded.Journal.VisibleRowCountForTests, "OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: reload duplicated or removed Hints rows.");
+            yield return SelectCategoryAndAssertRowContaining(reloaded.Journal, "Goals", "Student Day Guide", "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Goals row missing after reload.");
+            Assert.AreEqual(goalsRowsBefore, reloaded.Journal.VisibleRowCountForTests, "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: reload duplicated or removed Goals rows.");
+            yield return SelectCategoryAndAssertRowContaining(reloaded.Journal, "Hints", HintRouteTitle, "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Hints row missing after reload.");
+            Assert.AreEqual(hintsRowsBefore, reloaded.Journal.VisibleRowCountForTests, "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: reload duplicated or removed Hints rows.");
         }
 
         private static IEnumerator StartNewTownFromSaveSlotUi()
@@ -137,7 +137,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
             var creator = GameObject.Find("SpumCharacterCreatorRoot") ?? GameObject.Find("SpumCharacterCreatorPanel");
             if (creator != null) yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(creator.transform, "ConfirmButton"));
-            yield return PlayerFlowE2EDriver.WaitForScene("Town", 15f, "OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: SaveSlot New Game did not enter Town.");
+            yield return PlayerFlowE2EDriver.WaitForScene("Town", 15f, "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: SaveSlot New Game did not enter Town.");
             EnsureTownInstallers();
             yield return WaitForRuntime(15f);
         }
@@ -178,7 +178,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 yield return null;
             }
 
-            Assert.Fail("OBJECTIVE-JOURNAL-REGRESSION-PM-001 failed: Town runtime did not install within timeout. Last state: " + lastState);
+            Assert.Fail("OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Town runtime did not install within timeout. Last state: " + lastState);
         }
 
         private static RuntimeState FindRuntime()
