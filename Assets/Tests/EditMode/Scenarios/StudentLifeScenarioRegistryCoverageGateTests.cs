@@ -149,15 +149,15 @@ namespace Rootborn.Tests.EditMode.Scenarios
         }
 
         [Test]
-                public void SCENARIO_REGISTRY_EDIT_010_CatalogReferencesDedicatedCoreMatrixRefreshEvidence()
-                {
-                    Assert.IsTrue(File.Exists(CatalogPath), "The current Student Life scenario coverage catalog must exist.");
-                    string catalog = File.ReadAllText(CatalogPath);
+        public void SCENARIO_REGISTRY_EDIT_010_CatalogReferencesDedicatedCoreMatrixRefreshEvidence()
+        {
+            Assert.IsTrue(File.Exists(CatalogPath), "The current Student Life scenario coverage catalog must exist.");
+            string catalog = File.ReadAllText(CatalogPath);
 
-                    StringAssert.Contains("| Active | NET-CORE-MATRIX-001 | NET | Dedicated Core Matrix | QA runner | Scripts/qa/run-dedicated-core-gameplay-matrix.ps1 |", catalog, "Dedicated core matrix must remain active catalog evidence.");
-                    StringAssert.Contains("docs/superpowers/audits/2026-05-21-dedicated-core-gameplay-matrix-smoke-rerun-after-freshness-normalization.md", catalog, "Dedicated core matrix catalog row must reference the latest matrix smoke rerun audit.");
-                    StringAssert.Contains("Builds/Logs/network-dedicated-core-gameplay-matrix-after-smoke-freshness-normalization-rerun", catalog, "Dedicated core matrix catalog row must reference the latest matrix smoke rerun log directory.");
-                }
+            StringAssert.Contains("| Active | NET-CORE-MATRIX-001 | NET | Dedicated Core Matrix | QA runner | Scripts/qa/run-dedicated-core-gameplay-matrix.ps1 |", catalog, "Dedicated core matrix must remain active catalog evidence.");
+            StringAssert.Contains("docs/superpowers/audits/2026-05-21-dedicated-core-gameplay-matrix-smoke-rerun-after-freshness-normalization.md", catalog, "Dedicated core matrix catalog row must reference the latest matrix smoke rerun audit.");
+            StringAssert.Contains("Builds/Logs/network-dedicated-core-gameplay-matrix-after-smoke-freshness-normalization-rerun", catalog, "Dedicated core matrix catalog row must reference the latest matrix smoke rerun log directory.");
+        }
 
         [Test]
         public void SCENARIO_REGISTRY_EDIT_011_CatalogActivatesRelationshipCommitmentScenario()
@@ -169,6 +169,18 @@ namespace Rootborn.Tests.EditMode.Scenarios
             StringAssert.Contains("REL_COMMITMENT_E2E_001_TeacherHelpCommitmentReload", catalog);
             StringAssert.Contains("Builds/Logs/relationship-activity-commitment-e2e.png", catalog);
             StringAssert.DoesNotContain("| Deferred | REL-COMMITMENT-001 |", catalog, "Relationship commitment must not remain deferred after executable PlayMode coverage landed.");
+        }
+
+        [Test]
+        public void SCENARIO_REGISTRY_EDIT_012_CatalogActivatesKnowledgeStatusActivityChainScenario()
+        {
+            Assert.IsTrue(File.Exists(CatalogPath), "The current Student Life scenario coverage catalog must exist.");
+            string catalog = File.ReadAllText(CatalogPath);
+
+            StringAssert.Contains("| Active | KNOW-STATUS-ACTIVITY-001 | KNOW | Knowledge/Status Activity Chain | PlayMode | Assets/Tests/PlayMode/EndToEnd/KnowledgeStatusActivityChainE2EScenarioTests.cs |", catalog, "Knowledge/Status activity chain must be active catalog evidence after the PlayMode scenario landed.");
+            StringAssert.Contains("KNOWLEDGE_STATUS_E2E_001_ActivityChainHintReloadNoDuplicate", catalog);
+            StringAssert.Contains("Builds/Logs/knowledge-status-activity-chain-e2e.png", catalog);
+            StringAssert.DoesNotContain("| Deferred | KNOW-STATUS-ACTIVITY-001 |", catalog, "Knowledge/Status activity chain must not remain deferred after executable PlayMode coverage landed.");
         }
 
         private static void AssertCategory(string catalog, string category)
