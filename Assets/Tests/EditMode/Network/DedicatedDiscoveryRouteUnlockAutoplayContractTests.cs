@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using NUnit.Framework;
 
@@ -75,7 +76,8 @@ namespace Rootborn.Tests.EditMode.Network
             StringAssert.Contains("rootborn-server_Data\\StreamingAssets\\aa\\settings.json", source);
             StringAssert.Contains("rootborn_Data\\StreamingAssets\\aa\\settings.json", source);
             StringAssert.Contains("DirectValidationDiscoveryRouteUnlockAutoplayInstaller.cs", source, "Freshness guard must compare artifacts against the autoplay source required by this runner.");
-            StringAssert.Contains("run-dedicated-discovery-route-unlock-smoke.ps1", source, "Freshness guard must compare artifacts against the runner script itself.");
+            StringAssert.Contains("run-dedicated-discovery-route-unlock-smoke.ps1", source, "Freshness guard failure output must name the runner script.");
+            StringAssert.DoesNotContain("run-dedicated-discovery-route-unlock-smoke.ps1", ExtractRequiredSourcesBlock(source), "Freshness guard must not compare managed DLL artifacts against the runner script itself.");
             StringAssert.Contains("BuildServerWindows64", source, "Freshness failure output must name the server build remediation command.");
             StringAssert.Contains("BuildClientWindows64", source, "Freshness failure output must name the client build remediation command.");
         }
@@ -89,6 +91,16 @@ namespace Rootborn.Tests.EditMode.Network
             StringAssert.Contains("IsInterpretationCompleted", source, "Discovery autoplay must inspect saved interpretation progress before failing on a missing choice button.");
             StringAssert.Contains("autoplay interpretation already completed", source, "Discovery autoplay must log the idempotent already-completed interpretation path for matrix diagnostics.");
             StringAssert.Contains("WaitForWorldState", source, "Already-completed interpretation must continue through world-state, route selection, screenshot, and evidence logging.");
+        }
+
+        private static string ExtractRequiredSourcesBlock(string source)
+        {
+            const string Marker = "$requiredSources = @(";
+            int start = source.IndexOf(Marker, StringComparison.Ordinal);
+            Assert.GreaterOrEqual(start, 0, "Freshness guard must define required source files.");
+            int end = source.IndexOf(")", start, StringComparison.Ordinal);
+            Assert.Greater(end, start, "Freshness guard required source block must be closed.");
+            return source.Substring(start, end - start);
         }
     }
 }

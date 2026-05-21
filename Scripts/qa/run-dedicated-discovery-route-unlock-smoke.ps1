@@ -37,8 +37,7 @@ try {
         Assert-RequiredArtifact "Builds\Client\Windows\rootborn_Data\StreamingAssets\aa\settings.json" "client Addressables runtime settings" | Out-Null
 
         $requiredSources = @(
-            "Assets\Scripts\Game\Common\DirectValidationDiscoveryRouteUnlockAutoplayInstaller.cs",
-            "Scripts\qa\run-dedicated-discovery-route-unlock-smoke.ps1"
+            "Assets\Scripts\Game\Common\DirectValidationDiscoveryRouteUnlockAutoplayInstaller.cs"
         )
 
         foreach ($sourcePath in $requiredSources) {
