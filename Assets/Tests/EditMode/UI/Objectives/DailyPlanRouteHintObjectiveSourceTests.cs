@@ -74,7 +74,7 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
             for (int i = 0; i < sources.Length; i++) ids[i] = sources[i].SourceId;
 
             CollectionAssert.AreEqual(
-                new[] { "student-day-guide", "daily-plan", "daily-plan-route-hints", "resource-recipes", "quest-log", "quest-chain-log", "campaign-progress", "milestones", "career-interests" },
+                new[] { "student-day-guide", "daily-plan", "daily-plan-route-hints", "resource-recipes", "status-activity", "quest-log", "quest-chain-log", "campaign-progress", "milestones", "career-interests" },
                 ids);
         }
 
