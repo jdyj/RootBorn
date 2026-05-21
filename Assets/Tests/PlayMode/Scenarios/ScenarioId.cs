@@ -34,6 +34,6 @@ namespace Rootborn.Tests.PlayMode.Scenarios
         public const string COVERAGE_001 = "COVERAGE-001";
         public const string COVERAGE_002 = "COVERAGE-002";
         public const string COVERAGE_003 = "COVERAGE-003";
-        // [PENDING] NET-002 ~ NET-005, TOOL-001 (post-MVP)
+        // [PENDING] NET-002, NET-003, NET-004, NET-005, TOOL-001 (post-MVP)
     }
 }

@@ -110,6 +110,20 @@ namespace Rootborn.Tests.EditMode.Scenarios
             StringAssert.DoesNotContain("| Deferred | JOB-CAREER-BRIDGE-001 |", catalog, "Job/Career bridge must no longer remain deferred after executable PlayMode coverage landed.");
         }
 
+        [Test]
+        public void SCENARIO_REGISTRY_EDIT_007_PostMvpNetworkScenariosAreExplicitPendingIds()
+        {
+            Assert.IsTrue(File.Exists(ScenarioIdPath), "ScenarioId.cs must remain available for pending PlayMode scenario markers.");
+            string scenarioIds = File.ReadAllText(ScenarioIdPath);
+
+            StringAssert.Contains("[PENDING]", scenarioIds);
+            StringAssert.Contains("NET-002", scenarioIds);
+            StringAssert.Contains("NET-003", scenarioIds);
+            StringAssert.Contains("NET-004", scenarioIds);
+            StringAssert.Contains("NET-005", scenarioIds);
+            StringAssert.Contains("TOOL-001", scenarioIds);
+        }
+
         private static void AssertCategory(string catalog, string category)
         {
             StringAssert.Contains("| " + category + " |", catalog, "Catalog must include category " + category + ".");
