@@ -183,6 +183,18 @@ namespace Rootborn.Tests.EditMode.Scenarios
             StringAssert.DoesNotContain("| Deferred | KNOW-STATUS-ACTIVITY-001 |", catalog, "Knowledge/Status activity chain must not remain deferred after executable PlayMode coverage landed.");
         }
 
+        [Test]
+        public void SCENARIO_REGISTRY_EDIT_013_CatalogReferencesDailyPlanCompletionResultFeedbackEvidence()
+        {
+            Assert.IsTrue(File.Exists(CatalogPath), "The current Student Life scenario coverage catalog must exist.");
+            string catalog = File.ReadAllText(CatalogPath);
+
+            StringAssert.Contains("| Active | LIFE-DAILY-PLAN-002 | LIFE | Daily Plan | PlayMode | Assets/Tests/PlayMode/EndToEnd/DailyPlanRouteCompletionE2EScenarioTests.cs |", catalog, "Daily Plan completion must remain active catalog evidence.");
+            StringAssert.Contains("DAILY_PLAN_ROUTE_E2E_002_SelectCompleteRouteResultReload", catalog, "Daily Plan completion catalog row must reference the stricter result-feedback E2E method.");
+            StringAssert.Contains("Builds/Logs/daily-plan-route-completion-e2e.png", catalog, "Daily Plan completion catalog row must reference screenshot evidence.");
+            StringAssert.Contains("TrackedObjectiveHud", catalog, "Daily Plan completion catalog row must document tracked HUD cleanup evidence.");
+        }
+
         private static void AssertCategory(string catalog, string category)
         {
             StringAssert.Contains("| " + category + " |", catalog, "Catalog must include category " + category + ".");
