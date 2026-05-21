@@ -137,6 +137,17 @@ namespace Rootborn.Tests.EditMode.Scenarios
             StringAssert.Contains("Builds/Logs/objective-journal-source-collision-e2e.png", catalog);
         }
 
+        [Test]
+        public void SCENARIO_REGISTRY_EDIT_009_CatalogActivatesDedicatedRouteRelationshipLongRun()
+        {
+            Assert.IsTrue(File.Exists(CatalogPath), "The current Student Life scenario coverage catalog must exist.");
+            string catalog = File.ReadAllText(CatalogPath);
+
+            StringAssert.Contains("| Active | NET-ROUTE-REL-LONGRUN-001 | NET | Dedicated Route Relationship Long-Run | QA runner | Scripts/qa/run-dedicated-route-relationship-longrun.ps1 |", catalog, "Dedicated route/relationship long-run must be active catalog evidence after the refreshed run passed.");
+            StringAssert.Contains("docs/superpowers/audits/2026-05-21-dedicated-route-relationship-longrun-refresh.md", catalog);
+            StringAssert.Contains("Builds/Logs/network-dedicated-route-relationship-longrun-refresh", catalog);
+        }
+
         private static void AssertCategory(string catalog, string category)
         {
             StringAssert.Contains("| " + category + " |", catalog, "Catalog must include category " + category + ".");
