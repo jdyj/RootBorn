@@ -98,6 +98,18 @@ namespace Rootborn.Tests.EditMode.Scenarios
             StringAssert.Contains("check-scenario-registry-sync.ps1", bashGate);
         }
 
+        [Test]
+        public void SCENARIO_REGISTRY_EDIT_006_CatalogActivatesJobCareerBridgeScenario()
+        {
+            Assert.IsTrue(File.Exists(CatalogPath), "The current Student Life scenario coverage catalog must exist.");
+            string catalog = File.ReadAllText(CatalogPath);
+
+            StringAssert.Contains("| Active | JOB-CAREER-BRIDGE-001 | JOB | Part-Time Work/Career Bridge | PlayMode | Assets/Tests/PlayMode/EndToEnd/CareerJobRouteE2EScenarioTests.cs |", catalog, "Job/Career bridge must be active now that the CareerJobRoute E2E exists.");
+            StringAssert.Contains("CareerJobRouteE2EScenarioTests", catalog);
+            StringAssert.Contains("CAREER_JOB_ROUTE_E2E_001_ProgressUnlockSelectReload", catalog);
+            StringAssert.DoesNotContain("| Deferred | JOB-CAREER-BRIDGE-001 |", catalog, "Job/Career bridge must no longer remain deferred after executable PlayMode coverage landed.");
+        }
+
         private static void AssertCategory(string catalog, string category)
         {
             StringAssert.Contains("| " + category + " |", catalog, "Catalog must include category " + category + ".");

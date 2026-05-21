@@ -18,6 +18,7 @@ This catalog maps active ROOTBORN player-flow, domain, and dedicated validation 
 | Active | REL-FIRST-GUIDE-001 | REL | Relationships | PlayMode | Assets/Tests/PlayMode/EndToEnd/FirstGuideRelationshipMilestoneE2EScenarioTests.cs | First Guide relationship milestone through Town interaction |  |  |
 | Active | REL-SECOND-NPC-001 | REL | Relationships | PlayMode | Assets/Tests/PlayMode/EndToEnd/SecondNpcRelationshipMilestoneE2EScenarioTests.cs | Second NPC relationship milestone, Journal guidance, reload |  |  |
 | Active | JOB-PART-TIME-001 | JOB | Part-Time Work | PlayMode | Assets/Tests/PlayMode/EndToEnd/PartTimeWorkGrowthE2EScenarioTests.cs | Town part-time work growth route and reload |  |  |
+| Active | JOB-CAREER-BRIDGE-001 | JOB | Part-Time Work/Career Bridge | PlayMode | Assets/Tests/PlayMode/EndToEnd/CareerJobRouteE2EScenarioTests.cs | `CAREER_JOB_ROUTE_E2E_001_ProgressUnlockSelectReload` verifies Corner Store work progress unlocks/selects Workshop Daily Plan route, Objective Journal guidance, tracked HUD, screenshot, and reload persistence |  |  |
 | Active | KNOW-001 | KNOW | Knowledge/Discovery | PlayMode | Assets/Tests/PlayMode/EndToEnd/EncyclopediaDiscoveryUiE2EScenarioTests.cs | Discovery state appears in player-facing encyclopedia UI |  |  |
 | Active | KNOW-002 | KNOW | Discovery Route Unlock | PlayMode | Assets/Tests/PlayMode/EndToEnd/DiscoveryRouteUnlockE2EScenarioTests.cs | Clue interpretation unlocks Daily Plan route and reloads |  |  |
 | Active | STATUS-001 | STATUS | Student Condition | PlayMode | Assets/Tests/PlayMode/EndToEnd/StudentRelationshipConditionDayLoopE2EScenarioTests.cs | Relationship and condition day loop through player-facing route |  |  |
@@ -38,7 +39,6 @@ This catalog maps active ROOTBORN player-flow, domain, and dedicated validation 
 
 | Status | ID | Category | Owner | Evidence Type | Evidence | Player-Facing Verification | Deferred Reason | Future Validation |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Deferred | JOB-CAREER-BRIDGE-001 | JOB | Part-Time Work/Career Bridge | doc-only deferred |  |  | No committed player-facing job-to-career bridge slice yet | PlayMode plus dedicated smoke after feature slice |
 
 ## Gate Rules
 
