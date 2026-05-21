@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using NUnit.Framework;
 
@@ -102,7 +103,7 @@ namespace Rootborn.Tests.EditMode.Network
             StringAssert.Contains("rootborn-server_Data\\StreamingAssets\\aa\\settings.json", source);
             StringAssert.Contains("rootborn_Data\\StreamingAssets\\aa\\settings.json", source);
             StringAssert.Contains("DirectValidationRouteRelationshipAutoplayInstaller.cs", source, "Freshness guard must compare artifacts against the autoplay source required by this runner.");
-            StringAssert.Contains("run-dedicated-route-relationship-smoke.ps1", source, "Freshness guard must compare artifacts against the runner script itself.");
+            StringAssert.Contains("run-dedicated-route-relationship-smoke.ps1", source, "Freshness guard failure output must name the runner script.");
             StringAssert.Contains("BuildServerWindows64", source, "Freshness failure output must name the server build remediation command.");
             StringAssert.Contains("BuildClientWindows64", source, "Freshness failure output must name the client build remediation command.");
         }
@@ -120,9 +121,31 @@ namespace Rootborn.Tests.EditMode.Network
             StringAssert.Contains("rootborn-server_Data\\StreamingAssets\\aa\\settings.json", source);
             StringAssert.Contains("rootborn_Data\\StreamingAssets\\aa\\settings.json", source);
             StringAssert.Contains("DirectValidationRouteRelationshipAutoplayInstaller.cs", source, "Freshness guard must compare artifacts against the autoplay source required by this runner.");
-            StringAssert.Contains("run-dedicated-route-relationship-longrun.ps1", source, "Freshness guard must compare artifacts against the long-run runner script itself.");
+            StringAssert.Contains("run-dedicated-route-relationship-longrun.ps1", source, "Freshness guard failure output must name the long-run runner script.");
             StringAssert.Contains("BuildServerWindows64", source, "Freshness failure output must name the server build remediation command.");
             StringAssert.Contains("BuildClientWindows64", source, "Freshness failure output must name the client build remediation command.");
+        }
+
+        [Test]
+        public void DEDICATED_ROUTE_AUTOPLAY_EDIT_010_LongRunFreshnessComparesOnlyCompiledAutoplaySources()
+        {
+            Assert.IsTrue(File.Exists(LongRunScriptPath), "Dedicated route/relationship long-run regression script must exist.");
+            string source = File.ReadAllText(LongRunScriptPath);
+            string requiredSourcesBlock = ExtractRequiredSourcesBlock(source);
+
+            StringAssert.Contains("DirectValidationRouteRelationshipAutoplayInstaller.cs", requiredSourcesBlock, "Long-run freshness must compare Rootborn.Game.dll against compiled autoplay source.");
+            StringAssert.DoesNotContain("run-dedicated-route-relationship-longrun.ps1", requiredSourcesBlock, "Player builds may preserve managed assembly timestamps when only the runner script changes; the runner script must be named in remediation text, not compared against Rootborn.Game.dll freshness.");
+        }
+
+        private static string ExtractRequiredSourcesBlock(string source)
+        {
+            const string Marker = "$requiredSources = @(";
+            int start = source.IndexOf(Marker, StringComparison.Ordinal);
+            Assert.GreaterOrEqual(start, 0, "Freshness guard must define required source files.");
+
+            int end = source.IndexOf(")", start, StringComparison.Ordinal);
+            Assert.Greater(end, start, "Freshness guard required source block must be closed.");
+            return source.Substring(start, end - start);
         }
     }
 }
