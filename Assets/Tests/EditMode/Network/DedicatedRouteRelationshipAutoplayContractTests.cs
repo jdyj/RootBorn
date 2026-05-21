@@ -106,5 +106,23 @@ namespace Rootborn.Tests.EditMode.Network
             StringAssert.Contains("BuildServerWindows64", source, "Freshness failure output must name the server build remediation command.");
             StringAssert.Contains("BuildClientWindows64", source, "Freshness failure output must name the client build remediation command.");
         }
+
+        [Test]
+        public void DEDICATED_ROUTE_AUTOPLAY_EDIT_009_LongRunScriptFailsBeforeLaunchOnStaleArtifacts()
+        {
+            Assert.IsTrue(File.Exists(LongRunScriptPath), "Dedicated route/relationship long-run regression script must exist.");
+            string source = File.ReadAllText(LongRunScriptPath);
+
+            StringAssert.Contains("Assert-FreshBuildArtifacts", source, "Dedicated route/relationship long-run must fail before process launch if build artifacts are stale or incomplete.");
+            StringAssert.Contains("Assert-RequiredArtifact", source, "Dedicated route/relationship long-run must validate required executable, managed assembly, and Addressables runtime files.");
+            StringAssert.Contains("rootborn-server_Data\\Managed\\Rootborn.Game.dll", source);
+            StringAssert.Contains("rootborn_Data\\Managed\\Rootborn.Game.dll", source);
+            StringAssert.Contains("rootborn-server_Data\\StreamingAssets\\aa\\settings.json", source);
+            StringAssert.Contains("rootborn_Data\\StreamingAssets\\aa\\settings.json", source);
+            StringAssert.Contains("DirectValidationRouteRelationshipAutoplayInstaller.cs", source, "Freshness guard must compare artifacts against the autoplay source required by this runner.");
+            StringAssert.Contains("run-dedicated-route-relationship-longrun.ps1", source, "Freshness guard must compare artifacts against the long-run runner script itself.");
+            StringAssert.Contains("BuildServerWindows64", source, "Freshness failure output must name the server build remediation command.");
+            StringAssert.Contains("BuildClientWindows64", source, "Freshness failure output must name the client build remediation command.");
+        }
     }
 }

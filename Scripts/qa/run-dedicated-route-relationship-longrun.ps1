@@ -16,6 +16,46 @@ try {
     $serverExe = Resolve-Path $ServerExecutable
     $clientExe = Resolve-Path $ClientExecutable
 
+    function Assert-RequiredArtifact {
+        param(
+            [string]$Path,
+            [string]$Description
+        )
+
+        if (-not (Test-Path -LiteralPath $Path)) {
+            throw "Missing required dedicated long-run artifact: $Description at $Path. Rebuild with Rootborn.Editor.BuildScripts.BuildScript.BuildServerWindows64 and Rootborn.Editor.BuildScripts.BuildScript.BuildClientWindows64 before running run-dedicated-route-relationship-longrun.ps1."
+        }
+
+        return Get-Item -LiteralPath $Path
+    }
+
+    function Assert-FreshBuildArtifacts {
+        $serverGameDll = Assert-RequiredArtifact "Builds\Server\Windows\rootborn-server_Data\Managed\Rootborn.Game.dll" "server Rootborn.Game.dll"
+        $clientGameDll = Assert-RequiredArtifact "Builds\Client\Windows\rootborn_Data\Managed\Rootborn.Game.dll" "client Rootborn.Game.dll"
+        Assert-RequiredArtifact $serverExe.Path "server executable" | Out-Null
+        Assert-RequiredArtifact $clientExe.Path "client executable" | Out-Null
+        Assert-RequiredArtifact "Builds\Server\Windows\rootborn-server_Data\StreamingAssets\aa\settings.json" "server Addressables runtime settings" | Out-Null
+        Assert-RequiredArtifact "Builds\Client\Windows\rootborn_Data\StreamingAssets\aa\settings.json" "client Addressables runtime settings" | Out-Null
+
+        $requiredSources = @(
+            "Assets\Scripts\Game\Common\DirectValidationRouteRelationshipAutoplayInstaller.cs",
+            "Scripts\qa\run-dedicated-route-relationship-longrun.ps1"
+        )
+
+        foreach ($sourcePath in $requiredSources) {
+            $source = Assert-RequiredArtifact $sourcePath "required source for run-dedicated-route-relationship-longrun.ps1"
+            if ($serverGameDll.LastWriteTime -lt $source.LastWriteTime) {
+                throw "Stale server Rootborn.Game.dll for run-dedicated-route-relationship-longrun.ps1. $($serverGameDll.FullName) is older than $sourcePath. Rebuild with Rootborn.Editor.BuildScripts.BuildScript.BuildServerWindows64."
+            }
+
+            if ($clientGameDll.LastWriteTime -lt $source.LastWriteTime) {
+                throw "Stale client Rootborn.Game.dll for run-dedicated-route-relationship-longrun.ps1. $($clientGameDll.FullName) is older than $sourcePath. Rebuild with Rootborn.Editor.BuildScripts.BuildScript.BuildClientWindows64."
+            }
+        }
+    }
+
+    Assert-FreshBuildArtifacts
+
     if ($Cycles -lt 2) {
         throw "Cycles must be at least 2 so the long-run includes one action pass and one observe-only reload pass."
     }
