@@ -3,6 +3,7 @@
     <type fullname="Rootborn.Game.Common.DirectValidationAutoplayInstaller" preserve="all" />
     <type fullname="Rootborn.Game.Common.DirectValidationDailyPlanCompletionAutoplayInstaller" preserve="all" />
     <type fullname="Rootborn.Game.Common.DirectValidationDiscoveryRouteUnlockAutoplayInstaller" preserve="all" />
+    <type fullname="Rootborn.Game.Common.DirectValidationResourceRecipeActivityAutoplayInstaller" preserve="all" />
     <type fullname="Rootborn.Game.Common.DirectValidationRouteRelationshipAutoplayInstaller" preserve="all" />
     <type fullname="Rootborn.Game.Common.DirectValidationTrace" preserve="all" />
     <type fullname="Rootborn.Game.Common.DirectValidationTraceInstaller" preserve="all" />
@@ -11,6 +12,9 @@
     <type fullname="Rootborn.Game.Crops.CropDefinition" preserve="all" />
     <type fullname="Rootborn.Game.Crops.FertilizerSpeedupBehavior" preserve="all" />
     <type fullname="Rootborn.Game.Crops.RequiresDailyWaterBehavior" preserve="all" />
+    <type fullname="Rootborn.Game.Crafting.GatherResourceStep" preserve="all" />
+    <type fullname="Rootborn.Game.Crafting.RecipeDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.Crafting.ResourceRecipeProgress" preserve="all" />
     <type fullname="Rootborn.Game.Dialogue.DialogueChoiceDefinition" preserve="all" />
     <type fullname="Rootborn.Game.Dialogue.DialogueDefinition" preserve="all" />
     <type fullname="Rootborn.Game.Dialogue.NpcDefinition" preserve="all" />
@@ -113,6 +117,7 @@
     <type fullname="Rootborn.Game.StudentLife.LifeActivityDefinition" preserve="all" />
     <type fullname="Rootborn.Game.StudentLife.LocationActivityDefinition" preserve="all" />
     <type fullname="Rootborn.Game.StudentLife.LocationActivityProgressDeltaOutcome" preserve="all" />
+    <type fullname="Rootborn.Game.StudentLife.LocationActivityResourceRecipeOutcome" preserve="all" />
     <type fullname="Rootborn.Game.StudentLife.LocationCategoryDefinition" preserve="all" />
     <type fullname="Rootborn.Game.StudentLife.LocationDefinition" preserve="all" />
     <type fullname="Rootborn.Game.StudentLife.LocationIdentityDefinition" preserve="all" />
