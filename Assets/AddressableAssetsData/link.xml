@@ -2,6 +2,7 @@
   <assembly fullname="Rootborn.Game, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
     <type fullname="Rootborn.Game.Common.DirectValidationAutoplayInstaller" preserve="all" />
     <type fullname="Rootborn.Game.Common.DirectValidationDailyPlanCompletionAutoplayInstaller" preserve="all" />
+    <type fullname="Rootborn.Game.Common.DirectValidationDiscoveryRouteUnlockAutoplayInstaller" preserve="all" />
     <type fullname="Rootborn.Game.Common.DirectValidationRouteRelationshipAutoplayInstaller" preserve="all" />
     <type fullname="Rootborn.Game.Common.DirectValidationTrace" preserve="all" />
     <type fullname="Rootborn.Game.Common.DirectValidationTraceInstaller" preserve="all" />
@@ -152,6 +153,7 @@
     <type fullname="Rootborn.Game.WorldGeneration.TilePatternDefinition" preserve="all" />
     <type fullname="Rootborn.Game.WorldGeneration.TileVariantSetDefinition" preserve="all" />
     <type fullname="Rootborn.Game.WorldState.WorldStateFlagDefinition" preserve="all" />
+    <type fullname="Rootborn.Game.WorldState.WorldStateProgress" preserve="all" />
     <type fullname="Rootborn.Game.WorldState.WorldStateScopeDefinition" preserve="all" />
     <type fullname="Rootborn.Game.WorldState.WorldStateUsageCareerHintOutcome" preserve="all" />
     <type fullname="Rootborn.Game.WorldState.WorldStateUsageDefinition" preserve="all" />

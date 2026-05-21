@@ -17,6 +17,7 @@ namespace Rootborn.Tests.EditMode.Addressables
         {
             "Rootborn.Game.Common.DirectValidationAutoplayInstaller",
             "Rootborn.Game.Common.DirectValidationDailyPlanCompletionAutoplayInstaller",
+            "Rootborn.Game.Common.DirectValidationDiscoveryRouteUnlockAutoplayInstaller",
             "Rootborn.Game.Common.DirectValidationRouteRelationshipAutoplayInstaller",
             "Rootborn.Game.Common.DirectValidationTrace",
             "Rootborn.Game.Common.DirectValidationTraceInstaller",
