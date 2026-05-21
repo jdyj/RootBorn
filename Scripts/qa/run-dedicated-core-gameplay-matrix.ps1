@@ -1,4 +1,6 @@
 param(
+    [string]$ServerExecutable = "Builds\Server\Windows\rootborn-server.exe",
+    [string]$ClientExecutable = "Builds\Client\Windows\rootborn.exe",
     [int]$StartPort = 7901,
     [int]$WaitSeconds = 120,
     [string]$RunName = "network-dedicated-core-gameplay-matrix"
@@ -9,6 +11,52 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
 Push-Location $repoRoot
 try {
+    $serverExe = Resolve-Path $ServerExecutable
+    $clientExe = Resolve-Path $ClientExecutable
+
+    function Assert-RequiredArtifact {
+        param(
+            [string]$Path,
+            [string]$Description
+        )
+
+        if (-not (Test-Path -LiteralPath $Path)) {
+            throw "Missing required dedicated matrix artifact: $Description at $Path. Rebuild with Rootborn.Editor.BuildScripts.BuildScript.BuildServerWindows64 and Rootborn.Editor.BuildScripts.BuildScript.BuildClientWindows64 before running run-dedicated-core-gameplay-matrix.ps1."
+        }
+
+        return Get-Item -LiteralPath $Path
+    }
+
+    function Assert-FreshBuildArtifacts {
+        $serverGameDll = Assert-RequiredArtifact "Builds\Server\Windows\rootborn-server_Data\Managed\Rootborn.Game.dll" "server Rootborn.Game.dll"
+        $clientGameDll = Assert-RequiredArtifact "Builds\Client\Windows\rootborn_Data\Managed\Rootborn.Game.dll" "client Rootborn.Game.dll"
+        Assert-RequiredArtifact $serverExe.Path "server executable" | Out-Null
+        Assert-RequiredArtifact $clientExe.Path "client executable" | Out-Null
+        Assert-RequiredArtifact "Builds\Server\Windows\rootborn-server_Data\StreamingAssets\aa\settings.json" "server Addressables runtime settings" | Out-Null
+        Assert-RequiredArtifact "Builds\Client\Windows\rootborn_Data\StreamingAssets\aa\settings.json" "client Addressables runtime settings" | Out-Null
+
+        $requiredSources = @(
+            "Assets\Scripts\Game\Common\DirectValidationRouteRelationshipAutoplayInstaller.cs",
+            "Assets\Scripts\Game\Common\DirectValidationCareerDailyPlanAutoplayInstaller.cs",
+            "Assets\Scripts\Game\Common\DirectValidationDailyPlanCompletionAutoplayInstaller.cs",
+            "Assets\Scripts\Game\Common\DirectValidationDiscoveryRouteUnlockAutoplayInstaller.cs",
+            "Assets\Scripts\Game\Common\DirectValidationResourceRecipeActivityAutoplayInstaller.cs"
+        )
+
+        foreach ($sourcePath in $requiredSources) {
+            $source = Assert-RequiredArtifact $sourcePath "required source for run-dedicated-core-gameplay-matrix.ps1"
+            if ($serverGameDll.LastWriteTime -lt $source.LastWriteTime) {
+                throw "Stale server Rootborn.Game.dll for run-dedicated-core-gameplay-matrix.ps1. $($serverGameDll.FullName) is older than $sourcePath. Rebuild with Rootborn.Editor.BuildScripts.BuildScript.BuildServerWindows64."
+            }
+
+            if ($clientGameDll.LastWriteTime -lt $source.LastWriteTime) {
+                throw "Stale client Rootborn.Game.dll for run-dedicated-core-gameplay-matrix.ps1. $($clientGameDll.FullName) is older than $sourcePath. Rebuild with Rootborn.Editor.BuildScripts.BuildScript.BuildClientWindows64."
+            }
+        }
+    }
+
+    Assert-FreshBuildArtifacts
+
     $logsRoot = "Builds\Logs"
     New-Item -ItemType Directory -Path $logsRoot -Force | Out-Null
     $matrixLogDir = Join-Path (Resolve-Path $logsRoot) $RunName
@@ -167,6 +215,8 @@ try {
             "-NoProfile",
             "-ExecutionPolicy", "Bypass",
             "-File", $Slice.Script,
+            "-ServerExecutable", $serverExe.Path,
+            "-ClientExecutable", $clientExe.Path,
             "-RunName", $Slice.RunName,
             "-SaveSlot", $Slice.SaveSlot,
             "-Port", "$($Slice.Port)",
