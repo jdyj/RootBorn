@@ -1,7 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using NUnit.Framework;
 using Rootborn.Game.Interiors;
+using Rootborn.Game.Save;
 using Rootborn.UI.Interiors;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -11,11 +14,33 @@ using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace Rootborn.Tests.PlayMode.Interiors
 {
     public sealed class ModernInteriorsShadowlessHousePlacementPlayModeTests
     {
+        private string _saveRoot;
+
+        [UnitySetUp]
+        public IEnumerator SetUp()
+        {
+            _saveRoot = System.IO.Path.Combine(Application.temporaryCachePath, "rootborn-modern-interiors-placement-tests-" + Guid.NewGuid().ToString("N"));
+            SaveService.SetRootDirectoryForTests(_saveRoot);
+            ActiveSaveContext.Set(new SaveSlotMetadata { SlotId = "modern-interiors-placement-tests", DisplayName = "modern-interiors-placement-tests", WorldSeed = 1205, TileSeed = 1205 });
+            ClearStaticFurnitureLayoutCache();
+            yield return null;
+        }
+
+        [UnityTearDown]
+        public IEnumerator TearDown()
+        {
+            ActiveSaveContext.Clear();
+            SaveService.SetRootDirectoryForTests(null);
+            ClearStaticFurnitureLayoutCache();
+            yield return null;
+        }
+
         [UnityTest]
         public IEnumerator HousePalette_ShowsModernInteriorsShadowlessFurnitureFromRegistry()
         {
@@ -219,7 +244,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             for (int i = 0; i < transforms.Length; i++)
             {
                 var candidate = transforms[i] != null ? transforms[i].gameObject : null;
-                if (candidate != null && candidate.name.StartsWith("PaletteFurniture_modern.interiors.shadowless.", System.StringComparison.Ordinal))
+                if (candidate != null && candidate.name.StartsWith("PaletteFurniture_modern.interiors.shadowless.", StringComparison.Ordinal))
                 {
                     return candidate;
                 }
@@ -235,7 +260,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             for (int i = 0; i < transforms.Length; i++)
             {
                 var candidate = transforms[i] != null ? transforms[i].gameObject : null;
-                if (candidate != null && candidate.name.StartsWith("PaletteFurniture_", System.StringComparison.Ordinal))
+                if (candidate != null && candidate.name.StartsWith("PaletteFurniture_", StringComparison.Ordinal))
                 {
                     count++;
                 }
@@ -246,7 +271,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
 
         private static InteriorFurnitureDefinition GetActiveFurniture(InteriorPlacementPreviewOverlay overlay)
         {
-            var field = typeof(InteriorPlacementPreviewOverlay).GetField("_activeFurniture", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            var field = typeof(InteriorPlacementPreviewOverlay).GetField("_activeFurniture", BindingFlags.Instance | BindingFlags.NonPublic);
             return (InteriorFurnitureDefinition)field.GetValue(overlay);
         }
 
@@ -336,6 +361,13 @@ namespace Rootborn.Tests.PlayMode.Interiors
             return count;
         }
 
+        private static void ClearStaticFurnitureLayoutCache()
+        {
+            var field = typeof(InteriorPlacementPreviewOverlay).GetField("SavedFurnitureLayout", BindingFlags.Static | BindingFlags.NonPublic);
+            var list = field != null ? field.GetValue(null) as IList : null;
+            list?.Clear();
+        }
+
         [DefaultExecutionOrder(-10000)]
         private sealed class MouseMoveFrameDriver : MonoBehaviour
         {
@@ -367,8 +399,8 @@ namespace Rootborn.Tests.PlayMode.Interiors
                     if (overlay != null)
                     {
                         var overlayType = typeof(InteriorPlacementPreviewOverlay);
-                        overlayType.GetField("_wasMousePressed", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.SetValue(overlay, true);
-                        overlayType.GetMethod("Update", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.Invoke(overlay, null);
+                        overlayType.GetField("_wasMousePressed", BindingFlags.Instance | BindingFlags.NonPublic)?.SetValue(overlay, true);
+                        overlayType.GetMethod("Update", BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(overlay, null);
                     }
 
                     _frame++;
@@ -412,8 +444,8 @@ namespace Rootborn.Tests.PlayMode.Interiors
                     if (overlay != null)
                     {
                         var overlayType = typeof(InteriorPlacementPreviewOverlay);
-                        overlayType.GetField("_wasMousePressed", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.SetValue(overlay, false);
-                        overlayType.GetMethod("Update", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.Invoke(overlay, null);
+                        overlayType.GetField("_wasMousePressed", BindingFlags.Instance | BindingFlags.NonPublic)?.SetValue(overlay, false);
+                        overlayType.GetMethod("Update", BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(overlay, null);
                     }
 
                     _frame++;

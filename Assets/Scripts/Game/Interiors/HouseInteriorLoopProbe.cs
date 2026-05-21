@@ -22,16 +22,17 @@ namespace Rootborn.Game.Interiors
             string slot = !string.IsNullOrEmpty(ActiveSaveContext.SlotId) ? ActiveSaveContext.SlotId : "default";
             var state = HouseStatePersistence.Load(slot);
             var overlay = FindPlacementOverlay();
+            int groundTileCount = CountTiles("HouseGroundTilemap");
 
             return new HouseInteriorLoopProbe
             {
                 CurrentStageIndex = state.CurrentStageIndex,
                 SelectedRoomPresetId = state.SelectedRoomPresetId,
-                GroundTileCount = CountTiles("HouseGroundTilemap"),
+                GroundTileCount = groundTileCount,
                 WallTileCount = CountTiles("HouseWallTilemap"),
                 CollisionTileCount = CountTiles("HouseCollisionTilemap"),
-                SurfaceCellCount = ReadIntProperty(overlay, "ActiveSurfaceCellCountForTests"),
-                PlacedFurnitureCount = ReadIntProperty(overlay, "PlacedFurnitureCountForTests"),
+                SurfaceCellCount = ReadIntProperty(overlay, "ActiveSurfaceCellCountForTests", groundTileCount),
+                PlacedFurnitureCount = ReadIntProperty(overlay, "PlacedFurnitureCountForTests", 0),
                 HasVisibleDebugOverlay = HasVisibleOverlay()
             };
         }
@@ -50,17 +51,17 @@ namespace Rootborn.Game.Interiors
             return null;
         }
 
-        private static int ReadIntProperty(MonoBehaviour target, string propertyName)
+        private static int ReadIntProperty(MonoBehaviour target, string propertyName, int fallback)
         {
             if (target == null)
             {
-                return 0;
+                return fallback;
             }
 
             var property = target.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public);
             if (property == null || property.PropertyType != typeof(int))
             {
-                return 0;
+                return fallback;
             }
 
             return (int)property.GetValue(target);

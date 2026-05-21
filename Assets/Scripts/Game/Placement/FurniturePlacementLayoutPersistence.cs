@@ -76,6 +76,7 @@ namespace Rootborn.Game.Placement
                 return false;
             }
 
+            destination.Clear();
             string json = CreateService().ReadJson(fileName);
             if (string.IsNullOrEmpty(json))
             {
@@ -85,7 +86,6 @@ namespace Rootborn.Game.Placement
             try
             {
                 var layout = JsonUtility.FromJson<FurniturePlacementLayoutSaveData>(json);
-                destination.Clear();
                 if (layout == null || layout.Items == null)
                 {
                     return false;
@@ -103,6 +103,7 @@ namespace Rootborn.Game.Placement
             }
             catch (ArgumentException)
             {
+                destination.Clear();
                 return false;
             }
         }

@@ -1,11 +1,15 @@
+using System;
 using System.Collections;
+using System.Reflection;
 using NUnit.Framework;
+using Rootborn.Game.Save;
 using Rootborn.UI.Interiors;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace Rootborn.Tests.PlayMode.Interiors
 {
@@ -15,6 +19,27 @@ namespace Rootborn.Tests.PlayMode.Interiors
         private const string DeskButtonName = "PaletteFurniture_desk.large";
         private const string ChairTileName = "BlackChair_00";
         private const string DeskTileName = "ShadowlessOffice_Desk_Table_r39_c01";
+
+        private string _saveRoot;
+
+        [UnitySetUp]
+        public IEnumerator SetUp()
+        {
+            _saveRoot = System.IO.Path.Combine(Application.temporaryCachePath, "rootborn-placement-availability-tests-" + Guid.NewGuid().ToString("N"));
+            SaveService.SetRootDirectoryForTests(_saveRoot);
+            ActiveSaveContext.Set(new SaveSlotMetadata { SlotId = "placement-availability-tests", DisplayName = "placement-availability-tests", WorldSeed = 1205, TileSeed = 1205 });
+            ClearStaticFurnitureLayoutCache();
+            yield return null;
+        }
+
+        [UnityTearDown]
+        public IEnumerator TearDown()
+        {
+            ActiveSaveContext.Clear();
+            SaveService.SetRootDirectoryForTests(null);
+            ClearStaticFurnitureLayoutCache();
+            yield return null;
+        }
 
         [UnityTest]
         public IEnumerator SelectingFurniture_ShowsPlacementAvailabilityOverlayAndCounts()
@@ -89,6 +114,13 @@ namespace Rootborn.Tests.PlayMode.Interiors
             }
 
             return count;
+        }
+
+        private static void ClearStaticFurnitureLayoutCache()
+        {
+            var field = typeof(InteriorPlacementPreviewOverlay).GetField("SavedFurnitureLayout", BindingFlags.Static | BindingFlags.NonPublic);
+            var list = field != null ? field.GetValue(null) as IList : null;
+            list?.Clear();
         }
     }
 }

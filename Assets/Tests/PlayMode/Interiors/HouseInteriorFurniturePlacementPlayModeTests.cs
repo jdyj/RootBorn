@@ -1,11 +1,15 @@
+using System;
 using System.Collections;
+using System.Reflection;
 using NUnit.Framework;
+using Rootborn.Game.Save;
 using Rootborn.UI.Interiors;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace Rootborn.Tests.PlayMode.Interiors
 {
@@ -20,6 +24,27 @@ namespace Rootborn.Tests.PlayMode.Interiors
         private const string DeskFurnitureId = "desk.large";
         private const string DeskTileName = "ShadowlessOffice_Desk_Table_r39_c01";
         private const string ComputerTileName = "ShadowlessOffice_Computer_Monitor_r44_c08";
+
+        private string _saveRoot;
+
+        [UnitySetUp]
+        public IEnumerator SetUp()
+        {
+            _saveRoot = System.IO.Path.Combine(Application.temporaryCachePath, "rootborn-house-placement-tests-" + Guid.NewGuid().ToString("N"));
+            SaveService.SetRootDirectoryForTests(_saveRoot);
+            ActiveSaveContext.Set(new SaveSlotMetadata { SlotId = "house-placement-tests", DisplayName = "house-placement-tests", WorldSeed = 1205, TileSeed = 1205 });
+            ClearStaticFurnitureLayoutCache();
+            yield return null;
+        }
+
+        [UnityTearDown]
+        public IEnumerator TearDown()
+        {
+            ActiveSaveContext.Clear();
+            SaveService.SetRootDirectoryForTests(null);
+            ClearStaticFurnitureLayoutCache();
+            yield return null;
+        }
 
         [UnityTest]
         public IEnumerator HousePlacementUi_LoadsChairFurnitureObjectButtons()
@@ -349,6 +374,13 @@ namespace Rootborn.Tests.PlayMode.Interiors
 
             foundCell = default;
             return false;
+        }
+
+        private static void ClearStaticFurnitureLayoutCache()
+        {
+            var field = typeof(InteriorPlacementPreviewOverlay).GetField("SavedFurnitureLayout", BindingFlags.Static | BindingFlags.NonPublic);
+            var list = field != null ? field.GetValue(null) as IList : null;
+            list?.Clear();
         }
     }
 }

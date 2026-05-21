@@ -175,6 +175,37 @@ namespace Rootborn.Tests.EditMode.Placement
             Assert.AreEqual(1, loaded.Count);
             Assert.AreEqual("desk", loaded[0].FurnitureId);
         }
+
+        [Test]
+        public void HOUSE_FURNITURE_SAVE_002_MissingStageLayoutClearsDestination()
+        {
+            var root = System.IO.Path.Combine(Application.temporaryCachePath, "rootborn-furniture-missing-layout-" + System.Guid.NewGuid().ToString("N"));
+            SaveService.SetRootDirectoryForTests(root);
+            ActiveSaveContext.Set(new SaveSlotMetadata { SlotId = "house-furniture-missing-layout", DisplayName = "house-furniture-missing-layout" });
+
+            try
+            {
+                var loaded = new List<FurniturePlacementSaveData>
+                {
+                    new FurniturePlacementSaveData
+                    {
+                        FurnitureId = "stale.chair",
+                        AnchorX = 4,
+                        AnchorY = 5,
+                        Direction = FurniturePlacementDirection.South
+                    }
+                };
+
+                Assert.IsFalse(FurniturePlacementLayoutPersistence.TryLoadHouseLayoutForStage(3, loaded));
+                Assert.AreEqual(0, loaded.Count, "Missing layout files must clear stale destination entries so previous save-slot furniture cannot restore into a fresh House scene.");
+            }
+            finally
+            {
+                ActiveSaveContext.Clear();
+                SaveService.SetRootDirectoryForTests(null);
+            }
+        }
+
         private static int CountInstances(FurniturePlacementRegistry registry)
         {
             int count = 0;

@@ -1,6 +1,9 @@
+using System;
 using System.Collections;
+using System.Reflection;
 using NUnit.Framework;
 using Rootborn.Game.Interiors;
+using Rootborn.Game.Save;
 using Rootborn.UI.Interiors;
 using Rootborn.UI.Modern;
 using UnityEngine;
@@ -9,11 +12,33 @@ using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace Rootborn.Tests.PlayMode.Interiors
 {
     public sealed class HouseInteriorPlacementUiPlayModeTests
     {
+        private string _saveRoot;
+
+        [UnitySetUp]
+        public IEnumerator SetUp()
+        {
+            _saveRoot = System.IO.Path.Combine(Application.temporaryCachePath, "rootborn-house-placement-ui-tests-" + Guid.NewGuid().ToString("N"));
+            SaveService.SetRootDirectoryForTests(_saveRoot);
+            ActiveSaveContext.Set(new SaveSlotMetadata { SlotId = "house-placement-ui-tests", DisplayName = "house-placement-ui-tests", WorldSeed = 1205, TileSeed = 1205 });
+            ClearStaticFurnitureLayoutCache();
+            yield return null;
+        }
+
+        [UnityTearDown]
+        public IEnumerator TearDown()
+        {
+            ActiveSaveContext.Clear();
+            SaveService.SetRootDirectoryForTests(null);
+            ClearStaticFurnitureLayoutCache();
+            yield return null;
+        }
+
         [UnityTest]
         public IEnumerator HouseScene_CreatesFurniturePlacementPanelWithModernCommonPanels()
         {
@@ -169,6 +194,13 @@ namespace Rootborn.Tests.PlayMode.Interiors
             }
 
             return signature;
+        }
+
+        private static void ClearStaticFurnitureLayoutCache()
+        {
+            var field = typeof(InteriorPlacementPreviewOverlay).GetField("SavedFurnitureLayout", BindingFlags.Static | BindingFlags.NonPublic);
+            var list = field != null ? field.GetValue(null) as IList : null;
+            list?.Clear();
         }
     }
 }

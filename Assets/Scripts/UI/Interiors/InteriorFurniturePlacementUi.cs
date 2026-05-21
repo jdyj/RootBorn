@@ -470,9 +470,11 @@ namespace Rootborn.UI.Interiors
                 return;
             }
 
+            bool createdOverlay = false;
             if (_overlay == null)
             {
                 _overlay = InteriorPlacementPreviewOverlay.Ensure();
+                createdOverlay = _overlay != null;
             }
 
             if (_overlay == null)
@@ -480,10 +482,12 @@ namespace Rootborn.UI.Interiors
                 return;
             }
 
+            bool hadSavedLayout = _overlay.HasSavedFurnitureLayout();
             _overlay.BindGeneratedMapForPersistence(_model.CurrentMap, _applier);
-            if (_overlay.HasSavedFurnitureLayout())
+            if (!_overlay.LoadFurnitureLayout() && !hadSavedLayout && createdOverlay && _activeFurniture == null)
             {
-                _overlay.LoadFurnitureLayout();
+                Destroy(_overlay.gameObject);
+                _overlay = null;
             }
         }
 
