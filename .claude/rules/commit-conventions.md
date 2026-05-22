@@ -23,7 +23,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
 | `[BUGFIX]` | 버그 수정 |
 | `[REFACTOR]` | 동작 변경 없는 구조 개선 |
 | `[UI]` | UI/UX 변경 (Inspector·Scene 포함) |
-| `[ASSET]` | .asset / Prefab / 텍스처 / 오디오 등 자산 (Pixelwood 스프라이트 매핑 포함) |
+| `[ASSET]` | .asset / Prefab / 텍스처 / 오디오 등 자산 (Modern 스프라이트/타일 매핑 포함, Pixelwood는 레거시 범위) |
 | `[BALANCE]` | 수치 튜닝, 성장 시간, 도구 효율, 상태 감쇠율 등 |
 | `[TEST]` | 테스트 추가/수정 (코드 동작 변경 X) |
 | `[DOCS]` | 문서·헌법·규칙·ADR·CHANGELOG |

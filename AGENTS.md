@@ -34,6 +34,8 @@ Visible gameplay, UI, sprite, tilemap, placement, scene, prefab, camera, or inte
 
 7. **Modern UI Style2 공통 패널 규약.** 공통 패널은 `Assets/modernuserinterface-win/16x16/Modern_UI_Style_2.png`의 16x16 Style2 3×3 블록만 사용한다. 좌표는 top=`r2_c0/r2_c1/r2_c2`, middle=`r3_c0/r3_c1/r3_c2`, bottom=`r4_c0/r4_c1/r4_c2`이며 `r3_c1`을 fill tile로 반복한다. 패널 배경에 단일 `Image.sprite`를 직접 넣지 말고 `ModernUiTileImage + ModernUiRecipes.CommonPanel`을 사용한다. (`.claude/rules/ui-standards.md`)
 
+7-1. **Modern 비주얼 에셋 우선 규약.** Town, StudentLife, NPC, 상호작용 포인트, 월드 타일, 가구/실내, 공통 UI의 신규/수정 sprite는 Modern 계열 에셋을 우선 사용한다. 기본 후보 경로는 `Assets/Modern_Town/`, `Assets/Modern_Farm_v1.2/`, `Assets/moderninteriors-win/`, `Assets/modernuserinterface-win/`, `Assets/Tiles/ModernTownOffice/`, `Assets/TilePalettes/ModernTownOffice/`이다. Pixelwood 경로는 레거시 Farm/Crop 회귀, 이전 비교 기준, 이미 해당 에셋으로 고정된 기존 기능 보수에만 사용하며, Town 신규 상호작용 sprite의 기본 후보로 제안하지 않는다. Modern 에셋 적용도 실제 PlayMode Game View와 Renderer/Tilemap 상태로 검증해야 한다. (`.claude/constitution.md`, `.claude/rules/ui-standards.md`, `.claude/rules/path-based/sprite-slicing.md`)
+
 8. **플레이어 대리 테스트 + 사용자 지정 플레이 흐름 우회 금지.** 모든 유저 여정/코어 루프/PlayMode 시나리오의 완료 판정은 실제 플레이 방식의 입력, 이동, 트리거, UI 클릭/선택, 씬 전환 관찰로 증명한다. 사용자가 "직접 이동", "직접 클릭", "포탈로 가서", "UI에서 선택"처럼 구체적인 조작 경로를 지정하면 테스트와 구현은 그 경로를 그대로 재현해야 한다. 내부 메서드 직접 호출, 상태 강제 세팅, 씬 강제 로드 등 우회로 통과시킨 검증은 완료로 인정하지 않는다. 자동화가 어렵다면 먼저 명시적으로 알리고, 최소 PlayMode/입력/트리거/UI 경로 테스트로 실제 사용자 흐름을 증명한다. (`.claude/rules/testing-discipline.md`)
 
 9. **자유 경로 성장 원칙.** 학생 생활은 학교 수업·등교 루트 하나만 정답인 선형 구조로 설계하지 않는다. 플레이어는 학교를 중간에 나가거나, 마을 활동·관계·알바·탐험·제작·도움 행동·독학·휴식·이벤트 선택 등 다양한 경로로 특성·성향·스킬·진로 힌트·관계·컨디션을 성장시킬 수 있어야 한다. 동일한 핵심 성장 목표에는 가능한 한 2개 이상의 대체 경로를 제공하고, 모든 경로는 ScriptableObject 데이터와 전략 배열로 표현한다. 학교 밖 활동을 핵심 성장/진로/관계 진행에서 배제하거나 특정 활동/장소/퀘스트 ID별 C# 분기로 진행 경로를 제한하는 것은 금지한다. (`.claude/rules/game-design.md`)
@@ -64,7 +66,7 @@ Visible gameplay, UI, sprite, tilemap, placement, scene, prefab, camera, or inte
 - 게임 데이터: `Assets/Data/{StudentLife,LifeActivities,Choices,Skills,Careers,Jobs,Relationships,Locations,Tools,Resources,Recipes,Knowledge,Traits,Status,Family,Generations,Crops,Registry}/` (모두 ScriptableObject)
 - 로컬라이즈 리소스: `Assets/Localization`
 - 테스트: `Assets/Tests/EditMode`, `Assets/Tests/PlayMode`
-- 스프라이트 에셋: `Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/`, `Assets/Pixelwood Valley Icon Pack 1.0/`
+- 스프라이트 에셋: Modern 우선 `Assets/Modern_Town/`, `Assets/Modern_Farm_v1.2/`, `Assets/moderninteriors-win/`, `Assets/modernuserinterface-win/`, `Assets/Tiles/ModernTownOffice/`, `Assets/TilePalettes/ModernTownOffice/`; Pixelwood는 레거시/회귀 비교용 `Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/`, `Assets/Pixelwood Valley Icon Pack 1.0/`
 
 ## Build, Test, and Development Commands
 

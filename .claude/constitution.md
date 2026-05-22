@@ -59,7 +59,8 @@
 
 ## 그래픽 자산
 
-- **Pixelwood Valley 1.1.2** + **Icon Pack 1.0** (Unity Asset Store, 16×16 픽셀아트)
+- **Modern 계열 에셋 우선**: Town, StudentLife, NPC, 상호작용 포인트, 월드 타일, 가구/실내, 공통 UI의 신규/수정 sprite는 `Assets/Modern_Town/`, `Assets/Modern_Farm_v1.2/`, `Assets/moderninteriors-win/`, `Assets/modernuserinterface-win/`, `Assets/Tiles/ModernTownOffice/`, `Assets/TilePalettes/ModernTownOffice/`를 먼저 사용한다.
+- **Pixelwood Valley 1.1.2** + **Icon Pack 1.0**은 레거시 Farm/Crop 회귀, 이전 비교 기준, 이미 Pixelwood로 고정된 기존 기능 보수에 한정한다. Town 신규 상호작용 sprite의 기본 후보로 제안하지 않는다.
 - 타일, 실내/도시 소품, 아이콘, 캐릭터 6방향(Idle/Walk × Down/Side/Up) × 4프레임
 - Sprite sheet 슬라이스 규칙: `rules/path-based/sprite-slicing.md`
 - **캐릭터 sheet는 59×49** (16×16 아님), Tile/Items 계열은 자산별 PPU와 slice 규칙을 따른다.

@@ -22,7 +22,7 @@ ROOTBORN은 **PC 데스크톱** 기준이다 (Windows 64-bit 1순위, macOS/Linu
 - `UI Scale Mode`: Scale With Screen Size
 - `Reference Resolution`: 1920×1080
 - `Screen Match Mode`: Match Width Or Height = 0.5 (균형)
-- `Reference Pixels Per Unit`: 16 (Pixelwood 16x16 타일 기준)
+- `Reference Pixels Per Unit`: 16 (Modern 16x16 타일/아이콘 기준)
 
 ## Modern UI Style2 공통 패널
 
@@ -47,7 +47,17 @@ ROOTBORN은 **PC 데스크톱** 기준이다 (Windows 64-bit 1순위, macOS/Linu
 | 버튼 텍스트 | 18 | 20-24 |
 | 절대 하한선 | 14 | -- |
 
-12px 이하 텍스트는 금지. 픽셀아트 폰트(Pixelwood 무드와 일치) 사용 시 16/24/32 단계로만 가는 것을 권장.
+12px 이하 텍스트는 금지. 픽셀아트 폰트(Modern 계열 UI 무드와 일치) 사용 시 16/24/32 단계로만 가는 것을 권장.
+
+## Modern 비주얼 에셋 우선
+
+Town, StudentLife, NPC, 상호작용 포인트, 월드 타일, 가구/실내, 공통 UI의 신규/수정 sprite는 Modern 계열 에셋을 우선 사용한다.
+
+- 우선 후보: `Assets/Modern_Town/`, `Assets/Modern_Farm_v1.2/`, `Assets/moderninteriors-win/`, `Assets/modernuserinterface-win/`
+- 타일/팔레트 후보: `Assets/Tiles/ModernTownOffice/`, `Assets/TilePalettes/ModernTownOffice/`
+- Town 신규 상호작용 sprite 작업에서 Pixelwood를 기본 후보로 제안하지 않는다.
+- Pixelwood는 레거시 Farm/Crop 회귀, 이전 비교 기준, 이미 해당 에셋으로 고정된 기존 기능 보수에만 사용한다.
+- Modern sprite 적용 후에는 실제 PlayMode Game View, `SpriteRenderer.sprite`, `Tilemap` tile 이름/개수, UI overlay 상태를 함께 검증한다.
 
 ## 마우스/키보드 어포던스
 
