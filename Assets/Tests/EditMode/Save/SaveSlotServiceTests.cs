@@ -192,6 +192,32 @@ namespace Rootborn.Tests.EditMode.Save
             }
         }
 
+        [Test]
+        public void WriteJson_ReplacesFileAtomicallyAndLeavesNoTemporaryFiles()
+        {
+            var root = MakeTempRoot();
+            try
+            {
+                var service = new SaveService("slot-0", root);
+                service.WriteJson("progress.json", "{\"v\":1}");
+                string path = Path.Combine(service.DirectoryPath, "progress.json");
+                using (var committed = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+                using (var reader = new StreamReader(committed))
+                {
+                    service.WriteJson("progress.json", "{\"v\":2}");
+                    // In-place truncation would change this handle; an atomic replace leaves the old file intact.
+                    Assert.AreEqual("{\"v\":1}", reader.ReadToEnd());
+                }
+
+                Assert.AreEqual("{\"v\":2}", service.ReadJson("progress.json"));
+                Assert.AreEqual(1, Directory.GetFiles(service.DirectoryPath).Length);
+            }
+            finally
+            {
+                Directory.Delete(root, true);
+            }
+        }
+
         private static string MakeTempRoot()
         {
             var root = Path.Combine(Application.temporaryCachePath, "rootborn-save-tests-" + System.Guid.NewGuid().ToString("N"));

@@ -1,4 +1,5 @@
 using Rootborn.Game.Player;
+using Rootborn.Game.Common;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -17,6 +18,9 @@ namespace Rootborn.UI.Interiors
 
         private CameraFollow _follow;
         private bool _restoreFollowEnabled;
+        private bool _placementActive;
+        private float _restoreOrthographicSize;
+        private Vector3 _restorePosition;
         private bool _dragging;
         private Vector2 _lastMousePosition;
         private Bounds _bounds = new Bounds(Vector3.zero, new Vector3(20f, 12f, 1f));
@@ -30,26 +34,37 @@ namespace Rootborn.UI.Interiors
 
         public void BeginPlacementControl()
         {
-            if (_follow == null)
-            {
-                return;
-            }
-
-            _restoreFollowEnabled = _follow.enabled;
-            _follow.enabled = false;
+            if (_placementActive || _camera == null) return;
+            _placementActive = true;
+            _restoreOrthographicSize = _camera.orthographicSize;
+            _restorePosition = _camera.transform.position;
+            _restoreFollowEnabled = _follow != null && _follow.enabled;
+            if (_follow != null) _follow.enabled = false;
+            enabled = true;
         }
 
         public void EndPlacementControl()
         {
-            if (_follow != null)
+            if (!_placementActive) { enabled = false; return; }
+            _placementActive = false;
+            _dragging = false;
+            if (_camera != null)
             {
-                _follow.enabled = _restoreFollowEnabled;
+                _camera.orthographicSize = _restoreOrthographicSize;
+                _camera.transform.position = _restorePosition;
             }
+            if (_follow != null) _follow.enabled = _restoreFollowEnabled;
+            enabled = false;
+        }
+
+        private void OnDisable()
+        {
+            if (_placementActive) EndPlacementControl();
         }
 
         public void FullView()
         {
-            if (_camera == null || !_camera.orthographic)
+            if (!_placementActive || _camera == null || !_camera.orthographic)
             {
                 return;
             }
@@ -60,8 +75,14 @@ namespace Rootborn.UI.Interiors
 
         private void Update()
         {
-            if (_camera == null || !_camera.orthographic)
+            if (!_placementActive || _camera == null || !_camera.orthographic)
             {
+                return;
+            }
+
+            if (UiTextInputFocus.HasFocus || UiGameplayInputLock.IsBlocked)
+            {
+                _dragging = false;
                 return;
             }
 

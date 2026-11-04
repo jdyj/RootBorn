@@ -14,6 +14,14 @@ namespace Rootborn.Game.WorldState
         {
             string slot = string.IsNullOrEmpty(saveSlot) ? "default" : saveSlot;
             string player = string.IsNullOrEmpty(playerId) ? "player" : playerId;
+            if (Rootborn.Game.Careers.AdultCareerPersistenceRouter.TryGetWorld(slot, player, out var liveWorld)) return liveWorld;
+            var aggregateStorage = new SaveService(slot);
+            if (Rootborn.Game.Careers.AdultCareerSnapshotPersistence.HasCommittedFile(aggregateStorage, player))
+            {
+                var aggregate = Rootborn.Game.Careers.AdultCareerSnapshotPersistence.Load(aggregateStorage, player);
+                if (aggregate == null) throw new System.IO.InvalidDataException("Committed player snapshot requires recovery.");
+                return WorldStateProgress.FromSaveData(aggregate.World, slot, player);
+            }
             string fileName = FileNameFor(player);
             var playerData = ReadSaveData(slot, fileName);
             var sharedData = ReadSaveData(slot, SharedFileName);
@@ -24,6 +32,16 @@ namespace Rootborn.Game.WorldState
         public static void Save(WorldStateProgress progress)
         {
             if (progress == null) return;
+            if (Rootborn.Game.Careers.AdultCareerPersistenceRouter.TrySaveWorld(progress, out bool aggregateSaved))
+            {
+                if (!aggregateSaved) Debug.LogWarning("[ROOTBORN] Player snapshot save failed; legacy world files were not written.");
+                return;
+            }
+            if (Rootborn.Game.Careers.AdultCareerSnapshotPersistence.HasCommittedFile(new SaveService(progress.SaveSlot), progress.PlayerId))
+            {
+                Debug.LogWarning("[ROOTBORN] Player snapshot owner is not bound; refusing a standalone world save.");
+                return;
+            }
             var saveData = progress.ToSaveData();
             string fileName = FileNameFor(progress.PlayerId);
             WriteSaveData(progress.SaveSlot, fileName, saveData);

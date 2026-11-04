@@ -35,8 +35,8 @@ namespace Rootborn.UI.StudentLife
         {
             BuildIfNeeded();
             LastSummary = summary;
-            _title.text = string.IsNullOrEmpty(summary.DisplayName) ? "Unknown Location State" : summary.DisplayName;
-            _description.text = string.IsNullOrEmpty(summary.Description) ? summary.LocationId : summary.Description;
+            _title.text = LocationStatePresentation.LiveTitle(summary);
+            _description.text = LocationStatePresentation.LiveDescription(summary);
             _availability.text = FormatAvailability(summary);
             _unknownHint.text = summary.IsHidden ? "???" : string.Empty;
             _root.SetActive(true);
@@ -103,7 +103,7 @@ namespace Rootborn.UI.StudentLife
             rt.sizeDelta = size;
             var text = go.GetComponent<Text>();
             text.text = value;
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = LifeUiFont.Shared;
             text.fontSize = fontSize;
             text.alignment = alignment;
             text.color = new Color(0.25f, 0.18f, 0.12f, 1f);

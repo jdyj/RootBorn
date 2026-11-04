@@ -1,4 +1,5 @@
 using System;
+using Rootborn.Game.Minigames;
 using System.Collections.Generic;
 using Rootborn.Game.Common;
 using Rootborn.Game.Quests;
@@ -9,7 +10,10 @@ namespace Rootborn.Game.StudentLife
     [CreateAssetMenu(fileName = "PartTimeWork_New", menuName = "Rootborn/Student Life/Part-Time Work/Work")]
     public sealed class PartTimeWorkDefinition : StudentLifeDefinitionBase
     {
+        [SerializeField] private MinigameDefinition _minigame;
+        public MinigameDefinition Minigame => _minigame;
         [SerializeField] private WorkplaceDefinition _workplace;
+        [SerializeField] private ActivityTimePolicyDefinition _timePolicy;
         [SerializeField] private int _timeCostMinutes;
         [SerializeField] private int _energyCost;
         [SerializeField] private int _focusCost;
@@ -23,6 +27,7 @@ namespace Rootborn.Game.StudentLife
 
         public WorkplaceDefinition Workplace => _workplace;
         public string WorkplaceId => _workplace != null ? _workplace.Id : string.Empty;
+        public ActivityTimePolicyDefinition TimePolicy => _timePolicy;
         public int TimeCostMinutes => Mathf.Max(0, _timeCostMinutes);
         public int EnergyCost => Mathf.Max(0, _energyCost);
         public int FocusCost => Mathf.Max(0, _focusCost);

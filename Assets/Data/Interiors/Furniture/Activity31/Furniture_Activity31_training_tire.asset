@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23d21008197b3684eb9ccef9f4f47b40, type: 3}
+  m_Name: Furniture_Activity31_training_tire
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Placement.FurnitureDefinition
+  _stableId: activity31.training.tire
+  _displayName: "\uD6C8\uB828 \uD0C0\uC774\uC5B4"
+  _category: Activity31
+  _allowedSurfaceIds:
+  - house
+  - town-test
+  _tileParts:
+  - _localCell: {x: 0, y: 0}
+    _tile: {fileID: 11400000, guid: 42bd3cc980c89034ab0692594e6523ee, type: 2}
+  _footprintCells:
+  - {x: 0, y: 0}
+  _blocksMovement: 1
+  _placementPreference: 0
+  _unlockToken: 

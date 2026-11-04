@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.CareerPracticeDefinition
   _id: practice.emergency-care
   _displayNameKey: practice.emergency-care
+  _minigame: {fileID: 11400000, guid: 3740b2bcb10db3842a415fddc7f17049, type: 2}
   _activity: {fileID: 11400000, guid: 580395b449da0a342b2792693973afca, type: 2}
   _careerHint: {fileID: 11400000, guid: 7f32a7bd1e4fbf04aaf38b3bf1889cc5, type: 2}
   _steps:

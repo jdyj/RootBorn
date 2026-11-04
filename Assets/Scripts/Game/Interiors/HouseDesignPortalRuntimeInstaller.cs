@@ -45,6 +45,7 @@ namespace Rootborn.Game.Interiors
 
         private static void EnsureHouseDesignPortals(Scene scene)
         {
+            if (AuthoredWorldScene.Find(scene) != null) return;
             EnsurePortal(scene, "HouseDesignPortal_CondominiumDesign2", "Condominium Design 2", CompactSceneName, new Vector3(-5.5f, -4.2f, 0f));
             EnsurePortal(scene, "HouseDesignPortal_CondominiumDesign", "Condominium Design", ApartmentSceneName, new Vector3(5.5f, -4.2f, 0f));
         }

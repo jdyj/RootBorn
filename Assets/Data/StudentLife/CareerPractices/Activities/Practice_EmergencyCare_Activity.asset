@@ -71,6 +71,7 @@ MonoBehaviour:
   _id: practice.emergency-care
   _displayNameKey: practice.emergency-care
   _category: 0
+  _timePolicy: {fileID: 11400000, guid: 877e2af40acc7d749a78882afa991e80, type: 2}
   _timeCostMinutes: 45
   _energyCost: 1
   _focusCost: 1
@@ -84,6 +85,8 @@ MonoBehaviour:
   - {fileID: -13810273810284271}
   - {fileID: -5421630756975606417}
   - {fileID: 8720889565563295494}
+  - {fileID: 11400000, guid: 5ef04d800ecbfb84e9a41585b15d22fe, type: 2}
+  _choices: []
 --- !u!114 &3582166585568600527
 MonoBehaviour:
   m_ObjectHideFlags: 0

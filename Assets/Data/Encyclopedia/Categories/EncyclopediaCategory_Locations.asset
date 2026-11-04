@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: EncyclopediaCategory_Locations
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Encyclopedia.EncyclopediaCategoryDefinition
   _id: ency.category.locations
-  _displayName: Locations
+  _displayName: ui.encyclopedia.category.locations
   _sortOrder: 0

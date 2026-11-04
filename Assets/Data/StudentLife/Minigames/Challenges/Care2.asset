@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ae42e1a1abf7cf4fb7ef95dcbe7cfa8, type: 3}
+  m_Name: Care2
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Minigames.ChoiceChallengeDefinition
+  _instructionKey: minigame.care.instructions
+  _symbolSprites:
+  - {fileID: 21300000, guid: 1986595e496edbc449e9b6497c6ce22e, type: 3}
+  - {fileID: 21300000, guid: b66bed2ce433e924697f652e63a12cf7, type: 3}
+  - {fileID: 21300000, guid: 39eb1317c79cefb4da32ca04831616c4, type: 3}
+  _timeLimitSeconds: 29
+  _mistakeAllowance: 6
+  _answers: 000000000100000002000000
+  _prompts:
+  - minigame.care.scrape
+  - minigame.care.temperature
+  - minigame.care.rest
+  _symbols:
+  - minigame.tool.bandage
+  - minigame.tool.thermometer
+  - minigame.tool.water

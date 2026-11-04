@@ -45,7 +45,7 @@ namespace Rootborn.Game.StudentLife
                 return false;
             }
 
-            if (!progress.CanSpend(activity.EnergyCost, activity.FocusCost))
+            if (!progress.CanUseTimePolicy(activity.TimePolicy) || !progress.CanSpend(activity.EnergyCost, activity.FocusCost))
             {
                 result = new OutsideSchoolActivityResult(LifeActivityResultKind.InsufficientResources, progress.SaveSlot, progress.PlayerId, activity.Id, activity.CategoryId, requestId, Array.Empty<string>());
                 return false;
@@ -57,10 +57,11 @@ namespace Rootborn.Game.StudentLife
                 return false;
             }
 
+            progress.TryUseTimePolicy(activity.TimePolicy);
             progress.Spend(activity.TimeCostMinutes, activity.EnergyCost, activity.FocusCost, activity.StressDelta);
             string[] outcomeLogs = activity.ApplyOutcomes(progress);
             progress.MarkRequestApplied(requestId);
-            progress.RecordActivityCompleted(activity.Id, outcomeLogs);
+            progress.RecordActivityCompleted(activity.Id, outcomeLogs, true);
             result = new OutsideSchoolActivityResult(LifeActivityResultKind.Applied, progress.SaveSlot, progress.PlayerId, activity.Id, activity.CategoryId, requestId, outcomeLogs);
             return true;
         }
@@ -138,6 +139,7 @@ namespace Rootborn.Game.StudentLife
         public static OutsideSchoolGrowthSummary FromResultLogs(string[] resultLogIds)
         {
             var entries = new List<OutsideSchoolGrowthSummaryEntry>();
+            resultLogIds = OutsideSchoolLogCodec.AggregateDeltas(resultLogIds);
             if (resultLogIds != null)
             {
                 for (int i = 0; i < resultLogIds.Length; i++)
@@ -166,6 +168,28 @@ namespace Rootborn.Game.StudentLife
 
             string sign = delta > 0 ? "+" : string.Empty;
             return Prefix + activityId + ":" + sign + targetId + "=" + delta.ToString();
+        }
+
+        public static string[] AggregateDeltas(string[] values)
+        {
+            if (values == null) return Array.Empty<string>();
+            var totals = new Dictionary<(string activity, string target), int>();
+            foreach (string value in values)
+                if (TryParseDelta(value, out var entry))
+                {
+                    var key = (entry.ActivityId, entry.TargetId);
+                    totals.TryGetValue(key, out int prior);
+                    totals[key] = prior + entry.Delta;
+                }
+            var emitted = new HashSet<(string activity, string target)>();
+            var result = new List<string>();
+            foreach (string value in values)
+            {
+                if (!TryParseDelta(value, out var entry)) { result.Add(value); continue; }
+                var key = (entry.ActivityId, entry.TargetId);
+                if (emitted.Add(key)) result.Add(EncodeDelta(entry.ActivityId, entry.TargetId, totals[key]));
+            }
+            return result.ToArray();
         }
 
         public static bool TryParseDelta(string value, out OutsideSchoolGrowthSummaryEntry entry)

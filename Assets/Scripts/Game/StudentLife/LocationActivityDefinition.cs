@@ -19,7 +19,9 @@ namespace Rootborn.Game.StudentLife
     public sealed class LocationActivityDefinition : StudentLifeDefinitionBase
     {
         [SerializeField] private LocationDefinition _location;
+        [SerializeField] private string _resultTextKey;
         [SerializeField] private LocationGrowthRoute _growthRoute;
+        [SerializeField] private ActivityTimePolicyDefinition _timePolicy;
         [SerializeField] private int _timeCostMinutes;
         [SerializeField] private int _energyCost;
         [SerializeField] private int _focusCost;
@@ -28,8 +30,10 @@ namespace Rootborn.Game.StudentLife
         [SerializeField] private LocationActivityOutcomeBase[] _outcomes = Array.Empty<LocationActivityOutcomeBase>();
 
         public LocationDefinition Location => _location;
+        public string ResultTextKey => _resultTextKey ?? string.Empty;
         public string LocationId => _location != null ? _location.Id : string.Empty;
         public LocationGrowthRoute GrowthRoute => _growthRoute;
+        public ActivityTimePolicyDefinition TimePolicy => _timePolicy;
         public int TimeCostMinutes => Mathf.Max(0, _timeCostMinutes);
         public int EnergyCost => Mathf.Max(0, _energyCost);
         public int FocusCost => Mathf.Max(0, _focusCost);

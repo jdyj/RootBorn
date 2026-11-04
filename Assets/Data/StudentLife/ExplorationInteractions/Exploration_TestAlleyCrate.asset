@@ -15,7 +15,7 @@ MonoBehaviour:
   _id: exploration.test.alley-crate
   _displayNameKey: Exploration Test Alley Crate
   _descriptionKey: Exploration Test Alley Crate
-  _worldPosition: {x: 5.25, y: -3.25}
+  _worldPosition: {x: 22, y: 2}
   _interactionRadius: 1
   _repeatable: 0
   _cooldownDays: 0

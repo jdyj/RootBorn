@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.CareerPracticeDefinition
   _id: practice.interior
   _displayNameKey: practice.interior
+  _minigame: {fileID: 11400000, guid: 8b7d492e829fb7945aa835b86474524a, type: 2}
   _activity: {fileID: 11400000, guid: de7a64c7a82e5c44eb1195bd01dd1dc7, type: 2}
   _careerHint: {fileID: 11400000, guid: 37f1e84574c16e64ab6dfb6390833d6f, type: 2}
   _steps:

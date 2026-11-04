@@ -10,7 +10,8 @@ namespace Rootborn.Game.StudentLife
         ConditionFailed,
         DuplicateRequest,
         CooldownActive,
-        InsufficientResources
+        InsufficientResources,
+        Dismissed
     }
 
     public sealed class ExplorationOutcomeCollector
@@ -90,6 +91,23 @@ namespace Rootborn.Game.StudentLife
             if (interaction == null || choice == null || context.ExplorationProgress == null || context.StudentProgress == null)
             {
                 return false;
+            }
+
+            if (choice.DismissesInteraction)
+            {
+                if (choice.RiskPolicy != null || choice.Outcomes.Count > 0)
+                    return false;
+
+                if (!choice.ConditionsSatisfied(context, out string dismissalReason))
+                {
+                    result = new ExplorationChoiceResult(ExplorationChoiceResultKind.ConditionFailed,
+                        interaction.Id, choice.Id, dismissalReason, null);
+                    return false;
+                }
+
+                result = new ExplorationChoiceResult(ExplorationChoiceResultKind.Dismissed,
+                    interaction.Id, choice.Id, string.Empty, null);
+                return true;
             }
 
             if (!interaction.CanAttempt(context.ExplorationProgress, context.CurrentDay, out string interactionReason))

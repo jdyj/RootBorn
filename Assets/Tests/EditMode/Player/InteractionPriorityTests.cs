@@ -1,0 +1,18 @@
+using System;
+using NUnit.Framework;
+using Rootborn.Game.Player;
+using Rootborn.Game.StudentLife;
+using Rootborn.Game.Save;
+using UnityEngine;
+namespace Rootborn.Tests.EditMode.Player
+{
+ public sealed class InteractionPriorityTests
+ {
+  private GameObject _player,_location;private LocationDefinition _definition;private LocationIdentityDefinition _identity;private SaveSlotMetadata _save;
+  [SetUp]public void SetUp(){_save=ActiveSaveContext.Metadata;ActiveSaveContext.Clear();_player=new GameObject("PriorityPlayer",typeof(StudentLifeProgressComponent),typeof(PlayerInteractionRouter));_player.transform.position=new Vector3(1000,1000);_definition=ScriptableObject.CreateInstance<LocationDefinition>();_definition.ConfigureForTests("priority-place","priority-place",Vector2.zero,Array.Empty<DiscoveryDefinition>());_identity=ScriptableObject.CreateInstance<LocationIdentityDefinition>();_identity.ConfigureForTests("priority-identity","priority-identity",_definition,"",Array.Empty<LocationActivityDefinition>(),null,0,1440);_location=new GameObject("Place",typeof(BoxCollider2D));_location.transform.position=_player.transform.position+Vector3.right*.5f;_location.GetComponent<BoxCollider2D>().isTrigger=true;}
+  [TearDown]public void TearDown(){UnityEngine.Object.DestroyImmediate(_player);UnityEngine.Object.DestroyImmediate(_location);UnityEngine.Object.DestroyImmediate(_definition);UnityEngine.Object.DestroyImmediate(_identity);ActiveSaveContext.Set(_save);}
+  [Test]public void SameObject_ActivityPriorityWinsRegardlessOfComponentOrder(){_location.AddComponent<LocationVisitInteractor>().Bind(_definition);var activity=_location.AddComponent<LocationActivityInteractor>();activity.Bind(_identity);Physics2D.SyncTransforms();var router=_player.GetComponent<PlayerInteractionRouter>();router.RefreshPromptNow();Assert.That(router.CurrentInteractable,Is.SameAs(activity));}
+  [Test]public void SameObject_UnavailableFirstComponentDoesNotHideUsableInteraction(){_location.AddComponent<LocationActivityInteractor>();var visit=_location.AddComponent<LocationVisitInteractor>();visit.Bind(_definition);Physics2D.SyncTransforms();var router=_player.GetComponent<PlayerInteractionRouter>();router.RefreshPromptNow();Assert.That(router.CurrentInteractable,Is.SameAs(visit));}
+  [Test]public void ChildCollider_UnavailableChildDoesNotHideParentActivity(){var activity=_location.AddComponent<LocationActivityInteractor>();activity.Bind(_identity);UnityEngine.Object.DestroyImmediate(_location.GetComponent<BoxCollider2D>());var child=new GameObject("Child",typeof(BoxCollider2D),typeof(LocationVisitInteractor));child.transform.SetParent(_location.transform,false);child.GetComponent<BoxCollider2D>().isTrigger=true;Physics2D.SyncTransforms();var router=_player.GetComponent<PlayerInteractionRouter>();router.RefreshPromptNow();Assert.That(router.CurrentInteractable,Is.SameAs(activity));}
+ }
+}

@@ -17,7 +17,7 @@ MonoBehaviour:
   _descriptionKey: location.workshop.desc
   _category: {fileID: 11400000, guid: d076614cb5da3704ba05f4b0cc46556f, type: 2}
   _worldAnchorId: anchor.workshop
-  _worldPosition: {x: 7.5, y: -6}
+  _worldPosition: {x: 74, y: 7}
   _relatedRoles:
   - {fileID: 11400000, guid: 0840c52d18c94c54a902fc03f482dcb5, type: 2}
   _relatedNpcs:

@@ -1,30 +1,24 @@
 using System.Collections;
 using Rootborn.Game.Common;
+using Rootborn.Game.World;
 using Rootborn.Game.Managers;
-using Rootborn.Game.Placement;
 using Rootborn.Game.Player;
 using Rootborn.Game.Quests;
-using Rootborn.Game.Save;
 using Rootborn.Game.StudentLife;
-using Rootborn.Game.WorldState;
 using Rootborn.UI.Modern;
 using Rootborn.UI.Objectives;
-using Rootborn.UI.StudentLife;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
 namespace Rootborn.UI.Quests
 {
     public static class QuestChainRuntimeInstaller
     {
-        private const string TownSceneName = "Town";
         private const string RunnerName = "[QuestChainRuntimeInstaller]";
-        private const string CanvasName = "QuestChainCanvas";
-        private const string OpenButtonName = "QuestChainLogOpenButton";
-        private const string ProgressFileName = "quest-chain-progress.json";
-
         private static Runner s_activeRunner;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void Reset() => s_activeRunner = null;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap()
@@ -34,25 +28,14 @@ namespace Rootborn.UI.Quests
             EnsureForActiveScene();
         }
 
-        private static void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
-        {
-            if (scene.name == TownSceneName) EnsureScene(scene);
-        }
-
-        public static void EnsureForActiveScene()
-        {
-            var scene = SceneManager.GetActiveScene();
-            if (scene.name == TownSceneName) EnsureScene(scene);
-        }
-
-        public static string BuildDayEndSummary()
-        {
-            return s_activeRunner != null ? s_activeRunner.BuildDayEndSummary() : string.Empty;
-        }
+        private static bool IsGameplayScene(Scene scene) => scene.name == "Town" || scene.name == "House" || AuthoredWorldScene.Find(scene) != null;
+        private static void HandleSceneLoaded(Scene scene, LoadSceneMode mode) { if (IsGameplayScene(scene)) EnsureScene(scene); }
+        public static void EnsureForActiveScene() { var scene = SceneManager.GetActiveScene(); if (IsGameplayScene(scene)) EnsureScene(scene); }
+        public static string BuildDayEndSummary() => s_activeRunner != null ? s_activeRunner.BuildDayEndSummary() : string.Empty;
 
         private static void EnsureScene(Scene scene)
         {
-            if (scene.name != TownSceneName || FindRoot(scene, RunnerName) != null) return;
+            foreach (var root in scene.GetRootGameObjects()) if (root.name == RunnerName) return;
             var runner = new GameObject(RunnerName);
             SceneManager.MoveGameObjectToScene(runner, scene);
             runner.AddComponent<Runner>();
@@ -60,299 +43,111 @@ namespace Rootborn.UI.Quests
 
         private sealed class Runner : MonoBehaviour
         {
-            private Scene _scene;
             private QuestChainDefinition[] _chains;
             private QuestChainLog _log;
             private QuestChainLogPanel _panel;
             private ObjectiveJournalRuntimeProvider _objectiveProvider;
             private StudentLifeProgressComponent _student;
-            private PlayerInventory _playerInventory;
-            private WorldStateProgress _worldStateProgress;
-            private FurnitureUnlockProgress _furnitureUnlockProgress;
+            private QuestChainRuntimeService _service;
 
             private IEnumerator Start()
             {
                 s_activeRunner = this;
                 var bootstrap = Managers.BootstrapAsync();
                 while (!bootstrap.IsCompleted) yield return null;
-                if (bootstrap.IsFaulted)
+                if (bootstrap.IsFaulted) { Debug.LogException(bootstrap.Exception); yield break; }
+                var registry = ResolveRegistry();
+                if (registry == null) yield break;
+                _service = QuestChainRuntimeService.Ensure(registry);
+                _chains = registry.QuestChains;
+                Canvas canvas = null;
+                float elapsed = 0f;
+                while (elapsed < 10f)
                 {
-                    Debug.LogException(bootstrap.Exception);
+                    _student = FindInScene<StudentLifeProgressComponent>(gameObject.scene);
+                    canvas = FindInScene<Canvas>(gameObject.scene);
+                    if (_student != null && canvas != null) break;
+                    elapsed += Time.unscaledDeltaTime;
+                    yield return null;
+                }
+                if (_student == null || canvas == null)
+                {
+                    Debug.LogWarning("[ROOTBORN] Quest journal binding needs the gameplay player and shared canvas.");
                     yield break;
                 }
-
-                _scene = SceneManager.GetActiveScene();
-                var registry = ResolveRegistry();
-                _chains = registry != null && registry.QuestChains != null ? registry.QuestChains : new QuestChainDefinition[0];
-                _log = new QuestChainLog(_chains);
-                LoadProgress();
-
-                var canvas = EnsureCanvas(_scene);
-                ModernUiPanelAutoInstaller.InstallOnCanvas(canvas, ResolvePlayerInventory());
+                _log = _service.GetLog(_student.EnsureProgress());
+                ModernUiPanelAutoInstaller.InstallOnCanvas(canvas, _student.GetComponent<PlayerInventory>());
                 _objectiveProvider = canvas.GetComponent<ObjectiveJournalRuntimeProvider>();
                 _panel = QuestChainLogPanel.EnsureInScene(canvas);
-                _panel.Bind(_chains, _log, SaveAndRefresh, ResolveRewardContext());
                 _panel.Hide();
-                EvaluateAllStates();
-                RefreshObjectiveJournal();
-                EnsureOpenButton(_scene, canvas, _panel);
-
-                LocationIdentityPanel.OnAnyActivityApplied -= HandleLocationActivityApplied;
-                LocationIdentityPanel.OnAnyActivityApplied += HandleLocationActivityApplied;
+                _service.ProgressChanged += HandleProgressChanged;
+                Refresh();
             }
 
             private void OnDestroy()
             {
                 if (s_activeRunner == this) s_activeRunner = null;
-                LocationIdentityPanel.OnAnyActivityApplied -= HandleLocationActivityApplied;
+                if (_service != null) _service.ProgressChanged -= HandleProgressChanged;
             }
 
-            private void HandleLocationActivityApplied(LocationActivityDefinition activity, string requestId)
+            private void HandleProgressChanged(StudentLifeProgress student)
             {
-                if (_log == null || activity == null) return;
-                EvaluateAllStates();
-                _log.RecordEvent(new QuestEvent(QuestEventKind.LocationActivity, requestId, activity: activity));
-                SaveAndRefresh();
+                var current = _student != null ? _student.EnsureProgress() : null;
+                if (current == null || student == null || current.SaveSlot != student.SaveSlot || current.PlayerId != student.PlayerId) return;
+                _log = _service.GetLog(current);
+                Refresh();
             }
 
             private void SaveAndRefresh()
             {
-                EvaluateAllStates();
-                if (_panel != null) _panel.Bind(_chains, _log, SaveAndRefresh, ResolveRewardContext());
-                SaveProgress();
-                WorldStateProgressPersistence.Save(_worldStateProgress);
-                FurnitureUnlockProgressPersistence.Save(_furnitureUnlockProgress);
-                if (_panel != null) _panel.Refresh();
-                RefreshObjectiveJournal();
+                Refresh();
+            }
+
+            private void Refresh()
+            {
+                var student = _student != null ? _student.EnsureProgress() : null;
+                if (student == null || _log == null || _service == null) return;
+                var rewards = _service.ResolveRewards(student);
+                if (_panel != null)
+                {
+                    _panel.BindCommandExecutor(command => _service.ExecuteUserCommand(_student.EnsureProgress(), command));
+                    _panel.Bind(_chains, _log, SaveAndRefresh, rewards);
+                    _panel.Refresh();
+                }
+                if (_objectiveProvider != null) _objectiveProvider.RefreshNow();
             }
 
             public string BuildDayEndSummary()
             {
-                if (_chains == null || _log == null || _chains.Length == 0) return string.Empty;
-                for (int i = 0; i < _chains.Length; i++)
+                if (_chains == null || _log == null) return string.Empty;
+                foreach (var chain in _chains)
                 {
-                    var chain = _chains[i];
-                    if (chain == null) continue;
-                    var state = _log.GetState(chain);
-                    if (state == QuestChainState.Available) continue;
-                    return chain.Id + "\n" + state + "\n" + BuildObjectiveSummary(chain);
+                    if (chain == null || _log.GetState(chain) == QuestChainState.Available) continue;
+                    var step = _log.GetCurrentStep(chain);
+                    var objective = step?.Objectives != null && step.Objectives.Length > 0 ? step.Objectives[0] : null;
+                    return QuestChainSummaryPresentation.Build(chain, _log.GetState(chain), objective, objective != null ? _log.GetObjectiveProgress(chain, 0) : 0);
                 }
-
                 return string.Empty;
             }
-
-            private void EvaluateAllStates()
-            {
-                if (_chains == null || _log == null) return;
-                var context = new QuestRuntimeContext(null, null, null, null, ResolveStudentProgress());
-                for (int i = 0; i < _chains.Length; i++)
-                {
-                    var chain = _chains[i];
-                    if (chain == null) continue;
-                    _log.EvaluateTerminalState(chain, context);
-                    _log.EvaluateBlockState(chain, context);
-                }
-            }
-
-            private void RefreshObjectiveJournal()
-            {
-                if (_objectiveProvider != null)
-                {
-                    _objectiveProvider.RefreshNow();
-                }
-            }
-
-            private RewardRuntimeContext ResolveRewardContext()
-            {
-                var inventory = ResolvePlayerInventory();
-                return new RewardRuntimeContext(
-                    null,
-                    inventory != null ? inventory.Inventory : null,
-                    null,
-                    null,
-                    ResolveStudentProgress(),
-                    ResolveWorldStateProgress(),
-                    ResolveFurnitureUnlockProgress());
-            }
-
-            private PlayerInventory ResolvePlayerInventory()
-            {
-                if (_playerInventory == null)
-                {
-                    var player = FindByName(_scene, "Player");
-                    _playerInventory = player != null ? player.GetComponent<PlayerInventory>() : null;
-                }
-
-                return _playerInventory;
-            }
-
-            private StudentLifeProgress ResolveStudentProgress()
-            {
-                if (_student == null)
-                {
-                    var player = FindByName(_scene, "Player");
-                    _student = player != null ? player.GetComponent<StudentLifeProgressComponent>() : null;
-                }
-
-                return _student != null ? _student.EnsureProgress() : null;
-            }
-
-            private WorldStateProgress ResolveWorldStateProgress()
-            {
-                var studentProgress = ResolveStudentProgress();
-                if (studentProgress == null) return null;
-                if (_worldStateProgress == null || _worldStateProgress.SaveSlot != studentProgress.SaveSlot || _worldStateProgress.PlayerId != studentProgress.PlayerId)
-                {
-                    _worldStateProgress = WorldStateProgressPersistence.LoadOrCreate(studentProgress.SaveSlot, studentProgress.PlayerId);
-                }
-
-                return _worldStateProgress;
-            }
-
-            private FurnitureUnlockProgress ResolveFurnitureUnlockProgress()
-            {
-                var studentProgress = ResolveStudentProgress();
-                if (studentProgress == null) return null;
-                if (_furnitureUnlockProgress == null || _furnitureUnlockProgress.SaveSlot != studentProgress.SaveSlot || _furnitureUnlockProgress.PlayerId != studentProgress.PlayerId)
-                {
-                    _furnitureUnlockProgress = FurnitureUnlockProgressPersistence.LoadOrCreate(studentProgress.SaveSlot, studentProgress.PlayerId);
-                }
-
-                return _furnitureUnlockProgress;
-            }
-
-            private string BuildObjectiveSummary(QuestChainDefinition chain)
-            {
-                var step = chain != null && chain.Steps != null && chain.Steps.Length > 0 ? chain.Steps[0] : null;
-                var objective = step != null && step.Objectives != null && step.Objectives.Length > 0 ? step.Objectives[0] : null;
-                if (objective == null) return string.Empty;
-                return objective.DisplayKey + " " + _log.GetObjectiveProgress(chain, 0) + " / " + objective.RequiredCount;
-            }
-
-            private void LoadProgress()
-            {
-                var metadata = ActiveSaveContext.Metadata;
-                if (metadata == null || string.IsNullOrEmpty(metadata.SlotId) || _log == null) return;
-                string json = new SaveService(metadata.SlotId).ReadJson(ProgressFileName);
-                if (string.IsNullOrEmpty(json)) return;
-                var saveData = JsonUtility.FromJson<QuestChainLogSaveData>(json);
-                _log.LoadFromSaveData(saveData);
-            }
-
-            private void SaveProgress()
-            {
-                var metadata = ActiveSaveContext.Metadata;
-                if (metadata == null || string.IsNullOrEmpty(metadata.SlotId) || _log == null) return;
-                new SaveService(metadata.SlotId).WriteJson(ProgressFileName, JsonUtility.ToJson(_log.ToSaveData(), true));
-            }
         }
 
-        private static void EnsureOpenButton(Scene scene, Canvas canvas, QuestChainLogPanel panel)
+        private static T FindInScene<T>(Scene scene) where T : Component
         {
-            var existing = FindByName(scene, OpenButtonName);
-            if (existing != null) UnityEngine.Object.Destroy(existing);
-
-            var go = new GameObject(OpenButtonName, typeof(RectTransform), typeof(Image), typeof(Button));
-            go.transform.SetParent(canvas.transform, false);
-            var rect = (RectTransform)go.transform;
-            rect.anchorMin = new Vector2(0f, 1f);
-            rect.anchorMax = new Vector2(0f, 1f);
-            rect.pivot = new Vector2(0f, 1f);
-            rect.anchoredPosition = new Vector2(24f, -24f);
-            rect.sizeDelta = new Vector2(180f, 42f);
-            go.GetComponent<Image>().color = new Color(0.72f, 0.58f, 0.32f, 1f);
-            var button = go.GetComponent<Button>();
-            button.onClick.RemoveAllListeners();
-            button.onClick.AddListener(() => panel.Open());
-            MakeText(rect, "Label", "Quest Chains", Vector2.zero, rect.sizeDelta, 15, TextAnchor.MiddleCenter);
-        }
-
-        private static Text MakeText(RectTransform parent, string name, string value, Vector2 position, Vector2 size, int fontSize, TextAnchor alignment)
-        {
-            var go = new GameObject(name, typeof(RectTransform), typeof(Text));
-            go.transform.SetParent(parent, false);
-            var rect = (RectTransform)go.transform;
-            rect.anchorMin = new Vector2(0.5f, 0.5f);
-            rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = position;
-            rect.sizeDelta = size;
-            var text = go.GetComponent<Text>();
-            text.text = value;
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            text.fontSize = fontSize;
-            text.alignment = alignment;
-            text.color = new Color(0.25f, 0.18f, 0.12f, 1f);
-            text.raycastTarget = false;
-            return text;
-        }
-
-        private static Canvas EnsureCanvas(Scene scene)
-        {
-            var existing = FindComponentInScene<Canvas>(scene, true);
-            if (existing != null) return existing;
-
-            var canvasGo = new GameObject(CanvasName, typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-            SceneManager.MoveGameObjectToScene(canvasGo, scene);
-            var canvas = canvasGo.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 92;
-            var scaler = canvasGo.GetComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920f, 1080f);
-            scaler.matchWidthOrHeight = 0.5f;
-            return canvas;
-        }
-
-        private static GameDataRegistry ResolveRegistry()
-        {
-            var registry = Managers.Data != null ? Managers.Data.Registry : null;
-            if (registry != null && registry.QuestChains != null && registry.QuestChains.Length > 0) return registry;
-#if UNITY_EDITOR
-            var editorRegistry = UnityEditor.AssetDatabase.LoadAssetAtPath<GameDataRegistry>("Assets/Data/Registry/GameDataRegistry.asset");
-            if (editorRegistry != null) return editorRegistry;
-#endif
-            return registry;
-        }
-
-        private static T FindComponentInScene<T>(Scene scene, bool includeInactive) where T : Component
-        {
-            var roots = scene.GetRootGameObjects();
-            for (int i = 0; i < roots.Length; i++)
+            foreach (var root in scene.GetRootGameObjects())
             {
-                var component = roots[i].GetComponentInChildren<T>(includeInactive);
+                var component = root.GetComponentInChildren<T>(true);
                 if (component != null) return component;
             }
             return null;
         }
 
-        private static GameObject FindRoot(Scene scene, string rootName)
+        private static GameDataRegistry ResolveRegistry()
         {
-            var roots = scene.GetRootGameObjects();
-            for (int i = 0; i < roots.Length; i++) if (roots[i].name == rootName) return roots[i];
-            return null;
-        }
-
-        private static GameObject FindByName(Scene scene, string objectName)
-        {
-            var roots = scene.GetRootGameObjects();
-            for (int i = 0; i < roots.Length; i++)
-            {
-                var match = FindByName(roots[i].transform, objectName);
-                if (match != null) return match;
-            }
-            return null;
-        }
-
-        private static GameObject FindByName(Transform root, string objectName)
-        {
-            if (root.name == objectName) return root.gameObject;
-            for (int i = 0; i < root.childCount; i++)
-            {
-                var match = FindByName(root.GetChild(i), objectName);
-                if (match != null) return match;
-            }
-            return null;
+            var registry = Managers.Data != null ? Managers.Data.Registry : null;
+#if UNITY_EDITOR
+            if (registry == null) registry = UnityEditor.AssetDatabase.LoadAssetAtPath<GameDataRegistry>("Assets/Data/Registry/GameDataRegistry.asset");
+#endif
+            return registry;
         }
     }
 }

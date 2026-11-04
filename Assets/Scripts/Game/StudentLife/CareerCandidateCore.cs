@@ -182,6 +182,15 @@ namespace Rootborn.Game.StudentLife
         public override bool Matches(CareerCandidateEvaluationContext context)
         {
             if (context.StudentProgress == null || _activity == null) return false;
+            if (context.ResultLogIds != null && context.ResultLogIds.Length > 0)
+            {
+                for (int i = 0; i < context.ResultLogIds.Length; i++)
+                {
+                    string value = context.ResultLogIds[i];
+                    if (value == _activity.Id || (!string.IsNullOrEmpty(value) && value.StartsWith(_activity.Id + ":", StringComparison.Ordinal))) return true;
+                }
+                return false;
+            }
             return Contains(context.StudentProgress.GetActivityLogIds(), _activity.Id) || Contains(context.StudentProgress.GetTodayActivityIds(), _activity.Id);
         }
 

@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Dialogue_FirstNpc
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Dialogue.DialogueDefinition
   _lineKeys:
+  - opening.dialogue.guide
   - dialogue.firstNpc.greeting
   _choices:
   - {fileID: 11400000, guid: 7d3360f5fc30e8340964b63b23e276ef, type: 2}

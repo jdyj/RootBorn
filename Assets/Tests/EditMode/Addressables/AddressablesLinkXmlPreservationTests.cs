@@ -9,8 +9,8 @@ namespace Rootborn.Tests.EditMode.Addressables
 {
     public sealed class AddressablesLinkXmlPreservationTests
     {
-        private const string LinkXmlPath = "Assets/AddressableAssetsData/link.xml";
-        private const string LinkXmlMetaPath = "Assets/AddressableAssetsData/link.xml.meta";
+        private const string LinkXmlPath = "Assets/Linker/link.xml";
+        private const string LinkXmlMetaPath = "Assets/Linker/link.xml.meta";
         private const string RepositoryGuardPath = "Scripts/ci/check-addressables-linkxml-preserved.ps1";
 
         private static readonly string[] RequiredPreservedTypes =
@@ -77,7 +77,7 @@ namespace Rootborn.Tests.EditMode.Addressables
             StringAssert.Contains("git ls-files --error-unmatch", source, "Repository guard must fail if link.xml or its meta are not tracked by git.");
             StringAssert.Contains("git status --porcelain -- $path", source, "Repository guard must inspect git deletion state, not only filesystem existence.");
             StringAssert.Contains("Contains(\"D\")", source, "Repository guard must fail when git status marks either required path deleted.");
-            StringAssert.Contains("git restore -- Assets/AddressableAssetsData/link.xml Assets/AddressableAssetsData/link.xml.meta", source, "Repository guard failure output must show the exact remediation command used after Unity test/build tooling deletes link.xml.");
+            StringAssert.Contains("git restore -- Assets/Linker/link.xml Assets/Linker/link.xml.meta", source, "Repository guard failure output must show the exact remediation command used after Unity test/build tooling deletes link.xml.");
         }
     }
 }

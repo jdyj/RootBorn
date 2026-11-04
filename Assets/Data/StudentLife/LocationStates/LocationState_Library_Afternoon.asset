@@ -51,8 +51,8 @@ MonoBehaviour:
   m_Name: LocationState_Library_Afternoon
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.LocationStateDefinition
   _id: location.state.library-afternoon
-  _displayNameKey: Library Afternoon
-  _descriptionKey: Reference desk hour
+  _displayNameKey: life.location-state.library.afternoon.name
+  _descriptionKey: life.location-state.library.afternoon.description
   _location: {fileID: 11400000, guid: cbc6489c83f1f1440a50f2f18914cd32, type: 2}
   _priority: 15
   _conditions:

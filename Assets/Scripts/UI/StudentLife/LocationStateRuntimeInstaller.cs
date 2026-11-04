@@ -1,4 +1,5 @@
 using Rootborn.Game.Common;
+using Rootborn.Game.World;
 using Rootborn.Game.Dialogue;
 using Rootborn.Game.Managers;
 using Rootborn.Game.Player;
@@ -30,18 +31,18 @@ namespace Rootborn.UI.StudentLife
 
         private static void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            if (scene.name == TownSceneName) EnsureScene(scene);
+            if ((scene.name == TownSceneName || AuthoredWorldScene.Find(scene) != null)) EnsureScene(scene);
         }
 
         public static void EnsureForActiveScene()
         {
             var scene = SceneManager.GetActiveScene();
-            if (scene.IsValid() && scene.name == TownSceneName) EnsureScene(scene);
+            if (scene.IsValid() && (scene.name == TownSceneName || AuthoredWorldScene.Find(scene) != null)) EnsureScene(scene);
         }
 
         private static void EnsureScene(Scene scene)
         {
-            if (!scene.IsValid() || !scene.isLoaded || scene.name != TownSceneName || FindRoot(scene, RunnerName) != null) return;
+            if (!scene.IsValid() || !scene.isLoaded || (scene.name != TownSceneName && AuthoredWorldScene.Find(scene) == null) || FindRoot(scene, RunnerName) != null) return;
             var go = new GameObject(RunnerName);
             SceneManager.MoveGameObjectToScene(go, scene);
             go.AddComponent<Runner>();
@@ -75,7 +76,7 @@ namespace Rootborn.UI.StudentLife
                 _stateCache = new LocationStateLookupCache(GameDataRegistryLocationStateExtensions.GetLocationStates(_registry));
                 var policies = GameDataRegistryLocationStateExtensions.GetLocationStateConflictPolicies(_registry);
                 _resolver = new LocationStateResolver(_stateCache, policies != null && policies.Length > 0 ? policies[0] : LocationStateConflictPolicyDefinition.HighestPriority());
-                var canvas = EnsureCanvas(SceneManager.GetActiveScene());
+                var canvas = EnsureCanvas(gameObject.scene);
                 _panel = LocationStatePanel.EnsureInScene(canvas);
                 _logPanel = LocationStateLogPanel.EnsureInScene(canvas);
                 EnsureLogButton(canvas, ShowLogForLastPlayer);
@@ -99,7 +100,8 @@ namespace Rootborn.UI.StudentLife
                 QuestLog questLog = questLogPanel != null ? questLogPanel.QuestLog : null;
                 var summary = _resolver.Resolve(new LocationStateContext(interactor.Identity.Location, timeSlot, student, world, questLog, new NpcScheduleResolver(_dataCache), locationProgress));
                 LocationStateProgressPersistence.Save(locationProgress);
-                _panel.Show(summary);
+                _panel.Hide();
+                LocationIdentityPanel.EnsureInScene(EnsureCanvas(gameObject.scene)).SetLocationStateSummary(summary);
             }
 
             private void ShowLogForLastPlayer()

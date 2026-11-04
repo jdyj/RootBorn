@@ -16,7 +16,7 @@ MonoBehaviour:
   _fallbackLocation: {fileID: 11400000, guid: cbc6489c83f1f1440a50f2f18914cd32, type: 2}
   _entries:
   - _location: {fileID: 11400000, guid: cbc6489c83f1f1440a50f2f18914cd32, type: 2}
-    _dialogue: {fileID: 0}
+    _dialogue: {fileID: 11400000, guid: ef6cfc651b6040640a96af7d85db41d0, type: 2}
     _dialogueKey: dialogue.librarian.library
     _interactionHintKey: npc.librarian.hint.book-recommend
     _eventNoticeKey: npc.librarian.notice.difficult-book
@@ -24,7 +24,7 @@ MonoBehaviour:
     _rules:
     - {fileID: 11400000, guid: d682f1adb835ad74d98023fa3a5a022c, type: 2}
   - _location: {fileID: 11400000, guid: 0b792f8bcf32340469cd64320136e59b, type: 2}
-    _dialogue: {fileID: 0}
+    _dialogue: {fileID: 11400000, guid: b331dcfbc7607264abe5d11f20544535, type: 2}
     _dialogueKey: dialogue.librarian.square
     _interactionHintKey: npc.librarian.hint.knowledge-route
     _eventNoticeKey: npc.librarian.notice.village-rumor

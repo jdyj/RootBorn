@@ -1,3 +1,4 @@
+using System.Linq;
 using NUnit.Framework;
 using Rootborn.Game.Common;
 using Rootborn.Game.Interiors;
@@ -15,12 +16,14 @@ namespace Rootborn.Tests.EditMode.Interiors
 
             var furniture = InteriorFurnitureCatalog.LoadChairFurniture(registry);
 
-            Assert.AreEqual(1, furniture.Count);
-            Assert.AreEqual("chair.black", furniture[0].Id);
-            Assert.AreEqual("Black Chair", furniture[0].DisplayName);
-            Assert.AreEqual(InteriorObjectKind.Chair, furniture[0].ObjectKind);
-            Assert.AreEqual(1, furniture[0].Footprint.Count);
-            Assert.AreEqual(1, furniture[0].Tiles.Count);
+            Assert.GreaterOrEqual(furniture.Count, 1);
+            Assert.AreEqual(furniture.Count, furniture.Select(f => f.Id).Distinct().Count());
+            var chair = furniture.Single(f => f.Id == "chair.black");
+            Assert.AreEqual("chair.black", chair.Id);
+            Assert.AreEqual("Black Chair", chair.DisplayName);
+            Assert.AreEqual(InteriorObjectKind.Chair, chair.ObjectKind);
+            Assert.AreEqual(1, chair.Footprint.Count);
+            Assert.AreEqual(1, chair.Tiles.Count);
         }
     }
 }

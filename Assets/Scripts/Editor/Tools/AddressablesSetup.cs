@@ -42,6 +42,7 @@ namespace Rootborn.Editor.Tools
             ModernFarmAddressablesSetup.WireSheets();
             ModernInteriorsAddressablesSetup.WireSheets();
             WireCoreAssets();
+            SchoolPixelAddressablesSetup.WireAssets();
         }
 
         public static AddressableAssetSettings EnsureSettings()

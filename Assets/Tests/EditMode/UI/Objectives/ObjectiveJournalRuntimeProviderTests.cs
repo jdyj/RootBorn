@@ -375,6 +375,59 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
             }
         }
 
+        [Test]
+        public void HiddenJournal_TrackedDayRefreshesWithoutChangingSelectionOrWritingTracking()
+        {
+            var fixture = new Rootborn.Tests.EditMode.Dialogue.NpcDialogueContextTests();
+            fixture.Setup();
+            GameObject canvas = null;
+            try
+            {
+                var owner = (Rootborn.UI.Careers.AdultCareerRuntimeComponent)typeof(Rootborn.Tests.EditMode.Dialogue.NpcDialogueContextTests)
+                    .GetField("_owner", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(fixture);
+                canvas = new GameObject("LiveTrackedDayFixture", typeof(RectTransform), typeof(Canvas));
+                UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(canvas, owner.gameObject.scene);
+                var panelObject = new GameObject("Journal", typeof(RectTransform));
+                panelObject.transform.SetParent(canvas.transform, false);
+                var panel = panelObject.AddComponent<ObjectiveJournalPanel>();
+                var hudObject = new GameObject("Tracked", typeof(RectTransform));
+                hudObject.transform.SetParent(canvas.transform, false);
+                var hud = hudObject.AddComponent<TrackedObjectiveHud>();
+                var provider = canvas.AddComponent<ObjectiveJournalRuntimeProvider>();
+                ObjectiveJournalTrackingStore.Save(ActiveSaveContext.Metadata, "Goals", "student-day.current");
+                provider.Bind(panel, hud, owner.gameObject);
+                panel.SetItems("Quests", new[] { new ObjectiveJournalItem("unrelated", "Quests", "Keep selection", "", "", "", "", false, 0) });
+                panel.SelectCategory("Quests");
+                panel.SelectItem(0);
+                panel.Hide();
+                string file = Path.Combine(new SaveService(ActiveSaveContext.Metadata.SlotId).DirectoryPath, "objective-journal-tracking.json");
+                Assert.That(File.Exists(file), Is.True);
+                string before = File.ReadAllText(file);
+                File.SetLastWriteTimeUtc(file, new DateTime(2001, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+                var stamp = File.GetLastWriteTimeUtc(file);
+                string initial = hud.VisibleText;
+                typeof(ObjectiveJournalRuntimeProvider).GetMethod("LateUpdate", BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(provider, null);
+                Assert.That(owner.StudentComponent.Progress.TryEndDay(null, out _), Is.True);
+                Assert.That(owner.StudentComponent.Progress.TryStartNextDay(), Is.True);
+                typeof(ObjectiveJournalRuntimeProvider).GetMethod("LateUpdate", BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(provider, null);
+                Assert.That(hud.VisibleText, Is.Not.EqualTo(initial), "Actual day changes must refresh the HUD while its journal remains closed.");
+                StringAssert.Contains("Day 2", hud.VisibleText);
+                Assert.That(owner.StudentComponent.Progress.TrySpendTimePoints(owner.StudentComponent.Progress.TimePointsRemaining), Is.True);
+                typeof(ObjectiveJournalRuntimeProvider).GetMethod("LateUpdate", BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(provider, null);
+                StringAssert.Contains("Today's activities are complete", hud.VisibleText);
+                Assert.That(panel.SelectedCategoryIdForTests, Is.EqualTo("Quests"));
+                Assert.That(panel.SelectedStableKeyForTests, Is.EqualTo("unrelated"));
+                Assert.That(panel.gameObject.activeSelf, Is.False);
+                Assert.That(File.ReadAllText(file), Is.EqualTo(before));
+                Assert.That(File.GetLastWriteTimeUtc(file), Is.EqualTo(stamp), "Automatic presentation must not persist tracking again.");
+            }
+            finally
+            {
+                if (canvas != null) UnityEngine.Object.DestroyImmediate(canvas);
+                fixture.Cleanup();
+            }
+        }
+
         private static ObjectiveJournalItem[] BuildItemsFromSource(string sourceTypeName, GameObject player, GameDataRegistry registry)
         {
             var sourceType = Type.GetType("Rootborn.UI.Objectives." + sourceTypeName + ", Rootborn.UI");

@@ -1,4 +1,6 @@
-using Rootborn.Game.StudentLife;
+﻿using Rootborn.Game.StudentLife;
+using Rootborn.Game.Common;
+using Rootborn.Game.Localization;
 using Rootborn.UI.Modern;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,11 +21,12 @@ namespace Rootborn.UI.StudentLife
         private Button _deferButton;
         private Button _declineButton;
         private DailyEventDefinition _event;
+        private string _lastChoiceSummary;
         private StudentLifeProgressComponent _studentProgress;
         private DailyEventProgressComponent _eventProgress;
         private readonly DailyEventRunner _runner = new DailyEventRunner();
 
-        public bool IsOpen => _root != null && _root.activeSelf;
+        public bool IsOpen => _root != null && _root.activeInHierarchy;
         public LifeActivityResult LastResult { get; private set; }
         public DailyEventRecord LastRecord { get; private set; }
         public static event System.Action<StudentLifeProgress> OnAnyChoiceApplied;
@@ -50,18 +53,27 @@ namespace Rootborn.UI.StudentLife
             _studentProgress = player != null ? player.GetComponent<StudentLifeProgressComponent>() : null;
             _eventProgress = player != null ? player.GetComponent<DailyEventProgressComponent>() : null;
             if (player != null && _eventProgress == null) _eventProgress = player.AddComponent<DailyEventProgressComponent>();
-            _title.text = Humanize(dailyEvent != null ? dailyEvent.DisplayNameKey : string.Empty);
-            _description.text = dailyEvent != null ? dailyEvent.DescriptionKey : "No event";
+            _title.text = GameText.Get(dailyEvent != null ? dailyEvent.DisplayNameKey : "life.event.ui.title");
+            _description.text = GameText.Get(dailyEvent != null ? dailyEvent.DescriptionKey : "life.event.ui.none");
             _deadline.text = FormatDeadline(dailyEvent);
             _result.text = string.Empty;
+            _lastChoiceSummary = string.Empty;
             BindButtons();
+            _deferButton.GetComponentInChildren<Text>(true).text = GameText.Get("life.event.ui.later");
+            _declineButton.GetComponentInChildren<Text>(true).text = GameText.Get("life.event.ui.decline");
+            transform.SetAsLastSibling();
             _root.SetActive(true);
+            UiGameplayInputLock.Acquire(this);
         }
 
         public void Hide()
         {
+            UiGameplayInputLock.Release(this);
             if (_root != null) _root.SetActive(false);
         }
+
+        private void OnDisable() => Hide();
+        private void OnDestroy() => UiGameplayInputLock.Release(this);
 
         private void Choose(int index)
         {
@@ -72,6 +84,7 @@ namespace Rootborn.UI.StudentLife
             string requestId = _event.Id + ":" + choice.Id;
             bool applied = _runner.TryChoose(_event, choice, student, events, requestId, out var result);
             LastResult = result;
+            if (applied) _lastChoiceSummary = GameText.Get(choice.ResultSummaryKey);
             LastRecord = events != null ? events.GetRecord(_event.Id) : null;
             if (applied)
             {
@@ -92,7 +105,7 @@ namespace Rootborn.UI.StudentLife
             {
                 LastRecord = record;
                 DailyEventProgressPersistence.Save(_eventProgress);
-                _result.text = "Deferred until day " + record.DueDay;
+                _result.text = GameText.Format("life.event.ui.deferred", record.DueDay);
             }
         }
 
@@ -105,7 +118,7 @@ namespace Rootborn.UI.StudentLife
             {
                 LastRecord = record;
                 DailyEventProgressPersistence.Save(_eventProgress);
-                _result.text = "Declined";
+                _result.text = GameText.Get("life.event.ui.declined");
             }
         }
 
@@ -120,7 +133,7 @@ namespace Rootborn.UI.StudentLife
                 {
                     int index = i;
                     var choice = _event.Choices[i];
-                    label.text = Humanize(choice.DisplayNameKey) + "\n" + choice.ResultSummaryKey;
+                    label.text = GameText.Get(choice.DisplayNameKey) + "\n" + GameText.Get(choice.ResultSummaryKey);
                     button.interactable = _studentProgress != null && _eventProgress != null;
                     button.gameObject.SetActive(true);
                     button.onClick.AddListener(() => Choose(index));
@@ -144,32 +157,36 @@ namespace Rootborn.UI.StudentLife
         private void BuildIfNeeded()
         {
             if (_root != null) return;
-            _root = new GameObject("DailyEventRoot", typeof(RectTransform), typeof(ModernUiTileImage));
+            _root = new GameObject("DailyEventRoot", typeof(RectTransform), typeof(ModernUiTileImage), typeof(Canvas), typeof(GraphicRaycaster));
             _root.transform.SetParent(transform, false);
             var rt = (RectTransform)_root.transform;
             rt.anchorMin = new Vector2(0.5f, 0.5f);
             rt.anchorMax = new Vector2(0.5f, 0.5f);
             rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.anchoredPosition = new Vector2(0f, -70f);
-            rt.sizeDelta = new Vector2(700f, 430f);
+            rt.anchoredPosition = Vector2.zero;
+            rt.sizeDelta = new Vector2(1120f, 800f);
+            var modal = _root.GetComponent<Canvas>(); modal.overrideSorting = true; modal.sortingOrder = 1300;
             var tile = _root.GetComponent<ModernUiTileImage>();
             tile.SetRecipe(ModernUiRecipes.CommonPanel);
             tile.Rebuild();
 
-            _title = MakeText(rt, "DailyEventTitle", "Daily Event", new Vector2(0f, 166f), new Vector2(600f, 34f), 22, TextAnchor.MiddleCenter);
-            _description = MakeText(rt, "DailyEventDescription", string.Empty, new Vector2(0f, 120f), new Vector2(600f, 54f), 15, TextAnchor.UpperCenter);
-            _deadline = MakeText(rt, "DailyEventDeadline", string.Empty, new Vector2(0f, 78f), new Vector2(600f, 28f), 14, TextAnchor.MiddleCenter);
-            _result = MakeText(rt, "DailyEventResult", string.Empty, new Vector2(0f, -126f), new Vector2(600f, 72f), 14, TextAnchor.UpperCenter);
+            _title = MakeText(rt, "DailyEventTitle", string.Empty, new Vector2(0f, 320f), new Vector2(880f, 48f), 28, TextAnchor.MiddleCenter);
+            _description = MakeText(rt, "DailyEventDescription", string.Empty, new Vector2(0f, 250f), new Vector2(944f, 72f), 20, TextAnchor.UpperCenter);
+            _deadline = MakeText(rt, "DailyEventDeadline", string.Empty, new Vector2(0f, 195f), new Vector2(944f, 32f), 18, TextAnchor.MiddleCenter);
+            _result = MakeText(rt, "DailyEventResult", string.Empty, new Vector2(0f, -222f), new Vector2(944f, 96f), 20, TextAnchor.UpperCenter);
             for (int i = 0; i < _choiceButtons.Length; i++)
             {
-                var button = MakeButton(rt, "DailyEventChoiceButton_" + i, new Vector2(0f, 36f - i * 54f), new Vector2(560f, 46f));
+                var button = MakeButton(rt, "DailyEventChoiceButton_" + i, new Vector2(0f, 122f - i * 108f), new Vector2(944f, 92f));
                 _choiceButtons[i] = button;
                 _choiceLabels[i] = button.GetComponentInChildren<Text>(true);
             }
-            _deferButton = MakeButton(rt, "DailyEventDeferButton", new Vector2(-130f, -182f), new Vector2(190f, 42f));
-            _deferButton.GetComponentInChildren<Text>(true).text = "Later";
-            _declineButton = MakeButton(rt, "DailyEventDeclineButton", new Vector2(130f, -182f), new Vector2(190f, 42f));
-            _declineButton.GetComponentInChildren<Text>(true).text = "Decline";
+            var close = MakeButton(rt, "DailyEventCloseButton", new Vector2(504f, 342f), new Vector2(48f, 48f));
+            close.GetComponentInChildren<Text>(true).text = "×";
+            close.onClick.AddListener(Hide);
+            _deferButton = MakeButton(rt, "DailyEventDeferButton", new Vector2(-130f, -326f), new Vector2(210f, 52f));
+            _deferButton.GetComponentInChildren<Text>(true).text = GameText.Get("life.event.ui.later");
+            _declineButton = MakeButton(rt, "DailyEventDeclineButton", new Vector2(130f, -326f), new Vector2(210f, 52f));
+            _declineButton.GetComponentInChildren<Text>(true).text = GameText.Get("life.event.ui.decline");
         }
 
         private static Text MakeText(RectTransform parent, string name, string value, Vector2 position, Vector2 size, int fontSize, TextAnchor alignment)
@@ -184,7 +201,7 @@ namespace Rootborn.UI.StudentLife
             rt.sizeDelta = size;
             var text = go.GetComponent<Text>();
             text.text = value;
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = LifeUiFont.Shared;
             text.fontSize = fontSize;
             text.alignment = alignment;
             text.color = new Color(0.25f, 0.18f, 0.12f, 1f);
@@ -194,7 +211,7 @@ namespace Rootborn.UI.StudentLife
 
         private static Button MakeButton(RectTransform parent, string name, Vector2 position, Vector2 size)
         {
-            var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
+            var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button), typeof(ModernUiTileImage));
             go.transform.SetParent(parent, false);
             var rt = (RectTransform)go.transform;
             rt.anchorMin = new Vector2(0.5f, 0.5f);
@@ -202,28 +219,24 @@ namespace Rootborn.UI.StudentLife
             rt.pivot = new Vector2(0.5f, 0.5f);
             rt.anchoredPosition = position;
             rt.sizeDelta = size;
-            go.GetComponent<Image>().color = new Color(0.72f, 0.58f, 0.32f, 1f);
-            MakeText(rt, "Label", string.Empty, Vector2.zero, size, 13, TextAnchor.MiddleCenter);
+            var skin = go.GetComponent<ModernUiTileImage>(); skin.SetRecipe(ModernUiRecipes.CommonPanel); skin.Rebuild();
+            MakeText(rt, "Label", string.Empty, Vector2.zero, size - new Vector2(32f, 12f), 20, TextAnchor.MiddleCenter);
             return go.GetComponent<Button>();
         }
 
         private static string FormatDeadline(DailyEventDefinition dailyEvent)
         {
             if (dailyEvent == null || dailyEvent.Kind == null) return string.Empty;
-            if (dailyEvent.Kind.IsTimed && dailyEvent.Kind.DueTimeMinutes > 0) return "Due " + dailyEvent.Kind.DueTimeMinutes;
-            if (dailyEvent.Kind.IsDeferrable) return "Can do later";
-            return "Optional";
+            if (dailyEvent.Kind.IsTimed && dailyEvent.Kind.DueTimeMinutes > 0) return GameText.Format("life.event.ui.due", dailyEvent.Kind.DueTimeMinutes);
+            if (dailyEvent.Kind.IsDeferrable) return GameText.Get("life.event.ui.deferrable");
+            return GameText.Get("life.event.ui.optional");
         }
 
-        private static string FormatResult(LifeActivityResult result, DailyEventRecord record)
+        private string FormatResult(LifeActivityResult result, DailyEventRecord record)
         {
-            string text = "Result\n" + result.Kind + " " + result.ActivityId;
-            if (record != null)
-            {
-                var logs = record.ResultSummaryLogIds;
-                for (int i = 0; i < logs.Length; i++) text += "\n" + logs[i];
-            }
-            return text;
+            if (result.Kind == LifeActivityResultKind.Applied)
+                return GameText.Get("life.event.ui.applied") + (string.IsNullOrEmpty(_lastChoiceSummary) ? string.Empty : "\n" + _lastChoiceSummary);
+            return GameText.Get(result.Kind == LifeActivityResultKind.DuplicateRequest ? "life.event.ui.duplicate" : "life.event.ui.unavailable");
         }
 
         private static string Humanize(string key)
@@ -233,3 +246,5 @@ namespace Rootborn.UI.StudentLife
         }
     }
 }
+
+

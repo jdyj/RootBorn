@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Game.Careers;
 using Rootborn.Game.Characters;
 using Rootborn.Game.Characters.Spum;
 using Rootborn.Game.Crops;
@@ -41,6 +42,107 @@ namespace Rootborn.Game.Common
         public IReadOnlyList<Slot> Slots => _slots;
         public event Action OnChanged;
 
+        // Insert these members inside existing Rootborn.Game.Common.Inventory.
+        // Existing imports already include System, Collections.Generic, Quests and UnityEngine.
+        private bool _exchangeInProgress;
+
+        public bool CanExchange(IReadOnlyList<InventoryGrant> costs, IReadOnlyList<InventoryGrant> rewards)
+        {
+            return !_exchangeInProgress && TryBuildExchange(costs, rewards, out _);
+        }
+
+        public bool TryAddAll(IReadOnlyList<InventoryGrant> rewards, Action commitState = null)
+        {
+            return TryExchange(null, rewards, commitState);
+        }
+
+        // commitState must contain only prevalidated, nonthrowing progress mutations and no I/O.
+        // Observers run after both domains commit; the reentry guard remains held through notification.
+        public bool TryExchange(IReadOnlyList<InventoryGrant> costs, IReadOnlyList<InventoryGrant> rewards, Action commitState = null)
+        {
+            if (_exchangeInProgress || !TryBuildExchange(costs, rewards, out var next)) return false;
+            _exchangeInProgress = true;
+            var previous = new List<Slot>(_slots);
+            try
+            {
+                _slots.Clear();
+                _slots.AddRange(next);
+                try { commitState?.Invoke(); }
+                catch
+                {
+                    _slots.Clear();
+                    _slots.AddRange(previous);
+                    throw;
+                }
+                OnChanged?.Invoke();
+                return true;
+            }
+            finally { _exchangeInProgress = false; }
+        }
+
+        private bool TryBuildExchange(IReadOnlyList<InventoryGrant> costs, IReadOnlyList<InventoryGrant> rewards, out List<Slot> next)
+        {
+            next = new List<Slot>(_slots.Count);
+            for (int i = 0; i < _slots.Count; i++) next.Add(new Slot { Item = _slots[i].Item, Count = _slots[i].Count });
+            var totals = new Dictionary<ItemDefinition, long>();
+            if (costs != null)
+            {
+                for (int i = 0; i < costs.Count; i++)
+                {
+                    var cost = costs[i];
+                    if (cost.Item == null || cost.Count <= 0) return false;
+                    totals.TryGetValue(cost.Item, out long count);
+                    totals[cost.Item] = count + cost.Count;
+                }
+            }
+            foreach (var pair in totals)
+            {
+                long available = 0;
+                for (int i = 0; i < next.Count; i++) if (next[i].Item == pair.Key) available += Math.Max(0, next[i].Count);
+                if (available < pair.Value) return false;
+                long remaining = pair.Value;
+                for (int i = next.Count - 1; i >= 0 && remaining > 0; i--)
+                {
+                    var slot = next[i];
+                    if (slot.Item != pair.Key || slot.Count <= 0) continue;
+                    int take = (int)Math.Min(remaining, slot.Count);
+                    slot.Count -= take;
+                    remaining -= take;
+                    if (slot.Count == 0) slot.Item = null;
+                }
+            }
+            if (rewards != null)
+            {
+                for (int i = 0; i < rewards.Count; i++)
+                {
+                    var reward = rewards[i];
+                    if (reward.Item == null || reward.Count <= 0) return false;
+                    int remaining = reward.Count;
+                    for (int j = 0; j < next.Count && remaining > 0; j++)
+                    {
+                        var slot = next[j];
+                        if (slot.Item != reward.Item || slot.Count <= 0) continue;
+                        int put = Math.Min(Math.Max(0, reward.Item.MaxStack - slot.Count), remaining);
+                        slot.Count += put; remaining -= put;
+                    }
+                    for (int j = 0; j < next.Count && remaining > 0; j++)
+                    {
+                        var slot = next[j];
+                        if (slot.Item != null && slot.Count > 0) continue;
+                        int put = Math.Min(reward.Item.MaxStack, remaining);
+                        slot.Item = reward.Item; slot.Count = put; remaining -= put;
+                    }
+                    while (remaining > 0 && next.Count < MaxSlots)
+                    {
+                        int put = Math.Min(reward.Item.MaxStack, remaining);
+                        next.Add(new Slot { Item = reward.Item, Count = put }); remaining -= put;
+                    }
+                    if (remaining > 0) return false;
+                }
+            }
+            return true;
+        }
+
         public void Add(ItemDefinition item, int count = 1)
         {
             if (item == null || count <= 0) return;
@@ -54,6 +156,17 @@ namespace Rootborn.Game.Common
                 if (room <= 0) continue;
                 int put = Mathf.Min(room, remaining);
                 slot.Count += put;
+                remaining -= put;
+            }
+
+            // CanAdd counts emptied slots as free, so they must be filled before appending.
+            for (int i = 0; i < _slots.Count && remaining > 0; i++)
+            {
+                var slot = _slots[i];
+                if (slot.Item != null && slot.Count > 0) continue;
+                int put = Mathf.Min(max, remaining);
+                slot.Item = item;
+                slot.Count = put;
                 remaining -= put;
             }
 
@@ -269,10 +382,23 @@ namespace Rootborn.Game.Common
         [SerializeField] private TutorialStageDefinition _defaultTutorialStage;
         [SerializeField] private CharacterPartDefinition[] _characterParts = Array.Empty<CharacterPartDefinition>();
         [SerializeField] private CharacterPartAnimationClipDefinition[] _characterPartAnimationClips = Array.Empty<CharacterPartAnimationClipDefinition>();
+        [SerializeField] private CharacterPartMotionDefinition _defaultCharacterPartMotion;
         [SerializeField] private CharacterAppearanceDefinition[] _characterAppearances = Array.Empty<CharacterAppearanceDefinition>();
         [SerializeField] private SpumPartCatalogDefinition[] _spumPartCatalogs = Array.Empty<SpumPartCatalogDefinition>();
         [SerializeField] private SpumCharacterCreatorPresetDefinition[] _spumCharacterCreatorPresets = Array.Empty<SpumCharacterCreatorPresetDefinition>();
         [SerializeField] private FishingAnimationDefinition[] _fishingAnimations = Array.Empty<FishingAnimationDefinition>();
+        [SerializeField] private Rootborn.Game.Minigames.MinigameDefinition[] _minigames = Array.Empty<Rootborn.Game.Minigames.MinigameDefinition>();
+        [SerializeField] private Rootborn.Game.Minigames.ChallengeDefinitionBase[] _minigameChallenges = Array.Empty<Rootborn.Game.Minigames.ChallengeDefinitionBase>();
+        [SerializeField] private Rootborn.Game.Minigames.MinigameBonusRuleBase[] _minigameBonuses = Array.Empty<Rootborn.Game.Minigames.MinigameBonusRuleBase>();
+        [SerializeField] private FacilityVisualDefinition[] _facilityVisuals = Array.Empty<FacilityVisualDefinition>();
+        [SerializeField] private FacilityDefinition[] _facilityDefinitions = Array.Empty<FacilityDefinition>();
+        [SerializeField] private FacilityWorkDefinition[] _facilityWorks = Array.Empty<FacilityWorkDefinition>();
+        [SerializeField] private FacilityLevelDefinition[] _facilityLevels = Array.Empty<FacilityLevelDefinition>();
+        [SerializeField] private FacilityTransitionRequirementBase[] _facilityTransitionRequirements = Array.Empty<FacilityTransitionRequirementBase>();
+        [SerializeField] private AutoSkipRequirementBase[] _autoSkipRequirements = Array.Empty<AutoSkipRequirementBase>();
+        [SerializeField] private Rootborn.Game.Localization.GameTextCatalog _textCatalog;
+        [SerializeField] private LifeCalendarDefinition _studentLifeCalendar;
+        [SerializeField] private ActivityTimePolicyDefinition[] _activityTimePolicies = Array.Empty<ActivityTimePolicyDefinition>();
         [SerializeField] private LifeActivityDefinition[] _lifeActivities = Array.Empty<LifeActivityDefinition>();
         [SerializeField] private LifeChoiceDefinition[] _studentLifeChoices = Array.Empty<LifeChoiceDefinition>();
         [SerializeField] private TraitDefinition[] _studentLifeTraits = Array.Empty<TraitDefinition>();
@@ -308,6 +434,7 @@ namespace Rootborn.Game.Common
         [SerializeField] private LocationStateConflictPolicyDefinition[] _locationStateConflictPolicies = Array.Empty<LocationStateConflictPolicyDefinition>();
         [SerializeField] private DailyEventKindDefinition[] _dailyEventKinds = Array.Empty<DailyEventKindDefinition>();
         [SerializeField] private DailyEventDefinition[] _dailyEvents = Array.Empty<DailyEventDefinition>();
+        [SerializeField] private CampaignDefinition _defaultStudentCampaign;
         [SerializeField] private CampaignDefinition[] _campaigns = Array.Empty<CampaignDefinition>();
         [SerializeField] private CampaignDayDefinition[] _campaignDays = Array.Empty<CampaignDayDefinition>();
         [SerializeField] private CampaignRouteDefinition[] _campaignRoutes = Array.Empty<CampaignRouteDefinition>();
@@ -369,10 +496,25 @@ namespace Rootborn.Game.Common
         public TutorialStageDefinition DefaultTutorialStage => _defaultTutorialStage;
         public CharacterPartDefinition[] CharacterParts => _characterParts;
         public CharacterPartAnimationClipDefinition[] CharacterPartAnimationClips => _characterPartAnimationClips;
+        public CharacterPartMotionDefinition DefaultCharacterPartMotion => _defaultCharacterPartMotion;
+        [SerializeField] private Rootborn.Game.World.WorldTravelCatalogDefinition _worldTravelCatalog;
+        public Rootborn.Game.World.WorldTravelCatalogDefinition WorldTravelCatalog => _worldTravelCatalog;
         public CharacterAppearanceDefinition[] CharacterAppearances => _characterAppearances;
         public SpumPartCatalogDefinition[] SpumPartCatalogs => _spumPartCatalogs;
         public SpumCharacterCreatorPresetDefinition[] SpumCharacterCreatorPresets => _spumCharacterCreatorPresets;
         public FishingAnimationDefinition[] FishingAnimations => _fishingAnimations;
+        public Rootborn.Game.Minigames.MinigameDefinition[] Minigames => _minigames;
+        public Rootborn.Game.Minigames.ChallengeDefinitionBase[] MinigameChallenges => _minigameChallenges;
+        public Rootborn.Game.Minigames.MinigameBonusRuleBase[] MinigameBonuses => _minigameBonuses;
+        public FacilityVisualDefinition[] FacilityVisuals => _facilityVisuals;
+        public FacilityDefinition[] FacilityDefinitions => _facilityDefinitions;
+        public FacilityWorkDefinition[] FacilityWorks => _facilityWorks;
+        public FacilityLevelDefinition[] FacilityLevels => _facilityLevels;
+        public FacilityTransitionRequirementBase[] FacilityTransitionRequirements => _facilityTransitionRequirements;
+        public AutoSkipRequirementBase[] AutoSkipRequirements => _autoSkipRequirements;
+        public Rootborn.Game.Localization.GameTextCatalog TextCatalog => _textCatalog;
+        public LifeCalendarDefinition StudentLifeCalendar => _studentLifeCalendar;
+        public ActivityTimePolicyDefinition[] ActivityTimePolicies => _activityTimePolicies;
         public LifeActivityDefinition[] LifeActivities => _lifeActivities;
         public LifeChoiceDefinition[] StudentLifeChoices => _studentLifeChoices;
         public TraitDefinition[] StudentLifeTraits => _studentLifeTraits;
@@ -408,6 +550,7 @@ namespace Rootborn.Game.Common
         public LocationStateConflictPolicyDefinition[] LocationStateConflictPolicies => _locationStateConflictPolicies;
         public DailyEventKindDefinition[] DailyEventKinds => _dailyEventKinds;
         public DailyEventDefinition[] DailyEvents => _dailyEvents;
+        public CampaignDefinition DefaultStudentCampaign => _defaultStudentCampaign;
         public CampaignDefinition[] Campaigns => _campaigns;
         public CampaignDayDefinition[] CampaignDays => _campaignDays;
         public CampaignRouteDefinition[] CampaignRoutes => _campaignRoutes;

@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using Rootborn.Game.Characters;
 using Rootborn.Game.Common;
 using Rootborn.Game.Family;
+using Rootborn.Game.Interiors;
 using Rootborn.Game.Knowledge;
 using Rootborn.Game.Player;
 using Rootborn.Game.Save;
+using Rootborn.Game.World;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
@@ -30,7 +32,7 @@ namespace Rootborn.Game.Bootstrap
 
         private static void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            if (scene.name == TownSceneName)
+            if (SupportsScene(scene))
             {
                 Ensure(scene);
             }
@@ -39,10 +41,16 @@ namespace Rootborn.Game.Bootstrap
         private static void EnsureForActiveScene()
         {
             var scene = SceneManager.GetActiveScene();
-            if (scene.name == TownSceneName)
+            if (SupportsScene(scene))
             {
                 Ensure(scene);
             }
+        }
+
+        private static bool SupportsScene(Scene scene)
+        {
+            return scene.IsValid() && scene.isLoaded && (scene.name == TownSceneName
+                || AuthoredWorldScene.Find(scene) != null || WorldTravelRuntime.TryGetPendingEntry(scene, out _));
         }
 
         private static void Ensure(Scene scene)
@@ -61,6 +69,7 @@ namespace Rootborn.Game.Bootstrap
         {
             private IEnumerator Start()
             {
+                if (WorldTravelRuntime.IsRecoveringScene(gameObject.scene)) yield break;
                 var bootstrap = Managers.Managers.BootstrapAsync();
                 while (!bootstrap.IsCompleted)
                 {
@@ -73,27 +82,30 @@ namespace Rootborn.Game.Bootstrap
                     yield break;
                 }
 
-                Scene scene = SceneManager.GetActiveScene();
+                Scene scene = gameObject.scene;
                 var players = new List<GameObject>();
-                float elapsed = 0f;
+                float playerSearchDeadline = UnityEngine.Time.realtimeSinceStartup + 5f;
 
-                while (players.Count == 0 && elapsed < 5f)
+                while (players.Count == 0 && UnityEngine.Time.realtimeSinceStartup < playerSearchDeadline)
                 {
                     CollectPlayerRoots(scene, players);
                     if (players.Count == 0)
                     {
-                        elapsed += UnityEngine.Time.unscaledDeltaTime;
+                        // Registered local entry already specifies its spawn; no network spawn wait is needed.
+                        if (WorldTravelRuntime.TryGetPendingEntry(scene, out _) && ShouldCreateLocalPlayerFallback()) break;
                         yield return null;
                     }
                 }
 
                 if (players.Count == 0 && ShouldCreateLocalPlayerFallback())
                 {
-                    players.Add(CreateLocalPlayer(scene));
+                    var created = CreateLocalPlayer(scene);
+                    if (created != null) players.Add(created);
                 }
 
                 if (players.Count == 0)
                 {
+                    WorldTravelRuntime.ReportEntryFailure(scene);
                     yield break;
                 }
 
@@ -107,7 +119,7 @@ namespace Rootborn.Game.Bootstrap
                     }
 
                     ReinforcePlayer(candidate);
-                    yield return ConfigureLayeredPlayer(candidate);
+                    ConfigureLayeredPlayer(candidate);
                     if (cameraTarget == null && candidate != null)
                     {
                         cameraTarget = candidate;
@@ -121,6 +133,7 @@ namespace Rootborn.Game.Bootstrap
                 }
                 EnsureCanvas(scene);
                 EnsureEventSystem(scene);
+                FinalizeWorldEntry(scene, cameraTarget);
 
                 for (int i = 0; i < 12; i++)
                 {
@@ -142,7 +155,7 @@ namespace Rootborn.Game.Bootstrap
                         ReinforcePlayer(live);
                         if (CountVisiblePartSprites(live) < 5)
                         {
-                            yield return ConfigureLayeredPlayer(live);
+                            ConfigureLayeredPlayer(live);
                         }
                     }
 
@@ -153,13 +166,30 @@ namespace Rootborn.Game.Bootstrap
 
         private static GameObject CreateLocalPlayer(Scene scene)
         {
+            Vector3 position;
+            if (WorldTravelRuntime.TryGetPendingEntry(scene, out var entry))
+            {
+                var spawn = WorldEntryService.FindUniqueSpawn(scene, entry.SpawnId);
+                if (spawn == null) return null;
+                position = spawn.transform.position;
+            }
+            else position = ResolveLocalPlayerSpawnPosition(scene);
             var player = new GameObject("Player");
-            player.transform.position = ResolveLocalPlayerSpawnPosition(scene);
+            player.transform.position = position;
             SceneManager.MoveGameObjectToScene(player, scene);
             player.AddComponent<PlayerIdentity>();
             player.AddComponent<PlayerController>();
             player.AddComponent<PlayerInteractionRouter>();
             return player;
+        }
+
+        private static bool FinalizeWorldEntry(Scene scene, GameObject player)
+        {
+            if (player == null) return WorldTravelRuntime.ReportEntryFailure(scene);
+            if (!WorldTravelRuntime.TryGetPendingEntry(scene, out _)) return WorldTravelRuntime.TryBindSceneOwner(scene, player);
+            // Select the destination's camera, including when the actor is still carried in the persistent scene.
+            var camera = FindComponentInScene<Camera>(scene);
+            return WorldTravelRuntime.TryCompleteEntry(scene, player, camera);
         }
 
         private static Vector3 ResolveLocalPlayerSpawnPosition(Scene scene)
@@ -219,7 +249,24 @@ namespace Rootborn.Game.Bootstrap
                 return;
             }
 
+            // Legacy saved actors can already have movement but lack the identity required by the shared owner.
+            if (player.GetComponent<PlayerIdentity>() == null) player.AddComponent<PlayerIdentity>();
             EnsurePlayerInteractionRouter(player);
+
+            var groundSort = player.GetComponent<GroundDepthSort>();
+            var previousGroup = player.GetComponent<UnityEngine.Rendering.SortingGroup>();
+            bool fallbackEnabled = previousGroup != null && previousGroup.enabled;
+            int fallbackOrder = previousGroup != null ? previousGroup.sortingOrder : 0;
+            if (groundSort == null)
+            {
+                groundSort = player.AddComponent<GroundDepthSort>();
+            }
+            groundSort.SetActiveSceneScope("HouseInterior", fallbackEnabled, fallbackOrder);
+            groundSort.Configure(new Vector2(0f, -0.5f), 48, 10000);
+            // Apply the authored scene policy after the compatibility house scope. This is
+            // a dictionary lookup, so the existing startup reinforcement loop does not scan scenes.
+            if (ScenePlayerRenderPolicy.TryGetForScene(player.scene, out var renderPolicy))
+                renderPolicy.Apply(player, Camera.main);
 
             var inventory = player.GetComponent<PlayerInventory>();
             if (inventory == null)
@@ -266,13 +313,16 @@ namespace Rootborn.Game.Bootstrap
             }
         }
 
-        private static IEnumerator ConfigureLayeredPlayer(GameObject player)
+        private static void ConfigureLayeredPlayer(GameObject player)
         {
+            if (Characters.Growing.GrowingCharacterRuntimeInstaller.TryInstall(player, Managers.Managers.Data != null ? Managers.Managers.Data.Registry : null)) return;
+            if (TownSpumVisualRuntimeInstaller.TryBindExistingVisual(player)) return;
+
             var registry = Managers.Managers.Data != null ? Managers.Managers.Data.Registry : null;
             var resource = Managers.Managers.Resource;
             if (player == null || registry == null || registry.CharacterParts == null || registry.CharacterParts.Length == 0 || resource == null)
             {
-                yield break;
+                return;
             }
 
             var composer = player.GetComponent<CharacterPartComposer>();
@@ -303,6 +353,9 @@ namespace Rootborn.Game.Bootstrap
             visualAdapter.ConfigureForTests(pixelwoodView);
 
             var appearance = CharacterAppearance.ResolveWithDefaults(ActiveSaveContext.Metadata != null ? ActiveSaveContext.Metadata.Appearance : null, registry.CharacterParts);
+            var motion = registry.DefaultCharacterPartMotion;
+            int idleRow = motion != null ? motion.IdleRow : 0;
+            int idleColumn = motion != null ? motion.GetIdleColumn(Vector2.down) : 0;
             for (int i = 0; i < registry.CharacterParts.Length; i++)
             {
                 var part = registry.CharacterParts[i];
@@ -311,16 +364,16 @@ namespace Rootborn.Game.Bootstrap
                     continue;
                 }
 
-                string subName = CharacterPartComposer.BuildFrameSubSpriteName(part, 0, 0);
+                string subName = CharacterPartComposer.BuildFrameSubSpriteName(part, idleRow, idleColumn);
                 var task = resource.LoadSubSpriteAsync(part.SheetAddress, subName);
-                while (!task.IsCompleted)
+                if (!task.IsCompleted)
                 {
-                    yield return null;
+                    return;
                 }
 
                 if (player == null)
                 {
-                    yield break;
+                    return;
                 }
 
                 if (task.IsFaulted)
@@ -331,10 +384,11 @@ namespace Rootborn.Game.Bootstrap
 
             if (player == null)
             {
-                yield break;
+                return;
             }
 
             animator.Configure(composer, appearance, registry.CharacterParts, (part, subSpriteName) => resource.GetCachedSubSprite(part.SheetAddress, subSpriteName));
+            animator.ConfigureMotion(motion);
             animator.SetMotion(Vector2.zero, new Vector2(0f, -1f));
             animator.Tick(0f);
 
@@ -421,6 +475,8 @@ namespace Rootborn.Game.Bootstrap
                 follow = camera.gameObject.AddComponent<CameraFollow>();
             }
             follow.SetTarget(player);
+            if (ScenePlayerRenderPolicy.TryGetForScene(player.gameObject.scene, out var renderPolicy))
+                renderPolicy.Apply(player.gameObject, camera);
         }
 
         private static void EnsureCanvas(Scene scene)
@@ -445,38 +501,22 @@ namespace Rootborn.Game.Bootstrap
 
         private static void EnsureTownHud(Transform canvasTransform)
         {
+            // Keep this compatibility anchor; the time HUD and Objective Journal own visible content.
             var child = canvasTransform.Find("TownHud");
-            GameObject hudGo;
             if (child == null)
             {
-                hudGo = new GameObject("TownHud", typeof(RectTransform), typeof(Image));
+                var hudGo = new GameObject("TownHud", typeof(RectTransform));
                 hudGo.transform.SetParent(canvasTransform, false);
+                child = hudGo.transform;
             }
-            else
+
+            // Earlier installs stretched one atlas corner over an otherwise empty HUD rectangle.
+            var obsoleteBackground = child.GetComponent<Image>();
+            if (obsoleteBackground != null)
             {
-                hudGo = child.gameObject;
-                if (hudGo.GetComponent<Image>() == null)
-                {
-                    hudGo.AddComponent<Image>();
-                }
+                obsoleteBackground.enabled = false;
+                obsoleteBackground.raycastTarget = false;
             }
-
-            hudGo.SetActive(true);
-            var rect = (RectTransform)hudGo.transform;
-            rect.anchorMin = new Vector2(0f, 1f);
-            rect.anchorMax = new Vector2(0f, 1f);
-            rect.pivot = new Vector2(0f, 1f);
-            rect.anchoredPosition = new Vector2(24f, -24f);
-            rect.sizeDelta = new Vector2(288f, 96f);
-
-            var image = hudGo.GetComponent<Image>();
-            image.raycastTarget = false;
-            image.type = Image.Type.Sliced;
-            image.color = Color.white;
-            var key = ModernHudSpriteKeys.HintPanel;
-            var resource = Managers.Managers.Resource;
-            image.sprite = resource != null ? resource.GetCachedSubSprite(key.SheetAddress, key.SubSpriteName) : null;
-            image.enabled = image.sprite != null;
         }
 
         private static void EnsureEventSystem(Scene scene)
@@ -504,6 +544,11 @@ namespace Rootborn.Game.Bootstrap
         private static void CollectPlayerRoots(Scene scene, List<GameObject> players)
         {
             players.Clear();
+            if (WorldTravelRuntime.TryGetPendingEntry(scene, out _) && WorldTravelRuntime.TravellingActor != null)
+            {
+                players.Add(WorldTravelRuntime.TravellingActor);
+                return;
+            }
             var roots = scene.GetRootGameObjects();
             for (int i = 0; i < roots.Length; i++)
             {

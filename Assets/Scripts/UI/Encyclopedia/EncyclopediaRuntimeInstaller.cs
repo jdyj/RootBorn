@@ -1,3 +1,5 @@
+using Rootborn.Game.Localization;
+using Rootborn.UI.StudentLife;
 using System.Collections;
 using Rootborn.Game.Common;
 using Rootborn.Game.Encyclopedia;
@@ -107,7 +109,7 @@ namespace Rootborn.UI.Encyclopedia
             rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.anchoredPosition = Vector2.zero;
-            rect.sizeDelta = new Vector2(820f, 560f);
+            rect.sizeDelta = new Vector2(1280f, 800f);
             rect.SetAsLastSibling();
             var panel = go.GetComponent<EncyclopediaPanel>();
             if (panel == null) panel = go.AddComponent<EncyclopediaPanel>();
@@ -134,7 +136,13 @@ namespace Rootborn.UI.Encyclopedia
             {
                 if (panel.IsVisible) panel.Hide(); else panel.Show();
             });
-            MakeLabel(rect, "Label", "ENCYCLOPEDIA", Vector2.zero, new Vector2(150f, 32f), 13, TextAnchor.MiddleCenter);
+            MakeLabel(rect, "Label", Ui("ui.encyclopedia.open", "도감", "Encyclopedia"), Vector2.zero, new Vector2(150f, 32f), 18, TextAnchor.MiddleCenter);
+        }
+
+        private static string Ui(string key, string ko, string en)
+        {
+            string value = GameText.Get(key);
+            return value == key ? (GameText.Language == "ko" ? ko : en) : value;
         }
 
         private static Text MakeLabel(RectTransform parent, string name, string value, Vector2 position, Vector2 size, int fontSize, TextAnchor alignment)
@@ -149,9 +157,10 @@ namespace Rootborn.UI.Encyclopedia
             rect.sizeDelta = size;
             var text = go.GetComponent<Text>();
             text.text = value;
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = LifeUiFont.Shared;
             text.fontSize = fontSize;
             text.alignment = alignment;
+            text.raycastTarget = false;
             text.color = new Color(0.28f, 0.19f, 0.12f, 1f);
             return text;
         }

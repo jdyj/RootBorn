@@ -42,6 +42,8 @@ namespace Rootborn.Game.Player
         private static readonly int HashMoveY = Animator.StringToHash("MoveY");
         private static readonly int HashSpeed = Animator.StringToHash("Speed");
 
+        public static event System.Action AvailabilityChanged;
+
         public Vector2 LastFacing => _lastFacing;
         public Vector2 Input => _input;
 
@@ -60,6 +62,7 @@ namespace Rootborn.Game.Player
 
         private void OnEnable()
         {
+            AvailabilityChanged?.Invoke();
             _wasMouseAttackPressed = false;
             TryBindInventory();
         }
@@ -72,6 +75,7 @@ namespace Rootborn.Game.Player
 
         private void BeginAttack(Vector2 screenPos)
         {
+            if (UiGameplayInputLock.IsBlocked || UiTextInputFocus.HasFocus) return;
             bool hasToolSprites = HasToolSprites(_activeToolSpritePrefix);
             var visualAdapter = ResolveVisualAdapter();
             if (!hasToolSprites && visualAdapter == null) return;
@@ -117,6 +121,7 @@ namespace Rootborn.Game.Player
 
         private void OnDisable()
         {
+            AvailabilityChanged?.Invoke();
             DisposeAction(ref _moveAction);
             if (_attackAction != null)
             {
@@ -194,12 +199,17 @@ namespace Rootborn.Game.Player
 
         private void Update()
         {
+            // Town fallback actors can receive their body after this controller's Awake.
+            if (_rb == null) _rb = GetComponent<Rigidbody2D>();
             TryBindInventory();
             if (_partComposer == null) _partComposer = GetComponent<CharacterPartComposer>();
             if (_partAnimator == null) _partAnimator = GetComponent<CharacterPartAnimator>();
             if (_visualAdapter == null) _visualAdapter = GetComponent<PlayerCharacterVisualAdapter>();
 
-            _input = ReadMoveInput();
+            bool textInputFocused = UiTextInputFocus.HasFocus || UiGameplayInputLock.IsBlocked;
+            if (textInputFocused) _isAttacking = false;
+            _input = textInputFocused ? Vector2.zero : ReadMoveInput();
+            if (textInputFocused && _rb != null) _rb.linearVelocity = Vector2.zero;
             UpdateMouseAttackInput();
 
             if (_rb == null)
@@ -454,7 +464,9 @@ namespace Rootborn.Game.Player
 
         private void FixedUpdate()
         {
+            if (_rb == null) _rb = GetComponent<Rigidbody2D>();
             if (_rb == null) return;
+            if (UiTextInputFocus.HasFocus || UiGameplayInputLock.IsBlocked) _input = Vector2.zero;
             _rb.linearVelocity = _input * _moveSpeed;
         }
 

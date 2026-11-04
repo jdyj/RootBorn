@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Rootborn.Game.Characters;
 using Rootborn.Game.Characters.Spum;
+using Rootborn.Game.Localization;
 using Rootborn.UI.Modern;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,11 +16,11 @@ namespace Rootborn.UI.MainMenu
 
         private static readonly CategoryGroup[] CategoryGroups =
         {
-            new CategoryGroup("Body/Skin", "Tab_BodySkin", new[] { "body", "skin" }),
-            new CategoryGroup("Eye", "Tab_Eye", new[] { "eye", "eyes" }),
-            new CategoryGroup("Hair", "Tab_Hair", new[] { "hair" }),
-            new CategoryGroup("Outfit/Cloth", "Tab_OutfitCloth", new[] { "outfit", "cloth" }),
-            new CategoryGroup("Accessory", "Tab_AccessoryBackHelmet", new[] { "accessory", "back", "helmet" }),
+            new CategoryGroup("spum.creator.category.body-skin", "Body/Skin", "Tab_BodySkin", new[] { "body", "skin" }),
+            new CategoryGroup("spum.creator.category.eye", "Eye", "Tab_Eye", new[] { "eye", "eyes" }),
+            new CategoryGroup("spum.creator.category.hair", "Hair", "Tab_Hair", new[] { "hair" }),
+            new CategoryGroup("spum.creator.category.outfit-cloth", "Outfit/Cloth", "Tab_OutfitCloth", new[] { "outfit", "cloth" }),
+            new CategoryGroup("spum.creator.category.accessory", "Accessory", "Tab_AccessoryBackHelmet", new[] { "accessory", "back", "helmet" }),
         };
 
         private readonly Dictionary<string, string> _selectedPartIds = new Dictionary<string, string>();
@@ -52,13 +53,13 @@ namespace Rootborn.UI.MainMenu
             _selectedPartIds.Clear();
             ClearGeneratedChildren(transform);
             EnsureDefaultSelections();
+            EnsureModalBackdrop();
 
-            GameObject root = CreatePanel(transform, "SpumCharacterCreatorRoot", new Vector2(1280f, 760f));
+            GameObject root = CreatePanel(transform, "SpumCharacterCreatorRoot", new Vector2(1296f, 864f));
             CreateHeader(root.transform);
             CreateCategoryTabs(root.transform);
             CreatePreview(root.transform);
-            _partGrid = CreatePanel(root.transform, "PartGrid", new Vector2(840f, 420f)).transform;
-            ((RectTransform)_partGrid).anchoredPosition = new Vector2(180f, -90f);
+            _partGrid = CreateContainer(root.transform, "PartGrid", new Vector2(600f, 500f), new Vector2(-60f, 40f)).transform;
             CreatePageControls(root.transform);
             CreateFooter(root.transform);
 
@@ -153,26 +154,25 @@ namespace Rootborn.UI.MainMenu
 
         private void CreateHeader(Transform root)
         {
-            Transform header = CreateContainer(root, "Header", new Vector2(1180f, 72f), new Vector2(0f, 320f)).transform;
-            MakeText(header, "Title", "Character", new Vector2(-430f, 0f), new Vector2(220f, 48f), 30, TextAnchor.MiddleLeft);
+            Transform header = CreateContainer(root, "Header", new Vector2(1180f, 64f), new Vector2(0f, 360f)).transform;
+            MakeText(header, "Title", L("spum.creator.title", "Character"), new Vector2(-430f, 0f), new Vector2(220f, 48f), 30, TextAnchor.MiddleLeft);
 
-            GameObject back = CreateButton(header, "BackButton", "Back", new Vector2(104f, 48f));
+            GameObject back = CreateButton(header, "BackButton", L("spum.creator.back", "Back"), new Vector2(104f, 48f));
             back.GetComponent<Button>().onClick.AddListener(() => _cancel?.Invoke());
-            ((RectTransform)back.transform).anchoredPosition = new Vector2(270f, 0f);
+            ((RectTransform)back.transform).anchoredPosition = new Vector2(180f, 0f);
 
-            GameObject random = CreateButton(header, "RandomButton", "Random", new Vector2(120f, 48f));
+            GameObject random = CreateButton(header, "RandomButton", L("spum.creator.random", "Random"), new Vector2(120f, 48f));
             random.GetComponent<Button>().onClick.AddListener(RandomizeSelection);
-            ((RectTransform)random.transform).anchoredPosition = new Vector2(402f, 0f);
+            ((RectTransform)random.transform).anchoredPosition = new Vector2(316f, 0f);
 
-            GameObject confirm = CreateButton(header, "ConfirmButton", "Confirm", new Vector2(132f, 48f));
+            GameObject confirm = CreateButton(header, "ConfirmButton", L("spum.creator.confirm", "Confirm"), new Vector2(132f, 48f));
             confirm.GetComponent<Button>().onClick.AddListener(() => _confirm?.Invoke(CreateSnapshot()));
-            ((RectTransform)confirm.transform).anchoredPosition = new Vector2(546f, 0f);
+            ((RectTransform)confirm.transform).anchoredPosition = new Vector2(462f, 0f);
         }
 
         private void CreateCategoryTabs(Transform root)
         {
-            Transform tabs = CreatePanel(root, "CategoryTabs", new Vector2(240f, 560f)).transform;
-            ((RectTransform)tabs).anchoredPosition = new Vector2(-480f, -20f);
+            Transform tabs = CreateContainer(root, "CategoryTabs", new Vector2(220f, 500f), new Vector2(-490f, 40f)).transform;
             for (int i = 0; i < CategoryGroups.Length; i++)
             {
                 CategoryGroup group = CategoryGroups[i];
@@ -180,51 +180,53 @@ namespace Rootborn.UI.MainMenu
                     continue;
 
                 string firstCategoryId = group.CategoryIds[0];
-                GameObject tab = CreateButton(tabs, group.ObjectName, group.Label, new Vector2(220f, 56f));
+                GameObject tab = CreateButton(tabs, group.ObjectName, L(group.LabelKey, group.Label), new Vector2(204f, 56f));
                 tab.GetComponent<Button>().onClick.AddListener(() => SelectCategory(firstCategoryId));
                 var rect = (RectTransform)tab.transform;
-                rect.anchoredPosition = new Vector2(0f, 210f - i * 66f);
+                rect.anchoredPosition = new Vector2(0f, 204f - i * 76f);
             }
         }
 
         private void CreatePreview(Transform root)
         {
-            GameObject preview = CreatePanel(root, "Preview", new Vector2(300f, 420f));
-            var rect = (RectTransform)preview.transform;
-            rect.anchoredPosition = new Vector2(450f, -80f);
+            GameObject preview = CreateContainer(root, "Preview", new Vector2(300f, 500f), new Vector2(430f, 40f));
+            // Keep the preview's own labels readable; its renderer owns only its generated children.
+            var background = preview.AddComponent<Image>();
+            background.color = new Color(0.13f, 0.16f, 0.22f, 1f);
+            background.raycastTarget = false;
             _preview = preview.AddComponent<SpumCharacterCreatorPreview>();
             _preview.Build(PartsForCategories(new[] { "weapon", "weapons", "weapon-preview" }));
         }
 
         private void CreatePageControls(Transform root)
         {
-            Transform controls = CreateContainer(root, "PageControls", new Vector2(700f, 64f), new Vector2(180f, -338f)).transform;
-            _previousPageButton = CreateButton(controls, "PreviousPageButton", "<", new Vector2(72f, 48f));
+            Transform controls = CreateContainer(root, "PageControls", new Vector2(680f, 56f), new Vector2(-60f, -250f)).transform;
+            _previousPageButton = CreateButton(controls, "PreviousPageButton", L("spum.creator.page.previous", "<"), new Vector2(72f, 48f));
             _previousPageButton.GetComponent<Button>().onClick.AddListener(PreviousPage);
             ((RectTransform)_previousPageButton.transform).anchoredPosition = new Vector2(-300f, 0f);
 
-            _nextPageButton = CreateButton(controls, "NextPageButton", ">", new Vector2(72f, 48f));
+            _nextPageButton = CreateButton(controls, "NextPageButton", L("spum.creator.page.next", ">"), new Vector2(72f, 48f));
             _nextPageButton.GetComponent<Button>().onClick.AddListener(NextPage);
             ((RectTransform)_nextPageButton.transform).anchoredPosition = new Vector2(-216f, 0f);
 
-            GameObject previousPart = CreateButton(controls, "PreviousPartButton", "Prev", new Vector2(96f, 48f));
+            GameObject previousPart = CreateButton(controls, "PreviousPartButton", L("spum.creator.part.previous", "Prev"), new Vector2(96f, 48f));
             previousPart.GetComponent<Button>().onClick.AddListener(PreviousPart);
             ((RectTransform)previousPart.transform).anchoredPosition = new Vector2(-88f, 0f);
 
-            GameObject nextPart = CreateButton(controls, "NextPartButton", "Next", new Vector2(96f, 48f));
+            GameObject nextPart = CreateButton(controls, "NextPartButton", L("spum.creator.part.next", "Next"), new Vector2(96f, 48f));
             nextPart.GetComponent<Button>().onClick.AddListener(NextPart);
             ((RectTransform)nextPart.transform).anchoredPosition = new Vector2(22f, 0f);
 
-            GameObject cancel = CreateButton(controls, "CancelButton", "Cancel", new Vector2(112f, 48f));
+            GameObject cancel = CreateButton(controls, "CancelButton", L("spum.creator.cancel", "Cancel"), new Vector2(112f, 48f));
             cancel.GetComponent<Button>().onClick.AddListener(() => _cancel?.Invoke());
             ((RectTransform)cancel.transform).anchoredPosition = new Vector2(154f, 0f);
         }
 
         private void CreateFooter(Transform root)
         {
-            Transform footer = CreateContainer(root, "Footer", new Vector2(1180f, 86f), new Vector2(0f, -360f)).transform;
-            _selectedPartChips = CreateContainer(footer, "SelectedPartChips", new Vector2(900f, 44f), new Vector2(-100f, 12f)).transform;
-            _statusLine = MakeText(footer, "StatusLine", "Select appearance parts", new Vector2(390f, -18f), new Vector2(360f, 32f), 16, TextAnchor.MiddleRight);
+            Transform footer = CreateContainer(root, "Footer", new Vector2(1180f, 84f), new Vector2(0f, -342f)).transform;
+            _selectedPartChips = CreateContainer(footer, "SelectedPartChips", new Vector2(1120f, 36f), new Vector2(0f, 20f)).transform;
+            _statusLine = MakeText(footer, "StatusLine", string.Empty, new Vector2(0f, -24f), new Vector2(1120f, 28f), 18, TextAnchor.MiddleCenter);
         }
 
         private void RebuildPartGrid()
@@ -244,9 +246,9 @@ namespace Rootborn.UI.MainMenu
                 SpumPartDefinition selectedPart = part;
                 cell.GetComponent<Button>().onClick.AddListener(() => SelectPart(selectedPart));
                 var rect = (RectTransform)cell.transform;
-                int column = i % 4;
-                int row = i / 4;
-                rect.anchoredPosition = new Vector2(column * 196f - 294f, -row * 88f + 144f);
+                int column = i % 3;
+                int row = i / 3;
+                rect.anchoredPosition = new Vector2(column * 196f - 196f, -row * 104f + 174f);
             }
 
             int maxPage = MaxPageIndex(parts.Count);
@@ -307,7 +309,9 @@ namespace Rootborn.UI.MainMenu
             _preview?.ApplySelectedParts(_selectedPartIds);
             RebuildSelectedPartChips();
             if (_statusLine != null)
-                _statusLine.text = _selectedPartIds.Count == 0 ? "No parts selected" : _selectedPartIds.Count + " parts selected";
+                _statusLine.text = _selectedPartIds.Count == 0
+                    ? L("spum.creator.none-selected", "No parts selected")
+                    : string.Format(System.Globalization.CultureInfo.CurrentCulture, L("spum.creator.selected-count", "{0} parts selected"), _selectedPartIds.Count);
         }
 
         private void RebuildSelectedPartChips()
@@ -319,9 +323,9 @@ namespace Rootborn.UI.MainMenu
             int index = 0;
             foreach (KeyValuePair<string, string> selected in _selectedPartIds.OrderBy(pair => pair.Key, StringComparer.Ordinal))
             {
-                GameObject chip = CreateButton(_selectedPartChips, "Chip_" + SanitizeName(selected.Key), ShortPartLabel(selected.Value), new Vector2(132f, 32f));
+                GameObject chip = CreateButton(_selectedPartChips, "Chip_" + SanitizeName(selected.Key), ShortPartLabel(selected.Value), new Vector2(164f, 32f));
                 chip.GetComponent<Button>().interactable = false;
-                ((RectTransform)chip.transform).anchoredPosition = new Vector2(-380f + index * 144f, 0f);
+                ((RectTransform)chip.transform).anchoredPosition = new Vector2(-440f + index * 176f, 0f);
                 index++;
                 if (index >= 6)
                     break;
@@ -394,17 +398,32 @@ namespace Rootborn.UI.MainMenu
             return Mathf.Max(0, Mathf.CeilToInt(partCount / (float)VisiblePartCellBudget) - 1);
         }
 
+        private void EnsureModalBackdrop()
+        {
+            var backdrop = GetComponent<Image>();
+            if (backdrop == null) backdrop = gameObject.AddComponent<Image>();
+            backdrop.color = new Color(0.06f, 0.08f, 0.12f, 1f);
+            backdrop.raycastTarget = true;
+        }
+
         private GameObject CreatePanel(Transform parent, string name, Vector2 size)
         {
-            GameObject go = new GameObject(name, typeof(RectTransform), typeof(ModernUiTileImage));
+            // Configure geometry before OnEnable builds the tiled chrome. One root surface, no per-cell tile grids.
+            GameObject go = new GameObject(name, typeof(RectTransform), typeof(Image));
+            go.SetActive(false);
             go.transform.SetParent(parent, false);
             var rect = (RectTransform)go.transform;
             rect.anchorMin = new Vector2(0.5f, 0.5f);
             rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.sizeDelta = size;
-            var tile = go.GetComponent<ModernUiTileImage>();
+            var backplate = go.GetComponent<Image>();
+            backplate.color = new Color(0.90f, 0.89f, 0.94f, 1f);
+            backplate.raycastTarget = true;
+            var tile = go.AddComponent<ModernUiTileImage>();
             tile.SetRecipe(ModernUiRecipes.CommonPanel);
+            tile.SetTileSize(new Vector2(48f, 48f));
+            go.SetActive(true);
             return go;
         }
 
@@ -423,7 +442,7 @@ namespace Rootborn.UI.MainMenu
 
         private GameObject CreateButton(Transform parent, string name, string label, Vector2 size)
         {
-            GameObject button = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button), typeof(ModernUiTileImage));
+            GameObject button = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
             button.transform.SetParent(parent, false);
             var rect = (RectTransform)button.transform;
             rect.anchorMin = new Vector2(0.5f, 0.5f);
@@ -431,11 +450,11 @@ namespace Rootborn.UI.MainMenu
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.sizeDelta = size;
             var image = button.GetComponent<Image>();
-            image.color = new Color(1f, 1f, 1f, 0.01f);
-            var tile = button.GetComponent<ModernUiTileImage>();
-            tile.SetRecipe(ModernUiRecipes.CommonPanel);
-
-            MakeText(button.transform, "Label", label, Vector2.zero, new Vector2(size.x - 16f, size.y - 8f), 18, TextAnchor.MiddleCenter);
+            image.color = new Color(0.19f, 0.23f, 0.31f, 1f);
+            image.raycastTarget = true;
+            button.GetComponent<Button>().targetGraphic = image;
+            var text = MakeText(button.transform, "Label", label, Vector2.zero, new Vector2(size.x - 16f, size.y - 8f), 18, TextAnchor.MiddleCenter);
+            text.color = Color.white;
             return button;
         }
 
@@ -454,8 +473,10 @@ namespace Rootborn.UI.MainMenu
             label.alignment = alignment;
             label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             label.fontSize = fontSize;
-            label.color = Color.white;
+            label.color = new Color(0.10f, 0.13f, 0.20f, 1f);
             label.raycastTarget = false;
+            label.horizontalOverflow = HorizontalWrapMode.Wrap;
+            label.verticalOverflow = VerticalWrapMode.Truncate;
             return label;
         }
 
@@ -486,15 +507,23 @@ namespace Rootborn.UI.MainMenu
             return string.IsNullOrWhiteSpace(value) ? "empty" : value.Replace('.', '_').Replace('/', '_').Replace('\\', '_');
         }
 
+        private static string L(string key, string fallback)
+        {
+            string value = GameText.Get(key);
+            return string.IsNullOrEmpty(value) || value == key ? fallback : value;
+        }
+
         private readonly struct CategoryGroup
         {
-            public CategoryGroup(string label, string objectName, string[] categoryIds)
+            public CategoryGroup(string labelKey, string label, string objectName, string[] categoryIds)
             {
+                LabelKey = labelKey;
                 Label = label;
                 ObjectName = objectName;
                 CategoryIds = categoryIds;
             }
 
+            public string LabelKey { get; }
             public string Label { get; }
             public string ObjectName { get; }
             public string[] CategoryIds { get; }

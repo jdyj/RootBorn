@@ -32,6 +32,8 @@ namespace Rootborn.Network.Time
         private readonly HashSet<ulong> _dayEndReadyClients = new HashSet<ulong>();
 
         public static NetworkWorldTimeState Active { get; private set; }
+        public static event Action ActiveChanged;
+        public event Action Changed;
 
         public int CurrentDay => Mathf.Max(1, _currentDay.Value);
         public int WeekdayIndex => (CurrentDay - 1) % 7;
@@ -78,6 +80,8 @@ namespace Rootborn.Network.Time
                 LoadServerSnapshot();
             }
 
+            ActiveChanged?.Invoke();
+            Changed?.Invoke();
             Debug.Log($"[ROOTBORN] World time spawned owner={OwnerClientId} local={NetworkManager.Singleton?.LocalClientId} isOwner={IsOwner} isServer={IsServer} active={Active == this} {SnapshotText}");
         }
 
@@ -89,6 +93,7 @@ namespace Rootborn.Network.Time
             if (Active == this)
             {
                 Active = null;
+                ActiveChanged?.Invoke();
             }
         }
 
@@ -151,16 +156,19 @@ namespace Rootborn.Network.Time
 
         private void HandleDayChanged(int previous, int current)
         {
+            Changed?.Invoke();
             Debug.Log($"[ROOTBORN] World time day sync previous={previous} current={current} {SnapshotText}");
         }
 
         private void HandleTimeChanged(int previous, int current)
         {
+            Changed?.Invoke();
             Debug.Log($"[ROOTBORN] World time timeOfDay sync previous={(WorldTimeOfDay)previous} current={(WorldTimeOfDay)current} {SnapshotText}");
         }
 
         private void HandleSchedulePhaseChanged(int previous, int current)
         {
+            Changed?.Invoke();
             Debug.Log($"[ROOTBORN] World time schedule sync previous={(WorldSchedulePhase)previous} current={(WorldSchedulePhase)current} {SnapshotText}");
         }
 

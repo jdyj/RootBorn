@@ -9,6 +9,7 @@ namespace Rootborn.Game.StudentLife
     {
         [SerializeField] private string _npcId;
         [SerializeField] private string _locationId;
+        [SerializeField] private ActivityTimePolicyDefinition _timePolicy;
         [SerializeField] private int _timeCostMinutes;
         [SerializeField] private int _energyCost;
         [SerializeField] private int _focusCost;
@@ -18,6 +19,7 @@ namespace Rootborn.Game.StudentLife
 
         public string NpcId => string.IsNullOrEmpty(_npcId) ? string.Empty : _npcId;
         public string LocationId => string.IsNullOrEmpty(_locationId) ? string.Empty : _locationId;
+        public ActivityTimePolicyDefinition TimePolicy => _timePolicy;
         public int TimeCostMinutes => Mathf.Max(0, _timeCostMinutes);
         public int EnergyCost => Mathf.Max(0, _energyCost);
         public int FocusCost => Mathf.Max(0, _focusCost);

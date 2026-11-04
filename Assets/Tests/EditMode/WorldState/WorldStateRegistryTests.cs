@@ -56,7 +56,8 @@ namespace Rootborn.Tests.EditMode.WorldState
             {
                 var flag = registry.WorldStateFlags[i];
                 Assert.IsNotNull(flag, "WORLD-STATE-EDIT-001 failed: registry contains a null world-state flag.");
-                StringAssert.StartsWith("Assets/Data/WorldState/Flags/", AssetDatabase.GetAssetPath(flag));
+                var path = AssetDatabase.GetAssetPath(flag);
+                Assert.That(path.StartsWith("Assets/Data/WorldState/Flags/") || path.StartsWith("Assets/Data/Careers/Facilities/"), Is.True, "World flags must stay in central world-state or facility data folders, preserving their existing GUIDs.");
                 Assert.IsTrue(cache.TryGetWorldStateFlag(flag.Id, out var cachedFlag), flag.Id + " must resolve from GameDataLookupCache.");
                 Assert.AreSame(flag, cachedFlag);
             }

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.WorldState.WorldStateFlagDefinition
   _id: world.questchain.library-route-reward
   _displayNameKey: world.questchain.library-route-reward.name
-  _descriptionKey: world.questchain.library-route-reward.desc
+  _descriptionKey: world.questchain.library-route-reward.description
   _relatedLocation: {fileID: 0}
   _relatedNpcs: []
   _relatedQuestChains: []
@@ -22,7 +22,7 @@ MonoBehaviour:
   _scope: 2
   _changeKind: 0
   _nextActionKey: world.questchain.library-route-reward.next
-  _visibleSurfaces:
-  _badges:
+  _visibleSurfaces: 
+  _badges: 
   _sortPriority: 0
   _effectVersion: 1

@@ -1,5 +1,7 @@
+using Rootborn.Game.Localization;
 using System.Collections;
 using Rootborn.Game.Common;
+using Rootborn.Game.World;
 using Rootborn.Game.Managers;
 using Rootborn.Game.Player;
 using Rootborn.Game.StudentLife;
@@ -27,13 +29,13 @@ namespace Rootborn.UI.StudentLife
 
         private static void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            if (scene.name == TownSceneName) EnsureScene(scene);
+            if ((scene.name == TownSceneName || AuthoredWorldScene.Find(scene) != null)) EnsureScene(scene);
         }
 
         public static void EnsureForActiveScene()
         {
             var scene = SceneManager.GetActiveScene();
-            if (scene.name == TownSceneName) EnsureScene(scene);
+            if ((scene.name == TownSceneName || AuthoredWorldScene.Find(scene) != null)) EnsureScene(scene);
         }
 
         private static void EnsureScene(Scene scene)
@@ -138,9 +140,10 @@ namespace Rootborn.UI.StudentLife
                 rt.anchorMin = new Vector2(0f, 1f);
                 rt.anchorMax = new Vector2(0f, 1f);
                 rt.pivot = new Vector2(0f, 1f);
-                rt.anchoredPosition = new Vector2(24f, -128f);
-                rt.sizeDelta = new Vector2(190f, 38f);
-                go.GetComponent<Image>().color = new Color(0.72f, 0.58f, 0.32f, 1f);
+                rt.anchoredPosition = new Vector2(24f, -152f);
+                rt.sizeDelta = new Vector2(240f, 56f);
+                go.GetComponent<Image>().color = Color.clear;
+                go.AddComponent<ModernUiTileImage>().SetRecipe(ModernUiRecipes.CommonPanel);
                 var label = new GameObject("Label", typeof(RectTransform), typeof(Text));
                 label.transform.SetParent(go.transform, false);
                 var labelRt = (RectTransform)label.transform;
@@ -149,8 +152,10 @@ namespace Rootborn.UI.StudentLife
                 labelRt.offsetMin = Vector2.zero;
                 labelRt.offsetMax = Vector2.zero;
                 var text = label.GetComponent<Text>();
-                text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-                text.text = "Interest";
+                text.font = LifeUiFont.Shared;
+                text.fontSize = 20;
+                text.raycastTarget = false;
+                text.text = Ui("ui.career-interest.open", "관심사", "Interests");
                 text.alignment = TextAnchor.MiddleCenter;
                 text.color = new Color(0.25f, 0.18f, 0.12f, 1f);
                 go.GetComponent<Button>().onClick.AddListener(() =>
@@ -163,6 +168,12 @@ namespace Rootborn.UI.StudentLife
                     RefreshObjectiveJournal();
                 });
             }
+        }
+
+        private static string Ui(string key, string ko, string en)
+        {
+            var value = GameText.Get(key);
+            return value == key ? (GameText.Language == "ko" ? ko : en) : value;
         }
 
         private static GameDataRegistry ResolveRegistry()

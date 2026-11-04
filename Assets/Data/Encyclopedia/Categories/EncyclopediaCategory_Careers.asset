@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: EncyclopediaCategory_Careers
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Encyclopedia.EncyclopediaCategoryDefinition
   _id: ency.category.careers
-  _displayName: Careers
+  _displayName: ui.encyclopedia.category.careers
   _sortOrder: 3

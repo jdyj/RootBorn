@@ -1,4 +1,6 @@
 using NUnit.Framework;
+using System.IO;
+using Rootborn.Game.Save;
 using Rootborn.Game.StudentLife;
 using Rootborn.UI.StudentLife;
 using UnityEngine;
@@ -8,6 +10,19 @@ namespace Rootborn.Tests.EditMode.UI.StudentLife
 {
     public sealed class DailyPlanLocationIdentityPanelTests
     {
+        private SaveSlotMetadata _previousMetadata;
+        [SetUp] public void IsolateStorage()
+        {
+            _previousMetadata = ActiveSaveContext.Metadata;
+            ActiveSaveContext.Clear();
+            SaveService.SetRootDirectoryForTests(Path.Combine(Path.GetTempPath(), "FarmerDailyPlanUiQa", System.Guid.NewGuid().ToString("N")));
+        }
+        [TearDown] public void RestoreStorage()
+        {
+            ActiveSaveContext.Clear();
+            SaveService.SetRootDirectoryForTests(null);
+            if (_previousMetadata != null) ActiveSaveContext.Set(_previousMetadata);
+        }
         [Test]
         public void ClickingMatchingLocationActivity_CompletesSelectedDailyPlan()
         {

@@ -16,8 +16,8 @@ MonoBehaviour:
   _categoryId: accessory
   _displayNameKey: loc.character.character.accessory.straw.black
   _sheetAddress: sprites/character/accessory/accessory-straw-hat-black
-  _subSpriteName: Accessory_Straw_Hat_Black_r0_c0
+  _subSpriteName: Accessory_Straw_Hat_Black_r0_c3
   _editorAssetPath: Assets/Modern_Farm_v1.2/Farmer_Generator_Pieces/Character Pieces/Accessories/16x16/Accessory_Straw_Hat_Black.png
-  _previewSprite: {fileID: 7603059581215698244, guid: ef113c1db18e20540a257c50cd95542c, type: 3}
+  _previewSprite: {fileID: 7354125834594717962, guid: ef113c1db18e20540a257c50cd95542c, type: 3}
   _layerOrder: 5
   _isDefault: 0

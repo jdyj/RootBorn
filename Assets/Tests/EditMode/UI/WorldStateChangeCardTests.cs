@@ -1,3 +1,5 @@
+using Rootborn.Game.Common;
+using Rootborn.Game.Localization;
 using NUnit.Framework;
 using Rootborn.Game.WorldState;
 using Rootborn.UI.WorldState;
@@ -11,7 +13,14 @@ namespace Rootborn.Tests.EditMode.UI
         [Test]
         public void WORLD_STATE_UI_001_CommonCardRendersSummaryModelWithoutFlagIdBranching()
         {
+            GameDataRegistryProvider.TryGet(out var previousRegistry);
+            var registry = ScriptableObject.CreateInstance<GameDataRegistry>();
+            string language = GameText.Language;
+            GameText.Language = "en";
+            GameDataRegistryProvider.SetOverrideForTests(registry);
             var canvasObject = new GameObject("Canvas", typeof(Canvas));
+            try
+            {
             var card = WorldStateChangeCard.Create((RectTransform)canvasObject.transform, "WorldStateCard");
             var model = new WorldStateSummaryModel(
                 "world.library.archive-open",
@@ -28,7 +37,7 @@ namespace Rootborn.Tests.EditMode.UI
 
             card.Bind(model);
 
-            Assert.AreEqual("name", card.TitleTextForTests);
+            Assert.AreEqual("world.library.archive-open.name", card.TitleTextForTests, "Unknown authored keys must not be silently truncated to a meaningless suffix.");
             StringAssert.Contains("desc", card.BodyTextForTests);
             StringAssert.Contains("library", card.BodyTextForTests);
             StringAssert.Contains("librarian", card.BodyTextForTests);
@@ -36,7 +45,14 @@ namespace Rootborn.Tests.EditMode.UI
             StringAssert.Contains("New", card.BadgeTextForTests);
             StringAssert.Contains("Shared", card.BadgeTextForTests);
 
-            Object.DestroyImmediate(canvasObject);
+            }
+            finally
+            {
+                Object.DestroyImmediate(canvasObject);
+                GameDataRegistryProvider.SetOverrideForTests(previousRegistry);
+                GameText.Language = language;
+                Object.DestroyImmediate(registry);
+            }
         }
     }
 }

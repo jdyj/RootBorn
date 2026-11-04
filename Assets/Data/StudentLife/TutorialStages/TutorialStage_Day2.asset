@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.TutorialStageDefinition
   _id: tutorial.day2
   _displayNameKey: tutorial.day2
-  _guideText: 'Day 2: Talk to the guide again and choose your next goal.'
+  _guideText: ui.tutorial.next_goal_hint

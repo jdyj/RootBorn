@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Encyclopedia.EncyclopediaEntryDefinition
   _id: ency.npc.guide-hint
   _category: {fileID: 11400000, guid: 18046b2c79307df4e87c6be4efe99723, type: 2}
-  _displayName: Guide Hint
-  _lockedDisplayName: ???
-  _description: A guide entry used to verify category switching.
-  _lockedHint: Meet more townspeople.
+  _displayName: ui.encyclopedia.entry.guide-advice.name
+  _lockedDisplayName: ui.encyclopedia.locked.name
+  _description: ui.encyclopedia.entry.guide-advice.description
+  _lockedHint: ui.encyclopedia.entry.guide-advice.hint
   _detailLines:
-  - NPC details are revealed from data.
+  - ui.encyclopedia.entry.guide-advice.detail
   _unlockConditions: []
   _revealStage: 1

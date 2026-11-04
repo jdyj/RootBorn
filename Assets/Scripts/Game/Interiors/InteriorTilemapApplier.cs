@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Rootborn.Game.Housing;
+using Rootborn.Game.World;
 using Rootborn.Game.Player;
 using Rootborn.Game.Save;
 using UnityEngine;
@@ -25,6 +26,7 @@ namespace Rootborn.Game.Interiors
 
         private InteriorInteractionDefinition _runtimeComputerInteraction;
         private InteriorGeneratedMap _lastGeneratedMap;
+        private InteriorTileStyleOption _activeStyle;
 
         public InteriorGeneratedMap LastGeneratedMap => _lastGeneratedMap;
 
@@ -33,7 +35,9 @@ namespace Rootborn.Game.Interiors
             var state = HouseStatePersistence.Load(ResolveSaveSlot());
             var profile = ResolveProfileForStage(state.CurrentStageIndex);
             var originalTileSet = _tileSet;
+            var previousStyle = _activeStyle;
             _tileSet = ResolveTileSetForStage(state.CurrentStageIndex);
+            _activeStyle = _tileSet != null ? _tileSet.ResolveStyle(state.SelectedInteriorStyleId) : null;
 
             try
             {
@@ -43,6 +47,7 @@ namespace Rootborn.Game.Interiors
             finally
             {
                 _tileSet = originalTileSet;
+                _activeStyle = previousStyle;
             }
         }
 
@@ -143,9 +148,14 @@ namespace Rootborn.Game.Interiors
             CompressAll();
         }
 
+        public static bool ShouldGenerateOnSceneLoad(Scene scene)
+        {
+            return scene.IsValid() && scene.isLoaded && scene.name == "House" && AuthoredWorldScene.Find(scene) == null;
+        }
+
         private void Start()
         {
-            if (SceneManager.GetActiveScene().name != "House")
+            if (!ShouldGenerateOnSceneLoad(gameObject.scene))
             {
                 return;
             }
@@ -184,10 +194,20 @@ namespace Rootborn.Game.Interiors
 
             if (IsVerticalWallRun(map, cell) || IsDoorFrameWall(map, cell))
             {
-                return _tileSet.VerticalWallAccent;
+                return _activeStyle != null && _activeStyle.VerticalWallAccent != null ? _activeStyle.VerticalWallAccent : _tileSet.VerticalWallAccent;
             }
 
-            return _tileSet.Wall;
+            return ResolveWallBaseTile();
+        }
+
+        private TileBase ResolveFloorBaseTile()
+        {
+            return _activeStyle != null && _activeStyle.Floor != null ? _activeStyle.Floor : _tileSet.Floor;
+        }
+
+        private TileBase ResolveWallBaseTile()
+        {
+            return _activeStyle != null && _activeStyle.Wall != null ? _activeStyle.Wall : _tileSet.Wall;
         }
 
         private static bool IsVerticalWallRun(InteriorGeneratedMap map, Vector2Int cell)
@@ -302,19 +322,19 @@ namespace Rootborn.Game.Interiors
             {
                 switch (objectKind)
                 {
-                    case InteriorObjectKind.Desk: return _tileSet.ResolveDesk(facingDirection) != null ? _tileSet.ResolveDesk(facingDirection) : _tileSet.Floor;
-                    case InteriorObjectKind.Chair: return _tileSet.ResolveChair(facingDirection) != null ? _tileSet.ResolveChair(facingDirection) : _tileSet.Floor;
-                    case InteriorObjectKind.Computer: return _tileSet.Computer != null ? _tileSet.Computer : _tileSet.Floor;
-                    case InteriorObjectKind.Sofa: return _tileSet.ResolveSofa(facingDirection) != null ? _tileSet.ResolveSofa(facingDirection) : _tileSet.Floor;
-                    case InteriorObjectKind.Plant: return _tileSet.Plant != null ? _tileSet.Plant : _tileSet.Floor;
+                    case InteriorObjectKind.Desk: return _tileSet.ResolveDesk(facingDirection) != null ? _tileSet.ResolveDesk(facingDirection) : ResolveFloorBaseTile();
+                    case InteriorObjectKind.Chair: return _tileSet.ResolveChair(facingDirection) != null ? _tileSet.ResolveChair(facingDirection) : ResolveFloorBaseTile();
+                    case InteriorObjectKind.Computer: return _tileSet.Computer != null ? _tileSet.Computer : ResolveFloorBaseTile();
+                    case InteriorObjectKind.Sofa: return _tileSet.ResolveSofa(facingDirection) != null ? _tileSet.ResolveSofa(facingDirection) : ResolveFloorBaseTile();
+                    case InteriorObjectKind.Plant: return _tileSet.Plant != null ? _tileSet.Plant : ResolveFloorBaseTile();
                 }
 
                 switch (fallbackKind)
                 {
-                    case InteriorCellKind.Wall: return _tileSet.Wall;
+                    case InteriorCellKind.Wall: return ResolveWallBaseTile();
                     case InteriorCellKind.Door: return _tileSet.Door;
                     case InteriorCellKind.Window: return _tileSet.Window;
-                    default: return _tileSet.Floor;
+                    default: return ResolveFloorBaseTile();
                 }
             }
 

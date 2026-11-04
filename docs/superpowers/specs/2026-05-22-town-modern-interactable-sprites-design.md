@@ -12,11 +12,13 @@ This is a visual clarity pass, not a full Town rebuild. The player should be abl
 
 - Use Modern-series assets first:
   - `Assets/Modern_Town/`
+  - `Assets/Modern_Exteriors_32x32/`
   - `Assets/Modern_Farm_v1.2/`
   - `Assets/moderninteriors-win/`
   - `Assets/modernuserinterface-win/`
   - `Assets/Tiles/ModernTownOffice/`
   - `Assets/TilePalettes/ModernTownOffice/`
+- For career, job, location, building, transit, public facility, shop, school, hospital, police, office, workshop, and exterior door/sign/vehicle visuals, treat `Assets/Modern_Exteriors_32x32/` as the first candidate pack.
 - Do not use Pixelwood as the default candidate set for new Town interaction sprites.
 - Pixelwood remains limited to legacy Farm/Crop regression, old comparison references, or already-fixed legacy features.
 - Visible sprite work is not complete until it is verified through the actual player-facing PlayMode flow and a Game View or Camera screenshot.
@@ -90,11 +92,12 @@ Use a data-driven visual mapping table for Town interactable markers, backed by 
 The mapping should group targets by visual role instead of gameplay entity IDs:
 
 - NPC visual: human character sprite or generated character part composition from `Modern_Farm_v1.2`.
-- Location entrance visual: building/door/sign or office/town tile sprite from `Modern_Town` or `Tiles/ModernTownOffice`.
+- Location entrance visual: building/door/sign or office/town tile sprite from `Modern_Exteriors_32x32`, `Modern_Town`, or `Tiles/ModernTownOffice`.
 - Activity board visual: bulletin board, book, desk, clipboard, or UI-board-like sprite from `moderninteriors-win` or `modernuserinterface-win`.
-- Portal visual: door/gate/entrance sprite from Modern town/interior assets.
+- Portal visual: door/gate/entrance sprite from Modern exteriors/town/interior assets.
 - Help/discovery visual: notice, crate, clue, sign, or marker object from Modern town/interior assets.
-- Work/shop visual: counter, cash register, store shelf, or bag icon from Modern interior/UI assets.
+- Career/job visual: office, worksite, school, hospital, police, shop, transit, post-office, fire-station, or public-facility object from `Modern_Exteriors_32x32`, with interior/UI icons used only when a clearer exterior marker is unavailable.
+- Work/shop visual: counter, cash register, store shelf, shop sign, market prop, delivery object, or bag icon from Modern exterior/interior/UI assets.
 
 The first implementation can use a small `TownInteractableVisualProfile` ScriptableObject or an equivalent serialized mapping on the relevant runtime installer. The mapping keys should be generic categories or component/role names where possible. If specific scene object paths are needed for scene-only visual assignment, keep those references in data, not in C# branches.
 

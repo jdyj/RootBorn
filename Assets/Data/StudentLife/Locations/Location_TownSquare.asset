@@ -17,7 +17,7 @@ MonoBehaviour:
   _descriptionKey: location.town-square.desc
   _category: {fileID: 11400000, guid: 5ddd44723d4457945ae76b30e113423d, type: 2}
   _worldAnchorId: anchor.town-square
-  _worldPosition: {x: 5, y: -4}
+  _worldPosition: {x: 30, y: 7}
   _relatedRoles:
   - {fileID: 11400000, guid: 720b0c466a484a7469601e7254a75e32, type: 2}
   _relatedNpcs:

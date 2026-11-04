@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using Rootborn.Game.Common;
 using Rootborn.Game.StudentLife;
 using Rootborn.UI.StudentLife;
 using UnityEngine;
@@ -7,6 +8,10 @@ namespace Rootborn.Tests.EditMode.UI
 {
     public sealed class LocationStateUiSurfaceTests
     {
+        private GameDataRegistry _previous, _emptyRegistry;
+        [SetUp] public void IsolateRegistry(){GameDataRegistryProvider.TryGet(out _previous);_emptyRegistry=ScriptableObject.CreateInstance<GameDataRegistry>();GameDataRegistryProvider.SetOverrideForTests(_emptyRegistry);}
+        [TearDown] public void RestoreRegistry(){GameDataRegistryProvider.SetOverrideForTests(_previous);Object.DestroyImmediate(_emptyRegistry);}
+
         [Test]
         public void LOCATION_STATE_UI_009_DayResultAndWorldLogRenderVisitedLocationStates()
         {
@@ -44,7 +49,9 @@ namespace Rootborn.Tests.EditMode.UI
                 Assert.AreEqual(2, dayResult.GetLocationStateCardCountForTests(), "LOCATION-STATE-UI-009 failed: day result must render one card per visited state.");
                 Assert.AreEqual(2, worldLog.CardCountForTests, "LOCATION-STATE-UI-009 failed: world log must render one card per visited state.");
                 StringAssert.Contains("Library Morning", dayResult.GetLocationStateTextForTests());
-                StringAssert.Contains("location.state.library-afternoon", dayResult.GetLocationStateTextForTests());
+                StringAssert.DoesNotContain("location.state.library-afternoon", dayResult.GetLocationStateTextForTests());
+                StringAssert.DoesNotContain("location.library", dayResult.GetLocationStateTextForTests());
+                StringAssert.DoesNotContain("time.afternoon", worldLog.TextForTests);
                 StringAssert.Contains("Library Afternoon", worldLog.TextForTests);
             }
             finally

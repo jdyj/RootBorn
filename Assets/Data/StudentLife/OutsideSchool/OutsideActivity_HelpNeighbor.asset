@@ -15,6 +15,7 @@ MonoBehaviour:
   _id: outside.help-neighbor
   _displayNameKey: outside.help-neighbor
   _category: {fileID: 11400000, guid: fb55a486f8ce53c4587b5d08cfd71516, type: 2}
+  _timePolicy: {fileID: 11400000, guid: 877e2af40acc7d749a78882afa991e80, type: 2}
   _timeCostMinutes: 30
   _energyCost: 1
   _focusCost: 0

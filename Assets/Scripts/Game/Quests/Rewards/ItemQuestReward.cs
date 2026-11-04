@@ -12,6 +12,12 @@ namespace Rootborn.Game.Quests.Rewards
         public ItemDefinition Item => _item;
         public int Count => Mathf.Max(1, _count);
 
+        public override bool TryGetInventoryGrant(out InventoryGrant grant)
+        {
+            grant = new InventoryGrant(_item, Count);
+            return true;
+        }
+
         public override bool CanApply(in RewardRuntimeContext context)
         {
             return context.Inventory != null

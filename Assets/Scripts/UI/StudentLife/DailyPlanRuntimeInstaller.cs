@@ -1,5 +1,6 @@
 using System.Collections;
 using Rootborn.Game.Common;
+using Rootborn.Game.World;
 using Rootborn.Game.Managers;
 using Rootborn.Game.Player;
 using Rootborn.Game.StudentLife;
@@ -28,7 +29,7 @@ namespace Rootborn.UI.StudentLife
         public static void EnsureForActiveScene()
         {
             var scene = SceneManager.GetActiveScene();
-            if (scene.name == TownSceneName)
+            if (scene.name == TownSceneName || AuthoredWorldScene.Find(scene) != null)
             {
                 EnsureScene(scene);
             }
@@ -36,7 +37,7 @@ namespace Rootborn.UI.StudentLife
 
         public static void EnsureScene(Scene scene)
         {
-            if (scene.name != TownSceneName || FindRoot(scene, RunnerName) != null)
+            if ((scene.name != TownSceneName && AuthoredWorldScene.Find(scene) == null) || FindRoot(scene, RunnerName) != null)
             {
                 return;
             }
@@ -57,9 +58,9 @@ namespace Rootborn.UI.StudentLife
             var visibleCanvas = canvas != null ? canvas : EnsureCanvas(scene);
             var panel = EnsurePanel(scene, visibleCanvas);
             var board = EnsureBoard(scene);
-            var daily = EnsureDailyPlanProgress(runtimePlayer);
+            var daily = EnsureDailyPlanProgress(runtimePlayer, registry);
             var student = runtimePlayer != null ? runtimePlayer.GetComponent<StudentLifeProgressComponent>() : null;
-            board.Bind(panel, registry.DailyPlanRouteSets, daily, student);
+            if (board != null) board.Bind(panel, registry.DailyPlanRouteSets, null, null);
         }
 
         private static void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -71,7 +72,7 @@ namespace Rootborn.UI.StudentLife
         {
             private IEnumerator Start()
             {
-                var scene = SceneManager.GetActiveScene();
+                var scene = gameObject.scene;
                 GameObject player = null;
                 GameDataRegistry registry = null;
                 float elapsed = 0f;
@@ -94,11 +95,12 @@ namespace Rootborn.UI.StudentLife
             }
         }
 
-        private static DailyPlanProgressComponent EnsureDailyPlanProgress(GameObject player)
+        private static DailyPlanProgressComponent EnsureDailyPlanProgress(GameObject player, GameDataRegistry registry)
         {
             if (player == null) return null;
             var daily = player.GetComponent<DailyPlanProgressComponent>();
             if (daily == null) daily = player.AddComponent<DailyPlanProgressComponent>();
+            DailyPlanSessionBinding.Ensure(player, registry);
             return daily;
         }
 
@@ -141,6 +143,7 @@ namespace Rootborn.UI.StudentLife
         {
             var existing = FindComponentInScene<DailyPlanBoardInteractor>(scene);
             if (existing != null) return existing;
+            if (AuthoredWorldScene.Find(scene) != null) return null;
 
             var go = new GameObject(BoardName);
             SceneManager.MoveGameObjectToScene(go, scene);

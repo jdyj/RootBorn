@@ -1,5 +1,9 @@
 # Repository Guidelines
 
+## Approved urban molding UI exception (2026-10-27)
+
+The user approved applying the ComfyUI v5 urban molding skin to the game. For common UI, `ModernUiTileImage` may use the Addressables theme `data/ui/urban-molding` and one sliced Image per panel/button/slot. Preserve the approved corners, Point sampling, shared atlas, separate localized text, and existing Style2 fallback. This explicit approval overrides the Style2-only rule below for this skin. Verify actual player input and saved theme references before declaring completion.
+
 ## Constitutional Addendum — Direct Visual Play Verification Gate
 
 Visible gameplay, UI, sprite, tilemap, placement, scene, prefab, camera, or interaction changes are not complete until they are verified through the actual player-facing flow.
@@ -15,6 +19,7 @@ Visible gameplay, UI, sprite, tilemap, placement, scene, prefab, camera, or inte
 - If direct visual verification is blocked, the agent must say so explicitly before claiming completion and must describe what was verified and what remains unverified.
 - Previous failure pattern to prevent: a chair placement task passed asset and Tilemap checks while the Game View still showed stale sample/debug tiles or the placed result was hidden by overlay/UI. Future sessions must verify the visible result, not just the data path.
 - Previous failure pattern to prevent: a House wall tile task was reported as done after PlayMode runtime generation showed `tile_r02_c09`, but the saved `Assets/Scenes/House.unity` Tilemap still had only the original two window tiles using it. Future tilemap/palette changes must distinguish runtime generated state from saved scene/palette state and must not report completion until the saved state the user will see is verified.
+- Previous failure pattern to prevent: LDtk Town Ground tiles looked correct by `Tile.name`, layer count, and sorting order, but the generated `Sprite.rect` was cut from a downscaled Unity import height instead of the original PNG height. LDtk `src` is top-left origin; Unity `Sprite.rect.y` must be `originalPngHeight - srcY - tileHeight`. Future LDtk imports must verify original PNG size, TextureImporter max size/compression/filter settings, `Sprite.rect`, saved Tilemap references, and actual PlayMode Game View screenshot before claiming visual parity.
 
 > **헌법급 절대 원칙 — 모든 AI 에이전트는 위반 금지.** 상세 규칙은 `.claude/rules/` 참조.
 
@@ -34,7 +39,7 @@ Visible gameplay, UI, sprite, tilemap, placement, scene, prefab, camera, or inte
 
 7. **Modern UI Style2 공통 패널 규약.** 공통 패널은 `Assets/modernuserinterface-win/16x16/Modern_UI_Style_2.png`의 16x16 Style2 3×3 블록만 사용한다. 좌표는 top=`r2_c0/r2_c1/r2_c2`, middle=`r3_c0/r3_c1/r3_c2`, bottom=`r4_c0/r4_c1/r4_c2`이며 `r3_c1`을 fill tile로 반복한다. 패널 배경에 단일 `Image.sprite`를 직접 넣지 말고 `ModernUiTileImage + ModernUiRecipes.CommonPanel`을 사용한다. (`.claude/rules/ui-standards.md`)
 
-7-1. **Modern 비주얼 에셋 우선 규약.** Town, StudentLife, NPC, 상호작용 포인트, 월드 타일, 가구/실내, 공통 UI의 신규/수정 sprite는 Modern 계열 에셋을 우선 사용한다. 기본 후보 경로는 `Assets/Modern_Town/`, `Assets/Modern_Farm_v1.2/`, `Assets/moderninteriors-win/`, `Assets/modernuserinterface-win/`, `Assets/Tiles/ModernTownOffice/`, `Assets/TilePalettes/ModernTownOffice/`이다. Pixelwood 경로는 레거시 Farm/Crop 회귀, 이전 비교 기준, 이미 해당 에셋으로 고정된 기존 기능 보수에만 사용하며, Town 신규 상호작용 sprite의 기본 후보로 제안하지 않는다. Modern 에셋 적용도 실제 PlayMode Game View와 Renderer/Tilemap 상태로 검증해야 한다. (`.claude/constitution.md`, `.claude/rules/ui-standards.md`, `.claude/rules/path-based/sprite-slicing.md`)
+7-1. **Modern 비주얼 에셋 우선 규약.** Town, StudentLife, NPC, 상호작용 포인트, 월드 타일, 직업/장소 외관, 가구/실내, 공통 UI의 신규/수정 sprite는 Modern 계열 에셋을 우선 사용한다. 기본 후보 경로는 `Assets/Modern_Town/`, `Assets/Modern_Exteriors_32x32/`, `Assets/Modern_Farm_v1.2/`, `Assets/moderninteriors-win/`, `Assets/modernuserinterface-win/`, `Assets/Tiles/ModernTownOffice/`, `Assets/TilePalettes/ModernTownOffice/`이다. 특히 직업·장소·건물·교통·공공시설·상점·학교·병원·경찰서·오피스·작업장 계열 월드 sprite는 `Assets/Modern_Exteriors_32x32/`를 1차 후보로 검토한다. Pixelwood 경로는 레거시 Farm/Crop 회귀, 이전 비교 기준, 이미 해당 에셋으로 고정된 기존 기능 보수에만 사용하며, Town 신규 상호작용 sprite의 기본 후보로 제안하지 않는다. Modern 에셋 적용도 실제 PlayMode Game View와 Renderer/Tilemap 상태로 검증해야 한다. (`.claude/constitution.md`, `.claude/rules/ui-standards.md`, `.claude/rules/path-based/sprite-slicing.md`)
 
 8. **플레이어 대리 테스트 + 사용자 지정 플레이 흐름 우회 금지.** 모든 유저 여정/코어 루프/PlayMode 시나리오의 완료 판정은 실제 플레이 방식의 입력, 이동, 트리거, UI 클릭/선택, 씬 전환 관찰로 증명한다. 사용자가 "직접 이동", "직접 클릭", "포탈로 가서", "UI에서 선택"처럼 구체적인 조작 경로를 지정하면 테스트와 구현은 그 경로를 그대로 재현해야 한다. 내부 메서드 직접 호출, 상태 강제 세팅, 씬 강제 로드 등 우회로 통과시킨 검증은 완료로 인정하지 않는다. 자동화가 어렵다면 먼저 명시적으로 알리고, 최소 PlayMode/입력/트리거/UI 경로 테스트로 실제 사용자 흐름을 증명한다. (`.claude/rules/testing-discipline.md`)
 
@@ -66,7 +71,7 @@ Visible gameplay, UI, sprite, tilemap, placement, scene, prefab, camera, or inte
 - 게임 데이터: `Assets/Data/{StudentLife,LifeActivities,Choices,Skills,Careers,Jobs,Relationships,Locations,Tools,Resources,Recipes,Knowledge,Traits,Status,Family,Generations,Crops,Registry}/` (모두 ScriptableObject)
 - 로컬라이즈 리소스: `Assets/Localization`
 - 테스트: `Assets/Tests/EditMode`, `Assets/Tests/PlayMode`
-- 스프라이트 에셋: Modern 우선 `Assets/Modern_Town/`, `Assets/Modern_Farm_v1.2/`, `Assets/moderninteriors-win/`, `Assets/modernuserinterface-win/`, `Assets/Tiles/ModernTownOffice/`, `Assets/TilePalettes/ModernTownOffice/`; Pixelwood는 레거시/회귀 비교용 `Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/`, `Assets/Pixelwood Valley Icon Pack 1.0/`
+- 스프라이트 에셋: Modern 우선 `Assets/Modern_Town/`, `Assets/Modern_Exteriors_32x32/`, `Assets/Modern_Farm_v1.2/`, `Assets/moderninteriors-win/`, `Assets/modernuserinterface-win/`, `Assets/Tiles/ModernTownOffice/`, `Assets/TilePalettes/ModernTownOffice/`; Pixelwood는 레거시/회귀 비교용 `Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/`, `Assets/Pixelwood Valley Icon Pack 1.0/`
 
 ## Build, Test, and Development Commands
 

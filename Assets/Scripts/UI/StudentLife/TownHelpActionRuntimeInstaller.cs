@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Rootborn.Game.Common;
+using Rootborn.Game.World;
 using Rootborn.Game.Managers;
 using Rootborn.Game.StudentLife;
 using UnityEngine;
@@ -33,6 +34,7 @@ namespace Rootborn.UI.StudentLife
 
         public static void EnsureScene(Scene scene)
         {
+            if (AuthoredWorldScene.Find(scene) != null) return;
             if (scene.name != TownSceneName || FindRoot(scene, RunnerName) != null)
             {
                 return;
@@ -147,6 +149,8 @@ namespace Rootborn.UI.StudentLife
 
         private static void EnsureHelpPoint(Scene scene, TownHelpActionDefinition action, int index)
         {
+            // Saved interactors already contain their SO binding; never generate or reposition prototypes.
+            if (AuthoredWorldScene.Find(scene) != null) return;
             if (action == null)
             {
                 return;

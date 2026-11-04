@@ -1,8 +1,10 @@
 using System.Collections.Generic;
 using Rootborn.Game.Common;
 using Rootborn.Game.Managers;
+using Rootborn.Game.Localization;
 using Rootborn.Game.Player;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Rootborn.UI.Modern
@@ -14,14 +16,10 @@ namespace Rootborn.UI.Modern
         // with a row of tab ribbons poking out the top, a search-bar row, a slot grid,
         // and a vertical scrollbar on the right.
         private const int SlotColumns = 5;
-        private const int SlotRows = 4;
-        // Visible rows = how many slot rows the panel shows at once. Anything beyond
-        // VisibleRows still exists in the data — the scrollbar is reserved for it.
+        private const int SlotRows = (Inventory.MaxSlots + SlotColumns - 1) / SlotColumns;
+        // The viewport shows three rows; the pooled content covers the full model capacity.
         private const int VisibleRows = 3;
-        private const int VisibleSlotCount = SlotColumns * SlotRows;
-        // Slot size is 1.5x of the surrounding UI (168 vs ~112 baseline). The panel's
-        // DefaultSize is computed from VisibleRows so growing the slot does not balloon
-        // the panel height (only the slot grid extends past the visible area).
+        // Keep the approved large slots while clipping overflow inside the frame.
         private const float SlotSize = 168f;
         private const float SlotSpacing = 16f;
         private const float GridPadX = 40f;
@@ -36,25 +34,43 @@ namespace Rootborn.UI.Modern
         private const float ScrollbarWidth = 48f;
         private static readonly Vector2 DefaultSize = new Vector2(
             GridPadX * 2f + SlotColumns * SlotSize + (SlotColumns - 1) * SlotSpacing + ScrollbarWidth + 8f,
-            GridPadTop + VisibleRows * SlotSize + (VisibleRows - 1) * SlotSpacing + 28f);
+            GridPadTop + VisibleRows * SlotSize + (VisibleRows - 1) * SlotSpacing + 40f);
 
         // Four category tabs, left to right.
         private static readonly string[] TabIconSubSpriteNames = new[]
         {
             "ModernUI_16_Style2_r0_c22", // item.bag        — All / Inventory
             "ModernUI_16_Style2_r7_c20", // item.swordGreen — Weapons / tools
-            "ModernUI_16_Style2_r6_c20", // item.potionRed  — Consumables
+            "ModernUI_16_Style2_r6_c20", // Legacy icon alias; this tab groups resources and seeds.
             "ModernUI_16_Style2_r0_c24", // glyph.settings  — Misc
         };
 
-        // Inner panel padding so its 9-slice border doesn't crowd the slot grid.
-        private const float InnerPadding = 12f;
+        private static readonly string[] TabThemeIconKeys = { "inventory-all", "inventory-tools", "inventory-consumables", "inventory-misc" };
 
-        private readonly List<GameObject> _generated = new List<GameObject>();
+        private sealed class SlotView
+        {
+            public GameObject Root;
+            public Image Icon;
+            public Text Count;
+            public Button Button;
+            public Inventory.Slot Slot;
+        }
+
+        private readonly List<SlotView> _slots = new List<SlotView>(Inventory.MaxSlots);
         private PlayerInventory _inventory;
+        private Inventory _boundInventory;
         private RectTransform _innerContainer;
         private RectTransform _slotGrid;
+        private RectTransform _viewport;
+        private ScrollRect _scroll;
         private GameObject _popup;
+        private InputField _search;
+        private Text _title;
+        private Text _categoryLabel;
+        private Text _searchPlaceholder;
+        private Text _emptyHint;
+        private GameObject _emptyState;
+        private string _query = string.Empty;
         private int _selectedTab;
         private bool _built;
         private bool _isVisible;
@@ -77,16 +93,24 @@ namespace Rootborn.UI.Modern
 
         public void Bind(PlayerInventory inventory)
         {
-            if (_inventory != null)
+            var nextStorage = inventory != null ? inventory.Inventory : null;
+            if (object.ReferenceEquals(_inventory, inventory) && object.ReferenceEquals(_boundInventory, nextStorage))
+                return;
+
+            if (_boundInventory != null)
             {
-                _inventory.Inventory.OnChanged -= Refresh;
+                _boundInventory.OnChanged -= Refresh;
             }
 
             _inventory = inventory;
-            if (_inventory != null)
+            _boundInventory = nextStorage;
+            if (_boundInventory != null)
             {
-                _inventory.Inventory.OnChanged += Refresh;
+                _boundInventory.OnChanged += Refresh;
             }
+
+            ClosePopup();
+            ResetQuery();
 
             if (_built)
             {
@@ -105,16 +129,33 @@ namespace Rootborn.UI.Modern
         public void Hide()
         {
             ClosePopup();
+            ReleaseSelection();
+            ResetQuery();
             gameObject.SetActive(false);
             _isVisible = false;
         }
 
         private void OnDestroy()
         {
-            if (_inventory != null)
+            if (_boundInventory != null)
             {
-                _inventory.Inventory.OnChanged -= Refresh;
+                _boundInventory.OnChanged -= Refresh;
             }
+        }
+
+        private void ReleaseSelection()
+        {
+            var events = EventSystem.current;
+            var selected = events != null ? events.currentSelectedGameObject : null;
+            if (selected != null && selected.transform.IsChildOf(transform))
+                events.SetSelectedGameObject(null);
+        }
+
+        private void ResetQuery()
+        {
+            _query = string.Empty;
+            if (_search != null) _search.SetTextWithoutNotify(string.Empty);
+            if (_scroll != null) _scroll.verticalNormalizedPosition = 1f;
         }
 
         private void EnsureBuilt()
@@ -125,17 +166,22 @@ namespace Rootborn.UI.Modern
             }
 
             var root = transform as RectTransform;
-            if (root != null && root.sizeDelta == Vector2.zero)
+            if (root != null && (root.sizeDelta.x < DefaultSize.x || root.sizeDelta.y < DefaultSize.y))
             {
                 root.sizeDelta = DefaultSize;
             }
 
             BuildRootPanel();
             BuildTabStrip();
+            string title = GameText.Get("ui.inventory.title");
+            if (title == "ui.inventory.title") title = GameText.Language == "ko" ? "\uAC00\uBC29" : "Inventory";
+            _title = MakeLabel((RectTransform)transform, "Title", title, new Vector2(GridPadX, -40f), new Vector2(240f, 44f), 32, TextAnchor.MiddleLeft);
+            BuildHeaderControls();
             BuildSearchRow();
             BuildInnerPanel();
             BuildSlotGrid();
             BuildScrollbar();
+            BuildEmptyState();
 
             _built = true;
         }
@@ -147,31 +193,75 @@ namespace Rootborn.UI.Modern
                 return;
             }
 
-            for (int i = _slotGrid.childCount - 1; i >= 0; i--)
-            {
-                DestroyObject(_slotGrid.GetChild(i).gameObject);
-            }
-
+            ClosePopup();
+            RefreshLabels();
             int visibleIndex = 0;
-            if (_inventory != null)
+            if (_boundInventory != null)
             {
-                var slots = _inventory.Inventory.Slots;
-                for (int i = 0; i < slots.Count && visibleIndex < VisibleSlotCount; i++)
+                var slots = _boundInventory.Slots;
+                for (int i = 0; i < slots.Count && visibleIndex < _slots.Count; i++)
                 {
                     var slot = slots[i];
-                    if (slot.Item == null || slot.Count <= 0)
+                    if (slot.Item == null || slot.Count <= 0 || !InventoryUiFilter.Matches(slot.Item, _selectedTab, _query))
                     {
                         continue;
                     }
 
-                    MakeSlot(slot, visibleIndex++);
+                    BindSlot(_slots[visibleIndex], slot, visibleIndex);
+                    visibleIndex++;
                 }
             }
 
-            while (visibleIndex < VisibleSlotCount)
+            bool hasMatches = visibleIndex > 0;
+            while (visibleIndex < _slots.Count)
             {
-                MakeSlot(null, visibleIndex++);
+                BindSlot(_slots[visibleIndex], null, visibleIndex);
+                visibleIndex++;
             }
+            _slotGrid.gameObject.SetActive(hasMatches);
+            // Permanent scrollbar visibility is reapplied by ScrollRect.LateUpdate. An empty
+            // view has no scroll interaction; disabling the controller keeps that frame owner
+            // from resurrecting the track while retaining its geometry and all pooled slots.
+            _scroll.enabled = hasMatches;
+            _scroll.verticalScrollbar.gameObject.SetActive(hasMatches);
+            _emptyState.SetActive(!hasMatches);
+        }
+
+        private void RefreshLabels()
+        {
+            string title = GameText.Get("ui.inventory.title");
+            if (title == "ui.inventory.title") title = GameText.Language == "ko" ? "가방" : "Inventory";
+            _title.text = title;
+            _categoryLabel.text = GameText.Get(InventoryUiFilter.CategoryKey(_selectedTab));
+            _searchPlaceholder.text = GameText.Get("ui.inventory.search");
+            _emptyHint.text = GameText.Get("ui.inventory.empty");
+        }
+
+        private void BuildHeaderControls()
+        {
+            var root = (RectTransform)transform;
+            _categoryLabel = MakeLabel(root, "CategoryLabel", string.Empty, new Vector2(304f, -40f),
+                new Vector2(root.sizeDelta.x - 420f, 44f), 24, TextAnchor.MiddleRight);
+            var close = MakeImage(root, "InventoryCloseButton", new Vector2(root.sizeDelta.x - 88f, -38f), new Vector2(48f, 48f));
+            AddSlotBackplate(close);
+            close.raycastTarget = true;
+            var button = close.gameObject.AddComponent<Button>();
+            button.targetGraphic = close;
+            button.onClick.AddListener(Hide);
+            var icon = MakeImage(close.rectTransform, "Icon", new Vector2(8f, -8f), new Vector2(32f, 32f));
+            icon.gameObject.AddComponent<UrbanUiIcon>().Configure("close");
+        }
+
+        private void BuildEmptyState()
+        {
+            float width = _viewport.sizeDelta.x - 144f;
+            var background = MakeImage(_viewport, "EmptyState", new Vector2(72f, -104f), new Vector2(width, 288f));
+            AddSlotBackplate(background);
+            _emptyState = background.gameObject;
+            var icon = MakeImage(background.rectTransform, "Icon", new Vector2((width - 96f) * .5f, -40f), new Vector2(96f, 96f));
+            icon.gameObject.AddComponent<UrbanUiIcon>().Configure("inventory-empty");
+            _emptyHint = MakeLabel(background.rectTransform, "Hint", string.Empty, new Vector2(24f, -168f),
+                new Vector2(width - 48f, 56f), 28, TextAnchor.MiddleCenter);
         }
 
         private void BuildRootPanel()
@@ -235,99 +325,63 @@ namespace Rootborn.UI.Modern
                 icon.enabled = icon.sprite != null;
                 icon.preserveAspect = true;
                 icon.raycastTarget = false;
+                icon.gameObject.AddComponent<UrbanUiIcon>().ConfigureWithFallback(TabThemeIconKeys[i], icon.sprite);
                 icon.transform.SetAsLastSibling();
 
                 int capturedIndex = i;
                 var btn = go.GetComponent<Button>();
-                btn.targetGraphic = hit;
                 btn.onClick.AddListener(() => SelectTab(capturedIndex));
 
-                _generated.Add(go);
             }
         }
 
         private static void BuildTabCells(RectTransform parent, bool selected)
         {
-            // The 6 cells (r11_c0..r12_c2) each render at 1/3 of the tab width and
-            // proportionally for height — so every sprite scales together with the tab,
-            // including the corners. All cells use Image.Type.Simple stretch (Tiled was
-            // hiding the corner sprites when the cell wasn't a multiple of 16).
-            float w = parent.sizeDelta.x;
-            float h = parent.sizeDelta.y;
-            float colW = w / 3f;
-            float topH = h / 3f;   // top row = top third of the tab
-            float bodyH = h - topH; // body row = remaining two thirds
-
-            Color tint = selected ? Color.white : new Color(0.78f, 0.74f, 0.66f, 1f);
-
-            MakeTabCell(parent, "Cell_TL", ModernUiStyle2Sprites.TabPanel.TopLeftName,
-                new Vector2(0f, 0f), new Vector2(colW, topH), tint);
-            MakeTabCell(parent, "Cell_T", ModernUiStyle2Sprites.TabPanel.TopName,
-                new Vector2(colW, 0f), new Vector2(colW, topH), tint);
-            MakeTabCell(parent, "Cell_TR", ModernUiStyle2Sprites.TabPanel.TopRightName,
-                new Vector2(colW * 2f, 0f), new Vector2(colW, topH), tint);
-            MakeTabCell(parent, "Cell_L", ModernUiStyle2Sprites.TabPanel.BodyLeftName,
-                new Vector2(0f, -topH), new Vector2(colW, bodyH), tint);
-            MakeTabCell(parent, "Cell_M", ModernUiStyle2Sprites.TabPanel.BodyFillName,
-                new Vector2(colW, -topH), new Vector2(colW, bodyH), tint);
-            MakeTabCell(parent, "Cell_R", ModernUiStyle2Sprites.TabPanel.BodyRightName,
-                new Vector2(colW * 2f, -topH), new Vector2(colW, bodyH), tint);
+            var button = parent.GetComponent<Button>();
+            button.targetGraphic = parent.GetComponent<Image>();
+            SetTabColors(button, selected);
+            var tiles = parent.gameObject.AddComponent<ModernUiTileImage>();
+            tiles.SetRecipe(ModernUiRecipes.CommonPanel);
+            tiles.SetTileSize(new Vector2(16f, 16f));
+            tiles.Rebuild();
         }
 
-        private static void MakeTabCell(RectTransform parent, string name, string subSpriteName, Vector2 topLeft, Vector2 size, Color tint)
+        private static void SetTabColors(Button button, bool selected)
         {
-            var go = new GameObject(name, typeof(RectTransform), typeof(Image));
-            go.transform.SetParent(parent, false);
-            var rect = (RectTransform)go.transform;
-            rect.anchorMin = new Vector2(0f, 1f);
-            rect.anchorMax = new Vector2(0f, 1f);
-            rect.pivot = new Vector2(0f, 1f);
-            rect.anchoredPosition = topLeft;
-            rect.sizeDelta = size;
-
-            var image = go.GetComponent<Image>();
-            image.sprite = ResolveSprite(subSpriteName);
-            image.type = Image.Type.Simple;
-            image.color = tint;
-            image.preserveAspect = false;
-            image.raycastTarget = false;
+            var colors = button.colors;
+            colors.normalColor = selected ? Color.white : new Color(0.78f, 0.74f, 0.66f, 1f);
+            colors.selectedColor = colors.normalColor;
+            button.colors = colors;
         }
 
         private void SelectTab(int index)
         {
+            ClosePopup();
             _selectedTab = index;
-            Color sel = Color.white;
-            Color dim = new Color(0.78f, 0.74f, 0.66f, 1f);
             for (int i = 0; i < transform.childCount; i++)
             {
                 var child = transform.GetChild(i);
-                if (!child.name.StartsWith("Tab_"))
-                {
-                    continue;
-                }
-                bool selected = child.name == "Tab_" + index;
-                Color tint = selected ? sel : dim;
-                for (int j = 0; j < child.childCount; j++)
-                {
-                    var cell = child.GetChild(j);
-                    if (!cell.name.StartsWith("Cell_"))
-                    {
-                        continue;
-                    }
-                    var img = cell.GetComponent<Image>();
-                    if (img != null)
-                    {
-                        img.color = tint;
-                    }
-                }
+                if (child.name.StartsWith("Tab_") && child.TryGetComponent<Button>(out var button))
+                    SetTabColors(button, child.name == "Tab_" + index);
             }
             Refresh();
+            _scroll.verticalNormalizedPosition = 1f;
+        }
+
+        private static void AddSlotBackplate(Image image)
+        {
+            image.sprite = null;
+            image.color = Color.clear;
+            var tiles = image.gameObject.AddComponent<ModernUiTileImage>();
+            tiles.SetRecipe(ModernUiRecipes.SlotPanel);
+            tiles.SetTileSize(new Vector2(16f, 16f));
+            tiles.Rebuild();
         }
 
         private void BuildSearchRow()
         {
             var rect = (RectTransform)transform;
-            float rowY = rect.sizeDelta.y - GridPadTop + SlotSpacing;
+            float rowY = -GridPadTop + SlotSpacing + SearchBarHeight;
             float rowLeft = GridPadX;
             float rowRight = rect.sizeDelta.x - GridPadX - ScrollbarWidth - 8f;
             float rowWidth = rowRight - rowLeft;
@@ -341,7 +395,8 @@ namespace Rootborn.UI.Modern
             search.sprite = ResolveSprite(ModernUiStyle2Sprites.Slot.BaseName);
             search.type = Image.Type.Sliced;
             search.color = new Color(1f, 1f, 1f, 1f);
-            search.raycastTarget = false;
+            search.raycastTarget = true;
+            AddSlotBackplate(search);
 
             var searchIcon = MakeImage((RectTransform)search.transform, "Icon",
                 new Vector2(gap, -((SearchBarHeight - iconSize) * 0.5f)), new Vector2(iconSize, iconSize));
@@ -349,6 +404,21 @@ namespace Rootborn.UI.Modern
             searchIcon.enabled = searchIcon.sprite != null;
             searchIcon.preserveAspect = true;
             searchIcon.raycastTarget = false;
+            searchIcon.gameObject.AddComponent<UrbanUiIcon>().ConfigureWithFallback("inventory-search", searchIcon.sprite);
+
+            _search = search.gameObject.AddComponent<InputField>();
+            _search.targetGraphic = search;
+            _search.lineType = InputField.LineType.SingleLine;
+            _search.characterLimit = 64;
+            var text = MakeLabel(search.rectTransform, "Text", string.Empty, new Vector2(48f, -8f),
+                new Vector2(searchWidth - 64f, SearchBarHeight - 16f), 24, TextAnchor.MiddleLeft);
+            text.supportRichText = false;
+            _searchPlaceholder = MakeLabel(search.rectTransform, "Placeholder", string.Empty, new Vector2(48f, -8f),
+                new Vector2(searchWidth - 64f, SearchBarHeight - 16f), 24, TextAnchor.MiddleLeft);
+            _searchPlaceholder.color = new Color(.33f, .36f, .38f, 1f);
+            _search.textComponent = text;
+            _search.placeholder = _searchPlaceholder;
+            _search.onValueChanged.AddListener(OnQueryChanged);
 
             // Delete (trash) button on the right.
             var deleteRoot = MakeImage((RectTransform)transform, "DeleteButton",
@@ -357,6 +427,7 @@ namespace Rootborn.UI.Modern
             deleteRoot.type = Image.Type.Sliced;
             deleteRoot.color = Color.white;
             deleteRoot.raycastTarget = true;
+            AddSlotBackplate(deleteRoot);
 
             var deleteIcon = MakeImage((RectTransform)deleteRoot.transform, "Icon",
                 new Vector2((SearchBarHeight - iconSize) * 0.5f, -((SearchBarHeight - iconSize) * 0.5f)),
@@ -365,6 +436,7 @@ namespace Rootborn.UI.Modern
             deleteIcon.enabled = deleteIcon.sprite != null;
             deleteIcon.preserveAspect = true;
             deleteIcon.raycastTarget = false;
+            deleteIcon.gameObject.AddComponent<UrbanUiIcon>().ConfigureWithFallback("inventory-delete", deleteIcon.sprite);
 
             // Filter/settings button.
             var filterRoot = MakeImage((RectTransform)transform, "FilterButton",
@@ -374,6 +446,7 @@ namespace Rootborn.UI.Modern
             filterRoot.type = Image.Type.Sliced;
             filterRoot.color = Color.white;
             filterRoot.raycastTarget = true;
+            AddSlotBackplate(filterRoot);
 
             var filterIcon = MakeImage((RectTransform)filterRoot.transform, "Icon",
                 new Vector2((SearchBarHeight - iconSize) * 0.5f, -((SearchBarHeight - iconSize) * 0.5f)),
@@ -382,85 +455,82 @@ namespace Rootborn.UI.Modern
             filterIcon.enabled = filterIcon.sprite != null;
             filterIcon.preserveAspect = true;
             filterIcon.raycastTarget = false;
+            filterIcon.gameObject.AddComponent<UrbanUiIcon>().ConfigureWithFallback("inventory-filter", filterIcon.sprite);
         }
 
         private void BuildInnerPanel()
         {
-            // Builds the InnerPanel 9-slice (r8..r10, c0..c2) that wraps the slot grid +
-            // scrollbar. Sits inside the main beige panel below the search bar.
-            var root = (RectTransform)transform;
             float gridWidth = SlotColumns * SlotSize + (SlotColumns - 1) * SlotSpacing;
-            float gridHeight = SlotRows * SlotSize + (SlotRows - 1) * SlotSpacing;
-            float innerWidth = gridWidth + ScrollbarWidth + InnerPadding * 3f;
-            float innerHeight = gridHeight + InnerPadding * 2f;
-
-            var go = new GameObject("InventoryInnerPanel", typeof(RectTransform), typeof(ModernUiTileImage));
+            float visibleHeight = VisibleRows * SlotSize + (VisibleRows - 1) * SlotSpacing;
+            var go = new GameObject("InventoryInnerPanel", typeof(RectTransform), typeof(ScrollRect));
             go.transform.SetParent(transform, false);
-            var r = (RectTransform)go.transform;
-            r.anchorMin = new Vector2(0f, 1f);
-            r.anchorMax = new Vector2(0f, 1f);
-            r.pivot = new Vector2(0f, 1f);
-            r.anchoredPosition = new Vector2(GridPadX - InnerPadding, -(GridPadTop - InnerPadding));
-            r.sizeDelta = new Vector2(innerWidth, innerHeight);
-
-            var tiles = go.GetComponent<ModernUiTileImage>();
-            tiles.SetRecipe(ModernUiRecipes.InnerPanel);
-            tiles.SetTileSize(new Vector2(32f, 32f)); // match root panel's 2x tile size.
-            tiles.Rebuild();
-
-            _innerContainer = r;
-            _generated.Add(go);
+            _innerContainer = (RectTransform)go.transform;
+            _innerContainer.anchorMin = _innerContainer.anchorMax = new Vector2(0f, 1f);
+            _innerContainer.pivot = new Vector2(0f, 1f);
+            _innerContainer.anchoredPosition = new Vector2(GridPadX, -GridPadTop);
+            _innerContainer.sizeDelta = new Vector2(gridWidth + ScrollbarWidth + 8f, visibleHeight);
+            _scroll = go.GetComponent<ScrollRect>();
+            _scroll.horizontal = false;
+            _scroll.vertical = true;
+            _scroll.movementType = ScrollRect.MovementType.Clamped;
+            _scroll.scrollSensitivity = 48f;
+            var viewport = new GameObject("InventoryViewport", typeof(RectTransform), typeof(Image), typeof(RectMask2D));
+            viewport.transform.SetParent(_innerContainer, false);
+            _viewport = (RectTransform)viewport.transform;
+            _viewport.anchorMin = _viewport.anchorMax = new Vector2(0f, 1f);
+            _viewport.pivot = new Vector2(0f, 1f);
+            _viewport.sizeDelta = new Vector2(gridWidth, visibleHeight);
+            viewport.GetComponent<Image>().color = Color.clear;
+            viewport.GetComponent<Image>().raycastTarget = true;
+            _scroll.viewport = _viewport;
         }
 
         private void BuildSlotGrid()
         {
             float gridWidth = SlotColumns * SlotSize + (SlotColumns - 1) * SlotSpacing;
             float gridHeight = SlotRows * SlotSize + (SlotRows - 1) * SlotSpacing;
-
             var go = new GameObject("SlotGrid", typeof(RectTransform));
-            go.transform.SetParent(_innerContainer, false);
-            var gridRect = (RectTransform)go.transform;
-            gridRect.anchorMin = new Vector2(0f, 1f);
-            gridRect.anchorMax = new Vector2(0f, 1f);
-            gridRect.pivot = new Vector2(0f, 1f);
-            gridRect.anchoredPosition = new Vector2(InnerPadding, -InnerPadding);
-            gridRect.sizeDelta = new Vector2(gridWidth, gridHeight);
-
-            _slotGrid = gridRect;
-            _generated.Add(go);
+            go.transform.SetParent(_viewport, false);
+            _slotGrid = (RectTransform)go.transform;
+            _slotGrid.anchorMin = _slotGrid.anchorMax = new Vector2(0f, 1f);
+            _slotGrid.pivot = new Vector2(0f, 1f);
+            _slotGrid.sizeDelta = new Vector2(gridWidth, gridHeight);
+            _scroll.content = _slotGrid;
+            for (int i = 0; i < Inventory.MaxSlots; i++) MakeSlot(i);
         }
 
         private void BuildScrollbar()
         {
-            float gridHeight = SlotRows * SlotSize + (SlotRows - 1) * SlotSpacing;
-            float left = _innerContainer.sizeDelta.x - InnerPadding - ScrollbarWidth;
-
-            // Track is built from 3 stacked sprites: top cap / middle (stretched) / bottom cap.
-            const float capHeight = 32f;
-            float midHeight = Mathf.Max(8f, gridHeight - capHeight * 2f);
-            float top = -InnerPadding;
-
-            var topCap = MakeImage(_innerContainer, "ScrollTrackTop",
-                new Vector2(left, top), new Vector2(ScrollbarWidth, capHeight));
-            topCap.sprite = ResolveSprite(ModernUiStyle2Sprites.Scrollbar.TrackTopName);
-            topCap.preserveAspect = false;
-
-            var midPart = MakeImage(_innerContainer, "ScrollTrackMid",
-                new Vector2(left, top - capHeight), new Vector2(ScrollbarWidth, midHeight));
-            midPart.sprite = ResolveSprite(ModernUiStyle2Sprites.Scrollbar.TrackMiddleName);
-            midPart.type = Image.Type.Tiled;
-            midPart.preserveAspect = false;
-
-            var botCap = MakeImage(_innerContainer, "ScrollTrackBot",
-                new Vector2(left, top - capHeight - midHeight), new Vector2(ScrollbarWidth, capHeight));
-            botCap.sprite = ResolveSprite(ModernUiStyle2Sprites.Scrollbar.TrackBottomName);
-            botCap.preserveAspect = false;
+            float left = _viewport.sizeDelta.x + 8f;
+            var track = MakeImage(_innerContainer, "ScrollTrackTop", new Vector2(left, 0f),
+                new Vector2(ScrollbarWidth, _viewport.sizeDelta.y));
+            track.color = new Color(0.83f, 0.81f, 0.74f, 1f);
+            track.raycastTarget = true;
+            var scrollbar = track.gameObject.AddComponent<Scrollbar>();
+            var handle = MakeImage(track.rectTransform, "ScrollHandle", Vector2.zero, Vector2.zero);
+            handle.rectTransform.anchorMin = Vector2.zero;
+            handle.rectTransform.anchorMax = Vector2.one;
+            handle.rectTransform.offsetMin = new Vector2(8f, 0f);
+            handle.rectTransform.offsetMax = new Vector2(-8f, 0f);
+            handle.color = new Color(0.12f, 0.18f, 0.25f, 1f);
+            handle.raycastTarget = true;
+            scrollbar.direction = Scrollbar.Direction.BottomToTop;
+            scrollbar.handleRect = handle.rectTransform;
+            scrollbar.targetGraphic = handle;
+            _scroll.verticalScrollbar = scrollbar;
+            _scroll.verticalNormalizedPosition = 1f;
         }
 
-        private GameObject MakeSlot(Inventory.Slot slot, int visibleIndex)
+        private void OnQueryChanged(string value)
         {
-            bool hasItem = slot != null && slot.Item != null && slot.Count > 0;
-            var go = new GameObject(hasItem ? "Slot_" + slot.Item.Id : "Slot_Empty_" + visibleIndex,
+            _query = value ?? string.Empty;
+            Refresh();
+            _scroll.verticalNormalizedPosition = 1f;
+        }
+
+        private void MakeSlot(int visibleIndex)
+        {
+            var go = new GameObject("Slot_Empty_" + visibleIndex,
                 typeof(RectTransform), typeof(Image), typeof(Button), typeof(ModernUiTileImage));
             go.transform.SetParent(_slotGrid, false);
             var rect = (RectTransform)go.transform;
@@ -481,6 +551,8 @@ namespace Rootborn.UI.Modern
             image.color = new Color(0f, 0f, 0f, 0f);
             image.raycastTarget = true;
 
+            var button = go.GetComponent<Button>();
+            button.targetGraphic = image;
             var tiles = go.GetComponent<ModernUiTileImage>();
             tiles.SetRecipe(ModernUiRecipes.SlotPanel);
             tiles.SetTileSize(new Vector2(SlotSize / 3f, SlotSize / 3f));
@@ -491,42 +563,40 @@ namespace Rootborn.UI.Modern
             icon.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
             icon.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             icon.rectTransform.anchoredPosition = Vector2.zero;
-            icon.sprite = hasItem ? slot.Item.Icon : null;
-            icon.enabled = icon.sprite != null;
+            icon.enabled = false;
             icon.preserveAspect = true;
             icon.raycastTarget = false;
 
-            if (hasItem && slot.Count > 1)
-            {
-                var count = MakeLabel(rect, "Count", slot.Count.ToString(),
-                    new Vector2(SlotSize - 44f, -SlotSize + 8f), new Vector2(44f, 32f), 24, TextAnchor.LowerRight);
-                count.raycastTarget = false;
-                count.color = new Color(0.95f, 0.95f, 0.95f, 1f);
-                var shadow = count.gameObject.AddComponent<UnityEngine.UI.Shadow>();
-                shadow.effectColor = new Color(0f, 0f, 0f, 0.7f);
-                shadow.effectDistance = new Vector2(1f, -1f);
-            }
+            var count = MakeLabel(rect, "Count", string.Empty,
+                new Vector2(SlotSize - 84f, -SlotSize + 52f), new Vector2(64f, 32f), 24, TextAnchor.LowerRight);
+            count.color = new Color(0.12f, 0.18f, 0.25f, 1f);
+            var shadow = count.gameObject.AddComponent<UnityEngine.UI.Shadow>();
+            shadow.effectColor = new Color(0.97f, 0.94f, 0.85f, 0.8f);
+            shadow.effectDistance = new Vector2(1f, -1f);
+            var view = new SlotView { Root = go, Icon = icon, Count = count, Button = button };
+            count.gameObject.SetActive(false);
+            // One listener per pooled view reads its current binding instead of capturing an old model slot.
+            button.onClick.AddListener(() => OpenPopup(view.Slot));
+            _slots.Add(view);
+        }
 
-            var button = go.GetComponent<Button>();
-            button.targetGraphic = image;
-            button.onClick.RemoveAllListeners();
-            if (hasItem)
-            {
-                var captured = slot;
-                button.onClick.AddListener(() => OpenPopup(captured));
-            }
-            else
-            {
-                button.onClick.AddListener(ClosePopup);
-            }
-
-            return go;
+        private static void BindSlot(SlotView view, Inventory.Slot slot, int visibleIndex)
+        {
+            bool hasItem = slot != null && slot.Item != null && slot.Count > 0;
+            view.Slot = hasItem ? slot : null;
+            view.Root.name = hasItem ? "Slot_" + slot.Item.Id : "Slot_Empty_" + visibleIndex;
+            view.Icon.sprite = hasItem ? slot.Item.Icon : null;
+            view.Icon.enabled = view.Icon.sprite != null;
+            bool showCount = hasItem && slot.Count > 1;
+            view.Count.text = showCount ? slot.Count.ToString() : string.Empty;
+            view.Count.gameObject.SetActive(showCount);
+            view.Button.interactable = hasItem;
         }
 
         private void OpenPopup(Inventory.Slot slot)
         {
             ClosePopup();
-            if (slot == null || slot.Item == null)
+            if (slot == null || slot.Item == null || slot.Count <= 0)
             {
                 return;
             }
@@ -545,14 +615,28 @@ namespace Rootborn.UI.Modern
             tiles.SetRecipe(ModernUiRecipes.CommonPanel48);
             tiles.Rebuild();
 
-            MakeImage(rect, "ItemIcon", new Vector2(36f, -36f), new Vector2(104f, 104f)).sprite = slot.Item.Icon;
-            MakeLabel(rect, "ItemName", slot.Item.DisplayKey, new Vector2(156f, -36f), new Vector2(280f, 56f), 36, TextAnchor.UpperLeft);
-            MakeLabel(rect, "ItemCount", "Count: " + slot.Count, new Vector2(156f, -96f), new Vector2(280f, 48f), 28, TextAnchor.UpperLeft);
+            var itemIcon = MakeImage(rect, "ItemIcon", new Vector2(36f, -36f), new Vector2(104f, 104f));
+            itemIcon.sprite = slot.Item.Icon;
+            itemIcon.enabled = itemIcon.sprite != null;
+            var itemName = MakeLabel(rect, "ItemName", GameText.Get(slot.Item.DisplayKey), new Vector2(156f, -36f), new Vector2(280f, 56f), 36, TextAnchor.UpperLeft);
+            itemName.resizeTextForBestFit = true;
+            itemName.resizeTextMinSize = 24;
+            itemName.resizeTextMaxSize = 36;
+            string count = GameText.Get("ui.inventory.item-count");
+            if (count == "ui.inventory.item-count") count = "Count: {0}";
+            MakeLabel(rect, "ItemCount", string.Format(count, slot.Count), new Vector2(156f, -96f), new Vector2(280f, 48f), 28, TextAnchor.UpperLeft);
             MakeLabel(rect, "ItemDescription", slot.Item.Description, new Vector2(36f, -164f), new Vector2(408f, 140f), 28, TextAnchor.UpperLeft);
-            ModernUiPanelBuilder.CreateCommonPanel48Button(rect, "ActionButton", new Vector2(0f, -168f), new Vector2(192f, 64f));
+            var closeRoot = ModernUiPanelBuilder.CreateCommonPanel48Button(rect, "ActionButton", new Vector2(0f, -168f), new Vector2(192f, 64f));
+            string closeText = GameText.Get("ui.inventory.close-detail");
+            if (closeText == "ui.inventory.close-detail") closeText = GameText.Language == "ko" ? "닫기" : "Close";
+            var closeLabel = MakeLabel((RectTransform)closeRoot.transform, "Label", closeText, new Vector2(16f, -12f), new Vector2(112f, 40f), 26, TextAnchor.MiddleCenter);
+            closeLabel.raycastTarget = false;
+            var closeIcon = MakeImage((RectTransform)closeRoot.transform, "Icon", new Vector2(144f, -16f), new Vector2(32f, 32f));
+            closeIcon.gameObject.AddComponent<UrbanUiIcon>().Configure("close");
+            closeRoot.GetComponent<Button>().onClick.AddListener(ClosePopup);
+            closeRoot.GetComponent<ModernUiTileImage>().Rebuild();
 
             _popup = go;
-            _generated.Add(go);
         }
 
         private void ClosePopup()
@@ -562,6 +646,9 @@ namespace Rootborn.UI.Modern
                 return;
             }
 
+            // Destroy is deferred in PlayMode: remove its hit targets and hierarchy entry immediately.
+            _popup.SetActive(false);
+            _popup.transform.SetParent(null, false);
             DestroyObject(_popup);
             _popup = null;
         }
@@ -596,10 +683,11 @@ namespace Rootborn.UI.Modern
             rect.sizeDelta = size;
             var text = go.GetComponent<Text>();
             text.text = value ?? string.Empty;
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = Rootborn.UI.StudentLife.LifeUiFont.Shared;
             text.fontSize = fontSize;
             text.alignment = alignment;
-            text.color = new Color(0.28f, 0.19f, 0.12f, 1f);
+            text.raycastTarget = false;
+            text.color = new Color(0.12f, 0.18f, 0.25f, 1f);
             return text;
         }
 

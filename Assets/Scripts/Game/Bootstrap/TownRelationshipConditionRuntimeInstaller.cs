@@ -36,7 +36,6 @@ namespace Rootborn.Game.Bootstrap
             if (FindRoot(scene, "[TownRelationshipConditionRuntimeInstaller]") != null) return;
             var runner = new GameObject("[TownRelationshipConditionRuntimeInstaller]");
             SceneManager.MoveGameObjectToScene(runner, scene);
-            Debug.Log("[ROOTBORN] relationship condition installer started scene=" + scene.name);
             runner.AddComponent<Runner>();
         }
 
@@ -44,23 +43,19 @@ namespace Rootborn.Game.Bootstrap
         {
             private IEnumerator Start()
             {
-                float elapsed = 0f;
-                float nextWaitingLogAt = 0f;
-                while (elapsed < 60f)
+                float startTime = UnityEngine.Time.realtimeSinceStartup;
+                float deadline = startTime + 60f;
+                var pollDelay = new WaitForSecondsRealtime(0.5f);
+                while (UnityEngine.Time.realtimeSinceStartup < deadline)
                 {
                     string diagnostics;
                     if (TryAttachEffects(gameObject.scene, out diagnostics))
                     {
                         Debug.Log("[ROOTBORN] relationship condition effects attached scene=" + gameObject.scene.name + " " + diagnostics);
-                    }
-                    else if (elapsed >= nextWaitingLogAt)
-                    {
-                        Debug.Log("[ROOTBORN] relationship condition attach waiting scene=" + gameObject.scene.name + " " + diagnostics);
-                        nextWaitingLogAt = elapsed + 5f;
+                        yield break;
                     }
 
-                    elapsed += UnityEngine.Time.unscaledDeltaTime;
-                    yield return null;
+                    yield return pollDelay;
                 }
             }
         }

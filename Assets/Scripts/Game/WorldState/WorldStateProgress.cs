@@ -180,6 +180,36 @@ namespace Rootborn.Game.WorldState
             };
         }
 
+        public bool RestoreFromSaveData(WorldStateProgressSaveData data)
+        {
+            if (data == null || data.SaveSlot != SaveSlot || data.PlayerId != PlayerId) return false;
+            var restored = FromSaveData(data, SaveSlot, PlayerId);
+            _recordsByFlagId.Clear();
+            foreach (var pair in restored._recordsByFlagId) _recordsByFlagId.Add(pair.Key, pair.Value);
+            _todayFlagIds.Clear();
+            _todayFlagIds.AddRange(restored._todayFlagIds);
+            return true;
+        }
+
+        public bool MergeFromSaveData(WorldStateProgressSaveData data)
+        {
+            if (data == null || data.SaveSlot != SaveSlot || data.PlayerId != PlayerId) return false;
+            var incoming = FromSaveData(data, SaveSlot, PlayerId);
+            foreach (var pair in incoming._recordsByFlagId)
+            {
+                if (_recordsByFlagId.TryGetValue(pair.Key, out var current))
+                {
+                    _recordsByFlagId[pair.Key] = current
+                        .WithSeenNotification(current.SeenNotification || pair.Value.SeenNotification)
+                        .WithAppliedEffectVersion(Math.Max(current.AppliedEffectVersion, pair.Value.AppliedEffectVersion));
+                }
+                else _recordsByFlagId.Add(pair.Key, pair.Value);
+            }
+            for (int i = 0; i < incoming._todayFlagIds.Count; i++)
+                if (!_todayFlagIds.Contains(incoming._todayFlagIds[i])) _todayFlagIds.Add(incoming._todayFlagIds[i]);
+            return true;
+        }
+
         public static WorldStateProgress FromSaveData(WorldStateProgressSaveData saveData, string fallbackSaveSlot, string fallbackPlayerId)
         {
             var progress = new WorldStateProgress(saveData != null && !string.IsNullOrEmpty(saveData.SaveSlot) ? saveData.SaveSlot : fallbackSaveSlot, saveData != null && !string.IsNullOrEmpty(saveData.PlayerId) ? saveData.PlayerId : fallbackPlayerId);

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de7c95d014f124147aec20bce37318ba, type: 3}
+  m_Name: DailyPlan_Practice_Soldier
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.DailyPlanRouteDefinition
+  _id: daily.practice.soldier
+  _displayNameKey: daily.practice.soldier.name
+  _targetLocation: {fileID: 11400000, guid: 9eb76c11c93f49d4391ce9380b017b50, type: 2}
+  _growthRoute: 6
+  _matchingActivities: []
+  _matchingPractices:
+  - {fileID: 11400000, guid: e23bc0d461cecff4b89f45e50428c3a3, type: 2}
+  _matchingWorks: []
+  _requirements: []
+  _outcomes: []
+  _objectiveTitleKey: daily.practice.soldier.name
+  _objectiveDetailKey: daily.practice.soldier.detail
+  _nextHintKey: daily.practice.soldier.next

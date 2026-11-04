@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Rootborn.Game.Localization;
 using Rootborn.Game.StudentLife;
 
 namespace Rootborn.UI.Objectives
@@ -13,38 +15,32 @@ namespace Rootborn.UI.Objectives
         public ObjectiveJournalItem[] BuildItems(ObjectiveJournalContext context)
         {
             var routeSets = context.Registry != null ? context.Registry.DailyPlanRouteSets : Array.Empty<DailyPlanRouteSetDefinition>();
-            var progress = context.Player != null ? context.Player.GetComponent<DailyPlanProgressComponent>()?.Progress : null;
-            if (progress == null || string.IsNullOrEmpty(progress.SelectedRouteId))
+            var component = context.Player != null ? context.Player.GetComponent<DailyPlanProgressComponent>() : null;
+            var student = context.Player != null ? context.Player.GetComponent<StudentLifeProgressComponent>()?.Progress : null;
+            var progress = student != null ? component?.EnsureProgress(student) : component?.Progress;
+            if (progress == null) return new[] { BuildChooseItem() };
+            var items = new List<ObjectiveJournalItem>(progress.Slots.Count);
+            var routeKeys = new HashSet<string>(StringComparer.Ordinal);
+            bool hasUnassigned = false;
+            var runner = new DailyPlanRouteRunner();
+            foreach (var slot in progress.Slots)
             {
-                return new[] { BuildChooseItem() };
+                if (slot.Completed) continue;
+                var route = runner.FindRoute(routeSets, slot.RouteId);
+                if (route == null) { hasUnassigned = true; continue; }
+                // Preserve the legacy tracked key for a route's first pending slot;
+                // additional repeated-practice slots receive distinct keys.
+                string key = "daily-plan:" + route.Id;
+                if (!routeKeys.Add(route.Id)) key += ":slot:" + slot.SlotIndex;
+                string subtitle = progress.Slots.Count > 1
+                    ? GameText.Get(route.DisplayNameKey) + " · " + GameText.Get(slot.PeriodKey) : route.DisplayNameKey;
+                items.Add(new ObjectiveJournalItem(key, Category.CategoryId, route.ObjectiveTitleKey,
+                    subtitle, "Selected", "Selected for day " + progress.CurrentDay,
+                    route.ObjectiveDetailKey, false, 5 + slot.SlotIndex));
             }
-
-            var route = new DailyPlanRouteRunner().FindRoute(routeSets, progress.SelectedRouteId);
-            if (route == null)
-            {
-                return new[] { BuildChooseItem() };
-            }
-
-            if (progress.CompletedRouteId == route.Id)
-            {
-                return Array.Empty<ObjectiveJournalItem>();
-            }
-
-            return new[]
-            {
-                new ObjectiveJournalItem(
-                    "daily-plan:" + route.Id,
-                    Category.CategoryId,
-                    route.ObjectiveTitleKey,
-                    route.DisplayNameKey,
-                    "Selected",
-                    "Selected for day " + progress.CurrentDay,
-                    route.ObjectiveDetailKey,
-                    false,
-                    5)
-            };
+            if (items.Count == 0 && hasUnassigned) items.Add(BuildChooseItem());
+            return items.ToArray();
         }
-
         private static ObjectiveJournalItem BuildChooseItem()
         {
             return new ObjectiveJournalItem(

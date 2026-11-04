@@ -16,7 +16,7 @@ MonoBehaviour:
   _fallbackLocation: {fileID: 11400000, guid: 0b792f8bcf32340469cd64320136e59b, type: 2}
   _entries:
   - _location: {fileID: 11400000, guid: 0b792f8bcf32340469cd64320136e59b, type: 2}
-    _dialogue: {fileID: 0}
+    _dialogue: {fileID: 11400000, guid: 9d006cfd21882bc43be5d60a5244020c, type: 2}
     _dialogueKey: dialogue.first-guide.morning
     _interactionHintKey: npc.first-guide.hint.place-recommend
     _eventNoticeKey: npc.first-guide.notice.today-route
@@ -24,7 +24,7 @@ MonoBehaviour:
     _rules:
     - {fileID: 11400000, guid: aa57cc60e918759409164e03de44bf13, type: 2}
   - _location: {fileID: 11400000, guid: 0b792f8bcf32340469cd64320136e59b, type: 2}
-    _dialogue: {fileID: 0}
+    _dialogue: {fileID: 11400000, guid: e39bc0fc0f31d2b4ab9c12518c250050, type: 2}
     _dialogueKey: dialogue.first-guide.evening
     _interactionHintKey: npc.first-guide.hint.day-summary
     _eventNoticeKey: npc.first-guide.notice.tomorrow

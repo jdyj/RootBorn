@@ -16,7 +16,7 @@ MonoBehaviour:
   _fallbackLocation: {fileID: 11400000, guid: 74f05b36a5f69964e97495038a29176d, type: 2}
   _entries:
   - _location: {fileID: 11400000, guid: 74f05b36a5f69964e97495038a29176d, type: 2}
-    _dialogue: {fileID: 0}
+    _dialogue: {fileID: 11400000, guid: 1ea856118fdd177448e5d9c08e9ada5a, type: 2}
     _dialogueKey: dialogue.teacher.school
     _interactionHintKey: npc.teacher.hint.class-question
     _eventNoticeKey: npc.teacher.notice.study-basics
@@ -24,7 +24,7 @@ MonoBehaviour:
     _rules:
     - {fileID: 11400000, guid: aa57cc60e918759409164e03de44bf13, type: 2}
   - _location: {fileID: 11400000, guid: 0b792f8bcf32340469cd64320136e59b, type: 2}
-    _dialogue: {fileID: 0}
+    _dialogue: {fileID: 11400000, guid: 013bee6b476d7ae49977ef90f5885957, type: 2}
     _dialogueKey: dialogue.teacher.square
     _interactionHintKey: npc.teacher.hint.alt-growth
     _eventNoticeKey: npc.teacher.notice.outside-school

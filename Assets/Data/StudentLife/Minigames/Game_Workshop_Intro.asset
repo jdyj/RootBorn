@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d7087772d6d0574ea324d6ed33a950a, type: 3}
+  m_Name: Game_Workshop_Intro
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Minigames.MinigameDefinition
+  _id: minigame.workshop_intro
+  _displayNameKey: minigame.name.workshop_intro
+  _challenges:
+  - {fileID: 11400000, guid: aaf1569e34c289a42af4ca4e12d2d837, type: 2}
+  _bonuses: []
+  _successScore: 60

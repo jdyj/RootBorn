@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: EncyclopediaCategory_NPCs
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Encyclopedia.EncyclopediaCategoryDefinition
   _id: ency.category.npcs
-  _displayName: NPC
+  _displayName: ui.encyclopedia.category.npcs
   _sortOrder: 1

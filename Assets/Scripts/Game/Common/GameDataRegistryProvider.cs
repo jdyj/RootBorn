@@ -8,6 +8,15 @@ namespace Rootborn.Game.Common
         private static GameDataRegistry s_overrideRegistry;
         private static GameDataRegistry s_cachedRegistry;
 
+        [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetForPlayMode()
+        {
+            // Domain reload may be disabled: no editor/test registry is valid for a new runtime session.
+            s_overrideRegistry = null;
+            s_cachedRegistry = null;
+            s_provider = new DefaultGameDataRegistryProvider();
+        }
+
         public static bool TryGet(out GameDataRegistry registry)
         {
             if (s_overrideRegistry != null)

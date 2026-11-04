@@ -43,6 +43,7 @@ MonoBehaviour:
   _id: practice.interior
   _displayNameKey: practice.interior
   _category: 0
+  _timePolicy: {fileID: 11400000, guid: 877e2af40acc7d749a78882afa991e80, type: 2}
   _timeCostMinutes: 45
   _energyCost: 1
   _focusCost: 1
@@ -55,6 +56,8 @@ MonoBehaviour:
   - {fileID: -6178160358694897337}
   - {fileID: -7672766230608609999}
   - {fileID: 4212938864528800065}
+  - {fileID: 11400000, guid: a9e9def6a40fc0d4abc2d77a1697a65d, type: 2}
+  _choices: []
 --- !u!114 &3714153290417805989
 MonoBehaviour:
   m_ObjectHideFlags: 0

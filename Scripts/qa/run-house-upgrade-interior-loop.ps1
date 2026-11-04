@@ -24,8 +24,8 @@ function Assert-Contains {
 
 function Restore-AddressablesLinkXml {
     $paths = @(
-        "Assets/AddressableAssetsData/link.xml",
-        "Assets/AddressableAssetsData/link.xml.meta"
+        "Assets/Linker/link.xml",
+        "Assets/Linker/link.xml.meta"
     )
 
     $needsRestore = $false
@@ -35,13 +35,13 @@ function Restore-AddressablesLinkXml {
         }
     }
 
-    $status = & git status --short -- Assets/AddressableAssetsData/link.xml Assets/AddressableAssetsData/link.xml.meta
+    $status = & git status --short -- Assets/Linker/link.xml Assets/Linker/link.xml.meta
     if ($status) {
         $needsRestore = $true
     }
 
     if ($needsRestore) {
-        & git restore -- Assets/AddressableAssetsData/link.xml Assets/AddressableAssetsData/link.xml.meta
+        & git restore -- Assets/Linker/link.xml Assets/Linker/link.xml.meta
         if ($LASTEXITCODE -ne 0) {
             throw "House QA runner failed: could not restore Addressables link.xml files after Unity test run."
         }

@@ -1,0 +1,4 @@
+﻿using System;using Rootborn.Game.Localization;using Rootborn.Game.Quests;
+namespace Rootborn.UI.Quests{public static class QuestChainSummaryPresentation{
+public static string Build(QuestChainDefinition chain,QuestChainState state,QuestObjectiveBase objective,int progress){if(chain==null)return string.Empty;string title=GameText.Get(chain.DisplayNameKey);if(string.IsNullOrWhiteSpace(title)||title==chain.Id)title=GameText.Get("quest.chain.generic");string stateKey=Enum.IsDefined(typeof(QuestChainState),state)?state.ToString().ToLowerInvariant():"active";string text=title+"\n"+GameText.Get("quest.chain.state."+stateKey);if(objective!=null){string label=GameText.Get(objective.DisplayKey);if(string.IsNullOrWhiteSpace(label))label=GameText.Get("quest.chain.objective");text+="\n"+label+" "+progress+" / "+objective.RequiredCount;}return text;}
+}}

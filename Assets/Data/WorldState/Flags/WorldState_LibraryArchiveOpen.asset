@@ -13,15 +13,15 @@ MonoBehaviour:
   m_Name: WorldState_LibraryArchiveOpen
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.WorldState.WorldStateFlagDefinition
   _id: world.library.archive-open
-  _displayNameKey: Library archive opened
-  _descriptionKey: A quiet archive shelf is now available in the library.
+  _displayNameKey: world.library.archive-open.name
+  _descriptionKey: world.library.archive-open.description
   _relatedLocation: {fileID: 11400000, guid: cbc6489c83f1f1440a50f2f18914cd32, type: 2}
   _relatedNpcs: []
   _relatedQuestChains: []
   _scopeDefinition: {fileID: 0}
   _scope: 1
   _changeKind: 0
-  _nextActionKey: Check the archive shelf in the library
+  _nextActionKey: world.library.archive-open.next
   _visibleSurfaces: 000000000200000001000000
   _badges: 0200000004000000
   _sortPriority: 100

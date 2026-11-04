@@ -1,0 +1,48 @@
+fileFormatVersion: 2
+guid: e62293a5d562f784a9218d84a6af4513
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: aaa16bfc62c086f4fb45da87b6acf9b1, type: 3}
+  _reimportOnDependencyChange: 1
+  _jsonFile: {fileID: -164016180542632921, guid: e62293a5d562f784a9218d84a6af4513, type: 3}
+  _pixelsPerUnit: 16
+  _customLevelPrefab: {instanceID: 0}
+  _intGridValueColorsVisible: 0
+  _useCompositeCollider: 1
+  _geometryType: 0
+  _createBackgroundColor: 1
+  _createLevelBoundsTrigger: 0
+  _useParallax: 1
+  _scaleEntities: 1
+  _intGridValues: []
+  _entities:
+  - _key: Door
+    _asset: {instanceID: 0}
+  _enumGenerate: 0
+  _enumPath: 
+  _enumNamespace: 
+  _useLayerCustomSortingOrders: 0
+  _layerCustomSortingOrders:
+  - _ldtkLayerName: Door
+    _ldtkLayerOrder: 0
+  - _ldtkLayerName: House2
+    _ldtkLayerOrder: -1
+  - _ldtkLayerName: House1
+    _ldtkLayerOrder: -2
+  - _ldtkLayerName: Border
+    _ldtkLayerOrder: -3
+  - _ldtkLayerName: Shop
+    _ldtkLayerOrder: -4
+  - _ldtkLayerName: ForeGround
+    _ldtkLayerOrder: -5
+  - _ldtkLayerName: Wall_3d
+    _ldtkLayerOrder: -6
+  - _ldtkLayerName: Wall
+    _ldtkLayerOrder: -7
+  - _ldtkLayerName: Ground
+    _ldtkLayerOrder: -8

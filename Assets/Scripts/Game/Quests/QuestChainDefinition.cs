@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Game.Dialogue;
 using UnityEngine;
 
 namespace Rootborn.Game.Quests
@@ -11,6 +12,7 @@ namespace Rootborn.Game.Quests
         [SerializeField] private string _displayNameKey;
         [SerializeField] private string _descriptionKey;
         [SerializeField] private string _relatedCareerInterestId;
+        [SerializeField] private NpcDefinition _startNpc;
         [SerializeField] private QuestStepDefinition[] _steps = Array.Empty<QuestStepDefinition>();
         [SerializeField] private QuestConditionBase[] _startConditions = Array.Empty<QuestConditionBase>();
         [SerializeField] private QuestConditionBase[] _unblockConditions = Array.Empty<QuestConditionBase>();
@@ -24,6 +26,7 @@ namespace Rootborn.Game.Quests
         public string DisplayNameKey => _displayNameKey;
         public string DescriptionKey => _descriptionKey;
         public string RelatedCareerInterestId => _relatedCareerInterestId;
+        public NpcDefinition StartNpc => _startNpc;
         public QuestStepDefinition[] Steps => _steps;
         public QuestConditionBase[] StartConditions => _startConditions;
         public QuestConditionBase[] UnblockConditions => _unblockConditions;

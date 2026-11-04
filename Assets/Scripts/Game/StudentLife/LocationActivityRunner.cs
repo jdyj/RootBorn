@@ -45,7 +45,7 @@ namespace Rootborn.Game.StudentLife
                 return false;
             }
 
-            if (!progress.CanSpend(activity.EnergyCost, activity.FocusCost))
+            if (!progress.CanUseTimePolicy(activity.TimePolicy) || !progress.CanSpend(activity.EnergyCost, activity.FocusCost))
             {
                 result = new LocationActivityResult(LifeActivityResultKind.InsufficientResources, progress.SaveSlot, progress.PlayerId, activity.Id, activity.LocationId, activity.GrowthRoute, requestId, Array.Empty<string>());
                 return false;
@@ -57,6 +57,7 @@ namespace Rootborn.Game.StudentLife
                 return false;
             }
 
+            progress.TryUseTimePolicy(activity.TimePolicy);
             progress.Spend(activity.TimeCostMinutes, activity.EnergyCost, activity.FocusCost, activity.StressDelta);
             string[] outcomeLogs = activity.ApplyOutcomes(progress);
             progress.MarkRequestApplied(requestId);

@@ -20,12 +20,13 @@ namespace Rootborn.Game.StudentLife
                 return false;
             }
 
-            if (!progress.CanSpend(choice.EnergyCost, choice.FocusCost))
+            if (!progress.CanUseTimePolicy(choice.TimePolicy) || !progress.CanSpend(choice.EnergyCost, choice.FocusCost))
             {
                 result = new LifeActivityResult(LifeActivityResultKind.InsufficientResources, progress.SaveSlot, progress.PlayerId, dailyEvent.Id, requestId, choice.Id, Array.Empty<string>());
                 return false;
             }
 
+            progress.TryUseTimePolicy(choice.TimePolicy);
             progress.Spend(choice.TimeCostMinutes, choice.EnergyCost, choice.FocusCost, choice.StressDelta);
             string[] logs = choice.ApplyOutcomes(progress, dailyEvent);
             progress.MarkRequestApplied(requestId);

@@ -3,6 +3,7 @@ using NUnit.Framework;
 using Rootborn.Game.Housing;
 using Rootborn.Game.Interiors;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 namespace Rootborn.Tests.EditMode.Housing
 {
@@ -53,18 +54,77 @@ namespace Rootborn.Tests.EditMode.Housing
         }
 
         [Test]
+        public void HOUSE_STATE_002_SelectedInteriorStylePersistsThroughNormalize()
+        {
+            var state = new HouseStateSaveData
+            {
+                CurrentStageIndex = 1,
+                SelectedInteriorStyleId = "style.modern.office.blue"
+            };
+
+            HouseStatePersistence.Save("house-state-style-test", state);
+            var loaded = HouseStatePersistence.Load("house-state-style-test");
+
+            Assert.AreEqual(1, loaded.CurrentStageIndex);
+            Assert.AreEqual("style.modern.office.blue", loaded.SelectedInteriorStyleId);
+        }
+
+        [Test]
+        public void HOUSE_STYLE_001_TileSetResolvesSelectedStyleWithoutChangingFurnitureTiles()
+        {
+            var baseFloor = ScriptableObject.CreateInstance<Tile>();
+            var baseWall = ScriptableObject.CreateInstance<Tile>();
+            var baseAccent = ScriptableObject.CreateInstance<Tile>();
+            var styledFloor = ScriptableObject.CreateInstance<Tile>();
+            var styledWall = ScriptableObject.CreateInstance<Tile>();
+            var styledAccent = ScriptableObject.CreateInstance<Tile>();
+            var desk = ScriptableObject.CreateInstance<Tile>();
+            var tileSet = ScriptableObject.CreateInstance<InteriorTileSetDefinition>();
+
+            try
+            {
+                tileSet.ConfigureForTests(baseFloor, baseWall, baseAccent, desk);
+                tileSet.ConfigureStyleOptionsForTests(new[]
+                {
+                    InteriorTileStyleOption.CreateForTests("style.modern.office.blue", styledFloor, styledWall, styledAccent)
+                });
+
+                var style = tileSet.ResolveStyle("style.modern.office.blue");
+
+                Assert.IsNotNull(style);
+                Assert.AreSame(styledFloor, style.Floor);
+                Assert.AreSame(styledWall, style.Wall);
+                Assert.AreSame(styledAccent, style.VerticalWallAccent);
+                Assert.AreSame(baseFloor, tileSet.Floor, "Selecting a room style must not mutate the shared tile-set asset.");
+                Assert.AreSame(desk, tileSet.Desk, "Wall/floor styling must not rewrite furniture tiles.");
+                Assert.IsNull(tileSet.ResolveStyle("missing-style"));
+            }
+            finally
+            {
+                Object.DestroyImmediate(tileSet);
+                Object.DestroyImmediate(baseFloor);
+                Object.DestroyImmediate(baseWall);
+                Object.DestroyImmediate(baseAccent);
+                Object.DestroyImmediate(styledFloor);
+                Object.DestroyImmediate(styledWall);
+                Object.DestroyImmediate(styledAccent);
+                Object.DestroyImmediate(desk);
+            }
+        }
+
+        [Test]
         public void HOUSE_LOOP_EDIT_050_IntegratedE2EContainsSavedVisualAndOverlayAssertions()
         {
             Assert.IsTrue(File.Exists(HouseUpgradeInteriorLoopE2EPath), "House upgrade/interior loop requires an EndToEnd PlayMode test file for the integrated stage, preset, furniture, reload, and visual cleanup flow.");
             string source = File.ReadAllText(HouseUpgradeInteriorLoopE2EPath);
 
-            StringAssert.Contains("HOUSE_UPGRADE_E2E_001_UpgradePresetPlaceReload", source, "Integrated House E2E must expose the named scenario from the goal.");
-            StringAssert.Contains("AssertHouseStateContainsExactlyOnce", source, "Integrated House E2E must assert saved House stage/preset values exactly once, not only by containment.");
-            StringAssert.Contains("AssertFurnitureLayoutContainsExactlyOnce", source, "Integrated House E2E must assert saved furniture layout records exactly once.");
-            StringAssert.Contains("AssertRuntimeTilemapsMatchSavedLayout", source, "Integrated House E2E must compare runtime object/occupancy tilemaps with saved furniture layout.");
-            StringAssert.Contains("AssertNoVisibleOverlayArtifacts", source, "Integrated House E2E must verify construction, preview, sample, and debug overlays are not visible after reload.");
-            StringAssert.Contains("house-upgrade-interior-loop-e2e.png", source, "Integrated House E2E must capture Game View screenshot evidence.");
-            StringAssert.Contains("CountOccurrences", source, "Integrated House E2E exact-once assertions must use an explicit occurrence counter.");
+                    StringAssert.Contains("HOUSE_UPGRADE_E2E_001_UpgradePresetPlaceReload", source, "Integrated House E2E must expose the named scenario from the goal.");
+                    StringAssert.Contains("AssertHouseStateContainsExactlyOnce", source, "Integrated House E2E must assert saved House stage/preset values exactly once, not only by containment.");
+                    StringAssert.Contains("AssertFurnitureLayoutContainsExactlyOnce", source, "Integrated House E2E must assert saved furniture layout records exactly once.");
+                    StringAssert.Contains("AssertRuntimeTilemapsMatchSavedLayout", source, "Integrated House E2E must compare runtime object/occupancy tilemaps with saved furniture layout.");
+                    StringAssert.Contains("AssertNoVisibleOverlayArtifacts", source, "Integrated House E2E must verify construction, preview, sample, and debug overlays are not visible after reload.");
+                    StringAssert.Contains("house-upgrade-interior-loop-e2e.png", source, "Integrated House E2E must capture Game View screenshot evidence.");
+                    StringAssert.Contains("CountOccurrences", source, "Integrated House E2E exact-once assertions must use an explicit occurrence counter.");
         }
 #if UNITY_EDITOR
         [Test]

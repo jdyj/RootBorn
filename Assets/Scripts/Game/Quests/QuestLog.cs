@@ -177,6 +177,8 @@ namespace Rootborn.Game.Quests
             }
         }
 
+        private bool _claimInProgress;
+
         public bool CanClaimReward(QuestDefinition quest, in RewardRuntimeContext context)
         {
             if (!TryGetProgress(quest, out var progress) || progress.State != QuestState.Completed)
@@ -184,16 +186,10 @@ namespace Rootborn.Game.Quests
                 return false;
             }
 
-            if (quest.Rewards != null)
+            // Checks all item grants together: each reward fitting alone does not mean they all fit.
+            if (!QuestRewardBatch.CanApply(quest.Rewards, in context))
             {
-                for (int i = 0; i < quest.Rewards.Length; i++)
-                {
-                    var reward = quest.Rewards[i];
-                    if (reward != null && !reward.CanApply(in context))
-                    {
-                        return false;
-                    }
-                }
+                return false;
             }
 
             if (quest.CompletionEffects != null)
@@ -213,28 +209,45 @@ namespace Rootborn.Game.Quests
 
         public bool ClaimReward(QuestDefinition quest, in RewardRuntimeContext context)
         {
-            if (!CanClaimReward(quest, in context))
+            // A reward or effect calling back into this claim, even while checking, must not apply anything twice.
+            if (_claimInProgress)
             {
                 return false;
             }
 
-            if (quest.Rewards != null)
+            _claimInProgress = true;
+            try
             {
-                for (int i = 0; i < quest.Rewards.Length; i++)
+                if (!CanClaimReward(quest, in context) || !TryGetProgress(quest, out var progress))
                 {
-                    quest.Rewards[i]?.Apply(in context);
+                    return false;
                 }
-            }
 
-            if (quest.CompletionEffects != null)
+                return ClaimRewardCore(quest, progress, in context);
+            }
+            finally
             {
-                for (int i = 0; i < quest.CompletionEffects.Length; i++)
-                {
-                    quest.CompletionEffects[i]?.Apply(in context);
-                }
+                _claimInProgress = false;
             }
+        }
 
-            if (!TryGetProgress(quest, out var progress) || !progress.TryMarkRewardClaimed())
+        private bool ClaimRewardCore(QuestDefinition quest, QuestProgress progress, in RewardRuntimeContext context)
+        {
+            // Effects and the claim commit inside the batch, so inventory observers see the claim recorded.
+            var capturedContext = context;
+            bool claimed = QuestRewardBatch.TryApply(quest.Rewards, in context, () =>
+            {
+                if (quest.CompletionEffects != null)
+                {
+                    for (int i = 0; i < quest.CompletionEffects.Length; i++)
+                    {
+                        quest.CompletionEffects[i]?.Apply(in capturedContext);
+                    }
+                }
+
+                progress.TryMarkRewardClaimed();
+            });
+            if (!claimed)
             {
                 return false;
             }

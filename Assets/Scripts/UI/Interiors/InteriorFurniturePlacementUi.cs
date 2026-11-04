@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using Rootborn.Game.Common;
 using Rootborn.Game.Interiors;
+using Rootborn.Game.World;
 using Rootborn.UI.Modern;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -175,19 +176,15 @@ namespace Rootborn.UI.Interiors
 
     public sealed class InteriorFurniturePlacementPanel : MonoBehaviour
     {
-        private const int MaxPaletteItemsPerCategory = 60;
-
-        private static readonly InteriorObjectKind[] CategoryOrder =
-        {
-            InteriorObjectKind.Desk,
-            InteriorObjectKind.Chair,
-            InteriorObjectKind.Computer,
-            InteriorObjectKind.Sofa,
-            InteriorObjectKind.Plant,
-            InteriorObjectKind.Shelf,
-            InteriorObjectKind.Light,
-            InteriorObjectKind.OfficeProp,
-        };
+        private const int PalettePageSize = 20;
+        private readonly List<InteriorFurnitureDefinition> _filteredFurniture = new List<InteriorFurnitureDefinition>();
+        private readonly List<Button> _paletteButtons = new List<Button>(PalettePageSize);
+        private readonly List<Image> _paletteIcons = new List<Image>(PalettePageSize);
+        private InputField _paletteSearchInput;
+        private Button _palettePreviousButton;
+        private Button _paletteNextButton;
+        private Text _palettePageText;
+        private int _palettePageIndex;
 
         private readonly InteriorFurniturePlacementUiModel _model = new InteriorFurniturePlacementUiModel();
         private readonly List<InteriorFurnitureDefinition> _furniture = new List<InteriorFurnitureDefinition>();
@@ -219,13 +216,31 @@ namespace Rootborn.UI.Interiors
             var panel = root.GetComponent<InteriorFurniturePlacementPanel>();
             panel._applier = applier;
             panel.BuildUi();
-            panel.RegenerateAndApply();
+            if (AuthoredWorldScene.Find(root.scene) != null)
+            {
+                // Opening the editor is not permission to replace a saved room layout.
+                // Generation remains an explicit action; legacy generated rooms retain startup restore.
+                root.SetActive(false);
+            }
+            else
+            {
+                panel.RegenerateAndApply();
+            }
             return panel;
+        }
+
+        private void OnEnable()
+        {
+            transform.SetAsLastSibling();
+            _isClosing = false;
+            if(_overlay!=null){_overlay.gameObject.SetActive(true);UpdateAvailabilityPreview();}
         }
 
         private void OnDisable()
         {
             _isClosing = true;
+            if(_overlay!=null)_overlay.SuspendPreview();
+            HousePlacementCameraRuntimeInstaller.SetPlacementMode(gameObject.scene, false);
         }
 
         private void BuildUi()
@@ -239,7 +254,6 @@ namespace Rootborn.UI.Interiors
             var bottom = ModernUiPanelBuilder.CreateCommonPanel48(transform, "InteriorPlacementBottomBar", new Vector2(0f, -490f), new Vector2(1760f, 86f));
 
             CreateLabel(left.transform, "PaletteTitle", "가구 배치", new Vector2(-52f, 386f), new Vector2(270f, 42f), 24).alignment = TextAnchor.MiddleLeft;
-            CreateLabel(left.transform, "PaletteDropdownArrow", "v", new Vector2(178f, 386f), new Vector2(36f, 36f), 22);
             CreateFurnitureCategoryButtons(left.transform);
 
             CreateActionButton(toolbar.transform, "SelectToolButton", "선택", new Vector2(-285f, 0f), new Vector2(150f, 70f), () => { }, 18);
@@ -292,51 +306,103 @@ namespace Rootborn.UI.Interiors
 
         private void CreateFurnitureCategoryButtons(Transform parent)
         {
-            float y = 318f;
-            for (int i = 0; i < CategoryOrder.Length; i++)
+            // A bounded pool keeps the whole registry searchable without thousands of UI objects.
+            _paletteSearchInput = CreateInput(parent, "FurniturePaletteSearchInput", string.Empty, new Vector2(0f, 296f), new Vector2(368f, 64f));
+            _paletteSearchInput.characterLimit = 100;
+            _paletteSearchInput.targetGraphic = _paletteSearchInput.GetComponent<Image>();
+            _paletteSearchInput.GetComponent<Image>().color = Color.clear;
+            _paletteSearchInput.textComponent.fontSize = 18;
+            _paletteSearchInput.textComponent.rectTransform.sizeDelta = new Vector2(328f, 32f);
+            _paletteSearchInput.textComponent.color = new Color(0.16f, 0.12f, 0.08f, 1f);
+            var placeholder = (Text)_paletteSearchInput.placeholder;
+            placeholder.text = "이름 또는 ID로 검색";
+            placeholder.rectTransform.sizeDelta = new Vector2(328f, 32f);
+            placeholder.fontSize = 18;
+            placeholder.alignment = TextAnchor.MiddleLeft;
+            placeholder.color = new Color(0.28f, 0.24f, 0.20f, .75f);
+            ApplyPaletteChrome(_paletteSearchInput.gameObject);
+
+            for (int i = 0; i < PalettePageSize; i++)
             {
-                var category = CategoryOrder[i];
-                var items = CollectFurniture(category);
-                if (items.Count == 0)
+                int slot = i;
+                var position = new Vector2(-144f + (i % 5) * 72f, 168f - (i / 5) * 88f);
+                var go = ModernUiPanelBuilder.CreatePlainButton(parent, "PaletteFurniture_Pool" + i, position, new Vector2(64f, 64f));
+                ApplyPaletteChrome(go);
+                var icon = CreateImage(go.transform, "Icon", Vector2.zero, new Vector2(48f, 48f));
+                icon.preserveAspect = true;
+                var button = go.GetComponent<Button>();
+                button.onClick.AddListener(() =>
                 {
-                    continue;
-                }
-
-                CreateLabel(parent, "FurnitureCategory_" + category, GetCategoryLabel(category), new Vector2(-172f, y), new Vector2(96f, 28f), 17).alignment = TextAnchor.MiddleLeft;
-                y -= 48f;
-                var displayCount = Mathf.Min(items.Count, MaxPaletteItemsPerCategory);
-                for (int item = 0; item < displayCount; item++)
-                {
-                    var position = new Vector2(-150f + (item % 5) * 76f, y - (item / 5) * 76f);
-                    CreateFurnitureDefinitionButton(parent, items[item], position);
-                }
-
-                y -= Mathf.CeilToInt(displayCount / 5f) * 76f + 18f;
+                    int index = _palettePageIndex * PalettePageSize + slot;
+                    if (index < _filteredFurniture.Count) SelectFurnitureDefinition(_filteredFurniture[index]);
+                });
+                _paletteButtons.Add(button);
+                _paletteIcons.Add(icon);
             }
+
+            _palettePreviousButton = CreatePalettePageButton(parent, "FurniturePalettePreviousPage", "이전", new Vector2(-112f, -248f), () => ShowPalettePage(_palettePageIndex - 1));
+            _paletteNextButton = CreatePalettePageButton(parent, "FurniturePaletteNextPage", "다음", new Vector2(112f, -248f), () => ShowPalettePage(_palettePageIndex + 1));
+            _palettePageText = CreateLabel(parent, "FurniturePalettePageText", string.Empty, new Vector2(0f, -324f), new Vector2(368f, 64f), 18);
+            _palettePageText.color = new Color(0.16f, 0.12f, 0.08f, 1f);
+            _paletteSearchInput.onValueChanged.AddListener(FilterPalette);
+            FilterPalette(string.Empty);
         }
 
-        private List<InteriorFurnitureDefinition> CollectFurniture(InteriorObjectKind kind)
+        private static void ApplyPaletteChrome(GameObject go)
         {
-            var items = new List<InteriorFurnitureDefinition>();
+            var tiles = go.AddComponent<ModernUiTileImage>();
+            tiles.SetRecipe(ModernUiRecipes.CommonPanel);
+            tiles.Rebuild();
+        }
+
+        private static Button CreatePalettePageButton(Transform parent, string name, string label, Vector2 position, UnityEngine.Events.UnityAction action)
+        {
+            var go = ModernUiPanelBuilder.CreatePlainButton(parent, name, position, new Vector2(128f, 48f));
+            ApplyPaletteChrome(go);
+            var text = CreateLabel(go.transform, "Label", label, Vector2.zero, new Vector2(112f, 40f), 18);
+            text.color = new Color(0.16f, 0.12f, 0.08f, 1f);
+            var button = go.GetComponent<Button>();
+            button.onClick.AddListener(action);
+            return button;
+        }
+
+        private void FilterPalette(string query)
+        {
+            string filter = (query ?? string.Empty).Trim();
+            _filteredFurniture.Clear();
             for (int i = 0; i < _furniture.Count; i++)
             {
-                if (_furniture[i] != null && _furniture[i].ObjectKind == kind)
-                {
-                    items.Add(_furniture[i]);
-                }
+                var furniture = _furniture[i];
+                if (furniture != null && (filter.Length == 0 ||
+                    furniture.DisplayName.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    furniture.Id.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0))
+                    _filteredFurniture.Add(furniture);
             }
-
-            return items;
+            ShowPalettePage(0);
         }
 
-        private void CreateFurnitureDefinitionButton(Transform parent, InteriorFurnitureDefinition furniture, Vector2 position)
+        private void ShowPalettePage(int page)
         {
-            var go = ModernUiPanelBuilder.CreateCommonPanel48Button(parent, "PaletteFurniture_" + furniture.Id, position, new Vector2(68f, 68f));
-            var icon = CreateImage(go.transform, "Icon", Vector2.zero, new Vector2(52f, 52f));
-            icon.sprite = GetPrimarySprite(furniture);
-            icon.preserveAspect = true;
-            icon.color = icon.sprite != null ? Color.white : new Color(0.2f, 0.22f, 0.26f, 1f);
-            go.GetComponent<Button>().onClick.AddListener(() => SelectFurnitureDefinition(furniture));
+            int pageCount = Mathf.Max(1, Mathf.CeilToInt(_filteredFurniture.Count / (float)PalettePageSize));
+            _palettePageIndex = Mathf.Clamp(page, 0, pageCount - 1);
+            int first = _palettePageIndex * PalettePageSize;
+            for (int i = 0; i < _paletteButtons.Count; i++)
+            {
+                int index = first + i;
+                bool visible = index < _filteredFurniture.Count;
+                var button = _paletteButtons[i];
+                button.gameObject.SetActive(visible);
+                if (!visible) continue;
+                var furniture = _filteredFurniture[index];
+                button.name = "PaletteFurniture_" + furniture.Id;
+                var sprite = GetPrimarySprite(furniture);
+                _paletteIcons[i].sprite = sprite;
+                _paletteIcons[i].color = sprite != null ? Color.white : new Color(0.2f, 0.22f, 0.26f, 1f);
+            }
+            _palettePreviousButton.interactable = _palettePageIndex > 0;
+            _paletteNextButton.interactable = _palettePageIndex + 1 < pageCount;
+            _palettePageText.text = _filteredFurniture.Count == 0 ? "검색 결과가 없습니다" :
+                (_palettePageIndex + 1) + " / " + pageCount + " 페이지\n가구 " + _filteredFurniture.Count + "개";
         }
 
         private static Sprite GetPrimarySprite(InteriorFurnitureDefinition furniture)
@@ -423,8 +489,11 @@ namespace Rootborn.UI.Interiors
             }
         }
 
+        public static bool CanRegenerateRoom(UnityEngine.SceneManagement.Scene scene) => AuthoredWorldScene.Find(scene)==null;
+
         private void RegenerateAndApply()
         {
+            if(!CanRegenerateRoom(gameObject.scene))return;
             if (_isClosing)
             {
                 return;
@@ -452,6 +521,7 @@ namespace Rootborn.UI.Interiors
 
         private void ApplyCurrentMap()
         {
+            if(!CanRegenerateRoom(gameObject.scene))return;
             if (_applier == null)
             {
                 _applier = FindFirstObjectByType<InteriorTilemapApplier>();
@@ -473,7 +543,7 @@ namespace Rootborn.UI.Interiors
             bool createdOverlay = false;
             if (_overlay == null)
             {
-                _overlay = InteriorPlacementPreviewOverlay.Ensure();
+                _overlay = InteriorPlacementPreviewOverlay.Ensure(gameObject.scene);
                 createdOverlay = _overlay != null;
             }
 
@@ -495,7 +565,7 @@ namespace Rootborn.UI.Interiors
         {
             if (_overlay == null)
             {
-                _overlay = InteriorPlacementPreviewOverlay.Ensure();
+                _overlay = InteriorPlacementPreviewOverlay.Ensure(gameObject.scene);
             }
 
             if (_overlay != null && _overlay.SaveFurnitureLayout())
@@ -508,7 +578,7 @@ namespace Rootborn.UI.Interiors
         {
             if (_overlay == null)
             {
-                _overlay = InteriorPlacementPreviewOverlay.Ensure();
+                _overlay = InteriorPlacementPreviewOverlay.Ensure(gameObject.scene);
             }
 
             if (_overlay != null && _overlay.ClearPlacedFurniture())
@@ -521,7 +591,7 @@ namespace Rootborn.UI.Interiors
         {
             if (_overlay == null)
             {
-                _overlay = InteriorPlacementPreviewOverlay.Ensure();
+                _overlay = InteriorPlacementPreviewOverlay.Ensure(gameObject.scene);
             }
 
             if (_overlay != null && _overlay.LoadFurnitureLayout())
@@ -534,7 +604,7 @@ namespace Rootborn.UI.Interiors
         {
             if (_overlay == null)
             {
-                _overlay = InteriorPlacementPreviewOverlay.Ensure();
+                _overlay = InteriorPlacementPreviewOverlay.Ensure(gameObject.scene);
             }
 
             if (_overlay == null)
@@ -548,6 +618,7 @@ namespace Rootborn.UI.Interiors
                 _selectedDirectionText.text = "방향: " + direction;
             }
 
+            UpdateAvailabilityText();
             SetStatus("Direction " + direction, _summaryText != null ? _summaryText.text : string.Empty);
         }
 
@@ -555,7 +626,7 @@ namespace Rootborn.UI.Interiors
         {
             if (_overlay == null)
             {
-                _overlay = InteriorPlacementPreviewOverlay.Ensure();
+                _overlay = InteriorPlacementPreviewOverlay.Ensure(gameObject.scene);
             }
 
             if (_overlay != null && _overlay.MoveSelectedFurniture())
@@ -568,7 +639,7 @@ namespace Rootborn.UI.Interiors
         {
             if (_overlay == null)
             {
-                _overlay = InteriorPlacementPreviewOverlay.Ensure();
+                _overlay = InteriorPlacementPreviewOverlay.Ensure(gameObject.scene);
             }
 
             if (_overlay != null && _overlay.DeleteSelectedFurniture())
@@ -577,9 +648,19 @@ namespace Rootborn.UI.Interiors
             }
         }
 
+        private bool HasAuthoredFurnitureSession()
+        {
+            foreach (var root in gameObject.scene.GetRootGameObjects())
+            {
+                var session = root.GetComponentInChildren<Rootborn.Game.Placement.AuthoredHouseFurnitureSession>(true);
+                if (session != null && session.Surface != null) return true;
+            }
+            return false;
+        }
+
         private void UpdateAvailabilityPreview()
         {
-            if (_isClosing || !isActiveAndEnabled || _model.CurrentMap == null)
+            if (_isClosing || !isActiveAndEnabled || (_model.CurrentMap == null && !HasAuthoredFurnitureSession()))
             {
                 return;
             }
@@ -595,21 +676,29 @@ namespace Rootborn.UI.Interiors
             }
 
             var request = InteriorFurniturePlacementRequest.CreateForTests(_activeFurniture.ObjectKind, 1, _activeFurniture.PlacementPreference, InteriorFacingDirection.None, false);
-            var summary = InteriorPlacementAvailability.Summarize(_model.CurrentMap, request);
-            if (_availabilityText != null)
-            {
-                _availabilityText.text = _activeFurniture.DisplayName + ": " + summary.Message + (summary.HasEnoughCandidates ? "" : " - not enough");
-            }
-
             if (_overlay == null)
             {
-                _overlay = InteriorPlacementPreviewOverlay.Ensure();
+                _overlay = InteriorPlacementPreviewOverlay.Ensure(gameObject.scene);
             }
 
             if (_overlay != null)
             {
                 _overlay.RefreshFurniture(_model.CurrentMap, request, _applier, _activeFurniture);
+                UpdateAvailabilityText();
             }
+        }
+
+        private void UpdateAvailabilityText()
+        {
+            if (_availabilityText == null || _activeFurniture == null || _overlay == null)
+            {
+                return;
+            }
+
+            int validCount = _overlay.ValidCellCount;
+            _availabilityText.text = string.Format(CultureInfo.InvariantCulture,
+                "{0}: {1} available / requested 1{2}", _activeFurniture.DisplayName, validCount,
+                validCount > 0 ? string.Empty : " - not enough");
         }
 
         private void SetStatus(string status, string summary)
@@ -635,7 +724,8 @@ namespace Rootborn.UI.Interiors
             label.font = ResolveFont();
             label.fontSize = fontSize;
             label.alignment = TextAnchor.MiddleCenter;
-            label.color = new Color(0.95f, 0.93f, 0.84f, 1f);
+            bool darkControl = parent.GetComponent<Button>() != null || parent.GetComponent<InputField>() != null || parent.GetComponent<Dropdown>() != null;
+            label.color = darkControl ? new Color(0.95f, 0.93f, 0.84f, 1f) : new Color(0.16f, 0.12f, 0.08f, 1f);
             label.raycastTarget = false;
             return label;
         }
@@ -664,7 +754,7 @@ namespace Rootborn.UI.Interiors
         {
             if (_font == null)
             {
-                _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                _font = Rootborn.UI.StudentLife.LifeUiFont.Shared;
             }
 
             return _font;

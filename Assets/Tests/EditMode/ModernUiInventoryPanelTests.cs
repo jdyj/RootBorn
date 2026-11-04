@@ -22,8 +22,13 @@ namespace Rootborn.Tests.EditMode
                 Invoke(fixture.Panel, "Show");
 
                 Assert.IsTrue((bool)GetProperty(fixture.Panel, "IsVisible"));
-                Assert.IsNotNull(FindDeep(fixture.Host.transform, "Cell_TL"), "Missing inventory tab chrome.");
-                AssertChildHasTiles(fixture.Host.transform, "InventoryInnerPanel");
+                var tab = fixture.Host.transform.Find("Tab_0");
+                Assert.IsNotNull(tab, "Missing inventory category tab.");
+                AssertChildHasTiles(fixture.Host.transform, "Tab_0");
+                Assert.IsNotNull(tab.GetComponent<Button>(), "Tab must retain its input action.");
+                Assert.IsTrue(tab.GetComponent<Image>().raycastTarget, "Tab root must retain the hit target.");
+                Assert.IsFalse(tab.Find("Icon").GetComponent<Image>().raycastTarget, "Decorative tab icon must not intercept input.");
+                Assert.IsNotNull(fixture.Host.transform.Find("InventoryInnerPanel").GetComponent<ScrollRect>(), "Inventory body must scroll inside the outer frame.");
                 Assert.IsNotNull(FindDeep(fixture.Host.transform, "ScrollTrackTop"), "Missing inventory scrollbar.");
                 Assert.IsNotNull(fixture.Host.transform.Find("SearchField"), "Missing inventory bottom controls/search row.");
                 Assert.GreaterOrEqual((int)GetProperty(fixture.Panel, "TileCount"), 80);

@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57949aa1a0ccd544da205de8d3b92bbd, type: 3}
+  m_Name: Sheet_outfit_adult_office
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Characters.Growing.GrowingCharacterSheetDefinition
+  _id: outfit_adult_office
+  _frames:
+  - {fileID: -357646269756534407, guid: 05cfac69e3eccc0489a2ee6903fc2419, type: 3}
+  - {fileID: -5914023018604750576, guid: 05cfac69e3eccc0489a2ee6903fc2419, type: 3}
+  - {fileID: -7289265336238283762, guid: 05cfac69e3eccc0489a2ee6903fc2419, type: 3}
+  - {fileID: 8464463252096829941, guid: 05cfac69e3eccc0489a2ee6903fc2419, type: 3}
+  - {fileID: 4321678699828376416, guid: 05cfac69e3eccc0489a2ee6903fc2419, type: 3}
+  - {fileID: -9104327921104068616, guid: 05cfac69e3eccc0489a2ee6903fc2419, type: 3}
+  - {fileID: 1711003599641036076, guid: 05cfac69e3eccc0489a2ee6903fc2419, type: 3}
+  - {fileID: -4217126583670401345, guid: 05cfac69e3eccc0489a2ee6903fc2419, type: 3}
+  - {fileID: -5617317885837759451, guid: 05cfac69e3eccc0489a2ee6903fc2419, type: 3}
+  - {fileID: 3705973454979823575, guid: 05cfac69e3eccc0489a2ee6903fc2419, type: 3}
+  - {fileID: 3671866973419482643, guid: 05cfac69e3eccc0489a2ee6903fc2419, type: 3}
+  - {fileID: -7114056697719582582, guid: 05cfac69e3eccc0489a2ee6903fc2419, type: 3}
+  - {fileID: -3064127396775040119, guid: 05cfac69e3eccc0489a2ee6903fc2419, type: 3}
+  - {fileID: -8567156713633907478, guid: 05cfac69e3eccc0489a2ee6903fc2419, type: 3}
+  - {fileID: 3804589312509587580, guid: 05cfac69e3eccc0489a2ee6903fc2419, type: 3}
+  - {fileID: 3952283424133068736, guid: 05cfac69e3eccc0489a2ee6903fc2419, type: 3}
+  - {fileID: 8007297364376369738, guid: 05cfac69e3eccc0489a2ee6903fc2419, type: 3}
+  - {fileID: 7745089434126345407, guid: 05cfac69e3eccc0489a2ee6903fc2419, type: 3}
+  - {fileID: -8985575138404083462, guid: 05cfac69e3eccc0489a2ee6903fc2419, type: 3}
+  - {fileID: -157859963315458783, guid: 05cfac69e3eccc0489a2ee6903fc2419, type: 3}
+  - {fileID: 5830584609429658959, guid: 05cfac69e3eccc0489a2ee6903fc2419, type: 3}
+  - {fileID: -1558038134357849107, guid: 05cfac69e3eccc0489a2ee6903fc2419, type: 3}
+  - {fileID: 3333329489649846043, guid: 05cfac69e3eccc0489a2ee6903fc2419, type: 3}
+  - {fileID: 9081846865399354681, guid: 05cfac69e3eccc0489a2ee6903fc2419, type: 3}

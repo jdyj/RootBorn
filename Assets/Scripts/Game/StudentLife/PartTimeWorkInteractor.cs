@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using Rootborn.Game.Player;
+using Rootborn.Game.Quests;
 using UnityEngine;
 
 namespace Rootborn.Game.StudentLife
@@ -11,7 +12,6 @@ namespace Rootborn.Game.StudentLife
         [SerializeField] private PartTimeWorkDefinition _work;
 
         private readonly PartTimeWorkRunner _runner = new PartTimeWorkRunner();
-        private int _requestSequence;
 
         public PartTimeWorkDefinition Work => _work;
         public PartTimeWorkResult LastResult { get; private set; }
@@ -22,7 +22,6 @@ namespace Rootborn.Game.StudentLife
         public void Bind(PartTimeWorkDefinition work)
         {
             _work = work;
-            _requestSequence = 0;
         }
 
         public bool CanInteract(GameObject player)
@@ -45,12 +44,14 @@ namespace Rootborn.Game.StudentLife
 
         public bool Interact(StudentLifeProgressComponent progressComponent, PlayerInventory playerInventory)
         {
-            string requestId = _work != null ? _work.Id + ":" + _requestSequence++ : "part-time-work:" + _requestSequence++;
+            string requestId = QuestGameplayEventBridge.CreateRequestKey("part-time-work");
             return Interact(progressComponent, playerInventory, requestId);
         }
 
         public bool Interact(StudentLifeProgressComponent progressComponent, PlayerInventory playerInventory, string requestId)
         {
+            if (_work != null && _work.Minigame != null)
+                return progressComponent != null && StudentMinigameRequestBridge.TryRequestPartTimeWork(progressComponent.gameObject, _work, requestId);
             var progress = progressComponent == null ? null : progressComponent.EnsureProgress();
             var inventory = playerInventory == null ? null : playerInventory.Inventory;
             bool applied = _runner.TryPerform(_work, progress, inventory, requestId, out var result);
@@ -59,6 +60,7 @@ namespace Rootborn.Game.StudentLife
             if (applied)
             {
                 StudentLifeProgressPersistence.Save(progressComponent);
+                QuestGameplayEventBridge.Record(new QuestEvent(QuestEventKind.PartTimeWork, requestId, work: _work), progress);
             }
 
             return applied;

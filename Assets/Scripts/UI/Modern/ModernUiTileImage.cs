@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Rootborn.Game.Common;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,6 +20,27 @@ namespace Rootborn.UI.Modern
         private int _tileCount;
         private int _cornerTileCount;
         private bool _hasStretchedCornerTiles;
+
+        private UrbanUiThemeDefinition _themeOverride;
+        private Image _skin;
+        private Image _rootImage;
+        private Color _originalRootColor;
+        private bool _rootHidden;
+        private Button _button;
+        private Graphic _originalTarget;
+        private Color _tint = Color.white;
+        private readonly Dictionary<Text, Color> _originalLabelColors = new Dictionary<Text, Color>();
+
+        public void SetTheme(UrbanUiThemeDefinition theme)
+        {
+            _themeOverride = theme;
+        }
+
+        public void SetTint(Color tint)
+        {
+            _tint = tint;
+            if (_skin != null) _skin.color = tint;
+        }
 
         public int TileCount => _tileCount;
         public int CornerTileCount => _cornerTileCount;
@@ -43,14 +65,45 @@ namespace Rootborn.UI.Modern
 
         private void OnEnable()
         {
+            UrbanUiThemeRuntime.Changed -= OnThemeChanged;
+            UrbanUiThemeRuntime.Changed += OnThemeChanged;
             if (_rebuildOnEnable)
             {
                 Rebuild();
             }
         }
 
+        private void Start()
+        {
+            // Runtime factories configure labels after AddComponent/OnEnable.
+            if (_themeOverride != null || UrbanUiThemeRuntime.Current != null) Rebuild();
+        }
+
+        private void OnDisable()
+        {
+            UrbanUiThemeRuntime.Changed -= OnThemeChanged;
+        }
+
+        private void OnDestroy()
+        {
+            UrbanUiThemeRuntime.Changed -= OnThemeChanged;
+        }
+
+        private void OnThemeChanged()
+        {
+            if (isActiveAndEnabled) Rebuild();
+        }
+
+        private void OnCanvasHierarchyChanged()
+        {
+            // Reparenting under a different Canvas changes Image's reference PPU.
+            if (isActiveAndEnabled && _skin != null && _skin.gameObject.activeSelf) Rebuild();
+        }
+
         public void Rebuild()
         {
+            if (TryRenderUrbanTheme()) return;
+            RestoreLegacyGraphics();
             ClearGeneratedTiles();
 
             var rect = (RectTransform)transform;
@@ -60,6 +113,7 @@ namespace Rootborn.UI.Modern
             _tileCount = 0;
             _cornerTileCount = 0;
             _hasStretchedCornerTiles = false;
+            var spriteByRole = new Dictionary<string, Sprite>();
 
             for (int y = 0; y < rows; y++)
             {
@@ -67,7 +121,13 @@ namespace Rootborn.UI.Modern
                 {
                     string role = RoleFor(x, y, columns, rows);
                     bool isCorner = role.StartsWith("corner");
-                    var tile = CreateTile(rect.pivot, bounds, x, y, role, _recipe.FindByRole(role));
+                    if (!spriteByRole.TryGetValue(role, out var resolvedSprite))
+                    {
+                        resolvedSprite = ResolveSprite(_recipe.FindByRole(role));
+                        spriteByRole[role] = resolvedSprite;
+                    }
+
+                    var tile = CreateTile(rect.pivot, bounds, x, y, role, resolvedSprite);
                     tile.transform.SetSiblingIndex(_tileCount);
                     if (isCorner)
                     {
@@ -84,7 +144,94 @@ namespace Rootborn.UI.Modern
             }
         }
 
-        private GameObject CreateTile(Vector2 parentPivot, Rect parentBounds, int column, int row, string role, ModernUiSpriteKey spriteKey)
+        private bool TryRenderUrbanTheme()
+        {
+            var theme = _themeOverride != null ? _themeOverride : UrbanUiThemeRuntime.Current;
+            if (theme == null) return false;
+            _button = GetComponent<Button>();
+            bool isSlot = ReferenceEquals(_recipe, ModernUiRecipes.SlotPanel);
+            bool isButton = !isSlot && _button != null;
+            Sprite sprite = isSlot ? theme.SlotSprite : isButton ? theme.ButtonSprite : theme.PanelSprite;
+            if (sprite == null) return false;
+            ClearGeneratedTiles();
+            if (_skin == null)
+            {
+                var existing = transform.Find("[UrbanSkin]");
+                if (existing != null) _skin = existing.GetComponent<Image>();
+                if (_skin == null)
+                {
+                    var child = new GameObject("[UrbanSkin]", typeof(RectTransform), typeof(Image), typeof(LayoutElement));
+                    child.transform.SetParent(transform, false);
+                    _skin = child.GetComponent<Image>();
+                }
+            }
+            var layout = _skin.GetComponent<LayoutElement>();
+            if (layout == null) layout = _skin.gameObject.AddComponent<LayoutElement>();
+            layout.ignoreLayout = true;
+            _skin.gameObject.SetActive(true);
+            _skin.transform.SetAsFirstSibling();
+            var rect = _skin.rectTransform;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            _skin.sprite = sprite;
+            _skin.type = Image.Type.Sliced;
+            var canvas = GetComponentInParent<Canvas>();
+            float referencePpu = canvas != null ? canvas.referencePixelsPerUnit : 16f;
+            _skin.pixelsPerUnitMultiplier = .5f * referencePpu / 16f;
+            _skin.preserveAspect = false;
+            _skin.raycastTarget = false;
+            _skin.color = _tint;
+            if (!_rootHidden)
+            {
+                _rootImage = GetComponent<Image>();
+                if (_rootImage != null)
+                {
+                    _originalRootColor = _rootImage.color;
+                    _rootImage.color = Color.clear;
+                    _rootHidden = true;
+                }
+            }
+            if (_button != null && _button.targetGraphic != _skin)
+            {
+                _originalTarget = _button.targetGraphic;
+                _button.targetGraphic = _skin;
+            }
+            RestoreLabelColors();
+            if (isButton)
+            {
+                for (int i = 0; i < transform.childCount; i++)
+                {
+                    var label = transform.GetChild(i).GetComponent<Text>();
+                    if (label == null) continue;
+                    _originalLabelColors[label] = label.color;
+                    label.color = theme.ButtonTextColor;
+                }
+            }
+            _tileCount = 1;
+            _cornerTileCount = 0;
+            _hasStretchedCornerTiles = false;
+            return true;
+        }
+
+        private void RestoreLabelColors()
+        {
+            foreach (var pair in _originalLabelColors)
+                if (pair.Key != null) pair.Key.color = pair.Value;
+            _originalLabelColors.Clear();
+        }
+
+        private void RestoreLegacyGraphics()
+        {
+            if (_skin != null) _skin.gameObject.SetActive(false);
+            if (_rootHidden && _rootImage != null) _rootImage.color = _originalRootColor;
+            _rootHidden = false;
+            if (_button != null && _button.targetGraphic == _skin) _button.targetGraphic = _originalTarget;
+            RestoreLabelColors();
+        }
+
+        private GameObject CreateTile(Vector2 parentPivot, Rect parentBounds, int column, int row, string role, Sprite sprite)
         {
             var go = new GameObject($"Tile_{row}_{column}_{role}", typeof(RectTransform), typeof(Image));
             go.transform.SetParent(transform, false);
@@ -98,7 +245,7 @@ namespace Rootborn.UI.Modern
             rect.sizeDelta = _tileSize;
 
             var image = go.GetComponent<Image>();
-            image.sprite = ResolveSprite(spriteKey);
+            image.sprite = sprite != null ? sprite : EnsureFallbackSprite();
             image.color = Color.white;
             image.preserveAspect = false;
             image.raycastTarget = false;
@@ -136,6 +283,7 @@ namespace Rootborn.UI.Modern
                 var child = transform.GetChild(i);
                 if (child.name.StartsWith("Tile_"))
                 {
+                    child.gameObject.SetActive(false);
                     if (Application.isPlaying)
                     {
                         Destroy(child.gameObject);

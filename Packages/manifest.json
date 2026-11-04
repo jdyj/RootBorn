@@ -4,21 +4,23 @@
       "name": "OpenUPM",
       "url": "https://package.openupm.com",
       "scopes": [
-        "com.lupidan",
+        "com.cammin.ldtkunity",
         "com.ivanmurzak",
+        "com.lupidan",
         "extensions.unity",
         "org.nuget.com.ivanmurzak",
         "org.nuget.microsoft",
-        "org.nuget.system",
-        "org.nuget.r3"
+        "org.nuget.r3",
+        "org.nuget.system"
       ]
     }
   ],
   "dependencies": {
-    "com.ivanmurzak.unity.mcp": "0.72.1",
-    "com.ivanmurzak.unity.mcp.animation": "1.1.33",
-    "com.ivanmurzak.unity.mcp.particlesystem": "1.0.60",
-    "com.ivanmurzak.unity.mcp.probuilder": "1.0.72",
+    "com.cammin.ldtkunity": "6.12.3",
+    "com.ivanmurzak.unity.mcp": "1.5.0",
+    "com.ivanmurzak.unity.mcp.animation": "2.0.2",
+    "com.ivanmurzak.unity.mcp.particlesystem": "2.0.2",
+    "com.ivanmurzak.unity.mcp.probuilder": "2.0.2",
     "com.unity.2d.tilemap": "1.0.0",
     "com.unity.2d.tilemap.extras": "6.0.2",
     "com.unity.addressables": "2.4.6",

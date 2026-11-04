@@ -33,11 +33,12 @@ namespace Rootborn.UI.Objectives
                 }
 
                 var state = log.GetState(chain);
+                var currentStep = log.GetCurrentStep(chain);
                 items.Add(new ObjectiveJournalItem(
                     "questchain." + chain.Id,
                     Category.CategoryId,
-                    ObjectiveJournalSourceText.SafeText(chain.DisplayNameKey, chain.Id),
-                    ObjectiveJournalSourceText.SafeText(chain.DescriptionKey, chain.RelatedCareerInterestId),
+                    ObjectiveJournalSourceText.SafeText(currentStep != null ? currentStep.DisplayNameKey : chain.DisplayNameKey, chain.DisplayNameKey),
+                    ObjectiveJournalSourceText.SafeText(currentStep != null ? currentStep.DescriptionKey : chain.DescriptionKey, chain.DescriptionKey),
                     state.ToString(),
                     BuildQuestChainObjectiveText(log, chain),
                     BuildQuestChainHintText(log, chain, state),
@@ -50,7 +51,7 @@ namespace Rootborn.UI.Objectives
 
         private static string BuildQuestChainObjectiveText(QuestChainLog log, QuestChainDefinition chain)
         {
-            var step = chain != null && chain.Steps != null && chain.Steps.Length > 0 ? chain.Steps[0] : null;
+            var step = log.GetCurrentStep(chain);
             var objectives = step != null ? step.Objectives : null;
             if (objectives == null || objectives.Length == 0)
             {
@@ -86,7 +87,7 @@ namespace Rootborn.UI.Objectives
                 return string.IsNullOrEmpty(summary) ? "Review the blocked quest-chain condition." : summary;
             }
 
-            var step = chain != null && chain.Steps != null && chain.Steps.Length > 0 ? chain.Steps[0] : null;
+            var step = log.GetCurrentStep(chain);
             var objective = step != null && step.Objectives != null && step.Objectives.Length > 0 ? step.Objectives[0] : null;
             return objective != null ? "Next: " + ObjectiveJournalSourceText.SafeText(objective.DisplayKey, objective.GetType().Name) : "Open quest chain log.";
         }

@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95d5d066bba05e44b918c56abbe2fffd, type: 3}
+  m_Name: Work_1
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Careers.FacilityWorkDefinition
+  _id: work.chef.level1
+  _displayNameKey: work.chef.level1
+  _facility: {fileID: 11400000, guid: 54196ec4495023d4d8abfff053527f7e, type: 2}
+  _minigame: {fileID: 11400000, guid: 481a0bad263b0394593fe1d9757fef5c, type: 2}
+  _minimumFacilityLevel: 1
+  _timePointCost: 1
+  _maximumMastery: 100
+  _masteryPerSuccess: 20
+  _minimumSuccessScore: 60
+  _reputationPerSuccess: 2
+  _rewardItems:
+  - {fileID: 11400000, guid: ef2f89c9b4c8bde48a0aea1330e022aa, type: 2}
+  - {fileID: 11400000, guid: b38c56566d190cb43a0bd556d2726ac4, type: 2}
+  _maximumRewardCounts: 1e00000003000000
+  _autoSkipRequirements:
+  - {fileID: 11400000, guid: 3e62d88833925d8418a19610f0e3b540, type: 2}
+  - {fileID: 11400000, guid: 49610aba33886ee439b856658c9b4033, type: 2}
+  - {fileID: 11400000, guid: 1da8d3b1ecbde084b8719209d203bf78, type: 2}

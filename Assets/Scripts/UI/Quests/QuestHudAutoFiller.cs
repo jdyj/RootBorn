@@ -9,6 +9,7 @@ using Rootborn.Game.Save;
 using Rootborn.Game.Story;
 using Rootborn.Game.StudentLife;
 using Rootborn.Game.WorldState;
+using Rootborn.UI.Careers;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
@@ -156,6 +157,9 @@ namespace Rootborn.UI.Quests
                 var studentProgress = studentLife != null ? studentLife.EnsureProgress() : null;
                 var rewardContext = new RewardRuntimeContext(questLog, inventory, null, storyFlags, studentProgress, worldStateProgress);
                 questPanel.Bind(questLog, registry != null ? registry.Quests : null, rewardContext);
+                // Retain this quest state provider for dialogue, rewards, and Objective Journal sources.
+                // The Journal opened with Tab owns objective presentation during normal gameplay.
+                questPanelGo.SetActive(false);
 
                 // Reuse any DialoguePanel that another installer (e.g. LocationNpcRuntimeInstaller)
                 // already created. Searching by component type, not name, avoids the duplicate-panel
@@ -169,7 +173,12 @@ namespace Rootborn.UI.Quests
                 }
                 else
                 {
-                    dialogueGo = CreatePanel(canvas.transform, "DialoguePanel", new Vector2(760f, 190f), new Vector2(-580f, -820f));
+                    dialogueGo = CreatePanel(canvas.transform, "DialoguePanel", new Vector2(760f, 210f), Vector2.zero);
+                    var dialogueRect = (RectTransform)dialogueGo.transform;
+                    dialogueRect.anchorMin = new Vector2(0.5f, 0f);
+                    dialogueRect.anchorMax = new Vector2(0.5f, 0f);
+                    dialogueRect.pivot = new Vector2(0.5f, 0f);
+                    dialogueRect.anchoredPosition = new Vector2(0f, 36f);
                     CreateText(dialogueGo.transform, "Speaker", "Guide", new Vector2(0f, -24f), new Vector2(700f, 40f), 24, TextAnchor.MiddleCenter);
                     CreateText(dialogueGo.transform, "Choice", "Accept Quest", new Vector2(0f, -92f), new Vector2(700f, 72f), 20, TextAnchor.MiddleCenter);
                     dialogueGo.transform.SetParent(canvas.transform, false);
@@ -231,7 +240,18 @@ namespace Rootborn.UI.Quests
             private static void EnsureEventSystem()
             {
                 var scene = SceneManager.GetActiveScene();
-                var eventSystem = FindComponentInScene<EventSystem>(scene);
+                var current = EventSystem.current;
+            if (current != null)
+            {
+                if (current.GetComponent<BaseInputModule>() == null)
+                {
+                    AddUiInputModule(current.gameObject);
+                }
+
+                return;
+            }
+
+            var eventSystem = FindComponentInScene<EventSystem>(scene);
                 if (eventSystem == null)
                 {
                     var go = new GameObject("EventSystem", typeof(EventSystem));
@@ -345,6 +365,9 @@ namespace Rootborn.UI.Quests
                 if (_dialoguePanel != null)
                 {
                     _dialoguePanel.OnChoiceExecuted += HandleChoiceExecuted;
+                    var owner = _studentLife != null ? _studentLife.GetComponent<AdultCareerRuntimeComponent>() : null;
+                    if (owner != null)
+                        NpcDialoguePresenter.Ensure(_dialoguePanel.gameObject.scene, _dialoguePanel)?.Bind(owner, owner.Registry, _questLog, _storyFlags);
                 }
             }
 
@@ -389,14 +412,16 @@ namespace Rootborn.UI.Quests
                     return;
                 }
 
-                var inventory = _playerInventory != null ? _playerInventory.Inventory : null;
-                var progress = _studentLife != null ? _studentLife.EnsureProgress() : null;
-                var rewardContext = new RewardRuntimeContext(_questLog, inventory, null, _storyFlags, progress, _worldStateProgress);
-                _dialoguePanel.Open(npc.Npc.ResolveDialogue(progress), new DialogueChoiceContext(_questLog, rewardContext));
+                var owner = _studentLife != null ? _studentLife.GetComponent<AdultCareerRuntimeComponent>() : null;
+                if (owner == null) return;
+                var presenter = NpcDialoguePresenter.Ensure(_dialoguePanel.gameObject.scene, _dialoguePanel);
+                if (presenter != null && presenter.Bind(owner, owner.Registry, _questLog, _storyFlags))
+                    presenter.TryShow(npc, npc.CurrentInteractionActor);
             }
 
             private void HandleChoiceExecuted(bool success)
             {
+                if (_dialoguePanel != null && _dialoguePanel.GetComponent<NpcDialoguePresenter>()?.IsBound == true) return;
                 if (!success || _questLog == null)
                 {
                     return;

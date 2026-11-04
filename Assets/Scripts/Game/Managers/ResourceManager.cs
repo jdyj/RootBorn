@@ -100,7 +100,7 @@ namespace Rootborn.Game.Managers
 
         public Task<Sprite> LoadSubSpriteAsync(string sheetAddress, string subName)
         {
-            if (string.IsNullOrEmpty(sheetAddress) || _missingSpriteSheets.Contains(sheetAddress)) return Task.FromResult<Sprite>(null);
+            if (string.IsNullOrEmpty(sheetAddress)) return Task.FromResult<Sprite>(null);
 
             Sprite cached = GetCachedSubSprite(sheetAddress, subName);
             if (cached != null) return Task.FromResult(cached);
@@ -111,11 +111,6 @@ namespace Rootborn.Game.Managers
             IList<Sprite> sprites;
             if (!_sheetSprites.TryGetValue(sheetAddress, out sprites))
             {
-                if (!string.IsNullOrEmpty(subName))
-                {
-                    return Task.FromResult<Sprite>(null);
-                }
-
                 sprites = LoadSpriteSheet(sheetAddress);
                 if (sprites == null || sprites.Count == 0)
                 {
@@ -253,41 +248,99 @@ namespace Rootborn.Game.Managers
         }
 
 #if UNITY_EDITOR
-                private Sprite LoadEditorSubSprite(string sheetAddress, string subName)
-                {
-                    if (string.IsNullOrEmpty(subName))
-                    {
-                        return null;
-                    }
-        
-                    string[] paths = UnityEditor.AssetDatabase.GetAllAssetPaths();
-                    for (int i = 0; i < paths.Length; i++)
-                    {
-                        string assetPath = paths[i];
-                        if (string.IsNullOrEmpty(assetPath) || !assetPath.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
-                        {
-                            continue;
-                        }
-        
-                        var assets = UnityEditor.AssetDatabase.LoadAllAssetsAtPath(assetPath);
-                        for (int j = 0; j < assets.Length; j++)
-                        {
-                            if (assets[j] is Sprite sprite && sprite.name == subName)
-                            {
-                                CacheSubSprite(sheetAddress, sprite);
-                                return sprite;
-                            }
-                        }
-                    }
-        
-                    return null;
-                }
-        #else
-                private Sprite LoadEditorSubSprite(string sheetAddress, string subName)
-                {
-                    return null;
-                }
-        #endif
+        private Sprite LoadEditorSubSprite(string sheetAddress, string subName)
+        {
+            if (string.IsNullOrEmpty(subName)) return null;
+
+            var sprites = LoadEditorSpriteSheet(sheetAddress);
+            if (sprites == null || sprites.Count == 0) return null;
+
+            for (int i = 0; i < sprites.Count; i++)
+            {
+                if (sprites[i] != null && sprites[i].name == subName) return sprites[i];
+            }
+
+            return null;
+        }
+
+        private IList<Sprite> LoadEditorSpriteSheet(string sheetAddress)
+        {
+            if (string.IsNullOrEmpty(sheetAddress)) return null;
+            if (_sheetSprites.TryGetValue(sheetAddress, out var cached)) return cached;
+
+            string assetPath = FindEditorSpriteSheetPath(sheetAddress);
+            if (string.IsNullOrEmpty(assetPath))
+            {
+                return null;
+            }
+
+            var assets = UnityEditor.AssetDatabase.LoadAllAssetsAtPath(assetPath);
+            var sprites = new List<Sprite>();
+            for (int i = 0; i < assets.Length; i++)
+            {
+                if (assets[i] is Sprite sprite) sprites.Add(sprite);
+            }
+
+            if (sprites.Count > 0) _sheetSprites[sheetAddress] = sprites;
+            return sprites;
+        }
+
+        private static string FindEditorSpriteSheetPath(string sheetAddress)
+        {
+            string fileToken = LastAddressSegment(sheetAddress);
+            string normalizedToken = NormalizeSpriteLookupKey(fileToken);
+            if (string.IsNullOrEmpty(normalizedToken)) return null;
+
+            string[] candidateGuids = UnityEditor.AssetDatabase.FindAssets(fileToken + " t:Texture2D", new[] { "Assets" });
+            for (int i = 0; i < candidateGuids.Length; i++)
+            {
+                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(candidateGuids[i]);
+                if (IsMatchingSpriteSheetPath(path, normalizedToken)) return path;
+            }
+
+            string[] textureGuids = UnityEditor.AssetDatabase.FindAssets("t:Texture2D", new[] { "Assets" });
+            for (int i = 0; i < textureGuids.Length; i++)
+            {
+                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(textureGuids[i]);
+                if (IsMatchingSpriteSheetPath(path, normalizedToken)) return path;
+            }
+
+            return null;
+        }
+
+        private static bool IsMatchingSpriteSheetPath(string path, string normalizedToken)
+        {
+            if (string.IsNullOrEmpty(path) || !path.EndsWith(".png", StringComparison.OrdinalIgnoreCase)) return false;
+            string fileName = System.IO.Path.GetFileNameWithoutExtension(path);
+            string normalizedFileName = NormalizeSpriteLookupKey(fileName);
+            return string.Equals(normalizedFileName, normalizedToken, StringComparison.Ordinal)
+                || normalizedFileName.Contains(normalizedToken);
+        }
+
+        private static string LastAddressSegment(string sheetAddress)
+        {
+            int slash = sheetAddress.LastIndexOf('/');
+            return slash >= 0 && slash + 1 < sheetAddress.Length ? sheetAddress.Substring(slash + 1) : sheetAddress;
+        }
+
+        private static string NormalizeSpriteLookupKey(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return string.Empty;
+            var builder = new System.Text.StringBuilder(value.Length);
+            for (int i = 0; i < value.Length; i++)
+            {
+                char c = value[i];
+                if (char.IsLetterOrDigit(c)) builder.Append(char.ToLowerInvariant(c));
+            }
+
+            return builder.ToString();
+        }
+#else
+        private Sprite LoadEditorSubSprite(string sheetAddress, string subName)
+        {
+            return null;
+        }
+#endif
         
                 private static bool HasResourceLocation(string address)
         {

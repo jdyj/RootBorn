@@ -1,3 +1,4 @@
+﻿using Rootborn.Game.Localization;
 using System;
 using System.IO;
 using NUnit.Framework;
@@ -31,8 +32,8 @@ namespace Rootborn.Tests.EditMode.UI
                 button.onClick.Invoke();
 
                 Assert.AreEqual("interest.learning", progress.CurrentInterestId);
-                StringAssert.Contains("Selected", panel.DetailsTextForTests);
-                StringAssert.Contains("action.visit-library", panel.DetailsTextForTests);
+                StringAssert.Contains(GameText.Language == "ko" ? "선택됨" : "Selected", panel.DetailsTextForTests);
+                StringAssert.Contains(Rootborn.Game.Localization.GameText.Get("action.visit-library"), panel.DetailsTextForTests);
             }
             finally
             {
@@ -108,3 +109,5 @@ namespace Rootborn.Tests.EditMode.UI
         }
     }
 }
+
+

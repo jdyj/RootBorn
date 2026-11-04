@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.WorkplaceDefinition
   _id: workplace.corner-store
   _displayNameKey: workplace.corner-store
-  _locationId: location.town-store
+  _locationId: location.corner-store
   _npcId: npc.first-guide
   _availableWorks:
   - {fileID: 11400000, guid: 119069712aee6c745ae6c6ebebc67e3c, type: 2}

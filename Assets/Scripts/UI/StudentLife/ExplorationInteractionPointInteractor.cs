@@ -1,4 +1,3 @@
-using System.Globalization;
 using Rootborn.Game.Common;
 using Rootborn.Game.DiscoveryClues;
 using Rootborn.Game.Encyclopedia;
@@ -7,6 +6,8 @@ using Rootborn.Game.Quests;
 using Rootborn.Game.Save;
 using Rootborn.Game.StudentLife;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using Rootborn.UI.Modern;
 
 namespace Rootborn.UI.StudentLife
 {
@@ -20,7 +21,7 @@ namespace Rootborn.UI.StudentLife
 
         public ExplorationInteractionDefinition Interaction => _interaction;
         public int InteractionPriority => ExplorationInteractionPriority;
-        public string InteractionPrompt => "[E] " + Humanize(_interaction != null ? _interaction.DisplayNameKey : string.Empty);
+        public string InteractionPrompt => ExplorationTextPresentation.Prompt(_interaction != null ? _interaction.DisplayNameKey : null);
         public Vector3 InteractionPromptOffset => new Vector3(0f, 1.15f, 0f);
         public Transform InteractionTransform => transform;
         public ExplorationChoiceResult LastResult { get; private set; }
@@ -47,10 +48,13 @@ namespace Rootborn.UI.StudentLife
             var encyclopedia = EncyclopediaProgressPersistence.LoadOrCreate(student.SaveSlot, student.PlayerId);
             var cache = new ExplorationLookupCache(new[] { _interaction });
             var summary = ExplorationSummaryBuilder.Build(_interaction.Id, cache, exploration, student, inventory != null ? inventory.Inventory : null, questLog, clueProgress, student.CurrentDay, student.TimeMinutes);
-            var canvas = Object.FindFirstObjectByType<Canvas>(FindObjectsInactive.Include);
+            var canvases = Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            var canvas = SelectInteractionCanvas(canvases, gameObject.scene);
+            if (canvas == null) return false;
             var panel = ExplorationChoicePanel.EnsureInScene(canvas);
+            if (panel == null) return false;
             panel.Open(summary, exploration, choiceId => Choose(player, studentComponent, exploration, clueProgress, encyclopedia, questLog, choiceId, panel));
-            return true;
+            return panel.IsOpen && panel.gameObject.activeInHierarchy;
         }
 
         private void Choose(GameObject player, StudentLifeProgressComponent studentComponent, ExplorationProgress exploration, DiscoveryClueProgress clueProgress, EncyclopediaProgress encyclopedia, QuestLog questLog, string choiceId, ExplorationChoicePanel panel)
@@ -62,6 +66,11 @@ namespace Rootborn.UI.StudentLife
             var runner = new ExplorationInteractionRunner();
             runner.TryChoose(_interaction, choice, context, out var result);
             LastResult = result;
+            if (result.Kind == ExplorationChoiceResultKind.Dismissed)
+            {
+                panel.Close();
+                return;
+            }
             panel.ShowResult(result);
             if (result.Kind == ExplorationChoiceResultKind.Applied && studentComponent != null)
             {
@@ -112,11 +121,29 @@ namespace Rootborn.UI.StudentLife
             return string.IsNullOrEmpty(playerId) || playerId == "player" || playerId == PlayerIdentity.DefaultPlayerId ? ExplorationProgressFileName : "exploration-progress-" + playerId + ".json";
         }
 
-        private static string Humanize(string key)
+        private static Canvas SelectInteractionCanvas(Canvas[] candidates, Scene scene)
         {
-            if (string.IsNullOrEmpty(key)) return "Inspect";
-            string text = key.Replace("exploration.", string.Empty).Replace("choice.", string.Empty).Replace('-', ' ').Replace('_', ' ');
-            return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(text);
+            Canvas selected = null;
+            bool selectedShared = false;
+            if (candidates == null) return null;
+            for (int i = 0; i < candidates.Length; i++)
+            {
+                var canvas = candidates[i];
+                if (canvas == null || !canvas.isActiveAndEnabled || !canvas.gameObject.activeInHierarchy
+                    || canvas.gameObject.scene != scene || canvas.rootCanvas != canvas
+                    || canvas.renderMode != RenderMode.ScreenSpaceOverlay) continue;
+                bool shared = canvas.GetComponentInChildren<ModernUiInventoryPanel>(true) != null
+                    || canvas.GetComponentInChildren<ModernUiPanelInputRouter>(true) != null;
+                if (selected == null || (shared && !selectedShared)
+                    || (shared == selectedShared && canvas.sortingOrder > selected.sortingOrder))
+                {
+                    selected = canvas;
+                    selectedShared = shared;
+                }
+            }
+            return selected;
         }
+
+
     }
 }

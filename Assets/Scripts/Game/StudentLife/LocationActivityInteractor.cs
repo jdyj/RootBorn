@@ -1,6 +1,7 @@
 using System;
-using System.Globalization;
+using Rootborn.Game.Localization;
 using Rootborn.Game.Player;
+using Rootborn.Game.Quests;
 using UnityEngine;
 
 namespace Rootborn.Game.StudentLife
@@ -16,7 +17,7 @@ namespace Rootborn.Game.StudentLife
 
         public LocationIdentityDefinition Identity => _identity;
         public int InteractionPriority => LocationIdentityPriority;
-        public string InteractionPrompt => "[E] Explore " + Humanize(_identity != null && _identity.Location != null ? _identity.Location.DisplayNameKey : string.Empty);
+        public string InteractionPrompt => "[E] " + GameText.Format("life.location.explore", _identity != null && _identity.Location != null ? GameText.Get(_identity.Location.DisplayNameKey) : GameText.Get("life.location.generic"));
         public Vector3 InteractionPromptOffset => new Vector3(0f, 1.25f, 0f);
         public Transform InteractionTransform => transform;
 
@@ -43,15 +44,11 @@ namespace Rootborn.Game.StudentLife
                 StudentLifeProgressPersistence.Save(component);
             }
 
+            QuestGameplayEventBridge.Record(new QuestEvent(QuestEventKind.LocationVisit,
+                QuestGameplayEventBridge.CreateRequestKey("location-visit"), location: _identity.Location), progress);
             OnAnyInteracted?.Invoke(this, player);
             return true;
         }
 
-        private static string Humanize(string key)
-        {
-            if (string.IsNullOrEmpty(key)) return "Location";
-            string text = key.Replace("location.", string.Empty).Replace(".name", string.Empty).Replace('-', ' ').Replace('_', ' ');
-            return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(text);
-        }
     }
 }

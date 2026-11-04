@@ -16,6 +16,7 @@ MonoBehaviour:
   _displayNameKey: location.activity.workshop-shift.name
   _location: {fileID: 11400000, guid: 8256340ca6973cf47a485ef358a78792, type: 2}
   _growthRoute: 2
+  _timePolicy: {fileID: 11400000, guid: 877e2af40acc7d749a78882afa991e80, type: 2}
   _timeCostMinutes: 60
   _energyCost: 2
   _focusCost: 1

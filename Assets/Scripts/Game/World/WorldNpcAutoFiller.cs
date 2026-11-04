@@ -48,6 +48,7 @@ namespace Rootborn.Game.World
 
         private static void StartRunner(Scene scene)
         {
+            if (AuthoredWorldScene.Find(scene) != null) return;
             if (FindRoot(scene, "[WorldNpcAutoFiller]") != null)
             {
                 return;
@@ -93,12 +94,12 @@ namespace Rootborn.Game.World
                     yield break;
                 }
 
-                EnsureNpc(registry);
+                EnsureNpc(gameObject.scene, registry);
             }
 
-            private static void EnsureNpc(GameDataRegistry registry)
+            private static void EnsureNpc(Scene scene, GameDataRegistry registry)
             {
-                var scene = SceneManager.GetActiveScene();
+                if (!scene.IsValid() || !scene.isLoaded || AuthoredWorldScene.Find(scene) != null) return;
                 var root = FindRoot(scene, NpcRootName);
                 if (root == null)
                 {

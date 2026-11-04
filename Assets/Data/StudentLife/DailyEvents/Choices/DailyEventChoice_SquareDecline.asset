@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: DailyEventChoice_SquareDecline
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.DailyEventChoiceDefinition
   _id: daily-event-choice.square-decline
-  _displayNameKey: Not today
-  _resultSummaryKey: No immediate change.
+  _displayNameKey: life.event.choice.pass.name
+  _resultSummaryKey: life.event.choice.pass.summary
+  _timePolicy: {fileID: 11400000, guid: be35b131c6598294296e92ca3f4067e2, type: 2}
   _timeCostMinutes: 0
   _energyCost: 0
   _focusCost: 0

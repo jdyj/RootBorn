@@ -312,7 +312,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.AreNotEqual("Farm", portal.DestinationScene);
             Assert.GreaterOrEqual(SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/" + portal.DestinationScene + ".unity"), 0);
 
-            portal.Travel();
+            portal.Travel(GameObject.Find("Player"));
             yield return WaitForScene(portal.DestinationScene, 10f);
 
             var spawn = FindSpawnPoint(portal.DestinationSpawnId);
@@ -373,7 +373,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return MovePlayerWithKeyboard(player, Key.W);
 
             var portal = GameObject.Find("FarmPortal").GetComponent<WorldPortal>();
-            portal.Travel();
+            portal.Travel(GameObject.Find("Player"));
             yield return WaitForScene(portal.DestinationScene, 10f);
             yield return null;
 

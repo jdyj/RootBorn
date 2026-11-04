@@ -16,8 +16,8 @@ MonoBehaviour:
   _categoryId: accessory
   _displayNameKey: loc.character.character.accessory.bamboo.brown
   _sheetAddress: sprites/character/accessory/accessory-bamboo-hat-brown
-  _subSpriteName: Accessory_Bamboo_Hat_Brown_r0_c0
+  _subSpriteName: Accessory_Bamboo_Hat_Brown_r0_c3
   _editorAssetPath: Assets/Modern_Farm_v1.2/Farmer_Generator_Pieces/Character Pieces/Accessories/16x16/Accessory_Bamboo_Hat_Brown.png
-  _previewSprite: {fileID: 3468760410233344339, guid: ffe26c7ac9502e94f87bc63cdd4b74fa, type: 3}
+  _previewSprite: {fileID: -384047344834487468, guid: ffe26c7ac9502e94f87bc63cdd4b74fa, type: 3}
   _layerOrder: 5
   _isDefault: 1

@@ -15,10 +15,388 @@ MonoBehaviour:
   m_GroupName: Tiles
   m_GUID: 8e0868073c9271d4aa803e2495ed660a
   m_SerializeEntries:
+  - m_GUID: 054bce99ca3418e4d904286c5b1a9987
+    m_Address: tiles/furniture/urban31-lamp
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UrbanStreet31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 075aa3eda69299a49b204a1465a9eef6
+    m_Address: tiles/furniture/activity31-wheat-planter-green
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - WheatPlanters31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0f71ed07c452ffa4588513ef9b60fcaf
+    m_Address: tiles/school/school-bookcase-tile
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 13c14e1c116e08444b55557bf9e0df67
+    m_Address: tiles/furniture/activity31-wheat-planter-ripe
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - WheatPlanters31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 22e3d2b7168a1fd4882302136dc644c9
+    m_Address: tiles/furniture/urban31-planter
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UrbanStreet31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 27eff6244c5d1614b89ca6876068a1d5
+    m_Address: tiles/school/school-drawer-cabinet-tile
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2853e9420849f2a42bf2e08352735f25
+    m_Address: tiles/school/comfy31/border-left-cap
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SchoolComfy31
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 319245a9b3ad71d40bc010a9003c8c99
+    m_Address: tiles/furniture/activity31-paint-can
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - StudentActivity31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 32493ab5bc5be0641bde12a617d882d9
+    m_Address: tiles/school/school-chair-south-tile
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 336197f4ad1d2bc43a170f8bab99361e
+    m_Address: tiles/school/school-potted-plant-tile
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3e03345a0ebb42a45bf5f06981b97e91
+    m_Address: tiles/student-life/studentlife-snack-delivery-crate-tile
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - StudentActivity31
+    - StudentLifePixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 400773d50a5677746aa313cdc3b4302a
+    m_Address: tiles/interiors/furniture/story/tiles/story-photoboard-tile
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 42bd3cc980c89034ab0692594e6523ee
+    m_Address: tiles/furniture/activity31-training-tire
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - StudentActivity31
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 46038a2b9fa51024a94d7e9cce6d8de2
     m_Address: tiles/ground
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 46d0e3be91d3a7d4eb931ac02d9d92b6
+    m_Address: tiles/school/archive30-ledger-stand-tile
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Archive30
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 48c305884fea5ed48a0f3342fd8953be
+    m_Address: tiles/school/comfy31/wall-top
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SchoolComfy31
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 51b21fde482afd44fbc2d6b3875ab51b
+    m_Address: tiles/school/archive30-key-table-tile
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Archive30
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 52ad44080a6c7d1419b0c96a4ca6f587
+    m_Address: tiles/furniture/activity31-nurse-box
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SchoolSupport31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5402c5455efe4d74a8b2d11079961e5f
+    m_Address: tiles/furniture/growth31-assembly-desk
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Growth31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5644f954b1afcbb4298040c3bb05010e
+    m_Address: tiles/school/comfy31/border-left-strip
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SchoolComfy31
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 57fae143d5d255f41847de6b6e37f9c1
+    m_Address: tiles/furniture/activity31-wheat-planter-sprout
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - WheatPlanters31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5ba67a4790115074090105f9e4e800a2
+    m_Address: tiles/school/comfy31/border-right-cap
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SchoolComfy31
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5c84abdeeff1c514fb541d4c2d73e7aa
+    m_Address: tiles/furniture/comfy31-kitchen-counter-front
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Comfy31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5fb6c02285b992447bd5bc731b031c6e
+    m_Address: tiles/house-comfy31/computer
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HouseComfy31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 638b4d7a8d320964c93107187b21b292
+    m_Address: tiles/house-comfy31/sofa-south
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HouseComfy31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 661983e24edddf945ab8226b99cb2915
+    m_Address: tiles/student-life/studentlife-toy-kitchen-tile
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - StudentLifePixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6b9ac86a0fc230c48b1886b10c9b44a2
+    m_Address: tiles/school/school-lectern-tile
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7f793d702b9717b438a2b3f09d3efa75
+    m_Address: tiles/furniture/comfy31-kitchen-sink-front
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Comfy31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 835af04b39c236242a2158cbf4a71d81
+    m_Address: tiles/house-comfy31/chair-south
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HouseComfy31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 856ca7c7b4c6415459e0608a4d1bb8a6
+    m_Address: tiles/school/archive30-archive-bookshelf-tile
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Archive30
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 870a65e6dae197e419ee8ce032269b80
+    m_Address: tiles/house-comfy31/chair-west
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HouseComfy31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 894ed78095894d448b8cd8ea57c9af80
+    m_Address: tiles/furniture/urban31-bench
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UrbanStreet31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8e16e4636de0d67468ec7139af5a9fe8
+    m_Address: tiles/furniture/activity31-wheat-planter-leaf
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - WheatPlanters31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a1fe03acdc9b2934989f29ddd5d3bec6
+    m_Address: tiles/school/school-desk-tile
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aab55ba39ca5f434eba05f20e9df6133
+    m_Address: tiles/school/school-lockers-tile
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ac4ca568ae2d42b47a310d4325a07db7
+    m_Address: tiles/urban-street/collision
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UrbanStreet31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ac8c4beab3babaf47954490aa0d5e4d3
+    m_Address: tiles/furniture/comfy31-school-lockers
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Comfy31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: af00a56412617fd4d9c167501f135790
+    m_Address: tiles/furniture/growth31-first-aid-play-set
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Growth31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: af5c490dd398bd5459411b27c755cf4a
+    m_Address: tiles/school/school-desk-with-open-book-tile
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b0c40fcc089f720468e3e2ea8e1db39c
+    m_Address: tiles/school/oak-floor
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SchoolComfy31
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b213bde930eec714cb87eee134e76a39
+    m_Address: tiles/school/archive30-record-cabinet-tile
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Archive30
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bc05d51b7dc1df348a19dd6bbd9aec37
+    m_Address: tiles/school/comfy31/wall-corner-bottom
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SchoolComfy31
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cfa02e8f928807a43a99072978162815
+    m_Address: tiles/urban-ground/grass
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UrbanGround31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d26fcfb2838dd8548b61132f1886c754
+    m_Address: tiles/school/archive30-reading-station-tile
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Archive30
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d845f2cac47733648ad83a37334ee98d
+    m_Address: tiles/urban-ground/paving
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UrbanGround31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: db2abb073540e1d4082fa5a016f7e170
+    m_Address: tiles/school/school-waste-basket-tile
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dd5f1589250b9d84fa4269e86f1cce0d
+    m_Address: tiles/house-comfy31/desk-south
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HouseComfy31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e0768ce515c6abc478b8e5f47c2acbae
+    m_Address: tiles/school/school-chair-north-tile
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e320e26d61574e64c8aefef4a35042e5
+    m_Address: tiles/school/comfy31/border-right-strip
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SchoolComfy31
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e9c979f7172cab54090429212a1e02be
+    m_Address: tiles/house-comfy31/desk-west
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HouseComfy31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ea5769ef793426a4c999fe06d387f065
+    m_Address: tiles/furniture/activity31-wallpaper-samples
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - StudentActivity31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ebbd4c70439605842aad63d4c8285147
+    m_Address: tiles/school/school-teacher-desk-tile
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ed0b531d965282e468aa5f2a9749794c
+    m_Address: tiles/school/archive30-document-box-tile
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Archive30
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eea52fb399c865c429b429d7e2e10274
+    m_Address: tiles/house-comfy31/plant
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HouseComfy31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f4d00fa296b5f9641a9328c323e6036e
+    m_Address: tiles/house/comfy-oak-floor
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HouseComfy31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f70230d9e64354f4c8981ebdf7d87967
+    m_Address: tiles/school/comfy31/wall-bottom
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SchoolComfy31
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f747695fcda0ce448a97c250da9dad78
+    m_Address: tiles/school/comfy31/wall-corner-top
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SchoolComfy31
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f79fb4b3d4d28c143bf666c31f8ac784
+    m_Address: tiles/furniture/urban31-bin
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UrbanStreet31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f9bdbd9f377b4944f9c8cc70f7e995cf
+    m_Address: tiles/school/comfy31/border-middle-cap
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SchoolComfy31
+    - SchoolPixels
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fbe4ace78b741e14e89d308c54eb6c3b
+    m_Address: tiles/furniture/activity31-crop-basket
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - StudentTools31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ff4f9bd45396ae64e9f24b5980e86738
+    m_Address: tiles/school/comfy31/border-middle-strip
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SchoolComfy31
+    - SchoolPixels
     FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 2f14a7c3f9f8dc44c9d41564a87df795, type: 2}

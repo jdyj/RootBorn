@@ -219,6 +219,14 @@ namespace Rootborn.UI.Quests
                 return;
             }
 
+            var aggregateOwner = inventory.GetComponent<Rootborn.UI.Careers.AdultCareerRuntimeComponent>();
+            if (aggregateOwner != null) return;
+            if (GameDataRegistryProvider.TryGet(out var aggregateRegistry) && aggregateRegistry.StudentLifeCalendar != null)
+            {
+                aggregateOwner = Rootborn.UI.Careers.AdultCareerRuntimeComponent.Ensure(inventory.gameObject, aggregateRegistry);
+                if (aggregateOwner != null) return;
+            }
+            if (Rootborn.Game.Careers.AdultCareerSnapshotPersistence.HasCommittedFile(new SaveService(metadata.SlotId), playerId)) return;
             string json = new SaveService(metadata.SlotId).ReadJson(InventoryFileNameFor(playerId));
             if (string.IsNullOrEmpty(json))
             {
@@ -236,6 +244,8 @@ namespace Rootborn.UI.Quests
                 return;
             }
 
+            if (inventory.GetComponent<Rootborn.UI.Careers.AdultCareerRuntimeComponent>() != null) return;
+            if (Rootborn.Game.Careers.AdultCareerSnapshotPersistence.HasCommittedFile(new SaveService(metadata.SlotId), playerId)) return;
             string json = JsonUtility.ToJson(inventory.ToSaveData(), true);
             new SaveService(metadata.SlotId).WriteJson(InventoryFileNameFor(playerId), json);
         }

@@ -8,6 +8,7 @@ namespace Rootborn.Game.StudentLife
     public sealed class DailyEventChoiceDefinition : StudentLifeDefinitionBase
     {
         [SerializeField] private string _resultSummaryKey;
+        [SerializeField] private ActivityTimePolicyDefinition _timePolicy;
         [SerializeField] private int _timeCostMinutes;
         [SerializeField] private int _energyCost;
         [SerializeField] private int _focusCost;
@@ -18,6 +19,7 @@ namespace Rootborn.Game.StudentLife
         [SerializeField] private DailyEventOutcomeBase[] _outcomes = Array.Empty<DailyEventOutcomeBase>();
 
         public string ResultSummaryKey => string.IsNullOrEmpty(_resultSummaryKey) ? Id : _resultSummaryKey;
+        public ActivityTimePolicyDefinition TimePolicy => _timePolicy;
         public int TimeCostMinutes => Mathf.Max(0, _timeCostMinutes);
         public int EnergyCost => Mathf.Max(0, _energyCost);
         public int FocusCost => Mathf.Max(0, _focusCost);

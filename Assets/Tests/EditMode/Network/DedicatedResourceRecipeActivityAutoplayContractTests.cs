@@ -8,7 +8,7 @@ namespace Rootborn.Tests.EditMode.Network
     {
         private const string SourcePath = "Assets/Scripts/Game/Common/DirectValidationResourceRecipeActivityAutoplayInstaller.cs";
         private const string SmokeScriptPath = "Scripts/qa/run-dedicated-resource-recipe-activity-smoke.ps1";
-        private const string LinkXmlPath = "Assets/AddressableAssetsData/link.xml";
+        private const string LinkXmlPath = "Assets/Linker/link.xml";
 
         [Test]
         public void DEDICATED_RESOURCE_RECIPE_EDIT_001_AutoplayInstallerDefinesActionObserveScreenshotAndEvidenceContracts()

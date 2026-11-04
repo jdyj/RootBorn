@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Dialogue_LibrarianIntro
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Dialogue.DialogueDefinition
   _lineKeys:
+  - opening.dialogue.librarian
   - dialogue.librarian.intro
   _choices: []
   _requiredTutorialStage: {fileID: 0}

@@ -2,7 +2,7 @@ param()
 
 $ErrorActionPreference = "Stop"
 
-$restoreCommand = "git restore -- Assets/AddressableAssetsData/link.xml Assets/AddressableAssetsData/link.xml.meta"
+$restoreCommand = "git restore -- Assets/Linker/link.xml Assets/Linker/link.xml.meta"
 
 function Throw-WithRemediation {
     param([string] $Message)
@@ -14,8 +14,8 @@ $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
 Push-Location $repoRoot
 try {
     $requiredPaths = @(
-        "Assets/AddressableAssetsData/link.xml",
-        "Assets/AddressableAssetsData/link.xml.meta"
+        "Assets/Linker/link.xml",
+        "Assets/Linker/link.xml.meta"
     )
 
     foreach ($path in $requiredPaths) {

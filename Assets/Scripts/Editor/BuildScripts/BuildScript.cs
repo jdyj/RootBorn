@@ -22,6 +22,7 @@ namespace Rootborn.Editor.BuildScripts
             "Assets/Scenes/MainMenu.unity",
             "Assets/Scenes/HostLobby.unity",
             "Assets/Scenes/Town.unity",
+            "Assets/Scenes/Beach.unity",
             "Assets/Scenes/Farm.unity"
         };
 
@@ -29,6 +30,7 @@ namespace Rootborn.Editor.BuildScripts
         {
             "Assets/Scenes/Boot.unity",
             "Assets/Scenes/Town.unity",
+            "Assets/Scenes/Beach.unity",
             "Assets/Scenes/Farm.unity"
         };
 

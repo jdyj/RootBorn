@@ -31,7 +31,7 @@ namespace Rootborn.Game.StudentLife
         }
     }
 
-    public sealed class PartTimeWorkRunner
+    public sealed partial class PartTimeWorkRunner
     {
         public bool TryPerform(PartTimeWorkDefinition work, StudentLifeProgress progress, Inventory inventory, string requestId, out PartTimeWorkResult result)
         {
@@ -42,7 +42,7 @@ namespace Rootborn.Game.StudentLife
             string locationId = work != null && work.Workplace != null ? work.Workplace.LocationId : string.Empty;
             string npcId = work != null && work.Workplace != null ? work.Workplace.NpcId : string.Empty;
             result = new PartTimeWorkResult(LifeActivityResultKind.InvalidRequest, saveSlot, playerId, workId, workplaceId, locationId, npcId, requestId, Array.Empty<string>());
-            if (work == null || progress == null || inventory == null || string.IsNullOrEmpty(requestId))
+            if (work == null || work.Minigame != null || progress == null || inventory == null || string.IsNullOrEmpty(requestId))
             {
                 return false;
             }
@@ -53,7 +53,7 @@ namespace Rootborn.Game.StudentLife
                 return false;
             }
 
-            if (!progress.CanSpend(work.EnergyCost, work.FocusCost) || !inventory.CanAddAll(work.Rewards))
+            if (!progress.CanUseTimePolicy(work.TimePolicy) || !progress.CanSpend(work.EnergyCost, work.FocusCost) || !inventory.CanAddAll(work.Rewards))
             {
                 result = new PartTimeWorkResult(LifeActivityResultKind.InsufficientResources, progress.SaveSlot, progress.PlayerId, work.Id, work.WorkplaceId, locationId, npcId, requestId, Array.Empty<string>());
                 return false;
@@ -65,6 +65,7 @@ namespace Rootborn.Game.StudentLife
                 return false;
             }
 
+            progress.TryUseTimePolicy(work.TimePolicy);
             progress.Spend(work.TimeCostMinutes, work.EnergyCost, work.FocusCost, work.StressDelta);
             var logs = new List<string>();
             AddRewardLogsAndApply(work, inventory, logs);

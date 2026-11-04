@@ -26,7 +26,7 @@ namespace Rootborn.UI.StudentLife
 
         public DayEndRuleDefinition DayEndRules => _dayEndRules;
         public int InteractionPriority => DayEndInteractionPriority;
-        public string InteractionPrompt => "[E] End Day";
+        public string InteractionPrompt => "[E] " + StudentDayResultPanel.Ui("end-day", "End Day");
         public Vector3 InteractionPromptOffset => new Vector3(0f, 1.15f, 0f);
         public Transform InteractionTransform => transform;
 
@@ -83,7 +83,7 @@ namespace Rootborn.UI.StudentLife
             var worldStateSummaries = BuildWorldStateSummary(player, progress, registry);
             var locationStateSummaries = BuildLocationStateSummary(player, progress);
             _resultPanel.Show(progressComponent, summary, questInventorySummary, relationshipConditionSummary, milestoneSummary);
-            _resultPanel.AppendDailyPlanSummary(BuildDailyPlanSummary(player, registry));
+            foreach (var dailySummary in BuildDailyPlanSummaries(player, registry)) _resultPanel.AppendDailyPlanSummary(dailySummary);
             _resultPanel.ShowWorldStateChanges(worldStateSummaries);
             _resultPanel.ShowLocationStates(locationStateSummaries);
             AppendCampaignSummary(_resultPanel.transform, campaignSummary);
@@ -108,6 +108,46 @@ namespace Rootborn.UI.StudentLife
             return new DailyPlanDaySummary(route.DisplayNameKey, activity != null ? activity.DisplayNameKey : progress.MatchedActivityId, completed, System.Array.Empty<string>(), route.NextHintKey);
         }
 
+        public static DailyPlanDaySummary[] BuildDailyPlanSummaries(GameObject player, Rootborn.Game.Common.GameDataRegistry registry)
+        {
+            var component = player != null ? player.GetComponent<DailyPlanProgressComponent>() : null;
+            var student = player != null ? player.GetComponent<StudentLifeProgressComponent>()?.Progress : null;
+            var daily = student != null ? component?.EnsureProgress(student) : component?.Progress;
+            if (daily == null || registry == null) return Array.Empty<DailyPlanDaySummary>();
+            var results = new System.Collections.Generic.List<DailyPlanDaySummary>(daily.Slots.Count);
+            var runner = new DailyPlanRouteRunner();
+            foreach (var slot in daily.Slots)
+            {
+                if (string.IsNullOrEmpty(slot.RouteId)) continue;
+                var route = runner.FindRoute(registry.DailyPlanRouteSets, slot.RouteId);
+                string activityName = FindDailyPlanActivityName(registry, slot);
+                var logs = new string[slot.ResultLogs.Count];
+                for (int i = 0; i < logs.Length; i++) logs[i] = slot.ResultLogs[i];
+                results.Add(new DailyPlanDaySummary(route != null ? route.DisplayNameKey : slot.RouteId,
+                    activityName,
+                    slot.Completed, logs, route != null ? route.NextHintKey : slot.NextHintKey));
+            }
+            return results.ToArray();
+        }
+        private static string FindDailyPlanActivityName(Rootborn.Game.Common.GameDataRegistry registry, DailyPlanSlotRecord slot)
+        {
+            if (slot.MatchedActivityKind == DailyPlanActivityKind.Practice)
+            {
+                foreach (var practice in registry.CareerPractices)
+                    if (practice != null && practice.Id == slot.MatchedActivityId) return practice.DisplayNameKey;
+            }
+            else if (slot.MatchedActivityKind == DailyPlanActivityKind.PartTimeWork)
+            {
+                foreach (var work in registry.PartTimeWorks)
+                    if (work != null && work.Id == slot.MatchedActivityId) return work.DisplayNameKey;
+            }
+            else
+            {
+                var activity = FindLocationActivity(registry.LocationActivities, slot.MatchedActivityId);
+                if (activity != null) return activity.DisplayNameKey;
+            }
+            return slot.MatchedActivityId;
+        }
         private static LocationActivityDefinition FindLocationActivity(LocationActivityDefinition[] activities, string activityId)
         {
             if (activities == null || string.IsNullOrEmpty(activityId)) return null;
@@ -163,68 +203,17 @@ namespace Rootborn.UI.StudentLife
 
         private static void AppendCampaignSummary(Transform panel, CampaignDayResultSummary summary)
         {
-            if (panel == null || string.IsNullOrEmpty(summary.ProgressText)) return;
-            var existing = FindChild(panel, "CampaignResultSummary");
-            GameObject go;
-            if (existing != null) go = existing.gameObject;
-            else
-            {
-                go = new GameObject("CampaignResultSummary", typeof(RectTransform), typeof(Text));
-                go.transform.SetParent(panel, false);
-            }
-
-            var rt = (RectTransform)go.transform;
-            rt.anchorMin = new Vector2(0.5f, 0.5f);
-            rt.anchorMax = new Vector2(0.5f, 0.5f);
-            rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.anchoredPosition = new Vector2(0f, -336f);
-            rt.sizeDelta = new Vector2(760f, 56f);
-            var text = go.GetComponent<Text>();
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            text.fontSize = 14;
-            text.alignment = TextAnchor.MiddleCenter;
-            text.color = new Color(0.25f, 0.18f, 0.12f, 1f);
-            text.raycastTarget = false;
-            text.text = "Campaign\n" + summary.SelectedRouteText + "\n" + summary.ProgressText + "\n" + summary.NextGuideText;
+            if (panel == null) return;
+            var owner = panel.GetComponent<StudentDayResultPanel>();
+            if (owner == null) return;
+            owner.SetSummarySection("CampaignResultSummary", "campaign", "Campaign",
+                string.IsNullOrEmpty(summary.ProgressText) ? string.Empty : summary.SelectedRouteText + "\n" + summary.ProgressText + "\n" + summary.NextGuideText);
         }
 
         private static void AppendQuestChainSummary(Transform panel, string summaryText)
         {
-            if (panel == null || string.IsNullOrEmpty(summaryText)) return;
-            var existing = FindChild(panel, "QuestChainResultSummary");
-            GameObject go;
-            if (existing != null) go = existing.gameObject;
-            else
-            {
-                go = new GameObject("QuestChainResultSummary", typeof(RectTransform), typeof(Text));
-                go.transform.SetParent(panel, false);
-            }
-
-            var rt = (RectTransform)go.transform;
-            rt.anchorMin = new Vector2(0.5f, 0.5f);
-            rt.anchorMax = new Vector2(0.5f, 0.5f);
-            rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.anchoredPosition = new Vector2(0f, -400f);
-            rt.sizeDelta = new Vector2(760f, 58f);
-            var text = go.GetComponent<Text>();
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            text.fontSize = 14;
-            text.alignment = TextAnchor.MiddleCenter;
-            text.color = new Color(0.25f, 0.18f, 0.12f, 1f);
-            text.raycastTarget = false;
-            text.text = "Quest Chains\n" + summaryText;
-        }
-
-        private static Transform FindChild(Transform root, string name)
-        {
-            if (root == null) return null;
-            if (root.name == name) return root;
-            for (int i = 0; i < root.childCount; i++)
-            {
-                var match = FindChild(root.GetChild(i), name);
-                if (match != null) return match;
-            }
-            return null;
+            if (panel == null) return;
+            panel.GetComponent<StudentDayResultPanel>()?.SetSummarySection("QuestChainResultSummary", "quest-chains", "Quest Chains", summaryText);
         }
 
         private static StudentDayRelationshipConditionSummary BuildRelationshipConditionSummary(StudentLifeProgress progress, string[] resultLogIds)

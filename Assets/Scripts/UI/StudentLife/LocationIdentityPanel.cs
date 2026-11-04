@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using Rootborn.Game.Localization;
+using Rootborn.Game.Common;
 using Rootborn.Game.Managers;
 using Rootborn.Game.Player;
 using Rootborn.Game.Quests;
@@ -13,15 +16,19 @@ namespace Rootborn.UI.StudentLife
 {
     public sealed class LocationIdentityPanel : MonoBehaviour
     {
-        private const int MaxActivityButtons = 3;
 
         private GameObject _root;
         private Text _title;
         private Text _description;
         private Text _hints;
         private Text _result;
-        private readonly Button[] _activityButtons = new Button[MaxActivityButtons];
-        private readonly Text[] _activityLabels = new Text[MaxActivityButtons];
+        private readonly List<Button> _activityButtons = new List<Button>();
+        private readonly List<Text> _activityLabels = new List<Text>();
+        private RectTransform _activityContent;
+        private Text _timeBudget;
+        private Text _locationState;
+        private LocationStateSummaryModel _locationStateSummary;
+        private bool _hasLocationStateSummary;
         private LocationIdentityDefinition _identity;
         private GameObject _player;
         private StudentLifeProgressComponent _progressComponent;
@@ -57,7 +64,7 @@ namespace Rootborn.UI.StudentLife
         public void ClickActivityForTests(int index)
         {
             BuildIfNeeded();
-            if (index >= 0 && index < _activityButtons.Length)
+            if (index >= 0 && index < _activityButtons.Count)
             {
                 _activityButtons[index].onClick.Invoke();
             }
@@ -69,17 +76,52 @@ namespace Rootborn.UI.StudentLife
             _identity = identity;
             _player = player;
             _progressComponent = player != null ? player.GetComponent<StudentLifeProgressComponent>() : null;
-            _title.text = Humanize(identity != null && identity.Location != null ? identity.Location.DisplayNameKey : string.Empty);
-            _description.text = identity != null ? identity.DescriptionKey : "No location identity";
+            _title.text = GameText.Get(identity != null && identity.Location != null ? identity.Location.DisplayNameKey : string.Empty);
+            _description.text = GameText.Get(identity != null ? identity.DescriptionKey : "life.location.unavailable");
             _hints.text = FormatHints(identity);
             _result.text = string.Empty;
+            RefreshTimeBudget();
             BindButtons(identity);
+            gameObject.SetActive(true);
+            transform.SetAsLastSibling();
+            _root.transform.SetAsLastSibling();
             _root.SetActive(true);
+            UiGameplayInputLock.Acquire(this);
+            RefreshLocationState();
         }
 
         public void Hide()
         {
+            UiGameplayInputLock.Release(this);
             if (_root != null) _root.SetActive(false);
+        }
+
+        private void OnDisable()
+        {
+            UiGameplayInputLock.Release(this);
+            if (_root != null) _root.SetActive(false);
+        }
+
+        private void OnDestroy() => UiGameplayInputLock.Release(this);
+
+        public void SetLocationStateSummary(LocationStateSummaryModel summary)
+        {
+            BuildIfNeeded();
+            _locationStateSummary = summary;
+            _hasLocationStateSummary = true;
+            RefreshLocationState();
+        }
+
+        private void RefreshLocationState()
+        {
+            if (_locationState == null) return;
+            bool visible = _hasLocationStateSummary && _identity != null && _identity.Location != null
+                && _locationStateSummary.LocationId == _identity.Location.Id
+                && _locationStateSummary.PrimaryState != null && !_locationStateSummary.IsHidden
+                && !string.IsNullOrEmpty(_locationStateSummary.DisplayName);
+            _locationState.gameObject.SetActive(visible);
+            _locationState.text = visible ? GameText.Get(_locationStateSummary.DisplayName)
+                + (string.IsNullOrEmpty(_locationStateSummary.Description) ? string.Empty : "\n" + GameText.Get(_locationStateSummary.Description)) : string.Empty;
         }
 
         private void PerformActivity(int index)
@@ -98,10 +140,19 @@ namespace Rootborn.UI.StudentLife
                 var careerCandidates = _player != null ? _player.GetComponent<CareerCandidateProgressComponent>() : null;
                 if (careerCandidates != null) careerCandidates.ApplyHintsFromResult(progress, result.RequestId, result.OutcomeLogIds);
                 RecordDailyPlanActivity(activity, requestId, progress);
+                progress = _progressComponent.Progress;
                 RecordQuestActivity(activity, requestId);
+                QuestGameplayEventBridge.Record(new QuestEvent(QuestEventKind.LocationActivity, requestId, activity: activity), progress);
+                progress = _progressComponent.Progress;
                 OnAnyActivityApplied?.Invoke(activity, requestId);
             }
-            _result.text = FormatResult(result);
+            _result.text = applied
+                ? GameText.Format("life.tp.applied", progress.TimePointsRemaining, progress.DailyTimePointBudget)
+                : GameText.Get("life.tp.unavailable");
+            if (applied && !string.IsNullOrEmpty(activity.ResultTextKey))
+                _result.text += "\n" + GameText.Get(activity.ResultTextKey);
+            RefreshTimeBudget();
+            BindButtons(_identity);
         }
 
         private void RecordDailyPlanActivity(LocationActivityDefinition activity, string requestId, StudentLifeProgress progress)
@@ -110,7 +161,7 @@ namespace Rootborn.UI.StudentLife
             if (dailyPlan == null || activity == null || progress == null) return;
             var routeSets = ResolveDailyPlanRouteSets();
             if (routeSets.Length == 0) return;
-            dailyPlan.TryRecordActivity(routeSets, activity, progress, requestId, out _);
+            dailyPlan.TryRecordScheduledActivity(routeSets, activity, progress, progress.CurrentDay, requestId, out _);
         }
 
         private DailyPlanRouteSetDefinition[] ResolveDailyPlanRouteSets()
@@ -154,9 +205,24 @@ namespace Rootborn.UI.StudentLife
             return new string(chars);
         }
 
+        private void RefreshTimeBudget()
+        {
+            _timeBudget.text = TimeBudgetText.Format(_progressComponent != null ? _progressComponent.EnsureProgress() : null);
+        }
+
         private void BindButtons(LocationIdentityDefinition identity)
         {
-            for (int i = 0; i < _activityButtons.Length; i++)
+            int count = identity != null ? identity.AvailableActivities.Count : 0;
+            while (_activityButtons.Count < count)
+            {
+                int i = _activityButtons.Count;
+                var button = MakeButton(_activityContent, "LocationActivityButton_" + i, new Vector2(0, -46 - i * 92), new Vector2(504, 76));
+                var rect = (RectTransform)button.transform; rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 1);
+                _activityButtons.Add(button); _activityLabels.Add(button.GetComponentInChildren<Text>(true));
+            }
+            _activityContent.sizeDelta = new Vector2(0, count * 92);
+            var progress = _progressComponent != null ? _progressComponent.EnsureProgress() : null;
+            for (int i = 0; i < _activityButtons.Count; i++)
             {
                 var button = _activityButtons[i];
                 var label = _activityLabels[i];
@@ -165,8 +231,9 @@ namespace Rootborn.UI.StudentLife
                 {
                     int index = i;
                     var activity = identity.AvailableActivities[i];
-                    label.text = Humanize(activity.DisplayNameKey) + "\n" + activity.GrowthRoute;
-                    button.interactable = _progressComponent != null;
+                    label.text = GameText.Get(activity.DisplayNameKey) + "\n" + TimeBudgetText.Cost(activity.TimePolicy);
+                    button.interactable = progress != null && progress.CanUseTimePolicy(activity.TimePolicy)
+                        && progress.CanSpend(activity.EnergyCost, activity.FocusCost) && activity.HasSatisfiedRequirements(progress);
                     button.gameObject.SetActive(true);
                     button.onClick.AddListener(() => PerformActivity(index));
                 }
@@ -181,29 +248,37 @@ namespace Rootborn.UI.StudentLife
         private void BuildIfNeeded()
         {
             if (_root != null) return;
-            _root = new GameObject("LocationIdentityRoot", typeof(RectTransform), typeof(ModernUiTileImage));
+            _root = new GameObject("LocationIdentityRoot", typeof(RectTransform), typeof(ModernUiTileImage), typeof(Canvas), typeof(GraphicRaycaster));
             _root.transform.SetParent(transform, false);
             var rt = (RectTransform)_root.transform;
-            rt.anchorMin = new Vector2(0.5f, 0.5f);
-            rt.anchorMax = new Vector2(0.5f, 0.5f);
-            rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.anchoredPosition = new Vector2(0f, 190f);
-            rt.sizeDelta = new Vector2(620f, 360f);
-            var tile = _root.GetComponent<ModernUiTileImage>();
-            tile.SetRecipe(ModernUiRecipes.CommonPanel);
-            tile.Rebuild();
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(.5f,.5f);
+            rt.anchoredPosition = Vector2.zero;
+            rt.sizeDelta = new Vector2(1120,800);
+            var modal = _root.GetComponent<Canvas>(); modal.overrideSorting = true; modal.sortingOrder = 1200;
+            var tile = _root.GetComponent<ModernUiTileImage>(); tile.SetRecipe(ModernUiRecipes.CommonPanel); tile.Rebuild();
+            _title = MakeText(rt,"LocationName",string.Empty,new Vector2(0,340),new Vector2(880,48),32,TextAnchor.MiddleCenter);
+            _description = MakeText(rt,"LocationDescription",string.Empty,new Vector2(0,272),new Vector2(944,64),22,TextAnchor.UpperCenter);
+            _timeBudget = MakeText(rt,"TimeBudget",string.Empty,new Vector2(0,216),new Vector2(944,36),22,TextAnchor.MiddleCenter);
+            _locationState = MakeText(rt,"LocationStateSummary",string.Empty,new Vector2(0,154),new Vector2(944,64),20,TextAnchor.UpperCenter);
+            _locationState.gameObject.SetActive(false);
+            var hintFrame = MakeFrame(rt,"HintFrame",new Vector2(-318,-56),new Vector2(340,336));
+            _hints = MakeText(hintFrame,"LocationHints",string.Empty,Vector2.zero,new Vector2(268,272),20,TextAnchor.UpperLeft);
+            var activities = MakeFrame(rt,"ActivitiesFrame",new Vector2(176,-56),new Vector2(568,336));
+            _result = MakeText(rt,"LocationActivityResult",string.Empty,new Vector2(0,-296),new Vector2(976,112),20,TextAnchor.UpperLeft);
+            var viewportGo = new GameObject("ActivityViewport",typeof(RectTransform),typeof(Image),typeof(RectMask2D),typeof(ScrollRect));
+            viewportGo.transform.SetParent(activities,false);var viewport=(RectTransform)viewportGo.transform;
+            viewport.anchorMin=viewport.anchorMax=viewport.pivot=new Vector2(.5f,.5f);viewport.anchoredPosition=Vector2.zero;viewport.sizeDelta=new Vector2(504,272);
+            viewportGo.GetComponent<Image>().color=new Color(1,1,1,.001f);
+            var contentGo=new GameObject("ActivityContent",typeof(RectTransform));contentGo.transform.SetParent(viewport,false);_activityContent=(RectTransform)contentGo.transform;
+            _activityContent.anchorMin=new Vector2(0,1);_activityContent.anchorMax=Vector2.one;_activityContent.pivot=new Vector2(.5f,1);_activityContent.anchoredPosition=Vector2.zero;
+            var scroll=viewportGo.GetComponent<ScrollRect>();scroll.viewport=viewport;scroll.content=_activityContent;scroll.horizontal=false;scroll.movementType=ScrollRect.MovementType.Clamped;scroll.scrollSensitivity=32;
+            var close=MakeButton(rt,"CloseLocation",new Vector2(488,344),new Vector2(48,48));close.GetComponentInChildren<Text>().text=GameText.Get("ui.close-symbol");close.onClick.AddListener(Hide);
+        }
 
-            _title = MakeText(rt, "LocationName", "Location", new Vector2(0f, 136f), new Vector2(540f, 34f), 22, TextAnchor.MiddleCenter);
-            _description = MakeText(rt, "LocationDescription", string.Empty, new Vector2(0f, 92f), new Vector2(540f, 52f), 15, TextAnchor.UpperCenter);
-            _hints = MakeText(rt, "LocationHints", string.Empty, new Vector2(-170f, 0f), new Vector2(210f, 128f), 14, TextAnchor.UpperLeft);
-            _result = MakeText(rt, "LocationActivityResult", string.Empty, new Vector2(155f, -78f), new Vector2(270f, 68f), 14, TextAnchor.UpperLeft);
-
-            for (int i = 0; i < _activityButtons.Length; i++)
-            {
-                var button = MakeButton(rt, "LocationActivityButton_" + i, new Vector2(155f, 54f - i * 54f), new Vector2(270f, 46f));
-                _activityButtons[i] = button;
-                _activityLabels[i] = button.GetComponentInChildren<Text>(true);
-            }
+        private static RectTransform MakeFrame(RectTransform parent,string name,Vector2 position,Vector2 size)
+        {
+            var go=new GameObject(name,typeof(RectTransform),typeof(ModernUiTileImage));go.transform.SetParent(parent,false);var rt=(RectTransform)go.transform;
+            rt.anchorMin=rt.anchorMax=rt.pivot=new Vector2(.5f,.5f);rt.anchoredPosition=position;rt.sizeDelta=size;var tile=go.GetComponent<ModernUiTileImage>();tile.SetRecipe(ModernUiRecipes.CommonPanel);tile.Rebuild();return rt;
         }
 
         private static Text MakeText(RectTransform parent, string name, string value, Vector2 position, Vector2 size, int fontSize, TextAnchor alignment)
@@ -218,7 +293,7 @@ namespace Rootborn.UI.StudentLife
             rt.sizeDelta = size;
             var text = go.GetComponent<Text>();
             text.text = value;
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = LifeUiFont.Shared;
             text.fontSize = fontSize;
             text.alignment = alignment;
             text.color = new Color(0.25f, 0.18f, 0.12f, 1f);
@@ -228,7 +303,7 @@ namespace Rootborn.UI.StudentLife
 
         private static Button MakeButton(RectTransform parent, string name, Vector2 position, Vector2 size)
         {
-            var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
+            var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button), typeof(ModernUiTileImage));
             go.transform.SetParent(parent, false);
             var rt = (RectTransform)go.transform;
             rt.anchorMin = new Vector2(0.5f, 0.5f);
@@ -236,37 +311,26 @@ namespace Rootborn.UI.StudentLife
             rt.pivot = new Vector2(0.5f, 0.5f);
             rt.anchoredPosition = position;
             rt.sizeDelta = size;
-            go.GetComponent<Image>().color = new Color(0.72f, 0.58f, 0.32f, 1f);
-            MakeText(rt, "Label", string.Empty, Vector2.zero, size, 13, TextAnchor.MiddleCenter);
+            go.GetComponent<Image>().color = Color.clear;
+            var molding = go.GetComponent<ModernUiTileImage>();
+            molding.SetRecipe(ModernUiRecipes.CommonPanel);
+            molding.Rebuild();
+            MakeText(rt, "Label", string.Empty, Vector2.zero, size, 20, TextAnchor.MiddleCenter);
             return go.GetComponent<Button>();
         }
 
         private static string FormatHints(LocationIdentityDefinition identity)
         {
-            string text = "Hints";
-            if (identity == null || identity.Hints.Count == 0) return text + "\nNo hints yet";
+            string text = GameText.Get("life.location.hints");
+            if (identity == null || identity.Hints.Count == 0) return text + "\n" + GameText.Get("life.location.no-hints");
             for (int i = 0; i < identity.Hints.Count; i++)
             {
                 var hint = identity.Hints[i];
-                text += "\n" + (string.IsNullOrEmpty(hint.DisplayKey) ? hint.GrowthRoute.ToString() : hint.DisplayKey);
+                text += "\n" + GameText.Get(string.IsNullOrEmpty(hint.DisplayKey) ? "life.route." + hint.GrowthRoute : hint.DisplayKey);
             }
 
             return text;
         }
 
-        private static string FormatResult(LocationActivityResult result)
-        {
-            string text = result.Kind.ToString();
-            var logs = result.OutcomeLogIds;
-            if (logs != null) for (int i = 0; i < logs.Length; i++) if (!string.IsNullOrEmpty(logs[i])) text += "\n" + logs[i];
-            return text;
-        }
-
-        private static string Humanize(string key)
-        {
-            if (string.IsNullOrEmpty(key)) return string.Empty;
-            int dot = key.LastIndexOf('.');
-            return dot >= 0 && dot + 1 < key.Length ? key.Substring(dot + 1) : key;
-        }
     }
 }

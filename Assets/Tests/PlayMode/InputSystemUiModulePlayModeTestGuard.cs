@@ -78,7 +78,7 @@ namespace Rootborn.Tests.PlayMode
             if (s_eventSystem == null)
             {
                 var go = new GameObject("EventSystem", typeof(EventSystem), typeof(PassiveInputModule));
-                Object.DontDestroyOnLoad(go);
+                MoveToActiveScene(go);
                 s_eventSystem = go.GetComponent<EventSystem>();
                 return;
             }
@@ -93,7 +93,21 @@ namespace Rootborn.Tests.PlayMode
                 s_eventSystem.gameObject.AddComponent<PassiveInputModule>();
             }
 
-            Object.DontDestroyOnLoad(s_eventSystem.gameObject);
+            MoveToActiveScene(s_eventSystem.gameObject);
+        }
+
+        private static void MoveToActiveScene(GameObject go)
+        {
+            if (go == null)
+            {
+                return;
+            }
+
+            var scene = SceneManager.GetActiveScene();
+            if (scene.IsValid() && scene.isLoaded && go.scene != scene)
+            {
+                SceneManager.MoveGameObjectToScene(go, scene);
+            }
         }
 
         private static void ReplaceInputModules()

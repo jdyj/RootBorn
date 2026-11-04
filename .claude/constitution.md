@@ -64,6 +64,7 @@
 - 타일, 실내/도시 소품, 아이콘, 캐릭터 6방향(Idle/Walk × Down/Side/Up) × 4프레임
 - Sprite sheet 슬라이스 규칙: `rules/path-based/sprite-slicing.md`
 - **캐릭터 sheet는 59×49** (16×16 아님), Tile/Items 계열은 자산별 PPU와 slice 규칙을 따른다.
+- **LDtk 타일 좌표 원본성 보존**: LDtk `src`는 PNG 좌상단 기준 좌표이고, Unity `Sprite.rect.y`는 원본 PNG 높이 기준 `pngHeight - srcY - tileHeight`로 변환해야 한다. Unity import의 `maxTextureSize`, 플랫폼 override, 압축, bilinear filtering 때문에 텍스처가 축소된 상태에서 rect를 만들면 타일 이름은 맞아도 실제 픽셀이 다른 줄로 잘려 게임 화면이 깨진다. LDtk/Town/Interior 타일 작업은 `Tile.name`만 확인하지 말고 원본 PNG 크기, TextureImporter 설정, `Sprite.rect`, 저장 씬 Tilemap 참조, PlayMode Game View 스크린샷을 모두 검증한다.
 
 ### Modern UI Style2 공통 패널
 - 공통 패널은 `Assets/modernuserinterface-win/16x16/Modern_UI_Style_2.png`의 16x16 Style2 패널 블록을 사용한다.

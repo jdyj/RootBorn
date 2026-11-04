@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 933d8baaccd73054e9a0072c8cf54cca, type: 3}
+  m_Name: World_Level2
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.WorldState.WorldStateFlagDefinition
+  _id: world.emergency-care.level2
+  _displayNameKey: world.emergency-care.level2.name
+  _descriptionKey: world.emergency-care.level2.description
+  _relatedLocation: {fileID: 11400000, guid: 3334193d2a364b24c99ca6e1017a8171, type: 2}
+  _relatedNpcs: []
+  _relatedQuestChains: []
+  _scopeDefinition: {fileID: 0}
+  _scope: 0
+  _changeKind: 0
+  _nextActionKey: world.emergency-care.level2.next
+  _visibleSurfaces: 
+  _badges: 
+  _sortPriority: 0
+  _effectVersion: 1

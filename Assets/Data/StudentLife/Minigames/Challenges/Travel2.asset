@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a6a94fe632a70e4c9d8096efd3fa833, type: 3}
+  m_Name: Travel2
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Minigames.TargetDodgeChallengeDefinition
+  _instructionKey: minigame.travel.instructions
+  _symbolSprites:
+  - {fileID: 0}
+  - {fileID: 21300000, guid: b6cc15d5b520fb644a3bd2ff0973aefe, type: 3}
+  _timeLimitSeconds: 15.799999
+  _mistakeAllowance: 6
+  _targets: []
+  _obstacleLanes: 000000000100000002000000010000000000000002000000
+  _obstacleIntervalSeconds: 1.8
+  _targetRadius: 0.09
+  _targetWobble: 0
+  _laneCount: 3

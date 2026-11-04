@@ -70,6 +70,7 @@ MonoBehaviour:
   _id: practice.soldier
   _displayNameKey: practice.soldier
   _category: 0
+  _timePolicy: {fileID: 11400000, guid: 877e2af40acc7d749a78882afa991e80, type: 2}
   _timeCostMinutes: 45
   _energyCost: 1
   _focusCost: 1
@@ -83,6 +84,7 @@ MonoBehaviour:
   - {fileID: -6281557743674652845}
   - {fileID: 1671174047810154940}
   - {fileID: -6066178773902827277}
+  _choices: []
 --- !u!114 &1671174047810154940
 MonoBehaviour:
   m_ObjectHideFlags: 0

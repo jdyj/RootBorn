@@ -1,5 +1,5 @@
 using System;
-using System.Globalization;
+using Rootborn.Game.Localization;
 using Rootborn.Game.Player;
 using UnityEngine;
 
@@ -11,18 +11,16 @@ namespace Rootborn.Game.StudentLife
         [SerializeField] private OutsideSchoolActivityDefinition _activity;
 
         private readonly OutsideSchoolActivityRunner _runner = new OutsideSchoolActivityRunner();
-        private int _requestSequence;
 
         public OutsideSchoolActivityDefinition Activity => _activity;
         public OutsideSchoolActivityResult LastResult { get; private set; }
-        public string InteractionPrompt => "[E] " + HumanizeDisplayKey(_activity != null ? _activity.DisplayNameKey : string.Empty);
+        public string InteractionPrompt => "[E] " + ResolveDisplayKey(_activity != null ? _activity.DisplayNameKey : string.Empty);
         public Vector3 InteractionPromptOffset => new Vector3(0f, 1.05f, 0f);
         public Transform InteractionTransform => transform;
 
         public void Bind(OutsideSchoolActivityDefinition activity)
         {
             _activity = activity;
-            _requestSequence = 0;
         }
 
         public bool CanInteract(GameObject player)
@@ -42,7 +40,8 @@ namespace Rootborn.Game.StudentLife
 
         public bool Interact(StudentLifeProgressComponent progressComponent)
         {
-            string requestId = _activity != null ? _activity.Id + ":" + _requestSequence++ : "outside-school:" + _requestSequence++;
+            // A fresh user action must stay unique after scene reload; explicit request IDs still deduplicate replays.
+            string requestId = (_activity != null ? _activity.Id : "outside-school") + ":" + Guid.NewGuid().ToString("N");
             return Interact(progressComponent, requestId);
         }
 
@@ -60,28 +59,12 @@ namespace Rootborn.Game.StudentLife
             return applied;
         }
 
-        private static string HumanizeDisplayKey(string key)
+        private static string ResolveDisplayKey(string key)
         {
-            if (string.IsNullOrEmpty(key))
-            {
-                return "Outside Activity";
-            }
-
-            int dot = key.LastIndexOf('.');
-            string tail = dot >= 0 && dot + 1 < key.Length ? key.Substring(dot + 1) : key;
-            string[] parts = tail.Split(new[] { '-', '_', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length == 0)
-            {
-                return key;
-            }
-
-            var textInfo = CultureInfo.InvariantCulture.TextInfo;
-            for (int i = 0; i < parts.Length; i++)
-            {
-                parts[i] = textInfo.ToTitleCase(parts[i]);
-            }
-
-            return string.Join(" ", parts);
+            string localized = GameText.Get(key);
+            return !string.IsNullOrWhiteSpace(localized) && !string.Equals(localized, key, StringComparison.Ordinal)
+                ? localized
+                : GameText.Get("life.outside-activity.generic");
         }
     }
 }

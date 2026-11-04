@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23d21008197b3684eb9ccef9f4f47b40, type: 3}
+  m_Name: Furniture_Comfy31_school_lockers
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Placement.FurnitureDefinition
+  _stableId: comfy31.school.lockers
+  _displayName: Comfy31 School Lockers
+  _category: Comfy31
+  _allowedSurfaceIds:
+  - house
+  - town-test
+  _tileParts:
+  - _localCell: {x: 0, y: 0}
+    _tile: {fileID: 11400000, guid: ac8c4beab3babaf47954490aa0d5e4d3, type: 2}
+  _footprintCells:
+  - {x: 0, y: 0}
+  - {x: 1, y: 0}
+  _blocksMovement: 1
+  _placementPreference: 2
+  _unlockToken: 

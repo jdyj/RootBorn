@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Rootborn.Game.Common;
+using Rootborn.Game.World;
 using Rootborn.Game.Player;
 using Rootborn.Game.StudentLife;
 using UnityEngine;
@@ -59,13 +60,12 @@ namespace Rootborn.Game.Bootstrap
             {
                 Scene scene = SceneManager.GetActiveScene();
                 var players = new List<GameObject>();
-                float elapsed = 0f;
-                while (players.Count == 0 && elapsed < 5f)
+                float playerSearchDeadline = UnityEngine.Time.realtimeSinceStartup + 5f;
+                while (players.Count == 0 && UnityEngine.Time.realtimeSinceStartup < playerSearchDeadline)
                 {
                     CollectPlayerRoots(scene, players);
                     if (players.Count == 0)
                     {
-                        elapsed += UnityEngine.Time.unscaledDeltaTime;
                         yield return null;
                     }
                 }
@@ -82,6 +82,8 @@ namespace Rootborn.Game.Bootstrap
                     RestoreProgress(candidate, scene);
                 }
 
+                if (AuthoredWorldScene.Find(scene) != null) yield break;
+
                 for (int i = 0; i < 12; i++)
                 {
                     yield return null;
@@ -92,8 +94,9 @@ namespace Rootborn.Game.Bootstrap
                     }
                 }
 
-                elapsed = 0f;
-                while (elapsed < 60f)
+                float rebindDeadline = UnityEngine.Time.realtimeSinceStartup + 60f;
+                var rebindDelay = new WaitForSecondsRealtime(0.5f);
+                while (UnityEngine.Time.realtimeSinceStartup < rebindDeadline)
                 {
                     EnsureActivityObjects(scene);
                     if (StudyBasicsHasRelationshipConditionEffects())
@@ -102,8 +105,7 @@ namespace Rootborn.Game.Bootstrap
                         yield break;
                     }
 
-                    elapsed += UnityEngine.Time.unscaledDeltaTime;
-                    yield return null;
+                    yield return rebindDelay;
                 }
             }
         }
@@ -168,6 +170,8 @@ namespace Rootborn.Game.Bootstrap
 
         private static void EnsureActivityObjects(Scene scene)
         {
+            // Saved interactors already contain their SO binding; never generate or reposition prototypes.
+            if (AuthoredWorldScene.Find(scene) != null) return;
             var root = FindRoot(scene, RootName);
             if (root == null)
             {

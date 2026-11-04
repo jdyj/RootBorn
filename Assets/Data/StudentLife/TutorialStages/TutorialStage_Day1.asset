@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.TutorialStageDefinition
   _id: tutorial.day1
   _displayNameKey: tutorial.day1
-  _guideText: 'Day 1: Learn the town routine and finish one student activity.'
+  _guideText: ui.tutorial.town_routine_hint

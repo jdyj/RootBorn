@@ -1,8 +1,39 @@
+using System;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
 namespace Rootborn.Game.Interiors
 {
+    [Serializable]
+    public sealed class InteriorTileStyleOption
+    {
+        [SerializeField] private string _id;
+        [SerializeField] private TileBase _floor;
+        [SerializeField] private TileBase _wall;
+        [SerializeField] private TileBase _verticalWallAccent;
+
+        public string Id => _id ?? string.Empty;
+        public TileBase Floor => _floor;
+        public TileBase Wall => _wall;
+        public TileBase VerticalWallAccent => _verticalWallAccent;
+
+        public bool Matches(string styleId)
+        {
+            return !string.IsNullOrEmpty(styleId) && string.Equals(Id, styleId, StringComparison.Ordinal);
+        }
+
+        public static InteriorTileStyleOption CreateForTests(string id, TileBase floor, TileBase wall, TileBase verticalWallAccent)
+        {
+            return new InteriorTileStyleOption
+            {
+                _id = id,
+                _floor = floor,
+                _wall = wall,
+                _verticalWallAccent = verticalWallAccent
+            };
+        }
+    }
+
     [CreateAssetMenu(fileName = "InteriorTileSet_New", menuName = "Rootborn/Interiors/Tile Set")]
     public sealed class InteriorTileSetDefinition : ScriptableObject
     {
@@ -29,6 +60,7 @@ namespace Rootborn.Game.Interiors
         [SerializeField] private TileBase _sofaWest;
         [SerializeField] private TileBase _plant;
         [SerializeField] private TileBase _collision;
+        [SerializeField] private InteriorTileStyleOption[] _styleOptions = Array.Empty<InteriorTileStyleOption>();
 
         public TileBase Floor => _floor;
         public TileBase Wall => _wall != null ? _wall : _floor;
@@ -41,6 +73,38 @@ namespace Rootborn.Game.Interiors
         public TileBase Sofa => _sofa;
         public TileBase Plant => _plant;
         public TileBase Collision => _collision != null ? _collision : Wall;
+
+        public InteriorTileStyleOption ResolveStyle(string styleId)
+        {
+            if (string.IsNullOrEmpty(styleId) || _styleOptions == null || _styleOptions.Length == 0)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < _styleOptions.Length; i++)
+            {
+                var option = _styleOptions[i];
+                if (option != null && option.Matches(styleId))
+                {
+                    return option;
+                }
+            }
+
+            return null;
+        }
+
+        public void ConfigureForTests(TileBase floor, TileBase wall, TileBase verticalWallAccent, TileBase desk)
+        {
+            _floor = floor;
+            _wall = wall;
+            _verticalWallAccent = verticalWallAccent;
+            _desk = desk;
+        }
+
+        public void ConfigureStyleOptionsForTests(InteriorTileStyleOption[] styleOptions)
+        {
+            _styleOptions = styleOptions ?? Array.Empty<InteriorTileStyleOption>();
+        }
 
         public TileBase ResolveDesk(InteriorFacingDirection direction)
         {

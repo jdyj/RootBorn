@@ -13,16 +13,16 @@ MonoBehaviour:
   m_Name: WorldState_WorkshopRepairLedgerOpen
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.WorldState.WorldStateFlagDefinition
   _id: world.workshop.repair-ledger-open
-  _displayNameKey: Workshop repair ledger opened
-  _descriptionKey: A repair ledger at the workshop is now available for daily planning.
+  _displayNameKey: world.workshop.repair-ledger-open.name
+  _descriptionKey: world.workshop.repair-ledger-open.description
   _relatedLocation: {fileID: 11400000, guid: 8256340ca6973cf47a485ef358a78792, type: 2}
   _relatedNpcs: []
   _relatedQuestChains: []
   _scopeDefinition: {fileID: 0}
   _scope: 1
   _changeKind: 0
-  _nextActionKey: Check the workshop repair ledger
-  _visibleSurfaces:
-  _badges:
+  _nextActionKey: world.workshop.repair-ledger-open.next
+  _visibleSurfaces: 
+  _badges: 
   _sortPriority: 110
   _effectVersion: 1

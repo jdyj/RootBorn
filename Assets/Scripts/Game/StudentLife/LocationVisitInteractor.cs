@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using Rootborn.Game.Player;
+using Rootborn.Game.Quests;
 using UnityEngine;
 
 namespace Rootborn.Game.StudentLife
@@ -39,6 +40,8 @@ namespace Rootborn.Game.StudentLife
             bool applied = visitProgress.TryRecordLocationVisit(_location, out var result);
             LastResult = result;
             if (applied) StudentLifeProgressPersistence.Save(component);
+            QuestGameplayEventBridge.Record(new QuestEvent(QuestEventKind.LocationVisit,
+                QuestGameplayEventBridge.CreateRequestKey("location-visit"), location: _location), progress);
             Debug.Log($"[ROOTBORN] Location visit applied={applied} result={result.Kind} location={result.EntityId} player={result.PlayerId} request={result.RequestId}");
             return true;
         }

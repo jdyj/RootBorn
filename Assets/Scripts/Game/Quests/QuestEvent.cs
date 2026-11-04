@@ -3,6 +3,7 @@ using Rootborn.Game.Crops;
 using Rootborn.Game.Resources;
 using Rootborn.Game.Tools;
 using Rootborn.Game.StudentLife;
+using Rootborn.Game.Placement;
 using UnityEngine;
 
 namespace Rootborn.Game.Quests
@@ -19,6 +20,11 @@ namespace Rootborn.Game.Quests
         public readonly ScriptableObject DefeatTarget;
         public readonly ScriptableObject Tile;
         public readonly LocationActivityDefinition Activity;
+        public readonly LocationDefinition Location;
+        public readonly PartTimeWorkDefinition Work;
+        public readonly FurnitureDefinition Furniture;
+        public readonly string SurfaceId;
+        public readonly DailyPlanRouteDefinition DailyPlanRoute;
         public readonly int Count;
 
         public QuestEvent(
@@ -32,7 +38,12 @@ namespace Rootborn.Game.Quests
             ScriptableObject npc = null,
             ScriptableObject defeatTarget = null,
             ScriptableObject tile = null,
-            LocationActivityDefinition activity = null)
+            LocationActivityDefinition activity = null,
+            LocationDefinition location = null,
+            PartTimeWorkDefinition work = null,
+            FurnitureDefinition furniture = null,
+            string surfaceId = null,
+            DailyPlanRouteDefinition dailyPlanRoute = null)
         {
             Kind = kind;
             EventKey = eventKey;
@@ -45,6 +56,11 @@ namespace Rootborn.Game.Quests
             DefeatTarget = defeatTarget;
             Tile = tile;
             Activity = activity;
+            Location = location;
+            Work = work;
+            Furniture = furniture;
+            SurfaceId = surfaceId ?? string.Empty;
+            DailyPlanRoute = dailyPlanRoute;
         }
     }
 }

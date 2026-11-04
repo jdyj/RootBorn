@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95d5d066bba05e44b918c56abbe2fffd, type: 3}
+  m_Name: Work_2
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Careers.FacilityWorkDefinition
+  _id: work.soldier.level2
+  _displayNameKey: work.soldier.level2
+  _facility: {fileID: 11400000, guid: 02cfd22a8c0969440b3cf12cb7641baf, type: 2}
+  _minigame: {fileID: 11400000, guid: e99aaaf0dd86b0b44bcc86896966b6d1, type: 2}
+  _minimumFacilityLevel: 2
+  _timePointCost: 1
+  _maximumMastery: 100
+  _masteryPerSuccess: 20
+  _minimumSuccessScore: 60
+  _reputationPerSuccess: 4
+  _rewardItems:
+  - {fileID: 11400000, guid: ef2f89c9b4c8bde48a0aea1330e022aa, type: 2}
+  - {fileID: 11400000, guid: b38c56566d190cb43a0bd556d2726ac4, type: 2}
+  _maximumRewardCounts: 2800000004000000
+  _autoSkipRequirements:
+  - {fileID: 11400000, guid: c1a9699a8e6723c4b9ed0892583788f5, type: 2}
+  - {fileID: 11400000, guid: d922b71d8d93871459314c2f99f0b289, type: 2}
+  - {fileID: 11400000, guid: 7dc8a2d5fbba88f45b8047249dc337c4, type: 2}

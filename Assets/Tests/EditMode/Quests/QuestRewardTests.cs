@@ -106,6 +106,77 @@ namespace Rootborn.Tests.EditMode.Quests
         }
 
         [Test]
+        public void QUEST_005_QuestLogClaimReward_TwoRewardsOneFreeSlotMutatesNothing()
+        {
+            var filler = MakeItem(maxStack: 1);
+            var firstItem = MakeItem(maxStack: 1);
+            var secondItem = MakeItem(maxStack: 1);
+            var inventory = new Inventory();
+            for (int i = 0; i < Inventory.MaxSlots - 1; i++)
+            {
+                inventory.Add(filler, 1);
+            }
+
+            var first = ScriptableObject.CreateInstance<ItemQuestReward>();
+            SetField(first, "_item", firstItem);
+            SetField(first, "_count", 1);
+            var second = ScriptableObject.CreateInstance<ItemQuestReward>();
+            SetField(second, "_item", secondItem);
+            SetField(second, "_count", 1);
+            var objective = ScriptableObject.CreateInstance<AlwaysMatchObjective>();
+            SetField(objective, "_requiredCount", 1);
+            var quest = ScriptableObject.CreateInstance<QuestDefinition>();
+            SetField(quest, "_objectives", new QuestObjectiveBase[] { objective });
+            SetField(quest, "_rewards", new QuestRewardBase[] { first, second });
+            var log = new QuestLog(new[] { quest });
+            var context = new RewardRuntimeContext(log, inventory, null, null);
+
+            log.Accept(quest);
+            log.RecordEvent(new QuestEvent(QuestEventKind.Gather, "g1"));
+
+            Assert.IsFalse(log.CanClaimReward(quest, in context));
+            Assert.IsFalse(log.ClaimReward(quest, in context));
+
+            Assert.AreEqual(0, inventory.CountOf(firstItem));
+            Assert.AreEqual(0, inventory.CountOf(secondItem));
+            Assert.AreEqual(QuestState.Completed, log.GetState(quest));
+        }
+
+        [Test]
+        public void QUEST_005_QuestLogClaimReward_TwoRewardsWithRoomGrantsBothOnce()
+        {
+            var firstItem = MakeItem(maxStack: 1);
+            var secondItem = MakeItem(maxStack: 1);
+            var first = ScriptableObject.CreateInstance<ItemQuestReward>();
+            SetField(first, "_item", firstItem);
+            SetField(first, "_count", 1);
+            var second = ScriptableObject.CreateInstance<ItemQuestReward>();
+            SetField(second, "_item", secondItem);
+            SetField(second, "_count", 1);
+            var objective = ScriptableObject.CreateInstance<AlwaysMatchObjective>();
+            SetField(objective, "_requiredCount", 1);
+            var quest = ScriptableObject.CreateInstance<QuestDefinition>();
+            SetField(quest, "_objectives", new QuestObjectiveBase[] { objective });
+            SetField(quest, "_rewards", new QuestRewardBase[] { first, second });
+            var log = new QuestLog(new[] { quest });
+            var inventory = new Inventory();
+            var context = new RewardRuntimeContext(log, inventory, null, null);
+            var stateAtInventoryChange = default(QuestState);
+            inventory.OnChanged += () => stateAtInventoryChange = log.GetState(quest);
+
+            log.Accept(quest);
+            log.RecordEvent(new QuestEvent(QuestEventKind.Gather, "g1"));
+
+            Assert.IsTrue(log.ClaimReward(quest, in context));
+            Assert.IsFalse(log.ClaimReward(quest, in context));
+
+            Assert.AreEqual(1, inventory.CountOf(firstItem));
+            Assert.AreEqual(1, inventory.CountOf(secondItem));
+            Assert.AreEqual(QuestState.RewardClaimed, log.GetState(quest));
+            Assert.AreEqual(QuestState.RewardClaimed, stateAtInventoryChange, "Inventory observers must see the claim already committed.");
+        }
+
+        [Test]
         public void QUEST_CHAIN_EDIT_008_CompletionRewardPreflightAndDuplicateClaimAreAtomic()
         {
             var item = MakeItem(maxStack: 99);
@@ -190,6 +261,91 @@ namespace Rootborn.Tests.EditMode.Quests
             var chain = ScriptableObject.CreateInstance<QuestChainDefinition>();
             chain.ConfigureForTests("chain.reward", "chain.reward", "chain.reward.desc", "interest.learning", new ScriptableObject[] { step }, Array.Empty<QuestConditionBase>(), Array.Empty<QuestConditionBase>(), Array.Empty<QuestConditionBase>(), new QuestRewardBase[] { reward }, 0);
             return chain;
+        }
+
+        [Test]
+        public void QUEST_005_QuestLogClaimReward_EffectCallingBackDoesNotApplyTwice()
+        {
+            var objective = ScriptableObject.CreateInstance<AlwaysMatchObjective>();
+            SetField(objective, "_requiredCount", 1);
+            var effect = ScriptableObject.CreateInstance<ReentrantCountingEffect>();
+            var quest = ScriptableObject.CreateInstance<QuestDefinition>();
+            SetField(quest, "_objectives", new QuestObjectiveBase[] { objective });
+            SetField(quest, "_rewards", new QuestRewardBase[0]);
+            SetField(quest, "_completionEffects", new QuestCompletionEffectBase[] { effect });
+            var log = new QuestLog(new[] { quest });
+            effect.Log = log;
+            effect.Quest = quest;
+            var context = new RewardRuntimeContext(log, new Inventory(), null, null);
+            log.Accept(quest);
+            log.RecordEvent(new QuestEvent(QuestEventKind.Gather, "g1"));
+
+            Assert.IsTrue(log.ClaimReward(quest, in context));
+
+            Assert.AreEqual(1, effect.AppliedCount);
+            Assert.AreEqual(QuestState.RewardClaimed, log.GetState(quest));
+        }
+
+        private sealed class ReentrantCountingEffect : QuestCompletionEffectBase
+        {
+            public QuestLog Log;
+            public QuestDefinition Quest;
+            public int AppliedCount;
+
+            public override bool CanApply(in RewardRuntimeContext context) => true;
+
+            public override void Apply(in RewardRuntimeContext context)
+            {
+                AppliedCount++;
+                Log.ClaimReward(Quest, in context);
+            }
+        }
+
+        [Test]
+        public void QUEST_REENTRY_002_QuestLogClaimReward_PreflightCallingBackDoesNotApplyTwice()
+        {
+            var objective = ScriptableObject.CreateInstance<AlwaysMatchObjective>();
+            SetField(objective, "_requiredCount", 1);
+            var effect = ScriptableObject.CreateInstance<PreflightReentrantEffect>();
+            var quest = ScriptableObject.CreateInstance<QuestDefinition>();
+            SetField(quest, "_objectives", new QuestObjectiveBase[] { objective });
+            SetField(quest, "_rewards", new QuestRewardBase[0]);
+            SetField(quest, "_completionEffects", new QuestCompletionEffectBase[] { effect });
+            var log = new QuestLog(new[] { quest });
+            effect.Log = log;
+            effect.Quest = quest;
+            var context = new RewardRuntimeContext(log, new Inventory(), null, null);
+            log.Accept(quest);
+            log.RecordEvent(new QuestEvent(QuestEventKind.Gather, "g1"));
+
+            Assert.IsTrue(log.ClaimReward(quest, in context));
+
+            Assert.AreEqual(1, effect.AppliedCount);
+            Assert.AreEqual(QuestState.RewardClaimed, log.GetState(quest));
+        }
+
+        private sealed class PreflightReentrantEffect : QuestCompletionEffectBase
+        {
+            public QuestLog Log;
+            public QuestDefinition Quest;
+            public int AppliedCount;
+            private bool _reentered;
+
+            public override bool CanApply(in RewardRuntimeContext context)
+            {
+                if (!_reentered)
+                {
+                    _reentered = true;
+                    Log.ClaimReward(Quest, in context);
+                }
+
+                return true;
+            }
+
+            public override void Apply(in RewardRuntimeContext context)
+            {
+                AppliedCount++;
+            }
         }
 
         private static ItemDefinition MakeItem(int maxStack)

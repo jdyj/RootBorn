@@ -1,5 +1,6 @@
 using System;
 using Rootborn.Game.Dialogue;
+using Rootborn.Game.Localization;
 using Rootborn.UI.Modern;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -16,13 +17,15 @@ namespace Rootborn.UI.Quests
         private Text _lineText;
         private ModernUiTileImage _backgroundTiles;
         private bool _wasKeyboardChoicePressed;
+        private Func<bool> _canExecute;
 
         public bool IsOpen { get; private set; }
         public event Action<bool> OnChoiceExecuted;
 
-        public void Open(DialogueDefinition dialogue, DialogueChoiceContext context)
+        public void Open(DialogueDefinition dialogue, DialogueChoiceContext context, Func<bool> canExecute = null)
         {
             _dialogue = dialogue;
+            _canExecute = canExecute;
             _context = context;
             IsOpen = true;
             _wasKeyboardChoicePressed = IsKeyboardChoicePressed();
@@ -38,6 +41,7 @@ namespace Rootborn.UI.Quests
         public void Close()
         {
             IsOpen = false;
+            _canExecute = null;
             _dialogue = null;
             _wasKeyboardChoicePressed = false;
             ClearChoiceButtons();
@@ -51,6 +55,8 @@ namespace Rootborn.UI.Quests
 
         public bool Choose(int choiceIndex)
         {
+            if(!IsOpen || (_canExecute != null && !_canExecute()))
+            { OnChoiceExecuted?.Invoke(false); return false; }
             if (_dialogue == null || _dialogue.Choices == null)
             {
                 OnChoiceExecuted?.Invoke(false);
@@ -134,7 +140,8 @@ namespace Rootborn.UI.Quests
             {
                 if (!string.IsNullOrEmpty(lines[i]))
                 {
-                    text = string.IsNullOrEmpty(text) ? lines[i] : text + "\n" + lines[i];
+                    var line = GameText.Get(lines[i]);
+                    text = string.IsNullOrEmpty(text) ? line : text + "\n" + line;
                 }
             }
 
@@ -147,6 +154,7 @@ namespace Rootborn.UI.Quests
             var choices = _dialogue != null ? _dialogue.Choices : null;
             if (choices == null || choices.Length == 0)
             {
+                RefreshContentLayout(0);
                 return;
             }
 
@@ -163,6 +171,7 @@ namespace Rootborn.UI.Quests
                 CreateChoiceButton(i, visibleIndex, choice);
                 visibleIndex++;
             }
+            RefreshContentLayout(visibleIndex);
         }
 
         private void EnsureBackground()
@@ -231,7 +240,7 @@ namespace Rootborn.UI.Quests
             _lineText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             _lineText.fontSize = 20;
             _lineText.alignment = TextAnchor.UpperLeft;
-            _lineText.color = Color.black;
+            _lineText.color = new Color(0.12f, 0.18f, 0.25f, 1f);
             _lineText.raycastTarget = false;
         }
 
@@ -255,8 +264,8 @@ namespace Rootborn.UI.Quests
             _choiceRoot.anchorMin = new Vector2(0f, 0f);
             _choiceRoot.anchorMax = new Vector2(1f, 0f);
             _choiceRoot.pivot = new Vector2(0.5f, 0f);
-            _choiceRoot.anchoredPosition = new Vector2(0f, 20f);
-            _choiceRoot.sizeDelta = new Vector2(-40f, 92f);
+            _choiceRoot.anchoredPosition = new Vector2(0f, 42f);
+            _choiceRoot.sizeDelta = new Vector2(-84f, 48f);
         }
 
         private void EnsureCloseButton()
@@ -267,6 +276,11 @@ namespace Rootborn.UI.Quests
                 var existingButton = existing.GetComponent<Button>();
                 if (existingButton != null)
                 {
+                    var existingRect = (RectTransform)existingButton.transform;
+                    existingRect.anchorMin = existingRect.anchorMax = existingRect.pivot = Vector2.one;
+                    existingRect.anchoredPosition = new Vector2(-42f, -42f);
+                    existingRect.sizeDelta = new Vector2(48f, 48f);
+                    EnsureButtonSkin(existingButton);
                     existingButton.onClick.RemoveListener(Close);
                     existingButton.onClick.AddListener(Close);
                 }
@@ -279,8 +293,8 @@ namespace Rootborn.UI.Quests
             rect.anchorMin = new Vector2(1f, 1f);
             rect.anchorMax = new Vector2(1f, 1f);
             rect.pivot = new Vector2(1f, 1f);
-            rect.anchoredPosition = new Vector2(-14f, -14f);
-            rect.sizeDelta = new Vector2(34f, 34f);
+            rect.anchoredPosition = new Vector2(-42f, -42f);
+            rect.sizeDelta = new Vector2(48f, 48f);
 
             var image = buttonGo.GetComponent<Image>();
             image.color = new Color(0.16f, 0.20f, 0.24f, 0.95f);
@@ -303,6 +317,8 @@ namespace Rootborn.UI.Quests
             label.fontSize = 18;
             label.alignment = TextAnchor.MiddleCenter;
             label.color = Color.black;
+            label.raycastTarget = false;
+            EnsureButtonSkin(button);
         }
 
         private void CreateChoiceButton(int choiceIndex, int visibleIndex, DialogueChoiceDefinition choice)
@@ -313,8 +329,8 @@ namespace Rootborn.UI.Quests
             rect.anchorMin = new Vector2(0f, 1f);
             rect.anchorMax = new Vector2(1f, 1f);
             rect.pivot = new Vector2(0.5f, 1f);
-            rect.anchoredPosition = new Vector2(0f, -visibleIndex * 42f);
-            rect.sizeDelta = new Vector2(0f, 36f);
+            rect.anchoredPosition = new Vector2(0f, -visibleIndex * 60f);
+            rect.sizeDelta = new Vector2(0f, 48f);
 
             var image = buttonGo.GetComponent<Image>();
             image.color = new Color(0.18f, 0.24f, 0.30f, 0.92f);
@@ -328,8 +344,8 @@ namespace Rootborn.UI.Quests
             var labelRect = (RectTransform)labelGo.transform;
             labelRect.anchorMin = Vector2.zero;
             labelRect.anchorMax = Vector2.one;
-            labelRect.offsetMin = new Vector2(10f, 0f);
-            labelRect.offsetMax = new Vector2(-10f, 0f);
+            labelRect.offsetMin = new Vector2(16f, 12f);
+            labelRect.offsetMax = new Vector2(-16f, -12f);
 
             var label = labelGo.GetComponent<Text>();
             label.text = string.IsNullOrEmpty(choice.LabelKey) ? choice.QuestAction.ToString() : choice.LabelKey;
@@ -337,6 +353,40 @@ namespace Rootborn.UI.Quests
             label.fontSize = 18;
             label.alignment = TextAnchor.MiddleCenter;
             label.color = Color.black;
+            label.raycastTarget = false;
+            EnsureButtonSkin(button);
+        }
+
+        private void RefreshContentLayout(int visibleChoices)
+        {
+            const float inset = 42f;
+            const float sectionGap = 24f;
+            float choicesHeight = visibleChoices > 0 ? (visibleChoices - 1) * 60f + 48f : 0f;
+            if (_choiceRoot != null)
+            {
+                _choiceRoot.anchoredPosition = new Vector2(0f, inset);
+                _choiceRoot.sizeDelta = new Vector2(-inset * 2f, choicesHeight);
+            }
+            var root = (RectTransform)transform;
+            var line = _lineText.rectTransform;
+            line.anchorMin = Vector2.zero;
+            line.anchorMax = Vector2.one;
+            line.offsetMin = new Vector2(inset, inset + choicesHeight + sectionGap);
+            // Reserve the top-right close button and its separation from the text.
+            line.offsetMax = new Vector2(-102f, -inset);
+            float lineHeight = Mathf.Max(84f, _lineText.preferredHeight);
+            root.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical,
+                inset * 2f + choicesHeight + sectionGap + lineHeight);
+            _backgroundTiles.Rebuild();
+        }
+
+        private static void EnsureButtonSkin(Button button)
+        {
+            var tiles = button.GetComponent<ModernUiTileImage>();
+            if (tiles == null) tiles = button.gameObject.AddComponent<ModernUiTileImage>();
+            tiles.SetRecipe(ModernUiRecipes.CommonPanel);
+            tiles.SetTileSize(new Vector2(12f, 12f));
+            tiles.Rebuild();
         }
 
         private void ClearChoiceButtons()

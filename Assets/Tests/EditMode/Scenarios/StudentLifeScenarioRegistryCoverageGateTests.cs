@@ -208,6 +208,20 @@ namespace Rootborn.Tests.EditMode.Scenarios
                     StringAssert.DoesNotContain("| Deferred | QUEST-INTERIOR-REWARD-001 |", catalog, "Quest/Interior reward must not remain deferred after executable PlayMode coverage landed.");
                 }
 
+                [Test]
+                public void SCENARIO_REGISTRY_EDIT_015_CatalogActivatesHouseUpgradeInteriorScenario()
+                {
+                    Assert.IsTrue(File.Exists(CatalogPath), "The current Student Life scenario coverage catalog must exist.");
+                    string catalog = File.ReadAllText(CatalogPath);
+
+                    StringAssert.Contains("| Active | HOUSE-UPGRADE-INTERIOR-001 | LIFE | House Upgrade/Interior Loop | PlayMode | Assets/Tests/PlayMode/EndToEnd/HouseUpgradeInteriorLoopE2EScenarioTests.cs |", catalog, "House upgrade/interior loop must be active catalog evidence after the strict PlayMode scenario landed.");
+                    StringAssert.Contains("HOUSE_UPGRADE_E2E_001_UpgradePresetPlaceReload", catalog);
+                    StringAssert.Contains("Builds/Logs/house-upgrade-interior-loop-e2e.png", catalog);
+                    StringAssert.Contains("occupancy tilemap", catalog, "House catalog row must document runtime object and occupancy tilemap evidence.");
+                    StringAssert.Contains("overlay cleanup", catalog, "House catalog row must document stale overlay cleanup evidence.");
+                    StringAssert.DoesNotContain("| Deferred | HOUSE-UPGRADE-INTERIOR-001 |", catalog, "House upgrade/interior loop must not remain deferred after executable PlayMode coverage landed.");
+                }
+
                 private static void AssertCategory(string catalog, string category)
         {
             StringAssert.Contains("| " + category + " |", catalog, "Catalog must include category " + category + ".");

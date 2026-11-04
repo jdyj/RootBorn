@@ -88,7 +88,7 @@ namespace Rootborn.Tests.EditMode.Family
             var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(body.EditorAssetPath);
             Assert.IsNotNull(texture);
             int cols = texture.width / 16;
-            int rows = texture.height / 16;
+            int rows = texture.height / 32;
             foreach (var clip in LoadAnimationClips())
             {
                 Assert.Less(clip.Row, rows, clip.Id);
@@ -105,7 +105,7 @@ namespace Rootborn.Tests.EditMode.Family
         }
 
         [Test]
-        public void CharacterPartDefinitions_ReferenceExistingSixteenBySixteenSubSprites()
+        public void CharacterPartDefinitions_ReferenceExistingSixteenByThirtyTwoSubSprites()
         {
             var definitions = LoadDefinitions();
             Assert.GreaterOrEqual(definitions.Length, 10);
@@ -128,11 +128,11 @@ namespace Rootborn.Tests.EditMode.Family
 
                 Assert.IsNotNull(matched, definition.Id + " -> " + definition.SubSpriteName);
                 Assert.AreEqual(16f, matched.rect.width, definition.Id);
-                Assert.AreEqual(16f, matched.rect.height, definition.Id);
+                Assert.AreEqual(32f, matched.rect.height, definition.Id);
                 Assert.IsNotNull(definition.PreviewSprite, definition.Id);
                 Assert.AreEqual(definition.SubSpriteName, definition.PreviewSprite.name, definition.Id);
                 Assert.AreEqual(16f, definition.PreviewSprite.rect.width, definition.Id);
-                Assert.AreEqual(16f, definition.PreviewSprite.rect.height, definition.Id);
+                Assert.AreEqual(32f, definition.PreviewSprite.rect.height, definition.Id);
             }
         }
 

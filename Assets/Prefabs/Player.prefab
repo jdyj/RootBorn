@@ -478,6 +478,7 @@ GameObject:
   - component: {fileID: 9089469977953492741}
   - component: {fileID: 4885765691639228018}
   - component: {fileID: 4482702469712385393}
+  - component: {fileID: 2377963413306480018}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -678,6 +679,7 @@ MonoBehaviour:
   _toolRenderer: {fileID: 4368067554472882468}
   _partComposer: {fileID: 0}
   _partAnimator: {fileID: 0}
+  _visualAdapter: {fileID: 0}
   _rb: {fileID: 4737126560717574139}
   _inventory: {fileID: 0}
   _interactor: {fileID: 0}
@@ -814,6 +816,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b33586615375aa4696b8f964059798a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Rootborn.Network::Rootborn.Network.Player.NetworkLocalPlayerViewBinder
+  ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &2377963413306480018
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6584721302760826571}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f27b77687b704604ba6c43bfdaed1829, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Rootborn.Network::Rootborn.Network.Characters.GrowingCharacterNetworkAppearanceSync
   ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &7879842297577872743
 GameObject:

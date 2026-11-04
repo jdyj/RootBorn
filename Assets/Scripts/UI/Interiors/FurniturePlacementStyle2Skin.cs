@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Rootborn.UI.Modern;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -12,6 +13,7 @@ namespace Rootborn.UI.Interiors
         private static readonly Color PanelTint = new Color(0.10f, 0.12f, 0.18f, 0.94f);
         private const int FramesToReapply = 12;
         private int _framesApplied;
+        private readonly List<GameObject> _temporarilyHiddenControls = new List<GameObject>();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void RegisterSceneLoaded()
@@ -44,9 +46,8 @@ namespace Rootborn.UI.Interiors
 
         private void LateUpdate()
         {
-            HideUnrelatedTopLevelButtons();
-
             var panel = FindFirstObjectByType<InteriorFurniturePlacementPanel>();
+            SetUtilityMenusHidden(panel != null);
             if (panel == null)
             {
                 return;
@@ -74,20 +75,26 @@ namespace Rootborn.UI.Interiors
             }
         }
 
-        private static void HideUnrelatedTopLevelButtons()
+        private void SetUtilityMenusHidden(bool hidden)
         {
-            DestroyIfExists("WorldStateLogButton");
-            DestroyIfExists("EncyclopediaButton");
-        }
-
-        private static void DestroyIfExists(string name)
-        {
-            var go = GameObject.Find(name);
-            if (go != null)
+            if (!hidden)
             {
-                Destroy(go);
+                foreach (var control in _temporarilyHiddenControls)
+                    if (control != null) control.SetActive(true);
+                _temporarilyHiddenControls.Clear();
+                return;
+            }
+            // These are real gameplay entry points. Preserve their owner and callbacks.
+            foreach (string name in new[] { "WorldStateLogButton", "EncyclopediaButton" })
+            {
+                var control = GameObject.Find(name);
+                if (control == null || control.scene != gameObject.scene) continue;
+                _temporarilyHiddenControls.Add(control);
+                control.SetActive(false);
             }
         }
+
+        private void OnDisable() => SetUtilityMenusHidden(false);
 
         private static void ClearEmptyPreviewPlaceholder(Transform root)
         {

@@ -53,6 +53,7 @@ namespace Rootborn.Game.Quests
         private readonly HashSet<string> _rewardClaimedIds = new HashSet<string>(StringComparer.Ordinal);
         private readonly List<string> _transitionHistory = new List<string>();
         private int[] _objectiveProgressValues;
+        private bool _isApplyingStep;
 
         public QuestChainProgress(string saveSlot, string playerId, QuestChainDefinition chain)
         {
@@ -163,7 +164,14 @@ namespace Rootborn.Game.Quests
 
         public bool TryRecordEvent(QuestChainDefinition chain, in QuestEvent questEvent)
         {
-            if (chain == null || (State != QuestChainState.Active && State != QuestChainState.Tracked)) return false;
+            if (!TryCreditEvent(chain, in questEvent)) return false;
+            TryCompleteCurrentStep(chain, default, default);
+            return true;
+        }
+
+        internal bool TryCreditEvent(QuestChainDefinition chain, in QuestEvent questEvent)
+        {
+            if (_isApplyingStep || chain == null || (State != QuestChainState.Active && State != QuestChainState.Tracked)) return false;
             if (!string.IsNullOrEmpty(questEvent.EventKey) && !_processedEventKeys.Add(questEvent.EventKey)) return false;
             var step = FindStep(chain, CurrentStepId);
             if (step == null || step.Objectives == null || step.Objectives.Length == 0) return false;
@@ -182,7 +190,6 @@ namespace Rootborn.Game.Quests
                 changed = true;
             }
 
-            if (changed && AreCurrentObjectivesComplete(step)) CompleteCurrentStep(step);
             return changed;
         }
 
@@ -230,7 +237,17 @@ namespace Rootborn.Game.Quests
             if (!string.IsNullOrEmpty(saveData.ChainState) && Enum.TryParse(saveData.ChainState, out QuestChainState state)) progress.State = state;
             progress.IsTracked = saveData.IsTracked && !IsTerminalState(progress.State);
             progress.CurrentStepId = string.IsNullOrEmpty(saveData.CurrentStepId) ? FirstStepId(chain) : saveData.CurrentStepId;
-            progress._objectiveProgressValues = saveData.ObjectiveProgressValues != null ? (int[])saveData.ObjectiveProgressValues.Clone() : CreateObjectiveProgressValues(chain, progress.CurrentStepId);
+            progress._objectiveProgressValues = CreateObjectiveProgressValues(chain, progress.CurrentStepId);
+            var restoredStep = FindStep(chain, progress.CurrentStepId);
+            if (saveData.ObjectiveProgressValues != null && restoredStep != null)
+            {
+                int count = Math.Min(progress._objectiveProgressValues.Length, saveData.ObjectiveProgressValues.Length);
+                for (int i = 0; i < count; i++)
+                {
+                    int required = restoredStep.Objectives[i] != null ? restoredStep.Objectives[i].RequiredCount : 0;
+                    progress._objectiveProgressValues[i] = Mathf.Clamp(saveData.ObjectiveProgressValues[i], 0, required);
+                }
+            }
             AddAll(progress._completedStepIds, saveData.CompletedStepIds);
             AddAll(progress._processedEventKeys, saveData.ProcessedEventKeys);
             AddAll(progress._rewardClaimedIds, saveData.RewardClaimedIds);
@@ -246,10 +263,94 @@ namespace Rootborn.Game.Quests
             return progress;
         }
 
-        private void CompleteCurrentStep(QuestStepDefinition step)
+        public QuestStepDefinition GetCurrentStep(QuestChainDefinition chain) => FindStep(chain, CurrentStepId);
+
+        internal void RecordAcceptedDay(int dayIndex)
         {
-            if (step != null && !string.IsNullOrEmpty(step.Id)) _completedStepIds.Add(step.Id);
-            State = QuestChainState.Completed;
+            if (AcceptedDayIndex < 0) AcceptedDayIndex = dayIndex;
+        }
+
+        internal bool TryCompleteCurrentStep(QuestChainDefinition chain, QuestRuntimeContext context, RewardRuntimeContext rewards)
+        {
+            if (_isApplyingStep || (State != QuestChainState.Active && State != QuestChainState.Tracked)) return false;
+            var step = GetCurrentStep(chain);
+            if (!AreCurrentObjectivesComplete(step) || !ConditionsSatisfied(step.CompletionConditions, in context)) return false;
+            if (!ConditionsSatisfied(step.BlockConditions, in context)) return false;
+            if (!TryResolveNextStep(chain, step, in context, out var nextStep)) return false;
+
+            string rewardId = "step:" + step.Id;
+            int dayIndex = context.StudentLifeProgress != null ? context.StudentLifeProgress.CurrentDay : -1;
+            _isApplyingStep = true;
+            try
+            {
+                Action commit = () => CommitStep(step, nextStep, rewardId, dayIndex);
+                if (IsRewardClaimed(rewardId))
+                {
+                    commit();
+                    return true;
+                }
+                return QuestRewardBatch.TryApply(step.Rewards, in rewards, commit);
+            }
+            finally
+            {
+                _isApplyingStep = false;
+            }
+        }
+
+        private bool TryResolveNextStep(QuestChainDefinition chain, QuestStepDefinition step, in QuestRuntimeContext context, out QuestStepDefinition nextStep)
+        {
+            nextStep = null;
+            if (chain == null || step == null) return false;
+            if (step.Transitions != null && step.Transitions.Length > 0)
+            {
+                for (int i = 0; i < step.Transitions.Length; i++)
+                {
+                    var transition = step.Transitions[i];
+                    if (transition == null || !transition.TryResolveNextStep(chain, this, in context, out string nextId)) continue;
+                    if (string.IsNullOrEmpty(nextId)) return true;
+                    nextStep = FindStep(chain, nextId);
+                    return nextStep != null && nextStep.Id != step.Id && !_completedStepIds.Contains(nextStep.Id);
+                }
+                return false;
+            }
+
+            for (int i = 0; i < chain.Steps.Length; i++)
+            {
+                if (chain.Steps[i] == null || chain.Steps[i].Id != step.Id) continue;
+                if (i == chain.Steps.Length - 1) return true;
+                nextStep = chain.Steps[i + 1];
+                return nextStep != null && !string.IsNullOrEmpty(nextStep.Id) && !_completedStepIds.Contains(nextStep.Id);
+            }
+            return false;
+        }
+
+        private void CommitStep(QuestStepDefinition step, QuestStepDefinition nextStep, string rewardId, int dayIndex)
+        {
+            _completedStepIds.Add(step.Id);
+            _rewardClaimedIds.Add(rewardId);
+            _transitionHistory.Add(step.Id + "->" + (nextStep != null ? nextStep.Id : "completed"));
+            TodayQuestChainSummary = step.DisplayNameKey;
+            BlockedReasonId = string.Empty;
+            LastEvaluatedConditionSummary = string.Empty;
+            if (nextStep == null)
+            {
+                State = QuestChainState.Completed;
+                IsTracked = false;
+                CompletedDayIndex = dayIndex;
+                return;
+            }
+            CurrentStepId = nextStep.Id;
+            _objectiveProgressValues = new int[nextStep.Objectives != null ? nextStep.Objectives.Length : 0];
+        }
+
+        private static bool ConditionsSatisfied(QuestConditionBase[] conditions, in QuestRuntimeContext context)
+        {
+            if (conditions == null) return true;
+            for (int i = 0; i < conditions.Length; i++)
+            {
+                if (conditions[i] == null || !conditions[i].IsSatisfied(in context)) return false;
+            }
+            return true;
         }
 
         private bool AreCurrentObjectivesComplete(QuestStepDefinition step)
@@ -284,7 +385,7 @@ namespace Rootborn.Game.Quests
                 if (step != null && step.Id == stepId) return step;
             }
 
-            return chain.Steps.Length > 0 ? chain.Steps[0] : null;
+            return null;
         }
 
         private static int[] CreateObjectiveProgressValues(QuestChainDefinition chain, string stepId)
@@ -313,6 +414,7 @@ namespace Rootborn.Game.Quests
         private const string CompletionRewardId = "completion";
         private readonly Dictionary<QuestChainDefinition, QuestChainProgress> _progressByChain = new Dictionary<QuestChainDefinition, QuestChainProgress>();
         private readonly Dictionary<string, QuestChainProgress> _progressByChainId = new Dictionary<string, QuestChainProgress>(StringComparer.Ordinal);
+        private readonly HashSet<string> _claimingChainIds = new HashSet<string>(StringComparer.Ordinal);
 
         public QuestChainLog(IEnumerable<ScriptableObject> chains)
         {
@@ -365,7 +467,15 @@ namespace Rootborn.Game.Quests
 
         public bool EvaluateAvailability(ScriptableObject chain, QuestRuntimeContext context)
         {
-            return TryGetProgress(chain, out var progress) && progress.SetAvailable();
+            return chain is QuestChainDefinition definition && IsValidDefinition(definition)
+                && TryGetProgress(chain, out var progress) && progress.SetAvailable()
+                && AreAllSatisfied(definition.StartConditions, in context);
+        }
+
+        public QuestStepDefinition GetCurrentStep(ScriptableObject chain)
+        {
+            return chain is QuestChainDefinition definition && TryGetProgress(chain, out var progress)
+                ? progress.GetCurrentStep(definition) : null;
         }
 
         public bool EvaluateTerminalState(ScriptableObject chain, QuestRuntimeContext context)
@@ -386,22 +496,28 @@ namespace Rootborn.Game.Quests
         {
             if (!(chain is QuestChainDefinition definition) || !TryGetProgress(chain, out var progress)) return false;
             if (progress.State == QuestChainState.Available || progress.State == QuestChainState.Completed || progress.State == QuestChainState.Failed || progress.State == QuestChainState.Expired) return false;
-
-            if (progress.State == QuestChainState.Blocked)
-            {
-                var reopenConditions = definition.UnblockConditions != null && definition.UnblockConditions.Length > 0 ? definition.UnblockConditions : definition.BlockConditions;
-                if (AreAllSatisfied(reopenConditions, in context)) return progress.Unblock();
-                return true;
-            }
-
-            var missing = FirstUnsatisfied(definition.BlockConditions, in context);
-            if (missing == null) return false;
-            return progress.Block(missing.BlockedReasonId, missing.BlockedSummary);
+            var step = progress.GetCurrentStep(definition);
+            if (step == null) return progress.Block("questchain.invalid-step", "The saved quest step is not present in this chain.");
+            var chainConditions = progress.State == QuestChainState.Blocked && definition.UnblockConditions != null && definition.UnblockConditions.Length > 0
+                ? definition.UnblockConditions : definition.BlockConditions;
+            var missing = FirstUnsatisfied(chainConditions, in context) ?? FirstUnsatisfied(step.BlockConditions, in context);
+            if (missing != null) return progress.Block(missing.BlockedReasonId, missing.BlockedSummary);
+            if (progress.State == QuestChainState.Blocked) return progress.Unblock();
+            return false;
         }
 
         public bool Accept(ScriptableObject chain)
         {
-            return chain is QuestChainDefinition definition && TryGetProgress(chain, out var progress) && progress.Accept(definition);
+            return AcceptWithContext(chain, default);
+        }
+
+        public bool AcceptWithContext(ScriptableObject chain, QuestRuntimeContext context)
+        {
+            if (!(chain is QuestChainDefinition definition) || !IsValidDefinition(definition)
+                || !TryGetProgress(chain, out var progress) || !AreAllSatisfied(definition.StartConditions, in context)) return false;
+            if (!progress.Accept(definition)) return false;
+            progress.RecordAcceptedDay(ResolveDayIndex(in context));
+            return true;
         }
 
         public bool Track(ScriptableObject chain)
@@ -430,10 +546,28 @@ namespace Rootborn.Game.Quests
 
         public void RecordEvent(QuestEvent questEvent)
         {
+            RecordEventWithContext(questEvent, default, default);
+        }
+
+        public void RecordEventWithContext(QuestEvent questEvent, QuestRuntimeContext context, RewardRuntimeContext rewards)
+        {
             foreach (var pair in _progressByChain)
             {
-                pair.Value.TryRecordEvent(pair.Key, in questEvent);
+                EvaluateTerminalState(pair.Key, context);
+                EvaluateBlockState(pair.Key, context);
+                if (pair.Value.TryCreditEvent(pair.Key, in questEvent))
+                {
+                    pair.Value.TryCompleteCurrentStep(pair.Key, context, rewards);
+                }
             }
+        }
+
+        public bool EvaluateStepProgress(ScriptableObject chain, QuestRuntimeContext context, RewardRuntimeContext rewards)
+        {
+            if (!(chain is QuestChainDefinition definition) || !TryGetProgress(chain, out var progress)) return false;
+            EvaluateTerminalState(chain, context);
+            EvaluateBlockState(chain, context);
+            return progress.TryCompleteCurrentStep(definition, context, rewards);
         }
 
         public bool MarkRewardClaimed(ScriptableObject chain, string rewardId)
@@ -444,27 +578,24 @@ namespace Rootborn.Game.Quests
         public bool CanClaimCompletionRewards(ScriptableObject chain, in RewardRuntimeContext context)
         {
             if (!(chain is QuestChainDefinition definition) || !TryGetProgress(chain, out var progress)) return false;
-            if (progress.State != QuestChainState.Completed || progress.IsRewardClaimed(CompletionRewardId)) return false;
-            if (definition.CompletionRewards == null) return true;
-            for (int i = 0; i < definition.CompletionRewards.Length; i++)
-            {
-                var reward = definition.CompletionRewards[i];
-                if (reward != null && !reward.CanApply(in context)) return false;
-            }
-
-            return true;
+            if (progress.State != QuestChainState.Completed || progress.IsRewardClaimed(CompletionRewardId)
+                || _claimingChainIds.Contains(definition.Id)) return false;
+            return QuestRewardBatch.CanApply(definition.CompletionRewards, in context);
         }
 
         public bool ClaimCompletionRewards(ScriptableObject chain, in RewardRuntimeContext context)
         {
             if (!(chain is QuestChainDefinition definition) || !TryGetProgress(chain, out var progress)) return false;
-            if (!CanClaimCompletionRewards(chain, in context)) return false;
-            if (definition.CompletionRewards != null)
+            if (!CanClaimCompletionRewards(chain, in context) || !_claimingChainIds.Add(definition.Id)) return false;
+            try
             {
-                for (int i = 0; i < definition.CompletionRewards.Length; i++) definition.CompletionRewards[i]?.Apply(in context);
+                return QuestRewardBatch.TryApply(definition.CompletionRewards, in context,
+                    () => progress.MarkRewardClaimed(CompletionRewardId));
             }
-
-            return progress.MarkRewardClaimed(CompletionRewardId);
+            finally
+            {
+                _claimingChainIds.Remove(definition.Id);
+            }
         }
 
         public QuestChainLogSaveData ToSaveData()
@@ -491,6 +622,18 @@ namespace Rootborn.Game.Quests
                 _progressByChain[definition] = progress;
                 CacheProgress(definition, progress);
             }
+        }
+
+        private static bool IsValidDefinition(QuestChainDefinition chain)
+        {
+            if (chain == null || string.IsNullOrEmpty(chain.Id) || chain.Steps == null || chain.Steps.Length == 0) return false;
+            var ids = new HashSet<string>(StringComparer.Ordinal);
+            for (int i = 0; i < chain.Steps.Length; i++)
+            {
+                var step = chain.Steps[i];
+                if (step == null || string.IsNullOrEmpty(step.Id) || !ids.Add(step.Id)) return false;
+            }
+            return true;
         }
 
         private static QuestConditionBase FirstUnsatisfied(QuestConditionBase[] conditions, in QuestRuntimeContext context)

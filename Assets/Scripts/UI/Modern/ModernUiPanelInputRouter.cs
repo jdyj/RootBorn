@@ -1,4 +1,5 @@
 using Rootborn.UI.Objectives;
+using Rootborn.Game.Common;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -52,19 +53,21 @@ namespace Rootborn.UI.Modern
             bool settingsPressed = IsAnyKeyboardPressed(KeyboardKey.Settings);
             bool objectiveJournalPressed = IsAnyKeyboardPressed(KeyboardKey.ObjectiveJournal);
 
-            if (inventoryPressed && !_wasInventoryKeyPressed)
+            bool allowShortcuts = !UiTextInputFocus.HasFocus && !UiGameplayInputLock.IsBlocked;
+
+            if (allowShortcuts && inventoryPressed && !_wasInventoryKeyPressed)
             {
                 ToggleInventoryPanel();
             }
-            if (statusPressed && !_wasStatusKeyPressed)
+            if (allowShortcuts && statusPressed && !_wasStatusKeyPressed)
             {
                 ToggleStatusPanel();
             }
-            if (settingsPressed && !_wasSettingsKeyPressed)
+            if (allowShortcuts && settingsPressed && !_wasSettingsKeyPressed)
             {
                 ToggleSettingsPanel();
             }
-            if (objectiveJournalPressed && !_wasObjectiveJournalKeyPressed)
+            if (allowShortcuts && objectiveJournalPressed && !_wasObjectiveJournalKeyPressed)
             {
                 ToggleObjectiveJournalPanel();
             }

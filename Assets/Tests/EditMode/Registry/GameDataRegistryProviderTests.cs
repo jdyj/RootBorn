@@ -53,6 +53,27 @@ namespace Rootborn.Tests.EditMode.Registry
             StringAssert.Contains("GameDataRegistry", exception.Message);
         }
 
+        [TestCase(true)][TestCase(false)]
+        public void REGISTRY_PROVIDER_EDIT_004_PlayStartDropsPriorOverrideAndCachedProvider(bool useOverride)
+        {
+            var sentinel=ScriptableObject.CreateInstance<GameDataRegistry>();
+            try{
+                GameDataRegistryProvider.ClearOverrideForTests();GameDataRegistryProvider.SetProviderForTests(new FixedProvider(sentinel));
+                if(useOverride)GameDataRegistryProvider.SetOverrideForTests(sentinel);
+                Assert.That(GameDataRegistryProvider.Require(),Is.SameAs(sentinel));
+                var reset=typeof(GameDataRegistryProvider).GetMethod("ResetForPlayMode",System.Reflection.BindingFlags.Static|System.Reflection.BindingFlags.NonPublic);
+                Assert.That(reset,Is.Not.Null,"Subsystem registration must clear stale test/editor registry state before each play session");
+                reset.Invoke(null,null);GameDataRegistryProvider.TryGet(out var actual);
+                Assert.That(actual,Is.Not.SameAs(sentinel));
+                Assert.That(actual,Is.SameAs(Rootborn.Game.Managers.Managers.Data!=null?Rootborn.Game.Managers.Managers.Data.Registry:null));
+            }finally{Object.DestroyImmediate(sentinel);}
+        }
+        private sealed class FixedProvider : IGameDataRegistryProvider
+        {
+            private readonly GameDataRegistry _value;public FixedProvider(GameDataRegistry value){_value=value;}
+            public bool TryGet(out GameDataRegistry registry){registry=_value;return registry!=null;}public GameDataRegistry Require()=>_value;
+        }
+
         private sealed class EmptyProvider : IGameDataRegistryProvider
         {
             public bool TryGet(out GameDataRegistry registry)

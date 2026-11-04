@@ -1,3 +1,4 @@
+using Rootborn.Game.Localization;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -148,9 +149,12 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
             }
         }
 
-        [Test]
-        public void ObjectiveJournalPanel_EmptyCategoryShowsExplicitEmptyText()
+        [TestCase("en", "No objectives in this category")]
+        [TestCase("ko", "이 분류에는 아직 기록이 없어요.")]
+        public void ObjectiveJournalPanel_EmptyCategoryShowsExplicitEmptyText(string language, string expectedText)
         {
+            string previousLanguage = GameText.Language;
+            GameText.Language = language;
             var host = new GameObject("ObjectiveJournalEmptyCategoryFixture", typeof(RectTransform));
             try
             {
@@ -159,10 +163,11 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
                 panel.Show();
                 panel.SelectCategory("Hints");
 
-                StringAssert.Contains("No objectives in this category", panel.VisibleText);
+                StringAssert.Contains(expectedText, panel.VisibleText);
             }
             finally
             {
+                GameText.Language = previousLanguage;
                 UnityEngine.Object.DestroyImmediate(host);
             }
         }

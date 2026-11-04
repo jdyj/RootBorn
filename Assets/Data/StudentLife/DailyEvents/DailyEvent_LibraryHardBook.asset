@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: DailyEvent_LibraryHardBook
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.DailyEventDefinition
   _id: daily-event.library-hard-book
-  _displayNameKey: 'Library: Hard Book'
-  _descriptionKey: A difficult book catches your eye.
+  _displayNameKey: life.event.library.name
+  _descriptionKey: life.event.library.description
   _location: {fileID: 11400000, guid: cbc6489c83f1f1440a50f2f18914cd32, type: 2}
   _npc: {fileID: 0}
   _kind: {fileID: 11400000, guid: ed18e207eda63274c9e088a81763d933, type: 2}

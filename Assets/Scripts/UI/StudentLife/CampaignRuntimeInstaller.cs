@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Rootborn.Game.Common;
+using Rootborn.Game.World;
 using Rootborn.Game.Dialogue;
 using Rootborn.Game.StudentLife;
 using UnityEngine;
@@ -27,12 +28,12 @@ namespace Rootborn.UI.StudentLife
         public static void EnsureForActiveScene()
         {
             var scene = SceneManager.GetActiveScene();
-            if (scene.name == TownSceneName) EnsureScene(scene);
+            if ((scene.name == TownSceneName || AuthoredWorldScene.Find(scene) != null)) EnsureScene(scene);
         }
 
         public static void EnsureScene(Scene scene)
         {
-            if (scene.name != TownSceneName || FindRoot(scene, RunnerName) != null) return;
+            if ((scene.name != TownSceneName && AuthoredWorldScene.Find(scene) == null) || FindRoot(scene, RunnerName) != null) return;
             var runner = new GameObject(RunnerName);
             SceneManager.MoveGameObjectToScene(runner, scene);
             runner.AddComponent<Runner>();
@@ -62,7 +63,7 @@ namespace Rootborn.UI.StudentLife
 
             private IEnumerator Start()
             {
-                _scene = SceneManager.GetActiveScene();
+                _scene = gameObject.scene;
                 float elapsed = 0f;
                 GameObject player = null;
                 while (elapsed < 5f)
@@ -172,6 +173,7 @@ namespace Rootborn.UI.StudentLife
             var registry = ResolveRegistry();
             var testCampaigns = GameDataRegistryCampaignExtensions.GetCampaigns(registry);
             if (testCampaigns.Length > 0) return testCampaigns[0];
+            if (registry != null && registry.DefaultStudentCampaign != null) return registry.DefaultStudentCampaign;
             var registeredCampaigns = registry != null ? registry.Campaigns : null;
             return registeredCampaigns != null && registeredCampaigns.Length > 0 ? registeredCampaigns[0] : null;
         }
@@ -183,18 +185,33 @@ namespace Rootborn.UI.StudentLife
 
         private static void EnsureEventSystem(Scene scene)
         {
+            var current = EventSystem.current;
+            if (current != null)
+            {
+                if (current.GetComponent<BaseInputModule>() == null)
+                {
+                    AddUiInputModule(current.gameObject);
+                }
+
+                return;
+            }
+
             var eventSystem = FindComponentInScene<EventSystem>(scene);
             if (eventSystem == null)
             {
                 var go = new GameObject("EventSystem", typeof(EventSystem));
-                UiInputModuleInstaller.AddPreferredInputModule(go);
+                AddUiInputModule(go);
                 SceneManager.MoveGameObjectToScene(go, scene);
                 return;
             }
-            if (eventSystem.GetComponent<BaseInputModule>() == null) UiInputModuleInstaller.AddPreferredInputModule(eventSystem.gameObject);
+            if (eventSystem.GetComponent<BaseInputModule>() == null) AddUiInputModule(eventSystem.gameObject);
         }
 
-        private static GameObject FindRoot(Scene scene, string rootName)
+
+        private static void AddUiInputModule(GameObject go)
+        {
+            UiInputModuleInstaller.AddPreferredInputModule(go);
+        }        private static GameObject FindRoot(Scene scene, string rootName)
         {
             var roots = scene.GetRootGameObjects();
             for (int i = 0; i < roots.Length; i++) if (roots[i].name == rootName) return roots[i];

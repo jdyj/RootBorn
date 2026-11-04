@@ -84,6 +84,11 @@ namespace Rootborn.UI.Interiors
                 return false;
             }
 
+            if (canvas.GetComponent<GraphicRaycaster>() == null)
+            {
+                canvas.gameObject.AddComponent<GraphicRaycaster>();
+            }
+
             var existing = GameObject.Find(ButtonName);
             var buttonObject = existing != null
                 ? existing
@@ -181,6 +186,7 @@ namespace Rootborn.UI.Interiors
 
             bool nextActive = !panel.gameObject.activeSelf;
             panel.gameObject.SetActive(nextActive);
+            HousePlacementCameraRuntimeInstaller.SetPlacementMode(panel.gameObject.scene, nextActive);
             if (!nextActive)
             {
                 var overlay = FindFirstObjectByType<InteriorPlacementPreviewOverlay>();

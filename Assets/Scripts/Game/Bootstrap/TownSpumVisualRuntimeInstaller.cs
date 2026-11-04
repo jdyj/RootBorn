@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using Rootborn.Game.Characters;
 using Rootborn.Game.Characters.Spum;
 using Rootborn.Game.Save;
@@ -12,6 +13,12 @@ namespace Rootborn.Game.Bootstrap
         private const string TownSceneName = "Town";
         private const string RunnerName = "[TownSpumVisualRuntimeInstaller]";
         private const string SpumVisualKind = "spum";
+        private static readonly List<SpumCharacterVisualView> CandidateViews = new List<SpumCharacterVisualView>(4);
+
+        public static bool TryBindExistingVisual(GameObject player)
+        {
+            return HasSpumSnapshot() && BindSpumVisual(player);
+        }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Register()
@@ -57,39 +64,52 @@ namespace Rootborn.Game.Bootstrap
 
         private IEnumerator BindWhenPlayerExists()
         {
-            float elapsed = 0f;
-            while (elapsed < 10f)
+            float deadline = UnityEngine.Time.realtimeSinceStartup + 10f;
+            var retryDelay = new WaitForSecondsRealtime(0.1f);
+            while (UnityEngine.Time.realtimeSinceStartup < deadline)
             {
                 if (!HasSpumSnapshot())
                     yield break;
 
                 GameObject player = GameObject.Find("Player");
-                if (player != null)
+                if (player != null && BindSpumVisual(player))
                 {
-                    BindSpumVisual(player);
                     yield break;
                 }
 
-                elapsed += UnityEngine.Time.deltaTime;
-                yield return null;
+                yield return retryDelay;
             }
         }
 
-        private static void BindSpumVisual(GameObject player)
+        private static bool BindSpumVisual(GameObject player)
         {
-            var view = player.GetComponent<SpumCharacterVisualView>();
-            if (view == null)
+            if (player == null)
+                return false;
+
+            CandidateViews.Clear();
+            player.GetComponentsInChildren(false, CandidateViews);
+            SpumCharacterVisualView selected = null;
+            for (int i = 0; i < CandidateViews.Count; i++)
             {
-                view = player.AddComponent<SpumCharacterVisualView>();
+                var candidate = CandidateViews[i];
+                if (candidate != null && candidate.HasRenderableVisual)
+                {
+                    selected = candidate;
+                    break;
+                }
             }
+            CandidateViews.Clear();
+
+            // Snapshot intent alone never creates a view around another backend's renderers.
+            if (selected == null)
+                return false;
 
             var adapter = player.GetComponent<PlayerCharacterVisualAdapter>();
             if (adapter == null)
-            {
                 adapter = player.AddComponent<PlayerCharacterVisualAdapter>();
-            }
 
-            adapter.ConfigureForTests(view);
+            adapter.ConfigureForTests(selected);
+            return true;
         }
 
         private static bool HasSpumSnapshot()

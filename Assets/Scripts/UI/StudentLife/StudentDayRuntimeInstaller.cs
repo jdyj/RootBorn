@@ -1,5 +1,6 @@
 using System.Collections;
 using Rootborn.Game.Common;
+using Rootborn.Game.World;
 using Rootborn.Game.Managers;
 using Rootborn.Game.StudentLife;
 using UnityEngine;
@@ -27,7 +28,7 @@ namespace Rootborn.UI.StudentLife
         public static void EnsureForActiveScene()
         {
             var scene = SceneManager.GetActiveScene();
-            if (scene.name == TownSceneName)
+            if (scene.name == TownSceneName || AuthoredWorldScene.Find(scene) != null)
             {
                 EnsureScene(scene);
             }
@@ -35,7 +36,7 @@ namespace Rootborn.UI.StudentLife
 
         public static void EnsureScene(Scene scene)
         {
-            if (scene.name != TownSceneName || FindRoot(scene, RunnerName) != null)
+            if ((scene.name != TownSceneName && AuthoredWorldScene.Find(scene) == null) || FindRoot(scene, RunnerName) != null)
             {
                 return;
             }
@@ -54,7 +55,7 @@ namespace Rootborn.UI.StudentLife
         {
             private IEnumerator Start()
             {
-                Scene scene = SceneManager.GetActiveScene();
+                Scene scene = gameObject.scene;
                 float elapsed = 0f;
                 while (FindRoot(scene, "Player") == null && elapsed < 5f)
                 {
@@ -71,6 +72,13 @@ namespace Rootborn.UI.StudentLife
 
         private static void EnsureDayEndBoard(Scene scene, StudentDayResultPanel panel)
         {
+            if (AuthoredWorldScene.Find(scene) != null)
+            {
+                foreach (var root in scene.GetRootGameObjects())
+                    foreach (var authored in root.GetComponentsInChildren<StudentDayEndInteractor>(true))
+                        authored.Bind(ResolveDefaultDayEndRules(), panel);
+                return;
+            }
             var go = FindByName(scene, DayEndBoardName);
             if (go == null)
             {
@@ -140,18 +148,29 @@ namespace Rootborn.UI.StudentLife
 
         private static void EnsureEventSystem(Scene scene)
         {
+            var current = EventSystem.current;
+            if (current != null)
+            {
+                if (current.GetComponent<BaseInputModule>() == null)
+                {
+                    AddUiInputModule(current.gameObject);
+                }
+
+                return;
+            }
+
             var eventSystem = FindComponentInScene<EventSystem>(scene);
             if (eventSystem == null)
             {
                 var go = new GameObject("EventSystem", typeof(EventSystem));
-                UiInputModuleInstaller.AddPreferredInputModule(go);
+                AddUiInputModule(go);
                 SceneManager.MoveGameObjectToScene(go, scene);
                 return;
             }
 
             if (eventSystem.GetComponent<BaseInputModule>() == null)
             {
-                UiInputModuleInstaller.AddPreferredInputModule(eventSystem.gameObject);
+                AddUiInputModule(eventSystem.gameObject);
             }
         }
 
@@ -171,7 +190,11 @@ namespace Rootborn.UI.StudentLife
             return sprite;
         }
 
-        private static GameObject FindRoot(Scene scene, string rootName)
+
+        private static void AddUiInputModule(GameObject go)
+        {
+            UiInputModuleInstaller.AddPreferredInputModule(go);
+        }        private static GameObject FindRoot(Scene scene, string rootName)
         {
             var roots = scene.GetRootGameObjects();
             for (int i = 0; i < roots.Length; i++)

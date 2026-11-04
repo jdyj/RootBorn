@@ -16,6 +16,7 @@ MonoBehaviour:
   _displayNameKey: location.activity.square-help-request.name
   _location: {fileID: 11400000, guid: 0b792f8bcf32340469cd64320136e59b, type: 2}
   _growthRoute: 4
+  _timePolicy: {fileID: 11400000, guid: 877e2af40acc7d749a78882afa991e80, type: 2}
   _timeCostMinutes: 30
   _energyCost: 1
   _focusCost: 1

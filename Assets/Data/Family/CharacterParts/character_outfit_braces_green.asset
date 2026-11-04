@@ -16,8 +16,8 @@ MonoBehaviour:
   _categoryId: outfit
   _displayNameKey: loc.character.character.outfit.braces.green
   _sheetAddress: sprites/character/outfit/outfit-braces-green
-  _subSpriteName: Outfit_Braces_Green_r0_c0
+  _subSpriteName: Outfit_Braces_Green_r0_c3
   _editorAssetPath: Assets/Modern_Farm_v1.2/Farmer_Generator_Pieces/Character Pieces/Outfits/16x16/Outfit_Braces_Green.png
-  _previewSprite: {fileID: -5807433205111468137, guid: 02a93c453c9ba9241b22bc69c4ea6a33, type: 3}
+  _previewSprite: {fileID: 8955311438748858601, guid: 02a93c453c9ba9241b22bc69c4ea6a33, type: 3}
   _layerOrder: 2
   _isDefault: 0

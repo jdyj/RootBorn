@@ -1,3 +1,8 @@
+using Rootborn.Game.Time;
+using Rootborn.Game.StudentLife;
+using Rootborn.Game.World;
+using Rootborn.UI.Modern;
+using Rootborn.UI.StudentLife;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -22,7 +27,7 @@ namespace Rootborn.UI.HUD
         public static void EnsureForActiveScene()
         {
             var scene = SceneManager.GetActiveScene();
-            if (scene.name == TownSceneName)
+            if (IsEligible(scene))
             {
                 EnsureInScene(scene);
             }
@@ -30,13 +35,24 @@ namespace Rootborn.UI.HUD
 
         private static void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            if (scene.name == TownSceneName)
+            if (IsEligible(scene))
             {
                 EnsureInScene(scene);
             }
         }
 
-        private static void EnsureInScene(Scene scene)
+        private static bool IsEligible(Scene scene) => scene.IsValid() && scene.isLoaded
+            && (scene.name == TownSceneName || AuthoredWorldScene.Find(scene) != null);
+
+        // The travel binder calls this after moving its validated canonical owner.
+        // Moving an enabled actor between scenes does not emit OnEnable.
+        public static void BindOwner(Scene scene, StudentLifeProgressComponent owner)
+        {
+            if (!IsEligible(scene) || owner == null || owner.gameObject.scene != scene || !owner.isActiveAndEnabled) return;
+            EnsureInScene(scene).Bind(owner);
+        }
+
+        private static LifeTimePresentation EnsureInScene(Scene scene)
         {
             var canvas = EnsureCanvas(scene);
             var root = canvas.transform.Find(RootName) as RectTransform;
@@ -47,12 +63,14 @@ namespace Rootborn.UI.HUD
                 root = (RectTransform)rootGo.transform;
             }
 
-            root.anchorMin = new Vector2(0f, 1f);
-            root.anchorMax = new Vector2(0f, 1f);
-            root.pivot = new Vector2(0f, 1f);
-            root.anchoredPosition = new Vector2(36f, -36f);
-            root.sizeDelta = new Vector2(560f, 44f);
+            UrbanGameplayHudLayout.PositionClock(root);
             root.gameObject.SetActive(true);
+
+            var background = root.GetComponent<ModernUiTileImage>();
+            if (background == null) background = root.gameObject.AddComponent<ModernUiTileImage>();
+            background.SetRecipe(ModernUiRecipes.CommonPanel);
+            background.Rebuild();
+            EnsureTimeIcon(root);
 
             var label = root.Find(LabelName) as RectTransform;
             if (label == null)
@@ -64,8 +82,8 @@ namespace Rootborn.UI.HUD
 
             label.anchorMin = Vector2.zero;
             label.anchorMax = Vector2.one;
-            label.offsetMin = Vector2.zero;
-            label.offsetMax = Vector2.zero;
+            label.offsetMin = new Vector2(128f, 36f);
+            label.offsetMax = new Vector2(-36f, -36f);
 
             var text = label.GetComponent<Text>();
             if (text == null)
@@ -77,12 +95,11 @@ namespace Rootborn.UI.HUD
             text.alignment = TextAnchor.MiddleLeft;
             text.fontSize = 24;
             text.fontStyle = FontStyle.Bold;
-            text.color = new Color(1f, 0.96f, 0.72f, 1f);
+            text.color = new Color32(48, 71, 83, 255);
             text.text = "Day --";
-            if (text.font == null)
-            {
-                text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            }
+            text.font = LifeUiFont.Shared;
+            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.verticalOverflow = VerticalWrapMode.Truncate;
 
             var hud = root.GetComponent<TimeHud>();
             if (hud == null)
@@ -90,7 +107,34 @@ namespace Rootborn.UI.HUD
                 hud = root.gameObject.AddComponent<TimeHud>();
             }
 
+            var lifeTime = root.GetComponent<LifeTimePresentation>();
+            if (lifeTime == null) lifeTime = root.gameObject.AddComponent<LifeTimePresentation>();
             hud.BindLabelForRuntime(text);
+            hud.BindLifeTimePresentation(lifeTime);
+            var vitals = root.GetComponent<UrbanLifeVitalsHud>();
+            if (vitals == null) vitals = root.gameObject.AddComponent<UrbanLifeVitalsHud>();
+            vitals.Bind(lifeTime);
+            return lifeTime;
+        }
+
+        private static void EnsureTimeIcon(RectTransform root)
+        {
+            var icon = root.Find("UrbanTimeIcon") as RectTransform;
+            if (icon == null)
+            {
+                var go = new GameObject("UrbanTimeIcon", typeof(RectTransform), typeof(Image), typeof(UrbanUiIcon));
+                go.transform.SetParent(root, false);
+                icon = (RectTransform)go.transform;
+            }
+            icon.anchorMin = new Vector2(0f, 1f);
+            icon.anchorMax = new Vector2(0f, 1f);
+            icon.pivot = new Vector2(0f, 1f);
+            icon.anchoredPosition = new Vector2(40f, -40f);
+            icon.sizeDelta = new Vector2(64f, 64f);
+            var image = icon.GetComponent<Image>();
+            image.raycastTarget = false;
+            image.preserveAspect = true;
+            icon.GetComponent<UrbanUiIcon>().Configure("time");
         }
 
         private static Canvas EnsureCanvas(Scene scene)

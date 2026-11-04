@@ -37,6 +37,11 @@ namespace Rootborn.Game.StudentLife
             return Progress;
         }
 
+        public void BindProgress(CareerCandidateProgress progress)
+        {
+            if (progress != null) Progress = progress;
+        }
+
         public void RestoreFromSaveData(CareerCandidateProgressSaveData saveData)
         {
             Progress = CareerCandidateProgress.FromSaveData(saveData);
@@ -67,6 +72,19 @@ namespace Rootborn.Game.StudentLife
             var metadata = ActiveSaveContext.Metadata;
             if (component == null || metadata == null || string.IsNullOrEmpty(metadata.SlotId)) return false;
             string playerId = ResolvePlayerId(component.gameObject);
+            if (Rootborn.Game.Careers.AdultCareerPersistenceRouter.TryGetStudent(metadata.SlotId, playerId, out var liveStudent))
+            {
+                component.BindProgress(liveStudent.CareerCandidates); return true;
+            }
+            var storage = new SaveService(metadata.SlotId);
+            if (Rootborn.Game.Careers.AdultCareerSnapshotPersistence.HasCommittedFile(storage, playerId))
+            {
+                var snapshot = Rootborn.Game.Careers.AdultCareerSnapshotPersistence.Load(storage, playerId);
+                if (snapshot == null) return false;
+                var data = snapshot.Student.CareerCandidates;
+                if (data == null || string.IsNullOrEmpty(data.SaveSlot)) data = new CareerCandidateProgress(metadata.SlotId, playerId).ToSaveData();
+                component.RestoreFromSaveData(data); return true;
+            }
             string json = new SaveService(metadata.SlotId).ReadJson(FileNameFor(playerId));
             if (string.IsNullOrEmpty(json)) return false;
             component.RestoreFromSaveData(JsonUtility.FromJson<CareerCandidateProgressSaveData>(json));
@@ -78,6 +96,12 @@ namespace Rootborn.Game.StudentLife
             var metadata = ActiveSaveContext.Metadata;
             if (component == null || metadata == null || string.IsNullOrEmpty(metadata.SlotId)) return;
             var progress = component.EnsureProgress();
+            if (Rootborn.Game.Careers.AdultCareerPersistenceRouter.TryGetStudent(progress.SaveSlot, progress.PlayerId, out var liveStudent))
+            {
+                if (!ReferenceEquals(progress, liveStudent.CareerCandidates)) return;
+                Rootborn.Game.Careers.AdultCareerPersistenceRouter.TrySaveStudent(liveStudent, out _); return;
+            }
+            if (Rootborn.Game.Careers.AdultCareerSnapshotPersistence.HasCommittedFile(new SaveService(progress.SaveSlot), progress.PlayerId)) return;
             string json = JsonUtility.ToJson(progress.ToSaveData(), true);
             new SaveService(metadata.SlotId).WriteJson(FileNameFor(progress.PlayerId), json);
         }

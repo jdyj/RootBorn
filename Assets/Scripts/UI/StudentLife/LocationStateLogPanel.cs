@@ -117,10 +117,9 @@ namespace Rootborn.UI.StudentLife
             if (card == null || summary == null) return;
             var title = FindChild(card.transform, "Title");
             var detail = FindChild(card.transform, "Detail");
-            string displayName = string.IsNullOrEmpty(summary.DisplayName) ? summary.StateId : summary.DisplayName;
-            if (summary.Hidden) displayName = "??? " + displayName;
+            string displayName = LocationStatePresentation.RecordTitle(summary);
             if (title != null) title.GetComponent<Text>().text = displayName;
-            if (detail != null) detail.GetComponent<Text>().text = summary.StateId + " | " + summary.LocationId + " | " + summary.TimeSlotId;
+            if (detail != null) detail.GetComponent<Text>().text = LocationStatePresentation.RecordDetail(summary);
         }
 
         private static Text MakeText(RectTransform parent, string name, string value, Vector2 position, Vector2 size, int fontSize, TextAnchor alignment)
@@ -135,7 +134,7 @@ namespace Rootborn.UI.StudentLife
             rt.sizeDelta = size;
             var text = go.GetComponent<Text>();
             text.text = value;
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = LifeUiFont.Shared;
             text.fontSize = fontSize;
             text.alignment = alignment;
             text.color = new Color(0.25f, 0.18f, 0.12f, 1f);

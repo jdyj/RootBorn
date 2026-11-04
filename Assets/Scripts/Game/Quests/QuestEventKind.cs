@@ -8,6 +8,10 @@ namespace Rootborn.Game.Quests
         Harvest,
         Talk,
         TilePlaced,
-        LocationActivity
+        LocationActivity,
+        LocationVisit,
+        PartTimeWork,
+        FurniturePlaced,
+        DailyPlanSelected
     }
 }

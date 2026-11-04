@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Common.ItemDefinition
   _id: Item_Wheat
   _displayKey: item.wheat
-  _icon: {fileID: 0}
+  _icon: {fileID: 21300000, guid: 58c9b8c64d158704583741538b7a07d9, type: 3}
   _maxStack: 99
   _category: 0
   _description: 

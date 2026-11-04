@@ -1,0 +1,155 @@
+{
+  "ppu": 32,
+  "sheets": [
+    {
+      "id": "body_playground",
+      "file": "body_playground.png",
+      "cellWidth": 32,
+      "cellHeight": 48
+    },
+    {
+      "id": "head_playground_short_brown",
+      "file": "head_playground_short_brown.png",
+      "cellWidth": 32,
+      "cellHeight": 48
+    },
+    {
+      "id": "body_school",
+      "file": "body_school.png",
+      "cellWidth": 32,
+      "cellHeight": 53
+    },
+    {
+      "id": "head_school_short_brown",
+      "file": "head_school_short_brown.png",
+      "cellWidth": 32,
+      "cellHeight": 53
+    },
+    {
+      "id": "body_adult",
+      "file": "body_adult.png",
+      "cellWidth": 32,
+      "cellHeight": 59
+    },
+    {
+      "id": "head_adult_short_brown",
+      "file": "head_adult_short_brown.png",
+      "cellWidth": 32,
+      "cellHeight": 59
+    },
+    {
+      "id": "outfit_playground_casual",
+      "file": "outfit_playground_casual.png",
+      "cellWidth": 32,
+      "cellHeight": 48
+    },
+    {
+      "id": "outfit_school_school_uniform",
+      "file": "outfit_school_school_uniform.png",
+      "cellWidth": 32,
+      "cellHeight": 53
+    },
+    {
+      "id": "outfit_adult_office",
+      "file": "outfit_adult_office.png",
+      "cellWidth": 32,
+      "cellHeight": 59
+    },
+    {
+      "id": "outfit_adult_chef",
+      "file": "outfit_adult_chef.png",
+      "cellWidth": 32,
+      "cellHeight": 59
+    },
+    {
+      "id": "outfit_adult_interior",
+      "file": "outfit_adult_interior.png",
+      "cellWidth": 32,
+      "cellHeight": 59
+    },
+    {
+      "id": "outfit_school_school_casual",
+      "file": "outfit_school_school_casual.png",
+      "cellWidth": 32,
+      "cellHeight": 53
+    },
+    {
+      "id": "outfit_adult_adult_casual",
+      "file": "outfit_adult_adult_casual.png",
+      "cellWidth": 32,
+      "cellHeight": 59
+    }
+  ],
+  "appearances": [
+    {
+      "id": "playground_short_brown_casual",
+      "body": "body_playground",
+      "head": "head_playground_short_brown",
+      "outfit": "outfit_playground_casual",
+      "displayNameKey": "ui.wardrobe.outfit.casual",
+      "minimumStudentDay": 1,
+      "requiresAdult": false,
+      "facilityId": ""
+    },
+    {
+      "id": "school_short_brown_school_uniform",
+      "body": "body_school",
+      "head": "head_school_short_brown",
+      "outfit": "outfit_school_school_uniform",
+      "displayNameKey": "ui.wardrobe.outfit.school_uniform",
+      "minimumStudentDay": 2,
+      "requiresAdult": false,
+      "facilityId": ""
+    },
+    {
+      "id": "adult_short_brown_office",
+      "body": "body_adult",
+      "head": "head_adult_short_brown",
+      "outfit": "outfit_adult_office",
+      "displayNameKey": "ui.wardrobe.outfit.office",
+      "minimumStudentDay": 1,
+      "requiresAdult": true,
+      "facilityId": ""
+    },
+    {
+      "id": "adult_short_brown_chef",
+      "body": "body_adult",
+      "head": "head_adult_short_brown",
+      "outfit": "outfit_adult_chef",
+      "displayNameKey": "ui.wardrobe.outfit.chef",
+      "minimumStudentDay": 1,
+      "requiresAdult": true,
+      "facilityId": "facility.chef"
+    },
+    {
+      "id": "adult_short_brown_interior",
+      "body": "body_adult",
+      "head": "head_adult_short_brown",
+      "outfit": "outfit_adult_interior",
+      "displayNameKey": "ui.wardrobe.outfit.interior",
+      "minimumStudentDay": 1,
+      "requiresAdult": true,
+      "facilityId": "facility.interior"
+    },
+    {
+      "id": "school_short_brown_school_casual",
+      "body": "body_school",
+      "head": "head_school_short_brown",
+      "outfit": "outfit_school_school_casual",
+      "displayNameKey": "ui.wardrobe.outfit.school_casual",
+      "minimumStudentDay": 2,
+      "requiresAdult": false,
+      "facilityId": ""
+    },
+    {
+      "id": "adult_short_brown_adult_casual",
+      "body": "body_adult",
+      "head": "head_adult_short_brown",
+      "outfit": "outfit_adult_adult_casual",
+      "displayNameKey": "ui.wardrobe.outfit.adult_casual",
+      "minimumStudentDay": 1,
+      "requiresAdult": true,
+      "facilityId": ""
+    }
+  ]
+}

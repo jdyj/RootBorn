@@ -26,6 +26,8 @@ ROOTBORN은 **PC 데스크톱** 기준이다 (Windows 64-bit 1순위, macOS/Linu
 
 ## Modern UI Style2 공통 패널
 
+2026-10-27 사용자 승인 예외: ComfyUI v5 도시형 몰딩 UI를 게임에 적용한다. `ModernUiTileImage`는 `data/ui/urban-molding` Addressables 테마의 공용 아틀라스를 사용해 패널·버튼·슬롯을 각각 단일 Sliced Image로 표시할 수 있다. 모서리 크기 보존, Point 필터, 분리된 현지화 텍스트를 유지하며 테마가 없는 경우 아래 Style2 구현으로 돌아간다. 실제 입력 흐름과 저장된 에셋 참조를 검증한다.
+
 공통 패널 배경은 반드시 `Assets/modernuserinterface-win/16x16/Modern_UI_Style_2.png`의 16x16 Style2 패널 블록을 사용한다.
 
 - 소스 address: `sprites/ui/modern/16/style-2` (`ModernUISpriteAddresses.Style16Alt`)
@@ -53,7 +55,8 @@ ROOTBORN은 **PC 데스크톱** 기준이다 (Windows 64-bit 1순위, macOS/Linu
 
 Town, StudentLife, NPC, 상호작용 포인트, 월드 타일, 가구/실내, 공통 UI의 신규/수정 sprite는 Modern 계열 에셋을 우선 사용한다.
 
-- 우선 후보: `Assets/Modern_Town/`, `Assets/Modern_Farm_v1.2/`, `Assets/moderninteriors-win/`, `Assets/modernuserinterface-win/`
+- 우선 후보: `Assets/Modern_Town/`, `Assets/Modern_Exteriors_32x32/`, `Assets/Modern_Farm_v1.2/`, `Assets/moderninteriors-win/`, `Assets/modernuserinterface-win/`
+- 직업/장소/건물/교통/공공시설/상점/학교/병원/경찰서/오피스/작업장 계열 월드 sprite는 `Assets/Modern_Exteriors_32x32/`를 1차 후보로 검토한다.
 - 타일/팔레트 후보: `Assets/Tiles/ModernTownOffice/`, `Assets/TilePalettes/ModernTownOffice/`
 - Town 신규 상호작용 sprite 작업에서 Pixelwood를 기본 후보로 제안하지 않는다.
 - Pixelwood는 레거시 Farm/Crop 회귀, 이전 비교 기준, 이미 해당 에셋으로 고정된 기존 기능 보수에만 사용한다.

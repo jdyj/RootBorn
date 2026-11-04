@@ -16,8 +16,8 @@ MonoBehaviour:
   _categoryId: hair
   _displayNameKey: loc.character.character.hair.short.blonde
   _sheetAddress: sprites/character/hair/hairstyle-short-blonde
-  _subSpriteName: Hairstyle_Short_Blonde_r0_c0
+  _subSpriteName: Hairstyle_Short_Blonde_r0_c3
   _editorAssetPath: Assets/Modern_Farm_v1.2/Farmer_Generator_Pieces/Character Pieces/Hairstyles/16x16/Hairstyle_Short_Blonde.png
-  _previewSprite: {fileID: -1343002963164611175, guid: e1b8e1d5c54dde149b2d578197912965, type: 3}
+  _previewSprite: {fileID: 1169403685387220106, guid: e1b8e1d5c54dde149b2d578197912965, type: 3}
   _layerOrder: 4
   _isDefault: 1

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Rootborn.Game.Localization;
 
 namespace Rootborn.UI.Objectives
 {
@@ -6,7 +7,7 @@ namespace Rootborn.UI.Objectives
     {
         public static string SafeText(string primary, string fallback)
         {
-            return string.IsNullOrEmpty(primary) ? fallback : primary;
+            return GameText.Get(string.IsNullOrEmpty(primary) ? fallback : primary);
         }
 
         public static string JoinNonEmpty(string[] values, string separator)

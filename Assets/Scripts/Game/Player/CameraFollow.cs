@@ -19,6 +19,14 @@ namespace Rootborn.Game.Player
 
         public void SetBounds(BoxCollider2D bounds) => _bounds = bounds;
 
+        public void SnapToTarget()
+        {
+            if (_target == null) return;
+            if (_camera == null) _camera = GetComponent<Camera>();
+            _velocity = Vector3.zero;
+            transform.position = ClampToBounds(_target.position + _offset);
+        }
+
         private void Awake()
         {
             _camera = GetComponent<Camera>();

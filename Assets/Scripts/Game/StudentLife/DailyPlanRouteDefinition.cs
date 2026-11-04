@@ -37,6 +37,8 @@ namespace Rootborn.Game.StudentLife
         [SerializeField] private LocationDefinition _targetLocation;
         [SerializeField] private LocationGrowthRoute _growthRoute;
         [SerializeField] private LocationActivityDefinition[] _matchingActivities = Array.Empty<LocationActivityDefinition>();
+        [SerializeField] private CareerPracticeDefinition[] _matchingPractices = Array.Empty<CareerPracticeDefinition>();
+        [SerializeField] private PartTimeWorkDefinition[] _matchingWorks = Array.Empty<PartTimeWorkDefinition>();
         [SerializeField] private DailyPlanRouteRequirementBase[] _requirements = Array.Empty<DailyPlanRouteRequirementBase>();
         [SerializeField] private DailyPlanRouteOutcomeBase[] _outcomes = Array.Empty<DailyPlanRouteOutcomeBase>();
         [SerializeField] private string _objectiveTitleKey = string.Empty;
@@ -46,6 +48,8 @@ namespace Rootborn.Game.StudentLife
         public LocationDefinition TargetLocation => _targetLocation;
         public LocationGrowthRoute GrowthRoute => _growthRoute;
         public IReadOnlyList<LocationActivityDefinition> MatchingActivities => _matchingActivities;
+        public IReadOnlyList<CareerPracticeDefinition> MatchingPractices => _matchingPractices;
+        public IReadOnlyList<PartTimeWorkDefinition> MatchingWorks => _matchingWorks;
         public IReadOnlyList<DailyPlanRouteRequirementBase> Requirements => _requirements;
         public IReadOnlyList<DailyPlanRouteOutcomeBase> Outcomes => _outcomes;
         public string ObjectiveTitleKey => string.IsNullOrEmpty(_objectiveTitleKey) ? DisplayNameKey : _objectiveTitleKey;
@@ -77,9 +81,26 @@ namespace Rootborn.Game.StudentLife
                 if (_matchingActivities[i] == activity) return true;
             }
 
+            // Explicit typed plans require their real practice/work settlement. Explicit location references above remain valid.
+            if ((_matchingPractices != null && _matchingPractices.Length > 0)
+                || (_matchingWorks != null && _matchingWorks.Length > 0)) return false;
+
             return _targetLocation != null
                 && activity.Location == _targetLocation
                 && activity.GrowthRoute == _growthRoute;
+        }
+
+        public bool MatchesPractice(CareerPracticeDefinition practice)
+        {
+            if (practice == null || _matchingPractices == null) return false;
+            foreach (var candidate in _matchingPractices) if (candidate == practice) return true;
+            return false;
+        }
+        public bool MatchesWork(PartTimeWorkDefinition work)
+        {
+            if (work == null || _matchingWorks == null) return false;
+            foreach (var candidate in _matchingWorks) if (candidate == work) return true;
+            return false;
         }
 
         public string[] ApplyOutcomes(StudentLifeProgress progress)

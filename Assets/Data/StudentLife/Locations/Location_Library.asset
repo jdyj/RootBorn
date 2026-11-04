@@ -17,7 +17,7 @@ MonoBehaviour:
   _descriptionKey: location.library.desc
   _category: {fileID: 11400000, guid: a1c7f1fa8f1cca246a40a012fa779906, type: 2}
   _worldAnchorId: anchor.library
-  _worldPosition: {x: 5, y: -6}
+  _worldPosition: {x: 16, y: 7}
   _relatedRoles:
   - {fileID: 11400000, guid: d4276595328877a499d04b59a4ca13bf, type: 2}
   _relatedNpcs:

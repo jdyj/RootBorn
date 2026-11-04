@@ -18,6 +18,7 @@ MonoBehaviour:
   _descriptionKey: location.identity.library.desc
   _availableActivities:
   - {fileID: 11400000, guid: 9261dd8cefccadf458a9e564b07de057, type: 2}
+  - {fileID: 11400000, guid: ff2f039ea8b4fbf4bb87254b7306d905, type: 2}
   _hints:
   - _displayKey: hint.library.self-study
     _growthRoute: 1

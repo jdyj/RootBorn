@@ -1,3 +1,4 @@
+using System.Linq;
 using NUnit.Framework;
 using Rootborn.UI.Objectives;
 using UnityEngine;
@@ -62,7 +63,7 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
                 Assert.AreEqual("quest.target", panel.SelectedStableKeyForTests);
                 Assert.AreEqual(1, panel.SelectedItemIndexForTests);
                 Assert.AreEqual(3, panel.VisibleRowCountForTests);
-                Assert.AreEqual(3, host.GetComponentsInChildren<Button>(true).Length - 5, "Runtime inspection row count should match the actual objective row GameObjects, excluding category and track buttons.");
+                Assert.AreEqual(3, host.GetComponentsInChildren<Button>(true).Count(x => x.name.StartsWith("ObjectiveRow_") && x.gameObject.activeSelf), "Runtime inspection row count should match the actual objective row GameObjects, counting active objective rows rather than category, track, or close chrome.");
             }
             finally
             {

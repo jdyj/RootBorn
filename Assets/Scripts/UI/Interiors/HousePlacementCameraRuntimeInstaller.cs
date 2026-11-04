@@ -1,4 +1,5 @@
 using System.Collections;
+using Rootborn.Game.World;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
@@ -54,42 +55,59 @@ namespace Rootborn.UI.Interiors
 
         private void ConfigureCamera()
         {
-            var camera = Camera.main;
-            if (camera == null)
+            InitializeForScene(gameObject.scene);
+        }
+
+        public static void InitializeForScene(Scene scene)
+        {
+            if (!scene.IsValid() || !scene.isLoaded || scene.name != "House") return;
+            var panel = FindInScene<InteriorFurniturePlacementPanel>(scene);
+            bool active = AuthoredWorldScene.Find(scene) == null ||
+                (panel != null && panel.gameObject.activeInHierarchy);
+            SetPlacementMode(scene, active);
+        }
+
+        public static void SetPlacementMode(Scene scene, bool active)
+        {
+            if (!scene.IsValid() || !scene.isLoaded || scene.name != "House") return;
+            var camera = FindInScene<Camera>(scene);
+            if (camera == null) return;
+            var controller = camera.GetComponent<HousePlacementCameraController>();
+            if (!active)
             {
+                if (controller != null) controller.EndPlacementControl();
                 return;
             }
-
-            if (!camera.orthographic)
-            {
-                camera.orthographic = true;
-            }
-
-            var controller = camera.GetComponent<HousePlacementCameraController>();
-            if (controller == null)
-            {
-                controller = camera.gameObject.AddComponent<HousePlacementCameraController>();
-            }
-
-            controller.Configure(camera, ResolvePlacementBounds());
+            if (!camera.orthographic) camera.orthographic = true;
+            if (controller == null) controller = camera.gameObject.AddComponent<HousePlacementCameraController>();
+            controller.Configure(camera, ResolvePlacementBounds(scene));
             controller.BeginPlacementControl();
             controller.FullView();
         }
 
-        private static Bounds ResolvePlacementBounds()
+        private static T FindInScene<T>(Scene scene) where T : Component
         {
-            var tilemap = GameObject.Find("HouseGroundTilemap")?.GetComponent<Tilemap>();
-            if (tilemap != null && tilemap.cellBounds.size.x > 0 && tilemap.cellBounds.size.y > 0)
+            foreach (var root in scene.GetRootGameObjects())
             {
-                return TilemapWorldBounds(tilemap);
+                var component = root.GetComponentInChildren<T>(true);
+                if (component != null) return component;
             }
+            return null;
+        }
 
-            tilemap = GameObject.Find("HouseWallTilemap")?.GetComponent<Tilemap>();
-            if (tilemap != null && tilemap.cellBounds.size.x > 0 && tilemap.cellBounds.size.y > 0)
+        private static Bounds ResolvePlacementBounds(Scene scene)
+        {
+            foreach (var name in new[] { "HouseGroundTilemap", "HouseWallTilemap" })
             {
-                return TilemapWorldBounds(tilemap);
+                foreach (var root in scene.GetRootGameObjects())
+                {
+                    foreach (var tilemap in root.GetComponentsInChildren<Tilemap>(true))
+                    {
+                        if (tilemap.name == name && tilemap.cellBounds.size.x > 0 && tilemap.cellBounds.size.y > 0)
+                            return TilemapWorldBounds(tilemap);
+                    }
+                }
             }
-
             return new Bounds(Vector3.zero, new Vector3(20f, 12f, 1f));
         }
 

@@ -48,7 +48,7 @@ namespace Rootborn.Game.StudentLife
                 return false;
             }
 
-            if (!progress.CanSpend(action.EnergyCost, action.FocusCost))
+            if (!progress.CanUseTimePolicy(action.TimePolicy) || !progress.CanSpend(action.EnergyCost, action.FocusCost))
             {
                 result = new TownHelpActionResult(LifeActivityResultKind.InsufficientResources, progress.SaveSlot, progress.PlayerId, action.Id, action.NpcId, action.LocationId, requestId, Array.Empty<string>());
                 return false;
@@ -60,6 +60,7 @@ namespace Rootborn.Game.StudentLife
                 return false;
             }
 
+            progress.TryUseTimePolicy(action.TimePolicy);
             progress.Spend(action.TimeCostMinutes, action.EnergyCost, action.FocusCost, action.StressDelta);
             string[] outcomeLogs = action.ApplyOutcomes(progress);
             progress.MarkRequestApplied(requestId);

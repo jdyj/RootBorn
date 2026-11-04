@@ -8,6 +8,7 @@ namespace Rootborn.Game.StudentLife
     public sealed class OutsideSchoolActivityDefinition : StudentLifeDefinitionBase
     {
         [SerializeField] private OutsideSchoolActivityCategoryDefinition _category;
+        [SerializeField] private ActivityTimePolicyDefinition _timePolicy;
         [SerializeField] private int _timeCostMinutes;
         [SerializeField] private int _energyCost;
         [SerializeField] private int _focusCost;
@@ -17,6 +18,7 @@ namespace Rootborn.Game.StudentLife
 
         public OutsideSchoolActivityCategoryDefinition Category => _category;
         public string CategoryId => _category != null ? _category.Id : string.Empty;
+        public ActivityTimePolicyDefinition TimePolicy => _timePolicy;
         public int TimeCostMinutes => Mathf.Max(0, _timeCostMinutes);
         public int EnergyCost => Mathf.Max(0, _energyCost);
         public int FocusCost => Mathf.Max(0, _focusCost);

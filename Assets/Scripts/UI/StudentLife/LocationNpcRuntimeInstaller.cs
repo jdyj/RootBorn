@@ -1,11 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using Rootborn.Game.Common;
+using Rootborn.Game.World;
 using Rootborn.Game.Dialogue;
 using Rootborn.Game.Managers;
 using Rootborn.Game.Quests;
 using Rootborn.Game.StudentLife;
 using Rootborn.UI.Quests;
+using Rootborn.UI.Careers;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -30,19 +32,19 @@ namespace Rootborn.UI.StudentLife
 
         private static void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            if (scene.name == TownSceneName) EnsureScene(scene);
+            if ((scene.name == TownSceneName || AuthoredWorldScene.Find(scene) != null)) EnsureScene(scene);
         }
 
         public static void EnsureForActiveScene()
         {
             var scene = GetSafeScene();
-            if (scene.IsValid() && scene.name == TownSceneName) EnsureScene(scene);
+            if (scene.IsValid() && (scene.name == TownSceneName || AuthoredWorldScene.Find(scene) != null)) EnsureScene(scene);
         }
 
         public static void RefreshSchedulesForActiveScene()
         {
             var scene = GetSafeScene();
-            if (!scene.IsValid() || scene.name != TownSceneName) return;
+            if (!scene.IsValid() || (scene.name != TownSceneName && AuthoredWorldScene.Find(scene) == null)) return;
             EnsureScene(scene);
             var runnerRoot = FindRoot(scene, RunnerName);
             var runner = runnerRoot != null ? runnerRoot.GetComponent<Runner>() : null;
@@ -51,14 +53,29 @@ namespace Rootborn.UI.StudentLife
 
         public static void EnsureScene(Scene scene)
         {
-            if (!scene.IsValid() || !scene.isLoaded || scene.name != TownSceneName || FindRoot(scene, RunnerName) != null) return;
+            if (!scene.IsValid() || !scene.isLoaded || (scene.name != TownSceneName && AuthoredWorldScene.Find(scene) == null) || FindRoot(scene, RunnerName) != null) return;
             var runner = new GameObject(RunnerName);
             SceneManager.MoveGameObjectToScene(runner, scene);
             runner.AddComponent<Runner>();
         }
 
+        public static void BindOwner(Scene scene, StudentLifeProgressComponent student)
+        {
+            EnsureScene(scene);
+            var root = FindRoot(scene, RunnerName);
+            var runner = root != null ? root.GetComponent<Runner>() : null;
+            if (runner != null) runner.BindStudent(student);
+        }
+
         public static string LocationObjectName(string locationId) => "LocationVisit_" + SanitizeName(locationId);
         public static string NpcObjectName(string npcId) => "TownNpc_" + SanitizeName(npcId);
+
+        public static DialoguePanel EnsureDialoguePanelForScene(Scene scene)
+        {
+            if (!scene.IsValid() || !scene.isLoaded) return null;
+            var existing = FindComponentInScene<DialoguePanel>(scene, true);
+            return existing != null ? existing : EnsureDialoguePanel(scene, EnsureCanvas(scene));
+        }
 
         private sealed class Runner : MonoBehaviour
         {
@@ -89,23 +106,27 @@ namespace Rootborn.UI.StudentLife
                 _dialoguePanel = EnsureDialoguePanel(_scene, canvas);
                 _identityPanel = LocationIdentityPanel.EnsureInScene(canvas);
                 EnsureLocations(_scene, _registry, _identityPanel);
+                BindStudent(ResolveStudent());
                 RefreshNpcSchedules(force: true);
                 NpcInteractor.OnAnyInteracted += HandleNpcInteracted;
                 LocationActivityInteractor.OnAnyInteracted += HandleLocationIdentityInteracted;
                 DailyEventPanel.OnAnyChoiceApplied += HandleDailyEventChoiceApplied;
             }
 
-            private void Update()
+            public void BindStudent(StudentLifeProgressComponent student)
             {
-                var student = ResolveStudent();
-                if (student == null || student.Progress == null) return;
-                int minutes = student.Progress.TimeMinutes;
-                if (minutes == _lastTimeMinutes) return;
-                RefreshNpcSchedules(force: true);
+                if (_student != null) _student.TimeChanged -= HandleTimeChanged;
+                _student = student;
+                if (_student != null) _student.TimeChanged += HandleTimeChanged;
+                BindDialogueOwner();
+                if (_registry != null) RefreshNpcSchedules(force: true);
             }
+
+            private void HandleTimeChanged() => RefreshNpcSchedules(force: true);
 
             private void OnDestroy()
             {
+                if (_student != null) _student.TimeChanged -= HandleTimeChanged;
                 NpcInteractor.OnAnyInteracted -= HandleNpcInteracted;
                 LocationActivityInteractor.OnAnyInteracted -= HandleLocationIdentityInteracted;
                 DailyEventPanel.OnAnyChoiceApplied -= HandleDailyEventChoiceApplied;
@@ -115,7 +136,17 @@ namespace Rootborn.UI.StudentLife
             {
                 if (_dialoguePanel == null) _dialoguePanel = EnsureDialoguePanel(_scene, EnsureCanvas(_scene));
                 if (_dialoguePanel == null || npc == null || npc.Session.Current == null) return;
-                _dialoguePanel.Open(npc.Session.Current, new DialogueChoiceContext(null, default(RewardRuntimeContext)));
+                var presenter = BindDialogueOwner();
+                presenter?.TryShow(npc, npc.CurrentInteractionActor);
+            }
+
+            private NpcDialoguePresenter BindDialogueOwner()
+            {
+                if (_dialoguePanel == null || _student == null) return null;
+                var owner = _student.GetComponent<AdultCareerRuntimeComponent>();
+                if (owner == null) return null;
+                var presenter = NpcDialoguePresenter.Ensure(gameObject.scene, _dialoguePanel);
+                return presenter != null && presenter.Bind(owner, owner.Registry) ? presenter : null;
             }
 
             private void HandleLocationIdentityInteracted(LocationActivityInteractor interactor, GameObject player)
@@ -148,6 +179,7 @@ namespace Rootborn.UI.StudentLife
                 string timeSlotId = NpcScheduleResolver.ResolveTimeSlotId(progress);
                 var context = new NpcScheduleContext(progress != null ? progress.CurrentDay : 1, progress != null ? (progress.CurrentDay - 1) % 7 : 0, timeSlotId, progress);
                 var locationCounts = new Dictionary<LocationDefinition, int>();
+                var authored = AuthoredWorldScene.Find(_scene);
                 for (int i = 0; i < _registry.Npcs.Length; i++)
                 {
                     var npc = _registry.Npcs[i];
@@ -156,7 +188,14 @@ namespace Rootborn.UI.StudentLife
                     var location = result.Location != null ? result.Location : npc.HomeLocation;
                     if (location == null) continue;
                     int slotIndex = NextLocationSlot(locationCounts, location);
-                    if (!ApplyExistingNpcObjects(_scene, npc, location, timeSlotId, result, slotIndex)) ApplyNpcObject(CreateNpcObject(_scene, npc), npc, location, timeSlotId, result, slotIndex);
+                    if (authored != null && !authored.TryGetNpcPosition(location, slotIndex, out _))
+                    {
+                        SetNpcActive(_scene, npc, false);
+                        continue;
+                    }
+                    if (authored != null) SetNpcActive(_scene, npc, true);
+                    bool exists = ApplyExistingNpcObjects(_scene, npc, location, timeSlotId, result, slotIndex);
+                    if (!exists && authored == null) ApplyNpcObject(CreateNpcObject(_scene, npc), npc, location, timeSlotId, result, slotIndex);
                 }
             }
 
@@ -207,13 +246,27 @@ namespace Rootborn.UI.StudentLife
 
         private static void ApplyNpcObject(GameObject go, NpcDefinition npc, LocationDefinition location, string timeSlotId, NpcScheduleResult result, int slotIndex)
         {
-            Vector2 target = location.WorldPosition + SlotOffset(slotIndex);
+            var authored = AuthoredWorldScene.Find(go.scene);
+            Vector2 target;
+            if (authored != null)
+            {
+                if (!authored.TryGetNpcPosition(location, slotIndex, out target)) { go.SetActive(false); return; }
+            }
+            else target = location.WorldPosition + SlotOffset(slotIndex);
             go.transform.position = new Vector3(target.x, target.y, 0f);
-            EnsureMarker(go, new Color(0.95f, 0.72f, 0.35f, 1f), 54);
+            if (authored == null) EnsureMarker(go, new Color(0.95f, 0.72f, 0.35f, 1f), 54);
             var interactor = go.GetComponent<NpcInteractor>();
             if (interactor == null) interactor = go.AddComponent<NpcInteractor>();
             interactor.Bind(npc);
             interactor.BindSchedule(location, timeSlotId, result.Dialogue, result.DialogueKey, result.EventNoticeKey);
+        }
+
+        private static void SetNpcActive(Scene scene, NpcDefinition npc, bool active)
+        {
+            string objectName = NpcObjectName(npc.Id);
+            foreach (var root in scene.GetRootGameObjects())
+                foreach (var target in root.GetComponentsInChildren<Transform>(true))
+                    if (target.name == objectName && target.gameObject.activeSelf != active) target.gameObject.SetActive(active);
         }
 
         private static int NextLocationSlot(Dictionary<LocationDefinition, int> locationCounts, LocationDefinition location)
@@ -318,10 +371,22 @@ namespace Rootborn.UI.StudentLife
         {
             if (registry == null || registry.Locations == null) return;
             var cache = new GameDataLookupCache(registry);
+            var authored = AuthoredWorldScene.Find(scene);
             for (int i = 0; i < registry.Locations.Length; i++)
             {
                 var location = registry.Locations[i];
                 if (location == null) continue;
+                if (authored != null)
+                {
+                    if (!authored.TryGetLocationAnchor(location, out var anchor)) continue;
+                    var authoredVisit = anchor.GetComponent<LocationVisitInteractor>();
+                    if (authoredVisit == null) authoredVisit = anchor.gameObject.AddComponent<LocationVisitInteractor>();
+                    authoredVisit.Bind(location);
+                    // A facility/portal entrance already has its own action. Its location menu belongs at a separate authored point.
+                    var authoredActivity = anchor.GetComponent<LocationActivityInteractor>();
+                    if (authoredActivity != null && cache.TryGetLocationIdentity(location.Id, out var authoredIdentity)) authoredActivity.Bind(authoredIdentity);
+                    continue;
+                }
                 var go = FindByName(scene, LocationObjectName(location.Id));
                 if (go == null)
                 {

@@ -16,8 +16,8 @@ MonoBehaviour:
   _categoryId: outfit
   _displayNameKey: loc.character.character.outfit.braces.brown
   _sheetAddress: sprites/character/outfit/outfit-braces-brown
-  _subSpriteName: Outfit_Braces_Brown_r0_c0
+  _subSpriteName: Outfit_Braces_Brown_r0_c3
   _editorAssetPath: Assets/Modern_Farm_v1.2/Farmer_Generator_Pieces/Character Pieces/Outfits/16x16/Outfit_Braces_Brown.png
-  _previewSprite: {fileID: 487629990175660299, guid: 70d409f637e8a9549b34c68975307d56, type: 3}
+  _previewSprite: {fileID: -7811180609567695896, guid: 70d409f637e8a9549b34c68975307d56, type: 3}
   _layerOrder: 2
   _isDefault: 1

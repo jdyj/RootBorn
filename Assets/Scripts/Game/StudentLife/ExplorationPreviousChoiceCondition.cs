@@ -11,7 +11,8 @@ namespace Rootborn.Game.StudentLife
         public override bool Evaluate(in ExplorationInteractionContext context, ExplorationChoiceDefinition choice)
         {
             if (context.ExplorationProgress == null || _interaction == null || _choice == null) return false;
-            return context.ExplorationProgress.GetRecord(_interaction.Id).HasSelectedChoice(_choice.Id);
+            return context.ExplorationProgress.TryGetRecord(_interaction.Id, out var record)
+                && record.HasSelectedChoice(_choice.Id);
         }
 
         public void ConfigureForTests(ExplorationInteractionDefinition interaction, ExplorationChoiceDefinition requiredChoice, string lockedReasonKey)

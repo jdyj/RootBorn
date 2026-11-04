@@ -28,7 +28,12 @@ namespace Rootborn.Game.Characters
         public void SetFlipX(bool flipX)
         {
             if (_composer != null)
-                _composer.SetFlipX(flipX);
+            {
+                var motion = _animator != null ? _animator.MotionDefinition : null;
+                bool allowMirror = motion == null || motion.MirrorHorizontal;
+                // Also clears a flip set by the controller before its visual-adapter call.
+                _composer.SetFlipX(allowMirror && flipX);
+            }
         }
 
         public void PlayAction(CharacterVisualAction action)

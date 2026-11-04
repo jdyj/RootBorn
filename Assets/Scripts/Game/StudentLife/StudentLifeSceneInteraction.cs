@@ -18,7 +18,47 @@ namespace Rootborn.Game.StudentLife
         [SerializeField] private int _startingStress;
         [SerializeField] private int _startingTimeMinutes = 8 * 60;
 
-        public StudentLifeProgress Progress { get; private set; }
+        private StudentLifeProgress _progress;
+        public static event Action AvailabilityChanged;
+        public event Action TimeChanged;
+        public event Action VitalsChanged;
+        public StudentLifeProgress Progress
+        {
+            get => _progress;
+            private set
+            {
+                if (ReferenceEquals(_progress, value)) return;
+                bool vitalsChanged = _progress == null || value == null
+                    || _progress.Energy != value.Energy || _progress.Focus != value.Focus || _progress.Stress != value.Stress;
+                if (_progress != null)
+                {
+                    _progress.TimeChanged -= HandleTimeChanged;
+                    _progress.VitalsChanged -= HandleVitalsChanged;
+                }
+                _progress = value;
+                if (_progress != null)
+                {
+                    _progress.TimeChanged += HandleTimeChanged;
+                    _progress.VitalsChanged += HandleVitalsChanged;
+                }
+                if (vitalsChanged) HandleVitalsChanged();
+                HandleTimeChanged();
+            }
+        }
+
+        private void HandleTimeChanged() => TimeChanged?.Invoke();
+        private void HandleVitalsChanged() => VitalsChanged?.Invoke();
+        private void OnEnable() => AvailabilityChanged?.Invoke();
+        private void OnDisable() => AvailabilityChanged?.Invoke();
+        private void OnDestroy()
+        {
+            if (_progress != null)
+            {
+                _progress.TimeChanged -= HandleTimeChanged;
+                _progress.VitalsChanged -= HandleVitalsChanged;
+            }
+            AvailabilityChanged?.Invoke();
+        }
 
         private void Awake()
         {
@@ -38,6 +78,7 @@ namespace Rootborn.Game.StudentLife
         {
             Progress = StudentLifeProgress.FromSaveData(saveData, traits, skills, careers);
             SynchronizeWithPlayerIdentity();
+            BindCalendar();
         }
 
         public StudentLifeProgress EnsureProgress()
@@ -45,6 +86,7 @@ namespace Rootborn.Game.StudentLife
             if (Progress != null)
             {
                 SynchronizeWithPlayerIdentity();
+                BindCalendar();
                 return Progress;
             }
 
@@ -52,8 +94,15 @@ namespace Rootborn.Game.StudentLife
                 ? ActiveSaveContext.Metadata.SlotId
                 : "default";
             Progress = new StudentLifeProgress(saveSlot, ResolvePlayerId(), _startingEnergy, _startingFocus, _startingStress, _startingTimeMinutes);
+            BindCalendar();
             ApplyDefaultTutorialStage(Rootborn.Game.Managers.Managers.Data != null ? Rootborn.Game.Managers.Managers.Data.Registry : null);
             return Progress;
+        }
+
+        private void BindCalendar()
+        {
+            if (GameDataRegistryProvider.TryGet(out var registry) && Progress != null)
+                Progress.ConfigureCalendar(registry.StudentLifeCalendar);
         }
 
         public void SynchronizeWithPlayerIdentity()
@@ -76,7 +125,9 @@ namespace Rootborn.Game.StudentLife
 
             var saveData = Progress.ToSaveData();
             saveData.PlayerId = playerId;
+            var calendar = Progress.Calendar;
             Progress = StudentLifeProgress.FromSaveData(saveData, null, null, null);
+            Progress.ConfigureCalendar(calendar);
         }
 
         public void ApplyDefaultTutorialStage(GameDataRegistry registry)
@@ -118,6 +169,18 @@ namespace Rootborn.Game.StudentLife
             }
 
             string playerId = ResolvePlayerId(component.gameObject);
+            // A scene installer can run again for the carried player. Its already-bound
+            // aggregate remains authoritative and owns the model's event subscriptions.
+            if (Rootborn.Game.Careers.AdultCareerPersistenceRouter.TryGetStudent(metadata.SlotId, playerId, out var liveStudent)
+                && ReferenceEquals(component.Progress, liveStudent)) return true;
+            var aggregateStorage = new Rootborn.Game.Save.SaveService(metadata.SlotId);
+            if (Rootborn.Game.Careers.AdultCareerSnapshotPersistence.HasCommittedFile(aggregateStorage, playerId))
+            {
+                var aggregate = Rootborn.Game.Careers.AdultCareerSnapshotPersistence.Load(aggregateStorage, playerId);
+                if (aggregate == null) return false;
+                component.RestoreFromSaveData(aggregate.Student, traits, skills, careers);
+                return true;
+            }
             string json = new SaveService(metadata.SlotId).ReadJson(FileNameFor(playerId));
             if (string.IsNullOrEmpty(json))
             {
@@ -137,6 +200,16 @@ namespace Rootborn.Game.StudentLife
             }
 
             var progress = component.EnsureProgress();
+            if (Rootborn.Game.Careers.AdultCareerPersistenceRouter.TrySaveStudent(progress, out bool aggregateSaved))
+            {
+                if (!aggregateSaved) Debug.LogWarning("[ROOTBORN] Player snapshot save failed; legacy student file was not written.");
+                return;
+            }
+            if (Rootborn.Game.Careers.AdultCareerSnapshotPersistence.HasCommittedFile(new SaveService(progress.SaveSlot), progress.PlayerId))
+            {
+                Debug.LogWarning("[ROOTBORN] Player snapshot owner is not bound; refusing a standalone student save.");
+                return;
+            }
             string json = JsonUtility.ToJson(progress.ToSaveData(), true);
             new SaveService(metadata.SlotId).WriteJson(FileNameFor(progress.PlayerId), json);
         }
@@ -422,7 +495,9 @@ namespace Rootborn.Game.StudentLife
             int index = _nextPracticeIndex;
             _nextPracticeIndex = (_nextPracticeIndex + 1) % _practices.Length;
             var practice = GetPractice(index);
-            string requestId = practice != null ? practice.Id + ":" + _interactionSequence++ : "practice:" + _interactionSequence++;
+            string requestId = practice != null && practice.Minigame != null
+                ? Rootborn.Game.Quests.QuestGameplayEventBridge.CreateRequestKey("career-practice")
+                : practice != null ? practice.Id + ":" + _interactionSequence++ : "practice:" + _interactionSequence++;
             return RunPractice(player.GetComponent<StudentLifeProgressComponent>(), index, requestId);
         }
 
@@ -430,6 +505,11 @@ namespace Rootborn.Game.StudentLife
         {
             var progress = progressComponent == null ? null : progressComponent.EnsureProgress();
             var practice = GetPractice(practiceIndex);
+            if (practice != null && practice.Minigame != null)
+            {
+                LastPracticeId = practice.Id; LastRequestId = requestId ?? string.Empty;
+                return progressComponent != null && StudentMinigameRequestBridge.TryRequestPractice(progressComponent.gameObject, practice, requestId);
+            }
             bool applied = _runner.TryPerform(practice, progress, requestId, out var result);
 
             LastPracticeId = practice == null ? string.Empty : practice.Id;

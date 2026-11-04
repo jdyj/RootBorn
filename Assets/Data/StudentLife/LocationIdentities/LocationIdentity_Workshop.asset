@@ -18,6 +18,7 @@ MonoBehaviour:
   _descriptionKey: location.identity.workshop.desc
   _availableActivities:
   - {fileID: 11400000, guid: f137d0c0631cda840b1d16e38c8114f8, type: 2}
+  - {fileID: 11400000, guid: 80d3f5f631ff0cc4dbc965d73fcfcdd2, type: 2}
   _hints:
   - _displayKey: hint.workshop.work
     _growthRoute: 2

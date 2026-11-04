@@ -16,8 +16,8 @@ MonoBehaviour:
   _categoryId: eyes
   _displayNameKey: loc.character.character.eyes.blue
   _sheetAddress: sprites/character/eyes/eyes-blue
-  _subSpriteName: Eyes_Blue_r0_c0
+  _subSpriteName: Eyes_Blue_r0_c3
   _editorAssetPath: Assets/Modern_Farm_v1.2/Farmer_Generator_Pieces/Character Pieces/Eyes/16x16/Eyes_Blue.png
-  _previewSprite: {fileID: -634547163030569621, guid: 11279c6f6fdc98649bd0be5bd79cbb0d, type: 3}
+  _previewSprite: {fileID: 8484577588105404485, guid: 11279c6f6fdc98649bd0be5bd79cbb0d, type: 3}
   _layerOrder: 3
   _isDefault: 1

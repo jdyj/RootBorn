@@ -1,0 +1,2010 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b357cf251d2a7140b833fc02ca3ff10, type: 3}
+  m_Name: GameTextCatalog
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Localization.GameTextCatalog
+  _entries:
+  - key: career.chef
+    ko: "\uC694\uB9AC\uC0AC"
+    en: Chef
+  - key: career.chef.description
+    ko: "\uC694\uB9AC\uC0AC \uCCB4\uD5D8\uACFC \uAD00\uB828 \uD65C\uB3D9\uC744 \uD1B5\uD574
+      \uB098\uC758 \uC801\uC131\uC744 \uC54C\uC544\uBD10\uC694."
+    en: Discover your interests through chef practice and related activities.
+  - key: career.chef.insight
+    ko: "\uC694\uB9AC\uC0AC\uC758 \uC77C\uC744 \uC870\uAE08 \uB354 \uC774\uD574\uD588\uC5B4\uC694."
+    en: You understand chef work a little better.
+  - key: career.emergency-care
+    ko: "\uC751\uAE09 \uC758\uB8CC"
+    en: Emergency care
+  - key: career.emergency-care.description
+    ko: "\uC751\uAE09 \uC758\uB8CC \uCCB4\uD5D8\uACFC \uAD00\uB828 \uD65C\uB3D9\uC744
+      \uD1B5\uD574 \uB098\uC758 \uC801\uC131\uC744 \uC54C\uC544\uBD10\uC694."
+    en: Discover your interests through emergency care practice and related activities.
+  - key: career.emergency-care.insight
+    ko: "\uC751\uAE09 \uC758\uB8CC\uC758 \uC77C\uC744 \uC870\uAE08 \uB354 \uC774\uD574\uD588\uC5B4\uC694."
+    en: You understand emergency care work a little better.
+  - key: career.interior
+    ko: "\uC778\uD14C\uB9AC\uC5B4 \uB514\uC790\uC774\uB108"
+    en: Interior designer
+  - key: career.interior.description
+    ko: "\uC778\uD14C\uB9AC\uC5B4 \uB514\uC790\uC774\uB108 \uCCB4\uD5D8\uACFC \uAD00\uB828
+      \uD65C\uB3D9\uC744 \uD1B5\uD574 \uB098\uC758 \uC801\uC131\uC744 \uC54C\uC544\uBD10\uC694."
+    en: Discover your interests through interior designer practice and related activities.
+  - key: career.interior.insight
+    ko: "\uC778\uD14C\uB9AC\uC5B4 \uB514\uC790\uC774\uB108\uC758 \uC77C\uC744 \uC870\uAE08
+      \uB354 \uC774\uD574\uD588\uC5B4\uC694."
+    en: You understand interior designer work a little better.
+  - key: career.soldier
+    ko: "\uAD70\uC778"
+    en: Soldier
+  - key: career.soldier.description
+    ko: "\uAD70\uC778 \uCCB4\uD5D8\uACFC \uAD00\uB828 \uD65C\uB3D9\uC744 \uD1B5\uD574
+      \uB098\uC758 \uC801\uC131\uC744 \uC54C\uC544\uBD10\uC694."
+    en: Discover your interests through soldier practice and related activities.
+  - key: career.soldier.insight
+    ko: "\uAD70\uC778\uC758 \uC77C\uC744 \uC870\uAE08 \uB354 \uC774\uD574\uD588\uC5B4\uC694."
+    en: You understand soldier work a little better.
+  - key: daily-plan.close
+    ko: "\uB2E4\uC774\uC5B4\uB9AC \uB2EB\uAE30"
+    en: Close diary
+  - key: daily-plan.completed
+    ko: "\uC644\uB8CC"
+    en: Completed
+  - key: daily-plan.diary-day
+    ko: "{0}\uC77C\uC9F8\uC758 \uB2E4\uC774\uC5B4\uB9AC"
+    en: Day {0} diary
+  - key: daily-plan.empty-slot
+    ko: "\uD558\uACE0 \uC2F6\uC740 \uC77C\uC744 \uACE8\uB77C\uC694"
+    en: Choose a plan
+  - key: daily-plan.next
+    ko: "\uB2E4\uC74C \uB0A0 \uAE30\uB85D"
+    en: Next diary page
+  - key: daily-plan.period.after-school
+    ko: "\uBC29\uACFC \uD6C4"
+    en: After school
+  - key: daily-plan.period.afternoon
+    ko: "\uC624\uD6C4"
+    en: Afternoon
+  - key: daily-plan.period.evening
+    ko: "\uC800\uB141"
+    en: Evening
+  - key: daily-plan.period.morning
+    ko: "\uC544\uCE68"
+    en: Morning
+  - key: daily-plan.planned
+    ko: "\uACC4\uD68D"
+    en: Planned
+  - key: daily-plan.previous
+    ko: "\uC774\uC804 \uB0A0"
+    en: Previous day
+  - key: daily.practice.chef.detail
+    ko: "\uB808\uC2A4\uD1A0\uB791\uC5D0\uC11C \uC694\uB9AC \uC2E4\uC2B5 \uBBF8\uB2C8\uAC8C\uC784\uC5D0
+      \uC131\uACF5\uD574\uC694."
+    en: Succeed at the cooking practice minigame at the restaurant.
+  - key: daily.practice.chef.name
+    ko: "\uC694\uB9AC \uC2E4\uC2B5"
+    en: Cooking practice
+  - key: daily.practice.chef.next
+    ko: "\uB2E4\uC774\uC5B4\uB9AC\uC5D0\uC11C \uB0A8\uC740 \uACC4\uD68D\uC744 \uD655\uC778\uD574\uC694."
+    en: Check the remaining plans in your diary.
+  - key: daily.practice.emergency-care.detail
+    ko: "\uC9C4\uB8CC\uC18C\uC5D0\uC11C \uC751\uAE09\uCC98\uCE58 \uC2E4\uC2B5 \uBBF8\uB2C8\uAC8C\uC784\uC5D0
+      \uC131\uACF5\uD574\uC694."
+    en: Succeed at the emergency care practice minigame at the clinic.
+  - key: daily.practice.emergency-care.name
+    ko: "\uC751\uAE09\uCC98\uCE58 \uC2E4\uC2B5"
+    en: Emergency care practice
+  - key: daily.practice.emergency-care.next
+    ko: "\uB2E4\uC774\uC5B4\uB9AC\uC5D0\uC11C \uB0A8\uC740 \uACC4\uD68D\uC744 \uD655\uC778\uD574\uC694."
+    en: Check the remaining plans in your diary.
+  - key: daily.practice.interior.detail
+    ko: "\uB514\uC790\uC778 \uC2A4\uD29C\uB514\uC624\uC5D0\uC11C \uACF5\uAC04 \uAFB8\uBBF8\uAE30
+      \uC2E4\uC2B5 \uBBF8\uB2C8\uAC8C\uC784\uC5D0 \uC131\uACF5\uD574\uC694."
+    en: Succeed at the interior design practice minigame at the design studio.
+  - key: daily.practice.interior.name
+    ko: "\uACF5\uAC04 \uAFB8\uBBF8\uAE30 \uC2E4\uC2B5"
+    en: Interior design practice
+  - key: daily.practice.interior.next
+    ko: "\uB2E4\uC774\uC5B4\uB9AC\uC5D0\uC11C \uB0A8\uC740 \uACC4\uD68D\uC744 \uD655\uC778\uD574\uC694."
+    en: Check the remaining plans in your diary.
+  - key: daily.practice.soldier.detail
+    ko: "\uD6C8\uB828\uC7A5\uC5D0\uC11C \uCCB4\uB825 \uD6C8\uB828 \uBBF8\uB2C8\uAC8C\uC784\uC5D0
+      \uC131\uACF5\uD574\uC694."
+    en: Succeed at the fitness training minigame at the training ground.
+  - key: daily.practice.soldier.name
+    ko: "\uCCB4\uB825 \uD6C8\uB828"
+    en: Fitness training
+  - key: daily.practice.soldier.next
+    ko: "\uB2E4\uC774\uC5B4\uB9AC\uC5D0\uC11C \uB0A8\uC740 \uACC4\uD68D\uC744 \uD655\uC778\uD574\uC694."
+    en: Check the remaining plans in your diary.
+  - key: daily.route.career.interior-practice
+    ko: "\uACF5\uAC04 \uB514\uC790\uC778 \uCCB4\uD5D8"
+    en: Try interior design
+  - key: daily.route.library.archive-research
+    ko: "\uB3C4\uC11C\uAD00 \uAE30\uB85D \uC870\uC0AC"
+    en: Research library records
+  - key: daily.route.library.self-study
+    ko: "\uB3C4\uC11C\uAD00\uC5D0\uC11C \uC790\uC728 \uD559\uC2B5"
+    en: Study at the library
+  - key: daily.route.questchain.library-reward
+    ko: "\uB3C4\uC11C\uAD00 \uC758\uB8B0 \uB9C8\uBB34\uB9AC"
+    en: Finish the library request
+  - key: daily.route.town-square.help
+    ko: "\uAD11\uC7A5\uC5D0\uC11C \uC774\uC6C3 \uB3D5\uAE30"
+    en: Help neighbors in the square
+  - key: daily.route.workshop.repair-ledger
+    ko: "\uACF5\uBC29 \uC218\uB9AC \uAE30\uB85D \uC870\uC0AC"
+    en: Investigate workshop records
+  - key: daily.route.workshop.shift
+    ko: "\uACF5\uBC29\uC5D0\uC11C \uC77C\uD558\uAE30"
+    en: Work at the workshop
+  - key: daily.work.corner-store.detail
+    ko: "\uC0C1\uC810\uC5D0\uC11C \uC544\uB974\uBC14\uC774\uD2B8 \uBBF8\uB2C8\uAC8C\uC784\uC5D0
+      \uC131\uACF5\uD558\uACE0 \uC218\uB2F9\uC744 \uBC1B\uC544\uC694."
+    en: Succeed at the store work minigame and earn your pay.
+  - key: daily.work.corner-store.name
+    ko: "\uC0C1\uC810 \uC544\uB974\uBC14\uC774\uD2B8"
+    en: Store shift
+  - key: daily.work.corner-store.next
+    ko: "\uB2E4\uC774\uC5B4\uB9AC\uC5D0\uC11C \uB0A8\uC740 \uACC4\uD68D\uC744 \uD655\uC778\uD574\uC694."
+    en: Check the remaining plans in your diary.
+  - key: daily.work.workshop-helper.detail
+    ko: "\uACF5\uBC29\uC5D0\uC11C \uC544\uB974\uBC14\uC774\uD2B8 \uBBF8\uB2C8\uAC8C\uC784\uC5D0
+      \uC131\uACF5\uD558\uACE0 \uC218\uB2F9\uC744 \uBC1B\uC544\uC694."
+    en: Succeed at the workshop work minigame and earn your pay.
+  - key: daily.work.workshop-helper.name
+    ko: "\uACF5\uBC29 \uC544\uB974\uBC14\uC774\uD2B8"
+    en: Workshop shift
+  - key: daily.work.workshop-helper.next
+    ko: "\uB2E4\uC774\uC5B4\uB9AC\uC5D0\uC11C \uB0A8\uC740 \uACC4\uD68D\uC744 \uD655\uC778\uD574\uC694."
+    en: Check the remaining plans in your diary.
+  - key: day-result.activities
+    ko: "\uC624\uB298\uC758 \uD65C\uB3D9"
+    en: Activities
+  - key: day-result.campaign
+    ko: "\uC774\uC57C\uAE30 \uC9C4\uD589"
+    en: Campaign
+  - key: day-result.career-candidates
+    ko: "\uBC1C\uACAC\uD55C \uC9C4\uB85C"
+    en: Career Candidates
+  - key: day-result.career-interest
+    ko: "\uAD00\uC2EC \uC9C4\uB85C"
+    en: Career Interest
+  - key: day-result.completed
+    ko: "\uC644\uB8CC"
+    en: Completed
+  - key: day-result.conditions
+    ko: "\uBAB8\uACFC \uB9C8\uC74C"
+    en: Conditions
+  - key: day-result.daily-plan
+    ko: "\uD558\uB8E8 \uACC4\uD68D"
+    en: Daily Plan
+  - key: day-result.empty-activities
+    ko: "\uAE30\uB85D\uB41C \uD65C\uB3D9\uC774 \uC5C6\uC5B4\uC694."
+    en: No activities recorded
+  - key: day-result.empty-candidates
+    ko: "\uC0C8\uB86D\uAC8C \uBC1C\uACAC\uD55C \uC9C4\uB85C\uAC00 \uC5C6\uC5B4\uC694."
+    en: No career candidate changes
+  - key: day-result.empty-conditions
+    ko: "\uC624\uB298 \uC0C1\uD0DC\uC5D0 \uBCC0\uD654\uAC00 \uC5C6\uC5B4\uC694."
+    en: No condition changes
+  - key: day-result.empty-growth
+    ko: "\uAE30\uB85D\uB41C \uC131\uC7A5\uC774 \uC5C6\uC5B4\uC694."
+    en: No growth recorded
+  - key: day-result.empty-interest
+    ko: "\uC544\uC9C1 \uAD00\uC2EC \uC9C4\uB85C\uB97C \uC120\uD0DD\uD558\uC9C0 \uC54A\uC558\uC5B4\uC694."
+    en: No selected interest
+  - key: day-result.empty-inventory
+    ko: "\uC18C\uC9C0\uD488\uC5D0 \uBCC0\uD654\uAC00 \uC5C6\uC5B4\uC694."
+    en: No inventory changes
+  - key: day-result.empty-outside
+    ko: "\uAE30\uB85D\uB41C \uD559\uAD50 \uBC16 \uC131\uC7A5\uC774 \uC5C6\uC5B4\uC694."
+    en: No outside-school growth
+  - key: day-result.empty-quests
+    ko: "\uC624\uB298 \uBCC0\uACBD\uB41C \uBAA9\uD45C\uAC00 \uC5C6\uC5B4\uC694."
+    en: No quest changes
+  - key: day-result.empty-relationships
+    ko: "\uC624\uB298 \uAD00\uACC4\uC5D0 \uBCC0\uD654\uAC00 \uC5C6\uC5B4\uC694."
+    en: No relationship changes
+  - key: day-result.empty-rewards
+    ko: "\uC624\uB298 \uBC1B\uC740 \uBCF4\uC0C1\uC774 \uC5C6\uC5B4\uC694."
+    en: No rewards claimed
+  - key: day-result.end-day
+    ko: "\uD558\uB8E8 \uB9C8\uBB34\uB9AC"
+    en: End Day
+  - key: day-result.growth
+    ko: "\uC624\uB298\uC758 \uC131\uC7A5"
+    en: Growth
+  - key: day-result.heading
+    ko: "\uD558\uB8E8 \uC815\uC0B0"
+    en: Day Result
+  - key: day-result.inventory
+    ko: "\uC18C\uC9C0\uD488 \uBCC0\uD654"
+    en: Inventory
+  - key: day-result.milestones
+    ko: "\uC131\uC7A5 \uC774\uC815\uD45C"
+    en: Milestones
+  - key: day-result.next-day
+    ko: "\uB2E4\uC74C \uB0A0 \uC2DC\uC791"
+    en: Next Day
+  - key: day-result.next-prefix
+    ko: "\uB0B4\uC77C\uC758 \uC2DC\uC791: "
+    en: 'Next Day: '
+  - key: day-result.objective-prefix
+    ko: "\uB2E4\uC74C \uBAA9\uD45C: "
+    en: 'Next Objective: '
+  - key: day-result.outside-school
+    ko: "\uD559\uAD50 \uBC16\uC5D0\uC11C\uC758 \uC131\uC7A5"
+    en: Outside School
+  - key: day-result.persists
+    ko: "\uB0B4\uC77C\uB3C4 \uC774\uC5B4\uC9D0"
+    en: persists
+  - key: day-result.quest-chains
+    ko: "\uC774\uC5B4\uC9C0\uB294 \uC774\uC57C\uAE30"
+    en: Quest Chains
+  - key: day-result.quest-state.Active
+    ko: "\uD604\uC7AC \uC9C4\uD589 \uC911"
+    en: Active
+  - key: day-result.quest-state.Available
+    ko: "\uC2DC\uC791 \uAC00\uB2A5"
+    en: Available
+  - key: day-result.quest-state.Claimed
+    ko: "\uBCF4\uC0C1 \uBC1B\uC74C"
+    en: Claimed
+  - key: day-result.quest-state.Completed
+    ko: "\uC644\uB8CC"
+    en: Completed
+  - key: day-result.quest-state.InProgress
+    ko: "\uC9C4\uD589 \uC911"
+    en: In progress
+  - key: day-result.quest-state.Locked
+    ko: "\uC544\uC9C1 \uC7A0\uAE40"
+    en: Locked
+  - key: day-result.quest-state.NotStarted
+    ko: "\uC2DC\uC791 \uC804"
+    en: Not started
+  - key: day-result.quest-state.RewardClaimed
+    ko: "\uBCF4\uC0C1 \uBC1B\uC74C"
+    en: Reward claimed
+  - key: day-result.quests
+    ko: "\uBAA9\uD45C\uC758 \uBCC0\uD654"
+    en: Quests
+  - key: day-result.recommended
+    ko: "\uCD94\uCC9C \uD65C\uB3D9"
+    en: Recommended
+  - key: day-result.recovers
+    ko: "\uB0B4\uC77C \uD68C\uBCF5"
+    en: recovers
+  - key: day-result.relationships
+    ko: "\uAD00\uACC4\uC758 \uBCC0\uD654"
+    en: Relationships
+  - key: day-result.reward-suffix
+    ko: " (\uBCF4\uC0C1)"
+    en: ' reward'
+  - key: day-result.rewards
+    ko: "\uBC1B\uC740 \uBCF4\uC0C1"
+    en: Rewards
+  - key: day-result.selected
+    ko: "\uACC4\uD68D\uD568"
+    en: Selected
+  - key: day-result.stage-prefix
+    ko: "\uD604\uC7AC \uB2E8\uACC4: "
+    en: 'Stage: '
+  - key: day-result.title
+    ko: "{0}\uC77C\uCC28 \uD558\uB8E8 \uC815\uC0B0"
+    en: Day {0} Result
+  - key: day-result.unlocked
+    ko: "\uC0C8\uB86D\uAC8C \uBC1C\uACAC"
+    en: Unlocked
+  - key: day-result.world-badge.Blocked
+    ko: "\uC870\uAC74 \uD544\uC694"
+    en: Blocked
+  - key: day-result.world-badge.Locked
+    ko: "\uC7A0\uAE40"
+    en: Locked
+  - key: day-result.world-badge.New
+    ko: "\uC0C8\uB85C\uC6B4 \uBCC0\uD654"
+    en: New
+  - key: day-result.world-badge.Personal
+    ko: "\uAC1C\uC778"
+    en: Personal
+  - key: day-result.world-badge.Seen
+    ko: "\uD655\uC778\uD568"
+    en: Seen
+  - key: day-result.world-badge.Shared
+    ko: "\uD568\uAED8"
+    en: Shared
+  - key: day-result.world-scope.Personal
+    ko: "\uAC1C\uC778"
+    en: Personal
+  - key: day-result.world-scope.SaveSlot
+    ko: "\uC774 \uC138\uACC4"
+    en: SaveSlot
+  - key: day-result.world-scope.Shared
+    ko: "\uD568\uAED8"
+    en: Shared
+  - key: facility.auto-skip
+    ko: "\uC790\uB3D9 \uC644\uB8CC"
+    en: Auto-complete
+  - key: facility.auto-skip-requirements
+    ko: "\uCD5C\uACE0 \uC219\uB828\xB7\uC131\uACF5 \uACBD\uD5D8\xB7\uC2DC\uC124/\uC7A5\uBE44
+      \uC870\uAC74 \uCDA9\uC871 \uC2DC \uCD5C\uACE0 \uBCF4\uC0C1"
+    en: Maximum reward after mastery, success and facility/equipment requirements
+      are met
+  - key: facility.chef.level1
+    ko: "\uB3D9\uB124 \uC791\uC740 \uC2DD\uB2F9"
+    en: Neighborhood diner
+  - key: facility.chef.level2
+    ko: "\uB9C8\uC744 \uACF5\uC2DD \uB9DB\uC9D1"
+    en: Town favorite
+  - key: facility.chef.level3
+    ko: "\uCD5C\uACE0\uAE09 \uB808\uC2A4\uD1A0\uB791"
+    en: Fine restaurant
+  - key: facility.chef.name
+    ko: "\uB3D9\uB124 \uC791\uC740 \uC2DD\uB2F9"
+    en: Neighborhood diner
+  - key: facility.choose-route
+    ko: "\uAD00\uC2EC \uC788\uB294 \uC9C4\uB85C\uC758 \uC77C\uC744 \uC0B4\uD3B4\uBCF4\uACE0
+      \uC131\uC778 \uC9C4\uB85C\uB97C \uC120\uD0DD\uD558\uC138\uC694."
+    en: Explore this work and choose your adult career when ready.
+  - key: facility.close
+    ko: "\uB2EB\uAE30"
+    en: Close
+  - key: facility.emergency-care.level1
+    ko: "\uB0A1\uC740 \uBCF4\uAC74 \uC9C4\uB8CC\uC18C"
+    en: Small clinic
+  - key: facility.emergency-care.level2
+    ko: "\uC9C0\uC5ED \uC885\uD569 \uBCD1\uC6D0"
+    en: Community hospital
+  - key: facility.emergency-care.level3
+    ko: "\uB300\uD615 \uC751\uAE09 \uC758\uB8CC \uC13C\uD130"
+    en: Emergency medical center
+  - key: facility.emergency-care.name
+    ko: "\uB0A1\uC740 \uBCF4\uAC74 \uC9C4\uB8CC\uC18C"
+    en: Small clinic
+  - key: facility.interact
+    ko: "\uC2DC\uC124 \uC6B4\uC601 \uC0B4\uD3B4\uBCF4\uAE30"
+    en: Manage facility
+  - key: facility.interior.level1
+    ko: "\uAD6C\uC11D\uC9C4 \uBCBD\uC9C0 \uAC00\uAC8C"
+    en: Wallpaper shop
+  - key: facility.interior.level2
+    ko: "\uC885\uD569 \uC778\uD14C\uB9AC\uC5B4 \uC2A4\uD29C\uB514\uC624"
+    en: Interior design studio
+  - key: facility.interior.level3
+    ko: "\uB9C8\uC744 \uAC74\uCD95 \uC124\uACC4 \uC0AC\uBB34\uC18C"
+    en: Town architecture office
+  - key: facility.interior.name
+    ko: "\uAD6C\uC11D\uC9C4 \uBCBD\uC9C0 \uAC00\uAC8C"
+    en: Wallpaper shop
+  - key: facility.level-reputation
+    ko: "\uC2DC\uC124 Lv.{0} \xB7 \uD3C9\uD310 {1}"
+    en: "Facility Lv.{0} \xB7 Reputation {1}"
+  - key: facility.maximum-level
+    ko: "\uC2DC\uC124\uC774 \uCD5C\uACE0 \uB2E8\uACC4\uC5D0 \uB3C4\uB2EC\uD588\uC2B5\uB2C8\uB2E4."
+    en: This facility has reached its highest level.
+  - key: facility.no-cost
+    ko: "\uBE44\uC6A9 \uC5C6\uC74C"
+    en: No cost
+  - key: facility.play-work
+    ko: "\uC9C1\uC811 \uC77C\uD558\uAE30"
+    en: Play work
+  - key: facility.practice
+    ko: "\uC9C4\uB85C \uCCB4\uD5D8\uD558\uAE30"
+    en: Practice this career
+  - key: facility.result.AlreadyAdult
+    ko: "\uC131\uC778 \uC9C4\uB85C\uB97C \uC774\uBBF8 \uC120\uD0DD\uD588\uC2B5\uB2C8\uB2E4."
+    en: You have already chosen an adult career.
+  - key: facility.result.Applied
+    ko: "\uC644\uB8CC\uD558\uC5EC \uC800\uC7A5\uD588\uC2B5\uB2C8\uB2E4."
+    en: Completed and saved.
+  - key: facility.result.AtMaximumLevel
+    ko: "\uC774\uBBF8 \uCD5C\uACE0 \uB2E8\uACC4\uC785\uB2C8\uB2E4."
+    en: The facility is already at its highest level.
+  - key: facility.result.AuthorityDenied
+    ko: "\uD604\uC7AC \uC138\uC158\uC5D0\uC11C\uB294 \uC2DC\uC124 \uC6B4\uC601\uC744
+      \uC0AC\uC6A9\uD560 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4."
+    en: Facility management is unavailable in this session.
+  - key: facility.result.DuplicateRequest
+    ko: "\uC774\uBBF8 \uC644\uB8CC\uD55C \uC694\uCCAD\uC785\uB2C8\uB2E4."
+    en: This request has already been completed.
+  - key: facility.result.InsufficientCapacity
+    ko: "\uBCF4\uC0C1\uC744 \uBC1B\uC744 \uC778\uBCA4\uD1A0\uB9AC \uACF5\uAC04\uC774
+      \uBD80\uC871\uD569\uB2C8\uB2E4."
+    en: There is not enough inventory space for the reward.
+  - key: facility.result.InsufficientResources
+    ko: "\uD655\uC7A5\uC5D0 \uD544\uC694\uD55C \uC790\uC6D0\uC774 \uBD80\uC871\uD569\uB2C8\uB2E4."
+    en: You need more resources for this upgrade.
+  - key: facility.result.InsufficientTime
+    ko: "\uB0A8\uC740 TP\uAC00 \uBD80\uC871\uD569\uB2C8\uB2E4."
+    en: Not enough TP remains today.
+  - key: facility.result.InvalidDefinition
+    ko: "\uD604\uC7AC \uC774\uC6A9\uD560 \uC218 \uC5C6\uB294 \uC77C\uC785\uB2C8\uB2E4."
+    en: This work is currently unavailable.
+  - key: facility.result.InvalidRequest
+    ko: "\uD604\uC7AC \uC0C1\uD0DC\uC5D0\uC11C \uC2E4\uD589\uD560 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4."
+    en: This action is not available in the current state.
+  - key: facility.result.PersistenceFailed
+    ko: "\uC800\uC7A5\uD558\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4. \uC9C4\uD589 \uC0C1\uD0DC\uB294
+      \uBC14\uB00C\uC9C0 \uC54A\uC558\uC2B5\uB2C8\uB2E4."
+    en: Could not save. Your progress has not changed.
+  - key: facility.result.RecoveryRequired
+    ko: "\uC800\uC7A5 \uC0C1\uD0DC\uB97C \uBD88\uB7EC\uC624\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4.
+      \uC800\uC7A5 \uD30C\uC77C\uC744 \uBCF5\uAD6C\uD55C \uB4A4 \uB2E4\uC2DC \uC5F4\uC5B4
+      \uC8FC\uC138\uC694."
+    en: The saved state could not be loaded. Restore the save before reopening.
+  - key: facility.result.RequirementFailed
+    ko: "\uD544\uC694\uD55C \uC870\uAC74\uC744 \uBA3C\uC800 \uCDA9\uC871\uD558\uC138\uC694."
+    en: Meet the requirements first.
+  - key: facility.route-complete
+    ko: "\uC774 \uC9C4\uB85C\uC758 \uC2DC\uC124 \uC131\uC7A5\uC744 \uC644\uC131\uD588\uC2B5\uB2C8\uB2E4."
+    en: You have completed this career's facility growth.
+  - key: facility.soldier.level1
+    ko: "\uC791\uC740 \uC57C\uC678 \uD6C8\uB828\uC7A5"
+    en: Outdoor training yard
+  - key: facility.soldier.level2
+    ko: "\uB9C8\uC744 \uC218\uBE44\uB300 \uBCD1\uC601"
+    en: Town guard barracks
+  - key: facility.soldier.level3
+    ko: "\uC815\uC608 \uD6C8\uB828 \uC544\uCE74\uB370\uBBF8"
+    en: Training academy
+  - key: facility.soldier.name
+    ko: "\uC791\uC740 \uC57C\uC678 \uD6C8\uB828\uC7A5"
+    en: Outdoor training yard
+  - key: facility.transition
+    ko: "\uC774 \uC131\uC778 \uC9C4\uB85C \uC120\uD0DD"
+    en: Choose this adult career
+  - key: facility.transition-requirements
+    ko: "\uC9C4\uB85C \uACBD\uD5D8\uACFC \uD6C4\uBCF4 \uC870\uAC74\uC744 \uCDA9\uC871\uD558\uBA74
+      \uC774 \uC9C4\uB85C\uB97C \uC120\uD0DD\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."
+    en: Build career experience and meet the candidate requirements to choose this
+      career.
+  - key: facility.upgrade
+    ko: "\uC2DC\uC124 \uD655\uC7A5"
+    en: Upgrade facility
+  - key: facility.upgrade-cost
+    ko: "Lv.{0} \uD655\uC7A5 \uBE44\uC6A9: {1}"
+    en: 'Upgrade to Lv.{0}: {1}'
+  - key: facility.work-progress
+    ko: "{0} TP \xB7 \uC219\uB828 {1}/{2} \xB7 \uC131\uACF5 {3}\uD68C"
+    en: "{0} TP \xB7 Mastery {1}/{2} \xB7 {3} successes"
+  - key: hint.library.self-study
+    ko: "\uD559\uAD50 \uBC16\uC5D0\uC11C\uB3C4 \uACF5\uBD80\uD558\uBA70 \uC131\uC7A5\uD560
+      \uC218 \uC788\uC5B4\uC694."
+    en: You can learn and grow outside school.
+  - key: hint.school.teacher-career
+    ko: "\uC120\uC0DD\uB2D8\uC5D0\uAC8C \uC9C4\uB85C \uC0C1\uB2F4\uC744 \uBC1B\uC744
+      \uC218 \uC788\uC5B4\uC694."
+    en: Ask your teacher about possible careers.
+  - key: hint.square.social-help
+    ko: "\uC774\uC6C3\uC744 \uB3C4\uC6B0\uBA70 \uC2E0\uB8B0\uB97C \uC313\uC544\uC694."
+    en: Build trust by helping your neighbors.
+  - key: hint.store.commerce
+    ko: "\uBB3C\uAC74\uACFC \uAC70\uB798\uC5D0 \uAD00\uD55C \uACBD\uD5D8\uC744 \uC313\uC544\uC694."
+    en: Gain experience with goods and trade.
+  - key: hint.workshop.work
+    ko: "\uC77C\uC744 \uD558\uBA70 \uC2E4\uC6A9\uC801\uC778 \uAE30\uC220\uC744 \uBC30\uC6CC\uC694."
+    en: Learn practical skills through work.
+  - key: item.allowance.name
+    ko: "\uC6A9\uB3C8"
+    en: Allowance
+  - key: item.facility-materials.name
+    ko: "\uC2DC\uC124 \uBCF4\uC218 \uC790\uC7AC"
+    en: Renovation materials
+  - key: life.daily-plan.title
+    ko: "\uC624\uB298\uC758 \uACC4\uD68D"
+    en: Today's plan
+  - key: life.location.hints
+    ko: "\uC774\uACF3\uC5D0\uC11C \uD560 \uC218 \uC788\uB294 \uC77C"
+    en: Things to discover
+  - key: life.location.no-hints
+    ko: "\uC544\uC9C1 \uBC1C\uACAC\uD55C \uC815\uBCF4\uAC00 \uC5C6\uC5B4\uC694."
+    en: No discoveries yet.
+  - key: life.location.unavailable
+    ko: "\uC7A5\uC18C \uC815\uBCF4\uB97C \uBD88\uB7EC\uC62C \uC218 \uC5C6\uC5B4\uC694."
+    en: Location information is unavailable.
+  - key: life.route.Commerce
+    ko: "\uAC70\uB798"
+    en: Trade
+  - key: life.route.Exploration
+    ko: "\uD0D0\uC0C9"
+    en: Explore
+  - key: life.route.FormalStudy
+    ko: "\uC815\uADDC \uC218\uC5C5"
+    en: Class
+  - key: life.route.Rest
+    ko: "\uD734\uC2DD"
+    en: Rest
+  - key: life.route.SelfStudy
+    ko: "\uC790\uC728 \uD559\uC2B5"
+    en: Self study
+  - key: life.route.SocialHelp
+    ko: "\uC774\uC6C3 \uB3D5\uAE30"
+    en: Neighbor help
+  - key: life.route.Work
+    ko: "\uC77C"
+    en: Work
+  - key: life.time.hud
+    ko: "{0}\uC77C  {1:00}:{2:00}"
+    en: Day {0}  {1:00}:{2:00}
+  - key: life.tp.applied
+    ko: "\uD65C\uB3D9\uC744 \uB9C8\uCCE4\uC5B4\uC694. \uB0A8\uC740 TP {0}/{1}"
+    en: Activity completed. TP {0}/{1} remaining
+  - key: life.tp.cost
+    ko: '{0} TP'
+    en: '{0} TP'
+  - key: life.tp.free
+    ko: "TP \uC18C\uBAA8 \uC5C6\uC74C"
+    en: No TP cost
+  - key: life.tp.loading
+    ko: "\uC2DC\uAC04\uD45C\uB97C \uBD88\uB7EC\uC624\uB294 \uC911\u2026"
+    en: "Loading schedule\u2026"
+  - key: life.tp.summary
+    ko: "{0}\uC77C\uCC28 \xB7 {1} \xB7 \uB0A8\uC740 TP {2}/{3}"
+    en: "Day {0} \xB7 {1} \xB7 TP {2}/{3} remaining"
+  - key: life.tp.unavailable
+    ko: "\uC9C0\uAE08\uC740 \uD560 \uC218 \uC5C6\uC5B4\uC694. \uB0A8\uC740 TP\uC640
+      \uC624\uB298 \uD65C\uB3D9\uC744 \uD655\uC778\uD558\uC138\uC694."
+    en: Unavailable now. Check remaining TP and today's activities.
+  - key: life.weekday.0
+    ko: "\uC6D4\uC694\uC77C"
+    en: Monday
+  - key: life.weekday.1
+    ko: "\uD654\uC694\uC77C"
+    en: Tuesday
+  - key: life.weekday.2
+    ko: "\uC218\uC694\uC77C"
+    en: Wednesday
+  - key: life.weekday.3
+    ko: "\uBAA9\uC694\uC77C"
+    en: Thursday
+  - key: life.weekday.4
+    ko: "\uAE08\uC694\uC77C"
+    en: Friday
+  - key: life.weekday.5
+    ko: "\uD1A0\uC694\uC77C"
+    en: Saturday
+  - key: life.weekday.6
+    ko: "\uC77C\uC694\uC77C"
+    en: Sunday
+  - key: location.activity.library-hard-book.name
+    ko: "\uC5B4\uB824\uC6B4 \uCC45 \uC77D\uAE30"
+    en: Read a challenging book
+  - key: location.activity.school-class.name
+    ko: "\uC815\uADDC \uC218\uC5C5 \uB4E3\uAE30"
+    en: Attend class
+  - key: location.activity.square-help-request.name
+    ko: "\uC774\uC6C3\uC758 \uBD80\uD0C1 \uB3D5\uAE30"
+    en: Help a neighbor
+  - key: location.activity.store-browse.name
+    ko: "\uBB3C\uAC74 \uC0B4\uD3B4\uBCF4\uAE30"
+    en: Browse the shop
+  - key: location.activity.workshop-shift.name
+    ko: "\uACF5\uBC29 \uC77C \uB3D5\uAE30"
+    en: Help at the workshop
+  - key: location.corner-store.name
+    ko: "\uB3D9\uB124 \uAC00\uAC8C"
+    en: Corner store
+  - key: location.identity.library.desc
+    ko: "\uC870\uC6A9\uD788 \uACF5\uBD80\uD558\uAC70\uB098 \uC624\uB798\uB41C \uAE30\uB85D\uC744
+      \uC0B4\uD3B4\uBD10\uC694."
+    en: Study quietly or explore the old records.
+  - key: location.identity.school.desc
+    ko: "\uC120\uC0DD\uB2D8\uACFC \uB9CC\uB098\uACE0 \uC815\uADDC \uC218\uC5C5\uC5D0
+      \uCC38\uC5EC\uD574\uC694. \uD3C9\uC77C \uC544\uCE68 \uC218\uC5C5\uC740 \uD558\uB8E8
+      \uD55C \uBC88 \uBB34\uB8CC\uC608\uC694."
+    en: Meet your teacher and attend class. One weekday morning class costs no TP.
+  - key: location.identity.square.desc
+    ko: "\uC774\uC6C3\uC744 \uB9CC\uB098\uACE0 \uC791\uC740 \uBD80\uD0C1\uC744 \uB3C4\uC640\uC918\uC694."
+    en: Meet neighbors and help with their requests.
+  - key: location.identity.store.desc
+    ko: "\uB3D9\uB124 \uC18C\uC2DD\uC744 \uB4E3\uACE0 \uBB3C\uAC74\uC758 \uAC00\uCE58\uB97C
+      \uBC30\uC6CC\uC694."
+    en: Hear local news and learn the value of goods.
+  - key: location.identity.workshop.desc
+    ko: "\uC190\uC73C\uB85C \uBB3C\uAC74\uC744 \uB9CC\uB4E4\uACE0 \uC77C\uD558\uB294
+      \uACBD\uD5D8\uC744 \uC313\uC544\uC694."
+    en: Make things by hand and gain work experience.
+  - key: location.library.name
+    ko: "\uB3C4\uC11C\uAD00"
+    en: Library
+  - key: location.school.name
+    ko: "\uD559\uAD50"
+    en: School
+  - key: location.town-square
+    ko: "\uB9C8\uC744 \uAD11\uC7A5"
+    en: Town square
+  - key: location.workshop.name
+    ko: "\uACF5\uBC29"
+    en: Workshop
+  - key: minigame.aim-dodge
+    ko: "\uD45C\uC801\uC744 \uD074\uB9AD\uD558\uACE0, \uC624\uB978\uCABD \uCC28\uC120\uC5D0\uC11C
+      \uC7A5\uC560\uBB3C\uC744 \uD53C\uD574 \uC8FC\uC138\uC694. [\u2190 \u2192 /
+      A D]"
+    en: "Click the targets and dodge obstacles in the lanes on the right. [\u2190
+      \u2192 / A D]"
+  - key: minigame.cancelled
+    ko: "\uCCB4\uD5D8\uC744 \uC911\uB2E8\uD588\uC2B5\uB2C8\uB2E4. \uC0AC\uC6A9\uD55C
+      TP\uB294 \uC720\uC9C0\uB429\uB2C8\uB2E4."
+    en: Attempt ended. The spent TP is retained.
+  - key: minigame.care.call
+    ko: "\uB3C4\uC6C0 \uC694\uCCAD"
+    en: Call for help
+  - key: minigame.care.check
+    ko: "\uC0C1\uD669 \uD655\uC778"
+    en: Check the scene
+  - key: minigame.care.help
+    ko: "\uB3C4\uC6C0 \uC81C\uACF5"
+    en: Offer help
+  - key: minigame.care.instructions
+    ko: "\uB3CC\uBD04 \uC5F0\uC2B5: \uC0C1\uD669\uC5D0 \uB9DE\uB294 \uB3C4\uAD6C\uB97C
+      \uACE8\uB77C \uC8FC\uC138\uC694."
+    en: 'Care practice: choose a tool for each situation.'
+  - key: minigame.care.rest
+    ko: "\uB354\uC6B4 \uB0A0 \uC26C\uB294 \uC778\uD615\uC5D0\uAC8C \uC900\uBE44\uD574
+      \uC904 \uAC83\uC740 \uBB34\uC5C7\uC77C\uAE4C\uC694?"
+    en: What would you prepare for the doll resting on a hot day?
+  - key: minigame.care.scrape
+    ko: "\uC778\uD615\uC758 \uC791\uC740 \uAE01\uD78C \uC0C1\uCC98\uB97C \uB36E\uC5B4
+      \uC904 \uB3C4\uAD6C\uB294 \uBB34\uC5C7\uC77C\uAE4C\uC694?"
+    en: "Which item covers the doll\u2019s small scrape?"
+  - key: minigame.care.sequence
+    ko: "\uB3CC\uBD04 \uCE74\uB4DC\uC5D0 \uB098\uC628 \uB3C4\uC6C0 \uC21C\uC11C\uB97C
+      \uAE30\uC5B5\uD574 \uC8FC\uC138\uC694."
+    en: Remember the helping sequence on the practice cards.
+  - key: minigame.care.temperature
+    ko: "\uC778\uD615\uC758 \uCCB4\uC628\uC744 \uD655\uC778\uD560 \uB54C \uC0AC\uC6A9\uD558\uB294
+      \uAC83\uC740 \uBB34\uC5C7\uC77C\uAE4C\uC694?"
+    en: "Which tool checks the doll\u2019s temperature?"
+  - key: minigame.chef.sequence
+    ko: "\uC7AC\uB8CC \uC21C\uC11C\uB97C \uAE30\uC5B5\uD55C \uB4A4 \uC54C\uB9DE\uC740
+      \uC7AC\uB8CC\uBD80\uD130 \uACE8\uB77C \uC8FC\uC138\uC694."
+    en: Remember the recipe and select the ingredients in order.
+  - key: minigame.chef.timing
+    ko: "\uB178\uB780 \uC120\uC774 \uCD08\uB85D \uCE78\uC5D0 \uB2FF\uC744 \uB54C
+      \uB204\uB974\uBA74 \uC870\uB9AC\uAC00 \uC644\uC131\uB3FC\uC694."
+    en: Tap as the yellow line crosses each green cooking window.
+  - key: minigame.goods.bread
+    ko: "\uBE75"
+    en: Bread
+  - key: minigame.goods.fruit
+    ko: "\uACFC\uC77C"
+    en: Fruit
+  - key: minigame.goods.milk
+    ko: "\uC6B0\uC720"
+    en: Milk
+  - key: minigame.ingredient.egg
+    ko: "\uB2EC\uAC40"
+    en: Egg
+  - key: minigame.ingredient.rice
+    ko: "\uBC25"
+    en: Rice
+  - key: minigame.ingredient.sauce
+    ko: "\uC18C\uC2A4"
+    en: Sauce
+  - key: minigame.ingredient.vegetable
+    ko: "\uCC44\uC18C"
+    en: Vegetables
+  - key: minigame.interior.instructions
+    ko: "\uAC00\uAD6C\uB97C \uACE0\uB978 \uB4A4 \uACA9\uC790\uB97C \uB20C\uB7EC \uBC30\uCE58\uD558\uC138\uC694.
+      \uD68C\uC804\uC740 R, \uAC08\uC0C9 \uCD9C\uC785\uAD6C\uB294 \uBE44\uC6CC \uB450\uC138\uC694."
+    en: Select a piece, then click a grid cell. Use R to rotate and keep the brown
+      entrance clear.
+  - key: minigame.interrupted
+    ko: "\uC9C0\uB09C \uC791\uC5C5\uC774 \uC911\uB2E8\uB418\uC5B4 \uB9C8\uBB34\uB9AC\uB418\uC5C8\uC2B5\uB2C8\uB2E4.
+      \uC0AC\uC6A9\uD55C TP\uB294 \uC720\uC9C0\uB418\uBA70 \uBCF4\uC0C1\uC740 \uC9C0\uAE09\uB418\uC9C0
+      \uC54A\uC2B5\uB2C8\uB2E4."
+    en: Your interrupted attempt was ended. Its TP remains spent and no reward was
+      granted.
+  - key: minigame.memorize
+    ko: "\uC544\uB798 \uC21C\uC11C\uB97C \uAE30\uC5B5\uD574 \uC8FC\uC138\uC694."
+    en: Remember this order.
+  - key: minigame.name.chef_practice
+    ko: "\uC694\uB9AC\uC0AC \uCCB4\uD5D8"
+    en: Chef practice
+  - key: minigame.name.chef_work1
+    ko: "\uC694\uB9AC\uC0AC \uC5C5\uBB34 1"
+    en: Chef work 1
+  - key: minigame.name.chef_work2
+    ko: "\uC694\uB9AC\uC0AC \uC5C5\uBB34 2"
+    en: Chef work 2
+  - key: minigame.name.chef_work3
+    ko: "\uC694\uB9AC\uC0AC \uC5C5\uBB34 3"
+    en: Chef work 3
+  - key: minigame.name.cornerstore_intro
+    ko: "\uAC00\uAC8C \uBB3C\uAC74 \uD3EC\uC7A5 \uB3D5\uAE30"
+    en: Pack an order
+  - key: minigame.name.emergencycare_practice
+    ko: "\uC751\uAE09 \uC758\uB8CC \uCCB4\uD5D8"
+    en: Emergency care practice
+  - key: minigame.name.emergencycare_work1
+    ko: "\uC751\uAE09 \uC758\uB8CC \uC5C5\uBB34 1"
+    en: Emergency care work 1
+  - key: minigame.name.emergencycare_work2
+    ko: "\uC751\uAE09 \uC758\uB8CC \uC5C5\uBB34 2"
+    en: Emergency care work 2
+  - key: minigame.name.emergencycare_work3
+    ko: "\uC751\uAE09 \uC758\uB8CC \uC5C5\uBB34 3"
+    en: Emergency care work 3
+  - key: minigame.name.interior_practice
+    ko: "\uC778\uD14C\uB9AC\uC5B4 \uB514\uC790\uC774\uB108 \uCCB4\uD5D8"
+    en: Interior designer practice
+  - key: minigame.name.interior_work1
+    ko: "\uC778\uD14C\uB9AC\uC5B4 \uB514\uC790\uC774\uB108 \uC5C5\uBB34 1"
+    en: Interior designer work 1
+  - key: minigame.name.interior_work2
+    ko: "\uC778\uD14C\uB9AC\uC5B4 \uB514\uC790\uC774\uB108 \uC5C5\uBB34 2"
+    en: Interior designer work 2
+  - key: minigame.name.interior_work3
+    ko: "\uC778\uD14C\uB9AC\uC5B4 \uB514\uC790\uC774\uB108 \uC5C5\uBB34 3"
+    en: Interior designer work 3
+  - key: minigame.name.soldier_practice
+    ko: "\uAD70\uC778 \uCCB4\uD5D8"
+    en: Soldier practice
+  - key: minigame.name.soldier_work1
+    ko: "\uAD70\uC778 \uC5C5\uBB34 1"
+    en: Soldier work 1
+  - key: minigame.name.soldier_work2
+    ko: "\uAD70\uC778 \uC5C5\uBB34 2"
+    en: Soldier work 2
+  - key: minigame.name.soldier_work3
+    ko: "\uAD70\uC778 \uC5C5\uBB34 3"
+    en: Soldier work 3
+  - key: minigame.name.workshop_intro
+    ko: "\uACF5\uBC29 \uC870\uB9BD \uB3D5\uAE30"
+    en: Help with assembly
+  - key: minigame.piece
+    ko: "\uAC00\uAD6C {0}  {1}\xD7{2}"
+    en: "Piece {0}  {1}\xD7{2}"
+  - key: minigame.placement-invalid
+    ko: "\uC774\uACF3\uC5D0\uB294 \uB193\uC744 \uC218 \uC5C6\uC5B4\uC694. \uB2E4\uB978
+      \uAC00\uAD6C\uC640 \uCD9C\uC785\uAD6C\uB97C \uD655\uC778\uD574 \uC8FC\uC138\uC694."
+    en: This piece does not fit here. Check the furniture and entrance.
+  - key: minigame.placement-selection
+    ko: "\uC120\uD0DD: \uAC00\uAD6C {0} \xB7 \uD68C\uC804 {1}\xB0 \xB7 \uCD9C\uC785\uAD6C\uB294
+      \uBE44\uC6CC \uB450\uC138\uC694."
+    en: "Selected: piece {0} \xB7 Rotation {1}\xB0 \xB7 Keep the entrance clear."
+  - key: minigame.progress
+    ko: "{0}/{1} \uB2E8\uACC4 \xB7 {2}/{3} \uC644\uB8CC \xB7 {4}\uCD08 \xB7 \uC2E4\uC218
+      {5}\uD68C"
+    en: "Stage {0}/{1} \xB7 {2}/{3} completed \xB7 {4}s \xB7 {5} mistakes"
+  - key: minigame.repeat
+    ko: "\uAE30\uC5B5\uD55C \uC21C\uC11C\uB300\uB85C \uB20C\uB7EC \uC8FC\uC138\uC694."
+    en: Choose the symbols in the order you remember.
+  - key: minigame.result
+    ko: "\uACB0\uACFC: {0}\uC810"
+    en: 'Result: {0} points'
+  - key: minigame.retry
+    ko: "\uC870\uAE08\uC529 \uC775\uD600 \uAC00\uBA74 \uB3FC\uC694. \uB2E4\uC74C
+      \uAE30\uD68C\uC5D0 \uB2E4\uC2DC \uB3C4\uC804\uD574 \uBCF4\uC138\uC694."
+    en: You are learning. Try again on your next attempt.
+  - key: minigame.rotate
+    ko: "\uD68C\uC804  [R]"
+    en: 'Rotate  [R]'
+  - key: minigame.save-again
+    ko: "\uB2E4\uC2DC \uC800\uC7A5"
+    en: Save again
+  - key: minigame.save-failed
+    ko: "\uACB0\uACFC\uB97C \uC800\uC7A5\uD558\uC9C0 \uBABB\uD588\uC5B4\uC694. \uB2E4\uC2DC
+      \uC800\uC7A5\uC744 \uB20C\uB7EC \uC8FC\uC138\uC694."
+    en: Your result could not be saved. Select Save again.
+  - key: minigame.saved
+    ko: "\uACB0\uACFC\uB97C \uC800\uC7A5\uD588\uC5B4\uC694."
+    en: Your result was saved.
+  - key: minigame.store.instructions
+    ko: "\uC8FC\uBB38\uD55C \uBB3C\uAC74\uC758 \uC21C\uC11C\uB97C \uAE30\uC5B5\uD558\uACE0
+      \uCC28\uB840\uB300\uB85C \uB2F4\uC544 \uC8FC\uC138\uC694."
+    en: Remember the order and pack the requested goods.
+  - key: minigame.success
+    ko: "\uC798\uD588\uC5B4\uC694! \uACB0\uACFC\uB97C \uD655\uC778\uD558\uACE0 \uB2E4\uC74C
+      \uD65C\uB3D9\uC744 \uACE8\uB77C \uBCF4\uC138\uC694."
+    en: Well done! Check your result and choose your next activity.
+  - key: minigame.tap
+    ko: "\uD1A1! \uB204\uB974\uAE30  [Space]"
+    en: 'Tap!  [Space]'
+  - key: minigame.title.choice
+    ko: "\uC54C\uB9DE\uC740 \uB3C4\uAD6C \uACE0\uB974\uAE30"
+    en: Choose the right tool
+  - key: minigame.title.placement
+    ko: "\uACF5\uAC04 \uAFB8\uBBF8\uAE30"
+    en: Arrange the space
+  - key: minigame.title.sequence
+    ko: "\uC21C\uC11C\uB97C \uAE30\uC5B5\uD574\uC694"
+    en: Remember the sequence
+  - key: minigame.title.targetdodge
+    ko: "\uC9D1\uC911\uACFC \uD68C\uD53C"
+    en: Focus and dodge
+  - key: minigame.title.timing
+    ko: "\uD0C0\uC774\uBC0D \uB9DE\uCD94\uAE30"
+    en: Find the rhythm
+  - key: minigame.tool.bandage
+    ko: "\uBC18\uCC3D\uACE0"
+    en: Bandage
+  - key: minigame.tool.thermometer
+    ko: "\uCCB4\uC628\uACC4"
+    en: Thermometer
+  - key: minigame.tool.water
+    ko: "\uBB3C"
+    en: Water
+  - key: minigame.training.instructions
+    ko: "\uC548\uC804\uD55C \uC9D1\uC911 \uD6C8\uB828\uC785\uB2C8\uB2E4. \uD45C\uC801\uC744
+      \uB204\uB974\uACE0 \uCC28\uC120 \uC7A5\uC560\uBB3C\uC744 \uD53C\uD574 \uBCF4\uC138\uC694."
+    en: 'Safe focus practice: click the targets and avoid lane obstacles.'
+  - key: minigame.travel.instructions
+    ko: "\uAE34\uAE09 \uC774\uB3D9 \uC5F0\uC2B5: \uC7A5\uC560\uBB3C\uC774 \uB0B4\uB824\uC624\uB294
+      \uCC28\uC120\uC744 \uD53C\uD574 \uC774\uB3D9\uD558\uC138\uC694. [\u2190 \u2192]"
+    en: "Emergency travel practice: move out of the approaching obstacle\u2019s lane.
+      [\u2190 \u2192]"
+  - key: minigame.workshop.instructions
+    ko: "\uC870\uB9BD \uBD80\uD488\uC744 \uACA9\uC790 \uC548\uC5D0 \uB193\uC544 \uC8FC\uC138\uC694.
+      \uC11C\uB85C \uACB9\uCE58\uBA74 \uC548 \uB3FC\uC694."
+    en: Fit the assembly pieces inside the grid without overlap.
+  - key: objective.daily.choose.empty
+    ko: "\uC120\uD0DD\uD560 \uC218 \uC788\uB294 \uACC4\uD68D\uC774 \uC5C6\uC5B4\uC694."
+    en: No plans are available.
+  - key: opening.campaign.description
+    ko: "\uC120\uC0DD\uB2D8\uACFC \uD558\uB8E8 \uACC4\uD68D, \uB9C8\uC744 \uC77C\uAC70\uB9AC,
+      \uC624\uB798\uB41C \uAE30\uB85D\uC744 \uCC28\uB840\uB85C \uB9CC\uB098 \uBCF4\uC790.
+      \uAC01 \uB0A0\uC758 \uC131\uC7A5\uC5D0\uB294 \uD559\uAD50 \uBC16 \uB300\uC548\uB3C4
+      \uC788\uB2E4."
+    en: Meet your teacher, explore town work and discover an old record. Each day
+      offers an alternative way to grow outside class.
+  - key: opening.campaign.name
+    ko: "\uC6B0\uB9AC \uB9C8\uC744\uC5D0\uC11C\uC758 \uCCAB \uC0AC\uD758"
+    en: The First Three Days
+  - key: opening.chain.description
+    ko: "\uC120\uC0DD\uB2D8\uC744 \uB9CC\uB098 \uD558\uB8E8 \uACC4\uD68D\uC744 \uC138\uC6B0\uACE0,
+      \uB9C8\uC744\uC758 \uB124 \uC2DC\uC124\uC744 \uB458\uB7EC\uBCF4\uC790. \uCCAB
+      \uC6A9\uB3C8\uACFC \uC791\uC740 \uBC1C\uACAC\uC744 \uB0B4 \uBC29\uC758 \uCD94\uC5B5\uC73C\uB85C
+      \uB0A8\uACA8 \uBCF4\uC790."
+    en: Meet your teacher, plan your day and explore four town facilities. Turn your
+      first allowance and a small discovery into a memory for your room.
+  - key: opening.chain.name
+    ko: "\uB098\uC758 \uD559\uAD50\uC0DD\uD65C, \uC6B0\uB9AC \uB9C8\uC744"
+    en: My School Days, Our Town
+  - key: opening.clue.archive-door.action
+    ko: "\uC7A0\uAE34 Archive \uBB38 \uC0B4\uD3B4\uBCF4\uAE30"
+    en: Inspect the locked Archive door
+  - key: opening.clue.archive-door.result
+    ko: "Archive \uBB38\uC740 \uC7A0\uACA8 \uC788\uB2E4. \uBB38\uD2C8 \uAC00\uAE4C\uC774\uC5D0
+      \uB193\uC778 \uB0A1\uC740 \uC0AC\uC9C4\uC5D0\uB294 \uC9C0\uAE08\uACFC \uC870\uAE08
+      \uB2E4\uB978 \uB9C8\uC744 \uD48D\uACBD\uC774 \uBCF4\uC778\uB2E4. \uD750\uB824\uC9C4
+      \uB0A0\uC9DC\uB294 \uC77D\uC744 \uC218 \uC5C6\uB2E4. \uC0AC\uC11C\uC5D0\uAC8C
+      \uC774 \uC0AC\uC9C4\uC5D0 \uB300\uD574 \uBB3C\uC5B4\uBCF4\uACE0 \uC2F6\uC5B4\uC84C\uB2E4."
+    en: The Archive door is locked. An old photograph near the gap shows a town that
+      looks a little different. Its faded date is unreadable. You want to ask the
+      librarian about it.
+  - key: opening.clue.repair-ledger.action
+    ko: "\uC624\uB798\uB41C \uC218\uB9AC \uC7A5\uBD80 \uC77D\uAE30"
+    en: Read the old repair ledger
+  - key: opening.clue.repair-ledger.result
+    ko: "\uC7A5\uBD80\uC5D0\uB294 \uC624\uB798\uB41C \uC218\uB9AC \uAE30\uB85D\uC774
+      \uB0A8\uC544 \uC788\uB2E4. \uBE5B\uBC14\uB79C \uB0A0\uC9DC \uC606\uC758 \uAE00\uC528\uB294
+      \uC54C\uC544\uBCF4\uAE30 \uC5B4\uB835\uB2E4. \uC774 \uAE30\uB85D\uB9CC\uC73C\uB85C
+      \uBB34\uC2A8 \uC77C\uC774 \uC788\uC5C8\uB294\uC9C0\uB294 \uC54C \uC218 \uC5C6\uB2E4.
+      \uACF5\uBC29 \uC5B4\uB978\uC5D0\uAC8C \uC608\uC804\uC758 \uB9C8\uC744 \uC774\uC57C\uAE30\uB97C
+      \uBB3C\uC5B4\uBCF4\uACE0 \uC2F6\uC5B4\uC84C\uB2E4."
+    en: The ledger holds old repair records. The writing beside a faded date is hard
+      to read. This fragment does not explain what happened. You want to ask the
+      workshop manager about the town long ago.
+  - key: opening.day.1.direction
+    ko: "\uC120\uC0DD\uB2D8\uC744 \uB9CC\uB098 Daily Plan\uC744 \uACE8\uB77C \uBCF4\uC790.
+      \uB3C4\uC11C\uAD00 \uB3C5\uD559\uC73C\uB85C\uB3C4 \uC624\uB298\uC758 \uC131\uC7A5\uC744
+      \uC2DC\uC791\uD560 \uC218 \uC788\uB2E4."
+    en: Meet your teacher and choose a Daily Plan. Library self-study is another
+      way to begin today's growth.
+  - key: opening.day.1.name
+    ko: "\uCCAB\uB0A0: \uD559\uAD50\uC640 \uD558\uB8E8 \uACC4\uD68D"
+    en: 'Day 1: School and a Plan'
+  - key: opening.day.1.next
+    ko: "\uB0B4\uC77C\uC740 \uB124 \uC2DC\uC124\uC744 \uB458\uB7EC\uBCF4\uACE0 \uCCAB
+      \uC77C\uAC70\uB9AC\uB97C \uACE8\uB77C \uBCF4\uC790."
+    en: Tomorrow, explore four facilities and choose your first work.
+  - key: opening.day.2.direction
+    ko: "\uB124 \uC9C4\uB85C \uC2DC\uC124\uC744 \uBC29\uBB38\uD558\uACE0 \uC0C1\uC810\uC774\uB098
+      \uACF5\uBC29\uC5D0\uC11C \uC77C\uC744 \uB3C4\uC640 \uC6A9\uB3C8\uC744 \uBC8C\uC790."
+    en: Visit the four career facilities, then earn allowance by helping at the store
+      or workshop.
+  - key: opening.day.2.name
+    ko: "\uB458\uC9F8 \uB0A0: \uB9C8\uC744 \uD0D0\uD5D8\uACFC \uCCAB \uC6A9\uB3C8"
+    en: 'Day 2: Explore and Earn'
+  - key: opening.day.2.next
+    ko: "\uB3C4\uC11C\uAD00\uC758 \uC7A0\uAE34 \uBB38\uC774\uB098 \uACF5\uBC29\uC758
+      \uC624\uB798\uB41C \uC7A5\uBD80\uB97C \uC0B4\uD3B4\uBCF4\uC790."
+    en: Look into the library's locked door or the workshop's old ledger.
+  - key: opening.day.3.direction
+    ko: "\uB3C4\uC11C\uAD00 Archive \uBB38\uC774\uB098 \uACF5\uBC29 \uC7A5\uBD80
+      \uC911 \uD55C \uACF3\uC5D0\uC11C \uC791\uC740 \uB2E8\uC11C\uB97C \uCC3E\uC544\uBCF4\uC790."
+    en: Find a small clue at either the Archive door or the workshop ledger.
+  - key: opening.day.3.name
+    ko: "\uC14B\uC9F8 \uB0A0: \uC624\uB798\uB41C \uAE30\uB85D\uC758 \uAD81\uAE08\uC99D"
+    en: 'Day 3: Questions in Old Records'
+  - key: opening.day.3.next
+    ko: "\uC6A9\uB3C8\uC73C\uB85C \uAC00\uAD6C\uB97C \uAD6C\uC785\uD558\uACE0 \uC624\uB298\uC758
+      \uAD00\uC2EC\uC0AC\uB97C \uB0B4 \uBC29\uC5D0 \uB0A8\uACA8 \uBCF4\uC790."
+    en: Buy furniture with your allowance and make room for your new interests.
+  - key: opening.dialogue.guide
+    ko: "\uD559\uAD50\uC5D0\uC11C \uC120\uC0DD\uB2D8\uC744 \uB9CC\uB098 \uBCF4\uB834.
+      \uC624\uB298\uC758 \uACC4\uD68D\uC740 \uB124\uAC00 \uC815\uD574\uB3C4 \uAD1C\uCC2E\uC544.
+      \uB2E4\uC74C\uC5D0 \uD560 \uC77C\uC740 Tab \uBAA9\uD45C \uC800\uB110\uC5D0\uC11C
+      \uD655\uC778\uD560 \uC218 \uC788\uB2E8\uB2E4."
+    en: Go meet your teacher at school. You can choose how to spend your day. Press
+      Tab to check your next step in the Objective Journal.
+  - key: opening.dialogue.librarian
+    ko: "Archive\uB294 \uC544\uC9C1 \uC7A0\uACA8 \uC788\uC5B4. \uC624\uB798\uB41C
+      \uC0AC\uC9C4\uC774\uB098 \uAE30\uB85D\uC5D0\uC11C \uAD81\uAE08\uD55C \uC810\uC744
+      \uCC3E\uC73C\uBA74 \uC774\uC57C\uAE30\uD574 \uC8FC\uB834. \uC9C0\uAE08\uC740
+      \uC791\uC740 \uB2E8\uC11C\uBD80\uD130 \uCC9C\uCC9C\uD788 \uC0B4\uD3B4\uBCF4\uC790."
+    en: The Archive is still locked. Tell me if an old photo or record makes you
+      curious. For now, take your time with the small clues.
+  - key: opening.dialogue.manager
+    ko: "\uACF5\uBC29 \uC77C\uC744 \uB3C4\uC640\uC904\uB798? \uC815\uB9AC\uAC00 \uB05D\uB098\uBA74
+      \uC61B \uC218\uB9AC \uC7A5\uBD80\uB3C4 \uC0B4\uD3B4\uBD10\uB3C4 \uC88B\uC544.
+      \uB0A1\uC740 \uAE00\uC528\uAC00 \uB9CE\uC73C\uB2C8 \uBB34\uC2A8 \uAE30\uB85D\uC778\uC9C0
+      \uC11C\uB450\uB974\uC9C0 \uB9D0\uACE0 \uC77D\uC5B4 \uBCF4\uB834."
+    en: Would you help around the workshop? Afterwards you may look through the old
+      repair ledger. Much of the writing has faded, so read it carefully.
+  - key: opening.dialogue.teacher
+    ko: "\uD558\uB8E8\uB97C \uBCF4\uB0B4\uB294 \uBC29\uBC95\uC740 \uC5EC\uB7EC \uAC00\uC9C0\uB780\uB2E4.
+      Daily Plan\uC5D0\uC11C \uB9C8\uC74C\uC5D0 \uB4DC\uB294 \uC77C\uC744 \uACE8\uB77C
+      \uBCF4\uB834. \uD559\uAD50 \uBC16\uC5D0\uC11C \uBCF4\uACE0 \uB3D5\uACE0 \uC26C\uB294
+      \uC2DC\uAC04\uB3C4 \uB108\uB97C \uC790\uB77C\uAC8C \uD574."
+    en: There are many ways to spend a day. Choose something in your Daily Plan.
+      Exploring, helping and resting outside school help you grow too.
+  - key: opening.facility.design-studio.description
+    ko: "\uC0AC\uB78C\uC5D0\uAC8C \uB9DE\uB294 \uACF5\uAC04\uC744 \uB9CC\uB4DC\uB294
+      \uACF3\uC774\uB2E4. \uC0C9\uACFC \uAC00\uAD6C \uBC30\uCE58\uB97C \uC0B4\uD3B4\uBCF4\uBA70
+      \uC791\uC740 \uBC29\uC758 \uAC00\uB2A5\uC131\uC744 \uCC3E\uC544\uBCF4\uC790."
+    en: A place to design spaces for people. Explore color and furniture arrangements
+      for a small room.
+  - key: opening.facility.design-studio.introduction
+    ko: "\uACF5\uAC04 \uB514\uC790\uC778\uC758 \uC77C \uC18C\uAC1C \uB4E3\uAE30"
+    en: Learn about interior design
+  - key: opening.facility.design-studio.name
+    ko: "\uB514\uC790\uC778 \uC2A4\uD29C\uB514\uC624"
+    en: Design Studio
+  - key: opening.facility.medical-clinic.description
+    ko: "\uC544\uD508 \uC0AC\uB78C\uACFC \uB3D9\uBB3C\uC744 \uC0B4\uD53C\uB294 \uACF3\uC774\uB2E4.
+      \uB3C4\uC6C0\uC744 \uC8FC\uAE30 \uC804\uC5D0 \uC0C1\uD0DC\uB97C \uD655\uC778\uD558\uACE0
+      \uCE68\uCC29\uD558\uAC8C \uD310\uB2E8\uD558\uB294 \uBC95\uC744 \uBC30\uC6B4\uB2E4."
+    en: A place to care for people and animals. Learn to check their condition and
+      make calm decisions before helping.
+  - key: opening.facility.medical-clinic.introduction
+    ko: "\uBCF4\uAC74 \uC9C4\uB8CC\uC18C\uC758 \uC77C \uC18C\uAC1C \uB4E3\uAE30"
+    en: Learn about medical care
+  - key: opening.facility.medical-clinic.name
+    ko: "\uBCF4\uAC74 \uC9C4\uB8CC\uC18C"
+    en: Medical Clinic
+  - key: opening.facility.restaurant.description
+    ko: "\uC74C\uC2DD\uC73C\uB85C \uC774\uC6C3\uC744 \uB3CC\uBCF4\uB294 \uACF3\uC774\uB2E4.
+      \uC7AC\uB8CC\uC640 \uC870\uB9AC \uC21C\uC11C\uC5D0 \uAD00\uC2EC\uC774 \uC788\uB2E4\uBA74
+      \uC2DD\uB2F9\uC758 \uC77C\uC744 \uC54C\uC544\uBCF4\uC790."
+    en: A place that cares for neighbors through food. Learn about ingredients and
+      the order of cooking tasks.
+  - key: opening.facility.restaurant.introduction
+    ko: "\uC2DD\uB2F9\uC758 \uC77C \uC18C\uAC1C \uB4E3\uAE30"
+    en: Learn about restaurant work
+  - key: opening.facility.restaurant.name
+    ko: "\uB9C8\uC744 \uC2DD\uB2F9"
+    en: Town Restaurant
+  - key: opening.facility.training-ground.description
+    ko: "\uBAB8\uC744 \uC6C0\uC9C1\uC774\uBA70 \uADDC\uCE59\uACFC \uD611\uB3D9\uC744
+      \uBC30\uC6B0\uB294 \uACF3\uC774\uB2E4. \uC548\uC804\uD55C \uC5F0\uC2B5\uC73C\uB85C
+      \uCCB4\uB825\uACFC \uC9D1\uC911\uB825\uC744 \uAE30\uB97C \uC218 \uC788\uB2E4."
+    en: A place to practice fitness, rules and teamwork through safe exercises.
+  - key: opening.facility.training-ground.introduction
+    ko: "\uD6C8\uB828\uC7A5\uC758 \uC77C \uC18C\uAC1C \uB4E3\uAE30"
+    en: Learn about training work
+  - key: opening.facility.training-ground.name
+    ko: "\uD6C8\uB828\uC7A5"
+    en: Training Ground
+  - key: opening.objective.archive
+    ko: "\uC7A0\uAE34 Archive \uBB38 \uC0B4\uD3B4\uBCF4\uAE30"
+    en: Inspect the locked Archive door
+  - key: opening.objective.clue-choice
+    ko: "Archive \uBB38 \uB610\uB294 \uACF5\uBC29 \uC7A5\uBD80\uC5D0\uC11C \uB2E8\uC11C
+      \uCC3E\uAE30"
+    en: Find a clue at the Archive door or workshop ledger
+  - key: opening.objective.ledger
+    ko: "\uACF5\uBC29\uC758 \uC624\uB798\uB41C \uC218\uB9AC \uC7A5\uBD80 \uC77D\uAE30"
+    en: Read the workshop's old repair ledger
+  - key: opening.objective.plan
+    ko: "Daily Plan\uC5D0\uC11C \uD558\uB8E8 \uACC4\uD68D \uC120\uD0DD\uD558\uAE30"
+    en: Choose a Daily Plan
+  - key: opening.objective.room
+    ko: "\uAD6C\uC785\uD55C \uC0AC\uC9C4 \uAC8C\uC2DC\uD310 \uB610\uB294 \uC870\uB9BD
+      \uCC45\uC0C1\uC744 \uB0B4 \uBC29\uC5D0 \uBC30\uCE58\uD558\uAE30"
+    en: Place your purchased photo board or study desk in your room
+  - key: opening.objective.teacher
+    ko: "\uD559\uAD50\uC5D0\uC11C \uB2F4\uC784 \uC120\uC0DD\uB2D8\uACFC \uC774\uC57C\uAE30\uD558\uAE30"
+    en: Talk to your teacher at school
+  - key: opening.objective.visit.0
+    ko: "\uC2DD\uB2F9 \uBC29\uBB38\uD558\uAE30"
+    en: Visit the restaurant
+  - key: opening.objective.visit.1
+    ko: "\uBCF4\uAC74 \uC9C4\uB8CC\uC18C \uBC29\uBB38\uD558\uAE30"
+    en: Visit the medical clinic
+  - key: opening.objective.visit.2
+    ko: "\uB514\uC790\uC778 \uC2A4\uD29C\uB514\uC624 \uBC29\uBB38\uD558\uAE30"
+    en: Visit the design studio
+  - key: opening.objective.visit.3
+    ko: "\uD6C8\uB828\uC7A5 \uBC29\uBB38\uD558\uAE30"
+    en: Visit the training ground
+  - key: opening.objective.work
+    ko: "\uC0C1\uC810 \uB610\uB294 \uACF5\uBC29\uC758 \uC720\uAE09 \uC77C\uAC70\uB9AC
+      \uC644\uB8CC\uD558\uAE30"
+    en: Complete paid work at the store or workshop
+  - key: opening.quest.AfterSchoolTour.description
+    ko: "\uC2DD\uB2F9, \uBCF4\uAC74 \uC9C4\uB8CC\uC18C, \uB514\uC790\uC778 \uC2A4\uD29C\uB514\uC624,
+      \uD6C8\uB828\uC7A5\uC744 \uBC29\uBB38\uD558\uC790. \uBC29\uBB38 \uC21C\uC11C\uB294
+      \uC790\uC720\uB86D\uAC8C \uC815\uD560 \uC218 \uC788\uB2E4."
+    en: Visit the restaurant, medical clinic, design studio and training ground in
+      any order.
+  - key: opening.quest.AfterSchoolTour.name
+    ko: "\uBC29\uACFC \uD6C4 \uB9C8\uC744 \uD0D0\uD5D8"
+    en: After-School Tour
+  - key: opening.quest.BackToSchool.description
+    ko: "\uD559\uAD50\uC5D0\uC11C \uB2F4\uC784 \uC120\uC0DD\uB2D8\uACFC \uC774\uC57C\uAE30\uD558\uACE0
+      Daily Plan\uC5D0\uC11C \uC624\uB298 \uD558\uACE0 \uC2F6\uC740 \uC77C\uC744
+      \uACE8\uB77C \uBCF4\uC790."
+    en: Talk with your teacher at school, then choose something you want to do in
+      the Daily Plan.
+  - key: opening.quest.BackToSchool.name
+    ko: "\uB450\uADFC\uB450\uADFC \uCCAB \uB4F1\uAD50"
+    en: Back to School
+  - key: opening.quest.DustySecrets.description
+    ko: "\uB3C4\uC11C\uAD00\uC758 \uC7A0\uAE34 Archive \uBB38\uC744 \uC0B4\uD3B4\uBCF4\uAC70\uB098
+      \uACF5\uBC29\uC758 \uC624\uB798\uB41C \uC7A5\uBD80\uB97C \uC77D\uC5B4 \uBCF4\uC790.
+      \uC544\uC9C1\uC740 \uB9C8\uC744\uC758 \uACFC\uAC70\uB97C \uB2E8\uC815\uD560
+      \uC218 \uC5C6\uB2E4."
+    en: Inspect the locked Archive door at the library or read the workshop's old
+      ledger. These fragments raise questions about the town's past.
+  - key: opening.quest.DustySecrets.name
+    ko: "\uBA3C\uC9C0 \uC18D\uC758 \uC791\uC740 \uB2E8\uC11C"
+    en: Dusty Secrets
+  - key: opening.quest.FirstPartTimeJob.description
+    ko: "\uC0C1\uC810\uC774\uB098 \uACF5\uBC29\uC5D0\uC11C \uC77C\uC744 \uB3C4\uC640
+      \uC6A9\uB3C8\uC744 \uBC1B\uC544 \uBCF4\uC790. \uC774 \uB3C8\uC73C\uB85C \uB0B4
+      \uBC29\uC5D0 \uB458 \uAC00\uAD6C\uB97C \uC0B4 \uC218 \uC788\uB2E4."
+    en: Help with a shift at the corner store or workshop and earn allowance for
+      your room.
+  - key: opening.quest.FirstPartTimeJob.name
+    ko: "\uCC98\uC74C \uBC88 \uC6A9\uB3C8"
+    en: My First Part-Time Job
+  - key: opening.quest.MyOwnSpace.description
+    ko: "\uBC88 \uC6A9\uB3C8\uC73C\uB85C \uAE30\uB85D \uC0AC\uC9C4 \uAC8C\uC2DC\uD310\uC774\uB098
+      \uC870\uB9BD \uCC45\uC0C1\uC744 \uAD6C\uC785\uD574 \uB0B4 \uBC29\uC5D0 \uBC30\uCE58\uD558\uC790."
+    en: Use your allowance to buy a record photo board or study desk, then place
+      it in your room.
+  - key: opening.quest.MyOwnSpace.name
+    ko: "\uB098\uB9CC\uC758 \uACF5\uAC04"
+    en: My Own Space
+  - key: opening.route.Archive
+    ko: "\uC7A0\uAE34 Archive \uBB38"
+    en: The locked Archive door
+  - key: opening.route.Archive.description
+    ko: "\uBB38\uD2C8 \uAC00\uAE4C\uC774 \uB193\uC778 \uB0A1\uC740 \uC0AC\uC9C4\uC744
+      \uC0B4\uD3B4\uBCF8\uB2E4."
+    en: Inspect the old photograph near the door.
+  - key: opening.route.Ledger
+    ko: "\uC624\uB798\uB41C \uC218\uB9AC \uC7A5\uBD80"
+    en: The old repair ledger
+  - key: opening.route.Ledger.description
+    ko: "\uACF5\uBC29\uC758 \uBE5B\uBC14\uB79C \uC218\uB9AC \uAE30\uB85D\uC744 \uC77D\uB294\uB2E4."
+    en: Read the workshop's faded repair records.
+  - key: opening.route.SelfStudy
+    ko: "\uB3C4\uC11C\uAD00\uC5D0\uC11C \uB3C5\uD559"
+    en: Study at the library
+  - key: opening.route.SelfStudy.description
+    ko: "\uB3C4\uC11C\uAD00\uC758 \uCC45 \uC77D\uAE30 \uD65C\uB3D9\uC744 \uD55C\uB2E4."
+    en: Complete a reading activity at the library.
+  - key: opening.route.StoreWork
+    ko: "\uC0C1\uC810 \uC77C \uB3D5\uAE30"
+    en: Help at the store
+  - key: opening.route.StoreWork.description
+    ko: "\uC0C1\uC810\uC758 \uC720\uAE09 \uC77C\uAC70\uB9AC\uB97C \uC644\uB8CC\uD55C\uB2E4."
+    en: Complete paid work at the corner store.
+  - key: opening.route.Teacher
+    ko: "\uC120\uC0DD\uB2D8\uACFC \uCCAB \uC778\uC0AC"
+    en: Meet your teacher
+  - key: opening.route.Teacher.description
+    ko: "\uD559\uAD50\uC5D0\uC11C \uC120\uC0DD\uB2D8\uACFC \uB300\uD654\uD55C\uB2E4."
+    en: Talk to your teacher at school.
+  - key: opening.route.WorkshopWork
+    ko: "\uACF5\uBC29 \uC77C \uB3D5\uAE30"
+    en: Help at the workshop
+  - key: opening.route.WorkshopWork.description
+    ko: "\uACF5\uBC29\uC758 \uC720\uAE09 \uC77C\uAC70\uB9AC\uB97C \uC644\uB8CC\uD55C\uB2E4."
+    en: Complete paid work at the workshop.
+  - key: opening.work.workshop-helper
+    ko: "\uACF5\uBC29 \uC815\uB9AC \uB3C4\uC640\uC8FC\uAE30"
+    en: Help organize the workshop
+  - key: opening.workplace.workshop
+    ko: "\uB9C8\uC744 \uACF5\uBC29"
+    en: Town Workshop
+  - key: practice.chef
+    ko: "\uC694\uB9AC\uC0AC \uCCB4\uD5D8"
+    en: Chef practice
+  - key: practice.emergency-care
+    ko: "\uC751\uAE09 \uC758\uB8CC \uCCB4\uD5D8"
+    en: Emergency care practice
+  - key: practice.interior
+    ko: "\uC778\uD14C\uB9AC\uC5B4 \uB514\uC790\uC774\uB108 \uCCB4\uD5D8"
+    en: Interior designer practice
+  - key: practice.soldier
+    ko: "\uAD70\uC778 \uCCB4\uD5D8"
+    en: Soldier practice
+  - key: spum.creator.back
+    ko: "\uB4A4\uB85C"
+    en: Back
+  - key: spum.creator.cancel
+    ko: "\uCDE8\uC18C"
+    en: Cancel
+  - key: spum.creator.category.accessory
+    ko: "\uC7A5\uC2E0\uAD6C"
+    en: Accessories
+  - key: spum.creator.category.body-skin
+    ko: "\uBAB8 \xB7 \uD53C\uBD80"
+    en: Body / Skin
+  - key: spum.creator.category.eye
+    ko: "\uB208"
+    en: Eyes
+  - key: spum.creator.category.hair
+    ko: "\uBA38\uB9AC"
+    en: Hair
+  - key: spum.creator.category.outfit-cloth
+    ko: "\uC637"
+    en: Outfit / Cloth
+  - key: spum.creator.confirm
+    ko: "\uC644\uB8CC"
+    en: Confirm
+  - key: spum.creator.none-selected
+    ko: "\uC120\uD0DD\uD55C \uD30C\uCE20\uAC00 \uC5C6\uC5B4\uC694"
+    en: No parts selected
+  - key: spum.creator.page.next
+    ko: "\u3009"
+    en: "\u3009"
+  - key: spum.creator.page.previous
+    ko: "\u3008"
+    en: "\u3008"
+  - key: spum.creator.part.next
+    ko: "\uB2E4\uC74C \uD30C\uCE20"
+    en: Next
+  - key: spum.creator.part.previous
+    ko: "\uC774\uC804 \uD30C\uCE20"
+    en: Previous
+  - key: spum.creator.random
+    ko: "\uBB34\uC791\uC704"
+    en: Random
+  - key: spum.creator.selected-count
+    ko: "{0}\uAC1C \uC120\uD0DD\uB428"
+    en: '{0} parts selected'
+  - key: spum.creator.title
+    ko: "\uCE90\uB9AD\uD130 \uB9CC\uB4E4\uAE30"
+    en: Create character
+  - key: trait.aesthetic
+    ko: "\uBBF8\uC801 \uAC10\uAC01"
+    en: Aesthetic sense
+  - key: trait.delicacy
+    ko: "\uC12C\uC138\uD568"
+    en: Delicacy
+  - key: trait.relief
+    ko: "\uAD6C\uD638"
+    en: Care
+  - key: trait.taste
+    ko: "\uBBF8\uAC01"
+    en: Taste
+  - key: ui.close-symbol
+    ko: "\xD7"
+    en: "\xD7"
+  - key: work.chef.level1
+    ko: "\uC694\uB9AC\uC0AC \uC5C5\uBB34 1"
+    en: Chef work 1
+  - key: work.chef.level2
+    ko: "\uC694\uB9AC\uC0AC \uC5C5\uBB34 2"
+    en: Chef work 2
+  - key: work.chef.level3
+    ko: "\uC694\uB9AC\uC0AC \uC5C5\uBB34 3"
+    en: Chef work 3
+  - key: work.emergency-care.level1
+    ko: "\uC751\uAE09 \uC758\uB8CC \uC5C5\uBB34 1"
+    en: Emergency care work 1
+  - key: work.emergency-care.level2
+    ko: "\uC751\uAE09 \uC758\uB8CC \uC5C5\uBB34 2"
+    en: Emergency care work 2
+  - key: work.emergency-care.level3
+    ko: "\uC751\uAE09 \uC758\uB8CC \uC5C5\uBB34 3"
+    en: Emergency care work 3
+  - key: work.interior.level1
+    ko: "\uC778\uD14C\uB9AC\uC5B4 \uB514\uC790\uC774\uB108 \uC5C5\uBB34 1"
+    en: Interior designer work 1
+  - key: work.interior.level2
+    ko: "\uC778\uD14C\uB9AC\uC5B4 \uB514\uC790\uC774\uB108 \uC5C5\uBB34 2"
+    en: Interior designer work 2
+  - key: work.interior.level3
+    ko: "\uC778\uD14C\uB9AC\uC5B4 \uB514\uC790\uC774\uB108 \uC5C5\uBB34 3"
+    en: Interior designer work 3
+  - key: work.soldier.level1
+    ko: "\uAD70\uC778 \uC5C5\uBB34 1"
+    en: Soldier work 1
+  - key: work.soldier.level2
+    ko: "\uAD70\uC778 \uC5C5\uBB34 2"
+    en: Soldier work 2
+  - key: work.soldier.level3
+    ko: "\uAD70\uC778 \uC5C5\uBB34 3"
+    en: Soldier work 3
+  - key: world.entry.failed
+    ko: "\uC800\uC7A5\uB41C \uC2DC\uC791 \uC704\uCE58\uB97C \uBD88\uB7EC\uC62C \uC218
+      \uC5C6\uC2B5\uB2C8\uB2E4. \uC6D4\uB4DC \uB370\uC774\uD130\uC640 \uC800\uC7A5
+      \uC2AC\uB86F\uC744 \uD655\uC778\uD574 \uC8FC\uC138\uC694."
+    en: Unable to load this starting location. Check the world data and save slot.
+  - key: world.travel.failed
+    ko: "\uB2E4\uC74C \uC7A5\uC18C\uB85C \uC774\uB3D9\uD558\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4.
+      \uC800\uC7A5 \uC0C1\uD0DC\uB97C \uD655\uC778\uD55C \uB4A4 \uB2E4\uC2DC \uC2DC\uB3C4\uD574
+      \uC8FC\uC138\uC694."
+    en: Unable to travel to the next location. Check the save state and try again.
+  - key: interest.learning
+    ko: "\uBC30\uC6C0\uACFC \uD0D0\uAD6C"
+    en: Learning
+  - key: interest.technical
+    ko: "\uAE30\uC220\uACFC \uB9CC\uB4E4\uAE30"
+    en: Making and Technology
+  - key: interest.service
+    ko: "\uC774\uC6C3\uACFC \uB3CC\uBD04"
+    en: Community and Care
+  - key: interest.investigation
+    ko: "\uAD00\uCC30\uACFC \uBC1C\uACAC"
+    en: Observation and Discovery
+  - key: desc.interest.learning
+    ko: "\uCC45\uACFC \uC218\uC5C5\uC744 \uD1B5\uD574 \uC0C8\uB85C\uC6B4 \uC9C0\uC2DD\uC744
+      \uC313\uC544 \uBCF4\uC138\uC694."
+    en: Explore new knowledge through books and classes.
+  - key: desc.interest.technical
+    ko: "\uB3C4\uAD6C\uC640 \uC7AC\uB8CC\uB97C \uB2E4\uB8E8\uBA70 \uB9CC\uB4DC\uB294
+      \uC990\uAC70\uC6C0\uC744 \uCC3E\uC544\uBCF4\uC138\uC694."
+    en: Discover the joy of working with tools and materials.
+  - key: desc.interest.service
+    ko: "\uC774\uC6C3\uC744 \uB3D5\uACE0 \uD568\uAED8\uD558\uB294 \uACBD\uD5D8\uC744
+      \uC313\uC544 \uBCF4\uC138\uC694."
+    en: Build experience by helping your neighbors.
+  - key: desc.interest.investigation
+    ko: "\uB9C8\uC744\uC744 \uAD00\uCC30\uD558\uBA70 \uC0C8\uB85C\uC6B4 \uB2E8\uC11C\uB97C
+      \uBC1C\uACAC\uD574 \uBCF4\uC138\uC694."
+    en: Observe the town and discover new clues.
+  - key: action.visit-library
+    ko: "\uB3C4\uC11C\uAD00 \uBC29\uBB38\uD558\uAE30"
+    en: Visit the library
+  - key: action.attend-class
+    ko: "\uC218\uC5C5\uC5D0 \uCC38\uC5EC\uD558\uAE30"
+    en: Attend a class
+  - key: action.visit-workshop
+    ko: "\uACF5\uBC29 \uBC29\uBB38\uD558\uAE30"
+    en: Visit the workshop
+  - key: action.help-town-square
+    ko: "\uAD11\uC7A5\uC5D0\uC11C \uC774\uC6C3 \uB3D5\uAE30"
+    en: Help neighbors at the square
+  - key: action.visit-corner-store
+    ko: "\uB3D9\uB124 \uC0C1\uC810 \uBC29\uBB38\uD558\uAE30"
+    en: Visit the corner store
+  - key: objective.daily.choose.title
+    ko: "\uC624\uB298\uC758 \uACC4\uD68D \uC138\uC6B0\uAE30"
+    en: Plan your day
+  - key: objective.daily.choose.detail
+    ko: "\uACC4\uD68D \uAC8C\uC2DC\uD310\uC5D0\uC11C \uC624\uB298 \uD558\uACE0 \uC2F6\uC740
+      \uD65C\uB3D9\uC744 \uACE8\uB77C \uBCF4\uC138\uC694."
+    en: Choose an activity for today at the planning board.
+  - key: trait.calm
+    ko: "\uCE68\uCC29\uD568"
+    en: Calm
+  - key: trait.creativity
+    ko: "\uCC3D\uC758\uC131"
+    en: Creativity
+  - key: trait.discipline
+    ko: "\uADDC\uC728"
+    en: Discipline
+  - key: trait.empathy
+    ko: "\uACF5\uAC10 \uB2A5\uB825"
+    en: Empathy
+  - key: trait.fitness
+    ko: "\uAE30\uCD08 \uCCB4\uB825"
+    en: Fitness
+  - key: trait.focus
+    ko: "\uC9D1\uC911\uB825"
+    en: Focus
+  - key: trait.observation
+    ko: "\uAD00\uCC30\uB825"
+    en: Observation
+  - key: trait.planning
+    ko: "\uACC4\uD68D\uC131"
+    en: Planning
+  - key: trait.responsibility
+    ko: "\uCC45\uC784\uAC10"
+    en: Responsibility
+  - key: trait.service-sense
+    ko: "\uC11C\uBE44\uC2A4 \uAC10\uAC01"
+    en: Service Sense
+  - key: skill.budget-sense
+    ko: "\uC608\uC0B0 \uAC10\uAC01"
+    en: Budget Sense
+  - key: skill.care
+    ko: "\uB3CC\uBD04"
+    en: Care
+  - key: skill.color-harmony
+    ko: "\uC0C9\uC0C1 \uC870\uD654"
+    en: Color Harmony
+  - key: skill.cooking
+    ko: "\uC694\uB9AC"
+    en: Cooking
+  - key: skill.first-aid
+    ko: "\uC751\uAE09\uCC98\uCE58"
+    en: First Aid
+  - key: skill.order-judgment
+    ko: "\uC21C\uC11C \uD310\uB2E8"
+    en: Order Judgment
+  - key: skill.reaction-speed
+    ko: "\uBC18\uC751 \uC18D\uB3C4"
+    en: Reaction Speed
+  - key: skill.space-layout
+    ko: "\uACF5\uAC04 \uBC30\uCE58"
+    en: Space Layout
+  - key: skill.symptom-judgment
+    ko: "\uC99D\uC0C1 \uD310\uB2E8"
+    en: Symptom Judgment
+  - key: skill.teamwork
+    ko: "\uD611\uB3D9"
+    en: Teamwork
+  - key: skill.timing
+    ko: "\uD0C0\uC774\uBC0D"
+    en: Timing
+  - key: skill.training
+    ko: "\uD6C8\uB828"
+    en: Training
+  - key: Locked
+    ko: "\uC7A0\uAE40"
+    en: Locked
+  - key: Hinted
+    ko: "\uB2E8\uC11C \uBC1C\uACAC"
+    en: Hint Found
+  - key: Revealed
+    ko: "\uC9C4\uB85C \uBC1C\uACAC"
+    en: Career Revealed
+  - key: Deepening
+    ko: "\uC774\uD574 \uC2EC\uD654"
+    en: Understanding Deepened
+  - key: ReadyForChoice
+    ko: "\uC9C4\uB85C \uC120\uD0DD \uAC00\uB2A5"
+    en: Ready to Choose
+  - key: ui.objectives.student_day_guide
+    ko: "\uC624\uB298\uC758 \uD559\uAD50\uC0DD\uD65C"
+    en: Student Day Guide
+  - key: ui.objectives.career_day_guide
+    ko: "\uC624\uB298\uC758 \uC2DC\uC124 \uC6B4\uC601"
+    en: Career Day Guide
+  - key: ui.objectives.day_progress
+    ko: "{0}\uC77C | \uCCB4\uB825 {1} | \uC9D1\uC911 {2}"
+    en: Day {0} | Energy {1} | Focus {2}
+  - key: ui.objectives.finish_day_hint
+    ko: "\uC624\uB298\uC758 \uD65C\uB3D9\uC744 \uB9C8\uCCE4\uC2B5\uB2C8\uB2E4. \uC9D1\uC5D0\uC11C
+      \uD558\uB8E8\uB97C \uB9C8\uBB34\uB9AC\uD558\uC138\uC694."
+    en: Today's activities are complete. Return home to finish the day.
+  - key: ui.objectives.career_day_hint
+    ko: "\uC2DC\uC124\uC5D0\uC11C \uC5C5\uBB34\uB97C \uD558\uAC70\uB098 \uC6B4\uC601
+      \uC0C1\uD0DC\uC640 \uB2E4\uC74C \uC5C5\uADF8\uB808\uC774\uB4DC\uB97C \uD655\uC778\uD558\uC138\uC694."
+    en: Work at your facility or review its operations and next upgrade.
+  - key: ui.objectives.student_day_hint
+    ko: "\uB9C8\uC744\uC5D0\uC11C \uD65C\uB3D9\uD558\uAC70\uB098 \uC0AC\uB78C\uB4E4\uACFC
+      \uC774\uC57C\uAE30\uD558\uBA70 \uB2E4\uC74C \uBAA9\uD45C\uB97C \uCC3E\uC544\uBCF4\uC138\uC694."
+    en: Choose a town activity or relationship action.
+  - key: ui.objectives.pending_activity_hint
+    ko: "\uBA3C\uC800 \uC9C4\uD589 \uC911\uC778 \uD65C\uB3D9\uC744 \uB9C8\uBB34\uB9AC\uD558\uC138\uC694."
+    en: Finish the activity already in progress first.
+  - key: ui.tutorial.town_routine_hint
+    ko: "\uB9C8\uC744\uC758 \uC0DD\uD65C\uC744 \uC775\uD788\uACE0 \uD559\uC0DD \uD65C\uB3D9\uC744
+      \uD558\uB098 \uB9C8\uCCD0 \uBCF4\uC138\uC694."
+    en: Learn the town routine and finish one student activity.
+  - key: ui.tutorial.next_goal_hint
+    ko: "\uC548\uB0B4\uC778\uACFC \uB2E4\uC2DC \uC774\uC57C\uAE30\uD558\uACE0 \uB2E4\uC74C
+      \uBAA9\uD45C\uB97C \uC120\uD0DD\uD558\uC138\uC694."
+    en: Talk to the guide again and choose your next goal.
+  - key: ui.world-log.open
+    ko: "\uB9C8\uC744 \uAE30\uB85D"
+    en: World Log
+  - key: ui.world-log.title
+    ko: "\uB9C8\uC744\uC758 \uBCC0\uD654"
+    en: World Changes
+  - key: ui.world-log.empty
+    ko: "\uC544\uC9C1 \uAE30\uB85D\uB41C \uBCC0\uD654\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4."
+    en: No world changes yet.
+  - key: ui.encyclopedia.open
+    ko: "\uB3C4\uAC10"
+    en: Encyclopedia
+  - key: world.library.archive-open.name
+    ko: "\uB3C4\uC11C\uAD00 \uAE30\uB85D\uC2E4 \uAC1C\uBC29"
+    en: Library archive opened
+  - key: world.library.archive-open.description
+    ko: "\uB3C4\uC11C\uAD00\uC5D0\uC11C \uC870\uC6A9\uD55C \uAE30\uB85D\uC2E4\uC744
+      \uC774\uC6A9\uD560 \uC218 \uC788\uC5B4\uC694."
+    en: A quiet archive shelf is now available in the library.
+  - key: world.library.archive-open.next
+    ko: "\uB3C4\uC11C\uAD00\uC758 \uAE30\uB85D \uBCF4\uAD00\uB300\uB97C \uC0B4\uD3B4\uBCF4\uC138\uC694."
+    en: Check the archive shelf in the library.
+  - key: world.workshop.repair-ledger-open.name
+    ko: "\uACF5\uBC29\uC758 \uC218\uB9AC \uAE30\uB85D"
+    en: Workshop repair ledger opened
+  - key: world.workshop.repair-ledger-open.description
+    ko: "\uACF5\uBC29\uC5D0\uC11C \uC218\uB9AC \uAE30\uB85D\uC744 \uC0B4\uD3B4\uBCFC
+      \uC218 \uC788\uAC8C \uB410\uC5B4\uC694."
+    en: The workshop repair ledger is now available for daily planning.
+  - key: world.workshop.repair-ledger-open.next
+    ko: "\uACF5\uBC29\uC758 \uC218\uB9AC \uAE30\uB85D\uC744 \uD655\uC778\uD574 \uBCF4\uC138\uC694."
+    en: Check the workshop repair ledger.
+  - key: world.questchain.library-route-reward.name
+    ko: "\uB3C4\uC11C\uAD00\uC758 \uC0C8\uB85C\uC6B4 \uAE38"
+    en: A new library path
+  - key: world.questchain.library-route-reward.description
+    ko: "\uB3C4\uC11C\uAD00\uC758 \uC774\uC57C\uAE30\uB97C \uB530\uB77C \uB9C8\uC744\uC5D0
+      \uC0C8\uB85C\uC6B4 \uBCC0\uD654\uB97C \uB9CC\uB4E4\uC5C8\uC5B4\uC694."
+    en: Following the library story has brought a new change to town.
+  - key: world.questchain.library-route-reward.next
+    ko: "\uB3C4\uC11C\uAD00\uC744 \uB2E4\uC2DC \uCC3E\uC544 \uB2EC\uB77C\uC9C4 \uBAA8\uC2B5\uC744
+      \uD655\uC778\uD558\uC138\uC694."
+    en: Return to the library and see what has changed.
+  - key: world.chef.level2.name
+    ko: "\uC2DD\uB2F9 \uD655\uC7A5"
+    en: Restaurant expanded
+  - key: world.chef.level2.description
+    ko: "\uC870\uB9AC \uACF5\uAC04\uC774 \uB113\uC5B4\uC838 \uB354 \uB9CE\uC740 \uC694\uB9AC\uB97C
+      \uC900\uBE44\uD560 \uC218 \uC788\uC5B4\uC694."
+    en: A larger kitchen gives you room to prepare more dishes.
+  - key: world.chef.level2.next
+    ko: "\uC2DD\uB2F9\uC5D0\uC11C \uC0C8 \uC5C5\uBB34\uC640 \uC6B4\uC601 \uC0C1\uD0DC\uB97C
+      \uD655\uC778\uD558\uC138\uC694."
+    en: Review the new work and operations at your restaurant.
+  - key: world.chef.level3.name
+    ko: "\uC2DD\uB2F9 \uC7AC\uAC74 \uC644\uB8CC"
+    en: Restaurant restored
+  - key: world.chef.level3.description
+    ko: "\uB9C8\uC744\uC758 \uC2DD\uB2F9\uC774 \uC0C8\uB85C\uC6B4 \uBAA8\uC2B5\uC73C\uB85C
+      \uB2E4\uC2DC \uBB38\uC744 \uC5F4\uC5C8\uC5B4\uC694."
+    en: The town restaurant has reopened with a fresh new look.
+  - key: world.chef.level3.next
+    ko: "\uC2DD\uB2F9\uC758 \uC6B4\uC601\uACFC \uB2E4\uC74C \uBAA9\uD45C\uB97C \uC0B4\uD3B4\uBCF4\uC138\uC694."
+    en: Review operations and your next goals at the restaurant.
+  - key: world.emergency-care.level2.name
+    ko: "\uC758\uB8CC \uC2DC\uC124 \uD655\uC7A5"
+    en: Medical clinic expanded
+  - key: world.emergency-care.level2.description
+    ko: "\uB354 \uB113\uC5B4\uC9C4 \uC9C4\uB8CC \uACF5\uAC04\uC5D0\uC11C \uB9C8\uC744
+      \uC0AC\uB78C\uB4E4\uC744 \uB3CC\uBCFC \uC218 \uC788\uC5B4\uC694."
+    en: A larger clinic gives you more room to care for the town.
+  - key: world.emergency-care.level2.next
+    ko: "\uC758\uB8CC \uC2DC\uC124\uC5D0\uC11C \uC0C8 \uC5C5\uBB34\uC640 \uC6B4\uC601
+      \uC0C1\uD0DC\uB97C \uD655\uC778\uD558\uC138\uC694."
+    en: Review the new work and operations at your medical clinic.
+  - key: world.emergency-care.level3.name
+    ko: "\uC758\uB8CC \uC2DC\uC124 \uC7AC\uAC74 \uC644\uB8CC"
+    en: Medical clinic restored
+  - key: world.emergency-care.level3.description
+    ko: "\uB9C8\uC744\uC758 \uC758\uB8CC \uC2DC\uC124\uC774 \uC0C8\uB85C\uC6B4 \uBAA8\uC2B5\uC73C\uB85C
+      \uB2E4\uC2DC \uBB38\uC744 \uC5F4\uC5C8\uC5B4\uC694."
+    en: The town medical clinic has reopened with a fresh new look.
+  - key: world.emergency-care.level3.next
+    ko: "\uC758\uB8CC \uC2DC\uC124\uC758 \uC6B4\uC601\uACFC \uB2E4\uC74C \uBAA9\uD45C\uB97C
+      \uC0B4\uD3B4\uBCF4\uC138\uC694."
+    en: Review operations and your next goals at the medical clinic.
+  - key: world.interior.level2.name
+    ko: "\uB514\uC790\uC778 \uC791\uC5C5\uC2E4 \uD655\uC7A5"
+    en: Design studio expanded
+  - key: world.interior.level2.description
+    ko: "\uB354 \uB113\uC5B4\uC9C4 \uACF5\uAC04\uC5D0\uC11C \uB514\uC790\uC778 \uC758\uB8B0\uB97C
+      \uB9E1\uC744 \uC218 \uC788\uC5B4\uC694."
+    en: A larger workspace gives you more room for design projects.
+  - key: world.interior.level2.next
+    ko: "\uB514\uC790\uC778 \uC791\uC5C5\uC2E4\uC5D0\uC11C \uC0C8 \uC5C5\uBB34\uC640
+      \uC6B4\uC601 \uC0C1\uD0DC\uB97C \uD655\uC778\uD558\uC138\uC694."
+    en: Review the new work and operations at your design studio.
+  - key: world.interior.level3.name
+    ko: "\uB514\uC790\uC778 \uC791\uC5C5\uC2E4 \uC7AC\uAC74 \uC644\uB8CC"
+    en: Design studio restored
+  - key: world.interior.level3.description
+    ko: "\uB9C8\uC744\uC758 \uB514\uC790\uC778 \uC791\uC5C5\uC2E4\uC774 \uC0C8\uB85C\uC6B4
+      \uBAA8\uC2B5\uC73C\uB85C \uB2E4\uC2DC \uBB38\uC744 \uC5F4\uC5C8\uC5B4\uC694."
+    en: The town design studio has reopened with a fresh new look.
+  - key: world.interior.level3.next
+    ko: "\uB514\uC790\uC778 \uC791\uC5C5\uC2E4\uC758 \uC6B4\uC601\uACFC \uB2E4\uC74C
+      \uBAA9\uD45C\uB97C \uC0B4\uD3B4\uBCF4\uC138\uC694."
+    en: Review operations and your next goals at the design studio.
+  - key: world.soldier.level2.name
+    ko: "\uD6C8\uB828\uC7A5 \uD655\uC7A5"
+    en: Training ground expanded
+  - key: world.soldier.level2.description
+    ko: "\uC548\uC804\uD558\uAC8C \uD6C8\uB828\uD560 \uACF5\uAC04\uC774 \uB354 \uB113\uC5B4\uC84C\uC5B4\uC694."
+    en: There is more room to train safely.
+  - key: world.soldier.level2.next
+    ko: "\uD6C8\uB828\uC7A5\uC5D0\uC11C \uC0C8 \uC5C5\uBB34\uC640 \uC6B4\uC601 \uC0C1\uD0DC\uB97C
+      \uD655\uC778\uD558\uC138\uC694."
+    en: Review the new work and operations at your training ground.
+  - key: world.soldier.level3.name
+    ko: "\uD6C8\uB828\uC7A5 \uC7AC\uAC74 \uC644\uB8CC"
+    en: Training ground restored
+  - key: world.soldier.level3.description
+    ko: "\uB9C8\uC744\uC758 \uD6C8\uB828\uC7A5\uC774 \uC0C8\uB85C\uC6B4 \uBAA8\uC2B5\uC73C\uB85C
+      \uB2E4\uC2DC \uBB38\uC744 \uC5F4\uC5C8\uC5B4\uC694."
+    en: The town training ground has reopened with a fresh new look.
+  - key: world.soldier.level3.next
+    ko: "\uD6C8\uB828\uC7A5\uC758 \uC6B4\uC601\uACFC \uB2E4\uC74C \uBAA9\uD45C\uB97C
+      \uC0B4\uD3B4\uBCF4\uC138\uC694."
+    en: Review operations and your next goals at the training ground.
+  - key: ui.encyclopedia.category.locations
+    ko: "\uC7A5\uC18C"
+    en: Locations
+  - key: ui.encyclopedia.category.npcs
+    ko: "\uC8FC\uBBFC"
+    en: People
+  - key: ui.encyclopedia.category.knowledge
+    ko: "\uC9C0\uC2DD"
+    en: Knowledge
+  - key: ui.encyclopedia.category.careers
+    ko: "\uC9C4\uB85C"
+    en: Careers
+  - key: ui.encyclopedia.category.activities
+    ko: "\uD65C\uB3D9"
+    en: Activities
+  - key: ui.encyclopedia.category.items
+    ko: "\uC544\uC774\uD15C"
+    en: Items
+  - key: ui.encyclopedia.entry.clocktower-note.name
+    ko: "\uC2DC\uACC4\uD0D1\uC758 \uBC1C\uACAC"
+    en: The clocktower notice
+  - key: ui.encyclopedia.entry.clocktower-note.description
+    ko: "\uB9C8\uC744\uC744 \uB458\uB7EC\uBCF4\uB2E4 \uBC1C\uACAC\uD55C \uAE30\uB85D\uC785\uB2C8\uB2E4."
+    en: A note discovered while exploring the town.
+  - key: ui.encyclopedia.entry.clocktower-note.hint
+    ko: "\uB9C8\uC744\uC758 \uBC1C\uACAC \uC9C0\uC810\uC744 \uC0B4\uD3B4\uBCF4\uC138\uC694."
+    en: Look for a discovery point in town.
+  - key: ui.encyclopedia.entry.clocktower-note.detail
+    ko: "\uBC1C\uACAC\uD55C \uB2E8\uC11C\uB97C \uC774\uACF3\uC5D0\uC11C \uB2E4\uC2DC
+      \uC77D\uC5B4\uBCFC \uC218 \uC788\uC5B4\uC694."
+    en: You can return here to review the clues you have found.
+  - key: ui.encyclopedia.entry.guide-advice.name
+    ko: "\uC548\uB0B4\uC778\uC758 \uC870\uC5B8"
+    en: Advice from the guide
+  - key: ui.encyclopedia.entry.guide-advice.description
+    ko: "\uC548\uB0B4\uC778\uC774 \uC804\uD574 \uC900 \uB9C8\uC744 \uC0DD\uD65C\uC758
+      \uC870\uC5B8\uC785\uB2C8\uB2E4."
+    en: Advice from the guide about life around town.
+  - key: ui.encyclopedia.entry.guide-advice.hint
+    ko: "\uB9C8\uC744 \uC0AC\uB78C\uB4E4\uACFC \uB9CC\uB098 \uC774\uC57C\uAE30\uB97C
+      \uB098\uB220 \uBCF4\uC138\uC694."
+    en: Meet the townspeople and talk with them.
+  - key: ui.encyclopedia.entry.guide-advice.detail
+    ko: "\uC0AC\uB78C\uB4E4\uACFC \uC774\uC57C\uAE30\uD558\uBA70 \uAD00\uC2EC \uC788\uB294
+      \uC77C\uACFC \uC7A5\uC18C\uB97C \uCC3E\uC544\uBCF4\uC138\uC694."
+    en: Talk with people to find activities and places that interest you.
+  - key: ui.encyclopedia.entry.town-archive.name
+    ko: "\uB9C8\uC744 \uAE30\uB85D\uC2E4"
+    en: Town archive
+  - key: ui.encyclopedia.entry.town-archive.description
+    ko: "\uB9C8\uC744\uC5D0 \uB0A8\uACA8\uC9C4 \uC774\uC57C\uAE30\uC640 \uC790\uB8CC\uB97C
+      \uBAA8\uC544 \uB454 \uACF3\uC785\uB2C8\uB2E4."
+    en: A place for the stories and records left around town.
+  - key: ui.encyclopedia.entry.town-archive.hint
+    ko: "\uB9C8\uC744\uC758 \uC7A5\uC18C\uB97C \uB458\uB7EC\uBCF4\uBA70 \uB2E4\uC74C
+      \uB2E8\uC11C\uB97C \uCC3E\uC544\uBCF4\uC138\uC694."
+    en: Explore the town and look for your next clue.
+  - key: ui.encyclopedia.entry.town-archive.detail
+    ko: "\uC0AC\uB78C\uB4E4\uACFC \uB098\uB208 \uC774\uC57C\uAE30\uC5D0\uC11C \uAE30\uB85D\uC758
+      \uC2E4\uB9C8\uB9AC\uB97C \uC5BB\uC744 \uC218 \uC788\uC5B4\uC694."
+    en: Conversations around town may point you toward another record.
+  - key: ui.world-log.scroll
+    ko: "\uB9C8\uC6B0\uC2A4 \uD720\uB85C \uC9C0\uB09C \uAE30\uB85D\uC744 \uC0B4\uD3B4\uBCF4\uC138\uC694."
+    en: Scroll to browse earlier changes.
+  - key: ui.encyclopedia.new
+    ko: "\uC0C8 \uD56D\uBAA9"
+    en: NEW
+  - key: ui.encyclopedia.locked.name
+    ko: "\uC544\uC9C1 \uCC3E\uC9C0 \uBABB\uD55C \uAE30\uB85D"
+    en: Undiscovered entry
+  - key: ui.encyclopedia.empty.title
+    ko: "\uC544\uC9C1 \uAE30\uB85D\uC774 \uC5C6\uC5B4\uC694"
+    en: No entries yet
+  - key: ui.encyclopedia.empty.hint
+    ko: "\uB9C8\uC744\uC744 \uD0D0\uD5D8\uD558\uBA70 \uC774 \uBD84\uB958\uC758 \uAE30\uB85D\uC744
+      \uBAA8\uC544 \uBCF4\uC138\uC694."
+    en: Explore the town to collect entries in this category.
+  - key: life.location-state.library.morning.name
+    ko: "\uC870\uC6A9\uD55C \uB3C4\uC11C\uAD00"
+    en: Quiet library
+  - key: life.location-state.library.morning.description
+    ko: "\uCC45\uC7A5 \uC0AC\uC774\uC5D0\uC11C \uCC28\uBD84\uD788 \uC77D\uC744\uAC70\uB9AC\uB97C
+      \uCC3E\uC544\uBCF4\uC138\uC694."
+    en: Take your time browsing the shelves.
+  - key: life.location-state.library.afternoon.name
+    ko: "\uC790\uB8CC \uC5F4\uB78C \uACF5\uAC04"
+    en: Reference tables
+  - key: life.location-state.library.afternoon.description
+    ko: "\uC77D\uAE30\uB97C \uB9C8\uCCE4\uC5B4\uC694. \uC5F4\uB78C\uB300\uC5D0\uC11C
+      \uC0C8\uB85C\uC6B4 \uB2E8\uC11C\uB97C \uC0B4\uD3B4\uBCF4\uC138\uC694."
+    en: Your reading has opened up new leads at the reference tables.
+  - key: life.location-state.library.evening.name
+    ko: "\uC800\uB141\uC758 \uAE30\uB85D\uC2E4"
+    en: Evening archive
+  - key: life.location-state.library.evening.description
+    ko: "\uD558\uB8E8\uAC00 \uC800\uBB3C\uBA70 \uAE30\uB85D\uC2E4\uB3C4 \uCC28\uBD84\uD574\uC84C\uC5B4\uC694."
+    en: The archive grows quiet as the day winds down.
+  - key: life.location-state.record.hidden
+    ko: "\uC544\uC9C1 \uBC1D\uD600\uC9C0\uC9C0 \uC54A\uC740 \uAE30\uB85D"
+    en: Undiscovered record
+  - key: life.location-state.record.unknown
+    ko: "\uBC29\uBB38\uD55C \uC7A5\uC18C\uC758 \uBCC0\uD654"
+    en: Place update
+  - key: life.location-state.record.location
+    ko: "\uB9C8\uC744"
+    en: Town
+  - key: life.location-state.record.time
+    ko: "\uBC29\uBB38 \uC2DC\uAC04"
+    en: Visit time
+  - key: life.location-state.record.detail
+    ko: "{0}\uC77C\uCC28 \xB7 {1} \xB7 {2}"
+    en: "Day {0} \xB7 {1} \xB7 {2}"
+  - key: life.location-state.record.detail-no-day
+    ko: "\uC7A5\uC18C {0} \xB7 \uC2DC\uAC04 {1}"
+    en: "Place {0} \xB7 Time {1}"
+  - key: life.library.archive-door.action
+    ko: "\uC7A0\uAE34 \uAE30\uB85D\uC2E4 \uBB38 \uC0B4\uD3B4\uBCF4\uAE30"
+    en: Inspect the locked archive door
+  - key: life.library.archive-door.result
+    ko: "\uAE30\uB85D\uC2E4 \uBB38\uC740 \uC7A0\uACA8 \uC788\uC5B4\uC694. \uBB38\uD2C8
+      \uAC00\uAE4C\uC774 \uB193\uC778 \uB0A1\uC740 \uC0AC\uC9C4\uC5D0\uB294 \uC9C0\uAE08\uACFC
+      \uC870\uAE08 \uB2E4\uB978 \uB9C8\uC744 \uD48D\uACBD\uC774 \uBCF4\uC5EC\uC694.
+      \uD750\uB824\uC9C4 \uB0A0\uC9DC\uB294 \uC77D\uC744 \uC218 \uC5C6\uC9C0\uB9CC,
+      \uC0AC\uC11C\uC5D0\uAC8C \uC774 \uC0AC\uC9C4 \uC774\uC57C\uAE30\uB97C \uBB3C\uC5B4\uBCF4\uACE0
+      \uC2F6\uC5B4\uC84C\uC5B4\uC694."
+    en: The archive door is locked. An old photograph beside the gap shows a town
+      that looks different. The faded date is unreadable. Perhaps the librarian knows
+      its story.
+  - key: time.morning.name
+    ko: "\uC624\uC804"
+    en: Morning
+  - key: time.afternoon.name
+    ko: "\uC624\uD6C4"
+    en: Afternoon
+  - key: time.evening.name
+    ko: "\uC800\uB141"
+    en: Evening
+  - key: time.night.name
+    ko: "\uBC24"
+    en: Night
+  - key: life.event.library.name
+    ko: "\uB05D\uAE4C\uC9C0 \uC77D\uC5B4 \uBCFC\uAE4C?"
+    en: A challenging book
+  - key: life.event.library.description
+    ko: "\uB208\uAE38\uC744 \uB044\uB294 \uC5B4\uB824\uC6B4 \uCC45\uC744 \uBC1C\uACAC\uD588\uC5B4\uC694.
+      \uC5B4\uB5BB\uAC8C \uC77D\uC5B4 \uBCFC\uAE4C\uC694?"
+    en: A difficult book catches your eye. How will you approach it?
+  - key: life.event.square.name
+    ko: "\uAD11\uC7A5\uC5D0\uC11C \uB9CC\uB09C \uBD80\uD0C1"
+    en: A request in the square
+  - key: life.event.square.description
+    ko: "\uAD11\uC7A5\uC5D0\uC11C \uCE5C\uAD6C\uAC00 \uB3C4\uC6C0\uC744 \uCCAD\uD574\uC694.
+      \uC624\uB298\uC740 \uC5B4\uB5BB\uAC8C \uD560\uAE4C\uC694?"
+    en: A friend near the square asks for help. What will you do today?
+  - key: life.event.choice.read.name
+    ko: "\uB05D\uAE4C\uC9C0 \uC77D\uAE30"
+    en: Read to the end
+  - key: life.event.choice.read.summary
+    ko: "\uC9D1\uC911\uB825\uC774 \uC790\uB77C\uC9C0\uB9CC \uD53C\uB85C\uAC00 \uC870\uAE08
+      \uC313\uC5EC\uC694."
+    en: Build focus, with a little more fatigue.
+  - key: life.event.choice.hint.name
+    ko: "\uC0AC\uC11C\uC5D0\uAC8C \uD78C\uD2B8 \uB4E3\uAE30"
+    en: Ask for a hint
+  - key: life.event.choice.hint.summary
+    ko: "\uAC00\uBCBC\uC6B4 \uBD80\uB2F4\uC73C\uB85C \uC0AC\uC11C\uC640 \uC2E0\uB8B0\uB97C
+      \uC313\uC544\uC694."
+    en: Build trust with the librarian at a lighter cost.
+  - key: life.event.choice.help.name
+    ko: "\uC9C0\uAE08 \uB3C4\uC640\uC8FC\uAE30"
+    en: Help now
+  - key: life.event.choice.help.summary
+    ko: "\uCE5C\uAD6C\uB97C \uB3C4\uC6B0\uBA70 \uACF5\uAC10\uACFC \uC2E0\uB8B0\uB97C
+      \uC313\uC544\uC694."
+    en: Help your friend and build empathy and trust.
+  - key: life.event.choice.pass.name
+    ko: "\uC624\uB298\uC740 \uC9C0\uB098\uAC00\uAE30"
+    en: Not today
+  - key: life.event.choice.pass.summary
+    ko: "\uC624\uB298\uC740 \uD558\uB358 \uC77C\uC5D0 \uC9D1\uC911\uD574\uC694."
+    en: Keep your attention on your plans today.
+  - key: life.event.ui.title
+    ko: "\uC624\uB298\uC758 \uC791\uC740 \uB9CC\uB0A8"
+    en: A moment today
+  - key: life.event.ui.none
+    ko: "\uC9C0\uAE08\uC740 \uC0C8\uB85C\uC6B4 \uB9CC\uB0A8\uC774 \uC5C6\uC5B4\uC694."
+    en: No event is available right now.
+  - key: life.event.ui.later
+    ko: "\uB098\uC911\uC5D0"
+    en: Later
+  - key: life.event.ui.decline
+    ko: "\uC9C0\uB098\uAC00\uAE30"
+    en: Pass for now
+  - key: life.event.ui.close
+    ko: "\uB2EB\uAE30"
+    en: Close
+  - key: life.event.ui.due
+    ko: "\uB0A8\uC740 \uC2DC\uAC04 {0}\uBD84"
+    en: Due in {0} minutes
+  - key: life.event.ui.deferrable
+    ko: "\uC9C0\uAE08 \uC120\uD0DD\uD558\uAC70\uB098 \uB2E4\uC74C\uC73C\uB85C \uBBF8\uB8F0
+      \uC218 \uC788\uC5B4\uC694."
+    en: Choose now or leave it for later.
+  - key: life.event.ui.optional
+    ko: "\uD3B8\uD558\uAC8C \uC120\uD0DD\uD574 \uC8FC\uC138\uC694."
+    en: Choose at your own pace.
+  - key: life.event.ui.deferred
+    ko: "{0}\uC77C\uCC28\uC5D0 \uB2E4\uC2DC \uB9CC\uB098\uC694."
+    en: Come back on day {0}.
+  - key: life.event.ui.declined
+    ko: "\uC774\uBC88 \uB9CC\uB0A8\uC740 \uC9C0\uB098\uAC00\uAE30\uB85C \uD588\uC5B4\uC694."
+    en: You chose to pass this time.
+  - key: life.event.ui.applied
+    ko: "\uC120\uD0DD\uC774 \uBC18\uC601\uB410\uC5B4\uC694."
+    en: Your choice has been applied.
+  - key: life.event.ui.duplicate
+    ko: "\uC774\uBBF8 \uBC18\uC601\uD55C \uC120\uD0DD\uC774\uC5D0\uC694."
+    en: This choice has already been applied.
+  - key: life.event.ui.unavailable
+    ko: "\uC9C0\uAE08\uC740 \uC774 \uC120\uD0DD\uC744 \uD560 \uC218 \uC5C6\uC5B4\uC694."
+    en: You cannot make that choice right now.
+  - key: life.location.explore
+    ko: "{0} \uC0B4\uD3B4\uBCF4\uAE30"
+    en: Explore {0}
+  - key: life.location.generic
+    ko: "\uC774\uACF3"
+    en: this place
+  - key: quest.chain.generic
+    ko: "\uC774\uC5B4\uC9C0\uB294 \uC774\uC57C\uAE30"
+    en: An ongoing story
+  - key: quest.chain.objective
+    ko: "\uBAA9\uD45C \uC9C4\uD589"
+    en: Objective progress
+  - key: quest.chain.state.available
+    ko: "\uC2DC\uC791\uD560 \uC218 \uC788\uC5B4\uC694"
+    en: Available
+  - key: quest.chain.state.active
+    ko: "\uC9C4\uD589 \uC911"
+    en: In progress
+  - key: quest.chain.state.tracked
+    ko: "\uC9C4\uD589 \uC911\uC778 \uBAA9\uD45C"
+    en: Tracked objective
+  - key: quest.chain.state.paused
+    ko: "\uC7A0\uC2DC \uBA48\uCD98 \uC774\uC57C\uAE30"
+    en: Paused
+  - key: quest.chain.state.blocked
+    ko: "\uC9C4\uD589 \uC870\uAC74\uC744 \uD655\uC778\uD574 \uC8FC\uC138\uC694"
+    en: Check the requirements
+  - key: quest.chain.state.completed
+    ko: "\uC644\uB8CC\uD55C \uC774\uC57C\uAE30"
+    en: Completed
+  - key: quest.chain.state.failed
+    ko: "\uB9C8\uBB34\uB9AC\uD558\uC9C0 \uBABB\uD55C \uC774\uC57C\uAE30"
+    en: Failed
+  - key: quest.chain.state.expired
+    ko: "\uAE30\uAC04\uC774 \uC9C0\uB09C \uC774\uC57C\uAE30"
+    en: Expired
+  - key: day-result.location-visited
+    ko: "{0} \uBC29\uBB38"
+    en: Visited {0}
+  - key: life.library.archive-route.name
+    ko: "\uC7A0\uAE34 \uAE30\uB85D\uC2E4 \uBB38"
+    en: The locked archive door
+  - key: outside.self-study.library
+    ko: "\uB3C4\uC11C\uAD00\uC5D0\uC11C \uB3C5\uD559"
+    en: Study at the library
+  - key: outside.help-neighbor
+    ko: "\uC774\uC6C3 \uB3D5\uAE30"
+    en: Help a neighbor
+  - key: life.outside-activity.generic
+    ko: "\uD559\uAD50 \uBC16 \uD65C\uB3D9"
+    en: Outside-school activity
+  - key: skill.basic-study
+    ko: "\uAE30\uCD08 \uD559\uC2B5"
+    en: Basic Study
+  - key: ui.inventory.item-count
+    ko: "\uC218\uB7C9: {0}"
+    en: 'Count: {0}'
+  - key: ui.inventory.close-detail
+    ko: "\uB2EB\uAE30"
+    en: Close
+  - key: ui.status.title
+    ko: "\uB098\uC758 \uC0C1\uD0DC"
+    en: My status
+  - key: ui.status.day-points
+    ko: "{0}\uC77C\uCC28 \xB7 \uB0A8\uC740 \uD65C\uB3D9 {1}"
+    en: "Day {0} \xB7 Activity points left: {1}"
+  - key: ui.status.energy
+    ko: "\uCCB4\uB825"
+    en: Energy
+  - key: ui.status.focus
+    ko: "\uC9D1\uC911"
+    en: Focus
+  - key: ui.status.stress
+    ko: "\uC2A4\uD2B8\uB808\uC2A4"
+    en: Stress
+  - key: ui.status.waiting
+    ko: "\uC0C1\uD0DC\uB97C \uBD88\uB7EC\uC624\uB294 \uC911"
+    en: Loading status
+  - key: ui.status.close-hint
+    ko: "C \uD0A4\uB85C \uB2EB\uAE30"
+    en: Press C to close
+  - key: ui.inventory.search
+    ko: "\uC774\uB984\uC73C\uB85C \uAC80\uC0C9"
+    en: Search by name
+  - key: ui.inventory.empty
+    ko: "\uD45C\uC2DC\uD560 \uC544\uC774\uD15C\uC774 \uC5C6\uC5B4\uC694"
+    en: No items to show
+  - key: ui.inventory.category.all
+    ko: "\uC804\uCCB4"
+    en: All
+  - key: ui.inventory.category.tools
+    ko: "\uB3C4\uAD6C"
+    en: Tools
+  - key: ui.inventory.category.resources
+    ko: "\uC790\uC6D0\uACFC \uC528\uC557"
+    en: Resources & seeds
+  - key: ui.inventory.category.misc
+    ko: "\uAE30\uD0C0"
+    en: Miscellaneous
+  - key: Exploration Test Alley Crate
+    ko: "\uACE8\uBAA9\uC758 \uB0A1\uC740 \uC0C1\uC790"
+    en: Old alley crate
+  - key: choice.test.inspect
+    ko: "\uC0B4\uD3B4\uBCF4\uAE30"
+    en: Inspect
+  - key: choice.test.inspect.preview
+    ko: "\uBAA9\uC7AC\xB7\uC9D1\uC911\uB825 \uC131\uC7A5 \xB7 \uCCB4\uB825-1, \uC2A4\uD2B8\uB808\uC2A4+1"
+    en: "Wood & focus growth \xB7 energy -1, stress +1"
+  - key: choice.test.careful
+    ko: "\uC870\uC2EC\uD788 \uC870\uC0AC\uD558\uAE30"
+    en: Look closely
+  - key: choice.test.careful.preview
+    ko: "\uC694\uB9AC \uD78C\uD2B8\xB7\uC9D1\uC911\uB825 \uC131\uC7A5 \xB7 \uCCB4\uB825-1,
+      \uC2A4\uD2B8\uB808\uC2A4+1"
+    en: "Chef hint & focus growth \xB7 energy -1, stress +1"
+  - key: choice.test.discovery
+    ko: "\uD754\uC801 \uAE30\uB85D\uD558\uAE30"
+    en: Record findings
+  - key: choice.test.discovery.preview
+    ko: "\uB2E8\uC11C\xB7\uB3C4\uAC10\xB7\uD6C4\uC18D \uD018\uC2A4\uD2B8 \xB7 \uCCB4\uB825-1,
+      \uC2A4\uD2B8\uB808\uC2A4+1"
+    en: "Clue, journal & quest \xB7 energy -1, stress +1"
+  - key: choice.test.leave
+    ko: "\uADF8\uB9CC\uB450\uAE30"
+    en: Leave
+  - key: choice.test.leave.preview
+    ko: "\uBCC0\uD654 \uC5C6\uC774 \uB2EB\uAE30"
+    en: Close without changes
+  - key: exploration.condition.trait
+    ko: "\uC9D1\uC911\uB825 1 \uD544\uC694"
+    en: Focus 1 required
+  - key: item.wood
+    ko: "\uBAA9\uC7AC"
+    en: Wood
+  - key: exploration.ui.title
+    ko: "\uC870\uC0AC"
+    en: Investigation
+  - key: exploration.ui.choice
+    ko: "\uC120\uD0DD\uD558\uAE30"
+    en: Choose
+  - key: exploration.ui.hint
+    ko: "\uC870\uC0AC \uBC29\uBC95\uC744 \uC120\uD0DD\uD574 \uC8FC\uC138\uC694"
+    en: Choose an approach
+  - key: exploration.ui.locked
+    ko: "\uC870\uAC74\uC774 \uC544\uC9C1 \uBD80\uC871\uD574\uC694"
+    en: Requirements not met
+  - key: exploration.ui.prompt
+    ko: "[E] {0} \uC0B4\uD3B4\uBCF4\uAE30"
+    en: '[E] Inspect {0}'
+  - key: exploration.ui.prompt.generic
+    ko: "[E] \uC774\uACF3 \uC0B4\uD3B4\uBCF4\uAE30"
+    en: '[E] Inspect this place'
+  - key: exploration.result.applied
+    ko: "\uC870\uC0AC\uB97C \uB9C8\uCCE4\uC5B4\uC694"
+    en: Investigation complete
+  - key: exploration.result.invalidrequest
+    ko: "\uC870\uC0AC\uB97C \uC9C4\uD589\uD560 \uC218 \uC5C6\uC5B4\uC694"
+    en: Unable to investigate
+  - key: exploration.result.conditionfailed
+    ko: "\uC544\uC9C1 \uC120\uD0DD\uD560 \uC218 \uC5C6\uC5B4\uC694"
+    en: This option is unavailable
+  - key: exploration.result.duplicaterequest
+    ko: "\uC774\uBBF8 \uC870\uC0AC\uD55C \uACF3\uC774\uC5D0\uC694"
+    en: Already investigated
+  - key: exploration.result.cooldownactive
+    ko: "\uB098\uC911\uC5D0 \uB2E4\uC2DC \uC870\uC0AC\uD574 \uC8FC\uC138\uC694"
+    en: Try again later
+  - key: exploration.result.insufficientresources
+    ko: "\uD544\uC694\uD55C \uC790\uC6D0\uC774 \uBD80\uC871\uD574\uC694"
+    en: Required resources are missing
+  - key: exploration.result.dismissed
+    ko: "\uC870\uC0AC\uB97C \uADF8\uB9CC\uB480\uC5B4\uC694"
+    en: Investigation closed
+  - key: exploration.result.updated
+    ko: "\uC870\uC0AC \uACB0\uACFC\uB97C \uD655\uC778\uD574 \uC8FC\uC138\uC694"
+    en: Check the investigation result
+  - key: exploration.effect.item-gain
+    ko: "+{0} \xD7{1}"
+    en: "+{0} \xD7{1}"
+  - key: exploration.effect.item-spent
+    ko: "-{0} \xD7{1}"
+    en: "-{0} \xD7{1}"
+  - key: exploration.effect.item
+    ko: "\uC544\uC774\uD15C"
+    en: Item
+  - key: exploration.effect.clues
+    ko: "\uB2E8\uC11C {0}\uAC74"
+    en: 'Clues: {0}'
+  - key: exploration.effect.entries
+    ko: "\uB3C4\uAC10 {0}\uAC74"
+    en: 'Journal: {0}'
+  - key: exploration.effect.careers
+    ko: "\uC9C4\uB85C \uD78C\uD2B8 {0}\uAC1C"
+    en: 'Career hints: {0}'
+  - key: exploration.effect.quests
+    ko: "\uD6C4\uC18D \uD018\uC2A4\uD2B8 {0}\uAC74"
+    en: 'Follow-up: {0}'
+  - key: exploration.effect.growth
+    ko: "\uC131\uC7A5 \uAE30\uB85D {0}\uAC74"
+    en: 'Growth updates: {0}'
+  - key: exploration.effect.other
+    ko: "\uBCC0\uD654 {0}\uAC74"
+    en: 'Other changes: {0}'
+  - key: exploration.effect.energy
+    ko: "\uCCB4\uB825 {0}"
+    en: Energy {0}
+  - key: exploration.effect.focus
+    ko: "\uC9D1\uC911 {0}"
+    en: Focus {0}
+  - key: exploration.effect.stress
+    ko: "\uC2A4\uD2B8\uB808\uC2A4 {0}"
+    en: Stress {0}
+  - key: exploration.effect.status
+    ko: "\uC0C1\uD0DC \uBCC0\uD654 {0}\uAC74"
+    en: 'Status changes: {0}'
+  - key: ui.wardrobe.open
+    ko: "\uC637\uC7A5"
+    en: Wardrobe
+  - key: ui.wardrobe.title
+    ko: "\uC637\uC7A5"
+    en: Wardrobe
+  - key: ui.wardrobe.outfit.casual
+    ko: "\uD3C9\uC0C1\uBCF5"
+    en: Casual clothes
+  - key: ui.wardrobe.outfit.school_uniform
+    ko: "\uAD50\uBCF5"
+    en: School uniform
+  - key: ui.wardrobe.outfit.office
+    ko: "\uC815\uC7A5"
+    en: Office suit
+  - key: ui.wardrobe.outfit.chef
+    ko: "\uC694\uB9AC\uC0AC\uBCF5"
+    en: Chef uniform
+  - key: ui.wardrobe.outfit.interior
+    ko: "\uC791\uC5C5\uBCF5"
+    en: Work clothes
+  - key: ui.wardrobe.outfit.school_casual
+    ko: "사복"
+    en: Street clothes
+  - key: ui.wardrobe.outfit.adult_casual
+    ko: "캐주얼"
+    en: Casual jacket

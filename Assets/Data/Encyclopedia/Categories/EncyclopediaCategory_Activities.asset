@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: EncyclopediaCategory_Activities
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Encyclopedia.EncyclopediaCategoryDefinition
   _id: ency.category.activities
-  _displayName: Activities
+  _displayName: ui.encyclopedia.category.activities
   _sortOrder: 4

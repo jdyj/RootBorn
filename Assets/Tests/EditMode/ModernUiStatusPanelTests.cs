@@ -7,7 +7,7 @@ namespace Rootborn.Tests.EditMode
     public sealed class ModernUiStatusPanelTests
     {
         [Test]
-        public void Show_BuildsTiledStatusWindowPortraitGaugesIconFrameAndButtons()
+        public void Show_BuildsTiledStudentStatusCardsAndCloseWithoutFakePortraitOrHealth()
         {
             var type = System.Type.GetType("Rootborn.UI.Modern.ModernUiStatusPanel, Rootborn.UI");
             Assert.IsNotNull(type, "Missing Rootborn.UI.Modern.ModernUiStatusPanel.");
@@ -19,17 +19,16 @@ namespace Rootborn.Tests.EditMode
                 panel.GetType().GetMethod("Show").Invoke(panel, null);
 
                 Assert.IsTrue((bool)panel.GetType().GetProperty("IsVisible").GetValue(panel));
-                AssertChildHasTiles(host.transform, "StatusTitleTab");
-                AssertChildHasTiles(host.transform, "PortraitFrame");
-                AssertChildHasTiles(host.transform, "StatusValueFrame");
-                AssertChildHasTiles(host.transform, "EnergyGauge");
-                AssertChildHasTiles(host.transform, "HealthGauge");
-                AssertChildHasTiles(host.transform, "IconFrame");
-                AssertChildHasTiles(host.transform, "StatusBottomButtons");
-                Assert.GreaterOrEqual((int)panel.GetType().GetProperty("TileCount").GetValue(panel), 70);
+                Assert.IsNotNull(host.GetComponent<ModernUiTileImage>(), "Status needs a coherent outer molding frame.");
+                foreach (string name in new[] { "EnergyCard", "FocusCard", "StressCard", "StatusCloseButton" }) AssertChildHasTiles(host.transform, name);
+                Assert.IsNull(host.transform.Find("PortraitFrame"), "Do not retain the empty placeholder portrait.");
+                Assert.IsNull(host.transform.Find("HealthGauge"), "Read actual student vitals instead of a fake health gauge.");
+                Assert.GreaterOrEqual((int)panel.GetType().GetProperty("TileCount").GetValue(panel), 5);
+
             }
             finally
             {
+                host.GetComponent<ModernUiStatusPanel>().Hide();
                 Object.DestroyImmediate(host);
             }
         }

@@ -16,8 +16,8 @@ MonoBehaviour:
   _categoryId: body
   _displayNameKey: loc.character.character.body.02
   _sheetAddress: sprites/character/body/body-2
-  _subSpriteName: Body_2_r0_c0
+  _subSpriteName: Body_2_r0_c3
   _editorAssetPath: Assets/Modern_Farm_v1.2/Farmer_Generator_Pieces/Character Pieces/Bodies/16x16/Body_2.png
-  _previewSprite: {fileID: -5738716400944750186, guid: 455852ded0fe2ad4ea3c68d8adf5cfbf, type: 3}
+  _previewSprite: {fileID: -5772912236880739075, guid: 455852ded0fe2ad4ea3c68d8adf5cfbf, type: 3}
   _layerOrder: 0
   _isDefault: 0

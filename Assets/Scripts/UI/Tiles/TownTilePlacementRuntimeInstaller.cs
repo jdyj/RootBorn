@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Rootborn.Game.Common;
@@ -139,6 +139,7 @@ namespace Rootborn.UI.Tiles
                 var panel = EnsurePanel(canvas.transform);
                 panel.Bind(questLogPanel, quest, context, decorationTilemap, tiles, TilePlacementFileName, questLogFileName, studentLifeFileName);
                 panel.LoadSavedPlacements();
+                panel.gameObject.SetActive(false);
 
                 var board = EnsureBoard(scene);
                 board.Bind(panel);

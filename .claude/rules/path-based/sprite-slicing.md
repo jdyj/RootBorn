@@ -57,6 +57,36 @@ if (tex.width % cellW != 0)
 6. 슬라이스 후 sub-sprite 이름 한 개 골라 **Inspector에서 시각 확인**
 7. Sub-sprite 이름이 game code (예: `DataManager.SubPlayerIdle`)와 매칭되는지 검증
 
+### 4-1. LDtk Tileset 좌표 변환 — 원본 PNG 높이 기준
+
+LDtk의 tile `src` 좌표는 **tileset PNG의 좌상단 기준**이다. Unity `Sprite.rect`는 **좌하단 기준**이므로 y 변환은 반드시 원본 PNG 높이를 사용한다.
+
+```csharp
+int unityY = originalPngHeight - ldtkSrcY - tileHeight;
+var rect = new Rect(ldtkSrcX, unityY, tileWidth, tileHeight);
+```
+
+절대 `Texture2D.height`가 축소 import된 값인지 확인하지 않고 사용하지 않는다. `maxTextureSize=2048`, Standalone override, compression, bilinear filtering 때문에 큰 tileset이 축소되면 다음 사고가 난다.
+
+- LDtk Ground 기본 보도블록 `src=(320,736)`이 실제로는 다른 줄의 픽셀로 잘림
+- Unity Tile asset 이름은 `_City_Terrains_32x32_x320_y736_f0`라서 정상처럼 보임
+- `Tile.name`/cell count/sorting order 테스트는 통과하지만 Game View는 LDtk와 전혀 다른 타일로 렌더링됨
+
+필수 importer 설정:
+- `maxTextureSize`와 Default platform `maxTextureSize`는 원본 PNG 최대 변보다 크거나 같게 설정한다. Modern Exteriors Town tileset처럼 3296px 높이인 PNG는 최소 4096.
+- `nPOTScale = None`
+- `filterMode = Point`
+- `textureCompression = Uncompressed`
+- `mipmapEnabled = false`
+- PPU는 LDtk grid size와 동일하게 명시한다. 32x32 LDtk tileset은 PPU 32.
+
+필수 검증:
+- 원본 PNG 크기를 파일 헤더나 이미지 도구로 읽고 기록한다.
+- 대표 tile의 `Sprite.rect.x/y/width/height`가 LDtk `src`에서 계산한 값과 일치하는 EditMode 회귀 테스트를 둔다.
+- 저장된 씬 Tilemap이 해당 Tile asset을 참조하는지 확인한다.
+- PlayMode에서 실제 플레이어 진입 흐름으로 Game View 스크린샷을 캡처하고, LDtk에서 보이는 기본 Ground/보도블록/건물 주변 타일이 눈으로 일치하는지 확인한다.
+- `Tile.name`, draw count, sorting order만으로 완료 처리하지 않는다.
+
 ### 5. Sub-sprite 인덱스 지정 시 주의
 
 `Idle_Down_0`이 항상 "정상 캐릭터"라고 가정하지 말 것. 일부 sheet는 첫 프레임이 빈 칸이거나 특수 변형. 명확한 인덱스를 정한 후:

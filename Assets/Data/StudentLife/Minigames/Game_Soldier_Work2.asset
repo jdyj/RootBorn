@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d7087772d6d0574ea324d6ed33a950a, type: 3}
+  m_Name: Game_Soldier_Work2
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Minigames.MinigameDefinition
+  _id: minigame.soldier_work2
+  _displayNameKey: minigame.name.soldier_work2
+  _challenges:
+  - {fileID: 11400000, guid: 4fdfe1c419564bb4a8f3329f7c615e3a, type: 2}
+  _bonuses:
+  - {fileID: 11400000, guid: 18c0bfe03e310db49a5916d321a7a2a2, type: 2}
+  - {fileID: 11400000, guid: 661cf763b72cb5546b6dd13c8bdd1f1b, type: 2}
+  _successScore: 60

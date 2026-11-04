@@ -16,8 +16,8 @@ MonoBehaviour:
   _categoryId: eyes
   _displayNameKey: loc.character.character.eyes.brown
   _sheetAddress: sprites/character/eyes/eyes-brown
-  _subSpriteName: Eyes_Brown_r0_c0
+  _subSpriteName: Eyes_Brown_r0_c3
   _editorAssetPath: Assets/Modern_Farm_v1.2/Farmer_Generator_Pieces/Character Pieces/Eyes/16x16/Eyes_Brown.png
-  _previewSprite: {fileID: -5321096479520912379, guid: 021f2e20784b55242af275c1abab2113, type: 3}
+  _previewSprite: {fileID: -193618670930462739, guid: 021f2e20784b55242af275c1abab2113, type: 3}
   _layerOrder: 3
   _isDefault: 0

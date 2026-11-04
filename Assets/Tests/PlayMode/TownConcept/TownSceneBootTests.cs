@@ -100,11 +100,24 @@ namespace Rootborn.Tests.PlayMode.TownConcept
         private static int CountTownVisualCues()
         {
             int count = 0;
-            count += HasRenderer("TownApartment") ? 1 : 0;
-            count += HasRenderer("TownStreet") ? 1 : 0;
-            count += HasRenderer("TownShop") ? 1 : 0;
-            count += HasRenderer("TownCommunityBoard") ? 1 : 0;
+            count += HasVisibleTilemap("Town2LdtkGroundTilemap") ? 1 : 0;
+            count += HasVisibleTilemap("Town2LdtkShopTilemap") ? 1 : 0;
+            count += HasVisibleTilemap("Town2LdtkHospitalTilemap") ? 1 : 0;
+            count += HasVisibleTilemap("Town2LdtkBuildingTilemap") ? 1 : 0;
             return count;
+        }
+
+        private static bool HasVisibleTilemap(string name)
+        {
+            var go = GameObject.Find(name);
+            if (go == null)
+            {
+                return false;
+            }
+
+            var tilemap = go.GetComponent<Tilemap>();
+            var renderer = go.GetComponent<TilemapRenderer>();
+            return tilemap != null && renderer != null && renderer.enabled && go.activeInHierarchy && tilemap.GetUsedTilesCount() > 0;
         }
 
         private static bool HasRenderer(string name)

@@ -15,6 +15,7 @@ namespace Rootborn.Game.StudentLife
         [SerializeField] private ExplorationRiskPolicyDefinition _riskPolicy;
         [SerializeField] private bool _repeatable;
         [SerializeField] private string _previewHintKey;
+        [SerializeField] private bool _dismissesInteraction;
 
         public string Id => string.IsNullOrEmpty(_id) ? name : _id;
         public string DisplayNameKey => string.IsNullOrEmpty(_displayNameKey) ? Id : _displayNameKey;
@@ -23,6 +24,7 @@ namespace Rootborn.Game.StudentLife
         public IReadOnlyList<ExplorationOutcomeBase> Outcomes => _outcomes;
         public ExplorationRiskPolicyDefinition RiskPolicy => _riskPolicy;
         public bool Repeatable => _repeatable;
+        public bool DismissesInteraction => _dismissesInteraction;
         public string PreviewHintKey => string.IsNullOrEmpty(_previewHintKey) ? DescriptionKey : _previewHintKey;
 
         public bool ConditionsSatisfied(in ExplorationInteractionContext context, out string lockedReasonKey)
@@ -39,7 +41,7 @@ namespace Rootborn.Game.StudentLife
             return true;
         }
 
-        public void ConfigureForTests(string id, string displayNameKey, string descriptionKey, ExplorationConditionBase[] conditions, ExplorationOutcomeBase[] outcomes, ExplorationRiskPolicyDefinition riskPolicy, bool repeatable, string previewHintKey)
+        public void ConfigureForTests(string id, string displayNameKey, string descriptionKey, ExplorationConditionBase[] conditions, ExplorationOutcomeBase[] outcomes, ExplorationRiskPolicyDefinition riskPolicy, bool repeatable, string previewHintKey, bool dismissesInteraction = false)
         {
             _id = id;
             _displayNameKey = displayNameKey;
@@ -49,6 +51,7 @@ namespace Rootborn.Game.StudentLife
             _riskPolicy = riskPolicy;
             _repeatable = repeatable;
             _previewHintKey = previewHintKey;
+            _dismissesInteraction = dismissesInteraction;
         }
     }
 }

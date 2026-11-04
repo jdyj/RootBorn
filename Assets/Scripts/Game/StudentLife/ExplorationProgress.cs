@@ -177,6 +177,16 @@ namespace Rootborn.Game.StudentLife
         public string PlayerId { get; }
         public string[] TodayExplorationSummary => _todayExplorationSummary.ToArray();
 
+        public bool TryGetRecord(string interactionId, out ExplorationProgressRecord record)
+        {
+            if (string.IsNullOrEmpty(interactionId))
+            {
+                record = null;
+                return false;
+            }
+            return _records.TryGetValue(interactionId, out record);
+        }
+
         public ExplorationProgressRecord GetRecord(string interactionId)
         {
             string key = string.IsNullOrEmpty(interactionId) ? string.Empty : interactionId;

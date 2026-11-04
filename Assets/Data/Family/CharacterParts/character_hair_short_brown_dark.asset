@@ -16,8 +16,8 @@ MonoBehaviour:
   _categoryId: hair
   _displayNameKey: loc.character.character.hair.short.brown_dark
   _sheetAddress: sprites/character/hair/hairstyle-short-brown-dark
-  _subSpriteName: Hairstyle_Short_Brown_Dark_r0_c0
+  _subSpriteName: Hairstyle_Short_Brown_Dark_r0_c3
   _editorAssetPath: Assets/Modern_Farm_v1.2/Farmer_Generator_Pieces/Character Pieces/Hairstyles/16x16/Hairstyle_Short_Brown_Dark.png
-  _previewSprite: {fileID: -2743824887706347065, guid: 0fef600f252926647bf5086e5f8901d6, type: 3}
+  _previewSprite: {fileID: -4390796975164013053, guid: 0fef600f252926647bf5086e5f8901d6, type: 3}
   _layerOrder: 4
   _isDefault: 0

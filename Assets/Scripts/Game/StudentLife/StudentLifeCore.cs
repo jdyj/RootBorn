@@ -96,6 +96,11 @@ namespace Rootborn.Game.StudentLife
         public int Stress;
         public int TimeMinutes;
         public int CurrentDay = 1;
+        public int TimePointsSpentToday;
+        public string[] DailyTimePolicyIds = Array.Empty<string>();
+        public DailyPlanProgressSaveData DailyPlan;
+        public PendingStudentMinigameSaveData PendingMinigame;
+        public CareerCandidateProgressSaveData CareerCandidates;
         public string DayState = StudentDayState.InProgress.ToString();
         public int LastSettledDay;
         public string NextDayEntryPointId;
@@ -123,7 +128,7 @@ namespace Rootborn.Game.StudentLife
         }
     }
 
-    public sealed class StudentLifeProgress
+    public sealed partial class StudentLifeProgress
     {
         private readonly Dictionary<string, int> _traitValues = new Dictionary<string, int>();
         private readonly Dictionary<string, int> _skillValues = new Dictionary<string, int>();
@@ -155,6 +160,9 @@ namespace Rootborn.Game.StudentLife
             NextGuideText = string.Empty;
         }
 
+        public event Action TimeChanged;
+        public event Action VitalsChanged;
+
         public string SaveSlot { get; }
         public string PlayerId { get; }
         public int Energy { get; private set; }
@@ -177,14 +185,33 @@ namespace Rootborn.Game.StudentLife
 
         public void Spend(int timeCostMinutes, int energyCost, int focusCost, int stressDelta)
         {
+            int previousEnergy = Energy;
+            int previousFocus = Focus;
+            int previousStress = Stress;
             Energy = Mathf.Max(0, Energy - Mathf.Max(0, energyCost));
             Focus = Mathf.Max(0, Focus - Mathf.Max(0, focusCost));
             Stress = Mathf.Max(0, Stress + stressDelta);
+            int previousMinutes = TimeMinutes;
             TimeMinutes = Mathf.Max(0, TimeMinutes + Mathf.Max(0, timeCostMinutes));
+            if (Energy != previousEnergy || Focus != previousFocus || Stress != previousStress) VitalsChanged?.Invoke();
+            if (TimeMinutes != previousMinutes) TimeChanged?.Invoke();
         }
 
-        public void RestoreEnergyForDay(int value) => Energy = Mathf.Max(0, value);
-        public void RestoreFocusForDay(int value) => Focus = Mathf.Max(0, value);
+        public void RestoreEnergyForDay(int value)
+        {
+            int next = Mathf.Max(0, value);
+            if (Energy == next) return;
+            Energy = next;
+            VitalsChanged?.Invoke();
+        }
+
+        public void RestoreFocusForDay(int value)
+        {
+            int next = Mathf.Max(0, value);
+            if (Focus == next) return;
+            Focus = next;
+            VitalsChanged?.Invoke();
+        }
 
         public bool SetTutorialStage(TutorialStageDefinition stage, string nextObjectiveId)
         {
@@ -237,11 +264,22 @@ namespace Rootborn.Game.StudentLife
 
         public void RecordActivityCompleted(string activityId, string[] resultLogIds)
         {
+            RecordActivityCompleted(activityId, resultLogIds, false);
+        }
+
+        public void RecordActivityCompleted(string activityId, string[] resultLogIds, bool preserveRepeatedResults)
+        {
             if (string.IsNullOrEmpty(activityId)) return;
             LastActivityId = activityId;
             _activityLogIds.Add(activityId);
             _todayActivityIds.Add(activityId);
-            AddOrderedUnique(_todayResultLogIds, resultLogIds);
+            if (preserveRepeatedResults)
+            {
+                // Request idempotency is checked by the runner; identical deltas can be separate committed actions.
+                if (resultLogIds != null) foreach (string result in resultLogIds)
+                    if (!string.IsNullOrEmpty(result)) _todayResultLogIds.Add(result);
+            }
+            else AddOrderedUnique(_todayResultLogIds, resultLogIds);
         }
 
         public string[] GetActivityLogIds() => _activityLogIds.ToArray();
@@ -274,8 +312,12 @@ namespace Rootborn.Game.StudentLife
             CurrentDay = Mathf.Max(1, CurrentDay + 1);
             DayState = StudentDayState.InProgress;
             TimeMinutes = 8 * 60;
+            ResetDailyTimeBudget();
             _todayActivityIds.Clear();
             _todayResultLogIds.Clear();
+            CareerCandidates.ClearTodayHintResults();
+            _dailyPlan?.SynchronizeDay(this);
+            TimeChanged?.Invoke();
             return true;
         }
 
@@ -296,6 +338,11 @@ namespace Rootborn.Game.StudentLife
                 Stress = Stress,
                 TimeMinutes = TimeMinutes,
                 CurrentDay = CurrentDay,
+                TimePointsSpentToday = TimePointsSpentToday,
+                DailyTimePolicyIds = ToArray(_dailyTimePolicyIds),
+                DailyPlan = DailyPlan.ToSaveData(),
+                PendingMinigame = PendingStudentMinigameSaveData.Copy(_pendingMinigame),
+                CareerCandidates = CareerCandidates.ToSaveData(),
                 DayState = DayState.ToString(),
                 LastSettledDay = LastSettledDay,
                 NextDayEntryPointId = NextDayEntryPointId,
@@ -328,6 +375,8 @@ namespace Rootborn.Game.StudentLife
             var progress = new StudentLifeProgress(saveData.SaveSlot, saveData.PlayerId, saveData.Energy, saveData.Focus, saveData.Stress, saveData.TimeMinutes);
             progress.CurrentDay = Mathf.Max(1, saveData.CurrentDay <= 0 ? 1 : saveData.CurrentDay);
             progress.DayState = ParseDayState(saveData.DayState);
+            progress.TimePointsSpentToday = Mathf.Max(0, saveData.TimePointsSpentToday);
+            RestoreStrings(progress._dailyTimePolicyIds, saveData.DailyTimePolicyIds);
             progress.LastSettledDay = Mathf.Max(0, saveData.LastSettledDay);
             progress.NextDayEntryPointId = string.IsNullOrEmpty(saveData.NextDayEntryPointId) ? string.Empty : saveData.NextDayEntryPointId;
             progress.LastActivityId = string.IsNullOrEmpty(saveData.LastActivityId) ? string.Empty : saveData.LastActivityId;
@@ -345,6 +394,8 @@ namespace Rootborn.Game.StudentLife
             RestoreOrderedStrings(progress._todayResultLogIds, saveData.TodayResultLogIds);
             RestoreOrderedStrings(progress._previousDayActivityIds, saveData.PreviousDayActivityIds);
             RestoreOrderedStrings(progress._previousDayResultLogIds, saveData.PreviousDayResultLogIds);
+            progress.RestoreDailyPlan(saveData.DailyPlan);
+            progress.RestoreMinigameDomains(saveData);
             return progress;
         }
 
@@ -457,7 +508,7 @@ namespace Rootborn.Game.StudentLife
         public abstract void Apply(StudentLifeProgress progress);
     }
 
-    public sealed class LifeActivityRunner
+    public sealed partial class LifeActivityRunner
     {
         public bool TryPerform(LifeActivityDefinition activity, StudentLifeProgress progress, string requestId, out LifeActivityResult result)
         {
@@ -471,7 +522,7 @@ namespace Rootborn.Game.StudentLife
                 result = new LifeActivityResult(LifeActivityResultKind.DuplicateRequest, progress.SaveSlot, progress.PlayerId, activity.Id, requestId);
                 return false;
             }
-            if (!progress.CanSpend(activity.EnergyCost, activity.FocusCost))
+            if (!progress.CanUseTimePolicy(activity.TimePolicy) || !progress.CanSpend(activity.EnergyCost, activity.FocusCost))
             {
                 result = new LifeActivityResult(LifeActivityResultKind.InsufficientResources, progress.SaveSlot, progress.PlayerId, activity.Id, requestId);
                 return false;
@@ -482,6 +533,7 @@ namespace Rootborn.Game.StudentLife
                 return false;
             }
             var before = StudentLifeDeltaSnapshot.Capture(progress);
+            progress.TryUseTimePolicy(activity.TimePolicy);
             progress.Spend(activity.TimeCostMinutes, activity.EnergyCost, activity.FocusCost, activity.StressDelta);
             activity.ApplyEffects(progress);
             progress.MarkRequestApplied(requestId);
@@ -503,7 +555,7 @@ namespace Rootborn.Game.StudentLife
                 result = new LifeActivityResult(LifeActivityResultKind.DuplicateRequest, progress.SaveSlot, progress.PlayerId, activity.Id, requestId, choice.Id, Array.Empty<string>());
                 return false;
             }
-            if (!progress.CanSpend(activity.EnergyCost, activity.FocusCost))
+            if (!progress.CanUseTimePolicy(activity.TimePolicy) || !progress.CanSpend(activity.EnergyCost, activity.FocusCost))
             {
                 result = new LifeActivityResult(LifeActivityResultKind.InsufficientResources, progress.SaveSlot, progress.PlayerId, activity.Id, requestId, choice.Id, Array.Empty<string>());
                 return false;
@@ -514,6 +566,7 @@ namespace Rootborn.Game.StudentLife
                 return false;
             }
             var before = StudentLifeDeltaSnapshot.Capture(progress);
+            progress.TryUseTimePolicy(activity.TimePolicy);
             progress.Spend(activity.TimeCostMinutes, activity.EnergyCost, activity.FocusCost, activity.StressDelta);
             activity.ApplyEffects(progress);
             choice.ApplyEffects(progress);
@@ -595,7 +648,7 @@ namespace Rootborn.Game.StudentLife
 
         public bool TryPerform(CareerPracticeDefinition practice, StudentLifeProgress progress, string requestId, out LifeActivityResult result)
         {
-            if (practice == null)
+            if (practice == null || practice.Minigame != null)
             {
                 string saveSlot = progress == null ? "default" : progress.SaveSlot;
                 string playerId = progress == null ? "player" : progress.PlayerId;

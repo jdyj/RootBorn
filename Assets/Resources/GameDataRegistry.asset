@@ -24,6 +24,7 @@ MonoBehaviour:
   _resources:
   - {fileID: 11400000, guid: eb231f93a6f0fe5418e8c0754b131733, type: 2}
   - {fileID: 11400000, guid: 5a341bbcb8c7a8e49a3be09dda21cf30, type: 2}
+  _recipes: []
   _knowledge:
   - {fileID: 11400000, guid: 83000c80ee557bc4c8edf1bb6a390a3a, type: 2}
   - {fileID: 11400000, guid: c88d10affec11784996e4bc6ce3d82d4, type: 2}
@@ -123,11 +124,31 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 863a3702a2671e245a0fc17132ec922d, type: 2}
   - {fileID: 11400000, guid: d9497f5c1c47420438ce8f140860db08, type: 2}
   - {fileID: 11400000, guid: 0f82d6935541c2a44b102f9a53cca412, type: 2}
-  _characterAppearances: []
+  _defaultCharacterPartMotion: {fileID: 11400000, guid: a24418dd4871b11489592445b1e59479, type: 2}
+  _characterAppearances:
+  - {fileID: 11400000, guid: b05d745e95c6d4b48884fd328d407a49, type: 2}
+  - {fileID: 11400000, guid: 003e070282cdee74a909dacf6175867c, type: 2}
+  - {fileID: 11400000, guid: d6732938b359f114b986eac5a8f62943, type: 2}
+  - {fileID: 11400000, guid: 2a87e9f6766fc534ba2b97d367a68a0f, type: 2}
+  - {fileID: 11400000, guid: 2070d14b199c2104584918f2df2735ef, type: 2}
+  - {fileID: 11400000, guid: de51ab772ca801a49b76734f531d7f49, type: 2}
+  - {fileID: 11400000, guid: 2300eb6592073ff4db959f3fcb382dc1, type: 2}
   _spumPartCatalogs: []
   _spumCharacterCreatorPresets: []
   _fishingAnimations:
   - {fileID: 11400000, guid: 4d492c31c33bd2b4fa9e3e22ed110534, type: 2}
+  _minigames: []
+  _minigameChallenges: []
+  _minigameBonuses: []
+  _facilityVisuals: []
+  _facilityDefinitions: []
+  _facilityWorks: []
+  _facilityLevels: []
+  _facilityTransitionRequirements: []
+  _autoSkipRequirements: []
+  _textCatalog: {fileID: 0}
+  _studentLifeCalendar: {fileID: 0}
+  _activityTimePolicies: []
   _lifeActivities:
   - {fileID: 11400000, guid: acf6249e7dee124418b5fdff0659ffb4, type: 2}
   - {fileID: 11400000, guid: de7a64c7a82e5c44eb1195bd01dd1dc7, type: 2}
@@ -226,6 +247,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f137d0c0631cda840b1d16e38c8114f8, type: 2}
   - {fileID: 11400000, guid: 34b84450861e625488a4559ed8a08277, type: 2}
   - {fileID: 11400000, guid: 253f75a694caf474988a65781c9516f2, type: 2}
+  _dailyPlanRouteSets: []
   _explorationInteractions:
   - {fileID: 11400000, guid: cfd09340758f7bf4080cdd77b51faa94, type: 2}
   _explorationChoices:
@@ -256,6 +278,7 @@ MonoBehaviour:
   _dailyEvents:
   - {fileID: 11400000, guid: 734fe2685d8fb2b43a292880c6e4bbb7, type: 2}
   - {fileID: 11400000, guid: dbd023f62c661c74f85f6b8ce63885ce, type: 2}
+  _defaultStudentCampaign: {fileID: 0}
   _campaigns:
   - {fileID: 11400000, guid: a0d275aa681a498438eebccfc3bf373e, type: 2}
   _campaignDays:
@@ -277,6 +300,7 @@ MonoBehaviour:
   _discoveries:
   - {fileID: 11400000, guid: 13978bd72ab75cb47949497ef5d56aca, type: 2}
   _placeableTiles: []
+  _furnitureDefinitions: []
   _milestones:
   - {fileID: 11400000, guid: e964618ac9e20234598c35ded949ca42, type: 2}
   _milestoneObjectives:
@@ -361,3 +385,4 @@ MonoBehaviour:
   _groundSprite: {fileID: 21300000, guid: 71df351b8cfdac24b9dd030d2f35abac, type: 3}
   _playerSprite: {fileID: 21300000, guid: 5f439540e7f27e24f8b0856cc24ea6ab, type: 3}
   _defaultFarmTerrainGeneration: {fileID: 11400000, guid: b26cde69cfb426841aef41ae7a6f128f, type: 2}
+  _worldTravelCatalog: {fileID: 11400000, guid: b876e23685c08bb488c77af9d3b38334, type: 2}

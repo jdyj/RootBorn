@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using UnityEngine.AddressableAssets;
 using System.Threading.Tasks;
 using Rootborn.Game.Common;
 using Rootborn.Game.Crops;
@@ -68,6 +70,13 @@ namespace Rootborn.Game.Managers
 #if UNITY_EDITOR
             if (Application.isEditor)
             {
+                // Packed Play must follow the same authored registry and dependencies as a player build.
+                foreach (var locator in Addressables.ResourceLocators)
+                {
+                    if (locator.Locate(AddrRegistry, typeof(GameDataRegistry), out var locations)
+                        && locations != null && locations.Any(location => location.ProviderId != "UnityEngine.ResourceManagement.ResourceProviders.AssetDatabaseProvider"))
+                        return null;
+                }
                 return UnityEditor.AssetDatabase.LoadAssetAtPath<GameDataRegistry>(EditorRegistryPath);
             }
 #endif

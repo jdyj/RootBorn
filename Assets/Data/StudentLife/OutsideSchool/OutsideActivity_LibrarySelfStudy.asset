@@ -15,6 +15,7 @@ MonoBehaviour:
   _id: outside.self-study.library
   _displayNameKey: outside.self-study.library
   _category: {fileID: 11400000, guid: dc5c809d7746f87459c7f27decdb1b63, type: 2}
+  _timePolicy: {fileID: 11400000, guid: 877e2af40acc7d749a78882afa991e80, type: 2}
   _timeCostMinutes: 45
   _energyCost: 1
   _focusCost: 2

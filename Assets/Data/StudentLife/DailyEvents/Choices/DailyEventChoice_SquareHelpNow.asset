@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: DailyEventChoice_SquareHelpNow
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.DailyEventChoiceDefinition
   _id: daily-event-choice.square-help-now
-  _displayNameKey: Help now
-  _resultSummaryKey: Empathy and trust grow.
+  _displayNameKey: life.event.choice.help.name
+  _resultSummaryKey: life.event.choice.help.summary
+  _timePolicy: {fileID: 11400000, guid: 877e2af40acc7d749a78882afa991e80, type: 2}
   _timeCostMinutes: 20
   _energyCost: 1
   _focusCost: 0

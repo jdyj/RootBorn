@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Encyclopedia.EncyclopediaEntryDefinition
   _id: ency.location.locked-archive
   _category: {fileID: 11400000, guid: c1e9e5f494aca684e8a5ddcd36b6a07a, type: 2}
-  _displayName: Town Archive
-  _lockedDisplayName: ???
-  _description: Archive records.
-  _lockedHint: Keep exploring town routes.
+  _displayName: ui.encyclopedia.entry.town-archive.name
+  _lockedDisplayName: ui.encyclopedia.locked.name
+  _description: ui.encyclopedia.entry.town-archive.description
+  _lockedHint: ui.encyclopedia.entry.town-archive.hint
   _detailLines:
-  - More details later.
+  - ui.encyclopedia.entry.town-archive.detail
   _unlockConditions: []
   _revealStage: 1

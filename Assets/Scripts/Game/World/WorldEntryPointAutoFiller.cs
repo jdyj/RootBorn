@@ -10,12 +10,15 @@ namespace Rootborn.Game.World
     {
         private const string FarmSceneName = "Farm";
         private const string TownSceneName = "Town";
+        private const string HouseSceneName = "House";
         private const string FarmPortalName = "FarmPortal";
         private const string TownReturnPortalName = "TownReturnPortal";
         private const string FarmSpawnName = "FarmSpawnPoint";
         private const string TownSpawnName = "TownSpawnPoint";
+        private const string HouseSpawnName = "HouseSpawnPoint";
         private const string FarmSpawnId = "farm-entry";
         private const string TownSpawnId = "town-entry";
+        private const string HouseSpawnId = "house-entry";
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Register()
@@ -35,6 +38,10 @@ namespace Rootborn.Game.World
             {
                 EnsureTownEntryPoints(scene);
             }
+            else if (scene.name == HouseSceneName)
+            {
+                EnsureHouseEntryPoints(scene);
+            }
         }
 
         private static void EnsureForActiveScene()
@@ -48,6 +55,10 @@ namespace Rootborn.Game.World
             {
                 EnsureTownEntryPoints(scene);
             }
+            else if (scene.name == HouseSceneName)
+            {
+                EnsureHouseEntryPoints(scene);
+            }
         }
 
         private static void EnsureFarmEntryPoints(Scene scene)
@@ -57,12 +68,25 @@ namespace Rootborn.Game.World
             EnsureExistingPlayerRuntimeContext(scene);
         }
 
+        public static bool ShouldGenerateSceneEntryPoints(Scene scene)
+        {
+            return scene.IsValid() && scene.isLoaded && (scene.name == FarmSceneName || AuthoredWorldScene.Find(scene) == null);
+        }
+
         private static void EnsureTownEntryPoints(Scene scene)
         {
+            if (!ShouldGenerateSceneEntryPoints(scene)) return;
             EnsureCamera();
             EnsureTownGround(scene);
-            EnsureSpawnPoint(scene, TownSpawnName, TownSpawnId, new Vector3(0f, 0f, 0f));
+            EnsureSpawnPoint(scene, TownSpawnName, TownSpawnId, new Vector3(10.5f, -14.5f, 0f));
             EnsurePortal(scene, TownReturnPortalName, "Town Gate", FarmSceneName, FarmSpawnId, new Vector3(-3f, 0f, 0f));
+        }
+
+        private static void EnsureHouseEntryPoints(Scene scene)
+        {
+            if (!ShouldGenerateSceneEntryPoints(scene)) return;
+            EnsureSpawnPoint(scene, HouseSpawnName, HouseSpawnId, new Vector3(0.5f, -6.5f, 0f));
+            EnsureExistingPlayerRuntimeContext(scene);
         }
 
         private static void EnsureExistingPlayerRuntimeContext(Scene scene)
@@ -193,7 +217,7 @@ namespace Rootborn.Game.World
             }
 
             camera.orthographic = true;
-            camera.orthographicSize = 6f;
+            camera.orthographicSize = 9f;
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = new Color(0.30f, 0.36f, 0.42f, 1f);
             camera.transform.position = new Vector3(0f, 0f, -10f);

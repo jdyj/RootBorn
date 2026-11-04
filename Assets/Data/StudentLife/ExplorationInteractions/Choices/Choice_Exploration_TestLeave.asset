@@ -20,3 +20,4 @@ MonoBehaviour:
   _riskPolicy: {fileID: 0}
   _repeatable: 1
   _previewHintKey: choice.test.leave.preview
+  _dismissesInteraction: 1

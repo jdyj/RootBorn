@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Encyclopedia.EncyclopediaEntryDefinition
   _id: ency.location.first-discovery
   _category: {fileID: 11400000, guid: c1e9e5f494aca684e8a5ddcd36b6a07a, type: 2}
-  _displayName: discovery.clocktower-notice
-  _lockedDisplayName: ???
-  _description: A town discovery record unlocked through actual discovery interaction.
-  _lockedHint: Find a town discovery point.
+  _displayName: ui.encyclopedia.entry.clocktower-note.name
+  _lockedDisplayName: ui.encyclopedia.locked.name
+  _description: ui.encyclopedia.entry.clocktower-note.description
+  _lockedHint: ui.encyclopedia.entry.clocktower-note.hint
   _detailLines:
-  - Discovery details are persisted by save slot and player.
+  - ui.encyclopedia.entry.clocktower-note.detail
   _unlockConditions:
   - {fileID: 11400000, guid: b98e7b1e85847544e8c9f89ad6b78311, type: 2}
   _revealStage: 1

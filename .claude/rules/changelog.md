@@ -344,6 +344,16 @@
   - `Assets/Scripts/UI/Modern/ModernUiPanelAutoInstaller.cs` 수정 — Town UI 패널 설치 전에 `Managers.BootstrapAsync()` 완료를 기다려 Addressables sprite cache가 준비된 뒤 패널을 빌드.
 - 일반화: "sprite 완료 판정은 manifest 존재나 대표 smoke가 아니라 PlayMode 런타임 로더 기준 주소 resolve + 개별 sprite 전체 픽셀 rect 읽기 + 실제 렌더 대상(Image/SpriteRenderer) sprite 할당 확인까지 포함한다."
 
+## 2026-05-24 — LDtk Tileset 원본 좌표 검증 규칙 추가
+
+- 피드백: "지금까지 계속 실수했던거 다음 세션이나 이후에 재발되지않게 헌법에 적어놓거나 조치 취해줘"
+- 원인: LDtk Town Ground 타일이 `Tile.name`, Tilemap count, sorting order 기준으로는 정상처럼 보였지만, 생성된 `Sprite.rect`가 원본 PNG 높이(예: `2_City_Terrains_32x32.png` 1888×3296)가 아니라 Unity의 축소 import 높이(2048) 기준으로 잘려 있었다. 그 결과 LDtk `src=(320,736)` 보도블록 타일이 실제 Game View에서는 전혀 다른 픽셀 줄을 렌더링했다.
+- 변경:
+  - `constitution.md` 그래픽 자산 섹션에 **LDtk 타일 좌표 원본성 보존** 원칙 추가.
+  - `rules/path-based/sprite-slicing.md`에 **LDtk Tileset 좌표 변환 — 원본 PNG 높이 기준** 절 추가.
+  - `AGENTS.md` Direct Visual Play Verification Gate에 해당 실패 패턴 추가.
+- 일반화: LDtk `src`는 PNG 좌상단 기준이고 Unity `Sprite.rect`는 좌하단 기준이다. 변환은 `unityY = originalPngHeight - srcY - tileHeight`이며, `Tile.name`이나 Tilemap draw count만으로는 시각 동일성을 증명할 수 없다. LDtk/Town/Interior tile 작업은 원본 PNG 크기, TextureImporter max size/compression/filter, `Sprite.rect`, 저장 씬 Tilemap 참조, PlayMode Game View 스크린샷을 모두 확인해야 완료다.
+
 ## 2026-04-29 — 커밋 메시지 컨벤션 신설
 - 피드백: "커밋명 규칙 추가 [FEATURE], [BUGFIX]. [UI], [DB], [ASSET] 등의 prefix 활용. 제목+내용 모두 한글로"
 - 원인: 컨벤션 부재 — 영문 conventional 형식 (`feat(sim):`)이 혼용되었고 AI 에이전트가 임의 형식으로 커밋.

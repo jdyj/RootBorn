@@ -43,6 +43,7 @@ MonoBehaviour:
   _id: practice.chef
   _displayNameKey: practice.chef
   _category: 0
+  _timePolicy: {fileID: 11400000, guid: 877e2af40acc7d749a78882afa991e80, type: 2}
   _timeCostMinutes: 45
   _energyCost: 1
   _focusCost: 1
@@ -55,6 +56,9 @@ MonoBehaviour:
   - {fileID: -2782598459726731587}
   - {fileID: 5120949822288877513}
   - {fileID: 2767269619790274447}
+  - {fileID: 11400000, guid: 81a1dd28b80f5854aaf06e51d8fb3d55, type: 2}
+  - {fileID: 11400000, guid: 1c5fe073231fd8d46a59abcefba8451e, type: 2}
+  _choices: []
 --- !u!114 &2767269619790274447
 MonoBehaviour:
   m_ObjectHideFlags: 0

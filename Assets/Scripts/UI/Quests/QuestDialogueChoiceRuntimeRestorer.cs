@@ -6,6 +6,7 @@ using Rootborn.Game.Save;
 using Rootborn.Game.Story;
 using Rootborn.Game.StudentLife;
 using Rootborn.Game.WorldState;
+using Rootborn.Game.World;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -64,6 +65,8 @@ namespace Rootborn.UI.Quests
 
             private void HandleNpcInteracted(NpcInteractor npc, StudentLifeProgress progress)
             {
+                // Owner-bound scenes are presented synchronously. Never queue a second opener.
+                if (npc == null || AuthoredWorldScene.Find(npc.gameObject.scene) != null || FindOwnedPresenter(npc.gameObject.scene) != null) return;
                 var provider = npc != null ? npc.GetComponent<QuestProvider>() : null;
                 if (provider == null || provider.Quests == null || provider.Quests.Length == 0)
                 {
@@ -80,6 +83,7 @@ namespace Rootborn.UI.Quests
                 {
                     yield break;
                 }
+                if (AuthoredWorldScene.Find(npc.gameObject.scene) != null || FindOwnedPresenter(npc.gameObject.scene) != null) yield break;
 
                 var dialoguePanel = Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include);
                 var questPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
@@ -157,6 +161,15 @@ namespace Rootborn.UI.Quests
                 if (player != null) return player;
             }
 
+            return null;
+        }
+
+        private static NpcDialoguePresenter FindOwnedPresenter(Scene scene)
+        {
+            if (!scene.IsValid() || !scene.isLoaded) return null;
+            foreach (var root in scene.GetRootGameObjects())
+                foreach (var presenter in root.GetComponentsInChildren<NpcDialoguePresenter>(true))
+                    if (presenter.IsBound) return presenter;
             return null;
         }
 

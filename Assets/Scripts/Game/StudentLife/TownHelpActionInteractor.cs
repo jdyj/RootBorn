@@ -13,7 +13,6 @@ namespace Rootborn.Game.StudentLife
         [SerializeField] private TownHelpActionDefinition _action;
 
         private readonly TownHelpActionRunner _runner = new TownHelpActionRunner();
-        private int _requestSequence;
 
         public TownHelpActionDefinition Action => _action;
         public TownHelpActionResult LastResult { get; private set; }
@@ -25,7 +24,6 @@ namespace Rootborn.Game.StudentLife
         public void Bind(TownHelpActionDefinition action)
         {
             _action = action;
-            _requestSequence = 0;
         }
 
         public bool CanInteract(GameObject player)
@@ -45,7 +43,7 @@ namespace Rootborn.Game.StudentLife
 
         public bool Interact(StudentLifeProgressComponent progressComponent)
         {
-            string requestId = _action != null ? _action.Id + ":" + _requestSequence++ : "town-help:" + _requestSequence++;
+            string requestId = (_action != null ? _action.Id : "town-help") + ":" + Guid.NewGuid().ToString("N");
             return Interact(progressComponent, requestId);
         }
 

@@ -26,7 +26,12 @@ namespace Rootborn.Tests.EditMode.StudentLife
             Assert.IsNotNull(stages, "Registry must expose all tutorial stages as data.");
             CollectionAssert.Contains(stages, defaultStage);
             Assert.AreEqual("tutorial.day1", defaultStage.Id);
-            StringAssert.Contains("1", defaultStage.GuideText);
+            Assert.That(defaultStage.GuideText,Does.StartWith("ui.tutorial."));
+            foreach(string language in new[]{"ko","en"})
+            {
+                var text=registry.TextCatalog.Get(defaultStage.GuideText,language);
+                Assert.That(text,Is.Not.Empty);Assert.That(text,Is.Not.EqualTo(defaultStage.GuideText),"Tutorial guide key must resolve in both supported languages");
+            }
             StringAssert.StartsWith("Assets/Data/StudentLife/", AssetDatabase.GetAssetPath(defaultStage));
 
             var dayEndRule = registry.DefaultDayEndRule;
@@ -59,7 +64,8 @@ namespace Rootborn.Tests.EditMode.StudentLife
                 method.Invoke(component, new object[] { registry });
 
                 Assert.AreEqual("tutorial.day1", component.Progress.TutorialStageId);
-                StringAssert.Contains("Day 1", component.Progress.NextGuideText);
+                Assert.That(component.Progress.NextGuideText,Is.EqualTo(registry.DefaultTutorialStage.GuideText));
+                Assert.That(registry.TextCatalog.Get(component.Progress.NextGuideText,"ko").Any(c=>c>=0xAC00&&c<=0xD7A3),Is.True,"The saved canonical guide key must resolve to intact Korean text");
             }
             finally
             {

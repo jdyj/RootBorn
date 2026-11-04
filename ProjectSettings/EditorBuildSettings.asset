@@ -29,6 +29,33 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/House_Condominium_Design.unity
     guid: f69a78791952b2448a667535d8746fad
+  - enabled: 1
+    path: Assets/Scenes/Beach.unity
+    guid: de1ef7b85b7e23c4ebc54b7486838e17
+  - enabled: 1
+    path: Assets/Scenes/HouseInterior.unity
+    guid: 3c392859365415a4ab69779dab1bc3a5
+  - enabled: 1
+    path: Assets/Scenes/HospitalInterior.unity
+    guid: ae28c275ba1267b459230c1b08c8292a
+  - enabled: 1
+    path: Assets/Scenes/ShopInterior.unity
+    guid: 77cc6e50386726747b16f466f7ebd797
+  - enabled: 1
+    path: Assets/Scenes/PoliceInterior.unity
+    guid: 8cf8927753fa4844faa7e24e6a861f99
+  - enabled: 1
+    path: Assets/Scenes/PoliceShootingInterior.unity
+    guid: a878b8aced0763e4d92f61594a241b77
+  - enabled: 1
+    path: Assets/Scenes/KitchenInterior.unity
+    guid: 9126e37e186343c4880ca911f3df0982
+  - enabled: 1
+    path: Assets/Scenes/Kitchen2Interior.unity
+    guid: 5f3af3fe16128504095fada716385a5f
+  - enabled: 1
+    path: Assets/Scenes/School.unity
+    guid: 0b84e27e8079f6643b8604988c325361
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: 989c2c35ff103b54ebee2c85b48ade73, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

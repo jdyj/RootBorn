@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Rootborn.Game.Common;
 using Rootborn.Game.Family;
 using Rootborn.Game.Managers;
 using UnityEditor;
@@ -29,6 +30,30 @@ namespace Rootborn.Tests.EditMode.Family
                 Assert.AreEqual(16f, sprite.rect.width);
                 Assert.AreEqual(16f, sprite.rect.height);
                 Assert.AreSame(sprite, resource.GetCachedSubSprite(part.SheetAddress, part.SubSpriteName));
+            }
+            finally
+            {
+                resource.ReleaseAll();
+            }
+        }
+
+        [Test]
+        public async Task LoadSubSpriteAsync_ResolvesModernUiStyle2CommonPanelSubSpriteByAddress()
+        {
+            var resource = new ResourceManager();
+            try
+            {
+                await resource.InitializeAsync();
+
+                Sprite sprite = await AwaitWithTimeout(
+                    resource.LoadSubSpriteAsync(ModernUiStyle2Sprites.SheetAddress, ModernUiStyle2Sprites.CommonPanel.FillName),
+                    "ResourceManager did not resolve the Style2 common panel fill sub-sprite before timeout.");
+
+                Assert.IsNotNull(sprite, ModernUiStyle2Sprites.SheetAddress + " -> " + ModernUiStyle2Sprites.CommonPanel.FillName);
+                Assert.AreEqual(ModernUiStyle2Sprites.CommonPanel.FillName, sprite.name);
+                Assert.AreEqual(16f, sprite.rect.width);
+                Assert.AreEqual(16f, sprite.rect.height);
+                Assert.AreSame(sprite, resource.GetCachedSubSprite(ModernUiStyle2Sprites.SheetAddress, ModernUiStyle2Sprites.CommonPanel.FillName));
             }
             finally
             {

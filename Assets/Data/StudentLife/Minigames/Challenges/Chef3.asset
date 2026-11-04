@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be0d5d902e4d1ba41b2564b778b5d58e, type: 3}
+  m_Name: Chef3
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Minigames.SequenceChallengeDefinition
+  _instructionKey: minigame.chef.sequence
+  _symbolSprites:
+  - {fileID: 21300000, guid: 22679af2a400fdf4d9ea259a2b8178b1, type: 3}
+  - {fileID: 21300000, guid: e4fd42e11a816e44ba8808510bf34209, type: 3}
+  - {fileID: 21300000, guid: 66a5ec748409a834ebed8b76b99fcb57, type: 3}
+  - {fileID: 21300000, guid: e815d449ebe2847429dd9d7c4d4cc598, type: 3}
+  _timeLimitSeconds: 35
+  _mistakeAllowance: 6
+  _answers: 0000000001000000030000000200000001000000
+  _symbols:
+  - minigame.ingredient.rice
+  - minigame.ingredient.vegetable
+  - minigame.ingredient.egg
+  - minigame.ingredient.sauce
+  _revealSeconds: 3.5

@@ -15,9 +15,17 @@ namespace Rootborn.Game.Time
         public float DayProgress01 { get; private set; }
         public float RealSecondsPerGameDay => Mathf.Max(1f, _realSecondsPerGameDay);
         public float ElapsedGameDays => ElapsedRealSeconds / RealSecondsPerGameDay;
+        public float CurrentHour => DayProgress01 * 24f;
+        public int Hour => Mathf.FloorToInt(CurrentHour);
+        public int Minute => Mathf.FloorToInt((CurrentHour - Hour) * 60f);
+        public bool IsMorning => IsMorningHour(CurrentHour);
+        public bool IsAfternoon => IsAfternoonHour(CurrentHour);
+        public bool IsEvening => IsEveningHour(CurrentHour);
+        public bool IsNight => IsNightHour(CurrentHour);
 
-        // 새 day 정수가 시작될 때 발화. FarmGrid 가 구독하여 일일 물/비료 리셋.
+        // Fires when the integer day changes. FarmGrid subscribes to reset daily water/fertilizer state.
         public event Action<int> OnDayRolled;
+        public event Action<float> OnTimeChanged;
 
         public static GameClock Instance { get; private set; }
 
@@ -27,11 +35,50 @@ namespace Rootborn.Game.Time
             set => _timeScale = Mathf.Max(0f, value);
         }
 
+        public static bool IsMorningHour(float hour)
+        {
+            hour = WrapHour(hour);
+            return hour >= 5f && hour < 11f;
+        }
+
+        public static bool IsAfternoonHour(float hour)
+        {
+            hour = WrapHour(hour);
+            return hour >= 11f && hour < 17f;
+        }
+
+        public static bool IsEveningHour(float hour)
+        {
+            hour = WrapHour(hour);
+            return hour >= 17f && hour < 20f;
+        }
+
+        public static bool IsNightHour(float hour)
+        {
+            hour = WrapHour(hour);
+            return hour >= 20f || hour < 5f;
+        }
+
+        public static float WrapHour(float hour)
+        {
+            return Mathf.Repeat(hour, 24f);
+        }
+
         public void Configure(TimeDefinition definition)
         {
             _timeDefinition = definition;
             ApplyDefinition();
             RecalculateDay();
+            OnTimeChanged?.Invoke(CurrentHour);
+        }
+
+        public void SetCurrentHour(float hour)
+        {
+            float wrapped = WrapHour(hour);
+            float dayStartSeconds = Mathf.Floor(ElapsedRealSeconds / RealSecondsPerGameDay) * RealSecondsPerGameDay;
+            ElapsedRealSeconds = dayStartSeconds + wrapped / 24f * RealSecondsPerGameDay;
+            RecalculateDay();
+            OnTimeChanged?.Invoke(CurrentHour);
         }
 
         private void Awake()
@@ -66,6 +113,8 @@ namespace Rootborn.Game.Time
             {
                 OnDayRolled?.Invoke(rolledDay);
             }
+
+            OnTimeChanged?.Invoke(CurrentHour);
         }
 
         private void ApplyDefinition()

@@ -418,6 +418,8 @@ namespace Rootborn.Game.Bootstrap
 
         private static async void ConfigureCharacterParts(GameObject playerInstance, GameDataRegistry registry)
         {
+            if (TownSpumVisualRuntimeInstaller.TryBindExistingVisual(playerInstance)) return;
+
             if (playerInstance == null || registry == null || registry.CharacterParts == null || registry.CharacterParts.Length == 0)
             {
                 return;
@@ -444,10 +446,14 @@ namespace Rootborn.Game.Bootstrap
             }
             var saved = ActiveSaveContext.Metadata != null ? ActiveSaveContext.Metadata.Appearance : null;
             var appearance = CharacterAppearance.ResolveWithDefaults(saved, registry.CharacterParts);
+            var motion = registry.DefaultCharacterPartMotion;
+            int idleRow = motion != null ? motion.IdleRow : 0;
+            int idleColumn = motion != null ? motion.GetIdleColumn(Vector2.down) : 0;
             var resource = Managers.Managers.Resource;
             if (resource == null)
             {
                 animator.Configure(composer, appearance, registry.CharacterParts, (part, subSpriteName) => ResolveLoadedCharacterPartSprite(subSpriteName));
+            animator.ConfigureMotion(motion);
                 animator.SetMotion(Vector2.zero, new Vector2(0f, -1f));
                 animator.Tick(0f);
                 return;
@@ -458,7 +464,7 @@ namespace Rootborn.Game.Bootstrap
                 var part = registry.CharacterParts[i];
                 if (part != null)
                 {
-                    await resource.LoadSubSpriteAsync(part.SheetAddress, CharacterPartComposer.BuildFrameSubSpriteName(part, 0, 0));
+                    await resource.LoadSubSpriteAsync(part.SheetAddress, CharacterPartComposer.BuildFrameSubSpriteName(part, idleRow, idleColumn));
                     if (playerInstance == null || composer == null || animator == null)
                     {
                         return;
@@ -472,6 +478,7 @@ namespace Rootborn.Game.Bootstrap
             }
 
             animator.Configure(composer, appearance, registry.CharacterParts, (part, subSpriteName) => resource.GetCachedSubSprite(part.SheetAddress, subSpriteName));
+            animator.ConfigureMotion(motion);
             animator.SetMotion(Vector2.zero, new Vector2(0f, -1f));
             animator.Tick(0f);
         }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using Rootborn.Game.Family;
 using Rootborn.Game.Player;
 using UnityEngine;
@@ -131,7 +132,7 @@ namespace Rootborn.Game.Save
 
             string slotDir = SlotDirectory(metadata.SlotId);
             Directory.CreateDirectory(slotDir);
-            File.WriteAllText(Path.Combine(slotDir, MetadataFileName), JsonUtility.ToJson(metadata, true));
+            WriteAtomic(Path.Combine(slotDir, MetadataFileName), JsonUtility.ToJson(metadata, true));
         }
 
         public SaveSlotMetadata LoadMetadata(string slotId)
@@ -184,8 +185,78 @@ namespace Rootborn.Game.Save
 
         public void WriteJson(string fileName, string json)
         {
-            var path = Path.Combine(_dir, fileName);
-            File.WriteAllText(path, json);
+            WriteAtomic(Path.Combine(_dir, fileName), json);
+        }
+
+        // A crash during the write must leave the previous save intact, never a truncated file.
+        private static void WriteAtomic(string path, string contents)
+        {
+            string temporary = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            try
+            {
+                using (var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                {
+                    using (var writer = new StreamWriter(stream, new UTF8Encoding(false), 4096, true))
+                    {
+                        writer.Write(contents);
+                    }
+
+                    stream.Flush(true);
+                }
+
+                if (File.Exists(path))
+                {
+                    ReplaceWithTransientLockRetry(temporary, path);
+                }
+                else
+                {
+                    File.Move(temporary, path);
+                }
+            }
+            finally
+            {
+                TryDeleteTemporary(temporary);
+            }
+        }
+
+        private static void ReplaceWithTransientLockRetry(string temporary, string path)
+        {
+            // Three retries wait at most 70 ms, only after Windows sharing failures that keep both files.
+            for (int attempt = 0; ; attempt++)
+            {
+                try
+                {
+                    File.Replace(temporary, path, null);
+                    return;
+                }
+                catch (IOException exception) when (attempt < 3 && IsTransientReplacementLock(exception))
+                {
+                    System.Threading.Thread.Sleep(10 << attempt);
+                }
+            }
+        }
+
+        private static bool IsTransientReplacementLock(IOException exception)
+        {
+            int error = exception.HResult & 0xffff;
+            return error == 32 || error == 33 || error == 1175;
+        }
+
+        private static void TryDeleteTemporary(string temporary)
+        {
+            try
+            {
+                if (File.Exists(temporary))
+                {
+                    File.Delete(temporary);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
         }
 
         public string ReadJson(string fileName)

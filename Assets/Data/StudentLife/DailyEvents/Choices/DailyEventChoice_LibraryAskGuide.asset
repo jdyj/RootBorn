@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: DailyEventChoice_LibraryAskGuide
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.DailyEventChoiceDefinition
   _id: daily-event-choice.library-ask-guide
-  _displayNameKey: Ask for a hint
-  _resultSummaryKey: Trust grows with a lighter cost.
+  _displayNameKey: life.event.choice.hint.name
+  _resultSummaryKey: life.event.choice.hint.summary
+  _timePolicy: {fileID: 11400000, guid: 877e2af40acc7d749a78882afa991e80, type: 2}
   _timeCostMinutes: 15
   _energyCost: 0
   _focusCost: 1

@@ -1,5 +1,6 @@
 using System.Collections;
 using Rootborn.Game.Common;
+using Rootborn.Game.World;
 using Rootborn.Game.Player;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -43,6 +44,7 @@ namespace Rootborn.Game.StudentLife
 
         private static void Ensure(Scene scene)
         {
+            if (AuthoredWorldScene.Find(scene) != null) return;
             if (FindRoot(scene, RunnerName) != null)
             {
                 return;
@@ -112,6 +114,8 @@ namespace Rootborn.Game.StudentLife
 
         private static void EnsureWorkPoint(Scene scene, PartTimeWorkDefinition work)
         {
+            // Saved interactors already contain their SO binding; never generate or reposition prototypes.
+            if (AuthoredWorldScene.Find(scene) != null) return;
             var existing = GameObject.Find(WorkPointName);
             var go = existing != null ? existing : new GameObject(WorkPointName);
             if (existing == null)

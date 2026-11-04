@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: EncyclopediaCategory_Knowledge
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Encyclopedia.EncyclopediaCategoryDefinition
   _id: ency.category.knowledge
-  _displayName: Knowledge
+  _displayName: ui.encyclopedia.category.knowledge
   _sortOrder: 2

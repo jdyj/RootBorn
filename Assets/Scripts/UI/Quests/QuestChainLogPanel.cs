@@ -19,6 +19,17 @@ namespace Rootborn.UI.Quests
         private string _selectedChainId = string.Empty;
         private QuestChainState? _stateFilter;
         private Action _onChanged;
+        private Func<Func<QuestChainLog, RewardRuntimeContext, bool>, bool> _commandExecutor;
+
+        public void BindCommandExecutor(Func<Func<QuestChainLog, RewardRuntimeContext, bool>, bool> executor)
+        {
+            _commandExecutor = executor;
+        }
+
+        private bool ExecuteCommand(Func<QuestChainLog, RewardRuntimeContext, bool> command)
+        {
+            return _commandExecutor != null ? _commandExecutor(command) : command(_log, _rewardContext);
+        }
         private GameObject _root;
         private Text _careerText;
         private Text _stateText;
@@ -133,7 +144,8 @@ namespace Rootborn.UI.Quests
         {
             var selected = SelectVisibleChain();
             if (selected == null || _log == null) return;
-            if (_log.Accept(selected))
+            if (ExecuteCommand((log, rewards) => log.AcceptWithContext(selected,
+                new QuestRuntimeContext(rewards.QuestLog, null, rewards.KnowledgeProgress, rewards.StoryFlags, rewards.StudentLifeProgress))))
             {
                 Refresh();
                 _onChanged?.Invoke();
@@ -144,7 +156,7 @@ namespace Rootborn.UI.Quests
         {
             var selected = SelectVisibleChain();
             if (selected == null || _log == null) return;
-            if (_log.Track(selected))
+            if (ExecuteCommand((log, rewards) => log.Track(selected)))
             {
                 Refresh();
                 _onChanged?.Invoke();
@@ -155,7 +167,7 @@ namespace Rootborn.UI.Quests
         {
             var selected = SelectVisibleChain();
             if (selected == null || _log == null) return;
-            if (_log.ClaimCompletionRewards(selected, in _rewardContext))
+            if (ExecuteCommand((log, rewards) => log.ClaimCompletionRewards(selected, in rewards)))
             {
                 Refresh();
                 _onChanged?.Invoke();
@@ -232,7 +244,8 @@ namespace Rootborn.UI.Quests
         {
             if (_acceptButton == null || _trackButton == null || _claimRewardButton == null) return;
             var state = selected != null && _log != null ? _log.GetState(selected) : QuestChainState.Available;
-            _acceptButton.interactable = selected != null && state == QuestChainState.Available;
+            _acceptButton.interactable = selected != null && _log != null && state == QuestChainState.Available
+                && _log.EvaluateAvailability(selected, ResolveQuestContext());
             _trackButton.interactable = selected != null && (state == QuestChainState.Active || state == QuestChainState.Paused || state == QuestChainState.Tracked);
             _claimRewardButton.interactable = selected != null && _log != null && _log.CanClaimCompletionRewards(selected, in _rewardContext);
         }
@@ -240,12 +253,18 @@ namespace Rootborn.UI.Quests
         private string BuildDetail(QuestChainDefinition chain, QuestChainState state)
         {
             string text = chain.Id + "\n" + state;
-            var step = chain.Steps != null && chain.Steps.Length > 0 ? chain.Steps[0] : null;
+            var step = _log != null ? _log.GetCurrentStep(chain) : null;
             var objective = step != null && step.Objectives != null && step.Objectives.Length > 0 ? step.Objectives[0] : null;
             if (objective != null && _log != null) text += "\n" + objective.DisplayKey + " " + _log.GetObjectiveProgress(chain, 0) + " / " + objective.RequiredCount;
             if (state == QuestChainState.Blocked && _log != null) text += "\n" + _log.GetBlockedReasonId(chain) + "\n" + _log.GetBlockedSummary(chain);
             if (state == QuestChainState.Completed && _log != null) text += "\nReward: " + (_log.IsRewardClaimed(chain, CompletionRewardId) ? "Claimed" : "Ready");
             return text;
+        }
+
+        private QuestRuntimeContext ResolveQuestContext()
+        {
+            return new QuestRuntimeContext(_rewardContext.QuestLog, null, _rewardContext.KnowledgeProgress,
+                _rewardContext.StoryFlags, _rewardContext.StudentLifeProgress);
         }
 
         private void BuildIfNeeded()

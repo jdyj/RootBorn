@@ -83,7 +83,9 @@ namespace Rootborn.Game.StudentLife
                 choices.Add(new ExplorationChoiceSummaryModel(choice.Id, choice.DisplayNameKey, choice.PreviewHintKey, available, reason));
             }
 
-            bool completed = progress != null && progress.GetRecord(interaction.Id).Completed;
+            bool completed = progress != null
+                && progress.TryGetRecord(interaction.Id, out var record)
+                && record.Completed;
             return new ExplorationSummaryModel(interaction.Id, interaction.DisplayNameKey, interaction.DescriptionKey, completed, choices.ToArray());
         }
     }

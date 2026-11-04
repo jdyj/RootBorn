@@ -61,6 +61,7 @@ namespace Rootborn.UI.Modern
             if (playerInventory != null)
             {
                 inventoryPanel.Bind(playerInventory);
+                statusPanel.BindOwner(playerInventory.gameObject);
             }
 
             router.Bind(inventoryPanel, statusPanel, settingsPanel);
@@ -102,11 +103,11 @@ namespace Rootborn.UI.Modern
             }
             else if (typeof(T) == typeof(ObjectiveJournalPanel))
             {
-                rect.sizeDelta = new Vector2(1180f, 720f);
+                rect.sizeDelta = new Vector2(1440f, 840f);
             }
             else if (typeof(T) == typeof(TrackedObjectiveHud))
             {
-                rect.sizeDelta = new Vector2(360f, 96f);
+                rect.sizeDelta = new Vector2(640f, 200f);
             }
             else
             {
@@ -130,10 +131,7 @@ namespace Rootborn.UI.Modern
                 return;
             }
 
-            rect.anchorMin = new Vector2(1f, 1f);
-            rect.anchorMax = new Vector2(1f, 1f);
-            rect.pivot = new Vector2(1f, 1f);
-            rect.anchoredPosition = new Vector2(-24f, -24f);
+            Rootborn.UI.HUD.UrbanGameplayHudLayout.PositionTracked(rect);
         }
 
         private static void HandleSceneLoaded(Scene scene, LoadSceneMode mode)

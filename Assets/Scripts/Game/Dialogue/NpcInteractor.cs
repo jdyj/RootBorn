@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 using Rootborn.Game.Player;
 using Rootborn.Game.Quests;
 using Rootborn.Game.StudentLife;
@@ -10,6 +12,20 @@ namespace Rootborn.Game.Dialogue
     public sealed class NpcInteractor : MonoBehaviour, IPlayerInteractable, IPrioritizedPlayerInteractable
     {
         private const int NpcInteractionPriority = 30;
+        private sealed class SceneAuthority { public UnityEngine.Object Owner; public Func<GameObject,bool> Allows; }
+        private static readonly Dictionary<int,SceneAuthority> Authorities = new Dictionary<int,SceneAuthority>();
+        public static void BindSceneAuthority(Scene scene,UnityEngine.Object owner,Func<GameObject,bool> allows)
+        { if(scene.IsValid() && owner!=null && allows!=null) Authorities[scene.handle]=new SceneAuthority{Owner=owner,Allows=allows}; }
+        public static void ReleaseSceneAuthority(Scene scene,UnityEngine.Object owner)
+        { if(Authorities.TryGetValue(scene.handle,out var value) && ReferenceEquals(value.Owner,owner)) Authorities.Remove(scene.handle); }
+        private bool HasAuthority(GameObject actor)
+        {
+            if(!Authorities.TryGetValue(gameObject.scene.handle,out var value)) return true;
+            if(value.Owner==null){Authorities.Remove(gameObject.scene.handle);return true;}
+            return value.Allows(actor);
+        }
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetAuthorities(){Authorities.Clear();}
 
         [SerializeField] private NpcDefinition _npc;
 
@@ -21,6 +37,9 @@ namespace Rootborn.Game.Dialogue
         private DialogueDefinition _scheduledDialogue;
 
         public DialogueSession Session => _session;
+        // Valid only during synchronous interaction callbacks; UI must not infer another actor.
+        public GameObject CurrentInteractionActor { get; private set; }
+        public long InteractionSequence { get; private set; }
         public NpcDefinition Npc => _npc;
         public LocationVisitResult LastVisitResult { get; private set; }
         public int InteractionPriority => NpcInteractionPriority;
@@ -50,7 +69,7 @@ namespace Rootborn.Game.Dialogue
 
         public bool CanInteract(GameObject player)
         {
-            return _npc != null;
+            return _npc != null && HasAuthority(player);
         }
 
         public bool TryInteract(GameObject player)
@@ -60,24 +79,31 @@ namespace Rootborn.Game.Dialogue
                 return false;
             }
 
-            var component = player != null ? player.GetComponent<StudentLifeProgressComponent>() : null;
-            var progress = component != null ? component.EnsureProgress() : null;
-            Interact(progress);
-
-            bool shouldSave = false;
-            if (progress != null)
+            CurrentInteractionActor = player;
+            try
             {
-                var visitProgress = new LocationVisitProgress(progress);
-                bool applied = visitProgress.TryRecordNpcMeeting(_npc, out var result);
-                LastVisitResult = result;
-                shouldSave = applied;
+                var component = player != null ? player.GetComponent<StudentLifeProgressComponent>() : null;
+                var progress = component != null ? component.EnsureProgress() : null;
+                Interact(progress);
+                // A talk event can publish a replacement aggregate before these receipts.
+                progress = component != null ? component.EnsureProgress() : null;
 
-                var scheduleProgress = new NpcScheduleProgress(progress);
-                if (scheduleProgress.TryRecordMeeting(_npc, _scheduledLocation, _scheduledTimeSlotId, _scheduledEventNoticeKey, out _)) shouldSave = true;
-                if (shouldSave) StudentLifeProgressPersistence.Save(component);
+                bool shouldSave = false;
+                if (progress != null)
+                {
+                    var visitProgress = new LocationVisitProgress(progress);
+                    bool applied = visitProgress.TryRecordNpcMeeting(_npc, out var result);
+                    LastVisitResult = result;
+                    shouldSave = applied;
+
+                    var scheduleProgress = new NpcScheduleProgress(progress);
+                    if (scheduleProgress.TryRecordMeeting(_npc, _scheduledLocation, _scheduledTimeSlotId, _scheduledEventNoticeKey, out _)) shouldSave = true;
+                    if (shouldSave) StudentLifeProgressPersistence.Save(component);
+                }
+
+                return true;
             }
-
-            return true;
+            finally { CurrentInteractionActor = null; }
         }
 
         public void Interact()
@@ -87,9 +113,15 @@ namespace Rootborn.Game.Dialogue
 
         public void Interact(StudentLifeProgress progress)
         {
+            InteractionSequence++;
             var dialogue = ResolveInteractionDialogue(progress);
             _session.Open(dialogue);
             RecordTalkEvent();
+            if (_npc != null && progress != null)
+                QuestGameplayEventBridge.Record(new QuestEvent(QuestEventKind.Talk,
+                    QuestGameplayEventBridge.CreateRequestKey("npc-talk"), npc: _npc), progress);
+            if(CurrentInteractionActor!=null)
+            { var current=CurrentInteractionActor.GetComponent<StudentLifeProgressComponent>();if(current!=null) progress=current.EnsureProgress(); }
             OnInteracted?.Invoke(this);
             OnAnyInteracted?.Invoke(this, progress);
         }

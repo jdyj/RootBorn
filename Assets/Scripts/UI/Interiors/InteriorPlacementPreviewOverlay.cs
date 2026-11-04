@@ -3,6 +3,8 @@ using Rootborn.Game.Housing;
 using Rootborn.Game.Interiors;
 using Rootborn.Game.Save;
 using Rootborn.Game.Placement;
+using Rootborn.Game.Quests;
+using Rootborn.Game.StudentLife;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -21,7 +23,7 @@ namespace Rootborn.UI.Interiors
         private static readonly Color InvalidFootprintColor = new Color(1f, 0.2f, 0.12f, 0.42f);
         private static readonly List<FurniturePlacementSaveData> SavedFurnitureLayout = new List<FurniturePlacementSaveData>();
 
-        private readonly FurniturePlacementRegistry _registry = new FurniturePlacementRegistry();
+        private FurniturePlacementRegistry _registry = new FurniturePlacementRegistry();
         private Tilemap _overlay;
         private Tilemap _furnitureTilemap;
         private Tilemap _occupancyTilemap;
@@ -42,7 +44,28 @@ namespace Rootborn.UI.Interiors
         private bool _wasMousePressed;
         private bool _hasPreviewMapCell;
         private Vector2Int _lastPreviewMapCell;
+        private PointerEventData _pointerEventData;
+        private EventSystem _cachedEventSystem;
+        private readonly List<RaycastResult> _uiRaycastResults = new List<RaycastResult>(8);
+        private Camera _cachedCamera;
         private Vector3Int _offset;
+        private StudentLifeProgress _questPlayer;
+
+        private AuthoredHouseFurnitureSession _authoredSession;
+        public void BindAuthoredSession(AuthoredHouseFurnitureSession session)
+        {
+            if(session==null || session.gameObject.scene!=gameObject.scene)throw new System.ArgumentException("Same-scene session required.");
+            _authoredSession=session;_registry=session.Registry;_surface=session.Surface;
+            _furnitureTilemap=_surface.ObjectTilemap;_occupancyTilemap=_surface.OccupancyTilemap;_offset=Vector3Int.zero;
+        }
+        public void SuspendPreview(){ClearOverlay();gameObject.SetActive(false);}
+        private Tilemap CreateAuthoredPreview(string label,int order)
+        {
+            var go=new GameObject(label,typeof(Tilemap),typeof(TilemapRenderer));SceneManager.MoveGameObjectToScene(go,gameObject.scene);
+            go.transform.SetParent(_surface.GroundTilemap.transform.parent,false);
+            go.GetComponent<TilemapRenderer>().sortingOrder=order;return go.GetComponent<Tilemap>();
+        }
+        public void BindQuestPlayer(StudentLifeProgress progress) => _questPlayer = progress;
 
         public int ValidCellCount { get; private set; }
         public int InvalidCellCount { get; private set; }
@@ -51,13 +74,14 @@ namespace Rootborn.UI.Interiors
         public int ActiveSurfaceCellCountForTests => _surface != null ? _surface.Bounds.size.x * _surface.Bounds.size.y : 0;
         public int PlacedFurnitureCountForTests => _registry.Instances.Count;
 
-        public static InteriorPlacementPreviewOverlay Ensure()
+        public static InteriorPlacementPreviewOverlay Ensure() => Ensure(SceneManager.GetActiveScene());
+
+        public static InteriorPlacementPreviewOverlay Ensure(Scene scene)
         {
-            var scene = SceneManager.GetActiveScene();
-            var existing = FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
+            InteriorPlacementPreviewOverlay existing=null;foreach(var candidate in FindObjectsByType<InteriorPlacementPreviewOverlay>(FindObjectsInactive.Include,FindObjectsSortMode.None))if(candidate.gameObject.scene==scene){existing=candidate;break;}
             if (existing != null && existing.gameObject.scene == scene)
             {
-                return existing;
+                existing.gameObject.SetActive(true);return existing;
             }
 
             if (!scene.IsValid() || !scene.isLoaded)
@@ -89,6 +113,10 @@ namespace Rootborn.UI.Interiors
 
         public void RefreshFurniture(InteriorGeneratedMap map, InteriorFurniturePlacementRequest request, InteriorTilemapApplier applier, InteriorFurnitureDefinition furniture)
         {
+            if(_authoredSession!=null){_activeFurniture=furniture;_request=request;_activeDirection=FurniturePlacementDirection.North;_hasSelectedInstance=false;EnsureTilemap();ClearGhost();Draw();return;}
+
+            foreach(var root in gameObject.scene.GetRootGameObjects())
+            {var session=root.GetComponentInChildren<AuthoredHouseFurnitureSession>(true);if(session!=null){BindAuthoredSession(session);RefreshFurniture(map,request,applier,furniture);return;}}
             _surface = null;
             _furnitureTilemap = null;
             _occupancyTilemap = null;
@@ -130,6 +158,8 @@ namespace Rootborn.UI.Interiors
 
         public bool TryManualPlaceFirstValidForTests(out string message)
         {
+            if(_authoredSession!=null){foreach(var cell in _authoredSession.Model.GroundCells)if(TryManualPlace(new Vector2Int(cell.x,cell.y),out message))return true;message="No valid cells";return false;}
+
             if (_activeFurniture != null && _map != null)
             {
                 for (int y = 0; y < _map.Height; y++)
@@ -183,6 +213,15 @@ namespace Rootborn.UI.Interiors
         }
         public bool MoveSelectedFurniture()
         {
+            if(_authoredSession!=null)
+            {
+                if(!_hasSelectedInstance)return false;
+                foreach(var cell in _authoredSession.Model.GroundCells)
+                {if(cell==_selectedInstance.AnchorCell)continue;if(_authoredSession.TryMove(_selectedInstance.InstanceId,cell,_activeDirection))
+                    {_registry.TryFindAt(_surface.SurfaceId,cell,out _selectedInstance);Draw();return true;}}
+                return false;
+            }
+
             if (!_hasSelectedInstance || _surface == null || _map == null || _activeFurniture == null)
             {
                 return false;
@@ -226,6 +265,7 @@ namespace Rootborn.UI.Interiors
 
         public bool SaveFurnitureLayout()
         {
+            if(_authoredSession!=null)return _authoredSession.Save();
             SavedFurnitureLayout.Clear();
             foreach (var instance in _registry.Instances)
             {
@@ -246,6 +286,7 @@ namespace Rootborn.UI.Interiors
 
         public bool LoadFurnitureLayout()
         {
+            if(_authoredSession!=null){bool authoredRestored=_authoredSession.Reload();Draw();return authoredRestored;}
             FurniturePlacementLayoutPersistence.TryLoadHouseLayoutForStage(ResolveCurrentHouseStageIndex(), SavedFurnitureLayout);
             if (SavedFurnitureLayout.Count == 0 || _map == null)
             {
@@ -313,6 +354,7 @@ namespace Rootborn.UI.Interiors
 
         public bool DeleteSelectedFurniture()
         {
+            if(_authoredSession!=null){bool result=_hasSelectedInstance && _authoredSession.Delete(_selectedInstance.InstanceId);_hasSelectedInstance=false;Draw();return result;}
             if (!_hasSelectedInstance || _surface == null)
             {
                 return false;
@@ -350,12 +392,12 @@ namespace Rootborn.UI.Interiors
                 return;
             }
 
-            if (_map == null || _request == null || _overlay == null)
+            if ((_authoredSession==null && (_map == null || _request == null)) || _overlay == null)
             {
                 return;
             }
 
-            var camera = Camera.main;
+            var camera = ResolveCamera();
             if (camera == null)
             {
                 return;
@@ -378,9 +420,12 @@ namespace Rootborn.UI.Interiors
             var mapCell = new Vector2Int(tileCell.x - _offset.x, tileCell.y - _offset.y);
             if (_activeFurniture != null && !_hasSelectedInstance)
             {
-                DrawGhost(mapCell);
+                if (!_hasPreviewMapCell || _lastPreviewMapCell != mapCell)
+                {
+                    DrawGhost(mapCell);
+                }
             }
-            else
+            else if (_hasPreviewMapCell)
             {
                 ClearGhost();
             }
@@ -430,20 +475,34 @@ namespace Rootborn.UI.Interiors
             return true;
         }
 
-        private static bool IsPointerOverUi(Vector2 screenPosition)
+        private Camera ResolveCamera()
+        {
+            if (_cachedCamera == null || !_cachedCamera.isActiveAndEnabled)
+            {
+                _cachedCamera = Camera.main;
+            }
+
+            return _cachedCamera;
+        }
+
+        private bool IsPointerOverUi(Vector2 screenPosition)
         {
             if (EventSystem.current == null)
             {
                 return false;
             }
 
-            var eventData = new PointerEventData(EventSystem.current)
+            if (_pointerEventData == null || _cachedEventSystem != EventSystem.current)
             {
-                position = screenPosition
-            };
-            var results = new List<RaycastResult>();
-            EventSystem.current.RaycastAll(eventData, results);
-            return results.Count > 0;
+                _cachedEventSystem = EventSystem.current;
+                _pointerEventData = new PointerEventData(_cachedEventSystem);
+            }
+
+            _pointerEventData.Reset();
+            _pointerEventData.position = screenPosition;
+            _uiRaycastResults.Clear();
+            EventSystem.current.RaycastAll(_pointerEventData, _uiRaycastResults);
+            return _uiRaycastResults.Count > 0;
         }
 
         private bool TryManualPlace(Vector2Int mapCell, out string message)
@@ -468,6 +527,12 @@ namespace Rootborn.UI.Interiors
 
         private bool TryManualPlaceFurniture(Vector2Int mapCell, out string message)
         {
+            if(_authoredSession!=null)
+            {
+                bool placed=_activeFurniture!=null && _authoredSession.TryPlace(_activeFurniture.PlacementDefinition,new Vector3Int(mapCell.x,mapCell.y,0),_activeDirection);
+                message=placed?"Placed "+_activeFurniture.Id:"Placement unavailable";LastMessage=message;Draw();return placed;
+            }
+
             if (!CanPlaceFurnitureAt(mapCell))
             {
                 message = "Cell is not valid for " + _activeFurniture.Id;
@@ -503,11 +568,34 @@ namespace Rootborn.UI.Interiors
             message = "Placed " + placement.FurnitureId;
             LastMessage = message;
             ClearOverlay();
+            // This is the player commit point: footprint application can no longer roll back.
+            // Registry/service placement also runs during restoration and must remain silent.
+            var actor = ResolveQuestPlayer();
+            if (actor != null)
+            {
+                SaveFurnitureLayout();
+                LastMessage = message;
+                QuestGameplayEventBridge.Record(new QuestEvent(QuestEventKind.FurniturePlaced,
+                    QuestGameplayEventBridge.CreateRequestKey("furniture-placed"),
+                    furniture: _activeFurniture.PlacementDefinition, surfaceId: _surface.SurfaceId), actor);
+            }
             return true;
+        }
+
+        private StudentLifeProgress ResolveQuestPlayer()
+        {
+            if (_questPlayer != null && (string.IsNullOrEmpty(ActiveSaveContext.SlotId)
+                || _questPlayer.SaveSlot == ActiveSaveContext.SlotId)) return _questPlayer;
+            _questPlayer = null;
+            var player = GameObject.Find("Player");
+            var component = player != null ? player.GetComponent<StudentLifeProgressComponent>() : null;
+            return component != null ? component.EnsureProgress() : null;
         }
 
         private bool CanPlaceFurnitureAt(Vector2Int anchorCell)
         {
+            if(_authoredSession!=null)return _activeFurniture!=null && _authoredSession.CanPlace(_activeFurniture.PlacementDefinition,new Vector3Int(anchorCell.x,anchorCell.y,0),_activeDirection);
+
             if (_map == null || _activeFurniture == null)
             {
                 return false;
@@ -555,6 +643,7 @@ namespace Rootborn.UI.Interiors
 
         private bool ClearPlacedFurnitureInternal(bool updateMessage)
         {
+            if(_authoredSession!=null){bool result=_authoredSession.ClearUserFurniture();_hasSelectedInstance=false;Draw();return result;}
             if (_surface == null)
             {
                 EnsureFurnitureTilemap();
@@ -727,6 +816,7 @@ namespace Rootborn.UI.Interiors
 
         private void ApplyGeneratedMap()
         {
+            if(_authoredSession!=null)return;
             if (_applier == null)
             {
                 _applier = FindFirstObjectByType<InteriorTilemapApplier>();
@@ -740,6 +830,7 @@ namespace Rootborn.UI.Interiors
 
         private void EnsureTilemap()
         {
+            if(_authoredSession!=null){if(_overlay==null)_overlay=CreateAuthoredPreview("AuthoredPlacementAvailability",10001);EnsurePreviewTiles();return;}
             if (_overlay != null)
             {
                 return;
@@ -799,6 +890,7 @@ namespace Rootborn.UI.Interiors
 
         private void EnsureFurnitureTilemap()
         {
+            if(_authoredSession!=null)return;
             if (TryBindExistingPlacementSurface() && _overlay != null)
             {
                 return;
@@ -828,6 +920,7 @@ namespace Rootborn.UI.Interiors
 
         private void EnsureGhostTilemap()
         {
+            if(_authoredSession!=null){if(_ghostTilemap==null)_ghostTilemap=CreateAuthoredPreview("AuthoredGhostPreview",10002);return;}
             if (_ghostTilemap != null)
             {
                 return;
@@ -852,6 +945,7 @@ namespace Rootborn.UI.Interiors
 
         private void EnsureFootprintPreviewTilemap()
         {
+            if(_authoredSession!=null){if(_footprintPreviewTilemap==null)_footprintPreviewTilemap=CreateAuthoredPreview("AuthoredFootprintPreview",10000);return;}
             if (_footprintPreviewTilemap != null)
             {
                 return;
@@ -1026,6 +1120,9 @@ namespace Rootborn.UI.Interiors
 
         private void Draw()
         {
+            if(_authoredSession!=null){EnsureTilemap();_overlay.ClearAllTiles();ValidCellCount=0;InvalidCellCount=0;
+                foreach(var cell in _authoredSession.Model.GroundCells){bool valid=CanPlaceFurnitureAt(new Vector2Int(cell.x,cell.y));_overlay.SetTile(cell,valid?_validTile:_invalidTile);if(valid)ValidCellCount++;else InvalidCellCount++;}return;}
+
             if (_overlay == null)
             {
                 return;
@@ -1040,6 +1137,25 @@ namespace Rootborn.UI.Interiors
             }
 
             _offset = new Vector3Int(-_map.Width / 2, -_map.Height / 2, 0);
+            if (_activeFurniture != null)
+            {
+                // Selected catalog furniture uses its full rotated footprint and surface rules,
+                // exactly as DrawGhost and the mouse placement path do.
+                for (int y = 2; y < _map.Height - 2; y++)
+                {
+                    for (int x = 2; x < _map.Width - 2; x++)
+                    {
+                        var cell = new Vector2Int(x, y);
+                        bool valid = CanPlaceFurnitureAt(cell);
+                        _overlay.SetTile(new Vector3Int(x, y, 0) + _offset, valid ? _validTile : _invalidTile);
+                        if (valid) ValidCellCount++;
+                        else InvalidCellCount++;
+                    }
+                }
+
+                return;
+            }
+
             var candidates = InteriorPlacementAvailability.CollectCandidates(_map, _request);
             for (int i = 0; i < candidates.Invalid.Count; i++)
             {
@@ -1125,6 +1241,7 @@ namespace Rootborn.UI.Interiors
             }
 
             ClearGhost();
+            if(_authoredSession!=null){ValidCellCount=0;InvalidCellCount=0;return;}
             var tilemaps = FindObjectsByType<Tilemap>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
             for (int i = 0; i < tilemaps.Length; i++)
             {

@@ -15,7 +15,8 @@ namespace Rootborn.Game.Family
         private Vector2 _input;
         private Vector2 _facing = new Vector2(0f, -1f);
         private float _elapsed;
-        private int _lastRow;
+        private int _lastMotionKey;
+        private CharacterPartMotionDefinition _motionDefinition;
         private bool _lastWalking;
         private CharacterPartAnimationClipDefinition _activeClip;
         private float _clipElapsed;
@@ -33,6 +34,20 @@ namespace Rootborn.Game.Family
         }
 
         public CharacterPartAnimationClipDefinition ActiveClip => _activeClip;
+        public CharacterPartMotionDefinition MotionDefinition => _motionDefinition;
+
+        public void ConfigureMotion(CharacterPartMotionDefinition profile)
+        {
+            if (_motionDefinition == profile)
+            {
+                return;
+            }
+
+            _motionDefinition = profile;
+            _elapsed = 0f;
+            _lastMotionKey = GetMotionKey();
+            _lastWalking = _input.sqrMagnitude > 0.01f;
+        }
 
         public void Configure(
             CharacterPartComposer composer,
@@ -58,12 +73,12 @@ namespace Rootborn.Game.Family
                 _facing = facing.normalized;
             }
 
-            int row = FacingToRow(_facing);
+            int motionKey = GetMotionKey();
             bool walking = _input.sqrMagnitude > 0.01f;
-            if (row != _lastRow || walking != _lastWalking)
+            if (motionKey != _lastMotionKey || walking != _lastWalking)
             {
                 _elapsed = 0f;
-                _lastRow = row;
+                _lastMotionKey = motionKey;
                 _lastWalking = walking;
             }
         }
@@ -118,15 +133,27 @@ namespace Rootborn.Game.Family
         private void ApplyMotionFrame(float deltaTime)
         {
             bool walking = _input.sqrMagnitude > 0.01f;
-            int row = FacingToRow(_facing);
-            int column = 0;
+            int row = _motionDefinition != null
+                ? (walking ? _motionDefinition.WalkRow : _motionDefinition.IdleRow)
+                : FacingToRow(_facing);
+            int column = _motionDefinition != null ? _motionDefinition.GetIdleColumn(_facing) : 0;
             if (walking)
             {
                 _elapsed += deltaTime;
-                column = Mathf.FloorToInt(_elapsed * FramesPerSecond) % WalkFrameCount;
+                float fps = _motionDefinition != null ? _motionDefinition.FramesPerSecond : FramesPerSecond;
+                int count = _motionDefinition != null ? _motionDefinition.FramesPerDirection : WalkFrameCount;
+                int start = _motionDefinition != null ? _motionDefinition.GetWalkStartColumn(_facing) : 0;
+                column = start + Mathf.FloorToInt(_elapsed * fps) % count;
             }
 
             _composer.ApplyAnimationFrame(_appearance, _definitions, row, column, _resolveSprite);
+        }
+
+        private int GetMotionKey()
+        {
+            return _motionDefinition != null
+                ? CharacterPartMotionDefinition.GetDirectionIndex(_facing)
+                : FacingToRow(_facing);
         }
 
         private static int FacingToRow(Vector2 facing)

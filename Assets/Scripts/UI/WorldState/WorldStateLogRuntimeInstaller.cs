@@ -1,3 +1,5 @@
+using Rootborn.Game.Localization;
+using Rootborn.UI.StudentLife;
 using System;
 using System.Collections;
 using Rootborn.Game.Common;
@@ -111,8 +113,8 @@ namespace Rootborn.UI.WorldState
             rect.anchorMin = new Vector2(0f, 1f);
             rect.anchorMax = new Vector2(0f, 1f);
             rect.pivot = new Vector2(0f, 1f);
-            rect.anchoredPosition = new Vector2(24f, -74f);
-            rect.sizeDelta = new Vector2(180f, 42f);
+            rect.anchoredPosition = new Vector2(24f, -232f);
+            rect.sizeDelta = new Vector2(240f, 56f);
             go.GetComponent<Image>().color = Color.clear;
             var tile = go.GetComponent<ModernUiTileImage>();
             tile.SetRecipe(ModernUiRecipes.CommonPanel);
@@ -124,7 +126,13 @@ namespace Rootborn.UI.WorldState
                 refreshMarkers?.Invoke();
                 panel.Show(summaries != null ? summaries() : Array.Empty<WorldStateSummaryModel>());
             });
-            MakeText(rect, "Label", "World Log", Vector2.zero, rect.sizeDelta, 15, TextAnchor.MiddleCenter);
+            MakeText(rect, "Label", Ui("ui.world-log.open", "마을 기록", "World Log"), Vector2.zero, rect.sizeDelta, 20, TextAnchor.MiddleCenter);
+        }
+
+        private static string Ui(string key, string ko, string en)
+        {
+            string value = GameText.Get(key);
+            return value == key ? (GameText.Language == "ko" ? ko : en) : value;
         }
 
         private static Canvas EnsureCanvas(Scene scene)
@@ -162,7 +170,7 @@ namespace Rootborn.UI.WorldState
             rect.sizeDelta = size;
             var text = go.GetComponent<Text>();
             text.text = value;
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = LifeUiFont.Shared;
             text.fontSize = fontSize;
             text.alignment = alignment;
             text.color = new Color(0.25f, 0.18f, 0.12f, 1f);
@@ -284,6 +292,8 @@ namespace Rootborn.UI.WorldState
             label.transform.SetParent(go.transform, false);
             label.transform.localPosition = new Vector3(0f, 0.58f, 0f);
             var text = label.GetComponent<TextMesh>();
+            text.font = LifeUiFont.Shared;
+            text.GetComponent<Renderer>().sharedMaterial = text.font.material;
             text.text = Humanize(flag.DisplayNameKey);
             text.fontSize = 24;
             text.characterSize = 0.045f;
@@ -326,8 +336,7 @@ namespace Rootborn.UI.WorldState
         private static string Humanize(string key)
         {
             if (string.IsNullOrEmpty(key)) return string.Empty;
-            int dot = key.LastIndexOf('.');
-            return dot >= 0 && dot + 1 < key.Length ? key.Substring(dot + 1) : key;
+            return GameText.Get(key);
         }
 
         private static GameObject FindRoot(Scene scene, string rootName)

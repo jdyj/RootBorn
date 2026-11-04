@@ -1,4 +1,5 @@
 using System;
+using Rootborn.Game.Minigames;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,6 +8,8 @@ namespace Rootborn.Game.StudentLife
     [CreateAssetMenu(fileName = "CareerPractice_New", menuName = "Rootborn/Student Life/Career Practice")]
     public sealed class CareerPracticeDefinition : StudentLifeDefinitionBase
     {
+        [SerializeField] private MinigameDefinition _minigame;
+        public MinigameDefinition Minigame => _minigame;
         [SerializeField] private LifeActivityDefinition _activity;
         [SerializeField] private CareerDefinition _careerHint;
         [SerializeField] private PracticeStepDefinition[] _steps = Array.Empty<PracticeStepDefinition>();

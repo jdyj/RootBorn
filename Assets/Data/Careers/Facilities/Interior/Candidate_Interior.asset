@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c54ebbb815885b428ff36a2f71f0adc, type: 3}
+  m_Name: Candidate_Interior
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.CareerCandidateDefinition
+  _id: candidate.interior
+  _displayNameKey: career.interior
+  _descriptionKey: career.interior.description
+  _lockedTeaserKey: ???
+  _revealedHintThreshold: 1
+  _deepeningHintThreshold: 2
+  _readyHintThreshold: 3
+  _relatedLocations:
+  - {fileID: 11400000, guid: ce662f0e46167a1428e672b4c4b9dd0a, type: 2}
+  _relatedActivities:
+  - {fileID: 11400000, guid: de7a64c7a82e5c44eb1195bd01dd1dc7, type: 2}
+  _routes: []
+  _requirements: []
+  _recommendedActionKeys: []
+  _rewards: []

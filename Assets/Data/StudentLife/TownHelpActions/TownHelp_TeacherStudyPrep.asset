@@ -16,6 +16,7 @@ MonoBehaviour:
   _displayNameKey: town.help.teacher-study-prep
   _npcId: npc.teacher
   _locationId: location.school
+  _timePolicy: {fileID: 11400000, guid: 877e2af40acc7d749a78882afa991e80, type: 2}
   _timeCostMinutes: 20
   _energyCost: 1
   _focusCost: 0
