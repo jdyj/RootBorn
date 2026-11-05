@@ -217,8 +217,12 @@ namespace Rootborn.UI.Interiors
             {
                 if(!_hasSelectedInstance)return false;
                 foreach(var cell in _authoredSession.Model.GroundCells)
-                {if(cell==_selectedInstance.AnchorCell)continue;if(_authoredSession.TryMove(_selectedInstance.InstanceId,cell,_activeDirection))
-                    {_registry.TryFindAt(_surface.SurfaceId,cell,out _selectedInstance);Draw();return true;}}
+                {if(cell==_selectedInstance.AnchorCell)continue;
+                    // Like the generated House, a move goes somewhere new rather than shuffling one cell over its old spot.
+                    if(_activeFurniture!=null && MoveTargetOverlaps(_selectedInstance,new Vector2Int(cell.x-_offset.x,cell.y-_offset.y),_selectedInstance.Direction))continue;
+                    if(_authoredSession.TryMove(_selectedInstance.InstanceId,cell,_activeDirection))
+                    {_registry.TryFindAt(_surface.SurfaceId,cell,out _selectedInstance);LastMessage="Moved "+_selectedInstance.FurnitureId;ClearOverlay();return true;}}
+                LastMessage="No valid move target";
                 return false;
             }
 
@@ -265,7 +269,7 @@ namespace Rootborn.UI.Interiors
 
         public bool SaveFurnitureLayout()
         {
-            if(_authoredSession!=null)return _authoredSession.Save();
+            if(_authoredSession!=null){bool saved=_authoredSession.Save();LastMessage=saved?"Saved "+_authoredSession.PlacedFurniture.Count+" furniture":"Save unavailable";return saved;}
             SavedFurnitureLayout.Clear();
             foreach (var instance in _registry.Instances)
             {
@@ -286,7 +290,7 @@ namespace Rootborn.UI.Interiors
 
         public bool LoadFurnitureLayout()
         {
-            if(_authoredSession!=null){bool authoredRestored=_authoredSession.Reload();Draw();return authoredRestored;}
+            if(_authoredSession!=null){bool authoredRestored=_authoredSession.Reload();LastMessage=authoredRestored?"Loaded "+_authoredSession.PlacedFurniture.Count+" furniture":"No saved furniture";Draw();return authoredRestored;}
             FurniturePlacementLayoutPersistence.TryLoadHouseLayoutForStage(ResolveCurrentHouseStageIndex(), SavedFurnitureLayout);
             if (SavedFurnitureLayout.Count == 0 || _map == null)
             {
@@ -458,7 +462,8 @@ namespace Rootborn.UI.Interiors
         private static bool TryScreenToWorldOnTilePlane(Camera camera, Vector2 screenPosition, out Vector3 world)
         {
             world = default;
-            if (camera == null)
+            // A pointer without a valid position (no mouse yet, or one just unplugged) must not be projected every frame.
+            if (camera == null || !float.IsFinite(screenPosition.x) || !float.IsFinite(screenPosition.y))
             {
                 return false;
             }
@@ -530,7 +535,11 @@ namespace Rootborn.UI.Interiors
             if(_authoredSession!=null)
             {
                 bool placed=_activeFurniture!=null && _authoredSession.TryPlace(_activeFurniture.PlacementDefinition,new Vector3Int(mapCell.x,mapCell.y,0),_activeDirection);
-                message=placed?"Placed "+_activeFurniture.Id:"Placement unavailable";LastMessage=message;Draw();return placed;
+                message=placed?"Placed "+_activeFurniture.Id:"Placement unavailable";LastMessage=message;
+                // Same as the generated House: once placed, the availability tint must not cover the new furniture.
+                // As in the generated House, the piece just placed becomes the selection for move, rotate and delete.
+                if(placed){_hasSelectedInstance=_authoredSession.Registry.TryFindAt(_authoredSession.Surface.SurfaceId,new Vector3Int(mapCell.x,mapCell.y,0),out _selectedInstance);ClearOverlay();}else Draw();
+                return placed;
             }
 
             if (!CanPlaceFurnitureAt(mapCell))
