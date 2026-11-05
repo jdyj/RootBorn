@@ -16,6 +16,8 @@ namespace Rootborn.UI.HUD
         private LifeTimePresentation _lifeSource;
         private NetworkWorldTimeState _worldTime;
         private string _lastRenderedText;
+        private Rootborn.Game.Player.PlayerInventory _boundInventory;
+        private ItemDefinition _shopCurrency;
         private enum DisplaySource { None, Loading, Network, Life, Clock }
         private DisplaySource _displaySource;
         private int _displayDay;
@@ -71,6 +73,8 @@ namespace Rootborn.UI.HUD
             if (_worldTime != null) _worldTime.Changed -= Refresh;
             if (_lifeSource != null) _lifeSource.Changed -= HandleLifeSourceChanged;
             if (_lifeOwner != null) _lifeOwner.TimeChanged -= Refresh;
+            if (_boundInventory != null && _boundInventory.Inventory != null) _boundInventory.Inventory.OnChanged -= Refresh;
+            _boundInventory = null;
         }
 
         private void BindNetwork()
@@ -108,6 +112,32 @@ namespace Rootborn.UI.HUD
             return false;
         }
 
+        // The currency is whatever the shop charges, read once from data.
+        private static ItemDefinition FindShopCurrency()
+        {
+            if (!GameDataRegistryProvider.TryGet(out var registry) || registry == null || registry.FurnitureDefinitions == null) return null;
+            var furniture = registry.FurnitureDefinitions;
+            for (int i = 0; i < furniture.Length; i++) if (furniture[i] != null && furniture[i].IsForSale && furniture[i].PriceItem != null) return furniture[i].PriceItem;
+            return null;
+        }
+
+        private static int AllowanceCount(Rootborn.Game.Player.PlayerInventory inventory, ItemDefinition currency)
+            => inventory != null && inventory.Inventory != null && currency != null ? inventory.Inventory.CountOf(currency) : -1;
+
+        public static string AllowanceText(Rootborn.Game.Player.PlayerInventory inventory) => FormatAllowance(AllowanceCount(inventory, FindShopCurrency()));
+
+        private static string FormatAllowance(int count) => count < 0 ? string.Empty : GameText.FormatLocalized("dream.shop.balance", " \u00b7 Allowance {0}", count);
+
+        private void BindInventory()
+        {
+            var next = _lifeOwner != null ? _lifeOwner.GetComponent<Rootborn.Game.Player.PlayerInventory>() : null;
+            if (next == _boundInventory) return;
+            if (_boundInventory != null && _boundInventory.Inventory != null) _boundInventory.Inventory.OnChanged -= Refresh;
+            _boundInventory = next;
+            if (_boundInventory != null && _boundInventory.Inventory != null && isActiveAndEnabled) _boundInventory.Inventory.OnChanged += Refresh;
+            if (_shopCurrency == null) _shopCurrency = FindShopCurrency();
+        }
+
         private void Refresh()
         {
             if (_label == null) return;
@@ -122,8 +152,10 @@ namespace Rootborn.UI.HUD
             {
                 CheckLocalizationCatalog();
                 int minutes = progress.TimeMinutes % (24 * 60);
-                if (IsSameDisplay(DisplaySource.Life, progress.CurrentDay, minutes, 0, GameText.Language)) return;
-                SetLabelText(GameText.Format("life.time.hud", progress.CurrentDay, minutes / 60, minutes % 60));
+                BindInventory();
+                int allowance = AllowanceCount(_boundInventory, _shopCurrency);
+                if (IsSameDisplay(DisplaySource.Life, progress.CurrentDay, minutes, allowance, GameText.Language)) return;
+                SetLabelText(GameText.Format("life.time.hud", progress.CurrentDay, minutes / 60, minutes % 60) + FormatAllowance(allowance));
                 return;
             }
             if (_clock != null)

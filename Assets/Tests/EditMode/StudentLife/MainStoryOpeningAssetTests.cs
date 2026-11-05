@@ -847,6 +847,60 @@ namespace Rootborn.Tests.EditMode.StudentLife
         }
 
         [Test]
+        public void HouseEntry_OnlyAnnouncesFurnitureWhenACurrentStepWantsIt()
+        {
+            var chain = Load<QuestChainDefinition>("Assets/Data/StudentLife/MainStory/QuestChain_SchoolOpening.asset");
+            var furnitureStep = Load<QuestStepDefinition>("Assets/Data/StudentLife/MainStory/Steps/MainQuest_MyOwnSpace.asset");
+            var otherStep = Load<QuestStepDefinition>("Assets/Data/StudentLife/MainStory/Steps/MainQuest_BackToSchool.asset");
+            Assert.That(Rootborn.UI.Interiors.AuthoredHousePlacementBinding.StepWantsFurniture(furnitureStep), Is.True);
+            Assert.That(Rootborn.UI.Interiors.AuthoredHousePlacementBinding.StepWantsFurniture(otherStep), Is.False);
+            Assert.That(Rootborn.UI.Interiors.AuthoredHousePlacementBinding.StepWantsFurniture(null), Is.False);
+            Assert.That(chain, Is.Not.Null);
+        }
+
+        [Test]
+        public void TimeHud_ShowsAllowanceOncePlayerHasInventory()
+        {
+            string before = Rootborn.Game.Localization.GameText.Language;
+            var root = new GameObject("TimeHudAllowanceFixture");
+            GameDataRegistryProvider.SetOverrideForTests(Registry);
+            try
+            {
+                Rootborn.Game.Localization.GameText.Language = "ko";
+                Rootborn.Game.Player.PlayerGlobalState.ClearForTests();
+                var inventory = root.AddComponent<Rootborn.Game.Player.PlayerInventory>();
+                var desk = Load<FurnitureDefinition>("Assets/Data/Interiors/Furniture/Story/Furniture_Story_StudyDesk.asset");
+                Assert.That(Rootborn.UI.HUD.TimeHud.AllowanceText(null), Is.Empty);
+                Assert.That(Rootborn.UI.HUD.TimeHud.AllowanceText(inventory), Is.EqualTo(" · 용돈 0"));
+                inventory.Inventory.Add(desk.PriceItem, 7);
+                Assert.That(Rootborn.UI.HUD.TimeHud.AllowanceText(inventory), Is.EqualTo(" · 용돈 7"));
+            }
+            finally
+            {
+                GameDataRegistryProvider.SetOverrideForTests(null);
+                Rootborn.Game.Localization.GameText.Language = before;
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void PlacementPanel_HidesDeveloperControlsForPlayers()
+        {
+            var root = new GameObject("PlacementDevFixture");
+            try
+            {
+                foreach (var name in new[] { "SeedLabel", "SeedInput", "RegenerateButton", "ApplyButton", "ValidationLabel", "InteriorPlacementStatusText", "InteriorPlacementSummaryText", "SaveFurnitureLayoutButton" })
+                    new GameObject(name).transform.SetParent(root.transform, false);
+                Rootborn.UI.Interiors.InteriorFurniturePlacementPanel.HideDeveloperControls(root.transform);
+                Assert.That(root.transform.Find("SeedInput").gameObject.activeSelf, Is.False);
+                Assert.That(root.transform.Find("RegenerateButton").gameObject.activeSelf, Is.False);
+                Assert.That(root.transform.Find("InteriorPlacementStatusText").gameObject.activeSelf, Is.False);
+                Assert.That(root.transform.Find("SaveFurnitureLayoutButton").gameObject.activeSelf, Is.True);
+            }
+            finally { UnityEngine.Object.DestroyImmediate(root); }
+        }
+
+        [Test]
         public void StorePanel_ShowsHowMuchAllowanceThePlayerHas()
         {
             string before = Rootborn.Game.Localization.GameText.Language;

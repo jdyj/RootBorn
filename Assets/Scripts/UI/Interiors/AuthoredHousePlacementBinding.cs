@@ -84,10 +84,27 @@ namespace Rootborn.UI.Interiors
                 QuestGameplayEventBridge.CreateRequestKey("furniture-placed"),furniture:definition,
                 surfaceId:_session.Surface.SurfaceId),_owner.StudentComponent.Progress);
         }
+        public static bool StepWantsFurniture(QuestStepDefinition step)
+        {
+            var objectives = step != null ? step.Objectives : null;
+            if (objectives == null) return false;
+            for (int i = 0; i < objectives.Length; i++) if (objectives[i] is Rootborn.Game.Quests.Objectives.FurniturePlacedQuestObjective) return true;
+            return false;
+        }
+        // Every announcement saves and leaves a permanent processed-event key, so skip it unless a chain is waiting for furniture.
+        private bool AnyCurrentStepWantsFurniture()
+        {
+            if(!Rootborn.Game.Common.GameDataRegistryProvider.TryGet(out var registry)||registry==null||_owner==null)return false;
+            var log=_owner.QuestChains;
+            var chains=registry.QuestChains;
+            if(log==null||chains==null)return false;
+            for(int i=0;i<chains.Length;i++)if(chains[i]!=null&&StepWantsFurniture(log.GetCurrentStep(chains[i])))return true;
+            return false;
+        }
         // A piece placed before its quest step began still counts once the room is entered or a new day starts.
         public void AnnouncePlacedFurniture()
         {
-            if(_session==null)return;
+            if(_session==null||!AnyCurrentStepWantsFurniture())return;
             foreach(var definition in _session.PlacedFurniture.Distinct().ToArray())RecordPlacement(definition);
         }
         private void OnDestroy()
