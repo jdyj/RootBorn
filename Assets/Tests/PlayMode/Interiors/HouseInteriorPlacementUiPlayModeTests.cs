@@ -39,6 +39,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return null;
         }
 
+        [Ignore(LegacyPremise.AuthoredHouse + "Expects active developer placement panel with SeedInput/RegenerateButton/ApplyButton on lo")]
         [UnityTest]
         public IEnumerator HouseScene_CreatesFurniturePlacementPanelWithModernCommonPanels()
         {
@@ -63,6 +64,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             AssertModernPanel("InteriorPlacementBottomBar");
         }
 
+        [Ignore(LegacyPremise.AuthoredHouse + "FurnitureCategory_* Korean category headers no longer exist")]
         [UnityTest]
         public IEnumerator HouseScene_FurnitureButtonsUseMockupCategoryIconGrid()
         {
@@ -76,6 +78,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             AssertIconFurnitureButton("PaletteFurniture_desk.large");
         }
 
+        [Ignore(LegacyPremise.AuthoredHouse + "Seed/regenerate disabled in authored House")]
         [UnityTest]
         public IEnumerator RegenerateButton_SeedChangeUpdatesHouseLayoutWithoutAutoFurniture()
         {

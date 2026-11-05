@@ -64,6 +64,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Readiness requires GuideNpc + StudentDayEndBoard in Town")]
         [UnityTest]
         public IEnumerator TOWN_FLOW_001_003_NewGameTownObjectiveJournalDayResultReloadAndDedupe()
         {

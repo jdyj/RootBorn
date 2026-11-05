@@ -43,6 +43,7 @@ namespace Rootborn.Tests.PlayMode.Quests
             yield return null;
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Readiness waits for GuideNpc+QuestProvider")]
         [UnityTest]
         public IEnumerator QUEST_RESOURCE_TOWN_001_QuestResourceCanBeGatheredWithoutRouterMasking()
         {

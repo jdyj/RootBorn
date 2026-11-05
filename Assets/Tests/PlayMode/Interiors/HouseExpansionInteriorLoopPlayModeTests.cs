@@ -40,6 +40,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
             yield return null;
             yield return null;
+            yield return HousePlacementTestDriver.OpenPlacementMode();
 
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>(FindObjectsInactive.Include);
             Assert.IsNotNull(overlay);
@@ -53,6 +54,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
             yield return null;
             yield return null;
+            yield return HousePlacementTestDriver.OpenPlacementMode();
 
             var probe = HouseInteriorLoopProbe.Capture();
             Assert.AreEqual(1, probe.CurrentStageIndex);

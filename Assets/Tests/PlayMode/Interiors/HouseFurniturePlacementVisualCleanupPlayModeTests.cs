@@ -14,6 +14,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
         public IEnumerator HouseFurniturePlacementUi_HidesUnrelatedTopLevelButtonsAndTransparentEmptyPreview()
         {
             yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
+            yield return HousePlacementTestDriver.OpenPlacementMode();
             yield return WaitForPlacementPanel();
             yield return null;
             yield return null;

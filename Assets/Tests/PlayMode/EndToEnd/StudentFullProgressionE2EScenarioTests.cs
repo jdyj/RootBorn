@@ -60,6 +60,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Waits for StudyBasicsActivity, GuideNpc, TownReturnPortal")]
         [UnityTest]
         public IEnumerator STUDENT_E2E_001_012_FullPlayableStudentQuestPortalSaveRewardLoop()
         {

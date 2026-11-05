@@ -52,6 +52,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Readiness requires StudentDayEndBoard in Town")]
         [UnityTest]
         public IEnumerator DAILYEVENT_E2E_006_007_DeferThenStartNextDayReexposesEventFromPlayerPath()
         {

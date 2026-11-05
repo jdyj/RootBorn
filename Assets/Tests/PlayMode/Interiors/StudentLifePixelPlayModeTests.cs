@@ -98,9 +98,9 @@ namespace Rootborn.Tests.PlayMode.Interiors
                 var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
                 Assert.IsNotNull(overlay);
                 Assert.Greater(overlay.ValidCellCount, 0, "Mouse selection must show actual valid cells.");
-                var availability = FindMap("HousePlacementAvailabilityTilemap");
-                var objects = FindMap("HouseFurnitureObjectTilemap");
-                var occupancy = FindMap("HouseFurnitureOccupancyTilemap");
+                var availability = FindMap("AuthoredPlacementAvailability");
+                var objects = FindMap("AuthoredUserFurniture");
+                var occupancy = FindMap("AuthoredUserOccupancy");
                 var occupancyBefore = OccupiedCells(occupancy);
                 Assert.IsTrue(FindVisibleCell(availability, out var target, out var pointer),
                     "A valid visible floor cell outside all UI is required; no forced placement is allowed.");
@@ -134,8 +134,8 @@ namespace Rootborn.Tests.PlayMode.Interiors
 
                 yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
                 yield return WaitForHousePalette();
-                objects = FindMap("HouseFurnitureObjectTilemap");
-                occupancy = FindMap("HouseFurnitureOccupancyTilemap");
+                objects = FindMap("AuthoredUserFurniture");
+                occupancy = FindMap("AuthoredUserOccupancy");
                 Assert.AreEqual(slot, ActiveSaveContext.SlotId);
                 AssertPlacement(objects, occupancy, target, prop);
                 yield return Capture(prop.EvidenceName + "-reloaded");
@@ -228,8 +228,8 @@ namespace Rootborn.Tests.PlayMode.Interiors
                 yield return null;
             }
             Assert.IsNotNull(panel, "House placement UI did not install.");
-            if (!panel.gameObject.activeInHierarchy) yield return ClickButton("PlacementModeToggleButton");
-            yield return null;
+            // The toggle button is created a frame or more after the panel.
+            yield return HousePlacementTestDriver.OpenPlacementMode();
             yield return null;
             Assert.IsTrue(panel.gameObject.activeInHierarchy);
             Assert.IsNotNull(Camera.main);

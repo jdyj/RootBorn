@@ -47,8 +47,9 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
             yield return null;
             yield return null;
+            yield return HousePlacementTestDriver.OpenPlacementMode();
 
-            GameObject.Find(ChairButtonName).GetComponent<Button>().onClick.Invoke();
+            HousePlacementTestDriver.ShowFurniture("chair.black").GetComponent<Button>().onClick.Invoke();
             yield return null;
 
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
@@ -68,20 +69,21 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
             yield return null;
             yield return null;
+            yield return HousePlacementTestDriver.OpenPlacementMode();
 
-            GameObject.Find(DeskButtonName).GetComponent<Button>().onClick.Invoke();
+            HousePlacementTestDriver.ShowFurniture("desk.large").GetComponent<Button>().onClick.Invoke();
             yield return null;
 
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
             Assert.IsNotNull(overlay);
-            var furnitureTilemap = GameObject.Find("HouseFurnitureObjectTilemap")?.GetComponent<Tilemap>();
+            var furnitureTilemap = GameObject.Find("AuthoredUserFurniture")?.GetComponent<Tilemap>();
             int before = furnitureTilemap != null ? CountTiles(furnitureTilemap, DeskTileName) : 0;
 
             Assert.IsTrue(overlay.TryManualPlaceFirstValidForTests(out var message));
             yield return null;
 
             StringAssert.Contains("desk.large", message);
-            furnitureTilemap = GameObject.Find("HouseFurnitureObjectTilemap")?.GetComponent<Tilemap>();
+            furnitureTilemap = GameObject.Find("AuthoredUserFurniture")?.GetComponent<Tilemap>();
             Assert.IsNotNull(furnitureTilemap);
             Assert.Greater(CountTiles(furnitureTilemap, DeskTileName), before, "Manual placement should place the selected registry furniture object, not a generic desk cluster request.");
         }
@@ -92,6 +94,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
             yield return null;
             yield return null;
+            yield return HousePlacementTestDriver.OpenPlacementMode();
 
             Assert.IsNull(GameObject.Find("Palette_Sofa"), "Generic category request buttons must not be exposed in the mockup furniture picker.");
             Assert.IsNull(Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>(), "The availability overlay should wait until the player selects a concrete furniture item.");

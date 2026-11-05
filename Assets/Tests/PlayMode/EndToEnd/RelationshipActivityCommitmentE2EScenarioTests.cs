@@ -68,6 +68,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "after entering Town it waits for old prototype object names")]
         [UnityTest]
         [Timeout(600000)]
         public IEnumerator REL_COMMITMENT_E2E_001_TeacherHelpCommitmentReload()

@@ -35,6 +35,7 @@ namespace Rootborn.Tests.PlayMode.Housing
             if (Directory.Exists(_saveRoot)) Directory.Delete(_saveRoot, true);
         }
 
+        [Ignore(LegacyPremise.AuthoredHouse + "Expects stage-1 save to generate larger floor; authored House has fixed tiles. Generated H")]
         [UnityTest]
         public IEnumerator HOUSE_UPGRADE_PM_001_SavedStageSelectsExpandedHouseGeneration()
         {

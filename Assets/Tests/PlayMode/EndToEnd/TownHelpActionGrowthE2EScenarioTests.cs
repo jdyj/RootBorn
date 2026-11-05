@@ -54,6 +54,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Readiness requires TownHelpActionPoint + StudentDayEndBoard")]
         [UnityTest]
         public IEnumerator HELP_E2E_001_006_PlayTownHelpActionResultReloadAndDedupe()
         {

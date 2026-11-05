@@ -48,6 +48,7 @@ namespace Rootborn.Tests.PlayMode.Quests
             yield return null;
         }
 
+        [Ignore(LegacyPremise.Farm + "Farm portal travel to Town")]
         [UnityTest]
         public IEnumerator QUEST_PLAY_WOOD_006_PortalTravelKeepsPlayerInventoryAndGatherProgressUsesTravellingPlayerQuestLog()
         {

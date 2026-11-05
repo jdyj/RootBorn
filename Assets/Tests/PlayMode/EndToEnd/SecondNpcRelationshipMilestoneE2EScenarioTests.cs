@@ -66,6 +66,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "after entering Town it waits for old prototype object names")]
         [UnityTest]
         [Timeout(600000)]
         public IEnumerator NPC_RELATIONSHIP_E2E_002_SecondNpcMilestoneReload()

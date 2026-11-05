@@ -15,6 +15,7 @@ namespace Rootborn.Tests.PlayMode
         private const string ReferencePath = "docs/art/reference/pixelwood-reference-frame0-top-left.png";
         private const string EvidenceDirectory = "Builds/Logs/modern-ui";
 
+        [Ignore(LegacyPremise.Farm + "Farm scene HUD pixel match")]
         [UnityTest]
         public IEnumerator FarmScene_TopLeftHudCropMatchesReferencePixelsStrictly()
         {

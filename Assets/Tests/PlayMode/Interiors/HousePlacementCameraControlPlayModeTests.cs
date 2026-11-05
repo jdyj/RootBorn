@@ -16,6 +16,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
         public IEnumerator HouseScene_InstallsPlacementCameraControllerAndFramesAllTiles()
         {
             yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
+            yield return HousePlacementTestDriver.OpenPlacementMode();
             yield return WaitForHousePlacementCamera();
 
             var controller = Object.FindFirstObjectByType<HousePlacementCameraController>();
@@ -33,6 +34,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
         public IEnumerator HousePlacementCamera_KeyboardZoomAndPanMoveCameraThroughPlayerInput()
         {
             yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
+            yield return HousePlacementTestDriver.OpenPlacementMode();
             yield return WaitForHousePlacementCamera();
 
             var camera = Camera.main;

@@ -28,6 +28,9 @@ namespace Rootborn.Tests.PlayMode.Characters
         [UnityTest]
         public IEnumerator GROW_PERF_001_MovingAllocatesNothingAndCharactersStayInRenderBudget()
         {
+            // Run first in a suite, nothing has loaded the game data yet; a player arriving from Boot always has it.
+            var boot = Rootborn.Game.Managers.Managers.BootstrapAsync();
+            while (!boot.IsCompleted) yield return null;
             var load = SceneManager.LoadSceneAsync("Town", LoadSceneMode.Single);
             while (!load.isDone) yield return null;
             GrowingCharacterVisualView view = null;

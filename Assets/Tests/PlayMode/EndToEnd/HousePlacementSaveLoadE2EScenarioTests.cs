@@ -70,10 +70,11 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
 
             yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
             yield return WaitForStableScene("House", 0.25f, 10f);
+            yield return HousePlacementTestDriver.OpenPlacementMode();
             yield return PlaceModernShadowlessFurnitureByPlayerFacingInput();
 
-            var furnitureTilemap = RequiredTilemap("HouseFurnitureObjectTilemap");
-            var occupancyTilemap = RequiredTilemap("HouseFurnitureOccupancyTilemap");
+            var furnitureTilemap = RequiredTilemap("AuthoredUserFurniture");
+            var occupancyTilemap = RequiredTilemap("AuthoredUserOccupancy");
             Assert.AreEqual(1, CountModernShadowlessTiles(furnitureTilemap, out var placedCell, out var placedTileName), "Exactly one player-placed Modern Interiors furniture tile should exist before saving.");
             Assert.IsNotNull(occupancyTilemap.GetTile(placedCell), "Placed furniture must write occupancy before saving.");
             int occupiedBefore = CountTiles(occupancyTilemap);
@@ -104,8 +105,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return WaitForStableScene("House", 0.35f, 10f);
             yield return null;
 
-            var restoredFurnitureTilemap = RequiredTilemap("HouseFurnitureObjectTilemap");
-            var restoredOccupancyTilemap = RequiredTilemap("HouseFurnitureOccupancyTilemap");
+            var restoredFurnitureTilemap = RequiredTilemap("AuthoredUserFurniture");
+            var restoredOccupancyTilemap = RequiredTilemap("AuthoredUserOccupancy");
             Assert.AreEqual(1, CountModernShadowlessTiles(restoredFurnitureTilemap, out var restoredCell, out var restoredTileName), "Loading a saved game and entering House should restore the placed furniture visually.");
             Assert.AreEqual(placedCell, restoredCell, "Restored furniture should remain at the same tile cell after save-slot reload.");
             Assert.AreEqual(placedTileName, restoredTileName, "Restored furniture should keep the same tile asset after save-slot reload.");
@@ -142,7 +143,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
             Assert.IsNotNull(overlay, "Selecting furniture should create the placement overlay through the player-facing UI.");
             Assert.Greater(overlay.ValidCellCount, 0, "Selecting furniture should expose valid world placement cells.");
-            var overlayTilemap = RequiredTilemap("HousePlacementAvailabilityTilemap");
+            var overlayTilemap = RequiredTilemap("AuthoredPlacementAvailability");
             var camera = Camera.main;
             Assert.IsNotNull(camera, "House placement requires a Main Camera for world click projection.");
             Assert.IsTrue(TryFindVisibleValidOverlayCell(overlayTilemap, camera, out _, out var screenPosition), "A visible valid placement cell outside UI should be available for the player-facing mouse click.");
@@ -169,9 +170,9 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 File.Delete(screenshotPath);
             }
 
-            var availabilityTilemap = GameObject.Find("HousePlacementAvailabilityTilemap")?.GetComponent<Tilemap>();
-            var ghostTilemap = GameObject.Find("HouseFurnitureGhostPreviewTilemap")?.GetComponent<Tilemap>();
-            var footprintTilemap = GameObject.Find("HouseFurnitureFootprintPreviewTilemap")?.GetComponent<Tilemap>();
+            var availabilityTilemap = GameObject.Find("AuthoredPlacementAvailability")?.GetComponent<Tilemap>();
+            var ghostTilemap = GameObject.Find("AuthoredGhostPreview")?.GetComponent<Tilemap>();
+            var footprintTilemap = GameObject.Find("AuthoredFootprintPreview")?.GetComponent<Tilemap>();
             File.WriteAllText(probePath,
                 "scene=" + SceneManager.GetActiveScene().name + "\n" +
                 "tilemap=" + furnitureTilemap.gameObject.name + "\n" +
@@ -289,6 +290,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
 
         private static GameObject FindModernShadowlessPaletteButton()
         {
+            HousePlacementTestDriver.SearchPalette("modern.interiors.shadowless.");
             var transforms = Object.FindObjectsByType<Transform>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
             for (int i = 0; i < transforms.Length; i++)
             {

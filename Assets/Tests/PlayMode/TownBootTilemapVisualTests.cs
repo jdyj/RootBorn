@@ -46,6 +46,7 @@ namespace Rootborn.Tests.PlayMode
             yield return null;
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "after entering Town it waits for old prototype object names")]
         [UnityTest]
         public IEnumerator TOWN_VISUAL_PM_001_BootSaveSlotFlowShowsSavedTownTilemap()
         {

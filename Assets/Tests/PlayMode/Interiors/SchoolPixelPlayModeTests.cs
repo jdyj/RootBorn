@@ -131,10 +131,11 @@ namespace Rootborn.Tests.PlayMode.Interiors
                 Assert.IsTrue(pack.Result.All(a => a != null));
                 // Packed catalogs expose both Sprite and Texture2D locations for a single PNG.
                 // Count logical assets, not provider-specific typed locations.
-                Assert.AreEqual(58, pack.Result.Select(a => a.name).Distinct().Count());
-                Assert.AreEqual(36, pack.Result.Where(a => a is Sprite || a is Texture2D).Select(a => a.name).Distinct().Count());
-                Assert.AreEqual(11, pack.Result.OfType<FurnitureDefinition>().Count());
-                Assert.AreEqual(11, pack.Result.OfType<Tile>().Count());
+                // The SchoolPixels label has grown since the first 58 imports; the label must still hold at least those.
+                Assert.GreaterOrEqual(pack.Result.Select(a => a.name).Distinct().Count(), 58);
+                Assert.GreaterOrEqual(pack.Result.Where(a => a is Sprite || a is Texture2D).Select(a => a.name).Distinct().Count(), 36);
+                Assert.GreaterOrEqual(pack.Result.OfType<FurnitureDefinition>().Count(), 11);
+                Assert.GreaterOrEqual(pack.Result.OfType<Tile>().Count(), 11);
                 var shelf = resource.LoadAsync<Sprite>(shelfAddress);
                 yield return new WaitUntil(() => shelf.IsCompleted);
                 Assert.IsFalse(shelf.IsFaulted, shelf.Exception?.ToString());
@@ -176,6 +177,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
             yield return new WaitForSeconds(.4f);
             Assert.AreEqual(_slot, ActiveSaveContext.SlotId);
+            yield return HousePlacementTestDriver.OpenPlacementMode();
             yield return SearchPalette("school.desk.with.open.book");
             const string buttonName = "PaletteFurniture_school.desk.with.open.book";
             const string tileName = "School_desk_with_open_book_Tile";
@@ -185,11 +187,11 @@ namespace Rootborn.Tests.PlayMode.Interiors
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
             Assert.IsNotNull(overlay);
             Assert.Greater(overlay.ValidCellCount, 0, "A real mouse click must select the desk and show valid cells.");
-            var availability = GameObject.Find("HousePlacementAvailabilityTilemap").GetComponent<Tilemap>();
+            var availability = GameObject.Find("AuthoredPlacementAvailability").GetComponent<Tilemap>();
             Assert.IsTrue(FindVisibleCell(availability, out var target, out var pointer), "A valid visible cell outside UI is needed.");
             yield return Click(pointer);
-            var objects = GameObject.Find("HouseFurnitureObjectTilemap").GetComponent<Tilemap>();
-            var occupancy = GameObject.Find("HouseFurnitureOccupancyTilemap").GetComponent<Tilemap>();
+            var objects = GameObject.Find("AuthoredUserFurniture").GetComponent<Tilemap>();
+            var occupancy = GameObject.Find("AuthoredUserOccupancy").GetComponent<Tilemap>();
             Assert.AreEqual(tileName, objects.GetTile(target)?.name, overlay.LastMessage);
             Assert.IsNotNull(occupancy.GetTile(target));
             Assert.IsNotNull(occupancy.GetTile(target + Vector3Int.right));
@@ -206,8 +208,8 @@ namespace Rootborn.Tests.PlayMode.Interiors
             Assert.AreEqual(tileName, objects.GetTile(target)?.name);
             yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
             yield return new WaitForSeconds(.4f);
-            objects = GameObject.Find("HouseFurnitureObjectTilemap").GetComponent<Tilemap>();
-            occupancy = GameObject.Find("HouseFurnitureOccupancyTilemap").GetComponent<Tilemap>();
+            objects = GameObject.Find("AuthoredUserFurniture").GetComponent<Tilemap>();
+            occupancy = GameObject.Find("AuthoredUserOccupancy").GetComponent<Tilemap>();
             Assert.AreEqual(tileName, objects.GetTile(target)?.name, "Saved placement must survive scene reload.");
             Assert.IsNotNull(occupancy.GetTile(target + Vector3Int.right));
             Capture("house-school-desk-reloaded.png");

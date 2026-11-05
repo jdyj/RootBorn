@@ -55,6 +55,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "after entering Town it waits for old prototype object names")]
         [UnityTest]
         public IEnumerator OBJECTIVE_PROVIDER_STRICT_E2E_001_SourceCompositionTrackRefreshReload()
         {

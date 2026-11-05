@@ -53,6 +53,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Readiness requires StudentDayEndBoard in Town")]
         [UnityTest]
         public IEnumerator CAREER_CANDIDATE_E2E_001_010_SaveSlotLocationButtonCandidateUiResultReloadAndDedupe()
         {

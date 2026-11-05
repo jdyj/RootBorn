@@ -53,6 +53,7 @@ namespace Rootborn.Tests.PlayMode
             yield return null;
         }
 
+        [Ignore(LegacyPremise.CharacterParts + "PreviewPart_body never created")]
         [UnityTest]
         public IEnumerator CHAR_PART_004_SelectionPreviewUsesLayeredPartSprites()
         {
@@ -77,6 +78,7 @@ namespace Rootborn.Tests.PlayMode
             AssertPreviewPart(selectionPanel.transform, "PreviewPart_accessory", "Accessory_Bamboo_Hat_Brown_r0_c0");
         }
 
+        [Ignore(LegacyPremise.CharacterParts + "BodyNextButton belongs to the old customize row that the SPUM creator replaced")]
         [UnityTest]
         public IEnumerator CHAR_PART_004_NewSlotUiSavesSelectedAppearanceBeforeTownEntry()
         {
@@ -105,6 +107,7 @@ namespace Rootborn.Tests.PlayMode
             Assert.AreEqual("character.accessory.bamboo.brown", metadata.Appearance.GetSelectedPartId("accessory"));
         }
 
+        [Ignore(LegacyPremise.Farm + "Loads Farm and checks Part_body sprite; Old layered Part_* character replaced by growing c")]
         [UnityTest]
         public IEnumerator CHAR_PART_005_FarmPlayerRestoresSavedLayeredAppearance()
         {
@@ -118,6 +121,7 @@ namespace Rootborn.Tests.PlayMode
             AssertSavedLayeredPlayer(player);
         }
 
+        [Ignore(LegacyPremise.Farm + "Loads Farm and checks Part_body sprite; Old layered Part_* character replaced by growing c")]
         [UnityTest]
         public IEnumerator CHAR_PART_005_FarmPlayerLayeredRenderScreenshot_WritesEvidence()
         {
@@ -137,6 +141,7 @@ namespace Rootborn.Tests.PlayMode
             Assert.Greater(CountVisiblePixels(screenshotPath), 1000);
         }
 
+        [Ignore(LegacyPremise.Farm + "Loads Farm and checks Part_body sprite; Old layered Part_* character replaced by growing c")]
         [UnityTest]
         public IEnumerator CHAR_PART_006_FarmPlayerRightMotionKeepsLayeredCharacterUpright()
         {
@@ -169,6 +174,7 @@ namespace Rootborn.Tests.PlayMode
             AssertPartUprightAndFlipped(player, "Part_accessory");
         }
 
+        [Ignore(LegacyPremise.Farm + "Loads Farm and checks Part_body sprite; Old layered Part_* character replaced by growing c")]
         [UnityTest]
         public IEnumerator CHAR_PART_007_EquippedToolSpriteStaysVisibleWhileFacingRight()
         {

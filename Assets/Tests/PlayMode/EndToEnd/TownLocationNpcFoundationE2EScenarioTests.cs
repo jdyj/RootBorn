@@ -53,6 +53,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Readiness requires object named LocationVisit_location_school; in authored Town the school")]
         [UnityTest]
         public IEnumerator LOCNPC_E2E_001_009_SaveSlotMovementLocationNpcInteractionReloadAndDedupe()
         {

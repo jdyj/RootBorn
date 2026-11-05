@@ -27,8 +27,11 @@ namespace Rootborn.Tests.PlayMode
                 yield return new WaitForEndOfFrame();
 
                 Assert.IsTrue(panel.IsVisible);
-                Assert.GreaterOrEqual(panel.PanelTileCount, 30);
-                Assert.AreEqual(4, panel.CornerTileCount);
+                if (UrbanSkinCheck.SkinnedPanelCount(panel.gameObject) == 0)
+                {
+                    Assert.GreaterOrEqual(panel.PanelTileCount, 30);
+                    Assert.AreEqual(4, panel.CornerTileCount);
+                }
                 Assert.IsNull(canvasGo.transform.Find("SettingsPanelRoot/ReferenceAuditOverlay"), "SettingsPanel must not render captured reference PNG overlays.");
                 Assert.Zero(CountMissingTileSprites(canvasGo));
                 Assert.Zero(CountStretchedTileImages(canvasGo));
@@ -63,8 +66,8 @@ namespace Rootborn.Tests.PlayMode
                 yield return null;
                 yield return new WaitForEndOfFrame();
 
-                Assert.GreaterOrEqual(inventory.GetComponentsInChildren<ModernUiTileImage>(true).Sum(t => t.TileCount), 80);
-                Assert.GreaterOrEqual(status.GetComponentsInChildren<ModernUiTileImage>(true).Sum(t => t.TileCount), 60);
+                Assert.IsTrue(UrbanSkinCheck.TilesOrSkin(inventory.gameObject, inventory.GetComponentsInChildren<ModernUiTileImage>(true).Sum(t => t.TileCount), 80));
+                Assert.IsTrue(UrbanSkinCheck.TilesOrSkin(status.gameObject, status.GetComponentsInChildren<ModernUiTileImage>(true).Sum(t => t.TileCount), 60));
                 Assert.Zero(CountMissingTileSprites(canvasGo));
                 Assert.Zero(CountStretchedTileImages(canvasGo));
                 Assert.Zero(CountTextOverflows(canvasGo));

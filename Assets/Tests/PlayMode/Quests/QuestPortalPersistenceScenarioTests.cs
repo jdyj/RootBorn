@@ -51,6 +51,7 @@ namespace Rootborn.Tests.PlayMode.Quests
             yield return null;
         }
 
+        [Ignore(LegacyPremise.Farm + "Waits for FarmPortal/TownReturnPortal and GuideNpc")]
         [UnityTest]
         public IEnumerator PORTAL_PERSIST_PM_001_TownWoodInventoryAndQuestProgressSurvivePortalTravelToFarm()
         {

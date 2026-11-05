@@ -37,13 +37,13 @@ namespace Rootborn.Tests.PlayMode
             yield return null;
             Assert.IsTrue(inventoryPanel.IsVisible, "I-route toggle should show inventory.");
             Assert.IsFalse(statusPanel.IsVisible, "Inventory toggle should not show status.");
-            Assert.GreaterOrEqual(inventoryPanel.GetComponentsInChildren<ModernUiTileImage>(true).Sum(tile => tile.TileCount), 80);
+            Assert.IsTrue(UrbanSkinCheck.TilesOrSkin(inventoryPanel.gameObject, inventoryPanel.GetComponentsInChildren<ModernUiTileImage>(true).Sum(tile => tile.TileCount), 80));
 
             router.ToggleStatusPanel();
             yield return null;
             Assert.IsFalse(inventoryPanel.IsVisible, "Status toggle should close inventory.");
             Assert.IsTrue(statusPanel.IsVisible, "TAB-route toggle should show status.");
-            Assert.GreaterOrEqual(statusPanel.GetComponentsInChildren<ModernUiTileImage>(true).Sum(tile => tile.TileCount), 60);
+            Assert.IsTrue(UrbanSkinCheck.TilesOrSkin(statusPanel.gameObject, statusPanel.GetComponentsInChildren<ModernUiTileImage>(true).Sum(tile => tile.TileCount), 60));
         }
 
         private static IEnumerator LoadTownAndBootstrapRuntime()

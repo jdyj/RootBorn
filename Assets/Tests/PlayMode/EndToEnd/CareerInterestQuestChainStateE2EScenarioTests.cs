@@ -59,6 +59,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Readiness requires StudentDayEndBoard in Town")]
         [UnityTest]
         public IEnumerator QUEST_CHAIN_E2E_001_014_SaveSlotMovementUiAcceptTrackProgressResultReload()
         {
@@ -168,6 +169,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             AssertNoLegacyQuestChainHudObjects();
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Readiness requires StudentDayEndBoard in Town")]
         [UnityTest]
         public IEnumerator QUEST_CHAIN_E2E_009_010_BlockedChainReopensFromActualLocationActivity()
         {

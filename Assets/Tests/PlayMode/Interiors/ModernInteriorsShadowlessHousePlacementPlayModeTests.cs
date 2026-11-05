@@ -47,6 +47,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
             yield return null;
             yield return null;
+            yield return HousePlacementTestDriver.OpenPlacementMode();
 
             var panel = Object.FindFirstObjectByType<InteriorFurniturePlacementPanel>();
             Assert.IsNotNull(panel, "House should create the player-facing furniture placement panel.");
@@ -63,6 +64,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
             yield return null;
             yield return null;
+            yield return HousePlacementTestDriver.OpenPlacementMode();
 
             var button = FindModernShadowlessPaletteButton();
             Assert.IsNotNull(button, "A generated Modern Interiors shadowless furniture button is required for ghost preview verification.");
@@ -70,7 +72,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return null;
 
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
-            var overlayTilemap = GameObject.Find("HousePlacementAvailabilityTilemap")?.GetComponent<Tilemap>();
+            var overlayTilemap = GameObject.Find("AuthoredPlacementAvailability")?.GetComponent<Tilemap>();
             var camera = Camera.main;
             Assert.IsNotNull(overlay);
             Assert.IsNotNull(overlayTilemap);
@@ -85,7 +87,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return null;
             InputSystem.RemoveDevice(mouse);
 
-            var ghostTilemap = GameObject.Find("HouseFurnitureGhostPreviewTilemap")?.GetComponent<Tilemap>();
+            var ghostTilemap = GameObject.Find("AuthoredGhostPreview")?.GetComponent<Tilemap>();
             Assert.IsNotNull(ghostTilemap, "Hovering with a selected furniture item should create the ghost preview Tilemap.");
             Assert.AreEqual(1, CountModernShadowlessTiles(ghostTilemap, out var ghostCell, out var ghostTileName), "Ghost preview should render the selected Modern Interiors furniture tile before placement.");
             Assert.AreEqual(hoverCell, ghostCell, "Ghost preview should use the hovered cell as the lower-left anchor cell.");
@@ -98,6 +100,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
             yield return null;
             yield return null;
+            yield return HousePlacementTestDriver.OpenPlacementMode();
 
             var button = FindModernShadowlessPaletteButton();
             Assert.IsNotNull(button, "A generated Modern Interiors shadowless furniture button is required for footprint preview verification.");
@@ -105,7 +108,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return null;
 
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
-            var overlayTilemap = GameObject.Find("HousePlacementAvailabilityTilemap")?.GetComponent<Tilemap>();
+            var overlayTilemap = GameObject.Find("AuthoredPlacementAvailability")?.GetComponent<Tilemap>();
             var camera = Camera.main;
             Assert.IsNotNull(overlay);
             Assert.IsNotNull(overlayTilemap);
@@ -122,7 +125,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return null;
             InputSystem.RemoveDevice(mouse);
 
-            var footprintTilemap = GameObject.Find("HouseFurnitureFootprintPreviewTilemap")?.GetComponent<Tilemap>();
+            var footprintTilemap = GameObject.Find("AuthoredFootprintPreview")?.GetComponent<Tilemap>();
             Assert.IsNotNull(footprintTilemap, "Hovering with a selected furniture item should create the footprint preview Tilemap.");
             Assert.AreEqual(expectedFootprintCount, CountTiles(footprintTilemap), "Footprint preview should color every occupied cell for the selected furniture.");
             Assert.IsNotNull(footprintTilemap.GetTile(hoverCell), "The hovered lower-left anchor cell should be part of the colored footprint preview.");
@@ -134,6 +137,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
             yield return null;
             yield return null;
+            yield return HousePlacementTestDriver.OpenPlacementMode();
 
             Assert.IsNull(GameObject.Find("ModernOfficeChairSampleTilemap"), "Debug/sample chair tilemap must not be visible in playable House.");
 
@@ -146,7 +150,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             Assert.IsNotNull(overlay);
             Assert.Greater(overlay.ValidCellCount, 0, "Selecting Modern Interiors furniture should draw visible valid placement cells.");
 
-            var overlayTilemap = GameObject.Find("HousePlacementAvailabilityTilemap")?.GetComponent<Tilemap>();
+            var overlayTilemap = GameObject.Find("AuthoredPlacementAvailability")?.GetComponent<Tilemap>();
             var camera = Camera.main;
             Assert.IsNotNull(overlayTilemap);
             Assert.IsNotNull(camera);
@@ -160,10 +164,10 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return null;
             InputSystem.RemoveDevice(mouse);
 
-            var furnitureTilemap = GameObject.Find("HouseFurnitureObjectTilemap")?.GetComponent<Tilemap>();
-            var occupancyTilemap = GameObject.Find("HouseFurnitureOccupancyTilemap")?.GetComponent<Tilemap>();
-            var ghostTilemap = GameObject.Find("HouseFurnitureGhostPreviewTilemap")?.GetComponent<Tilemap>();
-            var footprintTilemap = GameObject.Find("HouseFurnitureFootprintPreviewTilemap")?.GetComponent<Tilemap>();
+            var furnitureTilemap = GameObject.Find("AuthoredUserFurniture")?.GetComponent<Tilemap>();
+            var occupancyTilemap = GameObject.Find("AuthoredUserOccupancy")?.GetComponent<Tilemap>();
+            var ghostTilemap = GameObject.Find("AuthoredGhostPreview")?.GetComponent<Tilemap>();
+            var footprintTilemap = GameObject.Find("AuthoredFootprintPreview")?.GetComponent<Tilemap>();
             Assert.IsNotNull(furnitureTilemap);
             Assert.IsNotNull(occupancyTilemap);
             Assert.AreEqual(0, overlay.ValidCellCount, "A successful world click placement should clear the availability overlay. Last message: " + overlay.LastMessage);
@@ -188,6 +192,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
             yield return null;
             yield return null;
+            yield return HousePlacementTestDriver.OpenPlacementMode();
 
             var button = FindModernShadowlessPaletteButton();
             Assert.IsNotNull(button, "A generated Modern Interiors shadowless furniture button is required for save/load verification.");
@@ -199,8 +204,8 @@ namespace Rootborn.Tests.PlayMode.Interiors
             Assert.IsTrue(overlay.TryManualPlaceFirstValidForTests(out var message), "Modern Interiors furniture should be placeable before save/load verification. Last message: " + message);
             yield return null;
 
-            var furnitureTilemap = GameObject.Find("HouseFurnitureObjectTilemap")?.GetComponent<Tilemap>();
-            var occupancyTilemap = GameObject.Find("HouseFurnitureOccupancyTilemap")?.GetComponent<Tilemap>();
+            var furnitureTilemap = GameObject.Find("AuthoredUserFurniture")?.GetComponent<Tilemap>();
+            var occupancyTilemap = GameObject.Find("AuthoredUserOccupancy")?.GetComponent<Tilemap>();
             Assert.IsNotNull(furnitureTilemap);
             Assert.IsNotNull(occupancyTilemap);
             Assert.AreEqual(1, CountModernShadowlessTiles(furnitureTilemap, out var placedCell, out var tileName));
@@ -240,6 +245,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
 
         private static GameObject FindModernShadowlessPaletteButton()
         {
+            HousePlacementTestDriver.SearchPalette("modern.interiors.shadowless.");
             var transforms = Object.FindObjectsByType<Transform>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
             for (int i = 0; i < transforms.Length; i++)
             {

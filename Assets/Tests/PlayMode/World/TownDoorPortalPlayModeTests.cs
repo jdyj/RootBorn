@@ -16,7 +16,7 @@ namespace Rootborn.Tests.PlayMode.World
     {
         private static readonly ExpectedDoor[] ExpectedDoors =
         {
-            new ExpectedDoor("TownLdtkDoor_house_18_12", "house", "HouseInterior", "house-entry"),
+            new ExpectedDoor("TownLdtkDoor_house_18_12", "house", "House", "house-entry"),
             new ExpectedDoor("TownLdtkDoor_hospital_49_41", "hospital", "HospitalInterior", "hospital-entry"),
             new ExpectedDoor("TownLdtkDoor_shopping_center_61_10", "shopping center", "ShopInterior", "shop-entry"),
             new ExpectedDoor("TownLdtkDoor_police_24_38", "police", "PoliceInterior", "police-entry"),
@@ -95,9 +95,29 @@ namespace Rootborn.Tests.PlayMode.World
         }
 
         [UnityTest]
-        public IEnumerator TOWN_DOOR_PM_002_PlayerWalksIntoHouseDoorAndSeesHouseInteriorLdtkLevel()
+        public IEnumerator TOWN_DOOR_PM_002_PlayerWalksIntoHouseDoorAndSeesTheAuthoredHouse()
         {
-            yield return EnterDoorAndAssertInterior("TownLdtkDoor_house_18_12", "HouseInterior", "HouseInteriorLdtkTilemaps", "HouseInteriorGroundTilemap", "House_1", "HouseInteriorDoorEntryVisual.png");
+            // The player's own house is the authored House scene now, not an LDtk interior level.
+            var player = GameObject.Find("Player");
+            var door = GameObject.Find("TownLdtkDoor_house_18_12");
+            Assert.IsNotNull(player?.GetComponent<PlayerController>(), "Town must expose a controllable player.");
+            Assert.IsNotNull(door, "The house door must exist before entering.");
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+            player.transform.position = door.transform.position + new Vector3(0f, -1.2f, 0f);
+            Physics2D.SyncTransforms();
+            yield return null;
+            yield return WalkPlayerWithKeyboardUntilSceneChangesOrNear(player, keyboard, door.transform.position, 0.25f, 160, "House", "Player must reach or trigger the house door using movement input.");
+            ReleaseMovementKeys(keyboard);
+            InputSystem.Update();
+            yield return WaitForScene("House", 10f);
+            yield return null;
+
+            Assert.AreEqual("House", SceneManager.GetActiveScene().name, "The house door must load the House scene.");
+            Assert.IsNotNull(GameObject.Find("Player"), "Player must persist into House.");
+            var ground = GameObject.Find("HouseGroundTilemap")?.GetComponent<Tilemap>();
+            Assert.IsNotNull(ground, "House must show its saved floor.");
+            Assert.Greater(CountTiles(ground), 0, "House floor must render tiles.");
+            Assert.IsNull(GameObject.Find("Town2LdtkTilemaps"), "House must not leak the Town LDtk root.");
         }
 
         [UnityTest]
@@ -136,7 +156,7 @@ namespace Rootborn.Tests.PlayMode.World
             Physics2D.SyncTransforms();
             yield return null;
             yield return WalkPlayerWithKeyboardUntilSceneChangesOrNear(player, keyboard, door.transform.position, 0.25f, 160, destinationScene, "Player must reach or trigger " + doorName + " using movement input.");
-            Debug.Log("TOWN_DOOR_TEST Walk reached/triggered " + doorName + " activeScene=" + SceneManager.GetActiveScene().name);
+            Debug.Log("TOWN_DOOR_TEST Walk reached/triggered " + doorName + " activeScene=" + SceneManager.GetActiveScene().name + " " + DoorState(player, door));
             yield return WaitForScene(destinationScene, 10f);
             yield return null;
             yield return null;
@@ -347,7 +367,19 @@ namespace Rootborn.Tests.PlayMode.World
 
             ReleaseMovementKeys(keyboard);
             InputSystem.Update();
-            Assert.IsTrue(SceneManager.GetActiveScene().name == destinationScene || (player != null && Vector3.Distance(player.transform.position, targetPosition) <= tolerance), failure);
+            Assert.IsTrue(SceneManager.GetActiveScene().name == destinationScene || (player != null && Vector3.Distance(player.transform.position, targetPosition) <= tolerance), failure + " player=" + (player != null ? player.transform.position.ToString("F2") : "none") + " target=" + targetPosition.ToString("F2") + " pendingTravel=" + Rootborn.Game.World.WorldTravelRuntime.HasPendingTravel);
+        }
+
+        private static string DoorState(GameObject player, GameObject door)
+        {
+            if (door == null) return "door=gone";
+            var trigger = door.GetComponent<Collider2D>();
+            var auto = door.GetComponent<TownAutoDoorPortal>();
+            return "player=" + (player != null ? player.transform.position.ToString("F2") : "none")
+                + " door=" + door.transform.position.ToString("F2")
+                + " trigger=" + (trigger != null ? trigger.bounds.ToString() + " isTrigger=" + trigger.isTrigger + " enabled=" + trigger.enabled : "none")
+                + " opening=" + (auto != null && auto.IsOpening)
+                + " pendingTravel=" + Rootborn.Game.World.WorldTravelRuntime.HasPendingTravel;
         }
 
         private static void QueueKey(Keyboard keyboard, Key key)

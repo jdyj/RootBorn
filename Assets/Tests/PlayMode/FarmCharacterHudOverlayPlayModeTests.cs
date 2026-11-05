@@ -60,6 +60,7 @@ namespace Rootborn.Tests.PlayMode
             Assert.IsNotNull(hud.transform.Find("HudSlot_Tool"));
         }
 
+        [Ignore(LegacyPremise.Farm + "Farm scene HUD tile count")]
         [UnityTest]
         public IEnumerator FarmScene_TopLeftHudUsesModern16x16TileImages()
         {
@@ -100,6 +101,7 @@ namespace Rootborn.Tests.PlayMode
             Assert.Greater(CountVisiblePixels(screenshotPath), 1000);
         }
 
+        [Ignore(LegacyPremise.Farm + "Loads Farm scene HUD reference crop")]
         [UnityTest]
         public IEnumerator FarmScene_TopLeftHudReferenceComparison_WritesReport()
         {

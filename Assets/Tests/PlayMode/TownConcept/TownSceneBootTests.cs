@@ -15,6 +15,7 @@ namespace Rootborn.Tests.PlayMode.TownConcept
 {
     public sealed class TownSceneBootTests
     {
+        [Ignore(LegacyPremise.CharacterParts + "Asserts layered Part_* composition on Town Player; renders Growing_Body etc.")]
         [UnityTest]
         public IEnumerator TownScene_LoadsAsPlayableTownBaseline()
         {

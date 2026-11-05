@@ -46,6 +46,7 @@ namespace Rootborn.Tests.PlayMode.Quests
             Object.Destroy(npc);
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Waits for GuideNpc with QuestProvider")]
         [UnityTest]
         public IEnumerator QUEST_PM_UI_001_TownNpcChoiceButtonClickAcceptsQuest()
         {
@@ -69,6 +70,7 @@ namespace Rootborn.Tests.PlayMode.Quests
             Assert.AreEqual(QuestState.Active, questLogPanel.QuestLog.GetState(firstQuest));
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Waits for GuideNpc with QuestProvider")]
         [UnityTest]
         public IEnumerator QUEST_STUDENT_PM_001_TownNpcPromptEQuestClaimRaisesAllCareerTraits()
         {

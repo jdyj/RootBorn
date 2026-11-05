@@ -51,6 +51,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Waits for StudyBasicsActivity")]
         [UnityTest]
         public IEnumerator STUDENT_E2E_010_011_SaveSlotUiReloadRestoresStudentProgressAfterRealStudyInteraction()
         {

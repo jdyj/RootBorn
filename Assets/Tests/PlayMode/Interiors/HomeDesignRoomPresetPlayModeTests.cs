@@ -15,6 +15,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
 {
     public sealed class HomeDesignRoomPresetPlayModeTests
     {
+        [Ignore(LegacyPremise.AuthoredHouse + "RoomPresetButton_* not exposed")]
         [UnityTest]
         public IEnumerator HousePlacementPanel_RoomPresetButtonAppliesCondominiumLayer1ToVisibleTilemap()
         {
@@ -51,6 +52,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             Assert.AreEqual(new Vector2Int(14, 6), mapProbe.LastPresetSize);
         }
 
+        [Ignore(LegacyPremise.AuthoredHouse + "Room presets require applier.LastGeneratedMap")]
         [UnityTest]
         public IEnumerator HOUSE_LOOP_PM_002_RoomPresetAppliesToExpandedHouseWithoutClearingFurniture()
         {

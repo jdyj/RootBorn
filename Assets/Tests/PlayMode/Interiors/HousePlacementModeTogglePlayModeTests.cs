@@ -21,16 +21,20 @@ namespace Rootborn.Tests.PlayMode.Interiors
             var toggle = GameObject.Find("PlacementModeToggleButton")?.GetComponent<Button>();
             Assert.IsNotNull(panel, "House should create the placement panel before the toggle binds to it.");
             Assert.IsNotNull(toggle, "House should expose a player-facing placement mode toggle button.");
-            Assert.IsTrue(panel.gameObject.activeSelf, "Placement mode should start visible to preserve the existing House editing flow.");
+            Assert.IsFalse(panel.gameObject.activeSelf, "The House opens as a room to walk in; placement starts closed.");
+            Assert.IsTrue(toggle.gameObject.activeInHierarchy, "The toggle must be visible so the player can start placing furniture.");
+
+            yield return Click(toggle.gameObject);
+            Assert.IsTrue(panel.gameObject.activeSelf, "Clicking the toggle should open placement mode.");
             Assert.IsTrue(toggle.gameObject.activeInHierarchy, "The toggle must remain visible while placement mode is on.");
 
             yield return Click(toggle.gameObject);
-            Assert.IsFalse(panel.gameObject.activeSelf, "Clicking the toggle should turn placement mode off by hiding the placement panel.");
+            Assert.IsFalse(panel.gameObject.activeSelf, "Clicking the toggle again should turn placement mode off by hiding the placement panel.");
             Assert.IsTrue(toggle.gameObject.activeInHierarchy, "The toggle must remain visible while placement mode is off so the player can restore it.");
             Assert.IsNull(Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>(), "Turning placement mode off should also remove the active placement preview overlay.");
 
             yield return Click(toggle.gameObject);
-            Assert.IsTrue(panel.gameObject.activeSelf, "Clicking the toggle again should restore placement mode.");
+            Assert.IsTrue(panel.gameObject.activeSelf, "Clicking the toggle a third time should restore placement mode.");
             Assert.IsTrue(toggle.gameObject.activeInHierarchy, "The toggle must remain usable after placement mode is restored.");
         }
 

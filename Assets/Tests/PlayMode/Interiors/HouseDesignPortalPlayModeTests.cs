@@ -11,6 +11,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
 {
     public sealed class HouseDesignPortalPlayModeTests
     {
+        [Ignore(LegacyPremise.AuthoredHouse + "HouseDesignPortal_* skipped in authored House")]
         [UnityTest]
         public IEnumerator HouseDesignPortals_LeftDoorTravelsToCompactCondominiumDesignScene()
         {
@@ -24,6 +25,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
                 new Vector3(0f, -1.2f, 0f));
         }
 
+        [Ignore(LegacyPremise.AuthoredHouse + "HouseDesignPortal_* skipped in authored House")]
         [UnityTest]
         public IEnumerator HouseDesignPortals_RightDoorTravelsToApartmentCondominiumDesignScene()
         {

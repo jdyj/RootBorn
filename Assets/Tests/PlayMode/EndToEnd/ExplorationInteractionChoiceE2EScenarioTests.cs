@@ -94,7 +94,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 Assert.AreEqual(ExplorationChoiceResultKind.Applied, interactor.LastResult.Kind, "EXPLORATION-CHOICE-E2E-007 failed: button click did not apply choice. Result text: " + panel.ResultText);
                 Assert.AreEqual(1, inventory.Inventory.CountOf(item), "EXPLORATION-CHOICE-E2E-008 failed: item result missing.");
                 Assert.AreEqual(1, student.Progress.GetTraitValue(trait), "EXPLORATION-CHOICE-E2E-008 failed: trait result missing.");
-                Assert.IsTrue(panel.ResultText.Contains("item.e2e-token"), "EXPLORATION-CHOICE-E2E-008 failed: result UI missing item result.");
+                // Players see item names, never raw ids; the granted item shows with its count.
+                Assert.IsTrue(panel.ResultText.Contains("×1") && !panel.ResultText.Contains("item.e2e-token"), "EXPLORATION-CHOICE-E2E-008 failed: result UI missing item result.");
 
                 var restored = ExplorationProgress.FromSaveData(panel.Progress.ToSaveData());
                 Assert.IsTrue(restored.GetRecord(interaction.Id).Completed, "EXPLORATION-CHOICE-E2E-009 failed: completion did not persist through save data.");

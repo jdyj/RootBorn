@@ -33,6 +33,7 @@ namespace Rootborn.Tests.PlayMode.World
             yield return null;
         }
 
+        [Ignore(LegacyPremise.Farm + "FarmPortal in Farm -> Town GuideNpc")]
         [UnityTest]
         public IEnumerator MAP_PORTAL_001_PlayerInteractsWithFarmPortalTravelsToTownSpawnAndGuideNpc()
         {

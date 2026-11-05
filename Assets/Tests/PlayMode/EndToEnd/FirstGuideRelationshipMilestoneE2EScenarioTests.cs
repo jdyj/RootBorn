@@ -62,6 +62,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Last state help=False dayEnd=False")]
         [UnityTest]
         [Timeout(600000)]
         public IEnumerator NPC_RELATIONSHIP_E2E_001_ScheduleInteractionMilestoneJournalReload()

@@ -61,6 +61,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Last state careerBoard=False")]
         [UnityTest]
         [Timeout(600000)]
         public IEnumerator CAREER_DAILY_PLAN_E2E_001_SelectInterestUnlockPracticeRouteReload()

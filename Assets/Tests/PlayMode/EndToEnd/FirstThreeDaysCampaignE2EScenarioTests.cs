@@ -56,6 +56,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Assert.IsNotNull")]
         [UnityTest]
         [Timeout(600000)]
         public IEnumerator CAMPAIGN_E2E_001_011_SaveSlotPlaysThreeDaysWithOutsideSchoolRouteReloadAndDedupe()

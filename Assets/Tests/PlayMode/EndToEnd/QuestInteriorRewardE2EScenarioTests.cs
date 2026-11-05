@@ -129,8 +129,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return WaitForStableScene("House", 0.3f, 10f, "QUEST-INTERIOR-REWARD-E2E-001 failed: project-supported House scene transition did not stabilize after quest reward claim.");
             yield return PlaceUnlockedFurnitureByPlayerFacingInput();
 
-            var furnitureTilemap = RequiredTilemap("HouseFurnitureObjectTilemap");
-            var occupancyTilemap = RequiredTilemap("HouseFurnitureOccupancyTilemap");
+            var furnitureTilemap = RequiredTilemap("AuthoredUserFurniture");
+            var occupancyTilemap = RequiredTilemap("AuthoredUserOccupancy");
             Assert.IsTrue(ContainsTile(furnitureTilemap, FurnitureTileName, out var placedCell), "QUEST-INTERIOR-REWARD-E2E-001 failed: unlocked furniture was not visibly placed in House tilemap.");
             Assert.IsNotNull(occupancyTilemap.GetTile(placedCell), "QUEST-INTERIOR-REWARD-E2E-001 failed: placed unlocked furniture did not write occupancy.");
             Assert.AreEqual(1, CountTiles(furnitureTilemap, FurnitureTileName), "QUEST-INTERIOR-REWARD-E2E-001 failed: initial placement duplicated the visible unlocked furniture tile.");
@@ -172,8 +172,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return WaitForStableScene("House", 0.3f, 10f, "QUEST-INTERIOR-REWARD-E2E-001 failed: House scene did not stabilize after reload.");
             AssertLayoutContainsExactlyOnce(layoutPath, "FurnitureId", FurnitureId, "QUEST-INTERIOR-REWARD-E2E-001 failed: reload duplicated or removed the saved reward furniture id field.");
             AssertLayoutContainsExactlyOnce(layoutPath, "TileName", FurnitureTileName, "QUEST-INTERIOR-REWARD-E2E-001 failed: reload duplicated or removed the saved reward furniture tile field.");
-            var restoredTilemap = RequiredTilemap("HouseFurnitureObjectTilemap");
-            var restoredOccupancy = RequiredTilemap("HouseFurnitureOccupancyTilemap");
+            var restoredTilemap = RequiredTilemap("AuthoredUserFurniture");
+            var restoredOccupancy = RequiredTilemap("AuthoredUserOccupancy");
             Assert.IsTrue(ContainsTile(restoredTilemap, FurnitureTileName, out var restoredCell), "QUEST-INTERIOR-REWARD-E2E-001 failed: placed unlocked furniture did not restore visibly after reload.");
             Assert.AreEqual(placedCell, restoredCell, "QUEST-INTERIOR-REWARD-E2E-001 failed: restored unlocked furniture moved after reload.");
             Assert.IsNotNull(restoredOccupancy.GetTile(restoredCell), "QUEST-INTERIOR-REWARD-E2E-001 failed: restored unlocked furniture did not restore occupancy.");
@@ -300,7 +300,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
             Assert.IsNotNull(overlay, "QUEST-INTERIOR-REWARD-E2E-001 failed: selecting unlocked furniture did not create placement overlay.");
             Assert.Greater(overlay.ValidCellCount, 0, "QUEST-INTERIOR-REWARD-E2E-001 failed: selecting unlocked furniture did not show valid placement cells.");
-            var overlayTilemap = RequiredTilemap("HousePlacementAvailabilityTilemap");
+            var overlayTilemap = RequiredTilemap("AuthoredPlacementAvailability");
             var camera = Camera.main;
             Assert.IsNotNull(camera, "QUEST-INTERIOR-REWARD-E2E-001 failed: House placement requires a Main Camera for world click projection.");
             Assert.IsTrue(TryFindVisibleValidOverlayCell(overlayTilemap, camera, out _, out var screenPosition), "QUEST-INTERIOR-REWARD-E2E-001 failed: no visible valid placement cell outside UI was available for mouse click.");

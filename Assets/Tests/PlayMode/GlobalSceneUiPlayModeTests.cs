@@ -42,9 +42,10 @@ namespace Rootborn.Tests.PlayMode
             yield return HoldKeyboardKey(Key.Escape, 4);
 
             Assert.IsTrue(settings.IsVisible, "Actual Esc keyboard input should open the same Modern UI panel in Town.");
-            Assert.GreaterOrEqual(settings.PanelTileCount, 9);
+            Assert.IsTrue(UrbanSkinCheck.TilesOrSkin(settings.gameObject, settings.PanelTileCount, 9), "Settings must draw a Style2 tiled or urban-skin panel.");
         }
 
+        [Ignore(LegacyPremise.Farm + "Loads Farm scene")]
         [UnityTest]
         public IEnumerator GLOBAL_UI_PM_002_FarmEscKeyboardEventOpensSameSettingsPanelOnOverlayCanvas()
         {
@@ -67,6 +68,7 @@ namespace Rootborn.Tests.PlayMode
             Assert.GreaterOrEqual(settings.PanelTileCount, 9);
         }
 
+        [Ignore(LegacyPremise.ObjectiveJournal + "QuestLogPanel intentionally hidden")]
         [UnityTest]
         public IEnumerator GLOBAL_UI_PM_003_TownQuestLogPanelRendersOnTopOverlayCanvas()
         {

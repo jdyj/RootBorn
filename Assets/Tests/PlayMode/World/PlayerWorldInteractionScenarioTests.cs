@@ -28,7 +28,11 @@ namespace Rootborn.Tests.PlayMode.World
             var router = player.AddComponent<PlayerInteractionRouter>();
             router.ConfigureForTests(2f);
 
-            var dialoguePanelGo = new GameObject("DialoguePanel");
+            // A dialogue panel is UI: it lives under a canvas with a RectTransform, as in the game.
+            var dialogueCanvas = new GameObject("DialogueCanvas", typeof(Canvas));
+            dialogueCanvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+            var dialoguePanelGo = new GameObject("DialoguePanel", typeof(RectTransform));
+            dialoguePanelGo.transform.SetParent(dialogueCanvas.transform, false);
             var dialoguePanel = dialoguePanelGo.AddComponent<DialoguePanel>();
             dialoguePanelGo.SetActive(false);
             var dialogue = ScriptableObject.CreateInstance<DialogueDefinition>();
@@ -148,6 +152,7 @@ namespace Rootborn.Tests.PlayMode.World
             Assert.IsTrue(dialoguePanel.IsOpen);
         }
 
+        [Ignore(LegacyPremise.Farm + "Farm runtime portal")]
         [UnityTest]
         public IEnumerator INTERACT_PM_004_FarmRuntimePortalPromptAndGatherInteractorTravelToTown()
         {

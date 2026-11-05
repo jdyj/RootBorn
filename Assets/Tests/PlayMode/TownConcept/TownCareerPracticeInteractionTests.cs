@@ -11,6 +11,7 @@ namespace Rootborn.Tests.PlayMode.TownConcept
 {
     public sealed class TownCareerPracticeInteractionTests
     {
+        [Ignore(LegacyPremise.AuthoredTown + "Waits for CareerPracticeBoard")]
         [UnityTest]
         public IEnumerator LIFE_CAREER_PRACTICE_PM_001_TownSceneInstallsCareerPracticeBoardWithFourPractices()
         {
@@ -26,30 +27,35 @@ namespace Rootborn.Tests.PlayMode.TownConcept
             AssertPractice(board.Practices[3], "practice.emergency-care");
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Waits for CareerPracticeBoard")]
         [UnityTest]
         public IEnumerator LIFE_CAREER_PRACTICE_PM_002_TownChefPracticeChangesPlayerProgress()
         {
             yield return AssertTownPracticeChangesProgress(0, "practice.chef", "career.chef");
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Waits for CareerPracticeBoard")]
         [UnityTest]
         public IEnumerator LIFE_CAREER_PRACTICE_PM_003_TownInteriorPracticeChangesPlayerProgress()
         {
             yield return AssertTownPracticeChangesProgress(1, "practice.interior", "career.interior");
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Waits for CareerPracticeBoard")]
         [UnityTest]
         public IEnumerator LIFE_CAREER_PRACTICE_PM_004_TownSoldierPracticeChangesPlayerProgress()
         {
             yield return AssertTownPracticeChangesProgress(2, "practice.soldier", "career.soldier");
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Waits for CareerPracticeBoard")]
         [UnityTest]
         public IEnumerator LIFE_CAREER_PRACTICE_PM_005_TownEmergencyPracticeChangesPlayerProgress()
         {
             yield return AssertTownPracticeChangesProgress(3, "practice.emergency-care", "career.emergency-care");
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Waits for CareerPracticeBoard")]
         [UnityTest]
         public IEnumerator LIFE_CAREER_PRACTICE_PM_006_TownCareerPracticesUnlockDifferentHints()
         {
@@ -69,6 +75,7 @@ namespace Rootborn.Tests.PlayMode.TownConcept
             Assert.AreEqual(4, hintIds.Count);
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Waits for CareerPracticeBoard")]
         [UnityTest]
         public IEnumerator LIFE_CAREER_PRACTICE_PM_007_TownCareerBoardPromptAndEInteractionProgressAllFourRoutes()
         {

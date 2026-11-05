@@ -60,7 +60,7 @@ namespace Rootborn.Tests.PlayMode.Placement
             yield return null;
             yield return null;
 
-            var deskButton = GameObject.Find(DeskButtonName)?.GetComponent<Button>();
+            var deskButton = HousePlacementTestDriver.ShowFurniture("desk.large")?.GetComponent<Button>();
             Assert.IsNotNull(deskButton, "The shared furniture palette should be available outside the House scene.");
             deskButton.onClick.Invoke();
             yield return null;

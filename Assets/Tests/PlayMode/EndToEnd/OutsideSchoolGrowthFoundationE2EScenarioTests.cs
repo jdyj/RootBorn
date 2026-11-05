@@ -53,6 +53,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "after entering Town it waits for old prototype object names")]
         [UnityTest]
         public IEnumerator OUTSIDE_FOUNDATION_E2E_001_007_PlayOutsideSchoolActivityResultReloadAndDedupe()
         {

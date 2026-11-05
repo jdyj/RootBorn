@@ -13,6 +13,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
         private const string DoorTileName = "tile_r03_c07";
         private const string VerticalWallAccentTileName = "tile_r02_c09";
 
+        [Ignore(LegacyPremise.AuthoredHouse + "Generated HouseDoorTilemap/office layers expected. Generated House interior skipped in aut")]
         [UnityTest]
         public IEnumerator HouseScene_GeneratesOfficeInteriorLayersFromNewPalette()
         {
@@ -50,6 +51,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             Assert.Less(Vector3.Distance(player.transform.position, spawn.transform.position), 0.05f, "Player should start at the generated interior spawn within normal physics settling tolerance.");
         }
 
+        [Ignore(LegacyPremise.AuthoredHouse + "Needs generated HouseDoorTilemap + generated wall accents. Generated House interior skippe")]
         [UnityTest]
         public IEnumerator HouseScene_UsesTileR02C09ForVerticalWallAccentsAndDoorFrames()
         {

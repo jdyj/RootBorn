@@ -174,6 +174,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.IsTrue(File.Exists(Path.Combine(root, "slot-0", "metadata.json")));
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Waits for StudyBasicsActivity + StudentDayEndBoard + GuideNpc in Town")]
         [UnityTest]
         public IEnumerator SAVE_E2E_003_NewGameCreatesTownRuntimeGraphAndSlotMetadata()
         {
@@ -299,6 +300,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.AreEqual(QuestState.Active, questLogPanel.QuestLog.GetState(quest));
         }
 
+        [Ignore(LegacyPremise.Farm + "FarmPortal travel from Farm")]
         [UnityTest]
         public IEnumerator MAP_E2E_002_MAP_E2E_003_FarmPortalMovesToDestinationSpawnWithoutDuplicatingPlayer()
         {
@@ -346,6 +348,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.AreEqual(QuestState.Active, questLogPanel.QuestLog.GetState(provider.Quests[0]));
         }
 
+        [Ignore(LegacyPremise.Farm + "Travels through FarmPortal from the Farm scene")]
         [UnityTest]
         public IEnumerator PLAYABLE_E2E_001_InputUiAndPortalFlowKeepPlayerControllable()
         {

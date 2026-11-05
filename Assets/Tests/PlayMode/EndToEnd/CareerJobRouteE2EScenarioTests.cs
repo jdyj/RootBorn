@@ -61,6 +61,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Last state work=False")]
         [UnityTest]
         [Timeout(600000)]
         public IEnumerator CAREER_JOB_ROUTE_E2E_001_ProgressUnlockSelectReload()

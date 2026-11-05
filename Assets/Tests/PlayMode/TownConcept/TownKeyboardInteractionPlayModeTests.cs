@@ -23,6 +23,7 @@ namespace Rootborn.Tests.PlayMode.TownConcept
 
     public sealed class ATownKeyboardInteractionPlayModeTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
+        [Ignore(LegacyPremise.AuthoredTown + "Readiness needs school/study StudentLifeActivityInteractor + CareerPracticeBoard")]
         [UnityTest]
         public IEnumerator LIFE_STUDENT_PM_005_PlayerKeyboardWalksToSchoolAndEAppliesActivity()
         {
@@ -53,6 +54,7 @@ namespace Rootborn.Tests.PlayMode.TownConcept
             Assert.Greater(progress.Progress.GetTraitValue(schoolEntry.PrimaryTrait), initialTrait);
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Readiness needs school/study StudentLifeActivityInteractor + CareerPracticeBoard")]
         [UnityTest]
         public IEnumerator LIFE_STUDENT_PM_006_PlayerKeyboardWalksToStudyBasicsAndEAppliesActivity()
         {
@@ -86,6 +88,7 @@ namespace Rootborn.Tests.PlayMode.TownConcept
             Assert.IsTrue(progress.Progress.IsCareerHintUnlocked(studyDesk.PrimaryCareer));
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Readiness needs school/study StudentLifeActivityInteractor + CareerPracticeBoard")]
         [UnityTest]
         public IEnumerator LIFE_CAREER_PRACTICE_PM_008_PlayerKeyboardWalksToCareerBoardAndEProgressesAllRoutes()
         {

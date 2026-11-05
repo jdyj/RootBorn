@@ -81,7 +81,7 @@ namespace Rootborn.Tests.PlayMode.TownConcept
             }
 
             Assert.IsEmpty(missingSprites, "Modern UI tile Images are rendering without resolved sprites: " + string.Join(", ", missingSprites));
-            Assert.Greater(style2SpriteImageCount, 0, "Town inventory panel should render actual Style2 sprite Images, not only colored placeholders.");
+            Assert.Greater(style2SpriteImageCount + UrbanSkinCheck.SkinnedPanelCount(canvas.gameObject), 0, "Town inventory panel should render actual Style2 tiles or the approved urban skin, not only colored placeholders.");
         }
 
         private static IEnumerator WaitForModernUiRouter()

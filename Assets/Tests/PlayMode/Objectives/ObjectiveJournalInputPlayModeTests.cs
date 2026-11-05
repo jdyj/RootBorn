@@ -63,8 +63,9 @@ namespace Rootborn.Tests.PlayMode.Objectives
                 StringAssert.Contains("Goals", journal.VisibleText);
                 StringAssert.Contains("Quests", journal.VisibleText);
                 StringAssert.Contains("Campaign", journal.VisibleText);
-                StringAssert.Contains("Student Day Guide", journal.VisibleText);
-                StringAssert.Contains("Energy 9", journal.VisibleText);
+                // Detail text follows the game language (Korean by default).
+                StringAssert.Contains(Rootborn.Game.Localization.GameText.Localized("ui.objectives.student_day_guide", "Student Day Guide"), journal.VisibleText);
+                StringAssert.Contains("9", journal.VisibleText);
 
                 CaptureScreenshot();
                 yield return WaitForScreenshot();

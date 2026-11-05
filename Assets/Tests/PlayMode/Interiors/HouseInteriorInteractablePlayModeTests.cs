@@ -17,8 +17,13 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return null;
             yield return null;
 
-            var interactor = Object.FindFirstObjectByType<InteriorObjectInteractor>();
-            Assert.IsNotNull(interactor, "Generated House computer should have a runtime interactor object.");
+            // The authored House also keeps two unbound computer leftovers; players only ever see a prompt on the bound one.
+            InteriorObjectInteractor interactor = null;
+            foreach (var candidate in Object.FindObjectsByType<InteriorObjectInteractor>(FindObjectsSortMode.None))
+            {
+                if (candidate.ObjectKind == InteriorObjectKind.Computer && !string.IsNullOrEmpty(candidate.InteractionPrompt)) interactor = candidate;
+            }
+            Assert.IsNotNull(interactor, "House computer should have a bound runtime interactor object.");
             Assert.AreEqual(InteriorObjectKind.Computer, interactor.ObjectKind);
 
             var player = GameObject.Find("Player");

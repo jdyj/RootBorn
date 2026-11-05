@@ -10,6 +10,7 @@ namespace Rootborn.Tests.PlayMode.TownConcept
 {
     public sealed class TownStudentLifeInteractionTests
     {
+        [Ignore(LegacyPremise.AuthoredTown + "Waits for generated StudyBasicsActivity/school StudentLifeActivityInteractor")]
         [UnityTest]
         public IEnumerator LIFE_STUDENT_PM_001_TownSceneInstallsSchoolActivityInteractors()
         {
@@ -30,6 +31,7 @@ namespace Rootborn.Tests.PlayMode.TownConcept
             Assert.AreEqual("activity.study-basics", studyDesk.GetComponent<StudentLifeActivityInteractor>().Activity.Id);
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Waits for generated StudyBasicsActivity/school StudentLifeActivityInteractor")]
         [UnityTest]
         public IEnumerator LIFE_STUDENT_PM_002_InteractingWithTownStudyActivityChangesStudentProgress()
         {
@@ -56,6 +58,7 @@ namespace Rootborn.Tests.PlayMode.TownConcept
             Assert.AreEqual(LifeActivityResultKind.Applied, studyDesk.LastResult.Kind);
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Waits for generated StudyBasicsActivity/school StudentLifeActivityInteractor")]
         [UnityTest]
         public IEnumerator LIFE_STUDENT_PM_003_RepeatedSameSceneInteractionRequestDoesNotDoubleApply()
         {
@@ -77,6 +80,7 @@ namespace Rootborn.Tests.PlayMode.TownConcept
             Assert.AreEqual(traitAfterFirst, playerProgress.Progress.GetTraitValue(studyDesk.PrimaryTrait));
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Waits for generated StudyBasicsActivity/school StudentLifeActivityInteractor")]
         [UnityTest]
         public IEnumerator LIFE_STUDENT_PM_004_TownStudyActivityShowsPromptAndEInteractionChangesProgress()
         {
@@ -107,6 +111,7 @@ namespace Rootborn.Tests.PlayMode.TownConcept
             Assert.IsTrue(progress.Progress.IsCareerHintUnlocked(studyDesk.PrimaryCareer));
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Waits for LifeActivityBoard")]
         [UnityTest]
         public IEnumerator LIFE_TRAIT_ACTIVITY_PM_001_TownSceneInstallsLifeActivityBoard()
         {
@@ -119,6 +124,7 @@ namespace Rootborn.Tests.PlayMode.TownConcept
             Assert.GreaterOrEqual(board.Activities.Count, 8);
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Waits for LifeActivityBoard")]
         [UnityTest]
         public IEnumerator LIFE_TRAIT_ACTIVITY_PM_002_TownLifeActivityChoiceChangesProgressAndExposesLastState()
         {

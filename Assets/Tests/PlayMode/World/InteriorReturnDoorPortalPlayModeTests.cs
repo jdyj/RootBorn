@@ -34,7 +34,7 @@ namespace Rootborn.Tests.PlayMode.World
         }
 
         [UnityTest]
-        public IEnumerator TOWN_DOOR_PM_005_PlayerWalksIntoHouseThenReturnsToTownThroughInteriorLdtkDoor()
+        public IEnumerator TOWN_DOOR_PM_005_PlayerWalksIntoHouseThenReturnsToTownThroughHouseExit()
         {
             var keyboard = InputSystem.AddDevice<Keyboard>();
             var player = GameObject.Find("Player");
@@ -45,23 +45,28 @@ namespace Rootborn.Tests.PlayMode.World
             player.transform.position = houseDoor.transform.position + new Vector3(0f, -1.2f, 0f);
             Physics2D.SyncTransforms();
             yield return null;
-            yield return WalkPlayerWithKeyboardUntilSceneChangesOrNear(player, keyboard, houseDoor.transform.position, 0.25f, 160, "HouseInterior", "Player must enter the LDtk house door through movement input.");
-            yield return WaitForScene("HouseInterior", 10f);
+            yield return WalkPlayerWithKeyboardUntilSceneChangesOrNear(player, keyboard, houseDoor.transform.position, 0.25f, 160, "House", "Player must enter the LDtk house door through movement input.");
+            yield return WaitForScene("House", 10f);
             yield return null;
 
             player = GameObject.Find("Player");
-            Assert.IsNotNull(player?.GetComponent<PlayerController>(), "Player must persist into HouseInterior.");
-            var returnDoor = GameObject.Find("InteriorLdtkDoor_town_10_28");
-            Assert.IsNotNull(returnDoor, "House_1 LDtk Door Where='town' must create an interior return portal.");
+            Assert.IsNotNull(player?.GetComponent<PlayerController>(), "Player must persist into House.");
+            // The authored House leaves through its saved HouseExit portal, back to the spot outside the house door.
+            var returnDoor = GameObject.Find("HouseExit");
+            Assert.IsNotNull(returnDoor, "House must have its saved exit portal.");
             var portal = returnDoor.GetComponent<WorldPortal>();
-            Assert.IsNotNull(portal, "Interior return door must use WorldPortal.");
+            Assert.IsNotNull(portal, "House exit must use WorldPortal.");
             Assert.AreEqual("Town", portal.DestinationScene);
-            Assert.AreEqual("town-entry", portal.DestinationSpawnId);
+            Assert.AreEqual("town-home-entry", portal.DestinationSpawnId);
 
-            player.transform.position = returnDoor.transform.position + new Vector3(0f, -1.0f, 0f);
-            Physics2D.SyncTransforms();
+            // Walk from the House arrival spot until the exit is within reach; it sits in the bottom wall row.
+            yield return WalkPlayerWithKeyboardUntilSceneChangesOrNear(player, keyboard, returnDoor.transform.position, 1.0f, 160, "Town", "Player must walk to the House exit using movement input.");
+            // The House exit is a door you use with E, not a walk-through trigger.
+            InputSystem.QueueStateEvent(keyboard, new UnityEngine.InputSystem.LowLevel.KeyboardState(Key.E));
+            InputSystem.Update();
             yield return null;
-            yield return WalkPlayerWithKeyboardUntilSceneChangesOrNear(player, keyboard, returnDoor.transform.position, 0.25f, 160, "Town", "Player must leave HouseInterior through the LDtk return door using movement input.");
+            InputSystem.QueueStateEvent(keyboard, new UnityEngine.InputSystem.LowLevel.KeyboardState());
+            InputSystem.Update();
             yield return WaitForScene("Town", 20f);
             Assert.AreEqual("Town", SceneManager.GetActiveScene().name);
             Assert.IsNotNull(GameObject.Find("Player"), "Player must persist back to Town.");
@@ -238,8 +243,10 @@ namespace Rootborn.Tests.PlayMode.World
                     var player = GameObject.Find("Player");
                     Assert.IsNotNull(player, "Town return view must contain Player.");
                     Assert.IsNotNull(Camera.main, "Town return view must contain Main Camera.");
-                    Vector2 cameraDelta = Camera.main.transform.position - player.transform.position;
-                    Assert.LessOrEqual(cameraDelta.magnitude, 1.5f, "Town return camera should be snapped near the returned player instead of easing from the previous scene. delta=" + cameraDelta);
+                    // The camera stops at the map edge, so check that the returned player is on screen rather than centred.
+                    Vector3 viewport = Camera.main.WorldToViewportPoint(player.transform.position);
+                    Assert.IsTrue(viewport.x > 0.05f && viewport.x < 0.95f && viewport.y > 0.05f && viewport.y < 0.95f,
+                        "Town return camera should show the returned player instead of easing from the previous scene. viewport=" + viewport);
         
                     var groundObject = GameObject.Find("Town2LdtkGroundTilemap");
                     Assert.IsNotNull(groundObject, "Town return view must contain the LDtk ground tilemap.");

@@ -46,6 +46,7 @@ namespace Rootborn.Tests.PlayMode.Quests
             yield return null;
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Readiness waits for GuideNpc NpcInteractor+QuestProvider")]
         [UnityTest]
         public IEnumerator QUEST_PLAY_WOOD_001_GuideDialogueAcceptsGatherWoodQuestThroughButtonAndQuestLogShowsZeroProgress()
         {
@@ -66,6 +67,7 @@ namespace Rootborn.Tests.PlayMode.Quests
             AssertPanelContains(runtime.QuestLogPanel.transform, "0 / " + route.Objective.RequiredCount);
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Readiness waits for GuideNpc NpcInteractor+QuestProvider")]
         [UnityTest]
         public IEnumerator QUEST_PLAY_WOOD_002_WorldTreeInteractionGrantsWoodAndRefreshesQuestProgressGui()
         {
@@ -84,6 +86,7 @@ namespace Rootborn.Tests.PlayMode.Quests
             AssertPanelContains(runtime.QuestLogPanel.transform, "1 / " + route.Objective.RequiredCount);
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Readiness waits for GuideNpc NpcInteractor+QuestProvider")]
         [UnityTest]
         public IEnumerator QUEST_PLAY_WOOD_003_RequiredWoodCompletesQuestAndClaimChoiceAppearsOnlyAfterCompletion()
         {
@@ -105,6 +108,7 @@ namespace Rootborn.Tests.PlayMode.Quests
             Assert.IsNotNull(FindChoiceButtonFor(runtime.DialoguePanel, DialogueQuestAction.ClaimReward, route.Quest), "ClaimReward choice must appear after the gather objective is complete.");
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Readiness waits for GuideNpc NpcInteractor+QuestProvider")]
         [UnityTest]
         public IEnumerator QUEST_PLAY_WOOD_004_NpcClaimButtonPaysRewardOnceAndQuestGuiShowsVisibleReward()
         {
@@ -126,6 +130,7 @@ namespace Rootborn.Tests.PlayMode.Quests
             AssertPanelContains(runtime.QuestLogPanel.transform, reward.Item.DisplayKey);
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Readiness waits for GuideNpc NpcInteractor+QuestProvider")]
         [UnityTest]
         public IEnumerator QUEST_PLAY_WOOD_005_RewardClaimedPersistsAfterTownReloadAndCannotBeClaimedTwice()
         {

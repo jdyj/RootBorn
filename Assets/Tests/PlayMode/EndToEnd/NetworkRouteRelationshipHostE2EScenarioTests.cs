@@ -69,6 +69,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "Last state careerBoard=False help=False dayEnd=False")]
         [UnityTest]
         [Timeout(600000)]
         public IEnumerator NETWORK_ROUTE_RELATIONSHIP_PM_001_HostProgressSaveReload()

@@ -24,16 +24,17 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
             yield return null;
             yield return null;
+            yield return HousePlacementTestDriver.OpenPlacementMode();
 
             Assert.IsNotNull(EventSystem.current, "The player-facing furniture UI must install an EventSystem so mouse clicks are handled by UI before world placement.");
             Assert.IsNull(GameObject.Find("Palette_Desk"), "The old generic Desk palette path must not remain because it places desk/chair/computer clusters instead of the clicked furniture item.");
 
-            var button = GameObject.Find(ChairButtonName)?.GetComponent<Button>();
+            var button = HousePlacementTestDriver.ShowFurniture("chair.black")?.GetComponent<Button>();
             Assert.IsNotNull(button, "The chair should be selectable from the player-facing furniture palette.");
             var buttonCenter = RectTransformUtility.WorldToScreenPoint(null, button.GetComponent<RectTransform>().position);
             AssertRaycastHits(buttonCenter, ChairButtonName);
 
-            var furnitureTilemap = GameObject.Find("HouseFurnitureObjectTilemap")?.GetComponent<Tilemap>();
+            var furnitureTilemap = GameObject.Find("AuthoredUserFurniture")?.GetComponent<Tilemap>();
             int chairCountBefore = furnitureTilemap != null ? CountTiles(furnitureTilemap, ChairTileName) : 0;
 
             var mouse = InputSystem.AddDevice<Mouse>();
@@ -51,7 +52,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
             Assert.IsNotNull(overlay);
             Assert.Greater(overlay.ValidCellCount, 0, "Selecting the chair should show valid placement cells, but must not place immediately on the tile behind the UI.");
-            furnitureTilemap = GameObject.Find("HouseFurnitureObjectTilemap")?.GetComponent<Tilemap>();
+            furnitureTilemap = GameObject.Find("AuthoredUserFurniture")?.GetComponent<Tilemap>();
             int chairCountAfter = furnitureTilemap != null ? CountTiles(furnitureTilemap, ChairTileName) : 0;
             Assert.AreEqual(chairCountBefore, chairCountAfter, "Clicking the UI button must not leak into the world and place furniture behind the UI.");
         }
@@ -62,8 +63,9 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
             yield return null;
             yield return null;
+            yield return HousePlacementTestDriver.OpenPlacementMode();
 
-            var button = GameObject.Find(ChairButtonName);
+            var button = HousePlacementTestDriver.ShowFurniture("chair.black");
             Assert.IsNotNull(button, "The player-facing furniture palette should contain the chair button.");
 
             var pointerData = new PointerEventData(EventSystem.current)
@@ -78,7 +80,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             Assert.IsNotNull(overlay);
             Assert.Greater(overlay.ValidCellCount, 0, "Selecting furniture should draw player-visible valid placement cells before clicking the world.");
 
-            var overlayTilemap = GameObject.Find("HousePlacementAvailabilityTilemap")?.GetComponent<Tilemap>();
+            var overlayTilemap = GameObject.Find("AuthoredPlacementAvailability")?.GetComponent<Tilemap>();
             Assert.IsNotNull(overlayTilemap);
             var camera = Camera.main;
             Assert.IsNotNull(camera);
@@ -92,8 +94,8 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return null;
             InputSystem.RemoveDevice(mouse);
 
-            var furnitureTilemap = GameObject.Find("HouseFurnitureObjectTilemap")?.GetComponent<Tilemap>();
-            var occupancyTilemap = GameObject.Find("HouseFurnitureOccupancyTilemap")?.GetComponent<Tilemap>();
+            var furnitureTilemap = GameObject.Find("AuthoredUserFurniture")?.GetComponent<Tilemap>();
+            var occupancyTilemap = GameObject.Find("AuthoredUserOccupancy")?.GetComponent<Tilemap>();
             Assert.IsNotNull(furnitureTilemap);
             Assert.IsNotNull(occupancyTilemap);
             Assert.AreEqual(0, overlay.ValidCellCount, "A successful world click placement should clear the availability overlay. Last message: " + overlay.LastMessage);
@@ -108,17 +110,18 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
             yield return null;
             yield return null;
+            yield return HousePlacementTestDriver.OpenPlacementMode();
 
             Assert.IsNull(GameObject.Find("ModernOfficeChairSampleTilemap"), "Debug/sample chair tilemap must not be visible in playable House.");
 
-            var button = GameObject.Find(ChairButtonName);
+            var button = HousePlacementTestDriver.ShowFurniture("chair.black");
             Assert.IsNotNull(button);
             ExecuteEvents.Execute<IPointerClickHandler>(button, new PointerEventData(EventSystem.current), ExecuteEvents.pointerClickHandler);
             yield return null;
 
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
             Assert.IsNotNull(overlay);
-            var overlayTilemap = GameObject.Find("HousePlacementAvailabilityTilemap")?.GetComponent<Tilemap>();
+            var overlayTilemap = GameObject.Find("AuthoredPlacementAvailability")?.GetComponent<Tilemap>();
             var camera = Camera.main;
             Assert.IsNotNull(overlayTilemap);
             Assert.IsNotNull(camera);
@@ -131,7 +134,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return null;
             yield return null;
 
-            var furnitureTilemap = GameObject.Find("HouseFurnitureObjectTilemap")?.GetComponent<Tilemap>();
+            var furnitureTilemap = GameObject.Find("AuthoredUserFurniture")?.GetComponent<Tilemap>();
             Assert.IsNotNull(furnitureTilemap);
             Assert.IsTrue(ContainsTile(furnitureTilemap, ChairTileName, out var firstFurnitureCell));
             Assert.AreEqual(firstCell, firstFurnitureCell);
