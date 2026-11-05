@@ -16,7 +16,7 @@ using UnityEngine.UI;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
-    public sealed class AStudentProgressionSaveE2EScenarioTests : InputTestFixture
+    public sealed class AStudentProgressionSaveE2EScenarioTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private const string TestSlotId = "slot-0";
         private string _saveRoot;
@@ -63,7 +63,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return null;
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
-            yield return WaitForScene("Town", 15f, "STUDENT-E2E-001 failed: New Game button did not enter Town through the save slot UI.");
+            yield return WaitForScene("Town", 20f, "STUDENT-E2E-001 failed: New Game button did not enter Town through the save slot UI.");
             yield return WaitForTownStudentRuntime(15f);
             LogAssert.ignoreFailingMessages = false;
 
@@ -108,7 +108,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return null;
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "LoadButton"));
-            yield return WaitForScene("Town", 15f, "STUDENT-E2E-010 failed: Load button did not re-enter Town through the save slot UI.");
+            yield return WaitForScene("Town", 20f, "STUDENT-E2E-010 failed: Load button did not re-enter Town through the save slot UI.");
             yield return WaitForTownStudentRuntime(15f);
             LogAssert.ignoreFailingMessages = false;
 

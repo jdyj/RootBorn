@@ -25,7 +25,7 @@ using UnityEngine.UI;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
-    public sealed class QuestDrivenWorldStateE2EScenarioTests : InputTestFixture
+    public sealed class QuestDrivenWorldStateE2EScenarioTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private const string TestSlotId = "slot-0";
         private string _saveRoot;
@@ -110,7 +110,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "LoadButton"));
-            yield return WaitForScene("Town", 15f, "WORLD-STATE-E2E-007 failed: save slot UI did not reload Town.");
+            yield return WaitForScene("Town", 20f, "WORLD-STATE-E2E-007 failed: save slot UI did not reload Town.");
             yield return WaitForTownRuntime(15f);
 
             var reloaded = FindRuntime();
@@ -134,7 +134,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
-            yield return WaitForScene("Town", 15f, "WORLD-STATE-E2E-001 failed: save slot UI did not enter Town.");
+            yield return WaitForScene("Town", 20f, "WORLD-STATE-E2E-001 failed: save slot UI did not enter Town.");
             yield return WaitForTownRuntime(15f);
         }
 

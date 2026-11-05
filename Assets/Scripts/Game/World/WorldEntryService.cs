@@ -21,12 +21,18 @@ namespace Rootborn.Game.World
         private static Func<GameObject, GameObject, bool> _legacyPlaceholderPolicy;
         public static void ConfigureLegacyPlaceholderPolicy(Func<GameObject, GameObject, bool> policy) => _legacyPlaceholderPolicy = policy;
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetLegacyPlaceholderPolicy() => _legacyPlaceholderPolicy = null;
+        private static void ResetLegacyPlaceholderPolicy() { _legacyPlaceholderPolicy = null; s_testEntryScene = null; s_testEntrySpawn = null; }
 
+
+        private static string s_testEntryScene, s_testEntrySpawn;
+        // Setup only: many scenario tests just need a running game and are not about where a new game begins.
+        public static void SetNewGameEntryForTests(string sceneName, string spawnId) { s_testEntryScene = sceneName; s_testEntrySpawn = spawnId; }
 
         public static WorldEntryPoint ResolveNewGame(WorldTravelCatalogDefinition catalog)
         {
-            return catalog != null && catalog.IsValid ? new WorldEntryPoint(catalog.NewGameDestination, catalog.NewGameSpawnId) : null;
+            if (catalog == null || !catalog.IsValid) return null;
+            var forTest = string.IsNullOrEmpty(s_testEntryScene) ? null : ResolvePair(catalog, s_testEntryScene, s_testEntrySpawn);
+            return forTest ?? new WorldEntryPoint(catalog.NewGameDestination, catalog.NewGameSpawnId);
         }
         public static WorldEntryPoint ResolvePair(WorldTravelCatalogDefinition catalog, string sceneName, string spawnId)
         {

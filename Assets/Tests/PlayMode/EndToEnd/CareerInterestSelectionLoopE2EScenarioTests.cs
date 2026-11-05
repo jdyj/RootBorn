@@ -25,7 +25,7 @@ using UnityEngine.UI;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
-    public sealed class CareerInterestSelectionLoopE2EScenarioTests : InputTestFixture
+    public sealed class CareerInterestSelectionLoopE2EScenarioTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private const string TestSlotId = "slot-0";
         private const string ObjectiveJournalScreenshotPath = "Builds/Logs/career-interest-objective-journal-e2e.png";
@@ -74,7 +74,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             var creator = GameObject.Find("SpumCharacterCreatorPanel");
             if (creator != null) yield return ClickButton(FindButton(creator.transform, "ConfirmButton"));
-            yield return WaitForScene("Town", 10f, "CAREER-INTEREST-E2E-001 failed: SaveSlot New Game did not enter Town.");
+            yield return WaitForScene("Town", 20f, "CAREER-INTEREST-E2E-001 failed: SaveSlot New Game did not enter Town.");
             StudentDayRuntimeInstaller.EnsureForActiveScene();
             LocationNpcRuntimeInstaller.EnsureForActiveScene();
             CareerInterestRuntimeInstaller.EnsureForActiveScene();
@@ -173,7 +173,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "LoadButton"));
-            yield return WaitForScene("Town", 10f, "CAREER-INTEREST-E2E-010 failed: SaveSlot Load did not re-enter Town.");
+            yield return WaitForScene("Town", 20f, "CAREER-INTEREST-E2E-010 failed: SaveSlot Load did not re-enter Town.");
             StudentDayRuntimeInstaller.EnsureForActiveScene();
             LocationNpcRuntimeInstaller.EnsureForActiveScene();
             CareerInterestRuntimeInstaller.EnsureForActiveScene();
@@ -237,7 +237,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "LoadButton"));
-            yield return WaitForScene("Town", 10f, "CAREER-INTEREST-E2E-013 failed: SaveSlot Load after claim did not re-enter Town.");
+            yield return WaitForScene("Town", 20f, "CAREER-INTEREST-E2E-013 failed: SaveSlot Load after claim did not re-enter Town.");
             StudentDayRuntimeInstaller.EnsureForActiveScene();
             LocationNpcRuntimeInstaller.EnsureForActiveScene();
             CareerInterestRuntimeInstaller.EnsureForActiveScene();

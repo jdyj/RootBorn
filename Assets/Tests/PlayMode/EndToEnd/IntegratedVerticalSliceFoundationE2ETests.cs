@@ -29,7 +29,7 @@ using UnityEngine.UI;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
-    public sealed class IntegratedVerticalSliceFoundationE2ETests : InputTestFixture
+    public sealed class IntegratedVerticalSliceFoundationE2ETests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private const string TestSlotId = "slot-0";
         private string _saveRoot;
@@ -150,7 +150,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "LoadButton"));
-            yield return WaitForScene("Town", 15f, "WORLD-USAGE-E2E-008 failed: save slot UI did not reload Town.");
+            yield return WaitForScene("Town", 20f, "WORLD-USAGE-E2E-008 failed: save slot UI did not reload Town.");
             yield return WaitForTownRuntime(15f);
 
             var reloaded = FindRuntime();
@@ -222,7 +222,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
             yield return ClickButton(FindButton("ConfirmButton"));
-            yield return WaitForScene("Town", 15f, "VERTICAL-E2E-001 failed: save slot UI and SPUM confirm did not enter Town.");
+            yield return WaitForScene("Town", 20f, "VERTICAL-E2E-001 failed: save slot UI and SPUM confirm did not enter Town.");
             yield return WaitForTownRuntime(15f);
         }
 

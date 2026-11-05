@@ -12,7 +12,7 @@ using UnityEngine.Tilemaps;
 
 namespace Rootborn.Tests.PlayMode.World
 {
-    public sealed class TownDoorPortalPlayModeTests : InputTestFixture
+    public sealed class TownDoorPortalPlayModeTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private static readonly ExpectedDoor[] ExpectedDoors =
         {

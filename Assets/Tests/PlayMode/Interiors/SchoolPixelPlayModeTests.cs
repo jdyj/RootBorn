@@ -25,7 +25,7 @@ using Object = UnityEngine.Object;
 
 namespace Rootborn.Tests.PlayMode.Interiors
 {
-    public sealed class SchoolPixelPlayModeTests : InputTestFixture
+    public sealed class SchoolPixelPlayModeTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private SaveSlotMetadata _previousSave;
         private string _slot;

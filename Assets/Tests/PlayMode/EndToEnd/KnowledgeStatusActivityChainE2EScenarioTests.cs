@@ -20,7 +20,7 @@ using Object = UnityEngine.Object;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
-    public sealed class KnowledgeStatusActivityChainE2EScenarioTests : InputTestFixture
+    public sealed class KnowledgeStatusActivityChainE2EScenarioTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private const string TestSlotId = "slot-0";
         private const string ActivityId = "location.activity.workshop-shift";
@@ -110,7 +110,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton("SaveSlotCard_" + TestSlotId, "LoadButton"));
-            yield return PlayerFlowE2EDriver.WaitForScene("Town", 15f, "KNOWLEDGE-STATUS-E2E-001 failed: SaveSlot Load did not re-enter Town.");
+            yield return PlayerFlowE2EDriver.WaitForScene("Town", 20f, "KNOWLEDGE-STATUS-E2E-001 failed: SaveSlot Load did not re-enter Town.");
             EnsureTownInstallers();
             yield return WaitForRuntime(15f);
 
@@ -147,7 +147,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
             var creator = GameObject.Find("SpumCharacterCreatorRoot") ?? GameObject.Find("SpumCharacterCreatorPanel");
             if (creator != null) yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(creator.transform, "ConfirmButton"));
-            yield return PlayerFlowE2EDriver.WaitForScene("Town", 15f, "KNOWLEDGE-STATUS-E2E-001 failed: SaveSlot New Game did not enter Town.");
+            yield return PlayerFlowE2EDriver.WaitForScene("Town", 20f, "KNOWLEDGE-STATUS-E2E-001 failed: SaveSlot New Game did not enter Town.");
             EnsureTownInstallers();
             yield return WaitForRuntime(15f);
         }

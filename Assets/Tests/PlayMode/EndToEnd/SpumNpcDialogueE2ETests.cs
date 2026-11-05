@@ -11,7 +11,7 @@ using UnityEngine.TestTools;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
-    public sealed class SpumNpcDialogueE2ETests : InputTestFixture
+    public sealed class SpumNpcDialogueE2ETests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         [UnityTest]
         public IEnumerator SPUM_NPC_DIALOGUE_E2E_001_ActualInteractOpensDialogueAndKeepsVisualChildSeparateFromNpcRoot()

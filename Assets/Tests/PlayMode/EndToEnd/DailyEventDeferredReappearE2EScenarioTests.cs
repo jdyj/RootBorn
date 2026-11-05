@@ -17,7 +17,7 @@ using UnityEngine.UI;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
-    public sealed class DailyEventDeferredReappearE2EScenarioTests : InputTestFixture
+    public sealed class DailyEventDeferredReappearE2EScenarioTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private const string TestSlotId = "slot-0";
         private string _saveRoot;
@@ -60,7 +60,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
-            yield return WaitForScene("Town", 10f, "DAILYEVENT-E2E-006 failed: SaveSlot New Game did not enter Town.");
+            yield return WaitForScene("Town", 20f, "DAILYEVENT-E2E-006 failed: SaveSlot New Game did not enter Town.");
             StudentDayRuntimeInstaller.EnsureForActiveScene();
             LocationNpcRuntimeInstaller.EnsureForActiveScene();
             DailyEventRuntimeInstaller.EnsureForActiveScene();

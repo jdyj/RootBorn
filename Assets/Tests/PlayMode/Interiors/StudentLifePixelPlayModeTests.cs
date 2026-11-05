@@ -23,7 +23,7 @@ using Object = UnityEngine.Object;
 
 namespace Rootborn.Tests.PlayMode.Interiors
 {
-    public sealed class StudentLifePixelPlayModeTests : InputTestFixture
+    public sealed class StudentLifePixelPlayModeTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private static readonly PropCase[] Props =
         {

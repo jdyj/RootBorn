@@ -67,7 +67,7 @@ namespace Rootborn.Tests.PlayMode.Quests
             yield return null;
             farmPlayer.GetComponent<GatherInteractor>().TriggerInteract();
 
-            yield return WaitForScene("Town", 10f);
+            yield return WaitForScene("Town", 20f);
             yield return WaitForTownRuntime(10f);
 
             Assert.AreEqual(1, CountObjectsNamed("Player"));

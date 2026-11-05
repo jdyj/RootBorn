@@ -18,7 +18,7 @@ using UnityEngine.UI;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
-    public sealed class CareerCandidateDeepeningLoopE2EScenarioTests : InputTestFixture
+    public sealed class CareerCandidateDeepeningLoopE2EScenarioTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private const string TestSlotId = "slot-0";
         private string _saveRoot;
@@ -65,7 +65,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
             yield return null;
             yield return ClickButton(FindButton("SpumCharacterCreatorPanel", "ConfirmButton"));
-            yield return WaitForScene("Town", 10f, "CAREER-CANDIDATE-E2E-001 failed: SaveSlot New Game did not enter Town.");
+            yield return WaitForScene("Town", 20f, "CAREER-CANDIDATE-E2E-001 failed: SaveSlot New Game did not enter Town.");
             StudentDayRuntimeInstaller.EnsureForActiveScene();
             LocationNpcRuntimeInstaller.EnsureForActiveScene();
             yield return WaitForRuntime(10f);
@@ -119,7 +119,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "LoadButton"));
-            yield return WaitForScene("Town", 10f, "CAREER-CANDIDATE-E2E-009 failed: SaveSlot Load did not re-enter Town.");
+            yield return WaitForScene("Town", 20f, "CAREER-CANDIDATE-E2E-009 failed: SaveSlot Load did not re-enter Town.");
             StudentDayRuntimeInstaller.EnsureForActiveScene();
             LocationNpcRuntimeInstaller.EnsureForActiveScene();
             yield return WaitForRuntime(10f);

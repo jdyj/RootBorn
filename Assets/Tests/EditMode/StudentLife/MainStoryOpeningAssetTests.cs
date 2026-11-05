@@ -888,6 +888,26 @@ namespace Rootborn.Tests.EditMode.StudentLife
             Assert.That(shipped.SpawnId, Is.EqualTo("house-entry"));
         }
 
+        // The shipped game starts in the House. Tests that only need a game running may start elsewhere for setup.
+        [Test]
+        public void NewGame_StartsInTheHouse_UnlessATestAsksForAnotherEntry()
+        {
+            var catalog = Registry.WorldTravelCatalog;
+            try
+            {
+                var shipped = Rootborn.Game.World.WorldEntryService.ResolveNewGame(catalog);
+                Assert.That(shipped.SceneName, Is.EqualTo("House"));
+                Assert.That(shipped.SpawnId, Is.EqualTo("house-entry"));
+                Rootborn.Game.World.WorldEntryService.SetNewGameEntryForTests("Town", "town-home-entry");
+                var forTest = Rootborn.Game.World.WorldEntryService.ResolveNewGame(catalog);
+                Assert.That(forTest.SceneName, Is.EqualTo("Town"));
+                Rootborn.Game.World.WorldEntryService.SetNewGameEntryForTests("NoSuchScene", "nowhere");
+                Assert.That(Rootborn.Game.World.WorldEntryService.ResolveNewGame(catalog).SceneName, Is.EqualTo("House"), "An unknown entry falls back to the shipped start.");
+            }
+            finally { Rootborn.Game.World.WorldEntryService.SetNewGameEntryForTests(null, null); }
+            Assert.That(Rootborn.Game.World.WorldEntryService.ResolveNewGame(catalog).SceneName, Is.EqualTo("House"));
+        }
+
         [TestCase("ko", "[E] 식당 일 돕기")]
         [TestCase("en", "[E] Help at the restaurant")]
         public void JobPrompt_ShowsLocalizedWorkName(string language, string expected)

@@ -15,7 +15,7 @@ using UnityEngine.UI;
 
 namespace Rootborn.Tests.PlayMode.Objectives
 {
-    public sealed class ObjectiveJournalInputPlayModeTests : InputTestFixture
+    public sealed class ObjectiveJournalInputPlayModeTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private const string ScreenshotPath = "Builds/Logs/objective-journal-playmode.png";
 

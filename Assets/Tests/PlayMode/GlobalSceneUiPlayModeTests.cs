@@ -21,7 +21,7 @@ namespace Rootborn.Tests.PlayMode
         public void OneTimeTearDown() => InputSystemUiModulePlayModeTestGuard.UninstallForCurrentTest();
     }
 
-    public sealed class GlobalSceneUiPlayModeTests : InputTestFixture
+    public sealed class GlobalSceneUiPlayModeTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         [UnityTest]
         public IEnumerator GLOBAL_UI_PM_001_TownEscKeyboardEventOpensSettingsPanelOnOverlayCanvas()

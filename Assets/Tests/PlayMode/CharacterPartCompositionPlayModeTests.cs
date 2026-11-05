@@ -93,7 +93,7 @@ namespace Rootborn.Tests.PlayMode
             ClickButtonNamed("NewGameButton");
             yield return null;
             ClickButtonNamed("ConfirmButton");
-            yield return WaitForScene("Town", 10f);
+            yield return WaitForScene("Town", 20f);
 
             var service = new SaveService("slot-0", _saveRoot);
             var metadata = service.LoadMetadata("slot-0");

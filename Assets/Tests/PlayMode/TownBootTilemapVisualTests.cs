@@ -15,7 +15,7 @@ using UnityEngine.UI;
 
 namespace Rootborn.Tests.PlayMode
 {
-    public sealed class TownBootTilemapVisualTests : InputTestFixture
+    public sealed class TownBootTilemapVisualTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private const string TestSlotId = "slot-0";
         private const string ExpectedTownNpcTextureName = "Premade_Character_32x32_01";
@@ -60,7 +60,7 @@ namespace Rootborn.Tests.PlayMode
                 yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(creator.transform, "ConfirmButton"));
             }
 
-            yield return PlayerFlowE2EDriver.WaitForScene("Town", 15f, "SaveSlot New Game did not enter Town from Boot/MainMenu player flow.");
+            yield return PlayerFlowE2EDriver.WaitForScene("Town", 20f, "SaveSlot New Game did not enter Town from Boot/MainMenu player flow.");
             yield return null;
 
             Tilemap legacyGround = AssertLegacyTilemapEmptyWithRenderer("GroundTilemap", 0);

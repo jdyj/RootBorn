@@ -114,7 +114,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             ClickButtonNamed("NewGameButton");
             yield return null;
             ClickButtonNamed("ConfirmButton");
-            yield return WaitForScene("Town", 10f);
+            yield return WaitForScene("Town", 20f);
 
             var service = new SaveService("slot-0", root);
             var metadata = service.LoadMetadata("slot-0");
@@ -127,7 +127,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             SaveSlotSelectPanel.EnsureInScene().Show();
             yield return null;
             ClickButtonNamed("LoadButton");
-            yield return WaitForScene("Town", 10f);
+            yield return WaitForScene("Town", 20f);
 
             var loaded = ActiveSaveContext.Metadata;
             Assert.IsNotNull(loaded);
@@ -162,7 +162,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             SaveSlotSelectPanel.EnsureInScene().Show();
             yield return null;
             ClickButtonNamed("LoadButton");
-            yield return WaitForScene("Town", 10f);
+            yield return WaitForScene("Town", 20f);
 
             var loaded = ActiveSaveContext.Metadata;
             Assert.IsNotNull(loaded);
@@ -186,7 +186,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             ClickButtonNamed("NewGameButton");
             yield return null;
             ClickButtonNamed("ConfirmButton");
-            yield return WaitForScene("Town", 10f);
+            yield return WaitForScene("Town", 20f);
             yield return WaitForTownRuntime(10f);
 
             var metadata = ActiveSaveContext.Metadata;

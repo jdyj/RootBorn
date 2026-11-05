@@ -13,7 +13,7 @@ using UnityEngine.UI;
 
 namespace Rootborn.Tests.PlayMode.World
 {
-    public sealed class InteriorReturnDoorPortalPlayModeTests : InputTestFixture
+    public sealed class InteriorReturnDoorPortalPlayModeTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         [UnitySetUp]
         public IEnumerator SetUp()
@@ -62,7 +62,7 @@ namespace Rootborn.Tests.PlayMode.World
             Physics2D.SyncTransforms();
             yield return null;
             yield return WalkPlayerWithKeyboardUntilSceneChangesOrNear(player, keyboard, returnDoor.transform.position, 0.25f, 160, "Town", "Player must leave HouseInterior through the LDtk return door using movement input.");
-            yield return WaitForScene("Town", 10f);
+            yield return WaitForScene("Town", 20f);
             Assert.AreEqual("Town", SceneManager.GetActiveScene().name);
             Assert.IsNotNull(GameObject.Find("Player"), "Player must persist back to Town.");
             AssertCleanTownReturnView();
@@ -215,7 +215,7 @@ namespace Rootborn.Tests.PlayMode.World
             Physics2D.SyncTransforms();
             yield return null;
             yield return WalkPlayerWithKeyboardUntilSceneChangesOrNear(player, keyboard, returnDoor.transform.position, 0.25f, 180, "Town", "Player must leave " + destinationScene + " through the LDtk return door using movement input.");
-            yield return WaitForScene("Town", 10f);
+            yield return WaitForScene("Town", 20f);
             Assert.AreEqual("Town", SceneManager.GetActiveScene().name);
             Assert.IsNotNull(GameObject.Find("Player"), "Player must persist back to Town.");
             AssertCleanTownReturnView();

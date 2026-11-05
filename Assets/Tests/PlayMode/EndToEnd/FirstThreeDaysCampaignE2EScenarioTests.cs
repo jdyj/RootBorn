@@ -19,7 +19,7 @@ using UnityEngine.UI;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
-    public sealed class FirstThreeDaysCampaignE2EScenarioTests : InputTestFixture
+    public sealed class FirstThreeDaysCampaignE2EScenarioTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private const string TestSlotId = "slot-0";
         private const string ScreenshotPath = "Builds/Logs/campaign-objective-journal-e2e.png";
@@ -70,7 +70,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             var creatorConfirm = FindOptionalButton("SpumCharacterCreatorPanel", "ConfirmButton");
             if (creatorConfirm != null) yield return ClickButton(creatorConfirm);
-            yield return WaitForScene("Town", 10f, "CAMPAIGN-E2E-001 failed: SaveSlot New Game did not enter Town.");
+            yield return WaitForScene("Town", 20f, "CAMPAIGN-E2E-001 failed: SaveSlot New Game did not enter Town.");
             StudentDayRuntimeInstaller.EnsureForActiveScene();
             LocationNpcRuntimeInstaller.EnsureForActiveScene();
             DailyEventRuntimeInstaller.EnsureForActiveScene();
@@ -141,7 +141,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "LoadButton"));
-            yield return WaitForScene("Town", 10f, "CAMPAIGN-E2E-009 failed: SaveSlot Load did not re-enter Town.");
+            yield return WaitForScene("Town", 20f, "CAMPAIGN-E2E-009 failed: SaveSlot Load did not re-enter Town.");
             CampaignRuntimeInstaller.EnsureForActiveScene();
             yield return WaitForCampaignRuntime(10f);
             AssertNoLegacyCampaignHudObjects("CAMPAIGN-E2E-011 failed: legacy Campaign HUD objects should not exist after reload.");

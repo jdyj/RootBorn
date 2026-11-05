@@ -11,7 +11,7 @@ using UnityEngine.TestTools;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
-    public sealed class SpumPlayerAttackGatherE2ETests : InputTestFixture
+    public sealed class SpumPlayerAttackGatherE2ETests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private const BindingFlags Bind = BindingFlags.Instance | BindingFlags.NonPublic;
 

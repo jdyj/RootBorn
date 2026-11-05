@@ -12,7 +12,7 @@ using UnityEngine.TestTools;
 namespace Rootborn.Tests.PlayMode.Characters
 {
     /// <summary>Walks the real Town player with keyboard input and checks the layered character on screen.</summary>
-    public sealed class GrowingCharacterPlayModeTests : InputTestFixture
+    public sealed class GrowingCharacterPlayModeTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private const string EvidenceFolder = "output/assetpacks/character-parts-v1-20261104/previews/playmode";
 

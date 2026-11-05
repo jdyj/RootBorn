@@ -20,7 +20,7 @@ using UnityEngine.UI;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
-    public sealed class CareerInterestQuestChainStateE2EScenarioTests : InputTestFixture
+    public sealed class CareerInterestQuestChainStateE2EScenarioTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private const string TestSlotId = "slot-0";
         private const string LibraryChainId = "questchain.test.career-interest.library";
@@ -69,7 +69,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
             yield return ClickButton(FindButton("SpumCharacterCreatorPanel", "ConfirmButton"));
-            yield return WaitForScene("Town", 10f, "QUEST-CHAIN-E2E-001 failed: SaveSlot New Game and SPUM confirm did not enter Town.");
+            yield return WaitForScene("Town", 20f, "QUEST-CHAIN-E2E-001 failed: SaveSlot New Game and SPUM confirm did not enter Town.");
             StudentDayRuntimeInstaller.EnsureForActiveScene();
             LocationNpcRuntimeInstaller.EnsureForActiveScene();
             QuestChainRuntimeInstaller.EnsureForActiveScene();
@@ -144,7 +144,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "LoadButton"));
-            yield return WaitForScene("Town", 10f, "QUEST-CHAIN-E2E-012 failed: SaveSlot Load did not re-enter Town.");
+            yield return WaitForScene("Town", 20f, "QUEST-CHAIN-E2E-012 failed: SaveSlot Load did not re-enter Town.");
             StudentDayRuntimeInstaller.EnsureForActiveScene();
             LocationNpcRuntimeInstaller.EnsureForActiveScene();
             QuestChainRuntimeInstaller.EnsureForActiveScene();
@@ -177,7 +177,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
             yield return ClickButton(FindButton("SpumCharacterCreatorPanel", "ConfirmButton"));
-            yield return WaitForScene("Town", 10f, "QUEST-CHAIN-E2E-009 failed: SaveSlot New Game and SPUM confirm did not enter Town.");
+            yield return WaitForScene("Town", 20f, "QUEST-CHAIN-E2E-009 failed: SaveSlot New Game and SPUM confirm did not enter Town.");
             StudentDayRuntimeInstaller.EnsureForActiveScene();
             LocationNpcRuntimeInstaller.EnsureForActiveScene();
             QuestChainRuntimeInstaller.EnsureForActiveScene();

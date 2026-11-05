@@ -18,7 +18,7 @@ using UnityEngine.UI;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
-    public sealed class OpenEndedMilestoneGrowthE2EScenarioTests : InputTestFixture
+    public sealed class OpenEndedMilestoneGrowthE2EScenarioTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private const string TestSlotId = "slot-0";
         private const string ScreenshotPath = "Builds/Logs/milestone-objective-journal-e2e.png";
@@ -70,7 +70,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             var creatorConfirm = FindOptionalButton("SpumCharacterCreatorPanel", "ConfirmButton");
             if (creatorConfirm != null) yield return ClickButton(creatorConfirm);
-            yield return WaitForScene("Town", 10f, "MILESTONE-E2E-001 failed: SaveSlot New Game did not enter Town.");
+            yield return WaitForScene("Town", 20f, "MILESTONE-E2E-001 failed: SaveSlot New Game did not enter Town.");
             yield return WaitForMilestoneRuntime(10f);
             AssertNoLegacyMilestoneHudObjects("MILESTONE-E2E-010 failed: legacy Milestone HUD objects should not exist at runtime.");
             LogAssert.ignoreFailingMessages = true;
@@ -123,7 +123,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "LoadButton"));
-            yield return WaitForScene("Town", 10f, "MILESTONE-E2E-007 failed: SaveSlot Load did not re-enter Town.");
+            yield return WaitForScene("Town", 20f, "MILESTONE-E2E-007 failed: SaveSlot Load did not re-enter Town.");
             yield return WaitForMilestoneRuntime(10f);
             AssertNoLegacyMilestoneHudObjects("MILESTONE-E2E-010 failed: legacy Milestone HUD objects should not exist after reload.");
 

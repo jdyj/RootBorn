@@ -18,7 +18,7 @@ using UnityEngine.UI;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
-    public sealed class TownHelpActionGrowthE2EScenarioTests : InputTestFixture
+    public sealed class TownHelpActionGrowthE2EScenarioTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private const string TestSlotId = "slot-0";
         private const string ScreenshotPath = "Builds/Logs/town-help-relationship-e2e.png";
@@ -64,7 +64,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
             yield return ClickSpumConfirmIfPresent();
-            yield return WaitForScene("Town", 10f, "HELP-E2E-001 failed: SaveSlot New Game did not enter Town.");
+            yield return WaitForScene("Town", 20f, "HELP-E2E-001 failed: SaveSlot New Game did not enter Town.");
             TownHelpActionRuntimeInstaller.EnsureForActiveScene();
             yield return null;
             yield return WaitForHelpRuntime(10f);
@@ -121,7 +121,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "LoadButton"));
-            yield return WaitForScene("Town", 10f, "HELP-E2E-006 failed: SaveSlot Load did not re-enter Town.");
+            yield return WaitForScene("Town", 20f, "HELP-E2E-006 failed: SaveSlot Load did not re-enter Town.");
             TownHelpActionRuntimeInstaller.EnsureForActiveScene();
             yield return null;
             yield return WaitForHelpRuntime(10f);

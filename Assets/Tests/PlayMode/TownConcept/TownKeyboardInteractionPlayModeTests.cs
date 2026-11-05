@@ -21,7 +21,7 @@ namespace Rootborn.Tests.PlayMode.TownConcept
         public void OneTimeTearDown() => InputSystemUiModulePlayModeTestGuard.UninstallForCurrentTest();
     }
 
-    public sealed class ATownKeyboardInteractionPlayModeTests : InputTestFixture
+    public sealed class ATownKeyboardInteractionPlayModeTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         [UnityTest]
         public IEnumerator LIFE_STUDENT_PM_005_PlayerKeyboardWalksToSchoolAndEAppliesActivity()

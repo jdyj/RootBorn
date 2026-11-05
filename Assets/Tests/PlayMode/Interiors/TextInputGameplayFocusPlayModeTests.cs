@@ -17,7 +17,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
 {
     // Focus is fixture setup; real KeyboardState events exercise the production Update/FixedUpdate consumers.
     // Native mouse/text entry through the furniture palette remains a separate player-flow verification.
-    public sealed class TextInputGameplayFocusPlayModeTests : InputTestFixture
+    public sealed class TextInputGameplayFocusPlayModeTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private GameObject _host;
         private GameObject _worldRoot;

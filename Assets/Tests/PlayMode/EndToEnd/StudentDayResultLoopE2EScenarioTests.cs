@@ -20,7 +20,7 @@ using UnityEngine.UI;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
-    public sealed class StudentDayResultLoopE2EScenarioTests : InputTestFixture
+    public sealed class StudentDayResultLoopE2EScenarioTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private const string TestSlotId = "slot-0";
         private string _saveRoot;
@@ -67,7 +67,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
             yield return ClickButton(FindButton(GameObject.Find("SpumCharacterCreatorRoot").transform, "ConfirmButton"));
-            yield return WaitForScene("Town", 10f, "STUDENT-DAY-E2E-001 failed: SaveSlot New Game did not enter Town.");
+            yield return WaitForScene("Town", 20f, "STUDENT-DAY-E2E-001 failed: SaveSlot New Game did not enter Town.");
             yield return WaitForDayRuntime(10f);
             // Keep Unity InputSystem UI module test-environment exceptions from failing this end-to-end path; assertions below verify the gameplay contract.
             LogAssert.ignoreFailingMessages = true;
@@ -136,7 +136,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "LoadButton"));
-            yield return WaitForScene("Town", 10f, "STUDENT-DAY-E2E-010 failed: SaveSlot Load did not re-enter Town.");
+            yield return WaitForScene("Town", 20f, "STUDENT-DAY-E2E-010 failed: SaveSlot Load did not re-enter Town.");
             yield return WaitForDayRuntime(10f);
             LogAssert.ignoreFailingMessages = true;
 

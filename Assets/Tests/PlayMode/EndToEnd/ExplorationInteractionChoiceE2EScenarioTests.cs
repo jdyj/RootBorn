@@ -15,7 +15,7 @@ using UnityEngine.UI;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
-    public sealed class ExplorationInteractionChoiceE2EScenarioTests : InputTestFixture
+    public sealed class ExplorationInteractionChoiceE2EScenarioTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private string _saveRoot;
 

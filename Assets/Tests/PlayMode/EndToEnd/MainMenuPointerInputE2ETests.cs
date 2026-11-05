@@ -13,7 +13,7 @@ using UnityEngine.TestTools;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
-    public sealed class MainMenuPointerInputE2ETests : InputTestFixture
+    public sealed class MainMenuPointerInputE2ETests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private const string EvidencePath = "production/qa/evidence/main-menu-pointer-save-slot.png";
 

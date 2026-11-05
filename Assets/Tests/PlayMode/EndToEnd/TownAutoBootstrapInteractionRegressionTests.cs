@@ -21,7 +21,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
     // test deliberately does NOT call EnsureForActiveScene; the scene must come up via the
     // automatic Bootstrap path alone, and the player must be able to walk to a real NPC and
     // open dialogue with the E key. If the auto-bootstrap regresses, this test fails.
-    public sealed class TownAutoBootstrapInteractionRegressionTests : InputTestFixture
+    public sealed class TownAutoBootstrapInteractionRegressionTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         [UnitySetUp]
         public IEnumerator SetUp()

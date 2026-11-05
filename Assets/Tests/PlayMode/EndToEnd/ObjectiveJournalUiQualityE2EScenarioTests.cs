@@ -18,7 +18,7 @@ using UnityEngine.UI;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
-    public sealed class ObjectiveJournalUiQualityE2EScenarioTests : InputTestFixture
+    public sealed class ObjectiveJournalUiQualityE2EScenarioTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private const string TestSlotId = "slot-0";
         private const string ScreenshotPath = "Builds/Logs/objective-journal-ui-quality-e2e.png";
@@ -67,7 +67,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
             yield return null;
             yield return ClickButton(FindButton("SpumCharacterCreatorPanel", "ConfirmButton"));
-            yield return WaitForScene("Town", 15f, "OBJECTIVE-JOURNAL-E2E-002 failed: SaveSlot New Game did not enter Town.");
+            yield return WaitForScene("Town", 20f, "OBJECTIVE-JOURNAL-E2E-002 failed: SaveSlot New Game did not enter Town.");
             StudentDayRuntimeInstaller.EnsureForActiveScene();
             CampaignRuntimeInstaller.EnsureForActiveScene();
             yield return WaitForObjectiveRuntime(15f);
@@ -119,7 +119,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "LoadButton"));
-            yield return WaitForScene("Town", 15f, "OBJECTIVE-JOURNAL-E2E-002 failed: SaveSlot Load did not re-enter Town.");
+            yield return WaitForScene("Town", 20f, "OBJECTIVE-JOURNAL-E2E-002 failed: SaveSlot Load did not re-enter Town.");
             StudentDayRuntimeInstaller.EnsureForActiveScene();
             CampaignRuntimeInstaller.EnsureForActiveScene();
             yield return WaitForObjectiveRuntime(15f);

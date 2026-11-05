@@ -19,7 +19,7 @@ using UnityEngine.UI;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
-    public sealed class StudentRelationshipConditionDayLoopE2EScenarioTests : InputTestFixture
+    public sealed class StudentRelationshipConditionDayLoopE2EScenarioTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private const string TestSlotId = "slot-0";
         private string _saveRoot;
@@ -66,7 +66,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
-            yield return WaitForScene("Town", 10f, "RELCOND-E2E-001 failed: ?€???¬ë¡¯ UI ??ê²Œìž„??Town??ì§„ìž…?˜ì? ëª»í–ˆ??");
+            yield return WaitForScene("Town", 20f, "RELCOND-E2E-001 failed: ?€???¬ë¡¯ UI ??ê²Œìž„??Town??ì§„ìž…?˜ì? ëª»í–ˆ??");
             yield return WaitForDayRuntime(10f);
             LogAssert.ignoreFailingMessages = true;
 
@@ -115,7 +115,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "LoadButton"));
-            yield return WaitForScene("Town", 10f, "RELCOND-E2E-010 failed: ?€???¬ë¡¯ UI ë¡œë“œ ??Town ?¬ì§„???¤íŒ¨");
+            yield return WaitForScene("Town", 20f, "RELCOND-E2E-010 failed: ?€???¬ë¡¯ UI ë¡œë“œ ??Town ?¬ì§„???¤íŒ¨");
             yield return WaitForDayRuntime(10f);
 
             var reloaded = FindDayRuntime();

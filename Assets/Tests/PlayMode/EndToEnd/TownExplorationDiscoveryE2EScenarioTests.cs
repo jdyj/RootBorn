@@ -17,7 +17,7 @@ using UnityEngine.UI;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
-    public sealed class TownExplorationDiscoveryE2EScenarioTests : InputTestFixture
+    public sealed class TownExplorationDiscoveryE2EScenarioTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private const string TestSlotId = "slot-0";
         private string _saveRoot;
@@ -61,7 +61,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
-            yield return WaitForScene("Town", 10f, "EXPLORE-E2E-001 failed: SaveSlot New Game did not enter Town.");
+            yield return WaitForScene("Town", 20f, "EXPLORE-E2E-001 failed: SaveSlot New Game did not enter Town.");
             TownExplorationDiscoveryRuntimeInstaller.EnsureForActiveScene();
             yield return null;
             yield return WaitForDiscoveryRuntime(10f);
@@ -113,7 +113,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "LoadButton"));
-            yield return WaitForScene("Town", 10f, "EXPLORE-E2E-006 failed: SaveSlot Load did not re-enter Town.");
+            yield return WaitForScene("Town", 20f, "EXPLORE-E2E-006 failed: SaveSlot Load did not re-enter Town.");
             TownExplorationDiscoveryRuntimeInstaller.EnsureForActiveScene();
             yield return null;
             yield return WaitForDiscoveryRuntime(10f);

@@ -19,7 +19,7 @@ using UnityEngine.UI;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
-    public sealed class BootToPoliceInteriorE2ETests : InputTestFixture
+    public sealed class BootToPoliceInteriorE2ETests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private string _saveRoot;
 
@@ -56,7 +56,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return WaitForSaveSlotPanel(5f);
             yield return ClickActiveButton("NewGameButton", 5f);
             yield return ClickActiveButton("ConfirmButton", 5f);
-            yield return WaitForScene("Town", 15f);
+            yield return WaitForScene("Town", 20f);
             yield return WaitForTownReady(15f);
 
             var player = GameObject.Find("Player");

@@ -11,7 +11,7 @@ using System.Collections;
         
         namespace Rootborn.Tests.PlayMode.World
         {
-            public sealed class TownLevelTransitionPlayModeTests : InputTestFixture
+            public sealed class TownLevelTransitionPlayModeTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
             {
                 [UnitySetUp]
                 public IEnumerator SetUp()

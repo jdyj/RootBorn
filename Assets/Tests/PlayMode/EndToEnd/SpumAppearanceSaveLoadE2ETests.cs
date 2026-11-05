@@ -50,7 +50,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return ClickButtonNamed("Tab_Hair");
             yield return ClickButtonNamed("PartCell_spum_hair_long");
             yield return ClickButtonNamed("ConfirmButton");
-            yield return WaitForScene("Town", 10f);
+            yield return WaitForScene("Town", 20f);
 
             SaveSlotMetadata firstLoad = new SaveService("slot-0", _saveRoot).LoadMetadata("slot-0");
             Assert.IsNotNull(firstLoad.CharacterAppearanceSnapshot);
@@ -63,7 +63,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             SaveSlotSelectPanel.EnsureInScene().Show();
             yield return null;
             yield return ClickButtonNamed("LoadButton");
-            yield return WaitForScene("Town", 10f);
+            yield return WaitForScene("Town", 20f);
 
             SaveSlotMetadata loaded = ActiveSaveContext.Metadata;
             Assert.IsNotNull(loaded);

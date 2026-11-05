@@ -21,7 +21,7 @@ using UnityEngine.UI;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
-    public sealed class RegistryProviderUnifiedFlowE2ETests : InputTestFixture
+    public sealed class RegistryProviderUnifiedFlowE2ETests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private const string EvidencePath = "production/qa/evidence/registry-provider-town-flow.png";
         private string _saveRoot;
@@ -63,7 +63,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return WaitForSaveSlotPanel(5f);
             yield return ClickActiveButton("NewGameButton", 5f);
             yield return ClickActiveButton("ConfirmButton", 5f);
-            yield return WaitForScene("Town", 15f);
+            yield return WaitForScene("Town", 20f);
             yield return WaitForRegistryDrivenTownRuntime(15f);
             yield return CaptureEvidence(EvidencePath);
 

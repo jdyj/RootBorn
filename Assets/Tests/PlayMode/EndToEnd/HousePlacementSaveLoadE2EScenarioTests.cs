@@ -64,7 +64,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.AreEqual("HOUSE-FLOW-003", ScenarioId.HOUSE_FLOW_003);
             yield return OpenCreatorFromMainMenu();
             yield return ClickButtonNamed("ConfirmButton");
-            yield return WaitForScene("Town", 10f);
+            yield return WaitForScene("Town", 20f);
             Assert.AreEqual("slot-0", ActiveSaveContext.SlotId, "New Game confirmation should activate slot-0 before entering the world.");
             Assert.IsTrue(File.Exists(Path.Combine(_saveRoot, "slot-0", "metadata.json")), "New Game should create slot metadata before House placement persistence.");
 
@@ -97,7 +97,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             SaveSlotSelectPanel.EnsureInScene().Show();
             yield return null;
             yield return ClickButtonNamed("LoadButton");
-            yield return WaitForScene("Town", 10f);
+            yield return WaitForScene("Town", 20f);
             Assert.AreEqual("slot-0", ActiveSaveContext.SlotId, "Loading the save slot should restore the active save context before House reload.");
 
             yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);

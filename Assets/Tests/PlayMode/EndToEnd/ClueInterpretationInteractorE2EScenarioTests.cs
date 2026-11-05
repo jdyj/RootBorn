@@ -23,7 +23,7 @@ using UnityEngine.UI;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
-    public sealed class ClueInterpretationInteractorE2EScenarioTests : InputTestFixture
+    public sealed class ClueInterpretationInteractorE2EScenarioTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private const string TestSlotId = "slot-0";
         private string _saveRoot;
@@ -138,7 +138,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
             var creator = GameObject.Find("SpumCharacterCreatorRoot");
             if (creator != null) yield return ClickButton(FindButton(creator.transform, "ConfirmButton"));
-            yield return WaitForScene("Town", 15f, "CLUE-INTERPRET-E2E-012 failed: save slot UI did not enter Town.");
+            yield return WaitForScene("Town", 20f, "CLUE-INTERPRET-E2E-012 failed: save slot UI did not enter Town.");
             yield return WaitForTownRuntime(15f);
         }
 

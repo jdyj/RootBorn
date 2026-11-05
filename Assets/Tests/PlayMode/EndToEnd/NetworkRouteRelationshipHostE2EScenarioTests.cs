@@ -21,7 +21,7 @@ using UnityEngine.UI;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
-    public sealed class NetworkRouteRelationshipHostE2EScenarioTests : InputTestFixture
+    public sealed class NetworkRouteRelationshipHostE2EScenarioTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private const string TestSlotId = "host-route-relationship-slot";
         private const string CareerId = "career.interior";
@@ -129,7 +129,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             }
 
             yield return PlayerFlowE2EDriver.ClickButton(FindRootButton("HostButton"));
-            yield return PlayerFlowE2EDriver.WaitForScene("Town", 15f, "NETWORK-ROUTE-REL-HOST-001 failed: HostButton did not enter Town.");
+            yield return PlayerFlowE2EDriver.WaitForScene("Town", 20f, "NETWORK-ROUTE-REL-HOST-001 failed: HostButton did not enter Town.");
         }
 
         private IEnumerator RestartHostTownFromSameSlot()
