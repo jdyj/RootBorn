@@ -17,6 +17,26 @@ namespace Rootborn.Editor.BuildScripts
         private const string ServerName = "rootborn-server";
         private const string ClientAddressablesRuntimeDataPath = "Builds/Client/Windows/rootborn_Data/StreamingAssets/aa";
 
+        // Nothing in the project reads the Addressables build layout, and generating it is what pops the
+        // Addressables Report window open after every content build. Keep it off for every editor session.
+        [InitializeOnLoadMethod]
+        private static void KeepAddressablesReportClosed()
+        {
+            if (ProjectConfigData.GenerateBuildLayout) ProjectConfigData.GenerateBuildLayout = false;
+            // The auto-open switch is internal to the package, so set it by name; ignore it if a package update renames it.
+            var autoOpen = typeof(ProjectConfigData).GetProperty("AutoOpenAddressablesReport",
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public);
+            if (autoOpen != null && autoOpen.CanWrite && autoOpen.GetValue(null) is bool open && open) autoOpen.SetValue(null, false);
+            // A report window saved in the editor layout comes back on every launch; close it once the layout is restored.
+            EditorApplication.delayCall += () =>
+            {
+                var windowType = typeof(ProjectConfigData).Assembly.GetType("UnityEditor.AddressableAssets.BuildReportVisualizer.BuildReportWindow");
+                if (windowType == null) return;
+                foreach (var window in Resources.FindObjectsOfTypeAll(windowType))
+                    if (window is EditorWindow editorWindow) editorWindow.Close();
+            };
+        }
+
         // The enabled build settings list is the one source of playable scenes; travel destinations must be in it.
         public static string[] ClientScenePaths()
         {
