@@ -54,13 +54,7 @@ namespace Rootborn.UI.DiscoveryClues
             var context = new ClueInterpretationContext(world, clueProgress, interpretationProgress, student, _questLog, encyclopedia, student.CurrentDay);
             var summaries = ClueInterpretationSummaryBuilder.BuildForSource(new ClueInterpretationLookupCache(_interpretations), _sourceKind, _sourceTargetId, context, SurfaceFor(_sourceKind));
             if (summaries.Length == 0) return false;
-            var canvas = Object.FindFirstObjectByType<Canvas>(FindObjectsInactive.Include);
-            if (canvas == null)
-            {
-                var canvasObject = new GameObject("ClueInterpretationCanvas", typeof(Canvas));
-                canvas = canvasObject.GetComponent<Canvas>();
-                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            }
+            var canvas = Rootborn.UI.Modern.ModernUiPanelBuilder.FindOrCreatePopupCanvas("ClueInterpretationCanvas");
             var panel = ClueInterpretationChoicePanel.EnsureInScene(canvas);
             panel.Show(summaries, selected => CompleteSelected(selected, studentComponent, saveSlot, playerId));
             return true;

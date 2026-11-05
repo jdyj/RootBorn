@@ -80,7 +80,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.GreaterOrEqual(objectSummaries.Length, 1, "CLUE-INTERPRET-E2E-005 failed: object interaction interpretation path was not visible from SO source data.");
 
             ClueInterpretationResult selectedResult = default;
-            var choicePanel = ClueInterpretationChoicePanel.EnsureInScene(Object.FindFirstObjectByType<Canvas>(FindObjectsInactive.Include));
+            var choicePanel = ClueInterpretationChoicePanel.EnsureInScene(Rootborn.UI.Modern.ModernUiPanelBuilder.FindOrCreatePopupCanvas("E2ECanvas"));
             choicePanel.Show(npcSummaries, selected =>
             {
                 var runner = new ClueInterpretationRunner();
@@ -134,7 +134,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var summaries = DiscoveryClueSummaryBuilder.BuildForSource(new DiscoveryClueLookupCache(new[] { clue }), kind, source.Id, context, surface);
             Assert.AreEqual(1, summaries.Length);
             DiscoveryClueResult revealResult = default;
-            var panel = DiscoveryClueSourcePanel.EnsureInScene(Object.FindFirstObjectByType<Canvas>(FindObjectsInactive.Include));
+            var panel = DiscoveryClueSourcePanel.EnsureInScene(Rootborn.UI.Modern.ModernUiPanelBuilder.FindOrCreatePopupCanvas("E2ECanvas"));
             panel.Show(summaries, selected =>
             {
                 new DiscoveryClueRunner().TryRevealSource(clue, source, context, out revealResult);

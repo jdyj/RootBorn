@@ -93,7 +93,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
 
             var context = new DiscoveryClueContext(WorldStateProgressPersistence.LoadOrCreate(TestSlotId, playerId), clueProgress, runtime.StudentLife.EnsureProgress(), runtime.QuestLogPanel.QuestLog, Rootborn.Game.Encyclopedia.EncyclopediaProgressPersistence.LoadOrCreate(TestSlotId, playerId), runtime.StudentLife.EnsureProgress().CurrentDay);
             var summaries = DiscoveryClueSummaryBuilder.BuildForClue(new DiscoveryClueLookupCache(new[] { clue }), clue.Id, context, DiscoveryClueSummarySurface.WorldLog);
-            var log = DiscoveryClueLogPanel.EnsureInScene(Object.FindFirstObjectByType<Canvas>(FindObjectsInactive.Include));
+            var log = DiscoveryClueLogPanel.EnsureInScene(Rootborn.UI.Modern.ModernUiPanelBuilder.FindOrCreatePopupCanvas("E2ECanvas"));
             log.Show(summaries);
             Assert.GreaterOrEqual(log.CardCountForTests, 5, "DISCOVERY-CLUE-E2E-008 failed: clue log did not render all source summaries.");
             StringAssert.Contains("Play clue", log.TextForTests);
@@ -131,7 +131,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var summaries = DiscoveryClueSummaryBuilder.BuildForSource(new DiscoveryClueLookupCache(new[] { clue }), kind, source.Id, context, surface);
             Assert.AreEqual(1, summaries.Length, "DISCOVERY-CLUE-E2E-005 failed: source summary was not built from registered SO data for " + kind + ".");
             DiscoveryClueResult revealResult = default;
-            var panel = DiscoveryClueSourcePanel.EnsureInScene(Object.FindFirstObjectByType<Canvas>(FindObjectsInactive.Include));
+            var panel = DiscoveryClueSourcePanel.EnsureInScene(Rootborn.UI.Modern.ModernUiPanelBuilder.FindOrCreatePopupCanvas("E2ECanvas"));
             panel.Show(summaries, selected =>
             {
                 var runner = new DiscoveryClueRunner();

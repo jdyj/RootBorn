@@ -93,7 +93,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var context = new DiscoveryClueContext(Rootborn.Game.WorldState.WorldStateProgressPersistence.LoadOrCreate(TestSlotId, playerId), clueProgress, runtime.StudentLife.EnsureProgress(), runtime.QuestLogPanel.QuestLog, Rootborn.Game.Encyclopedia.EncyclopediaProgressPersistence.LoadOrCreate(TestSlotId, playerId), runtime.StudentLife.EnsureProgress().CurrentDay);
             var summaries = DiscoveryClueSummaryBuilder.BuildForSource(new DiscoveryClueLookupCache(new[] { clue }), DiscoveryClueSourceKind.NpcDialogue, source.Id, context, DiscoveryClueSummarySurface.NpcDialogue);
             DiscoveryClueResult revealResult = default;
-            var panel = DiscoveryClueSourcePanel.EnsureInScene(Object.FindFirstObjectByType<Canvas>(FindObjectsInactive.Include));
+            var panel = DiscoveryClueSourcePanel.EnsureInScene(Rootborn.UI.Modern.ModernUiPanelBuilder.FindOrCreatePopupCanvas("E2ECanvas"));
             panel.Show(summaries, selected =>
             {
                 new DiscoveryClueRunner().TryRevealSource(clue, source, context, out revealResult);

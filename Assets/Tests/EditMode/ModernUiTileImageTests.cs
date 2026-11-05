@@ -12,6 +12,32 @@ namespace Rootborn.Tests.EditMode
     public sealed class ModernUiTileImageTests
     {
         [Test]
+        public void PopupCanvas_SkipsHiddenCanvasesSoPopupButtonsAreVisible()
+        {
+            var hidden = new GameObject("HiddenCanvasFixture", typeof(Canvas));
+            hidden.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+            hidden.SetActive(false);
+            var shown = new GameObject("ShownCanvasFixture", typeof(Canvas));
+            shown.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+            try
+            {
+                var canvas = ModernUiPanelBuilder.FindOrCreatePopupCanvas("PopupCanvasFixture");
+                Assert.That(canvas, Is.SameAs(shown.GetComponent<Canvas>()));
+
+                shown.SetActive(false);
+                var created = ModernUiPanelBuilder.FindOrCreatePopupCanvas("PopupCanvasFixture");
+                Assert.That(created.gameObject.activeInHierarchy, Is.True);
+                Assert.That(created.name, Is.EqualTo("PopupCanvasFixture"));
+                UnityEngine.Object.DestroyImmediate(created.gameObject);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(hidden);
+                UnityEngine.Object.DestroyImmediate(shown);
+            }
+        }
+
+        [Test]
         public void Rebuild_CreatesDeterministicSixteenPixelPanelTiles()
         {
             var go = new GameObject("ModernTileTest", typeof(RectTransform), typeof(ModernUiTileImage));

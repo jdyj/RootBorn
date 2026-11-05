@@ -144,13 +144,7 @@ namespace Rootborn.UI.StudentLife
 
         private static Canvas EnsureCanvas()
         {
-            var canvas = Object.FindFirstObjectByType<Canvas>(FindObjectsInactive.Include);
-            if (canvas != null) return canvas;
-            var go = new GameObject("CareerCandidateCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-            var created = go.GetComponent<Canvas>();
-            created.renderMode = RenderMode.ScreenSpaceOverlay;
-            go.GetComponent<CanvasScaler>().referenceResolution = new Vector2(1920f, 1080f);
-            return created;
+            return Rootborn.UI.Modern.ModernUiPanelBuilder.FindOrCreatePopupCanvas("CareerCandidateCanvas");
         }
 
         private static GameObject FindRoot(Scene scene, string rootName)

@@ -7,6 +7,33 @@ namespace Rootborn.UI.Modern
     {
         public static readonly Vector2 CommonPanel48TileSize = new Vector2(48f, 48f);
 
+        // Popups opened by an interaction need a canvas the player can see; a hidden panel's canvas would swallow them.
+        public static Canvas FindOrCreatePopupCanvas(string createdName)
+        {
+            Canvas selected = null;
+            bool selectedOverlay = false;
+            var canvases = Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None);
+            for (int i = 0; i < canvases.Length; i++)
+            {
+                var canvas = canvases[i];
+                if (canvas == null || !canvas.enabled || !canvas.gameObject.activeInHierarchy || !canvas.isRootCanvas) continue;
+                bool overlay = canvas.renderMode == RenderMode.ScreenSpaceOverlay;
+                if (selected == null || (overlay && !selectedOverlay)
+                    || (overlay == selectedOverlay && canvas.sortingOrder > selected.sortingOrder))
+                {
+                    selected = canvas;
+                    selectedOverlay = overlay;
+                }
+            }
+            if (selected != null) return selected;
+            var go = new GameObject(createdName, typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            var created = go.GetComponent<Canvas>();
+            created.renderMode = RenderMode.ScreenSpaceOverlay;
+            go.GetComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            go.GetComponent<CanvasScaler>().referenceResolution = new Vector2(1920f, 1080f);
+            return created;
+        }
+
         public static GameObject CreateCommonPanel48(Transform parent, string name, Vector2 position, Vector2 size)
         {
             var go = new GameObject(name, typeof(RectTransform), typeof(ModernUiTileImage));
