@@ -5,6 +5,23 @@ namespace Rootborn.Tests.EditMode.Addressables
 {
     public sealed class ClientBuildAddressablesLoopGuardTests
     {
+        // A destination missing from the player cannot be loaded: a new game could not even start.
+        [NUnit.Framework.Test]
+        public void ClientBuild_ContainsEveryTravelDestinationAndBootsFirst()
+        {
+            var scenes = Rootborn.Editor.BuildScripts.BuildScript.ClientScenePaths();
+            NUnit.Framework.Assert.That(scenes[0], NUnit.Framework.Is.EqualTo("Assets/Scenes/Boot.unity"));
+            NUnit.Framework.CollectionAssert.Contains(scenes, "Assets/Scenes/MainMenu.unity");
+            var missing = new System.Collections.Generic.List<string>();
+            foreach (string guid in UnityEditor.AssetDatabase.FindAssets("t:WorldDestinationDefinition"))
+            {
+                var destination = UnityEditor.AssetDatabase.LoadAssetAtPath<Rootborn.Game.World.WorldDestinationDefinition>(UnityEditor.AssetDatabase.GUIDToAssetPath(guid));
+                if (System.Array.IndexOf(scenes, "Assets/Scenes/" + destination.SceneName + ".unity") < 0) missing.Add(destination.SceneName);
+            }
+            NUnit.Framework.Assert.That(missing, NUnit.Framework.Is.Empty, string.Join(", ", missing));
+            foreach (string scene in scenes) NUnit.Framework.Assert.That(System.IO.File.Exists(scene), NUnit.Framework.Is.True, scene);
+        }
+
         private const string BuildScriptPath = "Assets/Scripts/Editor/BuildScripts/BuildScript.cs";
 
         [Test]

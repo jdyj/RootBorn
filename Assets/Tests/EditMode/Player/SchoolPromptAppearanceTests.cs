@@ -23,6 +23,17 @@ namespace Rootborn.Tests.EditMode.Player
         public bool TryInteract(GameObject player) => false;
     }
 
+    public sealed class ExplainingTarget : MonoBehaviour, IPlayerInteractable, IPrioritizedPlayerInteractable, IPlayerInteractionFailureExplainer
+    {
+        public string InteractionPrompt => "[E] Explaining target";
+        public Vector3 InteractionPromptOffset => Vector3.up;
+        public Transform InteractionTransform => transform;
+        public int InteractionPriority => 500;
+        public bool CanInteract(GameObject player) => true;
+        public bool TryInteract(GameObject player) => false;
+        public string ExplainFailure(GameObject player) => "no time left";
+    }
+
     public sealed class SchoolPromptAppearanceTests
     {
         const string ProviderName = "Rootborn.Game.Player.IPlayerInteractionPromptAppearance";
@@ -89,6 +100,20 @@ namespace Rootborn.Tests.EditMode.Player
             Assert.That(ink, Is.Not.Null, "Missing authored prompt color; expected RED.");
             flag.boolValue = enabled; ink.colorValue = color; serialized.ApplyModifiedPropertiesWithoutUndo();
         }
+        [Test]
+        public void FailedInteraction_ShowsTheTargetsExplanationInThePrompt()
+        {
+            _plainObject.SetActive(false);
+            var explainerObject = Own("Explainer", typeof(BoxCollider2D), typeof(ExplainingTarget));
+            explainerObject.transform.position = _actor.transform.position + Vector3.right * .1f;
+            explainerObject.GetComponent<BoxCollider2D>().isTrigger = true;
+            Physics2D.SyncTransforms();
+            Assert.That(_router.TryInteractWithNearest(), Is.False);
+            Assert.That(_router.PromptText, Is.EqualTo("no time left"));
+            _router.RefreshPromptNow();
+            Assert.That(_router.PromptText, Is.EqualTo("no time left"), "The explanation stays long enough to be read.");
+        }
+
         TextMesh Refresh()
         {
             Physics2D.SyncTransforms(); _router.RefreshPromptNow();

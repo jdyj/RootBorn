@@ -122,7 +122,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.AreEqual("Town", SceneManager.GetActiveScene().name, "STUDENT-E2E-008 failed: movement entered the portal trigger before interaction input.");
             town.Router.RefreshPromptNow();
             Assert.IsTrue(town.Router.PromptVisible, "STUDENT-E2E-008 failed: portal prompt was not visible before input.");
-            StringAssert.Contains("Enter", town.Router.PromptText, "STUDENT-E2E-008 failed: prompt did not target portal interaction.");
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.FormatLocalized("ui.prompt.enter-named", "Enter {0}", string.Empty).Trim(), town.Router.PromptText, "STUDENT-E2E-008 failed: prompt did not target portal interaction.");
             yield return PressInteractKey(keyboard);
             yield return WaitForScene("Farm", 15f, "STUDENT-E2E-008 failed: portal interaction input did not load Farm.");
             yield return WaitForFarmRuntime(15f);
@@ -253,7 +253,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         {
             runtime.Router.RefreshPromptNow();
             Assert.IsTrue(runtime.Router.PromptVisible, failure + " Prompt was not visible.");
-            StringAssert.Contains("Talk", runtime.Router.PromptText, failure + " Prompt did not target Talk.");
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Localized("ui.prompt.talk", "Talk"), runtime.Router.PromptText, failure + " Prompt did not target Talk.");
             yield return PressInteractKey(keyboard);
             float elapsed = 0f;
             while (!runtime.DialoguePanel.IsOpen && elapsed < 3f)

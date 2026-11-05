@@ -21,6 +21,72 @@ namespace Rootborn.Tests.EditMode.Interiors
         private const string FurnitureId = "chair.quest-reward";
         private const string QuestInteriorRewardE2EPath = "Assets/Tests/PlayMode/EndToEnd/QuestInteriorRewardE2EScenarioTests.cs";
 
+        private const string SaleToken = "unlock.furniture.test.sale";
+
+        private static FurnitureDefinition SaleFurniture(ItemDefinition coin, int price)
+        {
+            var furniture = ScriptableObject.CreateInstance<FurnitureDefinition>();
+            furniture.ConfigureSaleForTests(SaleToken, coin, price, "location.test");
+            return furniture;
+        }
+
+        private static ItemDefinition Coin()
+        {
+            var coin = ScriptableObject.CreateInstance<ItemDefinition>();
+            SetField(coin, "_id", "item.test-coin");
+            SetField(coin, "_maxStack", 9999);
+            return coin;
+        }
+
+        [Test]
+        public void FurniturePurchase_ChargesOnceAndUnlocks()
+        {
+            var coin = Coin(); var furniture = SaleFurniture(coin, 10);
+            var inventory = new Inventory(); inventory.Add(coin, 15);
+            var unlocks = new FurnitureUnlockProgress("slot", "player");
+            Assert.That(FurniturePurchase.Try(furniture, inventory, unlocks), Is.EqualTo(FurniturePurchaseResult.Purchased));
+            Assert.That(inventory.CountOf(coin), Is.EqualTo(5));
+            Assert.That(unlocks.IsUnlocked(SaleToken), Is.True);
+            Assert.That(FurniturePurchase.Try(furniture, inventory, unlocks), Is.EqualTo(FurniturePurchaseResult.AlreadyOwned));
+            Assert.That(inventory.CountOf(coin), Is.EqualTo(5), "Owning it already must never charge again.");
+        }
+
+        [Test]
+        public void FurniturePurchase_WithoutEnoughMoney_ChangesNothing()
+        {
+            var coin = Coin(); var furniture = SaleFurniture(coin, 10);
+            var inventory = new Inventory(); inventory.Add(coin, 9);
+            var unlocks = new FurnitureUnlockProgress("slot", "player");
+            Assert.That(FurniturePurchase.Try(furniture, inventory, unlocks), Is.EqualTo(FurniturePurchaseResult.NotEnoughMoney));
+            Assert.That(inventory.CountOf(coin), Is.EqualTo(9));
+            Assert.That(unlocks.IsUnlocked(SaleToken), Is.False);
+        }
+
+        [Test]
+        public void FurniturePurchase_NotForSaleOrMissingOwner_ChangesNothing()
+        {
+            var coin = Coin();
+            var inventory = new Inventory(); inventory.Add(coin, 20);
+            var unlocks = new FurnitureUnlockProgress("slot", "player");
+            Assert.That(FurniturePurchase.Try(ScriptableObject.CreateInstance<FurnitureDefinition>(), inventory, unlocks), Is.EqualTo(FurniturePurchaseResult.NotForSale));
+            Assert.That(FurniturePurchase.Try(null, inventory, unlocks), Is.EqualTo(FurniturePurchaseResult.NotForSale));
+            Assert.That(FurniturePurchase.Try(SaleFurniture(coin, 10), null, unlocks), Is.EqualTo(FurniturePurchaseResult.Unavailable));
+            Assert.That(FurniturePurchase.Try(SaleFurniture(coin, 10), inventory, null), Is.EqualTo(FurniturePurchaseResult.Unavailable));
+            Assert.That(inventory.CountOf(coin), Is.EqualTo(20));
+        }
+
+        [Test]
+        public void FurniturePurchase_SavedUnlock_DoesNotChargeAfterReload()
+        {
+            var coin = Coin(); var furniture = SaleFurniture(coin, 10);
+            var inventory = new Inventory(); inventory.Add(coin, 20);
+            var unlocks = new FurnitureUnlockProgress("slot", "player");
+            FurniturePurchase.Try(furniture, inventory, unlocks);
+            var restored = FurnitureUnlockProgress.FromSaveData(unlocks.ToSaveData(), "slot", "player");
+            Assert.That(FurniturePurchase.Try(furniture, inventory, restored), Is.EqualTo(FurniturePurchaseResult.AlreadyOwned));
+            Assert.That(inventory.CountOf(coin), Is.EqualTo(10));
+        }
+
         [Test]
         public void FurnitureUnlockReward_CanApplyRequiresProgressAndUnlocksExactlyOnce()
         {

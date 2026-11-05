@@ -108,7 +108,7 @@ namespace Rootborn.Tests.PlayMode.Quests
             yield return null;
             router.RefreshPromptNow();
             Assert.IsTrue(router.PromptVisible, failure + " Portal prompt was not visible.");
-            StringAssert.Contains("Enter", router.PromptText, failure + " Prompt did not target portal.");
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.FormatLocalized("ui.prompt.enter-named", "Enter {0}", string.Empty).Trim(), router.PromptText, failure + " Prompt did not target portal.");
             Assert.IsTrue(router.TryInteractWithNearest(), failure + " Portal interaction was not accepted.");
             yield return WaitForScene(destinationScene, 15f, failure);
         }

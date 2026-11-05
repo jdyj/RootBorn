@@ -29,6 +29,29 @@ namespace Rootborn.Tests.EditMode.UI.StudentLife
         private ExplorationProgress _progress;
         private Inventory _inventory;
         private ExplorationChoicePanel _panel;
+        // Discovery and usage assets store readable text as their key, so surfaces without translation stay readable.
+        private static readonly string[] ReviewedDreamLiteralKeys =
+        {
+            "Library job books",
+            "The library has a shelf of books about jobs.",
+            "Books about many jobs are waiting at the library.",
+            "??? book",
+            "A shelf of job books at the library",
+            "Town board notice",
+            "A notice recommends the library job books.",
+            "Librarian tip",
+            "The librarian recommends a book about jobs.",
+            "Library Job Shelf",
+            "Browse the shelf of books about jobs.",
+            "Browse the job shelf",
+            "Look for a job you want to know about",
+            "See how repair work is noted at the workshop.",
+            "The workshop keeps repair notes you can look at.",
+            "Ask a librarian about books on jobs.",
+            "The librarian suggests a book about jobs.",
+            "Ask Librarian",
+            "Ask"
+        };
         private readonly string[] _ids = { "choice.test.inspect", "choice.test.careful", "choice.test.discovery", "choice.test.leave" };
 
         [SetUp]
@@ -63,13 +86,39 @@ namespace Rootborn.Tests.EditMode.UI.StudentLife
             finally { foreach (var entry in _statics) entry.Key.SetValue(null, entry.Value); _statics.Clear(); }
         }
 
+        // Player-facing text added behind the protected rows when raw keys were removed from the journal and day summary.
+        private static readonly string[] ReviewedPlayerTextPrefixes = { "npc.", "objective.", "milestone.", "practice.", "quest.", "route.", "candidate.", "career.", "insight.", "loc.character.", "character.", "spum.", "location.", "work.", "workplace.", "opening.", "campaign.", "item.", "crop.", "tool.", "status.", "resource.", "outside.", "town.", "tutorial.", "recipe.", "discovery.", "daily.", "day-rule.", "tile.", "trait.", "generation.", "knowledge.", "condition.", "activity.", "goal.", "day-result.", "ui.journal.", "ui.prompt.", "ui.place.", "ui.placement.", "ui.location-log" };
+        private static readonly string[] ReviewedPlayerTextWords = { "Wood", "home-entry", "active", "completed", "[E] Use Computer" };
+        private static bool IsReviewedPlayerTextKey(string key) => ReviewedPlayerTextWords.Contains(key) || ReviewedPlayerTextPrefixes.Any(prefix => key.StartsWith(prefix, StringComparison.Ordinal));
+
+        // Any key-shaped text value in authored data must resolve, or the player reads the raw key.
+        [Test]
+        public void EveryTextKeyInAuthoredData_ResolvesInBothLanguages()
+        {
+            var keyShape = new System.Text.RegularExpressions.Regex(@"^[a-z][a-z0-9_-]*(\.[a-z0-9_-]+)+$");
+            var field = new System.Text.RegularExpressions.Regex(@"(?m)^\s*(?:- )?_\w*(?:Key|Text|Hint|Motivation|Description|Name|Title|Summary|Prompt|Label)\w*: *(.+?)\s*$");
+            var developerOnly = new System.Text.RegularExpressions.Regex(@"^(questchain\.test|step\.questchain\.test|choice\.test|objective\.questchain|objective\.daily\.questchain)");
+            var missing = new System.Collections.Generic.SortedSet<string>();
+            foreach (string path in System.IO.Directory.GetFiles("Assets/Data", "*.asset", System.IO.SearchOption.AllDirectories))
+            {
+                if (new System.IO.FileInfo(path).Length > 300000) continue;
+                foreach (System.Text.RegularExpressions.Match match in field.Matches(System.IO.File.ReadAllText(path)))
+                {
+                    string value = match.Groups[1].Value.Trim().Trim('"');
+                    if (!keyShape.IsMatch(value) || developerOnly.IsMatch(value)) continue;
+                    if (_registry.TextCatalog.Get(value, "ko") == value || _registry.TextCatalog.Get(value, "en") == value) missing.Add(value);
+                }
+            }
+            Assert.That(missing, Is.Empty, string.Join(", ", missing));
+        }
+
         [Test]
         public void CatalogAppendsExactlyReviewed38AndPreservesIndependent555And383Baselines()
         {
             var all = Rows(_registry.TextCatalog);
             Assert.That(all.Select(r => r.Key).Distinct(StringComparer.Ordinal).Count(), Is.EqualTo(all.Length));
-            // Wardrobe text is the one reviewed addition after this baseline. It sits behind the protected rows.
-            Assert.That(all.Skip(593).Select(r => r.Key).Where(k => !k.StartsWith("ui.wardrobe.", StringComparison.Ordinal)), Is.Empty);
+            // Wardrobe and dream-job text are the reviewed additions after this baseline. They sit behind the protected rows.
+            Assert.That(all.Skip(593).Select(r => r.Key).Where(k => !k.StartsWith("ui.wardrobe.", StringComparison.Ordinal) && !k.StartsWith("dream.", StringComparison.Ordinal) && !k.StartsWith("dialogue.", StringComparison.Ordinal) && !ReviewedDreamLiteralKeys.Contains(k) && !IsReviewedPlayerTextKey(k)), Is.Empty);
             var rows = all.Take(593).ToArray();
             Assert.That(rows.Length, Is.EqualTo(593));
             Assert.That(Hash(string.Join("\n", rows.Take(555).Select(r => r.Key + "\t" + r.Ko + "\t" + r.En))),

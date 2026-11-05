@@ -46,6 +46,34 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
         }
 
         [Test]
+        public void ObjectiveJournalPanel_TranslatesKeysFromAnySourceBeforeShowingThem()
+        {
+            var host = new GameObject("ObjectiveJournalKeyFixture", typeof(RectTransform));
+            var previous = Rootborn.Game.Localization.GameText.Language;
+            Rootborn.Game.Common.GameDataRegistryProvider.SetOverrideForTests(UnityEditor.AssetDatabase.LoadAssetAtPath<Rootborn.Game.Common.GameDataRegistry>("Assets/Data/Registry/GameDataRegistry.asset"));
+            try
+            {
+                Rootborn.Game.Localization.GameText.Language = "ko";
+                var panel = host.AddComponent<ObjectiveJournalPanel>();
+                panel.SetItems("Goals", new[] { new ObjectiveJournalItem("k", "Goals", "objective.daily.choose.title", "tutorial.day1", "InProgress", "plain progress", "opening.day.1.next", false, 1) });
+                panel.Show();
+                panel.SelectCategory("Goals");
+                var shown = string.Join("\n", System.Linq.Enumerable.Select(host.GetComponentsInChildren<UnityEngine.UI.Text>(true), t => t.text));
+                foreach (string raw in new[] { "objective.daily.choose.title", "tutorial.day1", "InProgress", "opening.day.1.next" })
+                    StringAssert.DoesNotContain(raw, shown);
+                StringAssert.Contains("plain progress", shown);
+                StringAssert.Contains("진행 중", shown);
+            }
+            finally
+            {
+                Rootborn.Game.Localization.GameText.Language = previous;
+                Rootborn.Game.Common.GameDataRegistryProvider.ClearOverrideForTests();
+                Rootborn.Game.Common.GameDataRegistryProvider.ResetCacheForTests();
+                UnityEngine.Object.DestroyImmediate(host);
+            }
+        }
+
+        [Test]
         public void ObjectiveJournalPanel_RowButtonClickUpdatesSelectedDetail()
         {
             var host = new GameObject("ObjectiveJournalRowClickFixture", typeof(RectTransform));

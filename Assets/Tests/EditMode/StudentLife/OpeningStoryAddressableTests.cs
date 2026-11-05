@@ -22,7 +22,15 @@ namespace Rootborn.Tests.EditMode.StudentLife
                     "Assets/Data/Items/Item_Allowance.asset",
                     "Assets/Data/Interiors/Furniture/Story/Tiles/Story_PhotoBoard_Tile.asset",
                     "Assets/Data/StudentLife/PartTimeWork/PartTimeWork_WorkshopHelper.asset",
-                    "Assets/Data/StudentLife/PartTimeWork/Workplace_Workshop.asset"
+                    "Assets/Data/StudentLife/PartTimeWork/Workplace_Workshop.asset",
+                    "Assets/Data/StudentLife/PartTimeWork/PartTimeWork_RestaurantHelper.asset",
+                    "Assets/Data/StudentLife/PartTimeWork/PartTimeWork_ClinicHelper.asset",
+                    "Assets/Data/StudentLife/PartTimeWork/PartTimeWork_StudioHelper.asset",
+                    "Assets/Data/StudentLife/PartTimeWork/PartTimeWork_TrainingHelper.asset",
+                    "Assets/Data/StudentLife/PartTimeWork/Workplace_Restaurant.asset",
+                    "Assets/Data/StudentLife/PartTimeWork/Workplace_Clinic.asset",
+                    "Assets/Data/StudentLife/PartTimeWork/Workplace_Studio.asset",
+                    "Assets/Data/StudentLife/PartTimeWork/Workplace_TrainingGround.asset"
                 }).Concat(new[] { "Restaurant", "MedicalClinic", "DesignStudio", "TrainingGround" }.SelectMany(name => new[] {
                     "Assets/Data/StudentLife/Locations/Location_" + name + ".asset",
                     "Assets/Data/StudentLife/LocationIdentities/LocationIdentity_" + name + ".asset"
@@ -56,6 +64,18 @@ namespace Rootborn.Tests.EditMode.StudentLife
             Assert.That(registry.Campaigns.Count(x => x != null && x.Id == "campaign.school-opening-three-days"), Is.EqualTo(1));
             Assert.That(registry.FurnitureDefinitions.Count(x => x != null && x.StableId == "story.photo-board"), Is.EqualTo(1));
             Assert.That(registry.FurnitureDefinitions.Count(x => x != null && x.StableId == "story.study-desk"), Is.EqualTo(1));
+        }
+
+        // A purchasable or quest-accepted piece without art would complete the quest while nothing appears in the room.
+        [Test]
+        public void ForSaleAndMyRoomFurniture_AllHaveVisibleArt()
+        {
+            var registry = AssetDatabase.LoadAssetAtPath<GameDataRegistry>("Assets/Data/Registry/GameDataRegistry.asset");
+            var objective = AssetDatabase.LoadAssetAtPath<Rootborn.Game.Quests.Objectives.FurniturePlacedQuestObjective>("Assets/Data/StudentLife/MainStory/Objectives/Objective_MyRoom.asset");
+            var pieces = registry.FurnitureDefinitions.Where(x => x != null && x.IsForSale).Concat(objective.AcceptedFurniture).Distinct().ToArray();
+            Assert.That(pieces.Length, Is.GreaterThanOrEqualTo(2));
+            var missing = pieces.Where(x => x.TileParts.Count == 0 || x.TileParts.Any(part => !(part.Tile is Tile tile) || tile.sprite == null)).Select(x => x.StableId).ToArray();
+            Assert.That(missing, Is.Empty, string.Join(", ", missing));
         }
     }
 }

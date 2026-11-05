@@ -199,7 +199,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         {
             runtime.Router.RefreshPromptNow();
             Assert.IsTrue(runtime.Router.PromptVisible, failure + " Prompt was not visible.");
-            StringAssert.Contains("Talk", runtime.Router.PromptText, failure + " Prompt did not target Talk.");
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Localized("ui.prompt.talk", "Talk"), runtime.Router.PromptText, failure + " Prompt did not target Talk.");
             yield return PressInteractKey(keyboard);
             float elapsed = 0f;
             while (!runtime.DialoguePanel.IsOpen && elapsed < 3f)

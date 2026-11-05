@@ -23,7 +23,7 @@ namespace Rootborn.Tests.EditMode.UI.StudentLife
             Assert.That(panel.ResultsTextForTests, Does.Contain("daily.route.library"));
             Assert.That(panel.ResultsTextForTests, Does.Contain("activity.library.read"));
             Assert.That(panel.ResultsTextForTests, Does.Contain("daily.result.focus"));
-            Assert.That(panel.NextGuideTextForTests, Does.Contain("objective.daily.library.next"));
+            Assert.That(panel.NextGuideTextForTests, Does.Contain(Rootborn.Game.Localization.GameText.Get("objective.daily.library.next")));
             Object.DestroyImmediate(go);
         }
     }

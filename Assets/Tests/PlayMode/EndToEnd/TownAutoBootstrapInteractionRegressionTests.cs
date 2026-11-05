@@ -66,7 +66,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return WalkPlayerWithKeyboardTo(player, keyboard, guide.transform.position, 0.3f);
             router.RefreshPromptNow();
             Assert.IsTrue(router.PromptVisible, "Interaction prompt was not visible after walking to the guide NPC.");
-            StringAssert.Contains("Talk", router.PromptText, "Prompt did not advertise the NPC interaction.");
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Localized("ui.prompt.talk", "Talk"), router.PromptText, "Prompt did not advertise the NPC interaction.");
 
             yield return PressInteractKey(keyboard);
             yield return WaitForDialoguePanelOpen(5f);

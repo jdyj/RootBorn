@@ -26,7 +26,7 @@ namespace Rootborn.Tests.EditMode.UI.Spum
                     Part("spum.accessory.default", "accessory"),
                     Part("spum.back.default", "back"),
                     Part("spum.helmet.default", "helmet"),
-                    Part("spum.weapon.default", "weapon"));
+                    WithPreviewSprite(Part("spum.weapon.default", "weapon")));
 
                 panel.Build(catalog);
 
@@ -154,6 +154,14 @@ namespace Rootborn.Tests.EditMode.UI.Spum
             var catalog = ScriptableObject.CreateInstance<SpumPartCatalogDefinition>();
             catalog.ConfigureForTests("spum.catalog.creator.test", parts);
             return catalog;
+        }
+
+        private static SpumPartDefinition WithPreviewSprite(SpumPartDefinition part)
+        {
+            var so = new UnityEditor.SerializedObject(part);
+            so.FindProperty("_previewSprite").objectReferenceValue = Sprite.Create(Texture2D.whiteTexture, new Rect(0f, 0f, 4f, 4f), Vector2.zero);
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return part;
         }
 
         private static SpumPartDefinition Part(string stableId, string categoryId)

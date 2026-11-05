@@ -163,8 +163,149 @@ namespace Rootborn.Tests.EditMode.Player
         // Character appearances are registered later by their own pack. Everything else in a registry stays pinned.
         private static string PreservedSha(string path)
         {
+            if (path.EndsWith("AssetGroups/Data.asset", StringComparison.Ordinal)) return ShaOfText(WithoutReviewedDreamJobEntries(File.ReadAllText(path)));
             if (!path.EndsWith("GameDataRegistry.asset", StringComparison.Ordinal)) return Sha(path);
             string text = Regex.Replace(File.ReadAllText(path), @"(?m)^  _characterAppearances:\n(?:  - \{[^\n]*\n)+", "  _characterAppearances: []\n");
+            text = WithoutReviewedDreamJobDelta(text, path.StartsWith("Assets/Data/", StringComparison.Ordinal));
+            using (var hash = SHA256.Create()) return BitConverter.ToString(hash.ComputeHash(new System.Text.UTF8Encoding(false).GetBytes(text))).Replace("-", "").ToLowerInvariant();
+        }
+
+        // Dream and part-time job registration is the one reviewed registry change after this pin (2026-11-04).
+        // Undo exactly that change. Any other registry edit still changes the hash.
+        private static readonly Dictionary<string, string[]> ReviewedDreamJobRegistryGuids = new Dictionary<string, string[]>
+        {
+            { "_questConditions", new[] { "1d3d1aa87c7af93448106b347b67b6f5", "e29c6515e91562f4ab125cb7285b74c9" } },
+            { "_careerHints", new[] { "a50f11080a395dd5beec84fffd07ba46", "83a89e3296b35da485ab24083efe9c47", "d6ca2f13fa725fea81a908e125b37b44", "bae0ed0476ab53e18b66a3e1793e369b", "003872287d0454998c9587c5024207ca", "184fbe59882852708c2328d6eebf18b8", "0344bb6d6b7651a79fe4ba061eddad0a", "0c05384b668151688a0eeacd2eae65fa", "091cda194ef754b8952ea5e7a36a468a", "f0d17e4363105a478b7e953c3ddf2725", "2b968b9cd1a05302b794220638e961a1", "51bcd0836feb5e7594f983e61051b63a" } },
+            { "_careerInterests", new[] { "dc7be1b9c80f5bef8f0a6b93428875b3", "f01d09f8f88451f9904b43a8c332aaf0", "e8e0dcc6402654c4bcb63f40a524d0d2", "52b0edd65acf568898a9d25043a92677" } },
+            { "_workplaces", new[] { "4c7c31fc9de853908e0a53177932a7a9", "7cadbd0846465d9d952762bf8412aadb", "8355c562fe035ec689ba2f3ef0ca1dad", "ee5cc81f7dc05fdc8cd08509109d9362" } },
+            { "_partTimeWorks", new[] { "c9c289becea45b908d28c435fb6f0b59", "9a84060315765314b1a346d162844e4f", "81e2783369e45e96aa6454ed51b4c620", "111a8911ca6f55afa8e339d56a8d2d8c", "06601f4b59185f48b13468c7af3ed463", "f047c2d0fd7e553d83a2994c2747911b", "84aee1fb502b5814bf8492ba6105b0bb" } },
+            { "_campaignRoutes", new[] { "a3550c42bb165edfbdb10a1a8b13bde1", "5483e5fa525b5d839d09efdb5e42a627", "1bf8a79f901d50d383cca2d699660a84", "4569816ae80c589f8fee265269360b25", "8e60ebb2c462501bb184d3a8afdea0f0", "d6b5102df7945942b49817398b8a4e50", "04c0e372355d5944959a271a3257f4c5" } },
+            { "_campaignObjectives", new[] { "a2ec62f421fa5ca69243e4095d4f16b2", "3bb20531016b510aa13b7aa69d27dd3f", "0ab133c88db75a46a3a06f5c5eb84db4", "4446a52519675e3b8762ea573c941405", "dffdbf719ea35e38a656102dcaad8e26", "55b601517ea45a5fa802c37fcecc92a6", "f88c7786a22a58289f39e23ab301c149" } },
+            { "_questObjectives", new[] { "527826c77c5456adbe0dd360d45d9b4e" } }
+        };
+        private static readonly string[] RemovedInterestGuids = { "01fc1513fb75ac448aaa6b5d5c9a7ac3", "b2e63186a49d1594f86424c4b1278a8c", "c1348a30d88a23c429ab668057894200", "6e2710dfaee3eff4c903a56f0ae33656" };
+
+        private static string WithoutReviewedDreamJobDelta(string text, bool primaryRegistry)
+        {
+            foreach (var field in ReviewedDreamJobRegistryGuids)
+            {
+                foreach (string guid in field.Value)
+                {
+                    string line = "  - {fileID: 11400000, guid: " + guid + ", type: 2}\n";
+                    Assert.That(Regex.Matches(text, Regex.Escape(line)).Count, Is.EqualTo(1), "Reviewed registration must appear exactly once: " + guid);
+                    var block = Regex.Match(text, @"(?m)^  " + field.Key + @":\n(?:  - \{[^\n]*\n)*");
+                    Assert.That(block.Value, Does.Contain(line), guid + " must stay in " + field.Key);
+                    text = text.Remove(block.Index, block.Length).Insert(block.Index, block.Value.Replace(line, string.Empty));
+                }
+            }
+            string removed = string.Concat(RemovedInterestGuids.Select(guid => "  - {fileID: 11400000, guid: " + guid + ", type: 2}\n"));
+            text = text.Replace("  _careerInterests:\n", primaryRegistry ? "  _careerInterests:\n" + removed : "  _careerInterests: []\n");
+            // Both registries had no quest conditions before the story pacing conditions.
+            text = text.Replace("  _questConditions:\n", "  _questConditions: []\n");
+            // The fallback registry had these lists empty.
+            if (!primaryRegistry)
+                foreach (string field in new[] { "_careerHints", "_workplaces", "_partTimeWorks" })
+                    text = text.Replace("  " + field + ":\n", "  " + field + ": []\n");
+            return text;
+        }
+
+        // Addressable entries of the reviewed dream and job assets. Each must appear once; any other group change still changes the hash.
+        private static readonly string[] ReviewedDreamJobAddressableGuids =
+        {
+            "1d3d1aa87c7af93448106b347b67b6f5",
+            "e29c6515e91562f4ab125cb7285b74c9",
+            "003872287d0454998c9587c5024207ca",
+            "0344bb6d6b7651a79fe4ba061eddad0a",
+            "04c0e372355d5944959a271a3257f4c5",
+            "06601f4b59185f48b13468c7af3ed463",
+            "091cda194ef754b8952ea5e7a36a468a",
+            "0ab133c88db75a46a3a06f5c5eb84db4",
+            "0c05384b668151688a0eeacd2eae65fa",
+            "0c78cd3d74c9535cbb7f786359db7fad",
+            "111a8911ca6f55afa8e339d56a8d2d8c",
+            "11e24882f9b35dc79076f2cde3bbf498",
+            "183ab5f4ae3c5533a839b0d33646e2d0",
+            "184fbe59882852708c2328d6eebf18b8",
+            "196f13689f345812a84de534e58ba176",
+            "1bf8a79f901d50d383cca2d699660a84",
+            "2b968b9cd1a05302b794220638e961a1",
+            "324c9bc5b9b65b81be62133c760a392b",
+            "39482081af195e98b7f8a6c710d9acfa",
+            "3bb20531016b510aa13b7aa69d27dd3f",
+            "4446a52519675e3b8762ea573c941405",
+            "4569816ae80c589f8fee265269360b25",
+            "4824862897275753bd249a052c9ca0e6",
+            "4c7c31fc9de853908e0a53177932a7a9",
+            "4f0ed990500c58f597e53349d52b3391",
+            "5158cbe1304c52f788458ff19db1535c",
+            "51bcd0836feb5e7594f983e61051b63a",
+            "527826c77c5456adbe0dd360d45d9b4e",
+            "52b0edd65acf568898a9d25043a92677",
+            "5300193a39815c699bc6f2de364b8a6e",
+            "5483e5fa525b5d839d09efdb5e42a627",
+            "55b601517ea45a5fa802c37fcecc92a6",
+            "57c34e3296745bd7b5aa7a2e71130702",
+            "6449ed839385522b825eb83b05908a67",
+            "6c52088483245be39e4a523707abf29b",
+            "6d184cdb98be572b869822ed5a5e8f2a",
+            "7248c195e0f15da788001ebae5441e53",
+            "775beeeaa2e8575f8bc6abf75c425bc6",
+            "7b4dd7c174135fba8125215bca1c1d2f",
+            "7cadbd0846465d9d952762bf8412aadb",
+            "81e2783369e45e96aa6454ed51b4c620",
+            "8355c562fe035ec689ba2f3ef0ca1dad",
+            "83a89e3296b35da485ab24083efe9c47",
+            "8466408e8aac57c28a6681bc8323339c",
+            "84aee1fb502b5814bf8492ba6105b0bb",
+            "8e60ebb2c462501bb184d3a8afdea0f0",
+            "8f8cce2c595a58e392e7a91182adc631",
+            "954c8add39ab5239a72274cae6bded83",
+            "9711ad7e9ee85eacaa2d979e0fe251f4",
+            "9a84060315765314b1a346d162844e4f",
+            "9d1337835007518cacefb7128f9055f9",
+            "a21d5827a5115bc393ef5086f2b91e6d",
+            "a2ec62f421fa5ca69243e4095d4f16b2",
+            "a3550c42bb165edfbdb10a1a8b13bde1",
+            "a50f11080a395dd5beec84fffd07ba46",
+            "a9991b686e11579691e9f9a00d0f7518",
+            "b1ce042c5a9c55339f71712f659cc6ef",
+            "bae0ed0476ab53e18b66a3e1793e369b",
+            "bcb5e81c6bf45e628fafa25203c9b3a1",
+            "bddc546c93d05706b2b131e5d85acaf9",
+            "c7b612b47553516baf4d9f4c6f58f837",
+            "c9c289becea45b908d28c435fb6f0b59",
+            "d2dee5793e775958bc62c72b68eff50a",
+            "d6b5102df7945942b49817398b8a4e50",
+            "d6ca2f13fa725fea81a908e125b37b44",
+            "d709ddd1ff8d5de692e2e57d1ca35393",
+            "d7437f07738458069524aeb2281b8829",
+            "db2233c940a158ca910a73f521fa8ca0",
+            "dc7be1b9c80f5bef8f0a6b93428875b3",
+            "dffdbf719ea35e38a656102dcaad8e26",
+            "e073a8113148597eb7a0be2d8c0710a7",
+            "e7adac1964fd52449487522421cff64d",
+            "e8e0dcc6402654c4bcb63f40a524d0d2",
+            "ee5cc81f7dc05fdc8cd08509109d9362",
+            "f01d09f8f88451f9904b43a8c332aaf0",
+            "f047c2d0fd7e553d83a2994c2747911b",
+            "f0d17e4363105a478b7e953c3ddf2725",
+            "f32e415df46b5e23a04db51b67c4e70a",
+            "f88c7786a22a58289f39e23ab301c149"
+        };
+
+        private static string WithoutReviewedDreamJobEntries(string text)
+        {
+            foreach (string guid in ReviewedDreamJobAddressableGuids)
+            {
+                var entries = Regex.Matches(text, @"  - m_GUID: " + guid + @"\n(?:    [^\n]*\n)+");
+                Assert.That(entries.Count, Is.EqualTo(1), "Reviewed Addressables entry must appear exactly once: " + guid);
+                text = text.Remove(entries[0].Index, entries[0].Length);
+            }
+            return text;
+        }
+
+        private static string ShaOfText(string text)
+        {
             using (var hash = SHA256.Create()) return BitConverter.ToString(hash.ComputeHash(new System.Text.UTF8Encoding(false).GetBytes(text))).Replace("-", "").ToLowerInvariant();
         }
 

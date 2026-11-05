@@ -125,13 +125,13 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return PressTab(keyboard);
             Assert.IsTrue(provider.Panel.IsVisible, "CAREER-INTEREST-E2E-007 failed: actual Tab input did not open Objective Journal.");
             yield return ClickButton(FindButton(provider.Panel.transform, "ObjectiveCategory_Hints"));
-            yield return ClickButton(FindButtonContaining(provider.Panel.transform, "ObjectiveRow_", "interest.learning"));
-            StringAssert.Contains("interest.learning", provider.Panel.VisibleText, "CAREER-INTEREST-E2E-007 failed: Objective Journal omitted selected interest.");
-            StringAssert.Contains("action.visit-library", provider.Panel.VisibleText, "CAREER-INTEREST-E2E-007 failed: Objective Journal omitted recommended next action.");
+            yield return ClickButton(FindButtonContaining(provider.Panel.transform, "ObjectiveRow_", Rootborn.Game.Localization.GameText.Get("interest.learning")));
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Get("interest.learning"), provider.Panel.VisibleText, "CAREER-INTEREST-E2E-007 failed: Objective Journal omitted selected interest.");
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Get("action.visit-library"), provider.Panel.VisibleText, "CAREER-INTEREST-E2E-007 failed: Objective Journal omitted recommended next action.");
             yield return ClickButton(FindButton(provider.Panel.transform, "ObjectiveTrackButton"));
             Assert.IsTrue(provider.TrackedHud.IsVisible, "CAREER-INTEREST-E2E-007 failed: Track click did not update TrackedObjectiveHud.");
-            StringAssert.Contains("interest.learning", provider.TrackedHud.VisibleText, "CAREER-INTEREST-E2E-007 failed: tracked HUD omitted selected interest.");
-            StringAssert.Contains("action.visit-library", provider.TrackedHud.VisibleText, "CAREER-INTEREST-E2E-007 failed: tracked HUD omitted recommended next action.");
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Get("interest.learning"), provider.TrackedHud.VisibleText, "CAREER-INTEREST-E2E-007 failed: tracked HUD omitted selected interest.");
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Get("action.visit-library"), provider.TrackedHud.VisibleText, "CAREER-INTEREST-E2E-007 failed: tracked HUD omitted recommended next action.");
             yield return CaptureScreenshot(ObjectiveJournalScreenshotPath);
             yield return PressTab(keyboard);
 
@@ -193,10 +193,10 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             reloadedProvider.RefreshNow();
             yield return PressTab(keyboard);
             yield return ClickButton(FindButton(reloadedProvider.Panel.transform, "ObjectiveCategory_Hints"));
-            yield return ClickButton(FindButtonContaining(reloadedProvider.Panel.transform, "ObjectiveRow_", "interest.learning"));
-            StringAssert.Contains("interest.learning", reloadedProvider.Panel.VisibleText, "CAREER-INTEREST-E2E-010 failed: reloaded Objective Journal omitted selected interest.");
+            yield return ClickButton(FindButtonContaining(reloadedProvider.Panel.transform, "ObjectiveRow_", Rootborn.Game.Localization.GameText.Get("interest.learning")));
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Get("interest.learning"), reloadedProvider.Panel.VisibleText, "CAREER-INTEREST-E2E-010 failed: reloaded Objective Journal omitted selected interest.");
             Assert.IsTrue(reloadedProvider.TrackedHud.IsVisible, "CAREER-INTEREST-E2E-010 failed: tracked career interest was not restored after reload.");
-            StringAssert.Contains("interest.learning", reloadedProvider.TrackedHud.VisibleText, "CAREER-INTEREST-E2E-010 failed: restored tracked HUD omitted selected interest.");
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Get("interest.learning"), reloadedProvider.TrackedHud.VisibleText, "CAREER-INTEREST-E2E-010 failed: restored tracked HUD omitted selected interest.");
             yield return PressTab(keyboard);
 
             var reloadedInterestPanel = CareerInterestPanel.EnsureInScene(EnsureCanvas());

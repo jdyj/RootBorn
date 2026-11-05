@@ -82,7 +82,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return PressInteractKey(keyboard);
             yield return WaitForDialoguePanel(3f, "NPCSCHEDULE-E2E-004 failed: teacher dialogue did not open from actual input.");
             var firstDialoguePanel = FindOpenDialoguePanel();
-            AssertPanelContains(firstDialoguePanel.transform, "dialogue.teacher.school", "NPCSCHEDULE-E2E-004 failed: teacher did not use school-time schedule dialogue.");
+            AssertPanelContains(firstDialoguePanel.transform, Rootborn.Game.Localization.GameText.Get("dialogue.teacher.school"), "NPCSCHEDULE-E2E-004 failed: teacher did not use school-time schedule dialogue.");
             yield return ClickButton(FindButton(firstDialoguePanel.transform, "CloseButton"));
             yield return WaitForDialogueClosed(2f, "NPCSCHEDULE-E2E-004 failed: teacher dialogue close button did not close the panel.");
             var progress = new NpcScheduleProgress(runtime.Student.Progress);
@@ -106,7 +106,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.IsTrue(runtime.Router.PromptVisible, "NPCSCHEDULE-E2E-008 failed: relocated teacher prompt was not visible.");
             yield return PressInteractKey(keyboard);
             yield return WaitForDialoguePanel(3f, "NPCSCHEDULE-E2E-008 failed: relocated teacher dialogue did not open from actual input.");
-            AssertPanelContains(FindOpenDialoguePanel().transform, "dialogue.teacher.square", "NPCSCHEDULE-E2E-008 failed: teacher did not use changed schedule dialogue.");
+            AssertPanelContains(FindOpenDialoguePanel().transform, Rootborn.Game.Localization.GameText.Get("dialogue.teacher.square"), "NPCSCHEDULE-E2E-008 failed: teacher did not use changed schedule dialogue.");
             progress = new NpcScheduleProgress(runtime.Student.Progress);
             Assert.IsTrue(progress.HasMet(teacher.GetComponent<NpcInteractor>().Npc, square.GetComponent<LocationVisitInteractor>().Location, "time.afternoon"), "NPCSCHEDULE-E2E-009 failed: relocated scheduled meeting was not recorded.");
             Assert.AreEqual(2, progress.MeetingRecordIds.Length, "NPCSCHEDULE-E2E-010 failed: scheduled meeting records duplicated unexpectedly before reload.");

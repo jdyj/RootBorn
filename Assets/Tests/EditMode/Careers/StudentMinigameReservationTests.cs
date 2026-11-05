@@ -7,6 +7,7 @@ using Rootborn.Game.Bootstrap;
 using Rootborn.Game.Careers;
 using Rootborn.Game.Common;
 using Rootborn.Game.Minigames;
+using Rootborn.Game.Placement;
 using Rootborn.Game.Player;
 using Rootborn.Game.Quests;
 using Rootborn.Game.Save;
@@ -50,6 +51,16 @@ namespace Rootborn.Tests.EditMode.Careers
             Assert.That(Settle(f, session).Applied, Is.True); Assert.That(f.Inventory.Inventory.CountOf(f.Coin), Is.EqualTo(5)); Assert.That(f.Student.Progress.GetTraitValue(f.Trait), Is.EqualTo(1)); Assert.That(f.Student.Progress.TimePointsRemaining, Is.EqualTo(2));
             Assert.That(f.Student.Progress.GetTodayActivityIds(), Does.Contain(f.Work.Id)); Assert.That(PartTimeWorkDayLog.FromResultLogs(f.Student.Progress.GetTodayResultLogIds()).WorkIds, Does.Contain(f.Work.Id)); Assert.That(Settle(f, session).Applied, Is.False);
         }
+        [Test] public void STUDENT_GAME_003b_SameJobTwiceKeepsBothPaymentsInTheDayLog()
+        {
+            var f = Fixture();
+            Assert.That(Job(f, "job-1").Applied, Is.True); var first = Session(f); first.Choose(0); Assert.That(Settle(f, first).Applied, Is.True);
+            Assert.That(Job(f, "job-2").Applied, Is.True); var second = Session(f); second.Choose(0); Assert.That(Settle(f, second).Applied, Is.True);
+            Assert.That(f.Inventory.Inventory.CountOf(f.Coin), Is.EqualTo(10));
+            string paid = PartTimeWorkLogCodec.EncodeDelta(f.Work.Id, f.Coin.Id, 5);
+            Assert.That(System.Array.FindAll(f.Student.Progress.GetTodayResultLogIds(), log => log == paid).Length, Is.EqualTo(2));
+        }
+
         [TestCase(false)] [TestCase(true)] public void STUDENT_GAME_004_FailedOrCancelledGameRetainsCostsWithoutIncomeOrGrowth(bool cancel)
         {
             var f = Fixture(); Job(f, "job-1"); var session = Session(f); if (cancel) session.Cancel(); else session.Choose(1); Assert.That(Settle(f, session).Applied, Is.True);
@@ -91,6 +102,67 @@ namespace Rootborn.Tests.EditMode.Careers
             f.Storage.WriteJson("career-candidate-progress.json", JsonUtility.ToJson(new CareerCandidateProgress("slot", PlayerIdentity.DefaultPlayerId).ToSaveData()));
             CareerCandidateProgressPersistence.TryLoad(f.Player.GetComponent<CareerCandidateProgressComponent>());
             Assert.That(f.Player.GetComponent<CareerCandidateProgressComponent>().Progress.GetUnderstandingScore(f.Candidate), Is.EqualTo(1));
+        }
+        [Test] public void STUDENT_GAME_PURCHASE_SessionChargesOnce_SurvivesReload_AndRejectsUnregistered()
+        {
+            var f = Fixture();
+            var furniture = New<FurnitureDefinition>(); furniture.ConfigureSaleForTests("unlock.test.sale", f.Coin, 10, "location.test");
+            Set(f.Registry, "_furnitureDefinitions", new[] { furniture });
+            f.Inventory.Inventory.Add(f.Coin, 25);
+            var other = New<FurnitureDefinition>(); other.ConfigureSaleForTests("unlock.test.other", f.Coin, 10, "location.test");
+            Assert.That(Call(f.Owner, "TryPurchaseFurniture", other), Is.EqualTo(FurniturePurchaseResult.NotForSale), "Only registered furniture is sold.");
+            Assert.That(f.Inventory.Inventory.CountOf(f.Coin), Is.EqualTo(25));
+            Assert.That(Call(f.Owner, "TryPurchaseFurniture", furniture), Is.EqualTo(FurniturePurchaseResult.Purchased));
+            Assert.That(f.Inventory.Inventory.CountOf(f.Coin), Is.EqualTo(15));
+            Assert.That(Get<FurnitureUnlockProgress>(f.Owner, "FurnitureUnlocks").IsUnlocked("unlock.test.sale"), Is.True);
+            Assert.That(Call(f.Owner, "TryPurchaseFurniture", furniture), Is.EqualTo(FurniturePurchaseResult.AlreadyOwned));
+            Assert.That(f.Inventory.Inventory.CountOf(f.Coin), Is.EqualTo(15));
+            var type = f.Owner.GetType(); UnityEngine.Object.DestroyImmediate(f.Owner); f.Owner = f.Player.AddComponent(type); Call(f.Owner, "Bind", f.Registry, f.Storage);
+            Assert.That(Get<FurnitureUnlockProgress>(f.Owner, "FurnitureUnlocks").IsUnlocked("unlock.test.sale"), Is.True);
+            Assert.That(f.Inventory.Inventory.CountOf(f.Coin), Is.EqualTo(15));
+            Assert.That(Call(f.Owner, "TryPurchaseFurniture", furniture), Is.EqualTo(FurniturePurchaseResult.AlreadyOwned));
+        }
+        [Test] public void STUDENT_GAME_PURCHASE_LiveUpdateFailure_StopsChanges_AndReloadRestoresSavedState()
+        {
+            var f = Fixture();
+            var furniture = New<FurnitureDefinition>(); furniture.ConfigureSaleForTests("unlock.test.sale", f.Coin, 10, "location.test");
+            Set(f.Registry, "_furnitureDefinitions", new[] { furniture });
+            f.Inventory.Inventory.Add(f.Coin, 25);
+            Action fail = () => throw new InvalidOperationException("subscriber failed");
+            f.Inventory.OnEquipmentChanged += fail;
+            Assert.Throws<TargetInvocationException>(() => Call(f.Owner, "TryPurchaseFurniture", furniture));
+            f.Inventory.OnEquipmentChanged -= fail;
+            Assert.That(Get<bool>(f.Owner, "RecoveryRequired"), Is.True, "Live state may differ from the save.");
+            Assert.That(Call(f.Owner, "TryPurchaseFurniture", furniture), Is.EqualTo(FurniturePurchaseResult.Unavailable));
+            var type = f.Owner.GetType(); UnityEngine.Object.DestroyImmediate(f.Owner); f.Owner = f.Player.AddComponent(type); Call(f.Owner, "Bind", f.Registry, f.Storage);
+            Assert.That(Get<bool>(f.Owner, "RecoveryRequired"), Is.False);
+            Assert.That(f.Inventory.Inventory.CountOf(f.Coin), Is.EqualTo(15), "The saved purchase is the truth.");
+            Assert.That(Get<FurnitureUnlockProgress>(f.Owner, "FurnitureUnlocks").IsUnlocked("unlock.test.sale"), Is.True);
+        }
+        [Test] public void STUDENT_GAME_PURCHASE_FailedSave_ChangesNeitherMoneyNorOwnership()
+        {
+            var f = Fixture();
+            var furniture = New<FurnitureDefinition>(); furniture.ConfigureSaleForTests("unlock.test.sale", f.Coin, 10, "location.test");
+            Set(f.Registry, "_furnitureDefinitions", new[] { furniture });
+            f.Inventory.Inventory.Add(f.Coin, 25);
+            Assert.That((bool)Call(f.Owner, "SaveCurrent"), Is.True); Block(f);
+            Assert.That(Call(f.Owner, "TryPurchaseFurniture", furniture), Is.EqualTo(FurniturePurchaseResult.Unavailable));
+            Assert.That(f.Inventory.Inventory.CountOf(f.Coin), Is.EqualTo(25));
+            Assert.That(Get<FurnitureUnlockProgress>(f.Owner, "FurnitureUnlocks").IsUnlocked("unlock.test.sale"), Is.False);
+            Unblock(f);
+        }
+        [Test] public void STUDENT_GAME_JOB_HINT_SuccessfulJobCountsTowardCareerOnce_AndFailureCountsNothing()
+        {
+            var f = Fixture();
+            var source = New<CareerResultLogHintSource>(); source.ConfigureForTests(f.Work.Id);
+            var hint = New<CareerHintDefinition>(); hint.ConfigureForTests("hint.job", "hint.job", f.Candidate, null, string.Empty, 1, new CareerHintSourceBase[] { source });
+            Set(hint, "_appliesOnce", true); Set(f.Registry, "_careerHints", new[] { hint });
+            Assert.That(Job(f, "job-fail").Applied, Is.True); var session = Session(f); session.Choose(1); Assert.That(Settle(f, session).Applied, Is.True);
+            Assert.That(Candidates(f).GetUnderstandingScore(f.Candidate), Is.Zero);
+            Assert.That(Job(f, "job-1").Applied, Is.True); session = Session(f); session.Choose(0); Assert.That(Settle(f, session).Applied, Is.True);
+            Assert.That(Candidates(f).GetUnderstandingScore(f.Candidate), Is.EqualTo(1));
+            Assert.That(Job(f, "job-2").Applied, Is.True); session = Session(f); session.Choose(0); Assert.That(Settle(f, session).Applied, Is.True);
+            Assert.That(Candidates(f).GetUnderstandingScore(f.Candidate), Is.EqualTo(1));
         }
         [Test] public void STUDENT_GAME_012_AuthoredPracticeBoardRequestsGameWithoutImmediateGrowth()
         {

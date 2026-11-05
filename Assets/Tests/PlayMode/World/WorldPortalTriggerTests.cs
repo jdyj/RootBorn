@@ -54,7 +54,7 @@ namespace Rootborn.Tests.PlayMode.World
 
             router.RefreshPromptNow();
             Assert.IsTrue(router.PromptVisible, "Portal interaction prompt should be visible when the player is in range.");
-            StringAssert.Contains("Enter", router.PromptText);
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.FormatLocalized("ui.prompt.enter-named", "Enter {0}", string.Empty).Trim(), router.PromptText);
             Assert.IsTrue(router.TryInteractWithNearest(), "Portal travel should happen through the player interaction router.");
             yield return WaitForScene(destinationScene, 10f);
             yield return WaitForTownNpcRuntime(10f);

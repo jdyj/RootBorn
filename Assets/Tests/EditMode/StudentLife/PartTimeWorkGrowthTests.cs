@@ -87,6 +87,34 @@ namespace Rootborn.Tests.EditMode.StudentLife
         }
 
         [Test]
+        public void WORK_EDIT_004b_SameWorkTwiceKeepsBothDayLogs()
+        {
+            var wage = MakeItem("item.wage-token", 99);
+            var work = ScriptableObject.CreateInstance<PartTimeWorkDefinition>();
+            var workplace = ScriptableObject.CreateInstance<WorkplaceDefinition>();
+            var progress = new StudentLifeProgress("slot-work", "player-work", 5, 5);
+            var inventory = new Inventory();
+            var runner = new PartTimeWorkRunner();
+            try
+            {
+                workplace.ConfigureForTests("workplace.corner-store", "workplace.corner-store", "location.store", "npc.owner", null);
+                work.ConfigureForTests("work.shift.store", "work.shift.store", workplace, 30, 1, 1, 1, new[] { new InventoryGrant(wage, 3) }, null, new WorkOutcomeBase[0]);
+                Assert.IsTrue(runner.TryPerform(work, progress, inventory, "work-request-a", out _));
+                Assert.IsTrue(runner.TryPerform(work, progress, inventory, "work-request-b", out _));
+                string reward = "part-time-work:work.shift.store:+item.wage-token=3";
+                int logged = 0;
+                foreach (var log in progress.GetTodayResultLogIds()) if (log == reward) logged++;
+                Assert.AreEqual(2, logged, "Both shifts earned money, so the day result must be able to total them.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(work);
+                Object.DestroyImmediate(workplace);
+                Object.DestroyImmediate(wage);
+            }
+        }
+
+        [Test]
         public void WORK_EDIT_004_WorkAppliesItemRewardCostAndGenericGrowthOutcome()
         {
             var wage = MakeItem("item.wage-token", 99);

@@ -363,7 +363,7 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
                 Assert.AreEqual("Selected", items[0].State);
                 Assert.IsTrue(items[0].IsTracked);
                 StringAssert.Contains("interest.learning", items[0].StableKey);
-                StringAssert.Contains("action.visit-library", items[0].NextHintText);
+                StringAssert.Contains(Rootborn.Game.Localization.GameText.Get("action.visit-library"), items[0].NextHintText);
                 StringAssert.Contains("candidate.route.study", items[0].NextHintText);
             }
             finally
@@ -425,6 +425,70 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
             {
                 if (canvas != null) UnityEngine.Object.DestroyImmediate(canvas);
                 fixture.Cleanup();
+            }
+        }
+
+        [Test]
+        public void Provider_ReboundWithoutPlayer_KeepsItsPlayer()
+        {
+            var host = new GameObject("ProviderHost", typeof(RectTransform));
+            var player = new GameObject("Player");
+            try
+            {
+                var panel = host.AddComponent<ObjectiveJournalPanel>();
+                var provider = host.AddComponent<ObjectiveJournalRuntimeProvider>();
+                provider.Bind(panel, null, player);
+                provider.Bind(panel, null, null);
+                var field = typeof(ObjectiveJournalRuntimeProvider).GetField("_player", BindingFlags.Instance | BindingFlags.NonPublic);
+                Assert.That(field.GetValue(provider), Is.SameAs(player));
+            }
+            finally { UnityEngine.Object.DestroyImmediate(host); UnityEngine.Object.DestroyImmediate(player); }
+        }
+
+        [Test]
+        public void Provider_BoundBeforeThePlayerExists_FindsThePlayerInItsSceneOnRefresh()
+        {
+            var host = new GameObject("ProviderHost", typeof(RectTransform));
+            var player = new GameObject("Player");
+            try
+            {
+                var panel = host.AddComponent<ObjectiveJournalPanel>();
+                var provider = host.AddComponent<ObjectiveJournalRuntimeProvider>();
+                provider.Bind(panel, null, null);
+                player.AddComponent<StudentLifeProgressComponent>();
+                provider.RefreshNow();
+                var field = typeof(ObjectiveJournalRuntimeProvider).GetField("_player", BindingFlags.Instance | BindingFlags.NonPublic);
+                Assert.That(field.GetValue(provider), Is.SameAs(player));
+            }
+            finally { UnityEngine.Object.DestroyImmediate(host); UnityEngine.Object.DestroyImmediate(player); }
+        }
+
+        [Test]
+        public void MilestoneProgressText_UsesObjectiveNames_NotIds()
+        {
+            var registry = UnityEditor.AssetDatabase.LoadAssetAtPath<GameDataRegistry>("Assets/Data/Registry/GameDataRegistry.asset");
+            var previous = Rootborn.Game.Localization.GameText.Language;
+            GameDataRegistryProvider.SetOverrideForTests(registry);
+            try
+            {
+                Rootborn.Game.Localization.GameText.Language = "ko";
+                var build = typeof(MilestoneObjectiveSource).GetMethod("BuildMilestoneProgressText", BindingFlags.Static | BindingFlags.NonPublic);
+                var hint = typeof(MilestoneObjectiveSource).GetMethod("BuildMilestoneHintText", BindingFlags.Static | BindingFlags.NonPublic);
+                var progress = new MilestoneProgress("slot", "player", registry.Milestones);
+                foreach (var milestone in registry.Milestones)
+                {
+                    string text = (string)build.Invoke(null, new object[] { progress, milestone });
+                    StringAssert.DoesNotContain("milestone.", text, milestone.Id);
+                    string next = (string)hint.Invoke(null, new object[] { progress, milestone });
+                    StringAssert.DoesNotContain("Routes:", next, milestone.Id);
+                    StringAssert.DoesNotMatch(@"[a-z]+\.[a-z]+", next, milestone.Id + " -> " + next);
+                }
+            }
+            finally
+            {
+                Rootborn.Game.Localization.GameText.Language = previous;
+                GameDataRegistryProvider.ClearOverrideForTests();
+                GameDataRegistryProvider.ResetCacheForTests();
             }
         }
 

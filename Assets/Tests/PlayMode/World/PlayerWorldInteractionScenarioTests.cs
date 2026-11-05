@@ -46,7 +46,7 @@ namespace Rootborn.Tests.PlayMode.World
             router.RefreshPromptNow();
 
             Assert.IsTrue(router.PromptVisible);
-            StringAssert.Contains("Talk", router.PromptText);
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Localized("ui.prompt.talk", "Talk"), router.PromptText);
             Assert.AreSame(interactor, router.CurrentInteractable);
 
             Assert.IsTrue(router.TryInteractWithNearest());
@@ -84,7 +84,7 @@ namespace Rootborn.Tests.PlayMode.World
             router.RefreshPromptNow();
 
             Assert.IsTrue(router.PromptVisible);
-            StringAssert.Contains("Enter", router.PromptText);
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.FormatLocalized("ui.prompt.enter-named", "Enter {0}", string.Empty).Trim(), router.PromptText);
             Assert.AreSame(portal, router.CurrentInteractable);
 
             Object.Destroy(player);
@@ -140,7 +140,7 @@ namespace Rootborn.Tests.PlayMode.World
             router.RefreshPromptNow();
 
             Assert.IsTrue(router.PromptVisible);
-            StringAssert.Contains("Talk", router.PromptText);
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Localized("ui.prompt.talk", "Talk"), router.PromptText);
 
             gather.TriggerInteract();
             yield return null;
@@ -169,7 +169,7 @@ namespace Rootborn.Tests.PlayMode.World
             router.RefreshPromptNow();
 
             Assert.IsTrue(router.PromptVisible);
-            StringAssert.Contains("Enter", router.PromptText);
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.FormatLocalized("ui.prompt.enter-named", "Enter {0}", string.Empty).Trim(), router.PromptText);
 
             string destinationScene = portal.DestinationScene;
             gather.TriggerInteract();

@@ -164,7 +164,7 @@ namespace Rootborn.Tests.PlayMode.Quests
             }
 
             Assert.IsTrue(router.PromptVisible, "Guide interaction prompt should be visible before dialogue interaction.");
-            StringAssert.Contains("Talk", router.PromptText);
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Localized("ui.prompt.talk", "Talk"), router.PromptText);
 
             gather.TriggerInteract();
             elapsed = 0f;

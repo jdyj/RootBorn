@@ -64,7 +64,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
 
             var preview = GameObject.Find("PreviewSelected_hair");
             Assert.IsNotNull(preview, "Part cell clicks must update a visible preview state for the selected category.");
-            StringAssert.Contains("spum.hair.long", preview.GetComponent<Text>().text);
+            StringAssert.Contains(Rootborn.UI.MainMenu.SpumCharacterCreatorPreview.PartLabel("spum.hair.long"), preview.GetComponent<Text>().text);
         }
 
         [UnityTest]

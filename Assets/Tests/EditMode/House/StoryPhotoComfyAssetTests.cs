@@ -104,7 +104,7 @@ namespace Rootborn.Tests.EditMode.House
             Assert.That(registry.FurnitureDefinitions.Count(x => x != null && x.StableId == definition.StableId), Is.EqualTo(1));
             var objective = new SerializedObject(Required<ScriptableObject>("Assets/Data/StudentLife/MainStory/Objectives/Objective_MyRoom.asset"));
             var accepted = objective.FindProperty("_acceptedFurniture");
-            Assert.That(accepted.arraySize, Is.EqualTo(2));
+            Assert.That(accepted.arraySize, Is.EqualTo(6), "Photo board, study desk and the four free career furniture items.");
             Assert.That(accepted.GetArrayElementAtIndex(0).objectReferenceValue, Is.SameAs(definition));
             Assert.That(accepted.GetArrayElementAtIndex(1).objectReferenceValue, Is.SameAs(Required<FurnitureDefinition>("Assets/Data/Interiors/Furniture/Story/Furniture_Story_StudyDesk.asset")));
             Assert.That(objective.FindProperty("_requiredSurfaceId").stringValue, Is.EqualTo("house"));

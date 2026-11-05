@@ -75,7 +75,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return WalkPlayerWithKeyboardTo(runtime.Player, keyboard, guide.transform.position, 0.25f, "LOCNPC-E2E-002 failed: actual keyboard movement could not reach guide NPC.");
             runtime.Router.RefreshPromptNow();
             Assert.IsTrue(runtime.Router.PromptVisible, "LOCNPC-E2E-003 failed: guide NPC prompt was not visible after movement.");
-            StringAssert.Contains("Talk", runtime.Router.PromptText, "LOCNPC-E2E-003 failed: prompt did not expose NPC interaction.");
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Localized("ui.prompt.talk", "Talk"), runtime.Router.PromptText, "LOCNPC-E2E-003 failed: prompt did not expose NPC interaction.");
             yield return PressInteractKey(keyboard);
             yield return WaitForDialoguePanel(3f, "LOCNPC-E2E-003 failed: NPC dialogue UI did not open from actual input.");
 

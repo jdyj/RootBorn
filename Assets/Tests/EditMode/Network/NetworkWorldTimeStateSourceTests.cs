@@ -5,6 +5,21 @@ namespace Rootborn.Tests.EditMode.Network
 {
     public sealed class NetworkWorldTimeStateSourceTests
     {
+        // A QA run with -saveRoot must not touch the player's own world-time file.
+        [NUnit.Framework.Test]
+        public void SaveRoot_AlsoHoldsWorldTime()
+        {
+            try
+            {
+                Rootborn.Game.Save.SaveService.SetRootDirectoryForTests("qa-root");
+                NUnit.Framework.Assert.That(Rootborn.Game.Save.SaveService.WorldTimeDirectory(), NUnit.Framework.Is.EqualTo(System.IO.Path.Combine("qa-root", "world-time")));
+                Rootborn.Game.Save.SaveService.SetRootDirectoryForTests(null);
+                NUnit.Framework.Assert.That(Rootborn.Game.Save.SaveService.WorldTimeDirectory(), NUnit.Framework.Is.EqualTo(System.IO.Path.Combine(UnityEngine.Application.persistentDataPath, "world-time")));
+                NUnit.Framework.Assert.That(System.IO.File.ReadAllText("Assets/Scripts/Network/Time/NetworkWorldTimeState.cs"), NUnit.Framework.Does.Contain("SaveService.WorldTimeDirectory()"));
+            }
+            finally { Rootborn.Game.Save.SaveService.SetRootDirectoryForTests(null); }
+        }
+
         [Test]
         public void MULTI_TIME_003_DayEndAndTimeAdvanceAreServerRpcRequestsOnly()
         {

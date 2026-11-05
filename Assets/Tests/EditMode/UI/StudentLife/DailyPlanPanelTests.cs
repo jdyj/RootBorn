@@ -99,7 +99,7 @@ namespace Rootborn.Tests.EditMode.UI.StudentLife
             var result = board.TryInteract(new GameObject("Player"));
 
             Assert.That(result, Is.True);
-            Assert.That(board.InteractionPrompt, Is.EqualTo("[E] Plan Day"));
+            Assert.That(board.InteractionPrompt, Is.EqualTo("[E] " + Rootborn.Game.Localization.GameText.Localized("ui.prompt.plan-day", "Plan Day")));
             Assert.That(panelGo.activeSelf, Is.True);
             Object.DestroyImmediate(panelGo);
             Object.DestroyImmediate(boardGo);

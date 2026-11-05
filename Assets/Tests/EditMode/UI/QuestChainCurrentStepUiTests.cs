@@ -37,6 +37,147 @@ namespace Rootborn.Tests.EditMode.UI
             StringAssert.DoesNotContain("first.objective", items[0].ProgressText);
         }
 
+        [Test]
+        public void JournalSource_HidesDeveloperOnlyChain()
+        {
+            var panel = CreateSecondStepPanel();
+            var chain = panel.Chains[0];
+            var so = new UnityEditor.SerializedObject(chain);
+            var flag = so.FindProperty("_developerOnly");
+            Assert.That(flag, Is.Not.Null, "QuestChainDefinition needs a data flag for developer-only chains.");
+            flag.boolValue = true;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            Assert.AreEqual(0, new QuestChainObjectiveSource().BuildItems(default).Length);
+        }
+
+        [Test]
+        public void RegistryChains_OnlyTestChainsAreDeveloperOnly()
+        {
+            var registry = UnityEditor.AssetDatabase.LoadAssetAtPath<Rootborn.Game.Common.GameDataRegistry>("Assets/Data/Registry/GameDataRegistry.asset");
+            int main = 0, test = 0;
+            foreach (var chain in registry.QuestChains)
+            {
+                var flag = new UnityEditor.SerializedObject(chain).FindProperty("_developerOnly");
+                Assert.That(flag, Is.Not.Null);
+                bool isTest = chain.Id.StartsWith("questchain.test.");
+                Assert.AreEqual(isTest, flag.boolValue, chain.Id);
+                if (isTest) test++; else main++;
+            }
+            Assert.That(test, Is.EqualTo(2));
+            Assert.That(main, Is.GreaterThan(0));
+        }
+
+        [Test]
+        public void JournalSource_FinishedStepWaitingForAConditionSaysSo()
+        {
+            var objective = ScriptableObject.CreateInstance<Rootborn.Game.Quests.Objectives.DailyPlanSelectedQuestObjective>();
+            var condition = ScriptableObject.CreateInstance<Rootborn.Game.Quests.Conditions.DayAtLeastCondition>();
+            condition.ConfigureForTests(2, "wait.summary");
+            var step = Create<QuestStepDefinition>();
+            step.ConfigureForTests("wait", "wait", "wait", new QuestObjectiveBase[] { objective }, new QuestConditionBase[] { condition }, null, null, null);
+            var next = Step("after", 1);
+            var chain = Create<QuestChainDefinition>();
+            chain.ConfigureForTests("ui.wait", "ui.wait", "ui.wait.description", "", new ScriptableObject[] { step, next }, null, null, null, null, 0);
+            var log = new QuestChainLog(new[] { chain });
+            log.LoadFromSaveData(new QuestChainLogSaveData { Chains = new[] { new QuestChainProgressSaveData
+            {
+                ChainId = chain.Id, ChainState = QuestChainState.Active.ToString(), CurrentStepId = "wait", ObjectiveProgressValues = new[] { 1 }
+            } } });
+            var go = new GameObject("WaitPanel"); _created.Add(go); _created.Add(objective); _created.Add(condition);
+            var panel = go.AddComponent<QuestChainLogPanel>();
+            panel.Bind(new[] { chain }, log, null);
+            var items = new QuestChainObjectiveSource().BuildItems(default);
+            Assert.AreEqual(1, items.Length);
+            StringAssert.Contains("wait.summary", items[0].NextHintText);
+        }
+
+        [Test]
+        public void JournalChainState_IsReadableText_NotAnEnumName()
+        {
+            var panel = CreateSecondStepPanel();
+            var previous = Rootborn.Game.Localization.GameText.Language;
+            Rootborn.Game.Common.GameDataRegistryProvider.SetOverrideForTests(UnityEditor.AssetDatabase.LoadAssetAtPath<Rootborn.Game.Common.GameDataRegistry>("Assets/Data/Registry/GameDataRegistry.asset"));
+            try
+            {
+                Rootborn.Game.Localization.GameText.Language = "ko";
+                var item = new QuestChainObjectiveSource().BuildItems(default)[0];
+                Assert.AreEqual("진행 중", item.State);
+                StringAssert.StartsWith("다음: ", item.NextHintText);
+                Rootborn.Game.Localization.GameText.Language = "en";
+                Assert.AreEqual("In progress", new QuestChainObjectiveSource().BuildItems(default)[0].State);
+            }
+            finally
+            {
+                Rootborn.Game.Localization.GameText.Language = previous;
+                Rootborn.Game.Common.GameDataRegistryProvider.ClearOverrideForTests();
+                Rootborn.Game.Common.GameDataRegistryProvider.ResetCacheForTests();
+            }
+        }
+
+        [Test]
+        public void DayResultText_ComposedIdsReadAsNames()
+        {
+            var previous = Rootborn.Game.Localization.GameText.Language;
+            var registry = UnityEditor.AssetDatabase.LoadAssetAtPath<Rootborn.Game.Common.GameDataRegistry>("Assets/Data/Registry/GameDataRegistry.asset");
+            Rootborn.Game.Common.GameDataRegistryProvider.SetOverrideForTests(registry);
+            var go = new GameObject("DayResult"); _created.Add(go);
+            go.SetActive(false);
+            var panel = go.AddComponent<Rootborn.UI.StudentLife.StudentDayResultPanel>();
+            typeof(Rootborn.UI.StudentLife.StudentDayResultPanel).GetMethod("RefreshDisplayKeys", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(panel, null);
+            try
+            {
+                Rootborn.Game.Localization.GameText.Language = "ko";
+                string name = registry.TextCatalog.Get("npc.teacher.name", "ko");
+                Assert.AreNotEqual("npc.teacher.name", name);
+                foreach (string raw in new[] { "npc.teacher", "npc:npc.teacher:met", "npc.teacher@location.school@time.morning", "item.allowance", "home-entry", "tutorial.day2", "milestone.first-guide-trust active", "npc.teacher.notice.outside-school", "town.help.first-guide-errand" })
+                {
+                    string shown = panel.ResolveText(raw);
+                    StringAssert.DoesNotMatch(@"[a-z]+[.:@-][a-z]", shown, raw + " -> " + shown);
+                }
+                StringAssert.Contains(name, panel.ResolveText("npc:npc.teacher:met"));
+                StringAssert.DoesNotContain("@", panel.ResolveText("npc.teacher@location.school@time.morning"));
+            }
+            finally
+            {
+                Rootborn.Game.Localization.GameText.Language = previous;
+                Rootborn.Game.Common.GameDataRegistryProvider.ClearOverrideForTests();
+                Rootborn.Game.Common.GameDataRegistryProvider.ResetCacheForTests();
+            }
+        }
+
+        [Test]
+        public void CreatorPreview_PartWithoutSpriteLeavesNoBlankBox()
+        {
+            var go = new GameObject("Preview", typeof(RectTransform)); _created.Add(go);
+            var preview = go.AddComponent<Rootborn.UI.MainMenu.SpumCharacterCreatorPreview>();
+            var part = Create<Rootborn.Game.Characters.Spum.SpumPartDefinition>();
+            preview.Build(new[] { part });
+            Assert.That(go.transform.Find("WeaponPreview"), Is.Null);
+        }
+
+        [Test]
+        public void CreatorPreview_ShowsCategoryAndPartNames_NotIds()
+        {
+            var previous = Rootborn.Game.Localization.GameText.Language;
+            Rootborn.Game.Common.GameDataRegistryProvider.SetOverrideForTests(UnityEditor.AssetDatabase.LoadAssetAtPath<Rootborn.Game.Common.GameDataRegistry>("Assets/Data/Registry/GameDataRegistry.asset"));
+            var go = new GameObject("Preview", typeof(RectTransform)); _created.Add(go);
+            try
+            {
+                Rootborn.Game.Localization.GameText.Language = "ko";
+                var preview = go.AddComponent<Rootborn.UI.MainMenu.SpumCharacterCreatorPreview>();
+                preview.ApplySelectedParts(new Dictionary<string, string> { { "body", "spum.body.default" }, { "hair", "spum.hair.short" } });
+                var labels = new List<string>();
+                foreach (var text in go.GetComponentsInChildren<UnityEngine.UI.Text>(true)) labels.Add(text.text);
+                CollectionAssert.AreEquivalent(new[] { "몸: 기본", "머리: 짧은 머리" }, labels);
+            }
+            finally
+            {
+                Rootborn.Game.Localization.GameText.Language = previous;
+                Rootborn.Game.Common.GameDataRegistryProvider.ClearOverrideForTests();
+                Rootborn.Game.Common.GameDataRegistryProvider.ResetCacheForTests();
+            }
+        }
+
         private QuestChainLogPanel CreateSecondStepPanel()
         {
             var first = Step("first", 1);
