@@ -124,7 +124,7 @@ namespace Rootborn.Tests.EditMode.Interiors
             Assert.That(Regex.Matches(cells, @"m_TileIndex: 3\n").Count, Is.EqualTo(74));
             Assert.That(Regex.Matches(cells, @"m_TileIndex: 0\n").Count, Is.EqualTo(50));
             Assert.That(Regex.Matches(cells, @"m_TileIndex: 1\n").Count, Is.EqualTo(3));
-            Assert.That(Regex.Matches(Section(Block(source, 317315563), "m_Tiles", "m_TileAssetArray"), @"- first:").Count, Is.EqualTo(130));
+            Assert.That(Regex.Matches(Section(Block(source, 317315563), "m_Tiles", "m_TileAssetArray"), @"- first:").Count, Is.EqualTo(133));
             Assert.That(source, Does.Contain("Rootborn.Game.World.AuthoredWorldScene"));
             Assert.That(Block(source, 1167780941), Does.Contain("_tileSet: {fileID: 11400000, guid: a505ca817cdf2b048b3dda294e030b3a, type: 2}"));
             Assert.That(ReversedHouse(), Is.EqualTo(File.ReadAllBytes(Output + "backup/original/" + House)));
@@ -157,7 +157,14 @@ namespace Rootborn.Tests.EditMode.Interiors
                     reversed = reversed.Replace(guid, pair[1]);
                 }
             }
-            return Encoding.UTF8.GetBytes(source.Replace(block, reversed));
+            // The three wall cells approved on 2026-11-05 are the only other difference from the original.
+            string walls = Block(source, 317315563); string originalWalls = walls;
+            foreach (var cell in new[] { "x: 0, y: -9", "x: 13, y: -5", "x: -14, y: 4" })
+                originalWalls = Regex.Replace(originalWalls, @"  - first: \{" + cell + @", z: 0\}?
+(?:    .*?
+)+", string.Empty);
+            originalWalls = originalWalls.Replace("m_RefCount: 133", "m_RefCount: 130");
+            return Encoding.UTF8.GetBytes(source.Replace(block, reversed).Replace(walls, originalWalls));
         }
     }
 }

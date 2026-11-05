@@ -41,7 +41,7 @@ namespace Rootborn.Tests.EditMode.World
         }
         [Test] public void TOWN_House_AuthoredSetupPreservesExistingFurnitureAndTileFootprint()
         {
-            foreach(var pair in new[]{("HouseGroundTilemap",380),("HouseWallTilemap",127),("HouseDecorationTilemap",14),("HouseCollisionTilemap",130)})
+            foreach(var pair in new[]{("HouseGroundTilemap",380),("HouseWallTilemap",127),("HouseDecorationTilemap",14),("HouseCollisionTilemap",133)})
             {
                 var map=All<Tilemap>().Single(m=>m.name==pair.Item1); int count=0;
                 foreach(var cell in map.cellBounds.allPositionsWithin) if(map.HasTile(cell)) count++;
