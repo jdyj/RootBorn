@@ -889,12 +889,13 @@ namespace Rootborn.Tests.EditMode.StudentLife
             var root = new GameObject("PlacementDevFixture");
             try
             {
-                foreach (var name in new[] { "SeedLabel", "SeedInput", "RegenerateButton", "ApplyButton", "ValidationLabel", "InteriorPlacementStatusText", "InteriorPlacementSummaryText", "SaveFurnitureLayoutButton" })
+                foreach (var name in new[] { "SeedLabel", "SeedInput", "RegenerateButton", "ApplyButton", "ValidationLabel", "InteriorPlacementStatusText", "InteriorPlacementSummaryText", "BlocksMovementToggle", "SaveFurnitureLayoutButton" })
                     new GameObject(name).transform.SetParent(root.transform, false);
                 Rootborn.UI.Interiors.InteriorFurniturePlacementPanel.HideDeveloperControls(root.transform);
                 Assert.That(root.transform.Find("SeedInput").gameObject.activeSelf, Is.False);
                 Assert.That(root.transform.Find("RegenerateButton").gameObject.activeSelf, Is.False);
                 Assert.That(root.transform.Find("InteriorPlacementStatusText").gameObject.activeSelf, Is.False);
+                Assert.That(root.transform.Find("BlocksMovementToggle").gameObject.activeSelf, Is.False);
                 Assert.That(root.transform.Find("SaveFurnitureLayoutButton").gameObject.activeSelf, Is.True);
             }
             finally { UnityEngine.Object.DestroyImmediate(root); }

@@ -132,6 +132,8 @@ namespace Rootborn.UI.MainMenu
             MakeText(frame.transform, "Title", Local("ui.save.title", "이어갈 이야기 선택", "Choose your story"), new Vector2(0f, -68f), new Vector2(1250f, 64f), 34,
                 TextAnchor.MiddleLeft, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f));
             BuildCharacterSelectionControls(frame.transform);
+            // The character creator replaced this row for players: its buttons no longer change how the character looks.
+            if (!Debug.isDebugBuild && frame.transform.Find("CharacterSelectionPanel") is Transform oldRow) oldRow.gameObject.SetActive(false);
             var service = CreateService("slot-0");
             var slots = service.ListUiSlots();
             for (int i = 0; i < slots.Count; i++) BuildSlotCard(frame.transform, service, slots[i], i);

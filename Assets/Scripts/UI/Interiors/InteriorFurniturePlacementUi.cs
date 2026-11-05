@@ -303,10 +303,14 @@ namespace Rootborn.UI.Interiors
             _availabilityText = CreateLabel(right.transform, "PlacementAvailabilityText", "가구를 선택하세요", new Vector2(0f, 224f), new Vector2(250f, 26f), 12);
             ConfigureStatusLabel(_availabilityText);
             // Map seeds and validation text are for development; players place furniture by clicking green cells.
-            if (!Debug.isDebugBuild) HideDeveloperControls(bottom.transform);
+            if (!Debug.isDebugBuild)
+            {
+                HideDeveloperControls(bottom.transform);
+                HideDeveloperControls(right.transform);
+            }
         }
 
-        private static readonly string[] DeveloperControlNames = { "SeedLabel", "SeedInput", "RegenerateButton", "ApplyButton", "ValidationLabel", "InteriorPlacementStatusText", "InteriorPlacementSummaryText" };
+        private static readonly string[] DeveloperControlNames = { "SeedLabel", "SeedInput", "RegenerateButton", "ApplyButton", "ValidationLabel", "InteriorPlacementStatusText", "InteriorPlacementSummaryText", "InteractiveFurnitureToggle", "BlocksMovementToggle", "FurnitureOptionsTitle", "PlacementAvailabilityText" };
 
         public static void HideDeveloperControls(Transform parent)
         {
