@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using Rootborn.Game.Localization;
 using Rootborn.Game.Common;
 using Rootborn.Game.Managers;
+using Rootborn.Game.Placement;
 using Rootborn.Game.Player;
 using Rootborn.Game.Quests;
 using Rootborn.Game.Save;
 using Rootborn.Game.StudentLife;
+using Rootborn.UI.Careers;
 using Rootborn.UI.Modern;
 using Rootborn.UI.Quests;
 using UnityEngine;
@@ -33,6 +35,7 @@ namespace Rootborn.UI.StudentLife
         private GameObject _player;
         private StudentLifeProgressComponent _progressComponent;
         private DailyPlanRouteSetDefinition[] _dailyPlanRouteSets = Array.Empty<DailyPlanRouteSetDefinition>();
+        private readonly List<FurnitureDefinition> _offers = new List<FurnitureDefinition>();
         private int _requestSequence;
         private readonly LocationActivityRunner _runner = new LocationActivityRunner();
 
@@ -80,6 +83,7 @@ namespace Rootborn.UI.StudentLife
             _description.text = GameText.Get(identity != null ? identity.DescriptionKey : "life.location.unavailable");
             _hints.text = FormatHints(identity);
             _result.text = string.Empty;
+            RefreshOffers(identity);
             RefreshTimeBudget();
             BindButtons(identity);
             gameObject.SetActive(true);
@@ -205,14 +209,22 @@ namespace Rootborn.UI.StudentLife
             return new string(chars);
         }
 
+        public static string OfferBalanceText(IReadOnlyList<FurnitureDefinition> offers, Rootborn.Game.Player.PlayerInventory inventory)
+        {
+            if (offers == null || offers.Count == 0 || offers[0] == null || offers[0].PriceItem == null || inventory == null || inventory.Inventory == null) return string.Empty;
+            return GameText.FormatLocalized("dream.shop.balance", " · Allowance {0}", inventory.Inventory.CountOf(offers[0].PriceItem));
+        }
+
         private void RefreshTimeBudget()
         {
-            _timeBudget.text = TimeBudgetText.Format(_progressComponent != null ? _progressComponent.EnsureProgress() : null);
+            _timeBudget.text = TimeBudgetText.Format(_progressComponent != null ? _progressComponent.EnsureProgress() : null)
+                + OfferBalanceText(_offers, _player != null ? _player.GetComponent<Rootborn.Game.Player.PlayerInventory>() : null);
         }
 
         private void BindButtons(LocationIdentityDefinition identity)
         {
-            int count = identity != null ? identity.AvailableActivities.Count : 0;
+            int activityCount = identity != null ? identity.AvailableActivities.Count : 0;
+            int count = activityCount + _offers.Count;
             while (_activityButtons.Count < count)
             {
                 int i = _activityButtons.Count;
@@ -237,12 +249,55 @@ namespace Rootborn.UI.StudentLife
                     button.gameObject.SetActive(true);
                     button.onClick.AddListener(() => PerformActivity(index));
                 }
+                else if (i >= activityCount && i < count)
+                {
+                    BindOffer(button, label, _offers[i - activityCount]);
+                }
                 else
                 {
                     label.text = string.Empty;
                     button.gameObject.SetActive(false);
                 }
             }
+        }
+
+        // Found once per visit: the furniture list is large and does not change while the panel is open.
+        private void RefreshOffers(LocationIdentityDefinition identity)
+        {
+            _offers.Clear();
+            string locationId = identity != null && identity.Location != null ? identity.Location.Id : string.Empty;
+            if (string.IsNullOrEmpty(locationId) || !GameDataRegistryProvider.TryGet(out var registry) || registry == null || registry.FurnitureDefinitions == null) return;
+            var furniture = registry.FurnitureDefinitions;
+            for (int i = 0; i < furniture.Length; i++)
+                if (furniture[i] != null && furniture[i].IsForSale && furniture[i].PurchaseLocationId == locationId) _offers.Add(furniture[i]);
+        }
+
+        private static string OfferName(FurnitureDefinition furniture) => string.IsNullOrEmpty(furniture.DisplayNameKey) ? furniture.DisplayName : GameText.Get(furniture.DisplayNameKey);
+
+        private void BindOffer(Button button, Text label, FurnitureDefinition furniture)
+        {
+            var owner = _player != null ? _player.GetComponent<AdultCareerRuntimeComponent>() : null;
+            bool owned = owner != null && owner.FurnitureUnlocks != null && owner.FurnitureUnlocks.IsUnlocked(furniture.UnlockToken);
+            var inventory = _player != null ? _player.GetComponent<PlayerInventory>() : null;
+            bool affordable = inventory != null && inventory.Inventory != null && inventory.Inventory.CountOf(furniture.PriceItem) >= furniture.Price;
+            label.text = owned
+                ? GameText.Format("dream.shop.owned", OfferName(furniture))
+                : GameText.Format("dream.shop.buy", OfferName(furniture), furniture.Price);
+            button.interactable = owner != null && owner.CanMutate && !owned && affordable;
+            button.gameObject.SetActive(true);
+            button.onClick.AddListener(() => PurchaseOffer(owner, furniture));
+        }
+
+        private void PurchaseOffer(AdultCareerRuntimeComponent owner, FurnitureDefinition furniture)
+        {
+            if (owner == null) return;
+            var result = owner.TryPurchaseFurniture(furniture);
+            _result.text = result == FurniturePurchaseResult.Purchased ? GameText.Format("dream.shop.bought", OfferName(furniture))
+                : result == FurniturePurchaseResult.NotEnoughMoney ? GameText.Get("dream.shop.not-enough")
+                : result == FurniturePurchaseResult.AlreadyOwned ? GameText.Format("dream.shop.owned", OfferName(furniture))
+                : GameText.Get("dream.shop.failed");
+            BindButtons(_identity);
+            RefreshTimeBudget();
         }
 
         private void BuildIfNeeded()

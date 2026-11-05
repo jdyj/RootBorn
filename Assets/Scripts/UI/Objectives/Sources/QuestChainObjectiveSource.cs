@@ -27,7 +27,7 @@ namespace Rootborn.UI.Objectives
             for (int i = 0; i < chains.Length; i++)
             {
                 var chain = chains[i];
-                if (chain == null || string.IsNullOrEmpty(chain.Id))
+                if (chain == null || chain.DeveloperOnly || string.IsNullOrEmpty(chain.Id))
                 {
                     continue;
                 }
@@ -39,7 +39,7 @@ namespace Rootborn.UI.Objectives
                     Category.CategoryId,
                     ObjectiveJournalSourceText.SafeText(currentStep != null ? currentStep.DisplayNameKey : chain.DisplayNameKey, chain.DisplayNameKey),
                     ObjectiveJournalSourceText.SafeText(currentStep != null ? currentStep.DescriptionKey : chain.DescriptionKey, chain.DescriptionKey),
-                    state.ToString(),
+                    ObjectiveJournalSourceText.State(state.ToString()),
                     BuildQuestChainObjectiveText(log, chain),
                     BuildQuestChainHintText(log, chain, state),
                     log.IsTracked(chain),
@@ -55,7 +55,7 @@ namespace Rootborn.UI.Objectives
             var objectives = step != null ? step.Objectives : null;
             if (objectives == null || objectives.Length == 0)
             {
-                return chain != null ? log.GetState(chain).ToString() : string.Empty;
+                return chain != null ? ObjectiveJournalSourceText.State(log.GetState(chain).ToString()) : string.Empty;
             }
 
             string text = string.Empty;
@@ -67,29 +67,34 @@ namespace Rootborn.UI.Objectives
                     continue;
                 }
 
-                string line = ObjectiveJournalSourceText.SafeText(objective.DisplayKey, objective.GetType().Name) + " " + log.GetObjectiveProgress(chain, i) + " / " + objective.RequiredCount;
+                string line = ObjectiveJournalSourceText.ObjectiveLabel(objective.DisplayKey) + " " + log.GetObjectiveProgress(chain, i) + " / " + objective.RequiredCount;
                 text += string.IsNullOrEmpty(text) ? line : " | " + line;
             }
 
-            return string.IsNullOrEmpty(text) ? log.GetState(chain).ToString() : text;
+            return string.IsNullOrEmpty(text) ? ObjectiveJournalSourceText.State(log.GetState(chain).ToString()) : text;
         }
 
         private static string BuildQuestChainHintText(QuestChainLog log, QuestChainDefinition chain, QuestChainState state)
         {
             if (state == QuestChainState.Completed)
             {
-                return "Claim rewards or review the next route.";
+                return ObjectiveJournalSourceText.Localized("ui.journal.chain.completed-hint", "Claim rewards or review the next route.");
             }
 
             if (state == QuestChainState.Blocked)
             {
                 string summary = log.GetBlockedSummary(chain);
-                return string.IsNullOrEmpty(summary) ? "Review the blocked quest-chain condition." : summary;
+                return string.IsNullOrEmpty(summary) ? ObjectiveJournalSourceText.Localized("ui.journal.chain.blocked-hint", "Review the blocked quest-chain condition.") : summary;
             }
 
             var step = log.GetCurrentStep(chain);
+            if (step != null && step.CompletionConditions != null && step.CompletionConditions.Length > 0 && log.AreCurrentObjectivesComplete(chain))
+            {
+                var waiting = step.CompletionConditions[0];
+                if (waiting != null) return ObjectiveJournalSourceText.SafeText(waiting.BlockedSummary, waiting.BlockedSummary);
+            }
             var objective = step != null && step.Objectives != null && step.Objectives.Length > 0 ? step.Objectives[0] : null;
-            return objective != null ? "Next: " + ObjectiveJournalSourceText.SafeText(objective.DisplayKey, objective.GetType().Name) : "Open quest chain log.";
+            return objective != null ? ObjectiveJournalSourceText.LocalizedFormat("ui.journal.next", "Next: {0}", ObjectiveJournalSourceText.ObjectiveLabel(objective.DisplayKey)) : ObjectiveJournalSourceText.Localized("ui.journal.chain.open-hint", "Open quest chain log.");
         }
 
         private static int BuildQuestChainSortPriority(QuestChainDefinition chain, QuestChainState state)

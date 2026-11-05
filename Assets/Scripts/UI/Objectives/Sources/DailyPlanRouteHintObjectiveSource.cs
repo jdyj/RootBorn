@@ -51,7 +51,7 @@ namespace Rootborn.UI.Objectives
                     route.ObjectiveTitleKey,
                     route.ObjectiveDetailKey,
                     "Available",
-                    "Route unlocked",
+                    ObjectiveJournalSourceText.Localized("ui.journal.daily.route-unlocked", "Route unlocked"),
                     route.NextHintKey,
                     false,
                     20 + i));

@@ -32,10 +32,10 @@ namespace Rootborn.UI.Objectives
                     "status-activity:" + status.Id,
                     Category.CategoryId,
                     string.IsNullOrEmpty(status.DisplayNameKey) ? status.Id : status.DisplayNameKey,
-                    "Status activity progress: " + status.Id,
+                    ObjectiveJournalSourceText.Localized("ui.journal.status.subtitle", "Status activity progress: " + status.Id),
                     "Changed",
                     status.Id + " = " + value,
-                    "Next: choose an activity that helps manage this status or turn it into another growth route.",
+                    ObjectiveJournalSourceText.Localized("ui.journal.status.next-hint", "Next: choose an activity that helps manage this status or turn it into another growth route."),
                     false,
                     45 + i));
             }

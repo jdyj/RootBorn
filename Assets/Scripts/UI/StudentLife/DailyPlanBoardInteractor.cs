@@ -14,7 +14,7 @@ namespace Rootborn.UI.StudentLife
         [SerializeField] private DailyPlanProgressComponent _dailyProgress;
         [SerializeField] private StudentLifeProgressComponent _studentProgress;
 
-        public string InteractionPrompt => "[E] Plan Day";
+        public string InteractionPrompt => "[E] " + Rootborn.Game.Localization.GameText.Localized("ui.prompt.plan-day", "Plan Day");
         public Vector3 InteractionPromptOffset => _interactionPromptOffset;
         public Transform InteractionTransform => transform;
         public int InteractionPriority => 80;

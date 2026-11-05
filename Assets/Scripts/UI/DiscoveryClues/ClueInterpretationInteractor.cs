@@ -21,7 +21,7 @@ namespace Rootborn.UI.DiscoveryClues
 
         public ClueInterpretationResult LastResult { get; private set; }
         public int InteractionPriority => InterpretationPriority;
-        public string InteractionPrompt => "[E] Interpret Clue";
+        public string InteractionPrompt => "[E] " + Rootborn.Game.Localization.GameText.Localized("ui.prompt.interpret-clue", "Interpret Clue");
         public Vector3 InteractionPromptOffset => new Vector3(0f, 1.2f, 0f);
         public Transform InteractionTransform => transform;
 

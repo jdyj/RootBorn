@@ -138,7 +138,7 @@ namespace Rootborn.UI.StudentLife
             go.GetComponent<Image>().color = new Color(0.72f, 0.58f, 0.32f, 0.92f);
             var button = go.GetComponent<Button>();
             button.onClick.AddListener(onClick);
-            MakeText(rt, "Label", "Location Log", Vector2.zero, rt.sizeDelta, 16, TextAnchor.MiddleCenter);
+            MakeText(rt, "Label", Rootborn.Game.Localization.GameText.Localized("ui.location-log", "Location Log"), Vector2.zero, rt.sizeDelta, 16, TextAnchor.MiddleCenter);
         }
 
         private static Text MakeText(RectTransform parent, string name, string value, Vector2 position, Vector2 size, int fontSize, TextAnchor alignment)

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Rootborn.Game.Common;
 using Rootborn.Game.Localization;
 using Rootborn.Game.Player;
+using Rootborn.Game.Quests;
 using Rootborn.Game.StudentLife;
 using Rootborn.Game.VerticalSlice;
 using Rootborn.UI.Modern;
@@ -95,7 +96,7 @@ namespace Rootborn.UI.StudentLife
             _activities.text = FormatList(Ui("activities", "Activities"), summary.CompletedActivityIds, Ui("empty-activities", "No activities recorded"));
             var careerCandidates = progressComponent != null ? progressComponent.GetComponent<CareerCandidateProgressComponent>() : null;
             var careerInterests = progressComponent != null ? progressComponent.GetComponent<CareerInterestProgressComponent>() : null;
-            _results.text = FormatList(Ui("growth", "Growth"), OutsideSchoolLogCodec.AggregateDeltas(summary.ResultLogIds), Ui("empty-growth", "No growth recorded")) + "\n\n" + FormatOutsideSchoolList(summary.ResultLogIds) + "\n\n" + FormatCareerCandidateList(careerCandidates != null && careerCandidates.Progress != null ? careerCandidates.Progress.TodayHintResultLines : null) + "\n\n" + FormatCareerInterestList(careerInterests);
+            _results.text = FormatList(Ui("growth", "Growth"), GrowthLines(summary.ResultLogIds), Ui("empty-growth", "No growth recorded")) + "\n\n" + FormatOutsideSchoolList(summary.ResultLogIds) + "\n\n" + FormatCareerCandidateList(careerCandidates != null && careerCandidates.Progress != null ? careerCandidates.Progress.TodayHintResultLines : null) + "\n\n" + FormatCareerInterestList(careerInterests);
             _quests.text = FormatQuestList(questInventorySummary.QuestEntries);
             _rewards.text = FormatRewardList(questInventorySummary.RewardEntries);
             _inventory.text = FormatInventoryList(questInventorySummary.InventoryDeltas);
@@ -145,6 +146,24 @@ namespace Rootborn.UI.StudentLife
             }
         }
 
+        // Steps waiting for this day advance first; things done earlier are then offered to whichever step is now current.
+        public static void PublishDayStartEvents(StudentLifeProgressComponent student)
+        {
+            if (student == null || student.Progress == null) return;
+            var progress = student.Progress;
+            QuestGameplayEventBridge.Record(new QuestEvent(QuestEventKind.DayStarted, QuestGameplayEventBridge.CreateRequestKey("day-started")), progress);
+            var dreams = student.GetComponent<CareerInterestProgressComponent>();
+            if (dreams != null && dreams.Progress != null && !string.IsNullOrEmpty(dreams.Progress.CurrentInterestId) && dreams.Interests != null)
+                foreach (var interest in dreams.Interests)
+                    if (interest != null && interest.Id == dreams.Progress.CurrentInterestId)
+                    {
+                        QuestGameplayEventBridge.Record(new QuestEvent(QuestEventKind.CareerInterestSelected, QuestGameplayEventBridge.CreateRequestKey("career-interest-kept"), careerInterest: interest), progress);
+                        break;
+                    }
+            var room = Object.FindFirstObjectByType<Rootborn.UI.Interiors.AuthoredHousePlacementBinding>();
+            if (room != null) room.AnnouncePlacedFurniture();
+        }
+
         private void StartNextDay()
         {
             if (_progressComponent == null || _progressComponent.Progress == null) return;
@@ -160,6 +179,7 @@ namespace Rootborn.UI.StudentLife
             }
             if (!advanced) return;
             _progressComponent.GetComponent<DailyPlanProgressComponent>()?.EnsureProgress(_progressComponent.Progress);
+            PublishDayStartEvents(_progressComponent);
             CaptureNextDayBaseline();
             Hide();
         }
@@ -354,7 +374,14 @@ namespace Rootborn.UI.StudentLife
         {
             string text = Ui("career-candidates", "Career Candidates");
             if (resultLines == null || resultLines.Length == 0) return text + "\n" + Ui("empty-candidates", "No career candidate changes");
-            for (int i = 0; i < resultLines.Length; i++) if (!string.IsNullOrEmpty(resultLines[i])) text += "\n" + ResolveText(resultLines[i]);
+            for (int i = 0; i < resultLines.Length; i++)
+            {
+                if (string.IsNullOrEmpty(resultLines[i])) continue;
+                // Lines are stored as candidate:hint:state.
+                var parts = resultLines[i].Split(':');
+                for (int p = 0; p < parts.Length; p++) parts[p] = ResolveText(parts[p]);
+                text += "\n" + string.Join(" · ", parts);
+            }
             return text;
         }
 
@@ -379,11 +406,14 @@ namespace Rootborn.UI.StudentLife
             return text;
         }
 
+        public static string[] GrowthLines(string[] resultLogIds) => PartTimeWorkLogCodec.AggregateDeltas(OutsideSchoolLogCodec.AggregateDeltas(resultLogIds));
+
         private string FormatOutsideSchoolList(string[] resultLogIds)
         {
-            string text = Ui("outside-school", "Outside School");
             var summary = OutsideSchoolGrowthSummary.FromResultLogs(resultLogIds);
-            if (summary.Entries.Length == 0) return text + "\n" + Ui("empty-outside", "No outside-school growth");
+            // Store work and other place activities are listed under growth but are not outside-school entries; an "empty" line here would contradict them.
+            if (summary.Entries.Length == 0) return string.Empty;
+            string text = Ui("outside-school", "Outside School");
             for (int i = 0; i < summary.Entries.Length; i++)
             {
                 var entry = summary.Entries[i];
@@ -479,6 +509,8 @@ namespace Rootborn.UI.StudentLife
             if (!GameDataRegistryProvider.TryGet(out var registry)) return;
             if (registry.LifeActivities != null) foreach (var definition in registry.LifeActivities)
                 if (definition != null) _displayKeys[definition.Id] = definition.DisplayNameKey;
+            if (registry.Npcs != null) foreach (var npc in registry.Npcs)
+                if (npc != null) _displayKeys[npc.Id] = npc.DisplayNameKey;
             AddDefinitions(registry.LocationActivities); AddDefinitions(registry.OutsideSchoolActivities);
             AddDefinitions(registry.StudentLifeTraits); AddDefinitions(registry.StudentLifeSkills);
             AddDefinitions(registry.Relationships); AddDefinitions(registry.StudentConditionStatuses);
@@ -502,6 +534,16 @@ namespace Rootborn.UI.StudentLife
             const string visitPrefix = "location:", visitSuffix = ":visited";
             if (value.StartsWith(visitPrefix, System.StringComparison.Ordinal) && value.EndsWith(visitSuffix, System.StringComparison.Ordinal) && value.Length > visitPrefix.Length + visitSuffix.Length)
                 return GameText.Format("day-result.location-visited", ResolveText(value.Substring(visitPrefix.Length, value.Length - visitPrefix.Length - visitSuffix.Length)));
+            const string npcPrefix = "npc:", metSuffix = ":met";
+            if (value.StartsWith(npcPrefix, System.StringComparison.Ordinal) && value.EndsWith(metSuffix, System.StringComparison.Ordinal) && value.Length > npcPrefix.Length + metSuffix.Length)
+                return GameText.Format("day-result.npc-met", ResolveText(value.Substring(npcPrefix.Length, value.Length - npcPrefix.Length - metSuffix.Length)));
+            // Schedule meetings are logged as npc@location@time.
+            if (value.IndexOf('@') > 0)
+            {
+                var parts = value.Split('@');
+                for (int i = 0; i < parts.Length; i++) parts[i] = ResolveText(parts[i]);
+                return string.Join(" · ", parts);
+            }
             if (_displayKeys.TryGetValue(value, out var key)) return GameText.Get(key);
             var translated = GameText.Get(value); if (translated != value) return translated;
             if (LocationActivityLogCodec.TryParse(value, out var location))

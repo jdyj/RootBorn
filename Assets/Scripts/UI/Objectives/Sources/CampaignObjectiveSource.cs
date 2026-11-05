@@ -46,27 +46,31 @@ namespace Rootborn.UI.Objectives
             };
         }
 
+        public static string CompletedLabel(string objectiveId) => ObjectiveJournalSourceText.Localized("ui.journal.campaign.done." + objectiveId, objectiveId);
+
         private static string BuildCampaignProgressText(CampaignProgress progress, CampaignDayDefinition day)
         {
-            string text = "Campaign day " + day.DayNumber;
+            string text = ObjectiveJournalSourceText.LocalizedFormat("ui.journal.campaign.day", "Campaign day {0}", day.DayNumber);
             var selectedRoute = ResolveSelectedRoute(progress, day);
             if (selectedRoute != null)
             {
-                text += " | Route: " + ObjectiveJournalSourceText.SafeText(selectedRoute.DisplayNameKey, selectedRoute.Id);
+                text += ObjectiveJournalSourceText.LocalizedFormat("ui.journal.campaign.route", " | Route: {0}", ObjectiveJournalSourceText.SafeText(selectedRoute.DisplayNameKey, selectedRoute.Id));
             }
             else
             {
                 string routesText = BuildAvailableRouteText(day);
                 if (!string.IsNullOrEmpty(routesText))
                 {
-                    text += " | Routes: " + routesText;
+                    text += ObjectiveJournalSourceText.LocalizedFormat("ui.journal.campaign.routes", " | Routes: {0}", routesText);
                 }
             }
 
             var completed = progress != null ? progress.LastProgressLogIds : Array.Empty<string>();
             if (completed.Length > 0)
             {
-                text += " | Completed: " + string.Join(", ", completed);
+                var labels = new string[completed.Length];
+                for (int i = 0; i < completed.Length; i++) labels[i] = CompletedLabel(completed[i]);
+                text += ObjectiveJournalSourceText.LocalizedFormat("ui.journal.campaign.completed", " | Completed: {0}", string.Join(", ", labels));
             }
 
             return text;

@@ -87,9 +87,9 @@ namespace Rootborn.UI.Objectives
         {
             EnsureBuilt();
             _trackedStableKey = item.StableKey;
-            _title.text = string.IsNullOrEmpty(item.Title) ? FallbackTitle() : item.Title;
-            _progress.text = string.IsNullOrEmpty(item.ProgressText) ? item.State : item.ProgressText;
-            _hint.text = string.IsNullOrEmpty(item.NextHintText) ? item.Subtitle : item.NextHintText;
+            _title.text = string.IsNullOrEmpty(item.Title) ? FallbackTitle() : ObjectiveJournalSourceText.Shown(item.Title);
+            _progress.text = string.IsNullOrEmpty(item.ProgressText) ? ObjectiveJournalSourceText.ShownState(item.State) : ObjectiveJournalSourceText.Shown(item.ProgressText);
+            _hint.text = ObjectiveJournalSourceText.Shown(string.IsNullOrEmpty(item.NextHintText) ? item.Subtitle : item.NextHintText);
             gameObject.SetActive(true);
             if (_root != null)
             {

@@ -405,6 +405,23 @@ namespace Rootborn.UI.StudentLife
                     identityInteractor.Bind(identity);
                 }
             }
+            RebindSceneLocationInteractors(scene, registry);
+            AuthoredWorldScene.MergeCollisionTilemaps(scene);
+        }
+
+        public static void RebindSceneLocationInteractors(Scene scene, GameDataRegistry registry)
+        {
+            // Scene references and bundle dependencies can be different instances of one authored location.
+            if (registry == null || !scene.IsValid() || !scene.isLoaded) return;
+            var cache = new GameDataLookupCache(registry);
+            foreach (var root in scene.GetRootGameObjects())
+            {
+                foreach (var visit in root.GetComponentsInChildren<LocationVisitInteractor>(true))
+                    if (visit.Location != null && cache.TryGetLocation(visit.Location.Id, out var location)) visit.Bind(location);
+                foreach (var activity in root.GetComponentsInChildren<LocationActivityInteractor>(true))
+                    if (activity.Identity != null && activity.Identity.Location != null
+                        && cache.TryGetLocationIdentity(activity.Identity.Location.Id, out var identity)) activity.Bind(identity);
+            }
         }
 
         private static void EnsureMarker(GameObject go, Color color, int sortingOrder)

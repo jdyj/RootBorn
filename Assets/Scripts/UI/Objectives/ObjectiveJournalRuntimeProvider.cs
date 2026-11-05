@@ -26,7 +26,8 @@ namespace Rootborn.UI.Objectives
         {
             _panel = panel;
             _trackedHud = trackedHud;
-            _player = player;
+            // A later install pass may not know the player yet; it must not forget the one already bound.
+            if (player != null) _player = player;
             _hasObservedState = false;
             if (_panel != null)
             {
@@ -35,6 +36,16 @@ namespace Rootborn.UI.Objectives
 
             RebuildAggregator();
             RefreshNow();
+        }
+
+        private GameObject FindPlayerInScene()
+        {
+            foreach (var root in gameObject.scene.GetRootGameObjects())
+            {
+                var student = root.GetComponentInChildren<StudentLifeProgressComponent>(true);
+                if (student != null) return student.gameObject;
+            }
+            return null;
         }
 
         public void RefreshNow()
@@ -49,6 +60,7 @@ namespace Rootborn.UI.Objectives
                 RebuildAggregator();
             }
 
+            if (_player == null) _player = FindPlayerInScene();
             GameDataRegistryProvider.TryGet(out var registry);
             var metadata = ActiveSaveContext.Metadata;
             string trackedStableKey = string.Empty;

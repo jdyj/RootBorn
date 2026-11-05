@@ -32,10 +32,10 @@ namespace Rootborn.UI.Objectives
                     "resource-recipe:" + recipe.Id,
                     Category.CategoryId,
                     string.IsNullOrEmpty(recipe.DisplayNameKey) ? recipe.Id : recipe.DisplayNameKey,
-                    "Resource recipe progress",
+                    ObjectiveJournalSourceText.Localized("ui.journal.recipe.subtitle", "Resource recipe progress"),
                     "Revealed",
-                    "Recipe discovered",
-                    string.IsNullOrEmpty(recipe.NextHintKey) ? "Gather the listed resources, then craft when the surface and timing requirements are satisfied." : recipe.NextHintKey,
+                    ObjectiveJournalSourceText.Localized("ui.journal.recipe.discovered", "Recipe discovered"),
+                    string.IsNullOrEmpty(recipe.NextHintKey) ? ObjectiveJournalSourceText.Localized("ui.journal.recipe.next-hint", "Gather the listed resources, then craft when the surface and timing requirements are satisfied.") : recipe.NextHintKey,
                     false,
                     35 + i));
             }

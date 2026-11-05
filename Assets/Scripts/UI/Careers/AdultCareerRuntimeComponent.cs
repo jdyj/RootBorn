@@ -216,6 +216,19 @@ namespace Rootborn.UI.Careers
         {
             return ExecuteSessionCommand((session, service) => service.TryUpgrade(facility, session.Student, session.Progress, session.Inventory, session.World, requestId));
         }
+        // Runs inside the session so the money, the unlock and the save succeed or fail as one.
+        public FurniturePurchaseResult TryPurchaseFurniture(FurnitureDefinition furniture)
+        {
+            if (furniture == null || _registry == null || _registry.FurnitureDefinitions == null || Array.IndexOf(_registry.FurnitureDefinitions, furniture) < 0) return FurniturePurchaseResult.NotForSale;
+            var purchase = FurniturePurchaseResult.Unavailable;
+            var result = ExecuteSessionCommand((session, service) =>
+            {
+                purchase = FurniturePurchase.Try(furniture, session.Inventory, session.FurnitureUnlocks);
+                return new AdultCareerResult(purchase == FurniturePurchaseResult.Purchased ? AdultCareerResultKind.Applied : AdultCareerResultKind.InsufficientResources);
+            });
+            return result.Applied ? FurniturePurchaseResult.Purchased : purchase == FurniturePurchaseResult.Purchased ? FurniturePurchaseResult.Unavailable : purchase;
+        }
+
         public AdultCareerResult ExecuteSessionCommand(Func<AdultCareerSession, AdultCareerService, AdultCareerResult> command)
         {
             if (_publishing) return SetResult(AdultCareerResultKind.InvalidRequest);
@@ -349,6 +362,8 @@ namespace Rootborn.UI.Careers
                 });
                 if (!applied) { RecoveryRequired = true; throw new InvalidOperationException("Committed player snapshot could not be published to its bound inventory."); }
             }
+            // The save already succeeded, so live state may now differ from it. Stop further saves; a reload restores the saved state.
+            catch { RecoveryRequired = true; throw; }
             finally { _publishing = false; }
             Committed?.Invoke();
         }

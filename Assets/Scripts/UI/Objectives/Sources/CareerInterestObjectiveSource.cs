@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Game.Localization;
 using Rootborn.Game.StudentLife;
 
 namespace Rootborn.UI.Objectives
@@ -39,10 +40,10 @@ namespace Rootborn.UI.Objectives
                 items.Add(new ObjectiveJournalItem(
                     "career-interest." + interest.Id,
                     Category.CategoryId,
-                    summary.DisplayName,
-                    summary.Description,
-                    summary.State.ToString(),
-                    BuildCareerInterestProgressText(summary, progress),
+                    GameText.Get(summary.DisplayName),
+                    GameText.Get(summary.Description),
+                    ObjectiveJournalSourceText.State(summary.State.ToString()),
+                    BuildCareerInterestProgressText(progress, interests),
                     BuildCareerInterestHintText(summary),
                     selected,
                     selected ? 10 : 40 + i));
@@ -51,22 +52,22 @@ namespace Rootborn.UI.Objectives
             return items.ToArray();
         }
 
-        private static string BuildCareerInterestProgressText(CareerInterestSummary summary, CareerInterestProgress progress)
+        private static string BuildCareerInterestProgressText(CareerInterestProgress progress, CareerInterestDefinition[] interests)
         {
-            string current = progress != null && !string.IsNullOrEmpty(progress.CurrentInterestId) ? progress.CurrentInterestId : "none";
-            string text = "Current: " + current;
-            if (!string.IsNullOrEmpty(summary.Reason))
-            {
-                text += " | " + summary.Reason;
-            }
-
-            return text;
+            // A saved dream that is no longer offered reads as "not chosen" instead of showing its internal id.
+            string current = GameText.Get("dream.journal.none");
+            for (int i = 0; progress != null && i < interests.Length; i++)
+                if (interests[i] != null && interests[i].Id == progress.CurrentInterestId) current = GameText.Get(interests[i].DisplayNameKey);
+            return GameText.Format("dream.journal.current", current);
         }
 
         private static string BuildCareerInterestHintText(CareerInterestSummary summary)
         {
-            string recommendations = ObjectiveJournalSourceText.JoinNonEmpty(summary.RecommendedActionKeys, " | ");
-            return string.IsNullOrEmpty(recommendations) ? "Explore town activities, relationships, work, study, or rest to refine this interest." : recommendations;
+            var keys = summary.RecommendedActionKeys;
+            var lines = new string[keys.Length];
+            for (int i = 0; i < keys.Length; i++) lines[i] = GameText.Get(keys[i]);
+            string recommendations = ObjectiveJournalSourceText.JoinNonEmpty(lines, " | ");
+            return string.IsNullOrEmpty(recommendations) ? GameText.Get("dream.journal.hint") : recommendations;
         }
     }
 }

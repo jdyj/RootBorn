@@ -17,11 +17,26 @@ namespace Rootborn.UI.MainMenu
         public CharacterVisualAction LastAction { get; private set; }
         public ToolVisualMappingDefinition LastToolVisualMapping { get; private set; }
 
+        // Parts are shown by the last segment of their stable id until they carry their own display names.
+        public static string PartLabel(string partId)
+        {
+            if (string.IsNullOrWhiteSpace(partId)) return string.Empty;
+            int separator = partId.LastIndexOf('.');
+            string shortId = separator >= 0 && separator < partId.Length - 1 ? partId.Substring(separator + 1) : partId;
+            return Localized("spum.part." + shortId, shortId);
+        }
+
+        private static string Localized(string key, string fallback)
+        {
+            string value = Rootborn.Game.Localization.GameText.Get(key);
+            return string.IsNullOrEmpty(value) || value == key ? fallback : value;
+        }
+
         public void Build(IReadOnlyList<SpumPartDefinition> weaponParts)
         {
             ClearGeneratedChildren();
             _selectionRows.Clear();
-            if (weaponParts == null || weaponParts.Count == 0)
+            if (weaponParts == null || weaponParts.Count == 0 || weaponParts[0] == null || weaponParts[0].PreviewSprite == null)
                 return;
 
             var weaponPreview = new GameObject("WeaponPreview", typeof(RectTransform), typeof(Image));
@@ -34,7 +49,7 @@ namespace Rootborn.UI.MainMenu
             rect.sizeDelta = new Vector2(96f, 96f);
 
             var image = weaponPreview.GetComponent<Image>();
-            image.sprite = weaponParts[0] != null ? weaponParts[0].PreviewSprite : null;
+            image.sprite = weaponParts[0].PreviewSprite;
             image.preserveAspect = true;
             image.raycastTarget = false;
         }
@@ -67,7 +82,7 @@ namespace Rootborn.UI.MainMenu
                 rect.sizeDelta = new Vector2(240f, 24f);
 
                 var text = labelObject.GetComponent<Text>();
-                text.text = selected.Key + ": " + selected.Value;
+                text.text = Localized("spum.category." + selected.Key, selected.Key) + ": " + PartLabel(selected.Value);
                 text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
                 text.fontSize = 14;
                 text.alignment = TextAnchor.MiddleCenter;

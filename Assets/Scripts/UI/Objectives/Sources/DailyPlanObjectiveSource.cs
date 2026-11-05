@@ -35,7 +35,7 @@ namespace Rootborn.UI.Objectives
                 string subtitle = progress.Slots.Count > 1
                     ? GameText.Get(route.DisplayNameKey) + " · " + GameText.Get(slot.PeriodKey) : route.DisplayNameKey;
                 items.Add(new ObjectiveJournalItem(key, Category.CategoryId, route.ObjectiveTitleKey,
-                    subtitle, "Selected", "Selected for day " + progress.CurrentDay,
+                    subtitle, ObjectiveJournalSourceText.State("Selected"), ObjectiveJournalSourceText.LocalizedFormat("ui.journal.daily.selected-for-day", "Selected for day {0}", progress.CurrentDay),
                     route.ObjectiveDetailKey, false, 5 + slot.SlotIndex));
             }
             if (items.Count == 0 && hasUnassigned) items.Add(BuildChooseItem());
@@ -48,8 +48,8 @@ namespace Rootborn.UI.Objectives
                 CategoryValue.CategoryId,
                 "objective.daily.choose.title",
                 string.Empty,
-                "Open",
-                "No daily route selected",
+                ObjectiveJournalSourceText.State("Open"),
+                ObjectiveJournalSourceText.Localized("ui.journal.daily.none", "No daily route selected"),
                 "objective.daily.choose.detail",
                 false,
                 5);

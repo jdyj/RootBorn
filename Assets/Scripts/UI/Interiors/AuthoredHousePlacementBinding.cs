@@ -58,7 +58,9 @@ namespace Rootborn.UI.Interiors
             surface.ConfigureForTests("house",ground,objects,occupancy,null,model.Bounds,
                 TilePlacementRuleFlags.RequireGround|TilePlacementRuleFlags.RejectOccupiedCells|TilePlacementRuleFlags.StayInsideBounds);
             _session=gameObject.AddComponent<AuthoredHouseFurnitureSession>();_session.Bind(model,surface);Configure();
-            return Reload();
+            bool loaded=Reload();
+            if(loaded)AnnouncePlacedFurniture();
+            return loaded;
         }
         private Tilemap CreateMap(string label,Tilemap ground,bool render)
         {
@@ -81,6 +83,12 @@ namespace Rootborn.UI.Interiors
             QuestGameplayEventBridge.Record(new QuestEvent(QuestEventKind.FurniturePlaced,
                 QuestGameplayEventBridge.CreateRequestKey("furniture-placed"),furniture:definition,
                 surfaceId:_session.Surface.SurfaceId),_owner.StudentComponent.Progress);
+        }
+        // A piece placed before its quest step began still counts once the room is entered or a new day starts.
+        public void AnnouncePlacedFurniture()
+        {
+            if(_session==null)return;
+            foreach(var definition in _session.PlacedFurniture.Distinct().ToArray())RecordPlacement(definition);
         }
         private void OnDestroy()
         { if(_session!=null)_session.PlacementCommitted-=RecordPlacement; }

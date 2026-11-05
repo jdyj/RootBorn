@@ -78,7 +78,7 @@ namespace Rootborn.UI.StudentLife
             _candidateProgress = candidateProgress;
             _studentProgress = studentProgress;
             _day = Mathf.Max(0, day);
-            _title.text = Ui("ui.career-interest.title", "발견한 관심사", "Career Interests");
+            _title.text = Ui("ui.career-interest.title", "내 장래희망", "My Dream");
             BindButtons();
             EnsureCurrentInterestLinkedQuests();
             ShowDetails(_interests.Length > 0 ? 0 : -1);
@@ -96,7 +96,7 @@ namespace Rootborn.UI.StudentLife
             _root=new GameObject("CareerInterestRoot",typeof(RectTransform),typeof(ModernUiTileImage));_root.transform.SetParent(transform,false);
             var rt=(RectTransform)_root.transform;rt.anchorMin=new Vector2(.5f,.5f);rt.anchorMax=rt.anchorMin;rt.pivot=rt.anchorMin;rt.anchoredPosition=Vector2.zero;rt.sizeDelta=new Vector2(1440f,840f);
             var tile=_root.GetComponent<ModernUiTileImage>();tile.SetRecipe(ModernUiRecipes.CommonPanel);tile.Rebuild();
-            _title=MakeText(rt,"Title",Ui("ui.career-interest.title","발견한 관심사","Career Interests"),new Vector2(-350f,350f),new Vector2(640f,44f),32,TextAnchor.MiddleLeft);
+            _title=MakeText(rt,"Title",Ui("ui.career-interest.title","내 장래희망","My Dream"),new Vector2(-350f,350f),new Vector2(640f,44f),32,TextAnchor.MiddleLeft);
             var cards=MakeContainer(rt,"InterestCardsViewport",new Vector2(0f,105f),new Vector2(1344f,314f));cards.gameObject.AddComponent<RectMask2D>();var hit=cards.gameObject.AddComponent<Image>();hit.color=Color.clear;
             var scroll=cards.gameObject.AddComponent<ScrollRect>();scroll.horizontal=true;scroll.vertical=false;scroll.inertia=false;scroll.movementType=ScrollRect.MovementType.Clamped;
             var content=new GameObject("InterestCardsContent",typeof(RectTransform));content.transform.SetParent(cards,false);_cardsContent=(RectTransform)content.transform;
@@ -129,7 +129,7 @@ namespace Rootborn.UI.StudentLife
                 bool visible=i<_interests.Length&&_interests[i]!=null;button.gameObject.SetActive(visible);
                 if(!visible){label.text=string.Empty;continue;}
                 int index=i;var interest=_interests[i];var summary=CareerInterestSummaryBuilder.Build(interest,_interestProgress,_candidateProgress,_studentProgress,_day);
-                var title=string.IsNullOrEmpty(interest.DisplayNameKey)?Ui("ui.career-interest.unknown","관심사","Interest"):GameText.Get(interest.DisplayNameKey);
+                var title=string.IsNullOrEmpty(interest.DisplayNameKey)?Ui("ui.career-interest.unknown","장래희망","Dream"):GameText.Get(interest.DisplayNameKey);
                 label.text=title+"\n"+StateText(summary);
                 button.transform.Find("InterestIcon").GetComponent<UrbanUiIcon>().ConfigureFor(interest,"journal");
                 button.onClick.AddListener(()=>SelectAndShow(index));
@@ -146,6 +146,7 @@ namespace Rootborn.UI.StudentLife
             {
                 if (_interestComponent != null) CareerInterestProgressPersistence.Save(_interestComponent);
                 ApplyLinkedQuests(_interests[index]);
+                QuestGameplayEventBridge.Record(new QuestEvent(QuestEventKind.CareerInterestSelected, QuestGameplayEventBridge.CreateRequestKey("career-interest"), careerInterest: _interests[index]), _studentProgress);
                 SelectionChanged?.Invoke();
             }
             BindButtons();
@@ -257,11 +258,11 @@ namespace Rootborn.UI.StudentLife
         {
             if(index<0||index>=_interests.Length||_interests[index]==null)
             {
-                _details.text=Ui("ui.career-interest.empty","아직 발견한 관심사가 없어요.","No career interests");LayoutDetails();return;
+                _details.text=Ui("ui.career-interest.empty","아직 고를 수 있는 꿈이 없어요.","No dreams to choose yet");LayoutDetails();return;
             }
             var summary=CareerInterestSummaryBuilder.Build(_interests[index],_interestProgress,_candidateProgress,_studentProgress,_day);
             string text=GameText.Get(summary.DisplayName)+"\n"+Ui("ui.career-interest.state","상태","State")+": "+StateText(summary);
-            if(!string.IsNullOrEmpty(summary.Reason))text+="\n"+GameText.Get(summary.Reason);
+            if(summary.State==CareerInterestSelectionState.LockedByCondition)text+="\n"+GameText.Get("dream.ui.locked-reason");
             if(!string.IsNullOrEmpty(summary.Description))text+="\n"+GameText.Get(summary.Description);
             text+=FormatLines("\n"+Ui("ui.career-interest.locations","관련 장소","Related Locations"),summary.RelatedLocationKeys,Ui("ui.career-interest.no-locations","아직 기록된 장소가 없어요.","No locations yet"));
             text+=FormatLines("\n"+Ui("ui.career-interest.activities","관련 활동","Related Activities"),summary.RelatedActivityKeys,Ui("ui.career-interest.no-activities","아직 기록된 활동이 없어요.","No activities yet"));

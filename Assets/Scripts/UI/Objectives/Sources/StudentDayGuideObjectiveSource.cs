@@ -40,7 +40,7 @@ namespace Rootborn.UI.Objectives
             }
             string format = Text(context, "ui.objectives.day_progress", "Day {0} | Energy {1} | Focus {2}");
             string progressText = string.Format(CultureInfo.CurrentCulture, format, progress.CurrentDay, progress.Energy, progress.Focus);
-            return new[] { new ObjectiveJournalItem(stableKey, Category.CategoryId, title, progress.TutorialStageId, progress.DayState.ToString(), progressText, hint, false, 0) };
+            return new[] { new ObjectiveJournalItem(stableKey, Category.CategoryId, title, ObjectiveJournalSourceText.SafeText(progress.TutorialStageId, string.Empty), ObjectiveJournalSourceText.State(progress.DayState.ToString()), progressText, hint, false, 0) };
         }
 
         private static string Text(ObjectiveJournalContext context, string key, string fallback)

@@ -48,22 +48,22 @@ namespace Rootborn.UI.Objectives
 
         private static string BuildQuestStateText(QuestState state)
         {
-            return state == QuestState.NotStarted ? "Available" : state.ToString();
+            return ObjectiveJournalSourceText.State(state == QuestState.NotStarted ? "Available" : state.ToString());
         }
 
         private static string BuildQuestHintText(QuestState state)
         {
             if (state == QuestState.NotStarted)
             {
-                return "Accept this quest from its provider.";
+                return ObjectiveJournalSourceText.Localized("ui.journal.quest.accept-hint", "Accept this quest from its provider.");
             }
 
             if (state == QuestState.RewardClaimed)
             {
-                return "Reward claimed. Review this completed quest history.";
+                return ObjectiveJournalSourceText.Localized("ui.journal.quest.claimed-hint", "Reward claimed. Review this completed quest history.");
             }
 
-            return state == QuestState.Completed ? "Claim the quest reward when inventory can accept it." : "Review the quest detail and complete the next objective.";
+            return state == QuestState.Completed ? ObjectiveJournalSourceText.Localized("ui.journal.quest.claim-hint", "Claim the quest reward when inventory can accept it.") : ObjectiveJournalSourceText.Localized("ui.journal.quest.next-hint", "Review the quest detail and complete the next objective.");
         }
 
         private static int BuildQuestSortPriority(QuestState state)
@@ -90,7 +90,7 @@ namespace Rootborn.UI.Objectives
         {
             if (quest.Objectives == null || quest.Objectives.Length == 0)
             {
-                return questLog.GetState(quest).ToString();
+                return ObjectiveJournalSourceText.State(questLog.GetState(quest).ToString());
             }
 
             string text = string.Empty;
@@ -102,12 +102,12 @@ namespace Rootborn.UI.Objectives
                     continue;
                 }
 
-                string label = ObjectiveJournalSourceText.SafeText(objective.DisplayKey, objective.GetType().Name);
+                string label = ObjectiveJournalSourceText.ObjectiveLabel(objective.DisplayKey);
                 string line = label + " " + questLog.GetObjectiveCount(quest, i) + " / " + objective.RequiredCount;
                 text += string.IsNullOrEmpty(text) ? line : " | " + line;
             }
 
-            return string.IsNullOrEmpty(text) ? questLog.GetState(quest).ToString() : text;
+            return string.IsNullOrEmpty(text) ? ObjectiveJournalSourceText.State(questLog.GetState(quest).ToString()) : text;
         }
     }
 }

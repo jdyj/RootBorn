@@ -155,7 +155,7 @@ namespace Rootborn.UI.StudentLife
                 text.font = LifeUiFont.Shared;
                 text.fontSize = 20;
                 text.raycastTarget = false;
-                text.text = Ui("ui.career-interest.open", "관심사", "Interests");
+                text.text = Ui("ui.career-interest.open", "장래희망", "My Dream");
                 text.alignment = TextAnchor.MiddleCenter;
                 text.color = new Color(0.25f, 0.18f, 0.12f, 1f);
                 go.GetComponent<Button>().onClick.AddListener(() =>

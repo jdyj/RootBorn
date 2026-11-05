@@ -1,4 +1,5 @@
 using Rootborn.Game.WorldState;
+using Rootborn.Game.Localization;
 using Rootborn.UI.Modern;
 using UnityEngine;
 using UnityEngine.UI;
@@ -81,6 +82,8 @@ namespace Rootborn.UI.WorldState
         private static string Humanize(string key)
         {
             if (string.IsNullOrEmpty(key)) return string.Empty;
+            string localized = GameText.Get(key);
+            if (localized != key) return localized;
             int dot = key.LastIndexOf('.');
             return dot >= 0 && dot + 1 < key.Length ? key.Substring(dot + 1) : key;
         }

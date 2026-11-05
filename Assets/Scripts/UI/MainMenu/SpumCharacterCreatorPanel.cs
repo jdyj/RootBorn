@@ -495,11 +495,7 @@ namespace Rootborn.UI.MainMenu
 
         private static string ShortPartLabel(string id)
         {
-            if (string.IsNullOrWhiteSpace(id))
-                return string.Empty;
-
-            int separator = id.LastIndexOf('.', id.Length - 1);
-            return separator >= 0 && separator < id.Length - 1 ? id.Substring(separator + 1) : id;
+            return SpumCharacterCreatorPreview.PartLabel(id);
         }
 
         private static string SanitizeName(string value)

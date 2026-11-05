@@ -34,7 +34,7 @@ namespace Rootborn.UI.Objectives
                     "milestone." + milestone.Id,
                     Category.CategoryId,
                     ObjectiveJournalSourceText.SafeText(milestone.DisplayNameKey, milestone.Id),
-                    "Milestone growth route",
+                    ObjectiveJournalSourceText.Localized("ui.journal.milestone.subtitle", "Milestone growth route"),
                     BuildMilestoneStateText(progress, milestone),
                     BuildMilestoneProgressText(progress, milestone),
                     BuildMilestoneHintText(progress, milestone),
@@ -79,17 +79,17 @@ namespace Rootborn.UI.Objectives
         {
             if (progress.IsRewardClaimed(milestone))
             {
-                return "Reward claimed. Review this completed growth route.";
+                return ObjectiveJournalSourceText.Localized("ui.journal.milestone.claimed-hint", "Reward claimed. Review this completed growth route.");
             }
 
             if (progress.IsCompleted(milestone))
             {
-                return "Claim the milestone reward when inventory can accept it.";
+                return ObjectiveJournalSourceText.Localized("ui.journal.milestone.claim-hint", "Claim the milestone reward when inventory can accept it.");
             }
 
             string routeText = BuildMilestoneRouteText(milestone);
-            string hint = "Use any matching growth route; school is not the only path.";
-            return string.IsNullOrEmpty(routeText) ? hint : hint + " Routes: " + routeText;
+            string hint = ObjectiveJournalSourceText.Localized("ui.journal.milestone.next-hint", "Use any matching growth route; school is not the only path.");
+            return string.IsNullOrEmpty(routeText) ? hint : hint + ObjectiveJournalSourceText.LocalizedFormat("ui.journal.milestone.routes", " Routes: {0}", routeText);
         }
 
         private static string BuildMilestoneRouteText(MilestoneDefinition milestone)
@@ -104,9 +104,9 @@ namespace Rootborn.UI.Objectives
             for (int i = 0; i < routes.Length; i++)
             {
                 string id = routes[i] != null ? routes[i].RecommendedActionId : string.Empty;
-                if (!string.IsNullOrEmpty(id) && !ids.Contains(id))
+                if (!string.IsNullOrEmpty(id) && !ids.Contains(ObjectiveJournalSourceText.Shown(id)))
                 {
-                    ids.Add(id);
+                    ids.Add(ObjectiveJournalSourceText.Shown(id));
                 }
             }
 
@@ -128,7 +128,7 @@ namespace Rootborn.UI.Objectives
             var objectives = milestone.Objectives ?? Array.Empty<MilestoneObjectiveBase>();
             if (objectives.Length == 0)
             {
-                return progress.IsCompleted(milestone) ? "Completed" : "Available";
+                return ObjectiveJournalSourceText.State(progress.IsCompleted(milestone) ? "Completed" : "Available");
             }
 
             string text = string.Empty;
@@ -140,11 +140,11 @@ namespace Rootborn.UI.Objectives
                     continue;
                 }
 
-                string line = objective.Id + " " + progress.GetObjectiveProgress(milestone, objective) + " / " + objective.RequiredValue;
+                string line = ObjectiveJournalSourceText.SafeText(objective.DisplayNameKey, objective.Id) + " " + progress.GetObjectiveProgress(milestone, objective) + " / " + objective.RequiredValue;
                 text += string.IsNullOrEmpty(text) ? line : " | " + line;
             }
 
-            return string.IsNullOrEmpty(text) ? (progress.IsCompleted(milestone) ? "Completed" : "Available") : text;
+            return string.IsNullOrEmpty(text) ? ObjectiveJournalSourceText.State(progress.IsCompleted(milestone) ? "Completed" : "Available") : text;
         }
     }
 }

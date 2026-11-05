@@ -213,7 +213,7 @@ namespace Rootborn.UI.Interiors
                 return;
             }
 
-            label.text = placementModeActive ? "Placement ON" : "Placement OFF";
+            label.text = placementModeActive ? Rootborn.Game.Localization.GameText.Localized("ui.placement.on", "Placement ON") : Rootborn.Game.Localization.GameText.Localized("ui.placement.off", "Placement OFF");
             label.transform.SetAsLastSibling();
         }
     }

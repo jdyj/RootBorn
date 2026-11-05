@@ -274,7 +274,7 @@ namespace Rootborn.UI.Objectives
                 }
                 row.name="ObjectiveRow_"+i;row.SetActive(true);((RectTransform)row.transform).anchoredPosition=new Vector2(0f,-i*RowStep);
                 row.transform.Find("RowIcon").GetComponent<UrbanUiIcon>().Configure(CategoryIconKey(categoryId));
-                row.transform.Find("ObjectiveRowText").GetComponent<Text>().text=items[i].Title+"\n"+items[i].ProgressText;
+                row.transform.Find("ObjectiveRowText").GetComponent<Text>().text=ObjectiveJournalSourceText.Shown(items[i].Title)+"\n"+ObjectiveJournalSourceText.Shown(items[i].ProgressText);
                 int rowIndex=i;row.GetComponent<Button>().onClick.AddListener(()=>SelectItem(rowIndex));_listRows.Add(row);
             }
             RefreshRowColors();RefreshDetail(items[_selectedItemIndex]);
@@ -301,7 +301,7 @@ namespace Rootborn.UI.Objectives
 
         private void RefreshDetail(ObjectiveJournalItem item)
         {
-            var detail = new ObjectiveJournalDetail(item.Title, item.Subtitle, item.ProgressText, item.State, item.NextHintText, "No objective selected");
+            var detail = new ObjectiveJournalDetail(ObjectiveJournalSourceText.Shown(item.Title), ObjectiveJournalSourceText.Shown(item.Subtitle), ObjectiveJournalSourceText.Shown(item.ProgressText), ObjectiveJournalSourceText.ShownState(item.State), ObjectiveJournalSourceText.Shown(item.NextHintText), "No objective selected");
             _detailTitle.text = detail.Title;
             _detailBody.text = detail.Body;
             _detailProgress.text = detail.ProgressText;

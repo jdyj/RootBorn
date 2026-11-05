@@ -528,7 +528,7 @@ namespace Rootborn.UI.Tiles
         {
             private TilePlacementPanel _panel;
 
-            public string InteractionPrompt => "[E] Tile Placement";
+            public string InteractionPrompt => "[E] " + Rootborn.Game.Localization.GameText.Localized("ui.prompt.tile-placement", "Tile Placement");
             public Vector3 InteractionPromptOffset => new Vector3(0f, 1.15f, 0f);
             public Transform InteractionTransform => transform;
 

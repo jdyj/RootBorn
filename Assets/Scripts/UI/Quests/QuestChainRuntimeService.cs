@@ -111,12 +111,26 @@ namespace Rootborn.UI.Quests
             {
                 foreach (var chain in registry.QuestChains)
                     if (chain != null && chain.StartNpc == questEvent.Npc && log.GetState(chain) == QuestChainState.Available
-                        && log.AcceptWithContext(chain, context)) log.Track(chain);
+                        && log.AcceptWithContext(chain, context))
+                    {
+                        log.Track(chain);
+                        CreditPlanChosenBeforeStart(registry, log, session.Student, context, rewards);
+                    }
             }
             log.RecordEventWithContext(questEvent, context, rewards);
             foreach (var chain in registry.QuestChains)
                 if (chain != null) log.EvaluateStepProgress(chain, context, rewards);
             session.ReplaceQuestChains(log.ToSaveData());
+            return true;
+        }
+        // A plan picked before talking to the chain's starter would otherwise need picking again to count.
+        public static bool CreditPlanChosenBeforeStart(GameDataRegistry registry, QuestChainLog log, StudentLifeProgress student, in QuestRuntimeContext context, RewardRuntimeContext rewards)
+        {
+            string routeId = student != null ? student.DailyPlan.SelectedRouteId : string.Empty;
+            if (string.IsNullOrEmpty(routeId) || registry == null || log == null) return false;
+            var route = new DailyPlanRouteRunner().FindRoute(registry.DailyPlanRouteSets, routeId);
+            if (route == null) return false;
+            log.RecordEventWithContext(new QuestEvent(QuestEventKind.DailyPlanSelected, "daily-plan-before-start:" + student.CurrentDay + ":" + routeId, dailyPlanRoute: route), context, rewards);
             return true;
         }
         private QuestChainLog DetachedLog(AdultCareerSession session) => DetachedLog(_registry, session);
