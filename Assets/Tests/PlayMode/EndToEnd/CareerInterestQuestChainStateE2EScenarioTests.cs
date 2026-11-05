@@ -68,6 +68,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
+            yield return Rootborn.Tests.PlayMode.PlayModeScenarioStart.WaitForGameData();
             yield return ClickButton(FindButton("SpumCharacterCreatorPanel", "ConfirmButton"));
             yield return WaitForScene("Town", 20f, "QUEST-CHAIN-E2E-001 failed: SaveSlot New Game and SPUM confirm did not enter Town.");
             StudentDayRuntimeInstaller.EnsureForActiveScene();
@@ -176,6 +177,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
+            yield return Rootborn.Tests.PlayMode.PlayModeScenarioStart.WaitForGameData();
             yield return ClickButton(FindButton("SpumCharacterCreatorPanel", "ConfirmButton"));
             yield return WaitForScene("Town", 20f, "QUEST-CHAIN-E2E-009 failed: SaveSlot New Game and SPUM confirm did not enter Town.");
             StudentDayRuntimeInstaller.EnsureForActiveScene();

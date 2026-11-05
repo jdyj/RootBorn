@@ -17,15 +17,19 @@ namespace Rootborn.Tests.PlayMode
 
         public static void ConfigureFor(string testName)
         {
-            bool aboutCreator = testName.Contains("Spum") || testName.Contains("CharacterPart") || testName.Contains("Creator");
             if (s_instance == null)
             {
                 var go = new UnityEngine.GameObject("[PlayModeCreatorAutoConfirm]");
                 DontDestroyOnLoad(go);
                 s_instance = go.AddComponent<PlayModeCreatorAutoConfirm>();
             }
-            s_instance.enabled = !aboutCreator;
             s_instance._openSince = -1f;
+        }
+
+        private static bool CurrentTestIsAboutCreator()
+        {
+            string name = TestContext.CurrentContext?.Test?.FullName ?? string.Empty;
+            return name.Contains("Spum") || name.Contains("CharacterPart") || name.Contains("Creator");
         }
 
         private void Update()
@@ -33,6 +37,7 @@ namespace Rootborn.Tests.PlayMode
             float now = UnityEngine.Time.unscaledTime;
             if (now < _nextCheck) return;
             _nextCheck = now + CheckSeconds;
+            if (CurrentTestIsAboutCreator()) return;
             var panel = UnityEngine.GameObject.Find("SpumCharacterCreatorPanel");
             if (panel == null) { _openSince = -1f; return; }
             if (_openSince < 0f) _openSince = now;
@@ -45,6 +50,30 @@ namespace Rootborn.Tests.PlayMode
                 return;
             }
         }
+    }
+
+    // Applies to every test under this namespace, with or without InputTestFixture.
+    [SetUpFixture]
+    public sealed class PlayModeScenarioStart
+    {
+        [OneTimeSetUp]
+        public void Apply()
+        {
+            // Scenario tests start from Town. The House start is covered by NewGame_StartsInTheHouse and real-input play.
+            Rootborn.Game.World.WorldEntryService.SetNewGameEntryForTests("Town", "town-home-entry");
+            PlayModeCreatorAutoConfirm.ConfigureFor(string.Empty);
+        }
+
+        // A player cannot press confirm in the first frames after the menu loads, while game data is still loading. Tests can.
+        public static System.Collections.IEnumerator WaitForGameData()
+        {
+            float deadline = UnityEngine.Time.unscaledTime + 15f;
+            while (!Rootborn.Game.Common.GameDataRegistryProvider.TryGet(out _) && UnityEngine.Time.unscaledTime < deadline) yield return null;
+            yield return null;
+        }
+
+        [OneTimeTearDown]
+        public void Clear() => Rootborn.Game.World.WorldEntryService.SetNewGameEntryForTests(null, null);
     }
 
     public abstract class PlayModeInputFixture : UnityEngine.InputSystem.InputTestFixture

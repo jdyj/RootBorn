@@ -66,6 +66,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
             yield return null;
+            yield return Rootborn.Tests.PlayMode.PlayModeScenarioStart.WaitForGameData();
             yield return ClickButton(FindButton("SpumCharacterCreatorPanel", "ConfirmButton"));
             yield return WaitForScene("Town", 20f, "OBJECTIVE-JOURNAL-E2E-002 failed: SaveSlot New Game did not enter Town.");
             StudentDayRuntimeInstaller.EnsureForActiveScene();
