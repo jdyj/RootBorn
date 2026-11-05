@@ -25,7 +25,8 @@ namespace Rootborn.Game.StudentLife
             {
                 logs.AddRange(work.ApplyOutcomes(progress));
                 progress.MarkRequestApplied(requestId);
-                progress.RecordActivityCompleted(work.Id, logs.ToArray());
+                // Each settled session is a separate committed action; the day result totals them.
+                progress.RecordActivityCompleted(work.Id, logs.ToArray(), true);
             });
             result = new PartTimeWorkResult(applied ? LifeActivityResultKind.Applied : LifeActivityResultKind.InsufficientResources, progress.SaveSlot, progress.PlayerId, work.Id, work.WorkplaceId, location, npc, requestId, applied ? logs.ToArray() : Array.Empty<string>());
             return applied;

@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: MainQuest_AfterSchoolTour
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Quests.QuestStepDefinition
   _id: mainquest.AfterSchoolTour
+  _legacyStepIds: []
   _displayNameKey: opening.quest.AfterSchoolTour.name
   _descriptionKey: opening.quest.AfterSchoolTour.description
   _objectives:

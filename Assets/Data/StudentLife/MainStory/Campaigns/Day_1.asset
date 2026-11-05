@@ -16,7 +16,7 @@ MonoBehaviour:
   _displayNameKey: opening.day.1.name
   _dayNumber: 1
   _themeKey: opening.day.1.name
-  _directionText: opening.day.1.direction
+  _directionText: dream.day.1.direction
   _nextGuideText: opening.day.1.next
   _routes:
   - {fileID: 11400000, guid: b9e117022f1841c439ce93a258ca3380, type: 2}

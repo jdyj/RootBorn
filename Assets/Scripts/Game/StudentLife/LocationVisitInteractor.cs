@@ -16,7 +16,7 @@ namespace Rootborn.Game.StudentLife
         public LocationDefinition Location => _location;
         public LocationVisitResult LastResult { get; private set; }
         public int InteractionPriority => LocationInteractionPriority;
-        public string InteractionPrompt => "[E] Visit " + HumanizeDisplayKey(_location != null ? _location.DisplayNameKey : string.Empty);
+        public string InteractionPrompt => "[E] " + Rootborn.Game.Localization.GameText.FormatLocalized("ui.prompt.visit", "Visit {0}", _location != null ? Rootborn.Game.Localization.GameText.Localized(_location.DisplayNameKey, HumanizeDisplayKey(_location.DisplayNameKey)) : HumanizeDisplayKey(string.Empty));
         public Vector3 InteractionPromptOffset => new Vector3(0f, 1.05f, 0f);
         public Transform InteractionTransform => transform;
 

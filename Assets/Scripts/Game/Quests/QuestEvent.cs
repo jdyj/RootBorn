@@ -25,6 +25,7 @@ namespace Rootborn.Game.Quests
         public readonly FurnitureDefinition Furniture;
         public readonly string SurfaceId;
         public readonly DailyPlanRouteDefinition DailyPlanRoute;
+        public readonly CareerInterestDefinition CareerInterest;
         public readonly int Count;
 
         public QuestEvent(
@@ -43,7 +44,8 @@ namespace Rootborn.Game.Quests
             PartTimeWorkDefinition work = null,
             FurnitureDefinition furniture = null,
             string surfaceId = null,
-            DailyPlanRouteDefinition dailyPlanRoute = null)
+            DailyPlanRouteDefinition dailyPlanRoute = null,
+            CareerInterestDefinition careerInterest = null)
         {
             Kind = kind;
             EventKey = eventKey;
@@ -61,6 +63,7 @@ namespace Rootborn.Game.Quests
             Furniture = furniture;
             SurfaceId = surfaceId ?? string.Empty;
             DailyPlanRoute = dailyPlanRoute;
+            CareerInterest = careerInterest;
         }
     }
 }

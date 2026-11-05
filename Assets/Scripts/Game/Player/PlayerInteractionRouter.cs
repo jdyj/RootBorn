@@ -12,6 +12,12 @@ namespace Rootborn.Game.Player
         bool TryInteract(GameObject player);
     }
 
+    // Tells the player why pressing the key did nothing, when the reason is worth knowing.
+    public interface IPlayerInteractionFailureExplainer
+    {
+        string ExplainFailure(GameObject player);
+    }
+
     public interface IPlayerInteractionPromptAppearance
     {
         bool TryGetInteractionPromptColor(out Color color);
@@ -37,6 +43,11 @@ namespace Rootborn.Game.Player
         private readonly List<Rect> _promptReservations = new List<Rect>(4);
         private readonly List<Vector2> _promptFreeIntervals = new List<Vector2>(8);
         private readonly Vector3[] _promptScreenCorners = new Vector3[8];
+
+        private const float FailureMessageSeconds = 2.5f;
+        private string _failureMessage;
+        private float _failureMessageUntil;
+        private IPlayerInteractable _failureMessageTarget;
 
         public IPlayerInteractable CurrentInteractable => _currentInteractable;
         public bool PromptVisible => _promptRoot != null && _promptRoot.activeSelf;
@@ -74,7 +85,15 @@ namespace Rootborn.Game.Player
             }
 
             RefreshPrompt(interactable);
-            return interactable.TryInteract(gameObject);
+            bool interacted = interactable.TryInteract(gameObject);
+            if (!interacted && interactable is IPlayerInteractionFailureExplainer explainer)
+            {
+                _failureMessage = explainer.ExplainFailure(gameObject);
+                _failureMessageUntil = UnityEngine.Time.realtimeSinceStartup + FailureMessageSeconds;
+                _failureMessageTarget = interactable;
+                RefreshPrompt(interactable);
+            }
+            return interacted;
         }
 
         public void RefreshPromptNow()
@@ -100,7 +119,8 @@ namespace Rootborn.Game.Player
                 return;
             }
 
-            _promptText.text = interactable.InteractionPrompt;
+            bool explaining = ReferenceEquals(interactable, _failureMessageTarget) && !string.IsNullOrEmpty(_failureMessage) && UnityEngine.Time.realtimeSinceStartup < _failureMessageUntil;
+            _promptText.text = explaining ? _failureMessage : interactable.InteractionPrompt;
             _promptText.color = interactable is IPlayerInteractionPromptAppearance appearance &&
                 appearance.TryGetInteractionPromptColor(out var color)
                 ? color

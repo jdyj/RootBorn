@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.DiscoveryClues.DiscoveryClueSourceDefinition
   _id: source.discovery.board-rumor
   _kind: 1
-  _displayNameKey: Town board rumor
-  _hintTextKey: A faded notice points toward the library archive.
+  _displayNameKey: Town board notice
+  _hintTextKey: A notice recommends the library job books.
   _relatedNpc: {fileID: 0}
   _relatedWorldState: {fileID: 11400000, guid: 06790a3103ccec64a8c1c5ebbc7a64a9, type: 2}
   _strength: 1

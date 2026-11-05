@@ -16,8 +16,15 @@ MonoBehaviour:
   _displayNameKey: opening.day.2.name
   _dayNumber: 2
   _themeKey: opening.day.2.name
-  _directionText: opening.day.2.direction
-  _nextGuideText: opening.day.2.next
+  _directionText: dream.day.2.direction
+  _nextGuideText: dream.day.2.next
   _routes:
   - {fileID: 11400000, guid: 3ae7b4fe0cab9ff45bf9d37fafc6d6b4, type: 2}
   - {fileID: 11400000, guid: 9a1039d097fb3c945afeff9f0b525a00, type: 2}
+  - {fileID: 11400000, guid: a3550c42bb165edfbdb10a1a8b13bde1, type: 2}
+  - {fileID: 11400000, guid: 5483e5fa525b5d839d09efdb5e42a627, type: 2}
+  - {fileID: 11400000, guid: 1bf8a79f901d50d383cca2d699660a84, type: 2}
+  - {fileID: 11400000, guid: 4569816ae80c589f8fee265269360b25, type: 2}
+  - {fileID: 11400000, guid: 8e60ebb2c462501bb184d3a8afdea0f0, type: 2}
+  - {fileID: 11400000, guid: d6b5102df7945942b49817398b8a4e50, type: 2}
+  - {fileID: 11400000, guid: 04c0e372355d5944959a271a3257f4c5, type: 2}

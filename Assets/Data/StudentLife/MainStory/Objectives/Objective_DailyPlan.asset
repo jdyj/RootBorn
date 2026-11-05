@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d5ae6f6dbbf94b439a8a8aebe8484eb, type: 3}
   m_Name: Objective_DailyPlan
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Quests.Objectives.DailyPlanSelectedQuestObjective
-  _displayKey: opening.objective.plan
+  _displayKey: dream.objective.plan
   _requiredCount: 1

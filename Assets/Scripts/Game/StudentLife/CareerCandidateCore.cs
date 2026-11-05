@@ -295,6 +295,12 @@ namespace Rootborn.Game.StudentLife
             }
 
             CandidateStateData state = GetOrCreate(hint.Candidate.Id);
+            if (hint.AppliesOnce && state.HintIds.Contains(hint.Id))
+            {
+                _appliedSourceRequestIds.Remove(requestId);
+                return new CareerCandidateHintApplyResult(false, hint.Candidate.Id, hint.Id, hint.Candidate.GetState(this), state.UnderstandingScore);
+            }
+
             AddUnique(state.HintIds, hint.Id);
             state.UnderstandingScore = Mathf.Max(0, state.UnderstandingScore + hint.UnderstandingDelta);
             state.LastHintSourceId = requestId;

@@ -19,7 +19,7 @@ MonoBehaviour:
   _description: ui.encyclopedia.entry.clocktower-note.description
   _lockedHint: ui.encyclopedia.entry.clocktower-note.hint
   _detailLines:
-  - ui.encyclopedia.entry.clocktower-note.detail
+  - dream.encyclopedia.first-discovery.detail
   _unlockConditions:
   - {fileID: 11400000, guid: b98e7b1e85847544e8c9f89ad6b78311, type: 2}
   _revealStage: 1

@@ -23,6 +23,7 @@ namespace Rootborn.Game.Placement
         public AuthoredHousePlacementModel Model => _model;
         public FurniturePlacementRegistry Registry => _registry;
         public int UnresolvedCount => _unresolved.Count;
+        public IReadOnlyCollection<FurnitureDefinition> PlacedFurniture => _definitions.Values;
         public bool CanMutate => _canMutate == null || _canMutate();
         public void ConfigureCommit(Func<bool> canMutate, Func<FurniturePlacementSaveData[], bool> commit, Func<bool> reload=null)
         { _canMutate=canMutate; _commit=commit;_reload=reload; }

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Npc_WorkManager_Schedule_0
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Dialogue.DialogueDefinition
   _lineKeys:
-  - opening.dialogue.manager
+  - dream.dialogue.manager
   - dialogue.work-manager.workshop
   _choices: []
   _requiredTutorialStage: {fileID: 0}

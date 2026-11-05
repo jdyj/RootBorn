@@ -15,7 +15,7 @@ namespace Rootborn.Game.Interiors
         [SerializeField] private int _priority = 10;
 
         public InteriorObjectKind ObjectKind => _objectKind;
-        public string Prompt => string.IsNullOrWhiteSpace(_prompt) ? "[E] Interact" : _prompt;
+        public string Prompt => string.IsNullOrWhiteSpace(_prompt) ? "[E] Interact" : Rootborn.Game.Localization.GameText.Localized(_prompt, _prompt);
         public Vector2 ColliderSize => new Vector2(Mathf.Max(0.1f, _colliderSize.x), Mathf.Max(0.1f, _colliderSize.y));
         public Vector3 PromptOffset => _promptOffset;
         public int Priority => _priority;

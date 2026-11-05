@@ -48,6 +48,7 @@ namespace Rootborn.Game.Quests
 
     public sealed class QuestChainProgress
     {
+        private const string StepRewardPrefix = "step:";
         private readonly HashSet<string> _completedStepIds = new HashSet<string>(StringComparer.Ordinal);
         private readonly HashSet<string> _processedEventKeys = new HashSet<string>(StringComparer.Ordinal);
         private readonly HashSet<string> _rewardClaimedIds = new HashSet<string>(StringComparer.Ordinal);
@@ -236,7 +237,7 @@ namespace Rootborn.Game.Quests
             progress.ChainId = string.IsNullOrEmpty(saveData.ChainId) ? (chain != null ? chain.Id : string.Empty) : saveData.ChainId;
             if (!string.IsNullOrEmpty(saveData.ChainState) && Enum.TryParse(saveData.ChainState, out QuestChainState state)) progress.State = state;
             progress.IsTracked = saveData.IsTracked && !IsTerminalState(progress.State);
-            progress.CurrentStepId = string.IsNullOrEmpty(saveData.CurrentStepId) ? FirstStepId(chain) : saveData.CurrentStepId;
+            progress.CurrentStepId = string.IsNullOrEmpty(saveData.CurrentStepId) ? FirstStepId(chain) : ResolveSavedStepId(chain, saveData.CurrentStepId);
             progress._objectiveProgressValues = CreateObjectiveProgressValues(chain, progress.CurrentStepId);
             var restoredStep = FindStep(chain, progress.CurrentStepId);
             if (saveData.ObjectiveProgressValues != null && restoredStep != null)
@@ -248,9 +249,9 @@ namespace Rootborn.Game.Quests
                     progress._objectiveProgressValues[i] = Mathf.Clamp(saveData.ObjectiveProgressValues[i], 0, required);
                 }
             }
-            AddAll(progress._completedStepIds, saveData.CompletedStepIds);
+            AddSavedStepIds(progress._completedStepIds, chain, saveData.CompletedStepIds);
             AddAll(progress._processedEventKeys, saveData.ProcessedEventKeys);
-            AddAll(progress._rewardClaimedIds, saveData.RewardClaimedIds);
+            AddSavedRewardIds(progress._rewardClaimedIds, chain, saveData.RewardClaimedIds);
             progress.BlockedReasonId = saveData.BlockedReasonId ?? string.Empty;
             progress.LastEvaluatedConditionSummary = saveData.LastEvaluatedConditionSummary ?? string.Empty;
             progress.RelatedCareerInterestId = string.IsNullOrEmpty(saveData.RelatedCareerInterestId) ? (chain != null ? chain.RelatedCareerInterestId : string.Empty) : saveData.RelatedCareerInterestId;
@@ -278,7 +279,7 @@ namespace Rootborn.Game.Quests
             if (!ConditionsSatisfied(step.BlockConditions, in context)) return false;
             if (!TryResolveNextStep(chain, step, in context, out var nextStep)) return false;
 
-            string rewardId = "step:" + step.Id;
+            string rewardId = StepRewardPrefix + step.Id;
             int dayIndex = context.StudentLifeProgress != null ? context.StudentLifeProgress.CurrentDay : -1;
             _isApplyingStep = true;
             try
@@ -353,6 +354,8 @@ namespace Rootborn.Game.Quests
             return true;
         }
 
+        internal bool AreCurrentObjectivesComplete(QuestChainDefinition chain) => AreCurrentObjectivesComplete(GetCurrentStep(chain));
+
         private bool AreCurrentObjectivesComplete(QuestStepDefinition step)
         {
             if (step == null || step.Objectives == null || step.Objectives.Length == 0) return false;
@@ -386,6 +389,41 @@ namespace Rootborn.Game.Quests
             }
 
             return null;
+        }
+
+        // A renamed step lists its earlier ids as data, so a save that stopped there keeps going.
+        private static string ResolveSavedStepId(QuestChainDefinition chain, string savedStepId)
+        {
+            if (chain == null || chain.Steps == null || FindStep(chain, savedStepId) != null) return savedStepId;
+            for (int i = 0; i < chain.Steps.Length; i++)
+            {
+                var step = chain.Steps[i];
+                if (step == null) continue;
+                var legacyIds = step.LegacyStepIds;
+                for (int j = 0; j < legacyIds.Count; j++) if (legacyIds[j] == savedStepId) return step.Id;
+            }
+
+            return savedStepId;
+        }
+
+        private static void AddSavedStepIds(HashSet<string> target, QuestChainDefinition chain, string[] values)
+        {
+            if (values == null) return;
+            for (int i = 0; i < values.Length; i++) if (!string.IsNullOrEmpty(values[i])) target.Add(ResolveSavedStepId(chain, values[i]));
+        }
+
+        // Step reward ids embed the step id. Translate them too, or a renamed step could pay out twice.
+        private static void AddSavedRewardIds(HashSet<string> target, QuestChainDefinition chain, string[] values)
+        {
+            if (values == null) return;
+            for (int i = 0; i < values.Length; i++)
+            {
+                string value = values[i];
+                if (string.IsNullOrEmpty(value)) continue;
+                target.Add(value.StartsWith(StepRewardPrefix, StringComparison.Ordinal)
+                    ? StepRewardPrefix + ResolveSavedStepId(chain, value.Substring(StepRewardPrefix.Length))
+                    : value);
+            }
         }
 
         private static int[] CreateObjectiveProgressValues(QuestChainDefinition chain, string stepId)
@@ -560,6 +598,12 @@ namespace Rootborn.Game.Quests
                     pair.Value.TryCompleteCurrentStep(pair.Key, context, rewards);
                 }
             }
+        }
+
+        public bool AreCurrentObjectivesComplete(ScriptableObject chain)
+        {
+            var definition = chain as QuestChainDefinition;
+            return definition != null && TryGetProgress(definition, out var progress) && progress.AreCurrentObjectivesComplete(definition);
         }
 
         public bool EvaluateStepProgress(ScriptableObject chain, QuestRuntimeContext context, RewardRuntimeContext rewards)

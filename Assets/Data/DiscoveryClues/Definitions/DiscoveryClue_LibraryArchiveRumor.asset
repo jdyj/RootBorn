@@ -13,14 +13,14 @@ MonoBehaviour:
   m_Name: DiscoveryClue_LibraryArchiveRumor
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.DiscoveryClues.DiscoveryClueDefinition
   _id: clue.discovery.library-archive-rumor
-  _displayNameKey: Library archive rumor
-  _descriptionKey: Rumors suggest an archive trace.
+  _displayNameKey: Library job books
+  _descriptionKey: The library has a shelf of books about jobs.
   _relatedWorldState: {fileID: 11400000, guid: 06790a3103ccec64a8c1c5ebbc7a64a9, type: 2}
   _relatedQuest: {fileID: 11400000, guid: 9125c118047141544a56347a27c2c118, type: 2}
   _relatedLocation: {fileID: 0}
   _strength: 3
-  _publicTextKey: A rumor hints at old records under the library.
-  _hiddenTextKey: ??? archive record
+  _publicTextKey: Books about many jobs are waiting at the library.
+  _hiddenTextKey: ??? book
   _sources:
   - {fileID: 11400000, guid: be4f08106221ff1408c7733e40feccd6, type: 2}
   - {fileID: 11400000, guid: b20af07f9e6ebd645848c29212e24fd7, type: 2}

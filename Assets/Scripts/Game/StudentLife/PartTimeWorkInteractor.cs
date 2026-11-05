@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using Rootborn.Game.Localization;
 using Rootborn.Game.Player;
 using Rootborn.Game.Quests;
 using UnityEngine;
@@ -7,7 +8,7 @@ using UnityEngine;
 namespace Rootborn.Game.StudentLife
 {
     [DisallowMultipleComponent]
-    public sealed class PartTimeWorkInteractor : MonoBehaviour, IPlayerInteractable
+    public sealed class PartTimeWorkInteractor : MonoBehaviour, IPlayerInteractable, IPlayerInteractionFailureExplainer
     {
         [SerializeField] private PartTimeWorkDefinition _work;
 
@@ -22,6 +23,15 @@ namespace Rootborn.Game.StudentLife
         public void Bind(PartTimeWorkDefinition work)
         {
             _work = work;
+        }
+
+        public string ExplainFailure(GameObject player)
+        {
+            var student = player != null ? player.GetComponent<StudentLifeProgressComponent>() : null;
+            var progress = student != null ? student.EnsureProgress() : null;
+            return progress != null && progress.TimePointsRemaining <= 0
+                ? Rootborn.Game.Localization.GameText.Localized("ui.prompt.no-time", "No time left today. Try again tomorrow.")
+                : string.Empty;
         }
 
         public bool CanInteract(GameObject player)
@@ -72,6 +82,9 @@ namespace Rootborn.Game.StudentLife
             {
                 return "Part-Time Work";
             }
+
+            string localized = GameText.Get(key);
+            if (localized != key) return localized;
 
             int dot = key.LastIndexOf('.');
             string tail = dot >= 0 && dot + 1 < key.Length ? key.Substring(dot + 1) : key;

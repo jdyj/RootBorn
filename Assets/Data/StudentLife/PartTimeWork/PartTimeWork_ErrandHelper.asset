@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4723852554500a4eb6747ba22f333f8, type: 3}
+  m_Name: PartTimeWork_ErrandHelper
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.PartTimeWorkDefinition
+  _id: work.errand-helper
+  _displayNameKey: dream.work.errand-helper
+  _minigame: {fileID: 11400000, guid: c8cf22be30712c145a8c08a5214137f6, type: 2}
+  _workplace: {fileID: 11400000, guid: 4c7c31fc9de853908e0a53177932a7a9, type: 2}
+  _timePolicy: {fileID: 11400000, guid: 877e2af40acc7d749a78882afa991e80, type: 2}
+  _timeCostMinutes: 30
+  _energyCost: 1
+  _focusCost: 1
+  _stressDelta: 0
+  _rewardItems:
+  - {fileID: 11400000, guid: ef2f89c9b4c8bde48a0aea1330e022aa, type: 2}
+  _rewardCounts: 05000000
+  _requirements: []
+  _outcomes:
+  - {fileID: 11400000, guid: f32e415df46b5e23a04db51b67c4e70a, type: 2}

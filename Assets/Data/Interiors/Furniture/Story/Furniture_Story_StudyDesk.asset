@@ -14,14 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Placement.FurnitureDefinition
   _stableId: story.study-desk
   _displayName: "\uB098\uC758 \uC870\uB9BD \uCC45\uC0C1"
+  _displayNameKey: dream.furniture.study-desk.name
   _category: desk
   _allowedSurfaceIds:
   - house
   _tileParts:
   - _localCell: {x: 0, y: 0}
-    _tile: {fileID: 11400000, guid: a65c99667fc002849aa0aadb1cb23064, type: 2}
+    _tile: {fileID: 11400000, guid: 5402c5455efe4d74a8b2d11079961e5f, type: 2}
   _footprintCells:
   - {x: 0, y: 0}
+  - {x: 1, y: 0}
   _blocksMovement: 1
-  _placementPreference: 0
+  _placementPreference: 2
   _unlockToken: unlock.furniture.story.study-desk
+  _priceItem: {fileID: 11400000, guid: ef2f89c9b4c8bde48a0aea1330e022aa, type: 2}
+  _price: 10
+  _purchaseLocationId: location.corner-store

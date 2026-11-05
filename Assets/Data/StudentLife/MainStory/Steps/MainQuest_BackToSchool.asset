@@ -13,12 +13,14 @@ MonoBehaviour:
   m_Name: MainQuest_BackToSchool
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Quests.QuestStepDefinition
   _id: mainquest.BackToSchool
+  _legacyStepIds: []
   _displayNameKey: opening.quest.BackToSchool.name
-  _descriptionKey: opening.quest.BackToSchool.description
+  _descriptionKey: dream.quest.back-to-school.description
   _objectives:
   - {fileID: 11400000, guid: b09edd3d8d729484296ec001f3b3880e, type: 2}
   - {fileID: 11400000, guid: e37e194281aa45040b07c3824ddefa57, type: 2}
-  _completionConditions: []
+  _completionConditions:
+  - {fileID: 11400000, guid: 1d3d1aa87c7af93448106b347b67b6f5, type: 2}
   _blockConditions: []
   _rewards: []
   _transitions: []

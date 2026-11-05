@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: Day_3
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.CampaignDayDefinition
   _id: opening.day.3
-  _displayNameKey: opening.day.3.name
+  _displayNameKey: dream.day.3.name
   _dayNumber: 3
-  _themeKey: opening.day.3.name
-  _directionText: opening.day.3.direction
-  _nextGuideText: opening.day.3.next
+  _themeKey: dream.day.3.name
+  _directionText: dream.day.3.direction
+  _nextGuideText: dream.day.3.next
   _routes:
   - {fileID: 11400000, guid: 186cadc40935bab4688c483d4ca7c181, type: 2}
   - {fileID: 11400000, guid: 6a6b7ccb1f370a04aa37da846586c4b5, type: 2}

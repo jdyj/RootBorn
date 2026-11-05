@@ -30,7 +30,9 @@ namespace Rootborn.Game.World
         public string DestinationScene => _destinationScene;
         public string DestinationSpawnId => _destinationSpawnId;
         public int InteractionPriority => PortalInteractionPriority;
-        public string InteractionPrompt => string.IsNullOrEmpty(_displayName) ? "[E] Enter" : "[E] Enter " + _displayName;
+        public string InteractionPrompt => string.IsNullOrEmpty(_displayName)
+            ? "[E] " + Rootborn.Game.Localization.GameText.Localized("ui.prompt.enter", "Enter")
+            : "[E] " + Rootborn.Game.Localization.GameText.FormatLocalized("ui.prompt.enter-named", "Enter {0}", Rootborn.Game.Localization.GameText.Localized("ui.place." + _displayName, _displayName));
         public Vector3 InteractionPromptOffset => new Vector3(0f, 1.25f, 0f);
         public Transform InteractionTransform => transform;
         public void Bind(string displayName, string destinationScene, string destinationSpawnId)

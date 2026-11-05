@@ -12,8 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4a182fa500b91774499b242d2146ceaf, type: 3}
   m_Name: Objective_PaidWork
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Quests.Objectives.PartTimeWorkQuestObjective
-  _displayKey: opening.objective.work
+  _displayKey: dream.objective.work
   _requiredCount: 1
   _acceptedWorks:
   - {fileID: 11400000, guid: 119069712aee6c745ae6c6ebebc67e3c, type: 2}
   - {fileID: 11400000, guid: b7131be6fdb8cc440b07ec16f5bfccfd, type: 2}
+  - {fileID: 11400000, guid: c9c289becea45b908d28c435fb6f0b59, type: 2}
+  - {fileID: 11400000, guid: 9a84060315765314b1a346d162844e4f, type: 2}
+  - {fileID: 11400000, guid: 81e2783369e45e96aa6454ed51b4c620, type: 2}
+  - {fileID: 11400000, guid: 111a8911ca6f55afa8e339d56a8d2d8c, type: 2}
+  - {fileID: 11400000, guid: 06601f4b59185f48b13468c7af3ed463, type: 2}
+  - {fileID: 11400000, guid: f047c2d0fd7e553d83a2994c2747911b, type: 2}
+  - {fileID: 11400000, guid: 84aee1fb502b5814bf8492ba6105b0bb, type: 2}

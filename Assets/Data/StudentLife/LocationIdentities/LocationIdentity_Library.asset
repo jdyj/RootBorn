@@ -15,7 +15,7 @@ MonoBehaviour:
   _id: location.identity.library
   _displayNameKey: location.identity.library.name
   _location: {fileID: 11400000, guid: cbc6489c83f1f1440a50f2f18914cd32, type: 2}
-  _descriptionKey: location.identity.library.desc
+  _descriptionKey: dream.location.library.description
   _availableActivities:
   - {fileID: 11400000, guid: 9261dd8cefccadf458a9e564b07de057, type: 2}
   - {fileID: 11400000, guid: ff2f039ea8b4fbf4bb87254b7306d905, type: 2}

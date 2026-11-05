@@ -226,7 +226,7 @@ namespace Rootborn.Network.Time
 
         private static string SaveDirectory()
         {
-            return Path.Combine(Application.persistentDataPath, "world-time");
+            return Rootborn.Game.Save.SaveService.WorldTimeDirectory();
         }
 
         private static string SavePath()

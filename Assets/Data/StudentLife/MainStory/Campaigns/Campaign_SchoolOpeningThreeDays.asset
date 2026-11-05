@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.CampaignDefinition
   _id: campaign.school-opening-three-days
   _displayNameKey: opening.campaign.name
-  _descriptionKey: opening.campaign.description
+  _descriptionKey: dream.campaign.description
   _days:
   - {fileID: 11400000, guid: f2a8f3265def73843b3b65ec3e3962c4, type: 2}
   - {fileID: 11400000, guid: a1c5242506f5870498a1fad119ca97bc, type: 2}

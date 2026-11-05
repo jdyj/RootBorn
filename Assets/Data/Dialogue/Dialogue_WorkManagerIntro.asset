@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Dialogue_WorkManagerIntro
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Dialogue.DialogueDefinition
   _lineKeys:
-  - opening.dialogue.manager
+  - dream.dialogue.manager
   - dialogue.workManager.intro
   _choices: []
   _requiredTutorialStage: {fileID: 0}

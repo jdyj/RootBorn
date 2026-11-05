@@ -21,6 +21,8 @@ namespace Rootborn.Game.StudentLife
         [SerializeField] private StatusDefinition _status;
         [SerializeField] private CareerDefinition _career;
         [SerializeField] private int _delta = 1;
+        [Tooltip("Career hint only: log the unlock every time, so a hint source can still read it after another system already unlocked this career.")]
+        [SerializeField] private bool _logCareerHintEveryTime;
 
         public LocationActivityProgressTarget Target => _target;
         public int Delta => _delta;
@@ -52,7 +54,7 @@ namespace Rootborn.Game.StudentLife
             {
                 bool wasUnlocked = progress.IsCareerHintUnlocked(_career);
                 progress.UnlockCareerHint(_career);
-                return wasUnlocked ? string.Empty : LocationActivityLogCodec.EncodeUnlock(activity.Id, _career.Id);
+                return wasUnlocked && !_logCareerHintEveryTime ? string.Empty : LocationActivityLogCodec.EncodeUnlock(activity.Id, _career.Id);
             }
 
             return string.Empty;

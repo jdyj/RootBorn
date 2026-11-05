@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7059c0af4cc4a34cb6b68330bd1a0a5, type: 3}
+  m_Name: Interest_Soldier
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.CareerInterestDefinition
+  _id: interest.soldier
+  _displayNameKey: career.soldier
+  _descriptionKey: dream.interest.soldier.description
+  _candidate: {fileID: 11400000, guid: 86b890e7127be07479caca08dbb0b770, type: 2}
+  _relatedLocations:
+  - {fileID: 11400000, guid: 9eb76c11c93f49d4391ce9380b017b50, type: 2}
+  _relatedActivities:
+  - {fileID: 11400000, guid: b1b71e12b60c27b4aa3e3dd50a41569a, type: 2}
+  _unlockRequirements:
+  - {fileID: 11400000, guid: 7b4dd7c174135fba8125215bca1c1d2f, type: 2}
+  _selectionRules:
+  - {fileID: 11400000, guid: bddc546c93d05706b2b131e5d85acaf9, type: 2}
+  _recommendations:
+  - {fileID: 11400000, guid: 39482081af195e98b7f8a6c710d9acfa, type: 2}
+  _rewards:
+  - {fileID: 11400000, guid: a9991b686e11579691e9f9a00d0f7518, type: 2}
+  _linkedQuests: []
+  _followUpNpc: {fileID: 11400000, guid: 69928f36d5e3e7d48a282ead6970997e, type: 2}
+  _followUpLineKey: dream.teacher.soldier
+  _changedLineKey: dream.teacher.changed

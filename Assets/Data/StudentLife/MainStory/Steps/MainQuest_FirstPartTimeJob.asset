@@ -13,11 +13,13 @@ MonoBehaviour:
   m_Name: MainQuest_FirstPartTimeJob
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Quests.QuestStepDefinition
   _id: mainquest.FirstPartTimeJob
+  _legacyStepIds: []
   _displayNameKey: opening.quest.FirstPartTimeJob.name
-  _descriptionKey: opening.quest.FirstPartTimeJob.description
+  _descriptionKey: dream.quest.first-job.description
   _objectives:
   - {fileID: 11400000, guid: b4e5520bf5008b348bac6306114c1b66, type: 2}
-  _completionConditions: []
+  _completionConditions:
+  - {fileID: 11400000, guid: e29c6515e91562f4ab125cb7285b74c9, type: 2}
   _blockConditions: []
   _rewards: []
   _transitions: []

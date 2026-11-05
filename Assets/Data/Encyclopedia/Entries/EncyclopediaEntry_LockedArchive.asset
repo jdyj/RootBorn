@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Encyclopedia.EncyclopediaEntryDefinition
   _id: ency.location.locked-archive
   _category: {fileID: 11400000, guid: c1e9e5f494aca684e8a5ddcd36b6a07a, type: 2}
-  _displayName: ui.encyclopedia.entry.town-archive.name
+  _displayName: dream.encyclopedia.job-shelf.name
   _lockedDisplayName: ui.encyclopedia.locked.name
-  _description: ui.encyclopedia.entry.town-archive.description
-  _lockedHint: ui.encyclopedia.entry.town-archive.hint
+  _description: dream.encyclopedia.job-shelf.description
+  _lockedHint: dream.encyclopedia.job-shelf.hint
   _detailLines:
-  - ui.encyclopedia.entry.town-archive.detail
+  - dream.encyclopedia.job-shelf.detail
   _unlockConditions: []
   _revealStage: 1

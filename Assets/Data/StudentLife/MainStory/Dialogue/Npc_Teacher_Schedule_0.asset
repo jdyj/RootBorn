@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Npc_Teacher_Schedule_0
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Dialogue.DialogueDefinition
   _lineKeys:
-  - opening.dialogue.teacher
+  - dream.dialogue.teacher
   - dialogue.teacher.school
   _choices: []
   _requiredTutorialStage: {fileID: 0}

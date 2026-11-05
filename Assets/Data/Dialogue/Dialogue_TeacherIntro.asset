@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Dialogue_TeacherIntro
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Dialogue.DialogueDefinition
   _lineKeys:
-  - opening.dialogue.teacher
+  - dream.dialogue.teacher
   - dialogue.teacher.intro
   _choices: []
   _requiredTutorialStage: {fileID: 0}

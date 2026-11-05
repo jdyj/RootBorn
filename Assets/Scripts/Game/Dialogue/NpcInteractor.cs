@@ -30,6 +30,7 @@ namespace Rootborn.Game.Dialogue
         [SerializeField] private NpcDefinition _npc;
 
         private readonly DialogueSession _session = new DialogueSession();
+        private DialogueDefinition _dreamFollowUpDialogue;
         private IQuestEventSink _questEvents;
         private LocationDefinition _scheduledLocation;
         private string _scheduledTimeSlotId;
@@ -43,7 +44,7 @@ namespace Rootborn.Game.Dialogue
         public NpcDefinition Npc => _npc;
         public LocationVisitResult LastVisitResult { get; private set; }
         public int InteractionPriority => NpcInteractionPriority;
-        public string InteractionPrompt => "[E] Talk";
+        public string InteractionPrompt => "[E] " + Rootborn.Game.Localization.GameText.Localized("ui.prompt.talk", "Talk");
         public Vector3 InteractionPromptOffset => new Vector3(0f, 1.15f, 0f);
         public Transform InteractionTransform => transform;
         public event Action<NpcInteractor> OnInteracted;
@@ -143,6 +144,8 @@ namespace Rootborn.Game.Dialogue
 
         private DialogueDefinition ResolveInteractionDialogue(StudentLifeProgress progress)
         {
+            var followUp = ResolveDreamFollowUp();
+            if (followUp != null) return followUp;
             var stageDialogue = _npc != null ? _npc.ResolveDialogue(progress) : null;
             if (stageDialogue != null && _npc != null && !ReferenceEquals(stageDialogue, _npc.DefaultDialogue))
             {
@@ -150,6 +153,26 @@ namespace Rootborn.Game.Dialogue
             }
 
             return _scheduledDialogue != null ? _scheduledDialogue : stageDialogue;
+        }
+
+        private DialogueDefinition ResolveDreamFollowUp()
+        {
+            var component = _npc != null && CurrentInteractionActor != null ? CurrentInteractionActor.GetComponent<CareerInterestProgressComponent>() : null;
+            if (component == null || component.Interests == null) return null;
+            var progress = component.EnsureProgress();
+            for (int i = 0; i < component.Interests.Length; i++)
+            {
+                var interest = component.Interests[i];
+                if (interest == null || interest.Id != progress.CurrentInterestId) continue;
+                if (interest.FollowUpNpc != _npc || string.IsNullOrEmpty(interest.FollowUpLineKey) || !progress.TryBeginFollowUp()) return null;
+                CareerInterestProgressPersistence.Save(component);
+                bool changed = !string.IsNullOrEmpty(progress.PreviousInterestId) && !string.IsNullOrEmpty(interest.ChangedLineKey);
+                if (_dreamFollowUpDialogue == null) _dreamFollowUpDialogue = ScriptableObject.CreateInstance<DialogueDefinition>();
+                _dreamFollowUpDialogue.ConfigureForTests(changed ? new[] { interest.ChangedLineKey, interest.FollowUpLineKey } : new[] { interest.FollowUpLineKey }, Array.Empty<DialogueChoiceDefinition>(), Array.Empty<DialogueCondition>());
+                return _dreamFollowUpDialogue;
+            }
+
+            return null;
         }
 
         private void RecordTalkEvent()

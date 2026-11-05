@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.DiscoveryClues.ClueInterpretationDefinition
   _id: interpret.ask-librarian
   _displayNameKey: Ask Librarian
-  _descriptionKey: Ask a librarian about the discovered clue.
+  _descriptionKey: Ask a librarian about books on jobs.
   _clue: {fileID: 11400000, guid: 03fd06b7e74b3ea4f94da474e73529e9, type: 2}
   _methodKey: Ask
-  _publicTextKey: The clue suggests archive research.
+  _publicTextKey: The librarian suggests a book about jobs.
   _hiddenTextKey: ???
   _sources:
   - {fileID: 11400000, guid: ab5824c6403fd7442b654243a2d76e3c, type: 2}

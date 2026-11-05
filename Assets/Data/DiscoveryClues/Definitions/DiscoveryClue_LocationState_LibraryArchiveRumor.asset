@@ -13,14 +13,14 @@ MonoBehaviour:
   m_Name: DiscoveryClue_LocationState_LibraryArchiveRumor
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.DiscoveryClues.DiscoveryClueDefinition
   _id: clue.library-archive-rumor
-  _displayNameKey: Library Archive Rumor
-  _descriptionKey: Location state archive rumor
+  _displayNameKey: Library job books
+  _descriptionKey: A shelf of job books at the library
   _relatedWorldState: {fileID: 0}
   _relatedQuest: {fileID: 0}
   _relatedLocation: {fileID: 11400000, guid: cbc6489c83f1f1440a50f2f18914cd32, type: 2}
   _strength: 1
-  _publicTextKey: clue.public.library-archive-rumor
-  _hiddenTextKey: clue.hidden.library-archive-rumor
+  _publicTextKey: Books about many jobs are waiting at the library.
+  _hiddenTextKey: ??? book
   _sources: []
   _conditions: []
   _completions: []

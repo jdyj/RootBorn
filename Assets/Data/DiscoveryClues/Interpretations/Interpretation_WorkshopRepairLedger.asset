@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.DiscoveryClues.ClueInterpretationDefinition
   _id: interpret.workshop-repair-ledger
   _displayNameKey: Inspect workshop repair ledger
-  _descriptionKey: Interpret the clue as a workshop repair lead.
+  _descriptionKey: See how repair work is noted at the workshop.
   _clue: {fileID: 11400000, guid: 03fd06b7e74b3ea4f94da474e73529e9, type: 2}
   _methodKey: Inspect ledger
-  _publicTextKey: The clue points toward repair notes at the workshop.
+  _publicTextKey: The workshop keeps repair notes you can look at.
   _hiddenTextKey: ??? repair ledger
   _sources:
   - {fileID: 11400000, guid: 73de7faac4d8d8b4f8d358d22f9469b1, type: 2}

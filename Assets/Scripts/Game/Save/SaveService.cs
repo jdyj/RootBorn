@@ -38,6 +38,22 @@ namespace Rootborn.Game.Save
         public string Slot => _slot;
         public string DirectoryPath => _dir;
 
+        // QA and dedicated setups can keep saves away from the player's folder: -saveRoot <path>.
+        public static bool ApplyRootArgument(string[] args)
+        {
+            if (args == null) return false;
+            for (int i = 0; i < args.Length - 1; i++)
+            {
+                if (!string.Equals(args[i], "-saveRoot", StringComparison.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(args[i + 1])) continue;
+                s_rootDirectoryOverride = args[i + 1];
+                return true;
+            }
+            return false;
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void ApplyCommandLineRoot() => ApplyRootArgument(Environment.GetCommandLineArgs());
+
         public static void SetRootDirectoryForTests(string rootDirectory)
         {
             s_rootDirectoryOverride = rootDirectory;
@@ -269,6 +285,9 @@ namespace Rootborn.Game.Save
         {
             return Path.Combine(_rootDir, SanitizeOrThrow(slotId));
         }
+
+        // Lives beside the save root when -saveRoot is given, so a QA run leaves the player's file alone.
+        public static string WorldTimeDirectory() => Path.Combine(string.IsNullOrEmpty(s_rootDirectoryOverride) ? Application.persistentDataPath : s_rootDirectoryOverride, "world-time");
 
         private static string ResolveDefaultRootDirectory()
         {

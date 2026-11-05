@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
@@ -16,15 +17,15 @@ namespace Rootborn.Editor.BuildScripts
         private const string ServerName = "rootborn-server";
         private const string ClientAddressablesRuntimeDataPath = "Builds/Client/Windows/rootborn_Data/StreamingAssets/aa";
 
-        private static readonly string[] ClientScenes =
+        // The enabled build settings list is the one source of playable scenes; travel destinations must be in it.
+        public static string[] ClientScenePaths()
         {
-            "Assets/Scenes/Boot.unity",
-            "Assets/Scenes/MainMenu.unity",
-            "Assets/Scenes/HostLobby.unity",
-            "Assets/Scenes/Town.unity",
-            "Assets/Scenes/Beach.unity",
-            "Assets/Scenes/Farm.unity"
-        };
+            var scenes = new List<string>();
+            foreach (var scene in EditorBuildSettings.scenes)
+                if (scene.enabled && !string.IsNullOrEmpty(scene.path)) scenes.Add(scene.path);
+            return scenes.ToArray();
+        }
+
 
         private static readonly string[] ServerScenes =
         {
@@ -58,7 +59,7 @@ namespace Rootborn.Editor.BuildScripts
             var addressablesRuntimePath = BuildAddressables();
             var opts = new BuildPlayerOptions
             {
-                scenes = ClientScenes,
+                scenes = ClientScenePaths(),
                 target = target,
                 subtarget = (int)StandaloneBuildSubtarget.Player,
                 locationPathName = outputPath,

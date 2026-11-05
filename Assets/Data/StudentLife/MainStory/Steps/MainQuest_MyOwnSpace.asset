@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: MainQuest_MyOwnSpace
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Quests.QuestStepDefinition
   _id: mainquest.MyOwnSpace
+  _legacyStepIds: []
   _displayNameKey: opening.quest.MyOwnSpace.name
-  _descriptionKey: opening.quest.MyOwnSpace.description
+  _descriptionKey: dream.quest.my-own-space.description
   _objectives:
   - {fileID: 11400000, guid: 29915f91b76a0cb45b5c3b5bfe07eb13, type: 2}
   _completionConditions: []

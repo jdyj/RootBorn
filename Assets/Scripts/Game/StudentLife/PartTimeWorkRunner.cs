@@ -72,7 +72,8 @@ namespace Rootborn.Game.StudentLife
             logs.AddRange(work.ApplyOutcomes(progress));
             string[] outcomeLogs = logs.ToArray();
             progress.MarkRequestApplied(requestId);
-            progress.RecordActivityCompleted(work.Id, outcomeLogs);
+            // Request idempotency is checked above; a second shift is a separate committed action and the day result totals it.
+            progress.RecordActivityCompleted(work.Id, outcomeLogs, true);
             result = new PartTimeWorkResult(LifeActivityResultKind.Applied, progress.SaveSlot, progress.PlayerId, work.Id, work.WorkplaceId, locationId, npcId, requestId, outcomeLogs);
             return true;
         }
@@ -182,6 +183,28 @@ namespace Rootborn.Game.StudentLife
     public static class PartTimeWorkLogCodec
     {
         private const string Prefix = "part-time-work:";
+
+        public static string[] AggregateDeltas(string[] values)
+        {
+            if (values == null) return Array.Empty<string>();
+            var totals = new Dictionary<(string work, string target), int>();
+            foreach (string value in values)
+                if (TryParseDelta(value, out var entry))
+                {
+                    var key = (entry.WorkId, entry.TargetId);
+                    totals.TryGetValue(key, out int prior);
+                    totals[key] = prior + entry.Delta;
+                }
+            var emitted = new HashSet<(string work, string target)>();
+            var result = new List<string>();
+            foreach (string value in values)
+            {
+                if (!TryParseDelta(value, out var entry)) { result.Add(value); continue; }
+                var key = (entry.WorkId, entry.TargetId);
+                if (emitted.Add(key)) result.Add(EncodeDelta(entry.WorkId, entry.TargetId, totals[key]));
+            }
+            return result.ToArray();
+        }
 
         public static string EncodeDelta(string workId, string targetId, int delta)
         {

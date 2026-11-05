@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Rootborn.Game.Common;
+using Rootborn.Game.Quests;
 using Rootborn.Game.Save;
 using UnityEngine;
 
@@ -12,6 +14,23 @@ namespace Rootborn.Game.Placement
         public string SaveSlot;
         public string PlayerId;
         public string[] UnlockTokens = Array.Empty<string>();
+    }
+
+    public enum FurniturePurchaseResult { Purchased, NotForSale, AlreadyOwned, NotEnoughMoney, Unavailable }
+
+    public static class FurniturePurchase
+    {
+        // The price and the unlock change together. Any failure leaves both untouched, and owning it already never charges again.
+        public static FurniturePurchaseResult Try(FurnitureDefinition furniture, Inventory inventory, FurnitureUnlockProgress unlocks)
+        {
+            if (furniture == null || !furniture.IsForSale) return FurniturePurchaseResult.NotForSale;
+            if (inventory == null || unlocks == null) return FurniturePurchaseResult.Unavailable;
+            if (unlocks.IsUnlocked(furniture.UnlockToken)) return FurniturePurchaseResult.AlreadyOwned;
+            var cost = new[] { new InventoryGrant(furniture.PriceItem, furniture.Price) };
+            return inventory.TryExchange(cost, Array.Empty<InventoryGrant>(), () => unlocks.TryUnlock(furniture.UnlockToken))
+                ? FurniturePurchaseResult.Purchased
+                : FurniturePurchaseResult.NotEnoughMoney;
+        }
     }
 
     public sealed class FurnitureUnlockProgress

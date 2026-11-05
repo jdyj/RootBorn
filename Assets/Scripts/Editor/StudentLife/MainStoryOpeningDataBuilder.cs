@@ -7,19 +7,22 @@ using Rootborn.Game.Common;
 using Rootborn.Game.Dialogue;
 using Rootborn.Game.Placement;
 using Rootborn.Game.Quests;
+using Rootborn.Game.Quests.Conditions;
 using Rootborn.Game.Quests.Objectives;
 using Rootborn.Game.StudentLife;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
+using UnityEditor.SceneManagement;
+using UnityEngine.SceneManagement;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using Object = UnityEngine.Object;
 
 namespace Rootborn.Editor.StudentLife
 {
-    /// <summary>Author the common opening only. Does not choose the town's past or place world objects.</summary>
+    /// <summary>Author the common opening: school, career tour, chosen part-time work and the player's dream. Does not place world objects.</summary>
     public static class MainStoryOpeningDataBuilder
     {
         private const string Root = "Assets/Data/StudentLife/MainStory/";
@@ -28,6 +31,26 @@ namespace Rootborn.Editor.StudentLife
         private static readonly HashSet<string> Created = new HashSet<string>(StringComparer.Ordinal);
         private static readonly HashSet<string> BackedUp = new HashSet<string>(StringComparer.Ordinal);
         private static string s_runDirectory;
+        // Lines the opening once prefixed. A rebuild removes them so the dropped town-past story cannot return.
+        private static readonly string[] RetiredOpeningLines = { "opening.dialogue.librarian", "opening.dialogue.manager", "opening.dialogue.teacher" };
+
+        private sealed class DreamJob
+        {
+            public string Career, CareerId, FacilityId, LocationName, WorkName, WorkId, PlaceName, RouteName, RouteKey, TraitPath, TraitName;
+            public float PlacementOffsetX = 2f;
+            public PartTimeWorkDefinition Work;
+        }
+
+        private static readonly DreamJob[] DreamJobs =
+        {
+            new DreamJob { Career = "Chef", CareerId = "chef", FacilityId = "restaurant", LocationName = "Restaurant", WorkName = "RestaurantHelper", WorkId = "restaurant-helper", PlaceName = "Restaurant", RouteName = "RestaurantWork", RouteKey = "restaurant-work", TraitPath = "Assets/Data/StudentLife/Minigames/Traits/Trait_Taste.asset", TraitName = "Taste" },
+            new DreamJob { Career = "EmergencyCare", CareerId = "emergency-care", FacilityId = "medical-clinic", LocationName = "MedicalClinic", WorkName = "ClinicHelper", WorkId = "clinic-helper", PlaceName = "Clinic", RouteName = "ClinicWork", RouteKey = "clinic-work", TraitPath = "Assets/Data/StudentLife/Minigames/Traits/Trait_Relief.asset", TraitName = "Relief" },
+            new DreamJob { Career = "Interior", CareerId = "interior", FacilityId = "design-studio", LocationName = "DesignStudio", WorkName = "StudioHelper", WorkId = "studio-helper", PlaceName = "Studio", RouteName = "StudioWork", RouteKey = "studio-work", TraitPath = "Assets/Data/StudentLife/Minigames/Traits/Trait_Aesthetic.asset", TraitName = "Aesthetic" },
+            new DreamJob { Career = "Soldier", CareerId = "soldier", FacilityId = "training-ground", LocationName = "TrainingGround", WorkName = "TrainingHelper", WorkId = "training-helper", PlaceName = "TrainingGround", RouteName = "TrainingWork", RouteKey = "training-work", TraitPath = "Assets/Data/StudentLife/CareerPractices/Traits/Trait_Discipline.asset", TraitName = "Discipline" },
+            new DreamJob { Career = "Chef", CareerId = "chef", FacilityId = "restaurant", LocationName = "Restaurant", WorkName = "ErrandHelper", WorkId = "errand-helper", PlaceName = "Restaurant", RouteName = "ErrandWork", RouteKey = "errand-work", TraitPath = "Assets/Data/StudentLife/Minigames/Traits/Trait_Delicacy.asset", TraitName = "Delicacy", PlacementOffsetX = -2f },
+            new DreamJob { Career = "EmergencyCare", CareerId = "emergency-care", FacilityId = "medical-clinic", LocationName = "MedicalClinic", WorkName = "SupplyHelper", WorkId = "supply-helper", PlaceName = "Clinic", RouteName = "SupplyWork", RouteKey = "supply-work", TraitPath = "Assets/Data/StudentLife/CareerPractices/Traits/Trait_Calm.asset", TraitName = "Calm", PlacementOffsetX = -2f },
+            new DreamJob { Career = "Soldier", CareerId = "soldier", FacilityId = "training-ground", LocationName = "TrainingGround", WorkName = "FitnessHelper", WorkId = "fitness-helper", PlaceName = "TrainingGround", RouteName = "FitnessWork", RouteKey = "fitness-work", TraitPath = "Assets/Data/StudentLife/CareerPractices/Traits/Trait_Fitness.asset", TraitName = "Fitness", PlacementOffsetX = -2f },
+        };
         private static AddressableAssetSettings s_addressables;
 
         [Serializable] private sealed class ImportManifest
@@ -49,14 +72,14 @@ namespace Rootborn.Editor.StudentLife
         public static void Build()
         {
             Touched.Clear(); Created.Clear(); BackedUp.Clear();
-            s_runDirectory = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "output/full-design-20261027/growth-audit/authoring",
+            s_runDirectory = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "output/dream-job-20261104/builder-runs",
                 DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-fffffff", System.Globalization.CultureInfo.InvariantCulture)));
             s_addressables = AddressableAssetSettingsDefaultObject.Settings;
             if (s_addressables == null || s_addressables.FindGroup("Data")?.GetSchema<BundledAssetGroupSchema>() == null
                 || s_addressables.FindGroup("Tiles")?.GetSchema<BundledAssetGroupSchema>() == null)
                 throw new InvalidOperationException("Existing local Data and Tiles Addressables groups are required before this import.");
             var photoSprite = Required<Sprite>("Assets/Art/HousePixels/Story31/story_town_photo.png");
-            var deskSource = Required<FurnitureDefinition>("Assets/Data/Interiors/Furniture/Furniture_Desk_Basic.asset");
+            var deskSource = Required<FurnitureDefinition>("Assets/Data/Interiors/Furniture/Growth31/Furniture_Growth31_assembly_desk.asset");
             if (deskSource.TileParts.Count == 0) throw new InvalidOperationException("Furniture art must be populated before content import.");
             if (Mathf.Abs(photoSprite.pixelsPerUnit - 48f) > 0.01f) throw new InvalidOperationException("Approved town photo must keep its 48-PPU import.");
             s_registry = Required<GameDataRegistry>("Assets/Data/Registry/GameDataRegistry.asset");
@@ -78,16 +101,21 @@ namespace Rootborn.Editor.StudentLife
     
                 var locations = BuildFacilities(free);
                 var work = BuildWork(workshop, storeWork, allowance, paid);
-                var archive = BuildClue("InspectArchiveDoor", "archive-door", library, paid);
-                var ledger = BuildClue("ReadRepairLedger", "repair-ledger", workshop, paid);
-                AppendIdentityActivity("Library", archive);
-                AppendIdentityActivity("Workshop", ledger);
+                BuildDreamJobs(allowance, paid);
+                BuildDreamInterests();
+                // Activity ids stay as they were: old saves' activity logs still count toward Day 3.
+                var jobBooks = BuildDreamActivity("ReadJobBooks", "opening.clue.archive-door", "dream.activity.job-books", library, paid);
+                var watchWork = BuildDreamActivity("WatchWorkshopWork", "opening.clue.repair-ledger", "dream.activity.watch-work", workshop, paid);
+                AppendIdentityActivity("Library", jobBooks);
+                AppendIdentityActivity("Workshop", watchWork);
     
+                string storeLocationId = Required<LocationDefinition>("Assets/Data/StudentLife/Locations/Location_CornerStore.asset").Id;
                 var photo = BuildPhotoBoard(photoSprite);
                 var desk = CopyFurniture(deskSource, "StudyDesk", "story.study-desk", "나의 조립 책상", "unlock.furniture.story.study-desk");
+                Edit(desk, so => Text(so, "_category", "desk"));
                 var teacherObjective = Objective<TalkQuestObjective>("Teacher", "opening.objective.teacher");
                 Edit(teacherObjective, so => Reference(so, "_targetNpc", teacher));
-                var planObjective = Objective<DailyPlanSelectedQuestObjective>("DailyPlan", "opening.objective.plan");
+                var planObjective = Objective<DailyPlanSelectedQuestObjective>("DailyPlan", "dream.objective.plan");
                 var visits = new QuestObjectiveBase[locations.Length];
                 for (int i = 0; i < locations.Length; i++)
                 {
@@ -95,43 +123,104 @@ namespace Rootborn.Editor.StudentLife
                     Edit(visit, so => Reference(so, "_targetLocation", locations[i]));
                     visits[i] = visit;
                 }
-                var workObjective = Objective<PartTimeWorkQuestObjective>("PaidWork", "opening.objective.work");
+                var workObjective = Objective<PartTimeWorkQuestObjective>("PaidWork", "dream.objective.work");
                 // Preserve later facility mini-game work references added by world-content integration.
-                Edit(workObjective, so => { Append(so, "_acceptedWorks", storeWork); Append(so, "_acceptedWorks", work); });
-                var archiveObjective = Objective<LocationActivityQuestObjective>("ArchiveDoor", "opening.objective.archive");
-                archiveObjective.ConfigureForRuntime("opening.objective.archive", 1, archive);
-                EditorUtility.SetDirty(archiveObjective);
-                var ledgerObjective = Objective<LocationActivityQuestObjective>("RepairLedger", "opening.objective.ledger");
-                ledgerObjective.ConfigureForRuntime("opening.objective.ledger", 1, ledger);
-                EditorUtility.SetDirty(ledgerObjective);
-                var clues = Objective<AnyOfQuestObjective>("ClueAlternative", "opening.objective.clue-choice");
-                Edit(clues, so => References(so, "_alternatives", new Object[] { archiveObjective, ledgerObjective }));
-                var room = Objective<FurniturePlacedQuestObjective>("MyRoom", "opening.objective.room");
-                Edit(room, so => { References(so, "_acceptedFurniture", new Object[] { photo, desk }); Text(so, "_requiredSurfaceId", "house"); });
+                Edit(workObjective, so =>
+                {
+                    Append(so, "_acceptedWorks", storeWork); Append(so, "_acceptedWorks", work);
+                    foreach (var job in DreamJobs) Append(so, "_acceptedWorks", job.Work);
+                });
+                var jobBooksObjective = Objective<LocationActivityQuestObjective>("ReadJobBooks", "dream.objective.job-books");
+                jobBooksObjective.ConfigureForRuntime("dream.objective.job-books", 1, jobBooks);
+                EditorUtility.SetDirty(jobBooksObjective);
+                var watchWorkObjective = Objective<LocationActivityQuestObjective>("WatchWorkshopWork", "dream.objective.watch-work");
+                watchWorkObjective.ConfigureForRuntime("dream.objective.watch-work", 1, watchWork);
+                EditorUtility.SetDirty(watchWorkObjective);
+                var dreamChoice = Objective<AnyOfQuestObjective>("DreamAlternative", "dream.objective.choice");
+                // Activities stay as alternatives: a dream picked before this step sends no new event, and school-free paths stay open.
+                var selectDream = Objective<CareerInterestSelectedQuestObjective>("SelectDream", "dream.objective.select");
+                Edit(dreamChoice, so => References(so, "_alternatives", new Object[] { selectDream, jobBooksObjective, watchWorkObjective }));
+                var room = Objective<FurniturePlacedQuestObjective>("MyRoom", "dream.objective.room");
+                // Career furniture is free to place, so the chain can always finish, even in a save already on this step.
+                Edit(room, so =>
+                {
+                    References(so, "_acceptedFurniture", new Object[]
+                    {
+                        photo, desk,
+                        Required<FurnitureDefinition>("Assets/Data/Interiors/Furniture/StudentLifePixels/Furniture48/Furniture_StudentLife_toy_kitchen.asset"),
+                        Required<FurnitureDefinition>("Assets/Data/Interiors/Furniture/Growth31/Furniture_Growth31_first_aid_play_set.asset"),
+                        Required<FurnitureDefinition>("Assets/Data/Interiors/Furniture/Growth31/Furniture_Growth31_assembly_desk.asset"),
+                        Required<FurnitureDefinition>("Assets/Data/Interiors/Furniture/Activity31/Furniture_Activity31_training_tire.asset")
+                    });
+                    Text(so, "_requiredSurfaceId", "house");
+                });
+                // Sold at the corner store for allowance: two work shifts.
+                foreach (var (forSale, nameKey) in new[] { (photo, "dream.furniture.photo-board.name"), (desk, "dream.furniture.study-desk.name") })
+                    Edit(forSale, so => { Text(so, "_displayNameKey", nameKey); Reference(so, "_priceItem", allowance); Number(so, "_price", 10); Text(so, "_purchaseLocationId", storeLocationId); });
                 var steps = new[]
                 {
-                    Step("BackToSchool", new QuestObjectiveBase[] { teacherObjective, planObjective }),
+                    Step("BackToSchool", new QuestObjectiveBase[] { teacherObjective, planObjective }, descriptionKey: "dream.quest.back-to-school.description", completion: new QuestConditionBase[] { DayCondition(2, "dream.wait.next-day") }),
                     Step("AfterSchoolTour", visits),
-                    Step("FirstPartTimeJob", new QuestObjectiveBase[] { workObjective }),
-                    Step("DustySecrets", new QuestObjectiveBase[] { clues }),
-                    Step("MyOwnSpace", new QuestObjectiveBase[] { room })
+                    Step("FirstPartTimeJob", new QuestObjectiveBase[] { workObjective }, "opening.quest.FirstPartTimeJob.name", "dream.quest.first-job.description", completion: new QuestConditionBase[] { DayCondition(3, "dream.wait.next-day") }),
+                    Step("MyDream", new QuestObjectiveBase[] { dreamChoice }, "dream.quest.my-dream.name", "dream.quest.my-dream.description", new[] { "mainquest.DustySecrets" }),
+                    Step("MyOwnSpace", new QuestObjectiveBase[] { room }, "opening.quest.MyOwnSpace.name", "dream.quest.my-own-space.description")
                 };
                 var chain = Asset<QuestChainDefinition>(Root + "QuestChain_SchoolOpening.asset");
-                chain.ConfigureForTests("main-story.school-opening", "opening.chain.name", "opening.chain.description", string.Empty,
+                chain.ConfigureForTests("main-story.school-opening", "opening.chain.name", "dream.chain.description", string.Empty,
                     steps.Cast<ScriptableObject>().ToArray(), null, null, null, null, 100);
                 Edit(chain, so => Reference(so, "_startNpc", guide));
                 Register("_questChains", chain);
     
-                BuildCampaign(teacher, storeWork, work, archive, ledger);
+                BuildCampaign(teacher, storeWork, work, jobBooks, watchWork);
                 AddNpcOpeningLine(guide, "opening.dialogue.guide");
-                AddNpcOpeningLine(teacher, "opening.dialogue.teacher");
-                AddNpcOpeningLine(Required<NpcDefinition>("Assets/Data/NPCs/Npc_Librarian.asset"), "opening.dialogue.librarian");
-                AddNpcOpeningLine(Required<NpcDefinition>("Assets/Data/NPCs/Npc_WorkManager.asset"), "opening.dialogue.manager");
+                AddNpcOpeningLine(teacher, "dream.dialogue.teacher");
+                AddNpcOpeningLine(Required<NpcDefinition>("Assets/Data/NPCs/Npc_Librarian.asset"), "dream.dialogue.librarian");
+                AddNpcOpeningLine(Required<NpcDefinition>("Assets/Data/NPCs/Npc_WorkManager.asset"), "dream.dialogue.manager");
                 addresses = RegisterAddressables();
                 AssetDatabase.SaveAssets();
                 Debug.Log("[ROOTBORN] Common opening data saved. Remaining player gates: visible facility targets/heads, real mini-game work, furniture purchase offers, photo-board Game View verification, Boot input journey.");
             }
             finally { WriteManifest(addresses); }
+        }
+
+        /// <summary>Adds one saved work point beside each career facility. Safe to run again: existing points are left alone.</summary>
+        [MenuItem("Rootborn/Student Life/Place Dream Jobs In Town")]
+        public static void PlaceDreamJobsInTown()
+        {
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+            var scene = EditorSceneManager.OpenScene("Assets/Scenes/Town.unity", OpenSceneMode.Single);
+            var points = Object.FindObjectsByType<PartTimeWorkInteractor>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            var template = points.FirstOrDefault(x => x.Work != null && x.Work.Id == "work.workshop-helper");
+            if (template == null) throw new InvalidOperationException("Town needs the saved workshop work point to copy.");
+            // Check everything first, so a missing facility cannot leave only some jobs placed.
+            var transforms = Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            var pending = new List<(PartTimeWorkDefinition work, Transform anchor, float offsetX)>(DreamJobs.Length);
+            foreach (var job in DreamJobs)
+            {
+                var work = Required<PartTimeWorkDefinition>("Assets/Data/StudentLife/PartTimeWork/PartTimeWork_" + job.WorkName + ".asset");
+                if (points.Any(x => x.Work == work)) continue;
+                string anchorName = "FacilityActivities_location_" + job.FacilityId.Replace('-', '_');
+                var anchor = transforms.FirstOrDefault(x => x.name == anchorName);
+                if (anchor == null) throw new InvalidOperationException("Town is missing " + anchorName);
+                pending.Add((work, anchor, job.PlacementOffsetX));
+            }
+            if (pending.Count == 0) return;
+            // Kept under their own root so the protected original Town objects stay untouched.
+            var root = GameObject.Find("DreamJobWorkPoints");
+            if (root == null) { root = new GameObject("DreamJobWorkPoints"); SceneManager.MoveGameObjectToScene(root, scene); }
+            // Starting offsets only. Check every point in the Game View before keeping it.
+            foreach (var (work, anchor, offsetX) in pending)
+            {
+                var copy = Object.Instantiate(template.gameObject, root.transform);
+                copy.name = "PartTimeWork_" + work.Id.Replace('.', '_').Replace('-', '_');
+                copy.transform.position = anchor.position + new Vector3(offsetX, 0f, 0f);
+                var so = new SerializedObject(copy.GetComponent<PartTimeWorkInteractor>());
+                Reference(so, "_work", work);
+                so.ApplyModifiedPropertiesWithoutUndo();
+                Debug.Log("[ROOTBORN] Placed " + copy.name + " at " + copy.transform.position);
+            }
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
         }
 
         private static LocationDefinition[] BuildFacilities(ActivityTimePolicyDefinition free)
@@ -151,13 +240,15 @@ namespace Rootborn.Editor.StudentLife
                 location.ConfigureForTests("location." + ids[i], "opening.facility." + ids[i] + ".name", "opening.facility." + ids[i] + ".description",
                     location.Category, "anchor." + ids[i], position, location.RelatedRoles.ToArray(), location.RelatedNpcs.ToArray(), location.Discoveries.ToArray(), location.VisitRules.ToArray());
                 EditorUtility.SetDirty(location); Register("_locations", location);
-                var hint = Asset<LocationActivityCareerHintOutcome>(Root + "Activities/Outcomes/CareerIntroduction_" + careers[i] + ".asset");
-                hint.ConfigureForTests(Required<CareerDefinition>("Assets/Data/StudentLife/CareerPractices/Careers/Career_" + careers[i] + ".asset"));
+                // Must be a class with its own script file. Unity cannot save a second class of a shared file (m_Script: 0).
+                var hint = Asset<LocationActivityProgressDeltaOutcome>(Root + "Activities/Outcomes/CareerIntroduction_" + careers[i] + ".asset");
+                hint.ConfigureCareerHintForTests(Required<CareerDefinition>("Assets/Data/StudentLife/CareerPractices/Careers/Career_" + careers[i] + ".asset"));
                 EditorUtility.SetDirty(hint);
+                Edit(hint, so => Field(so, "_logCareerHintEveryTime").boolValue = true);
                 var introduction = Asset<LocationActivityDefinition>(Root + "Activities/LocationActivity_Introduce" + careers[i] + ".asset");
                 introduction.ConfigureForTests("opening.introduce." + ids[i], "opening.facility." + ids[i] + ".introduction", location,
                     LocationGrowthRoute.Exploration, 0, 0, 0, 0, null, new LocationActivityOutcomeBase[] { hint });
-                Edit(introduction, so => Reference(so, "_timePolicy", free)); Register("_locationActivities", introduction);
+                Edit(introduction, so => { Reference(so, "_timePolicy", free); Text(so, "_resultTextKey", "dream.facility." + ids[i] + ".result"); }); Register("_locationActivities", introduction);
                 var identity = Asset<LocationIdentityDefinition>("Assets/Data/StudentLife/LocationIdentities/LocationIdentity_" + names[i] + ".asset");
                 var activities = identity.AvailableActivities.Where(x => x != null).ToList();
                 if (!activities.Contains(introduction)) activities.Add(introduction);
@@ -201,15 +292,97 @@ namespace Rootborn.Editor.StudentLife
             return work;
         }
 
-        private static LocationActivityDefinition BuildClue(string name, string id, LocationDefinition location, ActivityTimePolicyDefinition paid)
+        private static void BuildDreamJobs(ItemDefinition allowance, ActivityTimePolicyDefinition paid)
+        {
+            const string Folder = "Assets/Data/StudentLife/PartTimeWork/";
+            var cached = typeof(PartTimeWorkDefinition).GetField("_configuredRewards", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            foreach (var job in DreamJobs)
+            {
+                var growth = Asset<WorkTraitDeltaOutcome>(Folder + "Outcomes/WorkOutcome_" + job.WorkName + job.TraitName + ".asset");
+                growth.ConfigureForTests(Required<TraitDefinition>(job.TraitPath), 1);
+                EditorUtility.SetDirty(growth);
+                var workplace = Asset<WorkplaceDefinition>(Folder + "Workplace_" + job.PlaceName + ".asset");
+                var work = Asset<PartTimeWorkDefinition>(Folder + "PartTimeWork_" + job.WorkName + ".asset");
+                // No facility head NPC exists yet, so the workplace names no NPC.
+                var placeWorks = workplace.AvailableWorks.Where(x => x != null).ToList(); if (!placeWorks.Contains(work)) placeWorks.Add(work);
+                workplace.ConfigureForTests("workplace." + job.FacilityId, "opening.facility." + job.FacilityId + ".name", "location." + job.FacilityId, string.Empty, placeWorks.ToArray());
+                EditorUtility.SetDirty(workplace); Register("_workplaces", workplace);
+                // Same size as the workshop helper: no design value exists for these jobs yet.
+                work.ConfigureForTests("work." + job.WorkId, "dream.work." + job.WorkId, workplace, 30, 1, 1, 0, null, null, new WorkOutcomeBase[] { growth });
+                var game = Required<Rootborn.Game.Minigames.MinigameDefinition>("Assets/Data/StudentLife/Minigames/Game_" + job.Career + "_Practice.asset");
+                Edit(work, so => { Reference(so, "_minigame", game); References(so, "_rewardItems", new Object[] { allowance }); Ints(so, "_rewardCounts", new[] { 5 }); Reference(so, "_timePolicy", paid); });
+                cached?.SetValue(work, null);
+                Register("_partTimeWorks", work);
+                job.Work = work;
+            }
+        }
+
+        // The first success at each job counts once toward its career, so jobs alone can reach a career.
+        private static void BuildJobHints()
+        {
+            var jobs = DreamJobs.Select(x => (x.Career, x.CareerId, x.WorkName, x.WorkId)).Append(("Interior", "interior", "WorkshopHelper", "workshop-helper"));
+            foreach (var (career, careerId, workName, workId) in jobs)
+            {
+                string facility = "Assets/Data/Careers/Facilities/" + career + "/";
+                var source = Asset<CareerResultLogHintSource>(facility + "Source_Job_" + workName + ".asset");
+                source.ConfigureForTests("work." + workId); EditorUtility.SetDirty(source);
+                var hint = Asset<CareerHintDefinition>(facility + "Hint_Job_" + workName + ".asset");
+                hint.ConfigureForTests("hint." + careerId + ".job." + workId, "career." + careerId + ".insight",
+                    Required<CareerCandidateDefinition>(facility + "Candidate_" + career + ".asset"), null, string.Empty, 1, new CareerHintSourceBase[] { source });
+                EditorUtility.SetDirty(hint); Register("_careerHints", hint);
+                Edit(hint, so => Field(so, "_appliesOnce").boolValue = true);
+            }
+        }
+
+        private static void BuildDreamInterests()
+        {
+            const string Folder = "Assets/Data/Careers/Interests/";
+            BuildJobHints();
+            var teacher = Required<NpcDefinition>("Assets/Data/NPCs/Npc_Teacher.asset");
+            var interests = new List<Object>(4);
+            foreach (var job in DreamJobs.GroupBy(x => x.Career).Select(x => x.First()))
+            {
+                string facility = "Assets/Data/Careers/Facilities/" + job.Career + "/";
+                var candidate = Required<CareerCandidateDefinition>(facility + "Candidate_" + job.Career + ".asset");
+                var source = Asset<CareerResultLogHintSource>(facility + "Source_Introduction.asset");
+                source.ConfigureForTests("opening.introduce." + job.FacilityId);
+                EditorUtility.SetDirty(source);
+                var hint = Asset<CareerHintDefinition>(facility + "Hint_Introduction.asset");
+                hint.ConfigureForTests("hint." + job.CareerId + ".introduction", "career." + job.CareerId + ".insight", candidate, null, string.Empty, 1, new CareerHintSourceBase[] { source });
+                EditorUtility.SetDirty(hint); Register("_careerHints", hint);
+                Edit(hint, so => Field(so, "_appliesOnce").boolValue = true);
+                var requirement = Asset<CareerInterestCandidateStateRequirement>(Folder + "Requirements/InterestRequirement_" + job.Career + "_CandidateRevealed.asset");
+                requirement.ConfigureForTests(CareerCandidateState.Revealed); EditorUtility.SetDirty(requirement);
+                var rule = Asset<CareerInterestDailyChangeLimitRule>(Folder + "Rules/InterestRule_" + job.Career + "_DailyChangeLimit.asset");
+                // The dream can change any time. The rule stays only to treat re-picking the same dream as a no-op.
+                rule.ConfigureForTests(99, true); EditorUtility.SetDirty(rule);
+                var recommendation = Asset<CareerInterestStaticRecommendation>(Folder + "Recommendations/InterestRecommendation_" + job.Career + ".asset");
+                recommendation.ConfigureForTests(new[] { "dream.interest." + job.CareerId + ".action" }); EditorUtility.SetDirty(recommendation);
+                var reward = Asset<CareerInterestFocusReward>(Folder + "Rewards/InterestReward_" + job.Career + "_Focus.asset");
+                reward.ConfigureForTests("interest." + job.CareerId + ":reward.focus", 1); EditorUtility.SetDirty(reward);
+                var interest = Asset<CareerInterestDefinition>(Folder + "Interest_" + job.Career + ".asset");
+                interest.ConfigureForTests("interest." + job.CareerId, "career." + job.CareerId, "dream.interest." + job.CareerId + ".description", candidate,
+                    new[] { Required<LocationDefinition>("Assets/Data/StudentLife/Locations/Location_" + job.LocationName + ".asset") },
+                    new ScriptableObject[] { Required<LocationActivityDefinition>(Root + "Activities/LocationActivity_Introduce" + job.Career + ".asset") },
+                    new CareerInterestUnlockRequirementBase[] { requirement }, new CareerInterestSelectionRuleBase[] { rule },
+                    new CareerInterestRecommendationBase[] { recommendation }, new CareerInterestRewardBase[] { reward });
+                interest.ConfigureFollowUpForTests(teacher, "dream.teacher." + job.CareerId, "dream.teacher.changed");
+                EditorUtility.SetDirty(interest);
+                interests.Add(interest);
+            }
+            // The four dreams replace the old learning/technical/service/investigation interests.
+            Edit(s_registry, so => References(so, "_careerInterests", interests.ToArray()));
+        }
+
+        private static LocationActivityDefinition BuildDreamActivity(string name, string id, string keyBase, LocationDefinition location, ActivityTimePolicyDefinition paid)
         {
             var observation = Asset<LocationActivityTraitDeltaOutcome>(Root + "Activities/Outcomes/Observation_" + name + ".asset");
             observation.ConfigureForTests(Required<TraitDefinition>("Assets/Data/StudentLife/CareerPractices/Traits/Trait_Observation.asset"), 1);
             EditorUtility.SetDirty(observation);
             var activity = Asset<LocationActivityDefinition>(Root + "Activities/LocationActivity_" + name + ".asset");
-            activity.ConfigureForTests("opening.clue." + id, "opening.clue." + id + ".action", location,
+            activity.ConfigureForTests(id, keyBase + ".action", location,
                 LocationGrowthRoute.Exploration, 20, 0, 1, 0, null, new LocationActivityOutcomeBase[] { observation });
-            Edit(activity, so => { Reference(so, "_timePolicy", paid); Text(so, "_resultTextKey", "opening.clue." + id + ".result"); }); Register("_locationActivities", activity);
+            Edit(activity, so => { Reference(so, "_timePolicy", paid); Text(so, "_resultTextKey", keyBase + ".result"); }); Register("_locationActivities", activity);
             return activity;
         }
 
@@ -250,41 +423,55 @@ namespace Rootborn.Editor.StudentLife
             var objective = Asset<T>(Root + "Objectives/Objective_" + name + ".asset");
             objective.ConfigureForRuntime(key, 1); EditorUtility.SetDirty(objective); Register("_questObjectives", objective); return objective;
         }
-        private static QuestStepDefinition Step(string name, QuestObjectiveBase[] objectives)
+        private static DayAtLeastCondition DayCondition(int day, string summaryKey)
         {
-            var step = Asset<QuestStepDefinition>(Root + "Steps/MainQuest_" + name + ".asset");
-            step.ConfigureForTests("mainquest." + name, "opening.quest." + name + ".name", "opening.quest." + name + ".description",
-                objectives, null, null, null, null); EditorUtility.SetDirty(step); return step;
+            var condition = Asset<DayAtLeastCondition>(Root + "Conditions/Condition_DayAtLeast_" + day + ".asset");
+            condition.ConfigureForTests(day, summaryKey); EditorUtility.SetDirty(condition);
+            Register("_questConditions", condition);
+            return condition;
         }
 
-        private static void BuildCampaign(NpcDefinition teacher, PartTimeWorkDefinition store, PartTimeWorkDefinition workshop, LocationActivityDefinition archive, LocationActivityDefinition ledger)
+        private static QuestStepDefinition Step(string name, QuestObjectiveBase[] objectives, string nameKey = null, string descriptionKey = null, string[] legacyStepIds = null, QuestConditionBase[] completion = null, QuestRewardBase[] rewards = null)
+        {
+            var step = Asset<QuestStepDefinition>(Root + "Steps/MainQuest_" + name + ".asset");
+            step.ConfigureForTests("mainquest." + name, nameKey ?? "opening.quest." + name + ".name", descriptionKey ?? "opening.quest." + name + ".description",
+                objectives, completion, null, rewards, null); EditorUtility.SetDirty(step);
+            if (legacyStepIds != null) Edit(step, so => Strings(so, "_legacyStepIds", legacyStepIds));
+            return step;
+        }
+
+        private static void BuildCampaign(NpcDefinition teacher, PartTimeWorkDefinition store, PartTimeWorkDefinition workshop, LocationActivityDefinition jobBooks, LocationActivityDefinition watchWork)
         {
             var days = new CampaignDayDefinition[3];
             var dayRoutes = new[]
             {
                 new[] { Route("Teacher", "npc:" + teacher.Id + ":met"), Route("SelfStudy", Required<LocationActivityDefinition>("Assets/Data/StudentLife/LocationIdentities/Activities/LocationActivity_Library_HardBook.asset").Id) },
-                new[] { Route("StoreWork", store.Id), Route("WorkshopWork", workshop.Id) },
-                new[] { Route("Archive", archive.Id), Route("Ledger", ledger.Id) }
+                new[] { Route("StoreWork", store.Id), Route("WorkshopWork", workshop.Id) }.Concat(DreamJobs.Select(job => Route(job.RouteName, job.Work.Id, job.RouteName, "dream.route." + job.RouteKey))).ToArray(),
+                // Saved route ids stay Archive and Ledger; only the assets and their text changed.
+                new[] { Route("ReadJobBooks", jobBooks.Id, "Archive", "dream.route.job-books"), Route("WatchWorkshopWork", watchWork.Id, "Ledger", "dream.route.watch-work") }
             };
+            string[] dayNames = { "opening.day.1.name", "opening.day.2.name", "dream.day.3.name" };
+            string[] dayDirections = { "dream.day.1.direction", "dream.day.2.direction", "dream.day.3.direction" };
+            string[] dayNext = { "opening.day.1.next", "dream.day.2.next", "dream.day.3.next" };
             for (int i = 0; i < days.Length; i++)
             {
                 days[i] = Asset<CampaignDayDefinition>(Root + "Campaigns/Day_" + (i + 1) + ".asset");
-                days[i].ConfigureForTests("opening.day." + (i + 1), i + 1, "opening.day." + (i + 1) + ".name",
-                    "opening.day." + (i + 1) + ".direction", "opening.day." + (i + 1) + ".next", dayRoutes[i]);
+                days[i].ConfigureForTests("opening.day." + (i + 1), i + 1, dayNames[i], dayDirections[i], dayNext[i], dayRoutes[i]);
                 EditorUtility.SetDirty(days[i]); Register("_campaignDays", days[i]);
             }
             var campaign = Asset<CampaignDefinition>(Root + "Campaigns/Campaign_SchoolOpeningThreeDays.asset");
-            campaign.ConfigureForTests("campaign.school-opening-three-days", "opening.campaign.name", "opening.campaign.description", days, null);
+            campaign.ConfigureForTests("campaign.school-opening-three-days", "opening.campaign.name", "dream.campaign.description", days, null);
             EditorUtility.SetDirty(campaign); Register("_campaigns", campaign);
             Edit(s_registry, so => Reference(so, "_defaultStudentCampaign", campaign));
         }
-        private static CampaignRouteDefinition Route(string name, string prefix)
+        private static CampaignRouteDefinition Route(string name, string prefix, string stableId = null, string keyBase = null)
         {
+            stableId = stableId ?? name; keyBase = keyBase ?? "opening.route." + name;
             var objective = Asset<CampaignActivityLogObjective>(Root + "Campaigns/Objective_" + name + ".asset");
-            objective.ConfigureForTests("opening.campaign.objective." + name, prefix, 1, false);
-            Edit(objective, so => Text(so, "_displayNameKey", "opening.route." + name)); Register("_campaignObjectives", objective);
+            objective.ConfigureForTests("opening.campaign.objective." + stableId, prefix, 1, false);
+            Edit(objective, so => Text(so, "_displayNameKey", keyBase)); Register("_campaignObjectives", objective);
             var route = Asset<CampaignRouteDefinition>(Root + "Campaigns/Route_" + name + ".asset");
-            route.ConfigureForTests("opening.route." + name, "opening.route." + name, "opening.route." + name + ".description", new CampaignObjectiveBase[] { objective });
+            route.ConfigureForTests("opening.route." + stableId, keyBase, keyBase + ".description", new CampaignObjectiveBase[] { objective });
             EditorUtility.SetDirty(route); Register("_campaignRoutes", route); return route;
         }
 
@@ -316,7 +503,7 @@ namespace Rootborn.Editor.StudentLife
         }
         private static void PrefixLine(DialogueDefinition dialogue, string key)
         {
-            var lines = dialogue.LineKeys.Where(x => x != key).ToList(); lines.Insert(0, key);
+            var lines = dialogue.LineKeys.Where(x => x != key && !RetiredOpeningLines.Contains(x)).ToList(); lines.Insert(0, key);
             Edit(dialogue, so => Strings(so, "_lineKeys", lines.ToArray()));
         }
 

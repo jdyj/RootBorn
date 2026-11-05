@@ -15,6 +15,12 @@ MonoBehaviour:
   m_GroupName: Data
   m_GUID: e2d781116d2000f4695260b282e65d7f
   m_SerializeEntries:
+  - m_GUID: 003872287d0454998c9587c5024207ca
+    m_Address: data/careers/facilities/chef/hint-job-restauranthelper
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 013bee6b476d7ae49977ef90f5885957
     m_Address: data/studentlife/mainstory/dialogue/npc-teacher-schedule-1
     m_ReadOnly: 0
@@ -50,6 +56,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0344bb6d6b7651a79fe4ba061eddad0a
+    m_Address: data/careers/facilities/emergencycare/hint-job-clinichelper
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 04c0e372355d5944959a271a3257f4c5
+    m_Address: data/studentlife/mainstory/campaigns/route-fitnesswork
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 05b305245147e0443a5a1ba2b8a8937e
     m_Address: data/studentlife/mainstory/steps/mainquest-dustysecrets
     m_ReadOnly: 0
@@ -61,6 +79,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - CareerGameplay
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 06601f4b59185f48b13468c7af3ed463
+    m_Address: data/studentlife/parttimework/parttimework-errandhelper
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0672b8c4b1f160a44bb62e5ec39ad76c
     m_Address: data/careers/facilityvisuals/soldier_lv3
@@ -97,11 +121,23 @@ MonoBehaviour:
     m_SerializedLabels:
     - MainStory
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 091cda194ef754b8952ea5e7a36a468a
+    m_Address: data/careers/facilities/interior/hint-job-studiohelper
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0a6bd193d6ef05d40b39e4eb1cbbce5d
     m_Address: data/studentlife/minigames/game_interior_work2
     m_ReadOnly: 0
     m_SerializedLabels:
     - CareerGameplay
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0ab133c88db75a46a3a06f5c5eb84db4
+    m_Address: data/studentlife/mainstory/campaigns/objective-studiowork
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0aed75d7296974545a827a33877619d2
     m_Address: data/furniture/comfy31-school-lockers
@@ -109,11 +145,23 @@ MonoBehaviour:
     m_SerializedLabels:
     - Comfy31
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0c05384b668151688a0eeacd2eae65fa
+    m_Address: data/careers/facilities/emergencycare/hint-job-supplyhelper
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0c6aeed4d7abba949aed70f63baaf69c
     m_Address: data/careers/facilities/soldier/work_3
     m_ReadOnly: 0
     m_SerializedLabels:
     - CareerGameplay
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0c78cd3d74c9535cbb7f786359db7fad
+    m_Address: data/careers/facilities/chef/source-introduction
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0ddc95c27229a76419937b1524ab4197
     m_Address: data/studentlife/minigames/game_emergencycare_work2
@@ -164,6 +212,12 @@ MonoBehaviour:
     - Archive30
     - SchoolPixels
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 111a8911ca6f55afa8e339d56a8d2d8c
+    m_Address: data/studentlife/parttimework/parttimework-traininghelper
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 114293a690e50454692acb44d0be82ab
     m_Address: data/studentlife/mainstory/campaigns/objective-ledger
     m_ReadOnly: 0
@@ -175,6 +229,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - CareerGameplay
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 11e24882f9b35dc79076f2cde3bbf498
+    m_Address: data/studentlife/parttimework/outcomes/workoutcome-traininghelperdiscipline
+    m_ReadOnly: 0
+    m_SerializedLabels:
     - MainStory
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 12cdcc13a229cec41a7f66cf3dbfcf1b
@@ -215,6 +275,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 183ab5f4ae3c5533a839b0d33646e2d0
+    m_Address: data/careers/facilities/emergencycare/source-job-supplyhelper
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 184fbe59882852708c2328d6eebf18b8
+    m_Address: data/careers/facilities/chef/hint-job-errandhelper
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 186cadc40935bab4688c483d4ca7c181
     m_Address: data/studentlife/mainstory/campaigns/route-archive
     m_ReadOnly: 0
@@ -229,6 +301,18 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 193404627d2fb604d88e4b322062d672
     m_Address: data/studentlife/mainstory/questchain-schoolopening
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 196f13689f345812a84de534e58ba176
+    m_Address: data/careers/facilities/interior/source-job-workshophelper
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1bf8a79f901d50d383cca2d699660a84
+    m_Address: data/studentlife/mainstory/campaigns/route-studiowork
     m_ReadOnly: 0
     m_SerializedLabels:
     - MainStory
@@ -249,6 +333,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - CareerGameplay
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1d3d1aa87c7af93448106b347b67b6f5
+    m_Address: data/studentlife/mainstory/conditions/condition-dayatleast-2
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1da8d3b1ecbde084b8719209d203bf78
     m_Address: data/careers/facilities/chef/autoskip_facility
@@ -356,6 +446,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2b968b9cd1a05302b794220638e961a1
+    m_Address: data/careers/facilities/soldier/hint-job-traininghelper
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2cf8bec4434f499438f761ba90da6fa9
     m_Address: data/studentlife/minigames/traits/trait_relief
     m_ReadOnly: 0
@@ -386,6 +482,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - CareerGameplay
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 324c9bc5b9b65b81be62133c760a392b
+    m_Address: data/careers/facilities/chef/source-job-restauranthelper
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3334193d2a364b24c99ca6e1017a8171
     m_Address: data/studentlife/locations/location-medicalclinic
@@ -425,6 +527,12 @@ MonoBehaviour:
     - Archive30
     - SchoolPixels
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 39482081af195e98b7f8a6c710d9acfa
+    m_Address: data/careers/interests/recommendations/interestrecommendation-soldier
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 399c3003283fdc14fb2b102a07949d1e
     m_Address: data/studentlife/mainstory/dialogue/npc-workmanager-schedule-0
     m_ReadOnly: 0
@@ -433,6 +541,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3ae7b4fe0cab9ff45bf9d37fafc6d6b4
     m_Address: data/studentlife/mainstory/campaigns/route-storework
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3bb20531016b510aa13b7aa69d27dd3f
+    m_Address: data/studentlife/mainstory/campaigns/objective-clinicwork
     m_ReadOnly: 0
     m_SerializedLabels:
     - MainStory
@@ -479,6 +593,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - MainStory
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4446a52519675e3b8762ea573c941405
+    m_Address: data/studentlife/mainstory/campaigns/objective-trainingwork
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 44bec126b07af3345bc0db051ec21dd9
     m_Address: data/furniture/activity31-wheat-planter-ripe
     m_ReadOnly: 0
@@ -495,6 +615,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - CareerGameplay
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4569816ae80c589f8fee265269360b25
+    m_Address: data/studentlife/mainstory/campaigns/route-trainingwork
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 466c6359613c10f4f9d042fd2017f996
     m_Address: data/furniture/school-chair-south
@@ -519,6 +645,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - CareerGameplay
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4824862897275753bd249a052c9ca0e6
+    m_Address: data/careers/interests/rewards/interestreward-chef-focus
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 482e300706f947a4680c6085f3e36b03
     m_Address: data/dialogue/dialogue-librarianintro
@@ -557,6 +689,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - MainStory
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4c7c31fc9de853908e0a53177932a7a9
+    m_Address: data/studentlife/parttimework/workplace-restaurant
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4d509dd3d625e9d41946b3a69a9715a0
     m_Address: data/npcs/schedules/schedule-workmanager
     m_ReadOnly: 0
@@ -581,6 +719,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - CareerGameplay
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4f0ed990500c58f597e53349d52b3391
+    m_Address: data/careers/interests/requirements/interestrequirement-emergencycare-candidaterevealed
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4f61002f68f337844bbf40e356b8ba07
     m_Address: data/careers/facilities/chef/candidate_chef
     m_ReadOnly: 0
@@ -599,11 +743,41 @@ MonoBehaviour:
     m_SerializedLabels:
     - Growth31
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5158cbe1304c52f788458ff19db1535c
+    m_Address: data/careers/interests/rules/interestrule-interior-dailychangelimit
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 516586f0d115fb347a5eb160f3934a5a
     m_Address: data/studentlife/minigames/challenges/storeintro
     m_ReadOnly: 0
     m_SerializedLabels:
     - CareerGameplay
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 51bcd0836feb5e7594f983e61051b63a
+    m_Address: data/careers/facilities/soldier/hint-job-fitnesshelper
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 527826c77c5456adbe0dd360d45d9b4e
+    m_Address: data/studentlife/mainstory/objectives/objective-selectdream
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 52b0edd65acf568898a9d25043a92677
+    m_Address: data/careers/interests/interest-soldier
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5300193a39815c699bc6f2de364b8a6e
+    m_Address: data/careers/facilities/chef/source-job-errandhelper
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 54196ec4495023d4d8abfff053527f7e
     m_Address: data/careers/facilities/chef/facility_chef
@@ -617,6 +791,18 @@ MonoBehaviour:
     m_SerializedLabels:
     - CareerGameplay
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5483e5fa525b5d839d09efdb5e42a627
+    m_Address: data/studentlife/mainstory/campaigns/route-clinicwork
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 55b601517ea45a5fa802c37fcecc92a6
+    m_Address: data/studentlife/mainstory/campaigns/objective-supplywork
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 55f7d8d399765984b893af601fc11d4d
     m_Address: data/careers/facilities/chef/level_2
     m_ReadOnly: 0
@@ -625,6 +811,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 56358f740abbb5f4ebcf47e593d000b5
     m_Address: data/studentlife/mainstory/objectives/objective-archivedoor
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 57c34e3296745bd7b5aa7a2e71130702
+    m_Address: data/careers/facilities/interior/source-introduction
     m_ReadOnly: 0
     m_SerializedLabels:
     - MainStory
@@ -711,6 +903,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - CareerGameplay
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6449ed839385522b825eb83b05908a67
+    m_Address: data/careers/interests/recommendations/interestrecommendation-emergencycare
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 64a665ef1f5b8434fb1b92201be4a90b
     m_Address: data/studentlife/mainstory/campaigns/campaign-schoolopeningthreedays
     m_ReadOnly: 0
@@ -759,11 +957,23 @@ MonoBehaviour:
     m_SerializedLabels:
     - MainStory
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6c52088483245be39e4a523707abf29b
+    m_Address: data/studentlife/parttimework/outcomes/workoutcome-supplyhelpercalm
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6cb3d4892c5fb1741804e7815cb14ae5
     m_Address: data/careers/facilities/emergencycare/hint_practice
     m_ReadOnly: 0
     m_SerializedLabels:
     - CareerGameplay
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6d184cdb98be572b869822ed5a5e8f2a
+    m_Address: data/studentlife/parttimework/outcomes/workoutcome-studiohelperaesthetic
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6e590e1b4b969a94193a18b43e89817b
     m_Address: data/interiors/furniture/story/furniture-story-studydesk
@@ -799,6 +1009,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - CareerGameplay
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7248c195e0f15da788001ebae5441e53
+    m_Address: data/careers/interests/rewards/interestreward-emergencycare-focus
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7257a6ad361254447a6208d0625c83eb
     m_Address: data/furniture/school-bookcase
@@ -848,6 +1064,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - DailyPlan
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 775beeeaa2e8575f8bc6abf75c425bc6
+    m_Address: data/careers/interests/rules/interestrule-emergencycare-dailychangelimit
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 77815244802a15b478f5ad85202357d4
     m_Address: data/studentlife/minigames/traits/trait_aesthetic
     m_ReadOnly: 0
@@ -876,6 +1098,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - StudentActivity31
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7b4dd7c174135fba8125215bca1c1d2f
+    m_Address: data/careers/interests/requirements/interestrequirement-soldier-candidaterevealed
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7cadbd0846465d9d952762bf8412aadb
+    m_Address: data/studentlife/parttimework/workplace-clinic
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7dc8a2d5fbba88f45b8047249dc337c4
     m_Address: data/careers/facilities/soldier/autoskip_facility
@@ -942,6 +1176,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - CareerGameplay
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 81e2783369e45e96aa6454ed51b4c620
+    m_Address: data/studentlife/parttimework/parttimework-studiohelper
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8223b84dfd9d1174b8ace095adb23071
     m_Address: data/careers/facilityvisuals/chef_lv2
     m_ReadOnly: 0
@@ -959,6 +1199,30 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - CareerGameplay
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8355c562fe035ec689ba2f3ef0ca1dad
+    m_Address: data/studentlife/parttimework/workplace-studio
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 83a89e3296b35da485ab24083efe9c47
+    m_Address: data/careers/facilities/emergencycare/hint-introduction
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8466408e8aac57c28a6681bc8323339c
+    m_Address: data/careers/facilities/emergencycare/source-job-clinichelper
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 84aee1fb502b5814bf8492ba6105b0bb
+    m_Address: data/studentlife/parttimework/parttimework-fitnesshelper
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 86b890e7127be07479caca08dbb0b770
     m_Address: data/careers/facilities/soldier/candidate_soldier
@@ -1025,10 +1289,22 @@ MonoBehaviour:
     m_SerializedLabels:
     - CareerGameplay
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8e60ebb2c462501bb184d3a8afdea0f0
+    m_Address: data/studentlife/mainstory/campaigns/route-errandwork
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8ea6a8ec8b7666d4bb233551bd9cac47
     m_Address: data/world/destinations/school
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8f8cce2c595a58e392e7a91182adc631
+    m_Address: data/careers/interests/recommendations/interestrecommendation-interior
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8fbd397bd43bd844e8bf11d0eba7dfc9
     m_Address: data/calendar/default
@@ -1083,6 +1359,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - Growth31
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 954c8add39ab5239a72274cae6bded83
+    m_Address: data/careers/interests/rewards/interestreward-interior-focus
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9658fe4538503904f9e332a3f98dac3a
     m_Address: data/careers/facilities/emergencycare/autoskip_mastery
     m_ReadOnly: 0
@@ -1094,6 +1376,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - CareerGameplay
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9711ad7e9ee85eacaa2d979e0fe251f4
+    m_Address: data/careers/facilities/emergencycare/source-introduction
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 980527499a90ba84891ab2382107167f
     m_Address: data/time-policy/free-morning
@@ -1135,8 +1423,20 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9a84060315765314b1a346d162844e4f
+    m_Address: data/studentlife/parttimework/parttimework-clinichelper
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9d006cfd21882bc43be5d60a5244020c
     m_Address: data/studentlife/mainstory/dialogue/npc-firstguide-schedule-0
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9d1337835007518cacefb7128f9055f9
+    m_Address: data/studentlife/parttimework/outcomes/workoutcome-fitnesshelperfitness
     m_ReadOnly: 0
     m_SerializedLabels:
     - MainStory
@@ -1183,6 +1483,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - SchoolPixels
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a21d5827a5115bc393ef5086f2b91e6d
+    m_Address: data/careers/facilities/soldier/source-introduction
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a24418dd4871b11489592445b1e59479
     m_Address: data/family/modern-farm-motion
     m_ReadOnly: 0
@@ -1200,6 +1506,18 @@ MonoBehaviour:
     m_SerializedLabels:
     - CareerGameplay
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a2ec62f421fa5ca69243e4095d4f16b2
+    m_Address: data/studentlife/mainstory/campaigns/objective-restaurantwork
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a3550c42bb165edfbdb10a1a8b13bde1
+    m_Address: data/studentlife/mainstory/campaigns/route-restaurantwork
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a41fdeac5b1444d4aa8a75d5f9f06923
     m_Address: data/studentlife/minigames/challenges/travel3
     m_ReadOnly: 0
@@ -1211,6 +1529,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - DailyPlan
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a50f11080a395dd5beec84fffd07ba46
+    m_Address: data/careers/facilities/chef/hint-introduction
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a5642a13d28637b4c8efe0582e8b218d
     m_Address: data/studentlife/minigames/bonuses/tastewarning
@@ -1231,6 +1555,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a977322ddd5255b48afd7cadbbe5abc0
     m_Address: data/studentlife/locationidentities/locationidentity-designstudio
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a9991b686e11579691e9f9a00d0f7518
+    m_Address: data/careers/interests/rewards/interestreward-soldier-focus
     m_ReadOnly: 0
     m_SerializedLabels:
     - MainStory
@@ -1296,6 +1626,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b1b71e12b60c27b4aa3e3dd50a41569a
     m_Address: data/studentlife/mainstory/activities/locationactivity-introducesoldier
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b1ce042c5a9c55339f71712f659cc6ef
+    m_Address: data/careers/facilities/soldier/source-job-fitnesshelper
     m_ReadOnly: 0
     m_SerializedLabels:
     - MainStory
@@ -1377,10 +1713,28 @@ MonoBehaviour:
     m_SerializedLabels:
     - CareerGameplay
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bae0ed0476ab53e18b66a3e1793e369b
+    m_Address: data/careers/facilities/soldier/hint-introduction
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bba7940b46fcb3045b936c26b91bf852
     m_Address: data/careers/facilityvisuals/interior_lv3
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bcb5e81c6bf45e628fafa25203c9b3a1
+    m_Address: data/studentlife/parttimework/outcomes/workoutcome-clinichelperrelief
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bddc546c93d05706b2b131e5d85acaf9
+    m_Address: data/careers/interests/rules/interestrule-soldier-dailychangelimit
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: be35b131c6598294296e92ca3f4067e2
     m_Address: data/time-policy/free-interaction
@@ -1436,6 +1790,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - WheatPlanters31
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c7b612b47553516baf4d9f4c6f58f837
+    m_Address: data/careers/facilities/soldier/source-job-traininghelper
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c8cf22be30712c145a8c08a5214137f6
     m_Address: data/studentlife/minigames/game_chef_practice
     m_ReadOnly: 0
@@ -1447,6 +1807,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - DailyPlan
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c9c289becea45b908d28c435fb6f0b59
+    m_Address: data/studentlife/parttimework/parttimework-restauranthelper
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ca274ed554b902e4d8227c7bcb4694a4
     m_Address: data/furniture/activity31-wallpaper-samples
@@ -1519,6 +1885,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d2dee5793e775958bc62c72b68eff50a
+    m_Address: data/careers/interests/requirements/interestrequirement-chef-candidaterevealed
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d3459270b73292b4ea7a50cb5521d5da
     m_Address: data/careers/facilities/emergencycare/work_3
     m_ReadOnly: 0
@@ -1549,6 +1921,30 @@ MonoBehaviour:
     m_SerializedLabels:
     - CareerGameplay
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d6b5102df7945942b49817398b8a4e50
+    m_Address: data/studentlife/mainstory/campaigns/route-supplywork
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d6ca2f13fa725fea81a908e125b37b44
+    m_Address: data/careers/facilities/interior/hint-introduction
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d709ddd1ff8d5de692e2e57d1ca35393
+    m_Address: data/careers/interests/requirements/interestrequirement-interior-candidaterevealed
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d7437f07738458069524aeb2281b8829
+    m_Address: data/careers/facilities/interior/source-job-studiohelper
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d7c9805fd3dadf540b9674cc0e7cbda4
     m_Address: data/careers/facilities/interior/world_level2
     m_ReadOnly: 0
@@ -1571,6 +1967,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - CareerGameplay
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: db2233c940a158ca910a73f521fa8ca0
+    m_Address: data/careers/interests/recommendations/interestrecommendation-chef
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dc7be1b9c80f5bef8f0a6b93428875b3
+    m_Address: data/careers/interests/interest-chef
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: dcd3d6ccad4850a439b5f85afa6bb29a
     m_Address: data/careers/facilities/interior/level_1
@@ -1613,11 +2021,23 @@ MonoBehaviour:
     m_SerializedLabels:
     - CareerGameplay
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dffdbf719ea35e38a656102dcaad8e26
+    m_Address: data/studentlife/mainstory/campaigns/objective-errandwork
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e04410fedc733e14e80f344fdeb6e462
     m_Address: data/careers/facilities/chef/source_practice
     m_ReadOnly: 0
     m_SerializedLabels:
     - CareerGameplay
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e073a8113148597eb7a0be2d8c0710a7
+    m_Address: data/studentlife/parttimework/outcomes/workoutcome-restauranthelpertaste
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e0af6d08fae7770468e7c46bc5eada6c
     m_Address: data/studentlife/mainstory/objectives/objective-visit-location-medicalclinic
@@ -1653,6 +2073,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - CareerGameplay
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e29c6515e91562f4ab125cb7285b74c9
+    m_Address: data/studentlife/mainstory/conditions/condition-dayatleast-3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e2ca181264193d849bc544a6dd8b0db8
     m_Address: data/studentlife/minigames/game_cornerstore_intro
@@ -1701,6 +2127,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e7adac1964fd52449487522421cff64d
+    m_Address: data/careers/interests/rules/interestrule-chef-dailychangelimit
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e8e0dcc6402654c4bcb63f40a524d0d2
+    m_Address: data/careers/interests/interest-interior
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e99aaaf0dd86b0b44bcc86896966b6d1
     m_Address: data/studentlife/minigames/game_soldier_work2
     m_ReadOnly: 0
@@ -1717,6 +2155,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - CareerGameplay
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ee5cc81f7dc05fdc8cd08509109d9362
+    m_Address: data/studentlife/parttimework/workplace-trainingground
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ef2f89c9b4c8bde48a0aea1330e022aa
     m_Address: data/items/item-allowance
@@ -1737,11 +2181,29 @@ MonoBehaviour:
     m_SerializedLabels:
     - MainStory
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f01d09f8f88451f9904b43a8c332aaf0
+    m_Address: data/careers/interests/interest-emergencycare
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f047c2d0fd7e553d83a2994c2747911b
+    m_Address: data/studentlife/parttimework/parttimework-supplyhelper
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f09aa2aafdd26cf42bf9d661d85527d4
     m_Address: data/careers/facilities/chef/work_3
     m_ReadOnly: 0
     m_SerializedLabels:
     - CareerGameplay
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f0d17e4363105a478b7e953c3ddf2725
+    m_Address: data/careers/facilities/interior/hint-job-workshophelper
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f1ddd3bb14119004f8e2f0afdc3c4fc9
     m_Address: data/furniture/activity31-wheat-planter-sprout
@@ -1756,6 +2218,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f2a8f3265def73843b3b65ec3e3962c4
     m_Address: data/studentlife/mainstory/campaigns/day-1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f32e415df46b5e23a04db51b67c4e70a
+    m_Address: data/studentlife/parttimework/outcomes/workoutcome-errandhelperdelicacy
     m_ReadOnly: 0
     m_SerializedLabels:
     - MainStory
@@ -1791,6 +2259,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - CareerGameplay
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f88c7786a22a58289f39e23ab301c149
+    m_Address: data/studentlife/mainstory/campaigns/objective-fitnesswork
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MainStory
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f8988bc1199e85449acb297cb6694e3e
     m_Address: data/studentlife/minigames/challenges/chef2timing

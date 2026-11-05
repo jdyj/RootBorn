@@ -15,7 +15,7 @@ MonoBehaviour:
   _id: opening.introduce.training-ground
   _displayNameKey: opening.facility.training-ground.introduction
   _location: {fileID: 11400000, guid: 9eb76c11c93f49d4391ce9380b017b50, type: 2}
-  _resultTextKey: 
+  _resultTextKey: dream.facility.training-ground.result
   _growthRoute: 6
   _timePolicy: {fileID: 11400000, guid: be35b131c6598294296e92ca3f4067e2, type: 2}
   _timeCostMinutes: 0

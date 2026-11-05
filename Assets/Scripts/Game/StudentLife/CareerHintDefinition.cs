@@ -11,6 +11,8 @@ using System;
                 [SerializeField] private CareerCandidateRouteDefinition _route;
                 [SerializeField] private string _insightKey;
                 [SerializeField] private int _understandingDelta = 1;
+                [Tooltip("Count this hint once for the candidate, however many sources trigger it again.")]
+                [SerializeField] private bool _appliesOnce;
                 [SerializeField] private CareerHintSourceBase[] _sources = Array.Empty<CareerHintSourceBase>();
         
                 public CareerCandidateDefinition Candidate => _candidate;
@@ -19,6 +21,7 @@ using System;
                 public int UnderstandingDelta => Mathf.Max(1, _understandingDelta);
                 public IReadOnlyList<CareerHintSourceBase> Sources => _sources;
         
+                public bool AppliesOnce => _appliesOnce;
                 public bool Matches(CareerCandidateEvaluationContext context)
                 {
                     if (_candidate == null || _sources == null || _sources.Length == 0) return false;

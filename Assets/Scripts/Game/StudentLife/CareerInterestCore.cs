@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Game.Dialogue;
 using Rootborn.Game.Quests;
 using UnityEngine;
 
@@ -19,6 +20,11 @@ namespace Rootborn.Game.StudentLife
         [SerializeField] private CareerInterestRecommendationBase[] _recommendations = Array.Empty<CareerInterestRecommendationBase>();
         [SerializeField] private CareerInterestRewardBase[] _rewards = Array.Empty<CareerInterestRewardBase>();
         [SerializeField] private QuestDefinition[] _linkedQuests = Array.Empty<QuestDefinition>();
+        [Tooltip("This NPC reacts once after the player picks this dream.")]
+        [SerializeField] private NpcDefinition _followUpNpc;
+        [SerializeField] private string _followUpLineKey;
+        [Tooltip("Said before the follow-up line when the player changed from another dream.")]
+        [SerializeField] private string _changedLineKey;
 
         public string DescriptionKey => string.IsNullOrEmpty(_descriptionKey) ? DisplayNameKey : _descriptionKey;
         public CareerCandidateDefinition Candidate => _candidate;
@@ -29,6 +35,16 @@ namespace Rootborn.Game.StudentLife
         public IReadOnlyList<CareerInterestRecommendationBase> Recommendations => _recommendations;
         public IReadOnlyList<CareerInterestRewardBase> Rewards => _rewards;
         public IReadOnlyList<QuestDefinition> LinkedQuests => _linkedQuests;
+        public NpcDefinition FollowUpNpc => _followUpNpc;
+        public string FollowUpLineKey => _followUpLineKey ?? string.Empty;
+        public string ChangedLineKey => _changedLineKey ?? string.Empty;
+
+        public void ConfigureFollowUpForTests(NpcDefinition npc, string lineKey, string changedLineKey)
+        {
+            _followUpNpc = npc;
+            _followUpLineKey = lineKey;
+            _changedLineKey = changedLineKey;
+        }
 
         public CareerInterestSelectionEvaluation Evaluate(CareerInterestProgress interestProgress, CareerCandidateProgress candidateProgress, StudentLifeProgress studentProgress, int day)
         {
@@ -166,6 +182,7 @@ namespace Rootborn.Game.StudentLife
         public string[] ClaimedRewardIds = Array.Empty<string>();
         public string LastRecommendationSourceVersion;
         public string[] TodayInterestActionSummary = Array.Empty<string>();
+        public string LastFollowUpInterestId;
     }
 
     public sealed class CareerInterestProgress
@@ -187,6 +204,15 @@ namespace Rootborn.Game.StudentLife
         public int LastChangedDay { get; private set; }
         public int ChangeCountForCurrentDay { get; private set; }
         public string LastRecommendationSourceVersion { get; private set; } = string.Empty;
+        public string LastFollowUpInterestId { get; private set; } = string.Empty;
+
+        // True once for each newly picked dream, so an NPC reacts to the choice without repeating itself.
+        public bool TryBeginFollowUp()
+        {
+            if (string.IsNullOrEmpty(CurrentInterestId) || LastFollowUpInterestId == CurrentInterestId) return false;
+            LastFollowUpInterestId = CurrentInterestId;
+            return true;
+        }
         public string[] SelectionHistoryIds => _selectionHistoryIds.ToArray();
         public string[] TodayInterestActionSummary => _todayInterestActionSummary.ToArray();
 
@@ -205,6 +231,7 @@ namespace Rootborn.Game.StudentLife
                 LastChangedDay = Mathf.Max(0, day);
                 AddUnique(_selectionHistoryIds, interest.Id);
                 AddUnique(_todayInterestActionSummary, interest.Id + ":selected");
+                LastFollowUpInterestId = string.Empty;
             }
 
             ApplyRewardsOnce(interest, candidateProgress, studentProgress, Mathf.Max(0, day));
@@ -215,7 +242,7 @@ namespace Rootborn.Game.StudentLife
 
         public CareerInterestProgressSaveData ToSaveData()
         {
-            return new CareerInterestProgressSaveData { SaveSlot = SaveSlot, PlayerId = PlayerId, CurrentInterestId = CurrentInterestId, PreviousInterestId = PreviousInterestId, LastChangedDay = LastChangedDay, ChangeCountForCurrentDay = ChangeCountForCurrentDay, SelectionHistoryIds = _selectionHistoryIds.ToArray(), ClaimedRewardIds = ToArray(_claimedRewardIds), LastRecommendationSourceVersion = LastRecommendationSourceVersion, TodayInterestActionSummary = _todayInterestActionSummary.ToArray() };
+            return new CareerInterestProgressSaveData { SaveSlot = SaveSlot, PlayerId = PlayerId, CurrentInterestId = CurrentInterestId, PreviousInterestId = PreviousInterestId, LastChangedDay = LastChangedDay, ChangeCountForCurrentDay = ChangeCountForCurrentDay, SelectionHistoryIds = _selectionHistoryIds.ToArray(), ClaimedRewardIds = ToArray(_claimedRewardIds), LastRecommendationSourceVersion = LastRecommendationSourceVersion, TodayInterestActionSummary = _todayInterestActionSummary.ToArray(), LastFollowUpInterestId = LastFollowUpInterestId };
         }
 
         public static CareerInterestProgress FromSaveData(CareerInterestProgressSaveData saveData)
@@ -227,6 +254,7 @@ namespace Rootborn.Game.StudentLife
             progress.LastChangedDay = Mathf.Max(0, saveData.LastChangedDay);
             progress.ChangeCountForCurrentDay = Mathf.Max(0, saveData.ChangeCountForCurrentDay);
             progress.LastRecommendationSourceVersion = string.IsNullOrEmpty(saveData.LastRecommendationSourceVersion) ? string.Empty : saveData.LastRecommendationSourceVersion;
+            progress.LastFollowUpInterestId = string.IsNullOrEmpty(saveData.LastFollowUpInterestId) ? string.Empty : saveData.LastFollowUpInterestId;
             RestoreOrderedStrings(progress._selectionHistoryIds, saveData.SelectionHistoryIds);
             RestoreStrings(progress._claimedRewardIds, saveData.ClaimedRewardIds);
             RestoreOrderedStrings(progress._todayInterestActionSummary, saveData.TodayInterestActionSummary);

@@ -8,6 +8,8 @@ namespace Rootborn.Game.Quests
     public sealed class QuestStepDefinition : ScriptableObject
     {
         [SerializeField] private string _id;
+        [Tooltip("Earlier ids of this step. Old saves that stopped on one of them resume on this step.")]
+        [SerializeField] private string[] _legacyStepIds = Array.Empty<string>();
         [SerializeField] private string _displayNameKey;
         [SerializeField] private string _descriptionKey;
         [SerializeField] private QuestObjectiveBase[] _objectives = Array.Empty<QuestObjectiveBase>();
@@ -17,6 +19,7 @@ namespace Rootborn.Game.Quests
         [SerializeField] private QuestChainTransitionBase[] _transitions = Array.Empty<QuestChainTransitionBase>();
 
         public string Id => _id;
+        public IReadOnlyList<string> LegacyStepIds => _legacyStepIds ?? Array.Empty<string>();
         public string DisplayNameKey => _displayNameKey;
         public string DescriptionKey => _descriptionKey;
         public QuestObjectiveBase[] Objectives => _objectives;

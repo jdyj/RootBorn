@@ -60,6 +60,10 @@ namespace Rootborn.Game.StudentLife
             if (_registry == null || !Registered(_registry.PartTimeWorks, work) || !Matches(student, StudentMinigameKind.PartTimeWork, work.Id, work.Minigame, requestId)) return Result(AdultCareerResultKind.InvalidRequest);
             if (!succeeded) return Forfeit(student, requestId);
             if (!new PartTimeWorkRunner().TryPerformReserved(work, student, inventory, requestId, out _)) return Result(AdultCareerResultKind.InsufficientCapacity);
+            // Real work counts toward a career, the same way a successful practice does.
+            student.CareerCandidates.ApplyFirstMatchingHint(_registry.CareerHints, student, requestId, new[] { work.Id });
+            foreach (var candidate in _registry.CareerCandidates)
+                if (candidate != null) student.CareerCandidates.TryClaimRewards(candidate, student);
             student.ClearReservedMinigame(false);
             return Result(AdultCareerResultKind.Applied);
         }

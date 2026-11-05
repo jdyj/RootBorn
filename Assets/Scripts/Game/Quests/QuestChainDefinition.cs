@@ -21,6 +21,8 @@ namespace Rootborn.Game.Quests
         [SerializeField] private QuestConditionBase[] _expirationConditions = Array.Empty<QuestConditionBase>();
         [SerializeField] private QuestRewardBase[] _completionRewards = Array.Empty<QuestRewardBase>();
         [SerializeField] private int _sortPriority;
+        [Tooltip("Kept for automated tests. Never listed in the player's objective journal.")]
+        [SerializeField] private bool _developerOnly;
 
         public string Id => _id;
         public string DisplayNameKey => _displayNameKey;
@@ -35,6 +37,7 @@ namespace Rootborn.Game.Quests
         public QuestConditionBase[] ExpirationConditions => _expirationConditions;
         public QuestRewardBase[] CompletionRewards => _completionRewards;
         public int SortPriority => _sortPriority;
+        public bool DeveloperOnly => _developerOnly;
 
         public void ConfigureForTests(
             string id,

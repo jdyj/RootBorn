@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Quests.QuestChainDefinition
   _id: main-story.school-opening
   _displayNameKey: opening.chain.name
-  _descriptionKey: opening.chain.description
+  _descriptionKey: dream.chain.description
   _relatedCareerInterestId: 
   _startNpc: {fileID: 11400000, guid: c43188909a889884792a60a1a0e1d0ba, type: 2}
   _steps:
@@ -30,3 +30,4 @@ MonoBehaviour:
   _expirationConditions: []
   _completionRewards: []
   _sortPriority: 100
+  _developerOnly: 0

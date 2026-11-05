@@ -464,7 +464,7 @@ namespace Rootborn.Game.StudentLife
         public string LastCareerHintId { get; private set; } = string.Empty;
         public string LastRequestId { get; private set; } = string.Empty;
         public LifeActivityResultKind LastResultKind { get; private set; } = LifeActivityResultKind.InvalidRequest;
-        public string InteractionPrompt => "[E] Career Practice";
+        public string InteractionPrompt => "[E] " + Rootborn.Game.Localization.GameText.Localized("ui.prompt.career-practice", "Career Practice");
         public Vector3 InteractionPromptOffset => new Vector3(0f, 1.15f, 0f);
         public Transform InteractionTransform => transform;
 

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Npc_Librarian_Schedule_1
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Dialogue.DialogueDefinition
   _lineKeys:
-  - opening.dialogue.librarian
+  - dream.dialogue.librarian
   - dialogue.librarian.square
   _choices: []
   _requiredTutorialStage: {fileID: 0}

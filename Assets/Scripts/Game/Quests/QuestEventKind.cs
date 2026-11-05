@@ -12,6 +12,8 @@ namespace Rootborn.Game.Quests
         LocationVisit,
         PartTimeWork,
         FurniturePlaced,
-        DailyPlanSelected
+        DailyPlanSelected,
+        CareerInterestSelected,
+        DayStarted
     }
 }

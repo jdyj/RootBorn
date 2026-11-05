@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Rootborn.Game.Common;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -11,6 +12,8 @@ namespace Rootborn.Game.Placement
     {
         [SerializeField] private string _stableId = string.Empty;
         [SerializeField] private string _displayName = string.Empty;
+        [Tooltip("Optional text key for furniture shown in localized screens such as the shop.")]
+        [SerializeField] private string _displayNameKey = string.Empty;
         [SerializeField] private string _category = string.Empty;
         [SerializeField] private string[] _allowedSurfaceIds = Array.Empty<string>();
         [SerializeField] private FurnitureTilePartData[] _tileParts = Array.Empty<FurnitureTilePartData>();
@@ -18,6 +21,10 @@ namespace Rootborn.Game.Placement
         [SerializeField] private bool _blocksMovement = true;
         [SerializeField] private FurniturePlacementPreference _placementPreference = FurniturePlacementPreference.Any;
         [SerializeField] private string _unlockToken = string.Empty;
+        [Tooltip("Set all three to sell this furniture. Buying grants its unlock token.")]
+        [SerializeField] private ItemDefinition _priceItem;
+        [SerializeField] private int _price;
+        [SerializeField] private string _purchaseLocationId = string.Empty;
 
         public string StableId => _stableId;
         public string DisplayName => string.IsNullOrWhiteSpace(_displayName) ? _stableId : _displayName;
@@ -27,7 +34,20 @@ namespace Rootborn.Game.Placement
         public IReadOnlyList<Vector2Int> FootprintCells => ResolveFootprintCells();
         public bool BlocksMovement => _blocksMovement;
         public FurniturePlacementPreference PlacementPreference => _placementPreference;
+        public string DisplayNameKey => _displayNameKey ?? string.Empty;
         public string UnlockToken => _unlockToken;
+        public ItemDefinition PriceItem => _priceItem;
+        public int Price => Mathf.Max(0, _price);
+        public string PurchaseLocationId => _purchaseLocationId ?? string.Empty;
+        public bool IsForSale => _priceItem != null && _price > 0 && !string.IsNullOrEmpty(_unlockToken) && !string.IsNullOrEmpty(_purchaseLocationId);
+
+        public void ConfigureSaleForTests(string unlockToken, ItemDefinition priceItem, int price, string purchaseLocationId)
+        {
+            _unlockToken = unlockToken;
+            _priceItem = priceItem;
+            _price = price;
+            _purchaseLocationId = purchaseLocationId;
+        }
 
         public static FurnitureDefinition CreateForTests(
             string stableId,

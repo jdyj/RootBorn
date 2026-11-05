@@ -9,7 +9,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 35b56ddf397895049aa43976f2c5feb5, type: 3}
   m_Name: CareerIntroduction_Soldier
-  m_EditorClassIdentifier: Rootborn.Game:Rootborn.Game.StudentLife:LocationActivityCareerHintOutcome
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.LocationActivityProgressDeltaOutcome
+  _target: 4
+  _trait: {fileID: 0}
+  _skill: {fileID: 0}
+  _relationship: {fileID: 0}
+  _status: {fileID: 0}
   _career: {fileID: 11400000, guid: 320eb5fca1391b547bfa841e95f162c2, type: 2}
+  _delta: 1
+  _logCareerHintEveryTime: 1

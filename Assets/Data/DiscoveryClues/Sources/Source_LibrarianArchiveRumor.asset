@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.DiscoveryClues.DiscoveryClueSourceDefinition
   _id: source.discovery.librarian-rumor
   _kind: 0
-  _displayNameKey: Librarian rumor
-  _hintTextKey: The librarian mentions records below the archive.
+  _displayNameKey: Librarian tip
+  _hintTextKey: The librarian recommends a book about jobs.
   _relatedNpc: {fileID: 0}
   _relatedWorldState: {fileID: 11400000, guid: 06790a3103ccec64a8c1c5ebbc7a64a9, type: 2}
   _strength: 2

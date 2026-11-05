@@ -12,6 +12,25 @@ namespace Rootborn.Game.World
         [SerializeField] private Transform[] _locationAnchors = Array.Empty<Transform>();
         [SerializeField] private LocationDefinition[] _npcLocations = Array.Empty<LocationDefinition>();
         [SerializeField] private Transform[] _npcAnchors = Array.Empty<Transform>();
+        // Separate tile colliders catch a player sliding along a wall at every seam. Merged when the scene loads:
+        // the saved scene's collider layout is pinned by reviewed evidence.
+        public static void MergeCollisionTilemaps(Scene scene)
+        {
+            if (!scene.IsValid()) return;
+            foreach (var root in scene.GetRootGameObjects())
+            foreach (var collider in root.GetComponentsInChildren<UnityEngine.Tilemaps.TilemapCollider2D>(true))
+            {
+                if (collider.compositeOperation == Collider2D.CompositeOperation.Merge) continue;
+                var body = collider.GetComponent<Rigidbody2D>();
+                if (body == null) body = collider.gameObject.AddComponent<Rigidbody2D>();
+                body.bodyType = RigidbodyType2D.Static;
+                var composite = collider.GetComponent<CompositeCollider2D>();
+                if (composite == null) composite = collider.gameObject.AddComponent<CompositeCollider2D>();
+                composite.geometryType = CompositeCollider2D.GeometryType.Polygons;
+                collider.compositeOperation = Collider2D.CompositeOperation.Merge;
+            }
+        }
+
         public static AuthoredWorldScene Find(Scene scene)
         {
             if (!scene.IsValid() || !scene.isLoaded) return null;
@@ -40,7 +59,7 @@ namespace Rootborn.Game.World
             int found = -1;
             for (int i=0;i<_locations.Length;i++)
             {
-                if (_locations[i] != location) continue;
+                if (!SameLocation(_locations[i],location)) continue;
                 if (found >= 0) return false;
                 found = i;
             }
@@ -60,13 +79,15 @@ namespace Rootborn.Game.World
             int current=0;
             for (int i=0;i<_npcLocations.Length;i++)
             {
-                if (_npcLocations[i] != location) continue;
+                if (!SameLocation(_npcLocations[i],location)) continue;
                 if (current++ != slot) continue;
                 if (!IsLocal(_npcAnchors[i])) return false;
                 position = _npcAnchors[i].position; return true;
             }
             return false;
         }
+        // Built-in scenes and the Addressables registry hold separate copies of the same asset outside the editor database.
+        private static bool SameLocation(LocationDefinition a,LocationDefinition b) => a == b || (a != null && b != null && string.Equals(a.Id,b.Id,StringComparison.Ordinal));
         private bool IsLocal(Transform value) => value != null && value.gameObject.scene == gameObject.scene;
     }
 }

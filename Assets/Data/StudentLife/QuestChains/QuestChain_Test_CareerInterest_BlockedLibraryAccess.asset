@@ -25,3 +25,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a9ea17726e539e447ba95d82c472f6c1, type: 2}
   _completionRewards: []
   _sortPriority: 5
+  _developerOnly: 1
