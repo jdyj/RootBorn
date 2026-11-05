@@ -33,7 +33,7 @@ MonoBehaviour:
     e33: 1
   m_InstancedGameObject: {fileID: 0}
   m_Flags: 1
-  m_ColliderType: 1
+  m_ColliderType: 2
 --- !u!213 &1325706125573261950
 Sprite:
   m_ObjectHideFlags: 0
