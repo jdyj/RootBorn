@@ -31,6 +31,35 @@ namespace Rootborn.Game.World
             }
         }
 
+        // The saved 512x288 frame only fits some windows; at 1080p it left wide black bars at 3x. The nearest whole zoom with a
+        // frame cut to the window keeps pixels crisp and shows nearly the same amount of the world.
+        public static Vector2Int FitPixelFrame(int width, int height, int referenceHeight)
+        {
+            int zoom = Mathf.Max(1, Mathf.RoundToInt(height / (float)Mathf.Max(1, referenceHeight)));
+            return new Vector2Int(width / zoom, height / zoom);
+        }
+
+        private UnityEngine.Rendering.Universal.PixelPerfectCamera _pixelCamera;
+        private int _savedFrameHeight, _fittedWidth, _fittedHeight;
+
+        private void Start()
+        {
+            var main = Camera.main;
+            _pixelCamera = main != null && main.gameObject.scene == gameObject.scene ? main.GetComponent<UnityEngine.Rendering.Universal.PixelPerfectCamera>() : null;
+            if (_pixelCamera != null) _savedFrameHeight = _pixelCamera.refResolutionY;
+            else enabled = false;
+        }
+
+        private void LateUpdate()
+        {
+            if (_pixelCamera == null || (Screen.width == _fittedWidth && Screen.height == _fittedHeight)) return;
+            _fittedWidth = Screen.width;
+            _fittedHeight = Screen.height;
+            var frame = FitPixelFrame(_fittedWidth, _fittedHeight, _savedFrameHeight);
+            _pixelCamera.refResolutionX = frame.x;
+            _pixelCamera.refResolutionY = frame.y;
+        }
+
         public static AuthoredWorldScene Find(Scene scene)
         {
             if (!scene.IsValid() || !scene.isLoaded) return null;

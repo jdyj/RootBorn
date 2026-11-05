@@ -196,6 +196,15 @@ namespace Rootborn.UI.MainMenu
             background.raycastTarget = false;
             _preview = preview.AddComponent<SpumCharacterCreatorPreview>();
             _preview.Build(PartsForCategories(new[] { "weapon", "weapons", "weapon-preview" }));
+            // Same layered character the save slot shows. The part names stay above it.
+            SaveSlotSelectPanel.BuildCharacterPreviewImage(preview.transform, null);
+            var character = preview.transform.Find("CharacterPreviewImage") as RectTransform;
+            if (character != null)
+            {
+                character.anchorMin = character.anchorMax = new Vector2(0.5f, 0f);
+                character.anchoredPosition = new Vector2(0f, 90f);
+                character.sizeDelta = new Vector2(150f, 150f);
+            }
         }
 
         private void CreatePageControls(Transform root)

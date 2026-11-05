@@ -900,6 +900,41 @@ namespace Rootborn.Tests.EditMode.StudentLife
             finally { UnityEngine.Object.DestroyImmediate(root); }
         }
 
+        [TestCase(1920, 1080, 480, 270)]
+        [TestCase(2560, 1440, 512, 288)]
+        [TestCase(3840, 2160, 480, 270)]
+        [TestCase(1600, 900, 533, 300)]
+        public void TownCamera_FillsTheWindowAtTheNearestWholeZoom(int width, int height, int frameWidth, int frameHeight)
+        {
+            var frame = Rootborn.Game.World.AuthoredWorldScene.FitPixelFrame(width, height, 288);
+            Assert.That(frame.x, Is.EqualTo(frameWidth));
+            Assert.That(frame.y, Is.EqualTo(frameHeight));
+        }
+
+        [Test]
+        public void CharacterPreview_ShowsTheCharacterTheGameActuallyUses()
+        {
+            var root = new GameObject("CharacterPreviewFixture");
+            GameDataRegistryProvider.SetOverrideForTests(Registry);
+            try
+            {
+                var method = typeof(Rootborn.UI.MainMenu.SaveSlotSelectPanel).GetMethod("BuildCharacterPreviewImage", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+                method.Invoke(null, new object[] { root.transform, null });
+                var growing = Rootborn.Game.Characters.Growing.GrowingCharacterRuntimeInstaller.FindDefault(Registry);
+                Assert.That(growing, Is.Not.Null);
+                var layer = root.transform.Find("CharacterPreviewImage/PreviewGrowing_Body");
+                Assert.That(layer, Is.Not.Null);
+                Assert.That(layer.GetComponent<UnityEngine.UI.Image>().sprite, Is.EqualTo(growing.Body.GetFrame(Rootborn.Game.Characters.Growing.GrowingCharacterVisualView.RowDown, Rootborn.Game.Characters.Growing.GrowingCharacterVisualView.StandingColumn)));
+                Assert.That(root.transform.Find("CharacterPreviewImage/PreviewGrowing_Head"), Is.Not.Null);
+                Assert.That(root.transform.Find("CharacterPreviewImage/PreviewGrowing_Outfit"), Is.Not.Null);
+            }
+            finally
+            {
+                GameDataRegistryProvider.SetOverrideForTests(null);
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
         [Test]
         public void StorePanel_ShowsHowMuchAllowanceThePlayerHas()
         {

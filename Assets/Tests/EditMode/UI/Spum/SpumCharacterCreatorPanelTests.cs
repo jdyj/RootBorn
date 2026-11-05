@@ -36,6 +36,7 @@ namespace Rootborn.Tests.EditMode.UI.Spum
                 AssertTab(host, "Tab_OutfitCloth");
                 AssertTab(host, "Tab_AccessoryBackHelmet");
                 Assert.IsNotNull(host.transform.Find("SpumCharacterCreatorRoot/Preview/WeaponPreview"));
+                Assert.IsNotNull(host.transform.Find("SpumCharacterCreatorRoot/Preview/CharacterPreviewImage"), "The creator shows the character, not only a list of part names.");
             }
             finally
             {

@@ -456,7 +456,24 @@ namespace Rootborn.UI.MainMenu
             return $"Body {character.BodyVariant}\nHair {character.HairVariant}\nOutfit {character.OutfitVariant}{appearance}";
         }
 
-        private static void BuildCharacterPreviewImage(Transform parent, SaveSlotMetadata metadata)
+        private static void AddGrowingPreviewLayer(Transform parent, string name, Rootborn.Game.Characters.Growing.GrowingCharacterSheetDefinition sheet)
+        {
+            var sprite = sheet != null ? sheet.GetFrame(Rootborn.Game.Characters.Growing.GrowingCharacterVisualView.RowDown, Rootborn.Game.Characters.Growing.GrowingCharacterVisualView.StandingColumn) : null;
+            if (sprite == null) return;
+            var layer = new GameObject(name, typeof(RectTransform), typeof(Image));
+            layer.transform.SetParent(parent, false);
+            var rect = (RectTransform)layer.transform;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            var image = layer.GetComponent<Image>();
+            image.sprite = sprite;
+            image.preserveAspect = true;
+            image.raycastTarget = false;
+        }
+
+        internal static void BuildCharacterPreviewImage(Transform parent, SaveSlotMetadata metadata)
         {
             var go = new GameObject("CharacterPreviewImage", typeof(RectTransform), typeof(Image));
             go.transform.SetParent(parent, false);
@@ -474,6 +491,20 @@ namespace Rootborn.UI.MainMenu
             int hairVariant = character != null ? character.HairVariant : 0;
             int outfitVariant = character != null ? character.OutfitVariant : 0;
             background.color = CharacterPreviewColor(bodyVariant, hairVariant, outfitVariant);
+
+            // Draw the same layered character the game plays with.
+            if (GameDataRegistryProvider.TryGet(out var gameData) && gameData != null)
+            {
+                var growing = Rootborn.Game.Characters.Growing.GrowingCharacterRuntimeInstaller.FindDefault(gameData);
+                if (growing != null)
+                {
+                    background.color = Color.clear;
+                    AddGrowingPreviewLayer(go.transform, "PreviewGrowing_Body", growing.Body);
+                    AddGrowingPreviewLayer(go.transform, "PreviewGrowing_Outfit", growing.Outfit);
+                    AddGrowingPreviewLayer(go.transform, "PreviewGrowing_Head", growing.Head);
+                    return;
+                }
+            }
 
             var registry = Rootborn.Game.Managers.Managers.Data != null ? Rootborn.Game.Managers.Managers.Data.Registry : null;
             if (registry == null || registry.CharacterParts == null || registry.CharacterParts.Length == 0)

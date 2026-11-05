@@ -16,11 +16,11 @@ namespace Rootborn.Game.Characters.Growing
         public const string OutfitLayerName = "Growing_Outfit";
         public const string HeadLayerName = "Growing_Head";
 
-        private const int RowDown = 0;
+        public const int RowDown = 0;
         private const int RowLeft = 1;
         private const int RowRight = 2;
         private const int RowUp = 3;
-        private const int StandingColumn = 1;
+        public const int StandingColumn = 1;
         private const int FirstActionColumn = 3;
         private const int ActionColumnCount = 2;
         private const float MoveThresholdSqr = 0.0001f;
