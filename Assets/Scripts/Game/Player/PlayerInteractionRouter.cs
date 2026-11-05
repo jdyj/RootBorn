@@ -170,6 +170,8 @@ namespace Rootborn.Game.Player
                         _promptReservations, PromptScreenPadding, _promptFreeIntervals, out var fitted, out float scale))
                     break;
 
+                // A collapsed or non-finite measurement would poison the persistent prompt for every later scene.
+                if (!float.IsFinite(scale) || scale <= 0f || !float.IsFinite(fitted.center.x) || !float.IsFinite(actual.center.x)) break;
                 if (scale < 1f && actual.width - fitted.width > 0.01f)
                 {
                     promptTransform.localScale *= scale;
@@ -181,6 +183,7 @@ namespace Rootborn.Game.Player
                 {
                     var anchorOnScreen = _promptCamera.WorldToScreenPoint(promptTransform.position);
                     anchorOnScreen.x += horizontalDelta;
+                    if (!float.IsFinite(anchorOnScreen.x) || !float.IsFinite(anchorOnScreen.y) || !float.IsFinite(anchorOnScreen.z)) break;
                     var shifted = _promptCamera.ScreenToWorldPoint(anchorOnScreen);
                     if (float.IsNaN(shifted.x) || float.IsInfinity(shifted.x)) break;
                     promptTransform.position = new Vector3(shifted.x, authoredPosition.y, authoredPosition.z);
