@@ -452,6 +452,31 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             yield return WaitForPlayerReady(failure);
         }
 
+        // Walks next to a point, checks a prompt is shown, and presses E.
+        public static IEnumerator WalkAndInteract(Keyboard keyboard, Vector3 target, string failure)
+        {
+            var player = GameObject.Find("Player");
+            yield return WalkPlayerWithKeyboardTo(player, keyboard, target, 0.9f, 900, failure + ": could not walk there.");
+            var router = player.GetComponent<Rootborn.Game.Player.PlayerInteractionRouter>();
+            router.RefreshPromptNow();
+            Assert.IsTrue(router.PromptVisible, failure + ": no prompt there.");
+            yield return PressInteractKey(keyboard);
+            yield return null;
+        }
+
+        // Walks to a placed location point, opens its activity panel with E, presses one activity button and closes the panel.
+        public static IEnumerator UseLocationActivity(Keyboard keyboard, string pointName, int activityIndex, string failure)
+        {
+            var point = GameObject.Find(pointName);
+            Assert.IsNotNull(point, failure + " no point named " + pointName + ".");
+            yield return WalkAndInteract(keyboard, point.transform.position, failure + " " + pointName);
+            var panel = Object.FindFirstObjectByType<Rootborn.UI.StudentLife.LocationIdentityPanel>(FindObjectsInactive.Include);
+            Assert.IsTrue(panel != null && panel.IsOpen, failure + " E at " + pointName + " did not open its activity panel.");
+            yield return ClickButton(FindButton(panel.transform, "LocationActivityButton_" + activityIndex));
+            Assert.AreEqual(Rootborn.Game.StudentLife.LifeActivityResultKind.Applied, panel.LastResult.Kind, failure + " the activity at " + pointName + " did not apply (" + panel.LastResult.Kind + ").");
+            if (panel.IsOpen) yield return ClickButton(FindButton(panel.transform, "CloseLocation"));
+        }
+
         // Plays the open minigame through its on-screen buttons, the way a player reads and answers the screen.
         // Sequence: remember the order while it is shown, then press it back. Timing: press Tap while the cursor is over a beat.
         // Choice: press the hinted answer when the screen marks one. Placement and dodge stages are not driven yet.

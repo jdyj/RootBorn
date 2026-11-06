@@ -8,6 +8,7 @@ using Rootborn.Game.Save;
 using Rootborn.Game.StudentLife;
 using Rootborn.UI.MainMenu;
 using Rootborn.UI.StudentLife;
+using Rootborn.Tests.PlayMode.EndToEnd.Support;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -51,6 +52,36 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             InputSystemUiModulePlayModeTestGuard.UninstallForCurrentTest();
             LogAssert.ignoreFailingMessages = false;
             yield return null;
+        }
+
+        // CAREER-001 in the authored Town: helping at the town square gives a career hint toward the service candidate,
+        // the hint survives a reload, and the same hint does not count twice from one action.
+        [UnityTest]
+        [Timeout(600000)]
+        public IEnumerator CAREER_001_AuthoredTown_SquareHelpGivesServiceCareerHintThatSurvivesReload()
+        {
+            const string CandidateId = "career.candidate.service";
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+            yield return PlayerFlowE2EDriver.EnterWorldFromSaveSlot(TestSlotId, "NewGameButton", "Town", "CAREER-001 failed: New Game did not enter Town.");
+            yield return PlayerFlowE2EDriver.DismissDailyEvent();
+            var candidate = System.Array.Find(Rootborn.Game.Managers.Managers.Data.Registry.CareerCandidates, c => c != null && c.Id == CandidateId);
+            Assert.IsNotNull(candidate, "CAREER-001 failed: service career candidate is not registered.");
+            var student = GameObject.Find("Player").GetComponent<StudentLifeProgressComponent>();
+            int hintsBefore = student.Progress.CareerCandidates.GetHintCount(candidate);
+            int understandingBefore = student.Progress.CareerCandidates.GetUnderstandingScore(candidate);
+
+            yield return PlayerFlowE2EDriver.UseLocationActivity(keyboard, "LocationVisit_location_town_square", 0, "CAREER-001 failed:");
+            int hintsAfter = student.Progress.CareerCandidates.GetHintCount(candidate);
+            int understandingAfter = student.Progress.CareerCandidates.GetUnderstandingScore(candidate);
+            Assert.AreEqual(hintsBefore + 1, hintsAfter, "CAREER-001 failed: helping at the square did not add one service career hint.");
+            Assert.Greater(understandingAfter, understandingBefore, "CAREER-001 failed: service career understanding did not grow.");
+
+            ActiveSaveContext.Clear();
+            PlayerGlobalState.ClearForTests();
+            yield return PlayerFlowE2EDriver.EnterWorldFromSaveSlot(TestSlotId, "LoadButton", "Town", "CAREER-002 failed: Load did not return to Town.");
+            var reloaded = GameObject.Find("Player").GetComponent<StudentLifeProgressComponent>();
+            Assert.AreEqual(hintsAfter, reloaded.Progress.CareerCandidates.GetHintCount(candidate), "CAREER-002 failed: the career hint did not survive reload exactly once.");
+            Assert.AreEqual(understandingAfter, reloaded.Progress.CareerCandidates.GetUnderstandingScore(candidate), "CAREER-002 failed: career understanding changed on reload.");
         }
 
         [Ignore(LegacyPremise.AuthoredTown + "Readiness requires StudentDayEndBoard in Town")]
