@@ -3277,3 +3277,69 @@ MonoBehaviour:
   - key: "ui.journal.campaign.done.opening.campaign.objective.WorkshopWork"
     ko: "\uc791\uc5c5\uc7a5 \uc77c \ub3d5\uae30"
     en: "Help at the workshop"
+  - key: quest.gatherWood.name
+    ko: "\ub098\ubb34 \ubaa8\uc73c\uae30"
+    en: "Gather Wood"
+  - key: quest.gatherWood.desc
+    ko: "\ubd80\ud0c1\ubc1b\uc740 \ub098\ubb34\ub97c \ubaa8\uc544\uc11c \ub9e1\uae34 \uc0ac\ub78c\uc5d0\uac8c \uac00\uc838\ub2e4\uc8fc\uc138\uc694."
+    en: "Collect the wood you were asked for and bring it back."
+  - key: quest.gatherWood.objective
+    ko: "\ub098\ubb34 \ubaa8\uc73c\uae30"
+    en: "Gather wood"
+  - key: dialogue.choice.acceptCareer.chef
+    ko: "\uc694\ub9ac \uc77c\uc744 \uc54c\uc544\ubcfc\uac8c\uc694"
+    en: "I'll learn about cooking"
+  - key: dialogue.choice.claimCareer.chef
+    ko: "\ub2e4 \ud574 \ubd24\uc5b4\uc694"
+    en: "I tried it"
+  - key: dialogue.choice.acceptCareer.emergency-care
+    ko: "\uc751\uae09 \ucc98\uce58\ub97c \uc54c\uc544\ubcfc\uac8c\uc694"
+    en: "I'll learn about first aid"
+  - key: dialogue.choice.claimCareer.emergency-care
+    ko: "\ub2e4 \ud574 \ubd24\uc5b4\uc694"
+    en: "I tried it"
+  - key: dialogue.choice.acceptCareer.interior
+    ko: "\uacf5\uac04 \uafb8\ubbf8\uae30\ub97c \uc54c\uc544\ubcfc\uac8c\uc694"
+    en: "I'll learn about room design"
+  - key: dialogue.choice.claimCareer.interior
+    ko: "\ub2e4 \ud574 \ubd24\uc5b4\uc694"
+    en: "I tried it"
+  - key: dialogue.choice.acceptCareer.soldier
+    ko: "\ud6c8\ub828\uc744 \uc54c\uc544\ubcfc\uac8c\uc694"
+    en: "I'll learn about training"
+  - key: dialogue.choice.claimCareer.soldier
+    ko: "\ub2e4 \ud574 \ubd24\uc5b4\uc694"
+    en: "I tried it"
+  - key: dialogue.choice.accept.quest_gatherWood
+    ko: "\ub098\ubb34 \ubaa8\uc73c\uae30\ub97c \ub9e1\uc744\uac8c\uc694"
+    en: "I'll gather the wood"
+  - key: dialogue.choice.acceptGatherWood
+    ko: "\ub098\ubb34 \ubaa8\uc73c\uae30\ub97c \ub9e1\uc744\uac8c\uc694"
+    en: "I'll gather the wood"
+  - key: dialogue.choice.claim.quest_gatherWood
+    ko: "\ub098\ubb34\ub97c \uac00\uc838\uc654\uc5b4\uc694"
+    en: "I brought the wood"
+  - key: dialogue.choice.claimGatherWood
+    ko: "\ub098\ubb34\ub97c \uac00\uc838\uc654\uc5b4\uc694"
+    en: "I brought the wood"
+  - key: tool.bareHand
+    ko: "\ub9e8\uc190"
+    en: "Bare Hands"
+  - key: tool.stoneAxe
+    ko: "\ub3cc\ub3c4\ub07c"
+    en: "Stone Axe"
+  - key: tool.stoneHoe
+    ko: "\ub3cc\uad2d\uc774"
+    en: "Stone Hoe"
+  - key: tool.stonePickaxe
+    ko: "\ub3cc\uace1\uad2d\uc774"
+    en: "Stone Pickaxe"
+  - key: objective.daily.questchain.library-reward.title
+    ko: "\ub3c4\uc11c\uad00 \uc758\ub8b0 \ub9c8\ubb34\ub9ac"
+    en: "Finish the library request"
+  - key: objective.daily.questchain.library-reward.detail
+    ko: "\ub3c4\uc11c\uad00\uc5d0\uc11c \ubc1b\uc740 \ubd80\ud0c1\uc744 \ub9c8\ubb34\ub9ac\ud574\uc694."
+    en: "Wrap up the request from the library."
+  - key: objective.daily.questchain.library-reward.next
+    ko: "\ub9c8\uc744 \uad11\uc7a5\uc73c\ub85c \uac00 \ubcf4\uc138\uc694."
+    en: "Go to the town square."

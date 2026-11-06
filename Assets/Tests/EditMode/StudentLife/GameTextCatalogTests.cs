@@ -47,5 +47,28 @@ namespace Rootborn.Tests.EditMode.StudentLife
             return ScriptableObject.CreateInstance(type);
         }
         private static object Invoke(object o,string name,params object[] args) => o.GetType().GetMethod(name).Invoke(o,args);
+
+        // Quest, dialogue, item and daily-plan text keys reach players directly; a missing entry shows the raw key on screen.
+        [TestCase("Assets/Data/Quests")]
+        [TestCase("Assets/Data/Dialogue")]
+        [TestCase("Assets/Data/Items")]
+        [TestCase("Assets/Data/StudentLife/DailyPlans")]
+        public void PlayerFacingDataTextKeys_AllHaveCatalogEntries(string folder)
+        {
+            string catalog=System.IO.File.ReadAllText("Assets/Localization/GameTextCatalog.asset");
+            var keys=new System.Collections.Generic.HashSet<string>();
+            foreach(System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(catalog,@"  - key: ""?([^""\r\n]+)""?")) keys.Add(m.Groups[1].Value);
+            var missing=new System.Collections.Generic.List<string>();
+            foreach(var path in System.IO.Directory.GetFiles(folder,"*.asset",System.IO.SearchOption.AllDirectories))
+            {
+                if(path.Replace('\\','/').Contains("/Test")||System.IO.Path.GetFileName(path).Contains("_Test")) continue;
+                foreach(System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(System.IO.File.ReadAllText(path),@"\n  _(?:\w*[Kk]ey): ([^\s{][^\r\n]*)"))
+                {
+                    string key=m.Groups[1].Value.Trim().Trim('"');
+                    if(key.Length>0 && !key.Contains(" ") && !key.Contains(".test.") && !keys.Contains(key)) missing.Add(System.IO.Path.GetFileName(path)+": "+key);
+                }
+            }
+            Assert.That(missing,Is.Empty,"Text keys with no catalog entry: "+string.Join(", ",missing));
+        }
     }
 }
