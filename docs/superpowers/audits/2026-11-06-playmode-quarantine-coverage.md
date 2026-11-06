@@ -57,7 +57,10 @@ EditMode 단위 테스트는 위 시스템을 계속 다룬다. 공백은 "실�
 1. **공용 도우미 먼저.** `PlayerFlowE2EDriver`에 다음을 둔다.
    - 저작 오브젝트를 이름 대신 컴포넌트와 데이터로 찾는 함수 (`LocationActivityInteractor`의 identity, `PartTimeWorkInteractor`의 work 등)
    - 문으로 씬을 건너는 함수: 문 트리거까지 걷고, 씬 전환과 도착 지점을 기다림
-2. **JOB-001:** Town 시작 → `PartTimeWork_work_shift_corner_store`까지 걷기 → E → 시간·체력·돈 변화.
+2. **JOB-001:** Town 시작 → `PartTimeWork_work_shift_corner_store`까지 걷기 → E → 미니게임 → 시간·체력·돈 변화.
+   알바 9종이 모두 미니게임(`MinigamePanel`: 선택·탭·판 배치·차선 이동)을 연다. 옛 테스트의 "E 한 번에 즉시 적용" 전제는 더는 맞지 않는다.
+   먼저 미니게임 종류별로 화면 버튼을 눌러 끝내는 테스트 도우미가 필요하다. 저장 위치도 `student-life-progress.json`이 아니라
+   `adult-career-snapshot-*.json`이다(활성 테스트 `KnowledgeStatusActivityChainE2EScenarioTests` 기준).
 3. **하루 끝:** Town → 집 문 → House → `StudentDayEndBoard` → 결과 창 → 저장/불러오기 후 다음 날.
 4. **LIFE(공부):** Town → 학교 문 → School → `SchoolClassActivity` → 특성·기술 변화.
 5. **자유 경로:** `OutsideActivity_outside_self_study_library`로 같은 성장 목표가 학교 밖에서도 오르는지.
