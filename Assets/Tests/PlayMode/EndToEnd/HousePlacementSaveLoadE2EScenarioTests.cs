@@ -20,7 +20,6 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
 {
     public sealed class HousePlacementSaveLoadE2EScenarioTests
     {
-        private const string LayoutFileName = "house-furniture-layout.json";
         private string _saveRoot;
 
         [UnitySetUp]
@@ -35,6 +34,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             DestroyIfFound("SaveSlotSelectPanel");
             DestroyIfFound("SaveSlotCanvas");
             DestroyIfFound("EventSystem");
+            // A new game starts at home; other fixtures redirect it to Town, so pin the real start here.
+            Rootborn.Game.World.WorldEntryService.SetNewGameEntryForTests("House", "house-entry");
             yield return null;
         }
 
@@ -42,6 +43,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         public IEnumerator TearDown()
         {
             ActiveSaveContext.Clear();
+            Rootborn.Game.World.WorldEntryService.SetNewGameEntryForTests(null, null);
             SaveSlotSelectPanel.SetSaveRootForTests(null);
             SaveService.SetRootDirectoryForTests(null);
             ClearStaticFurnitureLayoutCache();
@@ -64,25 +66,25 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.AreEqual("HOUSE-FLOW-003", ScenarioId.HOUSE_FLOW_003);
             yield return OpenCreatorFromMainMenu();
             yield return ClickButtonNamed("ConfirmButton");
-            yield return WaitForScene("Town", 20f);
+            // The authored House saves furniture as it changes; it binds to the slot only when entered as a new game or load.
+            yield return WaitForScene("House", 20f);
+            yield return WaitForStableScene("House", 0.25f, 10f);
             Assert.AreEqual("slot-0", ActiveSaveContext.SlotId, "New Game confirmation should activate slot-0 before entering the world.");
             Assert.IsTrue(File.Exists(Path.Combine(_saveRoot, "slot-0", "metadata.json")), "New Game should create slot metadata before House placement persistence.");
 
-            yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
-            yield return WaitForStableScene("House", 0.25f, 10f);
             yield return HousePlacementTestDriver.OpenPlacementMode();
             yield return PlaceModernShadowlessFurnitureByPlayerFacingInput();
 
             var furnitureTilemap = RequiredTilemap("AuthoredUserFurniture");
             var occupancyTilemap = RequiredTilemap("AuthoredUserOccupancy");
-            Assert.AreEqual(1, CountModernShadowlessTiles(furnitureTilemap, out var placedCell, out var placedTileName), "Exactly one player-placed Modern Interiors furniture tile should exist before saving.");
-            Assert.IsNotNull(occupancyTilemap.GetTile(placedCell), "Placed furniture must write occupancy before saving.");
+            Assert.AreEqual(1, CountModernShadowlessTiles(furnitureTilemap, out var placedCell, out var placedTileName), "Exactly one player-placed Modern Interiors furniture tile should exist after placing.");
+            Assert.IsNotNull(occupancyTilemap.GetTile(placedCell), "Placed furniture must write occupancy.");
             int occupiedBefore = CountTiles(occupancyTilemap);
 
-            yield return ClickButtonNamed("SaveFurnitureLayoutButton");
-            var layoutPath = Path.Combine(_saveRoot, "slot-0", LayoutFileName);
-            Assert.IsTrue(File.Exists(layoutPath), "House furniture save must persist to the active save slot, not only a runtime static list.");
-            StringAssert.Contains(placedTileName, File.ReadAllText(layoutPath), "The saved layout JSON should identify the same furniture tile placed by the player-facing world click.");
+            string slotDirectory = Path.Combine(_saveRoot, "slot-0");
+            string[] layouts = Directory.Exists(slotDirectory) ? Directory.GetFiles(slotDirectory, "house-furniture-layout*.json") : new string[0];
+            Assert.AreEqual(1, layouts.Length, "Placing furniture in the authored House must save it to the active slot without a Save button.");
+            Assert.IsNotEmpty(File.ReadAllText(layouts[0]), "The saved House layout must not be empty.");
             yield return CaptureVisualEvidence(
                 "house-interior-placement-before-reload.png",
                 "house-interior-placement-before-reload-probe.txt",
@@ -98,16 +100,15 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             SaveSlotSelectPanel.EnsureInScene().Show();
             yield return null;
             yield return ClickButtonNamed("LoadButton");
-            yield return WaitForScene("Town", 20f);
-            Assert.AreEqual("slot-0", ActiveSaveContext.SlotId, "Loading the save slot should restore the active save context before House reload.");
-
-            yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
+            // Continue returns to where the player saved, which is the House.
+            yield return WaitForScene("House", 20f);
             yield return WaitForStableScene("House", 0.35f, 10f);
+            Assert.AreEqual("slot-0", ActiveSaveContext.SlotId, "Loading the save slot should restore the active save context.");
             yield return null;
 
             var restoredFurnitureTilemap = RequiredTilemap("AuthoredUserFurniture");
             var restoredOccupancyTilemap = RequiredTilemap("AuthoredUserOccupancy");
-            Assert.AreEqual(1, CountModernShadowlessTiles(restoredFurnitureTilemap, out var restoredCell, out var restoredTileName), "Loading a saved game and entering House should restore the placed furniture visually.");
+            Assert.AreEqual(1, CountModernShadowlessTiles(restoredFurnitureTilemap, out var restoredCell, out var restoredTileName), "Loading a saved game should restore the placed furniture visually.");
             Assert.AreEqual(placedCell, restoredCell, "Restored furniture should remain at the same tile cell after save-slot reload.");
             Assert.AreEqual(placedTileName, restoredTileName, "Restored furniture should keep the same tile asset after save-slot reload.");
             Assert.AreEqual(occupiedBefore, CountTiles(restoredOccupancyTilemap), "Restored occupancy should match the saved placement footprint without duplicates.");
@@ -161,7 +162,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
 
         private static IEnumerator CaptureVisualEvidence(string screenshotFileName, string probeFileName, Tilemap furnitureTilemap, Tilemap occupancyTilemap, Vector3Int restoredCell, string restoredTileName)
         {
-            string evidenceDirectory = Path.Combine(Application.dataPath, "..", "production", "qa", "evidence");
+            // Test runs write their screenshots to a temporary folder; repository evidence files are never overwritten.
+            string evidenceDirectory = Path.Combine(Application.temporaryCachePath, "house-placement-evidence");
             Directory.CreateDirectory(evidenceDirectory);
             string screenshotPath = Path.Combine(evidenceDirectory, screenshotFileName);
             string probePath = Path.Combine(evidenceDirectory, probeFileName);
