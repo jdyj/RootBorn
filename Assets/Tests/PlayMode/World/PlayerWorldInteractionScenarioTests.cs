@@ -23,6 +23,9 @@ namespace Rootborn.Tests.PlayMode.World
         [UnityTest]
         public IEnumerator INTERACT_PM_001_NearNpcShowsTalkPromptAndInteractOpensDialogue()
         {
+            // A scene left active by an earlier test can carry its owner's dialogue authority; build this one in its own scene.
+            var isolated = UnityEngine.SceneManagement.SceneManager.CreateScene("InteractScenario_" + System.Guid.NewGuid().ToString("N"));
+            UnityEngine.SceneManagement.SceneManager.SetActiveScene(isolated);
             var player = new GameObject("Player");
             player.transform.position = Vector3.zero;
             var router = player.AddComponent<PlayerInteractionRouter>();
@@ -49,7 +52,7 @@ namespace Rootborn.Tests.PlayMode.World
             yield return null;
             router.RefreshPromptNow();
 
-            Assert.IsTrue(router.PromptVisible);
+            Assert.IsTrue(router.PromptVisible, "Prompt hidden. " + Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.InputLockOwners() + " canInteract=" + interactor.CanInteract(player));
             StringAssert.Contains(Rootborn.Game.Localization.GameText.Localized("ui.prompt.talk", "Talk"), router.PromptText);
             Assert.AreSame(interactor, router.CurrentInteractable);
 

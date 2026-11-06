@@ -32,9 +32,17 @@ namespace Rootborn.Game.Interiors
                 WallTileCount = CountTiles("HouseWallTilemap"),
                 CollisionTileCount = CountTiles("HouseCollisionTilemap"),
                 SurfaceCellCount = ReadIntProperty(overlay, "ActiveSurfaceCellCountForTests", groundTileCount),
-                PlacedFurnitureCount = ReadIntProperty(overlay, "PlacedFurnitureCountForTests", 0),
+                PlacedFurnitureCount = CountPlacedFurniture(overlay),
                 HasVisibleDebugOverlay = HasVisibleOverlay()
             };
+        }
+
+        // The authored House keeps placed furniture in its furniture session; the overlay may not exist until a piece is picked.
+        private static int CountPlacedFurniture(MonoBehaviour overlay)
+        {
+            var session = Object.FindFirstObjectByType<Rootborn.Game.Placement.AuthoredHouseFurnitureSession>(FindObjectsInactive.Include);
+            if (session != null && session.Registry != null) return session.Registry.Instances.Count;
+            return ReadIntProperty(overlay, "PlacedFurnitureCountForTests", 0);
         }
 
         private static MonoBehaviour FindPlacementOverlay()
