@@ -77,7 +77,7 @@ EditMode 단위 테스트는 위 시스템을 계속 다룬다. 공백은 "실�
 
 ## 진행 (2026-11-06)
 
-- `PlayerFlowE2EDriver.PlayMinigameToEnd`: 순서(미리보기를 기억했다가 누름), 선택(힌트 표시), 타이밍(커서가 박자 위일 때 Tap)을 화면 버튼으로 진행한다. 판 배치와 피하기는 아직 지원하지 않고, 만나면 실패 메시지로 알린다.
+- `PlayerFlowE2EDriver.PlayMinigameToEnd`: 순서(미리보기를 기억했다가 누름), 선택(힌트 표시), 타이밍(커서가 박자 위일 때 Tap)을 화면 버튼으로 진행한다. 2026-11-07: 판 배치(맞는 배치를 먼저 계산해 조각·회전·칸 버튼을 누름)와 피하기(다음 장애물 차선에서 비켜서고 표적을 조준 영역에서 클릭)도 지원. `JOB_002_AuthoredTown_*`가 스튜디오 보조(판 배치)와 훈련 보조(피하기)를 화면 입력으로 통과시킨다.
 - JOB-001 복구. 옛 `WORK_E2E_001_006`은 즉시 적용 전제라 격리 유지.
 - 공용 도우미 추가: `EnterWorldFromSaveSlot`, `WaitForPlayerReady`, `WalkThroughDoor`(문까지 걷고 필요하면 E).
 - 하루 끝(DAY_END_001) 복구.

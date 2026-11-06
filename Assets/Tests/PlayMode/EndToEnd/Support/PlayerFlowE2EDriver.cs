@@ -487,11 +487,13 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             int[] remembered = null;
             Rootborn.Game.Minigames.ChallengeSession stage = null;
             int tappedBeats = 0;
+            int rotation = 0;
+            RectInt[] plan = null;
             while (panel.IsOpen && panel.Session != null && !panel.Session.IsComplete)
             {
                 Assert.Less(Time.unscaledTime, deadline, failure + " Minigame did not finish in time (stage " + panel.Session.StageIndex + ").");
                 var c = panel.Session.Current;
-                if (!ReferenceEquals(c, stage)) { stage = c; remembered = null; tappedBeats = 0; }
+                if (!ReferenceEquals(c, stage)) { stage = c; remembered = null; tappedBeats = 0; rotation = 0; plan = null; }
                 switch (c.Mechanic)
                 {
                     case Rootborn.Game.Minigames.MinigameMechanic.Sequence:
@@ -513,6 +515,28 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
                         }
                         else if (tappedBeats < beats.Length && c.Elapsed > beats[tappedBeats] + c.TimingWindow) tappedBeats++;
                         break;
+                    case Rootborn.Game.Minigames.MinigameMechanic.Placement:
+                        // Work out a layout that fits every piece, then pick each piece, turn it with Rotate and press its corner cell.
+                        if (plan == null) { plan = PlanPlacement(c); Assert.IsNotNull(plan, failure + " No layout fits the placement board."); }
+                        int piece = -1;
+                        for (int i = 0; i < plan.Length; i++) if (!c.TryGetPieceRect(i, out _)) { piece = i; break; }
+                        if (piece < 0) break;
+                        int wanted = plan[piece].width == c.PieceSizes[piece].x && plan[piece].height == c.PieceSizes[piece].y ? 0 : 1;
+                        yield return ClickButton(FindButton(panel.transform, "Piece_" + piece));
+                        while (rotation % 2 != wanted) { yield return ClickButton(FindButton(panel.transform, "Rotate")); rotation = (rotation + 1) % 4; }
+                        yield return ClickButton(FindButton(panel.transform, "Cell_" + plan[piece].x + "_" + plan[piece].y));
+                        Assert.IsTrue(c.TryGetPieceRect(piece, out _), failure + " Pressing the cell did not place piece " + piece + ".");
+                        rotation = 0;
+                        break;
+                    case Rootborn.Game.Minigames.MinigameMechanic.TargetDodge:
+                        // Step out of the lane the next obstacle comes down, and click the target where it is drawn.
+                        if (c.NextObstacleLane >= 0 && c.Lane == c.NextObstacleLane)
+                        {
+                            yield return ClickButton(FindButton(panel.transform, "Lane_" + ((c.Lane + 1) % c.LaneCount)));
+                            break;
+                        }
+                        if (c.HasTarget) yield return ClickAimSurface(panel, c.TargetPosition, failure);
+                        break;
                     default:
                         Assert.Fail(failure + " Minigame stage " + c.Mechanic + " is not driven by the test helper yet.");
                         break;
@@ -523,6 +547,65 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             Assert.IsTrue(panel.Session.IsComplete, failure + " Minigame closed before it finished.");
             // The panel hands the finished session to the game when it next refreshes.
             for (int i = 0; i < 10; i++) yield return null;
+        }
+
+        // Clicks the aim surface at a point given in its 0..1 coordinates, through the surface's pointer handler.
+        private static IEnumerator ClickAimSurface(Rootborn.UI.Minigames.MinigamePanel panel, Vector2 normalized, string failure)
+        {
+            var surface = panel.GetComponentInChildren<Rootborn.UI.Minigames.MinigamePointerSurface>();
+            Assert.IsNotNull(surface, failure + " The target stage has no aim surface.");
+            var rect = (RectTransform)surface.transform;
+            var canvas = surface.GetComponentInParent<Canvas>();
+            var camera = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.worldCamera : null;
+            var bounds = rect.rect;
+            var local = new Vector2(bounds.xMin + normalized.x * bounds.width, bounds.yMin + normalized.y * bounds.height);
+            var screen = RectTransformUtility.WorldToScreenPoint(camera, rect.TransformPoint(local));
+            var data = new PointerEventData(EventSystem.current) { button = PointerEventData.InputButton.Left, position = screen };
+            data.pointerPressRaycast = new RaycastResult { module = canvas != null ? canvas.GetComponent<GraphicRaycaster>() : null };
+            ExecuteEvents.Execute(surface.gameObject, data, ExecuteEvents.pointerClickHandler);
+            yield return null;
+        }
+
+        // Finds where each piece goes (corner cell and size after turning) so blocked cells stay free and required cells get covered.
+        private static RectInt[] PlanPlacement(Rootborn.Game.Minigames.ChallengeSession c)
+        {
+            var sizes = c.PieceSizes; var board = c.BoardSize;
+            var used = new bool[board.x, board.y];
+            foreach (var b in c.BlockedCells) if (b.x >= 0 && b.y >= 0 && b.x < board.x && b.y < board.y) used[b.x, b.y] = true;
+            var plan = new RectInt[sizes.Length];
+            return Fit(0, sizes, board, used, plan, RequiredCells(c)) ? plan : null;
+        }
+
+        private static Vector2Int[] RequiredCells(Rootborn.Game.Minigames.ChallengeSession c)
+        {
+            var field = c.GetType().GetField("_required", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            return field != null ? (Vector2Int[])field.GetValue(c) ?? new Vector2Int[0] : new Vector2Int[0];
+        }
+
+        private static bool Fit(int piece, Vector2Int[] sizes, Vector2Int board, bool[,] used, RectInt[] plan, Vector2Int[] required)
+        {
+            if (piece == sizes.Length)
+            {
+                foreach (var r in required) { bool covered = false; foreach (var p in plan) covered |= p.Contains(r); if (!covered) return false; }
+                return true;
+            }
+            for (int turn = 0; turn < 2; turn++)
+            {
+                var size = turn == 0 ? sizes[piece] : new Vector2Int(sizes[piece].y, sizes[piece].x);
+                if (turn == 1 && size == sizes[piece]) continue;
+                for (int y = 0; y + size.y <= board.y; y++)
+                for (int x = 0; x + size.x <= board.x; x++)
+                {
+                    bool free = true;
+                    for (int dy = 0; dy < size.y && free; dy++) for (int dx = 0; dx < size.x && free; dx++) free = !used[x + dx, y + dy];
+                    if (!free) continue;
+                    for (int dy = 0; dy < size.y; dy++) for (int dx = 0; dx < size.x; dx++) used[x + dx, y + dy] = true;
+                    plan[piece] = new RectInt(x, y, size.x, size.y);
+                    if (Fit(piece + 1, sizes, board, used, plan, required)) return true;
+                    for (int dy = 0; dy < size.y; dy++) for (int dx = 0; dx < size.x; dx++) used[x + dx, y + dy] = false;
+                }
+            }
+            return false;
         }
 
         public static KeyControl ControlFor(Keyboard keyboard, Key key)

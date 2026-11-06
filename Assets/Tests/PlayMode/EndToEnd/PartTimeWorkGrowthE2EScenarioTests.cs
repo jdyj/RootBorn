@@ -103,6 +103,35 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.AreEqual(1, System.Array.FindAll(reloaded.Progress.GetTodayActivityIds(), id => id == WorkId).Length, "JOB-001 failed: reload duplicated or lost the work log.");
         }
 
+        // JOB-002: the board-placement and target-and-dodge jobs play to a pass from the screen and grow the trait once.
+        [UnityTest]
+        [Timeout(600000)]
+        public IEnumerator JOB_002_AuthoredTown_PlacementAndDodgeJobsPassFromTheScreen([Values("work.studio-helper", "work.training-helper")] string workId)
+        {
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+            yield return EnterTownFromSaveSlot("NewGameButton", "JOB-002 failed: New Game did not enter Town.");
+            var player = GameObject.Find("Player");
+            var student = player.GetComponent<StudentLifeProgressComponent>();
+            var work = FindAuthoredWork(workId);
+            var traitOutcome = work.Work.Outcomes.Count > 0 ? work.Work.Outcomes[0] as WorkTraitDeltaOutcome : null;
+            Assert.IsNotNull(traitOutcome, "JOB-002 failed: " + workId + " has no trait outcome to observe.");
+            int traitBefore = student.Progress.GetTraitValue(traitOutcome.Trait);
+
+            yield return PlayerFlowE2EDriver.DismissDailyEvent();
+            yield return PlayerFlowE2EDriver.WalkAndInteract(keyboard, work.transform.position, "JOB-002 failed: " + workId);
+            Rootborn.UI.Minigames.MinigamePanel panel = null;
+            for (int i = 0; i < 120 && (panel == null || !panel.IsOpen); i++)
+            {
+                panel = Object.FindFirstObjectByType<Rootborn.UI.Minigames.MinigamePanel>(FindObjectsInactive.Include);
+                yield return null;
+            }
+            Assert.IsTrue(panel != null && panel.IsOpen, "JOB-002 failed: E at " + workId + " did not open its minigame.");
+            yield return PlayerFlowE2EDriver.PlayMinigameToEnd(panel, 120f, "JOB-002 failed (" + workId + "):");
+            Assert.IsTrue(panel.Session.Succeeded, "JOB-002 failed: " + workId + " played from the screen did not pass (score " + panel.Session.Score + ").");
+            Assert.AreEqual(traitBefore + traitOutcome.Delta, student.Progress.GetTraitValue(traitOutcome.Trait), "JOB-002 failed: " + workId + " growth was not applied exactly once.");
+            Assert.IsFalse(student.Progress.HasPendingMinigame, "JOB-002 failed: the finished minigame is still pending.");
+        }
+
         private IEnumerator EnterTownFromSaveSlot(string buttonName, string failure)
         {
             yield return LoadScene("MainMenu");
