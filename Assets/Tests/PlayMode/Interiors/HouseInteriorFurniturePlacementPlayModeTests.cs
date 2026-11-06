@@ -197,7 +197,14 @@ namespace Rootborn.Tests.PlayMode.Interiors
             moveButton.onClick.Invoke();
             yield return null;
 
+            // Move picks the piece up: nothing moves until the player clicks where it should go.
+            Assert.IsNotNull(furnitureTilemap.GetTile(originalDeskCell), "Pressing Move must not send the furniture to some other cell on its own.");
+            Assert.Greater(overlay.ValidCellCount, 0, "While carrying, the cells the piece can go to must be shown.");
+            Assert.IsTrue(overlay.TryManualPlaceFirstValidForTests(out _), "Clicking a free cell must put the carried piece there.");
+            yield return null;
+
             StringAssert.Contains("Moved", overlay.LastMessage, "Move button should invoke the overlay move path before tile assertions.");
+            Assert.AreEqual(1, CountTiles(furnitureTilemap, DeskTileName), "Moving must not leave a second desk behind.");
             Assert.IsNull(furnitureTilemap.GetTile(originalDeskCell));
             Assert.IsNull(furnitureTilemap.GetTile(originalComputerCell));
             Assert.IsNull(occupancyTilemap.GetTile(originalDeskCell));
@@ -208,6 +215,11 @@ namespace Rootborn.Tests.PlayMode.Interiors
             Assert.AreEqual(Vector3Int.right, movedComputerCell - movedDeskCell);
             Assert.IsNotNull(occupancyTilemap.GetTile(movedDeskCell));
             Assert.IsNotNull(occupancyTilemap.GetTile(movedComputerCell));
+
+            // The moved piece stays selected, so Delete right after a move removes it.
+            GameObject.Find("DeleteSelectedFurnitureButton")?.GetComponent<Button>()?.onClick.Invoke();
+            yield return null;
+            Assert.AreEqual(0, CountTiles(furnitureTilemap, DeskTileName), "Delete right after a move must remove the moved furniture.");
         }
 
         [Ignore(LegacyPremise.AuthoredHouse + "authored House saves on every change, so Clear is permanent and Load cannot bring cleared furniture back")]

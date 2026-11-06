@@ -38,6 +38,8 @@ namespace Rootborn.UI.Interiors
         private InteriorFurniturePlacementRequest _request;
         private InteriorTilemapApplier _applier;
         private InteriorFurnitureDefinition _activeFurniture;
+        // Move picks the selected piece up; the next click on a free cell puts it down there.
+        private bool _moveCarrying;
         private FurniturePlacementDirection _activeDirection = FurniturePlacementDirection.North;
         private FurniturePlacementInstance _selectedInstance;
         private bool _hasSelectedInstance;
@@ -113,7 +115,7 @@ namespace Rootborn.UI.Interiors
 
         public void RefreshFurniture(InteriorGeneratedMap map, InteriorFurniturePlacementRequest request, InteriorTilemapApplier applier, InteriorFurnitureDefinition furniture)
         {
-            if(_authoredSession!=null){_activeFurniture=furniture;_request=request;_activeDirection=FurniturePlacementDirection.North;_hasSelectedInstance=false;EnsureTilemap();ClearGhost();Draw();return;}
+            if(_authoredSession!=null){_activeFurniture=furniture;_request=request;_activeDirection=FurniturePlacementDirection.North;_hasSelectedInstance=false;_moveCarrying=false;EnsureTilemap();ClearGhost();Draw();return;}
 
             foreach(var root in gameObject.scene.GetRootGameObjects())
             {var session=root.GetComponentInChildren<AuthoredHouseFurnitureSession>(true);if(session!=null){BindAuthoredSession(session);RefreshFurniture(map,request,applier,furniture);return;}}
@@ -215,15 +217,12 @@ namespace Rootborn.UI.Interiors
         {
             if(_authoredSession!=null)
             {
+                // Sending the piece to the first free cell made it vanish from view; the player chooses where it goes.
                 if(!_hasSelectedInstance)return false;
-                foreach(var cell in _authoredSession.Model.GroundCells)
-                {if(cell==_selectedInstance.AnchorCell)continue;
-                    // Like the generated House, a move goes somewhere new rather than shuffling one cell over its old spot.
-                    if(_activeFurniture!=null && MoveTargetOverlaps(_selectedInstance,new Vector2Int(cell.x-_offset.x,cell.y-_offset.y),_selectedInstance.Direction))continue;
-                    if(_authoredSession.TryMove(_selectedInstance.InstanceId,cell,_activeDirection))
-                    {_registry.TryFindAt(_surface.SurfaceId,cell,out _selectedInstance);LastMessage="Moved "+_selectedInstance.FurnitureId;ClearOverlay();return true;}}
-                LastMessage="No valid move target";
-                return false;
+                var carried=FindFurniture(InteriorFurnitureCatalog.LoadFurniture(),_selectedInstance.FurnitureId);
+                if(carried==null){LastMessage="No furniture definition available";return false;}
+                _activeFurniture=carried;_activeDirection=_selectedInstance.Direction;_moveCarrying=true;
+                LastMessage="Click where to move "+carried.Id;ClearGhost();Draw();return true;
             }
 
             if (!_hasSelectedInstance || _surface == null || _map == null || _activeFurniture == null)
@@ -358,7 +357,7 @@ namespace Rootborn.UI.Interiors
 
         public bool DeleteSelectedFurniture()
         {
-            if(_authoredSession!=null){bool result=_hasSelectedInstance && _authoredSession.Delete(_selectedInstance.InstanceId);_hasSelectedInstance=false;Draw();return result;}
+            if(_authoredSession!=null){bool result=_hasSelectedInstance && _authoredSession.Delete(_selectedInstance.InstanceId);_hasSelectedInstance=false;_moveCarrying=false;Draw();return result;}
             if (!_hasSelectedInstance || _surface == null)
             {
                 return false;
@@ -422,7 +421,7 @@ namespace Rootborn.UI.Interiors
 
             var tileCell = _overlay.WorldToCell(world);
             var mapCell = new Vector2Int(tileCell.x - _offset.x, tileCell.y - _offset.y);
-            if (_activeFurniture != null && !_hasSelectedInstance)
+            if (_activeFurniture != null && (!_hasSelectedInstance || _moveCarrying))
             {
                 if (!_hasPreviewMapCell || _lastPreviewMapCell != mapCell)
                 {
@@ -534,6 +533,16 @@ namespace Rootborn.UI.Interiors
         {
             if(_authoredSession!=null)
             {
+                if(_moveCarrying && _hasSelectedInstance)
+                {
+                    var target=new Vector3Int(mapCell.x,mapCell.y,0);
+                    // Only the green cells shown while carrying are accepted, matching what the player sees.
+                    bool moved=CanPlaceFurnitureAt(mapCell) && _authoredSession.TryMove(_selectedInstance.InstanceId,target,_activeDirection);
+                    message=moved?"Moved "+_selectedInstance.FurnitureId:"Cannot move here";LastMessage=message;
+                    // The moved piece stays selected so rotate and delete still apply to it.
+                    if(moved){_moveCarrying=false;_hasSelectedInstance=_authoredSession.Registry.TryFindAt(_authoredSession.Surface.SurfaceId,target,out _selectedInstance);ClearOverlay();}else Draw();
+                    return moved;
+                }
                 bool placed=_activeFurniture!=null && _authoredSession.TryPlace(_activeFurniture.PlacementDefinition,new Vector3Int(mapCell.x,mapCell.y,0),_activeDirection);
                 message=placed?"Placed "+_activeFurniture.Id:"Placement unavailable";LastMessage=message;
                 // Same as the generated House: once placed, the availability tint must not cover the new furniture.
