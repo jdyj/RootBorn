@@ -63,7 +63,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
-            yield return WaitForScene("Town", 20f, "ENCYCLOPEDIA-E2E-001 failed: SaveSlot New Game did not enter Town. entryError=" + SaveSlotSelectPanel.EnsureInScene().LastEntryError + " pendingTravel=" + Rootborn.Game.World.WorldTravelRuntime.HasPendingTravel + " creator=" + (GameObject.Find("SpumCharacterCreatorPanel") != null) + " confirm=" + (GameObject.Find("ConfirmButton")?.GetComponent<UnityEngine.UI.Button>()?.IsInteractable()) + " slotPanel=" + (GameObject.Find("SaveSlotSelectPanel") != null) + " " + PlayerFlowE2EDriver.DescribeCreators());
+            // The message is built at the timeout, not before the click, so it shows why entry failed.
+            yield return WaitForScene("Town", 20f, () => "ENCYCLOPEDIA-E2E-001 failed: SaveSlot New Game did not enter Town. entryError=" + Object.FindAnyObjectByType<SaveSlotSelectPanel>(FindObjectsInactive.Include)?.LastEntryError + " registry=" + Rootborn.Game.Common.GameDataRegistryProvider.TryGet(out _) + " pendingTravel=" + Rootborn.Game.World.WorldTravelRuntime.HasPendingTravel + " creator=" + (GameObject.Find("SpumCharacterCreatorPanel") != null) + " confirm=" + (GameObject.Find("ConfirmButton")?.GetComponent<UnityEngine.UI.Button>()?.IsInteractable()) + " slotPanel=" + (GameObject.Find("SaveSlotSelectPanel") != null) + " " + PlayerFlowE2EDriver.DescribeCreators());
             TownExplorationDiscoveryRuntimeInstaller.EnsureForActiveScene();
             EncyclopediaRuntimeInstaller.EnsureForActiveScene();
             yield return WaitForRuntime(10f);
@@ -169,6 +170,11 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
 
         private static IEnumerator WaitForScene(string sceneName, float timeoutSeconds, string failure)
         {
+            return WaitForScene(sceneName, timeoutSeconds, () => failure);
+        }
+
+        private static IEnumerator WaitForScene(string sceneName, float timeoutSeconds, System.Func<string> failure)
+        {
             float elapsed = 0f;
             while (SceneManager.GetActiveScene().name != sceneName && elapsed < timeoutSeconds)
             {
@@ -176,7 +182,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 elapsed += Time.unscaledDeltaTime;
                 yield return null;
             }
-            Assert.AreEqual(sceneName, SceneManager.GetActiveScene().name, failure);
+            Assert.AreEqual(sceneName, SceneManager.GetActiveScene().name, SceneManager.GetActiveScene().name == sceneName ? string.Empty : failure());
         }
 
         private static IEnumerator ClickButton(Button button)
