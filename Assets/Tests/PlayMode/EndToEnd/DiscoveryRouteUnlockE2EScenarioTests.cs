@@ -28,8 +28,10 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         private const string ClueId = "clue.discovery.play-loop";
         private const string WorldStateId = "world.library.archive-open";
         private const string RouteId = "daily.route.library.archive-research";
-        private const string RouteLabel = "daily.route.library.archive-research";
-        private const string RouteObjectiveTitle = "objective.daily.library.archive.title";
+        // Players see the localized text, not the key.
+        private static string RouteLabel => Rootborn.Game.Localization.GameText.Get("daily.route.library.archive-research");
+        // Players see the localized text, not the key.
+        private static string RouteObjectiveTitle => Rootborn.Game.Localization.GameText.Get("objective.daily.library.archive.title");
         private const string InterpretationButtonText = "restore";
         private const string ScreenshotPath = "Builds/Logs/discovery-route-unlock-e2e.png";
         private string _saveRoot;

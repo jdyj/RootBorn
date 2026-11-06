@@ -160,7 +160,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
             var creator = GameObject.Find("SpumCharacterCreatorRoot") ?? GameObject.Find("SpumCharacterCreatorPanel");
             if (creator != null) yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(creator.transform, "ConfirmButton"));
-            yield return PlayerFlowE2EDriver.WaitForScene("Town", 20f, "KNOWLEDGE-STATUS-E2E-001 failed: SaveSlot New Game did not enter Town.");
+            yield return PlayerFlowE2EDriver.WaitForScene("Town", 20f, "KNOWLEDGE-STATUS-E2E-001 failed: SaveSlot New Game did not enter Town. entryError=" + SaveSlotSelectPanel.EnsureInScene().LastEntryError + " pendingTravel=" + Rootborn.Game.World.WorldTravelRuntime.HasPendingTravel);
             EnsureTownInstallers();
             yield return WaitForRuntime(15f);
         }

@@ -63,7 +63,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
-            yield return WaitForScene("Town", 20f, "ENCYCLOPEDIA-E2E-001 failed: SaveSlot New Game did not enter Town.");
+            yield return WaitForScene("Town", 20f, "ENCYCLOPEDIA-E2E-001 failed: SaveSlot New Game did not enter Town. entryError=" + SaveSlotSelectPanel.EnsureInScene().LastEntryError + " pendingTravel=" + Rootborn.Game.World.WorldTravelRuntime.HasPendingTravel + " creator=" + (GameObject.Find("SpumCharacterCreatorPanel") != null) + " confirm=" + (GameObject.Find("ConfirmButton")?.GetComponent<UnityEngine.UI.Button>()?.IsInteractable()) + " slotPanel=" + (GameObject.Find("SaveSlotSelectPanel") != null) + " " + PlayerFlowE2EDriver.DescribeCreators());
             TownExplorationDiscoveryRuntimeInstaller.EnsureForActiveScene();
             EncyclopediaRuntimeInstaller.EnsureForActiveScene();
             yield return WaitForRuntime(10f);
@@ -172,6 +172,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             float elapsed = 0f;
             while (SceneManager.GetActiveScene().name != sceneName && elapsed < timeoutSeconds)
             {
+                PlayerFlowE2EDriver.ConfirmCharacterCreatorIfShown();
                 elapsed += Time.unscaledDeltaTime;
                 yield return null;
             }

@@ -28,8 +28,10 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         private const string ClueId = "clue.discovery.play-loop";
         private const string WorldStateId = "world.workshop.repair-ledger-open";
         private const string RouteId = "daily.route.workshop.repair-ledger";
-        private const string RouteLabel = "daily.route.workshop.repair-ledger";
-        private const string RouteObjectiveTitle = "objective.daily.workshop.repair-ledger.title";
+        // Players see the localized text, not the key.
+        private static string RouteLabel => Rootborn.Game.Localization.GameText.Get("daily.route.workshop.repair-ledger");
+        // Players see the localized text, not the key.
+        private static string RouteObjectiveTitle => Rootborn.Game.Localization.GameText.Get("objective.daily.workshop.repair-ledger.title");
         private const string InterpretationButtonText = "repair ledger";
         private const string ScreenshotPath = "Builds/Logs/discovery-route-unlock-second-slice-e2e.png";
         private string _saveRoot;

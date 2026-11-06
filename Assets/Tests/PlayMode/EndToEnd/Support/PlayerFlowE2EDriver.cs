@@ -33,12 +33,44 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             float elapsed = 0f;
             while (SceneManager.GetActiveScene().name != sceneName && elapsed < timeoutSeconds)
             {
+                ConfirmCharacterCreatorIfShown();
                 elapsed += Time.unscaledDeltaTime;
                 yield return null;
             }
 
             Assert.AreEqual(sceneName, SceneManager.GetActiveScene().name, failure);
         }
+
+        // A new game opens the character creator first; a player presses Confirm to continue. Creator tests drive it themselves.
+        public static void ConfirmCharacterCreatorIfShown()
+        {
+            string test = TestContext.CurrentContext?.Test?.FullName ?? string.Empty;
+            if (test.Contains("Spum") || test.Contains("Creator") || test.Contains("CharacterPart")) return;
+            if (Time.unscaledTime - s_lastCreatorConfirm < 1f) return;
+            bool clicked = false;
+            foreach (var panel in Object.FindObjectsByType<Rootborn.UI.MainMenu.SpumCharacterCreatorPanel>(FindObjectsSortMode.None))
+            {
+                if (panel == null || !panel.isActiveAndEnabled) continue;
+                foreach (var button in panel.GetComponentsInChildren<Button>())
+                    if (button.name == "ConfirmButton" && button.IsInteractable())
+                    {
+                        ExecuteEvents.Execute(button.gameObject, new PointerEventData(EventSystem.current) { button = PointerEventData.InputButton.Left }, ExecuteEvents.pointerClickHandler);
+                        clicked = true;
+                        break;
+                    }
+            }
+            if (clicked) s_lastCreatorConfirm = Time.unscaledTime;
+        }
+
+        public static string DescribeCreators()
+        {
+            var all = Object.FindObjectsByType<Rootborn.UI.MainMenu.SpumCharacterCreatorPanel>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            var text = new StringBuilder("creators:" + all.Length);
+            foreach (var c in all) text.Append(' ').Append(c.name).Append(c.isActiveAndEnabled ? "/on" : "/off").Append('@').Append(c.gameObject.scene.name);
+            return text.ToString();
+        }
+
+        private static float s_lastCreatorConfirm = -10f;
 
         public static IEnumerator ClickButton(Button button)
         {
@@ -177,6 +209,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             Key activeKey = Key.None;
             Vector3 lastCheck = player.transform.position;
             int replans = 0;
+            string lastContacts = "-";
             string startScene = SceneManager.GetActiveScene().name;
             for (int i = 0; i < frameBudget && Vector3.Distance(player.transform.position, targetPosition) > tolerance; i++)
             {
@@ -196,6 +229,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
                         InputSystem.Update();
                         yield return new WaitForFixedUpdate();
                         activeKey = Key.None;
+                        lastContacts = DescribeContacts(player);
                         waypoints = PlanWalk(player, targetPosition);
                         next = 0;
                         replans++;
@@ -220,7 +254,33 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             InputSystem.Update();
             yield return new WaitForFixedUpdate();
-            Assert.LessOrEqual(Vector3.Distance(player.transform.position, targetPosition), tolerance, failure + " (from " + startPosition + " to " + targetPosition + ", stopped at " + player.transform.position + ", replans " + replans + ", reached waypoint " + next + "/" + waypoints.Count + ": " + string.Join(" ", waypoints) + ")");
+            Assert.LessOrEqual(Vector3.Distance(player.transform.position, targetPosition), tolerance, failure + " (from " + startPosition + " to " + targetPosition + ", stopped at " + player.transform.position + ", replans " + replans + " touching " + lastContacts + ", reached waypoint " + next + "/" + waypoints.Count + ": " + string.Join(" ", waypoints) + ")");
+        }
+
+        private static string DescribeContacts(GameObject player)
+        {
+            var body = player != null ? player.GetComponent<Rigidbody2D>() : null;
+            if (body == null) return "no body";
+            var contacts = new System.Collections.Generic.List<ContactPoint2D>();
+            body.GetContacts(contacts);
+            var names = new StringBuilder();
+            foreach (var c in contacts) if (c.collider != null) names.Append(c.collider.name).Append('(').Append(c.collider.GetType().Name).Append(')').Append(' ');
+            var box = player.GetComponent<BoxCollider2D>();
+            if (box != null)
+            {
+                var filter = new ContactFilter2D { useTriggers = false };
+                var hits = new System.Collections.Generic.List<Collider2D>();
+                Vector2 at = (Vector2)player.transform.position + box.offset + Vector2.left * 0.5f;
+                Physics2D.OverlapBox(at, box.size * 0.9f, 0f, filter, hits);
+                names.Append("| overlapLeft:");
+                foreach (var h in hits) names.Append(h.name).Append(h.transform.IsChildOf(player.transform) ? "(self)" : "").Append(' ');
+                var cast = new RaycastHit2D[8];
+                int n = Physics2D.BoxCast((Vector2)player.transform.position + box.offset, box.size * 0.9f, 0f, Vector2.left, filter, cast, 0.5f);
+                names.Append("| castLeft:");
+                for (int i = 0; i < n; i++) names.Append(cast[i].collider.name).Append('@').Append(cast[i].distance.ToString("0.00")).Append(' ');
+                names.Append("| layer ").Append(LayerMask.LayerToName(player.layer));
+            }
+            return names.Length > 0 ? names.ToString() : "nothing";
         }
 
         // Breadth-first route on a half-unit grid, testing each step with the player's own collider box.
@@ -230,9 +290,6 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             var corners = new System.Collections.Generic.List<Vector3>();
             var body = player != null ? player.GetComponent<BoxCollider2D>() : null;
             if (body == null) return corners;
-            // Town merges its collision tiles into composites at load; their shapes appear only after a rebuild,
-            // so build them now or the planner sees open ground where the player is blocked.
-            foreach (var composite in Object.FindObjectsByType<CompositeCollider2D>(FindObjectsSortMode.None)) composite.GenerateGeometry();
             Physics2D.SyncTransforms();
             const float step = 0.5f;
             Vector2 size = body.size * 0.9f;
