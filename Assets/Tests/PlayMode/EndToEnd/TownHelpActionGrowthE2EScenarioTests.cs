@@ -77,7 +77,16 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             string shownName = Rootborn.Game.Localization.GameText.Get(errand.Action.DisplayNameKey);
             Assert.AreNotEqual(errand.Action.DisplayNameKey, shownName, "HELP-001 failed: the errand has no catalog name.");
             StringAssert.Contains(shownName, errand.InteractionPrompt, "HELP-001 failed: the errand prompt does not show its translated name.");
-            yield return PlayerFlowE2EDriver.WalkAndInteract(keyboard, errand.transform.position, "HELP-001 failed: errand");
+            var walker = GameObject.Find("Player");
+            yield return PlayerFlowE2EDriver.WalkPlayerWithKeyboardTo(walker, keyboard, errand.transform.position, 0.9f, 900, "HELP-001 failed: could not walk to the errand.");
+            var errandRouter = walker.GetComponent<PlayerInteractionRouter>();
+            errandRouter.RefreshPromptNow();
+            Assert.IsTrue(errandRouter.PromptVisible, "HELP-001 failed: no prompt at the errand point.");
+            StringAssert.Contains(shownName, errandRouter.PromptText, "HELP-001 failed: the on-screen prompt does not show the translated errand name.");
+            yield return null;
+            yield return CaptureScreenshot("Builds/Logs/help-001-errand-prompt.png");
+            yield return PlayerFlowE2EDriver.PressInteractKey(keyboard);
+            yield return null;
             Assert.AreEqual(Rootborn.Game.StudentLife.LifeActivityResultKind.Applied, errand.LastResult.Kind, "HELP-001 failed: E at the errand point did not apply.");
             int traitAfter = student.Progress.GetTraitValueById(TraitId);
             int trustAfter = student.Progress.GetRelationshipValueById(TrustId);
