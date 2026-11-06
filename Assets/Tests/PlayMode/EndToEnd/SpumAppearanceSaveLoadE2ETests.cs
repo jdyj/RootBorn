@@ -43,6 +43,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
+        [Ignore(LegacyPremise.CharacterParts + "마을 플레이어는 성장 캐릭터로 그리며 SPUM 화면 부품을 붙이지 않음")]
         [UnityTest]
         public IEnumerator SPUM_UI_PM_006_SaveLoadKeepsAppearance()
         {
