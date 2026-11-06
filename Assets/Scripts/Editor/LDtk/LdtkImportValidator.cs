@@ -472,11 +472,96 @@ namespace Rootborn.Editor.LDtk
                 var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
                 int count = Rootborn.Game.World.InteriorDoorPortalRuntimeInstaller.EnsureForScene(scene);
                 if (count == 0) { failures.Add(path + " has no exit doors"); continue; }
+                if (Array.IndexOf(CollisionSceneNames, sceneName) >= 0)
+                {
+                    string problem = BakeCollision(scene, out int blocked);
+                    if (problem != null) { failures.Add(path + " " + problem); continue; }
+                    Debug.Log("[ROOTBORN] Baked " + blocked + " collision cell(s) into " + path);
+                }
                 EditorSceneManager.MarkSceneDirty(scene);
                 EditorSceneManager.SaveScene(scene);
                 Debug.Log("[ROOTBORN] Baked " + count + " exit door(s) into " + path);
             }
             if (failures.Count > 0) throw new InvalidOperationException("[ROOTBORN] Interior exit bake failed: " + string.Join("; ", failures));
+        }
+
+        // These interiors were saved with no collision at all, so players walked through walls and off the map.
+        // Everything that is not floor, plus wall and border tiles, becomes an invisible grid-collider cell; exits stay open.
+        private const string CollisionTilePath = "Assets/Data/Interiors/TileSets/UrbanStreet31/UrbanStreetCollision.asset";
+        public static readonly string[] CollisionSceneNames = { "HospitalInterior", "ShopInterior", "PoliceInterior", "PoliceShootingInterior", "KitchenInterior", "Kitchen2Interior" };
+
+        public static string CollisionTilemapName(string sceneName) => sceneName + "CollisionTilemap";
+
+        private static string BakeCollision(UnityEngine.SceneManagement.Scene scene, out int blocked)
+        {
+            blocked = 0;
+            var tile = AssetDatabase.LoadAssetAtPath<TileBase>(CollisionTilePath);
+            if (tile == null) return "collision tile missing at " + CollisionTilePath;
+            string collisionName = CollisionTilemapName(scene.name);
+            var maps = new List<Tilemap>();
+            foreach (var root in scene.GetRootGameObjects())
+            foreach (var map in root.GetComponentsInChildren<Tilemap>(true))
+            {
+                if (map.name == collisionName) { UnityEngine.Object.DestroyImmediate(map.gameObject); continue; }
+                maps.Add(map);
+            }
+            Tilemap groundMap = null;
+            var ground = new HashSet<Vector3Int>();
+            var solid = new HashSet<Vector3Int>();
+            var min = new Vector3Int(int.MaxValue, int.MaxValue, 0);
+            var max = new Vector3Int(int.MinValue, int.MinValue, 0);
+            foreach (var map in maps)
+            {
+                if (map == null) continue;
+                bool isGround = map.name.Contains("Ground");
+                bool isSolid = map.name.Contains("Wall") || map.name.Contains("Border");
+                if (isGround && groundMap == null) groundMap = map;
+                map.CompressBounds();
+                foreach (var cell in map.cellBounds.allPositionsWithin)
+                {
+                    if (!map.HasTile(cell)) continue;
+                    min = Vector3Int.Min(min, cell); max = Vector3Int.Max(max, cell);
+                    if (isGround) ground.Add(cell);
+                    if (isSolid) solid.Add(cell);
+                }
+            }
+            if (groundMap == null || ground.Count == 0) return "has no ground tilemap";
+            var open = new HashSet<Vector3Int>();
+            foreach (var root in scene.GetRootGameObjects())
+            foreach (var portal in root.GetComponentsInChildren<Rootborn.Game.World.WorldPortal>(true))
+            {
+                var box = portal.GetComponent<BoxCollider2D>();
+                if (box == null) continue;
+                Vector2 center = (Vector2)portal.transform.position + box.offset;
+                Vector2 half = box.size * 0.5f;
+                for (int x = Mathf.FloorToInt(center.x - half.x + 0.01f); x <= Mathf.FloorToInt(center.x + half.x - 0.01f); x++)
+                for (int y = Mathf.FloorToInt(center.y - half.y + 0.01f); y <= Mathf.FloorToInt(center.y + half.y - 0.01f); y++)
+                    open.Add(new Vector3Int(x, y, 0));
+            }
+            // Each LDtk layer carries its own Grid, so the collision layer needs one too or its cells collapse to the origin.
+            var go = new GameObject(collisionName, typeof(Grid), typeof(Tilemap), typeof(TilemapCollider2D));
+            var sourceGrid = groundMap.GetComponentInParent<Grid>();
+            if (sourceGrid != null) { var grid = go.GetComponent<Grid>(); grid.cellSize = sourceGrid.cellSize; grid.cellGap = sourceGrid.cellGap; grid.cellLayout = sourceGrid.cellLayout; grid.cellSwizzle = sourceGrid.cellSwizzle; }
+            go.transform.SetParent(groundMap.transform.parent, false);
+            var collision = go.GetComponent<Tilemap>();
+            var blockedCells = new HashSet<Vector3Int>();
+            for (int x = min.x - 1; x <= max.x + 1; x++)
+            for (int y = min.y - 1; y <= max.y + 1; y++)
+            {
+                var cell = new Vector3Int(x, y, 0);
+                if (open.Contains(cell) || (ground.Contains(cell) && !solid.Contains(cell))) continue;
+                collision.SetTile(cell, tile);
+                blockedCells.Add(cell);
+            }
+            blocked = blockedCells.Count;
+            foreach (var root in scene.GetRootGameObjects())
+            foreach (var spawn in root.GetComponentsInChildren<Rootborn.Game.World.WorldSpawnPoint>(true))
+            {
+                var p = spawn.transform.position;
+                var cell = new Vector3Int(Mathf.FloorToInt(p.x), Mathf.FloorToInt(p.y), 0);
+                if (blockedCells.Contains(cell)) return "spawn " + spawn.SpawnId + " at " + cell + " is not on open floor";
+            }
+            return null;
         }
     }
 }

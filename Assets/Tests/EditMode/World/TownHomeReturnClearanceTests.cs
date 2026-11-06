@@ -55,5 +55,40 @@ namespace Rootborn.Tests.EditMode.World
             Assert.That(text,Does.Contain("_destinationSpawnId: "+spawnId),sceneName+" exit must lead to "+spawnId);
             Assert.That(text,Does.Not.Contain("_destinationSpawnId: town-entry"),sceneName+" still sends players to the generic town entry");
         }
+        // Interiors were saved without any collision, so players walked through walls and off the map in the build.
+        [TestCase("HospitalInterior")]
+        [TestCase("ShopInterior")]
+        [TestCase("PoliceInterior")]
+        [TestCase("PoliceShootingInterior")]
+        [TestCase("KitchenInterior")]
+        [TestCase("Kitchen2Interior")]
+        public void InteriorScene_BlocksEverythingButFloorAndKeepsSpawnsAndExitsOpen(string sceneName)
+        {
+            var scene=EditorSceneManager.OpenPreviewScene("Assets/Scenes/"+sceneName+".unity");
+            try
+            {
+                var maps=scene.GetRootGameObjects().SelectMany(r=>r.GetComponentsInChildren<Tilemap>(true)).ToArray();
+                var collision=maps.SingleOrDefault(m=>m.name==sceneName+"CollisionTilemap");
+                Assert.That(collision,Is.Not.Null,sceneName+" has no collision tilemap");
+                var collider=collision.GetComponent<TilemapCollider2D>();
+                Assert.That(collider!=null && collider.enabled && !collider.isTrigger,Is.True,sceneName+" collision tilemap must have a solid collider");
+                var ground=maps.Where(m=>m.name.Contains("Ground")).ToArray();
+                Assert.That(ground,Is.Not.Empty);
+                bool IsFloor(Vector3Int c)=>ground.Any(g=>g.HasTile(c));
+                // A cell just outside the floor's bounds must be blocked on every side.
+                var b=ground[0].cellBounds;
+                foreach(var probe in new[]{new Vector3Int(b.xMin-1,(b.yMin+b.yMax)/2,0),new Vector3Int(b.xMax,(b.yMin+b.yMax)/2,0)})
+                    if(!IsFloor(probe)) Assert.That(collision.HasTile(probe),Is.True,sceneName+" leaves off-map cell "+probe+" open");
+                foreach(var spawn in scene.GetRootGameObjects().SelectMany(r=>r.GetComponentsInChildren<WorldSpawnPoint>(true)))
+                {
+                    var c=collision.WorldToCell(spawn.transform.position);
+                    Assert.That(IsFloor(c),Is.True,sceneName+" spawn "+spawn.SpawnId+" is off the floor at "+c);
+                    Assert.That(collision.HasTile(c),Is.False,sceneName+" spawn "+spawn.SpawnId+" is inside collision at "+c);
+                }
+                foreach(var portal in scene.GetRootGameObjects().SelectMany(r=>r.GetComponentsInChildren<WorldPortal>(true)))
+                    Assert.That(collision.HasTile(collision.WorldToCell(portal.transform.position)),Is.False,sceneName+" exit "+portal.name+" is walled off");
+            }
+            finally{EditorSceneManager.ClosePreviewScene(scene);}
+        }
     }
 }

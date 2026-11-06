@@ -237,9 +237,10 @@ namespace Rootborn.Tests.PlayMode.World
             var registry = Rootborn.Game.Managers.Managers.Data != null ? Rootborn.Game.Managers.Managers.Data.Registry : null;
             Assert.IsNotNull(WorldEntryService.ResolvePair(registry != null ? registry.WorldTravelCatalog : null, "Town", expectedTownSpawnId), "The travel catalog loaded at play time must accept " + expectedTownSpawnId + ".");
 
-            player.transform.position = returnDoor.transform.position + new Vector3(0f, -1.0f, 0f);
-            Physics2D.SyncTransforms();
-            yield return null;
+            // The player arrives just inside the door they came through, on the floor, and walks back out from there.
+            AssertStandsOnInteriorFloor(player, destinationScene, "arriving");
+            Assert.LessOrEqual(Vector2.Distance(player.transform.position, returnDoor.transform.position), 4f, "Entering " + destinationScene + " must put the player beside its street door.");
+            yield return AssertWallsHoldPlayer(player, keyboard, destinationScene);
             yield return WalkPlayerWithKeyboardUntilSceneChangesOrNear(player, keyboard, returnDoor.transform.position, 0.25f, 180, "Town", "Player must leave " + destinationScene + " through the LDtk return door using movement input.");
             yield return WaitForScene("Town", 20f);
             Assert.AreEqual("Town", SceneManager.GetActiveScene().name);
@@ -251,6 +252,31 @@ namespace Rootborn.Tests.PlayMode.World
             AssertCleanTownReturnView();
             CaptureScreenshot(screenshotName);
             yield return WaitForScreenshot(screenshotName, 3f);
+        }
+
+        private static void AssertStandsOnInteriorFloor(GameObject player, string sceneName, string when)
+        {
+            var scene = SceneManager.GetSceneByName(sceneName);
+            Tilemap ground = null;
+            foreach (var root in scene.GetRootGameObjects())
+                foreach (var map in root.GetComponentsInChildren<Tilemap>(true))
+                    if (map.name.Contains("Ground") && ground == null) ground = map;
+            Assert.IsNotNull(ground, sceneName + " must have a floor tilemap.");
+            var cell = ground.WorldToCell(player.transform.position);
+            Assert.IsTrue(ground.HasTile(cell), "Player must be on " + sceneName + " floor when " + when + ", but is at " + cell + ".");
+        }
+
+        // Interiors used to have no collision: holding a direction walked the player straight through the walls and off the map.
+        private static IEnumerator AssertWallsHoldPlayer(GameObject player, Keyboard keyboard, string sceneName)
+        {
+            foreach (var key in new[] { Key.A, Key.D })
+            {
+                QueueKey(keyboard, key);
+                for (int i = 0; i < 150; i++) { InputSystem.Update(); yield return new WaitForFixedUpdate(); }
+                ReleaseMovementKeys(keyboard);
+                yield return null;
+                AssertStandsOnInteriorFloor(player, sceneName, "pushing against a wall with " + key);
+            }
         }
 
         private static void AssertCleanTownReturnView()
