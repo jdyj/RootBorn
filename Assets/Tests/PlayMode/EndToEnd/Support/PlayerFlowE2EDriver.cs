@@ -39,6 +39,17 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             }
 
             Assert.AreEqual(sceneName, SceneManager.GetActiveScene().name, failure);
+            yield return WaitForArrival();
+        }
+
+        // A scene can be active before arrival finishes binding the slot owner; the game ignores interaction until then.
+        public static IEnumerator WaitForArrival(float timeoutSeconds = 10f)
+        {
+            float deadline = Time.unscaledTime + timeoutSeconds;
+            while (Rootborn.Game.World.WorldTravelRuntime.HasPendingTravel && Time.unscaledTime < deadline) yield return null;
+            // The test fixture swaps input systems per test; a scene load can leave actions bound to stale control indices,
+            // which freezes the last move key down. Re-resolve after every arrival, as the per-test reset does.
+            Rootborn.Tests.PlayMode.PlayModeInputSystemGuardAction.ForgetResolvedControls();
         }
 
         // A new game opens the character creator first; a player presses Confirm to continue. Creator tests drive it themselves.
@@ -198,6 +209,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
         {
             // The authored Town has solid buildings, so a straight walk stalls against walls. The route is planned
             // around colliders, but the player still moves only through WASD key events, like a person steering.
+            yield return WaitForArrival();
             Vector3 startPosition = player.transform.position;
             var waypoints = PlanWalk(player, targetPosition);
             float pathLength = 0f; Vector3 prev = player.transform.position;
@@ -254,7 +266,34 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             InputSystem.Update();
             yield return new WaitForFixedUpdate();
-            Assert.LessOrEqual(Vector3.Distance(player.transform.position, targetPosition), tolerance, failure + " (from " + startPosition + " to " + targetPosition + ", stopped at " + player.transform.position + ", replans " + replans + " touching " + lastContacts + ", reached waypoint " + next + "/" + waypoints.Count + ": " + string.Join(" ", waypoints) + ")");
+            // The body keeps sliding a little after the key is released; a person taps back toward the spot.
+            for (int nudge = 0; nudge < 12 && SceneManager.GetActiveScene().name == startScene && player != null; nudge++)
+            {
+                for (int settle = 0; settle < 3; settle++) yield return new WaitForFixedUpdate();
+                Vector3 miss = targetPosition - player.transform.position;
+                if (miss.magnitude <= tolerance || miss.magnitude > 1.5f) break;
+                QueueKey(keyboard, Mathf.Abs(miss.x) >= Mathf.Abs(miss.y) ? (miss.x >= 0f ? Key.D : Key.A) : (miss.y >= 0f ? Key.W : Key.S));
+                InputSystem.Update();
+                yield return null;
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+                InputSystem.Update();
+            }
+            if (SceneManager.GetActiveScene().name != startScene || player == null) yield break;
+            Assert.LessOrEqual(Vector3.Distance(player.transform.position, targetPosition), tolerance, failure + " (from " + startPosition + " to " + targetPosition + ", stopped at " + player.transform.position + ", replans " + replans + " touching " + lastContacts + ", reached waypoint " + next + "/" + waypoints.Count + ": " + string.Join(" ", waypoints) + ") " + DescribeKeyboards(keyboard));
+        }
+
+        private static string DescribeKeyboards(Keyboard driven)
+        {
+            var text = new StringBuilder("keyboards:");
+            foreach (var device in InputSystem.devices)
+            {
+                if (!(device is Keyboard k)) continue;
+                text.Append(' ').Append(k.deviceId).Append(k == driven ? "(driven)" : "").Append(k.added ? "" : "(removed)").Append('[');
+                if (k.wKey.isPressed) text.Append('W'); if (k.aKey.isPressed) text.Append('A'); if (k.sKey.isPressed) text.Append('S'); if (k.dKey.isPressed) text.Append('D');
+                text.Append(']');
+            }
+            if (driven != null && !driven.added) text.Append(" driven keyboard " + driven.deviceId + " is no longer added");
+            return text.ToString();
         }
 
         private static string DescribeContacts(GameObject player)
@@ -270,15 +309,15 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             {
                 var filter = new ContactFilter2D { useTriggers = false };
                 var hits = new System.Collections.Generic.List<Collider2D>();
-                Vector2 at = (Vector2)player.transform.position + box.offset + Vector2.left * 0.5f;
-                Physics2D.OverlapBox(at, box.size * 0.9f, 0f, filter, hits);
+                Vector2 at = (Vector2)box.bounds.center + Vector2.left * 0.5f;
+                Physics2D.OverlapBox(at, (Vector2)box.bounds.size * 0.9f, 0f, filter, hits);
                 names.Append("| overlapLeft:");
                 foreach (var h in hits) names.Append(h.name).Append(h.transform.IsChildOf(player.transform) ? "(self)" : "").Append(' ');
                 var cast = new RaycastHit2D[8];
-                int n = Physics2D.BoxCast((Vector2)player.transform.position + box.offset, box.size * 0.9f, 0f, Vector2.left, filter, cast, 0.5f);
+                int n = Physics2D.BoxCast((Vector2)box.bounds.center, (Vector2)box.bounds.size * 0.9f, 0f, Vector2.left, filter, cast, 0.5f);
                 names.Append("| castLeft:");
                 for (int i = 0; i < n; i++) names.Append(cast[i].collider.name).Append('@').Append(cast[i].distance.ToString("0.00")).Append(' ');
-                names.Append("| layer ").Append(LayerMask.LayerToName(player.layer));
+                names.Append("| layer ").Append(LayerMask.LayerToName(player.layer)); names.Append(" | bounds ").Append(box.bounds.size).Append(" scale ").Append(player.transform.lossyScale);
             }
             return names.Length > 0 ? names.ToString() : "nothing";
         }
@@ -290,8 +329,17 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             var body = player != null ? player.GetComponent<BoxCollider2D>() : null;
             if (body == null) return new System.Collections.Generic.List<Vector3>();
             // A route that grazes a wall catches the body on tile seams and stalls, so keep a margin when there is room.
-            var roomy = PlanWalk(player, body, target, body.size + new Vector2(0.4f, 0.4f), out bool reached);
-            var route = reached ? roomy : PlanWalk(player, body, target, body.size * 0.9f, out reached);
+            // World bounds include the player's scale, which the collider's local size does not.
+            Physics2D.SyncTransforms();
+            Vector2 worldSize = body.bounds.size;
+            // Try the widest margin first; a box smaller than the real body finds routes the body then catches on.
+            System.Collections.Generic.List<Vector3> route = null;
+            bool reached = false;
+            foreach (var size in new[] { worldSize + new Vector2(0.4f, 0.4f), worldSize + new Vector2(0.1f, 0.1f), worldSize + new Vector2(0.04f, 0.04f), worldSize * 0.9f })
+            {
+                route = PlanWalk(player, body, target, size, out reached);
+                if (reached) break;
+            }
             // The last corner is the target rounded to the half-unit grid; steering to it overshoots short walks. Head for the target itself.
             if (reached && route.Count > 0) route.RemoveAt(route.Count - 1);
             return route;
@@ -302,7 +350,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             var corners = new System.Collections.Generic.List<Vector3>();
             Physics2D.SyncTransforms();
             const float step = 0.5f;
-            Vector2 offset = body.offset;
+            Vector2 offset = (Vector2)(body.bounds.center - player.transform.position);
             Vector3 start = player.transform.position;
             int span = Mathf.CeilToInt(Mathf.Max(Mathf.Abs(target.x - start.x), Mathf.Abs(target.y - start.y)) / step) + 24;
             // Large trigger zones overlap everything, so they are filtered out instead of crowding a fixed hit buffer.
@@ -380,7 +428,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             {
                 var player = GameObject.Find("Player");
                 if (player != null && player.GetComponent<Rootborn.Game.StudentLife.StudentLifeProgressComponent>() != null
-                    && player.GetComponent<Rootborn.Game.Player.PlayerInteractionRouter>() != null && EventSystem.current != null) yield break;
+                    && player.GetComponent<Rootborn.Game.Player.PlayerInteractionRouter>() != null && EventSystem.current != null
+                    && !Rootborn.Game.World.WorldTravelRuntime.HasPendingTravel) yield break;
                 yield return null;
             }
             Assert.Fail(failure + " Player runtime was not ready in " + SceneManager.GetActiveScene().name + ".");

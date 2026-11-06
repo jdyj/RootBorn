@@ -224,9 +224,14 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.IsNotNull(board, failure + " House has no StudentDayEndBoard.");
             var player = GameObject.Find("Player");
             yield return PlayerFlowE2EDriver.WalkPlayerWithKeyboardTo(player, keyboard, board.transform.position, 0.9f, 900, failure + " could not walk to the day-end board.");
+            // After a reload the board is bound to the result panel a moment after the player appears.
+            var interactor = board.GetComponent<StudentDayEndInteractor>();
+            for (int i = 0; i < 300 && !interactor.CanInteract(player); i++) yield return null;
+            Assert.IsTrue(interactor.CanInteract(player), failure + " the day-end board never became usable.");
             var router = player.GetComponent<PlayerInteractionRouter>();
             router.RefreshPromptNow();
             Assert.IsTrue(router.PromptVisible, failure + " no prompt next to the day-end board.");
+            Assert.That(router.PromptText, Does.Not.Contain(Rootborn.Game.Localization.GameText.Localized("ui.prompt.enter", "Enter")), failure + " the prompt points at the door, not the board: " + router.PromptText);
             yield return PlayerFlowE2EDriver.PressInteractKey(keyboard);
         }
 

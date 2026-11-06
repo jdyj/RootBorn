@@ -7,6 +7,7 @@ using Rootborn.Game.Save;
 using Rootborn.Game.StudentLife;
 using Rootborn.UI.MainMenu;
 using Rootborn.UI.StudentLife;
+using Rootborn.Tests.PlayMode.EndToEnd.Support;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -51,6 +52,59 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             CleanupResidue();
             InputSystemUiModulePlayModeTestGuard.UninstallForCurrentTest();
             LogAssert.ignoreFailingMessages = false;
+            yield return null;
+        }
+
+        // Free-path growth: the same trait grows outside school (library self-study in Town) and in school (class in School),
+        // both reached by walking and pressing E, and both survive a reload once.
+        [UnityTest]
+        [Timeout(600000)]
+        public IEnumerator FREE_PATH_001_FocusGrowsFromLibrarySelfStudyAndFromSchoolClass()
+        {
+            const string FocusTraitId = "trait.focus";
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+            yield return PlayerFlowE2EDriver.EnterWorldFromSaveSlot(TestSlotId, "NewGameButton", "Town", "FREE-PATH-001 failed: New Game did not enter Town.");
+            yield return PlayerFlowE2EDriver.DismissDailyEvent();
+            var student = GameObject.Find("Player").GetComponent<StudentLifeProgressComponent>();
+            int focusStart = student.Progress.GetTraitValueById(FocusTraitId);
+
+            OutsideSchoolActivityInteractor library = null;
+            foreach (var candidate in Object.FindObjectsByType<OutsideSchoolActivityInteractor>(FindObjectsSortMode.None))
+                if (candidate.Activity != null && candidate.Activity.Id == "outside.self-study.library") library = candidate;
+            Assert.IsNotNull(library, "FREE-PATH-001 failed: authored Town has no library self-study point.");
+            yield return WalkAndInteract(keyboard, library.transform.position, "FREE-PATH-001 failed: library self-study");
+            Assert.AreEqual(LifeActivityResultKind.Applied, library.LastResult.Kind, "FREE-PATH-001 failed: library self-study did not apply through E.");
+            int focusAfterLibrary = student.Progress.GetTraitValueById(FocusTraitId);
+            Assert.Greater(focusAfterLibrary, focusStart, "FREE-PATH-001 failed: studying outside school did not grow focus.");
+
+            yield return PlayerFlowE2EDriver.WalkThroughDoor(keyboard, "School", "FREE-PATH-002 failed: could not enter School.");
+            student = GameObject.Find("Player").GetComponent<StudentLifeProgressComponent>();
+            Assert.AreEqual(focusAfterLibrary, student.Progress.GetTraitValueById(FocusTraitId), "FREE-PATH-002 failed: focus changed while walking to School.");
+            var classroom = GameObject.Find("SchoolClassActivity");
+            Assert.IsNotNull(classroom, "FREE-PATH-002 failed: School has no class activity.");
+            yield return WalkAndInteract(keyboard, classroom.transform.position, "FREE-PATH-002 failed: school class");
+            var panel = Object.FindFirstObjectByType<LocationIdentityPanel>(FindObjectsInactive.Include);
+            Assert.IsTrue(panel != null && panel.IsOpen, "FREE-PATH-002 failed: E at the classroom did not open its activity panel.");
+            yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(panel.transform, "LocationActivityButton_0"));
+            Assert.AreEqual(LifeActivityResultKind.Applied, panel.LastResult.Kind, "FREE-PATH-002 failed: the class did not apply (" + panel.LastResult.Kind + ").");
+            int focusAfterClass = student.Progress.GetTraitValueById(FocusTraitId);
+            Assert.Greater(focusAfterClass, focusAfterLibrary, "FREE-PATH-002 failed: attending class did not grow focus.");
+
+            ActiveSaveContext.Clear();
+            PlayerGlobalState.ClearForTests();
+            yield return PlayerFlowE2EDriver.EnterWorldFromSaveSlot(TestSlotId, "LoadButton", "School", "FREE-PATH-003 failed: Load did not return to School.");
+            var reloaded = GameObject.Find("Player").GetComponent<StudentLifeProgressComponent>();
+            Assert.AreEqual(focusAfterClass, reloaded.Progress.GetTraitValueById(FocusTraitId), "FREE-PATH-003 failed: focus from both routes did not survive reload exactly once.");
+        }
+
+        private static IEnumerator WalkAndInteract(Keyboard keyboard, Vector3 target, string failure)
+        {
+            var player = GameObject.Find("Player");
+            yield return PlayerFlowE2EDriver.WalkPlayerWithKeyboardTo(player, keyboard, target, 0.9f, 900, failure + ": could not walk there.");
+            var router = player.GetComponent<PlayerInteractionRouter>();
+            router.RefreshPromptNow();
+            Assert.IsTrue(router.PromptVisible, failure + ": no prompt there.");
+            yield return PlayerFlowE2EDriver.PressInteractKey(keyboard);
             yield return null;
         }
 

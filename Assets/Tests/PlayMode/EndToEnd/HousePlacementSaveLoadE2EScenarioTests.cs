@@ -57,8 +57,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 Directory.Delete(_saveRoot, true);
             }
 
+            // Not switched off here: the Input System can still log its own errors while this TearDown finishes.
             yield return null;
-            LogAssert.ignoreFailingMessages = false;
         }
 
         [UnityTest]
