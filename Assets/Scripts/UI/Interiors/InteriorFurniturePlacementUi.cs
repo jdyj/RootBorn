@@ -221,6 +221,8 @@ namespace Rootborn.UI.Interiors
                 // Opening the editor is not permission to replace a saved room layout.
                 // Generation remains an explicit action; legacy generated rooms retain startup restore.
                 root.SetActive(false);
+                // The authored House saves every change; players do not need Save/Load, and Clear would wipe the room with no undo.
+                if (!Debug.isDebugBuild) HideAutoSavedLayoutControls(root.transform.Find("InteriorPlacementBottomBar"));
             }
             else
             {
@@ -311,6 +313,18 @@ namespace Rootborn.UI.Interiors
         }
 
         private static readonly string[] DeveloperControlNames = { "SeedLabel", "SeedInput", "RegenerateButton", "ApplyButton", "ValidationLabel", "InteriorPlacementStatusText", "InteriorPlacementSummaryText", "InteractiveFurnitureToggle", "BlocksMovementToggle", "FurnitureOptionsTitle", "PlacementAvailabilityText" };
+
+        private static readonly string[] AutoSavedLayoutControlNames = { "SaveFurnitureLayoutButton", "ClearFurnitureLayoutButton", "LoadFurnitureLayoutButton" };
+
+        public static void HideAutoSavedLayoutControls(Transform parent)
+        {
+            if (parent == null) return;
+            for (int i = 0; i < AutoSavedLayoutControlNames.Length; i++)
+            {
+                var control = parent.Find(AutoSavedLayoutControlNames[i]);
+                if (control != null) control.gameObject.SetActive(false);
+            }
+        }
 
         public static void HideDeveloperControls(Transform parent)
         {

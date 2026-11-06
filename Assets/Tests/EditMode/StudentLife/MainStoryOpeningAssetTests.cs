@@ -901,6 +901,24 @@ namespace Rootborn.Tests.EditMode.StudentLife
             finally { UnityEngine.Object.DestroyImmediate(root); }
         }
 
+        // The authored House saves every change, so Save/Load do nothing and Clear wipes the room with no undo.
+        [Test]
+        public void PlacementPanel_HidesLayoutFileButtonsWhenTheHouseSavesItself()
+        {
+            var root = new GameObject("PlacementAutoSaveFixture");
+            try
+            {
+                foreach (var name in new[] { "SaveFurnitureLayoutButton", "ClearFurnitureLayoutButton", "LoadFurnitureLayoutButton", "MoveSelectedFurnitureButton" })
+                    new GameObject(name).transform.SetParent(root.transform, false);
+                Rootborn.UI.Interiors.InteriorFurniturePlacementPanel.HideAutoSavedLayoutControls(root.transform);
+                Assert.That(root.transform.Find("SaveFurnitureLayoutButton").gameObject.activeSelf, Is.False);
+                Assert.That(root.transform.Find("ClearFurnitureLayoutButton").gameObject.activeSelf, Is.False);
+                Assert.That(root.transform.Find("LoadFurnitureLayoutButton").gameObject.activeSelf, Is.False);
+                Assert.That(root.transform.Find("MoveSelectedFurnitureButton").gameObject.activeSelf, Is.True);
+            }
+            finally { UnityEngine.Object.DestroyImmediate(root); }
+        }
+
         [TestCase(1920, 1080, 480, 270)]
         [TestCase(2560, 1440, 512, 288)]
         [TestCase(3840, 2160, 480, 270)]
