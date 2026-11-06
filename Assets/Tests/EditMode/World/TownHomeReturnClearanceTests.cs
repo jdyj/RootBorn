@@ -138,4 +138,89 @@ namespace Rootborn.Tests.EditMode.World
             finally{EditorSceneManager.ClosePreviewScene(scene);}
         }
     }
+
+    // Painting a cell in LDtk and saving re-imports the level; the Town scene must pick it up with no menu click.
+    public sealed class LdtkPaintedCollisionAutoBakeTests
+    {
+        private const string ScenePath = "Assets/Scenes/Town.unity";
+
+        [UnityEngine.TestTools.UnityTest]
+        public System.Collections.IEnumerator SavingThePaintedTownLevel_BakesTheTownSceneByItself()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            string levelPath = Rootborn.Editor.LDtk.InteriorDoorPortalBaker.TownLevelPath;
+            byte[] originalLevel = System.IO.File.ReadAllBytes(levelPath);
+            byte[] originalScene = System.IO.File.ReadAllBytes(ScenePath);
+            int before = PaintedBlockCount();
+            try
+            {
+                System.IO.File.WriteAllText(levelPath, PaintLastCollisionCell(System.Text.Encoding.UTF8.GetString(originalLevel)));
+                UnityEditor.AssetDatabase.ImportAsset(levelPath, UnityEditor.ImportAssetOptions.ForceUpdate);
+                yield return WaitForScene(originalScene, changed: true);
+                Assert.That(PaintedBlockCount(), Is.EqualTo(before + 1), "Saving the painted level did not bake the new Block cell into Town");
+
+                System.IO.File.WriteAllBytes(levelPath, originalLevel);
+                UnityEditor.AssetDatabase.ImportAsset(levelPath, UnityEditor.ImportAssetOptions.ForceUpdate);
+                yield return WaitForCount(before);
+                Assert.That(PaintedBlockCount(), Is.EqualTo(before), "Erasing the cell and saving did not bake it back out");
+            }
+            finally
+            {
+                System.IO.File.WriteAllBytes(levelPath, originalLevel);
+                System.IO.File.WriteAllBytes(ScenePath, originalScene);
+                UnityEditor.AssetDatabase.ImportAsset(levelPath, UnityEditor.ImportAssetOptions.ForceUpdate);
+                UnityEditor.AssetDatabase.ImportAsset(ScenePath, UnityEditor.ImportAssetOptions.ForceUpdate);
+            }
+        }
+
+        // The bottom-right cell is the last value of the Collision layer's csv; the test paint lives top-left.
+        private static string PaintLastCollisionCell(string level)
+        {
+            int layer = level.IndexOf("\"__identifier\": \"Collision\"", System.StringComparison.Ordinal);
+            Assert.That(layer, Is.GreaterThanOrEqualTo(0));
+            int csv = level.IndexOf("\"intGridCsv\": [", layer, System.StringComparison.Ordinal);
+            int close = level.IndexOf(']', csv);
+            int last = close - 1;
+            while (char.IsWhiteSpace(level[last])) last--;
+            Assert.That(level[last], Is.EqualTo('0'), "bottom-right Collision cell is already painted");
+            return level.Substring(0, last) + "1" + level.Substring(last + 1);
+        }
+
+        private static System.Collections.IEnumerator WaitForScene(byte[] original, bool changed)
+        {
+            for (int frame = 0; frame < 600; frame++)
+            {
+                if (!System.Linq.Enumerable.SequenceEqual(System.IO.File.ReadAllBytes(ScenePath), original) == changed) yield break;
+                yield return null;
+            }
+        }
+
+        private static System.Collections.IEnumerator WaitForCount(int count)
+        {
+            for (int frame = 0; frame < 600; frame++)
+            {
+                if (frame % 20 == 0 && PaintedBlockCount() == count) yield break;
+                yield return null;
+            }
+        }
+
+        private static int PaintedBlockCount()
+        {
+            var scene = EditorSceneManager.OpenPreviewScene(ScenePath);
+            try
+            {
+                foreach (var root in scene.GetRootGameObjects())
+                foreach (var map in root.GetComponentsInChildren<Tilemap>(true))
+                {
+                    if (map.name != Rootborn.Editor.LDtk.InteriorDoorPortalBaker.TownPaintedBlockName) continue;
+                    map.CompressBounds();
+                    int n = 0;
+                    foreach (var cell in map.cellBounds.allPositionsWithin) if (map.HasTile(cell)) n++;
+                    return n;
+                }
+                return 0;
+            }
+            finally { EditorSceneManager.ClosePreviewScene(scene); }
+        }
+    }
 }
