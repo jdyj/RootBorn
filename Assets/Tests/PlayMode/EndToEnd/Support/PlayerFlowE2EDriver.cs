@@ -43,10 +43,20 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
         public static IEnumerator ClickButton(Button button)
         {
             Assert.IsNotNull(button);
-            Assert.IsTrue(button.gameObject.activeInHierarchy, button.name + " must be visible for player-facing click.");
+            Assert.IsTrue(button.gameObject.activeInHierarchy, button.name + " must be visible for player-facing click. Hidden by: " + FirstInactiveAncestor(button.transform));
             Assert.IsTrue(button.interactable, button.name + " must be interactable for player-facing click.");
             ExecuteEvents.Execute(button.gameObject, new PointerEventData(EventSystem.current) { button = PointerEventData.InputButton.Left }, ExecuteEvents.pointerClickHandler);
             yield return null;
+        }
+
+        private static string FirstInactiveAncestor(Transform t)
+        {
+            string hidden = "-";
+            for (var c = t; c != null; c = c.parent) if (!c.gameObject.activeSelf) hidden = c.name;
+            var journals = new StringBuilder();
+            foreach (var j in Object.FindObjectsByType<Rootborn.UI.Objectives.ObjectiveJournalPanel>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                journals.Append(' ').Append(j.GetInstanceID()).Append(j.IsVisible ? "/visible" : "/hidden").Append(j.gameObject.activeInHierarchy ? "/active" : "/inactive").Append(t.IsChildOf(j.transform) ? "/owner" : "");
+            return hidden + " (scene " + t.gameObject.scene.name + ") journals:" + journals;
         }
 
         public static Button FindButton(string cardName, string buttonName)
@@ -111,6 +121,25 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             return null;
         }
 
+        // A daily event can pop up after an activity and holds gameplay shortcuts until the player answers or closes it.
+        public static IEnumerator DismissDailyEvent()
+        {
+            var close = GameObject.Find("DailyEventCloseButton");
+            if (close == null || !close.activeInHierarchy) yield break;
+            yield return ClickButton(close.GetComponent<Button>());
+        }
+
+        // Names whatever currently holds gameplay shortcuts (a modal panel left open, a travel in progress).
+        public static string InputLockOwners()
+        {
+            var field = typeof(UiGameplayInputLock).GetField("Owners", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            var owners = field != null ? field.GetValue(null) as System.Collections.IEnumerable : null;
+            var names = new StringBuilder("input lock:");
+            if (owners != null) foreach (var o in owners) names.Append(' ').Append(o is Object u && u != null ? u.GetType().Name + "/" + u.name : "null");
+            names.Append(" textFocus:").Append(UiTextInputFocus.HasFocus);
+            return names.ToString();
+        }
+
         public static IEnumerator PressTab(Keyboard keyboard)
         {
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Tab));
@@ -135,10 +164,39 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
 
         public static IEnumerator WalkPlayerWithKeyboardTo(GameObject player, Keyboard keyboard, Vector3 targetPosition, float tolerance, int maxFrames, string failure)
         {
+            // The authored Town has solid buildings, so a straight walk stalls against walls. The route is planned
+            // around colliders, but the player still moves only through WASD key events, like a person steering.
+            Vector3 startPosition = player.transform.position;
+            var waypoints = PlanWalk(player, targetPosition);
+            float pathLength = 0f; Vector3 prev = player.transform.position;
+            foreach (var w in waypoints) { pathLength += Vector3.Distance(prev, w); prev = w; }
+            pathLength += Vector3.Distance(prev, targetPosition);
+            // Long routes around buildings take longer than the straight-line budget the callers were written for.
+            int frameBudget = maxFrames + Mathf.CeilToInt(pathLength * 30f);
+            int next = 0;
             Key activeKey = Key.None;
-            for (int i = 0; i < maxFrames && Vector3.Distance(player.transform.position, targetPosition) > tolerance; i++)
+            Vector3 lastCheck = player.transform.position;
+            int replans = 0;
+            for (int i = 0; i < frameBudget && Vector3.Distance(player.transform.position, targetPosition) > tolerance; i++)
             {
-                Vector3 delta = targetPosition - player.transform.position;
+                // Townsfolk walk their routes and can stand in the way; when the player stops making progress, plan again.
+                if (i > 0 && i % 30 == 0)
+                {
+                    if (Vector3.Distance(player.transform.position, lastCheck) < 0.3f && replans < 8)
+                    {
+                        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+                        InputSystem.Update();
+                        yield return new WaitForFixedUpdate();
+                        activeKey = Key.None;
+                        waypoints = PlanWalk(player, targetPosition);
+                        next = 0;
+                        replans++;
+                    }
+                    lastCheck = player.transform.position;
+                }
+                Vector3 goal = next < waypoints.Count ? waypoints[next] : targetPosition;
+                Vector3 delta = goal - player.transform.position;
+                if (next < waypoints.Count && Mathf.Abs(delta.x) < 0.12f && Mathf.Abs(delta.y) < 0.12f) { next++; continue; }
                 Key key = Mathf.Abs(delta.x) >= Mathf.Abs(delta.y) ? (delta.x >= 0f ? Key.D : Key.A) : (delta.y >= 0f ? Key.W : Key.S);
                 if (activeKey != key)
                 {
@@ -154,7 +212,76 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             InputSystem.Update();
             yield return new WaitForFixedUpdate();
-            Assert.LessOrEqual(Vector3.Distance(player.transform.position, targetPosition), tolerance, failure);
+            Assert.LessOrEqual(Vector3.Distance(player.transform.position, targetPosition), tolerance, failure + " (from " + startPosition + " to " + targetPosition + ", stopped at " + player.transform.position + ", replans " + replans + ", reached waypoint " + next + "/" + waypoints.Count + ": " + string.Join(" ", waypoints) + ")");
+        }
+
+        // Breadth-first route on a half-unit grid, testing each step with the player's own collider box.
+        // Returns the corners to steer through; empty when the straight walk is already the route or no route exists.
+        public static System.Collections.Generic.List<Vector3> PlanWalk(GameObject player, Vector3 target)
+        {
+            var corners = new System.Collections.Generic.List<Vector3>();
+            var body = player != null ? player.GetComponent<BoxCollider2D>() : null;
+            if (body == null) return corners;
+            // Town merges its collision tiles into composites at load; their shapes appear only after a rebuild,
+            // so build them now or the planner sees open ground where the player is blocked.
+            foreach (var composite in Object.FindObjectsByType<CompositeCollider2D>(FindObjectsSortMode.None)) composite.GenerateGeometry();
+            Physics2D.SyncTransforms();
+            const float step = 0.5f;
+            Vector2 size = body.size * 0.9f;
+            Vector2 offset = body.offset;
+            Vector3 start = player.transform.position;
+            int span = Mathf.CeilToInt(Mathf.Max(Mathf.Abs(target.x - start.x), Mathf.Abs(target.y - start.y)) / step) + 24;
+            // Large trigger zones overlap everything, so they are filtered out instead of crowding a fixed hit buffer.
+            var solidOnly = new ContactFilter2D { useTriggers = false };
+            var hits = new System.Collections.Generic.List<Collider2D>(16);
+            bool Open(Vector2Int c)
+            {
+                Vector2 p = (Vector2)start + (Vector2)c * step + offset;
+                Physics2D.OverlapBox(p, size, 0f, solidOnly, hits);
+                for (int i = 0; i < hits.Count; i++)
+                    if (hits[i] != null && !hits[i].transform.IsChildOf(player.transform)) return false;
+                return true;
+            }
+            // Boxes half a unit apart leave thin gaps where a fence line hides; sweep the body along each step instead.
+            var castHits = new RaycastHit2D[16];
+            bool Passable(Vector2Int c, Vector2Int n)
+            {
+                Vector2 p = (Vector2)start + (Vector2)c * step + offset;
+                int count = Physics2D.BoxCast(p, size, 0f, (Vector2)(n - c), solidOnly, castHits, step);
+                for (int i = 0; i < count; i++)
+                    if (castHits[i].collider != null && !castHits[i].collider.transform.IsChildOf(player.transform)) return false;
+                return true;
+            }
+            var goal = new Vector2Int(Mathf.RoundToInt((target.x - start.x) / step), Mathf.RoundToInt((target.y - start.y) / step));
+            var from = new System.Collections.Generic.Dictionary<Vector2Int, Vector2Int>();
+            var queue = new System.Collections.Generic.Queue<Vector2Int>();
+            var origin = Vector2Int.zero;
+            from[origin] = origin; queue.Enqueue(origin);
+            Vector2Int best = origin; float bestDistance = (goal - origin).sqrMagnitude;
+            var dirs = new[] { Vector2Int.right, Vector2Int.left, Vector2Int.up, Vector2Int.down };
+            while (queue.Count > 0 && from.Count < 40000)
+            {
+                var c = queue.Dequeue();
+                float d = (goal - c).sqrMagnitude;
+                if (d < bestDistance) { bestDistance = d; best = c; }
+                if (c == goal) break;
+                foreach (var dir in dirs)
+                {
+                    var n = c + dir;
+                    if (Mathf.Abs(n.x) > span || Mathf.Abs(n.y) > span || from.ContainsKey(n)) continue;
+                    if (n != goal && (!Open(n) || !Passable(c, n))) continue;
+                    from[n] = c; queue.Enqueue(n);
+                }
+            }
+            var path = new System.Collections.Generic.List<Vector2Int>();
+            for (var c = best; c != origin; c = from[c]) path.Add(c);
+            path.Reverse();
+            for (int i = 0; i < path.Count; i++)
+            {
+                bool corner = i == path.Count - 1 || (i > 0 && (path[i] - path[i - 1]) != (path[i + 1] - path[i])) || (i == 0 && path.Count > 1 && path[1] - path[0] != path[0]);
+                if (corner) corners.Add(start + new Vector3(path[i].x * step, path[i].y * step, 0f));
+            }
+            return corners;
         }
 
         public static KeyControl ControlFor(Keyboard keyboard, Key key)

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using Rootborn.Tests.PlayMode.EndToEnd.Support;
 using NUnit.Framework;
 using Rootborn.Game.Encyclopedia;
 using Rootborn.Game.Player;
@@ -144,25 +145,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
 
         private IEnumerator WalkPlayerWithKeyboardTo(GameObject player, Keyboard keyboard, Vector3 targetPosition, float tolerance, string failure)
         {
-            Key activeKey = Key.None;
-            for (int i = 0; i < 360 && Vector3.Distance(player.transform.position, targetPosition) > tolerance; i++)
-            {
-                Vector3 delta = targetPosition - player.transform.position;
-                Key key = Mathf.Abs(delta.x) >= Mathf.Abs(delta.y) ? (delta.x >= 0f ? Key.D : Key.A) : (delta.y >= 0f ? Key.W : Key.S);
-                if (activeKey != key)
-                {
-                    if (activeKey != Key.None) Release(ControlFor(keyboard, activeKey));
-                    Press(ControlFor(keyboard, key));
-                    activeKey = key;
-                }
-                InputSystem.Update();
-                yield return null;
-                yield return new WaitForFixedUpdate();
-            }
-            if (activeKey != Key.None) Release(ControlFor(keyboard, activeKey));
-            InputSystem.Update();
-            yield return new WaitForFixedUpdate();
-            Assert.LessOrEqual(Vector3.Distance(player.transform.position, targetPosition), tolerance, failure);
+            // Routed around buildings by the shared driver; movement still comes from WASD key events.
+            yield return PlayerFlowE2EDriver.WalkPlayerWithKeyboardTo(player, keyboard, targetPosition, tolerance, 720, failure);
         }
 
         private IEnumerator PressInteractKey(Keyboard keyboard)

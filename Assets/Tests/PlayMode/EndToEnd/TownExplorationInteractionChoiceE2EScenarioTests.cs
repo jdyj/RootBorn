@@ -1,5 +1,6 @@
 using System.Collections;
 using System.IO;
+using Rootborn.Tests.PlayMode.EndToEnd.Support;
 using NUnit.Framework;
 using Rootborn.Game.Player;
 using Rootborn.Game.Save;
@@ -77,7 +78,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return WalkPlayerWithKeyboardTo(runtime.Player, keyboard, runtime.Interaction.transform.position, 0.25f, "EXPLORATION-CHOICE-E2E-003 failed: keyboard movement could not reach placed exploration point.");
             runtime.Router.RefreshPromptNow();
             Assert.IsTrue(runtime.Router.PromptVisible, "EXPLORATION-CHOICE-E2E-004 failed: exploration prompt was not visible after movement.");
-            StringAssert.Contains("Exploration Test Alley Crate", runtime.Router.PromptText, "EXPLORATION-CHOICE-E2E-004 failed: prompt did not target SO exploration point.");
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Get(runtime.Interaction.Interaction.DisplayNameKey), runtime.Router.PromptText, "EXPLORATION-CHOICE-E2E-004 failed: prompt did not target SO exploration point.");
             yield return PressInteractKey(keyboard);
             yield return null;
 
@@ -90,7 +91,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return ClickButton(FindButton(panel.transform, "ChoiceButton_" + choice.Id));
             Assert.AreEqual(ExplorationChoiceResultKind.Applied, runtime.Interaction.LastResult.Kind, "EXPLORATION-CHOICE-E2E-007 failed: actual UI button did not apply choice. Result: " + panel.ResultText);
             Assert.AreEqual(beforeItemCount + 1, runtime.Inventory.Inventory.CountOf(item), "EXPLORATION-CHOICE-E2E-008 failed: item reward not reflected.");
-            Assert.IsTrue(panel.ResultText.Contains(item.Id), "EXPLORATION-CHOICE-E2E-008 failed: result UI did not show item grant.");
+            // Players see the item name with its count, never the raw id (same rule as the unit-level exploration test).
+            Assert.IsTrue(panel.ResultText.Contains("×") && !panel.ResultText.Contains(item.Id), "EXPLORATION-CHOICE-E2E-008 failed: result UI did not show item grant. Result: " + panel.ResultText);
             Assert.IsTrue(panel.Progress.GetRecord(runtime.Interaction.Interaction.Id).Completed, "EXPLORATION-CHOICE-E2E-009 failed: exploration progress did not mark completion.");
 
             string explorationSave = ResolveExplorationSavePath(runtime.Student.Progress.PlayerId);
@@ -154,25 +156,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
 
         private IEnumerator WalkPlayerWithKeyboardTo(GameObject player, Keyboard keyboard, Vector3 targetPosition, float tolerance, string failure)
         {
-            Key activeKey = Key.None;
-            for (int i = 0; i < 360 && Vector3.Distance(player.transform.position, targetPosition) > tolerance; i++)
-            {
-                Vector3 delta = targetPosition - player.transform.position;
-                Key key = Mathf.Abs(delta.x) >= Mathf.Abs(delta.y) ? (delta.x >= 0f ? Key.D : Key.A) : (delta.y >= 0f ? Key.W : Key.S);
-                if (activeKey != key)
-                {
-                    if (activeKey != Key.None) Release(ControlFor(keyboard, activeKey));
-                    Press(ControlFor(keyboard, key));
-                    activeKey = key;
-                }
-                InputSystem.Update();
-                yield return null;
-                yield return new WaitForFixedUpdate();
-            }
-            if (activeKey != Key.None) Release(ControlFor(keyboard, activeKey));
-            InputSystem.Update();
-            yield return new WaitForFixedUpdate();
-            Assert.LessOrEqual(Vector3.Distance(player.transform.position, targetPosition), tolerance, failure);
+            // Routed around buildings by the shared driver; movement still comes from WASD key events.
+            yield return PlayerFlowE2EDriver.WalkPlayerWithKeyboardTo(player, keyboard, targetPosition, tolerance, 720, failure);
         }
 
         private IEnumerator PressInteractKey(Keyboard keyboard)

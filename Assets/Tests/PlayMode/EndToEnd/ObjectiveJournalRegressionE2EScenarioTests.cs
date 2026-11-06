@@ -19,7 +19,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
     public sealed class ObjectiveJournalRegressionE2EScenarioTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
         private const string TestSlotId = "slot-0";
-        private const string HintRouteTitle = "objective.daily.library.title";
+        // The journal shows the localized route title, not its key.
+        private static string HintRouteTitle => Rootborn.Game.Localization.GameText.Get("objective.daily.library.title");
         private const string ScreenshotPath = "Builds/Logs/objective-journal-source-collision-e2e.png";
         private string _saveRoot;
 
@@ -70,7 +71,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             AssertNoLegacyObjectiveHudObjects("OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 before tracking");
             Assert.AreEqual(1, Object.FindObjectsByType<TrackedObjectiveHud>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length, "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Town created duplicate tracked HUD instances.");
 
-            yield return SelectCategoryAndAssertRowContaining(runtime.Journal, "Goals", "Student Day Guide", "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Goals source was missing.");
+            yield return SelectCategoryAndAssertRowContaining(runtime.Journal, "Goals", Rootborn.Game.Localization.GameText.Localized("ui.objectives.student_day_guide", "Student Day Guide"), "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Goals source was missing.");
             string goalStableKey = runtime.Journal.SelectedStableKeyForTests;
             Assert.IsFalse(string.IsNullOrEmpty(goalStableKey), "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Goals row had blank stable key.");
             int goalsRowsBefore = runtime.Journal.VisibleRowCountForTests;
@@ -81,7 +82,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.AreNotEqual(goalStableKey, hintStableKey, "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Goals and Hints sources emitted colliding stable keys.");
             int hintsRowsBefore = runtime.Journal.VisibleRowCountForTests;
 
-            yield return SelectCategoryAndAssertRowContaining(runtime.Journal, "Quests", "Quest", "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Quest source was missing.");
+            yield return SelectCategoryAndAssertRowContaining(runtime.Journal, "Quests", Rootborn.Game.Localization.GameText.Get("quest.gatherWood.name"), "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Quest source was missing.");
             string questStableKey = runtime.Journal.SelectedStableKeyForTests;
             Assert.IsFalse(string.IsNullOrEmpty(questStableKey), "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Quest row had blank stable key.");
             Assert.AreNotEqual(goalStableKey, questStableKey, "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Goals and Quests sources emitted colliding stable keys.");
@@ -121,7 +122,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.AreEqual(trackedCategory, reloadedCategory);
             Assert.AreEqual(trackedStableKey, reloadedStableKey);
 
-            yield return SelectCategoryAndAssertRowContaining(reloaded.Journal, "Goals", "Student Day Guide", "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Goals row missing after reload.");
+            yield return SelectCategoryAndAssertRowContaining(reloaded.Journal, "Goals", Rootborn.Game.Localization.GameText.Localized("ui.objectives.student_day_guide", "Student Day Guide"), "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Goals row missing after reload.");
             Assert.AreEqual(goalsRowsBefore, reloaded.Journal.VisibleRowCountForTests, "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: reload duplicated or removed Goals rows.");
             yield return SelectCategoryAndAssertRowContaining(reloaded.Journal, "Hints", HintRouteTitle, "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: Hints row missing after reload.");
             Assert.AreEqual(hintsRowsBefore, reloaded.Journal.VisibleRowCountForTests, "OBJECTIVE-JOURNAL-SOURCE-COLLISION-PM-001 failed: reload duplicated or removed Hints rows.");

@@ -96,7 +96,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var square = RequireObject(LocationNpcRuntimeInstaller.LocationObjectName("location.town-square"), "CAMPAIGN-E2E-003 failed: town square object missing.");
             yield return WalkPlayerWithKeyboardTo(runtime.Player, keyboard, ApproachTownSquare(square.transform.position), 0.25f, "CAMPAIGN-E2E-003 failed: actual keyboard movement could not reach town square approach point.");
             runtime.Router.RefreshPromptNow();
-            StringAssert.Contains("Explore", runtime.Router.PromptText, "CAMPAIGN-E2E-003 failed: town square approach must target the location visit prompt, not a nearby activity prompt.");
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Format("life.location.explore", "").Replace("", string.Empty).Trim(), runtime.Router.PromptText, "CAMPAIGN-E2E-003 failed: town square approach must target the location visit prompt, not a nearby activity prompt.");
             yield return PressInteractKey(keyboard);
             yield return WaitForCampaignJournalText(keyboard, "campaign.objective.visit-town", 3f, "CAMPAIGN-E2E-003 failed: actual location interaction did not advance day one campaign objective.");
 

@@ -83,6 +83,9 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             StringAssert.Contains(StatusId, runtime.LocationPanel.LastResult.OutcomeLogIds[0], "KNOWLEDGE-STATUS-E2E-001 failed: transient activity result did not expose status feedback.");
 
             runtime.ObjectiveProvider.RefreshNow();
+            // The location panel holds gameplay shortcuts while open; the player closes it before pressing Tab.
+            if (runtime.LocationPanel.IsOpen) yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(runtime.LocationPanel.transform, "CloseLocation"));
+            yield return PlayerFlowE2EDriver.DismissDailyEvent();
             yield return PlayerFlowE2EDriver.PressTab(keyboard);
             Assert.IsTrue(runtime.Journal.IsVisible, "KNOWLEDGE-STATUS-E2E-001 failed: Tab did not open Objective Journal.");
             yield return SelectStatusHintAndTrack(runtime, "KNOWLEDGE-STATUS-E2E-001 failed: Objective Journal did not show status activity hint after Workshop activity.");
@@ -94,10 +97,11 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             ScreenshotEvidence.Capture(ScreenshotPath);
             yield return ScreenshotEvidence.WaitForNonZeroFile(ScreenshotPath, 3f, "KNOWLEDGE-STATUS-E2E-001 failed: Game View screenshot evidence was not written.");
 
-            string studentFile = Path.Combine(_saveRoot, TestSlotId, "student-life-progress.json");
-            Assert.IsTrue(File.Exists(studentFile), "KNOWLEDGE-STATUS-E2E-001 failed: student progress save file missing after activity.");
-            string saved = File.ReadAllText(studentFile);
-            var saveData = JsonUtility.FromJson<StudentLifeProgressSaveData>(saved);
+            // Student progress is saved inside the slot's career snapshot together with inventory and world state.
+            string slotDirectory = Path.Combine(_saveRoot, TestSlotId);
+            string[] snapshots = Directory.Exists(slotDirectory) ? Directory.GetFiles(slotDirectory, "adult-career-snapshot-*.json") : new string[0];
+            Assert.AreEqual(1, snapshots.Length, "KNOWLEDGE-STATUS-E2E-001 failed: student progress save file missing after activity.");
+            var saveData = JsonUtility.FromJson<Rootborn.Game.Careers.AdultCareerSnapshot>(File.ReadAllText(snapshots[0])).Student;
             Assert.AreEqual(1, saveData.StudentConditionStatuses.Count(entry => string.Equals(entry.Id, StatusId, StringComparison.Ordinal) && entry.Value == 1), "KNOWLEDGE-STATUS-E2E-001 failed: status value should be saved exactly once before reload.");
             Assert.AreEqual(1, saveData.TodayResultLogIds.Count(id => string.Equals(id, statusLog, StringComparison.Ordinal)), "KNOWLEDGE-STATUS-E2E-001 failed: status result log should be saved exactly once before reload.");
             Assert.AreEqual(1, runtime.Student.Progress.GetTodayResultLogIds().Count(id => string.Equals(id, statusLog, StringComparison.Ordinal)), "KNOWLEDGE-STATUS-E2E-001 failed: status result log should exist exactly once before reload.");
@@ -119,12 +123,18 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.AreEqual(1, reloaded.Student.Progress.GetStatusValue(reloadedStatus), "KNOWLEDGE-STATUS-E2E-001 failed: status value did not restore exactly once after reload.");
             Assert.AreEqual(1, reloaded.Student.Progress.GetTodayResultLogIds().Count(id => string.Equals(id, statusLog, StringComparison.Ordinal)), "KNOWLEDGE-STATUS-E2E-001 failed: reload duplicated or removed the status result log.");
             reloaded.ObjectiveProvider.RefreshNow();
+            // The location panel holds gameplay shortcuts while open; the player closes it before pressing Tab.
+            if (reloaded.LocationPanel.IsOpen) yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(reloaded.LocationPanel.transform, "CloseLocation"));
+            yield return PlayerFlowE2EDriver.DismissDailyEvent();
             yield return PlayerFlowE2EDriver.PressTab(keyboard);
             Assert.IsTrue(reloaded.Journal.IsVisible, "KNOWLEDGE-STATUS-E2E-001 failed: Tab did not open Objective Journal after reload.");
             yield return SelectStatusHintAndTrack(reloaded, "KNOWLEDGE-STATUS-E2E-001 failed: reloaded Objective Journal did not show status activity hint.");
             Assert.AreEqual(1, CountVisibleStatusRows(reloaded.Journal), "KNOWLEDGE-STATUS-E2E-001 failed: reload duplicated status Journal rows.");
             AssertOneTrackedHud("KNOWLEDGE-STATUS-E2E-001 failed: reload created duplicate tracked HUD instances.");
 
+            // The location panel holds gameplay shortcuts while open; the player closes it before pressing Tab.
+            if (reloaded.LocationPanel.IsOpen) yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(reloaded.LocationPanel.transform, "CloseLocation"));
+            yield return PlayerFlowE2EDriver.DismissDailyEvent();
             yield return PlayerFlowE2EDriver.PressTab(keyboard);
             Assert.IsFalse(reloaded.Journal.IsVisible, "KNOWLEDGE-STATUS-E2E-001 failed: second Tab did not close Objective Journal before repeated activity.");
             var reloadedWorkshop = RequireObject(LocationNpcRuntimeInstaller.LocationObjectName("location.workshop"), "KNOWLEDGE-STATUS-E2E-001 failed: reloaded workshop location object missing.");
@@ -132,6 +142,9 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(reloaded.LocationPanel.transform, "LocationActivityButton_0"));
             Assert.AreEqual(2, reloaded.Student.Progress.GetStatusValue(reloadedStatus), "KNOWLEDGE-STATUS-E2E-001 failed: repeated player activity should apply a new request exactly once.");
             reloaded.ObjectiveProvider.RefreshNow();
+            // The location panel holds gameplay shortcuts while open; the player closes it before pressing Tab.
+            if (reloaded.LocationPanel.IsOpen) yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(reloaded.LocationPanel.transform, "CloseLocation"));
+            yield return PlayerFlowE2EDriver.DismissDailyEvent();
             yield return PlayerFlowE2EDriver.PressTab(keyboard);
             yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(reloaded.Journal.transform, "ObjectiveCategory_Hints"));
             Assert.AreEqual(1, CountVisibleStatusRows(reloaded.Journal), "KNOWLEDGE-STATUS-E2E-001 failed: repeated activity duplicated status Journal rows.");
@@ -229,8 +242,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return PlayerFlowE2EDriver.WalkPlayerWithKeyboardTo(runtime.Player, keyboard, location.transform.position + new Vector3(0.7f, 0f, 0f), 0.06f, 720, failure);
             runtime.Router.RefreshPromptNow();
             Assert.IsTrue(runtime.Router.PromptVisible, failure + " Prompt was not visible.");
-            StringAssert.Contains("Explore", runtime.Router.PromptText, failure + " Prompt did not select the location activity interaction.");
-            StringAssert.Contains("Workshop", runtime.Router.PromptText, failure + " Prompt did not target Workshop.");
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Format("life.location.explore", "").Replace("", string.Empty).Trim(), runtime.Router.PromptText, failure + " Prompt did not select the location activity interaction.");
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Get("location.workshop.name"), runtime.Router.PromptText, failure + " Prompt did not target Workshop.");
             yield return PlayerFlowE2EDriver.PressInteractKey(keyboard);
             yield return null;
         }

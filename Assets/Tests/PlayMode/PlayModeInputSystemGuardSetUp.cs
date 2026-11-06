@@ -68,6 +68,25 @@ namespace Rootborn.Tests.PlayMode
     {
         public const string ToggleName = "PlacementModeToggleButton";
 
+        // Enters a world scene the way a new game does, so scene systems (NPC dialogue, furniture) bind to the slot's owner.
+        // Loading a scene directly skips that binding and leaves those systems inert.
+        public static System.Collections.IEnumerator EnterWorld(string slotId, string sceneName, string spawnId, float timeoutSeconds = 20f)
+        {
+            var bootstrap = Rootborn.Game.Managers.Managers.BootstrapAsync();
+            while (!bootstrap.IsCompleted) yield return null;
+            var metadata = new Rootborn.Game.Save.SaveSlotMetadata { SlotId = slotId, DisplayName = slotId, WorldSeed = 1205, TileSeed = 1205 };
+            Assert.IsTrue(Rootborn.Game.World.WorldTravelRuntime.TryRequestEntry(metadata, sceneName, spawnId), sceneName + " entry request was refused.");
+            float deadline = UnityEngine.Time.realtimeSinceStartup + timeoutSeconds;
+            while (UnityEngine.Time.realtimeSinceStartup < deadline)
+            {
+                if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == sceneName)
+                    foreach (var owner in UnityEngine.Object.FindObjectsByType<Rootborn.UI.Careers.AdultCareerRuntimeComponent>(UnityEngine.FindObjectsSortMode.None))
+                        if (owner.CanMutate && owner.gameObject.scene.name == sceneName) yield break;
+                yield return null;
+            }
+            Assert.Fail(sceneName + " owner did not bind after entering as a player. " + OverlayDiagnostics());
+        }
+
         // Enters House the way a new game does, so the furniture session binds to the slot's owner.
         // Loading the scene directly leaves the authored House without a placement session.
         public static System.Collections.IEnumerator EnterHouse(string slotId, float timeoutSeconds = 20f)

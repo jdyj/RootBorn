@@ -77,7 +77,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return WalkPlayerWithKeyboardTo(runtime.Player, keyboard, square.transform.position, 0.25f, "LOCIDENT-E2E-002 failed: actual keyboard movement could not reach town square.");
             runtime.Router.RefreshPromptNow();
             Assert.IsTrue(runtime.Router.PromptVisible, "LOCIDENT-E2E-003 failed: town square prompt was not visible after movement.");
-            StringAssert.Contains("Explore", runtime.Router.PromptText, "LOCIDENT-E2E-003 failed: prompt did not expose location identity interaction.");
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Format("life.location.explore", "").Replace("", string.Empty).Trim(), runtime.Router.PromptText, "LOCIDENT-E2E-003 failed: prompt did not expose location identity interaction.");
             yield return PressInteractKey(keyboard);
             yield return WaitForLocationIdentityPanel(2f, "LOCIDENT-E2E-003 failed: location identity UI did not open from actual input.");
             AssertPanelContains(panel.transform, "square", "LOCIDENT-E2E-003 failed: first location UI did not show town square identity text.");

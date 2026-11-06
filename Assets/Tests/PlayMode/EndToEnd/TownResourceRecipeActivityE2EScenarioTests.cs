@@ -24,7 +24,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         private const string TestSlotId = "slot-0";
         private const string ActivityId = "location.activity.square-help-request";
         private const string RecipeId = "recipe.town.field-notes";
-        private const string RecipeTitle = "recipe.town.field-notes.name";
+        // Players see the localized recipe name, not its key.
+        private static string RecipeTitle => Rootborn.Game.Localization.GameText.Get("recipe.town.field-notes.name");
         private const string ScreenshotPath = "Builds/Logs/town-resource-recipe-activity-e2e.png";
         private string _saveRoot;
 
@@ -82,8 +83,11 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.AreEqual(1, progress.SeenResourceIds.Length, "TOWN-RESOURCE-RECIPE-E2E-001 failed: resource sighting was not recorded.");
 
             runtime.ObjectiveProvider.RefreshNow();
+            // The location panel holds gameplay shortcuts while open; the player closes it before pressing Tab.
+            if (runtime.LocationPanel.IsOpen) yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(runtime.LocationPanel.transform, "CloseLocation"));
+            yield return PlayerFlowE2EDriver.DismissDailyEvent();
             yield return PlayerFlowE2EDriver.PressTab(keyboard);
-            Assert.IsTrue(runtime.Journal.IsVisible, "TOWN-RESOURCE-RECIPE-E2E-001 failed: Tab did not open Objective Journal.");
+            Assert.IsTrue(runtime.Journal.IsVisible, "TOWN-RESOURCE-RECIPE-E2E-001 failed: Tab did not open Objective Journal. " + PlayerFlowE2EDriver.InputLockOwners());
             yield return SelectResourceRecipeHint(runtime.Journal, "TOWN-RESOURCE-RECIPE-E2E-001 failed: Objective Journal did not show resource/recipe hint after activity.");
             Assert.AreEqual(1, CountVisibleRecipeRows(runtime.Journal), "TOWN-RESOURCE-RECIPE-E2E-001 failed: Objective Journal showed duplicate resource/recipe rows after first reveal.");
 
@@ -110,11 +114,17 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var reloadedProgress = LoadProgress(reloaded.Player);
             Assert.AreEqual(1, reloadedProgress.RevealedRecipeIds.Count(id => id == RecipeId), "TOWN-RESOURCE-RECIPE-E2E-001 failed: recipe reveal did not restore exactly once after reload.");
             reloaded.ObjectiveProvider.RefreshNow();
+            // The location panel holds gameplay shortcuts while open; the player closes it before pressing Tab.
+            if (reloaded.LocationPanel.IsOpen) yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(reloaded.LocationPanel.transform, "CloseLocation"));
+            yield return PlayerFlowE2EDriver.DismissDailyEvent();
             yield return PlayerFlowE2EDriver.PressTab(keyboard);
             Assert.IsTrue(reloaded.Journal.IsVisible, "TOWN-RESOURCE-RECIPE-E2E-001 failed: Tab did not open Objective Journal after reload.");
             yield return SelectResourceRecipeHint(reloaded.Journal, "TOWN-RESOURCE-RECIPE-E2E-001 failed: reloaded Objective Journal did not show resource/recipe hint.");
             Assert.AreEqual(1, CountVisibleRecipeRows(reloaded.Journal), "TOWN-RESOURCE-RECIPE-E2E-001 failed: reload duplicated resource/recipe Journal rows.");
 
+            // The location panel holds gameplay shortcuts while open; the player closes it before pressing Tab.
+            if (reloaded.LocationPanel.IsOpen) yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(reloaded.LocationPanel.transform, "CloseLocation"));
+            yield return PlayerFlowE2EDriver.DismissDailyEvent();
             yield return PlayerFlowE2EDriver.PressTab(keyboard);
             Assert.IsFalse(reloaded.Journal.IsVisible, "TOWN-RESOURCE-RECIPE-E2E-001 failed: second Tab did not close Objective Journal before repeated interaction.");
             var reloadedSquare = RequireObject(LocationNpcRuntimeInstaller.LocationObjectName("location.town-square"), "TOWN-RESOURCE-RECIPE-E2E-001 failed: reloaded town square location object missing.");
@@ -207,7 +217,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return PlayerFlowE2EDriver.WalkPlayerWithKeyboardTo(runtime.Player, keyboard, square.transform.position + new Vector3(-1.45f, 0f, 0f), 0.06f, 480, failure);
             runtime.Router.RefreshPromptNow();
             Assert.IsTrue(runtime.Router.PromptVisible, failure + " Prompt was not visible.");
-            StringAssert.Contains("Explore", runtime.Router.PromptText, failure + " Prompt did not select the location activity interaction.");
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Format("life.location.explore", "").Replace("", string.Empty).Trim(), runtime.Router.PromptText, failure + " Prompt did not select the location activity interaction.");
             yield return PlayerFlowE2EDriver.PressInteractKey(keyboard);
             yield return null;
         }

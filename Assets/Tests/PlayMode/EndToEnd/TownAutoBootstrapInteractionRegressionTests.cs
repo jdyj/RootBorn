@@ -1,4 +1,5 @@
 using System.Collections;
+using Rootborn.Tests.PlayMode.EndToEnd.Support;
 using NUnit.Framework;
 using Rootborn.Game.Dialogue;
 using Rootborn.Game.Player;
@@ -28,13 +29,20 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         {
             LogAssert.ignoreFailingMessages = true;
             Time.timeScale = 1f;
+            _saveRoot = System.IO.Path.Combine(Application.temporaryCachePath, "rootborn-autoboot-" + System.Guid.NewGuid().ToString("N"));
+            Rootborn.Game.Save.SaveService.SetRootDirectoryForTests(_saveRoot);
+            Rootborn.Game.Save.ActiveSaveContext.Clear();
             EnsureEventSystem();
             yield return null;
         }
 
+        private string _saveRoot;
+
         [UnityTearDown]
         public new IEnumerator TearDown()
         {
+            Rootborn.Game.Save.ActiveSaveContext.Clear();
+            Rootborn.Game.Save.SaveService.SetRootDirectoryForTests(null);
             LogAssert.ignoreFailingMessages = false;
             yield return null;
         }
@@ -44,7 +52,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         {
             var keyboard = InputSystem.AddDevice<Keyboard>();
 
-            yield return LoadScene("Town");
+            // Enter Town as a new game does, so the guide's dialogue binds to the slot owner like in play.
+            yield return Rootborn.Tests.PlayMode.HousePlacementTestDriver.EnterWorld("autoboot-npc", "Town", "town-home-entry");
 
             // No explicit installer calls. The fix under test is the [RuntimeInitializeOnLoadMethod]
             // entry point + sceneLoaded handler in LocationNpcRuntimeInstaller.
@@ -103,25 +112,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
 
         private IEnumerator WalkPlayerWithKeyboardTo(GameObject player, Keyboard keyboard, Vector3 target, float tolerance)
         {
-            Key activeKey = Key.None;
-            for (int i = 0; i < 600 && Vector3.Distance(player.transform.position, target) > tolerance; i++)
-            {
-                Vector3 delta = target - player.transform.position;
-                Key key = Mathf.Abs(delta.x) >= Mathf.Abs(delta.y) ? (delta.x >= 0f ? Key.D : Key.A) : (delta.y >= 0f ? Key.W : Key.S);
-                if (activeKey != key)
-                {
-                    if (activeKey != Key.None) Release(ControlFor(keyboard, activeKey));
-                    Press(ControlFor(keyboard, key));
-                    activeKey = key;
-                }
-                InputSystem.Update();
-                yield return null;
-                yield return new WaitForFixedUpdate();
-            }
-            if (activeKey != Key.None) Release(ControlFor(keyboard, activeKey));
-            InputSystem.Update();
-            yield return new WaitForFixedUpdate();
-            Assert.LessOrEqual(Vector3.Distance(player.transform.position, target), tolerance, "Keyboard movement could not reach the NPC.");
+            // Routed around buildings by the shared driver; movement still comes from WASD key events.
+            yield return PlayerFlowE2EDriver.WalkPlayerWithKeyboardTo(player, keyboard, target, tolerance, 600, "Keyboard movement could not reach the NPC.");
         }
 
         private IEnumerator PressInteractKey(Keyboard keyboard)
