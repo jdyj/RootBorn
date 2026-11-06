@@ -359,6 +359,48 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             return corners;
         }
 
+        // Opens MainMenu, waits for game data, presses a save card button and waits for the world scene and a ready player.
+        public static IEnumerator EnterWorldFromSaveSlot(string slotId, string buttonName, string expectedScene, string failure)
+        {
+            yield return LoadScene("MainMenu");
+            EnsurePassiveEventSystem();
+            Rootborn.UI.MainMenu.SaveSlotSelectPanel.EnsureInScene().Show();
+            yield return null;
+            InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
+            yield return Rootborn.Tests.PlayMode.PlayModeScenarioStart.WaitForGameData();
+            yield return ClickButton(FindButton("SaveSlotCard_" + slotId, buttonName));
+            yield return WaitForScene(expectedScene, 20f, failure);
+            yield return WaitForPlayerReady(failure);
+        }
+
+        public static IEnumerator WaitForPlayerReady(string failure)
+        {
+            float deadline = Time.unscaledTime + 15f;
+            while (Time.unscaledTime < deadline)
+            {
+                var player = GameObject.Find("Player");
+                if (player != null && player.GetComponent<Rootborn.Game.StudentLife.StudentLifeProgressComponent>() != null
+                    && player.GetComponent<Rootborn.Game.Player.PlayerInteractionRouter>() != null && EventSystem.current != null) yield break;
+                yield return null;
+            }
+            Assert.Fail(failure + " Player runtime was not ready in " + SceneManager.GetActiveScene().name + ".");
+        }
+
+        // Walks into the door that leads to destinationScene; presses E if the door waits for it. Returns once the new scene's player is ready.
+        public static IEnumerator WalkThroughDoor(Keyboard keyboard, string destinationScene, string failure)
+        {
+            string from = SceneManager.GetActiveScene().name;
+            Rootborn.Game.World.WorldPortal door = null;
+            foreach (var portal in Object.FindObjectsByType<Rootborn.Game.World.WorldPortal>(FindObjectsSortMode.None))
+                if (portal.isActiveAndEnabled && portal.gameObject.scene.name == from && portal.DestinationScene == destinationScene) { door = portal; break; }
+            Assert.IsNotNull(door, failure + " " + from + " has no active door to " + destinationScene + ".");
+            var player = GameObject.Find("Player");
+            yield return WalkPlayerWithKeyboardTo(player, keyboard, door.transform.position, 0.9f, 900, failure + " Could not walk to the door.");
+            if (SceneManager.GetActiveScene().name == from) yield return PressInteractKey(keyboard);
+            yield return WaitForScene(destinationScene, 15f, failure + " The door did not lead to " + destinationScene + ".");
+            yield return WaitForPlayerReady(failure);
+        }
+
         // Plays the open minigame through its on-screen buttons, the way a player reads and answers the screen.
         // Sequence: remember the order while it is shown, then press it back. Timing: press Tap while the cursor is over a beat.
         // Choice: press the hinted answer when the screen marks one. Placement and dodge stages are not driven yet.

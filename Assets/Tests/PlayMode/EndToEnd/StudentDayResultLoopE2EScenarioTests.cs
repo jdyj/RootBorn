@@ -10,6 +10,7 @@ using Rootborn.Game.StudentLife;
 using Rootborn.UI.MainMenu;
 using Rootborn.UI.Quests;
 using Rootborn.UI.StudentLife;
+using Rootborn.Tests.PlayMode.EndToEnd.Support;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -179,6 +180,54 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             StringAssert.Contains("InProgress", nextDayJson, "STUDENT-DAY-E2E-010 failed: save file did not persist next day state.");
             StringAssert.Contains("tutorial.day2", nextDayJson, "STUDENT-DAY-E2E-010 failed: save file did not persist day-two tutorial stage.");
             StringAssert.Contains("goal.talk-to-guide-day2", nextDayJson, "STUDENT-DAY-E2E-010 failed: save file did not persist day-two objective.");
+        }
+
+        // End of day in the authored world: walk from Town through the home door, end the day at the board in House,
+        // reload, see the same result without settling twice, then start the next day from the result panel.
+        [UnityTest]
+        [Timeout(600000)]
+        public IEnumerator DAY_END_001_AuthoredHouse_EndDayReloadShowsSameResultThenNextDay()
+        {
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+            yield return PlayerFlowE2EDriver.EnterWorldFromSaveSlot(TestSlotId, "NewGameButton", "Town", "DAY-END-001 failed: New Game did not enter Town.");
+            yield return PlayerFlowE2EDriver.DismissDailyEvent();
+            yield return PlayerFlowE2EDriver.WalkThroughDoor(keyboard, "House", "DAY-END-001 failed: could not go home.");
+
+            var student = GameObject.Find("Player").GetComponent<StudentLifeProgressComponent>();
+            int day = student.Progress.CurrentDay;
+            Assert.AreEqual(StudentDayState.InProgress, student.Progress.DayState, "DAY-END-001 failed: a new day should be in progress.");
+            yield return WalkToDayEndBoardAndInteract(keyboard, "DAY-END-001 failed:");
+            yield return WaitForDayResultPanel(3f, "DAY-END-001 failed: ending the day at the board did not open the result panel.");
+            Assert.AreEqual(StudentDayState.ResultReady, student.Progress.DayState, "DAY-END-001 failed: the day did not end.");
+            Assert.AreEqual(day, student.Progress.CurrentDay, "DAY-END-001 failed: ending the day must not skip to the next day by itself.");
+
+            ActiveSaveContext.Clear();
+            PlayerGlobalState.ClearForTests();
+            yield return PlayerFlowE2EDriver.EnterWorldFromSaveSlot(TestSlotId, "LoadButton", "House", "DAY-END-002 failed: Load did not return to House.");
+            var reloaded = GameObject.Find("Player").GetComponent<StudentLifeProgressComponent>();
+            Assert.AreEqual(StudentDayState.ResultReady, reloaded.Progress.DayState, "DAY-END-002 failed: the ended day did not survive reload.");
+            Assert.AreEqual(day, reloaded.Progress.CurrentDay, "DAY-END-002 failed: reload changed the day.");
+            yield return WalkToDayEndBoardAndInteract(keyboard, "DAY-END-002 failed:");
+            yield return WaitForDayResultPanel(3f, "DAY-END-002 failed: the board did not reopen the saved result.");
+            Assert.AreEqual(day, reloaded.Progress.CurrentDay, "DAY-END-002 failed: reopening the result settled the day again.");
+
+            var panel = Object.FindFirstObjectByType<StudentDayResultPanel>(FindObjectsInactive.Include);
+            yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(panel.transform, "NextDayButton"));
+            yield return null;
+            Assert.AreEqual(day + 1, reloaded.Progress.CurrentDay, "DAY-END-003 failed: Next Day did not start the next day.");
+            Assert.AreEqual(StudentDayState.InProgress, reloaded.Progress.DayState, "DAY-END-003 failed: the next day is not in progress.");
+        }
+
+        private static IEnumerator WalkToDayEndBoardAndInteract(Keyboard keyboard, string failure)
+        {
+            var board = GameObject.Find("StudentDayEndBoard");
+            Assert.IsNotNull(board, failure + " House has no StudentDayEndBoard.");
+            var player = GameObject.Find("Player");
+            yield return PlayerFlowE2EDriver.WalkPlayerWithKeyboardTo(player, keyboard, board.transform.position, 0.9f, 900, failure + " could not walk to the day-end board.");
+            var router = player.GetComponent<PlayerInteractionRouter>();
+            router.RefreshPromptNow();
+            Assert.IsTrue(router.PromptVisible, failure + " no prompt next to the day-end board.");
+            yield return PlayerFlowE2EDriver.PressInteractKey(keyboard);
         }
 
         private static IEnumerator WaitForDayRuntime(float timeoutSeconds)

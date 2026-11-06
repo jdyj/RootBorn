@@ -45,7 +45,7 @@
 | REL-001 관계 | 없음 | **공백** (FirstGuide/SecondNpc/Relationship* 격리) |
 | JOB-001 알바 | `PartTimeWorkGrowthE2EScenarioTests.JOB_001_AuthoredTown_*` | 2026-11-06 복구: 걷기 → E → 미니게임을 화면 버튼으로 진행 → 불러오기 후 한 번만 반영 |
 | KNOW/STATUS | KnowledgeStatusActivityChain | 유지 |
-| 하루 끝 결과·다음 날 | 없음 | **공백** (StudentDayResult* 격리) |
+| 하루 끝 결과·다음 날 | `StudentDayResultLoopE2EScenarioTests.DAY_END_001_AuthoredHouse_*` | 2026-11-06 복구: Town → 집 문 → House 보드 → 결과 → 불러오기 후 같은 결과(재정산 없음) → 다음 날 |
 | 자유 경로(학교 밖 성장) | 없음 | **공백** (OutsideSchool, SelfStudyLibrary, TownHelpAction 격리) |
 
 EditMode 단위 테스트는 위 시스템을 계속 다룬다. 공백은 "실제 입력으로 저작 월드를 걸어 다니며 끝까지 가는" PlayMode 증명이다.
@@ -79,3 +79,5 @@ EditMode 단위 테스트는 위 시스템을 계속 다룬다. 공백은 "실�
 
 - `PlayerFlowE2EDriver.PlayMinigameToEnd`: 순서(미리보기를 기억했다가 누름), 선택(힌트 표시), 타이밍(커서가 박자 위일 때 Tap)을 화면 버튼으로 진행한다. 판 배치와 피하기는 아직 지원하지 않고, 만나면 실패 메시지로 알린다.
 - JOB-001 복구. 옛 `WORK_E2E_001_006`은 즉시 적용 전제라 격리 유지.
+- 공용 도우미 추가: `EnterWorldFromSaveSlot`, `WaitForPlayerReady`, `WalkThroughDoor`(문까지 걷고 필요하면 E).
+- 하루 끝(DAY_END_001) 복구.
