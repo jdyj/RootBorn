@@ -903,12 +903,14 @@ namespace Rootborn.UI.Interiors
             }
 
             EnsureEventSystem(scene);
-            if (FindFirstObjectByType<InteriorFurniturePlacementPanel>() != null)
+            if (FindInScene<InteriorFurniturePlacementPanel>(scene) != null)
             {
                 return;
             }
 
-            var canvas = FindFirstObjectByType<Canvas>();
+            // The panel must live in the House scene: a canvas kept across scenes (e.g. the save slot screen) would put it
+            // outside House, where it cannot create the placement overlay or receive clicks above the House UI.
+            var canvas = FindHouseCanvas(scene);
             if (canvas == null)
             {
                 var canvasGo = new GameObject("HouseInteriorPlacementCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
@@ -927,6 +929,24 @@ namespace Rootborn.UI.Interiors
 
             var applier = FindFirstObjectByType<InteriorTilemapApplier>();
             InteriorFurniturePlacementPanel.Create(canvas, applier);
+        }
+
+        private static T FindInScene<T>(Scene scene) where T : Component
+        {
+            foreach (var root in scene.GetRootGameObjects())
+            {
+                var found = root.GetComponentInChildren<T>(true);
+                if (found != null) return found;
+            }
+            return null;
+        }
+
+        private static Canvas FindHouseCanvas(Scene scene)
+        {
+            foreach (var root in scene.GetRootGameObjects())
+            foreach (var candidate in root.GetComponentsInChildren<Canvas>(true))
+                if (candidate.isRootCanvas && candidate.enabled && candidate.gameObject.activeInHierarchy) return candidate;
+            return null;
         }
 
         private static void EnsureEventSystem(Scene scene)
