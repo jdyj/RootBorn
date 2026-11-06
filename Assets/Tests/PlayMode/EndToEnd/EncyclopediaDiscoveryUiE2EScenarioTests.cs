@@ -62,6 +62,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             SaveSlotSelectPanel.EnsureInScene().Show();
             yield return null;
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
+            // Game data may still be loading in the first test of a run; entry then fails and the creator stays open.
+            yield return Rootborn.Tests.PlayMode.PlayModeScenarioStart.WaitForGameData();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
             // The message is built at the timeout, not before the click, so it shows why entry failed.
             yield return WaitForScene("Town", 20f, () => "ENCYCLOPEDIA-E2E-001 failed: SaveSlot New Game did not enter Town. entryError=" + Object.FindAnyObjectByType<SaveSlotSelectPanel>(FindObjectsInactive.Include)?.LastEntryError + " registry=" + Rootborn.Game.Common.GameDataRegistryProvider.TryGet(out _) + " pendingTravel=" + Rootborn.Game.World.WorldTravelRuntime.HasPendingTravel + " creator=" + (GameObject.Find("SpumCharacterCreatorPanel") != null) + " confirm=" + (GameObject.Find("ConfirmButton")?.GetComponent<UnityEngine.UI.Button>()?.IsInteractable()) + " slotPanel=" + (GameObject.Find("SaveSlotSelectPanel") != null) + " " + PlayerFlowE2EDriver.DescribeCreators());

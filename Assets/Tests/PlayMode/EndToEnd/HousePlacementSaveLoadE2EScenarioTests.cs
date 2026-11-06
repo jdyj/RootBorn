@@ -129,6 +129,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return WaitForStableScene("MainMenu", 0.25f, 10f);
             SaveSlotSelectPanel.EnsureInScene().Show();
             yield return null;
+            // Game data may still be loading in the first test of a run; entry then fails and the creator stays open.
+            yield return Rootborn.Tests.PlayMode.PlayModeScenarioStart.WaitForGameData();
             yield return ClickButtonNamed("NewGameButton");
             Assert.IsNotNull(GameObject.Find("SpumCharacterCreatorRoot"), "New Game should open the SPUM creator before the save is created.");
         }
