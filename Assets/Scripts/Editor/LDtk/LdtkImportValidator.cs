@@ -470,14 +470,19 @@ namespace Rootborn.Editor.LDtk
                 string path = "Assets/Scenes/" + sceneName + ".unity";
                 if (!File.Exists(path)) { failures.Add(path + " missing"); continue; }
                 var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+                int doorsBefore = CountExitDoors(scene);
                 int count = Rootborn.Game.World.InteriorDoorPortalRuntimeInstaller.EnsureForScene(scene);
                 if (count == 0) { failures.Add(path + " has no exit doors"); continue; }
+                bool changed = count != doorsBefore;
                 if (Array.IndexOf(CollisionSceneNames, sceneName) >= 0)
                 {
-                    string problem = BakeCollision(scene, out int blocked);
+                    string problem = BakeCollision(scene, out int blocked, out bool collisionChanged);
                     if (problem != null) { failures.Add(path + " " + problem); continue; }
-                    Debug.Log("[ROOTBORN] Baked " + blocked + " collision cell(s) into " + path);
+                    changed |= collisionChanged;
+                    Debug.Log("[ROOTBORN] " + (collisionChanged ? "Baked " : "Kept ") + blocked + " collision cell(s) in " + path);
                 }
+                // Rebuilding identical objects rewrote whole scene files with new ids; save only real changes.
+                if (!changed) { Debug.Log("[ROOTBORN] " + path + " unchanged"); continue; }
                 EditorSceneManager.MarkSceneDirty(scene);
                 EditorSceneManager.SaveScene(scene);
                 Debug.Log("[ROOTBORN] Baked " + count + " exit door(s) into " + path);
@@ -495,17 +500,41 @@ namespace Rootborn.Editor.LDtk
         // the foreground layer are drawn above the player and stay walkable.
         private static readonly string[] PropLayerKeys = { "Police", "Kitchen", "Shop", "Shooting", "School", "House1", "House2" };
 
-        private static string BakeCollision(UnityEngine.SceneManagement.Scene scene, out int blocked)
+        private static bool SameCollision(Tilemap existing, HashSet<Vector3Int> wanted, TileBase tile)
+        {
+            if (existing == null || existing.GetComponent<Grid>() == null || existing.GetComponent<TilemapCollider2D>() == null) return false;
+            int count = 0;
+            existing.CompressBounds();
+            foreach (var cell in existing.cellBounds.allPositionsWithin)
+            {
+                if (!existing.HasTile(cell)) continue;
+                if (!wanted.Contains(cell) || existing.GetTile(cell) != tile) return false;
+                count++;
+            }
+            return count == wanted.Count;
+        }
+
+        private static int CountExitDoors(UnityEngine.SceneManagement.Scene scene)
+        {
+            foreach (var root in scene.GetRootGameObjects())
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+                if (t.name == "[InteriorDoorPortals]") return t.childCount;
+            return 0;
+        }
+
+        private static string BakeCollision(UnityEngine.SceneManagement.Scene scene, out int blocked, out bool changed)
         {
             blocked = 0;
+            changed = false;
             var tile = AssetDatabase.LoadAssetAtPath<TileBase>(CollisionTilePath);
             if (tile == null) return "collision tile missing at " + CollisionTilePath;
             string collisionName = CollisionTilemapName(scene.name);
             var maps = new List<Tilemap>();
+            Tilemap existing = null;
             foreach (var root in scene.GetRootGameObjects())
             foreach (var map in root.GetComponentsInChildren<Tilemap>(true))
             {
-                if (map.name == collisionName) { UnityEngine.Object.DestroyImmediate(map.gameObject); continue; }
+                if (map.name == collisionName) { existing = map; continue; }
                 maps.Add(map);
             }
             Tilemap groundMap = null;
@@ -555,21 +584,26 @@ namespace Rootborn.Editor.LDtk
                     var near = cell + new Vector3Int(dx, dy, 0);
                     if (ground.Contains(near) && !walls.Contains(near)) open.Add(near);
                 }
-            var go = new GameObject(collisionName, typeof(Grid), typeof(Tilemap), typeof(TilemapCollider2D));
-            var sourceGrid = groundMap.GetComponentInParent<Grid>();
-            if (sourceGrid != null) { var grid = go.GetComponent<Grid>(); grid.cellSize = sourceGrid.cellSize; grid.cellGap = sourceGrid.cellGap; grid.cellLayout = sourceGrid.cellLayout; grid.cellSwizzle = sourceGrid.cellSwizzle; }
-            go.transform.SetParent(groundMap.transform.parent, false);
-            var collision = go.GetComponent<Tilemap>();
             var blockedCells = new HashSet<Vector3Int>();
             for (int x = min.x - 1; x <= max.x + 1; x++)
             for (int y = min.y - 1; y <= max.y + 1; y++)
             {
                 var cell = new Vector3Int(x, y, 0);
                 if (open.Contains(cell) || (ground.Contains(cell) && !solid.Contains(cell))) continue;
-                collision.SetTile(cell, tile);
                 blockedCells.Add(cell);
             }
             blocked = blockedCells.Count;
+            if (!SameCollision(existing, blockedCells, tile))
+            {
+                if (existing != null) UnityEngine.Object.DestroyImmediate(existing.gameObject);
+                var go = new GameObject(collisionName, typeof(Grid), typeof(Tilemap), typeof(TilemapCollider2D));
+                var sourceGrid = groundMap.GetComponentInParent<Grid>();
+                if (sourceGrid != null) { var grid = go.GetComponent<Grid>(); grid.cellSize = sourceGrid.cellSize; grid.cellGap = sourceGrid.cellGap; grid.cellLayout = sourceGrid.cellLayout; grid.cellSwizzle = sourceGrid.cellSwizzle; }
+                go.transform.SetParent(groundMap.transform.parent, false);
+                var collision = go.GetComponent<Tilemap>();
+                foreach (var cell in blockedCells) collision.SetTile(cell, tile);
+                changed = true;
+            }
             var portalCells = new List<HashSet<Vector3Int>>();
             foreach (var root in scene.GetRootGameObjects())
             foreach (var portal in root.GetComponentsInChildren<Rootborn.Game.World.WorldPortal>(true))
