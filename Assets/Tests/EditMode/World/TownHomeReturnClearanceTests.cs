@@ -21,6 +21,14 @@ namespace Rootborn.Tests.EditMode.World
             Assert.That(blocks,Is.EqualTo(new[]{new Vector2(1.5f,-.5f)}));
             Assert.That(opens,Is.EqualTo(new[]{new Vector2(.5f,-1.5f)}));
         }
+        // Saving a level in LDtk bakes the scene it feeds; levels that feed no scene are left alone.
+        [Test] public void PaintedLevel_MapsToTheSceneItFeeds()
+        {
+            Assert.That(Rootborn.Editor.LDtk.InteriorDoorPortalBaker.SceneForPaintedLevel("Assets/LDtk/Town/town/Level_0.ldtkl"),Is.EqualTo("Town"));
+            Assert.That(Rootborn.Editor.LDtk.InteriorDoorPortalBaker.SceneForPaintedLevel("Assets/LDtk/Interiors/interiors/Shop.ldtkl"),Is.EqualTo("ShopInterior"));
+            Assert.That(Rootborn.Editor.LDtk.InteriorDoorPortalBaker.SceneForPaintedLevel("Assets/LDtk/Town/town/Level_1.ldtkl"),Is.Null);
+            Assert.That(Rootborn.Editor.LDtk.InteriorDoorPortalBaker.SceneForPaintedLevel("Assets/LDtk/Interiors/interiors/Shop_Base.ldtkl"),Is.Null);
+        }
         // What is painted in LDtk must be what the saved Town scene has. If this fails, run Rootborn/World/Bake Town Painted Collision.
         [Test] public void TownScene_MatchesThePaintedLdtkCollisionLayer()
         {

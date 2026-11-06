@@ -681,16 +681,69 @@ namespace Rootborn.Editor.LDtk
         [MenuItem("Rootborn/World/Bake Town Painted Collision")]
         public static void BakeTownPaintedCollision()
         {
-            var scene = EditorSceneManager.OpenScene("Assets/Scenes/Town.unity", OpenSceneMode.Single);
-            var blocks = new List<Vector2>(); var opens = new List<Vector2>();
-            if (!LdtkPaintedCollision.TryRead(TownLevelPath, LdtkPaintedCollision.PixelsPerUnit, blocks, opens))
-                throw new InvalidOperationException("[ROOTBORN] " + TownLevelPath + " has no " + LdtkPaintedCollision.LayerName + " layer.");
-            string problem = ApplyTownPaintedCollision(scene, blocks, opens, out bool changed, out int blockCount, out int openCount);
+            string problem = BakePaintedCollisionForLevel(TownLevelPath);
             if (problem != null) throw new InvalidOperationException("[ROOTBORN] Town painted collision failed: " + problem);
-            if (!changed) { Debug.Log("[ROOTBORN] Town painted collision unchanged (" + blockCount + " block, " + openCount + " open)"); return; }
-            EditorSceneManager.MarkSceneDirty(scene);
-            EditorSceneManager.SaveScene(scene);
-            Debug.Log("[ROOTBORN] Baked Town painted collision: " + blockCount + " block cell(s), " + openCount + " opened cell(s)");
+        }
+
+        // The scene a painted LDtk level feeds: Town for the town level, the interior that is built from that level, or none.
+        public static string SceneForPaintedLevel(string levelPath)
+        {
+            if (string.IsNullOrEmpty(levelPath)) return null;
+            levelPath = levelPath.Replace('\\', '/');
+            if (string.Equals(levelPath, TownLevelPath, StringComparison.OrdinalIgnoreCase)) return "Town";
+            foreach (string sceneName in CollisionSceneNames)
+                if (Rootborn.Game.World.InteriorDoorPortalRuntimeInstaller.TryGetInteriorLevel(sceneName, out string interiorLevel, out _)
+                    && string.Equals(interiorLevel, levelPath, StringComparison.OrdinalIgnoreCase)) return sceneName;
+            return null;
+        }
+
+        // Bakes one painted level into its scene. A scene that is already open is used as is; one with unsaved edits is
+        // skipped rather than overwritten. A scene opened here is closed again afterwards.
+        public static string BakePaintedCollisionForLevel(string levelPath)
+        {
+            string sceneName = SceneForPaintedLevel(levelPath);
+            if (sceneName == null) return null;
+            string scenePath = "Assets/Scenes/" + sceneName + ".unity";
+            var scene = UnityEngine.SceneManagement.SceneManager.GetSceneByPath(scenePath);
+            bool openedHere = false;
+            if (scene.IsValid() && scene.isLoaded)
+            {
+                if (scene.isDirty) return sceneName + " has unsaved edits; save it, then save the LDtk level again or run the bake menu";
+            }
+            else
+            {
+                scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
+                openedHere = true;
+            }
+            try
+            {
+                bool changed;
+                string summary;
+                if (sceneName == "Town")
+                {
+                    var blocks = new List<Vector2>(); var opens = new List<Vector2>();
+                    if (!LdtkPaintedCollision.TryRead(TownLevelPath, LdtkPaintedCollision.PixelsPerUnit, blocks, opens))
+                        return TownLevelPath + " has no " + LdtkPaintedCollision.LayerName + " layer";
+                    string problem = ApplyTownPaintedCollision(scene, blocks, opens, out changed, out int blockCount, out int openCount);
+                    if (problem != null) return problem;
+                    summary = blockCount + " block, " + openCount + " open";
+                }
+                else
+                {
+                    string problem = BakeCollision(scene, out int blocked, out changed);
+                    if (problem != null) return sceneName + " " + problem;
+                    summary = blocked + " blocked cell(s)";
+                }
+                if (!changed) { Debug.Log("[ROOTBORN] " + sceneName + " painted collision unchanged (" + summary + ")"); return null; }
+                EditorSceneManager.MarkSceneDirty(scene);
+                EditorSceneManager.SaveScene(scene);
+                Debug.Log("[ROOTBORN] Baked painted collision into " + sceneName + " (" + summary + ")");
+                return null;
+            }
+            finally
+            {
+                if (openedHere) EditorSceneManager.CloseScene(scene, true);
+            }
         }
 
         // The painted tilemap shares UrbanStreetCollision's grid, so compare cells only; no tilemap equals an empty paint.
@@ -784,6 +837,61 @@ namespace Rootborn.Editor.LDtk
                 changed = true;
             }
             return null;
+        }
+    }
+
+    // Saving a level in LDtk re-imports its .ldtkl. That level's painted collision is baked into its scene right away,
+    // so painting and saving in LDtk is enough; during Play mode the bake waits until Play mode ends.
+    public sealed class LdtkPaintedCollisionAutoBake : AssetPostprocessor
+    {
+        private static readonly HashSet<string> s_pending = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        private static void OnPostprocessAllAssets(string[] imported, string[] deleted, string[] moved, string[] movedFrom)
+        {
+            bool added = false;
+            foreach (string path in imported)
+            {
+                string normal = path.Replace('\\', '/');
+                if (!normal.EndsWith(".ldtkl", StringComparison.OrdinalIgnoreCase) || normal.Contains("/backups/")) continue;
+                if (InteriorDoorPortalBaker.SceneForPaintedLevel(normal) == null) continue;
+                added |= s_pending.Add(normal);
+            }
+            if (!added) return;
+            EditorApplication.delayCall -= Flush;
+            EditorApplication.delayCall += Flush;
+        }
+
+        private static void Flush()
+        {
+            if (s_pending.Count == 0) return;
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                EditorApplication.playModeStateChanged -= OnPlayModeChanged;
+                EditorApplication.playModeStateChanged += OnPlayModeChanged;
+                return;
+            }
+            if (EditorApplication.isCompiling || EditorApplication.isUpdating) { EditorApplication.delayCall += Flush; return; }
+            var levels = new List<string>(s_pending);
+            s_pending.Clear();
+            foreach (string level in levels)
+            {
+                try
+                {
+                    string problem = InteriorDoorPortalBaker.BakePaintedCollisionForLevel(level);
+                    if (problem != null) Debug.LogWarning("[ROOTBORN] Painted collision from " + level + " was not baked: " + problem);
+                }
+                catch (Exception error)
+                {
+                    Debug.LogError("[ROOTBORN] Painted collision bake failed for " + level + ": " + error.Message);
+                }
+            }
+        }
+
+        private static void OnPlayModeChanged(PlayModeStateChange change)
+        {
+            if (change != PlayModeStateChange.EnteredEditMode) return;
+            EditorApplication.playModeStateChanged -= OnPlayModeChanged;
+            EditorApplication.delayCall += Flush;
         }
     }
 
