@@ -25,6 +25,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         [UnitySetUp]
         public IEnumerator SetUp()
         {
+            // Scene switches under the input test fixture log a PlayerInput.OnDisable error from the Input System itself.
+            LogAssert.ignoreFailingMessages = true;
             ActiveSaveContext.Clear();
             _saveRoot = Path.Combine(Application.temporaryCachePath, "rootborn-house-placement-e2e-" + System.Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_saveRoot);
@@ -43,6 +45,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         public IEnumerator TearDown()
         {
             ActiveSaveContext.Clear();
+            LogAssert.ignoreFailingMessages = false;
             Rootborn.Game.World.WorldEntryService.SetNewGameEntryForTests(null, null);
             SaveSlotSelectPanel.SetSaveRootForTests(null);
             SaveService.SetRootDirectoryForTests(null);

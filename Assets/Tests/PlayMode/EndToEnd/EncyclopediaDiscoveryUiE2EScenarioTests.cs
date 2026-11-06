@@ -66,7 +66,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return Rootborn.Tests.PlayMode.PlayModeScenarioStart.WaitForGameData();
             yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, "NewGameButton"));
             // The message is built at the timeout, not before the click, so it shows why entry failed.
-            yield return WaitForScene("Town", 20f, () => "ENCYCLOPEDIA-E2E-001 failed: SaveSlot New Game did not enter Town. entryError=" + Object.FindAnyObjectByType<SaveSlotSelectPanel>(FindObjectsInactive.Include)?.LastEntryError + " registry=" + Rootborn.Game.Common.GameDataRegistryProvider.TryGet(out _) + " pendingTravel=" + Rootborn.Game.World.WorldTravelRuntime.HasPendingTravel + " creator=" + (GameObject.Find("SpumCharacterCreatorPanel") != null) + " confirm=" + (GameObject.Find("ConfirmButton")?.GetComponent<UnityEngine.UI.Button>()?.IsInteractable()) + " slotPanel=" + (GameObject.Find("SaveSlotSelectPanel") != null) + " " + PlayerFlowE2EDriver.DescribeCreators());
+            yield return WaitForScene("Town", 20f, () => "ENCYCLOPEDIA-E2E-001 failed: SaveSlot New Game did not enter Town. entryError=" + Object.FindAnyObjectByType<SaveSlotSelectPanel>(FindObjectsInactive.Include)?.LastEntryError + " registry=" + Rootborn.Game.Common.GameDataRegistryProvider.TryGet(out _) + " managers=" + (Rootborn.Game.Managers.Managers.Instance != null) + "/" + (Rootborn.Game.Managers.Managers.Instance != null && Rootborn.Game.Managers.Managers.Instance.IsBootstrapped) + "/" + (Rootborn.Game.Managers.Managers.Data?.Registry != null) + " pendingTravel=" + Rootborn.Game.World.WorldTravelRuntime.HasPendingTravel + " creator=" + (GameObject.Find("SpumCharacterCreatorPanel") != null) + " confirm=" + (GameObject.Find("ConfirmButton")?.GetComponent<UnityEngine.UI.Button>()?.IsInteractable()) + " slotPanel=" + (GameObject.Find("SaveSlotSelectPanel") != null) + " " + PlayerFlowE2EDriver.DescribeCreators());
             TownExplorationDiscoveryRuntimeInstaller.EnsureForActiveScene();
             EncyclopediaRuntimeInstaller.EnsureForActiveScene();
             yield return WaitForRuntime(10f);
@@ -87,10 +87,17 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var panel = Object.FindFirstObjectByType<EncyclopediaPanel>(FindObjectsInactive.Include);
             Assert.IsNotNull(panel, "ENCYCLOPEDIA-E2E-003 failed: encyclopedia panel was not installed.");
             Assert.IsTrue(panel.IsVisible, "ENCYCLOPEDIA-E2E-003 failed: UI button did not open encyclopedia panel.");
-            AssertPanelContains(panel.transform, "???", "ENCYCLOPEDIA-E2E-005 failed: locked entries must be visible as hidden rows.");
-            AssertPanelContains(panel.transform, "discovery", "ENCYCLOPEDIA-E2E-006 failed: unlocked detail text did not render.");
+            // Expected text comes from the entry data in the player's language, not fixed English words.
+            var entries = Rootborn.Game.Managers.Managers.Data.Registry.EncyclopediaEntries;
+            var unlockedEntry = System.Array.Find(entries, e => e != null && runtime.Encyclopedia.Progress.IsUnlocked(e.Id));
+            Assert.IsNotNull(unlockedEntry, "ENCYCLOPEDIA-E2E-002 failed: no registered entry is unlocked.");
+            var lockedEntry = System.Array.Find(entries, e => e != null && e.Category == unlockedEntry.Category && !runtime.Encyclopedia.Progress.IsUnlocked(e.Id));
+            if (lockedEntry != null) AssertPanelContains(panel.transform, Rootborn.Game.Localization.GameText.Get(lockedEntry.LockedDisplayName), "ENCYCLOPEDIA-E2E-005 failed: locked entries must be visible as hidden rows.");
+            AssertPanelContains(panel.transform, Rootborn.Game.Localization.GameText.Get(unlockedEntry.Description), "ENCYCLOPEDIA-E2E-006 failed: unlocked detail text did not render.");
             yield return ClickButton(FindButton(panel.transform, "Category_ency.category.npcs"));
-            AssertPanelContains(panel.transform, "NPC", "ENCYCLOPEDIA-E2E-004 failed: category tab switch did not render NPC tab content.");
+            var npcEntry = System.Array.Find(entries, e => e != null && e.Category != null && e.Category.Id == "ency.category.npcs");
+            Assert.IsNotNull(npcEntry, "ENCYCLOPEDIA-E2E-004 failed: no NPC entry is registered.");
+            AssertPanelContains(panel.transform, Rootborn.Game.Localization.GameText.Get(runtime.Encyclopedia.Progress.IsUnlocked(npcEntry.Id) ? npcEntry.DisplayName : npcEntry.LockedDisplayName), "ENCYCLOPEDIA-E2E-004 failed: category tab switch did not render NPC tab content.");
             Assert.AreEqual(0, runtime.Encyclopedia.Progress.NewCount, "ENCYCLOPEDIA-E2E-008 failed: viewing the unlocked entry should clear the new marker.");
 
             ActiveSaveContext.Clear();

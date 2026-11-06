@@ -198,8 +198,13 @@ namespace Rootborn.Tests.PlayMode
         // A player cannot press confirm in the first frames after the menu loads, while game data is still loading. Tests can.
         public static System.Collections.IEnumerator WaitForGameData()
         {
+            // The game loads its data from the Boot scene. Tests that open MainMenu directly skip Boot, so start the same load here.
+            // Without this the first test in a run waits for data that nothing is loading.
+            var bootstrap = Rootborn.Game.Managers.Managers.BootstrapAsync();
             float deadline = UnityEngine.Time.unscaledTime + 15f;
+            while (!bootstrap.IsCompleted && UnityEngine.Time.unscaledTime < deadline) yield return null;
             while (!Rootborn.Game.Common.GameDataRegistryProvider.TryGet(out _) && UnityEngine.Time.unscaledTime < deadline) yield return null;
+            UnityEngine.Debug.Log("[ROOTBORN/Test] Game data ready=" + Rootborn.Game.Common.GameDataRegistryProvider.TryGet(out _) + " bootstrap=" + bootstrap.Status);
             yield return null;
         }
 

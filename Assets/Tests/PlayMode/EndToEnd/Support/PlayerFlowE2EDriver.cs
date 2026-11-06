@@ -287,12 +287,18 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
         // Returns the corners to steer through; empty when the straight walk is already the route or no route exists.
         public static System.Collections.Generic.List<Vector3> PlanWalk(GameObject player, Vector3 target)
         {
-            var corners = new System.Collections.Generic.List<Vector3>();
             var body = player != null ? player.GetComponent<BoxCollider2D>() : null;
-            if (body == null) return corners;
+            if (body == null) return new System.Collections.Generic.List<Vector3>();
+            // A route that grazes a wall catches the body on tile seams and stalls, so keep a margin when there is room.
+            var roomy = PlanWalk(player, body, target, body.size + new Vector2(0.4f, 0.4f), out bool reached);
+            return reached ? roomy : PlanWalk(player, body, target, body.size * 0.9f, out _);
+        }
+
+        private static System.Collections.Generic.List<Vector3> PlanWalk(GameObject player, BoxCollider2D body, Vector3 target, Vector2 size, out bool reachedGoal)
+        {
+            var corners = new System.Collections.Generic.List<Vector3>();
             Physics2D.SyncTransforms();
             const float step = 0.5f;
-            Vector2 size = body.size * 0.9f;
             Vector2 offset = body.offset;
             Vector3 start = player.transform.position;
             int span = Mathf.CeilToInt(Mathf.Max(Mathf.Abs(target.x - start.x), Mathf.Abs(target.y - start.y)) / step) + 24;
@@ -338,6 +344,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
                     from[n] = c; queue.Enqueue(n);
                 }
             }
+            reachedGoal = best == goal;
             var path = new System.Collections.Generic.List<Vector2Int>();
             for (var c = best; c != origin; c = from[c]) path.Add(c);
             path.Reverse();
