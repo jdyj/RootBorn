@@ -12,6 +12,17 @@ namespace Rootborn.Game.World
         private const string RootName = "[InteriorDoorPortals]";
         private const string TownSceneName = "Town";
         private const string TownSpawnId = "town-entry";
+        // Leaving a building puts the player back in front of that building's own door in Town.
+        private static readonly Dictionary<string, string> TownReturnSpawnBySelfDoor = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "house", "town-home-entry" },
+            { "hospital", "town-hospital-entry" },
+            { "shop", "town-shop-entry" },
+            { "police_1", "town-police-entry" },
+            { "police_2", "town-police-entry" },
+            { "kitchen1", "town-kitchen-entry" },
+            { "kitchen2", "town-kitchen-entry" },
+        };
         private const float PixelsPerUnit = 32f;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -24,15 +35,29 @@ namespace Rootborn.Game.World
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void EnsureActiveScene()
         {
-            EnsureForScene(SceneManager.GetActiveScene());
+            EnsureForSceneInternal(SceneManager.GetActiveScene());
         }
 
         private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            EnsureForScene(scene);
+            EnsureForSceneInternal(scene);
         }
 
-        private static void EnsureForScene(Scene scene)
+        public static readonly string[] InteriorSceneNames =
+        {
+            "HouseInterior", "HospitalInterior", "ShopInterior", "PoliceInterior", "PoliceShootingInterior", "KitchenInterior", "Kitchen2Interior"
+        };
+
+        // The LDtk level files exist only in the editor; players rely on the portals saved into each interior scene.
+        // Returns the number of portals present after the pass so the editor bake can refuse to save an empty result.
+        public static int EnsureForScene(Scene scene)
+        {
+            EnsureForSceneInternal(scene);
+            var root = FindInScene(scene, RootName);
+            return root != null ? root.transform.childCount : 0;
+        }
+
+        private static void EnsureForSceneInternal(Scene scene)
         {
             if (!TryGetInteriorLevel(scene.name, out string levelPath, out string selfDoorAlias))
             {
@@ -186,7 +211,7 @@ namespace Rootborn.Game.World
             if (where == "town" || where == "outside" || where == Normalize(selfDoorAlias))
             {
                 destinationScene = TownSceneName;
-                spawnId = TownSpawnId;
+                spawnId = TownReturnSpawnId(selfDoorAlias);
                 return true;
             }
             if (where == "police_2")
@@ -216,6 +241,11 @@ namespace Rootborn.Game.World
             destinationScene = string.Empty;
             spawnId = string.Empty;
             return false;
+        }
+
+        public static string TownReturnSpawnId(string selfDoorAlias)
+        {
+            return selfDoorAlias != null && TownReturnSpawnBySelfDoor.TryGetValue(selfDoorAlias, out string spawnId) ? spawnId : TownSpawnId;
         }
 
         private static string ResolveProjectPath(string assetPath)

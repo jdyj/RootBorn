@@ -128,7 +128,7 @@
 					"defUid": 17,
 					"px": [288,320],
 					"fieldInstances": [
-						{ "__identifier": "Where", "__type": "String", "__value": null, "__tile": null, "defUid": 20, "realEditorValues": [] },
+						{ "__identifier": "Where", "__type": "String", "__value": "town", "__tile": null, "defUid": 20, "realEditorValues": [{ "id": "V_String", "params": ["town"] }] },
 						{ "__identifier": "Position", "__type": "String", "__value": null, "__tile": null, "defUid": 21, "realEditorValues": [] }
 					],
 					"__worldX": 2656,

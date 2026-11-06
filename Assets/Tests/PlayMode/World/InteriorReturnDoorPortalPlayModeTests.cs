@@ -41,6 +41,8 @@ namespace Rootborn.Tests.PlayMode.World
             Assert.IsNotNull(player?.GetComponent<PlayerController>(), "Town must expose a controllable player.");
             var houseDoor = GameObject.Find("TownLdtkDoor_house_18_12");
             Assert.IsNotNull(houseDoor, "Town LDtk house door must exist.");
+            string townDoorName = houseDoor.name;
+            Vector3 townDoorPosition = houseDoor.transform.position;
 
             player.transform.position = houseDoor.transform.position + new Vector3(0f, -1.2f, 0f);
             Physics2D.SyncTransforms();
@@ -69,7 +71,11 @@ namespace Rootborn.Tests.PlayMode.World
             InputSystem.Update();
             yield return WaitForScene("Town", 20f);
             Assert.AreEqual("Town", SceneManager.GetActiveScene().name);
-            Assert.IsNotNull(GameObject.Find("Player"), "Player must persist back to Town.");
+            player = GameObject.Find("Player");
+            Assert.IsNotNull(player, "Player must persist back to Town.");
+            Vector3 offset = player.transform.position - townDoorPosition;
+            Assert.LessOrEqual(Mathf.Abs(offset.x), 1.5f, "Player must come out in front of " + townDoorName + ", not elsewhere in Town. Offset " + offset);
+            Assert.That(offset.y, Is.InRange(-5f, -0.5f), "Player must stand just below " + townDoorName + " without re-entering it. Offset " + offset);
             AssertCleanTownReturnView();
             string screenshotPath = Path.Combine(Application.temporaryCachePath, "HouseInteriorReturnToTownVisual.png");
             if (File.Exists(screenshotPath)) File.Delete(screenshotPath);
@@ -87,15 +93,27 @@ namespace Rootborn.Tests.PlayMode.World
         [UnityTest]
         public IEnumerator TOWN_DOOR_PM_006_PlayerWalksIntoShopThenReturnsToTownThroughInteriorLdtkDoor()
         {
-            yield return EnterInteriorThenReturnToTown("TownLdtkDoor_shopping_center_61_10", "ShopInterior", "InteriorLdtkDoor_town_18_2", "ShopInteriorReturnToTownVisual.png");
+            yield return EnterInteriorThenReturnToTown("TownLdtkDoor_shopping_center_61_10", "ShopInterior", "InteriorLdtkDoor_town_18_2", "town-shop-entry", "ShopInteriorReturnToTownVisual.png");
         }
 
         [UnityTest]
         public IEnumerator TOWN_DOOR_PM_007_PlayerWalksIntoHospitalThenReturnsToTownThroughInteriorLdtkDoorWhenPresent()
         {
-            yield return EnterInteriorThenReturnToTown("TownLdtkDoor_hospital_49_41", "HospitalInterior", "InteriorLdtkDoor_town_6_28", "HospitalInteriorReturnToTownVisual.png");
+            yield return EnterInteriorThenReturnToTown("TownLdtkDoor_hospital_49_41", "HospitalInterior", "InteriorLdtkDoor_town_6_28", "town-hospital-entry", "HospitalInteriorReturnToTownVisual.png");
         }
 
+
+        [UnityTest]
+        public IEnumerator TOWN_DOOR_PM_012_PlayerLeavesPoliceAndStandsInFrontOfThePoliceDoor()
+        {
+            yield return EnterInteriorThenReturnToTown("TownLdtkDoor_police_24_38", "PoliceInterior", "InteriorLdtkDoor_town_18_20", "town-police-entry", "PoliceInteriorReturnToTownVisual.png");
+        }
+
+        [UnityTest]
+        public IEnumerator TOWN_DOOR_PM_013_PlayerLeavesKitchenAndStandsInFrontOfTheKitchenDoor()
+        {
+            yield return EnterInteriorThenReturnToTown("TownLdtkDoor_kitchen_24_54", "KitchenInterior", "InteriorLdtkDoor_town_12_22", "town-kitchen-entry", "KitchenInteriorReturnToTownVisual.png");
+        }
 
         [UnityTest]
         public IEnumerator TOWN_DOOR_PM_009_PlayerWalksIntoPoliceThenUsesInternalPoliceDoor()
@@ -118,7 +136,7 @@ namespace Rootborn.Tests.PlayMode.World
             Assert.IsNotNull(player?.GetComponent<PlayerController>(), "Player must persist into PoliceInterior." );
             var internalDoor = GameObject.Find("InteriorLdtkDoor_police_2_24_13");
             Assert.IsNotNull(internalDoor, "Police_1 LDtk Door Where='police_2' must create an internal police portal." );
-            AssertScenePortalCount("PoliceInterior", 1, "Police_1 must only expose the populated LDtk police_2 door; empty police doors must stay inactive." );
+            AssertScenePortalCount("PoliceInterior", 2, "Police_1 must expose only its street exit and the police_2 door; empty police doors must stay inactive." );
             var portal = internalDoor.GetComponent<WorldPortal>();
             Assert.IsNotNull(portal, "Police internal door must use WorldPortal." );
             Assert.AreEqual("PoliceShootingInterior", portal.DestinationScene);
@@ -185,13 +203,14 @@ namespace Rootborn.Tests.PlayMode.World
             yield return WaitForScreenshot("Kitchen2InteriorDoorEntryVisual.png", 3f);
         }
 
-        private static IEnumerator EnterInteriorThenReturnToTown(string townDoorName, string destinationScene, string expectedReturnDoorName, string screenshotName)
+        private static IEnumerator EnterInteriorThenReturnToTown(string townDoorName, string destinationScene, string expectedReturnDoorName, string expectedTownSpawnId, string screenshotName)
         {
             var keyboard = InputSystem.AddDevice<Keyboard>();
             var player = GameObject.Find("Player");
             Assert.IsNotNull(player?.GetComponent<PlayerController>(), "Town must expose a controllable player.");
             var townDoor = GameObject.Find(townDoorName);
             Assert.IsNotNull(townDoor, townDoorName + " must exist.");
+            Vector3 townDoorPosition = townDoor.transform.position;
 
             player.transform.position = townDoor.transform.position + new Vector3(0f, -1.2f, 0f);
             Physics2D.SyncTransforms();
@@ -214,7 +233,9 @@ namespace Rootborn.Tests.PlayMode.World
             var portal = returnDoor.GetComponent<WorldPortal>();
             Assert.IsNotNull(portal, expectedReturnDoorName + " must use WorldPortal.");
             Assert.AreEqual("Town", portal.DestinationScene);
-            Assert.AreEqual("town-entry", portal.DestinationSpawnId);
+            Assert.AreEqual(expectedTownSpawnId, portal.DestinationSpawnId, "Leaving a building must lead back to that building's own door.");
+            var registry = Rootborn.Game.Managers.Managers.Data != null ? Rootborn.Game.Managers.Managers.Data.Registry : null;
+            Assert.IsNotNull(WorldEntryService.ResolvePair(registry != null ? registry.WorldTravelCatalog : null, "Town", expectedTownSpawnId), "The travel catalog loaded at play time must accept " + expectedTownSpawnId + ".");
 
             player.transform.position = returnDoor.transform.position + new Vector3(0f, -1.0f, 0f);
             Physics2D.SyncTransforms();
@@ -222,7 +243,11 @@ namespace Rootborn.Tests.PlayMode.World
             yield return WalkPlayerWithKeyboardUntilSceneChangesOrNear(player, keyboard, returnDoor.transform.position, 0.25f, 180, "Town", "Player must leave " + destinationScene + " through the LDtk return door using movement input.");
             yield return WaitForScene("Town", 20f);
             Assert.AreEqual("Town", SceneManager.GetActiveScene().name);
-            Assert.IsNotNull(GameObject.Find("Player"), "Player must persist back to Town.");
+            player = GameObject.Find("Player");
+            Assert.IsNotNull(player, "Player must persist back to Town.");
+            Vector3 offset = player.transform.position - townDoorPosition;
+            Assert.LessOrEqual(Mathf.Abs(offset.x), 1.5f, "Player must come out in front of " + townDoorName + ", not elsewhere in Town. Offset " + offset);
+            Assert.That(offset.y, Is.InRange(-5f, -0.5f), "Player must stand just below " + townDoorName + " without re-entering it. Offset " + offset);
             AssertCleanTownReturnView();
             CaptureScreenshot(screenshotName);
             yield return WaitForScreenshot(screenshotName, 3f);

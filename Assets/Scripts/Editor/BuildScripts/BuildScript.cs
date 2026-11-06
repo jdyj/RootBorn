@@ -90,6 +90,13 @@ namespace Rootborn.Editor.BuildScripts
             Debug.Log($"[ROOTBORN] Client build -> {outputPath} result={report.summary.result}");
         }
 
+        // Play mode in this project reads the built Addressables content, so data edits need a content rebuild to show up there.
+        [MenuItem("Rootborn/Build/Addressables Content")]
+        public static void BuildAddressablesContent()
+        {
+            BuildAddressables();
+        }
+
         private static string BuildAddressables()
         {
             var settings = AddressableAssetSettingsDefaultObject.Settings;

@@ -18,3 +18,7 @@ MonoBehaviour:
   - town-entry
   - town-home-entry
   - town-school-entry
+  - town-shop-entry
+  - town-hospital-entry
+  - town-police-entry
+  - town-kitchen-entry

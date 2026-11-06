@@ -456,4 +456,27 @@ namespace Rootborn.Editor.LDtk
             public int SortingOrder { get; }
         }
     }
+
+    // Interior exits used to be built only from the LDtk level files at play time. Those files never ship in a player
+    // build, so the exits are saved into each interior scene here and the runtime pass just refreshes them in the editor.
+    public static class InteriorDoorPortalBaker
+    {
+        [MenuItem("Rootborn/World/Bake Interior Exit Doors")]
+        public static void BakeAll()
+        {
+            var failures = new List<string>();
+            foreach (string sceneName in Rootborn.Game.World.InteriorDoorPortalRuntimeInstaller.InteriorSceneNames)
+            {
+                string path = "Assets/Scenes/" + sceneName + ".unity";
+                if (!File.Exists(path)) { failures.Add(path + " missing"); continue; }
+                var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+                int count = Rootborn.Game.World.InteriorDoorPortalRuntimeInstaller.EnsureForScene(scene);
+                if (count == 0) { failures.Add(path + " has no exit doors"); continue; }
+                EditorSceneManager.MarkSceneDirty(scene);
+                EditorSceneManager.SaveScene(scene);
+                Debug.Log("[ROOTBORN] Baked " + count + " exit door(s) into " + path);
+            }
+            if (failures.Count > 0) throw new InvalidOperationException("[ROOTBORN] Interior exit bake failed: " + string.Join("; ", failures));
+        }
+    }
 }
