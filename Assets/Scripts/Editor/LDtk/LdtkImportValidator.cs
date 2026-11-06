@@ -527,8 +527,7 @@ namespace Rootborn.Editor.LDtk
                     + "|" + portal.DestinationScene + "|" + portal.DestinationSpawnId + "|" + portal.gameObject.activeSelf);
             }
             lines.Sort(StringComparer.Ordinal);
-            return string.Join("
-", lines);
+            return string.Join(";", lines);
         }
 
         private static string BakeCollision(UnityEngine.SceneManagement.Scene scene, out int blocked, out bool changed)
