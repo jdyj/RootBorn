@@ -16,8 +16,9 @@ using System.Collections.Generic;
                     "StudentDayResultRoot",
                     "BookPanel",
                     "QuestLogPanel",
-                    "ObjectiveJournalPanel",
-                    "ObjectiveJournalRoot",
+                    // The Objective Journal is rebuilt closed in every scene and opened only by the player (Tab).
+                    // Sweeping it here hid a journal the player opened in the first seconds after arriving,
+                    // leaving it "open" but invisible so the next Tab closed it instead.
                     "WorldStateLogPanel",
                     "WorldStateLogRoot"
                 };
