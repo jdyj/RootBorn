@@ -84,6 +84,14 @@ namespace Rootborn.Tests.EditMode.World
                     var c=collision.WorldToCell(spawn.transform.position);
                     Assert.That(IsFloor(c),Is.True,sceneName+" spawn "+spawn.SpawnId+" is off the floor at "+c);
                     Assert.That(collision.HasTile(c),Is.False,sceneName+" spawn "+spawn.SpawnId+" is inside collision at "+c);
+                    // Arriving right against an exit trigger sends the player straight back out (the shooting range did).
+                    foreach(var exit in scene.GetRootGameObjects().SelectMany(r=>r.GetComponentsInChildren<WorldPortal>(true)))
+                    {
+                        var box=exit.GetComponent<BoxCollider2D>(); var center=(Vector2)exit.transform.position+box.offset; var half=box.size*.5f;
+                        var p=(Vector2)spawn.transform.position;
+                        float dx=Mathf.Max(center.x-half.x-p.x,0f,p.x-(center.x+half.x)); float dy=Mathf.Max(center.y-half.y-p.y,0f,p.y-(center.y+half.y));
+                        Assert.That(Mathf.Sqrt(dx*dx+dy*dy),Is.GreaterThanOrEqualTo(.9f),sceneName+" spawn "+spawn.SpawnId+" hugs exit "+exit.name);
+                    }
                 }
                 foreach(var portal in scene.GetRootGameObjects().SelectMany(r=>r.GetComponentsInChildren<WorldPortal>(true)))
                     Assert.That(collision.HasTile(collision.WorldToCell(portal.transform.position)),Is.False,sceneName+" exit "+portal.name+" is walled off");

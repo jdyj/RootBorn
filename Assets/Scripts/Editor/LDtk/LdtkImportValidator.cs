@@ -496,6 +496,7 @@ namespace Rootborn.Editor.LDtk
         public static readonly string[] CollisionSceneNames = { "HospitalInterior", "ShopInterior", "PoliceInterior", "PoliceShootingInterior", "KitchenInterior", "Kitchen2Interior" };
 
         public static string CollisionTilemapName(string sceneName) => sceneName + "CollisionTilemap";
+        private const float MinSpawnDistanceFromExit = 0.9f;
         // Furniture and fixtures (counters, tables, cell bars) block like walls; their raised overdraw parts and
         // the foreground layer are drawn above the player and stay walkable.
         private static readonly string[] PropLayerKeys = { "Police", "Kitchen", "Shop", "Shooting", "School", "House1", "House2" };
@@ -605,6 +606,7 @@ namespace Rootborn.Editor.LDtk
                 changed = true;
             }
             var portalCells = new List<HashSet<Vector3Int>>();
+            var portalBoxes = new List<Rect>();
             foreach (var root in scene.GetRootGameObjects())
             foreach (var portal in root.GetComponentsInChildren<Rootborn.Game.World.WorldPortal>(true))
             {
@@ -617,6 +619,7 @@ namespace Rootborn.Editor.LDtk
                 for (int y = Mathf.FloorToInt(center.y - half.y + 0.01f); y <= Mathf.FloorToInt(center.y + half.y - 0.01f); y++)
                     cells.Add(new Vector3Int(x, y, 0));
                 portalCells.Add(cells);
+                portalBoxes.Add(new Rect(center - half, box.size));
             }
             foreach (var root in scene.GetRootGameObjects())
             foreach (var spawn in root.GetComponentsInChildren<Rootborn.Game.World.WorldSpawnPoint>(true))
@@ -624,6 +627,13 @@ namespace Rootborn.Editor.LDtk
                 var p = spawn.transform.position;
                 var cell = new Vector3Int(Mathf.FloorToInt(p.x), Mathf.FloorToInt(p.y), 0);
                 if (blockedCells.Contains(cell)) return "spawn " + spawn.SpawnId + " at " + cell + " is not on open floor";
+                // A spawn hugging an exit trigger sends the arriving player straight back through it (the shooting range did).
+                foreach (var exitBox in portalBoxes)
+                {
+                    float dx = Mathf.Max(exitBox.xMin - p.x, 0f, p.x - exitBox.xMax);
+                    float dy = Mathf.Max(exitBox.yMin - p.y, 0f, p.y - exitBox.yMax);
+                    if (Mathf.Sqrt(dx * dx + dy * dy) < MinSpawnDistanceFromExit) return "spawn " + spawn.SpawnId + " is within " + MinSpawnDistanceFromExit + " of an exit trigger";
+                }
                 // Every exit must stay reachable on foot from where the player arrives.
                 var reached = new HashSet<Vector3Int> { cell };
                 var queue = new Queue<Vector3Int>(); queue.Enqueue(cell);
