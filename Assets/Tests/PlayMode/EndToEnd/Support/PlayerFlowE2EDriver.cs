@@ -49,6 +49,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             while (Rootborn.Game.World.WorldTravelRuntime.HasPendingTravel && Time.unscaledTime < deadline) yield return null;
             // The test fixture swaps input systems per test; a scene load can leave actions bound to stale control indices,
             // which freezes the last move key down. Re-resolve after every arrival, as the per-test reset does.
+            // Re-resolving can make the Input System log "cached value became outdated"; that comes from this reset, not the game.
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             Rootborn.Tests.PlayMode.PlayModeInputSystemGuardAction.ForgetResolvedControls();
         }
 
