@@ -47,6 +47,49 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
+        // Cells painted Block in the LDtk Collision layer stop the player in play; cells painted Open have no tile collider.
+        [UnityTest]
+        public IEnumerator TOWN_PAINTED_COLLISION_001_PaintedBlockCellsAreSolidAndOpenCellsAreClear()
+        {
+            yield return Rootborn.Tests.PlayMode.HousePlacementTestDriver.EnterWorld("painted", "Town", "town-home-entry");
+            yield return PlayerFlowE2EDriver.WaitForArrival();
+            for (int i = 0; i < 3; i++) yield return new WaitForFixedUpdate();
+            UnityEngine.Tilemaps.Tilemap blocks = null, opens = null;
+            foreach (var root in SceneManager.GetActiveScene().GetRootGameObjects())
+            foreach (var map in root.GetComponentsInChildren<UnityEngine.Tilemaps.Tilemap>(true))
+            {
+                if (map.name == "LdtkPaintedCollision") blocks = map;
+                if (map.name == "LdtkPaintedOpen") opens = map;
+            }
+            var solid = new ContactFilter2D { useTriggers = false };
+            var hits = new System.Collections.Generic.List<Collider2D>();
+            int checkedBlocks = 0;
+            if (blocks != null)
+            {
+                blocks.CompressBounds();
+                foreach (var cell in blocks.cellBounds.allPositionsWithin)
+                {
+                    if (!blocks.HasTile(cell)) continue;
+                    Vector2 centre = blocks.GetCellCenterWorld(cell);
+                    Physics2D.OverlapPoint(centre, solid, hits);
+                    Assert.IsTrue(hits.Exists(h => h.gameObject == blocks.gameObject), "Painted Block cell " + cell + " at " + centre + " has no collider in play.");
+                    checkedBlocks++;
+                }
+            }
+            if (opens != null)
+            {
+                opens.CompressBounds();
+                foreach (var cell in opens.cellBounds.allPositionsWithin)
+                {
+                    if (!opens.HasTile(cell)) continue;
+                    Vector2 centre = opens.GetCellCenterWorld(cell);
+                    Physics2D.OverlapPoint(centre, solid, hits);
+                    Assert.IsFalse(hits.Exists(h => h.GetComponent<UnityEngine.Tilemaps.Tilemap>() != null), "Painted Open cell " + cell + " at " + centre + " still has a tile collider in play.");
+                }
+            }
+            Debug.Log("[ROOTBORN] Painted collision checked: " + checkedBlocks + " block cell(s), open marker " + (opens != null));
+        }
+
         [UnityTest]
         public IEnumerator TOWN_AUTOBOOT_001_LoadTown_NpcAndLocationVisitSpawnAutomatically_EOpensDialogue()
         {
