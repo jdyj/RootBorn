@@ -52,3 +52,7 @@ Builds/Server/
 Builds/Client/
 Builds/Logs/
 artifacts/
+
+# LDtk automatic save backups
+Assets/LDtk/**/backups/
+Assets/LDtk/**/backups.meta
