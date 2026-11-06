@@ -62,6 +62,66 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
+        // REL-001 in the authored Town: talk to Mom, help out at the town square, and the trust value rises by the data delta
+        // once per action, survives a reload, and a second visit adds exactly one more delta.
+        [UnityTest]
+        [Timeout(600000)]
+        public IEnumerator REL_001_AuthoredTown_TalkToMomThenSquareHelpRaisesTrustOncePerAction()
+        {
+            const string TrustId = "relationship.first-guide.trust";
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+            yield return PlayerFlowE2EDriver.EnterWorldFromSaveSlot(TestSlotId, "NewGameButton", "Town", "REL-001 failed: New Game did not enter Town.");
+            yield return PlayerFlowE2EDriver.DismissDailyEvent();
+            var player = GameObject.Find("Player");
+            var student = player.GetComponent<StudentLifeProgressComponent>();
+            int trustStart = student.Progress.GetRelationshipValueById(TrustId);
+
+            var mom = GameObject.Find("TownNpc_npc_first_guide");
+            Assert.IsNotNull(mom, "REL-001 failed: authored Town has no First Guide NPC.");
+            var momNpc = mom.GetComponent<Rootborn.Game.Dialogue.NpcInteractor>();
+            yield return WalkAndPressE(keyboard, mom.transform.position, "REL-001 failed: Mom");
+            Assert.IsTrue(momNpc.Session.IsOpen, "REL-001 failed: E next to Mom did not open her dialogue.");
+            var dialogue = Object.FindFirstObjectByType<Rootborn.UI.Quests.DialoguePanel>(FindObjectsInactive.Include);
+            if (dialogue != null && dialogue.IsOpen) yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(dialogue.transform, "CloseButton"));
+
+            int trustAfterFirst = 0;
+            yield return HelpAtSquare(keyboard, "REL-001 failed:");
+            trustAfterFirst = student.Progress.GetRelationshipValueById(TrustId);
+            Assert.Greater(trustAfterFirst, trustStart, "REL-001 failed: helping at the square did not raise Mom's trust.");
+            int delta = trustAfterFirst - trustStart;
+
+            ActiveSaveContext.Clear();
+            PlayerGlobalState.ClearForTests();
+            yield return PlayerFlowE2EDriver.EnterWorldFromSaveSlot(TestSlotId, "LoadButton", "Town", "REL-002 failed: Load did not return to Town.");
+            var reloaded = GameObject.Find("Player").GetComponent<StudentLifeProgressComponent>();
+            Assert.AreEqual(trustAfterFirst, reloaded.Progress.GetRelationshipValueById(TrustId), "REL-002 failed: trust did not survive reload exactly once.");
+            yield return HelpAtSquare(keyboard, "REL-003 failed:");
+            Assert.AreEqual(trustAfterFirst + delta, reloaded.Progress.GetRelationshipValueById(TrustId), "REL-003 failed: a second help must add exactly one more delta.");
+        }
+
+        private static IEnumerator HelpAtSquare(Keyboard keyboard, string failure)
+        {
+            var square = GameObject.Find("LocationVisit_location_town_square");
+            Assert.IsNotNull(square, failure + " authored Town has no town square point.");
+            yield return WalkAndPressE(keyboard, square.transform.position, failure + " town square");
+            var panel = Object.FindFirstObjectByType<LocationIdentityPanel>(FindObjectsInactive.Include);
+            Assert.IsTrue(panel != null && panel.IsOpen, failure + " E at the square did not open its activity panel.");
+            yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(panel.transform, "LocationActivityButton_0"));
+            Assert.AreEqual(LifeActivityResultKind.Applied, panel.LastResult.Kind, failure + " the square help did not apply (" + panel.LastResult.Kind + ").");
+            if (panel.IsOpen) yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(panel.transform, "CloseLocation"));
+        }
+
+        private static IEnumerator WalkAndPressE(Keyboard keyboard, Vector3 target, string failure)
+        {
+            var player = GameObject.Find("Player");
+            yield return PlayerFlowE2EDriver.WalkPlayerWithKeyboardTo(player, keyboard, target, 0.9f, 900, failure + ": could not walk there.");
+            var router = player.GetComponent<PlayerInteractionRouter>();
+            router.RefreshPromptNow();
+            Assert.IsTrue(router.PromptVisible, failure + ": no prompt there.");
+            yield return PlayerFlowE2EDriver.PressInteractKey(keyboard);
+            yield return null;
+        }
+
         [Ignore(LegacyPremise.AuthoredTown + "Last state help=False dayEnd=False")]
         [UnityTest]
         [Timeout(600000)]
