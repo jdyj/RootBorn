@@ -245,6 +245,8 @@ namespace Rootborn.Game.Player
         private IPlayerInteractable FindNearestInteractable()
         {
             if (Rootborn.Game.Common.UiGameplayInputLock.IsBlocked) return null;
+            // Until arrival finishes, the slot owner is not bound yet and would overwrite anything done now.
+            if (Rootborn.Game.World.WorldTravelRuntime.HasPendingTravel) return null;
             IPlayerInteractable best = null;
             float bestSqr = _interactionRadius * _interactionRadius;
             int bestPriority = int.MinValue;
