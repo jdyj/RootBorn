@@ -291,7 +291,10 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             if (body == null) return new System.Collections.Generic.List<Vector3>();
             // A route that grazes a wall catches the body on tile seams and stalls, so keep a margin when there is room.
             var roomy = PlanWalk(player, body, target, body.size + new Vector2(0.4f, 0.4f), out bool reached);
-            return reached ? roomy : PlanWalk(player, body, target, body.size * 0.9f, out _);
+            var route = reached ? roomy : PlanWalk(player, body, target, body.size * 0.9f, out reached);
+            // The last corner is the target rounded to the half-unit grid; steering to it overshoots short walks. Head for the target itself.
+            if (reached && route.Count > 0) route.RemoveAt(route.Count - 1);
+            return route;
         }
 
         private static System.Collections.Generic.List<Vector3> PlanWalk(GameObject player, BoxCollider2D body, Vector3 target, Vector2 size, out bool reachedGoal)
