@@ -46,6 +46,9 @@ namespace Rootborn.UI.Interiors
         private bool _wasMousePressed;
         private bool _hasPreviewMapCell;
         private Vector2Int _lastPreviewMapCell;
+        // After a placement the ghost stays hidden until the pointer leaves that cell, so it does not cover the new piece.
+        private bool _ghostHeld;
+        private Vector2Int _ghostHeldCell;
         private PointerEventData _pointerEventData;
         private EventSystem _cachedEventSystem;
         private readonly List<RaycastResult> _uiRaycastResults = new List<RaycastResult>(8);
@@ -424,9 +427,16 @@ namespace Rootborn.UI.Interiors
             // A click places (or drops) the active piece whether or not something is selected, so always show where it would go.
             if (_activeFurniture != null)
             {
-                if (!_hasPreviewMapCell || _lastPreviewMapCell != mapCell)
+                if (_ghostHeld && _ghostHeldCell == mapCell)
                 {
-                    DrawGhost(mapCell);
+                }
+                else
+                {
+                    _ghostHeld = false;
+                    if (!_hasPreviewMapCell || _lastPreviewMapCell != mapCell)
+                    {
+                        DrawGhost(mapCell);
+                    }
                 }
             }
             else if (_hasPreviewMapCell)
@@ -1254,6 +1264,8 @@ namespace Rootborn.UI.Interiors
 
         private void ClearOverlay()
         {
+            _ghostHeld = _hasPreviewMapCell;
+            _ghostHeldCell = _lastPreviewMapCell;
             if (_overlay != null)
             {
                 _overlay.ClearAllTiles();
