@@ -27,7 +27,8 @@ namespace Rootborn.Tests.PlayMode.Interiors
         {
             _saveRoot = System.IO.Path.Combine(Application.temporaryCachePath, "rootborn-modern-interiors-placement-tests-" + Guid.NewGuid().ToString("N"));
             SaveService.SetRootDirectoryForTests(_saveRoot);
-            ActiveSaveContext.Set(new SaveSlotMetadata { SlotId = "modern-interiors-placement-tests", DisplayName = "modern-interiors-placement-tests", WorldSeed = 1205, TileSeed = 1205 });
+            // EnterHouse opens the slot the way a new game does; an already-open slot makes the entry treat it as a recovery.
+            ActiveSaveContext.Clear();
             ClearStaticFurnitureLayoutCache();
             yield return null;
         }
@@ -44,7 +45,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
         [UnityTest]
         public IEnumerator HousePalette_ShowsModernInteriorsShadowlessFurnitureFromRegistry()
         {
-            yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
+            yield return HousePlacementTestDriver.EnterHouse("shadowless-placement");
             yield return null;
             yield return null;
             yield return HousePlacementTestDriver.OpenPlacementMode();
@@ -61,7 +62,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
         [UnityTest]
         public IEnumerator ModernShadowlessFurnitureSelectionAndMouseHover_ShowsGhostPreviewBeforePlacement()
         {
-            yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
+            yield return HousePlacementTestDriver.EnterHouse("shadowless-placement");
             yield return null;
             yield return null;
             yield return HousePlacementTestDriver.OpenPlacementMode();
@@ -74,7 +75,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
             var overlayTilemap = GameObject.Find("AuthoredPlacementAvailability")?.GetComponent<Tilemap>();
             var camera = Camera.main;
-            Assert.IsNotNull(overlay);
+            Assert.IsNotNull(overlay, HousePlacementTestDriver.OverlayDiagnostics() + " button=" + button.name + " status=" + GameObject.Find("InteriorPlacementStatusText")?.GetComponent<UnityEngine.UI.Text>()?.text + " selected=" + GameObject.Find("SelectedFurnitureName")?.GetComponent<UnityEngine.UI.Text>()?.text);
             Assert.IsNotNull(overlayTilemap);
             Assert.IsNotNull(camera);
             Assert.IsTrue(TryFindVisibleValidOverlayCell(overlayTilemap, camera, out var hoverCell, out var screenPosition), "A visible valid placement cell outside UI should be available.");
@@ -97,7 +98,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
         [UnityTest]
         public IEnumerator ModernShadowlessFurnitureSelectionAndMouseHover_ShowsFootprintCellsBeforePlacement()
         {
-            yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
+            yield return HousePlacementTestDriver.EnterHouse("shadowless-placement");
             yield return null;
             yield return null;
             yield return HousePlacementTestDriver.OpenPlacementMode();
@@ -134,7 +135,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
         [UnityTest]
         public IEnumerator ModernShadowlessFurnitureSelectionAndWorldMouseClick_PlacesGeneratedTile()
         {
-            yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
+            yield return HousePlacementTestDriver.EnterHouse("shadowless-placement");
             yield return null;
             yield return null;
             yield return HousePlacementTestDriver.OpenPlacementMode();
@@ -186,10 +187,11 @@ namespace Rootborn.Tests.PlayMode.Interiors
             }
         }
 
+        [Ignore(LegacyPremise.AuthoredHouse + "자동 저장되는 House에서는 초기화가 영구 삭제라 저장 뒤 초기화를 불러오기로 되돌리는 흐름이 없음")]
         [UnityTest]
         public IEnumerator ModernShadowlessFurnitureSaveClearLoad_RestoresGeneratedTileWithoutDuplicates()
         {
-            yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
+            yield return HousePlacementTestDriver.EnterHouse("shadowless-placement");
             yield return null;
             yield return null;
             yield return HousePlacementTestDriver.OpenPlacementMode();

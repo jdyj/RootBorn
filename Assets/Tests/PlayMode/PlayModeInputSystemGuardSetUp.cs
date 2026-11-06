@@ -68,6 +68,41 @@ namespace Rootborn.Tests.PlayMode
     {
         public const string ToggleName = "PlacementModeToggleButton";
 
+        // Enters House the way a new game does, so the furniture session binds to the slot's owner.
+        // Loading the scene directly leaves the authored House without a placement session.
+        public static System.Collections.IEnumerator EnterHouse(string slotId, float timeoutSeconds = 20f)
+        {
+            var bootstrap = Rootborn.Game.Managers.Managers.BootstrapAsync();
+            while (!bootstrap.IsCompleted) yield return null;
+            var metadata = new Rootborn.Game.Save.SaveSlotMetadata { SlotId = slotId, DisplayName = slotId, WorldSeed = 1205, TileSeed = 1205 };
+            Assert.IsTrue(Rootborn.Game.World.WorldTravelRuntime.TryRequestEntry(metadata, "House", "house-entry"), "House entry request was refused.");
+            float deadline = UnityEngine.Time.realtimeSinceStartup + timeoutSeconds;
+            while (UnityEngine.Time.realtimeSinceStartup < deadline)
+            {
+                foreach (var session in UnityEngine.Object.FindObjectsByType<Rootborn.Game.Placement.AuthoredHouseFurnitureSession>(UnityEngine.FindObjectsSortMode.None))
+                    if (session.Surface != null && session.gameObject.scene.name == "House") yield break;
+                yield return null;
+            }
+            Assert.Fail("House furniture session did not bind after entering as a player. " + OverlayDiagnostics());
+        }
+
+        // Explains a missing placement overlay: none created, created inactive, or created in another scene.
+        public static string OverlayDiagnostics()
+        {
+            var sb = new System.Text.StringBuilder("overlays:");
+            foreach (var o in UnityEngine.Object.FindObjectsByType<Rootborn.UI.Interiors.InteriorPlacementPreviewOverlay>(UnityEngine.FindObjectsInactive.Include, UnityEngine.FindObjectsSortMode.None))
+                sb.Append(' ').Append(o.name).Append('@').Append(o.gameObject.scene.name).Append(o.gameObject.activeInHierarchy ? "/active" : "/inactive");
+            sb.Append(" panels:");
+            foreach (var p in UnityEngine.Object.FindObjectsByType<Rootborn.UI.Interiors.InteriorFurniturePlacementPanel>(UnityEngine.FindObjectsInactive.Include, UnityEngine.FindObjectsSortMode.None))
+                sb.Append(' ').Append(p.gameObject.scene.name).Append(p.gameObject.activeInHierarchy ? "/active" : "/inactive").Append(" parent=").Append(p.transform.parent != null ? p.transform.parent.name : "-");
+            sb.Append(" sessions:");
+            foreach (var s in UnityEngine.Object.FindObjectsByType<Rootborn.Game.Placement.AuthoredHouseFurnitureSession>(UnityEngine.FindObjectsInactive.Include, UnityEngine.FindObjectsSortMode.None))
+                sb.Append(' ').Append(s.gameObject.scene.name).Append(s.Surface != null ? "/surface" : "/nosurface");
+            sb.Append(" owners:").Append(UnityEngine.Object.FindObjectsByType<Rootborn.UI.Careers.AdultCareerRuntimeComponent>(UnityEngine.FindObjectsInactive.Include, UnityEngine.FindObjectsSortMode.None).Length);
+            sb.Append(" slot:").Append(Rootborn.Game.Save.ActiveSaveContext.SlotId);
+            return sb.ToString();
+        }
+
         public static System.Collections.IEnumerator OpenPlacementMode(float timeoutSeconds = 5f)
         {
             float deadline = UnityEngine.Time.unscaledTime + timeoutSeconds;

@@ -17,11 +17,30 @@ namespace Rootborn.Tests.PlayMode.Interiors
     {
         private const string ChairButtonName = "PaletteFurniture_chair.black";
         private const string ChairTileName = "BlackChair_00";
+        private const string SlotId = "furniture-mouse-flow-tests";
+        private string _saveRoot;
+
+        [UnitySetUp]
+        public IEnumerator SetUp()
+        {
+            _saveRoot = System.IO.Path.Combine(Application.temporaryCachePath, "rootborn-furniture-mouse-flow-" + System.Guid.NewGuid().ToString("N"));
+            Rootborn.Game.Save.SaveService.SetRootDirectoryForTests(_saveRoot);
+            Rootborn.Game.Save.ActiveSaveContext.Clear();
+            yield return null;
+        }
+
+        [UnityTearDown]
+        public IEnumerator TearDown()
+        {
+            Rootborn.Game.Save.ActiveSaveContext.Clear();
+            Rootborn.Game.Save.SaveService.SetRootDirectoryForTests(null);
+            yield return null;
+        }
 
         [UnityTest]
         public IEnumerator PaletteButtonMouseClick_SelectsFurnitureAndDoesNotPlaceWorldTileBehindUi()
         {
-            yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
+            yield return HousePlacementTestDriver.EnterHouse(SlotId);
             yield return null;
             yield return null;
             yield return HousePlacementTestDriver.OpenPlacementMode();
@@ -50,7 +69,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             StringAssert.Contains("Black Chair", status.text, "A real mouse click on the chair button should select the chair through the UI event path.");
 
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
-            Assert.IsNotNull(overlay);
+            Assert.IsNotNull(overlay, HousePlacementTestDriver.OverlayDiagnostics());
             Assert.Greater(overlay.ValidCellCount, 0, "Selecting the chair should show valid placement cells, but must not place immediately on the tile behind the UI.");
             furnitureTilemap = GameObject.Find("AuthoredUserFurniture")?.GetComponent<Tilemap>();
             int chairCountAfter = furnitureTilemap != null ? CountTiles(furnitureTilemap, ChairTileName) : 0;
@@ -60,7 +79,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
         [UnityTest]
         public IEnumerator PaletteSelectionAndWorldMouseClick_PlacesFurnitureThroughOverlayUpdate()
         {
-            yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
+            yield return HousePlacementTestDriver.EnterHouse(SlotId);
             yield return null;
             yield return null;
             yield return HousePlacementTestDriver.OpenPlacementMode();
@@ -77,7 +96,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return null;
 
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
-            Assert.IsNotNull(overlay);
+            Assert.IsNotNull(overlay, HousePlacementTestDriver.OverlayDiagnostics());
             Assert.Greater(overlay.ValidCellCount, 0, "Selecting furniture should draw player-visible valid placement cells before clicking the world.");
 
             var overlayTilemap = GameObject.Find("AuthoredPlacementAvailability")?.GetComponent<Tilemap>();
@@ -107,7 +126,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
         [UnityTest]
         public IEnumerator BlackChairMousePlacementTwice_DoesNotRevealStaleOverlayOrSampleTilesBehindFirstChair()
         {
-            yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
+            yield return HousePlacementTestDriver.EnterHouse(SlotId);
             yield return null;
             yield return null;
             yield return HousePlacementTestDriver.OpenPlacementMode();
@@ -120,7 +139,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return null;
 
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
-            Assert.IsNotNull(overlay);
+            Assert.IsNotNull(overlay, HousePlacementTestDriver.OverlayDiagnostics());
             var overlayTilemap = GameObject.Find("AuthoredPlacementAvailability")?.GetComponent<Tilemap>();
             var camera = Camera.main;
             Assert.IsNotNull(overlayTilemap);

@@ -74,6 +74,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return null;
         }
 
+        [Ignore(LegacyPremise.AuthoredHouse + "자동 저장되는 House에서는 초기화가 영구 삭제라 저장 뒤 초기화를 불러오기로 되돌리는 흐름이 없음")]
         [UnityTest]
         public IEnumerator FloorProps_MousePalettePlacementSaveClearLoadAndReload()
         {
