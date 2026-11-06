@@ -943,10 +943,16 @@ namespace Rootborn.UI.Interiors
 
         private static Canvas FindHouseCanvas(Scene scene)
         {
+            // A screen overlay canvas keeps the panel on screen; fall back to any active root canvas in House.
+            Canvas fallback = null;
             foreach (var root in scene.GetRootGameObjects())
             foreach (var candidate in root.GetComponentsInChildren<Canvas>(true))
-                if (candidate.isRootCanvas && candidate.enabled && candidate.gameObject.activeInHierarchy) return candidate;
-            return null;
+            {
+                if (!candidate.isRootCanvas || !candidate.enabled || !candidate.gameObject.activeInHierarchy) continue;
+                if (candidate.renderMode == RenderMode.ScreenSpaceOverlay) return candidate;
+                if (fallback == null) fallback = candidate;
+            }
+            return fallback;
         }
 
         private static void EnsureEventSystem(Scene scene)

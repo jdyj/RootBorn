@@ -470,10 +470,11 @@ namespace Rootborn.Editor.LDtk
                 string path = "Assets/Scenes/" + sceneName + ".unity";
                 if (!File.Exists(path)) { failures.Add(path + " missing"); continue; }
                 var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
-                int doorsBefore = CountExitDoors(scene);
+                string doorsBefore = DescribeExitDoors(scene);
                 int count = Rootborn.Game.World.InteriorDoorPortalRuntimeInstaller.EnsureForScene(scene);
                 if (count == 0) { failures.Add(path + " has no exit doors"); continue; }
-                bool changed = count != doorsBefore;
+                // Doors are edited in place (position, size, destination), so compare their full description, not the count.
+                bool changed = DescribeExitDoors(scene) != doorsBefore;
                 if (Array.IndexOf(CollisionSceneNames, sceneName) >= 0)
                 {
                     string problem = BakeCollision(scene, out int blocked, out bool collisionChanged);
@@ -515,12 +516,19 @@ namespace Rootborn.Editor.LDtk
             return count == wanted.Count;
         }
 
-        private static int CountExitDoors(UnityEngine.SceneManagement.Scene scene)
+        private static string DescribeExitDoors(UnityEngine.SceneManagement.Scene scene)
         {
+            var lines = new List<string>();
             foreach (var root in scene.GetRootGameObjects())
-            foreach (var t in root.GetComponentsInChildren<Transform>(true))
-                if (t.name == "[InteriorDoorPortals]") return t.childCount;
-            return 0;
+            foreach (var portal in root.GetComponentsInChildren<Rootborn.Game.World.WorldPortal>(true))
+            {
+                var box = portal.GetComponent<BoxCollider2D>();
+                lines.Add(portal.name + "|" + portal.transform.position + "|" + (box != null ? box.size.ToString() + box.offset + box.isTrigger : "-")
+                    + "|" + portal.DestinationScene + "|" + portal.DestinationSpawnId + "|" + portal.gameObject.activeSelf);
+            }
+            lines.Sort(StringComparer.Ordinal);
+            return string.Join("
+", lines);
         }
 
         private static string BakeCollision(UnityEngine.SceneManagement.Scene scene, out int blocked, out bool changed)

@@ -421,7 +421,8 @@ namespace Rootborn.UI.Interiors
 
             var tileCell = _overlay.WorldToCell(world);
             var mapCell = new Vector2Int(tileCell.x - _offset.x, tileCell.y - _offset.y);
-            if (_activeFurniture != null && (!_hasSelectedInstance || _moveCarrying))
+            // A click places (or drops) the active piece whether or not something is selected, so always show where it would go.
+            if (_activeFurniture != null)
             {
                 if (!_hasPreviewMapCell || _lastPreviewMapCell != mapCell)
                 {

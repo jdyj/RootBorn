@@ -87,7 +87,7 @@ namespace Rootborn.Tests.EditMode.World
                     // Arriving right against an exit trigger sends the player straight back out (the shooting range did).
                     foreach(var exit in scene.GetRootGameObjects().SelectMany(r=>r.GetComponentsInChildren<WorldPortal>(true)))
                     {
-                        var box=exit.GetComponent<BoxCollider2D>(); var center=(Vector2)exit.transform.position+box.offset; var half=box.size*.5f;
+                        var box=exit.GetComponent<BoxCollider2D>(); Assert.That(box,Is.Not.Null,sceneName+" exit "+exit.name+" has no trigger box"); var center=(Vector2)exit.transform.position+box.offset; var half=box.size*.5f;
                         var p=(Vector2)spawn.transform.position;
                         float dx=Mathf.Max(center.x-half.x-p.x,0f,p.x-(center.x+half.x)); float dy=Mathf.Max(center.y-half.y-p.y,0f,p.y-(center.y+half.y));
                         Assert.That(Mathf.Sqrt(dx*dx+dy*dy),Is.GreaterThanOrEqualTo(.9f),sceneName+" spawn "+spawn.SpawnId+" hugs exit "+exit.name);
