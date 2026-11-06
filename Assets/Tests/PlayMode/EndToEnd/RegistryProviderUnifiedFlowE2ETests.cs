@@ -47,6 +47,23 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         }
 
         [UnityTest]
+        public IEnumerator REGISTRY_PROVIDER_002_ManagersDestroyedMidLoad_ReplacementStillLoadsTheRegistry()
+        {
+            foreach (var old in GameObject.FindObjectsByType<Managers>(FindObjectsInactive.Include, FindObjectsSortMode.None)) Object.DestroyImmediate(old.gameObject);
+            yield return null;
+            var first = Managers.BootstrapAsync();
+            // Deleting @Managers while it loads used to hand the old load to the replacement, which then never loaded.
+            Object.DestroyImmediate(Managers.Instance.gameObject);
+            var second = Managers.BootstrapAsync();
+            float deadline = Time.unscaledTime + 30f;
+            while ((!first.IsCompleted || !second.IsCompleted) && Time.unscaledTime < deadline) yield return null;
+            Assert.IsTrue(second.IsCompleted, "Replacement Managers load did not finish.");
+            Assert.IsNotNull(Managers.Instance, "Replacement Managers missing.");
+            Assert.IsTrue(Managers.Instance.IsBootstrapped, "Replacement Managers must load its own data, not wait on the destroyed one.");
+            Assert.IsNotNull(Managers.Data.Registry, "Replacement Managers has no registry.");
+        }
+
+        [UnityTest]
         public IEnumerator REGISTRY_PROVIDER_E2E_001_MainMenuNewGameEntersTownWithProviderBackedRuntimeInstallers()
         {
             yield return LoadScene("Boot");

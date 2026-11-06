@@ -10,6 +10,8 @@ namespace Rootborn.Game.Managers
     {
         private static Managers s_instance;
         private static Task s_bootstrapTask;
+        // The instance the running task loads into. A destroyed @Managers must not hand its load to the replacement.
+        private static Managers s_bootstrapOwner;
 
         public static Managers Instance => s_instance;
 
@@ -43,8 +45,9 @@ namespace Rootborn.Game.Managers
         {
             var managers = EnsureExists();
             if (managers.IsBootstrapped) return Task.CompletedTask;
-            if (s_bootstrapTask != null && !s_bootstrapTask.IsCompleted) return s_bootstrapTask;
+            if (s_bootstrapTask != null && !s_bootstrapTask.IsCompleted && ReferenceEquals(s_bootstrapOwner, managers)) return s_bootstrapTask;
 
+            s_bootstrapOwner = managers;
             s_bootstrapTask = managers.BootstrapInternalAsync();
             return s_bootstrapTask;
         }
@@ -62,7 +65,7 @@ namespace Rootborn.Game.Managers
             }
             finally
             {
-                if (!IsBootstrapped)
+                if (!IsBootstrapped && ReferenceEquals(s_bootstrapOwner, this))
                 {
                     s_bootstrapTask = null;
                 }
