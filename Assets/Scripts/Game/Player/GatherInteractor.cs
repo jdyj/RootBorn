@@ -92,14 +92,21 @@ namespace Rootborn.Game.Player
 
         private void OnInteract(InputAction.CallbackContext ctx) => DoInteract();
 
+        // Reads every keyboard, like movement does, so E on a keyboard that is not Keyboard.current still interacts.
         private static bool IsKeyboardInteractPressed()
         {
-            var keyboard = Keyboard.current;
-            if (keyboard == null)
+            var devices = InputSystem.devices;
+            for (int i = 0; i < devices.Count; i++)
             {
-                return false;
+                if (devices[i] is Keyboard keyboard && IsInteractHeld(keyboard)) return true;
             }
 
+            var current = Keyboard.current;
+            return current != null && IsInteractHeld(current);
+        }
+
+        private static bool IsInteractHeld(Keyboard keyboard)
+        {
             return keyboard.eKey.isPressed ||
                 keyboard.spaceKey.isPressed ||
                 keyboard.leftCtrlKey.isPressed ||
