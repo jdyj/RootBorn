@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d304445aa14d5df41b7b39c577cf8aad, type: 3}
   m_Name: Source_Hint_Learning_School
   m_EditorClassIdentifier: Rootborn.Game:Rootborn.Game.StudentLife:CareerResultLogHintSource
-  _requiredText: 
+  _requiredText: location.activity.school-class

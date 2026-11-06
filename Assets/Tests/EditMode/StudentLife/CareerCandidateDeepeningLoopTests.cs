@@ -9,6 +9,23 @@ namespace Rootborn.Tests.EditMode.StudentLife
 {
     public sealed class CareerCandidateDeepeningLoopTests
     {
+        // An empty result-log source never matches, so the career hint it belongs to can never be earned in play.
+        [Test]
+        public void RegisteredCareerHints_ResultLogSourcesAllHaveRequiredText()
+        {
+            var registry = UnityEditor.AssetDatabase.LoadAssetAtPath<GameDataRegistry>("Assets/Data/Registry/GameDataRegistry.asset");
+            Assert.IsNotNull(registry);
+            var field = typeof(CareerResultLogHintSource).GetField("_requiredText", BindingFlags.Instance | BindingFlags.NonPublic);
+            var empty = new System.Collections.Generic.List<string>();
+            foreach (var hint in registry.CareerHints)
+            {
+                if (hint == null) continue;
+                foreach (var source in hint.Sources)
+                    if (source is CareerResultLogHintSource log && string.IsNullOrEmpty((string)field.GetValue(log))) empty.Add(hint.name + "/" + log.name);
+            }
+            CollectionAssert.IsEmpty(empty, "Career hint sources with no required text can never match.");
+        }
+
         [Test]
         public void CAREER_CANDIDATE_EDIT_001_RegistryExposesCandidateHintAndRouteDefinitions()
         {
