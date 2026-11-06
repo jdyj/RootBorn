@@ -26,6 +26,14 @@ namespace Rootborn.Tests.PlayMode.World
             float travelDeadline = Time.realtimeSinceStartup + 10f;
             while (Rootborn.Game.World.WorldTravelRuntime.HasPendingTravel && Time.realtimeSinceStartup < travelDeadline) yield return null;
             yield return LoadScene("Town");
+            // A travel that a previous test queued late would swap this Town out mid-test; let it land and reload Town.
+            yield return new WaitForSecondsRealtime(0.3f);
+            if (Rootborn.Game.World.WorldTravelRuntime.HasPendingTravel || SceneManager.GetActiveScene().name != "Town")
+            {
+                travelDeadline = Time.realtimeSinceStartup + 10f;
+                while (Rootborn.Game.World.WorldTravelRuntime.HasPendingTravel && Time.realtimeSinceStartup < travelDeadline) yield return null;
+                yield return LoadScene("Town");
+            }
             yield return WaitForObjectWithPortal("TownLdtkDoor_house_18_12", 20f);
             yield return WaitForObjectWithPortal("TownLdtkDoor_kitchen_24_54", 20f);
         }
@@ -262,6 +270,8 @@ namespace Rootborn.Tests.PlayMode.World
         private static void AssertStandsOnInteriorFloor(GameObject player, string sceneName, string when)
         {
             var scene = SceneManager.GetSceneByName(sceneName);
+            Assert.IsTrue(scene.IsValid() && scene.isLoaded, sceneName + " is no longer loaded when " + when + ": active scene " + SceneManager.GetActiveScene().name
+                + ", pending travel " + Rootborn.Game.World.WorldTravelRuntime.HasPendingTravel + ", player at " + player.transform.position + ".");
             Tilemap ground = null;
             foreach (var root in scene.GetRootGameObjects())
                 foreach (var map in root.GetComponentsInChildren<Tilemap>(true))

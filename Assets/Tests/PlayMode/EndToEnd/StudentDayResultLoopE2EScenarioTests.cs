@@ -204,6 +204,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             ActiveSaveContext.Clear();
             PlayerGlobalState.ClearForTests();
             yield return PlayerFlowE2EDriver.EnterWorldFromSaveSlot(TestSlotId, "LoadButton", "House", "DAY-END-002 failed: Load did not return to House.");
+            yield return PlayerFlowE2EDriver.DismissDailyEvent();
             var reloaded = GameObject.Find("Player").GetComponent<StudentLifeProgressComponent>();
             Assert.AreEqual(StudentDayState.ResultReady, reloaded.Progress.DayState, "DAY-END-002 failed: the ended day did not survive reload.");
             Assert.AreEqual(day, reloaded.Progress.CurrentDay, "DAY-END-002 failed: reload changed the day.");
@@ -302,7 +303,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 yield return null;
             }
 
-            Assert.Fail(failure);
+            Assert.Fail(failure + " [" + PlayerFlowE2EDriver.InputLockOwners() + " daily event open:" + (GameObject.Find("DailyEventCloseButton") != null) + "]");
         }
 
         private static IEnumerator WaitForDialoguePanel(DialoguePanel panel, float timeoutSeconds, string failure)
