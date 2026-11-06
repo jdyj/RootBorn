@@ -111,7 +111,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             runtime.Router.RefreshPromptNow();
             Assert.IsTrue(runtime.Router.PromptVisible, "NPC-REL-E2E-002 failed: Teacher help prompt was not visible after player movement.");
             Assert.AreEqual(HelpActionId, runtime.Help.Action.Id, "NPC-REL-E2E-002 failed: reached help point was not bound to the Teacher action.");
-            StringAssert.Contains("Teacher", runtime.Router.PromptText, "NPC-REL-E2E-002 failed: visible help prompt did not identify the Teacher action.");
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Get("town.help.teacher-study-prep"), runtime.Router.PromptText, "NPC-REL-E2E-002 failed: visible help prompt did not identify the Teacher action.");
             yield return PlayerFlowE2EDriver.PressInteractKey(keyboard);
             yield return null;
 

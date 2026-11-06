@@ -191,7 +191,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return WalkPlayerWithKeyboardTo(runtime.Player, keyboard, runtime.Work.transform.position, 0.25f, "WORK-E2E-002 failed: actual keyboard movement could not reach part-time work point.");
             runtime.Router.RefreshPromptNow();
             Assert.IsTrue(runtime.Router.PromptVisible, "WORK-E2E-002 failed: part-time work prompt was not visible after movement.");
-            StringAssert.Contains("Corner Store", runtime.Router.PromptText, "WORK-E2E-003 failed: prompt did not target the sample part-time work.");
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Get("work.shift.corner-store"), runtime.Router.PromptText, "WORK-E2E-003 failed: prompt did not target the sample part-time work.");
             yield return PressInteractKey(keyboard);
             yield return null;
 

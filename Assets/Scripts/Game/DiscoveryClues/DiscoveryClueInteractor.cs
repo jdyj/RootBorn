@@ -24,7 +24,8 @@ namespace Rootborn.Game.DiscoveryClues
         public DiscoveryClueResult LastRevealResult { get; private set; }
         public DiscoveryClueResult LastCompleteResult { get; private set; }
         public int InteractionPriority => CluePriority;
-        public string InteractionPrompt => "[E] " + Humanize(_source != null ? _source.HintTextKey : _clue != null ? _clue.PublicTextKey : string.Empty);
+        public string InteractionPrompt => "[E] " + DisplayName(_source != null ? _source.HintTextKey : _clue != null ? _clue.PublicTextKey : string.Empty);
+        private static string DisplayName(string key) => Rootborn.Game.Localization.GameText.Localized(key, Humanize(key));
         public Vector3 InteractionPromptOffset => new Vector3(0f, 1.2f, 0f);
         public Transform InteractionTransform => transform;
 

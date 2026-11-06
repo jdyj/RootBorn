@@ -75,7 +75,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return WalkPlayerWithKeyboardTo(runtime.Player, keyboard, runtime.Discovery.transform.position, 0.25f, "EXPLORE-E2E-002 failed: actual keyboard movement could not reach discovery point.");
             runtime.Router.RefreshPromptNow();
             Assert.IsTrue(runtime.Router.PromptVisible, "EXPLORE-E2E-003 failed: discovery prompt was not visible after movement.");
-            StringAssert.Contains("Clocktower Notice", runtime.Router.PromptText, "EXPLORE-E2E-003 failed: prompt did not target the sample discovery.");
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Get("discovery.clocktower-notice"), runtime.Router.PromptText, "EXPLORE-E2E-003 failed: prompt did not target the sample discovery.");
             yield return PressInteractKey(keyboard);
             yield return null;
 

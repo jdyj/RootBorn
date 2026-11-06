@@ -15,7 +15,8 @@ namespace Rootborn.Game.StudentLife
 
         public DiscoveryDefinition Discovery => _discovery;
         public DiscoveryResult LastResult { get; private set; }
-        public string InteractionPrompt => "[E] " + HumanizeDisplayKey(_discovery != null ? _discovery.DisplayNameKey : string.Empty);
+        public string InteractionPrompt => "[E] " + DisplayName(_discovery != null ? _discovery.DisplayNameKey : string.Empty);
+        private static string DisplayName(string key) => Rootborn.Game.Localization.GameText.Localized(key, HumanizeDisplayKey(key));
         public Vector3 InteractionPromptOffset => new Vector3(0f, 1.05f, 0f);
         public Transform InteractionTransform => transform;
         public int InteractionPriority => 15;

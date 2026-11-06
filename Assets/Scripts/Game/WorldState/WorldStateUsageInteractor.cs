@@ -21,7 +21,8 @@ namespace Rootborn.Game.WorldState
         public WorldStateUsageDefinition Usage => _usage;
         public WorldStateUsageResult LastResult { get; private set; }
         public int InteractionPriority => UsagePriority;
-        public string InteractionPrompt => "[E] " + Humanize(_usage != null ? _usage.InteractionPromptKey : string.Empty);
+        public string InteractionPrompt => "[E] " + DisplayName(_usage != null ? _usage.InteractionPromptKey : string.Empty);
+        private static string DisplayName(string key) => Rootborn.Game.Localization.GameText.Localized(key, Humanize(key));
         public Vector3 InteractionPromptOffset => new Vector3(0f, 1.2f, 0f);
         public Transform InteractionTransform => transform;
 

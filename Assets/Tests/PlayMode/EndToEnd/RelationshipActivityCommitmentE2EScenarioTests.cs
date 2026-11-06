@@ -98,7 +98,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return PlayerFlowE2EDriver.WalkPlayerWithKeyboardTo(runtime.Player, keyboard, runtime.Help.transform.position, 0.25f, 720, "REL-COMMITMENT-E2E-001 failed: actual keyboard movement could not reach Teacher help action.");
             runtime.Router.RefreshPromptNow();
             Assert.IsTrue(runtime.Router.PromptVisible, "REL-COMMITMENT-E2E-001 failed: Teacher help prompt was not visible after player movement.");
-            StringAssert.Contains("Teacher", runtime.Router.PromptText, "REL-COMMITMENT-E2E-001 failed: visible help prompt did not identify the Teacher action.");
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Get("town.help.teacher-study-prep"), runtime.Router.PromptText, "REL-COMMITMENT-E2E-001 failed: visible help prompt did not identify the Teacher action.");
             yield return PlayerFlowE2EDriver.PressInteractKey(keyboard);
             yield return null;
 

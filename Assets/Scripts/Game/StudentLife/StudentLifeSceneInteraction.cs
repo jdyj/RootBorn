@@ -317,7 +317,8 @@ namespace Rootborn.Game.StudentLife
         public SkillDefinition PrimarySkill => _primarySkill;
         public CareerDefinition PrimaryCareer => _primaryCareer;
         public LifeActivityResult LastResult { get; private set; }
-        public string InteractionPrompt => "[E] " + HumanizeDisplayKey(_activity != null ? _activity.DisplayNameKey : string.Empty);
+        public string InteractionPrompt => "[E] " + DisplayName(_activity != null ? _activity.DisplayNameKey : string.Empty);
+        private static string DisplayName(string key) => Rootborn.Game.Localization.GameText.Localized(key, HumanizeDisplayKey(key));
         public Vector3 InteractionPromptOffset => new Vector3(0f, 1.05f, 0f);
         public Transform InteractionTransform => transform;
 

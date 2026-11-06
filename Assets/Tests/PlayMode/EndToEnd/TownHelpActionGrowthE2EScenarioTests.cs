@@ -74,6 +74,9 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
 
             var errand = FindHelpPoint(ActionId);
             Assert.IsNotNull(errand, "HELP-001 failed: authored Town has no errand point for " + ActionId + ".");
+            string shownName = Rootborn.Game.Localization.GameText.Get(errand.Action.DisplayNameKey);
+            Assert.AreNotEqual(errand.Action.DisplayNameKey, shownName, "HELP-001 failed: the errand has no catalog name.");
+            StringAssert.Contains(shownName, errand.InteractionPrompt, "HELP-001 failed: the errand prompt does not show its translated name.");
             yield return PlayerFlowE2EDriver.WalkAndInteract(keyboard, errand.transform.position, "HELP-001 failed: errand");
             Assert.AreEqual(Rootborn.Game.StudentLife.LifeActivityResultKind.Applied, errand.LastResult.Kind, "HELP-001 failed: E at the errand point did not apply.");
             int traitAfter = student.Progress.GetTraitValueById(TraitId);
@@ -130,7 +133,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return WalkPlayerWithKeyboardTo(runtime.Player, keyboard, runtime.Help.transform.position, 0.25f, "HELP-E2E-002 failed: actual keyboard movement could not reach town help action point.");
             runtime.Router.RefreshPromptNow();
             Assert.IsTrue(runtime.Router.PromptVisible, "HELP-E2E-002 failed: town help prompt was not visible after movement.");
-            StringAssert.Contains("First Guide Errand", runtime.Router.PromptText, "HELP-E2E-003 failed: prompt did not target the sample town help action.");
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Get("town.help.first-guide-errand"), runtime.Router.PromptText, "HELP-E2E-003 failed: prompt did not target the sample town help action.");
             yield return PressInteractKey(keyboard);
             yield return null;
 

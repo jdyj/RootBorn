@@ -16,7 +16,8 @@ namespace Rootborn.Game.StudentLife
 
         public PartTimeWorkDefinition Work => _work;
         public PartTimeWorkResult LastResult { get; private set; }
-        public string InteractionPrompt => "[E] " + HumanizeDisplayKey(_work != null ? _work.DisplayNameKey : string.Empty);
+        public string InteractionPrompt => "[E] " + DisplayName(_work != null ? _work.DisplayNameKey : string.Empty);
+        private static string DisplayName(string key) => Rootborn.Game.Localization.GameText.Localized(key, HumanizeDisplayKey(key));
         public Vector3 InteractionPromptOffset => new Vector3(0f, 1.05f, 0f);
         public Transform InteractionTransform => transform;
 

@@ -79,7 +79,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return PlayerFlowE2EDriver.WalkPlayerWithKeyboardTo(runtime.Player, keyboard, runtime.Work.transform.position, 0.25f, 720, "CAREER-JOB-ROUTE-E2E-001 failed: keyboard movement could not reach part-time work point.");
             runtime.Router.RefreshPromptNow();
             Assert.IsTrue(runtime.Router.PromptVisible, "CAREER-JOB-ROUTE-E2E-001 failed: part-time work prompt was not visible.");
-            StringAssert.Contains("Corner Store", runtime.Router.PromptText, "CAREER-JOB-ROUTE-E2E-001 failed: prompt did not expose the expected player-facing work text.");
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Get("work.shift.corner-store"), runtime.Router.PromptText, "CAREER-JOB-ROUTE-E2E-001 failed: prompt did not expose the expected player-facing work text.");
             yield return PlayerFlowE2EDriver.PressInteractKey(keyboard);
             yield return null;
 

@@ -141,7 +141,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return PlayerFlowE2EDriver.WalkPlayerWithKeyboardTo(runtime.Player, keyboard, runtime.Help.transform.position, 0.25f, 640, "NPC-REL-E2E-001 failed: actual keyboard movement could not reach First Guide help action.");
             runtime.Router.RefreshPromptNow();
             Assert.IsTrue(runtime.Router.PromptVisible, "NPC-REL-E2E-001 failed: help prompt was not visible after player movement.");
-            StringAssert.Contains("First Guide", runtime.Router.PromptText, "NPC-REL-E2E-001 failed: help prompt did not target the First Guide action.");
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Get("town.help.first-guide-errand"), runtime.Router.PromptText, "NPC-REL-E2E-001 failed: help prompt did not target the First Guide action.");
             yield return PlayerFlowE2EDriver.PressInteractKey(keyboard);
             yield return null;
 

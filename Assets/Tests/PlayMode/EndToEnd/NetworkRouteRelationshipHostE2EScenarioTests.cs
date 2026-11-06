@@ -180,7 +180,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return PlayerFlowE2EDriver.WalkPlayerWithKeyboardTo(runtime.Player, keyboard, runtime.Help.transform.position, 0.25f, 720, "NETWORK-ROUTE-REL-HOST-001 failed: host keyboard movement could not reach First Guide help action.");
             runtime.Router.RefreshPromptNow();
             Assert.IsTrue(runtime.Router.PromptVisible, "NETWORK-ROUTE-REL-HOST-001 failed: host help prompt was not visible.");
-            StringAssert.Contains("First Guide", runtime.Router.PromptText, "NETWORK-ROUTE-REL-HOST-001 failed: host help prompt did not expose First Guide action.");
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Get("town.help.first-guide-errand"), runtime.Router.PromptText, "NETWORK-ROUTE-REL-HOST-001 failed: host help prompt did not expose First Guide action.");
             yield return PlayerFlowE2EDriver.PressInteractKey(keyboard);
             yield return null;
             Assert.AreEqual(LifeActivityResultKind.Applied, runtime.Help.LastResult.Kind, "NETWORK-ROUTE-REL-HOST-001 failed: host help action did not apply through player input.");
