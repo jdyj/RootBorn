@@ -6,6 +6,7 @@ using NUnit.Framework;
 using Rootborn.Game.Player;
 using Rootborn.Game.Save;
 using Rootborn.Game.StudentLife;
+using Rootborn.Tests.PlayMode.EndToEnd.Support;
 using Rootborn.UI.MainMenu;
 using Rootborn.UI.StudentLife;
 using UnityEngine;
@@ -52,6 +53,54 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             InputSystemUiModulePlayModeTestGuard.UninstallForCurrentTest();
             LogAssert.ignoreFailingMessages = false;
             yield return null;
+        }
+
+        // HELP-001 in the authored Town: walk to Mom's errand point and press E. Responsibility and Mom's trust rise by the
+        // data deltas, energy pays the cost, the result survives a reload once, and helping again adds exactly one more delta.
+        [UnityTest]
+        [Timeout(600000)]
+        public IEnumerator HELP_001_AuthoredTown_ErrandForMomGrowsResponsibilityAndTrustOncePerHelp()
+        {
+            const string ActionId = "town.help.first-guide-errand";
+            const string TraitId = "trait.responsibility";
+            const string TrustId = "relationship.first-guide.trust";
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+            yield return PlayerFlowE2EDriver.EnterWorldFromSaveSlot(TestSlotId, "NewGameButton", "Town", "HELP-001 failed: New Game did not enter Town.");
+            yield return PlayerFlowE2EDriver.DismissDailyEvent();
+            var student = GameObject.Find("Player").GetComponent<StudentLifeProgressComponent>();
+            int traitStart = student.Progress.GetTraitValueById(TraitId);
+            int trustStart = student.Progress.GetRelationshipValueById(TrustId);
+            int energyStart = student.Progress.Energy;
+
+            var errand = FindHelpPoint(ActionId);
+            Assert.IsNotNull(errand, "HELP-001 failed: authored Town has no errand point for " + ActionId + ".");
+            yield return PlayerFlowE2EDriver.WalkAndInteract(keyboard, errand.transform.position, "HELP-001 failed: errand");
+            Assert.AreEqual(Rootborn.Game.StudentLife.LifeActivityResultKind.Applied, errand.LastResult.Kind, "HELP-001 failed: E at the errand point did not apply.");
+            int traitAfter = student.Progress.GetTraitValueById(TraitId);
+            int trustAfter = student.Progress.GetRelationshipValueById(TrustId);
+            Assert.Greater(traitAfter, traitStart, "HELP-001 failed: helping did not grow responsibility.");
+            Assert.Greater(trustAfter, trustStart, "HELP-001 failed: helping did not raise Mom's trust.");
+            Assert.AreEqual(energyStart - errand.Action.EnergyCost, student.Progress.Energy, "HELP-001 failed: the errand did not cost its energy.");
+
+            ActiveSaveContext.Clear();
+            PlayerGlobalState.ClearForTests();
+            yield return PlayerFlowE2EDriver.EnterWorldFromSaveSlot(TestSlotId, "LoadButton", "Town", "HELP-002 failed: Load did not return to Town.");
+            student = GameObject.Find("Player").GetComponent<StudentLifeProgressComponent>();
+            Assert.AreEqual(traitAfter, student.Progress.GetTraitValueById(TraitId), "HELP-002 failed: responsibility did not survive reload exactly once.");
+            Assert.AreEqual(trustAfter, student.Progress.GetRelationshipValueById(TrustId), "HELP-002 failed: trust did not survive reload exactly once.");
+
+            errand = FindHelpPoint(ActionId);
+            yield return PlayerFlowE2EDriver.WalkAndInteract(keyboard, errand.transform.position, "HELP-003 failed: second errand");
+            Assert.AreEqual(Rootborn.Game.StudentLife.LifeActivityResultKind.Applied, errand.LastResult.Kind, "HELP-003 failed: the second errand did not apply (" + errand.LastResult.Kind + ").");
+            Assert.AreEqual(traitAfter + (traitAfter - traitStart), student.Progress.GetTraitValueById(TraitId), "HELP-003 failed: a second help must add exactly one more responsibility delta.");
+            Assert.AreEqual(trustAfter + (trustAfter - trustStart), student.Progress.GetRelationshipValueById(TrustId), "HELP-003 failed: a second help must add exactly one more trust delta.");
+        }
+
+        private static TownHelpActionInteractor FindHelpPoint(string actionId)
+        {
+            foreach (var candidate in Object.FindObjectsByType<TownHelpActionInteractor>(FindObjectsSortMode.None))
+                if (candidate.Action != null && candidate.Action.Id == actionId) return candidate;
+            return null;
         }
 
         [Ignore(LegacyPremise.AuthoredTown + "Readiness requires TownHelpActionPoint + StudentDayEndBoard")]

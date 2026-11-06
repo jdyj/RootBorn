@@ -41,12 +41,12 @@
 |---|---|---|
 | TOWN-001 진입 | BootToGame 7건, RegistryProviderUnifiedFlow | 유지 |
 | LIFE-001/002 활동 결과·멱등 | KnowledgeStatusActivityChain, TownResourceRecipeActivity, FREE_PATH_001(학교 수업) | 유지 |
-| CAREER-001 진로 해금 | 없음 | **공백** (Career* 6파일 격리) |
-| REL-001 관계 | 없음 | **공백** (FirstGuide/SecondNpc/Relationship* 격리) |
+| CAREER-001 진로 해금 | `CareerCandidateDeepeningLoopE2EScenarioTests.CAREER_001_AuthoredTown_*` | 2026-11-06 복구 |
+| REL-001 관계 | `FirstGuideRelationshipMilestoneE2EScenarioTests.REL_001_AuthoredTown_*` | 2026-11-06 복구 |
 | JOB-001 알바 | `PartTimeWorkGrowthE2EScenarioTests.JOB_001_AuthoredTown_*` | 2026-11-06 복구: 걷기 → E → 미니게임을 화면 버튼으로 진행 → 불러오기 후 한 번만 반영 |
 | KNOW/STATUS | KnowledgeStatusActivityChain | 유지 |
 | 하루 끝 결과·다음 날 | `StudentDayResultLoopE2EScenarioTests.DAY_END_001_AuthoredHouse_*` | 2026-11-06 복구: Town → 집 문 → House 보드 → 결과 → 불러오기 후 같은 결과(재정산 없음) → 다음 날 |
-| 자유 경로(학교 밖 성장) | `SelfStudyLibraryGrowthE2EScenarioTests.FREE_PATH_001_*` | 2026-11-06 복구: Town 도서관 독학과 School 수업이 둘 다 trait.focus를 올림. TownHelpAction은 아직 공백 |
+| 자유 경로(학교 밖 성장) | `SelfStudyLibraryGrowthE2EScenarioTests.FREE_PATH_001_*` | 2026-11-06 복구: Town 도서관 독학과 School 수업이 둘 다 trait.focus를 올림. 2026-11-07: `TownHelpActionGrowthE2EScenarioTests.HELP_001_AuthoredTown_*`로 엄마 심부름(걷기 → E)이 책임감·신뢰를 올리고, 불러오기 후 한 번만 반영되며, 다시 도우면 한 번 더 오르는 것을 확인 |
 
 EditMode 단위 테스트는 위 시스템을 계속 다룬다. 공백은 "실제 입력으로 저작 월드를 걸어 다니며 끝까지 가는" PlayMode 증명이다.
 
