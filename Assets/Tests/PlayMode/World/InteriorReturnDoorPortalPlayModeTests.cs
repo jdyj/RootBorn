@@ -20,6 +20,11 @@ namespace Rootborn.Tests.PlayMode.World
         {
             SaveService.SetRootDirectoryForTests(Path.Combine(Application.temporaryCachePath, "FarmerDoorQa", System.Guid.NewGuid().ToString("N")));
             ActiveSaveContext.Set(new SaveSlotMetadata { SlotId = "interior-return-door-test-slot", DisplayName = "Interior Return Door Test", WorldSeed = 2026052401, TileSeed = 2026052402 });
+            // An automatic door opened at the end of the previous test finishes its travel a moment later; let it land first
+            // so it does not replace the Town this test loads.
+            yield return new WaitForSecondsRealtime(0.6f);
+            float travelDeadline = Time.realtimeSinceStartup + 10f;
+            while (Rootborn.Game.World.WorldTravelRuntime.HasPendingTravel && Time.realtimeSinceStartup < travelDeadline) yield return null;
             yield return LoadScene("Town");
             yield return WaitForObjectWithPortal("TownLdtkDoor_house_18_12", 20f);
             yield return WaitForObjectWithPortal("TownLdtkDoor_kitchen_24_54", 20f);
@@ -387,7 +392,10 @@ namespace Rootborn.Tests.PlayMode.World
                 if (go != null && go.GetComponent<WorldPortal>() != null) yield break;
                 yield return null;
             }
-            Assert.Fail(objectName + " did not become portal-ready.");
+            var any = Resources.FindObjectsOfTypeAll<WorldPortal>();
+            var names = new System.Text.StringBuilder();
+            foreach (var p in any) if (p != null && p.gameObject.scene.IsValid() && p.name.StartsWith("TownLdtkDoor")) names.Append(' ').Append(p.name).Append(p.gameObject.activeInHierarchy ? "/on" : "/off").Append('@').Append(p.gameObject.scene.name);
+            Assert.Fail(objectName + " did not become portal-ready. active scene=" + SceneManager.GetActiveScene().name + " portals:" + names + " travel busy=" + Rootborn.Game.World.WorldTravelRuntime.HasPendingTravel);
         }
 
         private static IEnumerator WaitForScene(string sceneName, float timeoutSeconds)
@@ -401,8 +409,13 @@ namespace Rootborn.Tests.PlayMode.World
         {
             for (int i = 0; i < maxFrames; i++)
             {
-                if (SceneManager.GetActiveScene().name == destinationScene) yield break;
-                if (player == null || Vector3.Distance(player.transform.position, targetPosition) <= tolerance) yield break;
+                // Let go of the keys on arrival; a key still held walks the player straight into the next scene's return door.
+                if (SceneManager.GetActiveScene().name == destinationScene || player == null || Vector3.Distance(player.transform.position, targetPosition) <= tolerance)
+                {
+                    ReleaseMovementKeys(keyboard);
+                    InputSystem.Update();
+                    yield break;
+                }
                 Vector3 delta = targetPosition - player.transform.position;
                 Key key = Mathf.Abs(delta.x) >= Mathf.Abs(delta.y) ? (delta.x >= 0f ? Key.D : Key.A) : (delta.y >= 0f ? Key.W : Key.S);
                 QueueKey(keyboard, key);

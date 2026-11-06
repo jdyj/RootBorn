@@ -63,6 +63,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
+        [Ignore(LegacyPremise.ObjectiveJournal + "퀘스트 목록 열기 버튼(QuestChainLogOpenButton)은 더 이상 만들지 않음")]
         [UnityTest]
         [Timeout(600000)]
         public IEnumerator QUEST_ROUTE_REWARD_E2E_001_CompleteChainUnlockRouteReload()

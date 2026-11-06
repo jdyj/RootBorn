@@ -44,6 +44,7 @@ namespace Rootborn.Tests.PlayMode.TownConcept
             yield return null;
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "타일 배치 퀘스트 설치기가 기다리는 옛 QuestLogPanel이 저작 Town에 없음")]
         [UnityTest]
         public IEnumerator TILE_PLACE_QUEST_001_002_003_004_005_PlayerAcceptsTileQuestSelectsPalettePlacesWorldTileAndClaimsInteriorGrowthThroughUi()
         {
@@ -76,6 +77,7 @@ namespace Rootborn.Tests.PlayMode.TownConcept
             AssertPanelContains(runtime.TilePanel.transform, "RewardClaimed");
         }
 
+        [Ignore(LegacyPremise.AuthoredTown + "타일 배치 퀘스트 설치기가 기다리는 옛 QuestLogPanel이 저작 Town에 없음")]
         [UnityTest]
         public IEnumerator TILE_PLACE_QUEST_006_007_PlacedTileAndRewardClaimPersistAfterTownReloadWithoutDuplicateReward()
         {
