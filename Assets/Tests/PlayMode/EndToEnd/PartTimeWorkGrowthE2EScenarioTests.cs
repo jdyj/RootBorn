@@ -8,6 +8,7 @@ using Rootborn.Game.Save;
 using Rootborn.Game.StudentLife;
 using Rootborn.UI.MainMenu;
 using Rootborn.UI.StudentLife;
+using Rootborn.Tests.PlayMode.EndToEnd.Support;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -51,6 +52,84 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             InputSystemUiModulePlayModeTestGuard.UninstallForCurrentTest();
             LogAssert.ignoreFailingMessages = false;
             yield return null;
+        }
+
+        // JOB-001 in the authored Town: walk to the corner store, press E, play its minigame on screen, then reload.
+        [UnityTest]
+        [Timeout(600000)]
+        public IEnumerator JOB_001_AuthoredTown_CornerStoreShiftThroughMinigameSurvivesReloadOnce()
+        {
+            const string WorkId = "work.shift.corner-store";
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+            yield return EnterTownFromSaveSlot("NewGameButton", "JOB-001 failed: New Game did not enter Town.");
+
+            var player = GameObject.Find("Player");
+            var student = player.GetComponent<StudentLifeProgressComponent>();
+            var router = player.GetComponent<PlayerInteractionRouter>();
+            var work = FindAuthoredWork(WorkId);
+            var traitOutcome = work.Work.Outcomes.Count > 0 ? work.Work.Outcomes[0] as WorkTraitDeltaOutcome : null;
+            Assert.IsNotNull(traitOutcome, "JOB-001 failed: corner store work has no trait outcome to observe.");
+            int traitBefore = student.Progress.GetTraitValue(traitOutcome.Trait);
+            int spentBefore = student.Progress.TimePointsSpentToday;
+
+            yield return PlayerFlowE2EDriver.DismissDailyEvent();
+            yield return PlayerFlowE2EDriver.WalkPlayerWithKeyboardTo(player, keyboard, work.transform.position + new Vector3(0f, -0.5f, 0f), 0.45f, 900, "JOB-001 failed: keyboard movement could not reach the corner store work point.");
+            router.RefreshPromptNow();
+            Assert.IsTrue(router.PromptVisible, "JOB-001 failed: no interaction prompt next to the corner store work point.");
+            yield return PlayerFlowE2EDriver.PressInteractKey(keyboard);
+
+            Rootborn.UI.Minigames.MinigamePanel panel = null;
+            for (int i = 0; i < 120 && (panel == null || !panel.IsOpen); i++)
+            {
+                panel = Object.FindFirstObjectByType<Rootborn.UI.Minigames.MinigamePanel>(FindObjectsInactive.Include);
+                yield return null;
+            }
+            Assert.IsTrue(panel != null && panel.IsOpen, "JOB-001 failed: pressing E at the work point did not open its minigame.");
+            yield return PlayerFlowE2EDriver.PlayMinigameToEnd(panel, 90f, "JOB-001 failed:");
+            Assert.IsTrue(panel.Session.Succeeded, "JOB-001 failed: the minigame played from the screen did not succeed (score " + panel.Session.Score + ").");
+
+            int traitAfter = student.Progress.GetTraitValue(traitOutcome.Trait);
+            Assert.AreEqual(traitBefore + traitOutcome.Delta, traitAfter, "JOB-001 failed: work growth was not applied exactly once.");
+            Assert.Greater(student.Progress.TimePointsSpentToday, spentBefore, "JOB-001 failed: work did not spend time.");
+            Assert.AreEqual(1, System.Array.FindAll(student.Progress.GetTodayActivityIds(), id => id == WorkId).Length, "JOB-001 failed: today's log must record the work once.");
+            Assert.IsFalse(student.Progress.HasPendingMinigame, "JOB-001 failed: the finished minigame is still pending.");
+            if (panel.IsOpen) yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(panel.transform, "Close"));
+
+            ActiveSaveContext.Clear();
+            PlayerGlobalState.ClearForTests();
+            yield return EnterTownFromSaveSlot("LoadButton", "JOB-001 failed: Load did not re-enter Town.");
+            var reloaded = GameObject.Find("Player").GetComponent<StudentLifeProgressComponent>();
+            Assert.AreEqual(traitAfter, reloaded.Progress.GetTraitValue(traitOutcome.Trait), "JOB-001 failed: work growth did not survive reload.");
+            Assert.AreEqual(1, System.Array.FindAll(reloaded.Progress.GetTodayActivityIds(), id => id == WorkId).Length, "JOB-001 failed: reload duplicated or lost the work log.");
+        }
+
+        private IEnumerator EnterTownFromSaveSlot(string buttonName, string failure)
+        {
+            yield return LoadScene("MainMenu");
+            EnsurePassiveEventSystem();
+            SaveSlotSelectPanel.EnsureInScene().Show();
+            yield return null;
+            InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
+            yield return Rootborn.Tests.PlayMode.PlayModeScenarioStart.WaitForGameData();
+            yield return ClickButton(FindButton("SaveSlotCard_" + TestSlotId, buttonName));
+            yield return PlayerFlowE2EDriver.WaitForScene("Town", 20f, failure);
+            float deadline = Time.unscaledTime + 15f;
+            while (Time.unscaledTime < deadline)
+            {
+                var player = GameObject.Find("Player");
+                if (player != null && player.GetComponent<StudentLifeProgressComponent>() != null && player.GetComponent<PlayerInventory>() != null
+                    && player.GetComponent<PlayerInteractionRouter>() != null && EventSystem.current != null) yield break;
+                yield return null;
+            }
+            Assert.Fail(failure + " Player runtime was not ready in Town.");
+        }
+
+        private static PartTimeWorkInteractor FindAuthoredWork(string workId)
+        {
+            foreach (var candidate in Object.FindObjectsByType<PartTimeWorkInteractor>(FindObjectsSortMode.None))
+                if (candidate.Work != null && candidate.Work.Id == workId) return candidate;
+            Assert.Fail("JOB-001 failed: authored Town has no work point for " + workId);
+            return null;
         }
 
         [Ignore(LegacyPremise.AuthoredTown + "after entering Town it waits for old prototype object names")]

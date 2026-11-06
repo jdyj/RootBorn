@@ -359,6 +359,54 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             return corners;
         }
 
+        // Plays the open minigame through its on-screen buttons, the way a player reads and answers the screen.
+        // Sequence: remember the order while it is shown, then press it back. Timing: press Tap while the cursor is over a beat.
+        // Choice: press the hinted answer when the screen marks one. Placement and dodge stages are not driven yet.
+        public static IEnumerator PlayMinigameToEnd(Rootborn.UI.Minigames.MinigamePanel panel, float timeoutSeconds, string failure)
+        {
+            Assert.IsNotNull(panel, failure + " Minigame panel missing.");
+            float deadline = Time.unscaledTime + timeoutSeconds;
+            int[] remembered = null;
+            Rootborn.Game.Minigames.ChallengeSession stage = null;
+            int tappedBeats = 0;
+            while (panel.IsOpen && panel.Session != null && !panel.Session.IsComplete)
+            {
+                Assert.Less(Time.unscaledTime, deadline, failure + " Minigame did not finish in time (stage " + panel.Session.StageIndex + ").");
+                var c = panel.Session.Current;
+                if (!ReferenceEquals(c, stage)) { stage = c; remembered = null; tappedBeats = 0; }
+                switch (c.Mechanic)
+                {
+                    case Rootborn.Game.Minigames.MinigameMechanic.Sequence:
+                        if (c.PreviewVisible) { remembered = c.PreviewSequence; break; }
+                        Assert.IsNotNull(remembered, failure + " The sequence was never shown before answering.");
+                        var answer = FindButton(panel.transform, "Choice_" + remembered[c.ProgressIndex]); if (!answer.interactable) break; yield return ClickButton(answer);
+                        break;
+                    case Rootborn.Game.Minigames.MinigameMechanic.Choice:
+                        int hinted = -1;
+                        for (int i = 0; i < c.Symbols.Length; i++) if (c.IsHintChoice(i)) { hinted = i; break; }
+                        var pick = FindButton(panel.transform, "Choice_" + Mathf.Max(0, hinted)); if (!pick.interactable) break; yield return ClickButton(pick);
+                        break;
+                    case Rootborn.Game.Minigames.MinigameMechanic.Timing:
+                        var beats = c.BeatTimes;
+                        if (tappedBeats < beats.Length && Mathf.Abs(c.Elapsed - beats[tappedBeats]) <= c.TimingWindow * 0.5f)
+                        {
+                            yield return ClickButton(FindButton(panel.transform, "Tap"));
+                            tappedBeats++;
+                        }
+                        else if (tappedBeats < beats.Length && c.Elapsed > beats[tappedBeats] + c.TimingWindow) tappedBeats++;
+                        break;
+                    default:
+                        Assert.Fail(failure + " Minigame stage " + c.Mechanic + " is not driven by the test helper yet.");
+                        break;
+                }
+                yield return null;
+            }
+            Assert.IsNotNull(panel.Session, failure + " Minigame session missing.");
+            Assert.IsTrue(panel.Session.IsComplete, failure + " Minigame closed before it finished.");
+            // The panel hands the finished session to the game when it next refreshes.
+            for (int i = 0; i < 10; i++) yield return null;
+        }
+
         public static KeyControl ControlFor(Keyboard keyboard, Key key)
         {
             if (key == Key.A) return keyboard.aKey;

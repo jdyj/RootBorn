@@ -43,7 +43,7 @@
 | LIFE-001/002 활동 결과·멱등 | KnowledgeStatusActivityChain, TownResourceRecipeActivity | 일부 유지. 공부→하루 끝→결과 흐름은 격리 |
 | CAREER-001 진로 해금 | 없음 | **공백** (Career* 6파일 격리) |
 | REL-001 관계 | 없음 | **공백** (FirstGuide/SecondNpc/Relationship* 격리) |
-| JOB-001 알바 | 없음 | **공백** (PartTimeWorkGrowth 격리) |
+| JOB-001 알바 | `PartTimeWorkGrowthE2EScenarioTests.JOB_001_AuthoredTown_*` | 2026-11-06 복구: 걷기 → E → 미니게임을 화면 버튼으로 진행 → 불러오기 후 한 번만 반영 |
 | KNOW/STATUS | KnowledgeStatusActivityChain | 유지 |
 | 하루 끝 결과·다음 날 | 없음 | **공백** (StudentDayResult* 격리) |
 | 자유 경로(학교 밖 성장) | 없음 | **공백** (OutsideSchool, SelfStudyLibrary, TownHelpAction 격리) |
@@ -74,3 +74,8 @@ EditMode 단위 테스트는 위 시스템을 계속 다룬다. 공백은 "실�
 - 새 게임 버튼 전에 `PlayModeScenarioStart.WaitForGameData()`를 부르지 않는 E2E가 40개 가까이 있다.
   실행 첫 순서가 되면 레지스트리가 아직 없어 진입이 실패하고 생성 화면이 남는다. 도감 E2E의 실행 첫 순서 실패가 이 경우로 보인다(2026-11-06 수정, 미실행).
 - 공용 도우미를 만들 때 새 게임 클릭 함수 안에서 이 대기를 하면 개별 테스트가 빠뜨릴 수 없다.
+
+## 진행 (2026-11-06)
+
+- `PlayerFlowE2EDriver.PlayMinigameToEnd`: 순서(미리보기를 기억했다가 누름), 선택(힌트 표시), 타이밍(커서가 박자 위일 때 Tap)을 화면 버튼으로 진행한다. 판 배치와 피하기는 아직 지원하지 않고, 만나면 실패 메시지로 알린다.
+- JOB-001 복구. 옛 `WORK_E2E_001_006`은 즉시 적용 전제라 격리 유지.
