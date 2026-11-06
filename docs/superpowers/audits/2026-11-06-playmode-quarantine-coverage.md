@@ -40,13 +40,13 @@
 | 시나리오 | 저작 월드 활성 E2E | 상태 |
 |---|---|---|
 | TOWN-001 진입 | BootToGame 7건, RegistryProviderUnifiedFlow | 유지 |
-| LIFE-001/002 활동 결과·멱등 | KnowledgeStatusActivityChain, TownResourceRecipeActivity | 일부 유지. 공부→하루 끝→결과 흐름은 격리 |
+| LIFE-001/002 활동 결과·멱등 | KnowledgeStatusActivityChain, TownResourceRecipeActivity, FREE_PATH_001(학교 수업) | 유지 |
 | CAREER-001 진로 해금 | 없음 | **공백** (Career* 6파일 격리) |
 | REL-001 관계 | 없음 | **공백** (FirstGuide/SecondNpc/Relationship* 격리) |
 | JOB-001 알바 | `PartTimeWorkGrowthE2EScenarioTests.JOB_001_AuthoredTown_*` | 2026-11-06 복구: 걷기 → E → 미니게임을 화면 버튼으로 진행 → 불러오기 후 한 번만 반영 |
 | KNOW/STATUS | KnowledgeStatusActivityChain | 유지 |
 | 하루 끝 결과·다음 날 | `StudentDayResultLoopE2EScenarioTests.DAY_END_001_AuthoredHouse_*` | 2026-11-06 복구: Town → 집 문 → House 보드 → 결과 → 불러오기 후 같은 결과(재정산 없음) → 다음 날 |
-| 자유 경로(학교 밖 성장) | 없음 | **공백** (OutsideSchool, SelfStudyLibrary, TownHelpAction 격리) |
+| 자유 경로(학교 밖 성장) | `SelfStudyLibraryGrowthE2EScenarioTests.FREE_PATH_001_*` | 2026-11-06 복구: Town 도서관 독학과 School 수업이 둘 다 trait.focus를 올림. TownHelpAction은 아직 공백 |
 
 EditMode 단위 테스트는 위 시스템을 계속 다룬다. 공백은 "실제 입력으로 저작 월드를 걸어 다니며 끝까지 가는" PlayMode 증명이다.
 
@@ -81,3 +81,5 @@ EditMode 단위 테스트는 위 시스템을 계속 다룬다. 공백은 "실�
 - JOB-001 복구. 옛 `WORK_E2E_001_006`은 즉시 적용 전제라 격리 유지.
 - 공용 도우미 추가: `EnterWorldFromSaveSlot`, `WaitForPlayerReady`, `WalkThroughDoor`(문까지 걷고 필요하면 E).
 - 하루 끝(DAY_END_001) 복구.
+- 자유 경로(FREE_PATH_001) 복구. 그 과정에서 도착 처리 중 상호작용이 바인딩에 덮여 사라지는 게임 버그를 찾아 고침.
+- 남은 공백: CAREER-001, REL-001, TownHelpAction.
