@@ -177,8 +177,16 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             Key activeKey = Key.None;
             Vector3 lastCheck = player.transform.position;
             int replans = 0;
+            string startScene = SceneManager.GetActiveScene().name;
             for (int i = 0; i < frameBudget && Vector3.Distance(player.transform.position, targetPosition) > tolerance; i++)
             {
+                // Walking into a portal or level edge changes scenes; the target belongs to the old scene, so stop there.
+                if (SceneManager.GetActiveScene().name != startScene || player == null)
+                {
+                    InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+                    InputSystem.Update();
+                    yield break;
+                }
                 // Townsfolk walk their routes and can stand in the way; when the player stops making progress, plan again.
                 if (i > 0 && i % 30 == 0)
                 {

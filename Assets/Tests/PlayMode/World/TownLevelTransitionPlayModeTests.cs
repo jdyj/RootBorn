@@ -13,11 +13,25 @@ using System.Collections;
         {
             public sealed class TownLevelTransitionPlayModeTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
             {
+                private string _saveRoot;
+
                 [UnitySetUp]
                 public IEnumerator SetUp()
                 {
-                    yield return PlayerFlowE2EDriver.LoadScene("Town");
+                    // Scene travel needs the slot owner a new game binds; a directly loaded Town has none and refuses to travel.
+                    _saveRoot = Path.Combine(Application.temporaryCachePath, "rootborn-level-transition-" + System.Guid.NewGuid().ToString("N"));
+                    Rootborn.Game.Save.SaveService.SetRootDirectoryForTests(_saveRoot);
+                    Rootborn.Game.Save.ActiveSaveContext.Clear();
+                    yield return Rootborn.Tests.PlayMode.HousePlacementTestDriver.EnterWorld("level-transition", "Town", "town-home-entry");
                     yield return WaitForTownReady(10f);
+                }
+
+                [UnityTearDown]
+                public IEnumerator TearDownSave()
+                {
+                    Rootborn.Game.Save.ActiveSaveContext.Clear();
+                    Rootborn.Game.Save.SaveService.SetRootDirectoryForTests(null);
+                    yield return null;
                 }
         
                 [UnityTest]
