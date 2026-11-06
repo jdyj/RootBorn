@@ -87,6 +87,19 @@ namespace Rootborn.Tests.EditMode.World
                 }
                 foreach(var portal in scene.GetRootGameObjects().SelectMany(r=>r.GetComponentsInChildren<WorldPortal>(true)))
                     Assert.That(collision.HasTile(collision.WorldToCell(portal.transform.position)),Is.False,sceneName+" exit "+portal.name+" is walled off");
+                // Counters, tables and cell bars must stop the player like walls (their raised overdraw parts do not).
+                // Fixtures touching an exit's trigger box (the police gate) are left open so the exit stays reachable.
+                var nearExit=new System.Collections.Generic.HashSet<Vector3Int>();
+                foreach(var pt in scene.GetRootGameObjects().SelectMany(r=>r.GetComponentsInChildren<WorldPortal>(true)))
+                {
+                    var box=pt.GetComponent<BoxCollider2D>(); var center=(Vector2)pt.transform.position+box.offset; var half=box.size*.5f;
+                    for(int x=Mathf.FloorToInt(center.x-half.x+.01f)-1;x<=Mathf.FloorToInt(center.x+half.x-.01f)+1;x++)
+                        for(int y=Mathf.FloorToInt(center.y-half.y+.01f)-1;y<=Mathf.FloorToInt(center.y+half.y-.01f)+1;y++) nearExit.Add(new Vector3Int(x,y,0));
+                }
+                foreach(var prop in maps.Where(m=>{var layer=m.name.Substring(sceneName.Length);return new[]{"Police","Kitchen","Shop","Shooting"}.Any(k=>layer.StartsWith(k))&&!layer.Contains("Overdraw");}))
+                    foreach(var c in prop.cellBounds.allPositionsWithin)
+                        if(prop.HasTile(c)&&!nearExit.Contains(c))
+                            Assert.That(collision.HasTile(c),Is.True,sceneName+" lets the player walk through "+prop.name+" at "+c);
             }
             finally{EditorSceneManager.ClosePreviewScene(scene);}
         }

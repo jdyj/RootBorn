@@ -491,6 +491,9 @@ namespace Rootborn.Editor.LDtk
         public static readonly string[] CollisionSceneNames = { "HospitalInterior", "ShopInterior", "PoliceInterior", "PoliceShootingInterior", "KitchenInterior", "Kitchen2Interior" };
 
         public static string CollisionTilemapName(string sceneName) => sceneName + "CollisionTilemap";
+        // Furniture and fixtures (counters, tables, cell bars) block like walls; their raised overdraw parts and
+        // the foreground layer are drawn above the player and stay walkable.
+        private static readonly string[] PropLayerKeys = { "Police", "Kitchen", "Shop", "Shooting", "School", "House1", "House2" };
 
         private static string BakeCollision(UnityEngine.SceneManagement.Scene scene, out int blocked)
         {
@@ -508,13 +511,17 @@ namespace Rootborn.Editor.LDtk
             Tilemap groundMap = null;
             var ground = new HashSet<Vector3Int>();
             var solid = new HashSet<Vector3Int>();
+            var walls = new HashSet<Vector3Int>();
             var min = new Vector3Int(int.MaxValue, int.MaxValue, 0);
             var max = new Vector3Int(int.MinValue, int.MinValue, 0);
             foreach (var map in maps)
             {
                 if (map == null) continue;
-                bool isGround = map.name.Contains("Ground");
-                bool isSolid = map.name.Contains("Wall") || map.name.Contains("Border");
+                // Layer names repeat the scene name ("PoliceInterior..."), so judge by the layer part alone.
+                string layer = map.name.StartsWith(scene.name, StringComparison.Ordinal) ? map.name.Substring(scene.name.Length) : map.name;
+                bool isGround = layer.Contains("Ground");
+                bool isProp = Array.Exists(PropLayerKeys, k => layer.StartsWith(k, StringComparison.Ordinal)) && !layer.Contains("Overdraw");
+                bool isSolid = layer.Contains("Wall") || layer.Contains("Border") || isProp;
                 if (isGround && groundMap == null) groundMap = map;
                 map.CompressBounds();
                 foreach (var cell in map.cellBounds.allPositionsWithin)
@@ -523,6 +530,7 @@ namespace Rootborn.Editor.LDtk
                     min = Vector3Int.Min(min, cell); max = Vector3Int.Max(max, cell);
                     if (isGround) ground.Add(cell);
                     if (isSolid) solid.Add(cell);
+                    if (isSolid && !isProp) walls.Add(cell);
                 }
             }
             if (groundMap == null || ground.Count == 0) return "has no ground tilemap";
@@ -539,6 +547,14 @@ namespace Rootborn.Editor.LDtk
                     open.Add(new Vector3Int(x, y, 0));
             }
             // Each LDtk layer carries its own Grid, so the collision layer needs one too or its cells collapse to the origin.
+            // A fixture drawn right at a door (the police entrance gate) must not shut the exit; floor next to an exit stays open.
+            foreach (var cell in new List<Vector3Int>(open))
+                for (int dx = -1; dx <= 1; dx++)
+                for (int dy = -1; dy <= 1; dy++)
+                {
+                    var near = cell + new Vector3Int(dx, dy, 0);
+                    if (ground.Contains(near) && !walls.Contains(near)) open.Add(near);
+                }
             var go = new GameObject(collisionName, typeof(Grid), typeof(Tilemap), typeof(TilemapCollider2D));
             var sourceGrid = groundMap.GetComponentInParent<Grid>();
             if (sourceGrid != null) { var grid = go.GetComponent<Grid>(); grid.cellSize = sourceGrid.cellSize; grid.cellGap = sourceGrid.cellGap; grid.cellLayout = sourceGrid.cellLayout; grid.cellSwizzle = sourceGrid.cellSwizzle; }
@@ -554,12 +570,42 @@ namespace Rootborn.Editor.LDtk
                 blockedCells.Add(cell);
             }
             blocked = blockedCells.Count;
+            var portalCells = new List<HashSet<Vector3Int>>();
+            foreach (var root in scene.GetRootGameObjects())
+            foreach (var portal in root.GetComponentsInChildren<Rootborn.Game.World.WorldPortal>(true))
+            {
+                var box = portal.GetComponent<BoxCollider2D>();
+                if (box == null) continue;
+                var cells = new HashSet<Vector3Int>();
+                Vector2 center = (Vector2)portal.transform.position + box.offset;
+                Vector2 half = box.size * 0.5f;
+                for (int x = Mathf.FloorToInt(center.x - half.x + 0.01f); x <= Mathf.FloorToInt(center.x + half.x - 0.01f); x++)
+                for (int y = Mathf.FloorToInt(center.y - half.y + 0.01f); y <= Mathf.FloorToInt(center.y + half.y - 0.01f); y++)
+                    cells.Add(new Vector3Int(x, y, 0));
+                portalCells.Add(cells);
+            }
             foreach (var root in scene.GetRootGameObjects())
             foreach (var spawn in root.GetComponentsInChildren<Rootborn.Game.World.WorldSpawnPoint>(true))
             {
                 var p = spawn.transform.position;
                 var cell = new Vector3Int(Mathf.FloorToInt(p.x), Mathf.FloorToInt(p.y), 0);
                 if (blockedCells.Contains(cell)) return "spawn " + spawn.SpawnId + " at " + cell + " is not on open floor";
+                // Every exit must stay reachable on foot from where the player arrives.
+                var reached = new HashSet<Vector3Int> { cell };
+                var queue = new Queue<Vector3Int>(); queue.Enqueue(cell);
+                while (queue.Count > 0)
+                {
+                    var c = queue.Dequeue();
+                    foreach (var d in new[] { Vector3Int.left, Vector3Int.right, Vector3Int.up, Vector3Int.down })
+                    {
+                        var n = c + d;
+                        if (n.x < min.x - 1 || n.x > max.x + 1 || n.y < min.y - 1 || n.y > max.y + 1) continue;
+                        if (blockedCells.Contains(n) || !reached.Add(n)) continue;
+                        queue.Enqueue(n);
+                    }
+                }
+                for (int i = 0; i < portalCells.Count; i++)
+                    if (!portalCells[i].Overlaps(reached)) return "spawn " + spawn.SpawnId + " cannot walk to exit " + i;
             }
             return null;
         }
