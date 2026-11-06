@@ -78,7 +78,7 @@ namespace Rootborn.Game.World
             }
         }
 
-        private static bool TryGetInteriorLevel(string sceneName, out string levelPath, out string selfDoorAlias)
+        public static bool TryGetInteriorLevel(string sceneName, out string levelPath, out string selfDoorAlias)
         {
             if (string.Equals(sceneName, "HouseInterior", StringComparison.OrdinalIgnoreCase))
             {

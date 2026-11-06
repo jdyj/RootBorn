@@ -29,6 +29,36 @@
 	"fieldInstances": [],
 	"layerInstances": [
 		{
+			"__identifier": "Collision",
+			"__type": "IntGrid",
+			"__cWid": 10,
+			"__cHei": 11,
+			"__gridSize": 32,
+			"__opacity": 0.45,
+			"__pxTotalOffsetX": 0,
+			"__pxTotalOffsetY": 0,
+			"__tilesetDefUid": null,
+			"__tilesetRelPath": null,
+			"iid": "f3ab47d8-6d98-4737-912e-9d57dc779da3",
+			"levelId": 31,
+			"layerDefUid": 52,
+			"pxOffsetX": 0,
+			"pxOffsetY": 0,
+			"visible": true,
+			"optionalRules": [],
+			"intGridCsv": [
+				0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+				0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+				0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+				0,0,0,0,0
+			],
+			"autoLayerTiles": [],
+			"seed": 0,
+			"overrideTilesetUid": null,
+			"gridTiles": [],
+			"entityInstances": []
+		},
+		{
 			"__identifier": "Animation",
 			"__type": "Entities",
 			"__cWid": 10,

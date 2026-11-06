@@ -600,6 +600,16 @@ namespace Rootborn.Editor.LDtk
                 if (open.Contains(cell) || (ground.Contains(cell) && !solid.Contains(cell))) continue;
                 blockedCells.Add(cell);
             }
+            // Hand-painted LDtk cells override the automatic guess: Block always blocks, Open is always walkable.
+            if (Rootborn.Game.World.InteriorDoorPortalRuntimeInstaller.TryGetInteriorLevel(scene.name, out string levelPath, out _))
+            {
+                var paintedBlocks = new List<Vector2>(); var paintedOpens = new List<Vector2>();
+                if (LdtkPaintedCollision.TryRead(levelPath, LdtkPaintedCollision.PixelsPerUnit, paintedBlocks, paintedOpens))
+                {
+                    foreach (var centre in paintedBlocks) blockedCells.Add(groundMap.WorldToCell(centre));
+                    foreach (var centre in paintedOpens) blockedCells.Remove(groundMap.WorldToCell(centre));
+                }
+            }
             blocked = blockedCells.Count;
             if (!SameCollision(existing, blockedCells, tile))
             {
@@ -659,6 +669,157 @@ namespace Rootborn.Editor.LDtk
                     if (!portalCells[i].Overlaps(reached)) return "spawn " + spawn.SpawnId + " cannot walk to exit " + i;
             }
             return null;
+        }
+
+        // Town collision comes from the building and fence art tilemaps plus UrbanStreetCollision. Painted Block cells go
+        // to their own invisible tilemap next to UrbanStreetCollision; painted Open cells switch the collider off on that
+        // cell of every collider tilemap (the art stays). A marker tilemap remembers opened cells so erasing them restores.
+        public const string TownLevelPath = "Assets/LDtk/Town/town/Level_0.ldtkl";
+        public const string TownPaintedBlockName = "LdtkPaintedCollision";
+        public const string TownPaintedOpenName = "LdtkPaintedOpen";
+
+        [MenuItem("Rootborn/World/Bake Town Painted Collision")]
+        public static void BakeTownPaintedCollision()
+        {
+            var scene = EditorSceneManager.OpenScene("Assets/Scenes/Town.unity", OpenSceneMode.Single);
+            var blocks = new List<Vector2>(); var opens = new List<Vector2>();
+            if (!LdtkPaintedCollision.TryRead(TownLevelPath, LdtkPaintedCollision.PixelsPerUnit, blocks, opens))
+                throw new InvalidOperationException("[ROOTBORN] " + TownLevelPath + " has no " + LdtkPaintedCollision.LayerName + " layer.");
+            string problem = ApplyTownPaintedCollision(scene, blocks, opens, out bool changed, out int blockCount, out int openCount);
+            if (problem != null) throw new InvalidOperationException("[ROOTBORN] Town painted collision failed: " + problem);
+            if (!changed) { Debug.Log("[ROOTBORN] Town painted collision unchanged (" + blockCount + " block, " + openCount + " open)"); return; }
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+            Debug.Log("[ROOTBORN] Baked Town painted collision: " + blockCount + " block cell(s), " + openCount + " opened cell(s)");
+        }
+
+        // The painted tilemap shares UrbanStreetCollision's grid, so compare cells only; no tilemap equals an empty paint.
+        private static bool SameCells(Tilemap existing, HashSet<Vector3Int> wanted, TileBase tile)
+        {
+            if (existing == null) return wanted.Count == 0;
+            if (existing.GetComponent<TilemapCollider2D>() == null) return false;
+            int count = 0;
+            existing.CompressBounds();
+            foreach (var cell in existing.cellBounds.allPositionsWithin)
+            {
+                if (!existing.HasTile(cell)) continue;
+                if (!wanted.Contains(cell) || existing.GetTile(cell) != tile) return false;
+                count++;
+            }
+            return count == wanted.Count;
+        }
+
+        public static string ApplyTownPaintedCollision(UnityEngine.SceneManagement.Scene scene, List<Vector2> blocks, List<Vector2> opens, out bool changed, out int blockCount, out int openCount)
+        {
+            changed = false; blockCount = 0; openCount = 0;
+            var tile = AssetDatabase.LoadAssetAtPath<TileBase>(CollisionTilePath);
+            if (tile == null) return "collision tile missing at " + CollisionTilePath;
+            Tilemap urban = null, paintedBlock = null, paintedOpen = null;
+            var colliderMaps = new List<Tilemap>();
+            foreach (var root in scene.GetRootGameObjects())
+            foreach (var map in root.GetComponentsInChildren<Tilemap>(true))
+            {
+                if (map.name == TownPaintedBlockName) { paintedBlock = map; continue; }
+                if (map.name == TownPaintedOpenName) { paintedOpen = map; continue; }
+                if (map.name == "UrbanStreetCollision") urban = map;
+                if (map.GetComponent<TilemapCollider2D>() != null) colliderMaps.Add(map);
+            }
+            if (urban == null) return "UrbanStreetCollision tilemap missing";
+
+            // Cells are counted in UrbanStreetCollision's grid; painted Block and Open share it.
+            var wantedOpen = new HashSet<Vector3Int>();
+            foreach (var centre in opens) wantedOpen.Add(urban.WorldToCell(centre));
+            var wantedBlocks = new HashSet<Vector3Int>();
+            foreach (var centre in blocks) wantedBlocks.Add(urban.WorldToCell(centre));
+            wantedBlocks.ExceptWith(wantedOpen);
+            blockCount = wantedBlocks.Count; openCount = wantedOpen.Count;
+            if (!SameCells(paintedBlock, wantedBlocks, tile))
+            {
+                if (paintedBlock != null) UnityEngine.Object.DestroyImmediate(paintedBlock.gameObject);
+                if (wantedBlocks.Count > 0)
+                {
+                    var go = new GameObject(TownPaintedBlockName, typeof(Tilemap), typeof(TilemapCollider2D));
+                    go.transform.SetParent(urban.transform.parent, false);
+                    go.transform.localPosition = urban.transform.localPosition;
+                    var map = go.GetComponent<Tilemap>();
+                    foreach (var cell in wantedBlocks) map.SetTile(cell, tile);
+                }
+                changed = true;
+            }
+
+            var previousOpen = new HashSet<Vector3Int>();
+            if (paintedOpen != null)
+            {
+                paintedOpen.CompressBounds();
+                foreach (var cell in paintedOpen.cellBounds.allPositionsWithin) if (paintedOpen.HasTile(cell)) previousOpen.Add(cell);
+            }
+            foreach (var map in colliderMaps)
+            {
+                foreach (var cell in previousOpen)
+                {
+                    if (wantedOpen.Contains(cell)) continue;
+                    var local = map.WorldToCell(urban.GetCellCenterWorld(cell));
+                    if (!map.HasTile(local)) continue;
+                    var natural = map.GetTile(local) is Tile asset ? asset.colliderType : Tile.ColliderType.Grid;
+                    if (map.GetColliderType(local) != natural) { map.SetColliderType(local, natural); changed = true; }
+                }
+                foreach (var cell in wantedOpen)
+                {
+                    var local = map.WorldToCell(urban.GetCellCenterWorld(cell));
+                    if (!map.HasTile(local) || map.GetColliderType(local) == Tile.ColliderType.None) continue;
+                    map.SetColliderType(local, Tile.ColliderType.None); changed = true;
+                }
+            }
+            if (!previousOpen.SetEquals(wantedOpen))
+            {
+                if (paintedOpen != null) UnityEngine.Object.DestroyImmediate(paintedOpen.gameObject);
+                if (wantedOpen.Count > 0)
+                {
+                    var marker = new GameObject(TownPaintedOpenName, typeof(Tilemap));
+                    marker.transform.SetParent(urban.transform.parent, false);
+                    marker.transform.localPosition = urban.transform.localPosition;
+                    var markerMap = marker.GetComponent<Tilemap>();
+                    foreach (var cell in wantedOpen) markerMap.SetTile(cell, tile);
+                }
+                changed = true;
+            }
+            return null;
+        }
+    }
+
+    // Reads the hand-painted LDtk "Collision" IntGrid layer: 1 Block always blocks, 2 Open is always walkable,
+    // empty cells keep the automatic result. Cell centres use the LDtk door import's mapping (x / ppu, -y / ppu).
+    public static class LdtkPaintedCollision
+    {
+        public const string LayerName = "Collision";
+        public const int Block = 1, Open = 2;
+        public const float PixelsPerUnit = 32f;
+
+        [Serializable] private sealed class LevelJson { public LayerJson[] layerInstances; }
+        [Serializable] private sealed class LayerJson { public string __identifier; public int __cWid; public int __gridSize; public int[] intGridCsv; }
+
+        public static bool TryRead(string levelPath, float pixelsPerUnit, List<Vector2> blocks, List<Vector2> opens)
+        {
+            if (string.IsNullOrEmpty(levelPath) || !File.Exists(levelPath)) return false;
+            var level = JsonUtility.FromJson<LevelJson>(File.ReadAllText(levelPath));
+            if (level == null || level.layerInstances == null) return false;
+            foreach (var layer in level.layerInstances)
+            {
+                if (layer == null || layer.__identifier != LayerName || layer.intGridCsv == null || layer.__cWid <= 0 || layer.__gridSize <= 0) continue;
+                Read(layer.intGridCsv, layer.__cWid, layer.__gridSize, pixelsPerUnit, blocks, opens);
+                return true;
+            }
+            return false;
+        }
+
+        public static void Read(int[] csv, int width, int gridSize, float pixelsPerUnit, List<Vector2> blocks, List<Vector2> opens)
+        {
+            for (int i = 0; i < csv.Length; i++)
+            {
+                if (csv[i] != Block && csv[i] != Open) continue;
+                var centre = new Vector2((i % width + 0.5f) * gridSize / pixelsPerUnit, -(i / width + 0.5f) * gridSize / pixelsPerUnit);
+                (csv[i] == Block ? blocks : opens).Add(centre);
+            }
         }
     }
 }

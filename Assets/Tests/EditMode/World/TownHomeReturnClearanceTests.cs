@@ -10,8 +10,26 @@ namespace Rootborn.Tests.EditMode.World
     public sealed class TownHomeReturnClearanceTests
     {
         private Scene _scene;
-        [SetUp] public void SetUp(){_scene=EditorSceneManager.OpenPreviewScene("Assets/Scenes/Town.unity");}
+        // A Town already open in the editor plus this preview copy logs "more than one global light"; geometry is all these tests read.
+        [SetUp] public void SetUp(){UnityEngine.TestTools.LogAssert.ignoreFailingMessages=true;_scene=EditorSceneManager.OpenPreviewScene("Assets/Scenes/Town.unity");}
         [TearDown] public void TearDown(){EditorSceneManager.ClosePreviewScene(_scene);}
+        // LDtk "Collision" layer: 1 Block, 2 Open; a cell centre is (x + .5, -(y + .5)) cells in world units.
+        [Test] public void PaintedCollision_ReadsBlockAndOpenCellCentres()
+        {
+            var blocks=new System.Collections.Generic.List<Vector2>(); var opens=new System.Collections.Generic.List<Vector2>();
+            Rootborn.Editor.LDtk.LdtkPaintedCollision.Read(new[]{0,1,2,0},2,32,32f,blocks,opens);
+            Assert.That(blocks,Is.EqualTo(new[]{new Vector2(1.5f,-.5f)}));
+            Assert.That(opens,Is.EqualTo(new[]{new Vector2(.5f,-1.5f)}));
+        }
+        // What is painted in LDtk must be what the saved Town scene has. If this fails, run Rootborn/World/Bake Town Painted Collision.
+        [Test] public void TownScene_MatchesThePaintedLdtkCollisionLayer()
+        {
+            var blocks=new System.Collections.Generic.List<Vector2>(); var opens=new System.Collections.Generic.List<Vector2>();
+            Assert.That(Rootborn.Editor.LDtk.LdtkPaintedCollision.TryRead(Rootborn.Editor.LDtk.InteriorDoorPortalBaker.TownLevelPath,Rootborn.Editor.LDtk.LdtkPaintedCollision.PixelsPerUnit,blocks,opens),Is.True,"Town LDtk level has no Collision layer");
+            string problem=Rootborn.Editor.LDtk.InteriorDoorPortalBaker.ApplyTownPaintedCollision(_scene,blocks,opens,out bool changed,out int blockCount,out int openCount);
+            Assert.That(problem,Is.Null);
+            Assert.That(changed,Is.False,"Town scene is out of date with the painted LDtk Collision layer ("+blockCount+" block, "+openCount+" open). Run Rootborn/World/Bake Town Painted Collision.");
+        }
         private T[] All<T>() where T:Component => _scene.GetRootGameObjects().SelectMany(r=>r.GetComponentsInChildren<T>(true)).ToArray();
         private Vector3 ReturnPosition(string spawnId)=>All<WorldSpawnPoint>().Single(s=>s.SpawnId==spawnId).transform.position;
         // Each building returns the player to its own door; every return spot must be clear of the doors and buildings.

@@ -29,6 +29,37 @@
 	"fieldInstances": [],
 	"layerInstances": [
 		{
+			"__identifier": "Collision",
+			"__type": "IntGrid",
+			"__cWid": 14,
+			"__cHei": 12,
+			"__gridSize": 32,
+			"__opacity": 0.45,
+			"__pxTotalOffsetX": 0,
+			"__pxTotalOffsetY": 0,
+			"__tilesetDefUid": null,
+			"__tilesetRelPath": null,
+			"iid": "f10b0f1c-a4e9-4647-9cbd-a8433365ae04",
+			"levelId": 28,
+			"layerDefUid": 52,
+			"pxOffsetX": 0,
+			"pxOffsetY": 0,
+			"visible": true,
+			"optionalRules": [],
+			"intGridCsv": [
+				0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+				0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+				0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+				0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+				0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+			],
+			"autoLayerTiles": [],
+			"seed": 0,
+			"overrideTilesetUid": null,
+			"gridTiles": [],
+			"entityInstances": []
+		},
+		{
 			"__identifier": "Animation",
 			"__type": "Entities",
 			"__cWid": 14,
@@ -128,7 +159,10 @@
 					"defUid": 17,
 					"px": [288,320],
 					"fieldInstances": [
-						{ "__identifier": "Where", "__type": "String", "__value": "town", "__tile": null, "defUid": 20, "realEditorValues": [{ "id": "V_String", "params": ["town"] }] },
+						{ "__identifier": "Where", "__type": "String", "__value": "town", "__tile": null, "defUid": 20, "realEditorValues": [{
+							"id": "V_String",
+							"params": ["town"]
+						}] },
 						{ "__identifier": "Position", "__type": "String", "__value": null, "__tile": null, "defUid": 21, "realEditorValues": [] }
 					],
 					"__worldX": 2656,
