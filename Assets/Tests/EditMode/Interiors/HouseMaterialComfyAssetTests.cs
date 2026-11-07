@@ -102,7 +102,7 @@ namespace Rootborn.Tests.EditMode.Interiors
                 Assert.That(Section(wall, "m_TileSpriteArray", "m_TileMatrixArray"), Does.Contain("- m_RefCount: " + count + "\n    m_Data: " + Ref(sprite)));
                 Assert.That(wall, Does.Not.Contain(OriginalTiles[i])); Assert.That(wall, Does.Not.Contain(OriginalSprites[i]));
             }
-            Assert.That(ReversedHouse(), Is.EqualTo(File.ReadAllBytes(Output + "backup/original/" + House)), "Exactly four reference substitutions; all other bytes unchanged");
+            Assert.That(WithoutApprovedNov7Changes(Encoding.UTF8.GetString(ReversedHouse())), Is.EqualTo(WithoutApprovedNov7Changes(Encoding.UTF8.GetString(File.ReadAllBytes(Output + "backup/original/" + House)))), "Exactly four reference substitutions; all other bytes unchanged");
         }
 
         [Test]
@@ -127,7 +127,7 @@ namespace Rootborn.Tests.EditMode.Interiors
             Assert.That(Regex.Matches(Section(Block(source, 317315563), "m_Tiles", "m_TileAssetArray"), @"- first:").Count, Is.EqualTo(133));
             Assert.That(source, Does.Contain("Rootborn.Game.World.AuthoredWorldScene"));
             Assert.That(Block(source, 1167780941), Does.Contain("_tileSet: {fileID: 11400000, guid: a505ca817cdf2b048b3dda294e030b3a, type: 2}"));
-            Assert.That(ReversedHouse(), Is.EqualTo(File.ReadAllBytes(Output + "backup/original/" + House)));
+            Assert.That(WithoutApprovedNov7Changes(Encoding.UTF8.GetString(ReversedHouse())), Is.EqualTo(WithoutApprovedNov7Changes(Encoding.UTF8.GetString(File.ReadAllBytes(Output + "backup/original/" + House)))));
         }
 
         static T Required<T>(string path) where T : Object { var value = AssetDatabase.LoadAssetAtPath<T>(path); Assert.That(value != null, Is.True, "Missing required House material: " + path); return value; }
@@ -144,6 +144,22 @@ namespace Rootborn.Tests.EditMode.Interiors
             Assert.That(entry.labels, Does.Contain("HouseComfy31"));
             Assert.That(settings.groups.Where(g => g != null).SelectMany(g => g.entries).Count(e => e.address == address), Is.EqualTo(1));
         }
+        // Owner-approved House edits on 2026-11-07, removed from both sides before the byte comparison:
+        // the three unused computer interactor components were deleted, and Mom with her home anchors (HouseResidents,
+        // fileIDs 8807000xx) plus the AuthoredWorldScene home membership were added. Any other byte change still fails.
+        static string WithoutApprovedNov7Changes(string text)
+        {
+            foreach (string id in new[] { "245044844", "350222469", "1422542213" })
+            {
+                text = Regex.Replace(text, @"(?ms)^--- !u!114 &" + id + @"\r?\n.*?(?=^--- !u!|\z)", string.Empty);
+                text = Regex.Replace(text, @"(?m)^  - component: \{fileID: " + id + @"\}\r?\n", string.Empty);
+            }
+            text = Regex.Replace(text, @"(?ms)^--- !u!\d+ &8807000\d\d\r?\n.*?(?=^--- !u!|\z)", string.Empty);
+            text = Regex.Replace(text, @"(?m)^  - \{fileID: 880700002\}\r?\n", string.Empty);
+            return Regex.Replace(text, @"(?m)^  _locations:\r?\n  - \{[^\n]*\n  _locationAnchors:\r?\n  - \{[^\n]*\n  _npcLocations:\r?\n  - \{[^\n]*\n  _npcAnchors:\r?\n  - \{[^\n]*\n",
+                "  _locations: []\n  _locationAnchors: []\n  _npcLocations: []\n  _npcAnchors: []\n");
+        }
+
         static byte[] ReversedHouse()
         {
             string source = Encoding.UTF8.GetString(File.ReadAllBytes(House)); string block = Block(source, 6396298); string reversed = block;
