@@ -107,34 +107,6 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.IsTrue(File.Exists(Path.Combine(root, "slot-0", "metadata.json")));
         }
 
-        [Ignore(LegacyPremise.AuthoredTown + "Waits for StudyBasicsActivity + StudentDayEndBoard + GuideNpc in Town")]
-        [UnityTest]
-        public IEnumerator SAVE_E2E_003_NewGameCreatesTownRuntimeGraphAndSlotMetadata()
-        {
-            string root = NewSaveRoot("rootborn-new-game-runtime-e2e");
-            SetTestSaveRoot(root);
-
-            yield return LoadScene("MainMenu");
-            SaveSlotSelectPanel.EnsureInScene().Show();
-            yield return null;
-            ClickButtonNamed("NewGameButton");
-            yield return null;
-            ClickButtonNamed("ConfirmButton");
-            yield return WaitForScene("Town", 20f);
-            yield return WaitForTownRuntime(10f);
-
-            var metadata = ActiveSaveContext.Metadata;
-            Assert.IsNotNull(metadata);
-            Assert.AreEqual("slot-0", metadata.SlotId);
-            Assert.IsTrue(File.Exists(Path.Combine(root, "slot-0", "metadata.json")));
-            Assert.AreEqual(1, CountObjectsNamed("Player"));
-            Assert.IsNotNull(GameObject.Find("StudyBasicsActivity"));
-            Assert.IsNotNull(GameObject.Find("StudentDayEndBoard"));
-            Assert.IsNotNull(QuestSessionLookup.Active());
-            Assert.IsNotNull(Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include));
-            Assert.IsNotNull(Object.FindFirstObjectByType<NpcInteractor>(FindObjectsInactive.Include));
-        }
-
         private static IEnumerator LoadScene(string sceneName)
         {
             var op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
@@ -164,90 +136,6 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 yield return null;
             }
             Assert.AreEqual(sceneName, SceneManager.GetActiveScene().name);
-        }
-
-        private static IEnumerator WaitForTownRuntime(float timeoutSeconds)
-        {
-            float elapsed = 0f;
-            while (elapsed < timeoutSeconds)
-            {
-                var player = GameObject.Find("Player");
-                if (player != null &&
-                    player.GetComponent<PlayerInventory>() != null &&
-                    player.GetComponent<Rootborn.Game.StudentLife.StudentLifeProgressComponent>() != null &&
-                    GameObject.Find("StudyBasicsActivity") != null &&
-                    GameObject.Find("StudentDayEndBoard") != null &&
-                    QuestSessionLookup.Active() != null &&
-                    Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include) != null &&
-                    Object.FindFirstObjectByType<NpcInteractor>(FindObjectsInactive.Include) != null)
-                {
-                    yield break;
-                }
-
-                elapsed += Time.unscaledDeltaTime;
-                yield return null;
-            }
-
-            Assert.Fail("Town runtime did not expose player, student life, quest UI, and guide NPC within timeout.");
-        }
-
-        private static IEnumerator WaitForFarmAutoFill(float timeoutSeconds)
-        {
-            float elapsed = 0f;
-            while (elapsed < timeoutSeconds)
-            {
-                var player = GameObject.Find("Player");
-                if (player != null && player.GetComponent<PlayerInventory>() != null) yield break;
-                elapsed += Time.unscaledDeltaTime;
-                yield return null;
-            }
-            Assert.Fail("Farm auto-fill did not create Player with PlayerInventory within timeout.");
-        }
-
-        private static IEnumerator MovePlayerWithKeyboard(GameObject player, Key key)
-        {
-            var keyboard = InputSystem.AddDevice<Keyboard>();
-            var controller = player.GetComponent<PlayerController>();
-            Assert.IsNotNull(controller);
-            controller.enabled = false;
-            yield return null;
-            controller.enabled = true;
-            yield return null;
-
-            var before = player.transform.position;
-            InputSystem.QueueStateEvent(keyboard, new KeyboardState(key));
-            InputSystem.Update();
-            for (int i = 0; i < 12; i++)
-            {
-                yield return null;
-                yield return new WaitForFixedUpdate();
-            }
-
-            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
-            InputSystem.Update();
-            yield return new WaitForFixedUpdate();
-            InputSystem.RemoveDevice(keyboard);
-
-            if (Vector3.Distance(player.transform.position, before) <= 0.05f)
-            {
-                Assert.IsTrue(controller.enabled, "PlayerController should remain enabled after UI and portal flow.");
-                var manualBefore = player.transform.position;
-                player.transform.position = manualBefore + DirectionForKey(key) * 0.5f;
-                yield return null;
-                Assert.Greater(Vector3.Distance(player.transform.position, manualBefore), 0.05f, "Player movement surface should remain unlocked after UI and portal flow.");
-                yield break;
-            }
-
-            Assert.Pass();
-        }
-
-        private static Vector3 DirectionForKey(Key key)
-        {
-            if (key == Key.A) return Vector3.left;
-            if (key == Key.D) return Vector3.right;
-            if (key == Key.W) return Vector3.up;
-            if (key == Key.S) return Vector3.down;
-            return Vector3.right;
         }
 
         private static SaveSlotMetadata Metadata(string slotId, int worldSeed, int tileSeed)
@@ -294,40 +182,6 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 if (transforms[i].name == name) count++;
             }
             return count;
-        }
-
-        private static WorldSpawnPoint FindSpawnPoint(string spawnId)
-        {
-            var spawnPoints = Object.FindObjectsByType<WorldSpawnPoint>(FindObjectsSortMode.None);
-            for (int i = 0; i < spawnPoints.Length; i++)
-            {
-                if (spawnPoints[i].SpawnId == spawnId) return spawnPoints[i];
-            }
-            return null;
-        }
-
-        private static void CompleteFirstObjective(QuestLog questLog, QuestDefinition quest)
-        {
-            var objective = quest.Objectives[0];
-            var targetResourceProperty = objective.GetType().GetProperty("TargetResource", BindingFlags.Public | BindingFlags.Instance);
-            var resource = targetResourceProperty != null ? targetResourceProperty.GetValue(objective) as ResourceNodeDefinition : null;
-            Assert.IsNotNull(resource);
-            questLog.RecordEvent(new QuestEvent(QuestEventKind.Gather, "quest-e2e-gather", resource: resource));
-        }
-
-        private static ItemDefinition GetRewardItem(QuestRewardBase reward)
-        {
-            var property = reward.GetType().GetProperty("Item", BindingFlags.Public | BindingFlags.Instance);
-            var item = property != null ? property.GetValue(reward) as ItemDefinition : null;
-            Assert.IsNotNull(item);
-            return item;
-        }
-
-        private static int GetRewardCount(QuestRewardBase reward)
-        {
-            var property = reward.GetType().GetProperty("Count", BindingFlags.Public | BindingFlags.Instance);
-            Assert.IsNotNull(property);
-            return (int)property.GetValue(reward);
         }
 
         private static void CleanupDontDestroyResidue()

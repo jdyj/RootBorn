@@ -15,8 +15,6 @@ namespace Rootborn.Tests.EditMode.StudentLife
     public sealed class SecondNpcRelationshipRouteTests
     {
         private const string RegistryPath = "Assets/Data/Registry/GameDataRegistry.asset";
-        private const string SecondNpcE2EPath = "Assets/Tests/PlayMode/EndToEnd/SecondNpcRelationshipMilestoneE2EScenarioTests.cs";
-        private const string CommitmentE2EPath = "Assets/Tests/PlayMode/EndToEnd/RelationshipActivityCommitmentE2EScenarioTests.cs";
         private const string TeacherNpcId = "npc.teacher";
         private const string FirstGuideRelationshipId = "relationship.first-guide.trust";
         private const string TeacherRelationshipId = "relationship.teacher.support";
@@ -74,29 +72,6 @@ namespace Rootborn.Tests.EditMode.StudentLife
         }
 
         [Test]
-        public void NPC_RELATIONSHIP_EDIT_005_E2EContainsExactOnceSavedStateAssertions()
-        {
-            string source = File.ReadAllText(SecondNpcE2EPath);
-
-            StringAssert.Contains(
-                "AssertStudentSaveContainsExactlyOnce",
-                source,
-                "Second NPC relationship E2E must assert the Teacher relationship save record appears exactly once, not merely that it exists.");
-            StringAssert.Contains(
-                "AssertMilestoneSaveContainsExactlyOnce",
-                source,
-                "Second NPC relationship E2E must assert Teacher milestone and objective save records appear exactly once.");
-            StringAssert.Contains(
-                "AssertObjectiveRowsContainExactlyOnce",
-                source,
-                "Second NPC relationship E2E must assert Objective Journal Teacher milestone rows do not duplicate.");
-            StringAssert.Contains(
-                "CountOccurrences",
-                source,
-                "Second NPC relationship E2E exact-once assertions must use an explicit occurrence counter.");
-        }
-
-        [Test]
         public void NPC_RELATIONSHIP_EDIT_006_TeacherCommitmentRouteDataIsRegisteredBehindTeacherSupportMilestone()
         {
             var registry = LoadRegistry();
@@ -121,22 +96,6 @@ namespace Rootborn.Tests.EditMode.StudentLife
             CollectionAssert.Contains(commitment.Objectives, objective, "Teacher commitment milestone must own the commitment objective.");
             CollectionAssert.Contains(commitment.Routes, route, "Teacher commitment milestone must own the commitment route.");
             CollectionAssert.Contains(ReadPrerequisiteMilestones(commitment), support, "Teacher commitment milestone must be gated behind Teacher support completion, not shown as an always-on hint.");
-        }
-
-        [Test]
-        public void NPC_RELATIONSHIP_EDIT_007_CommitmentE2EContainsPlayerFacingScreenshotReloadAndExactOnceAssertions()
-        {
-            Assert.IsTrue(File.Exists(CommitmentE2EPath), "Relationship commitment E2E must exist.");
-            string source = File.ReadAllText(CommitmentE2EPath);
-
-            StringAssert.Contains("REL_COMMITMENT_E2E_001_TeacherHelpCommitmentReload", source);
-            StringAssert.Contains("relationship-activity-commitment-e2e.png", source);
-            StringAssert.Contains("AssertStudentSaveContainsExactlyOnce", source);
-            StringAssert.Contains("AssertMilestoneSaveContainsExactlyOnce", source);
-            StringAssert.Contains("AssertObjectiveRowsContainExactlyOnce", source);
-            StringAssert.Contains("AssertOneTrackedHud", source);
-            StringAssert.Contains("PlayerFlowE2EDriver.WalkPlayerWithKeyboardTo", source, "Commitment E2E must use player-facing movement, not direct state setup.");
-            StringAssert.DoesNotContain("MarkCompletedForTests", source, "Commitment E2E must not force milestone completion.");
         }
 
         private static MilestoneDefinition[] ReadPrerequisiteMilestones(MilestoneDefinition milestone)

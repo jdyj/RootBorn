@@ -15,9 +15,6 @@ namespace Rootborn.Tests.PlayMode.Interiors
 {
     public sealed class HouseInteriorFurniturePlacementPlayModeTests
     {
-        private const string ChairButtonName = "PaletteFurniture_chair.black";
-        private const string BasicDeskButtonName = "PaletteFurniture_desk.basic";
-        private const string DeskButtonName = "PaletteFurniture_desk.large";
         private const string ChairFurnitureId = "chair.black";
         private const string ChairTileName = "BlackChair_00";
         private const string BasicDeskFurnitureId = "desk.basic";
@@ -222,68 +219,6 @@ namespace Rootborn.Tests.PlayMode.Interiors
             Assert.AreEqual(0, CountTiles(furnitureTilemap, DeskTileName), "Delete right after a move must remove the moved furniture.");
         }
 
-        [Ignore(LegacyPremise.AuthoredHouse + "authored House saves on every change, so Clear is permanent and Load cannot bring cleared furniture back")]
-        [UnityTest]
-        public IEnumerator SaveLoadFurnitureButtons_RestorePlacedFurnitureWithoutDuplicateTiles()
-        {
-            yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
-            yield return null;
-            yield return null;
-            yield return HousePlacementTestDriver.OpenPlacementMode();
-
-            HousePlacementTestDriver.ShowFurniture(ChairFurnitureId).GetComponent<Button>().onClick.Invoke();
-            yield return null;
-            var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
-            Assert.IsTrue(overlay.TryManualPlaceFirstValidForTests(out _));
-            yield return null;
-
-            HousePlacementTestDriver.ShowFurniture(DeskFurnitureId).GetComponent<Button>().onClick.Invoke();
-            yield return null;
-            Assert.IsTrue(overlay.TryManualPlaceFirstValidForTests(out _));
-            yield return null;
-
-            var furnitureTilemap = GameObject.Find("AuthoredUserFurniture")?.GetComponent<Tilemap>();
-            var occupancyTilemap = GameObject.Find("AuthoredUserOccupancy")?.GetComponent<Tilemap>();
-            Assert.AreEqual(1, CountTiles(furnitureTilemap, ChairTileName));
-            Assert.AreEqual(1, CountTiles(furnitureTilemap, DeskTileName));
-            Assert.AreEqual(1, CountTiles(furnitureTilemap, ComputerTileName));
-            var occupiedBefore = CountOccupied(occupancyTilemap);
-            Assert.GreaterOrEqual(occupiedBefore, 3);
-
-            var saveButton = GameObject.Find("SaveFurnitureLayoutButton")?.GetComponent<Button>();
-            var clearButton = GameObject.Find("ClearFurnitureLayoutButton")?.GetComponent<Button>();
-            var loadButton = GameObject.Find("LoadFurnitureLayoutButton")?.GetComponent<Button>();
-            Assert.IsNotNull(saveButton, "House placement UI should expose a player-facing save button.");
-            Assert.IsNotNull(clearButton, "House placement UI should expose a clear button so load restoration can be verified without stale tiles.");
-            Assert.IsNotNull(loadButton, "House placement UI should expose a player-facing load button.");
-
-            saveButton.onClick.Invoke();
-            yield return null;
-            StringAssert.Contains("Saved", overlay.LastMessage);
-
-            clearButton.onClick.Invoke();
-            yield return null;
-            Assert.AreEqual(0, CountTiles(furnitureTilemap, ChairTileName));
-            Assert.AreEqual(0, CountTiles(furnitureTilemap, DeskTileName));
-            Assert.AreEqual(0, CountTiles(furnitureTilemap, ComputerTileName));
-            Assert.AreEqual(0, CountOccupied(occupancyTilemap));
-
-            loadButton.onClick.Invoke();
-            yield return null;
-            StringAssert.Contains("Loaded", overlay.LastMessage);
-            Assert.AreEqual(1, CountTiles(furnitureTilemap, ChairTileName));
-            Assert.AreEqual(1, CountTiles(furnitureTilemap, DeskTileName));
-            Assert.AreEqual(1, CountTiles(furnitureTilemap, ComputerTileName));
-            Assert.AreEqual(occupiedBefore, CountOccupied(occupancyTilemap));
-
-            loadButton.onClick.Invoke();
-            yield return null;
-            Assert.AreEqual(1, CountTiles(furnitureTilemap, ChairTileName), "Repeated load must not duplicate chair tiles.");
-            Assert.AreEqual(1, CountTiles(furnitureTilemap, DeskTileName), "Repeated load must not duplicate desk tiles.");
-            Assert.AreEqual(1, CountTiles(furnitureTilemap, ComputerTileName), "Repeated load must not duplicate computer tiles.");
-            Assert.AreEqual(occupiedBefore, CountOccupied(occupancyTilemap), "Repeated load must not duplicate occupancy cells.");
-        }
-
         [UnityTest]
         public IEnumerator SelectedChairFurniture_ClearsAvailabilityOverlayAfterPlacement()
         {
@@ -361,20 +296,6 @@ namespace Rootborn.Tests.PlayMode.Interiors
             {
                 var tile = tilemap.GetTile(position);
                 if (tile != null && tile.name == tileName)
-                {
-                    count++;
-                }
-            }
-
-            return count;
-        }
-
-        private static int CountOccupied(Tilemap tilemap)
-        {
-            int count = 0;
-            foreach (var position in tilemap.cellBounds.allPositionsWithin)
-            {
-                if (tilemap.GetTile(position) != null)
                 {
                     count++;
                 }

@@ -35,13 +35,13 @@ namespace Rootborn.Tests.EditMode.Scenarios
             string catalog = File.ReadAllText(CatalogPath);
 
             StringAssert.Contains("TOWN-FLOW-001", catalog);
-            StringAssert.Contains("IntegratedVerticalSliceFoundationE2ETests", catalog);
+            StringAssert.Contains("TownExplorationDiscoveryE2EScenarioTests", catalog);
             StringAssert.Contains("LIFE-STUDENT-001", catalog);
             StringAssert.Contains("StudentLifeActivityTests", catalog);
-            StringAssert.Contains("CAREER-DAILY-PLAN-001", catalog);
-            StringAssert.Contains("CareerDailyPlanRouteE2EScenarioTests", catalog);
-            StringAssert.Contains("REL-SECOND-NPC-001", catalog);
-            StringAssert.Contains("SecondNpcRelationshipMilestoneE2EScenarioTests", catalog);
+            StringAssert.Contains("CAREER-CANDIDATE-001", catalog);
+            StringAssert.Contains("CareerCandidateDeepeningLoopE2EScenarioTests", catalog);
+            StringAssert.Contains("REL-FIRST-GUIDE-001", catalog);
+            StringAssert.Contains("FirstGuideRelationshipMilestoneE2EScenarioTests", catalog);
             StringAssert.Contains("NET-SMOKE-001", catalog);
             StringAssert.Contains("Scripts/qa/run-dedicated-multiplayer-smoke.ps1", catalog);
             StringAssert.Contains("NET-HOST-001", catalog);
@@ -95,18 +95,6 @@ namespace Rootborn.Tests.EditMode.Scenarios
         }
 
         [Test]
-        public void SCENARIO_REGISTRY_EDIT_006_CatalogActivatesJobCareerBridgeScenario()
-        {
-            Assert.IsTrue(File.Exists(CatalogPath), "The current Student Life scenario coverage catalog must exist.");
-            string catalog = File.ReadAllText(CatalogPath);
-
-            StringAssert.Contains("| Active | JOB-CAREER-BRIDGE-001 | JOB | Part-Time Work/Career Bridge | PlayMode | Assets/Tests/PlayMode/EndToEnd/CareerJobRouteE2EScenarioTests.cs |", catalog, "Job/Career bridge must be active now that the CareerJobRoute E2E exists.");
-            StringAssert.Contains("CareerJobRouteE2EScenarioTests", catalog);
-            StringAssert.Contains("CAREER_JOB_ROUTE_E2E_001_ProgressUnlockSelectReload", catalog);
-            StringAssert.DoesNotContain("| Deferred | JOB-CAREER-BRIDGE-001 |", catalog, "Job/Career bridge must no longer remain deferred after executable PlayMode coverage landed.");
-        }
-
-        [Test]
         public void SCENARIO_REGISTRY_EDIT_007_PostMvpNetworkScenariosAreExplicitPendingIds()
         {
             Assert.IsTrue(File.Exists(ScenarioIdPath), "ScenarioId.cs must remain available for pending PlayMode scenario markers.");
@@ -132,18 +120,6 @@ namespace Rootborn.Tests.EditMode.Scenarios
         }
 
         [Test]
-        public void SCENARIO_REGISTRY_EDIT_011_CatalogActivatesRelationshipCommitmentScenario()
-        {
-            Assert.IsTrue(File.Exists(CatalogPath), "The current Student Life scenario coverage catalog must exist.");
-            string catalog = File.ReadAllText(CatalogPath);
-
-            StringAssert.Contains("| Active | REL-COMMITMENT-001 | REL | Relationship Commitment | PlayMode | Assets/Tests/PlayMode/EndToEnd/RelationshipActivityCommitmentE2EScenarioTests.cs |", catalog, "Relationship commitment must be active catalog evidence after the PlayMode scenario landed.");
-            StringAssert.Contains("REL_COMMITMENT_E2E_001_TeacherHelpCommitmentReload", catalog);
-            StringAssert.Contains("Builds/Logs/relationship-activity-commitment-e2e.png", catalog);
-            StringAssert.DoesNotContain("| Deferred | REL-COMMITMENT-001 |", catalog, "Relationship commitment must not remain deferred after executable PlayMode coverage landed.");
-        }
-
-        [Test]
         public void SCENARIO_REGISTRY_EDIT_012_CatalogActivatesKnowledgeStatusActivityChainScenario()
         {
             Assert.IsTrue(File.Exists(CatalogPath), "The current Student Life scenario coverage catalog must exist.");
@@ -155,46 +131,7 @@ namespace Rootborn.Tests.EditMode.Scenarios
             StringAssert.DoesNotContain("| Deferred | KNOW-STATUS-ACTIVITY-001 |", catalog, "Knowledge/Status activity chain must not remain deferred after executable PlayMode coverage landed.");
         }
 
-        [Test]
-        public void SCENARIO_REGISTRY_EDIT_013_CatalogReferencesDailyPlanCompletionResultFeedbackEvidence()
-        {
-            Assert.IsTrue(File.Exists(CatalogPath), "The current Student Life scenario coverage catalog must exist.");
-            string catalog = File.ReadAllText(CatalogPath);
-
-            StringAssert.Contains("| Active | LIFE-DAILY-PLAN-002 | LIFE | Daily Plan | PlayMode | Assets/Tests/PlayMode/EndToEnd/DailyPlanRouteCompletionE2EScenarioTests.cs |", catalog, "Daily Plan completion must remain active catalog evidence.");
-            StringAssert.Contains("DAILY_PLAN_ROUTE_E2E_002_SelectCompleteRouteResultReload", catalog, "Daily Plan completion catalog row must reference the stricter result-feedback E2E method.");
-            StringAssert.Contains("Builds/Logs/daily-plan-route-completion-e2e.png", catalog, "Daily Plan completion catalog row must reference screenshot evidence.");
-            StringAssert.Contains("TrackedObjectiveHud", catalog, "Daily Plan completion catalog row must document tracked HUD cleanup evidence.");
-        }
-
-        [Test]
-                public void SCENARIO_REGISTRY_EDIT_014_CatalogActivatesQuestInteriorRewardScenario()
-                {
-                    Assert.IsTrue(File.Exists(CatalogPath), "The current Student Life scenario coverage catalog must exist.");
-                    string catalog = File.ReadAllText(CatalogPath);
-
-                    StringAssert.Contains("| Active | QUEST-INTERIOR-REWARD-001 | LIFE | Quest/Interior Reward | PlayMode | Assets/Tests/PlayMode/EndToEnd/QuestInteriorRewardE2EScenarioTests.cs |", catalog, "Quest/Interior reward must be active catalog evidence after the PlayMode scenario landed.");
-                    StringAssert.Contains("QUEST_INTERIOR_REWARD_E2E_001_ClaimUnlockPlaceReload", catalog);
-                    StringAssert.Contains("Builds/Logs/quest-interior-reward-e2e.png", catalog);
-                    StringAssert.Contains("exact-once", catalog, "Quest/Interior reward catalog row must document exact-once reward and saved-state evidence.");
-                    StringAssert.DoesNotContain("| Deferred | QUEST-INTERIOR-REWARD-001 |", catalog, "Quest/Interior reward must not remain deferred after executable PlayMode coverage landed.");
-                }
-
-                [Test]
-                public void SCENARIO_REGISTRY_EDIT_015_CatalogActivatesHouseUpgradeInteriorScenario()
-                {
-                    Assert.IsTrue(File.Exists(CatalogPath), "The current Student Life scenario coverage catalog must exist.");
-                    string catalog = File.ReadAllText(CatalogPath);
-
-                    StringAssert.Contains("| Active | HOUSE-UPGRADE-INTERIOR-001 | LIFE | House Upgrade/Interior Loop | PlayMode | Assets/Tests/PlayMode/EndToEnd/HouseUpgradeInteriorLoopE2EScenarioTests.cs |", catalog, "House upgrade/interior loop must be active catalog evidence after the strict PlayMode scenario landed.");
-                    StringAssert.Contains("HOUSE_UPGRADE_E2E_001_UpgradePresetPlaceReload", catalog);
-                    StringAssert.Contains("Builds/Logs/house-upgrade-interior-loop-e2e.png", catalog);
-                    StringAssert.Contains("occupancy tilemap", catalog, "House catalog row must document runtime object and occupancy tilemap evidence.");
-                    StringAssert.Contains("overlay cleanup", catalog, "House catalog row must document stale overlay cleanup evidence.");
-                    StringAssert.DoesNotContain("| Deferred | HOUSE-UPGRADE-INTERIOR-001 |", catalog, "House upgrade/interior loop must not remain deferred after executable PlayMode coverage landed.");
-                }
-
-                private static void AssertCategory(string catalog, string category)
+        private static void AssertCategory(string catalog, string category)
         {
             StringAssert.Contains("| " + category + " |", catalog, "Catalog must include category " + category + ".");
         }

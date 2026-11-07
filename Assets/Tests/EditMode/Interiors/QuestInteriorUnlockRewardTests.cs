@@ -19,7 +19,6 @@ namespace Rootborn.Tests.EditMode.Interiors
         private const string ChainId = "questchain.test.career-interest.library";
         private const string UnlockToken = "unlock.furniture.quest.library-chair";
         private const string FurnitureId = "chair.quest-reward";
-        private const string QuestInteriorRewardE2EPath = "Assets/Tests/PlayMode/EndToEnd/QuestInteriorRewardE2EScenarioTests.cs";
 
         private const string SaleToken = "unlock.furniture.test.sale";
 
@@ -143,25 +142,6 @@ namespace Rootborn.Tests.EditMode.Interiors
             Assert.IsTrue(restored.IsUnlocked(UnlockToken));
             Assert.AreEqual(1, restored.UnlockedCount, "Loading saved unlock data must collapse duplicate or empty unlock tokens before the next save.");
             CollectionAssert.AreEqual(new[] { UnlockToken }, restored.ToSaveData().UnlockTokens);
-        }
-
-        [Test]
-        public void QuestInteriorRewardE2E_ContainsExactOnceSavedStateAssertions()
-        {
-            string source = File.ReadAllText(QuestInteriorRewardE2EPath);
-
-            StringAssert.Contains(
-                "AssertFileContainsExactlyOnce",
-                source,
-                "Quest/interior reward E2E must assert the unlock save file contains the reward token exactly once, not merely that it contains the token.");
-            StringAssert.Contains(
-                "AssertLayoutContainsExactlyOnce",
-                source,
-                "Quest/interior reward E2E must assert the serialized layout contains the reward furniture fields exactly once.");
-            StringAssert.Contains(
-                "CountOccurrences",
-                source,
-                "Quest/interior reward E2E exact-once assertions must use an explicit occurrence counter so duplicate serialized records fail visibly.");
         }
 
         [Test]

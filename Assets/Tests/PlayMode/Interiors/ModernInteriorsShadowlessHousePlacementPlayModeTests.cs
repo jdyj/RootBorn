@@ -187,64 +187,6 @@ namespace Rootborn.Tests.PlayMode.Interiors
             }
         }
 
-        [Ignore(LegacyPremise.AuthoredHouse + "자동 저장되는 House에서는 초기화가 영구 삭제라 저장 뒤 초기화를 불러오기로 되돌리는 흐름이 없음")]
-        [UnityTest]
-        public IEnumerator ModernShadowlessFurnitureSaveClearLoad_RestoresGeneratedTileWithoutDuplicates()
-        {
-            yield return HousePlacementTestDriver.EnterHouse("shadowless-placement");
-            yield return null;
-            yield return null;
-            yield return HousePlacementTestDriver.OpenPlacementMode();
-
-            var button = FindModernShadowlessPaletteButton();
-            Assert.IsNotNull(button, "A generated Modern Interiors shadowless furniture button is required for save/load verification.");
-            ExecuteEvents.Execute<IPointerClickHandler>(button, new PointerEventData(EventSystem.current), ExecuteEvents.pointerClickHandler);
-            yield return null;
-
-            var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
-            Assert.IsNotNull(overlay);
-            Assert.IsTrue(overlay.TryManualPlaceFirstValidForTests(out var message), "Modern Interiors furniture should be placeable before save/load verification. Last message: " + message);
-            yield return null;
-
-            var furnitureTilemap = GameObject.Find("AuthoredUserFurniture")?.GetComponent<Tilemap>();
-            var occupancyTilemap = GameObject.Find("AuthoredUserOccupancy")?.GetComponent<Tilemap>();
-            Assert.IsNotNull(furnitureTilemap);
-            Assert.IsNotNull(occupancyTilemap);
-            Assert.AreEqual(1, CountModernShadowlessTiles(furnitureTilemap, out var placedCell, out var tileName));
-            Assert.IsNotNull(occupancyTilemap.GetTile(placedCell), "Placed Modern Interiors tile should write occupancy before save. Tile=" + tileName);
-            var occupiedBefore = CountTiles(occupancyTilemap);
-
-            var saveButton = GameObject.Find("SaveFurnitureLayoutButton")?.GetComponent<Button>();
-            var clearButton = GameObject.Find("ClearFurnitureLayoutButton")?.GetComponent<Button>();
-            var loadButton = GameObject.Find("LoadFurnitureLayoutButton")?.GetComponent<Button>();
-            Assert.IsNotNull(saveButton, "House placement UI should expose a player-facing save button.");
-            Assert.IsNotNull(clearButton, "House placement UI should expose a player-facing clear button.");
-            Assert.IsNotNull(loadButton, "House placement UI should expose a player-facing load button.");
-
-            saveButton.onClick.Invoke();
-            yield return null;
-            StringAssert.Contains("Saved", overlay.LastMessage);
-
-            clearButton.onClick.Invoke();
-            yield return null;
-            Assert.AreEqual(0, CountModernShadowlessTiles(furnitureTilemap, out _, out _));
-            Assert.AreEqual(0, CountTiles(occupancyTilemap));
-
-            loadButton.onClick.Invoke();
-            yield return null;
-            StringAssert.Contains("Loaded", overlay.LastMessage);
-            Assert.AreEqual(1, CountModernShadowlessTiles(furnitureTilemap, out var restoredCell, out var restoredTile));
-            Assert.AreEqual(placedCell, restoredCell);
-            Assert.AreEqual(tileName, restoredTile);
-            Assert.AreEqual(occupiedBefore, CountTiles(occupancyTilemap));
-            Assert.IsNotNull(occupancyTilemap.GetTile(restoredCell), "Loaded Modern Interiors tile should restore occupancy. Tile=" + restoredTile);
-
-            loadButton.onClick.Invoke();
-            yield return null;
-            Assert.AreEqual(1, CountModernShadowlessTiles(furnitureTilemap, out _, out _), "Repeated load must not duplicate generated Modern Interiors tiles.");
-            Assert.AreEqual(occupiedBefore, CountTiles(occupancyTilemap), "Repeated load must not duplicate occupancy cells.");
-        }
-
         private static GameObject FindModernShadowlessPaletteButton()
         {
             HousePlacementTestDriver.SearchPalette("modern.interiors.shadowless.");

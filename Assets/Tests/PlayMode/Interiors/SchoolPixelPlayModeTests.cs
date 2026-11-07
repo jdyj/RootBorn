@@ -31,7 +31,6 @@ namespace Rootborn.Tests.PlayMode.Interiors
         private string _slot;
         private Keyboard _keyboard;
         private Mouse _mouse;
-        private string _searchInputRoute;
         private static string Evidence => Path.GetFullPath(Path.Combine(Application.dataPath, "../output/school-game-integration/evidence"));
 
         public override void Setup()
@@ -168,58 +167,6 @@ namespace Rootborn.Tests.PlayMode.Interiors
             Assert.IsNull(resource.Load<Tile>(tileAddress));
         }
 
-        [Ignore(LegacyPremise.AuthoredHouse + "자동 저장되는 House에서는 초기화가 영구 삭제라 저장 뒤 초기화를 불러오기로 되돌리는 흐름이 없음")]
-        [UnityTest]
-        public IEnumerator SchoolDesk_MouseSelectionPlacementSaveClearLoadAndSceneReload()
-        {
-            var boot = Managers.BootstrapAsync();
-            yield return new WaitUntil(() => boot.IsCompleted);
-            Assert.IsFalse(boot.IsFaulted, boot.Exception?.ToString());
-            yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
-            yield return new WaitForSeconds(.4f);
-            Assert.AreEqual(_slot, ActiveSaveContext.SlotId);
-            yield return HousePlacementTestDriver.OpenPlacementMode();
-            yield return SearchPalette("school.desk.with.open.book");
-            const string buttonName = "PaletteFurniture_school.desk.with.open.book";
-            const string tileName = "School_desk_with_open_book_Tile";
-            var button = GameObject.Find(buttonName);
-            Assert.IsNotNull(button, "The imported school desk must be exposed through the actual furniture palette.");
-            yield return Click(RectTransformUtility.WorldToScreenPoint(null, button.GetComponent<RectTransform>().position));
-            var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
-            Assert.IsNotNull(overlay);
-            Assert.Greater(overlay.ValidCellCount, 0, "A real mouse click must select the desk and show valid cells.");
-            var availability = GameObject.Find("AuthoredPlacementAvailability").GetComponent<Tilemap>();
-            Assert.IsTrue(FindVisibleCell(availability, out var target, out var pointer), "A valid visible cell outside UI is needed.");
-            yield return Click(pointer);
-            var objects = GameObject.Find("AuthoredUserFurniture").GetComponent<Tilemap>();
-            var occupancy = GameObject.Find("AuthoredUserOccupancy").GetComponent<Tilemap>();
-            Assert.AreEqual(tileName, objects.GetTile(target)?.name, overlay.LastMessage);
-            Assert.IsNotNull(occupancy.GetTile(target));
-            Assert.IsNotNull(occupancy.GetTile(target + Vector3Int.right));
-            Assert.AreEqual(0, overlay.ValidCellCount, "Availability preview must clear after placement.");
-            Assert.AreEqual(0, overlay.InvalidCellCount);
-            Assert.IsNull(GameObject.Find("ModernOfficeChairSampleTilemap"));
-            Capture("house-school-desk-placed.png");
-            yield return ClickButton("SaveFurnitureLayoutButton");
-            var saved = new SaveService(_slot).ReadJson(FurniturePlacementLayoutPersistence.GetHouseLayoutFileNameForStage(0));
-            StringAssert.Contains("school.desk.with.open.book", saved);
-            yield return ClickButton("ClearFurnitureLayoutButton");
-            Assert.IsNull(objects.GetTile(target));
-            yield return ClickButton("LoadFurnitureLayoutButton");
-            Assert.AreEqual(tileName, objects.GetTile(target)?.name);
-            yield return SceneManager.LoadSceneAsync("House", LoadSceneMode.Single);
-            yield return new WaitForSeconds(.4f);
-            objects = GameObject.Find("AuthoredUserFurniture").GetComponent<Tilemap>();
-            occupancy = GameObject.Find("AuthoredUserOccupancy").GetComponent<Tilemap>();
-            Assert.AreEqual(tileName, objects.GetTile(target)?.name, "Saved placement must survive scene reload.");
-            Assert.IsNotNull(occupancy.GetTile(target + Vector3Int.right));
-            Capture("house-school-desk-reloaded.png");
-            File.WriteAllText(Path.Combine(Evidence, "house-placement.txt"),
-                "input=MouseState press/release through EventSystem and overlay Update; no placement method invoked\n" +
-                "paletteSearchInput=" + _searchInputRoute + "\nslot=" + _slot + "\nselected=" + buttonName + "\ntile=" + objects.GetTile(target).name + "\ncell=" + target +
-                "\noccupancy=" + target + ";" + (target + Vector3Int.right) + "\nsaveClearLoadAndReload=passed\n" + saved);
-        }
-
         private IEnumerator WalkTo(PlayerController player, Key key, float target, bool horizontal)
         {
             float sign = key == Key.A || key == Key.S ? -1 : 1;
@@ -248,91 +195,6 @@ namespace Rootborn.Tests.PlayMode.Interiors
             InputSystem.Update();
             yield return null;
             yield return new WaitForFixedUpdate();
-        }
-
-        private IEnumerator SearchPalette(string query)
-        {
-            Assert.IsNotNull(EventSystem.current, "Search requires the player-facing EventSystem.");
-            Assert.IsInstanceOf<InputSystemUIInputModule>(EventSystem.current.currentInputModule,
-                "Search focus must be delivered by the real UI module; the assembly's PassiveInputModule cannot process pointer events.");
-            var go = GameObject.Find("FurniturePaletteSearchInput");
-            Assert.IsNotNull(go, "The palette search must be reachable through its actual InputField.");
-            var input = go.GetComponent<InputField>();
-            Assert.IsNotNull(input);
-            var rect = go.GetComponent<RectTransform>();
-            var canvas = go.GetComponentInParent<Canvas>();
-            Camera eventCamera = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.worldCamera : null;
-            var position = RectTransformUtility.WorldToScreenPoint(eventCamera, rect.TransformPoint(rect.rect.center));
-            Assert.IsTrue(position.x >= 0 && position.x <= Screen.width && position.y >= 0 && position.y <= Screen.height);
-            var hits = new List<RaycastResult>();
-            EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = position }, hits);
-            Assert.IsNotEmpty(hits);
-            Assert.IsTrue(hits[0].gameObject == go || hits[0].gameObject.transform.IsChildOf(go.transform), "Search input is covered by " + hits[0].gameObject.name);
-            yield return Click(position);
-            yield return null;
-            Assert.IsTrue(input.isFocused, "A real mouse click must focus the search input.");
-            Assert.AreEqual(string.Empty, input.text, "A newly loaded House must start with an empty search field.");
-            _keyboard.MakeCurrent();
-            foreach (char character in query) InputSystem.QueueTextEvent(_keyboard, character);
-            InputSystem.Update();
-            yield return null;
-            yield return null;
-            if (input.text == query)
-            {
-                _searchInputRoute = "MouseState focus + InputSystem.QueueTextEvent";
-            }
-            else
-            {
-                // This installed uGUI InputField consumes Event.PopEvent rather than Keyboard.onTextInput.
-                // Exercise its supported text-event API; never assign .text or call selection/placement methods.
-                Assert.AreEqual(string.Empty, input.text, "Unexpected partial text delivery; do not append a duplicate query.");
-                foreach (char character in query)
-                    input.ProcessEvent(new Event { type = EventType.KeyDown, keyCode = KeyCode.None, character = character });
-                input.ForceLabelUpdate();
-                _searchInputRoute = "MouseState focus + uGUI InputField.ProcessEvent(KeyDown characters); QueueTextEvent unsupported by this uGUI version";
-            }
-            yield return null;
-            Assert.AreEqual(query, input.text, "Search must respond to actual text input events.");
-        }
-
-        private IEnumerator ClickButton(string name)
-        {
-            var go = GameObject.Find(name);
-            Assert.IsNotNull(go, name);
-            yield return Click(RectTransformUtility.WorldToScreenPoint(null, go.GetComponent<RectTransform>().position));
-        }
-
-        private IEnumerator Click(Vector2 position)
-        {
-            _mouse.MakeCurrent();
-            InputSystem.QueueStateEvent(_mouse, new MouseState { position = position });
-            InputSystem.Update();
-            yield return null;
-            InputSystem.QueueStateEvent(_mouse, new MouseState { position = position, buttons = 1 });
-            InputSystem.Update();
-            yield return null;
-            yield return null;
-            InputSystem.QueueStateEvent(_mouse, new MouseState { position = position });
-            InputSystem.Update();
-            yield return null;
-            yield return null;
-        }
-
-        private static bool FindVisibleCell(Tilemap map, out Vector3Int cell, out Vector2 pointer)
-        {
-            var camera = Camera.main;
-            foreach (var p in map.cellBounds.allPositionsWithin)
-            {
-                var tile = map.GetTile<Tile>(p);
-                if (tile == null || tile.color.g < .8f || tile.color.r > .3f) continue;
-                var screen = camera.WorldToScreenPoint(map.GetCellCenterWorld(p));
-                if (screen.z <= 0 || screen.x < Screen.width*.28f || screen.x > Screen.width*.7f || screen.y < Screen.height*.25f || screen.y > Screen.height*.75f) continue;
-                var hits = new List<RaycastResult>();
-                EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = screen }, hits);
-                if (hits.Count > 0) continue;
-                cell = p; pointer = screen; return true;
-            }
-            cell = default; pointer = default; return false;
         }
 
         private static void Capture(string filename)

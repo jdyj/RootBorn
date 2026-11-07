@@ -38,12 +38,9 @@ namespace Rootborn.Tests.EditMode.Scenarios
         [Test]
         public void COVERAGE_002_TownAndHouseScenarioIdsMapToConcretePlayModeTests()
         {
-            string town = File.ReadAllText("Assets/Tests/PlayMode/EndToEnd/IntegratedVerticalSliceFoundationE2ETests.cs");
+            // The Town flow E2E that carried TownFlow001-003 was quarantined and then deleted on 2026-11-07; House stays live.
             string house = File.ReadAllText("Assets/Tests/PlayMode/EndToEnd/HousePlacementSaveLoadE2EScenarioTests.cs");
 
-            StringAssert.Contains(TownFlow001, town);
-            StringAssert.Contains(TownFlow002, town);
-            StringAssert.Contains(TownFlow003, town);
             StringAssert.Contains(HouseFlow001, house);
             StringAssert.Contains(HouseFlow002, house);
             StringAssert.Contains(HouseFlow003, house);
@@ -62,18 +59,6 @@ namespace Rootborn.Tests.EditMode.Scenarios
             StringAssert.Contains(TownFlow001, audit);
             StringAssert.Contains(HouseFlow001, audit);
             StringAssert.Contains(Coverage001, audit);
-        }
-
-        [Test]
-        public void COVERAGE_004_TownCoreFlowWritesRequiredEvidencePaths()
-        {
-            string town = File.ReadAllText("Assets/Tests/PlayMode/EndToEnd/IntegratedVerticalSliceFoundationE2ETests.cs");
-
-            StringAssert.Contains("town-core-flow-objective-journal.png", town);
-            StringAssert.Contains("town-core-flow-day-result.png", town);
-            StringAssert.Contains("production", town);
-            StringAssert.Contains("qa", town);
-            StringAssert.Contains("evidence", town);
         }
 
         [Test]

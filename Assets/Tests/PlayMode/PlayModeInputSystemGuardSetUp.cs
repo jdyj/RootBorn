@@ -52,17 +52,6 @@ namespace Rootborn.Tests.PlayMode
         }
     }
 
-    // Reasons for tests set aside because what they check is no longer in the game by design.
-    // Town and House are now authored scenes; the runtime installers skip their old generated objects there.
-    internal static class LegacyPremise
-    {
-        public const string AuthoredTown = "레거시 전제: 저작 Town에서는 만들지 않는 프로토타입 오브젝트를 기다림 — ";
-        public const string AuthoredHouse = "레거시 전제: 저작 House에서는 생성하지 않는 옛 집 생성·배치 흐름 — ";
-        public const string Farm = "레거시 전제: Town에서 더 이상 이어지지 않는 Farm 씬과 옛 HUD — ";
-        public const string ObjectiveJournal = "레거시 전제: 목표 표시는 Tab 목표 저널로 옮겨 옛 패널을 숨김 — ";
-        public const string CharacterParts = "레거시 전제: 성장 캐릭터로 바뀐 옛 부위 조합 캐릭터 — ";
-    }
-
     // The House furniture panel starts closed and shows 20 items per page, the way players see it.
     internal static class HousePlacementTestDriver
     {

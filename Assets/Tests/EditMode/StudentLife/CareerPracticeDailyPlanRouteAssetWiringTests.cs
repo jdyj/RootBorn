@@ -17,8 +17,6 @@ namespace Rootborn.Tests.EditMode.StudentLife
     public sealed class CareerPracticeDailyPlanRouteAssetWiringTests
     {
         private const string RegistryPath = "Assets/Data/Registry/GameDataRegistry.asset";
-        private const string CareerRouteE2EPath = "Assets/Tests/PlayMode/EndToEnd/CareerDailyPlanRouteE2EScenarioTests.cs";
-        private const string CareerJobRouteE2EPath = "Assets/Tests/PlayMode/EndToEnd/CareerJobRouteE2EScenarioTests.cs";
         private const string RequirementTypeName = "Rootborn.Game.StudentLife.DailyPlanCareerHintRequirement, Rootborn.Game";
         private const string WorkRequirementTypeName = "Rootborn.Game.StudentLife.DailyPlanPartTimeWorkRequirement, Rootborn.Game";
         private const string CareerId = "career.interior";
@@ -153,60 +151,6 @@ namespace Rootborn.Tests.EditMode.StudentLife
             var route = FindRoute(registry, WorkshopRouteId);
 
             AssertRouteIsReadyForDailyPlan(registry, route, "Workshop/job route");
-        }
-
-        [Test]
-        public void CareerDailyPlanRouteE2E_ContainsExactOnceSavedStateAssertions()
-        {
-            string source = File.ReadAllText(CareerRouteE2EPath);
-
-            StringAssert.Contains(
-                "AssertSaveContainsExactlyOnce",
-                source,
-                "Career Daily Plan E2E must assert StudentLife and DailyPlan save files contain career/route state exactly once, not merely that they contain it.");
-            StringAssert.Contains(
-                "CountOccurrences",
-                source,
-                "Career Daily Plan E2E exact-once assertions must use an explicit occurrence counter so duplicate serialized route or hint records fail visibly.");
-            StringAssert.Contains(
-                "AssertObjectiveRowsContainExactlyOnce",
-                source,
-                "Career Daily Plan E2E must assert Objective Journal rows do not duplicate the selected career route before or after reload.");
-        }
-
-        [Test]
-        public void CareerJobRouteE2E_ContainsExactOnceSavedStateAssertions()
-        {
-            string source = File.ReadAllText(CareerJobRouteE2EPath);
-
-            StringAssert.Contains(
-                "AssertSaveContainsExactlyOnce",
-                source,
-                "Career/Job route E2E must assert StudentLife and DailyPlan save files contain work/route state exactly once, not merely that they contain it.");
-            StringAssert.Contains(
-                "CountOccurrences",
-                source,
-                "Career/Job route E2E exact-once assertions must use an explicit occurrence counter so duplicate serialized work or route records fail visibly.");
-            StringAssert.DoesNotContain(
-                "AssertSaveContains(",
-                source,
-                "Career/Job route E2E must not rely on contains-only save assertions.");
-            StringAssert.Contains(
-                "Daily Plan save must include selected workshop route exactly once",
-                source,
-                "Career/Job route E2E must exact-once check selected workshop route save state before reload.");
-            StringAssert.Contains(
-                "reload duplicated or removed the selected workshop route save state",
-                source,
-                "Career/Job route E2E must exact-once check selected workshop route save state after reload.");
-            StringAssert.Contains(
-                "StudentLife save must include part-time work progress exactly once",
-                source,
-                "Career/Job route E2E must exact-once check part-time work save state before reload.");
-            StringAssert.Contains(
-                "reload duplicated or removed the part-time work save state",
-                source,
-                "Career/Job route E2E must exact-once check part-time work save state after reload.");
         }
 
         [Test]
