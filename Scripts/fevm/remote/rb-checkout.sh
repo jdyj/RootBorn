@@ -12,9 +12,10 @@ git clone --no-checkout -q "$B" "$D"
 git -C "$D" checkout -q --detach "$H"
 GOT=$(git -C "$D" rev-parse HEAD)
 case "$GOT" in "$H"*) ;; *) echo "hash mismatch: $GOT vs $H"; exit 1;; esac
-# Seed Library from the newest earlier checkout that no Unity is using (Library is only a cache).
+# Optional: RB_SEED_LIBRARY=1 seeds Library from the newest idle checkout. Off by default: a seeded Library once left
+# FangAutoTile assets unloaded (14 false EditMode failures, 2026-11-08), so a fresh import is the trusted baseline.
 PREV=""
-for L in $(ls -1dt "$RB_HOME"/*/Library 2>/dev/null); do
+[ "${RB_SEED_LIBRARY:-0}" = 1 ] && for L in $(ls -1dt "$RB_HOME"/*/Library 2>/dev/null); do
   case "$L" in "$D/"*) continue;; esac
   if rb_project_busy "${L%/Library}"; then echo "skip Library seed: Unity is using ${L%/Library}"; continue; fi
   PREV=$L; break

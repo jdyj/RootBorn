@@ -10,7 +10,7 @@
 1. 커밋한다. 미커밋 수정은 검증에 들어가지 않는다.
 2. Windows Git Bash: `Scripts/fevm/sync.sh [커밋]`
    - 번들을 만들어 올리고 `~/farmer-unity-verify/<짧은 해시>`에 체크아웃한 뒤 해시를 다시 확인한다.
-   - 이전 체크아웃의 `Library`를 복사해 첫 임포트 시간을 줄인다(캐시일 뿐이다).
+   - 새 사본은 처음부터 임포트한다(약 10분). `RB_SEED_LIBRARY=1`이면 쓰지 않는 최근 Library를 복사하지만, 복사본에서 FangAutoTile 에셋이 안 읽혀 가짜 실패가 난 적이 있어 기본은 끈다.
    - `test-fixtures.txt`의 `output/` 고정 증거(git 밖)를 사본에 복사한다. 원본은 고치지 않는다.
 3. FEVM: `~/farmer-unity-verify/tools/rb-test.sh <폴더> EditMode|PlayMode [필터] [asset|built|rebuild]`
    - EditMode·PlayMode 모두 Xvfb(`:97`, 1920x1080, `-noreset`) + VirtualGL(`egl0`, `-force-glcore`) GPU 렌더링. `-nographics` 첫 임포트는 8192px 넘는 텍스처를 실패시킨다(`RB_NOGRAPHICS=1`로만 강제).
