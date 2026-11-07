@@ -167,7 +167,6 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         private static void EnsureTownRelationshipInstallers()
         {
             LocationNpcRuntimeInstaller.EnsureForActiveScene();
-            TownHelpActionRuntimeInstaller.EnsureForActiveScene();
             StudentDayRuntimeInstaller.EnsureForActiveScene();
         }
 

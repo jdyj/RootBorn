@@ -13,7 +13,6 @@ namespace Rootborn.Tests.EditMode.TownConcept
             {
                 "Assets/Scripts/UI/Modern/ModernUiRecipes.cs",
                 "Assets/Scripts/Game/Common/ModernHudSpriteKeys.cs",
-                "Assets/Scripts/UI/HUD/StatusHud.cs",
                 "Assets/Scripts/UI/Quests/QuestLogPanel.cs"
             };
 

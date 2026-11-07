@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Rootborn.Game.Characters;
-using Rootborn.Game.Characters.Spum;
 using Rootborn.Game.Common;
 using Rootborn.Game.Family;
 using Rootborn.Game.Player;
@@ -486,63 +485,6 @@ namespace Rootborn.UI.MainMenu
                     return;
                 }
             }
-
-            var registry = Rootborn.Game.Managers.Managers.Data != null ? Rootborn.Game.Managers.Managers.Data.Registry : null;
-            if (registry == null || registry.CharacterParts == null || registry.CharacterParts.Length == 0)
-            {
-                return;
-            }
-
-            background.color = Color.clear;
-            var appearance = CharacterAppearance.ResolveWithDefaults(metadata != null ? metadata.Appearance : null, registry.CharacterParts);
-            for (int i = 0; i < registry.CharacterParts.Length; i++)
-            {
-                var candidate = registry.CharacterParts[i];
-                if (candidate == null || string.IsNullOrEmpty(candidate.CategoryId))
-                {
-                    continue;
-                }
-                var part = FindPreviewPart(registry.CharacterParts, appearance.GetSelectedPartId(candidate.CategoryId), candidate.CategoryId);
-                if (part == null || part.PreviewSprite == null || go.transform.Find("PreviewPart_" + part.CategoryId) != null)
-                {
-                    continue;
-                }
-
-                var layer = new GameObject("PreviewPart_" + part.CategoryId, typeof(RectTransform), typeof(Image));
-                layer.transform.SetParent(go.transform, false);
-                var layerRt = (RectTransform)layer.transform;
-                layerRt.anchorMin = Vector2.zero;
-                layerRt.anchorMax = Vector2.one;
-                layerRt.offsetMin = Vector2.zero;
-                layerRt.offsetMax = Vector2.zero;
-                var image = layer.GetComponent<Image>();
-                image.sprite = part.PreviewSprite;
-                image.color = Color.white;
-                image.preserveAspect = true;
-                image.raycastTarget = false;
-            }
-        }
-
-        private static CharacterPartDefinition FindPreviewPart(CharacterPartDefinition[] parts, string selectedId, string categoryId)
-        {
-            CharacterPartDefinition fallback = null;
-            for (int i = 0; i < parts.Length; i++)
-            {
-                var part = parts[i];
-                if (part == null || part.CategoryId != categoryId)
-                {
-                    continue;
-                }
-                if (part.Id == selectedId)
-                {
-                    return part;
-                }
-                if (fallback == null && part.IsDefault)
-                {
-                    fallback = part;
-                }
-            }
-            return fallback;
         }
 
         private static Color CharacterPreviewColor(int bodyVariant, int hairVariant, int outfitVariant)

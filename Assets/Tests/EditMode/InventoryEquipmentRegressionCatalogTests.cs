@@ -25,15 +25,6 @@ namespace Rootborn.Tests.EditMode
         {
             AssertTypeExists("Rootborn.Tests.EditMode.PlayerControllerTests");
             AssertTypeExists("Rootborn.Tests.EditMode.WorldGeneration.SeededWorldGeneratorTests");
-            AssertTypeExists("Rootborn.Tests.PlayMode.FarmFlowTests, Rootborn.Tests.PlayMode");
-        }
-
-        [Test]
-        public void REG_004_FarmingAndToolRegressionCoverage_RemainsPresent()
-        {
-            AssertTypeExists("Rootborn.Tests.EditMode.Farming.ToolEffectTests");
-            AssertTypeExists("Rootborn.Tests.EditMode.Farming.FarmGridTests");
-            AssertTypeExists("Rootborn.Tests.PlayMode.Farming.FarmingScenarioTests, Rootborn.Tests.PlayMode");
         }
 
         private static Type AssertTypeExists(string typeName)

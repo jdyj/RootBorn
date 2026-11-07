@@ -124,69 +124,6 @@ namespace Rootborn.Tests.PlayMode.World
             Object.Destroy(portalGo);
         }
 
-        [UnityTest]
-        public IEnumerator INTERACT_PM_003_FarmRuntimeNpcPromptAndGatherInteractorOpenDialogue()
-        {
-            ActiveSaveContext.Set(new SaveSlotMetadata { SlotId = "interact-runtime-npc", DisplayName = "Interact NPC", WorldSeed = 1, TileSeed = 2 });
-            yield return LoadScene("Farm");
-            yield return WaitForFarmInteractionRuntime();
-
-            var player = GameObject.Find("Player");
-            var npc = Object.FindFirstObjectByType<NpcInteractor>(FindObjectsInactive.Include);
-            var dialoguePanel = Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include);
-            var router = player.GetComponent<PlayerInteractionRouter>();
-            var gather = player.GetComponent<GatherInteractor>();
-
-            Assert.IsNotNull(router);
-            Assert.IsNotNull(gather);
-            Assert.IsNotNull(npc);
-            Assert.IsNotNull(dialoguePanel);
-
-            player.transform.position = npc.transform.position + new Vector3(1f, 0f, 0f);
-            yield return null;
-            router.RefreshPromptNow();
-
-            Assert.IsTrue(router.PromptVisible);
-            StringAssert.Contains(Rootborn.Game.Localization.GameText.Localized("ui.prompt.talk", "Talk"), router.PromptText);
-
-            gather.TriggerInteract();
-            yield return null;
-
-            Assert.IsTrue(dialoguePanel.IsOpen);
-        }
-
-        [Ignore(LegacyPremise.Farm + "Farm runtime portal")]
-        [UnityTest]
-        public IEnumerator INTERACT_PM_004_FarmRuntimePortalPromptAndGatherInteractorTravelToTown()
-        {
-            ActiveSaveContext.Set(new SaveSlotMetadata { SlotId = "interact-runtime-portal", DisplayName = "Interact Portal", WorldSeed = 3, TileSeed = 4 });
-            yield return LoadScene("Farm");
-            yield return WaitForFarmInteractionRuntime();
-
-            var player = GameObject.Find("Player");
-            var portal = GameObject.Find("FarmPortal").GetComponent<WorldPortal>();
-            var router = player.GetComponent<PlayerInteractionRouter>();
-            var gather = player.GetComponent<GatherInteractor>();
-
-            Assert.IsNotNull(router);
-            Assert.IsNotNull(gather);
-            Assert.IsNotNull(portal);
-
-            player.transform.position = portal.transform.position + new Vector3(1.2f, 0f, 0f);
-            yield return null;
-            router.RefreshPromptNow();
-
-            Assert.IsTrue(router.PromptVisible);
-            StringAssert.Contains(Rootborn.Game.Localization.GameText.FormatLocalized("ui.prompt.enter-named", "Enter {0}", string.Empty).Trim(), router.PromptText);
-
-            string destinationScene = portal.DestinationScene;
-            gather.TriggerInteract();
-            yield return WaitForScene(destinationScene, 10f);
-
-            Assert.AreEqual("Town", SceneManager.GetActiveScene().name);
-            Assert.AreEqual(1, CountObjectsNamed("Player"));
-        }
-
         private static IEnumerator LoadScene(string sceneName)
         {
             var op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);

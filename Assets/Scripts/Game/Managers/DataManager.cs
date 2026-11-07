@@ -3,7 +3,6 @@ using System.Linq;
 using UnityEngine.AddressableAssets;
 using System.Threading.Tasks;
 using Rootborn.Game.Common;
-using Rootborn.Game.Crops;
 using Rootborn.Game.Family;
 using Rootborn.Game.Knowledge;
 using Rootborn.Game.Resources;
@@ -24,12 +23,9 @@ namespace Rootborn.Game.Managers
         public Sprite PlayerSprite { get; private set; }
         public Sprite GroundSprite { get; private set; }
 
-        public Dictionary<string, CropDefinition> CropById { get; } = new Dictionary<string, CropDefinition>();
         public Dictionary<string, ToolDefinition> ToolById { get; } = new Dictionary<string, ToolDefinition>();
         public Dictionary<string, ResourceNodeDefinition> ResourceById { get; } = new Dictionary<string, ResourceNodeDefinition>();
         public Dictionary<string, KnowledgeNode> KnowledgeById { get; } = new Dictionary<string, KnowledgeNode>();
-        public Dictionary<string, CharacterPartDefinition> CharacterPartById { get; } = new Dictionary<string, CharacterPartDefinition>();
-        public Dictionary<string, List<CharacterPartDefinition>> CharacterPartsByCategory { get; } = new Dictionary<string, List<CharacterPartDefinition>>();
         public Dictionary<string, CharacterPartAnimationClipDefinition> CharacterPartAnimationClipById { get; } = new Dictionary<string, CharacterPartAnimationClipDefinition>();
         public Dictionary<string, FishingAnimationDefinition> FishingAnimationById { get; } = new Dictionary<string, FishingAnimationDefinition>();
 
@@ -52,7 +48,7 @@ namespace Rootborn.Game.Managers
             }
             else
             {
-                Debug.Log($"[ROOTBORN/DataManager] Registry loaded: crops={Registry.Crops?.Length}, tools={Registry.Tools?.Length}, resources={Registry.Resources?.Length}, characterParts={Registry.CharacterParts?.Length}");
+                Debug.Log($"[ROOTBORN/DataManager] Registry loaded: tools={Registry.Tools?.Length}, resources={Registry.Resources?.Length}");
             }
 
             BuildLookups();
@@ -85,23 +81,12 @@ namespace Rootborn.Game.Managers
 
         private void BuildLookups()
         {
-            CropById.Clear();
             ToolById.Clear();
             ResourceById.Clear();
             KnowledgeById.Clear();
-            CharacterPartById.Clear();
-            CharacterPartsByCategory.Clear();
             CharacterPartAnimationClipById.Clear();
             FishingAnimationById.Clear();
 
-            if (Registry.Crops != null)
-            {
-                for (int i = 0; i < Registry.Crops.Length; i++)
-                {
-                    var c = Registry.Crops[i];
-                    if (c != null && !string.IsNullOrEmpty(c.Id)) CropById[c.Id] = c;
-                }
-            }
             if (Registry.Tools != null)
             {
                 for (int i = 0; i < Registry.Tools.Length; i++)
@@ -124,25 +109,6 @@ namespace Rootborn.Game.Managers
                 {
                     var k = Registry.Knowledge[i];
                     if (k != null && !string.IsNullOrEmpty(k.Id)) KnowledgeById[k.Id] = k;
-                }
-            }
-            if (Registry.CharacterParts != null)
-            {
-                for (int i = 0; i < Registry.CharacterParts.Length; i++)
-                {
-                    var part = Registry.CharacterParts[i];
-                    if (part == null || string.IsNullOrEmpty(part.Id) || string.IsNullOrEmpty(part.CategoryId))
-                    {
-                        continue;
-                    }
-
-                    CharacterPartById[part.Id] = part;
-                    if (!CharacterPartsByCategory.TryGetValue(part.CategoryId, out var categoryParts))
-                    {
-                        categoryParts = new List<CharacterPartDefinition>();
-                        CharacterPartsByCategory[part.CategoryId] = categoryParts;
-                    }
-                    categoryParts.Add(part);
                 }
             }
             if (Registry.CharacterPartAnimationClips != null)

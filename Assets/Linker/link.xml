@@ -1,12 +1,5 @@
 <linker>
   <assembly fullname="Rootborn.Game, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-    <type fullname="Rootborn.Game.Common.DirectValidationAutoplayInstaller" preserve="all" />
-    <type fullname="Rootborn.Game.Common.DirectValidationDailyPlanCompletionAutoplayInstaller" preserve="all" />
-    <type fullname="Rootborn.Game.Common.DirectValidationDiscoveryRouteUnlockAutoplayInstaller" preserve="all" />
-    <type fullname="Rootborn.Game.Common.DirectValidationResourceRecipeActivityAutoplayInstaller" preserve="all" />
-    <type fullname="Rootborn.Game.Common.DirectValidationRouteRelationshipAutoplayInstaller" preserve="all" />
-    <type fullname="Rootborn.Game.Common.DirectValidationTrace" preserve="all" />
-    <type fullname="Rootborn.Game.Common.DirectValidationTraceInstaller" preserve="all" />
     <type fullname="Rootborn.Game.Common.GameDataRegistry" preserve="all" />
     <type fullname="Rootborn.Game.Common.ItemDefinition" preserve="all" />
     <type fullname="Rootborn.Game.Crops.CropDefinition" preserve="all" />

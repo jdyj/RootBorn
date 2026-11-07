@@ -45,29 +45,6 @@ namespace Rootborn.Tests.PlayMode
             Assert.IsTrue(UrbanSkinCheck.TilesOrSkin(settings.gameObject, settings.PanelTileCount, 9), "Settings must draw a Style2 tiled or urban-skin panel.");
         }
 
-        [Ignore(LegacyPremise.Farm + "Loads Farm scene")]
-        [UnityTest]
-        public IEnumerator GLOBAL_UI_PM_002_FarmEscKeyboardEventOpensSameSettingsPanelOnOverlayCanvas()
-        {
-            yield return SceneManager.LoadSceneAsync("Farm", LoadSceneMode.Single);
-            yield return WaitForGlobalUi();
-
-            var canvas = FindGlobalUiCanvas();
-            var router = canvas.GetComponent<ModernUiPanelInputRouter>();
-            var settings = FindModernSettingsPanel(canvas);
-
-            Assert.AreEqual(RenderMode.ScreenSpaceOverlay, canvas.renderMode);
-            Assert.GreaterOrEqual(canvas.sortingOrder, 1000);
-            Assert.IsNotNull(router);
-            Assert.IsNotNull(settings);
-            Assert.IsFalse(settings.IsVisible);
-
-            yield return HoldKeyboardKey(Key.Escape, 4);
-
-            Assert.IsTrue(settings.IsVisible, "Actual Esc keyboard input should open through the global Modern UI router in Farm.");
-            Assert.GreaterOrEqual(settings.PanelTileCount, 9);
-        }
-
         [Ignore(LegacyPremise.ObjectiveJournal + "QuestLogPanel intentionally hidden")]
         [UnityTest]
         public IEnumerator GLOBAL_UI_PM_003_TownQuestLogPanelRendersOnTopOverlayCanvas()

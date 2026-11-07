@@ -469,8 +469,6 @@ GameObject:
   - component: {fileID: 4737126560717574139}
   - component: {fileID: 510319199563348370}
   - component: {fileID: 7779920602336980567}
-  - component: {fileID: 6735423024639536156}
-  - component: {fileID: 507124032853071634}
   - component: {fileID: 6648590890737219894}
   - component: {fileID: 7033432447557357620}
   - component: {fileID: 6819499319452771163}
@@ -685,33 +683,6 @@ MonoBehaviour:
   _interactor: {fileID: 0}
   _attackFrameDuration: 0.06
   _camera: {fileID: 0}
---- !u!114 &6735423024639536156
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6584721302760826571}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ca29d14df9ede644d92aa8ff70e28ca8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Family.CharacterPartComposer
-  _layers: []
---- !u!114 &507124032853071634
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6584721302760826571}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 62a2c5f9caf50654e9630f1b6fc01e27, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Family.CharacterPartAnimator
-  _framesPerSecond: 8
-  _walkFrameCount: 4
 --- !u!114 &6648590890737219894
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -724,7 +695,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e314fb2f64687d499774911e9f743d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Family.FishingAnimationController
-  _animator: {fileID: 507124032853071634}
+  _animator: {fileID: 0}
   _definition: {fileID: 11400000, guid: 4d492c31c33bd2b4fa9e3e22ed110534, type: 2}
 --- !u!114 &7033432447557357620
 MonoBehaviour:

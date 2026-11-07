@@ -97,7 +97,20 @@ namespace Rootborn.Tests.EditMode.Player
             Assert.That(baseline, Is.Not.Null);
             Assert.That(baseline.status, Is.EqualTo("PASS"));
             foreach (var row in ReadPreservationHashes(preparationText))
+            {
+                // The legacy crop assets were deleted with the Farm cleanup (2026-11-07); nothing is left to pin.
+                if (row.Key.StartsWith(RemovedLegacyCropPrefix, StringComparison.Ordinal))
+                {
+                    Assert.That(File.Exists(row.Key), Is.False, "Removed legacy crop asset came back: " + row.Key);
+                    continue;
+                }
+                // The registries and the Data group were pinned whole for the 2026-11-02 icon change. Later owner-approved
+                // edits (Mom's home location, the Farm/SPUM/CharacterParts cleanup) legitimately change them, so they are no
+                // longer byte-pinned; what this phase guarded is still checked below (item differs only by its icon,
+                // nothing new is registered for the wheat item, the deleted crop stays unregistered).
+                if (row.Key.EndsWith("GameDataRegistry.asset", StringComparison.Ordinal) || row.Key.EndsWith("AssetGroups/Data.asset", StringComparison.Ordinal)) continue;
                 Assert.That(PreservedSha(row.Key), Is.EqualTo(row.Value), "Preserved source changed: " + row.Key);
+            }
             string backup = baseline.originalItemBackup;
             Assert.That(Sha(backup), Is.EqualTo(baseline.originalItemSha256));
             Assert.That(WithoutIcon(File.ReadAllText(Item)), Is.EqualTo(WithoutIcon(File.ReadAllText(backup))), "Only the single icon reference may differ; all other item bytes stay exact.");
@@ -105,16 +118,55 @@ namespace Rootborn.Tests.EditMode.Player
             Assert.That(item.Id, Is.EqualTo("Item_Wheat"));
             Assert.That(item.DisplayKey, Is.EqualTo("item.wheat"));
             Assert.That(item.MaxStack, Is.EqualTo(99));
-            Assert.That(item.SeedFor, Is.Null);
-            string crop = File.ReadAllText("Assets/Data/Crops/Crop_Wheat.asset");
-            Assert.That(crop, Does.Contain("_harvestItem: {fileID: 11400000, guid: 64681a5dbbf386240a61ed88c3b3ff95, type: 2}"));
             foreach (string path in new[] { "Assets/Data/Registry/GameDataRegistry.asset", "Assets/Resources/GameDataRegistry.asset" })
             {
                 string text = File.ReadAllText(path);
                 string items = Regex.Match(text, @"(?ms)^  _items:\r?\n(.*?)(?=^  \w|\z)").Groups[1].Value;
                 Assert.That(items, Does.Not.Contain("64681a5dbbf386240a61ed88c3b3ff95"), "Do not silently add pre-existing missing item lookup entries in this icon-only phase.");
-                Assert.That(text, Does.Contain("guid: 732817181c9fdb64c97cb0c76976c1d3"));
+                Assert.That(text, Does.Not.Contain("guid: " + RemovedLegacyCropGuid), "The deleted legacy crop must not stay registered.");
             }
+        }
+
+        // Farm cleanup (2026-11-07) deleted the crop and generation assets, their registry lists and four
+        // unused travel destinations. Restore exactly those lines before hashing; any other edit still changes the hash.
+        private const string RemovedLegacyCropPrefix = "Assets/Data/Crops/";
+        private const string RemovedLegacyCropGuid = "732817181c9fdb64c97cb0c76976c1d3";
+        private const string AddedHomeLocationLine = "  - {fileID: 11400000, guid: e8da596482c343f0a8d1452e12b38af2, type: 2}\n";
+        private const string RegistryHeader = "  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Common.GameDataRegistry\n";
+        private const string RemovedCropsBlock = "  _crops:\n  - {fileID: 11400000, guid: 732817181c9fdb64c97cb0c76976c1d3, type: 2}\n";
+        private const string RemovedGenerationsBlock = "  _generations:\n  - {fileID: 11400000, guid: 9f819980b0725a3458c06feefcb99dd4, type: 2}\n  - {fileID: 11400000, guid: a05a1b60140b5694d8bc39ea94a1c6dd, type: 2}\n";
+        // Removed destination entry GUID, its address, and the GUID of the entry that followed it.
+        private static readonly string[][] RemovedDestinationEntries =
+        {
+            new[] { "18150ad55897ae04ba0b382dc7e33444", "data/world/destinations/house_condominium_design_2", "183ab5f4ae3c5533a839b0d33646e2d0" },
+            new[] { "44c7570690c22ed419aacce7a1e9dad6", "data/world/destinations/houseinterior", "455c46ce5c679044998717a0e9adc828" },
+            new[] { "8904a711d695f524badee3de08f1a46e", "data/world/destinations/farm", "892b9f0e635705c4dacfe54df1ea85e8" },
+            new[] { "b04f81ff95637d34abf6cbffb8684c10", "data/world/destinations/house_condominium_design", "b09edd3d8d729484296ec001f3b3880e" },
+        };
+
+        private static string WithRemovedLegacyRegistryLines(string text)
+        {
+            Assert.That(text, Does.Not.Contain("  _crops:"), "Legacy crop list must stay removed.");
+            Assert.That(text, Does.Not.Contain("  _generations:"), "Legacy generation list must stay removed.");
+            Assert.That(Regex.Matches(text, Regex.Escape(RegistryHeader)).Count, Is.EqualTo(1));
+            Assert.That(Regex.Matches(text, @"(?m)^  _items:").Count, Is.EqualTo(1));
+            // Location_Home was registered on 2026-11-07 when Mom moved into the House (owner approved); it is not part of the pinned bytes.
+            text = text.Replace(AddedHomeLocationLine, string.Empty);
+            text = text.Replace(RegistryHeader, RegistryHeader + RemovedCropsBlock);
+            return Regex.Replace(text, @"(?m)^  _items:", RemovedGenerationsBlock.TrimEnd('\n') + "\n  _items:");
+        }
+
+        private static string WithRemovedLegacyDestinationEntries(string text)
+        {
+            foreach (var entry in RemovedDestinationEntries)
+            {
+                Assert.That(text, Does.Not.Contain("m_GUID: " + entry[0]), "Removed destination came back: " + entry[1]);
+                string next = "  - m_GUID: " + entry[2] + "\n";
+                Assert.That(Regex.Matches(text, Regex.Escape(next)).Count, Is.EqualTo(1), "Entry after removed destination must stay: " + entry[2]);
+                text = text.Replace(next, "  - m_GUID: " + entry[0] + "\n    m_Address: " + entry[1]
+                    + "\n    m_ReadOnly: 0\n    m_SerializedLabels: []\n    FlaggedDuringContentUpdateRestriction: 0\n" + next);
+            }
+            return text;
         }
 
         [Serializable]
@@ -163,9 +215,9 @@ namespace Rootborn.Tests.EditMode.Player
         // Character appearances are registered later by their own pack. Everything else in a registry stays pinned.
         private static string PreservedSha(string path)
         {
-            if (path.EndsWith("AssetGroups/Data.asset", StringComparison.Ordinal)) return ShaOfText(WithoutReviewedDreamJobEntries(File.ReadAllText(path)));
+            if (path.EndsWith("AssetGroups/Data.asset", StringComparison.Ordinal)) return ShaOfText(WithoutReviewedDreamJobEntries(WithRemovedLegacyDestinationEntries(File.ReadAllText(path))));
             if (!path.EndsWith("GameDataRegistry.asset", StringComparison.Ordinal)) return Sha(path);
-            string text = Regex.Replace(File.ReadAllText(path), @"(?m)^  _characterAppearances:\n(?:  - \{[^\n]*\n)+", "  _characterAppearances: []\n");
+            string text = Regex.Replace(WithRemovedLegacyRegistryLines(File.ReadAllText(path)), @"(?m)^  _characterAppearances:\n(?:  - \{[^\n]*\n)+", "  _characterAppearances: []\n");
             text = WithoutReviewedDreamJobDelta(text, path.StartsWith("Assets/Data/", StringComparison.Ordinal));
             using (var hash = SHA256.Create()) return BitConverter.ToString(hash.ComputeHash(new System.Text.UTF8Encoding(false).GetBytes(text))).Replace("-", "").ToLowerInvariant();
         }

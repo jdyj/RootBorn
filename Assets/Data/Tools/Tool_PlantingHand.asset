@@ -16,7 +16,6 @@ MonoBehaviour:
   _displayKey: tool.planting_hand
   _icon: {fileID: 0}
   _powerMultiplier: 1
-  _effects:
-  - {fileID: 11400000, guid: 63e538f3f75e4204a984a9686e66b741, type: 2}
+  _effects: []
   _isStartingTool: 0
   _description: 

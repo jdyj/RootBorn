@@ -16,9 +16,7 @@ MonoBehaviour:
   _displayKey: tool.stoneHoe
   _icon: {fileID: 21300000, guid: bad88ca443e236b428c64977d57b58c4, type: 3}
   _powerMultiplier: 1
-  _effects:
-  - {fileID: 11400000, guid: 9991dbf28548bc34b98b3eb158b9f7a1, type: 2}
-  - {fileID: 11400000, guid: b2b7c056623f5e84d977f893486e2d08, type: 2}
+  _effects: []
   _characterPartAnimationClip: {fileID: 11400000, guid: 362284ccfd176004dbaf04ad216ef3aa, type: 2}
   _isStartingTool: 0
   _description: Power x1.0. Tills the soil for planting crops.

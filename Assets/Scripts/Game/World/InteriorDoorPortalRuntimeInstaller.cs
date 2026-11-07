@@ -45,7 +45,7 @@ namespace Rootborn.Game.World
 
         public static readonly string[] InteriorSceneNames =
         {
-            "HouseInterior", "HospitalInterior", "ShopInterior", "PoliceInterior", "PoliceShootingInterior", "KitchenInterior", "Kitchen2Interior"
+            "HospitalInterior", "ShopInterior", "PoliceInterior", "PoliceShootingInterior", "KitchenInterior", "Kitchen2Interior"
         };
 
         // The LDtk level files exist only in the editor; players rely on the portals saved into each interior scene.
@@ -80,12 +80,6 @@ namespace Rootborn.Game.World
 
         public static bool TryGetInteriorLevel(string sceneName, out string levelPath, out string selfDoorAlias)
         {
-            if (string.Equals(sceneName, "HouseInterior", StringComparison.OrdinalIgnoreCase))
-            {
-                levelPath = "Assets/LDtk/Interiors/interiors/House_1.ldtkl";
-                selfDoorAlias = "house";
-                return true;
-            }
             if (string.Equals(sceneName, "HospitalInterior", StringComparison.OrdinalIgnoreCase))
             {
                 levelPath = "Assets/LDtk/Interiors/interiors/Hospital_1.ldtkl";

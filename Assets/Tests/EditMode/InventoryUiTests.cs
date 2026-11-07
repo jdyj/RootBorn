@@ -71,18 +71,5 @@ namespace Rootborn.Tests.EditMode
                     $"도구 sheet 주소는 -down/-side/-up 으로 끝나야 함: {addr}");
             }
         }
-
-        // 5. InventoryView 에 SelectedItem 프로퍼티 존재 — 선택 상태 추적 회귀 방지.
-        [Test]
-        public void InventoryView_HasSelectedItemProperty()
-        {
-            // InventoryView 는 StatusHud.cs 의 internal 클래스. Rootborn.UI.HUD 네임스페이스.
-            var t = System.Type.GetType("Rootborn.UI.HUD.InventoryView, Rootborn.UI");
-            Assert.IsNotNull(t, "InventoryView 타입을 찾을 수 없음 — Rootborn.UI 어셈블리 확인.");
-
-            var prop = t.GetProperty("SelectedItem", BindingFlags.Public | BindingFlags.Instance);
-            Assert.IsNotNull(prop, "InventoryView 에 public SelectedItem getter 가 있어야 함.");
-            Assert.AreEqual(typeof(ItemDefinition), prop.PropertyType);
-        }
     }
 }

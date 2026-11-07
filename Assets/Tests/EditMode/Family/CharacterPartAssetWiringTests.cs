@@ -11,7 +11,6 @@ namespace Rootborn.Tests.EditMode.Family
 {
     public sealed class CharacterPartAssetWiringTests
     {
-        private static readonly string[] RequiredCategories = { "body", "eyes", "hair", "outfit", "accessory" };
         private static readonly string[] RequiredAnimationClipIds =
         {
             "character.action.watering.down",
@@ -24,40 +23,6 @@ namespace Rootborn.Tests.EditMode.Family
             "character.action.fishing.pull_hook.side",
             "character.action.fishing.caught.side",
         };
-
-        [Test]
-        public void CharacterPartAssets_HaveAtLeastTwoDefinitionsPerRequiredCategory()
-        {
-            var definitions = LoadDefinitions();
-            var counts = new Dictionary<string, int>();
-            foreach (var definition in definitions)
-            {
-                if (definition == null)
-                {
-                    continue;
-                }
-                counts.TryGetValue(definition.CategoryId, out int count);
-                counts[definition.CategoryId] = count + 1;
-            }
-
-            foreach (string category in RequiredCategories)
-            {
-                counts.TryGetValue(category, out int count);
-                Assert.GreaterOrEqual(count, 2, category);
-            }
-        }
-
-        [Test]
-        public void CharacterPartAssets_AreRegisteredInGameDataRegistry()
-        {
-            AssertRegistryHasCharacterParts("Assets/Data/Registry/GameDataRegistry.asset");
-        }
-
-        [Test]
-        public void CharacterPartAssets_AreRegisteredInResourcesFallbackRegistry()
-        {
-            AssertRegistryHasCharacterParts("Assets/Resources/GameDataRegistry.asset");
-        }
 
         [Test]
         public void CharacterPartAnimationClipAssets_AreRegisteredInBothRegistries()
@@ -81,59 +46,11 @@ namespace Rootborn.Tests.EditMode.Family
         }
 
         [Test]
-        public void CharacterPartActionClips_TargetCellsWithinRuntimePartSheetBounds()
-        {
-            var body = AssetDatabase.LoadAssetAtPath<CharacterPartDefinition>("Assets/Data/Family/CharacterParts/character_body_02.asset");
-            Assert.IsNotNull(body);
-            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(body.EditorAssetPath);
-            Assert.IsNotNull(texture);
-            int cols = texture.width / 16;
-            int rows = texture.height / 32;
-            foreach (var clip in LoadAnimationClips())
-            {
-                Assert.Less(clip.Row, rows, clip.Id);
-                Assert.LessOrEqual(clip.FrameCount, cols, clip.Id);
-            }
-        }
-
-        [Test]
         public void ToolDefinitions_ReferenceRegisteredCharacterPartActionClips()
         {
             AssertToolClip("Assets/Data/Tools/Tool_WateringCan.asset", "character.action.watering.down");
             AssertToolClip("Assets/Data/Tools/Tool_StoneAxe.asset", "character.action.chopping.side");
             AssertToolClip("Assets/Data/Tools/Tool_StoneHoe.asset", "character.action.digging.down");
-        }
-
-        [Test]
-        public void CharacterPartDefinitions_ReferenceExistingSixteenByThirtyTwoSubSprites()
-        {
-            var definitions = LoadDefinitions();
-            Assert.GreaterOrEqual(definitions.Length, 10);
-
-            foreach (var definition in definitions)
-            {
-                Assert.IsTrue(definition.IsValid(out var error), error);
-                string assetPath = definition.EditorAssetPath;
-                Assert.IsTrue(assetPath.StartsWith("Assets/"), definition.Id);
-                var sprites = AssetDatabase.LoadAllAssetsAtPath(assetPath);
-                Sprite matched = null;
-                foreach (var asset in sprites)
-                {
-                    if (asset is Sprite sprite && sprite.name == definition.SubSpriteName)
-                    {
-                        matched = sprite;
-                        break;
-                    }
-                }
-
-                Assert.IsNotNull(matched, definition.Id + " -> " + definition.SubSpriteName);
-                Assert.AreEqual(16f, matched.rect.width, definition.Id);
-                Assert.AreEqual(32f, matched.rect.height, definition.Id);
-                Assert.IsNotNull(definition.PreviewSprite, definition.Id);
-                Assert.AreEqual(definition.SubSpriteName, definition.PreviewSprite.name, definition.Id);
-                Assert.AreEqual(16f, definition.PreviewSprite.rect.width, definition.Id);
-                Assert.AreEqual(32f, definition.PreviewSprite.rect.height, definition.Id);
-            }
         }
 
         private static void AssertClipGuide(string expectedId, int expectedRow, int expectedFrameCount)
@@ -177,22 +94,6 @@ namespace Rootborn.Tests.EditMode.Family
             Assert.AreEqual(expectedClipId, tool.CharacterPartAnimationClip.Id, path);
         }
 
-        private static void AssertRegistryHasCharacterParts(string path)
-        {
-            var registry = AssetDatabase.LoadAssetAtPath<GameDataRegistry>(path);
-            Assert.IsNotNull(registry, path);
-            Assert.IsNotNull(registry.CharacterParts, path);
-            Assert.GreaterOrEqual(registry.CharacterParts.Length, 10, path);
-
-            var ids = new HashSet<string>();
-            foreach (var definition in registry.CharacterParts)
-            {
-                Assert.IsNotNull(definition, path);
-                Assert.IsTrue(definition.IsValid(out var error), error);
-                Assert.IsTrue(ids.Add(definition.Id), definition.Id);
-            }
-        }
-
         private static void AssertRegistryHasAnimationClips(string path)
         {
             var registry = AssetDatabase.LoadAssetAtPath<GameDataRegistry>(path);
@@ -210,22 +111,6 @@ namespace Rootborn.Tests.EditMode.Family
             {
                 Assert.IsTrue(ids.Contains(requiredId), requiredId + " in " + path);
             }
-        }
-
-        private static CharacterPartDefinition[] LoadDefinitions()
-        {
-            string[] guids = AssetDatabase.FindAssets("t:CharacterPartDefinition", new[] { "Assets/Data/Family/CharacterParts" });
-            var definitions = new List<CharacterPartDefinition>(guids.Length);
-            foreach (string guid in guids)
-            {
-                string path = AssetDatabase.GUIDToAssetPath(guid);
-                var definition = AssetDatabase.LoadAssetAtPath<CharacterPartDefinition>(path);
-                if (definition != null)
-                {
-                    definitions.Add(definition);
-                }
-            }
-            return definitions.ToArray();
         }
     }
 }

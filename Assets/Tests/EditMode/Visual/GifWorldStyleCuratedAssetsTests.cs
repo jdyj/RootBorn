@@ -9,7 +9,6 @@ namespace Rootborn.Tests.EditMode.Visual
 {
     public sealed class GifWorldStyleCuratedAssetsTests
     {
-        private const string ScenePath = "Assets/Scenes/GifWorldStylePreview.unity";
 
         private static readonly string[] CuratedAutotiles =
         {
@@ -76,84 +75,5 @@ namespace Rootborn.Tests.EditMode.Visual
             }
         }
 
-        [Test]
-        public void PreviewSceneUsesCuratedGifTerrainTiles()
-        {
-            var previousScene = EditorSceneManager.GetActiveScene().path;
-            var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
-            try
-            {
-                Assert.IsTrue(scene.IsValid(), $"Could not open preview scene at {ScenePath}.");
-                var terrainObject = GameObject.Find("Gif Terrain Preview");
-                Assert.IsNotNull(terrainObject, "Missing Gif Terrain Preview Tilemap object.");
-
-                var tilemap = terrainObject.GetComponent<Tilemap>();
-                Assert.IsNotNull(tilemap, "Gif Terrain Preview must have a Tilemap component.");
-
-                var occupiedCells = 0;
-                foreach (var position in tilemap.cellBounds.allPositionsWithin)
-                {
-                    var tile = tilemap.GetTile(position);
-                    if (tile == null)
-                    {
-                        continue;
-                    }
-
-                    occupiedCells++;
-                    var path = AssetDatabase.GetAssetPath(tile);
-                    Assert.Contains(path, CuratedAutotiles, $"Preview scene tile at {position} should use a curated GifWorldStyle autotile, not {path}.");
-                    Assert.False(path.Contains("/Resources/"), $"Preview scene must not reference source Resources autotile at {position}: {path}");
-                }
-
-                Assert.GreaterOrEqual(occupiedCells, 140, "Preview terrain should remain broad enough for visual judgment.");
-            }
-            finally
-            {
-                if (!string.IsNullOrEmpty(previousScene))
-                {
-                    EditorSceneManager.OpenScene(previousScene, OpenSceneMode.Single);
-                }
-            }
-        }
-
-        [Test]
-        public void PreviewSceneUsesCuratedGifPropPrefabs()
-        {
-            var previousScene = EditorSceneManager.GetActiveScene().path;
-            var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
-            try
-            {
-                Assert.IsTrue(scene.IsValid(), $"Could not open preview scene at {ScenePath}.");
-                var propRoots = new[] { "Gif House Cluster", "Gif Forest Cluster", "Gif Prop Cluster" };
-                var checkedInstances = 0;
-
-                foreach (var rootName in propRoots)
-                {
-                    var root = GameObject.Find(rootName);
-                    Assert.IsNotNull(root, $"Missing {rootName}.");
-
-                    foreach (Transform child in root.transform)
-                    {
-                        checkedInstances++;
-                        var source = PrefabUtility.GetCorrespondingObjectFromSource(child.gameObject);
-                        Assert.IsNotNull(source, $"Preview scene instance {child.name} should keep a prefab source link.");
-
-                        var sourcePath = AssetDatabase.GetAssetPath(source);
-                        Assert.True(
-                            sourcePath.StartsWith("Assets/Prefabs/GifWorldStyle/WorldProps/"),
-                            $"Preview scene instance {child.name} should use curated prefab, not {sourcePath}.");
-                    }
-                }
-
-                Assert.GreaterOrEqual(checkedInstances, 12, "Preview scene should keep at least 12 curated prop prefab instances.");
-            }
-            finally
-            {
-                if (!string.IsNullOrEmpty(previousScene))
-                {
-                    EditorSceneManager.OpenScene(previousScene, OpenSceneMode.Single);
-                }
-            }
-        }
     }
 }

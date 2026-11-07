@@ -270,11 +270,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 18150ad55897ae04ba0b382dc7e33444
-    m_Address: data/world/destinations/house_condominium_design_2
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 183ab5f4ae3c5533a839b0d33646e2d0
     m_Address: data/careers/facilities/emergencycare/source-job-supplyhelper
     m_ReadOnly: 0
@@ -441,11 +436,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - MainStory
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2b670a279e586e44db1c58035a5860e3
-    m_Address: data/family/character-parts/character.body.02
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2b968b9cd1a05302b794220638e961a1
     m_Address: data/careers/facilities/soldier/hint-job-traininghelper
     m_ReadOnly: 0
@@ -604,11 +594,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - WheatPlanters31
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 44c7570690c22ed419aacce7a1e9dad6
-    m_Address: data/world/destinations/houseinterior
-    m_ReadOnly: 0
-    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 455c46ce5c679044998717a0e9adc828
     m_Address: data/careers/facilities/emergencycare/autoskip_facility
@@ -892,11 +877,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - SchoolSupport31
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 63237f3df29014e42abe0f4c4f2aae25
-    m_Address: data/family/character-parts/character.accessory.straw.black
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 63d9db7b0d2f85c4c89172f8ca05aa7c
     m_Address: data/studentlife/minigames/game_soldier_work1
     m_ReadOnly: 0
@@ -999,11 +979,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - CareerGameplay
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6ff5728ee62403b438a8c7c277d4d62a
-    m_Address: data/family/character-parts/character.outfit.braces.green
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7043a5a8898119e43a784ae9f06ca461
     m_Address: data/careers/facilities/interior/level_3
     m_ReadOnly: 0
@@ -1075,11 +1050,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - CareerGameplay
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 77e0776bce5034e4f8690d62b8f55cb5
-    m_Address: data/family/character-parts/character.hair.short.blonde
-    m_ReadOnly: 0
-    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 78ba8fab91fa09d4e8bf146010410274
     m_Address: data/studentlife/minigames/game_workshop_intro
@@ -1253,11 +1223,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - MainStory
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8904a711d695f524badee3de08f1a46e
-    m_Address: data/world/destinations/farm
-    m_ReadOnly: 0
-    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 892b9f0e635705c4dacfe54df1ea85e8
     m_Address: data/furniture/comfy31-kitchen-sink-front
@@ -1607,11 +1572,6 @@ MonoBehaviour:
     - Archive30
     - SchoolPixels
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: b04f81ff95637d34abf6cbffb8684c10
-    m_Address: data/world/destinations/house_condominium_design
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b09edd3d8d729484296ec001f3b3880e
     m_Address: data/studentlife/mainstory/objectives/objective-teacher
     m_ReadOnly: 0
@@ -1832,11 +1792,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - CareerGameplay
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: cbbe4fe537a437149a2ad5132c3b4f56
-    m_Address: data/family/character-parts/character.eyes.blue
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cddb8d0390bf84f48973b74ecff5fdc7
     m_Address: data/studentlife/minigames/game_soldier_work3
     m_ReadOnly: 0
@@ -1992,11 +1947,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - MainStory
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: dd16f0c05718b5a4aac2ef45c4fccef7
-    m_Address: data/family/character-parts/character.outfit.braces.brown
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ddc12f3fa003d1d47ad344bcb81d088b
     m_Address: data/studentlife/dailyplans/facilitypracticeroutes/dailyplan-work-workshop
     m_ReadOnly: 0
@@ -2122,11 +2072,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - MainStory
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e75df9e38569a3345b7ac3b14900d9f1
-    m_Address: data/family/character-parts/character.accessory.bamboo.brown
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e7adac1964fd52449487522421cff64d
     m_Address: data/careers/interests/rules/interestrule-chef-dailychangelimit
     m_ReadOnly: 0
@@ -2144,11 +2089,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - CareerGameplay
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: eaa9769c1ffa16649a535f2d88b31038
-    m_Address: data/family/character-parts/character.eyes.brown
-    m_ReadOnly: 0
-    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: eb8308bfd616a964494494d797fca684
     m_Address: data/studentlife/minigames/challenges/chef1
@@ -2210,11 +2150,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - WheatPlanters31
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f246268599991274fb7e2788096bb6e8
-    m_Address: data/family/character-parts/character.body.01
-    m_ReadOnly: 0
-    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f2a8f3265def73843b3b65ec3e3962c4
     m_Address: data/studentlife/mainstory/campaigns/day-1
@@ -2290,11 +2225,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - MainStory
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ff32da434c4d3b44488c37bad88c3ff2
-    m_Address: data/family/character-parts/character.hair.short.brown_dark
-    m_ReadOnly: 0
-    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ffb00602ac01e8145b2c58ae6eea89b6
     m_Address: data/careers/facilities/interior/hint_practice

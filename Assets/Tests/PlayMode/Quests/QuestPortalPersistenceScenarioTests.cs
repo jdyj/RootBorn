@@ -51,47 +51,6 @@ namespace Rootborn.Tests.PlayMode.Quests
             yield return null;
         }
 
-        [Ignore(LegacyPremise.Farm + "Waits for FarmPortal/TownReturnPortal and GuideNpc")]
-        [UnityTest]
-        public IEnumerator PORTAL_PERSIST_PM_001_TownWoodInventoryAndQuestProgressSurvivePortalTravelToFarm()
-        {
-            yield return LoadScene("Town");
-            yield return WaitForTownRuntime(15f);
-            var town = FindRuntime(requireNpc: true);
-            var route = FindGatherWoodRoute(town.Provider);
-            var wood = town.Inventory.FindById("Wood");
-            Assert.IsNotNull(wood, "Registry wiring missing: Wood item must be findable by the player inventory.");
-
-            yield return OpenGuideDialogue(town);
-            yield return ClickButton(FindChoiceButtonFor(town.DialoguePanel, DialogueQuestAction.AcceptQuest, route.Quest));
-            Assert.AreEqual(QuestState.Active, town.QuestLogPanel.QuestLog.GetState(route.Quest), "Domain quest state did not become Active after the visible accept choice.");
-
-            int beforeWood = town.Inventory.Inventory.CountOf(wood);
-            int beforeObjective = town.QuestLogPanel.QuestLog.GetObjectiveCount(route.Quest, route.ObjectiveIndex);
-            yield return GatherTargetResourceUntilInventoryIncreases(town, route.Objective.TargetResource, wood, beforeWood);
-
-            int townWood = town.Inventory.Inventory.CountOf(wood);
-            int townObjective = town.QuestLogPanel.QuestLog.GetObjectiveCount(route.Quest, route.ObjectiveIndex);
-            Assert.Greater(townWood, beforeWood, "Domain state loss check: Town PlayerInventory did not gain wood from the user gather path.");
-            Assert.Greater(townObjective, beforeObjective, "Domain state loss check: Town QuestLog did not progress from the user gather path.");
-            AssertInventoryUiContains(town.InventoryPanel, wood.Id, townWood, "Town Inventory UI did not reflect the gathered wood count.");
-            AssertPanelContains(town.QuestLogPanel.transform, townObjective + " / " + route.Objective.RequiredCount, "Town QuestLog UI did not reflect gathered wood progress.");
-
-            yield return InteractWithPortal("TownReturnPortal", town.Player, town.Router, new Vector3(0f, 1.35f, 0f), "Farm", "Portal path missing: interacting with the Town portal did not load Farm.");
-            yield return WaitForFarmRuntime(15f);
-            var farm = FindRuntime(requireNpc: false);
-            Assert.AreEqual(townWood, farm.Inventory.Inventory.CountOf(wood), "Domain state loss: Farm PlayerInventory did not preserve Town wood count after portal travel.");
-            Assert.AreEqual(townObjective, farm.QuestLogPanel.QuestLog.GetObjectiveCount(route.Quest, route.ObjectiveIndex), "Domain state loss: Farm QuestLog did not preserve Town gather progress after portal travel.");
-            AssertInventoryUiContains(farm.InventoryPanel, wood.Id, townWood, "UI rebind missing: Farm Inventory UI did not show the preserved wood count.");
-            AssertPanelContains(farm.QuestLogPanel.transform, townObjective + " / " + route.Objective.RequiredCount, "UI rebind missing: Farm QuestLog UI did not show preserved quest progress.");
-
-            yield return InteractWithPortal("FarmPortal", farm.Player, farm.Router, new Vector3(1.35f, 0f, 0f), "Town", "Portal path missing: interacting with the Farm portal did not load Town.");
-            yield return WaitForTownRuntime(15f);
-            var roundTrip = FindRuntime(requireNpc: true);
-            Assert.AreEqual(townWood, roundTrip.Inventory.Inventory.CountOf(wood), "Duplicate/loss check: Farm to Town round trip changed the preserved wood count.");
-            Assert.AreEqual(townObjective, roundTrip.QuestLogPanel.QuestLog.GetObjectiveCount(route.Quest, route.ObjectiveIndex), "Duplicate/loss check: Farm to Town round trip changed quest progress.");
-        }
-
         private static IEnumerator LoadScene(string sceneName)
         {
             var op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);

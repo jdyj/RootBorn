@@ -147,7 +147,6 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         {
             StudentDayRuntimeInstaller.EnsureForActiveScene();
             LocationNpcRuntimeInstaller.EnsureForActiveScene();
-            TownHelpActionRuntimeInstaller.EnsureForActiveScene();
             DailyPlanRuntimeInstaller.EnsureForActiveScene();
             CampaignRuntimeInstaller.EnsureForActiveScene();
         }

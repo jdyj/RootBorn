@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
 using Rootborn.Game.Common;
-using Rootborn.Game.Crops;
-using Rootborn.Game.Generation;
 using Rootborn.Game.Heir;
 using Rootborn.Game.Knowledge;
 using Rootborn.Game.Knowledge.Triggers;
@@ -41,13 +39,11 @@ namespace Rootborn.Editor.Tools
 
             EnsureFolder(DataRoot);
             EnsureFolder($"{DataRoot}/Tools");
-            EnsureFolder($"{DataRoot}/Crops");
             EnsureFolder($"{DataRoot}/Resources");
             EnsureFolder($"{DataRoot}/Knowledge");
             EnsureFolder($"{DataRoot}/Knowledge/Triggers");
             EnsureFolder($"{DataRoot}/Status");
             EnsureFolder($"{DataRoot}/Traits");
-            EnsureFolder($"{DataRoot}/Generations");
             EnsureFolder($"{DataRoot}/Registry");
             EnsureFolder($"{DataRoot}/Items");
             EnsureFolder("Assets/Resources");
@@ -94,20 +90,6 @@ namespace Rootborn.Editor.Tools
                 SetField(t, "_displayKey", "tool.stonePickaxe");
                 SetField(t, "_powerMultiplier", 1.2f);
                 SetField(t, "_icon", pickaxeIcon);
-            });
-
-            var crop = CreateOrLoad<CropDefinition>($"{DataRoot}/Crops/Crop_Wheat.asset", c =>
-            {
-                SetField(c, "_id", "Wheat");
-                SetField(c, "_displayKey", "crop.wheat");
-                SetField(c, "_stageDurationsSec", new float[] { 30f, 30f, 30f, 30f });
-                SetField(c, "_growthStageSprites", new[]
-                {
-                    LoadSprite(WheatSproutPath),
-                    LoadSprite(WheatStage1Path),
-                    LoadSprite(WheatStage2Path),
-                    LoadSprite(WheatRipePath)
-                });
             });
 
             var resTree = CreateOrLoad<ResourceNodeDefinition>($"{DataRoot}/Resources/Resource_Tree.asset", r =>
@@ -196,24 +178,6 @@ namespace Rootborn.Editor.Tools
                 SetField(t, "_learnSpeedMul", 1.3f);
             });
 
-            var genStone = CreateOrLoad<GenerationProfile>($"{DataRoot}/Generations/Gen_StoneAge.asset", g =>
-            {
-                SetField(g, "_generationIndex", 2);
-                SetField(g, "_displayKey", "generation.stoneAge");
-                SetField(g, "_lifetimeSec", 1800f);
-                SetField(g, "_startingKnowledge", new[] { knowStone });
-                SetField(g, "_startingInventory", new[] { stoneAxe, stoneHoe, stonePickaxe });
-            });
-
-            var genDefault = CreateOrLoad<GenerationProfile>($"{DataRoot}/Generations/Gen_Default.asset", g =>
-            {
-                SetField(g, "_generationIndex", 1);
-                SetField(g, "_displayKey", "generation.primal");
-                SetField(g, "_lifetimeSec", 1800f);
-                SetField(g, "_startingInventory", new[] { bareHand });
-                SetField(g, "_nextGeneration", genStone);
-            });
-
             var itemWood = CreateOrLoad<ItemDefinition>($"{DataRoot}/Items/Item_Wood.asset", it =>
             {
                 SetField(it, "_id", "Wood");
@@ -262,13 +226,11 @@ namespace Rootborn.Editor.Tools
             DeleteIfExists($"{DataRoot}/Registry/GameDataRegistry.asset");
             var registry = CreateOrLoad<GameDataRegistry>("Assets/Resources/GameDataRegistry.asset", r =>
             {
-                SetField(r, "_crops", new[] { crop });
                 SetField(r, "_tools", new[] { bareHand, stoneAxe, stoneHoe, stonePickaxe });
                 SetField(r, "_resources", new[] { resTree, resRock });
                 SetField(r, "_knowledge", new[] { knowStone, knowFire });
                 SetField(r, "_traits", new[] { hardy, greenThumb, quickLearner });
                 SetField(r, "_statuses", new[] { hunger, fatigue, loneliness });
-                SetField(r, "_generations", new[] { genDefault, genStone });
                 SetField(r, "_items", new[] { itemWood, itemStone, itemBareHand, itemStoneAxe, itemStonePickaxe });
                 SetField(r, "_groundSprite", groundSprite);
                 SetField(r, "_playerSprite", playerSprite);

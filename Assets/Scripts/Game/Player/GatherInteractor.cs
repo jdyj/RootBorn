@@ -169,25 +169,13 @@ namespace Rootborn.Game.Player
             if (effects == null || effects.Length == 0) return;
 
             var clock = Rootborn.Game.Time.GameClock.Instance;
-            var grid = Rootborn.Game.Farming.FarmGrid.Instance;
             Vector2 facing = ResolveFacing();
             Vector3 targetWorld = transform.position + (Vector3)(facing.normalized * 0.75f);
             string surface = ResolveSurface(targetWorld);
 
-            if (grid == null || grid.GroundTilemap == null)
-            {
-                var targetOnlyCtx = new ToolUseContext(
-                    _equippedTool, gameObject, surface,
-                    default, null, null, _inventory, clock, _questEvents);
-                _equippedTool.ApplyEffects(in targetOnlyCtx);
-                return;
-            }
-
-            Vector3Int cell = grid.WorldToCell(targetWorld);
-
             var ctx = new ToolUseContext(
                 _equippedTool, gameObject, surface,
-                cell, grid.GroundTilemap, grid, _inventory, clock, _questEvents);
+                default, null, null, _inventory, clock, _questEvents);
             _equippedTool.ApplyEffects(in ctx);
         }
 

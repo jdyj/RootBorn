@@ -12,8 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 59686c5ff60389544b6ee508451a55a6, type: 3}
   m_Name: GameDataRegistry
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Common.GameDataRegistry
-  _crops:
-  - {fileID: 11400000, guid: 732817181c9fdb64c97cb0c76976c1d3, type: 2}
   _tools:
   - {fileID: 11400000, guid: 5e36fb0bfb8264044bb95e1c8de70da2, type: 2}
   - {fileID: 11400000, guid: 58d3c252b9385d546922d09ce0b6cc49, type: 2}
@@ -37,9 +35,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 1d178f0f46c410243bba47dbb7d79a79, type: 2}
   - {fileID: 11400000, guid: 1ded5e04a1ec7e5488fa0e530c114ae8, type: 2}
   - {fileID: 11400000, guid: 4240fb5b47a39ec49869032cf3615b42, type: 2}
-  _generations:
-  - {fileID: 11400000, guid: 9f819980b0725a3458c06feefcb99dd4, type: 2}
-  - {fileID: 11400000, guid: a05a1b60140b5694d8bc39ea94a1c6dd, type: 2}
   _items:
   - {fileID: 11400000, guid: 704ab36b76618c444bb49c6bcff56993, type: 2}
   - {fileID: 11400000, guid: a612e54fcdc092a43a184aa357c8fbaf, type: 2}
@@ -134,17 +129,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 7d73f556819dccb4d90d42e9ae8ff781, type: 2}
   - {fileID: 11400000, guid: 5c80dab5d61aa9b41b686335899c45ba, type: 2}
   _defaultTutorialStage: {fileID: 11400000, guid: 7d73f556819dccb4d90d42e9ae8ff781, type: 2}
-  _characterParts:
-  - {fileID: 11400000, guid: e75df9e38569a3345b7ac3b14900d9f1, type: 2}
-  - {fileID: 11400000, guid: 63237f3df29014e42abe0f4c4f2aae25, type: 2}
-  - {fileID: 11400000, guid: f246268599991274fb7e2788096bb6e8, type: 2}
-  - {fileID: 11400000, guid: 2b670a279e586e44db1c58035a5860e3, type: 2}
-  - {fileID: 11400000, guid: cbbe4fe537a437149a2ad5132c3b4f56, type: 2}
-  - {fileID: 11400000, guid: eaa9769c1ffa16649a535f2d88b31038, type: 2}
-  - {fileID: 11400000, guid: 77e0776bce5034e4f8690d62b8f55cb5, type: 2}
-  - {fileID: 11400000, guid: ff32da434c4d3b44488c37bad88c3ff2, type: 2}
-  - {fileID: 11400000, guid: dd16f0c05718b5a4aac2ef45c4fccef7, type: 2}
-  - {fileID: 11400000, guid: 6ff5728ee62403b438a8c7c277d4d62a, type: 2}
   _characterPartAnimationClips:
   - {fileID: 11400000, guid: e2eda45368eae424393bf47b4d89af44, type: 2}
   - {fileID: 11400000, guid: 362284ccfd176004dbaf04ad216ef3aa, type: 2}
@@ -164,8 +148,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 2070d14b199c2104584918f2df2735ef, type: 2}
   - {fileID: 11400000, guid: de51ab772ca801a49b76734f531d7f49, type: 2}
   - {fileID: 11400000, guid: 2300eb6592073ff4db959f3fcb382dc1, type: 2}
-  _spumPartCatalogs: []
-  _spumCharacterCreatorPresets: []
   _fishingAnimations:
   - {fileID: 11400000, guid: 4d492c31c33bd2b4fa9e3e22ed110534, type: 2}
   _minigames:

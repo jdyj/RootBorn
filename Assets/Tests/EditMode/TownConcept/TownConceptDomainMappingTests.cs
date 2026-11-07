@@ -24,18 +24,6 @@ namespace Rootborn.Tests.EditMode.TownConcept
             Assert.IsTrue(File.Exists("Assets/Scenes/Town.unity"), "Town scene must exist before default flow migration.");
         }
 
-        [Test]
-        public void BuildSettings_PrioritizeTownBeforeLegacyFarm()
-        {
-            var scenes = EditorBuildSettings.scenes;
-            int townIndex = FindSceneIndex(scenes, "Assets/Scenes/Town.unity");
-            int farmIndex = FindSceneIndex(scenes, "Assets/Scenes/Farm.unity");
-
-            Assert.GreaterOrEqual(townIndex, 0, "Town scene must be included in build settings.");
-            Assert.GreaterOrEqual(farmIndex, 0, "Farm scene can remain only as a legacy scene after Town.");
-            Assert.Less(townIndex, farmIndex, "Town should be ordered before legacy Farm in build settings.");
-        }
-
         private static int FindSceneIndex(EditorBuildSettingsScene[] scenes, string path)
         {
             for (int i = 0; i < scenes.Length; i++)

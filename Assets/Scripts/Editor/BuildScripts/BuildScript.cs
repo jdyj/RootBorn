@@ -51,8 +51,7 @@ namespace Rootborn.Editor.BuildScripts
         {
             "Assets/Scenes/Boot.unity",
             "Assets/Scenes/Town.unity",
-            "Assets/Scenes/Beach.unity",
-            "Assets/Scenes/Farm.unity"
+            "Assets/Scenes/Beach.unity"
         };
 
         [MenuItem("Rootborn/Build/Client Windows 64")]

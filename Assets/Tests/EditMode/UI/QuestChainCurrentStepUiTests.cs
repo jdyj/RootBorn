@@ -145,39 +145,6 @@ namespace Rootborn.Tests.EditMode.UI
             }
         }
 
-        [Test]
-        public void CreatorPreview_PartWithoutSpriteLeavesNoBlankBox()
-        {
-            var go = new GameObject("Preview", typeof(RectTransform)); _created.Add(go);
-            var preview = go.AddComponent<Rootborn.UI.MainMenu.SpumCharacterCreatorPreview>();
-            var part = Create<Rootborn.Game.Characters.Spum.SpumPartDefinition>();
-            preview.Build(new[] { part });
-            Assert.That(go.transform.Find("WeaponPreview"), Is.Null);
-        }
-
-        [Test]
-        public void CreatorPreview_ShowsCategoryAndPartNames_NotIds()
-        {
-            var previous = Rootborn.Game.Localization.GameText.Language;
-            Rootborn.Game.Common.GameDataRegistryProvider.SetOverrideForTests(UnityEditor.AssetDatabase.LoadAssetAtPath<Rootborn.Game.Common.GameDataRegistry>("Assets/Data/Registry/GameDataRegistry.asset"));
-            var go = new GameObject("Preview", typeof(RectTransform)); _created.Add(go);
-            try
-            {
-                Rootborn.Game.Localization.GameText.Language = "ko";
-                var preview = go.AddComponent<Rootborn.UI.MainMenu.SpumCharacterCreatorPreview>();
-                preview.ApplySelectedParts(new Dictionary<string, string> { { "body", "spum.body.default" }, { "hair", "spum.hair.short" } });
-                var labels = new List<string>();
-                foreach (var text in go.GetComponentsInChildren<UnityEngine.UI.Text>(true)) labels.Add(text.text);
-                CollectionAssert.AreEquivalent(new[] { "몸: 기본", "머리: 짧은 머리" }, labels);
-            }
-            finally
-            {
-                Rootborn.Game.Localization.GameText.Language = previous;
-                Rootborn.Game.Common.GameDataRegistryProvider.ClearOverrideForTests();
-                Rootborn.Game.Common.GameDataRegistryProvider.ResetCacheForTests();
-            }
-        }
-
         private QuestChainLogPanel CreateSecondStepPanel()
         {
             var first = Step("first", 1);

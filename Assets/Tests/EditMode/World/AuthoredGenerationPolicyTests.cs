@@ -25,14 +25,6 @@ namespace Rootborn.Tests.EditMode.World
         { _scene.name="House"; Config(); Assert.That(ShouldGenerate(typeof(InteriorTilemapApplier),"ShouldGenerateOnSceneLoad"),Is.False); }
         [Test] public void TOWN_LegacyHouse_KeepsSeededGeneration()
         { _scene.name="House"; Assert.That(ShouldGenerate(typeof(InteriorTilemapApplier),"ShouldGenerateOnSceneLoad"),Is.True); }
-        [Test] public void TOWN_ConfiguredTown_DoesNotSynthesizePrototypeFarmGate()
-        { _scene.name="Town"; Config(); Assert.That(ShouldGenerate(typeof(WorldEntryPointAutoFiller),"ShouldGenerateSceneEntryPoints"),Is.False); }
-        [Test] public void TOWN_ConfiguredHouse_DoesNotOverwriteAuthoredEntry()
-        { _scene.name="House"; Config(); Assert.That(ShouldGenerate(typeof(WorldEntryPointAutoFiller),"ShouldGenerateSceneEntryPoints"),Is.False); }
-        [Test] public void TOWN_LegacyFarm_RetainsEntryGenerationEvenWithConfiguration()
-        { _scene.name="Farm"; Config(); Assert.That(ShouldGenerate(typeof(WorldEntryPointAutoFiller),"ShouldGenerateSceneEntryPoints"),Is.True); }
-        [Test] public void TOWN_LegacyTown_RetainsEntryGeneration()
-        { _scene.name="Town"; Assert.That(ShouldGenerate(typeof(WorldEntryPointAutoFiller),"ShouldGenerateSceneEntryPoints"),Is.True); }
         private LocationDefinition Location(string id)
         { var l=ScriptableObject.CreateInstance<LocationDefinition>(); var so=new UnityEditor.SerializedObject(l); so.FindProperty("_id").stringValue=id; so.ApplyModifiedPropertiesWithoutUndo(); return l; }
         private AuthoredWorldScene Slots(LocationDefinition location,Vector2 position)

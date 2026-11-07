@@ -190,24 +190,6 @@ namespace Rootborn.Tests.PlayMode.World
 
         private static void AssertInteriorVisualState(string sceneName, GameObject root)
         {
-            if (sceneName == "HouseInterior")
-            {
-                AssertLayer(root, "HouseInteriorGroundTilemap", 154, 0);
-                AssertLayer(root, "HouseInteriorWallTilemap", 0, 1);
-                AssertLayer(root, "HouseInteriorWall3dTilemap", 64, 2);
-                AssertLayer(root, "HouseInteriorWall3dOverdraw01Tilemap", 1, 3);
-                AssertLayer(root, "HouseInteriorForeGroundTilemap", 0, 3);
-                AssertLayer(root, "HouseInteriorShopTilemap", 0, 4);
-                AssertLayer(root, "HouseInteriorBorderTilemap", 8, 5);
-                AssertLayer(root, "HouseInteriorHouse1Tilemap", 0, 6);
-                AssertLayer(root, "HouseInteriorHouse2Tilemap", 17, 7);
-                AssertLayer(root, "HouseInteriorPoliceTilemap", 0, 8);
-                AssertLayer(root, "HouseInteriorShootingTilemap", 0, 9);
-                AssertLayer(root, "HouseInteriorSchoolTilemap", 0, 10);
-                AssertLayer(root, "HouseInteriorKitchenTilemap", 0, 11);
-                return;
-            }
-
             if (sceneName == "ShopInterior")
             {
                 AssertLayer(root, "ShopInteriorGroundTilemap", 149, 0);

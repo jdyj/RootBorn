@@ -1,5 +1,4 @@
 using Rootborn.Game.Common;
-using Rootborn.Game.Crops;
 using Rootborn.Game.Resources;
 using Rootborn.Game.Tools;
 using Rootborn.Game.StudentLife;
@@ -14,7 +13,6 @@ namespace Rootborn.Game.Quests
         public readonly string EventKey;
         public readonly ResourceNodeDefinition Resource;
         public readonly ItemDefinition Item;
-        public readonly CropDefinition Crop;
         public readonly ToolDefinition Tool;
         public readonly ScriptableObject Npc;
         public readonly ScriptableObject DefeatTarget;
@@ -34,7 +32,6 @@ namespace Rootborn.Game.Quests
             int count = 1,
             ResourceNodeDefinition resource = null,
             ItemDefinition item = null,
-            CropDefinition crop = null,
             ToolDefinition tool = null,
             ScriptableObject npc = null,
             ScriptableObject defeatTarget = null,
@@ -52,7 +49,6 @@ namespace Rootborn.Game.Quests
             Count = count;
             Resource = resource;
             Item = item;
-            Crop = crop;
             Tool = tool;
             Npc = npc;
             DefeatTarget = defeatTarget;

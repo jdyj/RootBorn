@@ -123,8 +123,7 @@ namespace Rootborn.Tests.EditMode.StudentLife
                 "Assets/Scripts/Game/StudentLife/OutsideSchoolActivityDefinition.cs",
                 "Assets/Scripts/Game/StudentLife/OutsideSchoolActivityRunner.cs",
                 "Assets/Scripts/Game/StudentLife/OutsideSchoolOutcomes.cs",
-                "Assets/Scripts/Game/StudentLife/OutsideSchoolRequirements.cs",
-                "Assets/Scripts/UI/StudentLife/OutsideSchoolRuntimeInstaller.cs"
+                "Assets/Scripts/Game/StudentLife/OutsideSchoolRequirements.cs"
             };
 
             for (int i = 0; i < files.Length; i++)

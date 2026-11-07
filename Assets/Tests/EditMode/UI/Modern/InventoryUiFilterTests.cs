@@ -37,7 +37,13 @@ namespace Rootborn.Tests.EditMode.UI.Modern
             GameDataRegistryProvider.SetOverrideForTests(_registry);
             _tool = AssetDatabase.LoadAssetAtPath<ItemDefinition>("Assets/Data/Items/Item_Tool_BareHand.asset");
             _resource = AssetDatabase.LoadAssetAtPath<ItemDefinition>("Assets/Data/Items/Item_FacilityMaterials.asset");
-            _seed = AssetDatabase.LoadAssetAtPath<ItemDefinition>("Assets/Data/Items/Item_Seed_Wheat.asset");
+            // The seed category stays in the enum; no seed asset ships, so the filter is checked with an in-memory item.
+            _seed = ScriptableObject.CreateInstance<ItemDefinition>();
+            var seedData = new SerializedObject(_seed);
+            seedData.FindProperty("_id").stringValue = "Item_Seed_Test";
+            seedData.FindProperty("_displayKey").stringValue = "item.seed.wheat";
+            seedData.FindProperty("_category").enumValueIndex = (int)ItemCategory.Seed;
+            seedData.ApplyModifiedPropertiesWithoutUndo();
             _misc = AssetDatabase.LoadAssetAtPath<ItemDefinition>("Assets/Data/Items/Item_Allowance.asset");
             Assert.That(_tool, Is.Not.Null);
             Assert.That(_resource, Is.Not.Null);
@@ -58,6 +64,7 @@ namespace Rootborn.Tests.EditMode.UI.Modern
             WriteProviderField("s_cachedRegistry", _previousCache);
             if (_registry != null) UnityEngine.Object.DestroyImmediate(_registry);
             if (_catalog != null) UnityEngine.Object.DestroyImmediate(_catalog);
+            if (_seed != null) UnityEngine.Object.DestroyImmediate(_seed);
         }
 
         [Test]

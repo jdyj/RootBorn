@@ -68,8 +68,6 @@ namespace Rootborn.Tests.PlayMode
                 throw bootstrapTask.Exception;
             }
 
-            var farmFiller = new GameObject("[FarmAutoFiller]");
-            farmFiller.AddComponent<FarmAutoFiller>();
         }
 
         private static IEnumerator WaitUntilInstalled(

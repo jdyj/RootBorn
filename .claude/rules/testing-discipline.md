@@ -59,14 +59,12 @@
 | NET-001 | ArgsParser가 -mode/-port/-maxPlayers/-saveSlot/-joinIp 파싱, Unity 예약 인자 무시 | ArgsParserTests |
 | NET-002 | dedicated server 빌드 → 클라 loopback 접속 → 플레이어 spawn 및 생활 활동 결과 동기화 (PlayMode) | StudentLifeNetworkTests |
 
-### ROOTBORN 레거시 농장/세대 시나리오 (격리 유지, prefix: GEN/HEIR/CROP)
-레거시 Farm/Crop/Generation 코드는 삭제 전까지 회귀 방지를 위해 테스트를 유지한다. 단, 신규 코어 루프의 기본 판타지나 MVP 완료 조건으로 승격하지 않는다.
+### ROOTBORN 레거시 세대 시나리오 (prefix: HEIR)
+Farm·작물·세대 시스템은 2026-11-07 사용자 결정으로 삭제했다(GEN-001, CROP-001 제거). 후계자 생성 코드가 남아 있는 동안만 아래 회귀를 유지한다.
 
 | ID | 시나리오 | 검증 |
 |---|---|---|
-| GEN-001 | 1세대 lifetimeSec 경과 → 2세대 자동 전환 + Lineage 기록 | GenerationManagerTests |
 | HEIR-001 | 같은 시드 입력 → 동일 후계자 생성, 비계승 특성은 부모로부터 전달 안 됨 | HeirGeneratorTests |
-| CROP-001 | CropPlot.Tick이 stageDurations에 따라 결정론적으로 단계 전환 | CropGrowthTests |
 
 ### 매치 시나리오 (참고 — coin-defense 호환 보존, ROOTBORN 미사용)
 | ID | 시나리오 | 검증 |

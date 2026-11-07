@@ -28,23 +28,6 @@ namespace Rootborn.Tests.EditMode
             AssertObjectReferenceUsesModernFarmSprite("Assets/Resources/GameDataRegistry.asset", "_playerSprite");
         }
 
-        [Test]
-        public void WheatGrowthStages_UseModernFarmSpritesInsteadOfPixelwood()
-        {
-            var crop = AssetDatabase.LoadAssetAtPath<Object>("Assets/Data/Crops/Crop_Wheat.asset");
-            Assert.IsNotNull(crop);
-            var serialized = new SerializedObject(crop);
-            var stages = serialized.FindProperty("_growthStageSprites");
-            Assert.IsNotNull(stages);
-            Assert.GreaterOrEqual(stages.arraySize, 4);
-
-            for (int i = 0; i < 4; i++)
-            {
-                var sprite = stages.GetArrayElementAtIndex(i).objectReferenceValue as Sprite;
-                AssertSpritePathIsModernFarm(sprite, $"Crop_Wheat stage {i}");
-            }
-        }
-
         private static void AssertObjectReferenceUsesModernFarmSprite(string assetPath, string propertyPath)
         {
             var asset = AssetDatabase.LoadAssetAtPath<Object>(assetPath);

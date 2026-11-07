@@ -1,4 +1,3 @@
-using Rootborn.Game.Crops;
 using UnityEngine;
 
 namespace Rootborn.Game.Common
@@ -18,8 +17,6 @@ namespace Rootborn.Game.Common
         [SerializeField] private int _maxStack = 99;
         [SerializeField] private ItemCategory _category = ItemCategory.Resource;
         [SerializeField, TextArea(3, 6)] private string _description;
-        // Category==Seed 인 아이템이 어떤 작물의 씨앗인지. PlantSeedEffect 가 ID 분기 없이 작물 조회.
-        [SerializeField] private CropDefinition _seedFor;
         [SerializeField] private string _toolSpritePrefix;
 
         public string Id => _id;
@@ -28,7 +25,6 @@ namespace Rootborn.Game.Common
         public int MaxStack => Mathf.Max(1, _maxStack);
         public ItemCategory Category => _category;
         public string Description => _description;
-        public CropDefinition SeedFor => _seedFor;
         public string ToolSpritePrefix => _toolSpritePrefix;
     }
 }

@@ -127,22 +127,6 @@ namespace Rootborn.Tests.EditMode.World
             LocationNpcRuntimeInstaller.EnsureScene(_scene);
             Assert.That(Array.Exists(_scene.GetRootGameObjects(),r=>r.name=="[LocationNpcRuntimeInstaller]"),Is.True);
         }
-        [TestCase(typeof(OutsideSchoolRuntimeInstaller), "EnsureActivityPoint", typeof(OutsideSchoolActivityDefinition))]
-        [TestCase(typeof(TownHelpActionRuntimeInstaller), "EnsureHelpPoint", typeof(TownHelpActionDefinition))]
-        [TestCase(typeof(PartTimeWorkRuntimeInstaller), "EnsureWorkPoint", typeof(PartTimeWorkDefinition))]
-        public void LIFE_ConfiguredScene_DoesNotGenerateLegacyActivityPoints(Type installer,string methodName,Type definitionType)
-        {
-            Config(Array.Empty<LocationDefinition>(),Array.Empty<Transform>());
-            var definition = ScriptableObject.CreateInstance(definitionType);
-            try
-            {
-                object[] args = methodName == "EnsureActivityPoint" ? new object[] { _scene,definition,"OutsideSchoolActivityPoint",Vector3.zero }
-                    : methodName == "EnsureHelpPoint" ? new object[] { _scene,definition,0 } : new object[] { _scene,definition };
-                installer.GetMethod(methodName,BindingFlags.Static|BindingFlags.NonPublic).Invoke(null,args);
-                Assert.That(_scene.GetRootGameObjects().Length,Is.EqualTo(1),"Only authored config should remain; no prototype entry points.");
-            }
-            finally { UnityEngine.Object.DestroyImmediate(definition); }
-        }
         [Test] public void TOWN_AuthoredNpc_UsesDedicatedSlotAndPreservesCollider()
         {
             var door=Make("Door").transform; var slot=Make("NpcSlot").transform; slot.position=new Vector3(44,23,0);
@@ -167,19 +151,6 @@ namespace Rootborn.Tests.EditMode.World
             typeof(TownStudentLifeRuntimeInstaller).GetMethod("EnsureActivityObjects",BindingFlags.Static|BindingFlags.NonPublic)
                 .Invoke(null,new object[] { _scene });
             Assert.That(_scene.GetRootGameObjects().Length,Is.EqualTo(1));
-        }
-        [Test] public void TOWN_AuthoredDoorInstaller_PreservesSavedRouteAndDoesNotGenerateLegacyRoutes()
-        {
-            _scene.name="Town";
-            Config(Array.Empty<LocationDefinition>(),Array.Empty<Transform>());
-            var door=Make("TownDoorPortal_Hospital"); var portal=door.AddComponent<WorldPortal>();
-            portal.Bind("Authored","House","house-entry");
-            var collider=door.AddComponent<BoxCollider2D>(); collider.isTrigger=true;
-            typeof(TownDoorPortalRuntimeInstaller).GetMethod("EnsureForScene",BindingFlags.Static|BindingFlags.NonPublic)
-                .Invoke(null,new object[] { _scene });
-            Assert.That(portal.DestinationScene,Is.EqualTo("House"));
-            Assert.That(collider.enabled,Is.True);
-            Assert.That(_scene.GetRootGameObjects().Length,Is.EqualTo(2));
         }
         [Test] public void LIFE_AuthoredDailyPlan_DoesNotCaptureDestinationPlaceholderActor()
         {

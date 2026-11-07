@@ -15,13 +15,6 @@ namespace Rootborn.Tests.EditMode.Addressables
 
         private static readonly string[] RequiredPreservedTypes =
         {
-            "Rootborn.Game.Common.DirectValidationAutoplayInstaller",
-            "Rootborn.Game.Common.DirectValidationDailyPlanCompletionAutoplayInstaller",
-            "Rootborn.Game.Common.DirectValidationDiscoveryRouteUnlockAutoplayInstaller",
-            "Rootborn.Game.Common.DirectValidationResourceRecipeActivityAutoplayInstaller",
-            "Rootborn.Game.Common.DirectValidationRouteRelationshipAutoplayInstaller",
-            "Rootborn.Game.Common.DirectValidationTrace",
-            "Rootborn.Game.Common.DirectValidationTraceInstaller",
             "Rootborn.Game.Common.GameDataRegistry",
             "Rootborn.Game.Crafting.GatherResourceStep",
             "Rootborn.Game.Crafting.RecipeDefinition",

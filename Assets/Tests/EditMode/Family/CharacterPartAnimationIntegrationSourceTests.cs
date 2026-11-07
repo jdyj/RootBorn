@@ -6,16 +6,6 @@ namespace Rootborn.Tests.EditMode.Family
     public sealed class CharacterPartAnimationIntegrationSourceTests
     {
         [Test]
-        public void FarmAutoFiller_ConfiguresCharacterPartAnimatorWithCachedFrameResolver()
-        {
-            string source = File.ReadAllText("Assets/Scripts/Game/Bootstrap/FarmAutoFiller.cs");
-
-            StringAssert.Contains("CharacterPartAnimator", source);
-            StringAssert.Contains("animator.Configure", source);
-            StringAssert.Contains("resource.GetCachedSubSprite(part.SheetAddress, subSpriteName)", source);
-        }
-
-        [Test]
         public void PlayerController_PushesMotionStateIntoCharacterPartAnimator()
         {
             string source = File.ReadAllText("Assets/Scripts/Game/Player/PlayerController.cs");

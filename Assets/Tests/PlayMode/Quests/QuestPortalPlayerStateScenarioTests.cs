@@ -48,48 +48,6 @@ namespace Rootborn.Tests.PlayMode.Quests
             yield return null;
         }
 
-        [Ignore(LegacyPremise.Farm + "Farm portal travel to Town")]
-        [UnityTest]
-        public IEnumerator QUEST_PLAY_WOOD_006_PortalTravelKeepsPlayerInventoryAndGatherProgressUsesTravellingPlayerQuestLog()
-        {
-            yield return LoadScene("Farm");
-            yield return WaitForFarmRuntime(10f);
-
-            var farmPlayer = GameObject.Find("Player");
-            var farmInventory = farmPlayer.GetComponent<PlayerInventory>();
-            var wood = farmInventory.FindById("Wood");
-            Assert.IsNotNull(wood, "Wood item must be available from the runtime registry.");
-            int seededWood = farmInventory.Inventory.CountOf(wood) + 7;
-            farmInventory.Inventory.Add(wood, 7);
-
-            var portal = GameObject.Find("FarmPortal").GetComponent<WorldPortal>();
-            farmPlayer.transform.position = portal.transform.position + new Vector3(1.2f, 0f, 0f);
-            Physics2D.SyncTransforms();
-            yield return null;
-            farmPlayer.GetComponent<GatherInteractor>().TriggerInteract();
-
-            yield return WaitForScene("Town", 20f);
-            yield return WaitForTownRuntime(10f);
-
-            Assert.AreEqual(1, CountObjectsNamed("Player"));
-            var runtime = FindTownRuntime();
-            Assert.AreSame(farmPlayer, runtime.Player, "Portal travel must keep the same player instance for player-owned state.");
-            Assert.AreEqual(seededWood, runtime.Inventory.Inventory.CountOf(wood), "Player-owned inventory must survive portal scene changes.");
-
-            var route = FindGatherWoodRoute(runtime.Provider);
-            yield return OpenGuideDialogue(runtime);
-            yield return ClickButton(FindChoiceButtonFor(runtime.DialoguePanel, DialogueQuestAction.AcceptQuest, route.Quest));
-            Assert.AreEqual(QuestState.Active, runtime.QuestLogPanel.QuestLog.GetState(route.Quest));
-
-            int beforeObjective = runtime.QuestLogPanel.QuestLog.GetObjectiveCount(route.Quest, route.ObjectiveIndex);
-            int beforeWood = runtime.Inventory.Inventory.CountOf(wood);
-            yield return GatherTargetResourceUntilInventoryIncreases(runtime, route.Objective.TargetResource, wood, beforeWood);
-
-            Assert.Greater(runtime.Inventory.Inventory.CountOf(wood), beforeWood, "Travelling player should receive gathered wood.");
-            Assert.Greater(runtime.QuestLogPanel.QuestLog.GetObjectiveCount(route.Quest, route.ObjectiveIndex), beforeObjective, "Travelling player's GatherInteractor must be bound to the visible QuestLogPanel QuestLog.");
-            AssertPanelContains(runtime.QuestLogPanel.transform, "1 / " + route.Objective.RequiredCount);
-        }
-
         private static IEnumerator LoadScene(string sceneName)
         {
             var op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);

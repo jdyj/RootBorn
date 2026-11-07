@@ -206,22 +206,6 @@ namespace Rootborn.Editor.LDtk
                 new ExpectedLayer("Town2LdtkModularBuildingTilemap", 70, 1000),
                 new ExpectedLayer("Town2LdtkModularBuildingOverdraw01Tilemap", 12, 1001)
             });
-            ValidateScene(issues, "Assets/Scenes/HouseInterior.unity", "HouseInteriorLdtkTilemaps", new[]
-            {
-                new ExpectedLayer("HouseInteriorGroundTilemap", 154, 0),
-                new ExpectedLayer("HouseInteriorWallTilemap", 0, 1),
-                new ExpectedLayer("HouseInteriorWall3dTilemap", 64, 2),
-                new ExpectedLayer("HouseInteriorWall3dOverdraw01Tilemap", 1, 3),
-                new ExpectedLayer("HouseInteriorForeGroundTilemap", 0, 3),
-                new ExpectedLayer("HouseInteriorShopTilemap", 0, 4),
-                new ExpectedLayer("HouseInteriorBorderTilemap", 8, 5),
-                new ExpectedLayer("HouseInteriorHouse1Tilemap", 0, 6),
-                new ExpectedLayer("HouseInteriorHouse2Tilemap", 17, 7),
-                new ExpectedLayer("HouseInteriorPoliceTilemap", 0, 8),
-                new ExpectedLayer("HouseInteriorShootingTilemap", 0, 9),
-                new ExpectedLayer("HouseInteriorSchoolTilemap", 0, 10),
-                new ExpectedLayer("HouseInteriorKitchenTilemap", 0, 11)
-            });
             ValidateScene(issues, "Assets/Scenes/ShopInterior.unity", "ShopInteriorLdtkTilemaps", new[]
             {
                 new ExpectedLayer("ShopInteriorGroundTilemap", 149, 0),

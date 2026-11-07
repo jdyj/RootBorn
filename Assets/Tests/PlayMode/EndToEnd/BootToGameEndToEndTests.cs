@@ -43,42 +43,6 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         }
 
         [UnityTest]
-        public IEnumerator BOOT_E2E_001_MAP_E2E_001_NPC_E2E_001_QUEST_E2E_002_BootFlowExposesPlayableFarmEntryPoints()
-        {
-            yield return LoadScene("Boot");
-            yield return WaitForScene("MainMenu", 10f);
-            Assert.IsNotNull(GameBootstrap.Config);
-            Assert.IsNotNull(Managers.Instance);
-            Assert.IsNotNull(Managers.Data);
-            Assert.IsNotNull(Managers.Data.Registry);
-
-            Assert.IsNotNull(Object.FindFirstObjectByType<ModeSelectPanel>(FindObjectsInactive.Include));
-            ClickButtonNamed("SinglePlayButton");
-            yield return null;
-            Assert.IsNotNull(Object.FindFirstObjectByType<SaveSlotSelectPanel>(FindObjectsInactive.Include));
-
-            ActiveSaveContext.Set(Metadata("e2e-slot-boot-flow", 2026050701, 2026050702));
-            yield return LoadScene("Farm");
-            yield return WaitForFarmAutoFill(10f);
-
-            Assert.IsNotNull(GameObject.Find("Player"));
-            Assert.AreEqual(1, CountObjectsNamed("Player"));
-            var portal = GameObject.Find("FarmPortal");
-            Assert.IsNotNull(portal);
-            Assert.IsNotNull(portal.GetComponent<Collider2D>());
-
-            var npc = Object.FindFirstObjectByType<NpcInteractor>(FindObjectsInactive.Include);
-            Assert.IsNotNull(npc);
-            Assert.IsNotNull(npc.Npc);
-            Assert.IsNotNull(npc.GetComponent<QuestProvider>());
-
-            var questLogPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
-            Assert.IsNotNull(questLogPanel);
-            Assert.IsNotNull(questLogPanel.QuestLog);
-            Assert.IsNotNull(Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include));
-        }
-
-        [UnityTest]
         public IEnumerator BOOT_E2E_002_ReenteringBootKeepsSingleManagerAndMainMenuPanels()
         {
             yield return LoadScene("Boot");
@@ -108,13 +72,18 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             SetTestSaveRoot(root);
 
             yield return LoadScene("MainMenu");
+            // A player waits at the menu while the game data loads; entering before it is ready stays on the menu.
+            yield return Rootborn.Tests.PlayMode.PlayModeScenarioStart.WaitForGameData();
             SaveSlotSelectPanel.EnsureInScene().Show();
             yield return null;
 
             ClickButtonNamed("NewGameButton");
             yield return null;
             ClickButtonNamed("ConfirmButton");
-            yield return WaitForScene("Town", 20f);
+            // The world entry data decides where a new game starts (home or Town); either means the game was entered.
+            yield return WaitForWorld(20f, "new game");
+            // Let the arrival finish (player placed and bound) before leaving, as a player would.
+            yield return Support.PlayerFlowE2EDriver.WaitForPlayerReady("SAVE-E2E-001 failed: new game arrival did not finish.");
 
             var service = new SaveService("slot-0", root);
             var metadata = service.LoadMetadata("slot-0");
@@ -127,48 +96,12 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             SaveSlotSelectPanel.EnsureInScene().Show();
             yield return null;
             ClickButtonNamed("LoadButton");
-            yield return WaitForScene("Town", 20f);
+            yield return WaitForWorld(20f, "load");
 
             var loaded = ActiveSaveContext.Metadata;
             Assert.IsNotNull(loaded);
             Assert.AreEqual("slot-0", loaded.SlotId);
             Assert.AreEqual(createdAt, loaded.CreatedAtUtcTicks);
-            Assert.AreEqual(worldSeed, loaded.WorldSeed);
-            Assert.AreEqual(tileSeed, loaded.TileSeed);
-            Assert.IsTrue(File.Exists(Path.Combine(root, "slot-0", "metadata.json")));
-        }
-
-        [UnityTest]
-        public IEnumerator SAVE_E2E_002_LoadingExistingFarmSlotKeepsCreatedTimestampAndDoesNotRecreateGame()
-        {
-            string root = NewSaveRoot("rootborn-save-reentry-e2e");
-            SetTestSaveRoot(root);
-            var service = new SaveService("slot-0", root);
-            var metadata = service.CreateUiMetadata("slot-0", new CharacterCustomization(), 2026050710, 2026050711);
-            service.SaveMetadata(metadata);
-            long createdAt = metadata.CreatedAtUtcTicks;
-            int worldSeed = metadata.WorldSeed;
-            int tileSeed = metadata.TileSeed;
-
-            ActiveSaveContext.Set(metadata);
-            yield return LoadScene("Farm");
-            yield return WaitForFarmAutoFill(10f);
-
-            metadata.UpdatedAtUtcTicks = createdAt;
-            service.SaveMetadata(metadata);
-            long updatedAt = metadata.UpdatedAtUtcTicks;
-
-            yield return LoadScene("MainMenu");
-            SaveSlotSelectPanel.EnsureInScene().Show();
-            yield return null;
-            ClickButtonNamed("LoadButton");
-            yield return WaitForScene("Town", 20f);
-
-            var loaded = ActiveSaveContext.Metadata;
-            Assert.IsNotNull(loaded);
-            Assert.AreEqual("slot-0", loaded.SlotId);
-            Assert.AreEqual(createdAt, loaded.CreatedAtUtcTicks);
-            Assert.AreEqual(updatedAt, loaded.UpdatedAtUtcTicks);
             Assert.AreEqual(worldSeed, loaded.WorldSeed);
             Assert.AreEqual(tileSeed, loaded.TileSeed);
             Assert.IsTrue(File.Exists(Path.Combine(root, "slot-0", "metadata.json")));
@@ -202,195 +135,24 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.IsNotNull(Object.FindFirstObjectByType<NpcInteractor>(FindObjectsInactive.Include));
         }
 
-        [UnityTest]
-        public IEnumerator QUEST_E2E_003_RewardClaimedPersistsAcrossSaveLoadAndCannotPayTwice()
-        {
-            string root = NewSaveRoot("rootborn-quest-e2e");
-            SetTestSaveRoot(root);
-            var service = new SaveService("slot-0", root);
-            var metadata = service.CreateUiMetadata("slot-0", new CharacterCustomization(), 2026050707, 2026050708);
-            service.SaveMetadata(metadata);
-            ActiveSaveContext.Set(metadata);
-
-            yield return LoadScene("Farm");
-            yield return WaitForFarmAutoFill(10f);
-
-            var questLogPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
-            var dialoguePanel = Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include);
-            var npc = Object.FindFirstObjectByType<NpcInteractor>(FindObjectsInactive.Include);
-            var playerInventory = GameObject.Find("Player").GetComponent<PlayerInventory>();
-            Assert.IsNotNull(questLogPanel);
-            Assert.IsNotNull(dialoguePanel);
-            Assert.IsNotNull(npc);
-            Assert.IsNotNull(playerInventory);
-
-            var quest = npc.GetComponent<QuestProvider>().Quests[0];
-            var reward = quest.Rewards[0];
-            var rewardItem = GetRewardItem(reward);
-            int rewardCount = GetRewardCount(reward);
-            int before = playerInventory.Inventory.CountOf(rewardItem);
-
-            npc.Interact();
-            yield return null;
-            Assert.IsTrue(dialoguePanel.Choose(0));
-            CompleteFirstObjective(questLogPanel.QuestLog, quest);
-            Assert.AreEqual(QuestState.Completed, questLogPanel.QuestLog.GetState(quest));
-            npc.Interact();
-            yield return null;
-            Assert.IsTrue(dialoguePanel.IsOpen);
-            Assert.IsTrue(dialoguePanel.Choose(1));
-            Assert.AreEqual(before + rewardCount, playerInventory.Inventory.CountOf(rewardItem));
-            Assert.AreEqual(QuestState.RewardClaimed, questLogPanel.QuestLog.GetState(quest));
-            Assert.IsFalse(dialoguePanel.Choose(1));
-            Assert.AreEqual(before + rewardCount, playerInventory.Inventory.CountOf(rewardItem));
-
-            string questPath = Path.Combine(root, "slot-0", "quest-log.json");
-            Assert.IsTrue(File.Exists(questPath));
-
-            yield return LoadScene("Farm");
-            yield return WaitForFarmAutoFill(10f);
-
-            questLogPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
-            dialoguePanel = Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include);
-            npc = Object.FindFirstObjectByType<NpcInteractor>(FindObjectsInactive.Include);
-            playerInventory = GameObject.Find("Player").GetComponent<PlayerInventory>();
-            quest = npc.GetComponent<QuestProvider>().Quests[0];
-            rewardItem = GetRewardItem(quest.Rewards[0]);
-            int afterReloadBeforeClaim = playerInventory.Inventory.CountOf(rewardItem);
-
-            Assert.AreEqual(QuestState.RewardClaimed, questLogPanel.QuestLog.GetState(quest));
-            npc.Interact();
-            yield return null;
-            Assert.IsFalse(dialoguePanel.Choose(1));
-            Assert.AreEqual(afterReloadBeforeClaim, playerInventory.Inventory.CountOf(rewardItem));
-        }
-
-        [UnityTest]
-        public IEnumerator QUEST_E2E_004_AcceptedQuestPersistsAcrossFarmReload()
-        {
-            string root = NewSaveRoot("rootborn-quest-active-e2e");
-            SetTestSaveRoot(root);
-            var service = new SaveService("slot-0", root);
-            var metadata = service.CreateUiMetadata("slot-0", new CharacterCustomization(), 2026050714, 2026050715);
-            service.SaveMetadata(metadata);
-            ActiveSaveContext.Set(metadata);
-
-            yield return LoadScene("Farm");
-            yield return WaitForFarmAutoFill(10f);
-
-            var questLogPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
-            var dialoguePanel = Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include);
-            var npc = Object.FindFirstObjectByType<NpcInteractor>(FindObjectsInactive.Include);
-            var quest = npc.GetComponent<QuestProvider>().Quests[0];
-            Assert.AreEqual(QuestState.NotStarted, questLogPanel.QuestLog.GetState(quest));
-
-            npc.Interact();
-            yield return null;
-            Assert.IsTrue(dialoguePanel.Choose(0));
-            yield return null;
-            Assert.AreEqual(QuestState.Active, questLogPanel.QuestLog.GetState(quest));
-            Assert.IsTrue(File.Exists(Path.Combine(root, "slot-0", "quest-log.json")));
-
-            yield return LoadScene("Farm");
-            yield return WaitForFarmAutoFill(10f);
-
-            questLogPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
-            npc = Object.FindFirstObjectByType<NpcInteractor>(FindObjectsInactive.Include);
-            quest = npc.GetComponent<QuestProvider>().Quests[0];
-            Assert.AreEqual(QuestState.Active, questLogPanel.QuestLog.GetState(quest));
-        }
-
-        [Ignore(LegacyPremise.Farm + "FarmPortal travel from Farm")]
-        [UnityTest]
-        public IEnumerator MAP_E2E_002_MAP_E2E_003_FarmPortalMovesToDestinationSpawnWithoutDuplicatingPlayer()
-        {
-            ActiveSaveContext.Set(Metadata("e2e-slot-map-flow", 2026050703, 2026050704));
-            yield return LoadScene("Farm");
-            yield return WaitForFarmAutoFill(10f);
-
-            var portal = GameObject.Find("FarmPortal").GetComponent<WorldPortal>();
-            Assert.IsNotNull(portal);
-            Assert.IsTrue(portal.CanTravel);
-            Assert.AreNotEqual("Farm", portal.DestinationScene);
-            Assert.GreaterOrEqual(SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/" + portal.DestinationScene + ".unity"), 0);
-
-            portal.Travel(GameObject.Find("Player"));
-            yield return WaitForScene(portal.DestinationScene, 10f);
-
-            var spawn = FindSpawnPoint(portal.DestinationSpawnId);
-            Assert.IsNotNull(spawn);
-            Assert.AreEqual(1, CountObjectsNamed("Player"));
-            Assert.LessOrEqual(Vector3.Distance(GameObject.Find("Player").transform.position, spawn.transform.position), 1.5f);
-            Assert.IsNotNull(Camera.main != null ? Camera.main.GetComponent<Rootborn.Game.Player.CameraFollow>() : null);
-        }
-
-        [UnityTest]
-        public IEnumerator QUEST_E2E_001_NpcInteractionOpensDialogueChoiceAndAcceptsQuest()
-        {
-            ActiveSaveContext.Set(Metadata("e2e-slot-quest-flow", 2026050705, 2026050706));
-            yield return LoadScene("Farm");
-            yield return WaitForFarmAutoFill(10f);
-
-            var npc = Object.FindFirstObjectByType<NpcInteractor>(FindObjectsInactive.Include);
-            var provider = npc.GetComponent<QuestProvider>();
-            var questLogPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
-            var dialoguePanel = Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include);
-            Assert.IsNotNull(provider);
-            Assert.Greater(provider.Quests.Length, 0);
-            Assert.IsNotNull(questLogPanel);
-            Assert.IsNotNull(dialoguePanel);
-            Assert.IsFalse(dialoguePanel.IsOpen);
-
-            npc.Interact();
-            yield return null;
-            Assert.IsTrue(dialoguePanel.IsOpen);
-            Assert.IsTrue(dialoguePanel.Choose(0));
-            Assert.AreEqual(QuestState.Active, questLogPanel.QuestLog.GetState(provider.Quests[0]));
-        }
-
-        [Ignore(LegacyPremise.Farm + "Travels through FarmPortal from the Farm scene")]
-        [UnityTest]
-        public IEnumerator PLAYABLE_E2E_001_InputUiAndPortalFlowKeepPlayerControllable()
-        {
-            ActiveSaveContext.Set(Metadata("e2e-slot-playable-flow", 2026050712, 2026050713));
-            yield return LoadScene("Farm");
-            yield return WaitForFarmAutoFill(10f);
-
-            var player = GameObject.Find("Player");
-            var controller = player.GetComponent<PlayerController>();
-            Assert.IsNotNull(controller);
-            yield return MovePlayerWithKeyboard(player, Key.D);
-
-            var npc = Object.FindFirstObjectByType<NpcInteractor>(FindObjectsInactive.Include);
-            var dialoguePanel = Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include);
-            npc.Interact();
-            yield return null;
-            Assert.IsTrue(dialoguePanel.IsOpen);
-            Assert.IsTrue(dialoguePanel.Choose(0));
-            dialoguePanel.gameObject.SetActive(false);
-
-            var questPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
-            Assert.IsNotNull(questPanel);
-            questPanel.gameObject.SetActive(false);
-            questPanel.gameObject.SetActive(true);
-            yield return MovePlayerWithKeyboard(player, Key.W);
-
-            var portal = GameObject.Find("FarmPortal").GetComponent<WorldPortal>();
-            portal.Travel(GameObject.Find("Player"));
-            yield return WaitForScene(portal.DestinationScene, 10f);
-            yield return null;
-
-            player = GameObject.Find("Player");
-            Assert.IsNotNull(player);
-            Assert.IsNotNull(Camera.main != null ? Camera.main.GetComponent<Rootborn.Game.Player.CameraFollow>() : null);
-            yield return MovePlayerWithKeyboard(player, Key.A);
-        }
-
         private static IEnumerator LoadScene(string sceneName)
         {
             var op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
             Assert.IsNotNull(op, sceneName + " should be present in BuildSettings.");
             while (!op.isDone) yield return null;
+        }
+
+        private static IEnumerator WaitForWorld(float timeoutSeconds, string step)
+        {
+            float elapsed = 0f;
+            while (SceneManager.GetActiveScene().name != "House" && SceneManager.GetActiveScene().name != "Town" && elapsed < timeoutSeconds)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                yield return null;
+            }
+            var panel = Object.FindFirstObjectByType<SaveSlotSelectPanel>(FindObjectsInactive.Include);
+            Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("House").Or.EqualTo("Town"),
+                step + ": entry error: '" + (panel != null ? panel.LastEntryError : "no panel") + "' creator open: " + (Object.FindFirstObjectByType<SpumCharacterCreatorPanel>() != null));
         }
 
         private static IEnumerator WaitForScene(string sceneName, float timeoutSeconds)

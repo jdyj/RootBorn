@@ -11,33 +11,6 @@ namespace Rootborn.Tests.EditMode.Family
     public sealed class CharacterPartResourceManagerTests
     {
         [Test]
-        public async Task LoadSubSpriteAsync_ResolvesRegisteredCharacterPartSubSpriteByAddress()
-        {
-            var part = AssetDatabase.LoadAssetAtPath<CharacterPartDefinition>("Assets/Data/Family/CharacterParts/character_body_02.asset");
-            Assert.IsNotNull(part);
-
-            var resource = new ResourceManager();
-            try
-            {
-                await resource.InitializeAsync();
-
-                Sprite sprite = await AwaitWithTimeout(
-                    resource.LoadSubSpriteAsync(part.SheetAddress, part.SubSpriteName),
-                    "ResourceManager did not resolve the registered character part sub-sprite before timeout.");
-
-                Assert.IsNotNull(sprite, part.SheetAddress + " -> " + part.SubSpriteName);
-                Assert.AreEqual(part.SubSpriteName, sprite.name);
-                Assert.AreEqual(16f, sprite.rect.width);
-                Assert.AreEqual(16f, sprite.rect.height);
-                Assert.AreSame(sprite, resource.GetCachedSubSprite(part.SheetAddress, part.SubSpriteName));
-            }
-            finally
-            {
-                resource.ReleaseAll();
-            }
-        }
-
-        [Test]
         public async Task LoadSubSpriteAsync_ResolvesModernUiStyle2CommonPanelSubSpriteByAddress()
         {
             var resource = new ResourceManager();

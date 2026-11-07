@@ -12,126 +12,6 @@ namespace Rootborn.Tests.EditMode
     public sealed class InventoryEquipmentScenarioTests
     {
         [Test]
-        public void INV_001_ToggleInventoryCommand_OpensInventoryPanel()
-        {
-            var host = new GameObject("Hud", typeof(RectTransform), typeof(FarmHudController));
-            var book = new GameObject("BookPanel");
-            try
-            {
-                book.SetActive(false);
-                var controller = host.GetComponent<FarmHudController>();
-                SetField(controller, "_bookPanel", book);
-
-                InvokePrivate(controller, "ToggleBook");
-
-                Assert.IsTrue(book.activeSelf);
-            }
-            finally
-            {
-                Object.DestroyImmediate(host);
-                Object.DestroyImmediate(book);
-            }
-        }
-
-        [Test]
-        public void INV_002_ClosingInventory_RestoresHudAndMovementCapabilitySurface()
-        {
-            var host = new GameObject("Hud", typeof(RectTransform), typeof(FarmHudController));
-            var hud = new GameObject("HudPanel");
-            var book = new GameObject("BookPanel");
-            try
-            {
-                hud.SetActive(true);
-                book.SetActive(true);
-                var controller = host.GetComponent<FarmHudController>();
-                SetField(controller, "_hudPanel", hud);
-                SetField(controller, "_bookPanel", book);
-
-                InvokePrivate(controller, "ToggleBook");
-
-                Assert.IsFalse(book.activeSelf);
-                Assert.IsTrue(hud.activeSelf);
-            }
-            finally
-            {
-                Object.DestroyImmediate(host);
-                Object.DestroyImmediate(hud);
-                Object.DestroyImmediate(book);
-            }
-        }
-
-        [Test]
-        public void INV_003_PlayerInventoryItem_RendersInventorySlotUi()
-        {
-            var wood = MakeItem("Wood", ItemCategory.Resource, 99);
-            var fixture = MakeInventoryViewFixture();
-            try
-            {
-                fixture.Inventory.Inventory.Add(wood, 1);
-                fixture.View.Refresh();
-
-                Assert.IsNotNull(fixture.Root.Find("Slot_Wood"));
-            }
-            finally { Object.DestroyImmediate(fixture.Host); }
-        }
-
-        [Test]
-        public void INV_004_EmptyInventory_RendersStableEmptySlotsWithoutException()
-        {
-            var fixture = MakeInventoryViewFixture();
-            try
-            {
-                fixture.View.Refresh();
-
-                Assert.GreaterOrEqual(fixture.Root.childCount, 16);
-                Assert.IsNotNull(fixture.Root.Find("Slot_Empty_0"));
-            }
-            finally { Object.DestroyImmediate(fixture.Host); }
-        }
-
-        [Test]
-        public void STK_001_ResourceItemSlot_DisplaysOwnedCount()
-        {
-            var wood = MakeItem("Wood", ItemCategory.Resource, 99);
-            var fixture = MakeInventoryViewFixture();
-            try
-            {
-                fixture.Inventory.Inventory.Add(wood, 12);
-                fixture.View.Refresh();
-
-                var slot = fixture.Root.Find("Slot_Wood");
-                Assert.IsNotNull(slot);
-                var count = slot.Find("Count")?.GetComponent<Text>();
-                Assert.IsNotNull(count);
-                Assert.AreEqual("12", count.text);
-            }
-            finally { Object.DestroyImmediate(fixture.Host); }
-        }
-
-        [Test]
-        public void EQP_001_ToolSlotSelection_UpdatesSelectedItemAndRaisesSelection()
-        {
-            var axe = MakeItem("StoneAxe", ItemCategory.Tool, 1);
-            var fixture = MakeInventoryViewFixture();
-            try
-            {
-                Inventory.Slot selected = null;
-                fixture.View.OnSlotSelected += slot => selected = slot;
-                fixture.Inventory.Inventory.Add(axe, 1);
-                fixture.View.Refresh();
-
-                var slotGo = fixture.Root.Find("Slot_StoneAxe");
-                Assert.IsNotNull(slotGo);
-                slotGo.GetComponent<Button>().onClick.Invoke();
-
-                Assert.AreSame(axe, fixture.View.SelectedItem);
-                Assert.IsNotNull(selected);
-                Assert.AreSame(axe, selected.Item);
-            }
-            finally { Object.DestroyImmediate(fixture.Host); }
-        }
-
-        [Test]
         public void EQP_002_EquipmentButton_Click_ChangesEquippedToolItem()
         {
             var axe = MakeItem("StoneAxe", ItemCategory.Tool, 1);
@@ -186,28 +66,6 @@ namespace Rootborn.Tests.EditMode
                 Assert.IsNull(GetPrivate<string>(controller, "_activeToolId"));
             }
             finally { Object.DestroyImmediate(player); }
-        }
-
-        [Test]
-        public void EQP_005_EquipmentChange_RefreshesHudCurrentToolLabel()
-        {
-            var axe = MakeItem("StoneAxe", ItemCategory.Tool, 1);
-            var host = new GameObject("Hud", typeof(RectTransform), typeof(FarmHudController));
-            var labelGo = new GameObject("EquippedLabel", typeof(RectTransform), typeof(Text));
-            try
-            {
-                labelGo.transform.SetParent(host.transform, false);
-                var inventory = host.AddComponent<PlayerInventory>();
-                var controller = host.GetComponent<FarmHudController>();
-                SetField(controller, "_playerInv", inventory);
-                SetField(controller, "_equippedSlotLabel", labelGo.GetComponent<Text>());
-
-                inventory.EquipTool(axe);
-                InvokePrivate(controller, "UpdateEquippedSlot");
-
-                Assert.AreEqual("StoneAxe", labelGo.GetComponent<Text>().text);
-            }
-            finally { Object.DestroyImmediate(host); }
         }
 
         [Test]
@@ -267,36 +125,6 @@ namespace Rootborn.Tests.EditMode
         }
 
         [Test]
-        public void DRG_001_InventorySlotDragHandler_DropOnEmptySlotMovesItem()
-        {
-            var wood = MakeItem("Wood", ItemCategory.Resource, 99);
-            var fixture = MakeInventoryViewFixture();
-            try
-            {
-                fixture.Inventory.Inventory.Add(wood, 3);
-                fixture.View.Refresh();
-
-                var source = fixture.Root.Find("Slot_Wood");
-                var target = fixture.Root.Find("Slot_Empty_1");
-                Assert.IsNotNull(source);
-                Assert.IsNotNull(target);
-                var beginDrag = source.GetComponent<IBeginDragHandler>();
-                var drop = target.GetComponent<IDropHandler>();
-                Assert.IsNotNull(beginDrag, "Filled inventory slots must expose a drag source handler." );
-                Assert.IsNotNull(drop, "Empty inventory slots must expose a drop target handler." );
-
-                var eventData = new PointerEventData(EventSystem.current);
-                beginDrag.OnBeginDrag(eventData);
-                drop.OnDrop(eventData);
-
-                Assert.IsNull(fixture.Inventory.Inventory.Slots[0].Item);
-                Assert.AreSame(wood, fixture.Inventory.Inventory.Slots[1].Item);
-                Assert.AreEqual(3, fixture.Inventory.Inventory.CountOf(wood));
-            }
-            finally { Object.DestroyImmediate(fixture.Host); }
-        }
-
-        [Test]
         public void DRG_002_MoveStackableSlot_ToSameItemSlot_MergesAvailableCountOnly()
         {
             var wood = MakeItem("Wood", ItemCategory.Resource, 5);
@@ -347,37 +175,6 @@ namespace Rootborn.Tests.EditMode
             Assert.AreSame(stone, inventory.Slots[2].Item);
             Assert.AreEqual(3, inventory.Slots[2].Count);
             Assert.AreEqual(8, inventory.CountOf(stone));
-        }
-
-        [Test]
-        public void DRG_005_RefreshingInventoryDuringSelection_DoesNotLoseOrDuplicateItems()
-        {
-            var wood = MakeItem("Wood", ItemCategory.Resource, 99);
-            var fixture = MakeInventoryViewFixture();
-            try
-            {
-                fixture.Inventory.Inventory.Add(wood, 6);
-                fixture.View.Refresh();
-                fixture.Root.Find("Slot_Wood").GetComponent<Button>().onClick.Invoke();
-
-                fixture.View.Refresh();
-
-                Assert.AreEqual(6, fixture.Inventory.Inventory.CountOf(wood));
-                Assert.AreEqual(1, FilledSlotCount(fixture.Inventory.Inventory));
-            }
-            finally { Object.DestroyImmediate(fixture.Host); }
-        }
-
-        private static (GameObject Host, RectTransform Root, InventoryView View, PlayerInventory Inventory) MakeInventoryViewFixture()
-        {
-            var host = new GameObject("InventoryViewFixture", typeof(RectTransform));
-            var rootGo = new GameObject("Slots", typeof(RectTransform));
-            rootGo.transform.SetParent(host.transform, false);
-            var inventory = host.AddComponent<PlayerInventory>();
-            var view = host.AddComponent<InventoryView>();
-            view.BindElements((RectTransform)rootGo.transform, null, InventoryView.Filter.All);
-            view.Bind(inventory);
-            return (host, (RectTransform)rootGo.transform, view, inventory);
         }
 
         private static int FilledSlotCount(Inventory inventory)

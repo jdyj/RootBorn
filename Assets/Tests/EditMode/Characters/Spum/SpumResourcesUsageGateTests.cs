@@ -13,12 +13,8 @@ namespace Rootborn.Tests.EditMode.Characters.Spum
 
         private static readonly HashSet<string> AllowedRuntimeResourcesUsages = new HashSet<string>
         {
-            "Assets/Scripts/Game/Bootstrap/FarmAutoFiller.cs :: var fromResources = UnityEngine.Resources.Load<GameDataRegistry>(\"GameDataRegistry\");",
             "Assets/Scripts/Game/Managers/DataManager.cs :: Registry = UnityEngine.Resources.Load<GameDataRegistry>(\"GameDataRegistry\");",
             "Assets/Scripts/Game/StudentLife/MilestoneGrowth.cs :: var fallback = UnityEngine.Resources.Load<Rootborn.Game.Common.GameDataRegistry>(\"GameDataRegistry\");",
-            "Assets/Scripts/Game/WorldGeneration/SeededFarmWorldApplier.cs :: registry = global::UnityEngine.Resources.Load<GameDataRegistry>(\"GameDataRegistry\");",
-            "Assets/Scripts/UI/HUD/FarmCharacterHudOverlayInstaller.cs :: var registry = Rootborn.Game.Managers.Managers.Data?.Registry ?? Resources.Load<GameDataRegistry>(\"GameDataRegistry\");",
-            "Assets/Scripts/UI/HUD/StatusHud.cs :: _cached = Resources.Load<Font>(\"Fonts/VaultUI\");",
             "Assets/Scripts/UI/StudentLife/CampaignRuntimeInstaller.cs :: return Resources.Load<GameDataRegistry>(\"GameDataRegistry\");",
             "Assets/Scripts/UI/StudentLife/DailyEventRuntimeInstaller.cs :: return Resources.Load<GameDataRegistry>(\"GameDataRegistry\");"
         };

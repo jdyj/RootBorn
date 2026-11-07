@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using NUnit.Framework;
-using Rootborn.Game.Characters.Spum;
 using Rootborn.Game.Save;
 using Rootborn.UI.MainMenu;
 using UnityEngine;

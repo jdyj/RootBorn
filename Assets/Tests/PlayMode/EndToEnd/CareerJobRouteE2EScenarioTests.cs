@@ -158,7 +158,6 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         private static void EnsureTownInstallers()
         {
             StudentDayRuntimeInstaller.EnsureForActiveScene();
-            PartTimeWorkRuntimeInstaller.EnsureForActiveScene();
             DailyPlanRuntimeInstaller.EnsureForActiveScene();
             CampaignRuntimeInstaller.EnsureForActiveScene();
         }

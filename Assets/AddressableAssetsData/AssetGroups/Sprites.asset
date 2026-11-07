@@ -29,16 +29,6 @@ MonoBehaviour:
     - SchoolClassroom31
     - SchoolPixels
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 021f2e20784b55242af275c1abab2113
-    m_Address: sprites/character/eyes/eyes-brown
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 02a93c453c9ba9241b22bc69c4ea6a33
-    m_Address: sprites/character/outfit/outfit-braces-green
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 04820ec21554dbd4b8c26b53b5f0e75d
     m_Address: sprites/student-life/furniture48/studentlife-snack-delivery-crate-1x1
     m_ReadOnly: 0
@@ -90,11 +80,6 @@ MonoBehaviour:
     - SchoolClassroom31
     - SchoolPixels
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 0fef600f252926647bf5086e5f8901d6
-    m_Address: sprites/character/hair/hairstyle-short-brown-dark
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 10d3073974ed20443b4d0984a40b483d
     m_Address: sprites/farm/modern/16/crops
     m_ReadOnly: 0
@@ -106,11 +91,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - UrbanStreet31
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 11279c6f6fdc98649bd0be5bd79cbb0d
-    m_Address: sprites/character/eyes/eyes-blue
-    m_ReadOnly: 0
-    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 113e0354f38f14e4ead5d2e580f1b1cf
     m_Address: sprites/school/sprites/chair-south
@@ -327,11 +307,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - HouseComfy31
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 455852ded0fe2ad4ea3c68d8adf5cfbf
-    m_Address: sprites/character/body/body-2
-    m_ReadOnly: 0
-    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 45dbecceb20fe2348a872396f93a70c0
     m_Address: sprites/player/tool/pickup-down
@@ -600,11 +575,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - CareerMinigames
     - Comfy31Props
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 70d409f637e8a9549b34c68975307d56
-    m_Address: sprites/character/outfit/outfit-braces-brown
-    m_ReadOnly: 0
-    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 71ac4ded033c94d4cae6378054094469
     m_Address: sprites/player/tool/axe-side
@@ -884,11 +854,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - WheatPlanters31
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: b01b3f2261b6020438d574907f1dbcd7
-    m_Address: sprites/character/body/body-1
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b1bfcf608153fde4cb4c8735d6a3adda
     m_Address: sprites/school/furniture48/desk/school-desk-with-open-book-2x1
     m_ReadOnly: 0
@@ -1151,11 +1116,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - CareerAchievements
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e1b8e1d5c54dde149b2d578197912965
-    m_Address: sprites/character/hair/hairstyle-short-blonde
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e260157a9dce9e04c9f7d8bfba1f5e04
     m_Address: sprites/school/sprites/window
     m_ReadOnly: 0
@@ -1236,11 +1196,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - CareerFacilities
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ef113c1db18e20540a257c50cd95542c
-    m_Address: sprites/character/accessory/accessory-straw-hat-black
-    m_ReadOnly: 0
-    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: eff3390a133694046ab51cd046a0103a
     m_Address: sprites/furniture/comfy31-kitchen-sink-front
@@ -1327,11 +1282,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - SchoolComfy31
     - SchoolPixels
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ffe26c7ac9502e94f87bc63cdd4b74fa
-    m_Address: sprites/character/accessory/accessory-bamboo-hat-brown
-    m_ReadOnly: 0
-    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 2f14a7c3f9f8dc44c9d41564a87df795, type: 2}

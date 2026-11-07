@@ -2,14 +2,11 @@ using System;
 using System.Collections.Generic;
 using Rootborn.Game.Careers;
 using Rootborn.Game.Characters;
-using Rootborn.Game.Characters.Spum;
-using Rootborn.Game.Crops;
 using Rootborn.Game.Crafting;
 using Rootborn.Game.Dialogue;
 using Rootborn.Game.DiscoveryClues;
 using Rootborn.Game.Encyclopedia;
 using Rootborn.Game.Family;
-using Rootborn.Game.Generation;
 using Rootborn.Game.Heir;
 using Rootborn.Game.Knowledge;
 using Rootborn.Game.Placement;
@@ -357,7 +354,6 @@ namespace Rootborn.Game.Common
     [CreateAssetMenu(fileName = "GameDataRegistry", menuName = "Rootborn/Common/Game Data Registry")]
     public sealed class GameDataRegistry : ScriptableObject
     {
-        [SerializeField] private CropDefinition[] _crops = Array.Empty<CropDefinition>();
         [SerializeField] private ToolDefinition[] _tools = Array.Empty<ToolDefinition>();
         [SerializeField] private ToolVisualMappingDefinition[] _toolVisualMappings = Array.Empty<ToolVisualMappingDefinition>();
         [SerializeField] private ResourceNodeDefinition[] _resources = Array.Empty<ResourceNodeDefinition>();
@@ -365,7 +361,6 @@ namespace Rootborn.Game.Common
         [SerializeField] private KnowledgeNode[] _knowledge = Array.Empty<KnowledgeNode>();
         [SerializeField] private HeirTrait[] _traits = Array.Empty<HeirTrait>();
         [SerializeField] private StatusEffectDefinition[] _statuses = Array.Empty<StatusEffectDefinition>();
-        [SerializeField] private GenerationProfile[] _generations = Array.Empty<GenerationProfile>();
         [SerializeField] private ItemDefinition[] _items = Array.Empty<ItemDefinition>();
         [SerializeField] private QuestDefinition[] _quests = Array.Empty<QuestDefinition>();
         [SerializeField] private QuestChainDefinition[] _questChains = Array.Empty<QuestChainDefinition>();
@@ -380,12 +375,9 @@ namespace Rootborn.Game.Common
         [SerializeField] private StoryFlagDefinition[] _storyFlags = Array.Empty<StoryFlagDefinition>();
         [SerializeField] private TutorialStageDefinition[] _tutorialStages = Array.Empty<TutorialStageDefinition>();
         [SerializeField] private TutorialStageDefinition _defaultTutorialStage;
-        [SerializeField] private CharacterPartDefinition[] _characterParts = Array.Empty<CharacterPartDefinition>();
         [SerializeField] private CharacterPartAnimationClipDefinition[] _characterPartAnimationClips = Array.Empty<CharacterPartAnimationClipDefinition>();
         [SerializeField] private CharacterPartMotionDefinition _defaultCharacterPartMotion;
         [SerializeField] private CharacterAppearanceDefinition[] _characterAppearances = Array.Empty<CharacterAppearanceDefinition>();
-        [SerializeField] private SpumPartCatalogDefinition[] _spumPartCatalogs = Array.Empty<SpumPartCatalogDefinition>();
-        [SerializeField] private SpumCharacterCreatorPresetDefinition[] _spumCharacterCreatorPresets = Array.Empty<SpumCharacterCreatorPresetDefinition>();
         [SerializeField] private FishingAnimationDefinition[] _fishingAnimations = Array.Empty<FishingAnimationDefinition>();
         [SerializeField] private Rootborn.Game.Minigames.MinigameDefinition[] _minigames = Array.Empty<Rootborn.Game.Minigames.MinigameDefinition>();
         [SerializeField] private Rootborn.Game.Minigames.ChallengeDefinitionBase[] _minigameChallenges = Array.Empty<Rootborn.Game.Minigames.ChallengeDefinitionBase>();
@@ -471,7 +463,6 @@ namespace Rootborn.Game.Common
         [SerializeField] private Sprite _playerSprite;
         [SerializeField] private TerrainGenerationDefinition _defaultFarmTerrainGeneration;
 
-        public CropDefinition[] Crops => _crops;
         public ToolDefinition[] Tools => _tools;
         public ToolVisualMappingDefinition[] ToolVisualMappings => _toolVisualMappings;
         public ResourceNodeDefinition[] Resources => _resources;
@@ -479,7 +470,6 @@ namespace Rootborn.Game.Common
         public KnowledgeNode[] Knowledge => _knowledge;
         public HeirTrait[] Traits => _traits;
         public StatusEffectDefinition[] Statuses => _statuses;
-        public GenerationProfile[] Generations => _generations;
         public ItemDefinition[] Items => _items;
         public QuestDefinition[] Quests => _quests;
         public QuestChainDefinition[] QuestChains => _questChains;
@@ -494,14 +484,11 @@ namespace Rootborn.Game.Common
         public StoryFlagDefinition[] StoryFlags => _storyFlags;
         public TutorialStageDefinition[] TutorialStages => _tutorialStages;
         public TutorialStageDefinition DefaultTutorialStage => _defaultTutorialStage;
-        public CharacterPartDefinition[] CharacterParts => _characterParts;
         public CharacterPartAnimationClipDefinition[] CharacterPartAnimationClips => _characterPartAnimationClips;
         public CharacterPartMotionDefinition DefaultCharacterPartMotion => _defaultCharacterPartMotion;
         [SerializeField] private Rootborn.Game.World.WorldTravelCatalogDefinition _worldTravelCatalog;
         public Rootborn.Game.World.WorldTravelCatalogDefinition WorldTravelCatalog => _worldTravelCatalog;
         public CharacterAppearanceDefinition[] CharacterAppearances => _characterAppearances;
-        public SpumPartCatalogDefinition[] SpumPartCatalogs => _spumPartCatalogs;
-        public SpumCharacterCreatorPresetDefinition[] SpumCharacterCreatorPresets => _spumCharacterCreatorPresets;
         public FishingAnimationDefinition[] FishingAnimations => _fishingAnimations;
         public Rootborn.Game.Minigames.MinigameDefinition[] Minigames => _minigames;
         public Rootborn.Game.Minigames.ChallengeDefinitionBase[] MinigameChallenges => _minigameChallenges;

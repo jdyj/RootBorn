@@ -10,7 +10,6 @@ namespace Rootborn.UI.Quests
 {
     public static class QuestPlayflowRuntimeBinder
     {
-        private const string FarmSceneName = "Farm";
         private const string TownSceneName = "Town";
         private const string RunnerName = "[QuestPlayflowRuntimeBinder]";
         private const string QuestLogFileName = "quest-log.json";
@@ -43,7 +42,7 @@ namespace Rootborn.UI.Quests
 
         private static bool SupportsScene(string sceneName)
         {
-            return sceneName == FarmSceneName || sceneName == TownSceneName;
+            return sceneName == TownSceneName;
         }
 
         private static void StartRunner(Scene scene)

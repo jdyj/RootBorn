@@ -79,7 +79,6 @@ namespace Rootborn.Tests.EditMode.TownConcept
             AssertRuntimeEventSystemInstaller("Assets/Scripts/UI/MainMenu/SaveSlotSelectPanel.cs");
             AssertRuntimeEventSystemInstaller("Assets/Scripts/UI/Quests/QuestHudAutoFiller.cs");
             AssertRuntimeEventSystemInstaller("Assets/Scripts/Game/Bootstrap/TownPlayableBaselineRuntimeInstaller.cs");
-            AssertRuntimeEventSystemInstaller("Assets/Scripts/Game/Bootstrap/FarmAutoFiller.cs");
         }
 
         [Test]

@@ -21,7 +21,6 @@ namespace Rootborn.Editor.DataValidators
             {
                 var path = AssetDatabase.GUIDToAssetPath(guid);
                 var reg = AssetDatabase.LoadAssetAtPath<GameDataRegistry>(path);
-                issues += CheckUnique(reg.Crops, "Crop", path);
                 issues += CheckUnique(reg.Tools, "Tool", path);
                 issues += CheckUnique(reg.Resources, "Resource", path);
                 issues += CheckUnique(reg.Knowledge, "Knowledge", path);

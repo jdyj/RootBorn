@@ -62,16 +62,6 @@ namespace Rootborn.Tests.EditMode.StudentLife
         }
 
         [Test]
-        public void NPC_RELATIONSHIP_EDIT_003_TownHelpRuntimeExposesMultipleDataDrivenActions()
-        {
-            var registry = LoadRegistry();
-            var actions = TownHelpActionRuntimeInstaller.ResolveActionsForTests(registry);
-            Assert.GreaterOrEqual(actions.Length, 2, "Town Help runtime must expose more than the First Guide sample action.");
-            Assert.IsTrue(actions.Any(action => action != null && action.Id == TeacherHelpActionId), "Town Help runtime action resolution must include the Teacher relationship action.");
-            Assert.IsTrue(actions.Any(action => action != null && action.Id == "town.help.first-guide-errand"), "Town Help runtime must keep the First Guide action available while adding the second NPC route.");
-        }
-
-        [Test]
         public void NPC_RELATIONSHIP_EDIT_004_ObjectiveJournalMilestoneSourceIncludesTeacherRouteHint()
         {
             var registry = LoadRegistry();

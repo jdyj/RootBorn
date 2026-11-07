@@ -16,8 +16,7 @@ MonoBehaviour:
   _displayKey: tool.watering_can
   _icon: {fileID: 0}
   _powerMultiplier: 1
-  _effects:
-  - {fileID: 11400000, guid: f7d7745a41e3df3428c43d015d203eef, type: 2}
+  _effects: []
   _characterPartAnimationClip: {fileID: 11400000, guid: 0f82d6935541c2a44b102f9a53cca412, type: 2}
   _isStartingTool: 1
   _description: 

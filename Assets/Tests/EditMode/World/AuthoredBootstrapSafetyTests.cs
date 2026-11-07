@@ -32,14 +32,5 @@ namespace Rootborn.Tests.EditMode.World
             Assert.That((bool)typeof(InteriorFurniturePlacementPanel).GetField("_isClosing",flags).GetValue(panel),Is.False);
             Assert.That(panel.Model.CurrentMap,Is.Null,"Opening is not permission to regenerate saved tiles.");
         }
-        private void RunNpcInstaller() { typeof(WorldNpcAutoFiller).GetMethod("StartRunner",BindingFlags.Static|BindingFlags.NonPublic).Invoke(null,new object[]{_scene}); }
-        private bool HasNpcRunner()
-        { foreach(var root in _scene.GetRootGameObjects()) if(root.name=="[WorldNpcAutoFiller]") return true; return false; }
-        [Test] public void AuthoredTown_DoesNotInstallPrototypeGuideNpc()
-        { _scene.name="Town"; Configure(); RunNpcInstaller(); Assert.That(HasNpcRunner(),Is.False); }
-        [Test] public void LegacyTown_KeepsGuideNpcInstaller()
-        { _scene.name="Town"; RunNpcInstaller(); Assert.That(HasNpcRunner(),Is.True); }
-        [Test] public void LegacyFarm_KeepsGuideNpcInstaller()
-        { _scene.name="Farm"; RunNpcInstaller(); Assert.That(HasNpcRunner(),Is.True); }
     }
 }

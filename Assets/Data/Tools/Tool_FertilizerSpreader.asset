@@ -16,7 +16,6 @@ MonoBehaviour:
   _displayKey: tool.fertilizer_spreader
   _icon: {fileID: 0}
   _powerMultiplier: 1
-  _effects:
-  - {fileID: 11400000, guid: 15dd72f5f40d24d409070abc7971247e, type: 2}
+  _effects: []
   _isStartingTool: 0
   _description: 

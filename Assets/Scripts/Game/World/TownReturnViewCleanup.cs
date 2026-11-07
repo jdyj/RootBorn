@@ -45,7 +45,6 @@ using System.Collections.Generic;
                 private static bool IsSupportedPlayerFacingScene(string sceneName)
                 {
                     return sceneName == "Town"
-                        || sceneName == "HouseInterior"
                         || sceneName == "ShopInterior"
                         || sceneName == "HospitalInterior"
                         || sceneName == "PoliceInterior"
