@@ -17,6 +17,18 @@
 ---
 
 
+## 기본 실행 위치 — Strix Halo(FEVM) (2026-11-08 사용자 결정)
+
+"이제 unity사용은 strix halo로 진행". ROOTBORN의 Unity 컴파일 확인, EditMode, PlayMode, Addressables 빌드는 Windows PC가 아니라 FEVM에서 커밋 해시 기준으로 돌린다. Windows Unity는 사용자가 따로 요청할 때만 켠다.
+
+- 절차: 수정 → 로컬 커밋 → `Scripts/fevm/sync.sh [커밋]` → FEVM `~/farmer-unity-verify/tools/rb-test.sh <사본> EditMode|PlayMode [필터] [asset|built|rebuild]` → 통과 후 push. 상세: `Scripts/fevm/README.md`, 판정 규칙: `rules/strix-verification.md`.
+- EditMode·PlayMode 모두 Xvfb + VirtualGL GPU로 돌린다. `-nographics`로 처음 임포트하면 8192px보다 큰 텍스처가 실패하고 Library에 그대로 남는다.
+- git 밖 `output/` 증거를 읽는 테스트는 `Scripts/fevm/test-fixtures.txt`에 적힌 폴더를 sync.sh가 사본에 복사한다.
+- Linux 결과를 Windows 화면·빌드 확인으로 보고하지 않는다. 실행 파일 실플레이는 FEVM의 Windows VM(`rootborn-win11`)에서 한다.
+- 아래 Windows 경로·명령은 Windows에서 돌려야 할 때의 참조로 남긴다.
+
+---
+
 Unity를 헤드리스 CLI로 구동하는 표준 절차. `unity-builder`, `unity-test-runner`, `deploy-manager` 에이전트가 참조한다.
 
 ## 실행 파일 경로
