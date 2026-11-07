@@ -84,3 +84,4 @@ EditMode 단위 테스트는 위 시스템을 계속 다룬다. 공백은 "실�
 - 자유 경로(FREE_PATH_001) 복구. 그 과정에서 도착 처리 중 상호작용이 바인딩에 덮여 사라지는 게임 버그를 찾아 고침.
 - 남은 공백: CAREER-001, REL-001, TownHelpAction.
 - 2026-11-07: `TownExplorationDiscoveryE2EScenarioTests.TOWN_POINT_001_*`가 Town에 배치된 상호작용 지점 10종류 46곳을 모두 걸어가서, E가 그 지점(또는 같은 오브젝트의 우선 상호작용)에 닿고 안내에 내부 키가 보이지 않는지 확인한다. 장소 방문 지점 13곳은 모두 장소 활동·시설·학교 문과 한 오브젝트에 있어 그쪽이 E를 받는다(방문 기록도 그쪽이 남김).
+- 2026-11-07: 사용자 결정으로 대체 E2E가 생긴 격리 테스트 6개를 지웠다: `WORK_E2E_001_006`, `STUDENT_DAY_E2E_001_011`, `STUDY_E2E_001_006`, `NPC_RELATIONSHIP_E2E_001`, `CAREER_CANDIDATE_E2E_001_010`, `HELP_E2E_001_006`. 그 안의 결과창 문구와 목표 저널 확인은 대체 테스트에 없다. 옛 생성형 집 컴퓨터 테스트(`HouseScene_SpawnsComputerInteractorUsableByPlayerRouter`)도 House 컴퓨터 상호작용을 없애면서 지웠다.
