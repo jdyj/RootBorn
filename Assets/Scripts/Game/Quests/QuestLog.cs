@@ -1,3 +1,4 @@
+using Rootborn.Core.Rewards;
 using System;
 using System.Collections.Generic;
 
@@ -177,83 +178,39 @@ namespace Rootborn.Game.Quests
             }
         }
 
-        private bool _claimInProgress;
+        // One claim at a time: a reward or effect that starts another claim while one runs gets false (Rootborn.Core).
+        private readonly RewardClaimGate _claimGate = new RewardClaimGate();
 
         public bool CanClaimReward(QuestDefinition quest, in RewardRuntimeContext context)
         {
-            if (!TryGetProgress(quest, out var progress) || progress.State != QuestState.Completed)
+            if (_claimGate.IsClaiming || !TryGetProgress(quest, out var progress) || progress.State != QuestState.Completed)
             {
                 return false;
             }
 
-            // Checks all item grants together: each reward fitting alone does not mean they all fit.
-            if (!QuestRewardBatch.CanApply(quest.Rewards, in context))
-            {
-                return false;
-            }
-
-            if (quest.CompletionEffects != null)
-            {
-                for (int i = 0; i < quest.CompletionEffects.Length; i++)
-                {
-                    var effect = quest.CompletionEffects[i];
-                    if (effect != null && !effect.CanApply(in context))
-                    {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
+            // Checks all item grants, rewards and completion effects together: each fitting alone does not mean they all fit.
+            return RewardTransaction.CanApply(QuestRewardBatch.Bundle(quest.Rewards, quest.CompletionEffects, in context), context.Inventory);
         }
 
         public bool ClaimReward(QuestDefinition quest, in RewardRuntimeContext context)
         {
-            // A reward or effect calling back into this claim, even while checking, must not apply anything twice.
-            if (_claimInProgress)
-            {
-                return false;
-            }
-
-            _claimInProgress = true;
-            try
-            {
-                if (!CanClaimReward(quest, in context) || !TryGetProgress(quest, out var progress))
-                {
-                    return false;
-                }
-
-                return ClaimRewardCore(quest, progress, in context);
-            }
-            finally
-            {
-                _claimInProgress = false;
-            }
-        }
-
-        private bool ClaimRewardCore(QuestDefinition quest, QuestProgress progress, in RewardRuntimeContext context)
-        {
-            // Effects and the claim commit inside the batch, so inventory observers see the claim recorded.
             var capturedContext = context;
-            bool claimed = QuestRewardBatch.TryApply(quest.Rewards, in context, () =>
-            {
-                if (quest.CompletionEffects != null)
+            QuestProgress progress = null;
+            // Items, other rewards, completion effects and the claim commit together, so inventory observers see the claim recorded.
+            // The notification stays inside the gate, so a listener cannot start another claim while this one finishes.
+            return _claimGate.TryClaim(
+                () => TryGetProgress(quest, out progress) && progress.State == QuestState.Completed,
+                () =>
                 {
-                    for (int i = 0; i < quest.CompletionEffects.Length; i++)
+                    if (!RewardTransaction.TryApply(QuestRewardBatch.Bundle(quest.Rewards, quest.CompletionEffects, in capturedContext),
+                            capturedContext.Inventory, () => progress.TryMarkRewardClaimed()))
                     {
-                        quest.CompletionEffects[i]?.Apply(in capturedContext);
+                        return false;
                     }
-                }
 
-                progress.TryMarkRewardClaimed();
-            });
-            if (!claimed)
-            {
-                return false;
-            }
-
-            RaiseStateChanged(new QuestStateChange(quest, progress.State, QuestStateChangeKind.RewardClaimed));
-            return true;
+                    RaiseStateChanged(new QuestStateChange(quest, progress.State, QuestStateChangeKind.RewardClaimed));
+                    return true;
+                });
         }
 
         public QuestLogSaveData ToSaveData()

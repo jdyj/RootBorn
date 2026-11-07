@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Rootborn.Core.Inventory;
+using Rootborn.Core.Rewards;
 using Rootborn.Game.Careers;
 using Rootborn.Game.Characters;
 using Rootborn.Game.Crafting;
@@ -26,7 +27,7 @@ namespace Rootborn.Game.Common
 {
     public enum ItemCategory { Resource, Tool, Misc, Seed }
 
-    public sealed class Inventory
+    public sealed class Inventory : IRewardInventory<ItemDefinition>
     {
         public const int MaxSlots = 32;
 
@@ -47,6 +48,18 @@ namespace Rootborn.Game.Common
         public bool CanExchange(IReadOnlyList<InventoryGrant> costs, IReadOnlyList<InventoryGrant> rewards)
         {
             return !_exchangeInProgress && TryBuildExchange(costs, rewards, out _);
+        }
+
+        public bool CanReceive(IReadOnlyList<ItemAmount<ItemDefinition>> grants) => CanExchange(null, ToGrants(grants));
+
+        public bool TryReceive(IReadOnlyList<ItemAmount<ItemDefinition>> grants, Action commit) => TryExchange(null, ToGrants(grants), commit);
+
+        private static List<InventoryGrant> ToGrants(IReadOnlyList<ItemAmount<ItemDefinition>> amounts)
+        {
+            if (amounts == null) return null;
+            var grants = new List<InventoryGrant>(amounts.Count);
+            for (int i = 0; i < amounts.Count; i++) grants.Add(new InventoryGrant(amounts[i].Item, amounts[i].Count));
+            return grants;
         }
 
         public bool TryAddAll(IReadOnlyList<InventoryGrant> rewards, Action commitState = null)
