@@ -22,15 +22,19 @@ namespace Rootborn.Tests.EditMode.StudentLife
         }
 
         [Test]
-        public void LocationVisitObjective_MatchesOnlyTargetSoReferenceAndEventKind()
+        public void LocationVisitObjective_MatchesTargetLocationByIdAndEventKind()
         {
+            // A copy with the same id is the same location (scene copy vs Addressables bundle copy); another id is not.
             var objective = Objective("LocationVisitQuestObjective");
             var location = Own(ScriptableObject.CreateInstance<LocationDefinition>());
+            var copy = Own(ScriptableObject.CreateInstance<LocationDefinition>());
             var other = Own(ScriptableObject.CreateInstance<LocationDefinition>());
             location.ConfigureForTests("same-id", "location", Vector2.zero, null);
-            other.ConfigureForTests("same-id", "location", Vector2.zero, null);
+            copy.ConfigureForTests("same-id", "location", Vector2.zero, null);
+            other.ConfigureForTests("other-id", "location", Vector2.zero, null);
             Set(objective, "_targetLocation", location);
             Assert.That(objective.Matches(Event("LocationVisit", "location", location)), Is.True);
+            Assert.That(objective.Matches(Event("LocationVisit", "location", copy)), Is.True);
             Assert.That(objective.Matches(Event("LocationVisit", "location", other)), Is.False);
             Assert.That(objective.Matches(new QuestEvent(QuestEventKind.Talk, "wrong-kind")), Is.False);
             Set(objective, "_targetLocation", null);
