@@ -17,6 +17,19 @@ jobs:
       - name: scenario-id registry sync
         run: bash Scripts/ci/check-scenario-registry-sync.sh
 
+  core-rules:
+    name: core rules (dotnet, no Unity)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Rootborn.Core must not reference Unity
+        run: "! grep -rnE '^\\s*using\\s+Unity' Packages/com.rootborn.core/Runtime"
+      - name: Run core rule tests
+        run: dotnet test Tools/Rootborn.Core.Tests
+
   editmode:
     name: Unity EditMode
     runs-on: windows-2022
