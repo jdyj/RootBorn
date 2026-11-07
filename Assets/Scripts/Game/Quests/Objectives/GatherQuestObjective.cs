@@ -13,8 +13,7 @@ namespace Rootborn.Game.Quests.Objectives
         public override bool Matches(in QuestEvent questEvent)
         {
             return questEvent.Kind == QuestEventKind.Gather
-                && _targetResource != null
-                && questEvent.Resource == _targetResource;
+                && SameEntry(questEvent.Resource, _targetResource, questEvent.Resource != null ? questEvent.Resource.Id : null, _targetResource != null ? _targetResource.Id : null);
         }
     }
 }

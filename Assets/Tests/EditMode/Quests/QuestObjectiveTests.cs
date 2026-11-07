@@ -49,6 +49,39 @@ namespace Rootborn.Tests.EditMode.Quests
         }
 
         [Test]
+        public void QUEST_007_GatherObjective_MatchesBundleCopyOfTheSameResourceById()
+        {
+            // Built Addressables load the quest's target from a bundle while the tree in the scene keeps its own copy.
+            var sceneCopy = ScriptableObject.CreateInstance<ResourceNodeDefinition>();
+            var bundleCopy = ScriptableObject.CreateInstance<ResourceNodeDefinition>();
+            var otherResource = ScriptableObject.CreateInstance<ResourceNodeDefinition>();
+            SetField(sceneCopy, "_id", "resource.test-tree");
+            SetField(bundleCopy, "_id", "resource.test-tree");
+            SetField(otherResource, "_id", "resource.test-rock");
+            var objective = ScriptableObject.CreateInstance<GatherQuestObjective>();
+            SetField(objective, "_targetResource", bundleCopy);
+
+            Assert.IsTrue(objective.Matches(new QuestEvent(QuestEventKind.Gather, "g1", resource: sceneCopy)));
+            Assert.IsFalse(objective.Matches(new QuestEvent(QuestEventKind.Gather, "g2", resource: otherResource)));
+        }
+
+        [Test]
+        public void QUEST_009_CollectObjective_MatchesBundleCopyOfTheSameItemById()
+        {
+            var sceneCopy = ScriptableObject.CreateInstance<ItemDefinition>();
+            var bundleCopy = ScriptableObject.CreateInstance<ItemDefinition>();
+            var otherItem = ScriptableObject.CreateInstance<ItemDefinition>();
+            SetField(sceneCopy, "_id", "item.test-wood");
+            SetField(bundleCopy, "_id", "item.test-wood");
+            SetField(otherItem, "_id", "item.test-stone");
+            var objective = ScriptableObject.CreateInstance<CollectQuestObjective>();
+            SetField(objective, "_targetItem", bundleCopy);
+
+            Assert.IsTrue(objective.Matches(new QuestEvent(QuestEventKind.Collect, "c1", item: sceneCopy)));
+            Assert.IsFalse(objective.Matches(new QuestEvent(QuestEventKind.Collect, "c2", item: otherItem)));
+        }
+
+        [Test]
         public void QUEST_008_DefeatObjective_MatchesTargetReference()
         {
             var target = ScriptableObject.CreateInstance<ScriptableObject>();
