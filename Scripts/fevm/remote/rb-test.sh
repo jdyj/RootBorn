@@ -14,7 +14,8 @@ X=$O/$PLAT-$T.xml; L=$O/$PLAT-$T.log
 ARGS=(-batchmode -projectPath "$P" -buildTarget StandaloneWindows64 -runTests -testPlatform "$PLAT" -testResults "$X" -logFile "$L")
 [ -n "$FILTER" ] && ARGS+=(-testFilter "$FILTER")
 if [ "$ADDR" = rebuild ]; then
-  "$RB_UNITY" -batchmode -nographics -quit -projectPath "$P" -buildTarget StandaloneWindows64     -executeMethod Rootborn.Editor.BuildScripts.BuildScript.BuildAddressablesContent -logFile "$O/aa-build-$T.log"     || { echo "Addressables build failed: $O/aa-build-$T.log"; exit 2; }
+  rb_xvfb || exit 1
+  rb_unity_gpu -batchmode -quit -projectPath "$P" -buildTarget StandaloneWindows64     -executeMethod Rootborn.Editor.BuildScripts.BuildScript.BuildAddressablesContent -logFile "$O/aa-build-$T.log"     || { echo "Addressables build failed: $O/aa-build-$T.log"; exit 2; }
   ADDR=built
 fi
 export ROOTBORN_AA_PLAYMODE=$ADDR

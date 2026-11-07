@@ -26,3 +26,14 @@
 
 ## 기준선 (d70d74345, 2026-11-08)
 - EditMode GPU: 2090건 중 2029 통과, 59 실패. Windows 대비 FEVM만 실패 11건 = `output/` 증거 9건(고정 증거 복사로 해결 대상) + `DailyEventPresentationTests` 라벨 높이 2건(글꼴 차이 추정, 미확인).
+
+## AI Game Developer MCP (FEVM 편집기)
+- FEVM: `~/farmer-unity-verify/tools/rb-editor.sh <사본> start|stop|status`
+  - 창이 있는 편집기를 Xvfb `:99` + GPU로 띄운다.
+  - PC와 같은 연결 설정(Custom, streamableHttp, 22394, 인증 없음)을 `UserSettings/AI-Game-Developer-Config.json`에 넣는다.
+- PC: `Scripts/fevm/mcp-tunnel.sh`를 켜 둔다(PC 22395 → FEVM 22394).
+  - `.mcp.json`의 `ai-game-developer-fevm`으로 붙는다. 새 MCP 항목은 Claude Code를 다시 시작하거나 `/mcp`에서 다시 연결해야 보인다.
+- PC 편집기용 `ai-game-developer`(22394)는 그대로 둔다.
+- FEVM 사본에서 바꾼 장면·에셋은 `git diff` 패치로 가져와 PC 저장소에 적용하고 커밋한다.
+  - Linux가 바꾼 ProjectSettings와 .meta는 가져오지 않는다.
+- 같은 사본에서 편집기와 배치 테스트를 동시에 돌리지 않는다.

@@ -3,6 +3,10 @@
     "ai-game-developer": {
       "type": "http",
       "url": "http://localhost:22394"
+    },
+    "ai-game-developer-fevm": {
+      "type": "http",
+      "url": "http://localhost:22395"
     }
   }
 }
