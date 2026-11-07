@@ -52,6 +52,12 @@
       },
       "url": "https://package.openupm.com"
     },
+    "com.rootborn.core": {
+      "version": "file:com.rootborn.core",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
       "depth": 1,
