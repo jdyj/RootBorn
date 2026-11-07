@@ -77,7 +77,6 @@ namespace Rootborn.Tests.EditMode.TownConcept
         public void RuntimeEventSystemInstallers_DoNotUseTestCompileSymbolForClickableUi()
         {
             AssertRuntimeEventSystemInstaller("Assets/Scripts/UI/MainMenu/SaveSlotSelectPanel.cs");
-            AssertRuntimeEventSystemInstaller("Assets/Scripts/UI/Quests/QuestHudAutoFiller.cs");
             AssertRuntimeEventSystemInstaller("Assets/Scripts/Game/Bootstrap/TownPlayableBaselineRuntimeInstaller.cs");
         }
 

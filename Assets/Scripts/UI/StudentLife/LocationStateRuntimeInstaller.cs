@@ -96,8 +96,7 @@ namespace Rootborn.UI.StudentLife
                 string playerId = ResolvePlayerId(player, student.PlayerId);
                 var locationProgress = LocationStateProgressPersistence.LoadOrCreate(saveSlot, playerId);
                 var world = WorldStateProgressPersistence.LoadOrCreate(saveSlot, playerId);
-                var questLogPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
-                QuestLog questLog = questLogPanel != null ? questLogPanel.QuestLog : null;
+                QuestLog questLog = Rootborn.Game.Player.PlayerQuestRuntime.TryGet(saveSlot, playerId, out var quests) ? quests.QuestLog : null;
                 var summary = _resolver.Resolve(new LocationStateContext(interactor.Identity.Location, timeSlot, student, world, questLog, new NpcScheduleResolver(_dataCache), locationProgress));
                 LocationStateProgressPersistence.Save(locationProgress);
                 _panel.Hide();

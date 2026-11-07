@@ -336,7 +336,7 @@ namespace Rootborn.UI.StudentLife
             return panelGo.GetComponent<DialoguePanel>();
         }
 
-        // QuestHudAutoFiller historically created its own "DialoguePanel" GameObject
+        // The removed Town quest HUD installer created its own "DialoguePanel" GameObject
         // because it searched by name instead of component type. Surviving orphans
         // from older builds show up as a faint second panel behind the active one.
         // Destroy any DialoguePanel GameObject that isn't the one we'll keep.

@@ -91,17 +91,17 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return WalkPlayerWithKeyboardTo(town.Player, keyboard, town.Npc.transform.position + new Vector3(0.75f, 0f, 0f), 0.2f, "STUDENT-DAY-E2E-012 failed: keyboard movement could not reach GuideNpc.");
             yield return OpenGuideDialogueThroughInput(town, keyboard, "STUDENT-DAY-E2E-012 failed: GuideNpc dialogue did not open through prompt/input.");
             yield return ClickButton(FindChoiceButtonFor(town.DialoguePanel, DialogueQuestAction.AcceptQuest, route.Quest));
-            Assert.AreEqual(QuestState.Active, town.QuestLogPanel.QuestLog.GetState(route.Quest), "STUDENT-DAY-E2E-012 failed: visible accept choice did not activate quest.");
+            Assert.AreEqual(QuestState.Active, town.Quests.QuestLog.GetState(route.Quest), "STUDENT-DAY-E2E-012 failed: visible accept choice did not activate quest.");
 
             yield return GatherUntilQuestCompletedThroughMovement(town, keyboard, route, woodItem);
-            Assert.AreEqual(QuestState.Completed, town.QuestLogPanel.QuestLog.GetState(route.Quest), "STUDENT-DAY-E2E-012 failed: actual resource interaction did not complete quest.");
+            Assert.AreEqual(QuestState.Completed, town.Quests.QuestLog.GetState(route.Quest), "STUDENT-DAY-E2E-012 failed: actual resource interaction did not complete quest.");
 
             yield return WalkPlayerWithKeyboardTo(town.Player, keyboard, town.Npc.transform.position + new Vector3(0.75f, 0f, 0f), 0.2f, "STUDENT-DAY-E2E-012 failed: keyboard movement could not return to GuideNpc for reward.");
             yield return OpenGuideDialogueThroughInput(town, keyboard, "STUDENT-DAY-E2E-012 failed: GuideNpc dialogue did not reopen for reward.");
             yield return ClickButton(FindChoiceButtonFor(town.DialoguePanel, DialogueQuestAction.ClaimReward, route.Quest));
             int rewardAfterClaim = town.Inventory.Inventory.CountOf(reward.Item);
             Assert.AreEqual(rewardBeforeClaim + reward.Count, rewardAfterClaim, "STUDENT-DAY-E2E-012 failed: reward was not paid exactly once before day end.");
-            Assert.AreEqual(QuestState.RewardClaimed, town.QuestLogPanel.QuestLog.GetState(route.Quest), "STUDENT-DAY-E2E-012 failed: reward claim state did not update before day end.");
+            Assert.AreEqual(QuestState.RewardClaimed, town.Quests.QuestLog.GetState(route.Quest), "STUDENT-DAY-E2E-012 failed: reward claim state did not update before day end.");
 
             var dayEnd = GameObject.Find("StudentDayEndBoard").GetComponent<StudentDayEndInteractor>();
             yield return WalkPlayerWithKeyboardTo(town.Player, keyboard, dayEnd.transform.position, 0.25f, "STUDENT-DAY-E2E-012 failed: keyboard movement could not reach day-end board.");
@@ -139,7 +139,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var reloaded = FindTownRuntime();
             route = FindGatherWoodRoute(reloaded.Provider);
             reward = FindFirstItemReward(route.Quest);
-            Assert.AreEqual(QuestState.RewardClaimed, reloaded.QuestLogPanel.QuestLog.GetState(route.Quest), "STUDENT-DAY-E2E-012 failed: quest reward state did not survive slot reload.");
+            Assert.AreEqual(QuestState.RewardClaimed, reloaded.Quests.QuestLog.GetState(route.Quest), "STUDENT-DAY-E2E-012 failed: quest reward state did not survive slot reload.");
             Assert.AreEqual(rewardAfterClaim, reloaded.Inventory.Inventory.CountOf(reward.Item), "STUDENT-DAY-E2E-012 failed: reward inventory count changed after slot reload.");
             yield return WalkPlayerWithKeyboardTo(reloaded.Player, keyboard, reloaded.Npc.transform.position + new Vector3(0.75f, 0f, 0f), 0.2f, "STUDENT-DAY-E2E-012 failed: keyboard movement could not reach GuideNpc after reload.");
             yield return OpenGuideDialogueThroughInput(reloaded, keyboard, "STUDENT-DAY-E2E-012 failed: GuideNpc dialogue did not open after reload.");
@@ -156,7 +156,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 var npc = GameObject.Find("GuideNpc");
                 var dayEnd = GameObject.Find("StudentDayEndBoard");
                 var dialoguePanel = Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include);
-                var questLogPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
+                var questLogPanel = QuestSessionLookup.Active();
                 var resultPanel = Object.FindFirstObjectByType<StudentDayResultPanel>(FindObjectsInactive.Include);
                 if (player != null &&
                     player.GetComponent<PlayerController>() != null &&
@@ -193,7 +193,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 npc.GetComponent<NpcInteractor>(),
                 npc.GetComponent<QuestProvider>(),
                 Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include),
-                Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include));
+                QuestSessionLookup.Active());
         }
 
         private IEnumerator OpenGuideDialogueThroughInput(TownRuntime runtime, Keyboard keyboard, string failure)
@@ -215,7 +215,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         private IEnumerator GatherUntilQuestCompletedThroughMovement(TownRuntime runtime, Keyboard keyboard, GatherWoodRoute route, ItemDefinition woodItem)
         {
             int guard = 0;
-            while (runtime.QuestLogPanel.QuestLog.GetState(route.Quest) != QuestState.Completed && guard < 80)
+            while (runtime.Quests.QuestLog.GetState(route.Quest) != QuestState.Completed && guard < 80)
             {
                 int before = runtime.Inventory.Inventory.CountOf(woodItem);
                 var node = FindTargetResourceNode(route.Objective.TargetResource);
@@ -537,9 +537,9 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             public readonly NpcInteractor Npc;
             public readonly QuestProvider Provider;
             public readonly DialoguePanel DialoguePanel;
-            public readonly QuestLogPanel QuestLogPanel;
+            public readonly Rootborn.Game.Player.PlayerQuestSession Quests;
 
-            public TownRuntime(GameObject player, GatherInteractor gather, PlayerInteractionRouter router, PlayerInventory inventory, StudentLifeProgressComponent student, NpcInteractor npc, QuestProvider provider, DialoguePanel dialoguePanel, QuestLogPanel questLogPanel)
+            public TownRuntime(GameObject player, GatherInteractor gather, PlayerInteractionRouter router, PlayerInventory inventory, StudentLifeProgressComponent student, NpcInteractor npc, QuestProvider provider, DialoguePanel dialoguePanel, Rootborn.Game.Player.PlayerQuestSession quests)
             {
                 Player = player;
                 Gather = gather;
@@ -549,7 +549,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 Npc = npc;
                 Provider = provider;
                 DialoguePanel = dialoguePanel;
-                QuestLogPanel = questLogPanel;
+                Quests = quests;
             }
         }
     }

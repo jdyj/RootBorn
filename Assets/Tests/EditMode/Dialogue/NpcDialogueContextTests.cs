@@ -126,12 +126,9 @@ namespace Rootborn.Tests.EditMode.Dialogue
         [Test]
         public void NPC_CONTEXT_002_TownCallbacksKeepRichOwnerContextAfterGlobalDispatch()
         {
-            WireLegacyQuestBinder();
-            DialogueChoiceContext beforeGlobal = default;
-            _npc.OnInteracted += _ => beforeGlobal = Context;
             WireLocationRunner();
             Assert.That(_npc.TryInteract(_owner.gameObject), Is.True);
-            Assert.That(beforeGlobal.QuestLog, Is.SameAs(_log), "The first production callback supplies the rich context.");
+            Assert.That(Context.QuestLog, Is.SameAs(_log), "The player's quest session supplies the dialogue quest log.");
             AssertOwnerContext(Context);
             AssertSinglePanel();
         }
@@ -139,7 +136,7 @@ namespace Rootborn.Tests.EditMode.Dialogue
         [Test]
         public void NPC_CONTEXT_003_AcceptChoiceRemainsAvailableAfterBothProductionCallbacks()
         {
-            WireLegacyQuestBinder(); WireLocationRunner();
+            WireLocationRunner();
             Assert.That(_npc.TryInteract(_owner.gameObject), Is.True);
             var context = Context;
             Assert.That(Choice(DialogueQuestAction.AcceptQuest).IsAvailable(in context), Is.True,
@@ -150,7 +147,7 @@ namespace Rootborn.Tests.EditMode.Dialogue
         [Test]
         public void NPC_CONTEXT_004_CompletedRewardKeepsCanonicalInventoryForPreflight()
         {
-            Assert.That(_log.Accept(_quest), Is.True); WireLegacyQuestBinder(); WireLocationRunner();
+            Assert.That(_log.Accept(_quest), Is.True); WireLocationRunner();
             Assert.That(_npc.TryInteract(_owner.gameObject), Is.True);
             Assert.That(_log.GetState(_quest), Is.EqualTo(QuestState.Completed), "The actual NPC talk event completes the real objective.");
             var context = Context;
@@ -163,7 +160,7 @@ namespace Rootborn.Tests.EditMode.Dialogue
         public void NPC_CONTEXT_005_ScheduleSelectedDialogueAndRichContextSurviveTogether()
         {
             var scheduled = MakeDialogue(); _npc.BindSchedule(null, "morning", scheduled, null, null);
-            WireLegacyQuestBinder(); WireLocationRunner();
+            WireLocationRunner();
             Assert.That(_npc.TryInteract(_owner.gameObject), Is.True);
             Assert.That(_npc.Session.Current, Is.SameAs(scheduled));
             Assert.That(Get(_panel, "_dialogue"), Is.SameAs(scheduled), "Do not replace schedule selection with the NPC default.");
@@ -181,7 +178,7 @@ namespace Rootborn.Tests.EditMode.Dialogue
         [Test]
         public void NPC_CONTEXT_007_UnboundForeignActorCannotOpenTheCanonicalOwnersConversation()
         {
-            WireLegacyQuestBinder(); WireLocationRunner();
+            WireLocationRunner();
             var foreign = Go("ForeignActor"); foreign.AddComponent<PlayerIdentity>().Configure("foreign");
             _npc.TryInteract(foreign);
             Assert.That(_panel.IsOpen, Is.False, "An unrelated actor cannot borrow the bound owner's quest/reward context.");
@@ -201,15 +198,6 @@ namespace Rootborn.Tests.EditMode.Dialogue
         {
             int count = 0; foreach (var root in _scene.GetRootGameObjects()) count += root.GetComponentsInChildren<DialoguePanel>(true).Length;
             Assert.That(count, Is.EqualTo(1), "Reuse the existing scene panel.");
-        }
-        private void WireLegacyQuestBinder()
-        {
-            var type = typeof(QuestHudAutoFiller).GetNestedType("QuestDialogueUiBinder", BindingFlags.NonPublic);
-            var binder = (MonoBehaviour)Go("QuestDialogueBinder").AddComponent(type); _binders.Add(binder);
-            type.GetMethod("Bind", new[] { typeof(DialoguePanel), typeof(QuestLog), typeof(PlayerInventory), typeof(StudentLifeProgressComponent), typeof(StoryFlagSet), typeof(string), typeof(Rootborn.Game.WorldState.WorldStateProgress) })
-                .Invoke(binder, new object[] { _panel, _log, _owner.PlayerInventory, _owner.StudentComponent, _flags, "actor", _owner.World });
-            var callback = (Action<NpcInteractor>)Delegate.CreateDelegate(typeof(Action<NpcInteractor>), binder, type.GetMethod("HandleNpcInteracted", PrivateInstance));
-            _npc.OnInteracted += callback; Set(binder, "_attached", new[] { _npc });
         }
         private void WireLocationRunner()
         {

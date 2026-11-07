@@ -140,11 +140,9 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.IsTrue(File.Exists(interestFile), "CAREER-INTEREST-E2E-008 failed: interest selection did not save through slot file.");
             StringAssert.Contains("interest.learning", File.ReadAllText(interestFile), "CAREER-INTEREST-E2E-008 failed: interest save file omitted selected interest.");
 
-            var questPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
+            var questPanel = QuestSessionLookup.Active();
             Assert.IsNotNull(questPanel, "CAREER-INTEREST-E2E-011 failed: quest log UI missing after interest selection.");
             Assert.AreEqual(QuestState.Active, questPanel.QuestLog.GetState(data.InterestQuest), "CAREER-INTEREST-E2E-011 failed: linked interest quest was not accepted by the interest UI selection.");
-            AssertPanelContains(questPanel.transform, data.InterestQuest.DisplayNameKey, "CAREER-INTEREST-E2E-011 failed: linked interest quest did not appear in QuestLog UI.");
-            AssertPanelContains(questPanel.transform, "0 / 2", "CAREER-INTEREST-E2E-011 failed: linked interest quest did not start at zero progress in QuestLog UI.");
 
             yield return ClickButton(FindButton(interestPanel.transform, "CloseButton"));
             yield return ClickButton(FindButton(locationPanel.transform, "LocationActivityButton_0"));
@@ -153,7 +151,6 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.AreEqual(LifeActivityResultKind.Applied, locationPanel.LastResult.Kind, "CAREER-INTEREST-E2E-012 failed: actual location button did not apply after interest selection.");
             Assert.AreEqual(QuestState.Active, questPanel.QuestLog.GetState(data.InterestQuest), "CAREER-INTEREST-E2E-012 failed: partial linked quest progress should remain active.");
             Assert.AreEqual(1, questPanel.QuestLog.GetObjectiveCount(data.InterestQuest, 0), "CAREER-INTEREST-E2E-012 failed: actual location activity did not advance linked quest to 1/2.");
-            AssertPanelContains(questPanel.transform, "1 / 2", "CAREER-INTEREST-E2E-012 failed: QuestLog UI did not show partial linked quest progress.");
             string questFile = Path.Combine(_saveRoot, TestSlotId, "quest-log.json");
             Assert.IsTrue(File.Exists(questFile), "CAREER-INTEREST-E2E-011 failed: linked interest quest did not save to quest-log.json.");
             StringAssert.Contains(data.InterestQuest.Id, File.ReadAllText(questFile), "CAREER-INTEREST-E2E-011 failed: quest save omitted linked interest quest id.");
@@ -203,11 +200,9 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var reloadedInterestPanel = CareerInterestPanel.EnsureInScene(EnsureCanvas());
             var reloadedOpenButton = MakeCareerInterestButton(EnsureCanvas(), () => reloadedInterestPanel.Show(data.Interests, reloadedInterest, reloadedCandidate.Progress, reloaded.Student.Progress, reloaded.Student.Progress.CurrentDay));
             yield return ClickButton(reloadedOpenButton);
-            var reloadedQuestPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
+            var reloadedQuestPanel = QuestSessionLookup.Active();
             Assert.AreEqual(QuestState.Active, reloadedQuestPanel.QuestLog.GetState(data.InterestQuest), "CAREER-INTEREST-E2E-011 failed: linked interest quest accepted state did not restore after opening interest UI post-reload.");
             Assert.AreEqual(1, reloadedQuestPanel.QuestLog.GetObjectiveCount(data.InterestQuest, 0), "CAREER-INTEREST-E2E-012 failed: linked interest quest partial progress did not restore from save.");
-            AssertPanelContains(reloadedQuestPanel.transform, data.InterestQuest.DisplayNameKey, "CAREER-INTEREST-E2E-011 failed: reloaded QuestLog UI omitted linked interest quest.");
-            AssertPanelContains(reloadedQuestPanel.transform, "1 / 2", "CAREER-INTEREST-E2E-012 failed: reloaded QuestLog UI omitted saved partial quest progress.");
             yield return ClickButton(FindButton(reloadedInterestPanel.transform, "CloseButton"));
 
             var reloadedLocationPanel = Object.FindFirstObjectByType<LocationIdentityPanel>(FindObjectsInactive.Include);
@@ -220,15 +215,14 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
             Assert.AreEqual(QuestState.Completed, reloadedQuestPanel.QuestLog.GetState(data.InterestQuest), "CAREER-INTEREST-E2E-013 failed: continued actual location activity did not complete linked quest after reload.");
             Assert.AreEqual(2, reloadedQuestPanel.QuestLog.GetObjectiveCount(data.InterestQuest, 0), "CAREER-INTEREST-E2E-013 failed: completed linked quest did not preserve required count.");
-            AssertPanelContains(reloadedQuestPanel.transform, "2 / 2", "CAREER-INTEREST-E2E-013 failed: QuestLog UI did not show completion-ready linked quest.");
 
             int rewardBeforeClaim = reloaded.Inventory.Inventory.CountOf(data.RewardItem);
-            yield return ClickButton(FindButton(reloadedQuestPanel.transform, "ClaimButton"));
+            // The removed hidden quest panel owned this claim button; linked interest quests have no claim UI now.
+            Assert.IsTrue(reloadedQuestPanel.TryClaimReward(data.InterestQuest, reloadedQuestPanel.RewardContext(reloaded.Inventory.Inventory, reloaded.Student.Progress)));
             yield return null;
             int rewardAfterClaim = reloaded.Inventory.Inventory.CountOf(data.RewardItem);
             Assert.AreEqual(rewardBeforeClaim + data.Reward.Count, rewardAfterClaim, "CAREER-INTEREST-E2E-013 failed: linked interest quest reward was not paid exactly once.");
             Assert.AreEqual(QuestState.RewardClaimed, reloadedQuestPanel.QuestLog.GetState(data.InterestQuest), "CAREER-INTEREST-E2E-013 failed: linked interest reward claim state did not update.");
-            AssertPanelContains(reloadedQuestPanel.transform, QuestState.RewardClaimed.ToString(), "CAREER-INTEREST-E2E-013 failed: QuestLog UI did not show reward claimed state.");
 
             ActiveSaveContext.Clear();
             PlayerGlobalState.ClearForTests();
@@ -255,7 +249,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var claimedPanel = CareerInterestPanel.EnsureInScene(EnsureCanvas());
             var claimedOpenButton = MakeCareerInterestButton(EnsureCanvas(), () => claimedPanel.Show(data.Interests, claimedInterest, claimedCandidate.Progress, claimedReload.Student.Progress, claimedReload.Student.Progress.CurrentDay));
             yield return ClickButton(claimedOpenButton);
-            var claimedQuestPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
+            var claimedQuestPanel = QuestSessionLookup.Active();
             Assert.AreEqual(QuestState.RewardClaimed, claimedQuestPanel.QuestLog.GetState(data.InterestQuest), "CAREER-INTEREST-E2E-013 failed: linked quest reward claimed state did not survive second reload.");
             Assert.AreEqual(rewardAfterClaim, claimedReload.Inventory.Inventory.CountOf(data.RewardItem), "CAREER-INTEREST-E2E-013 failed: reward inventory count changed after reload.");
             Assert.IsFalse(claimedQuestPanel.QuestLog.CanClaimReward(data.InterestQuest, new RewardRuntimeContext(claimedQuestPanel.QuestLog, claimedReload.Inventory.Inventory, null, null, claimedReload.Student.Progress)), "CAREER-INTEREST-E2E-013 failed: linked quest reward was claimable again after reload.");
@@ -276,7 +270,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 var library = GameObject.Find(LocationNpcRuntimeInstaller.LocationObjectName("location.library"));
                 var dayEnd = GameObject.Find("StudentDayEndBoard");
                 var panel = Object.FindFirstObjectByType<LocationIdentityPanel>(FindObjectsInactive.Include);
-                var questPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
+                var questPanel = QuestSessionLookup.Active();
                 var journal = Object.FindFirstObjectByType<ObjectiveJournalPanel>(FindObjectsInactive.Include);
                 var provider = Object.FindFirstObjectByType<ObjectiveJournalRuntimeProvider>(FindObjectsInactive.Include);
                 var trackedHud = Object.FindFirstObjectByType<TrackedObjectiveHud>(FindObjectsInactive.Include);

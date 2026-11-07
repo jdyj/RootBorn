@@ -25,7 +25,6 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
             "Assets/Scripts/UI/Objectives/TrackedObjectiveHud.cs :: TrackedObjectiveHud",
 
             // Reviewed legacy or non-always-visible surfaces. New objective-like HUD/Panel/Widget types must not be added here without design review.
-            "Assets/Scripts/UI/Quests/QuestLogPanel.cs :: QuestLogPanel",
             "Assets/Scripts/UI/Quests/QuestChainLogPanel.cs :: QuestChainLogPanel",
             "Assets/Scripts/UI/StudentLife/CareerInterestPanel.cs :: CareerInterestPanel"
         };

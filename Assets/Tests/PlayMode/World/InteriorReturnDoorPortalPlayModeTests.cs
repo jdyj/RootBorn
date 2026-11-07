@@ -296,11 +296,9 @@ namespace Rootborn.Tests.PlayMode.World
 
         private static void AssertCleanTownReturnView()
                 {
-                    AssertInactiveOrMissing("QuestChainLogOpenButton");
             AssertInactiveOrMissing("LocationStateLogButton");
                     AssertInactiveOrMissing("StudentDayResultRoot");
                     AssertInactiveOrMissing("BookPanel");
-                    AssertInactiveOrMissing("QuestLogPanel");
                     AssertInactiveOrMissing("ObjectiveJournalPanel");
                     AssertInactiveOrMissing("ObjectiveJournalRoot");
                     AssertInactiveOrMissing("WorldStateLogPanel");

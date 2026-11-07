@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using NUnit.Framework;
 using Rootborn.Game.Common;
+using Rootborn.Game.Player;
 using Rootborn.Game.Quests;
 using Rootborn.Game.Save;
 using Rootborn.Game.StudentLife;
@@ -82,7 +83,12 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
                 Array.Empty<QuestRewardBase>(),
                 Array.Empty<QuestCompletionEffectBase>());
 
-            var log = new QuestLog(new[] { claimedQuest });
+            var registry = ScriptableObject.CreateInstance<GameDataRegistry>();
+            SetPrivateField(registry, "_quests", new[] { claimedQuest });
+            var previousSave = ActiveSaveContext.Metadata;
+            ActiveSaveContext.Clear();
+            PlayerGlobalState.ClearForTests();
+            var log = PlayerQuestRuntime.Get(string.Empty, null, registry.Quests).QuestLog;
             log.Accept(claimedQuest);
             log.RecordEvent(new QuestEvent(QuestEventKind.Gather, "herbs-1"));
             log.RecordEvent(new QuestEvent(QuestEventKind.Gather, "herbs-2"));
@@ -90,12 +96,9 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
             Assert.AreEqual(QuestState.Completed, log.GetState(claimedQuest));
             Assert.IsTrue(log.ClaimReward(claimedQuest, default));
 
-            var panelGo = new GameObject("QuestLogPanel", typeof(RectTransform));
             try
             {
-                panelGo.AddComponent<QuestLogPanel>().Bind(log, new[] { claimedQuest }, default);
-
-                var items = BuildItemsFromSource("QuestLogObjectiveSource", null, null);
+                var items = BuildItemsFromSource("QuestLogObjectiveSource", null, registry);
 
                 Assert.AreEqual(1, items.Length, "RewardClaimed quests should remain visible in Objective Journal history.");
                 Assert.AreEqual("RewardClaimed", items[0].State);
@@ -104,7 +107,9 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
             }
             finally
             {
-                UnityEngine.Object.DestroyImmediate(panelGo);
+                PlayerGlobalState.ClearForTests();
+                ActiveSaveContext.Set(previousSave);
+                UnityEngine.Object.DestroyImmediate(registry);
                 UnityEngine.Object.DestroyImmediate(firstObjective);
                 UnityEngine.Object.DestroyImmediate(secondObjective);
                 UnityEngine.Object.DestroyImmediate(claimedQuest);

@@ -58,7 +58,7 @@ namespace Rootborn.Tests.PlayMode.Quests
             var router = player.GetComponent<PlayerInteractionRouter>();
             var npc = GameObject.Find("GuideNpc").GetComponent<NpcInteractor>();
             var dialoguePanel = Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include);
-            var questLogPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
+            var questLogPanel = QuestSessionLookup.Active();
             var firstQuest = npc.Npc.DefaultDialogue.Choices[0].Quest;
 
             yield return OpenGuideDialogue(player, npc, gather, router, dialoguePanel);
@@ -84,7 +84,7 @@ namespace Rootborn.Tests.PlayMode.Quests
             var npc = GameObject.Find("GuideNpc").GetComponent<NpcInteractor>();
             var provider = npc.GetComponent<QuestProvider>();
             var dialoguePanel = Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include);
-            var questLogPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
+            var questLogPanel = QuestSessionLookup.Active();
             var routes = FindTraitQuests(provider.Quests);
             Assert.AreEqual(4, routes.Count);
 

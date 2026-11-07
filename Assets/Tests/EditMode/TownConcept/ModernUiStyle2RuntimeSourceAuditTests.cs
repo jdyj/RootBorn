@@ -12,8 +12,7 @@ namespace Rootborn.Tests.EditMode.TownConcept
             var files = new[]
             {
                 "Assets/Scripts/UI/Modern/ModernUiRecipes.cs",
-                "Assets/Scripts/Game/Common/ModernHudSpriteKeys.cs",
-                "Assets/Scripts/UI/Quests/QuestLogPanel.cs"
+                "Assets/Scripts/Game/Common/ModernHudSpriteKeys.cs"
             };
 
             var violations = new List<string>();

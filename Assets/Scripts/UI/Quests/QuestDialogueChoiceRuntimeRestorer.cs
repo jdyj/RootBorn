@@ -86,31 +86,29 @@ namespace Rootborn.UI.Quests
                 if (AuthoredWorldScene.Find(npc.gameObject.scene) != null || FindOwnedPresenter(npc.gameObject.scene) != null) yield break;
 
                 var dialoguePanel = Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include);
-                var questPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
-                if (dialoguePanel == null || questPanel == null || questPanel.QuestLog == null)
+                var player = FindPlayer();
+                var inventoryComponent = player != null ? player.GetComponent<PlayerInventory>() : null;
+                string playerId = ResolvePlayerId(inventoryComponent);
+                if (dialoguePanel == null || !PlayerQuestRuntime.TryGetActive(playerId, out var quests) || quests.LoadFailed)
                 {
                     yield break;
                 }
 
-                var player = FindPlayer();
-                var inventoryComponent = player != null ? player.GetComponent<PlayerInventory>() : null;
                 var studentComponent = player != null ? player.GetComponent<StudentLifeProgressComponent>() : null;
                 var studentProgress = progress ?? (studentComponent != null ? studentComponent.EnsureProgress() : null);
-                string playerId = ResolvePlayerId(inventoryComponent);
                 var metadata = ActiveSaveContext.Metadata;
                 var worldStateProgress = metadata != null && !string.IsNullOrEmpty(metadata.SlotId)
                     ? WorldStateProgressPersistence.LoadOrCreate(metadata.SlotId, playerId)
                     : new WorldStateProgress("default", playerId);
-                var context = new RewardRuntimeContext(
-                    questPanel.QuestLog,
+                var context = quests.RewardContext(
                     inventoryComponent != null ? inventoryComponent.Inventory : null,
-                    null,
-                    _storyFlags,
                     studentProgress,
-                    worldStateProgress);
+                    worldStateProgress,
+                    null,
+                    _storyFlags);
 
                 RegisterPendingChoiceSave(dialoguePanel, worldStateProgress);
-                dialoguePanel.Open(npc.Npc.ResolveDialogue(studentProgress), new DialogueChoiceContext(questPanel.QuestLog, context));
+                dialoguePanel.Open(npc.Npc.ResolveDialogue(studentProgress), new DialogueChoiceContext(quests.QuestLog, context));
             }
 
             private void RegisterPendingChoiceSave(DialoguePanel panel, WorldStateProgress progress)

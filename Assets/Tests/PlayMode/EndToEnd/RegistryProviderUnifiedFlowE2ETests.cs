@@ -189,7 +189,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                     ReferenceEquals(providerRegistry, Managers.Data.Registry) &&
                     player != null &&
                     player.GetComponent<StudentLifeProgressComponent>() != null &&
-                    Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include) != null &&
+                    QuestSessionLookup.Active() != null &&
                     Object.FindFirstObjectByType<ObjectiveJournalPanel>(FindObjectsInactive.Include) != null &&
                     Object.FindFirstObjectByType<ObjectiveJournalRuntimeProvider>(FindObjectsInactive.Include) != null &&
                     Object.FindFirstObjectByType<TrackedObjectiveHud>(FindObjectsInactive.Include) != null &&

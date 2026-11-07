@@ -12,7 +12,6 @@ namespace Rootborn.UI.Quests
     {
         private const string TownSceneName = "Town";
         private const string RunnerName = "[QuestPlayflowRuntimeBinder]";
-        private const string QuestLogFileName = "quest-log.json";
         private const string InventoryFileName = "inventory.json";
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -65,6 +64,7 @@ namespace Rootborn.UI.Quests
             private Inventory _subscribedInventory;
             private string _loadedInventoryKey;
             private string _playerId = PlayerIdentity.DefaultPlayerId;
+            private string _questSlot;
 
             private IEnumerator Start()
             {
@@ -92,13 +92,18 @@ namespace Rootborn.UI.Quests
 
             private void BindCurrentSceneObjects()
             {
-                var panel = FindComponentInScene<QuestLogPanel>(gameObject.scene);
-                var nextQuestLog = panel != null ? panel.QuestLog : null;
                 var player = FindPlayerInScene(gameObject.scene);
                 var nextGather = player != null ? player.GetComponent<GatherInteractor>() : null;
                 var nextInventory = player != null ? player.GetComponent<PlayerInventory>() : null;
-                var identity = player != null ? player.GetComponent<PlayerIdentity>() : null;
-                var nextPlayerId = identity != null ? identity.PlayerId : PlayerIdentity.DefaultPlayerId;
+                var nextPlayerId = PlayerQuestRuntime.PlayerIdOf(player);
+                // The quest session saves itself after every change; this binder only feeds it gather events.
+                // Resolved again only when the slot or player changes, not every frame.
+                string slot = ActiveSaveContext.SlotId;
+                var nextQuestLog = _questLog;
+                if (player == null) nextQuestLog = null;
+                else if (_questLog == null || slot != _questSlot || nextPlayerId != _playerId)
+                    nextQuestLog = PlayerQuestRuntime.TryGetActive(nextPlayerId, out var quests) ? quests.QuestLog : null;
+                _questSlot = slot;
 
                 if (_questLog != nextQuestLog)
                 {
@@ -175,7 +180,6 @@ namespace Rootborn.UI.Quests
 
             private void HandleQuestStateChanged(QuestStateChange change)
             {
-                SaveQuestLog(_questLog, _playerId);
                 string questId = change.Quest != null && !string.IsNullOrEmpty(change.Quest.Id) ? change.Quest.Id : string.Empty;
                 Debug.Log("[ROOTBORN] Quest state changed player=" + _playerId + " quest=" + questId + " state=" + change.State + " kind=" + change.Kind + " objective=" + change.ObjectiveIndex + " count=" + change.ObjectiveCount);
             }
@@ -249,23 +253,6 @@ namespace Rootborn.UI.Quests
             new SaveService(metadata.SlotId).WriteJson(InventoryFileNameFor(playerId), json);
         }
 
-        private static void SaveQuestLog(QuestLog questLog, string playerId)
-        {
-            if (questLog == null)
-            {
-                return;
-            }
-
-            var metadata = ActiveSaveContext.Metadata;
-            if (metadata == null || string.IsNullOrEmpty(metadata.SlotId))
-            {
-                return;
-            }
-
-            var json = JsonUtility.ToJson(questLog.ToSaveData(), true);
-            new SaveService(metadata.SlotId).WriteJson(QuestLogFileNameFor(playerId), json);
-        }
-
         private static GameObject FindRoot(Scene scene, string name)
         {
             var roots = scene.GetRootGameObjects();
@@ -336,40 +323,6 @@ namespace Rootborn.UI.Quests
             return null;
         }
 
-        private static T FindComponentInScene<T>(Scene scene) where T : Component
-        {
-            var roots = scene.GetRootGameObjects();
-            for (int i = 0; i < roots.Length; i++)
-            {
-                var match = FindComponentInChildren<T>(roots[i].transform);
-                if (match != null)
-                {
-                    return match;
-                }
-            }
-
-            return null;
-        }
-
-        private static T FindComponentInChildren<T>(Transform root) where T : Component
-        {
-            if (root.TryGetComponent<T>(out var component))
-            {
-                return component;
-            }
-
-            for (int i = 0; i < root.childCount; i++)
-            {
-                var match = FindComponentInChildren<T>(root.GetChild(i));
-                if (match != null)
-                {
-                    return match;
-                }
-            }
-
-            return null;
-        }
-
         private static string InventoryFileNameFor(string playerId)
         {
             if (string.IsNullOrEmpty(playerId) || playerId == PlayerIdentity.DefaultPlayerId)
@@ -378,16 +331,6 @@ namespace Rootborn.UI.Quests
             }
 
             return "inventory-" + SanitizeFileName(playerId) + ".json";
-        }
-
-        private static string QuestLogFileNameFor(string playerId)
-        {
-            if (string.IsNullOrEmpty(playerId) || playerId == PlayerIdentity.DefaultPlayerId)
-            {
-                return QuestLogFileName;
-            }
-
-            return "quest-log-" + SanitizeFileName(playerId) + ".json";
         }
 
         private static string SanitizeFileName(string value)

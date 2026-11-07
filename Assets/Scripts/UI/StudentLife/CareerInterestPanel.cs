@@ -170,88 +170,16 @@ namespace Rootborn.UI.StudentLife
         private void ApplyLinkedQuests(CareerInterestDefinition interest)
         {
             if (interest == null || interest.LinkedQuests == null || interest.LinkedQuests.Count == 0) return;
-            var questPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
-            if (questPanel == null || questPanel.QuestLog == null) return;
             var inventory = _interestComponent != null ? _interestComponent.GetComponent<PlayerInventory>() : null;
-            string playerId = ResolvePlayerId(inventory);
-            bool added = false;
+            string playerId = PlayerQuestRuntime.PlayerIdOf(inventory != null ? inventory.gameObject : null);
+            if (!PlayerQuestRuntime.TryGetActive(playerId, out var quests) || quests.LoadFailed) return;
+            // Adding restores progress saved for these quests; each accept is saved by the quest session.
+            quests.AddQuests(interest.LinkedQuests);
             for (int i = 0; i < interest.LinkedQuests.Count; i++)
             {
                 var quest = interest.LinkedQuests[i];
-                if (quest == null || ContainsQuest(questPanel.Quests, quest.Id)) continue;
-                questPanel.QuestLog.AddQuest(quest);
-                added = true;
+                if (quest != null && quests.QuestLog.GetState(quest) == QuestState.NotStarted) quests.QuestLog.Accept(quest);
             }
-
-            if (added) LoadQuestLog(questPanel.QuestLog, playerId);
-
-            bool changed = false;
-            for (int i = 0; i < interest.LinkedQuests.Count; i++)
-            {
-                var quest = interest.LinkedQuests[i];
-                if (quest == null) continue;
-                if (questPanel.QuestLog.GetState(quest) == QuestState.NotStarted && questPanel.QuestLog.Accept(quest)) changed = true;
-            }
-
-            var context = new RewardRuntimeContext(questPanel.QuestLog, inventory != null ? inventory.Inventory : null, null, new StoryFlagSet(), _studentProgress);
-            questPanel.Bind(questPanel.QuestLog, AppendQuests(questPanel.Quests, interest.LinkedQuests), context);
-            if (changed) SaveQuestLog(questPanel.QuestLog, playerId);
-        }
-
-        private static QuestDefinition[] AppendQuests(QuestDefinition[] current, IReadOnlyList<QuestDefinition> linked)
-        {
-            var result = new List<QuestDefinition>();
-            if (current != null) for (int i = 0; i < current.Length; i++) if (current[i] != null && !ContainsQuest(result, current[i].Id)) result.Add(current[i]);
-            if (linked != null) for (int i = 0; i < linked.Count; i++) if (linked[i] != null && !ContainsQuest(result, linked[i].Id)) result.Add(linked[i]);
-            return result.ToArray();
-        }
-
-        private static bool ContainsQuest(QuestDefinition[] quests, string questId)
-        {
-            if (quests == null) return false;
-            for (int i = 0; i < quests.Length; i++) if (quests[i] != null && quests[i].Id == questId) return true;
-            return false;
-        }
-
-        private static bool ContainsQuest(List<QuestDefinition> quests, string questId)
-        {
-            for (int i = 0; i < quests.Count; i++) if (quests[i] != null && quests[i].Id == questId) return true;
-            return false;
-        }
-
-        private static void SaveQuestLog(QuestLog questLog, string playerId)
-        {
-            var metadata = ActiveSaveContext.Metadata;
-            if (metadata == null || string.IsNullOrEmpty(metadata.SlotId) || questLog == null) return;
-            new SaveService(metadata.SlotId).WriteJson(QuestLogFileNameFor(playerId), JsonUtility.ToJson(questLog.ToSaveData(), true));
-        }
-
-        private static void LoadQuestLog(QuestLog questLog, string playerId)
-        {
-            var metadata = ActiveSaveContext.Metadata;
-            if (metadata == null || string.IsNullOrEmpty(metadata.SlotId) || questLog == null) return;
-            var json = new SaveService(metadata.SlotId).ReadJson(QuestLogFileNameFor(playerId));
-            if (string.IsNullOrEmpty(json)) return;
-            questLog.LoadFromSaveData(JsonUtility.FromJson<QuestLogSaveData>(json));
-        }
-
-        private static string ResolvePlayerId(PlayerInventory inventory)
-        {
-            var identity = inventory != null ? inventory.GetComponent<PlayerIdentity>() : null;
-            return identity != null ? identity.PlayerId : PlayerIdentity.DefaultPlayerId;
-        }
-
-        private static string QuestLogFileNameFor(string playerId)
-        {
-            if (string.IsNullOrEmpty(playerId) || playerId == PlayerIdentity.DefaultPlayerId) return "quest-log.json";
-            return "quest-log-" + SanitizeFileName(playerId) + ".json";
-        }
-
-        private static string SanitizeFileName(string value)
-        {
-            var chars = value.ToCharArray();
-            for (int i = 0; i < chars.Length; i++) if (!char.IsLetterOrDigit(chars[i]) && chars[i] != '-' && chars[i] != '_') chars[i] = '_';
-            return new string(chars);
         }
 
         private void ShowDetails(int index)

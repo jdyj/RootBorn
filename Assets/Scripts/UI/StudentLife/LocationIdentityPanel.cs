@@ -177,36 +177,9 @@ namespace Rootborn.UI.StudentLife
 
         private void RecordQuestActivity(LocationActivityDefinition activity, string requestId)
         {
-            var questPanel = UnityEngine.Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
-            if (questPanel == null || questPanel.QuestLog == null || activity == null) return;
-            questPanel.QuestLog.RecordEvent(new QuestEvent(QuestEventKind.LocationActivity, requestId, activity: activity));
-            SaveQuestLog(questPanel.QuestLog, ResolvePlayerId(_player));
-        }
-
-        private static void SaveQuestLog(QuestLog questLog, string playerId)
-        {
-            var metadata = ActiveSaveContext.Metadata;
-            if (metadata == null || string.IsNullOrEmpty(metadata.SlotId) || questLog == null) return;
-            new SaveService(metadata.SlotId).WriteJson(QuestLogFileNameFor(playerId), JsonUtility.ToJson(questLog.ToSaveData(), true));
-        }
-
-        private static string ResolvePlayerId(GameObject player)
-        {
-            var identity = player != null ? player.GetComponent<PlayerIdentity>() : null;
-            return identity != null ? identity.PlayerId : PlayerIdentity.DefaultPlayerId;
-        }
-
-        private static string QuestLogFileNameFor(string playerId)
-        {
-            if (string.IsNullOrEmpty(playerId) || playerId == PlayerIdentity.DefaultPlayerId) return "quest-log.json";
-            return "quest-log-" + SanitizeFileName(playerId) + ".json";
-        }
-
-        private static string SanitizeFileName(string value)
-        {
-            var chars = value.ToCharArray();
-            for (int i = 0; i < chars.Length; i++) if (!char.IsLetterOrDigit(chars[i]) && chars[i] != '-' && chars[i] != '_') chars[i] = '_';
-            return new string(chars);
+            // The quest session saves itself when the event advances an objective.
+            if (activity == null || !Rootborn.Game.Player.PlayerQuestRuntime.TryGetActive(_player, out var quests)) return;
+            quests.QuestLog.RecordEvent(new QuestEvent(QuestEventKind.LocationActivity, requestId, activity: activity));
         }
 
         public static string OfferBalanceText(IReadOnlyList<FurnitureDefinition> offers, Rootborn.Game.Player.PlayerInventory inventory)

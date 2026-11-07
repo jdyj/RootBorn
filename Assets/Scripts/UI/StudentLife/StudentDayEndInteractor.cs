@@ -230,11 +230,11 @@ namespace Rootborn.UI.StudentLife
         {
             var tracker = player.GetComponent<StudentDayQuestInventoryTracker>();
             if (tracker != null) return tracker.BuildSummary();
-            var questPanel = UnityEngine.Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
             var inventory = player.GetComponent<PlayerInventory>();
+            bool hasQuests = PlayerQuestRuntime.TryGetActive(player, out var quests);
             var after = StudentDayQuestInventorySnapshot.Capture(
-                questPanel != null ? questPanel.QuestLog : null,
-                questPanel != null ? questPanel.Quests : null,
+                hasQuests ? quests.QuestLog : null,
+                hasQuests ? quests.Quests : null,
                 inventory != null ? inventory.Inventory : null);
             return StudentDayQuestInventorySummaryBuilder.Build(null, after);
         }

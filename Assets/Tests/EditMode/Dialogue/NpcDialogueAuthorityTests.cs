@@ -36,7 +36,7 @@ namespace Rootborn.Tests.EditMode.Dialogue
         {
             _choice = null; _choiceDialogue = null; _foreign = null; _otherScene = default;
             _fixture = new NpcDialogueContextTests(); _fixture.Setup();
-            InvokeFixture("WireLegacyQuestBinder"); InvokeFixture("WireLocationRunner");
+            InvokeFixture("WireLocationRunner");
         }
 
         [TearDown]

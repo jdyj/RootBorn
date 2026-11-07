@@ -45,24 +45,6 @@ namespace Rootborn.Tests.PlayMode
             Assert.IsTrue(UrbanSkinCheck.TilesOrSkin(settings.gameObject, settings.PanelTileCount, 9), "Settings must draw a Style2 tiled or urban-skin panel.");
         }
 
-        [Ignore(LegacyPremise.ObjectiveJournal + "QuestLogPanel intentionally hidden")]
-        [UnityTest]
-        public IEnumerator GLOBAL_UI_PM_003_TownQuestLogPanelRendersOnTopOverlayCanvas()
-        {
-            yield return SceneManager.LoadSceneAsync("Town", LoadSceneMode.Single);
-            yield return WaitForQuestPanel();
-
-            var canvas = FindGlobalUiCanvas();
-            var questPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
-
-            Assert.IsNotNull(canvas);
-            Assert.IsNotNull(questPanel);
-            Assert.AreEqual(RenderMode.ScreenSpaceOverlay, canvas.renderMode);
-            Assert.GreaterOrEqual(canvas.sortingOrder, 1000);
-            Assert.AreSame(canvas.transform, questPanel.transform.parent);
-            Assert.IsTrue(questPanel.gameObject.activeInHierarchy, "QuestLogPanel should not be hidden behind world sprites or disabled in Town.");
-        }
-
         private static IEnumerator WaitForGlobalUi()
         {
             for (int i = 0; i < 600; i++)
@@ -76,21 +58,6 @@ namespace Rootborn.Tests.PlayMode
             }
 
             Assert.Fail("Global Modern UI did not install router and SettingsPanel within timeout.");
-        }
-
-        private static IEnumerator WaitForQuestPanel()
-        {
-            for (int i = 0; i < 600; i++)
-            {
-                if (Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include) != null && FindGlobalUiCanvas() != null)
-                {
-                    yield break;
-                }
-
-                yield return null;
-            }
-
-            Assert.Fail("QuestLogPanel did not install within timeout.");
         }
 
         private static IEnumerator HoldKeyboardKey(Key key, int frameCount)

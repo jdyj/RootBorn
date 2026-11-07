@@ -188,10 +188,9 @@ namespace Rootborn.UI.StudentLife
         {
             var tracker = _progressComponent.GetComponent<StudentDayQuestInventoryTracker>();
             var inventory = _progressComponent.GetComponent<PlayerInventory>();
-            var questPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
-            if (tracker != null && inventory != null && questPanel != null && questPanel.QuestLog != null)
+            if (tracker != null && inventory != null && PlayerQuestRuntime.TryGetActive(_progressComponent.gameObject, out var quests))
             {
-                tracker.CaptureBaseline(questPanel, inventory);
+                tracker.CaptureBaseline(quests, inventory);
             }
         }
 

@@ -43,7 +43,7 @@ namespace Rootborn.UI.StudentLife
             var student = studentComponent.EnsureProgress();
             var exploration = LoadProgress(student.SaveSlot, student.PlayerId);
             var inventory = player.GetComponent<PlayerInventory>();
-            var questLog = Object.FindFirstObjectByType<Rootborn.UI.Quests.QuestLogPanel>(FindObjectsInactive.Include)?.QuestLog;
+            var questLog = Rootborn.Game.Player.PlayerQuestRuntime.TryGet(student.SaveSlot, student.PlayerId, out var quests) ? quests.QuestLog : null;
             var clueProgress = DiscoveryClueProgressPersistence.LoadOrCreate(student.SaveSlot, student.PlayerId);
             var encyclopedia = EncyclopediaProgressPersistence.LoadOrCreate(student.SaveSlot, student.PlayerId);
             var cache = new ExplorationLookupCache(new[] { _interaction });

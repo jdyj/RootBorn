@@ -302,7 +302,6 @@ namespace Rootborn.Tests.PlayMode.World
         private static void AssertPlayerFacingDebugUiHidden(string sceneName)
         {
             // Gameplay entries remain reachable; utility entry tests cover their visibility.
-            AssertInactiveOrMissing(sceneName, "QuestChainLogOpenButton");
             AssertInactiveOrMissing(sceneName, "LocationStateLogButton");
             AssertInactiveOrMissing(sceneName, "StudentDayResultRoot");
         }

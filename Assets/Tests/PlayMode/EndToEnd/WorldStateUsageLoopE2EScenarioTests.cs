@@ -84,7 +84,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var world = WorldStateProgressPersistence.LoadOrCreate(TestSlotId, playerId);
             Assert.IsTrue(world.IsActive(flag), "WORLD-USAGE-E2E-002 failed: actual quest reward did not create the Shared world-state change.");
 
-            var usageObject = SpawnUsageObjectNearPlayer(runtime.Player, usage, runtime.QuestLogPanel.QuestLog);
+            var usageObject = SpawnUsageObjectNearPlayer(runtime.Player, usage, runtime.Quests.QuestLog);
             yield return WalkPlayerWithKeyboardTo(runtime.Player, keyboard, usageObject.transform.position + new Vector3(0.35f, 0f, 0f), 0.3f, "WORLD-USAGE-E2E-003 failed: keyboard movement could not reach the opened usage object.");
             runtime.Router.RefreshPromptNow();
             Assert.IsTrue(runtime.Router.PromptVisible, "WORLD-USAGE-E2E-004 failed: opened usage object did not expose an interaction prompt.");
@@ -101,9 +101,9 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var encyclopedia = EncyclopediaProgressPersistence.LoadOrCreate(TestSlotId, playerId);
             Assert.GreaterOrEqual(encyclopedia.UnlockedCount, 1, "WORLD-USAGE-E2E-006 failed: usage did not persist an encyclopedia discovery.");
             Assert.GreaterOrEqual(runtime.StudentLife.EnsureProgress().GetCareerHintIds().Length, 1, "WORLD-USAGE-E2E-006 failed: usage did not grant a personal career hint.");
-            Assert.AreEqual(QuestState.Active, runtime.QuestLogPanel.QuestLog.GetState(FindFirstFollowUpQuest(usage)), "WORLD-USAGE-E2E-006 failed: usage did not activate its follow-up quest in the playable quest log.");
+            Assert.AreEqual(QuestState.Active, runtime.Quests.QuestLog.GetState(FindFirstFollowUpQuest(usage)), "WORLD-USAGE-E2E-006 failed: usage did not activate its follow-up quest in the playable quest log.");
 
-            var context = new WorldStateUsageContext(world, usageProgress, runtime.StudentLife.EnsureProgress(), runtime.QuestLogPanel.QuestLog, encyclopedia, null, runtime.StudentLife.EnsureProgress().CurrentDay);
+            var context = new WorldStateUsageContext(world, usageProgress, runtime.StudentLife.EnsureProgress(), runtime.Quests.QuestLog, encyclopedia, null, runtime.StudentLife.EnsureProgress().CurrentDay);
             var summaries = WorldStateUsageSummaryBuilder.BuildForSurface(new WorldStateUsageLookupCache(new[] { usage }), context, WorldStateUsageSummarySurface.DayResult);
             yield return OpenDayResultByKeyboard(runtime, keyboard);
             var resultPanel = Object.FindFirstObjectByType<StudentDayResultPanel>(FindObjectsInactive.Include);
@@ -184,7 +184,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 var npc = GameObject.Find("GuideNpc");
                 var dayEnd = GameObject.Find("StudentDayEndBoard");
                 var dialoguePanel = Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include);
-                var questLogPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
+                var questLogPanel = QuestSessionLookup.Active();
                 var resultPanel = Object.FindFirstObjectByType<StudentDayResultPanel>(FindObjectsInactive.Include);
                 if (player != null && player.GetComponent<GatherInteractor>() != null && player.GetComponent<PlayerInteractionRouter>() != null && player.GetComponent<PlayerInventory>() != null && player.GetComponent<StudentLifeProgressComponent>() != null && npc != null && npc.GetComponent<NpcInteractor>() != null && npc.GetComponent<QuestProvider>() != null && dayEnd != null && dayEnd.GetComponent<StudentDayEndInteractor>() != null && dialoguePanel != null && questLogPanel != null && questLogPanel.QuestLog != null && resultPanel != null && EventSystem.current != null) yield break;
                 elapsed += Time.unscaledDeltaTime;
@@ -201,7 +201,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.IsNotNull(player);
             Assert.IsNotNull(npcGo);
             Assert.IsNotNull(dayEnd);
-            return new RuntimeRefs(player, player.GetComponent<GatherInteractor>(), player.GetComponent<PlayerInteractionRouter>(), player.GetComponent<PlayerInventory>(), player.GetComponent<StudentLifeProgressComponent>(), npcGo.GetComponent<NpcInteractor>(), npcGo.GetComponent<QuestProvider>(), Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include), Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include), dayEnd.GetComponent<StudentDayEndInteractor>());
+            return new RuntimeRefs(player, player.GetComponent<GatherInteractor>(), player.GetComponent<PlayerInteractionRouter>(), player.GetComponent<PlayerInventory>(), player.GetComponent<StudentLifeProgressComponent>(), npcGo.GetComponent<NpcInteractor>(), npcGo.GetComponent<QuestProvider>(), Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include), QuestSessionLookup.Active(), dayEnd.GetComponent<StudentDayEndInteractor>());
         }
 
         private IEnumerator OpenGuideDialogueByKeyboard(RuntimeRefs runtime, Keyboard keyboard)
@@ -226,7 +226,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         private IEnumerator GatherUntilQuestCompletedByKeyboard(RuntimeRefs runtime, Keyboard keyboard, WorldStateGatherRoute route, ItemDefinition item)
         {
             int questGuard = 0;
-            while (runtime.QuestLogPanel.QuestLog.GetState(route.Quest) != QuestState.Completed && questGuard < 80)
+            while (runtime.Quests.QuestLog.GetState(route.Quest) != QuestState.Completed && questGuard < 80)
             {
                 int before = runtime.Inventory.Inventory.CountOf(item);
                 int interactionGuard = 0;
@@ -243,7 +243,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 Assert.Greater(runtime.Inventory.Inventory.CountOf(item), before);
                 questGuard++;
             }
-            Assert.AreEqual(QuestState.Completed, runtime.QuestLogPanel.QuestLog.GetState(route.Quest));
+            Assert.AreEqual(QuestState.Completed, runtime.Quests.QuestLog.GetState(route.Quest));
         }
 
         private static ResourceNode FindTargetResourceNode(ResourceNodeDefinition targetResource)
@@ -496,9 +496,9 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             public readonly NpcInteractor Npc;
             public readonly QuestProvider Provider;
             public readonly DialoguePanel DialoguePanel;
-            public readonly QuestLogPanel QuestLogPanel;
+            public readonly Rootborn.Game.Player.PlayerQuestSession Quests;
             public readonly StudentDayEndInteractor DayEnd;
-            public RuntimeRefs(GameObject player, GatherInteractor gather, PlayerInteractionRouter router, PlayerInventory inventory, StudentLifeProgressComponent studentLife, NpcInteractor npc, QuestProvider provider, DialoguePanel dialoguePanel, QuestLogPanel questLogPanel, StudentDayEndInteractor dayEnd)
+            public RuntimeRefs(GameObject player, GatherInteractor gather, PlayerInteractionRouter router, PlayerInventory inventory, StudentLifeProgressComponent studentLife, NpcInteractor npc, QuestProvider provider, DialoguePanel dialoguePanel, Rootborn.Game.Player.PlayerQuestSession quests, StudentDayEndInteractor dayEnd)
             {
                 Player = player;
                 Gather = gather;
@@ -508,7 +508,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 Npc = npc;
                 Provider = provider;
                 DialoguePanel = dialoguePanel;
-                QuestLogPanel = questLogPanel;
+                Quests = quests;
                 DayEnd = dayEnd;
             }
         }

@@ -74,12 +74,12 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
 
             yield return OpenGuideDialogueByKeyboard(runtime, keyboard);
             yield return ClickButton(FindFirstChoiceButton(runtime.DialoguePanel));
-            Assert.AreEqual(QuestState.Active, runtime.QuestLogPanel.QuestLog.GetState(route.Quest), "WORLD-STATE-E2E-003 failed: first visible dialogue button did not accept the world-state quest.");
+            Assert.AreEqual(QuestState.Active, runtime.Quests.QuestLog.GetState(route.Quest), "WORLD-STATE-E2E-003 failed: first visible dialogue button did not accept the world-state quest.");
 
             yield return GatherUntilQuestCompletedByKeyboard(runtime, keyboard, route, woodItem);
             yield return OpenGuideDialogueByKeyboard(runtime, keyboard);
             yield return ClickButton(FindFirstChoiceButton(runtime.DialoguePanel));
-            Assert.AreEqual(QuestState.RewardClaimed, runtime.QuestLogPanel.QuestLog.GetState(route.Quest), "WORLD-STATE-E2E-004 failed: claim path did not mark the quest reward claimed.");
+            Assert.AreEqual(QuestState.RewardClaimed, runtime.Quests.QuestLog.GetState(route.Quest), "WORLD-STATE-E2E-004 failed: claim path did not mark the quest reward claimed.");
 
             string playerId = ResolvePlayerId(runtime.Inventory);
             var progress = WorldStateProgressPersistence.LoadOrCreate(TestSlotId, playerId);
@@ -120,7 +120,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             playerId = ResolvePlayerId(reloaded.Inventory);
             progress = WorldStateProgressPersistence.LoadOrCreate(TestSlotId, playerId);
             Assert.IsTrue(progress.IsActive(flag), "WORLD-STATE-E2E-007 failed: activated world-state flag did not survive reload.");
-            Assert.AreEqual(QuestState.RewardClaimed, reloaded.QuestLogPanel.QuestLog.GetState(route.Quest), "WORLD-STATE-E2E-008 failed: reward-claimed quest state did not survive reload.");
+            Assert.AreEqual(QuestState.RewardClaimed, reloaded.Quests.QuestLog.GetState(route.Quest), "WORLD-STATE-E2E-008 failed: reward-claimed quest state did not survive reload.");
             Assert.AreEqual(afterClaimItemCount, reloaded.Inventory.Inventory.CountOf(itemReward.Item), "WORLD-STATE-E2E-008 failed: reload changed the item reward count.");
 
             yield return ClickButton(FindButton("WorldStateLogButton"));
@@ -148,7 +148,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 var npc = GameObject.Find("GuideNpc");
                 var dayEnd = GameObject.Find("StudentDayEndBoard");
                 var dialoguePanel = Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include);
-                var questLogPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
+                var questLogPanel = QuestSessionLookup.Active();
                 var resultPanel = Object.FindFirstObjectByType<StudentDayResultPanel>(FindObjectsInactive.Include);
                 if (player != null && player.GetComponent<GatherInteractor>() != null && player.GetComponent<PlayerInteractionRouter>() != null && player.GetComponent<PlayerInventory>() != null && player.GetComponent<StudentLifeProgressComponent>() != null && npc != null && npc.GetComponent<NpcInteractor>() != null && npc.GetComponent<QuestProvider>() != null && dayEnd != null && dayEnd.GetComponent<StudentDayEndInteractor>() != null && dialoguePanel != null && questLogPanel != null && questLogPanel.QuestLog != null && resultPanel != null && EventSystem.current != null) yield break;
                 elapsed += Time.unscaledDeltaTime;
@@ -165,7 +165,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.IsNotNull(player);
             Assert.IsNotNull(npcGo);
             Assert.IsNotNull(dayEnd);
-            return new RuntimeRefs(player, player.GetComponent<GatherInteractor>(), player.GetComponent<PlayerInteractionRouter>(), player.GetComponent<PlayerInventory>(), player.GetComponent<StudentLifeProgressComponent>(), npcGo.GetComponent<NpcInteractor>(), npcGo.GetComponent<QuestProvider>(), Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include), Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include), dayEnd.GetComponent<StudentDayEndInteractor>());
+            return new RuntimeRefs(player, player.GetComponent<GatherInteractor>(), player.GetComponent<PlayerInteractionRouter>(), player.GetComponent<PlayerInventory>(), player.GetComponent<StudentLifeProgressComponent>(), npcGo.GetComponent<NpcInteractor>(), npcGo.GetComponent<QuestProvider>(), Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include), QuestSessionLookup.Active(), dayEnd.GetComponent<StudentDayEndInteractor>());
         }
 
         private IEnumerator OpenGuideDialogueByKeyboard(RuntimeRefs runtime, Keyboard keyboard)
@@ -190,7 +190,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         private IEnumerator GatherUntilQuestCompletedByKeyboard(RuntimeRefs runtime, Keyboard keyboard, WorldStateGatherRoute route, ItemDefinition item)
         {
             int questGuard = 0;
-            while (runtime.QuestLogPanel.QuestLog.GetState(route.Quest) != QuestState.Completed && questGuard < 80)
+            while (runtime.Quests.QuestLog.GetState(route.Quest) != QuestState.Completed && questGuard < 80)
             {
                 int before = runtime.Inventory.Inventory.CountOf(item);
                 int interactionGuard = 0;
@@ -207,7 +207,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 Assert.Greater(runtime.Inventory.Inventory.CountOf(item), before, "WORLD-STATE-E2E-003 failed: resource interaction did not add the target item.");
                 questGuard++;
             }
-            Assert.AreEqual(QuestState.Completed, runtime.QuestLogPanel.QuestLog.GetState(route.Quest));
+            Assert.AreEqual(QuestState.Completed, runtime.Quests.QuestLog.GetState(route.Quest));
         }
 
         private static ResourceNode FindTargetResourceNode(ResourceNodeDefinition targetResource)
@@ -450,9 +450,9 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             public readonly NpcInteractor Npc;
             public readonly QuestProvider Provider;
             public readonly DialoguePanel DialoguePanel;
-            public readonly QuestLogPanel QuestLogPanel;
+            public readonly Rootborn.Game.Player.PlayerQuestSession Quests;
             public readonly StudentDayEndInteractor DayEnd;
-            public RuntimeRefs(GameObject player, GatherInteractor gather, PlayerInteractionRouter router, PlayerInventory inventory, StudentLifeProgressComponent studentLife, NpcInteractor npc, QuestProvider provider, DialoguePanel dialoguePanel, QuestLogPanel questLogPanel, StudentDayEndInteractor dayEnd)
+            public RuntimeRefs(GameObject player, GatherInteractor gather, PlayerInteractionRouter router, PlayerInventory inventory, StudentLifeProgressComponent studentLife, NpcInteractor npc, QuestProvider provider, DialoguePanel dialoguePanel, Rootborn.Game.Player.PlayerQuestSession quests, StudentDayEndInteractor dayEnd)
             {
                 Player = player;
                 Gather = gather;
@@ -462,7 +462,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 Npc = npc;
                 Provider = provider;
                 DialoguePanel = dialoguePanel;
-                QuestLogPanel = questLogPanel;
+                Quests = quests;
                 DayEnd = dayEnd;
             }
         }

@@ -96,7 +96,7 @@ namespace Rootborn.Tests.PlayMode.Quests
                 var player = GameObject.Find("Player");
                 var npc = GameObject.Find("GuideNpc");
                 var dialoguePanel = Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include);
-                var questLogPanel = Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
+                var questLogPanel = QuestSessionLookup.Active();
                 if (player != null && player.GetComponent<GatherInteractor>() != null && player.GetComponent<PlayerInteractionRouter>() != null && player.GetComponent<PlayerInventory>() != null && player.GetComponent<StudentLifeProgressComponent>() != null && npc != null && npc.GetComponent<QuestProvider>() != null && dialoguePanel != null && questLogPanel != null && EventSystem.current != null) yield break;
                 elapsed += Time.unscaledDeltaTime;
                 yield return null;

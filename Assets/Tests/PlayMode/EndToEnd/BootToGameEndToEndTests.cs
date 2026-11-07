@@ -130,7 +130,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.AreEqual(1, CountObjectsNamed("Player"));
             Assert.IsNotNull(GameObject.Find("StudyBasicsActivity"));
             Assert.IsNotNull(GameObject.Find("StudentDayEndBoard"));
-            Assert.IsNotNull(Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include));
+            Assert.IsNotNull(QuestSessionLookup.Active());
             Assert.IsNotNull(Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include));
             Assert.IsNotNull(Object.FindFirstObjectByType<NpcInteractor>(FindObjectsInactive.Include));
         }
@@ -177,7 +177,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                     player.GetComponent<Rootborn.Game.StudentLife.StudentLifeProgressComponent>() != null &&
                     GameObject.Find("StudyBasicsActivity") != null &&
                     GameObject.Find("StudentDayEndBoard") != null &&
-                    Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include) != null &&
+                    QuestSessionLookup.Active() != null &&
                     Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include) != null &&
                     Object.FindFirstObjectByType<NpcInteractor>(FindObjectsInactive.Include) != null)
                 {

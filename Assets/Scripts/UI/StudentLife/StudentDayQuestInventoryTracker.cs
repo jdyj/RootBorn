@@ -3,7 +3,6 @@ using Rootborn.Game.Player;
 using Rootborn.Game.Quests;
 using Rootborn.Game.Save;
 using Rootborn.Game.StudentLife;
-using Rootborn.UI.Quests;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -13,14 +12,14 @@ namespace Rootborn.UI.StudentLife
     public sealed class StudentDayQuestInventoryTracker : MonoBehaviour
     {
         private StudentDayQuestInventorySnapshot _baseline;
-        private QuestLogPanel _questPanel;
+        private PlayerQuestSession _quests;
         private PlayerInventory _inventory;
 
         public bool HasBaseline => _baseline != null;
 
-        public void CaptureBaseline(QuestLogPanel questPanel, PlayerInventory inventory)
+        public void CaptureBaseline(PlayerQuestSession quests, PlayerInventory inventory)
         {
-            _questPanel = questPanel;
+            _quests = quests;
             _inventory = inventory;
             _baseline = CaptureCurrent();
         }
@@ -35,8 +34,8 @@ namespace Rootborn.UI.StudentLife
         private StudentDayQuestInventorySnapshot CaptureCurrent()
         {
             return StudentDayQuestInventorySnapshot.Capture(
-                _questPanel != null ? _questPanel.QuestLog : null,
-                _questPanel != null ? _questPanel.Quests : null,
+                _quests != null ? _quests.QuestLog : null,
+                _quests != null ? _quests.Quests : null,
                 _inventory != null ? _inventory.Inventory : null);
         }
     }
@@ -91,9 +90,8 @@ namespace Rootborn.UI.StudentLife
                 while (elapsed < 5f)
                 {
                     var player = GameObject.Find("Player");
-                    var questPanel = UnityEngine.Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
                     var inventory = player != null ? player.GetComponent<PlayerInventory>() : null;
-                    if (player != null && questPanel != null && questPanel.QuestLog != null && inventory != null)
+                    if (player != null && inventory != null && PlayerQuestRuntime.TryGetActive(player, out var quests))
                     {
                         var tracker = player.GetComponent<StudentDayQuestInventoryTracker>();
                         if (tracker == null)
@@ -103,7 +101,7 @@ namespace Rootborn.UI.StudentLife
 
                         if (!tracker.HasBaseline)
                         {
-                            tracker.CaptureBaseline(questPanel, inventory);
+                            tracker.CaptureBaseline(quests, inventory);
                         }
 
                         yield break;

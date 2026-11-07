@@ -4,12 +4,11 @@ using System.Reflection;
 using NUnit.Framework;
 using Rootborn.Game.Bootstrap;
 using Rootborn.Game.Common;
+using Rootborn.Game.Player;
 using Rootborn.Game.Quests;
 using Rootborn.Game.Save;
-using Rootborn.Game.Story;
 using Rootborn.UI.Modern;
 using Rootborn.UI.Objectives;
-using Rootborn.UI.Quests;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -64,50 +63,35 @@ namespace Rootborn.Tests.EditMode.UI
         }
 
         [Test]
-        public void InstalledLegacyQuestStore_IsHiddenButStillFeedsTheObjectiveJournal()
+        public void QuestSessionFeedsTheObjectiveJournalWithoutAnyQuestWindow()
         {
             var registry = ScriptableObject.CreateInstance<GameDataRegistry>();
             var quest = ScriptableObject.CreateInstance<QuestDefinition>();
+            PlayerGlobalState.ClearForTests();
             try
             {
                 quest.ConfigureForRuntime("ui-obstruction-regression", "Visible journal quest", "A real journal row", null, null, null);
                 typeof(GameDataRegistry).GetField("_quests", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(registry, new[] { quest });
-                var runner = new GameObject("QuestFixtureRunner");
-                var runnerType = typeof(QuestHudAutoFiller).GetNestedType("QuestHudAutoFillRunner", BindingFlags.NonPublic);
-                Assert.IsNotNull(runnerType);
-                var install = runnerType.GetMethod("EnsureQuestUi", BindingFlags.Static | BindingFlags.NonPublic);
-                Assert.IsNotNull(install);
-                install.Invoke(null, new object[] { registry, runner, null, null, new StoryFlagSet() });
 
-                var panel = _testScene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<QuestLogPanel>(true)).Single();
-                Assert.IsFalse(panel.gameObject.activeInHierarchy, "Entering Town must not open an obsolete quest window over the world.");
-                Assert.IsNotNull(panel.QuestLog, "Hiding the obsolete surface must retain quest/dialogue/reward state.");
-                Assert.AreSame(quest, panel.Quests.Single());
                 var source = new QuestLogObjectiveSource();
                 Assert.IsTrue(source.BuildItems(new ObjectiveJournalContext(registry, null, null)).Any(item => item.StableKey == "quest.ui-obstruction-regression"),
-                    "The inactive quest store must remain discoverable by the current Objective Journal owner.");
+                    "The player's quest session must reach the Objective Journal with no quest window in the scene.");
 
-                var dialogue = _testScene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<DialoguePanel>(true)).Single();
-                var dialogueRect = (RectTransform)dialogue.transform;
-                Assert.AreEqual(new Vector2(0.5f, 0f), dialogueRect.anchorMin);
-                Assert.AreEqual(new Vector2(0.5f, 0f), dialogueRect.anchorMax);
-                Assert.AreEqual(new Vector2(0.5f, 0f), dialogueRect.pivot);
-                Assert.AreEqual(new Vector2(0f, 36f), dialogueRect.anchoredPosition,
-                    "Legacy fallback dialogue must grow upward inside the screen when choices require a taller panel.");
-
-                var canvas = panel.GetComponentInParent<Canvas>();
+                var canvas = new GameObject("Canvas", typeof(RectTransform), typeof(Canvas)).GetComponent<Canvas>();
                 ModernUiPanelAutoInstaller.InstallOnCanvas(canvas, null);
                 var provider = canvas.GetComponent<ObjectiveJournalRuntimeProvider>();
                 var router = canvas.GetComponent<ModernUiPanelInputRouter>();
                 Assert.IsNotNull(provider);
                 Assert.IsNotNull(router);
-                Assert.IsFalse(provider.Panel.IsVisible);
+                Assert.IsFalse(provider.Panel.IsVisible, "Entering a scene must not open a quest list over the world.");
                 router.ToggleObjectiveJournalPanel();
                 Assert.IsTrue(provider.Panel.IsVisible, "The existing journal input route must remain available.");
-                Assert.IsFalse(panel.gameObject.activeInHierarchy);
+                Assert.IsEmpty(_testScene.GetRootGameObjects().Where(root => root.name.StartsWith("Quest")).ToArray(),
+                    "No separate quest window is created any more.");
             }
             finally
             {
+                PlayerGlobalState.ClearForTests();
                 UnityEngine.Object.DestroyImmediate(registry);
                 UnityEngine.Object.DestroyImmediate(quest);
             }

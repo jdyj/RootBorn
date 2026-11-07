@@ -265,4 +265,13 @@ namespace Rootborn.Tests.PlayMode
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
         }
     }
+
+    // The local player's quest session for the active save slot; it replaces the removed hidden quest list panel.
+    internal static class QuestSessionLookup
+    {
+        public static Rootborn.Game.Player.PlayerQuestSession Active()
+        {
+            return Rootborn.Game.Player.PlayerQuestRuntime.TryGetActive(Rootborn.Game.Player.PlayerIdentity.DefaultPlayerId, out var session) ? session : null;
+        }
+    }
 }

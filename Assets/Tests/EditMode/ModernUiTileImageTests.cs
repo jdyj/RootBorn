@@ -108,17 +108,6 @@ namespace Rootborn.Tests.EditMode
         }
 
         [Test]
-        public void QuestLogPanel_UsesReusableModernPanelBuilderForPanelChrome()
-        {
-            string source = File.ReadAllText("Assets/Scripts/UI/Quests/QuestLogPanel.cs");
-
-            StringAssert.Contains("ModernUiPanelBuilder.CreateCommonPanel48", source);
-            StringAssert.Contains("ModernUiPanelBuilder.CreatePlainButton", source);
-            StringAssert.DoesNotContain("new GameObject(\"QuestTitleTab\", typeof(RectTransform), typeof(ModernUiTileImage))", source);
-            StringAssert.DoesNotContain("SetRecipe(ModernUiRecipes.CommonPanel48)", source);
-        }
-
-        [Test]
         public void Rebuild_AlignsGeneratedTilesToRectPivotBounds()
         {
             var go = new GameObject("ModernTileBoundsTest", typeof(RectTransform), typeof(ModernUiTileImage));

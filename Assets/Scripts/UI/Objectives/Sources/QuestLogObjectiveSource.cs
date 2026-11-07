@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Game.Common;
+using Rootborn.Game.Player;
 using Rootborn.Game.Quests;
-using Rootborn.UI.Quests;
-using UnityEngine;
+using Rootborn.Game.Save;
 
 namespace Rootborn.UI.Objectives
 {
@@ -15,35 +16,54 @@ namespace Rootborn.UI.Objectives
 
         public ObjectiveJournalItem[] BuildItems(ObjectiveJournalContext context)
         {
-            var questPanel = UnityEngine.Object.FindFirstObjectByType<QuestLogPanel>(FindObjectsInactive.Include);
-            if (questPanel == null || questPanel.QuestLog == null || questPanel.Quests == null)
+            var session = ResolveSession(context);
+            if (session == null)
             {
                 return Array.Empty<ObjectiveJournalItem>();
             }
 
-            var items = new List<ObjectiveJournalItem>();
-            for (int i = 0; i < questPanel.Quests.Length; i++)
+            var quests = session.Quests;
+            var items = new List<ObjectiveJournalItem>(quests.Count);
+            for (int i = 0; i < quests.Count; i++)
             {
-                var quest = questPanel.Quests[i];
+                var quest = quests[i];
                 if (quest == null || string.IsNullOrEmpty(quest.Id))
                 {
                     continue;
                 }
 
-                var state = questPanel.QuestLog.GetState(quest);
+                var state = session.QuestLog.GetState(quest);
                 items.Add(new ObjectiveJournalItem(
                     "quest." + quest.Id,
                     Category.CategoryId,
                     ObjectiveJournalSourceText.SafeText(quest.DisplayNameKey, quest.Id),
                     ObjectiveJournalSourceText.SafeText(quest.DescriptionKey, string.Empty),
                     BuildQuestStateText(state),
-                    BuildObjectiveText(questPanel.QuestLog, quest),
+                    BuildObjectiveText(session.QuestLog, quest),
                     BuildQuestHintText(state),
                     false,
                     BuildQuestSortPriority(state)));
             }
 
             return items.ToArray();
+        }
+
+        // The same per-player session NPC dialogue changes, in whichever world scene the player is.
+        private static PlayerQuestSession ResolveSession(ObjectiveJournalContext context)
+        {
+            var registry = context.Registry;
+            if (registry == null && !GameDataRegistryProvider.TryGet(out registry))
+            {
+                return null;
+            }
+
+            if (registry == null)
+            {
+                return null;
+            }
+
+            string slot = context.ActiveSave != null ? context.ActiveSave.SlotId : ActiveSaveContext.SlotId;
+            return PlayerQuestRuntime.Get(slot, PlayerQuestRuntime.PlayerIdOf(context.Player), registry.Quests);
         }
 
         private static string BuildQuestStateText(QuestState state)

@@ -16,7 +16,7 @@ namespace Rootborn.UI.Objectives
         private GameObject _player;
         private ObjectiveJournalAggregator _aggregator;
 
-        private (object Student, object Adult, int Day, int Energy, int Focus, int Time, int DayState, string Stage, string Objective, string Hint, bool Pending, bool AdultPhase, bool PendingWork, string Language, string TrackedKey, string Slot) _observedState;
+        private (object Student, object Adult, int Day, int Energy, int Focus, int Time, int DayState, string Stage, string Objective, string Hint, bool Pending, bool AdultPhase, bool PendingWork, string Language, string TrackedKey, string Slot, int QuestRevision) _observedState;
         private bool _hasObservedState;
 
         public ObjectiveJournalPanel Panel => _panel;
@@ -86,7 +86,8 @@ namespace Rootborn.UI.Objectives
                 student != null ? student.TimePointsRemaining : 0, student != null ? (int)student.DayState : 0,
                 student?.TutorialStageId, student?.NextObjectiveId, student?.NextGuideText,
                 student != null && student.HasPendingMinigame, adult != null && adult.IsAdult,
-                adult != null && adult.HasPendingWork, GameText.Language, _trackedHud.TrackedStableKey, slot);
+                adult != null && adult.HasPendingWork, GameText.Language, _trackedHud.TrackedStableKey, slot,
+                Rootborn.Game.Player.PlayerQuestRuntime.Revision);
             if (_hasObservedState && _observedState.Equals(state)) return;
             _observedState = state;
             _hasObservedState = true;

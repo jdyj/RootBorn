@@ -18,6 +18,7 @@ namespace Rootborn.UI.Quests
     {
         private DialoguePanel _panel;
         private AdultCareerRuntimeComponent _owner;
+        private PlayerQuestSession _session;
         private QuestLog _questLog;
         private StoryFlagSet _storyFlags;
         private NpcInteractor _lastNpc;
@@ -43,25 +44,31 @@ namespace Rootborn.UI.Quests
             return presenter != null && presenter.Bind(owner, owner.Registry);
         }
 
-        public bool Bind(AdultCareerRuntimeComponent owner, GameDataRegistry registry, QuestLog questLog = null, StoryFlagSet storyFlags = null)
+        public bool Bind(AdultCareerRuntimeComponent owner, GameDataRegistry registry)
         {
             if (owner == null || registry == null || owner.gameObject.scene != gameObject.scene || !owner.CanMutate) return false;
-            bool changed = _owner != owner;
-            if (changed)
+            if (_owner != owner)
             {
                 _lastNpc = null; _lastSequence = -1;
-                _questLog = questLog ?? PlayerGlobalState.GetQuestLog(owner.Progress.SaveSlot, owner.Progress.PlayerId, registry.Quests);
-                _storyFlags = storyFlags ?? new StoryFlagSet();
-                if (questLog == null && !LoadLegacyLog(owner, _questLog)) return false;
-            }
-            else
-            {
-                if (questLog != null) _questLog = questLog;
-                if (storyFlags != null) _storyFlags = storyFlags;
+                // The player's one quest session, loaded from the slot once and carried between scenes.
+                var session = PlayerQuestRuntime.Get(owner.Progress.SaveSlot, owner.Progress.PlayerId, registry.Quests);
+                if (session.LoadFailed) return false;
+                _session = session;
+                _questLog = session.QuestLog;
+                _storyFlags = new StoryFlagSet();
             }
             _owner = owner;
+            BindSceneNpcQuestEvents();
             NpcInteractor.BindSceneAuthority(gameObject.scene,this,actor=>this!=null && _owner!=null && _owner.CanMutate && actor==_owner.gameObject && actor.scene==gameObject.scene);
             return true;
+        }
+
+        // Talking to an NPC counts toward talk objectives in every scene with NPCs, not only Town.
+        private void BindSceneNpcQuestEvents()
+        {
+            foreach (var root in gameObject.scene.GetRootGameObjects())
+                foreach (var npc in root.GetComponentsInChildren<NpcInteractor>(true))
+                    npc.BindQuestEvents(_questLog);
         }
 
         public bool Owns(NpcInteractor npc, GameObject actor)
@@ -86,34 +93,13 @@ namespace Rootborn.UI.Quests
             return true;
         }
 
-        // Compatibility persistence only. Legacy claims are not yet part of the aggregate command.
+        // The quest session already saved on each state change; this keeps the owner's world and inventory in step.
+        // Legacy claims are not yet part of the aggregate command.
         private void HandleChoiceExecuted(bool success)
         {
             if (!success || !IsBound || !_owner.CanMutate) return;
-            new SaveService(_owner.Progress.SaveSlot).WriteJson(LogFileName(_owner.Progress.PlayerId), JsonUtility.ToJson(_questLog.ToSaveData(), true));
+            _session?.Save();
             _owner.SaveCurrent();
-        }
-
-        private static bool LoadLegacyLog(AdultCareerRuntimeComponent owner, QuestLog log)
-        {
-            var json = new SaveService(owner.Progress.SaveSlot).ReadJson(LogFileName(owner.Progress.PlayerId));
-            if (string.IsNullOrEmpty(json)) return true;
-            try
-            {
-                var data = JsonUtility.FromJson<QuestLogSaveData>(json);
-                if (data?.Quests == null) return false;
-                log.LoadFromSaveData(data);
-                return true;
-            }
-            catch (ArgumentException) { return false; }
-        }
-
-        private static string LogFileName(string playerId)
-        {
-            if (string.IsNullOrEmpty(playerId) || playerId == PlayerIdentity.DefaultPlayerId) return "quest-log.json";
-            var chars = playerId.ToCharArray();
-            for (int i = 0; i < chars.Length; i++) if (!char.IsLetterOrDigit(chars[i]) && chars[i] != '-' && chars[i] != '_') chars[i] = '_';
-            return "quest-log-" + new string(chars) + ".json";
         }
 
         private void OnDestroy()
