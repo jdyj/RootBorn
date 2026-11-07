@@ -136,4 +136,56 @@ namespace Rootborn.Editor.Tools
             return AssetDatabase.GUIDToAssetPath(guids[0]);
         }
     }
+
+    /// <summary>
+    /// Lets a test run pick where PlayMode reads Addressables from, without changing the owner's editor setting.
+    /// ROOTBORN_AA_PLAYMODE=asset reads the source assets (no rebuild after a data change); =built reads the built
+    /// bundles like the real game. The previous choice comes back when the editor quits. Unset leaves it alone.
+    /// </summary>
+    [InitializeOnLoad]
+    public static class AddressablesTestPlayMode
+    {
+        public const string EnvironmentVariable = "ROOTBORN_AA_PLAYMODE";
+        private const string RestoreKey = "Rootborn.AddressablesTestPlayMode.Restore";
+
+        static AddressablesTestPlayMode()
+        {
+            EditorApplication.delayCall += Apply;
+            EditorApplication.quitting += Restore;
+        }
+
+        public static bool TryResolveBuilderType(string mode, out System.Type builderType)
+        {
+            builderType = null;
+            if (string.Equals(mode, "asset", System.StringComparison.OrdinalIgnoreCase)) builderType = typeof(UnityEditor.AddressableAssets.Build.DataBuilders.BuildScriptFastMode);
+            else if (string.Equals(mode, "built", System.StringComparison.OrdinalIgnoreCase)) builderType = typeof(UnityEditor.AddressableAssets.Build.DataBuilders.BuildScriptPackedPlayMode);
+            return builderType != null;
+        }
+
+        private static void Apply()
+        {
+            var settings = AddressableAssetSettingsDefaultObject.Settings;
+            if (settings == null || !TryResolveBuilderType(System.Environment.GetEnvironmentVariable(EnvironmentVariable), out var builderType)) return;
+            for (int i = 0; i < settings.DataBuilders.Count; i++)
+            {
+                if (settings.DataBuilders[i] == null || settings.DataBuilders[i].GetType() != builderType) continue;
+                if (!SessionState.GetBool(RestoreKey + ".saved", false))
+                {
+                    SessionState.SetBool(RestoreKey + ".saved", true);
+                    SessionState.SetInt(RestoreKey, settings.ActivePlayModeDataBuilderIndex);
+                }
+
+                settings.ActivePlayModeDataBuilderIndex = i;
+                Debug.Log("[ROOTBORN] Addressables PlayMode data: " + builderType.Name);
+                return;
+            }
+        }
+
+        private static void Restore()
+        {
+            var settings = AddressableAssetSettingsDefaultObject.Settings;
+            if (settings == null || !SessionState.GetBool(RestoreKey + ".saved", false)) return;
+            settings.ActivePlayModeDataBuilderIndex = SessionState.GetInt(RestoreKey, settings.ActivePlayModeDataBuilderIndex);
+        }
+    }
 }
