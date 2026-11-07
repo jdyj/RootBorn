@@ -28,6 +28,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a32eee29e87d7934d8c0d47b6a96b4d7, type: 2}
   - {fileID: 11400000, guid: cac87b1032845394cb09b7f010a7cd9d, type: 2}
   - {fileID: 11400000, guid: 6b5974a0d9599994fb0be6ad24f5f85a, type: 2}
+  - {fileID: 11400000, guid: 5987365cd0256f140aadfb5562601626, type: 2}
   _worldTexture: {fileID: 2800000, guid: 73ce8122774baf04ea8c5e228feefe0d, type: 3}
   _worldSpriteRect:
     serializedVersion: 2

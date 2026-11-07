@@ -24,7 +24,10 @@ namespace Rootborn.UI.Objectives
 
         public void Bind(ObjectiveJournalPanel panel, TrackedObjectiveHud trackedHud, GameObject player)
         {
+            if (_panel != null) _panel.ItemActionCompleted -= RefreshAfterAction;
             _panel = panel;
+            // A detail action (such as claiming a reward) changed game state: rebuild the items so the detail shows it.
+            if (_panel != null) _panel.ItemActionCompleted += RefreshAfterAction;
             _trackedHud = trackedHud;
             // A later install pass may not know the player yet; it must not forget the one already bound.
             if (player != null) _player = player;
@@ -72,6 +75,16 @@ namespace Rootborn.UI.Objectives
             _aggregator.Refresh(_panel, new ObjectiveJournalContext(registry, _player, metadata), trackedStableKey);
         }
 
+        // After a detail action only the items are rebuilt: the player stays on the item they acted on (no re-tracking jump).
+        private void RefreshAfterAction()
+        {
+            if (_panel == null) return;
+            if (_aggregator == null) RebuildAggregator();
+            if (_player == null) _player = FindPlayerInScene();
+            GameDataRegistryProvider.TryGet(out var registry);
+            _aggregator.Refresh(_panel, new ObjectiveJournalContext(registry, _player, ActiveSaveContext.Metadata), string.Empty);
+        }
+
         // Observe cheap owner values every frame; rebuild read-only source data only on change.
         // Never refresh the journal here: that would select a row and persist tracking again.
         private void LateUpdate()
@@ -103,6 +116,11 @@ namespace Rootborn.UI.Objectives
                         return;
                     }
             _trackedHud.Hide();
+        }
+
+        private void OnDestroy()
+        {
+            if (_panel != null) _panel.ItemActionCompleted -= RefreshAfterAction;
         }
 
         private void RebuildAggregator()

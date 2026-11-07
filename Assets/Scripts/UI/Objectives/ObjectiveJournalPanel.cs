@@ -32,6 +32,11 @@ namespace Rootborn.UI.Objectives
         private Text _detailProgress;
         private Text _detailReward;
         private Text _detailAction;
+        private Text _detailFeedback;
+        private GameObject _actionButton;
+        private Text _actionButtonLabel;
+        private ObjectiveJournalAction _shownAction;
+        private string _feedbackStableKey = string.Empty;
         private TrackedObjectiveHud _trackedHud;
         private string _selectedCategory = "Goals";
         private string _selectedStableKey = string.Empty;
@@ -44,6 +49,11 @@ namespace Rootborn.UI.Objectives
         public string SelectedStableKeyForTests => _selectedStableKey;
         public int SelectedItemIndexForTests => _selectedItemIndex;
         public int VisibleRowCountForTests => _listRows.Count;
+        /// <summary>The selected item's detail action button, when that item has one and it is on screen.</summary>
+        public GameObject DetailActionButton => _actionButton != null && _actionButton.activeInHierarchy ? _actionButton : null;
+
+        /// <summary>Raised after a detail action ran, so the owner can rebuild items from the changed state.</summary>
+        public event Action ItemActionCompleted;
 
         private void Awake()
         {
@@ -294,9 +304,29 @@ namespace Rootborn.UI.Objectives
             _detailProgress=MakeText(_detailContent,"ObjectiveDetailProgress",string.Empty,Vector2.zero,new Vector2(592f,36f),20,TextAnchor.UpperLeft);
             _detailReward=MakeText(_detailContent,"ObjectiveDetailReward",string.Empty,Vector2.zero,new Vector2(592f,36f),20,TextAnchor.UpperLeft);
             _detailAction=MakeText(_detailContent,"ObjectiveDetailAction",string.Empty,Vector2.zero,new Vector2(592f,54f),20,TextAnchor.UpperLeft);
-            var track=ModernUiPanelBuilder.CreatePlainButton(_detail,"ObjectiveTrackButton",new Vector2(0f,-282f),new Vector2(300f,60f));
+            _detailFeedback=MakeText(_detailContent,"ObjectiveDetailFeedback",string.Empty,Vector2.zero,new Vector2(592f,36f),20,TextAnchor.UpperLeft);
+            var track=ModernUiPanelBuilder.CreatePlainButton(_detail,"ObjectiveTrackButton",new Vector2(160f,-282f),new Vector2(290f,60f));
             track.GetComponent<Button>().onClick.AddListener(TrackSelectedItem);
-            MakeText((RectTransform)track.transform,"ObjectiveTrackButtonLabel",Ui("ui.objective.track","목표 추적","Track"),new Vector2(14f,-13f),new Vector2(272f,34f),22,TextAnchor.MiddleCenter);SkinButton(track);
+            MakeText((RectTransform)track.transform,"ObjectiveTrackButtonLabel",Ui("ui.objective.track","목표 추적","Track"),new Vector2(14f,-13f),new Vector2(262f,34f),22,TextAnchor.MiddleCenter);SkinButton(track);
+            // Shown only for items that supply an action (e.g. a completed quest whose reward is not claimed yet).
+            _actionButton=ModernUiPanelBuilder.CreatePlainButton(_detail,"ObjectiveDetailActionButton",new Vector2(-160f,-282f),new Vector2(290f,60f));
+            _actionButton.GetComponent<Button>().onClick.AddListener(RunSelectedAction);
+            _actionButtonLabel=MakeText((RectTransform)_actionButton.transform,"ObjectiveDetailActionButtonLabel",string.Empty,new Vector2(14f,-13f),new Vector2(262f,34f),22,TextAnchor.MiddleCenter);SkinButton(_actionButton);
+            _actionButton.SetActive(false);
+        }
+
+        /// <summary>Runs the selected item's detail action once and shows its message under the detail.</summary>
+        public void RunSelectedAction()
+        {
+            var items = GetSelectedItems();
+            if (items.Length == 0 || _selectedItemIndex < 0 || _selectedItemIndex >= items.Length) return;
+            var action = items[_selectedItemIndex].Action;
+            if (action == null || !ReferenceEquals(action, _shownAction)) return;
+            var result = action.Run();
+            _feedbackStableKey = items[_selectedItemIndex].StableKey ?? string.Empty;
+            if (_detailFeedback != null) _detailFeedback.text = result.Message;
+            LayoutDetail();
+            ItemActionCompleted?.Invoke();
         }
 
         private void RefreshDetail(ObjectiveJournalItem item)
@@ -307,6 +337,18 @@ namespace Rootborn.UI.Objectives
             _detailProgress.text = detail.ProgressText;
             _detailReward.text = detail.RewardText;
             _detailAction.text = detail.ActionText;
+            // A message stays while the same item is shown (it is rebuilt right after its action ran) and clears on another item.
+            if (!string.Equals(_feedbackStableKey, item.StableKey ?? string.Empty, StringComparison.Ordinal))
+            {
+                _feedbackStableKey = string.Empty;
+                if (_detailFeedback != null) _detailFeedback.text = string.Empty;
+            }
+            _shownAction = item.Action;
+            if (_actionButton != null)
+            {
+                _actionButton.SetActive(_shownAction != null);
+                if (_actionButtonLabel != null) _actionButtonLabel.text = _shownAction != null ? _shownAction.Label : string.Empty;
+            }
             LayoutDetail();
         }
 
@@ -317,6 +359,10 @@ namespace Rootborn.UI.Objectives
             _detailProgress.text = string.Empty;
             _detailReward.text = string.Empty;
             _detailAction.text = string.Empty;
+            _feedbackStableKey = string.Empty;
+            if (_detailFeedback != null) _detailFeedback.text = string.Empty;
+            _shownAction = null;
+            if (_actionButton != null) _actionButton.SetActive(false);
             LayoutDetail();
         }
 
@@ -373,6 +419,8 @@ namespace Rootborn.UI.Objectives
             AppendVisibleText(ref text, _detailProgress);
             AppendVisibleText(ref text, _detailReward);
             AppendVisibleText(ref text, _detailAction);
+            AppendVisibleText(ref text, _detailFeedback);
+            if (DetailActionButton != null) AppendVisibleText(ref text, _actionButtonLabel);
 
             return text;
         }
@@ -422,7 +470,7 @@ namespace Rootborn.UI.Objectives
         {
             if(_detailContent==null)return;
             float width=Mathf.Max(100f,((RectTransform)_detailContent.parent).rect.width-32f);float y=16f;
-            var texts=new[]{_detailTitle,_detailBody,_detailProgress,_detailReward,_detailAction};
+            var texts=_detailFeedback!=null?new[]{_detailTitle,_detailBody,_detailProgress,_detailReward,_detailAction,_detailFeedback}:new[]{_detailTitle,_detailBody,_detailProgress,_detailReward,_detailAction};
             for(int i=0;i<texts.Length;i++)
             {
                 var text=texts[i];text.horizontalOverflow=HorizontalWrapMode.Wrap;text.verticalOverflow=VerticalWrapMode.Truncate;

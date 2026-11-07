@@ -378,6 +378,46 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
             }
         }
 
+        // A detail action (the quest "Claim reward" button) shows only for items that supply one, runs once per press,
+        // keeps its message on the same item after the owner rebuilds items, and asks the owner to rebuild.
+        [Test]
+        public void ObjectiveJournalPanel_DetailActionButtonShowsOnlyForItemsWithAnActionAndRunsIt()
+        {
+            var host = new GameObject("ObjectiveJournalActionFixture", typeof(RectTransform));
+            try
+            {
+                int runs = 0;
+                int completed = 0;
+                var action = new ObjectiveJournalAction("Claim reward", () => { runs++; return new ObjectiveJournalActionResult(true, "Reward received."); });
+                var withAction = new ObjectiveJournalItem("quest.done", "Quests", "Done quest", "", "Completed", "1 / 1", "", false, 10, action);
+                var plain = new ObjectiveJournalItem("quest.active", "Quests", "Active quest", "", "Active", "0 / 1", "", false, 20);
+                var panel = host.AddComponent<ObjectiveJournalPanel>();
+                panel.ItemActionCompleted += () => completed++;
+                panel.SetItems("Quests", new[] { withAction, plain });
+                panel.Show();
+                panel.SelectCategory("Quests");
+
+                Assert.IsNotNull(panel.DetailActionButton, "A completed quest shows its claim button.");
+                StringAssert.Contains("Claim reward", panel.VisibleText);
+                panel.DetailActionButton.GetComponent<Button>().onClick.Invoke();
+                Assert.AreEqual(1, runs);
+                Assert.AreEqual(1, completed, "The owner is asked to rebuild items after the action.");
+                StringAssert.Contains("Reward received.", panel.VisibleText);
+
+                panel.SetItems("Quests", new[] { new ObjectiveJournalItem("quest.done", "Quests", "Done quest", "", "RewardClaimed", "1 / 1", "", false, 60), plain });
+                Assert.IsNull(panel.DetailActionButton, "A claimed quest no longer shows the button.");
+                StringAssert.Contains("Reward received.", panel.VisibleText, "The message stays on the item it belongs to.");
+
+                panel.SelectItem(1);
+                Assert.IsNull(panel.DetailActionButton, "An item without an action shows no button.");
+                StringAssert.DoesNotContain("Reward received.", panel.VisibleText, "Another item does not show the message.");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(host);
+            }
+        }
+
         private static int CountObjectiveRows(Transform root)
         {
             return root.GetComponentsInChildren<Button>(true).Count(button => button.name.StartsWith("ObjectiveRow_", StringComparison.Ordinal));

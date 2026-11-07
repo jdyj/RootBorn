@@ -25,20 +25,20 @@
 ## 2. UI
 | 대상 | 필요한 것 | 지금 상태 | 상태 |
 |---|---|---|---|
-| 목표 저널 "보상 받기" 버튼 | 일반·눌림·비활성 3상태 | 공용 도시형 몰딩 버튼으로 임시 사용 | 요청 |
+| 목표 저널 "보상 받기" 버튼 | 290x60 버튼, 일반·호버·눌림 3상태(9-slice 가능). 쓰는 곳: `Assets/Scripts/UI/Objectives/ObjectiveJournalPanel.cs`의 `ObjectiveDetailActionButton`(완료·미수령 퀘스트 상세) | 2026-11-07: '목표 추적' 버튼과 같은 공용 Style2/도시형 몰딩 버튼(`ModernUiRecipes.CommonPanel`) + 글자 '보상 받기'를 임시 사용. 화면: `output/quest-fixes-20261107/quest-wood-e2e-001-journal-claim-button.png` | 요청 |
 | 캐릭터 생성 화면 | 칸별 선택 화살표, 미리보기 배경 | 단색 사각형과 텍스트 화살표 | 요청 |
 | 옷장 패널 | 칸별 탭 아이콘(얼굴·머리·상의·모자·액세서리) | 착용 칸 구현 때 필요 | 요청 |
 
 ## 3. 월드 (Town·건물)
 | 대상 | 필요한 것 | 지금 상태 | 상태 |
 |---|---|---|---|
-| 마을 나무 자원 지점 | 베기 전·베는 중·벤 뒤(그루터기) 그림, 32px 격자 | 퀘스트 수정 작업에서 기존 Modern 그림을 임시로 씀(작업 결과에 맞춰 갱신) | 요청 |
-| 나무(아이템) 아이콘 | 인벤토리 아이콘 | 확인 필요 | 요청 |
+| 마을 나무 자원 지점 | 128x128(4x4칸, 32px 격자) 나무 3상태: 베기 전·맞는 중(흔들림 2~3프레임)·벤 뒤(그루터기). 밑동 기준점이 아래 10% 높이. 쓰는 곳: `Assets/Scenes/Town.unity` 루트 `TownResourcePoints`의 `WoodResourcePoint_01~03/Visual`(SpriteRenderer), 데이터 `Assets/Data/Resources/Resource_Tree.asset` | 2026-11-07: Modern Exteriors `ME_Singles_Camping_32x32_Tree_1.png`(Sprite, PPU 32) 1장만 사용. 맞는 중·벤 뒤 그림이 없어 다 베면 나무가 사라진다. 화면: `output/quest-fixes-20261107/quest-wood-e2e-001-town-trees.png` | 요청 |
+| 나무(아이템) 아이콘 | 16x16 장작/통나무 인벤토리 아이콘 1장. 쓰는 곳: `Assets/Data/Items/Item_Wood.asset`의 `_icon` | 2026-11-07 확인: Modern Farm `Pickup_Fishing_Branch_16x16.png`(나뭇가지)를 쓰고 있어 '나무'로 읽히기 어렵다 | 요청 |
 
 ## 4. 실내·가구
 | 대상 | 필요한 것 | 지금 상태 | 상태 |
 |---|---|---|---|
-| 집 꾸미기 퀘스트 가구 | 방에 놓을 가구 추가 종류(침대·책상 외 소품) | 오프닝 '내 방 만들기' 가구 목록만 있음 | 요청 |
+| 집 꾸미기 퀘스트 가구 | 방에 놓을 소품 3~6종(그림자 없는 Modern Interiors 기준, 1~2칸). 쓰는 곳: `Assets/Data/Quests/Objectives/Objective_DecorateHouse.asset`의 `_acceptedFurniture` | 2026-11-07: 오프닝 '내 방 만들기'(`Objective_MyRoom`)와 같은 6종(사진판·공부책상·장난감 주방·구급 놀이 세트·조립 책상·훈련 타이어)을 그대로 씀. 새 게임 팔레트 첫 장에는 훈련 타이어만 보여 E2E가 타이어 3개를 놓는다 | 요청 |
 
 ## 추가 방법
 구현하다가 그림이 필요하면 해당 표에 한 줄을 추가한다: 대상, 크기·프레임·상태 수, 어디에 쓰는지(파일·데이터 경로), 지금 임시로 무엇을 쓰는지.

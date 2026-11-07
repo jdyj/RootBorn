@@ -182,6 +182,265 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.AreEqual(QuestState.Active, reloaded.QuestLog.GetState(quest));
         }
 
+        // QUEST-WOOD-E2E-001: on day two Mom's Gather Wood quest is accepted with a mouse click, the player walks out to the
+        // trees in Town with WASD and gathers with E until the quest completes and wood lands in the bag, then claims the
+        // reward with the mouse on the Tab journal's "Claim reward" button. After a reload the reward is not paid again.
+        [UnityTest]
+        [Timeout(600000)]
+        public IEnumerator QUEST_WOOD_E2E_001_AcceptFromMomGatherTownTreesByInputClaimInJournalOnceAcrossReload()
+        {
+            const string F = "QUEST-WOOD-E2E-001 failed:";
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+            yield return StartDayTwoAtHome(keyboard, F);
+            yield return AcceptMomQuest(keyboard, "quest.gatherWood", F);
+            var quest = AcceptFromMomResult;
+            Assert.IsTrue(PlayerQuestRuntime.TryGetActive(GameObject.Find("Player"), out var quests), F + " no quest session.");
+
+            yield return PlayerFlowE2EDriver.WalkThroughDoor(keyboard, "Town", F);
+            yield return PlayerFlowE2EDriver.DismissDailyEvent();
+            var points = GameObject.Find("TownResourcePoints");
+            Assert.IsNotNull(points, F + " Town has no authored resource points.");
+            var tree = points.transform.GetChild(0).GetComponent<Rootborn.Game.Resources.ResourceNode>();
+            Assert.IsNotNull(tree, F + " the first resource point is not a resource node.");
+            var player = GameObject.Find("Player");
+            yield return PlayerFlowE2EDriver.WalkPlayerWithKeyboardTo(player, keyboard, tree.transform.position + new Vector3(0f, -0.9f, 0f), 0.4f, 900, F + " could not walk to the tree.");
+            yield return CaptureScreenshot("output/quest-fixes-20261107/quest-wood-e2e-001-town-trees.png");
+
+            var inventory = player.GetComponent<PlayerInventory>().Inventory;
+            int woodBefore = CountById(inventory, "Wood");
+            for (int i = 0; i < 5 && quests.QuestLog.GetState(quest) == QuestState.Active; i++) yield return PlayerFlowE2EDriver.PressInteractKey(keyboard);
+            Assert.AreEqual(QuestState.Completed, quests.QuestLog.GetState(quest), F + " pressing E at the tree did not complete the gather objective.");
+            Assert.AreEqual(QuestState.Completed, SavedQuestState(quest.Id), F + " the completed objective was not saved.");
+            for (int i = 0; i < 40 && !tree.IsBroken; i++) yield return PlayerFlowE2EDriver.PressInteractKey(keyboard);
+            Assert.IsTrue(tree.IsBroken, F + " the tree did not fall after repeated E presses with bare hands.");
+            Assert.Greater(CountById(inventory, "Wood"), woodBefore, F + " the felled tree dropped no wood into the bag.");
+
+            var reward = FirstItemReward(quest);
+            int rewardBefore = inventory.CountOf(reward.Item);
+            yield return ClaimFromJournal(keyboard, quest, "output/quest-fixes-20261107/quest-wood-e2e-001-journal-claim-button.png", F);
+            Assert.AreEqual(QuestState.RewardClaimed, quests.QuestLog.GetState(quest), F + " the journal claim did not claim the quest.");
+            Assert.AreEqual(QuestState.RewardClaimed, SavedQuestState(quest.Id), F + " the claim was not saved right away.");
+            Assert.AreEqual(rewardBefore + reward.Count, inventory.CountOf(reward.Item), F + " the reward item was not paid exactly once.");
+            int rewardAfterClaim = inventory.CountOf(reward.Item);
+
+            ActiveSaveContext.Clear();
+            PlayerGlobalState.ClearForTests();
+            yield return PlayerFlowE2EDriver.EnterWorldFromSaveSlot(TestSlotId, "LoadButton", "Town", "QUEST-WOOD-E2E-002 failed: Load did not return to Town.");
+            yield return PlayerFlowE2EDriver.DismissDailyEvent();
+            var reloadedPlayer = GameObject.Find("Player");
+            Assert.IsTrue(PlayerQuestRuntime.TryGetActive(reloadedPlayer, out var reloaded), "QUEST-WOOD-E2E-002 failed: no quest session after reload.");
+            Assert.AreEqual(QuestState.RewardClaimed, reloaded.QuestLog.GetState(quest), "QUEST-WOOD-E2E-002 failed: the claim did not load back.");
+            yield return null;
+            Assert.AreEqual(rewardAfterClaim, reloadedPlayer.GetComponent<PlayerInventory>().Inventory.CountOf(reward.Item), "QUEST-WOOD-E2E-002 failed: the reward changed across reload.");
+            yield return AssertJournalHasNoClaimButton(keyboard, quest, "QUEST-WOOD-E2E-002 failed:");
+        }
+
+        // QUEST-DECORATE-E2E-001: on day two Mom's house decorating quest is accepted with a mouse click, three pieces of
+        // furniture are placed in the House with the mouse (furniture panel button, palette item, room cell), the reward is
+        // claimed on the journal detail button by mouse, and after a reload it stays claimed and its effect counted once.
+        [UnityTest]
+        [Timeout(600000)]
+        public IEnumerator QUEST_DECORATE_E2E_001_AcceptFromMomPlaceThreeFurnitureByMouseClaimInJournalOnceAcrossReload()
+        {
+            const string F = "QUEST-DECORATE-E2E-001 failed:";
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+            yield return StartDayTwoAtHome(keyboard, F);
+            yield return AcceptMomQuest(keyboard, "quest.tile-placement.interior", F);
+            var quest = AcceptFromMomResult;
+            Assert.IsTrue(PlayerQuestRuntime.TryGetActive(GameObject.Find("Player"), out var quests), F + " no quest session.");
+            var objective = (Rootborn.Game.Quests.Objectives.FurniturePlacedQuestObjective)quest.Objectives[0];
+            var effect = (Rootborn.Game.Quests.Effects.TraitDeltaCompletionEffect)System.Array.Find(quest.CompletionEffects, e => e is Rootborn.Game.Quests.Effects.TraitDeltaCompletionEffect);
+            var student = GameObject.Find("Player").GetComponent<StudentLifeProgressComponent>();
+            int traitBefore = student.Progress.GetTraitValue(effect.Trait);
+
+            var toggle = GameObject.Find(HousePlacementTestDriver.ToggleName);
+            Assert.IsNotNull(toggle, F + " House has no furniture button.");
+            yield return ClickWithMouse(toggle, F + " furniture button");
+            var accepted = new System.Collections.Generic.List<string>();
+            foreach (var furniture in objective.AcceptedFurniture) if (furniture != null) accepted.Add(furniture.StableId);
+            var used = new System.Collections.Generic.HashSet<string>();
+            for (int placed = 0; placed < 3; placed++)
+            {
+                int before = quests.QuestLog.GetObjectiveCount(quest, 0);
+                GameObject paletteButton = null;
+                for (int page = 0; page < 40 && paletteButton == null; page++)
+                {
+                    paletteButton = FindPaletteButton(accepted, used) ?? FindPaletteButton(accepted, null);
+                    if (paletteButton != null) break;
+                    var next = PlayerFlowE2EDriver.FindButton(Object.FindFirstObjectByType<Rootborn.UI.Interiors.InteriorFurniturePlacementPanel>().transform, "FurniturePaletteNextPage");
+                    Assert.IsTrue(next != null && next.interactable, F + " none of Mom's furniture is in the House palette.");
+                    yield return ClickWithMouse(next.gameObject, F + " palette next page");
+                }
+
+                Assert.IsNotNull(paletteButton, F + " none of Mom's furniture is in the House palette.");
+                used.Add(paletteButton.name.Substring("PaletteFurniture_".Length));
+                yield return ClickWithMouse(paletteButton, F + " palette item " + paletteButton.name);
+                var overlay = Object.FindFirstObjectByType<Rootborn.UI.Interiors.InteriorPlacementPreviewOverlay>();
+                for (int i = 0; i < 60 && (overlay == null || overlay.ValidCellCount == 0); i++) { yield return null; overlay = Object.FindFirstObjectByType<Rootborn.UI.Interiors.InteriorPlacementPreviewOverlay>(); }
+                Assert.IsTrue(overlay != null && overlay.ValidCellCount > 0, F + " choosing " + paletteButton.name + " showed no free cells.");
+                Assert.IsTrue(TryFindFreeRoomCell(out var screen), F + " no free room cell is visible outside the UI.");
+                yield return PressMouseInWorld(screen);
+                for (int i = 0; i < 30 && quests.QuestLog.GetObjectiveCount(quest, 0) == before; i++) yield return null;
+                Assert.AreEqual(before + 1, quests.QuestLog.GetObjectiveCount(quest, 0), F + " placing " + paletteButton.name + " did not count once.");
+            }
+
+            Assert.AreEqual(QuestState.Completed, quests.QuestLog.GetState(quest), F + " three placed pieces did not complete the quest.");
+            yield return CaptureScreenshot("output/quest-fixes-20261107/quest-decorate-e2e-001-house-furniture.png");
+            yield return ClickWithMouse(GameObject.Find(HousePlacementTestDriver.ToggleName), F + " closing the furniture panel");
+            yield return ClaimFromJournal(keyboard, quest, "output/quest-fixes-20261107/quest-decorate-e2e-001-journal-claim-button.png", F);
+            Assert.AreEqual(QuestState.RewardClaimed, quests.QuestLog.GetState(quest), F + " the journal claim did not claim the quest.");
+            Assert.AreEqual(QuestState.RewardClaimed, SavedQuestState(quest.Id), F + " the claim was not saved right away.");
+            Assert.AreEqual(traitBefore + effect.Delta, student.Progress.GetTraitValue(effect.Trait), F + " the quest effect did not apply exactly once.");
+
+            ActiveSaveContext.Clear();
+            PlayerGlobalState.ClearForTests();
+            yield return PlayerFlowE2EDriver.EnterWorldFromSaveSlot(TestSlotId, "LoadButton", "House", "QUEST-DECORATE-E2E-002 failed: Load did not return to the House.");
+            yield return PlayerFlowE2EDriver.DismissDailyEvent();
+            var reloadedPlayer = GameObject.Find("Player");
+            Assert.IsTrue(PlayerQuestRuntime.TryGetActive(reloadedPlayer, out var reloaded), "QUEST-DECORATE-E2E-002 failed: no quest session after reload.");
+            Assert.AreEqual(QuestState.RewardClaimed, reloaded.QuestLog.GetState(quest), "QUEST-DECORATE-E2E-002 failed: the claim did not load back.");
+            Assert.AreEqual(traitBefore + effect.Delta, reloadedPlayer.GetComponent<StudentLifeProgressComponent>().Progress.GetTraitValue(effect.Trait), "QUEST-DECORATE-E2E-002 failed: the effect changed across reload.");
+            yield return AssertJournalHasNoClaimButton(keyboard, quest, "QUEST-DECORATE-E2E-002 failed:");
+        }
+
+        private static QuestDefinition AcceptFromMomResult;
+
+        // New game, into the House, end day one at the home board, and wait for Mom on day two.
+        private static IEnumerator StartDayTwoAtHome(Keyboard keyboard, string failure)
+        {
+            yield return PlayerFlowE2EDriver.EnterWorldFromSaveSlot(TestSlotId, "NewGameButton", "Town", failure + " New Game did not enter Town.");
+            yield return PlayerFlowE2EDriver.DismissDailyEvent();
+            yield return PlayerFlowE2EDriver.WalkThroughDoor(keyboard, "House", failure);
+            yield return PlayerFlowE2EDriver.DismissDailyEvent();
+            var student = GameObject.Find("Player").GetComponent<StudentLifeProgressComponent>();
+            int firstDay = student.Progress.CurrentDay;
+            yield return EndDayAtHomeBoard(keyboard, failure);
+            Assert.AreEqual(firstDay + 1, student.Progress.CurrentDay, failure + " Next Day did not start day two.");
+            yield return PlayerFlowE2EDriver.DismissDailyEvent();
+            yield return WaitForMomInScene("House", true, failure + " Mom is not at home.");
+        }
+
+        // Talks to Mom with E and clicks the accept choice for the given quest with the mouse.
+        private IEnumerator AcceptMomQuest(Keyboard keyboard, string questId, string failure)
+        {
+            var mom = GameObject.Find("TownNpc_npc_first_guide");
+            var momNpc = mom.GetComponent<NpcInteractor>();
+            yield return PlayerFlowE2EDriver.WalkAndInteract(keyboard, mom.transform.position, failure + " Mom");
+            Assert.IsTrue(momNpc.Session.IsOpen, failure + " E next to Mom did not open her dialogue.");
+            int acceptIndex = -1;
+            var choices = momNpc.Session.Current.Choices;
+            for (int i = 0; i < choices.Length; i++)
+                if (choices[i] != null && choices[i].QuestAction == DialogueQuestAction.AcceptQuest && choices[i].Quest != null && choices[i].Quest.Id == questId) acceptIndex = i;
+            Assert.GreaterOrEqual(acceptIndex, 0, failure + " Mom does not offer " + questId + ".");
+            var quest = choices[acceptIndex].Quest;
+            var dialogue = FindInActiveScene<DialoguePanel>();
+            Assert.IsTrue(dialogue != null && dialogue.IsOpen, failure + " Mom's dialogue panel is not on screen.");
+            yield return ClickWithMouse(PlayerFlowE2EDriver.FindButton(dialogue.transform, "ChoiceButton_" + acceptIndex).gameObject, failure + " accept choice");
+            Assert.IsTrue(PlayerQuestRuntime.TryGetActive(GameObject.Find("Player"), out var quests), failure + " no quest session.");
+            Assert.AreEqual(QuestState.Active, quests.QuestLog.GetState(quest), failure + " clicking the accept choice did not accept " + questId + ".");
+            Assert.AreEqual(QuestState.Active, SavedQuestState(quest.Id), failure + " the accepted quest was not saved right away.");
+            if (dialogue.IsOpen) yield return ClickWithMouse(PlayerFlowE2EDriver.FindButton(dialogue.transform, "CloseButton").gameObject, failure + " dialogue close");
+            AcceptFromMomResult = quest;
+        }
+
+        // Tab, Quests category and the quest row by mouse; the detail's claim button is captured on screen and clicked by mouse.
+        private static IEnumerator ClaimFromJournal(Keyboard keyboard, QuestDefinition quest, string screenshotPath, string failure)
+        {
+            yield return PressTabUntilJournal(keyboard, true, failure);
+            var journal = FindInActiveScene<ObjectiveJournalPanel>();
+            yield return ClickWithMouse(PlayerFlowE2EDriver.FindButton(journal.transform, "ObjectiveCategory_Quests").gameObject, failure + " Quests category");
+            var row = ObjectiveJournalE2EDriver.FindRowButtonContaining(journal, GameText.Get(quest.DisplayNameKey), failure);
+            yield return ClickWithMouse(row.gameObject, failure + " quest row");
+            var claim = journal.DetailActionButton;
+            Assert.IsNotNull(claim, failure + " the completed quest shows no claim button in the journal detail.\n" + journal.VisibleText);
+            StringAssert.Contains(GameText.Localized("ui.journal.quest.claim", "Claim reward"), journal.VisibleText, failure + " the claim button has no label.");
+            yield return CaptureScreenshot(screenshotPath);
+            yield return ClickWithMouse(claim, failure + " claim button");
+            StringAssert.Contains(GameText.Localized("ui.journal.quest.claimed", "Reward received."), journal.VisibleText, failure + " the journal did not confirm the claim.");
+            Assert.IsNull(journal.DetailActionButton, failure + " the claim button is still offered after claiming.");
+            yield return PressTabUntilJournal(keyboard, false, failure);
+        }
+
+        private static IEnumerator AssertJournalHasNoClaimButton(Keyboard keyboard, QuestDefinition quest, string failure)
+        {
+            yield return PressTabUntilJournal(keyboard, true, failure);
+            var journal = FindInActiveScene<ObjectiveJournalPanel>();
+            yield return ClickWithMouse(PlayerFlowE2EDriver.FindButton(journal.transform, "ObjectiveCategory_Quests").gameObject, failure + " Quests category");
+            var row = ObjectiveJournalE2EDriver.FindRowButtonContaining(journal, GameText.Get(quest.DisplayNameKey), failure);
+            yield return ClickWithMouse(row.gameObject, failure + " quest row");
+            Assert.IsNull(journal.DetailActionButton, failure + " a claimed quest offers its reward again after reload.");
+            yield return PressTabUntilJournal(keyboard, false, failure);
+        }
+
+        private static GameObject FindPaletteButton(System.Collections.Generic.List<string> accepted, System.Collections.Generic.HashSet<string> exclude)
+        {
+            foreach (var button in Object.FindObjectsByType<Button>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+            {
+                if (!button.name.StartsWith("PaletteFurniture_", System.StringComparison.Ordinal)) continue;
+                string id = button.name.Substring("PaletteFurniture_".Length);
+                if (accepted.Contains(id) && (exclude == null || !exclude.Contains(id))) return button.gameObject;
+            }
+
+            return null;
+        }
+
+        // A free (green) placement cell in view and not under any UI.
+        private static bool TryFindFreeRoomCell(out Vector2 screen)
+        {
+            var tilemap = GameObject.Find("AuthoredPlacementAvailability")?.GetComponent<UnityEngine.Tilemaps.Tilemap>();
+            var camera = Camera.main;
+            screen = default;
+            if (tilemap == null || camera == null) return false;
+            foreach (var cell in tilemap.cellBounds.allPositionsWithin)
+            {
+                var tile = tilemap.GetTile<UnityEngine.Tilemaps.Tile>(cell);
+                if (tile == null || tile.color.g <= 0.8f || tile.color.r >= 0.3f) continue;
+                var point = camera.WorldToScreenPoint(tilemap.GetCellCenterWorld(cell));
+                if (point.z <= 0f || point.x < Screen.width * 0.3f || point.x > Screen.width * 0.9f || point.y < Screen.height * 0.15f || point.y > Screen.height * 0.85f) continue;
+                var results = new System.Collections.Generic.List<RaycastResult>();
+                EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = point }, results);
+                if (results.Count > 0) continue;
+                screen = point;
+                return true;
+            }
+
+            return false;
+        }
+
+        // A real mouse moves over the room cell, presses for a few frames and releases, as a player clicks.
+        private static IEnumerator PressMouseInWorld(Vector2 point)
+        {
+            var mouse = InputSystem.AddDevice<Mouse>();
+            mouse.MakeCurrent();
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = point });
+            InputSystem.Update();
+            yield return null;
+            yield return null;
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = point, buttons = 1 });
+            InputSystem.Update();
+            yield return null;
+            yield return null;
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = point });
+            InputSystem.Update();
+            yield return null;
+            yield return null;
+            InputSystem.RemoveDevice(mouse);
+        }
+
+        private static Rootborn.Game.Quests.Rewards.ItemQuestReward FirstItemReward(QuestDefinition quest)
+        {
+            foreach (var reward in quest.Rewards) if (reward is Rootborn.Game.Quests.Rewards.ItemQuestReward item && item.Item != null) return item;
+            Assert.Fail(quest.Id + " has no item reward.");
+            return null;
+        }
+
+        private static int CountById(Rootborn.Game.Common.Inventory inventory, string itemId)
+        {
+            int count = 0;
+            foreach (var slot in inventory.Slots) if (slot.Item != null && slot.Item.Id == itemId) count += slot.Count;
+            return count;
+        }
+
         private static IEnumerator EndDayAtHomeBoard(Keyboard keyboard, string failure)
         {
             var board = GameObject.Find("StudentDayEndBoard");

@@ -4,6 +4,9 @@ using Rootborn.Game.Common;
 using Rootborn.Game.Player;
 using Rootborn.Game.Quests;
 using Rootborn.Game.Save;
+using Rootborn.Game.StudentLife;
+using Rootborn.UI.Careers;
+using UnityEngine;
 
 namespace Rootborn.UI.Objectives
 {
@@ -42,10 +45,69 @@ namespace Rootborn.UI.Objectives
                     BuildObjectiveText(session.QuestLog, quest),
                     BuildQuestHintText(state),
                     false,
-                    BuildQuestSortPriority(state)));
+                    BuildQuestSortPriority(state),
+                    state == QuestState.Completed ? CreateClaimAction(session, quest, context.Player) : null));
             }
 
             return items.ToArray();
+        }
+
+        // Any completed quest can be claimed from its journal detail, whoever offered it (e.g. dream-linked quests).
+        private static ObjectiveJournalAction CreateClaimAction(PlayerQuestSession session, QuestDefinition quest, GameObject player)
+        {
+            if (player == null || session.LoadFailed)
+            {
+                return null;
+            }
+
+            return new ObjectiveJournalAction(
+                ObjectiveJournalSourceText.Localized("ui.journal.quest.claim", "Claim reward"),
+                () => ClaimFromJournal(session, quest, player));
+        }
+
+        /// <summary>
+        /// The journal's claim: the session checks inventory room for every reward first and pays all or nothing, marks
+        /// the quest claimed and saves it, so repeating (also after reload) pays nothing. The owner then saves the
+        /// inventory and world it changed, as Mom's claim choice does.
+        /// </summary>
+        public static ObjectiveJournalActionResult ClaimFromJournal(PlayerQuestSession session, QuestDefinition quest, GameObject player)
+        {
+            var failed = new ObjectiveJournalActionResult(false, ObjectiveJournalSourceText.Localized(
+                "ui.journal.quest.claim-failed", "The reward could not be claimed. Make room in your bag and try again."));
+            if (session == null || quest == null || player == null || session.LoadFailed)
+            {
+                return failed;
+            }
+
+            var owner = player.GetComponent<AdultCareerRuntimeComponent>();
+            if (owner != null && !owner.CanMutate)
+            {
+                return failed;
+            }
+
+            var inventory = owner != null ? owner.PlayerInventory : player.GetComponent<PlayerInventory>();
+            var studentComponent = owner != null ? owner.StudentComponent : player.GetComponent<StudentLifeProgressComponent>();
+            if (inventory == null || inventory.Inventory == null)
+            {
+                return failed;
+            }
+
+            var context = session.RewardContext(
+                inventory.Inventory,
+                studentComponent != null ? studentComponent.Progress : null,
+                owner != null ? owner.World : null,
+                owner != null ? owner.FurnitureUnlocks : null);
+            if (!session.TryClaimReward(quest, in context))
+            {
+                return failed;
+            }
+
+            if (owner != null)
+            {
+                owner.SaveCurrent();
+            }
+
+            return new ObjectiveJournalActionResult(true, ObjectiveJournalSourceText.Localized("ui.journal.quest.claimed", "Reward received."));
         }
 
         // The same per-player session NPC dialogue changes, in whichever world scene the player is.

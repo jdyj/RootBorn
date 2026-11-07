@@ -133,6 +133,7 @@ namespace Rootborn.Game.Player
         /// <summary>The session for a slot and player. Without a slot it lives in memory only and never touches files.</summary>
         public static PlayerQuestSession Get(string saveSlot, string playerId, IReadOnlyList<QuestDefinition> quests)
         {
+            EnsureGameplayEventRouting();
             string key = PlayerGlobalState.MakePlayerStateKey(saveSlot, playerId);
             if (s_sessions.TryGetValue(key, out var existing))
             {
@@ -167,6 +168,45 @@ namespace Rootborn.Game.Player
         public static bool TryGetActive(GameObject player, out PlayerQuestSession session)
         {
             return TryGetActive(PlayerIdOf(player), out session);
+        }
+
+        // Producers of these kinds already write into the player's quest log themselves (gather hits, NPC talk keys, the
+        // location activity panel). Routing their bridge copies too would count one action twice.
+        private static readonly QuestEventKind[] s_kindsRecordedDirectly = { QuestEventKind.Gather, QuestEventKind.Talk, QuestEventKind.LocationActivity };
+
+        /// <summary>
+        /// Committed gameplay actions published on <see cref="QuestGameplayEventBridge"/> (furniture placed, places
+        /// visited, work done, ...) also count toward the acting player's quests. Each event counts once: replays are
+        /// skipped and every objective remembers the event key it already counted. Saved by the session on change.
+        /// </summary>
+        public static void EnsureGameplayEventRouting()
+        {
+            QuestGameplayEventBridge.OnRecorded -= RouteGameplayEvent;
+            QuestGameplayEventBridge.OnRecorded += RouteGameplayEvent;
+        }
+
+        private static void RouteGameplayEvent(QuestEvent questEvent, StudentLifeProgress progress)
+        {
+            if (progress == null || questEvent.IsReplay || Array.IndexOf(s_kindsRecordedDirectly, questEvent.Kind) >= 0)
+            {
+                return;
+            }
+
+            string key = PlayerGlobalState.MakePlayerStateKey(progress.SaveSlot, progress.PlayerId);
+            // A session not opened yet is opened only for the slot being played, never for another slot's file.
+            if (!s_sessions.TryGetValue(key, out var session)
+                && (string.IsNullOrEmpty(progress.SaveSlot) || progress.SaveSlot != ActiveSaveContext.SlotId
+                    || !TryGet(progress.SaveSlot, progress.PlayerId, out session)))
+            {
+                return;
+            }
+
+            if (session == null || session.LoadFailed)
+            {
+                return;
+            }
+
+            session.QuestLog.RecordEvent(in questEvent);
         }
 
         internal static void ClearSessions()

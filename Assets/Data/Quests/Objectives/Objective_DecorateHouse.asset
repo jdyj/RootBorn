@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fc6ab9813ad85c418816274454e25f0, type: 3}
+  m_Name: Objective_DecorateHouse
+  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Quests.Objectives.FurniturePlacedQuestObjective
+  _displayKey: quest.house-decorating.objective
+  _requiredCount: 3
+  _acceptedFurniture:
+  - {fileID: 11400000, guid: 41e7b47340d25104380092928b95c9a5, type: 2}
+  - {fileID: 11400000, guid: 6e590e1b4b969a94193a18b43e89817b, type: 2}
+  - {fileID: 11400000, guid: ffcfa614bb8222b49afa04d706c655f2, type: 2}
+  - {fileID: 11400000, guid: 4fe35e78c862f67469b27422c42664bf, type: 2}
+  - {fileID: 11400000, guid: 95418fd30df3cab43967346379bf59ca, type: 2}
+  - {fileID: 11400000, guid: 74ffd6d12b6245b43ac21ac2480b89b9, type: 2}
+  _requiredSurfaceId: house

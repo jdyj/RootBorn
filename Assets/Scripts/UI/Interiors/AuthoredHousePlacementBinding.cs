@@ -77,12 +77,14 @@ namespace Rootborn.UI.Interiors
             _session.PlacementCommitted-=RecordPlacement;
             _session.PlacementCommitted+=RecordPlacement;
         }
-        private void RecordPlacement(FurnitureDefinition definition)
+        private void RecordPlacement(FurnitureDefinition definition) => RecordPlacement(definition,false);
+        // A replay announces furniture already in the room; quest chains catch up on it, the quest log does not count it again.
+        private void RecordPlacement(FurnitureDefinition definition,bool replay)
         {
             if(!Owns())return;
             QuestGameplayEventBridge.Record(new QuestEvent(QuestEventKind.FurniturePlaced,
                 QuestGameplayEventBridge.CreateRequestKey("furniture-placed"),furniture:definition,
-                surfaceId:_session.Surface.SurfaceId),_owner.StudentComponent.Progress);
+                surfaceId:_session.Surface.SurfaceId,isReplay:replay),_owner.StudentComponent.Progress);
         }
         public static bool StepWantsFurniture(QuestStepDefinition step)
         {
@@ -105,7 +107,7 @@ namespace Rootborn.UI.Interiors
         public void AnnouncePlacedFurniture()
         {
             if(_session==null||!AnyCurrentStepWantsFurniture())return;
-            foreach(var definition in _session.PlacedFurniture.Distinct().ToArray())RecordPlacement(definition);
+            foreach(var definition in _session.PlacedFurniture.Distinct().ToArray())RecordPlacement(definition,true);
         }
         private void OnDestroy()
         { if(_session!=null)_session.PlacementCommitted-=RecordPlacement; }

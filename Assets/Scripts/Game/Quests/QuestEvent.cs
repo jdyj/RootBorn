@@ -25,6 +25,9 @@ namespace Rootborn.Game.Quests
         public readonly DailyPlanRouteDefinition DailyPlanRoute;
         public readonly CareerInterestDefinition CareerInterest;
         public readonly int Count;
+        /// <summary>True when an already committed action is announced again (e.g. furniture already in the room on entry).
+        /// Quest chains may use it to catch up; the player's quest log does not count it again.</summary>
+        public readonly bool IsReplay;
 
         public QuestEvent(
             QuestEventKind kind,
@@ -42,7 +45,8 @@ namespace Rootborn.Game.Quests
             FurnitureDefinition furniture = null,
             string surfaceId = null,
             DailyPlanRouteDefinition dailyPlanRoute = null,
-            CareerInterestDefinition careerInterest = null)
+            CareerInterestDefinition careerInterest = null,
+            bool isReplay = false)
         {
             Kind = kind;
             EventKey = eventKey;
@@ -60,6 +64,7 @@ namespace Rootborn.Game.Quests
             SurfaceId = surfaceId ?? string.Empty;
             DailyPlanRoute = dailyPlanRoute;
             CareerInterest = careerInterest;
+            IsReplay = isReplay;
         }
     }
 }

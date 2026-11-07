@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: Quest_TilePlacementInterior
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Quests.QuestDefinition
   _id: quest.tile-placement.interior
-  _displayNameKey: quest.tile-placement.interior.name
-  _descriptionKey: quest.tile-placement.interior.desc
+  _displayNameKey: quest.house-decorating.name
+  _descriptionKey: quest.house-decorating.desc
   _providerConditions: []
   _prerequisites: []
   _objectives:
-  - {fileID: 11400000, guid: 5f2de75c4df902342a119d0c500a34f7, type: 2}
+  - {fileID: 11400000, guid: 4d01dfa4d7444e97bec60b8fe69e7d56, type: 2}
   _rewards: []
   _completionEffects:
   - {fileID: 11400000, guid: fddfeb9d65983ee43bc403e9f9c6b908, type: 2}

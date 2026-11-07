@@ -3388,3 +3388,27 @@ MonoBehaviour:
   - key: ui.creator.hint
     ko: "\uC637\uC740 \uAC8C\uC784 \uC548 \uC637\uC7A5\uC5D0\uC11C\uB3C4 \uBC14\uAFC0 \uC218 \uC788\uC5B4\uC694."
     en: "You can change outfits later in the wardrobe."
+  - key: quest.house-decorating.name
+    ko: "\uc9d1 \uafb8\ubbf8\uae30"
+    en: "Decorate the House"
+  - key: quest.house-decorating.desc
+    ko: "\uc5c4\ub9c8\uac00 \uc9d1\uc744 \uac19\uc774 \uafb8\uba70 \ubcf4\uc790\uace0 \ud588\uc5b4\uc694. \uc9d1\uc5d0 \uac00\uad6c\ub97c \uc138 \uac1c \ub193\uc544 \ubcf4\uc138\uc694."
+    en: "Mom asked you to help decorate the house. Place three pieces of furniture at home."
+  - key: quest.house-decorating.objective
+    ko: "\uc9d1\uc5d0 \uac00\uad6c \ub193\uae30"
+    en: "Place furniture at home"
+  - key: dialogue.choice.acceptDecorateHouse
+    ko: "\uc9d1 \uafb8\ubbf8\uae30\ub97c \ub3c4\uc6b8\uac8c\uc694"
+    en: "I'll help decorate the house"
+  - key: dialogue.choice.claimDecorateHouse
+    ko: "\uac00\uad6c\ub97c \ub2e4 \ub193\uc558\uc5b4\uc694"
+    en: "I placed the furniture"
+  - key: ui.journal.quest.claim
+    ko: "\ubcf4\uc0c1 \ubc1b\uae30"
+    en: "Claim reward"
+  - key: ui.journal.quest.claimed
+    ko: "\ubcf4\uc0c1\uc744 \ubc1b\uc558\uc5b4\uc694."
+    en: "Reward received."
+  - key: ui.journal.quest.claim-failed
+    ko: "\ubcf4\uc0c1\uc744 \ubc1b\uc9c0 \ubabb\ud588\uc5b4\uc694. \uac00\ubc29\uc5d0 \uc790\ub9ac\ub97c \ub9cc\ub4e4\uace0 \ub2e4\uc2dc \ud574 \ubcf4\uc138\uc694."
+    en: "The reward could not be claimed. Make room in your bag and try again."

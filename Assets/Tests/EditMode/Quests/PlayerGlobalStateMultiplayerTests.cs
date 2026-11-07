@@ -278,6 +278,158 @@ namespace Rootborn.Tests.EditMode.Quests
             Assert.IsFalse(Directory.Exists(_root) && Directory.GetFiles(_root, "quest-log*", SearchOption.AllDirectories).Length > 0);
         }
 
+        // Furniture placed in the House (and other committed actions on the gameplay event bridge) count toward the
+        // player's quests: once per event key, never for replays of furniture already in the room, never for other players.
+        [Test]
+        public void QUEST_SESSION_008_BridgeFurnitureEventsCountOncePerEventInThePlayersQuestLog()
+        {
+            var furniture = ScriptableObject.CreateInstance<Rootborn.Game.Placement.FurnitureDefinition>();
+            _objects.Add(furniture);
+            var objective = ScriptableObject.CreateInstance<Rootborn.Game.Quests.Objectives.FurniturePlacedQuestObjective>();
+            objective.ConfigureForRuntime("objective.session.furniture", 2);
+            SetField(objective, "_acceptedFurniture", new[] { furniture });
+            SetField(objective, "_requiredSurfaceId", "house");
+            var quest = ScriptableObject.CreateInstance<QuestDefinition>();
+            quest.ConfigureForRuntime("quest.session.decorate", "n", "d", new QuestObjectiveBase[] { objective }, Array.Empty<QuestRewardBase>(), null);
+            _objects.Add(objective);
+            _objects.Add(quest);
+            var session = PlayerQuestRuntime.Get(Slot, Player, new[] { quest });
+            Assert.IsTrue(session.QuestLog.Accept(quest));
+            var progress = new Rootborn.Game.StudentLife.StudentLifeProgress(Slot, Player, 10, 10);
+            var other = new Rootborn.Game.StudentLife.StudentLifeProgress(Slot, "player-b", 10, 10);
+
+            QuestGameplayEventBridge.Record(Placed("furniture-1", furniture, "house"), progress);
+            Assert.AreEqual(1, session.QuestLog.GetObjectiveCount(quest, 0), "A placed piece counts in the player's quest log.");
+            QuestGameplayEventBridge.Record(Placed("furniture-1", furniture, "house"), progress);
+            Assert.AreEqual(1, session.QuestLog.GetObjectiveCount(quest, 0), "The same event published twice counts once.");
+            QuestGameplayEventBridge.Record(Placed("furniture-replay", furniture, "house", replay: true), progress);
+            Assert.AreEqual(1, session.QuestLog.GetObjectiveCount(quest, 0), "Re-announcing furniture already in the room does not count again.");
+            QuestGameplayEventBridge.Record(Placed("furniture-town", furniture, "town"), progress);
+            QuestGameplayEventBridge.Record(Placed("furniture-other", furniture, "house"), other);
+            Assert.AreEqual(1, session.QuestLog.GetObjectiveCount(quest, 0), "Other surfaces and other players do not count.");
+
+            QuestGameplayEventBridge.Record(Placed("furniture-2", furniture, "house"), progress);
+            Assert.AreEqual(QuestState.Completed, session.QuestLog.GetState(quest));
+            Assert.AreEqual(QuestState.Completed, SavedState(quest), "Progress from bridge events is saved right away.");
+        }
+
+        // A tree hit counts once through the gather interactor's own binding; a bridge copy of a gather does not count again.
+        [Test]
+        public void QUEST_SESSION_009_GatherHitCountsOnceAndABridgeCopyIsNotCountedAgain()
+        {
+            var resource = ScriptableObject.CreateInstance<Rootborn.Game.Resources.ResourceNodeDefinition>();
+            SetField(resource, "_id", "Tree");
+            SetField(resource, "_baseHitsToBreak", 5f);
+            SetField(resource, "_bareHandPenaltyMul", 1f);
+            var objective = ScriptableObject.CreateInstance<Rootborn.Game.Quests.Objectives.GatherQuestObjective>();
+            objective.ConfigureForRuntime("objective.session.gather", 2);
+            SetField(objective, "_targetResource", resource);
+            var quest = ScriptableObject.CreateInstance<QuestDefinition>();
+            quest.ConfigureForRuntime("quest.session.wood", "n", "d", new QuestObjectiveBase[] { objective }, Array.Empty<QuestRewardBase>(), null);
+            _objects.Add(resource);
+            _objects.Add(objective);
+            _objects.Add(quest);
+            var session = PlayerQuestRuntime.Get(Slot, Player, new[] { quest });
+            Assert.IsTrue(session.QuestLog.Accept(quest));
+            var player = new GameObject("Player");
+            var nodeGo = new GameObject("Tree");
+            try
+            {
+                nodeGo.transform.position = new Vector3(0.5f, 0f, 0f);
+                var node = nodeGo.AddComponent<Rootborn.Game.Resources.ResourceNode>();
+                node.BindForRuntime(resource, nodeGo.AddComponent<SpriteRenderer>());
+                var gather = player.AddComponent<GatherInteractor>();
+                gather.BindQuestEvents(session.QuestLog);
+
+                gather.TriggerInteract();
+                Assert.AreEqual(1, session.QuestLog.GetObjectiveCount(quest, 0), "One hit counts once.");
+                var progress = new Rootborn.Game.StudentLife.StudentLifeProgress(Slot, Player, 10, 10);
+                QuestGameplayEventBridge.Record(new QuestEvent(QuestEventKind.Gather, "bridge-gather", resource: resource), progress);
+                Assert.AreEqual(1, session.QuestLog.GetObjectiveCount(quest, 0), "Gathering is recorded by the interactor only.");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(player);
+                UnityEngine.Object.DestroyImmediate(nodeGo);
+            }
+        }
+
+        // The Objective Journal detail claims any completed quest: all rewards or nothing, saved at once, once only.
+        [Test]
+        public void QUEST_SESSION_010_JournalClaimPaysOnceChangesNothingWithoutRoomAndStaysClaimedAfterReload()
+        {
+            string playerId = PlayerIdentity.DefaultPlayerId;
+            var registry = ScriptableObject.CreateInstance<GameDataRegistry>();
+            SetField(registry, "_quests", new[] { _quest });
+            _objects.Add(registry);
+            var session = PlayerQuestRuntime.Get(Slot, playerId, new[] { _quest });
+            Assert.IsTrue(session.QuestLog.Accept(_quest));
+            session.QuestLog.RecordEvent(new QuestEvent(QuestEventKind.Gather, "journal-complete"));
+            var source = new Rootborn.UI.Objectives.QuestLogObjectiveSource();
+            var fullPlayer = new GameObject("Player");
+            var player = new GameObject("Player");
+            try
+            {
+                var full = fullPlayer.AddComponent<PlayerInventory>().Inventory;
+                for (int i = 0; i < Inventory.MaxSlots; i++) full.Add(Item("item.session.full." + i, 1), 1);
+                var empty = player.AddComponent<PlayerInventory>().Inventory;
+                string savedPath = Path.Combine(_root, Slot, PlayerQuestRuntime.LogFileName(playerId));
+                string savedBefore = File.ReadAllText(savedPath);
+
+                var blockedAction = JournalAction(source, registry, fullPlayer);
+                Assert.IsNotNull(blockedAction, "A completed quest offers a claim button in the journal.");
+                var blocked = blockedAction.Run();
+                Assert.IsFalse(blocked.Succeeded);
+                Assert.IsNotEmpty(blocked.Message, "A failed claim tells the player why.");
+                Assert.AreEqual(0, full.CountOf(_stackedReward));
+                Assert.AreEqual(0, full.CountOf(_newReward));
+                Assert.AreEqual(QuestState.Completed, session.QuestLog.GetState(_quest));
+                Assert.AreEqual(savedBefore, File.ReadAllText(savedPath), "A failed claim must not change the save.");
+
+                var action = JournalAction(source, registry, player);
+                Assert.IsTrue(action.Run().Succeeded);
+                Assert.AreEqual(2, empty.CountOf(_stackedReward));
+                Assert.AreEqual(1, empty.CountOf(_newReward));
+                Assert.AreEqual(QuestState.RewardClaimed, SavedState(_quest, playerId), "The claim is saved right away.");
+                Assert.IsFalse(action.Run().Succeeded, "Pressing the same button again pays nothing.");
+                Assert.IsNull(JournalAction(source, registry, player), "A claimed quest no longer offers the button.");
+
+                PlayerGlobalState.ClearForTests();
+                var reloaded = PlayerQuestRuntime.Get(Slot, playerId, new[] { _quest });
+                Assert.AreEqual(QuestState.RewardClaimed, reloaded.QuestLog.GetState(_quest));
+                Assert.IsNull(JournalAction(source, registry, player), "After reload the claimed quest still has no button.");
+                Assert.IsFalse(action.Run().Succeeded, "An old button kept across reload pays nothing.");
+                Assert.AreEqual(2, empty.CountOf(_stackedReward));
+                Assert.AreEqual(1, empty.CountOf(_newReward));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(fullPlayer);
+                UnityEngine.Object.DestroyImmediate(player);
+            }
+        }
+
+        private Rootborn.UI.Objectives.ObjectiveJournalAction JournalAction(Rootborn.UI.Objectives.QuestLogObjectiveSource source, GameDataRegistry registry, GameObject player)
+        {
+            var items = source.BuildItems(new Rootborn.UI.Objectives.ObjectiveJournalContext(registry, player, new SaveSlotMetadata { SlotId = Slot }));
+            foreach (var item in items) if (item.StableKey == "quest." + _quest.Id) return item.Action;
+            Assert.Fail("The journal does not list the quest.");
+            return null;
+        }
+
+        private static QuestEvent Placed(string key, Rootborn.Game.Placement.FurnitureDefinition furniture, string surface, bool replay = false)
+        {
+            return new QuestEvent(QuestEventKind.FurniturePlaced, key, furniture: furniture, surfaceId: surface, isReplay: replay);
+        }
+
+        private QuestState SavedState(QuestDefinition quest, string playerId = Player)
+        {
+            var data = JsonUtility.FromJson<QuestLogSaveData>(File.ReadAllText(Path.Combine(_root, Slot, PlayerQuestRuntime.LogFileName(playerId))));
+            foreach (var entry in data.Quests) if (entry.QuestId == quest.Id) return entry.State;
+            Assert.Fail("Quest missing from the saved file.");
+            return QuestState.NotStarted;
+        }
+
         private PlayerQuestSession CompletedSession()
         {
             var session = PlayerQuestRuntime.Get(Slot, Player, new[] { _quest });
