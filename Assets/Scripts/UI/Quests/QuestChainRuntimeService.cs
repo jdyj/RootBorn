@@ -110,7 +110,7 @@ namespace Rootborn.UI.Quests
             if (questEvent.Kind == QuestEventKind.Talk && questEvent.Npc != null)
             {
                 foreach (var chain in registry.QuestChains)
-                    if (chain != null && chain.StartNpc == questEvent.Npc && log.GetState(chain) == QuestChainState.Available
+                    if (chain != null && chain.IsStartedByTalkingTo(questEvent.Npc) && log.GetState(chain) == QuestChainState.Available
                         && log.AcceptWithContext(chain, context))
                     {
                         log.Track(chain);

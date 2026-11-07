@@ -174,6 +174,20 @@ namespace Rootborn.Tests.EditMode.Quests
         }
 
         [Test]
+        public void QUEST_ID_009_QuestChainStartsWhenTalkingToAnyCopyOfItsStartNpc()
+        {
+            var (scene, bundle, other) = Copies<NpcDefinition>("_id", "npc.test-mom", "npc.test-teacher");
+            var chain = ScriptableObject.CreateInstance<QuestChainDefinition>();
+            SetField(chain, "_startNpc", bundle);
+
+            Assert.IsTrue(chain.IsStartedByTalkingTo(scene));
+            Assert.IsFalse(chain.IsStartedByTalkingTo(other));
+            Assert.IsFalse(chain.IsStartedByTalkingTo(null));
+            SetField(chain, "_startNpc", null);
+            Assert.IsFalse(chain.IsStartedByTalkingTo(scene), "a chain without a start NPC is never started by talking");
+        }
+
+        [Test]
         public void QUEST_ID_008_DefinitionsWithoutIdOnlyMatchThemselves()
         {
             var resource = ScriptableObject.CreateInstance<ResourceNodeDefinition>();

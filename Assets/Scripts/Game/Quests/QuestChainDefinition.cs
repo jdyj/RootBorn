@@ -29,6 +29,10 @@ namespace Rootborn.Game.Quests
         public string DescriptionKey => _descriptionKey;
         public string RelatedCareerInterestId => _relatedCareerInterestId;
         public NpcDefinition StartNpc => _startNpc;
+
+        /// <summary>True when talking to <paramref name="npc"/> starts this chain; copies of the start NPC (scene, bundle) share its id.</summary>
+        public bool IsStartedByTalkingTo(UnityEngine.Object npc)
+            => _startNpc != null && npc != null && string.Equals(QuestSubjectIds.Of(_startNpc), QuestSubjectIds.Of(npc), StringComparison.Ordinal);
         public QuestStepDefinition[] Steps => _steps;
         public QuestConditionBase[] StartConditions => _startConditions;
         public QuestConditionBase[] UnblockConditions => _unblockConditions;

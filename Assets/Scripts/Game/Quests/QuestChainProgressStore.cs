@@ -78,7 +78,7 @@ namespace Rootborn.Game.Quests
                 for (int i = 0; chains != null && i < chains.Length; i++)
                 {
                     var chain = chains[i];
-                    if (chain != null && chain.StartNpc == questEvent.Npc && log.GetState(chain) == QuestChainState.Available
+                    if (chain != null && chain.IsStartedByTalkingTo(questEvent.Npc) && log.GetState(chain) == QuestChainState.Available
                         && log.AcceptWithContext(chain, context)) log.Track(chain);
                 }
             }
