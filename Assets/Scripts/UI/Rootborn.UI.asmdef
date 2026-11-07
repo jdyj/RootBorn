@@ -5,7 +5,8 @@
         "Rootborn.Game",
         "Rootborn.Network",
         "Unity.Netcode.Runtime",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "Rootborn.Core"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

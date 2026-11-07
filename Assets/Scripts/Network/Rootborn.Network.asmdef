@@ -5,7 +5,8 @@
         "Rootborn.Game",
         "Unity.Netcode.Runtime",
         "Unity.Networking.Transport",
-        "Unity.Collections"
+        "Unity.Collections",
+        "Rootborn.Core"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
