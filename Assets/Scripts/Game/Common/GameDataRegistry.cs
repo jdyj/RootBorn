@@ -27,82 +27,55 @@ namespace Rootborn.Game.Common
 {
     public enum ItemCategory { Resource, Tool, Misc, Seed }
 
+    /// <summary>
+    /// The player's slot inventory. Stacking, moving, removing and all-or-nothing exchanges live in Rootborn.Core
+    /// (ItemSlots, tested with dotnet test); this class keeps the game's API and item type.
+    /// </summary>
     public sealed class Inventory : IRewardInventory<ItemDefinition>
     {
         public const int MaxSlots = 32;
 
-        public sealed class Slot
+        public sealed class Slot : ItemSlot<ItemDefinition>
         {
-            public ItemDefinition Item;
-            public int Count;
         }
 
-        private readonly List<Slot> _slots = new List<Slot>(MaxSlots);
-        public IReadOnlyList<Slot> Slots => _slots;
-        public event Action OnChanged;
+        private readonly ItemSlots<ItemDefinition, Slot> _slots = new ItemSlots<ItemDefinition, Slot>(MaxSlots, item => item.MaxStack);
 
-        // Insert these members inside existing Rootborn.Game.Common.Inventory.
-        // Existing imports already include System, Collections.Generic, Quests and UnityEngine.
-        private bool _exchangeInProgress;
+        public IReadOnlyList<Slot> Slots => _slots.Slots;
+
+        public event Action OnChanged
+        {
+            add => _slots.Changed += value;
+            remove => _slots.Changed -= value;
+        }
 
         public bool CanExchange(IReadOnlyList<InventoryGrant> costs, IReadOnlyList<InventoryGrant> rewards)
-        {
-            return !_exchangeInProgress && TryBuildExchange(costs, rewards, out _);
-        }
+            => _slots.CanExchange(ToAmounts(costs), ToAmounts(rewards));
 
-        public bool CanReceive(IReadOnlyList<ItemAmount<ItemDefinition>> grants) => CanExchange(null, ToGrants(grants));
+        public bool CanReceive(IReadOnlyList<ItemAmount<ItemDefinition>> grants) => _slots.CanExchange(null, grants);
 
-        public bool TryReceive(IReadOnlyList<ItemAmount<ItemDefinition>> grants, Action commit) => TryExchange(null, ToGrants(grants), commit);
+        public bool TryReceive(IReadOnlyList<ItemAmount<ItemDefinition>> grants, Action commit) => _slots.TryExchange(null, grants, commit);
 
-        private static List<InventoryGrant> ToGrants(IReadOnlyList<ItemAmount<ItemDefinition>> amounts)
-        {
-            if (amounts == null) return null;
-            var grants = new List<InventoryGrant>(amounts.Count);
-            for (int i = 0; i < amounts.Count; i++) grants.Add(new InventoryGrant(amounts[i].Item, amounts[i].Count));
-            return grants;
-        }
-
-        public bool TryAddAll(IReadOnlyList<InventoryGrant> rewards, Action commitState = null)
-        {
-            return TryExchange(null, rewards, commitState);
-        }
+        public bool TryAddAll(IReadOnlyList<InventoryGrant> rewards, Action commitState = null) => TryExchange(null, rewards, commitState);
 
         // commitState must contain only prevalidated, nonthrowing progress mutations and no I/O.
         // Observers run after both domains commit; the reentry guard remains held through notification.
         public bool TryExchange(IReadOnlyList<InventoryGrant> costs, IReadOnlyList<InventoryGrant> rewards, Action commitState = null)
-        {
-            if (_exchangeInProgress || !TryBuildExchange(costs, rewards, out var next)) return false;
-            _exchangeInProgress = true;
-            var previous = new List<Slot>(_slots);
-            try
-            {
-                _slots.Clear();
-                _slots.AddRange(next);
-                try { commitState?.Invoke(); }
-                catch
-                {
-                    _slots.Clear();
-                    _slots.AddRange(previous);
-                    throw;
-                }
-                OnChanged?.Invoke();
-                return true;
-            }
-            finally { _exchangeInProgress = false; }
-        }
+            => _slots.TryExchange(ToAmounts(costs), ToAmounts(rewards), commitState);
 
-        // The exchange rule lives in Rootborn.Core (InventoryPlanner, tested with dotnet test).
-        private bool TryBuildExchange(IReadOnlyList<InventoryGrant> costs, IReadOnlyList<InventoryGrant> rewards, out List<Slot> next)
-        {
-            var stacks = new List<ItemStack<ItemDefinition>>(_slots.Count);
-            for (int i = 0; i < _slots.Count; i++) stacks.Add(new ItemStack<ItemDefinition>(_slots[i].Item, _slots[i].Count));
-            next = null;
-            if (!InventoryPlanner.TryPlanExchange(stacks, MaxSlots, ToAmounts(costs), ToAmounts(rewards), item => item.MaxStack, out var planned))
-                return false;
-            next = new List<Slot>(planned.Count);
-            for (int i = 0; i < planned.Count; i++) next.Add(new Slot { Item = planned[i].Item, Count = planned[i].Count });
-            return true;
-        }
+        public void Add(ItemDefinition item, int count = 1) => _slots.Add(item, count);
+
+        public bool CanAdd(ItemDefinition item, int count = 1) => _slots.CanAdd(item, count);
+
+        public bool CanAddAll(IReadOnlyList<InventoryGrant> grants) => _slots.CanAddAll(ToAmounts(grants));
+
+        public bool TryMoveSlot(int sourceIndex, int targetIndex) => _slots.TryMoveSlot(sourceIndex, targetIndex);
+
+        public bool Remove(ItemDefinition item, int count = 1) => _slots.Remove(item, count);
+
+        public int CountOf(ItemDefinition item) => _slots.CountOf(item);
+
+        public void Clear() => _slots.Clear();
 
         private static List<ItemAmount<ItemDefinition>> ToAmounts(IReadOnlyList<InventoryGrant> grants)
         {
@@ -110,162 +83,6 @@ namespace Rootborn.Game.Common
             var amounts = new List<ItemAmount<ItemDefinition>>(grants.Count);
             for (int i = 0; i < grants.Count; i++) amounts.Add(new ItemAmount<ItemDefinition>(grants[i].Item, grants[i].Count));
             return amounts;
-        }
-
-        public void Add(ItemDefinition item, int count = 1)
-        {
-            if (item == null || count <= 0) return;
-            int remaining = count;
-            int max = item.MaxStack;
-            for (int i = 0; i < _slots.Count && remaining > 0; i++)
-            {
-                var slot = _slots[i];
-                if (slot.Item != item) continue;
-                int room = max - slot.Count;
-                if (room <= 0) continue;
-                int put = Mathf.Min(room, remaining);
-                slot.Count += put;
-                remaining -= put;
-            }
-
-            // CanAdd counts emptied slots as free, so they must be filled before appending.
-            for (int i = 0; i < _slots.Count && remaining > 0; i++)
-            {
-                var slot = _slots[i];
-                if (slot.Item != null && slot.Count > 0) continue;
-                int put = Mathf.Min(max, remaining);
-                slot.Item = item;
-                slot.Count = put;
-                remaining -= put;
-            }
-
-            while (remaining > 0 && _slots.Count < MaxSlots)
-            {
-                int put = Mathf.Min(max, remaining);
-                _slots.Add(new Slot { Item = item, Count = put });
-                remaining -= put;
-            }
-
-            OnChanged?.Invoke();
-        }
-
-        public bool CanAdd(ItemDefinition item, int count = 1)
-        {
-            if (item == null || count <= 0) return false;
-            int remaining = count;
-            int max = item.MaxStack;
-            int occupiedSlots = 0;
-            for (int i = 0; i < _slots.Count; i++)
-            {
-                var slot = _slots[i];
-                if (slot.Item != null && slot.Count > 0) occupiedSlots++;
-                if (slot.Item != item) continue;
-                int room = max - slot.Count;
-                if (room <= 0) continue;
-                int put = Mathf.Min(room, remaining);
-                remaining -= put;
-                if (remaining <= 0) return true;
-            }
-
-            int freeSlots = MaxSlots - occupiedSlots;
-            while (remaining > 0 && freeSlots > 0)
-            {
-                remaining -= Mathf.Min(max, remaining);
-                freeSlots--;
-            }
-
-            return remaining <= 0;
-        }
-
-        public bool CanAddAll(IReadOnlyList<InventoryGrant> grants)
-        {
-            if (grants == null) return true;
-            var clone = new Inventory();
-            for (int i = 0; i < _slots.Count; i++)
-            {
-                var slot = _slots[i];
-                if (slot.Item != null && slot.Count > 0) clone.Add(slot.Item, slot.Count);
-            }
-
-            for (int i = 0; i < grants.Count; i++)
-            {
-                var grant = grants[i];
-                if (!clone.CanAdd(grant.Item, grant.Count)) return false;
-                clone.Add(grant.Item, grant.Count);
-            }
-
-            return true;
-        }
-
-        public bool TryMoveSlot(int sourceIndex, int targetIndex)
-        {
-            if (sourceIndex < 0 || targetIndex < 0) return false;
-            EnsureSlotCount(Mathf.Max(sourceIndex, targetIndex) + 1);
-            var source = _slots[sourceIndex];
-            if (source.Item == null || source.Count <= 0) return false;
-            if (sourceIndex == targetIndex) return true;
-            var target = _slots[targetIndex];
-            if (target.Item != null && target.Count > 0)
-            {
-                if (target.Item != source.Item) return false;
-                int room = source.Item.MaxStack - target.Count;
-                if (room <= 0) return false;
-                int moved = Mathf.Min(room, source.Count);
-                target.Count += moved;
-                source.Count -= moved;
-                if (source.Count <= 0)
-                {
-                    source.Item = null;
-                    source.Count = 0;
-                }
-                OnChanged?.Invoke();
-                return true;
-            }
-
-            target.Item = source.Item;
-            target.Count = source.Count;
-            source.Item = null;
-            source.Count = 0;
-            OnChanged?.Invoke();
-            return true;
-        }
-
-        public bool Remove(ItemDefinition item, int count = 1)
-        {
-            if (item == null || count <= 0) return false;
-            if (CountOf(item) < count) return false;
-            int remaining = count;
-            for (int i = _slots.Count - 1; i >= 0 && remaining > 0; i--)
-            {
-                var slot = _slots[i];
-                if (slot.Item != item) continue;
-                int take = Mathf.Min(slot.Count, remaining);
-                slot.Count -= take;
-                remaining -= take;
-                if (slot.Count == 0) _slots.RemoveAt(i);
-            }
-            OnChanged?.Invoke();
-            return true;
-        }
-
-        public int CountOf(ItemDefinition item)
-        {
-            if (item == null) return 0;
-            int sum = 0;
-            for (int i = 0; i < _slots.Count; i++) if (_slots[i].Item == item) sum += _slots[i].Count;
-            return sum;
-        }
-
-        public void Clear()
-        {
-            if (_slots.Count == 0) return;
-            _slots.Clear();
-            OnChanged?.Invoke();
-        }
-
-        private void EnsureSlotCount(int count)
-        {
-            while (_slots.Count < count && _slots.Count < MaxSlots) _slots.Add(new Slot());
         }
     }
 

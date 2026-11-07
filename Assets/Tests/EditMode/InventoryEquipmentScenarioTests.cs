@@ -162,19 +162,18 @@ namespace Rootborn.Tests.EditMode
         {
             var stone = MakeItem("Stone", ItemCategory.Resource, 5);
             var inventory = new Inventory();
-            inventory.Add(stone, 4);
+            // Slots are only changed through the inventory: a full stack (5) at 0, an axe at 1, a partial stack (4) at 2.
+            inventory.Add(stone, 5);
             inventory.Add(MakeItem("StoneAxe", ItemCategory.Tool, 1), 1);
             inventory.Add(stone, 4);
-            inventory.Slots[0].Count = 4;
-            inventory.Slots[2].Count = 4;
 
-            bool moved = inventory.TryMoveSlot(2, 0);
+            bool moved = inventory.TryMoveSlot(0, 2);
 
             Assert.IsTrue(moved);
-            Assert.AreEqual(5, inventory.Slots[0].Count);
-            Assert.AreSame(stone, inventory.Slots[2].Item);
-            Assert.AreEqual(3, inventory.Slots[2].Count);
-            Assert.AreEqual(8, inventory.CountOf(stone));
+            Assert.AreEqual(5, inventory.Slots[2].Count);
+            Assert.AreSame(stone, inventory.Slots[0].Item);
+            Assert.AreEqual(4, inventory.Slots[0].Count);
+            Assert.AreEqual(9, inventory.CountOf(stone));
         }
 
         private static int FilledSlotCount(Inventory inventory)
