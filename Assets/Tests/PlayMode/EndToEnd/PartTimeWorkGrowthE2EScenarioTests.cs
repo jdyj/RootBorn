@@ -106,7 +106,9 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         // JOB-002: the board-placement and target-and-dodge jobs play to a pass from the screen and grow the trait once.
         [UnityTest]
         [Timeout(600000)]
-        public IEnumerator JOB_002_AuthoredTown_PlacementAndDodgeJobsPassFromTheScreen([Values("work.studio-helper", "work.training-helper")] string workId)
+        public IEnumerator JOB_002_AuthoredTown_EveryJobPassesFromTheScreen([Values(
+            "work.shift.corner-store", "work.workshop-helper", "work.restaurant-helper", "work.studio-helper", "work.supply-helper",
+            "work.training-helper", "work.clinic-helper", "work.fitness-helper", "work.errand-helper")] string workId)
         {
             var keyboard = InputSystem.AddDevice<Keyboard>();
             yield return EnterTownFromSaveSlot("NewGameButton", "JOB-002 failed: New Game did not enter Town.");
