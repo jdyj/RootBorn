@@ -156,7 +156,7 @@ namespace Rootborn.Tests.EditMode.World
             {
                 System.IO.File.WriteAllText(levelPath, PaintLastCollisionCell(System.Text.Encoding.UTF8.GetString(originalLevel)));
                 UnityEditor.AssetDatabase.ImportAsset(levelPath, UnityEditor.ImportAssetOptions.ForceUpdate);
-                yield return WaitForScene(originalScene, changed: true);
+                yield return WaitForCount(before + 1);
                 Assert.That(PaintedBlockCount(), Is.EqualTo(before + 1), "Saving the painted level did not bake the new Block cell into Town");
 
                 System.IO.File.WriteAllBytes(levelPath, originalLevel);
@@ -186,20 +186,19 @@ namespace Rootborn.Tests.EditMode.World
             return level.Substring(0, last) + "1" + level.Substring(last + 1);
         }
 
-        private static System.Collections.IEnumerator WaitForScene(byte[] original, bool changed)
-        {
-            for (int frame = 0; frame < 600; frame++)
-            {
-                if (!System.Linq.Enumerable.SequenceEqual(System.IO.File.ReadAllBytes(ScenePath), original) == changed) yield break;
-                yield return null;
-            }
-        }
-
+        // Waits by time, not frames: in a full run frames pass quickly while the LDtk import and the
+        // delayed bake can take tens of seconds, so a 600-frame wait gave up before the bake landed.
         private static System.Collections.IEnumerator WaitForCount(int count)
         {
-            for (int frame = 0; frame < 600; frame++)
+            double deadline = UnityEditor.EditorApplication.timeSinceStartup + 90.0;
+            double nextCheck = 0.0;
+            while (UnityEditor.EditorApplication.timeSinceStartup < deadline)
             {
-                if (frame % 20 == 0 && PaintedBlockCount() == count) yield break;
+                if (UnityEditor.EditorApplication.timeSinceStartup >= nextCheck)
+                {
+                    if (PaintedBlockCount() == count) yield break;
+                    nextCheck = UnityEditor.EditorApplication.timeSinceStartup + 1.0;
+                }
                 yield return null;
             }
         }
