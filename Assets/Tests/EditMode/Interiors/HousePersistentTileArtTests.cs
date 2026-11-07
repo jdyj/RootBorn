@@ -155,14 +155,6 @@ namespace Rootborn.Tests.EditMode.Interiors
                 var tileSet = serialized.FindProperty("_tileSet").objectReferenceValue as InteriorTileSetDefinition;
                 Assert.IsNotNull(tileSet);
                 AssertTileSet(tileSet);
-                var stages = serialized.FindProperty("_upgradeStages");
-                for (int i = 0; i < stages.arraySize; i++)
-                {
-                    var stage = stages.GetArrayElementAtIndex(i).objectReferenceValue;
-                    if (stage == null) continue;
-                    var stageSet = new SerializedObject(stage).FindProperty("_tileSet").objectReferenceValue as InteriorTileSetDefinition;
-                    if (stageSet != null) AssertTileSet(stageSet);
-                }
             }
             finally { EditorSceneManager.ClosePreviewScene(scene); }
         }

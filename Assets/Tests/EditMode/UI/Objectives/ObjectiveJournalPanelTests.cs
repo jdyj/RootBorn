@@ -358,6 +358,26 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
             }
         }
 
+        // Town's first canvas can be a display-only HUD canvas without a raycaster; the journal and inventory on it
+        // must still receive mouse clicks (QUEST_DIALOGUE_E2E_001 caught this after the old House upgrade canvas was deleted).
+        [Test]
+        public void ModernUiPanelAutoInstaller_HostCanvasWithoutRaycasterGetsOneSoPanelsTakeClicks()
+        {
+            var canvasGo = new GameObject("DisplayOnlyHudCanvasFixture", typeof(RectTransform), typeof(Canvas));
+            try
+            {
+                Assert.IsNull(canvasGo.GetComponent<GraphicRaycaster>());
+                ModernUiPanelAutoInstaller.InstallOnCanvas(canvasGo.GetComponent<Canvas>(), null);
+                Assert.IsNotNull(canvasGo.GetComponent<GraphicRaycaster>(), "Interactive panels need a GraphicRaycaster on their host canvas.");
+                ModernUiPanelAutoInstaller.InstallOnCanvas(canvasGo.GetComponent<Canvas>(), null);
+                Assert.AreEqual(1, canvasGo.GetComponents<GraphicRaycaster>().Length, "Reinstalling must not stack raycasters.");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(canvasGo);
+            }
+        }
+
         private static int CountObjectiveRows(Transform root)
         {
             return root.GetComponentsInChildren<Button>(true).Count(button => button.name.StartsWith("ObjectiveRow_", StringComparison.Ordinal));

@@ -35,6 +35,11 @@ namespace Rootborn.UI.Modern
 
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = Mathf.Max(canvas.sortingOrder, 1000);
+            // The host may be a display-only HUD canvas (e.g. Town's time HUD); the panels installed here take mouse clicks.
+            if (canvas.GetComponent<GraphicRaycaster>() == null)
+            {
+                canvas.gameObject.AddComponent<GraphicRaycaster>();
+            }
 
             var host = canvas.gameObject;
             var inventoryPanel = EnsurePanelHost<ModernUiInventoryPanel>(canvas.transform, InventoryPanelName);

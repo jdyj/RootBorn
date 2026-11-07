@@ -1,6 +1,4 @@
-using System.Reflection;
 using NUnit.Framework;
-using Rootborn.Game.Interiors;
 using Rootborn.Game.StudentLife;
 using Rootborn.Game.World;
 using UnityEditor.SceneManagement;
@@ -14,17 +12,6 @@ namespace Rootborn.Tests.EditMode.World
         private Scene _scene;
         [SetUp] public void SetUp() { _scene=EditorSceneManager.NewPreviewScene(); }
         [TearDown] public void TearDown() { if(_scene.IsValid()) EditorSceneManager.ClosePreviewScene(_scene); }
-        private void Config() { var go=new GameObject("AuthoredWorld"); SceneManager.MoveGameObjectToScene(go,_scene); go.AddComponent<AuthoredWorldScene>(); }
-        private bool ShouldGenerate(System.Type type,string method)
-        {
-            var member=type.GetMethod(method,BindingFlags.Static|BindingFlags.Public);
-            Assert.That(member,Is.Not.Null,"An explicit scene-load generation contract must protect saved authored content.");
-            return (bool)member.Invoke(null,new object[]{_scene});
-        }
-        [Test] public void TOWN_AuthoredHouse_DoesNotRegenerateSavedFurnitureOnLoad()
-        { _scene.name="House"; Config(); Assert.That(ShouldGenerate(typeof(InteriorTilemapApplier),"ShouldGenerateOnSceneLoad"),Is.False); }
-        [Test] public void TOWN_LegacyHouse_KeepsSeededGeneration()
-        { _scene.name="House"; Assert.That(ShouldGenerate(typeof(InteriorTilemapApplier),"ShouldGenerateOnSceneLoad"),Is.True); }
         private LocationDefinition Location(string id)
         { var l=ScriptableObject.CreateInstance<LocationDefinition>(); var so=new UnityEditor.SerializedObject(l); so.FindProperty("_id").stringValue=id; so.ApplyModifiedPropertiesWithoutUndo(); return l; }
         private AuthoredWorldScene Slots(LocationDefinition location,Vector2 position)

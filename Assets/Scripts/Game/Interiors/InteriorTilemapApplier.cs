@@ -1,8 +1,5 @@
 using System.Collections.Generic;
-using Rootborn.Game.Housing;
-using Rootborn.Game.World;
 using Rootborn.Game.Player;
-using Rootborn.Game.Save;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
@@ -12,101 +9,16 @@ namespace Rootborn.Game.Interiors
 {
     public sealed class InteriorTilemapApplier : MonoBehaviour
     {
-        [SerializeField] private InteriorGenerationProfile _profile;
         [SerializeField] private InteriorTileSetDefinition _tileSet;
-        [SerializeField] private HouseUpgradeStageDefinition[] _upgradeStages;
-        [SerializeField] private InteriorInteractionDefinition[] _interactions;
-        [SerializeField] private int _fallbackSeed = 1205;
         [SerializeField] private Tilemap _floor;
         [SerializeField] private Tilemap _walls;
         [SerializeField] private Tilemap _doors;
         [SerializeField] private Tilemap _decorations;
         [SerializeField] private Tilemap _collision;
-        [SerializeField] private Transform _interactorRoot;
 
-        private InteriorInteractionDefinition _runtimeComputerInteraction;
         private InteriorGeneratedMap _lastGeneratedMap;
-        private InteriorTileStyleOption _activeStyle;
 
         public InteriorGeneratedMap LastGeneratedMap => _lastGeneratedMap;
-
-        public void ApplyGeneratedInterior(int seed)
-        {
-            var state = HouseStatePersistence.Load(ResolveSaveSlot());
-            var profile = ResolveProfileForStage(state.CurrentStageIndex);
-            var originalTileSet = _tileSet;
-            var previousStyle = _activeStyle;
-            _tileSet = ResolveTileSetForStage(state.CurrentStageIndex);
-            _activeStyle = _tileSet != null ? _tileSet.ResolveStyle(state.SelectedInteriorStyleId) : null;
-
-            try
-            {
-                var map = InteriorGenerator.Generate(profile, seed);
-                Apply(map);
-            }
-            finally
-            {
-                _tileSet = originalTileSet;
-                _activeStyle = previousStyle;
-            }
-        }
-
-        private static string ResolveSaveSlot()
-        {
-            return !string.IsNullOrEmpty(ActiveSaveContext.SlotId) ? ActiveSaveContext.SlotId : "default";
-        }
-
-        private InteriorGenerationProfile ResolveProfileForStage(int stageIndex)
-        {
-            var stage = ResolveStageForIndex(stageIndex);
-            if (stage != null && stage.Profile != null)
-            {
-                return stage.Profile;
-            }
-
-            if (stageIndex >= 1)
-            {
-                return InteriorGenerationProfile.CreateExpandedOfficeForTests();
-            }
-
-            return _profile != null ? _profile : InteriorGenerationProfile.CreateDefaultOfficeForTests();
-        }
-
-        private InteriorTileSetDefinition ResolveTileSetForStage(int stageIndex)
-        {
-            var stage = ResolveStageForIndex(stageIndex);
-            if (stage != null && stage.TileSet != null)
-            {
-                return stage.TileSet;
-            }
-
-            return _tileSet;
-        }
-
-        private HouseUpgradeStageDefinition ResolveStageForIndex(int stageIndex)
-        {
-            if (_upgradeStages == null || _upgradeStages.Length == 0)
-            {
-                return null;
-            }
-
-            HouseUpgradeStageDefinition best = null;
-            for (int i = 0; i < _upgradeStages.Length; i++)
-            {
-                var stage = _upgradeStages[i];
-                if (stage == null || stage.StageIndex > stageIndex)
-                {
-                    continue;
-                }
-
-                if (best == null || stage.StageIndex > best.StageIndex)
-                {
-                    best = stage;
-                }
-            }
-
-            return best;
-        }
 
         public void Apply(InteriorGeneratedMap map)
         {
@@ -144,24 +56,7 @@ namespace Rootborn.Game.Interiors
             }
 
             MoveHouseSpawn(map, offset);
-            SpawnInteractors(map, offset);
             CompressAll();
-        }
-
-        public static bool ShouldGenerateOnSceneLoad(Scene scene)
-        {
-            return scene.IsValid() && scene.isLoaded && scene.name == "House" && AuthoredWorldScene.Find(scene) == null;
-        }
-
-        private void Start()
-        {
-            if (!ShouldGenerateOnSceneLoad(gameObject.scene))
-            {
-                return;
-            }
-
-            int seed = ActiveSaveContext.Metadata != null ? ActiveSaveContext.Metadata.WorldSeed : _fallbackSeed;
-            ApplyGeneratedInterior(seed);
         }
 
         private void ApplyBaseTile(InteriorGeneratedMap map, InteriorCell cell, Vector3Int pos)
@@ -194,7 +89,7 @@ namespace Rootborn.Game.Interiors
 
             if (IsVerticalWallRun(map, cell) || IsDoorFrameWall(map, cell))
             {
-                return _activeStyle != null && _activeStyle.VerticalWallAccent != null ? _activeStyle.VerticalWallAccent : _tileSet.VerticalWallAccent;
+                return _tileSet.VerticalWallAccent;
             }
 
             return ResolveWallBaseTile();
@@ -202,12 +97,12 @@ namespace Rootborn.Game.Interiors
 
         private TileBase ResolveFloorBaseTile()
         {
-            return _activeStyle != null && _activeStyle.Floor != null ? _activeStyle.Floor : _tileSet.Floor;
+            return _tileSet.Floor;
         }
 
         private TileBase ResolveWallBaseTile()
         {
-            return _activeStyle != null && _activeStyle.Wall != null ? _activeStyle.Wall : _tileSet.Wall;
+            return _tileSet.Wall;
         }
 
         private static bool IsVerticalWallRun(InteriorGeneratedMap map, Vector2Int cell)
@@ -273,47 +168,6 @@ namespace Rootborn.Game.Interiors
                     player.AddComponent<PlayerInteractionRouter>();
                 }
             }
-        }
-
-        private void SpawnInteractors(InteriorGeneratedMap map, Vector3Int offset)
-        {
-            var definitions = ResolveInteractionDefinitions();
-            InteriorInteractorSpawner.SpawnInteractables(map, _floor, offset, ResolveInteractorRoot(), definitions);
-        }
-
-        private IReadOnlyList<InteriorInteractionDefinition> ResolveInteractionDefinitions()
-        {
-            if (_interactions != null && _interactions.Length > 0)
-            {
-                return _interactions;
-            }
-
-            if (_runtimeComputerInteraction == null)
-            {
-                _runtimeComputerInteraction = InteriorInteractionDefinition.CreateForTests(InteriorObjectKind.Computer, "[E] Use Computer");
-            }
-
-            return new[] { _runtimeComputerInteraction };
-        }
-
-        private Transform ResolveInteractorRoot()
-        {
-            if (_interactorRoot != null)
-            {
-                return _interactorRoot;
-            }
-
-            var existing = GameObject.Find("[HouseInteriorInteractors]");
-            if (existing != null)
-            {
-                _interactorRoot = existing.transform;
-                return _interactorRoot;
-            }
-
-            var root = new GameObject("[HouseInteriorInteractors]");
-            SceneManager.MoveGameObjectToScene(root, gameObject.scene);
-            _interactorRoot = root.transform;
-            return _interactorRoot;
         }
 
         private TileBase ResolveTile(InteriorObjectKind objectKind, InteriorCellKind fallbackKind, InteriorFacingDirection facingDirection)
@@ -424,27 +278,6 @@ namespace Rootborn.Game.Interiors
             }
             _decorations.CompressBounds();
             _collision.CompressBounds();
-        }
-    }
-
-    public sealed class HouseInteriorRuntimeInstaller : MonoBehaviour
-    {
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void EnsureHouseInteriorGenerator()
-        {
-            if (SceneManager.GetActiveScene().name != "House")
-            {
-                return;
-            }
-
-            if (FindFirstObjectByType<InteriorTilemapApplier>() != null)
-            {
-                return;
-            }
-
-            var go = new GameObject("[HouseInteriorGenerator]");
-            SceneManager.MoveGameObjectToScene(go, SceneManager.GetActiveScene());
-            go.AddComponent<InteriorTilemapApplier>();
         }
     }
 }

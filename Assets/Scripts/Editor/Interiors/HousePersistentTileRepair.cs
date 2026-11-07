@@ -13,7 +13,7 @@ using UnityEngine.Tilemaps;
 
 namespace Rootborn.Editor.Interiors
 {
-    // One-time editor migration. This does not call Apply/ApplyGeneratedInterior or rebuild the house.
+    // One-time editor migration. This does not call Apply or rebuild the house.
     public static class HousePersistentTileRepair
     {
         private const string Staging = "output/student-life-integration-20261027/house-repair";
@@ -59,15 +59,6 @@ namespace Rootborn.Editor.Interiors
                     throw new InvalidOperationException("The House runtime tileset differs from the reviewed plan.");
                 if (EditorUtility.IsDirty(tileSet))
                     throw new InvalidOperationException("The runtime tileset has unsaved edits. Save those through Unity and refresh the staged plan before repair.");
-                var stages = applierData.FindProperty("_upgradeStages");
-                for (int i = 0; i < stages.arraySize; i++)
-                {
-                    var stage = stages.GetArrayElementAtIndex(i).objectReferenceValue;
-                    if (stage == null) continue;
-                    var stageTileSet = new SerializedObject(stage).FindProperty("_tileSet").objectReferenceValue;
-                    if (stageTileSet != null && stageTileSet != tileSet)
-                        throw new InvalidOperationException("A separate upgrade-stage tileset needs its own review; nothing has been changed.");
-                }
 
                 // Preflight all references and all source sprites before creating or changing assets.
                 foreach (var spec in plan.tiles) RequireSprite(spec.spritePath);

@@ -4,33 +4,11 @@ using UnityEngine;
 
 namespace Rootborn.Game.Housing
 {
-    public enum HouseConstructionCellKind
-    {
-        Floor,
-        Wall,
-        Door,
-        Decoration
-    }
-
-    [Serializable]
-    public sealed class HouseConstructionCellSaveData
-    {
-        public int X;
-        public int Y;
-        public HouseConstructionCellKind Kind;
-    }
-
     [Serializable]
     public sealed class HouseStateSaveData
     {
+        // Older saves also carry construction, room-preset and currency fields; JsonUtility ignores them.
         public int CurrentStageIndex;
-        public string ActiveConstructionStageId;
-        public string SelectedRoomPresetId = string.Empty;
-        public string SelectedInteriorStyleId = string.Empty;
-        public HouseConstructionCellSaveData[] PlacedConstructionCells = Array.Empty<HouseConstructionCellSaveData>();
-        public HouseUpgradeRouteKind LatestRoute;
-        public string[] CompletionHistoryIds = Array.Empty<string>();
-        public HouseCurrencySaveData Currency = new HouseCurrencySaveData();
     }
 
     public static class HouseStatePersistence
@@ -57,11 +35,6 @@ namespace Rootborn.Game.Housing
         {
             state ??= new HouseStateSaveData();
             state.CurrentStageIndex = Math.Max(0, state.CurrentStageIndex);
-            state.SelectedRoomPresetId ??= string.Empty;
-            state.SelectedInteriorStyleId ??= string.Empty;
-            state.PlacedConstructionCells ??= Array.Empty<HouseConstructionCellSaveData>();
-            state.CompletionHistoryIds ??= Array.Empty<string>();
-            state.Currency ??= new HouseCurrencySaveData();
             return state;
         }
     }
