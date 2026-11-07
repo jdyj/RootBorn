@@ -5,7 +5,7 @@
 # http://localhost:22394 on FEVM (reach it from the PC through Scripts/fevm/mcp-tunnel.sh).
 set -u
 . ~/farmer-unity-verify/tools/rb-env.sh
-P=$(cd "$1" && pwd); CMD=${2:-start}
+P=$(cd "$1" && pwd -P); CMD=${2:-start}
 export RB_DISPLAY=:99
 C=$P/UserSettings/AI-Game-Developer-Config.json
 case "$CMD" in

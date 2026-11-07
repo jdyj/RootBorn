@@ -7,7 +7,7 @@
 # Results: <project-dir>/rb-results/<platform>-<time>.{xml,log}; prints a summary.
 set -u
 . ~/farmer-unity-verify/tools/rb-env.sh
-P=$(cd "$1" && pwd); PLAT=$2; FILTER=${3:-}; ADDR=${4:-asset}
+P=$(cd "$1" && pwd -P); PLAT=$2; FILTER=${3:-}; ADDR=${4:-asset}
 if rb_project_busy "$P"; then echo "Unity already running on $P"; exit 1; fi
 O=$P/rb-results; mkdir -p "$O"; T=$(date +%Y%m%d-%H%M%S)
 X=$O/$PLAT-$T.xml; L=$O/$PLAT-$T.log
