@@ -202,12 +202,14 @@ namespace Rootborn.Game.Common
         }
 
         // Scrollbar / long track. r4_c3 is an empty cell, so the repeating track middle is the
-        // r3_c5 bar middle (Divider.Long and Gauge.Track alias it). Thumb reuses r5_c3.
+        // r3_c5 bar middle (Divider.Long and Gauge.Track alias it). r3_c3 holds the whole small
+        // handle box (PNG 53,49 9x14), so Thumb, TrackBottom and Gauge.Fill use it; r5_c3 is only the
+        // left edge of a larger vertical box.
         public static class Scrollbar
         {
             public const string TrackTopName = Prefix + "r3_c3";
             public const string TrackMiddleName = TabRibbon.MiddleName;
-            public const string TrackBottomName = Prefix + "r5_c3";
+            public const string TrackBottomName = TrackTopName;
             public const string ThumbName = TrackBottomName;
             public const string TrackName = TrackMiddleName;
 
@@ -279,7 +281,7 @@ namespace Rootborn.Game.Common
         public static class Gauge
         {
             public const string TrackName = Scrollbar.TrackName;
-            public const string FillName = Prefix + "r5_c3";
+            public const string FillName = Scrollbar.ThumbName;
 
             public static readonly ModernHudSpriteKey Track = Key("GaugeTrack", TrackName);
             public static readonly ModernHudSpriteKey Fill = Key("GaugeFill", FillName);

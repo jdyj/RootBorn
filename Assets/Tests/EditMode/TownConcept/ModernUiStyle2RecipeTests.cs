@@ -72,11 +72,11 @@ namespace Rootborn.Tests.EditMode.TownConcept
             AssertHudKey("TabRibbon", "Right", "ModernUI_16_Style2_r3_c6");
             AssertHudKey("Scrollbar", "TrackTop", "ModernUI_16_Style2_r3_c3");
             AssertHudKey("Scrollbar", "TrackMiddle", "ModernUI_16_Style2_r3_c5");
-            AssertHudKey("Scrollbar", "TrackBottom", "ModernUI_16_Style2_r5_c3");
+            AssertHudKey("Scrollbar", "TrackBottom", "ModernUI_16_Style2_r3_c3");
             AssertHudKey("IconButton", "Search", "ModernUI_16_Style2_r12_c46");
             AssertHudKey("IconButton", "Delete", "ModernUI_16_Style2_r13_c46");
             AssertHudKey("IconButton", "Settings", "ModernUI_16_Style2_r6_c46");
-            AssertHudKey("Gauge", "Fill", "ModernUI_16_Style2_r5_c3");
+            AssertHudKey("Gauge", "Fill", "ModernUI_16_Style2_r3_c3");
         }
 
         [Test]
@@ -87,6 +87,33 @@ namespace Rootborn.Tests.EditMode.TownConcept
 
             // PNG top-left (61,13) size 22x22 -> Unity bottom-left y = 544 - 13 - 22 = 509.
             Assert.AreEqual(new UnityEngine.Rect(61, 509, 22, 22), box.rect);
+        }
+
+        // Thumb, Gauge.Fill and the track bottom must hold a whole drawn box, not a slice of a larger one:
+        // nothing drawn may touch the cell's outer edge.
+        [Test]
+        public void Style2ThumbAndGaugeFill_HoldTheWholeHandleBox()
+        {
+            foreach (string name in new[] { ModernUiStyle2Sprites.Scrollbar.ThumbName, ModernUiStyle2Sprites.Gauge.FillName, ModernUiStyle2Sprites.Scrollbar.TrackBottomName })
+            {
+                UnityEngine.Sprite sprite = LoadStyle2Sprite(name);
+                Assert.NotNull(sprite, name);
+                var r = sprite.rect;
+                UnityEngine.Color32[] pixels = sprite.texture.GetPixels32();
+                int width = sprite.texture.width, x0 = (int)r.x, y0 = (int)r.y, x1 = x0 + (int)r.width - 1, y1 = y0 + (int)r.height - 1;
+                int drawn = 0;
+                for (int y = y0; y <= y1; y++)
+                {
+                    for (int x = x0; x <= x1; x++)
+                    {
+                        if (pixels[y * width + x].a == 0) continue;
+                        drawn++;
+                        Assert.IsFalse(x == x0 || x == x1 || y == y0 || y == y1, name + " is cut from a larger box: drawn pixel on its edge at (" + x + "," + y + ").");
+                    }
+                }
+
+                Assert.Greater(drawn, 0, name + " is empty.");
+            }
         }
 
         [Test]
