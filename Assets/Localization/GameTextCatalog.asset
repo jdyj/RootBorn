@@ -3343,3 +3343,9 @@ MonoBehaviour:
   - key: objective.daily.questchain.library-reward.next
     ko: "\ub9c8\uc744 \uad11\uc7a5\uc73c\ub85c \uac00 \ubcf4\uc138\uc694."
     en: "Go to the town square."
+  - key: location.home
+    ko: "\uC9D1"
+    en: Home
+  - key: location.home.desc
+    ko: "\uAC00\uC871\uC774 \uD568\uAED8 \uC0AC\uB294 \uACF3\uC774\uC5D0\uC694."
+    en: Where your family lives.

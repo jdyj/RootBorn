@@ -94,7 +94,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var points = new List<MonoBehaviour>();
             foreach (var behaviour in Object.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.InstanceID))
                 if (behaviour.isActiveAndEnabled && behaviour is IPlayerInteractable && behaviour.gameObject.scene.name == sceneName
-                    && behaviour.gameObject.name != "Player" && include(behaviour)) points.Add(behaviour);
+                    && behaviour.gameObject.name != "Player" && behaviour.GetComponent<Collider2D>() != null && include(behaviour)) points.Add(behaviour);
             return points;
         }
 

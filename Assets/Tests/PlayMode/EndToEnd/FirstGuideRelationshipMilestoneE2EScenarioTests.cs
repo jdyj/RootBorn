@@ -62,11 +62,11 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
-        // REL-001 in the authored Town: talk to Mom, help out at the town square, and the trust value rises by the data delta
-        // once per action, survives a reload, and a second visit adds exactly one more delta.
+        // REL-001: Mom lives at home. Walk into the House and talk to her, walk back out and help at the town square, and the
+        // trust value rises by the data delta once per action, survives a reload, and a second visit adds exactly one more delta.
         [UnityTest]
         [Timeout(600000)]
-        public IEnumerator REL_001_AuthoredTown_TalkToMomThenSquareHelpRaisesTrustOncePerAction()
+        public IEnumerator REL_001_AuthoredWorld_TalkToMomAtHomeThenSquareHelpRaisesTrustOncePerAction()
         {
             const string TrustId = "relationship.first-guide.trust";
             var keyboard = InputSystem.AddDevice<Keyboard>();
@@ -76,13 +76,18 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var student = player.GetComponent<StudentLifeProgressComponent>();
             int trustStart = student.Progress.GetRelationshipValueById(TrustId);
 
+            yield return WaitForMomInScene("Town", false, "REL-001 failed: Mom is still standing in Town.");
+            yield return PlayerFlowE2EDriver.WalkThroughDoor(keyboard, "House", "REL-001 failed:");
+            yield return PlayerFlowE2EDriver.DismissDailyEvent();
+            yield return WaitForMomInScene("House", true, "REL-001 failed: Mom is not at home.");
             var mom = GameObject.Find("TownNpc_npc_first_guide");
-            Assert.IsNotNull(mom, "REL-001 failed: authored Town has no First Guide NPC.");
             var momNpc = mom.GetComponent<Rootborn.Game.Dialogue.NpcInteractor>();
             yield return PlayerFlowE2EDriver.WalkAndInteract(keyboard, mom.transform.position, "REL-001 failed: Mom");
             Assert.IsTrue(momNpc.Session.IsOpen, "REL-001 failed: E next to Mom did not open her dialogue.");
             var dialogue = Object.FindFirstObjectByType<Rootborn.UI.Quests.DialoguePanel>(FindObjectsInactive.Include);
             if (dialogue != null && dialogue.IsOpen) yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(dialogue.transform, "CloseButton"));
+            yield return PlayerFlowE2EDriver.WalkThroughDoor(keyboard, "Town", "REL-001 failed:");
+            yield return PlayerFlowE2EDriver.DismissDailyEvent();
 
             int trustAfterFirst = 0;
             yield return PlayerFlowE2EDriver.UseLocationActivity(keyboard, "LocationVisit_location_town_square", 0, "REL-001 failed:");
@@ -97,6 +102,22 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.AreEqual(trustAfterFirst, reloaded.Progress.GetRelationshipValueById(TrustId), "REL-002 failed: trust did not survive reload exactly once.");
             yield return PlayerFlowE2EDriver.UseLocationActivity(keyboard, "LocationVisit_location_town_square", 0, "REL-003 failed:");
             Assert.AreEqual(trustAfterFirst + delta, reloaded.Progress.GetRelationshipValueById(TrustId), "REL-003 failed: a second help must add exactly one more delta.");
+        }
+
+        // The schedule places Mom after the scene's data finishes loading, so wait for her to show up (or disappear).
+        private static IEnumerator WaitForMomInScene(string sceneName, bool present, string failure)
+        {
+            float elapsed = 0f;
+            while (elapsed < 10f)
+            {
+                var mom = GameObject.Find("TownNpc_npc_first_guide");
+                bool here = mom != null && mom.scene.name == sceneName;
+                if (here == present) yield break;
+                elapsed += Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            Assert.Fail(failure);
         }
 
         private static IEnumerator CaptureScreenshot(string relativePath)

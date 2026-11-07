@@ -15,7 +15,7 @@ MonoBehaviour:
   _id: npc.first-guide
   _displayNameKey: npc.first-guide.name
   _introductionKey: npc.first-guide.intro
-  _homeLocation: {fileID: 11400000, guid: 0b792f8bcf32340469cd64320136e59b, type: 2}
+  _homeLocation: {fileID: 11400000, guid: e8da596482c343f0a8d1452e12b38af2, type: 2}
   _roles:
   - {fileID: 11400000, guid: 720b0c466a484a7469601e7254a75e32, type: 2}
   _defaultDialogue: {fileID: 11400000, guid: 8142bab72b18c8d46b226b2da4f7561d, type: 2}

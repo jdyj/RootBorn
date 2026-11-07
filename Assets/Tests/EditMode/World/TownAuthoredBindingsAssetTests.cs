@@ -26,8 +26,17 @@ namespace Rootborn.Tests.EditMode.World
         [Test] public void TOWN_SavedBindings_AllLocationsHaveAuthoredMembership()
         {
             var config=All<AuthoredWorldScene>().SingleOrDefault(); Assert.That(config,Is.Not.Null);
-            Assert.That(_registry.Locations.Count(l=>l!=null),Is.EqualTo(9));
-            foreach(var location in _registry.Locations.Where(l=>l!=null)) Assert.That(config.ContainsLocation(location),Is.True,location.Id);
+            Assert.That(_registry.Locations.Count(l=>l!=null),Is.EqualTo(10));
+            // Every location lives in Town except Home, which is the House scene's own location (Mom stays there).
+            var house=EditorSceneManager.OpenPreviewScene("Assets/Scenes/House.unity");
+            try
+            {
+                var houseConfig=house.GetRootGameObjects().SelectMany(r=>r.GetComponentsInChildren<AuthoredWorldScene>(true)).Single();
+                foreach(var location in _registry.Locations.Where(l=>l!=null))
+                    Assert.That(config.ContainsLocation(location)!=houseConfig.ContainsLocation(location),Is.True,location.Id+" must belong to exactly one of Town and House.");
+                Assert.That(houseConfig.ContainsLocation(_registry.Locations.Single(l=>l!=null&&l.Id=="location.home")),Is.True);
+            }
+            finally { EditorSceneManager.ClosePreviewScene(house); }
         }
         [Test] public void TOWN_SavedBindings_FacilityLocationDataMatchesActualEntrances()
         {
