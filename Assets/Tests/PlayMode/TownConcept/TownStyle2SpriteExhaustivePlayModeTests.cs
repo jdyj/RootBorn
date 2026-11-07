@@ -25,36 +25,8 @@ namespace Rootborn.Tests.PlayMode.TownConcept
             int checkedAssetPixels = 0;
             int renderedCount = 0;
 
-            GameObject cameraGo = null;
-            GameObject canvasGo = null;
-            RenderTexture renderTexture = null;
-            Texture2D readback = null;
-
             try
             {
-                cameraGo = new GameObject("SpriteRenderVerifierCamera", typeof(Camera));
-                var camera = cameraGo.GetComponent<Camera>();
-                camera.clearFlags = CameraClearFlags.SolidColor;
-                camera.backgroundColor = Color.black;
-                camera.orthographic = true;
-                camera.orthographicSize = 5f;
-                camera.transform.position = new Vector3(0f, 0f, -10f);
-
-                renderTexture = new RenderTexture(128, 128, 0, RenderTextureFormat.ARGB32);
-                renderTexture.Create();
-                readback = new Texture2D(128, 128, TextureFormat.RGBA32, false);
-                camera.targetTexture = renderTexture;
-
-                canvasGo = new GameObject("SpriteRenderVerifierCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
-                var canvas = canvasGo.GetComponent<Canvas>();
-                canvas.renderMode = RenderMode.ScreenSpaceCamera;
-                canvas.worldCamera = camera;
-                canvas.planeDistance = 1f;
-                canvas.sortingOrder = 1000;
-
-                var scaler = canvasGo.GetComponent<CanvasScaler>();
-                scaler.uiScaleMode = CanvasScaler.ScaleMode.ConstantPixelSize;
-
                 foreach (var sheet in ModernUISpriteAddresses.AllSheets)
                 {
                     foreach (string subName in sheet.subNames)
@@ -85,7 +57,7 @@ namespace Rootborn.Tests.PlayMode.TownConcept
                         }
                         checkedAssetPixels += visibleAssetPixels;
 
-                        if (!RenderSpriteAndReadVisiblePixels(canvasGo.transform, camera, renderTexture, readback, sprite))
+                        if (!RenderSpriteAndReadVisiblePixels(sprite))
                         {
                             notRendered.Add(id);
                             continue;
@@ -98,14 +70,6 @@ namespace Rootborn.Tests.PlayMode.TownConcept
             finally
             {
                 resource.ReleaseAll();
-                if (readback != null) Object.Destroy(readback);
-                if (renderTexture != null)
-                {
-                    renderTexture.Release();
-                    Object.Destroy(renderTexture);
-                }
-                if (canvasGo != null) Object.Destroy(canvasGo);
-                if (cameraGo != null) Object.Destroy(cameraGo);
             }
 
             Assert.Greater(checkedCount, 0, "The exhaustive PlayMode sprite gate must check at least one sprite.");
@@ -193,50 +157,76 @@ namespace Rootborn.Tests.PlayMode.TownConcept
             }
         }
 
-        private static bool RenderSpriteAndReadVisiblePixels(Transform canvasRoot, Camera camera, RenderTexture renderTexture, Texture2D readback, Sprite sprite)
+        // Each sprite gets its own camera, render texture and canvas. Reusing one camera under URP
+        // only produced pixels for the first sprite(s); every later manual Render read back black.
+        private static bool RenderSpriteAndReadVisiblePixels(Sprite sprite)
         {
-            for (int i = canvasRoot.childCount - 1; i >= 0; i--)
+            var cameraGo = new GameObject("SpriteRenderVerifierCamera", typeof(Camera));
+            var canvasGo = new GameObject("SpriteRenderVerifierCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
+            var renderTexture = new RenderTexture(128, 128, 0, RenderTextureFormat.ARGB32);
+            var readback = new Texture2D(128, 128, TextureFormat.RGBA32, false);
+            try
             {
-                Object.DestroyImmediate(canvasRoot.GetChild(i).gameObject);
-            }
+                var camera = cameraGo.GetComponent<Camera>();
+                camera.clearFlags = CameraClearFlags.SolidColor;
+                camera.backgroundColor = Color.black;
+                camera.orthographic = true;
+                camera.orthographicSize = 5f;
+                camera.transform.position = new Vector3(0f, 0f, -10f);
+                renderTexture.Create();
+                camera.targetTexture = renderTexture;
 
-            var imageGo = new GameObject("RenderedSprite", typeof(RectTransform), typeof(Image));
-            imageGo.transform.SetParent(canvasRoot, false);
-            var rect = (RectTransform)imageGo.transform;
-            rect.anchorMin = new Vector2(0.5f, 0.5f);
-            rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = Vector2.zero;
-            rect.sizeDelta = new Vector2(64f, 64f);
+                var canvas = canvasGo.GetComponent<Canvas>();
+                canvas.renderMode = RenderMode.ScreenSpaceCamera;
+                canvas.worldCamera = camera;
+                canvas.planeDistance = 1f;
+                canvas.sortingOrder = 1000;
+                canvasGo.GetComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ConstantPixelSize;
 
-            var image = imageGo.GetComponent<Image>();
-            image.sprite = sprite;
-            image.color = Color.white;
-            image.preserveAspect = true;
-            image.raycastTarget = false;
+                var imageGo = new GameObject("RenderedSprite", typeof(RectTransform), typeof(Image));
+                imageGo.transform.SetParent(canvasGo.transform, false);
+                var rect = (RectTransform)imageGo.transform;
+                rect.anchorMin = new Vector2(0.5f, 0.5f);
+                rect.anchorMax = new Vector2(0.5f, 0.5f);
+                rect.pivot = new Vector2(0.5f, 0.5f);
+                rect.anchoredPosition = Vector2.zero;
+                rect.sizeDelta = new Vector2(64f, 64f);
 
-            Canvas.ForceUpdateCanvases();
-            camera.Render();
+                var image = imageGo.GetComponent<Image>();
+                image.sprite = sprite;
+                image.color = Color.white;
+                image.preserveAspect = true;
+                image.raycastTarget = false;
 
-            RenderTexture previous = RenderTexture.active;
-            RenderTexture.active = renderTexture;
-            readback.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0);
-            readback.Apply(false);
-            RenderTexture.active = previous;
+                Canvas.ForceUpdateCanvases();
+                camera.Render();
 
-            Color[] pixels = readback.GetPixels();
-            for (int i = 0; i < pixels.Length; i++)
-            {
-                Color pixel = pixels[i];
-                if (pixel.a > 0.01f && (pixel.r > 0.01f || pixel.g > 0.01f || pixel.b > 0.01f))
+                RenderTexture previous = RenderTexture.active;
+                RenderTexture.active = renderTexture;
+                readback.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0);
+                readback.Apply(false);
+                RenderTexture.active = previous;
+
+                Color[] pixels = readback.GetPixels();
+                for (int i = 0; i < pixels.Length; i++)
                 {
-                    Object.DestroyImmediate(imageGo);
-                    return true;
+                    Color pixel = pixels[i];
+                    if (pixel.a > 0.01f && (pixel.r > 0.01f || pixel.g > 0.01f || pixel.b > 0.01f))
+                    {
+                        return true;
+                    }
                 }
-            }
 
-            Object.DestroyImmediate(imageGo);
-            return false;
+                return false;
+            }
+            finally
+            {
+                Object.DestroyImmediate(canvasGo);
+                Object.DestroyImmediate(cameraGo);
+                renderTexture.Release();
+                Object.DestroyImmediate(renderTexture);
+                Object.DestroyImmediate(readback);
+            }
         }
     }
 }
