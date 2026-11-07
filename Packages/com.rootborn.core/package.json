@@ -1,0 +1,7 @@
+{
+  "name": "com.rootborn.core",
+  "version": "0.1.0",
+  "displayName": "ROOTBORN Core Rules",
+  "description": "Engine-independent game rules (no UnityEngine references). Tested with dotnet test from Tools/Rootborn.Core.Tests.",
+  "unity": "6000.3"
+}
