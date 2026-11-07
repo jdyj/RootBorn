@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Rootborn.Game.Characters;
-using Rootborn.Game.Characters.Spum;
+using Rootborn.Game.Characters.Growing;
 using Rootborn.Game.Localization;
 using Rootborn.UI.Modern;
 using UnityEngine;
@@ -10,99 +9,77 @@ using UnityEngine.UI;
 
 namespace Rootborn.UI.MainMenu
 {
+    /// <summary>
+    /// New-game character creator for the growing character: a name, the hair style and the outfit the character
+    /// starts in at each growth stage. Every choice comes from the appearance assets; adding a look is data only.
+    /// The wardrobe can change the outfit later; the creator only seeds the starting choice per body.
+    /// </summary>
     public sealed class SpumCharacterCreatorPanel : MonoBehaviour
     {
-        public const int VisiblePartCellBudget = 12;
+        public const int MaxNameLength = 12;
 
-        private static readonly CategoryGroup[] CategoryGroups =
-        {
-            new CategoryGroup("spum.creator.category.body-skin", "Body/Skin", "Tab_BodySkin", new[] { "body", "skin" }),
-            new CategoryGroup("spum.creator.category.eye", "Eye", "Tab_Eye", new[] { "eye", "eyes" }),
-            new CategoryGroup("spum.creator.category.hair", "Hair", "Tab_Hair", new[] { "hair" }),
-            new CategoryGroup("spum.creator.category.outfit-cloth", "Outfit/Cloth", "Tab_OutfitCloth", new[] { "outfit", "cloth" }),
-            new CategoryGroup("spum.creator.category.accessory", "Accessory", "Tab_AccessoryBackHelmet", new[] { "accessory", "back", "helmet" }),
-        };
-
-        private readonly Dictionary<string, string> _selectedPartIds = new Dictionary<string, string>();
-        private SpumPartCatalogDefinition _catalog;
-        private Transform _partGrid;
-        private Transform _selectedPartChips;
-        private Text _statusLine;
-        private GameObject _nextPageButton;
-        private GameObject _previousPageButton;
-        private string[] _selectedCategoryIds = Array.Empty<string>();
-        private int _currentPageIndex;
-        private Action<CharacterAppearanceSnapshot> _confirm;
+        private readonly List<List<GrowingCharacterAppearanceDefinition>> _stages = new List<List<GrowingCharacterAppearanceDefinition>>();
+        private readonly List<int> _choices = new List<int>();
+        private readonly List<Text> _choiceLabels = new List<Text>();
+        private readonly List<Image> _stageRowBackgrounds = new List<Image>();
+        private int _previewStage;
+        private InputField _nameField;
+        private RectTransform _previewCharacter;
+        private Text _previewCaption;
+        private Action<CharacterAppearanceSnapshot, string> _confirm;
         private Action _cancel;
-        private SpumCharacterCreatorPreview _preview;
 
         public ModernUiTileRecipe RootPanelRecipe => ModernUiRecipes.CommonPanel;
-        public int CurrentPageIndex => _currentPageIndex;
+        public int StageCount => _stages.Count;
+        public int PreviewStage => _previewStage;
+        public string PlayerName => _nameField != null ? CleanName(_nameField.text) : string.Empty;
 
-        public void Build(SpumPartCatalogDefinition catalog)
+        public GrowingCharacterAppearanceDefinition ChoiceAt(int stage)
         {
-            Build(catalog, null, null);
+            return stage >= 0 && stage < _stages.Count ? _stages[stage][_choices[stage]] : null;
         }
 
-        public void Build(SpumPartCatalogDefinition catalog, Action<CharacterAppearanceSnapshot> onConfirm, Action onCancel)
+        public void Build(CharacterAppearanceDefinition[] appearances, string defaultName, Action<CharacterAppearanceSnapshot, string> onConfirm, Action onCancel)
         {
-            _catalog = catalog;
             _confirm = onConfirm;
             _cancel = onCancel;
-            _currentPageIndex = 0;
-            _selectedPartIds.Clear();
-            ClearGeneratedChildren(transform);
-            EnsureDefaultSelections();
-            EnsureModalBackdrop();
+            _stages.Clear();
+            _choices.Clear();
+            _choiceLabels.Clear();
+            _stageRowBackgrounds.Clear();
+            _stages.AddRange(GrowingCharacterStageSelector.CreatorStages(appearances));
+            for (int i = 0; i < _stages.Count; i++) _choices.Add(0);
+            _previewStage = 0;
 
+            ClearGeneratedChildren(transform);
+            EnsureModalBackdrop();
             GameObject root = CreatePanel(transform, "SpumCharacterCreatorRoot", new Vector2(1296f, 864f));
             CreateHeader(root.transform);
-            CreateCategoryTabs(root.transform);
             CreatePreview(root.transform);
-            _partGrid = CreateContainer(root.transform, "PartGrid", new Vector2(600f, 500f), new Vector2(-60f, 40f)).transform;
-            CreatePageControls(root.transform);
+            CreateChoices(root.transform, defaultName);
             CreateFooter(root.transform);
-
-            CategoryGroup? firstGroup = FindFirstAvailableGroup();
-            if (firstGroup.HasValue)
-            {
-                SelectCategory(firstGroup.Value.CategoryIds[0]);
-            }
-            else
-            {
-                RefreshSelectionSurfaces();
-            }
+            RefreshAll();
         }
 
-        public void SelectCategory(string categoryId)
+        public void SetName(string value)
         {
-            _selectedCategoryIds = ResolveCategoryIds(categoryId);
-            _currentPageIndex = 0;
-            RebuildPartGrid();
-            RefreshSelectionSurfaces();
+            if (_nameField != null) _nameField.text = value ?? string.Empty;
         }
 
-        public void NextPage()
+        public void StepChoice(int stage, int offset)
         {
-            int maxPage = MaxPageIndex(CurrentSelectedParts().Count);
-            _currentPageIndex = Mathf.Min(_currentPageIndex + 1, maxPage);
-            RebuildPartGrid();
+            if (stage < 0 || stage >= _stages.Count || _stages[stage].Count == 0) return;
+            int count = _stages[stage].Count;
+            _choices[stage] = ((_choices[stage] + offset) % count + count) % count;
+            _previewStage = stage;
+            RefreshAll();
         }
 
-        public void PreviousPage()
+        public void PreviewStageAt(int stage)
         {
-            _currentPageIndex = Mathf.Max(0, _currentPageIndex - 1);
-            RebuildPartGrid();
-        }
-
-        public void NextPart()
-        {
-            StepPart(1);
-        }
-
-        public void PreviousPart()
-        {
-            StepPart(-1);
+            if (stage < 0 || stage >= _stages.Count) return;
+            _previewStage = stage;
+            RefreshAll();
         }
 
         public void RandomizeSelection()
@@ -112,299 +89,198 @@ namespace Rootborn.UI.MainMenu
 
         public void RandomizeSelection(int seed)
         {
-            if (_catalog == null || _catalog.Parts == null)
-                return;
-
             var rng = new System.Random(seed);
-            string[] categories = _catalog.Parts
-                .Where(part => part != null && !string.IsNullOrWhiteSpace(part.CategoryId))
-                .Select(part => part.CategoryId)
-                .Distinct()
-                .OrderBy(categoryId => categoryId, StringComparer.Ordinal)
-                .ToArray();
+            for (int i = 0; i < _stages.Count; i++) _choices[i] = rng.Next(_stages[i].Count);
+            RefreshAll();
+        }
 
-            for (int i = 0; i < categories.Length; i++)
-            {
-                List<SpumPartDefinition> parts = PartsForCategories(new[] { categories[i] });
-                if (parts.Count == 0)
-                    continue;
-
-                SpumPartDefinition selected = parts[rng.Next(parts.Count)];
-                _selectedPartIds[categories[i]] = selected.StableId;
-            }
-
-            RebuildPartGrid();
-            RefreshSelectionSurfaces();
+        public void Confirm()
+        {
+            _confirm?.Invoke(CreateSnapshot(), PlayerName);
         }
 
         public CharacterAppearanceSnapshot CreateSnapshot()
         {
-            var selections = new List<CharacterAppearancePartSelection>();
-            foreach (KeyValuePair<string, string> selected in _selectedPartIds.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+            var selections = new List<CharacterAppearancePartSelection>(_stages.Count);
+            for (int i = 0; i < _stages.Count; i++)
             {
-                if (!string.IsNullOrWhiteSpace(selected.Key) && !string.IsNullOrWhiteSpace(selected.Value))
-                {
-                    selections.Add(new CharacterAppearancePartSelection(selected.Key, selected.Value));
-                }
+                var look = ChoiceAt(i);
+                if (look != null && look.Body != null)
+                    selections.Add(new CharacterAppearancePartSelection(GrowingCharacterStageSelector.OutfitCategoryPrefix + look.Body.Id, look.Id));
             }
 
-            string catalogId = _catalog != null ? _catalog.Id : string.Empty;
-            return new CharacterAppearanceSnapshot(1, "spum", "appearance.spum.generated", catalogId, selections.ToArray());
+            var first = ChoiceAt(0);
+            return new CharacterAppearanceSnapshot(1, GrowingCharacterAppearanceDefinition.VisualKindName, first != null ? first.Id : string.Empty,
+                GrowingCharacterStageSelector.CreatorCatalogId, selections.ToArray());
         }
 
         private void CreateHeader(Transform root)
         {
             Transform header = CreateContainer(root, "Header", new Vector2(1180f, 64f), new Vector2(0f, 360f)).transform;
-            MakeText(header, "Title", L("spum.creator.title", "Character"), new Vector2(-430f, 0f), new Vector2(220f, 48f), 30, TextAnchor.MiddleLeft);
+            MakeText(header, "Title", L("ui.creator.title", "Create your character"), new Vector2(-380f, 0f), new Vector2(420f, 52f), 32, TextAnchor.MiddleLeft);
 
-            GameObject back = CreateButton(header, "BackButton", L("spum.creator.back", "Back"), new Vector2(104f, 48f));
+            GameObject back = CreateButton(header, "BackButton", L("ui.creator.back", "Back"), new Vector2(120f, 52f));
             back.GetComponent<Button>().onClick.AddListener(() => _cancel?.Invoke());
-            ((RectTransform)back.transform).anchoredPosition = new Vector2(180f, 0f);
+            ((RectTransform)back.transform).anchoredPosition = new Vector2(170f, 0f);
 
-            GameObject random = CreateButton(header, "RandomButton", L("spum.creator.random", "Random"), new Vector2(120f, 48f));
+            GameObject random = CreateButton(header, "RandomButton", L("ui.creator.random", "Random"), new Vector2(140f, 52f));
             random.GetComponent<Button>().onClick.AddListener(RandomizeSelection);
-            ((RectTransform)random.transform).anchoredPosition = new Vector2(316f, 0f);
+            ((RectTransform)random.transform).anchoredPosition = new Vector2(318f, 0f);
 
-            GameObject confirm = CreateButton(header, "ConfirmButton", L("spum.creator.confirm", "Confirm"), new Vector2(132f, 48f));
-            confirm.GetComponent<Button>().onClick.AddListener(() => _confirm?.Invoke(CreateSnapshot()));
-            ((RectTransform)confirm.transform).anchoredPosition = new Vector2(462f, 0f);
-        }
-
-        private void CreateCategoryTabs(Transform root)
-        {
-            Transform tabs = CreateContainer(root, "CategoryTabs", new Vector2(220f, 500f), new Vector2(-490f, 40f)).transform;
-            for (int i = 0; i < CategoryGroups.Length; i++)
-            {
-                CategoryGroup group = CategoryGroups[i];
-                if (!CatalogContainsAny(group.CategoryIds))
-                    continue;
-
-                string firstCategoryId = group.CategoryIds[0];
-                GameObject tab = CreateButton(tabs, group.ObjectName, L(group.LabelKey, group.Label), new Vector2(204f, 56f));
-                tab.GetComponent<Button>().onClick.AddListener(() => SelectCategory(firstCategoryId));
-                var rect = (RectTransform)tab.transform;
-                rect.anchoredPosition = new Vector2(0f, 204f - i * 76f);
-            }
+            GameObject confirm = CreateButton(header, "ConfirmButton", L("ui.creator.confirm", "Start"), new Vector2(150f, 52f));
+            confirm.GetComponent<Button>().onClick.AddListener(Confirm);
+            ((RectTransform)confirm.transform).anchoredPosition = new Vector2(478f, 0f);
         }
 
         private void CreatePreview(Transform root)
         {
-            GameObject preview = CreateContainer(root, "Preview", new Vector2(300f, 500f), new Vector2(430f, 40f));
-            // Keep the preview's own labels readable; its renderer owns only its generated children.
+            GameObject preview = CreateContainer(root, "Preview", new Vector2(380f, 560f), new Vector2(-400f, 0f));
             var background = preview.AddComponent<Image>();
             background.color = new Color(0.13f, 0.16f, 0.22f, 1f);
             background.raycastTarget = false;
-            _preview = preview.AddComponent<SpumCharacterCreatorPreview>();
-            _preview.Build(PartsForCategories(new[] { "weapon", "weapons", "weapon-preview" }));
-            // Same layered character the save slot shows. The part names stay above it.
-            SaveSlotSelectPanel.BuildCharacterPreviewImage(preview.transform, null);
-            var character = preview.transform.Find("CharacterPreviewImage") as RectTransform;
-            if (character != null)
+
+            var character = new GameObject("CharacterPreviewImage", typeof(RectTransform));
+            character.transform.SetParent(preview.transform, false);
+            _previewCharacter = (RectTransform)character.transform;
+            _previewCharacter.anchorMin = _previewCharacter.anchorMax = new Vector2(0.5f, 0.5f);
+            _previewCharacter.anchoredPosition = new Vector2(0f, 30f);
+            _previewCharacter.sizeDelta = new Vector2(300f, 300f);
+
+            _previewCaption = MakeText(preview.transform, "PreviewCaption", string.Empty, new Vector2(0f, -230f), new Vector2(340f, 48f), 22, TextAnchor.MiddleCenter);
+            _previewCaption.color = Color.white;
+        }
+
+        private void CreateChoices(Transform root, string defaultName)
+        {
+            Transform choices = CreateContainer(root, "Choices", new Vector2(700f, 560f), new Vector2(210f, 0f)).transform;
+            float y = 230f;
+
+            MakeText(choices, "NameLabel", L("ui.creator.name", "Name"), new Vector2(-260f, y), new Vector2(160f, 48f), 22, TextAnchor.MiddleLeft);
+            _nameField = CreateNameField(choices, new Vector2(90f, y), new Vector2(480f, 56f));
+            _nameField.text = CleanName(defaultName);
+            y -= 90f;
+
+            MakeText(choices, "HairLabel", L("ui.creator.hair", "Hair"), new Vector2(-260f, y), new Vector2(160f, 48f), 22, TextAnchor.MiddleLeft);
+            CreateStepRow(choices, "Hair", y, L("ui.creator.hair.short_brown", "Short brown hair"), null, false);
+            y -= 90f;
+
+            for (int i = 0; i < _stages.Count; i++)
             {
-                character.anchorMin = character.anchorMax = new Vector2(0.5f, 0f);
-                character.anchoredPosition = new Vector2(0f, 90f);
-                character.sizeDelta = new Vector2(150f, 150f);
+                int stage = i;
+                var rowBackground = new GameObject("Stage" + i + "_Row", typeof(RectTransform), typeof(Image), typeof(Button));
+                rowBackground.transform.SetParent(choices, false);
+                var rowRect = (RectTransform)rowBackground.transform;
+                rowRect.anchorMin = rowRect.anchorMax = new Vector2(0.5f, 0.5f);
+                rowRect.anchoredPosition = new Vector2(0f, y);
+                rowRect.sizeDelta = new Vector2(690f, 72f);
+                var image = rowBackground.GetComponent<Image>();
+                image.color = new Color(1f, 1f, 1f, 0f);
+                rowBackground.GetComponent<Button>().targetGraphic = image;
+                rowBackground.GetComponent<Button>().onClick.AddListener(() => PreviewStageAt(stage));
+                _stageRowBackgrounds.Add(image);
+
+                MakeText(choices, "Stage" + i + "_Label", StageLabel(_stages[i][0]), new Vector2(-260f, y), new Vector2(170f, 48f), 22, TextAnchor.MiddleLeft);
+                _choiceLabels.Add(CreateStepRow(choices, "Stage" + i, y, string.Empty, offset => StepChoice(stage, offset), _stages[i].Count > 1));
+                y -= 90f;
             }
         }
 
-        private void CreatePageControls(Transform root)
+        // ◀ label ▶ row. Arrows are hidden when there is only one option, so a single choice never looks broken.
+        private Text CreateStepRow(Transform parent, string prefix, float y, string text, Action<int> step, bool canStep)
         {
-            Transform controls = CreateContainer(root, "PageControls", new Vector2(680f, 56f), new Vector2(-60f, -250f)).transform;
-            _previousPageButton = CreateButton(controls, "PreviousPageButton", L("spum.creator.page.previous", "<"), new Vector2(72f, 48f));
-            _previousPageButton.GetComponent<Button>().onClick.AddListener(PreviousPage);
-            ((RectTransform)_previousPageButton.transform).anchoredPosition = new Vector2(-300f, 0f);
+            GameObject previous = CreateButton(parent, prefix + "_Previous", "<", new Vector2(56f, 52f));
+            ((RectTransform)previous.transform).anchoredPosition = new Vector2(-120f, y);
+            GameObject next = CreateButton(parent, prefix + "_Next", ">", new Vector2(56f, 52f));
+            ((RectTransform)next.transform).anchoredPosition = new Vector2(300f, y);
+            if (step != null)
+            {
+                previous.GetComponent<Button>().onClick.AddListener(() => step(-1));
+                next.GetComponent<Button>().onClick.AddListener(() => step(1));
+            }
 
-            _nextPageButton = CreateButton(controls, "NextPageButton", L("spum.creator.page.next", ">"), new Vector2(72f, 48f));
-            _nextPageButton.GetComponent<Button>().onClick.AddListener(NextPage);
-            ((RectTransform)_nextPageButton.transform).anchoredPosition = new Vector2(-216f, 0f);
-
-            GameObject previousPart = CreateButton(controls, "PreviousPartButton", L("spum.creator.part.previous", "Prev"), new Vector2(96f, 48f));
-            previousPart.GetComponent<Button>().onClick.AddListener(PreviousPart);
-            ((RectTransform)previousPart.transform).anchoredPosition = new Vector2(-88f, 0f);
-
-            GameObject nextPart = CreateButton(controls, "NextPartButton", L("spum.creator.part.next", "Next"), new Vector2(96f, 48f));
-            nextPart.GetComponent<Button>().onClick.AddListener(NextPart);
-            ((RectTransform)nextPart.transform).anchoredPosition = new Vector2(22f, 0f);
-
-            GameObject cancel = CreateButton(controls, "CancelButton", L("spum.creator.cancel", "Cancel"), new Vector2(112f, 48f));
-            cancel.GetComponent<Button>().onClick.AddListener(() => _cancel?.Invoke());
-            ((RectTransform)cancel.transform).anchoredPosition = new Vector2(154f, 0f);
+            previous.SetActive(canStep);
+            next.SetActive(canStep);
+            return MakeText(parent, prefix + "_Choice", text, new Vector2(90f, y), new Vector2(340f, 52f), 22, TextAnchor.MiddleCenter);
         }
 
         private void CreateFooter(Transform root)
         {
-            Transform footer = CreateContainer(root, "Footer", new Vector2(1180f, 84f), new Vector2(0f, -342f)).transform;
-            _selectedPartChips = CreateContainer(footer, "SelectedPartChips", new Vector2(1120f, 36f), new Vector2(0f, 20f)).transform;
-            _statusLine = MakeText(footer, "StatusLine", string.Empty, new Vector2(0f, -24f), new Vector2(1120f, 28f), 18, TextAnchor.MiddleCenter);
+            Transform footer = CreateContainer(root, "Footer", new Vector2(1180f, 64f), new Vector2(0f, -350f)).transform;
+            MakeText(footer, "Hint", L("ui.creator.hint", "You can change outfits later in the wardrobe."), Vector2.zero, new Vector2(1120f, 40f), 20, TextAnchor.MiddleCenter);
         }
 
-        private void RebuildPartGrid()
+        private void RefreshAll()
         {
-            if (_partGrid == null)
-                return;
-
-            ClearGeneratedChildren(_partGrid);
-            List<SpumPartDefinition> parts = CurrentSelectedParts();
-            int start = _currentPageIndex * VisiblePartCellBudget;
-            int count = Mathf.Min(VisiblePartCellBudget, Mathf.Max(0, parts.Count - start));
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < _choiceLabels.Count; i++)
             {
-                SpumPartDefinition part = parts[start + i];
-                string cellName = "PartCell_" + SanitizeName(part != null ? part.StableId : "empty");
-                GameObject cell = CreateButton(_partGrid, cellName, ShortPartLabel(part), new Vector2(180f, 74f));
-                SpumPartDefinition selectedPart = part;
-                cell.GetComponent<Button>().onClick.AddListener(() => SelectPart(selectedPart));
-                var rect = (RectTransform)cell.transform;
-                int column = i % 3;
-                int row = i / 3;
-                rect.anchoredPosition = new Vector2(column * 196f - 196f, -row * 104f + 174f);
+                var look = ChoiceAt(i);
+                _choiceLabels[i].text = look != null ? L(look.DisplayNameKey, look.Id) : string.Empty;
+                _stageRowBackgrounds[i].color = i == _previewStage ? new Color(0.35f, 0.45f, 0.70f, 0.25f) : new Color(1f, 1f, 1f, 0f);
             }
 
-            int maxPage = MaxPageIndex(parts.Count);
-            if (_previousPageButton != null)
-                _previousPageButton.SetActive(_currentPageIndex > 0);
-            if (_nextPageButton != null)
-                _nextPageButton.SetActive(_currentPageIndex < maxPage);
+            var shown = ChoiceAt(_previewStage);
+            if (_previewCaption != null)
+                _previewCaption.text = shown != null ? string.Format(System.Globalization.CultureInfo.CurrentCulture, L("ui.creator.preview", "{0}"), StageLabel(shown)) : string.Empty;
+            if (_previewCharacter == null) return;
+            ClearGeneratedChildren(_previewCharacter);
+            if (shown == null) return;
+            AddPreviewLayer(_previewCharacter, "PreviewGrowing_Body", shown.Body);
+            AddPreviewLayer(_previewCharacter, "PreviewGrowing_Outfit", shown.Outfit);
+            AddPreviewLayer(_previewCharacter, "PreviewGrowing_Head", shown.Head);
         }
 
-        private void SelectPart(SpumPartDefinition part)
+        private static string StageLabel(GrowingCharacterAppearanceDefinition look)
         {
-            if (part == null || string.IsNullOrWhiteSpace(part.CategoryId))
-                return;
-
-            _selectedPartIds[part.CategoryId] = part.StableId;
-            RefreshSelectionSurfaces();
+            if (look == null) return string.Empty;
+            if (look.RequiresAdult) return L("ui.creator.stage.adult", "Adult");
+            return look.MinimumStudentDay <= 1 ? L("ui.creator.stage.child", "Child") : L("ui.creator.stage.student", "Student");
         }
 
-        private void StepPart(int offset)
+        private static void AddPreviewLayer(Transform parent, string name, GrowingCharacterSheetDefinition sheet)
         {
-            List<SpumPartDefinition> parts = CurrentSelectedParts();
-            if (parts.Count == 0)
-                return;
-
-            string categoryId = !string.IsNullOrWhiteSpace(parts[0].CategoryId) ? parts[0].CategoryId : string.Empty;
-            string currentPartId = _selectedPartIds.TryGetValue(categoryId, out string selected) ? selected : string.Empty;
-            int currentIndex = Mathf.Max(0, parts.FindIndex(part => part != null && part.StableId == currentPartId));
-            int nextIndex = (currentIndex + offset + parts.Count) % parts.Count;
-            SelectPart(parts[nextIndex]);
+            var sprite = sheet != null ? sheet.GetFrame(GrowingCharacterVisualView.RowDown, GrowingCharacterVisualView.StandingColumn) : null;
+            if (sprite == null) return;
+            var layer = new GameObject(name, typeof(RectTransform), typeof(Image));
+            layer.transform.SetParent(parent, false);
+            var rect = (RectTransform)layer.transform;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            var image = layer.GetComponent<Image>();
+            image.sprite = sprite;
+            image.preserveAspect = true;
+            image.raycastTarget = false;
         }
 
-        private void EnsureDefaultSelections()
+        private InputField CreateNameField(Transform parent, Vector2 position, Vector2 size)
         {
-            if (_catalog == null || _catalog.Parts == null)
-                return;
-
-            for (int i = 0; i < _catalog.Parts.Length; i++)
-            {
-                SpumPartDefinition part = _catalog.Parts[i];
-                if (part == null || string.IsNullOrWhiteSpace(part.CategoryId) || !part.IsDefault || _selectedPartIds.ContainsKey(part.CategoryId))
-                    continue;
-
-                _selectedPartIds.Add(part.CategoryId, part.StableId);
-            }
-
-            for (int i = 0; i < _catalog.Parts.Length; i++)
-            {
-                SpumPartDefinition part = _catalog.Parts[i];
-                if (part == null || string.IsNullOrWhiteSpace(part.CategoryId) || _selectedPartIds.ContainsKey(part.CategoryId))
-                    continue;
-
-                _selectedPartIds.Add(part.CategoryId, part.StableId);
-            }
+            var go = new GameObject("NameField", typeof(RectTransform), typeof(Image), typeof(InputField));
+            go.transform.SetParent(parent, false);
+            var rect = (RectTransform)go.transform;
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+            var image = go.GetComponent<Image>();
+            image.color = Color.white;
+            var text = MakeText(go.transform, "Text", string.Empty, Vector2.zero, size - new Vector2(24f, 8f), 22, TextAnchor.MiddleLeft);
+            text.supportRichText = false;
+            var placeholder = MakeText(go.transform, "Placeholder", L("ui.creator.name.placeholder", "Enter a name"), Vector2.zero, size - new Vector2(24f, 8f), 22, TextAnchor.MiddleLeft);
+            placeholder.color = new Color(0.45f, 0.48f, 0.55f, 1f);
+            var field = go.GetComponent<InputField>();
+            field.targetGraphic = image;
+            field.textComponent = text;
+            field.placeholder = placeholder;
+            field.characterLimit = MaxNameLength;
+            field.lineType = InputField.LineType.SingleLine;
+            return field;
         }
 
-        private void RefreshSelectionSurfaces()
+        private static string CleanName(string value)
         {
-            _preview?.ApplySelectedParts(_selectedPartIds);
-            RebuildSelectedPartChips();
-            if (_statusLine != null)
-                _statusLine.text = _selectedPartIds.Count == 0
-                    ? L("spum.creator.none-selected", "No parts selected")
-                    : string.Format(System.Globalization.CultureInfo.CurrentCulture, L("spum.creator.selected-count", "{0} parts selected"), _selectedPartIds.Count);
-        }
-
-        private void RebuildSelectedPartChips()
-        {
-            if (_selectedPartChips == null)
-                return;
-
-            ClearGeneratedChildren(_selectedPartChips);
-            int index = 0;
-            foreach (KeyValuePair<string, string> selected in _selectedPartIds.OrderBy(pair => pair.Key, StringComparer.Ordinal))
-            {
-                GameObject chip = CreateButton(_selectedPartChips, "Chip_" + SanitizeName(selected.Key), ShortPartLabel(selected.Value), new Vector2(164f, 32f));
-                chip.GetComponent<Button>().interactable = false;
-                ((RectTransform)chip.transform).anchoredPosition = new Vector2(-440f + index * 176f, 0f);
-                index++;
-                if (index >= 6)
-                    break;
-            }
-        }
-
-        private CategoryGroup? FindFirstAvailableGroup()
-        {
-            for (int i = 0; i < CategoryGroups.Length; i++)
-            {
-                if (CatalogContainsAny(CategoryGroups[i].CategoryIds))
-                    return CategoryGroups[i];
-            }
-
-            return null;
-        }
-
-        private string[] ResolveCategoryIds(string categoryId)
-        {
-            for (int i = 0; i < CategoryGroups.Length; i++)
-            {
-                CategoryGroup group = CategoryGroups[i];
-                for (int j = 0; j < group.CategoryIds.Length; j++)
-                {
-                    if (group.CategoryIds[j] == categoryId)
-                        return group.CategoryIds;
-                }
-            }
-
-            return string.IsNullOrWhiteSpace(categoryId) ? Array.Empty<string>() : new[] { categoryId };
-        }
-
-        private bool CatalogContainsAny(IReadOnlyList<string> categoryIds)
-        {
-            return PartsForCategories(categoryIds).Count > 0;
-        }
-
-        private List<SpumPartDefinition> CurrentSelectedParts()
-        {
-            return PartsForCategories(_selectedCategoryIds);
-        }
-
-        private List<SpumPartDefinition> PartsForCategories(IReadOnlyList<string> categoryIds)
-        {
-            var parts = new List<SpumPartDefinition>();
-            if (_catalog == null || _catalog.Parts == null || categoryIds == null)
-                return parts;
-
-            for (int i = 0; i < _catalog.Parts.Length; i++)
-            {
-                SpumPartDefinition part = _catalog.Parts[i];
-                if (part == null)
-                    continue;
-
-                for (int j = 0; j < categoryIds.Count; j++)
-                {
-                    if (part.CategoryId == categoryIds[j])
-                    {
-                        parts.Add(part);
-                        break;
-                    }
-                }
-            }
-
-            return parts;
-        }
-
-        private static int MaxPageIndex(int partCount)
-        {
-            return Mathf.Max(0, Mathf.CeilToInt(partCount / (float)VisiblePartCellBudget) - 1);
+            if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+            string trimmed = value.Trim();
+            return trimmed.Length > MaxNameLength ? trimmed.Substring(0, MaxNameLength) : trimmed;
         }
 
         private void EnsureModalBackdrop()
@@ -436,7 +312,7 @@ namespace Rootborn.UI.MainMenu
             return go;
         }
 
-        private GameObject CreateContainer(Transform parent, string name, Vector2 size, Vector2 position)
+        private static GameObject CreateContainer(Transform parent, string name, Vector2 size, Vector2 position)
         {
             GameObject go = new GameObject(name, typeof(RectTransform));
             go.transform.SetParent(parent, false);
@@ -449,7 +325,7 @@ namespace Rootborn.UI.MainMenu
             return go;
         }
 
-        private GameObject CreateButton(Transform parent, string name, string label, Vector2 size)
+        private static GameObject CreateButton(Transform parent, string name, string label, Vector2 size)
         {
             GameObject button = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
             button.transform.SetParent(parent, false);
@@ -462,7 +338,7 @@ namespace Rootborn.UI.MainMenu
             image.color = new Color(0.19f, 0.23f, 0.31f, 1f);
             image.raycastTarget = true;
             button.GetComponent<Button>().targetGraphic = image;
-            var text = MakeText(button.transform, "Label", label, Vector2.zero, new Vector2(size.x - 16f, size.y - 8f), 18, TextAnchor.MiddleCenter);
+            var text = MakeText(button.transform, "Label", label, Vector2.zero, new Vector2(size.x - 12f, size.y - 8f), 20, TextAnchor.MiddleCenter);
             text.color = Color.white;
             return button;
         }
@@ -497,41 +373,11 @@ namespace Rootborn.UI.MainMenu
             }
         }
 
-        private static string ShortPartLabel(SpumPartDefinition part)
-        {
-            return part == null ? string.Empty : ShortPartLabel(part.StableId);
-        }
-
-        private static string ShortPartLabel(string id)
-        {
-            return SpumCharacterCreatorPreview.PartLabel(id);
-        }
-
-        private static string SanitizeName(string value)
-        {
-            return string.IsNullOrWhiteSpace(value) ? "empty" : value.Replace('.', '_').Replace('/', '_').Replace('\\', '_');
-        }
-
         private static string L(string key, string fallback)
         {
+            if (string.IsNullOrEmpty(key)) return fallback;
             string value = GameText.Get(key);
             return string.IsNullOrEmpty(value) || value == key ? fallback : value;
-        }
-
-        private readonly struct CategoryGroup
-        {
-            public CategoryGroup(string labelKey, string label, string objectName, string[] categoryIds)
-            {
-                LabelKey = labelKey;
-                Label = label;
-                ObjectName = objectName;
-                CategoryIds = categoryIds;
-            }
-
-            public string LabelKey { get; }
-            public string Label { get; }
-            public string ObjectName { get; }
-            public string[] CategoryIds { get; }
         }
     }
 }

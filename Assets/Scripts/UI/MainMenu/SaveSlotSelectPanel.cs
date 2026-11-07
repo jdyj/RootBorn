@@ -262,7 +262,9 @@ namespace Rootborn.UI.MainMenu
             _spumCreatorPanel = go.AddComponent<SpumCharacterCreatorPanel>();
             try
             {
-                _spumCreatorPanel.Build(CreateDefaultSpumCatalog(), snapshot => ConfirmSpumCreator(service, slotId, snapshot), CloseSpumCreator);
+                GameDataRegistryProvider.TryGet(out var registry);
+                _spumCreatorPanel.Build(registry != null ? registry.CharacterAppearances : null, string.Empty,
+                    (snapshot, playerName) => ConfirmSpumCreator(service, slotId, snapshot, playerName), CloseSpumCreator);
             }
             catch
             {
@@ -294,12 +296,13 @@ namespace Rootborn.UI.MainMenu
             else DestroyImmediate(value);
         }
 
-        private void ConfirmSpumCreator(SaveService service, string slotId, CharacterAppearanceSnapshot snapshot)
+        private void ConfirmSpumCreator(SaveService service, string slotId, CharacterAppearanceSnapshot snapshot, string playerName)
         {
             int worldSeed = unchecked(System.Environment.TickCount * 397) ^ slotId.GetHashCode();
             int tileSeed = unchecked(System.Environment.TickCount * 491) ^ (slotId.GetHashCode() << 1);
             var metadata = CreateMetadataForSelectedCharacter(slotId, worldSeed, tileSeed);
             metadata.CharacterAppearanceSnapshot = snapshot;
+            if (!string.IsNullOrWhiteSpace(playerName)) metadata.DisplayName = playerName.Trim();
             service.SaveMetadata(metadata);
             TryEnterSlot(metadata, true);
         }
@@ -413,30 +416,6 @@ namespace Rootborn.UI.MainMenu
             return string.IsNullOrEmpty(s_saveRootOverride)
                 ? new SaveService(slotId)
                 : new SaveService(slotId, s_saveRootOverride);
-        }
-
-        private static SpumPartCatalogDefinition CreateDefaultSpumCatalog()
-        {
-            var catalog = ScriptableObject.CreateInstance<SpumPartCatalogDefinition>();
-            catalog.ConfigureForTests("spum.catalog.newgame.generated", new[]
-            {
-                CreateSpumPart("spum.body.default", "body", true),
-                CreateSpumPart("spum.skin.default", "skin", true),
-                CreateSpumPart("spum.eye.default", "eye", true),
-                CreateSpumPart("spum.hair.short", "hair", true),
-                CreateSpumPart("spum.hair.long", "hair", false),
-                CreateSpumPart("spum.outfit.default", "outfit", true),
-                CreateSpumPart("spum.accessory.none", "accessory", true),
-                CreateSpumPart("spum.weapon.none", "weapon", true),
-            });
-            return catalog;
-        }
-
-        private static SpumPartDefinition CreateSpumPart(string stableId, string categoryId, bool isDefault)
-        {
-            var part = ScriptableObject.CreateInstance<SpumPartDefinition>();
-            part.ConfigureForTests(stableId, categoryId, isDefault);
-            return part;
         }
 
         private static string FormatCharacterPreview(SaveSlotMetadata metadata)

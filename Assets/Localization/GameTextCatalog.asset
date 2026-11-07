@@ -3349,3 +3349,42 @@ MonoBehaviour:
   - key: location.home.desc
     ko: "\uAC00\uC871\uC774 \uD568\uAED8 \uC0AC\uB294 \uACF3\uC774\uC5D0\uC694."
     en: Where your family lives.
+  - key: ui.creator.title
+    ko: "\uCE90\uB9AD\uD130 \uB9CC\uB4E4\uAE30"
+    en: "Create your character"
+  - key: ui.creator.back
+    ko: "\uB4A4\uB85C"
+    en: "Back"
+  - key: ui.creator.random
+    ko: "\uBB34\uC791\uC704"
+    en: "Random"
+  - key: ui.creator.confirm
+    ko: "\uC2DC\uC791\uD558\uAE30"
+    en: "Start"
+  - key: ui.creator.name
+    ko: "\uC774\uB984"
+    en: "Name"
+  - key: ui.creator.name.placeholder
+    ko: "\uC774\uB984\uC744 \uC785\uB825\uD558\uC138\uC694"
+    en: "Enter a name"
+  - key: ui.creator.hair
+    ko: "\uBA38\uB9AC"
+    en: "Hair"
+  - key: ui.creator.hair.short_brown
+    ko: "\uC9E7\uC740 \uAC08\uC0C9 \uBA38\uB9AC"
+    en: "Short brown hair"
+  - key: ui.creator.stage.child
+    ko: "\uC5B4\uB9B4 \uB54C"
+    en: "Child"
+  - key: ui.creator.stage.student
+    ko: "\uD559\uAD50 \uB2E4\uB2D0 \uB54C"
+    en: "Student"
+  - key: ui.creator.stage.adult
+    ko: "\uC5B4\uB978\uC774 \uB418\uBA74"
+    en: "Adult"
+  - key: ui.creator.preview
+    ko: "{0} \uBAA8\uC2B5"
+    en: "As {0}"
+  - key: ui.creator.hint
+    ko: "\uC637\uC740 \uAC8C\uC784 \uC548 \uC637\uC7A5\uC5D0\uC11C\uB3C4 \uBC14\uAFC0 \uC218 \uC788\uC5B4\uC694."
+    en: "You can change outfits later in the wardrobe."

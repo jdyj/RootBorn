@@ -87,7 +87,7 @@ namespace Rootborn.Tests.EditMode.UI.StudentLife
         }
 
         // Player-facing text added behind the protected rows when raw keys were removed from the journal and day summary.
-        private static readonly string[] ReviewedPlayerTextPrefixes = { "npc.", "objective.", "milestone.", "practice.", "quest.", "route.", "candidate.", "career.", "insight.", "loc.character.", "character.", "spum.", "location.", "work.", "workplace.", "opening.", "campaign.", "item.", "crop.", "tool.", "status.", "resource.", "outside.", "town.", "tutorial.", "recipe.", "discovery.", "daily.", "day-rule.", "tile.", "trait.", "generation.", "knowledge.", "condition.", "activity.", "goal.", "day-result.", "ui.journal.", "ui.prompt.", "ui.place.", "ui.placement.", "ui.location-log" };
+        private static readonly string[] ReviewedPlayerTextPrefixes = { "npc.", "objective.", "milestone.", "practice.", "quest.", "route.", "candidate.", "career.", "insight.", "loc.character.", "character.", "spum.", "location.", "work.", "workplace.", "opening.", "campaign.", "item.", "crop.", "tool.", "status.", "resource.", "outside.", "town.", "tutorial.", "recipe.", "discovery.", "daily.", "day-rule.", "tile.", "trait.", "generation.", "knowledge.", "condition.", "activity.", "goal.", "day-result.", "ui.journal.", "ui.creator.", "ui.prompt.", "ui.place.", "ui.placement.", "ui.location-log" };
         private static readonly string[] ReviewedPlayerTextWords = { "Wood", "home-entry", "active", "completed", "[E] Use Computer" };
         private static bool IsReviewedPlayerTextKey(string key) => ReviewedPlayerTextWords.Contains(key) || ReviewedPlayerTextPrefixes.Any(prefix => key.StartsWith(prefix, StringComparison.Ordinal));
 

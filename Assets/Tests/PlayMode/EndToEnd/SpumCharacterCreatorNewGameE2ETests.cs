@@ -1,7 +1,9 @@
 using System.Collections;
 using System.IO;
 using NUnit.Framework;
+using Rootborn.Game.Characters.Growing;
 using Rootborn.Game.Save;
+using Rootborn.UI.Characters;
 using Rootborn.UI.MainMenu;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -11,6 +13,7 @@ using UnityEngine.UI;
 
 namespace Rootborn.Tests.PlayMode.EndToEnd
 {
+    // CREATOR-001..005: the new-game creator for the growing character, driven by button clicks.
     public sealed class SpumCharacterCreatorNewGameE2ETests
     {
         private string _saveRoot;
@@ -19,7 +22,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         public IEnumerator SetUp()
         {
             ActiveSaveContext.Clear();
-            _saveRoot = Path.Combine(Application.temporaryCachePath, "rootborn-spum-newgame-" + System.Guid.NewGuid().ToString("N"));
+            _saveRoot = Path.Combine(Application.temporaryCachePath, "rootborn-creator-newgame-" + System.Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_saveRoot);
             SaveSlotSelectPanel.SetSaveRootForTests(_saveRoot);
             DestroyIfFound("SaveSlotSelectPanel");
@@ -36,119 +39,154 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             DestroyIfFound("SaveSlotSelectPanel");
             DestroyIfFound("SaveSlotCanvas");
             DestroyIfFound("EventSystem");
-            if (!string.IsNullOrEmpty(_saveRoot) && Directory.Exists(_saveRoot))
-            {
-                Directory.Delete(_saveRoot, true);
-            }
+            DestroyIfFound("Player");
+            if (!string.IsNullOrEmpty(_saveRoot) && Directory.Exists(_saveRoot)) Directory.Delete(_saveRoot, true);
             yield return null;
         }
 
         [UnityTest]
-        public IEnumerator SPUM_UI_PM_001_NewGameOpensCreator()
+        public IEnumerator CREATOR_001_NewGameOpensCreatorWithoutSaving()
         {
             yield return OpenSaveSlotsFromMainMenu();
-
             yield return ClickButtonNamed("NewGameButton");
 
-            Assert.IsNotNull(GameObject.Find("SpumCharacterCreatorRoot"), "New Game must open the SPUM character creator before saving.");
+            var creator = Object.FindFirstObjectByType<SpumCharacterCreatorPanel>();
+            Assert.IsNotNull(creator, "New Game must open the character creator before saving.");
+            Assert.GreaterOrEqual(creator.StageCount, 2, "The creator offers a starting outfit for each growth stage from the appearance data.");
+            Assert.IsNotNull(GameObject.Find("NameField"), "The creator asks for a name.");
             Assert.IsFalse(File.Exists(Path.Combine(_saveRoot, "slot-0", "metadata.json")), "Opening the creator must not create save metadata before Confirm.");
         }
 
         [UnityTest]
-        public IEnumerator SPUM_UI_PM_002_ClickPartUpdatesPreview()
+        public IEnumerator CREATOR_002_StageArrowChangesChoiceAndPreview()
         {
-            yield return OpenCreatorFromMainMenu();
+            var creator = default(SpumCharacterCreatorPanel);
+            yield return OpenCreatorFromMainMenu(c => creator = c);
+            int stage = FirstStageWithChoices(creator);
+            string before = creator.ChoiceAt(stage).Id;
 
-            yield return ClickButtonNamed("Tab_Hair");
-            yield return ClickButtonNamed("PartCell_spum_hair_long");
+            yield return ClickButtonNamed("Stage" + stage + "_Next");
 
-            var preview = GameObject.Find("PreviewSelected_hair");
-            Assert.IsNotNull(preview, "Part cell clicks must update a visible preview state for the selected category.");
-            StringAssert.Contains(Rootborn.UI.MainMenu.SpumCharacterCreatorPreview.PartLabel("spum.hair.long"), preview.GetComponent<Text>().text);
+            Assert.AreNotEqual(before, creator.ChoiceAt(stage).Id, "The arrow must switch to another outfit.");
+            Assert.AreEqual(stage, creator.PreviewStage, "The preview follows the stage being changed.");
+            yield return Capture("output/creator-mom-20261107/creator-002-after-arrow.png");
+            var shown = GameObject.Find("PreviewGrowing_Outfit");
+            Assert.IsNotNull(shown, "The preview draws the chosen outfit.");
+            Assert.AreSame(creator.ChoiceAt(stage).Outfit.GetFrame(GrowingCharacterVisualView.RowDown, GrowingCharacterVisualView.StandingColumn),
+                shown.GetComponent<Image>().sprite, "The preview must show the newly chosen outfit.");
         }
 
         [UnityTest]
-        public IEnumerator SPUM_UI_PM_003_RandomCreatesResolvedAppearance()
+        public IEnumerator CREATOR_003_ConfirmSavesNameAndStartingOutfitThatTheTownCharacterWears()
         {
-            yield return OpenCreatorFromMainMenu();
+            var creator = default(SpumCharacterCreatorPanel);
+            yield return OpenCreatorFromMainMenu(c => creator = c);
+            int stage = FirstStageWithChoices(creator);
+            yield return ClickButtonNamed("Stage" + stage + "_Next");
+            var chosen = creator.ChoiceAt(stage);
+            GameObject.Find("NameField").GetComponent<InputField>().text = "  Haru  ";
 
-            yield return ClickButtonNamed("RandomButton");
             yield return ClickButtonNamed("ConfirmButton");
-            yield return WaitForScene("Town", 20f);
-
-            SaveSlotMetadata metadata = new SaveService("slot-0", _saveRoot).LoadMetadata("slot-0");
-            AssertResolvedRequiredCategory(metadata, "body");
-            AssertResolvedRequiredCategory(metadata, "skin");
-            AssertResolvedRequiredCategory(metadata, "eye");
-            AssertResolvedRequiredCategory(metadata, "hair");
-            AssertResolvedRequiredCategory(metadata, "outfit");
-            AssertResolvedRequiredCategory(metadata, "accessory");
-        }
-
-        [Ignore(LegacyPremise.CharacterParts + "마을 플레이어는 성장 캐릭터로 그리며 SPUM 화면 부품을 붙이지 않음")]
-        [UnityTest]
-        public IEnumerator SPUM_UI_PM_004_ConfirmCreatesSaveAndLoadsTown()
-        {
-            yield return OpenCreatorFromMainMenu();
-
-            yield return ClickButtonNamed("Tab_Hair");
-            yield return ClickButtonNamed("PartCell_spum_hair_long");
-            yield return ClickButtonNamed("ConfirmButton");
-            yield return WaitForScene("Town", 20f);
+            yield return WaitForScene(20f);
 
             SaveSlotMetadata metadata = new SaveService("slot-0", _saveRoot).LoadMetadata("slot-0");
             Assert.IsNotNull(metadata);
-            Assert.IsNotNull(metadata.CharacterAppearanceSnapshot);
-            Assert.AreEqual("spum", metadata.CharacterAppearanceSnapshot.VisualKind);
-            Assert.AreEqual("spum.hair.long", metadata.CharacterAppearanceSnapshot.GetSelectedPartId("hair"));
-            Assert.IsNotNull(ActiveSaveContext.Metadata);
-            Assert.AreEqual(metadata.CharacterAppearanceSnapshot.GetSelectedPartId("hair"), ActiveSaveContext.Metadata.CharacterAppearanceSnapshot.GetSelectedPartId("hair"));
+            Assert.AreEqual("Haru", metadata.DisplayName, "The typed name becomes the save's name.");
+            Assert.AreEqual(GrowingCharacterAppearanceDefinition.VisualKindName, metadata.CharacterAppearanceSnapshot.VisualKind);
+            Assert.AreEqual(chosen.Id, GrowingCharacterStageSelector.ChoiceFromSnapshot(metadata.CharacterAppearanceSnapshot, chosen.Body.Id));
 
-            GameObject player = GameObject.Find("Player");
-            Assert.IsNotNull(player);
-            Assert.IsNotNull(player.GetComponent<Rootborn.Game.Characters.Spum.SpumCharacterVisualView>(), "Town Player visual must bind through the SPUM visual boundary for SPUM snapshots.");
+            var driver = default(GrowingCharacterStageDriver);
+            float elapsed = 0f;
+            while (elapsed < 10f && (driver == null || driver.CurrentLook == null))
+            {
+                var player = GameObject.Find("Player");
+                driver = player != null ? player.GetComponent<GrowingCharacterStageDriver>() : null;
+                elapsed += Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            Assert.IsNotNull(driver, "The town player must use the growing character.");
+            // The stage's own rules pick the body; the creator's choice decides which outfit it wears.
+            var worn = driver.Apply(chosen.MinimumStudentDay, chosen.RequiresAdult, null);
+            Assert.AreEqual(chosen.Id, worn != null ? worn.Id : null, "The character must start that stage in the outfit picked in the creator.");
         }
 
         [UnityTest]
-        public IEnumerator SPUM_UI_PM_005_CancelDoesNotCreateSave()
+        public IEnumerator CREATOR_004_RandomThenConfirmSavesAnOutfitForEveryStage()
         {
-            yield return OpenCreatorFromMainMenu();
+            var creator = default(SpumCharacterCreatorPanel);
+            yield return OpenCreatorFromMainMenu(c => creator = c);
+            yield return ClickButtonNamed("RandomButton");
+            var expected = new string[creator.StageCount];
+            for (int i = 0; i < expected.Length; i++) expected[i] = creator.ChoiceAt(i).Id;
 
-            yield return ClickButtonNamed("CancelButton");
+            yield return ClickButtonNamed("ConfirmButton");
+            yield return WaitForScene(20f);
+
+            var snapshot = new SaveService("slot-0", _saveRoot).LoadMetadata("slot-0").CharacterAppearanceSnapshot;
+            for (int i = 0; i < expected.Length; i++)
+                Assert.AreEqual(expected[i], GrowingCharacterStageSelector.ChoiceFromSnapshot(snapshot, FindBodyId(expected[i])), "stage " + i);
+        }
+
+        [UnityTest]
+        public IEnumerator CREATOR_005_BackDoesNotCreateSave()
+        {
+            yield return OpenCreatorFromMainMenu(null);
+            yield return ClickButtonNamed("BackButton");
             yield return null;
 
-            Assert.IsNull(GameObject.Find("SpumCharacterCreatorRoot"), "Cancel must close the draft creator flow.");
-            Assert.IsFalse(File.Exists(Path.Combine(_saveRoot, "slot-0", "metadata.json")), "Cancel must not create save metadata for an empty slot.");
+            Assert.IsNull(GameObject.Find("SpumCharacterCreatorRoot"), "Back must close the creator.");
+            Assert.IsFalse(File.Exists(Path.Combine(_saveRoot, "slot-0", "metadata.json")), "Back must not create save metadata for an empty slot.");
             Assert.IsNull(ActiveSaveContext.Metadata);
         }
 
-        private IEnumerator OpenCreatorFromMainMenu()
+        private static string FindBodyId(string appearanceId)
+        {
+            Rootborn.Game.Common.GameDataRegistryProvider.TryGet(out var registry);
+            foreach (var definition in registry.CharacterAppearances)
+                if (definition is GrowingCharacterAppearanceDefinition look && look.Id == appearanceId) return look.Body.Id;
+            return string.Empty;
+        }
+
+        private static int FirstStageWithChoices(SpumCharacterCreatorPanel creator)
+        {
+            for (int i = 0; i < creator.StageCount; i++)
+                if (GameObject.Find("Stage" + i + "_Next") != null) return i;
+            Assert.Fail("No growth stage offers more than one starting outfit.");
+            return -1;
+        }
+
+        private IEnumerator OpenCreatorFromMainMenu(System.Action<SpumCharacterCreatorPanel> found)
         {
             yield return OpenSaveSlotsFromMainMenu();
             yield return ClickButtonNamed("NewGameButton");
             yield return null;
-            Assert.IsNotNull(GameObject.Find("SpumCharacterCreatorRoot"));
+            var creator = Object.FindFirstObjectByType<SpumCharacterCreatorPanel>();
+            Assert.IsNotNull(creator);
+            found?.Invoke(creator);
         }
 
-        private IEnumerator OpenSaveSlotsFromMainMenu()
+        private static IEnumerator OpenSaveSlotsFromMainMenu()
         {
             yield return SceneManager.LoadSceneAsync("MainMenu");
             yield return WaitForStableScene("MainMenu", 0.25f, 5f);
+            yield return Rootborn.Tests.PlayMode.PlayModeScenarioStart.WaitForGameData();
             SaveSlotSelectPanel.EnsureInScene().Show();
             yield return null;
             Assert.IsNotNull(GameObject.Find("SaveSlotSelectRoot"));
         }
 
-        private static IEnumerator WaitForScene(string sceneName, float timeout)
+        // A new game starts at home or in Town depending on the world entry data; either means the world loaded.
+        private static IEnumerator WaitForScene(float timeout)
         {
             float elapsed = 0f;
-            while (SceneManager.GetActiveScene().name != sceneName && elapsed < timeout)
+            while (elapsed < timeout && SceneManager.GetActiveScene().name != "Town" && SceneManager.GetActiveScene().name != "House")
             {
                 yield return null;
-                elapsed += Time.deltaTime;
+                elapsed += Time.unscaledDeltaTime;
             }
 
-            Assert.AreEqual(sceneName, SceneManager.GetActiveScene().name);
+            Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Town").Or.EqualTo("House"));
         }
 
         private static IEnumerator WaitForStableScene(string sceneName, float stableSeconds, float timeout)
@@ -159,16 +197,12 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             {
                 if (SceneManager.GetActiveScene().name == sceneName)
                 {
-                    stable += Time.deltaTime;
-                    if (stable >= stableSeconds)
-                        yield break;
+                    stable += Time.unscaledDeltaTime;
+                    if (stable >= stableSeconds) yield break;
                 }
-                else
-                {
-                    stable = 0f;
-                }
+                else stable = 0f;
 
-                elapsed += Time.deltaTime;
+                elapsed += Time.unscaledDeltaTime;
                 yield return null;
             }
 
@@ -188,20 +222,20 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
-        private static void AssertResolvedRequiredCategory(SaveSlotMetadata metadata, string categoryId)
+        private static IEnumerator Capture(string path)
         {
-            Assert.IsNotNull(metadata);
-            Assert.IsNotNull(metadata.CharacterAppearanceSnapshot);
-            Assert.IsNotEmpty(metadata.CharacterAppearanceSnapshot.GetSelectedPartId(categoryId), categoryId + " must resolve to a saved SPUM part.");
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            if (File.Exists(path)) File.Delete(path);
+            yield return new WaitForEndOfFrame();
+            ScreenCapture.CaptureScreenshot(path);
+            float elapsed = 0f;
+            while (elapsed < 3f && !(File.Exists(path) && new FileInfo(path).Length > 0L)) { elapsed += Time.unscaledDeltaTime; yield return null; }
         }
 
         private static void DestroyIfFound(string name)
         {
             var go = GameObject.Find(name);
-            if (go != null)
-            {
-                Object.DestroyImmediate(go);
-            }
+            if (go != null) Object.DestroyImmediate(go);
         }
     }
 }

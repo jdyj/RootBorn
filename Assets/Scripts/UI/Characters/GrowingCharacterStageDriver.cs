@@ -88,9 +88,25 @@ namespace Rootborn.UI.Characters
             {
                 _wardrobe = GrowingWardrobeStore.Load(new SaveService(_boundProgress.SaveSlot), _boundProgress.PlayerId);
                 _wardrobeOwner = owner;
+                SeedFromCreator(_wardrobe, _boundProgress.SaveSlot);
             }
 
             return _wardrobe;
+        }
+
+        // The outfit picked in the new-game creator fills bodies the player has not chosen for yet; a wardrobe choice wins.
+        // The creator choice lives in the slot metadata, so it is the same after every load and needs no extra save.
+        private void SeedFromCreator(GrowingWardrobeStore wardrobe, string slot)
+        {
+            var metadata = ActiveSaveContext.Metadata;
+            if (wardrobe == null || metadata == null || metadata.SlotId != slot || _registry == null || _registry.CharacterAppearances == null) return;
+            var appearances = _registry.CharacterAppearances;
+            for (int i = 0; i < appearances.Length; i++)
+            {
+                if (!(appearances[i] is GrowingCharacterAppearanceDefinition look) || look.Body == null || !string.IsNullOrEmpty(wardrobe.GetChoice(look.Body.Id))) continue;
+                string chosen = GrowingCharacterStageSelector.ChoiceFromSnapshot(metadata.CharacterAppearanceSnapshot, look.Body.Id);
+                if (!string.IsNullOrEmpty(chosen)) wardrobe.SetChoice(look.Body.Id, chosen);
+            }
         }
 
         private IEnumerator BindWhenReady()

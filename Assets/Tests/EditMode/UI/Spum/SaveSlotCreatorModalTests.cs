@@ -22,7 +22,6 @@ namespace Rootborn.Tests.EditMode.UI.Spum
             var previouslyInactive = new GameObject("PreviouslyHiddenControl", typeof(RectTransform), typeof(Button));
             var cards = new List<GameObject>();
             SpumCharacterCreatorPanel creator = null;
-            SpumPartCatalogDefinition generatedCatalog = null;
             var tempRoot = Path.Combine(Application.temporaryCachePath, "rootborn-creator-modal-" + Guid.NewGuid().ToString("N"));
             try
             {
@@ -41,11 +40,10 @@ namespace Rootborn.Tests.EditMode.UI.Spum
                 open.Invoke(owner, new object[] { new SaveService("slot-0", tempRoot), "slot-0" });
                 creator = root.GetComponentInChildren<SpumCharacterCreatorPanel>(true);
                 Assert.That(creator, Is.Not.Null); Assert.That(creator.gameObject.activeInHierarchy, Is.True);
-                generatedCatalog = (SpumPartCatalogDefinition)typeof(SpumCharacterCreatorPanel).GetField("_catalog", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(creator);
                 Assert.That(cards.TrueForAll(x => !x.activeInHierarchy), Is.True,
                     "Opening the creator currently leaves every underlying save card visible and interactive.");
                 Assert.That(previouslyInactive.activeSelf, Is.False);
-                var cancel = creator.transform.Find("SpumCharacterCreatorRoot/PageControls/CancelButton").GetComponent<Button>();
+                var cancel = creator.transform.Find("SpumCharacterCreatorRoot/Header/BackButton").GetComponent<Button>();
                 cancel.onClick.Invoke();
                 Assert.That(cards.TrueForAll(x => x.activeSelf && x.activeInHierarchy), Is.True, "Cancel must restore the same existing card instances.");
                 Assert.That(previouslyInactive.activeSelf, Is.False, "Cancel must not reveal a control that was already hidden.");
@@ -56,11 +54,6 @@ namespace Rootborn.Tests.EditMode.UI.Spum
             {
                 Object.DestroyImmediate(host);
                 if (previouslyInactive != null) Object.DestroyImmediate(previouslyInactive);
-                if (generatedCatalog != null && !EditorUtility.IsPersistent(generatedCatalog))
-                {
-                    foreach (var part in generatedCatalog.Parts) if (part != null && !EditorUtility.IsPersistent(part)) Object.DestroyImmediate(part);
-                    Object.DestroyImmediate(generatedCatalog);
-                }
                 if (Directory.Exists(tempRoot)) Directory.Delete(tempRoot, true);
             }
         }

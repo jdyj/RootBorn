@@ -83,6 +83,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var mom = GameObject.Find("TownNpc_npc_first_guide");
             var momNpc = mom.GetComponent<Rootborn.Game.Dialogue.NpcInteractor>();
             yield return PlayerFlowE2EDriver.WalkAndInteract(keyboard, mom.transform.position, "REL-001 failed: Mom");
+            yield return CaptureScreenshot("output/creator-mom-20261107/rel-001-mom-at-home.png");
             Assert.IsTrue(momNpc.Session.IsOpen, "REL-001 failed: E next to Mom did not open her dialogue.");
             var dialogue = Object.FindFirstObjectByType<Rootborn.UI.Quests.DialoguePanel>(FindObjectsInactive.Include);
             if (dialogue != null && dialogue.IsOpen) yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(dialogue.transform, "CloseButton"));
