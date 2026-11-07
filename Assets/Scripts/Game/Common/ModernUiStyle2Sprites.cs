@@ -10,6 +10,10 @@ namespace Rootborn.Game.Common
         public const string First = Prefix + "r0_c0";
         public const string Last = Prefix + "r33_c48";
 
+        // Whole 22x22 tab box. On the sheet it straddles r0..r2 / c3..c5, so it is cut by an explicit
+        // rect (ModernUiSliceSetup.Style2ExplicitRects) instead of a 16px grid cell.
+        public const string TabBoxName = Prefix + "tab_box";
+
         public static class CommonPanel
         {
             public const string TopLeftName = Prefix + "r2_c0";
@@ -161,13 +165,14 @@ namespace Rootborn.Game.Common
             public static readonly ModernHudSpriteKey IconFrame = Base;
         }
 
-        // ribbon.* (horizontal): r1_c4..r1_c6 = left/middle/right (3-slice top tab strip)
-        // Used for inventory category tab strip across the panel top.
+        // Horizontal bar r3_c4 | r3_c5 | r3_c6 = left / middle / right (3-slice). On the sheet the
+        // bar spans PNG x 69..106, y 49..62, so each piece sits inside one 16px cell.
+        // The old r1_c4..r1_c6 mapping cut a 22x22 box into fragments and r1_c6 was empty.
         public static class TabRibbon
         {
-            public const string LeftName = Prefix + "r1_c4";
-            public const string MiddleName = Prefix + "r1_c5";
-            public const string RightName = Prefix + "r1_c6";
+            public const string LeftName = Prefix + "r3_c4";
+            public const string MiddleName = Prefix + "r3_c5";
+            public const string RightName = Prefix + "r3_c6";
             public const string ShadowLeftName = Prefix + "r2_c4";
             public const string ShadowMiddleName = Prefix + "r2_c5";
             public const string ShadowRightName = Prefix + "r2_c6";
@@ -177,17 +182,15 @@ namespace Rootborn.Game.Common
             public static readonly ModernHudSpriteKey Right = Key("RibbonRight", RightName);
         }
 
-        // Legacy Tab class kept for source-compat with HUD code (ModernHudSpriteKeys.Bookmark*).
-        // Style2 시트에는 별도 책갈피 sprite 가 없어, 모든 필드를 TabRibbon (3-slice 가로 ribbon) 으로
-        // alias. 실제 책갈피 시각 효과는 외부 sprite (e.g. Pixelwood Bookmark sheet) 또는
-        // ModernUiTileImage 의 TabPanel/TabRibbon recipe 로 구성한다.
+        // Bookmark tabs (ModernHudSpriteKeys.Bookmark*). Style2 has no dedicated bookmark sprite, so every
+        // tab uses the whole 22x22 box (TabBoxName); the selected tab is shown by its position offset.
         public static class Tab
         {
-            public const string AllName = TabRibbon.LeftName;
-            public const string ResourceName = TabRibbon.MiddleName;
-            public const string TitleName = TabRibbon.MiddleName;
-            public const string SelectedName = TabRibbon.MiddleName;
-            public const string MiscName = TabRibbon.RightName;
+            public const string AllName = TabBoxName;
+            public const string ResourceName = TabBoxName;
+            public const string TitleName = TabBoxName;
+            public const string SelectedName = TabBoxName;
+            public const string MiscName = TabBoxName;
 
             public static readonly ModernHudSpriteKey All = Key("BookmarkAll", AllName);
             public static readonly ModernHudSpriteKey Resource = Key("BookmarkResource", ResourceName);
@@ -198,12 +201,12 @@ namespace Rootborn.Game.Common
             public static readonly ModernHudSpriteKey Misc = Key("BookmarkMisc", MiscName);
         }
 
-        // ribbon.vertical* (r3_c3,r4_c3,r5_c3) = vertical 3-slice for the scrollbar track.
-        // Thumb reuses r5_c3 (end-cap with a soft handle look).
+        // Scrollbar / long track. r4_c3 is an empty cell, so the repeating track middle is the
+        // r3_c5 bar middle (Divider.Long and Gauge.Track alias it). Thumb reuses r5_c3.
         public static class Scrollbar
         {
             public const string TrackTopName = Prefix + "r3_c3";
-            public const string TrackMiddleName = Prefix + "r4_c3";
+            public const string TrackMiddleName = TabRibbon.MiddleName;
             public const string TrackBottomName = Prefix + "r5_c3";
             public const string ThumbName = TrackBottomName;
             public const string TrackName = TrackMiddleName;

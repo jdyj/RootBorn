@@ -1,7 +1,10 @@
 fileFormatVersion: 2
 guid: d8f6aaaff68986e4e82388f7c8568350
 TextureImporter:
-  internalIDToNameTable: []
+  internalIDToNameTable:
+  - first:
+      213: -5233764866174313130
+    second: ModernUI_16_Style2_tab_box
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -36748,6 +36751,28 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: ModernUI_16_Style2_tab_box
+      rect:
+        serializedVersion: 2
+        x: 61
+        y: 509
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 65d92c9759eed57b0800000000000000
+      internalID: -5233764866174313130
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
@@ -38428,6 +38453,7 @@ TextureImporter:
       ModernUI_16_Style2_r9_c7: 4766795812866879427
       ModernUI_16_Style2_r9_c8: 5915559591026235858
       ModernUI_16_Style2_r9_c9: 8224218935255792895
+      ModernUI_16_Style2_tab_box: -5233764866174313130
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

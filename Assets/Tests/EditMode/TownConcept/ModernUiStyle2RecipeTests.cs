@@ -60,18 +60,74 @@ namespace Rootborn.Tests.EditMode.TownConcept
             AssertHudKey("Slot", "Equipment", "ModernUI_16_Style2_r6_c0");
             AssertHudKey("Slot", "Base", "ModernUI_16_Style2_r6_c0");
             AssertHudKey("Slot", "Highlight", "ModernUI_16_Style2_r7_c0");
-            AssertHudKey("Tab", "Title", "ModernUI_16_Style2_r1_c5");
-            AssertHudKey("Tab", "Selected", "ModernUI_16_Style2_r1_c5");
-            AssertHudKey("TabRibbon", "Left", "ModernUI_16_Style2_r1_c4");
-            AssertHudKey("TabRibbon", "Middle", "ModernUI_16_Style2_r1_c5");
-            AssertHudKey("TabRibbon", "Right", "ModernUI_16_Style2_r1_c6");
+            // Tabs use the whole 22x22 box cut by an explicit rect: on the sheet it straddles
+            // r0..r2 / c3..c5, so no single 16px cell holds it.
+            AssertHudKey("Tab", "All", "ModernUI_16_Style2_tab_box");
+            AssertHudKey("Tab", "Title", "ModernUI_16_Style2_tab_box");
+            AssertHudKey("Tab", "Selected", "ModernUI_16_Style2_tab_box");
+            AssertHudKey("Tab", "Misc", "ModernUI_16_Style2_tab_box");
+            // The horizontal ribbon and the long track use the r3_c4..r3_c6 bar (left | middle | right).
+            AssertHudKey("TabRibbon", "Left", "ModernUI_16_Style2_r3_c4");
+            AssertHudKey("TabRibbon", "Middle", "ModernUI_16_Style2_r3_c5");
+            AssertHudKey("TabRibbon", "Right", "ModernUI_16_Style2_r3_c6");
             AssertHudKey("Scrollbar", "TrackTop", "ModernUI_16_Style2_r3_c3");
-            AssertHudKey("Scrollbar", "TrackMiddle", "ModernUI_16_Style2_r4_c3");
+            AssertHudKey("Scrollbar", "TrackMiddle", "ModernUI_16_Style2_r3_c5");
             AssertHudKey("Scrollbar", "TrackBottom", "ModernUI_16_Style2_r5_c3");
             AssertHudKey("IconButton", "Search", "ModernUI_16_Style2_r12_c46");
             AssertHudKey("IconButton", "Delete", "ModernUI_16_Style2_r13_c46");
             AssertHudKey("IconButton", "Settings", "ModernUI_16_Style2_r6_c46");
             AssertHudKey("Gauge", "Fill", "ModernUI_16_Style2_r5_c3");
+        }
+
+        [Test]
+        public void Style2TabBox_IsCutFromTheWholeBoxOnTheSheet()
+        {
+            UnityEngine.Sprite box = LoadStyle2Sprite(ModernUiStyle2Sprites.TabBoxName);
+            Assert.NotNull(box, "Style2 sheet has no " + ModernUiStyle2Sprites.TabBoxName + " sub-sprite. Run Rootborn/Modern UI/Slice Sprite Sheets.");
+
+            // PNG top-left (61,13) size 22x22 -> Unity bottom-left y = 544 - 13 - 22 = 509.
+            Assert.AreEqual(new UnityEngine.Rect(61, 509, 22, 22), box.rect);
+        }
+
+        [Test]
+        public void Style2PreloadSprites_AllHaveVisiblePixelsOnTheSheet()
+        {
+            var blank = new List<string>();
+            foreach (string name in ModernUiStyle2Sprites.PreloadSubSprites.Distinct())
+            {
+                UnityEngine.Sprite sprite = LoadStyle2Sprite(name);
+                if (sprite == null)
+                {
+                    blank.Add(name + " (missing)");
+                    continue;
+                }
+
+                var r = sprite.rect;
+                UnityEngine.Color32[] pixels = sprite.texture.GetPixels32();
+                int width = sprite.texture.width;
+                bool visible = false;
+                for (int y = (int)r.y; y < (int)(r.y + r.height) && !visible; y++)
+                {
+                    for (int x = (int)r.x; x < (int)(r.x + r.width); x++)
+                    {
+                        if (pixels[y * width + x].a > 0) { visible = true; break; }
+                    }
+                }
+
+                if (!visible) blank.Add(name);
+            }
+
+            Assert.IsEmpty(blank, "Style2 preload sprites with no visible pixels: " + string.Join(", ", blank));
+        }
+
+        private static UnityEngine.Sprite LoadStyle2Sprite(string name)
+        {
+            foreach (UnityEngine.Object asset in UnityEditor.AssetDatabase.LoadAllAssetsAtPath("Assets/modernuserinterface-win/16x16/Modern_UI_Style_2.png"))
+            {
+                if (asset is UnityEngine.Sprite sprite && sprite.name == name) return sprite;
+            }
+
+            return null;
         }
 
         [Test]
