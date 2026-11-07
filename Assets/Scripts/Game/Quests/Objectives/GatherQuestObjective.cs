@@ -1,3 +1,4 @@
+using Rootborn.Core.Quests;
 using Rootborn.Game.Resources;
 using UnityEngine;
 
@@ -10,10 +11,6 @@ namespace Rootborn.Game.Quests.Objectives
 
         public ResourceNodeDefinition TargetResource => _targetResource;
 
-        public override bool Matches(in QuestEvent questEvent)
-        {
-            return questEvent.Kind == QuestEventKind.Gather
-                && SameEntry(questEvent.Resource, _targetResource, questEvent.Resource != null ? questEvent.Resource.Id : null, _targetResource != null ? _targetResource.Id : null);
-        }
+        protected override QuestObjectiveSpec BuildSpec() => QuestObjectiveSpec.Listed((int)QuestEventKind.Gather, _targetResource != null ? QuestSubjectIds.Of(_targetResource) : null);
     }
 }

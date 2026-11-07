@@ -1,9 +1,13 @@
 using System.Reflection;
 using NUnit.Framework;
 using Rootborn.Game.Common;
+using Rootborn.Game.Dialogue;
+using Rootborn.Game.Placement;
 using Rootborn.Game.Quests;
 using Rootborn.Game.Quests.Objectives;
 using Rootborn.Game.Resources;
+using Rootborn.Game.StudentLife;
+using Rootborn.Game.Tiles;
 using UnityEngine;
 
 namespace Rootborn.Tests.EditMode.Quests
@@ -82,6 +86,106 @@ namespace Rootborn.Tests.EditMode.Quests
         }
 
         [Test]
+        public void QUEST_ID_001_TalkObjective_MatchesBundleCopyOfTheSameNpcById()
+        {
+            var (scene, bundle, other) = Copies<NpcDefinition>("_id", "npc.test-mom", "npc.test-teacher");
+            var objective = ScriptableObject.CreateInstance<TalkQuestObjective>();
+            SetField(objective, "_targetNpc", bundle);
+
+            Assert.IsTrue(objective.Matches(new QuestEvent(QuestEventKind.Talk, "t1", npc: scene)));
+            Assert.IsFalse(objective.Matches(new QuestEvent(QuestEventKind.Talk, "t2", npc: other)));
+        }
+
+        [Test]
+        public void QUEST_ID_002_LocationVisitObjective_MatchesBundleCopyOfTheSameLocationById()
+        {
+            var (scene, bundle, other) = Copies<LocationDefinition>("_id", "location.test-library", "location.test-park");
+            var objective = ScriptableObject.CreateInstance<LocationVisitQuestObjective>();
+            SetField(objective, "_targetLocation", bundle);
+
+            Assert.IsTrue(objective.Matches(new QuestEvent(QuestEventKind.LocationVisit, "v1", location: scene)));
+            Assert.IsFalse(objective.Matches(new QuestEvent(QuestEventKind.LocationVisit, "v2", location: other)));
+        }
+
+        [Test]
+        public void QUEST_ID_003_LocationActivityObjective_MatchesByIdAndAnyActivityWithoutTarget()
+        {
+            var (scene, bundle, other) = Copies<LocationActivityDefinition>("_id", "activity.test-read", "activity.test-run");
+            var objective = ScriptableObject.CreateInstance<LocationActivityQuestObjective>();
+            objective.ConfigureForRuntime("test", 1, bundle);
+
+            Assert.IsTrue(objective.Matches(new QuestEvent(QuestEventKind.LocationActivity, "a1", activity: scene)));
+            Assert.IsFalse(objective.Matches(new QuestEvent(QuestEventKind.LocationActivity, "a2", activity: other)));
+
+            objective.ConfigureForRuntime("test", 1, null);
+            Assert.IsTrue(objective.Matches(new QuestEvent(QuestEventKind.LocationActivity, "a3", activity: other)), "no target accepts any activity");
+        }
+
+        [Test]
+        public void QUEST_ID_004_TilePlacedObjective_MatchesByIdAndAnyTileWithoutTarget()
+        {
+            var (scene, bundle, other) = Copies<PlaceableTileDefinition>("_id", "tile.test-wood", "tile.test-stone");
+            var objective = ScriptableObject.CreateInstance<TilePlacedQuestObjective>();
+            objective.ConfigureForRuntime("test", 1, bundle);
+
+            Assert.IsTrue(objective.Matches(new QuestEvent(QuestEventKind.TilePlaced, "p1", tile: scene)));
+            Assert.IsFalse(objective.Matches(new QuestEvent(QuestEventKind.TilePlaced, "p2", tile: other)));
+
+            objective.ConfigureForRuntime("test", 1, null);
+            Assert.IsTrue(objective.Matches(new QuestEvent(QuestEventKind.TilePlaced, "p3", tile: other)), "no target accepts any tile");
+        }
+
+        [Test]
+        public void QUEST_ID_005_PartTimeWorkObjective_MatchesBundleCopyInTheAcceptedList()
+        {
+            var (scene, bundle, other) = Copies<PartTimeWorkDefinition>("_id", "work.test-cafe", "work.test-store");
+            var objective = ScriptableObject.CreateInstance<PartTimeWorkQuestObjective>();
+            SetField(objective, "_acceptedWorks", new[] { bundle });
+
+            Assert.IsTrue(objective.Matches(new QuestEvent(QuestEventKind.PartTimeWork, "w1", work: scene)));
+            Assert.IsFalse(objective.Matches(new QuestEvent(QuestEventKind.PartTimeWork, "w2", work: other)));
+        }
+
+        [Test]
+        public void QUEST_ID_006_FurniturePlacedObjective_MatchesByStableIdAndRequiredSurface()
+        {
+            var (scene, bundle, other) = Copies<FurnitureDefinition>("_stableId", "furniture.test-desk", "furniture.test-bed");
+            var objective = ScriptableObject.CreateInstance<FurniturePlacedQuestObjective>();
+            SetField(objective, "_acceptedFurniture", new[] { bundle });
+            SetField(objective, "_requiredSurfaceId", "surface.test-room");
+
+            Assert.IsTrue(objective.Matches(new QuestEvent(QuestEventKind.FurniturePlaced, "f1", furniture: scene, surfaceId: "surface.test-room")));
+            Assert.IsFalse(objective.Matches(new QuestEvent(QuestEventKind.FurniturePlaced, "f2", furniture: scene, surfaceId: "surface.test-yard")));
+            Assert.IsFalse(objective.Matches(new QuestEvent(QuestEventKind.FurniturePlaced, "f3", furniture: other, surfaceId: "surface.test-room")));
+        }
+
+        [Test]
+        public void QUEST_ID_007_CareerInterestObjective_EmptyListAcceptsAnyDreamOtherwiseById()
+        {
+            var (scene, bundle, other) = Copies<CareerInterestDefinition>("_id", "career.test-chef", "career.test-nurse");
+            var objective = ScriptableObject.CreateInstance<CareerInterestSelectedQuestObjective>();
+            Assert.IsTrue(objective.Matches(new QuestEvent(QuestEventKind.CareerInterestSelected, "c0", careerInterest: other)), "empty list accepts any dream");
+            Assert.IsFalse(objective.Matches(new QuestEvent(QuestEventKind.CareerInterestSelected, "c1")), "but a dream must be chosen");
+
+            var listed = ScriptableObject.CreateInstance<CareerInterestSelectedQuestObjective>();
+            SetField(listed, "_acceptedInterests", new[] { bundle });
+            Assert.IsTrue(listed.Matches(new QuestEvent(QuestEventKind.CareerInterestSelected, "c2", careerInterest: scene)));
+            Assert.IsFalse(listed.Matches(new QuestEvent(QuestEventKind.CareerInterestSelected, "c3", careerInterest: other)));
+        }
+
+        [Test]
+        public void QUEST_ID_008_DefinitionsWithoutIdOnlyMatchThemselves()
+        {
+            var resource = ScriptableObject.CreateInstance<ResourceNodeDefinition>();
+            var lookAlike = ScriptableObject.CreateInstance<ResourceNodeDefinition>();
+            var objective = ScriptableObject.CreateInstance<GatherQuestObjective>();
+            SetField(objective, "_targetResource", resource);
+
+            Assert.IsTrue(objective.Matches(new QuestEvent(QuestEventKind.Gather, "n1", resource: resource)));
+            Assert.IsFalse(objective.Matches(new QuestEvent(QuestEventKind.Gather, "n2", resource: lookAlike)));
+        }
+
+        [Test]
         public void QUEST_008_DefeatObjective_MatchesTargetReference()
         {
             var target = ScriptableObject.CreateInstance<ScriptableObject>();
@@ -107,9 +211,27 @@ namespace Rootborn.Tests.EditMode.Quests
 
         private static void SetField(object target, string fieldName, object value)
         {
-            var field = target.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
-            Assert.IsNotNull(field, fieldName);
-            field.SetValue(target, value);
+            for (var type = target.GetType(); type != null; type = type.BaseType)
+            {
+                var field = type.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+                if (field == null) continue;
+                field.SetValue(target, value);
+                return;
+            }
+
+            Assert.Fail(fieldName);
+        }
+
+        // Two copies of one definition (scene copy and Addressables bundle copy) plus a different definition.
+        private static (T sceneCopy, T bundleCopy, T other) Copies<T>(string idField, string id, string otherId) where T : ScriptableObject
+        {
+            var sceneCopy = ScriptableObject.CreateInstance<T>();
+            var bundleCopy = ScriptableObject.CreateInstance<T>();
+            var other = ScriptableObject.CreateInstance<T>();
+            SetField(sceneCopy, idField, id);
+            SetField(bundleCopy, idField, id);
+            SetField(other, idField, otherId);
+            return (sceneCopy, bundleCopy, other);
         }
     }
 }

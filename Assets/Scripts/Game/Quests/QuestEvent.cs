@@ -1,4 +1,7 @@
+using Rootborn.Core.Quests;
 using Rootborn.Game.Common;
+using Rootborn.Game.Dialogue;
+using Rootborn.Game.Tiles;
 using Rootborn.Game.Resources;
 using Rootborn.Game.Tools;
 using Rootborn.Game.StudentLife;
@@ -65,6 +68,60 @@ namespace Rootborn.Game.Quests
             DailyPlanRoute = dailyPlanRoute;
             CareerInterest = careerInterest;
             IsReplay = isReplay;
+        }
+
+        /// <summary>The definition this event happened to, by kind.</summary>
+        public Object Subject
+        {
+            get
+            {
+                switch (Kind)
+                {
+                    case QuestEventKind.Gather: return Resource;
+                    case QuestEventKind.Collect: return Item;
+                    case QuestEventKind.Talk: return Npc;
+                    case QuestEventKind.Defeat: return DefeatTarget;
+                    case QuestEventKind.TilePlaced: return Tile;
+                    case QuestEventKind.LocationActivity: return Activity;
+                    case QuestEventKind.LocationVisit: return Location;
+                    case QuestEventKind.PartTimeWork: return Work;
+                    case QuestEventKind.FurniturePlaced: return Furniture;
+                    case QuestEventKind.DailyPlanSelected: return DailyPlanRoute;
+                    case QuestEventKind.CareerInterestSelected: return CareerInterest;
+                    default: return null;
+                }
+            }
+        }
+
+        /// <summary>The event reduced to ids for Rootborn.Core's objective rules.</summary>
+        public QuestEventFacts ToFacts() => new QuestEventFacts((int)Kind, QuestSubjectIds.Of(Subject), Count, SurfaceId);
+    }
+
+    /// <summary>
+    /// Stable ids for quest subjects. Copies of one definition (scene copy, Addressables bundle copy) share the id;
+    /// a definition without an id falls back to its own instance, so it only matches itself.
+    /// </summary>
+    public static class QuestSubjectIds
+    {
+        public static string Of(Object subject)
+        {
+            if (subject == null) return null;
+            string id = null;
+            if (subject is StudentLifeDefinitionBase studentLife) id = studentLife.Id;
+            else if (subject is ResourceNodeDefinition resource) id = resource.Id;
+            else if (subject is ItemDefinition item) id = item.Id;
+            else if (subject is NpcDefinition npc) id = npc.Id;
+            else if (subject is FurnitureDefinition furniture) id = furniture.StableId;
+            else if (subject is PlaceableTileDefinition tile) id = tile.Id;
+            return string.IsNullOrEmpty(id) ? "#instance:" + subject.GetInstanceID() : id;
+        }
+
+        public static string[] Of<T>(System.Collections.Generic.IReadOnlyList<T> subjects) where T : Object
+        {
+            if (subjects == null) return System.Array.Empty<string>();
+            var ids = new string[subjects.Count];
+            for (int i = 0; i < ids.Length; i++) ids[i] = subjects[i] != null ? Of(subjects[i]) : null;
+            return ids;
         }
     }
 }

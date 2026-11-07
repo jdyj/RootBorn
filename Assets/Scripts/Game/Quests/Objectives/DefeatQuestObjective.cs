@@ -1,3 +1,4 @@
+using Rootborn.Core.Quests;
 using UnityEngine;
 
 namespace Rootborn.Game.Quests.Objectives
@@ -9,11 +10,6 @@ namespace Rootborn.Game.Quests.Objectives
 
         public ScriptableObject Target => _target;
 
-        public override bool Matches(in QuestEvent questEvent)
-        {
-            return questEvent.Kind == QuestEventKind.Defeat
-                && _target != null
-                && questEvent.DefeatTarget == _target;
-        }
+        protected override QuestObjectiveSpec BuildSpec() => QuestObjectiveSpec.Listed((int)QuestEventKind.Defeat, _target != null ? QuestSubjectIds.Of(_target) : null);
     }
 }

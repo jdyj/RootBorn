@@ -1,3 +1,4 @@
+using Rootborn.Core.Quests;
 using Rootborn.Game.Tiles;
 using UnityEngine;
 
@@ -16,14 +17,9 @@ namespace Rootborn.Game.Quests.Objectives
             _targetTile = targetTile;
         }
 
-        public override bool Matches(in QuestEvent questEvent)
-        {
-            if (questEvent.Kind != QuestEventKind.TilePlaced)
-            {
-                return false;
-            }
-
-            return _targetTile == null || questEvent.Tile == _targetTile;
-        }
+        // No target accepts any placed tile.
+        protected override QuestObjectiveSpec BuildSpec() => _targetTile == null
+            ? QuestObjectiveSpec.AnyEvent((int)QuestEventKind.TilePlaced)
+            : QuestObjectiveSpec.Listed((int)QuestEventKind.TilePlaced, QuestSubjectIds.Of(_targetTile));
     }
 }

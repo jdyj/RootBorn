@@ -1,3 +1,4 @@
+using Rootborn.Core.Quests;
 using UnityEngine;
 
 namespace Rootborn.Game.Quests
@@ -10,23 +11,29 @@ namespace Rootborn.Game.Quests
         public string DisplayKey => _displayKey;
         public int RequiredCount => Mathf.Max(1, _requiredCount);
 
+        [System.NonSerialized] private QuestObjectiveSpec _spec;
+
         public void ConfigureForRuntime(string displayKey, int requiredCount)
         {
             _displayKey = displayKey;
             _requiredCount = Mathf.Max(1, requiredCount);
+            InvalidateSpec();
         }
 
-        public abstract bool Matches(in QuestEvent questEvent);
+        /// <summary>What this objective accepts, by id. Matching itself lives in Rootborn.Core (QuestObjectiveMatcher).</summary>
+        protected virtual QuestObjectiveSpec BuildSpec() => null;
 
-        /// <summary>
-        /// True when two definitions are the same entry: the same object, or copies with the same non-empty id.
-        /// Built Addressables load quest targets from bundles while scene objects keep their own copies.
-        /// </summary>
-        protected static bool SameEntry(Object eventValue, Object target, string eventId, string targetId)
+        protected void InvalidateSpec() => _spec = null;
+
+        public virtual bool Matches(in QuestEvent questEvent)
         {
-            if (eventValue == null || target == null) return false;
-            return eventValue == target || (!string.IsNullOrEmpty(targetId) && string.Equals(eventId, targetId, System.StringComparison.Ordinal));
+            if (_spec == null) _spec = BuildSpec();
+            return QuestObjectiveMatcher.Matches(_spec, questEvent.ToFacts());
         }
+
+#if UNITY_EDITOR
+        protected virtual void OnValidate() => InvalidateSpec();
+#endif
 
         public virtual int GetDelta(in QuestEvent questEvent)
         {

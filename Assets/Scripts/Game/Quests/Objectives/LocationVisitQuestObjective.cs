@@ -1,3 +1,4 @@
+using Rootborn.Core.Quests;
 using Rootborn.Game.StudentLife;
 using UnityEngine;
 
@@ -8,7 +9,6 @@ namespace Rootborn.Game.Quests.Objectives
     {
         [SerializeField] private LocationDefinition _targetLocation;
         public LocationDefinition TargetLocation => _targetLocation;
-        public override bool Matches(in QuestEvent questEvent) => questEvent.Kind == QuestEventKind.LocationVisit
-            && _targetLocation != null && questEvent.Location == _targetLocation;
+        protected override QuestObjectiveSpec BuildSpec() => QuestObjectiveSpec.Listed((int)QuestEventKind.LocationVisit, _targetLocation != null ? QuestSubjectIds.Of(_targetLocation) : null);
     }
 }

@@ -1,3 +1,4 @@
+using Rootborn.Core.Quests;
 using System;
 using Rootborn.Game.StudentLife;
 using UnityEngine;
@@ -10,13 +11,8 @@ namespace Rootborn.Game.Quests.Objectives
         [Tooltip("Empty accepts any dream, so the player's choice is never limited by this objective.")]
         [SerializeField] private CareerInterestDefinition[] _acceptedInterests = Array.Empty<CareerInterestDefinition>();
 
-        public override bool Matches(in QuestEvent questEvent)
-        {
-            if (questEvent.Kind != QuestEventKind.CareerInterestSelected) return false;
-            if (_acceptedInterests == null || _acceptedInterests.Length == 0) return questEvent.CareerInterest != null;
-            for (int i = 0; i < _acceptedInterests.Length; i++)
-                if (_acceptedInterests[i] != null && _acceptedInterests[i] == questEvent.CareerInterest) return true;
-            return false;
-        }
+        protected override QuestObjectiveSpec BuildSpec() => _acceptedInterests == null || _acceptedInterests.Length == 0
+            ? QuestObjectiveSpec.AnySubject((int)QuestEventKind.CareerInterestSelected)
+            : QuestObjectiveSpec.Listed((int)QuestEventKind.CareerInterestSelected, QuestSubjectIds.Of(_acceptedInterests));
     }
 }

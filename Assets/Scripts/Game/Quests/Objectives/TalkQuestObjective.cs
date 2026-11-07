@@ -1,3 +1,4 @@
+using Rootborn.Core.Quests;
 using UnityEngine;
 
 namespace Rootborn.Game.Quests.Objectives
@@ -9,11 +10,6 @@ namespace Rootborn.Game.Quests.Objectives
 
         public ScriptableObject TargetNpc => _targetNpc;
 
-        public override bool Matches(in QuestEvent questEvent)
-        {
-            return questEvent.Kind == QuestEventKind.Talk
-                && _targetNpc != null
-                && questEvent.Npc == _targetNpc;
-        }
+        protected override QuestObjectiveSpec BuildSpec() => QuestObjectiveSpec.Listed((int)QuestEventKind.Talk, _targetNpc != null ? QuestSubjectIds.Of(_targetNpc) : null);
     }
 }

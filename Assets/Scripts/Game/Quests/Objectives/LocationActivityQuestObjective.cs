@@ -1,3 +1,4 @@
+using Rootborn.Core.Quests;
 using Rootborn.Game.StudentLife;
 using UnityEngine;
 
@@ -16,10 +17,9 @@ namespace Rootborn.Game.Quests.Objectives
             _targetActivity = targetActivity;
         }
 
-        public override bool Matches(in QuestEvent questEvent)
-        {
-            return questEvent.Kind == QuestEventKind.LocationActivity
-                && (_targetActivity == null || questEvent.Activity == _targetActivity);
-        }
+        // No target accepts any location activity.
+        protected override QuestObjectiveSpec BuildSpec() => _targetActivity == null
+            ? QuestObjectiveSpec.AnyEvent((int)QuestEventKind.LocationActivity)
+            : QuestObjectiveSpec.Listed((int)QuestEventKind.LocationActivity, QuestSubjectIds.Of(_targetActivity));
     }
 }
