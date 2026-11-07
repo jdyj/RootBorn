@@ -1,5 +1,6 @@
 using System.Reflection;
 using NUnit.Framework;
+using Rootborn.Core.Quests;
 using Rootborn.Game.Quests;
 using UnityEngine;
 
@@ -43,6 +44,29 @@ namespace Rootborn.Tests.EditMode.Quests
             log.RecordEvent(new QuestEvent(QuestEventKind.Gather, "event-1"));
 
             Assert.AreEqual(QuestState.Completed, log.GetState(quest));
+        }
+
+        [Test]
+        public void QUEST_STATE_001_QuestStateMatchesCoreQuestStageNamesAndOrder()
+        {
+            // QuestProgress casts between the game enum and Rootborn.Core's enum, and saves store both number and name.
+            var states = (QuestState[])System.Enum.GetValues(typeof(QuestState));
+            var stages = (QuestStage[])System.Enum.GetValues(typeof(QuestStage));
+            Assert.AreEqual(stages.Length, states.Length);
+            for (int i = 0; i < states.Length; i++)
+            {
+                Assert.AreEqual((int)stages[i], (int)states[i]);
+                Assert.AreEqual(stages[i].ToString(), states[i].ToString());
+            }
+        }
+
+        [Test]
+        public void QUEST_SAVE_STATE_001_UndefinedSavedStateNameFallsBackToSavedNumber()
+        {
+            var progress = new QuestProgress(objectiveCount: 1);
+            progress.LoadFromSaveData(new QuestProgressSaveData { State = QuestState.Active, StateName = "7", ObjectiveCounts = new[] { 0 } });
+
+            Assert.AreEqual(QuestState.Active, progress.State);
         }
 
         private sealed class AlwaysMatchObjective : QuestObjectiveBase

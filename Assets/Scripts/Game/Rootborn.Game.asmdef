@@ -5,7 +5,8 @@
         "Unity.InputSystem",
         "Unity.Addressables",
         "Unity.ResourceManager",
-        "Unity.RenderPipelines.Universal.2D.Runtime"
+        "Unity.RenderPipelines.Universal.2D.Runtime",
+        "Rootborn.Core"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Core.Inventory;
 using Rootborn.Game.Careers;
 using Rootborn.Game.Characters;
 using Rootborn.Game.Crafting;
@@ -77,67 +78,25 @@ namespace Rootborn.Game.Common
             finally { _exchangeInProgress = false; }
         }
 
+        // The exchange rule lives in Rootborn.Core (InventoryPlanner, tested with dotnet test).
         private bool TryBuildExchange(IReadOnlyList<InventoryGrant> costs, IReadOnlyList<InventoryGrant> rewards, out List<Slot> next)
         {
-            next = new List<Slot>(_slots.Count);
-            for (int i = 0; i < _slots.Count; i++) next.Add(new Slot { Item = _slots[i].Item, Count = _slots[i].Count });
-            var totals = new Dictionary<ItemDefinition, long>();
-            if (costs != null)
-            {
-                for (int i = 0; i < costs.Count; i++)
-                {
-                    var cost = costs[i];
-                    if (cost.Item == null || cost.Count <= 0) return false;
-                    totals.TryGetValue(cost.Item, out long count);
-                    totals[cost.Item] = count + cost.Count;
-                }
-            }
-            foreach (var pair in totals)
-            {
-                long available = 0;
-                for (int i = 0; i < next.Count; i++) if (next[i].Item == pair.Key) available += Math.Max(0, next[i].Count);
-                if (available < pair.Value) return false;
-                long remaining = pair.Value;
-                for (int i = next.Count - 1; i >= 0 && remaining > 0; i--)
-                {
-                    var slot = next[i];
-                    if (slot.Item != pair.Key || slot.Count <= 0) continue;
-                    int take = (int)Math.Min(remaining, slot.Count);
-                    slot.Count -= take;
-                    remaining -= take;
-                    if (slot.Count == 0) slot.Item = null;
-                }
-            }
-            if (rewards != null)
-            {
-                for (int i = 0; i < rewards.Count; i++)
-                {
-                    var reward = rewards[i];
-                    if (reward.Item == null || reward.Count <= 0) return false;
-                    int remaining = reward.Count;
-                    for (int j = 0; j < next.Count && remaining > 0; j++)
-                    {
-                        var slot = next[j];
-                        if (slot.Item != reward.Item || slot.Count <= 0) continue;
-                        int put = Math.Min(Math.Max(0, reward.Item.MaxStack - slot.Count), remaining);
-                        slot.Count += put; remaining -= put;
-                    }
-                    for (int j = 0; j < next.Count && remaining > 0; j++)
-                    {
-                        var slot = next[j];
-                        if (slot.Item != null && slot.Count > 0) continue;
-                        int put = Math.Min(reward.Item.MaxStack, remaining);
-                        slot.Item = reward.Item; slot.Count = put; remaining -= put;
-                    }
-                    while (remaining > 0 && next.Count < MaxSlots)
-                    {
-                        int put = Math.Min(reward.Item.MaxStack, remaining);
-                        next.Add(new Slot { Item = reward.Item, Count = put }); remaining -= put;
-                    }
-                    if (remaining > 0) return false;
-                }
-            }
+            var stacks = new List<ItemStack<ItemDefinition>>(_slots.Count);
+            for (int i = 0; i < _slots.Count; i++) stacks.Add(new ItemStack<ItemDefinition>(_slots[i].Item, _slots[i].Count));
+            next = null;
+            if (!InventoryPlanner.TryPlanExchange(stacks, MaxSlots, ToAmounts(costs), ToAmounts(rewards), item => item.MaxStack, out var planned))
+                return false;
+            next = new List<Slot>(planned.Count);
+            for (int i = 0; i < planned.Count; i++) next.Add(new Slot { Item = planned[i].Item, Count = planned[i].Count });
             return true;
+        }
+
+        private static List<ItemAmount<ItemDefinition>> ToAmounts(IReadOnlyList<InventoryGrant> grants)
+        {
+            if (grants == null) return null;
+            var amounts = new List<ItemAmount<ItemDefinition>>(grants.Count);
+            for (int i = 0; i < grants.Count; i++) amounts.Add(new ItemAmount<ItemDefinition>(grants[i].Item, grants[i].Count));
+            return amounts;
         }
 
         public void Add(ItemDefinition item, int count = 1)
