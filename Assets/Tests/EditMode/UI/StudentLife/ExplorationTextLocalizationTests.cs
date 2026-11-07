@@ -96,7 +96,9 @@ namespace Rootborn.Tests.EditMode.UI.StudentLife
         public void EveryTextKeyInAuthoredData_ResolvesInBothLanguages()
         {
             var keyShape = new System.Text.RegularExpressions.Regex(@"^[a-z][a-z0-9_-]*(\.[a-z0-9_-]+)+$");
-            var field = new System.Text.RegularExpressions.Regex(@"(?m)^\s*(?:- )?_\w*(?:Key|Text|Hint|Motivation|Description|Name|Title|Summary|Prompt|Label)\w*: *(.+?)\s*$");
+            // _required* fields (e.g. CareerResultLogHintSource._requiredText) hold an ID matched against
+            // result logs, not text shown to the player, so they are not localization keys.
+            var field = new System.Text.RegularExpressions.Regex(@"(?m)^\s*(?:- )?_(?!required)\w*(?:Key|Text|Hint|Motivation|Description|Name|Title|Summary|Prompt|Label)\w*: *(.+?)\s*$");
             var developerOnly = new System.Text.RegularExpressions.Regex(@"^(questchain\.test|step\.questchain\.test|choice\.test|objective\.questchain|objective\.daily\.questchain)");
             var missing = new System.Collections.Generic.SortedSet<string>();
             foreach (string path in System.IO.Directory.GetFiles("Assets/Data", "*.asset", System.IO.SearchOption.AllDirectories))

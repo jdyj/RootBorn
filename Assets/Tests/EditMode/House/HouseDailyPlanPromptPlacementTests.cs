@@ -53,8 +53,12 @@ namespace Rootborn.Tests.EditMode.House
                 string body = Block(File.ReadAllText(House), 109339619);
                 Assert.That(Vector(body, Field), Is.EqualTo(new Vector3(0f, 1.7f, 0f)));
                 Assert.That(Vector(Block(File.ReadAllText("Assets/Scenes/School.unity"), 224293929), Field), Is.EqualTo(new Vector3(0f, 1.6f, 0f)), "School owns its separately reviewed prompt override.");
+                // A scene re-save (e.g. the painted-collision bake) may write the default value out;
+                // Town keeps the shared offset as long as every saved value equals the code default.
+                Vector3 sharedDefault = property.vector3Value;
                 foreach (string path in new[] { "Assets/Scenes/Town.unity" })
-                    Assert.That(Regex.IsMatch(File.ReadAllText(path), @"(?m)^  " + Field + @":"), Is.False, "Town must retain the shared unconfigured prompt offset: " + path);
+                    foreach (Match saved in Regex.Matches(File.ReadAllText(path), @"(?m)^  " + Field + @": \{x: ([^,]+), y: ([^,]+), z: ([^}]+)\}"))
+                        Assert.That(new Vector3(Parse(saved.Groups[1].Value), Parse(saved.Groups[2].Value), Parse(saved.Groups[3].Value)), Is.EqualTo(sharedDefault), "Town must retain the shared unconfigured prompt offset: " + path);
                 ApplyAuthoredOffsetIfPresent(board, body);
                 Assert.That(board.InteractionPromptOffset, Is.EqualTo(new Vector3(0f, 1.7f, 0f)), "The public interaction contract must use the serialized instance value.");
             }

@@ -216,9 +216,10 @@ namespace Rootborn.Tests.EditMode.Player
             string house = File.ReadAllText("Assets/Scenes/House.unity"); Assert.That(house, Does.Contain("_interactionPromptOffset: {x: 0, y: 1.7, z: 0}"));
             foreach (string path in new[] { "Assets/Scenes/House.unity", "Assets/Scenes/Town.unity" })
             {
+                // A scene re-save may write the default (override off) values out; what must hold is
+                // that House and Town never turn the color override on.
                 string source = File.ReadAllText(path);
-                Assert.That(Regex.IsMatch(source, @"(?m)^  " + EnabledField + ":"), Is.False, path);
-                Assert.That(Regex.IsMatch(source, @"(?m)^  " + ColorField + ":"), Is.False, path);
+                Assert.That(Regex.IsMatch(source, @"(?m)^  " + EnabledField + @": [^0\s]"), Is.False, path + " must not override the prompt color.");
             }
         }
 
