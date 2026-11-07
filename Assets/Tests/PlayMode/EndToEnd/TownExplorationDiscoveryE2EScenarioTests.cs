@@ -82,11 +82,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return Support.PlayerFlowE2EDriver.DismissDailyEvent();
             yield return Support.PlayerFlowE2EDriver.WalkThroughDoor(keyboard, sceneName, "TOWN-POINT-002 failed:");
             yield return Support.PlayerFlowE2EDriver.DismissDailyEvent();
-            // Left out: the three invisible InteriorInteractor_Computer_* triggers saved in House.unity by the old generated-house
-            // spawner (two have no definition, one sits inside a wall and prompts an unlocalized "[E] Use Computer").
-            // House.unity is fixed evidence, so removing them waits for the user's decision.
-            var points = PlacedPoints(sceneName, behaviour => behaviour.GetComponent<Rootborn.Game.World.WorldPortal>() == null
-                && !(behaviour is Rootborn.Game.Interiors.InteriorObjectInteractor));
+            var points = PlacedPoints(sceneName, behaviour => behaviour.GetComponent<Rootborn.Game.World.WorldPortal>() == null);
             Assert.IsNotEmpty(points, "TOWN-POINT-002 failed: " + sceneName + " has no placed points.");
             var problems = new List<string>();
             yield return CheckPlacedPoints(keyboard, sceneName, points, problems);

@@ -2383,7 +2383,6 @@ GameObject:
   m_Component:
   - component: {fileID: 245044843}
   - component: {fileID: 245044845}
-  - component: {fileID: 245044844}
   m_Layer: 0
   m_Name: InteriorInteractor_Computer_12_12
   m_TagString: Untagged
@@ -2406,21 +2405,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1367485164}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &245044844
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 245044842}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a286c7becb7ca1a418ff5bfa0184bbc1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Interiors.InteriorObjectInteractor
-  _definition: {fileID: 0}
-  _objectKind: 0
-  _cell: {x: 0, y: 0}
 --- !u!61 &245044845
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -4031,7 +4015,6 @@ GameObject:
   m_Component:
   - component: {fileID: 350222468}
   - component: {fileID: 350222470}
-  - component: {fileID: 350222469}
   m_Layer: 0
   m_Name: InteriorInteractor_Computer_21_16
   m_TagString: Untagged
@@ -4054,21 +4037,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1367485164}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &350222469
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 350222467}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a286c7becb7ca1a418ff5bfa0184bbc1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Interiors.InteriorObjectInteractor
-  _definition: {fileID: 0}
-  _objectKind: 0
-  _cell: {x: 0, y: 0}
 --- !u!61 &350222470
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -6883,7 +6851,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1422542212}
   - component: {fileID: 1422542214}
-  - component: {fileID: 1422542213}
   m_Layer: 0
   m_Name: InteriorInteractor_Computer_18_13
   m_TagString: Untagged
@@ -6906,21 +6873,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1367485164}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1422542213
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1422542211}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a286c7becb7ca1a418ff5bfa0184bbc1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.Interiors.InteriorObjectInteractor
-  _definition: {fileID: 11400000, guid: 85b16bb7c24de4849a98f212bc4f72fd, type: 2}
-  _objectKind: 3
-  _cell: {x: 18, y: 13}
 --- !u!61 &1422542214
 BoxCollider2D:
   m_ObjectHideFlags: 0

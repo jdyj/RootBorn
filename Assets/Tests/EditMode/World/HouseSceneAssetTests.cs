@@ -47,7 +47,9 @@ namespace Rootborn.Tests.EditMode.World
                 foreach(var cell in map.cellBounds.allPositionsWithin) if(map.HasTile(cell)) count++;
                 Assert.That(count,Is.EqualTo(pair.Item2),pair.Item1);
             }
-            Assert.That(All<InteriorObjectInteractor>().Length,Is.EqualTo(3));
+            // The three computer interactors left by the old generated house were removed with the owner's approval on 2026-11-07:
+            // two had no definition and one sat inside a wall with an unlocalized prompt. Their empty objects stay for the geometry hash.
+            Assert.That(All<InteriorObjectInteractor>().Length,Is.EqualTo(0));
             Assert.That(All<InteriorTilemapApplier>().Length,Is.EqualTo(1));
         }
     }
