@@ -52,6 +52,82 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return null;
         }
 
+        // Every placed point of one kind in the authored Town: the player walks there with WASD, and E at that spot
+        // must reach that very point (not a neighbour that wins the priority) with a prompt that shows player text,
+        // not a raw localization key. Problems are collected so one run reports every bad point.
+        [UnityTest]
+        [Timeout(900000)]
+        public IEnumerator TOWN_POINT_001_AuthoredTown_EveryPlacedPointIsReachableAndPromptsItself([Values(
+            "LocationVisitInteractor", "PartTimeWorkInteractor", "LocationActivityInteractor", "NpcInteractor", "CareerFacilityInteractor",
+            "TownHelpActionInteractor", "OutsideSchoolActivityInteractor", "ExplorationInteractionPointInteractor",
+            "DailyPlanBoardInteractor", "DiscoveryPointInteractor")] string typeName)
+        {
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+            yield return Support.PlayerFlowE2EDriver.EnterWorldFromSaveSlot(TestSlotId, "NewGameButton", "Town", "TOWN-POINT-001 failed: New Game did not enter Town.");
+            yield return Support.PlayerFlowE2EDriver.DismissDailyEvent();
+            var player = GameObject.Find("Player");
+            var router = player.GetComponent<PlayerInteractionRouter>();
+            var rawKey = new System.Text.RegularExpressions.Regex(@"\b[a-z][a-z0-9_-]*(\.[a-z0-9_-]+){1,}\b");
+
+            var points = new List<MonoBehaviour>();
+            foreach (var behaviour in Object.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.InstanceID))
+                if (behaviour.isActiveAndEnabled && behaviour.GetType().Name == typeName && behaviour is IPlayerInteractable
+                    && behaviour.gameObject.scene.name == "Town") points.Add(behaviour);
+            Assert.IsNotEmpty(points, "TOWN-POINT-001 failed: authored Town has no active " + typeName + ".");
+
+            var problems = new List<string>();
+            foreach (var point in points)
+            {
+                var interactable = (IPlayerInteractable)point;
+                string label = point.name;
+                if (Rootborn.Game.Common.UiGameplayInputLock.IsBlocked)
+                {
+                    problems.Add(label + ": input was still locked before walking there (" + Support.PlayerFlowE2EDriver.InputLockOwners() + ")");
+                    break;
+                }
+
+                var walkProblems = new List<string>();
+                yield return Guarded(Support.PlayerFlowE2EDriver.WalkPlayerWithKeyboardTo(player, keyboard, interactable.InteractionTransform.position, 0.9f, 900, label), walkProblems);
+                if (walkProblems.Count > 0) { problems.Add(label + ": unreachable — " + walkProblems[0]); continue; }
+                if (SceneManager.GetActiveScene().name != "Town") { problems.Add(label + ": walking there left Town"); break; }
+
+                router.RefreshPromptNow();
+                var winner = router.CurrentInteractable as Component;
+                // A companion on the same object may win by priority (a location visit shares its spot with the
+                // location's activity, facility or door, which record the visit themselves). E landing on another
+                // object is the failure.
+                if (winner == null || winner.gameObject != point.gameObject)
+                {
+                    problems.Add(label + ": E here reaches " + (winner != null ? winner.name + " (" + winner.GetType().Name + ")" : "nothing") + " instead");
+                    continue;
+                }
+                string prompt = router.PromptText;
+                if (string.IsNullOrWhiteSpace(prompt) || rawKey.IsMatch(prompt)) problems.Add(label + ": prompt shows \"" + prompt + "\"");
+            }
+
+            Assert.IsEmpty(problems, "TOWN-POINT-001 failed for " + typeName + " (" + points.Count + " points):\n" + string.Join("\n", problems));
+        }
+
+        // Runs a walk and turns its assertion into a collected problem, so the loop can go on to the next point.
+        private static IEnumerator Guarded(IEnumerator inner, List<string> problems)
+        {
+            while (true)
+            {
+                object current;
+                try
+                {
+                    if (!inner.MoveNext()) yield break;
+                    current = inner.Current;
+                }
+                catch (AssertionException error)
+                {
+                    problems.Add(error.Message);
+                    yield break;
+                }
+                yield return current;
+            }
+        }
+
         [Ignore(LegacyPremise.AuthoredTown + "Readiness requires StudentDayEndBoard in Town")]
         [UnityTest]
         public IEnumerator EXPLORE_E2E_001_006_PlayDiscoveryResultReloadAndDedupe()
