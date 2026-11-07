@@ -14,5 +14,6 @@ GOT=$(git -C "$D" rev-parse HEAD)
 case "$GOT" in "$H"*) ;; *) echo "hash mismatch: $GOT vs $H"; exit 1;; esac
 # Seed Library from the newest earlier checkout to save the first import (Library is only a cache).
 PREV=$(ls -1dt "$RB_HOME"/*/Library 2>/dev/null | grep -v "^$D/" | head -1 || true)
-if [ -n "$PREV" ]; then cp -a --reflink=auto "$PREV" "$D/Library"; echo "seeded Library from $PREV"; fi
+if [ -n "$PREV" ] && rb_project_busy "${PREV%/Library}"; then echo "skip Library seed: Unity is using ${PREV%/Library}"
+elif [ -n "$PREV" ]; then cp -a --reflink=auto "$PREV" "$D/Library"; echo "seeded Library from $PREV"; fi
 echo "checked out $GOT at $D"
