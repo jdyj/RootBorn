@@ -14,7 +14,6 @@ namespace Rootborn.UI.StudentLife
     {
         private const string TownSceneName = "Town";
         private const string RunnerName = "[DailyPlanRuntimeInstaller]";
-        private const string BoardName = "DailyPlanBoard";
         private const string PanelName = "DailyPlanPanel";
         private const string CanvasName = "DailyPlanCanvas";
 
@@ -139,35 +138,10 @@ namespace Rootborn.UI.StudentLife
             return panel;
         }
 
+        // Boards are authored into the scene; the installer only binds an existing one and never creates a prototype.
         private static DailyPlanBoardInteractor EnsureBoard(Scene scene)
         {
-            var existing = FindComponentInScene<DailyPlanBoardInteractor>(scene);
-            if (existing != null) return existing;
-            if (AuthoredWorldScene.Find(scene) != null) return null;
-
-            var go = new GameObject(BoardName);
-            SceneManager.MoveGameObjectToScene(go, scene);
-            go.transform.position = new Vector3(-1.5f, -2.75f, 0f);
-            var renderer = go.AddComponent<SpriteRenderer>();
-            renderer.sprite = CreateMarkerSprite(new Color(0.36f, 0.63f, 0.92f, 1f));
-            renderer.sortingOrder = 48;
-            var collider = go.AddComponent<BoxCollider2D>();
-            collider.isTrigger = true;
-            collider.size = new Vector2(0.85f, 0.85f);
-            return go.AddComponent<DailyPlanBoardInteractor>();
-        }
-
-        private static Sprite CreateMarkerSprite(Color color)
-        {
-            var texture = new Texture2D(8, 8, TextureFormat.RGBA32, false);
-            texture.name = "DailyPlanBoardMarker";
-            var pixels = new Color[64];
-            for (int i = 0; i < pixels.Length; i++) pixels[i] = color;
-            texture.SetPixels(pixels);
-            texture.Apply();
-            var sprite = Sprite.Create(texture, new Rect(0f, 0f, 8f, 8f), new Vector2(0.5f, 0.5f), 16f);
-            sprite.name = texture.name;
-            return sprite;
+            return FindComponentInScene<DailyPlanBoardInteractor>(scene);
         }
 
         private static T FindComponentInScene<T>(Scene scene) where T : Component

@@ -1,5 +1,4 @@
 using System.Collections;
-using Rootborn.Game.World;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
@@ -62,8 +61,7 @@ namespace Rootborn.UI.Interiors
         {
             if (!scene.IsValid() || !scene.isLoaded || scene.name != "House") return;
             var panel = FindInScene<InteriorFurniturePlacementPanel>(scene);
-            bool active = AuthoredWorldScene.Find(scene) == null ||
-                (panel != null && panel.gameObject.activeInHierarchy);
+            bool active = panel != null && panel.gameObject.activeInHierarchy;
             SetPlacementMode(scene, active);
         }
 

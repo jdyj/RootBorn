@@ -15,7 +15,6 @@ namespace Rootborn.UI.StudentLife
     {
         private const string TownSceneName = "Town";
         private const string RunnerName = "[StudentDayRuntimeInstaller]";
-        private const string DayEndBoardName = "StudentDayEndBoard";
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Register()
@@ -70,48 +69,13 @@ namespace Rootborn.UI.StudentLife
             }
         }
 
+        // Only authored scenes reach this point (Town is authored); their saved day-end interactors are bound, never generated.
         private static void EnsureDayEndBoard(Scene scene, StudentDayResultPanel panel)
         {
-            if (AuthoredWorldScene.Find(scene) != null)
-            {
-                foreach (var root in scene.GetRootGameObjects())
-                    foreach (var authored in root.GetComponentsInChildren<StudentDayEndInteractor>(true))
-                        authored.Bind(ResolveDefaultDayEndRules(), panel);
-                return;
-            }
-            var go = FindByName(scene, DayEndBoardName);
-            if (go == null)
-            {
-                go = new GameObject(DayEndBoardName);
-                SceneManager.MoveGameObjectToScene(go, scene);
-            }
-
-            go.transform.position = new Vector3(-0.5f, -3.0f, 0f);
-            var renderer = go.GetComponent<SpriteRenderer>();
-            if (renderer == null)
-            {
-                renderer = go.AddComponent<SpriteRenderer>();
-            }
-            if (renderer.sprite == null)
-            {
-                renderer.sprite = CreateMarkerSprite(new Color(0.88f, 0.42f, 0.26f, 1f));
-            }
-            renderer.sortingOrder = 48;
-
-            var collider = go.GetComponent<BoxCollider2D>();
-            if (collider == null)
-            {
-                collider = go.AddComponent<BoxCollider2D>();
-            }
-            collider.isTrigger = true;
-            collider.size = new Vector2(0.85f, 0.85f);
-
-            var interactor = go.GetComponent<StudentDayEndInteractor>();
-            if (interactor == null)
-            {
-                interactor = go.AddComponent<StudentDayEndInteractor>();
-            }
-            interactor.Bind(ResolveDefaultDayEndRules(), panel);
+            if (AuthoredWorldScene.Find(scene) == null) return;
+            foreach (var root in scene.GetRootGameObjects())
+                foreach (var authored in root.GetComponentsInChildren<StudentDayEndInteractor>(true))
+                    authored.Bind(ResolveDefaultDayEndRules(), panel);
         }
 
         public static DayEndRuleDefinition ResolveDefaultDayEndRulesForTests(GameDataRegistry registry)
@@ -174,27 +138,12 @@ namespace Rootborn.UI.StudentLife
             }
         }
 
-        private static Sprite CreateMarkerSprite(Color color)
-        {
-            var texture = new Texture2D(8, 8, TextureFormat.RGBA32, false);
-            texture.name = "StudentDayEndMarker";
-            var pixels = new Color[64];
-            for (int i = 0; i < pixels.Length; i++)
-            {
-                pixels[i] = color;
-            }
-            texture.SetPixels(pixels);
-            texture.Apply();
-            var sprite = Sprite.Create(texture, new Rect(0f, 0f, 8f, 8f), new Vector2(0.5f, 0.5f), 16f);
-            sprite.name = texture.name;
-            return sprite;
-        }
-
-
         private static void AddUiInputModule(GameObject go)
         {
             UiInputModuleInstaller.AddPreferredInputModule(go);
-        }        private static GameObject FindRoot(Scene scene, string rootName)
+        }
+
+        private static GameObject FindRoot(Scene scene, string rootName)
         {
             var roots = scene.GetRootGameObjects();
             for (int i = 0; i < roots.Length; i++)
@@ -202,40 +151,6 @@ namespace Rootborn.UI.StudentLife
                 if (roots[i].name == rootName)
                 {
                     return roots[i];
-                }
-            }
-
-            return null;
-        }
-
-        private static GameObject FindByName(Scene scene, string objectName)
-        {
-            var roots = scene.GetRootGameObjects();
-            for (int i = 0; i < roots.Length; i++)
-            {
-                var match = FindByName(roots[i].transform, objectName);
-                if (match != null)
-                {
-                    return match;
-                }
-            }
-
-            return null;
-        }
-
-        private static GameObject FindByName(Transform root, string objectName)
-        {
-            if (root.name == objectName)
-            {
-                return root.gameObject;
-            }
-
-            for (int i = 0; i < root.childCount; i++)
-            {
-                var match = FindByName(root.GetChild(i), objectName);
-                if (match != null)
-                {
-                    return match;
                 }
             }
 

@@ -1,7 +1,6 @@
 ﻿Assets/Scripts/Game/Bootstrap/SceneDiagnostics.cs :: int cameraCount = Object.FindObjectsByType<Camera>(FindObjectsSortMode.None).Length;
 Assets/Scripts/Game/Bootstrap/SceneDiagnostics.cs :: int rendererCount = Object.FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None).Length;
 Assets/Scripts/Game/Bootstrap/SceneDiagnostics.cs :: int tilemapCount = Object.FindObjectsByType<UnityEngine.Tilemaps.Tilemap>(FindObjectsSortMode.None).Length;
-Assets/Scripts/Game/Interiors/InteriorRoomPresetRuntime.cs :: var probe = FindFirstObjectByType<InteriorRoomPresetRuntimeProbe>();
 Assets/Scripts/Game/Interiors/InteriorTilemapApplier.cs :: _collision = _collision != null ? _collision : GameObject.Find("HouseCollisionTilemap")?.GetComponent<Tilemap>();
 Assets/Scripts/Game/Interiors/InteriorTilemapApplier.cs :: _decorations = _decorations != null ? _decorations : GameObject.Find("HouseDecorationTilemap")?.GetComponent<Tilemap>();
 Assets/Scripts/Game/Interiors/InteriorTilemapApplier.cs :: _doors = _doors != null ? _doors : GameObject.Find("HouseDoorTilemap")?.GetComponent<Tilemap>();
@@ -11,20 +10,10 @@ Assets/Scripts/Game/Interiors/InteriorTilemapApplier.cs :: if (FindFirstObjectBy
 Assets/Scripts/Game/Interiors/InteriorTilemapApplier.cs :: var existing = GameObject.Find("[HouseInteriorInteractors]");
 Assets/Scripts/Game/Interiors/InteriorTilemapApplier.cs :: var player = GameObject.Find("Player");
 Assets/Scripts/Game/Interiors/InteriorTilemapApplier.cs :: var spawn = GameObject.Find("HouseSpawnPoint");
-Assets/Scripts/Game/Interiors/HouseInteriorLoopProbe.cs :: var behaviours = Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-Assets/Scripts/Game/Interiors/HouseInteriorLoopProbe.cs :: var tilemap = GameObject.Find(name)?.GetComponent<Tilemap>();
-Assets/Scripts/Game/Interiors/HouseInteriorLoopProbe.cs :: var tilemaps = Object.FindObjectsByType<TilemapRenderer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
 Assets/Scripts/Game/Managers/Managers.cs :: var existing = GameObject.Find("@Managers");
 Assets/Scripts/Game/Player/GatherInteractor.cs :: var all = UnityEngine.Object.FindObjectsByType<ResourceNode>(FindObjectsSortMode.None);
 Assets/Scripts/Game/Player/PlayerInteractionRouter.cs :: var behaviours = Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
 Assets/Scripts/Game/StudentLife/MilestoneGrowth.cs :: var interactor = UnityEngine.Object.FindFirstObjectByType<OutsideSchoolActivityInteractor>(UnityEngine.FindObjectsInactive.Include);
-Assets/Scripts/UI/Housing/HouseConstructionOverlay.cs :: _placementTilemap = GameObject.Find("HouseGroundTilemap")?.GetComponent<Tilemap>();
-Assets/Scripts/UI/Housing/HouseConstructionOverlay.cs :: var canvas = FindFirstObjectByType<Canvas>();
-Assets/Scripts/UI/Housing/HouseConstructionOverlay.cs :: var overlay = FindFirstObjectByType<HouseConstructionOverlay>(FindObjectsInactive.Include) ?? Create();
-Assets/Scripts/UI/Housing/HouseUpgradePanel.cs :: var existing = FindFirstObjectByType<HouseUpgradePanel>(FindObjectsInactive.Include);
-Assets/Scripts/UI/Housing/HouseUpgradeRuntimeInstaller.cs :: var canvas = FindFirstObjectByType<Canvas>();
-Assets/Scripts/UI/HUD/StatusHud.cs :: _cached = Resources.Load<Font>("Fonts/VaultUI");
-Assets/Scripts/UI/HUD/StatusHud.cs :: var playerGo = GameObject.Find("Player");
 Assets/Scripts/UI/Interiors/FurniturePlacementPointerRouter.cs :: if (scene.name != "House" || FindFirstObjectByType<FurniturePlacementPointerRouter>() != null)
 Assets/Scripts/UI/Interiors/FurniturePlacementStyle2Skin.cs :: if (scene.name != "House" || FindFirstObjectByType<FurniturePlacementStyle2Skin>() != null)
 Assets/Scripts/UI/Interiors/FurniturePlacementStyle2Skin.cs :: var go = GameObject.Find(name);
@@ -47,22 +36,15 @@ Assets/Scripts/UI/Interiors/InteriorPlacementPreviewOverlay.cs :: _applier = Fin
 Assets/Scripts/UI/Interiors/InteriorPlacementPreviewOverlay.cs :: var existing = FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
 Assets/Scripts/UI/Interiors/InteriorPlacementPreviewOverlay.cs :: var surfaces = FindObjectsByType<TilePlacementSurface>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
 Assets/Scripts/UI/Interiors/InteriorPlacementPreviewOverlay.cs :: var tilemaps = FindObjectsByType<Tilemap>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-Assets/Scripts/UI/Interiors/InteriorRoomPresetToolbarInstaller.cs :: if (FindFirstObjectByType<InteriorRoomPresetToolbarInstaller>() != null)
-Assets/Scripts/UI/Interiors/InteriorRoomPresetToolbarInstaller.cs :: var applier = FindFirstObjectByType<InteriorTilemapApplier>();
-Assets/Scripts/UI/Interiors/InteriorRoomPresetToolbarInstaller.cs :: return GameObject.Find(name)?.GetComponent<Tilemap>();
-Assets/Scripts/UI/Interiors/InteriorRoomPresetToolbarInstaller.cs :: var status = GameObject.Find("InteriorPlacementStatusText")?.GetComponent<Text>();
-Assets/Scripts/UI/Interiors/InteriorRoomPresetToolbarInstaller.cs :: var toolbar = GameObject.Find("InteriorPlacementToolbar");
 Assets/Scripts/UI/MainMenu/SaveSlotSelectPanel.cs :: var canvas = Object.FindFirstObjectByType<Canvas>();
 Assets/Scripts/UI/MainMenu/SaveSlotSelectPanel.cs :: var eventSystem = Object.FindFirstObjectByType<EventSystem>();
 Assets/Scripts/UI/MainMenu/SaveSlotSelectPanel.cs :: var existing = Object.FindFirstObjectByType<SaveSlotSelectPanel>(FindObjectsInactive.Include);
 Assets/Scripts/UI/Quests/DialoguePanel.cs :: var campaign = UnityEngine.Object.FindFirstObjectByType<CampaignHudPanel>(FindObjectsInactive.Include);
 Assets/Scripts/UI/Quests/DialoguePanel.cs :: var milestone = UnityEngine.Object.FindFirstObjectByType<MilestoneHudPanel>(FindObjectsInactive.Include);
 Assets/Scripts/UI/Quests/QuestDialogueChoiceRuntimeRestorer.cs :: var dialoguePanel = Object.FindFirstObjectByType<DialoguePanel>(FindObjectsInactive.Include);
-Assets/Scripts/UI/StudentLife/CampaignHudPanel.cs :: var existing = Object.FindFirstObjectByType<CampaignHudPanel>(FindObjectsInactive.Include);
 Assets/Scripts/UI/StudentLife/CareerCandidatePanel.cs :: var existing = Object.FindFirstObjectByType<CareerCandidatePanel>(FindObjectsInactive.Include);
 Assets/Scripts/UI/StudentLife/CareerCandidateRuntimeInstaller.cs :: var canvas = Object.FindFirstObjectByType<Canvas>(FindObjectsInactive.Include);
 Assets/Scripts/UI/StudentLife/CareerCandidateRuntimeInstaller.cs :: var player = GameObject.Find("Player");
-Assets/Scripts/UI/StudentLife/CareerInterestHudWidget.cs :: var existing = Object.FindFirstObjectByType<CareerInterestHudWidget>(FindObjectsInactive.Include);
 Assets/Scripts/UI/StudentLife/CareerInterestPanel.cs :: var existing = Object.FindFirstObjectByType<CareerInterestPanel>(FindObjectsInactive.Include);
 Assets/Scripts/UI/StudentLife/CareerInterestRuntimeInstaller.cs :: var canvas = Object.FindFirstObjectByType<Canvas>(FindObjectsInactive.Include);
 Assets/Scripts/UI/StudentLife/CareerInterestRuntimeInstaller.cs :: var player = GameObject.Find("Player");
@@ -71,7 +53,6 @@ Assets/Scripts/UI/StudentLife/ExplorationChoicePanel.cs :: var existing = UnityE
 Assets/Scripts/UI/StudentLife/ExplorationInteractionPointInteractor.cs :: var canvas = Object.FindFirstObjectByType<Canvas>(FindObjectsInactive.Include);
 Assets/Scripts/UI/StudentLife/LocationIdentityPanel.cs :: var existing = UnityEngine.Object.FindFirstObjectByType<LocationIdentityPanel>(FindObjectsInactive.Include);
 Assets/Scripts/UI/StudentLife/LocationStatePanel.cs :: var existing = Object.FindFirstObjectByType<LocationStatePanel>(FindObjectsInactive.Include);
-Assets/Scripts/UI/StudentLife/MilestoneHudPanel.cs :: var existing = Object.FindFirstObjectByType<MilestoneHudPanel>(FindObjectsInactive.Include);
 Assets/Scripts/UI/StudentLife/StudentDayEndInteractor.cs :: var hud = UnityEngine.Object.FindFirstObjectByType<MilestoneHudPanel>(FindObjectsInactive.Include);
 Assets/Scripts/UI/StudentLife/StudentDayQuestInventoryTracker.cs :: var player = GameObject.Find("Player");
 Assets/Scripts/UI/StudentLife/StudentDayResultPanel.cs :: var existing = Object.FindFirstObjectByType<StudentDayResultPanel>(FindObjectsInactive.Include);

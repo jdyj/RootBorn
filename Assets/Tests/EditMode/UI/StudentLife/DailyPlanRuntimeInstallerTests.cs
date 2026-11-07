@@ -13,7 +13,7 @@ namespace Rootborn.Tests.EditMode.UI.StudentLife
     public sealed class DailyPlanRuntimeInstallerTests
     {
         [Test]
-        public void EnsureSceneForTests_AddsOneBoardAndPanelOnlyOnce()
+        public void EnsureSceneForTests_AddsOnePanelOnlyOnceAndNeverCreatesPrototypeBoard()
         {
             var scene = SceneManager.GetActiveScene();
             var beforePanels = CountComponents<DailyPlanPanel>(scene);
@@ -32,7 +32,7 @@ namespace Rootborn.Tests.EditMode.UI.StudentLife
                 DailyPlanRuntimeInstaller.EnsureSceneForTests(scene, canvas, registry, player);
 
                 Assert.That(CountComponents<DailyPlanPanel>(scene), Is.EqualTo(beforePanels + 1));
-                Assert.That(CountComponents<DailyPlanBoardInteractor>(scene), Is.EqualTo(beforeBoards + 1));
+                Assert.That(CountComponents<DailyPlanBoardInteractor>(scene), Is.EqualTo(beforeBoards), "Boards are authored; the installer must not create a prototype board.");
             }
             finally
             {

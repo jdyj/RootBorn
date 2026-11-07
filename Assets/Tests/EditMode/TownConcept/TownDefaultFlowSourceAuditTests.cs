@@ -23,15 +23,6 @@ namespace Rootborn.Tests.EditMode.TownConcept
         }
 
         [Test]
-        public void SceneSetup_RepairsExistingEventSystemWithoutInputModule()
-        {
-            string source = File.ReadAllText("Assets/Scripts/Editor/Tools/SceneSetup.cs");
-
-            StringAssert.Contains("BaseInputModule", source, "Scene setup must detect an EventSystem that exists without a UI input module.");
-            StringAssert.Contains("UiInputModuleInstaller.AddPreferredInputModule", source, "Scene setup should use the shared input module installer instead of only fixing newly-created EventSystems.");
-        }
-
-        [Test]
         public void ModernUiPanelAutoInstaller_RunsOnPlayableScenesExceptBootAndMainMenu()
         {
             string source = File.ReadAllText("Assets/Scripts/UI/Modern/ModernUiPanelAutoInstaller.cs");

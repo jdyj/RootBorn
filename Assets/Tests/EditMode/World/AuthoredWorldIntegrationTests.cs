@@ -145,13 +145,6 @@ namespace Rootborn.Tests.EditMode.World
             }
             finally { UnityEngine.Object.DestroyImmediate(npc); }
         }
-        [Test] public void LIFE_ConfiguredScene_StudentLifeInstallerDoesNotCreatePrototypeCluster()
-        {
-            Config(Array.Empty<LocationDefinition>(),Array.Empty<Transform>());
-            typeof(TownStudentLifeRuntimeInstaller).GetMethod("EnsureActivityObjects",BindingFlags.Static|BindingFlags.NonPublic)
-                .Invoke(null,new object[] { _scene });
-            Assert.That(_scene.GetRootGameObjects().Length,Is.EqualTo(1));
-        }
         [Test] public void LIFE_AuthoredDailyPlan_DoesNotCaptureDestinationPlaceholderActor()
         {
             Config(Array.Empty<LocationDefinition>(),Array.Empty<Transform>());

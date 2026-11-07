@@ -25,8 +25,6 @@ namespace Rootborn.Tests.EditMode.World
         {var c=_camera.gameObject.AddComponent<HousePlacementCameraController>(); c.Configure(_camera,new Bounds(Vector3.zero,new Vector3(30,20,1))); return c;}
         [Test] public void AuthoredHiddenPlacement_PreservesFollowAndZoom()
         {Config(); Invoke("InitializeForScene",_scene); Assert.That(_follow.enabled,Is.True); Assert.That(_camera.orthographicSize,Is.EqualTo(5f)); var c=_camera.GetComponent<HousePlacementCameraController>(); Assert.That(c==null || !c.enabled,Is.True);}
-        [Test] public void LegacyHouse_RetainsInitialPlacementCamera()
-        {Invoke("InitializeForScene",_scene); Assert.That(_follow.enabled,Is.False); Assert.That(_camera.GetComponent<HousePlacementCameraController>().enabled,Is.True);}
         [Test] public void ExplicitModeEntryAndExit_RestoresCamera()
         {Config(); Invoke("SetPlacementMode",_scene,true); Assert.That(_follow.enabled,Is.False); Invoke("SetPlacementMode",_scene,false); Assert.That(_follow.enabled,Is.True); Assert.That(_camera.orthographicSize,Is.EqualTo(5f)); Assert.That(_camera.GetComponent<HousePlacementCameraController>().enabled,Is.False);}
         [Test] public void PanelDisable_ReleasesPlacementCameraWithoutToggle()
