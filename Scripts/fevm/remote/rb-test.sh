@@ -9,6 +9,8 @@
 # Results: <project-dir>/rb-results/<platform>-<time>.{xml,log}; prints a summary.
 set -u
 . ~/farmer-unity-verify/tools/rb-env.sh
+# Game View renders at the game's reference resolution so UI tests can reach every button (TestGameViewSize.cs).
+export ROOTBORN_GAMEVIEW_SIZE=${ROOTBORN_GAMEVIEW_SIZE:-1920x1080}
 P=$(cd "$1" && pwd -P); PLAT=$2; FILTER=${3:-}; ADDR=${4:-asset}
 if rb_project_busy "$P"; then echo "Unity already running on $P"; exit 1; fi
 O=$P/rb-results; mkdir -p "$O"; T=$(date +%Y%m%d-%H%M%S)

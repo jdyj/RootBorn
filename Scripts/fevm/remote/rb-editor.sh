@@ -5,6 +5,8 @@
 # http://localhost:22394 on FEVM (reach it from the PC through Scripts/fevm/mcp-tunnel.sh).
 set -u
 . ~/farmer-unity-verify/tools/rb-env.sh
+# Game View renders at the game's reference resolution so UI tests can reach every button (TestGameViewSize.cs).
+export ROOTBORN_GAMEVIEW_SIZE=${ROOTBORN_GAMEVIEW_SIZE:-1920x1080}
 P=$(cd "$1" && pwd -P); CMD=${2:-start}
 export RB_DISPLAY=:99
 C=$P/UserSettings/AI-Game-Developer-Config.json
