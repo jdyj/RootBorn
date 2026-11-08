@@ -111,11 +111,18 @@ namespace Rootborn.UI.Characters
 
             if (_look == null) return sections;
             var resolver = Resolver();
+            // Slots with a real choice come first; when no slot has one (e.g. the first stage), single-item slots are
+            // shown so the wardrobe is never empty.
+            int minimumChoices = 2;
+            bool anyRealChoice = false;
+            foreach (var slot in resolver.Catalog.Slots)
+                if (resolver.Catalog.Choices(slot.Id, _look.StageId).Count >= 2) anyRealChoice = true;
+            if (!anyRealChoice) minimumChoices = 1;
             foreach (var slot in resolver.Catalog.Slots)
             {
                 var choices = new HashSet<string>();
                 foreach (var choice in resolver.Catalog.Choices(slot.Id, _look.StageId)) choices.Add(choice.Id);
-                if (choices.Count < 2) continue;
+                if (choices.Count < minimumChoices) continue;
                 var slotData = FindSlot(slot.Id);
                 var section = new WardrobeSection(slotData != null ? slotData.DisplayNameKey : slot.Id);
                 // Registry order, so designers decide the card order.
