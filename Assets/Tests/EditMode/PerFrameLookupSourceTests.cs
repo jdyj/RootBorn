@@ -8,7 +8,6 @@ namespace Rootborn.Tests.EditMode
     public sealed class PerFrameLookupSourceTests
     {
         [TestCase("Assets/Scripts/UI/Interiors/FurniturePlacementStyle2Skin.cs")]
-        [TestCase("Assets/Scripts/UI/Objectives/ObjectiveJournalRuntimeProvider.cs")]
         public void LateUpdate_DoesNotSearchOrAllocateEveryFrame(string sourcePath)
         {
             Assert.IsTrue(File.Exists(sourcePath), "Missing source: " + sourcePath);

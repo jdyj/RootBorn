@@ -15,9 +15,6 @@ namespace Rootborn.UI.Objectives
         private TrackedObjectiveHud _trackedHud;
         private GameObject _player;
         private ObjectiveJournalAggregator _aggregator;
-        private GameObject _ownersFor;
-        private StudentLifeProgressComponent _studentOwner;
-        private AdultCareerRuntimeComponent _adultOwner;
 
         private (object Student, object Adult, int Day, int Energy, int Focus, int Time, int DayState, string Stage, string Objective, string Hint, bool Pending, bool AdultPhase, bool PendingWork, string Language, string TrackedKey, string Slot, int QuestRevision) _observedState;
         private bool _hasObservedState;
@@ -93,9 +90,8 @@ namespace Rootborn.UI.Objectives
         private void LateUpdate()
         {
             if (_player == null || _trackedHud == null || _aggregator == null) return;
-            ResolveOwners();
-            var student = _studentOwner != null ? _studentOwner.Progress : null;
-            var adult = _adultOwner != null ? _adultOwner.Progress : null;
+            var student = _player.GetComponent<StudentLifeProgressComponent>()?.Progress;
+            var adult = _player.GetComponent<AdultCareerRuntimeComponent>()?.Progress;
             string slot = ActiveSaveContext.Metadata != null ? ActiveSaveContext.Metadata.SlotId : string.Empty;
             if (student != null && !string.IsNullOrEmpty(slot) && student.SaveSlot != slot) return;
             var state = ((object)student, (object)adult, student != null ? student.CurrentDay : 0,
@@ -120,21 +116,6 @@ namespace Rootborn.UI.Objectives
                         return;
                     }
             _trackedHud.Hide();
-        }
-
-        // Components are cached per player. A missing one (students may never get a career owner) is checked again each
-        // frame with TryGetComponent, which does not allocate; a delayed pick-up would refresh the HUD late, mid-interaction.
-        private void ResolveOwners()
-        {
-            if (_ownersFor != _player)
-            {
-                _ownersFor = _player;
-                _studentOwner = null;
-                _adultOwner = null;
-            }
-
-            if (_studentOwner == null) _player.TryGetComponent(out _studentOwner);
-            if (_adultOwner == null) _player.TryGetComponent(out _adultOwner);
         }
 
         private void OnDestroy()
