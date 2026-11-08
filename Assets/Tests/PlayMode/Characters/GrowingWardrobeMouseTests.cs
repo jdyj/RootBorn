@@ -46,6 +46,10 @@ namespace Rootborn.Tests.PlayMode.Characters
             string saveRoot = Path.Combine(Path.GetTempPath(), "rootborn-wardrobe-play-" + System.Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(saveRoot);
             SaveService.SetRootDirectoryForTests(saveRoot);
+            var previousSave = ActiveSaveContext.Metadata;
+            // Started from a save slot like the menu does, so Town creates the career owner and the driver finishes binding;
+            // until then it re-applies the student look every half second and would undo the fixture below.
+            ActiveSaveContext.Set(new SaveSlotMetadata { SlotId = "grow-wardrobe" });
             try
             {
                 yield return LoadTown();
@@ -53,6 +57,14 @@ namespace Rootborn.Tests.PlayMode.Characters
                 var view = player.GetComponentInChildren<GrowingCharacterVisualView>(true);
                 var driver = player.GetComponent<GrowingCharacterStageDriver>();
                 Assert.That(driver, Is.Not.Null);
+                float bound = 0f;
+                while (bound < 10f && (player.GetComponent<AdultCareerRuntimeComponent>() == null || !player.GetComponent<AdultCareerRuntimeComponent>().CanMutate))
+                {
+                    bound += Time.unscaledDeltaTime;
+                    yield return null;
+                }
+
+                yield return new WaitForSecondsRealtime(0.6f);
                 // Fixture: reaching adulthood takes a long career flow, so grow up through the driver. Every click below is a
                 // mouse device event read by Town's InputSystemUIInputModule (no direct handler calls).
                 driver.Apply(40, true, "facility.none");
@@ -93,6 +105,14 @@ namespace Rootborn.Tests.PlayMode.Characters
                 player = GameObject.Find("Player");
                 view = player.GetComponentInChildren<GrowingCharacterVisualView>(true);
                 driver = player.GetComponent<GrowingCharacterStageDriver>();
+                bound = 0f;
+                while (bound < 10f && (player.GetComponent<AdultCareerRuntimeComponent>() == null || !player.GetComponent<AdultCareerRuntimeComponent>().CanMutate))
+                {
+                    bound += Time.unscaledDeltaTime;
+                    yield return null;
+                }
+
+                yield return new WaitForSecondsRealtime(0.6f);
                 driver.Apply(40, true, "facility.none");
                 yield return null;
                 Assert.That(view.LookKey, Does.Contain("chef"), "Saved choice should come back after reload.");
@@ -100,6 +120,7 @@ namespace Rootborn.Tests.PlayMode.Characters
             }
             finally
             {
+                ActiveSaveContext.Set(previousSave);
                 SaveService.SetRootDirectoryForTests(null);
                 if (Directory.Exists(saveRoot)) Directory.Delete(saveRoot, true);
             }
