@@ -133,6 +133,61 @@ namespace Rootborn.Tests.EditMode.Characters
         }
 
         [Test]
+        public void GROW_VIEW_LAYER_001_AnyNumberOfLayersDrawOverTheBodyInOrder()
+        {
+            var host = new GameObject("host");
+            _objects.Add(host);
+            var view = host.AddComponent<GrowingCharacterVisualView>();
+            var source = host.AddComponent<SpriteRenderer>();
+            source.sortingOrder = 40;
+
+            view.ApplyLayers(Sheet("body"), new[] { Sheet("outfit"), Sheet("hair"), Sheet("hat") });
+            view.MatchSorting(source);
+            view.SetMotion(Vector2.zero, Vector2.down);
+
+            Assert.That(view.LayerCount, Is.EqualTo(3));
+            Assert.That(view.BodyRenderer.sprite.name, Is.EqualTo("body1"));
+            Assert.That(view.LayerRenderer(0).sprite.name, Is.EqualTo("outfit1"));
+            Assert.That(view.LayerRenderer(1).sprite.name, Is.EqualTo("hair1"));
+            Assert.That(view.LayerRenderer(2).sprite.name, Is.EqualTo("hat1"));
+            Assert.That(view.BodyRenderer.sortingOrder, Is.EqualTo(40));
+            Assert.That(view.LayerRenderer(0).sortingOrder, Is.EqualTo(41));
+            Assert.That(view.LayerRenderer(2).sortingOrder, Is.EqualTo(43));
+            Assert.That(view.Appearance, Is.Null, "a layered look is not a legacy appearance");
+        }
+
+        [Test]
+        public void GROW_VIEW_LAYER_002_FewerLayersClearTheLeftoverRenderers()
+        {
+            var host = new GameObject("host");
+            _objects.Add(host);
+            var view = host.AddComponent<GrowingCharacterVisualView>();
+            view.ApplyLayers(Sheet("body"), new[] { Sheet("outfit"), Sheet("hair"), Sheet("hat") });
+            int changes = 0;
+            view.LookChanged += () => changes++;
+
+            view.ApplyLayers(Sheet("body2"), new[] { Sheet("outfit2") });
+            view.SetMotion(Vector2.zero, Vector2.down);
+
+            Assert.That(view.LayerCount, Is.EqualTo(1));
+            Assert.That(view.LayerRenderer(0).sprite.name, Is.EqualTo("outfit21"));
+            Assert.That(view.HeadRenderer.sprite, Is.Null);
+            Assert.That(view.LayerRenderer(2).sprite, Is.Null, "the extra renderer stays but draws nothing");
+            Assert.That(changes, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void GROW_VIEW_LAYER_003_LegacyAppearanceIsBodyOutfitHead()
+        {
+            var view = View(out var appearance);
+            view.SetMotion(Vector2.zero, Vector2.down);
+            Assert.That(view.Appearance, Is.SameAs(appearance));
+            Assert.That(view.LayerCount, Is.EqualTo(2));
+            Assert.That(view.LayerRenderer(0), Is.SameAs(view.OutfitRenderer));
+            Assert.That(view.LayerRenderer(1), Is.SameAs(view.HeadRenderer));
+        }
+
+        [Test]
         public void GROW_SHEET_001_RejectsWrongFrameCount()
         {
             var sheet = ScriptableObject.CreateInstance<GrowingCharacterSheetDefinition>();

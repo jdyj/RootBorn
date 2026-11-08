@@ -1,10 +1,11 @@
+using System.Collections.Generic;
 using Rootborn.Game.Tools;
 using UnityEngine;
 
 namespace Rootborn.Game.Characters.Growing
 {
     /// <summary>
-    /// Draws body, outfit and head as stacked frame layers. Sprites change only when the frame changes,
+    /// Draws the body and any number of wearable layers (outfit, hair, ...) as stacked frame layers. Sprites change only when the frame changes,
     /// so a standing character costs nothing per frame. Movement and input stay with PlayerController.
     /// </summary>
     [DisallowMultipleComponent]
@@ -15,6 +16,7 @@ namespace Rootborn.Game.Characters.Growing
         public const string BodyLayerName = "Growing_Body";
         public const string OutfitLayerName = "Growing_Outfit";
         public const string HeadLayerName = "Growing_Head";
+        public const string ExtraLayerNamePrefix = "Growing_Layer";
 
         public const int RowDown = 0;
         private const int RowLeft = 1;
@@ -41,8 +43,14 @@ namespace Rootborn.Game.Characters.Growing
         private float _actionRemaining;
         private Vector2 _lastPosition;
         private bool _isRemote;
+        private GrowingCharacterSheetDefinition _body;
+        private readonly List<GrowingCharacterSheetDefinition> _layers = new List<GrowingCharacterSheetDefinition>(4);
+        private readonly List<SpriteRenderer> _extraRenderers = new List<SpriteRenderer>();
+        private SpriteRenderer _sortingSource;
 
         public event System.Action<GrowingCharacterAppearanceDefinition> AppearanceChanged;
+        /// <summary>Raised whenever the drawn look changes, legacy appearance or layered.</summary>
+        public event System.Action LookChanged;
 
         /// <summary>True for another player's character: its look comes from the network and its motion from movement.</summary>
         public bool IsRemote
@@ -64,15 +72,45 @@ namespace Rootborn.Game.Characters.Growing
         public SpriteRenderer BodyRenderer => _bodyRenderer;
         public SpriteRenderer OutfitRenderer => _outfitRenderer;
         public SpriteRenderer HeadRenderer => _headRenderer;
+        public int LayerCount => _layers.Count;
+
+        /// <summary>Layer renderers in draw order: outfit and head renderers first (prefab-wired), then extra ones.</summary>
+        public SpriteRenderer LayerRenderer(int index)
+        {
+            if (index < 0) return null;
+            EnsureRenderers();
+            if (index == 0) return _outfitRenderer;
+            if (index == 1) return _headRenderer;
+            return index - 2 < _extraRenderers.Count ? _extraRenderers[index - 2] : null;
+        }
 
         public void Apply(GrowingCharacterAppearanceDefinition appearance)
         {
             _appearance = appearance;
+            SetLook(appearance != null ? appearance.Body : null,
+                appearance != null ? new[] { appearance.Outfit, appearance.Head } : null);
+            AppearanceChanged?.Invoke(appearance);
+            LookChanged?.Invoke();
+        }
+
+        /// <summary>Draws a body and wearable layers resolved by Rootborn.Core, lowest draw order first.</summary>
+        public void ApplyLayers(GrowingCharacterSheetDefinition body, IReadOnlyList<GrowingCharacterSheetDefinition> layers)
+        {
+            _appearance = null;
+            SetLook(body, layers);
+            LookChanged?.Invoke();
+        }
+
+        private void SetLook(GrowingCharacterSheetDefinition body, IReadOnlyList<GrowingCharacterSheetDefinition> layers)
+        {
+            _body = body;
+            _layers.Clear();
+            if (layers != null)
+                for (int i = 0; i < layers.Count; i++) _layers.Add(layers[i]);
             EnsureRenderers();
             _appliedRow = -1;
             _appliedColumn = -1;
             ApplyFrame();
-            AppearanceChanged?.Invoke(appearance);
         }
 
 #if UNITY_EDITOR
@@ -88,10 +126,12 @@ namespace Rootborn.Game.Characters.Growing
         public void MatchSorting(SpriteRenderer source)
         {
             if (source == null) return;
+            _sortingSource = source;
             EnsureRenderers();
             SetSorting(_bodyRenderer, source, 0);
             SetSorting(_outfitRenderer, source, 1);
             SetSorting(_headRenderer, source, 2);
+            for (int i = 0; i < _extraRenderers.Count; i++) SetSorting(_extraRenderers[i], source, i + 3);
         }
 
         public void SetMotion(Vector2 input, Vector2 facing)
@@ -165,14 +205,26 @@ namespace Rootborn.Game.Characters.Growing
 
         private void ApplyFrame()
         {
-            if (_appearance == null || (_row == _appliedRow && _column == _appliedColumn)) return;
+            // An appearance saved on the prefab or scene is drawn without an Apply call.
+            if (_body == null && _layers.Count == 0 && _appearance != null)
+            {
+                _body = _appearance.Body;
+                _layers.Add(_appearance.Outfit);
+                _layers.Add(_appearance.Head);
+            }
+
+            if ((_body == null && _layers.Count == 0) || (_row == _appliedRow && _column == _appliedColumn)) return;
             EnsureRenderers();
             _appliedRow = _row;
             _appliedColumn = _column;
             FrameChangeCount++;
-            _bodyRenderer.sprite = FrameOf(_appearance.Body);
-            _outfitRenderer.sprite = FrameOf(_appearance.Outfit);
-            _headRenderer.sprite = FrameOf(_appearance.Head);
+            _bodyRenderer.sprite = FrameOf(_body);
+            int drawn = 2 + _extraRenderers.Count;
+            for (int i = 0; i < drawn; i++)
+            {
+                var target = LayerRenderer(i);
+                if (target != null) target.sprite = i < _layers.Count ? FrameOf(_layers[i]) : null;
+            }
         }
 
         private Sprite FrameOf(GrowingCharacterSheetDefinition sheet)
@@ -185,6 +237,13 @@ namespace Rootborn.Game.Characters.Growing
             if (_bodyRenderer == null) _bodyRenderer = CreateLayer(BodyLayerName, 0);
             if (_outfitRenderer == null) _outfitRenderer = CreateLayer(OutfitLayerName, 1);
             if (_headRenderer == null) _headRenderer = CreateLayer(HeadLayerName, 2);
+            while (_extraRenderers.Count < _layers.Count - 2)
+            {
+                int index = _extraRenderers.Count;
+                var extra = CreateLayer(ExtraLayerNamePrefix + (index + 2), index + 3);
+                if (_sortingSource != null) SetSorting(extra, _sortingSource, index + 3);
+                _extraRenderers.Add(extra);
+            }
         }
 
         private SpriteRenderer CreateLayer(string layerName, int order)
