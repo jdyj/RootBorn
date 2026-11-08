@@ -86,6 +86,33 @@ namespace Rootborn.Tests.EditMode.Characters
         }
 
         [Test]
+        public void WEAR_UI_001_TheWardrobeIsNeverEmptyAndShowsRealChoicesFirst()
+        {
+            // Found in real play (2026-11-08): on day 1 every slot has one item, and the wardrobe opened empty.
+            var host = new UnityEngine.GameObject("wardrobe-host");
+            try
+            {
+                var view = host.AddComponent<Rootborn.Game.Characters.Growing.GrowingCharacterVisualView>();
+                var driver = host.AddComponent<Rootborn.UI.Characters.GrowingCharacterStageDriver>();
+                driver.Configure(view, Registry());
+
+                driver.Apply(1, false, null);
+                var child = driver.WardrobeSections();
+                Assert.That(child, Is.Not.Empty, "day 1 must still offer what the child can wear");
+                Assert.That(child[0].Cards, Is.Not.Empty);
+
+                driver.Apply(2, false, null);
+                var school = driver.WardrobeSections();
+                Assert.That(school.Count, Is.EqualTo(1), "only the slot with a real choice");
+                Assert.That(school[0].Cards.Count, Is.EqualTo(2));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(host);
+            }
+        }
+
+        [Test]
         public void WEAR_SAVE_001_LegacyChoicesMoveInOnceAndLaterChoicesPersist()
         {
             var registry = Registry();
