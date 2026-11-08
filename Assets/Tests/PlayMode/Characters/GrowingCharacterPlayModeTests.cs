@@ -126,9 +126,8 @@ namespace Rootborn.Tests.PlayMode.Characters
                 Assert.That(driver, Is.Not.Null);
 
                 // The adult body has several outfits today; the wardrobe must show all of them.
-                var looks = Rootborn.Game.Common.GameDataRegistryProvider.TryGet(out var registry) ? registry.CharacterAppearances : null;
-                var adult = GrowingCharacterStageSelector.Select(looks, 40, true, "facility.none");
-                view.Apply(adult);
+                // Fixture: grow up through the driver (its stage decides which wardrobe rows exist).
+                driver.Apply(40, true, "facility.none");
                 yield return null;
 
                 var button = GameObject.Find(Rootborn.UI.Characters.GrowingWardrobeRuntimeInstaller.ButtonName);
