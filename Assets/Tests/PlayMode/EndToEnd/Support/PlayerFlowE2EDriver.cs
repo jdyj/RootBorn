@@ -136,10 +136,82 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
         {
             var rect = target.GetComponent<RectTransform>();
             Assert.IsNotNull(rect, label + " is not a UI element.");
+            // A row far down a list is reached the way a player does: with the mouse wheel over the list.
+            yield return ScrollIntoViewWithWheel(rect, label);
             var canvas = target.GetComponentInParent<Canvas>().rootCanvas;
             var camera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
             Vector2 point = RectTransformUtility.WorldToScreenPoint(camera, rect.TransformPoint(rect.rect.center));
             yield return ClickWithMouseAt(target, point, label);
+        }
+
+        private sealed class RealPointerScope
+        {
+            private readonly Rootborn.Game.Common.PassiveInputModule _passive;
+            private readonly UnityEngine.InputSystem.UI.InputSystemUIInputModule _module;
+            private readonly bool _addedModule, _moduleWasEnabled, _passiveWasEnabled;
+            public readonly Mouse Mouse;
+
+            // Scenario tests park a passive module so stray input does nothing; real pointer input uses the UI module meanwhile.
+            public RealPointerScope(EventSystem events)
+            {
+                _passive = events.GetComponent<BaseInputModule>() as Rootborn.Game.Common.PassiveInputModule;
+                _module = events.GetComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+                _addedModule = _module == null;
+                if (_addedModule) _module = events.gameObject.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+                _moduleWasEnabled = _module.enabled;
+                _passiveWasEnabled = _passive != null && _passive.enabled;
+                if (_passive != null) _passive.enabled = false;
+                _module.enabled = true;
+                Mouse = InputSystem.AddDevice<Mouse>();
+                Mouse.MakeCurrent();
+            }
+
+            public void Dispose()
+            {
+                InputSystem.RemoveDevice(Mouse);
+                // Disabled, not destroyed: Destroy waits for the end of the frame, and a click right after would get the
+                // dying module back from GetComponent and lose its press.
+                if (_module != null) _module.enabled = !_addedModule && _moduleWasEnabled;
+                if (_passive != null) _passive.enabled = _passiveWasEnabled;
+            }
+        }
+
+        /// <summary>Scrolls the nearest ScrollRect with mouse wheel events over its viewport until the target is inside it.</summary>
+        public static IEnumerator ScrollIntoViewWithWheel(RectTransform target, string label)
+        {
+            var scroll = target.GetComponentInParent<ScrollRect>();
+            if (scroll == null || EventSystem.current == null) yield break;
+            var viewport = scroll.viewport != null ? scroll.viewport : (RectTransform)scroll.transform;
+            var canvas = viewport.GetComponentInParent<Canvas>().rootCanvas;
+            var camera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+            if (Inside(viewport, target, camera)) yield break;
+            var scope = new RealPointerScope(EventSystem.current);
+            try
+            {
+                Vector2 over = RectTransformUtility.WorldToScreenPoint(camera, viewport.TransformPoint(viewport.rect.center));
+                for (int step = 0; step < 80 && !Inside(viewport, target, camera); step++)
+                {
+                    float targetY = viewport.InverseTransformPoint(target.TransformPoint(target.rect.center)).y;
+                    // Wheel down (negative) moves the list up to reveal rows below the viewport.
+                    float wheel = targetY < viewport.rect.center.y ? -120f : 120f;
+                    InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = over, scroll = new Vector2(0f, wheel) });
+                    yield return null;
+                    InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = over });
+                    yield return null;
+                }
+            }
+            finally
+            {
+                scope.Dispose();
+            }
+
+            Assert.IsTrue(Inside(viewport, target, camera), label + " stayed outside its list after scrolling with the mouse wheel.");
+        }
+
+        private static bool Inside(RectTransform viewport, RectTransform target, Camera camera)
+        {
+            Vector2 point = RectTransformUtility.WorldToScreenPoint(camera, target.TransformPoint(target.rect.center));
+            return RectTransformUtility.RectangleContainsScreenPoint(viewport, point, camera);
         }
 
         /// <summary>Clicks a screen point with a mouse device; the target must be the top UI hit there.</summary>
@@ -152,38 +224,23 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             Assert.That(hits.Count, Is.GreaterThan(0), "Nothing under the pointer at " + point + " for " + label);
             Assert.IsTrue(hits[0].gameObject.transform.IsChildOf(target.transform), label + " is covered by " + hits[0].gameObject.name);
 
-            // Scenario tests park a passive module so stray input does nothing; a click uses the real UI module meanwhile.
-            var passive = events.GetComponent<BaseInputModule>() as Rootborn.Game.Common.PassiveInputModule;
-            var module = events.GetComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
-            bool addedModule = module == null;
-            if (addedModule) module = events.gameObject.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
-            bool moduleWasEnabled = module.enabled;
-            bool passiveWasEnabled = passive != null && passive.enabled;
-            if (passive != null) passive.enabled = false;
-            module.enabled = true;
-            var mouse = InputSystem.AddDevice<Mouse>();
-            mouse.MakeCurrent();
+            var scope = new RealPointerScope(events);
             try
             {
                 yield return null;
-                InputSystem.QueueStateEvent(mouse, new MouseState { position = point });
+                InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = point });
                 yield return null;
                 yield return null;
-                InputSystem.QueueStateEvent(mouse, new MouseState { position = point, buttons = 1 });
+                InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = point, buttons = 1 });
                 yield return null;
                 yield return null;
-                InputSystem.QueueStateEvent(mouse, new MouseState { position = point });
+                InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = point });
                 yield return null;
                 yield return null;
             }
             finally
             {
-                InputSystem.RemoveDevice(mouse);
-                // Disabled, not destroyed: Destroy waits for the end of the frame, and a click right after would get the
-                // dying module back from GetComponent and lose its press.
-                if (module != null) module.enabled = !addedModule && moduleWasEnabled;
-
-                if (passive != null) passive.enabled = passiveWasEnabled;
+                scope.Dispose();
             }
         }
 

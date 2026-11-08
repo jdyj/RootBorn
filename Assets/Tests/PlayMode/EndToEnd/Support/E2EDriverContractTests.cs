@@ -34,15 +34,21 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
         [UnityTest]
         public IEnumerator PlayerFlowE2EDriver_ClickButtonInvokesVisibleInteractableButton()
         {
-            var root = new GameObject("ContractRoot", typeof(RectTransform));
+            // A real screen canvas and EventSystem: ClickButton presses with a mouse device through the UI module.
+            var root = new GameObject("ContractRoot", typeof(RectTransform), typeof(Canvas), typeof(UnityEngine.UI.CanvasScaler), typeof(UnityEngine.UI.GraphicRaycaster));
+            root.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+            if (UnityEngine.EventSystems.EventSystem.current == null)
+                new GameObject("ContractEventSystem", typeof(UnityEngine.EventSystems.EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule)).transform.SetParent(root.transform, false);
             var buttonGo = new GameObject("TargetButton", typeof(RectTransform), typeof(Image), typeof(Button));
             buttonGo.transform.SetParent(root.transform, false);
             bool clicked = false;
             buttonGo.GetComponent<Button>().onClick.AddListener(() => clicked = true);
 
+            yield return null;
             yield return PlayerFlowE2EDriver.ClickButton(buttonGo.GetComponent<Button>());
 
             Assert.IsTrue(clicked);
+            Object.Destroy(root);
         }
 
         [Test]
