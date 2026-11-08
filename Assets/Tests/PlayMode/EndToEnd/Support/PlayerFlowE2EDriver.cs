@@ -110,7 +110,25 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
                 if (button != null) button.onClick.RemoveListener(count);
             }
 
-            Assert.AreEqual(1, clicks, label + " did not receive exactly one click from the mouse device.");
+            Assert.AreEqual(1, clicks, label + " did not receive exactly one click from the mouse device. " + DescribeInputSetup());
+        }
+
+        /// <summary>Event systems with their enabled modules and the pointer devices, for click failures.</summary>
+        public static string DescribeInputSetup()
+        {
+            var text = new StringBuilder("event systems:");
+            foreach (var system in Object.FindObjectsByType<EventSystem>(FindObjectsSortMode.None))
+            {
+                text.Append(' ').Append(system.name).Append(system == EventSystem.current ? "(current)[" : "[");
+                foreach (var module in system.GetComponents<BaseInputModule>())
+                    if (module.enabled) text.Append(module.GetType().Name).Append(' ');
+                text.Append(']');
+            }
+
+            text.Append(" pointers:");
+            foreach (var device in InputSystem.devices)
+                if (device is Pointer) text.Append(' ').Append(device.name);
+            return text.ToString();
         }
 
         /// <summary>Moves a mouse device over the target's center, checks it is the top UI hit, then presses and releases.</summary>
