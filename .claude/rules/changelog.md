@@ -1,5 +1,11 @@
 # 규칙 변경 이력
 
+## 2026-11-09 — 새 .cs 직접 작성 허용을 AGENTS.md 1번에 반영
+- 요청: "새 .cs를 왜 Unity를 거쳐 만들어? 이러면 더 유니티에 결합되는거 아니야?"(11-08), "승인할게 수정하고 진행해봐"(11-09)
+- 배경: `unity-cli.md`는 11-08에 고쳤지만 AGENTS.md 1번에는 'MCP·편집기 경유 의무'가 남아 두 문서가 어긋났다. `unity-cli.md`의 MCP 편집기 사본 갱신 절차는 열린 편집기 밑에서 체크아웃하는 것이라 같은 위험이 있었다.
+- 변경: AGENTS.md 1번 문구 교체, `unity-cli.md` MCP 사본 갱신은 편집기를 닫고 체크아웃한 뒤 다시 띄우도록 수정.
+- 일반화: 금지 대상은 '직접 쓰기'가 아니라 '열린 편집기 밑에서 소스가 바뀌는 것'이다. 커밋 체크아웃도 여기에 포함된다.
+
 ## 2026-05-16 - Runtime-only tilemap verification false completion
 - Feedback: "전혀 안됐는데 어딜 했다고하는거야?"
 - Cause: In the House wall tile task, the agent verified only the PlayMode runtime-generated result and reported completion before checking the saved `Assets/Scenes/House.unity` EditMode Tilemap. The saved scene still had `tile_r02_c09` only on the original two window cells, so the user's visible scene/palette had not actually changed.

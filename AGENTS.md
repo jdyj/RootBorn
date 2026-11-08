@@ -25,7 +25,7 @@ Visible gameplay, UI, sprite, tilemap, placement, scene, prefab, camera, or inte
 
 ## Constitutional Rules (절대 원칙)
 
-1. **`Assets/**/*.cs` 디스크 직접 쓰기 금지.** 신규 C# 스크립트는 반드시 `script-update-or-create` MCP tool 또는 Unity Editor 메뉴 경유. `Write`/`echo >` 등 외부 디스크 쓰기는 `CompilationPipeline.sourceFiles` 누락을 일으켜 CS0103 발생. (`.claude/rules/unity-cli.md`)
+1. **열려 있는 Unity 편집기 밑에서 `.cs`·`.asmdef`를 바깥에서 고치지 않는다.** 새 `.cs`와 그 `.meta`(`fileFormatVersion: 2` + 새 32자리 GUID)는 직접 작성해 함께 커밋한다. 편집기가 열린 동안 바깥에서 고치면 컴파일 캐시가 바뀐 파일을 놓쳐 CS0103이 난다. (`.claude/rules/unity-cli.md`)
 
 2. **엔티티 데이터-드리븐 절대 원칙.** 모든 게임 엔티티(생활 활동·선택지·특성·기술·진로·직무·관계·장소·도구·자원·지식·상태이상·레시피·레거시 작물/세대 프로필)는 100% ScriptableObject로 정의. `if (activityId == "X")`, `if (cropId == "X")`, `switch(toolId)`, 활동/선택지/작물/도구별 C# 클래스, ID enum 모두 **금지**. 메카닉은 `LifeActivityDefinition` SO + 전략 배열, `LifeChoiceDefinition` SO + outcome 전략 배열, `ToolDefinition` SO + `ToolEffectBase[]`, `KnowledgeNode` SO + `KnowledgeTriggerBase[]` 처럼 SO 전략 배열로만 표현. (`.claude/rules/path-based/assets-data.md`, CI 게이트 `Scripts/ci/check-no-entity-id-branching.sh`)
 
