@@ -178,6 +178,54 @@ namespace Rootborn.Tests.EditMode.Save
         }
 
         [Test]
+        public void StartNewSlot_ClearsLeftoverFilesOfAStoryWhoseMetadataIsGone()
+        {
+            var root = MakeTempRoot();
+            try
+            {
+                // An unreadable or missing metadata shows the slot as empty, but old progress files can still be there.
+                var old = new SaveService("slot-1", root);
+                old.WriteJson("wearables-local-player.json", "{\"legacyImported\":true}");
+                old.WriteJson("student-life-progress.json", "{\"day\":9}");
+                File.WriteAllText(Path.Combine(old.DirectoryPath, "metadata.json"), "not json");
+
+                var service = new SaveService("slot-0", root);
+                Assert.IsNull(service.LoadMetadata("slot-1"));
+                Assert.IsTrue(service.StartNewSlot(service.CreateMetadata("slot-1", new CharacterCustomization(), 11, 22)));
+
+                Assert.IsNotNull(service.LoadMetadata("slot-1"));
+                Assert.AreEqual(new[] { "metadata.json" }, System.Array.ConvertAll(Directory.GetFiles(old.DirectoryPath), Path.GetFileName),
+                    "A new story must not inherit the old story's outfit, progress or anything else.");
+            }
+            finally
+            {
+                Directory.Delete(root, true);
+            }
+        }
+
+        [Test]
+        public void StartNewSlot_NeverOverwritesAStoryThatStillLoads()
+        {
+            var root = MakeTempRoot();
+            try
+            {
+                var service = new SaveService("slot-0", root);
+                var existing = service.CreateMetadata("slot-1", new CharacterCustomization(), 11, 22);
+                existing.DisplayName = "Kept";
+                service.SaveMetadata(existing);
+                new SaveService("slot-1", root).WriteJson("student-life-progress.json", "{\"day\":9}");
+
+                Assert.IsFalse(service.StartNewSlot(service.CreateMetadata("slot-1", new CharacterCustomization(), 33, 44)));
+                Assert.AreEqual("Kept", service.LoadMetadata("slot-1").DisplayName);
+                Assert.AreEqual("{\"day\":9}", new SaveService("slot-1", root).ReadJson("student-life-progress.json"));
+            }
+            finally
+            {
+                Directory.Delete(root, true);
+            }
+        }
+
+        [Test]
         public void CreateMetadata_RejectsUnsafeSlotId()
         {
             var root = MakeTempRoot();

@@ -302,7 +302,12 @@ namespace Rootborn.UI.MainMenu
             var metadata = CreateMetadataForSelectedCharacter(slotId, worldSeed, tileSeed);
             metadata.CharacterAppearanceSnapshot = snapshot;
             if (!string.IsNullOrWhiteSpace(playerName)) metadata.DisplayName = playerName.Trim();
-            service.SaveMetadata(metadata);
+            // Never mixes in files an unreadable earlier story left behind, and never replaces a story that still loads.
+            if (!service.StartNewSlot(metadata))
+            {
+                EntryFailure();
+                return;
+            }
             TryEnterSlot(metadata, true);
         }
 

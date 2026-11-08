@@ -199,6 +199,21 @@ namespace Rootborn.Game.Save
             return true;
         }
 
+        /// <summary>
+        /// Starts a new story in a slot that has no loadable story. Files left by an unreadable or missing metadata
+        /// (old progress, outfits, career data) are removed first so the new story starts clean.
+        /// Returns false and changes nothing when the slot still holds a story that loads.
+        /// </summary>
+        public bool StartNewSlot(SaveSlotMetadata metadata)
+        {
+            if (metadata == null) throw new ArgumentNullException(nameof(metadata));
+            string safeSlotId = SanitizeOrThrow(metadata.SlotId);
+            if (LoadMetadata(safeSlotId) != null) return false;
+            DeleteSlot(safeSlotId);
+            SaveMetadata(metadata);
+            return true;
+        }
+
         public void WriteJson(string fileName, string json)
         {
             WriteAtomic(Path.Combine(_dir, fileName), json);
