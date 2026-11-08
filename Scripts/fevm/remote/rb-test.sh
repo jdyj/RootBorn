@@ -4,6 +4,8 @@
 # Both platforms run on Xvfb + VirtualGL GPU. -nographics caps textures at 8192px, so a first import without a GPU
 # fails large sheets (e.g. 1024x8288) and caches the failure in Library. RB_NOGRAPHICS=1 forces -nographics for EditMode.
 # Unity can hang on exit in the MCP plugin after saving results; a watchdog stops it 90 s after the run completes.
+# RB_WINDOWED=1 runs without -batchmode (an editor window with a Game View, so ScreenCapture works); the window is
+# grown to 1920x1080 like rb-editor.sh. Scene backups from force-stopped runs are removed first.
 # Results: <project-dir>/rb-results/<platform>-<time>.{xml,log}; prints a summary.
 set -u
 . ~/farmer-unity-verify/tools/rb-env.sh
@@ -11,7 +13,9 @@ P=$(cd "$1" && pwd -P); PLAT=$2; FILTER=${3:-}; ADDR=${4:-asset}
 if rb_project_busy "$P"; then echo "Unity already running on $P"; exit 1; fi
 O=$P/rb-results; mkdir -p "$O"; T=$(date +%Y%m%d-%H%M%S)
 X=$O/$PLAT-$T.xml; L=$O/$PLAT-$T.log
-ARGS=(-batchmode -projectPath "$P" -buildTarget StandaloneWindows64 -runTests -testPlatform "$PLAT" -testResults "$X" -logFile "$L")
+BATCH=(-batchmode); [ "${RB_WINDOWED:-0}" = 1 ] && BATCH=()
+rm -rf "$P/Temp/__Backupscenes"
+ARGS=("${BATCH[@]}" -projectPath "$P" -buildTarget StandaloneWindows64 -runTests -testPlatform "$PLAT" -testResults "$X" -logFile "$L")
 [ -n "$FILTER" ] && ARGS+=(-testFilter "$FILTER")
 if [ "$ADDR" = rebuild ]; then
   rb_xvfb || exit 1
@@ -23,6 +27,14 @@ free -g | sed -n 2p
 S=$(date +%s)
 if [ "$PLAT" = EditMode ] && [ "${RB_NOGRAPHICS:-0}" = 1 ]; then "$RB_UNITY" -nographics "${ARGS[@]}" & UP=$!
 else rb_xvfb || exit 1; rb_unity_gpu "${ARGS[@]}" & UP=$!; fi
+if [ "${RB_WINDOWED:-0}" = 1 ]; then
+  ( R=$RB_TOOLS/root/x; X="env $RB_XENV DISPLAY=$RB_DISPLAY $R/usr/bin/xdotool"
+    for i in $(seq 1 180); do
+      W=$($X search --onlyvisible --name "^Unity - " 2>/dev/null | head -1)
+      if [ -n "$W" ]; then $X windowmove "$W" 0 0; $X windowsize "$W" 1920 1080; break; fi
+      sleep 10
+    done ) &
+fi
 ( while kill -0 $UP 2>/dev/null; do
     if grep -q "Test run completed" "$L" 2>/dev/null; then
       sleep 90; if rb_project_busy "$P"; then echo "watchdog: Unity still running 90 s after results; stopping it"; pkill -TERM -f "[E]ditor/Unity.*-projectPath $P( |$)"; sleep 15; pkill -KILL -f "[E]ditor/Unity.*-projectPath $P( |$)"; fi

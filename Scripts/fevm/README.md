@@ -16,6 +16,7 @@
    - EditMode·PlayMode 모두 Xvfb(`:97`, 1920x1080, `-noreset`) + VirtualGL(`egl0`, `-force-glcore`) GPU 렌더링. `-nographics` 첫 임포트는 8192px 넘는 텍스처를 실패시킨다(`RB_NOGRAPHICS=1`로만 강제).
    - 네 번째 인자는 `ROOTBORN_AA_PLAYMODE`로 넘어간다. `rebuild`는 Addressables를 먼저 빌드하고 빌드본을 읽는다.
    - 결과: `<폴더>/rb-results/<플랫폼>-<시각>.xml|.log`, 요약(통과·실패 이름·컴파일 오류)을 출력한다.
+   - PlayMode 전체는 `RB_WINDOWED=1`(창 있는 편집기, -batchmode 없음)로 돌린다. 배치 모드는 도중에 멈춘 적이 있고 ScreenCapture가 파일을 쓰지 않는다. 2026-11-08 299cda192 창 모드: 166건 중 164 통과, 23분.
    - 결과 저장 뒤 Unity가 MCP 플러그인 종료에서 멈추면 90초 뒤 감시가 종료한다. 실행 뒤 바뀐 파일을 `git status`로 보여 준다.
    - `-buildTarget StandaloneWindows64`로 열어 Linux 타깃 전환을 피한다. 그래도 바뀐 `ProjectSettings`나 `.meta`는 Windows로 가져오지 않는다.
 
