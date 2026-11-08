@@ -17,8 +17,11 @@ namespace Rootborn.Tests.PlayMode.UI.Modern
         [UnityTest]
         public IEnumerator EmptyFilterKeepsScrollbarHiddenAcrossFramesAndRestoresBottomRowScrolling()
         {
-            var canvas = new GameObject("InventoryScrollbarFixture", typeof(Canvas));
+            // A real screen canvas with a raycaster and an EventSystem: the tabs are clicked with a mouse device.
+            var canvas = new GameObject("InventoryScrollbarFixture", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+            if (UnityEngine.EventSystems.EventSystem.current == null)
+                new GameObject("InventoryScrollbarEventSystem", typeof(UnityEngine.EventSystems.EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule)).transform.SetParent(canvas.transform, false);
             var root = new GameObject("Inventory", typeof(RectTransform), typeof(ModernUiInventoryPanel));
             root.transform.SetParent(canvas.transform, false);
             var player = new GameObject("InventoryScrollbarOwner", typeof(PlayerInventory));
