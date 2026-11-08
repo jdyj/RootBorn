@@ -196,8 +196,10 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
                     // Wheel down (negative) moves the list up to reveal rows below the viewport.
                     float wheel = targetY < viewport.rect.center.y ? -120f : 120f;
                     InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = over, scroll = new Vector2(0f, wheel) });
+                    InputSystem.Update();
                     yield return null;
                     InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = over });
+                    InputSystem.Update();
                     yield return null;
                 }
             }
@@ -226,16 +228,20 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             Assert.IsTrue(hits[0].gameObject.transform.IsChildOf(target.transform), label + " is covered by " + hits[0].gameObject.name);
 
             var scope = new RealPointerScope(events);
+            // Each event is processed at once: some fixtures update the Input System manually, and an unprocessed press is lost.
             try
             {
                 yield return null;
                 InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = point });
+                InputSystem.Update();
                 yield return null;
                 yield return null;
                 InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = point, buttons = 1 });
+                InputSystem.Update();
                 yield return null;
                 yield return null;
                 InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = point });
+                InputSystem.Update();
                 yield return null;
                 yield return null;
             }
