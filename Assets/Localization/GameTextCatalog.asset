@@ -3412,3 +3412,21 @@ MonoBehaviour:
   - key: ui.journal.quest.claim-failed
     ko: "\ubcf4\uc0c1\uc744 \ubc1b\uc9c0 \ubabb\ud588\uc5b4\uc694. \uac00\ubc29\uc5d0 \uc790\ub9ac\ub97c \ub9cc\ub4e4\uace0 \ub2e4\uc2dc \ud574 \ubcf4\uc138\uc694."
     en: "The reward could not be claimed. Make room in your bag and try again."
+  - key: ui.wardrobe.stage.playground
+    ko: "\uc5b4\ub9b0\uc774"
+    en: "Child"
+  - key: ui.wardrobe.stage.school
+    ko: "\ud559\uc0dd"
+    en: "Student"
+  - key: ui.wardrobe.stage.adult
+    ko: "\uc5b4\ub978"
+    en: "Adult"
+  - key: ui.wardrobe.slot.outfit
+    ko: "\uc637"
+    en: "Outfit"
+  - key: ui.wardrobe.slot.hair
+    ko: "\uba38\ub9ac"
+    en: "Hair"
+  - key: ui.wardrobe.hair.short_brown
+    ko: "\uc9e7\uc740 \uac08\uc0c9 \uba38\ub9ac"
+    en: "Short brown hair"
