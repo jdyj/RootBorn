@@ -52,7 +52,7 @@ namespace Rootborn.Editor.Tools
             var gameViewType = editorAssembly.GetType("UnityEditor.GameView");
             var singleton = typeof(ScriptableSingleton<>).MakeGenericType(sizesType);
             var sizes = singleton.GetProperty("instance", BindingFlags.Public | BindingFlags.Static).GetValue(null);
-            var groupKind = sizesType.GetProperty("currentGroupType", BindingFlags.Public | BindingFlags.Static).GetValue(null);
+            var groupKind = sizesType.GetProperty("currentGroupType", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static).GetValue(sizes);
             var group = sizesType.GetMethod("GetGroup", BindingFlags.Public | BindingFlags.Instance).Invoke(sizes, new[] { groupKind });
             var groupType = group.GetType();
 
