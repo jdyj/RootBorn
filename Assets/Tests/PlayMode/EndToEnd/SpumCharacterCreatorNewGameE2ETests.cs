@@ -26,6 +26,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             _saveRoot = Path.Combine(Application.temporaryCachePath, "rootborn-creator-newgame-" + System.Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_saveRoot);
             SaveSlotSelectPanel.SetSaveRootForTests(_saveRoot);
+            // The game side (progress, outfits) must use the same folder, or it reads and leaves files in the real save folder.
+            SaveService.SetRootDirectoryForTests(_saveRoot);
             DestroyIfFound("SaveSlotSelectPanel");
             DestroyIfFound("SaveSlotCanvas");
             DestroyIfFound("EventSystem");
@@ -37,6 +39,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         {
             ActiveSaveContext.Clear();
             SaveSlotSelectPanel.SetSaveRootForTests(null);
+            SaveService.SetRootDirectoryForTests(null);
             DestroyIfFound("SaveSlotSelectPanel");
             DestroyIfFound("SaveSlotCanvas");
             DestroyIfFound("EventSystem");
