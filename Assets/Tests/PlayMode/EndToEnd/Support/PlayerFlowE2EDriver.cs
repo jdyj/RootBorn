@@ -146,33 +146,36 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
 
         private sealed class RealPointerScope
         {
-            private readonly Rootborn.Game.Common.PassiveInputModule _passive;
-            private readonly UnityEngine.InputSystem.UI.InputSystemUIInputModule _module;
-            private readonly bool _addedModule, _moduleWasEnabled, _passiveWasEnabled;
+            private readonly BaseInputModule[] _disabled;
+            private readonly UnityEngine.InputSystem.UI.InputSystemUIInputModule _temporary;
             public readonly Mouse Mouse;
 
-            // Scenario tests park a passive module so stray input does nothing; real pointer input uses the UI module meanwhile.
+            // A fresh UI module for this pointer only: scenario tests park a passive module, and a module created before
+            // the test's input fixture may not see a device added now. Other modules are switched off meanwhile.
             public RealPointerScope(EventSystem events)
             {
-                _passive = events.GetComponent<BaseInputModule>() as Rootborn.Game.Common.PassiveInputModule;
-                _module = events.GetComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
-                _addedModule = _module == null;
-                if (_addedModule) _module = events.gameObject.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
-                _moduleWasEnabled = _module.enabled;
-                _passiveWasEnabled = _passive != null && _passive.enabled;
-                if (_passive != null) _passive.enabled = false;
-                _module.enabled = true;
+                var modules = events.GetComponents<BaseInputModule>();
+                var disabled = new List<BaseInputModule>();
+                foreach (var module in modules)
+                {
+                    if (!module.enabled) continue;
+                    module.enabled = false;
+                    disabled.Add(module);
+                }
+
+                _disabled = disabled.ToArray();
                 Mouse = InputSystem.AddDevice<Mouse>();
                 Mouse.MakeCurrent();
+                _temporary = events.gameObject.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
             }
 
             public void Dispose()
             {
+                // Removed at once (not Destroy, which waits for the end of the frame and could swallow the next click).
+                if (_temporary != null) Object.DestroyImmediate(_temporary);
                 InputSystem.RemoveDevice(Mouse);
-                // Disabled, not destroyed: Destroy waits for the end of the frame, and a click right after would get the
-                // dying module back from GetComponent and lose its press.
-                if (_module != null) _module.enabled = !_addedModule && _moduleWasEnabled;
-                if (_passive != null) _passive.enabled = _passiveWasEnabled;
+                foreach (var module in _disabled)
+                    if (module != null) module.enabled = true;
             }
         }
 
@@ -196,10 +199,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
                     // Wheel down (negative) moves the list up to reveal rows below the viewport.
                     float wheel = targetY < viewport.rect.center.y ? -120f : 120f;
                     InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = over, scroll = new Vector2(0f, wheel) });
-                    InputSystem.Update();
                     yield return null;
                     InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = over });
-                    InputSystem.Update();
                     yield return null;
                 }
             }
@@ -228,20 +229,16 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             Assert.IsTrue(hits[0].gameObject.transform.IsChildOf(target.transform), label + " is covered by " + hits[0].gameObject.name);
 
             var scope = new RealPointerScope(events);
-            // Each event is processed at once: some fixtures update the Input System manually, and an unprocessed press is lost.
             try
             {
                 yield return null;
                 InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = point });
-                InputSystem.Update();
                 yield return null;
                 yield return null;
                 InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = point, buttons = 1 });
-                InputSystem.Update();
                 yield return null;
                 yield return null;
                 InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = point });
-                InputSystem.Update();
                 yield return null;
                 yield return null;
             }
