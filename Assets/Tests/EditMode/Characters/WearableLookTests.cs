@@ -75,6 +75,17 @@ namespace Rootborn.Tests.EditMode.Characters
         }
 
         [Test]
+        public void WEAR_LOOK_004_APublishedLookCodeIsRebuiltAndUnknownCodesAreRefused()
+        {
+            var resolver = new WearableLookResolver(Registry());
+            var look = resolver.Resolve(null, 9, true, "facility.interior");
+            Assert.That(resolver.TryResolveCode(look.Code, out var rebuilt), Is.True);
+            Assert.That(rebuilt.SameAs(look), Is.True);
+            Assert.That(resolver.TryResolveCode("stage.adult|wearable.not_shipped", out _), Is.False);
+            Assert.That(resolver.TryResolveCode("adult_short_brown_chef", out _), Is.False, "a legacy id is not a look code");
+        }
+
+        [Test]
         public void WEAR_SAVE_001_LegacyChoicesMoveInOnceAndLaterChoicesPersist()
         {
             var registry = Registry();

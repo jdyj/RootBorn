@@ -146,14 +146,16 @@ namespace Rootborn.Tests.PlayMode.Characters
                 var panelObject = GameObject.Find(Rootborn.UI.Characters.GrowingWardrobeRuntimeInstaller.PanelName);
                 Assert.That(panelObject, Is.Not.Null, "A real click should open the wardrobe.");
                 var panel = panelObject.GetComponent<Rootborn.UI.Characters.GrowingWardrobePanel>();
-                Assert.That(panel.VisibleCardCount, Is.EqualTo(driver.WardrobeOptions().Count));
+                int offered = 0;
+                foreach (var section in driver.WardrobeSections()) offered += section.Cards.Count;
+                Assert.That(panel.VisibleCardCount, Is.EqualTo(offered));
                 Assert.That(panel.VisibleCardCount, Is.GreaterThanOrEqualTo(3));
                 yield return CaptureScreen("wardrobe-open");
 
-                var chef = GameObject.Find("Outfit_adult_short_brown_chef");
+                var chef = GameObject.Find("Outfit_wearable.outfit_chef");
                 Assert.That(chef, Is.Not.Null);
                 yield return Click(chef);
-                Assert.That(view.Appearance.Id, Does.Contain("chef"));
+                Assert.That(view.LookKey, Does.Contain("chef"));
                 yield return CaptureScreen("wardrobe-chef-chosen");
                 Assert.That(Rootborn.Game.Common.UiGameplayInputLock.IsBlocked, Is.True, "Movement stays locked while it is open.");
                 panel.Hide();
@@ -161,8 +163,9 @@ namespace Rootborn.Tests.PlayMode.Characters
 
                 string slot = player.GetComponent<Rootborn.Game.StudentLife.StudentLifeProgressComponent>().Progress.SaveSlot;
                 string id = player.GetComponent<Rootborn.Game.StudentLife.StudentLifeProgressComponent>().Progress.PlayerId;
-                var saved = GrowingWardrobeStore.Load(new Rootborn.Game.Save.SaveService(slot, saveRoot), id);
-                Assert.That(saved.GetChoice(adult.Body.Id), Does.Contain("chef"), "Choice must be written to the save folder.");
+                string savedJson = File.ReadAllText(Path.Combine(new Rootborn.Game.Save.SaveService(slot, saveRoot).DirectoryPath,
+                    Rootborn.Game.Characters.Wearables.WearableWardrobeStore.FileNameFor(id)));
+                Assert.That(savedJson, Does.Contain("wearable.outfit_chef"), "Choice must be written to the save folder.");
 
                 // A fresh scene and driver must restore the saved outfit on their own.
                 yield return LoadTown();
@@ -172,7 +175,7 @@ namespace Rootborn.Tests.PlayMode.Characters
                 Assert.That(driver, Is.Not.Null);
                 driver.Apply(40, true, "facility.none");
                 yield return null;
-                Assert.That(view.Appearance.Id, Does.Contain("chef"), "Saved choice should win over the adult default after reload.");
+                Assert.That(view.LookKey, Does.Contain("chef"), "Saved choice should win over the adult default after reload.");
                 Assert.That(view.OutfitRenderer.sprite, Is.Not.Null);
             }
             finally
@@ -229,7 +232,7 @@ namespace Rootborn.Tests.PlayMode.Characters
         private IEnumerator CheckLook(GrowingCharacterVisualView view, string expected, string label)
         {
             yield return null;
-            Assert.That(view.Appearance.Id, Does.Contain(expected), label);
+            Assert.That(view.LookKey, Does.Contain(expected), label);
             Assert.That(view.BodyRenderer.sprite, Is.Not.Null, label);
             Assert.That(view.OutfitRenderer.sprite, Is.Not.Null, label);
             yield return Capture(label);

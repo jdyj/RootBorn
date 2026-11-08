@@ -22,6 +22,8 @@ namespace Rootborn.Game.Characters.Wearables
         public GrowingCharacterSheetDefinition Body { get; }
         public IReadOnlyList<GrowingCharacterSheetDefinition> Layers { get; }
         public IReadOnlyList<string> WearableIds { get; }
+        /// <summary>Short network code for this look (Rootborn.Core WearableLookCode).</summary>
+        public string Code => WearableLookCode.Encode(StageId, WearableIds);
 
         public bool SameAs(WearableLook other)
         {
@@ -87,6 +89,25 @@ namespace Rootborn.Game.Characters.Wearables
             }
 
             return new WearableLook(stage.Id, stage.Body, layers, ids);
+        }
+
+        /// <summary>The look another player published, or false when the code names anything this game does not ship.</summary>
+        public bool TryResolveCode(string code, out WearableLook look)
+        {
+            look = null;
+            if (!WearableLookCode.TryDecode(Catalog, code, out string stageId, out var ids)) return false;
+            var stage = FindStage(stageId);
+            if (stage == null) return false;
+            var layers = new List<GrowingCharacterSheetDefinition>(ids.Count);
+            foreach (string id in ids)
+            {
+                var sheet = FindWearable(id)?.SheetFor(stageId);
+                if (sheet == null) return false;
+                layers.Add(sheet);
+            }
+
+            look = new WearableLook(stageId, stage.Body, layers, ids);
+            return true;
         }
 
         /// <summary>

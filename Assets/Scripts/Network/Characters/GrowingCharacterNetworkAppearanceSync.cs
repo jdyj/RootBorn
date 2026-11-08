@@ -1,6 +1,7 @@
 using System.Collections;
 using Rootborn.Game.Characters;
 using Rootborn.Game.Characters.Growing;
+using Rootborn.Game.Characters.Wearables;
 using Rootborn.Game.Common;
 using Unity.Collections;
 using Unity.Netcode;
@@ -9,18 +10,20 @@ using UnityEngine;
 namespace Rootborn.Network.Characters
 {
     /// <summary>
-    /// The owner publishes which look it wears; everyone else shows that look. Only an appearance id crosses
-    /// the network, and it is resolved through the registry, so a client can only pick assets the game ships.
+    /// The owner publishes which look it wears; everyone else shows that look. Only a look key crosses the network
+    /// (a wearable look code, or a legacy appearance id), resolved through the registry, so a client can only show
+    /// assets the game ships (codes are checked by Rootborn.Core WearableLookCode).
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class GrowingCharacterNetworkAppearanceSync : NetworkBehaviour
     {
-        private readonly NetworkVariable<FixedString64Bytes> _appearanceId = new NetworkVariable<FixedString64Bytes>(
+        private readonly NetworkVariable<FixedString128Bytes> _appearanceId = new NetworkVariable<FixedString128Bytes>(
             default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
         private const float RegistryRetrySeconds = 0.25f;
 
         private GrowingCharacterVisualView _view;
+        private WearableLookResolver _resolver;
 
         public override void OnNetworkSpawn()
         {
@@ -44,7 +47,7 @@ namespace Rootborn.Network.Characters
             GrowingCharacterRuntimeInstaller.Installed -= HandleInstalled;
             _appearanceId.OnValueChanged -= HandleValueChanged;
             StopAllCoroutines();
-            if (_view != null) _view.AppearanceChanged -= HandleLocalChange;
+            if (_view != null) _view.LookChanged -= HandleLocalChange;
             _view = null;
         }
 
@@ -56,22 +59,24 @@ namespace Rootborn.Network.Characters
         private void BindView(GrowingCharacterVisualView view)
         {
             if (view == null || view == _view) return;
-            if (_view != null) _view.AppearanceChanged -= HandleLocalChange;
+            if (_view != null) _view.LookChanged -= HandleLocalChange;
             _view = view;
             _view.IsRemote = !IsOwner;
-            _view.AppearanceChanged += HandleLocalChange;
-            if (IsOwner) HandleLocalChange(_view.Appearance);
+            _view.LookChanged += HandleLocalChange;
+            if (IsOwner) HandleLocalChange();
             else ApplyRemote(_appearanceId.Value.ToString());
         }
 
-        private void HandleLocalChange(GrowingCharacterAppearanceDefinition look)
+        private void HandleLocalChange()
         {
-            if (!IsOwner || look == null) return;
-            var id = new FixedString64Bytes(look.Id);
+            if (!IsOwner || _view == null) return;
+            string key = _view.LookKey;
+            if (string.IsNullOrEmpty(key)) return;
+            var id = new FixedString128Bytes(key);
             if (!_appearanceId.Value.Equals(id)) _appearanceId.Value = id;
         }
 
-        private void HandleValueChanged(FixedString64Bytes previous, FixedString64Bytes current)
+        private void HandleValueChanged(FixedString128Bytes previous, FixedString128Bytes current)
         {
             if (!IsOwner) ApplyRemote(current.ToString());
         }
@@ -80,6 +85,13 @@ namespace Rootborn.Network.Characters
         {
             if (IsOwner || _view == null || string.IsNullOrEmpty(id)) return;
             if (!GameDataRegistryProvider.TryGet(out var registry)) return;
+            if (_resolver == null) _resolver = new WearableLookResolver(registry);
+            if (_resolver.TryResolveCode(id, out var wearableLook))
+            {
+                _view.ApplyLayers(wearableLook.Body, wearableLook.Layers, wearableLook.Code);
+                return;
+            }
+
             var look = FindById(registry.CharacterAppearances, id);
             if (look != null) _view.Apply(look);
         }

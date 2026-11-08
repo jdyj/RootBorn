@@ -2,6 +2,7 @@ using System.Collections;
 using System.IO;
 using NUnit.Framework;
 using Rootborn.Game.Characters.Growing;
+using Rootborn.Game.Common;
 using Rootborn.Game.Save;
 using Rootborn.UI.Characters;
 using Rootborn.UI.MainMenu;
@@ -97,7 +98,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
 
             var driver = default(GrowingCharacterStageDriver);
             float elapsed = 0f;
-            while (elapsed < 10f && (driver == null || driver.CurrentLook == null))
+            while (elapsed < 10f && (driver == null || !driver.HasLook))
             {
                 var player = GameObject.Find("Player");
                 driver = player != null ? player.GetComponent<GrowingCharacterStageDriver>() : null;
@@ -107,8 +108,12 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
 
             Assert.IsNotNull(driver, "The town player must use the growing character.");
             // The stage's own rules pick the body; the creator's choice decides which outfit it wears.
-            var worn = driver.Apply(chosen.MinimumStudentDay, chosen.RequiresAdult, null);
-            Assert.AreEqual(chosen.Id, worn != null ? worn.Id : null, "The character must start that stage in the outfit picked in the creator.");
+            string worn = driver.Apply(chosen.MinimumStudentDay, chosen.RequiresAdult, null);
+            Assert.IsNotNull(worn);
+            GameDataRegistryProvider.TryGet(out var registry);
+            var replacing = new Rootborn.Game.Characters.Wearables.WearableLookResolver(registry).LegacyAppearanceMap(registry.CharacterAppearances);
+            Assert.That(replacing.ContainsKey(chosen.Id), Is.True, chosen.Id);
+            StringAssert.Contains(replacing[chosen.Id], worn, "The character must start that stage in the outfit picked in the creator.");
         }
 
         [UnityTest]

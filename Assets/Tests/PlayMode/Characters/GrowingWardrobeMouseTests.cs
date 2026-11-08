@@ -53,7 +53,7 @@ namespace Rootborn.Tests.PlayMode.Characters
                 var view = player.GetComponentInChildren<GrowingCharacterVisualView>(true);
                 Assert.That(view, Is.Not.Null);
                 yield return SetStudentDay(player, 2);
-                Assert.That(view.Appearance.Id, Does.Contain("school_uniform"), "Day 2 should grow into the school look by itself.");
+                Assert.That(view.LookKey, Does.Contain("school_uniform"), "Day 2 should grow into the school look by itself.");
 
                 var module = EventSystem.current.GetComponent<BaseInputModule>();
                 Assert.That(module, Is.InstanceOf<InputSystemUIInputModule>(), "Town must read the real device in play.");
@@ -64,10 +64,10 @@ namespace Rootborn.Tests.PlayMode.Characters
                 yield return ClickAt(GameObject.Find(GrowingWardrobeRuntimeInstaller.ButtonName));
                 Assert.That(GameObject.Find(GrowingWardrobeRuntimeInstaller.PanelName), Is.Not.Null, "A device click at the button should open the wardrobe.");
                 yield return null;
-                var card = GameObject.Find("Outfit_school_short_brown_school_casual");
+                var card = GameObject.Find("Outfit_wearable.outfit_school_casual");
                 Assert.That(card, Is.Not.Null);
                 yield return ClickAt(card);
-                Assert.That(view.Appearance.Id, Does.Contain("school_casual"), "A device click on a card should change the outfit.");
+                Assert.That(view.LookKey, Does.Contain("school_casual"), "A device click on a card should change the outfit.");
                 yield return Capture("mouse-school-casual-panel");
                 yield return ClickAt(GameObject.Find(GrowingWardrobeRuntimeInstaller.ButtonName));
                 yield return Capture("mouse-school-casual-closed");
@@ -77,7 +77,7 @@ namespace Rootborn.Tests.PlayMode.Characters
                 player = GameObject.Find("Player");
                 view = player.GetComponentInChildren<GrowingCharacterVisualView>(true);
                 yield return SetStudentDay(player, 2);
-                Assert.That(view.Appearance.Id, Does.Contain("school_casual"), "The saved choice should return after reload.");
+                Assert.That(view.LookKey, Does.Contain("school_casual"), "The saved choice should return after reload.");
                 Assert.That(view.OutfitRenderer.sprite, Is.Not.Null);
             }
             finally
@@ -111,7 +111,7 @@ namespace Rootborn.Tests.PlayMode.Characters
                 }
 
                 Assert.That(owner != null && owner.CanMutate, Is.True, "Town should give the player a career owner.");
-                Assert.That(view.Appearance.Id, Does.Not.Contain("chef"));
+                Assert.That(view.LookKey, Does.Not.Contain("chef"));
                 var facility = UnityEditor.AssetDatabase.LoadAssetAtPath<FacilityDefinition>("Assets/Data/Careers/Facilities/Chef/Facility_Chef.asset");
                 Assert.That(facility, Is.Not.Null);
 
@@ -124,20 +124,20 @@ namespace Rootborn.Tests.PlayMode.Characters
                 });
                 Assert.That(result.Applied, Is.True);
                 yield return null;
-                Assert.That(view.Appearance.Id, Does.Contain("chef"));
+                Assert.That(view.LookKey, Does.Contain("chef"));
                 yield return Capture("adult-chef-apron");
 
                 yield return LoadTown();
                 player = GameObject.Find("Player");
                 view = player.GetComponentInChildren<GrowingCharacterVisualView>(true);
                 waited = 0f;
-                while (waited < 10f && !view.Appearance.Id.Contains("chef"))
+                while (waited < 10f && !view.LookKey.Contains("chef"))
                 {
                     waited += Time.unscaledDeltaTime;
                     yield return null;
                 }
 
-                Assert.That(view.Appearance.Id, Does.Contain("chef"), "A saved career should bring the look back after reload.");
+                Assert.That(view.LookKey, Does.Contain("chef"), "A saved career should bring the look back after reload.");
             }
             finally
             {

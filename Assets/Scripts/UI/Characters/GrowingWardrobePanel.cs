@@ -10,7 +10,38 @@ using UnityEngine.UI;
 
 namespace Rootborn.UI.Characters
 {
-    /// <summary>Lists the outfits that fit the current body. Cards are reused, so reopening creates nothing new.</summary>
+    /// <summary>One wardrobe card: what to wear and how it looks (body plus layers in draw order).</summary>
+    public sealed class WardrobeCard
+    {
+        public WardrobeCard(string id, string labelKey, GrowingCharacterSheetDefinition body, IReadOnlyList<GrowingCharacterSheetDefinition> layers, bool selected)
+        {
+            Id = id ?? string.Empty;
+            LabelKey = labelKey;
+            Body = body;
+            Layers = layers ?? Array.Empty<GrowingCharacterSheetDefinition>();
+            Selected = selected;
+        }
+
+        public string Id { get; }
+        public string LabelKey { get; }
+        public GrowingCharacterSheetDefinition Body { get; }
+        public IReadOnlyList<GrowingCharacterSheetDefinition> Layers { get; }
+        public bool Selected { get; }
+    }
+
+    /// <summary>A wardrobe row: one wearable slot (or the legacy outfit list) and its cards.</summary>
+    public sealed class WardrobeSection
+    {
+        public WardrobeSection(string titleKey)
+        {
+            TitleKey = titleKey ?? string.Empty;
+        }
+
+        public string TitleKey { get; }
+        public List<WardrobeCard> Cards { get; } = new List<WardrobeCard>();
+    }
+
+    /// <summary>Shows wardrobe rows of cards. Cards and rows are reused, so reopening creates nothing new.</summary>
     [DisallowMultipleComponent]
     public sealed class GrowingWardrobePanel : MonoBehaviour
     {
@@ -19,6 +50,9 @@ namespace Rootborn.UI.Characters
         private const float CardGap = 16f;
         private const int StandingRow = 0;
         private const int StandingColumn = 1;
+        private const float RowTitleHeight = 32f;
+        private const float RowGap = 20f;
+        private const float PanelChrome = 120f;
 
         private sealed class Card
         {
@@ -26,12 +60,12 @@ namespace Rootborn.UI.Characters
             public Button Button;
             public Image Highlight;
             public Image Body;
-            public Image Outfit;
-            public Image Head;
+            public readonly List<Image> Layers = new List<Image>();
             public Text Label;
         }
 
         private readonly List<Card> _cards = new List<Card>();
+        private readonly List<Text> _rowTitles = new List<Text>();
         private RectTransform _cardRoot;
         private bool _built;
         private Action<string> _onChoose;
@@ -48,23 +82,51 @@ namespace Rootborn.UI.Characters
             }
         }
 
+        /// <summary>Legacy entry: one row of appearances that fit the current body.</summary>
         public void Show(IReadOnlyList<GrowingCharacterAppearanceDefinition> options, GrowingCharacterAppearanceDefinition current, Action<string> onChoose)
+        {
+            var section = new WardrobeSection(string.Empty);
+            if (options != null)
+                foreach (var look in options)
+                    if (look != null) section.Cards.Add(new WardrobeCard(look.Id, look.DisplayNameKey, look.Body, new[] { look.Outfit, look.Head }, look == current));
+            Show(new[] { section }, onChoose);
+        }
+
+        public void Show(IReadOnlyList<WardrobeSection> sections, Action<string> onChoose)
         {
             Build();
             _onChoose = onChoose;
             gameObject.SetActive(true);
             transform.SetAsLastSibling();
             UiGameplayInputLock.Acquire(this);
-            int count = options != null ? options.Count : 0;
-            while (_cards.Count < count) _cards.Add(MakeCard(_cards.Count));
-            float start = -(count * CardWidth + Mathf.Max(0, count - 1) * CardGap) / 2f;
-            for (int i = 0; i < _cards.Count; i++)
+            int rows = sections != null ? sections.Count : 0;
+            float rowHeight = CardHeight + RowTitleHeight + RowGap;
+            var rect = (RectTransform)transform;
+            rect.sizeDelta = new Vector2(rect.sizeDelta.x, Mathf.Max(rect.sizeDelta.y, PanelChrome + rows * rowHeight));
+            float top = (rows * rowHeight) / 2f;
+            int used = 0;
+            for (int row = 0; row < rows; row++)
             {
-                var card = _cards[i];
-                bool used = i < count;
-                card.Root.SetActive(used);
-                if (used) Fill(card, options[i], options[i] == current, start + i * (CardWidth + CardGap));
+                var section = sections[row];
+                float rowCenter = top - row * rowHeight - RowTitleHeight - CardHeight / 2f;
+                while (_rowTitles.Count <= row) _rowTitles.Add(MakeText(_cardRoot, "RowTitle_" + _rowTitles.Count, string.Empty, Vector2.zero, new Vector2(400f, RowTitleHeight), 20, new Vector2(0.5f, 0.5f)));
+                var title = _rowTitles[row];
+                title.gameObject.SetActive(section.TitleKey.Length > 0);
+                title.text = section.TitleKey.Length > 0 ? GameText.Get(section.TitleKey) : string.Empty;
+                ((RectTransform)title.transform).anchoredPosition = new Vector2(0f, rowCenter + CardHeight / 2f + RowTitleHeight / 2f);
+                int count = section.Cards.Count;
+                float start = -(count * CardWidth + Mathf.Max(0, count - 1) * CardGap) / 2f;
+                for (int i = 0; i < count; i++)
+                {
+                    while (_cards.Count <= used) _cards.Add(MakeCard(_cards.Count));
+                    var card = _cards[used++];
+                    card.Root.SetActive(true);
+                    Fill(card, section.Cards[i], start + i * (CardWidth + CardGap), rowCenter);
+                }
             }
+
+            for (int i = used; i < _cards.Count; i++) _cards[i].Root.SetActive(false);
+            for (int i = rows; i < _rowTitles.Count; i++) _rowTitles[i].gameObject.SetActive(false);
         }
 
         public void Hide()
@@ -76,16 +138,18 @@ namespace Rootborn.UI.Characters
         private void OnDisable() => UiGameplayInputLock.Release(this);
         private void OnDestroy() => UiGameplayInputLock.Release(this);
 
-        private void Fill(Card card, GrowingCharacterAppearanceDefinition look, bool selected, float x)
+        private void Fill(Card card, WardrobeCard model, float x, float y)
         {
-            string id = look.Id;
+            string id = model.Id;
             card.Root.name = "Outfit_" + id;
-            ((RectTransform)card.Root.transform).anchoredPosition = new Vector2(x, 0f);
-            card.Highlight.color = selected ? new Color(0.95f, 0.72f, 0.28f, 1f) : new Color(0.93f, 0.87f, 0.74f, 1f);
-            SetFrame(card.Body, look.Body);
-            SetFrame(card.Outfit, look.Outfit);
-            SetFrame(card.Head, look.Head);
-            card.Label.text = GameText.Get(string.IsNullOrEmpty(look.DisplayNameKey) ? id : look.DisplayNameKey);
+            ((RectTransform)card.Root.transform).anchoredPosition = new Vector2(x, y);
+            card.Highlight.color = model.Selected ? new Color(0.95f, 0.72f, 0.28f, 1f) : new Color(0.93f, 0.87f, 0.74f, 1f);
+            SetFrame(card.Body, model.Body);
+            var rect = (RectTransform)card.Root.transform;
+            while (card.Layers.Count < model.Layers.Count) card.Layers.Add(MakeLayer(rect, "Layer_" + card.Layers.Count));
+            for (int i = 0; i < card.Layers.Count; i++) SetFrame(card.Layers[i], i < model.Layers.Count ? model.Layers[i] : null);
+            card.Label.transform.SetAsLastSibling();
+            card.Label.text = GameText.Get(string.IsNullOrEmpty(model.LabelKey) ? id : model.LabelKey);
             card.Button.onClick.RemoveAllListeners();
             card.Button.onClick.AddListener(() => _onChoose?.Invoke(id));
         }
@@ -128,8 +192,6 @@ namespace Rootborn.UI.Characters
                 Button = button,
                 Highlight = button.GetComponent<Image>(),
                 Body = MakeLayer(rect, "Body"),
-                Outfit = MakeLayer(rect, "Outfit"),
-                Head = MakeLayer(rect, "Head"),
                 Label = MakeText(rect, "Label", string.Empty, new Vector2(0f, -94f), new Vector2(CardWidth - 8f, 36f), 18, new Vector2(0.5f, 0.5f)),
             };
             return card;

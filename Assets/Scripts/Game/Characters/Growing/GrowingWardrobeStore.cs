@@ -36,6 +36,9 @@ namespace Rootborn.Game.Characters.Growing
             return safe.Append(".json").ToString();
         }
 
+        /// <summary>Every saved (body, appearance) choice, for the one-time move to wearable choices.</summary>
+        public IEnumerable<KeyValuePair<string, string>> Choices => _choices;
+
         public string GetChoice(string bodyId)
         {
             return !string.IsNullOrEmpty(bodyId) && _choices.TryGetValue(bodyId, out var id) ? id : null;

@@ -73,6 +73,11 @@ namespace Rootborn.Game.Characters.Growing
         public SpriteRenderer OutfitRenderer => _outfitRenderer;
         public SpriteRenderer HeadRenderer => _headRenderer;
         public int LayerCount => _layers.Count;
+        /// <summary>An opaque code for a layered look (set by whoever resolved it, e.g. for the network). Empty for legacy looks.</summary>
+        public string LookCode { get; private set; } = string.Empty;
+        /// <summary>The layered look code, or the legacy appearance id.</summary>
+        public string LookKey => LookCode.Length > 0 ? LookCode : _appearance != null ? _appearance.Id : string.Empty;
+        public bool HasLook => _appearance != null || _body != null || _layers.Count > 0;
 
         /// <summary>Layer renderers in draw order: outfit and head renderers first (prefab-wired), then extra ones.</summary>
         public SpriteRenderer LayerRenderer(int index)
@@ -87,6 +92,7 @@ namespace Rootborn.Game.Characters.Growing
         public void Apply(GrowingCharacterAppearanceDefinition appearance)
         {
             _appearance = appearance;
+            LookCode = string.Empty;
             SetLook(appearance != null ? appearance.Body : null,
                 appearance != null ? new[] { appearance.Outfit, appearance.Head } : null);
             AppearanceChanged?.Invoke(appearance);
@@ -94,9 +100,10 @@ namespace Rootborn.Game.Characters.Growing
         }
 
         /// <summary>Draws a body and wearable layers resolved by Rootborn.Core, lowest draw order first.</summary>
-        public void ApplyLayers(GrowingCharacterSheetDefinition body, IReadOnlyList<GrowingCharacterSheetDefinition> layers)
+        public void ApplyLayers(GrowingCharacterSheetDefinition body, IReadOnlyList<GrowingCharacterSheetDefinition> layers, string lookCode = null)
         {
             _appearance = null;
+            LookCode = lookCode ?? string.Empty;
             SetLook(body, layers);
             LookChanged?.Invoke();
         }

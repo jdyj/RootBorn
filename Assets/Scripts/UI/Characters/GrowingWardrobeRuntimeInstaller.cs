@@ -109,7 +109,7 @@ namespace Rootborn.UI.Characters
 
         private static void Show(GrowingWardrobePanel panel, GrowingCharacterStageDriver driver)
         {
-            panel.Show(driver.WardrobeOptions(), driver.CurrentLook, id =>
+            panel.Show(driver.WardrobeSections(), id =>
             {
                 driver.ChooseOutfit(id);
                 Show(panel, driver);

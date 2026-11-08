@@ -41,7 +41,8 @@ namespace Rootborn.Game.Characters.Growing
             }
 
             var rootRenderer = player.GetComponent<SpriteRenderer>();
-            if (view.Appearance == null) view.Apply(appearance);
+            // A reinstall keeps whatever look is already drawn (legacy appearance or wearable layers).
+            if (!view.HasLook) view.Apply(appearance);
             view.MatchSorting(rootRenderer);
             HideOtherVisuals(player, view);
             var adapter = player.GetComponent<PlayerCharacterVisualAdapter>();
