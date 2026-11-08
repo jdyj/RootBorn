@@ -294,23 +294,9 @@ namespace Rootborn.Tests.PlayMode.Interiors
                 _mouse.MakeCurrent();
                 if (_frame == 0)
                 {
+                    // Queued before every other Update (execution order -10000): the overlay reads the press in its own Update.
                     InputSystem.QueueStateEvent(_mouse, new MouseState { position = _screenPosition, buttons = 1 });
                     InputSystem.Update();
-
-                    var router = Object.FindFirstObjectByType<FurniturePlacementPointerRouter>();
-                    if (router != null)
-                    {
-                        typeof(FurniturePlacementPointerRouter).GetMethod("Update", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.Invoke(router, null);
-                    }
-
-                    var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
-                    if (overlay != null)
-                    {
-                        var overlayType = typeof(InteriorPlacementPreviewOverlay);
-                        overlayType.GetField("_wasMousePressed", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.SetValue(overlay, false);
-                        overlayType.GetMethod("Update", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.Invoke(overlay, null);
-                    }
-
                     _frame++;
                     return;
                 }
