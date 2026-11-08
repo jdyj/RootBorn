@@ -42,7 +42,7 @@ namespace Rootborn.Network.Session
 
             nm.OnClientConnectedCallback += HandleConnected;
             nm.OnClientDisconnectCallback += HandleDisconnected;
-            nm.ConnectionApprovalCallback = HandleApproval;
+            SessionApproval.EnableLimit(nm, MaxPlayers);
 
             Application.targetFrameRate = 30;
 
@@ -81,7 +81,7 @@ namespace Rootborn.Network.Session
 
                 nm.OnClientConnectedCallback -= HandleConnected;
                 nm.OnClientDisconnectCallback -= HandleDisconnected;
-                nm.ConnectionApprovalCallback = null;
+                SessionApproval.Disable(nm);
                 nm.Shutdown();
             }
             return Task.CompletedTask;
@@ -97,15 +97,6 @@ namespace Rootborn.Network.Session
         {
             Debug.Log($"[ROOTBORN] Dedicated server client disconnected id={id}");
             OnPlayerDisconnected?.Invoke(id);
-        }
-
-        private void HandleApproval(NetworkManager.ConnectionApprovalRequest req, NetworkManager.ConnectionApprovalResponse res)
-        {
-            var nm = NetworkManager.Singleton;
-            int currentPlayers = nm == null ? 0 : nm.ConnectedClientsIds.Count;
-            res.Approved = currentPlayers < MaxPlayers;
-            res.CreatePlayerObject = res.Approved;
-            res.Reason = res.Approved ? string.Empty : "server full";
         }
 
         private void HandleSceneEvent(SceneEvent sceneEvent)

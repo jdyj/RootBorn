@@ -50,6 +50,7 @@ namespace Rootborn.Tests.PlayMode.Network
             Assert.IsTrue(manager.IsServer, "Host session must start server authority.");
             Assert.IsTrue(manager.IsClient, "Host session must also start a local client.");
             Assert.IsTrue(manager.IsListening, "Host NetworkManager must be listening after StartHost.");
+            Assert.IsTrue(manager.NetworkConfig.ConnectionApproval, "Host must enforce -maxPlayers through connection approval (and match the client config hash).");
             Assert.AreEqual(1, manager.ConnectedClientsIds.Count, "Host-mode PlayMode gate should have exactly the local client connected.");
             Assert.GreaterOrEqual(connectedCount, 1, "HostSession must surface the local client connection callback.");
 

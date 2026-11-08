@@ -33,6 +33,7 @@ namespace Rootborn.Network.Session
 
             nm.OnClientConnectedCallback += HandleConnected;
             nm.OnClientDisconnectCallback += HandleDisconnected;
+            SessionApproval.EnableForClient(nm);
 
             if (!nm.StartClient())
             {

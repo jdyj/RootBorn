@@ -36,6 +36,7 @@ namespace Rootborn.Network.Session
 
             nm.OnClientConnectedCallback += HandleConnected;
             nm.OnClientDisconnectCallback += HandleDisconnected;
+            SessionApproval.EnableLimit(nm, config.MaxPlayers);
 
             if (!nm.StartHost())
             {
@@ -48,7 +49,7 @@ namespace Rootborn.Network.Session
                 nm.SceneManager.OnSceneEvent += HandleSceneEvent;
             }
 
-            Debug.Log($"[ROOTBORN] Host started - port={config.Port} saveSlot={config.SaveSlot}");
+            Debug.Log($"[ROOTBORN] Host started - port={config.Port} maxPlayers={config.MaxPlayers} saveSlot={config.SaveSlot}");
             if (nm.NetworkConfig != null && nm.NetworkConfig.EnableSceneManagement && nm.SceneManager != null)
             {
                 var status = nm.SceneManager.LoadScene(TownSceneName, LoadSceneMode.Single);
@@ -73,6 +74,7 @@ namespace Rootborn.Network.Session
 
                 nm.OnClientConnectedCallback -= HandleConnected;
                 nm.OnClientDisconnectCallback -= HandleDisconnected;
+                SessionApproval.Disable(nm);
                 nm.Shutdown();
             }
             return Task.CompletedTask;
