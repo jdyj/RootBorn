@@ -13,6 +13,25 @@ namespace Rootborn.Tests.EditMode.Player
   [TearDown]public void TearDown(){UnityEngine.Object.DestroyImmediate(_player);UnityEngine.Object.DestroyImmediate(_location);UnityEngine.Object.DestroyImmediate(_definition);UnityEngine.Object.DestroyImmediate(_identity);ActiveSaveContext.Set(_save);}
   [Test]public void SameObject_ActivityPriorityWinsRegardlessOfComponentOrder(){_location.AddComponent<LocationVisitInteractor>().Bind(_definition);var activity=_location.AddComponent<LocationActivityInteractor>();activity.Bind(_identity);Physics2D.SyncTransforms();var router=_player.GetComponent<PlayerInteractionRouter>();router.RefreshPromptNow();Assert.That(router.CurrentInteractable,Is.SameAs(activity));}
   [Test]public void SameObject_UnavailableFirstComponentDoesNotHideUsableInteraction(){_location.AddComponent<LocationActivityInteractor>();var visit=_location.AddComponent<LocationVisitInteractor>();visit.Bind(_definition);Physics2D.SyncTransforms();var router=_player.GetComponent<PlayerInteractionRouter>();router.RefreshPromptNow();Assert.That(router.CurrentInteractable,Is.SameAs(visit));}
+  [Test]public void NearerPartTimeWorkBeatsAFartherFacilityActivity()
+  {
+   // A work point beside a facility (errand helper next to the restaurant, 2 cells apart): the one the player stands at wins.
+   _player.AddComponent<Rootborn.Game.Player.PlayerInventory>();
+   var activity=_location.AddComponent<LocationActivityInteractor>();activity.Bind(_identity);
+   _location.transform.position=_player.transform.position+Vector3.right*1.2f;
+   var work=ScriptableObject.CreateInstance<PartTimeWorkDefinition>();
+   var workPoint=new GameObject("WorkPoint",typeof(BoxCollider2D));
+   try
+   {
+    workPoint.GetComponent<BoxCollider2D>().isTrigger=true;workPoint.transform.position=_player.transform.position+Vector3.left*.4f;
+    var job=workPoint.AddComponent<PartTimeWorkInteractor>();job.Bind(work);
+    Physics2D.SyncTransforms();var router=_player.GetComponent<PlayerInteractionRouter>();router.RefreshPromptNow();
+    Assert.That(router.CurrentInteractable,Is.SameAs(job));
+    workPoint.transform.position=_player.transform.position+Vector3.left*1.5f;Physics2D.SyncTransforms();router.RefreshPromptNow();
+    Assert.That(router.CurrentInteractable,Is.SameAs(activity),"standing at the facility, the facility wins");
+   }
+   finally{UnityEngine.Object.DestroyImmediate(workPoint);UnityEngine.Object.DestroyImmediate(work);}
+  }
   [Test]public void ChildCollider_UnavailableChildDoesNotHideParentActivity(){var activity=_location.AddComponent<LocationActivityInteractor>();activity.Bind(_identity);UnityEngine.Object.DestroyImmediate(_location.GetComponent<BoxCollider2D>());var child=new GameObject("Child",typeof(BoxCollider2D),typeof(LocationVisitInteractor));child.transform.SetParent(_location.transform,false);child.GetComponent<BoxCollider2D>().isTrigger=true;Physics2D.SyncTransforms();var router=_player.GetComponent<PlayerInteractionRouter>();router.RefreshPromptNow();Assert.That(router.CurrentInteractable,Is.SameAs(activity));}
  }
 }
