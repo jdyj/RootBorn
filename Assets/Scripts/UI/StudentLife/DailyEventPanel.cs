@@ -181,7 +181,10 @@ namespace Rootborn.UI.StudentLife
                 _choiceLabels[i] = button.GetComponentInChildren<Text>(true);
             }
             var close = MakeButton(rt, "DailyEventCloseButton", new Vector2(504f, 342f), new Vector2(48f, 48f));
-            close.GetComponentInChildren<Text>(true).text = "×";
+            var closeLabel = close.GetComponentInChildren<Text>(true);
+            closeLabel.text = "×";
+            // The 48px button leaves a 16px label box; a glyph wider than that (e.g. Noto Sans CJK) would wrap out of sight.
+            closeLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
             close.onClick.AddListener(Hide);
             _deferButton = MakeButton(rt, "DailyEventDeferButton", new Vector2(-130f, -326f), new Vector2(210f, 52f));
             _deferButton.GetComponentInChildren<Text>(true).text = GameText.Get("life.event.ui.later");
