@@ -56,13 +56,8 @@ namespace Rootborn.Tests.PlayMode.Interiors
             var furnitureTilemap = GameObject.Find("AuthoredUserFurniture")?.GetComponent<Tilemap>();
             int chairCountBefore = furnitureTilemap != null ? CountTiles(furnitureTilemap, ChairTileName) : 0;
 
-            var mouse = InputSystem.AddDevice<Mouse>();
-            mouse.MakeCurrent();
-            var driver = new GameObject("FurnitureUiMouseClickDriver").AddComponent<MouseClickFrameDriver>();
-            driver.Configure(mouse, buttonCenter);
-            yield return null;
-            yield return null;
-            InputSystem.RemoveDevice(mouse);
+            // A mouse device press and release over the button, handled by the scene's UI input module (exactly one click).
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickButton(button);
 
             var status = GameObject.Find("InteriorPlacementStatusText")?.GetComponent<Text>();
             Assert.IsNotNull(status);
