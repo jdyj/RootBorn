@@ -167,6 +167,9 @@ namespace Rootborn.Game.Common
         [SerializeField] private CharacterPartAnimationClipDefinition[] _characterPartAnimationClips = Array.Empty<CharacterPartAnimationClipDefinition>();
         [SerializeField] private CharacterPartMotionDefinition _defaultCharacterPartMotion;
         [SerializeField] private CharacterAppearanceDefinition[] _characterAppearances = Array.Empty<CharacterAppearanceDefinition>();
+        [SerializeField] private Rootborn.Game.Characters.Wearables.CharacterGrowthStageDefinition[] _growthStages = Array.Empty<Rootborn.Game.Characters.Wearables.CharacterGrowthStageDefinition>();
+        [SerializeField] private Rootborn.Game.Characters.Wearables.WearableSlotDefinition[] _wearableSlots = Array.Empty<Rootborn.Game.Characters.Wearables.WearableSlotDefinition>();
+        [SerializeField] private Rootborn.Game.Characters.Wearables.WearableDefinition[] _wearables = Array.Empty<Rootborn.Game.Characters.Wearables.WearableDefinition>();
         [SerializeField] private FishingAnimationDefinition[] _fishingAnimations = Array.Empty<FishingAnimationDefinition>();
         [SerializeField] private Rootborn.Game.Minigames.MinigameDefinition[] _minigames = Array.Empty<Rootborn.Game.Minigames.MinigameDefinition>();
         [SerializeField] private Rootborn.Game.Minigames.ChallengeDefinitionBase[] _minigameChallenges = Array.Empty<Rootborn.Game.Minigames.ChallengeDefinitionBase>();
@@ -278,6 +281,9 @@ namespace Rootborn.Game.Common
         [SerializeField] private Rootborn.Game.World.WorldTravelCatalogDefinition _worldTravelCatalog;
         public Rootborn.Game.World.WorldTravelCatalogDefinition WorldTravelCatalog => _worldTravelCatalog;
         public CharacterAppearanceDefinition[] CharacterAppearances => _characterAppearances;
+        public Rootborn.Game.Characters.Wearables.CharacterGrowthStageDefinition[] GrowthStages => _growthStages;
+        public Rootborn.Game.Characters.Wearables.WearableSlotDefinition[] WearableSlots => _wearableSlots;
+        public Rootborn.Game.Characters.Wearables.WearableDefinition[] Wearables => _wearables;
         public FishingAnimationDefinition[] FishingAnimations => _fishingAnimations;
         public Rootborn.Game.Minigames.MinigameDefinition[] Minigames => _minigames;
         public Rootborn.Game.Minigames.ChallengeDefinitionBase[] MinigameChallenges => _minigameChallenges;

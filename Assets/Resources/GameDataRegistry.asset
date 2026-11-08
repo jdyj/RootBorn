@@ -120,6 +120,22 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 2070d14b199c2104584918f2df2735ef, type: 2}
   - {fileID: 11400000, guid: de51ab772ca801a49b76734f531d7f49, type: 2}
   - {fileID: 11400000, guid: 2300eb6592073ff4db959f3fcb382dc1, type: 2}
+  _growthStages:
+  - {fileID: 11400000, guid: 6b67346dd25140899548806d0ff1d5ac, type: 2}
+  - {fileID: 11400000, guid: beedeeab2c004002af48937da927310a, type: 2}
+  - {fileID: 11400000, guid: 51ad5573e66b437d9a3a58980163ac3e, type: 2}
+  _wearableSlots:
+  - {fileID: 11400000, guid: 785a64b90d07439783dc2a9ccebacb3f, type: 2}
+  - {fileID: 11400000, guid: 27af8bee9d0f4e11955037c8b956649a, type: 2}
+  _wearables:
+  - {fileID: 11400000, guid: 12fd3fcbc18042e99620a0fd5a94943d, type: 2}
+  - {fileID: 11400000, guid: ed9befb0f89b44d1a145d91dbced0a98, type: 2}
+  - {fileID: 11400000, guid: 10086044e7a94e45a9466eccb0a3eed9, type: 2}
+  - {fileID: 11400000, guid: c049a403ccee41f7b3a365cd2856defc, type: 2}
+  - {fileID: 11400000, guid: ce87303507dd47799a305b1eb167faec, type: 2}
+  - {fileID: 11400000, guid: 301e9157a94f493885c59fbc2b364e9a, type: 2}
+  - {fileID: 11400000, guid: 37efa5296f784e06bae0d70e925b5edb, type: 2}
+  - {fileID: 11400000, guid: af389fd0ef624c228937da8fbf18d3fc, type: 2}
   _fishingAnimations:
   - {fileID: 11400000, guid: 4d492c31c33bd2b4fa9e3e22ed110534, type: 2}
   _minigames: []
