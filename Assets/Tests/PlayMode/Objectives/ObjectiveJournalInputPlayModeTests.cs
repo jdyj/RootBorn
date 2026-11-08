@@ -84,6 +84,15 @@ namespace Rootborn.Tests.PlayMode.Objectives
             string rootDirectory = Path.Combine(Application.temporaryCachePath, "rootborn-objective-journal-row-click", System.Guid.NewGuid().ToString("N"));
             SaveService.SetRootDirectoryForTests(rootDirectory);
             ActiveSaveContext.Set(new SaveSlotMetadata { SlotId = "slot-row-click", DisplayName = "Row Click" });
+            // Start from an empty scene: a scene left by an earlier test (e.g. Town with its own journal) would cover this panel.
+            var isolated = UnityEngine.SceneManagement.SceneManager.CreateScene("ObjectiveJournalRowClick_" + System.Guid.NewGuid().ToString("N"));
+            UnityEngine.SceneManagement.SceneManager.SetActiveScene(isolated);
+            for (int i = UnityEngine.SceneManagement.SceneManager.sceneCount - 1; i >= 0; i--)
+            {
+                var other = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
+                if (other != isolated && other.isLoaded) yield return UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync(other);
+            }
+
             EnsurePassiveEventSystem();
 
             var canvasGo = new GameObject("ObjectiveJournalRowClickCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));

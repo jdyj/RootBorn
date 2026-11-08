@@ -157,12 +157,12 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 var button = go != null ? go.GetComponent<Button>() : null;
                 if (button != null && button.gameObject.activeInHierarchy && button.interactable)
                 {
-                    var eventSystem = Object.FindFirstObjectByType<EventSystem>(FindObjectsInactive.Include);
+                    // The current EventSystem's UI module handles a mouse device click (exactly one), like the other flows.
+                    var eventSystem = EventSystem.current;
                     Assert.IsNotNull(eventSystem, "A real EventSystem is required for player-facing pointer clicks." );
-                    Assert.IsNotNull(eventSystem.GetComponent<InputSystemUIInputModule>(), "Pointer flow must use InputSystemUIInputModule." );
-                    if (TryFindRaycastPointFor(button.gameObject, eventSystem, out Vector2 clickPoint))
+                    if (TryFindRaycastPointFor(button.gameObject, eventSystem, out _))
                     {
-                        yield return ClickWithMouse(clickPoint);
+                        yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickButton(button);
                         yield break;
                     }
                 }
