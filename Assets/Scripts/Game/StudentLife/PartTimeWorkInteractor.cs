@@ -8,13 +8,17 @@ using UnityEngine;
 namespace Rootborn.Game.StudentLife
 {
     [DisallowMultipleComponent]
-    public sealed class PartTimeWorkInteractor : MonoBehaviour, IPlayerInteractable, IPlayerInteractionFailureExplainer
+    public sealed class PartTimeWorkInteractor : MonoBehaviour, IPlayerInteractable, IPlayerInteractionFailureExplainer, IPrioritizedPlayerInteractable
     {
+        // Same as LocationActivityInteractor: a work point beside a facility is chosen by distance, not hidden by it.
+        private const int WorkPointPriority = 45;
+
         [SerializeField] private PartTimeWorkDefinition _work;
 
         private readonly PartTimeWorkRunner _runner = new PartTimeWorkRunner();
 
         public PartTimeWorkDefinition Work => _work;
+        public int InteractionPriority => WorkPointPriority;
         public PartTimeWorkResult LastResult { get; private set; }
         public string InteractionPrompt => "[E] " + DisplayName(_work != null ? _work.DisplayNameKey : string.Empty);
         private static string DisplayName(string key) => Rootborn.Game.Localization.GameText.Localized(key, HumanizeDisplayKey(key));
