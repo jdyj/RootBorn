@@ -222,9 +222,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.IsNotNull(button, name);
             Assert.IsTrue(button.IsInteractable(), name + " must be interactable.");
             Assert.IsNotNull(EventSystem.current, "UI click tests require an EventSystem.");
-            var eventData = new PointerEventData(EventSystem.current) { button = PointerEventData.InputButton.Left };
-            ExecuteEvents.Execute(button.gameObject, eventData, ExecuteEvents.pointerClickHandler);
-            yield return null;
+            // Mouse device through the scene UI module, never a direct handler call.
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickButton(button);
         }
 
         private static IEnumerator Capture(string path)

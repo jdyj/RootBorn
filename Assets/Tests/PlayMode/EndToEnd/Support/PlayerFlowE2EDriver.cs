@@ -56,6 +56,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
         }
 
         // A new game opens the character creator first; a player presses Confirm to continue. Creator tests drive it themselves.
+        // Preparation only (tests not about the creator); SpumCharacterCreatorNewGameE2ETests clicks it with a mouse device.
         public static void ConfirmCharacterCreatorIfShown()
         {
             string test = TestContext.CurrentContext?.Test?.FullName ?? string.Empty;
@@ -120,6 +121,12 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             var canvas = target.GetComponentInParent<Canvas>().rootCanvas;
             var camera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
             Vector2 point = RectTransformUtility.WorldToScreenPoint(camera, rect.TransformPoint(rect.rect.center));
+            yield return ClickWithMouseAt(target, point, label);
+        }
+
+        /// <summary>Clicks a screen point with a mouse device; the target must be the top UI hit there.</summary>
+        public static IEnumerator ClickWithMouseAt(GameObject target, Vector2 point, string label)
+        {
             var events = EventSystem.current;
             Assert.IsNotNull(events, "No EventSystem for " + label);
             var hits = new List<RaycastResult>();
@@ -617,7 +624,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             for (int i = 0; i < 10; i++) yield return null;
         }
 
-        // Clicks the aim surface at a point given in its 0..1 coordinates, through the surface's pointer handler.
+        // Clicks the aim surface at a point given in its 0..1 coordinates with a mouse device.
         private static IEnumerator ClickAimSurface(Rootborn.UI.Minigames.MinigamePanel panel, Vector2 normalized, string failure)
         {
             var surface = panel.GetComponentInChildren<Rootborn.UI.Minigames.MinigamePointerSurface>();
@@ -628,10 +635,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             var bounds = rect.rect;
             var local = new Vector2(bounds.xMin + normalized.x * bounds.width, bounds.yMin + normalized.y * bounds.height);
             var screen = RectTransformUtility.WorldToScreenPoint(camera, rect.TransformPoint(local));
-            var data = new PointerEventData(EventSystem.current) { button = PointerEventData.InputButton.Left, position = screen };
-            data.pointerPressRaycast = new RaycastResult { module = canvas != null ? canvas.GetComponent<GraphicRaycaster>() : null };
-            ExecuteEvents.Execute(surface.gameObject, data, ExecuteEvents.pointerClickHandler);
-            yield return null;
+            // Mouse device through the scene UI module, never a direct handler call.
+            yield return ClickWithMouseAt(surface.gameObject, screen, failure + " aim surface");
         }
 
         // Finds where each piece goes (corner cell and size after turning) so blocked cells stay free and required cells get covered.

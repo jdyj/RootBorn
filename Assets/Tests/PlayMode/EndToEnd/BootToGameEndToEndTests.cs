@@ -60,7 +60,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.AreEqual(1, CountObjectsNamed("@Managers"), "Boot reentry should not duplicate the manager singleton.");
             Assert.AreEqual(1, Object.FindObjectsByType<ModeSelectPanel>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length);
 
-            ClickButtonNamed("SinglePlayButton");
+            yield return ClickButtonNamed("SinglePlayButton");
             yield return null;
             Assert.AreEqual(1, Object.FindObjectsByType<SaveSlotSelectPanel>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length);
         }
@@ -77,9 +77,9 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             SaveSlotSelectPanel.EnsureInScene().Show();
             yield return null;
 
-            ClickButtonNamed("NewGameButton");
+            yield return ClickButtonNamed("NewGameButton");
             yield return null;
-            ClickButtonNamed("ConfirmButton");
+            yield return ClickButtonNamed("ConfirmButton");
             // The world entry data decides where a new game starts (home or Town); either means the game was entered.
             yield return WaitForWorld(20f, "new game");
             // Let the arrival finish (player placed and bound) before leaving, as a player would.
@@ -95,7 +95,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return LoadScene("MainMenu");
             SaveSlotSelectPanel.EnsureInScene().Show();
             yield return null;
-            ClickButtonNamed("LoadButton");
+            yield return ClickButtonNamed("LoadButton");
             yield return WaitForWorld(20f, "load");
 
             var loaded = ActiveSaveContext.Metadata;
@@ -164,13 +164,14 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             SaveService.SetRootDirectoryForTests(root);
         }
 
-        private static void ClickButtonNamed(string name)
+        private static IEnumerator ClickButtonNamed(string name)
         {
             var go = GameObject.Find(name);
             Assert.IsNotNull(go, "Expected button GameObject named " + name + ".");
             var button = go.GetComponent<Button>();
             Assert.IsNotNull(button, name + " should have a Button component.");
-            button.onClick.Invoke();
+            // Mouse device through the scene UI module, never a direct handler call.
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickButton(button);
         }
 
         private static int CountObjectsNamed(string name)

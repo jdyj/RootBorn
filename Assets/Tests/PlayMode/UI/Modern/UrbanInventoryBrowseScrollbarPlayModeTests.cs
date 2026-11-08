@@ -44,7 +44,7 @@ namespace Rootborn.Tests.PlayMode.UI.Modern
                 Assert.That(scroll.verticalScrollbar.gameObject.activeInHierarchy, Is.True);
 
                 // Refresh's immediate SetActive(false) is insufficient: ScrollRect owns visibility in LateUpdate.
-                root.transform.Find("Tab_1").GetComponent<Button>().onClick.Invoke();
+                yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickButton(root.transform.Find("Tab_1").GetComponent<Button>());
                 yield return null;
                 yield return null;
                 Assert.That(scroll.verticalScrollbar.gameObject.activeInHierarchy, Is.False,
@@ -52,7 +52,7 @@ namespace Rootborn.Tests.PlayMode.UI.Modern
                 Assert.That(scroll.content.gameObject.activeInHierarchy, Is.False);
                 Assert.That(scroll.viewport.Find("EmptyState").gameObject.activeInHierarchy, Is.True);
 
-                root.transform.Find("Tab_0").GetComponent<Button>().onClick.Invoke();
+                yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickButton(root.transform.Find("Tab_0").GetComponent<Button>());
                 yield return null;
                 yield return null;
                 Assert.That(scroll.verticalScrollbar.gameObject.activeInHierarchy, Is.True);

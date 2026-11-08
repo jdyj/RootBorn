@@ -49,7 +49,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return null;
             yield return HousePlacementTestDriver.OpenPlacementMode();
 
-            HousePlacementTestDriver.ShowFurniture("chair.black").GetComponent<Button>().onClick.Invoke();
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickButton(HousePlacementTestDriver.ShowFurniture("chair.black").GetComponent<Button>());
             yield return null;
 
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
@@ -71,7 +71,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return null;
             yield return HousePlacementTestDriver.OpenPlacementMode();
 
-            HousePlacementTestDriver.ShowFurniture("desk.large").GetComponent<Button>().onClick.Invoke();
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickButton(HousePlacementTestDriver.ShowFurniture("desk.large").GetComponent<Button>());
             yield return null;
 
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();

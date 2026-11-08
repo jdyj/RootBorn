@@ -45,12 +45,12 @@ namespace Rootborn.Tests.PlayMode.Encyclopedia
             AssertPanelContains(panel.transform, "Library", "ENCYCLOPEDIA-E2E-005 failed: unlocked entries must show their title.");
             AssertPanelContains(panel.transform, "???", "ENCYCLOPEDIA-E2E-005 failed: locked entries must show hidden state.");
 
-            Click(FindButton(panel.transform, "Entry_" + unlocked.Id));
+            yield return Click(FindButton(panel.transform, "Entry_" + unlocked.Id));
             yield return null;
             AssertPanelContains(panel.transform, "Library details", "ENCYCLOPEDIA-E2E-006 failed: selecting an unlocked row must show detail text.");
             Assert.IsFalse(progress.IsNew(unlocked.Id), "ENCYCLOPEDIA-E2E-008 failed: selecting a new entry should clear its new marker once.");
 
-            Click(FindButton(panel.transform, "Category_" + npc.Id));
+            yield return Click(FindButton(panel.transform, "Category_" + npc.Id));
             yield return null;
             AssertPanelContains(panel.transform, "Guide", "ENCYCLOPEDIA-E2E-004 failed: category tabs must switch the list.");
             AssertPanelContains(panel.transform, "Guide details", "ENCYCLOPEDIA-E2E-006 failed: switched category should display unlocked entry details.");
@@ -78,14 +78,10 @@ namespace Rootborn.Tests.PlayMode.Encyclopedia
             return null;
         }
 
-        private static void Click(Button button)
+        private static IEnumerator Click(Button button)
         {
-            var eventSystem = EventSystem.current;
-            if (eventSystem == null)
-            {
-                new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
-            }
-            button.onClick.Invoke();
+            // Mouse device through the scene UI module, never a direct handler call.
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickButton(button);
         }
 
         private static void AssertPanelContains(Transform root, string expected, string message)

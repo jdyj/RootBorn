@@ -176,9 +176,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.IsNotNull(button);
             Assert.IsTrue(button.gameObject.activeInHierarchy, button.name + " must be active for user click.");
             Assert.IsTrue(button.interactable, button.name + " must be interactable for user click.");
-            var eventData = new PointerEventData(EventSystem.current) { button = PointerEventData.InputButton.Left };
-            ExecuteEvents.Execute(button.gameObject, eventData, ExecuteEvents.pointerClickHandler);
-            yield return null;
+            // Mouse device through the scene UI module, never a direct handler call.
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickButton(button);
         }
 
         private static Button FindButton(string cardName, string buttonName)

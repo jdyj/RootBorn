@@ -67,7 +67,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return null;
             yield return HousePlacementTestDriver.OpenPlacementMode();
 
-            HousePlacementTestDriver.ShowFurniture(ChairFurnitureId).GetComponent<Button>().onClick.Invoke();
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickButton(HousePlacementTestDriver.ShowFurniture(ChairFurnitureId).GetComponent<Button>());
             yield return null;
 
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
@@ -90,7 +90,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return HousePlacementTestDriver.OpenPlacementMode();
 
             Assert.IsNotNull(HousePlacementTestDriver.ShowFurniture(BasicDeskFurnitureId), "The regular player-facing desk button must select desk.basic, not desk.large.");
-            HousePlacementTestDriver.ShowFurniture(BasicDeskFurnitureId).GetComponent<Button>().onClick.Invoke();
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickButton(HousePlacementTestDriver.ShowFurniture(BasicDeskFurnitureId).GetComponent<Button>());
             yield return null;
 
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
@@ -118,7 +118,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return HousePlacementTestDriver.OpenPlacementMode();
 
             Assert.IsNotNull(HousePlacementTestDriver.ShowFurniture(DeskFurnitureId), "House placement UI should expose multi-tile desk furniture from the shared registry catalog.");
-            HousePlacementTestDriver.ShowFurniture(DeskFurnitureId).GetComponent<Button>().onClick.Invoke();
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickButton(HousePlacementTestDriver.ShowFurniture(DeskFurnitureId).GetComponent<Button>());
             yield return null;
 
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
@@ -146,12 +146,12 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return null;
             yield return HousePlacementTestDriver.OpenPlacementMode();
 
-            HousePlacementTestDriver.ShowFurniture(DeskFurnitureId).GetComponent<Button>().onClick.Invoke();
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickButton(HousePlacementTestDriver.ShowFurniture(DeskFurnitureId).GetComponent<Button>());
             yield return null;
 
             var rotateButton = GameObject.Find("RotateFurnitureButton")?.GetComponent<Button>();
             Assert.IsNotNull(rotateButton, "House placement UI should expose a player-facing furniture rotation button.");
-            rotateButton.onClick.Invoke();
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickButton(rotateButton);
             yield return null;
 
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
@@ -177,7 +177,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return null;
             yield return HousePlacementTestDriver.OpenPlacementMode();
 
-            HousePlacementTestDriver.ShowFurniture(DeskFurnitureId).GetComponent<Button>().onClick.Invoke();
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickButton(HousePlacementTestDriver.ShowFurniture(DeskFurnitureId).GetComponent<Button>());
             yield return null;
 
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
@@ -191,7 +191,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
 
             var moveButton = GameObject.Find("MoveSelectedFurnitureButton")?.GetComponent<Button>();
             Assert.IsNotNull(moveButton, "House placement UI should expose a player-facing move button for the selected furniture instance.");
-            moveButton.onClick.Invoke();
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickButton(moveButton);
             yield return null;
 
             // Move picks the piece up: nothing moves until the player clicks where it should go.
@@ -214,7 +214,8 @@ namespace Rootborn.Tests.PlayMode.Interiors
             Assert.IsNotNull(occupancyTilemap.GetTile(movedComputerCell));
 
             // The moved piece stays selected, so Delete right after a move removes it.
-            GameObject.Find("DeleteSelectedFurnitureButton")?.GetComponent<Button>()?.onClick.Invoke();
+            var deleteButton = GameObject.Find("DeleteSelectedFurnitureButton")?.GetComponent<Button>();
+            if (deleteButton != null) yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickButton(deleteButton);
             yield return null;
             Assert.AreEqual(0, CountTiles(furnitureTilemap, DeskTileName), "Delete right after a move must remove the moved furniture.");
         }
@@ -227,7 +228,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return null;
             yield return HousePlacementTestDriver.OpenPlacementMode();
 
-            HousePlacementTestDriver.ShowFurniture(ChairFurnitureId).GetComponent<Button>().onClick.Invoke();
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickButton(HousePlacementTestDriver.ShowFurniture(ChairFurnitureId).GetComponent<Button>());
             yield return null;
 
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
@@ -247,7 +248,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return null;
             yield return HousePlacementTestDriver.OpenPlacementMode();
 
-            HousePlacementTestDriver.ShowFurniture(ChairFurnitureId).GetComponent<Button>().onClick.Invoke();
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickButton(HousePlacementTestDriver.ShowFurniture(ChairFurnitureId).GetComponent<Button>());
             yield return null;
 
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
@@ -269,7 +270,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             yield return null;
             yield return HousePlacementTestDriver.OpenPlacementMode();
 
-            HousePlacementTestDriver.ShowFurniture(ChairFurnitureId).GetComponent<Button>().onClick.Invoke();
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickButton(HousePlacementTestDriver.ShowFurniture(ChairFurnitureId).GetComponent<Button>());
             yield return null;
 
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
@@ -282,7 +283,7 @@ namespace Rootborn.Tests.PlayMode.Interiors
             Assert.IsNotNull(occupancyTilemap, "Furniture placement should write shared occupancy state, not only visual object tiles.");
             Assert.IsNotNull(occupancyTilemap.GetTile(furnitureCell));
 
-            GameObject.Find("DeleteSelectedFurnitureButton").GetComponent<Button>().onClick.Invoke();
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickButton(GameObject.Find("DeleteSelectedFurnitureButton").GetComponent<Button>());
             yield return null;
 
             Assert.IsNull(furnitureTilemap.GetTile(furnitureCell));

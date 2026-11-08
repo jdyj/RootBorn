@@ -69,8 +69,8 @@ namespace Rootborn.Tests.PlayMode.Interiors
 
             var button = FindModernShadowlessPaletteButton();
             Assert.IsNotNull(button, "A generated Modern Interiors shadowless furniture button is required for ghost preview verification.");
-            ExecuteEvents.Execute<IPointerClickHandler>(button, new PointerEventData(EventSystem.current), ExecuteEvents.pointerClickHandler);
-            yield return null;
+            // Mouse device through the scene UI module, never a direct handler call.
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickWithMouse(button, button.name);
 
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
             var overlayTilemap = GameObject.Find("AuthoredPlacementAvailability")?.GetComponent<Tilemap>();
@@ -105,8 +105,8 @@ namespace Rootborn.Tests.PlayMode.Interiors
 
             var button = FindModernShadowlessPaletteButton();
             Assert.IsNotNull(button, "A generated Modern Interiors shadowless furniture button is required for footprint preview verification.");
-            ExecuteEvents.Execute<IPointerClickHandler>(button, new PointerEventData(EventSystem.current), ExecuteEvents.pointerClickHandler);
-            yield return null;
+            // Mouse device through the scene UI module, never a direct handler call.
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickWithMouse(button, button.name);
 
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
             var overlayTilemap = GameObject.Find("AuthoredPlacementAvailability")?.GetComponent<Tilemap>();
@@ -144,8 +144,8 @@ namespace Rootborn.Tests.PlayMode.Interiors
 
             var button = FindModernShadowlessPaletteButton();
             Assert.IsNotNull(button, "A generated Modern Interiors shadowless furniture button is required for player-facing placement.");
-            ExecuteEvents.Execute<IPointerClickHandler>(button, new PointerEventData(EventSystem.current), ExecuteEvents.pointerClickHandler);
-            yield return null;
+            // Mouse device through the scene UI module, never a direct handler call.
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickWithMouse(button, button.name);
 
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
             Assert.IsNotNull(overlay);

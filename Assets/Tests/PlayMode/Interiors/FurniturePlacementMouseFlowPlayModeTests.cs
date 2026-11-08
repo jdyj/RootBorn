@@ -92,8 +92,8 @@ namespace Rootborn.Tests.PlayMode.Interiors
                 button = PointerEventData.InputButton.Left,
                 pointerId = -1
             };
-            ExecuteEvents.Execute<IPointerClickHandler>(button, pointerData, ExecuteEvents.pointerClickHandler);
-            yield return null;
+            // Mouse device through the scene UI module, never a direct handler call.
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickWithMouse(button, button.name);
 
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
             Assert.IsNotNull(overlay, HousePlacementTestDriver.OverlayDiagnostics());
@@ -135,8 +135,8 @@ namespace Rootborn.Tests.PlayMode.Interiors
 
             var button = HousePlacementTestDriver.ShowFurniture("chair.black");
             Assert.IsNotNull(button);
-            ExecuteEvents.Execute<IPointerClickHandler>(button, new PointerEventData(EventSystem.current), ExecuteEvents.pointerClickHandler);
-            yield return null;
+            // Mouse device through the scene UI module, never a direct handler call.
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickWithMouse(button, button.name);
 
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
             Assert.IsNotNull(overlay, HousePlacementTestDriver.OverlayDiagnostics());
@@ -160,8 +160,8 @@ namespace Rootborn.Tests.PlayMode.Interiors
             Assert.AreEqual(0, overlay.ValidCellCount);
             Assert.AreEqual(0, overlay.InvalidCellCount);
 
-            ExecuteEvents.Execute<IPointerClickHandler>(button, new PointerEventData(EventSystem.current), ExecuteEvents.pointerClickHandler);
-            yield return null;
+            // Mouse device through the scene UI module, never a direct handler call.
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickWithMouse(button, button.name);
             Assert.IsTrue(TryFindVisibleValidOverlayCell(overlayTilemap, camera, out var secondCell, out var secondScreen));
             Assert.AreNotEqual(firstCell, secondCell, "Second placement should use a different visible valid cell for this regression.");
 

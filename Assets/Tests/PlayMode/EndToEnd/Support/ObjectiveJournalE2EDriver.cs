@@ -6,12 +6,12 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
 {
     public static class ObjectiveJournalE2EDriver
     {
-        public static void SelectCategoryAndRow(ObjectiveJournalPanel panel, string categoryId, int rowIndex)
+        public static System.Collections.IEnumerator SelectCategoryAndRow(ObjectiveJournalPanel panel, string categoryId, int rowIndex)
         {
             var categoryButton = PlayerFlowE2EDriver.FindButton(panel.transform, "ObjectiveCategory_" + categoryId);
-            categoryButton.onClick.Invoke();
+            yield return PlayerFlowE2EDriver.ClickButton(categoryButton);
             var rowButton = PlayerFlowE2EDriver.FindButton(panel.transform, "ObjectiveRow_" + rowIndex);
-            rowButton.onClick.Invoke();
+            yield return PlayerFlowE2EDriver.ClickButton(rowButton);
         }
 
         public static Button FindRowButtonContaining(ObjectiveJournalPanel panel, string contains, string failurePrefix)

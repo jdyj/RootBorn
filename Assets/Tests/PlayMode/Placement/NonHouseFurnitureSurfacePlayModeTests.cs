@@ -62,7 +62,7 @@ namespace Rootborn.Tests.PlayMode.Placement
 
             var deskButton = HousePlacementTestDriver.ShowFurniture("desk.large")?.GetComponent<Button>();
             Assert.IsNotNull(deskButton, "The shared furniture palette should be available outside the House scene.");
-            deskButton.onClick.Invoke();
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickButton(deskButton);
             yield return null;
 
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();

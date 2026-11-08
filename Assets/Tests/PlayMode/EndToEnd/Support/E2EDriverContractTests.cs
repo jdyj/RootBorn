@@ -98,10 +98,14 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             File.Delete(path);
         }
 
-        [Test]
-        public void ObjectiveJournalE2EDriver_SelectsCategoryAndRowByVisibleButtons()
+        [UnityTest]
+        public IEnumerator ObjectiveJournalE2EDriver_SelectsCategoryAndRowByVisibleButtons()
         {
-            var root = new GameObject("ContractRoot", typeof(RectTransform));
+            // A real screen canvas and EventSystem: the driver clicks with a mouse device, not by calling handlers.
+            var root = new GameObject("ContractRoot", typeof(RectTransform), typeof(Canvas), typeof(UnityEngine.UI.CanvasScaler), typeof(UnityEngine.UI.GraphicRaycaster));
+            root.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+            if (UnityEngine.EventSystems.EventSystem.current == null)
+                new GameObject("ContractEventSystem", typeof(UnityEngine.EventSystems.EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule)).transform.SetParent(root.transform, false);
             var panelGo = new GameObject("ObjectiveJournalPanel", typeof(RectTransform));
             panelGo.transform.SetParent(root.transform, false);
             var panel = panelGo.AddComponent<ObjectiveJournalPanel>();
@@ -111,8 +115,9 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
                 new ObjectiveJournalItem("goal.two", "Goals", "Goal Two", string.Empty, "Active", "1 / 2", "Next", false, 1),
             });
             panel.Show();
+            yield return null;
 
-            ObjectiveJournalE2EDriver.SelectCategoryAndRow(panel, "Goals", 1);
+            yield return ObjectiveJournalE2EDriver.SelectCategoryAndRow(panel, "Goals", 1);
 
             StringAssert.Contains("Goal Two", panel.VisibleText);
             Object.DestroyImmediate(root);

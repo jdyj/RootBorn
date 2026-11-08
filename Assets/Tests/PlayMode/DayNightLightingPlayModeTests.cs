@@ -128,8 +128,8 @@ namespace Rootborn.Tests.PlayMode
                 Object.DontDestroyOnLoad(eventSystem);
             }
 
-            ExecuteEvents.Execute(button.gameObject, new PointerEventData(EventSystem.current) { button = PointerEventData.InputButton.Left }, ExecuteEvents.pointerClickHandler);
-            yield return null;
+            // Mouse device through the scene UI module, never a direct handler call.
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickButton(button);
         }
         private static IEnumerator CapturePhase(GameClock clock, string phase, float hour)
         {

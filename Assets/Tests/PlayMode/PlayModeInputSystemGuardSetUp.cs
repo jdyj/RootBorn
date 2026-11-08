@@ -9,6 +9,7 @@ namespace Rootborn.Tests.PlayMode
 {
     // New Game now opens the character creator. Scenario tests that are not about it press its real confirm button after a
     // short wait, so tests that confirm by themselves still go first. Tests about the creator opt out by name.
+    // Preparation only, not player-input evidence: the creator's own E2E tests click Confirm with a mouse device.
     internal sealed class PlayModeCreatorAutoConfirm : UnityEngine.MonoBehaviour
     {
         private const float WaitSeconds = 3f, CheckSeconds = 0.25f;
@@ -127,9 +128,8 @@ namespace Rootborn.Tests.PlayMode
             Assert.IsNotNull(panel, "House must have the furniture placement panel.");
             if (!panel.gameObject.activeSelf)
             {
-                UnityEngine.EventSystems.ExecuteEvents.Execute(toggle,
-                    new UnityEngine.EventSystems.PointerEventData(UnityEngine.EventSystems.EventSystem.current),
-                    UnityEngine.EventSystems.ExecuteEvents.pointerClickHandler);
+                // Mouse device through the scene UI module, never a direct handler call.
+                yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickWithMouse(toggle, toggle.name);
             }
             yield return null;
             Assert.IsTrue(panel.gameObject.activeInHierarchy, "The placement mode button must open the furniture panel.");

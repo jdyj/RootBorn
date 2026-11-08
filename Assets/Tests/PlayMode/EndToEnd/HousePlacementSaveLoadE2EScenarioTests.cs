@@ -145,8 +145,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.IsNull(GameObject.Find("ModernOfficeChairSampleTilemap"), "Debug/sample furniture tilemap must not be visible before placement.");
             var button = FindModernShadowlessPaletteButton();
             Assert.IsNotNull(button, "A generated Modern Interiors shadowless furniture palette button is required for the E2E scenario.");
-            ExecuteEvents.Execute<IPointerClickHandler>(button, new PointerEventData(EventSystem.current), ExecuteEvents.pointerClickHandler);
-            yield return null;
+            // Mouse device through the scene UI module, never a direct handler call.
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickWithMouse(button, button.name);
 
             var overlay = Object.FindFirstObjectByType<InteriorPlacementPreviewOverlay>();
             Assert.IsNotNull(overlay, "Selecting furniture should create the placement overlay through the player-facing UI.");
@@ -255,8 +255,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.IsNotNull(button, name);
             Assert.IsTrue(button.IsInteractable(), name + " must be interactable.");
             Assert.IsNotNull(EventSystem.current, "UI click tests require an EventSystem.");
-            ExecuteEvents.Execute(button.gameObject, new PointerEventData(EventSystem.current) { button = PointerEventData.InputButton.Left }, ExecuteEvents.pointerClickHandler);
-            yield return null;
+            // Mouse device through the scene UI module, never a direct handler call.
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickButton(button);
         }
 
         private static IEnumerator WaitForScene(string sceneName, float timeout)

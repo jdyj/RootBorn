@@ -63,11 +63,8 @@ namespace Rootborn.Tests.PlayMode.Interiors
                 eligibleForClick = true
             };
 
-            ExecuteEvents.Execute(target, data, ExecuteEvents.pointerDownHandler);
-            yield return null;
-            ExecuteEvents.Execute(target, data, ExecuteEvents.pointerUpHandler);
-            ExecuteEvents.Execute(target, data, ExecuteEvents.pointerClickHandler);
-            yield return null;
+            // Mouse device through the scene UI module, never a direct handler call.
+            yield return Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.ClickWithMouse(target, target.name);
         }
     }
 }
