@@ -164,12 +164,12 @@ namespace Rootborn.Core.Characters
         public WearableSlotRule FindSlot(string id) => id != null && _slotsById.TryGetValue(id, out var slot) ? slot : null;
         public WearableRule FindWearable(string id) => id != null && _wearablesById.TryGetValue(id, out var wearable) ? wearable : null;
 
-        /// <summary>Items a player may pick for a slot at a stage (work uniforms are excluded; they come from the facility).</summary>
+        /// <summary>Items a player may pick for a slot at a stage. Work uniforms are pickable too; a facility only adds auto-wearing.</summary>
         public List<WearableRule> Choices(string slotId, string stageId)
         {
             var result = new List<WearableRule>();
             foreach (var wearable in _wearables)
-                if (wearable.SlotId == slotId && wearable.AutoEquipFacilityId.Length == 0 && wearable.HasArtFor(stageId)) result.Add(wearable);
+                if (wearable.SlotId == slotId && wearable.HasArtFor(stageId)) result.Add(wearable);
             return result;
         }
     }
@@ -200,12 +200,11 @@ namespace Rootborn.Core.Characters
             return best != null ? best.Id : string.Empty;
         }
 
-        /// <summary>True when the item exists, belongs to that slot, is not a work uniform and has art for the stage.</summary>
+        /// <summary>True when the item exists, belongs to that slot and has art for the stage.</summary>
         public static bool CanEquip(WearableCatalog catalog, string slotId, string wearableId, string stageId)
         {
             var wearable = catalog?.FindWearable(wearableId);
-            return wearable != null && catalog.FindSlot(slotId) != null && wearable.SlotId == slotId
-                && wearable.AutoEquipFacilityId.Length == 0 && wearable.HasArtFor(stageId);
+            return wearable != null && catalog.FindSlot(slotId) != null && wearable.SlotId == slotId && wearable.HasArtFor(stageId);
         }
 
         /// <summary>

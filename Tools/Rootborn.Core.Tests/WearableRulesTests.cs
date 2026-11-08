@@ -89,15 +89,24 @@ namespace Rootborn.Core.Tests
         }
 
         [Test]
-        public void Choose_RejectsWrongSlotMissingArtUnknownItemsAndWorkUniformsWithoutChangingState()
+        public void Choose_RejectsWrongSlotMissingArtAndUnknownItemsWithoutChangingState()
         {
             var catalog = Catalog();
             var state = new WearableState();
             Assert.That(WearableRules.Choose(catalog, state, "hair", "office", "adult"), Is.False, "wrong slot");
             Assert.That(WearableRules.Choose(catalog, state, "top", "office", "school"), Is.False, "no art at this stage");
             Assert.That(WearableRules.Choose(catalog, state, "top", "missing", "adult"), Is.False, "unknown item");
-            Assert.That(WearableRules.Choose(catalog, state, "top", "chef", "adult"), Is.False, "uniforms come from the facility");
             Assert.That(state.Count, Is.Zero);
+        }
+
+        [Test]
+        public void Choose_AWorkUniformCanAlsoBeWornAsNormalClothes()
+        {
+            // The wardrobe has always offered the chef and interior outfits; the facility only adds auto-wearing at work.
+            var catalog = Catalog();
+            var state = new WearableState();
+            Assert.That(WearableRules.Choose(catalog, state, "top", "chef", "adult"), Is.True);
+            Assert.That(Ids(WearableRules.ResolveLayers(catalog, state, "adult", null)), Does.Contain("top:chef"));
         }
 
         [Test]
@@ -162,10 +171,10 @@ namespace Rootborn.Core.Tests
         }
 
         [Test]
-        public void Choices_ListOnlyPickableItemsWithArtForTheStage()
+        public void Choices_ListEveryItemWithArtForTheStageIncludingWorkUniforms()
         {
             var ids = Catalog().Choices("top", "adult").Select(w => w.Id).ToArray();
-            Assert.That(ids, Is.EqualTo(new[] { "adult_casual", "office" }));
+            Assert.That(ids, Is.EqualTo(new[] { "adult_casual", "chef", "office" }), "catalog order is by id");
         }
     }
 }
