@@ -104,7 +104,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             }
             finally
             {
-                button.onClick.RemoveListener(count);
+                // Many buttons (dialogue choices, panel closers) destroy themselves when clicked.
+                if (button != null) button.onClick.RemoveListener(count);
             }
 
             Assert.AreEqual(1, clicks, button.name + " did not receive exactly one click from the mouse device.");
@@ -152,11 +153,9 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             finally
             {
                 InputSystem.RemoveDevice(mouse);
-                if (module != null)
-                {
-                    if (addedModule) Object.Destroy(module);
-                    else module.enabled = moduleWasEnabled;
-                }
+                // Disabled, not destroyed: Destroy waits for the end of the frame, and a click right after would get the
+                // dying module back from GetComponent and lose its press.
+                if (module != null) module.enabled = !addedModule && moduleWasEnabled;
 
                 if (passive != null) passive.enabled = passiveWasEnabled;
             }
