@@ -2,6 +2,7 @@ using System.Collections;
 using System.Text;
 using NUnit.Framework;
 using Rootborn.Game.Common;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -85,13 +86,80 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
 
         private static float s_lastCreatorConfirm = -10f;
 
+        /// <summary>
+        /// Clicks a UI button the way a player does: the button must be on top under the pointer, and a mouse device moves,
+        /// presses and releases there while the scene's InputSystemUIInputModule handles it (no direct handler calls).
+        /// </summary>
         public static IEnumerator ClickButton(Button button)
         {
             Assert.IsNotNull(button);
             Assert.IsTrue(button.gameObject.activeInHierarchy, button.name + " must be visible for player-facing click. Hidden by: " + FirstInactiveAncestor(button.transform));
             Assert.IsTrue(button.interactable, button.name + " must be interactable for player-facing click.");
-            ExecuteEvents.Execute(button.gameObject, new PointerEventData(EventSystem.current) { button = PointerEventData.InputButton.Left }, ExecuteEvents.pointerClickHandler);
-            yield return null;
+            int clicks = 0;
+            UnityEngine.Events.UnityAction count = () => clicks++;
+            button.onClick.AddListener(count);
+            try
+            {
+                yield return ClickWithMouse(button.gameObject, button.name);
+            }
+            finally
+            {
+                button.onClick.RemoveListener(count);
+            }
+
+            Assert.AreEqual(1, clicks, button.name + " did not receive exactly one click from the mouse device.");
+        }
+
+        /// <summary>Moves a mouse device over the target's center, checks it is the top UI hit, then presses and releases.</summary>
+        public static IEnumerator ClickWithMouse(GameObject target, string label)
+        {
+            var rect = target.GetComponent<RectTransform>();
+            Assert.IsNotNull(rect, label + " is not a UI element.");
+            var canvas = target.GetComponentInParent<Canvas>().rootCanvas;
+            var camera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+            Vector2 point = RectTransformUtility.WorldToScreenPoint(camera, rect.TransformPoint(rect.rect.center));
+            var events = EventSystem.current;
+            Assert.IsNotNull(events, "No EventSystem for " + label);
+            var hits = new List<RaycastResult>();
+            events.RaycastAll(new PointerEventData(events) { position = point }, hits);
+            Assert.That(hits.Count, Is.GreaterThan(0), "Nothing under the pointer at " + point + " for " + label);
+            Assert.IsTrue(hits[0].gameObject.transform.IsChildOf(target.transform), label + " is covered by " + hits[0].gameObject.name);
+
+            // Scenario tests park a passive module so stray input does nothing; a click uses the real UI module meanwhile.
+            var passive = events.GetComponent<BaseInputModule>() as Rootborn.Game.Common.PassiveInputModule;
+            var module = events.GetComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+            bool addedModule = module == null;
+            if (addedModule) module = events.gameObject.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+            bool moduleWasEnabled = module.enabled;
+            bool passiveWasEnabled = passive != null && passive.enabled;
+            if (passive != null) passive.enabled = false;
+            module.enabled = true;
+            var mouse = InputSystem.AddDevice<Mouse>();
+            mouse.MakeCurrent();
+            try
+            {
+                yield return null;
+                InputSystem.QueueStateEvent(mouse, new MouseState { position = point });
+                yield return null;
+                yield return null;
+                InputSystem.QueueStateEvent(mouse, new MouseState { position = point, buttons = 1 });
+                yield return null;
+                yield return null;
+                InputSystem.QueueStateEvent(mouse, new MouseState { position = point });
+                yield return null;
+                yield return null;
+            }
+            finally
+            {
+                InputSystem.RemoveDevice(mouse);
+                if (module != null)
+                {
+                    if (addedModule) Object.Destroy(module);
+                    else module.enabled = moduleWasEnabled;
+                }
+
+                if (passive != null) passive.enabled = passiveWasEnabled;
+            }
         }
 
         private static string FirstInactiveAncestor(Transform t)
