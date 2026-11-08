@@ -75,7 +75,8 @@ namespace Rootborn.Network.Session
 
         private void HandleDisconnected(ulong id)
         {
-            Debug.Log($"[ROOTBORN] Client disconnected callback id={id} localClientId={NetworkManager.Singleton?.LocalClientId}");
+            // The server's reason (e.g. "server full" from SessionCapacity) is the only clue a refused player gets.
+            Debug.Log($"[ROOTBORN] Client disconnected callback id={id} localClientId={NetworkManager.Singleton?.LocalClientId} reason={NetworkManager.Singleton?.DisconnectReason}");
             OnPlayerDisconnected?.Invoke(id);
         }
 

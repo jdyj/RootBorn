@@ -1,5 +1,6 @@
 using Rootborn.Core.Network;
 using Unity.Netcode;
+using UnityEngine;
 
 namespace Rootborn.Network.Session
 {
@@ -21,6 +22,8 @@ namespace Rootborn.Network.Session
                 // Same default Netcode uses without approval: spawn a player only when a prefab is configured.
                 response.CreatePlayerObject = decision.Approved && nm.NetworkConfig.PlayerPrefab != null;
                 response.Reason = decision.Reason;
+                if (!decision.Approved)
+                    Debug.Log($"[ROOTBORN] Connection refused client={request.ClientNetworkId} connected={nm.ConnectedClientsIds.Count} maxPlayers={maxPlayers} reason={decision.Reason}");
             };
         }
 

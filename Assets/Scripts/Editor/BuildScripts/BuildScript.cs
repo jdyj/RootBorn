@@ -60,6 +60,13 @@ namespace Rootborn.Editor.BuildScripts
             BuildClient(BuildTarget.StandaloneWindows64, $"Builds/Client/Windows/{ClientName}.exe");
         }
 
+        // FEVM has no Linux Dedicated Server module; one Linux player runs as server (-mode server) and as clients.
+        [MenuItem("Rootborn/Build/Client Linux 64")]
+        public static void BuildClientLinux64()
+        {
+            BuildClient(BuildTarget.StandaloneLinux64, $"Builds/Client/Linux/{ClientName}");
+        }
+
         [MenuItem("Rootborn/Build/Server Windows 64")]
         public static void BuildServerWindows64()
         {
