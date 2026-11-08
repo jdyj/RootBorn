@@ -95,12 +95,13 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             Assert.IsNotNull(button);
             Assert.IsTrue(button.gameObject.activeInHierarchy, button.name + " must be visible for player-facing click. Hidden by: " + FirstInactiveAncestor(button.transform));
             Assert.IsTrue(button.interactable, button.name + " must be interactable for player-facing click.");
+            string label = button.name;
             int clicks = 0;
             UnityEngine.Events.UnityAction count = () => clicks++;
             button.onClick.AddListener(count);
             try
             {
-                yield return ClickWithMouse(button.gameObject, button.name);
+                yield return ClickWithMouse(button.gameObject, label);
             }
             finally
             {
@@ -108,7 +109,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
                 if (button != null) button.onClick.RemoveListener(count);
             }
 
-            Assert.AreEqual(1, clicks, button.name + " did not receive exactly one click from the mouse device.");
+            Assert.AreEqual(1, clicks, label + " did not receive exactly one click from the mouse device.");
         }
 
         /// <summary>Moves a mouse device over the target's center, checks it is the top UI hit, then presses and releases.</summary>
