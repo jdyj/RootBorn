@@ -1,18 +1,13 @@
 # Unity CLI (batchmode) 참조 규칙
 
-## ⚠️ 절대 원칙 — `Assets/**/*.cs` 직접 디스크 쓰기 금지
+## ⚠️ 절대 원칙 — 열려 있는 Unity 편집기 밑에서 `.cs`를 바꾸지 않는다
 
-신규 C# 스크립트(`Assets/Scripts/**/*.cs`, Editor 스크립트 포함) 생성은 **반드시 Unity API 경유**:
-- `script-update-or-create` MCP tool, 또는
-- Unity Editor 내 메뉴(Project 우클릭 → Create → C# Script)
+2026-11-08 사용자 결정으로 고쳤다. 피드백: "새 .cs를 왜 Unity를 거쳐 만들어? 이러면 더 유니티에 결합되는거 아니야?"
 
-`Write`/`bash echo >` 등 외부 디스크 쓰기는 **MonoScript 자산 등록은 되지만 `CompilationPipeline.sourceFiles`에 누락**되는 케이스 발생 (Library/Bee 캐시 미갱신). 결과: 컴파일러가 해당 클래스 인식 실패 → CS0103.
-
-증상: 같은 폴더의 다른 .cs 는 정상이지만 특정 신규 .cs 만 "이름이 컨텍스트에 없음" 오류.
-
-검증: `CompilationPipeline.GetAssemblies()` 의 `sourceFiles` 에 파일 경로 존재 확인. 없으면 `assets-delete` 후 `script-update-or-create` 로 재생성.
-
-`.json`, `.md`, `.asmdef` 등 비-스크립트 자산은 Write 직접 쓰기 허용.
+- 새 `.cs`와 그 `.meta`는 일반 파일처럼 직접 작성하고 함께 커밋한다. `.meta`는 `fileFormatVersion: 2`와 새 32자리 GUID 두 줄이면 된다(코어 패키지와 같은 방식). 특정 편집기나 MCP 도구를 거칠 필요가 없다.
+- 금지: 그 프로젝트의 Unity 편집기가 열려 있는 동안 그 폴더의 `.cs`·`.asmdef`를 바깥에서 쓰는 것. 2026-04-29 사고(CS0103)의 원인은 직접 쓰기가 아니라, 열린 편집기의 컴파일 캐시(Library/Bee)가 바깥에서 바뀐 파일을 놓친 것이었다.
+- FEVM 사본은 커밋을 체크아웃해 처음부터 임포트하므로 이 문제가 생기지 않는다. MCP로 열어 둔 FEVM 편집기 사본은 커밋을 받아(`git fetch` + `checkout`) 갱신한다.
+- 증상이 나오면(같은 폴더의 다른 파일은 되는데 새 파일만 CS0103): 편집기를 닫고 다시 열거나 `CompilationPipeline.GetAssemblies()`의 `sourceFiles`에 그 파일이 있는지 확인한다.
 
 ---
 
