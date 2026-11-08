@@ -180,7 +180,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
         public static IEnumerator ScrollIntoViewWithWheel(RectTransform target, string label)
         {
             var scroll = target.GetComponentInParent<ScrollRect>();
-            if (scroll == null || EventSystem.current == null) yield break;
+            // Only items inside the scrolled content move with the wheel; buttons beside the viewport do not.
+            if (scroll == null || scroll.content == null || !target.IsChildOf(scroll.content) || EventSystem.current == null) yield break;
             var viewport = scroll.viewport != null ? scroll.viewport : (RectTransform)scroll.transform;
             var canvas = viewport.GetComponentInParent<Canvas>().rootCanvas;
             var camera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
