@@ -17,6 +17,6 @@ MonoBehaviour:
   _drawOrder: 1
   _defaultWearables:
   - {fileID: 11400000, guid: ed9befb0f89b44d1a145d91dbced0a98, type: 2}
-  - {fileID: 11400000, guid: 10086044e7a94e45a9466eccb0a3eed9, type: 2}
-  - {fileID: 11400000, guid: ce87303507dd47799a305b1eb167faec, type: 2}
+  - {fileID: 11400000, guid: c049a403ccee41f7b3a365cd2856defc, type: 2}
+  - {fileID: 11400000, guid: 301e9157a94f493885c59fbc2b364e9a, type: 2}
   _hidesSlots: []

@@ -114,6 +114,21 @@ namespace Rootborn.Tests.EditMode.Characters
             Assert.That(StageBody(1, true), Is.EqualTo("Sheet_body_adult"));
         }
 
+        [TestCase(1, false, "")]
+        [TestCase(2, false, "")]
+        [TestCase(30, false, "")]
+        [TestCase(1, true, "")]
+        [TestCase(1, true, "facility.chef")]
+        [TestCase(1, true, "facility.interior")]
+        public void WEAR_DATA_005_DefaultsMatchTheLegacyStageSelector(int studentDay, bool isAdult, string facilityId)
+        {
+            var registry = Registry(RegistryPath);
+            var legacy = GrowingCharacterStageSelector.Select(registry.CharacterAppearances, studentDay, isAdult, facilityId);
+            var look = new WearableLookResolver(registry).Resolve(null, studentDay, isAdult, facilityId);
+            Assert.That(look.Body, Is.SameAs(legacy.Body));
+            Assert.That(look.Layers, Is.EqualTo(new[] { legacy.Outfit, legacy.Head }));
+        }
+
         [Test]
         public void WEAR_DATA_004_BothRegistriesListTheSameWearableData()
         {

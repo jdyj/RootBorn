@@ -44,7 +44,7 @@ namespace Rootborn.Tests.EditMode.Characters
             Assert.That(Names(resolver.Resolve(null, 1, false, null)),
                 Is.EqualTo(new[] { "Sheet_body_playground", "Sheet_outfit_playground_casual", "Sheet_head_playground_short_brown" }));
             Assert.That(Names(resolver.Resolve(null, 2, false, null)),
-                Is.EqualTo(new[] { "Sheet_body_school", "Sheet_outfit_school_school_casual", "Sheet_head_school_short_brown" }));
+                Is.EqualTo(new[] { "Sheet_body_school", "Sheet_outfit_school_school_uniform", "Sheet_head_school_short_brown" }));
             Assert.That(Names(resolver.Resolve(null, 9, true, "facility.chef")),
                 Is.EqualTo(new[] { "Sheet_body_adult", "Sheet_outfit_adult_chef", "Sheet_head_adult_short_brown" }));
         }
@@ -59,7 +59,7 @@ namespace Rootborn.Tests.EditMode.Characters
             Assert.That(WearableRules.Choose(resolver.Catalog, state, uniform.Slot.Id, uniform.Id, school), Is.True);
 
             Assert.That(Names(resolver.Resolve(state, 3, false, null))[1], Is.EqualTo("Sheet_outfit_school_school_uniform"));
-            Assert.That(Names(resolver.Resolve(state, 3, true, null))[1], Is.EqualTo("Sheet_outfit_adult_adult_casual"), "no uniform art for adults");
+            Assert.That(Names(resolver.Resolve(state, 3, true, null))[1], Is.EqualTo("Sheet_outfit_adult_office"), "no school uniform art for adults: the adult default");
             Assert.That(Names(resolver.Resolve(state, 3, false, null))[1], Is.EqualTo("Sheet_outfit_school_school_uniform"));
         }
 
@@ -81,20 +81,21 @@ namespace Rootborn.Tests.EditMode.Characters
             var resolver = new WearableLookResolver(registry);
             var map = resolver.LegacyAppearanceMap(registry.CharacterAppearances);
             var storage = new SaveService("slot-a", _root);
-            var legacy = new[] { "adult_short_brown_office" };
+            // The adult default is office wear, so the old casual choice shows that the import ran.
+            var legacy = new[] { "adult_short_brown_adult_casual" };
 
             var state = WearableWardrobeStore.Load(storage, "player-1", resolver.Catalog, legacy, map);
-            Assert.That(Names(resolver.Resolve(state, 1, true, null))[1], Is.EqualTo("Sheet_outfit_adult_office"));
+            Assert.That(Names(resolver.Resolve(state, 1, true, null))[1], Is.EqualTo("Sheet_outfit_adult_adult_casual"));
             Assert.That(File.Exists(Path.Combine(storage.DirectoryPath, WearableWardrobeStore.FileNameFor("player-1"))), Is.True,
                 "the import is recorded right away");
 
             string adult = resolver.StageFor(1, true);
-            var casual = resolver.FindWearable("wearable.outfit_adult_casual");
-            Assert.That(WearableRules.Choose(resolver.Catalog, state, casual.Slot.Id, casual.Id, adult), Is.True);
+            var office = resolver.FindWearable("wearable.outfit_office");
+            Assert.That(WearableRules.Choose(resolver.Catalog, state, office.Slot.Id, office.Id, adult), Is.True);
             Assert.That(WearableWardrobeStore.Save(storage, "player-1", state), Is.True);
 
             var reloaded = WearableWardrobeStore.Load(storage, "player-1", resolver.Catalog, legacy, map);
-            Assert.That(Names(resolver.Resolve(reloaded, 1, true, null))[1], Is.EqualTo("Sheet_outfit_adult_adult_casual"),
+            Assert.That(Names(resolver.Resolve(reloaded, 1, true, null))[1], Is.EqualTo("Sheet_outfit_adult_office"),
                 "the old look does not come back after the import");
         }
 
@@ -107,7 +108,7 @@ namespace Rootborn.Tests.EditMode.Characters
             File.WriteAllText(Path.Combine(storage.DirectoryPath, WearableWardrobeStore.FileNameFor("player-1")), "{ not json");
 
             var state = WearableWardrobeStore.Load(storage, "player-1", resolver.Catalog, null, null);
-            Assert.That(Names(resolver.Resolve(state, 2, false, null))[1], Is.EqualTo("Sheet_outfit_school_school_casual"));
+            Assert.That(Names(resolver.Resolve(state, 2, false, null))[1], Is.EqualTo("Sheet_outfit_school_school_uniform"));
         }
     }
 }
