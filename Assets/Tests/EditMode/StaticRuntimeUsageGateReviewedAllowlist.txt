@@ -17,7 +17,6 @@ Assets/Scripts/Game/StudentLife/MilestoneGrowth.cs :: var interactor = UnityEngi
 Assets/Scripts/UI/Interiors/FurniturePlacementPointerRouter.cs :: if (scene.name != "House" || FindFirstObjectByType<FurniturePlacementPointerRouter>() != null)
 Assets/Scripts/UI/Interiors/FurniturePlacementStyle2Skin.cs :: if (scene.name != "House" || FindFirstObjectByType<FurniturePlacementStyle2Skin>() != null)
 Assets/Scripts/UI/Interiors/FurniturePlacementStyle2Skin.cs :: var go = GameObject.Find(name);
-Assets/Scripts/UI/Interiors/FurniturePlacementStyle2Skin.cs :: var panel = FindFirstObjectByType<InteriorFurniturePlacementPanel>();
 Assets/Scripts/UI/Interiors/HousePlacementCameraRuntimeInstaller.cs :: if (FindFirstObjectByType<HousePlacementCameraRuntimeInstaller>() != null)
 Assets/Scripts/UI/Interiors/HousePlacementCameraRuntimeInstaller.cs :: tilemap = GameObject.Find("HouseWallTilemap")?.GetComponent<Tilemap>();
 Assets/Scripts/UI/Interiors/HousePlacementCameraRuntimeInstaller.cs :: var tilemap = GameObject.Find("HouseGroundTilemap")?.GetComponent<Tilemap>();

@@ -231,8 +231,18 @@ namespace Rootborn.UI.Interiors
             return panel;
         }
 
+        private static readonly List<InteriorFurniturePlacementPanel> EnabledPanels = new List<InteriorFurniturePlacementPanel>(2);
+
+        /// <summary>An enabled panel, or null. Lets per-frame readers skip a scene search.</summary>
+        public static InteriorFurniturePlacementPanel FirstEnabled => EnabledPanels.Count > 0 ? EnabledPanels[0] : null;
+
+        // Domain reload is off in this project, so statics outlive a play session.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetEnabledPanels() => EnabledPanels.Clear();
+
         private void OnEnable()
         {
+            if (!EnabledPanels.Contains(this)) EnabledPanels.Add(this);
             transform.SetAsLastSibling();
             _isClosing = false;
             if(_overlay!=null){_overlay.gameObject.SetActive(true);UpdateAvailabilityPreview();}
@@ -240,6 +250,7 @@ namespace Rootborn.UI.Interiors
 
         private void OnDisable()
         {
+            EnabledPanels.Remove(this);
             _isClosing = true;
             if(_overlay!=null)_overlay.SuspendPreview();
             HousePlacementCameraRuntimeInstaller.SetPlacementMode(gameObject.scene, false);

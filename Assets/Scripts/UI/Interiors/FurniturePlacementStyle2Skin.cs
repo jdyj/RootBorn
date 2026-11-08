@@ -12,8 +12,13 @@ namespace Rootborn.UI.Interiors
         private static readonly Vector2 TileSize = new Vector2(16f, 16f);
         private static readonly Color PanelTint = new Color(0.10f, 0.12f, 0.18f, 0.94f);
         private const int FramesToReapply = 12;
+        private static readonly string[] UtilityMenuNames = { "WorldStateLogButton", "EncyclopediaButton" };
         private int _framesApplied;
         private readonly List<GameObject> _temporarilyHiddenControls = new List<GameObject>();
+        private InteriorFurniturePlacementPanel _panel;
+        private Image _previewImage;
+        private bool _previewSearched;
+        private bool _utilitiesHidden;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void RegisterSceneLoaded()
@@ -46,20 +51,33 @@ namespace Rootborn.UI.Interiors
 
         private void LateUpdate()
         {
-            var panel = FindFirstObjectByType<InteriorFurniturePlacementPanel>();
-            SetUtilityMenusHidden(panel != null);
+            var panel = InteriorFurniturePlacementPanel.FirstEnabled;
+            if (panel != _panel)
+            {
+                _panel = panel;
+                _previewImage = null;
+                _previewSearched = false;
+            }
+
+            bool hide = panel != null;
+            if (hide != _utilitiesHidden)
+            {
+                _utilitiesHidden = hide;
+                SetUtilityMenusHidden(hide);
+            }
+
             if (panel == null)
             {
                 return;
             }
 
             ClearEmptyPreviewPlaceholder(panel.transform);
+            if (_framesApplied < FramesToReapply) ReapplySkin(panel);
+        }
 
-            if (_framesApplied >= FramesToReapply)
-            {
-                return;
-            }
-
+        // Runs for the first FramesToReapply frames in which an open panel has tiles, while those tiles are still being built.
+        private void ReapplySkin(InteriorFurniturePlacementPanel panel)
+        {
             var tileImages = panel.GetComponentsInChildren<ModernUiTileImage>(true);
             for (int i = 0; i < tileImages.Length; i++)
             {
@@ -85,7 +103,7 @@ namespace Rootborn.UI.Interiors
                 return;
             }
             // These are real gameplay entry points. Preserve their owner and callbacks.
-            foreach (string name in new[] { "WorldStateLogButton", "EncyclopediaButton" })
+            foreach (string name in UtilityMenuNames)
             {
                 var control = GameObject.Find(name);
                 if (control == null || control.scene != gameObject.scene) continue;
@@ -94,20 +112,25 @@ namespace Rootborn.UI.Interiors
             }
         }
 
-        private void OnDisable() => SetUtilityMenusHidden(false);
-
-        private static void ClearEmptyPreviewPlaceholder(Transform root)
+        private void OnDisable()
         {
-            var preview = FindChild(root, "SelectedFurniturePreviewIcon");
-            if (preview == null)
+            _utilitiesHidden = false;
+            SetUtilityMenusHidden(false);
+        }
+
+        // The preview icon is looked up once per panel, not every frame.
+        private void ClearEmptyPreviewPlaceholder(Transform root)
+        {
+            if (!_previewSearched)
             {
-                return;
+                _previewSearched = true;
+                var preview = FindChild(root, "SelectedFurniturePreviewIcon");
+                _previewImage = preview != null ? preview.GetComponent<Image>() : null;
             }
 
-            var image = preview.GetComponent<Image>();
-            if (image != null && image.sprite == null)
+            if (_previewImage != null && _previewImage.sprite == null)
             {
-                image.color = Color.clear;
+                _previewImage.color = Color.clear;
             }
         }
 
