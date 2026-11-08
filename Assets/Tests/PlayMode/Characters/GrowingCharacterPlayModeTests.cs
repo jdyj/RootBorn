@@ -110,80 +110,6 @@ namespace Rootborn.Tests.PlayMode.Characters
             yield return CheckLook(view, "office", "stage-adult-office");
         }
 
-        [UnityTest]
-        public IEnumerator GROW_PLAY_003_WardrobeButtonChangesOutfitAndChoiceSurvivesSceneReload()
-        {
-            InputSystem.AddDevice<Keyboard>();
-            string saveRoot = Path.Combine(Path.GetTempPath(), "rootborn-wardrobe-play-" + System.Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(saveRoot);
-            Rootborn.Game.Save.SaveService.SetRootDirectoryForTests(saveRoot);
-            try
-            {
-                yield return LoadTown();
-                var player = GameObject.Find("Player");
-                var view = player.GetComponentInChildren<GrowingCharacterVisualView>(true);
-                var driver = player.GetComponent<Rootborn.UI.Characters.GrowingCharacterStageDriver>();
-                Assert.That(driver, Is.Not.Null);
-
-                // The adult body has several outfits today; the wardrobe must show all of them.
-                // Fixture: grow up through the driver (its stage decides which wardrobe rows exist).
-                driver.Apply(40, true, "facility.none");
-                yield return null;
-
-                var button = GameObject.Find(Rootborn.UI.Characters.GrowingWardrobeRuntimeInstaller.ButtonName);
-                float waited = 0f;
-                while (button == null && waited < 15f)
-                {
-                    waited += Time.unscaledDeltaTime;
-                    yield return null;
-                    button = GameObject.Find(Rootborn.UI.Characters.GrowingWardrobeRuntimeInstaller.ButtonName);
-                }
-
-                Assert.That(button, Is.Not.Null, "Wardrobe button should appear in Town.");
-                yield return Click(button);
-                yield return null;
-                var panelObject = GameObject.Find(Rootborn.UI.Characters.GrowingWardrobeRuntimeInstaller.PanelName);
-                Assert.That(panelObject, Is.Not.Null, "A real click should open the wardrobe.");
-                var panel = panelObject.GetComponent<Rootborn.UI.Characters.GrowingWardrobePanel>();
-                int offered = 0;
-                foreach (var section in driver.WardrobeSections()) offered += section.Cards.Count;
-                Assert.That(panel.VisibleCardCount, Is.EqualTo(offered));
-                Assert.That(panel.VisibleCardCount, Is.GreaterThanOrEqualTo(3));
-                yield return CaptureScreen("wardrobe-open");
-
-                var chef = GameObject.Find("Outfit_wearable.outfit_chef");
-                Assert.That(chef, Is.Not.Null);
-                yield return Click(chef);
-                Assert.That(view.LookKey, Does.Contain("chef"));
-                yield return CaptureScreen("wardrobe-chef-chosen");
-                Assert.That(Rootborn.Game.Common.UiGameplayInputLock.IsBlocked, Is.True, "Movement stays locked while it is open.");
-                panel.Hide();
-                Assert.That(Rootborn.Game.Common.UiGameplayInputLock.IsBlocked, Is.False);
-
-                string slot = player.GetComponent<Rootborn.Game.StudentLife.StudentLifeProgressComponent>().Progress.SaveSlot;
-                string id = player.GetComponent<Rootborn.Game.StudentLife.StudentLifeProgressComponent>().Progress.PlayerId;
-                string savedJson = File.ReadAllText(Path.Combine(new Rootborn.Game.Save.SaveService(slot, saveRoot).DirectoryPath,
-                    Rootborn.Game.Characters.Wearables.WearableWardrobeStore.FileNameFor(id)));
-                Assert.That(savedJson, Does.Contain("wearable.outfit_chef"), "Choice must be written to the save folder.");
-
-                // A fresh scene and driver must restore the saved outfit on their own.
-                yield return LoadTown();
-                player = GameObject.Find("Player");
-                view = player.GetComponentInChildren<GrowingCharacterVisualView>(true);
-                driver = player.GetComponent<Rootborn.UI.Characters.GrowingCharacterStageDriver>();
-                Assert.That(driver, Is.Not.Null);
-                driver.Apply(40, true, "facility.none");
-                yield return null;
-                Assert.That(view.LookKey, Does.Contain("chef"), "Saved choice should win over the adult default after reload.");
-                Assert.That(view.OutfitRenderer.sprite, Is.Not.Null);
-            }
-            finally
-            {
-                Rootborn.Game.Save.SaveService.SetRootDirectoryForTests(null);
-                if (Directory.Exists(saveRoot)) Directory.Delete(saveRoot, true);
-            }
-        }
-
         private IEnumerator LoadTown()
         {
             var load = SceneManager.LoadSceneAsync("Town", LoadSceneMode.Single);
@@ -198,25 +124,6 @@ namespace Rootborn.Tests.PlayMode.Characters
             }
 
             yield return new WaitForSecondsRealtime(1f);
-        }
-
-        private IEnumerator Click(GameObject target)
-        {
-            // Same frame-driven pointer as MainMenuPointerInputE2ETests, so the real EventSystem handles the click.
-            var rect = target.GetComponent<RectTransform>();
-            var canvas = target.GetComponentInParent<Canvas>().rootCanvas;
-            Vector2 point = RectTransformUtility.WorldToScreenPoint(canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera, rect.TransformPoint(rect.rect.center));
-            var hits = new System.Collections.Generic.List<RaycastResult>();
-            EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = point }, hits);
-            Assert.That(hits.Count, Is.GreaterThan(0), "Nothing under the pointer at " + point);
-            Assert.That(hits[0].gameObject.transform.IsChildOf(target.transform), Is.True, target.name + " is covered by " + hits[0].gameObject.name);
-            // InputTestFixture hides the device from Town's input module, so dispatch at the raycast hit here.
-            // This proves what is on top and that its handler works. GrowingWardrobeMouseTests covers the device path.
-            var data = new PointerEventData(EventSystem.current) { position = point, button = PointerEventData.InputButton.Left };
-            var handler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(hits[0].gameObject);
-            Assert.That(handler, Is.Not.Null);
-            ExecuteEvents.Execute(handler, data, ExecuteEvents.pointerClickHandler);
-            yield return null;
         }
 
         private static IEnumerator CaptureScreen(string label)

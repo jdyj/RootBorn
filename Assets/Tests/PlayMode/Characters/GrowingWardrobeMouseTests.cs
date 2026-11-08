@@ -41,6 +41,71 @@ namespace Rootborn.Tests.PlayMode.Characters
         }
 
         [UnityTest]
+        public IEnumerator GROW_PLAY_003_MouseDevicePicksTheChefOutfitAsAnAdultAndReloadKeepsIt()
+        {
+            string saveRoot = Path.Combine(Path.GetTempPath(), "rootborn-wardrobe-play-" + System.Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(saveRoot);
+            SaveService.SetRootDirectoryForTests(saveRoot);
+            try
+            {
+                yield return LoadTown();
+                var player = GameObject.Find("Player");
+                var view = player.GetComponentInChildren<GrowingCharacterVisualView>(true);
+                var driver = player.GetComponent<GrowingCharacterStageDriver>();
+                Assert.That(driver, Is.Not.Null);
+                // Fixture: reaching adulthood takes a long career flow, so grow up through the driver. Every click below is a
+                // mouse device event read by Town's InputSystemUIInputModule (no direct handler calls).
+                driver.Apply(40, true, "facility.none");
+                yield return null;
+
+                _mouse = InputSystem.AddDevice<Mouse>();
+                _mouse.MakeCurrent();
+                yield return null;
+                var button = GameObject.Find(GrowingWardrobeRuntimeInstaller.ButtonName);
+                yield return ClickAt(button);
+                var panelObject = GameObject.Find(GrowingWardrobeRuntimeInstaller.PanelName);
+                Assert.That(panelObject, Is.Not.Null, "A device click at the button should open the wardrobe.");
+                var panel = panelObject.GetComponent<GrowingWardrobePanel>();
+                int offered = 0;
+                foreach (var section in driver.WardrobeSections()) offered += section.Cards.Count;
+                Assert.That(panel.VisibleCardCount, Is.EqualTo(offered));
+                Assert.That(panel.VisibleCardCount, Is.GreaterThanOrEqualTo(3), "The adult body has several outfits.");
+                yield return Capture("wardrobe-open");
+
+                var chef = GameObject.Find("Outfit_wearable.outfit_chef");
+                Assert.That(chef, Is.Not.Null);
+                yield return ClickAt(chef);
+                Assert.That(view.LookKey, Does.Contain("chef"), "A device click on the chef card should change the outfit.");
+                yield return Capture("wardrobe-chef-chosen");
+                Assert.That(Rootborn.Game.Common.UiGameplayInputLock.IsBlocked, Is.True, "Movement stays locked while it is open.");
+                yield return ClickAt(GameObject.Find(GrowingWardrobeRuntimeInstaller.ButtonName));
+                Assert.That(panel.IsVisible, Is.False, "A second device click on the button closes the wardrobe.");
+                Assert.That(Rootborn.Game.Common.UiGameplayInputLock.IsBlocked, Is.False);
+
+                string slot = player.GetComponent<StudentLifeProgressComponent>().Progress.SaveSlot;
+                string id = player.GetComponent<StudentLifeProgressComponent>().Progress.PlayerId;
+                string savedJson = File.ReadAllText(Path.Combine(new SaveService(slot, saveRoot).DirectoryPath,
+                    Rootborn.Game.Characters.Wearables.WearableWardrobeStore.FileNameFor(id)));
+                Assert.That(savedJson, Does.Contain("wearable.outfit_chef"), "Choice must be written to the save folder.");
+
+                // A fresh scene and driver must restore the saved outfit on their own.
+                yield return LoadTown();
+                player = GameObject.Find("Player");
+                view = player.GetComponentInChildren<GrowingCharacterVisualView>(true);
+                driver = player.GetComponent<GrowingCharacterStageDriver>();
+                driver.Apply(40, true, "facility.none");
+                yield return null;
+                Assert.That(view.LookKey, Does.Contain("chef"), "Saved choice should come back after reload.");
+                Assert.That(view.OutfitRenderer.sprite, Is.Not.Null);
+            }
+            finally
+            {
+                SaveService.SetRootDirectoryForTests(null);
+                if (Directory.Exists(saveRoot)) Directory.Delete(saveRoot, true);
+            }
+        }
+
+        [UnityTest]
         public IEnumerator GROW_PLAY_004_MouseDevicePicksAnOutfitAndReloadRestoresItWithoutHelp()
         {
             string saveRoot = Path.Combine(Path.GetTempPath(), "rootborn-wardrobe-mouse-" + System.Guid.NewGuid().ToString("N"));
