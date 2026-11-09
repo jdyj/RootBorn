@@ -239,8 +239,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var keyboard = InputSystem.AddDevice<Keyboard>();
             yield return EnterNewGame();
             PrepareChainAt(Chain(), "mainquest.MyDream");
-            // A dream opens once its career is introduced; the tour does that. Hear the restaurant's introduction first.
-            yield return VisitPlace(keyboard, "FacilityActivities_location_restaurant");
+            // A dream opens once its career is introduced. Hear the restaurant's introduction (its first activity button).
+            yield return PlayerFlowE2EDriver.UseLocationActivity(keyboard, "FacilityActivities_location_restaurant", 0, F);
             var player = GameObject.Find("Player");
             var interests = player.GetComponent<CareerInterestProgressComponent>();
             Assert.IsTrue(interests != null && interests.Interests != null && interests.Interests.Length > 0, F + " the player has no dreams to choose.");
