@@ -93,6 +93,8 @@ namespace Rootborn.UI.Quests
             var result = owner.ExecuteSessionCommand((session, service) => new AdultCareerResult(
                 ApplyEventToSession(session, questEvent) ? AdultCareerResultKind.Applied : AdultCareerResultKind.InvalidRequest));
             if (result.Applied) NotifyCommitted(owner);
+            // A refused command drops the event, and with it the player's quest progress; say so instead of failing silently.
+            else Debug.LogWarning($"[ROOTBORN] Quest event not applied kind={questEvent.Kind} key={questEvent.EventKey} result={result.Kind}");
         }
 
         // Used by work settlement so income, step rewards and the event receipt share one save.
