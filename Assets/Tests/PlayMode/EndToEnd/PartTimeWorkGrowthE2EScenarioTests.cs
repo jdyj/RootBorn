@@ -132,6 +132,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.IsTrue(panel.Session.Succeeded, "JOB-002 failed: " + workId + " played from the screen did not pass (score " + panel.Session.Score + ").");
             Assert.AreEqual(traitBefore + traitOutcome.Delta, student.Progress.GetTraitValue(traitOutcome.Trait), "JOB-002 failed: " + workId + " growth was not applied exactly once.");
             Assert.IsFalse(student.Progress.HasPendingMinigame, "JOB-002 failed: the finished minigame is still pending.");
+            // Close the result as a player does, so its input lock does not outlive the test.
+            if (panel.IsOpen) yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(panel.transform, "Close"));
         }
 
         private IEnumerator EnterTownFromSaveSlot(string buttonName, string failure)

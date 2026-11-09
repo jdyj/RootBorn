@@ -268,17 +268,8 @@ namespace Rootborn.Tests.PlayMode
             }
         }
 
-        // A test can end with a modal still open (a minigame left on screen) in a scene the next test keeps using; its
-        // input lock then blocked the next test's shortcuts (OBJECTIVE_JOURNAL_PM_001's Tab after the job tests).
-        internal static void ReleaseLeftoverInputLocks()
-        {
-            var owners = typeof(Rootborn.Game.Common.UiGameplayInputLock).GetField("Owners", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-            (owners?.GetValue(null) as System.Collections.Generic.HashSet<UnityEngine.Object>)?.Clear();
-        }
-
         public void BeforeTest(ITest test)
         {
-            ReleaseLeftoverInputLocks();
             // Scenario tests here start from Town. The House start is covered by NewGame_StartsInTheHouse and real-input play.
             Rootborn.Game.World.WorldEntryService.SetNewGameEntryForTests("Town", "town-home-entry");
             LogAssert.ignoreFailingMessages = true;
@@ -288,7 +279,6 @@ namespace Rootborn.Tests.PlayMode
         public void AfterTest(ITest test)
         {
             LogAssert.ignoreFailingMessages = true;
-            ReleaseLeftoverInputLocks();
             ForgetResolvedControls();
             InputSystemUiModulePlayModeTestGuard.InstallForCurrentTest();
         }

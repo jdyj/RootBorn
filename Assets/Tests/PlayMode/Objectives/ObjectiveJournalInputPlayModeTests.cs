@@ -17,6 +17,22 @@ namespace Rootborn.Tests.PlayMode.Objectives
 {
     public sealed class ObjectiveJournalInputPlayModeTests : Rootborn.Tests.PlayMode.PlayModeInputFixture
     {
+        // These tests build their own canvas; start from an empty scene so a previous test's world (and any panel it left
+        // open, such as a minigame holding the input lock) cannot take the shortcuts.
+        [UnitySetUp]
+        public IEnumerator StartInEmptyScene()
+        {
+            var fresh = UnityEngine.SceneManagement.SceneManager.CreateScene("ObjectiveJournalInputTest-" + System.Guid.NewGuid().ToString("N"));
+            UnityEngine.SceneManagement.SceneManager.SetActiveScene(fresh);
+            for (int i = UnityEngine.SceneManagement.SceneManager.sceneCount - 1; i >= 0; i--)
+            {
+                var scene = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
+                if (scene == fresh || !scene.isLoaded) continue;
+                var unload = UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync(scene);
+                while (unload != null && !unload.isDone) yield return null;
+            }
+        }
+
         private const string ScreenshotPath = "Builds/Logs/objective-journal-playmode.png";
 
         [UnityTest]
