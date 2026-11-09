@@ -113,6 +113,52 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             Assert.AreEqual(1, clicks, label + " did not receive exactly one click from the mouse device. " + DescribeInputSetup());
         }
 
+        /// <summary>
+        /// Like <see cref="ClickButton"/>, for a minigame answer that can be switched off while the press is under way: the
+        /// game greys the answers out while it shows the order to remember, refreshing ten times a second. If the button was
+        /// greyed out or rebuilt during the press, the click is not counted and the caller simply tries again, as a player
+        /// would. A button that stayed live and still missed the click fails as before.
+        /// </summary>
+        public static IEnumerator ClickAnswer(Button button)
+        {
+            Assert.IsNotNull(button);
+            Assert.IsTrue(button.gameObject.activeInHierarchy, button.name + " must be visible for player-facing click. Hidden by: " + FirstInactiveAncestor(button.transform));
+            Assert.IsTrue(button.interactable, button.name + " must be interactable for player-facing click.");
+            string label = button.name;
+            int clicks = 0;
+            bool stayedLive = true;
+            UnityEngine.Events.UnityAction count = () => clicks++;
+            button.onClick.AddListener(count);
+            var watch = button.gameObject.AddComponent<InteractableWatch>();
+            watch.Target = button;
+            try
+            {
+                yield return ClickWithMouse(button.gameObject, label);
+            }
+            finally
+            {
+                if (button != null)
+                {
+                    button.onClick.RemoveListener(count);
+                    stayedLive = watch != null && !watch.WentOff;
+                    if (watch != null) Object.Destroy(watch);
+                }
+                else stayedLive = false;
+            }
+
+            if (clicks == 0 && !stayedLive) yield break;
+            Assert.AreEqual(1, clicks, label + " did not receive exactly one click from the mouse device. " + DescribeInputSetup());
+        }
+
+        // Notes whether a button was ever non-interactable while a press was in progress.
+        private sealed class InteractableWatch : MonoBehaviour
+        {
+            public Button Target;
+            public bool WentOff;
+            private void LateUpdate() { if (Target == null || !Target.interactable || !Target.isActiveAndEnabled) WentOff = true; }
+            private void OnDisable() { WentOff = true; }
+        }
+
         /// <summary>Event systems with their enabled modules and the pointer devices, for click failures.</summary>
         public static string DescribeInputSetup()
         {
@@ -678,12 +724,12 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
                     case Rootborn.Game.Minigames.MinigameMechanic.Sequence:
                         if (c.PreviewVisible) { remembered = c.PreviewSequence; break; }
                         Assert.IsNotNull(remembered, failure + " The sequence was never shown before answering.");
-                        var answer = FindButton(panel.transform, "Choice_" + remembered[c.ProgressIndex]); if (!answer.interactable) break; yield return ClickButton(answer);
+                        var answer = FindButton(panel.transform, "Choice_" + remembered[c.ProgressIndex]); if (!answer.interactable) break; yield return ClickAnswer(answer);
                         break;
                     case Rootborn.Game.Minigames.MinigameMechanic.Choice:
                         int hinted = -1;
                         for (int i = 0; i < c.Symbols.Length; i++) if (c.IsHintChoice(i)) { hinted = i; break; }
-                        var pick = FindButton(panel.transform, "Choice_" + Mathf.Max(0, hinted)); if (!pick.interactable) break; yield return ClickButton(pick);
+                        var pick = FindButton(panel.transform, "Choice_" + Mathf.Max(0, hinted)); if (!pick.interactable) break; yield return ClickAnswer(pick);
                         break;
                     case Rootborn.Game.Minigames.MinigameMechanic.Timing:
                         var beats = c.BeatTimes;
