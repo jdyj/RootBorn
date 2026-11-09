@@ -190,7 +190,11 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.IsNotNull(work, F + " Town has no work point for " + workId + ".");
             var player = GameObject.Find("Player");
             yield return PlayerFlowE2EDriver.WalkPlayerWithKeyboardTo(player, keyboard, work.transform.position + new Vector3(0f, -0.5f, 0f), 0.45f, 900, F + " could not reach " + workId + ".");
-            player.GetComponent<PlayerInteractionRouter>().RefreshPromptNow();
+            var router = player.GetComponent<PlayerInteractionRouter>();
+            router.RefreshPromptNow();
+            string before = "prompt=" + router.PromptVisible + " '" + router.PromptText + "' target=" + (router.CurrentInteractable as Component)?.name
+                + " locks=" + PlayerFlowE2EDriver.InputLockOwners() + " remaining=" + player.GetComponent<StudentLifeProgressComponent>().Progress.TimePointsRemaining
+                + " pendingMinigame=" + player.GetComponent<StudentLifeProgressComponent>().Progress.HasPendingMinigame + " " + DescribeTime();
             yield return PlayerFlowE2EDriver.PressInteractKey(keyboard);
             Rootborn.UI.Minigames.MinigamePanel panel = null;
             for (int i = 0; i < 120 && (panel == null || !panel.IsOpen); i++)
@@ -199,7 +203,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 yield return null;
             }
 
-            Assert.IsTrue(panel != null && panel.IsOpen, F + " E at " + workId + " did not open its minigame.");
+            if (panel == null || !panel.IsOpen) yield return Capture("fail-work-" + workId + ".png");
+            Assert.IsTrue(panel != null && panel.IsOpen, F + " E at " + workId + " did not open its minigame. Before E: " + before);
             yield return PlayerFlowE2EDriver.PlayMinigameToEnd(panel, 120f, F);
             Assert.IsTrue(panel.Session.Succeeded, F + " the shift minigame did not succeed (score " + panel.Session.Score + ").");
             if (panel.IsOpen) yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(panel.transform, "Close"));
