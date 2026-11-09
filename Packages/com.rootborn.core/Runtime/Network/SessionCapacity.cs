@@ -18,6 +18,9 @@ namespace Rootborn.Core.Network
         public const string ServerFullReason = "server full";
         public const string InvalidLimitReason = "invalid player limit";
 
+        /// <summary>True when a refused client's disconnect reason says the session was full.</summary>
+        public static bool IsServerFull(string disconnectReason) => disconnectReason == ServerFullReason;
+
         /// <param name="connectedClients">Clients already connected, the host's own client included.</param>
         public static SessionCapacityDecision Decide(int connectedClients, int maxPlayers)
         {

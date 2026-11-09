@@ -55,16 +55,21 @@ namespace Rootborn.Network.Session
             var nm = NetworkManager.Singleton;
             if (nm != null)
             {
-                if (nm.SceneManager != null)
-                {
-                    nm.SceneManager.OnSceneEvent -= HandleSceneEvent;
-                }
-
-                nm.OnClientConnectedCallback -= HandleConnected;
-                nm.OnClientDisconnectCallback -= HandleDisconnected;
+                Detach(nm);
                 nm.Shutdown();
             }
             return Task.CompletedTask;
+        }
+
+        private void Detach(NetworkManager nm)
+        {
+            if (nm.SceneManager != null)
+            {
+                nm.SceneManager.OnSceneEvent -= HandleSceneEvent;
+            }
+
+            nm.OnClientConnectedCallback -= HandleConnected;
+            nm.OnClientDisconnectCallback -= HandleDisconnected;
         }
 
         private void HandleConnected(ulong id)
@@ -78,6 +83,10 @@ namespace Rootborn.Network.Session
             // The server's reason (e.g. "server full" from SessionCapacity) is the only clue a refused player gets.
             Debug.Log($"[ROOTBORN] Client disconnected callback id={id} localClientId={NetworkManager.Singleton?.LocalClientId} reason={NetworkManager.Singleton?.DisconnectReason}");
             OnPlayerDisconnected?.Invoke(id);
+            // A client only hears about its own connection ending (refused, timed out, kicked); a retry starts a new session,
+            // so this one lets go of the shared NetworkManager instead of logging and firing for the next one too.
+            var nm = NetworkManager.Singleton;
+            if (nm != null) Detach(nm);
         }
 
         private void HandleSceneEvent(SceneEvent sceneEvent)

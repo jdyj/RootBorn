@@ -17,7 +17,6 @@ namespace Rootborn.UI.MainMenu
         [SerializeField] private Button _clientButton;
         [SerializeField] private Button _quitButton;
         [SerializeField] private string _townScene = "Town";
-        [SerializeField] private string _hostLobbyScene = "HostLobby";
         private static readonly Color Ink = new Color32(48, 71, 83, 255);
         private GameObject _ownedBackdrop;
 
@@ -170,7 +169,8 @@ namespace Rootborn.UI.MainMenu
         private void OnClient()
         {
             ApplyMode(SessionMode.Client);
-            SceneManager.LoadScene(_hostLobbyScene);
+            // Joining is typed in over the menu; the server's scene sync then moves the client into the world.
+            JoinGamePanel.EnsureInScene(transform.parent != null ? transform.parent : transform).Show();
         }
 
         private void OnQuit() => Application.Quit();
