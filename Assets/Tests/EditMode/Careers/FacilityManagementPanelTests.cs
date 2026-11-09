@@ -215,9 +215,10 @@ namespace Rootborn.Tests.EditMode.Careers
         private static string DescribeInteract(Component interactor, Data f)
         {
             var behaviour = (Behaviour)interactor; GameDataRegistryProvider.TryGet(out var registry);
-            int canvases = 0; foreach (var c in UnityEngine.Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None)) if (c.isActiveAndEnabled && c.gameObject.scene == interactor.gameObject.scene && c.rootCanvas == c && c.renderMode == RenderMode.ScreenSpaceOverlay) canvases++;
+            string canvases = string.Empty; foreach (var c in UnityEngine.Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                canvases += " [" + c.name + " ae=" + c.isActiveAndEnabled + " sameScene=" + (c.gameObject.scene == interactor.gameObject.scene) + " root=" + (c.rootCanvas == c) + " mode=" + c.renderMode + "]";
             return "activeAndEnabled=" + behaviour.isActiveAndEnabled + " facilityValid=" + f.Facility.IsValid + " canInteract=" + ((IPlayerInteractable)interactor).CanInteract(f.Player)
-                + " registry=" + (registry == f.Registry) + " eligibleCanvases=" + canvases;
+                + " registry=" + (registry == f.Registry) + " canvases:" + canvases;
         }
         private Canvas Canvas() { var go = new GameObject("FixtureCanvas", typeof(RectTransform), typeof(Canvas)); _objects.Add(go); return go.GetComponent<Canvas>(); }
         private static Type PanelType() { var type = typeof(CareerInterestPanel).Assembly.GetType("Rootborn.UI.Careers.FacilityManagementPanel"); Assert.That(type, Is.Not.Null, "FacilityManagementPanel missing"); return type; }

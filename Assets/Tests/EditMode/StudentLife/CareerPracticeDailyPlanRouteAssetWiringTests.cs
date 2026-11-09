@@ -130,8 +130,11 @@ namespace Rootborn.Tests.EditMode.StudentLife
             var progress = new StudentLifeProgress("slot-work-route", "player-work-route", 100, 100);
             progress.ConfigureCalendar(registry.StudentLifeCalendar); // a shift spends a daily time point
             var inventory = new Inventory();
-            Assert.IsTrue(new PartTimeWorkRunner().TryPerform(work, progress, inventory, "registered-work-route-request", out var result));
-            Assert.AreEqual(LifeActivityResultKind.Applied, result.Kind);
+            // The shift is played as a minigame now: reserve it, then settle a successful run, as the work point does.
+            var service = new StudentMinigameService(registry);
+            var adult = Rootborn.Game.Careers.AdultCareerProgress.FromSaveData(new Rootborn.Game.Careers.AdultCareerProgressSaveData { SaveSlot = progress.SaveSlot, PlayerId = progress.PlayerId });
+            Assert.IsTrue(service.TryBeginPartTimeWork(work, progress, adult, inventory, "registered-work-route-request", 1).Applied, "The registered shift must start.");
+            Assert.IsTrue(service.TrySettlePartTimeWork(work, progress, inventory, "registered-work-route-request", true).Applied, "A successful shift must settle.");
             var unlocked = new DailyPlanRouteContext(progress);
             Assert.IsTrue(route.IsAvailable(in unlocked), "Workshop/job route must be available after the configured part-time work is completed.");
         }
