@@ -230,6 +230,46 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             if (panel.IsOpen) yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(panel.transform, "CloseLocation"));
         }
 
+        // MyDream: choose a dream from the HUD "장래희망" panel with the mouse, close it, then Tab: the journal hint row for that
+        // dream names it as the current one.
+        [UnityTest]
+        [Timeout(600000)]
+        public IEnumerator MAIN_E2E_009_MyDream_ChoosingADreamShowsItInTheJournal()
+        {
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+            yield return EnterNewGame();
+            PrepareChainAt(Chain(), "mainquest.MyDream");
+            var player = GameObject.Find("Player");
+            var interests = player.GetComponent<CareerInterestProgressComponent>();
+            Assert.IsTrue(interests != null && interests.Interests != null && interests.Interests.Length > 0, F + " the player has no dreams to choose.");
+            var student = player.GetComponent<StudentLifeProgressComponent>().Progress;
+            var candidates = player.GetComponent<CareerCandidateProgressComponent>()?.Progress;
+            int pick = -1;
+            for (int i = 0; i < interests.Interests.Length && pick < 0; i++)
+                if (interests.Interests[i] != null && interests.Interests[i].Evaluate(interests.EnsureProgress(), candidates, student, student.CurrentDay).Allowed) pick = i;
+            Assert.GreaterOrEqual(pick, 0, F + " no dream can be chosen at the MyDream step.");
+            var dream = interests.Interests[pick];
+
+            var open = GameObject.Find("CareerInterestOpenButton");
+            Assert.IsNotNull(open, F + " the HUD has no dream button.");
+            yield return PlayerFlowE2EDriver.ClickButton(open.GetComponent<Button>());
+            var panel = Object.FindFirstObjectByType<CareerInterestPanel>(FindObjectsInactive.Include);
+            Assert.IsTrue(panel != null && panel.IsOpen, F + " the dream button did not open the dream panel.");
+            yield return PlayerFlowE2EDriver.ClickButton(panel.GetInterestButtonForTests(pick));
+            Assert.AreEqual(dream.Id, interests.EnsureProgress().CurrentInterestId, F + " clicking the " + dream.Id + " card did not choose it.");
+            yield return Capture("07-dream-chosen.png");
+            yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(panel.transform, "CloseButton"));
+
+            yield return PlayerFlowE2EDriver.PressTab(keyboard);
+            var journal = Object.FindFirstObjectByType<Rootborn.UI.Objectives.ObjectiveJournalPanel>(FindObjectsInactive.Include);
+            Assert.IsTrue(journal != null && journal.IsVisible, F + " Tab did not open the journal.");
+            string name = Rootborn.Game.Localization.GameText.Get(dream.DisplayNameKey);
+            yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(journal.transform, "ObjectiveCategory_Hints"));
+            yield return PlayerFlowE2EDriver.ClickButton(ObjectiveJournalE2EDriver.FindRowButtonContaining(journal, name, F + " journal row for " + dream.Id));
+            yield return Capture("08-dream-in-journal.png");
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Format("dream.journal.current", name), journal.VisibleText, F + " the journal does not name the chosen dream.");
+        }
+
         private static IEnumerator EnterNewGame()
         {
             yield return PlayerFlowE2EDriver.EnterWorldFromSaveSlot("slot-0", "NewGameButton", "Town", F + " New Game did not enter Town.");
