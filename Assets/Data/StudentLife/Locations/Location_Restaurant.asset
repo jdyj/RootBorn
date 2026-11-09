@@ -15,10 +15,11 @@ MonoBehaviour:
   _id: location.restaurant
   _displayNameKey: opening.facility.restaurant.name
   _descriptionKey: opening.facility.restaurant.description
-  _category: {fileID: 0}
+  _category: {fileID: 11400000, guid: d076614cb5da3704ba05f4b0cc46556f, type: 2}
   _worldAnchorId: anchor.restaurant
   _worldPosition: {x: 18.5, y: 17.5}
-  _relatedRoles: []
+  _relatedRoles:
+  - {fileID: 11400000, guid: 0840c52d18c94c54a902fc03f482dcb5, type: 2}
   _relatedNpcs: []
   _discoveries: []
   _visitRules: []

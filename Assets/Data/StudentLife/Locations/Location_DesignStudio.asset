@@ -15,10 +15,11 @@ MonoBehaviour:
   _id: location.design-studio
   _displayNameKey: opening.facility.design-studio.name
   _descriptionKey: opening.facility.design-studio.description
-  _category: {fileID: 0}
+  _category: {fileID: 11400000, guid: d076614cb5da3704ba05f4b0cc46556f, type: 2}
   _worldAnchorId: anchor.design-studio
   _worldPosition: {x: 50.5, y: 17.5}
-  _relatedRoles: []
+  _relatedRoles:
+  - {fileID: 11400000, guid: 0840c52d18c94c54a902fc03f482dcb5, type: 2}
   _relatedNpcs: []
   _discoveries: []
   _visitRules: []

@@ -15,10 +15,11 @@ MonoBehaviour:
   _id: location.medical-clinic
   _displayNameKey: opening.facility.medical-clinic.name
   _descriptionKey: opening.facility.medical-clinic.description
-  _category: {fileID: 0}
+  _category: {fileID: 11400000, guid: d076614cb5da3704ba05f4b0cc46556f, type: 2}
   _worldAnchorId: anchor.medical-clinic
   _worldPosition: {x: 31.5, y: 25.5}
-  _relatedRoles: []
+  _relatedRoles:
+  - {fileID: 11400000, guid: 0840c52d18c94c54a902fc03f482dcb5, type: 2}
   _relatedNpcs: []
   _discoveries: []
   _visitRules: []
