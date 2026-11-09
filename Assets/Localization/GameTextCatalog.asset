@@ -3430,3 +3430,39 @@ MonoBehaviour:
   - key: ui.wardrobe.hair.short_brown
     ko: "\uc9e7\uc740 \uac08\uc0c9 \uba38\ub9ac"
     en: "Short brown hair"
+  - key: daily.time.shared-hud
+    ko: "{0}\uc77c {1}\uc694\uc77c \u00b7 {2}"
+    en: "Day {0} {1} · {2}"
+  - key: daily.weekday.0
+    ko: "\uc6d4"
+    en: "Mon"
+  - key: daily.weekday.1
+    ko: "\ud654"
+    en: "Tue"
+  - key: daily.weekday.2
+    ko: "\uc218"
+    en: "Wed"
+  - key: daily.weekday.3
+    ko: "\ubaa9"
+    en: "Thu"
+  - key: daily.weekday.4
+    ko: "\uae08"
+    en: "Fri"
+  - key: daily.weekday.5
+    ko: "\ud1a0"
+    en: "Sat"
+  - key: daily.weekday.6
+    ko: "\uc77c"
+    en: "Sun"
+  - key: daily.time-of-day.morning
+    ko: "\uc544\uce68"
+    en: "Morning"
+  - key: daily.time-of-day.afternoon
+    ko: "\uc624\ud6c4"
+    en: "Afternoon"
+  - key: daily.time-of-day.evening
+    ko: "\uc800\ub141"
+    en: "Evening"
+  - key: daily.time-of-day.night
+    ko: "\ubc24"
+    en: "Night"

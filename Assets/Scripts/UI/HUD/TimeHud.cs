@@ -143,8 +143,15 @@ namespace Rootborn.UI.HUD
             if (_label == null) return;
             if (_worldTime != null)
             {
-                if (IsSameDisplay(DisplaySource.Network, _worldTime.CurrentDay, (int)_worldTime.TimeOfDay, (int)_worldTime.SchedulePhase, null)) return;
-                SetLabelText("Day " + _worldTime.CurrentDay + " " + _worldTime.WeekdayName + " " + _worldTime.TimeOfDay + " " + _worldTime.SchedulePhase);
+                // Shared world time (multiplayer): day, weekday and part of day in the player's language. The schedule phase
+                // (DayStart, ...) is a sync detail, not something to show; it stays in the logs (worldTime.SnapshotText).
+                CheckLocalizationCatalog();
+                BindInventory();
+                int sharedAllowance = AllowanceCount(_boundInventory, _shopCurrency);
+                if (IsSameDisplay(DisplaySource.Network, _worldTime.CurrentDay, (int)_worldTime.TimeOfDay * 100000 + _worldTime.WeekdayIndex, sharedAllowance, GameText.Language)) return;
+                string weekday = GameText.Get("daily.weekday." + _worldTime.WeekdayIndex);
+                string partOfDay = GameText.Get("daily.time-of-day." + _worldTime.TimeOfDay.ToString().ToLowerInvariant());
+                SetLabelText(GameText.Format("daily.time.shared-hud", _worldTime.CurrentDay, weekday, partOfDay) + FormatAllowance(sharedAllowance));
                 return;
             }
             var progress = _lifeOwner != null && _lifeOwner.isActiveAndEnabled ? _lifeOwner.Progress : null;

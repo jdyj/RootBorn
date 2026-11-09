@@ -57,9 +57,14 @@ namespace Rootborn.Tests.EditMode.Network
             Assert.GreaterOrEqual(localClockIndex, 0);
             Assert.Less(worldTimeIndex, localClockIndex);
             StringAssert.Contains("worldTime.CurrentDay", source);
-            StringAssert.Contains("worldTime.WeekdayName", source);
+            StringAssert.Contains("worldTime.WeekdayIndex", source);
             StringAssert.Contains("worldTime.TimeOfDay", source);
-            StringAssert.Contains("worldTime.SchedulePhase", source);
+            // Players see day, weekday and part of day through localized keys, never the raw sync names.
+            StringAssert.Contains("\"daily.time.shared-hud\"", source);
+            StringAssert.Contains("\"daily.weekday.\"", source);
+            StringAssert.Contains("\"daily.time-of-day.\"", source);
+            StringAssert.DoesNotContain("worldTime.WeekdayName", source);
+            StringAssert.DoesNotContain("+ _worldTime.SchedulePhase", source);
         }
 
         [Test]
