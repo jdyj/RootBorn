@@ -230,6 +230,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 if (square != null)
                     yield return PlayerFlowE2EDriver.WalkPlayerWithKeyboardTo(GameObject.Find("Player"), keyboard, square.transform.position + new Vector3(0f, -1.5f, 0f), 1.2f, 900, F + " could not walk to the town square on the way home.");
                 Debug.Log("[MAIN-E2E] before door to " + next + " locks=" + PlayerFlowE2EDriver.InputLockOwners() + " " + DescribeTime());
+                yield return ProbeMovement(keyboard, "before door to " + next);
                 yield return Capture("before-door-" + next + "-day" + GameObject.Find("Player").GetComponent<StudentLifeProgressComponent>().Progress.CurrentDay + ".png");
                 yield return PlayerFlowE2EDriver.WalkThroughDoor(keyboard, next, F);
                 yield return PlayerFlowE2EDriver.DismissDailyEvent();
@@ -285,6 +286,29 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.IsTrue(TryFindFreeRoomCell(out var screen), F + " no free room cell is visible outside the UI.");
             yield return PressMouseInWorld(screen);
             for (int i = 0; i < 60 && Log().GetState(chain) != QuestChainState.Completed; i++) yield return null;
+        }
+
+        // Diagnostic: hold D for a few frames and report whether the body moved and what could hold it still.
+        private static IEnumerator ProbeMovement(Keyboard keyboard, string label)
+        {
+            var player = GameObject.Find("Player");
+            var controller = player.GetComponent<Rootborn.Game.Player.PlayerController>();
+            var body = player.GetComponent<Rigidbody2D>();
+            Vector3 start = player.transform.position;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
+            InputSystem.Update();
+            for (int i = 0; i < 10; i++) { yield return null; yield return new WaitForFixedUpdate(); }
+            var pressed = new System.Text.StringBuilder();
+            foreach (var device in InputSystem.devices)
+                if (device is Keyboard k) { pressed.Append(k.name).Append('['); foreach (var key in k.allKeys) if (key.isPressed) pressed.Append(key.keyCode).Append(' '); pressed.Append("] "); }
+            string state = "moved=" + Vector3.Distance(start, player.transform.position).ToString("F2")
+                + " controller=" + (controller != null && controller.isActiveAndEnabled) + " input=" + (controller != null ? controller.Input.ToString() : "-")
+                + " body=" + (body != null ? body.bodyType + " sim=" + body.simulated + " vel=" + body.linearVelocity + " constraints=" + body.constraints : "none")
+                + " timeScale=" + Time.timeScale + " keyboards=" + pressed + " players=" + Object.FindObjectsByType<Rootborn.Game.Player.PlayerController>(FindObjectsSortMode.None).Length;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+            yield return null;
+            Debug.Log("[MAIN-E2E] probe " + label + ": " + state);
         }
 
         private static QuestChainLog Log()
