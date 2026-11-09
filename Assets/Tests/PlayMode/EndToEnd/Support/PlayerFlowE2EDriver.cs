@@ -245,8 +245,10 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
                     // Wheel down (negative) moves the list up to reveal rows below the viewport.
                     float wheel = targetY < viewport.rect.center.y ? -120f : 120f;
                     InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = over, scroll = new Vector2(0f, wheel) });
+                    InputSystem.Update();
                     yield return null;
                     InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = over });
+                    InputSystem.Update();
                     yield return null;
                 }
             }
@@ -278,16 +280,22 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             LastClickTrace = label + " at " + point + ":";
             try
             {
+                // Each state is applied right away (InputSystem.Update), as the keyboard helpers do. Left queued, an event
+                // waited for the next automatic input update; in some frames none came and the whole click was lost
+                // (trace: mousePos stayed (0,0), pressed stayed false).
                 yield return null;
                 InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = point });
+                InputSystem.Update();
                 yield return null;
                 yield return null;
                 TraceClick("hover", target, point, scope);
                 InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = point, buttons = 1 });
+                InputSystem.Update();
                 yield return null;
                 yield return null;
                 TraceClick("down", target, point, scope);
                 InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = point });
+                InputSystem.Update();
                 yield return null;
                 yield return null;
                 TraceClick("up", target, point, scope);

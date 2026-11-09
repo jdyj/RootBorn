@@ -39,7 +39,7 @@ namespace Rootborn.UI.Minigames
             // Scene references and an Addressables registry can hold distinct instances.
             // Use only the owner's unique registered definition, never scene-supplied costs.
             var canonical = ResolvePartTimeWork(owner.Registry, work);
-            if (canonical == null) return false;
+            if (canonical == null) return Refuse("work " + (work != null ? work.Id : "-") + " is not registered exactly once");
             return Begin(owner, panel, () => owner.TryBeginPartTimeWork(canonical, request, NewSeed()));
         }
 
@@ -75,21 +75,33 @@ namespace Rootborn.UI.Minigames
                 if (candidate.isRootCanvas && candidate.isActiveAndEnabled && candidate.gameObject.scene == player.scene)
                 { canvas = candidate; break; }
             }
-            if (canvas == null) return false;
+            if (canvas == null) return Refuse("no active root canvas in " + player.scene.name);
             panel = MinigamePanel.EnsureInScene(canvas);
-            if (panel == null || panel.IsOpen) return false;
+            if (panel == null) return Refuse("no minigame panel");
+            if (panel.IsOpen) return Refuse("a minigame is already open");
             owner = player.GetComponent<AdultCareerRuntimeComponent>();
             if (owner == null || !owner.IsBound)
             {
                 if (!GameDataRegistryProvider.TryGet(out var registry)) return false;
                 owner = AdultCareerRuntimeComponent.Ensure(player, registry);
             }
-            return owner != null && owner.CanMutate && owner.ActiveWorkSession == null;
+            if (owner == null) return Refuse("no career owner on the player");
+            if (!owner.CanMutate) return Refuse("career owner cannot change state (bound=" + owner.IsBound + " recovery=" + owner.RecoveryRequired + ")");
+            if (owner.ActiveWorkSession != null) return Refuse("a work session is already running");
+            return true;
+        }
+
+        // E at a work point that silently does nothing is what a player sees when a request is refused; say why in the log.
+        private static bool Refuse(string reason)
+        {
+            Debug.LogWarning("[ROOTBORN] Minigame request refused: " + reason);
+            return false;
         }
 
         private static bool Begin(AdultCareerRuntimeComponent owner, MinigamePanel panel, Func<AdultCareerResult> reserve)
         {
-            if (!reserve().Applied) return false;
+            var reserved = reserve();
+            if (!reserved.Applied) return Refuse("reservation " + reserved.Kind);
             var session = owner.ActiveWorkSession;
             if (panel.Show(session, completed => Settle(owner, panel, completed))) return true;
             // A presentation failure cannot leave a live playable attempt behind.
