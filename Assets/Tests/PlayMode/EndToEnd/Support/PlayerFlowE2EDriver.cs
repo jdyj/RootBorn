@@ -286,16 +286,19 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
                 yield return null;
                 InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = point });
                 InputSystem.Update();
+                TraceNow("hover", scope.Mouse);
                 yield return null;
                 yield return null;
                 TraceClick("hover", target, point, scope);
                 InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = point, buttons = 1 });
                 InputSystem.Update();
+                TraceNow("down", scope.Mouse);
                 yield return null;
                 yield return null;
                 TraceClick("down", target, point, scope);
                 InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = point });
                 InputSystem.Update();
+                TraceNow("up", scope.Mouse);
                 yield return null;
                 yield return null;
                 TraceClick("up", target, point, scope);
@@ -308,6 +311,14 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
 
         /// <summary>What the last mouse click saw at hover, press and release; failure messages include it.</summary>
         public static string LastClickTrace = string.Empty;
+
+        // The device state right after the event was queued and InputSystem.Update ran, before any frame passed.
+        private static void TraceNow(string phase, Mouse mouse)
+        {
+            LastClickTrace += " " + phase + "-now[pos=" + mouse.position.ReadValue() + " pressed=" + mouse.leftButton.isPressed
+                + " enabled=" + mouse.enabled + " added=" + mouse.added + " mode=" + InputSystem.settings.updateMode
+                + " bg=" + InputSystem.settings.backgroundBehavior + " devices=" + InputSystem.devices.Count + "]";
+        }
 
         private static void TraceClick(string phase, GameObject target, Vector2 point, RealPointerScope scope)
         {
@@ -441,11 +452,24 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
         {
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
             InputSystem.Update();
+            LastKeyTrace = "E-now[pressed=" + keyboard.eKey.isPressed + " enabled=" + keyboard.enabled + " added=" + keyboard.added
+                + " current=" + (Keyboard.current == keyboard) + " keyboards=" + CountKeyboards() + " frame=" + Time.frameCount + "]";
             yield return null;
+            LastKeyTrace += " E-next[pressed=" + keyboard.eKey.isPressed + " frame=" + Time.frameCount + "]";
             yield return new WaitForFixedUpdate();
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             InputSystem.Update();
             yield return null;
+        }
+
+        /// <summary>What the last E press looked like on the keyboard device right after it was sent and one frame later.</summary>
+        public static string LastKeyTrace = string.Empty;
+
+        private static int CountKeyboards()
+        {
+            int count = 0;
+            foreach (var device in InputSystem.devices) if (device is Keyboard) count++;
+            return count;
         }
 
         public static IEnumerator WalkPlayerWithKeyboardTo(GameObject player, Keyboard keyboard, Vector3 targetPosition, float tolerance, int maxFrames, string failure)
@@ -730,7 +754,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             yield return PressInteractKey(keyboard);
             yield return null;
             router.RefreshPromptNow();
-            LastInteractTrace += " | after E: target=" + DescribeTarget(router) + " prompt='" + router.PromptText + "' " + InputLockOwners() + " frame=" + Time.frameCount;
+            LastInteractTrace += " | after E: target=" + DescribeTarget(router) + " prompt='" + router.PromptText + "' " + InputLockOwners() + " frame=" + Time.frameCount + " " + LastKeyTrace;
         }
 
         /// <summary>What E was aimed at in the last <see cref="WalkAndInteract"/>, before and after the press.</summary>
