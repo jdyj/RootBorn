@@ -212,10 +212,33 @@ namespace Rootborn.Tests.PlayMode
             UnityEngine.InputSystem.InputSystem.settings.editorInputBehaviorInPlayMode =
                 UnityEngine.InputSystem.InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
             UnityEngine.InputSystem.InputSystem.settings.backgroundBehavior = UnityEngine.InputSystem.InputSettings.BackgroundBehavior.IgnoreFocus;
+            MoveTestClockPastPlayModeEntry();
             PlayModeInputSystemGuardAction.ForgetResolvedControls();
             PlayModeCreatorAutoConfirm.ConfigureFor(TestContext.CurrentContext.Test.FullName);
             // Scenario tests start from Town. The House start is covered by NewGame_StartsInTheHouse and real-input play.
             Rootborn.Game.World.WorldEntryService.SetNewGameEntryForTests("Town", "town-home-entry");
+        }
+
+        // The Input System drops state events stamped between leaving edit mode and entering play mode (both in the
+        // editor's real time). This fixture's clock starts near zero and advances 1/60 s per frame, so a long scenario
+        // reached that window mid-test and every key and click in it vanished (trace: state unchanged right after
+        // InputSystem.Update; failing frames moved from run to run). Start the test clock after play mode entry.
+        private void MoveTestClockPastPlayModeEntry()
+        {
+            var field = typeof(UnityEngine.InputSystem.InputSystem).GetField("s_SystemObject", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            var system = field != null ? field.GetValue(null) : null;
+            if (system == null) return;
+            var enterField = system.GetType().GetField("enterPlayModeTime");
+            var exitField = system.GetType().GetField("exitEditModeTime");
+            double enter = enterField != null ? (double)enterField.GetValue(system) : 0;
+            double exit = exitField != null ? (double)exitField.GetValue(system) : 0;
+            double floor = System.Math.Max(enter, exit) + 1.0;
+            // Both marks are in the runtime's raw clock, so move the raw clock (the fixture's currentTime adds an offset).
+            var runtimeProperty = typeof(UnityEngine.InputSystem.InputTestFixture).GetProperty("runtime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var runtime = runtimeProperty != null ? runtimeProperty.GetValue(this) : null;
+            var raw = runtime != null ? runtime.GetType().GetProperty("currentTime") : null;
+            if (raw == null) { if (currentTime < floor) currentTime = floor; return; }
+            if ((double)raw.GetValue(runtime) < floor) raw.SetValue(runtime, floor);
         }
     }
 
