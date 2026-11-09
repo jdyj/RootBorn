@@ -206,6 +206,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         private static void MakeCandidateReady(AdultCareerSnapshot s)
         {
             s.Student.CurrentDay = Mathf.Max(4, s.Student.CurrentDay);
+            // The day plan diary is saved per day; the save check refuses a diary from another day.
+            if (s.Student.DailyPlan != null && !DailyPlanProgressSaveData.IsEmpty(s.Student.DailyPlan)) s.Student.DailyPlan.CurrentDay = s.Student.CurrentDay;
             s.Student.DayState = StudentDayState.InProgress.ToString();
             s.Student.TimePointsSpentToday = 0;
             if (!s.Student.CareerHintIds.Contains(CareerId)) s.Student.CareerHintIds = s.Student.CareerHintIds.Concat(new[] { CareerId }).ToArray();

@@ -206,6 +206,12 @@ namespace Rootborn.Tests.PlayMode
         public override void Setup()
         {
             base.Setup();
+            // The test editor runs in a virtual display whose Game View can lose focus for a moment (window moves, captures).
+            // With the default settings the Input System then drops keyboard and pointer events, so a press or click simply
+            // vanished in some runs (trace: mouse position stayed (0,0), E did nothing). Test input always goes to the game.
+            UnityEngine.InputSystem.InputSystem.settings.editorInputBehaviorInPlayMode =
+                UnityEngine.InputSystem.InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+            UnityEngine.InputSystem.InputSystem.settings.backgroundBehavior = UnityEngine.InputSystem.InputSettings.BackgroundBehavior.IgnoreFocus;
             PlayModeInputSystemGuardAction.ForgetResolvedControls();
             PlayModeCreatorAutoConfirm.ConfigureFor(TestContext.CurrentContext.Test.FullName);
             // Scenario tests start from Town. The House start is covered by NewGame_StartsInTheHouse and real-input play.
