@@ -100,10 +100,16 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 yield return PlayerFlowE2EDriver.DismissDailyEvent();
             }
 
+            var visits = new System.Text.StringBuilder();
             foreach (var place in new[] { "location_restaurant", "location_medical_clinic", "location_design_studio", "location_training_ground" })
+            {
                 yield return VisitPlace(keyboard, "FacilityActivities_" + place);
+                visits.Append(place).Append(": step=").Append(StepId(chain)).Append(" progress=").Append(DescribeProgress(chain, 4))
+                    .Append(" scene=").Append(SceneManager.GetActiveScene().name).Append(" | ");
+                Debug.Log("[MAIN-E2E] after " + place + " step=" + StepId(chain) + " progress=" + DescribeProgress(chain, 4));
+            }
             yield return Capture("03-tour-done.png");
-            AssertStep(chain, "mainquest.FirstPartTimeJob", "visiting the four places should finish the tour");
+            AssertStep(chain, "mainquest.FirstPartTimeJob", "visiting the four places should finish the tour. Visits: " + visits);
 
             // FirstPartTimeJob: one part-time job played through its minigame, then sleep into day 3.
             yield return WorkOneShift(keyboard, "work.shift.corner-store");
