@@ -6,7 +6,8 @@
         "Unity.Netcode.Runtime",
         "Unity.Networking.Transport",
         "Unity.Collections",
-        "Rootborn.Core"
+        "Rootborn.Core",
+        "com.rlabrecque.steamworks.net"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

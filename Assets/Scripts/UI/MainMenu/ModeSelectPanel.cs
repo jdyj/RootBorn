@@ -3,6 +3,8 @@ using Rootborn.Game.Bootstrap;
 using Rootborn.Game.Localization;
 using Rootborn.Game.Save;
 using Rootborn.Network.Session;
+using Rootborn.Network.Steam;
+using Unity.Netcode;
 using Rootborn.UI.Modern;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -72,7 +74,7 @@ namespace Rootborn.UI.MainMenu
 
             StyleButton(_singleButton, 0, Local("ui.menu.single", "이야기 시작 · 싱글", "Start story · Single"));
             StyleButton(_hostButton, 1, Local("ui.menu.host", "호스트 모드", "Host game"));
-            StyleButton(_clientButton, 2, Local("ui.menu.client", "클라이언트 접속", "Join game"));
+            StyleButton(_clientButton, 2, Local("ui.menu.client", "친구 게임 참가", "Join a friend"));
             StyleButton(_quitButton, 3, Local("ui.menu.quit", "종료", "Quit"));
         }
 
@@ -162,15 +164,34 @@ namespace Rootborn.UI.MainMenu
         {
             ApplyMode(SessionMode.Host);
             EnsureSaveContext(GameBootstrap.Config);
-            await NetworkBootstrap.StartSessionAsync(GameBootstrap.Config);
+            // With Steam the host opens a friends-only room friends can join from Steam; without it (development,
+            // tests) the host listens on the command-line port as before.
+            if (SteamSessions.Available) await SteamSessions.HostAsync(GameBootstrap.Config);
+            else
+            {
+                SteamSessions.UseDefaultTransport(NetworkManager.Singleton);
+                await NetworkBootstrap.StartSessionAsync(GameBootstrap.Config);
+            }
             SceneManager.LoadScene(_townScene);
         }
 
         private void OnClient()
         {
             ApplyMode(SessionMode.Client);
-            // Joining is typed in over the menu; the server's scene sync then moves the client into the world.
-            JoinGamePanel.EnsureInScene(transform.parent != null ? transform.parent : transform).Show();
+            // Friends' rooms are picked over the menu; the host's scene sync then moves the client into the world.
+            JoinPanel().Show();
+        }
+
+        private JoinGamePanel JoinPanel() => JoinGamePanel.EnsureInScene(transform.parent != null ? transform.parent : transform);
+
+        // "Join Game" on the Steam friends list, an accepted invite, or a launch with +connect_lobby lands on the menu.
+        private void Update()
+        {
+            if (!SteamPlatform.TryTakePendingLobby(out ulong lobbyId)) return;
+            ApplyMode(SessionMode.Client);
+            var panel = JoinPanel();
+            panel.Show();
+            panel.JoinLobby(lobbyId);
         }
 
         private void OnQuit() => Application.Quit();

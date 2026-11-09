@@ -1,6 +1,7 @@
 using System.Collections;
 using NUnit.Framework;
 using Rootborn.Game.Bootstrap;
+using Rootborn.Network.Steam;
 using Rootborn.Tests.PlayMode.EndToEnd.Support;
 using Rootborn.UI.MainMenu;
 using Unity.Netcode;
@@ -12,13 +13,11 @@ using UnityEngine.TestTools;
 namespace Rootborn.Tests.PlayMode.Network
 {
     /// <summary>
-    /// NET-JOIN: the main menu's "Join game" opens an address panel over the menu. Buttons are pressed with a mouse device.
-    /// Typing into the fields is preparation (field text is set directly); the OS keyboard path is checked on FEVM by hand.
+    /// NET-JOIN: the main menu's "Join a friend" opens the Steam friend room panel over the menu (buttons pressed with a
+    /// mouse device). Real Steam joins need two logged-in Steam accounts and are checked by hand later.
     /// </summary>
     public sealed class JoinGamePanelPlayModeTests
     {
-        // Nothing listens here during tests, so a connect attempt must come back as a failure the player can read.
-        private const string UnusedPort = "7979";
         private SessionMode _mode;
         private string _joinIp;
         private ushort _port;
@@ -52,17 +51,28 @@ namespace Rootborn.Tests.PlayMode.Network
         }
 
         [UnityTest]
-        public IEnumerator NET_JOIN_001_ClientButtonOpensAddressPanelOverTheMenu()
+        public IEnumerator NET_JOIN_001_JoinAFriendOpensTheRoomPanelOverTheMenu()
         {
             yield return PlayerFlowE2EDriver.ClickButton(MenuButton("ClientButton"));
             yield return null;
 
             var panel = Object.FindFirstObjectByType<JoinGamePanel>();
-            Assert.IsNotNull(panel, "Join game should open the address panel.");
+            Assert.IsNotNull(panel, "Join a friend should open the room panel.");
             Assert.IsTrue(panel.IsShown);
             Assert.AreEqual("MainMenu", SceneManager.GetActiveScene().name, "Joining is set up on the menu, not in an empty lobby scene.");
-            Assert.AreEqual(GameBootstrap.Config.JoinIp, Field(panel, "JoinHostField").text);
-            Assert.AreEqual(GameBootstrap.Config.Port.ToString(), Field(panel, "JoinPortField").text);
+            Assert.IsNull(PlayerFlowE2EDriver.FindChild(panel.transform, "JoinHostField"), "Players pick a friend's room; there is no address to type.");
+            if (SteamPlatform.IsReady)
+            {
+                Assert.AreEqual(JoinGamePanel.JoinState.Idle, panel.State, panel.StatusText);
+            }
+            else
+            {
+                // Test machines run without Steam: the panel must say why no rooms can be listed.
+                Assert.AreEqual(JoinGamePanel.JoinState.SteamUnavailable, panel.State, panel.StatusText);
+                StringAssert.Contains("Steam", panel.StatusText);
+                Assert.IsFalse(PlayerFlowE2EDriver.FindChild(panel.transform, "JoinRefreshButton").gameObject.activeInHierarchy);
+                Assert.AreEqual(0, panel.RoomRowCount);
+            }
 
             yield return PlayerFlowE2EDriver.ClickButton(PanelButton(panel, "JoinBackButton"));
             yield return null;
@@ -72,56 +82,16 @@ namespace Rootborn.Tests.PlayMode.Network
         }
 
         [UnityTest]
-        public IEnumerator NET_JOIN_002_InvalidPortIsExplainedWithoutStartingAClient()
+        public IEnumerator NET_JOIN_002_WithoutSteamAJoinRequestExplainsInsteadOfConnecting()
         {
+            if (SteamPlatform.IsReady) Assert.Ignore("Steam is running on this machine; this case covers machines without it.");
             yield return PlayerFlowE2EDriver.ClickButton(MenuButton("ClientButton"));
             var panel = Object.FindFirstObjectByType<JoinGamePanel>();
-            Field(panel, "JoinPortField").text = "0"; // preparation: typed value
 
-            yield return PlayerFlowE2EDriver.ClickButton(PanelButton(panel, "JoinConnectButton"));
-            yield return null;
+            panel.JoinLobby(109775241021923456UL); // preparation: a lobby picked in Steam's friends list
 
-            Assert.AreEqual(JoinGamePanel.JoinState.Failed, panel.State);
-            StringAssert.Contains("65535", panel.StatusText, "The status should say what a valid port is.");
-            Assert.IsFalse(NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening, "A rejected address must not start the client.");
-            Assert.IsTrue(PanelButton(panel, "JoinConnectButton").interactable, "The player can fix the port and try again.");
-        }
-
-        [UnityTest]
-        public IEnumerator NET_JOIN_003_UnreachableServerFailsVisiblyAndAllowsRetry()
-        {
-            Assert.IsNotNull(NetworkManager.Singleton, "Boot should provide the NetworkManager.");
-            yield return PlayerFlowE2EDriver.ClickButton(MenuButton("ClientButton"));
-            var panel = Object.FindFirstObjectByType<JoinGamePanel>();
-            Field(panel, "JoinHostField").text = "127.0.0.1"; // preparation: typed values
-            Field(panel, "JoinPortField").text = UnusedPort;
-
-            yield return PlayerFlowE2EDriver.ClickButton(PanelButton(panel, "JoinConnectButton"));
-            yield return null;
-            Assert.AreEqual(JoinGamePanel.JoinState.Connecting, panel.State, panel.StatusText);
-            Assert.IsFalse(PanelButton(panel, "JoinConnectButton").interactable, "Connect should not be pressed twice while connecting.");
-
-            // Unity Transport reports the timed-out attempt as an error; that is the expected outcome here.
-            LogAssert.Expect(LogType.Error, "Failed to connect to server.");
-            float deadline = Time.unscaledTime + 30f;
-            while (panel.State == JoinGamePanel.JoinState.Connecting && Time.unscaledTime < deadline) yield return null;
-            Assert.AreEqual(JoinGamePanel.JoinState.Failed, panel.State, "No server answered, so the attempt should fail within the shortened timeout. Status: " + panel.StatusText);
-            Assert.AreEqual("MainMenu", SceneManager.GetActiveScene().name);
-
-            deadline = Time.unscaledTime + 5f;
-            while (NetworkManager.Singleton.ShutdownInProgress && Time.unscaledTime < deadline) yield return null;
-            Assert.IsFalse(NetworkManager.Singleton.IsListening, "The failed client should be shut down.");
-
-            // Retrying starts a new attempt instead of being stuck on the old session.
-            yield return PlayerFlowE2EDriver.ClickButton(PanelButton(panel, "JoinConnectButton"));
-            yield return null;
-            Assert.AreEqual(JoinGamePanel.JoinState.Connecting, panel.State, panel.StatusText);
-            yield return PlayerFlowE2EDriver.ClickButton(PanelButton(panel, "JoinBackButton"));
-            yield return null;
-            Assert.IsFalse(panel.IsShown);
-            deadline = Time.unscaledTime + 5f;
-            while (NetworkManager.Singleton.ShutdownInProgress && Time.unscaledTime < deadline) yield return null;
-            Assert.IsFalse(NetworkManager.Singleton.IsListening, "Back while connecting should cancel the attempt.");
+            Assert.AreEqual(JoinGamePanel.JoinState.SteamUnavailable, panel.State);
+            Assert.IsFalse(NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening, "No client may start without Steam.");
         }
 
         private static Button MenuButton(string name)
@@ -138,13 +108,6 @@ namespace Rootborn.Tests.PlayMode.Network
             var button = PlayerFlowE2EDriver.FindButton(panel.transform, name);
             Assert.IsNotNull(button, name + " not found. " + PlayerFlowE2EDriver.DescribeButtons(panel.transform));
             return button;
-        }
-
-        private static InputField Field(JoinGamePanel panel, string name)
-        {
-            var child = PlayerFlowE2EDriver.FindChild(panel.transform, name);
-            Assert.IsNotNull(child, name + " not found.");
-            return child.GetComponent<InputField>();
         }
 
         private static void ShutdownClient()
