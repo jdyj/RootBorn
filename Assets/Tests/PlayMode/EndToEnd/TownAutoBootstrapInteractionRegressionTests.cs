@@ -107,9 +107,10 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var router = player.GetComponent<PlayerInteractionRouter>();
             Assert.IsNotNull(router, "PlayerInteractionRouter was not attached.");
 
-            var guide = GameObject.Find(LocationNpcRuntimeInstaller.NpcObjectName("npc.first-guide"));
-            Assert.IsNotNull(guide, "First-guide NPC was not auto-spawned. LocationNpcRuntimeInstaller bootstrap regressed.");
-            Assert.IsNotNull(guide.GetComponent<NpcInteractor>(), "NpcInteractor missing on auto-spawned guide.");
+            // Any townsperson scheduled in Town now. (The first guide, Mom, lives at home since the 11-07 story change.)
+            var guide = FindTownNpc();
+            Assert.IsNotNull(guide, "No NPC was auto-spawned in Town. LocationNpcRuntimeInstaller bootstrap regressed.");
+            Assert.IsNotNull(guide.GetComponent<NpcInteractor>(), "NpcInteractor missing on the auto-spawned NPC " + guide.name + ".");
 
             var townSquare = GameObject.Find(LocationNpcRuntimeInstaller.LocationObjectName("location.town-square"));
             Assert.IsNotNull(townSquare, "Town square LocationVisit was not auto-spawned.");
@@ -131,13 +132,22 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             while (!op.isDone) yield return null;
         }
 
+        private static GameObject FindTownNpc()
+        {
+            var scene = SceneManager.GetActiveScene();
+            foreach (var npc in Object.FindObjectsByType<NpcInteractor>(FindObjectsSortMode.None))
+                if (npc.isActiveAndEnabled && npc.gameObject.scene == scene && npc.name.StartsWith("TownNpc_", System.StringComparison.Ordinal))
+                    return npc.gameObject;
+            return null;
+        }
+
         private static IEnumerator WaitForAutoBootstrap(float timeoutSeconds)
         {
             float elapsed = 0f;
             while (elapsed < timeoutSeconds)
             {
                 var player = GameObject.Find("Player");
-                var guide = GameObject.Find(LocationNpcRuntimeInstaller.NpcObjectName("npc.first-guide"));
+                var guide = FindTownNpc();
                 var square = GameObject.Find(LocationNpcRuntimeInstaller.LocationObjectName("location.town-square"));
                 if (player != null
                     && player.GetComponent<PlayerInteractionRouter>() != null
