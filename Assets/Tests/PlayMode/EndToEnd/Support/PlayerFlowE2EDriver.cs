@@ -396,6 +396,18 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
                         InputSystem.QueueStateEvent(keyboard, new KeyboardState());
                         InputSystem.Update();
                         yield return new WaitForFixedUpdate();
+                        // The route grid starts at the player's position: replanning from the very spot that caught the body
+                        // gives the same route again. Step back a little first, as a person backs off a corner.
+                        Key back = activeKey == Key.W ? Key.S : activeKey == Key.S ? Key.W : activeKey == Key.A ? Key.D : activeKey == Key.D ? Key.A : Key.None;
+                        if (back != Key.None)
+                        {
+                            QueueKey(keyboard, back);
+                            InputSystem.Update();
+                            for (int b = 0; b < 4; b++) { yield return null; yield return new WaitForFixedUpdate(); }
+                            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+                            InputSystem.Update();
+                            yield return new WaitForFixedUpdate();
+                        }
                         activeKey = Key.None;
                         lastContacts = DescribeContacts(player);
                         waypoints = PlanWalk(player, targetPosition);
@@ -497,39 +509,10 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             // Try the widest margin first; a box smaller than the real body finds routes the body then catches on.
             System.Collections.Generic.List<Vector3> route = null;
             bool reached = false;
-            var wide = worldSize + new Vector2(0.4f, 0.4f);
-            route = PlanWalk(player, body, player.transform.position, target, wide, out reached);
-            // Short walks (inside a room, to a nearby door) keep the original whole-route fallback.
-            bool longWalk = Vector2.Distance(player.transform.position, target) >= 12f;
-            if (!reached && !longWalk)
+            foreach (var size in new[] { worldSize + new Vector2(0.4f, 0.4f), worldSize + new Vector2(0.1f, 0.1f), worldSize + new Vector2(0.04f, 0.04f), worldSize * 0.9f })
             {
-                foreach (var size in new[] { worldSize + new Vector2(0.1f, 0.1f), worldSize + new Vector2(0.04f, 0.04f), worldSize * 0.9f })
-                {
-                    route = PlanWalk(player, body, player.transform.position, target, size, out reached);
-                    if (reached) break;
-                }
-            }
-            else if (!reached)
-            {
-                // Often only the last stretch (a doorway, a gate) is too narrow for the wide margin. Keep the wide route as far
-                // as it gets and plan only the rest tighter; a tight route over the whole map grazes corners and catches.
-                Vector3 handoff = route.Count > 0 ? route[route.Count - 1] : player.transform.position;
-                foreach (var size in new[] { worldSize + new Vector2(0.1f, 0.1f), worldSize + new Vector2(0.04f, 0.04f), worldSize * 0.9f })
-                {
-                    var rest = PlanWalk(player, body, handoff, target, size, out reached);
-                    if (!reached) continue;
-                    route.AddRange(rest);
-                    break;
-                }
-
-                if (!reached)
-                {
-                    foreach (var size in new[] { worldSize + new Vector2(0.1f, 0.1f), worldSize + new Vector2(0.04f, 0.04f), worldSize * 0.9f })
-                    {
-                        route = PlanWalk(player, body, player.transform.position, target, size, out reached);
-                        if (reached) break;
-                    }
-                }
+                route = PlanWalk(player, body, player.transform.position, target, size, out reached);
+                if (reached) break;
             }
             // The last corner is the target rounded to the half-unit grid; steering to it overshoots short walks. Head for the target itself.
             if (reached && route.Count > 0) route.RemoveAt(route.Count - 1);
