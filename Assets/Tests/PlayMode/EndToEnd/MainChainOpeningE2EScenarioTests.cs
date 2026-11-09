@@ -300,8 +300,10 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         private static string DescribeProgress(QuestChainDefinition chain, int objectiveCount)
         {
             var log = Log();
+            var step = log.GetCurrentStep(chain);
+            int count = step != null ? Mathf.Min(objectiveCount, step.Objectives.Length) : 0;
             var text = new System.Text.StringBuilder();
-            for (int i = 0; i < objectiveCount; i++) text.Append(i).Append('=').Append(log.GetObjectiveProgress(chain, i)).Append(' ');
+            for (int i = 0; i < count; i++) text.Append(i).Append('=').Append(log.GetObjectiveProgress(chain, i)).Append(' ');
             return text.ToString();
         }
 
