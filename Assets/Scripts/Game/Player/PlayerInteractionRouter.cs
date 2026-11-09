@@ -285,7 +285,9 @@ namespace Rootborn.Game.Player
             }
 
             int priority = ResolvePriority(interactable);
-            if (priority > bestPriority || (priority == bestPriority && sqr <= bestSqr))
+            // The thing the player stands at wins; priority only settles near ties (Rootborn.Core, tested with dotnet test).
+            if (Rootborn.Core.Interaction.InteractionTargetRule.IsBetter(priority, Mathf.Sqrt(sqr),
+                    best == null ? int.MinValue : bestPriority, best == null ? float.MaxValue : Mathf.Sqrt(bestSqr)))
             {
                 bestPriority = priority;
                 bestSqr = sqr;

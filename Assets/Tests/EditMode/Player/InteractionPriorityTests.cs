@@ -13,6 +13,24 @@ namespace Rootborn.Tests.EditMode.Player
   [TearDown]public void TearDown(){UnityEngine.Object.DestroyImmediate(_player);UnityEngine.Object.DestroyImmediate(_location);UnityEngine.Object.DestroyImmediate(_definition);UnityEngine.Object.DestroyImmediate(_identity);ActiveSaveContext.Set(_save);}
   [Test]public void SameObject_ActivityPriorityWinsRegardlessOfComponentOrder(){_location.AddComponent<LocationVisitInteractor>().Bind(_definition);var activity=_location.AddComponent<LocationActivityInteractor>();activity.Bind(_identity);Physics2D.SyncTransforms();var router=_player.GetComponent<PlayerInteractionRouter>();router.RefreshPromptNow();Assert.That(router.CurrentInteractable,Is.SameAs(activity));}
   [Test]public void SameObject_UnavailableFirstComponentDoesNotHideUsableInteraction(){_location.AddComponent<LocationActivityInteractor>();var visit=_location.AddComponent<LocationVisitInteractor>();visit.Bind(_definition);Physics2D.SyncTransforms();var router=_player.GetComponent<PlayerInteractionRouter>();router.RefreshPromptNow();Assert.That(router.CurrentInteractable,Is.SameAs(visit));}
+  // INTERACT-001: standing at a lower-priority point (visit, 35) with a higher-priority one (activity, 45) at the edge of reach,
+  // E acts on the one in front; with both about equally close, priority still decides.
+  [Test]public void INTERACT_001_TheThingInFrontBeatsAHigherPriorityThingFartherAway()
+  {
+   var activity=_location.AddComponent<LocationActivityInteractor>();activity.Bind(_identity);
+   _location.transform.position=_player.transform.position+Vector3.right*1.5f;
+   var spot=new GameObject("VisitSpot",typeof(BoxCollider2D));
+   try
+   {
+    spot.GetComponent<BoxCollider2D>().isTrigger=true;spot.transform.position=_player.transform.position+Vector3.left*.3f;
+    var visit=spot.AddComponent<LocationVisitInteractor>();visit.Bind(_definition);
+    Physics2D.SyncTransforms();var router=_player.GetComponent<PlayerInteractionRouter>();router.RefreshPromptNow();
+    Assert.That(router.CurrentInteractable,Is.SameAs(visit),"the point the player stands at must take E");
+    spot.transform.position=_player.transform.position+Vector3.left*1.2f;Physics2D.SyncTransforms();router.RefreshPromptNow();
+    Assert.That(router.CurrentInteractable,Is.SameAs(activity),"about equally close: the higher priority wins");
+   }
+   finally{UnityEngine.Object.DestroyImmediate(spot);}
+  }
   [Test]public void NearerPartTimeWorkBeatsAFartherFacilityActivity()
   {
    // A work point beside a facility (errand helper next to the restaurant, 2 cells apart): the one the player stands at wins.
