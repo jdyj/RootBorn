@@ -490,6 +490,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             int replans = 0;
             string lastContacts = "-";
             string startScene = SceneManager.GetActiveScene().name;
+            var walkTrace = new StringBuilder();
             for (int i = 0; i < frameBudget && Vector3.Distance(player.transform.position, targetPosition) > tolerance; i++)
             {
                 // Walking into a portal or level edge changes scenes; the target belongs to the old scene, so stop there.
@@ -526,6 +527,15 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
                         replans++;
                     }
                     lastCheck = player.transform.position;
+                }
+                if (i == 3 || i == 15 || i == 45)
+                {
+                    var controller = player.GetComponent<Rootborn.Game.Player.PlayerController>();
+                    var body = player.GetComponent<Rigidbody2D>();
+                    walkTrace.Append(" f").Append(i).Append("[key=").Append(activeKey).Append(" held=").Append(activeKey != Key.None && ControlFor(keyboard, activeKey).isPressed)
+                        .Append(" input=").Append(controller != null ? controller.Input.ToString() : "-").Append(" ctrl=").Append(controller != null && controller.isActiveAndEnabled)
+                        .Append(" vel=").Append(body != null ? body.linearVelocity.ToString() : "-").Append(" sim=").Append(body != null && body.simulated)
+                        .Append(" pos=").Append(player.transform.position).Append(" timeScale=").Append(Time.timeScale).Append(']');
                 }
                 Vector3 goal = next < waypoints.Count ? waypoints[next] : targetPosition;
                 Vector3 delta = goal - player.transform.position;
@@ -564,7 +574,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
                 InputSystem.Update();
             }
             if (SceneManager.GetActiveScene().name != startScene || player == null) yield break;
-            Assert.LessOrEqual(Vector3.Distance(player.transform.position, targetPosition), tolerance, failure + " (from " + startPosition + " to " + targetPosition + ", stopped at " + player.transform.position + ", replans " + replans + " touching " + lastContacts + ", reached waypoint " + next + "/" + waypoints.Count + ": " + string.Join(" ", waypoints) + ") " + DescribeKeyboards(keyboard));
+            Assert.LessOrEqual(Vector3.Distance(player.transform.position, targetPosition), tolerance, failure + " (from " + startPosition + " to " + targetPosition + ", stopped at " + player.transform.position + ", replans " + replans + " touching " + lastContacts + ", reached waypoint " + next + "/" + waypoints.Count + ": " + string.Join(" ", waypoints) + ") " + DescribeKeyboards(keyboard) + " walk:" + walkTrace);
         }
 
         private static string DescribeKeyboards(Keyboard driven)
