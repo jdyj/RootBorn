@@ -58,7 +58,12 @@ namespace Rootborn.Tests.PlayMode.Objectives
 
                 yield return HoldKeyboardKey(Key.Tab, 3);
 
-                Assert.IsFalse(inventory.IsVisible, "Actual Tab keyboard input must close inventory before opening Objective Journal.");
+                var routers = new System.Text.StringBuilder();
+                foreach (var other in Object.FindObjectsByType<ModernUiPanelInputRouter>(FindObjectsSortMode.None))
+                    routers.Append(' ').Append(other.name).Append('@').Append(other.gameObject.scene.name).Append(other.isActiveAndEnabled ? "" : "(off)");
+                Assert.IsFalse(inventory.IsVisible, "Actual Tab keyboard input must close inventory before opening Objective Journal. scene="
+                    + UnityEngine.SceneManagement.SceneManager.GetActiveScene().name + " " + Rootborn.Tests.PlayMode.EndToEnd.Support.PlayerFlowE2EDriver.InputLockOwners()
+                    + " routers:" + routers + " journalVisible=" + journal.IsVisible);
                 Assert.IsTrue(journal.IsVisible, "Actual Tab keyboard input must open Objective Journal through ModernUiPanelInputRouter.");
                 StringAssert.Contains("Goals", journal.VisibleText);
                 StringAssert.Contains("Quests", journal.VisibleText);
