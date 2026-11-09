@@ -21,6 +21,8 @@ namespace Rootborn.Network.Session
                 response.Approved = decision.Approved;
                 // Same default Netcode uses without approval: spawn a player only when a prefab is configured.
                 response.CreatePlayerObject = decision.Approved && nm.NetworkConfig.PlayerPrefab != null;
+                // Players appear at the Town spawn point, side by side by join order, not at the prefab's origin.
+                if (response.CreatePlayerObject) response.Position = SessionSpawn.Resolve(nm.ConnectedClientsIds.Count);
                 response.Reason = decision.Reason;
                 if (!decision.Approved)
                     Debug.Log($"[ROOTBORN] Connection refused client={request.ClientNetworkId} connected={nm.ConnectedClientsIds.Count} maxPlayers={maxPlayers} reason={decision.Reason}");
