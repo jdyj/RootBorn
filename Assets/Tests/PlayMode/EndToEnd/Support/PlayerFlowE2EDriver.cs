@@ -618,7 +618,15 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             Assert.IsNotNull(door, failure + " " + from + " has no active door to " + destinationScene + ".");
             var player = GameObject.Find("Player");
             yield return WalkPlayerWithKeyboardTo(player, keyboard, door.transform.position, 0.9f, 900, failure + " Could not walk to the door.");
-            if (SceneManager.GetActiveScene().name == from) yield return PressInteractKey(keyboard);
+            // E can land on something else next to the door (a board, a person); a player steps onto the door and tries again.
+            for (int attempt = 0; attempt < 3 && SceneManager.GetActiveScene().name == from; attempt++)
+            {
+                if (attempt > 0) yield return WalkPlayerWithKeyboardTo(player, keyboard, door.transform.position, 0.5f, 300, failure + " Could not step onto the door.");
+                if (SceneManager.GetActiveScene().name != from) break;
+                yield return PressInteractKey(keyboard);
+                for (float t = 0f; t < 2f && SceneManager.GetActiveScene().name == from && !Rootborn.Game.World.WorldTravelRuntime.HasPendingTravel; t += Time.unscaledDeltaTime) yield return null;
+                if (Rootborn.Game.World.WorldTravelRuntime.HasPendingTravel) break;
+            }
             yield return WaitForScene(destinationScene, 15f, failure + " The door did not lead to " + destinationScene + ".");
             yield return WaitForPlayerReady(failure);
         }
