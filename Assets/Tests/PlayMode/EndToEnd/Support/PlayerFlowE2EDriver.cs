@@ -493,7 +493,17 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             bool reached = false;
             var wide = worldSize + new Vector2(0.4f, 0.4f);
             route = PlanWalk(player, body, player.transform.position, target, wide, out reached);
-            if (!reached)
+            // Short walks (inside a room, to a nearby door) keep the original whole-route fallback.
+            bool longWalk = Vector2.Distance(player.transform.position, target) >= 12f;
+            if (!reached && !longWalk)
+            {
+                foreach (var size in new[] { worldSize + new Vector2(0.1f, 0.1f), worldSize + new Vector2(0.04f, 0.04f), worldSize * 0.9f })
+                {
+                    route = PlanWalk(player, body, player.transform.position, target, size, out reached);
+                    if (reached) break;
+                }
+            }
+            else if (!reached)
             {
                 // Often only the last stretch (a doorway, a gate) is too narrow for the wide margin. Keep the wide route as far
                 // as it gets and plan only the rest tighter; a tight route over the whole map grazes corners and catches.
