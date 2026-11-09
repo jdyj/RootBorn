@@ -244,11 +244,11 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
                     float targetY = viewport.InverseTransformPoint(target.TransformPoint(target.rect.center)).y;
                     // Wheel down (negative) moves the list up to reveal rows below the viewport.
                     float wheel = targetY < viewport.rect.center.y ? -120f : 120f;
+                    // Left for the frame's own input update: scroll is a delta that the next input update clears, so
+                    // applying it right away (InputSystem.Update) lets the frame's update zero it before the UI reads it.
                     InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = over, scroll = new Vector2(0f, wheel) });
-                    InputSystem.Update();
                     yield return null;
                     InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = over });
-                    InputSystem.Update();
                     yield return null;
                 }
             }
