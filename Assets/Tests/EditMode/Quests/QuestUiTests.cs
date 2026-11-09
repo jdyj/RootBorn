@@ -13,7 +13,8 @@ namespace Rootborn.Tests.EditMode.Quests
         [Test]
         public void DialoguePanel_OpenClose_TracksVisibleState()
         {
-            var go = new GameObject("DialoguePanel");
+            // The dialogue panel is a UI object; it always has a RectTransform in the game.
+                var go = new GameObject("DialoguePanel", typeof(RectTransform));
             try
             {
                 var panel = go.AddComponent<DialoguePanel>();

@@ -35,6 +35,7 @@ namespace Rootborn.Tests.EditMode.StudentLife
             Assert.IsTrue(cache.TryGetLocationActivity(WorkshopActivityId, out var activity));
             var status = registry.StudentConditionStatuses.First(definition => definition != null && definition.Id == StatusId);
             var progress = new StudentLifeProgress("slot-status-chain", "player-status-chain", 100, 100);
+            progress.ConfigureCalendar(registry.StudentLifeCalendar); // activities spend a daily time point; with no calendar the budget is 0
             var runner = new LocationActivityRunner();
 
             Assert.IsTrue(runner.TryPerform(activity, progress, "request-status-chain", out var result), "Status activity should apply through LocationActivityRunner.");

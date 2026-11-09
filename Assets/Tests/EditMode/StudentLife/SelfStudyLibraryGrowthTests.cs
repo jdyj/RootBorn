@@ -38,6 +38,7 @@ namespace Rootborn.Tests.EditMode.StudentLife
             Assert.Greater(activity.Outcomes.Count, 0, "Library self-study must define data-driven outcome strategy assets.");
 
             var progress = new StudentLifeProgress("slot-study", "player-study", 8, 8);
+            progress.ConfigureCalendar(registry.StudentLifeCalendar); // activities spend a daily time point; with no calendar the budget is 0
             var runner = new OutsideSchoolActivityRunner();
             int startEnergy = progress.Energy;
             int startFocus = progress.Focus;
@@ -80,6 +81,7 @@ namespace Rootborn.Tests.EditMode.StudentLife
             Assert.IsNotNull(activity, "Library self-study activity must be registered before growth behavior can be tested.");
 
             var progress = new StudentLifeProgress("slot-study", "player-study", 8, 8);
+            progress.ConfigureCalendar(registry.StudentLifeCalendar); // activities spend a daily time point; with no calendar the budget is 0
             var runner = new OutsideSchoolActivityRunner();
 
             Assert.IsTrue(runner.TryPerform(activity, progress, "study-edit-request-growth", out var result));
@@ -101,6 +103,7 @@ namespace Rootborn.Tests.EditMode.StudentLife
 
             var runner = new OutsideSchoolActivityRunner();
             var progress = new StudentLifeProgress("slot-study", "player-study", 8, 8);
+            progress.ConfigureCalendar(registry.StudentLifeCalendar); // activities spend a daily time point; with no calendar the budget is 0
 
             Assert.IsTrue(runner.TryPerform(activity, progress, "study-edit-request-idempotent", out var first));
             var saveData = progress.ToSaveData();

@@ -1,5 +1,7 @@
 using System.IO;
 using NUnit.Framework;
+using Rootborn.Game.Common;
+using UnityEditor;
 
 namespace Rootborn.Tests.EditMode.TownConcept
 {
@@ -9,7 +11,7 @@ namespace Rootborn.Tests.EditMode.TownConcept
         public void MainMenuAndBootstrap_DefaultUserFlowReachesTown()
         {
             AssertDefaultTownScene("Assets/Scripts/UI/MainMenu/ModeSelectPanel.cs");
-            AssertDefaultTownScene("Assets/Scripts/UI/MainMenu/SaveSlotSelectPanel.cs");
+            AssertSaveSlotEntryComesFromWorldTravelData("Assets/Scripts/UI/MainMenu/SaveSlotSelectPanel.cs");
             AssertBootstrapLoadsMainMenu("Assets/Scripts/Game/Bootstrap/GameBootstrap.cs");
         }
 
@@ -98,6 +100,23 @@ namespace Rootborn.Tests.EditMode.TownConcept
             StringAssert.Contains("\"Town\"", source, path + " should name Town as the default playable scene.");
             StringAssert.DoesNotContain("_farmScene = \"Farm\"", source, path + " should not default to Farm.");
             StringAssert.DoesNotContain("LoadScene(_farmScene)", source, path + " should not load Farm through the old default field.");
+        }
+
+        // Save slots no longer name a scene: a new game enters the catalog's new-game destination (the opening starts
+        // at home), and Continue enters the saved one. What must hold is that the scene comes from data, never Farm.
+        private static void AssertSaveSlotEntryComesFromWorldTravelData(string path)
+        {
+            string source = File.ReadAllText(path);
+            StringAssert.Contains("WorldEntryService.ResolveNewGame", source, path + " should enter the data-defined new-game destination.");
+            StringAssert.DoesNotContain("_farmScene = \"Farm\"", source, path + " should not default to Farm.");
+            StringAssert.DoesNotContain("LoadScene(_farmScene)", source, path + " should not load Farm through the old default field.");
+
+            var registry = AssetDatabase.LoadAssetAtPath<GameDataRegistry>("Assets/Data/Registry/GameDataRegistry.asset");
+            Assert.IsNotNull(registry?.WorldTravelCatalog, "GameDataRegistry must reference the world travel catalog.");
+            var destination = registry.WorldTravelCatalog.NewGameDestination;
+            Assert.IsNotNull(destination, "The world travel catalog must define a new-game destination.");
+            Assert.IsFalse(string.IsNullOrEmpty(destination.SceneName), "The new-game destination must name a scene.");
+            Assert.AreNotEqual("Farm", destination.SceneName, "A new game must not start in the legacy Farm scene.");
         }
 
         private static void AssertBootstrapLoadsMainMenu(string path)

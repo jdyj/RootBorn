@@ -24,11 +24,14 @@ namespace Rootborn.Tests.EditMode.StudentLife
         [Test]
         public void QuestChainRuntimeInstaller_RewardContextProvidesAndPersistsWorldStateProgress()
         {
-            string source = File.ReadAllText(QuestChainRuntimeInstallerPath);
+            // World state moved into the career owner's atomic save session: the owner loads it once, the quest-chain
+            // reward context reads it from the owner/session, and the session commit saves it with the inventory.
+            string service = File.ReadAllText("Assets/Scripts/UI/Quests/QuestChainRuntimeService.cs");
+            string owner = File.ReadAllText("Assets/Scripts/UI/Careers/AdultCareerRuntimeComponent.cs");
 
-            StringAssert.Contains("WorldStateProgressPersistence.LoadOrCreate", source, "Quest-chain reward context must load WorldStateProgress for world-state route rewards.");
-            StringAssert.Contains("WorldStateProgressPersistence.Save", source, "Quest-chain reward claim flow must persist WorldStateProgress after reward application.");
-            StringAssert.Contains("ResolveWorldStateProgress", source, "Quest-chain runtime should centralize world-state progress resolution for reward context and save.");
+            StringAssert.Contains("WorldStateProgressPersistence.LoadOrCreate", owner, "The career owner must load WorldStateProgress for world-state route rewards.");
+            StringAssert.Contains("owner.World", service, "Quest-chain reward context must use the owner's world state.");
+            StringAssert.Contains("session.World", service, "Quest-chain reward claims must apply world-state rewards inside the saved session.");
         }
 
         [Test]
@@ -102,7 +105,8 @@ namespace Rootborn.Tests.EditMode.StudentLife
                 var unselected = aggregator.Build(context);
                 Assert.IsTrue(unselected["Hints"].Any(item => item.StableKey == "daily-plan-route-hint:" + route.Id));
 
-                daily.RestoreFromSaveData(new DailyPlanProgressSaveData { SaveSlot = "slot-quest-route-objective", PlayerId = "player-quest-route-objective", CurrentDay = 1, SelectedRouteId = route.Id }, "slot-quest-route-objective", "player-quest-route-objective", 1);
+                // The day plan belongs to the student now; a restore on the component is ignored once the student owns it. Select the way the planner does.
+                Assert.IsTrue(daily.TrySelect(route, student.EnsureProgress()), "Planner selection of the unlocked route must succeed.");
                 var selected = aggregator.Build(context);
 
                 Assert.IsTrue(selected["Goals"].Any(item => item.StableKey == "daily-plan:" + route.Id));

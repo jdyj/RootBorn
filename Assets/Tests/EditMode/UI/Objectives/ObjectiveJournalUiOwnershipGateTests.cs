@@ -31,7 +31,7 @@ namespace Rootborn.Tests.EditMode.UI.Objectives
 
         private static readonly HashSet<string> AllowedObjectiveUiFactories = new HashSet<string>
         {
-            "Assets/Scripts/UI/Objectives/TrackedObjectiveHud.cs :: _root = new GameObject(\"TrackedObjectiveHudRoot\", typeof(RectTransform), typeof(ModernUiTileImage));",
+            "Assets/Scripts/UI/Objectives/TrackedObjectiveHud.cs :: _root = new GameObject(\"TrackedObjectiveHudRoot\", typeof(RectTransform), typeof(ModernUiTileImage), typeof(CanvasGroup));",
             "Assets/Scripts/UI/Quests/QuestChainLogPanel.cs :: public static QuestChainLogPanel EnsureInScene(Canvas canvas)",
             "Assets/Scripts/UI/Quests/QuestChainLogPanel.cs :: var go = new GameObject(\"QuestChainLogPanel\", typeof(RectTransform));",
             "Assets/Scripts/UI/Quests/QuestChainLogPanel.cs :: _root = new GameObject(\"QuestChainLogRoot\", typeof(RectTransform), typeof(ModernUiTileImage));",

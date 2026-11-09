@@ -100,7 +100,7 @@ namespace Rootborn.Tests.EditMode.Careers
             var f = Fixture(); var type = typeof(CareerInterestPanel).Assembly.GetType("Rootborn.UI.Careers.CareerFacilityInteractor"); Assert.That(type, Is.Not.Null, "CareerFacilityInteractor missing");
             var marker = new GameObject("FacilityMarker"); _objects.Add(marker); var interactor = marker.AddComponent(type);
             type.GetMethod("Bind").Invoke(interactor, new object[] { f.Facility }); Assert.That(interactor, Is.InstanceOf<IPlayerInteractable>());
-            Assert.That(((IPlayerInteractable)interactor).TryInteract(f.Player), Is.True); Assert.That(Get<bool>(f.Panel, "IsOpen"), Is.True);
+            Assert.That(((IPlayerInteractable)interactor).TryInteract(f.Player), Is.True, "TryInteract refused: " + DescribeInteract(interactor, f)); Assert.That(Get<bool>(f.Panel, "IsOpen"), Is.True);
             Assert.That(f.Inventory.Inventory.CountOf(f.Coin), Is.EqualTo(10)); Assert.That(f.Student.Progress.TimePointsRemaining, Is.EqualTo(2));
         }
         [Test] public void FACILITY_UI_008_ClosedModalCannotDispatchStaleWorkButtons()
@@ -211,6 +211,13 @@ namespace Rootborn.Tests.EditMode.Careers
             var minigame = New<MinigameDefinition>(); Set(minigame, "_challenges", new ChallengeDefinitionBase[] { choice });
             var practice = New<CareerPracticeDefinition>(); practice.ConfigureForTests("practice.fixture", "practice.fixture", activity, null, Array.Empty<PracticeStepDefinition>()); Set(practice, "_minigame", minigame);
             Set(f.Facility, "_practice", practice); Set(f.Registry, "_careerPractices", new[] { practice }); return practice;
+        }
+        private static string DescribeInteract(Component interactor, Data f)
+        {
+            var behaviour = (Behaviour)interactor; GameDataRegistryProvider.TryGet(out var registry);
+            int canvases = 0; foreach (var c in UnityEngine.Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None)) if (c.isActiveAndEnabled && c.gameObject.scene == interactor.gameObject.scene && c.rootCanvas == c && c.renderMode == RenderMode.ScreenSpaceOverlay) canvases++;
+            return "activeAndEnabled=" + behaviour.isActiveAndEnabled + " facilityValid=" + f.Facility.IsValid + " canInteract=" + ((IPlayerInteractable)interactor).CanInteract(f.Player)
+                + " registry=" + (registry == f.Registry) + " eligibleCanvases=" + canvases;
         }
         private Canvas Canvas() { var go = new GameObject("FixtureCanvas", typeof(RectTransform), typeof(Canvas)); _objects.Add(go); return go.GetComponent<Canvas>(); }
         private static Type PanelType() { var type = typeof(CareerInterestPanel).Assembly.GetType("Rootborn.UI.Careers.FacilityManagementPanel"); Assert.That(type, Is.Not.Null, "FacilityManagementPanel missing"); return type; }

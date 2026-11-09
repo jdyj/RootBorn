@@ -128,6 +128,7 @@ namespace Rootborn.Tests.EditMode.StudentLife
             Assert.IsFalse(route.IsAvailable(in locked), "Workshop/job route must be unavailable before the configured part-time work is completed.");
 
             var progress = new StudentLifeProgress("slot-work-route", "player-work-route", 100, 100);
+            progress.ConfigureCalendar(registry.StudentLifeCalendar); // a shift spends a daily time point
             var inventory = new Inventory();
             Assert.IsTrue(new PartTimeWorkRunner().TryPerform(work, progress, inventory, "registered-work-route-request", out var result));
             Assert.AreEqual(LifeActivityResultKind.Applied, result.Kind);
@@ -180,7 +181,8 @@ namespace Rootborn.Tests.EditMode.StudentLife
                 Assert.AreEqual("daily-plan:choose", unselected["Goals"][0].StableKey);
                 Assert.AreEqual(1, unselected["Hints"].Count(item => item.StableKey == "daily-plan-route-hint:" + route.Id), "Unlocked unselected career route hint must be emitted exactly once.");
 
-                daily.RestoreFromSaveData(new DailyPlanProgressSaveData { SaveSlot = "slot-career-route-objective", PlayerId = "player-career-route-objective", CurrentDay = 1, SelectedRouteId = route.Id }, "slot-career-route-objective", "player-career-route-objective", 1);
+                // The day plan belongs to the student now; a restore on the component is ignored once the student owns it. Select the way the planner does.
+                Assert.IsTrue(daily.TrySelect(route, student.EnsureProgress()), "Planner selection of the unlocked route must succeed.");
                 var selected = aggregator.Build(context);
 
                 Assert.AreEqual(1, selected["Goals"].Count(item => item.StableKey == "daily-plan:" + route.Id), "Selected career route goal must be emitted exactly once.");

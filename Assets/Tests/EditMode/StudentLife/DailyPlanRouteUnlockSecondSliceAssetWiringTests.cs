@@ -134,7 +134,8 @@ namespace Rootborn.Tests.EditMode.StudentLife
                 Assert.AreEqual("daily-plan:choose", unselected["Goals"][0].StableKey);
                 Assert.IsTrue(unselected["Hints"].Any(item => item.StableKey == "daily-plan-route-hint:" + route.Id));
 
-                daily.RestoreFromSaveData(new DailyPlanProgressSaveData { SaveSlot = "slot-second-route-objective", PlayerId = "player-second-route-objective", CurrentDay = 1, SelectedRouteId = route.Id }, "slot-second-route-objective", "player-second-route-objective", 1);
+                // The day plan belongs to the student now; a restore on the component is ignored once the student owns it. Select the way the planner does.
+                Assert.IsTrue(daily.TrySelect(route, student.EnsureProgress()), "Planner selection of the unlocked route must succeed.");
                 var selected = aggregator.Build(context);
 
                 Assert.IsTrue(selected["Goals"].Any(item => item.StableKey == "daily-plan:" + route.Id));
