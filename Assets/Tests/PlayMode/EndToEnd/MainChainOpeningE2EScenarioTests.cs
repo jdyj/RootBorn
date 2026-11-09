@@ -372,6 +372,17 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
 
         private IEnumerator GoHomeAndSleep(Keyboard keyboard)
         {
+            // Spending the day's last time point ends the day on the spot and shows the day result; a player presses
+            // Next Day there instead of walking home.
+            var shown = Object.FindFirstObjectByType<StudentDayResultPanel>(FindObjectsInactive.Include);
+            if (shown != null && shown.IsOpen)
+            {
+                yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(shown.transform, "NextDayButton"));
+                yield return null;
+                yield return PlayerFlowE2EDriver.DismissDailyEvent();
+                yield break;
+            }
+
             for (int hop = 0; hop < 3 && SceneManager.GetActiveScene().name != "House"; hop++)
             {
                 string next = SceneManager.GetActiveScene().name == "Town" ? "House" : "Town";
