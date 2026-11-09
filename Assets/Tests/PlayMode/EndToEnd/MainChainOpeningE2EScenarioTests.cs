@@ -374,7 +374,16 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         {
             // Spending the day's last time point ends the day on the spot and shows the day result; a player presses
             // Next Day there instead of walking home.
-            var shown = Object.FindFirstObjectByType<StudentDayResultPanel>(FindObjectsInactive.Include);
+            StudentDayResultPanel shown = null;
+            for (float t = 0f; t < 3f && (shown == null || !shown.IsOpen); t += Time.unscaledDeltaTime)
+            {
+                shown = Object.FindFirstObjectByType<StudentDayResultPanel>(FindObjectsInactive.Include);
+                yield return null;
+            }
+            var student = GameObject.Find("Player").GetComponent<StudentLifeProgressComponent>().Progress;
+            Debug.Log("[MAIN-E2E] before going home: resultOpen=" + (shown != null && shown.IsOpen) + " dayState=" + student.DayState
+                + " remaining=" + student.TimePointsRemaining + " " + PlayerFlowE2EDriver.InputLockOwners() + " " + DescribeTime());
+            yield return Capture("before-home-day" + student.CurrentDay + ".png");
             if (shown != null && shown.IsOpen)
             {
                 yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(shown.transform, "NextDayButton"));
