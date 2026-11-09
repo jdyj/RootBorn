@@ -229,6 +229,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 var square = next == "House" ? GameObject.Find("LocationVisit_location_town_square") : null;
                 if (square != null)
                     yield return PlayerFlowE2EDriver.WalkPlayerWithKeyboardTo(GameObject.Find("Player"), keyboard, square.transform.position + new Vector3(0f, -1.5f, 0f), 1.2f, 900, F + " could not walk to the town square on the way home.");
+                Debug.Log("[MAIN-E2E] before door to " + next + " locks=" + PlayerFlowE2EDriver.InputLockOwners() + " " + DescribeTime());
+                yield return Capture("before-door-" + next + "-day" + GameObject.Find("Player").GetComponent<StudentLifeProgressComponent>().Progress.CurrentDay + ".png");
                 yield return PlayerFlowE2EDriver.WalkThroughDoor(keyboard, next, F);
                 yield return PlayerFlowE2EDriver.DismissDailyEvent();
             }
