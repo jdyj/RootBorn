@@ -423,12 +423,18 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             InputSystem.Update();
             yield return new WaitForFixedUpdate();
             // The body keeps sliding a little after the key is released; a person taps back toward the spot.
+            // If a tap along the main axis is blocked (a doorway off to one side), the next taps step along the other axis.
+            bool otherAxis = false;
+            float lastMiss = float.MaxValue;
             for (int nudge = 0; nudge < 12 && SceneManager.GetActiveScene().name == startScene && player != null; nudge++)
             {
                 for (int settle = 0; settle < 3; settle++) yield return new WaitForFixedUpdate();
                 Vector3 miss = targetPosition - player.transform.position;
                 if (miss.magnitude <= tolerance || miss.magnitude > 1.5f) break;
-                QueueKey(keyboard, Mathf.Abs(miss.x) >= Mathf.Abs(miss.y) ? (miss.x >= 0f ? Key.D : Key.A) : (miss.y >= 0f ? Key.W : Key.S));
+                if (miss.magnitude > lastMiss - 0.02f) otherAxis = !otherAxis;
+                lastMiss = miss.magnitude;
+                bool horizontal = (Mathf.Abs(miss.x) >= Mathf.Abs(miss.y)) != otherAxis;
+                QueueKey(keyboard, horizontal ? (miss.x >= 0f ? Key.D : Key.A) : (miss.y >= 0f ? Key.W : Key.S));
                 InputSystem.Update();
                 yield return null;
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState());
