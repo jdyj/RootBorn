@@ -127,7 +127,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 panel = Object.FindFirstObjectByType<Rootborn.UI.Minigames.MinigamePanel>(FindObjectsInactive.Include);
                 yield return null;
             }
-            Assert.IsTrue(panel != null && panel.IsOpen, "JOB-002 failed: E at " + workId + " did not open its minigame.");
+            Assert.IsTrue(panel != null && panel.IsOpen, "JOB-002 failed: E at " + workId + " did not open its minigame. " + PlayerFlowE2EDriver.LastInteractTrace + " remaining=" + student.Progress.TimePointsRemaining + " pending=" + student.Progress.HasPendingMinigame);
             yield return PlayerFlowE2EDriver.PlayMinigameToEnd(panel, 120f, "JOB-002 failed (" + workId + "):");
             Assert.IsTrue(panel.Session.Succeeded, "JOB-002 failed: " + workId + " played from the screen did not pass (score " + panel.Session.Score + ").");
             Assert.AreEqual(traitBefore + traitOutcome.Delta, student.Progress.GetTraitValue(traitOutcome.Trait), "JOB-002 failed: " + workId + " growth was not applied exactly once.");

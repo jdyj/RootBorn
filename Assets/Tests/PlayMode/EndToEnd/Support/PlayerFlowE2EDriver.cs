@@ -110,7 +110,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
                 if (button != null) button.onClick.RemoveListener(count);
             }
 
-            Assert.AreEqual(1, clicks, label + " did not receive exactly one click from the mouse device. " + DescribeInputSetup());
+            Assert.AreEqual(1, clicks, label + " did not receive exactly one click from the mouse device. " + DescribeInputSetup() + " trace: " + LastClickTrace);
         }
 
         /// <summary>
@@ -147,7 +147,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             }
 
             if (clicks == 0 && !stayedLive) yield break;
-            Assert.AreEqual(1, clicks, label + " did not receive exactly one click from the mouse device. " + DescribeInputSetup());
+            Assert.AreEqual(1, clicks, label + " did not receive exactly one click from the mouse device. " + DescribeInputSetup() + " trace: " + LastClickTrace);
         }
 
         // Notes whether a button was ever non-interactable while a press was in progress.
@@ -275,23 +275,56 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             Assert.IsTrue(hits[0].gameObject.transform.IsChildOf(target.transform), label + " is covered by " + hits[0].gameObject.name);
 
             var scope = new RealPointerScope(events);
+            LastClickTrace = label + " at " + point + ":";
             try
             {
                 yield return null;
                 InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = point });
                 yield return null;
                 yield return null;
+                TraceClick("hover", target, point, scope);
                 InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = point, buttons = 1 });
                 yield return null;
                 yield return null;
+                TraceClick("down", target, point, scope);
                 InputSystem.QueueStateEvent(scope.Mouse, new MouseState { position = point });
                 yield return null;
                 yield return null;
+                TraceClick("up", target, point, scope);
             }
             finally
             {
                 scope.Dispose();
             }
+        }
+
+        /// <summary>What the last mouse click saw at hover, press and release; failure messages include it.</summary>
+        public static string LastClickTrace = string.Empty;
+
+        private static void TraceClick(string phase, GameObject target, Vector2 point, RealPointerScope scope)
+        {
+            var events = EventSystem.current;
+            var text = new StringBuilder(LastClickTrace);
+            text.Append(' ').Append(phase).Append('[');
+            if (target == null) text.Append("target destroyed");
+            else
+            {
+                var button = target.GetComponent<Button>();
+                text.Append("active=").Append(target.activeInHierarchy);
+                if (button != null) text.Append(" interactable=").Append(button.interactable);
+            }
+
+            if (events != null)
+            {
+                var hits = new List<RaycastResult>();
+                events.RaycastAll(new PointerEventData(events) { position = point }, hits);
+                text.Append(" top=").Append(hits.Count > 0 ? hits[0].gameObject.name : "-");
+                text.Append(" module=").Append(events.currentInputModule != null ? events.currentInputModule.GetType().Name + (events.currentInputModule.enabled ? "" : "(off)") : "-");
+                text.Append(" pressed=").Append(scope.Mouse.leftButton.isPressed).Append(" mousePos=").Append(scope.Mouse.position.ReadValue());
+            }
+            else text.Append(" no event system");
+            text.Append(" frame=").Append(Time.frameCount).Append(']');
+            LastClickTrace = text.ToString();
         }
 
         private static string FirstInactiveAncestor(Transform t)
@@ -685,8 +718,20 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             var router = player.GetComponent<Rootborn.Game.Player.PlayerInteractionRouter>();
             router.RefreshPromptNow();
             Assert.IsTrue(router.PromptVisible, failure + ": no prompt there.");
+            LastInteractTrace = "before E: target=" + DescribeTarget(router) + " prompt='" + router.PromptText + "' at " + player.transform.position + " frame=" + Time.frameCount;
             yield return PressInteractKey(keyboard);
             yield return null;
+            router.RefreshPromptNow();
+            LastInteractTrace += " | after E: target=" + DescribeTarget(router) + " prompt='" + router.PromptText + "' " + InputLockOwners() + " frame=" + Time.frameCount;
+        }
+
+        /// <summary>What E was aimed at in the last <see cref="WalkAndInteract"/>, before and after the press.</summary>
+        public static string LastInteractTrace = string.Empty;
+
+        private static string DescribeTarget(Rootborn.Game.Player.PlayerInteractionRouter router)
+        {
+            var target = router.CurrentInteractable as Component;
+            return target != null ? target.name + "/" + target.GetType().Name : "<none>";
         }
 
         // Walks to a placed location point, opens its activity panel with E, presses one activity button and closes the panel.
