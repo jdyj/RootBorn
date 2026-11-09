@@ -175,6 +175,57 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.AreEqual(QuestChainState.Completed, Log().GetState(chain), F + " placing furniture at home should complete the chain (step " + StepId(chain) + ").");
         }
 
+        // MyOwnSpace tells the player to buy furniture with allowance. Earn it with two shifts, then buy at the corner store
+        // with a mouse click: the allowance is charged once and the furniture is unlocked for the home catalog.
+        [UnityTest]
+        [Timeout(900000)]
+        public IEnumerator MAIN_E2E_008_MyOwnSpace_BuyingFurnitureWithShiftAllowance()
+        {
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+            yield return EnterNewGame();
+            var chain = Chain();
+            PrepareChainAt(chain, "mainquest.MyOwnSpace");
+            Assert.IsTrue(GameDataRegistryProvider.TryGet(out var registry), F + " no game data.");
+            var offer = System.Array.Find(registry.FurnitureDefinitions, f => f != null && f.IsForSale && f.PurchaseLocationId == "location.corner-store");
+            Assert.IsNotNull(offer, F + " nothing is for sale at the corner store.");
+            var player = GameObject.Find("Player");
+            var wallet = player.GetComponent<PlayerInventory>();
+            var owner = player.GetComponent<Rootborn.UI.Careers.AdultCareerRuntimeComponent>();
+            Assert.IsNotNull(owner, F + " the player has no career owner.");
+            Assert.IsFalse(owner.FurnitureUnlocks.IsUnlocked(offer.UnlockToken), F + " " + offer.name + " is owned before buying.");
+
+            while (wallet.Inventory.CountOf(offer.PriceItem) < offer.Price)
+            {
+                int before = wallet.Inventory.CountOf(offer.PriceItem);
+                yield return WorkOneShift(keyboard, "work.shift.corner-store");
+                Assert.Greater(wallet.Inventory.CountOf(offer.PriceItem), before, F + " a shift paid no " + offer.PriceItem.name + ".");
+            }
+            int money = wallet.Inventory.CountOf(offer.PriceItem);
+
+            var shop = GameObject.Find(LocationNpcRuntimeInstaller.LocationObjectName(offer.PurchaseLocationId));
+            Assert.IsNotNull(shop, F + " no shop point for " + offer.PurchaseLocationId + ".");
+            yield return PlayerFlowE2EDriver.WalkAndInteract(keyboard, shop.transform.position, F + " the corner store");
+            var panel = Object.FindFirstObjectByType<LocationIdentityPanel>(FindObjectsInactive.Include);
+            Assert.IsTrue(panel != null && panel.IsOpen, F + " E at the corner store did not open its panel.");
+            string name = string.IsNullOrEmpty(offer.DisplayNameKey) ? offer.DisplayName : Rootborn.Game.Localization.GameText.Get(offer.DisplayNameKey);
+            string label = Rootborn.Game.Localization.GameText.Format("dream.shop.buy", name, offer.Price);
+            Button buy = null;
+            foreach (var button in panel.GetComponentsInChildren<Button>())
+            {
+                var text = button.GetComponentInChildren<Text>(true);
+                if (text != null && text.text == label) { buy = button; break; }
+            }
+            Assert.IsNotNull(buy, F + " the corner store shows no '" + label + "' button.");
+            Assert.IsTrue(buy.interactable, F + " the buy button is disabled with " + money + " " + offer.PriceItem.name + ".");
+            yield return PlayerFlowE2EDriver.ClickButton(buy);
+            yield return Capture("06-bought-furniture.png");
+
+            Assert.IsTrue(owner.FurnitureUnlocks.IsUnlocked(offer.UnlockToken), F + " buying did not unlock " + offer.name + ".");
+            Assert.AreEqual(money - offer.Price, wallet.Inventory.CountOf(offer.PriceItem), F + " buying should charge the price once.");
+            Assert.IsFalse(buy.interactable, F + " an owned offer must not be buyable again.");
+            if (panel.IsOpen) yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(panel.transform, "CloseLocation"));
+        }
+
         private static IEnumerator EnterNewGame()
         {
             yield return PlayerFlowE2EDriver.EnterWorldFromSaveSlot("slot-0", "NewGameButton", "Town", F + " New Game did not enter Town.");
