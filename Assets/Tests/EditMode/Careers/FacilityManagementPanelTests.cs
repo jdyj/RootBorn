@@ -220,7 +220,8 @@ namespace Rootborn.Tests.EditMode.Careers
             return "activeAndEnabled=" + behaviour.isActiveAndEnabled + " facilityValid=" + f.Facility.IsValid + " canInteract=" + ((IPlayerInteractable)interactor).CanInteract(f.Player)
                 + " registry=" + (registry == f.Registry) + " canvases:" + canvases;
         }
-        private Canvas Canvas() { var go = new GameObject("FixtureCanvas", typeof(RectTransform), typeof(Canvas)); _objects.Add(go); return go.GetComponent<Canvas>(); }
+        // A Canvas added in edit mode starts in WorldSpace; game HUDs, and the facility interactor, use ScreenSpaceOverlay.
+        private Canvas Canvas() { var go = new GameObject("FixtureCanvas", typeof(RectTransform), typeof(Canvas)); _objects.Add(go); var canvas = go.GetComponent<Canvas>(); canvas.renderMode = RenderMode.ScreenSpaceOverlay; return canvas; }
         private static Type PanelType() { var type = typeof(CareerInterestPanel).Assembly.GetType("Rootborn.UI.Careers.FacilityManagementPanel"); Assert.That(type, Is.Not.Null, "FacilityManagementPanel missing"); return type; }
         private static Component Ensure(Type type, Canvas canvas) => (Component)type.GetMethod("EnsureInScene").Invoke(null, new object[] { canvas });
         private static void Show(Data f) => f.Panel.GetType().GetMethod("Show").Invoke(f.Panel, new object[] { f.Facility, f.Owner });
