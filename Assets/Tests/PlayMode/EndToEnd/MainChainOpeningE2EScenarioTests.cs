@@ -30,6 +30,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         private const string Evidence = "output/main-chain-e2e/";
         private const string F = "MAIN-E2E-001 failed:";
         private string _saveRoot;
+        private static string LastTarget = string.Empty;
 
         [UnitySetUp]
         public IEnumerator SetUp()
@@ -105,7 +106,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             {
                 yield return VisitPlace(keyboard, "FacilityActivities_" + place);
                 visits.Append(place).Append(": step=").Append(StepId(chain)).Append(" progress=").Append(DescribeProgress(chain, 4))
-                    .Append(" scene=").Append(SceneManager.GetActiveScene().name).Append(" | ");
+                    .Append(" E-target=").Append(LastTarget).Append(" | ");
                 Debug.Log("[MAIN-E2E] after " + place + " step=" + StepId(chain) + " progress=" + DescribeProgress(chain, 4));
             }
             yield return Capture("03-tour-done.png");
@@ -176,7 +177,14 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         {
             var point = GameObject.Find(pointName);
             Assert.IsNotNull(point, F + " Town has no " + pointName + ".");
-            yield return PlayerFlowE2EDriver.WalkAndInteract(keyboard, point.transform.position, F + " " + pointName);
+            var player = GameObject.Find("Player");
+            yield return PlayerFlowE2EDriver.WalkPlayerWithKeyboardTo(player, keyboard, point.transform.position, 0.9f, 900, F + " " + pointName + ": could not walk there.");
+            var router = player.GetComponent<PlayerInteractionRouter>();
+            router.RefreshPromptNow();
+            LastTarget = (router.CurrentInteractable as Component) != null ? ((Component)router.CurrentInteractable).name + "/" + router.CurrentInteractable.GetType().Name : "<none>";
+            Assert.IsTrue(router.PromptVisible, F + " " + pointName + ": no prompt there.");
+            yield return PlayerFlowE2EDriver.PressInteractKey(keyboard);
+            yield return null;
             var panel = Object.FindFirstObjectByType<LocationIdentityPanel>(FindObjectsInactive.Include);
             if (panel != null && panel.IsOpen) yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(panel.transform, "CloseLocation"));
             yield return PlayerFlowE2EDriver.DismissDailyEvent();
