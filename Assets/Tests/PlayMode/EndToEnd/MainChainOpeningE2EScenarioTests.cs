@@ -218,7 +218,11 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.IsNotNull(buy, F + " the corner store shows no '" + label + "' button.");
             Assert.IsTrue(buy.interactable, F + " the buy button is disabled with " + money + " " + offer.PriceItem.name + ".");
             yield return PlayerFlowE2EDriver.ClickButton(buy);
+            // Disabled buttons fade to the disabled tint over the button's fade time (real time); let it finish before looking.
+            yield return new WaitForSecondsRealtime(buy.colors.fadeDuration + 0.2f);
             yield return Capture("06-bought-furniture.png");
+            var shown = buy.targetGraphic != null ? buy.targetGraphic.canvasRenderer.GetColor() : Color.white;
+            Assert.Less(shown.a, 0.9f, F + " the owned offer still looks pressable (rendered tint " + shown + ").");
 
             Assert.IsTrue(owner.FurnitureUnlocks.IsUnlocked(offer.UnlockToken), F + " buying did not unlock " + offer.name + ".");
             Assert.AreEqual(money - offer.Price, wallet.Inventory.CountOf(offer.PriceItem), F + " buying should charge the price once.");
