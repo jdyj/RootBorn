@@ -101,6 +101,8 @@ namespace Rootborn.Tests.PlayMode.Network
             Assert.AreEqual(JoinGamePanel.JoinState.Connecting, panel.State, panel.StatusText);
             Assert.IsFalse(PanelButton(panel, "JoinConnectButton").interactable, "Connect should not be pressed twice while connecting.");
 
+            // Unity Transport reports the timed-out attempt as an error; that is the expected outcome here.
+            LogAssert.Expect(LogType.Error, "Failed to connect to server.");
             float deadline = Time.unscaledTime + 30f;
             while (panel.State == JoinGamePanel.JoinState.Connecting && Time.unscaledTime < deadline) yield return null;
             Assert.AreEqual(JoinGamePanel.JoinState.Failed, panel.State, "No server answered, so the attempt should fail within the shortened timeout. Status: " + panel.StatusText);
