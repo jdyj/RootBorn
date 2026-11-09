@@ -15,6 +15,9 @@ namespace Rootborn.UI.Objectives
         private TrackedObjectiveHud _trackedHud;
         private GameObject _player;
         private ObjectiveJournalAggregator _aggregator;
+        private GameObject _ownersFor;
+        private StudentLifeProgressComponent _studentOwner;
+        private AdultCareerRuntimeComponent _adultOwner;
 
         private (object Student, object Adult, int Day, int Energy, int Focus, int Time, int DayState, string Stage, string Objective, string Hint, bool Pending, bool AdultPhase, bool PendingWork, string Language, string TrackedKey, string Slot, int QuestRevision) _observedState;
         private bool _hasObservedState;
@@ -90,8 +93,9 @@ namespace Rootborn.UI.Objectives
         private void LateUpdate()
         {
             if (_player == null || _trackedHud == null || _aggregator == null) return;
-            var student = _player.GetComponent<StudentLifeProgressComponent>()?.Progress;
-            var adult = _player.GetComponent<AdultCareerRuntimeComponent>()?.Progress;
+            ResolveOwners();
+            var student = _studentOwner != null ? _studentOwner.Progress : null;
+            var adult = _adultOwner != null ? _adultOwner.Progress : null;
             string slot = ActiveSaveContext.Metadata != null ? ActiveSaveContext.Metadata.SlotId : string.Empty;
             if (student != null && !string.IsNullOrEmpty(slot) && student.SaveSlot != slot) return;
             var state = ((object)student, (object)adult, student != null ? student.CurrentDay : 0,
@@ -116,6 +120,20 @@ namespace Rootborn.UI.Objectives
                         return;
                     }
             _trackedHud.Hide();
+        }
+
+        // Owners are cached per player; only a missing one is looked up again (the career owner can be added after binding).
+        private void ResolveOwners()
+        {
+            if (_ownersFor != _player)
+            {
+                _ownersFor = _player;
+                _studentOwner = null;
+                _adultOwner = null;
+            }
+
+            if (_studentOwner == null) _studentOwner = _player.GetComponent<StudentLifeProgressComponent>();
+            if (_adultOwner == null) _adultOwner = _player.GetComponent<AdultCareerRuntimeComponent>();
         }
 
         private void OnDestroy()
