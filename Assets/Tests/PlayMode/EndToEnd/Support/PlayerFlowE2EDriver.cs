@@ -491,23 +491,41 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
             // Try the widest margin first; a box smaller than the real body finds routes the body then catches on.
             System.Collections.Generic.List<Vector3> route = null;
             bool reached = false;
-            foreach (var size in new[] { worldSize + new Vector2(0.4f, 0.4f), worldSize + new Vector2(0.1f, 0.1f), worldSize + new Vector2(0.04f, 0.04f), worldSize * 0.9f })
+            var wide = worldSize + new Vector2(0.4f, 0.4f);
+            route = PlanWalk(player, body, player.transform.position, target, wide, out reached);
+            if (!reached)
             {
-                route = PlanWalk(player, body, target, size, out reached);
-                if (reached) break;
+                // Often only the last stretch (a doorway, a gate) is too narrow for the wide margin. Keep the wide route as far
+                // as it gets and plan only the rest tighter; a tight route over the whole map grazes corners and catches.
+                Vector3 handoff = route.Count > 0 ? route[route.Count - 1] : player.transform.position;
+                foreach (var size in new[] { worldSize + new Vector2(0.1f, 0.1f), worldSize + new Vector2(0.04f, 0.04f), worldSize * 0.9f })
+                {
+                    var rest = PlanWalk(player, body, handoff, target, size, out reached);
+                    if (!reached) continue;
+                    route.AddRange(rest);
+                    break;
+                }
+
+                if (!reached)
+                {
+                    foreach (var size in new[] { worldSize + new Vector2(0.1f, 0.1f), worldSize + new Vector2(0.04f, 0.04f), worldSize * 0.9f })
+                    {
+                        route = PlanWalk(player, body, player.transform.position, target, size, out reached);
+                        if (reached) break;
+                    }
+                }
             }
             // The last corner is the target rounded to the half-unit grid; steering to it overshoots short walks. Head for the target itself.
             if (reached && route.Count > 0) route.RemoveAt(route.Count - 1);
             return route;
         }
 
-        private static System.Collections.Generic.List<Vector3> PlanWalk(GameObject player, BoxCollider2D body, Vector3 target, Vector2 size, out bool reachedGoal)
+        private static System.Collections.Generic.List<Vector3> PlanWalk(GameObject player, BoxCollider2D body, Vector3 start, Vector3 target, Vector2 size, out bool reachedGoal)
         {
             var corners = new System.Collections.Generic.List<Vector3>();
             Physics2D.SyncTransforms();
             const float step = 0.5f;
             Vector2 offset = (Vector2)(body.bounds.center - player.transform.position);
-            Vector3 start = player.transform.position;
             int span = Mathf.CeilToInt(Mathf.Max(Mathf.Abs(target.x - start.x), Mathf.Abs(target.y - start.y)) / step) + 24;
             // Large trigger zones overlap everything, so they are filtered out instead of crowding a fixed hit buffer.
             var solidOnly = new ContactFilter2D { useTriggers = false };
