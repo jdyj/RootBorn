@@ -535,7 +535,9 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
                     walkTrace.Append(" f").Append(i).Append("[key=").Append(activeKey).Append(" held=").Append(activeKey != Key.None && ControlFor(keyboard, activeKey).isPressed)
                         .Append(" input=").Append(controller != null ? controller.Input.ToString() : "-").Append(" ctrl=").Append(controller != null && controller.isActiveAndEnabled)
                         .Append(" vel=").Append(body != null ? body.linearVelocity.ToString() : "-").Append(" sim=").Append(body != null && body.simulated)
-                        .Append(" pos=").Append(player.transform.position).Append(" timeScale=").Append(Time.timeScale).Append(']');
+                        .Append(" pos=").Append(player.transform.position).Append(" timeScale=").Append(Time.timeScale)
+                        .Append(" kbLast=").Append(keyboard.lastUpdateTime.ToString("F3")).Append(" now=").Append(UnityEngine.InputSystem.LowLevel.InputState.currentTime.ToString("F3"))
+                        .Append(" kbEnabled=").Append(keyboard.enabled).Append(']');
                 }
                 Vector3 goal = next < waypoints.Count ? waypoints[next] : targetPosition;
                 Vector3 delta = goal - player.transform.position;
