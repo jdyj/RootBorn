@@ -80,6 +80,7 @@ namespace Rootborn.Network.Time
                 LoadServerSnapshot();
             }
 
+            SyncLocalClock();
             ActiveChanged?.Invoke();
             Changed?.Invoke();
             Debug.Log($"[ROOTBORN] World time spawned owner={OwnerClientId} local={NetworkManager.Singleton?.LocalClientId} isOwner={IsOwner} isServer={IsServer} active={Active == this} {SnapshotText}");
@@ -92,9 +93,36 @@ namespace Rootborn.Network.Time
             _schedulePhase.OnValueChanged -= HandleSchedulePhaseChanged;
             if (Active == this)
             {
+                ReleaseLocalClock();
                 Active = null;
                 ActiveChanged?.Invoke();
             }
+        }
+
+        // Day-night lighting and other hour readers use the local GameClock. While shared world time is active it holds that
+        // clock at the hour standing for the shared part of day; otherwise a client's own clock ran on and lit the town as
+        // night while the shared time said morning.
+        private float _heldClockScale = -1f;
+
+        private void SyncLocalClock()
+        {
+            if (Active != this) return;
+            var clock = Rootborn.Game.Time.GameClock.Instance;
+            if (clock == null) return;
+            if (_heldClockScale < 0f)
+            {
+                _heldClockScale = clock.TimeScale;
+                clock.TimeScale = 0f;
+            }
+
+            clock.SetCurrentHour(Rootborn.Core.Network.WorldTimeHours.Representative((int)TimeOfDay));
+        }
+
+        private void ReleaseLocalClock()
+        {
+            var clock = Rootborn.Game.Time.GameClock.Instance;
+            if (clock != null && _heldClockScale >= 0f) clock.TimeScale = _heldClockScale;
+            _heldClockScale = -1f;
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -156,12 +184,14 @@ namespace Rootborn.Network.Time
 
         private void HandleDayChanged(int previous, int current)
         {
+            SyncLocalClock();
             Changed?.Invoke();
             Debug.Log($"[ROOTBORN] World time day sync previous={previous} current={current} {SnapshotText}");
         }
 
         private void HandleTimeChanged(int previous, int current)
         {
+            SyncLocalClock();
             Changed?.Invoke();
             Debug.Log($"[ROOTBORN] World time timeOfDay sync previous={(WorldTimeOfDay)previous} current={(WorldTimeOfDay)current} {SnapshotText}");
         }

@@ -68,6 +68,21 @@ namespace Rootborn.Tests.EditMode.Network
         }
 
         [Test]
+        public void MULTI_TIME_009_SharedWorldTimeHoldsTheLocalClockAtItsPartOfDay()
+        {
+            // Lighting reads the local GameClock; shared world time must set it, or clients light the town by their own clock.
+            string source = File.ReadAllText("Assets/Scripts/Network/Time/NetworkWorldTimeState.cs");
+            StringAssert.Contains("WorldTimeHours.Representative((int)TimeOfDay)", source);
+            StringAssert.Contains("clock.TimeScale = 0f", source);
+            int spawn = source.IndexOf("public override void OnNetworkSpawn", System.StringComparison.Ordinal);
+            int despawn = source.IndexOf("public override void OnNetworkDespawn", System.StringComparison.Ordinal);
+            Assert.Greater(source.IndexOf("SyncLocalClock();", spawn, System.StringComparison.Ordinal), spawn, "spawn must set the local clock");
+            Assert.Greater(source.IndexOf("ReleaseLocalClock();", despawn, System.StringComparison.Ordinal), despawn, "despawn must give the clock back");
+            int timeHandler = source.IndexOf("private void HandleTimeChanged", System.StringComparison.Ordinal);
+            Assert.Greater(source.IndexOf("SyncLocalClock();", timeHandler, System.StringComparison.Ordinal), timeHandler, "a new part of day must move the clock");
+        }
+
+        [Test]
         public void MULTI_TIME_008_DayEndInteractorRequestsWorldTimeAfterPersonalDayResult()
         {
             string source = File.ReadAllText("Assets/Scripts/UI/StudentLife/StudentDayEndInteractor.cs");
