@@ -249,7 +249,16 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             int pick = -1;
             for (int i = 0; i < interests.Interests.Length && pick < 0; i++)
                 if (interests.Interests[i] != null && interests.Interests[i].Evaluate(interests.EnsureProgress(), candidates, student, student.CurrentDay).Allowed) pick = i;
-            Assert.GreaterOrEqual(pick, 0, F + " no dream can be chosen at the MyDream step.");
+            if (pick < 0)
+            {
+                var why = new System.Text.StringBuilder();
+                foreach (var interest in interests.Interests)
+                    if (interest != null)
+                        why.Append(interest.Id).Append(": ").Append(interest.Evaluate(interests.EnsureProgress(), candidates, student, student.CurrentDay).Reason)
+                            .Append(" score=").Append(interest.Candidate != null && candidates != null ? candidates.GetUnderstandingScore(interest.Candidate) : -1).Append(" | ");
+                Assert.Fail(F + " no dream can be chosen at the MyDream step. E-target=" + LastTarget + " logs=" + string.Join(",", student.GetTodayResultLogIds())
+                    + " studentCandidatesSame=" + ReferenceEquals(candidates, student.CareerCandidates) + " :: " + why);
+            }
             var dream = interests.Interests[pick];
 
             var open = GameObject.Find("CareerInterestOpenButton");
