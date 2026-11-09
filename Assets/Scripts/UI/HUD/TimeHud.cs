@@ -19,6 +19,7 @@ namespace Rootborn.UI.HUD
         private Rootborn.Game.Player.PlayerInventory _boundInventory;
         private ItemDefinition _shopCurrency;
         private enum DisplaySource { None, Loading, Network, Life, Clock }
+        private static readonly string[] EnglishWeekdays = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
         private DisplaySource _displaySource;
         private int _displayDay;
         private int _displayValue;
@@ -86,6 +87,17 @@ namespace Rootborn.UI.HUD
             Refresh();
         }
 
+        // Game data (and its text catalog) can arrive after the first draw, for example on a client that joined straight into
+        // Town. Until it does, check once a frame; when it appears, draw again so the label switches to the player's language.
+        private void Update()
+        {
+            if (_displayCatalog != null || _label == null) return;
+            GameDataRegistryProvider.TryGet(out var registry);
+            if (registry == null || registry.TextCatalog == null) return;
+            CheckLocalizationCatalog(); // remembers the catalog, so this stops after one redraw
+            Refresh();
+        }
+
         private void HandleClockChanged(float hour)
         {
             if (_worldTime != null || (_lifeOwner != null && _lifeOwner.isActiveAndEnabled && _lifeOwner.Progress != null)) return;
@@ -149,9 +161,9 @@ namespace Rootborn.UI.HUD
                 BindInventory();
                 int sharedAllowance = AllowanceCount(_boundInventory, _shopCurrency);
                 if (IsSameDisplay(DisplaySource.Network, _worldTime.CurrentDay, (int)_worldTime.TimeOfDay * 100000 + _worldTime.WeekdayIndex, sharedAllowance, GameText.Language)) return;
-                string weekday = GameText.Get("daily.weekday." + _worldTime.WeekdayIndex);
-                string partOfDay = GameText.Get("daily.time-of-day." + _worldTime.TimeOfDay.ToString().ToLowerInvariant());
-                SetLabelText(GameText.Format("daily.time.shared-hud", _worldTime.CurrentDay, weekday, partOfDay) + FormatAllowance(sharedAllowance));
+                string weekday = GameText.Localized("daily.weekday." + _worldTime.WeekdayIndex, EnglishWeekdays[_worldTime.WeekdayIndex]);
+                string partOfDay = GameText.Localized("daily.time-of-day." + _worldTime.TimeOfDay.ToString().ToLowerInvariant(), _worldTime.TimeOfDay.ToString());
+                SetLabelText(GameText.FormatLocalized("daily.time.shared-hud", "Day {0} {1} \u00b7 {2}", _worldTime.CurrentDay, weekday, partOfDay) + FormatAllowance(sharedAllowance));
                 return;
             }
             var progress = _lifeOwner != null && _lifeOwner.isActiveAndEnabled ? _lifeOwner.Progress : null;
