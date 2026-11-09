@@ -118,7 +118,7 @@ namespace Rootborn.Network.Steam
 
         public override NetworkEvent PollEvent(out ulong clientId, out ArraySegment<byte> payload, out float receiveTime)
         {
-            receiveTime = Time.realtimeSinceStartup;
+            receiveTime = UnityEngine.Time.realtimeSinceStartup;
             payload = default;
             if (_events.Count > 0)
             {
