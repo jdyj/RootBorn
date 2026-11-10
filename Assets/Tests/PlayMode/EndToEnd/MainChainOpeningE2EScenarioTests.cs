@@ -622,11 +622,11 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 paletteButton = FindPaletteButton(accepted);
                 if (paletteButton != null) break;
                 var next = PlayerFlowE2EDriver.FindButton(Object.FindFirstObjectByType<Rootborn.UI.Interiors.InteriorFurniturePlacementPanel>().transform, "FurniturePaletteNextPage");
-                Assert.IsTrue(next != null && next.interactable, F + " none of the accepted room furniture is in the House palette.");
+                Assert.IsTrue(next != null && next.interactable, F + " none of " + string.Join(",", accepted) + " is in the House palette (" + DescribePalette() + ").");
                 yield return ClickWithMouse(next.gameObject, F + " palette next page");
             }
 
-            Assert.IsNotNull(paletteButton, F + " none of the accepted room furniture is in the House palette.");
+            Assert.IsNotNull(paletteButton, F + " none of " + string.Join(",", accepted) + " is in the House palette (" + DescribePalette() + ").");
             yield return ClickWithMouse(paletteButton, F + " palette item " + paletteButton.name);
             var overlay = Object.FindFirstObjectByType<Rootborn.UI.Interiors.InteriorPlacementPreviewOverlay>();
             for (int i = 0; i < 60 && (overlay == null || overlay.ValidCellCount == 0); i++) { yield return null; overlay = Object.FindFirstObjectByType<Rootborn.UI.Interiors.InteriorPlacementPreviewOverlay>(); }
@@ -693,6 +693,21 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             }
 
             return null;
+        }
+
+        private static string DescribePalette()
+        {
+            var text = new System.Text.StringBuilder();
+            foreach (var panel in Object.FindObjectsByType<Rootborn.UI.Interiors.InteriorFurniturePlacementPanel>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                var page = PlayerFlowE2EDriver.FindChild(panel.transform, "FurniturePalettePageText");
+                text.Append("panel scene=").Append(panel.gameObject.scene.name).Append(" active=").Append(panel.gameObject.activeInHierarchy)
+                    .Append(" page='").Append(page != null ? page.GetComponent<Text>()?.text?.Replace('\n', ' ') : "?").Append("' ");
+            }
+            text.Append("buttons:");
+            foreach (var button in Object.FindObjectsByType<Button>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+                if (button.name.StartsWith("PaletteFurniture_", System.StringComparison.Ordinal)) text.Append(' ').Append(button.name.Substring("PaletteFurniture_".Length));
+            return text.ToString();
         }
 
         private static GameObject FindPaletteButton(System.Collections.Generic.List<string> accepted)
