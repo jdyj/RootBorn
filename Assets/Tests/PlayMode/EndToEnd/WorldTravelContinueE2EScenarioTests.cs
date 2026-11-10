@@ -70,6 +70,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 yield return SettleCamera();
                 AssertPlayerOnScreen(route[i]);
                 AssertStatusHudShown(route[i]);
+                AssertCameraInsideMap(route[i]);
                 yield return Capture((i + 1).ToString("00") + "-" + route[i] + ".png");
             }
             var facilityPlayer = GameObject.Find("Player");
@@ -106,6 +107,25 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             foreach (var renderer in player.GetComponentsInChildren<SpriteRenderer>())
                 if (renderer.enabled && renderer.sprite != null) { drawn = true; break; }
             Assert.IsTrue(drawn, F + " the player has no drawn sprite in " + place + ".");
+        }
+
+        // The camera stays inside the scene's CameraBounds box, so the screen never shows the void outside the map.
+        private static void AssertCameraInsideMap(string place)
+        {
+            var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+            BoxCollider2D bounds = null;
+            foreach (var root in scene.GetRootGameObjects())
+                foreach (var box in root.GetComponentsInChildren<BoxCollider2D>(true))
+                    if (box.name == "CameraBounds") bounds = box;
+            Assert.IsNotNull(bounds, F + " " + place + " has no CameraBounds, so the camera can show outside the map.");
+            var camera = Camera.main;
+            Vector3 c = camera.transform.position;
+            var b = bounds.bounds;
+            Assert.IsTrue(c.x >= b.min.x - 0.01f && c.x <= b.max.x + 0.01f && c.y >= b.min.y - 0.01f && c.y <= b.max.y + 0.01f,
+                F + " the camera in " + place + " is outside its map bounds (" + c + " vs " + b + ").");
+            float halfHeight = camera.orthographicSize, halfWidth = halfHeight * camera.aspect;
+            if (b.size.y >= 2f * halfHeight) Assert.IsTrue(c.y - halfHeight >= b.min.y - 0.05f && c.y + halfHeight <= b.max.y + 0.05f, F + " the camera in " + place + " shows past the top or bottom of the map.");
+            if (b.size.x >= 2f * halfWidth) Assert.IsTrue(c.x - halfWidth >= b.min.x - 0.05f && c.x + halfWidth <= b.max.x + 0.05f, F + " the camera in " + place + " shows past the side of the map.");
         }
 
         // The top status HUD (clock with energy/focus cards) must be on screen in every place the player can walk into.
