@@ -118,6 +118,15 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             var traitOutcome = work.Work.Outcomes.Count > 0 ? work.Work.Outcomes[0] as WorkTraitDeltaOutcome : null;
             Assert.IsNotNull(traitOutcome, "JOB-002 failed: " + workId + " has no trait outcome to observe.");
             int traitBefore = student.Progress.GetTraitValue(traitOutcome.Trait);
+            // A job tied to a career (its result log matches a hint) raises that career's candidate score once.
+            var hints = Rootborn.Game.Managers.Managers.Data.Registry.CareerHints;
+            CareerHintDefinition jobHint = null;
+            foreach (var hint in hints)
+                if (hint != null && hint.Matches(new CareerCandidateEvaluationContext(hint.Candidate, student.Progress.CareerCandidates, student.Progress, string.Empty, new[] { workId }))) { jobHint = hint; break; }
+            var candidates = Rootborn.Game.Managers.Managers.Data.Registry.CareerCandidates;
+            var understandingBefore = new Dictionary<string, int>();
+            foreach (var candidate in candidates)
+                if (candidate != null) understandingBefore[candidate.Id] = student.Progress.CareerCandidates.GetUnderstandingScore(candidate);
 
             yield return PlayerFlowE2EDriver.DismissDailyEvent();
             yield return PlayerFlowE2EDriver.WalkAndInteract(keyboard, work.transform.position, "JOB-002 failed: " + workId);
@@ -132,6 +141,13 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.IsTrue(panel.Session.Succeeded, "JOB-002 failed: " + workId + " played from the screen did not pass (score " + panel.Session.Score + ").");
             Assert.AreEqual(traitBefore + traitOutcome.Delta, student.Progress.GetTraitValue(traitOutcome.Trait), "JOB-002 failed: " + workId + " growth was not applied exactly once.");
             Assert.IsFalse(student.Progress.HasPendingMinigame, "JOB-002 failed: the finished minigame is still pending.");
+            foreach (var candidate in candidates)
+            {
+                if (candidate == null) continue;
+                int expected = understandingBefore[candidate.Id] + (jobHint != null && jobHint.Candidate == candidate ? jobHint.UnderstandingDelta : 0);
+                Assert.AreEqual(expected, student.Progress.CareerCandidates.GetUnderstandingScore(candidate),
+                    "JOB-002 failed: after " + workId + " the career score of " + candidate.Id + " is wrong (hint " + (jobHint != null ? jobHint.Id : "none") + ").");
+            }
             // Close the result as a player does, so its input lock does not outlive the test.
             if (panel.IsOpen) yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(panel.transform, "Close"));
         }
