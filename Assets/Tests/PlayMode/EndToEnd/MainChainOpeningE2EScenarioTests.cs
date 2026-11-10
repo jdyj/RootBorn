@@ -361,11 +361,12 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             StringAssert.Contains(Rootborn.Game.Localization.GameText.Format("dream.journal.current", name), journal.VisibleText, F + " the journal does not name the chosen dream.");
         }
 
-        // Changing the dream: hear two careers' introductions, choose the first dream with the mouse, then change to the second
-        // the same day. The journal names the new dream as current, and Continue keeps the change (and the earlier one as previous).
+        // The daily dream change limit: hear two careers' introductions, choose the first dream with the mouse, then try the
+        // second the same day. The choice stays, the second card says "changed today", the journal still names the first
+        // dream, and after Continue the same-day limit still holds.
         [UnityTest]
         [Timeout(600000)]
-        public IEnumerator MAIN_E2E_011_ChangingTheDreamMovesTheJournalAndSurvivesContinue()
+        public IEnumerator MAIN_E2E_011_ASecondDreamChangeTheSameDayIsRefusedAndStaysRefusedAfterContinue()
         {
             var keyboard = InputSystem.AddDevice<Keyboard>();
             yield return EnterNewGame();
@@ -382,6 +383,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.GreaterOrEqual(allowed.Count, 2, F + " after two introductions fewer than two dreams can be chosen. E-target=" + LastTarget);
             var first = interests.Interests[allowed[0]];
             var second = interests.Interests[allowed[1]];
+            string changedToday = Rootborn.Game.Localization.GameText.Get("ui.interest-state.changed");
 
             yield return PlayerFlowE2EDriver.ClickButton(GameObject.Find("CareerInterestOpenButton").GetComponent<Button>());
             var panel = Object.FindFirstObjectByType<CareerInterestPanel>(FindObjectsInactive.Include);
@@ -389,26 +391,31 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return PlayerFlowE2EDriver.ClickButton(panel.GetInterestButtonForTests(allowed[0]));
             Assert.AreEqual(first.Id, interests.EnsureProgress().CurrentInterestId, F + " clicking " + first.Id + " did not choose it.");
             yield return PlayerFlowE2EDriver.ClickButton(panel.GetInterestButtonForTests(allowed[1]));
-            Assert.AreEqual(second.Id, interests.EnsureProgress().CurrentInterestId, F + " clicking " + second.Id + " the same day did not change the dream.");
-            Assert.AreEqual(first.Id, interests.EnsureProgress().PreviousInterestId, F + " the change did not remember " + first.Id + " as the previous dream.");
-            yield return Capture("11-dream-changed.png");
+            Assert.AreEqual(first.Id, interests.EnsureProgress().CurrentInterestId, F + " a second change the same day was not refused.");
+            string secondLabel = panel.GetInterestButtonForTests(allowed[1]).GetComponentInChildren<Text>(true).text;
+            StringAssert.Contains(changedToday, secondLabel, F + " the refused dream card does not say it was changed today.");
+            yield return Capture("11-dream-change-refused.png");
             yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(panel.transform, "CloseButton"));
 
             yield return PlayerFlowE2EDriver.PressTab(keyboard);
             var journal = Object.FindFirstObjectByType<Rootborn.UI.Objectives.ObjectiveJournalPanel>(FindObjectsInactive.Include);
             Assert.IsTrue(journal != null && journal.IsVisible, F + " Tab did not open the journal.");
-            string secondName = Rootborn.Game.Localization.GameText.Get(second.DisplayNameKey);
+            string firstName = Rootborn.Game.Localization.GameText.Get(first.DisplayNameKey);
             yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(journal.transform, "ObjectiveCategory_Hints"));
-            yield return PlayerFlowE2EDriver.ClickButton(ObjectiveJournalE2EDriver.FindRowButtonContaining(journal, secondName, F + " journal row for " + second.Id));
-            StringAssert.Contains(Rootborn.Game.Localization.GameText.Format("dream.journal.current", secondName), journal.VisibleText, F + " the journal does not name the new dream.");
+            yield return PlayerFlowE2EDriver.ClickButton(ObjectiveJournalE2EDriver.FindRowButtonContaining(journal, firstName, F + " journal row for " + first.Id));
+            StringAssert.Contains(Rootborn.Game.Localization.GameText.Format("dream.journal.current", firstName), journal.VisibleText, F + " the journal does not keep the chosen dream.");
             yield return PlayerFlowE2EDriver.PressTab(keyboard);
 
             ActiveSaveContext.Clear();
             PlayerGlobalState.ClearForTests();
             yield return PlayerFlowE2EDriver.EnterWorldFromSaveSlot("slot-0", "LoadButton", "Town", F + " Continue did not return to Town.");
-            var reloaded = GameObject.Find("Player").GetComponent<CareerInterestProgressComponent>().EnsureProgress();
-            Assert.AreEqual(second.Id, reloaded.CurrentInterestId, F + " Continue lost the changed dream.");
-            Assert.AreEqual(first.Id, reloaded.PreviousInterestId, F + " Continue lost the previous dream.");
+            var reloaded = GameObject.Find("Player").GetComponent<CareerInterestProgressComponent>();
+            Assert.AreEqual(first.Id, reloaded.EnsureProgress().CurrentInterestId, F + " Continue lost the chosen dream.");
+            yield return PlayerFlowE2EDriver.ClickButton(GameObject.Find("CareerInterestOpenButton").GetComponent<Button>());
+            panel = Object.FindFirstObjectByType<CareerInterestPanel>(FindObjectsInactive.Include);
+            Assert.IsTrue(panel != null && panel.IsOpen, F + " the dream button did not open the dream panel after Continue.");
+            yield return PlayerFlowE2EDriver.ClickButton(panel.GetInterestButtonForTests(allowed[1]));
+            Assert.AreEqual(first.Id, reloaded.EnsureProgress().CurrentInterestId, F + " Continue reset the daily change limit.");
         }
 
         private static IEnumerator EnterNewGame()

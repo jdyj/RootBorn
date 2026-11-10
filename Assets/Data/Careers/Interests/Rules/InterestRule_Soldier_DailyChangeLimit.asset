@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aa0d7c59000a9084fbe2df8f07f87b3e, type: 3}
   m_Name: InterestRule_Soldier_DailyChangeLimit
   m_EditorClassIdentifier: Rootborn.Game::Rootborn.Game.StudentLife.CareerInterestDailyChangeLimitRule
-  _maxChangesPerDay: 99
+  _maxChangesPerDay: 1
   _allowSameInterestNoOp: 1
