@@ -36,7 +36,8 @@ namespace Rootborn.Tests.EditMode.World
             Assert.That(All<AuthoredWorldScene>().Length,Is.EqualTo(1));
             var policy=All<ScenePlayerRenderPolicy>().SingleOrDefault(); Assert.That(policy,Is.Not.Null);
             Assert.That(policy.CameraBounds,Is.Not.Null); Assert.That(policy.CameraBounds.name,Is.EqualTo("HouseCameraBounds"));
-            Assert.That(policy.CameraBounds.size,Is.EqualTo(new Vector2(32,20)));
+            // The house walls span 28x18 (-14..14, -9..9); bounds larger than that showed the void past the walls.
+            Assert.That(policy.CameraBounds.size,Is.EqualTo(new Vector2(28,18)));
             Assert.That(All<Canvas>(),Is.Not.Empty);
         }
         [Test] public void TOWN_House_AuthoredSetupPreservesExistingFurnitureAndTileFootprint()
