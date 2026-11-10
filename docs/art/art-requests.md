@@ -28,6 +28,7 @@
 | 목표 저널 "보상 받기" 버튼 | 290x60 버튼, 일반·호버·눌림 3상태(9-slice 가능). 쓰는 곳: `Assets/Scripts/UI/Objectives/ObjectiveJournalPanel.cs`의 `ObjectiveDetailActionButton`(완료·미수령 퀘스트 상세) | 2026-11-07: '목표 추적' 버튼과 같은 공용 Style2/도시형 몰딩 버튼(`ModernUiRecipes.CommonPanel`) + 글자 '보상 받기'를 임시 사용. 화면: `output/quest-fixes-20261107/quest-wood-e2e-001-journal-claim-button.png` | 요청 |
 | 캐릭터 생성 화면 | 칸별 선택 화살표, 미리보기 배경 | 단색 사각형과 텍스트 화살표 | 요청 |
 | 옷장 패널 | 칸별 탭 아이콘(얼굴·머리·상의·모자·액세서리) | 착용 칸 구현 때 필요 | 요청 |
+| 장래희망 카드 아이콘 | 144x144 아이콘 8종(요리사·응급 의료·인테리어 디자이너·군인·수사·학습·서비스·기술), 투명 배경. 쓰는 곳: `Assets/Scripts/UI/StudentLife/CareerInterestPanel.cs`의 `InterestIcon`(`UrbanUiIcon.ConfigureFor(interest,"journal")`), 데이터 `Assets/Data/Careers/Interests/` | 2026-11-10: 8장 모두 같은 파란 책 그림이 나와 카드끼리 구분이 안 된다. 화면: `output/main-chain-e2e/11-dream-changed.png` | 요청 |
 
 ## 3. 월드 (Town·건물)
 | 대상 | 필요한 것 | 지금 상태 | 상태 |
