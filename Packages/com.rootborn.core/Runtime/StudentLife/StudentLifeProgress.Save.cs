@@ -5,7 +5,6 @@ namespace Rootborn.Core.StudentLife
 {
     /// <summary>
     /// 세이브 파일에 쓰는 모양. 필드 이름은 기존 세이브 파일과 같아야 한다(바꾸면 옛 세이브를 못 읽는다).
-    /// 일과·미니게임·진로 후보 필드는 그 부분을 옮길 때 더한다.
     /// </summary>
     [Serializable]
     public sealed class StudentLifeProgressSaveData
@@ -26,6 +25,9 @@ namespace Rootborn.Core.StudentLife
         public string TutorialStageId;
         public string NextObjectiveId;
         public string NextGuideText;
+        public DailyPlanProgressSaveData DailyPlan;
+        public PendingStudentMinigameSaveData PendingMinigame;
+        public CareerCandidateProgressSaveData CareerCandidates;
         public StatEntry[] Traits = Array.Empty<StatEntry>();
         public StatEntry[] Skills = Array.Empty<StatEntry>();
         public StatEntry[] Relationships = Array.Empty<StatEntry>();
@@ -68,6 +70,9 @@ namespace Rootborn.Core.StudentLife
                 TutorialStageId = TutorialStageId,
                 NextObjectiveId = NextObjectiveId,
                 NextGuideText = NextGuideText,
+                DailyPlan = DailyPlan.ToSaveData(),
+                PendingMinigame = PendingStudentMinigameSaveData.Copy(_pendingMinigame),
+                CareerCandidates = CareerCandidates.ToSaveData(),
                 Traits = ToEntries(_traitValues),
                 Skills = ToEntries(_skillValues),
                 Relationships = ToEntries(_relationshipValues),
@@ -108,6 +113,8 @@ namespace Rootborn.Core.StudentLife
             RestoreList(progress._todayResultLogIds, saveData.TodayResultLogIds);
             RestoreList(progress._previousDayActivityIds, saveData.PreviousDayActivityIds);
             RestoreList(progress._previousDayResultLogIds, saveData.PreviousDayResultLogIds);
+            progress.RestoreDailyPlan(saveData.DailyPlan);
+            progress.RestoreMinigameDomains(saveData);
             return progress;
         }
 
