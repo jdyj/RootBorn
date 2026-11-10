@@ -245,7 +245,18 @@ namespace Rootborn.UI.Interiors
             if (!EnabledPanels.Contains(this)) EnabledPanels.Add(this);
             transform.SetAsLastSibling();
             _isClosing = false;
+            RefreshFurnitureCatalog();
             if(_overlay!=null){_overlay.gameObject.SetActive(true);UpdateAvailabilityPreview();}
+        }
+
+        // The panel is built when House loads, before the player's live unlocks may be bound; furniture bought later must
+        // also appear. Reload the unlocked catalog each time the panel opens (once per open, not per frame).
+        private void RefreshFurnitureCatalog()
+        {
+            if (_paletteSearchInput == null) return;
+            _furniture.Clear();
+            _furniture.AddRange(InteriorFurnitureCatalog.LoadFurniture());
+            FilterPalette(_paletteSearchInput.text);
         }
 
         private void OnDisable()
