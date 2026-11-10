@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Rootborn.Game.StudentLife
 {
     [DisallowMultipleComponent]
-    public sealed class OutsideSchoolActivityInteractor : MonoBehaviour, IPlayerInteractable
+    public sealed class OutsideSchoolActivityInteractor : MonoBehaviour, IPlayerInteractable, IPlayerInteractionFailureExplainer
     {
         [SerializeField] private OutsideSchoolActivityDefinition _activity;
 
@@ -21,6 +21,13 @@ namespace Rootborn.Game.StudentLife
         public void Bind(OutsideSchoolActivityDefinition activity)
         {
             _activity = activity;
+        }
+
+        public string ExplainFailure(GameObject player)
+        {
+            var student = player != null ? player.GetComponent<StudentLifeProgressComponent>() : null;
+            if (student == null || _activity == null) return string.Empty;
+            return StudentActivityRefusalText.Explain(student.EnsureProgress(), _activity.TimePolicy, _activity.EnergyCost, _activity.FocusCost);
         }
 
         public bool CanInteract(GameObject player)

@@ -97,6 +97,46 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.AreEqual(focusAfterClass, reloaded.Progress.GetTraitValueById(FocusTraitId), "FREE-PATH-003 failed: focus from both routes did not survive reload exactly once.");
         }
 
+        // FREE-PATH-004: once the day's time or energy is spent, E at the library tells the player why nothing happened, and
+        // nothing changes. Every press is a keyboard E in front of the library.
+        [UnityTest]
+        [Timeout(600000)]
+        public IEnumerator FREE_PATH_004_LibraryRefusedWhenSpentTellsThePlayerWhyAndChangesNothing()
+        {
+            const string FocusTraitId = "trait.focus";
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+            yield return PlayerFlowE2EDriver.EnterWorldFromSaveSlot(TestSlotId, "NewGameButton", "Town", "FREE-PATH-004 failed: New Game did not enter Town.");
+            yield return PlayerFlowE2EDriver.DismissDailyEvent();
+            var player = GameObject.Find("Player");
+            var student = player.GetComponent<StudentLifeProgressComponent>();
+            var router = player.GetComponent<PlayerInteractionRouter>();
+            var library = FindSelfStudyInteractor();
+            Assert.IsNotNull(library, "FREE-PATH-004 failed: authored Town has no library self-study point.");
+
+            int applied = 0;
+            for (int press = 0; press < 8; press++)
+            {
+                yield return WalkAndInteract(keyboard, library.transform.position, "FREE-PATH-004 failed: library press " + press);
+                if (library.LastResult.Kind != LifeActivityResultKind.Applied) break;
+                applied++;
+            }
+            Assert.Greater(applied, 0, "FREE-PATH-004 failed: the first library study did not apply.");
+            Assert.AreEqual(LifeActivityResultKind.InsufficientResources, library.LastResult.Kind, "FREE-PATH-004 failed: the library was never refused after " + applied + " studies.");
+
+            int focus = student.Progress.GetTraitValueById(FocusTraitId);
+            int remaining = student.Progress.TimePointsRemaining;
+            int energy = student.Progress.Energy;
+            yield return PlayerFlowE2EDriver.PressInteractKey(keyboard);
+            yield return null;
+            Assert.AreEqual(LifeActivityResultKind.InsufficientResources, library.LastResult.Kind, "FREE-PATH-004 failed: the refused study applied on a second press.");
+            Assert.AreEqual(focus, student.Progress.GetTraitValueById(FocusTraitId), "FREE-PATH-004 failed: a refused study changed focus.");
+            Assert.AreEqual(remaining, student.Progress.TimePointsRemaining, "FREE-PATH-004 failed: a refused study spent time.");
+            Assert.AreEqual(energy, student.Progress.Energy, "FREE-PATH-004 failed: a refused study spent energy.");
+            Assert.IsTrue(router.PromptVisible, "FREE-PATH-004 failed: no prompt is shown after the refused press.");
+            Assert.AreNotEqual(library.InteractionPrompt, router.PromptText, "FREE-PATH-004 failed: the player is not told why the study was refused.");
+            StringAssert.DoesNotContain("[E]", router.PromptText, "FREE-PATH-004 failed: the refusal reads like the normal prompt.");
+        }
+
         private static IEnumerator WalkAndInteract(Keyboard keyboard, Vector3 target, string failure)
         {
             var player = GameObject.Find("Player");

@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Rootborn.Game.StudentLife
 {
     [DisallowMultipleComponent]
-    public sealed class TownHelpActionInteractor : MonoBehaviour, IPlayerInteractable, IPrioritizedPlayerInteractable
+    public sealed class TownHelpActionInteractor : MonoBehaviour, IPlayerInteractable, IPrioritizedPlayerInteractable, IPlayerInteractionFailureExplainer
     {
         private const int TownHelpInteractionPriority = 85;
 
@@ -25,6 +25,13 @@ namespace Rootborn.Game.StudentLife
         public void Bind(TownHelpActionDefinition action)
         {
             _action = action;
+        }
+
+        public string ExplainFailure(GameObject player)
+        {
+            var student = player != null ? player.GetComponent<StudentLifeProgressComponent>() : null;
+            if (student == null || _action == null) return string.Empty;
+            return StudentActivityRefusalText.Explain(student.EnsureProgress(), _action.TimePolicy, _action.EnergyCost, _action.FocusCost);
         }
 
         public bool CanInteract(GameObject player)
