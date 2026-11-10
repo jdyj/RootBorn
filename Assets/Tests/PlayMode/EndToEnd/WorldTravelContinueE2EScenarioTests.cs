@@ -69,6 +69,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 yield return PlayerFlowE2EDriver.WalkThroughDoor(keyboard, route[i], F + " step " + i + " (" + route[i] + ").");
                 yield return SettleCamera();
                 AssertPlayerOnScreen(route[i]);
+                AssertStatusHudShown(route[i]);
                 yield return Capture((i + 1).ToString("00") + "-" + route[i] + ".png");
             }
             var facilityPlayer = GameObject.Find("Player");
@@ -80,6 +81,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return PlayerFlowE2EDriver.EnterWorldFromSaveSlot(TestSlotId, "LoadButton", Facility, F + " Continue did not return to " + Facility + ".");
             yield return SettleCamera();
             AssertPlayerOnScreen(Facility + " after Continue");
+            AssertStatusHudShown(Facility + " after Continue");
             var continued = GameObject.Find("Player");
             Assert.LessOrEqual(Vector3.Distance(arrivedAt, continued.transform.position), 3f,
                 F + " Continue put the player far from the facility entrance (" + arrivedAt + " vs " + continued.transform.position + ").");
@@ -104,6 +106,22 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             foreach (var renderer in player.GetComponentsInChildren<SpriteRenderer>())
                 if (renderer.enabled && renderer.sprite != null) { drawn = true; break; }
             Assert.IsTrue(drawn, F + " the player has no drawn sprite in " + place + ".");
+        }
+
+        // The top status HUD (clock with energy/focus cards) must be on screen in every place the player can walk into.
+        private static void AssertStatusHudShown(string place)
+        {
+            var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+            GameObject hud = null;
+            foreach (var root in scene.GetRootGameObjects())
+            {
+                var found = root.transform.Find("TownWorldTimeHud");
+                if (found != null) { hud = found.gameObject; break; }
+            }
+            Assert.IsTrue(hud != null && hud.activeInHierarchy, F + " no top status HUD in " + place + ".");
+            var label = hud.transform.Find("WorldTimeLabel");
+            var text = label != null ? label.GetComponent<UnityEngine.UI.Text>() : null;
+            Assert.IsTrue(text != null && text.text.Contains(":"), F + " the status HUD in " + place + " shows no clock ('" + (text != null ? text.text : "<none>") + "').");
         }
 
         private static IEnumerator Capture(string fileName)
