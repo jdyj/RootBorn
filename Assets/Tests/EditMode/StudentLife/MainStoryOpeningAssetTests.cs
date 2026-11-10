@@ -292,7 +292,7 @@ namespace Rootborn.Tests.EditMode.StudentLife
         }
 
         [Test]
-        public void Dream_CanChangeAgainOnTheSameDay_AndRepickingIsANoOp()
+        public void Dream_ChangesOncePerDay_AndRepickingIsANoOp()
         {
             var chef = Load<CareerInterestDefinition>("Assets/Data/Careers/Interests/Interest_Chef.asset");
             var soldier = Load<CareerInterestDefinition>("Assets/Data/Careers/Interests/Interest_Soldier.asset");
@@ -306,10 +306,13 @@ namespace Rootborn.Tests.EditMode.StudentLife
             }
             var interests = new CareerInterestProgress("slot", "player");
             Assert.That(interests.TrySelect(chef, candidates, student, 2, "a").Applied, Is.True);
-            Assert.That(interests.TrySelect(soldier, candidates, student, 2, "b").Applied, Is.True);
-            Assert.That(interests.TrySelect(chef, candidates, student, 2, "c").Applied, Is.True);
-            Assert.That(interests.TrySelect(chef, candidates, student, 2, "d").Applied, Is.False);
-            Assert.That(interests.CurrentInterestId, Is.EqualTo(chef.Id));
+            var refused = interests.TrySelect(soldier, candidates, student, 2, "b");
+            Assert.That(refused.Applied, Is.False, "A second dream change the same day is refused.");
+            Assert.That(refused.State, Is.EqualTo(CareerInterestSelectionState.ChangedToday));
+            Assert.That(interests.TrySelect(chef, candidates, student, 2, "c").Applied, Is.False, "Picking the current dream again is a no-op.");
+            Assert.That(interests.TrySelect(soldier, candidates, student, 3, "d").Applied, Is.True, "The next day the dream can change again.");
+            Assert.That(interests.TrySelect(chef, candidates, student, 3, "e").Applied, Is.False);
+            Assert.That(interests.CurrentInterestId, Is.EqualTo(soldier.Id));
         }
 
         [Test]
@@ -600,8 +603,8 @@ namespace Rootborn.Tests.EditMode.StudentLife
             }
             progress.TrySelect(chef, candidates, student, 2, "a");
             Assert.That(progress.TryBeginFollowUp(), Is.True);
-            progress.TrySelect(soldier, candidates, student, 2, "b");
-            progress.TrySelect(chef, candidates, student, 2, "c");
+            Assert.That(progress.TrySelect(soldier, candidates, student, 3, "b").Applied, Is.True);
+            Assert.That(progress.TrySelect(chef, candidates, student, 4, "c").Applied, Is.True);
             Assert.That(progress.TryBeginFollowUp(), Is.True, "Coming back is still a new choice.");
         }
 
@@ -623,7 +626,7 @@ namespace Rootborn.Tests.EditMode.StudentLife
             Assert.That(progress.TryBeginFollowUp(), Is.False);
             var restored = CareerInterestProgress.FromSaveData(progress.ToSaveData());
             Assert.That(restored.TryBeginFollowUp(), Is.False, "Reloading must not repeat the reaction.");
-            restored.TrySelect(Load<CareerInterestDefinition>("Assets/Data/Careers/Interests/Interest_Soldier.asset"), candidates, student, 2, "b");
+            Assert.That(restored.TrySelect(Load<CareerInterestDefinition>("Assets/Data/Careers/Interests/Interest_Soldier.asset"), candidates, student, 3, "b").Applied, Is.True, "The next day the dream can change.");
             Assert.That(restored.TryBeginFollowUp(), Is.True);
             Assert.That(restored.PreviousInterestId, Is.EqualTo("interest.chef"));
         }
