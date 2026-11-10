@@ -55,7 +55,7 @@
 | KNOW-002 | KnowledgeProgress가 임계 도달 시 OnUnlocked 1회 발화, 이후 누적해도 이중 발화 X | KnowledgeProgressTests |
 | TOOL-001 | ToolDefinition.ApplyEffects가 SO 전략 배열을 순서대로 호출 | ToolEffectTests |
 | STATUS-001 | StatusValue.Tick 누적, max 클램프, Restore 0 floor, Penalty 곡선 | StatusValueTests |
-| STATUS-002 | 게임 시계의 Day/DayProgress 결정론 | DayClockTests (dotnet), GameClockTests |
+| STATUS-002 | 게임 시계의 Day/DayProgress 결정론 | DayClockTests (dotnet) |
 | NET-001 | ArgsParser가 -mode/-port/-maxPlayers/-saveSlot/-joinIp 파싱, Unity 예약 인자 무시 | ArgsParserTests |
 | NET-002 | dedicated server 빌드 → 클라 loopback 접속 → 플레이어 spawn 및 생활 활동 결과 동기화 (PlayMode) | StudentLifeNetworkTests |
 

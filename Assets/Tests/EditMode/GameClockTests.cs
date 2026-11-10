@@ -5,11 +5,34 @@ using UnityEngine;
 
 namespace Rootborn.Tests.EditMode
 {
-    // STATUS-002/TIME-002~003: 씬의 GameClock이 설정 SO와 직렬화 값을 Core 시계에 넘기고 날짜 이벤트를 알리는지 확인한다.
-    // 일자·진행률 계산 자체(TIME-001 포함)는 Tools/Rootborn.Core.Tests/DayClockTests.cs가 검증한다.
+    // STATUS-002/TIME-001~003: GameClock의 Tick은 일자/일자 진행률을 결정론적으로 계산한다.
     public sealed class GameClockTests
     {
         private const System.Reflection.BindingFlags Bind = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+
+        [Test]
+        public void TIME_001_DefaultDayLengthIs600SecondsAndRollsToDay2()
+        {
+            var go = new GameObject("clock");
+            try
+            {
+                var clock = go.AddComponent<GameClock>();
+
+                Assert.AreEqual(600f, clock.RealSecondsPerGameDay, 0.001f);
+
+                clock.Tick(599f);
+                Assert.AreEqual(1, clock.Day);
+                Assert.AreEqual(599f / 600f, clock.DayProgress01, 0.001f);
+
+                clock.Tick(1f);
+                Assert.AreEqual(2, clock.Day);
+                Assert.AreEqual(0f, clock.DayProgress01, 0.001f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+            }
+        }
 
         [Test]
         public void TIME_002_TimeDefinitionControlsDayProgressDeterministically()
