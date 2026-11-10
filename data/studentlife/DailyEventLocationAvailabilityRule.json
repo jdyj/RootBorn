@@ -1,0 +1,20 @@
+[
+  {
+    "type": "DailyEventLocationAvailabilityRule",
+    "id": "DailyEventRule_Library",
+    "asset": "Assets/Data/StudentLife/DailyEvents/Rules/DailyEventRule_Library.asset",
+    "location": {
+      "ref": "location.library",
+      "type": "LocationDefinition"
+    }
+  },
+  {
+    "type": "DailyEventLocationAvailabilityRule",
+    "id": "DailyEventRule_TownSquare",
+    "asset": "Assets/Data/StudentLife/DailyEvents/Rules/DailyEventRule_TownSquare.asset",
+    "location": {
+      "ref": "location.town-square",
+      "type": "LocationDefinition"
+    }
+  }
+]

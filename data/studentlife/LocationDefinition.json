@@ -1,0 +1,282 @@
+[
+  {
+    "type": "LocationDefinition",
+    "id": "location.corner-store",
+    "asset": "Assets/Data/StudentLife/Locations/Location_CornerStore.asset",
+    "displayNameKey": "location.corner-store.name",
+    "descriptionKey": "location.corner-store.desc",
+    "category": {
+      "ref": "location.category.shop",
+      "type": "LocationCategoryDefinition"
+    },
+    "worldAnchorId": "anchor.corner-store",
+    "worldPosition": {
+      "x": 54,
+      "y": 7
+    },
+    "relatedRoles": [
+      {
+        "ref": "npc.role.shopkeeper",
+        "type": "NpcRoleDefinition"
+      }
+    ],
+    "relatedNpcs": [
+      {
+        "ref": "npc.shopkeeper",
+        "type": "NpcDefinition"
+      }
+    ],
+    "discoveries": [],
+    "visitRules": []
+  },
+  {
+    "type": "LocationDefinition",
+    "id": "location.design-studio",
+    "asset": "Assets/Data/StudentLife/Locations/Location_DesignStudio.asset",
+    "displayNameKey": "opening.facility.design-studio.name",
+    "descriptionKey": "opening.facility.design-studio.description",
+    "category": {
+      "ref": "location.category.work",
+      "type": "LocationCategoryDefinition"
+    },
+    "worldAnchorId": "anchor.design-studio",
+    "worldPosition": {
+      "x": 50.5,
+      "y": 17.5
+    },
+    "relatedRoles": [
+      {
+        "ref": "npc.role.work-manager",
+        "type": "NpcRoleDefinition"
+      }
+    ],
+    "relatedNpcs": [],
+    "discoveries": [],
+    "visitRules": []
+  },
+  {
+    "type": "LocationDefinition",
+    "id": "location.home",
+    "asset": "Assets/Data/StudentLife/Locations/Location_Home.asset",
+    "displayNameKey": "location.home",
+    "descriptionKey": "location.home.desc",
+    "category": {
+      "ref": "location.category.public",
+      "type": "LocationCategoryDefinition"
+    },
+    "worldAnchorId": "anchor.home",
+    "worldPosition": {
+      "x": 0,
+      "y": 0
+    },
+    "relatedRoles": [
+      {
+        "ref": "npc.role.guide",
+        "type": "NpcRoleDefinition"
+      }
+    ],
+    "relatedNpcs": [
+      {
+        "ref": "npc.first-guide",
+        "type": "NpcDefinition"
+      }
+    ],
+    "discoveries": [],
+    "visitRules": []
+  },
+  {
+    "type": "LocationDefinition",
+    "id": "location.library",
+    "asset": "Assets/Data/StudentLife/Locations/Location_Library.asset",
+    "displayNameKey": "location.library.name",
+    "descriptionKey": "location.library.desc",
+    "category": {
+      "ref": "location.category.study",
+      "type": "LocationCategoryDefinition"
+    },
+    "worldAnchorId": "anchor.library",
+    "worldPosition": {
+      "x": 16,
+      "y": 7
+    },
+    "relatedRoles": [
+      {
+        "ref": "npc.role.librarian",
+        "type": "NpcRoleDefinition"
+      }
+    ],
+    "relatedNpcs": [
+      {
+        "ref": "npc.librarian",
+        "type": "NpcDefinition"
+      }
+    ],
+    "discoveries": [],
+    "visitRules": []
+  },
+  {
+    "type": "LocationDefinition",
+    "id": "location.medical-clinic",
+    "asset": "Assets/Data/StudentLife/Locations/Location_MedicalClinic.asset",
+    "displayNameKey": "opening.facility.medical-clinic.name",
+    "descriptionKey": "opening.facility.medical-clinic.description",
+    "category": {
+      "ref": "location.category.work",
+      "type": "LocationCategoryDefinition"
+    },
+    "worldAnchorId": "anchor.medical-clinic",
+    "worldPosition": {
+      "x": 31.5,
+      "y": 25.5
+    },
+    "relatedRoles": [
+      {
+        "ref": "npc.role.work-manager",
+        "type": "NpcRoleDefinition"
+      }
+    ],
+    "relatedNpcs": [],
+    "discoveries": [],
+    "visitRules": []
+  },
+  {
+    "type": "LocationDefinition",
+    "id": "location.restaurant",
+    "asset": "Assets/Data/StudentLife/Locations/Location_Restaurant.asset",
+    "displayNameKey": "opening.facility.restaurant.name",
+    "descriptionKey": "opening.facility.restaurant.description",
+    "category": {
+      "ref": "location.category.work",
+      "type": "LocationCategoryDefinition"
+    },
+    "worldAnchorId": "anchor.restaurant",
+    "worldPosition": {
+      "x": 18.5,
+      "y": 17.5
+    },
+    "relatedRoles": [
+      {
+        "ref": "npc.role.work-manager",
+        "type": "NpcRoleDefinition"
+      }
+    ],
+    "relatedNpcs": [],
+    "discoveries": [],
+    "visitRules": []
+  },
+  {
+    "type": "LocationDefinition",
+    "id": "location.school",
+    "asset": "Assets/Data/StudentLife/Locations/Location_School.asset",
+    "displayNameKey": "location.school.name",
+    "descriptionKey": "location.school.desc",
+    "category": {
+      "ref": "location.category.school",
+      "type": "LocationCategoryDefinition"
+    },
+    "worldAnchorId": "anchor.school",
+    "worldPosition": {
+      "x": 43,
+      "y": 30
+    },
+    "relatedRoles": [
+      {
+        "ref": "npc.role.teacher",
+        "type": "NpcRoleDefinition"
+      }
+    ],
+    "relatedNpcs": [
+      {
+        "ref": "npc.teacher",
+        "type": "NpcDefinition"
+      }
+    ],
+    "discoveries": [],
+    "visitRules": []
+  },
+  {
+    "type": "LocationDefinition",
+    "id": "location.town-square",
+    "asset": "Assets/Data/StudentLife/Locations/Location_TownSquare.asset",
+    "displayNameKey": "location.town-square",
+    "descriptionKey": "location.town-square.desc",
+    "category": {
+      "ref": "location.category.public",
+      "type": "LocationCategoryDefinition"
+    },
+    "worldAnchorId": "anchor.town-square",
+    "worldPosition": {
+      "x": 30,
+      "y": 7
+    },
+    "relatedRoles": [
+      {
+        "ref": "npc.role.guide",
+        "type": "NpcRoleDefinition"
+      }
+    ],
+    "relatedNpcs": [
+      {
+        "ref": "npc.first-guide",
+        "type": "NpcDefinition"
+      }
+    ],
+    "discoveries": [],
+    "visitRules": []
+  },
+  {
+    "type": "LocationDefinition",
+    "id": "location.training-ground",
+    "asset": "Assets/Data/StudentLife/Locations/Location_TrainingGround.asset",
+    "displayNameKey": "opening.facility.training-ground.name",
+    "descriptionKey": "opening.facility.training-ground.description",
+    "category": {
+      "ref": "location.category.work",
+      "type": "LocationCategoryDefinition"
+    },
+    "worldAnchorId": "anchor.training-ground",
+    "worldPosition": {
+      "x": 66.5,
+      "y": 25.5
+    },
+    "relatedRoles": [
+      {
+        "ref": "npc.role.work-manager",
+        "type": "NpcRoleDefinition"
+      }
+    ],
+    "relatedNpcs": [],
+    "discoveries": [],
+    "visitRules": []
+  },
+  {
+    "type": "LocationDefinition",
+    "id": "location.workshop",
+    "asset": "Assets/Data/StudentLife/Locations/Location_Workshop.asset",
+    "displayNameKey": "location.workshop.name",
+    "descriptionKey": "location.workshop.desc",
+    "category": {
+      "ref": "location.category.work",
+      "type": "LocationCategoryDefinition"
+    },
+    "worldAnchorId": "anchor.workshop",
+    "worldPosition": {
+      "x": 74,
+      "y": 7
+    },
+    "relatedRoles": [
+      {
+        "ref": "npc.role.work-manager",
+        "type": "NpcRoleDefinition"
+      }
+    ],
+    "relatedNpcs": [
+      {
+        "ref": "npc.work-manager",
+        "type": "NpcDefinition"
+      }
+    ],
+    "discoveries": [],
+    "visitRules": []
+  }
+]

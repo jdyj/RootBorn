@@ -1,0 +1,16 @@
+[
+  {
+    "type": "DayAtLeastCondition",
+    "id": "Condition_DayAtLeast_2",
+    "asset": "Assets/Data/StudentLife/MainStory/Conditions/Condition_DayAtLeast_2.asset",
+    "minimumDay": 2,
+    "blockedSummaryKey": "dream.wait.next-day"
+  },
+  {
+    "type": "DayAtLeastCondition",
+    "id": "Condition_DayAtLeast_3",
+    "asset": "Assets/Data/StudentLife/MainStory/Conditions/Condition_DayAtLeast_3.asset",
+    "minimumDay": 3,
+    "blockedSummaryKey": "dream.wait.next-day"
+  }
+]

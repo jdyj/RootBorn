@@ -1,0 +1,8 @@
+[
+  {
+    "type": "FocusRestoreDayEndRule",
+    "id": "DayEndRule_FocusRestore_Default",
+    "asset": "Assets/Data/StudentLife/DayEndRules/DayEndRule_FocusRestore_Default.asset",
+    "restoredFocus": 10
+  }
+]

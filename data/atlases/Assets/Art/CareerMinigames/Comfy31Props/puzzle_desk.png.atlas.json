@@ -1,0 +1,19 @@
+{
+  "image": "Assets/Art/CareerMinigames/Comfy31Props/puzzle_desk.png",
+  "width": 96,
+  "height": 64,
+  "pixelsPerUnit": 48,
+  "origin": "top-left",
+  "sprites": {
+    "puzzle_desk": {
+      "x": 0,
+      "y": 0,
+      "w": 96,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  }
+}

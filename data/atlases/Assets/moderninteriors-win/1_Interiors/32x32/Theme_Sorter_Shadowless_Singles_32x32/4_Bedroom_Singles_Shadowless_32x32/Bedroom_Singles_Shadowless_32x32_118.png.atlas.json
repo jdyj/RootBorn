@@ -1,0 +1,19 @@
+{
+  "image": "Assets/moderninteriors-win/1_Interiors/32x32/Theme_Sorter_Shadowless_Singles_32x32/4_Bedroom_Singles_Shadowless_32x32/Bedroom_Singles_Shadowless_32x32_118.png",
+  "width": 80,
+  "height": 80,
+  "pixelsPerUnit": 32,
+  "origin": "top-left",
+  "sprites": {
+    "Bedroom_Singles_Shadowless_32x32_118": {
+      "x": 0,
+      "y": 0,
+      "w": 80,
+      "h": 80,
+      "pivot": {
+        "x": 0.2,
+        "y": 0.8
+      }
+    }
+  }
+}

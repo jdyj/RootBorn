@@ -1,0 +1,190 @@
+[
+  {
+    "type": "PlacementChallengeDefinition",
+    "id": "Interior1",
+    "asset": "Assets/Data/StudentLife/Minigames/Challenges/Interior1.asset",
+    "instructionKey": "minigame.interior.instructions",
+    "symbolSprites": [
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31Props/puzzle_desk.png",
+        "name": "puzzle_desk"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31Props/puzzle_drawer_cabinet.png",
+        "name": "puzzle_drawer_cabinet"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31Props/puzzle_chair.png",
+        "name": "puzzle_chair"
+      }
+    ],
+    "timeLimitSeconds": 50,
+    "mistakeAllowance": 6,
+    "boardSize": {
+      "x": 5,
+      "y": 4
+    },
+    "pieceSizes": [
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 1
+      }
+    ],
+    "blockedCells": [
+      {
+        "x": 2,
+        "y": 0
+      }
+    ],
+    "requiredCells": []
+  },
+  {
+    "type": "PlacementChallengeDefinition",
+    "id": "Interior2",
+    "asset": "Assets/Data/StudentLife/Minigames/Challenges/Interior2.asset",
+    "instructionKey": "minigame.interior.instructions",
+    "symbolSprites": [
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31Props/puzzle_desk.png",
+        "name": "puzzle_desk"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31Props/puzzle_drawer_cabinet.png",
+        "name": "puzzle_drawer_cabinet"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31Props/puzzle_chair.png",
+        "name": "puzzle_chair"
+      }
+    ],
+    "timeLimitSeconds": 45,
+    "mistakeAllowance": 6,
+    "boardSize": {
+      "x": 5,
+      "y": 4
+    },
+    "pieceSizes": [
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 1
+      }
+    ],
+    "blockedCells": [
+      {
+        "x": 2,
+        "y": 0
+      }
+    ],
+    "requiredCells": []
+  },
+  {
+    "type": "PlacementChallengeDefinition",
+    "id": "Interior3",
+    "asset": "Assets/Data/StudentLife/Minigames/Challenges/Interior3.asset",
+    "instructionKey": "minigame.interior.instructions",
+    "symbolSprites": [
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31Props/puzzle_workbench.png",
+        "name": "puzzle_workbench"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31Props/puzzle_drawer_cabinet.png",
+        "name": "puzzle_drawer_cabinet"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31Props/puzzle_desk.png",
+        "name": "puzzle_desk"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31Props/puzzle_chair.png",
+        "name": "puzzle_chair"
+      }
+    ],
+    "timeLimitSeconds": 40,
+    "mistakeAllowance": 6,
+    "boardSize": {
+      "x": 5,
+      "y": 4
+    },
+    "pieceSizes": [
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 1
+      }
+    ],
+    "blockedCells": [
+      {
+        "x": 2,
+        "y": 0
+      }
+    ],
+    "requiredCells": []
+  },
+  {
+    "type": "PlacementChallengeDefinition",
+    "id": "WorkshopIntro",
+    "asset": "Assets/Data/StudentLife/Minigames/Challenges/WorkshopIntro.asset",
+    "instructionKey": "minigame.workshop.instructions",
+    "symbolSprites": [
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31Props/puzzle_desk.png",
+        "name": "puzzle_desk"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31Props/puzzle_drawer_cabinet.png",
+        "name": "puzzle_drawer_cabinet"
+      }
+    ],
+    "timeLimitSeconds": 45,
+    "mistakeAllowance": 6,
+    "boardSize": {
+      "x": 4,
+      "y": 3
+    },
+    "pieceSizes": [
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 2
+      }
+    ],
+    "blockedCells": [
+      {
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "requiredCells": []
+  }
+]

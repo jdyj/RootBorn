@@ -1,0 +1,14 @@
+[
+  {
+    "type": "InteriorGenerationProfile",
+    "id": "Profile_HouseOffice",
+    "asset": "Assets/Data/Interiors/Profiles/Profile_HouseOffice.asset",
+    "size": {
+      "x": 28,
+      "y": 18
+    },
+    "minCorridorWidth": 2,
+    "deskClusterCount": 3,
+    "plantCount": 4
+  }
+]

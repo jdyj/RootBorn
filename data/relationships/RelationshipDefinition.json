@@ -1,0 +1,16 @@
+[
+  {
+    "type": "RelationshipDefinition",
+    "id": "relationship.first-guide.trust",
+    "asset": "Assets/Data/Relationships/Relationship_FirstGuide_Trust.asset",
+    "displayNameKey": "Guide Trust",
+    "targetId": "npc.first-guide"
+  },
+  {
+    "type": "RelationshipDefinition",
+    "id": "relationship.teacher.support",
+    "asset": "Assets/Data/Relationships/Relationship_Teacher_Support.asset",
+    "displayNameKey": "Teacher Support",
+    "targetId": "npc.teacher"
+  }
+]

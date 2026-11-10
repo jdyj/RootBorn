@@ -1,0 +1,330 @@
+[
+  {
+    "type": "PartTimeWorkDefinition",
+    "id": "work.clinic-helper",
+    "asset": "Assets/Data/StudentLife/PartTimeWork/PartTimeWork_ClinicHelper.asset",
+    "displayNameKey": "dream.work.clinic-helper",
+    "minigame": {
+      "ref": "minigame.emergencycare_practice",
+      "type": "MinigameDefinition"
+    },
+    "workplace": {
+      "ref": "workplace.medical-clinic",
+      "type": "WorkplaceDefinition"
+    },
+    "timePolicy": {
+      "ref": "paid-activity",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 30,
+    "energyCost": 1,
+    "focusCost": 1,
+    "stressDelta": 0,
+    "rewardItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      }
+    ],
+    "rewardCounts": "05000000",
+    "requirements": [],
+    "outcomes": [
+      {
+        "ref": "WorkOutcome_ClinicHelperRelief",
+        "type": "WorkTraitDeltaOutcome"
+      }
+    ]
+  },
+  {
+    "type": "PartTimeWorkDefinition",
+    "id": "work.errand-helper",
+    "asset": "Assets/Data/StudentLife/PartTimeWork/PartTimeWork_ErrandHelper.asset",
+    "displayNameKey": "dream.work.errand-helper",
+    "minigame": {
+      "ref": "minigame.chef_practice",
+      "type": "MinigameDefinition"
+    },
+    "workplace": {
+      "ref": "workplace.restaurant",
+      "type": "WorkplaceDefinition"
+    },
+    "timePolicy": {
+      "ref": "paid-activity",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 30,
+    "energyCost": 1,
+    "focusCost": 1,
+    "stressDelta": 0,
+    "rewardItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      }
+    ],
+    "rewardCounts": "05000000",
+    "requirements": [],
+    "outcomes": [
+      {
+        "ref": "WorkOutcome_ErrandHelperDelicacy",
+        "type": "WorkTraitDeltaOutcome"
+      }
+    ]
+  },
+  {
+    "type": "PartTimeWorkDefinition",
+    "id": "work.fitness-helper",
+    "asset": "Assets/Data/StudentLife/PartTimeWork/PartTimeWork_FitnessHelper.asset",
+    "displayNameKey": "dream.work.fitness-helper",
+    "minigame": {
+      "ref": "minigame.soldier_practice",
+      "type": "MinigameDefinition"
+    },
+    "workplace": {
+      "ref": "workplace.training-ground",
+      "type": "WorkplaceDefinition"
+    },
+    "timePolicy": {
+      "ref": "paid-activity",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 30,
+    "energyCost": 1,
+    "focusCost": 1,
+    "stressDelta": 0,
+    "rewardItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      }
+    ],
+    "rewardCounts": "05000000",
+    "requirements": [],
+    "outcomes": [
+      {
+        "ref": "WorkOutcome_FitnessHelperFitness",
+        "type": "WorkTraitDeltaOutcome"
+      }
+    ]
+  },
+  {
+    "type": "PartTimeWorkDefinition",
+    "id": "work.restaurant-helper",
+    "asset": "Assets/Data/StudentLife/PartTimeWork/PartTimeWork_RestaurantHelper.asset",
+    "displayNameKey": "dream.work.restaurant-helper",
+    "minigame": {
+      "ref": "minigame.chef_practice",
+      "type": "MinigameDefinition"
+    },
+    "workplace": {
+      "ref": "workplace.restaurant",
+      "type": "WorkplaceDefinition"
+    },
+    "timePolicy": {
+      "ref": "paid-activity",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 30,
+    "energyCost": 1,
+    "focusCost": 1,
+    "stressDelta": 0,
+    "rewardItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      }
+    ],
+    "rewardCounts": "05000000",
+    "requirements": [],
+    "outcomes": [
+      {
+        "ref": "WorkOutcome_RestaurantHelperTaste",
+        "type": "WorkTraitDeltaOutcome"
+      }
+    ]
+  },
+  {
+    "type": "PartTimeWorkDefinition",
+    "id": "work.shift.corner-store",
+    "asset": "Assets/Data/StudentLife/PartTimeWork/PartTimeWork_CornerStoreShift.asset",
+    "displayNameKey": "work.shift.corner-store",
+    "minigame": {
+      "ref": "minigame.cornerstore_intro",
+      "type": "MinigameDefinition"
+    },
+    "workplace": {
+      "ref": "workplace.corner-store",
+      "type": "WorkplaceDefinition"
+    },
+    "timePolicy": {
+      "ref": "paid-activity",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 45,
+    "energyCost": 2,
+    "focusCost": 1,
+    "stressDelta": 1,
+    "rewardItems": [
+      {
+        "ref": "Wood",
+        "type": "ItemDefinition"
+      },
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      }
+    ],
+    "rewardCounts": "0300000005000000",
+    "requirements": [],
+    "outcomes": [
+      {
+        "ref": "WorkOutcome_StoreResponsibility",
+        "type": "WorkTraitDeltaOutcome"
+      }
+    ]
+  },
+  {
+    "type": "PartTimeWorkDefinition",
+    "id": "work.studio-helper",
+    "asset": "Assets/Data/StudentLife/PartTimeWork/PartTimeWork_StudioHelper.asset",
+    "displayNameKey": "dream.work.studio-helper",
+    "minigame": {
+      "ref": "minigame.interior_practice",
+      "type": "MinigameDefinition"
+    },
+    "workplace": {
+      "ref": "workplace.design-studio",
+      "type": "WorkplaceDefinition"
+    },
+    "timePolicy": {
+      "ref": "paid-activity",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 30,
+    "energyCost": 1,
+    "focusCost": 1,
+    "stressDelta": 0,
+    "rewardItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      }
+    ],
+    "rewardCounts": "05000000",
+    "requirements": [],
+    "outcomes": [
+      {
+        "ref": "WorkOutcome_StudioHelperAesthetic",
+        "type": "WorkTraitDeltaOutcome"
+      }
+    ]
+  },
+  {
+    "type": "PartTimeWorkDefinition",
+    "id": "work.supply-helper",
+    "asset": "Assets/Data/StudentLife/PartTimeWork/PartTimeWork_SupplyHelper.asset",
+    "displayNameKey": "dream.work.supply-helper",
+    "minigame": {
+      "ref": "minigame.emergencycare_practice",
+      "type": "MinigameDefinition"
+    },
+    "workplace": {
+      "ref": "workplace.medical-clinic",
+      "type": "WorkplaceDefinition"
+    },
+    "timePolicy": {
+      "ref": "paid-activity",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 30,
+    "energyCost": 1,
+    "focusCost": 1,
+    "stressDelta": 0,
+    "rewardItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      }
+    ],
+    "rewardCounts": "05000000",
+    "requirements": [],
+    "outcomes": [
+      {
+        "ref": "WorkOutcome_SupplyHelperCalm",
+        "type": "WorkTraitDeltaOutcome"
+      }
+    ]
+  },
+  {
+    "type": "PartTimeWorkDefinition",
+    "id": "work.training-helper",
+    "asset": "Assets/Data/StudentLife/PartTimeWork/PartTimeWork_TrainingHelper.asset",
+    "displayNameKey": "dream.work.training-helper",
+    "minigame": {
+      "ref": "minigame.soldier_practice",
+      "type": "MinigameDefinition"
+    },
+    "workplace": {
+      "ref": "workplace.training-ground",
+      "type": "WorkplaceDefinition"
+    },
+    "timePolicy": {
+      "ref": "paid-activity",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 30,
+    "energyCost": 1,
+    "focusCost": 1,
+    "stressDelta": 0,
+    "rewardItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      }
+    ],
+    "rewardCounts": "05000000",
+    "requirements": [],
+    "outcomes": [
+      {
+        "ref": "WorkOutcome_TrainingHelperDiscipline",
+        "type": "WorkTraitDeltaOutcome"
+      }
+    ]
+  },
+  {
+    "type": "PartTimeWorkDefinition",
+    "id": "work.workshop-helper",
+    "asset": "Assets/Data/StudentLife/PartTimeWork/PartTimeWork_WorkshopHelper.asset",
+    "displayNameKey": "opening.work.workshop-helper",
+    "minigame": {
+      "ref": "minigame.workshop_intro",
+      "type": "MinigameDefinition"
+    },
+    "workplace": {
+      "ref": "workplace.workshop",
+      "type": "WorkplaceDefinition"
+    },
+    "timePolicy": {
+      "ref": "paid-activity",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 30,
+    "energyCost": 1,
+    "focusCost": 1,
+    "stressDelta": 0,
+    "rewardItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      }
+    ],
+    "rewardCounts": "05000000",
+    "requirements": [],
+    "outcomes": [
+      {
+        "ref": "Work_Responsibility",
+        "type": "WorkTraitDeltaOutcome"
+      }
+    ]
+  }
+]

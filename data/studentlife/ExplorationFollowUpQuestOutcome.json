@@ -1,0 +1,11 @@
+[
+  {
+    "type": "ExplorationFollowUpQuestOutcome",
+    "id": "Outcome_Exploration_TestFollowUpQuest",
+    "asset": "Assets/Data/StudentLife/ExplorationInteractions/Outcomes/Outcome_Exploration_TestFollowUpQuest.asset",
+    "quest": {
+      "ref": "quest.gatherWood",
+      "type": "QuestDefinition"
+    }
+  }
+]

@@ -1,0 +1,10 @@
+[
+  {
+    "type": "OutsideSchoolLogMilestoneObjective",
+    "id": "milestone.objective.responsibility-log",
+    "asset": "Assets/Data/StudentLife/Milestones/Objectives/MilestoneObjective_VillageResponsibility.asset",
+    "displayNameKey": "milestone.objective.responsibility-log",
+    "requiredValue": 1,
+    "targetId": "trait.responsibility"
+  }
+]

@@ -1,0 +1,60 @@
+[
+  {
+    "type": "ResourceNodeDefinition",
+    "id": "Rock",
+    "asset": "Assets/Data/Resources/Resource_Rock.asset",
+    "displayKey": "resource.rock",
+    "sprite": {
+      "sprite": "Assets/Art/GifWorldStyle/Dependencies/Prefabs/Rocks/Sprites/rock_01.png",
+      "name": "rock_01"
+    },
+    "baseHitsToBreak": 6,
+    "preferredTool": {
+      "ref": "StonePickaxe",
+      "type": "ToolDefinition"
+    },
+    "bareHandPenaltyMul": 0.3,
+    "drops": [
+      {
+        "resourceId": "Stone",
+        "minCount": 1,
+        "maxCount": 2
+      }
+    ],
+    "surfaceTag": "ground",
+    "isWalkable": 0,
+    "colliderSize": {
+      "x": 1,
+      "y": 1
+    }
+  },
+  {
+    "type": "ResourceNodeDefinition",
+    "id": "Tree",
+    "asset": "Assets/Data/Resources/Resource_Tree.asset",
+    "displayKey": "resource.tree",
+    "sprite": {
+      "sprite": "Assets/Art/GifWorldStyle/Dependencies/Prefabs/Trees/Sprites/tree_01.png",
+      "name": "tree_01"
+    },
+    "baseHitsToBreak": 5,
+    "preferredTool": {
+      "ref": "StoneAxe",
+      "type": "ToolDefinition"
+    },
+    "bareHandPenaltyMul": 0.3,
+    "drops": [
+      {
+        "resourceId": "Wood",
+        "minCount": 1,
+        "maxCount": 3
+      }
+    ],
+    "surfaceTag": "ground",
+    "isWalkable": 1,
+    "colliderSize": {
+      "x": 1,
+      "y": 1
+    }
+  }
+]

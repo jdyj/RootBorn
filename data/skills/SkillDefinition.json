@@ -1,0 +1,8 @@
+[
+  {
+    "type": "SkillDefinition",
+    "id": "skill.basic-study",
+    "asset": "Assets/Data/Skills/Skill_BasicStudy.asset",
+    "displayNameKey": "skill.basic-study"
+  }
+]

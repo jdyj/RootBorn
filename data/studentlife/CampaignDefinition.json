@@ -1,0 +1,51 @@
+[
+  {
+    "type": "CampaignDefinition",
+    "id": "campaign.first-three-days",
+    "asset": "Assets/Data/StudentLife/Campaigns/Campaign_FirstThreeDays.asset",
+    "displayNameKey": "First three days",
+    "descriptionKey": "Open first campaign",
+    "days": [
+      {
+        "ref": "campaign.day.town",
+        "type": "CampaignDayDefinition"
+      },
+      {
+        "ref": "campaign.day.growth",
+        "type": "CampaignDayDefinition"
+      },
+      {
+        "ref": "campaign.day.future",
+        "type": "CampaignDayDefinition"
+      }
+    ],
+    "rewards": [
+      {
+        "ref": "campaign.reward.first-career-hint",
+        "type": "CampaignCareerHintReward"
+      }
+    ]
+  },
+  {
+    "type": "CampaignDefinition",
+    "id": "campaign.school-opening-three-days",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Campaign_SchoolOpeningThreeDays.asset",
+    "displayNameKey": "opening.campaign.name",
+    "descriptionKey": "dream.campaign.description",
+    "days": [
+      {
+        "ref": "opening.day.1",
+        "type": "CampaignDayDefinition"
+      },
+      {
+        "ref": "opening.day.2",
+        "type": "CampaignDayDefinition"
+      },
+      {
+        "ref": "opening.day.3",
+        "type": "CampaignDayDefinition"
+      }
+    ],
+    "rewards": []
+  }
+]

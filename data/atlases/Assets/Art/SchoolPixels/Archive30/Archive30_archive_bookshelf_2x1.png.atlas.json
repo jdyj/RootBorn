@@ -1,0 +1,19 @@
+{
+  "image": "Assets/Art/SchoolPixels/Archive30/Archive30_archive_bookshelf_2x1.png",
+  "width": 96,
+  "height": 144,
+  "pixelsPerUnit": 48,
+  "origin": "top-left",
+  "sprites": {
+    "Archive30_archive_bookshelf_2x1": {
+      "x": 0,
+      "y": 0,
+      "w": 96,
+      "h": 144,
+      "pivot": {
+        "x": 0.25,
+        "y": 0.83333333
+      }
+    }
+  }
+}

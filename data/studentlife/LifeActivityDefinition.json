@@ -1,0 +1,198 @@
+[
+  {
+    "type": "LifeActivityDefinition",
+    "id": "practice.chef",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_Chef_Activity.asset",
+    "displayNameKey": "practice.chef",
+    "category": 0,
+    "timePolicy": {
+      "ref": "paid-activity",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 45,
+    "energyCost": 1,
+    "focusCost": 1,
+    "stressDelta": 0,
+    "requirements": [],
+    "effects": [
+      {
+        "ref": "Practice_Chef_Activity/Practice_Chef_TraitDeltaActivityEffect#1",
+        "type": "TraitDeltaActivityEffect"
+      },
+      {
+        "ref": "Practice_Chef_Activity/Practice_Chef_TraitDeltaActivityEffect#2",
+        "type": "TraitDeltaActivityEffect"
+      },
+      {
+        "ref": "Practice_Chef_Activity/Practice_Chef_SkillProgressActivityEffect#1",
+        "type": "SkillProgressActivityEffect"
+      },
+      {
+        "ref": "Practice_Chef_Activity/Practice_Chef_SkillProgressActivityEffect#2",
+        "type": "SkillProgressActivityEffect"
+      },
+      {
+        "ref": "Practice_Chef_Activity/Practice_Chef_SkillProgressActivityEffect#3",
+        "type": "SkillProgressActivityEffect"
+      },
+      {
+        "ref": "Practice_Chef_Activity/Practice_Chef_CareerHintUnlockActivityEffect",
+        "type": "CareerHintUnlockActivityEffect"
+      },
+      {
+        "ref": "Effect_Trait_Taste",
+        "type": "TraitDeltaActivityEffect"
+      },
+      {
+        "ref": "Effect_Trait_Delicacy",
+        "type": "TraitDeltaActivityEffect"
+      }
+    ],
+    "choices": []
+  },
+  {
+    "type": "LifeActivityDefinition",
+    "id": "practice.emergency-care",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_EmergencyCare_Activity.asset",
+    "displayNameKey": "practice.emergency-care",
+    "category": 0,
+    "timePolicy": {
+      "ref": "paid-activity",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 45,
+    "energyCost": 1,
+    "focusCost": 1,
+    "stressDelta": 0,
+    "requirements": [],
+    "effects": [
+      {
+        "ref": "Practice_EmergencyCare_Activity/Practice_EmergencyCare_TraitDeltaActivityEffect#3",
+        "type": "TraitDeltaActivityEffect"
+      },
+      {
+        "ref": "Practice_EmergencyCare_Activity/Practice_EmergencyCare_TraitDeltaActivityEffect#1",
+        "type": "TraitDeltaActivityEffect"
+      },
+      {
+        "ref": "Practice_EmergencyCare_Activity/Practice_EmergencyCare_TraitDeltaActivityEffect#2",
+        "type": "TraitDeltaActivityEffect"
+      },
+      {
+        "ref": "Practice_EmergencyCare_Activity/Practice_EmergencyCare_SkillProgressActivityEffect#3",
+        "type": "SkillProgressActivityEffect"
+      },
+      {
+        "ref": "Practice_EmergencyCare_Activity/Practice_EmergencyCare_SkillProgressActivityEffect#2",
+        "type": "SkillProgressActivityEffect"
+      },
+      {
+        "ref": "Practice_EmergencyCare_Activity/Practice_EmergencyCare_SkillProgressActivityEffect#1",
+        "type": "SkillProgressActivityEffect"
+      },
+      {
+        "ref": "Practice_EmergencyCare_Activity/Practice_EmergencyCare_CareerHintUnlockActivityEffect",
+        "type": "CareerHintUnlockActivityEffect"
+      },
+      {
+        "ref": "Effect_Trait_Relief",
+        "type": "TraitDeltaActivityEffect"
+      }
+    ],
+    "choices": []
+  },
+  {
+    "type": "LifeActivityDefinition",
+    "id": "practice.interior",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_Interior_Activity.asset",
+    "displayNameKey": "practice.interior",
+    "category": 0,
+    "timePolicy": {
+      "ref": "paid-activity",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 45,
+    "energyCost": 1,
+    "focusCost": 1,
+    "stressDelta": 0,
+    "requirements": [],
+    "effects": [
+      {
+        "ref": "Practice_Interior_Activity/Practice_Interior_TraitDeltaActivityEffect#2",
+        "type": "TraitDeltaActivityEffect"
+      },
+      {
+        "ref": "Practice_Interior_Activity/Practice_Interior_TraitDeltaActivityEffect#1",
+        "type": "TraitDeltaActivityEffect"
+      },
+      {
+        "ref": "Practice_Interior_Activity/Practice_Interior_SkillProgressActivityEffect#3",
+        "type": "SkillProgressActivityEffect"
+      },
+      {
+        "ref": "Practice_Interior_Activity/Practice_Interior_SkillProgressActivityEffect#2",
+        "type": "SkillProgressActivityEffect"
+      },
+      {
+        "ref": "Practice_Interior_Activity/Practice_Interior_SkillProgressActivityEffect#1",
+        "type": "SkillProgressActivityEffect"
+      },
+      {
+        "ref": "Practice_Interior_Activity/Practice_Interior_CareerHintUnlockActivityEffect",
+        "type": "CareerHintUnlockActivityEffect"
+      },
+      {
+        "ref": "Effect_Trait_Aesthetic",
+        "type": "TraitDeltaActivityEffect"
+      }
+    ],
+    "choices": []
+  },
+  {
+    "type": "LifeActivityDefinition",
+    "id": "practice.soldier",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_Soldier_Activity.asset",
+    "displayNameKey": "practice.soldier",
+    "category": 0,
+    "timePolicy": {
+      "ref": "paid-activity",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 45,
+    "energyCost": 1,
+    "focusCost": 1,
+    "stressDelta": 0,
+    "requirements": [],
+    "effects": [
+      {
+        "ref": "Practice_Soldier_Activity/Practice_Soldier_TraitDeltaActivityEffect#3",
+        "type": "TraitDeltaActivityEffect"
+      },
+      {
+        "ref": "Practice_Soldier_Activity/Practice_Soldier_TraitDeltaActivityEffect#2",
+        "type": "TraitDeltaActivityEffect"
+      },
+      {
+        "ref": "Practice_Soldier_Activity/Practice_Soldier_TraitDeltaActivityEffect#1",
+        "type": "TraitDeltaActivityEffect"
+      },
+      {
+        "ref": "Practice_Soldier_Activity/Practice_Soldier_SkillProgressActivityEffect#2",
+        "type": "SkillProgressActivityEffect"
+      },
+      {
+        "ref": "Practice_Soldier_Activity/Practice_Soldier_SkillProgressActivityEffect#1",
+        "type": "SkillProgressActivityEffect"
+      },
+      {
+        "ref": "Practice_Soldier_Activity/Practice_Soldier_SkillProgressActivityEffect#3",
+        "type": "SkillProgressActivityEffect"
+      },
+      {
+        "ref": "Practice_Soldier_Activity/Practice_Soldier_CareerHintUnlockActivityEffect",
+        "type": "CareerHintUnlockActivityEffect"
+      }
+    ],
+    "choices": []
+  }
+]

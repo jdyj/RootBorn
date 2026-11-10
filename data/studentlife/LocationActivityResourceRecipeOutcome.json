@@ -1,0 +1,16 @@
+[
+  {
+    "type": "LocationActivityResourceRecipeOutcome",
+    "id": "Outcome_Square_FieldNotesRecipe",
+    "asset": "Assets/Data/StudentLife/LocationIdentities/Outcomes/Outcome_Square_FieldNotesRecipe.asset",
+    "resource": {
+      "ref": "Rock",
+      "type": "ResourceNodeDefinition"
+    },
+    "recipe": {
+      "ref": "recipe.town.field-notes",
+      "type": "RecipeDefinition"
+    },
+    "nextHintKey": "objective.recipe.field-notes.next"
+  }
+]

@@ -1,0 +1,23 @@
+[
+  {
+    "type": "FishingAnimationDefinition",
+    "id": "character.fishing.default",
+    "asset": "Assets/Data/Family/CharacterPartAnimations/FishingAnimation_Default.asset",
+    "throwHookClip": {
+      "ref": "character.action.fishing.throw_hook.side",
+      "type": "CharacterPartAnimationClipDefinition"
+    },
+    "waitingIdleClip": {
+      "ref": "character.action.fishing.idle.side",
+      "type": "CharacterPartAnimationClipDefinition"
+    },
+    "pullHookClip": {
+      "ref": "character.action.fishing.pull_hook.side",
+      "type": "CharacterPartAnimationClipDefinition"
+    },
+    "caughtClip": {
+      "ref": "character.action.fishing.caught.side",
+      "type": "CharacterPartAnimationClipDefinition"
+    }
+  }
+]

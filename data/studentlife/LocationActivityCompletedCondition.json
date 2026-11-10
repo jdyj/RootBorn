@@ -1,0 +1,13 @@
+[
+  {
+    "type": "LocationActivityCompletedCondition",
+    "id": "Condition_QC_Test_BlockedLibraryAccess",
+    "asset": "Assets/Data/StudentLife/QuestChains/Conditions/Condition_QC_Test_BlockedLibraryAccess.asset",
+    "activity": {
+      "ref": "location.activity.library-hard-book",
+      "type": "LocationActivityDefinition"
+    },
+    "blockedReasonId": "missing.library.access",
+    "blockedSummary": "Visit the library desk to reopen this chain."
+  }
+]

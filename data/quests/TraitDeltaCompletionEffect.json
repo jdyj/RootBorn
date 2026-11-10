@@ -1,0 +1,72 @@
+[
+  {
+    "type": "TraitDeltaCompletionEffect",
+    "id": "Effect_CareerTrait_Chef",
+    "asset": "Assets/Data/Quests/CareerRoutes/Effects/Effect_CareerTrait_Chef.asset",
+    "trait": {
+      "ref": "trait.service-sense",
+      "type": "TraitDefinition"
+    },
+    "delta": 2,
+    "careerHint": {
+      "ref": "career.chef",
+      "type": "CareerDefinition"
+    }
+  },
+  {
+    "type": "TraitDeltaCompletionEffect",
+    "id": "Effect_CareerTrait_EmergencyCare",
+    "asset": "Assets/Data/Quests/CareerRoutes/Effects/Effect_CareerTrait_EmergencyCare.asset",
+    "trait": {
+      "ref": "trait.empathy",
+      "type": "TraitDefinition"
+    },
+    "delta": 2,
+    "careerHint": {
+      "ref": "career.emergency-care",
+      "type": "CareerDefinition"
+    }
+  },
+  {
+    "type": "TraitDeltaCompletionEffect",
+    "id": "Effect_CareerTrait_Interior",
+    "asset": "Assets/Data/Quests/CareerRoutes/Effects/Effect_CareerTrait_Interior.asset",
+    "trait": {
+      "ref": "trait.creativity",
+      "type": "TraitDefinition"
+    },
+    "delta": 2,
+    "careerHint": {
+      "ref": "career.interior",
+      "type": "CareerDefinition"
+    }
+  },
+  {
+    "type": "TraitDeltaCompletionEffect",
+    "id": "Effect_CareerTrait_Soldier",
+    "asset": "Assets/Data/Quests/CareerRoutes/Effects/Effect_CareerTrait_Soldier.asset",
+    "trait": {
+      "ref": "trait.discipline",
+      "type": "TraitDefinition"
+    },
+    "delta": 2,
+    "careerHint": {
+      "ref": "career.soldier",
+      "type": "CareerDefinition"
+    }
+  },
+  {
+    "type": "TraitDeltaCompletionEffect",
+    "id": "Effect_TilePlacementInterior",
+    "asset": "Assets/Data/Quests/CareerRoutes/Effects/Effect_TilePlacementInterior.asset",
+    "trait": {
+      "ref": "trait.creativity",
+      "type": "TraitDefinition"
+    },
+    "delta": 2,
+    "careerHint": {
+      "ref": "career.interior",
+      "type": "CareerDefinition"
+    }
+  }
+]

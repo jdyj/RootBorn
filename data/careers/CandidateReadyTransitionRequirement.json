@@ -1,0 +1,22 @@
+[
+  {
+    "type": "CandidateReadyTransitionRequirement",
+    "id": "Careers/Facilities/Chef/Transition_Candidate",
+    "asset": "Assets/Data/Careers/Facilities/Chef/Transition_Candidate.asset"
+  },
+  {
+    "type": "CandidateReadyTransitionRequirement",
+    "id": "Careers/Facilities/EmergencyCare/Transition_Candidate",
+    "asset": "Assets/Data/Careers/Facilities/EmergencyCare/Transition_Candidate.asset"
+  },
+  {
+    "type": "CandidateReadyTransitionRequirement",
+    "id": "Careers/Facilities/Interior/Transition_Candidate",
+    "asset": "Assets/Data/Careers/Facilities/Interior/Transition_Candidate.asset"
+  },
+  {
+    "type": "CandidateReadyTransitionRequirement",
+    "id": "Careers/Facilities/Soldier/Transition_Candidate",
+    "asset": "Assets/Data/Careers/Facilities/Soldier/Transition_Candidate.asset"
+  }
+]

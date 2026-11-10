@@ -1,0 +1,23 @@
+[
+  {
+    "type": "AnyOfQuestObjective",
+    "id": "Objective_DreamAlternative",
+    "asset": "Assets/Data/StudentLife/MainStory/Objectives/Objective_DreamAlternative.asset",
+    "displayKey": "dream.objective.choice",
+    "requiredCount": 1,
+    "alternatives": [
+      {
+        "ref": "Objective_SelectDream",
+        "type": "CareerInterestSelectedQuestObjective"
+      },
+      {
+        "ref": "Objective_ReadJobBooks",
+        "type": "LocationActivityQuestObjective"
+      },
+      {
+        "ref": "Objective_WatchWorkshopWork",
+        "type": "LocationActivityQuestObjective"
+      }
+    ]
+  }
+]

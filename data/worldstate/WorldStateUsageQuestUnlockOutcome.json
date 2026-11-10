@@ -1,0 +1,13 @@
+[
+  {
+    "type": "WorldStateUsageQuestUnlockOutcome",
+    "id": "UsageOutcome_LibraryArchive_Quest",
+    "asset": "Assets/Data/WorldState/Usage/Outcomes/UsageOutcome_LibraryArchive_Quest.asset",
+    "quests": [
+      {
+        "ref": "quest.career.interior",
+        "type": "QuestDefinition"
+      }
+    ]
+  }
+]

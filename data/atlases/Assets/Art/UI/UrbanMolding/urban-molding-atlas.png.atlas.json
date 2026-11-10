@@ -1,0 +1,57 @@
+{
+  "image": "Assets/Art/UI/UrbanMolding/urban-molding-atlas.png",
+  "width": 256,
+  "height": 256,
+  "pixelsPerUnit": 16,
+  "origin": "top-left",
+  "sprites": {
+    "urban_button": {
+      "x": 112,
+      "y": 8,
+      "w": 96,
+      "h": 24,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "border": {
+        "left": 6,
+        "top": 6,
+        "right": 6,
+        "bottom": 6
+      }
+    },
+    "urban_panel": {
+      "x": 8,
+      "y": 8,
+      "w": 96,
+      "h": 96,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "border": {
+        "left": 18,
+        "top": 18,
+        "right": 18,
+        "bottom": 18
+      }
+    },
+    "urban_slot": {
+      "x": 112,
+      "y": 48,
+      "w": 48,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "border": {
+        "left": 6,
+        "top": 6,
+        "right": 6,
+        "bottom": 6
+      }
+    }
+  }
+}

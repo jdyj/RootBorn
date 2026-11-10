@@ -1,0 +1,105 @@
+[
+  {
+    "type": "QuestChainDefinition",
+    "id": "main-story.school-opening",
+    "asset": "Assets/Data/StudentLife/MainStory/QuestChain_SchoolOpening.asset",
+    "displayNameKey": "opening.chain.name",
+    "descriptionKey": "dream.chain.description",
+    "relatedCareerInterestId": "",
+    "startNpc": {
+      "ref": "npc.first-guide",
+      "type": "NpcDefinition"
+    },
+    "steps": [
+      {
+        "ref": "mainquest.BackToSchool",
+        "type": "QuestStepDefinition"
+      },
+      {
+        "ref": "mainquest.AfterSchoolTour",
+        "type": "QuestStepDefinition"
+      },
+      {
+        "ref": "mainquest.FirstPartTimeJob",
+        "type": "QuestStepDefinition"
+      },
+      {
+        "ref": "mainquest.MyDream",
+        "type": "QuestStepDefinition"
+      },
+      {
+        "ref": "mainquest.MyOwnSpace",
+        "type": "QuestStepDefinition"
+      }
+    ],
+    "startConditions": [],
+    "unblockConditions": [],
+    "blockConditions": [],
+    "failureConditions": [],
+    "expirationConditions": [],
+    "completionRewards": [],
+    "sortPriority": 100,
+    "developerOnly": 0
+  },
+  {
+    "type": "QuestChainDefinition",
+    "id": "questchain.test.career-interest.blocked-library-access",
+    "asset": "Assets/Data/StudentLife/QuestChains/QuestChain_Test_CareerInterest_BlockedLibraryAccess.asset",
+    "displayNameKey": "questchain.test.career-interest.blocked-library-access",
+    "descriptionKey": "questchain.test.career-interest.blocked-library-access.desc",
+    "relatedCareerInterestId": "interest.learning",
+    "steps": [
+      {
+        "ref": "step.questchain.test.blocked.library.access",
+        "type": "QuestStepDefinition"
+      }
+    ],
+    "startConditions": [],
+    "unblockConditions": [
+      {
+        "ref": "Condition_QC_Test_BlockedLibraryAccess",
+        "type": "LocationActivityCompletedCondition"
+      }
+    ],
+    "blockConditions": [
+      {
+        "ref": "Condition_QC_Test_BlockedLibraryAccess",
+        "type": "LocationActivityCompletedCondition"
+      }
+    ],
+    "completionRewards": [],
+    "sortPriority": 5,
+    "developerOnly": 1
+  },
+  {
+    "type": "QuestChainDefinition",
+    "id": "questchain.test.career-interest.library",
+    "asset": "Assets/Data/StudentLife/QuestChains/QuestChain_Test_CareerInterest_Library.asset",
+    "displayNameKey": "questchain.test.career-interest.library",
+    "descriptionKey": "questchain.test.career-interest.library.desc",
+    "relatedCareerInterestId": "interest.learning",
+    "steps": [
+      {
+        "ref": "step.questchain.test.library.start",
+        "type": "QuestStepDefinition"
+      }
+    ],
+    "startConditions": [],
+    "unblockConditions": [],
+    "blockConditions": [],
+    "failureConditions": [],
+    "expirationConditions": [],
+    "completionRewards": [
+      {
+        "ref": "Reward_QC_LibraryRouteWorldState",
+        "type": "WorldStateChangeQuestReward"
+      },
+      {
+        "ref": "Reward_QC_LibraryFurnitureUnlock",
+        "type": "FurnitureUnlockQuestReward"
+      }
+    ],
+    "sortPriority": 10,
+    "developerOnly": 1
+  }
+]

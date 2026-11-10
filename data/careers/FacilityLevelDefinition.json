@@ -1,0 +1,274 @@
+[
+  {
+    "type": "FacilityLevelDefinition",
+    "id": "facility.chef.level1",
+    "asset": "Assets/Data/Careers/Facilities/Chef/Level_1.asset",
+    "displayNameKey": "facility.chef.level1",
+    "level": 1,
+    "costItems": [],
+    "costCounts": "",
+    "worldFlags": [],
+    "rewardPercent": 100,
+    "completesRoute": 0
+  },
+  {
+    "type": "FacilityLevelDefinition",
+    "id": "facility.chef.level2",
+    "asset": "Assets/Data/Careers/Facilities/Chef/Level_2.asset",
+    "displayNameKey": "facility.chef.level2",
+    "level": 2,
+    "costItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      },
+      {
+        "ref": "item.facility-materials",
+        "type": "ItemDefinition"
+      }
+    ],
+    "costCounts": 6400000004000000,
+    "worldFlags": [
+      {
+        "ref": "world.chef.level2",
+        "type": "WorldStateFlagDefinition"
+      }
+    ],
+    "rewardPercent": 150,
+    "completesRoute": 0
+  },
+  {
+    "type": "FacilityLevelDefinition",
+    "id": "facility.chef.level3",
+    "asset": "Assets/Data/Careers/Facilities/Chef/Level_3.asset",
+    "displayNameKey": "facility.chef.level3",
+    "level": 3,
+    "costItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      },
+      {
+        "ref": "item.facility-materials",
+        "type": "ItemDefinition"
+      }
+    ],
+    "costCounts": "2c0100000a000000",
+    "worldFlags": [
+      {
+        "ref": "world.chef.level3",
+        "type": "WorldStateFlagDefinition"
+      }
+    ],
+    "rewardPercent": 200,
+    "completesRoute": 1,
+    "achievementSprite": {
+      "sprite": "Assets/Art/CareerFacilities/Achievements/trophy_chef.png",
+      "name": "trophy_chef"
+    }
+  },
+  {
+    "type": "FacilityLevelDefinition",
+    "id": "facility.emergency-care.level1",
+    "asset": "Assets/Data/Careers/Facilities/EmergencyCare/Level_1.asset",
+    "displayNameKey": "facility.emergency-care.level1",
+    "level": 1,
+    "costItems": [],
+    "costCounts": "",
+    "worldFlags": [],
+    "rewardPercent": 100,
+    "completesRoute": 0
+  },
+  {
+    "type": "FacilityLevelDefinition",
+    "id": "facility.emergency-care.level2",
+    "asset": "Assets/Data/Careers/Facilities/EmergencyCare/Level_2.asset",
+    "displayNameKey": "facility.emergency-care.level2",
+    "level": 2,
+    "costItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      },
+      {
+        "ref": "item.facility-materials",
+        "type": "ItemDefinition"
+      }
+    ],
+    "costCounts": 6400000004000000,
+    "worldFlags": [
+      {
+        "ref": "world.emergency-care.level2",
+        "type": "WorldStateFlagDefinition"
+      }
+    ],
+    "rewardPercent": 150,
+    "completesRoute": 0
+  },
+  {
+    "type": "FacilityLevelDefinition",
+    "id": "facility.emergency-care.level3",
+    "asset": "Assets/Data/Careers/Facilities/EmergencyCare/Level_3.asset",
+    "displayNameKey": "facility.emergency-care.level3",
+    "level": 3,
+    "costItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      },
+      {
+        "ref": "item.facility-materials",
+        "type": "ItemDefinition"
+      }
+    ],
+    "costCounts": "2c0100000a000000",
+    "worldFlags": [
+      {
+        "ref": "world.emergency-care.level3",
+        "type": "WorldStateFlagDefinition"
+      }
+    ],
+    "rewardPercent": 200,
+    "completesRoute": 1,
+    "achievementSprite": {
+      "sprite": "Assets/Art/CareerFacilities/Achievements/trophy_emergencycare.png",
+      "name": "trophy_emergencycare"
+    }
+  },
+  {
+    "type": "FacilityLevelDefinition",
+    "id": "facility.interior.level1",
+    "asset": "Assets/Data/Careers/Facilities/Interior/Level_1.asset",
+    "displayNameKey": "facility.interior.level1",
+    "level": 1,
+    "costItems": [],
+    "costCounts": "",
+    "worldFlags": [],
+    "rewardPercent": 100,
+    "completesRoute": 0
+  },
+  {
+    "type": "FacilityLevelDefinition",
+    "id": "facility.interior.level2",
+    "asset": "Assets/Data/Careers/Facilities/Interior/Level_2.asset",
+    "displayNameKey": "facility.interior.level2",
+    "level": 2,
+    "costItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      },
+      {
+        "ref": "item.facility-materials",
+        "type": "ItemDefinition"
+      }
+    ],
+    "costCounts": 6400000004000000,
+    "worldFlags": [
+      {
+        "ref": "world.interior.level2",
+        "type": "WorldStateFlagDefinition"
+      }
+    ],
+    "rewardPercent": 150,
+    "completesRoute": 0
+  },
+  {
+    "type": "FacilityLevelDefinition",
+    "id": "facility.interior.level3",
+    "asset": "Assets/Data/Careers/Facilities/Interior/Level_3.asset",
+    "displayNameKey": "facility.interior.level3",
+    "level": 3,
+    "costItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      },
+      {
+        "ref": "item.facility-materials",
+        "type": "ItemDefinition"
+      }
+    ],
+    "costCounts": "2c0100000a000000",
+    "worldFlags": [
+      {
+        "ref": "world.interior.level3",
+        "type": "WorldStateFlagDefinition"
+      }
+    ],
+    "rewardPercent": 200,
+    "completesRoute": 1,
+    "achievementSprite": {
+      "sprite": "Assets/Art/CareerFacilities/Achievements/trophy_interior.png",
+      "name": "trophy_interior"
+    }
+  },
+  {
+    "type": "FacilityLevelDefinition",
+    "id": "facility.soldier.level1",
+    "asset": "Assets/Data/Careers/Facilities/Soldier/Level_1.asset",
+    "displayNameKey": "facility.soldier.level1",
+    "level": 1,
+    "costItems": [],
+    "costCounts": "",
+    "worldFlags": [],
+    "rewardPercent": 100,
+    "completesRoute": 0
+  },
+  {
+    "type": "FacilityLevelDefinition",
+    "id": "facility.soldier.level2",
+    "asset": "Assets/Data/Careers/Facilities/Soldier/Level_2.asset",
+    "displayNameKey": "facility.soldier.level2",
+    "level": 2,
+    "costItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      },
+      {
+        "ref": "item.facility-materials",
+        "type": "ItemDefinition"
+      }
+    ],
+    "costCounts": 6400000004000000,
+    "worldFlags": [
+      {
+        "ref": "world.soldier.level2",
+        "type": "WorldStateFlagDefinition"
+      }
+    ],
+    "rewardPercent": 150,
+    "completesRoute": 0
+  },
+  {
+    "type": "FacilityLevelDefinition",
+    "id": "facility.soldier.level3",
+    "asset": "Assets/Data/Careers/Facilities/Soldier/Level_3.asset",
+    "displayNameKey": "facility.soldier.level3",
+    "level": 3,
+    "costItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      },
+      {
+        "ref": "item.facility-materials",
+        "type": "ItemDefinition"
+      }
+    ],
+    "costCounts": "2c0100000a000000",
+    "worldFlags": [
+      {
+        "ref": "world.soldier.level3",
+        "type": "WorldStateFlagDefinition"
+      }
+    ],
+    "rewardPercent": 200,
+    "completesRoute": 1,
+    "achievementSprite": {
+      "sprite": "Assets/Art/CareerFacilities/Achievements/trophy_soldier.png",
+      "name": "trophy_soldier"
+    }
+  }
+]

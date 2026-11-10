@@ -1,0 +1,13 @@
+[
+  {
+    "type": "ClueInterpretationRelationshipThresholdCondition",
+    "id": "InterpretationCondition_Relationship",
+    "asset": "Assets/Data/DiscoveryClues/Interpretations/InterpretationCondition_Relationship.asset",
+    "lockedReasonKey": "condition.missing",
+    "relationship": {
+      "ref": "relationship.first-guide.trust",
+      "type": "RelationshipDefinition"
+    },
+    "minimumValue": 0
+  }
+]

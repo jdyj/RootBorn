@@ -1,0 +1,15 @@
+[
+  {
+    "type": "TilePatternDefinition",
+    "id": "Pattern_Grass_Default",
+    "asset": "Assets/Data/WorldGeneration/Pattern_Grass_Default.asset",
+    "width": 1,
+    "height": 1,
+    "cells": [
+      {
+        "ref": "TileVariants_Grass_Default",
+        "type": "TileVariantSetDefinition"
+      }
+    ]
+  }
+]

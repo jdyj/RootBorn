@@ -1,0 +1,13 @@
+[
+  {
+    "type": "TutorialStageAdvanceDayEndRule",
+    "id": "DayEndRule_Tutorial_Day1ToDay2",
+    "asset": "Assets/Data/StudentLife/DayEndRules/DayEndRule_Tutorial_Day1ToDay2.asset",
+    "fromStageId": "",
+    "targetStage": {
+      "ref": "tutorial.day2",
+      "type": "TutorialStageDefinition"
+    },
+    "nextObjectiveId": "goal.talk-to-guide-day2"
+  }
+]

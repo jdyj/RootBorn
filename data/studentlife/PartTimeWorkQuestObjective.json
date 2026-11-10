@@ -1,0 +1,47 @@
+[
+  {
+    "type": "PartTimeWorkQuestObjective",
+    "id": "Objective_PaidWork",
+    "asset": "Assets/Data/StudentLife/MainStory/Objectives/Objective_PaidWork.asset",
+    "displayKey": "dream.objective.work",
+    "requiredCount": 1,
+    "acceptedWorks": [
+      {
+        "ref": "work.shift.corner-store",
+        "type": "PartTimeWorkDefinition"
+      },
+      {
+        "ref": "work.workshop-helper",
+        "type": "PartTimeWorkDefinition"
+      },
+      {
+        "ref": "work.restaurant-helper",
+        "type": "PartTimeWorkDefinition"
+      },
+      {
+        "ref": "work.clinic-helper",
+        "type": "PartTimeWorkDefinition"
+      },
+      {
+        "ref": "work.studio-helper",
+        "type": "PartTimeWorkDefinition"
+      },
+      {
+        "ref": "work.training-helper",
+        "type": "PartTimeWorkDefinition"
+      },
+      {
+        "ref": "work.errand-helper",
+        "type": "PartTimeWorkDefinition"
+      },
+      {
+        "ref": "work.supply-helper",
+        "type": "PartTimeWorkDefinition"
+      },
+      {
+        "ref": "work.fitness-helper",
+        "type": "PartTimeWorkDefinition"
+      }
+    ]
+  }
+]

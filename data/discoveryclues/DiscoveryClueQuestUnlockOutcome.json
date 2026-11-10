@@ -1,0 +1,24 @@
+[
+  {
+    "type": "DiscoveryClueQuestUnlockOutcome",
+    "id": "Outcome_LibraryFollowUpQuest",
+    "asset": "Assets/Data/DiscoveryClues/Outcomes/Outcome_LibraryFollowUpQuest.asset",
+    "quests": [
+      {
+        "ref": "Quest_DiscoveryClue_LibraryFollowUp",
+        "type": "QuestDefinition"
+      }
+    ]
+  },
+  {
+    "type": "DiscoveryClueQuestUnlockOutcome",
+    "id": "Outcome_PlayLoopQuest",
+    "asset": "Assets/Data/DiscoveryClues/Outcomes/Outcome_PlayLoopQuest.asset",
+    "quests": [
+      {
+        "ref": "quest.discovery.play-followup",
+        "type": "QuestDefinition"
+      }
+    ]
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "type": "SuccessCountAutoSkipRequirement",
+    "id": "Careers/Facilities/Chef/AutoSkip_Successes",
+    "asset": "Assets/Data/Careers/Facilities/Chef/AutoSkip_Successes.asset",
+    "minimumSuccesses": 5
+  },
+  {
+    "type": "SuccessCountAutoSkipRequirement",
+    "id": "Careers/Facilities/EmergencyCare/AutoSkip_Successes",
+    "asset": "Assets/Data/Careers/Facilities/EmergencyCare/AutoSkip_Successes.asset",
+    "minimumSuccesses": 5
+  },
+  {
+    "type": "SuccessCountAutoSkipRequirement",
+    "id": "Careers/Facilities/Interior/AutoSkip_Successes",
+    "asset": "Assets/Data/Careers/Facilities/Interior/AutoSkip_Successes.asset",
+    "minimumSuccesses": 5
+  },
+  {
+    "type": "SuccessCountAutoSkipRequirement",
+    "id": "Careers/Facilities/Soldier/AutoSkip_Successes",
+    "asset": "Assets/Data/Careers/Facilities/Soldier/AutoSkip_Successes.asset",
+    "minimumSuccesses": 5
+  }
+]

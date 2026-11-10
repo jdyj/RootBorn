@@ -1,0 +1,16 @@
+[
+  {
+    "type": "CareerDefinition",
+    "id": "Career_DiscoveryClue_Research",
+    "asset": "Assets/Data/DiscoveryClues/Careers/Career_DiscoveryClue_Research.asset",
+    "displayNameKey": "",
+    "requirements": []
+  },
+  {
+    "type": "CareerDefinition",
+    "id": "career.discovery.play-research",
+    "asset": "Assets/Data/DiscoveryClues/Careers/Career_DiscoveryClue_PlayLoop.asset",
+    "displayNameKey": "Play Research",
+    "requirements": []
+  }
+]

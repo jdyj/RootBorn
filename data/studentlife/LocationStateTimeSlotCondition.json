@@ -1,0 +1,13 @@
+[
+  {
+    "type": "LocationStateTimeSlotCondition",
+    "id": "LocationState_Library_Evening/Condition_TimeSlot",
+    "asset": "Assets/Data/StudentLife/LocationStates/LocationState_Library_Evening.asset",
+    "timeSlots": [
+      {
+        "ref": "time.evening",
+        "type": "TimeSlotDefinition"
+      }
+    ]
+  }
+]

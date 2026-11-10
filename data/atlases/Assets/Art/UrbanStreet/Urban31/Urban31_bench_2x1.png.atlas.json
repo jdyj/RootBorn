@@ -1,0 +1,19 @@
+{
+  "image": "Assets/Art/UrbanStreet/Urban31/Urban31_bench_2x1.png",
+  "width": 96,
+  "height": 96,
+  "pixelsPerUnit": 48,
+  "origin": "top-left",
+  "sprites": {
+    "Urban31_bench_2x1": {
+      "x": 0,
+      "y": 0,
+      "w": 96,
+      "h": 96,
+      "pivot": {
+        "x": 0.25,
+        "y": 0.75
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "type": "ClueInterpretationStatusDeltaOutcome",
+    "id": "InterpretationOutcome_Status",
+    "asset": "Assets/Data/DiscoveryClues/Interpretations/InterpretationOutcome_Status.asset",
+    "status": {
+      "ref": "status.fatigue",
+      "type": "StatusDefinition"
+    },
+    "delta": 1
+  }
+]

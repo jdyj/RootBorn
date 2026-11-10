@@ -1,0 +1,156 @@
+[
+  {
+    "type": "LocationActivityProgressDeltaOutcome",
+    "id": "CareerIntroduction_Chef",
+    "asset": "Assets/Data/StudentLife/MainStory/Activities/Outcomes/CareerIntroduction_Chef.asset",
+    "target": 4,
+    "trait": null,
+    "skill": null,
+    "relationship": null,
+    "status": null,
+    "career": {
+      "ref": "career.chef",
+      "type": "CareerDefinition"
+    },
+    "delta": 1,
+    "logCareerHintEveryTime": 1
+  },
+  {
+    "type": "LocationActivityProgressDeltaOutcome",
+    "id": "CareerIntroduction_EmergencyCare",
+    "asset": "Assets/Data/StudentLife/MainStory/Activities/Outcomes/CareerIntroduction_EmergencyCare.asset",
+    "target": 4,
+    "trait": null,
+    "skill": null,
+    "relationship": null,
+    "status": null,
+    "career": {
+      "ref": "career.emergency-care",
+      "type": "CareerDefinition"
+    },
+    "delta": 1,
+    "logCareerHintEveryTime": 1
+  },
+  {
+    "type": "LocationActivityProgressDeltaOutcome",
+    "id": "CareerIntroduction_Interior",
+    "asset": "Assets/Data/StudentLife/MainStory/Activities/Outcomes/CareerIntroduction_Interior.asset",
+    "target": 4,
+    "trait": null,
+    "skill": null,
+    "relationship": null,
+    "status": null,
+    "career": {
+      "ref": "career.interior",
+      "type": "CareerDefinition"
+    },
+    "delta": 1,
+    "logCareerHintEveryTime": 1
+  },
+  {
+    "type": "LocationActivityProgressDeltaOutcome",
+    "id": "CareerIntroduction_Soldier",
+    "asset": "Assets/Data/StudentLife/MainStory/Activities/Outcomes/CareerIntroduction_Soldier.asset",
+    "target": 4,
+    "trait": null,
+    "skill": null,
+    "relationship": null,
+    "status": null,
+    "career": {
+      "ref": "career.soldier",
+      "type": "CareerDefinition"
+    },
+    "delta": 1,
+    "logCareerHintEveryTime": 1
+  },
+  {
+    "type": "LocationActivityProgressDeltaOutcome",
+    "id": "Outcome_Library_Skill",
+    "asset": "Assets/Data/StudentLife/LocationIdentities/Outcomes/Outcome_Library_Skill.asset",
+    "target": 1,
+    "trait": null,
+    "skill": {
+      "ref": "skill.cooking",
+      "type": "SkillDefinition"
+    },
+    "relationship": null,
+    "status": null,
+    "career": null,
+    "delta": 2
+  },
+  {
+    "type": "LocationActivityProgressDeltaOutcome",
+    "id": "Outcome_School_Career",
+    "asset": "Assets/Data/StudentLife/LocationIdentities/Outcomes/Outcome_School_Career.asset",
+    "target": 4,
+    "trait": null,
+    "skill": null,
+    "relationship": null,
+    "status": null,
+    "career": {
+      "ref": "career.chef",
+      "type": "CareerDefinition"
+    },
+    "delta": 1
+  },
+  {
+    "type": "LocationActivityProgressDeltaOutcome",
+    "id": "Outcome_School_Trait",
+    "asset": "Assets/Data/StudentLife/LocationIdentities/Outcomes/Outcome_School_Trait.asset",
+    "target": 0,
+    "trait": {
+      "ref": "trait.focus",
+      "type": "TraitDefinition"
+    },
+    "skill": null,
+    "relationship": null,
+    "status": null,
+    "career": null,
+    "delta": 1
+  },
+  {
+    "type": "LocationActivityProgressDeltaOutcome",
+    "id": "Outcome_Square_Relationship",
+    "asset": "Assets/Data/StudentLife/LocationIdentities/Outcomes/Outcome_Square_Relationship.asset",
+    "target": 2,
+    "trait": null,
+    "skill": null,
+    "relationship": {
+      "ref": "relationship.first-guide.trust",
+      "type": "RelationshipDefinition"
+    },
+    "status": null,
+    "career": null,
+    "delta": 2
+  },
+  {
+    "type": "LocationActivityProgressDeltaOutcome",
+    "id": "Outcome_Store_Skill",
+    "asset": "Assets/Data/StudentLife/LocationIdentities/Outcomes/Outcome_Store_Skill.asset",
+    "target": 1,
+    "trait": null,
+    "skill": {
+      "ref": "skill.cooking",
+      "type": "SkillDefinition"
+    },
+    "relationship": null,
+    "status": null,
+    "career": null,
+    "delta": 1
+  },
+  {
+    "type": "LocationActivityProgressDeltaOutcome",
+    "id": "Outcome_Workshop_Status",
+    "asset": "Assets/Data/StudentLife/LocationIdentities/Outcomes/Outcome_Workshop_Status.asset",
+    "target": 3,
+    "trait": null,
+    "skill": null,
+    "relationship": null,
+    "status": {
+      "ref": "status.fatigue",
+      "type": "StatusDefinition"
+    },
+    "career": null,
+    "delta": 1
+  }
+]

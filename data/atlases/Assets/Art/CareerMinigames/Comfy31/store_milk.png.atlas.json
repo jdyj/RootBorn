@@ -1,0 +1,19 @@
+{
+  "image": "Assets/Art/CareerMinigames/Comfy31/store_milk.png",
+  "width": 48,
+  "height": 48,
+  "pixelsPerUnit": 48,
+  "origin": "top-left",
+  "sprites": {
+    "store_milk": {
+      "x": 0,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  }
+}

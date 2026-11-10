@@ -1,0 +1,102 @@
+[
+  {
+    "type": "TraitDeltaActivityEffect",
+    "id": "Practice_Chef_Activity/Practice_Chef_TraitDeltaActivityEffect#1",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_Chef_Activity.asset",
+    "trait": {
+      "ref": "trait.focus",
+      "type": "TraitDefinition"
+    },
+    "delta": 2
+  },
+  {
+    "type": "TraitDeltaActivityEffect",
+    "id": "Practice_Chef_Activity/Practice_Chef_TraitDeltaActivityEffect#2",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_Chef_Activity.asset",
+    "trait": {
+      "ref": "trait.service-sense",
+      "type": "TraitDefinition"
+    },
+    "delta": 1
+  },
+  {
+    "type": "TraitDeltaActivityEffect",
+    "id": "Practice_EmergencyCare_Activity/Practice_EmergencyCare_TraitDeltaActivityEffect#1",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_EmergencyCare_Activity.asset",
+    "trait": {
+      "ref": "trait.empathy",
+      "type": "TraitDefinition"
+    },
+    "delta": 2
+  },
+  {
+    "type": "TraitDeltaActivityEffect",
+    "id": "Practice_EmergencyCare_Activity/Practice_EmergencyCare_TraitDeltaActivityEffect#2",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_EmergencyCare_Activity.asset",
+    "trait": {
+      "ref": "trait.observation",
+      "type": "TraitDefinition"
+    },
+    "delta": 1
+  },
+  {
+    "type": "TraitDeltaActivityEffect",
+    "id": "Practice_EmergencyCare_Activity/Practice_EmergencyCare_TraitDeltaActivityEffect#3",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_EmergencyCare_Activity.asset",
+    "trait": {
+      "ref": "trait.calm",
+      "type": "TraitDefinition"
+    },
+    "delta": 2
+  },
+  {
+    "type": "TraitDeltaActivityEffect",
+    "id": "Practice_Interior_Activity/Practice_Interior_TraitDeltaActivityEffect#1",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_Interior_Activity.asset",
+    "trait": {
+      "ref": "trait.planning",
+      "type": "TraitDefinition"
+    },
+    "delta": 2
+  },
+  {
+    "type": "TraitDeltaActivityEffect",
+    "id": "Practice_Interior_Activity/Practice_Interior_TraitDeltaActivityEffect#2",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_Interior_Activity.asset",
+    "trait": {
+      "ref": "trait.creativity",
+      "type": "TraitDefinition"
+    },
+    "delta": 2
+  },
+  {
+    "type": "TraitDeltaActivityEffect",
+    "id": "Practice_Soldier_Activity/Practice_Soldier_TraitDeltaActivityEffect#1",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_Soldier_Activity.asset",
+    "trait": {
+      "ref": "trait.responsibility",
+      "type": "TraitDefinition"
+    },
+    "delta": 1
+  },
+  {
+    "type": "TraitDeltaActivityEffect",
+    "id": "Practice_Soldier_Activity/Practice_Soldier_TraitDeltaActivityEffect#2",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_Soldier_Activity.asset",
+    "trait": {
+      "ref": "trait.discipline",
+      "type": "TraitDefinition"
+    },
+    "delta": 2
+  },
+  {
+    "type": "TraitDeltaActivityEffect",
+    "id": "Practice_Soldier_Activity/Practice_Soldier_TraitDeltaActivityEffect#3",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_Soldier_Activity.asset",
+    "trait": {
+      "ref": "trait.fitness",
+      "type": "TraitDefinition"
+    },
+    "delta": 2
+  }
+]

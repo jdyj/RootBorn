@@ -1,0 +1,166 @@
+[
+  {
+    "type": "ClueInterpretationDefinition",
+    "id": "interpret.ask-librarian",
+    "asset": "Assets/Data/DiscoveryClues/Interpretations/Interpretation_AskLibrarian.asset",
+    "displayNameKey": "Ask Librarian",
+    "descriptionKey": "Ask a librarian about books on jobs.",
+    "clue": {
+      "ref": "clue.discovery.play-loop",
+      "type": "DiscoveryClueDefinition"
+    },
+    "methodKey": "Ask",
+    "publicTextKey": "The librarian suggests a book about jobs.",
+    "hiddenTextKey": "???",
+    "sources": [
+      {
+        "ref": "interpret.source.librarian",
+        "type": "ClueInterpretationSourceDefinition"
+      }
+    ],
+    "conditions": [
+      {
+        "ref": "InterpretationCondition_ClueSeen",
+        "type": "ClueInterpretationClueSeenCondition"
+      },
+      {
+        "ref": "InterpretationCondition_Relationship",
+        "type": "ClueInterpretationRelationshipThresholdCondition"
+      }
+    ],
+    "outcomes": [
+      {
+        "ref": "InterpretationOutcome_Encyclopedia",
+        "type": "ClueInterpretationEncyclopediaOutcome"
+      },
+      {
+        "ref": "InterpretationOutcome_Career",
+        "type": "ClueInterpretationCareerHintOutcome"
+      }
+    ],
+    "policy": {
+      "ref": "policy.interpret.nonexclusive",
+      "type": "ClueInterpretationPolicyDefinition"
+    },
+    "sortPriority": 30
+  },
+  {
+    "type": "ClueInterpretationDefinition",
+    "id": "interpret.investigate-location",
+    "asset": "Assets/Data/DiscoveryClues/Interpretations/Interpretation_InvestigateLocation.asset",
+    "displayNameKey": "Investigate Location",
+    "descriptionKey": "Investigate the clue location.",
+    "clue": {
+      "ref": "clue.discovery.play-loop",
+      "type": "DiscoveryClueDefinition"
+    },
+    "methodKey": "Investigate",
+    "publicTextKey": "The location changes your condition.",
+    "hiddenTextKey": "???",
+    "sources": [
+      {
+        "ref": "interpret.source.location",
+        "type": "ClueInterpretationSourceDefinition"
+      }
+    ],
+    "conditions": [
+      {
+        "ref": "InterpretationCondition_ClueSeen",
+        "type": "ClueInterpretationClueSeenCondition"
+      }
+    ],
+    "outcomes": [
+      {
+        "ref": "InterpretationOutcome_Status",
+        "type": "ClueInterpretationStatusDeltaOutcome"
+      }
+    ],
+    "policy": {
+      "ref": "policy.interpret.sequential",
+      "type": "ClueInterpretationPolicyDefinition"
+    },
+    "sortPriority": 10
+  },
+  {
+    "type": "ClueInterpretationDefinition",
+    "id": "interpret.restore-workbench",
+    "asset": "Assets/Data/DiscoveryClues/Interpretations/Interpretation_RestoreWorkbench.asset",
+    "displayNameKey": "Restore at Workbench",
+    "descriptionKey": "Restore the clue with tools.",
+    "clue": {
+      "ref": "clue.discovery.play-loop",
+      "type": "DiscoveryClueDefinition"
+    },
+    "methodKey": "Restore",
+    "publicTextKey": "The fragment points to follow-up work.",
+    "hiddenTextKey": "???",
+    "sources": [
+      {
+        "ref": "interpret.source.workbench",
+        "type": "ClueInterpretationSourceDefinition"
+      }
+    ],
+    "conditions": [
+      {
+        "ref": "InterpretationCondition_ClueSeen",
+        "type": "ClueInterpretationClueSeenCondition"
+      }
+    ],
+    "outcomes": [
+      {
+        "ref": "InterpretationOutcome_Quest",
+        "type": "ClueInterpretationQuestUnlockOutcome"
+      },
+      {
+        "ref": "InterpretationOutcome_World",
+        "type": "ClueInterpretationWorldStateOutcome"
+      },
+      {
+        "ref": "InterpretationOutcome_Relationship",
+        "type": "ClueInterpretationRelationshipDeltaOutcome"
+      }
+    ],
+    "policy": {
+      "ref": "policy.interpret.exclusive",
+      "type": "ClueInterpretationPolicyDefinition"
+    },
+    "sortPriority": 20
+  },
+  {
+    "type": "ClueInterpretationDefinition",
+    "id": "interpret.workshop-repair-ledger",
+    "asset": "Assets/Data/DiscoveryClues/Interpretations/Interpretation_WorkshopRepairLedger.asset",
+    "displayNameKey": "Inspect workshop repair ledger",
+    "descriptionKey": "See how repair work is noted at the workshop.",
+    "clue": {
+      "ref": "clue.discovery.play-loop",
+      "type": "DiscoveryClueDefinition"
+    },
+    "methodKey": "Inspect ledger",
+    "publicTextKey": "The workshop keeps repair notes you can look at.",
+    "hiddenTextKey": "??? repair ledger",
+    "sources": [
+      {
+        "ref": "interpret.source.workbench",
+        "type": "ClueInterpretationSourceDefinition"
+      }
+    ],
+    "conditions": [
+      {
+        "ref": "InterpretationCondition_ClueSeen",
+        "type": "ClueInterpretationClueSeenCondition"
+      }
+    ],
+    "outcomes": [
+      {
+        "ref": "InterpretationOutcome_WorkshopRepairLedgerWorld",
+        "type": "ClueInterpretationWorldStateOutcome"
+      }
+    ],
+    "policy": {
+      "ref": "policy.interpret.nonexclusive",
+      "type": "ClueInterpretationPolicyDefinition"
+    },
+    "sortPriority": 35
+  }
+]

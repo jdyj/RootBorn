@@ -1,0 +1,57 @@
+[
+  {
+    "type": "MilestoneRouteDefinition",
+    "id": "milestone.route.first-guide-trust-help",
+    "asset": "Assets/Data/StudentLife/Milestones/Routes/MilestoneRoute_FirstGuideTrustHelp.asset",
+    "displayNameKey": "milestone.route.first-guide-trust-help",
+    "objective": {
+      "ref": "milestone.objective.first-guide-trust",
+      "type": "RelationshipMilestoneObjective"
+    },
+    "recommendedActionId": "town.help.first-guide-errand"
+  },
+  {
+    "type": "MilestoneRouteDefinition",
+    "id": "milestone.route.help-neighbor",
+    "asset": "Assets/Data/StudentLife/Milestones/Routes/MilestoneRoute_HelpNeighbor.asset",
+    "displayNameKey": "milestone.route.help-neighbor",
+    "objective": {
+      "ref": "milestone.objective.responsibility-log",
+      "type": "OutsideSchoolLogMilestoneObjective"
+    },
+    "recommendedActionId": "outside.help-neighbor"
+  },
+  {
+    "type": "MilestoneRouteDefinition",
+    "id": "milestone.route.study-basics",
+    "asset": "Assets/Data/StudentLife/Milestones/Routes/MilestoneRoute_StudyBasics.asset",
+    "displayNameKey": "milestone.route.study-basics",
+    "objective": {
+      "ref": "milestone.objective.responsibility-log",
+      "type": "OutsideSchoolLogMilestoneObjective"
+    },
+    "recommendedActionId": "activity.study-basics"
+  },
+  {
+    "type": "MilestoneRouteDefinition",
+    "id": "milestone.route.teacher-commitment-help",
+    "asset": "Assets/Data/StudentLife/Milestones/Routes/MilestoneRoute_TeacherCommitmentHelp.asset",
+    "displayNameKey": "milestone.route.teacher-commitment-help",
+    "objective": {
+      "ref": "milestone.objective.teacher-commitment",
+      "type": "RelationshipMilestoneObjective"
+    },
+    "recommendedActionId": "town.help.teacher-study-prep"
+  },
+  {
+    "type": "MilestoneRouteDefinition",
+    "id": "milestone.route.teacher-support-help",
+    "asset": "Assets/Data/StudentLife/Milestones/Routes/MilestoneRoute_TeacherSupportHelp.asset",
+    "displayNameKey": "milestone.route.teacher-support-help",
+    "objective": {
+      "ref": "milestone.objective.teacher-support",
+      "type": "RelationshipMilestoneObjective"
+    },
+    "recommendedActionId": "town.help.teacher-study-prep"
+  }
+]

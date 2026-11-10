@@ -1,0 +1,19 @@
+{
+  "image": "Assets/Modern_Farm_v1.2/Icons/Icons_16x16/Icons_16x16_Singles/Icons_16x16_Tools_Axe.png",
+  "width": 16,
+  "height": 16,
+  "pixelsPerUnit": 16,
+  "origin": "top-left",
+  "sprites": {
+    "Icons_16x16_Tools_Axe": {
+      "x": 0,
+      "y": 0,
+      "w": 16,
+      "h": 16,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  }
+}

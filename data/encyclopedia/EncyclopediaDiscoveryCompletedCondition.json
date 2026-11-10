@@ -1,0 +1,11 @@
+[
+  {
+    "type": "EncyclopediaDiscoveryCompletedCondition",
+    "id": "EncyclopediaCondition_FirstDiscovery",
+    "asset": "Assets/Data/Encyclopedia/Conditions/EncyclopediaCondition_FirstDiscovery.asset",
+    "discovery": {
+      "ref": "discovery.clocktower-notice",
+      "type": "DiscoveryDefinition"
+    }
+  }
+]

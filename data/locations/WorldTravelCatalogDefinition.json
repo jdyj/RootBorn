@@ -1,0 +1,54 @@
+[
+  {
+    "type": "WorldTravelCatalogDefinition",
+    "id": "WorldTravelCatalog",
+    "asset": "Assets/Data/Locations/WorldTravel/WorldTravelCatalog.asset",
+    "destinations": [
+      {
+        "ref": "Destination_Beach",
+        "type": "WorldDestinationDefinition"
+      },
+      {
+        "ref": "Destination_HospitalInterior",
+        "type": "WorldDestinationDefinition"
+      },
+      {
+        "ref": "Destination_House",
+        "type": "WorldDestinationDefinition"
+      },
+      {
+        "ref": "Destination_Kitchen2Interior",
+        "type": "WorldDestinationDefinition"
+      },
+      {
+        "ref": "Destination_KitchenInterior",
+        "type": "WorldDestinationDefinition"
+      },
+      {
+        "ref": "Destination_PoliceInterior",
+        "type": "WorldDestinationDefinition"
+      },
+      {
+        "ref": "Destination_PoliceShootingInterior",
+        "type": "WorldDestinationDefinition"
+      },
+      {
+        "ref": "Destination_School",
+        "type": "WorldDestinationDefinition"
+      },
+      {
+        "ref": "Destination_ShopInterior",
+        "type": "WorldDestinationDefinition"
+      },
+      {
+        "ref": "Destination_Town",
+        "type": "WorldDestinationDefinition"
+      }
+    ],
+    "newGameDestination": {
+      "ref": "Destination_House",
+      "type": "WorldDestinationDefinition"
+    },
+    "newGameSpawnId": "house-entry"
+  }
+]

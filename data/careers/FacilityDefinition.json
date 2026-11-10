@@ -1,0 +1,258 @@
+[
+  {
+    "type": "FacilityDefinition",
+    "id": "facility.chef",
+    "asset": "Assets/Data/Careers/Facilities/Chef/Facility_Chef.asset",
+    "displayNameKey": "facility.chef.name",
+    "location": {
+      "ref": "location.restaurant",
+      "type": "LocationDefinition"
+    },
+    "practice": {
+      "ref": "practice.chef",
+      "type": "CareerPracticeDefinition"
+    },
+    "career": {
+      "ref": "career.chef",
+      "type": "CareerDefinition"
+    },
+    "candidate": {
+      "ref": "candidate.chef",
+      "type": "CareerCandidateDefinition"
+    },
+    "transitionRequirements": [
+      {
+        "ref": "Careers/Facilities/Chef/Transition_Hint",
+        "type": "CareerHintTransitionRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/Chef/Transition_Candidate",
+        "type": "CandidateReadyTransitionRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/Chef/Transition_Day",
+        "type": "MinimumDayTransitionRequirement"
+      }
+    ],
+    "levels": [
+      {
+        "ref": "facility.chef.level1",
+        "type": "FacilityLevelDefinition"
+      },
+      {
+        "ref": "facility.chef.level2",
+        "type": "FacilityLevelDefinition"
+      },
+      {
+        "ref": "facility.chef.level3",
+        "type": "FacilityLevelDefinition"
+      }
+    ],
+    "works": [
+      {
+        "ref": "work.chef.level1",
+        "type": "FacilityWorkDefinition"
+      },
+      {
+        "ref": "work.chef.level2",
+        "type": "FacilityWorkDefinition"
+      },
+      {
+        "ref": "work.chef.level3",
+        "type": "FacilityWorkDefinition"
+      }
+    ]
+  },
+  {
+    "type": "FacilityDefinition",
+    "id": "facility.emergency-care",
+    "asset": "Assets/Data/Careers/Facilities/EmergencyCare/Facility_EmergencyCare.asset",
+    "displayNameKey": "facility.emergency-care.name",
+    "location": {
+      "ref": "location.medical-clinic",
+      "type": "LocationDefinition"
+    },
+    "practice": {
+      "ref": "practice.emergency-care",
+      "type": "CareerPracticeDefinition"
+    },
+    "career": {
+      "ref": "career.emergency-care",
+      "type": "CareerDefinition"
+    },
+    "candidate": {
+      "ref": "candidate.emergency-care",
+      "type": "CareerCandidateDefinition"
+    },
+    "transitionRequirements": [
+      {
+        "ref": "Careers/Facilities/EmergencyCare/Transition_Hint",
+        "type": "CareerHintTransitionRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/EmergencyCare/Transition_Candidate",
+        "type": "CandidateReadyTransitionRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/EmergencyCare/Transition_Day",
+        "type": "MinimumDayTransitionRequirement"
+      }
+    ],
+    "levels": [
+      {
+        "ref": "facility.emergency-care.level1",
+        "type": "FacilityLevelDefinition"
+      },
+      {
+        "ref": "facility.emergency-care.level2",
+        "type": "FacilityLevelDefinition"
+      },
+      {
+        "ref": "facility.emergency-care.level3",
+        "type": "FacilityLevelDefinition"
+      }
+    ],
+    "works": [
+      {
+        "ref": "work.emergency-care.level1",
+        "type": "FacilityWorkDefinition"
+      },
+      {
+        "ref": "work.emergency-care.level2",
+        "type": "FacilityWorkDefinition"
+      },
+      {
+        "ref": "work.emergency-care.level3",
+        "type": "FacilityWorkDefinition"
+      }
+    ]
+  },
+  {
+    "type": "FacilityDefinition",
+    "id": "facility.interior",
+    "asset": "Assets/Data/Careers/Facilities/Interior/Facility_Interior.asset",
+    "displayNameKey": "facility.interior.name",
+    "location": {
+      "ref": "location.design-studio",
+      "type": "LocationDefinition"
+    },
+    "practice": {
+      "ref": "practice.interior",
+      "type": "CareerPracticeDefinition"
+    },
+    "career": {
+      "ref": "career.interior",
+      "type": "CareerDefinition"
+    },
+    "candidate": {
+      "ref": "candidate.interior",
+      "type": "CareerCandidateDefinition"
+    },
+    "transitionRequirements": [
+      {
+        "ref": "Careers/Facilities/Interior/Transition_Hint",
+        "type": "CareerHintTransitionRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/Interior/Transition_Candidate",
+        "type": "CandidateReadyTransitionRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/Interior/Transition_Day",
+        "type": "MinimumDayTransitionRequirement"
+      }
+    ],
+    "levels": [
+      {
+        "ref": "facility.interior.level1",
+        "type": "FacilityLevelDefinition"
+      },
+      {
+        "ref": "facility.interior.level2",
+        "type": "FacilityLevelDefinition"
+      },
+      {
+        "ref": "facility.interior.level3",
+        "type": "FacilityLevelDefinition"
+      }
+    ],
+    "works": [
+      {
+        "ref": "work.interior.level1",
+        "type": "FacilityWorkDefinition"
+      },
+      {
+        "ref": "work.interior.level2",
+        "type": "FacilityWorkDefinition"
+      },
+      {
+        "ref": "work.interior.level3",
+        "type": "FacilityWorkDefinition"
+      }
+    ]
+  },
+  {
+    "type": "FacilityDefinition",
+    "id": "facility.soldier",
+    "asset": "Assets/Data/Careers/Facilities/Soldier/Facility_Soldier.asset",
+    "displayNameKey": "facility.soldier.name",
+    "location": {
+      "ref": "location.training-ground",
+      "type": "LocationDefinition"
+    },
+    "practice": {
+      "ref": "practice.soldier",
+      "type": "CareerPracticeDefinition"
+    },
+    "career": {
+      "ref": "career.soldier",
+      "type": "CareerDefinition"
+    },
+    "candidate": {
+      "ref": "candidate.soldier",
+      "type": "CareerCandidateDefinition"
+    },
+    "transitionRequirements": [
+      {
+        "ref": "Careers/Facilities/Soldier/Transition_Hint",
+        "type": "CareerHintTransitionRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/Soldier/Transition_Candidate",
+        "type": "CandidateReadyTransitionRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/Soldier/Transition_Day",
+        "type": "MinimumDayTransitionRequirement"
+      }
+    ],
+    "levels": [
+      {
+        "ref": "facility.soldier.level1",
+        "type": "FacilityLevelDefinition"
+      },
+      {
+        "ref": "facility.soldier.level2",
+        "type": "FacilityLevelDefinition"
+      },
+      {
+        "ref": "facility.soldier.level3",
+        "type": "FacilityLevelDefinition"
+      }
+    ],
+    "works": [
+      {
+        "ref": "work.soldier.level1",
+        "type": "FacilityWorkDefinition"
+      },
+      {
+        "ref": "work.soldier.level2",
+        "type": "FacilityWorkDefinition"
+      },
+      {
+        "ref": "work.soldier.level3",
+        "type": "FacilityWorkDefinition"
+      }
+    ]
+  }
+]

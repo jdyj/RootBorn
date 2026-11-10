@@ -1,0 +1,44 @@
+[
+  {
+    "type": "EncyclopediaCategoryDefinition",
+    "id": "ency.category.activities",
+    "asset": "Assets/Data/Encyclopedia/Categories/EncyclopediaCategory_Activities.asset",
+    "displayName": "ui.encyclopedia.category.activities",
+    "sortOrder": 4
+  },
+  {
+    "type": "EncyclopediaCategoryDefinition",
+    "id": "ency.category.careers",
+    "asset": "Assets/Data/Encyclopedia/Categories/EncyclopediaCategory_Careers.asset",
+    "displayName": "ui.encyclopedia.category.careers",
+    "sortOrder": 3
+  },
+  {
+    "type": "EncyclopediaCategoryDefinition",
+    "id": "ency.category.items",
+    "asset": "Assets/Data/Encyclopedia/Categories/EncyclopediaCategory_Items.asset",
+    "displayName": "ui.encyclopedia.category.items",
+    "sortOrder": 5
+  },
+  {
+    "type": "EncyclopediaCategoryDefinition",
+    "id": "ency.category.knowledge",
+    "asset": "Assets/Data/Encyclopedia/Categories/EncyclopediaCategory_Knowledge.asset",
+    "displayName": "ui.encyclopedia.category.knowledge",
+    "sortOrder": 2
+  },
+  {
+    "type": "EncyclopediaCategoryDefinition",
+    "id": "ency.category.locations",
+    "asset": "Assets/Data/Encyclopedia/Categories/EncyclopediaCategory_Locations.asset",
+    "displayName": "ui.encyclopedia.category.locations",
+    "sortOrder": 0
+  },
+  {
+    "type": "EncyclopediaCategoryDefinition",
+    "id": "ency.category.npcs",
+    "asset": "Assets/Data/Encyclopedia/Categories/EncyclopediaCategory_NPCs.asset",
+    "displayName": "ui.encyclopedia.category.npcs",
+    "sortOrder": 1
+  }
+]

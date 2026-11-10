@@ -1,0 +1,86 @@
+[
+  {
+    "type": "TraitDefinition",
+    "id": "trait.aesthetic",
+    "asset": "Assets/Data/StudentLife/Minigames/Traits/Trait_Aesthetic.asset",
+    "displayNameKey": "trait.aesthetic"
+  },
+  {
+    "type": "TraitDefinition",
+    "id": "trait.calm",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Traits/Trait_Calm.asset",
+    "displayNameKey": "trait.calm"
+  },
+  {
+    "type": "TraitDefinition",
+    "id": "trait.creativity",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Traits/Trait_Creativity.asset",
+    "displayNameKey": "trait.creativity"
+  },
+  {
+    "type": "TraitDefinition",
+    "id": "trait.delicacy",
+    "asset": "Assets/Data/StudentLife/Minigames/Traits/Trait_Delicacy.asset",
+    "displayNameKey": "trait.delicacy"
+  },
+  {
+    "type": "TraitDefinition",
+    "id": "trait.discipline",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Traits/Trait_Discipline.asset",
+    "displayNameKey": "trait.discipline"
+  },
+  {
+    "type": "TraitDefinition",
+    "id": "trait.empathy",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Traits/Trait_Empathy.asset",
+    "displayNameKey": "trait.empathy"
+  },
+  {
+    "type": "TraitDefinition",
+    "id": "trait.fitness",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Traits/Trait_Fitness.asset",
+    "displayNameKey": "trait.fitness"
+  },
+  {
+    "type": "TraitDefinition",
+    "id": "trait.focus",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Traits/Trait_Focus.asset",
+    "displayNameKey": "trait.focus"
+  },
+  {
+    "type": "TraitDefinition",
+    "id": "trait.observation",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Traits/Trait_Observation.asset",
+    "displayNameKey": "trait.observation"
+  },
+  {
+    "type": "TraitDefinition",
+    "id": "trait.planning",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Traits/Trait_Planning.asset",
+    "displayNameKey": "trait.planning"
+  },
+  {
+    "type": "TraitDefinition",
+    "id": "trait.relief",
+    "asset": "Assets/Data/StudentLife/Minigames/Traits/Trait_Relief.asset",
+    "displayNameKey": "trait.relief"
+  },
+  {
+    "type": "TraitDefinition",
+    "id": "trait.responsibility",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Traits/Trait_Responsibility.asset",
+    "displayNameKey": "trait.responsibility"
+  },
+  {
+    "type": "TraitDefinition",
+    "id": "trait.service-sense",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Traits/Trait_ServiceSense.asset",
+    "displayNameKey": "trait.service-sense"
+  },
+  {
+    "type": "TraitDefinition",
+    "id": "trait.taste",
+    "asset": "Assets/Data/StudentLife/Minigames/Traits/Trait_Taste.asset",
+    "displayNameKey": "trait.taste"
+  }
+]

@@ -1,0 +1,220 @@
+[
+  {
+    "type": "SequenceChallengeDefinition",
+    "id": "CareSequence1",
+    "asset": "Assets/Data/StudentLife/Minigames/Challenges/CareSequence1.asset",
+    "instructionKey": "minigame.care.sequence",
+    "symbolSprites": [
+      {
+        "sprite": "Assets/Art/UI/UrbanMolding/inventory_search.png",
+        "name": "inventory_search"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/care_call_handset.png",
+        "name": "care_call_handset"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/first_aid_case.png",
+        "name": "first_aid_case"
+      }
+    ],
+    "timeLimitSeconds": 25,
+    "mistakeAllowance": 6,
+    "answers": "000000000100000002000000",
+    "symbols": [
+      "minigame.care.check",
+      "minigame.care.call",
+      "minigame.care.help"
+    ],
+    "revealSeconds": 3
+  },
+  {
+    "type": "SequenceChallengeDefinition",
+    "id": "CareSequence2",
+    "asset": "Assets/Data/StudentLife/Minigames/Challenges/CareSequence2.asset",
+    "instructionKey": "minigame.care.sequence",
+    "symbolSprites": [
+      {
+        "sprite": "Assets/Art/UI/UrbanMolding/inventory_search.png",
+        "name": "inventory_search"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/care_call_handset.png",
+        "name": "care_call_handset"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/first_aid_case.png",
+        "name": "first_aid_case"
+      }
+    ],
+    "timeLimitSeconds": 25,
+    "mistakeAllowance": 6,
+    "answers": "000000000100000002000000",
+    "symbols": [
+      "minigame.care.check",
+      "minigame.care.call",
+      "minigame.care.help"
+    ],
+    "revealSeconds": 3
+  },
+  {
+    "type": "SequenceChallengeDefinition",
+    "id": "CareSequence3",
+    "asset": "Assets/Data/StudentLife/Minigames/Challenges/CareSequence3.asset",
+    "instructionKey": "minigame.care.sequence",
+    "symbolSprites": [
+      {
+        "sprite": "Assets/Art/UI/UrbanMolding/inventory_search.png",
+        "name": "inventory_search"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/care_call_handset.png",
+        "name": "care_call_handset"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/first_aid_case.png",
+        "name": "first_aid_case"
+      }
+    ],
+    "timeLimitSeconds": 25,
+    "mistakeAllowance": 6,
+    "answers": "000000000100000002000000",
+    "symbols": [
+      "minigame.care.check",
+      "minigame.care.call",
+      "minigame.care.help"
+    ],
+    "revealSeconds": 3
+  },
+  {
+    "type": "SequenceChallengeDefinition",
+    "id": "Chef1",
+    "asset": "Assets/Data/StudentLife/Minigames/Challenges/Chef1.asset",
+    "instructionKey": "minigame.chef.sequence",
+    "symbolSprites": [
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/rice_bowl.png",
+        "name": "rice_bowl"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/carrot.png",
+        "name": "carrot"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/egg.png",
+        "name": "egg"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/sauce_bottle.png",
+        "name": "sauce_bottle"
+      }
+    ],
+    "timeLimitSeconds": 35,
+    "mistakeAllowance": 6,
+    "answers": "000000000100000002000000",
+    "symbols": [
+      "minigame.ingredient.rice",
+      "minigame.ingredient.vegetable",
+      "minigame.ingredient.egg",
+      "minigame.ingredient.sauce"
+    ],
+    "revealSeconds": 3.5
+  },
+  {
+    "type": "SequenceChallengeDefinition",
+    "id": "Chef2",
+    "asset": "Assets/Data/StudentLife/Minigames/Challenges/Chef2.asset",
+    "instructionKey": "minigame.chef.sequence",
+    "symbolSprites": [
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/rice_bowl.png",
+        "name": "rice_bowl"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/carrot.png",
+        "name": "carrot"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/egg.png",
+        "name": "egg"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/sauce_bottle.png",
+        "name": "sauce_bottle"
+      }
+    ],
+    "timeLimitSeconds": 35,
+    "mistakeAllowance": 6,
+    "answers": "00000000020000000100000003000000",
+    "symbols": [
+      "minigame.ingredient.rice",
+      "minigame.ingredient.vegetable",
+      "minigame.ingredient.egg",
+      "minigame.ingredient.sauce"
+    ],
+    "revealSeconds": 3.5
+  },
+  {
+    "type": "SequenceChallengeDefinition",
+    "id": "Chef3",
+    "asset": "Assets/Data/StudentLife/Minigames/Challenges/Chef3.asset",
+    "instructionKey": "minigame.chef.sequence",
+    "symbolSprites": [
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/rice_bowl.png",
+        "name": "rice_bowl"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/carrot.png",
+        "name": "carrot"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/egg.png",
+        "name": "egg"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/sauce_bottle.png",
+        "name": "sauce_bottle"
+      }
+    ],
+    "timeLimitSeconds": 35,
+    "mistakeAllowance": 6,
+    "answers": "0000000001000000030000000200000001000000",
+    "symbols": [
+      "minigame.ingredient.rice",
+      "minigame.ingredient.vegetable",
+      "minigame.ingredient.egg",
+      "minigame.ingredient.sauce"
+    ],
+    "revealSeconds": 3.5
+  },
+  {
+    "type": "SequenceChallengeDefinition",
+    "id": "StoreIntro",
+    "asset": "Assets/Data/StudentLife/Minigames/Challenges/StoreIntro.asset",
+    "instructionKey": "minigame.store.instructions",
+    "symbolSprites": [
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/store_bread.png",
+        "name": "store_bread"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/store_milk.png",
+        "name": "store_milk"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/store_fruit.png",
+        "name": "store_fruit"
+      }
+    ],
+    "timeLimitSeconds": 35,
+    "mistakeAllowance": 6,
+    "answers": "000000000100000002000000",
+    "symbols": [
+      "minigame.goods.bread",
+      "minigame.goods.milk",
+      "minigame.goods.fruit"
+    ],
+    "revealSeconds": 4
+  }
+]

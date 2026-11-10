@@ -1,0 +1,50 @@
+[
+  {
+    "type": "TimingChallengeDefinition",
+    "id": "Chef1Timing",
+    "asset": "Assets/Data/StudentLife/Minigames/Challenges/Chef1Timing.asset",
+    "instructionKey": "minigame.chef.timing",
+    "timeLimitSeconds": 6,
+    "mistakeAllowance": 6,
+    "beatTimes": [
+      1.25,
+      2.5,
+      3.75,
+      5
+    ],
+    "windowSeconds": 0.225
+  },
+  {
+    "type": "TimingChallengeDefinition",
+    "id": "Chef2Timing",
+    "asset": "Assets/Data/StudentLife/Minigames/Challenges/Chef2Timing.asset",
+    "instructionKey": "minigame.chef.timing",
+    "timeLimitSeconds": 7.25,
+    "mistakeAllowance": 6,
+    "beatTimes": [
+      1.25,
+      2.5,
+      3.75,
+      5,
+      6.25
+    ],
+    "windowSeconds": 0.19
+  },
+  {
+    "type": "TimingChallengeDefinition",
+    "id": "Chef3Timing",
+    "asset": "Assets/Data/StudentLife/Minigames/Challenges/Chef3Timing.asset",
+    "instructionKey": "minigame.chef.timing",
+    "timeLimitSeconds": 8.5,
+    "mistakeAllowance": 6,
+    "beatTimes": [
+      1.25,
+      2.5,
+      3.75,
+      5,
+      6.25,
+      7.5
+    ],
+    "windowSeconds": 0.15499999
+  }
+]

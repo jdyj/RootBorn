@@ -1,0 +1,428 @@
+[
+  {
+    "type": "CareerHintDefinition",
+    "id": "career.hint.investigation.store",
+    "asset": "Assets/Data/Careers/Hints/Hint_Investigation_Store.asset",
+    "displayNameKey": "career.hint.investigation.store",
+    "candidate": {
+      "ref": "career.candidate.investigation",
+      "type": "CareerCandidateDefinition"
+    },
+    "route": {
+      "ref": "career.route.investigation",
+      "type": "CareerCandidateRouteDefinition"
+    },
+    "insightKey": "insight.career.hint.investigation.store",
+    "understandingDelta": 1,
+    "sources": [
+      {
+        "ref": "Source_Hint_Investigation_Store",
+        "type": "CareerResultLogHintSource"
+      }
+    ]
+  },
+  {
+    "type": "CareerHintDefinition",
+    "id": "career.hint.learning.library",
+    "asset": "Assets/Data/Careers/Hints/Hint_Learning_Library.asset",
+    "displayNameKey": "career.hint.learning.library",
+    "candidate": {
+      "ref": "career.candidate.learning",
+      "type": "CareerCandidateDefinition"
+    },
+    "route": {
+      "ref": "career.route.library",
+      "type": "CareerCandidateRouteDefinition"
+    },
+    "insightKey": "insight.career.hint.learning.library",
+    "understandingDelta": 1,
+    "sources": [
+      {
+        "ref": "Source_Hint_Learning_Library",
+        "type": "CareerResultLogHintSource"
+      }
+    ]
+  },
+  {
+    "type": "CareerHintDefinition",
+    "id": "career.hint.learning.school",
+    "asset": "Assets/Data/Careers/Hints/Hint_Learning_School.asset",
+    "displayNameKey": "career.hint.learning.school",
+    "candidate": {
+      "ref": "career.candidate.learning",
+      "type": "CareerCandidateDefinition"
+    },
+    "route": {
+      "ref": "career.route.school",
+      "type": "CareerCandidateRouteDefinition"
+    },
+    "insightKey": "insight.career.hint.learning.school",
+    "understandingDelta": 1,
+    "sources": [
+      {
+        "ref": "Source_Hint_Learning_School",
+        "type": "CareerResultLogHintSource"
+      }
+    ]
+  },
+  {
+    "type": "CareerHintDefinition",
+    "id": "career.hint.service.square",
+    "asset": "Assets/Data/Careers/Hints/Hint_Service_Square.asset",
+    "displayNameKey": "career.hint.service.square",
+    "candidate": {
+      "ref": "career.candidate.service",
+      "type": "CareerCandidateDefinition"
+    },
+    "route": {
+      "ref": "career.route.service",
+      "type": "CareerCandidateRouteDefinition"
+    },
+    "insightKey": "insight.career.hint.service.square",
+    "understandingDelta": 1,
+    "sources": [
+      {
+        "ref": "Source_Hint_Service_Square",
+        "type": "CareerResultLogHintSource"
+      }
+    ]
+  },
+  {
+    "type": "CareerHintDefinition",
+    "id": "career.hint.technical.workshop",
+    "asset": "Assets/Data/Careers/Hints/Hint_Technical_Workshop.asset",
+    "displayNameKey": "career.hint.technical.workshop",
+    "candidate": {
+      "ref": "career.candidate.technical",
+      "type": "CareerCandidateDefinition"
+    },
+    "route": {
+      "ref": "career.route.workshop",
+      "type": "CareerCandidateRouteDefinition"
+    },
+    "insightKey": "insight.career.hint.technical.workshop",
+    "understandingDelta": 1,
+    "sources": [
+      {
+        "ref": "Source_Hint_Technical_Workshop",
+        "type": "CareerResultLogHintSource"
+      }
+    ]
+  },
+  {
+    "type": "CareerHintDefinition",
+    "id": "hint.chef.introduction",
+    "asset": "Assets/Data/Careers/Facilities/Chef/Hint_Introduction.asset",
+    "displayNameKey": "career.chef.insight",
+    "candidate": {
+      "ref": "candidate.chef",
+      "type": "CareerCandidateDefinition"
+    },
+    "route": null,
+    "insightKey": "",
+    "understandingDelta": 1,
+    "appliesOnce": 1,
+    "sources": [
+      {
+        "ref": "Careers/Facilities/Chef/Source_Introduction",
+        "type": "CareerResultLogHintSource"
+      }
+    ]
+  },
+  {
+    "type": "CareerHintDefinition",
+    "id": "hint.chef.job.errand-helper",
+    "asset": "Assets/Data/Careers/Facilities/Chef/Hint_Job_ErrandHelper.asset",
+    "displayNameKey": "career.chef.insight",
+    "candidate": {
+      "ref": "candidate.chef",
+      "type": "CareerCandidateDefinition"
+    },
+    "route": null,
+    "insightKey": "",
+    "understandingDelta": 1,
+    "appliesOnce": 1,
+    "sources": [
+      {
+        "ref": "Source_Job_ErrandHelper",
+        "type": "CareerResultLogHintSource"
+      }
+    ]
+  },
+  {
+    "type": "CareerHintDefinition",
+    "id": "hint.chef.job.restaurant-helper",
+    "asset": "Assets/Data/Careers/Facilities/Chef/Hint_Job_RestaurantHelper.asset",
+    "displayNameKey": "career.chef.insight",
+    "candidate": {
+      "ref": "candidate.chef",
+      "type": "CareerCandidateDefinition"
+    },
+    "route": null,
+    "insightKey": "",
+    "understandingDelta": 1,
+    "appliesOnce": 1,
+    "sources": [
+      {
+        "ref": "Source_Job_RestaurantHelper",
+        "type": "CareerResultLogHintSource"
+      }
+    ]
+  },
+  {
+    "type": "CareerHintDefinition",
+    "id": "hint.chef.practice",
+    "asset": "Assets/Data/Careers/Facilities/Chef/Hint_Practice.asset",
+    "displayNameKey": "career.chef.insight",
+    "candidate": {
+      "ref": "candidate.chef",
+      "type": "CareerCandidateDefinition"
+    },
+    "route": null,
+    "insightKey": "",
+    "understandingDelta": 1,
+    "sources": [
+      {
+        "ref": "Careers/Facilities/Chef/Source_Practice",
+        "type": "CareerResultLogHintSource"
+      }
+    ]
+  },
+  {
+    "type": "CareerHintDefinition",
+    "id": "hint.emergency-care.introduction",
+    "asset": "Assets/Data/Careers/Facilities/EmergencyCare/Hint_Introduction.asset",
+    "displayNameKey": "career.emergency-care.insight",
+    "candidate": {
+      "ref": "candidate.emergency-care",
+      "type": "CareerCandidateDefinition"
+    },
+    "route": null,
+    "insightKey": "",
+    "understandingDelta": 1,
+    "appliesOnce": 1,
+    "sources": [
+      {
+        "ref": "Careers/Facilities/EmergencyCare/Source_Introduction",
+        "type": "CareerResultLogHintSource"
+      }
+    ]
+  },
+  {
+    "type": "CareerHintDefinition",
+    "id": "hint.emergency-care.job.clinic-helper",
+    "asset": "Assets/Data/Careers/Facilities/EmergencyCare/Hint_Job_ClinicHelper.asset",
+    "displayNameKey": "career.emergency-care.insight",
+    "candidate": {
+      "ref": "candidate.emergency-care",
+      "type": "CareerCandidateDefinition"
+    },
+    "route": null,
+    "insightKey": "",
+    "understandingDelta": 1,
+    "appliesOnce": 1,
+    "sources": [
+      {
+        "ref": "Source_Job_ClinicHelper",
+        "type": "CareerResultLogHintSource"
+      }
+    ]
+  },
+  {
+    "type": "CareerHintDefinition",
+    "id": "hint.emergency-care.job.supply-helper",
+    "asset": "Assets/Data/Careers/Facilities/EmergencyCare/Hint_Job_SupplyHelper.asset",
+    "displayNameKey": "career.emergency-care.insight",
+    "candidate": {
+      "ref": "candidate.emergency-care",
+      "type": "CareerCandidateDefinition"
+    },
+    "route": null,
+    "insightKey": "",
+    "understandingDelta": 1,
+    "appliesOnce": 1,
+    "sources": [
+      {
+        "ref": "Source_Job_SupplyHelper",
+        "type": "CareerResultLogHintSource"
+      }
+    ]
+  },
+  {
+    "type": "CareerHintDefinition",
+    "id": "hint.emergency-care.practice",
+    "asset": "Assets/Data/Careers/Facilities/EmergencyCare/Hint_Practice.asset",
+    "displayNameKey": "career.emergency-care.insight",
+    "candidate": {
+      "ref": "candidate.emergency-care",
+      "type": "CareerCandidateDefinition"
+    },
+    "route": null,
+    "insightKey": "",
+    "understandingDelta": 1,
+    "sources": [
+      {
+        "ref": "Careers/Facilities/EmergencyCare/Source_Practice",
+        "type": "CareerResultLogHintSource"
+      }
+    ]
+  },
+  {
+    "type": "CareerHintDefinition",
+    "id": "hint.interior.introduction",
+    "asset": "Assets/Data/Careers/Facilities/Interior/Hint_Introduction.asset",
+    "displayNameKey": "career.interior.insight",
+    "candidate": {
+      "ref": "candidate.interior",
+      "type": "CareerCandidateDefinition"
+    },
+    "route": null,
+    "insightKey": "",
+    "understandingDelta": 1,
+    "appliesOnce": 1,
+    "sources": [
+      {
+        "ref": "Careers/Facilities/Interior/Source_Introduction",
+        "type": "CareerResultLogHintSource"
+      }
+    ]
+  },
+  {
+    "type": "CareerHintDefinition",
+    "id": "hint.interior.job.studio-helper",
+    "asset": "Assets/Data/Careers/Facilities/Interior/Hint_Job_StudioHelper.asset",
+    "displayNameKey": "career.interior.insight",
+    "candidate": {
+      "ref": "candidate.interior",
+      "type": "CareerCandidateDefinition"
+    },
+    "route": null,
+    "insightKey": "",
+    "understandingDelta": 1,
+    "appliesOnce": 1,
+    "sources": [
+      {
+        "ref": "Source_Job_StudioHelper",
+        "type": "CareerResultLogHintSource"
+      }
+    ]
+  },
+  {
+    "type": "CareerHintDefinition",
+    "id": "hint.interior.job.workshop-helper",
+    "asset": "Assets/Data/Careers/Facilities/Interior/Hint_Job_WorkshopHelper.asset",
+    "displayNameKey": "career.interior.insight",
+    "candidate": {
+      "ref": "candidate.interior",
+      "type": "CareerCandidateDefinition"
+    },
+    "route": null,
+    "insightKey": "",
+    "understandingDelta": 1,
+    "appliesOnce": 1,
+    "sources": [
+      {
+        "ref": "Source_Job_WorkshopHelper",
+        "type": "CareerResultLogHintSource"
+      }
+    ]
+  },
+  {
+    "type": "CareerHintDefinition",
+    "id": "hint.interior.practice",
+    "asset": "Assets/Data/Careers/Facilities/Interior/Hint_Practice.asset",
+    "displayNameKey": "career.interior.insight",
+    "candidate": {
+      "ref": "candidate.interior",
+      "type": "CareerCandidateDefinition"
+    },
+    "route": null,
+    "insightKey": "",
+    "understandingDelta": 1,
+    "sources": [
+      {
+        "ref": "Careers/Facilities/Interior/Source_Practice",
+        "type": "CareerResultLogHintSource"
+      }
+    ]
+  },
+  {
+    "type": "CareerHintDefinition",
+    "id": "hint.soldier.introduction",
+    "asset": "Assets/Data/Careers/Facilities/Soldier/Hint_Introduction.asset",
+    "displayNameKey": "career.soldier.insight",
+    "candidate": {
+      "ref": "candidate.soldier",
+      "type": "CareerCandidateDefinition"
+    },
+    "route": null,
+    "insightKey": "",
+    "understandingDelta": 1,
+    "appliesOnce": 1,
+    "sources": [
+      {
+        "ref": "Careers/Facilities/Soldier/Source_Introduction",
+        "type": "CareerResultLogHintSource"
+      }
+    ]
+  },
+  {
+    "type": "CareerHintDefinition",
+    "id": "hint.soldier.job.fitness-helper",
+    "asset": "Assets/Data/Careers/Facilities/Soldier/Hint_Job_FitnessHelper.asset",
+    "displayNameKey": "career.soldier.insight",
+    "candidate": {
+      "ref": "candidate.soldier",
+      "type": "CareerCandidateDefinition"
+    },
+    "route": null,
+    "insightKey": "",
+    "understandingDelta": 1,
+    "appliesOnce": 1,
+    "sources": [
+      {
+        "ref": "Source_Job_FitnessHelper",
+        "type": "CareerResultLogHintSource"
+      }
+    ]
+  },
+  {
+    "type": "CareerHintDefinition",
+    "id": "hint.soldier.job.training-helper",
+    "asset": "Assets/Data/Careers/Facilities/Soldier/Hint_Job_TrainingHelper.asset",
+    "displayNameKey": "career.soldier.insight",
+    "candidate": {
+      "ref": "candidate.soldier",
+      "type": "CareerCandidateDefinition"
+    },
+    "route": null,
+    "insightKey": "",
+    "understandingDelta": 1,
+    "appliesOnce": 1,
+    "sources": [
+      {
+        "ref": "Source_Job_TrainingHelper",
+        "type": "CareerResultLogHintSource"
+      }
+    ]
+  },
+  {
+    "type": "CareerHintDefinition",
+    "id": "hint.soldier.practice",
+    "asset": "Assets/Data/Careers/Facilities/Soldier/Hint_Practice.asset",
+    "displayNameKey": "career.soldier.insight",
+    "candidate": {
+      "ref": "candidate.soldier",
+      "type": "CareerCandidateDefinition"
+    },
+    "route": null,
+    "insightKey": "",
+    "understandingDelta": 1,
+    "sources": [
+      {
+        "ref": "Careers/Facilities/Soldier/Source_Practice",
+        "type": "CareerResultLogHintSource"
+      }
+    ]
+  }
+]

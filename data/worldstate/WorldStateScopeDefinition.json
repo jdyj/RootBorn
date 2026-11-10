@@ -1,0 +1,9 @@
+[
+  {
+    "type": "WorldStateScopeDefinition",
+    "id": "scope.shared-world",
+    "asset": "Assets/Data/WorldState/Scopes/Scope_SharedWorld.asset",
+    "kind": 1,
+    "displayNameKey": "Shared World"
+  }
+]

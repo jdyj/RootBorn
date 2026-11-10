@@ -1,0 +1,101 @@
+[
+  {
+    "type": "DailyEventChoiceDefinition",
+    "id": "daily-event-choice.library-ask-guide",
+    "asset": "Assets/Data/StudentLife/DailyEvents/Choices/DailyEventChoice_LibraryAskGuide.asset",
+    "displayNameKey": "life.event.choice.hint.name",
+    "resultSummaryKey": "life.event.choice.hint.summary",
+    "timePolicy": {
+      "ref": "paid-activity",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 15,
+    "energyCost": 0,
+    "focusCost": 1,
+    "stressDelta": 0,
+    "isDeferChoice": 0,
+    "isDeclineChoice": 0,
+    "availabilityRules": [],
+    "outcomes": [
+      {
+        "ref": "DailyEventOutcome_FirstGuideTrustPlus",
+        "type": "DailyEventRelationshipDeltaOutcome"
+      }
+    ]
+  },
+  {
+    "type": "DailyEventChoiceDefinition",
+    "id": "daily-event-choice.library-read-to-end",
+    "asset": "Assets/Data/StudentLife/DailyEvents/Choices/DailyEventChoice_LibraryReadToEnd.asset",
+    "displayNameKey": "life.event.choice.read.name",
+    "resultSummaryKey": "life.event.choice.read.summary",
+    "timePolicy": {
+      "ref": "paid-activity",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 30,
+    "energyCost": 1,
+    "focusCost": 1,
+    "stressDelta": 0,
+    "isDeferChoice": 0,
+    "isDeclineChoice": 0,
+    "availabilityRules": [],
+    "outcomes": [
+      {
+        "ref": "DailyEventOutcome_FocusPlus",
+        "type": "DailyEventTraitDeltaOutcome"
+      },
+      {
+        "ref": "DailyEventOutcome_FatiguePlus",
+        "type": "DailyEventStatusDeltaOutcome"
+      }
+    ]
+  },
+  {
+    "type": "DailyEventChoiceDefinition",
+    "id": "daily-event-choice.square-decline",
+    "asset": "Assets/Data/StudentLife/DailyEvents/Choices/DailyEventChoice_SquareDecline.asset",
+    "displayNameKey": "life.event.choice.pass.name",
+    "resultSummaryKey": "life.event.choice.pass.summary",
+    "timePolicy": {
+      "ref": "free-interaction",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 0,
+    "energyCost": 0,
+    "focusCost": 0,
+    "stressDelta": 0,
+    "isDeferChoice": 0,
+    "isDeclineChoice": 1,
+    "availabilityRules": [],
+    "outcomes": []
+  },
+  {
+    "type": "DailyEventChoiceDefinition",
+    "id": "daily-event-choice.square-help-now",
+    "asset": "Assets/Data/StudentLife/DailyEvents/Choices/DailyEventChoice_SquareHelpNow.asset",
+    "displayNameKey": "life.event.choice.help.name",
+    "resultSummaryKey": "life.event.choice.help.summary",
+    "timePolicy": {
+      "ref": "paid-activity",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 20,
+    "energyCost": 1,
+    "focusCost": 0,
+    "stressDelta": 0,
+    "isDeferChoice": 0,
+    "isDeclineChoice": 0,
+    "availabilityRules": [],
+    "outcomes": [
+      {
+        "ref": "DailyEventOutcome_EmpathyPlus",
+        "type": "DailyEventTraitDeltaOutcome"
+      },
+      {
+        "ref": "DailyEventOutcome_FirstGuideTrustPlus",
+        "type": "DailyEventRelationshipDeltaOutcome"
+      }
+    ]
+  }
+]

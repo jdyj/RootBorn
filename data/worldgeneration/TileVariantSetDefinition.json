@@ -1,0 +1,16 @@
+[
+  {
+    "type": "TileVariantSetDefinition",
+    "id": "TileVariants_Grass_Default",
+    "asset": "Assets/Data/WorldGeneration/TileVariants_Grass_Default.asset",
+    "variants": [
+      {
+        "Tile": {
+          "sprite": "Assets/Modern_Farm_v1.2/16x16/Single_Files_16x16/0_Complete_Tileset_Singles_16x16/Topsoil_16x16.png",
+          "name": "Topsoil_16x16"
+        },
+        "Weight": 1
+      }
+    ]
+  }
+]

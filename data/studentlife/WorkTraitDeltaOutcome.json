@@ -1,0 +1,92 @@
+[
+  {
+    "type": "WorkTraitDeltaOutcome",
+    "id": "WorkOutcome_ClinicHelperRelief",
+    "asset": "Assets/Data/StudentLife/PartTimeWork/Outcomes/WorkOutcome_ClinicHelperRelief.asset",
+    "trait": {
+      "ref": "trait.relief",
+      "type": "TraitDefinition"
+    },
+    "delta": 1
+  },
+  {
+    "type": "WorkTraitDeltaOutcome",
+    "id": "WorkOutcome_ErrandHelperDelicacy",
+    "asset": "Assets/Data/StudentLife/PartTimeWork/Outcomes/WorkOutcome_ErrandHelperDelicacy.asset",
+    "trait": {
+      "ref": "trait.delicacy",
+      "type": "TraitDefinition"
+    },
+    "delta": 1
+  },
+  {
+    "type": "WorkTraitDeltaOutcome",
+    "id": "WorkOutcome_FitnessHelperFitness",
+    "asset": "Assets/Data/StudentLife/PartTimeWork/Outcomes/WorkOutcome_FitnessHelperFitness.asset",
+    "trait": {
+      "ref": "trait.fitness",
+      "type": "TraitDefinition"
+    },
+    "delta": 1
+  },
+  {
+    "type": "WorkTraitDeltaOutcome",
+    "id": "WorkOutcome_RestaurantHelperTaste",
+    "asset": "Assets/Data/StudentLife/PartTimeWork/Outcomes/WorkOutcome_RestaurantHelperTaste.asset",
+    "trait": {
+      "ref": "trait.taste",
+      "type": "TraitDefinition"
+    },
+    "delta": 1
+  },
+  {
+    "type": "WorkTraitDeltaOutcome",
+    "id": "WorkOutcome_StoreResponsibility",
+    "asset": "Assets/Data/StudentLife/PartTimeWork/Outcomes/WorkOutcome_StoreResponsibility.asset",
+    "trait": {
+      "ref": "trait.responsibility",
+      "type": "TraitDefinition"
+    },
+    "delta": 2
+  },
+  {
+    "type": "WorkTraitDeltaOutcome",
+    "id": "WorkOutcome_StudioHelperAesthetic",
+    "asset": "Assets/Data/StudentLife/PartTimeWork/Outcomes/WorkOutcome_StudioHelperAesthetic.asset",
+    "trait": {
+      "ref": "trait.aesthetic",
+      "type": "TraitDefinition"
+    },
+    "delta": 1
+  },
+  {
+    "type": "WorkTraitDeltaOutcome",
+    "id": "WorkOutcome_SupplyHelperCalm",
+    "asset": "Assets/Data/StudentLife/PartTimeWork/Outcomes/WorkOutcome_SupplyHelperCalm.asset",
+    "trait": {
+      "ref": "trait.calm",
+      "type": "TraitDefinition"
+    },
+    "delta": 1
+  },
+  {
+    "type": "WorkTraitDeltaOutcome",
+    "id": "WorkOutcome_TrainingHelperDiscipline",
+    "asset": "Assets/Data/StudentLife/PartTimeWork/Outcomes/WorkOutcome_TrainingHelperDiscipline.asset",
+    "trait": {
+      "ref": "trait.discipline",
+      "type": "TraitDefinition"
+    },
+    "delta": 1
+  },
+  {
+    "type": "WorkTraitDeltaOutcome",
+    "id": "Work_Responsibility",
+    "asset": "Assets/Data/StudentLife/MainStory/Activities/Outcomes/Work_Responsibility.asset",
+    "trait": {
+      "ref": "trait.responsibility",
+      "type": "TraitDefinition"
+    },
+    "delta": 1
+  }
+]

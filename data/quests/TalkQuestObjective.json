@@ -1,0 +1,46 @@
+[
+  {
+    "type": "TalkQuestObjective",
+    "id": "Objective_CareerTalk_Chef",
+    "asset": "Assets/Data/Quests/CareerRoutes/Objectives/Objective_CareerTalk_Chef.asset",
+    "displayKey": "",
+    "requiredCount": 1,
+    "targetNpc": {
+      "ref": "npc.first-guide",
+      "type": "NpcDefinition"
+    }
+  },
+  {
+    "type": "TalkQuestObjective",
+    "id": "Objective_CareerTalk_EmergencyCare",
+    "asset": "Assets/Data/Quests/CareerRoutes/Objectives/Objective_CareerTalk_EmergencyCare.asset",
+    "displayKey": "",
+    "requiredCount": 1,
+    "targetNpc": {
+      "ref": "npc.first-guide",
+      "type": "NpcDefinition"
+    }
+  },
+  {
+    "type": "TalkQuestObjective",
+    "id": "Objective_CareerTalk_Interior",
+    "asset": "Assets/Data/Quests/CareerRoutes/Objectives/Objective_CareerTalk_Interior.asset",
+    "displayKey": "",
+    "requiredCount": 1,
+    "targetNpc": {
+      "ref": "npc.first-guide",
+      "type": "NpcDefinition"
+    }
+  },
+  {
+    "type": "TalkQuestObjective",
+    "id": "Objective_CareerTalk_Soldier",
+    "asset": "Assets/Data/Quests/CareerRoutes/Objectives/Objective_CareerTalk_Soldier.asset",
+    "displayKey": "",
+    "requiredCount": 1,
+    "targetNpc": {
+      "ref": "npc.first-guide",
+      "type": "NpcDefinition"
+    }
+  }
+]

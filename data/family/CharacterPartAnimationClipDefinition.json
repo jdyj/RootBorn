@@ -1,0 +1,83 @@
+[
+  {
+    "type": "CharacterPartAnimationClipDefinition",
+    "id": "character.action.chopping.side",
+    "asset": "Assets/Data/Family/CharacterPartAnimations/CharacterAction_Chopping_Side.asset",
+    "row": 5,
+    "frameCount": 40,
+    "framesPerSecond": 10,
+    "loop": 0
+  },
+  {
+    "type": "CharacterPartAnimationClipDefinition",
+    "id": "character.action.digging.down",
+    "asset": "Assets/Data/Family/CharacterPartAnimations/CharacterAction_Digging_Down.asset",
+    "row": 3,
+    "frameCount": 36,
+    "framesPerSecond": 10,
+    "loop": 0
+  },
+  {
+    "type": "CharacterPartAnimationClipDefinition",
+    "id": "character.action.fishing.caught.side",
+    "asset": "Assets/Data/Family/CharacterPartAnimations/CharacterAction_Fishing_Caught_Side.asset",
+    "row": 9,
+    "frameCount": 40,
+    "framesPerSecond": 8,
+    "loop": 0
+  },
+  {
+    "type": "CharacterPartAnimationClipDefinition",
+    "id": "character.action.fishing.idle.side",
+    "asset": "Assets/Data/Family/CharacterPartAnimations/CharacterAction_Fishing_Idle_Side.asset",
+    "row": 7,
+    "frameCount": 24,
+    "framesPerSecond": 6,
+    "loop": 1
+  },
+  {
+    "type": "CharacterPartAnimationClipDefinition",
+    "id": "character.action.fishing.pull_hook.side",
+    "asset": "Assets/Data/Family/CharacterPartAnimations/CharacterAction_Fishing_PullHook_Side.asset",
+    "row": 8,
+    "frameCount": 8,
+    "framesPerSecond": 10,
+    "loop": 0
+  },
+  {
+    "type": "CharacterPartAnimationClipDefinition",
+    "id": "character.action.fishing.side",
+    "asset": "Assets/Data/Family/CharacterPartAnimations/CharacterAction_Fishing_Side.asset",
+    "row": 6,
+    "frameCount": 40,
+    "framesPerSecond": 8,
+    "loop": 0
+  },
+  {
+    "type": "CharacterPartAnimationClipDefinition",
+    "id": "character.action.fishing.throw_hook.side",
+    "asset": "Assets/Data/Family/CharacterPartAnimations/CharacterAction_Fishing_ThrowHook_Side.asset",
+    "row": 6,
+    "frameCount": 40,
+    "framesPerSecond": 8,
+    "loop": 0
+  },
+  {
+    "type": "CharacterPartAnimationClipDefinition",
+    "id": "character.action.harvesting.down",
+    "asset": "Assets/Data/Family/CharacterPartAnimations/CharacterAction_Harvesting_Down.asset",
+    "row": 2,
+    "frameCount": 36,
+    "framesPerSecond": 10,
+    "loop": 0
+  },
+  {
+    "type": "CharacterPartAnimationClipDefinition",
+    "id": "character.action.watering.down",
+    "asset": "Assets/Data/Family/CharacterPartAnimations/CharacterAction_Watering_Down.asset",
+    "row": 4,
+    "frameCount": 56,
+    "framesPerSecond": 10,
+    "loop": 0
+  }
+]

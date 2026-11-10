@@ -1,0 +1,7 @@
+[
+  {
+    "type": "DiscoveryClueWorldStateActiveCondition",
+    "id": "Condition_LibraryArchiveActive",
+    "asset": "Assets/Data/DiscoveryClues/Conditions/Condition_LibraryArchiveActive.asset"
+  }
+]

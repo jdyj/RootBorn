@@ -1,0 +1,11 @@
+[
+  {
+    "type": "ExplorationEncyclopediaOutcome",
+    "id": "Outcome_Exploration_TestEncyclopedia",
+    "asset": "Assets/Data/StudentLife/ExplorationInteractions/Outcomes/Outcome_Exploration_TestEncyclopedia.asset",
+    "entry": {
+      "ref": "ency.location.first-discovery",
+      "type": "EncyclopediaEntryDefinition"
+    }
+  }
+]

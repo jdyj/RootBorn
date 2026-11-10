@@ -1,0 +1,24 @@
+[
+  {
+    "type": "DiscoveryClueWorldStateRevealOutcome",
+    "id": "Outcome_LibraryArchiveWorldState",
+    "asset": "Assets/Data/DiscoveryClues/Outcomes/Outcome_LibraryArchiveWorldState.asset",
+    "flags": [
+      {
+        "ref": "WorldState_DiscoveryClue_LibraryArchive",
+        "type": "WorldStateFlagDefinition"
+      }
+    ]
+  },
+  {
+    "type": "DiscoveryClueWorldStateRevealOutcome",
+    "id": "Outcome_PlayLoopWorldState",
+    "asset": "Assets/Data/DiscoveryClues/Outcomes/Outcome_PlayLoopWorldState.asset",
+    "flags": [
+      {
+        "ref": "world.discovery.play-loop",
+        "type": "WorldStateFlagDefinition"
+      }
+    ]
+  }
+]

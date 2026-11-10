@@ -1,0 +1,42 @@
+[
+  {
+    "type": "TraitDeltaActivityEffect",
+    "id": "Effect_Trait_Aesthetic",
+    "asset": "Assets/Data/Careers/Facilities/Interior/Effect_Trait_Aesthetic.asset",
+    "trait": {
+      "ref": "trait.aesthetic",
+      "type": "TraitDefinition"
+    },
+    "delta": 2
+  },
+  {
+    "type": "TraitDeltaActivityEffect",
+    "id": "Effect_Trait_Delicacy",
+    "asset": "Assets/Data/Careers/Facilities/Chef/Effect_Trait_Delicacy.asset",
+    "trait": {
+      "ref": "trait.delicacy",
+      "type": "TraitDefinition"
+    },
+    "delta": 2
+  },
+  {
+    "type": "TraitDeltaActivityEffect",
+    "id": "Effect_Trait_Relief",
+    "asset": "Assets/Data/Careers/Facilities/EmergencyCare/Effect_Trait_Relief.asset",
+    "trait": {
+      "ref": "trait.relief",
+      "type": "TraitDefinition"
+    },
+    "delta": 2
+  },
+  {
+    "type": "TraitDeltaActivityEffect",
+    "id": "Effect_Trait_Taste",
+    "asset": "Assets/Data/Careers/Facilities/Chef/Effect_Trait_Taste.asset",
+    "trait": {
+      "ref": "trait.taste",
+      "type": "TraitDefinition"
+    },
+    "delta": 2
+  }
+]

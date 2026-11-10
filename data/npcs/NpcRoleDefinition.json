@@ -1,0 +1,37 @@
+[
+  {
+    "type": "NpcRoleDefinition",
+    "id": "npc.role.guide",
+    "asset": "Assets/Data/NPCs/Roles/NpcRole_Guide.asset",
+    "displayName": "Guide",
+    "sortOrder": 10
+  },
+  {
+    "type": "NpcRoleDefinition",
+    "id": "npc.role.librarian",
+    "asset": "Assets/Data/NPCs/Roles/NpcRole_Librarian.asset",
+    "displayName": "Librarian",
+    "sortOrder": 30
+  },
+  {
+    "type": "NpcRoleDefinition",
+    "id": "npc.role.shopkeeper",
+    "asset": "Assets/Data/NPCs/Roles/NpcRole_Shopkeeper.asset",
+    "displayName": "Shopkeeper",
+    "sortOrder": 50
+  },
+  {
+    "type": "NpcRoleDefinition",
+    "id": "npc.role.teacher",
+    "asset": "Assets/Data/NPCs/Roles/NpcRole_Teacher.asset",
+    "displayName": "Teacher",
+    "sortOrder": 20
+  },
+  {
+    "type": "NpcRoleDefinition",
+    "id": "npc.role.work-manager",
+    "asset": "Assets/Data/NPCs/Roles/NpcRole_WorkManager.asset",
+    "displayName": "Work Manager",
+    "sortOrder": 40
+  }
+]

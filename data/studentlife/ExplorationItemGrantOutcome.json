@@ -1,0 +1,13 @@
+[
+  {
+    "type": "ExplorationItemGrantOutcome",
+    "id": "Outcome_Exploration_TestItem",
+    "asset": "Assets/Data/StudentLife/ExplorationInteractions/Outcomes/Outcome_Exploration_TestItem.asset",
+    "item": {
+      "ref": "Wood",
+      "type": "ItemDefinition"
+    },
+    "count": 1,
+    "allowDuplicate": 0
+  }
+]

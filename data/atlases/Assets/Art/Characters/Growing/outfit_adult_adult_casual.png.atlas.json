@@ -1,0 +1,249 @@
+{
+  "image": "Assets/Art/Characters/Growing/outfit_adult_adult_casual.png",
+  "width": 192,
+  "height": 236,
+  "pixelsPerUnit": 32,
+  "origin": "top-left",
+  "sprites": {
+    "outfit_adult_adult_casual_00": {
+      "x": 0,
+      "y": 0,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_adult_casual_01": {
+      "x": 32,
+      "y": 0,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_adult_casual_02": {
+      "x": 64,
+      "y": 0,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_adult_casual_03": {
+      "x": 96,
+      "y": 0,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_adult_casual_04": {
+      "x": 128,
+      "y": 0,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_adult_casual_05": {
+      "x": 160,
+      "y": 0,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_adult_casual_06": {
+      "x": 0,
+      "y": 59,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_adult_casual_07": {
+      "x": 32,
+      "y": 59,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_adult_casual_08": {
+      "x": 64,
+      "y": 59,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_adult_casual_09": {
+      "x": 96,
+      "y": 59,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_adult_casual_10": {
+      "x": 128,
+      "y": 59,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_adult_casual_11": {
+      "x": 160,
+      "y": 59,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_adult_casual_12": {
+      "x": 0,
+      "y": 118,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_adult_casual_13": {
+      "x": 32,
+      "y": 118,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_adult_casual_14": {
+      "x": 64,
+      "y": 118,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_adult_casual_15": {
+      "x": 96,
+      "y": 118,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_adult_casual_16": {
+      "x": 128,
+      "y": 118,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_adult_casual_17": {
+      "x": 160,
+      "y": 118,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_adult_casual_18": {
+      "x": 0,
+      "y": 177,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_adult_casual_19": {
+      "x": 32,
+      "y": 177,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_adult_casual_20": {
+      "x": 64,
+      "y": 177,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_adult_casual_21": {
+      "x": 96,
+      "y": 177,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_adult_casual_22": {
+      "x": 128,
+      "y": 177,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_adult_casual_23": {
+      "x": 160,
+      "y": 177,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  }
+}

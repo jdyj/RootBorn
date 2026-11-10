@@ -1,0 +1,22 @@
+[
+  {
+    "type": "LocationActivityTraitDeltaOutcome",
+    "id": "Observation_ReadJobBooks",
+    "asset": "Assets/Data/StudentLife/MainStory/Activities/Outcomes/Observation_ReadJobBooks.asset",
+    "trait": {
+      "ref": "trait.observation",
+      "type": "TraitDefinition"
+    },
+    "delta": 1
+  },
+  {
+    "type": "LocationActivityTraitDeltaOutcome",
+    "id": "Observation_WatchWorkshopWork",
+    "asset": "Assets/Data/StudentLife/MainStory/Activities/Outcomes/Observation_WatchWorkshopWork.asset",
+    "trait": {
+      "ref": "trait.observation",
+      "type": "TraitDefinition"
+    },
+    "delta": 1
+  }
+]

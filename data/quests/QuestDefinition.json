@@ -1,0 +1,143 @@
+[
+  {
+    "type": "QuestDefinition",
+    "id": "quest.career.chef",
+    "asset": "Assets/Data/Quests/CareerRoutes/Quest_CareerRoute_Chef.asset",
+    "displayNameKey": "quest.career.chef.name",
+    "descriptionKey": "quest.career.chef.desc",
+    "providerConditions": [],
+    "prerequisites": [],
+    "objectives": [
+      {
+        "ref": "Objective_CareerTalk_Chef",
+        "type": "TalkQuestObjective"
+      }
+    ],
+    "rewards": [],
+    "completionEffects": [
+      {
+        "ref": "Effect_CareerTrait_Chef",
+        "type": "TraitDeltaCompletionEffect"
+      }
+    ]
+  },
+  {
+    "type": "QuestDefinition",
+    "id": "quest.career.emergency-care",
+    "asset": "Assets/Data/Quests/CareerRoutes/Quest_CareerRoute_EmergencyCare.asset",
+    "displayNameKey": "quest.career.emergency-care.name",
+    "descriptionKey": "quest.career.emergency-care.desc",
+    "providerConditions": [],
+    "prerequisites": [],
+    "objectives": [
+      {
+        "ref": "Objective_CareerTalk_EmergencyCare",
+        "type": "TalkQuestObjective"
+      }
+    ],
+    "rewards": [],
+    "completionEffects": [
+      {
+        "ref": "Effect_CareerTrait_EmergencyCare",
+        "type": "TraitDeltaCompletionEffect"
+      }
+    ]
+  },
+  {
+    "type": "QuestDefinition",
+    "id": "quest.career.interior",
+    "asset": "Assets/Data/Quests/CareerRoutes/Quest_CareerRoute_Interior.asset",
+    "displayNameKey": "quest.career.interior.name",
+    "descriptionKey": "quest.career.interior.desc",
+    "providerConditions": [],
+    "prerequisites": [],
+    "objectives": [
+      {
+        "ref": "Objective_CareerTalk_Interior",
+        "type": "TalkQuestObjective"
+      }
+    ],
+    "rewards": [],
+    "completionEffects": [
+      {
+        "ref": "Effect_CareerTrait_Interior",
+        "type": "TraitDeltaCompletionEffect"
+      }
+    ]
+  },
+  {
+    "type": "QuestDefinition",
+    "id": "quest.career.soldier",
+    "asset": "Assets/Data/Quests/CareerRoutes/Quest_CareerRoute_Soldier.asset",
+    "displayNameKey": "quest.career.soldier.name",
+    "descriptionKey": "quest.career.soldier.desc",
+    "providerConditions": [],
+    "prerequisites": [],
+    "objectives": [
+      {
+        "ref": "Objective_CareerTalk_Soldier",
+        "type": "TalkQuestObjective"
+      }
+    ],
+    "rewards": [],
+    "completionEffects": [
+      {
+        "ref": "Effect_CareerTrait_Soldier",
+        "type": "TraitDeltaCompletionEffect"
+      }
+    ]
+  },
+  {
+    "type": "QuestDefinition",
+    "id": "quest.gatherWood",
+    "asset": "Assets/Data/Quests/Quest_GatherWood.asset",
+    "displayNameKey": "quest.gatherWood.name",
+    "descriptionKey": "quest.gatherWood.desc",
+    "providerConditions": [],
+    "prerequisites": [],
+    "objectives": [
+      {
+        "ref": "Objective_GatherWood",
+        "type": "GatherQuestObjective"
+      }
+    ],
+    "rewards": [
+      {
+        "ref": "Reward_WoodQuestStone",
+        "type": "ItemQuestReward"
+      },
+      {
+        "ref": "Reward_GatherWood_WorldState",
+        "type": "WorldStateChangeQuestReward"
+      }
+    ],
+    "completionEffects": [
+      {
+        "ref": "Effect_SetFirstQuestComplete",
+        "type": "SetStoryFlagCompletionEffect"
+      }
+    ]
+  },
+  {
+    "type": "QuestDefinition",
+    "id": "quest.tile-placement.interior",
+    "asset": "Assets/Data/Quests/CareerRoutes/Quest_TilePlacementInterior.asset",
+    "displayNameKey": "quest.house-decorating.name",
+    "descriptionKey": "quest.house-decorating.desc",
+    "providerConditions": [],
+    "prerequisites": [],
+    "objectives": [
+      {
+        "ref": "Objective_DecorateHouse",
+        "type": "FurniturePlacedQuestObjective"
+      }
+    ],
+    "rewards": [],
+    "completionEffects": [
+      {
+        "ref": "Effect_TilePlacementInterior",
+        "type": "TraitDeltaCompletionEffect"
+      }
+    ]
+  }
+]

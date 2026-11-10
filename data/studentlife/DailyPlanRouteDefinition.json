@@ -1,0 +1,325 @@
+[
+  {
+    "type": "DailyPlanRouteDefinition",
+    "id": "daily.library.self-study",
+    "asset": "Assets/Data/StudentLife/DailyPlans/LibrarySelfStudyRoute.asset",
+    "displayNameKey": "daily.route.library.self-study",
+    "targetLocation": {
+      "ref": "location.library",
+      "type": "LocationDefinition"
+    },
+    "growthRoute": 1,
+    "matchingActivities": [
+      {
+        "ref": "location.activity.library-hard-book",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "requirements": [],
+    "outcomes": [],
+    "objectiveTitleKey": "objective.daily.library.title",
+    "objectiveDetailKey": "objective.daily.library.detail",
+    "nextHintKey": "objective.daily.library.next"
+  },
+  {
+    "type": "DailyPlanRouteDefinition",
+    "id": "daily.practice.chef",
+    "asset": "Assets/Data/StudentLife/DailyPlans/FacilityPracticeRoutes/DailyPlan_Practice_Chef.asset",
+    "displayNameKey": "daily.practice.chef.name",
+    "targetLocation": {
+      "ref": "location.restaurant",
+      "type": "LocationDefinition"
+    },
+    "growthRoute": 6,
+    "matchingActivities": [],
+    "matchingPractices": [
+      {
+        "ref": "practice.chef",
+        "type": "CareerPracticeDefinition"
+      }
+    ],
+    "matchingWorks": [],
+    "requirements": [],
+    "outcomes": [],
+    "objectiveTitleKey": "daily.practice.chef.name",
+    "objectiveDetailKey": "daily.practice.chef.detail",
+    "nextHintKey": "daily.practice.chef.next"
+  },
+  {
+    "type": "DailyPlanRouteDefinition",
+    "id": "daily.practice.emergency-care",
+    "asset": "Assets/Data/StudentLife/DailyPlans/FacilityPracticeRoutes/DailyPlan_Practice_EmergencyCare.asset",
+    "displayNameKey": "daily.practice.emergency-care.name",
+    "targetLocation": {
+      "ref": "location.medical-clinic",
+      "type": "LocationDefinition"
+    },
+    "growthRoute": 6,
+    "matchingActivities": [],
+    "matchingPractices": [
+      {
+        "ref": "practice.emergency-care",
+        "type": "CareerPracticeDefinition"
+      }
+    ],
+    "matchingWorks": [],
+    "requirements": [],
+    "outcomes": [],
+    "objectiveTitleKey": "daily.practice.emergency-care.name",
+    "objectiveDetailKey": "daily.practice.emergency-care.detail",
+    "nextHintKey": "daily.practice.emergency-care.next"
+  },
+  {
+    "type": "DailyPlanRouteDefinition",
+    "id": "daily.practice.interior",
+    "asset": "Assets/Data/StudentLife/DailyPlans/FacilityPracticeRoutes/DailyPlan_Practice_Interior.asset",
+    "displayNameKey": "daily.practice.interior.name",
+    "targetLocation": {
+      "ref": "location.design-studio",
+      "type": "LocationDefinition"
+    },
+    "growthRoute": 6,
+    "matchingActivities": [],
+    "matchingPractices": [
+      {
+        "ref": "practice.interior",
+        "type": "CareerPracticeDefinition"
+      }
+    ],
+    "matchingWorks": [],
+    "requirements": [],
+    "outcomes": [],
+    "objectiveTitleKey": "daily.practice.interior.name",
+    "objectiveDetailKey": "daily.practice.interior.detail",
+    "nextHintKey": "daily.practice.interior.next"
+  },
+  {
+    "type": "DailyPlanRouteDefinition",
+    "id": "daily.practice.soldier",
+    "asset": "Assets/Data/StudentLife/DailyPlans/FacilityPracticeRoutes/DailyPlan_Practice_Soldier.asset",
+    "displayNameKey": "daily.practice.soldier.name",
+    "targetLocation": {
+      "ref": "location.training-ground",
+      "type": "LocationDefinition"
+    },
+    "growthRoute": 6,
+    "matchingActivities": [],
+    "matchingPractices": [
+      {
+        "ref": "practice.soldier",
+        "type": "CareerPracticeDefinition"
+      }
+    ],
+    "matchingWorks": [],
+    "requirements": [],
+    "outcomes": [],
+    "objectiveTitleKey": "daily.practice.soldier.name",
+    "objectiveDetailKey": "daily.practice.soldier.detail",
+    "nextHintKey": "daily.practice.soldier.next"
+  },
+  {
+    "type": "DailyPlanRouteDefinition",
+    "id": "daily.route.career.interior-practice",
+    "asset": "Assets/Data/StudentLife/DailyPlans/CareerInteriorPracticeRoute.asset",
+    "displayNameKey": "daily.route.career.interior-practice",
+    "targetLocation": {
+      "ref": "location.workshop",
+      "type": "LocationDefinition"
+    },
+    "growthRoute": 2,
+    "matchingActivities": [
+      {
+        "ref": "location.activity.workshop-shift",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "requirements": [
+      {
+        "ref": "DailyPlanRequirement_CareerInteriorHintUnlocked",
+        "type": "DailyPlanCareerHintRequirement"
+      }
+    ],
+    "outcomes": [],
+    "objectiveTitleKey": "objective.daily.career.interior-practice.title",
+    "objectiveDetailKey": "objective.daily.career.interior-practice.detail",
+    "nextHintKey": "objective.daily.career.interior-practice.next"
+  },
+  {
+    "type": "DailyPlanRouteDefinition",
+    "id": "daily.route.library.archive-research",
+    "asset": "Assets/Data/StudentLife/DailyPlans/LibraryArchiveResearchRoute.asset",
+    "displayNameKey": "daily.route.library.archive-research",
+    "targetLocation": {
+      "ref": "location.library",
+      "type": "LocationDefinition"
+    },
+    "growthRoute": 1,
+    "matchingActivities": [
+      {
+        "ref": "location.activity.library-hard-book",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "requirements": [
+      {
+        "ref": "DailyPlanRequirement_LibraryArchiveOpen",
+        "type": "DailyPlanWorldStateRequirement"
+      }
+    ],
+    "outcomes": [],
+    "objectiveTitleKey": "objective.daily.library.archive.title",
+    "objectiveDetailKey": "objective.daily.library.archive.detail",
+    "nextHintKey": "objective.daily.library.archive.next"
+  },
+  {
+    "type": "DailyPlanRouteDefinition",
+    "id": "daily.route.questchain.library-reward",
+    "asset": "Assets/Data/StudentLife/DailyPlans/QuestChainLibraryRewardRoute.asset",
+    "displayNameKey": "daily.route.questchain.library-reward",
+    "targetLocation": {
+      "ref": "location.town-square",
+      "type": "LocationDefinition"
+    },
+    "growthRoute": 4,
+    "matchingActivities": [
+      {
+        "ref": "location.activity.square-help-request",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "requirements": [
+      {
+        "ref": "DailyPlanRequirement_QuestChainLibraryRouteReward",
+        "type": "DailyPlanWorldStateRequirement"
+      }
+    ],
+    "outcomes": [],
+    "objectiveTitleKey": "objective.daily.questchain.library-reward.title",
+    "objectiveDetailKey": "objective.daily.questchain.library-reward.detail",
+    "nextHintKey": "objective.daily.questchain.library-reward.next"
+  },
+  {
+    "type": "DailyPlanRouteDefinition",
+    "id": "daily.route.workshop.repair-ledger",
+    "asset": "Assets/Data/StudentLife/DailyPlans/WorkshopRepairLedgerRoute.asset",
+    "displayNameKey": "daily.route.workshop.repair-ledger",
+    "targetLocation": {
+      "ref": "location.workshop",
+      "type": "LocationDefinition"
+    },
+    "growthRoute": 2,
+    "matchingActivities": [
+      {
+        "ref": "location.activity.workshop-shift",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "requirements": [
+      {
+        "ref": "DailyPlanRequirement_WorkshopRepairLedgerOpen",
+        "type": "DailyPlanWorldStateRequirement"
+      }
+    ],
+    "outcomes": [],
+    "objectiveTitleKey": "objective.daily.workshop.repair-ledger.title",
+    "objectiveDetailKey": "objective.daily.workshop.repair-ledger.detail",
+    "nextHintKey": "objective.daily.workshop.repair-ledger.next"
+  },
+  {
+    "type": "DailyPlanRouteDefinition",
+    "id": "daily.town-square.help",
+    "asset": "Assets/Data/StudentLife/DailyPlans/TownSquareHelpRoute.asset",
+    "displayNameKey": "daily.route.town-square.help",
+    "targetLocation": {
+      "ref": "location.town-square",
+      "type": "LocationDefinition"
+    },
+    "growthRoute": 4,
+    "matchingActivities": [
+      {
+        "ref": "location.activity.square-help-request",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "requirements": [],
+    "outcomes": [],
+    "objectiveTitleKey": "objective.daily.town-square.title",
+    "objectiveDetailKey": "objective.daily.town-square.detail",
+    "nextHintKey": "objective.daily.town-square.next"
+  },
+  {
+    "type": "DailyPlanRouteDefinition",
+    "id": "daily.work.corner-store",
+    "asset": "Assets/Data/StudentLife/DailyPlans/FacilityPracticeRoutes/DailyPlan_Work_CornerStore.asset",
+    "displayNameKey": "daily.work.corner-store.name",
+    "targetLocation": {
+      "ref": "location.corner-store",
+      "type": "LocationDefinition"
+    },
+    "growthRoute": 2,
+    "matchingActivities": [],
+    "matchingPractices": [],
+    "matchingWorks": [
+      {
+        "ref": "work.shift.corner-store",
+        "type": "PartTimeWorkDefinition"
+      }
+    ],
+    "requirements": [],
+    "outcomes": [],
+    "objectiveTitleKey": "daily.work.corner-store.name",
+    "objectiveDetailKey": "daily.work.corner-store.detail",
+    "nextHintKey": "daily.work.corner-store.next"
+  },
+  {
+    "type": "DailyPlanRouteDefinition",
+    "id": "daily.work.workshop-helper",
+    "asset": "Assets/Data/StudentLife/DailyPlans/FacilityPracticeRoutes/DailyPlan_Work_Workshop.asset",
+    "displayNameKey": "daily.work.workshop-helper.name",
+    "targetLocation": {
+      "ref": "location.workshop",
+      "type": "LocationDefinition"
+    },
+    "growthRoute": 2,
+    "matchingActivities": [],
+    "matchingPractices": [],
+    "matchingWorks": [
+      {
+        "ref": "work.workshop-helper",
+        "type": "PartTimeWorkDefinition"
+      }
+    ],
+    "requirements": [],
+    "outcomes": [],
+    "objectiveTitleKey": "daily.work.workshop-helper.name",
+    "objectiveDetailKey": "daily.work.workshop-helper.detail",
+    "nextHintKey": "daily.work.workshop-helper.next"
+  },
+  {
+    "type": "DailyPlanRouteDefinition",
+    "id": "daily.workshop.shift",
+    "asset": "Assets/Data/StudentLife/DailyPlans/WorkshopShiftRoute.asset",
+    "displayNameKey": "daily.route.workshop.shift",
+    "targetLocation": {
+      "ref": "location.workshop",
+      "type": "LocationDefinition"
+    },
+    "growthRoute": 2,
+    "matchingActivities": [
+      {
+        "ref": "location.activity.workshop-shift",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "requirements": [
+      {
+        "ref": "DailyPlanRequirement_WorkshopShift_CornerStoreWork",
+        "type": "DailyPlanPartTimeWorkRequirement"
+      }
+    ],
+    "outcomes": [],
+    "objectiveTitleKey": "objective.daily.workshop.title",
+    "objectiveDetailKey": "objective.daily.workshop.detail",
+    "nextHintKey": "objective.daily.workshop.next"
+  }
+]

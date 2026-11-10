@@ -1,0 +1,206 @@
+[
+  {
+    "type": "WearableDefinition",
+    "id": "wearable.hair_short_brown",
+    "asset": "Assets/Data/Characters/Wearables/Wearable_hair_short_brown.asset",
+    "displayNameKey": "ui.wardrobe.hair.short_brown",
+    "slot": {
+      "ref": "slot.hair",
+      "type": "WearableSlotDefinition"
+    },
+    "stageArt": [
+      {
+        "Stage": {
+          "ref": "stage.playground",
+          "type": "CharacterGrowthStageDefinition"
+        },
+        "Sheet": {
+          "ref": "head_playground_short_brown",
+          "type": "GrowingCharacterSheetDefinition"
+        }
+      },
+      {
+        "Stage": {
+          "ref": "stage.school",
+          "type": "CharacterGrowthStageDefinition"
+        },
+        "Sheet": {
+          "ref": "head_school_short_brown",
+          "type": "GrowingCharacterSheetDefinition"
+        }
+      },
+      {
+        "Stage": {
+          "ref": "stage.adult",
+          "type": "CharacterGrowthStageDefinition"
+        },
+        "Sheet": {
+          "ref": "head_adult_short_brown",
+          "type": "GrowingCharacterSheetDefinition"
+        }
+      }
+    ],
+    "autoEquipFacilityId": ""
+  },
+  {
+    "type": "WearableDefinition",
+    "id": "wearable.outfit_adult_casual",
+    "asset": "Assets/Data/Characters/Wearables/Wearable_outfit_adult_casual.asset",
+    "displayNameKey": "ui.wardrobe.outfit.adult_casual",
+    "slot": {
+      "ref": "slot.outfit",
+      "type": "WearableSlotDefinition"
+    },
+    "stageArt": [
+      {
+        "Stage": {
+          "ref": "stage.adult",
+          "type": "CharacterGrowthStageDefinition"
+        },
+        "Sheet": {
+          "ref": "outfit_adult_adult_casual",
+          "type": "GrowingCharacterSheetDefinition"
+        }
+      }
+    ],
+    "autoEquipFacilityId": ""
+  },
+  {
+    "type": "WearableDefinition",
+    "id": "wearable.outfit_casual",
+    "asset": "Assets/Data/Characters/Wearables/Wearable_outfit_casual.asset",
+    "displayNameKey": "ui.wardrobe.outfit.casual",
+    "slot": {
+      "ref": "slot.outfit",
+      "type": "WearableSlotDefinition"
+    },
+    "stageArt": [
+      {
+        "Stage": {
+          "ref": "stage.playground",
+          "type": "CharacterGrowthStageDefinition"
+        },
+        "Sheet": {
+          "ref": "outfit_playground_casual",
+          "type": "GrowingCharacterSheetDefinition"
+        }
+      }
+    ],
+    "autoEquipFacilityId": ""
+  },
+  {
+    "type": "WearableDefinition",
+    "id": "wearable.outfit_chef",
+    "asset": "Assets/Data/Characters/Wearables/Wearable_outfit_chef.asset",
+    "displayNameKey": "ui.wardrobe.outfit.chef",
+    "slot": {
+      "ref": "slot.outfit",
+      "type": "WearableSlotDefinition"
+    },
+    "stageArt": [
+      {
+        "Stage": {
+          "ref": "stage.adult",
+          "type": "CharacterGrowthStageDefinition"
+        },
+        "Sheet": {
+          "ref": "outfit_adult_chef",
+          "type": "GrowingCharacterSheetDefinition"
+        }
+      }
+    ],
+    "autoEquipFacilityId": "facility.chef"
+  },
+  {
+    "type": "WearableDefinition",
+    "id": "wearable.outfit_interior",
+    "asset": "Assets/Data/Characters/Wearables/Wearable_outfit_interior.asset",
+    "displayNameKey": "ui.wardrobe.outfit.interior",
+    "slot": {
+      "ref": "slot.outfit",
+      "type": "WearableSlotDefinition"
+    },
+    "stageArt": [
+      {
+        "Stage": {
+          "ref": "stage.adult",
+          "type": "CharacterGrowthStageDefinition"
+        },
+        "Sheet": {
+          "ref": "outfit_adult_interior",
+          "type": "GrowingCharacterSheetDefinition"
+        }
+      }
+    ],
+    "autoEquipFacilityId": "facility.interior"
+  },
+  {
+    "type": "WearableDefinition",
+    "id": "wearable.outfit_office",
+    "asset": "Assets/Data/Characters/Wearables/Wearable_outfit_office.asset",
+    "displayNameKey": "ui.wardrobe.outfit.office",
+    "slot": {
+      "ref": "slot.outfit",
+      "type": "WearableSlotDefinition"
+    },
+    "stageArt": [
+      {
+        "Stage": {
+          "ref": "stage.adult",
+          "type": "CharacterGrowthStageDefinition"
+        },
+        "Sheet": {
+          "ref": "outfit_adult_office",
+          "type": "GrowingCharacterSheetDefinition"
+        }
+      }
+    ],
+    "autoEquipFacilityId": ""
+  },
+  {
+    "type": "WearableDefinition",
+    "id": "wearable.outfit_school_casual",
+    "asset": "Assets/Data/Characters/Wearables/Wearable_outfit_school_casual.asset",
+    "displayNameKey": "ui.wardrobe.outfit.school_casual",
+    "slot": {
+      "ref": "slot.outfit",
+      "type": "WearableSlotDefinition"
+    },
+    "stageArt": [
+      {
+        "Stage": {
+          "ref": "stage.school",
+          "type": "CharacterGrowthStageDefinition"
+        },
+        "Sheet": {
+          "ref": "outfit_school_school_casual",
+          "type": "GrowingCharacterSheetDefinition"
+        }
+      }
+    ],
+    "autoEquipFacilityId": ""
+  },
+  {
+    "type": "WearableDefinition",
+    "id": "wearable.outfit_school_uniform",
+    "asset": "Assets/Data/Characters/Wearables/Wearable_outfit_school_uniform.asset",
+    "displayNameKey": "ui.wardrobe.outfit.school_uniform",
+    "slot": {
+      "ref": "slot.outfit",
+      "type": "WearableSlotDefinition"
+    },
+    "stageArt": [
+      {
+        "Stage": {
+          "ref": "stage.school",
+          "type": "CharacterGrowthStageDefinition"
+        },
+        "Sheet": {
+          "ref": "outfit_school_school_uniform",
+          "type": "GrowingCharacterSheetDefinition"
+        }
+      }
+    ],
+    "autoEquipFacilityId": ""
+  }
+]

@@ -1,0 +1,358 @@
+[
+  {
+    "type": "CareerInterestDefinition",
+    "id": "interest.chef",
+    "asset": "Assets/Data/Careers/Interests/Interest_Chef.asset",
+    "displayNameKey": "career.chef",
+    "descriptionKey": "dream.interest.chef.description",
+    "candidate": {
+      "ref": "candidate.chef",
+      "type": "CareerCandidateDefinition"
+    },
+    "relatedLocations": [
+      {
+        "ref": "location.restaurant",
+        "type": "LocationDefinition"
+      }
+    ],
+    "relatedActivities": [
+      {
+        "ref": "opening.introduce.restaurant",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "unlockRequirements": [
+      {
+        "ref": "InterestRequirement_Chef_CandidateRevealed",
+        "type": "CareerInterestCandidateStateRequirement"
+      }
+    ],
+    "selectionRules": [
+      {
+        "ref": "InterestRule_Chef_DailyChangeLimit",
+        "type": "CareerInterestDailyChangeLimitRule"
+      }
+    ],
+    "recommendations": [
+      {
+        "ref": "InterestRecommendation_Chef",
+        "type": "CareerInterestStaticRecommendation"
+      }
+    ],
+    "rewards": [
+      {
+        "ref": "InterestReward_Chef_Focus",
+        "type": "CareerInterestFocusReward"
+      }
+    ],
+    "linkedQuests": [],
+    "followUpNpc": {
+      "ref": "npc.teacher",
+      "type": "NpcDefinition"
+    },
+    "followUpLineKey": "dream.teacher.chef",
+    "changedLineKey": "dream.teacher.changed"
+  },
+  {
+    "type": "CareerInterestDefinition",
+    "id": "interest.emergency-care",
+    "asset": "Assets/Data/Careers/Interests/Interest_EmergencyCare.asset",
+    "displayNameKey": "career.emergency-care",
+    "descriptionKey": "dream.interest.emergency-care.description",
+    "candidate": {
+      "ref": "candidate.emergency-care",
+      "type": "CareerCandidateDefinition"
+    },
+    "relatedLocations": [
+      {
+        "ref": "location.medical-clinic",
+        "type": "LocationDefinition"
+      }
+    ],
+    "relatedActivities": [
+      {
+        "ref": "opening.introduce.medical-clinic",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "unlockRequirements": [
+      {
+        "ref": "InterestRequirement_EmergencyCare_CandidateRevealed",
+        "type": "CareerInterestCandidateStateRequirement"
+      }
+    ],
+    "selectionRules": [
+      {
+        "ref": "InterestRule_EmergencyCare_DailyChangeLimit",
+        "type": "CareerInterestDailyChangeLimitRule"
+      }
+    ],
+    "recommendations": [
+      {
+        "ref": "InterestRecommendation_EmergencyCare",
+        "type": "CareerInterestStaticRecommendation"
+      }
+    ],
+    "rewards": [
+      {
+        "ref": "InterestReward_EmergencyCare_Focus",
+        "type": "CareerInterestFocusReward"
+      }
+    ],
+    "linkedQuests": [],
+    "followUpNpc": {
+      "ref": "npc.teacher",
+      "type": "NpcDefinition"
+    },
+    "followUpLineKey": "dream.teacher.emergency-care",
+    "changedLineKey": "dream.teacher.changed"
+  },
+  {
+    "type": "CareerInterestDefinition",
+    "id": "interest.interior",
+    "asset": "Assets/Data/Careers/Interests/Interest_Interior.asset",
+    "displayNameKey": "career.interior",
+    "descriptionKey": "dream.interest.interior.description",
+    "candidate": {
+      "ref": "candidate.interior",
+      "type": "CareerCandidateDefinition"
+    },
+    "relatedLocations": [
+      {
+        "ref": "location.design-studio",
+        "type": "LocationDefinition"
+      }
+    ],
+    "relatedActivities": [
+      {
+        "ref": "opening.introduce.design-studio",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "unlockRequirements": [
+      {
+        "ref": "InterestRequirement_Interior_CandidateRevealed",
+        "type": "CareerInterestCandidateStateRequirement"
+      }
+    ],
+    "selectionRules": [
+      {
+        "ref": "InterestRule_Interior_DailyChangeLimit",
+        "type": "CareerInterestDailyChangeLimitRule"
+      }
+    ],
+    "recommendations": [
+      {
+        "ref": "InterestRecommendation_Interior",
+        "type": "CareerInterestStaticRecommendation"
+      }
+    ],
+    "rewards": [
+      {
+        "ref": "InterestReward_Interior_Focus",
+        "type": "CareerInterestFocusReward"
+      }
+    ],
+    "linkedQuests": [],
+    "followUpNpc": {
+      "ref": "npc.teacher",
+      "type": "NpcDefinition"
+    },
+    "followUpLineKey": "dream.teacher.interior",
+    "changedLineKey": "dream.teacher.changed"
+  },
+  {
+    "type": "CareerInterestDefinition",
+    "id": "interest.investigation",
+    "asset": "Assets/Data/Careers/Interests/Interest_Investigation.asset",
+    "displayNameKey": "interest.investigation",
+    "descriptionKey": "desc.interest.investigation",
+    "candidate": {
+      "ref": "career.candidate.investigation",
+      "type": "CareerCandidateDefinition"
+    },
+    "relatedLocations": [
+      {
+        "ref": "location.corner-store",
+        "type": "LocationDefinition"
+      }
+    ],
+    "relatedActivities": [
+      {
+        "ref": "location.activity.store-browse",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "unlockRequirements": [
+      null
+    ],
+    "selectionRules": [
+      null
+    ],
+    "recommendations": [
+      null
+    ],
+    "rewards": [
+      null
+    ]
+  },
+  {
+    "type": "CareerInterestDefinition",
+    "id": "interest.learning",
+    "asset": "Assets/Data/Careers/Interests/Interest_Learning.asset",
+    "displayNameKey": "interest.learning",
+    "descriptionKey": "desc.interest.learning",
+    "candidate": {
+      "ref": "career.candidate.learning",
+      "type": "CareerCandidateDefinition"
+    },
+    "relatedLocations": [
+      {
+        "ref": "location.library",
+        "type": "LocationDefinition"
+      }
+    ],
+    "relatedActivities": [
+      {
+        "ref": "location.activity.library-hard-book",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "unlockRequirements": [
+      null
+    ],
+    "selectionRules": [
+      null
+    ],
+    "recommendations": [
+      null
+    ],
+    "rewards": [
+      null
+    ]
+  },
+  {
+    "type": "CareerInterestDefinition",
+    "id": "interest.service",
+    "asset": "Assets/Data/Careers/Interests/Interest_Service.asset",
+    "displayNameKey": "interest.service",
+    "descriptionKey": "desc.interest.service",
+    "candidate": {
+      "ref": "career.candidate.service",
+      "type": "CareerCandidateDefinition"
+    },
+    "relatedLocations": [
+      {
+        "ref": "location.town-square",
+        "type": "LocationDefinition"
+      }
+    ],
+    "relatedActivities": [
+      {
+        "ref": "location.activity.square-help-request",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "unlockRequirements": [
+      null
+    ],
+    "selectionRules": [
+      null
+    ],
+    "recommendations": [
+      null
+    ],
+    "rewards": [
+      null
+    ]
+  },
+  {
+    "type": "CareerInterestDefinition",
+    "id": "interest.soldier",
+    "asset": "Assets/Data/Careers/Interests/Interest_Soldier.asset",
+    "displayNameKey": "career.soldier",
+    "descriptionKey": "dream.interest.soldier.description",
+    "candidate": {
+      "ref": "candidate.soldier",
+      "type": "CareerCandidateDefinition"
+    },
+    "relatedLocations": [
+      {
+        "ref": "location.training-ground",
+        "type": "LocationDefinition"
+      }
+    ],
+    "relatedActivities": [
+      {
+        "ref": "opening.introduce.training-ground",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "unlockRequirements": [
+      {
+        "ref": "InterestRequirement_Soldier_CandidateRevealed",
+        "type": "CareerInterestCandidateStateRequirement"
+      }
+    ],
+    "selectionRules": [
+      {
+        "ref": "InterestRule_Soldier_DailyChangeLimit",
+        "type": "CareerInterestDailyChangeLimitRule"
+      }
+    ],
+    "recommendations": [
+      {
+        "ref": "InterestRecommendation_Soldier",
+        "type": "CareerInterestStaticRecommendation"
+      }
+    ],
+    "rewards": [
+      {
+        "ref": "InterestReward_Soldier_Focus",
+        "type": "CareerInterestFocusReward"
+      }
+    ],
+    "linkedQuests": [],
+    "followUpNpc": {
+      "ref": "npc.teacher",
+      "type": "NpcDefinition"
+    },
+    "followUpLineKey": "dream.teacher.soldier",
+    "changedLineKey": "dream.teacher.changed"
+  },
+  {
+    "type": "CareerInterestDefinition",
+    "id": "interest.technical",
+    "asset": "Assets/Data/Careers/Interests/Interest_Technical.asset",
+    "displayNameKey": "interest.technical",
+    "descriptionKey": "desc.interest.technical",
+    "candidate": {
+      "ref": "career.candidate.technical",
+      "type": "CareerCandidateDefinition"
+    },
+    "relatedLocations": [
+      {
+        "ref": "location.workshop",
+        "type": "LocationDefinition"
+      }
+    ],
+    "relatedActivities": [
+      {
+        "ref": "location.activity.workshop-shift",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "unlockRequirements": [
+      null
+    ],
+    "selectionRules": [
+      null
+    ],
+    "recommendations": [
+      null
+    ],
+    "rewards": [
+      null
+    ]
+  }
+]

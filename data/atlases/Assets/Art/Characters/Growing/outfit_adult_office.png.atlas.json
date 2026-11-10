@@ -1,0 +1,249 @@
+{
+  "image": "Assets/Art/Characters/Growing/outfit_adult_office.png",
+  "width": 192,
+  "height": 236,
+  "pixelsPerUnit": 32,
+  "origin": "top-left",
+  "sprites": {
+    "outfit_adult_office_00": {
+      "x": 0,
+      "y": 0,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_office_01": {
+      "x": 32,
+      "y": 0,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_office_02": {
+      "x": 64,
+      "y": 0,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_office_03": {
+      "x": 96,
+      "y": 0,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_office_04": {
+      "x": 128,
+      "y": 0,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_office_05": {
+      "x": 160,
+      "y": 0,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_office_06": {
+      "x": 0,
+      "y": 59,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_office_07": {
+      "x": 32,
+      "y": 59,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_office_08": {
+      "x": 64,
+      "y": 59,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_office_09": {
+      "x": 96,
+      "y": 59,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_office_10": {
+      "x": 128,
+      "y": 59,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_office_11": {
+      "x": 160,
+      "y": 59,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_office_12": {
+      "x": 0,
+      "y": 118,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_office_13": {
+      "x": 32,
+      "y": 118,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_office_14": {
+      "x": 64,
+      "y": 118,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_office_15": {
+      "x": 96,
+      "y": 118,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_office_16": {
+      "x": 128,
+      "y": 118,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_office_17": {
+      "x": 160,
+      "y": 118,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_office_18": {
+      "x": 0,
+      "y": 177,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_office_19": {
+      "x": 32,
+      "y": 177,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_office_20": {
+      "x": 64,
+      "y": 177,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_office_21": {
+      "x": 96,
+      "y": 177,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_office_22": {
+      "x": 128,
+      "y": 177,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_adult_office_23": {
+      "x": 160,
+      "y": 177,
+      "w": 32,
+      "h": 59,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  }
+}

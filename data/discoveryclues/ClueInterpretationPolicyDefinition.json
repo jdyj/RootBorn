@@ -1,0 +1,32 @@
+[
+  {
+    "type": "ClueInterpretationPolicyDefinition",
+    "id": "policy.interpret.exclusive",
+    "asset": "Assets/Data/DiscoveryClues/Interpretations/InterpretationPolicy_Exclusive.asset",
+    "kind": 0,
+    "groupId": "policy.group.play-loop",
+    "sequenceOrder": 0,
+    "cooldownDays": 0,
+    "consumeItem": 0
+  },
+  {
+    "type": "ClueInterpretationPolicyDefinition",
+    "id": "policy.interpret.nonexclusive",
+    "asset": "Assets/Data/DiscoveryClues/Interpretations/InterpretationPolicy_NonExclusive.asset",
+    "kind": 1,
+    "groupId": "policy.group.play-loop.multi",
+    "sequenceOrder": 0,
+    "cooldownDays": 0,
+    "consumeItem": 0
+  },
+  {
+    "type": "ClueInterpretationPolicyDefinition",
+    "id": "policy.interpret.sequential",
+    "asset": "Assets/Data/DiscoveryClues/Interpretations/InterpretationPolicy_Sequential.asset",
+    "kind": 2,
+    "groupId": "policy.group.play-loop.sequence",
+    "sequenceOrder": 0,
+    "cooldownDays": 0,
+    "consumeItem": 0
+  }
+]

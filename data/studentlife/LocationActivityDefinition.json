@@ -1,0 +1,302 @@
+[
+  {
+    "type": "LocationActivityDefinition",
+    "id": "location.activity.library-hard-book",
+    "asset": "Assets/Data/StudentLife/LocationIdentities/Activities/LocationActivity_Library_HardBook.asset",
+    "displayNameKey": "location.activity.library-hard-book.name",
+    "location": {
+      "ref": "location.library",
+      "type": "LocationDefinition"
+    },
+    "growthRoute": 1,
+    "timePolicy": {
+      "ref": "paid-activity",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 40,
+    "energyCost": 1,
+    "focusCost": 2,
+    "stressDelta": 0,
+    "requirements": [],
+    "outcomes": [
+      {
+        "ref": "Outcome_Library_Skill",
+        "type": "LocationActivityProgressDeltaOutcome"
+      }
+    ]
+  },
+  {
+    "type": "LocationActivityDefinition",
+    "id": "location.activity.school-class",
+    "asset": "Assets/Data/StudentLife/LocationIdentities/Activities/LocationActivity_School_Class.asset",
+    "displayNameKey": "location.activity.school-class.name",
+    "location": {
+      "ref": "location.school",
+      "type": "LocationDefinition"
+    },
+    "growthRoute": 0,
+    "timePolicy": {
+      "ref": "free-morning",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 45,
+    "energyCost": 1,
+    "focusCost": 2,
+    "stressDelta": 1,
+    "requirements": [],
+    "outcomes": [
+      {
+        "ref": "Outcome_School_Trait",
+        "type": "LocationActivityProgressDeltaOutcome"
+      },
+      {
+        "ref": "Outcome_School_Career",
+        "type": "LocationActivityProgressDeltaOutcome"
+      }
+    ]
+  },
+  {
+    "type": "LocationActivityDefinition",
+    "id": "location.activity.square-help-request",
+    "asset": "Assets/Data/StudentLife/LocationIdentities/Activities/LocationActivity_Square_HelpRequest.asset",
+    "displayNameKey": "location.activity.square-help-request.name",
+    "location": {
+      "ref": "location.town-square",
+      "type": "LocationDefinition"
+    },
+    "growthRoute": 4,
+    "timePolicy": {
+      "ref": "paid-activity",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 30,
+    "energyCost": 1,
+    "focusCost": 1,
+    "stressDelta": 0,
+    "requirements": [],
+    "outcomes": [
+      {
+        "ref": "Outcome_Square_Relationship",
+        "type": "LocationActivityProgressDeltaOutcome"
+      },
+      {
+        "ref": "Outcome_Square_FieldNotesRecipe",
+        "type": "LocationActivityResourceRecipeOutcome"
+      }
+    ]
+  },
+  {
+    "type": "LocationActivityDefinition",
+    "id": "location.activity.store-browse",
+    "asset": "Assets/Data/StudentLife/LocationIdentities/Activities/LocationActivity_Store_Browse.asset",
+    "displayNameKey": "location.activity.store-browse.name",
+    "location": {
+      "ref": "location.corner-store",
+      "type": "LocationDefinition"
+    },
+    "growthRoute": 3,
+    "timePolicy": {
+      "ref": "paid-activity",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 20,
+    "energyCost": 0,
+    "focusCost": 1,
+    "stressDelta": 0,
+    "requirements": [],
+    "outcomes": [
+      {
+        "ref": "Outcome_Store_Skill",
+        "type": "LocationActivityProgressDeltaOutcome"
+      }
+    ]
+  },
+  {
+    "type": "LocationActivityDefinition",
+    "id": "location.activity.workshop-shift",
+    "asset": "Assets/Data/StudentLife/LocationIdentities/Activities/LocationActivity_Workshop_Shift.asset",
+    "displayNameKey": "location.activity.workshop-shift.name",
+    "location": {
+      "ref": "location.workshop",
+      "type": "LocationDefinition"
+    },
+    "growthRoute": 2,
+    "timePolicy": {
+      "ref": "paid-activity",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 60,
+    "energyCost": 2,
+    "focusCost": 1,
+    "stressDelta": 2,
+    "requirements": [],
+    "outcomes": [
+      {
+        "ref": "Outcome_Workshop_Status",
+        "type": "LocationActivityProgressDeltaOutcome"
+      }
+    ]
+  },
+  {
+    "type": "LocationActivityDefinition",
+    "id": "opening.clue.archive-door",
+    "asset": "Assets/Data/StudentLife/MainStory/Activities/LocationActivity_ReadJobBooks.asset",
+    "displayNameKey": "dream.activity.job-books.action",
+    "location": {
+      "ref": "location.library",
+      "type": "LocationDefinition"
+    },
+    "resultTextKey": "dream.activity.job-books.result",
+    "growthRoute": 6,
+    "timePolicy": {
+      "ref": "paid-activity",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 20,
+    "energyCost": 0,
+    "focusCost": 1,
+    "stressDelta": 0,
+    "requirements": [],
+    "outcomes": [
+      {
+        "ref": "Observation_ReadJobBooks",
+        "type": "LocationActivityTraitDeltaOutcome"
+      }
+    ]
+  },
+  {
+    "type": "LocationActivityDefinition",
+    "id": "opening.clue.repair-ledger",
+    "asset": "Assets/Data/StudentLife/MainStory/Activities/LocationActivity_WatchWorkshopWork.asset",
+    "displayNameKey": "dream.activity.watch-work.action",
+    "location": {
+      "ref": "location.workshop",
+      "type": "LocationDefinition"
+    },
+    "resultTextKey": "dream.activity.watch-work.result",
+    "growthRoute": 6,
+    "timePolicy": {
+      "ref": "paid-activity",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 20,
+    "energyCost": 0,
+    "focusCost": 1,
+    "stressDelta": 0,
+    "requirements": [],
+    "outcomes": [
+      {
+        "ref": "Observation_WatchWorkshopWork",
+        "type": "LocationActivityTraitDeltaOutcome"
+      }
+    ]
+  },
+  {
+    "type": "LocationActivityDefinition",
+    "id": "opening.introduce.design-studio",
+    "asset": "Assets/Data/StudentLife/MainStory/Activities/LocationActivity_IntroduceInterior.asset",
+    "displayNameKey": "opening.facility.design-studio.introduction",
+    "location": {
+      "ref": "location.design-studio",
+      "type": "LocationDefinition"
+    },
+    "resultTextKey": "dream.facility.design-studio.result",
+    "growthRoute": 6,
+    "timePolicy": {
+      "ref": "free-interaction",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 0,
+    "energyCost": 0,
+    "focusCost": 0,
+    "stressDelta": 0,
+    "requirements": [],
+    "outcomes": [
+      {
+        "ref": "CareerIntroduction_Interior",
+        "type": "LocationActivityProgressDeltaOutcome"
+      }
+    ]
+  },
+  {
+    "type": "LocationActivityDefinition",
+    "id": "opening.introduce.medical-clinic",
+    "asset": "Assets/Data/StudentLife/MainStory/Activities/LocationActivity_IntroduceEmergencyCare.asset",
+    "displayNameKey": "opening.facility.medical-clinic.introduction",
+    "location": {
+      "ref": "location.medical-clinic",
+      "type": "LocationDefinition"
+    },
+    "resultTextKey": "dream.facility.medical-clinic.result",
+    "growthRoute": 6,
+    "timePolicy": {
+      "ref": "free-interaction",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 0,
+    "energyCost": 0,
+    "focusCost": 0,
+    "stressDelta": 0,
+    "requirements": [],
+    "outcomes": [
+      {
+        "ref": "CareerIntroduction_EmergencyCare",
+        "type": "LocationActivityProgressDeltaOutcome"
+      }
+    ]
+  },
+  {
+    "type": "LocationActivityDefinition",
+    "id": "opening.introduce.restaurant",
+    "asset": "Assets/Data/StudentLife/MainStory/Activities/LocationActivity_IntroduceChef.asset",
+    "displayNameKey": "opening.facility.restaurant.introduction",
+    "location": {
+      "ref": "location.restaurant",
+      "type": "LocationDefinition"
+    },
+    "resultTextKey": "dream.facility.restaurant.result",
+    "growthRoute": 6,
+    "timePolicy": {
+      "ref": "free-interaction",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 0,
+    "energyCost": 0,
+    "focusCost": 0,
+    "stressDelta": 0,
+    "requirements": [],
+    "outcomes": [
+      {
+        "ref": "CareerIntroduction_Chef",
+        "type": "LocationActivityProgressDeltaOutcome"
+      }
+    ]
+  },
+  {
+    "type": "LocationActivityDefinition",
+    "id": "opening.introduce.training-ground",
+    "asset": "Assets/Data/StudentLife/MainStory/Activities/LocationActivity_IntroduceSoldier.asset",
+    "displayNameKey": "opening.facility.training-ground.introduction",
+    "location": {
+      "ref": "location.training-ground",
+      "type": "LocationDefinition"
+    },
+    "resultTextKey": "dream.facility.training-ground.result",
+    "growthRoute": 6,
+    "timePolicy": {
+      "ref": "free-interaction",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 0,
+    "energyCost": 0,
+    "focusCost": 0,
+    "stressDelta": 0,
+    "requirements": [],
+    "outcomes": [
+      {
+        "ref": "CareerIntroduction_Soldier",
+        "type": "LocationActivityProgressDeltaOutcome"
+      }
+    ]
+  }
+]

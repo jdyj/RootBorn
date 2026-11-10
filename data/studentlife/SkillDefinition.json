@@ -1,0 +1,74 @@
+[
+  {
+    "type": "SkillDefinition",
+    "id": "skill.budget-sense",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Skills/Skill_BudgetSense.asset",
+    "displayNameKey": "skill.budget-sense"
+  },
+  {
+    "type": "SkillDefinition",
+    "id": "skill.care",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Skills/Skill_Care.asset",
+    "displayNameKey": "skill.care"
+  },
+  {
+    "type": "SkillDefinition",
+    "id": "skill.color-harmony",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Skills/Skill_ColorHarmony.asset",
+    "displayNameKey": "skill.color-harmony"
+  },
+  {
+    "type": "SkillDefinition",
+    "id": "skill.cooking",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Skills/Skill_Cooking.asset",
+    "displayNameKey": "skill.cooking"
+  },
+  {
+    "type": "SkillDefinition",
+    "id": "skill.first-aid",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Skills/Skill_FirstAid.asset",
+    "displayNameKey": "skill.first-aid"
+  },
+  {
+    "type": "SkillDefinition",
+    "id": "skill.order-judgment",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Skills/Skill_OrderJudgment.asset",
+    "displayNameKey": "skill.order-judgment"
+  },
+  {
+    "type": "SkillDefinition",
+    "id": "skill.reaction-speed",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Skills/Skill_ReactionSpeed.asset",
+    "displayNameKey": "skill.reaction-speed"
+  },
+  {
+    "type": "SkillDefinition",
+    "id": "skill.space-layout",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Skills/Skill_SpaceLayout.asset",
+    "displayNameKey": "skill.space-layout"
+  },
+  {
+    "type": "SkillDefinition",
+    "id": "skill.symptom-judgment",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Skills/Skill_SymptomJudgment.asset",
+    "displayNameKey": "skill.symptom-judgment"
+  },
+  {
+    "type": "SkillDefinition",
+    "id": "skill.teamwork",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Skills/Skill_Teamwork.asset",
+    "displayNameKey": "skill.teamwork"
+  },
+  {
+    "type": "SkillDefinition",
+    "id": "skill.timing",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Skills/Skill_Timing.asset",
+    "displayNameKey": "skill.timing"
+  },
+  {
+    "type": "SkillDefinition",
+    "id": "skill.training",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Skills/Skill_Training.asset",
+    "displayNameKey": "skill.training"
+  }
+]

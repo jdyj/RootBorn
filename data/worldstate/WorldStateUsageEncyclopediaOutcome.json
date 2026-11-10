@@ -1,0 +1,13 @@
+[
+  {
+    "type": "WorldStateUsageEncyclopediaOutcome",
+    "id": "UsageOutcome_LibraryArchive_Encyclopedia",
+    "asset": "Assets/Data/WorldState/Usage/Outcomes/UsageOutcome_LibraryArchive_Encyclopedia.asset",
+    "entries": [
+      {
+        "ref": "ency.location.locked-archive",
+        "type": "EncyclopediaEntryDefinition"
+      }
+    ]
+  }
+]

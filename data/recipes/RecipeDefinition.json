@@ -1,0 +1,16 @@
+[
+  {
+    "type": "RecipeDefinition",
+    "id": "recipe.town.field-notes",
+    "asset": "Assets/Data/Recipes/Recipe_Town_FieldNotes.asset",
+    "displayNameKey": "recipe.town.field-notes.name",
+    "nextHintKey": "objective.recipe.field-notes.next",
+    "steps": [
+      {
+        "ref": "Recipe_Town_FieldNotes/Step_Gather_Stone_For_FieldNotes",
+        "type": "GatherResourceStep"
+      }
+    ],
+    "producesTool": null
+  }
+]

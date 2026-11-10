@@ -1,0 +1,98 @@
+[
+  {
+    "type": "DialogueDefinition",
+    "id": "Npc_FirstGuide_Schedule_0",
+    "asset": "Assets/Data/StudentLife/MainStory/Dialogue/Npc_FirstGuide_Schedule_0.asset",
+    "lineKeys": [
+      "opening.dialogue.guide",
+      "dialogue.first-guide.morning"
+    ],
+    "choices": [],
+    "requiredTutorialStage": null,
+    "conditions": []
+  },
+  {
+    "type": "DialogueDefinition",
+    "id": "Npc_FirstGuide_Schedule_1",
+    "asset": "Assets/Data/StudentLife/MainStory/Dialogue/Npc_FirstGuide_Schedule_1.asset",
+    "lineKeys": [
+      "opening.dialogue.guide",
+      "dialogue.first-guide.evening"
+    ],
+    "choices": [],
+    "requiredTutorialStage": null,
+    "conditions": []
+  },
+  {
+    "type": "DialogueDefinition",
+    "id": "Npc_Librarian_Schedule_0",
+    "asset": "Assets/Data/StudentLife/MainStory/Dialogue/Npc_Librarian_Schedule_0.asset",
+    "lineKeys": [
+      "dream.dialogue.librarian",
+      "dialogue.librarian.library"
+    ],
+    "choices": [],
+    "requiredTutorialStage": null,
+    "conditions": []
+  },
+  {
+    "type": "DialogueDefinition",
+    "id": "Npc_Librarian_Schedule_1",
+    "asset": "Assets/Data/StudentLife/MainStory/Dialogue/Npc_Librarian_Schedule_1.asset",
+    "lineKeys": [
+      "dream.dialogue.librarian",
+      "dialogue.librarian.square"
+    ],
+    "choices": [],
+    "requiredTutorialStage": null,
+    "conditions": []
+  },
+  {
+    "type": "DialogueDefinition",
+    "id": "Npc_Teacher_Schedule_0",
+    "asset": "Assets/Data/StudentLife/MainStory/Dialogue/Npc_Teacher_Schedule_0.asset",
+    "lineKeys": [
+      "dream.dialogue.teacher",
+      "dialogue.teacher.school"
+    ],
+    "choices": [],
+    "requiredTutorialStage": null,
+    "conditions": []
+  },
+  {
+    "type": "DialogueDefinition",
+    "id": "Npc_Teacher_Schedule_1",
+    "asset": "Assets/Data/StudentLife/MainStory/Dialogue/Npc_Teacher_Schedule_1.asset",
+    "lineKeys": [
+      "dream.dialogue.teacher",
+      "dialogue.teacher.square"
+    ],
+    "choices": [],
+    "requiredTutorialStage": null,
+    "conditions": []
+  },
+  {
+    "type": "DialogueDefinition",
+    "id": "Npc_WorkManager_Schedule_0",
+    "asset": "Assets/Data/StudentLife/MainStory/Dialogue/Npc_WorkManager_Schedule_0.asset",
+    "lineKeys": [
+      "dream.dialogue.manager",
+      "dialogue.work-manager.workshop"
+    ],
+    "choices": [],
+    "requiredTutorialStage": null,
+    "conditions": []
+  },
+  {
+    "type": "DialogueDefinition",
+    "id": "Npc_WorkManager_Schedule_1",
+    "asset": "Assets/Data/StudentLife/MainStory/Dialogue/Npc_WorkManager_Schedule_1.asset",
+    "lineKeys": [
+      "dream.dialogue.manager",
+      "dialogue.work-manager.corner-store"
+    ],
+    "choices": [],
+    "requiredTutorialStage": null,
+    "conditions": []
+  }
+]

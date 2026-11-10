@@ -1,0 +1,12 @@
+[
+  {
+    "type": "ClueInterpretationRelationshipDeltaOutcome",
+    "id": "InterpretationOutcome_Relationship",
+    "asset": "Assets/Data/DiscoveryClues/Interpretations/InterpretationOutcome_Relationship.asset",
+    "relationship": {
+      "ref": "relationship.first-guide.trust",
+      "type": "RelationshipDefinition"
+    },
+    "delta": 1
+  }
+]

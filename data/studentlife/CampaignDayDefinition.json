@@ -1,0 +1,150 @@
+[
+  {
+    "type": "CampaignDayDefinition",
+    "id": "campaign.day.future",
+    "asset": "Assets/Data/StudentLife/Campaigns/Days/Day_03_ConnectFuture.asset",
+    "displayNameKey": "Connect future",
+    "dayNumber": 3,
+    "themeKey": "Connect future",
+    "directionText": "Connect event, milestone, encyclopedia, or career hint",
+    "nextGuideText": "Next campaign",
+    "routes": [
+      {
+        "ref": "campaign.route.event",
+        "type": "CampaignRouteDefinition"
+      },
+      {
+        "ref": "campaign.route.library",
+        "type": "CampaignRouteDefinition"
+      }
+    ]
+  },
+  {
+    "type": "CampaignDayDefinition",
+    "id": "campaign.day.growth",
+    "asset": "Assets/Data/StudentLife/Campaigns/Days/Day_02_FindGrowth.asset",
+    "displayNameKey": "Find growth",
+    "dayNumber": 2,
+    "themeKey": "Find growth",
+    "directionText": "School and outside-school both work",
+    "nextGuideText": "Connect future",
+    "routes": [
+      {
+        "ref": "campaign.route.library",
+        "type": "CampaignRouteDefinition"
+      },
+      {
+        "ref": "campaign.route.school",
+        "type": "CampaignRouteDefinition"
+      }
+    ]
+  },
+  {
+    "type": "CampaignDayDefinition",
+    "id": "campaign.day.town",
+    "asset": "Assets/Data/StudentLife/Campaigns/Days/Day_01_TownAdaptation.asset",
+    "displayNameKey": "Town adaptation",
+    "dayNumber": 1,
+    "themeKey": "Town adaptation",
+    "directionText": "Meet the town",
+    "nextGuideText": "Find growth",
+    "routes": [
+      {
+        "ref": "campaign.route.town-walk",
+        "type": "CampaignRouteDefinition"
+      },
+      {
+        "ref": "campaign.route.library",
+        "type": "CampaignRouteDefinition"
+      }
+    ]
+  },
+  {
+    "type": "CampaignDayDefinition",
+    "id": "opening.day.1",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Day_1.asset",
+    "displayNameKey": "opening.day.1.name",
+    "dayNumber": 1,
+    "themeKey": "opening.day.1.name",
+    "directionText": "dream.day.1.direction",
+    "nextGuideText": "opening.day.1.next",
+    "routes": [
+      {
+        "ref": "opening.route.Teacher",
+        "type": "CampaignRouteDefinition"
+      },
+      {
+        "ref": "opening.route.SelfStudy",
+        "type": "CampaignRouteDefinition"
+      }
+    ]
+  },
+  {
+    "type": "CampaignDayDefinition",
+    "id": "opening.day.2",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Day_2.asset",
+    "displayNameKey": "opening.day.2.name",
+    "dayNumber": 2,
+    "themeKey": "opening.day.2.name",
+    "directionText": "dream.day.2.direction",
+    "nextGuideText": "dream.day.2.next",
+    "routes": [
+      {
+        "ref": "opening.route.StoreWork",
+        "type": "CampaignRouteDefinition"
+      },
+      {
+        "ref": "opening.route.WorkshopWork",
+        "type": "CampaignRouteDefinition"
+      },
+      {
+        "ref": "opening.route.RestaurantWork",
+        "type": "CampaignRouteDefinition"
+      },
+      {
+        "ref": "opening.route.ClinicWork",
+        "type": "CampaignRouteDefinition"
+      },
+      {
+        "ref": "opening.route.StudioWork",
+        "type": "CampaignRouteDefinition"
+      },
+      {
+        "ref": "opening.route.TrainingWork",
+        "type": "CampaignRouteDefinition"
+      },
+      {
+        "ref": "opening.route.ErrandWork",
+        "type": "CampaignRouteDefinition"
+      },
+      {
+        "ref": "opening.route.SupplyWork",
+        "type": "CampaignRouteDefinition"
+      },
+      {
+        "ref": "opening.route.FitnessWork",
+        "type": "CampaignRouteDefinition"
+      }
+    ]
+  },
+  {
+    "type": "CampaignDayDefinition",
+    "id": "opening.day.3",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Day_3.asset",
+    "displayNameKey": "dream.day.3.name",
+    "dayNumber": 3,
+    "themeKey": "dream.day.3.name",
+    "directionText": "dream.day.3.direction",
+    "nextGuideText": "dream.day.3.next",
+    "routes": [
+      {
+        "ref": "opening.route.Archive",
+        "type": "CampaignRouteDefinition"
+      },
+      {
+        "ref": "opening.route.Ledger",
+        "type": "CampaignRouteDefinition"
+      }
+    ]
+  }
+]

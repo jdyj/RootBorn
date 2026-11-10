@@ -1,0 +1,32 @@
+[
+  {
+    "type": "DailyPlanWorldStateRequirement",
+    "id": "DailyPlanRequirement_LibraryArchiveOpen",
+    "asset": "Assets/Data/StudentLife/DailyPlans/Requirements/DailyPlanRequirement_LibraryArchiveOpen.asset",
+    "flag": {
+      "ref": "world.library.archive-open",
+      "type": "WorldStateFlagDefinition"
+    },
+    "expectedActive": 1
+  },
+  {
+    "type": "DailyPlanWorldStateRequirement",
+    "id": "DailyPlanRequirement_QuestChainLibraryRouteReward",
+    "asset": "Assets/Data/StudentLife/DailyPlans/Requirements/DailyPlanRequirement_QuestChainLibraryRouteReward.asset",
+    "flag": {
+      "ref": "world.questchain.library-route-reward",
+      "type": "WorldStateFlagDefinition"
+    },
+    "expectedActive": 1
+  },
+  {
+    "type": "DailyPlanWorldStateRequirement",
+    "id": "DailyPlanRequirement_WorkshopRepairLedgerOpen",
+    "asset": "Assets/Data/StudentLife/DailyPlans/Requirements/DailyPlanRequirement_WorkshopRepairLedgerOpen.asset",
+    "flag": {
+      "ref": "world.workshop.repair-ledger-open",
+      "type": "WorldStateFlagDefinition"
+    },
+    "expectedActive": 1
+  }
+]

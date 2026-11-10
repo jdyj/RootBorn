@@ -1,0 +1,9 @@
+[
+  {
+    "type": "StatusDefinition",
+    "id": "status.fatigue",
+    "asset": "Assets/Data/Status/Status_Student_Fatigue.asset",
+    "displayNameKey": "Fatigue",
+    "persistsToNextDay": 1
+  }
+]

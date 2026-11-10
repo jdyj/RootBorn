@@ -1,0 +1,17 @@
+[
+  {
+    "type": "WorldStateChangeQuestReward",
+    "id": "Reward_GatherWood_WorldState",
+    "asset": "Assets/Data/Quests/Rewards/Reward_GatherWood_WorldState.asset",
+    "flags": [
+      {
+        "ref": "world.library.archive-open",
+        "type": "WorldStateFlagDefinition"
+      }
+    ],
+    "sourceQuestChainId": "quest.gatherWood",
+    "sourceQuestStepId": "claim",
+    "sourceEventId": "reward.claim",
+    "activationDay": 1
+  }
+]

@@ -1,0 +1,58 @@
+[
+  {
+    "type": "CareerInterestFocusReward",
+    "id": "InterestReward_Chef_Focus",
+    "asset": "Assets/Data/Careers/Interests/Rewards/InterestReward_Chef_Focus.asset",
+    "rewardId": "interest.chef:reward.focus",
+    "focusDelta": 1
+  },
+  {
+    "type": "CareerInterestFocusReward",
+    "id": "InterestReward_EmergencyCare_Focus",
+    "asset": "Assets/Data/Careers/Interests/Rewards/InterestReward_EmergencyCare_Focus.asset",
+    "rewardId": "interest.emergency-care:reward.focus",
+    "focusDelta": 1
+  },
+  {
+    "type": "CareerInterestFocusReward",
+    "id": "InterestReward_Interior_Focus",
+    "asset": "Assets/Data/Careers/Interests/Rewards/InterestReward_Interior_Focus.asset",
+    "rewardId": "interest.interior:reward.focus",
+    "focusDelta": 1
+  },
+  {
+    "type": "CareerInterestFocusReward",
+    "id": "InterestReward_Investigation_Focus",
+    "asset": "Assets/Data/Careers/Interests/Rewards/InterestReward_Investigation_Focus.asset",
+    "rewardId": "interest.investigation:reward.focus",
+    "focusDelta": 1
+  },
+  {
+    "type": "CareerInterestFocusReward",
+    "id": "InterestReward_Learning_Focus",
+    "asset": "Assets/Data/Careers/Interests/Rewards/InterestReward_Learning_Focus.asset",
+    "rewardId": "interest.learning:reward.focus",
+    "focusDelta": 1
+  },
+  {
+    "type": "CareerInterestFocusReward",
+    "id": "InterestReward_Service_Focus",
+    "asset": "Assets/Data/Careers/Interests/Rewards/InterestReward_Service_Focus.asset",
+    "rewardId": "interest.service:reward.focus",
+    "focusDelta": 1
+  },
+  {
+    "type": "CareerInterestFocusReward",
+    "id": "InterestReward_Soldier_Focus",
+    "asset": "Assets/Data/Careers/Interests/Rewards/InterestReward_Soldier_Focus.asset",
+    "rewardId": "interest.soldier:reward.focus",
+    "focusDelta": 1
+  },
+  {
+    "type": "CareerInterestFocusReward",
+    "id": "InterestReward_Technical_Focus",
+    "asset": "Assets/Data/Careers/Interests/Rewards/InterestReward_Technical_Focus.asset",
+    "rewardId": "interest.technical:reward.focus",
+    "focusDelta": 1
+  }
+]

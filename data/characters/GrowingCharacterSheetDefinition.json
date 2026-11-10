@@ -1,0 +1,1341 @@
+[
+  {
+    "type": "GrowingCharacterSheetDefinition",
+    "id": "body_adult",
+    "asset": "Assets/Data/Characters/Growing/Sheet_body_adult.asset",
+    "frames": [
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_adult.png",
+        "name": "body_adult_00"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_adult.png",
+        "name": "body_adult_01"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_adult.png",
+        "name": "body_adult_02"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_adult.png",
+        "name": "body_adult_03"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_adult.png",
+        "name": "body_adult_04"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_adult.png",
+        "name": "body_adult_05"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_adult.png",
+        "name": "body_adult_06"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_adult.png",
+        "name": "body_adult_07"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_adult.png",
+        "name": "body_adult_08"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_adult.png",
+        "name": "body_adult_09"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_adult.png",
+        "name": "body_adult_10"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_adult.png",
+        "name": "body_adult_11"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_adult.png",
+        "name": "body_adult_12"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_adult.png",
+        "name": "body_adult_13"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_adult.png",
+        "name": "body_adult_14"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_adult.png",
+        "name": "body_adult_15"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_adult.png",
+        "name": "body_adult_16"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_adult.png",
+        "name": "body_adult_17"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_adult.png",
+        "name": "body_adult_18"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_adult.png",
+        "name": "body_adult_19"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_adult.png",
+        "name": "body_adult_20"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_adult.png",
+        "name": "body_adult_21"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_adult.png",
+        "name": "body_adult_22"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_adult.png",
+        "name": "body_adult_23"
+      }
+    ]
+  },
+  {
+    "type": "GrowingCharacterSheetDefinition",
+    "id": "body_playground",
+    "asset": "Assets/Data/Characters/Growing/Sheet_body_playground.asset",
+    "frames": [
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_playground.png",
+        "name": "body_playground_00"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_playground.png",
+        "name": "body_playground_01"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_playground.png",
+        "name": "body_playground_02"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_playground.png",
+        "name": "body_playground_03"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_playground.png",
+        "name": "body_playground_04"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_playground.png",
+        "name": "body_playground_05"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_playground.png",
+        "name": "body_playground_06"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_playground.png",
+        "name": "body_playground_07"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_playground.png",
+        "name": "body_playground_08"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_playground.png",
+        "name": "body_playground_09"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_playground.png",
+        "name": "body_playground_10"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_playground.png",
+        "name": "body_playground_11"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_playground.png",
+        "name": "body_playground_12"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_playground.png",
+        "name": "body_playground_13"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_playground.png",
+        "name": "body_playground_14"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_playground.png",
+        "name": "body_playground_15"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_playground.png",
+        "name": "body_playground_16"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_playground.png",
+        "name": "body_playground_17"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_playground.png",
+        "name": "body_playground_18"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_playground.png",
+        "name": "body_playground_19"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_playground.png",
+        "name": "body_playground_20"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_playground.png",
+        "name": "body_playground_21"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_playground.png",
+        "name": "body_playground_22"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_playground.png",
+        "name": "body_playground_23"
+      }
+    ]
+  },
+  {
+    "type": "GrowingCharacterSheetDefinition",
+    "id": "body_school",
+    "asset": "Assets/Data/Characters/Growing/Sheet_body_school.asset",
+    "frames": [
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_school.png",
+        "name": "body_school_00"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_school.png",
+        "name": "body_school_01"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_school.png",
+        "name": "body_school_02"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_school.png",
+        "name": "body_school_03"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_school.png",
+        "name": "body_school_04"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_school.png",
+        "name": "body_school_05"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_school.png",
+        "name": "body_school_06"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_school.png",
+        "name": "body_school_07"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_school.png",
+        "name": "body_school_08"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_school.png",
+        "name": "body_school_09"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_school.png",
+        "name": "body_school_10"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_school.png",
+        "name": "body_school_11"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_school.png",
+        "name": "body_school_12"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_school.png",
+        "name": "body_school_13"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_school.png",
+        "name": "body_school_14"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_school.png",
+        "name": "body_school_15"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_school.png",
+        "name": "body_school_16"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_school.png",
+        "name": "body_school_17"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_school.png",
+        "name": "body_school_18"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_school.png",
+        "name": "body_school_19"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_school.png",
+        "name": "body_school_20"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_school.png",
+        "name": "body_school_21"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_school.png",
+        "name": "body_school_22"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/body_school.png",
+        "name": "body_school_23"
+      }
+    ]
+  },
+  {
+    "type": "GrowingCharacterSheetDefinition",
+    "id": "head_adult_short_brown",
+    "asset": "Assets/Data/Characters/Growing/Sheet_head_adult_short_brown.asset",
+    "frames": [
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_adult_short_brown.png",
+        "name": "head_adult_short_brown_00"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_adult_short_brown.png",
+        "name": "head_adult_short_brown_01"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_adult_short_brown.png",
+        "name": "head_adult_short_brown_02"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_adult_short_brown.png",
+        "name": "head_adult_short_brown_03"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_adult_short_brown.png",
+        "name": "head_adult_short_brown_04"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_adult_short_brown.png",
+        "name": "head_adult_short_brown_05"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_adult_short_brown.png",
+        "name": "head_adult_short_brown_06"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_adult_short_brown.png",
+        "name": "head_adult_short_brown_07"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_adult_short_brown.png",
+        "name": "head_adult_short_brown_08"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_adult_short_brown.png",
+        "name": "head_adult_short_brown_09"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_adult_short_brown.png",
+        "name": "head_adult_short_brown_10"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_adult_short_brown.png",
+        "name": "head_adult_short_brown_11"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_adult_short_brown.png",
+        "name": "head_adult_short_brown_12"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_adult_short_brown.png",
+        "name": "head_adult_short_brown_13"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_adult_short_brown.png",
+        "name": "head_adult_short_brown_14"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_adult_short_brown.png",
+        "name": "head_adult_short_brown_15"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_adult_short_brown.png",
+        "name": "head_adult_short_brown_16"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_adult_short_brown.png",
+        "name": "head_adult_short_brown_17"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_adult_short_brown.png",
+        "name": "head_adult_short_brown_18"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_adult_short_brown.png",
+        "name": "head_adult_short_brown_19"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_adult_short_brown.png",
+        "name": "head_adult_short_brown_20"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_adult_short_brown.png",
+        "name": "head_adult_short_brown_21"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_adult_short_brown.png",
+        "name": "head_adult_short_brown_22"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_adult_short_brown.png",
+        "name": "head_adult_short_brown_23"
+      }
+    ]
+  },
+  {
+    "type": "GrowingCharacterSheetDefinition",
+    "id": "head_playground_short_brown",
+    "asset": "Assets/Data/Characters/Growing/Sheet_head_playground_short_brown.asset",
+    "frames": [
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_playground_short_brown.png",
+        "name": "head_playground_short_brown_00"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_playground_short_brown.png",
+        "name": "head_playground_short_brown_01"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_playground_short_brown.png",
+        "name": "head_playground_short_brown_02"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_playground_short_brown.png",
+        "name": "head_playground_short_brown_03"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_playground_short_brown.png",
+        "name": "head_playground_short_brown_04"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_playground_short_brown.png",
+        "name": "head_playground_short_brown_05"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_playground_short_brown.png",
+        "name": "head_playground_short_brown_06"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_playground_short_brown.png",
+        "name": "head_playground_short_brown_07"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_playground_short_brown.png",
+        "name": "head_playground_short_brown_08"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_playground_short_brown.png",
+        "name": "head_playground_short_brown_09"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_playground_short_brown.png",
+        "name": "head_playground_short_brown_10"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_playground_short_brown.png",
+        "name": "head_playground_short_brown_11"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_playground_short_brown.png",
+        "name": "head_playground_short_brown_12"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_playground_short_brown.png",
+        "name": "head_playground_short_brown_13"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_playground_short_brown.png",
+        "name": "head_playground_short_brown_14"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_playground_short_brown.png",
+        "name": "head_playground_short_brown_15"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_playground_short_brown.png",
+        "name": "head_playground_short_brown_16"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_playground_short_brown.png",
+        "name": "head_playground_short_brown_17"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_playground_short_brown.png",
+        "name": "head_playground_short_brown_18"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_playground_short_brown.png",
+        "name": "head_playground_short_brown_19"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_playground_short_brown.png",
+        "name": "head_playground_short_brown_20"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_playground_short_brown.png",
+        "name": "head_playground_short_brown_21"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_playground_short_brown.png",
+        "name": "head_playground_short_brown_22"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_playground_short_brown.png",
+        "name": "head_playground_short_brown_23"
+      }
+    ]
+  },
+  {
+    "type": "GrowingCharacterSheetDefinition",
+    "id": "head_school_short_brown",
+    "asset": "Assets/Data/Characters/Growing/Sheet_head_school_short_brown.asset",
+    "frames": [
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_school_short_brown.png",
+        "name": "head_school_short_brown_00"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_school_short_brown.png",
+        "name": "head_school_short_brown_01"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_school_short_brown.png",
+        "name": "head_school_short_brown_02"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_school_short_brown.png",
+        "name": "head_school_short_brown_03"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_school_short_brown.png",
+        "name": "head_school_short_brown_04"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_school_short_brown.png",
+        "name": "head_school_short_brown_05"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_school_short_brown.png",
+        "name": "head_school_short_brown_06"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_school_short_brown.png",
+        "name": "head_school_short_brown_07"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_school_short_brown.png",
+        "name": "head_school_short_brown_08"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_school_short_brown.png",
+        "name": "head_school_short_brown_09"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_school_short_brown.png",
+        "name": "head_school_short_brown_10"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_school_short_brown.png",
+        "name": "head_school_short_brown_11"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_school_short_brown.png",
+        "name": "head_school_short_brown_12"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_school_short_brown.png",
+        "name": "head_school_short_brown_13"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_school_short_brown.png",
+        "name": "head_school_short_brown_14"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_school_short_brown.png",
+        "name": "head_school_short_brown_15"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_school_short_brown.png",
+        "name": "head_school_short_brown_16"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_school_short_brown.png",
+        "name": "head_school_short_brown_17"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_school_short_brown.png",
+        "name": "head_school_short_brown_18"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_school_short_brown.png",
+        "name": "head_school_short_brown_19"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_school_short_brown.png",
+        "name": "head_school_short_brown_20"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_school_short_brown.png",
+        "name": "head_school_short_brown_21"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_school_short_brown.png",
+        "name": "head_school_short_brown_22"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/head_school_short_brown.png",
+        "name": "head_school_short_brown_23"
+      }
+    ]
+  },
+  {
+    "type": "GrowingCharacterSheetDefinition",
+    "id": "outfit_adult_adult_casual",
+    "asset": "Assets/Data/Characters/Growing/Sheet_outfit_adult_adult_casual.asset",
+    "frames": [
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_adult_casual.png",
+        "name": "outfit_adult_adult_casual_00"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_adult_casual.png",
+        "name": "outfit_adult_adult_casual_01"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_adult_casual.png",
+        "name": "outfit_adult_adult_casual_02"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_adult_casual.png",
+        "name": "outfit_adult_adult_casual_03"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_adult_casual.png",
+        "name": "outfit_adult_adult_casual_04"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_adult_casual.png",
+        "name": "outfit_adult_adult_casual_05"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_adult_casual.png",
+        "name": "outfit_adult_adult_casual_06"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_adult_casual.png",
+        "name": "outfit_adult_adult_casual_07"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_adult_casual.png",
+        "name": "outfit_adult_adult_casual_08"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_adult_casual.png",
+        "name": "outfit_adult_adult_casual_09"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_adult_casual.png",
+        "name": "outfit_adult_adult_casual_10"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_adult_casual.png",
+        "name": "outfit_adult_adult_casual_11"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_adult_casual.png",
+        "name": "outfit_adult_adult_casual_12"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_adult_casual.png",
+        "name": "outfit_adult_adult_casual_13"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_adult_casual.png",
+        "name": "outfit_adult_adult_casual_14"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_adult_casual.png",
+        "name": "outfit_adult_adult_casual_15"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_adult_casual.png",
+        "name": "outfit_adult_adult_casual_16"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_adult_casual.png",
+        "name": "outfit_adult_adult_casual_17"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_adult_casual.png",
+        "name": "outfit_adult_adult_casual_18"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_adult_casual.png",
+        "name": "outfit_adult_adult_casual_19"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_adult_casual.png",
+        "name": "outfit_adult_adult_casual_20"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_adult_casual.png",
+        "name": "outfit_adult_adult_casual_21"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_adult_casual.png",
+        "name": "outfit_adult_adult_casual_22"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_adult_casual.png",
+        "name": "outfit_adult_adult_casual_23"
+      }
+    ]
+  },
+  {
+    "type": "GrowingCharacterSheetDefinition",
+    "id": "outfit_adult_chef",
+    "asset": "Assets/Data/Characters/Growing/Sheet_outfit_adult_chef.asset",
+    "frames": [
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_chef.png",
+        "name": "outfit_adult_chef_00"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_chef.png",
+        "name": "outfit_adult_chef_01"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_chef.png",
+        "name": "outfit_adult_chef_02"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_chef.png",
+        "name": "outfit_adult_chef_03"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_chef.png",
+        "name": "outfit_adult_chef_04"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_chef.png",
+        "name": "outfit_adult_chef_05"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_chef.png",
+        "name": "outfit_adult_chef_06"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_chef.png",
+        "name": "outfit_adult_chef_07"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_chef.png",
+        "name": "outfit_adult_chef_08"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_chef.png",
+        "name": "outfit_adult_chef_09"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_chef.png",
+        "name": "outfit_adult_chef_10"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_chef.png",
+        "name": "outfit_adult_chef_11"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_chef.png",
+        "name": "outfit_adult_chef_12"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_chef.png",
+        "name": "outfit_adult_chef_13"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_chef.png",
+        "name": "outfit_adult_chef_14"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_chef.png",
+        "name": "outfit_adult_chef_15"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_chef.png",
+        "name": "outfit_adult_chef_16"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_chef.png",
+        "name": "outfit_adult_chef_17"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_chef.png",
+        "name": "outfit_adult_chef_18"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_chef.png",
+        "name": "outfit_adult_chef_19"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_chef.png",
+        "name": "outfit_adult_chef_20"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_chef.png",
+        "name": "outfit_adult_chef_21"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_chef.png",
+        "name": "outfit_adult_chef_22"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_chef.png",
+        "name": "outfit_adult_chef_23"
+      }
+    ]
+  },
+  {
+    "type": "GrowingCharacterSheetDefinition",
+    "id": "outfit_adult_interior",
+    "asset": "Assets/Data/Characters/Growing/Sheet_outfit_adult_interior.asset",
+    "frames": [
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_interior.png",
+        "name": "outfit_adult_interior_00"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_interior.png",
+        "name": "outfit_adult_interior_01"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_interior.png",
+        "name": "outfit_adult_interior_02"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_interior.png",
+        "name": "outfit_adult_interior_03"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_interior.png",
+        "name": "outfit_adult_interior_04"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_interior.png",
+        "name": "outfit_adult_interior_05"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_interior.png",
+        "name": "outfit_adult_interior_06"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_interior.png",
+        "name": "outfit_adult_interior_07"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_interior.png",
+        "name": "outfit_adult_interior_08"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_interior.png",
+        "name": "outfit_adult_interior_09"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_interior.png",
+        "name": "outfit_adult_interior_10"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_interior.png",
+        "name": "outfit_adult_interior_11"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_interior.png",
+        "name": "outfit_adult_interior_12"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_interior.png",
+        "name": "outfit_adult_interior_13"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_interior.png",
+        "name": "outfit_adult_interior_14"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_interior.png",
+        "name": "outfit_adult_interior_15"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_interior.png",
+        "name": "outfit_adult_interior_16"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_interior.png",
+        "name": "outfit_adult_interior_17"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_interior.png",
+        "name": "outfit_adult_interior_18"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_interior.png",
+        "name": "outfit_adult_interior_19"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_interior.png",
+        "name": "outfit_adult_interior_20"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_interior.png",
+        "name": "outfit_adult_interior_21"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_interior.png",
+        "name": "outfit_adult_interior_22"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_interior.png",
+        "name": "outfit_adult_interior_23"
+      }
+    ]
+  },
+  {
+    "type": "GrowingCharacterSheetDefinition",
+    "id": "outfit_adult_office",
+    "asset": "Assets/Data/Characters/Growing/Sheet_outfit_adult_office.asset",
+    "frames": [
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_office.png",
+        "name": "outfit_adult_office_00"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_office.png",
+        "name": "outfit_adult_office_01"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_office.png",
+        "name": "outfit_adult_office_02"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_office.png",
+        "name": "outfit_adult_office_03"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_office.png",
+        "name": "outfit_adult_office_04"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_office.png",
+        "name": "outfit_adult_office_05"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_office.png",
+        "name": "outfit_adult_office_06"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_office.png",
+        "name": "outfit_adult_office_07"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_office.png",
+        "name": "outfit_adult_office_08"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_office.png",
+        "name": "outfit_adult_office_09"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_office.png",
+        "name": "outfit_adult_office_10"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_office.png",
+        "name": "outfit_adult_office_11"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_office.png",
+        "name": "outfit_adult_office_12"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_office.png",
+        "name": "outfit_adult_office_13"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_office.png",
+        "name": "outfit_adult_office_14"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_office.png",
+        "name": "outfit_adult_office_15"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_office.png",
+        "name": "outfit_adult_office_16"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_office.png",
+        "name": "outfit_adult_office_17"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_office.png",
+        "name": "outfit_adult_office_18"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_office.png",
+        "name": "outfit_adult_office_19"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_office.png",
+        "name": "outfit_adult_office_20"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_office.png",
+        "name": "outfit_adult_office_21"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_office.png",
+        "name": "outfit_adult_office_22"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_adult_office.png",
+        "name": "outfit_adult_office_23"
+      }
+    ]
+  },
+  {
+    "type": "GrowingCharacterSheetDefinition",
+    "id": "outfit_playground_casual",
+    "asset": "Assets/Data/Characters/Growing/Sheet_outfit_playground_casual.asset",
+    "frames": [
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_playground_casual.png",
+        "name": "outfit_playground_casual_00"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_playground_casual.png",
+        "name": "outfit_playground_casual_01"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_playground_casual.png",
+        "name": "outfit_playground_casual_02"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_playground_casual.png",
+        "name": "outfit_playground_casual_03"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_playground_casual.png",
+        "name": "outfit_playground_casual_04"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_playground_casual.png",
+        "name": "outfit_playground_casual_05"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_playground_casual.png",
+        "name": "outfit_playground_casual_06"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_playground_casual.png",
+        "name": "outfit_playground_casual_07"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_playground_casual.png",
+        "name": "outfit_playground_casual_08"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_playground_casual.png",
+        "name": "outfit_playground_casual_09"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_playground_casual.png",
+        "name": "outfit_playground_casual_10"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_playground_casual.png",
+        "name": "outfit_playground_casual_11"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_playground_casual.png",
+        "name": "outfit_playground_casual_12"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_playground_casual.png",
+        "name": "outfit_playground_casual_13"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_playground_casual.png",
+        "name": "outfit_playground_casual_14"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_playground_casual.png",
+        "name": "outfit_playground_casual_15"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_playground_casual.png",
+        "name": "outfit_playground_casual_16"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_playground_casual.png",
+        "name": "outfit_playground_casual_17"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_playground_casual.png",
+        "name": "outfit_playground_casual_18"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_playground_casual.png",
+        "name": "outfit_playground_casual_19"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_playground_casual.png",
+        "name": "outfit_playground_casual_20"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_playground_casual.png",
+        "name": "outfit_playground_casual_21"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_playground_casual.png",
+        "name": "outfit_playground_casual_22"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_playground_casual.png",
+        "name": "outfit_playground_casual_23"
+      }
+    ]
+  },
+  {
+    "type": "GrowingCharacterSheetDefinition",
+    "id": "outfit_school_school_casual",
+    "asset": "Assets/Data/Characters/Growing/Sheet_outfit_school_school_casual.asset",
+    "frames": [
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_casual.png",
+        "name": "outfit_school_school_casual_00"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_casual.png",
+        "name": "outfit_school_school_casual_01"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_casual.png",
+        "name": "outfit_school_school_casual_02"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_casual.png",
+        "name": "outfit_school_school_casual_03"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_casual.png",
+        "name": "outfit_school_school_casual_04"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_casual.png",
+        "name": "outfit_school_school_casual_05"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_casual.png",
+        "name": "outfit_school_school_casual_06"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_casual.png",
+        "name": "outfit_school_school_casual_07"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_casual.png",
+        "name": "outfit_school_school_casual_08"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_casual.png",
+        "name": "outfit_school_school_casual_09"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_casual.png",
+        "name": "outfit_school_school_casual_10"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_casual.png",
+        "name": "outfit_school_school_casual_11"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_casual.png",
+        "name": "outfit_school_school_casual_12"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_casual.png",
+        "name": "outfit_school_school_casual_13"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_casual.png",
+        "name": "outfit_school_school_casual_14"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_casual.png",
+        "name": "outfit_school_school_casual_15"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_casual.png",
+        "name": "outfit_school_school_casual_16"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_casual.png",
+        "name": "outfit_school_school_casual_17"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_casual.png",
+        "name": "outfit_school_school_casual_18"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_casual.png",
+        "name": "outfit_school_school_casual_19"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_casual.png",
+        "name": "outfit_school_school_casual_20"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_casual.png",
+        "name": "outfit_school_school_casual_21"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_casual.png",
+        "name": "outfit_school_school_casual_22"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_casual.png",
+        "name": "outfit_school_school_casual_23"
+      }
+    ]
+  },
+  {
+    "type": "GrowingCharacterSheetDefinition",
+    "id": "outfit_school_school_uniform",
+    "asset": "Assets/Data/Characters/Growing/Sheet_outfit_school_school_uniform.asset",
+    "frames": [
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_uniform.png",
+        "name": "outfit_school_school_uniform_00"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_uniform.png",
+        "name": "outfit_school_school_uniform_01"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_uniform.png",
+        "name": "outfit_school_school_uniform_02"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_uniform.png",
+        "name": "outfit_school_school_uniform_03"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_uniform.png",
+        "name": "outfit_school_school_uniform_04"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_uniform.png",
+        "name": "outfit_school_school_uniform_05"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_uniform.png",
+        "name": "outfit_school_school_uniform_06"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_uniform.png",
+        "name": "outfit_school_school_uniform_07"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_uniform.png",
+        "name": "outfit_school_school_uniform_08"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_uniform.png",
+        "name": "outfit_school_school_uniform_09"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_uniform.png",
+        "name": "outfit_school_school_uniform_10"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_uniform.png",
+        "name": "outfit_school_school_uniform_11"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_uniform.png",
+        "name": "outfit_school_school_uniform_12"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_uniform.png",
+        "name": "outfit_school_school_uniform_13"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_uniform.png",
+        "name": "outfit_school_school_uniform_14"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_uniform.png",
+        "name": "outfit_school_school_uniform_15"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_uniform.png",
+        "name": "outfit_school_school_uniform_16"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_uniform.png",
+        "name": "outfit_school_school_uniform_17"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_uniform.png",
+        "name": "outfit_school_school_uniform_18"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_uniform.png",
+        "name": "outfit_school_school_uniform_19"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_uniform.png",
+        "name": "outfit_school_school_uniform_20"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_uniform.png",
+        "name": "outfit_school_school_uniform_21"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_uniform.png",
+        "name": "outfit_school_school_uniform_22"
+      },
+      {
+        "sprite": "Assets/Art/Characters/Growing/outfit_school_school_uniform.png",
+        "name": "outfit_school_school_uniform_23"
+      }
+    ]
+  }
+]

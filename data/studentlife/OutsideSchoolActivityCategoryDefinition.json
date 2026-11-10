@@ -1,0 +1,14 @@
+[
+  {
+    "type": "OutsideSchoolActivityCategoryDefinition",
+    "id": "outside.category.help",
+    "asset": "Assets/Data/StudentLife/OutsideSchool/OutsideSchoolCategory_Help.asset",
+    "displayNameKey": "outside.category.help"
+  },
+  {
+    "type": "OutsideSchoolActivityCategoryDefinition",
+    "id": "outside.category.self-study",
+    "asset": "Assets/Data/StudentLife/OutsideSchool/OutsideSchoolCategory_SelfStudy.asset",
+    "displayNameKey": "outside.category.self-study"
+  }
+]

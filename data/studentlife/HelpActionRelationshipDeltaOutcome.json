@@ -1,0 +1,22 @@
+[
+  {
+    "type": "HelpActionRelationshipDeltaOutcome",
+    "id": "HelpOutcome_FirstGuideRelationship",
+    "asset": "Assets/Data/StudentLife/TownHelpActions/Outcomes/HelpOutcome_FirstGuideRelationship.asset",
+    "relationship": {
+      "ref": "relationship.first-guide.trust",
+      "type": "RelationshipDefinition"
+    },
+    "delta": 2
+  },
+  {
+    "type": "HelpActionRelationshipDeltaOutcome",
+    "id": "HelpOutcome_TeacherSupport",
+    "asset": "Assets/Data/StudentLife/TownHelpActions/Outcomes/HelpOutcome_TeacherSupport.asset",
+    "relationship": {
+      "ref": "relationship.teacher.support",
+      "type": "RelationshipDefinition"
+    },
+    "delta": 2
+  }
+]

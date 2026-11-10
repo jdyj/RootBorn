@@ -1,0 +1,19 @@
+{
+  "image": "Assets/Art/UI/UrbanMolding/inventory_close.png",
+  "width": 32,
+  "height": 32,
+  "pixelsPerUnit": 16,
+  "origin": "top-left",
+  "sprites": {
+    "inventory_close": {
+      "x": 0,
+      "y": 0,
+      "w": 32,
+      "h": 32,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  }
+}

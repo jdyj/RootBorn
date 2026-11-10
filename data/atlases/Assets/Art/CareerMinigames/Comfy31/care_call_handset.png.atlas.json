@@ -1,0 +1,19 @@
+{
+  "image": "Assets/Art/CareerMinigames/Comfy31/care_call_handset.png",
+  "width": 48,
+  "height": 48,
+  "pixelsPerUnit": 48,
+  "origin": "top-left",
+  "sprites": {
+    "care_call_handset": {
+      "x": 0,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  }
+}

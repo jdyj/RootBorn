@@ -1,0 +1,22 @@
+[
+  {
+    "type": "DailyEventTraitDeltaOutcome",
+    "id": "DailyEventOutcome_EmpathyPlus",
+    "asset": "Assets/Data/StudentLife/DailyEvents/Outcomes/DailyEventOutcome_EmpathyPlus.asset",
+    "trait": {
+      "ref": "trait.empathy",
+      "type": "TraitDefinition"
+    },
+    "delta": 1
+  },
+  {
+    "type": "DailyEventTraitDeltaOutcome",
+    "id": "DailyEventOutcome_FocusPlus",
+    "asset": "Assets/Data/StudentLife/DailyEvents/Outcomes/DailyEventOutcome_FocusPlus.asset",
+    "trait": {
+      "ref": "trait.focus",
+      "type": "TraitDefinition"
+    },
+    "delta": 2
+  }
+]

@@ -1,0 +1,14 @@
+[
+  {
+    "type": "DiscoveryClueLocationVisitCompletion",
+    "id": "Completion_LibraryArchiveVisit",
+    "asset": "Assets/Data/DiscoveryClues/Completions/Completion_LibraryArchiveVisit.asset",
+    "locationId": "location.library.archive-room"
+  },
+  {
+    "type": "DiscoveryClueLocationVisitCompletion",
+    "id": "Completion_PlayLoopTraceVisit",
+    "asset": "Assets/Data/DiscoveryClues/Completions/Completion_PlayLoopTraceVisit.asset",
+    "locationId": "location.discovery.play-trace"
+  }
+]

@@ -1,0 +1,8 @@
+[
+  {
+    "type": "StoryFlagDefinition",
+    "id": "story.firstQuestComplete",
+    "asset": "Assets/Data/Story/StoryFlag_FirstQuestComplete.asset",
+    "displayKey": "story.firstQuestComplete"
+  }
+]

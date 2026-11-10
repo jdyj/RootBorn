@@ -1,0 +1,51 @@
+[
+  {
+    "type": "LocationActivityQuestObjective",
+    "id": "Objective_QC_Test_BlockedLibraryAccess",
+    "asset": "Assets/Data/StudentLife/QuestChains/Objectives/Objective_QC_Test_BlockedLibraryAccess.asset",
+    "displayKey": "objective.questchain.blocked.library.access",
+    "requiredCount": 1,
+    "targetActivity": {
+      "ref": "location.activity.library-hard-book",
+      "type": "LocationActivityDefinition"
+    }
+  },
+  {
+    "type": "LocationActivityQuestObjective",
+    "id": "Objective_QC_Test_LibraryActivity",
+    "asset": "Assets/Data/StudentLife/QuestChains/Objectives/Objective_QC_Test_LibraryActivity.asset",
+    "displayKey": "objective.questchain.library.activity",
+    "requiredCount": 1,
+    "targetActivity": null
+  },
+  {
+    "type": "LocationActivityQuestObjective",
+    "id": "Objective_QC_Test_SecondActivity",
+    "asset": "Assets/Data/StudentLife/QuestChains/Objectives/Objective_QC_Test_SecondActivity.asset",
+    "displayKey": "objective.questchain.library.followup",
+    "requiredCount": 1,
+    "targetActivity": null
+  },
+  {
+    "type": "LocationActivityQuestObjective",
+    "id": "Objective_ReadJobBooks",
+    "asset": "Assets/Data/StudentLife/MainStory/Objectives/Objective_ReadJobBooks.asset",
+    "displayKey": "dream.objective.job-books",
+    "requiredCount": 1,
+    "targetActivity": {
+      "ref": "opening.clue.archive-door",
+      "type": "LocationActivityDefinition"
+    }
+  },
+  {
+    "type": "LocationActivityQuestObjective",
+    "id": "Objective_WatchWorkshopWork",
+    "asset": "Assets/Data/StudentLife/MainStory/Objectives/Objective_WatchWorkshopWork.asset",
+    "displayKey": "dream.objective.watch-work",
+    "requiredCount": 1,
+    "targetActivity": {
+      "ref": "opening.clue.repair-ledger",
+      "type": "LocationActivityDefinition"
+    }
+  }
+]

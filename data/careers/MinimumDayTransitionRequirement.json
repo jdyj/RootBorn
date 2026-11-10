@@ -1,0 +1,26 @@
+[
+  {
+    "type": "MinimumDayTransitionRequirement",
+    "id": "Careers/Facilities/Chef/Transition_Day",
+    "asset": "Assets/Data/Careers/Facilities/Chef/Transition_Day.asset",
+    "minimumDay": 4
+  },
+  {
+    "type": "MinimumDayTransitionRequirement",
+    "id": "Careers/Facilities/EmergencyCare/Transition_Day",
+    "asset": "Assets/Data/Careers/Facilities/EmergencyCare/Transition_Day.asset",
+    "minimumDay": 4
+  },
+  {
+    "type": "MinimumDayTransitionRequirement",
+    "id": "Careers/Facilities/Interior/Transition_Day",
+    "asset": "Assets/Data/Careers/Facilities/Interior/Transition_Day.asset",
+    "minimumDay": 4
+  },
+  {
+    "type": "MinimumDayTransitionRequirement",
+    "id": "Careers/Facilities/Soldier/Transition_Day",
+    "asset": "Assets/Data/Careers/Facilities/Soldier/Transition_Day.asset",
+    "minimumDay": 4
+  }
+]

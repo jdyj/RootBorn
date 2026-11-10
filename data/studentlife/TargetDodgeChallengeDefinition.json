@@ -1,0 +1,167 @@
+[
+  {
+    "type": "TargetDodgeChallengeDefinition",
+    "id": "Training1",
+    "asset": "Assets/Data/StudentLife/Minigames/Challenges/Training1.asset",
+    "instructionKey": "minigame.training.instructions",
+    "symbolSprites": [
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31Props/training_target.png",
+        "name": "training_target"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31Props/traffic_cone.png",
+        "name": "traffic_cone"
+      }
+    ],
+    "timeLimitSeconds": 17.900002,
+    "mistakeAllowance": 6,
+    "targets": [
+      {
+        "x": 0.25,
+        "y": 0.35
+      },
+      {
+        "x": 0.7,
+        "y": 0.65
+      },
+      {
+        "x": 0.5,
+        "y": 0.3
+      },
+      {
+        "x": 0.2,
+        "y": 0.7
+      }
+    ],
+    "obstacleLanes": "000000000100000002000000000000000200000001000000",
+    "obstacleIntervalSeconds": 2.15,
+    "targetRadius": 0.09,
+    "targetWobble": 0.035,
+    "laneCount": 3
+  },
+  {
+    "type": "TargetDodgeChallengeDefinition",
+    "id": "Training2",
+    "asset": "Assets/Data/StudentLife/Minigames/Challenges/Training2.asset",
+    "instructionKey": "minigame.training.instructions",
+    "symbolSprites": [
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31Props/training_target.png",
+        "name": "training_target"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31Props/traffic_cone.png",
+        "name": "traffic_cone"
+      }
+    ],
+    "timeLimitSeconds": 16.400002,
+    "mistakeAllowance": 6,
+    "targets": [
+      {
+        "x": 0.25,
+        "y": 0.35
+      },
+      {
+        "x": 0.7,
+        "y": 0.65
+      },
+      {
+        "x": 0.5,
+        "y": 0.3
+      },
+      {
+        "x": 0.2,
+        "y": 0.7
+      }
+    ],
+    "obstacleLanes": "000000000100000002000000000000000200000001000000",
+    "obstacleIntervalSeconds": 1.9000001,
+    "targetRadius": 0.09,
+    "targetWobble": 0.045,
+    "laneCount": 3
+  },
+  {
+    "type": "TargetDodgeChallengeDefinition",
+    "id": "Training3",
+    "asset": "Assets/Data/StudentLife/Minigames/Challenges/Training3.asset",
+    "instructionKey": "minigame.training.instructions",
+    "symbolSprites": [
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31Props/training_target.png",
+        "name": "training_target"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31Props/traffic_cone.png",
+        "name": "traffic_cone"
+      }
+    ],
+    "timeLimitSeconds": 14.900001,
+    "mistakeAllowance": 6,
+    "targets": [
+      {
+        "x": 0.25,
+        "y": 0.35
+      },
+      {
+        "x": 0.7,
+        "y": 0.65
+      },
+      {
+        "x": 0.5,
+        "y": 0.3
+      },
+      {
+        "x": 0.2,
+        "y": 0.7
+      }
+    ],
+    "obstacleLanes": "000000000100000002000000000000000200000001000000",
+    "obstacleIntervalSeconds": 1.6500001,
+    "targetRadius": 0.09,
+    "targetWobble": 0.055,
+    "laneCount": 3
+  },
+  {
+    "type": "TargetDodgeChallengeDefinition",
+    "id": "Travel2",
+    "asset": "Assets/Data/StudentLife/Minigames/Challenges/Travel2.asset",
+    "instructionKey": "minigame.travel.instructions",
+    "symbolSprites": [
+      null,
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31Props/road_barrier.png",
+        "name": "road_barrier"
+      }
+    ],
+    "timeLimitSeconds": 15.799999,
+    "mistakeAllowance": 6,
+    "targets": [],
+    "obstacleLanes": "000000000100000002000000010000000000000002000000",
+    "obstacleIntervalSeconds": 1.8,
+    "targetRadius": 0.09,
+    "targetWobble": 0,
+    "laneCount": 3
+  },
+  {
+    "type": "TargetDodgeChallengeDefinition",
+    "id": "Travel3",
+    "asset": "Assets/Data/StudentLife/Minigames/Challenges/Travel3.asset",
+    "instructionKey": "minigame.travel.instructions",
+    "symbolSprites": [
+      null,
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31Props/road_barrier.png",
+        "name": "road_barrier"
+      }
+    ],
+    "timeLimitSeconds": 15.799999,
+    "mistakeAllowance": 6,
+    "targets": [],
+    "obstacleLanes": "000000000100000002000000010000000000000002000000",
+    "obstacleIntervalSeconds": 1.8,
+    "targetRadius": 0.09,
+    "targetWobble": 0,
+    "laneCount": 3
+  }
+]

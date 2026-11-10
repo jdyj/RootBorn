@@ -1,0 +1,24 @@
+[
+  {
+    "type": "DiscoveryClueCareerHintOutcome",
+    "id": "Outcome_PlayLoopCareer",
+    "asset": "Assets/Data/DiscoveryClues/Outcomes/Outcome_PlayLoopCareer.asset",
+    "careers": [
+      {
+        "ref": "career.discovery.play-research",
+        "type": "CareerDefinition"
+      }
+    ]
+  },
+  {
+    "type": "DiscoveryClueCareerHintOutcome",
+    "id": "Outcome_ResearchCareerHint",
+    "asset": "Assets/Data/DiscoveryClues/Outcomes/Outcome_ResearchCareerHint.asset",
+    "careers": [
+      {
+        "ref": "Career_DiscoveryClue_Research",
+        "type": "CareerDefinition"
+      }
+    ]
+  }
+]

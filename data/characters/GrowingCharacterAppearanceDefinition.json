@@ -1,0 +1,177 @@
+[
+  {
+    "type": "GrowingCharacterAppearanceDefinition",
+    "id": "adult_short_brown_adult_casual",
+    "asset": "Assets/Data/Characters/Growing/Appearance_adult_short_brown_adult_casual.asset",
+    "visualKind": "growing",
+    "body": {
+      "ref": "body_adult",
+      "type": "GrowingCharacterSheetDefinition"
+    },
+    "head": {
+      "ref": "head_adult_short_brown",
+      "type": "GrowingCharacterSheetDefinition"
+    },
+    "outfit": {
+      "ref": "outfit_adult_adult_casual",
+      "type": "GrowingCharacterSheetDefinition"
+    },
+    "displayNameKey": "ui.wardrobe.outfit.adult_casual",
+    "visualPrefab": {
+      "asset": "Assets/Prefabs/Characters/GrowingCharacterVisual.prefab"
+    },
+    "minimumStudentDay": 1,
+    "requiresAdult": 1,
+    "facilityId": ""
+  },
+  {
+    "type": "GrowingCharacterAppearanceDefinition",
+    "id": "adult_short_brown_chef",
+    "asset": "Assets/Data/Characters/Growing/Appearance_adult_short_brown_chef.asset",
+    "visualKind": "growing",
+    "body": {
+      "ref": "body_adult",
+      "type": "GrowingCharacterSheetDefinition"
+    },
+    "head": {
+      "ref": "head_adult_short_brown",
+      "type": "GrowingCharacterSheetDefinition"
+    },
+    "outfit": {
+      "ref": "outfit_adult_chef",
+      "type": "GrowingCharacterSheetDefinition"
+    },
+    "displayNameKey": "ui.wardrobe.outfit.chef",
+    "visualPrefab": {
+      "asset": "Assets/Prefabs/Characters/GrowingCharacterVisual.prefab"
+    },
+    "minimumStudentDay": 1,
+    "requiresAdult": 1,
+    "facilityId": "facility.chef"
+  },
+  {
+    "type": "GrowingCharacterAppearanceDefinition",
+    "id": "adult_short_brown_interior",
+    "asset": "Assets/Data/Characters/Growing/Appearance_adult_short_brown_interior.asset",
+    "visualKind": "growing",
+    "body": {
+      "ref": "body_adult",
+      "type": "GrowingCharacterSheetDefinition"
+    },
+    "head": {
+      "ref": "head_adult_short_brown",
+      "type": "GrowingCharacterSheetDefinition"
+    },
+    "outfit": {
+      "ref": "outfit_adult_interior",
+      "type": "GrowingCharacterSheetDefinition"
+    },
+    "displayNameKey": "ui.wardrobe.outfit.interior",
+    "visualPrefab": {
+      "asset": "Assets/Prefabs/Characters/GrowingCharacterVisual.prefab"
+    },
+    "minimumStudentDay": 1,
+    "requiresAdult": 1,
+    "facilityId": "facility.interior"
+  },
+  {
+    "type": "GrowingCharacterAppearanceDefinition",
+    "id": "adult_short_brown_office",
+    "asset": "Assets/Data/Characters/Growing/Appearance_adult_short_brown_office.asset",
+    "visualKind": "growing",
+    "body": {
+      "ref": "body_adult",
+      "type": "GrowingCharacterSheetDefinition"
+    },
+    "head": {
+      "ref": "head_adult_short_brown",
+      "type": "GrowingCharacterSheetDefinition"
+    },
+    "outfit": {
+      "ref": "outfit_adult_office",
+      "type": "GrowingCharacterSheetDefinition"
+    },
+    "displayNameKey": "ui.wardrobe.outfit.office",
+    "visualPrefab": {
+      "asset": "Assets/Prefabs/Characters/GrowingCharacterVisual.prefab"
+    },
+    "minimumStudentDay": 1,
+    "requiresAdult": 1,
+    "facilityId": ""
+  },
+  {
+    "type": "GrowingCharacterAppearanceDefinition",
+    "id": "playground_short_brown_casual",
+    "asset": "Assets/Data/Characters/Growing/Appearance_playground_short_brown_casual.asset",
+    "visualKind": "growing",
+    "body": {
+      "ref": "body_playground",
+      "type": "GrowingCharacterSheetDefinition"
+    },
+    "head": {
+      "ref": "head_playground_short_brown",
+      "type": "GrowingCharacterSheetDefinition"
+    },
+    "outfit": {
+      "ref": "outfit_playground_casual",
+      "type": "GrowingCharacterSheetDefinition"
+    },
+    "displayNameKey": "ui.wardrobe.outfit.casual",
+    "visualPrefab": {
+      "asset": "Assets/Prefabs/Characters/GrowingCharacterVisual.prefab"
+    },
+    "minimumStudentDay": 1,
+    "requiresAdult": 0,
+    "facilityId": ""
+  },
+  {
+    "type": "GrowingCharacterAppearanceDefinition",
+    "id": "school_short_brown_school_casual",
+    "asset": "Assets/Data/Characters/Growing/Appearance_school_short_brown_school_casual.asset",
+    "visualKind": "growing",
+    "body": {
+      "ref": "body_school",
+      "type": "GrowingCharacterSheetDefinition"
+    },
+    "head": {
+      "ref": "head_school_short_brown",
+      "type": "GrowingCharacterSheetDefinition"
+    },
+    "outfit": {
+      "ref": "outfit_school_school_casual",
+      "type": "GrowingCharacterSheetDefinition"
+    },
+    "displayNameKey": "ui.wardrobe.outfit.school_casual",
+    "visualPrefab": {
+      "asset": "Assets/Prefabs/Characters/GrowingCharacterVisual.prefab"
+    },
+    "minimumStudentDay": 2,
+    "requiresAdult": 0,
+    "facilityId": ""
+  },
+  {
+    "type": "GrowingCharacterAppearanceDefinition",
+    "id": "school_short_brown_school_uniform",
+    "asset": "Assets/Data/Characters/Growing/Appearance_school_short_brown_school_uniform.asset",
+    "visualKind": "growing",
+    "body": {
+      "ref": "body_school",
+      "type": "GrowingCharacterSheetDefinition"
+    },
+    "head": {
+      "ref": "head_school_short_brown",
+      "type": "GrowingCharacterSheetDefinition"
+    },
+    "outfit": {
+      "ref": "outfit_school_school_uniform",
+      "type": "GrowingCharacterSheetDefinition"
+    },
+    "displayNameKey": "ui.wardrobe.outfit.school_uniform",
+    "visualPrefab": {
+      "asset": "Assets/Prefabs/Characters/GrowingCharacterVisual.prefab"
+    },
+    "minimumStudentDay": 2,
+    "requiresAdult": 0,
+    "facilityId": ""
+  }
+]

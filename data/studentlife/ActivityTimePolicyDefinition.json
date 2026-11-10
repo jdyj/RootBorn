@@ -1,0 +1,26 @@
+[
+  {
+    "type": "ActivityTimePolicyDefinition",
+    "id": "free-interaction",
+    "asset": "Assets/Data/StudentLife/Calendar/TimePolicy_FreeInteraction.asset",
+    "timePointCost": 0,
+    "allowedDaysMask": 127,
+    "oncePerDay": 0
+  },
+  {
+    "type": "ActivityTimePolicyDefinition",
+    "id": "free-morning",
+    "asset": "Assets/Data/StudentLife/Calendar/TimePolicy_FreeMorning.asset",
+    "timePointCost": 0,
+    "allowedDaysMask": 31,
+    "oncePerDay": 1
+  },
+  {
+    "type": "ActivityTimePolicyDefinition",
+    "id": "paid-activity",
+    "asset": "Assets/Data/StudentLife/Calendar/TimePolicy_PaidActivity.asset",
+    "timePointCost": 1,
+    "allowedDaysMask": 127,
+    "oncePerDay": 0
+  }
+]

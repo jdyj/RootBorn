@@ -1,0 +1,38 @@
+[
+  {
+    "type": "CharacterGrowthStageDefinition",
+    "id": "stage.adult",
+    "asset": "Assets/Data/Characters/Wearables/Stage_adult.asset",
+    "displayNameKey": "ui.wardrobe.stage.adult",
+    "minimumStudentDay": 1,
+    "requiresAdult": 1,
+    "body": {
+      "ref": "body_adult",
+      "type": "GrowingCharacterSheetDefinition"
+    }
+  },
+  {
+    "type": "CharacterGrowthStageDefinition",
+    "id": "stage.playground",
+    "asset": "Assets/Data/Characters/Wearables/Stage_playground.asset",
+    "displayNameKey": "ui.wardrobe.stage.playground",
+    "minimumStudentDay": 1,
+    "requiresAdult": 0,
+    "body": {
+      "ref": "body_playground",
+      "type": "GrowingCharacterSheetDefinition"
+    }
+  },
+  {
+    "type": "CharacterGrowthStageDefinition",
+    "id": "stage.school",
+    "asset": "Assets/Data/Characters/Wearables/Stage_school.asset",
+    "displayNameKey": "ui.wardrobe.stage.school",
+    "minimumStudentDay": 2,
+    "requiresAdult": 0,
+    "body": {
+      "ref": "body_school",
+      "type": "GrowingCharacterSheetDefinition"
+    }
+  }
+]

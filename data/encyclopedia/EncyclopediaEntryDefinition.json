@@ -1,0 +1,61 @@
+[
+  {
+    "type": "EncyclopediaEntryDefinition",
+    "id": "ency.location.first-discovery",
+    "asset": "Assets/Data/Encyclopedia/Entries/EncyclopediaEntry_FirstDiscovery.asset",
+    "category": {
+      "ref": "ency.category.locations",
+      "type": "EncyclopediaCategoryDefinition"
+    },
+    "displayName": "ui.encyclopedia.entry.clocktower-note.name",
+    "lockedDisplayName": "ui.encyclopedia.locked.name",
+    "description": "ui.encyclopedia.entry.clocktower-note.description",
+    "lockedHint": "ui.encyclopedia.entry.clocktower-note.hint",
+    "detailLines": [
+      "dream.encyclopedia.first-discovery.detail"
+    ],
+    "unlockConditions": [
+      {
+        "ref": "EncyclopediaCondition_FirstDiscovery",
+        "type": "EncyclopediaDiscoveryCompletedCondition"
+      }
+    ],
+    "revealStage": 1
+  },
+  {
+    "type": "EncyclopediaEntryDefinition",
+    "id": "ency.location.locked-archive",
+    "asset": "Assets/Data/Encyclopedia/Entries/EncyclopediaEntry_LockedArchive.asset",
+    "category": {
+      "ref": "ency.category.locations",
+      "type": "EncyclopediaCategoryDefinition"
+    },
+    "displayName": "dream.encyclopedia.job-shelf.name",
+    "lockedDisplayName": "ui.encyclopedia.locked.name",
+    "description": "dream.encyclopedia.job-shelf.description",
+    "lockedHint": "dream.encyclopedia.job-shelf.hint",
+    "detailLines": [
+      "dream.encyclopedia.job-shelf.detail"
+    ],
+    "unlockConditions": [],
+    "revealStage": 1
+  },
+  {
+    "type": "EncyclopediaEntryDefinition",
+    "id": "ency.npc.guide-hint",
+    "asset": "Assets/Data/Encyclopedia/Entries/EncyclopediaEntry_GuideHint.asset",
+    "category": {
+      "ref": "ency.category.npcs",
+      "type": "EncyclopediaCategoryDefinition"
+    },
+    "displayName": "ui.encyclopedia.entry.guide-advice.name",
+    "lockedDisplayName": "ui.encyclopedia.locked.name",
+    "description": "ui.encyclopedia.entry.guide-advice.description",
+    "lockedHint": "ui.encyclopedia.entry.guide-advice.hint",
+    "detailLines": [
+      "ui.encyclopedia.entry.guide-advice.detail"
+    ],
+    "unlockConditions": [],
+    "revealStage": 1
+  }
+]

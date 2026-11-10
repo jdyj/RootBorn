@@ -1,0 +1,244 @@
+[
+  {
+    "type": "CareerCandidateDefinition",
+    "id": "candidate.chef",
+    "asset": "Assets/Data/Careers/Facilities/Chef/Candidate_Chef.asset",
+    "displayNameKey": "career.chef",
+    "descriptionKey": "career.chef.description",
+    "lockedTeaserKey": "???",
+    "revealedHintThreshold": 1,
+    "deepeningHintThreshold": 2,
+    "readyHintThreshold": 3,
+    "relatedLocations": [
+      {
+        "ref": "location.restaurant",
+        "type": "LocationDefinition"
+      }
+    ],
+    "relatedActivities": [
+      {
+        "ref": "practice.chef",
+        "type": "LifeActivityDefinition"
+      }
+    ],
+    "routes": [],
+    "requirements": [],
+    "recommendedActionKeys": [],
+    "rewards": []
+  },
+  {
+    "type": "CareerCandidateDefinition",
+    "id": "candidate.emergency-care",
+    "asset": "Assets/Data/Careers/Facilities/EmergencyCare/Candidate_EmergencyCare.asset",
+    "displayNameKey": "career.emergency-care",
+    "descriptionKey": "career.emergency-care.description",
+    "lockedTeaserKey": "???",
+    "revealedHintThreshold": 1,
+    "deepeningHintThreshold": 2,
+    "readyHintThreshold": 3,
+    "relatedLocations": [
+      {
+        "ref": "location.medical-clinic",
+        "type": "LocationDefinition"
+      }
+    ],
+    "relatedActivities": [
+      {
+        "ref": "practice.emergency-care",
+        "type": "LifeActivityDefinition"
+      }
+    ],
+    "routes": [],
+    "requirements": [],
+    "recommendedActionKeys": [],
+    "rewards": []
+  },
+  {
+    "type": "CareerCandidateDefinition",
+    "id": "candidate.interior",
+    "asset": "Assets/Data/Careers/Facilities/Interior/Candidate_Interior.asset",
+    "displayNameKey": "career.interior",
+    "descriptionKey": "career.interior.description",
+    "lockedTeaserKey": "???",
+    "revealedHintThreshold": 1,
+    "deepeningHintThreshold": 2,
+    "readyHintThreshold": 3,
+    "relatedLocations": [
+      {
+        "ref": "location.design-studio",
+        "type": "LocationDefinition"
+      }
+    ],
+    "relatedActivities": [
+      {
+        "ref": "practice.interior",
+        "type": "LifeActivityDefinition"
+      }
+    ],
+    "routes": [],
+    "requirements": [],
+    "recommendedActionKeys": [],
+    "rewards": []
+  },
+  {
+    "type": "CareerCandidateDefinition",
+    "id": "candidate.soldier",
+    "asset": "Assets/Data/Careers/Facilities/Soldier/Candidate_Soldier.asset",
+    "displayNameKey": "career.soldier",
+    "descriptionKey": "career.soldier.description",
+    "lockedTeaserKey": "???",
+    "revealedHintThreshold": 1,
+    "deepeningHintThreshold": 2,
+    "readyHintThreshold": 3,
+    "relatedLocations": [
+      {
+        "ref": "location.training-ground",
+        "type": "LocationDefinition"
+      }
+    ],
+    "relatedActivities": [
+      {
+        "ref": "practice.soldier",
+        "type": "LifeActivityDefinition"
+      }
+    ],
+    "routes": [],
+    "requirements": [],
+    "recommendedActionKeys": [],
+    "rewards": []
+  },
+  {
+    "type": "CareerCandidateDefinition",
+    "id": "career.candidate.investigation",
+    "asset": "Assets/Data/Careers/Candidates/Candidate_Investigation.asset",
+    "displayNameKey": "candidate.investigation",
+    "descriptionKey": "candidate.investigation.desc",
+    "lockedTeaserKey": "???",
+    "revealedHintThreshold": 2,
+    "deepeningHintThreshold": 3,
+    "readyHintThreshold": 4,
+    "relatedLocations": [
+      {
+        "ref": "location.library",
+        "type": "LocationDefinition"
+      },
+      {
+        "ref": "location.corner-store",
+        "type": "LocationDefinition"
+      }
+    ],
+    "relatedActivities": [],
+    "routes": [
+      {
+        "ref": "career.route.investigation",
+        "type": "CareerCandidateRouteDefinition"
+      }
+    ],
+    "requirements": [],
+    "recommendedActionKeys": [
+      "action.investigate-town"
+    ],
+    "rewards": []
+  },
+  {
+    "type": "CareerCandidateDefinition",
+    "id": "career.candidate.learning",
+    "asset": "Assets/Data/Careers/Candidates/Candidate_Learning.asset",
+    "displayNameKey": "candidate.learning",
+    "descriptionKey": "candidate.learning.desc",
+    "lockedTeaserKey": "???",
+    "revealedHintThreshold": 2,
+    "deepeningHintThreshold": 3,
+    "readyHintThreshold": 4,
+    "relatedLocations": [
+      {
+        "ref": "location.school",
+        "type": "LocationDefinition"
+      },
+      {
+        "ref": "location.library",
+        "type": "LocationDefinition"
+      }
+    ],
+    "relatedActivities": [],
+    "routes": [
+      {
+        "ref": "career.route.library",
+        "type": "CareerCandidateRouteDefinition"
+      },
+      {
+        "ref": "career.route.school",
+        "type": "CareerCandidateRouteDefinition"
+      }
+    ],
+    "requirements": [],
+    "recommendedActionKeys": [
+      "action.visit-library",
+      "action.attend-class"
+    ],
+    "rewards": []
+  },
+  {
+    "type": "CareerCandidateDefinition",
+    "id": "career.candidate.service",
+    "asset": "Assets/Data/Careers/Candidates/Candidate_Service.asset",
+    "displayNameKey": "candidate.service",
+    "descriptionKey": "candidate.service.desc",
+    "lockedTeaserKey": "???",
+    "revealedHintThreshold": 2,
+    "deepeningHintThreshold": 3,
+    "readyHintThreshold": 4,
+    "relatedLocations": [
+      {
+        "ref": "location.town-square",
+        "type": "LocationDefinition"
+      },
+      {
+        "ref": "location.corner-store",
+        "type": "LocationDefinition"
+      }
+    ],
+    "relatedActivities": [],
+    "routes": [
+      {
+        "ref": "career.route.service",
+        "type": "CareerCandidateRouteDefinition"
+      }
+    ],
+    "requirements": [],
+    "recommendedActionKeys": [
+      "action.help-npc",
+      "action.visit-store"
+    ],
+    "rewards": []
+  },
+  {
+    "type": "CareerCandidateDefinition",
+    "id": "career.candidate.technical",
+    "asset": "Assets/Data/Careers/Candidates/Candidate_Technical.asset",
+    "displayNameKey": "candidate.technical",
+    "descriptionKey": "candidate.technical.desc",
+    "lockedTeaserKey": "???",
+    "revealedHintThreshold": 2,
+    "deepeningHintThreshold": 3,
+    "readyHintThreshold": 4,
+    "relatedLocations": [
+      {
+        "ref": "location.workshop",
+        "type": "LocationDefinition"
+      }
+    ],
+    "relatedActivities": [],
+    "routes": [
+      {
+        "ref": "career.route.workshop",
+        "type": "CareerCandidateRouteDefinition"
+      }
+    ],
+    "requirements": [],
+    "recommendedActionKeys": [
+      "action.try-workshop"
+    ],
+    "rewards": []
+  }
+]

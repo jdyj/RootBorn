@@ -1,0 +1,10 @@
+[
+  {
+    "type": "CareerInterestSelectedQuestObjective",
+    "id": "Objective_SelectDream",
+    "asset": "Assets/Data/StudentLife/MainStory/Objectives/Objective_SelectDream.asset",
+    "displayKey": "dream.objective.select",
+    "requiredCount": 1,
+    "acceptedInterests": []
+  }
+]

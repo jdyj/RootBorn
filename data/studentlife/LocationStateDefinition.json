@@ -1,0 +1,69 @@
+[
+  {
+    "type": "LocationStateDefinition",
+    "id": "location.state.library-afternoon",
+    "asset": "Assets/Data/StudentLife/LocationStates/LocationState_Library_Afternoon.asset",
+    "displayNameKey": "life.location-state.library.afternoon.name",
+    "descriptionKey": "dream.location-state.library.afternoon.description",
+    "location": {
+      "ref": "location.library",
+      "type": "LocationDefinition"
+    },
+    "priority": 15,
+    "conditions": [
+      {
+        "ref": "LocationState_Library_Afternoon/Condition_ActivityLog",
+        "type": "LocationStateActivityLogCondition"
+      }
+    ],
+    "effects": [
+      {
+        "ref": "LocationState_Library_Afternoon/Effect_Availability",
+        "type": "LocationStateAvailabilityEffect"
+      }
+    ]
+  },
+  {
+    "type": "LocationStateDefinition",
+    "id": "location.state.library-evening",
+    "asset": "Assets/Data/StudentLife/LocationStates/LocationState_Library_Evening.asset",
+    "displayNameKey": "life.location-state.library.evening.name",
+    "descriptionKey": "life.location-state.library.evening.description",
+    "location": {
+      "ref": "location.library",
+      "type": "LocationDefinition"
+    },
+    "priority": 20,
+    "conditions": [
+      {
+        "ref": "LocationState_Library_Evening/Condition_TimeSlot",
+        "type": "LocationStateTimeSlotCondition"
+      }
+    ],
+    "effects": [
+      {
+        "ref": "LocationState_Library_Evening/Effect_Availability",
+        "type": "LocationStateAvailabilityEffect"
+      }
+    ]
+  },
+  {
+    "type": "LocationStateDefinition",
+    "id": "location.state.library-morning",
+    "asset": "Assets/Data/StudentLife/LocationStates/LocationState_Library_Morning.asset",
+    "displayNameKey": "life.location-state.library.morning.name",
+    "descriptionKey": "life.location-state.library.morning.description",
+    "location": {
+      "ref": "location.library",
+      "type": "LocationDefinition"
+    },
+    "priority": 10,
+    "conditions": [],
+    "effects": [
+      {
+        "ref": "LocationState_Library_Morning/Effect_Availability",
+        "type": "LocationStateAvailabilityEffect"
+      }
+    ]
+  }
+]

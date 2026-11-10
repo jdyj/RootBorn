@@ -1,0 +1,24 @@
+[
+  {
+    "type": "ClueInterpretationWorldStateOutcome",
+    "id": "InterpretationOutcome_WorkshopRepairLedgerWorld",
+    "asset": "Assets/Data/DiscoveryClues/Interpretations/InterpretationOutcome_WorkshopRepairLedgerWorld.asset",
+    "flags": [
+      {
+        "ref": "world.workshop.repair-ledger-open",
+        "type": "WorldStateFlagDefinition"
+      }
+    ]
+  },
+  {
+    "type": "ClueInterpretationWorldStateOutcome",
+    "id": "InterpretationOutcome_World",
+    "asset": "Assets/Data/DiscoveryClues/Interpretations/InterpretationOutcome_World.asset",
+    "flags": [
+      {
+        "ref": "world.library.archive-open",
+        "type": "WorldStateFlagDefinition"
+      }
+    ]
+  }
+]

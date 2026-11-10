@@ -1,0 +1,28 @@
+[
+  {
+    "type": "EncyclopediaEntryDefinition",
+    "id": "Encyclopedia_DiscoveryClue_ArchiveFragment",
+    "asset": "Assets/Data/DiscoveryClues/Encyclopedia/Encyclopedia_DiscoveryClue_ArchiveFragment.asset",
+    "category": null,
+    "displayName": "",
+    "lockedDisplayName": "???",
+    "description": "",
+    "lockedHint": "",
+    "detailLines": [],
+    "unlockConditions": [],
+    "revealStage": 1
+  },
+  {
+    "type": "EncyclopediaEntryDefinition",
+    "id": "encyclopedia.discovery.play-clue",
+    "asset": "Assets/Data/DiscoveryClues/Encyclopedia/Encyclopedia_DiscoveryClue_PlayLoop.asset",
+    "category": null,
+    "displayName": "Play clue entry",
+    "lockedDisplayName": "???",
+    "description": "A discovered clue entry.",
+    "lockedHint": "Find clue",
+    "detailLines": [],
+    "unlockConditions": [],
+    "revealStage": 1
+  }
+]

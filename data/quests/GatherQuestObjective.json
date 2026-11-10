@@ -1,0 +1,13 @@
+[
+  {
+    "type": "GatherQuestObjective",
+    "id": "Objective_GatherWood",
+    "asset": "Assets/Data/Quests/Objectives/Objective_GatherWood.asset",
+    "displayKey": "quest.gatherWood.objective",
+    "requiredCount": 1,
+    "targetResource": {
+      "ref": "Tree",
+      "type": "ResourceNodeDefinition"
+    }
+  }
+]

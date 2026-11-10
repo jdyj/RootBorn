@@ -1,0 +1,20 @@
+[
+  {
+    "type": "CharacterPartMotionDefinition",
+    "id": "ModernFarmMotion",
+    "asset": "Assets/Data/Family/CharacterPartAnimations/ModernFarmMotion.asset",
+    "idleRow": 0,
+    "walkRow": 1,
+    "framesPerDirection": 6,
+    "framesPerSecond": 8,
+    "idleRightColumn": 0,
+    "idleUpColumn": 1,
+    "idleLeftColumn": 2,
+    "idleDownColumn": 3,
+    "walkRightStartColumn": 0,
+    "walkUpStartColumn": 6,
+    "walkLeftStartColumn": 12,
+    "walkDownStartColumn": 18,
+    "mirrorHorizontal": 0
+  }
+]

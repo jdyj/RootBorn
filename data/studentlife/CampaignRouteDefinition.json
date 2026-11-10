@@ -1,0 +1,227 @@
+[
+  {
+    "type": "CampaignRouteDefinition",
+    "id": "campaign.route.event",
+    "asset": "Assets/Data/StudentLife/Campaigns/Routes/Route_EventPath.asset",
+    "displayNameKey": "Event path",
+    "descriptionKey": "Follow a town event",
+    "objectives": [
+      {
+        "ref": "campaign.objective.career-hint",
+        "type": "CampaignActivityLogObjective"
+      }
+    ]
+  },
+  {
+    "type": "CampaignRouteDefinition",
+    "id": "campaign.route.library",
+    "asset": "Assets/Data/StudentLife/Campaigns/Routes/Route_LibraryPath.asset",
+    "displayNameKey": "Library path",
+    "descriptionKey": "Study outside class",
+    "objectives": [
+      {
+        "ref": "campaign.objective.visit-library",
+        "type": "CampaignLocationVisitObjective"
+      },
+      {
+        "ref": "campaign.objective.school-free-growth",
+        "type": "CampaignActivityLogObjective"
+      }
+    ]
+  },
+  {
+    "type": "CampaignRouteDefinition",
+    "id": "campaign.route.school",
+    "asset": "Assets/Data/StudentLife/Campaigns/Routes/Route_SchoolPath.asset",
+    "displayNameKey": "School path",
+    "descriptionKey": "A school route is available",
+    "objectives": [
+      {
+        "ref": "campaign.objective.career-hint",
+        "type": "CampaignActivityLogObjective"
+      }
+    ]
+  },
+  {
+    "type": "CampaignRouteDefinition",
+    "id": "campaign.route.town-walk",
+    "asset": "Assets/Data/StudentLife/Campaigns/Routes/Route_TownWalk.asset",
+    "displayNameKey": "Town walk",
+    "descriptionKey": "Visit town spaces",
+    "objectives": [
+      {
+        "ref": "campaign.objective.visit-town",
+        "type": "CampaignLocationVisitObjective"
+      }
+    ]
+  },
+  {
+    "type": "CampaignRouteDefinition",
+    "id": "opening.route.Archive",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Route_ReadJobBooks.asset",
+    "displayNameKey": "dream.route.job-books",
+    "descriptionKey": "dream.route.job-books.description",
+    "objectives": [
+      {
+        "ref": "opening.campaign.objective.Archive",
+        "type": "CampaignActivityLogObjective"
+      }
+    ]
+  },
+  {
+    "type": "CampaignRouteDefinition",
+    "id": "opening.route.ClinicWork",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Route_ClinicWork.asset",
+    "displayNameKey": "dream.route.clinic-work",
+    "descriptionKey": "dream.route.clinic-work.description",
+    "objectives": [
+      {
+        "ref": "opening.campaign.objective.ClinicWork",
+        "type": "CampaignActivityLogObjective"
+      }
+    ]
+  },
+  {
+    "type": "CampaignRouteDefinition",
+    "id": "opening.route.ErrandWork",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Route_ErrandWork.asset",
+    "displayNameKey": "dream.route.errand-work",
+    "descriptionKey": "dream.route.errand-work.description",
+    "objectives": [
+      {
+        "ref": "opening.campaign.objective.ErrandWork",
+        "type": "CampaignActivityLogObjective"
+      }
+    ]
+  },
+  {
+    "type": "CampaignRouteDefinition",
+    "id": "opening.route.FitnessWork",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Route_FitnessWork.asset",
+    "displayNameKey": "dream.route.fitness-work",
+    "descriptionKey": "dream.route.fitness-work.description",
+    "objectives": [
+      {
+        "ref": "opening.campaign.objective.FitnessWork",
+        "type": "CampaignActivityLogObjective"
+      }
+    ]
+  },
+  {
+    "type": "CampaignRouteDefinition",
+    "id": "opening.route.Ledger",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Route_WatchWorkshopWork.asset",
+    "displayNameKey": "dream.route.watch-work",
+    "descriptionKey": "dream.route.watch-work.description",
+    "objectives": [
+      {
+        "ref": "opening.campaign.objective.Ledger",
+        "type": "CampaignActivityLogObjective"
+      }
+    ]
+  },
+  {
+    "type": "CampaignRouteDefinition",
+    "id": "opening.route.RestaurantWork",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Route_RestaurantWork.asset",
+    "displayNameKey": "dream.route.restaurant-work",
+    "descriptionKey": "dream.route.restaurant-work.description",
+    "objectives": [
+      {
+        "ref": "opening.campaign.objective.RestaurantWork",
+        "type": "CampaignActivityLogObjective"
+      }
+    ]
+  },
+  {
+    "type": "CampaignRouteDefinition",
+    "id": "opening.route.SelfStudy",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Route_SelfStudy.asset",
+    "displayNameKey": "opening.route.SelfStudy",
+    "descriptionKey": "opening.route.SelfStudy.description",
+    "objectives": [
+      {
+        "ref": "opening.campaign.objective.SelfStudy",
+        "type": "CampaignActivityLogObjective"
+      }
+    ]
+  },
+  {
+    "type": "CampaignRouteDefinition",
+    "id": "opening.route.StoreWork",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Route_StoreWork.asset",
+    "displayNameKey": "opening.route.StoreWork",
+    "descriptionKey": "opening.route.StoreWork.description",
+    "objectives": [
+      {
+        "ref": "opening.campaign.objective.StoreWork",
+        "type": "CampaignActivityLogObjective"
+      }
+    ]
+  },
+  {
+    "type": "CampaignRouteDefinition",
+    "id": "opening.route.StudioWork",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Route_StudioWork.asset",
+    "displayNameKey": "dream.route.studio-work",
+    "descriptionKey": "dream.route.studio-work.description",
+    "objectives": [
+      {
+        "ref": "opening.campaign.objective.StudioWork",
+        "type": "CampaignActivityLogObjective"
+      }
+    ]
+  },
+  {
+    "type": "CampaignRouteDefinition",
+    "id": "opening.route.SupplyWork",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Route_SupplyWork.asset",
+    "displayNameKey": "dream.route.supply-work",
+    "descriptionKey": "dream.route.supply-work.description",
+    "objectives": [
+      {
+        "ref": "opening.campaign.objective.SupplyWork",
+        "type": "CampaignActivityLogObjective"
+      }
+    ]
+  },
+  {
+    "type": "CampaignRouteDefinition",
+    "id": "opening.route.Teacher",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Route_Teacher.asset",
+    "displayNameKey": "opening.route.Teacher",
+    "descriptionKey": "opening.route.Teacher.description",
+    "objectives": [
+      {
+        "ref": "opening.campaign.objective.Teacher",
+        "type": "CampaignActivityLogObjective"
+      }
+    ]
+  },
+  {
+    "type": "CampaignRouteDefinition",
+    "id": "opening.route.TrainingWork",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Route_TrainingWork.asset",
+    "displayNameKey": "dream.route.training-work",
+    "descriptionKey": "dream.route.training-work.description",
+    "objectives": [
+      {
+        "ref": "opening.campaign.objective.TrainingWork",
+        "type": "CampaignActivityLogObjective"
+      }
+    ]
+  },
+  {
+    "type": "CampaignRouteDefinition",
+    "id": "opening.route.WorkshopWork",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Route_WorkshopWork.asset",
+    "displayNameKey": "opening.route.WorkshopWork",
+    "descriptionKey": "opening.route.WorkshopWork.description",
+    "objectives": [
+      {
+        "ref": "opening.campaign.objective.WorkshopWork",
+        "type": "CampaignActivityLogObjective"
+      }
+    ]
+  }
+]

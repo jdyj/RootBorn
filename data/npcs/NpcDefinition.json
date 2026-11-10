@@ -1,0 +1,212 @@
+[
+  {
+    "type": "NpcDefinition",
+    "id": "npc.first-guide",
+    "asset": "Assets/Data/NPCs/Npc_FirstGuide.asset",
+    "displayNameKey": "npc.first-guide.name",
+    "introductionKey": "npc.first-guide.intro",
+    "homeLocation": {
+      "ref": "location.home",
+      "type": "LocationDefinition"
+    },
+    "roles": [
+      {
+        "ref": "npc.role.guide",
+        "type": "NpcRoleDefinition"
+      }
+    ],
+    "defaultDialogue": {
+      "ref": "Dialogue_FirstNpc",
+      "type": "DialogueDefinition"
+    },
+    "defaultDialogueConditions": [],
+    "stageDialogues": [
+      {
+        "ref": "Dialogue_FirstNpc_Day2",
+        "type": "DialogueDefinition"
+      }
+    ],
+    "quests": [
+      {
+        "ref": "quest.gatherWood",
+        "type": "QuestDefinition"
+      },
+      {
+        "ref": "quest.career.chef",
+        "type": "QuestDefinition"
+      },
+      {
+        "ref": "quest.career.interior",
+        "type": "QuestDefinition"
+      },
+      {
+        "ref": "quest.career.soldier",
+        "type": "QuestDefinition"
+      },
+      {
+        "ref": "quest.career.emergency-care",
+        "type": "QuestDefinition"
+      },
+      {
+        "ref": "quest.tile-placement.interior",
+        "type": "QuestDefinition"
+      }
+    ],
+    "worldTexture": {
+      "asset": "Assets/ModernInteriors/Characters/Premade32/Premade_Character_32x32_02.png"
+    },
+    "worldSpriteRect": {
+      "serializedVersion": 2,
+      "x": 96,
+      "y": 1248,
+      "width": 32,
+      "height": 64
+    },
+    "worldSpritePixelsPerUnit": 32,
+    "characterAppearance": null
+  },
+  {
+    "type": "NpcDefinition",
+    "id": "npc.librarian",
+    "asset": "Assets/Data/NPCs/Npc_Librarian.asset",
+    "displayNameKey": "npc.librarian.name",
+    "introductionKey": "npc.librarian.intro",
+    "homeLocation": {
+      "ref": "location.library",
+      "type": "LocationDefinition"
+    },
+    "roles": [
+      {
+        "ref": "npc.role.librarian",
+        "type": "NpcRoleDefinition"
+      }
+    ],
+    "defaultDialogue": {
+      "ref": "Dialogue_LibrarianIntro",
+      "type": "DialogueDefinition"
+    },
+    "defaultDialogueConditions": [],
+    "stageDialogues": [],
+    "quests": [],
+    "worldTexture": {
+      "asset": "Assets/ModernInteriors/Characters/Premade32/Premade_Character_32x32_03.png"
+    },
+    "worldSpriteRect": {
+      "serializedVersion": 2,
+      "x": 96,
+      "y": 1248,
+      "width": 32,
+      "height": 64
+    },
+    "worldSpritePixelsPerUnit": 32,
+    "characterAppearance": null
+  },
+  {
+    "type": "NpcDefinition",
+    "id": "npc.shopkeeper",
+    "asset": "Assets/Data/NPCs/Npc_Shopkeeper.asset",
+    "displayNameKey": "npc.shopkeeper.name",
+    "introductionKey": "npc.shopkeeper.intro",
+    "homeLocation": {
+      "ref": "location.corner-store",
+      "type": "LocationDefinition"
+    },
+    "roles": [
+      {
+        "ref": "npc.role.shopkeeper",
+        "type": "NpcRoleDefinition"
+      }
+    ],
+    "defaultDialogue": {
+      "ref": "Dialogue_ShopkeeperIntro",
+      "type": "DialogueDefinition"
+    },
+    "defaultDialogueConditions": [],
+    "stageDialogues": [],
+    "quests": [],
+    "worldTexture": {
+      "asset": "Assets/ModernInteriors/Characters/Premade32/Premade_Character_32x32_04.png"
+    },
+    "worldSpriteRect": {
+      "serializedVersion": 2,
+      "x": 96,
+      "y": 1248,
+      "width": 32,
+      "height": 64
+    },
+    "worldSpritePixelsPerUnit": 32,
+    "characterAppearance": null
+  },
+  {
+    "type": "NpcDefinition",
+    "id": "npc.teacher",
+    "asset": "Assets/Data/NPCs/Npc_Teacher.asset",
+    "displayNameKey": "npc.teacher.name",
+    "introductionKey": "npc.teacher.intro",
+    "homeLocation": {
+      "ref": "location.school",
+      "type": "LocationDefinition"
+    },
+    "roles": [
+      {
+        "ref": "npc.role.teacher",
+        "type": "NpcRoleDefinition"
+      }
+    ],
+    "defaultDialogue": {
+      "ref": "Dialogue_TeacherIntro",
+      "type": "DialogueDefinition"
+    },
+    "defaultDialogueConditions": [],
+    "stageDialogues": [],
+    "quests": [],
+    "worldTexture": {
+      "asset": "Assets/ModernInteriors/Characters/Premade32/Premade_Character_32x32_01.png"
+    },
+    "worldSpriteRect": {
+      "serializedVersion": 2,
+      "x": 96,
+      "y": 1248,
+      "width": 32,
+      "height": 64
+    },
+    "worldSpritePixelsPerUnit": 32,
+    "characterAppearance": null
+  },
+  {
+    "type": "NpcDefinition",
+    "id": "npc.work-manager",
+    "asset": "Assets/Data/NPCs/Npc_WorkManager.asset",
+    "displayNameKey": "npc.work-manager.name",
+    "introductionKey": "npc.work-manager.intro",
+    "homeLocation": {
+      "ref": "location.workshop",
+      "type": "LocationDefinition"
+    },
+    "roles": [
+      {
+        "ref": "npc.role.work-manager",
+        "type": "NpcRoleDefinition"
+      }
+    ],
+    "defaultDialogue": {
+      "ref": "Dialogue_WorkManagerIntro",
+      "type": "DialogueDefinition"
+    },
+    "defaultDialogueConditions": [],
+    "stageDialogues": [],
+    "quests": [],
+    "worldTexture": {
+      "asset": "Assets/ModernInteriors/Characters/Premade32/Premade_Character_32x32_05.png"
+    },
+    "worldSpriteRect": {
+      "serializedVersion": 2,
+      "x": 96,
+      "y": 1248,
+      "width": 32,
+      "height": 64
+    },
+    "worldSpritePixelsPerUnit": 32,
+    "characterAppearance": null
+  }
+]

@@ -1,0 +1,30 @@
+[
+  {
+    "type": "FacilityEquipmentAutoSkipRequirement",
+    "id": "Careers/Facilities/Chef/AutoSkip_Facility",
+    "asset": "Assets/Data/Careers/Facilities/Chef/AutoSkip_Facility.asset",
+    "minimumLevel": 2,
+    "equipment": null
+  },
+  {
+    "type": "FacilityEquipmentAutoSkipRequirement",
+    "id": "Careers/Facilities/EmergencyCare/AutoSkip_Facility",
+    "asset": "Assets/Data/Careers/Facilities/EmergencyCare/AutoSkip_Facility.asset",
+    "minimumLevel": 2,
+    "equipment": null
+  },
+  {
+    "type": "FacilityEquipmentAutoSkipRequirement",
+    "id": "Careers/Facilities/Interior/AutoSkip_Facility",
+    "asset": "Assets/Data/Careers/Facilities/Interior/AutoSkip_Facility.asset",
+    "minimumLevel": 2,
+    "equipment": null
+  },
+  {
+    "type": "FacilityEquipmentAutoSkipRequirement",
+    "id": "Careers/Facilities/Soldier/AutoSkip_Facility",
+    "asset": "Assets/Data/Careers/Facilities/Soldier/AutoSkip_Facility.asset",
+    "minimumLevel": 2,
+    "equipment": null
+  }
+]

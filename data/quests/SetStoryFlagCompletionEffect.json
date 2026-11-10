@@ -1,0 +1,11 @@
+[
+  {
+    "type": "SetStoryFlagCompletionEffect",
+    "id": "Effect_SetFirstQuestComplete",
+    "asset": "Assets/Data/Quests/Effects/Effect_SetFirstQuestComplete.asset",
+    "flag": {
+      "ref": "story.firstQuestComplete",
+      "type": "StoryFlagDefinition"
+    }
+  }
+]

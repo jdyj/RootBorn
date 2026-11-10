@@ -1,0 +1,13 @@
+[
+  {
+    "type": "WorldStateUsageCareerHintOutcome",
+    "id": "UsageOutcome_LibraryArchive_Career",
+    "asset": "Assets/Data/WorldState/Usage/Outcomes/UsageOutcome_LibraryArchive_Career.asset",
+    "careers": [
+      {
+        "ref": "career.interior",
+        "type": "CareerDefinition"
+      }
+    ]
+  }
+]

@@ -1,0 +1,12 @@
+[
+  {
+    "type": "DiscoveryTraitDeltaOutcome",
+    "id": "DiscoveryOutcome_ClocktowerObservation",
+    "asset": "Assets/Data/StudentLife/Discoveries/Outcomes/DiscoveryOutcome_ClocktowerObservation.asset",
+    "trait": {
+      "ref": "trait.observation",
+      "type": "TraitDefinition"
+    },
+    "delta": 2
+  }
+]

@@ -1,0 +1,249 @@
+{
+  "image": "Assets/Art/Characters/Growing/outfit_school_school_uniform.png",
+  "width": 192,
+  "height": 212,
+  "pixelsPerUnit": 32,
+  "origin": "top-left",
+  "sprites": {
+    "outfit_school_school_uniform_00": {
+      "x": 0,
+      "y": 0,
+      "w": 32,
+      "h": 53,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_school_school_uniform_01": {
+      "x": 32,
+      "y": 0,
+      "w": 32,
+      "h": 53,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_school_school_uniform_02": {
+      "x": 64,
+      "y": 0,
+      "w": 32,
+      "h": 53,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_school_school_uniform_03": {
+      "x": 96,
+      "y": 0,
+      "w": 32,
+      "h": 53,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_school_school_uniform_04": {
+      "x": 128,
+      "y": 0,
+      "w": 32,
+      "h": 53,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_school_school_uniform_05": {
+      "x": 160,
+      "y": 0,
+      "w": 32,
+      "h": 53,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_school_school_uniform_06": {
+      "x": 0,
+      "y": 53,
+      "w": 32,
+      "h": 53,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_school_school_uniform_07": {
+      "x": 32,
+      "y": 53,
+      "w": 32,
+      "h": 53,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_school_school_uniform_08": {
+      "x": 64,
+      "y": 53,
+      "w": 32,
+      "h": 53,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_school_school_uniform_09": {
+      "x": 96,
+      "y": 53,
+      "w": 32,
+      "h": 53,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_school_school_uniform_10": {
+      "x": 128,
+      "y": 53,
+      "w": 32,
+      "h": 53,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_school_school_uniform_11": {
+      "x": 160,
+      "y": 53,
+      "w": 32,
+      "h": 53,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_school_school_uniform_12": {
+      "x": 0,
+      "y": 106,
+      "w": 32,
+      "h": 53,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_school_school_uniform_13": {
+      "x": 32,
+      "y": 106,
+      "w": 32,
+      "h": 53,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_school_school_uniform_14": {
+      "x": 64,
+      "y": 106,
+      "w": 32,
+      "h": 53,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_school_school_uniform_15": {
+      "x": 96,
+      "y": 106,
+      "w": 32,
+      "h": 53,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_school_school_uniform_16": {
+      "x": 128,
+      "y": 106,
+      "w": 32,
+      "h": 53,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_school_school_uniform_17": {
+      "x": 160,
+      "y": 106,
+      "w": 32,
+      "h": 53,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_school_school_uniform_18": {
+      "x": 0,
+      "y": 159,
+      "w": 32,
+      "h": 53,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_school_school_uniform_19": {
+      "x": 32,
+      "y": 159,
+      "w": 32,
+      "h": 53,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_school_school_uniform_20": {
+      "x": 64,
+      "y": 159,
+      "w": 32,
+      "h": 53,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_school_school_uniform_21": {
+      "x": 96,
+      "y": 159,
+      "w": 32,
+      "h": 53,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_school_school_uniform_22": {
+      "x": 128,
+      "y": 159,
+      "w": 32,
+      "h": 53,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_school_school_uniform_23": {
+      "x": 160,
+      "y": 159,
+      "w": 32,
+      "h": 53,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  }
+}

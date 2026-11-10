@@ -1,0 +1,66 @@
+[
+  {
+    "type": "DailyEventDefinition",
+    "id": "daily-event.library-hard-book",
+    "asset": "Assets/Data/StudentLife/DailyEvents/DailyEvent_LibraryHardBook.asset",
+    "displayNameKey": "life.event.library.name",
+    "descriptionKey": "life.event.library.description",
+    "location": {
+      "ref": "location.library",
+      "type": "LocationDefinition"
+    },
+    "npc": null,
+    "kind": {
+      "ref": "daily-event-kind.deferrable",
+      "type": "DailyEventKindDefinition"
+    },
+    "availabilityRules": [
+      {
+        "ref": "DailyEventRule_Library",
+        "type": "DailyEventLocationAvailabilityRule"
+      }
+    ],
+    "choices": [
+      {
+        "ref": "daily-event-choice.library-read-to-end",
+        "type": "DailyEventChoiceDefinition"
+      },
+      {
+        "ref": "daily-event-choice.library-ask-guide",
+        "type": "DailyEventChoiceDefinition"
+      }
+    ]
+  },
+  {
+    "type": "DailyEventDefinition",
+    "id": "daily-event.square-friend-request",
+    "asset": "Assets/Data/StudentLife/DailyEvents/DailyEvent_SquareFriendRequest.asset",
+    "displayNameKey": "life.event.square.name",
+    "descriptionKey": "life.event.square.description",
+    "location": {
+      "ref": "location.town-square",
+      "type": "LocationDefinition"
+    },
+    "npc": null,
+    "kind": {
+      "ref": "daily-event-kind.deferrable",
+      "type": "DailyEventKindDefinition"
+    },
+    "availabilityRules": [
+      {
+        "ref": "DailyEventRule_TownSquare",
+        "type": "DailyEventLocationAvailabilityRule"
+      }
+    ],
+    "choices": [
+      {
+        "ref": "daily-event-choice.square-help-now",
+        "type": "DailyEventChoiceDefinition"
+      },
+      {
+        "ref": "daily-event-choice.square-decline",
+        "type": "DailyEventChoiceDefinition"
+      }
+    ]
+  }
+]

@@ -1,0 +1,24 @@
+[
+  {
+    "type": "DiscoveryClueEncyclopediaOutcome",
+    "id": "Outcome_ArchiveFragmentEntry",
+    "asset": "Assets/Data/DiscoveryClues/Outcomes/Outcome_ArchiveFragmentEntry.asset",
+    "entries": [
+      {
+        "ref": "Encyclopedia_DiscoveryClue_ArchiveFragment",
+        "type": "EncyclopediaEntryDefinition"
+      }
+    ]
+  },
+  {
+    "type": "DiscoveryClueEncyclopediaOutcome",
+    "id": "Outcome_PlayLoopEntry",
+    "asset": "Assets/Data/DiscoveryClues/Outcomes/Outcome_PlayLoopEntry.asset",
+    "entries": [
+      {
+        "ref": "encyclopedia.discovery.play-clue",
+        "type": "EncyclopediaEntryDefinition"
+      }
+    ]
+  }
+]

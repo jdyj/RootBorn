@@ -1,0 +1,10 @@
+[
+  {
+    "type": "LifeCalendarDefinition",
+    "id": "Calendar_Default",
+    "asset": "Assets/Data/StudentLife/Calendar/Calendar_Default.asset",
+    "weekdayBudget": 2,
+    "weekendBudget": 3,
+    "weekendDaysMask": 96
+  }
+]

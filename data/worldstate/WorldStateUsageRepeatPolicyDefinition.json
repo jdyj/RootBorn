@@ -1,0 +1,11 @@
+[
+  {
+    "type": "WorldStateUsageRepeatPolicyDefinition",
+    "id": "UsageRepeat_LibraryArchiveOnce",
+    "asset": "Assets/Data/WorldState/Usage/RepeatPolicies/UsageRepeat_LibraryArchiveOnce.asset",
+    "mode": 0,
+    "cooldownDays": 0,
+    "maxUses": 1,
+    "allowDuplicateRewards": 0
+  }
+]

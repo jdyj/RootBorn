@@ -1,0 +1,19 @@
+{
+  "image": "Assets/moderninteriors-win/1_Interiors/32x32/Theme_Sorter_Shadowless_Singles_32x32/2_Living_Room_Singles_Shadowless_32x32/Living_Room_Singles_Shadowless_32x32_57.png",
+  "width": 64,
+  "height": 64,
+  "pixelsPerUnit": 32,
+  "origin": "top-left",
+  "sprites": {
+    "Living_Room_Singles_Shadowless_32x32_57": {
+      "x": 0,
+      "y": 0,
+      "w": 64,
+      "h": 64,
+      "pivot": {
+        "x": 0.25,
+        "y": 0.75
+      }
+    }
+  }
+}

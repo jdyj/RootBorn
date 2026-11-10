@@ -1,0 +1,19 @@
+{
+  "image": "Assets/Art/UI/UrbanMolding/inventory_search.png",
+  "width": 32,
+  "height": 32,
+  "pixelsPerUnit": 16,
+  "origin": "top-left",
+  "sprites": {
+    "inventory_search": {
+      "x": 0,
+      "y": 0,
+      "w": 32,
+      "h": 32,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  }
+}

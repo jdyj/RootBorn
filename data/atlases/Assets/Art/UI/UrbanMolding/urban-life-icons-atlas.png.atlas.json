@@ -1,0 +1,129 @@
+{
+  "image": "Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+  "width": 256,
+  "height": 256,
+  "pixelsPerUnit": 16,
+  "origin": "top-left",
+  "sprites": {
+    "urban_icon_care": {
+      "x": 60,
+      "y": 60,
+      "w": 48,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "urban_icon_chef": {
+      "x": 4,
+      "y": 60,
+      "w": 48,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "urban_icon_discovery": {
+      "x": 172,
+      "y": 4,
+      "w": 48,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "urban_icon_energy": {
+      "x": 60,
+      "y": 116,
+      "w": 48,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "urban_icon_focus": {
+      "x": 116,
+      "y": 116,
+      "w": 48,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "urban_icon_interior": {
+      "x": 116,
+      "y": 60,
+      "w": 48,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "urban_icon_journal": {
+      "x": 4,
+      "y": 4,
+      "w": 48,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "urban_icon_money": {
+      "x": 172,
+      "y": 116,
+      "w": 48,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "urban_icon_plan": {
+      "x": 60,
+      "y": 4,
+      "w": 48,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "urban_icon_time": {
+      "x": 4,
+      "y": 116,
+      "w": 48,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "urban_icon_town_map": {
+      "x": 116,
+      "y": 4,
+      "w": 48,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "urban_icon_training": {
+      "x": 172,
+      "y": 60,
+      "w": 48,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  }
+}

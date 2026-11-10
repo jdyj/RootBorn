@@ -1,0 +1,8 @@
+[
+  {
+    "type": "ClueInterpretationClueSeenCondition",
+    "id": "InterpretationCondition_ClueSeen",
+    "asset": "Assets/Data/DiscoveryClues/Interpretations/InterpretationCondition_ClueSeen.asset",
+    "lockedReasonKey": "condition.missing"
+  }
+]

@@ -1,0 +1,23 @@
+[
+  {
+    "type": "DayEndRuleDefinition",
+    "id": "day-rule.student-default",
+    "asset": "Assets/Data/StudentLife/DayEndRules/DayEndRule_StudentDefault.asset",
+    "displayNameKey": "day-rule.student-default",
+    "nextDayEntryPointId": "home-entry",
+    "rules": [
+      {
+        "ref": "DayEndRule_EnergyRestore_Default",
+        "type": "EnergyRestoreDayEndRule"
+      },
+      {
+        "ref": "DayEndRule_FocusRestore_Default",
+        "type": "FocusRestoreDayEndRule"
+      },
+      {
+        "ref": "DayEndRule_Tutorial_Day1ToDay2",
+        "type": "TutorialStageAdvanceDayEndRule"
+      }
+    ]
+  }
+]

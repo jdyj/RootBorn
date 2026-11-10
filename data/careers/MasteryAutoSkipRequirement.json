@@ -1,0 +1,22 @@
+[
+  {
+    "type": "MasteryAutoSkipRequirement",
+    "id": "Careers/Facilities/Chef/AutoSkip_Mastery",
+    "asset": "Assets/Data/Careers/Facilities/Chef/AutoSkip_Mastery.asset"
+  },
+  {
+    "type": "MasteryAutoSkipRequirement",
+    "id": "Careers/Facilities/EmergencyCare/AutoSkip_Mastery",
+    "asset": "Assets/Data/Careers/Facilities/EmergencyCare/AutoSkip_Mastery.asset"
+  },
+  {
+    "type": "MasteryAutoSkipRequirement",
+    "id": "Careers/Facilities/Interior/AutoSkip_Mastery",
+    "asset": "Assets/Data/Careers/Facilities/Interior/AutoSkip_Mastery.asset"
+  },
+  {
+    "type": "MasteryAutoSkipRequirement",
+    "id": "Careers/Facilities/Soldier/AutoSkip_Mastery",
+    "asset": "Assets/Data/Careers/Facilities/Soldier/AutoSkip_Mastery.asset"
+  }
+]

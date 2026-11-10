@@ -1,0 +1,35 @@
+[
+  {
+    "type": "RelationshipMilestoneObjective",
+    "id": "milestone.objective.first-guide-trust",
+    "asset": "Assets/Data/StudentLife/Milestones/Objectives/MilestoneObjective_FirstGuideTrust.asset",
+    "displayNameKey": "milestone.objective.first-guide-trust",
+    "requiredValue": 2,
+    "relationship": {
+      "ref": "relationship.first-guide.trust",
+      "type": "RelationshipDefinition"
+    }
+  },
+  {
+    "type": "RelationshipMilestoneObjective",
+    "id": "milestone.objective.teacher-commitment",
+    "asset": "Assets/Data/StudentLife/Milestones/Objectives/MilestoneObjective_TeacherCommitment.asset",
+    "displayNameKey": "milestone.objective.teacher-commitment",
+    "requiredValue": 4,
+    "relationship": {
+      "ref": "relationship.teacher.support",
+      "type": "RelationshipDefinition"
+    }
+  },
+  {
+    "type": "RelationshipMilestoneObjective",
+    "id": "milestone.objective.teacher-support",
+    "asset": "Assets/Data/StudentLife/Milestones/Objectives/MilestoneObjective_TeacherSupport.asset",
+    "displayNameKey": "milestone.objective.teacher-support",
+    "requiredValue": 2,
+    "relationship": {
+      "ref": "relationship.teacher.support",
+      "type": "RelationshipDefinition"
+    }
+  }
+]

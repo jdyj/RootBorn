@@ -1,0 +1,100 @@
+[
+  {
+    "type": "DiscoveryClueSourceDefinition",
+    "id": "source.discovery.board-rumor",
+    "asset": "Assets/Data/DiscoveryClues/Sources/Source_BoardArchiveRumor.asset",
+    "kind": 1,
+    "displayNameKey": "Town board notice",
+    "hintTextKey": "A notice recommends the library job books.",
+    "relatedNpc": null,
+    "relatedWorldState": {
+      "ref": "WorldState_DiscoveryClue_LibraryArchive",
+      "type": "WorldStateFlagDefinition"
+    },
+    "strength": 1
+  },
+  {
+    "type": "DiscoveryClueSourceDefinition",
+    "id": "source.discovery.librarian-rumor",
+    "asset": "Assets/Data/DiscoveryClues/Sources/Source_LibrarianArchiveRumor.asset",
+    "kind": 0,
+    "displayNameKey": "Librarian tip",
+    "hintTextKey": "The librarian recommends a book about jobs.",
+    "relatedNpc": null,
+    "relatedWorldState": {
+      "ref": "WorldState_DiscoveryClue_LibraryArchive",
+      "type": "WorldStateFlagDefinition"
+    },
+    "strength": 2
+  },
+  {
+    "type": "DiscoveryClueSourceDefinition",
+    "id": "source.discovery.play-board",
+    "asset": "Assets/Data/DiscoveryClues/Sources/Source_PlayLoopBoard.asset",
+    "kind": 1,
+    "displayNameKey": "Play clue board",
+    "hintTextKey": "A board hint points to a trace.",
+    "relatedNpc": null,
+    "relatedWorldState": {
+      "ref": "world.discovery.play-loop",
+      "type": "WorldStateFlagDefinition"
+    },
+    "strength": 1
+  },
+  {
+    "type": "DiscoveryClueSourceDefinition",
+    "id": "source.discovery.play-encyclopedia",
+    "asset": "Assets/Data/DiscoveryClues/Sources/Source_PlayLoopEncyclopedia.asset",
+    "kind": 3,
+    "displayNameKey": "Play clue unknown entry",
+    "hintTextKey": "??? trace entry",
+    "relatedNpc": null,
+    "relatedWorldState": {
+      "ref": "world.discovery.play-loop",
+      "type": "WorldStateFlagDefinition"
+    },
+    "strength": 1
+  },
+  {
+    "type": "DiscoveryClueSourceDefinition",
+    "id": "source.discovery.play-map",
+    "asset": "Assets/Data/DiscoveryClues/Sources/Source_PlayLoopMap.asset",
+    "kind": 2,
+    "displayNameKey": "Play clue map hint",
+    "hintTextKey": "The map shades a nearby trace area.",
+    "relatedNpc": null,
+    "relatedWorldState": {
+      "ref": "world.discovery.play-loop",
+      "type": "WorldStateFlagDefinition"
+    },
+    "strength": 2
+  },
+  {
+    "type": "DiscoveryClueSourceDefinition",
+    "id": "source.discovery.play-npc",
+    "asset": "Assets/Data/DiscoveryClues/Sources/Source_PlayLoopNpc.asset",
+    "kind": 0,
+    "displayNameKey": "Play clue NPC",
+    "hintTextKey": "A villager repeats the board rumor.",
+    "relatedNpc": null,
+    "relatedWorldState": {
+      "ref": "world.discovery.play-loop",
+      "type": "WorldStateFlagDefinition"
+    },
+    "strength": 2
+  },
+  {
+    "type": "DiscoveryClueSourceDefinition",
+    "id": "source.discovery.play-trace",
+    "asset": "Assets/Data/DiscoveryClues/Sources/Source_PlayLoopTrace.asset",
+    "kind": 4,
+    "displayNameKey": "Play clue trace",
+    "hintTextKey": "A scuffed trace waits nearby.",
+    "relatedNpc": null,
+    "relatedWorldState": {
+      "ref": "world.discovery.play-loop",
+      "type": "WorldStateFlagDefinition"
+    },
+    "strength": 2
+  }
+]

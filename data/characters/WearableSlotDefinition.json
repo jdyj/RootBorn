@@ -1,0 +1,38 @@
+[
+  {
+    "type": "WearableSlotDefinition",
+    "id": "slot.hair",
+    "asset": "Assets/Data/Characters/Wearables/Slot_hair.asset",
+    "displayNameKey": "ui.wardrobe.slot.hair",
+    "drawOrder": 2,
+    "defaultWearables": [
+      {
+        "ref": "wearable.hair_short_brown",
+        "type": "WearableDefinition"
+      }
+    ],
+    "hidesSlots": []
+  },
+  {
+    "type": "WearableSlotDefinition",
+    "id": "slot.outfit",
+    "asset": "Assets/Data/Characters/Wearables/Slot_outfit.asset",
+    "displayNameKey": "ui.wardrobe.slot.outfit",
+    "drawOrder": 1,
+    "defaultWearables": [
+      {
+        "ref": "wearable.outfit_casual",
+        "type": "WearableDefinition"
+      },
+      {
+        "ref": "wearable.outfit_school_uniform",
+        "type": "WearableDefinition"
+      },
+      {
+        "ref": "wearable.outfit_office",
+        "type": "WearableDefinition"
+      }
+    ],
+    "hidesSlots": []
+  }
+]

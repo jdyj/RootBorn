@@ -1,0 +1,30 @@
+[
+  {
+    "type": "CareerDefinition",
+    "id": "career.chef",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Careers/Career_Chef.asset",
+    "displayNameKey": "career.chef",
+    "requirements": []
+  },
+  {
+    "type": "CareerDefinition",
+    "id": "career.emergency-care",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Careers/Career_EmergencyCare.asset",
+    "displayNameKey": "career.emergency-care",
+    "requirements": []
+  },
+  {
+    "type": "CareerDefinition",
+    "id": "career.interior",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Careers/Career_Interior.asset",
+    "displayNameKey": "career.interior",
+    "requirements": []
+  },
+  {
+    "type": "CareerDefinition",
+    "id": "career.soldier",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Careers/Career_Soldier.asset",
+    "displayNameKey": "career.soldier",
+    "requirements": []
+  }
+]

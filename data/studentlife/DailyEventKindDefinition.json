@@ -1,0 +1,30 @@
+[
+  {
+    "type": "DailyEventKindDefinition",
+    "id": "daily-event-kind.deferrable",
+    "asset": "Assets/Data/StudentLife/DailyEvents/Kinds/DailyEventKind_Deferrable.asset",
+    "displayNameKey": "Deferrable",
+    "isOptional": 1,
+    "isDeferrable": 1,
+    "isTimed": 0,
+    "isRequired": 0,
+    "isRepeatable": 0,
+    "isConditional": 0,
+    "deferDays": 1,
+    "dueTimeMinutes": 0
+  },
+  {
+    "type": "DailyEventKindDefinition",
+    "id": "daily-event-kind.optional",
+    "asset": "Assets/Data/StudentLife/DailyEvents/Kinds/DailyEventKind_Optional.asset",
+    "displayNameKey": "Optional",
+    "isOptional": 1,
+    "isDeferrable": 0,
+    "isTimed": 0,
+    "isRequired": 0,
+    "isRepeatable": 0,
+    "isConditional": 0,
+    "deferDays": 0,
+    "dueTimeMinutes": 0
+  }
+]

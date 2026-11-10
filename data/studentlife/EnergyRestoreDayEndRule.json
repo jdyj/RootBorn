@@ -1,0 +1,8 @@
+[
+  {
+    "type": "EnergyRestoreDayEndRule",
+    "id": "DayEndRule_EnergyRestore_Default",
+    "asset": "Assets/Data/StudentLife/DayEndRules/DayEndRule_EnergyRestore_Default.asset",
+    "restoredEnergy": 12
+  }
+]

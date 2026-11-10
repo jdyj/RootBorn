@@ -1,0 +1,16 @@
+[
+  {
+    "type": "TutorialStageDefinition",
+    "id": "tutorial.day1",
+    "asset": "Assets/Data/StudentLife/TutorialStages/TutorialStage_Day1.asset",
+    "displayNameKey": "tutorial.day1",
+    "guideText": "ui.tutorial.town_routine_hint"
+  },
+  {
+    "type": "TutorialStageDefinition",
+    "id": "tutorial.day2",
+    "asset": "Assets/Data/StudentLife/TutorialStages/TutorialStage_Day2.asset",
+    "displayNameKey": "tutorial.day2",
+    "guideText": "ui.tutorial.next_goal_hint"
+  }
+]

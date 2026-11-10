@@ -1,0 +1,13 @@
+[
+  {
+    "type": "ClueInterpretationCareerHintOutcome",
+    "id": "InterpretationOutcome_Career",
+    "asset": "Assets/Data/DiscoveryClues/Interpretations/InterpretationOutcome_Career.asset",
+    "careers": [
+      {
+        "ref": "career.chef",
+        "type": "CareerDefinition"
+      }
+    ]
+  }
+]

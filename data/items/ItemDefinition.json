@@ -1,0 +1,144 @@
+[
+  {
+    "type": "ItemDefinition",
+    "id": "BareHand",
+    "asset": "Assets/Data/Items/Item_Tool_BareHand.asset",
+    "displayKey": "tool.bareHand",
+    "icon": {
+      "sprite": "Assets/Modern_Farm_v1.2/Icons/Icons_16x16/Icons_16x16_Singles/Icons_16x16_Tools_Bag.png",
+      "name": "Icons_16x16_Tools_Bag"
+    },
+    "maxStack": 1,
+    "category": 1,
+    "description": "Just your bare hands. Slow, but always available. You really should craft a proper tool.",
+    "seedFor": null,
+    "toolSpritePrefix": ""
+  },
+  {
+    "type": "ItemDefinition",
+    "id": "FishingRod",
+    "asset": "Assets/Data/Items/Item_Tool_FishingRod.asset",
+    "displayKey": "item.tool.fishing_rod",
+    "icon": null,
+    "maxStack": 1,
+    "category": 1,
+    "description": "물가에서 낚시에 사용하는 도구.",
+    "seedFor": null,
+    "toolSpritePrefix": ""
+  },
+  {
+    "type": "ItemDefinition",
+    "id": "Item_Fertilizer",
+    "asset": "Assets/Data/Items/Item_Fertilizer.asset",
+    "displayKey": "item.fertilizer",
+    "icon": null,
+    "maxStack": 99,
+    "category": 0,
+    "description": "",
+    "seedFor": null
+  },
+  {
+    "type": "ItemDefinition",
+    "id": "Item_Wheat",
+    "asset": "Assets/Data/Items/Item_Wheat.asset",
+    "displayKey": "item.wheat",
+    "icon": {
+      "sprite": "Assets/Art/UI/UrbanMolding/harvested_wheat.png",
+      "name": "harvested_wheat"
+    },
+    "maxStack": 99,
+    "category": 0,
+    "description": "",
+    "seedFor": null
+  },
+  {
+    "type": "ItemDefinition",
+    "id": "Stone",
+    "asset": "Assets/Data/Items/Item_Stone.asset",
+    "displayKey": "item.stone",
+    "icon": {
+      "sprite": "Assets/Modern_Farm_v1.2/16x16/Single_Files_16x16/Pickup_Items_16x16/Pickup_Resource_1_16x16.png",
+      "name": "Pickup_Resource_1_16x16"
+    },
+    "maxStack": 99,
+    "category": 0,
+    "description": "A rough chunk of stone. Useful for crafting tools and building basic structures. Heavy in the pocket.",
+    "seedFor": null,
+    "toolSpritePrefix": ""
+  },
+  {
+    "type": "ItemDefinition",
+    "id": "StoneAxe",
+    "asset": "Assets/Data/Items/Item_Tool_StoneAxe.asset",
+    "displayKey": "tool.stoneAxe",
+    "icon": {
+      "sprite": "Assets/Modern_Farm_v1.2/Icons/Icons_16x16/Icons_16x16_Singles/Icons_16x16_Tools_Axe.png",
+      "name": "Icons_16x16_Tools_Axe"
+    },
+    "maxStack": 1,
+    "category": 1,
+    "description": "A sharpened stone lashed to a sturdy stick. Cuts through tree trunks where bare hands would only bruise.",
+    "seedFor": null,
+    "toolSpritePrefix": "Axe"
+  },
+  {
+    "type": "ItemDefinition",
+    "id": "StonePickaxe",
+    "asset": "Assets/Data/Items/Item_Tool_StonePickaxe.asset",
+    "displayKey": "tool.stonePickaxe",
+    "icon": {
+      "sprite": "Assets/Modern_Farm_v1.2/Icons/Icons_16x16/Icons_16x16_Singles/Icons_16x16_Tools_Shovel.png",
+      "name": "Icons_16x16_Tools_Shovel"
+    },
+    "maxStack": 1,
+    "category": 1,
+    "description": "A heavy stone bound to a sturdy haft. Splits rock that bare hands cannot.",
+    "seedFor": null,
+    "toolSpritePrefix": "Pickaxe"
+  },
+  {
+    "type": "ItemDefinition",
+    "id": "Wood",
+    "asset": "Assets/Data/Items/Item_Wood.asset",
+    "displayKey": "item.wood",
+    "icon": {
+      "sprite": "Assets/Modern_Farm_v1.2/16x16/Single_Files_16x16/Pickup_Items_16x16/Pickup_Fishing_Branch_16x16.png",
+      "name": "Pickup_Fishing_Branch_16x16"
+    },
+    "maxStack": 99,
+    "category": 0,
+    "description": "A bundle of wood gathered from felled trees. The foundation of any homestead.",
+    "seedFor": null,
+    "toolSpritePrefix": ""
+  },
+  {
+    "type": "ItemDefinition",
+    "id": "item.allowance",
+    "asset": "Assets/Data/Items/Item_Allowance.asset",
+    "displayKey": "item.allowance.name",
+    "icon": {
+      "sprite": "Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+      "name": "urban_icon_money"
+    },
+    "maxStack": 9999,
+    "category": 2,
+    "description": "",
+    "seedFor": null,
+    "toolSpritePrefix": ""
+  },
+  {
+    "type": "ItemDefinition",
+    "id": "item.facility-materials",
+    "asset": "Assets/Data/Items/Item_FacilityMaterials.asset",
+    "displayKey": "item.facility-materials.name",
+    "icon": {
+      "sprite": "Assets/Art/UI/UrbanMolding/building_materials.png",
+      "name": "building_materials"
+    },
+    "maxStack": 9999,
+    "category": 0,
+    "description": "",
+    "seedFor": null,
+    "toolSpritePrefix": ""
+  }
+]

@@ -1,0 +1,13 @@
+[
+  {
+    "type": "ClueInterpretationQuestUnlockOutcome",
+    "id": "InterpretationOutcome_Quest",
+    "asset": "Assets/Data/DiscoveryClues/Interpretations/InterpretationOutcome_Quest.asset",
+    "quests": [
+      {
+        "ref": "quest.gatherWood",
+        "type": "QuestDefinition"
+      }
+    ]
+  }
+]

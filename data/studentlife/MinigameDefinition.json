@@ -1,0 +1,422 @@
+[
+  {
+    "type": "MinigameDefinition",
+    "id": "minigame.chef_practice",
+    "asset": "Assets/Data/StudentLife/Minigames/Game_Chef_Practice.asset",
+    "displayNameKey": "minigame.name.chef_practice",
+    "challenges": [
+      {
+        "ref": "Chef1",
+        "type": "SequenceChallengeDefinition"
+      },
+      {
+        "ref": "Chef1Timing",
+        "type": "TimingChallengeDefinition"
+      }
+    ],
+    "bonuses": [
+      {
+        "ref": "TasteWarning",
+        "type": "GrowthMinigameBonusRule"
+      },
+      {
+        "ref": "DelicateTiming",
+        "type": "GrowthMinigameBonusRule"
+      }
+    ],
+    "successScore": 60
+  },
+  {
+    "type": "MinigameDefinition",
+    "id": "minigame.chef_work1",
+    "asset": "Assets/Data/StudentLife/Minigames/Game_Chef_Work1.asset",
+    "displayNameKey": "minigame.name.chef_work1",
+    "challenges": [
+      {
+        "ref": "Chef1",
+        "type": "SequenceChallengeDefinition"
+      },
+      {
+        "ref": "Chef1Timing",
+        "type": "TimingChallengeDefinition"
+      }
+    ],
+    "bonuses": [
+      {
+        "ref": "TasteWarning",
+        "type": "GrowthMinigameBonusRule"
+      },
+      {
+        "ref": "DelicateTiming",
+        "type": "GrowthMinigameBonusRule"
+      }
+    ],
+    "successScore": 60
+  },
+  {
+    "type": "MinigameDefinition",
+    "id": "minigame.chef_work2",
+    "asset": "Assets/Data/StudentLife/Minigames/Game_Chef_Work2.asset",
+    "displayNameKey": "minigame.name.chef_work2",
+    "challenges": [
+      {
+        "ref": "Chef2",
+        "type": "SequenceChallengeDefinition"
+      },
+      {
+        "ref": "Chef2Timing",
+        "type": "TimingChallengeDefinition"
+      }
+    ],
+    "bonuses": [
+      {
+        "ref": "TasteWarning",
+        "type": "GrowthMinigameBonusRule"
+      },
+      {
+        "ref": "DelicateTiming",
+        "type": "GrowthMinigameBonusRule"
+      }
+    ],
+    "successScore": 60
+  },
+  {
+    "type": "MinigameDefinition",
+    "id": "minigame.chef_work3",
+    "asset": "Assets/Data/StudentLife/Minigames/Game_Chef_Work3.asset",
+    "displayNameKey": "minigame.name.chef_work3",
+    "challenges": [
+      {
+        "ref": "Chef3",
+        "type": "SequenceChallengeDefinition"
+      },
+      {
+        "ref": "Chef3Timing",
+        "type": "TimingChallengeDefinition"
+      }
+    ],
+    "bonuses": [
+      {
+        "ref": "TasteWarning",
+        "type": "GrowthMinigameBonusRule"
+      },
+      {
+        "ref": "DelicateTiming",
+        "type": "GrowthMinigameBonusRule"
+      }
+    ],
+    "successScore": 60
+  },
+  {
+    "type": "MinigameDefinition",
+    "id": "minigame.cornerstore_intro",
+    "asset": "Assets/Data/StudentLife/Minigames/Game_CornerStore_Intro.asset",
+    "displayNameKey": "minigame.name.cornerstore_intro",
+    "challenges": [
+      {
+        "ref": "StoreIntro",
+        "type": "SequenceChallengeDefinition"
+      }
+    ],
+    "bonuses": [],
+    "successScore": 60
+  },
+  {
+    "type": "MinigameDefinition",
+    "id": "minigame.emergencycare_practice",
+    "asset": "Assets/Data/StudentLife/Minigames/Game_EmergencyCare_Practice.asset",
+    "displayNameKey": "minigame.name.emergencycare_practice",
+    "challenges": [
+      {
+        "ref": "Care1",
+        "type": "ChoiceChallengeDefinition"
+      },
+      {
+        "ref": "CareSequence1",
+        "type": "SequenceChallengeDefinition"
+      }
+    ],
+    "bonuses": [
+      {
+        "ref": "ReliefHints",
+        "type": "GrowthMinigameBonusRule"
+      },
+      {
+        "ref": "CalmTime",
+        "type": "GrowthMinigameBonusRule"
+      }
+    ],
+    "successScore": 60
+  },
+  {
+    "type": "MinigameDefinition",
+    "id": "minigame.emergencycare_work1",
+    "asset": "Assets/Data/StudentLife/Minigames/Game_EmergencyCare_Work1.asset",
+    "displayNameKey": "minigame.name.emergencycare_work1",
+    "challenges": [
+      {
+        "ref": "Care1",
+        "type": "ChoiceChallengeDefinition"
+      },
+      {
+        "ref": "CareSequence1",
+        "type": "SequenceChallengeDefinition"
+      }
+    ],
+    "bonuses": [
+      {
+        "ref": "ReliefHints",
+        "type": "GrowthMinigameBonusRule"
+      },
+      {
+        "ref": "CalmTime",
+        "type": "GrowthMinigameBonusRule"
+      }
+    ],
+    "successScore": 60
+  },
+  {
+    "type": "MinigameDefinition",
+    "id": "minigame.emergencycare_work2",
+    "asset": "Assets/Data/StudentLife/Minigames/Game_EmergencyCare_Work2.asset",
+    "displayNameKey": "minigame.name.emergencycare_work2",
+    "challenges": [
+      {
+        "ref": "Care2",
+        "type": "ChoiceChallengeDefinition"
+      },
+      {
+        "ref": "CareSequence2",
+        "type": "SequenceChallengeDefinition"
+      },
+      {
+        "ref": "Travel2",
+        "type": "TargetDodgeChallengeDefinition"
+      }
+    ],
+    "bonuses": [
+      {
+        "ref": "ReliefHints",
+        "type": "GrowthMinigameBonusRule"
+      },
+      {
+        "ref": "CalmTime",
+        "type": "GrowthMinigameBonusRule"
+      }
+    ],
+    "successScore": 60
+  },
+  {
+    "type": "MinigameDefinition",
+    "id": "minigame.emergencycare_work3",
+    "asset": "Assets/Data/StudentLife/Minigames/Game_EmergencyCare_Work3.asset",
+    "displayNameKey": "minigame.name.emergencycare_work3",
+    "challenges": [
+      {
+        "ref": "Care3",
+        "type": "ChoiceChallengeDefinition"
+      },
+      {
+        "ref": "CareSequence3",
+        "type": "SequenceChallengeDefinition"
+      },
+      {
+        "ref": "Travel3",
+        "type": "TargetDodgeChallengeDefinition"
+      }
+    ],
+    "bonuses": [
+      {
+        "ref": "ReliefHints",
+        "type": "GrowthMinigameBonusRule"
+      },
+      {
+        "ref": "CalmTime",
+        "type": "GrowthMinigameBonusRule"
+      }
+    ],
+    "successScore": 60
+  },
+  {
+    "type": "MinigameDefinition",
+    "id": "minigame.interior_practice",
+    "asset": "Assets/Data/StudentLife/Minigames/Game_Interior_Practice.asset",
+    "displayNameKey": "minigame.name.interior_practice",
+    "challenges": [
+      {
+        "ref": "Interior1",
+        "type": "PlacementChallengeDefinition"
+      }
+    ],
+    "bonuses": [
+      {
+        "ref": "AestheticHarmony",
+        "type": "GrowthMinigameBonusRule"
+      }
+    ],
+    "successScore": 60
+  },
+  {
+    "type": "MinigameDefinition",
+    "id": "minigame.interior_work1",
+    "asset": "Assets/Data/StudentLife/Minigames/Game_Interior_Work1.asset",
+    "displayNameKey": "minigame.name.interior_work1",
+    "challenges": [
+      {
+        "ref": "Interior1",
+        "type": "PlacementChallengeDefinition"
+      }
+    ],
+    "bonuses": [
+      {
+        "ref": "AestheticHarmony",
+        "type": "GrowthMinigameBonusRule"
+      }
+    ],
+    "successScore": 60
+  },
+  {
+    "type": "MinigameDefinition",
+    "id": "minigame.interior_work2",
+    "asset": "Assets/Data/StudentLife/Minigames/Game_Interior_Work2.asset",
+    "displayNameKey": "minigame.name.interior_work2",
+    "challenges": [
+      {
+        "ref": "Interior2",
+        "type": "PlacementChallengeDefinition"
+      }
+    ],
+    "bonuses": [
+      {
+        "ref": "AestheticHarmony",
+        "type": "GrowthMinigameBonusRule"
+      }
+    ],
+    "successScore": 60
+  },
+  {
+    "type": "MinigameDefinition",
+    "id": "minigame.interior_work3",
+    "asset": "Assets/Data/StudentLife/Minigames/Game_Interior_Work3.asset",
+    "displayNameKey": "minigame.name.interior_work3",
+    "challenges": [
+      {
+        "ref": "Interior3",
+        "type": "PlacementChallengeDefinition"
+      }
+    ],
+    "bonuses": [
+      {
+        "ref": "AestheticHarmony",
+        "type": "GrowthMinigameBonusRule"
+      }
+    ],
+    "successScore": 60
+  },
+  {
+    "type": "MinigameDefinition",
+    "id": "minigame.soldier_practice",
+    "asset": "Assets/Data/StudentLife/Minigames/Game_Soldier_Practice.asset",
+    "displayNameKey": "minigame.name.soldier_practice",
+    "challenges": [
+      {
+        "ref": "Training1",
+        "type": "TargetDodgeChallengeDefinition"
+      }
+    ],
+    "bonuses": [
+      {
+        "ref": "FitnessTime",
+        "type": "GrowthMinigameBonusRule"
+      },
+      {
+        "ref": "FocusedAim",
+        "type": "GrowthMinigameBonusRule"
+      }
+    ],
+    "successScore": 60
+  },
+  {
+    "type": "MinigameDefinition",
+    "id": "minigame.soldier_work1",
+    "asset": "Assets/Data/StudentLife/Minigames/Game_Soldier_Work1.asset",
+    "displayNameKey": "minigame.name.soldier_work1",
+    "challenges": [
+      {
+        "ref": "Training1",
+        "type": "TargetDodgeChallengeDefinition"
+      }
+    ],
+    "bonuses": [
+      {
+        "ref": "FitnessTime",
+        "type": "GrowthMinigameBonusRule"
+      },
+      {
+        "ref": "FocusedAim",
+        "type": "GrowthMinigameBonusRule"
+      }
+    ],
+    "successScore": 60
+  },
+  {
+    "type": "MinigameDefinition",
+    "id": "minigame.soldier_work2",
+    "asset": "Assets/Data/StudentLife/Minigames/Game_Soldier_Work2.asset",
+    "displayNameKey": "minigame.name.soldier_work2",
+    "challenges": [
+      {
+        "ref": "Training2",
+        "type": "TargetDodgeChallengeDefinition"
+      }
+    ],
+    "bonuses": [
+      {
+        "ref": "FitnessTime",
+        "type": "GrowthMinigameBonusRule"
+      },
+      {
+        "ref": "FocusedAim",
+        "type": "GrowthMinigameBonusRule"
+      }
+    ],
+    "successScore": 60
+  },
+  {
+    "type": "MinigameDefinition",
+    "id": "minigame.soldier_work3",
+    "asset": "Assets/Data/StudentLife/Minigames/Game_Soldier_Work3.asset",
+    "displayNameKey": "minigame.name.soldier_work3",
+    "challenges": [
+      {
+        "ref": "Training3",
+        "type": "TargetDodgeChallengeDefinition"
+      }
+    ],
+    "bonuses": [
+      {
+        "ref": "FitnessTime",
+        "type": "GrowthMinigameBonusRule"
+      },
+      {
+        "ref": "FocusedAim",
+        "type": "GrowthMinigameBonusRule"
+      }
+    ],
+    "successScore": 60
+  },
+  {
+    "type": "MinigameDefinition",
+    "id": "minigame.workshop_intro",
+    "asset": "Assets/Data/StudentLife/Minigames/Game_Workshop_Intro.asset",
+    "displayNameKey": "minigame.name.workshop_intro",
+    "challenges": [
+      {
+        "ref": "WorkshopIntro",
+        "type": "PlacementChallengeDefinition"
+      }
+    ],
+    "bonuses": [],
+    "successScore": 60
+  }
+]

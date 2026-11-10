@@ -1,0 +1,14 @@
+[
+  {
+    "type": "HitGroundWithRockTrigger",
+    "id": "Trigger_HitGroundWithRock",
+    "asset": "Assets/Data/Knowledge/Triggers/Trigger_HitGroundWithRock.asset",
+    "requiredRepeats": 1,
+    "expectedTargetResourceId": "Rock",
+    "expectedSurface": "ground",
+    "expectedTool": {
+      "ref": "BareHand",
+      "type": "ToolDefinition"
+    }
+  }
+]

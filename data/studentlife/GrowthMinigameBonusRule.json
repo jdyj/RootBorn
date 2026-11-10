@@ -1,0 +1,93 @@
+[
+  {
+    "type": "GrowthMinigameBonusRule",
+    "id": "AestheticHarmony",
+    "asset": "Assets/Data/StudentLife/Minigames/Bonuses/AestheticHarmony.asset",
+    "trait": {
+      "ref": "trait.aesthetic",
+      "type": "TraitDefinition"
+    },
+    "skill": null,
+    "target": 4,
+    "amountPerPoint": 0.5,
+    "maximumBonus": 15
+  },
+  {
+    "type": "GrowthMinigameBonusRule",
+    "id": "CalmTime",
+    "asset": "Assets/Data/StudentLife/Minigames/Bonuses/CalmTime.asset",
+    "trait": {
+      "ref": "trait.calm",
+      "type": "TraitDefinition"
+    },
+    "skill": null,
+    "target": 1,
+    "amountPerPoint": 0.5,
+    "maximumBonus": 12
+  },
+  {
+    "type": "GrowthMinigameBonusRule",
+    "id": "DelicateTiming",
+    "asset": "Assets/Data/StudentLife/Minigames/Bonuses/DelicateTiming.asset",
+    "trait": {
+      "ref": "trait.delicacy",
+      "type": "TraitDefinition"
+    },
+    "skill": null,
+    "target": 0,
+    "amountPerPoint": 0.008,
+    "maximumBonus": 0.2
+  },
+  {
+    "type": "GrowthMinigameBonusRule",
+    "id": "FitnessTime",
+    "asset": "Assets/Data/StudentLife/Minigames/Bonuses/FitnessTime.asset",
+    "trait": {
+      "ref": "trait.fitness",
+      "type": "TraitDefinition"
+    },
+    "skill": null,
+    "target": 1,
+    "amountPerPoint": 0.35,
+    "maximumBonus": 10
+  },
+  {
+    "type": "GrowthMinigameBonusRule",
+    "id": "FocusedAim",
+    "asset": "Assets/Data/StudentLife/Minigames/Bonuses/FocusedAim.asset",
+    "trait": {
+      "ref": "trait.focus",
+      "type": "TraitDefinition"
+    },
+    "skill": null,
+    "target": 5,
+    "amountPerPoint": 0.04,
+    "maximumBonus": 1
+  },
+  {
+    "type": "GrowthMinigameBonusRule",
+    "id": "ReliefHints",
+    "asset": "Assets/Data/StudentLife/Minigames/Bonuses/ReliefHints.asset",
+    "trait": {
+      "ref": "trait.relief",
+      "type": "TraitDefinition"
+    },
+    "skill": null,
+    "target": 3,
+    "amountPerPoint": 0.1,
+    "maximumBonus": 2
+  },
+  {
+    "type": "GrowthMinigameBonusRule",
+    "id": "TasteWarning",
+    "asset": "Assets/Data/StudentLife/Minigames/Bonuses/TasteWarning.asset",
+    "trait": {
+      "ref": "trait.taste",
+      "type": "TraitDefinition"
+    },
+    "skill": null,
+    "target": 3,
+    "amountPerPoint": 0.1,
+    "maximumBonus": 2
+  }
+]

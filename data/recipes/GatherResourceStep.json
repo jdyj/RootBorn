@@ -1,0 +1,10 @@
+[
+  {
+    "type": "GatherResourceStep",
+    "id": "Recipe_Town_FieldNotes/Step_Gather_Stone_For_FieldNotes",
+    "asset": "Assets/Data/Recipes/Recipe_Town_FieldNotes.asset",
+    "displayKey": "",
+    "resourceId": "Stone",
+    "requiredCount": 1
+  }
+]

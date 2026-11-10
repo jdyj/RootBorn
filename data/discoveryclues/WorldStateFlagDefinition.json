@@ -1,0 +1,38 @@
+[
+  {
+    "type": "WorldStateFlagDefinition",
+    "id": "WorldState_DiscoveryClue_LibraryArchive",
+    "asset": "Assets/Data/DiscoveryClues/WorldState/WorldState_DiscoveryClue_LibraryArchive.asset",
+    "displayNameKey": "",
+    "descriptionKey": "",
+    "relatedLocation": null,
+    "relatedNpcs": [],
+    "relatedQuestChains": [],
+    "scopeDefinition": null,
+    "scope": 1,
+    "changeKind": 0,
+    "nextActionKey": "",
+    "visibleSurfaces": "",
+    "badges": "",
+    "sortPriority": 0,
+    "effectVersion": 1
+  },
+  {
+    "type": "WorldStateFlagDefinition",
+    "id": "world.discovery.play-loop",
+    "asset": "Assets/Data/DiscoveryClues/WorldState/WorldState_DiscoveryClue_PlayLoop.asset",
+    "displayNameKey": "Play clue world state",
+    "descriptionKey": "Play clue revealed a trace.",
+    "relatedLocation": null,
+    "relatedNpcs": [],
+    "relatedQuestChains": [],
+    "scopeDefinition": null,
+    "scope": 1,
+    "changeKind": 1,
+    "nextActionKey": "Follow clue",
+    "visibleSurfaces": "02000000",
+    "badges": "04000000",
+    "sortPriority": 0,
+    "effectVersion": 1
+  }
+]

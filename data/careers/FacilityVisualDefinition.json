@@ -1,0 +1,1182 @@
+[
+  {
+    "type": "FacilityVisualDefinition",
+    "id": "chef_lv1",
+    "asset": "Assets/Data/Careers/FacilityVisuals/chef_lv1.asset",
+    "facility": {
+      "ref": "facility.chef",
+      "type": "FacilityDefinition"
+    },
+    "level": 1,
+    "spriteAddress": "sprites/career-facilities/chef_lv1",
+    "siteSize": {
+      "x": 4,
+      "y": 2
+    },
+    "spriteOffset": {
+      "x": 1.5,
+      "y": -0.5
+    },
+    "entranceOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "collisionCells": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 1
+      }
+    ],
+    "entranceCells": [
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 0
+      }
+    ],
+    "approachCells": [
+      {
+        "x": 1,
+        "y": -1
+      },
+      {
+        "x": 2,
+        "y": -1
+      }
+    ]
+  },
+  {
+    "type": "FacilityVisualDefinition",
+    "id": "chef_lv2",
+    "asset": "Assets/Data/Careers/FacilityVisuals/chef_lv2.asset",
+    "facility": {
+      "ref": "facility.chef",
+      "type": "FacilityDefinition"
+    },
+    "level": 2,
+    "spriteAddress": "sprites/career-facilities/chef_lv2",
+    "siteSize": {
+      "x": 5,
+      "y": 3
+    },
+    "spriteOffset": {
+      "x": 2,
+      "y": -0.5
+    },
+    "entranceOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "collisionCells": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 4,
+        "y": 2
+      }
+    ],
+    "entranceCells": [
+      {
+        "x": 2,
+        "y": 0
+      }
+    ],
+    "approachCells": [
+      {
+        "x": 2,
+        "y": -1
+      }
+    ]
+  },
+  {
+    "type": "FacilityVisualDefinition",
+    "id": "chef_lv3",
+    "asset": "Assets/Data/Careers/FacilityVisuals/chef_lv3.asset",
+    "facility": {
+      "ref": "facility.chef",
+      "type": "FacilityDefinition"
+    },
+    "level": 3,
+    "spriteAddress": "sprites/career-facilities/chef_lv3",
+    "siteSize": {
+      "x": 6,
+      "y": 4
+    },
+    "spriteOffset": {
+      "x": 2.5,
+      "y": -0.5
+    },
+    "entranceOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "collisionCells": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 5,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 1
+      },
+      {
+        "x": 5,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 4,
+        "y": 2
+      },
+      {
+        "x": 5,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      }
+    ],
+    "entranceCells": [
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 0
+      }
+    ],
+    "approachCells": [
+      {
+        "x": 2,
+        "y": -1
+      },
+      {
+        "x": 3,
+        "y": -1
+      }
+    ]
+  },
+  {
+    "type": "FacilityVisualDefinition",
+    "id": "emergencycare_lv1",
+    "asset": "Assets/Data/Careers/FacilityVisuals/emergencycare_lv1.asset",
+    "facility": {
+      "ref": "facility.emergency-care",
+      "type": "FacilityDefinition"
+    },
+    "level": 1,
+    "spriteAddress": "sprites/career-facilities/emergencycare_lv1",
+    "siteSize": {
+      "x": 4,
+      "y": 2
+    },
+    "spriteOffset": {
+      "x": 1.5,
+      "y": -0.5
+    },
+    "entranceOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "collisionCells": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 1
+      }
+    ],
+    "entranceCells": [
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 0
+      }
+    ],
+    "approachCells": [
+      {
+        "x": 1,
+        "y": -1
+      },
+      {
+        "x": 2,
+        "y": -1
+      }
+    ]
+  },
+  {
+    "type": "FacilityVisualDefinition",
+    "id": "emergencycare_lv2",
+    "asset": "Assets/Data/Careers/FacilityVisuals/emergencycare_lv2.asset",
+    "facility": {
+      "ref": "facility.emergency-care",
+      "type": "FacilityDefinition"
+    },
+    "level": 2,
+    "spriteAddress": "sprites/career-facilities/emergencycare_lv2",
+    "siteSize": {
+      "x": 5,
+      "y": 3
+    },
+    "spriteOffset": {
+      "x": 2,
+      "y": -0.5
+    },
+    "entranceOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "collisionCells": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 4,
+        "y": 2
+      }
+    ],
+    "entranceCells": [
+      {
+        "x": 2,
+        "y": 0
+      }
+    ],
+    "approachCells": [
+      {
+        "x": 2,
+        "y": -1
+      }
+    ]
+  },
+  {
+    "type": "FacilityVisualDefinition",
+    "id": "emergencycare_lv3",
+    "asset": "Assets/Data/Careers/FacilityVisuals/emergencycare_lv3.asset",
+    "facility": {
+      "ref": "facility.emergency-care",
+      "type": "FacilityDefinition"
+    },
+    "level": 3,
+    "spriteAddress": "sprites/career-facilities/emergencycare_lv3",
+    "siteSize": {
+      "x": 6,
+      "y": 4
+    },
+    "spriteOffset": {
+      "x": 2.5,
+      "y": -0.5
+    },
+    "entranceOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "collisionCells": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 5,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 1
+      },
+      {
+        "x": 5,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 4,
+        "y": 2
+      },
+      {
+        "x": 5,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      }
+    ],
+    "entranceCells": [
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 0
+      }
+    ],
+    "approachCells": [
+      {
+        "x": 2,
+        "y": -1
+      },
+      {
+        "x": 3,
+        "y": -1
+      }
+    ]
+  },
+  {
+    "type": "FacilityVisualDefinition",
+    "id": "interior_lv1",
+    "asset": "Assets/Data/Careers/FacilityVisuals/interior_lv1.asset",
+    "facility": {
+      "ref": "facility.interior",
+      "type": "FacilityDefinition"
+    },
+    "level": 1,
+    "spriteAddress": "sprites/career-facilities/interior_lv1",
+    "siteSize": {
+      "x": 4,
+      "y": 2
+    },
+    "spriteOffset": {
+      "x": 1.5,
+      "y": -0.5
+    },
+    "entranceOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "collisionCells": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 1
+      }
+    ],
+    "entranceCells": [
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 0
+      }
+    ],
+    "approachCells": [
+      {
+        "x": 1,
+        "y": -1
+      },
+      {
+        "x": 2,
+        "y": -1
+      }
+    ]
+  },
+  {
+    "type": "FacilityVisualDefinition",
+    "id": "interior_lv2",
+    "asset": "Assets/Data/Careers/FacilityVisuals/interior_lv2.asset",
+    "facility": {
+      "ref": "facility.interior",
+      "type": "FacilityDefinition"
+    },
+    "level": 2,
+    "spriteAddress": "sprites/career-facilities/interior_lv2",
+    "siteSize": {
+      "x": 5,
+      "y": 3
+    },
+    "spriteOffset": {
+      "x": 2,
+      "y": -0.5
+    },
+    "entranceOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "collisionCells": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 4,
+        "y": 2
+      }
+    ],
+    "entranceCells": [
+      {
+        "x": 2,
+        "y": 0
+      }
+    ],
+    "approachCells": [
+      {
+        "x": 2,
+        "y": -1
+      }
+    ]
+  },
+  {
+    "type": "FacilityVisualDefinition",
+    "id": "interior_lv3",
+    "asset": "Assets/Data/Careers/FacilityVisuals/interior_lv3.asset",
+    "facility": {
+      "ref": "facility.interior",
+      "type": "FacilityDefinition"
+    },
+    "level": 3,
+    "spriteAddress": "sprites/career-facilities/interior_lv3",
+    "siteSize": {
+      "x": 6,
+      "y": 4
+    },
+    "spriteOffset": {
+      "x": 2.5,
+      "y": -0.5
+    },
+    "entranceOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "collisionCells": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 5,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 1
+      },
+      {
+        "x": 5,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 4,
+        "y": 2
+      },
+      {
+        "x": 5,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      }
+    ],
+    "entranceCells": [
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 0
+      }
+    ],
+    "approachCells": [
+      {
+        "x": 2,
+        "y": -1
+      },
+      {
+        "x": 3,
+        "y": -1
+      }
+    ]
+  },
+  {
+    "type": "FacilityVisualDefinition",
+    "id": "soldier_lv1",
+    "asset": "Assets/Data/Careers/FacilityVisuals/soldier_lv1.asset",
+    "facility": {
+      "ref": "facility.soldier",
+      "type": "FacilityDefinition"
+    },
+    "level": 1,
+    "spriteAddress": "sprites/career-facilities/soldier_lv1",
+    "siteSize": {
+      "x": 4,
+      "y": 2
+    },
+    "spriteOffset": {
+      "x": 1.5,
+      "y": -0.5
+    },
+    "entranceOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "collisionCells": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 1
+      }
+    ],
+    "entranceCells": [
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 0
+      }
+    ],
+    "approachCells": [
+      {
+        "x": 1,
+        "y": -1
+      },
+      {
+        "x": 2,
+        "y": -1
+      }
+    ]
+  },
+  {
+    "type": "FacilityVisualDefinition",
+    "id": "soldier_lv2",
+    "asset": "Assets/Data/Careers/FacilityVisuals/soldier_lv2.asset",
+    "facility": {
+      "ref": "facility.soldier",
+      "type": "FacilityDefinition"
+    },
+    "level": 2,
+    "spriteAddress": "sprites/career-facilities/soldier_lv2",
+    "siteSize": {
+      "x": 5,
+      "y": 3
+    },
+    "spriteOffset": {
+      "x": 2,
+      "y": -0.5
+    },
+    "entranceOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "collisionCells": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 4,
+        "y": 2
+      }
+    ],
+    "entranceCells": [
+      {
+        "x": 2,
+        "y": 0
+      }
+    ],
+    "approachCells": [
+      {
+        "x": 2,
+        "y": -1
+      }
+    ]
+  },
+  {
+    "type": "FacilityVisualDefinition",
+    "id": "soldier_lv3",
+    "asset": "Assets/Data/Careers/FacilityVisuals/soldier_lv3.asset",
+    "facility": {
+      "ref": "facility.soldier",
+      "type": "FacilityDefinition"
+    },
+    "level": 3,
+    "spriteAddress": "sprites/career-facilities/soldier_lv3",
+    "siteSize": {
+      "x": 6,
+      "y": 4
+    },
+    "spriteOffset": {
+      "x": 2.5,
+      "y": -0.5
+    },
+    "entranceOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "collisionCells": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 5,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 1
+      },
+      {
+        "x": 5,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 4,
+        "y": 2
+      },
+      {
+        "x": 5,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      }
+    ],
+    "entranceCells": [
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 0
+      }
+    ],
+    "approachCells": [
+      {
+        "x": 2,
+        "y": -1
+      },
+      {
+        "x": 3,
+        "y": -1
+      }
+    ]
+  }
+]

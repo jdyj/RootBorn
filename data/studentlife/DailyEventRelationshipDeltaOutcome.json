@@ -1,0 +1,12 @@
+[
+  {
+    "type": "DailyEventRelationshipDeltaOutcome",
+    "id": "DailyEventOutcome_FirstGuideTrustPlus",
+    "asset": "Assets/Data/StudentLife/DailyEvents/Outcomes/DailyEventOutcome_FirstGuideTrustPlus.asset",
+    "relationship": {
+      "ref": "relationship.first-guide.trust",
+      "type": "RelationshipDefinition"
+    },
+    "delta": 1
+  }
+]

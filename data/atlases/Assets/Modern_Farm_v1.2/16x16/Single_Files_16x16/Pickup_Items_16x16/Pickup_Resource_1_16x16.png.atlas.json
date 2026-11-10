@@ -1,0 +1,19 @@
+{
+  "image": "Assets/Modern_Farm_v1.2/16x16/Single_Files_16x16/Pickup_Items_16x16/Pickup_Resource_1_16x16.png",
+  "width": 16,
+  "height": 16,
+  "pixelsPerUnit": 16,
+  "origin": "top-left",
+  "sprites": {
+    "Pickup_Resource_1_16x16": {
+      "x": 0,
+      "y": 0,
+      "w": 16,
+      "h": 16,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  }
+}

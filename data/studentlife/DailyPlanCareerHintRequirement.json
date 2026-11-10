@@ -1,0 +1,12 @@
+[
+  {
+    "type": "DailyPlanCareerHintRequirement",
+    "id": "DailyPlanRequirement_CareerInteriorHintUnlocked",
+    "asset": "Assets/Data/StudentLife/DailyPlans/Requirements/DailyPlanRequirement_CareerInteriorHintUnlocked.asset",
+    "career": {
+      "ref": "career.interior",
+      "type": "CareerDefinition"
+    },
+    "expectedUnlocked": 1
+  }
+]

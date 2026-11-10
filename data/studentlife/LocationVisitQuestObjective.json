@@ -1,0 +1,46 @@
+[
+  {
+    "type": "LocationVisitQuestObjective",
+    "id": "Objective_Visit_Location_DesignStudio",
+    "asset": "Assets/Data/StudentLife/MainStory/Objectives/Objective_Visit_Location_DesignStudio.asset",
+    "displayKey": "opening.objective.visit.2",
+    "requiredCount": 1,
+    "targetLocation": {
+      "ref": "location.design-studio",
+      "type": "LocationDefinition"
+    }
+  },
+  {
+    "type": "LocationVisitQuestObjective",
+    "id": "Objective_Visit_Location_MedicalClinic",
+    "asset": "Assets/Data/StudentLife/MainStory/Objectives/Objective_Visit_Location_MedicalClinic.asset",
+    "displayKey": "opening.objective.visit.1",
+    "requiredCount": 1,
+    "targetLocation": {
+      "ref": "location.medical-clinic",
+      "type": "LocationDefinition"
+    }
+  },
+  {
+    "type": "LocationVisitQuestObjective",
+    "id": "Objective_Visit_Location_Restaurant",
+    "asset": "Assets/Data/StudentLife/MainStory/Objectives/Objective_Visit_Location_Restaurant.asset",
+    "displayKey": "opening.objective.visit.0",
+    "requiredCount": 1,
+    "targetLocation": {
+      "ref": "location.restaurant",
+      "type": "LocationDefinition"
+    }
+  },
+  {
+    "type": "LocationVisitQuestObjective",
+    "id": "Objective_Visit_Location_TrainingGround",
+    "asset": "Assets/Data/StudentLife/MainStory/Objectives/Objective_Visit_Location_TrainingGround.asset",
+    "displayKey": "opening.objective.visit.3",
+    "requiredCount": 1,
+    "targetLocation": {
+      "ref": "location.training-ground",
+      "type": "LocationDefinition"
+    }
+  }
+]

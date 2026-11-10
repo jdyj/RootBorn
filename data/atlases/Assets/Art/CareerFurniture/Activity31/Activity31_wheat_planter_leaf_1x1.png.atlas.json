@@ -1,0 +1,19 @@
+{
+  "image": "Assets/Art/CareerFurniture/Activity31/Activity31_wheat_planter_leaf_1x1.png",
+  "width": 48,
+  "height": 96,
+  "pixelsPerUnit": 48,
+  "origin": "top-left",
+  "sprites": {
+    "Activity31_wheat_planter_leaf_1x1": {
+      "x": 0,
+      "y": 0,
+      "w": 48,
+      "h": 96,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    }
+  }
+}

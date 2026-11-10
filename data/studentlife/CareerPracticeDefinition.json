@@ -1,0 +1,130 @@
+[
+  {
+    "type": "CareerPracticeDefinition",
+    "id": "practice.chef",
+    "asset": "Assets/Data/StudentLife/CareerPractices/PracticeS/Practice_Chef.asset",
+    "displayNameKey": "practice.chef",
+    "minigame": {
+      "ref": "minigame.chef_practice",
+      "type": "MinigameDefinition"
+    },
+    "activity": {
+      "ref": "practice.chef",
+      "type": "LifeActivityDefinition"
+    },
+    "careerHint": {
+      "ref": "career.chef",
+      "type": "CareerDefinition"
+    },
+    "steps": [
+      {
+        "ref": "practice.chef.ingredients",
+        "type": "PracticeStepDefinition"
+      },
+      {
+        "ref": "practice.chef.sequence",
+        "type": "PracticeStepDefinition"
+      },
+      {
+        "ref": "practice.chef.order-response",
+        "type": "PracticeStepDefinition"
+      }
+    ]
+  },
+  {
+    "type": "CareerPracticeDefinition",
+    "id": "practice.emergency-care",
+    "asset": "Assets/Data/StudentLife/CareerPractices/PracticeS/Practice_EmergencyCare.asset",
+    "displayNameKey": "practice.emergency-care",
+    "minigame": {
+      "ref": "minigame.emergencycare_practice",
+      "type": "MinigameDefinition"
+    },
+    "activity": {
+      "ref": "practice.emergency-care",
+      "type": "LifeActivityDefinition"
+    },
+    "careerHint": {
+      "ref": "career.emergency-care",
+      "type": "CareerDefinition"
+    },
+    "steps": [
+      {
+        "ref": "practice.emergency-care.symptom-check",
+        "type": "PracticeStepDefinition"
+      },
+      {
+        "ref": "practice.emergency-care.first-aid",
+        "type": "PracticeStepDefinition"
+      },
+      {
+        "ref": "practice.emergency-care.patient-care",
+        "type": "PracticeStepDefinition"
+      }
+    ]
+  },
+  {
+    "type": "CareerPracticeDefinition",
+    "id": "practice.interior",
+    "asset": "Assets/Data/StudentLife/CareerPractices/PracticeS/Practice_Interior.asset",
+    "displayNameKey": "practice.interior",
+    "minigame": {
+      "ref": "minigame.interior_practice",
+      "type": "MinigameDefinition"
+    },
+    "activity": {
+      "ref": "practice.interior",
+      "type": "LifeActivityDefinition"
+    },
+    "careerHint": {
+      "ref": "career.interior",
+      "type": "CareerDefinition"
+    },
+    "steps": [
+      {
+        "ref": "practice.interior.room-purpose",
+        "type": "PracticeStepDefinition"
+      },
+      {
+        "ref": "practice.interior.layout",
+        "type": "PracticeStepDefinition"
+      },
+      {
+        "ref": "practice.interior.color-budget",
+        "type": "PracticeStepDefinition"
+      }
+    ]
+  },
+  {
+    "type": "CareerPracticeDefinition",
+    "id": "practice.soldier",
+    "asset": "Assets/Data/StudentLife/CareerPractices/PracticeS/Practice_Soldier.asset",
+    "displayNameKey": "practice.soldier",
+    "minigame": {
+      "ref": "minigame.soldier_practice",
+      "type": "MinigameDefinition"
+    },
+    "activity": {
+      "ref": "practice.soldier",
+      "type": "LifeActivityDefinition"
+    },
+    "careerHint": {
+      "ref": "career.soldier",
+      "type": "CareerDefinition"
+    },
+    "steps": [
+      {
+        "ref": "practice.soldier.fitness",
+        "type": "PracticeStepDefinition"
+      },
+      {
+        "ref": "practice.soldier.orders",
+        "type": "PracticeStepDefinition"
+      },
+      {
+        "ref": "practice.soldier.teamwork",
+        "type": "PracticeStepDefinition"
+      }
+    ]
+  }
+]

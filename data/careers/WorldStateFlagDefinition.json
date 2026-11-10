@@ -1,0 +1,170 @@
+[
+  {
+    "type": "WorldStateFlagDefinition",
+    "id": "world.chef.level2",
+    "asset": "Assets/Data/Careers/Facilities/Chef/World_Level2.asset",
+    "displayNameKey": "world.chef.level2.name",
+    "descriptionKey": "world.chef.level2.description",
+    "relatedLocation": {
+      "ref": "location.restaurant",
+      "type": "LocationDefinition"
+    },
+    "relatedNpcs": [],
+    "relatedQuestChains": [],
+    "scopeDefinition": null,
+    "scope": 0,
+    "changeKind": 0,
+    "nextActionKey": "world.chef.level2.next",
+    "visibleSurfaces": "",
+    "badges": "",
+    "sortPriority": 0,
+    "effectVersion": 1
+  },
+  {
+    "type": "WorldStateFlagDefinition",
+    "id": "world.chef.level3",
+    "asset": "Assets/Data/Careers/Facilities/Chef/World_Level3.asset",
+    "displayNameKey": "world.chef.level3.name",
+    "descriptionKey": "world.chef.level3.description",
+    "relatedLocation": {
+      "ref": "location.restaurant",
+      "type": "LocationDefinition"
+    },
+    "relatedNpcs": [],
+    "relatedQuestChains": [],
+    "scopeDefinition": null,
+    "scope": 0,
+    "changeKind": 0,
+    "nextActionKey": "world.chef.level3.next",
+    "visibleSurfaces": "",
+    "badges": "",
+    "sortPriority": 0,
+    "effectVersion": 1
+  },
+  {
+    "type": "WorldStateFlagDefinition",
+    "id": "world.emergency-care.level2",
+    "asset": "Assets/Data/Careers/Facilities/EmergencyCare/World_Level2.asset",
+    "displayNameKey": "world.emergency-care.level2.name",
+    "descriptionKey": "world.emergency-care.level2.description",
+    "relatedLocation": {
+      "ref": "location.medical-clinic",
+      "type": "LocationDefinition"
+    },
+    "relatedNpcs": [],
+    "relatedQuestChains": [],
+    "scopeDefinition": null,
+    "scope": 0,
+    "changeKind": 0,
+    "nextActionKey": "world.emergency-care.level2.next",
+    "visibleSurfaces": "",
+    "badges": "",
+    "sortPriority": 0,
+    "effectVersion": 1
+  },
+  {
+    "type": "WorldStateFlagDefinition",
+    "id": "world.emergency-care.level3",
+    "asset": "Assets/Data/Careers/Facilities/EmergencyCare/World_Level3.asset",
+    "displayNameKey": "world.emergency-care.level3.name",
+    "descriptionKey": "world.emergency-care.level3.description",
+    "relatedLocation": {
+      "ref": "location.medical-clinic",
+      "type": "LocationDefinition"
+    },
+    "relatedNpcs": [],
+    "relatedQuestChains": [],
+    "scopeDefinition": null,
+    "scope": 0,
+    "changeKind": 0,
+    "nextActionKey": "world.emergency-care.level3.next",
+    "visibleSurfaces": "",
+    "badges": "",
+    "sortPriority": 0,
+    "effectVersion": 1
+  },
+  {
+    "type": "WorldStateFlagDefinition",
+    "id": "world.interior.level2",
+    "asset": "Assets/Data/Careers/Facilities/Interior/World_Level2.asset",
+    "displayNameKey": "world.interior.level2.name",
+    "descriptionKey": "world.interior.level2.description",
+    "relatedLocation": {
+      "ref": "location.design-studio",
+      "type": "LocationDefinition"
+    },
+    "relatedNpcs": [],
+    "relatedQuestChains": [],
+    "scopeDefinition": null,
+    "scope": 0,
+    "changeKind": 0,
+    "nextActionKey": "world.interior.level2.next",
+    "visibleSurfaces": "",
+    "badges": "",
+    "sortPriority": 0,
+    "effectVersion": 1
+  },
+  {
+    "type": "WorldStateFlagDefinition",
+    "id": "world.interior.level3",
+    "asset": "Assets/Data/Careers/Facilities/Interior/World_Level3.asset",
+    "displayNameKey": "world.interior.level3.name",
+    "descriptionKey": "world.interior.level3.description",
+    "relatedLocation": {
+      "ref": "location.design-studio",
+      "type": "LocationDefinition"
+    },
+    "relatedNpcs": [],
+    "relatedQuestChains": [],
+    "scopeDefinition": null,
+    "scope": 0,
+    "changeKind": 0,
+    "nextActionKey": "world.interior.level3.next",
+    "visibleSurfaces": "",
+    "badges": "",
+    "sortPriority": 0,
+    "effectVersion": 1
+  },
+  {
+    "type": "WorldStateFlagDefinition",
+    "id": "world.soldier.level2",
+    "asset": "Assets/Data/Careers/Facilities/Soldier/World_Level2.asset",
+    "displayNameKey": "world.soldier.level2.name",
+    "descriptionKey": "world.soldier.level2.description",
+    "relatedLocation": {
+      "ref": "location.training-ground",
+      "type": "LocationDefinition"
+    },
+    "relatedNpcs": [],
+    "relatedQuestChains": [],
+    "scopeDefinition": null,
+    "scope": 0,
+    "changeKind": 0,
+    "nextActionKey": "world.soldier.level2.next",
+    "visibleSurfaces": "",
+    "badges": "",
+    "sortPriority": 0,
+    "effectVersion": 1
+  },
+  {
+    "type": "WorldStateFlagDefinition",
+    "id": "world.soldier.level3",
+    "asset": "Assets/Data/Careers/Facilities/Soldier/World_Level3.asset",
+    "displayNameKey": "world.soldier.level3.name",
+    "descriptionKey": "world.soldier.level3.description",
+    "relatedLocation": {
+      "ref": "location.training-ground",
+      "type": "LocationDefinition"
+    },
+    "relatedNpcs": [],
+    "relatedQuestChains": [],
+    "scopeDefinition": null,
+    "scope": 0,
+    "changeKind": 0,
+    "nextActionKey": "world.soldier.level3.next",
+    "visibleSurfaces": "",
+    "badges": "",
+    "sortPriority": 0,
+    "effectVersion": 1
+  }
+]

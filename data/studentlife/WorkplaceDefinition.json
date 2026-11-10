@@ -1,0 +1,98 @@
+[
+  {
+    "type": "WorkplaceDefinition",
+    "id": "workplace.corner-store",
+    "asset": "Assets/Data/StudentLife/PartTimeWork/Workplace_CornerStore.asset",
+    "displayNameKey": "workplace.corner-store",
+    "locationId": "location.corner-store",
+    "npcId": "npc.first-guide",
+    "availableWorks": [
+      {
+        "ref": "work.shift.corner-store",
+        "type": "PartTimeWorkDefinition"
+      }
+    ]
+  },
+  {
+    "type": "WorkplaceDefinition",
+    "id": "workplace.design-studio",
+    "asset": "Assets/Data/StudentLife/PartTimeWork/Workplace_Studio.asset",
+    "displayNameKey": "opening.facility.design-studio.name",
+    "locationId": "location.design-studio",
+    "npcId": "",
+    "availableWorks": [
+      {
+        "ref": "work.studio-helper",
+        "type": "PartTimeWorkDefinition"
+      }
+    ]
+  },
+  {
+    "type": "WorkplaceDefinition",
+    "id": "workplace.medical-clinic",
+    "asset": "Assets/Data/StudentLife/PartTimeWork/Workplace_Clinic.asset",
+    "displayNameKey": "opening.facility.medical-clinic.name",
+    "locationId": "location.medical-clinic",
+    "npcId": "",
+    "availableWorks": [
+      {
+        "ref": "work.clinic-helper",
+        "type": "PartTimeWorkDefinition"
+      },
+      {
+        "ref": "work.supply-helper",
+        "type": "PartTimeWorkDefinition"
+      }
+    ]
+  },
+  {
+    "type": "WorkplaceDefinition",
+    "id": "workplace.restaurant",
+    "asset": "Assets/Data/StudentLife/PartTimeWork/Workplace_Restaurant.asset",
+    "displayNameKey": "opening.facility.restaurant.name",
+    "locationId": "location.restaurant",
+    "npcId": "",
+    "availableWorks": [
+      {
+        "ref": "work.restaurant-helper",
+        "type": "PartTimeWorkDefinition"
+      },
+      {
+        "ref": "work.errand-helper",
+        "type": "PartTimeWorkDefinition"
+      }
+    ]
+  },
+  {
+    "type": "WorkplaceDefinition",
+    "id": "workplace.training-ground",
+    "asset": "Assets/Data/StudentLife/PartTimeWork/Workplace_TrainingGround.asset",
+    "displayNameKey": "opening.facility.training-ground.name",
+    "locationId": "location.training-ground",
+    "npcId": "",
+    "availableWorks": [
+      {
+        "ref": "work.training-helper",
+        "type": "PartTimeWorkDefinition"
+      },
+      {
+        "ref": "work.fitness-helper",
+        "type": "PartTimeWorkDefinition"
+      }
+    ]
+  },
+  {
+    "type": "WorkplaceDefinition",
+    "id": "workplace.workshop",
+    "asset": "Assets/Data/StudentLife/PartTimeWork/Workplace_Workshop.asset",
+    "displayNameKey": "opening.workplace.workshop",
+    "locationId": "location.workshop",
+    "npcId": "npc.work-manager",
+    "availableWorks": [
+      {
+        "ref": "work.workshop-helper",
+        "type": "PartTimeWorkDefinition"
+      }
+    ]
+  }
+]

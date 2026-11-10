@@ -1,0 +1,13 @@
+[
+  {
+    "type": "TalkQuestObjective",
+    "id": "Objective_Teacher",
+    "asset": "Assets/Data/StudentLife/MainStory/Objectives/Objective_Teacher.asset",
+    "displayKey": "opening.objective.teacher",
+    "requiredCount": 1,
+    "targetNpc": {
+      "ref": "npc.teacher",
+      "type": "NpcDefinition"
+    }
+  }
+]

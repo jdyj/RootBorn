@@ -1,0 +1,19 @@
+{
+  "image": "Assets/moderninteriors-win/1_Interiors/32x32/Theme_Sorter_Shadowless_Singles_32x32/12_Kitchen_Singles_Shadowless_32x32/Kitchen_Singles_Shadowless_32x32_23.png",
+  "width": 32,
+  "height": 32,
+  "pixelsPerUnit": 32,
+  "origin": "top-left",
+  "sprites": {
+    "Kitchen_Singles_Shadowless_32x32_23": {
+      "x": 0,
+      "y": 0,
+      "w": 32,
+      "h": 32,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  }
+}

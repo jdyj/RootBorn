@@ -1,0 +1,12 @@
+[
+  {
+    "type": "OutsideSchoolSkillDeltaOutcome",
+    "id": "OutsideOutcome_LibraryBasicStudy",
+    "asset": "Assets/Data/StudentLife/OutsideSchool/OutsideOutcome_LibraryBasicStudy.asset",
+    "skill": {
+      "ref": "skill.basic-study",
+      "type": "SkillDefinition"
+    },
+    "delta": 3
+  }
+]

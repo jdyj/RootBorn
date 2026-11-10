@@ -1,0 +1,74 @@
+[
+  {
+    "type": "PracticeStepDefinition",
+    "id": "practice.chef.ingredients",
+    "asset": "Assets/Data/StudentLife/CareerPractices/PracticeSteps/Practice_Chef_Step1.asset",
+    "displayNameKey": "practice.chef.ingredients"
+  },
+  {
+    "type": "PracticeStepDefinition",
+    "id": "practice.chef.order-response",
+    "asset": "Assets/Data/StudentLife/CareerPractices/PracticeSteps/Practice_Chef_Step3.asset",
+    "displayNameKey": "practice.chef.order-response"
+  },
+  {
+    "type": "PracticeStepDefinition",
+    "id": "practice.chef.sequence",
+    "asset": "Assets/Data/StudentLife/CareerPractices/PracticeSteps/Practice_Chef_Step2.asset",
+    "displayNameKey": "practice.chef.sequence"
+  },
+  {
+    "type": "PracticeStepDefinition",
+    "id": "practice.emergency-care.first-aid",
+    "asset": "Assets/Data/StudentLife/CareerPractices/PracticeSteps/Practice_EmergencyCare_Step2.asset",
+    "displayNameKey": "practice.emergency-care.first-aid"
+  },
+  {
+    "type": "PracticeStepDefinition",
+    "id": "practice.emergency-care.patient-care",
+    "asset": "Assets/Data/StudentLife/CareerPractices/PracticeSteps/Practice_EmergencyCare_Step3.asset",
+    "displayNameKey": "practice.emergency-care.patient-care"
+  },
+  {
+    "type": "PracticeStepDefinition",
+    "id": "practice.emergency-care.symptom-check",
+    "asset": "Assets/Data/StudentLife/CareerPractices/PracticeSteps/Practice_EmergencyCare_Step1.asset",
+    "displayNameKey": "practice.emergency-care.symptom-check"
+  },
+  {
+    "type": "PracticeStepDefinition",
+    "id": "practice.interior.color-budget",
+    "asset": "Assets/Data/StudentLife/CareerPractices/PracticeSteps/Practice_Interior_Step3.asset",
+    "displayNameKey": "practice.interior.color-budget"
+  },
+  {
+    "type": "PracticeStepDefinition",
+    "id": "practice.interior.layout",
+    "asset": "Assets/Data/StudentLife/CareerPractices/PracticeSteps/Practice_Interior_Step2.asset",
+    "displayNameKey": "practice.interior.layout"
+  },
+  {
+    "type": "PracticeStepDefinition",
+    "id": "practice.interior.room-purpose",
+    "asset": "Assets/Data/StudentLife/CareerPractices/PracticeSteps/Practice_Interior_Step1.asset",
+    "displayNameKey": "practice.interior.room-purpose"
+  },
+  {
+    "type": "PracticeStepDefinition",
+    "id": "practice.soldier.fitness",
+    "asset": "Assets/Data/StudentLife/CareerPractices/PracticeSteps/Practice_Soldier_Step1.asset",
+    "displayNameKey": "practice.soldier.fitness"
+  },
+  {
+    "type": "PracticeStepDefinition",
+    "id": "practice.soldier.orders",
+    "asset": "Assets/Data/StudentLife/CareerPractices/PracticeSteps/Practice_Soldier_Step2.asset",
+    "displayNameKey": "practice.soldier.orders"
+  },
+  {
+    "type": "PracticeStepDefinition",
+    "id": "practice.soldier.teamwork",
+    "asset": "Assets/Data/StudentLife/CareerPractices/PracticeSteps/Practice_Soldier_Step3.asset",
+    "displayNameKey": "practice.soldier.teamwork"
+  }
+]

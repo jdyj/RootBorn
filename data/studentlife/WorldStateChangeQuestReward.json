@@ -1,0 +1,17 @@
+[
+  {
+    "type": "WorldStateChangeQuestReward",
+    "id": "Reward_QC_LibraryRouteWorldState",
+    "asset": "Assets/Data/StudentLife/QuestChains/Rewards/Reward_QC_LibraryRouteWorldState.asset",
+    "flags": [
+      {
+        "ref": "world.questchain.library-route-reward",
+        "type": "WorldStateFlagDefinition"
+      }
+    ],
+    "sourceQuestChainId": "questchain.test.career-interest.library",
+    "sourceQuestStepId": "completion",
+    "sourceEventId": "quest-chain-route-reward",
+    "activationDay": 1
+  }
+]

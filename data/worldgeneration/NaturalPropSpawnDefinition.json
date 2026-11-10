@@ -1,0 +1,38 @@
+[
+  {
+    "type": "NaturalPropSpawnDefinition",
+    "id": "Spawn_Rocks_Default",
+    "asset": "Assets/Data/WorldGeneration/Spawn_Rocks_Default.asset",
+    "resource": {
+      "ref": "Rock",
+      "type": "ResourceNodeDefinition"
+    },
+    "targetCount": 8,
+    "spawnableArea": {
+      "x": 2,
+      "y": 2,
+      "width": 26,
+      "height": 16
+    },
+    "minDistanceBetweenProps": 1,
+    "maxAttempts": 256
+  },
+  {
+    "type": "NaturalPropSpawnDefinition",
+    "id": "Spawn_Trees_Default",
+    "asset": "Assets/Data/WorldGeneration/Spawn_Trees_Default.asset",
+    "resource": {
+      "ref": "Tree",
+      "type": "ResourceNodeDefinition"
+    },
+    "targetCount": 12,
+    "spawnableArea": {
+      "x": 2,
+      "y": 2,
+      "width": 26,
+      "height": 16
+    },
+    "minDistanceBetweenProps": 1,
+    "maxAttempts": 256
+  }
+]

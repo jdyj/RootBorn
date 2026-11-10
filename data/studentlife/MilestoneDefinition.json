@@ -1,0 +1,92 @@
+[
+  {
+    "type": "MilestoneDefinition",
+    "id": "milestone.first-guide-trust",
+    "asset": "Assets/Data/StudentLife/Milestones/Milestone_FirstGuideTrust.asset",
+    "displayNameKey": "milestone.first-guide-trust",
+    "objectives": [
+      {
+        "ref": "milestone.objective.first-guide-trust",
+        "type": "RelationshipMilestoneObjective"
+      }
+    ],
+    "rewards": [],
+    "routes": [
+      {
+        "ref": "milestone.route.first-guide-trust-help",
+        "type": "MilestoneRouteDefinition"
+      }
+    ],
+    "requiredObjectiveCount": 1
+  },
+  {
+    "type": "MilestoneDefinition",
+    "id": "milestone.teacher-commitment",
+    "asset": "Assets/Data/StudentLife/Milestones/Milestone_TeacherCommitment.asset",
+    "displayNameKey": "milestone.teacher-commitment",
+    "objectives": [
+      {
+        "ref": "milestone.objective.teacher-commitment",
+        "type": "RelationshipMilestoneObjective"
+      }
+    ],
+    "rewards": [],
+    "routes": [
+      {
+        "ref": "milestone.route.teacher-commitment-help",
+        "type": "MilestoneRouteDefinition"
+      }
+    ],
+    "prerequisiteMilestones": [
+      {
+        "ref": "milestone.teacher-support",
+        "type": "MilestoneDefinition"
+      }
+    ],
+    "requiredObjectiveCount": 1
+  },
+  {
+    "type": "MilestoneDefinition",
+    "id": "milestone.teacher-support",
+    "asset": "Assets/Data/StudentLife/Milestones/Milestone_TeacherSupport.asset",
+    "displayNameKey": "milestone.teacher-support",
+    "objectives": [
+      {
+        "ref": "milestone.objective.teacher-support",
+        "type": "RelationshipMilestoneObjective"
+      }
+    ],
+    "rewards": [],
+    "routes": [
+      {
+        "ref": "milestone.route.teacher-support-help",
+        "type": "MilestoneRouteDefinition"
+      }
+    ],
+    "requiredObjectiveCount": 1
+  },
+  {
+    "type": "MilestoneDefinition",
+    "id": "milestone.village-adaptation",
+    "asset": "Assets/Data/StudentLife/Milestones/Milestone_VillageAdaptation.asset",
+    "displayNameKey": "milestone.village-adaptation",
+    "objectives": [
+      {
+        "ref": "milestone.objective.responsibility-log",
+        "type": "OutsideSchoolLogMilestoneObjective"
+      }
+    ],
+    "rewards": [],
+    "routes": [
+      {
+        "ref": "milestone.route.help-neighbor",
+        "type": "MilestoneRouteDefinition"
+      },
+      {
+        "ref": "milestone.route.study-basics",
+        "type": "MilestoneRouteDefinition"
+      }
+    ],
+    "requiredObjectiveCount": 1
+  }
+]

@@ -1,0 +1,46 @@
+[
+  {
+    "type": "DialogueChoiceDefinition",
+    "id": "Choice_AcceptDecorateHouse",
+    "asset": "Assets/Data/Dialogue/Choice_AcceptDecorateHouse.asset",
+    "labelKey": "dialogue.choice.acceptDecorateHouse",
+    "questAction": 1,
+    "quest": {
+      "ref": "quest.tile-placement.interior",
+      "type": "QuestDefinition"
+    }
+  },
+  {
+    "type": "DialogueChoiceDefinition",
+    "id": "Choice_AcceptGatherWood",
+    "asset": "Assets/Data/Dialogue/Choice_AcceptGatherWood.asset",
+    "labelKey": "dialogue.choice.acceptGatherWood",
+    "questAction": 1,
+    "quest": {
+      "ref": "quest.gatherWood",
+      "type": "QuestDefinition"
+    }
+  },
+  {
+    "type": "DialogueChoiceDefinition",
+    "id": "Choice_ClaimDecorateHouse",
+    "asset": "Assets/Data/Dialogue/Choice_ClaimDecorateHouse.asset",
+    "labelKey": "dialogue.choice.claimDecorateHouse",
+    "questAction": 2,
+    "quest": {
+      "ref": "quest.tile-placement.interior",
+      "type": "QuestDefinition"
+    }
+  },
+  {
+    "type": "DialogueChoiceDefinition",
+    "id": "Choice_ClaimGatherWood",
+    "asset": "Assets/Data/Dialogue/Choice_ClaimGatherWood.asset",
+    "labelKey": "dialogue.choice.claimGatherWood",
+    "questAction": 2,
+    "quest": {
+      "ref": "quest.gatherWood",
+      "type": "QuestDefinition"
+    }
+  }
+]

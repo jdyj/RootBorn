@@ -1,0 +1,12 @@
+[
+  {
+    "type": "DailyPlanPartTimeWorkRequirement",
+    "id": "DailyPlanRequirement_WorkshopShift_CornerStoreWork",
+    "asset": "Assets/Data/StudentLife/DailyPlans/DailyPlanRequirement_WorkshopShift_CornerStoreWork.asset",
+    "work": {
+      "ref": "work.shift.corner-store",
+      "type": "PartTimeWorkDefinition"
+    },
+    "expectedCompleted": 1
+  }
+]

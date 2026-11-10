@@ -1,0 +1,220 @@
+[
+  {
+    "type": "LocationIdentityDefinition",
+    "id": "location.identity.design-studio",
+    "asset": "Assets/Data/StudentLife/LocationIdentities/LocationIdentity_DesignStudio.asset",
+    "displayNameKey": "opening.facility.design-studio.name",
+    "location": {
+      "ref": "location.design-studio",
+      "type": "LocationDefinition"
+    },
+    "descriptionKey": "opening.facility.design-studio.description",
+    "availableActivities": [
+      {
+        "ref": "opening.introduce.design-studio",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "hints": [],
+    "recommendedVisitStartMinute": 480,
+    "recommendedVisitEndMinute": 1140
+  },
+  {
+    "type": "LocationIdentityDefinition",
+    "id": "location.identity.library",
+    "asset": "Assets/Data/StudentLife/LocationIdentities/LocationIdentity_Library.asset",
+    "displayNameKey": "location.identity.library.name",
+    "location": {
+      "ref": "location.library",
+      "type": "LocationDefinition"
+    },
+    "descriptionKey": "dream.location.library.description",
+    "availableActivities": [
+      {
+        "ref": "location.activity.library-hard-book",
+        "type": "LocationActivityDefinition"
+      },
+      {
+        "ref": "opening.clue.archive-door",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "hints": [
+      {
+        "displayKey": "hint.library.self-study",
+        "growthRoute": 1,
+        "milestone": null
+      }
+    ],
+    "recommendedVisitStartMinute": 480,
+    "recommendedVisitEndMinute": 1140
+  },
+  {
+    "type": "LocationIdentityDefinition",
+    "id": "location.identity.medical-clinic",
+    "asset": "Assets/Data/StudentLife/LocationIdentities/LocationIdentity_MedicalClinic.asset",
+    "displayNameKey": "opening.facility.medical-clinic.name",
+    "location": {
+      "ref": "location.medical-clinic",
+      "type": "LocationDefinition"
+    },
+    "descriptionKey": "opening.facility.medical-clinic.description",
+    "availableActivities": [
+      {
+        "ref": "opening.introduce.medical-clinic",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "hints": [],
+    "recommendedVisitStartMinute": 480,
+    "recommendedVisitEndMinute": 1140
+  },
+  {
+    "type": "LocationIdentityDefinition",
+    "id": "location.identity.restaurant",
+    "asset": "Assets/Data/StudentLife/LocationIdentities/LocationIdentity_Restaurant.asset",
+    "displayNameKey": "opening.facility.restaurant.name",
+    "location": {
+      "ref": "location.restaurant",
+      "type": "LocationDefinition"
+    },
+    "descriptionKey": "opening.facility.restaurant.description",
+    "availableActivities": [
+      {
+        "ref": "opening.introduce.restaurant",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "hints": [],
+    "recommendedVisitStartMinute": 480,
+    "recommendedVisitEndMinute": 1140
+  },
+  {
+    "type": "LocationIdentityDefinition",
+    "id": "location.identity.school",
+    "asset": "Assets/Data/StudentLife/LocationIdentities/LocationIdentity_School.asset",
+    "displayNameKey": "location.identity.school.name",
+    "location": {
+      "ref": "location.school",
+      "type": "LocationDefinition"
+    },
+    "descriptionKey": "location.identity.school.desc",
+    "availableActivities": [
+      {
+        "ref": "location.activity.school-class",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "hints": [
+      {
+        "displayKey": "hint.school.teacher-career",
+        "growthRoute": 0,
+        "milestone": null
+      }
+    ],
+    "recommendedVisitStartMinute": 480,
+    "recommendedVisitEndMinute": 1140
+  },
+  {
+    "type": "LocationIdentityDefinition",
+    "id": "location.identity.square",
+    "asset": "Assets/Data/StudentLife/LocationIdentities/LocationIdentity_TownSquare.asset",
+    "displayNameKey": "location.identity.square.name",
+    "location": {
+      "ref": "location.town-square",
+      "type": "LocationDefinition"
+    },
+    "descriptionKey": "location.identity.square.desc",
+    "availableActivities": [
+      {
+        "ref": "location.activity.square-help-request",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "hints": [
+      {
+        "displayKey": "hint.square.social-help",
+        "growthRoute": 4,
+        "milestone": null
+      }
+    ],
+    "recommendedVisitStartMinute": 480,
+    "recommendedVisitEndMinute": 1140
+  },
+  {
+    "type": "LocationIdentityDefinition",
+    "id": "location.identity.store",
+    "asset": "Assets/Data/StudentLife/LocationIdentities/LocationIdentity_CornerStore.asset",
+    "displayNameKey": "location.identity.store.name",
+    "location": {
+      "ref": "location.corner-store",
+      "type": "LocationDefinition"
+    },
+    "descriptionKey": "location.identity.store.desc",
+    "availableActivities": [
+      {
+        "ref": "location.activity.store-browse",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "hints": [
+      {
+        "displayKey": "hint.store.commerce",
+        "growthRoute": 3,
+        "milestone": null
+      }
+    ],
+    "recommendedVisitStartMinute": 480,
+    "recommendedVisitEndMinute": 1140
+  },
+  {
+    "type": "LocationIdentityDefinition",
+    "id": "location.identity.training-ground",
+    "asset": "Assets/Data/StudentLife/LocationIdentities/LocationIdentity_TrainingGround.asset",
+    "displayNameKey": "opening.facility.training-ground.name",
+    "location": {
+      "ref": "location.training-ground",
+      "type": "LocationDefinition"
+    },
+    "descriptionKey": "opening.facility.training-ground.description",
+    "availableActivities": [
+      {
+        "ref": "opening.introduce.training-ground",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "hints": [],
+    "recommendedVisitStartMinute": 480,
+    "recommendedVisitEndMinute": 1140
+  },
+  {
+    "type": "LocationIdentityDefinition",
+    "id": "location.identity.workshop",
+    "asset": "Assets/Data/StudentLife/LocationIdentities/LocationIdentity_Workshop.asset",
+    "displayNameKey": "location.identity.workshop.name",
+    "location": {
+      "ref": "location.workshop",
+      "type": "LocationDefinition"
+    },
+    "descriptionKey": "location.identity.workshop.desc",
+    "availableActivities": [
+      {
+        "ref": "location.activity.workshop-shift",
+        "type": "LocationActivityDefinition"
+      },
+      {
+        "ref": "opening.clue.repair-ledger",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "hints": [
+      {
+        "displayKey": "hint.workshop.work",
+        "growthRoute": 2,
+        "milestone": null
+      }
+    ],
+    "recommendedVisitStartMinute": 480,
+    "recommendedVisitEndMinute": 1140
+  }
+]

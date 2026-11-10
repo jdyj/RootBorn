@@ -1,0 +1,102 @@
+[
+  {
+    "type": "DialogueDefinition",
+    "id": "Dialogue_FirstNpc",
+    "asset": "Assets/Data/Dialogue/Dialogue_FirstNpc.asset",
+    "lineKeys": [
+      "opening.dialogue.guide",
+      "dialogue.firstNpc.greeting"
+    ],
+    "choices": [
+      {
+        "ref": "Choice_AcceptGatherWood",
+        "type": "DialogueChoiceDefinition"
+      },
+      {
+        "ref": "Choice_ClaimGatherWood",
+        "type": "DialogueChoiceDefinition"
+      }
+    ],
+    "requiredTutorialStage": null,
+    "conditions": []
+  },
+  {
+    "type": "DialogueDefinition",
+    "id": "Dialogue_FirstNpc_Day2",
+    "asset": "Assets/Data/Dialogue/Dialogue_FirstNpc_Day2.asset",
+    "lineKeys": [
+      "opening.dialogue.guide",
+      "dialogue.guide.day2"
+    ],
+    "choices": [
+      {
+        "ref": "Choice_AcceptGatherWood",
+        "type": "DialogueChoiceDefinition"
+      },
+      {
+        "ref": "Choice_ClaimGatherWood",
+        "type": "DialogueChoiceDefinition"
+      },
+      {
+        "ref": "Choice_AcceptDecorateHouse",
+        "type": "DialogueChoiceDefinition"
+      },
+      {
+        "ref": "Choice_ClaimDecorateHouse",
+        "type": "DialogueChoiceDefinition"
+      }
+    ],
+    "requiredTutorialStage": {
+      "ref": "tutorial.day2",
+      "type": "TutorialStageDefinition"
+    },
+    "conditions": []
+  },
+  {
+    "type": "DialogueDefinition",
+    "id": "Dialogue_LibrarianIntro",
+    "asset": "Assets/Data/Dialogue/Dialogue_LibrarianIntro.asset",
+    "lineKeys": [
+      "dream.dialogue.librarian",
+      "dialogue.librarian.intro"
+    ],
+    "choices": [],
+    "requiredTutorialStage": null,
+    "conditions": []
+  },
+  {
+    "type": "DialogueDefinition",
+    "id": "Dialogue_ShopkeeperIntro",
+    "asset": "Assets/Data/Dialogue/Dialogue_ShopkeeperIntro.asset",
+    "lineKeys": [
+      "dialogue.shopkeeper.intro"
+    ],
+    "choices": [],
+    "requiredTutorialStage": null,
+    "conditions": []
+  },
+  {
+    "type": "DialogueDefinition",
+    "id": "Dialogue_TeacherIntro",
+    "asset": "Assets/Data/Dialogue/Dialogue_TeacherIntro.asset",
+    "lineKeys": [
+      "dream.dialogue.teacher",
+      "dialogue.teacher.intro"
+    ],
+    "choices": [],
+    "requiredTutorialStage": null,
+    "conditions": []
+  },
+  {
+    "type": "DialogueDefinition",
+    "id": "Dialogue_WorkManagerIntro",
+    "asset": "Assets/Data/Dialogue/Dialogue_WorkManagerIntro.asset",
+    "lineKeys": [
+      "dream.dialogue.manager",
+      "dialogue.workManager.intro"
+    ],
+    "choices": [],
+    "requiredTutorialStage": null,
+    "conditions": []
+  }
+]

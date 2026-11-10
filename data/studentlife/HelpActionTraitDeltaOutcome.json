@@ -1,0 +1,12 @@
+[
+  {
+    "type": "HelpActionTraitDeltaOutcome",
+    "id": "HelpOutcome_FirstGuideTrust",
+    "asset": "Assets/Data/StudentLife/TownHelpActions/Outcomes/HelpOutcome_FirstGuideTrust.asset",
+    "trait": {
+      "ref": "trait.responsibility",
+      "type": "TraitDefinition"
+    },
+    "delta": 2
+  }
+]

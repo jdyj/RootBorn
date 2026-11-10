@@ -1,0 +1,271 @@
+[
+  {
+    "type": "NpcScheduleDefinition",
+    "id": "Schedule_FirstGuide",
+    "asset": "Assets/Data/NPCs/Schedules/Schedule_FirstGuide.asset",
+    "npc": {
+      "ref": "npc.first-guide",
+      "type": "NpcDefinition"
+    },
+    "fallbackLocation": {
+      "ref": "location.home",
+      "type": "LocationDefinition"
+    },
+    "entries": [
+      {
+        "location": {
+          "ref": "location.home",
+          "type": "LocationDefinition"
+        },
+        "dialogue": {
+          "ref": "Npc_FirstGuide_Schedule_0",
+          "type": "DialogueDefinition"
+        },
+        "dialogueKey": "dialogue.first-guide.morning",
+        "interactionHintKey": "npc.first-guide.hint.place-recommend",
+        "eventNoticeKey": "npc.first-guide.notice.today-route",
+        "priority": 20,
+        "rules": [
+          {
+            "ref": "Rule_Time_Morning",
+            "type": "TimeSlotScheduleRule"
+          }
+        ]
+      },
+      {
+        "location": {
+          "ref": "location.home",
+          "type": "LocationDefinition"
+        },
+        "dialogue": {
+          "ref": "Npc_FirstGuide_Schedule_1",
+          "type": "DialogueDefinition"
+        },
+        "dialogueKey": "dialogue.first-guide.evening",
+        "interactionHintKey": "npc.first-guide.hint.day-summary",
+        "eventNoticeKey": "npc.first-guide.notice.tomorrow",
+        "priority": 10,
+        "rules": [
+          {
+            "ref": "Rule_Time_AfternoonEvening",
+            "type": "TimeSlotScheduleRule"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "NpcScheduleDefinition",
+    "id": "Schedule_Librarian",
+    "asset": "Assets/Data/NPCs/Schedules/Schedule_Librarian.asset",
+    "npc": {
+      "ref": "npc.librarian",
+      "type": "NpcDefinition"
+    },
+    "fallbackLocation": {
+      "ref": "location.library",
+      "type": "LocationDefinition"
+    },
+    "entries": [
+      {
+        "location": {
+          "ref": "location.library",
+          "type": "LocationDefinition"
+        },
+        "dialogue": {
+          "ref": "Npc_Librarian_Schedule_0",
+          "type": "DialogueDefinition"
+        },
+        "dialogueKey": "dialogue.librarian.library",
+        "interactionHintKey": "npc.librarian.hint.book-recommend",
+        "eventNoticeKey": "npc.librarian.notice.difficult-book",
+        "priority": 20,
+        "rules": [
+          {
+            "ref": "Rule_Time_Afternoon",
+            "type": "TimeSlotScheduleRule"
+          }
+        ]
+      },
+      {
+        "location": {
+          "ref": "location.town-square",
+          "type": "LocationDefinition"
+        },
+        "dialogue": {
+          "ref": "Npc_Librarian_Schedule_1",
+          "type": "DialogueDefinition"
+        },
+        "dialogueKey": "dialogue.librarian.square",
+        "interactionHintKey": "npc.librarian.hint.knowledge-route",
+        "eventNoticeKey": "npc.librarian.notice.village-rumor",
+        "priority": 10,
+        "rules": [
+          {
+            "ref": "Rule_Time_Evening",
+            "type": "TimeSlotScheduleRule"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "NpcScheduleDefinition",
+    "id": "Schedule_Shopkeeper",
+    "asset": "Assets/Data/NPCs/Schedules/Schedule_Shopkeeper.asset",
+    "npc": {
+      "ref": "npc.shopkeeper",
+      "type": "NpcDefinition"
+    },
+    "fallbackLocation": {
+      "ref": "location.corner-store",
+      "type": "LocationDefinition"
+    },
+    "entries": [
+      {
+        "location": {
+          "ref": "location.corner-store",
+          "type": "LocationDefinition"
+        },
+        "dialogue": null,
+        "dialogueKey": "dialogue.shopkeeper.store",
+        "interactionHintKey": "npc.shopkeeper.hint.browse-goods",
+        "eventNoticeKey": "npc.shopkeeper.notice.discount",
+        "priority": 20,
+        "rules": [
+          {
+            "ref": "Rule_Time_Afternoon",
+            "type": "TimeSlotScheduleRule"
+          }
+        ]
+      },
+      {
+        "location": {
+          "ref": "location.town-square",
+          "type": "LocationDefinition"
+        },
+        "dialogue": null,
+        "dialogueKey": "dialogue.shopkeeper.square",
+        "interactionHintKey": "npc.shopkeeper.hint.tomorrow-items",
+        "eventNoticeKey": "npc.shopkeeper.notice.village-need",
+        "priority": 10,
+        "rules": [
+          {
+            "ref": "Rule_Time_Evening",
+            "type": "TimeSlotScheduleRule"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "NpcScheduleDefinition",
+    "id": "Schedule_Teacher",
+    "asset": "Assets/Data/NPCs/Schedules/Schedule_Teacher.asset",
+    "npc": {
+      "ref": "npc.teacher",
+      "type": "NpcDefinition"
+    },
+    "fallbackLocation": {
+      "ref": "location.school",
+      "type": "LocationDefinition"
+    },
+    "entries": [
+      {
+        "location": {
+          "ref": "location.school",
+          "type": "LocationDefinition"
+        },
+        "dialogue": {
+          "ref": "Npc_Teacher_Schedule_0",
+          "type": "DialogueDefinition"
+        },
+        "dialogueKey": "dialogue.teacher.school",
+        "interactionHintKey": "npc.teacher.hint.class-question",
+        "eventNoticeKey": "npc.teacher.notice.study-basics",
+        "priority": 20,
+        "rules": [
+          {
+            "ref": "Rule_Time_Morning",
+            "type": "TimeSlotScheduleRule"
+          }
+        ]
+      },
+      {
+        "location": {
+          "ref": "location.town-square",
+          "type": "LocationDefinition"
+        },
+        "dialogue": {
+          "ref": "Npc_Teacher_Schedule_1",
+          "type": "DialogueDefinition"
+        },
+        "dialogueKey": "dialogue.teacher.square",
+        "interactionHintKey": "npc.teacher.hint.alt-growth",
+        "eventNoticeKey": "npc.teacher.notice.outside-school",
+        "priority": 10,
+        "rules": [
+          {
+            "ref": "Rule_Time_Afternoon",
+            "type": "TimeSlotScheduleRule"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "NpcScheduleDefinition",
+    "id": "Schedule_WorkManager",
+    "asset": "Assets/Data/NPCs/Schedules/Schedule_WorkManager.asset",
+    "npc": {
+      "ref": "npc.work-manager",
+      "type": "NpcDefinition"
+    },
+    "fallbackLocation": {
+      "ref": "location.workshop",
+      "type": "LocationDefinition"
+    },
+    "entries": [
+      {
+        "location": {
+          "ref": "location.workshop",
+          "type": "LocationDefinition"
+        },
+        "dialogue": {
+          "ref": "Npc_WorkManager_Schedule_0",
+          "type": "DialogueDefinition"
+        },
+        "dialogueKey": "dialogue.work-manager.workshop",
+        "interactionHintKey": "npc.work-manager.hint.part-time",
+        "eventNoticeKey": "npc.work-manager.notice.work-offer",
+        "priority": 20,
+        "rules": [
+          {
+            "ref": "Rule_Time_Afternoon",
+            "type": "TimeSlotScheduleRule"
+          }
+        ]
+      },
+      {
+        "location": {
+          "ref": "location.corner-store",
+          "type": "LocationDefinition"
+        },
+        "dialogue": {
+          "ref": "Npc_WorkManager_Schedule_1",
+          "type": "DialogueDefinition"
+        },
+        "dialogueKey": "dialogue.work-manager.corner-store",
+        "interactionHintKey": "npc.work-manager.hint.errand-advice",
+        "eventNoticeKey": "npc.work-manager.notice.rest-advice",
+        "priority": 10,
+        "rules": [
+          {
+            "ref": "Rule_Time_Evening",
+            "type": "TimeSlotScheduleRule"
+          }
+        ]
+      }
+    ]
+  }
+]

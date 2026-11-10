@@ -1,0 +1,63 @@
+[
+  {
+    "type": "DailyPlanRouteSetDefinition",
+    "id": "daily.default",
+    "asset": "Assets/Data/StudentLife/DailyPlans/DefaultDailyPlanRouteSet.asset",
+    "displayNameKey": "daily.default",
+    "routes": [
+      {
+        "ref": "daily.library.self-study",
+        "type": "DailyPlanRouteDefinition"
+      },
+      {
+        "ref": "daily.town-square.help",
+        "type": "DailyPlanRouteDefinition"
+      },
+      {
+        "ref": "daily.workshop.shift",
+        "type": "DailyPlanRouteDefinition"
+      },
+      {
+        "ref": "daily.route.library.archive-research",
+        "type": "DailyPlanRouteDefinition"
+      },
+      {
+        "ref": "daily.route.workshop.repair-ledger",
+        "type": "DailyPlanRouteDefinition"
+      },
+      {
+        "ref": "daily.route.career.interior-practice",
+        "type": "DailyPlanRouteDefinition"
+      },
+      {
+        "ref": "daily.route.questchain.library-reward",
+        "type": "DailyPlanRouteDefinition"
+      },
+      {
+        "ref": "daily.practice.chef",
+        "type": "DailyPlanRouteDefinition"
+      },
+      {
+        "ref": "daily.practice.emergency-care",
+        "type": "DailyPlanRouteDefinition"
+      },
+      {
+        "ref": "daily.practice.interior",
+        "type": "DailyPlanRouteDefinition"
+      },
+      {
+        "ref": "daily.practice.soldier",
+        "type": "DailyPlanRouteDefinition"
+      },
+      {
+        "ref": "daily.work.corner-store",
+        "type": "DailyPlanRouteDefinition"
+      },
+      {
+        "ref": "daily.work.workshop-helper",
+        "type": "DailyPlanRouteDefinition"
+      }
+    ],
+    "maxSelectionsPerDay": 1
+  }
+]

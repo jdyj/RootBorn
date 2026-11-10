@@ -1,0 +1,554 @@
+[
+  {
+    "type": "FacilityWorkDefinition",
+    "id": "work.chef.level1",
+    "asset": "Assets/Data/Careers/Facilities/Chef/Work_1.asset",
+    "displayNameKey": "work.chef.level1",
+    "facility": {
+      "ref": "facility.chef",
+      "type": "FacilityDefinition"
+    },
+    "minigame": {
+      "ref": "minigame.chef_work1",
+      "type": "MinigameDefinition"
+    },
+    "minimumFacilityLevel": 1,
+    "timePointCost": 1,
+    "timeCostMinutes": 60,
+    "maximumMastery": 100,
+    "masteryPerSuccess": 20,
+    "minimumSuccessScore": 60,
+    "reputationPerSuccess": 2,
+    "rewardItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      },
+      {
+        "ref": "item.facility-materials",
+        "type": "ItemDefinition"
+      }
+    ],
+    "maximumRewardCounts": 1e00000003000000,
+    "autoSkipRequirements": [
+      {
+        "ref": "Careers/Facilities/Chef/AutoSkip_Mastery",
+        "type": "MasteryAutoSkipRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/Chef/AutoSkip_Successes",
+        "type": "SuccessCountAutoSkipRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/Chef/AutoSkip_Facility",
+        "type": "FacilityEquipmentAutoSkipRequirement"
+      }
+    ]
+  },
+  {
+    "type": "FacilityWorkDefinition",
+    "id": "work.chef.level2",
+    "asset": "Assets/Data/Careers/Facilities/Chef/Work_2.asset",
+    "displayNameKey": "work.chef.level2",
+    "facility": {
+      "ref": "facility.chef",
+      "type": "FacilityDefinition"
+    },
+    "minigame": {
+      "ref": "minigame.chef_work2",
+      "type": "MinigameDefinition"
+    },
+    "minimumFacilityLevel": 2,
+    "timePointCost": 1,
+    "timeCostMinutes": 60,
+    "maximumMastery": 100,
+    "masteryPerSuccess": 20,
+    "minimumSuccessScore": 60,
+    "reputationPerSuccess": 4,
+    "rewardItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      },
+      {
+        "ref": "item.facility-materials",
+        "type": "ItemDefinition"
+      }
+    ],
+    "maximumRewardCounts": 2800000004000000,
+    "autoSkipRequirements": [
+      {
+        "ref": "Careers/Facilities/Chef/AutoSkip_Mastery",
+        "type": "MasteryAutoSkipRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/Chef/AutoSkip_Successes",
+        "type": "SuccessCountAutoSkipRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/Chef/AutoSkip_Facility",
+        "type": "FacilityEquipmentAutoSkipRequirement"
+      }
+    ]
+  },
+  {
+    "type": "FacilityWorkDefinition",
+    "id": "work.chef.level3",
+    "asset": "Assets/Data/Careers/Facilities/Chef/Work_3.asset",
+    "displayNameKey": "work.chef.level3",
+    "facility": {
+      "ref": "facility.chef",
+      "type": "FacilityDefinition"
+    },
+    "minigame": {
+      "ref": "minigame.chef_work3",
+      "type": "MinigameDefinition"
+    },
+    "minimumFacilityLevel": 3,
+    "timePointCost": 1,
+    "timeCostMinutes": 60,
+    "maximumMastery": 100,
+    "masteryPerSuccess": 20,
+    "minimumSuccessScore": 60,
+    "reputationPerSuccess": 6,
+    "rewardItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      },
+      {
+        "ref": "item.facility-materials",
+        "type": "ItemDefinition"
+      }
+    ],
+    "maximumRewardCounts": 3200000005000000,
+    "autoSkipRequirements": [
+      {
+        "ref": "Careers/Facilities/Chef/AutoSkip_Mastery",
+        "type": "MasteryAutoSkipRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/Chef/AutoSkip_Successes",
+        "type": "SuccessCountAutoSkipRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/Chef/AutoSkip_Facility",
+        "type": "FacilityEquipmentAutoSkipRequirement"
+      }
+    ]
+  },
+  {
+    "type": "FacilityWorkDefinition",
+    "id": "work.emergency-care.level1",
+    "asset": "Assets/Data/Careers/Facilities/EmergencyCare/Work_1.asset",
+    "displayNameKey": "work.emergency-care.level1",
+    "facility": {
+      "ref": "facility.emergency-care",
+      "type": "FacilityDefinition"
+    },
+    "minigame": {
+      "ref": "minigame.emergencycare_work1",
+      "type": "MinigameDefinition"
+    },
+    "minimumFacilityLevel": 1,
+    "timePointCost": 1,
+    "timeCostMinutes": 60,
+    "maximumMastery": 100,
+    "masteryPerSuccess": 20,
+    "minimumSuccessScore": 60,
+    "reputationPerSuccess": 2,
+    "rewardItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      },
+      {
+        "ref": "item.facility-materials",
+        "type": "ItemDefinition"
+      }
+    ],
+    "maximumRewardCounts": 1e00000003000000,
+    "autoSkipRequirements": [
+      {
+        "ref": "Careers/Facilities/EmergencyCare/AutoSkip_Mastery",
+        "type": "MasteryAutoSkipRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/EmergencyCare/AutoSkip_Successes",
+        "type": "SuccessCountAutoSkipRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/EmergencyCare/AutoSkip_Facility",
+        "type": "FacilityEquipmentAutoSkipRequirement"
+      }
+    ]
+  },
+  {
+    "type": "FacilityWorkDefinition",
+    "id": "work.emergency-care.level2",
+    "asset": "Assets/Data/Careers/Facilities/EmergencyCare/Work_2.asset",
+    "displayNameKey": "work.emergency-care.level2",
+    "facility": {
+      "ref": "facility.emergency-care",
+      "type": "FacilityDefinition"
+    },
+    "minigame": {
+      "ref": "minigame.emergencycare_work2",
+      "type": "MinigameDefinition"
+    },
+    "minimumFacilityLevel": 2,
+    "timePointCost": 1,
+    "timeCostMinutes": 60,
+    "maximumMastery": 100,
+    "masteryPerSuccess": 20,
+    "minimumSuccessScore": 60,
+    "reputationPerSuccess": 4,
+    "rewardItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      },
+      {
+        "ref": "item.facility-materials",
+        "type": "ItemDefinition"
+      }
+    ],
+    "maximumRewardCounts": 2800000004000000,
+    "autoSkipRequirements": [
+      {
+        "ref": "Careers/Facilities/EmergencyCare/AutoSkip_Mastery",
+        "type": "MasteryAutoSkipRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/EmergencyCare/AutoSkip_Successes",
+        "type": "SuccessCountAutoSkipRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/EmergencyCare/AutoSkip_Facility",
+        "type": "FacilityEquipmentAutoSkipRequirement"
+      }
+    ]
+  },
+  {
+    "type": "FacilityWorkDefinition",
+    "id": "work.emergency-care.level3",
+    "asset": "Assets/Data/Careers/Facilities/EmergencyCare/Work_3.asset",
+    "displayNameKey": "work.emergency-care.level3",
+    "facility": {
+      "ref": "facility.emergency-care",
+      "type": "FacilityDefinition"
+    },
+    "minigame": {
+      "ref": "minigame.emergencycare_work3",
+      "type": "MinigameDefinition"
+    },
+    "minimumFacilityLevel": 3,
+    "timePointCost": 1,
+    "timeCostMinutes": 60,
+    "maximumMastery": 100,
+    "masteryPerSuccess": 20,
+    "minimumSuccessScore": 60,
+    "reputationPerSuccess": 6,
+    "rewardItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      },
+      {
+        "ref": "item.facility-materials",
+        "type": "ItemDefinition"
+      }
+    ],
+    "maximumRewardCounts": 3200000005000000,
+    "autoSkipRequirements": [
+      {
+        "ref": "Careers/Facilities/EmergencyCare/AutoSkip_Mastery",
+        "type": "MasteryAutoSkipRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/EmergencyCare/AutoSkip_Successes",
+        "type": "SuccessCountAutoSkipRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/EmergencyCare/AutoSkip_Facility",
+        "type": "FacilityEquipmentAutoSkipRequirement"
+      }
+    ]
+  },
+  {
+    "type": "FacilityWorkDefinition",
+    "id": "work.interior.level1",
+    "asset": "Assets/Data/Careers/Facilities/Interior/Work_1.asset",
+    "displayNameKey": "work.interior.level1",
+    "facility": {
+      "ref": "facility.interior",
+      "type": "FacilityDefinition"
+    },
+    "minigame": {
+      "ref": "minigame.interior_work1",
+      "type": "MinigameDefinition"
+    },
+    "minimumFacilityLevel": 1,
+    "timePointCost": 1,
+    "timeCostMinutes": 60,
+    "maximumMastery": 100,
+    "masteryPerSuccess": 20,
+    "minimumSuccessScore": 60,
+    "reputationPerSuccess": 2,
+    "rewardItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      },
+      {
+        "ref": "item.facility-materials",
+        "type": "ItemDefinition"
+      }
+    ],
+    "maximumRewardCounts": 1e00000003000000,
+    "autoSkipRequirements": [
+      {
+        "ref": "Careers/Facilities/Interior/AutoSkip_Mastery",
+        "type": "MasteryAutoSkipRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/Interior/AutoSkip_Successes",
+        "type": "SuccessCountAutoSkipRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/Interior/AutoSkip_Facility",
+        "type": "FacilityEquipmentAutoSkipRequirement"
+      }
+    ]
+  },
+  {
+    "type": "FacilityWorkDefinition",
+    "id": "work.interior.level2",
+    "asset": "Assets/Data/Careers/Facilities/Interior/Work_2.asset",
+    "displayNameKey": "work.interior.level2",
+    "facility": {
+      "ref": "facility.interior",
+      "type": "FacilityDefinition"
+    },
+    "minigame": {
+      "ref": "minigame.interior_work2",
+      "type": "MinigameDefinition"
+    },
+    "minimumFacilityLevel": 2,
+    "timePointCost": 1,
+    "timeCostMinutes": 60,
+    "maximumMastery": 100,
+    "masteryPerSuccess": 20,
+    "minimumSuccessScore": 60,
+    "reputationPerSuccess": 4,
+    "rewardItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      },
+      {
+        "ref": "item.facility-materials",
+        "type": "ItemDefinition"
+      }
+    ],
+    "maximumRewardCounts": 2800000004000000,
+    "autoSkipRequirements": [
+      {
+        "ref": "Careers/Facilities/Interior/AutoSkip_Mastery",
+        "type": "MasteryAutoSkipRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/Interior/AutoSkip_Successes",
+        "type": "SuccessCountAutoSkipRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/Interior/AutoSkip_Facility",
+        "type": "FacilityEquipmentAutoSkipRequirement"
+      }
+    ]
+  },
+  {
+    "type": "FacilityWorkDefinition",
+    "id": "work.interior.level3",
+    "asset": "Assets/Data/Careers/Facilities/Interior/Work_3.asset",
+    "displayNameKey": "work.interior.level3",
+    "facility": {
+      "ref": "facility.interior",
+      "type": "FacilityDefinition"
+    },
+    "minigame": {
+      "ref": "minigame.interior_work3",
+      "type": "MinigameDefinition"
+    },
+    "minimumFacilityLevel": 3,
+    "timePointCost": 1,
+    "timeCostMinutes": 60,
+    "maximumMastery": 100,
+    "masteryPerSuccess": 20,
+    "minimumSuccessScore": 60,
+    "reputationPerSuccess": 6,
+    "rewardItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      },
+      {
+        "ref": "item.facility-materials",
+        "type": "ItemDefinition"
+      }
+    ],
+    "maximumRewardCounts": 3200000005000000,
+    "autoSkipRequirements": [
+      {
+        "ref": "Careers/Facilities/Interior/AutoSkip_Mastery",
+        "type": "MasteryAutoSkipRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/Interior/AutoSkip_Successes",
+        "type": "SuccessCountAutoSkipRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/Interior/AutoSkip_Facility",
+        "type": "FacilityEquipmentAutoSkipRequirement"
+      }
+    ]
+  },
+  {
+    "type": "FacilityWorkDefinition",
+    "id": "work.soldier.level1",
+    "asset": "Assets/Data/Careers/Facilities/Soldier/Work_1.asset",
+    "displayNameKey": "work.soldier.level1",
+    "facility": {
+      "ref": "facility.soldier",
+      "type": "FacilityDefinition"
+    },
+    "minigame": {
+      "ref": "minigame.soldier_work1",
+      "type": "MinigameDefinition"
+    },
+    "minimumFacilityLevel": 1,
+    "timePointCost": 1,
+    "timeCostMinutes": 60,
+    "maximumMastery": 100,
+    "masteryPerSuccess": 20,
+    "minimumSuccessScore": 60,
+    "reputationPerSuccess": 2,
+    "rewardItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      },
+      {
+        "ref": "item.facility-materials",
+        "type": "ItemDefinition"
+      }
+    ],
+    "maximumRewardCounts": 1e00000003000000,
+    "autoSkipRequirements": [
+      {
+        "ref": "Careers/Facilities/Soldier/AutoSkip_Mastery",
+        "type": "MasteryAutoSkipRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/Soldier/AutoSkip_Successes",
+        "type": "SuccessCountAutoSkipRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/Soldier/AutoSkip_Facility",
+        "type": "FacilityEquipmentAutoSkipRequirement"
+      }
+    ]
+  },
+  {
+    "type": "FacilityWorkDefinition",
+    "id": "work.soldier.level2",
+    "asset": "Assets/Data/Careers/Facilities/Soldier/Work_2.asset",
+    "displayNameKey": "work.soldier.level2",
+    "facility": {
+      "ref": "facility.soldier",
+      "type": "FacilityDefinition"
+    },
+    "minigame": {
+      "ref": "minigame.soldier_work2",
+      "type": "MinigameDefinition"
+    },
+    "minimumFacilityLevel": 2,
+    "timePointCost": 1,
+    "timeCostMinutes": 60,
+    "maximumMastery": 100,
+    "masteryPerSuccess": 20,
+    "minimumSuccessScore": 60,
+    "reputationPerSuccess": 4,
+    "rewardItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      },
+      {
+        "ref": "item.facility-materials",
+        "type": "ItemDefinition"
+      }
+    ],
+    "maximumRewardCounts": 2800000004000000,
+    "autoSkipRequirements": [
+      {
+        "ref": "Careers/Facilities/Soldier/AutoSkip_Mastery",
+        "type": "MasteryAutoSkipRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/Soldier/AutoSkip_Successes",
+        "type": "SuccessCountAutoSkipRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/Soldier/AutoSkip_Facility",
+        "type": "FacilityEquipmentAutoSkipRequirement"
+      }
+    ]
+  },
+  {
+    "type": "FacilityWorkDefinition",
+    "id": "work.soldier.level3",
+    "asset": "Assets/Data/Careers/Facilities/Soldier/Work_3.asset",
+    "displayNameKey": "work.soldier.level3",
+    "facility": {
+      "ref": "facility.soldier",
+      "type": "FacilityDefinition"
+    },
+    "minigame": {
+      "ref": "minigame.soldier_work3",
+      "type": "MinigameDefinition"
+    },
+    "minimumFacilityLevel": 3,
+    "timePointCost": 1,
+    "timeCostMinutes": 60,
+    "maximumMastery": 100,
+    "masteryPerSuccess": 20,
+    "minimumSuccessScore": 60,
+    "reputationPerSuccess": 6,
+    "rewardItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      },
+      {
+        "ref": "item.facility-materials",
+        "type": "ItemDefinition"
+      }
+    ],
+    "maximumRewardCounts": 3200000005000000,
+    "autoSkipRequirements": [
+      {
+        "ref": "Careers/Facilities/Soldier/AutoSkip_Mastery",
+        "type": "MasteryAutoSkipRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/Soldier/AutoSkip_Successes",
+        "type": "SuccessCountAutoSkipRequirement"
+      },
+      {
+        "ref": "Careers/Facilities/Soldier/AutoSkip_Facility",
+        "type": "FacilityEquipmentAutoSkipRequirement"
+      }
+    ]
+  }
+]

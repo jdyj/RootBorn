@@ -1,0 +1,158 @@
+[
+  {
+    "type": "QuestStepDefinition",
+    "id": "mainquest.AfterSchoolTour",
+    "asset": "Assets/Data/StudentLife/MainStory/Steps/MainQuest_AfterSchoolTour.asset",
+    "legacyStepIds": [],
+    "displayNameKey": "opening.quest.AfterSchoolTour.name",
+    "descriptionKey": "opening.quest.AfterSchoolTour.description",
+    "objectives": [
+      {
+        "ref": "Objective_Visit_Location_Restaurant",
+        "type": "LocationVisitQuestObjective"
+      },
+      {
+        "ref": "Objective_Visit_Location_MedicalClinic",
+        "type": "LocationVisitQuestObjective"
+      },
+      {
+        "ref": "Objective_Visit_Location_DesignStudio",
+        "type": "LocationVisitQuestObjective"
+      },
+      {
+        "ref": "Objective_Visit_Location_TrainingGround",
+        "type": "LocationVisitQuestObjective"
+      }
+    ],
+    "completionConditions": [],
+    "blockConditions": [],
+    "rewards": [],
+    "transitions": []
+  },
+  {
+    "type": "QuestStepDefinition",
+    "id": "mainquest.BackToSchool",
+    "asset": "Assets/Data/StudentLife/MainStory/Steps/MainQuest_BackToSchool.asset",
+    "legacyStepIds": [],
+    "displayNameKey": "opening.quest.BackToSchool.name",
+    "descriptionKey": "dream.quest.back-to-school.description",
+    "objectives": [
+      {
+        "ref": "Objective_Teacher",
+        "type": "TalkQuestObjective"
+      },
+      {
+        "ref": "Objective_DailyPlan",
+        "type": "DailyPlanSelectedQuestObjective"
+      }
+    ],
+    "completionConditions": [
+      {
+        "ref": "Condition_DayAtLeast_2",
+        "type": "DayAtLeastCondition"
+      }
+    ],
+    "blockConditions": [],
+    "rewards": [],
+    "transitions": []
+  },
+  {
+    "type": "QuestStepDefinition",
+    "id": "mainquest.FirstPartTimeJob",
+    "asset": "Assets/Data/StudentLife/MainStory/Steps/MainQuest_FirstPartTimeJob.asset",
+    "legacyStepIds": [],
+    "displayNameKey": "opening.quest.FirstPartTimeJob.name",
+    "descriptionKey": "dream.quest.first-job.description",
+    "objectives": [
+      {
+        "ref": "Objective_PaidWork",
+        "type": "PartTimeWorkQuestObjective"
+      }
+    ],
+    "completionConditions": [
+      {
+        "ref": "Condition_DayAtLeast_3",
+        "type": "DayAtLeastCondition"
+      }
+    ],
+    "blockConditions": [],
+    "rewards": [],
+    "transitions": []
+  },
+  {
+    "type": "QuestStepDefinition",
+    "id": "mainquest.MyDream",
+    "asset": "Assets/Data/StudentLife/MainStory/Steps/MainQuest_MyDream.asset",
+    "legacyStepIds": [
+      "mainquest.DustySecrets"
+    ],
+    "displayNameKey": "dream.quest.my-dream.name",
+    "descriptionKey": "dream.quest.my-dream.description",
+    "objectives": [
+      {
+        "ref": "Objective_DreamAlternative",
+        "type": "AnyOfQuestObjective"
+      }
+    ],
+    "completionConditions": [],
+    "blockConditions": [],
+    "rewards": [],
+    "transitions": []
+  },
+  {
+    "type": "QuestStepDefinition",
+    "id": "mainquest.MyOwnSpace",
+    "asset": "Assets/Data/StudentLife/MainStory/Steps/MainQuest_MyOwnSpace.asset",
+    "legacyStepIds": [],
+    "displayNameKey": "opening.quest.MyOwnSpace.name",
+    "descriptionKey": "dream.quest.my-own-space.description",
+    "objectives": [
+      {
+        "ref": "Objective_MyRoom",
+        "type": "FurniturePlacedQuestObjective"
+      }
+    ],
+    "completionConditions": [],
+    "blockConditions": [],
+    "rewards": [],
+    "transitions": []
+  },
+  {
+    "type": "QuestStepDefinition",
+    "id": "step.questchain.test.blocked.library.access",
+    "asset": "Assets/Data/StudentLife/QuestChains/Steps/Step_QC_Test_BlockedLibraryAccess.asset",
+    "displayNameKey": "step.questchain.test.blocked.library.access",
+    "descriptionKey": "step.questchain.test.blocked.library.access.desc",
+    "objectives": [
+      {
+        "ref": "Objective_QC_Test_BlockedLibraryAccess",
+        "type": "LocationActivityQuestObjective"
+      }
+    ],
+    "completionConditions": [],
+    "blockConditions": [],
+    "rewards": [],
+    "transitions": []
+  },
+  {
+    "type": "QuestStepDefinition",
+    "id": "step.questchain.test.library.start",
+    "asset": "Assets/Data/StudentLife/QuestChains/Steps/Step_QC_Test_LibraryStart.asset",
+    "displayNameKey": "step.questchain.test.library.start",
+    "descriptionKey": "step.questchain.test.library.start.desc",
+    "objectives": [
+      {
+        "ref": "Objective_QC_Test_LibraryActivity",
+        "type": "LocationActivityQuestObjective"
+      },
+      {
+        "ref": "Objective_QC_Test_SecondActivity",
+        "type": "LocationActivityQuestObjective"
+      }
+    ],
+    "completionConditions": [],
+    "blockConditions": [],
+    "rewards": [],
+    "transitions": []
+  }
+]

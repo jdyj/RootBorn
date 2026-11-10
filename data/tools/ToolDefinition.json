@@ -1,0 +1,123 @@
+[
+  {
+    "type": "ToolDefinition",
+    "id": "BareHand",
+    "asset": "Assets/Data/Tools/Tool_BareHand.asset",
+    "displayKey": "tool.bareHand",
+    "icon": {
+      "sprite": "Assets/Modern_Farm_v1.2/Icons/Icons_16x16/Icons_16x16_Singles/Icons_16x16_Tools_Bag.png",
+      "name": "Icons_16x16_Tools_Bag"
+    },
+    "powerMultiplier": 0.3,
+    "effects": [],
+    "isStartingTool": 1,
+    "description": "Power x0.3. Effective on soft surfaces only."
+  },
+  {
+    "type": "ToolDefinition",
+    "id": "FishingRod",
+    "asset": "Assets/Data/Tools/Tool_FishingRod.asset",
+    "displayKey": "tool.fishing_rod",
+    "icon": null,
+    "powerMultiplier": 1,
+    "effects": [
+      {
+        "ref": "Effect_FishingThrowHook",
+        "type": "FishingAnimationEffect"
+      }
+    ],
+    "characterPartAnimationClip": {
+      "ref": "character.action.fishing.throw_hook.side",
+      "type": "CharacterPartAnimationClipDefinition"
+    },
+    "isStartingTool": 0,
+    "description": "낚시를 시작하는 기본 도구."
+  },
+  {
+    "type": "ToolDefinition",
+    "id": "StoneAxe",
+    "asset": "Assets/Data/Tools/Tool_StoneAxe.asset",
+    "displayKey": "tool.stoneAxe",
+    "icon": {
+      "sprite": "Assets/Modern_Farm_v1.2/Icons/Icons_16x16/Icons_16x16_Singles/Icons_16x16_Tools_Axe.png",
+      "name": "Icons_16x16_Tools_Axe"
+    },
+    "powerMultiplier": 1.2,
+    "effects": [],
+    "characterPartAnimationClip": {
+      "ref": "character.action.chopping.side",
+      "type": "CharacterPartAnimationClipDefinition"
+    },
+    "isStartingTool": 0,
+    "description": "Power x1.2. Designed for chopping wood."
+  },
+  {
+    "type": "ToolDefinition",
+    "id": "StoneHoe",
+    "asset": "Assets/Data/Tools/Tool_StoneHoe.asset",
+    "displayKey": "tool.stoneHoe",
+    "icon": {
+      "sprite": "Assets/Modern_Farm_v1.2/Icons/Icons_16x16/Icons_16x16_Singles/Icons_16x16_Tools_Shovel.png",
+      "name": "Icons_16x16_Tools_Shovel"
+    },
+    "powerMultiplier": 1,
+    "effects": [],
+    "characterPartAnimationClip": {
+      "ref": "character.action.digging.down",
+      "type": "CharacterPartAnimationClipDefinition"
+    },
+    "isStartingTool": 0,
+    "description": "Power x1.0. Tills the soil for planting crops."
+  },
+  {
+    "type": "ToolDefinition",
+    "id": "StonePickaxe",
+    "asset": "Assets/Data/Tools/Tool_StonePickaxe.asset",
+    "displayKey": "tool.stonePickaxe",
+    "icon": {
+      "sprite": "Assets/Modern_Farm_v1.2/Icons/Icons_16x16/Icons_16x16_Singles/Icons_16x16_Tools_Shovel.png",
+      "name": "Icons_16x16_Tools_Shovel"
+    },
+    "powerMultiplier": 1.2,
+    "effects": [],
+    "isStartingTool": 0,
+    "description": "Power x1.2. Designed for breaking rocks."
+  },
+  {
+    "type": "ToolDefinition",
+    "id": "Tool_FertilizerSpreader",
+    "asset": "Assets/Data/Tools/Tool_FertilizerSpreader.asset",
+    "displayKey": "tool.fertilizer_spreader",
+    "icon": null,
+    "powerMultiplier": 1,
+    "effects": [],
+    "isStartingTool": 0,
+    "description": ""
+  },
+  {
+    "type": "ToolDefinition",
+    "id": "Tool_PlantingHand",
+    "asset": "Assets/Data/Tools/Tool_PlantingHand.asset",
+    "displayKey": "tool.planting_hand",
+    "icon": null,
+    "powerMultiplier": 1,
+    "effects": [],
+    "isStartingTool": 0,
+    "description": ""
+  },
+  {
+    "type": "ToolDefinition",
+    "id": "Tool_WateringCan",
+    "asset": "Assets/Data/Tools/Tool_WateringCan.asset",
+    "displayKey": "tool.watering_can",
+    "icon": null,
+    "powerMultiplier": 1,
+    "effects": [],
+    "characterPartAnimationClip": {
+      "ref": "character.action.watering.down",
+      "type": "CharacterPartAnimationClipDefinition"
+    },
+    "isStartingTool": 1,
+    "description": ""
+  }
+]

@@ -1,0 +1,116 @@
+[
+  {
+    "type": "StatusEffectDefinition",
+    "id": "Fatigue",
+    "asset": "Assets/Data/Status/Status_Fatigue.asset",
+    "displayKey": "status.fatigue",
+    "maxValue": 100,
+    "decayPerSecond": 0.04,
+    "gameplayPenalty": {
+      "serializedVersion": 2,
+      "m_Curve": [
+        {
+          "serializedVersion": 3,
+          "time": 0,
+          "value": 0,
+          "inSlope": 0,
+          "outSlope": 1,
+          "tangentMode": 0,
+          "weightedMode": 0,
+          "inWeight": 0,
+          "outWeight": 0
+        },
+        {
+          "serializedVersion": 3,
+          "time": 1,
+          "value": 1,
+          "inSlope": 1,
+          "outSlope": 0,
+          "tangentMode": 0,
+          "weightedMode": 0,
+          "inWeight": 0,
+          "outWeight": 0
+        }
+      ],
+      "m_PreInfinity": 2,
+      "m_PostInfinity": 2,
+      "m_RotationOrder": 4
+    }
+  },
+  {
+    "type": "StatusEffectDefinition",
+    "id": "Hunger",
+    "asset": "Assets/Data/Status/Status_Hunger.asset",
+    "displayKey": "status.hunger",
+    "maxValue": 100,
+    "decayPerSecond": 0.05,
+    "gameplayPenalty": {
+      "serializedVersion": 2,
+      "m_Curve": [
+        {
+          "serializedVersion": 3,
+          "time": 0,
+          "value": 0,
+          "inSlope": 0,
+          "outSlope": 1,
+          "tangentMode": 0,
+          "weightedMode": 0,
+          "inWeight": 0,
+          "outWeight": 0
+        },
+        {
+          "serializedVersion": 3,
+          "time": 1,
+          "value": 1,
+          "inSlope": 1,
+          "outSlope": 0,
+          "tangentMode": 0,
+          "weightedMode": 0,
+          "inWeight": 0,
+          "outWeight": 0
+        }
+      ],
+      "m_PreInfinity": 2,
+      "m_PostInfinity": 2,
+      "m_RotationOrder": 4
+    }
+  },
+  {
+    "type": "StatusEffectDefinition",
+    "id": "Loneliness",
+    "asset": "Assets/Data/Status/Status_Loneliness.asset",
+    "displayKey": "status.loneliness",
+    "maxValue": 100,
+    "decayPerSecond": 0.02,
+    "gameplayPenalty": {
+      "serializedVersion": 2,
+      "m_Curve": [
+        {
+          "serializedVersion": 3,
+          "time": 0,
+          "value": 0,
+          "inSlope": 0,
+          "outSlope": 1,
+          "tangentMode": 0,
+          "weightedMode": 0,
+          "inWeight": 0,
+          "outWeight": 0
+        },
+        {
+          "serializedVersion": 3,
+          "time": 1,
+          "value": 1,
+          "inSlope": 1,
+          "outSlope": 0,
+          "tangentMode": 0,
+          "weightedMode": 0,
+          "inWeight": 0,
+          "outWeight": 0
+        }
+      ],
+      "m_PreInfinity": 2,
+      "m_PostInfinity": 2,
+      "m_RotationOrder": 4
+    }
+  }
+]

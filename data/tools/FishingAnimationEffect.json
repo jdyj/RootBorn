@@ -1,0 +1,9 @@
+[
+  {
+    "type": "FishingAnimationEffect",
+    "id": "Effect_FishingThrowHook",
+    "asset": "Assets/Data/Tools/Effects/Effect_FishingThrowHook.asset",
+    "phase": 0,
+    "requiredSurface": "Water"
+  }
+]

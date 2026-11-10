@@ -1,0 +1,98 @@
+[
+  {
+    "type": "LocationStateAvailabilityEffect",
+    "id": "LocationState_Library_Afternoon/Effect_Availability",
+    "asset": "Assets/Data/StudentLife/LocationStates/LocationState_Library_Afternoon.asset",
+    "activities": [
+      {
+        "ref": "location.activity.library-hard-book",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "npcs": [
+      {
+        "ref": "npc.librarian",
+        "type": "NpcDefinition"
+      }
+    ],
+    "clues": [
+      {
+        "ref": "clue.library-archive-rumor",
+        "type": "DiscoveryClueDefinition"
+      }
+    ],
+    "interactableObjectIds": [
+      "object.reading-table"
+    ],
+    "portalIds": [
+      "portal.library-afternoon"
+    ],
+    "shopItemIds": [
+      "shop.library-afternoon"
+    ]
+  },
+  {
+    "type": "LocationStateAvailabilityEffect",
+    "id": "LocationState_Library_Evening/Effect_Availability",
+    "asset": "Assets/Data/StudentLife/LocationStates/LocationState_Library_Evening.asset",
+    "activities": [
+      {
+        "ref": "location.activity.library-hard-book",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "npcs": [
+      {
+        "ref": "npc.librarian",
+        "type": "NpcDefinition"
+      }
+    ],
+    "clues": [
+      {
+        "ref": "clue.library-archive-rumor",
+        "type": "DiscoveryClueDefinition"
+      }
+    ],
+    "interactableObjectIds": [
+      "object.archive-desk"
+    ],
+    "portalIds": [
+      "portal.library-archive"
+    ],
+    "shopItemIds": [
+      "shop.library-archive"
+    ]
+  },
+  {
+    "type": "LocationStateAvailabilityEffect",
+    "id": "LocationState_Library_Morning/Effect_Availability",
+    "asset": "Assets/Data/StudentLife/LocationStates/LocationState_Library_Morning.asset",
+    "activities": [
+      {
+        "ref": "location.activity.library-hard-book",
+        "type": "LocationActivityDefinition"
+      }
+    ],
+    "npcs": [
+      {
+        "ref": "npc.librarian",
+        "type": "NpcDefinition"
+      }
+    ],
+    "clues": [
+      {
+        "ref": "clue.library-archive-rumor",
+        "type": "DiscoveryClueDefinition"
+      }
+    ],
+    "interactableObjectIds": [
+      "object.library-shelf"
+    ],
+    "portalIds": [
+      "portal.library-main"
+    ],
+    "shopItemIds": [
+      "shop.library-basics"
+    ]
+  }
+]

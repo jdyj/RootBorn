@@ -1,0 +1,9 @@
+[
+  {
+    "type": "LocationStateActivityLogCondition",
+    "id": "LocationState_Library_Afternoon/Condition_ActivityLog",
+    "asset": "Assets/Data/StudentLife/LocationStates/LocationState_Library_Afternoon.asset",
+    "requiredActivityId": "location.activity.library-hard-book",
+    "minimumCount": 1
+  }
+]

@@ -1,0 +1,19 @@
+{
+  "image": "Assets/Art/HousePixels/Story31/story_town_photo.png",
+  "width": 40,
+  "height": 32,
+  "pixelsPerUnit": 48,
+  "origin": "top-left",
+  "sprites": {
+    "story_town_photo": {
+      "x": 0,
+      "y": 0,
+      "w": 40,
+      "h": 32,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.9375
+      }
+    }
+  }
+}

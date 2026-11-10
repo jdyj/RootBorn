@@ -1,0 +1,95 @@
+[
+  {
+    "type": "CareerCandidateRouteDefinition",
+    "id": "career.route.investigation",
+    "asset": "Assets/Data/Careers/Routes/Route_Candidate_Investigation.asset",
+    "displayNameKey": "route.investigation",
+    "descriptionKey": "route.investigation.desc",
+    "locations": [
+      {
+        "ref": "location.library",
+        "type": "LocationDefinition"
+      },
+      {
+        "ref": "location.corner-store",
+        "type": "LocationDefinition"
+      }
+    ],
+    "activities": [],
+    "recommendedActionKeys": [
+      "action.investigate-town"
+    ]
+  },
+  {
+    "type": "CareerCandidateRouteDefinition",
+    "id": "career.route.library",
+    "asset": "Assets/Data/Careers/Routes/Route_Candidate_Library.asset",
+    "displayNameKey": "route.library",
+    "descriptionKey": "route.library.desc",
+    "locations": [
+      {
+        "ref": "location.library",
+        "type": "LocationDefinition"
+      }
+    ],
+    "activities": [],
+    "recommendedActionKeys": [
+      "action.visit-library"
+    ]
+  },
+  {
+    "type": "CareerCandidateRouteDefinition",
+    "id": "career.route.school",
+    "asset": "Assets/Data/Careers/Routes/Route_Candidate_School.asset",
+    "displayNameKey": "route.school",
+    "descriptionKey": "route.school.desc",
+    "locations": [
+      {
+        "ref": "location.school",
+        "type": "LocationDefinition"
+      }
+    ],
+    "activities": [],
+    "recommendedActionKeys": [
+      "action.attend-class"
+    ]
+  },
+  {
+    "type": "CareerCandidateRouteDefinition",
+    "id": "career.route.service",
+    "asset": "Assets/Data/Careers/Routes/Route_Candidate_Service.asset",
+    "displayNameKey": "route.service",
+    "descriptionKey": "route.service.desc",
+    "locations": [
+      {
+        "ref": "location.town-square",
+        "type": "LocationDefinition"
+      },
+      {
+        "ref": "location.corner-store",
+        "type": "LocationDefinition"
+      }
+    ],
+    "activities": [],
+    "recommendedActionKeys": [
+      "action.help-npc"
+    ]
+  },
+  {
+    "type": "CareerCandidateRouteDefinition",
+    "id": "career.route.workshop",
+    "asset": "Assets/Data/Careers/Routes/Route_Candidate_Workshop.asset",
+    "displayNameKey": "route.workshop",
+    "descriptionKey": "route.workshop.desc",
+    "locations": [
+      {
+        "ref": "location.workshop",
+        "type": "LocationDefinition"
+      }
+    ],
+    "activities": [],
+    "recommendedActionKeys": [
+      "action.try-workshop"
+    ]
+  }
+]

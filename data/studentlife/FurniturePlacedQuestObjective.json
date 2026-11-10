@@ -1,0 +1,36 @@
+[
+  {
+    "type": "FurniturePlacedQuestObjective",
+    "id": "Objective_MyRoom",
+    "asset": "Assets/Data/StudentLife/MainStory/Objectives/Objective_MyRoom.asset",
+    "displayKey": "dream.objective.room",
+    "requiredCount": 1,
+    "acceptedFurniture": [
+      {
+        "ref": "story.photo-board",
+        "type": "FurnitureDefinition"
+      },
+      {
+        "ref": "story.study-desk",
+        "type": "FurnitureDefinition"
+      },
+      {
+        "ref": "studentlife.toy.kitchen",
+        "type": "FurnitureDefinition"
+      },
+      {
+        "ref": "growth31.first.aid.play.set",
+        "type": "FurnitureDefinition"
+      },
+      {
+        "ref": "growth31.assembly.desk",
+        "type": "FurnitureDefinition"
+      },
+      {
+        "ref": "activity31.training.tire",
+        "type": "FurnitureDefinition"
+      }
+    ],
+    "requiredSurfaceId": "house"
+  }
+]

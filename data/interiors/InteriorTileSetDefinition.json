@@ -1,0 +1,116 @@
+[
+  {
+    "type": "InteriorTileSetDefinition",
+    "id": "TileSetDefinition_NewPaletteOffice",
+    "asset": "Assets/Data/Interiors/TileSets/TileSetDefinition_NewPaletteOffice.asset",
+    "floor": {
+      "sprite": "Assets/Art/SchoolPixels/Comfy31/School_oak_floor_48.png",
+      "name": "School_oak_floor_48"
+    },
+    "wall": {
+      "sprite": "Assets/Art/SchoolPixels/tiles/wall.png",
+      "name": "wall"
+    },
+    "verticalWallAccent": {
+      "sprite": "Assets/Art/SchoolPixels/tiles/wainscot.png",
+      "name": "wainscot"
+    },
+    "door": {
+      "sprite": "Assets/Art/SchoolPixels/sprites/door.png",
+      "name": "door"
+    },
+    "window": {
+      "sprite": "Assets/Art/SchoolPixels/sprites/window.png",
+      "name": "window"
+    },
+    "desk": {
+      "sprite": "Assets/Art/HousePixels/Comfy31/House31_desk_south_1x1.png",
+      "name": "House31_desk_south_1x1"
+    },
+    "deskNorth": {
+      "unresolved": "c4a8a9eeab91de44ba1020b582b404da",
+      "fileID": "11400000"
+    },
+    "deskEast": {
+      "unresolved": "ae5d5bc93b3ca8147aeabc367d012e5a",
+      "fileID": "11400000"
+    },
+    "deskSouth": {
+      "sprite": "Assets/Art/HousePixels/Comfy31/House31_desk_south_1x1.png",
+      "name": "House31_desk_south_1x1"
+    },
+    "deskWest": {
+      "sprite": "Assets/Art/HousePixels/Comfy31/House31_desk_west_1x1.png",
+      "name": "House31_desk_west_1x1"
+    },
+    "chair": {
+      "sprite": "Assets/Art/HousePixels/Comfy31/House31_chair_south_1x1.png",
+      "name": "House31_chair_south_1x1"
+    },
+    "chairNorth": {
+      "unresolved": "6cb0df24cc4b68446977244b3aaaf0cc",
+      "fileID": "11400000"
+    },
+    "chairEast": {
+      "unresolved": "87ca0e966499de94482af8a18c1deb12",
+      "fileID": "11400000"
+    },
+    "chairSouth": {
+      "sprite": "Assets/Art/HousePixels/Comfy31/House31_chair_south_1x1.png",
+      "name": "House31_chair_south_1x1"
+    },
+    "chairWest": {
+      "sprite": "Assets/Art/HousePixels/Comfy31/House31_chair_west_1x1.png",
+      "name": "House31_chair_west_1x1"
+    },
+    "computer": {
+      "sprite": "Assets/Art/HousePixels/Comfy31/House31_computer_1x1.png",
+      "name": "House31_computer_1x1"
+    },
+    "sofa": {
+      "sprite": "Assets/Art/HousePixels/Comfy31/House31_sofa_south_1x1.png",
+      "name": "House31_sofa_south_1x1"
+    },
+    "sofaNorth": {
+      "unresolved": "b432a2d5bf766ef46a2235ec2da30d3c",
+      "fileID": "11400000"
+    },
+    "sofaEast": {
+      "unresolved": "767d025088b05324f97b8339ee506b22",
+      "fileID": "11400000"
+    },
+    "sofaSouth": {
+      "sprite": "Assets/Art/HousePixels/Comfy31/House31_sofa_south_1x1.png",
+      "name": "House31_sofa_south_1x1"
+    },
+    "sofaWest": {
+      "unresolved": "d5952420d3d09074992711c0167e1b08",
+      "fileID": "11400000"
+    },
+    "plant": {
+      "sprite": "Assets/Art/HousePixels/Comfy31/House31_plant_1x1.png",
+      "name": "House31_plant_1x1"
+    },
+    "collision": {
+      "sprite": "Assets/Art/SchoolPixels/tiles/wall.png",
+      "name": "wall"
+    },
+    "styleOptions": [
+      {
+        "id": "style.modern.office.blue",
+        "floor": {
+          "sprite": "Assets/Art/SchoolPixels/tiles/floor_1.png",
+          "name": "floor_1"
+        },
+        "wall": {
+          "sprite": "Assets/Art/SchoolPixels/tiles/wall.png",
+          "name": "wall"
+        },
+        "verticalWallAccent": {
+          "sprite": "Assets/Art/SchoolPixels/tiles/wainscot.png",
+          "name": "wainscot"
+        }
+      }
+    ]
+  }
+]

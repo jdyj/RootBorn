@@ -1,0 +1,22 @@
+[
+  {
+    "type": "OutsideSchoolTraitDeltaOutcome",
+    "id": "OutsideOutcome_HelpResponsibility",
+    "asset": "Assets/Data/StudentLife/OutsideSchool/OutsideOutcome_HelpResponsibility.asset",
+    "trait": {
+      "ref": "trait.responsibility",
+      "type": "TraitDefinition"
+    },
+    "delta": 1
+  },
+  {
+    "type": "OutsideSchoolTraitDeltaOutcome",
+    "id": "OutsideOutcome_LibraryFocus",
+    "asset": "Assets/Data/StudentLife/OutsideSchool/OutsideOutcome_LibraryFocus.asset",
+    "trait": {
+      "ref": "trait.focus",
+      "type": "TraitDefinition"
+    },
+    "delta": 2
+  }
+]

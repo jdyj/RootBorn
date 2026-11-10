@@ -1,0 +1,19 @@
+{
+  "image": "Assets/Art/CareerFurniture/Growth31/Growth31_first_aid_play_set_1x1.png",
+  "width": 48,
+  "height": 144,
+  "pixelsPerUnit": 48,
+  "origin": "top-left",
+  "sprites": {
+    "Growth31_first_aid_play_set_1x1": {
+      "x": 0,
+      "y": 0,
+      "w": 48,
+      "h": 144,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.83333333
+      }
+    }
+  }
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "type": "WorldStateUsageDefinition",
+    "id": "usage.library.archive-table",
+    "asset": "Assets/Data/WorldState/Usage/Usage_LibraryArchiveTable.asset",
+    "displayNameKey": "Library Job Shelf",
+    "descriptionKey": "Browse the shelf of books about jobs.",
+    "sourceFlag": {
+      "ref": "world.library.archive-open",
+      "type": "WorldStateFlagDefinition"
+    },
+    "relatedLocation": null,
+    "interactionPromptKey": "Browse the job shelf",
+    "nextActionKey": "Look for a job you want to know about",
+    "conditions": [
+      {
+        "ref": "UsageCondition_LibraryArchiveFlagActive",
+        "type": "WorldStateUsageFlagActiveCondition"
+      }
+    ],
+    "outcomes": [
+      {
+        "ref": "UsageOutcome_LibraryArchive_Quest",
+        "type": "WorldStateUsageQuestUnlockOutcome"
+      },
+      {
+        "ref": "UsageOutcome_LibraryArchive_Encyclopedia",
+        "type": "WorldStateUsageEncyclopediaOutcome"
+      },
+      {
+        "ref": "UsageOutcome_LibraryArchive_Career",
+        "type": "WorldStateUsageCareerHintOutcome"
+      }
+    ],
+    "repeatPolicy": {
+      "ref": "UsageRepeat_LibraryArchiveOnce",
+      "type": "WorldStateUsageRepeatPolicyDefinition"
+    },
+    "visibleSurfaces": "",
+    "sortPriority": 10
+  }
+]

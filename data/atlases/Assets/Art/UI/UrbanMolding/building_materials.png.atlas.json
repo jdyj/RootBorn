@@ -1,0 +1,19 @@
+{
+  "image": "Assets/Art/UI/UrbanMolding/building_materials.png",
+  "width": 64,
+  "height": 64,
+  "pixelsPerUnit": 16,
+  "origin": "top-left",
+  "sprites": {
+    "building_materials": {
+      "x": 0,
+      "y": 0,
+      "w": 64,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  }
+}

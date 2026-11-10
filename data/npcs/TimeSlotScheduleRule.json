@@ -1,0 +1,61 @@
+[
+  {
+    "type": "TimeSlotScheduleRule",
+    "id": "Rule_Time_Afternoon",
+    "asset": "Assets/Data/NPCs/ScheduleRules/Rule_Time_Afternoon.asset",
+    "timeSlots": [
+      {
+        "ref": "time.afternoon",
+        "type": "TimeSlotDefinition"
+      }
+    ]
+  },
+  {
+    "type": "TimeSlotScheduleRule",
+    "id": "Rule_Time_AfternoonEvening",
+    "asset": "Assets/Data/NPCs/ScheduleRules/Rule_Time_AfternoonEvening.asset",
+    "timeSlots": [
+      {
+        "ref": "time.afternoon",
+        "type": "TimeSlotDefinition"
+      },
+      {
+        "ref": "time.evening",
+        "type": "TimeSlotDefinition"
+      }
+    ]
+  },
+  {
+    "type": "TimeSlotScheduleRule",
+    "id": "Rule_Time_Evening",
+    "asset": "Assets/Data/NPCs/ScheduleRules/Rule_Time_Evening.asset",
+    "timeSlots": [
+      {
+        "ref": "time.evening",
+        "type": "TimeSlotDefinition"
+      }
+    ]
+  },
+  {
+    "type": "TimeSlotScheduleRule",
+    "id": "Rule_Time_Morning",
+    "asset": "Assets/Data/NPCs/ScheduleRules/Rule_Time_Morning.asset",
+    "timeSlots": [
+      {
+        "ref": "time.morning",
+        "type": "TimeSlotDefinition"
+      }
+    ]
+  },
+  {
+    "type": "TimeSlotScheduleRule",
+    "id": "Rule_Time_Night",
+    "asset": "Assets/Data/NPCs/ScheduleRules/Rule_Time_Night.asset",
+    "timeSlots": [
+      {
+        "ref": "time.night",
+        "type": "TimeSlotDefinition"
+      }
+    ]
+  }
+]

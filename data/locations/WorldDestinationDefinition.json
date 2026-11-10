@@ -1,0 +1,100 @@
+[
+  {
+    "type": "WorldDestinationDefinition",
+    "id": "Destination_Beach",
+    "asset": "Assets/Data/Locations/WorldTravel/Destination_Beach.asset",
+    "sceneName": "Beach",
+    "spawnIds": [
+      "beach-to-town-top-entry",
+      "beach-top-entry"
+    ]
+  },
+  {
+    "type": "WorldDestinationDefinition",
+    "id": "Destination_HospitalInterior",
+    "asset": "Assets/Data/Locations/WorldTravel/Destination_HospitalInterior.asset",
+    "sceneName": "HospitalInterior",
+    "spawnIds": [
+      "hospital-entry"
+    ]
+  },
+  {
+    "type": "WorldDestinationDefinition",
+    "id": "Destination_House",
+    "asset": "Assets/Data/Locations/WorldTravel/Destination_House.asset",
+    "sceneName": "House",
+    "spawnIds": [
+      "house-entry"
+    ]
+  },
+  {
+    "type": "WorldDestinationDefinition",
+    "id": "Destination_Kitchen2Interior",
+    "asset": "Assets/Data/Locations/WorldTravel/Destination_Kitchen2Interior.asset",
+    "sceneName": "Kitchen2Interior",
+    "spawnIds": [
+      "kitchen-2-entry"
+    ]
+  },
+  {
+    "type": "WorldDestinationDefinition",
+    "id": "Destination_KitchenInterior",
+    "asset": "Assets/Data/Locations/WorldTravel/Destination_KitchenInterior.asset",
+    "sceneName": "KitchenInterior",
+    "spawnIds": [
+      "kitchen-entry"
+    ]
+  },
+  {
+    "type": "WorldDestinationDefinition",
+    "id": "Destination_PoliceInterior",
+    "asset": "Assets/Data/Locations/WorldTravel/Destination_PoliceInterior.asset",
+    "sceneName": "PoliceInterior",
+    "spawnIds": [
+      "police-entry"
+    ]
+  },
+  {
+    "type": "WorldDestinationDefinition",
+    "id": "Destination_PoliceShootingInterior",
+    "asset": "Assets/Data/Locations/WorldTravel/Destination_PoliceShootingInterior.asset",
+    "sceneName": "PoliceShootingInterior",
+    "spawnIds": [
+      "police-2-entry"
+    ]
+  },
+  {
+    "type": "WorldDestinationDefinition",
+    "id": "Destination_School",
+    "asset": "Assets/Data/Locations/WorldTravel/Destination_School.asset",
+    "sceneName": "School",
+    "spawnIds": [
+      "school-entry"
+    ]
+  },
+  {
+    "type": "WorldDestinationDefinition",
+    "id": "Destination_ShopInterior",
+    "asset": "Assets/Data/Locations/WorldTravel/Destination_ShopInterior.asset",
+    "sceneName": "ShopInterior",
+    "spawnIds": [
+      "shop-entry"
+    ]
+  },
+  {
+    "type": "WorldDestinationDefinition",
+    "id": "Destination_Town",
+    "asset": "Assets/Data/Locations/WorldTravel/Destination_Town.asset",
+    "sceneName": "Town",
+    "spawnIds": [
+      "town-bottom-entry",
+      "town-entry",
+      "town-home-entry",
+      "town-school-entry",
+      "town-shop-entry",
+      "town-hospital-entry",
+      "town-police-entry",
+      "town-kitchen-entry"
+    ]
+  }
+]

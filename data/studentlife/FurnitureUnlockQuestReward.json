@@ -1,0 +1,8 @@
+[
+  {
+    "type": "FurnitureUnlockQuestReward",
+    "id": "Reward_QC_LibraryFurnitureUnlock",
+    "asset": "Assets/Data/StudentLife/QuestChains/Rewards/Reward_QC_LibraryFurnitureUnlock.asset",
+    "unlockToken": "unlock.furniture.quest.library-chair"
+  }
+]

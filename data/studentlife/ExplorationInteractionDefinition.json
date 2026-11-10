@@ -1,0 +1,38 @@
+[
+  {
+    "type": "ExplorationInteractionDefinition",
+    "id": "exploration.test.alley-crate",
+    "asset": "Assets/Data/StudentLife/ExplorationInteractions/Exploration_TestAlleyCrate.asset",
+    "displayNameKey": "Exploration Test Alley Crate",
+    "descriptionKey": "Exploration Test Alley Crate",
+    "worldPosition": {
+      "x": 22,
+      "y": 2
+    },
+    "interactionRadius": 1,
+    "repeatable": 0,
+    "cooldownDays": 0,
+    "defaultRiskPolicy": {
+      "ref": "RiskPolicy_Exploration_Test",
+      "type": "ExplorationRiskPolicyDefinition"
+    },
+    "choices": [
+      {
+        "ref": "choice.test.inspect",
+        "type": "ExplorationChoiceDefinition"
+      },
+      {
+        "ref": "choice.test.careful",
+        "type": "ExplorationChoiceDefinition"
+      },
+      {
+        "ref": "choice.test.discovery",
+        "type": "ExplorationChoiceDefinition"
+      },
+      {
+        "ref": "choice.test.leave",
+        "type": "ExplorationChoiceDefinition"
+      }
+    ]
+  }
+]

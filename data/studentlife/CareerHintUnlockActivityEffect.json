@@ -1,0 +1,38 @@
+[
+  {
+    "type": "CareerHintUnlockActivityEffect",
+    "id": "Practice_Chef_Activity/Practice_Chef_CareerHintUnlockActivityEffect",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_Chef_Activity.asset",
+    "career": {
+      "ref": "career.chef",
+      "type": "CareerDefinition"
+    }
+  },
+  {
+    "type": "CareerHintUnlockActivityEffect",
+    "id": "Practice_EmergencyCare_Activity/Practice_EmergencyCare_CareerHintUnlockActivityEffect",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_EmergencyCare_Activity.asset",
+    "career": {
+      "ref": "career.emergency-care",
+      "type": "CareerDefinition"
+    }
+  },
+  {
+    "type": "CareerHintUnlockActivityEffect",
+    "id": "Practice_Interior_Activity/Practice_Interior_CareerHintUnlockActivityEffect",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_Interior_Activity.asset",
+    "career": {
+      "ref": "career.interior",
+      "type": "CareerDefinition"
+    }
+  },
+  {
+    "type": "CareerHintUnlockActivityEffect",
+    "id": "Practice_Soldier_Activity/Practice_Soldier_CareerHintUnlockActivityEffect",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_Soldier_Activity.asset",
+    "career": {
+      "ref": "career.soldier",
+      "type": "CareerDefinition"
+    }
+  }
+]

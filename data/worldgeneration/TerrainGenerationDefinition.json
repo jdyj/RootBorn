@@ -1,0 +1,44 @@
+[
+  {
+    "type": "TerrainGenerationDefinition",
+    "id": "DefaultFarmTerrainGeneration",
+    "asset": "Assets/Data/WorldGeneration/DefaultFarmTerrainGeneration.asset",
+    "width": 30,
+    "height": 20,
+    "basePattern": null,
+    "reservedAreas": [],
+    "naturalPropSpawns": []
+  },
+  {
+    "type": "TerrainGenerationDefinition",
+    "id": "Terrain_Farm_Default",
+    "asset": "Assets/Data/WorldGeneration/Terrain_Farm_Default.asset",
+    "width": 30,
+    "height": 20,
+    "basePattern": {
+      "ref": "Pattern_Grass_Default",
+      "type": "TilePatternDefinition"
+    },
+    "reservedAreas": [
+      {
+        "Area": {
+          "x": 0,
+          "y": 0,
+          "width": 4,
+          "height": 4
+        },
+        "SafeRadius": 0
+      }
+    ],
+    "naturalPropSpawns": [
+      {
+        "ref": "Spawn_Trees_Default",
+        "type": "NaturalPropSpawnDefinition"
+      },
+      {
+        "ref": "Spawn_Rocks_Default",
+        "type": "NaturalPropSpawnDefinition"
+      }
+    ]
+  }
+]

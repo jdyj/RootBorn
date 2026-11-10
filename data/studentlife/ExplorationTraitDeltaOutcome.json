@@ -1,0 +1,12 @@
+[
+  {
+    "type": "ExplorationTraitDeltaOutcome",
+    "id": "Outcome_Exploration_TestTrait",
+    "asset": "Assets/Data/StudentLife/ExplorationInteractions/Outcomes/Outcome_Exploration_TestTrait.asset",
+    "trait": {
+      "ref": "trait.focus",
+      "type": "TraitDefinition"
+    },
+    "delta": 1
+  }
+]

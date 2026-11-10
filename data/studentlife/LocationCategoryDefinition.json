@@ -1,0 +1,37 @@
+[
+  {
+    "type": "LocationCategoryDefinition",
+    "id": "location.category.public",
+    "asset": "Assets/Data/StudentLife/LocationCategories/LocationCategory_Public.asset",
+    "displayName": "Public",
+    "sortOrder": 10
+  },
+  {
+    "type": "LocationCategoryDefinition",
+    "id": "location.category.school",
+    "asset": "Assets/Data/StudentLife/LocationCategories/LocationCategory_School.asset",
+    "displayName": "School",
+    "sortOrder": 20
+  },
+  {
+    "type": "LocationCategoryDefinition",
+    "id": "location.category.shop",
+    "asset": "Assets/Data/StudentLife/LocationCategories/LocationCategory_Shop.asset",
+    "displayName": "Shop",
+    "sortOrder": 50
+  },
+  {
+    "type": "LocationCategoryDefinition",
+    "id": "location.category.study",
+    "asset": "Assets/Data/StudentLife/LocationCategories/LocationCategory_Study.asset",
+    "displayName": "Study",
+    "sortOrder": 30
+  },
+  {
+    "type": "LocationCategoryDefinition",
+    "id": "location.category.work",
+    "asset": "Assets/Data/StudentLife/LocationCategories/LocationCategory_Work.asset",
+    "displayName": "Work",
+    "sortOrder": 40
+  }
+]

@@ -1,0 +1,153 @@
+[
+  {
+    "type": "DiscoveryClueDefinition",
+    "id": "clue.discovery.library-archive-rumor",
+    "asset": "Assets/Data/DiscoveryClues/Definitions/DiscoveryClue_LibraryArchiveRumor.asset",
+    "displayNameKey": "Library job books",
+    "descriptionKey": "The library has a shelf of books about jobs.",
+    "relatedWorldState": {
+      "ref": "WorldState_DiscoveryClue_LibraryArchive",
+      "type": "WorldStateFlagDefinition"
+    },
+    "relatedQuest": {
+      "ref": "Quest_DiscoveryClue_LibraryFollowUp",
+      "type": "QuestDefinition"
+    },
+    "relatedLocation": null,
+    "strength": 3,
+    "publicTextKey": "Books about many jobs are waiting at the library.",
+    "hiddenTextKey": "??? book",
+    "sources": [
+      {
+        "ref": "source.discovery.librarian-rumor",
+        "type": "DiscoveryClueSourceDefinition"
+      },
+      {
+        "ref": "source.discovery.board-rumor",
+        "type": "DiscoveryClueSourceDefinition"
+      }
+    ],
+    "conditions": [
+      {
+        "ref": "Condition_LibraryArchiveActive",
+        "type": "DiscoveryClueWorldStateActiveCondition"
+      }
+    ],
+    "completions": [
+      {
+        "ref": "Completion_LibraryArchiveVisit",
+        "type": "DiscoveryClueLocationVisitCompletion"
+      }
+    ],
+    "outcomes": [
+      {
+        "ref": "Outcome_LibraryFollowUpQuest",
+        "type": "DiscoveryClueQuestUnlockOutcome"
+      },
+      {
+        "ref": "Outcome_ResearchCareerHint",
+        "type": "DiscoveryClueCareerHintOutcome"
+      },
+      {
+        "ref": "Outcome_ArchiveFragmentEntry",
+        "type": "DiscoveryClueEncyclopediaOutcome"
+      },
+      {
+        "ref": "Outcome_LibraryArchiveWorldState",
+        "type": "DiscoveryClueWorldStateRevealOutcome"
+      }
+    ],
+    "visibleSurfaces": "00000000010000000500000003000000",
+    "sortPriority": 10
+  },
+  {
+    "type": "DiscoveryClueDefinition",
+    "id": "clue.discovery.play-loop",
+    "asset": "Assets/Data/DiscoveryClues/Definitions/DiscoveryClue_PlayLoop.asset",
+    "displayNameKey": "Play clue",
+    "descriptionKey": "PlayMode clue",
+    "relatedWorldState": {
+      "ref": "world.discovery.play-loop",
+      "type": "WorldStateFlagDefinition"
+    },
+    "relatedQuest": {
+      "ref": "quest.discovery.play-followup",
+      "type": "QuestDefinition"
+    },
+    "relatedLocation": null,
+    "strength": 1,
+    "publicTextKey": "The trace is nearby.",
+    "hiddenTextKey": "??? trace",
+    "sources": [
+      {
+        "ref": "source.discovery.play-npc",
+        "type": "DiscoveryClueSourceDefinition"
+      },
+      {
+        "ref": "source.discovery.play-board",
+        "type": "DiscoveryClueSourceDefinition"
+      },
+      {
+        "ref": "source.discovery.play-map",
+        "type": "DiscoveryClueSourceDefinition"
+      },
+      {
+        "ref": "source.discovery.play-encyclopedia",
+        "type": "DiscoveryClueSourceDefinition"
+      },
+      {
+        "ref": "source.discovery.play-trace",
+        "type": "DiscoveryClueSourceDefinition"
+      }
+    ],
+    "conditions": [],
+    "completions": [
+      {
+        "ref": "Completion_PlayLoopTraceVisit",
+        "type": "DiscoveryClueLocationVisitCompletion"
+      }
+    ],
+    "outcomes": [
+      {
+        "ref": "Outcome_PlayLoopQuest",
+        "type": "DiscoveryClueQuestUnlockOutcome"
+      },
+      {
+        "ref": "Outcome_PlayLoopCareer",
+        "type": "DiscoveryClueCareerHintOutcome"
+      },
+      {
+        "ref": "Outcome_PlayLoopEntry",
+        "type": "DiscoveryClueEncyclopediaOutcome"
+      },
+      {
+        "ref": "Outcome_PlayLoopWorldState",
+        "type": "DiscoveryClueWorldStateRevealOutcome"
+      }
+    ],
+    "visibleSurfaces": "000000000100000002000000030000000400000005000000",
+    "sortPriority": 1
+  },
+  {
+    "type": "DiscoveryClueDefinition",
+    "id": "clue.library-archive-rumor",
+    "asset": "Assets/Data/DiscoveryClues/Definitions/DiscoveryClue_LocationState_LibraryArchiveRumor.asset",
+    "displayNameKey": "Library job books",
+    "descriptionKey": "A shelf of job books at the library",
+    "relatedWorldState": null,
+    "relatedQuest": null,
+    "relatedLocation": {
+      "ref": "location.library",
+      "type": "LocationDefinition"
+    },
+    "strength": 1,
+    "publicTextKey": "Books about many jobs are waiting at the library.",
+    "hiddenTextKey": "??? book",
+    "sources": [],
+    "conditions": [],
+    "completions": [],
+    "outcomes": [],
+    "visibleSurfaces": "",
+    "sortPriority": 1
+  }
+]

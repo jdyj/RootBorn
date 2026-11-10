@@ -1,0 +1,12 @@
+[
+  {
+    "type": "ExplorationRiskPolicyDefinition",
+    "id": "RiskPolicy_Exploration_Test",
+    "asset": "Assets/Data/StudentLife/ExplorationInteractions/RiskPolicies/RiskPolicy_Exploration_Test.asset",
+    "stressDelta": 1,
+    "energyCost": 1,
+    "focusCost": 0,
+    "status": null,
+    "statusDelta": 0
+  }
+]

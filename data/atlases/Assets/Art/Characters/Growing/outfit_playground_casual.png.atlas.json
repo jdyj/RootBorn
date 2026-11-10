@@ -1,0 +1,249 @@
+{
+  "image": "Assets/Art/Characters/Growing/outfit_playground_casual.png",
+  "width": 192,
+  "height": 192,
+  "pixelsPerUnit": 32,
+  "origin": "top-left",
+  "sprites": {
+    "outfit_playground_casual_00": {
+      "x": 0,
+      "y": 0,
+      "w": 32,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_playground_casual_01": {
+      "x": 32,
+      "y": 0,
+      "w": 32,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_playground_casual_02": {
+      "x": 64,
+      "y": 0,
+      "w": 32,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_playground_casual_03": {
+      "x": 96,
+      "y": 0,
+      "w": 32,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_playground_casual_04": {
+      "x": 128,
+      "y": 0,
+      "w": 32,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_playground_casual_05": {
+      "x": 160,
+      "y": 0,
+      "w": 32,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_playground_casual_06": {
+      "x": 0,
+      "y": 48,
+      "w": 32,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_playground_casual_07": {
+      "x": 32,
+      "y": 48,
+      "w": 32,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_playground_casual_08": {
+      "x": 64,
+      "y": 48,
+      "w": 32,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_playground_casual_09": {
+      "x": 96,
+      "y": 48,
+      "w": 32,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_playground_casual_10": {
+      "x": 128,
+      "y": 48,
+      "w": 32,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_playground_casual_11": {
+      "x": 160,
+      "y": 48,
+      "w": 32,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_playground_casual_12": {
+      "x": 0,
+      "y": 96,
+      "w": 32,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_playground_casual_13": {
+      "x": 32,
+      "y": 96,
+      "w": 32,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_playground_casual_14": {
+      "x": 64,
+      "y": 96,
+      "w": 32,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_playground_casual_15": {
+      "x": 96,
+      "y": 96,
+      "w": 32,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_playground_casual_16": {
+      "x": 128,
+      "y": 96,
+      "w": 32,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_playground_casual_17": {
+      "x": 160,
+      "y": 96,
+      "w": 32,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_playground_casual_18": {
+      "x": 0,
+      "y": 144,
+      "w": 32,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_playground_casual_19": {
+      "x": 32,
+      "y": 144,
+      "w": 32,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_playground_casual_20": {
+      "x": 64,
+      "y": 144,
+      "w": 32,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_playground_casual_21": {
+      "x": 96,
+      "y": 144,
+      "w": 32,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_playground_casual_22": {
+      "x": 128,
+      "y": 144,
+      "w": 32,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "outfit_playground_casual_23": {
+      "x": 160,
+      "y": 144,
+      "w": 32,
+      "h": 48,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  }
+}

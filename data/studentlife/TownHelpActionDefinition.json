@@ -1,0 +1,52 @@
+[
+  {
+    "type": "TownHelpActionDefinition",
+    "id": "town.help.first-guide-errand",
+    "asset": "Assets/Data/StudentLife/TownHelpActions/TownHelp_FirstGuideErrand.asset",
+    "displayNameKey": "town.help.first-guide-errand",
+    "npcId": "npc.first-guide",
+    "locationId": "location.town-square",
+    "timePolicy": {
+      "ref": "paid-activity",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 20,
+    "energyCost": 1,
+    "focusCost": 0,
+    "stressDelta": 0,
+    "requirements": [],
+    "outcomes": [
+      {
+        "ref": "HelpOutcome_FirstGuideTrust",
+        "type": "HelpActionTraitDeltaOutcome"
+      },
+      {
+        "ref": "HelpOutcome_FirstGuideRelationship",
+        "type": "HelpActionRelationshipDeltaOutcome"
+      }
+    ]
+  },
+  {
+    "type": "TownHelpActionDefinition",
+    "id": "town.help.teacher-study-prep",
+    "asset": "Assets/Data/StudentLife/TownHelpActions/TownHelp_TeacherStudyPrep.asset",
+    "displayNameKey": "town.help.teacher-study-prep",
+    "npcId": "npc.teacher",
+    "locationId": "location.school",
+    "timePolicy": {
+      "ref": "paid-activity",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 20,
+    "energyCost": 1,
+    "focusCost": 0,
+    "stressDelta": -1,
+    "requirements": [],
+    "outcomes": [
+      {
+        "ref": "HelpOutcome_TeacherSupport",
+        "type": "HelpActionRelationshipDeltaOutcome"
+      }
+    ]
+  }
+]

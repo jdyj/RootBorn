@@ -1,0 +1,66 @@
+[
+  {
+    "type": "CareerInterestStaticRecommendation",
+    "id": "InterestRecommendation_Chef",
+    "asset": "Assets/Data/Careers/Interests/Recommendations/InterestRecommendation_Chef.asset",
+    "recommendationKeys": [
+      "dream.interest.chef.action"
+    ]
+  },
+  {
+    "type": "CareerInterestStaticRecommendation",
+    "id": "InterestRecommendation_EmergencyCare",
+    "asset": "Assets/Data/Careers/Interests/Recommendations/InterestRecommendation_EmergencyCare.asset",
+    "recommendationKeys": [
+      "dream.interest.emergency-care.action"
+    ]
+  },
+  {
+    "type": "CareerInterestStaticRecommendation",
+    "id": "InterestRecommendation_Interior",
+    "asset": "Assets/Data/Careers/Interests/Recommendations/InterestRecommendation_Interior.asset",
+    "recommendationKeys": [
+      "dream.interest.interior.action"
+    ]
+  },
+  {
+    "type": "CareerInterestStaticRecommendation",
+    "id": "InterestRecommendation_Investigation",
+    "asset": "Assets/Data/Careers/Interests/Recommendations/InterestRecommendation_Investigation.asset",
+    "recommendationKeys": [
+      "action.visit-corner-store"
+    ]
+  },
+  {
+    "type": "CareerInterestStaticRecommendation",
+    "id": "InterestRecommendation_Learning",
+    "asset": "Assets/Data/Careers/Interests/Recommendations/InterestRecommendation_Learning.asset",
+    "recommendationKeys": [
+      "action.visit-library"
+    ]
+  },
+  {
+    "type": "CareerInterestStaticRecommendation",
+    "id": "InterestRecommendation_Service",
+    "asset": "Assets/Data/Careers/Interests/Recommendations/InterestRecommendation_Service.asset",
+    "recommendationKeys": [
+      "action.help-town-square"
+    ]
+  },
+  {
+    "type": "CareerInterestStaticRecommendation",
+    "id": "InterestRecommendation_Soldier",
+    "asset": "Assets/Data/Careers/Interests/Recommendations/InterestRecommendation_Soldier.asset",
+    "recommendationKeys": [
+      "dream.interest.soldier.action"
+    ]
+  },
+  {
+    "type": "CareerInterestStaticRecommendation",
+    "id": "InterestRecommendation_Technical",
+    "asset": "Assets/Data/Careers/Interests/Recommendations/InterestRecommendation_Technical.asset",
+    "recommendationKeys": [
+      "action.visit-workshop"
+    ]
+  }
+]

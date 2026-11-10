@@ -1,0 +1,12 @@
+[
+  {
+    "type": "CampaignCareerHintReward",
+    "id": "campaign.reward.first-career-hint",
+    "asset": "Assets/Data/StudentLife/Campaigns/Rewards/Reward_FirstCareerHint.asset",
+    "displayNameKey": "campaign.reward.first-career-hint",
+    "career": {
+      "ref": "career.chef",
+      "type": "CareerDefinition"
+    }
+  }
+]

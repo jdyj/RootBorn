@@ -1,0 +1,19 @@
+{
+  "image": "Assets/Art/SchoolPixels/sprites/school.png",
+  "width": 256,
+  "height": 160,
+  "pixelsPerUnit": 48,
+  "origin": "top-left",
+  "sprites": {
+    "school": {
+      "x": 0,
+      "y": 0,
+      "w": 256,
+      "h": 160,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.95
+      }
+    }
+  }
+}

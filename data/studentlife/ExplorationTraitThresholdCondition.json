@@ -1,0 +1,13 @@
+[
+  {
+    "type": "ExplorationTraitThresholdCondition",
+    "id": "Condition_Exploration_TestTrait",
+    "asset": "Assets/Data/StudentLife/ExplorationInteractions/Conditions/Condition_Exploration_TestTrait.asset",
+    "lockedReasonKey": "exploration.condition.trait",
+    "trait": {
+      "ref": "trait.focus",
+      "type": "TraitDefinition"
+    },
+    "minimum": 1
+  }
+]

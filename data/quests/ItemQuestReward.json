@@ -1,0 +1,12 @@
+[
+  {
+    "type": "ItemQuestReward",
+    "id": "Reward_WoodQuestStone",
+    "asset": "Assets/Data/Quests/Rewards/Reward_WoodQuestStone.asset",
+    "item": {
+      "ref": "Stone",
+      "type": "ItemDefinition"
+    },
+    "count": 1
+  }
+]

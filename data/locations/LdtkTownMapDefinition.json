@@ -1,0 +1,20 @@
+[
+  {
+    "type": "LdtkTownMapDefinition",
+    "id": "Town2LdtkMapDefinition",
+    "asset": "Assets/Data/Locations/Town2LdtkMapDefinition.asset",
+    "projectAsset": {
+      "unresolved": "6a3820d37553f8e4e896a2bda395f543",
+      "fileID": "-6245912384275440281"
+    },
+    "compositeSprite": {
+      "unresolved": "c64c7db933c92a647bf25772f5b1a7de",
+      "fileID": "21300000"
+    },
+    "pixelsPerUnit": 32,
+    "worldCenter": {
+      "x": 45,
+      "y": -46.5
+    }
+  }
+]

@@ -1,0 +1,50 @@
+[
+  {
+    "type": "CareerInterestCandidateStateRequirement",
+    "id": "InterestRequirement_Chef_CandidateRevealed",
+    "asset": "Assets/Data/Careers/Interests/Requirements/InterestRequirement_Chef_CandidateRevealed.asset",
+    "minimumState": 2
+  },
+  {
+    "type": "CareerInterestCandidateStateRequirement",
+    "id": "InterestRequirement_EmergencyCare_CandidateRevealed",
+    "asset": "Assets/Data/Careers/Interests/Requirements/InterestRequirement_EmergencyCare_CandidateRevealed.asset",
+    "minimumState": 2
+  },
+  {
+    "type": "CareerInterestCandidateStateRequirement",
+    "id": "InterestRequirement_Interior_CandidateRevealed",
+    "asset": "Assets/Data/Careers/Interests/Requirements/InterestRequirement_Interior_CandidateRevealed.asset",
+    "minimumState": 2
+  },
+  {
+    "type": "CareerInterestCandidateStateRequirement",
+    "id": "InterestRequirement_Investigation_CandidateRevealed",
+    "asset": "Assets/Data/Careers/Interests/Requirements/InterestRequirement_Investigation_CandidateRevealed.asset",
+    "minimumState": 2
+  },
+  {
+    "type": "CareerInterestCandidateStateRequirement",
+    "id": "InterestRequirement_Learning_CandidateRevealed",
+    "asset": "Assets/Data/Careers/Interests/Requirements/InterestRequirement_Learning_CandidateRevealed.asset",
+    "minimumState": 2
+  },
+  {
+    "type": "CareerInterestCandidateStateRequirement",
+    "id": "InterestRequirement_Service_CandidateRevealed",
+    "asset": "Assets/Data/Careers/Interests/Requirements/InterestRequirement_Service_CandidateRevealed.asset",
+    "minimumState": 2
+  },
+  {
+    "type": "CareerInterestCandidateStateRequirement",
+    "id": "InterestRequirement_Soldier_CandidateRevealed",
+    "asset": "Assets/Data/Careers/Interests/Requirements/InterestRequirement_Soldier_CandidateRevealed.asset",
+    "minimumState": 2
+  },
+  {
+    "type": "CareerInterestCandidateStateRequirement",
+    "id": "InterestRequirement_Technical_CandidateRevealed",
+    "asset": "Assets/Data/Careers/Interests/Requirements/InterestRequirement_Technical_CandidateRevealed.asset",
+    "minimumState": 2
+  }
+]

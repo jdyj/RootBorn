@@ -1,0 +1,62 @@
+[
+  {
+    "type": "WorldStateFlagDefinition",
+    "id": "world.library.archive-open",
+    "asset": "Assets/Data/WorldState/Flags/WorldState_LibraryArchiveOpen.asset",
+    "displayNameKey": "world.library.archive-open.name",
+    "descriptionKey": "world.library.archive-open.description",
+    "relatedLocation": {
+      "ref": "location.library",
+      "type": "LocationDefinition"
+    },
+    "relatedNpcs": [],
+    "relatedQuestChains": [],
+    "scopeDefinition": null,
+    "scope": 1,
+    "changeKind": 0,
+    "nextActionKey": "world.library.archive-open.next",
+    "visibleSurfaces": "000000000200000001000000",
+    "badges": "0200000004000000",
+    "sortPriority": 100,
+    "effectVersion": 1
+  },
+  {
+    "type": "WorldStateFlagDefinition",
+    "id": "world.questchain.library-route-reward",
+    "asset": "Assets/Data/WorldState/Flags/WorldState_QuestChainLibraryRouteReward.asset",
+    "displayNameKey": "world.questchain.library-route-reward.name",
+    "descriptionKey": "world.questchain.library-route-reward.description",
+    "relatedLocation": null,
+    "relatedNpcs": [],
+    "relatedQuestChains": [],
+    "scopeDefinition": null,
+    "scope": 2,
+    "changeKind": 0,
+    "nextActionKey": "world.questchain.library-route-reward.next",
+    "visibleSurfaces": "",
+    "badges": "",
+    "sortPriority": 0,
+    "effectVersion": 1
+  },
+  {
+    "type": "WorldStateFlagDefinition",
+    "id": "world.workshop.repair-ledger-open",
+    "asset": "Assets/Data/WorldState/Flags/WorldState_WorkshopRepairLedgerOpen.asset",
+    "displayNameKey": "world.workshop.repair-ledger-open.name",
+    "descriptionKey": "world.workshop.repair-ledger-open.description",
+    "relatedLocation": {
+      "ref": "location.workshop",
+      "type": "LocationDefinition"
+    },
+    "relatedNpcs": [],
+    "relatedQuestChains": [],
+    "scopeDefinition": null,
+    "scope": 1,
+    "changeKind": 0,
+    "nextActionKey": "world.workshop.repair-ledger-open.next",
+    "visibleSurfaces": "",
+    "badges": "",
+    "sortPriority": 110,
+    "effectVersion": 1
+  }
+]

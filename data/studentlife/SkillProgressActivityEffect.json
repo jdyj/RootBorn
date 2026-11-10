@@ -1,0 +1,122 @@
+[
+  {
+    "type": "SkillProgressActivityEffect",
+    "id": "Practice_Chef_Activity/Practice_Chef_SkillProgressActivityEffect#1",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_Chef_Activity.asset",
+    "skill": {
+      "ref": "skill.cooking",
+      "type": "SkillDefinition"
+    },
+    "delta": 3
+  },
+  {
+    "type": "SkillProgressActivityEffect",
+    "id": "Practice_Chef_Activity/Practice_Chef_SkillProgressActivityEffect#2",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_Chef_Activity.asset",
+    "skill": {
+      "ref": "skill.order-judgment",
+      "type": "SkillDefinition"
+    },
+    "delta": 2
+  },
+  {
+    "type": "SkillProgressActivityEffect",
+    "id": "Practice_Chef_Activity/Practice_Chef_SkillProgressActivityEffect#3",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_Chef_Activity.asset",
+    "skill": {
+      "ref": "skill.timing",
+      "type": "SkillDefinition"
+    },
+    "delta": 2
+  },
+  {
+    "type": "SkillProgressActivityEffect",
+    "id": "Practice_EmergencyCare_Activity/Practice_EmergencyCare_SkillProgressActivityEffect#1",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_EmergencyCare_Activity.asset",
+    "skill": {
+      "ref": "skill.care",
+      "type": "SkillDefinition"
+    },
+    "delta": 2
+  },
+  {
+    "type": "SkillProgressActivityEffect",
+    "id": "Practice_EmergencyCare_Activity/Practice_EmergencyCare_SkillProgressActivityEffect#2",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_EmergencyCare_Activity.asset",
+    "skill": {
+      "ref": "skill.symptom-judgment",
+      "type": "SkillDefinition"
+    },
+    "delta": 2
+  },
+  {
+    "type": "SkillProgressActivityEffect",
+    "id": "Practice_EmergencyCare_Activity/Practice_EmergencyCare_SkillProgressActivityEffect#3",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_EmergencyCare_Activity.asset",
+    "skill": {
+      "ref": "skill.first-aid",
+      "type": "SkillDefinition"
+    },
+    "delta": 3
+  },
+  {
+    "type": "SkillProgressActivityEffect",
+    "id": "Practice_Interior_Activity/Practice_Interior_SkillProgressActivityEffect#1",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_Interior_Activity.asset",
+    "skill": {
+      "ref": "skill.budget-sense",
+      "type": "SkillDefinition"
+    },
+    "delta": 2
+  },
+  {
+    "type": "SkillProgressActivityEffect",
+    "id": "Practice_Interior_Activity/Practice_Interior_SkillProgressActivityEffect#2",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_Interior_Activity.asset",
+    "skill": {
+      "ref": "skill.color-harmony",
+      "type": "SkillDefinition"
+    },
+    "delta": 2
+  },
+  {
+    "type": "SkillProgressActivityEffect",
+    "id": "Practice_Interior_Activity/Practice_Interior_SkillProgressActivityEffect#3",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_Interior_Activity.asset",
+    "skill": {
+      "ref": "skill.space-layout",
+      "type": "SkillDefinition"
+    },
+    "delta": 3
+  },
+  {
+    "type": "SkillProgressActivityEffect",
+    "id": "Practice_Soldier_Activity/Practice_Soldier_SkillProgressActivityEffect#1",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_Soldier_Activity.asset",
+    "skill": {
+      "ref": "skill.reaction-speed",
+      "type": "SkillDefinition"
+    },
+    "delta": 2
+  },
+  {
+    "type": "SkillProgressActivityEffect",
+    "id": "Practice_Soldier_Activity/Practice_Soldier_SkillProgressActivityEffect#2",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_Soldier_Activity.asset",
+    "skill": {
+      "ref": "skill.training",
+      "type": "SkillDefinition"
+    },
+    "delta": 3
+  },
+  {
+    "type": "SkillProgressActivityEffect",
+    "id": "Practice_Soldier_Activity/Practice_Soldier_SkillProgressActivityEffect#3",
+    "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_Soldier_Activity.asset",
+    "skill": {
+      "ref": "skill.teamwork",
+      "type": "SkillDefinition"
+    },
+    "delta": 2
+  }
+]

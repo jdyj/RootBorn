@@ -1,0 +1,21 @@
+[
+  {
+    "type": "DiscoveryDefinition",
+    "id": "discovery.clocktower-notice",
+    "asset": "Assets/Data/StudentLife/Discoveries/Discovery_ClocktowerNotice.asset",
+    "displayNameKey": "discovery.clocktower-notice",
+    "scope": 0,
+    "worldPosition": {
+      "x": 12,
+      "y": 7
+    },
+    "interactionRadius": 1.15,
+    "requirements": [],
+    "outcomes": [
+      {
+        "ref": "DiscoveryOutcome_ClocktowerObservation",
+        "type": "DiscoveryTraitDeltaOutcome"
+      }
+    ]
+  }
+]

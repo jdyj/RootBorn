@@ -1,0 +1,36 @@
+[
+  {
+    "type": "KnowledgeNode",
+    "id": "Fire",
+    "asset": "Assets/Data/Knowledge/Knowledge_Fire.asset",
+    "displayKey": "knowledge.fire",
+    "triggers": [],
+    "unlocksTools": []
+  },
+  {
+    "type": "KnowledgeNode",
+    "id": "StoneTool",
+    "asset": "Assets/Data/Knowledge/Knowledge_StoneTool.asset",
+    "displayKey": "knowledge.stoneTool",
+    "triggers": [
+      {
+        "ref": "Trigger_HitGroundWithRock",
+        "type": "HitGroundWithRockTrigger"
+      }
+    ],
+    "unlocksTools": [
+      {
+        "ref": "StoneAxe",
+        "type": "ToolDefinition"
+      },
+      {
+        "ref": "StoneHoe",
+        "type": "ToolDefinition"
+      },
+      {
+        "ref": "StonePickaxe",
+        "type": "ToolDefinition"
+      }
+    ]
+  }
+]

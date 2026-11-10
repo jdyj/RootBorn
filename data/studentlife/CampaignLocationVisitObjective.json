@@ -1,0 +1,26 @@
+[
+  {
+    "type": "CampaignLocationVisitObjective",
+    "id": "campaign.objective.visit-library",
+    "asset": "Assets/Data/StudentLife/Campaigns/Objectives/Objective_VisitLibrary.asset",
+    "displayNameKey": "campaign.objective.visit-library",
+    "requiresSchoolClass": 0,
+    "location": {
+      "ref": "location.library",
+      "type": "LocationDefinition"
+    },
+    "requiredCount": 1
+  },
+  {
+    "type": "CampaignLocationVisitObjective",
+    "id": "campaign.objective.visit-town",
+    "asset": "Assets/Data/StudentLife/Campaigns/Objectives/Objective_VisitTown.asset",
+    "displayNameKey": "campaign.objective.visit-town",
+    "requiresSchoolClass": 0,
+    "location": {
+      "ref": "location.town-square",
+      "type": "LocationDefinition"
+    },
+    "requiredCount": 1
+  }
+]

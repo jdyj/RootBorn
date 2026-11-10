@@ -1,0 +1,36 @@
+[
+  {
+    "type": "FurniturePlacedQuestObjective",
+    "id": "Objective_DecorateHouse",
+    "asset": "Assets/Data/Quests/Objectives/Objective_DecorateHouse.asset",
+    "displayKey": "quest.house-decorating.objective",
+    "requiredCount": 3,
+    "acceptedFurniture": [
+      {
+        "ref": "story.photo-board",
+        "type": "FurnitureDefinition"
+      },
+      {
+        "ref": "story.study-desk",
+        "type": "FurnitureDefinition"
+      },
+      {
+        "ref": "studentlife.toy.kitchen",
+        "type": "FurnitureDefinition"
+      },
+      {
+        "ref": "growth31.first.aid.play.set",
+        "type": "FurnitureDefinition"
+      },
+      {
+        "ref": "growth31.assembly.desk",
+        "type": "FurnitureDefinition"
+      },
+      {
+        "ref": "activity31.training.tire",
+        "type": "FurnitureDefinition"
+      }
+    ],
+    "requiredSurfaceId": "house"
+  }
+]

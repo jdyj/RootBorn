@@ -1,0 +1,32 @@
+[
+  {
+    "type": "ClueInterpretationSourceDefinition",
+    "id": "interpret.source.librarian",
+    "asset": "Assets/Data/DiscoveryClues/Interpretations/InterpretationSource_Librarian.asset",
+    "kind": 0,
+    "targetId": "npc.librarian",
+    "displayNameKey": "Librarian",
+    "hintTextKey": "Ask about the clue",
+    "strength": 3
+  },
+  {
+    "type": "ClueInterpretationSourceDefinition",
+    "id": "interpret.source.location",
+    "asset": "Assets/Data/DiscoveryClues/Interpretations/InterpretationSource_Location.asset",
+    "kind": 1,
+    "targetId": "location.town-square",
+    "displayNameKey": "Town Square",
+    "hintTextKey": "Investigate the place",
+    "strength": 1
+  },
+  {
+    "type": "ClueInterpretationSourceDefinition",
+    "id": "interpret.source.workbench",
+    "asset": "Assets/Data/DiscoveryClues/Interpretations/InterpretationSource_Workbench.asset",
+    "kind": 2,
+    "targetId": "object.workbench",
+    "displayNameKey": "Workbench",
+    "hintTextKey": "Restore at the workbench",
+    "strength": 2
+  }
+]

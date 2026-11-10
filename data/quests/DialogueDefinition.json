@@ -1,0 +1,94 @@
+[
+  {
+    "type": "DialogueDefinition",
+    "id": "Dialogue_CareerMentor",
+    "asset": "Assets/Data/Quests/CareerRoutes/Dialogue/Dialogue_CareerMentor.asset",
+    "lineKeys": [
+      "dialogue.careerMentor.greeting"
+    ],
+    "choices": [
+      {
+        "ref": "Choice_AcceptCareer_Chef",
+        "type": "DialogueChoiceDefinition"
+      },
+      {
+        "ref": "Choice_ClaimCareer_Chef",
+        "type": "DialogueChoiceDefinition"
+      },
+      {
+        "ref": "Choice_AcceptCareer_Interior",
+        "type": "DialogueChoiceDefinition"
+      },
+      {
+        "ref": "Choice_ClaimCareer_Interior",
+        "type": "DialogueChoiceDefinition"
+      },
+      {
+        "ref": "Choice_AcceptCareer_Soldier",
+        "type": "DialogueChoiceDefinition"
+      },
+      {
+        "ref": "Choice_ClaimCareer_Soldier",
+        "type": "DialogueChoiceDefinition"
+      },
+      {
+        "ref": "Choice_AcceptCareer_EmergencyCare",
+        "type": "DialogueChoiceDefinition"
+      },
+      {
+        "ref": "Choice_ClaimCareer_EmergencyCare",
+        "type": "DialogueChoiceDefinition"
+      }
+    ]
+  },
+  {
+    "type": "DialogueDefinition",
+    "id": "Dialogue_OrderedQuestProvider",
+    "asset": "Assets/Data/Quests/CareerRoutes/Dialogue/Dialogue_OrderedQuestProvider.asset",
+    "lineKeys": [
+      "dialogue.questProvider.greeting"
+    ],
+    "choices": [
+      {
+        "ref": "Choice_Accept_quest_gatherWood",
+        "type": "DialogueChoiceDefinition"
+      },
+      {
+        "ref": "Choice_Claim_quest_gatherWood",
+        "type": "DialogueChoiceDefinition"
+      },
+      {
+        "ref": "Choice_Accept_quest_career_chef",
+        "type": "DialogueChoiceDefinition"
+      },
+      {
+        "ref": "Choice_Claim_quest_career_chef",
+        "type": "DialogueChoiceDefinition"
+      },
+      {
+        "ref": "Choice_Accept_quest_career_interior",
+        "type": "DialogueChoiceDefinition"
+      },
+      {
+        "ref": "Choice_Claim_quest_career_interior",
+        "type": "DialogueChoiceDefinition"
+      },
+      {
+        "ref": "Choice_Accept_quest_career_soldier",
+        "type": "DialogueChoiceDefinition"
+      },
+      {
+        "ref": "Choice_Claim_quest_career_soldier",
+        "type": "DialogueChoiceDefinition"
+      },
+      {
+        "ref": "Choice_Accept_quest_career_emergency_care",
+        "type": "DialogueChoiceDefinition"
+      },
+      {
+        "ref": "Choice_Claim_quest_career_emergency_care",
+        "type": "DialogueChoiceDefinition"
+      }
+    ]
+  }
+]

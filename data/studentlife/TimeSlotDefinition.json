@@ -1,0 +1,30 @@
+[
+  {
+    "type": "TimeSlotDefinition",
+    "id": "time.afternoon",
+    "asset": "Assets/Data/StudentLife/TimeSlots/TimeSlot_Afternoon.asset",
+    "displayNameKey": "time.afternoon.name",
+    "order": 1
+  },
+  {
+    "type": "TimeSlotDefinition",
+    "id": "time.evening",
+    "asset": "Assets/Data/StudentLife/TimeSlots/TimeSlot_Evening.asset",
+    "displayNameKey": "time.evening.name",
+    "order": 2
+  },
+  {
+    "type": "TimeSlotDefinition",
+    "id": "time.morning",
+    "asset": "Assets/Data/StudentLife/TimeSlots/TimeSlot_Morning.asset",
+    "displayNameKey": "time.morning.name",
+    "order": 0
+  },
+  {
+    "type": "TimeSlotDefinition",
+    "id": "time.night",
+    "asset": "Assets/Data/StudentLife/TimeSlots/TimeSlot_Night.asset",
+    "displayNameKey": "time.night.name",
+    "order": 3
+  }
+]

@@ -1,0 +1,8 @@
+[
+  {
+    "type": "LocationStateConflictPolicyDefinition",
+    "id": "LocationStateConflictPolicy_HighestPriority",
+    "asset": "Assets/Data/StudentLife/LocationStates/LocationStateConflictPolicy_HighestPriority.asset",
+    "mode": 0
+  }
+]

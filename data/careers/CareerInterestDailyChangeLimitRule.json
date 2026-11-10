@@ -1,0 +1,58 @@
+[
+  {
+    "type": "CareerInterestDailyChangeLimitRule",
+    "id": "InterestRule_Chef_DailyChangeLimit",
+    "asset": "Assets/Data/Careers/Interests/Rules/InterestRule_Chef_DailyChangeLimit.asset",
+    "maxChangesPerDay": 1,
+    "allowSameInterestNoOp": 1
+  },
+  {
+    "type": "CareerInterestDailyChangeLimitRule",
+    "id": "InterestRule_EmergencyCare_DailyChangeLimit",
+    "asset": "Assets/Data/Careers/Interests/Rules/InterestRule_EmergencyCare_DailyChangeLimit.asset",
+    "maxChangesPerDay": 1,
+    "allowSameInterestNoOp": 1
+  },
+  {
+    "type": "CareerInterestDailyChangeLimitRule",
+    "id": "InterestRule_Interior_DailyChangeLimit",
+    "asset": "Assets/Data/Careers/Interests/Rules/InterestRule_Interior_DailyChangeLimit.asset",
+    "maxChangesPerDay": 1,
+    "allowSameInterestNoOp": 1
+  },
+  {
+    "type": "CareerInterestDailyChangeLimitRule",
+    "id": "InterestRule_Investigation_DailyChangeLimit",
+    "asset": "Assets/Data/Careers/Interests/Rules/InterestRule_Investigation_DailyChangeLimit.asset",
+    "maxChangesPerDay": 1,
+    "allowSameInterestNoOp": 1
+  },
+  {
+    "type": "CareerInterestDailyChangeLimitRule",
+    "id": "InterestRule_Learning_DailyChangeLimit",
+    "asset": "Assets/Data/Careers/Interests/Rules/InterestRule_Learning_DailyChangeLimit.asset",
+    "maxChangesPerDay": 1,
+    "allowSameInterestNoOp": 1
+  },
+  {
+    "type": "CareerInterestDailyChangeLimitRule",
+    "id": "InterestRule_Service_DailyChangeLimit",
+    "asset": "Assets/Data/Careers/Interests/Rules/InterestRule_Service_DailyChangeLimit.asset",
+    "maxChangesPerDay": 1,
+    "allowSameInterestNoOp": 1
+  },
+  {
+    "type": "CareerInterestDailyChangeLimitRule",
+    "id": "InterestRule_Soldier_DailyChangeLimit",
+    "asset": "Assets/Data/Careers/Interests/Rules/InterestRule_Soldier_DailyChangeLimit.asset",
+    "maxChangesPerDay": 1,
+    "allowSameInterestNoOp": 1
+  },
+  {
+    "type": "CareerInterestDailyChangeLimitRule",
+    "id": "InterestRule_Technical_DailyChangeLimit",
+    "asset": "Assets/Data/Careers/Interests/Rules/InterestRule_Technical_DailyChangeLimit.asset",
+    "maxChangesPerDay": 1,
+    "allowSameInterestNoOp": 1
+  }
+]

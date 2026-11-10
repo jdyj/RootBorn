@@ -1,0 +1,38 @@
+[
+  {
+    "type": "HeirTrait",
+    "id": "GreenThumb",
+    "asset": "Assets/Data/Traits/Trait_GreenThumb.asset",
+    "displayKey": "trait.greenThumb",
+    "hungerDecayMul": 1,
+    "fatigueDecayMul": 1,
+    "gatherSpeedMul": 1.2,
+    "learnSpeedMul": 1,
+    "isInheritable": 1,
+    "isRandomOnly": 0
+  },
+  {
+    "type": "HeirTrait",
+    "id": "Hardy",
+    "asset": "Assets/Data/Traits/Trait_Hardy.asset",
+    "displayKey": "trait.hardy",
+    "hungerDecayMul": 1,
+    "fatigueDecayMul": 0.8,
+    "gatherSpeedMul": 1,
+    "learnSpeedMul": 1,
+    "isInheritable": 1,
+    "isRandomOnly": 0
+  },
+  {
+    "type": "HeirTrait",
+    "id": "QuickLearner",
+    "asset": "Assets/Data/Traits/Trait_QuickLearner.asset",
+    "displayKey": "trait.quickLearner",
+    "hungerDecayMul": 1,
+    "fatigueDecayMul": 1,
+    "gatherSpeedMul": 1,
+    "learnSpeedMul": 1.3,
+    "isInheritable": 1,
+    "isRandomOnly": 0
+  }
+]

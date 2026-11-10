@@ -1,0 +1,9 @@
+[
+  {
+    "type": "DailyPlanSelectedQuestObjective",
+    "id": "Objective_DailyPlan",
+    "asset": "Assets/Data/StudentLife/MainStory/Objectives/Objective_DailyPlan.asset",
+    "displayKey": "dream.objective.plan",
+    "requiredCount": 1
+  }
+]

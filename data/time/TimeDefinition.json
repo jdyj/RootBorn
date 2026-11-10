@@ -1,0 +1,10 @@
+[
+  {
+    "type": "TimeDefinition",
+    "id": "Time_Default",
+    "asset": "Assets/Data/Time/Time_Default.asset",
+    "realSecondsPerGameDay": 600,
+    "startDay": 1,
+    "initialTimeScale": 1
+  }
+]

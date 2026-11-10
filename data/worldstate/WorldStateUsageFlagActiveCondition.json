@@ -1,0 +1,7 @@
+[
+  {
+    "type": "WorldStateUsageFlagActiveCondition",
+    "id": "UsageCondition_LibraryArchiveFlagActive",
+    "asset": "Assets/Data/WorldState/Usage/Conditions/UsageCondition_LibraryArchiveFlagActive.asset"
+  }
+]

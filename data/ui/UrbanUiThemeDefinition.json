@@ -1,0 +1,330 @@
+[
+  {
+    "type": "UrbanUiThemeDefinition",
+    "id": "UrbanMoldingTheme",
+    "asset": "Assets/Data/UI/UrbanMoldingTheme.asset",
+    "panelSprite": {
+      "sprite": "Assets/Art/UI/UrbanMolding/urban-molding-atlas.png",
+      "name": "urban_panel"
+    },
+    "buttonSprite": {
+      "sprite": "Assets/Art/UI/UrbanMolding/urban-molding-atlas.png",
+      "name": "urban_button"
+    },
+    "slotSprite": {
+      "sprite": "Assets/Art/UI/UrbanMolding/urban-molding-atlas.png",
+      "name": "urban_slot"
+    },
+    "buttonTextColor": {
+      "r": 0.95686275,
+      "g": 0.92941177,
+      "b": 0.85490197,
+      "a": 1
+    },
+    "icons": [
+      {
+        "key": "journal",
+        "sprite": {
+          "sprite": "Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+          "name": "urban_icon_journal"
+        }
+      },
+      {
+        "key": "plan",
+        "sprite": {
+          "sprite": "Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+          "name": "urban_icon_plan"
+        }
+      },
+      {
+        "key": "town_map",
+        "sprite": {
+          "sprite": "Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+          "name": "urban_icon_town_map"
+        }
+      },
+      {
+        "key": "discovery",
+        "sprite": {
+          "sprite": "Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+          "name": "urban_icon_discovery"
+        }
+      },
+      {
+        "key": "chef",
+        "sprite": {
+          "sprite": "Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+          "name": "urban_icon_chef"
+        }
+      },
+      {
+        "key": "care",
+        "sprite": {
+          "sprite": "Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+          "name": "urban_icon_care"
+        }
+      },
+      {
+        "key": "interior",
+        "sprite": {
+          "sprite": "Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+          "name": "urban_icon_interior"
+        }
+      },
+      {
+        "key": "training",
+        "sprite": {
+          "sprite": "Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+          "name": "urban_icon_training"
+        }
+      },
+      {
+        "key": "time",
+        "sprite": {
+          "sprite": "Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+          "name": "urban_icon_time"
+        }
+      },
+      {
+        "key": "energy",
+        "sprite": {
+          "sprite": "Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+          "name": "urban_icon_energy"
+        }
+      },
+      {
+        "key": "focus",
+        "sprite": {
+          "sprite": "Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+          "name": "urban_icon_focus"
+        }
+      },
+      {
+        "key": "money",
+        "sprite": {
+          "sprite": "Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+          "name": "urban_icon_money"
+        }
+      },
+      {
+        "key": "school",
+        "sprite": {
+          "sprite": "Assets/Art/SchoolPixels/sprites/school.png",
+          "name": "school"
+        }
+      },
+      {
+        "key": "inventory-all",
+        "sprite": {
+          "sprite": "Assets/Art/UI/UrbanMolding/student_backpack.png",
+          "name": "student_backpack"
+        }
+      },
+      {
+        "key": "inventory-tools",
+        "sprite": {
+          "sprite": "Assets/Art/UI/UrbanMolding/toolbox.png",
+          "name": "toolbox"
+        }
+      },
+      {
+        "key": "inventory-consumables",
+        "sprite": {
+          "sprite": "Assets/Art/UI/UrbanMolding/water_bottle.png",
+          "name": "water_bottle"
+        }
+      },
+      {
+        "key": "inventory-misc",
+        "sprite": {
+          "sprite": "Assets/Art/UI/UrbanMolding/folder.png",
+          "name": "folder"
+        }
+      },
+      {
+        "key": "inventory-search",
+        "sprite": {
+          "sprite": "Assets/Art/UI/UrbanMolding/inventory_search.png",
+          "name": "inventory_search"
+        }
+      },
+      {
+        "key": "inventory-delete",
+        "sprite": {
+          "sprite": "Assets/Art/UI/UrbanMolding/inventory_delete.png",
+          "name": "inventory_delete"
+        }
+      },
+      {
+        "key": "inventory-filter",
+        "sprite": {
+          "sprite": "Assets/Art/UI/UrbanMolding/inventory_filter.png",
+          "name": "inventory_filter"
+        }
+      },
+      {
+        "key": "close",
+        "sprite": {
+          "sprite": "Assets/Art/UI/UrbanMolding/inventory_close.png",
+          "name": "inventory_close"
+        }
+      },
+      {
+        "key": "stress",
+        "sprite": {
+          "sprite": "Assets/Art/UI/UrbanMolding/urban_icon_stress.png",
+          "name": "urban_icon_stress"
+        }
+      },
+      {
+        "key": "daily-planner",
+        "sprite": {
+          "sprite": "Assets/Art/UI/UrbanMolding/daily_planner.png",
+          "name": "daily_planner"
+        }
+      },
+      {
+        "key": "inventory-empty",
+        "sprite": {
+          "sprite": "Assets/Art/UI/UrbanMolding/inventory_empty.png",
+          "name": "inventory_empty"
+        }
+      },
+      {
+        "key": "encyclopedia",
+        "sprite": {
+          "sprite": "Assets/Art/UI/UrbanMolding/encyclopedia_reference.png",
+          "name": "encyclopedia_reference"
+        }
+      },
+      {
+        "key": "facility-upgrade",
+        "sprite": {
+          "sprite": "Assets/Art/UI/UrbanMolding/facility_upgrade_blueprint.png",
+          "name": "facility_upgrade_blueprint"
+        }
+      }
+    ],
+    "presentations": [
+      {
+        "definition": {
+          "ref": "interest.investigation",
+          "type": "CareerInterestDefinition"
+        },
+        "iconKey": "discovery"
+      },
+      {
+        "definition": {
+          "ref": "interest.learning",
+          "type": "CareerInterestDefinition"
+        },
+        "iconKey": "journal"
+      },
+      {
+        "definition": {
+          "ref": "interest.service",
+          "type": "CareerInterestDefinition"
+        },
+        "iconKey": "care"
+      },
+      {
+        "definition": {
+          "ref": "interest.technical",
+          "type": "CareerInterestDefinition"
+        },
+        "iconKey": "interior"
+      },
+      {
+        "definition": {
+          "ref": "daily.practice.chef",
+          "type": "DailyPlanRouteDefinition"
+        },
+        "iconKey": "chef"
+      },
+      {
+        "definition": {
+          "ref": "daily.practice.emergency-care",
+          "type": "DailyPlanRouteDefinition"
+        },
+        "iconKey": "care"
+      },
+      {
+        "definition": {
+          "ref": "daily.practice.interior",
+          "type": "DailyPlanRouteDefinition"
+        },
+        "iconKey": "interior"
+      },
+      {
+        "definition": {
+          "ref": "daily.practice.soldier",
+          "type": "DailyPlanRouteDefinition"
+        },
+        "iconKey": "training"
+      },
+      {
+        "definition": {
+          "ref": "daily.work.corner-store",
+          "type": "DailyPlanRouteDefinition"
+        },
+        "iconKey": "money"
+      },
+      {
+        "definition": {
+          "ref": "daily.work.workshop-helper",
+          "type": "DailyPlanRouteDefinition"
+        },
+        "iconKey": "interior"
+      },
+      {
+        "definition": {
+          "ref": "daily.library.self-study",
+          "type": "DailyPlanRouteDefinition"
+        },
+        "iconKey": "focus"
+      },
+      {
+        "definition": {
+          "ref": "daily.route.library.archive-research",
+          "type": "DailyPlanRouteDefinition"
+        },
+        "iconKey": "discovery"
+      },
+      {
+        "definition": {
+          "ref": "daily.route.questchain.library-reward",
+          "type": "DailyPlanRouteDefinition"
+        },
+        "iconKey": "journal"
+      },
+      {
+        "definition": {
+          "ref": "daily.workshop.shift",
+          "type": "DailyPlanRouteDefinition"
+        },
+        "iconKey": "money"
+      },
+      {
+        "definition": {
+          "ref": "daily.route.workshop.repair-ledger",
+          "type": "DailyPlanRouteDefinition"
+        },
+        "iconKey": "interior"
+      },
+      {
+        "definition": {
+          "ref": "daily.town-square.help",
+          "type": "DailyPlanRouteDefinition"
+        },
+        "iconKey": "care"
+      },
+      {
+        "definition": {
+          "ref": "daily.route.career.interior-practice",
+          "type": "DailyPlanRouteDefinition"
+        },
+        "iconKey": "interior"
+      }
+    ]
+  }
+]

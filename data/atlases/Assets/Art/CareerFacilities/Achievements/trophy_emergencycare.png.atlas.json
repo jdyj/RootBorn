@@ -1,0 +1,19 @@
+{
+  "image": "Assets/Art/CareerFacilities/Achievements/trophy_emergencycare.png",
+  "width": 64,
+  "height": 64,
+  "pixelsPerUnit": 48,
+  "origin": "top-left",
+  "sprites": {
+    "trophy_emergencycare": {
+      "x": 0,
+      "y": 0,
+      "w": 64,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  }
+}

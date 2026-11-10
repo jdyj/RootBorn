@@ -1,0 +1,19 @@
+{
+  "image": "Assets/Art/UrbanStreet/Urban31/Urban31_lamp_1x1.png",
+  "width": 48,
+  "height": 192,
+  "pixelsPerUnit": 48,
+  "origin": "top-left",
+  "sprites": {
+    "Urban31_lamp_1x1": {
+      "x": 0,
+      "y": 0,
+      "w": 48,
+      "h": 192,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.875
+      }
+    }
+  }
+}

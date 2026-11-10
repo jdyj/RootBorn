@@ -1,0 +1,128 @@
+[
+  {
+    "type": "CareerResultLogHintSource",
+    "id": "Careers/Facilities/Chef/Source_Introduction",
+    "asset": "Assets/Data/Careers/Facilities/Chef/Source_Introduction.asset",
+    "requiredText": "opening.introduce.restaurant"
+  },
+  {
+    "type": "CareerResultLogHintSource",
+    "id": "Careers/Facilities/Chef/Source_Practice",
+    "asset": "Assets/Data/Careers/Facilities/Chef/Source_Practice.asset",
+    "requiredText": "practice.chef"
+  },
+  {
+    "type": "CareerResultLogHintSource",
+    "id": "Careers/Facilities/EmergencyCare/Source_Introduction",
+    "asset": "Assets/Data/Careers/Facilities/EmergencyCare/Source_Introduction.asset",
+    "requiredText": "opening.introduce.medical-clinic"
+  },
+  {
+    "type": "CareerResultLogHintSource",
+    "id": "Careers/Facilities/EmergencyCare/Source_Practice",
+    "asset": "Assets/Data/Careers/Facilities/EmergencyCare/Source_Practice.asset",
+    "requiredText": "practice.emergency-care"
+  },
+  {
+    "type": "CareerResultLogHintSource",
+    "id": "Careers/Facilities/Interior/Source_Introduction",
+    "asset": "Assets/Data/Careers/Facilities/Interior/Source_Introduction.asset",
+    "requiredText": "opening.introduce.design-studio"
+  },
+  {
+    "type": "CareerResultLogHintSource",
+    "id": "Careers/Facilities/Interior/Source_Practice",
+    "asset": "Assets/Data/Careers/Facilities/Interior/Source_Practice.asset",
+    "requiredText": "practice.interior"
+  },
+  {
+    "type": "CareerResultLogHintSource",
+    "id": "Careers/Facilities/Soldier/Source_Introduction",
+    "asset": "Assets/Data/Careers/Facilities/Soldier/Source_Introduction.asset",
+    "requiredText": "opening.introduce.training-ground"
+  },
+  {
+    "type": "CareerResultLogHintSource",
+    "id": "Careers/Facilities/Soldier/Source_Practice",
+    "asset": "Assets/Data/Careers/Facilities/Soldier/Source_Practice.asset",
+    "requiredText": "practice.soldier"
+  },
+  {
+    "type": "CareerResultLogHintSource",
+    "id": "Source_Hint_Investigation_Store",
+    "asset": "Assets/Data/Careers/Sources/Source_Hint_Investigation_Store.asset",
+    "requiredText": "location.activity.store-browse"
+  },
+  {
+    "type": "CareerResultLogHintSource",
+    "id": "Source_Hint_Learning_Library",
+    "asset": "Assets/Data/Careers/Sources/Source_Hint_Learning_Library.asset",
+    "requiredText": "location.activity.library-hard-book"
+  },
+  {
+    "type": "CareerResultLogHintSource",
+    "id": "Source_Hint_Learning_School",
+    "asset": "Assets/Data/Careers/Sources/Source_Hint_Learning_School.asset",
+    "requiredText": "location.activity.school-class"
+  },
+  {
+    "type": "CareerResultLogHintSource",
+    "id": "Source_Hint_Service_Square",
+    "asset": "Assets/Data/Careers/Sources/Source_Hint_Service_Square.asset",
+    "requiredText": "location.activity.square-help-request"
+  },
+  {
+    "type": "CareerResultLogHintSource",
+    "id": "Source_Hint_Technical_Workshop",
+    "asset": "Assets/Data/Careers/Sources/Source_Hint_Technical_Workshop.asset",
+    "requiredText": "location.activity.workshop-shift"
+  },
+  {
+    "type": "CareerResultLogHintSource",
+    "id": "Source_Job_ClinicHelper",
+    "asset": "Assets/Data/Careers/Facilities/EmergencyCare/Source_Job_ClinicHelper.asset",
+    "requiredText": "work.clinic-helper"
+  },
+  {
+    "type": "CareerResultLogHintSource",
+    "id": "Source_Job_ErrandHelper",
+    "asset": "Assets/Data/Careers/Facilities/Chef/Source_Job_ErrandHelper.asset",
+    "requiredText": "work.errand-helper"
+  },
+  {
+    "type": "CareerResultLogHintSource",
+    "id": "Source_Job_FitnessHelper",
+    "asset": "Assets/Data/Careers/Facilities/Soldier/Source_Job_FitnessHelper.asset",
+    "requiredText": "work.fitness-helper"
+  },
+  {
+    "type": "CareerResultLogHintSource",
+    "id": "Source_Job_RestaurantHelper",
+    "asset": "Assets/Data/Careers/Facilities/Chef/Source_Job_RestaurantHelper.asset",
+    "requiredText": "work.restaurant-helper"
+  },
+  {
+    "type": "CareerResultLogHintSource",
+    "id": "Source_Job_StudioHelper",
+    "asset": "Assets/Data/Careers/Facilities/Interior/Source_Job_StudioHelper.asset",
+    "requiredText": "work.studio-helper"
+  },
+  {
+    "type": "CareerResultLogHintSource",
+    "id": "Source_Job_SupplyHelper",
+    "asset": "Assets/Data/Careers/Facilities/EmergencyCare/Source_Job_SupplyHelper.asset",
+    "requiredText": "work.supply-helper"
+  },
+  {
+    "type": "CareerResultLogHintSource",
+    "id": "Source_Job_TrainingHelper",
+    "asset": "Assets/Data/Careers/Facilities/Soldier/Source_Job_TrainingHelper.asset",
+    "requiredText": "work.training-helper"
+  },
+  {
+    "type": "CareerResultLogHintSource",
+    "id": "Source_Job_WorkshopHelper",
+    "asset": "Assets/Data/Careers/Facilities/Interior/Source_Job_WorkshopHelper.asset",
+    "requiredText": "work.workshop-helper"
+  }
+]

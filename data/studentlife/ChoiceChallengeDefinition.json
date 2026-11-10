@@ -1,0 +1,101 @@
+[
+  {
+    "type": "ChoiceChallengeDefinition",
+    "id": "Care1",
+    "asset": "Assets/Data/StudentLife/Minigames/Challenges/Care1.asset",
+    "instructionKey": "minigame.care.instructions",
+    "symbolSprites": [
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/bandage.png",
+        "name": "bandage"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/thermometer.png",
+        "name": "thermometer"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/water_bottle.png",
+        "name": "water_bottle"
+      }
+    ],
+    "timeLimitSeconds": 32,
+    "mistakeAllowance": 6,
+    "answers": "000000000100000002000000",
+    "prompts": [
+      "minigame.care.scrape",
+      "minigame.care.temperature",
+      "minigame.care.rest"
+    ],
+    "symbols": [
+      "minigame.tool.bandage",
+      "minigame.tool.thermometer",
+      "minigame.tool.water"
+    ]
+  },
+  {
+    "type": "ChoiceChallengeDefinition",
+    "id": "Care2",
+    "asset": "Assets/Data/StudentLife/Minigames/Challenges/Care2.asset",
+    "instructionKey": "minigame.care.instructions",
+    "symbolSprites": [
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/bandage.png",
+        "name": "bandage"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/thermometer.png",
+        "name": "thermometer"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/water_bottle.png",
+        "name": "water_bottle"
+      }
+    ],
+    "timeLimitSeconds": 29,
+    "mistakeAllowance": 6,
+    "answers": "000000000100000002000000",
+    "prompts": [
+      "minigame.care.scrape",
+      "minigame.care.temperature",
+      "minigame.care.rest"
+    ],
+    "symbols": [
+      "minigame.tool.bandage",
+      "minigame.tool.thermometer",
+      "minigame.tool.water"
+    ]
+  },
+  {
+    "type": "ChoiceChallengeDefinition",
+    "id": "Care3",
+    "asset": "Assets/Data/StudentLife/Minigames/Challenges/Care3.asset",
+    "instructionKey": "minigame.care.instructions",
+    "symbolSprites": [
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/bandage.png",
+        "name": "bandage"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/thermometer.png",
+        "name": "thermometer"
+      },
+      {
+        "sprite": "Assets/Art/CareerMinigames/Comfy31/water_bottle.png",
+        "name": "water_bottle"
+      }
+    ],
+    "timeLimitSeconds": 26,
+    "mistakeAllowance": 6,
+    "answers": "000000000100000002000000",
+    "prompts": [
+      "minigame.care.scrape",
+      "minigame.care.temperature",
+      "minigame.care.rest"
+    ],
+    "symbols": [
+      "minigame.tool.bandage",
+      "minigame.tool.thermometer",
+      "minigame.tool.water"
+    ]
+  }
+]

@@ -1,0 +1,96 @@
+[
+  {
+    "type": "ExplorationChoiceDefinition",
+    "id": "choice.test.careful",
+    "asset": "Assets/Data/StudentLife/ExplorationInteractions/Choices/Choice_Exploration_TestCareful.asset",
+    "displayNameKey": "choice.test.careful",
+    "descriptionKey": "choice.test.careful.desc",
+    "conditions": [
+      {
+        "ref": "Condition_Exploration_TestTrait",
+        "type": "ExplorationTraitThresholdCondition"
+      }
+    ],
+    "outcomes": [
+      {
+        "ref": "Outcome_Exploration_TestCareer",
+        "type": "ExplorationCareerHintOutcome"
+      },
+      {
+        "ref": "Outcome_Exploration_TestTrait",
+        "type": "ExplorationTraitDeltaOutcome"
+      }
+    ],
+    "riskPolicy": {
+      "ref": "RiskPolicy_Exploration_Test",
+      "type": "ExplorationRiskPolicyDefinition"
+    },
+    "repeatable": 0,
+    "previewHintKey": "choice.test.careful.preview"
+  },
+  {
+    "type": "ExplorationChoiceDefinition",
+    "id": "choice.test.discovery",
+    "asset": "Assets/Data/StudentLife/ExplorationInteractions/Choices/Choice_Exploration_TestDiscovery.asset",
+    "displayNameKey": "choice.test.discovery",
+    "descriptionKey": "choice.test.discovery.desc",
+    "conditions": [],
+    "outcomes": [
+      {
+        "ref": "Outcome_Exploration_TestClue",
+        "type": "ExplorationClueOutcome"
+      },
+      {
+        "ref": "Outcome_Exploration_TestEncyclopedia",
+        "type": "ExplorationEncyclopediaOutcome"
+      },
+      {
+        "ref": "Outcome_Exploration_TestFollowUpQuest",
+        "type": "ExplorationFollowUpQuestOutcome"
+      }
+    ],
+    "riskPolicy": {
+      "ref": "RiskPolicy_Exploration_Test",
+      "type": "ExplorationRiskPolicyDefinition"
+    },
+    "repeatable": 0,
+    "previewHintKey": "choice.test.discovery.preview"
+  },
+  {
+    "type": "ExplorationChoiceDefinition",
+    "id": "choice.test.inspect",
+    "asset": "Assets/Data/StudentLife/ExplorationInteractions/Choices/Choice_Exploration_TestInspect.asset",
+    "displayNameKey": "choice.test.inspect",
+    "descriptionKey": "choice.test.inspect.desc",
+    "conditions": [],
+    "outcomes": [
+      {
+        "ref": "Outcome_Exploration_TestItem",
+        "type": "ExplorationItemGrantOutcome"
+      },
+      {
+        "ref": "Outcome_Exploration_TestTrait",
+        "type": "ExplorationTraitDeltaOutcome"
+      }
+    ],
+    "riskPolicy": {
+      "ref": "RiskPolicy_Exploration_Test",
+      "type": "ExplorationRiskPolicyDefinition"
+    },
+    "repeatable": 0,
+    "previewHintKey": "choice.test.inspect.preview"
+  },
+  {
+    "type": "ExplorationChoiceDefinition",
+    "id": "choice.test.leave",
+    "asset": "Assets/Data/StudentLife/ExplorationInteractions/Choices/Choice_Exploration_TestLeave.asset",
+    "displayNameKey": "choice.test.leave",
+    "descriptionKey": "choice.test.leave.desc",
+    "conditions": [],
+    "outcomes": [],
+    "riskPolicy": null,
+    "repeatable": 1,
+    "previewHintKey": "choice.test.leave.preview",
+    "dismissesInteraction": 1
+  }
+]

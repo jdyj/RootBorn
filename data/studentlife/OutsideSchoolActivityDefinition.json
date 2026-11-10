@@ -1,0 +1,56 @@
+[
+  {
+    "type": "OutsideSchoolActivityDefinition",
+    "id": "outside.help-neighbor",
+    "asset": "Assets/Data/StudentLife/OutsideSchool/OutsideActivity_HelpNeighbor.asset",
+    "displayNameKey": "outside.help-neighbor",
+    "category": {
+      "ref": "outside.category.help",
+      "type": "OutsideSchoolActivityCategoryDefinition"
+    },
+    "timePolicy": {
+      "ref": "paid-activity",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 30,
+    "energyCost": 1,
+    "focusCost": 0,
+    "stressDelta": 0,
+    "requirements": [],
+    "outcomes": [
+      {
+        "ref": "OutsideOutcome_HelpResponsibility",
+        "type": "OutsideSchoolTraitDeltaOutcome"
+      }
+    ]
+  },
+  {
+    "type": "OutsideSchoolActivityDefinition",
+    "id": "outside.self-study.library",
+    "asset": "Assets/Data/StudentLife/OutsideSchool/OutsideActivity_LibrarySelfStudy.asset",
+    "displayNameKey": "outside.self-study.library",
+    "category": {
+      "ref": "outside.category.self-study",
+      "type": "OutsideSchoolActivityCategoryDefinition"
+    },
+    "timePolicy": {
+      "ref": "paid-activity",
+      "type": "ActivityTimePolicyDefinition"
+    },
+    "timeCostMinutes": 45,
+    "energyCost": 1,
+    "focusCost": 2,
+    "stressDelta": 1,
+    "requirements": [],
+    "outcomes": [
+      {
+        "ref": "OutsideOutcome_LibraryFocus",
+        "type": "OutsideSchoolTraitDeltaOutcome"
+      },
+      {
+        "ref": "OutsideOutcome_LibraryBasicStudy",
+        "type": "OutsideSchoolSkillDeltaOutcome"
+      }
+    ]
+  }
+]

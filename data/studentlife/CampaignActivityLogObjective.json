@@ -1,0 +1,137 @@
+[
+  {
+    "type": "CampaignActivityLogObjective",
+    "id": "campaign.objective.career-hint",
+    "asset": "Assets/Data/StudentLife/Campaigns/Objectives/Objective_CareerHint.asset",
+    "displayNameKey": "campaign.objective.career-hint",
+    "requiresSchoolClass": 0,
+    "requiredLogPrefix": "daily-event:",
+    "requiredCount": 1
+  },
+  {
+    "type": "CampaignActivityLogObjective",
+    "id": "campaign.objective.school-free-growth",
+    "asset": "Assets/Data/StudentLife/Campaigns/Objectives/Objective_SchoolFreeGrowth.asset",
+    "displayNameKey": "campaign.objective.school-free-growth",
+    "requiresSchoolClass": 0,
+    "requiredLogPrefix": "daily-event:",
+    "requiredCount": 1
+  },
+  {
+    "type": "CampaignActivityLogObjective",
+    "id": "opening.campaign.objective.Archive",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Objective_ReadJobBooks.asset",
+    "displayNameKey": "dream.route.job-books",
+    "requiresSchoolClass": 0,
+    "requiredLogPrefix": "opening.clue.archive-door",
+    "requiredCount": 1
+  },
+  {
+    "type": "CampaignActivityLogObjective",
+    "id": "opening.campaign.objective.ClinicWork",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Objective_ClinicWork.asset",
+    "displayNameKey": "dream.route.clinic-work",
+    "requiresSchoolClass": 0,
+    "requiredLogPrefix": "work.clinic-helper",
+    "requiredCount": 1
+  },
+  {
+    "type": "CampaignActivityLogObjective",
+    "id": "opening.campaign.objective.ErrandWork",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Objective_ErrandWork.asset",
+    "displayNameKey": "dream.route.errand-work",
+    "requiresSchoolClass": 0,
+    "requiredLogPrefix": "work.errand-helper",
+    "requiredCount": 1
+  },
+  {
+    "type": "CampaignActivityLogObjective",
+    "id": "opening.campaign.objective.FitnessWork",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Objective_FitnessWork.asset",
+    "displayNameKey": "dream.route.fitness-work",
+    "requiresSchoolClass": 0,
+    "requiredLogPrefix": "work.fitness-helper",
+    "requiredCount": 1
+  },
+  {
+    "type": "CampaignActivityLogObjective",
+    "id": "opening.campaign.objective.Ledger",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Objective_WatchWorkshopWork.asset",
+    "displayNameKey": "dream.route.watch-work",
+    "requiresSchoolClass": 0,
+    "requiredLogPrefix": "opening.clue.repair-ledger",
+    "requiredCount": 1
+  },
+  {
+    "type": "CampaignActivityLogObjective",
+    "id": "opening.campaign.objective.RestaurantWork",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Objective_RestaurantWork.asset",
+    "displayNameKey": "dream.route.restaurant-work",
+    "requiresSchoolClass": 0,
+    "requiredLogPrefix": "work.restaurant-helper",
+    "requiredCount": 1
+  },
+  {
+    "type": "CampaignActivityLogObjective",
+    "id": "opening.campaign.objective.SelfStudy",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Objective_SelfStudy.asset",
+    "displayNameKey": "opening.route.SelfStudy",
+    "requiresSchoolClass": 0,
+    "requiredLogPrefix": "location.activity.library-hard-book",
+    "requiredCount": 1
+  },
+  {
+    "type": "CampaignActivityLogObjective",
+    "id": "opening.campaign.objective.StoreWork",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Objective_StoreWork.asset",
+    "displayNameKey": "opening.route.StoreWork",
+    "requiresSchoolClass": 0,
+    "requiredLogPrefix": "work.shift.corner-store",
+    "requiredCount": 1
+  },
+  {
+    "type": "CampaignActivityLogObjective",
+    "id": "opening.campaign.objective.StudioWork",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Objective_StudioWork.asset",
+    "displayNameKey": "dream.route.studio-work",
+    "requiresSchoolClass": 0,
+    "requiredLogPrefix": "work.studio-helper",
+    "requiredCount": 1
+  },
+  {
+    "type": "CampaignActivityLogObjective",
+    "id": "opening.campaign.objective.SupplyWork",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Objective_SupplyWork.asset",
+    "displayNameKey": "dream.route.supply-work",
+    "requiresSchoolClass": 0,
+    "requiredLogPrefix": "work.supply-helper",
+    "requiredCount": 1
+  },
+  {
+    "type": "CampaignActivityLogObjective",
+    "id": "opening.campaign.objective.Teacher",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Objective_Teacher.asset",
+    "displayNameKey": "opening.route.Teacher",
+    "requiresSchoolClass": 0,
+    "requiredLogPrefix": "npc:npc.teacher:met",
+    "requiredCount": 1
+  },
+  {
+    "type": "CampaignActivityLogObjective",
+    "id": "opening.campaign.objective.TrainingWork",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Objective_TrainingWork.asset",
+    "displayNameKey": "dream.route.training-work",
+    "requiresSchoolClass": 0,
+    "requiredLogPrefix": "work.training-helper",
+    "requiredCount": 1
+  },
+  {
+    "type": "CampaignActivityLogObjective",
+    "id": "opening.campaign.objective.WorkshopWork",
+    "asset": "Assets/Data/StudentLife/MainStory/Campaigns/Objective_WorkshopWork.asset",
+    "displayNameKey": "opening.route.WorkshopWork",
+    "requiresSchoolClass": 0,
+    "requiredLogPrefix": "work.workshop-helper",
+    "requiredCount": 1
+  }
+]

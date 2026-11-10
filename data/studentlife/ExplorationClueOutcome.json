@@ -1,0 +1,15 @@
+[
+  {
+    "type": "ExplorationClueOutcome",
+    "id": "Outcome_Exploration_TestClue",
+    "asset": "Assets/Data/StudentLife/ExplorationInteractions/Outcomes/Outcome_Exploration_TestClue.asset",
+    "clue": {
+      "ref": "clue.discovery.library-archive-rumor",
+      "type": "DiscoveryClueDefinition"
+    },
+    "source": {
+      "ref": "source.discovery.librarian-rumor",
+      "type": "DiscoveryClueSourceDefinition"
+    }
+  }
+]

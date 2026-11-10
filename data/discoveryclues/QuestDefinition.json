@@ -1,0 +1,26 @@
+[
+  {
+    "type": "QuestDefinition",
+    "id": "Quest_DiscoveryClue_LibraryFollowUp",
+    "asset": "Assets/Data/DiscoveryClues/Quests/Quest_DiscoveryClue_LibraryFollowUp.asset",
+    "displayNameKey": "",
+    "descriptionKey": "",
+    "providerConditions": [],
+    "prerequisites": [],
+    "objectives": [],
+    "rewards": [],
+    "completionEffects": []
+  },
+  {
+    "type": "QuestDefinition",
+    "id": "quest.discovery.play-followup",
+    "asset": "Assets/Data/DiscoveryClues/Quests/Quest_DiscoveryClue_PlayLoop.asset",
+    "displayNameKey": "Play clue follow-up",
+    "descriptionKey": "Follow the play clue.",
+    "providerConditions": [],
+    "prerequisites": [],
+    "objectives": [],
+    "rewards": [],
+    "completionEffects": []
+  }
+]

@@ -1,0 +1,12 @@
+[
+  {
+    "type": "DailyEventStatusDeltaOutcome",
+    "id": "DailyEventOutcome_FatiguePlus",
+    "asset": "Assets/Data/StudentLife/DailyEvents/Outcomes/DailyEventOutcome_FatiguePlus.asset",
+    "status": {
+      "ref": "status.fatigue",
+      "type": "StatusDefinition"
+    },
+    "delta": 1
+  }
+]

@@ -1,0 +1,200 @@
+[
+  {
+    "type": "DialogueChoiceDefinition",
+    "id": "Choice_AcceptCareer_Chef",
+    "asset": "Assets/Data/Quests/CareerRoutes/Dialogue/Choice_AcceptCareer_Chef.asset",
+    "labelKey": "dialogue.choice.acceptCareer.chef",
+    "questAction": 1,
+    "quest": {
+      "ref": "quest.career.chef",
+      "type": "QuestDefinition"
+    }
+  },
+  {
+    "type": "DialogueChoiceDefinition",
+    "id": "Choice_AcceptCareer_EmergencyCare",
+    "asset": "Assets/Data/Quests/CareerRoutes/Dialogue/Choice_AcceptCareer_EmergencyCare.asset",
+    "labelKey": "dialogue.choice.acceptCareer.emergency-care",
+    "questAction": 1,
+    "quest": {
+      "ref": "quest.career.emergency-care",
+      "type": "QuestDefinition"
+    }
+  },
+  {
+    "type": "DialogueChoiceDefinition",
+    "id": "Choice_AcceptCareer_Interior",
+    "asset": "Assets/Data/Quests/CareerRoutes/Dialogue/Choice_AcceptCareer_Interior.asset",
+    "labelKey": "dialogue.choice.acceptCareer.interior",
+    "questAction": 1,
+    "quest": {
+      "ref": "quest.career.interior",
+      "type": "QuestDefinition"
+    }
+  },
+  {
+    "type": "DialogueChoiceDefinition",
+    "id": "Choice_AcceptCareer_Soldier",
+    "asset": "Assets/Data/Quests/CareerRoutes/Dialogue/Choice_AcceptCareer_Soldier.asset",
+    "labelKey": "dialogue.choice.acceptCareer.soldier",
+    "questAction": 1,
+    "quest": {
+      "ref": "quest.career.soldier",
+      "type": "QuestDefinition"
+    }
+  },
+  {
+    "type": "DialogueChoiceDefinition",
+    "id": "Choice_Accept_quest_career_chef",
+    "asset": "Assets/Data/Quests/CareerRoutes/Dialogue/Choice_Accept_quest_career_chef.asset",
+    "labelKey": "dialogue.choice.accept.quest_career_chef",
+    "questAction": 1,
+    "quest": {
+      "ref": "quest.career.chef",
+      "type": "QuestDefinition"
+    }
+  },
+  {
+    "type": "DialogueChoiceDefinition",
+    "id": "Choice_Accept_quest_career_emergency_care",
+    "asset": "Assets/Data/Quests/CareerRoutes/Dialogue/Choice_Accept_quest_career_emergency_care.asset",
+    "labelKey": "dialogue.choice.accept.quest_career_emergency_care",
+    "questAction": 1,
+    "quest": {
+      "ref": "quest.career.emergency-care",
+      "type": "QuestDefinition"
+    }
+  },
+  {
+    "type": "DialogueChoiceDefinition",
+    "id": "Choice_Accept_quest_career_interior",
+    "asset": "Assets/Data/Quests/CareerRoutes/Dialogue/Choice_Accept_quest_career_interior.asset",
+    "labelKey": "dialogue.choice.accept.quest_career_interior",
+    "questAction": 1,
+    "quest": {
+      "ref": "quest.career.interior",
+      "type": "QuestDefinition"
+    }
+  },
+  {
+    "type": "DialogueChoiceDefinition",
+    "id": "Choice_Accept_quest_career_soldier",
+    "asset": "Assets/Data/Quests/CareerRoutes/Dialogue/Choice_Accept_quest_career_soldier.asset",
+    "labelKey": "dialogue.choice.accept.quest_career_soldier",
+    "questAction": 1,
+    "quest": {
+      "ref": "quest.career.soldier",
+      "type": "QuestDefinition"
+    }
+  },
+  {
+    "type": "DialogueChoiceDefinition",
+    "id": "Choice_Accept_quest_gatherWood",
+    "asset": "Assets/Data/Quests/CareerRoutes/Dialogue/Choice_Accept_quest_gatherWood.asset",
+    "labelKey": "dialogue.choice.accept.quest_gatherWood",
+    "questAction": 1,
+    "quest": {
+      "ref": "quest.gatherWood",
+      "type": "QuestDefinition"
+    }
+  },
+  {
+    "type": "DialogueChoiceDefinition",
+    "id": "Choice_ClaimCareer_Chef",
+    "asset": "Assets/Data/Quests/CareerRoutes/Dialogue/Choice_ClaimCareer_Chef.asset",
+    "labelKey": "dialogue.choice.claimCareer.chef",
+    "questAction": 2,
+    "quest": {
+      "ref": "quest.career.chef",
+      "type": "QuestDefinition"
+    }
+  },
+  {
+    "type": "DialogueChoiceDefinition",
+    "id": "Choice_ClaimCareer_EmergencyCare",
+    "asset": "Assets/Data/Quests/CareerRoutes/Dialogue/Choice_ClaimCareer_EmergencyCare.asset",
+    "labelKey": "dialogue.choice.claimCareer.emergency-care",
+    "questAction": 2,
+    "quest": {
+      "ref": "quest.career.emergency-care",
+      "type": "QuestDefinition"
+    }
+  },
+  {
+    "type": "DialogueChoiceDefinition",
+    "id": "Choice_ClaimCareer_Interior",
+    "asset": "Assets/Data/Quests/CareerRoutes/Dialogue/Choice_ClaimCareer_Interior.asset",
+    "labelKey": "dialogue.choice.claimCareer.interior",
+    "questAction": 2,
+    "quest": {
+      "ref": "quest.career.interior",
+      "type": "QuestDefinition"
+    }
+  },
+  {
+    "type": "DialogueChoiceDefinition",
+    "id": "Choice_ClaimCareer_Soldier",
+    "asset": "Assets/Data/Quests/CareerRoutes/Dialogue/Choice_ClaimCareer_Soldier.asset",
+    "labelKey": "dialogue.choice.claimCareer.soldier",
+    "questAction": 2,
+    "quest": {
+      "ref": "quest.career.soldier",
+      "type": "QuestDefinition"
+    }
+  },
+  {
+    "type": "DialogueChoiceDefinition",
+    "id": "Choice_Claim_quest_career_chef",
+    "asset": "Assets/Data/Quests/CareerRoutes/Dialogue/Choice_Claim_quest_career_chef.asset",
+    "labelKey": "dialogue.choice.claim.quest_career_chef",
+    "questAction": 2,
+    "quest": {
+      "ref": "quest.career.chef",
+      "type": "QuestDefinition"
+    }
+  },
+  {
+    "type": "DialogueChoiceDefinition",
+    "id": "Choice_Claim_quest_career_emergency_care",
+    "asset": "Assets/Data/Quests/CareerRoutes/Dialogue/Choice_Claim_quest_career_emergency_care.asset",
+    "labelKey": "dialogue.choice.claim.quest_career_emergency_care",
+    "questAction": 2,
+    "quest": {
+      "ref": "quest.career.emergency-care",
+      "type": "QuestDefinition"
+    }
+  },
+  {
+    "type": "DialogueChoiceDefinition",
+    "id": "Choice_Claim_quest_career_interior",
+    "asset": "Assets/Data/Quests/CareerRoutes/Dialogue/Choice_Claim_quest_career_interior.asset",
+    "labelKey": "dialogue.choice.claim.quest_career_interior",
+    "questAction": 2,
+    "quest": {
+      "ref": "quest.career.interior",
+      "type": "QuestDefinition"
+    }
+  },
+  {
+    "type": "DialogueChoiceDefinition",
+    "id": "Choice_Claim_quest_career_soldier",
+    "asset": "Assets/Data/Quests/CareerRoutes/Dialogue/Choice_Claim_quest_career_soldier.asset",
+    "labelKey": "dialogue.choice.claim.quest_career_soldier",
+    "questAction": 2,
+    "quest": {
+      "ref": "quest.career.soldier",
+      "type": "QuestDefinition"
+    }
+  },
+  {
+    "type": "DialogueChoiceDefinition",
+    "id": "Choice_Claim_quest_gatherWood",
+    "asset": "Assets/Data/Quests/CareerRoutes/Dialogue/Choice_Claim_quest_gatherWood.asset",
+    "labelKey": "dialogue.choice.claim.quest_gatherWood",
+    "questAction": 2,
+    "quest": {
+      "ref": "quest.gatherWood",
+      "type": "QuestDefinition"
+    }
+  }
+]

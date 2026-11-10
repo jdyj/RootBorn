@@ -1,0 +1,13 @@
+[
+  {
+    "type": "ClueInterpretationEncyclopediaOutcome",
+    "id": "InterpretationOutcome_Encyclopedia",
+    "asset": "Assets/Data/DiscoveryClues/Interpretations/InterpretationOutcome_Encyclopedia.asset",
+    "entries": [
+      {
+        "ref": "ency.location.first-discovery",
+        "type": "EncyclopediaEntryDefinition"
+      }
+    ]
+  }
+]
