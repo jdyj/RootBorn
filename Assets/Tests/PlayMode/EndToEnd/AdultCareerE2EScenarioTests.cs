@@ -172,6 +172,76 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.AreEqual(before + 1, WorkOf(owner, FirstWorkId).SuccessfulCompletions, F + " work after the ending did not count. " + Describe(panel));
         }
 
+        // ADULT-E2E-004 (audit 4.3/4.4): one more passed work from the screen unlocks auto-complete (mastery 100, five
+        // successes, level 2); auto-complete pays the full-score reward once, the next press is refused for lack of time
+        // without paying again, and the result survives Continue.
+        [UnityTest]
+        [Timeout(600000)]
+        public IEnumerator ADULT_E2E_004_LastPassedWorkUnlocksAutoCompleteThatPaysTheTopRewardOnce()
+        {
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+            yield return EnterNewGame();
+            Prepare(s =>
+            {
+                MakeCandidateReady(s);
+                s.Adult.FacilityId = FacilityId;
+                s.Adult.FacilityLevel = 2;
+                s.Adult.Works = new[] { new FacilityWorkProgressSaveData { WorkId = FirstWorkId, Mastery = 80, SuccessfulCompletions = 4 } };
+            });
+            var owner = Owner();
+            Assert.IsTrue(GameDataRegistryProvider.TryGet(out var registry), F + " no game data.");
+            var work = registry.FacilityWorks.First(w => w != null && w.Id == FirstWorkId);
+
+            var panel = default(FacilityManagementPanel);
+            yield return OpenFacilityPanel(keyboard, p => panel = p);
+            Assert.IsFalse(FirstRowButton(panel, "AutoSkipWork").interactable, F + " auto-complete is offered before mastery is full. " + Describe(panel));
+
+            yield return PlayerFlowE2EDriver.ClickButton(FirstRowButton(panel, "PlayWork"));
+            Rootborn.UI.Minigames.MinigamePanel minigame = null;
+            for (int i = 0; i < 180 && (minigame == null || !minigame.IsOpen); i++)
+            {
+                minigame = Object.FindFirstObjectByType<Rootborn.UI.Minigames.MinigamePanel>(FindObjectsInactive.Include);
+                yield return null;
+            }
+            Assert.IsTrue(minigame != null && minigame.IsOpen, F + " PlayWork did not open the work minigame.");
+            yield return PlayerFlowE2EDriver.PlayMinigameToEnd(minigame, 120f, F);
+            Assert.IsTrue(minigame.Session.Succeeded, F + " the work minigame played from the screen did not pass (score " + minigame.Session.Score + ").");
+            if (minigame.IsOpen) yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(minigame.transform, "Close"));
+            yield return null;
+            Assert.AreEqual(5, WorkOf(owner, FirstWorkId).SuccessfulCompletions, F + " the fifth passed work did not count.");
+            Assert.AreEqual(work.MaximumMastery, WorkOf(owner, FirstWorkId).Mastery, F + " the fifth passed work did not fill mastery.");
+
+            if (!panel.IsOpen) yield return OpenFacilityPanel(keyboard, p => panel = p);
+            var skip = FirstRowButton(panel, "AutoSkipWork");
+            Assert.IsTrue(skip.interactable, F + " auto-complete did not unlock after the fifth passed work. " + Describe(panel));
+            Assert.IsTrue(work.TryBuildRewards(100, work.Facility.GetLevel(2).RewardPercent, out var top), F + " the top reward cannot be built.");
+            var inventory = owner.PlayerInventory.Inventory;
+            var before = top.Select(g => inventory.CountOf(g.Item)).ToArray();
+            yield return PlayerFlowE2EDriver.ClickButton(skip);
+            yield return null;
+            for (int i = 0; i < top.Length; i++)
+                Assert.AreEqual(before[i] + top[i].Count, inventory.CountOf(top[i].Item), F + " auto-complete did not pay the full-score reward of " + top[i].Item.name + " once. " + Describe(panel));
+            Assert.AreEqual(6, WorkOf(owner, FirstWorkId).SuccessfulCompletions, F + " auto-complete did not count as a success.");
+            yield return Capture("adult-04-auto-complete.png");
+
+            // Today's time is spent (work 1 TP + auto-complete 1 TP); another press must not pay.
+            var paid = top.Select(g => inventory.CountOf(g.Item)).ToArray();
+            skip = FirstRowButton(panel, "AutoSkipWork");
+            if (skip.interactable) yield return PlayerFlowE2EDriver.ClickButton(skip);
+            yield return null;
+            for (int i = 0; i < top.Length; i++)
+                Assert.AreEqual(paid[i], inventory.CountOf(top[i].Item), F + " auto-complete paid again with no time left. " + Describe(panel));
+            Assert.AreEqual(6, WorkOf(owner, FirstWorkId).SuccessfulCompletions, F + " a refused auto-complete counted.");
+
+            ActiveSaveContext.Clear();
+            PlayerGlobalState.ClearForTests();
+            yield return PlayerFlowE2EDriver.EnterWorldFromSaveSlot("slot-0", "LoadButton", "Town", F + " Continue did not return to Town.");
+            var reloaded = Owner();
+            Assert.AreEqual(6, WorkOf(reloaded, FirstWorkId).SuccessfulCompletions, F + " work progress did not survive Continue exactly once.");
+            for (int i = 0; i < top.Length; i++)
+                Assert.AreEqual(paid[i], reloaded.PlayerInventory.Inventory.CountOf(top[i].Item), F + " the reward of " + top[i].Item.name + " changed across Continue.");
+        }
+
         private static IEnumerator EnterNewGame()
         {
             yield return PlayerFlowE2EDriver.EnterWorldFromSaveSlot("slot-0", "NewGameButton", "Town", F + " New Game did not enter Town.");
