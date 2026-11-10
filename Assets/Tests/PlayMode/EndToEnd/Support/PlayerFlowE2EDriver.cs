@@ -548,6 +548,13 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
                     QueueKey(keyboard, key);
                     activeKey = key;
                 }
+                // A press the device dropped (seen in long runs: the state event applied nothing) is pressed again, as a
+                // player presses again when the character does not move.
+                else if (!ControlFor(keyboard, key).isPressed)
+                {
+                    QueueKey(keyboard, key);
+                    RepressCount++;
+                }
 
                 InputSystem.Update();
                 yield return null;
@@ -576,8 +583,11 @@ namespace Rootborn.Tests.PlayMode.EndToEnd.Support
                 InputSystem.Update();
             }
             if (SceneManager.GetActiveScene().name != startScene || player == null) yield break;
-            Assert.LessOrEqual(Vector3.Distance(player.transform.position, targetPosition), tolerance, failure + " (from " + startPosition + " to " + targetPosition + ", stopped at " + player.transform.position + ", replans " + replans + " touching " + lastContacts + ", reached waypoint " + next + "/" + waypoints.Count + ": " + string.Join(" ", waypoints) + ") " + DescribeKeyboards(keyboard) + " walk:" + walkTrace);
+            Assert.LessOrEqual(Vector3.Distance(player.transform.position, targetPosition), tolerance, failure + " (from " + startPosition + " to " + targetPosition + ", stopped at " + player.transform.position + ", replans " + replans + " touching " + lastContacts + ", reached waypoint " + next + "/" + waypoints.Count + ": " + string.Join(" ", waypoints) + ") " + DescribeKeyboards(keyboard) + " walk:" + walkTrace + " represses=" + RepressCount);
         }
+
+        /// <summary>How many times the walker had to press a held key again because the device did not hold it.</summary>
+        public static int RepressCount;
 
         private static string DescribeKeyboards(Keyboard driven)
         {
