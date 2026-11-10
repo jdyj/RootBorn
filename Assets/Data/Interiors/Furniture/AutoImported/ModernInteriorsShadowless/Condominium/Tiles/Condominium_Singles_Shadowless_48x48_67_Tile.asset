@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 13312, guid: 0000000000000000e000000000000000, type: 0}
   m_Name: Condominium_Singles_Shadowless_48x48_67_Tile
   m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.Tilemaps.Tile
-  m_Sprite: {fileID: 21300000, guid: bee6605feeb4dc04fb6d9463a31f4918, type: 3}
+  m_Sprite: {fileID: 21300000, guid: a4ed0037e80a6ac479c8eac239c4dc29, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Transform:
     e00: 1

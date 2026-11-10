@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 13312, guid: 0000000000000000e000000000000000, type: 0}
   m_Name: Japanese_Interiors_Singles_Shadowless_48x48_46_Tile
   m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.Tilemaps.Tile
-  m_Sprite: {fileID: 21300000, guid: 79e16efb4fa145c4fbc8ee13de059ccb, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 83822ac5cd91b0d4abb3b8259fb70c58, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Transform:
     e00: 1

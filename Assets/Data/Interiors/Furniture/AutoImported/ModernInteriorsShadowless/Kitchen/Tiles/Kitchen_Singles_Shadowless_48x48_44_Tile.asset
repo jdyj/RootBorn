@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 13312, guid: 0000000000000000e000000000000000, type: 0}
   m_Name: Kitchen_Singles_Shadowless_48x48_44_Tile
   m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.Tilemaps.Tile
-  m_Sprite: {fileID: 21300000, guid: 70b940883fa813b4eb9c4426f6851426, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 2fcf4801bc7b5d24fb26493215f1ab4e, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Transform:
     e00: 1

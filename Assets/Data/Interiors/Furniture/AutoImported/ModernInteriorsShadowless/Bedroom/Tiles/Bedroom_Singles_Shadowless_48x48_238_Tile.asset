@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 13312, guid: 0000000000000000e000000000000000, type: 0}
   m_Name: Bedroom_Singles_Shadowless_48x48_238_Tile
   m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.Tilemaps.Tile
-  m_Sprite: {fileID: 21300000, guid: b63adf790b7f640428383591bc3ac493, type: 3}
+  m_Sprite: {fileID: 21300000, guid: ffdfdbe0ca1e6ea4c9a419a7c2baa15a, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Transform:
     e00: 1
