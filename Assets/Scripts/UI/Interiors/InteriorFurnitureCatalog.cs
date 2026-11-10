@@ -103,7 +103,10 @@ namespace Rootborn.UI.Interiors
 
             return registry.FurnitureDefinitions
                 .Where(definition => definition != null && IsUnlocked(definition, unlockProgress))
-                .OrderBy(definition => definition.Category, StringComparer.Ordinal)
+                // Furniture the player earned or bought (it needed an unlock) comes first, so it is not lost among the
+                // ~1500 always-available pieces.
+                .OrderBy(definition => string.IsNullOrEmpty(definition.UnlockToken) ? 1 : 0)
+                .ThenBy(definition => definition.Category, StringComparer.Ordinal)
                 .ThenBy(definition => definition.StableId, StringComparer.Ordinal)
                 .Select(Convert)
                 .Where(definition => definition != null)

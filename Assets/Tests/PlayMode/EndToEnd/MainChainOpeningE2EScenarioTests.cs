@@ -31,6 +31,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         private const string F = "MAIN-E2E failed:";
         private string _saveRoot;
         private static string LastTarget = string.Empty;
+        private static int _paletteFoundOnPage = -1;
 
         [UnitySetUp]
         public IEnumerator SetUp()
@@ -233,6 +234,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 + " owns=" + resolved.IsUnlocked(offer.UnlockToken) + ", panels " + panels.Length + ").");
             yield return PlaceAcceptedFurniture(chain, offer.StableId);
             yield return Capture("09-placed-bought-furniture.png");
+            Assert.AreEqual(0, _paletteFoundOnPage, F + " bought furniture should be on the palette's first page, not buried among the free pieces.");
             Assert.AreEqual(QuestChainState.Completed, Log().GetState(chain), F + " placing the bought " + offer.StableId + " should complete the chain (step " + StepId(chain) + ").");
         }
 
@@ -620,6 +622,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             for (int page = 0; page < 200 && paletteButton == null; page++)
             {
                 paletteButton = FindPaletteButton(accepted);
+                _paletteFoundOnPage = page;
                 if (paletteButton != null) break;
                 var next = PlayerFlowE2EDriver.FindButton(Object.FindFirstObjectByType<Rootborn.UI.Interiors.InteriorFurniturePlacementPanel>().transform, "FurniturePaletteNextPage");
                 Assert.IsTrue(next != null && next.interactable, F + " none of " + string.Join(",", accepted) + " is in the House palette (" + DescribePalette() + ").");
