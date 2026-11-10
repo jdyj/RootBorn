@@ -114,9 +114,11 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         {
             var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
             BoxCollider2D bounds = null;
-            foreach (var root in scene.GetRootGameObjects())
-                foreach (var box in root.GetComponentsInChildren<BoxCollider2D>(true))
-                    if (box.name == "CameraBounds") bounds = box;
+            if (Rootborn.Game.Player.ScenePlayerRenderPolicy.TryGetForScene(scene, out var policy)) bounds = policy.CameraBounds;
+            if (bounds == null)
+                foreach (var root in scene.GetRootGameObjects())
+                    foreach (var box in root.GetComponentsInChildren<BoxCollider2D>(true))
+                        if (box.name == "CameraBounds") bounds = box;
             Assert.IsNotNull(bounds, F + " " + place + " has no CameraBounds, so the camera can show outside the map.");
             var camera = Camera.main;
             Vector3 c = camera.transform.position;
