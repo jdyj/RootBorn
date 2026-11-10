@@ -222,6 +222,15 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             }
 
             Assert.AreEqual("House", SceneManager.GetActiveScene().name, F + " could not walk home after buying.");
+            var catalog = Rootborn.UI.Interiors.InteriorFurnitureCatalog.LoadFurniture();
+            var meta = ActiveSaveContext.Metadata;
+            var owned = GameObject.Find("Player").GetComponent<Rootborn.UI.Careers.AdultCareerRuntimeComponent>().FurnitureUnlocks;
+            var resolved = Rootborn.Game.Placement.FurnitureUnlockProgressPersistence.LoadOrCreate(meta?.SlotId, Rootborn.Game.Player.PlayerIdentity.DefaultPlayerId);
+            var panels = Object.FindObjectsByType<Rootborn.UI.Interiors.InteriorFurniturePlacementPanel>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            Assert.IsTrue(catalog.Exists(f => f.Id == offer.StableId), F + " the home catalog lacks the bought " + offer.StableId
+                + " (catalog " + catalog.Count + ", save slot '" + meta?.SlotId + "', owner " + owned.SaveSlot + "/" + owned.PlayerId
+                + " owns=" + owned.IsUnlocked(offer.UnlockToken) + ", resolved " + resolved.SaveSlot + "/" + resolved.PlayerId
+                + " owns=" + resolved.IsUnlocked(offer.UnlockToken) + ", panels " + panels.Length + ").");
             yield return PlaceAcceptedFurniture(chain, offer.StableId);
             yield return Capture("09-placed-bought-furniture.png");
             Assert.AreEqual(QuestChainState.Completed, Log().GetState(chain), F + " placing the bought " + offer.StableId + " should complete the chain (step " + StepId(chain) + ").");
