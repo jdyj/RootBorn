@@ -173,8 +173,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         }
 
         // ADULT-E2E-004 (audit 4.3/4.4): one more passed work from the screen unlocks auto-complete (mastery 100, five
-        // successes, level 2); auto-complete pays the full-score reward once, the next press is refused for lack of time
-        // without paying again, and the result survives Continue.
+        // successes, level 2); auto-complete pays the full-score reward once, with today's time spent no work button is
+        // offered, and the result survives Continue.
         [UnityTest]
         [Timeout(600000)]
         public IEnumerator ADULT_E2E_004_LastPassedWorkUnlocksAutoCompleteThatPaysTheTopRewardOnce()
@@ -222,16 +222,16 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             for (int i = 0; i < top.Length; i++)
                 Assert.AreEqual(before[i] + top[i].Count, inventory.CountOf(top[i].Item), F + " auto-complete did not pay the full-score reward of " + top[i].Item.name + " once. " + Describe(panel));
             Assert.AreEqual(6, WorkOf(owner, FirstWorkId).SuccessfulCompletions, F + " auto-complete did not count as a success.");
-            yield return Capture("adult-04-auto-complete.png");
 
-            // Today's time is spent (work 1 TP + auto-complete 1 TP); another press must not pay.
+            // Today's time is spent (work 1 TP + auto-complete 1 TP): neither work button may be offered, and nothing pays again.
             var paid = top.Select(g => inventory.CountOf(g.Item)).ToArray();
-            skip = FirstRowButton(panel, "AutoSkipWork");
-            if (skip.interactable) yield return PlayerFlowE2EDriver.ClickButton(skip);
-            yield return null;
+            Assert.AreEqual(0, owner.StudentComponent.Progress.TimePointsRemaining, F + " the work and auto-complete did not spend today's time.");
+            Assert.IsFalse(FirstRowButton(panel, "AutoSkipWork").interactable, F + " auto-complete is still offered with no time left. " + Describe(panel));
+            Assert.IsFalse(FirstRowButton(panel, "PlayWork").interactable, F + " play is still offered with no time left. " + Describe(panel));
+            for (float t = 0f; t < 0.5f; t += Time.unscaledDeltaTime) yield return null; // let the button tint finish fading
+            yield return Capture("adult-04-auto-complete.png");
             for (int i = 0; i < top.Length; i++)
-                Assert.AreEqual(paid[i], inventory.CountOf(top[i].Item), F + " auto-complete paid again with no time left. " + Describe(panel));
-            Assert.AreEqual(6, WorkOf(owner, FirstWorkId).SuccessfulCompletions, F + " a refused auto-complete counted.");
+                Assert.AreEqual(paid[i], inventory.CountOf(top[i].Item), F + " the reward changed with no time left. " + Describe(panel));
 
             ActiveSaveContext.Clear();
             PlayerGlobalState.ClearForTests();
