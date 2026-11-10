@@ -91,4 +91,8 @@ public sealed class TraitDeltaEffect : ILifeActivityEffect {
 
 옮기면서 일부러 바꾼 것을 여기에 한 줄씩 적는다(무엇을, 왜, 어느 테스트가 고정하는지).
 
-- (아직 없음)
+- 퀘스트: 개수 0 이하 이벤트는 목표를 진행하지 않고 이벤트 키도 소모하지 않는다(원본은 1로 셈). `EventsWithoutAPositiveCount_CreditNothing_AndDoNotUseUpTheirKey`
+- 퀘스트: `QuestLog`는 다시 알리는 이벤트(`IsReplay`)를 세지 않는다. 체인은 그대로 따라잡는다. `QuestLog_IgnoresReplayedEvents_WhileChainsStillCatchUpOnThem`
+- 퀘스트: 체인 세이브 상태는 이름만 받고 숫자는 `Available`로 읽는다. 옛 세이브는 이름이라 그대로 읽힌다. `ChainSaveState_AcceptsOnlyStateNames`
+- 퀘스트: 체인 진행 저장소는 이미 가진 로그를 체인 목록 없이도 돌려준다(원본은 null). `Store_ReturnsAHeldLogEvenWithoutAChainList`
+- 알바 정산: 정산 뒤 요청을 서비스가 직접 적용됨으로 표시해, 정산 쪽이 빠뜨려도 두 번 정산되지 않는다. `ChangedBehavior_SettledJobIsMarkedEvenIfPayrollForgetsTheReceipt`
