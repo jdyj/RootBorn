@@ -66,6 +66,19 @@ namespace Rootborn.Tests.EditMode.Careers
             AssertKind("DuplicateRequest",Work(f,"recorded-work",100,false));
             Assert.That(f.Student.GetTodayActivityIds(),Has.Length.EqualTo(1));
         }
+        [Test] public void ADULT_019_WorkAdvancesTheClockByItsMinutesOnlyWhenApplied()
+        {
+            var f = Fixture(); Transition(f, "transition"); Set(f.Work, "_timeCostMinutes", 90);
+            int start = f.Student.TimeMinutes;
+            AssertKind("Applied", Work(f, "clock", 100, false));
+            Assert.That(f.Student.TimeMinutes, Is.EqualTo(start + 90), "a finished work shift must move the clock");
+            AssertKind("DuplicateRequest", Work(f, "clock", 100, false));
+            Assert.That(f.Student.TimeMinutes, Is.EqualTo(start + 90), "a repeated request must not move the clock again");
+            for (int i = 0; i < Inventory.MaxSlots; i++) f.Inventory.Add(Item("full-" + i, 1), 1);
+            AssertKind("InsufficientCapacity", Work(f, "clock-full", 100, false));
+            Assert.That(f.Student.TimeMinutes, Is.EqualTo(start + 90), "a refused work must not move the clock");
+        }
+
         [Test] public void ADULT_005_FullInventoryPreflightPreservesTimeMasteryAndRequest()
         {
             var f = Fixture(); Transition(f, "transition");

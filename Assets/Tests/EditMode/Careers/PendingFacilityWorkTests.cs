@@ -90,6 +90,15 @@ namespace Rootborn.Tests.EditMode.Careers
             var saved = AdultCareerSnapshotPersistence.Load(f.Storage, PlayerIdentity.DefaultPlayerId); Assert.That(Pending(saved.Adult), Is.Null); Assert.That(saved.Adult.AppliedRequestIds, Does.Contain("attempt-1"));
             stale.Choose(0); Assert.That(Settle(f, stale).Applied, Is.False); Assert.That(Begin(f, "attempt-1").Applied, Is.False);
         }
+        [Test] public void PENDING_WORK_017_StartingAPlayedShiftAdvancesTheClockOnceAndSavesIt()
+        {
+            var f = Fixture(); Set(f.Work, "_timeCostMinutes", 90); int start = f.Student.Progress.TimeMinutes;
+            Assert.That(Begin(f, "clock").Applied, Is.True);
+            Assert.That(f.Student.Progress.TimeMinutes, Is.EqualTo(start + 90), "starting the shift must move the clock with the spent time");
+            Assert.That(AdultCareerSnapshotPersistence.Load(f.Storage, PlayerIdentity.DefaultPlayerId).Student.TimeMinutes, Is.EqualTo(start + 90));
+            var session = Session(f); session.Choose(0); Assert.That(Settle(f, session).Applied, Is.True);
+            Assert.That(f.Student.Progress.TimeMinutes, Is.EqualTo(start + 90), "settling must not move the clock a second time");
+        }
         [Test] public void PENDING_WORK_009_MissingAuthoredMinigameRejectsBeforeSpendingTime()
         {
             var f = Fixture(); Set(f.Work, "_minigame", null); Assert.That(Begin(f, "attempt-1").Applied, Is.False);

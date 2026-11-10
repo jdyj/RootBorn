@@ -63,6 +63,7 @@ namespace Rootborn.Game.Careers
                 bool applied = inventory.TryExchange(null, rewards, () =>
                 {
                     if (!student.TrySpendTimePoints(work.TimePointCost)) throw new InvalidOperationException("Prevalidated facility work budget changed during settlement.");
+                    student.Spend(work.TimeCostMinutes, 0, 0, 0);
                     adult.CompleteWork(work, requestId, effectiveScore >= work.MinimumSuccessScore);
                     student.RecordActivityCompleted(work.Id);
                 });
@@ -105,6 +106,7 @@ namespace Rootborn.Game.Careers
             var level = work.Facility.GetLevel(adult.FacilityLevel);
             if (level == null || !level.IsValid) return Result(AdultCareerResultKind.InvalidDefinition);
             if (!student.TrySpendTimePoints(work.TimePointCost)) return Result(AdultCareerResultKind.InsufficientTime);
+            student.Spend(work.TimeCostMinutes, 0, 0, 0);
             adult.ReserveWork(work, requestId, student.CurrentDay, seed, level.RewardPercent);
             return Result(AdultCareerResultKind.Applied);
         }

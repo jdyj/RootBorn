@@ -16,6 +16,8 @@ namespace Rootborn.Game.Careers
         [SerializeField] private MinigameDefinition _minigame;
         [SerializeField] private int _minimumFacilityLevel = 1;
         [SerializeField] private int _timePointCost = 1;
+        [Tooltip("Minutes the shift moves the day clock, like a student activity's time cost.")]
+        [SerializeField] private int _timeCostMinutes = 60;
         [SerializeField] private int _maximumMastery = 100;
         [SerializeField] private int _masteryPerSuccess = 1;
         [SerializeField] private int _minimumSuccessScore = 1;
@@ -29,6 +31,7 @@ namespace Rootborn.Game.Careers
         public MinigameDefinition Minigame => _minigame;
         public int MinimumFacilityLevel => _minimumFacilityLevel;
         public int TimePointCost => _timePointCost;
+        public int TimeCostMinutes => Mathf.Max(0, _timeCostMinutes);
         public int MaximumMastery => _maximumMastery;
         public int MasteryPerSuccess => _masteryPerSuccess;
         public int MinimumSuccessScore => _minimumSuccessScore;

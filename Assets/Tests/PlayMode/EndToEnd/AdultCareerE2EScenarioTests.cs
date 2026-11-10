@@ -105,6 +105,9 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return OpenFacilityPanel(keyboard, p => panel = p);
             var play = FirstRowButton(panel, "PlayWork");
             Assert.IsTrue(play.interactable, F + " the first work cannot be played. " + Describe(panel));
+            Assert.IsTrue(GameDataRegistryProvider.TryGet(out var registry), F + " no game data.");
+            var workDefinition = registry.FacilityWorks.First(w => w != null && w.Id == FirstWorkId);
+            int minutesBefore = owner.StudentComponent.Progress.TimeMinutes;
             yield return PlayerFlowE2EDriver.ClickButton(play);
 
             Rootborn.UI.Minigames.MinigamePanel minigame = null;
@@ -124,7 +127,16 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.IsNotNull(work, F + " the played work left no progress.");
             Assert.AreEqual(1, work.SuccessfulCompletions, F + " one passed work should count once.");
             Assert.Greater(work.Mastery, 0, F + " a passed work should raise mastery.");
+            Assert.Greater(workDefinition.TimeCostMinutes, 0, F + " the work has no time cost.");
+            var progress = owner.StudentComponent.Progress;
+            Assert.AreEqual(minutesBefore + workDefinition.TimeCostMinutes, progress.TimeMinutes, F + " the work shift did not move the clock.");
+            if (panel.IsOpen) yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(panel.transform, "Close"));
+            yield return null;
+            int shown = progress.TimeMinutes % (24 * 60);
+            string clock = Rootborn.Game.Localization.GameText.Format("life.time.hud", progress.CurrentDay, shown / 60, shown % 60);
+            bool onScreen = Object.FindObjectsByType<Text>(FindObjectsSortMode.None).Any(t => t.isActiveAndEnabled && t.text.Contains(clock));
             yield return Capture("adult-02-work-played.png");
+            Assert.IsTrue(onScreen, F + " the HUD does not show the moved clock '" + clock + "'.");
         }
 
         // ADULT-E2E-003: at level 2 with the cost in hand the player upgrades to level 3, the route completes (ending), the

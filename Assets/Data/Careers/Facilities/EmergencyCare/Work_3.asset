@@ -18,6 +18,7 @@ MonoBehaviour:
   _minigame: {fileID: 11400000, guid: 17439d3a0c87ede4382b1c548f979924, type: 2}
   _minimumFacilityLevel: 3
   _timePointCost: 1
+  _timeCostMinutes: 60
   _maximumMastery: 100
   _masteryPerSuccess: 20
   _minimumSuccessScore: 60
