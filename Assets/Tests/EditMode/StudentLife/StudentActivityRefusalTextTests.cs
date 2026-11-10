@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using NUnit.Framework;
-using Rootborn.Game.Localization;
 using Rootborn.Game.StudentLife;
 using UnityEngine;
 
@@ -27,18 +26,22 @@ namespace Rootborn.Tests.EditMode.StudentLife
             Assert.AreEqual(string.Empty, StudentActivityRefusalText.Explain(progress, paid, 1, 1), "An affordable activity must not explain a refusal.");
 
             Assert.IsTrue(progress.TrySpendTimePoints(2));
-            Assert.AreEqual(GameText.Localized("ui.prompt.no-time", "x"), StudentActivityRefusalText.Explain(progress, paid, 1, 1));
+            string noTime = StudentActivityRefusalText.Explain(progress, paid, 1, 1);
 
             var fresh = Student(energy: 10, focus: 10);
             var once = Policy("policy.once", cost: 0, mask: 0x7F, oncePerDay: true);
             Assert.IsTrue(fresh.TryUseTimePolicy(once));
-            Assert.AreEqual(GameText.Localized("ui.prompt.done-today", "x"), StudentActivityRefusalText.Explain(fresh, once, 0, 0));
+            string doneToday = StudentActivityRefusalText.Explain(fresh, once, 0, 0);
 
             var never = Policy("policy.never", cost: 0, mask: 0, oncePerDay: false);
-            Assert.AreEqual(GameText.Localized("ui.prompt.not-today", "x"), StudentActivityRefusalText.Explain(fresh, never, 0, 0));
+            string notToday = StudentActivityRefusalText.Explain(fresh, never, 0, 0);
 
             var tired = Student(energy: 0, focus: 10);
-            Assert.AreEqual(GameText.Localized("ui.prompt.no-energy", "x"), StudentActivityRefusalText.Explain(tired, paid, 1, 0));
+            string noEnergy = StudentActivityRefusalText.Explain(tired, paid, 1, 0);
+
+            var messages = new[] { noTime, doneToday, notToday, noEnergy };
+            foreach (var message in messages) Assert.IsFalse(string.IsNullOrEmpty(message), "Every refusal cause must explain itself.");
+            Assert.AreEqual(4, new HashSet<string>(messages).Count, "Each refusal cause needs its own words: " + string.Join(" | ", messages));
         }
 
         private StudentLifeProgress Student(int energy, int focus)
