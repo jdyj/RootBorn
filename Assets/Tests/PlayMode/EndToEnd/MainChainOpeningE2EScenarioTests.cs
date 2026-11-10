@@ -251,7 +251,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.IsNotNull(toggle, F + " House has no furniture button.");
             yield return ClickWithMouse(toggle, F + " furniture button");
             var only = new System.Collections.Generic.List<string> { stableId };
-            for (int page = 0; page < 40; page++)
+            for (int page = 0; page < 200; page++)
             {
                 if (FindPaletteButton(only) != null) { result(true); yield break; }
                 var next = PlayerFlowE2EDriver.FindButton(Object.FindFirstObjectByType<Rootborn.UI.Interiors.InteriorFurniturePlacementPanel>().transform, "FurniturePaletteNextPage");
@@ -617,7 +617,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             Assert.IsNotNull(toggle, F + " House has no furniture button.");
             yield return ClickWithMouse(toggle, F + " furniture button");
             GameObject paletteButton = null;
-            for (int page = 0; page < 40 && paletteButton == null; page++)
+            for (int page = 0; page < 200 && paletteButton == null; page++)
             {
                 paletteButton = FindPaletteButton(accepted);
                 if (paletteButton != null) break;
