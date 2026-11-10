@@ -183,11 +183,80 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
         {
             var keyboard = InputSystem.AddDevice<Keyboard>();
             yield return EnterNewGame();
+            PrepareChainAt(Chain(), "mainquest.MyOwnSpace");
+            yield return EarnAndBuyAtShop(keyboard, CornerStoreOffer(), "06-bought-furniture.png");
+        }
+
+        // MyOwnSpace with bought furniture: the offer is not in the House palette before buying; after the shifts and the
+        // purchase it is, and placing that exact piece at home with the mouse completes the chain.
+        [UnityTest]
+        [Timeout(1200000)]
+        public IEnumerator MAIN_E2E_010_MyOwnSpace_PlacingBoughtFurnitureCompletesTheChain()
+        {
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+            yield return EnterNewGame();
             var chain = Chain();
             PrepareChainAt(chain, "mainquest.MyOwnSpace");
+            var offer = CornerStoreOffer();
+            var objective = Log().GetCurrentStep(chain).Objectives[0] as Rootborn.Game.Quests.Objectives.FurniturePlacedQuestObjective;
+            Assert.IsNotNull(objective, F + " MyOwnSpace's first objective is not furniture placement.");
+            bool accepts = false;
+            foreach (var furniture in objective.AcceptedFurniture) accepts |= furniture != null && furniture.StableId == offer.StableId;
+            Assert.IsTrue(accepts, F + " MyOwnSpace does not accept the corner store furniture " + offer.StableId + ".");
+
+            yield return PlayerFlowE2EDriver.WalkThroughDoor(keyboard, "House", F);
+            yield return PlayerFlowE2EDriver.DismissDailyEvent();
+            bool listed = false;
+            yield return PaletteListsFurniture(offer.StableId, found => listed = found);
+            Assert.IsFalse(listed, F + " " + offer.StableId + " is in the House palette before it is bought.");
+            var placementPanel = Object.FindFirstObjectByType<Rootborn.UI.Interiors.InteriorFurniturePlacementPanel>();
+            yield return ClickWithMouse(PlayerFlowE2EDriver.FindButton(placementPanel.transform, "CloseFurniturePanelButton").gameObject, F + " furniture panel close");
+            yield return PlayerFlowE2EDriver.WalkThroughDoor(keyboard, "Town", F);
+            yield return PlayerFlowE2EDriver.DismissDailyEvent();
+
+            yield return EarnAndBuyAtShop(keyboard, offer, null);
+            for (int hop = 0; hop < 3 && SceneManager.GetActiveScene().name != "House"; hop++)
+            {
+                yield return PlayerFlowE2EDriver.WalkThroughDoor(keyboard, SceneManager.GetActiveScene().name == "Town" ? "House" : "Town", F);
+                yield return PlayerFlowE2EDriver.DismissDailyEvent();
+            }
+
+            Assert.AreEqual("House", SceneManager.GetActiveScene().name, F + " could not walk home after buying.");
+            yield return PlaceAcceptedFurniture(chain, offer.StableId);
+            yield return Capture("09-placed-bought-furniture.png");
+            Assert.AreEqual(QuestChainState.Completed, Log().GetState(chain), F + " placing the bought " + offer.StableId + " should complete the chain (step " + StepId(chain) + ").");
+        }
+
+        private static Rootborn.Game.Placement.FurnitureDefinition CornerStoreOffer()
+        {
             Assert.IsTrue(GameDataRegistryProvider.TryGet(out var registry), F + " no game data.");
             var offer = System.Array.Find(registry.FurnitureDefinitions, f => f != null && f.IsForSale && f.PurchaseLocationId == "location.corner-store");
             Assert.IsNotNull(offer, F + " nothing is for sale at the corner store.");
+            return offer;
+        }
+
+        // Opens the House furniture palette with the mouse and pages through all of it, reporting whether the item is listed.
+        private static IEnumerator PaletteListsFurniture(string stableId, System.Action<bool> result)
+        {
+            var toggle = GameObject.Find(HousePlacementTestDriver.ToggleName);
+            Assert.IsNotNull(toggle, F + " House has no furniture button.");
+            yield return ClickWithMouse(toggle, F + " furniture button");
+            var only = new System.Collections.Generic.List<string> { stableId };
+            for (int page = 0; page < 40; page++)
+            {
+                if (FindPaletteButton(only) != null) { result(true); yield break; }
+                var next = PlayerFlowE2EDriver.FindButton(Object.FindFirstObjectByType<Rootborn.UI.Interiors.InteriorFurniturePlacementPanel>().transform, "FurniturePaletteNextPage");
+                if (next == null || !next.interactable) break;
+                yield return ClickWithMouse(next.gameObject, F + " palette next page");
+            }
+
+            result(false);
+        }
+
+        // Works corner store shifts until the allowance covers the offer, then buys it at the store with a mouse click: the
+        // allowance is charged once, the furniture unlocks, and the offer can no longer be pressed.
+        private IEnumerator EarnAndBuyAtShop(Keyboard keyboard, Rootborn.Game.Placement.FurnitureDefinition offer, string captureName)
+        {
             var player = GameObject.Find("Player");
             var wallet = player.GetComponent<PlayerInventory>();
             var owner = player.GetComponent<Rootborn.UI.Careers.AdultCareerRuntimeComponent>();
@@ -220,7 +289,7 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return PlayerFlowE2EDriver.ClickButton(buy);
             // Disabled buttons fade to the disabled tint over the button's fade time (real time); let it finish before looking.
             yield return new WaitForSecondsRealtime(buy.colors.fadeDuration + 0.2f);
-            yield return Capture("06-bought-furniture.png");
+            if (!string.IsNullOrEmpty(captureName)) yield return Capture(captureName);
             var shown = buy.targetGraphic != null ? buy.targetGraphic.canvasRenderer.GetColor() : Color.white;
             Assert.Less(shown.a, 0.9f, F + " the owned offer still looks pressable (rendered tint " + shown + ").");
 
@@ -526,13 +595,14 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return PlayerFlowE2EDriver.DismissDailyEvent();
         }
 
-        private IEnumerator PlaceAcceptedFurniture(QuestChainDefinition chain)
+        private IEnumerator PlaceAcceptedFurniture(QuestChainDefinition chain, string onlyStableId = null)
         {
             var step = Log().GetCurrentStep(chain);
             var objective = step.Objectives[0] as Rootborn.Game.Quests.Objectives.FurniturePlacedQuestObjective;
             Assert.IsNotNull(objective, F + " MyOwnSpace's first objective is not furniture placement.");
             var accepted = new System.Collections.Generic.List<string>();
-            foreach (var furniture in objective.AcceptedFurniture) if (furniture != null) accepted.Add(furniture.StableId);
+            foreach (var furniture in objective.AcceptedFurniture)
+                if (furniture != null && (onlyStableId == null || furniture.StableId == onlyStableId)) accepted.Add(furniture.StableId);
 
             var toggle = GameObject.Find(HousePlacementTestDriver.ToggleName);
             Assert.IsNotNull(toggle, F + " House has no furniture button.");
