@@ -176,6 +176,14 @@ namespace Rootborn.Tests.PlayMode.Interiors
             Assert.IsTrue(ContainsModernShadowlessTile(furnitureTilemap, out var placedCell, out var tileName), "The generated Modern Interiors shadowless tile should be placed by the world mouse path. Last message: " + overlay.LastMessage);
             Assert.AreEqual(clickCell, placedCell);
             Assert.IsNotNull(occupancyTilemap.GetTile(placedCell), "Mouse placement should write occupancy for the placed Modern Interiors furniture cell. Tile=" + tileName);
+            // The placed furniture must actually be drawn: its tile has the pack sprite at the world's 32 px per cell.
+            var placedSprite = furnitureTilemap.GetSprite(placedCell);
+            Assert.IsNotNull(placedSprite, "The placed Modern Interiors furniture has no sprite, so nothing is drawn. Tile=" + tileName);
+            Assert.AreEqual(32f, placedSprite.pixelsPerUnit, "The placed furniture sprite is not at 32 px per cell. Tile=" + tileName);
+            yield return null;
+            System.IO.Directory.CreateDirectory("output/furniture-e2e");
+            ScreenCapture.CaptureScreenshot("output/furniture-e2e/shadowless-placed.png");
+            for (int i = 0; i < 10; i++) yield return null;
             if (ghostTilemap != null)
             {
                 Assert.AreEqual(0, CountModernShadowlessTiles(ghostTilemap, out _, out _), "Successful placement should clear the transient ghost preview.");
