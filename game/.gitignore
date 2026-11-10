@@ -1,0 +1,6 @@
+bin/
+obj/
+TestResults/
+# 저장소 최상위 .gitignore가 Unity가 만드는 프로젝트 파일을 무시한다. game/ 아래 것은 직접 쓴 원본이다.
+!*.csproj
+!*.sln

@@ -1,0 +1,172 @@
+using System;
+using System.Text;
+
+namespace Rootborn.Ui
+{
+    public enum UiAlign { Left, Center, Right }
+
+    /// <summary>9조각 패널 배경. 포인터를 받아 뒤를 가린다.</summary>
+    public sealed class UiPanel : UiNode
+    {
+        public string Skin = UiSkin.Panel;
+        public UiColor Tint = UiTheme.White;
+
+        public UiPanel() { Interactive = true; }
+
+        public override void Emit(DrawList list, ITextMeasurer text) => list.Panel(Rect, Skin, Tint);
+    }
+
+    /// <summary>한 줄 글자. 사각형 안에서 세로 가운데, 가로는 Align.</summary>
+    public sealed class UiLabel : UiNode
+    {
+        public string Text;
+        public float FontSize = 20;
+        public UiColor Color = UiTheme.Ink;
+        public UiAlign Align = UiAlign.Left;
+
+        public override void Emit(DrawList list, ITextMeasurer text)
+        {
+            if (string.IsNullOrEmpty(Text)) return;
+            float x = Rect.X;
+            if (Align != UiAlign.Left)
+            {
+                float width = text.Width(Text, FontSize);
+                x = Align == UiAlign.Center ? Rect.X + (Rect.W - width) / 2f : Rect.Right - width;
+            }
+            list.Text(x, Rect.Y + (Rect.H - text.LineHeight(FontSize)) / 2f, Text, FontSize, Color);
+        }
+    }
+
+    public sealed class UiButton : UiNode
+    {
+        public string Text;
+        public float FontSize = 20;
+        public string Skin = UiSkin.Button;
+
+        public UiButton() { Interactive = true; Focusable = true; }
+
+        public override void Emit(DrawList list, ITextMeasurer text)
+        {
+            bool active = IsActive;
+            UiColor tint = !active ? UiTheme.ButtonDisabled : Pressed ? UiTheme.ButtonPressed : Hovered ? UiTheme.ButtonHovered : UiTheme.ButtonNormal;
+            list.Panel(Rect, Skin, tint);
+            if (!string.IsNullOrEmpty(Text))
+            {
+                float x = Rect.X + (Rect.W - text.Width(Text, FontSize)) / 2f;
+                float y = Rect.Y + (Rect.H - text.LineHeight(FontSize)) / 2f + (Pressed ? UiTheme.PressedOffset : 0f);
+                list.Text(x, y, Text, FontSize, active ? UiTheme.Ink : UiTheme.InkMuted);
+            }
+            if (Focused) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
+        }
+    }
+
+    /// <summary>가방 칸 하나. 내용물(아이콘, 수량)은 화면을 옮길 때 붙인다.</summary>
+    public sealed class UiSlot : UiNode
+    {
+        public string Skin = UiSkin.Slot;
+        public bool Selected;
+
+        /// <summary>고른 칸 표시는 테두리 그림(논리 좌표로 15~18) 안쪽에 그린다.</summary>
+        private const float SelectedInset = 21;
+
+        public UiSlot() { Interactive = true; Focusable = true; }
+
+        public override void Emit(DrawList list, ITextMeasurer text)
+        {
+            UiColor tint = !IsActive ? UiTheme.ButtonDisabled : Pressed ? UiTheme.ButtonPressed : Hovered ? UiTheme.ButtonHovered : UiTheme.ButtonNormal;
+            list.Panel(Rect, Skin, tint);
+            if (Selected) list.Outline(Rect.Inset(SelectedInset), UiTheme.FocusOutline, UiTheme.InkOnDark);
+            if (Focused) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
+        }
+    }
+
+    /// <summary>
+    /// 한 줄 글자 입력 칸. 글자는 끝에만 붙고 끝에서만 지워진다(이름 입력용).
+    /// 조합 중인 글자는 Composition에 따로 두고 다른 색과 밑줄로 보여 준다.
+    /// </summary>
+    public sealed class UiTextField : UiNode
+    {
+        public string Text { get; private set; } = "";
+        public string Composition { get; private set; } = "";
+        public string Placeholder;
+        public int MaxLength = 12;
+        public float FontSize = 24;
+        public float PaddingX = 20;
+        public string Skin = UiSkin.Field;
+
+        /// <summary>포커스된 채 실행 키(Enter)를 눌렀다.</summary>
+        public event Action<string> Submitted;
+
+        public UiTextField() { Interactive = true; Focusable = true; }
+
+        public void SetText(string text) { Text = text ?? ""; Composition = ""; }
+
+        public override void OnClick(float x, float y) { }
+        public override void OnSubmit() => Submitted?.Invoke(Text);
+        public override bool OnNavigate(UiNav nav) => nav == UiNav.Left || nav == UiNav.Right;
+        public override void OnFocusChanged(bool focused) { if (!focused) Composition = ""; }
+
+        public override void OnTextInput(string text)
+        {
+            Composition = "";
+            if (string.IsNullOrEmpty(text)) return;
+            var result = new StringBuilder(Text);
+            int length = CountCharacters(Text);
+            for (int i = 0; i < text.Length && length < MaxLength; i++)
+            {
+                char c = text[i];
+                if (char.IsControl(c)) continue;
+                result.Append(c);
+                if (char.IsHighSurrogate(c) && i + 1 < text.Length) result.Append(text[++i]);
+                length++;
+            }
+            Text = result.ToString();
+        }
+
+        public override void OnTextBackspace()
+        {
+            if (Composition.Length > 0 || Text.Length == 0) return; // 조합 중에는 입력기가 지운다
+            int remove = Text.Length >= 2 && char.IsLowSurrogate(Text[Text.Length - 1]) && char.IsHighSurrogate(Text[Text.Length - 2]) ? 2 : 1;
+            Text = Text.Substring(0, Text.Length - remove);
+        }
+
+        public override void OnTextComposition(string text) => Composition = text ?? "";
+
+        private static int CountCharacters(string text)
+        {
+            int count = 0;
+            for (int i = 0; i < text.Length; i++)
+                if (!char.IsLowSurrogate(text[i])) count++;
+            return count;
+        }
+
+        public override void Emit(DrawList list, ITextMeasurer text)
+        {
+            bool active = IsActive;
+            list.Panel(Rect, Skin, !active ? UiTheme.ButtonDisabled : Focused ? UiTheme.ButtonHovered : UiTheme.ButtonNormal);
+            float lineHeight = text.LineHeight(FontSize);
+            float x = Rect.X + PaddingX, y = Rect.Y + (Rect.H - lineHeight) / 2f;
+            if (Text.Length == 0 && Composition.Length == 0)
+            {
+                if (!Focused) list.Text(x, y, Placeholder, FontSize, UiTheme.InkMuted);
+            }
+            else
+            {
+                list.Text(x, y, Text, FontSize, active ? UiTheme.Ink : UiTheme.InkMuted);
+                x += text.Width(Text, FontSize);
+                if (Composition.Length > 0)
+                {
+                    float width = text.Width(Composition, FontSize);
+                    list.Text(x, y, Composition, FontSize, UiTheme.Accent);
+                    list.Fill(new UiRect(x, y + lineHeight + 2, width, 2), UiTheme.Accent);
+                    x += width;
+                }
+            }
+            if (Focused)
+            {
+                list.Fill(new UiRect(x + 2, y, 2, lineHeight), UiTheme.Ink); // 입력 위치
+                list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
+            }
+        }
+    }
+}

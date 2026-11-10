@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- UI 토대. 배치, 포인터 판정, 포커스, 스크롤, 9조각 계산. 엔진 참조 없음: 그리기 명령 목록만 낸다. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <RootNamespace>Rootborn.Ui</RootNamespace>
+  </PropertyGroup>
+</Project>
