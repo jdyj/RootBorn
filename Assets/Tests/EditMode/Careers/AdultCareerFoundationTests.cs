@@ -74,9 +74,10 @@ namespace Rootborn.Tests.EditMode.Careers
             Assert.That(f.Student.TimeMinutes, Is.EqualTo(start + 90), "a finished work shift must move the clock");
             AssertKind("DuplicateRequest", Work(f, "clock", 100, false));
             Assert.That(f.Student.TimeMinutes, Is.EqualTo(start + 90), "a repeated request must not move the clock again");
-            for (int i = 0; i < Inventory.MaxSlots; i++) f.Inventory.Add(Item("full-" + i, 1), 1);
-            AssertKind("InsufficientCapacity", Work(f, "clock-full", 100, false));
-            Assert.That(f.Student.TimeMinutes, Is.EqualTo(start + 90), "a refused work must not move the clock");
+            Call(f.Student, "TrySpendTimePoints", 1);
+            int beforeRefusal = f.Student.TimeMinutes;
+            AssertKind("InsufficientTime", Work(f, "clock-no-time", 100, false));
+            Assert.That(f.Student.TimeMinutes, Is.EqualTo(beforeRefusal), "a refused work must not move the clock");
         }
 
         [Test] public void ADULT_005_FullInventoryPreflightPreservesTimeMasteryAndRequest()
