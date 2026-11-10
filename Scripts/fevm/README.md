@@ -1,6 +1,6 @@
 # FEVM(Strix Halo) Unity 검증 스크립트
 
-2026-11-08부터 ROOTBORN의 Unity 컴파일·EditMode·PlayMode는 여기서 돌린다(사용자 결정, `.claude/rules/unity-cli.md`). Windows PC 메모리를 쓰지 않고 커밋 기준으로 검증한다. 절차와 판정 규칙은 `.claude/rules/strix-verification.md`가 우선이다.
+2026-11-11에 Unity 판을 얼렸다(태그 `unity-playable-20261111`). 이 스크립트는 MonoGame 판과 화면을 비교하려고 기준본을 한 번 더 돌릴 때만 쓴다. 비교가 끝나면 이 폴더와 `.claude/rules/strix-verification.md`를 지운다. Windows PC 메모리를 쓰지 않고 커밋 기준으로 검증한다. 절차와 판정 규칙은 `.claude/rules/strix-verification.md`가 우선이다.
 
 ## 한 번 준비된 것 (FEVM, sudo 없이 사용자 영역)
 - 에디터 `~/Unity/Hub/Editor/6000.3.13f1` (Linux, Windows 빌드 모듈 포함), Unity Personal 라이선스
