@@ -444,7 +444,8 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
                 yield return VisitPlace(keyboard, "FacilityActivities_" + place);
                 visits.Append(place).Append(": step=").Append(StepId(chain)).Append(" progress=").Append(DescribeProgress(chain, 4))
                     .Append(" E-target=").Append(LastTarget).Append(" | ");
-                Debug.Log("[MAIN-E2E] after " + place + " step=" + StepId(chain) + " progress=" + DescribeProgress(chain, 4));
+                Debug.Log("[MAIN-E2E] after " + place + " step=" + StepId(chain) + " progress=" + DescribeProgress(chain, 4)
+                    + " key=" + PlayerFlowE2EDriver.LastKeyTrace + " locks=" + PlayerFlowE2EDriver.InputLockOwners() + " panelOpened=" + _visitPanelOpened);
             }
             yield return Capture("03-tour-done.png");
             AssertStep(chain, "mainquest.FirstPartTimeJob", "visiting the four places should finish the tour. Visits: " + visits);
@@ -523,9 +524,12 @@ namespace Rootborn.Tests.PlayMode.EndToEnd
             yield return PlayerFlowE2EDriver.PressInteractKey(keyboard);
             yield return null;
             var panel = Object.FindFirstObjectByType<LocationIdentityPanel>(FindObjectsInactive.Include);
-            if (panel != null && panel.IsOpen) yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(panel.transform, "CloseLocation"));
+            _visitPanelOpened = panel != null && panel.IsOpen;
+            if (_visitPanelOpened) yield return PlayerFlowE2EDriver.ClickButton(PlayerFlowE2EDriver.FindButton(panel.transform, "CloseLocation"));
             yield return PlayerFlowE2EDriver.DismissDailyEvent();
         }
+
+        private static bool _visitPanelOpened;
 
         private IEnumerator WorkOneShift(Keyboard keyboard, string workId)
         {
