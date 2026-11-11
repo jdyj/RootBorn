@@ -126,3 +126,7 @@ public sealed class TraitDeltaEffect : ILifeActivityEffect {
 - 월드: 집 출구 상자 높이가 0.65칸에서 1칸으로 커졌다. 집 문짝 그림 높이는 53.33px에서 53px. 가게의 겹친 타일은 LDtk 층 순서대로 그린다(Unity는 일부 순서가 섞였다).
 - 월드: 한 칸 틈으로 들어갈 때 Unity 물리의 밀어내기 대신 몸이 있는 칸의 가운데로 살짝 미는 보정을 쓴다. 문 판정 여유 0.02칸은 Unity 물리의 모양 껍질을 흉내 낸 것이다.
 - 월드: 마을 바닥은 LDtk 원본 타일로 그린다. Unity 판 마을의 Ground·Ground2와 Kitchen2는 GifWorldStyle 자동 타일로 바뀌어 있어 바닥 모양이 다르다(맵 대조 결과, 사용자 결정 대기).
+- 가구: `Items` 필드가 없는 배치 파일은 빈 방으로 읽지 않고 예외를 낸다. 옮긴 가구의 기록은 세이브 안에서 원래 자리를 지킨다(원본은 파일 끝으로 보냈다). 가구를 놓거나 옮길 때는 저장이 성공한 뒤에만 상태가 바뀐다.
+- 채집: 자원을 부술 만큼 쳤는데 나온 물건이 가방에 다 들어가지 않으면 부수지 않고 아무것도 주지 않는다(원본은 들어가는 만큼만 넣었다).
+- 레시피 공개: 깨진 레시피 진행 파일은 새 기록으로 덮어쓰지 않고 예외를 낸다. 새로 쓴 가구·레시피 파일 맨 위에 `"Version": 1`이 들어간다.
+- 옮기지 않은 영역(지금 게임이 쓰지 않음, 근거는 `game/Rootborn.Data/Builders/NotUsedByGame.cs`): `StatusEffectDefinition`, `KnowledgeNode`, `HitGroundWithRockTrigger`, `ToolDefinition`, `FishingAnimationEffect`, `GatherResourceStep`, `HeirTrait`.
