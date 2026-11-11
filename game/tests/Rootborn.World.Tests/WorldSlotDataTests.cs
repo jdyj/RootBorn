@@ -15,7 +15,7 @@ namespace Rootborn.World.Tests
         [Test]
         public void TravelCatalog_FromDataStartsANewGameAtTheHouseEntry()
         {
-            WorldTravelCatalog catalog = WorldTravelData.Load(Repo.Root);
+            WorldTravelCatalog catalog = WorldTravelData.From(Repo.Definitions);
             Assert.That(catalog.IsValid, Is.True);
             Assert.That(WorldEntryRules.ResolveNewGame(catalog), Is.EqualTo(new WorldEntryPoint("House", "house-entry")), "Unity WorldTravelCatalog.asset: _newGameDestination Destination_House, _newGameSpawnId house-entry");
             Assert.That(catalog.Destinations.Count, Is.EqualTo(10));
@@ -24,7 +24,7 @@ namespace Rootborn.World.Tests
         [Test]
         public void EveryMapSpawnAndDoorDestinationIsInTheTravelCatalog()
         {
-            WorldTravelCatalog travel = WorldTravelData.Load(Repo.Root);
+            WorldTravelCatalog travel = WorldTravelData.From(Repo.Definitions);
             WorldCatalog maps = WorldCatalog.Load(Path.Combine(Repo.Root, WorldCatalog.DefaultRelativePath));
             foreach (MapEntry map in maps.Maps)
             {
@@ -62,7 +62,7 @@ namespace Rootborn.World.Tests
             Assert.That(progress.LastPortalDisplayName, Is.EqualTo(""));
 
             DateTime before = File.GetLastWriteTimeUtc(Path.Combine(FixtureSaves, folder, slot, SaveFileNames.Metadata));
-            WorldSlotStart start = new WorldSlot(store, slot, WorldTravelData.Load(Repo.Root)).Begin(DateTime.UtcNow.Ticks);
+            WorldSlotStart start = new WorldSlot(store, slot, WorldTravelData.From(Repo.Definitions)).Begin(DateTime.UtcNow.Ticks);
             Assert.That(start.Ok, Is.True, start.Problem);
             Assert.That(start.NewGame, Is.False);
             Assert.That(start.Entry, Is.EqualTo(new WorldEntryPoint(scene, spawn)));

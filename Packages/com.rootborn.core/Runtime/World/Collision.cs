@@ -45,25 +45,58 @@ namespace Rootborn.Core.World
     }
 
     /// <summary>
+    /// 맵 목록이 충돌 규칙에 넘기는 값. 비어 있는(null) 값은 규칙의 기본값을 쓴다. 맵마다 다른 층 이름은 여기로만 들어온다.
+    /// </summary>
+    public sealed class CollisionRuleOptions
+    {
+        /// <summary>collider-layers: 막는 층 이름.</summary>
+        public readonly IReadOnlyList<string> Layers;
+        /// <summary>interior-auto: 이름에 이 글자가 들어 있으면 바닥 층.</summary>
+        public readonly IReadOnlyList<string> GroundKeys;
+        /// <summary>interior-auto: 이름에 이 글자가 들어 있으면 벽 층.</summary>
+        public readonly IReadOnlyList<string> SolidKeys;
+        /// <summary>interior-auto: 이름이 이것으로 시작하면 가구 층(막지만 문 옆 바닥은 연다).</summary>
+        public readonly IReadOnlyList<string> PropPrefixes;
+
+        public CollisionRuleOptions(IReadOnlyList<string> layers = null, IReadOnlyList<string> groundKeys = null,
+            IReadOnlyList<string> solidKeys = null, IReadOnlyList<string> propPrefixes = null)
+        {
+            Layers = layers;
+            GroundKeys = groundKeys;
+            SolidKeys = solidKeys;
+            PropPrefixes = propPrefixes;
+        }
+    }
+
+    /// <summary>
     /// 실내 자동 판정. Unity 판 "Bake Interior Exit Doors"(InteriorDoorPortalBaker.BakeCollision)를 옮겼다.
-    /// - 이름에 Ground가 든 층은 바닥(ForeGround도 이름 때문에 바닥으로 친다 — Unity 판 그대로).
-    /// - 이름에 Wall·Border가 든 층과 가구 층(이름이 Police·Kitchen·Shop… 으로 시작)은 막는 층.
+    /// - 이름에 바닥 글자(기본 Ground)가 든 층은 바닥(ForeGround도 이름 때문에 바닥으로 친다 — Unity 판 그대로).
+    /// - 이름에 벽 글자(기본 Wall·Border)가 든 층과 가구 층(이름이 가구 앞부분 — 기본 Prop — 으로 시작)은 막는 층.
+    ///   지금 맵의 가구 층 이름(Police·Kitchen·Shop…)은 맵 목록이 넘긴다.
     /// - 출구 상자가 덮는 칸은 열고, 그 둘레 8칸 중 벽이 아닌 바닥도 연다(문 앞 가구가 출구를 막지 않게).
     /// - 타일이 있는 범위에 한 칸 테두리를 더한 안에서, 막는 층이 없는 바닥과 열린 칸 말고는 모두 막는다.
     /// </summary>
     public sealed class InteriorAutoCollision : ICollisionRule
     {
-        public static readonly string[] UnityGroundKeys = { "Ground" };
-        public static readonly string[] UnitySolidKeys = { "Wall", "Border" };
-        public static readonly string[] UnityPropPrefixes = { "Police", "Kitchen", "Shop", "Shooting", "School", "House1", "House2" };
+        public static readonly string[] DefaultGroundKeys = { "Ground" };
+        public static readonly string[] DefaultSolidKeys = { "Wall", "Border" };
+        public static readonly string[] DefaultPropPrefixes = { "Prop" };
 
         private readonly string[] _groundKeys, _solidKeys, _propPrefixes;
 
-        public InteriorAutoCollision(string[] groundKeys = null, string[] solidKeys = null, string[] propPrefixes = null)
+        public InteriorAutoCollision(IReadOnlyList<string> groundKeys = null, IReadOnlyList<string> solidKeys = null, IReadOnlyList<string> propPrefixes = null)
         {
-            _groundKeys = groundKeys ?? UnityGroundKeys;
-            _solidKeys = solidKeys ?? UnitySolidKeys;
-            _propPrefixes = propPrefixes ?? UnityPropPrefixes;
+            _groundKeys = Copy(groundKeys, DefaultGroundKeys);
+            _solidKeys = Copy(solidKeys, DefaultSolidKeys);
+            _propPrefixes = Copy(propPrefixes, DefaultPropPrefixes);
+        }
+
+        private static string[] Copy(IReadOnlyList<string> values, string[] fallback)
+        {
+            if (values == null) return fallback;
+            var copy = new List<string>(values.Count);
+            foreach (string v in values) if (!string.IsNullOrEmpty(v)) copy.Add(v);
+            return copy.ToArray();
         }
 
         private static bool ContainsAny(string name, string[] keys)
@@ -190,18 +223,22 @@ namespace Rootborn.Core.World
     /// <summary>맵 목록 파일이 이름으로 고르는 충돌 규칙. 새 규칙은 여기에 한 줄 더한다.</summary>
     public static class CollisionRules
     {
-        private static readonly Dictionary<string, Func<IReadOnlyList<string>, ICollisionRule>> Factories =
-            new Dictionary<string, Func<IReadOnlyList<string>, ICollisionRule>>(StringComparer.Ordinal)
+        private static readonly Dictionary<string, Func<CollisionRuleOptions, ICollisionRule>> Factories =
+            new Dictionary<string, Func<CollisionRuleOptions, ICollisionRule>>(StringComparer.Ordinal)
             {
-                { "interior-auto", _ => new InteriorAutoCollision() },
-                { "collider-layers", layers => new ColliderLayersCollision(layers) },
+                { "interior-auto", o => new InteriorAutoCollision(o.GroundKeys, o.SolidKeys, o.PropPrefixes) },
+                { "collider-layers", o => new ColliderLayersCollision(o.Layers) },
             };
 
-        public static ICollisionRule Create(string name, IReadOnlyList<string> layers)
+        public static IEnumerable<string> Names => Factories.Keys;
+
+        public static ICollisionRule Create(string name, CollisionRuleOptions options)
         {
             if (name == null || !Factories.TryGetValue(name, out var factory))
                 throw new ArgumentException("모르는 충돌 규칙: " + name + " (있는 것: " + string.Join(", ", Factories.Keys) + ")");
-            return factory(layers ?? Array.Empty<string>());
+            return factory(options ?? new CollisionRuleOptions());
         }
+
+        public static ICollisionRule Create(string name, IReadOnlyList<string> layers) => Create(name, new CollisionRuleOptions(layers));
     }
 }

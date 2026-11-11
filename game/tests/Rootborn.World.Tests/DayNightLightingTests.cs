@@ -3,10 +3,10 @@ using NUnit.Framework;
 
 namespace Rootborn.World.Tests
 {
-    /// <summary>자동 테스트: 실제 data/time의 낮밤 조명 프로필. 화면 근거가 아니다.</summary>
+    /// <summary>자동 테스트: 정의 로더가 data/time에서 만든 낮밤 조명 프로필. 화면 근거가 아니다.</summary>
     public sealed class DayNightLightingTests
     {
-        private static DayNightLighting Profile => DayNightLighting.Load(Repo.Root);
+        private static DayNightLighting Profile => DayNightLighting.From(Repo.Definitions);
 
         [Test]
         public void ColorKeysAndIntensityKeysAreTheUnityProfileValues()

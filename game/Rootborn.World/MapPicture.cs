@@ -61,6 +61,11 @@ namespace Rootborn.World
                 if (!depth && !layer.Tags.Contains(ArtTag)) continue;
                 foreach (LdtkEntity e in layer.Entities)
                 {
+                    if (e.MissingTileset != null && picture.Problems.Count < 200)
+                    {
+                        string problem = "층 " + layer.Name + "의 엔티티 " + e.Name + " 그림 타일셋이 저장소에 없어 그리지 않았다: " + e.MissingTileset;
+                        if (!picture.Problems.Contains(problem)) picture.Problems.Add(problem);
+                    }
                     if (!e.HasTile) continue;
                     var draw = new SpriteDraw(e.TilesetPath, e.TileX, e.TileY, e.TileW, e.TileH, e.Left + layer.OffsetX, e.Top + layer.OffsetY, e.Width, e.Height, 0, layer.Opacity, e.Y + layer.OffsetY);
                     picture.Textures.Add(e.TilesetPath);

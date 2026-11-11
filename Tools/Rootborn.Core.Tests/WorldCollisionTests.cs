@@ -12,6 +12,9 @@ namespace Rootborn.Core.Tests
     {
         private const int Cell = 32;
 
+        /// <summary>Unity 판 실내 맵들의 가구 층 이름 앞부분. 이제 Core가 아니라 맵 목록(maps.json)의 값이다.</summary>
+        private static readonly string[] UnityInteriorProps = { "Police", "Kitchen", "Shop", "Shooting", "School", "House1", "House2" };
+
         // 문자 그림으로 층을 만든다. 각 문자열이 한 행, 공백이 아닌 칸에 타일이 있다.
         private static MapLayer Layer(string name, params string[] rows)
         {
@@ -86,7 +89,7 @@ namespace Rootborn.Core.Tests
             var wall3d = Layer("Wall_3d", "       ", "       ", "       ", "    .  ", "       ", "       ");
             var fore = Layer("ForeGround", "       ", "       ", "       ", "       ", "       ", "     . ");
             var other = Layer("Animation", "       ", "       ", "       ", "       ", " .     ", "       ");
-            CollisionGrid grid = Bake(new InteriorAutoCollision(), new[] { ground, shop, wall3d, fore, other });
+            CollisionGrid grid = Bake(new InteriorAutoCollision(propPrefixes: UnityInteriorProps), new[] { ground, shop, wall3d, fore, other });
             Assert.That(grid.IsBlocked(2, 2), Is.True, "Shop 가구");
             Assert.That(grid.IsBlocked(4, 3), Is.True, "Wall_3d");
             Assert.That(grid.IsBlocked(5, 5), Is.False, "ForeGround는 바닥으로 친다(Unity 판 이름 규칙 그대로)");
@@ -107,7 +110,7 @@ namespace Rootborn.Core.Tests
                 "       ");
             var wall = Layer("Wall", "       ", " ..... ", "       ", "       ", "       ", "       ");
             var counter = Layer("Kitchen", "       ", "       ", "  .... ", "       ", "       ", "       ");
-            CollisionGrid grid = Bake(new InteriorAutoCollision(), new[] { ground, wall, counter }, new[] { CellArea(3, 1) });
+            CollisionGrid grid = Bake(new InteriorAutoCollision(propPrefixes: UnityInteriorProps), new[] { ground, wall, counter }, new[] { CellArea(3, 1) });
             Assert.That(grid.IsBlocked(3, 1), Is.False, "문 칸");
             Assert.That(grid.IsBlocked(2, 2), Is.False, "문 옆 가구 칸");
             Assert.That(grid.IsBlocked(4, 2), Is.False, "문 옆 가구 칸");
@@ -198,6 +201,32 @@ namespace Rootborn.Core.Tests
             Assert.That(CollisionRules.Create("interior-auto", new string[0]), Is.InstanceOf<InteriorAutoCollision>());
             Assert.That(CollisionRules.Create("collider-layers", new[] { "Building" }), Is.InstanceOf<ColliderLayersCollision>());
             Assert.Throws<System.ArgumentException>(() => CollisionRules.Create("sprite-outline", new string[0]));
+        }
+
+        [Test]
+        public void WORLD_COL_010_InteriorAuto_LayerNamesComeFromTheMapNotFromCore()
+        {
+            // 새 맵은 값 없이 기본 이름 규칙(바닥 Ground, 벽 Wall·Border, 가구 Prop으로 시작)으로 읽힌다.
+            // 지금 맵의 가구 층 이름(Shop·Kitchen…)은 맵 목록이 넘기는 값이고 Core 기본값에 없다.
+            var ground = Layer("Ground", "       ", " ..... ", " ..... ", " ..... ", " ..... ", "       ");
+            var shop = Layer("Shop", "       ", "  .    ", "       ", "       ", "       ", "       ");
+            var prop = Layer("PropTable", "       ", "       ", "    .  ", "       ", "       ", "       ");
+
+            CollisionGrid byDefault = Bake(CollisionRules.Create("interior-auto", new CollisionRuleOptions()), new[] { ground, shop, prop });
+            Assert.That(byDefault.IsBlocked(2, 1), Is.False, "Shop은 기본 가구 이름이 아니다");
+            Assert.That(byDefault.IsBlocked(4, 2), Is.True, "Prop으로 시작하는 층은 가구");
+
+            var options = new CollisionRuleOptions(propPrefixes: new[] { "Shop" });
+            CollisionGrid fromMap = Bake(CollisionRules.Create("interior-auto", options), new[] { ground, shop, prop });
+            Assert.That(fromMap.IsBlocked(2, 1), Is.True, "맵이 Shop을 가구 이름으로 넘겼다");
+            Assert.That(fromMap.IsBlocked(4, 2), Is.False, "맵이 이름 목록을 주면 그것만 쓴다");
+
+            var keys = new CollisionRuleOptions(groundKeys: new[] { "Floor" }, solidKeys: new[] { "Block" });
+            var floor = Layer("Floor", "       ", " ..... ", " ..... ", " ..... ", " ..... ", "       ");
+            var block = Layer("Block", "       ", " .     ", "       ", "       ", "       ", "       ");
+            CollisionGrid custom = Bake(CollisionRules.Create("interior-auto", keys), new[] { floor, block });
+            Assert.That(custom.IsBlocked(2, 2), Is.False, "Floor가 바닥");
+            Assert.That(custom.IsBlocked(1, 1), Is.True, "Block이 벽");
         }
 
         [Test]

@@ -13,6 +13,9 @@ namespace Rootborn.World
         public string Kind, Id;
         public float X, Y;
         public int Priority;
+        /// <summary>임시 지점인가(새 맵이 오기 전까지 메인 체인을 잇는 자리). 게임은 다른 지점과 똑같이 쓴다.</summary>
+        public bool Temporary;
+        public string Reason;
     }
 
     /// <summary>맵 하나의 물건과 NPC 자리(장소 id → 자리 목록).</summary>
@@ -33,6 +36,9 @@ namespace Rootborn.World
         public float RadiusCells = InteractionTargets.UnityRadiusCells;
         public int NpcPriority, DoorPriority;
         private readonly Dictionary<string, MapInteractions> _maps = new Dictionary<string, MapInteractions>(StringComparer.Ordinal);
+
+        /// <summary>상호작용이 적힌 맵 id들.</summary>
+        public IEnumerable<string> MapIds => _maps.Keys;
 
         public MapInteractions Map(string mapId) => mapId != null && _maps.TryGetValue(mapId, out MapInteractions m) ? m : MapInteractions.Empty;
 
@@ -59,7 +65,12 @@ namespace Rootborn.World
                         {
                             Kind = t.GetProperty("kind").GetString(), Id = t.GetProperty("id").GetString(),
                             X = at[0].GetSingle(), Y = at[1].GetSingle(), Priority = t.GetProperty("priority").GetInt32(),
+                            Temporary = t.TryGetProperty("temporary", out JsonElement tmp) && tmp.ValueKind == JsonValueKind.True,
+                            Reason = t.TryGetProperty("reason", out JsonElement why) ? why.GetString() : null,
                         });
+                        InteractionThing added = m.Things[m.Things.Count - 1];
+                        if (added.Temporary && string.IsNullOrWhiteSpace(added.Reason))
+                            throw new InvalidDataException(map.Name + " " + added.Kind + "/" + added.Id + ": 임시 지점에는 reason을 적는다");
                     }
                 if (map.Value.TryGetProperty("npcAnchors", out JsonElement anchors))
                     foreach (JsonProperty location in anchors.EnumerateObject())

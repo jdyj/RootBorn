@@ -9,8 +9,13 @@
   // dayNight: 시각에 따라 화면 색을 바꾸는 맵. Unity 판은 마을 씬에만 낮밤 조명(LightingManager + 전역 2D 조명)이 있고
   //   실내·집 씬에는 2D 조명이 없어 늘 밝았다.
   // doorOpenSeconds: LDtk 문에 들어선 뒤 열릴 때까지(없으면 0.35초, Unity 실내 문). Town.unity의 자동문 5개는 0.8초였다.
+  // temporary + reason: 새 맵이 오기 전까지 메인 체인을 걸어서 잇는 임시 연결(문 경로, 이동 구역, 도착 지점 { "at": [x, y], ... }).
+  //   게임은 다른 값과 똑같이 쓴다. 맵을 새로 그리면 지운다. 목록은 game/world/README.md "임시 연결 목록".
   // areas: LDtk에 없는 이동 구역(Unity 씬의 TownLevelTransitionTrigger, 0.25초). rect는 [x, y, 너비, 높이] 레벨 픽셀(그림 기준).
   // collision.rule: interior-auto(실내 자동 판정) 또는 collider-layers(정해 둔 층의 타일이 막음). 칠한 Collision 층은 언제나 덮는다.
+  //   interior-auto의 층 이름 규칙: groundKeys(이름에 들면 바닥, 기본 Ground), solidKeys(벽, 기본 Wall·Border), propPrefixes(이름이 이것으로
+  //   시작하면 가구, 기본 Prop). 지금 실내 맵의 가구 층(Police·Kitchen·Shop…)은 Unity 판 이름이라 맵마다 적는다.
+  // doorField·spawnField: 문 엔티티(Door)의 목적지 칸과 도착 지점 칸. 없으면 Where·Position. 자세한 약속은 game/world/README.md.
   //   collision.openCells: 규칙이 막아도 열어 둘 칸 [x, y](Unity 씬에 구운 충돌에 없던 칸).
   "walker": { "bodyCells": 1, "speedCellsPerSecond": 4 },
   "maps": [
@@ -30,7 +35,9 @@
         "hospital": { "map": "HospitalInterior", "spawn": "hospital-entry" },
         "shopping center": { "map": "ShopInterior", "spawn": "shop-entry" },
         "police": { "map": "PoliceInterior", "spawn": "police-entry" },
-        "kitchen": { "map": "KitchenInterior", "spawn": "kitchen-entry" }
+        "kitchen": { "map": "KitchenInterior", "spawn": "kitchen-entry" },
+        "north": { "map": "School", "spawn": "school-entry", "temporary": true,
+          "reason": "임시 연결: LDtk 마을 그림 밖 북쪽 구역(학교 입구가 있던 곳)이 없어, 그 구역으로 가던 문 'north'를 학교 도착 지점으로 바로 잇는다. 새 맵에서 지운다" }
       },
       "spawns": {
         "town-entry": [ 336, 496 ],
@@ -39,7 +46,10 @@
         "town-hospital-entry": [ 1600, 1520 ],
         "town-police-entry": [ 784, 1360 ],
         "town-kitchen-entry": [ 784, 1872 ],
-        "town-bottom-entry": [ 1200, 1984 ]
+        "town-bottom-entry": [ 1200, 1984 ],
+        // 칸 (36,4): 북쪽 광장, 문 'north' 세 칸 아래
+        "town-school-entry": { "at": [ 1168, 144 ], "temporary": true,
+          "reason": "임시 연결: Unity 판의 학교 앞 도착 지점은 LDtk에 없는 북쪽 구역에 있었다. 학교에서 나오면 문 'north' 앞 북쪽 광장에 선다. 새 맵에서 지운다" }
       },
       // Unity Town.unity TownLevelTransition_Level0ToLevel1: 가운데 (37.5, -62.6) 44x1.4유닛 → 마을 아래 가장자리
       "areas": [ { "name": "beach", "rect": [ 496, 2012.8, 1408, 44.8 ], "to": { "map": "Beach", "spawn": "beach-top-entry" }, "openSeconds": 0.25 } ]
@@ -64,7 +74,8 @@
     },
     {
       // 학교: interiors.ldtk School_1. School.unity는 줄 밀림이 없다(LDtk r행 = 씬 칸 -(r+1)) → 픽셀 (x*32, -y*32).
-      // 마을의 학교 입구(TownSchoolPortal)와 학교 출구의 목적지(town-school-entry)는 LDtk 마을 그림 밖 북쪽 구역에 있어 아직 걸어서 잇지 못한다.
+      // 마을의 학교 입구(TownSchoolPortal)와 학교 출구의 목적지(town-school-entry)는 LDtk 마을 그림 밖 북쪽 구역에 있었다.
+      // 새 맵 전까지 임시 연결로 잇는다(마을 문 'north', 이 맵의 areas, 마을 도착 지점 town-school-entry — game/world/README.md "임시 연결 목록").
       "id": "School",
       "ldtk": "Assets/LDtk/Interiors/interiors.ldtk",
       "level": "School_1",
@@ -74,7 +85,10 @@
       "doorField": "Where",
       "spawnField": "Position",
       "doors": {},
-      "spawns": { "school-entry": [ 368, 496 ] }
+      "spawns": { "school-entry": [ 368, 496 ] },
+      // 아래 가장자리 한 줄(칸 17행) → 마을 학교 앞
+      "areas": [ { "name": "town", "rect": [ 0, 544, 736, 32 ], "to": { "map": "Town", "spawn": "town-school-entry" }, "openSeconds": 0.35, "temporary": true,
+        "reason": "임시 연결: interiors.ldtk School_1에는 문 엔티티가 없고 Unity 판 학교 출구(마을 북쪽 구역으로)도 LDtk에 없다. 아래 가장자리로 나가면 마을 학교 앞. 새 맵에서 지운다" } ]
     },
     {
       "id": "House",
@@ -96,7 +110,7 @@
       "level": "Shop",
       "entityRowShift": 1,
       "viewCells": 13,
-      "collision": { "rule": "interior-auto" },
+      "collision": { "rule": "interior-auto", "propPrefixes": [ "Police", "Kitchen", "Shop", "Shooting", "School", "House1", "House2" ] },
       "doorField": "Where",
       "spawnField": "Position",
       "doors": {
@@ -112,7 +126,7 @@
       "level": "Hospital_1",
       "entityRowShift": 1,
       "viewCells": 13,
-      "collision": { "rule": "interior-auto" },
+      "collision": { "rule": "interior-auto", "propPrefixes": [ "Police", "Kitchen", "Shop", "Shooting", "School", "House1", "House2" ] },
       "doorField": "Where",
       "spawnField": "Position",
       "doors": {
@@ -128,7 +142,7 @@
       "level": "Police_1",
       "entityRowShift": 1,
       "viewCells": 13,
-      "collision": { "rule": "interior-auto" },
+      "collision": { "rule": "interior-auto", "propPrefixes": [ "Police", "Kitchen", "Shop", "Shooting", "School", "House1", "House2" ] },
       "doorField": "Where",
       "spawnField": "Position",
       "doors": {
@@ -147,7 +161,7 @@
       "level": "Police_2",
       "entityRowShift": 1,
       "viewCells": 13,
-      "collision": { "rule": "interior-auto" },
+      "collision": { "rule": "interior-auto", "propPrefixes": [ "Police", "Kitchen", "Shop", "Shooting", "School", "House1", "House2" ] },
       "doorField": "Where",
       "spawnField": "Position",
       "doors": {
@@ -166,7 +180,7 @@
       "level": "Level_14",
       "entityRowShift": 1,
       "viewCells": 13,
-      "collision": { "rule": "interior-auto" },
+      "collision": { "rule": "interior-auto", "propPrefixes": [ "Police", "Kitchen", "Shop", "Shooting", "School", "House1", "House2" ] },
       "doorField": "Where",
       "spawnField": "Position",
       "doors": {
@@ -185,7 +199,7 @@
       "level": "Kitchen2",
       "entityRowShift": 1,
       "viewCells": 13,
-      "collision": { "rule": "interior-auto" },
+      "collision": { "rule": "interior-auto", "propPrefixes": [ "Police", "Kitchen", "Shop", "Shooting", "School", "House1", "House2" ] },
       "doorField": "Where",
       "spawnField": "Position",
       "doors": {

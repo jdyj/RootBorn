@@ -1,0 +1,181 @@
+# 맵 약속 — LDtk로 맵을 그리는 사람이 지킬 것
+
+이 문서는 MonoGame 판(`game/`)이 맵에서 **실제로 읽는 것**만 적는다. 코드는 특정 맵의 이름, 크기, 좌표를 모른다.
+맵을 바꾸는 일은 LDtk 파일, 타일셋 PNG, 이 폴더의 `maps.json`·`interactions.json`을 바꾸는 일이다.
+
+읽는 코드: `game/Rootborn.World`(LDtk 읽기 `Ldtk/LdtkFile.cs`, 맵 만들기 `WorldMapLoader.cs`, 맵 목록 `WorldCatalog.cs`,
+그리기 순서 `MapPicture.cs`, 상호작용 `WorldInteractionData.cs`, 검사 `MapChecks.cs`), 규칙은 Core `Packages/com.rootborn.core/Runtime/World`.
+
+## 1. 파일 두는 곳
+
+- LDtk 프로젝트(`.ldtk`)와 따로 저장한 레벨(`.ldtkl`)은 저장소 안 아무 곳에나 둔다. 지금 맵은 `Assets/LDtk/` 아래에 있다.
+- 타일셋 PNG는 LDtk 프로젝트에서 상대 경로(`relPath`)로 가리킨다. **그 PNG가 저장소 안에 있어야 그려진다.** 없으면 그 층은 그리지 않고
+  문제로 알린다(검사 테스트가 잡는다). PNG는 그대로 읽는다(변환 단계 없음).
+- 맵 하나를 더하려면 `maps.json`의 `maps`에 한 덩어리를 더한다. 맵 크기는 적지 않는다(레벨에서 읽는다).
+
+```jsonc
+{
+  "id": "Library",                       // 맵 id. 세이브의 현재 장면 이름과 같다. data/locations 장면 목록에도 있어야 이어 하기가 된다
+  "ldtk": "Assets/LDtk/Town/library.ldtk", // 저장소 뿌리 기준 경로
+  "level": "Library_1",                  // LDtk 레벨 이름
+  "viewCells": 13,                       // 화면에 보일 높이(칸)
+  "collision": { "rule": "interior-auto" },
+  "doors": {                             // 문 엔티티의 값 → 목적지 맵과 도착 지점
+    "town": { "map": "Town", "spawn": "town-library-entry" }
+  },
+  "spawns": {                            // 도착 지점(레벨 픽셀). 처음 적은 것이 이 맵의 시작 도착 지점
+    "library-entry": [ 304, 176 ]
+  }
+}
+```
+
+있으면 읽는 값(없으면 기본값):
+
+| 값 | 뜻 | 없을 때 |
+|---|---|---|
+| `doorEntity` | 문 엔티티 이름 | `Door` |
+| `doorField` | 문 엔티티에서 목적지 값을 읽는 칸 | `Where` |
+| `spawnField` | 문 엔티티에서 도착 지점을 따로 정하는 칸(값이 있으면 `doors` 표의 도착 지점 대신 쓴다) | `Position` |
+| `doorOpenSeconds` | 문에 들어선 뒤 넘어갈 때까지(초) | 0.35 |
+| `areas` | LDtk에 없는 이동 구역 목록(3절) | 없음 |
+| `dayNight` | 시각에 따라 화면 색을 바꾸는가(바깥 맵) | `false` |
+| `entityRowShift` | 문 엔티티와 칠한 Collision 층을 그림보다 몇 줄 아래로 읽을지 | 0 |
+
+`entityRowShift`는 Unity 판에서 가져온 지금 맵의 어긋남(문이 그림보다 한 줄 아래)을 재현하는 값이다. **새 맵에는 적지 않는다.**
+
+## 2. 칸, 좌표, 층
+
+- **좌표**: 모든 좌표는 LDtk 레벨 픽셀이다. 왼쪽 위가 (0, 0)이고 아래로 갈수록 y가 커진다(LDtk와 같다).
+  칸 (c, r)의 가운데 픽셀은 ((c + 0.5) × 칸, (r + 0.5) × 칸).
+- **칸 크기**: `Collision` IntGrid 층이 있으면 그 격자 크기, 없으면 타일이 가장 많은 타일 층의 격자 크기다.
+  레벨 픽셀 크기는 칸 크기로 나누어떨어져야 한다(아니면 문제로 알린다). 칸 크기가 다른 타일 층은 충돌 판정에서 빠진다.
+- **걷는 몸**: 1칸 크기 상자, 초당 4칸(`maps.json`의 `walker`). 칸 단위라 칸 크기가 다른 맵에서도 같다.
+- **그리기 순서** (`MapPicture.cs`):
+  - 보이는(`visible`) 타일 층은 모두 캐릭터 **아래**에 LDtk 순서대로 깐다.
+  - LDtk 층 정의에 태그(`uiFilterTags`) `ysort`를 단 층의 그림만 캐릭터와 발 위치로 앞뒤를 가린다(아래쪽에 선 것이 앞). 가구가 이런 층이다.
+  - 엔티티는 태그 `art` 또는 `ysort`가 붙은 층의 것만 그린다. 문 같은 표시용 엔티티는 그리지 않는다.
+  - 엔티티 그림은 엔티티의 타일(`__tile`)에서 오고, 발 위치는 엔티티의 기준점(pivot) y다.
+
+## 3. 충돌(걸을 수 있는 칸)
+
+`collision.rule`로 규칙을 고른다. 규칙 뒤에 칠한 `Collision` 층이 언제나 덮는다.
+
+### `interior-auto` — 층 이름으로 자동 판정(실내에 쓴다)
+
+- 이름에 **`Ground`**가 들어간 층은 바닥이다.
+- 이름에 **`Wall`** 또는 **`Border`**가 들어간 층은 벽이다(막음).
+- 이름이 **`Prop`**으로 시작하는 층은 가구다(막음). 단, 문 바로 둘레 8칸의 바닥은 가구가 있어도 연다(문 앞을 가구가 막지 않게).
+- 타일이 있는 범위에 한 칸 테두리를 더한 안에서, 벽·가구가 없는 바닥과 문 칸만 열리고 나머지는 막힌다. 맵 밖은 언제나 막힌다.
+- 이름 규칙은 맵마다 바꿀 수 있다: `"collision": { "rule": "interior-auto", "groundKeys": [...], "solidKeys": [...], "propPrefixes": [...] }`.
+  지금 실내 맵은 Unity 판 층 이름(Police·Kitchen·Shop·Shooting·School·House1·House2)을 `propPrefixes`로 적어 둔다.
+  이름에 `Ground`가 들어가기만 하면 바닥이라, `ForeGround` 같은 이름도 바닥으로 친다.
+
+### `collider-layers` — 정해 둔 층의 타일이 칸 전체를 막음(바깥 맵에 쓴다)
+
+`"collision": { "rule": "collider-layers", "layers": [ "Building", "Fence" ] }`. 그 층에 타일이 있는 칸은 막히고, 나머지는 열린다.
+
+### 칠해서 덮기 — `Collision` IntGrid 층
+
+레벨에 이름이 `Collision`인 IntGrid 층을 두고 **1은 막음, 2는 열림**으로 칠한다. 0이나 다른 값은 규칙의 결과를 둔다.
+격자 크기가 맵 칸과 다르면 쓰지 않고 문제로 알린다. 규칙만으로 안 맞는 칸은 이 층으로 고친다(`openCells`보다 이쪽을 쓴다).
+`collision.openCells: [[x, y], ...]`는 지금 학교 맵을 Unity 판 충돌에 맞추려고 둔 값이다.
+
+## 4. 문과 이동
+
+- **문 엔티티**: 이름 `Door`(또는 `doorEntity`). 필드 `Where`(또는 `doorField`)에 목적지 값을 적는다. 값은 앞뒤 공백을 지우고 소문자로,
+  `-`는 공백으로 바꿔 `doors` 표와 비교한다(`Shopping-Center` = `shopping center`). **표에 없는 값의 문은 열리지 않는다**(검사가 잡는다).
+- 필드 `Position`(또는 `spawnField`)에 값이 있으면 그 도착 지점으로 간다. 비어 있으면 표의 도착 지점.
+- **문 상자**: 엔티티의 사각형. 가운데는 그대로 두고 너비 0.75칸, 높이 1칸보다 작으면 넓힌다.
+  몸이 문 상자에 새로 겹치면 열리기 시작해 `doorOpenSeconds` 뒤에 넘어간다. 도착했을 때 이미 겹친 문은 한 번 나갔다 들어와야 열린다.
+- **문을 그림에 맞게 놓기**: 문 엔티티를 문 그림 타일 위에 **그 칸 그대로** 놓는다. 새 맵은 `entityRowShift`를 적지 않으므로 엔티티 자리가 곧 게임의 문 자리다.
+  문 상자는 걸어서 들어갈 수 있는 칸에 걸쳐야 한다(벽 안에만 있으면 닿지 않는다 — `interior-auto`는 문 칸을 자동으로 연다).
+- **맵 가장자리 이동 구역**: LDtk 엔티티 없이 `areas`에 적는다.
+  `{ "name": "beach", "rect": [x, y, 너비, 높이], "to": { "map": "Beach", "spawn": "beach-top-entry" }, "openSeconds": 0.25 }`.
+  `rect`는 레벨 픽셀이고 맵 밖으로 나가도 된다(맵 밖으로 나간 칸은 걸을 수 있게 열린다). 줄 밀기를 받지 않는다.
+- **도착 지점**: `spawns`의 이름 → 레벨 픽셀 [x, y](몸 가운데). 걸을 수 있는 칸 위에 둔다. 실내는 출구 상자에서 0.9칸 넘게 떨어뜨리고
+  그 자리에서 모든 출구까지 걸어갈 수 있어야 한다(Unity 판 저장 검사와 같다). 도착 지점 이름은 맵 사이에서 겹치지 않게 짓는다(`<맵>-<어디>-entry`).
+  다른 맵의 문이 이 이름을 가리키므로 이름을 바꾸면 그 문들의 `doors`·`Position`도 바꾼다.
+
+## 5. 상호작용 지점
+
+LDtk 엔티티가 아니라 **`interactions.json`**에 맵 id별로 적는다(LDtk에는 상호작용 엔티티를 두지 않는다).
+
+```jsonc
+"Library": {
+  "npcAnchors": { "location.library": [ [ 144, 80 ] ] },   // 장소 id → NPC가 설 자리 목록(레벨 픽셀)
+  "things": [
+    { "kind": "location-activity", "id": "location.library", "at": [ 80, 208 ], "priority": 45 }
+  ]
+}
+```
+
+- `at`은 물건의 가운데 레벨 픽셀이다. 플레이어가 `radiusCells`(1.75칸) 안에 들어오면 대상이 되고, 여럿이면 `priority`가 큰 것.
+  지점은 걸을 수 있는 칸이거나 그 옆 칸에 둔다(검사가 잡는다). 지점 자체는 길을 막지 않는다.
+- NPC는 일정(data/npcs)이 정한 장소의 자리에 선다. 같은 장소에 NPC가 여럿이면 data/registry.json의 NPC 순서대로 1번째, 2번째 자리.
+  자리가 모자라면 그 NPC는 그 맵에 서지 않는다.
+- `kind`는 그대로 이벤트로 나가는 문자열이고, 화면 등록 표(`Rootborn.Screens/ScreenCatalog.cs`)가 종류로 화면을 연다. 지금 종류:
+
+| kind | 무엇 | 우선순위(Unity 판) | 지금 여는 화면(2026-11-12) |
+|---|---|---|---|
+| `npc` | NPC(자동, `npcAnchors`에서) | 30 | 대화 |
+| `daily-plan-board` | 하루 계획판 | 80 | 아직 없음 |
+| `student-day-end` | 하루 마감 | 80 | 아직 없음 |
+| `location-visit` | 장소 방문 | 35 | 아직 없음(안내 글자만) |
+| `location-activity` | 장소 활동 | 45 | 그 장소의 하루 이벤트 |
+| `part-time-work` | 알바 자리(`id`는 data의 알바 id) | 45 | 아직 없음 |
+| `door` | 자동문(자동, 목적지 있는 문) | 110 | 없음 — 걸어 들어가야 열린다 |
+
+  탐색 지점 종류는 아직 없다. 새 종류는 화면 쪽에 등록하면 되고, 이 파일에는 문자열만 적는다.
+
+## 6. 집
+
+- 집 맵의 크기는 자유다(지금 28×18칸). 코드는 집 크기를 맵 파일에서 읽는다(`HouseSizeTests`가 크기가 다른 집으로 확인한다).
+- 가구를 놓을 수 있는 칸: 지금 정한 방식(`game/tests/Rootborn.Game.Tests/HouseRoom.cs`, Host 연결은 아직 전)은
+  **맵 안의 모든 칸이 바닥, 막힌 칸은 고정 칸, 도착 지점이 있는 칸은 들어오는 칸(문 앞)**이다. 그래서 벽·고정 가구는 충돌로 막아 두면 된다.
+  가구 그림은 `ysort` 태그 층의 엔티티로 그린다.
+- 집 단계: 세이브의 집 상태(`HouseStage`, 0부터)와 단계마다 따로 저장하는 가구 배치가 있다. 단계마다 다른 집 맵으로 바꾸는 표는 아직 없다
+  (지금 `maps.json`의 집은 하나). 새 집 그림이 단계별로 오면 그때 맵 목록에 단계 → 맵을 더한다.
+
+## 7. 메인 체인이 요구하는 곳
+
+새 게임 시작 자리(data/locations 장면 목록의 새 게임 자리, 지금 `House/house-entry`)에서 **문을 지나 걸어서** 아래에 모두 닿고,
+닿은 모든 곳에서 집으로 걸어서 돌아와야 한다. `MainChainWalkTests`가 확인한다(맵 이름이 아니라 종류와 id로 찾는다).
+
+| 단계(Unity E2E) | 지점 |
+|---|---|
+| 001 엄마와 이야기 | NPC 자리 `location.home` |
+| 001 하루 계획 | `daily-plan-board` |
+| 001 학교 선생님 | NPC 자리 `location.school` |
+| 002·005 하루 마감 | `student-day-end` |
+| 003 일터 둘러보기 | `location.restaurant`, `location.medical-clinic`, `location.design-studio`, `location.training-ground` (`location-visit`·`location-activity`) |
+| 004 가게 알바 | `part-time-work` / `work.shift.corner-store` |
+| 006 도서관 | `location.library` |
+| 008~009 가구 사기 | `location.corner-store` |
+
+## 8. 임시 연결 목록
+
+새 맵이 오기 전까지 메인 체인을 걸어서 확인하려고 데이터에만 둔 연결이다. 항목마다 `"temporary": true`와 `"reason"`이 있다
+(이유가 없으면 읽기를 거절한다). 게임은 다른 값과 똑같이 쓰고, 화면에서 구별하지 않는다. **맵을 새로 그리면 지운다.**
+
+| 파일 | 맵 | 항목 | 이유 |
+|---|---|---|---|
+| maps.json | Town | 문 `north` → School/school-entry | LDtk 마을 그림 밖 북쪽 구역(학교 입구가 있던 곳)이 LDtk에 없다 |
+| maps.json | Town | 도착 지점 `town-school-entry` (1168, 144) | 학교 앞 도착 지점이 북쪽 구역에 있었다. 문 `north` 아래 북쪽 광장 |
+| maps.json | School | 이동 구역 `town`(아래 가장자리 한 줄) → Town/town-school-entry | School_1에 문 엔티티가 없고 학교 출구도 LDtk에 없다 |
+| interactions.json | Town | `location-activity`·`location-visit` × `location.restaurant`(1072,176), `location.medical-clinic`(1200,176), `location.design-studio`(1328,176), `location.training-ground`(1456,176), `location.library`(1072,304), `location.corner-store`(1264,304) — 12개 | 이 지점들이 북쪽 구역에 있었다 |
+| interactions.json | Town | `part-time-work` / `work.shift.corner-store` (1456, 304) | 가게 알바 자리가 북쪽 구역에 있었다. 여는 화면은 아직 없다 |
+
+## 9. 새 맵을 넣은 뒤 돌려 볼 것
+
+```
+dotnet test game/tests/Rootborn.World.Tests --filter "MapContractTests|MainChainWalkTests"
+dotnet run --project game/Rootborn.Host -- --world <맵 id 또는 LDtk 레벨 이름> --size 1920x1080
+```
+
+- `MapContractTests`(새 맵 검사, `MapChecks`): `maps.json`의 모든 맵에 대해 문 값이 `doors` 표에 있다, 문의 목적지 맵과 도착 지점이 있다,
+  도착 지점이 걸을 수 있는 칸이다, 모든 문이 그 맵의 시작 도착 지점에서 걸어서 닿는다, 상호작용 지점·NPC 자리가 걸어서 닿는 칸 옆에 있다,
+  쓰는 타일셋 PNG가 있다. 지금 맵에서 걸리는 것은 테스트 옆 `KnownMapProblems`에 (맵 id, LDtk 파일, 레벨)로 묶여 있어,
+  LDtk 파일이나 레벨을 바꾼 새 맵에는 적용되지 않는다.
+- `MainChainWalkTests`: 7절.
+- `--world`로 띄우면 맵 목록의 첫 도착 지점에 선다(`--spawn <이름>`으로 바꾼다). 화면에서 F12로 찍어 겹침·빈 그림·어긋난 문을 본다.
+- 이 테스트들은 자동 테스트다(칸 단위 경로). 실제로 걸어 본 것은 Host의 장치 입력 테스트나 직접 본 화면으로만 말한다.

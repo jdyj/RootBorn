@@ -57,7 +57,7 @@ namespace Rootborn.World
             var map = new LoadedMap { Entry = entry, Level = level };
             var doors = new List<DoorArea>();
             CollisionInput input = CollisionInputOf(entry, level, doors, map.Problems);
-            ICollisionRule rule = CollisionRules.Create(entry.CollisionRule, entry.CollisionLayers);
+            ICollisionRule rule = CollisionRules.Create(entry.CollisionRule, entry.CollisionOptions);
             map.World = new WorldMap(entry.Id, Open(CollisionBaker.Bake(input, rule), entry.OpenCells), doors, entry.Spawns);
             map.Picture = MapPicture.From(level);
             map.Problems.AddRange(map.Picture.Problems);

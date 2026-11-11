@@ -25,6 +25,8 @@ namespace Rootborn.World.Ldtk
         public float PivotX, PivotY;
         public string TilesetPath;
         public int TileX, TileY, TileW, TileH;
+        /// <summary>그림 타일셋을 가리키지만 그 PNG가 저장소에 없을 때 그 타일셋 이름(아니면 null).</summary>
+        public string MissingTileset;
         public readonly Dictionary<string, string> Fields = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         public bool HasTile => TilesetPath != null && TileW > 0 && TileH > 0;
@@ -244,6 +246,11 @@ namespace Rootborn.World.Ldtk
                 entity.TileY = tile.GetProperty("y").GetInt32();
                 entity.TileW = tile.GetProperty("w").GetInt32();
                 entity.TileH = tile.GetProperty("h").GetInt32();
+            }
+            else if (e.TryGetProperty("__tile", out JsonElement missing) && missing.ValueKind == JsonValueKind.Object)
+            {
+                int uid = missing.GetProperty("tilesetUid").GetInt32();
+                entity.MissingTileset = Tilesets.TryGetValue(uid, out LdtkTileset known) ? (known.RelPath ?? known.Identifier) : "uid " + uid;
             }
             if (e.TryGetProperty("fieldInstances", out JsonElement fields))
                 foreach (JsonElement f in fields.EnumerateArray())

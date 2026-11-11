@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.Json;
+using Rootborn.Core.Time;
+using Rootborn.Data;
 
 namespace Rootborn.World
 {
@@ -17,41 +18,37 @@ namespace Rootborn.World
     }
 
     /// <summary>
-    /// 낮밤 조명 프로필(Unity DayNightLightingProfile, data/time). 시각(0~24)으로 빛 색(그라디언트, 키 사이 직선)과
-    /// 세기(곡선, Unity AnimationCurve의 에르미트 보간)를 낸다. 정의 로더는 이 종류를 "규칙이 아님"으로 두어 여기서 읽는다.
+    /// 낮밤 조명(Unity DayNightLightingProfile). 정의 로더가 data/time에서 만든 Core DayNightLightingProfile의 키로
+    /// 시각(0~24)의 빛 색(그라디언트, 키 사이 직선)과 세기(곡선, Unity AnimationCurve의 에르미트 보간)를 낸다.
     /// </summary>
     public sealed class DayNightLighting
     {
-        public const string RelativePath = "data/time/DayNightLightingProfile.json";
-
         private readonly List<(float time, LightColor color)> _colors = new List<(float, LightColor)>();
         private readonly List<(float time, float value, float inSlope, float outSlope)> _intensity = new List<(float, float, float, float)>();
 
-        public float LerpSpeed { get; private set; } = 2f;
+        public float LerpSpeed { get; }
 
-        public static DayNightLighting Load(string repoRoot) => Parse(File.ReadAllText(Path.Combine(repoRoot, RelativePath)));
-
-        public static DayNightLighting Parse(string json)
+        /// <summary>Core 프로필의 키를 그대로 쓴다(프로필이 이미 시간 순으로 정렬해 두었다).</summary>
+        public DayNightLighting(DayNightLightingProfile profile)
         {
-            using JsonDocument doc = JsonDocument.Parse(json);
-            JsonElement[] all = new List<JsonElement>(doc.RootElement.EnumerateArray()).ToArray();
-            if (all.Length == 0) throw new InvalidDataException("낮밤 조명 프로필이 없다");
-            JsonElement p = all[0];
-            var profile = new DayNightLighting();
-            if (p.TryGetProperty("lightingLerpSpeed", out JsonElement speed)) profile.LerpSpeed = Math.Max(0.01f, speed.GetSingle());
-            JsonElement g = p.GetProperty("globalColor");
-            int keys = g.GetProperty("m_NumColorKeys").GetInt32();
-            for (int i = 0; i < keys; i++)
-            {
-                JsonElement k = g.GetProperty("key" + i);
-                profile._colors.Add((g.GetProperty("ctime" + i).GetInt32() / 65535f, new LightColor(k.GetProperty("r").GetSingle(), k.GetProperty("g").GetSingle(), k.GetProperty("b").GetSingle())));
-            }
-            profile._colors.Sort((a, b) => a.time.CompareTo(b.time));
-            foreach (JsonElement k in p.GetProperty("globalIntensity").GetProperty("m_Curve").EnumerateArray())
-                profile._intensity.Add((k.GetProperty("time").GetSingle(), k.GetProperty("value").GetSingle(), k.GetProperty("inSlope").GetSingle(), k.GetProperty("outSlope").GetSingle()));
-            profile._intensity.Sort((a, b) => a.time.CompareTo(b.time));
-            return profile;
+            if (profile == null) throw new ArgumentNullException(nameof(profile));
+            LerpSpeed = profile.LerpSpeed;
+            foreach (LightingColorKey k in profile.ColorKeys) _colors.Add((k.DayFraction, new LightColor(k.R, k.G, k.B)));
+            foreach (LightingCurveKey k in profile.IntensityKeys) _intensity.Add((k.Hour, k.Value, k.InSlope, k.OutSlope));
         }
+
+        /// <summary>정의에서 낮밤 조명 프로필 하나를 꺼낸다. 없으면 오류.</summary>
+        public static DayNightLighting From(GameDefinitions definitions)
+        {
+            if (definitions == null) throw new ArgumentNullException(nameof(definitions));
+            IReadOnlyList<DayNightLightingProfile> all = definitions.All<DayNightLightingProfile>();
+            if (all.Count == 0) throw new InvalidDataException("낮밤 조명 프로필(DayNightLightingProfile)이 없다");
+            return new DayNightLighting(all[0]);
+        }
+
+        /// <summary>옛 진입점(Host가 아직 부른다). 저장소의 data/를 정의 로더로 읽어 From과 같은 값을 낸다.</summary>
+        [Obsolete("Host에서 바꿀 곳: DayNightLighting.From(정의)를 쓴다. 이 진입점은 data/를 한 번 더 읽는다.")]
+        public static DayNightLighting Load(string repoRoot) => From(LoadedDefinitions.Of(repoRoot));
 
         private static float Wrap(float hour)
         {

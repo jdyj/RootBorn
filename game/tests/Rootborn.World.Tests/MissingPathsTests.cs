@@ -35,7 +35,7 @@ namespace Rootborn.World.Tests
             town.World.TryGetSpawn("town-bottom-entry", out var bottom);
             Assert.That(GridPath.Find(town.World.Collision, CellPos.Containing(bottom.X, bottom.Y, 32),
                 c => toBeach.Area.Overlaps(new AreaRect(c.X * 32, c.Y * 32, 32, 32))), Is.Not.Null);
-            Assert.That(WorldEntryRules.ResolvePair(WorldTravelData.Load(Repo.Root), "Beach", "beach-top-entry"), Is.Not.Null);
+            Assert.That(WorldEntryRules.ResolvePair(WorldTravelData.From(Repo.Definitions), "Beach", "beach-top-entry"), Is.Not.Null);
         }
 
         [Test]
