@@ -1,67 +1,51 @@
 #!/usr/bin/env bash
-# 농장 게임 데이터-드리븐 원칙 강제 (.claude/rules/path-based/assets-data.md):
-# 시스템 코드는 특정 엔티티(Crop/Tool/Knowledge/Trait/Generation) ID에 분기 금지.
-#
-# 허용: 테스트 코드 / Editor 스크립트 / Data SO 내부에서 ID 비교는 OK.
-# 금지: 런타임 게임플레이/네트워크 코드.
-
+# 엔티티 데이터-드리븐 원칙(.claude/rules/path-based/assets-data.md): 코드는 특정 엔티티 id로 갈라지지 않는다.
+# 대상: Packages/com.rootborn.core/Runtime, game/ (tests 폴더 제외). 주석은 보지 않는다.
+# 찾는 것: id 이름(id, xxxId)을 문자열 리터럴과 ==, !=, is, Equals로 비교, switch (…Id), enum …Id.
+# 지금 코드에서 걸리는 것은 Scripts/ci/allowlists/entity-id-branching.txt 에 이유와 함께 고정한다.
 set -euo pipefail
+source "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 
-ROOT="$(git rev-parse --show-toplevel)"
-cd "$ROOT"
+ALLOW="${ENTITY_ID_ALLOWLIST:-$CI_DIR/allowlists/entity-id-branching.txt}"
+SCAN=("Packages/com.rootborn.core/Runtime" "game")
 
-SCAN_GLOBS=(
-  "Assets/Scripts/Game"
-  "Assets/Scripts/Network"
-  "Assets/Scripts/UI"
-)
-
+# id로 읽히는 이름 한 덩어리(낱말 전체): id, _id, Id, someId. valid·android 같은 낱말 끝은 id가 아니다.
+ID='([A-Za-z0-9_]*Id|_?id)'
+B='(^|[^A-Za-z0-9_])'          # 이름 앞 경계
+Q='([A-Za-z0-9_]+\.)*'          # a.b. 같은 앞 접두
+E='([^A-Za-z0-9_]|$)'           # 이름 뒤 경계
 PATTERNS=(
-  'cropId\s*==\s*"'
-  'crop\.id\s*==\s*"'
-  '\.CropId\s*==\s*"'
-  'switch\s*\(\s*crop(Id|\.id|Definition\.id)\s*\)'
-  'enum\s+CropId\b'
-
-  'toolId\s*==\s*"'
-  'tool\.id\s*==\s*"'
-  '\.ToolId\s*==\s*"'
-  'switch\s*\(\s*tool(Id|\.id|Definition\.id)\s*\)'
-  'enum\s+ToolId\b'
-
-  'knowledgeId\s*==\s*"'
-  'knowledge\.id\s*==\s*"'
-  'switch\s*\(\s*knowledge(Id|\.id|Node\.id)\s*\)'
-  'enum\s+KnowledgeId\b'
-
-  'traitId\s*==\s*"'
-  'trait\.id\s*==\s*"'
-  'switch\s*\(\s*trait(Id|\.id)\s*\)'
-  'enum\s+TraitId\b'
+  "${B}${Q}${ID}\s*(==|!=)\s*\"|\"\s*(==|!=)\s*${Q}${ID}${E}"   # 이름 == "리터럴" / "리터럴" == 이름
+  "${B}${Q}${ID}\s+is\s+(not\s+)?\""                              # 이름 is "리터럴"
+  "${B}${Q}${ID}\s*\.\s*Equals\s*\(\s*\""                         # 이름.Equals("리터럴")
+  "Equals\s*\(\s*${Q}${ID}\s*,\s*\""                              # string.Equals(이름, "리터럴")
+  "Equals\s*\(\s*\"[^\"]*\"\s*,\s*${Q}${ID}${E}"                  # string.Equals("리터럴", 이름)
+  "switch\s*\(\s*${Q}${ID}\s*\)"                                  # switch (이름)
+  "(^|[^A-Za-z0-9_])enum\s+[A-Za-z0-9_]*Id\b"                     # enum …Id
 )
 
+mapfile -t files < <(cs_files "${SCAN[@]}")
 violations=0
-for path in "${SCAN_GLOBS[@]}"; do
-  [ -d "$path" ] || continue
+allowed=0
+if [ "${#files[@]}" -gt 0 ]; then
+  scanned="$(printf '%s\n' "${files[@]}" | cs_scan nocomment)"
   for pat in "${PATTERNS[@]}"; do
-    if matches=$(grep -RInE \
-        --include='*.cs' \
-        --exclude-dir='Tests' \
-        --exclude-dir='tests' \
-        --exclude-dir='Editor' \
-        "$pat" "$path" 2>/dev/null); then
-      echo "::error::data-driven violation (pattern: $pat)"
-      echo "$matches"
-      echo
+    while IFS= read -r hit; do
+      [ -n "$hit" ] || continue
+      path="${hit%%:*}"
+      rest="${hit#*:}"; text="${rest#*:}"
+      if is_allowed "$ALLOW" "$path" "$text"; then
+        allowed=$((allowed + 1))
+        continue
+      fi
+      echo "$hit  <- 엔티티 id로 분기하지 않는다"
       violations=$((violations + 1))
-    fi
+    done < <(printf '%s\n' "$scanned" | grep -E -- "$pat" || true)
   done
-done
-
-if [ "$violations" -gt 0 ]; then
-  echo "FAIL: $violations data-driven principle violation(s) found." >&2
-  echo "See .claude/rules/path-based/assets-data.md (엔티티 데이터-드리븐 절대 원칙)." >&2
-  exit 1
 fi
 
-echo "OK: no entity-id branching in system code."
+if [ "$violations" -gt 0 ]; then
+  echo "FAIL: 엔티티 id 분기 ${violations}건 (허용 목록 ${allowed}건 제외). .claude/rules/path-based/assets-data.md 참고." >&2
+  exit 1
+fi
+echo "OK: 엔티티 id 분기가 없다 (${#files[@]}개 파일, 허용 목록 ${allowed}건)."
