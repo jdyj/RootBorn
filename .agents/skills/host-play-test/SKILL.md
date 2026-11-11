@@ -32,6 +32,10 @@ C:\Users\jdyj\.dotnet\dotnet.exe run --project game/Rootborn.Host -- --sample --
 - 대상은 화면 좌표가 아니라 요소 id로 찾는다. 화면은 `OpenScreenWithKey`·`WaitForScreen`으로 열고 `PressButton`으로 누르고 `ScreenshotScreen`으로 찍는다(`game/README.md` "화면 더하기").
 - 테스트가 띄운 창과 프로세스는 반드시 끝낸다. 사용자의 마우스와 키보드를 OS 수준으로 조작하지 않는다.
 
+## 스스로 플레이하는 시뮬레이션
+
+대본 없이 정책(`random`, `main-chain`, `off-school`, `novelty`)이 화면에 보이는 것(누를 수 있는 요소, 걸어 닿는 지점과 문, 여는 키, 추적 목표)만 보고 골라 여러 날을 플레이하며 불변식(예외, 막힘, 하루 넘김, 수치 범위, 보상 두 번, 화면 쌓임, 날마다 저장 → 새 `GameSession`으로 다시 읽기, 빠진 문구 키, 걸음 프레임·프레임당 할당)을 본다. 판단 코드는 `game/tests/Rootborn.Simulation.Tests/Play/`에 하나다. 창 없는 층은 `dotnet test game/tests/Rootborn.Simulation.Tests`(자동 테스트, 30초쯤), 실제 창 층은 `dotnet test game/tests/Rootborn.Host.Tests --filter "FullyQualifiedName~Simulation"`(장치 이벤트 주입, OS 입력 계층 미확인). 길게 돌리려면 `ROOTBORN_SIM_SEEDS`·`ROOTBORN_SIM_DAYS`(창 없음), `ROOTBORN_SIM_HOST_SEEDS`·`ROOTBORN_SIM_HOST_DAYS`(창). 판마다 `output/simulation/<이름>/`에 `play.txt`(정책·씨앗·행동 이름), `summary.md`(지나간 화면·상호작용·맵, 끝낸 퀘스트, 열지 못한 화면), 실패하면 `failure.md`(화면 쌓임·맵·자리·최근 행동)가 남는다. 재현: 같은 정책과 씨앗은 같은 판이다(결정적 — 창 없는 층). 남은 기록을 그대로 다시 하려면 `ROOTBORN_SIM_REPLAY=output/simulation/<이름>/play.txt dotnet test game/tests/Rootborn.Simulation.Tests --filter "Name=ReplayFromEnvironment"`. 새 요소 종류는 `UiTargets.Register`, 줄·카드의 데이터 id는 `ScreenSubjects.Register`, 정책은 `PlayPolicyCatalog.Register`, 목표 종류 힌트는 `ObjectiveHints.Register`에 한 줄씩 더한다. 찾은 결함 중 범위 밖은 `KnownDefects`와 `KnownDefectReproTests`(건너뜀 없음)에 둔다.
+
 ## 스크린샷
 
 - 그려진 화면 버퍼에서 저장한다. 위치는 `output/` 아래(git 밖).

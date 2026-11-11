@@ -7,6 +7,8 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../Rootborn.Host/Rootborn.Host.csproj" />
+    <!-- 스스로 플레이하는 시뮬레이션(Simulation/)이 창 없는 층과 같은 판단·관찰·불변식 코드를 쓴다. -->
+    <ProjectReference Include="../Rootborn.Simulation.Tests/Rootborn.Simulation.Tests.csproj" />
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="[3.8.6.1]" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageReference Include="NUnit" Version="3.14.0" />
