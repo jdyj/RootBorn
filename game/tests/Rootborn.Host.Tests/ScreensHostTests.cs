@@ -222,10 +222,10 @@ namespace Rootborn.Host.Tests
             TestContext.Progress.WriteLine(report);
             File.WriteAllText(Path.Combine(HostOptions.Resolve(new[] { "--sample" }).RepoRoot, "output", "host-screens-evidence", "performance.txt"), report);
             // 벽시계는 CI 러너(소프트웨어 그리기)에서 흔들려 판정하지 않는다. 흔들리지 않는 값: 그린 칸(위), 그리기 명령 수(칸마다 3개 — 1,500칸을 다 그리면 4,500개),
-            // 프레임당 할당. 2026-11-12 측정 약 5,300바이트 — 전부 Rootborn.Ui NineSlice.BuildStretched가 늘이기 칸 그림마다 int[4] 두 개를 만드는 것(보이는 칸 42개,
-            // 그 프로젝트는 이 작업 범위 밖). 1,500칸을 다 그리면 10만 바이트를 넘는다. Ui를 고치면 한계를 내린다.
+            // 프레임당 할당은 0이다(첫 휠로 글자 그림을 채운 뒤). 고치기 전(2026-11-12) 약 5,300바이트 — NineSlice.BuildStretched가 칸마다 int[4] 두 개, 그리고
+            // UiRenderer의 SpriteBatch가 처음 넘기는 줄에서 내부 배열을 키우며 한 번에 15만 바이트(BatchCapacity로 미리 잡는다).
             Assert.That(maxCommands, Is.LessThan(400), "보이는 칸만 그린다(그리기 명령 수)");
-            Assert.That(bytesPerFrame, Is.LessThan(8192), "스크롤하는 동안 프레임마다 새로 잡는 바이트");
+            Assert.That(bytesPerFrame, Is.EqualTo(0), "스크롤하는 동안 프레임마다 새로 잡는 바이트");
         }
     }
 }

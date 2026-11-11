@@ -34,11 +34,10 @@ namespace Rootborn.Host.Tests.Simulation
         /// <summary>같은 구간의 관리 힙(GC 뒤)이 늘어도 되는 양(MB). 2026-11-12: 29MB에서 그대로.</summary>
         private const long AllowedManagedGrowthMb = 16;
         /// <summary>
-        /// 맨 위 화면 없이 가만히 선 실제 창 프레임 한 번의 할당 한계(바이트). 2026-11-12 측정 720 — 전부 Rootborn.Ui NineSlice.BuildStretched가
-        /// 늘이기 9조각 패널(HUD)마다 int[4] 두 개를 만드는 것이다(그 프로젝트는 이 작업 범위 밖, 보고에 적음). 월드 갱신·그리기는 0(WORLD_FRAME_001).
-        /// Ui를 고치면 이 한계를 0 가까이로 내린다.
+        /// 맨 위 화면 없이 가만히 선 실제 창 프레임 한 번의 할당 한계(바이트). 0이다: 월드 갱신·그리기(WORLD_FRAME_001)와 UI 배치·포인터·그리기 명령·9조각
+        /// (Rootborn.Ui FrameAllocationTests)가 모두 새 객체를 만들지 않는다. 고치기 전(2026-11-12) 720(집 800) — NineSlice.BuildStretched가 HUD 패널마다 int[4] 두 개.
         /// </summary>
-        private const long IdleFrameBytesLimit = 1024;
+        private const long IdleFrameBytesLimit = 0;
         /// <summary>메모리를 비교할 때 가장 작은 값을 고르는 창(잰 횟수).</summary>
         private const int Window = 3;
         private const int IdleFrames = 30;

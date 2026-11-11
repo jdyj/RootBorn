@@ -25,6 +25,13 @@ namespace Rootborn.Host.Rendering
         };
         private readonly RasterizerState _scissor = new RasterizerState { CullMode = CullMode.None, ScissorTestEnable = true };
 
+        /// <summary>
+        /// UI 그리기 묶음(SpriteBatch) 하나에 미리 잡아 두는 그림 수. 기본(256)으로 두면 긴 목록·격자를 처음 넘길 때 한 묶음의 그림 수가 최고치를
+        /// 넘는 프레임에 MonoGame이 내부 배열을 키우며 한 번에 15만 바이트쯤 잡는다(1,500칸 격자, 2026-11-12 측정). 9조각 패널 하나가 9장, 글자 하나가 1장이다.
+        /// 넘어도 MonoGame이 알아서 키우므로 그리기 결과는 같다 — 프레임 중간의 할당만 없앤다.
+        /// </summary>
+        private const int BatchCapacity = 4096;
+
         private readonly GraphicsDevice _device;
         private readonly SpriteBatch _batch;
         private readonly Texture2D _white;
@@ -41,7 +48,7 @@ namespace Rootborn.Host.Rendering
         public UiRenderer(GraphicsDevice device, TextRenderer text, ThemeFolder theme, ImageCatalog images, SpriteAtlases atlases)
         {
             _device = device;
-            _batch = new SpriteBatch(device);
+            _batch = new SpriteBatch(device, BatchCapacity);
             _text = text;
             _skins = theme.Skins;
             _textColors = theme.TextColors;

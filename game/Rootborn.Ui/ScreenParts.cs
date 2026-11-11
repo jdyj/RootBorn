@@ -133,11 +133,18 @@ namespace Rootborn.Ui
         public string OnSkin;
 
         private readonly List<string> _lines = new List<string>(4);
+        private string _wrappedText;
+        private float _wrappedWidth = -1, _wrappedSize;
 
         public override void Emit(DrawList list, ITextMeasurer text)
         {
             if (string.IsNullOrEmpty(Text)) return;
-            TextWrap.Wrap(Text, Rect.W, text, FontSize, _lines);
+            if (_wrappedText != Text || _wrappedWidth != Rect.W || _wrappedSize != FontSize)
+            {
+                // 줄바꿈은 글자·폭·크기가 바뀔 때만(프레임마다 줄 글자를 새로 만들지 않는다).
+                TextWrap.Wrap(Text, Rect.W, text, FontSize, _lines);
+                _wrappedText = Text; _wrappedWidth = Rect.W; _wrappedSize = FontSize;
+            }
             float lineHeight = text.LineHeight(FontSize);
             float total = _lines.Count * lineHeight + Math.Max(0, _lines.Count - 1) * LineSpacing;
             float y = Rect.Y + (Rect.H - total) / 2f;
@@ -248,9 +255,23 @@ namespace Rootborn.Ui
         public float MaxFontSize = 36f, MinFontSize = 24f;
         public UiColor Color = UiTheme.Ink;
 
+        private string _fitText, _shown;
+        private float _fitWidth = -1, _fitMax, _fitMin, _size;
+
         public override void Emit(DrawList list, ITextMeasurer text)
         {
             if (string.IsNullOrEmpty(Text)) return;
+            if (_shown == null || _fitText != Text || _fitWidth != Rect.W || _fitMax != MaxFontSize || _fitMin != MinFontSize)
+            {
+                // 크기 줄이기·말줄임은 글자·폭·크기 범위가 바뀔 때만(넘치는 이름이 프레임마다 잘린 글자를 새로 만들지 않는다).
+                Fit(text);
+                _fitText = Text; _fitWidth = Rect.W; _fitMax = MaxFontSize; _fitMin = MinFontSize;
+            }
+            list.Text(Rect.X, Rect.Y + (Rect.H - text.LineHeight(_size)) / 2f, _shown, _size, Color);
+        }
+
+        private void Fit(ITextMeasurer text)
+        {
             float size = MaxFontSize;
             while (size > MinFontSize && text.Width(Text, size) > Rect.W) size -= 2f;
             string shown = Text;
@@ -261,7 +282,8 @@ namespace Rootborn.Ui
                 while (length > 1 && text.Width(shown.Substring(0, length) + ellipsis, size) > Rect.W) length--;
                 shown = shown.Substring(0, length) + ellipsis;
             }
-            list.Text(Rect.X, Rect.Y + (Rect.H - text.LineHeight(size)) / 2f, shown, size, Color);
+            _shown = shown;
+            _size = size;
         }
     }
 

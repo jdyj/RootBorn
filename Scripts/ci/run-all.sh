@@ -33,7 +33,7 @@ run_step() { # run_step <이름> <명령...>
   fi
 }
 
-CHECKS=(core-references monogame-references no-entity-id-branching no-hardcoded-text localization-keys meta-files)
+CHECKS=(core-references monogame-references no-entity-id-branching no-hardcoded-text localization-keys meta-files host-test-shards)
 
 if [ "$checks_only" -eq 0 ]; then
   run_step "검사 스크립트 자체 시험" bash "$CI_DIR/tests/run-tests.sh"

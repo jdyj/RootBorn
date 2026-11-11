@@ -28,10 +28,10 @@ namespace Rootborn.Host.Tests.Simulation
         private const long AllowedPrivateGrowthMb = 48;
         private const long AllowedManagedGrowthMb = 8;
         /// <summary>
-        /// 넘기는 동안 프레임 한 번의 할당 한계(바이트). 쪽을 넘기면 칸의 글자·그림을 바꾸고, 늘이기 9조각 패널마다 Rootborn.Ui NineSlice가 int[4] 두 개를 만든다
-        /// (범위 밖, 보고에 적음). 항목 수(1,500)에 비례하면 수만 바이트가 된다.
+        /// 넘기는 동안 프레임 한 번의 할당 한계(바이트). UI 배치·그리기는 0이다(Rootborn.Ui FrameAllocationTests). 남은 것은 쪽을 넘길 때 칸의 글자·그림을
+        /// 바꾸는 화면 일이다(2026-11-12: 가구 팔레트 2바퀴째부터 1,639, 휠만 넘기는 화면은 0). 항목 수(1,500)에 비례하면 수만 바이트가 된다.
         /// </summary>
-        private const long FrameBytesLimit = 8 * 1024;
+        private const long FrameBytesLimit = 4 * 1024;
         /// <summary>한 프레임의 UI 그리기 명령 한계. 보이는 칸만 그리면 수백 개다. 항목마다 그리면 수천 개가 된다.</summary>
         private const int DrawCommandsLimit = 400;
 

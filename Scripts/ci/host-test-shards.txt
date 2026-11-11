@@ -1,0 +1,14 @@
+# CI Host 테스트 묶음(.github/workflows/ci.yml 의 host-tests matrix). 형식과 검사는 Scripts/ci/README.md "Host 테스트 묶음".
+# 한 줄이 묶음 하나: <묶음>: <클래스>... (네임스페이스 없이). 마지막 rest 는 여기 적지 않은 전부다(새 테스트 클래스는 저절로 rest).
+# 균형(2026-11-12, 원격 Linux·소프트웨어 GL trx 의 클래스별 시간 합, 이 브랜치 커밋 8a8701b98 — Host 198건 전체 약 1,540초):
+#   soak 375초(2건), play 275초(8건), main-chain 461초(13건), rest 433초(175건). flow-time-screens 세션이 합쳐지면 play 가 늘어난다
+#   (그 브랜치에서 HostPlayTests 510초). 러너에서는 대략 같은 비율로 길어진다. 다시 맞출 때는 묶음별 trx 아티팩트를 본다.
+
+# 시뮬레이션의 긴 플레이·무거운 화면 검사(메모리·할당 측정, 여러 날을 실제 창에서)
+soak: LongPlayHostTests HeavyScreensHostTests
+# 시뮬레이션의 정책 플레이(실제 창에서 하루 이상을 정책으로 플레이)
+play: HostPlayTests DriverDoorReproTests
+# 메인 체인을 실행부터 끝까지 실제 입력으로(MAIN_E2E)
+main-chain: MainChainHostTests NewGameJourneyTests
+# 나머지 전부(화면, 월드, 시작 화면, 멀티플레이 들어가기, 옵션 …)
+rest: *

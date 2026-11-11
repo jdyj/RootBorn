@@ -70,16 +70,22 @@ namespace Rootborn.Ui
         {
             int left = Math.Min(source.ColW(0) * scale, dest.W / 2), right = Math.Min(source.ColW(2) * scale, dest.W - left);
             int top = Math.Min(source.RowH(0) * scale, dest.H / 2), bottom = Math.Min(source.RowH(2) * scale, dest.H - top);
-            int[] xs = { dest.X, dest.X + left, dest.X + dest.W - right, dest.X + dest.W };
-            int[] ys = { dest.Y, dest.Y + top, dest.Y + dest.H - bottom, dest.Y + dest.H };
+            // 선 네 개를 배열로 두지 않는다(프레임마다 패널마다 불린다 — 새 객체를 만들지 않는다).
+            int x1 = dest.X + left, x2 = dest.X + dest.W - right, x3 = dest.X + dest.W;
+            int y1 = dest.Y + top, y2 = dest.Y + dest.H - bottom, y3 = dest.Y + dest.H;
             for (int row = 0; row < 3; row++)
+            {
+                int y = Line(row, dest.Y, y1, y2), h = Line(row + 1, dest.Y, y1, y2, y3) - y;
                 for (int col = 0; col < 3; col++)
                 {
-                    int w = xs[col + 1] - xs[col], h = ys[row + 1] - ys[row];
+                    int x = Line(col, dest.X, x1, x2), w = Line(col + 1, dest.X, x1, x2, x3) - x;
                     if (w <= 0 || h <= 0) continue;
-                    into.Add(new SlicePiece(new PixelRect(xs[col], ys[row], w, h),
+                    into.Add(new SlicePiece(new PixelRect(x, y, w, h),
                         new PixelRect(source.ColX(col), source.RowY(row), source.ColW(col), source.RowH(row))));
                 }
+            }
         }
+
+        private static int Line(int index, int a, int b, int c, int d = 0) => index == 0 ? a : index == 1 ? b : index == 2 ? c : d;
     }
 }
