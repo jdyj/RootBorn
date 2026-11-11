@@ -113,3 +113,10 @@ public sealed class TraitDeltaEffect : ILifeActivityEffect {
 - 장소 상태 시간대: 12:00 전은 오전이다(원본은 정확히 8:00만 오전이라 7:00과 9:00이 오후였다). 사용자 결정 2026-11-11. `ChangedBehavior_EarlyHoursAreMorning`
 - 미니게임 예약: 정산하지 않은 학생 미니게임 예약은 다음 날을 시작할 때 포기 처리한다(원본은 화면을 다시 불러올 때 처리). 성인 일 예약도 앞선 날의 것은 포기 처리한다 — 다음 날을 시작할 때 `ForfeitWorkLeftFromEarlierDays`를 부르고, 새 일을 예약하거나 바로 할 때도 같은 처리를 한다(원본은 예약이 남으면 날을 넘기지 못하게 막았다). 사용자 결정 2026-11-11. `ChangedBehavior_UnsettledStudentMinigameIsForfeitedWhenTheNextDayStarts`, `ChangedBehavior_UnsettledWorkIsForfeitedWhenTheNextDayStarts`, `ChangedBehavior_WorkLeftFromAnEarlierDayDoesNotBlockANewReservation`
 - 일과: 길 묶음의 `MaxSelectionsPerDay`는 "그 묶음의 길 하나를 하루에 몇 칸까지 넣을 수 있는지"다. 값은 데이터에서 바꾼다(지금 1 → 같은 길은 하루 한 번). 원본에서는 쓰이지 않던 값이라 같은 길을 여러 칸에 넣을 수 있었다. 묶음에 없는 길은 제한이 없다. 사용자 결정 2026-11-11. `ChangedBehavior_TheSameRouteFillsOnlyAsManySlotsADayAsItsSetAllows`, `TheDailyLimitOfARoute_ComesFromData`
+- 세이브: 퀘스트 체인 파일이 깨져 있으면 새 기록으로 덮어쓰지 않고 예외를 낸다(원본은 덮어썼다). Data 테스트로 고정.
+- 데이터 읽기: 시설 단계 비용·시설 일 보상의 아이템과 개수 짝이 맞지 않거나, 캠페인 장소 방문 목표에 `requiresSchoolClass`가 있으면 로드 오류로 드러낸다. 지금 데이터에는 없다.
+- 단서 해석: 순서형 정책은 같은 그룹의 바로 앞 순서 해석이 끝나야 통과한다(원본은 같은 그룹의 아무 해석이나 끝나 있으면 통과). 해석 목록이 없으면 순서 1 이상은 막는다. 단서 해석 테스트로 고정.
+- 월드 상태 사용·발견 단서·단서 해석: 이어지는 퀘스트 결과가 아직 시작하지 않은 퀘스트만 연다(원본은 매번 다시 넣어 진행도가 지워지고 보상을 다시 받을 수 있었다). `FollowUpQuests.TryStart`.
+- 월드 상태 사용·발견 단서·단서 해석: 조회나 거절된 요청이 빈 기록을 세이브에 남기지 않는다.
+- 기록 안의 id 목록이 넣은 순서를 지킨다(원본은 순서가 정해지지 않았다). 도감 발견 시각은 시계에서 직접 읽지 않고 문맥이나 받은 시계에서 읽는다.
+- 대화: 선택지의 퀘스트 받기가 퀘스트의 제공 조건·선행 조건을 따진다(위 퀘스트 수락 규칙을 따름).
