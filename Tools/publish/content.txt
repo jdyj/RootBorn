@@ -23,6 +23,10 @@ game/world/*.json
 # --- 문구: 현지화 덮어쓰기 파일(data/localization 은 위 data 줄이 가져온다) ---
 game/localization/*.json
 
+# --- UI 테마: 테마 파일(가리키는 PNG는 @refs가 가져온다) ---
+game/themes/*/*.json
+@refs game/themes/*/theme.json
+
 # --- 맵: LDtk 프로젝트와 타일셋 ---
 @ldtk Assets/LDtk/*/*.ldtk
 
