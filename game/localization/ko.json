@@ -206,5 +206,20 @@
   "ui.join.reason.server-shutdown": "서버가 닫혔어요.",
   "ui.join.reason.connection-closed": "서버와의 연결이 닫혔어요.",
   "ui.room.notice.title": "서버와 연결이 끊겼어요",
-  "ui.room.notice.ok": "확인"
+  "ui.room.notice.ok": "확인",
+  "ui.save.host-room": "방 열기",
+  "ui.host.title": "방 열기",
+  "ui.host.address": "이 PC에서 들을 주소",
+  "ui.host.address.placeholder": "예: 192.168.0.10:7777",
+  "ui.host.capacity": "정원(나 포함)",
+  "ui.host.character": "방을 열 인물",
+  "ui.host.open": "열기",
+  "ui.host.cancel": "취소",
+  "ui.host.opening": "방을 여는 중...",
+  "ui.host.no-character": "방을 열 인물이 없어요. 먼저 새로운 이야기를 만들어 주세요.",
+  "ui.host.saved-in-slot": "방의 기록은 고른 이야기의 슬롯에 저장돼요. 다른 사람은 이 주소로 들어와요.",
+  "ui.join.reason.cannot-listen": "그 주소와 포트로 방을 열 수 없어요. 이 PC의 주소인지, 다른 프로그램이 그 포트를 쓰고 있지 않은지 확인해 주세요.",
+  "ui.join.reason.room-save-unreadable": "이 이야기의 방 기록을 읽을 수 없어요. 기록은 덮어쓰지 않았어요.",
+  "ui.settings.room-open": "방이 열려 있어요 · {1}/{2}명\n주소 {0}",
+  "ui.settings.room-close": "방 닫기"
 }

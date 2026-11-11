@@ -61,6 +61,8 @@ dotnet run --project game/Rootborn.Host -- --save-root <세이브 폴더> --slot
 | `--frames <N>` | | 없음(끝내지 않는다). N프레임 그린 뒤 끝낸다. 배포 폴더에서 창을 띄워 화면을 확인할 때 쓴다 |
 | `--screenshot <PNG>` | | 없음. `--frames`와 함께 준다: 끝내기 직전 화면을 그 파일로 저장한다(없는 폴더는 만든다) |
 | `--day-copies <N>` | `ROOTBORN_DAY_COPIES` | 3(`GameSession.DefaultDayCopiesToKeep`). 다음 날을 시작할 때 슬롯 폴더의 `backups/<날>/`에 남길 사본 수(최근 것부터). 0이면 남기지 않는다. 사본을 못 쓰면(디스크가 참 등) 그날 저장은 끝난 채로 두고 오류 출력에 `[세이브]` 한 줄을 남긴다 |
+| `--host <IP 주소:포트>` | `ROOTBORN_HOST_ROOM` | 없음(주소 기본값이 없다). 내 PC에서 방을 연다. 이 PC에서 들을 IPv4 주소와 포트(0이면 운영체제가 빈 포트를 준다). `--save-root`가 필요하다. 시작 화면에서 방 열기 창을 그 주소로 열고, `--slot`도 주면 그 슬롯으로 바로 방을 열고 들어가 월드를 띄운다. `--join`·`--world`·`--sample`과 함께 줄 수 없다 |
+| `--max-players <정원>` | `ROOTBORN_MAX_PLAYERS` | 4(방 설정 기본값). 1~8. `--host`와 함께만 준다(환경 변수는 `--host`가 없으면 쓰지 않는다 — 서버와 같은 이름) |
 
 `--sample`도 `--world`도 `--slot`도 없으면 슬롯 선택 화면(슬롯 3개: 새 이야기 → 캐릭터 만들기, 이어서 시작, 삭제)부터 띄운다. 세이브 폴더가 없으면 안내 후 끝난다.
 캐릭터 만들기의 시작하기는 슬롯 정보(이름, 고른 겉모습, 시각으로 만든 시드)를 쓰고 그 슬롯으로 `--slot`과 같게 시작한다. 슬롯으로 시작하면 맵에 들어갈 때마다(처음 들어갈 때 포함) `world-progress.json`에 쓴다.
@@ -85,6 +87,13 @@ F1은 단축키 안내(모달, 이동을 막음, 시작 화면에서도 열림, 
 아직 이 PC에 남는 것: 맵 자리(`world-progress.json`)와 옷 선택. 돈·마을 상태를 같이 쓰는 방이면 게임 한 판의 지갑·월드 상태 깃발이 방의 것을 따른다(`GameSession.Shares`).
 방에서의 신원은 슬롯 정보(만든 시각·시드)로 만든 그 인물의 고정 id다(슬롯의 플레이어 id는 모든 슬롯이 `local-player`라 두 PC가 서로를 밀어낸다). 방에 들어가지 않으면 Net 코드는 프레임마다 돌지 않는다.
 게임 버전은 `1.0.0+<커밋>`이다(저장소 루트 `Directory.Build.props`, git이 없으면 `-p:ROOTBORN_COMMIT=<커밋>` 또는 `unknown-commit`). 데이터 지문은 `Rootborn.Data.DataFingerprint`(서버와 같은 셈법).
+내 PC에서 방 열기(설계 6절 "내 PC에서 열기"): 슬롯 선택 아래 "방 열기" → 이 PC에서 들을 주소(`IP 주소:포트`), 정원, 방을 열 인물(이야기가 있는 슬롯)을 고르고 열기(또는 `--host`).
+같은 프로세스 안에 데디케이티드 서버와 같은 방(`Rootborn.Net/Room/HostedRoom` — `RoomServer`, 같은 프로세스 안 전송과 UDP를 묶어 듣는다)이 돌고, 내 게임은 들어가기와 같은 방 접속(`Net/RoomConnection`)으로 같은 프로세스 안 전송을 타고 들어간다. 다른 사람은 그 주소로 들어오기(UDP)로 온다.
+방의 틱은 Host 게임 루프가 프레임마다 돌린다(`Net/RoomHosting.Update`, 고정 간격, 시계는 Host의 네트워크 시계 — 들어가기와 같은 실제 시간). 방을 열지 않으면 방 코드는 프레임마다 돌지 않는다.
+방의 상태(방의 시계 `room-clock.json`)는 고른 슬롯 폴더에 저장되고, 같은 슬롯으로 다시 열면 잇는다. 그 슬롯은 혼자 이어 하기로도 그대로 읽힌다(혼자 하기는 방의 파일을 읽지도 지우지도 않는다).
+방이 열려 있으면 설정 화면(Esc)의 아이콘 묶음 자리에 "방 열림 · 사람 수/정원 · 주소"와 방 닫기가 보인다. 방을 닫거나 게임을 끄면 들어와 있던 사람에게 닫혔다고 알리고(`server shutdown`) 방을 저장한 뒤, 닫기면 시작 화면으로 돌아간다(Unity 판에는 이때의 화면 처리가 없었다).
+임시: 내 게임 한 판은 아직 방의 시계를 따르지 않는다(들어가기와 같다 — 시간 공유를 잇는 일은 남았다). 방 설정(공유할 것 고르기)이 생기면 방 열기 창의 정원 줄 아래에 줄을 더한다.
+테스트: Net `HostedRoomTests`(같은 프로세스 + UDP), Screens `HostRoomScreenTests`(창 없이), Host `MultiplayerHostModeHostTests`(실제 창, 장치 이벤트 주입, 친구는 루프백 UDP의 `SessionClient`).
 
 F1은 단축키 안내(모달, 이동을 막음, 시작 화면에서도 열림, 설정의 "단축키" 단추로도). 줄은 등록 표의 키 배정(`ScreenRegistry.KeyBindings`, 하는 일 문구 키 `ui.keys.<화면 id>`), 화면 쌓기의 버튼 옮기기, 화면 안에서만 듣는 키를 그 화면이 등록 때 넘긴 줄(`.GuidesKeys(...)`, 지금은 미니게임), Host 이름표(`Input/Devices.cs`의 `KeyGuideNames`: 걷기·상호작용·F11·F12·가구 배치 카메라 F·=·-)에서 만든다 — 키 배정을 바꾸면 이름표에도 한 줄.
 미니게임은 알바·연습·시설 일이 예약되면 저절로 열리고(누가 예약했든 "게임 진행이 바뀜" 알림으로 본다), 일터 지점(`part-time-work`)·연습 지점(`career-practice`)에서 E를 누르면 예약한다. Space 박자, R 돌리기, A/D·←/→ 줄 옮기기, 포인터로 단추·칸·조준 판. 시간은 Host가 넘기는 프레임 dt(`ScreenStack.Tick`)로만 흐르고, 끝나면 한 번 정산하고 결과를 보인 채 둔다. Esc·닫기는 끝나지 않은 판을 포기로 정산하고 닫는다. 도전 종류마다 그리는 부분은 `Minigames/ChallengeViewCatalog`에 한 줄로 등록한다.

@@ -46,6 +46,7 @@ namespace Rootborn.Screens
         public const string SaveSlotDamaged = "save-slot-damaged";
         public const string JoinServer = "join-server";
         public const string RoomNotice = "room-notice";
+        public const string HostRoom = "host-room";
 
         // HUD 버튼이 여는 화면. 아직 옮기지 않은 화면은 id만 정해 두고, 그 화면을 등록하면 버튼이 저절로 이어진다.
         public const string CareerCandidates = "career-candidates";
@@ -102,6 +103,7 @@ namespace Rootborn.Screens
             r.Add(SaveSlotDamaged, ScreenLayer.Modal, blocksMovement: true, s => new SaveSlotDamagedScreen(s)).WithoutWorld();
             r.Add(JoinServer, ScreenLayer.Modal, blocksMovement: true, s => new JoinServerScreen(s)).WithoutWorld();
             r.Add(RoomNotice, ScreenLayer.Modal, blocksMovement: true, s => new RoomNoticeScreen(s)).WithoutWorld();
+            r.Add(HostRoom, ScreenLayer.Modal, blocksMovement: true, s => new HostRoomScreen(s)).WithoutWorld();
             // 가구 배치: 집 HUD 버튼(가구 배치 켬/끔)이 연다. 이동을 막지 않는다(Unity 판 패널은 입력을 잠그지 않았다).
             r.Add(FurniturePlacement, ScreenLayer.Panel, blocksMovement: false, s => new FurniturePlacementScreen(s));
             r.Add(Encyclopedia, ScreenLayer.Panel, blocksMovement: true, s => new EncyclopediaScreen(s));

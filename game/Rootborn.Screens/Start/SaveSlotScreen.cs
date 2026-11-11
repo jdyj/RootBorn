@@ -77,9 +77,11 @@ namespace Rootborn.Screens.Start
             public const float SavedCharacterY = -139f, SavedCharacterH = 28f, SavedCharacterFont = 16f;
             public const float ChooseCharacterY = -114f, ChooseCharacterH = 58f, ChooseCharacterFont = 18f;
             public const float CardButtonY = -190f, CardButtonH = 58f, PairButtonX = 87f, PairButtonW = 152f, NewButtonW = 278f, CardButtonFont = 22f;
-            public const float BackX = -505f, BottomY = -350f, BackW = 240f, BackH = 58f, BackFont = 22f;
-            public const float JoinX = -155f, JoinW = 300f;
-            public const float HintX = 325f, HintW = 600f, HintH = 44f, HintFont = 18f;
+            // 아래 줄: 돌아가기 · 서버 주소로 들어가기 · 방 열기 · 삭제 안내(오른쪽 맞춤). 틀 안쪽 -625~625.
+            public const float BackX = -525f, BottomY = -350f, BackW = 200f, BackH = 58f, BackFont = 22f;
+            public const float JoinX = -275f, JoinW = 280f;
+            public const float HostX = -5f, HostW = 240f;
+            public const float HintX = 380f, HintW = 490f, HintH = 44f, HintFont = 18f;
             public const float ErrorY = -304f, ErrorW = 1100f, ErrorH = 36f, ErrorFont = 18f;
             public static readonly UiColor Backdrop = new UiColor(211, 216, 212);
             public static readonly UiColor Ink = new UiColor(48, 71, 83);
@@ -91,6 +93,7 @@ namespace Rootborn.Screens.Start
         public const string TitleId = "save-slots.title";
         public const string BackId = "save-slots.back";
         public const string JoinId = "save-slots.join";
+        public const string HostId = "save-slots.host";
         public const string HintId = "save-slots.delete-hint";
         public const string ErrorId = "save-slots.error";
         public static string CardId(int i) => "save-slots.card." + i;
@@ -115,7 +118,7 @@ namespace Rootborn.Screens.Start
 
         private readonly Card[] _cards = new Card[SaveSlots.MaxUiSlots];
         private UiLabel _title, _hint, _error;
-        private UiButton _back, _join;
+        private UiButton _back, _join, _host;
         private StartMenu _menu;
         private string _errorKey;
 
@@ -136,6 +139,8 @@ namespace Rootborn.Screens.Start
             _back.Clicked += () => _menu?.Quit?.Invoke();
             _join = frame.Add(new UiButton { Id = JoinId, FontSize = Metrics.BackFont }).Centered(Metrics.JoinX, Metrics.BottomY, Metrics.JoinW, Metrics.BackH);
             _join.Clicked += OpenJoin;
+            _host = frame.Add(new UiButton { Id = HostId, FontSize = Metrics.BackFont }).Centered(Metrics.HostX, Metrics.BottomY, Metrics.HostW, Metrics.BackH);
+            _host.Clicked += OpenHost;
             _hint = frame.Add(new UiLabel { Id = HintId, FontSize = Metrics.HintFont, Color = Metrics.Ink, Align = UiAlign.Right })
                 .Centered(Metrics.HintX, Metrics.BottomY, Metrics.HintW, Metrics.HintH);
             _error = frame.Add(new UiLabel { Id = ErrorId, FontSize = Metrics.ErrorFont, Color = Metrics.ErrorInk, Align = UiAlign.Center, Visible = false })
@@ -193,6 +198,8 @@ namespace Rootborn.Screens.Start
             _back.Visible = _menu.Quit != null;
             _join.Text = T("ui.save.join-server");
             _join.Visible = _menu.Join != null;
+            _host.Text = T("ui.save.host-room");
+            _host.Visible = _menu.Host != null;
             _hint.Text = T("ui.save.delete-hint");
             for (int i = 0; i < _cards.Length; i++)
             {
@@ -255,6 +262,13 @@ namespace Rootborn.Screens.Start
         {
             if (_menu?.Join == null) return;
             Services.Screens?.Open(ScreenCatalog.JoinServer, argument: new JoinServerOpen(_menu));
+        }
+
+        /// <summary>내 PC에서 방 열기 창을 연다(여는 쪽이 있을 때만 보이는 단추).</summary>
+        private void OpenHost()
+        {
+            if (_menu?.Host == null) return;
+            Services.Screens?.Open(ScreenCatalog.HostRoom, argument: new HostRoomOpen(_menu));
         }
 
         private void NewGame(int index)

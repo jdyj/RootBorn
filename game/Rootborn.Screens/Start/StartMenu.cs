@@ -49,6 +49,9 @@ namespace Rootborn.Screens.Start
 
         /// <summary>서버 주소로 방에 들어가는 쪽. 없으면 슬롯 선택에 "서버 주소로 들어가기"가 보이지 않는다.</summary>
         public IRoomJoin Join { get; set; }
+
+        /// <summary>내 PC에서 방을 여는 쪽. 없으면 슬롯 선택에 "방 열기"가 보이지 않는다.</summary>
+        public IRoomHost Host { get; set; }
     }
 
     /// <summary>만들기 화면을 여는 값: 시작 화면이 쓰는 것과 새 이야기를 쓸 슬롯.</summary>

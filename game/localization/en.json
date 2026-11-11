@@ -206,5 +206,20 @@
   "ui.join.reason.server-shutdown": "The server was closed.",
   "ui.join.reason.connection-closed": "The connection to the server was closed.",
   "ui.room.notice.title": "Disconnected from the server",
-  "ui.room.notice.ok": "OK"
+  "ui.room.notice.ok": "OK",
+  "ui.save.host-room": "Open a room",
+  "ui.host.title": "Open a room",
+  "ui.host.address": "Address to listen on (this PC)",
+  "ui.host.address.placeholder": "e.g. 192.168.0.10:7777",
+  "ui.host.capacity": "Room size (including you)",
+  "ui.host.character": "Character",
+  "ui.host.open": "Open",
+  "ui.host.cancel": "Cancel",
+  "ui.host.opening": "Opening the room...",
+  "ui.host.no-character": "There is no character to open a room with. Create a new story first.",
+  "ui.host.saved-in-slot": "The room is saved in the chosen story's slot. Others join at this address.",
+  "ui.join.reason.cannot-listen": "Could not open a room on that address and port. Check that it is this PC's address and that no other program is using the port.",
+  "ui.join.reason.room-save-unreadable": "The room save of this story could not be read. It was not overwritten.",
+  "ui.settings.room-open": "Room open · {1}/{2} players\nAddress {0}",
+  "ui.settings.room-close": "Close room"
 }

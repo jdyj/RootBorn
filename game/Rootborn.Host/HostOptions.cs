@@ -18,6 +18,8 @@ namespace Rootborn.Host
         public const string UiThemeVariable = "ROOTBORN_UI_THEME";
         public const string DayCopiesVariable = "ROOTBORN_DAY_COPIES";
         public const string JoinVariable = "ROOTBORN_JOIN";
+        public const string HostVariable = "ROOTBORN_HOST_ROOM";
+        public const string MaxPlayersVariable = "ROOTBORN_MAX_PLAYERS";
         /// <summary>UI 테마를 주지 않았을 때: Unity 판의 승인된 도시형 몰딩(2026-10-27).</summary>
         public const string DefaultUiTheme = "urban";
 
@@ -68,8 +70,20 @@ namespace Rootborn.Host
         /// </summary>
         public string JoinAddress;
 
-        /// <summary>월드 화면을 바로 띄우는가(--world, 또는 --join 없이 --slot).</summary>
-        public bool WorldActive => World != null || (SaveSlot != null && JoinAddress == null);
+        /// <summary>
+        /// 내 PC에서 방을 연다(--host, "IP 주소:포트" — 이 PC에서 들을 곳). 기본값이 없다. 시작 화면에서 방 열기 창을 이 주소로 연다.
+        /// --slot도 주면 그 슬롯으로 바로 방을 열고 들어가 월드를 띄운다. 포트 0이면 운영체제가 빈 포트를 준다.
+        /// </summary>
+        public string HostAddress;
+
+        /// <summary>내 PC에서 여는 방의 정원(--max-players). 주지 않으면 null이고 방 설정의 기본값(4)이다. --host와만 준다.</summary>
+        public int? MaxPlayers;
+
+        /// <summary>시작 화면에서 바로 방을 연다(--host와 --slot).</summary>
+        public bool HostOnStart => HostAddress != null && SaveSlot != null;
+
+        /// <summary>월드 화면을 바로 띄우는가(--world, 또는 --join·--host 없이 --slot).</summary>
+        public bool WorldActive => World != null || (SaveSlot != null && JoinAddress == null && HostAddress == null);
 
         /// <summary>
         /// 시작 화면(슬롯 선택)부터 띄우는가: 견본도 월드도 슬롯도 주지 않았고 세이브 폴더가 있다. 슬롯을 고르면 그 슬롯으로 월드를 시작한다.
@@ -117,7 +131,11 @@ namespace Rootborn.Host
                 WorldMapsPath = environment(WorldMapsVariable),
                 SaveRoot = environment(SaveRootVariable),
                 JoinAddress = environment(JoinVariable),
+                HostAddress = environment(HostVariable),
             };
+            string maxPlayers = environment(MaxPlayersVariable); // 서버와 같은 이름이라 --host가 없으면 그냥 쓰지 않는다
+            bool maxPlayersGiven = false;
+            if (!string.IsNullOrWhiteSpace(maxPlayers)) o.MaxPlayers = ParseMaxPlayers(maxPlayers, "환경 변수 " + MaxPlayersVariable);
             string uiTheme = environment(UiThemeVariable);
             string dayCopies = environment(DayCopiesVariable);
             if (!string.IsNullOrWhiteSpace(dayCopies)) o.DayCopies = ParseDayCopies(dayCopies, "환경 변수 " + DayCopiesVariable);
@@ -147,6 +165,8 @@ namespace Rootborn.Host
                     case "--save-root": o.SaveRoot = value; break;
                     case "--slot": o.SaveSlot = value; break;
                     case "--join": o.JoinAddress = value; break;
+                    case "--host": o.HostAddress = value; break;
+                    case "--max-players": o.MaxPlayers = ParseMaxPlayers(value, "--max-players"); maxPlayersGiven = true; break;
                     case "--lang": o.Language = value; break;
                     case "--ui-theme": uiTheme = value; break;
                     case "--frames":
@@ -205,6 +225,20 @@ namespace Rootborn.Host
                 if (string.IsNullOrWhiteSpace(o.SaveRoot))
                     throw new InvalidOperationException($"--join 을 쓰려면 세이브 폴더를 --save-root 또는 환경 변수 {SaveRootVariable} 로 준다(들어갈 인물은 그 슬롯에서 고른다).");
             }
+            if (string.IsNullOrWhiteSpace(o.HostAddress)) o.HostAddress = null;
+            if (o.HostAddress != null)
+            {
+                if (!Net.RoomAddress.TryParseListen(o.HostAddress, out _, out _))
+                    throw new InvalidOperationException("--host 는 이 PC에서 들을 \"IP 주소:포트\" 꼴로 준다(예: 192.168.0.10:7777, 포트 0이면 빈 포트): " + o.HostAddress);
+                if (o.JoinAddress != null)
+                    throw new InvalidOperationException("--host 와 --join 은 함께 줄 수 없다(방을 열거나 남의 방에 들어가거나 하나)");
+                if (o.Sample || o.World != null)
+                    throw new InvalidOperationException("--host 는 --sample, --world 와 함께 줄 수 없다(방을 열 인물은 세이브 슬롯에서 고른다)");
+                if (string.IsNullOrWhiteSpace(o.SaveRoot))
+                    throw new InvalidOperationException($"--host 를 쓰려면 세이브 폴더를 --save-root 또는 환경 변수 {SaveRootVariable} 로 준다(방의 기록은 고른 슬롯에 저장된다).");
+            }
+            else if (maxPlayersGiven)
+                throw new InvalidOperationException("--max-players 는 --host 와 함께 준다(내 PC에서 여는 방의 정원)");
             if (o.SaveSlot != null && o.World != null)
                 throw new InvalidOperationException("--world 와 --slot 은 함께 줄 수 없다(슬롯이 시작 맵을 정한다)");
             if (o.SaveSlot != null && o._timeGiven)
@@ -217,6 +251,14 @@ namespace Rootborn.Host
             if ((o.WorldActive || o.StartMenu) && o.WorldMapsPath != null && !File.Exists(o.WorldMapsPath))
                 throw new InvalidOperationException("맵 목록 파일이 없다: " + o.WorldMapsPath);
             return o;
+        }
+
+        private static int ParseMaxPlayers(string value, string from)
+        {
+            int limit = Rootborn.Net.Room.RoomServerSettings.MaxPlayersLimit;
+            if (!int.TryParse(value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int count) || count < 1 || count > limit)
+                throw new InvalidOperationException(from + " 는 1~" + limit + " 정수: " + value);
+            return count;
         }
 
         private static int ParseDayCopies(string value, string from)

@@ -100,15 +100,35 @@ namespace Rootborn.Host.Net
                 return;
             }
 
+            Start(transport, slotId, host + ":" + port);
+        }
+
+        /// <summary>
+        /// 이미 연 전송으로 방에 들어간다(내 PC에서 연 방: 같은 프로세스 안 전송 <see cref="HostedRoom.ConnectLocal"/>). 그 뒤는 <see cref="Begin"/>과 같다.
+        /// </summary>
+        /// <param name="where">로그에 남길 곳(사람이 읽는 운영 로그).</param>
+        public void BeginWith(ITransport transport, string slotId, string where)
+        {
+            if (transport == null) throw new ArgumentNullException(nameof(transport));
+            Close();
+            FailureCode = string.Empty;
+            Start(transport, slotId, where);
+        }
+
+        private void Start(ITransport transport, string slotId, string where)
+        {
             _slotId = slotId;
             PlayerId = _identityForSlot(slotId);
             _versions ??= _versionsSource();
             _client = RoomClient.Create(transport, _versions.Value, PlayerId, string.Empty, _settings);
             if (!_uploads.TryGetValue(PlayerId, out var uploads)) _uploads[PlayerId] = uploads = new GuestUploads();
             _link = new RoomGuestLink(_client, _settings.MaxMessageBytes, uploads);
-            Console.WriteLine("[방] " + host + ":" + port + "에 접속하는 중(신원 " + PlayerId + ", " + _versions.Value + ")");
+            Console.WriteLine("[방] " + where + "에 접속하는 중(신원 " + PlayerId + ", " + _versions.Value + ")");
             SetPhase(RoomJoinPhase.Connecting);
         }
+
+        /// <summary>이 프로그램의 버전(처음 부를 때 한 번 셈한다 — 데이터 지문은 모든 data/ 파일을 읽는다). 내 PC에서 여는 방도 같은 값을 쓴다.</summary>
+        public RoomVersions Versions => _versions ??= _versionsSource();
 
         public void Cancel()
         {

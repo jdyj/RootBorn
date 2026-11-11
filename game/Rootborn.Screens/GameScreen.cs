@@ -76,6 +76,8 @@ namespace Rootborn.Screens
         public Records.IWardrobeBackend Wardrobe { get; set; }
         /// <summary>장치 키 이름표(단축키 안내). Host가 Input/Devices.cs의 배정으로 채운다. 없으면 ScreenKey 이름으로 보인다.</summary>
         public Rootborn.Screens.KeyGuide.KeyGuideKeys KeyGuide { get; set; } = new Rootborn.Screens.KeyGuide.KeyGuideKeys();
+        /// <summary>내 PC에서 연 방(Host가 채운다). 열려 있으면 설정 화면에 한 줄(열림, 주소, 사람 수, 닫기)이 보인다. 없으면 그 줄이 없다.</summary>
+        public Start.IRoomHost RoomHost { get; set; }
     }
 
     /// <summary>화면을 연 까닭. 상호작용으로 열었으면 그 이벤트가 있다. Argument는 여는 쪽이 넘긴 값(예: 하루 이벤트 id).</summary>

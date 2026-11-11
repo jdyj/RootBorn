@@ -87,6 +87,8 @@ namespace Rootborn.Host
         public RoomConnection Room { get; private set; }
         /// <summary>같은 맵의 다른 참가자(방에 들어갔을 때만).</summary>
         public RemoteAvatars Remotes { get; private set; }
+        /// <summary>내 PC에서 방을 여는 쪽(시작 화면이 있을 때 만든다). 방을 열지 않으면 프레임마다 아무것도 하지 않는다(서버 코드가 돌지 않는다).</summary>
+        public RoomHosting Hosting { get; private set; }
         /// <summary>
         /// 방 접속이 쓰는 시각(초). 네트워크는 실제 시간으로 흐르므로(상대의 살아 있다는 표시, 전송의 시간 초과) 테스트 모드에서도 실제 시간이다.
         /// 다른 참가자의 걷기 칸은 프레임 dt로 돈다.
@@ -209,6 +211,7 @@ namespace Rootborn.Host
             var atlases = new SpriteAtlases(_options.RepoRoot);
             _renderer = new UiRenderer(GraphicsDevice, _text, _options.UiTheme, new ImageCatalog(atlases, _options.UiTheme, ItemIcons.Load(_options.RepoRoot)), atlases);
             _textInput = new TextInputDevice(Window);
+            if (_options.HostAddress != null && _options.StartMenu) { ShowStartMenu(); return; } // --host(+--slot)는 시작 화면에서 방 열기 창으로
             if (_options.SaveSlot != null && _options.JoinAddress == null) { StartFromSlotArgument(); return; } // --join과 함께면 시작 화면에서 들어가기 창으로
             if (_options.WorldActive)
             {
@@ -264,6 +267,7 @@ namespace Rootborn.Host
             services.KeyGuide = KeyGuideNames.Create();
             Screens = new ScreenStack(registry, services);
             StartMenu.Join = Room ??= CreateRoom();
+            StartMenu.Host = Hosting ??= CreateHosting();
             Screens.Open(ScreenCatalog.SaveSlotSelect, argument: StartMenu);
             if (_options.JoinAddress != null && !_joinOffered)
             {
@@ -272,10 +276,33 @@ namespace Rootborn.Host
                 Screens.Open(ScreenCatalog.JoinServer, argument: new JoinServerOpen(StartMenu, _options.JoinAddress, _options.SaveSlot));
                 if (_options.JoinOnStart) Room.Begin(_options.JoinAddress, _options.SaveSlot);
             }
+            if (_options.HostAddress != null && !_hostOffered)
+            {
+                // --host: 방 열기 창을 그 주소로 연다. --slot도 줬으면 그 슬롯으로 바로 방을 열고 들어간다.
+                _hostOffered = true;
+                Screens.Open(ScreenCatalog.HostRoom, argument: new HostRoomOpen(StartMenu, _options.HostAddress, _options.SaveSlot));
+                if (_options.HostOnStart) Hosting.Begin(_options.HostAddress, _options.MaxPlayers ?? Hosting.DefaultMaxPlayers, _options.SaveSlot);
+            }
             SetTree(Screens.Tree);
         }
 
         private bool _joinOffered;
+        private bool _hostOffered;
+
+        /// <summary>
+        /// 내 PC에서 방을 여는 쪽을 만든다. 방은 데디케이티드 서버와 같은 RoomServer이고, 내 게임은 들어가기와 같은 방 접속(Room)으로 들어간다.
+        /// 방의 상태는 내 세이브 폴더의 그 슬롯에, 틱은 Host의 네트워크 시계로 센다. 달력은 서버와 같은 정의(registry.json 기본값의 달력 id).
+        /// </summary>
+        private RoomHosting CreateHosting()
+        {
+            var hosting = new RoomHosting(Room, () => new FileSaveStore(_options.SaveRoot), _netClock, () =>
+            {
+                Rootborn.Data.GameDefinitions definitions = GameContent.Load(_options.RepoRoot).Definitions;
+                return definitions.Get<Rootborn.Core.StudentLife.LifeCalendar>(GameStartSettings.FromDefinitions(definitions).CalendarId);
+            }, () => ReturnToStartMenu(null));
+            hosting.Changed += () => Screens?.NotifyChanged(RoomHostText.Topic);
+            return hosting;
+        }
 
         /// <summary>
         /// 방 접속을 만든다. 버전은 서버(Rootborn.Server)와 같은 셈법(RoomVersions.ForProgram + Rootborn.Data.DataFingerprint),
@@ -289,6 +316,7 @@ namespace Rootborn.Host
                 slot => GuestProgress.RoomIdentity(slot, new FileSaveStore(_options.SaveRoot).TryRead(slot, SaveFileNames.Metadata, out SaveSlotMetadata m) ? m : null),
                 EnterSlot);
             room.PhaseChanged += () => Screens?.NotifyChanged(Rootborn.Screens.Start.RoomJoinText.Topic);
+            room.PhaseChanged += () => Screens?.NotifyChanged(RoomHostText.Topic); // 내 PC에서 연 방도 이 접속으로 들어간다
             room.Lost += ReturnToStartMenu;
             return room;
         }
@@ -309,6 +337,7 @@ namespace Rootborn.Host
             _sessionDay = -1;
             _options.SaveSlot = null;
             ShowStartMenu();
+            if (reason == null) { SetTree(Screens.Tree); return; } // 내가 방을 닫았다: 알림 없이 시작 화면
             Screens.Open(ScreenCatalog.RoomNotice, argument: new RoomNoticeOpen(reason));
             SetTree(Screens.Tree);
         }
@@ -409,6 +438,7 @@ namespace Rootborn.Host
             ExtraScreens?.Invoke(registry);
             var services = new ScreenServices(Text, Session) { Definitions = World.Content.Definitions, Settings = Settings, Display = Display, Names = DisplayNames.Load(Path.Combine(_options.RepoRoot, "data")) };
             services.KeyGuide = KeyGuideNames.Create();
+            services.RoomHost = Hosting; // 내 PC에서 연 방이 열려 있으면 설정 화면에 한 줄
             if (Session != null)
                 services.Wardrobe = new HostWardrobe(World, Session, new FileSaveStore(_options.SaveRoot), _options.SaveSlot, SaveFileNames.DefaultPlayerId, _options.RepoRoot);
             var screens = new ScreenStack(registry, services);
@@ -640,6 +670,7 @@ namespace Rootborn.Host
                     else if (!_options.TestMode) Exit();
                 }
             }
+            Hosting?.Update(); // 내 PC에서 연 방의 틱(내 접속을 돌린 뒤). 방을 열지 않았으면 아무것도 하지 않는다
             if (keys.Screenshot) SaveScreenshot(Path.Combine(_options.EvidenceDir, "manual-" + (++_shotCount).ToString("00") + ".png"));
 
             SyncTextInput();
@@ -795,6 +826,8 @@ namespace Rootborn.Host
             {
                 Room?.Dispose();
                 Room = null;
+                Hosting?.Dispose(); // 들어와 있던 사람에게 닫혔다고 알리고 저장한다
+                Hosting = null;
             }
             base.Dispose(disposing);
         }
@@ -802,6 +835,7 @@ namespace Rootborn.Host
         protected override void UnloadContent()
         {
             Room?.Leave();
+            Hosting?.ShutDownRoom();
             World?.Dispose();
             _textInput?.Dispose();
             _renderer?.Dispose();

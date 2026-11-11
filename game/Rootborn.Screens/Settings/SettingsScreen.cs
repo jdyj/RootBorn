@@ -69,6 +69,19 @@ namespace Rootborn.Screens.Settings
         public const string DisplayLabelId = "settings.display.label";
         public const string DisplayButtonId = "settings.display.value";
         public const string KeyGuideButtonId = "settings.key-guide";
+        public const string RoomLineId = "settings.room";
+        public const string RoomTextId = "settings.room.text";
+        public const string RoomCloseId = "settings.room.close";
+
+        /// <summary>
+        /// 내 PC에서 연 방의 줄(열려 있을 때만): 아이콘 묶음(뜻 없는 장식) 자리에 그것 대신 보인다 — 다른 줄을 옮기지 않는다.
+        /// 왼쪽 두 줄 글(열림, 다른 사람이 들어올 주소, 사람 수/정원), 오른쪽 방 닫기. 양옆 기둥(±221) 안쪽.
+        /// </summary>
+        internal static class RoomRow
+        {
+            public const float TextX = -72f, TextW = 290f, TextH = 76f, Font = 16f;
+            public const float ButtonX = 152f, ButtonW = 130f, ButtonH = 40f, ButtonFont = 18f;
+        }
 
         /// <summary>단축키 안내 단추: 아래 테두리 띠 위 가운데(무늬 줄 -204보다 아래). 누르면 단축키 안내가 위에 뜬다.</summary>
         internal static class KeyGuideButton
@@ -82,6 +95,10 @@ namespace Rootborn.Screens.Settings
         private UiLabel _displayLabel;
         private UiButton _displayButton;
         private UiButton _keyGuideButton;
+        private UiBox _roomLine;
+        private UiTextBlock _roomText;
+        private UiButton _roomClose;
+        private readonly List<UiNode> _iconGroup = new List<UiNode>(16);
 
         public SettingsScreen(ScreenServices services) : base(services)
         {
@@ -113,6 +130,7 @@ namespace Rootborn.Screens.Settings
             LanguageLine(root);
             DisplayLine(root);
             IconGroup(root, 0f, OptionRows.IconGroupY);
+            RoomLine(root);
             CornerOrnaments(root);
             PatternRow(root, 154f);
             PatternRow(root, -204f);
@@ -126,10 +144,12 @@ namespace Rootborn.Screens.Settings
             WriteLanguage();
             WriteDisplay();
             WriteKeyGuide();
+            WriteRoom();
         }
 
         protected internal override void OnChanged(string topic)
         {
+            if (topic == Start.RoomHostText.Topic || topic == ChangeTopics.Language || topic == ChangeTopics.All) WriteRoom();
             if (topic == ChangeTopics.Language || topic == ChangeTopics.All) { WriteLanguage(); WriteDisplay(); }
             else if (topic == ChangeTopics.Display) WriteDisplay();
             if (topic == ChangeTopics.Language || topic == ChangeTopics.All) WriteKeyGuide();
@@ -143,6 +163,30 @@ namespace Rootborn.Screens.Settings
         }
 
         private void WriteKeyGuide() => _keyGuideButton.Text = T("ui.settings.key-guide");
+
+        private void RoomLine(UiNode root)
+        {
+            float y = OptionRows.IconGroupY, h = OptionRows.IconGroupH;
+            _roomLine = root.Add(new UiBox { Id = RoomLineId, Color = FrameDark, Visible = false }).Centered(0f, y, 442f, h);
+            _roomLine.Add(new UiBox { Color = PanelLight }).Centered(0f, 0f, 434f, h - 8f);
+            _roomText = _roomLine.Add(new UiTextBlock { Id = RoomTextId, FontSize = RoomRow.Font, Color = UiTheme.Ink })
+                .Centered(RoomRow.TextX, 0f, RoomRow.TextW, RoomRow.TextH);
+            _roomClose = _roomLine.Add(new UiButton { Id = RoomCloseId, FontSize = RoomRow.ButtonFont })
+                .Centered(RoomRow.ButtonX, 0f, RoomRow.ButtonW, RoomRow.ButtonH);
+            _roomClose.Clicked += () => Services.RoomHost?.Close();
+        }
+
+        /// <summary>방 줄: 내 PC에서 연 방이 열려 있으면 아이콘 묶음 대신 보인다. 사람 수가 바뀌면 Host가 알린다(RoomHostText.Topic).</summary>
+        private void WriteRoom()
+        {
+            Start.IRoomHost room = Services.RoomHost;
+            bool open = room != null && room.IsOpen;
+            _roomLine.Visible = open;
+            foreach (UiNode node in _iconGroup) node.Visible = !open;
+            if (!open) return;
+            _roomText.Text = F("ui.settings.room-open", room.ListenAddress, room.PlayerCount, room.MaxPlayers);
+            _roomClose.Text = T("ui.settings.room-close");
+        }
 
         private void LanguageLine(UiNode root)
         {
@@ -236,8 +280,9 @@ namespace Rootborn.Screens.Settings
             _toggles[index] = toggle;
         }
 
-        private static void IconGroup(UiNode root, float cx, float cy)
+        private void IconGroup(UiNode root, float cx, float cy)
         {
+            int first = root.Children.Count;
             float h = OptionRows.IconGroupH;
             Box(root, cx, cy, 386f, h, FrameDark);
             Box(root, cx, cy, 356f, h - 22f, PanelLight);
@@ -249,6 +294,7 @@ namespace Rootborn.Screens.Settings
                 Box(root, x, cy, 28f, 28f, i == 0 ? White : AccentBlue);
             }
             Cursor(root, cx - 128f, cy - 2f);
+            for (int i = first; i < root.Children.Count; i++) _iconGroup.Add(root.Children[i]); // 방 줄이 보일 때 숨긴다
         }
 
         private static void SideRail(UiNode root, float x)
