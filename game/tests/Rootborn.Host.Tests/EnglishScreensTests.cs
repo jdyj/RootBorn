@@ -150,7 +150,11 @@ namespace Rootborn.Host.Tests
                 TestContext.Out.WriteLine(report.ToString());
 
                 Assert.That(errors, Is.Empty);
-                Assert.That(shot.Count, Is.GreaterThanOrEqualTo(entries.Count - 3), "거의 모든 화면을 찍었다(숨은 HUD 등은 그릴 것이 없다)");
+                // 내용이 있어야만 그릴 것이 있는 화면: 추적 목표 HUD(추적한 것이 없으면 숨는다), 상호작용 안내(앞에 대상이 있을 때),
+                // 성인 시설(성인 진행이 있어야 열린다), 상호작용 실패 안내(거절 이유가 있을 때 — InteractionRefusalNoticeTests가 따로 본다).
+                // 이 목록 밖의 화면이 찍히지 않으면 실패한다(새 화면이 영어 검사에서 조용히 빠지지 않게).
+                var needsContent = new[] { ScreenCatalog.HudTracked, ScreenCatalog.HudPrompt, ScreenCatalog.Facility, ScreenCatalog.InteractionRefusal };
+                Assert.That(entries.Select(e => e.Id).Where(id => !shot.Contains(id)).Except(needsContent), Is.Empty, "내용 없이도 그릴 수 있는 화면은 모두 찍었다");
                 Assert.That(overflows, Is.Empty, "영어 글자가 패널 밖으로 나갔다(보고서 output/host-screens-evidence/en-report.md)");
                 Assert.That(korean.Keys.Except(KnownKorean.Keys), Is.Empty, "영어 화면에 한글이 남았다(보고서 참고)");
                 Assert.That(missing.Except(KnownMissing.Keys), Is.Empty, "영어에 없는 키");
