@@ -118,6 +118,12 @@ namespace Rootborn.Screens
         /// 배치를 바꿨으면 true(화면 쌓기가 다시 배치한다).
         /// </summary>
         protected internal virtual bool OnTick(float seconds) => false;
+        /// <summary>
+        /// HUD 화면의 겉면 하나라도 위층 화면에 덮이면 이 화면의 겉면을 모두 숨기는가(한 묶음으로 읽히는 HUD: 체력·집중 칸).
+        /// 기본은 겉면마다 따로 숨긴다(버튼 줄).
+        /// </summary>
+        protected internal virtual bool CoveredAsOne => false;
+
         /// <summary>화면이 가져갈 키. true면 다른 화면과 키 배정은 그 키를 보지 않는다.</summary>
         protected internal virtual bool OnKey(ScreenKey key, bool shift) => false;
 
@@ -141,6 +147,20 @@ namespace Rootborn.Screens
         {
             if (string.IsNullOrEmpty(keyOrText)) return string.Empty;
             return Services.Text.Has(keyOrText, Services.Text.Language) ? T(keyOrText) : keyOrText;
+        }
+
+        /// <summary>
+        /// 정의의 화면 이름: 이름 키 → id로 만든 규칙 키(DataTextKeys.Name) 중 지금 언어에 있는 첫 문구, 없으면 데이터의 이름 글, 그것도 없으면 id.
+        /// 화면이 id마다 분기하지 않고 문구를 game/localization에 더할 수 있게 한다.
+        /// </summary>
+        protected string NameOf(string displayNameKey, string id, string fallbackText = null)
+        {
+            string language = Services.Text.Language;
+            if (!string.IsNullOrEmpty(displayNameKey) && Services.Text.Has(displayNameKey, language)) return T(displayNameKey);
+            string ruleKey = DataTextKeys.Name(id);
+            if (ruleKey != null && Services.Text.Has(ruleKey, language)) return T(ruleKey);
+            if (!string.IsNullOrEmpty(fallbackText)) return fallbackText;
+            return id ?? string.Empty;
         }
 
         protected void Close() => Services.Screens?.Close(this);

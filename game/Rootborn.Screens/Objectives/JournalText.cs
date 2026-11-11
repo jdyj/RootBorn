@@ -18,7 +18,7 @@ namespace Rootborn.Screens.Objectives
     /// </summary>
     public sealed class JournalText
     {
-        private enum Kind { Empty, Key, KeyOr, Data, Raw, List }
+        private enum Kind { Empty, Key, KeyOr, Data, Raw, List, FirstKey }
 
         public const string ListSeparatorKey = "ui.journal.list-separator";
         public static readonly JournalText Empty = new JournalText(Kind.Empty, null, null, null);
@@ -44,6 +44,18 @@ namespace Rootborn.Screens.Objectives
         /// <summary>문구 키가 있으면 그 문구, 없으면 fallback 그대로(Unity ObjectiveJournalSourceText.Localized). 빠진 키로 세지 않는다.</summary>
         public static JournalText KeyOr(string key, string fallback) => string.IsNullOrEmpty(key) ? Raw(fallback) : new JournalText(Kind.KeyOr, key, new object[] { fallback ?? string.Empty }, null);
 
+        /// <summary>
+        /// 키 여러 개 중 지금 언어에 있는 첫 문구, 하나도 없으면 fallback 그대로(빈 키는 건너뛴다). 데이터의 이름 키가 비었거나 키가 아닌 글일 때
+        /// id로 만든 규칙 키(DataTextKeys)를 이어서 찾는 데 쓴다. 빠진 키로 세지 않는다.
+        /// </summary>
+        public static JournalText FirstKey(string fallback, params string[] keys)
+        {
+            var present = new List<object>(keys?.Length ?? 0);
+            if (keys != null) foreach (string key in keys) if (!string.IsNullOrEmpty(key)) present.Add(key);
+            if (present.Count == 0) return Raw(fallback);
+            return new JournalText(Kind.FirstKey, fallback ?? string.Empty, present.ToArray(), null);
+        }
+
         /// <summary>번역하지 않는 값(숫자 등).</summary>
         public static JournalText Raw(string text) => string.IsNullOrEmpty(text) ? Empty : new JournalText(Kind.Raw, text, null, null);
 
@@ -68,6 +80,7 @@ namespace Rootborn.Screens.Objectives
                 case Kind.Empty: return string.Empty;
                 case Kind.List: return "[" + string.Join(",", Array.ConvertAll(_items, i => i.ToString())) + "]" + _separatorKey;
                 case Kind.Key when _args != null: return _value + "(" + string.Join(",", Array.ConvertAll(_args, a => a?.ToString() ?? string.Empty)) + ")";
+                case Kind.FirstKey: return string.Join("|", Array.ConvertAll(_args, a => a.ToString())) + "|" + _value;
                 default: return _value;
             }
         }
@@ -88,6 +101,13 @@ namespace Rootborn.Screens.Objectives
                     string shown = r.Shown(_value);
                     return shown == _value ? (string)_args[0] : shown;
                 case Kind.Data: return r.Shown(_value);
+                case Kind.FirstKey:
+                    foreach (object key in _args)
+                    {
+                        string found = r.Shown((string)key);
+                        if (found != (string)key) return found;
+                    }
+                    return _value;
                 case Kind.Raw: return _value;
                 case Kind.List:
                     var seen = new HashSet<string>(StringComparer.Ordinal);

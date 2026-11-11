@@ -1,4 +1,8 @@
 {
+  "data.quest-discoveryclue-libraryfollowup.description": "Follow the clue found at the library.",
+  "data.quest-discoveryclue-libraryfollowup.name": "Library clue follow-up",
+  "data.quest.discovery.play-followup.description": "Follow the play clue.",
+  "data.quest.discovery.play-followup.name": "Play clue follow-up",
   "exploration.ui.choice-label": "{0} — {1}",
   "facility.cost-item": "{0} × {1}",
   "facility.cost-separator": " · ",

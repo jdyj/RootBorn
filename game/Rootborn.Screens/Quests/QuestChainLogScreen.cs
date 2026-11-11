@@ -89,7 +89,7 @@ namespace Rootborn.Screens.Quests
             if (!string.IsNullOrEmpty(Subtitle)) list.Text(Rect.X + (Rect.W - text.Width(Subtitle, FontSize)) / 2f, y + line + 2f, Subtitle, FontSize, Ink, UiSkin.Button);
             list.PopClip();
             if (Selected) list.Outline(Rect.Inset(3f), 2f, Ink);
-            if (Focused) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
+            if (FocusRing) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
         }
     }
 

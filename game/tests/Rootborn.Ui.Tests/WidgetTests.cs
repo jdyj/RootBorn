@@ -136,7 +136,7 @@ namespace Rootborn.Ui.Tests
             UiColor disabledInk = Text(list).Color;
 
             Assert.That(new[] { normal, hovered, pressed, disabled }.Distinct().Count(), Is.EqualTo(4));
-            Assert.That(disabledInk, Is.EqualTo(UiTheme.InkMuted));
+            Assert.That(disabledInk, Is.EqualTo(UiTheme.InkDisabled), "비활성 글자 색 이름(테마가 정한다)");
         }
 
         [Test]

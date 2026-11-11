@@ -15,6 +15,8 @@ namespace Rootborn.Screens
         public ScreenLayer Layer { get; }
         public bool BlocksMovement { get; }
         public Func<ScreenServices, GameScreen> Create { get; }
+        /// <summary>월드(HUD) 없이 뜨는 화면(슬롯 선택처럼 게임 한 판 전). HUD와 함께 떠 있지 않는다.</summary>
+        public bool WithoutWorld { get; internal set; }
     }
 
     /// <summary>
@@ -68,6 +70,13 @@ namespace Rootborn.Screens
             {
                 if (_owner._keys.TryGetValue(key, out string other)) throw new InvalidOperationException($"키 {key}는 이미 화면 {other}에 배정됐다");
                 _owner._keys[key] = _id;
+                return this;
+            }
+
+            /// <summary>월드(HUD) 없이 뜨는 화면이다(게임 한 판 전의 시작 화면).</summary>
+            public Registration WithoutWorld()
+            {
+                _owner._screens[_id].WithoutWorld = true;
                 return this;
             }
 

@@ -31,7 +31,7 @@ namespace Rootborn.Screens.Objectives
                 list.PopClip();
             }
             if (Selected) list.Outline(Rect.Inset(6f), UiTheme.FocusOutline, Ink);
-            if (Focused) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
+            if (FocusRing) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
         }
     }
 
@@ -145,8 +145,9 @@ namespace Rootborn.Screens.Objectives
                 var area = new UiRect(r.X + TextX, r.Y + TextY, TextW, TextH);
                 list.PushClip(area);
                 float y = area.Y + (area.H - lineHeight * 2f - LineGap) / 2f;
-                list.Text(area.X, y, title, FontSize, Ink);
-                list.Text(area.X, y + lineHeight + LineGap, progress, FontSize, Ink);
+                // 칸보다 긴 글은 글자 중간에서 잘리지 않게 말줄임으로 줄인다(넘칠 때만 다시 잰다).
+                list.Text(area.X, y, TextFit.Ellipsize(title, area.W, text, FontSize), FontSize, Ink);
+                list.Text(area.X, y + lineHeight + LineGap, TextFit.Ellipsize(progress, area.W, text, FontSize), FontSize, Ink);
                 list.PopClip();
             }
             list.PopClip();
@@ -159,7 +160,7 @@ namespace Rootborn.Screens.Objectives
                 list.Fill(new UiRect(view.Right - bar, view.Y, bar, view.H), new UiColor(60, 60, 100, 40));
                 list.Fill(new UiRect(view.Right - bar, view.Y + (view.H - thumb) * (_scroll / MaxScroll), bar, thumb), new UiColor(86, 89, 114));
             }
-            if (Focused) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
+            if (FocusRing) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
         }
     }
 

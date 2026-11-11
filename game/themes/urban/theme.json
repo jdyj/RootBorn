@@ -23,7 +23,9 @@
       "border": [ 6, 6, 6, 6 ],
       "fill": "stretch",
       "pixelSize": 2,
-      "textColor": "#F4EDDA"
+      "textColor": "#F4EDDA",
+      "disabledTint": "#96929C",
+      "disabledTextColor": "#E2DCCE"
     },
     "slot": {
       "image": "repo:Assets/Art/UI/UrbanMolding/urban-molding-atlas.png",
@@ -168,6 +170,7 @@
   "textColors": {
     "ink": "#282434",
     "inkMuted": "#848096",
-    "inkOnDark": "#EBE4F2"
+    "inkOnDark": "#EBE4F2",
+    "inkDisabled": "#545062"
   }
 }

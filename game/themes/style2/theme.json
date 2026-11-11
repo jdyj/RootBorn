@@ -162,6 +162,7 @@
   "textColors": {
     "ink": "#282434",
     "inkMuted": "#848096",
-    "inkOnDark": "#EBE4F2"
+    "inkOnDark": "#EBE4F2",
+    "inkDisabled": "#545062"
   }
 }

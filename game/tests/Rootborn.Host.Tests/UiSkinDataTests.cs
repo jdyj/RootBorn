@@ -110,8 +110,27 @@ namespace Rootborn.Host.Tests
             foreach (string name in new[] { "urban", "style2" })
             {
                 ThemeTextColors colors = Load(name).TextColors;
-                Assert.That((colors.Ink, colors.InkMuted, colors.InkOnDark), Is.EqualTo((UiTheme.Ink, UiTheme.InkMuted, UiTheme.InkOnDark)), name);
+                Assert.That((colors.Ink, colors.InkMuted, colors.InkOnDark, colors.InkDisabled),
+                    Is.EqualTo((UiTheme.Ink, UiTheme.InkMuted, UiTheme.InkOnDark, UiTheme.InkDisabled)), name);
             }
+        }
+
+        [Test]
+        public void DisabledText_TakesItsColorFromTheTheme()
+        {
+            SkinSource button = Load("urban").Skins.Get(UiSkin.Button);
+            Assert.That(button.DisabledTextColor, Is.EqualTo((UiColor?)UrbanThemeConversion.UrbanDisabledText));
+            Assert.That(button.DisabledTint, Is.EqualTo((UiColor?)UrbanThemeConversion.UrbanDisabledTint));
+            ThemeTextColors colors = Load("urban").TextColors;
+            Assert.That(UiRenderer.ThemedTextColor(button, UiTheme.InkDisabled, colors), Is.EqualTo(UrbanThemeConversion.UrbanDisabledText), "스킨의 비활성 글자색");
+            Assert.That(UiRenderer.ThemedTextColor(button, UiTheme.Ink, colors), Is.EqualTo(button.TextColor.Value), "활성 글자는 스킨 글자색 그대로");
+
+            SkinSource field = Load("urban").Skins.Get(UiSkin.Field);
+            Assert.That(UiRenderer.ThemedTextColor(field, UiTheme.InkDisabled, colors), Is.EqualTo(colors.InkDisabled), "스킨에 글자색이 없으면 테마의 inkDisabled");
+
+            var light = new SkinSource("x.png", default, true, 1, new UiColor(250, 240, 220));
+            Assert.That(UiRenderer.ThemedTextColor(light, UiTheme.InkDisabled, colors), Is.EqualTo(new UiColor(250, 240, 220, 191)),
+                "스킨 글자색만 있으면 그 색을 조금 흐리게(예전의 절반 투명은 읽히지 않았다)");
         }
 
         // ---------- 그림 id 풀기 ----------

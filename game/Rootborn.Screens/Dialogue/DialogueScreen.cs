@@ -73,9 +73,7 @@ namespace Rootborn.Screens.Dialogue
             public const float ChoiceFont = 18f;
             public const float CloseSize = 48f;
             public const float CloseInset = 42f;
-            public const float CloseFont = 18f;
             /// <summary>닫기 버튼 기호(언어와 무관).</summary>
-            public const string CloseGlyph = "X";
             public static readonly UiColor LineColor = UnityLayout.Color(0.12f, 0.18f, 0.25f);
         }
 
@@ -102,7 +100,7 @@ namespace Rootborn.Screens.Dialogue
             var root = new UiNode { Id = "dialogue.root" };
             _root = root.Add(new DialogueRoot(this) { Id = PanelId });
             _lines = _root.Add(new UiTextBlock { Id = LinesId, FontSize = Metrics.LineFont, Color = Metrics.LineColor });
-            _close = _root.Add(new UiButton { Id = CloseId, Text = Metrics.CloseGlyph, FontSize = Metrics.CloseFont });
+            _close = _root.Add(new UiButton { Id = CloseId, Icon = Rootborn.Screens.Day.ScreenIcons.Close });
             _close.Place(1f, 0f, -Metrics.CloseInset - Metrics.CloseSize, Metrics.CloseInset, Metrics.CloseSize, Metrics.CloseSize);
             _close.Clicked += Close;
             Arrange(Metrics.MinLineHeight);

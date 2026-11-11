@@ -14,21 +14,23 @@ namespace Rootborn.Screens.Tests.Hud
         }
 
         [Test]
-        public void Buttons_SitWhereUnityPutThem_AndThePlacementToggleOnlyAtHome()
+        public void Buttons_SitInTheirLayoutTable_WithoutOverlapping_AndThePlacementToggleOnlyAtHome()
         {
             using var t = new TestSession();
             t.Stack.EnterMap("Town");
             t.Stack.OpenHud();
-            Assert.That(t.Node("hud.button.careers").Rect, Is.EqualTo(new UiRect(24, 84, 240, 56)));
-            Assert.That(t.Node("hud.button.dream").Rect, Is.EqualTo(new UiRect(24, 152, 240, 56)));
-            Assert.That(t.Node("hud.button.world-log").Rect, Is.EqualTo(new UiRect(24, 232, 240, 56)));
+            Assert.That(t.Node("hud.button.careers").Rect, Is.EqualTo(new UiRect(24, 104, 240, 56)));
+            Assert.That(t.Node("hud.button.dream").Rect, Is.EqualTo(new UiRect(24, 172, 240, 56)));
+            Assert.That(t.Node("hud.button.world-log").Rect, Is.EqualTo(new UiRect(24, 252, 240, 56)));
             Assert.That(t.Node("hud.button.encyclopedia").Rect, Is.EqualTo(new UiRect(1920 - 24 - 150, 86, 150, 34)));
             Assert.That(t.Node("hud.button.wardrobe").Rect, Is.EqualTo(new UiRect(1920 - 24 - 150, 126, 150, 34)));
             Assert.That(t.Node("hud.button.placement").Visible, Is.False, "가구 배치 토글은 집에서만");
 
             t.Stack.EnterMap("House", new[] { MapFeatures.FurniturePlacement });
             Assert.That(t.Node("hud.button.placement").Visible, Is.True);
-            Assert.That(t.Node("hud.button.placement").Rect, Is.EqualTo(new UiRect(960 - 790 - 120, 540 - 480 - 32, 240, 64)));
+            // Unity 판 자리(50, 28)는 진로 버튼 위쪽 8을 가렸다. 왼쪽 여백 24에 맞추고 진로 버튼과 16 띄운다.
+            Assert.That(t.Node("hud.button.placement").Rect, Is.EqualTo(new UiRect(24, 24, 240, 64)));
+            Assert.That(t.Node("hud.button.placement").Rect.Bottom + 16, Is.EqualTo(t.Node("hud.button.careers").Rect.Y));
             Assert.That(((UiButton)t.Node("hud.button.placement")).Text, Is.EqualTo("가구 배치 꺼짐"));
         }
 

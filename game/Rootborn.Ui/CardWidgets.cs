@@ -67,7 +67,7 @@ namespace Rootborn.Ui
             ScrollOffset = _scroll;
         }
 
-        protected CardState StateOf(int index) => new CardState(index == _selected, index == _hover, Focused, IsActive);
+        protected CardState StateOf(int index) => new CardState(index == _selected, index == _hover, FocusRing, IsActive);
 
         public override bool OnWheel(float notches)
         {
@@ -156,7 +156,8 @@ namespace Rootborn.Ui
                     list.Fill(new UiRect(x, view.Y + at, ScrollbarWidth, thumb), ScrollThumb);
                 }
             }
-            if (Focused) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
+            // 고른 칸이 있으면 그 칸이 포커스 테두리를 그린다(DrawCell). 목록 전체에 또 두르지 않는다.
+            if (FocusRing && _selected < 0) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
         }
     }
 

@@ -110,13 +110,59 @@ namespace Rootborn.Screens
         public InteractionTargetView? Target { get; private set; }
 
         /// <summary>지금 크기로 다시 배치한다(화면이 노드를 새로 단 직후).</summary>
-        internal void Relayout() => Tree.Layout(_width, _height);
+        internal void Relayout() => LayoutTree();
 
         public void Layout(float width, float height)
         {
             _width = width; _height = height;
-            Tree.Layout(width, height);
+            LayoutTree();
         }
+
+        private readonly List<UiNode> _hudSurfaces = new List<UiNode>(32);
+        private readonly List<UiNode> _coverSurfaces = new List<UiNode>(64);
+
+        /// <summary>배치하고, 열린 패널·모달이 덮는 HUD 요소를 정한다.</summary>
+        private void LayoutTree()
+        {
+            Tree.Layout(_width, _height);
+            UpdateCoveredHud();
+        }
+
+        /// <summary>
+        /// 열린 패널·모달의 겉면(UiSurfaces)과 겹치는 HUD 겉면은 덮인 것으로 둔다(그리지도 누르지도 않는다). 반쯤 가려진 시계·버튼이
+        /// 패널 밑에서 비어져 나오지 않게 한다. 화면의 배치 수치가 바뀌어도(새 디자인) 저절로 맞는다. HUD끼리는 덮지 않는다(배치로 피한다).
+        /// </summary>
+        private void UpdateCoveredHud()
+        {
+            _hudSurfaces.Clear();
+            _coverSurfaces.Clear();
+            for (int i = 0; i < _open.Count; i++)
+            {
+                GameScreen screen = _open[i];
+                if (screen.Layer == ScreenLayer.Hud) UiSurfaces.Collect(screen.Root, _hudSurfaces, includeCovered: true);
+                else if (screen.Layer == ScreenLayer.Panel || screen.Layer == ScreenLayer.Modal) UiSurfaces.Collect(screen.Root, _coverSurfaces);
+            }
+            for (int i = 0; i < _hudSurfaces.Count; i++)
+            {
+                UiNode hud = _hudSurfaces[i];
+                bool covered = false;
+                for (int j = 0; j < _coverSurfaces.Count && !covered; j++) covered = UiSurfaces.Overlap(hud.Rect, _coverSurfaces[j].Rect);
+                hud.Covered = covered;
+            }
+            // 한 묶음으로 읽히는 HUD(GameScreen.CoveredAsOne)는 하나가 덮이면 모두 숨긴다.
+            for (int i = 0; i < _open.Count; i++)
+            {
+                GameScreen screen = _open[i];
+                if (screen.Layer != ScreenLayer.Hud || !screen.CoveredAsOne) continue;
+                _groupSurfaces.Clear();
+                UiSurfaces.Collect(screen.Root, _groupSurfaces, includeCovered: true);
+                bool any = false;
+                foreach (UiNode node in _groupSurfaces) any |= node.Covered;
+                if (any) foreach (UiNode node in _groupSurfaces) node.Covered = true;
+            }
+        }
+
+        private readonly List<UiNode> _groupSurfaces = new List<UiNode>(8);
 
         private GameScreen Get(string id)
         {
@@ -158,6 +204,7 @@ namespace Rootborn.Screens
             Refresh();
             screen.OnOpened(new ScreenOpenContext(interaction, argument));
             Opened?.Invoke(screen);
+            LayoutTree(); // 연 화면과 Opened를 들은 화면이 보이는 것을 바꿨을 수 있다(덮인 HUD를 다시 정한다)
             return screen;
         }
 
@@ -180,6 +227,7 @@ namespace Rootborn.Screens
             Refresh();
             screen.OnClosed();
             Closed?.Invoke(screen);
+            LayoutTree();
             return true;
         }
 
@@ -209,7 +257,7 @@ namespace Rootborn.Screens
             for (int i = 0; i < _open.Count; i++) if (_open[i].Layer == ScreenLayer.Modal) anyModal = true;
             _modalBlocker.Visible = anyModal;
             Tree.FocusScope = FocusScreen?.Root ?? _layers[(int)ScreenLayer.Panel];
-            Tree.Layout(_width, _height);
+            LayoutTree();
         }
 
         // ---------- 입력 ----------
@@ -221,7 +269,7 @@ namespace Rootborn.Screens
             bool relayout = false;
             foreach (GameScreen screen in Snapshot().ToArray())
                 if (screen.IsOpen && screen.OnTick(seconds)) relayout = true;
-            if (relayout) Tree.Layout(_width, _height);
+            if (relayout) LayoutTree();
         }
 
         /// <summary>프레임마다 한 번. 논리 좌표.</summary>
@@ -340,7 +388,7 @@ namespace Rootborn.Screens
         {
             foreach (GameScreen screen in Snapshot().ToArray())
                 if (screen.IsOpen) screen.OnChanged(topic);
-            Tree.Layout(_width, _height);
+            LayoutTree();
         }
 
         public void Emit(DrawList list, ITextMeasurer text) => Tree.Emit(list, text);

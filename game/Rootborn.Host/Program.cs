@@ -22,6 +22,8 @@ namespace Rootborn.Host
                 Console.Error.WriteLine("세이브 폴더를 준다: --save-root <세이브 폴더>(또는 환경 변수 " + HostOptions.SaveRootVariable + ")면 슬롯 선택 화면부터 시작한다.");
                 Console.Error.WriteLine("다른 화면: --slot <슬롯> --save-root <세이브 폴더>(그 슬롯으로 바로), --world <맵>(예: Shop, Town, House) 또는 --sample(UI 견본).");
                 Console.Error.WriteLine("인자: --slot <슬롯>  --save-root <세이브 폴더>  --world <맵>  --spawn <도착 지점>  --maps <맵 목록>  --sample  --size 1280x720  --fullscreen | --windowed  --root <저장소>  --font <TTF>  --evidence <스크린샷 폴더>");
+                Console.Error.WriteLine("      --lang <언어>(없으면 저장된 설정 → 운영체제 언어 → 기준 언어)  --ui-theme <테마 이름 또는 폴더>(없으면 " + HostOptions.UiThemeVariable + " → " + HostOptions.DefaultUiTheme + ")");
+                Console.Error.WriteLine("      --frames <N>(N프레임 그린 뒤 끝낸다)  --screenshot <PNG>(--frames와 함께: 끝내기 직전 화면을 저장한다)");
                 return 2;
             }
             using var game = new HostGame(options);

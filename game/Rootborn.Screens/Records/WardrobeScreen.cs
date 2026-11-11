@@ -95,10 +95,9 @@ namespace Rootborn.Screens.Records
             /// <summary>카드들이 놓이는 곳의 가운데에서 아래로 내린 거리.</summary>
             public const float CardsOffsetY = -24f;
             public const float TitleFont = 28f, TitleW = 400f, TitleH = 44f, TitleCenterFromTop = 36f;
-            public const float CloseSize = 48f, CloseFont = 28f, CloseFromRight = 40f, CloseFromTop = 36f;
+            public const float CloseSize = 48f, CloseFromRight = 40f, CloseFromTop = 36f;
             public const float PreviewW = 128f, PreviewH = 180f, PreviewLift = 16f;
             public const float LabelFont = 18f, LabelW = 162f, LabelH = 36f, LabelDrop = -94f;
-            public const string CloseGlyph = "×";
             public static readonly UiColor Selected = UnityLayout.Color(0.95f, 0.72f, 0.28f);
             public static readonly UiColor Normal = UnityLayout.Color(0.93f, 0.87f, 0.74f);
             public static readonly UiColor Ink = UnityLayout.Color(0.28f, 0.19f, 0.12f);
@@ -136,7 +135,7 @@ namespace Rootborn.Screens.Records
             _panel.Centered(0f, 0f, Metrics.PanelW, Metrics.PanelMinH);
             _title = _panel.Add(new UiLabel { Id = TitleId, FontSize = Metrics.TitleFont, Align = UiAlign.Center, Color = Metrics.Ink });
             _title.Place(0.5f, 0f, -Metrics.TitleW / 2f, Metrics.TitleCenterFromTop - Metrics.TitleH / 2f, Metrics.TitleW, Metrics.TitleH);
-            var close = _panel.Add(new UiButton { Id = CloseId, Text = Metrics.CloseGlyph, FontSize = Metrics.CloseFont });
+            var close = _panel.Add(new UiButton { Id = CloseId, Icon = Rootborn.Screens.Day.ScreenIcons.Close });
             close.Place(1f, 0f, -Metrics.CloseFromRight - Metrics.CloseSize / 2f, Metrics.CloseFromTop - Metrics.CloseSize / 2f, Metrics.CloseSize, Metrics.CloseSize);
             close.Clicked += Close;
             return root;
@@ -254,7 +253,7 @@ namespace Rootborn.Screens.Records
             public override void Emit(DrawList list, ITextMeasurer text)
             {
                 list.Fill(Rect, IsActive && Hovered ? new UiColor((byte)Math.Min(255, _color.R + 12), (byte)Math.Min(255, _color.G + 12), (byte)Math.Min(255, _color.B + 12)) : _color);
-                if (Focused) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
+                if (FocusRing) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
             }
         }
     }

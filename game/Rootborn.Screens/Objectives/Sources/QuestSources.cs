@@ -23,7 +23,7 @@ namespace Rootborn.Screens.Objectives.Sources
                 if (quest == null || string.IsNullOrEmpty(quest.Id)) continue;
                 QuestStage state = session.QuestLog.GetState(quest);
                 string questId = quest.Id;
-                items.Add(new JournalItem("quest." + quest.Id, CategoryId, JournalSourceText.Safe(quest.DisplayNameKey, quest.Id), JournalText.Data(quest.DescriptionKey),
+                items.Add(new JournalItem("quest." + quest.Id, CategoryId, JournalSourceText.Name(quest.DisplayNameKey, quest.Id), JournalSourceText.Description(quest.DescriptionKey, quest.Id),
                     JournalSourceText.State(state == QuestStage.NotStarted ? "Available" : state.ToString()), Objectives(session.QuestLog, quest, state), Hint(state), false, Priority(state),
                     state == QuestStage.Completed ? new JournalAction(JournalText.Key("ui.journal.quest.claim"), session => Claim(session, questId)) : null));
             }

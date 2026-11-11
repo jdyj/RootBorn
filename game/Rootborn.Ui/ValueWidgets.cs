@@ -82,7 +82,7 @@ namespace Rootborn.Ui
                     list.Text(r.X + (r.W - text.Width(label, FontSize)) / 2f, r.Y + (r.H - text.LineHeight(FontSize)) / 2f, label, FontSize,
                         selected ? UiTheme.Ink : UiTheme.InkMuted, Skin);
             }
-            if (Focused) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
+            if (FocusRing) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
         }
     }
 
@@ -158,7 +158,7 @@ namespace Rootborn.Ui
             list.Fill(knob, Hovered ? KnobLight : Knob);
             float lw = knob.W * 22f / 36f, lh = knob.H * 14f / 36f; // 손잡이 위 밝은 칸 22x14, 가운데보다 5 위
             list.Fill(new UiRect(knob.CenterX - lw / 2f, knob.CenterY - lh / 2f - knob.H * 5f / 36f, lw, lh), KnobLight);
-            if (Focused) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
+            if (FocusRing) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
         }
     }
 
@@ -234,7 +234,7 @@ namespace Rootborn.Ui
             list.Fill(track, IsActive ? Track : UiTheme.ButtonDisabled);
             list.Fill(new UiRect(track.X, track.Y, track.W * Fraction, track.H), Fill);
             list.Fill(KnobRect, Knob);
-            if (Focused) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
+            if (FocusRing) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
         }
     }
 }

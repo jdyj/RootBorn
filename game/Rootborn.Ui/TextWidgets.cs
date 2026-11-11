@@ -112,6 +112,8 @@ namespace Rootborn.Ui
 
         public UiMultilineButton() { Interactive = true; Focusable = true; }
 
+        public override bool IsSurface => true;
+
         public override void Emit(DrawList list, ITextMeasurer text)
         {
             bool active = IsActive;
@@ -130,11 +132,11 @@ namespace Rootborn.Ui
                 foreach (string line in _lines)
                 {
                     float x = Rect.X + (Rect.W - text.Width(line, FontSize)) / 2f;
-                    list.Text(x, y, line, FontSize, active ? UiTheme.Ink : UiTheme.InkMuted, Skin);
+                    list.Text(x, y, line, FontSize, active ? UiTheme.Ink : UiTheme.InkDisabled, Skin);
                     y += lineHeight + LineSpacing;
                 }
             }
-            if (Focused) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
+            if (FocusRing) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
         }
     }
 

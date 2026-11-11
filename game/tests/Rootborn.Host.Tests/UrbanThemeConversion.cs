@@ -71,6 +71,10 @@ namespace Rootborn.Host.Tests
                 JsonElement c = root.GetProperty("buttonTextColor");
                 byte B(string k) => (byte)MathF.Round(Math.Clamp(c.GetProperty(k).GetSingle(), 0f, 1f) * 255f);
                 button["textColor"] = ThemeFolder.ToHex(new UiColor(B("r"), B("g"), B("b"), B("a")));
+                // 예전 데이터에 없는 값(2026-11-12 화면 결함 정리): 누를 수 없는 단추는 반투명 회색 대신 불투명하게 어둡히고, 글자는 밝은 색 그대로 둔다.
+                // 반투명 바탕 위 반투명 밝은 글자는 읽히지 않았다.
+                button["disabledTint"] = ThemeFolder.ToHex(UrbanDisabledTint);
+                button["disabledTextColor"] = ThemeFolder.ToHex(UrbanDisabledText);
                 slot = Sliced(root.GetProperty("slotSprite"));
             }
             (JsonObject icons, JsonObject definitionIcons) = Icons(repoRoot);
@@ -93,11 +97,15 @@ namespace Rootborn.Host.Tests
             };
         }
 
+        public static readonly UiColor UrbanDisabledTint = new UiColor(150, 146, 156);
+        public static readonly UiColor UrbanDisabledText = new UiColor(226, 220, 206);
+
         public static JsonObject DefaultTextColors() => new JsonObject
         {
             ["ink"] = ThemeFolder.ToHex(UiTheme.Ink),
             ["inkMuted"] = ThemeFolder.ToHex(UiTheme.InkMuted),
             ["inkOnDark"] = ThemeFolder.ToHex(UiTheme.InkOnDark),
+            ["inkDisabled"] = ThemeFolder.ToHex(UiTheme.InkDisabled),
         };
 
         /// <summary>들여 쓴 JSON. 수만 든 배열(rect, border)은 한 줄로.</summary>

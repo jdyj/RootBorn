@@ -177,7 +177,7 @@ namespace Rootborn.Ui
                 float thumbY = view.Y + (view.H - thumbH) * (_scroll / MaxScroll);
                 list.Fill(new UiRect(trackX, thumbY, ScrollbarWidth, thumbH), ScrollThumb);
             }
-            if (Focused) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
+            if (FocusRing) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
         }
     }
 }

@@ -54,7 +54,7 @@ namespace Rootborn.Screens.Settings
         /// <summary>언어 줄 배치(패널 가운데 기준, Unity 좌표처럼 y가 위로). 켬/끔 묶음(아래 끝 -10)과 아이콘 묶음(위 끝 -68) 사이.</summary>
         internal static class LanguageRow
         {
-            public const float Y = -39f, Height = 40f, Font = 18f;
+            public const float Y = -39f, Height = 40f, Font = 18f, LabelFont = 24f;
             public const float LabelX = -98f, LabelW = 170f;
             public const float ButtonX = 92f, ButtonW = 190f;
         }
@@ -114,7 +114,7 @@ namespace Rootborn.Screens.Settings
 
         private void LanguageLine(UiNode root)
         {
-            _languageLabel = root.Add(new UiLabel { Id = LanguageLabelId, FontSize = LanguageRow.Font, Color = FrameDark })
+            _languageLabel = root.Add(new UiLabel { Id = LanguageLabelId, FontSize = LanguageRow.LabelFont, Color = UiTheme.Ink, Align = UiAlign.Right })
                 .Centered(LanguageRow.LabelX, LanguageRow.Y, LanguageRow.LabelW, LanguageRow.Height);
             _languageButton = root.Add(new UiButton { Id = LanguageButtonId, FontSize = LanguageRow.Font })
                 .Centered(LanguageRow.ButtonX, LanguageRow.Y, LanguageRow.ButtonW, LanguageRow.Height);

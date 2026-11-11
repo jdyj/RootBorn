@@ -23,7 +23,7 @@ namespace Rootborn.Screens.Minigames
             public const float StatusY = -235f, StatusW = 800f, StatusH = 32f, StatusFont = 19f;
             public const float FeedbackY = -192f, FeedbackW = 800f, FeedbackH = 72f, FeedbackFont = 20f;
             public const float BodyW = 800f, BodyH = 290f;
-            public const float CloseX = 390f, CloseY = 250f, CloseW = 52f, CloseH = 48f, CloseFont = 19f;
+            public const float CloseX = 390f, CloseY = 250f, CloseW = 52f, CloseH = 48f;
             public const float RetryY = -278f, RetryW = 220f, RetryH = 40f, RetryFont = 19f;
             public static readonly UiColor Ink = UnityLayout.Color(.25f, .18f, .12f);
         }
@@ -77,7 +77,7 @@ namespace Rootborn.Screens.Minigames
             _feedback = root.Add(new UiTextBlock { Id = FeedbackId, FontSize = Metrics.FeedbackFont, Color = Metrics.Ink, Align = UiAlign.Center })
                 .Centered(0f, Metrics.FeedbackY, Metrics.FeedbackW, Metrics.FeedbackH);
             _body = root.Add(new UiNode { Id = BodyId }).Centered(0f, 0f, Metrics.BodyW, Metrics.BodyH);
-            _close = root.Add(new UiButton { Id = CloseId, FontSize = Metrics.CloseFont }).Centered(Metrics.CloseX, Metrics.CloseY, Metrics.CloseW, Metrics.CloseH);
+            _close = root.Add(new UiButton { Id = CloseId, Icon = Rootborn.Screens.Day.ScreenIcons.Close }).Centered(Metrics.CloseX, Metrics.CloseY, Metrics.CloseW, Metrics.CloseH);
             _close.Clicked += CloseOrForfeit;
             _retry = root.Add(new UiButton { Id = RetryId, FontSize = Metrics.RetryFont, Visible = false }).Centered(0f, Metrics.RetryY, Metrics.RetryW, Metrics.RetryH);
             _retry.Clicked += RetrySettlement;
@@ -92,7 +92,6 @@ namespace Rootborn.Screens.Minigames
             _delivered = false;
             _shown = null;
             _retry.Visible = false;
-            _close.Text = T("ui.close-symbol");
             _retry.Text = T("minigame.save-again");
             if (Session == null)
             {
@@ -106,7 +105,6 @@ namespace Rootborn.Screens.Minigames
         protected internal override void OnChanged(string topic)
         {
             if (topic != ChangeTopics.Language || Session == null) return;
-            _close.Text = T("ui.close-symbol");
             _retry.Text = T("minigame.save-again");
             _shown = null; // 글자를 다시 받도록 도전을 다시 그린다(같은 판, 같은 값)
             _signature = default;

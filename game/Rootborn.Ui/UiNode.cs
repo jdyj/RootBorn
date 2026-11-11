@@ -17,6 +17,14 @@ namespace Rootborn.Ui
         public bool Visible = true;
         public bool Enabled = true;
 
+        /// <summary>
+        /// 위층 화면이 덮어서 그리지 않는다(화면 쌓기가 정한다. 화면 코드는 Visible만 쓴다). 덮인 요소와 그 자식은 그리지도 포인터를 받지도 않는다.
+        /// </summary>
+        public bool Covered;
+
+        /// <summary>바탕을 그리는 겉면(패널, 칠한 상자, 버튼, 칸, 글자 칸). 화면끼리 겹치는지는 가장 바깥 겉면으로 본다(UiSurfaces).</summary>
+        public virtual bool IsSurface => false;
+
         /// <summary>포인터를 받는다. 받는 요소는 뒤에 있는 요소를 가린다.</summary>
         public bool Interactive;
 
@@ -33,15 +41,21 @@ namespace Rootborn.Ui
         public bool Pressed { get; internal set; }
         public bool Focused { get; internal set; }
 
+        /// <summary>
+        /// 포커스 테두리를 그린다: 키보드(또는 코드)로 옮긴 포커스. 포인터로 눌러서 받은 포커스는 테두리를 그리지 않는다
+        /// (누른 줄·칸의 선택 표시와 목록 테두리가 겹쳐 그려지지 않게).
+        /// </summary>
+        public bool FocusRing { get; internal set; }
+
         public event Action Clicked;
 
-        /// <summary>자신과 모든 조상이 보이고 활성일 때만 입력을 받는다.</summary>
+        /// <summary>자신과 모든 조상이 보이고 활성이고 덮이지 않았을 때만 입력을 받는다.</summary>
         public bool IsActive
         {
             get
             {
                 for (UiNode n = this; n != null; n = n.Parent)
-                    if (!n.Visible || !n.Enabled) return false;
+                    if (!n.Visible || !n.Enabled || n.Covered) return false;
                 return true;
             }
         }

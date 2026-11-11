@@ -89,7 +89,7 @@ namespace Rootborn.Screens.Minigames
             list.Fill(Rect, IsActive && (Hovered || Pressed) ? Lighter(Color) : Color);
             if (!string.IsNullOrEmpty(Text))
                 list.Text(Rect.X + (Rect.W - text.Width(Text, FontSize)) / 2f, Rect.Y + (Rect.H - text.LineHeight(FontSize)) / 2f, Text, FontSize, UiTheme.Ink);
-            if (Focused) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
+            if (FocusRing) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
         }
 
         private static UiColor Lighter(UiColor c) =>

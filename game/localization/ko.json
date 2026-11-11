@@ -1,4 +1,8 @@
 {
+  "data.quest-discoveryclue-libraryfollowup.description": "도서관에서 찾은 단서를 따라가 본다.",
+  "data.quest-discoveryclue-libraryfollowup.name": "도서관 단서 따라가기",
+  "data.quest.discovery.play-followup.description": "놀이에서 찾은 단서를 따라가 본다.",
+  "data.quest.discovery.play-followup.name": "놀이 단서 따라가기",
   "exploration.ui.choice-label": "{0} — {1}",
   "facility.cost-item": "{0} × {1}",
   "facility.cost-separator": " · ",

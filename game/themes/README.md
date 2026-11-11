@@ -66,14 +66,15 @@
   "about": "이 테마 설명(자유)",
   "skins": {
     "panel":  { "image": "panel.png", "border": [ 12, 12, 12, 12 ], "fill": "stretch", "pixelSize": 2 },
-    "button": { "image": "ui.png", "rect": [ 0, 0, 48, 16 ], "border": [ 4, 4, 4, 4 ], "pixelSize": 2, "textColor": "#F4EDDA" }
+    "button": { "image": "ui.png", "rect": [ 0, 0, 48, 16 ], "border": [ 4, 4, 4, 4 ], "pixelSize": 2, "textColor": "#F4EDDA",
+                "disabledTint": "#96929C", "disabledTextColor": "#E2DCCE" }
   },
   "icons": {
     "close": { "image": "icons.png", "rect": [ 32, 0, 16, 16 ] },
     "time":  { "image": "time.png" }
   },
   "definitionIcons": { "daily.practice.chef": "chef" },
-  "textColors": { "ink": "#282434", "inkMuted": "#848096", "inkOnDark": "#EBE4F2" }
+  "textColors": { "ink": "#282434", "inkMuted": "#848096", "inkOnDark": "#EBE4F2", "inkDisabled": "#545062" }
 }
 ```
 
@@ -82,11 +83,13 @@
 - **`border`**: 9조각 테두리 두께 `[왼쪽, 위, 오른쪽, 아래]`, 픽셀. 모서리는 그대로 두고 변과 가운데만 늘이거나 반복한다. 테두리를 빼고도 가운데가 남아야 한다.
 - **`fill`**: `stretch`(변과 가운데를 늘인다, 기본) 또는 `tile`(가운데 칸을 반복한다).
 - **`pixelSize`**: 원본 1픽셀이 화면에서 몇 칸인가(1920x1080 기준 논리 크기). 적지 않으면 화면 크기에 맞춘 정수 배율(1080에서 3). 픽셀아트를 또렷하게 두려면 정수로.
-- **`textColor`**: 이 그림 위에 놓이는 글자 색(예: 어두운 버튼 위 밝은 글자). `"#RRGGBB"` 또는 `"#RRGGBBAA"`. 흐린 글자(비활성)는 반투명으로 그린다.
+- **`textColor`**: 이 그림 위에 놓이는 글자 색(예: 어두운 버튼 위 밝은 글자). `"#RRGGBB"` 또는 `"#RRGGBBAA"`. 흐린 글자는 반투명으로 그린다.
+- **`disabledTextColor`**: 누를 수 없는 단추·줄에서 이 그림 위 글자 색. 적지 않으면 `textColor`를 조금 흐리게, `textColor`도 없으면 `textColors.inkDisabled`.
+- **`disabledTint`**: 누를 수 없을 때 이 그림을 물들이는 색. 적지 않으면 게임 기본값(반투명 회색). 비활성 글자가 바탕 위에서 읽히는지 함께 본다.
 - **`padding`**: 글자를 놓을 안쪽 여백 `[왼쪽, 위, 오른쪽, 아래]`(논리 크기). 적지 않으면 테두리 두께 × `pixelSize`.
 - **`icons`**: 아이콘 키 → 그림(`image`, 있으면 `rect`).
 - **`definitionIcons`**: 게임 데이터의 정의 id → 아이콘 키. 그 정의(예: 일과 카드 하나)에만 다른 아이콘을 보이고 싶을 때. 없으면 화면이 정한 기본 아이콘.
-- **`textColors`**: 기본 글자 색 묶음. `ink`(보통 글자), `inkMuted`(흐린 글자), `inkOnDark`(어두운 바탕 위 글자). 적지 않은 색은 게임 기본값.
+- **`textColors`**: 기본 글자 색 묶음. `ink`(보통 글자), `inkMuted`(흐린 글자), `inkOnDark`(어두운 바탕 위 글자), `inkDisabled`(누를 수 없는 단추·줄의 글자). 적지 않은 색은 게임 기본값.
 
 ### 알아 둘 것
 

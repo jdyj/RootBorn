@@ -316,7 +316,7 @@ namespace Rootborn.Ui
         public override void Emit(DrawList list, ITextMeasurer text)
         {
             if (Selected) list.Fill(Rect, SelectedColor);
-            if (Focused) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
+            if (FocusRing) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
         }
     }
 }

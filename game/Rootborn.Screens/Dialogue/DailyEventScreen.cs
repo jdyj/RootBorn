@@ -78,9 +78,8 @@ namespace Rootborn.Screens.Dialogue
             public const float DeadlineY = 195f, DeadlineW = 944f, DeadlineH = 32f, DeadlineFont = 18f;
             public const float ResultY = -222f, ResultW = 944f, ResultH = 96f, ResultFont = 20f;
             public const float ChoiceTopY = 122f, ChoiceStep = 108f, ChoiceW = 944f, ChoiceH = 92f, ChoiceFont = 20f;
-            public const float CloseX = 504f, CloseY = 342f, CloseSize = 48f, CloseFont = 20f;
+            public const float CloseX = 504f, CloseY = 342f, CloseSize = 48f;
             public const float DeferX = -130f, DeclineX = 130f, BottomButtonY = -326f, BottomButtonW = 210f, BottomButtonH = 52f, BottomFont = 20f;
-            public const string CloseGlyph = "×";
             public static readonly UiColor Ink = UnityLayout.Color(0.25f, 0.18f, 0.12f);
         }
 
@@ -127,7 +126,7 @@ namespace Rootborn.Screens.Dialogue
                     .Centered(0f, Metrics.ChoiceTopY - i * Metrics.ChoiceStep, Metrics.ChoiceW, Metrics.ChoiceH);
                 _choices[i].Clicked += () => Choose(index);
             }
-            var close = root.Add(new UiButton { Id = CloseId, Text = Metrics.CloseGlyph, FontSize = Metrics.CloseFont })
+            var close = root.Add(new UiButton { Id = CloseId, Icon = Rootborn.Screens.Day.ScreenIcons.Close })
                 .Centered(Metrics.CloseX, Metrics.CloseY, Metrics.CloseSize, Metrics.CloseSize);
             close.Clicked += Close;
             _defer = root.Add(new UiButton { Id = DeferId, FontSize = Metrics.BottomFont })

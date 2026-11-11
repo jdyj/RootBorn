@@ -63,7 +63,7 @@ namespace Rootborn.Screens.Records
             public const float PanelW = 1120f, PanelH = 800f;
             public const float IconX = -488f, IconY = 332f, IconSize = 64f;
             public const float TitleY = 332f, TitleW = 832f, TitleH = 48f, TitleFont = 32f;
-            public const float CloseX = 484f, CloseY = 334f, CloseSize = 56f, CloseFont = 28f;
+            public const float CloseX = 484f, CloseY = 334f, CloseSize = 56f;
             public const float EmptyY = 160f, EmptyW = 960f, EmptyH = 48f, EmptyFont = 22f;
             public const float ListY = -40f, ListW = 1024f, ListH = 592f, ListPadding = 8f;
             public const float CardW = 992f, CardH = 208f, CardGap = 16f;
@@ -74,7 +74,6 @@ namespace Rootborn.Screens.Records
             public const float BodyTop = 62f, BodyH = 76f, BodyFont = 20f;
             public const float BadgeTop = 147f, BadgeH = 26f, BadgeFont = 18f;
             public const float LineSpacing = 4f;
-            public const string CloseGlyph = "×";
             public const string Icon = "icon:journal";
             public static readonly UiColor Ink = UnityLayout.Color(48f / 255f, 71f / 255f, 83f / 255f);
         }
@@ -111,7 +110,7 @@ namespace Rootborn.Screens.Records
             panel.Add(new UiImage { Id = "world-state-log.icon", Image = Metrics.Icon }).Centered(Metrics.IconX, Metrics.IconY, Metrics.IconSize, Metrics.IconSize);
             _title = panel.Add(new UiLabel { Id = TitleId, FontSize = Metrics.TitleFont, Align = UiAlign.Center, Color = Metrics.Ink });
             _title.Centered(0f, Metrics.TitleY, Metrics.TitleW, Metrics.TitleH);
-            var close = panel.Add(new UiButton { Id = CloseId, Text = Metrics.CloseGlyph, FontSize = Metrics.CloseFont });
+            var close = panel.Add(new UiButton { Id = CloseId, Icon = Rootborn.Screens.Day.ScreenIcons.Close });
             close.Centered(Metrics.CloseX, Metrics.CloseY, Metrics.CloseSize, Metrics.CloseSize);
             close.Clicked += Close;
             _empty = panel.Add(new UiLabel { Id = EmptyId, FontSize = Metrics.EmptyFont, Align = UiAlign.Center, Color = Metrics.Ink });

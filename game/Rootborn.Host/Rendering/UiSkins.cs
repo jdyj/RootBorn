@@ -12,9 +12,11 @@ namespace Rootborn.Host.Rendering
     /// </summary>
     public sealed class SkinSource
     {
-        public SkinSource(string texture, NineSliceSource slices, bool stretch, float logicalPerPixel, UiColor? textColor, SkinPadding padding = default)
+        public SkinSource(string texture, NineSliceSource slices, bool stretch, float logicalPerPixel, UiColor? textColor, SkinPadding padding = default,
+            UiColor? disabledTextColor = null, UiColor? disabledTint = null)
         {
             Texture = texture; Slices = slices; Stretch = stretch; LogicalPerPixel = logicalPerPixel; TextColor = textColor; Padding = padding;
+            DisabledTextColor = disabledTextColor; DisabledTint = disabledTint;
         }
 
         public string Texture { get; }
@@ -25,6 +27,10 @@ namespace Rootborn.Host.Rendering
         public float LogicalPerPixel { get; }
         /// <summary>이 그림 위 글자 색(도시형 몰딩 버튼). 없으면 화면이 정한 색.</summary>
         public UiColor? TextColor { get; }
+        /// <summary>누를 수 없을 때 이 그림 위 글자 색. 없으면 textColor를 조금 흐리게, textColor도 없으면 테마의 inkDisabled.</summary>
+        public UiColor? DisabledTextColor { get; }
+        /// <summary>누를 수 없을 때 이 그림의 물들임(화면이 UiTheme.ButtonDisabled로 그린 것). 없으면 그대로.</summary>
+        public UiColor? DisabledTint { get; }
         /// <summary>글자를 놓아도 되는 안쪽 여백(논리 좌표).</summary>
         public SkinPadding Padding { get; }
 

@@ -85,7 +85,7 @@ namespace Rootborn.Host.Rendering
                         if (skin.Stretch) NineSlice.BuildStretched(fit.ToPixels(command.Rect), skin.Slices, skin.Scale(fit), _pieces);
                         else NineSlice.Build(fit.ToPixels(command.Rect), skin.Slices, skin.Scale(fit), _pieces);
                         Texture2D sheet = Texture(skin.Texture);
-                        Color tint = ToColor(command.Color);
+                        Color tint = ToColor(command.Color == UiTheme.ButtonDisabled && skin.DisabledTint.HasValue ? skin.DisabledTint.Value : command.Color);
                         for (int i = 0; i < _pieces.Count; i++)
                             _batch.Draw(sheet, ToRectangle(_pieces[i].Dest), ToRectangle(_pieces[i].Source), tint);
                         break;
@@ -122,13 +122,25 @@ namespace Rootborn.Host.Rendering
             _device.ScissorRectangle = full;
         }
 
-        /// <summary>글자가 올라앉은 그림에 글자 색이 정해져 있으면 그 색(흐린 글자는 반투명으로), 아니면 테마의 글자 색 묶음.</summary>
-        private UiColor TextColor(DrawCommand command)
+        /// <summary>
+        /// 글자가 올라앉은 그림에 글자 색이 정해져 있으면 그 색(흐린 글자는 반투명으로, 비활성 글자는 그 그림의 disabledTextColor),
+        /// 아니면 테마의 글자 색 묶음.
+        /// </summary>
+        private UiColor TextColor(DrawCommand command) => ThemedTextColor(command.Skin == null ? null : _skins.Get(command.Skin), command.Color, _textColors);
+
+        /// <summary>글자 색 고르기(그리는 것과 따로 시험한다).</summary>
+        public static UiColor ThemedTextColor(SkinSource skin, UiColor color, ThemeTextColors colors)
         {
-            UiColor? themed = command.Skin == null ? null : _skins.Get(command.Skin).TextColor;
-            if (!themed.HasValue) return _textColors.Map(command.Color);
+            if (color == UiTheme.InkDisabled)
+            {
+                if (skin?.DisabledTextColor is UiColor disabled) return disabled;
+                if (skin?.TextColor is UiColor onSkin) return new UiColor(onSkin.R, onSkin.G, onSkin.B, (byte)(onSkin.A * 3 / 4));
+                return colors.InkDisabled;
+            }
+            UiColor? themed = skin?.TextColor;
+            if (!themed.HasValue) return colors.Map(color);
             UiColor c = themed.Value;
-            return command.Color == UiTheme.InkMuted ? new UiColor(c.R, c.G, c.B, (byte)(c.A / 2)) : c;
+            return color == UiTheme.InkMuted ? new UiColor(c.R, c.G, c.B, (byte)(c.A / 2)) : c;
         }
 
         private void Begin() => _batch.Begin(SpriteSortMode.Deferred, _blend, SamplerState.PointClamp, null, _scissor);

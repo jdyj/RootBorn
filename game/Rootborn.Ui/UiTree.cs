@@ -33,7 +33,7 @@ namespace Rootborn.Ui
 
         private static UiNode HitTest(UiNode node, float x, float y)
         {
-            if (!node.Visible) return null;
+            if (!node.Visible || node.Covered) return null;
             for (int i = node.Children.Count - 1; i >= 0; i--)
             {
                 UiNode hit = HitTest(node.Children[i], x, y);
@@ -65,7 +65,7 @@ namespace Rootborn.Ui
                 _pressed = activeOver;
                 _pressX = x; _pressY = y;
                 _dragging = false;
-                SetFocus(activeOver != null && activeOver.Focusable ? activeOver : null);
+                SetFocus(activeOver != null && activeOver.Focusable ? activeOver : null, ring: false);
                 _pressed?.OnPress(x, y);
             }
 
@@ -102,13 +102,21 @@ namespace Rootborn.Ui
             Clicked?.Invoke(node);
         }
 
-        public void SetFocus(UiNode node)
+        /// <summary>포커스를 옮긴다(키보드·코드). 포커스 테두리를 그린다.</summary>
+        public void SetFocus(UiNode node) => SetFocus(node, ring: true);
+
+        /// <param name="ring">포커스 테두리를 그리는가. 포인터로 눌러 받은 포커스는 false.</param>
+        private void SetFocus(UiNode node, bool ring)
         {
             if (node != null && (!node.Focusable || !node.IsActive)) return;
-            if (node == Focused) return;
-            if (Focused != null) { Focused.Focused = false; Focused.OnFocusChanged(false); }
+            if (node == Focused)
+            {
+                if (node != null) node.FocusRing = ring;
+                return;
+            }
+            if (Focused != null) { Focused.Focused = false; Focused.FocusRing = false; Focused.OnFocusChanged(false); }
             Focused = node;
-            if (Focused != null) { Focused.Focused = true; Focused.OnFocusChanged(true); }
+            if (Focused != null) { Focused.Focused = true; Focused.FocusRing = ring; Focused.OnFocusChanged(true); }
             FocusChanged?.Invoke(Focused);
         }
 
@@ -136,7 +144,7 @@ namespace Rootborn.Ui
 
         private static void Collect(UiNode node, List<UiNode> into)
         {
-            if (!node.Visible || !node.Enabled) return;
+            if (!node.Visible || !node.Enabled || node.Covered) return;
             if (node.Focusable) into.Add(node);
             for (int i = 0; i < node.Children.Count; i++) Collect(node.Children[i], into);
         }
@@ -186,7 +194,7 @@ namespace Rootborn.Ui
 
         private static void Emit(UiNode node, DrawList list, ITextMeasurer text)
         {
-            if (!node.Visible) return;
+            if (!node.Visible || node.Covered) return;
             node.Emit(list, text);
             for (int i = 0; i < node.Children.Count; i++) Emit(node.Children[i], list, text);
         }

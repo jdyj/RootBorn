@@ -42,6 +42,9 @@ namespace Rootborn.Screens.Hud
 
         public VitalsHudScreen(ScreenServices services) : base(services) { }
 
+        /// <summary>체력·집중 칸은 한 묶음이다: 하나가 패널에 덮이면 둘 다 숨긴다.</summary>
+        protected internal override bool CoveredAsOne => true;
+
         public VitalsModel Model { get; private set; }
 
         public static string ValueId(string widgetId) => widgetId + ".value";

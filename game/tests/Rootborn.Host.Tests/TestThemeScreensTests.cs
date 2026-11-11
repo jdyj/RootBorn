@@ -200,7 +200,7 @@ namespace Rootborn.Host.Tests
         }
 
         /// <summary>UiTree.Emit과 같은 순서로 한 화면의 보이는 요소만 그리기 명령으로 낸다.</summary>
-        private static void EmitVisible(UiNode node, DrawList list, ITextMeasurer text)
+        internal static void EmitVisible(UiNode node, DrawList list, ITextMeasurer text)
         {
             if (!node.Visible) return;
             node.Emit(list, text);
@@ -211,7 +211,7 @@ namespace Rootborn.Host.Tests
         /// 글자마다 그 아래 패널(앞서 그린 패널 중 글자 가운데를 품는 가장 작은 것)을 찾아, 보이는 글자 상자(잘라 내기 안쪽)가 패널 밖으로 나가는지 본다.
         /// 패널의 안쪽 여백(테마의 테두리 두께)에 닿는 것은 따로 모은다.
         /// </summary>
-        private static void Check(string screenId, DrawList list, ITextMeasurer measurer, UiSkins skins,
+        internal static void Check(string screenId, DrawList list, ITextMeasurer measurer, UiSkins skins,
             SortedDictionary<string, List<string>> overflows, SortedDictionary<string, List<string>> borderTouches)
         {
             var panels = new List<(UiRect rect, string skin)>();

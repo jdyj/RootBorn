@@ -13,6 +13,17 @@ namespace Rootborn.Screens.Objectives.Sources
         /// <summary>키가 비었으면 대신 쓸 키(Unity SafeText).</summary>
         public static JournalText Safe(string primary, string fallback) => JournalText.Data(string.IsNullOrEmpty(primary) ? fallback : primary);
 
+        /// <summary>
+        /// 정의의 이름: 데이터의 이름 키 → id로 만든 규칙 키(DataTextKeys.Name) → 데이터의 글(키가 아닌 이름) → id 순서.
+        /// 이름 키가 비었거나 문구가 없는 퀘스트가 id나 영어 원문으로 보이던 것을 game/localization의 규칙 키로 고칠 수 있게 한다.
+        /// </summary>
+        public static JournalText Name(string displayNameKey, string id) =>
+            JournalText.FirstKey(string.IsNullOrEmpty(displayNameKey) ? id : displayNameKey, displayNameKey, DataTextKeys.Name(id));
+
+        /// <summary>정의의 설명: 데이터의 설명 키 → 규칙 키(DataTextKeys.Description) → 데이터의 글.</summary>
+        public static JournalText Description(string descriptionKey, string id) =>
+            JournalText.FirstKey(descriptionKey, descriptionKey, DataTextKeys.Description(id));
+
         /// <summary>목표 이름(비었으면 일반 목표).</summary>
         public static JournalText ObjectiveLabel(string displayKey) =>
             string.IsNullOrEmpty(displayKey) ? JournalText.Key(GenericObjectiveKey) : JournalText.Data(displayKey);

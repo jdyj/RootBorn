@@ -37,7 +37,7 @@ namespace Rootborn.Screens.Furniture
 
             public const float SettingsX = 760f, SettingsY = 0f, SettingsW = 360f, SettingsH = 720f;
             public const float SettingsTitleX = -34f, SettingsTitleY = 310f, SettingsTitleW = 230f, SettingsTitleH = 40f;
-            public const float CloseX = 150f, CloseY = 310f, CloseSize = 44f, CloseFont = 18f;
+            public const float CloseX = 150f, CloseY = 310f, CloseSize = 44f;
             public const float PreviewX = -82f, PreviewY = -288f, PreviewSize = 116f, PreviewIcon = 82f;
             public const float InfoX = 72f, InfoW = 170f;
             public const float NameY = -254f, NameH = 28f, NameFont = 16f;
@@ -50,7 +50,6 @@ namespace Rootborn.Screens.Furniture
             public const float MoveX = -320f, MoveW = 64f, MoveH = 40f, MoveFont = 14f;
 
             /// <summary>닫기 버튼 기호(언어와 무관).</summary>
-            public const string CloseGlyph = "X";
 
             // 미리보기 색(Unity InteriorPlacementPreviewOverlay).
             public static readonly UiColor ValidCell = UnityLayout.Color(0.15f, 0.95f, 0.35f, 0.38f);
@@ -136,12 +135,8 @@ namespace Rootborn.Screens.Furniture
             _validDirty = true;
         }
 
-        private string Name(FurnitureDefinition f)
-        {
-            if (f == null) return string.Empty;
-            string key = f.DisplayNameKey;
-            return !string.IsNullOrEmpty(key) && Services.Text.Has(key, Services.Text.Language) ? T(key) : f.DisplayName;
-        }
+        /// <summary>가구 이름: 이름 키 → id로 만든 규칙 키(DataTextKeys) → 데이터의 이름 → id. 지금 데이터는 이름 키가 없어 데이터의 한국어 이름이다.</summary>
+        private string Name(FurnitureDefinition f) => f == null ? string.Empty : NameOf(f.DisplayNameKey, f.StableId, f.DisplayName);
 
         protected override UiNode Build()
         {
@@ -173,7 +168,7 @@ namespace Rootborn.Screens.Furniture
             UiPanel settings = root.Add(new UiPanel { Id = "furniture.settings" }).Centered(Metrics.SettingsX, Metrics.SettingsY, Metrics.SettingsW, Metrics.SettingsH);
             _settingsTitle = settings.Add(new UiLabel { Id = "furniture.settings.title", FontSize = Metrics.TitleFont, Color = Metrics.Ink })
                 .Centered(Metrics.SettingsTitleX, Metrics.SettingsTitleY, Metrics.SettingsTitleW, Metrics.SettingsTitleH);
-            _close = settings.Add(new UiButton { Id = CloseId, Text = Metrics.CloseGlyph, FontSize = Metrics.CloseFont })
+            _close = settings.Add(new UiButton { Id = CloseId, Icon = Rootborn.Screens.Day.ScreenIcons.Close })
                 .Centered(Metrics.CloseX, Metrics.CloseY, Metrics.CloseSize, Metrics.CloseSize);
             _close.Clicked += Close;
             UiPanel frame = settings.Add(new UiPanel { Id = "furniture.selected.frame" }).Centered(Metrics.PreviewX, Metrics.PreviewY, Metrics.PreviewSize, Metrics.PreviewSize);

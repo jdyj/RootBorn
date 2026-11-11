@@ -23,16 +23,19 @@ namespace Rootborn.Screens.Hud
     /// </summary>
     public sealed class HudButtonsScreen : GameScreen
     {
-        /// <summary>배치와 구성 — 새 디자인에서는 이 표만 고친다.</summary>
+        /// <summary>
+        /// 배치와 구성 — 새 디자인에서는 이 표만 고친다. 왼쪽 위 열: 가구 배치(집에서만) → 진로 → 장래희망 → 마을 기록.
+        /// Unity 판은 가구 배치(가운데 기준 (-790, 480) 240x64 → 왼쪽 위 (50, 28))가 진로(24, 84) 위쪽 8을 가렸다. 가구 배치를 왼쪽 여백 24에 맞추고
+        /// 아래 세 버튼을 16씩 내려 겹치지 않게 했다(버튼 간격은 Unity 그대로 68·80).
+        /// </summary>
         public static readonly HudButtonSpec[] Buttons =
         {
-            new HudButtonSpec("hud.button.careers", "ui.career-candidate.open", null, ScreenCatalog.CareerCandidates, HudButtonAction.Open, 0f, 0f, 24f, 84f, 240f, 56f, 20f, null),
-            new HudButtonSpec("hud.button.dream", "ui.career-interest.open", null, ScreenCatalog.CareerInterest, HudButtonAction.Open, 0f, 0f, 24f, 152f, 240f, 56f, 20f, null),
-            new HudButtonSpec("hud.button.world-log", "ui.world-log.open", null, ScreenCatalog.WorldStateLog, HudButtonAction.Open, 0f, 0f, 24f, 232f, 240f, 56f, 20f, null),
+            new HudButtonSpec("hud.button.careers", "ui.career-candidate.open", null, ScreenCatalog.CareerCandidates, HudButtonAction.Open, 0f, 0f, 24f, 104f, 240f, 56f, 20f, null),
+            new HudButtonSpec("hud.button.dream", "ui.career-interest.open", null, ScreenCatalog.CareerInterest, HudButtonAction.Open, 0f, 0f, 24f, 172f, 240f, 56f, 20f, null),
+            new HudButtonSpec("hud.button.world-log", "ui.world-log.open", null, ScreenCatalog.WorldStateLog, HudButtonAction.Open, 0f, 0f, 24f, 252f, 240f, 56f, 20f, null),
             new HudButtonSpec("hud.button.encyclopedia", "ui.encyclopedia.open", null, ScreenCatalog.Encyclopedia, HudButtonAction.Toggle, 1f, 0f, -24f - 150f, 86f, 150f, 34f, 18f, null),
             new HudButtonSpec("hud.button.wardrobe", "ui.wardrobe.open", null, ScreenCatalog.Wardrobe, HudButtonAction.Toggle, 1f, 0f, -24f - 150f, 126f, 150f, 34f, 18f, null),
-            // Unity: 가운데 기준 (-790, 480) 240x64 → 가운데에서 왼쪽 위 모서리까지 (-910, -512).
-            new HudButtonSpec("hud.button.placement", "ui.placement.off", "ui.placement.on", ScreenCatalog.FurniturePlacement, HudButtonAction.Toggle, 0.5f, 0.5f, -790f - 120f, -480f - 32f, 240f, 64f, 20f, MapFeatures.FurniturePlacement),
+            new HudButtonSpec("hud.button.placement", "ui.placement.off", "ui.placement.on", ScreenCatalog.FurniturePlacement, HudButtonAction.Toggle, 0f, 0f, 24f, 24f, 240f, 64f, 20f, MapFeatures.FurniturePlacement),
         };
 
         private readonly UiButton[] _buttons = new UiButton[Buttons.Length];

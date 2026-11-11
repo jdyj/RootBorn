@@ -208,7 +208,7 @@ namespace Rootborn.Screens.Day
             var label = new UiRect(rect.X + DailyPlanLayout.RouteTextLeft, rect.Y + inset, rect.W - DailyPlanLayout.RouteTextLeft - inset, rect.H - 2 * inset);
             string name = Services.Text.Get(route.NameKey);
             if (string.IsNullOrEmpty(route.NameKey)) name = Services.Text.Get("life.daily-plan.title");
-            DrawMiddle(list, text, label, name, DailyPlanLayout.RouteFont, active ? UiTheme.Ink : UiTheme.InkMuted);
+            DrawMiddle(list, text, label, name, DailyPlanLayout.RouteFont, active ? UiTheme.Ink : UiTheme.InkDisabled);
             if (state.Selected && state.Focused) list.Outline(rect, UiTheme.FocusOutline, UiTheme.Accent);
         }
 

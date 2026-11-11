@@ -13,6 +13,8 @@ namespace Rootborn.Ui
 
         public UiPanel() { Interactive = true; }
 
+        public override bool IsSurface => true;
+
         public override void Emit(DrawList list, ITextMeasurer text) => list.Panel(Rect, Skin, Tint);
     }
 
@@ -20,6 +22,8 @@ namespace Rootborn.Ui
     public sealed class UiBox : UiNode
     {
         public UiColor Color = UiTheme.White;
+
+        public override bool IsSurface => true;
 
         public override void Emit(DrawList list, ITextMeasurer text) => list.Fill(Rect, Color);
     }
@@ -58,24 +62,36 @@ namespace Rootborn.Ui
         public string Skin = UiSkin.Button;
         /// <summary>칸보다 길면 뒤를 말줄임(…)으로 줄인다. 기본은 켬.</summary>
         public bool Ellipsis = true;
+        /// <summary>글자 대신(또는 글자 없이) 가운데에 그리는 그림 id(예: "icon:close"). 크기는 단추의 짧은 변 × IconRatio.</summary>
+        public string Icon;
+        public float IconRatio = 0.6f;
 
         private FittedText _fitted;
 
         public UiButton() { Interactive = true; Focusable = true; }
+
+        public override bool IsSurface => true;
 
         public override void Emit(DrawList list, ITextMeasurer text)
         {
             bool active = IsActive;
             UiColor tint = !active ? UiTheme.ButtonDisabled : Pressed ? UiTheme.ButtonPressed : Hovered ? UiTheme.ButtonHovered : UiTheme.ButtonNormal;
             list.Panel(Rect, Skin, tint);
+            if (!string.IsNullOrEmpty(Icon))
+            {
+                float size = MathF.Min(Rect.W, Rect.H) * IconRatio;
+                float offset = Pressed ? UiTheme.PressedOffset : 0f;
+                list.Image(new UiRect(Rect.CenterX - size / 2f, Rect.CenterY - size / 2f + offset, size, size), Icon, default,
+                    active ? UiTheme.White : UiTheme.ButtonDisabled);
+            }
             string shown = string.IsNullOrEmpty(Text) ? string.Empty : Ellipsis ? _fitted.Get(Text, Rect.W, FontSize, text) : Text;
             if (shown.Length > 0)
             {
                 float x = Rect.X + (Rect.W - text.Width(shown, FontSize)) / 2f;
                 float y = Rect.Y + (Rect.H - text.LineHeight(FontSize)) / 2f + (Pressed ? UiTheme.PressedOffset : 0f);
-                list.Text(x, y, shown, FontSize, active ? UiTheme.Ink : UiTheme.InkMuted, Skin);
+                list.Text(x, y, shown, FontSize, active ? UiTheme.Ink : UiTheme.InkDisabled, Skin);
             }
-            if (Focused) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
+            if (FocusRing) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
         }
     }
 
@@ -90,12 +106,14 @@ namespace Rootborn.Ui
 
         public UiSlot() { Interactive = true; Focusable = true; }
 
+        public override bool IsSurface => true;
+
         public override void Emit(DrawList list, ITextMeasurer text)
         {
             UiColor tint = !IsActive ? UiTheme.ButtonDisabled : Pressed ? UiTheme.ButtonPressed : Hovered ? UiTheme.ButtonHovered : UiTheme.ButtonNormal;
             list.Panel(Rect, Skin, tint);
             if (Selected) list.Outline(Rect.Inset(SelectedInset), UiTheme.FocusOutline, UiTheme.InkOnDark);
-            if (Focused) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
+            if (FocusRing) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
         }
     }
 
@@ -134,6 +152,8 @@ namespace Rootborn.Ui
         public event Action<string> TextChanged;
 
         public UiTextField() { Interactive = true; Focusable = true; }
+
+        public override bool IsSurface => true;
 
         public void SetText(string text) { Composition = ""; Text = text ?? ""; }
 
@@ -188,7 +208,7 @@ namespace Rootborn.Ui
             }
             else
             {
-                list.Text(x, y, Text, FontSize, active ? UiTheme.Ink : UiTheme.InkMuted);
+                list.Text(x, y, Text, FontSize, active ? UiTheme.Ink : UiTheme.InkDisabled);
                 x += text.Width(Text, FontSize);
                 if (Composition.Length > 0)
                 {

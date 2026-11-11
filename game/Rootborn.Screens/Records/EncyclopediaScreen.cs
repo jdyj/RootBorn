@@ -73,7 +73,7 @@ namespace Rootborn.Screens.Records
             // 패널 왼쪽 위 기준
             public const float IconX = 48f, IconY = 20f, IconSize = 64f;
             public const float TitleX = 136f, TitleY = 28f, TitleW = 1000f, TitleH = 48f, TitleFont = 32f;
-            public const float CloseX = 1200f, CloseY = 28f, CloseSize = 48f, CloseFont = 28f;
+            public const float CloseX = 1200f, CloseY = 28f, CloseSize = 48f;
             // 가운데 기준 (x, y위로 +) 과 크기
             public const float CategoryX = -442f, CategoryY = -48f, CategoryW = 300f, CategoryH = 632f;
             public const float RowsX = -52f, RowsY = -48f, RowsW = 432f, RowsH = 632f;
@@ -87,7 +87,6 @@ namespace Rootborn.Screens.Records
             public const float DetailTitleX = 32f, DetailTitleY = 32f, DetailTitleW = 336f, DetailTitleH = 56f, DetailTitleFont = 26f;
             public const float DetailBodyX = 32f, DetailBodyY = 96f, DetailBodyW = 336f, DetailBodyH = 488f, DetailBodyFont = 20f;
             /// <summary>닫기 기호(언어와 무관).</summary>
-            public const string CloseGlyph = "×";
             public const string Icon = "icon:encyclopedia";
             public static readonly UiColor Ink = UnityLayout.Color(48f / 255f, 71f / 255f, 83f / 255f);
         }
@@ -133,7 +132,7 @@ namespace Rootborn.Screens.Records
             panel.Add(new UiImage { Id = "encyclopedia.icon", Image = Metrics.Icon }).Place(0f, 0f, Metrics.IconX, Metrics.IconY, Metrics.IconSize, Metrics.IconSize);
             _title = panel.Add(new UiLabel { Id = TitleId, FontSize = Metrics.TitleFont, Align = UiAlign.Center, Color = Metrics.Ink });
             _title.Place(0f, 0f, Metrics.TitleX, Metrics.TitleY, Metrics.TitleW, Metrics.TitleH);
-            var close = panel.Add(new UiButton { Id = CloseId, Text = Metrics.CloseGlyph, FontSize = Metrics.CloseFont });
+            var close = panel.Add(new UiButton { Id = CloseId, Icon = Rootborn.Screens.Day.ScreenIcons.Close });
             close.Place(0f, 0f, Metrics.CloseX, Metrics.CloseY, Metrics.CloseSize, Metrics.CloseSize);
             close.Clicked += Close;
 

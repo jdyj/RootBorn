@@ -129,6 +129,9 @@ namespace Rootborn.Host.Rendering
 
             UiColor? textColor = null;
             if (e.TryGetProperty("textColor", out JsonElement tc)) textColor = ReadColor(tc, where + " textColor", problems);
+            UiColor? disabledTextColor = null, disabledTint = null;
+            if (e.TryGetProperty("disabledTextColor", out JsonElement dtc)) disabledTextColor = ReadColor(dtc, where + " disabledTextColor", problems);
+            if (e.TryGetProperty("disabledTint", out JsonElement dt)) disabledTint = ReadColor(dt, where + " disabledTint", problems);
 
             float unit = pixelSize > 0f ? pixelSize : ScreenFit.ReferenceTileScale;
             var padding = new SkinPadding(border[0] * unit, border[1] * unit, border[2] * unit, border[3] * unit);
@@ -141,7 +144,7 @@ namespace Rootborn.Host.Rendering
             if (problems.Count > before || texture == null) return null;
             var slices = new NineSliceSource(rect.X, rect.X + border[0], rect.X + rect.W - border[2], rect.X + rect.W,
                 rect.Y, rect.Y + border[1], rect.Y + rect.H - border[3], rect.Y + rect.H);
-            return new SkinSource(texture, slices, fill == "stretch", pixelSize, textColor, padding);
+            return new SkinSource(texture, slices, fill == "stretch", pixelSize, textColor, padding, disabledTextColor, disabledTint);
         }
 
         private static string ReadImage(JsonElement e, string where, string directory, string repoRoot, Dictionary<string, (int, int)?> sizes, List<string> problems, out (int w, int h)? size)
@@ -217,27 +220,32 @@ namespace Rootborn.Host.Rendering
     public readonly record struct SkinPadding(float Left, float Top, float Right, float Bottom);
 
     /// <summary>
-    /// 글자 색 묶음. 화면은 Rootborn.Ui.UiTheme의 이름 붙은 색(Ink, InkMuted, InkOnDark)으로 글자를 그리고, 테마가 그 색을 바꿀 수 있다.
+    /// 글자 색 묶음. 화면은 Rootborn.Ui.UiTheme의 이름 붙은 색(Ink, InkMuted, InkOnDark, InkDisabled)으로 글자를 그리고, 테마가 그 색을 바꿀 수 있다.
     /// 스킨의 textColor(버튼 글자 등)가 먼저다.
     /// </summary>
     public sealed class ThemeTextColors
     {
-        public static readonly ThemeTextColors Default = new ThemeTextColors(UiTheme.Ink, UiTheme.InkMuted, UiTheme.InkOnDark);
+        public static readonly ThemeTextColors Default = new ThemeTextColors(UiTheme.Ink, UiTheme.InkMuted, UiTheme.InkOnDark, UiTheme.InkDisabled);
 
-        public ThemeTextColors(UiColor ink, UiColor inkMuted, UiColor inkOnDark) { Ink = ink; InkMuted = inkMuted; InkOnDark = inkOnDark; }
+        public ThemeTextColors(UiColor ink, UiColor inkMuted, UiColor inkOnDark, UiColor inkDisabled)
+        {
+            Ink = ink; InkMuted = inkMuted; InkOnDark = inkOnDark; InkDisabled = inkDisabled;
+        }
 
         public UiColor Ink { get; }
         public UiColor InkMuted { get; }
         public UiColor InkOnDark { get; }
+        /// <summary>누를 수 없는 단추·줄의 글자.</summary>
+        public UiColor InkDisabled { get; }
 
         /// <summary>화면이 고른 글자 색 → 테마의 글자 색. 이름 붙은 색이 아니면 그대로.</summary>
         public UiColor Map(UiColor color) =>
-            color == UiTheme.Ink ? Ink : color == UiTheme.InkMuted ? InkMuted : color == UiTheme.InkOnDark ? InkOnDark : color;
+            color == UiTheme.Ink ? Ink : color == UiTheme.InkMuted ? InkMuted : color == UiTheme.InkOnDark ? InkOnDark : color == UiTheme.InkDisabled ? InkDisabled : color;
 
         internal static ThemeTextColors Read(JsonElement e, List<string> problems)
         {
             UiColor Get(string key, UiColor fallback) => e.TryGetProperty(key, out JsonElement c) ? ThemeFolder.ReadColor(c, "textColors." + key, problems) : fallback;
-            return new ThemeTextColors(Get("ink", UiTheme.Ink), Get("inkMuted", UiTheme.InkMuted), Get("inkOnDark", UiTheme.InkOnDark));
+            return new ThemeTextColors(Get("ink", UiTheme.Ink), Get("inkMuted", UiTheme.InkMuted), Get("inkOnDark", UiTheme.InkOnDark), Get("inkDisabled", UiTheme.InkDisabled));
         }
     }
 

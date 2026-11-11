@@ -592,6 +592,18 @@ namespace Rootborn.Host
             _batch.Draw(_scene, Vector2.Zero, Color.White);
             _batch.End();
             base.Draw(gameTime);
+            ExitAfterFramesIfAsked();
+        }
+
+        private int _drawnFrames;
+
+        /// <summary>--frames N: N번 그린 뒤 (--screenshot이 있으면 그 화면을 저장하고) 끝낸다.</summary>
+        private void ExitAfterFramesIfAsked()
+        {
+            if (_options.ExitAfterFrames <= 0 || ++_drawnFrames < _options.ExitAfterFrames) return;
+            if (_options.ScreenshotPath != null) SaveScreenshot(_options.ScreenshotPath);
+            _options.ExitAfterFrames = 0; // 한 번만
+            Exit();
         }
 
         /// <summary>마지막으로 그려진 화면 버퍼를 PNG로 저장한다.</summary>

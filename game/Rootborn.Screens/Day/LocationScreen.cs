@@ -30,7 +30,6 @@ namespace Rootborn.Screens.Day
         public static readonly (float X, float Y, float W, float H) Result = (0, -296, 976, 112);
         public const float ResultFont = 20;
         public static readonly (float X, float Y, float W, float H) Close = (488, 344, 48, 48);
-        public const float CloseFont = 20;
     }
 
     /// <summary>
@@ -79,7 +78,7 @@ namespace Rootborn.Screens.Day
             _rows.DrawCell = DrawRow;
             _rows.CellClicked += Press;
             _result = At(root.Add(new UiTextBlock { Id = ResultId, FontSize = LocationLayout.ResultFont }), LocationLayout.Result);
-            _close = At(root.Add(new UiButton { Id = CloseId, FontSize = LocationLayout.CloseFont }), LocationLayout.Close);
+            _close = At(root.Add(new UiButton { Id = CloseId, Icon = ScreenIcons.Close }), LocationLayout.Close);
             _close.Clicked += Close;
             return root;
         }
@@ -154,7 +153,6 @@ namespace Rootborn.Screens.Day
             else foreach (string key in Model.HintKeys) hints += "\n" + T(key);
             _hints.Text = hints;
             _result.Text = _resultText;
-            _close.Text = T("ui.close-symbol");
             _rows.ItemCount = Model.Rows.Count;
             foreach (LocationRow row in Model.Rows) RowLines(row); // 쓰는 키를 기록해 둔다
         }
@@ -186,7 +184,7 @@ namespace Rootborn.Screens.Day
             float line3 = reason.Length > 0 ? text.LineHeight(LocationLayout.RowReasonFont) : 0;
             float total = line1 + line2 + line3 + (line2 > 0 ? 2 : 0) + (line3 > 0 ? 2 : 0);
             float y = rect.Y + (rect.H - total) / 2f;
-            UiColor ink = active ? UiTheme.Ink : UiTheme.InkMuted;
+            UiColor ink = active ? UiTheme.Ink : UiTheme.InkDisabled;
             y = Line(list, text, rect, y, lines[0], LocationLayout.RowFont, ink) + 2;
             if (lines.Length > 1) y = Line(list, text, rect, y, lines[1], LocationLayout.RowSubFont, ink) + 2;
             if (reason.Length > 0) Line(list, text, rect, y, reason, LocationLayout.RowReasonFont, ink);

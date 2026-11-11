@@ -34,6 +34,9 @@ namespace Rootborn.Screens.Day
     {
         public static string Key(string iconKey) => "icon:" + iconKey;
 
+        /// <summary>닫기 단추의 그림(테마의 close 아이콘). 글자 "×"를 화면마다 적지 않는다.</summary>
+        public static readonly string Close = Key("close");
+
         public static string For(string definitionId, string fallbackKey) =>
             string.IsNullOrEmpty(definitionId) ? Key(fallbackKey) : Key(fallbackKey) + "@" + definitionId;
     }

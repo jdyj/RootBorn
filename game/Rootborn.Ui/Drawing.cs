@@ -71,6 +71,11 @@ namespace Rootborn.Ui
     {
         public static readonly UiColor Ink = new UiColor(40, 36, 52);
         public static readonly UiColor InkMuted = new UiColor(132, 128, 150);
+        /// <summary>
+        /// 누를 수 없는 단추·줄의 글자(이름 붙은 색). 흐린 글자(InkMuted)와 따로 둔다: 비활성 바탕 위에서도 읽혀야 한다.
+        /// 실제 색은 테마가 정한다(스킨의 disabledTextColor, 없으면 textColors.inkDisabled).
+        /// </summary>
+        public static readonly UiColor InkDisabled = new UiColor(84, 80, 98);
         public static readonly UiColor InkOnDark = new UiColor(235, 228, 242);
         public static readonly UiColor Accent = new UiColor(45, 110, 215);
         public static readonly UiColor White = new UiColor(255, 255, 255);
@@ -78,6 +83,7 @@ namespace Rootborn.Ui
         public static readonly UiColor ButtonNormal = new UiColor(226, 226, 234);
         public static readonly UiColor ButtonHovered = new UiColor(255, 255, 255);
         public static readonly UiColor ButtonPressed = new UiColor(168, 168, 186);
+        /// <summary>누를 수 없는 단추의 바탕 물들임(이름 붙은 색). 테마가 스킨마다 바꿀 수 있다(disabledTint).</summary>
         public static readonly UiColor ButtonDisabled = new UiColor(150, 150, 156, 150);
 
         public const float FocusOutline = 3f;

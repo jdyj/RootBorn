@@ -19,7 +19,7 @@ namespace Rootborn.Game.Tests
         [Test]
         public void TopicNames_MatchTheScreenTopicNames()
         {
-            // Rootborn.Screens.ChangeTopics와 같은 글자여야 SessionCommands가 그대로 넘길 수 있다.
+            // Rootborn.Screens.ChangeTopics가 이 이름을 그대로 쓴다(화면 쌓기는 GameSession.Changed를 받아 열린 화면에 넘긴다).
             Assert.That(GameChangeTopics.Student, Is.EqualTo("student"));
             Assert.That(GameChangeTopics.Inventory, Is.EqualTo("inventory"));
             Assert.That(GameChangeTopics.Quests, Is.EqualTo("quests"));

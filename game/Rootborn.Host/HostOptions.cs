@@ -77,6 +77,14 @@ namespace Rootborn.Host
         /// <summary>읽고 검사한 UI 테마. 화면이 쓰는 스킨·아이콘이 빠졌으면 Resolve가 빠진 이름 목록과 함께 멈춘다.</summary>
         public Rendering.ThemeFolder UiTheme;
 
+        /// <summary>
+        /// 이 수만큼 그린 뒤 끝낸다(0이면 끝내지 않는다). --screenshot을 주면 끝내기 직전에 그 화면을 저장한다.
+        /// 배포 폴더에서 창을 띄워 화면을 확인하는 데 쓴다.
+        /// </summary>
+        public int ExitAfterFrames;
+        /// <summary>ExitAfterFrames 뒤에 저장할 PNG 경로. 없으면 저장하지 않는다.</summary>
+        public string ScreenshotPath;
+
         /// <summary>테스트가 한 프레임씩 돌린다: 고정 시간 간격, 수직 동기 끔, 창이 뒤에 있어도 쉬지 않음.</summary>
         public bool TestMode;
 
@@ -121,6 +129,11 @@ namespace Rootborn.Host
                     case "--slot": o.SaveSlot = value; break;
                     case "--lang": o.Language = value; break;
                     case "--ui-theme": uiTheme = value; break;
+                    case "--frames":
+                        if (!int.TryParse(value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out o.ExitAfterFrames) || o.ExitAfterFrames < 1)
+                            throw new InvalidOperationException("--frames 는 1 이상의 정수: " + value);
+                        break;
+                    case "--screenshot": o.ScreenshotPath = value; break;
                     case "--time-scale":
                         if (!float.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out o.TimeScale) || o.TimeScale < 0f)
                             throw new InvalidOperationException("--time-scale 은 0 이상의 수: " + value);
@@ -159,6 +172,8 @@ namespace Rootborn.Host
             if (!File.Exists(o.FontPath))
                 throw new InvalidOperationException("글꼴 파일이 없다: " + o.FontPath);
 
+            if (o.ScreenshotPath != null && o.ExitAfterFrames == 0)
+                throw new InvalidOperationException("--screenshot 은 --frames <N> 과 함께 준다(N프레임 뒤 저장하고 끝낸다)");
             if (o.SaveSlot != null && o.World != null)
                 throw new InvalidOperationException("--world 와 --slot 은 함께 줄 수 없다(슬롯이 시작 맵을 정한다)");
             if (o.SaveSlot != null && o._timeGiven)
