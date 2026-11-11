@@ -1,7 +1,7 @@
 # 코딩 표준 — MonoGame 판 C#
 
 모든 C# 코드에 적용한다. 데이터 쪽 규칙은 `rules/data-driven.md`, 화면은 `rules/ui-standards.md`, 환경 의존 값은 `rules/environment-config.md`.
-Unity 판(`Assets/`)은 얼렸으므로 고치지 않는다(`rules/engine-migration.md`).
+Unity 판은 저장소에서 지웠다(태그 `unity-playable-20261111`). `Assets/`에는 게임이 읽는 그림과 맵만 있다(`rules/engine-migration.md`).
 
 ## 프로젝트와 참조 방향
 

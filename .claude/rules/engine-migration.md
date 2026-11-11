@@ -4,14 +4,14 @@
 
 ## 지금 상태
 
-- **Unity 판은 얼렸다.** 태그 `unity-playable-20261111`이 플레이 가능한 기준본이다. Unity 코드와 `Assets/` 아래는 고치지 않고 읽기 전용 참고 자료로만 쓴다. Unity 테스트를 돌리지 않는다.
-- **끝난 것**: 규칙 옮기기(Core, `NotPortedYet` 비어 있음), 데이터 변환기와 정의 로더·세이브 저장소, 월드(LDtk 직접 읽기, 걷기·문·상호작용, 세이브 슬롯), 화면 옮기기(메인 체인을 MonoGame 판에서 처음부터 끝까지 — Host `MainChainHostTests`, 장치 이벤트 주입). CI는 dotnet 기준(`Scripts/ci`).
-- **남은 것**: 멀티플레이와 Steam(프로젝트 5, 조사만 `docs/superpowers/specs/2026-11-12-multiplayer-research.md`), Unity 제거(프로젝트 7). 아직 없는 것의 규칙은 미리 쓰지 않는다.
-- 새 기능을 넣을지는 사용자가 정한다. 그 전까지는 같은 게임을 옮기고 고치는 일만 한다.
+- **Unity 판은 저장소에서 지웠다(2026-11-12).** 태그 `unity-playable-20261111`이 플레이 가능한 기준본이고, Unity 코드와 옛 에셋은 그 태그에서 읽는다(`git show unity-playable-20261111:<경로>`). `Assets/`에는 게임이 읽는 그림과 LDtk 맵만 남아 있다(Unity 시절 폴더 이름이다).
+- **끝난 것**: 규칙 옮기기(Core, `NotPortedYet` 비어 있음), 정의 로더·세이브 저장소(데이터는 `data/`가 원본, 변환기는 지웠다), 월드(LDtk 직접 읽기, 걷기·문·상호작용, 세이브 슬롯), 화면 옮기기(메인 체인을 MonoGame 판에서 처음부터 끝까지 — Host `MainChainHostTests`, 장치 이벤트 주입). CI는 dotnet 기준(`Scripts/ci`).
+- **남은 것**: Steam(조사 `docs/superpowers/specs/2026-11-12-steam-research.md`)과 멀티플레이의 남은 단계(`2026-11-12-multiplayer-design.md`), Core를 `Packages/com.rootborn.core`에서 `game/` 안으로 옮기기(Unity 제거 계획 2단계). 아직 없는 것의 규칙은 미리 쓰지 않는다.
+- 새 기능을 넣을지는 사용자가 정한다. 사용자가 정해 더한 것: 흐르는 시간(`2026-11-12-flowing-time-design.md`), 멀티플레이의 공유 설정과 서버, 단축키 안내.
 - 데이터의 원본:
-  - 규칙 데이터(`data/`)는 아직 Unity 에셋(`Assets/Data`)을 `Tools/Rootborn.DataExport`로 바꾼 결과다. `data/`를 손으로 고치지 않는다(다시 내보내면 덮인다). Unity 판을 얼렸으므로 다시 내보내는 것은 변환기를 고쳤을 때뿐이다. JSON을 원본으로 삼기로 하면 이 줄을 고친다.
+  - 규칙 데이터는 `data/`가 원본이고 손으로 고친다(`data/README.md`). 엔티티의 `asset` 필드는 옛 Unity 경로를 적어 둔 것이고 새 엔티티에는 쓰지 않아도 된다. 균형 수치를 고친 기록은 `docs/superpowers/specs/2026-11-12-time-balance.md`.
   - MonoGame 판이 직접 갖는 데이터: 덧붙인 문구 `game/localization`, 맵 목록·상호작용 지점 `game/world/*.json`, UI 테마 `game/themes`. 이것들은 손으로 고친다.
-  - 맵은 LDtk 파일이 원본이다(지금은 `Assets/LDtk/` 아래, `game/world/README.md`).
+  - 맵은 LDtk 파일이 원본이다(지금은 `Assets/LDtk/` 아래, `game/world/README.md`). 새 그림과 맵은 `Assets/`가 아닌 새 자리에서 시작한다.
 
 ## 어디에 무엇을 쓰는가
 
@@ -44,7 +44,7 @@
 
 사용자 지시(2026-11-11): 진행하면서 스킬로 만들 수 있는 것은 스킬로 만들어 Claude와 Codex 양쪽에 저장한다. 같은 내용을 `.claude/skills/<이름>/SKILL.md`와 `.agents/skills/<이름>/SKILL.md`에 둔다. 절차가 바뀌면 양쪽을 함께 고치고, 그 절차가 더 쓰이지 않게 되면 양쪽에서 지운다.
 
-지금 있는 것: `port-rule-to-core`(규칙 옮기기), `parallel-claude-session`(세션 나눠 맡기고 합치기), `export-game-data`(데이터 변환), `host-play-test`(MonoGame 판 화면 테스트), `ui-nine-slice-skin`(UI 그림을 재서 9조각 테마 스킨으로).
+지금 있는 것: `port-rule-to-core`(규칙 옮기기), `parallel-claude-session`(세션 나눠 맡기고 합치기), `host-play-test`(MonoGame 판 화면 테스트), `ui-nine-slice-skin`(UI 그림을 재서 9조각 테마 스킨으로).
 
 ## 그림은 갈아 끼울 수 있게
 

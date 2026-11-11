@@ -1,5 +1,11 @@
 # 규칙 변경 이력
 
+## 2026-11-12 — Unity를 저장소에서 지움, data/가 원본, 테스트는 원격에서도
+- 요청: "준비되면 Unity는 바로 지우면 돼", "이 테스트를 여기서 하지 말고 strix halo에서 하면 안 돼?", "다음부턴 이어서 하도록 해 줘"
+- 배경: Unity 전용 파일과 변환기, 안 읽는 그림 팩을 지웠다(추적 파일 12만 개 → 4,600개). 이 PC의 메모리가 모자라 전체 테스트가 여러 번 꺼졌다.
+- 변경: `engine-migration.md` "지금 상태"(Unity 판은 지웠다, `data/`가 원본이고 손으로 고친다, 남은 것), `localization.md`·`coding-standards.md`·`AGENTS.md`·`constitution.md`의 "얼렸다"·"변환기" 문장, `testing-discipline.md`에 원격 실행과 이어 받기, `ui-standards.md` 키 표에 L·F1·F11.
+- 일반화: 규칙 문서의 "지금 상태"는 큰 합치기마다 지금 사실로 고친다. 지운 것의 문장을 남겨 두면 다음 세션이 없는 도구(변환기)를 찾는다.
+
 ## 2026-11-12 — 헌법과 AGENTS.md를 MonoGame 판 기준으로 다시 씀, Unity 규칙 삭제
 - 요청: "규칙문서 직접 고쳐도돼 unity 관련된거 지워"
 - 배경: 게임이 MonoGame 판으로 옮겨져 메인 체인이 실제 입력으로 통과했다. `AGENTS.md`와 `constitution.md`에는 Unity 기준 조항(SO 와이어링, PlayMode, Addressables, Style2 좌표, NGO, Unity 빌드)이 남아 있었다.

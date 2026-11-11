@@ -1,6 +1,6 @@
 # Repository Guidelines
 
-ROOTBORN은 도시 생활 성장 시뮬레이션이다. 2026-11-11부터 Unity에서 MonoGame으로 옮겼고, Unity 판은 태그 `unity-playable-20261111`에 얼려 두었다. `Assets/`의 Unity 코드와 씬은 고치지 않는다(지울 예정). 최상위 규칙은 `.claude/constitution.md`, 자세한 규칙은 `.claude/rules/`에 있다. Claude와 Codex 모두 따른다.
+ROOTBORN은 도시 생활 성장 시뮬레이션이다. 2026-11-11부터 Unity에서 MonoGame으로 옮겼고, Unity 판은 저장소에서 지웠고 태그 `unity-playable-20261111`에 있다. 최상위 규칙은 `.claude/constitution.md`, 자세한 규칙은 `.claude/rules/`에 있다. Claude와 Codex 모두 따른다.
 
 ## 절대 원칙
 
@@ -35,11 +35,11 @@ ROOTBORN은 도시 생활 성장 시뮬레이션이다. 2026-11-11부터 Unity�
 
 - `Packages/com.rootborn.core/Runtime` — `Rootborn.Core`: 게임 규칙, 진행 상태, 세이브 모양, 월드 판정
 - `game/` — MonoGame 판: `Rootborn.Data`(데이터 읽기, 세이브 파일), `Rootborn.Game`(게임 한 판 `GameSession`), `Rootborn.World`(맵), `Rootborn.Ui`(UI 부품), `Rootborn.Screens`(화면), `Rootborn.Net`(멀티플레이 바탕), `Rootborn.Host`(실행 프로그램), `tests/`, `world/`(맵 목록과 상호작용 지점), `themes/`(UI 그림), `localization/`(더한 문구)
-- `data/` — 게임 데이터 JSON. 지금은 Unity 에셋에서 변환한 결과다(`Tools/Rootborn.DataExport`). 고치는 법은 `data/README.md`
-- `Tools/` — Core 테스트, 변환기, 배포 빌드(`Tools/publish`)
-- `Scripts/ci` — 정적 검사
+- `data/` — 게임 데이터 JSON의 원본. 손으로 고친다. 고치는 법은 `data/README.md`
+- `Tools/` — Core 테스트, 배포 빌드(`Tools/publish`), UI 테두리 재기(`Tools/ui-nine-slice`)
+- `Scripts/ci` — 정적 검사. `Scripts/remote-test` — 전체 테스트를 원격 Linux 장치에서 돌리기
 - `docs/superpowers/specs` — 설계 문서
-- `Assets/` — 얼린 Unity 판. 게임이 읽는 그림과 LDtk 맵이 아직 이 아래에 있다
+- `Assets/` — 게임이 읽는 그림과 LDtk 맵(Unity 시절 폴더 이름. 새 그림이 오면 새 자리로 옮긴다)
 
 자세한 설명과 실행 인자는 `game/README.md`.
 

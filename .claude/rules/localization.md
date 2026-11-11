@@ -10,7 +10,7 @@
 
 ## 파일
 
-- `data/localization/<언어>.json`: 변환기가 Unity 에셋에서 다시 쓰는 파일. 직접 고치지 않는다.
+- `data/localization/<언어>.json`: Unity 판에서 넘어온 옛 문구 표. 되도록 그대로 두고 새 문구와 고친 문구는 아래 파일에 넣는다(덮어 읽는다).
 - `game/localization/<언어>.json`: MonoGame 판에서 더하거나 고친 문구. 위 파일 위에 덮어 읽는다(`GameText.LoadMerged`). 새 문구는 여기에 넣는다.
 - 키 이름: `{영역}.{화면}.{요소}`(소문자, 하이픈). 예: `ui.hud.energy`, `ui.objectives.tracked`.
 
