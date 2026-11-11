@@ -1,0 +1,117 @@
+using System.Collections.Generic;
+using Rootborn.Core.StudentLife;
+using Rootborn.Game;
+using Rootborn.Ui;
+
+namespace Rootborn.Screens.Day
+{
+    /// <summary>하루 결과 화면의 배치 수치. Unity StudentDayResultPanel(1160x900 가운데, 뒤 전체를 55% 검정으로 가림).</summary>
+    public static class DayResultLayout
+    {
+        public const float Width = 1160, Height = 900;
+        public static readonly UiColor Backdrop = new UiColor(0, 0, 0, 140);
+        public static readonly (float X, float Y, float W, float H) Title = (0, 390, 1040, 56);
+        public const float TitleFont = 36;
+        /// <summary>결산 글 영역: 패널 안쪽 왼쪽 42, 위·아래 112, 오른쪽 34(스크롤 막대 18 포함, Unity 막대 -52..-34).</summary>
+        public const float BodyLeft = 42, BodyTop = 112, BodyRight = 34, BodyBottom = 112;
+        public const float BodyFont = 20, SectionSpacing = 22;
+        public static readonly (float X, float Y, float W, float H) NextDay = (0, -390, 300, 58);
+        public const float ButtonFont = 22;
+    }
+
+    /// <summary>
+    /// 하루 결과(하루 마감 지점 상호작용 "student-day-end"). Unity StudentDayEndInteractor → StudentDayResultPanel 순서:
+    /// 하루가 진행 중이면 하루를 끝내고(GameSession.EndDay), 결산 구역을 위에서부터 보인다 — 한 활동, 결과(성장·학교 밖·진로 후보·장래희망·일과 칸),
+    /// 퀘스트, 관계, 상태, 보상, 물건, 다음 날 안내, 장소 상태 기록, 캠페인, 체인. 다음 날 버튼이 다음 날을 시작하고 닫는다.
+    /// 이미 끝난 날이면 끝내지 않고 그 날의 결산만 다시 보인다. 모달, 이동을 막는다. 닫기 버튼은 없다(Unity 판과 같음).
+    /// </summary>
+    public sealed class DayResultScreen : GameScreen
+    {
+        public const string InteractionKind = "student-day-end";
+        public const string RootId = "day-result", PanelId = "day-result.panel", TitleId = "day-result.title", BodyId = "day-result.body", NextDayId = "day-result.next-day";
+
+        private UiLabel _title;
+        private ScrollingTextView _body;
+        private UiButton _next;
+        private Dictionary<string, string> _displayKeys;
+        private GameDayResult _result;
+
+        public DayResultScreen(ScreenServices services) : base(services) { }
+
+        public DayResultModel Model { get; private set; }
+        public ScrollingTextView Body => _body;
+
+        protected override UiNode Build()
+        {
+            var root = new UiNode { Id = RootId };
+            root.Stretch(0, 0, 0, 0);
+            root.Add(new UiBox { Color = DayResultLayout.Backdrop, Interactive = true }).Stretch(0, 0, 0, 0);
+            var panel = root.Add(new UiPanel { Id = PanelId, Skin = UiSkin.Panel });
+            panel.Centered(0, 0, DayResultLayout.Width, DayResultLayout.Height);
+            var t = DayResultLayout.Title;
+            _title = panel.Add(new UiLabel { Id = TitleId, FontSize = DayResultLayout.TitleFont, Align = UiAlign.Center }).Centered(t.X, t.Y, t.W, t.H);
+            _body = panel.Add(new ScrollingTextView { Id = BodyId, FontSize = DayResultLayout.BodyFont, SectionSpacing = DayResultLayout.SectionSpacing });
+            _body.Stretch(DayResultLayout.BodyLeft, DayResultLayout.BodyTop, DayResultLayout.BodyRight, DayResultLayout.BodyBottom);
+            var n = DayResultLayout.NextDay;
+            _next = panel.Add(new UiButton { Id = NextDayId, FontSize = DayResultLayout.ButtonFont }).Centered(n.X, n.Y, n.W, n.H);
+            _next.Clicked += StartNextDay;
+            return root;
+        }
+
+        protected internal override void OnOpened(ScreenOpenContext context)
+        {
+            if (Services.Commands == null) { Close(); return; }
+            GameSession session = Services.Commands.Session;
+            DayBaseline.For(session);
+            _displayKeys ??= DayResultText.BuildDisplayKeys(session);
+            if (session.Student.DayState == StudentDayState.InProgress)
+                _result = Services.Commands.Run(s => s.EndDay(), ChangeTopics.Day);
+            else
+            {
+                GameDayResult last = session.LastDayResult;
+                _result = last.Ended && last.Summary.DayNumber == session.Student.CurrentDay ? last : default;
+            }
+            _body.ScrollOffset = 0;
+            Render();
+        }
+
+        protected internal override void OnChanged(string topic)
+        {
+            if (Services.Commands != null && Model != null) Render();
+        }
+
+        private void StartNextDay()
+        {
+            if (Model == null || !Model.CanStartNextDay) return;
+            GameSession session = Services.Commands.Session;
+            if (!Services.Commands.Run(s => s.StartNextDay(), ChangeTopics.Day)) return;
+            DayBaseline.For(session).Capture();
+            Close();
+        }
+
+        private void Render()
+        {
+            GameSession session = Services.Commands.Session;
+            Model = DayResultModel.From(session, _result, DayBaseline.For(session).Summary());
+            var text = new DayResultText(T, Services.Text, _displayKeys);
+            _title.Text = text.Title(Model.Summary.DayNumber);
+            _next.Text = text.Ui("next-day");
+            _next.Enabled = Model.CanStartNextDay;
+            var sections = new List<string>(16)
+            {
+                text.List("activities", Model.Summary.CompletedActivityIds, "empty-activities"),
+                text.Results(Model),
+                text.Quests(Model.QuestInventory.QuestEntries),
+                text.Relationships(Model.RelationshipCondition.RelationshipEntries),
+                text.Conditions(Model.RelationshipCondition.StatusEntries),
+                text.Rewards(Model.QuestInventory.RewardEntries),
+                text.Inventory(Model.QuestInventory.InventoryDeltas),
+                text.NextGuide(Model),
+            };
+            sections.AddRange(text.LocationStates(session, Model.LocationStates));
+            sections.Add(text.Campaign(Model.Campaign));
+            sections.Add(text.Chain(Model));
+            _body.SetSections(sections);
+        }
+    }
+}

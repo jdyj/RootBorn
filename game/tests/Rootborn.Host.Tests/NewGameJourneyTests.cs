@@ -34,8 +34,8 @@ namespace Rootborn.Host.Tests
 
         private PlayerDriver Start()
         {
-            // 배속 20: 게임 1시간 = 75프레임(하루 600초 × 1/20 ÷ 24).
-            HostOptions options = HostOptions.Resolve(new[] { "--save-root", _saves, "--slot", "slot-1", "--time-scale", "20", "--size", "1280x720" });
+            // 슬롯은 학생 시각을 따른다(시각은 활동으로만 흐른다). --hour·--time-scale은 슬롯과 함께 줄 수 없다.
+            HostOptions options = HostOptions.Resolve(new[] { "--save-root", _saves, "--slot", "slot-1", "--size", "1280x720" });
             options.TestMode = true;
             var player = new PlayerDriver(options);
             player.Frames(3);
@@ -81,15 +81,14 @@ namespace Rootborn.Host.Tests
                 AssertAt(player, "Town", "town-home-entry");
                 LightColor arrived = player.Game.World.Tint;
                 double arrivedBlue = Brightness(player);
-                float arrivedHour = player.Game.World.Clock.CurrentHour;
+                float arrivedHour = player.Game.World.CurrentHour;
+                Assert.That(arrivedHour, Is.EqualTo(player.Game.Session.StudentHour), "마을 낮밤은 학생 시각을 따른다(Unity 판과 같음)");
                 player.Screenshot("journey-03-town-arrived");
 
-                player.Frames(450); // 6시간: 시간만 흐른다(키를 누르지 않음)
-                LightColor later = player.Game.World.Tint;
-                float laterHour = player.Game.World.Clock.CurrentHour;
-                Assert.That(laterHour - arrivedHour, Is.EqualTo(6f).Within(0.3f), arrivedHour + " → " + laterHour);
-                Assert.That(Math.Abs(later.B - arrived.B), Is.GreaterThan(0.15f), "빛이 바뀐다: " + arrived + " → " + later);
-                Assert.That(Math.Abs(Brightness(player) - arrivedBlue), Is.GreaterThan(20.0), "화면 색이 바뀐다");
+                player.Frames(450); // 키를 누르지 않고 프레임만 흐른다 — 학생 시각은 활동으로만 흐르므로 빛도 그대로다
+                Assert.That(player.Game.World.CurrentHour, Is.EqualTo(arrivedHour));
+                Assert.That(player.Game.World.Tint, Is.EqualTo(arrived));
+                Assert.That(Math.Abs(Brightness(player) - arrivedBlue), Is.LessThan(1.0), "화면 색이 그대로다");
                 player.Screenshot("journey-04-town-later");
 
                 Assert.That(player.WalkThroughDoor("shopping center"), Is.EqualTo("ShopInterior"));

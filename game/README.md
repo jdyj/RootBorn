@@ -43,8 +43,8 @@ dotnet run --project game/Rootborn.Host -- --save-root <세이브 폴더> --slot
 | `--spawn <도착 지점>` | | 맵 목록에서 그 맵의 첫 도착 지점 |
 | `--maps <맵 목록>` | `ROOTBORN_WORLD_MAPS` | `<저장소>/game/world/maps.json` |
 | `--interactions <파일>` | | `<저장소>/game/world/interactions.json` |
-| `--hour <시각>` | | 8(Unity 판 학생 생활 하루 시작) |
-| `--time-scale <배속>` | | 1. 하루 길이는 data/time의 TimeDefinition(600초) |
+| `--hour <시각>` | | 8(Unity 판 학생 생활 하루 시작). `--world`일 때만(슬롯은 학생 시각을 따른다) |
+| `--time-scale <배속>` | | 1. 하루 길이는 data/time의 TimeDefinition(600초). `--world`일 때만 |
 | `--save-root <세이브 폴더>` | `ROOTBORN_SAVE_ROOT` | 없음. `--slot`을 쓰면 반드시 준다 |
 | `--lang <언어>` | | ko. `data/localization`의 파일 이름 |
 | `--ui-theme <스킨>` | | urban(Unity 판의 도시형 몰딩). style2는 대체 스킨 |
@@ -53,7 +53,7 @@ dotnet run --project game/Rootborn.Host -- --save-root <세이브 폴더> --slot
 `--sample`도 `--world`도 `--slot`도 없으면 안내 후 끝난다. 슬롯으로 시작하면 맵에 들어갈 때마다(처음 들어갈 때 포함) `world-progress.json`에 쓴다.
 읽을 수 없는 세이브 파일은 덮어쓰지 않고 시작을 거절한다.
 캐릭터는 슬롯의 옷 선택(`wearables-local-player.json`, 없으면 칸 기본값)으로 성장 단계 몸에 옷·머리를 겹쳐 그린다.
-낮밤은 맵 목록의 `dayNight`가 켜진 맵(마을)에만 입힌다. NPC는 일정(data/npcs)과 시간대로 `interactions.json`의 장소 자리에 선다.
+낮밤은 맵 목록의 `dayNight`가 켜진 맵(마을)에만 입힌다. 슬롯으로 시작하면 낮밤·NPC 자리는 학생 날·시각(`GameSession.StudentDay`·`StudentHour`)을, 캐릭터 몸은 `GrowthStageId()`를 따른다. `interactions.json`에서 `placementSurface`가 있는 맵(집)에 들어가면 그 맵에서 방 칸을 만들어 `GameSession.EnterHouse`를 부른다. NPC는 일정(data/npcs)과 시간대로 `interactions.json`의 장소 자리에 선다.
 슬롯으로 시작하면 같은 정의로 `GameSession`도 시작하고, 월드 위에 화면 쌓기를 올린다(`--world`도 화면 쌓기는 올린다).
 E·Space·Ctrl(Unity 판과 같은 상호작용 키)을 누르면 앞의 대상과 상호작용한 이벤트가 나오고(`[상호작용] 맵:종류/id`), 그 종류에 등록된 화면이 열린다.
 Esc는 설정, I는 가방, C는 상태, Tab은 목표 수첩(등록된 화면만). HUD(시계, 체력·집중, 추적 목표, HUD 버튼, 상호작용 안내 글자)는 월드를 띄우면 늘 떠 있다. NPC 앞에서 E는 대화, 장소 지점(location-activity)에서 E를 누르면 그 장소의 하루 이벤트가 열린다. 이동을 막지 않는 화면의 버튼은 Shift+방향 키로 옮기고 Enter로 누른다. 이동을 막는 화면이 떠 있거나 글자를 치는 동안은 걷지 않는다. 월드 화면에서는 화살표나 WASD를 누르고 있는 동안 걷고, 문에 들어서면 0.35초 뒤 목적지 맵으로 간다. 증거 폴더 기본값은 `<저장소>/output/host-world-evidence`.

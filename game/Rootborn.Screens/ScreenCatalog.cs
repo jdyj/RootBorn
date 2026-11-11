@@ -1,5 +1,6 @@
 using Rootborn.Screens.Dialogue;
 using Rootborn.Screens.Hud;
+using Rootborn.Screens.Day;
 using Rootborn.Screens.Settings;
 
 namespace Rootborn.Screens
@@ -27,6 +28,9 @@ namespace Rootborn.Screens
         public const string Encyclopedia = "encyclopedia";
         public const string Wardrobe = "wardrobe";
         public const string FurniturePlacement = "furniture-placement";
+        public const string DailyPlan = "daily-plan";
+        public const string Location = "location";
+        public const string DayResult = "day-result";
 
         public static void Register(ScreenRegistry r)
         {
@@ -40,6 +44,9 @@ namespace Rootborn.Screens
             r.Add(DailyEvent, ScreenLayer.Modal, blocksMovement: true, s => new DailyEventScreen(s));
             // 하루 이벤트는 장소 지점 상호작용 뒤에 연다(Unity DailyEventRuntimeInstaller).
             r.AddListener(s => new DailyEventTrigger(s, DailyEvent, "location-activity"));
+            r.Add(DailyPlan, ScreenLayer.Panel, blocksMovement: false, s => new DailyPlanScreen(s)).OpenedByInteraction(DailyPlanScreen.InteractionKind);
+            r.Add(Location, ScreenLayer.Modal, blocksMovement: true, s => new LocationScreen(s)).OpenedByInteraction(LocationScreen.InteractionKind);
+            r.Add(DayResult, ScreenLayer.Modal, blocksMovement: true, s => new DayResultScreen(s)).OpenedByInteraction(DayResultScreen.InteractionKind);
         }
 
         /// <summary>표를 채운 새 등록 표.</summary>

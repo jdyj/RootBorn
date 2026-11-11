@@ -46,6 +46,7 @@ namespace Rootborn.Host
         public float TimeScale = 1f;
         /// <summary>시작 시각. Unity 판 학생 생활 하루가 시작하는 8시(StudentLifeProgress TimeMinutes 8*60).</summary>
         public float StartHour = 8f;
+        private bool _timeGiven;
 
         /// <summary>월드 화면을 띄우는가(--world 또는 --slot).</summary>
         public bool WorldActive => World != null || SaveSlot != null;
@@ -100,10 +101,12 @@ namespace Rootborn.Host
                     case "--time-scale":
                         if (!float.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out o.TimeScale) || o.TimeScale < 0f)
                             throw new InvalidOperationException("--time-scale 은 0 이상의 수: " + value);
+                        o._timeGiven = true;
                         break;
                     case "--hour":
                         if (!float.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out o.StartHour) || o.StartHour < 0f || o.StartHour >= 24f)
                             throw new InvalidOperationException("--hour 는 0 이상 24 미만: " + value);
+                        o._timeGiven = true;
                         break;
                     case "--size":
                         string[] wh = value.Split('x');
@@ -132,6 +135,8 @@ namespace Rootborn.Host
 
             if (o.SaveSlot != null && o.World != null)
                 throw new InvalidOperationException("--world 와 --slot 은 함께 줄 수 없다(슬롯이 시작 맵을 정한다)");
+            if (o.SaveSlot != null && o._timeGiven)
+                throw new InvalidOperationException("--hour 와 --time-scale 은 --slot 과 함께 줄 수 없다(슬롯은 학생 시각을 따른다 — 시각은 활동으로만 흐른다)");
             if (o.SaveSlot != null && string.IsNullOrWhiteSpace(o.SaveRoot))
                 throw new InvalidOperationException($"--slot 을 쓰려면 세이브 폴더를 --save-root 또는 환경 변수 {SaveRootVariable} 로 준다.");
             if (string.IsNullOrEmpty(o.EvidenceDir)) o.EvidenceDir = Path.Combine(o.RepoRoot, "output", o.WorldActive ? "host-world-evidence" : "host-ui-evidence");

@@ -70,6 +70,20 @@ namespace Rootborn.Host.Tests
         }
 
         [Test]
+        public void IconForADefinition_UsesTheThemesPresentation_ElseTheFallbackKey()
+        {
+            var atlases = new SpriteAtlases(Root);
+            var images = new ImageCatalog(atlases, UrbanTheme.Load(Root));
+            images.TryResolve("icon:chef", default, out _, out PixelRect chef);
+            images.TryResolve("icon:plan", default, out _, out PixelRect plan);
+            // 테마 데이터: daily.practice.chef → chef. 테마가 정하지 않은 정의는 대체 키(plan).
+            Assert.That(images.TryResolve("icon:plan@daily.practice.chef", default, out _, out PixelRect own), Is.True);
+            Assert.That(own, Is.EqualTo(chef));
+            Assert.That(images.TryResolve("icon:plan@no.such.definition", default, out _, out PixelRect fallback), Is.True);
+            Assert.That(fallback, Is.EqualTo(plan));
+        }
+
+        [Test]
         public void EveryThemeIcon_HasAnAtlasEntry_AndItsPngExists()
         {
             var atlases = new SpriteAtlases(Root);

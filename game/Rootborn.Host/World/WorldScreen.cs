@@ -102,19 +102,42 @@ namespace Rootborn.Host.World
                 if (!Session.Enter(startMap, spawn)) throw new InvalidOperationException(Session.LastProblem);
             }
             foreach (string problem in Current.Problems) Console.Error.WriteLine("[월드] " + startMap + ": " + problem);
-            PlayerLook = ResolvePlayerLook(options);
+            _look = LoadWearables(options);
+            PlayerLook = ResolveLook(WearableRules.SelectStage(Content.Wearables.Stages, NewGameStudentDay, false));
             UpdateLight(0f);
             RefreshInteractions();
         }
 
         /// <summary>시간대(Core LocationStateTimeSlots: 오전·오후·저녁·밤).</summary>
-        public string TimeSlot => LocationStateTimeSlots.FromMinutes((int)(Clock.CurrentHour * 60f));
+        public string TimeSlot => LocationStateTimeSlots.FromMinutes((int)(CurrentHour * 60f));
+
+        private Func<int> _studentDay;
+        private Func<float> _studentHour;
+
+        /// <summary>
+        /// 게임 한 판이 있으면 낮밤과 NPC 자리를 학생 날·시각으로 정한다(Unity 판: 마을 낮밤과 NPC 일정이 학생 시각을 따랐다).
+        /// 그 뒤로 게임 시계(Clock)는 흐르지 않는다. 시각은 활동으로만 흐른다.
+        /// </summary>
+        public void FollowStudentTime(Func<int> day, Func<float> hour)
+        {
+            _studentDay = day ?? throw new ArgumentNullException(nameof(day));
+            _studentHour = hour ?? throw new ArgumentNullException(nameof(hour));
+            _lightSnapped = false;
+            UpdateLight(0f);
+            RefreshInteractions();
+        }
+
+        /// <summary>지금 시각(0~24). 학생 시각을 따르면 그것, 아니면 게임 시계.</summary>
+        public float CurrentHour => _studentHour != null ? _studentHour() : Clock.CurrentHour;
+
+        /// <summary>지금 날. 학생 날을 따르면 그것, 아니면 게임 시계.</summary>
+        public int CurrentDay => _studentDay != null ? _studentDay() : Clock.Day;
 
         /// <summary>맵이나 시간대가 바뀌었을 때만 NPC 자리와 후보를 다시 만든다(프레임마다 다시 만들지 않는다).</summary>
         private void RefreshInteractions()
         {
             string map = Session.Map.Id, slot = TimeSlot;
-            int day = Clock.Day;
+            int day = CurrentDay;
             if (map == _placedMap && slot == _placedSlot && day == _placedDay) { Interactions.Update(Session.Walker.X, Session.Walker.Y); return; }
             _placedMap = map; _placedSlot = slot; _placedDay = day;
             MapInteractions here = _interactionData.Map(map);
@@ -126,20 +149,37 @@ namespace Rootborn.Host.World
             Interactions.Update(Session.Walker.X, Session.Walker.Y);
         }
 
+        /// <summary>지금 맵의 상호작용 데이터(물건, NPC 자리, 가구 방이면 면 id).</summary>
+        public MapInteractions HereData => _interactionData.Map(Session.Map.Id);
+
         /// <summary>상호작용 키: 대상이 무언가 하면 Core 이벤트가 나온다.</summary>
         public InteractionEvent? Interact() => Interactions.Press();
 
-        /// <summary>
-        /// 겉모습: 슬롯의 옷 선택(없으면 칸 기본값)과 성장 단계. 단계는 학생 진행 저장을 아직 읽지 않아 새 게임과 같은 1일차·학생으로 정한다.
-        /// </summary>
-        private CharacterLook ResolvePlayerLook(HostOptions options)
+        private WearableState _look;
+
+        /// <summary>지금 그리는 성장 단계 id.</summary>
+        public string GrowthStage { get; private set; }
+
+        /// <summary>슬롯의 옷 선택(없으면 칸 기본값).</summary>
+        private WearableState LoadWearables(HostOptions options) => Slot != null
+            ? PlayerWearables.Load(new FileSaveStore(options.SaveRoot), Slot.SlotId, SaveFileNames.DefaultPlayerId, SlotStart.Metadata, Content.Wearables, Content.Characters)
+            : new WearableState();
+
+        private CharacterLook ResolveLook(string stage)
         {
-            WearableState state = Slot != null
-                ? PlayerWearables.Load(new FileSaveStore(options.SaveRoot), Slot.SlotId, SaveFileNames.DefaultPlayerId, SlotStart.Metadata, Content.Wearables, Content.Characters)
-                : new WearableState();
-            string stage = WearableRules.SelectStage(Content.Wearables.Stages, NewGameStudentDay, false);
-            return CharacterLook.Resolve(Content.Characters, Content.Wearables, state, stage, null)
+            GrowthStage = stage;
+            return CharacterLook.Resolve(Content.Characters, Content.Wearables, _look, stage, null)
                 ?? throw new InvalidOperationException("성장 단계 " + stage + "의 몸 그림이 없다");
+        }
+
+        /// <summary>
+        /// 성장 단계를 바꾼다(게임 한 판이 있으면 Host가 GameSession.GrowthStageId()로 부른다 — Unity WearableLook.StageFor).
+        /// 게임 한 판이 없으면(--world) 새 게임과 같은 1일차·학생 단계다. 같은 단계면 아무것도 하지 않는다. 빈 id는 무시한다.
+        /// </summary>
+        public void SetGrowthStage(string stage)
+        {
+            if (string.IsNullOrEmpty(stage) || stage == GrowthStage) return;
+            PlayerLook = ResolveLook(stage);
         }
 
         private Texture2D Load(string path)
@@ -158,7 +198,7 @@ namespace Rootborn.Host.World
             if (Session.Map.Id != before)
                 foreach (string problem in Current.Problems) Console.Error.WriteLine("[월드] " + Session.Map.Id + ": " + problem);
             PlayerAnimator.Advance(Session.Walker.Moving, Session.Walker.Facing, dt);
-            Clock.Tick(dt * _timeScale);
+            if (_studentHour == null) Clock.Tick(dt * _timeScale);
             UpdateLight(dt);
             RefreshInteractions();
         }
@@ -172,8 +212,8 @@ namespace Rootborn.Host.World
                 Tint = LightColor.White;
                 return;
             }
-            if (!_lightSnapped) { _light.Snap(Clock.CurrentHour); _lightSnapped = true; }
-            else _light.Update(Clock.CurrentHour, dt);
+            if (!_lightSnapped) { _light.Snap(CurrentHour); _lightSnapped = true; }
+            else _light.Update(CurrentHour, dt);
             Tint = _light.Tint;
         }
 

@@ -117,6 +117,8 @@ namespace Rootborn.Host.Rendering
         public SpriteRef Panel, Button, Slot;
         public UiColor ButtonTextColor;
         public readonly Dictionary<string, SpriteRef> Icons = new Dictionary<string, SpriteRef>(StringComparer.Ordinal);
+        /// <summary>정의 id → 그 정의의 아이콘 키(테마의 presentations, Unity UrbanUiThemeDefinition.ResolveIcon).</summary>
+        public readonly Dictionary<string, string> Presentations = new Dictionary<string, string>(StringComparer.Ordinal);
 
         public static UrbanTheme Load(string repoRoot)
         {
@@ -135,6 +137,10 @@ namespace Rootborn.Host.Rendering
             if (root.TryGetProperty("icons", out JsonElement icons))
                 foreach (JsonElement icon in icons.EnumerateArray())
                     theme.Icons[icon.GetProperty("key").GetString()] = Ref(icon.GetProperty("sprite"));
+            if (root.TryGetProperty("presentations", out JsonElement presentations))
+                foreach (JsonElement p in presentations.EnumerateArray())
+                    if (p.TryGetProperty("definition", out JsonElement d) && d.TryGetProperty("ref", out JsonElement id) && p.TryGetProperty("iconKey", out JsonElement key))
+                        theme.Presentations[id.GetString() ?? string.Empty] = key.GetString() ?? string.Empty;
             return theme;
         }
 
@@ -202,7 +208,7 @@ namespace Rootborn.Host.Rendering
 
     /// <summary>
     /// 그림 id → PNG와 그 안의 칸. 그림 id 꼴:
-    /// "icon:&lt;키&gt;"(도시형 몰딩 테마의 아이콘 키, 예: icon:journal), "&lt;PNG 경로&gt;#&lt;스프라이트 이름&gt;"(좌표표), "&lt;PNG 경로&gt;"(그림 전체).
+    /// "icon:&lt;키&gt;"(도시형 몰딩 테마의 아이콘 키, 예: icon:journal), "icon:&lt;키&gt;@&lt;정의 id&gt;"(테마가 정의마다 정한 아이콘, 없으면 그 키), "&lt;PNG 경로&gt;#&lt;스프라이트 이름&gt;"(좌표표), "&lt;PNG 경로&gt;"(그림 전체).
     /// 그리기 명령에 원본 칸(Source)이 있으면 그 PNG 안의 그 칸을 쓴다.
     /// </summary>
     public sealed class ImageCatalog
@@ -237,7 +243,16 @@ namespace Rootborn.Host.Rendering
         {
             if (imageId.StartsWith("icon:", StringComparison.Ordinal))
             {
-                if (_theme == null || !_theme.Icons.TryGetValue(imageId.Substring(5), out SpriteRef icon)) return (null, default);
+                // "icon:<키>@<정의 id>": 테마가 그 정의에 정한 아이콘이 있으면 그것, 없으면 <키>.
+                string key = imageId.Substring(5);
+                int at = key.IndexOf('@');
+                if (at >= 0)
+                {
+                    string definition = key.Substring(at + 1);
+                    key = key.Substring(0, at);
+                    if (_theme != null && _theme.Presentations.TryGetValue(definition, out string own) && _theme.Icons.ContainsKey(own)) key = own;
+                }
+                if (_theme == null || !_theme.Icons.TryGetValue(key, out SpriteRef icon)) return (null, default);
                 return _atlases.TryFind(icon.Path, icon.Name, out AtlasSprite s) ? (icon.Path, s.Rect) : (null, default);
             }
             int hash = imageId.IndexOf('#');

@@ -11,18 +11,15 @@ namespace Rootborn.Screens.Tests.Dialogue
     {
         private static readonly InteractionEvent Library = new InteractionEvent("Town", "location-activity", "location.library");
 
-        private sealed class LocationProbe : GameScreen
-        {
-            public LocationProbe(ScreenServices s) : base(s) { }
-            protected override UiNode Build() => new UiPanel { Id = "location-probe" }.Centered(0, 0, 400, 300);
-        }
-
         private static TestSession OpenAtLibrary()
         {
             var t = new TestSession();
             t.Stack.OpenHud();
             t.Stack.Interaction(Library);
-            Assert.That(t.Stack.IsOpen(ScreenCatalog.DailyEvent), Is.True, "장소 지점 상호작용 뒤 그 장소의 하루 이벤트가 열린다");
+            // 장소 지점은 장소 화면을 먼저 연다. 닫으면 그 장소의 하루 이벤트가 열린다(Unity 순서).
+            Assert.That(t.Stack.IsOpen(ScreenCatalog.Location), Is.True);
+            t.Click(Rootborn.Screens.Day.LocationScreen.CloseId);
+            Assert.That(t.Stack.IsOpen(ScreenCatalog.DailyEvent), Is.True, "장소 화면을 닫은 뒤 그 장소의 하루 이벤트가 열린다");
             t.Emit();
             return t;
         }
@@ -54,11 +51,11 @@ namespace Rootborn.Screens.Tests.Dialogue
         [Test]
         public void WaitsForTheScreenTheLocationInteractionOpened_ThenOpens()
         {
-            using var t = new TestSession(extra: r => r.Add("location-probe", ScreenLayer.Panel, false, s => new LocationProbe(s)).OpenedByInteraction("location-activity"));
+            using var t = new TestSession();
             t.Stack.Interaction(Library);
-            Assert.That(t.Stack.IsOpen("location-probe"), Is.True);
+            Assert.That(t.Stack.IsOpen(ScreenCatalog.Location), Is.True);
             Assert.That(t.Stack.IsOpen(ScreenCatalog.DailyEvent), Is.False, "장소 화면이 떠 있는 동안은 기다린다");
-            t.Stack.Close("location-probe");
+            t.Stack.Close(ScreenCatalog.Location);
             Assert.That(t.Stack.IsOpen(ScreenCatalog.DailyEvent), Is.True);
         }
 

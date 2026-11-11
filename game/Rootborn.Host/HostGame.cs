@@ -13,6 +13,8 @@ using GameSession = Rootborn.Game.GameSession;
 using GameStartSettings = Rootborn.Game.GameStartSettings;
 using Rootborn.Host.World;
 using Rootborn.Screens;
+using Rootborn.Screens.Day;
+using Rootborn.World;
 using Rootborn.Ui;
 
 namespace Rootborn.Host
@@ -121,6 +123,36 @@ namespace Rootborn.Host
             Screens = new ScreenStack(registry, services);
             Screens.EnterMap(World.Session.Map.Id);
             Screens.OpenHud();
+            if (Session != null)
+            {
+                // 학생 시각·날이 낮밤과 NPC 자리를, 학생 날·성인 여부가 성장 단계를 정한다(Unity 판과 같음).
+                World.FollowStudentTime(() => Session.StudentDay, () => Session.StudentHour);
+                DayBaseline.For(Session); // 하루 결과의 퀘스트·물건 변화 기준점(Unity: 마을 씬을 불러올 때)
+                SyncSession();
+            }
+        }
+
+        private string _sessionMap;
+        private int _sessionDay = -1;
+
+        /// <summary>
+        /// 게임 한 판과 월드를 맞춘다(프레임마다, 바뀐 것만): 날이 바뀌면 성장 단계, 가구 방(interactions.json의 placementSurface)에
+        /// 들어오면 그 맵에서 방 칸을 만들어 GameSession.EnterHouse(Unity AuthoredHousePlacementBinding.Bind). 맵 크기는 맵에서 읽는다.
+        /// 맵에 들어갈 때 장소 방문은 기록하지 않는다(Unity 판은 장소 지점을 눌렀을 때만 기록했다).
+        /// </summary>
+        private void SyncSession()
+        {
+            if (Session == null) return;
+            if (Session.StudentDay != _sessionDay)
+            {
+                _sessionDay = Session.StudentDay;
+                World.SetGrowthStage(Session.GrowthStageId());
+            }
+            string map = World.Session.Map.Id;
+            if (map == _sessionMap) return;
+            _sessionMap = map;
+            string surface = World.HereData.PlacementSurface;
+            if (!string.IsNullOrEmpty(surface)) Session.EnterHouse(RoomPlacementGrid.FromMap(World.Current.World), surface);
         }
 
         /// <summary>견본 화면을 새로 만들어 띄운다.</summary>
@@ -221,6 +253,7 @@ namespace Rootborn.Host
             bool blocked = s.MovementBlockedWhile(keys.Shift);
             World.Update(blocked ? 0 : keys.MoveX, blocked ? 0 : keys.MoveY, dt);
             s.EnterMap(World.Session.Map.Id);
+            SyncSession();
             s.SetInteractionTarget(TargetOnScreen());
             if (interact)
             {

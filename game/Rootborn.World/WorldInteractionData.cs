@@ -21,6 +21,8 @@ namespace Rootborn.World
         public static readonly MapInteractions Empty = new MapInteractions();
         public readonly List<InteractionThing> Things = new List<InteractionThing>();
         public readonly Dictionary<string, List<(float X, float Y)>> NpcAnchors = new Dictionary<string, List<(float X, float Y)>>(StringComparer.Ordinal);
+        /// <summary>가구를 놓는 방이면 그 면 id(가구 정의의 allowedSurfaceIds, 집은 "house"). 아니면 빈 문자열.</summary>
+        public string PlacementSurface = string.Empty;
     }
 
     /// <summary>상호작용 데이터(game/world/interactions.json).</summary>
@@ -66,6 +68,7 @@ namespace Rootborn.World
                         foreach (JsonElement p in location.Value.EnumerateArray()) list.Add((p[0].GetSingle(), p[1].GetSingle()));
                         m.NpcAnchors[location.Name] = list;
                     }
+                if (map.Value.TryGetProperty("placementSurface", out JsonElement surface)) m.PlacementSurface = surface.GetString() ?? string.Empty;
                 data._maps[map.Name] = m;
             }
             return data;

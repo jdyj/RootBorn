@@ -42,7 +42,7 @@ namespace Rootborn.Host.Tests
         {
             HostOptions options = HostOptions.Resolve(new[]
             {
-                "--save-root", _saves, "--slot", "slot-1", "--size", "1920x1080", "--time-scale", "0",
+                "--save-root", _saves, "--slot", "slot-1", "--size", "1920x1080",
                 "--evidence", Path.Combine(_root, "output", "host-screens-evidence"),
             }.Concat(extra).ToArray());
             options.TestMode = true;
@@ -146,6 +146,10 @@ namespace Rootborn.Host.Tests
             player.Screenshot("daily-event-00-prompt");
 
             player.PressKey(TestKey.E);
+            // 장소 지점은 장소 화면을 먼저 연다. 닫기를 누르면 그 장소의 하루 이벤트가 열린다(Unity 순서).
+            player.WaitForScreen(ScreenCatalog.Location);
+            Assert.That(player.Screens.IsOpen(ScreenCatalog.DailyEvent), Is.False, "장소 화면이 떠 있는 동안은 기다린다");
+            player.PressButton(Rootborn.Screens.Day.LocationScreen.CloseId);
             player.WaitForScreen(ScreenCatalog.DailyEvent);
             var screen = Screen<DailyEventScreen>(player, ScreenCatalog.DailyEvent);
             Assert.That(screen.Model.EventId, Is.EqualTo("daily-event.library-hard-book"));
