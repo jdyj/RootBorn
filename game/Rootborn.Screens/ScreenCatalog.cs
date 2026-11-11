@@ -51,7 +51,7 @@ namespace Rootborn.Screens
         public const string DailyPlan = "daily-plan";
         public const string Location = "location";
         public const string DayResult = "day-result";
-        /// <summary>장소 기록(Unity LocationStateLogPanel). HUD 버튼은 없다(Unity 버튼은 도감 버튼 밑에 깔려 보이지 않았다).</summary>
+        /// <summary>장소 기록(Unity LocationStateLogPanel). L 키와 HUD 버튼(오른쪽 위 열, 옷장 아래)이 열고 닫는다(사용자 결정 2026-11-12).</summary>
         public const string LocationStateLog = "location-state-log";
         /// <summary>성인 시설 관리(Unity FacilityManagementPanel). 시설 앞 상호작용으로 열린다. 이동을 막는다.</summary>
         public const string Facility = "facility";
@@ -94,7 +94,7 @@ namespace Rootborn.Screens
             r.Add(Encyclopedia, ScreenLayer.Panel, blocksMovement: true, s => new EncyclopediaScreen(s));
             r.Add(Wardrobe, ScreenLayer.Panel, blocksMovement: true, s => new WardrobeScreen(s));
             r.Add(WorldStateLog, ScreenLayer.Panel, blocksMovement: true, s => new WorldStateLogScreen(s));
-            r.Add(LocationStateLog, ScreenLayer.Panel, blocksMovement: false, s => new LocationStateLogScreen(s));
+            r.Add(LocationStateLog, ScreenLayer.Panel, blocksMovement: false, s => new LocationStateLogScreen(s)).OpenedBy(ScreenKey.LocationLog);
             r.Add(Facility, ScreenLayer.Modal, blocksMovement: true, s => new FacilityScreen(s)).OpenedByInteraction(FacilityScreen.InteractionKind);
         }
 

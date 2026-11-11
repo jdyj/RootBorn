@@ -19,7 +19,8 @@ namespace Rootborn.Screens.Hud
     /// 진로(CareerCandidateRuntimeInstaller), 장래희망(CareerInterestRuntimeInstaller), 마을 기록(WorldStateLogRuntimeInstaller),
     /// 도감(EncyclopediaRuntimeInstaller), 옷장(GrowingWardrobeRuntimeInstaller), 가구 배치 켬/끔(HousePlacementModeToggleInstaller, 가구를 놓는 면이 있는 맵에서만).
     /// 여는 화면이 아직 등록되지 않았으면 눌러도 아무 일도 없다(숨기지 않는다). 그 화면을 등록하면 저절로 이어진다.
-    /// 장소 기록 버튼(LocationStateRuntimeInstaller, 오른쪽 위 168x36)은 Unity 판 증거 화면 어디에도 보이지 않아(도감 버튼 밑에 깔림) 넣지 않았다.
+    /// 장소 기록 버튼(LocationStateRuntimeInstaller, 오른쪽 위 168x36)은 Unity 판에서 도감 버튼 밑에 깔려 보이지 않았다. 사용자 결정(2026-11-12)으로
+    /// 오른쪽 위 열의 옷장 아래(같은 크기 150x34, 간격 40)에 둔다.
     /// </summary>
     public sealed class HudButtonsScreen : GameScreen
     {
@@ -36,6 +37,7 @@ namespace Rootborn.Screens.Hud
             new HudButtonSpec("hud.button.encyclopedia", "ui.encyclopedia.open", null, ScreenCatalog.Encyclopedia, HudButtonAction.Toggle, 1f, 0f, -24f - 150f, 86f, 150f, 34f, 18f, null),
             new HudButtonSpec("hud.button.wardrobe", "ui.wardrobe.open", null, ScreenCatalog.Wardrobe, HudButtonAction.Toggle, 1f, 0f, -24f - 150f, 126f, 150f, 34f, 18f, null),
             new HudButtonSpec("hud.button.placement", "ui.placement.off", "ui.placement.on", ScreenCatalog.FurniturePlacement, HudButtonAction.Toggle, 0f, 0f, 24f, 24f, 240f, 64f, 20f, MapFeatures.FurniturePlacement),
+            new HudButtonSpec("hud.button.location-log", "ui.location-log", null, ScreenCatalog.LocationStateLog, HudButtonAction.Toggle, 1f, 0f, -24f - 150f, 166f, 150f, 34f, 18f, null),
         };
 
         private readonly UiButton[] _buttons = new UiButton[Buttons.Length];
