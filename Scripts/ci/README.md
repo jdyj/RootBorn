@@ -42,4 +42,7 @@ bash Scripts/ci/run-all.sh --skip-host     # dotnet 테스트에서 창을 띄�
 
 - `static-checks`: 자체 시험 + 검사 6개. 실패하면 막는다.
 - `dotnet-tests`: Core, DataExport, `game/tests`의 Host 테스트를 뺀 나머지. 실패하면 막는다.
-- `host-tests`: `game/Rootborn.sln` 전체를 `xvfb-run`으로. Host 테스트는 실제 창을 띄우므로 GitHub 러너에서 도는지 확인되기 전까지 `continue-on-error: true`다(이유는 워크플로 주석).
+- `host-tests`: `game/tests/Rootborn.Host.Tests`만 `xvfb-run`으로(나머지는 `dotnet-tests`가 돌린다). 러너에 `fonts-nanum`을 깔고 `ROOTBORN_FONT`로 준다.
+  GitHub 러너에서 도는지 확인되기 전까지 `continue-on-error: true`다. 2026-11-11까지의 실행은 한글 글꼴이 없어 130건 중 104건이 `HostOptions.Resolve`에서 멈췄다(원인 하나). 글꼴을 넣은 뒤의 결과는 GitHub에서 아직 보지 못했다.
+- 새 테스트 프로젝트는 `game/tests/<이름>/<이름>.csproj`에 두면 `dotnet-tests`가 저절로 돌린다(글롭). `Tools/` 아래 테스트 프로젝트는 워크플로와 `run-all.sh`에 한 줄씩 더한다.
+- 배포 폴더(`Tools/publish`)는 CI가 만들거나 확인하지 않는다. 로컬에서 `Tools/publish/publish.sh` 뒤 `Tools/publish/verify.sh`(`Tools/publish/README.md`).

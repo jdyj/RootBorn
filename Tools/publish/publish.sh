@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # 배포용 실행 폴더를 만든다. 사용법과 목록 고치는 법은 README.md.
 #   Tools/publish/publish.sh [플랫폼...]   (기본: win-x64 linux-x64)
+#   Tools/publish/publish.sh --list       복사할 게임 파일 목록만 낸다(게시하지 않는다. verify.sh 가 쓴다)
 set -euo pipefail
 shopt -s globstar nullglob dotglob
 
@@ -11,12 +12,16 @@ OUT_ROOT="${PUBLISH_OUT:-$REPO/output/publish}"
 export PATH="$HOME/.dotnet:$PATH"
 export DOTNET_ROOT="${DOTNET_ROOT:-$HOME/.dotnet}"
 
+LIST_ONLY=0
+if [ "${1:-}" = "--list" ]; then LIST_ONLY=1; shift; fi
 PLATFORMS=("$@")
 [ ${#PLATFORMS[@]} -gt 0 ] || PLATFORMS=(win-x64 linux-x64)
 
 cd "$REPO"
 
 # ---- 복사할 파일 목록 만들기 (저장소 기준 상대 경로, 중복 없음) ----
+# Windows(Git Bash)에서는 프로세스 하나 띄우는 데 수십 ms가 든다. 파일마다 grep·cp 를 띄우지 않는다
+# (예전에는 @refs 가 JSON 파일마다 grep 을 띄워 목록 만들기만 20분이 넘었다).
 declare -A FILES=()     # 상대 경로 → 1
 declare -a PROBLEMS=()
 
@@ -32,7 +37,7 @@ add_file() {
 }
 
 add_glob() {
-  local pattern="$1" m any=0
+  local pattern="$1" m f any=0
   for m in $pattern; do
     any=1
     if [ -d "$m" ]; then
@@ -53,14 +58,21 @@ remove_glob() {
   return 0
 }
 
-add_refs() {      # JSON 안의 "Assets/...png" 문자열
+# 배포에 들어가는 JSON(앞 줄들이 모은 것) 가운데 글롭에 맞는 것 안의 "Assets/...png" 문자열을 더한다.
+# 앞에서 뺀 JSON(예: data/atlases)은 보지 않는다 — 그러지 않으면 좌표표가 가리키는 그림이 쓰이든 말든 전부 따라온다.
+add_refs() {
   local pattern="$1" j p
+  local -a jsons=()
   for j in $pattern; do
-    [ -f "$j" ] || continue
-    while IFS= read -r p; do
-      if [ -n "$p" ]; then add_file "$p"; fi
-    done < <(grep -ohE 'Assets/[^"]+\.png' "$j" | sort -u)
+    if [ -n "${FILES[$j]+x}" ]; then jsons+=("$j"); fi
   done
+  if [ ${#jsons[@]} -eq 0 ]; then
+    PROBLEMS+=("@refs 가 볼 JSON 이 없는 줄(배포에 들어가는 JSON 만 본다): $pattern")
+    return 0
+  fi
+  while IFS= read -r p; do
+    if [ -n "$p" ]; then add_file "$p"; fi
+  done < <(printf '%s\0' "${jsons[@]}" | xargs -0 grep -ohE 'Assets/[^"]+\.png' | LC_ALL=C sort -u)
 }
 
 add_ldtk() {      # .ldtk 하나: 파일, 레벨 파일, 타일셋 PNG
@@ -87,7 +99,8 @@ while IFS= read -r line || [ -n "$line" ]; do
   lineno=$((lineno + 1))
   line="${line%$'\r'}"
   [[ "$line" =~ ^[[:space:]]*(#|$) ]] && continue
-  line="$(echo "$line" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')"
+  line="${line#"${line%%[![:space:]]*}"}"       # 앞뒤 공백 떼기(프로세스를 띄우지 않고)
+  line="${line%"${line##*[![:space:]]}"}"
   case "$line" in
     '!'*)       remove_glob "${line#!}" ;;
     '@refs '*)  add_refs "${line#@refs }" ;;
@@ -106,6 +119,11 @@ for f in "${!FILES[@]}"; do
 done
 for p in "${PROBLEMS[@]+"${PROBLEMS[@]}"}"; do echo "경고: $p" >&2; done
 
+if [ $LIST_ONLY -eq 1 ]; then
+  printf '%s\n' "${!FILES[@]}" | LC_ALL=C sort
+  exit 0
+fi
+
 # ---- 플랫폼마다: 게시 + 복사 ----
 for rid in "${PLATFORMS[@]}"; do
   dest="$OUT_ROOT/$rid"
@@ -114,7 +132,6 @@ for rid in "${PLATFORMS[@]}"; do
   rm -rf "$dest"
   dotnet publish game/Rootborn.Host -c Release -r "$rid" --self-contained -o "$dest" -nologo -v quiet
   # 파일마다 cp 를 띄우면 Windows 에서 몹시 느리다 — tar 한 번으로 같은 상대 경로에 푼다.
-  printf '%s
-' "${!FILES[@]}" | LC_ALL=C sort | tar -cf - -T - | tar -xf - -C "$dest"
+  printf '%s\n' "${!FILES[@]}" | LC_ALL=C sort | tar -cf - -T - | tar -xf - -C "$dest"
   echo "   복사한 게임 파일 ${#FILES[@]}개"
 done

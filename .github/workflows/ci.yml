@@ -53,19 +53,24 @@ jobs:
     name: Host 테스트 (실제 창, xvfb)
     runs-on: ubuntu-latest
     # 막지 않는다(continue-on-error): Host 테스트는 SDL로 실제 창을 띄우고 장치 입력을 주입한다.
-    # GitHub ubuntu 러너에서 가상 화면(xvfb)과 OpenGL(소프트웨어 렌더링)로 돌 수 있는지는 아직 확인하지 못했다.
-    # 돌아가는 것이 확인되면 이 줄을 지워 다른 job처럼 실패 시 막게 한다.
+    # 2026-11-11까지의 실행은 모두 러너에 한글 글꼴이 없어 HostOptions.Resolve에서 멈췄다(130건 중 104건 실패, 원인 하나).
+    # 그래서 가상 화면(xvfb)과 OpenGL(소프트웨어 렌더링)로 실제로 그려지는지는 아직 확인하지 못했다.
+    # 글꼴을 넣은 뒤 통과가 확인되면 이 줄을 지워 다른 job처럼 실패 시 막게 한다.
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
-      - name: 창에 필요한 시스템 라이브러리
+      - name: 창에 필요한 시스템 라이브러리와 한글 글꼴
         run: |
           sudo apt-get update
-          sudo apt-get install -y xvfb libsdl2-2.0-0 libopenal1 libgl1 libglu1-mesa mesa-utils libegl1
-      - name: game 전체 솔루션 테스트 (Host 포함)
+          sudo apt-get install -y xvfb libsdl2-2.0-0 libopenal1 libgl1 libglu1-mesa mesa-utils libegl1 fonts-nanum
+          test -f /usr/share/fonts/truetype/nanum/NanumGothic.ttf
+      # 나머지 테스트 프로젝트는 dotnet-tests job이 돌리므로 여기서는 Host 테스트만 돌린다.
+      - name: Host 테스트
         env:
           LIBGL_ALWAYS_SOFTWARE: '1'
-        run: xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" dotnet test game/Rootborn.sln
+          # 러너의 글꼴 위치. 테스트가 운영체제 글꼴 찾기에 기대지 않게 직접 준다(배포용 글꼴은 사용자 결정 대기).
+          ROOTBORN_FONT: /usr/share/fonts/truetype/nanum/NanumGothic.ttf
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" dotnet test game/tests/Rootborn.Host.Tests
