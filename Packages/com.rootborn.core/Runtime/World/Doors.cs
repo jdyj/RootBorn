@@ -20,28 +20,33 @@ namespace Rootborn.Core.World
         public override string ToString() => MapId + "/" + SpawnId;
     }
 
-    /// <summary>문 하나: 맵 원본의 목적지 값(Where/Door), 닿으면 반응하는 상자, 풀린 목적지(모르면 null).</summary>
+    /// <summary>
+    /// 문 하나: 맵 원본의 목적지 값(Where/Door), 닿으면 반응하는 상자, 풀린 목적지(모르면 null),
+    /// 들어선 뒤 열릴 때까지의 시간(null이면 지켜보는 쪽의 기본값).
+    /// </summary>
     public sealed class DoorArea
     {
         public readonly string Target;
         public readonly AreaRect Area;
         public readonly TravelTarget? Destination;
+        public readonly float? OpenSeconds;
 
-        public DoorArea(string target, AreaRect area, TravelTarget? destination)
+        public DoorArea(string target, AreaRect area, TravelTarget? destination, float? openSeconds = null)
         {
             Target = target ?? string.Empty;
             Area = area;
             Destination = destination;
+            OpenSeconds = openSeconds.HasValue ? Math.Max(0f, openSeconds.Value) : (float?)null;
         }
 
         /// <summary>
         /// LDtk Door 엔티티(왼쪽 위 px, 너비, 높이)로 문 상자를 만든다. Unity 판처럼 가운데는 그대로 두고
         /// 너비는 0.75칸, 높이는 1칸보다 작아지지 않게 넓힌다.
         /// </summary>
-        public static DoorArea FromEntity(float x, float y, float width, float height, string target, int cellSize, TravelTarget? destination)
+        public static DoorArea FromEntity(float x, float y, float width, float height, string target, int cellSize, TravelTarget? destination, float? openSeconds = null)
         {
             float w = Math.Max(0.75f * cellSize, width), h = Math.Max(1f * cellSize, height);
-            return new DoorArea(target, AreaRect.Centered(x + width / 2f, y + height / 2f, w, h), destination);
+            return new DoorArea(target, AreaRect.Centered(x + width / 2f, y + height / 2f, w, h), destination, openSeconds);
         }
     }
 
@@ -77,7 +82,7 @@ namespace Rootborn.Core.World
 
     /// <summary>
     /// 문에 들어서는 것을 지켜본다. 몸 상자가 문 상자에 새로 겹치는 순간(Unity 판 OnTriggerEnter2D) 문이 열리기 시작하고,
-    /// 정해진 시간(Unity 판 0.35초)이 지나면 그 문을 돌려준다. 열리기 시작한 뒤에는 걸어 나가도 이어진다.
+    /// 정해진 시간(문에 시간이 있으면 그 값, 없으면 기본값 — Unity 판 실내 문 0.35초)이 지나면 그 문을 돌려준다. 열리기 시작한 뒤에는 걸어 나가도 이어진다.
     /// 도착했을 때 이미 겹쳐 있던 문은 한 번 나갔다 다시 들어와야 반응한다.
     /// skin만큼 떨어져 있어도 겹친 것으로 친다: Unity 판 물리(Box2D)는 모양마다 0.01유닛 껍질이 있어 벽에 붙어 선 몸이 벽과 같은 선의 문 상자에 닿았다.
     /// </summary>
@@ -126,7 +131,7 @@ namespace Rootborn.Core.World
             }
             if (Opening == null) return null;
             _elapsed += Math.Max(0f, dt);
-            if (_elapsed + 1e-5f < _openSeconds) return null;
+            if (_elapsed + 1e-5f < (Opening.OpenSeconds ?? _openSeconds)) return null;
             DoorArea done = Opening;
             Opening = null;
             _elapsed = 0f;

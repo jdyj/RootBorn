@@ -76,7 +76,10 @@ namespace Rootborn.World.Tests
             Assert.That(active["hospital"].Area, Is.EqualTo(AreaRect.Centered(50f * 32, 43f * 32, 64, 64)));
             Assert.That(active["police"].Area, Is.EqualTo(AreaRect.Centered(24.5f * 32, 40f * 32, 32, 64)));
             Assert.That(active["kitchen"].Area, Is.EqualTo(AreaRect.Centered(24.5f * 32, 56f * 32, 32, 64)));
-            Assert.That(active.Count, Is.EqualTo(5), "값이 비었거나 표에 없는 문(north 등)은 열리지 않는다");
+            Assert.That(active["beach"].Area, Is.EqualTo(new AreaRect(496f, 2012.8f, 1408f, 44.8f)), "LDtk 문이 아니라 맵 목록의 경계 구역(TownLevelTransition_Level0ToLevel1)");
+            Assert.That(active["beach"].OpenSeconds, Is.EqualTo(0.25f));
+            Assert.That(active["house"].OpenSeconds, Is.EqualTo(0.8f), "Town.unity 자동문 _openingDuration 0.8");
+            Assert.That(active.Count, Is.EqualTo(6), "LDtk 문 5개 + 해변 경계. 값이 비었거나 표에 없는 문(north 등)은 열리지 않는다");
         }
 
         private static HashSet<(int, int)> UnityBaked(string mapId)
@@ -148,7 +151,7 @@ namespace Rootborn.World.Tests
                 var grown = new AreaRect(door.Area.X - 1, door.Area.Y - 1, door.Area.W + 2, door.Area.H + 2);
                 if (reached.Any(c => new AreaRect(c.X * size, c.Y * size, size, size).Overlaps(grown))) walkable.Add(door.Target);
             }
-            CollectionAssert.AreEquivalent(new[] { "house", "shopping center", "police", "kitchen" }, walkable,
+            CollectionAssert.AreEquivalent(new[] { "house", "shopping center", "police", "kitchen", "beach" }, walkable,
                 "병원 문은 Unity 판에서도 건물 계단 타일(칸 전체 충돌) 세 줄에 막혀 걸어서 닿지 않는다 — LDtk를 고칠지는 사용자 결정");
         }
 

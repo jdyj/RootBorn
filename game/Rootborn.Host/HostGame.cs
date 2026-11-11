@@ -43,6 +43,8 @@ namespace Rootborn.Host
         public SampleScreen Sample { get; private set; }
         public WorldScreen World { get; private set; }
         public UiTree Ui => _tree;
+        /// <summary>마지막으로 그린 화면 버퍼(스크린샷과 같은 그림).</summary>
+        public RenderTarget2D Scene => _scene;
 
         /// <summary>글자 칸이 선택되어 입력기가 켜져 있다.</summary>
         public bool TextInputActive => _textInput != null && _textInput.Active;
@@ -72,7 +74,7 @@ namespace Rootborn.Host
             _measurer = new HostTextMeasurer(_text);
             _renderer = new UiRenderer(GraphicsDevice, _sheet, _text);
             _textInput = new TextInputDevice(Window);
-            if (_options.World != null)
+            if (_options.WorldActive)
             {
                 World = new WorldScreen(GraphicsDevice, _options);
                 SetTree(new UiTree());
@@ -149,6 +151,7 @@ namespace Rootborn.Host
             {
                 float dt = _options.TestMode ? TestFrameSeconds : (float)gameTime.ElapsedGameTime.TotalSeconds;
                 World.Update(keys.MoveX, keys.MoveY, dt);
+                if (keys.Interact && _tree.Focused == null) World.Interact();
             }
             if (keys.Screenshot) SaveScreenshot(Path.Combine(_options.EvidenceDir, "manual-" + (++_shotCount).ToString("00") + ".png"));
 

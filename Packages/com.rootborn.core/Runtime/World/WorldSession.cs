@@ -45,6 +45,9 @@ namespace Rootborn.Core.World
         public int Travels { get; private set; }
         public string LastProblem { get; private set; }
 
+        /// <summary>도착을 기록하는 곳(세이브 슬롯). 없으면 기록하지 않는다. 기록이 거절되면 그 맵으로 옮기지 않는다.</summary>
+        public IWorldArrivals Arrivals { get; set; }
+
         public WorldSession(IWorldMapSource source, WalkerSettings settings)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
@@ -53,14 +56,18 @@ namespace Rootborn.Core.World
 
         public DoorArea OpeningDoor => _doors?.Opening;
 
-        /// <summary>맵에 들어간다. 도착 지점 id가 없거나 맵에 없으면 거절한다(지금 상태는 그대로).</summary>
-        public bool Enter(string mapId, string spawnId)
+        /// <summary>
+        /// 맵에 들어간다. 도착 지점 id가 없거나 맵에 없거나 도착 기록이 거절되면 들어가지 않는다(지금 상태는 그대로).
+        /// displayName은 도착 기록에 남는 문 이름(Unity LastPortalDisplayName).
+        /// </summary>
+        public bool Enter(string mapId, string spawnId, string displayName = null)
         {
             WorldMap map;
             try { map = _source.Load(mapId); }
             catch (Exception e) { LastProblem = "맵 " + mapId + "을 불러오지 못했다: " + e.Message; return false; }
             if (map == null) { LastProblem = "맵이 없다: " + mapId; return false; }
             if (!map.TryGetSpawn(spawnId, out var point)) { LastProblem = "맵 " + mapId + "에 도착 지점 " + spawnId + "이 없다"; return false; }
+            if (Arrivals != null && !Arrivals.Record(map.Id, spawnId, displayName)) { LastProblem = Arrivals.LastProblem ?? "도착을 기록하지 못했다"; return false; }
             Facing facing = Walker?.Facing ?? Facing.Down;
             Map = map;
             Walker = new Walker(_settings, map.Grid.CellSize);
@@ -80,7 +87,7 @@ namespace Rootborn.Core.World
             DoorArea door = _doors.Update(Walker.Box, dt);
             if (door == null || !door.Destination.HasValue) return false;
             TravelTarget target = door.Destination.Value;
-            if (!Enter(target.MapId, target.SpawnId)) return false;
+            if (!Enter(target.MapId, target.SpawnId, door.Target)) return false;
             Travels++;
             return true;
         }

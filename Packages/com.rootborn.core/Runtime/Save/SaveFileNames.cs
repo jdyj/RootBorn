@@ -18,6 +18,15 @@ namespace Rootborn.Core.Save
 
         public const string QuestLog = "quest-log.json";
 
+        /// <summary>슬롯 정보(Unity SaveService).</summary>
+        public const string Metadata = "metadata.json";
+
+        /// <summary>지금 있는 장면과 입구(Unity WorldEntryService). 월드 상태(WorldState) 파일이 아니다.</summary>
+        public const string WorldProgress = "world-progress.json";
+
+        /// <summary>옷 선택(Unity WearableWardrobeStore.FileNameFor): 글자·숫자·'-'·'_' 밖은 '_'. 빈 id는 "wearables-.json".</summary>
+        public static string Wearables(string playerId) => "wearables-" + Sanitize(playerId) + ".json";
+
         /// <summary>월드 상태 중 Shared·SaveSlot 범위만 담는 슬롯 공유 파일.</summary>
         public const string WorldStateShared = "world-state-progress-shared.json";
 

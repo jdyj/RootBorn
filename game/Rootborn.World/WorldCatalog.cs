@@ -17,6 +17,8 @@ namespace Rootborn.World
         public float ViewCells;
         public string CollisionRule;
         public List<string> CollisionLayers = new List<string>();
+        /// <summary>충돌 규칙이 막아도 열어 둘 칸(Unity 씬에 구워진 충돌에 없던 칸). 칸 좌표는 그림 기준.</summary>
+        public List<CellPos> OpenCells = new List<CellPos>();
         public string DoorEntity = "Door";
         /// <summary>문 엔티티에서 목적지 값을 읽는 칸(실내 Where, 마을 Door).</summary>
         public string DoorField;
@@ -27,8 +29,23 @@ namespace Rootborn.World
         /// 한 줄 위에 놓아, 게임에서는 문과 칠한 칸이 그림보다 한 줄 아래에 있었다. 그 판에 맞춰 만든 맵은 1로 둔다.
         /// </summary>
         public int EntityRowShift;
+        /// <summary>시각에 따라 화면 색을 바꾸는가(Unity 판 씬에 낮밤 조명이 있었는가).</summary>
+        public bool DayNight;
+        /// <summary>LDtk 문이 들어선 뒤 열릴 때까지의 시간. null이면 Core 기본값(Unity 실내 문 0.35초).</summary>
+        public float? DoorOpenSeconds;
+        /// <summary>LDtk에 없는 경계 구역(Unity 씬의 TownLevelTransitionTrigger 등). 들어서면 문처럼 목적지로 간다.</summary>
+        public readonly List<MapArea> Areas = new List<MapArea>();
         public Dictionary<string, TravelTarget> Doors = new Dictionary<string, TravelTarget>(StringComparer.Ordinal);
         public Dictionary<string, (float X, float Y)> Spawns = new Dictionary<string, (float X, float Y)>(StringComparer.Ordinal);
+    }
+
+    /// <summary>데이터로 정한 이동 구역 하나: 맵 픽셀 사각형(그림 기준, 줄 밀기 없음), 이름, 목적지, 열리는 시간.</summary>
+    public sealed class MapArea
+    {
+        public string Name;
+        public AreaRect Rect;
+        public TravelTarget Destination;
+        public float? OpenSeconds;
     }
 
     /// <summary>
@@ -74,11 +91,27 @@ namespace Rootborn.World
                 if (!seen.Add(entry.Id)) throw new InvalidDataException(sourceName + ": 맵 id가 겹친다: " + entry.Id);
                 if (m.TryGetProperty("doorEntity", out JsonElement de)) entry.DoorEntity = de.GetString();
                 if (m.TryGetProperty("entityRowShift", out JsonElement shift)) entry.EntityRowShift = shift.GetInt32();
+                if (m.TryGetProperty("dayNight", out JsonElement dayNight)) entry.DayNight = dayNight.GetBoolean();
+                if (m.TryGetProperty("doorOpenSeconds", out JsonElement openSeconds)) entry.DoorOpenSeconds = openSeconds.GetSingle();
+                if (m.TryGetProperty("areas", out JsonElement areas))
+                    foreach (JsonElement a in areas.EnumerateArray())
+                    {
+                        JsonElement r = a.GetProperty("rect"), to = a.GetProperty("to");
+                        entry.Areas.Add(new MapArea
+                        {
+                            Name = Required(a, "name", sourceName),
+                            Rect = new AreaRect(r[0].GetSingle(), r[1].GetSingle(), r[2].GetSingle(), r[3].GetSingle()),
+                            Destination = new TravelTarget(Required(to, "map", sourceName), Required(to, "spawn", sourceName)),
+                            OpenSeconds = a.TryGetProperty("openSeconds", out JsonElement s) ? s.GetSingle() : (float?)null,
+                        });
+                    }
                 JsonElement collision = m.GetProperty("collision");
                 entry.CollisionRule = Required(collision, "rule", sourceName);
                 if (collision.TryGetProperty("layers", out JsonElement layers))
                     foreach (JsonElement l in layers.EnumerateArray()) entry.CollisionLayers.Add(l.GetString());
                 CollisionRules.Create(entry.CollisionRule, entry.CollisionLayers); // 모르는 규칙은 여기서 알린다
+                if (collision.TryGetProperty("openCells", out JsonElement open))
+                    foreach (JsonElement c in open.EnumerateArray()) entry.OpenCells.Add(new CellPos(c[0].GetInt32(), c[1].GetInt32()));
                 foreach (JsonProperty door in m.GetProperty("doors").EnumerateObject())
                     entry.Doors[door.Name] = new TravelTarget(Required(door.Value, "map", sourceName), Required(door.Value, "spawn", sourceName));
                 foreach (JsonProperty spawn in m.GetProperty("spawns").EnumerateObject())

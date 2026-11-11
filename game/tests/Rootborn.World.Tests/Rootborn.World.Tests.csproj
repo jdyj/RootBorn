@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- 맵 읽기 테스트. 화면 없이 돈다(자동 테스트). 실제 LDtk 파일과 맵 목록을 읽는다. -->
+  <!-- 맵 읽기 테스트. 화면 없이 돈다(자동 테스트). 실제 LDtk 파일과 맵 목록을 읽는다.
+       Rootborn.Data는 세이브 파일 저장소(FileSaveStore)로 고정 세이브를 읽을 때만 쓴다. -->
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>disable</Nullable>
@@ -7,6 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../Rootborn.World/Rootborn.World.csproj" />
+    <ProjectReference Include="../../Rootborn.Data/Rootborn.Data.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageReference Include="NUnit" Version="3.14.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />

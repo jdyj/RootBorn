@@ -56,7 +56,7 @@ namespace Rootborn.Host.Tests
         }
     }
 
-    public enum TestKey { Up, Down, Left, Right, Tab, Enter, Backspace, Escape, LeftShift }
+    public enum TestKey { Up, Down, Left, Right, Tab, Enter, Backspace, Escape, LeftShift, E, Space }
 
     /// <summary>
     /// 플레이어를 대신해 조작한다. 근거의 종류:
@@ -96,6 +96,8 @@ namespace Rootborn.Host.Tests
                 case TestKey.Down: return (81, 0x40000051);
                 case TestKey.Up: return (82, 0x40000052);
                 case TestKey.LeftShift: return (225, 0x400000E1);
+                case TestKey.E: return (8, 'e');
+                case TestKey.Space: return (44, ' ');
                 default: throw new ArgumentOutOfRangeException(nameof(key));
             }
         }
@@ -256,6 +258,20 @@ namespace Rootborn.Host.Tests
         public void WalkTo(CellPos cell)
         {
             if (!FollowPath(c => c.Equals(cell), "걸어가기 " + cell)) throw new InvalidOperationException("걸어가는 도중 맵이 바뀌었다: " + World.Map.Id);
+        }
+
+        /// <summary>맵의 한 지점(픽셀) 가까이까지 걷는다: 가운데가 그 지점에서 within 픽셀 안인 칸 중 가장 가까운 길의 끝.</summary>
+        public void WalkNear(float x, float y, float within)
+        {
+            int size = World.Map.Grid.CellSize;
+            bool Close(CellPos c)
+            {
+                var center = CellPos.Center(c, size);
+                float dx = center.X - x, dy = center.Y - y;
+                return dx * dx + dy * dy <= within * within;
+            }
+            if (Close(PlayerCell)) return;
+            if (!FollowPath(Close, "가까이 걷기 (" + x + "," + y + ")")) throw new InvalidOperationException("걸어가는 도중 맵이 바뀌었다: " + World.Map.Id);
         }
 
         /// <summary>

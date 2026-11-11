@@ -58,7 +58,7 @@ namespace Rootborn.World
             var doors = new List<DoorArea>();
             CollisionInput input = CollisionInputOf(entry, level, doors, map.Problems);
             ICollisionRule rule = CollisionRules.Create(entry.CollisionRule, entry.CollisionLayers);
-            map.World = new WorldMap(entry.Id, CollisionBaker.Bake(input, rule), doors, entry.Spawns);
+            map.World = new WorldMap(entry.Id, Open(CollisionBaker.Bake(input, rule), entry.OpenCells), doors, entry.Spawns);
             map.Picture = MapPicture.From(level);
             map.Problems.AddRange(map.Picture.Problems);
             return map;
@@ -98,11 +98,33 @@ namespace Rootborn.World
             {
                 string where = e.Field(entry.DoorField);
                 TravelTarget? destination = routes.Resolve(where, entry.SpawnField != null ? e.Field(entry.SpawnField) : null);
-                DoorArea door = DoorArea.FromEntity(e.Left, e.Top + entry.EntityRowShift * cell, e.Width, e.Height, where, cell, destination);
+                DoorArea door = DoorArea.FromEntity(e.Left, e.Top + entry.EntityRowShift * cell, e.Width, e.Height, where, cell, destination, entry.DoorOpenSeconds);
                 doors.Add(door);
                 if (destination.HasValue) exits.Add(door.Area);
             }
+            foreach (MapArea area in entry.Areas)
+            {
+                var door = new DoorArea(area.Name, area.Rect, area.Destination, area.OpenSeconds);
+                doors.Add(door);
+                exits.Add(door.Area);
+            }
             return new CollisionInput(grid, layers, exits, painted);
+        }
+
+        /// <summary>맵 목록의 openCells를 연다(Unity 씬의 구운 충돌에 없던 칸).</summary>
+        private static CollisionGrid Open(CollisionGrid baked, List<CellPos> openCells)
+        {
+            if (openCells == null || openCells.Count == 0) return baked;
+            MapGrid grid = baked.Grid;
+            var blocked = new bool[grid.Count];
+            for (int y = 0; y < grid.Rows; y++)
+                for (int x = 0; x < grid.Columns; x++) blocked[grid.Index(x, y)] = baked.IsBlocked(x, y);
+            foreach (CellPos c in openCells) if (grid.Contains(c.X, c.Y)) blocked[grid.Index(c.X, c.Y)] = false;
+            var outside = new List<CellPos>();
+            for (int y = -4; y < grid.Rows + 4; y++) // 출구 상자가 맵 밖으로 몇 칸까지 연 칸
+                for (int x = -4; x < grid.Columns + 4; x++)
+                    if (!grid.Contains(x, y) && !baked.IsBlocked(x, y)) outside.Add(new CellPos(x, y));
+            return new CollisionGrid(grid, blocked, outside);
         }
 
         private static int[] ShiftRows(int[] cells, int columns, int rows)

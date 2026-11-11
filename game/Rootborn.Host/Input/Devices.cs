@@ -34,6 +34,8 @@ namespace Rootborn.Host.Input
     public struct KeyFrame
     {
         public bool Up, Down, Left, Right, Tab, Enter, Escape, Screenshot, Shift;
+        /// <summary>상호작용 키(Unity GatherInteractor: E, Space, 왼쪽·오른쪽 Ctrl)가 이번 프레임에 눌렸다.</summary>
+        public bool Interact;
         public bool HeldUp, HeldDown, HeldLeft, HeldRight;
 
         /// <summary>누르고 있는 방향 키로 정한 걷기 방향(-1, 0, 1). 반대 방향을 함께 누르면 0.</summary>
@@ -59,6 +61,7 @@ namespace Rootborn.Host.Input
                 Enter = Pressed(now, Keys.Enter),
                 Escape = Pressed(now, Keys.Escape),
                 Screenshot = Pressed(now, Keys.F12),
+                Interact = Pressed(now, Keys.E) || Pressed(now, Keys.Space) || Pressed(now, Keys.LeftControl) || Pressed(now, Keys.RightControl),
                 Shift = now.IsKeyDown(Keys.LeftShift) || now.IsKeyDown(Keys.RightShift),
                 HeldUp = now.IsKeyDown(Keys.Up) || now.IsKeyDown(Keys.W),
                 HeldDown = now.IsKeyDown(Keys.Down) || now.IsKeyDown(Keys.S),
