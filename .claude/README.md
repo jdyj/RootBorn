@@ -1,6 +1,6 @@
 # .claude/ — ROOTBORN 에이전트 설정
 
-ROOTBORN은 MonoGame 판(`game/`, `Packages/com.rootborn.core`, `data/`)이다. 최상위 규칙은 `AGENTS.md`(Claude·Codex 공통)와 이 폴더의 헌법·규칙 문서다.
+ROOTBORN은 MonoGame 판(`game/`, `game/Rootborn.Core`, `data/`)이다. 최상위 규칙은 `AGENTS.md`(Claude·Codex 공통)와 이 폴더의 헌법·규칙 문서다.
 
 ## 무엇이 어디에 있나
 
@@ -8,7 +8,7 @@ ROOTBORN은 MonoGame 판(`game/`, `Packages/com.rootborn.core`, `data/`)이다. 
 |---|---|
 | `constitution.md` | 헌법(최상위 규칙) |
 | `rules/*.md` | 세부 규칙. 목록은 `AGENTS.md` "규칙 문서". 규칙이 바뀐 이력은 `rules/changelog.md` |
-| `skills/` | 되풀이 절차: `port-rule-to-core`, `parallel-claude-session`, `host-play-test`, `ui-nine-slice-skin`, `game-code-review`, `feedback-constitution-update`. 앞의 네 개는 `.agents/skills/`에 같은 내용이 있다(Codex용) |
+| `skills/` | 되풀이 절차: `parallel-claude-session`, `host-play-test`, `ui-nine-slice-skin`, `game-code-review`, `feedback-constitution-update`. 앞의 네 개는 `.agents/skills/`에 같은 내용이 있다(Codex용) |
 | `agents/` | `code-reviewer`, `test-designer`, `test-result-analyzer`, `bug-fixer`, `feedback-analyzer`, `constitution-updater`. 각 파일이 읽을 규칙 문서와 지킬 것을 적는다 |
 | `hooks/` | `detect-feedback.js`(부정적 피드백 감지 → `feedback-constitution-update` 스킬 유도), `session-hint.sh`(세션당 1회 브랜치·마지막 커밋 표시) |
 | `settings.json` | 훅 연결과 권한 목록 |

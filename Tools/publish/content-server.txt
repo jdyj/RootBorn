@@ -12,3 +12,5 @@ data/**/*.json
 !data/export-report.json
 !data/localization/**
 game/economy.json
+# 시간 규칙: 데이터 폴더 옆의 game/time.json(하루 시작, 취침 시각 등). 없으면 게임이 시작하지 않는다.
+game/time.json

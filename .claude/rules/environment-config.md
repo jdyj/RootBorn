@@ -19,7 +19,7 @@
 ## 리뷰 때 볼 것
 
 ```bash
-git grep -nE "127\.0\.0\.1|localhost|https?://[0-9]+\.|[A-Z]:[\\/]" -- game Tools Scripts Packages/com.rootborn.core
+git grep -nE "127\.0\.0\.1|localhost|https?://[0-9]+\.|[A-Z]:[\\/]" -- game Tools Scripts
 ```
 
 걸린 것이 테스트용이거나 안전한 기본값이면 왜 안전한지 주석을 단다. 실행 경로의 값이면 인자·환경 변수로 뺀다.

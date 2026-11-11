@@ -33,7 +33,7 @@ ROOTBORN은 도시 생활 성장 시뮬레이션이다. 2026-11-11부터 Unity�
 
 ## 저장소 구조
 
-- `Packages/com.rootborn.core/Runtime` — `Rootborn.Core`: 게임 규칙, 진행 상태, 세이브 모양, 월드 판정
+- `game/Rootborn.Core/src` — `Rootborn.Core`: 게임 규칙, 진행 상태, 세이브 모양, 월드 판정
 - `game/` — MonoGame 판: `Rootborn.Data`(데이터 읽기, 세이브 파일), `Rootborn.Game`(게임 한 판 `GameSession`), `Rootborn.World`(맵), `Rootborn.Ui`(UI 부품), `Rootborn.Screens`(화면), `Rootborn.Net`(멀티플레이 바탕), `Rootborn.Host`(실행 프로그램), `tests/`, `world/`(맵 목록과 상호작용 지점), `themes/`(UI 그림), `localization/`(더한 문구)
 - `data/` — 게임 데이터 JSON의 원본. 손으로 고친다. 고치는 법은 `data/README.md`
 - `Tools/` — Core 테스트, 배포 빌드(`Tools/publish`), UI 테두리 재기(`Tools/ui-nine-slice`)
@@ -47,7 +47,7 @@ ROOTBORN은 도시 생활 성장 시뮬레이션이다. 2026-11-11부터 Unity�
 
 ```bash
 export PATH="$HOME/.dotnet:$PATH" DOTNET_ROOT="$HOME/.dotnet"
-dotnet test Tools/Rootborn.Core.Tests          # 규칙
+dotnet test game/tests/Rootborn.Core.Tests          # 규칙
 dotnet test game/Rootborn.sln                  # 데이터, 맵, 게임 진행, 화면, 실제 창
 bash Scripts/ci/run-all.sh --checks-only       # 정적 검사
 dotnet run --project game/Rootborn.Host        # 실행(슬롯 선택부터)

@@ -7,7 +7,7 @@ Unity 판은 저장소에서 지웠다(태그 `unity-playable-20261111`). `Asset
 
 | 프로젝트 | 하는 일 | 참조할 수 있는 것 |
 |---|---|---|
-| `Rootborn.Core` (`Packages/com.rootborn.core/Runtime`) | 게임 규칙, 진행 상태, 세이브 모양, 월드 판정 | 없음 |
+| `Rootborn.Core` (`game/Rootborn.Core/src`) | 게임 규칙, 진행 상태, 세이브 모양, 월드 판정 | 없음 |
 | `game/Rootborn.Data` | `data/` JSON으로 Core 정의 만들기, 세이브 파일 저장소 | Core |
 | `game/Rootborn.Game` | 게임 한 판(`GameSession`): 영역을 잇고 저장한다 | Core, Data |
 | `game/Rootborn.World` | LDtk와 `game/world/*.json`으로 Core 월드와 그릴 목록 만들기 | Core, Data |
@@ -21,9 +21,7 @@ Unity 판은 저장소에서 지웠다(태그 `unity-playable-20261111`). `Asset
 
 ## Core 제약
 
-- `UnityEngine`, `System.Text.Json`, `System.IO`를 참조하지 않는다. asmdef `noEngineReferences: true`. 왜: Core는 엔진·파일·JSON 라이브러리와 무관해야 어디서든 돈다. CI `check-core-references.sh`가 막는다.
-- LangVersion 9: 파일 범위 네임스페이스, `record`, `global using`을 쓰지 않는다. 왜: Unity 판이 같은 폴더를 패키지로 읽는다.
-- 새 `.cs`와 새 폴더마다 `.meta`(`fileFormatVersion: 2`, 새 32자리 guid)를 함께 커밋한다. CI `check-meta-files.sh`.
+- `UnityEngine`, `System.Text.Json`, `System.IO`를 참조하지 않는다. 왜: Core는 엔진·파일·JSON 라이브러리와 무관해야 어디서든 돈다. CI `check-core-references.sh`가 막는다.
 - 값은 생성자로 받는다. 엔진·전역 상태(시계, 레지스트리, 저장 서비스)에 닿던 자리는 값이나 인터페이스로 받는다. 왜: 테스트가 생성자만으로 규칙을 만들 수 있게.
 - 다른 엔티티는 객체가 아니라 **id 문자열**로 가리킨다. 엔티티 id로 분기하지 않는다(`rules/data-driven.md`).
 - 세이브 모양 클래스는 필드 이름과 형을 바꾸지 않는다. 왜: 옛 세이브를 계속 읽어야 한다. 바꿀 일이 생기면 형식 버전(`Version`)으로 다룬다.

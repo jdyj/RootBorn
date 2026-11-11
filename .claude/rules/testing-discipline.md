@@ -15,7 +15,7 @@
 
 | 프로젝트 | 무엇을 | 근거의 종류 |
 |---|---|---|
-| `Tools/Rootborn.Core.Tests` | Core 규칙 단위(생성자로 만든 정의, 메모리 저장소) | 자동 테스트 |
+| `game/tests/Rootborn.Core.Tests` | Core 규칙 단위(생성자로 만든 정의, 메모리 저장소) | 자동 테스트 |
 | `game/tests/Rootborn.Data.Tests` | 정의 로더, 실제 `data/` 전체 읽기(`RealDataTests`), 세이브 저장소, 옛 세이브 고정 파일 | 자동 테스트 |
 | `game/tests/Rootborn.World.Tests` | 맵 만들기, 새 맵 검사(`MapContractTests`), 메인 체인 지점까지 칸 단위 걷기(`MainChainWalkTests`) | 자동 테스트(화면 근거 아님) |
 | `game/tests/Rootborn.Game.Tests` | `GameSession` 명령만으로 흐름(메인 체인, 성인기, 보상 한 번, 이어 하기). 실제 `data/`, 임시 폴더 저장소 | 자동 테스트(화면 근거 아님) |
@@ -32,9 +32,9 @@
 
 ```bash
 export PATH="$HOME/.dotnet:$PATH" DOTNET_ROOT="$HOME/.dotnet"
-dotnet test Tools/Rootborn.Core.Tests
-dotnet test game/Rootborn.sln
-bash Scripts/ci/run-all.sh --checks-only   # 정적 검사 6개(Scripts/ci/README.md)
+dotnet test game/Rootborn.sln                 # 전부(Core 포함)
+dotnet test game/tests/Rootborn.Core.Tests    # 규칙만
+bash Scripts/ci/run-all.sh --checks-only   # 정적 검사(Scripts/ci/README.md)
 bash Scripts/ci/run-all.sh                 # 자체 시험 + 검사 + dotnet 테스트 전부
 ```
 

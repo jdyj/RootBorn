@@ -17,6 +17,8 @@ data/**/*.json
 !data/atlases/**
 # 돈 설정: 데이터 폴더 옆의 game/economy.json(통화 아이템). 정의를 만들 때 읽고 데이터 지문에도 들어간다(서버와 같은 지문).
 game/economy.json
+# 시간 규칙: 데이터 폴더 옆의 game/time.json(하루 시작, 취침 시각 등). 없으면 게임이 시작하지 않는다.
+game/time.json
 
 # --- 월드: 맵 목록, 상호작용 지점 ---
 game/world/*.json

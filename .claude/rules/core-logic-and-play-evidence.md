@@ -4,8 +4,8 @@ Claude와 Codex 모두 따른다. 2026-11-07 사용자 결정. MonoGame 판 기�
 
 ## 1. 게임 규칙은 엔진과 무관한 Core에 있다
 
-- 진행도, 조건 판정, 보상 계산, 일정, 퀘스트·업적 평가, 세이브 모양, 월드 판정(걷기·충돌·문·상호작용 범위)은 `Rootborn.Core`(`Packages/com.rootborn.core/Runtime`)에 있다. 엔진·파일·JSON 라이브러리를 참조하지 않는다(CI가 막는다).
-- 규칙 단위 테스트는 `dotnet test Tools/Rootborn.Core.Tests`로 엔진 없이 몇 초에 돈다. 같은 동작을 다른 층에서 중복 검증하지 않는다.
+- 진행도, 조건 판정, 보상 계산, 일정, 퀘스트·업적 평가, 세이브 모양, 월드 판정(걷기·충돌·문·상호작용 범위)은 `Rootborn.Core`(`game/Rootborn.Core/src`)에 있다. 엔진·파일·JSON 라이브러리를 참조하지 않는다(CI가 막는다).
+- 규칙 단위 테스트는 `dotnet test game/tests/Rootborn.Core.Tests`로 엔진 없이 몇 초에 돈다. 같은 동작을 다른 층에서 중복 검증하지 않는다.
 - 새 규칙도 Core에 쓴다. 화면·Host에 규칙 판단을 쓰지 않는다. 자세한 제약은 `rules/coding-standards.md`.
 
 ## 2. "확인했다"는 실제 입력으로 확인한 것만 쓴다
