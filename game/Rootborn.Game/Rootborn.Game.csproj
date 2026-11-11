@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 게임 한 판(GameSession): Core 규칙과 Data 정의를 한 번만 잇는다. 규칙 판단은 Core에 있다. 게임 엔진 참조 금지. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Rootborn.Core/Rootborn.Core.csproj" />
+    <ProjectReference Include="../Rootborn.Data/Rootborn.Data.csproj" />
+  </ItemGroup>
+</Project>
