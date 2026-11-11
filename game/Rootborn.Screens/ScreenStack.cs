@@ -11,7 +11,9 @@ namespace Rootborn.Screens
     /// 큰 패널은 한 번에 하나(Unity ModernUiPanelInputRouter의 배타 규칙), 모달·알림은 위로 쌓인다.
     /// 이동을 막는지는 화면마다 등록할 때 정하고(Unity UiGameplayInputLock 대신), Host는 MovementBlocked로 묻는다.
     /// 키 처리 순서: 글자 칸 포커스 → 열린 화면이 가져가는 키(위에서부터) → 키 배정 표 → 맨 위 화면 안에서 포커스 이동.
-    /// 이동을 막지 않는 화면이 맨 위면 방향 키는 가져가지 않는다(Tab·Shift+Tab·Enter만). 캐릭터가 걷는다.
+    /// 이동을 막지 않는 화면이 맨 위면 방향 키만으로는 가져가지 않는다(캐릭터가 걷는다). 그런 화면에서 포커스 이동은 Shift+방향 키,
+    /// 실행은 Enter다. Tab은 목표 수첩을 여는 키라 포커스 이동에 쓰지 않는다(설계 3.1절, 2026-11-12).
+    /// Host는 월드에서 일어난 일(맵 들어감, 앞의 상호작용 대상, 상호작용)을 EnterMap·SetInteractionTarget·Interaction으로 넘긴다.
     /// </summary>
     public sealed class ScreenStack
     {
@@ -34,6 +36,7 @@ namespace Rootborn.Screens
             _modalBlocker = _layers[(int)ScreenLayer.Modal].Add(new UiNode { Id = "modal-blocker", Interactive = true, Visible = false });
             if (_services.Commands != null) _services.Commands.Changed += NotifyChanged;
             _services.Text.LanguageChanged += () => NotifyChanged(ChangeTopics.Language);
+            foreach (Action<ScreenServices> attach in registry.Listeners) attach(_services);
         }
 
         public UiTree Tree { get; } = new UiTree();
@@ -72,11 +75,29 @@ namespace Rootborn.Screens
 
         public bool IsOpen(string id) => _screens.TryGetValue(id, out GameScreen s) && s.IsOpen;
 
+        /// <summary>등록 표에 그 화면이 있다(아직 옮기지 않은 화면을 여는 버튼은 이것으로 본다).</summary>
+        public bool Has(string id) => _registry.Has(id);
+
+        /// <summary>
+        /// 캐릭터가 걷지 못한다: MovementBlocked이거나, Shift를 누른 채 포커스를 받는 화면이 떠 있다(Shift+방향 키는 버튼 사이를 옮긴다).
+        /// </summary>
+        public bool MovementBlockedWhile(bool shiftHeld) => MovementBlocked || (shiftHeld && FocusScreen != null);
+
         /// <summary>만들어진 화면(열린 적이 있으면). 없으면 null.</summary>
         public GameScreen Find(string id) => _screens.TryGetValue(id, out GameScreen s) ? s : null;
 
         public event Action<GameScreen> Opened;
         public event Action<GameScreen> Closed;
+        /// <summary>월드의 상호작용이 있었다. 두 번째 값은 그 종류로 열린 화면(없으면 null).</summary>
+        public event Action<InteractionEvent, GameScreen> Interacted;
+        /// <summary>앞의 상호작용 대상이 바뀌거나 화면에서 움직였다.</summary>
+        public event Action TargetChanged;
+
+        /// <summary>지금 맵 id(Host가 EnterMap으로 넘긴다). 모르면 빈 글자.</summary>
+        public string MapId { get; private set; } = string.Empty;
+
+        /// <summary>지금 상호작용 키를 누르면 반응할 대상(없으면 null).</summary>
+        public InteractionTargetView? Target { get; private set; }
 
         public void Layout(float width, float height)
         {
@@ -99,8 +120,15 @@ namespace Rootborn.Screens
             return screen;
         }
 
+        /// <summary>등록된 HUD 층 화면을 모두 연다(Host가 월드를 띄울 때 한 번).</summary>
+        public void OpenHud()
+        {
+            foreach (ScreenEntry entry in _registry.Screens)
+                if (entry.Layer == ScreenLayer.Hud && !IsOpen(entry.Id)) Open(entry.Id);
+        }
+
         /// <summary>화면을 연다. 이미 열려 있으면 그 층의 맨 위로 올리고 다시 알린다. 큰 패널은 다른 패널을 닫는다.</summary>
-        public GameScreen Open(string id, InteractionEvent? interaction = null)
+        public GameScreen Open(string id, InteractionEvent? interaction = null, object argument = null)
         {
             GameScreen screen = Get(id);
             if (screen.Layer == ScreenLayer.Panel)
@@ -115,7 +143,7 @@ namespace Rootborn.Screens
             screen.Root.Visible = true;
             screen.IsOpen = true;
             Refresh();
-            screen.OnOpened(new ScreenOpenContext(interaction));
+            screen.OnOpened(new ScreenOpenContext(interaction, argument));
             Opened?.Invoke(screen);
             return screen;
         }
@@ -189,9 +217,10 @@ namespace Rootborn.Screens
                 {
                     case ScreenKey.Escape: Tree.SetFocus(null); break;
                     case ScreenKey.Enter: Tree.Submit(); break;
-                    case ScreenKey.Tab: Tree.Navigate(shift ? UiNav.Previous : UiNav.Next); break;
                     case ScreenKey.Left: Tree.Navigate(UiNav.Left); break;
                     case ScreenKey.Right: Tree.Navigate(UiNav.Right); break;
+                    case ScreenKey.Up: if (shift) Tree.Navigate(UiNav.Up); break;
+                    case ScreenKey.Down: if (shift) Tree.Navigate(UiNav.Down); break;
                 }
                 return true; // 글자 칸이 잡고 있는 동안 키 배정과 월드는 키를 보지 않는다
             }
@@ -210,13 +239,12 @@ namespace Rootborn.Screens
             {
                 switch (key)
                 {
-                    case ScreenKey.Tab: Tree.Navigate(shift ? UiNav.Previous : UiNav.Next); return true;
                     case ScreenKey.Enter:
                         if (Tree.Focused == null) return false;
                         Tree.Submit();
                         return true;
                     case ScreenKey.Up: case ScreenKey.Down: case ScreenKey.Left: case ScreenKey.Right:
-                        if (!focus.BlocksMovement) return false;
+                        if (!focus.BlocksMovement && !shift) return false;
                         Tree.Navigate(key == ScreenKey.Up ? UiNav.Up : key == ScreenKey.Down ? UiNav.Down : key == ScreenKey.Left ? UiNav.Left : UiNav.Right);
                         return true;
                 }
@@ -238,12 +266,29 @@ namespace Rootborn.Screens
             return reversed;
         }
 
-        /// <summary>월드의 상호작용: 그 종류에 등록된 화면을 연다. 열었으면 true.</summary>
+        /// <summary>월드의 상호작용: 그 종류에 등록된 화면을 연다. 열었으면 true. 열었든 아니든 Interacted로 알린다.</summary>
         public bool Interaction(InteractionEvent interaction)
         {
-            if (!_registry.TryGetByInteraction(interaction.Kind, out string id)) return false;
-            Open(id, interaction);
-            return true;
+            GameScreen opened = _registry.TryGetByInteraction(interaction.Kind, out string id) ? Open(id, interaction) : null;
+            Interacted?.Invoke(interaction, opened);
+            return opened != null;
+        }
+
+        /// <summary>플레이어가 맵에 들어섰다(처음 들어갈 때 포함). 같은 맵이면 아무것도 하지 않는다.</summary>
+        public void EnterMap(string mapId)
+        {
+            mapId ??= string.Empty;
+            if (mapId == MapId) return;
+            MapId = mapId;
+            NotifyChanged(ChangeTopics.Map);
+        }
+
+        /// <summary>앞의 상호작용 대상(없으면 null). 바뀐 것이 있을 때만 TargetChanged를 낸다.</summary>
+        public void SetInteractionTarget(InteractionTargetView? target)
+        {
+            if (Nullable.Equals(Target, target)) return;
+            Target = target;
+            TargetChanged?.Invoke();
         }
 
         /// <summary>열린 화면들에 무엇이 바뀌었는지 알린다.</summary>

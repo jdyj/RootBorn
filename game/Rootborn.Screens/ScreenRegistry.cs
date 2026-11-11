@@ -36,7 +36,22 @@ namespace Rootborn.Screens
             return new Registration(this, id);
         }
 
+        private readonly List<Action<ScreenServices>> _listeners = new List<Action<ScreenServices>>();
+
+        /// <summary>
+        /// 화면 쌓기가 만들어질 때 한 번 불릴 것(화면이 열리기 전부터 알림을 들어야 하는 것: 예를 들어 장소 상호작용 뒤 하루 이벤트를 여는 쪽).
+        /// Services.Screens가 채워진 뒤 불린다.
+        /// </summary>
+        public void AddListener(Action<ScreenServices> attach)
+        {
+            if (attach == null) throw new ArgumentNullException(nameof(attach));
+            _listeners.Add(attach);
+        }
+
+        public IReadOnlyList<Action<ScreenServices>> Listeners => _listeners;
+
         public IEnumerable<ScreenEntry> Screens => _screens.Values;
+        public bool Has(string id) => id != null && _screens.ContainsKey(id);
         public bool TryGet(string id, out ScreenEntry entry) => _screens.TryGetValue(id ?? string.Empty, out entry);
         public bool TryGetByKey(ScreenKey key, out string screenId) => _keys.TryGetValue(key, out screenId);
         public bool TryGetByInteraction(string kind, out string screenId) => _interactions.TryGetValue(kind ?? string.Empty, out screenId);

@@ -84,19 +84,25 @@ namespace Rootborn.Host.Tests
             // 다시 열면 바꾼 값이 남아 있다(화면은 한 번만 만든다).
             player.OpenScreenWithKey(TestKey.Escape, ScreenCatalog.Settings);
             Assert.That(((UiToggle)player.Node(SettingsScreen.ToggleId(1))).IsOn, Is.True);
-            Assert.That(player.Game.Text.MissingKeys, Is.Empty);
+            Rootborn.Screens.Tests.KnownMissingKeys.AssertOnlyKnownMissing(player.Game.Text, System.Array.Empty<string>());
             Assert.That(player.Game.Renderer.MissingImages, Is.Empty);
             player.CloseScreenWithKey(TestKey.Escape, ScreenCatalog.Settings);
         }
 
         [Test]
-        public void SCREENS_002_TabAndEnter_ToggleFromTheKeyboard_ArrowsStillWalk()
+        public void SCREENS_002_ShiftArrowAndEnter_ToggleFromTheKeyboard_PlainArrowsStillWalk()
         {
             using PlayerDriver player = Start("1280x720");
             player.OpenScreenWithKey(TestKey.Escape, ScreenCatalog.Settings);
             var settings = (SettingsScreen)player.Screens.Find(ScreenCatalog.Settings);
-            player.PressKey(TestKey.Tab);
+            float sx = player.World.Walker.X, sy = player.World.Walker.Y;
+            player.KeyDown(TestKey.LeftShift);
+            player.PressKey(TestKey.Down);
+            player.KeyUp(TestKey.LeftShift);
             Assert.That(player.Game.Ui.Focused?.Id, Is.EqualTo(SettingsScreen.ToggleId(0)));
+            Assert.That((player.World.Walker.X, player.World.Walker.Y), Is.EqualTo((sx, sy)), "Shift+방향 키는 포커스만 옮기고 걷지 않는다");
+            player.PressKey(TestKey.Tab);
+            Assert.That(player.Game.Ui.Focused?.Id, Is.EqualTo(SettingsScreen.ToggleId(0)), "Tab은 포커스를 옮기지 않는다(목표 수첩 키)");
             player.PressKey(TestKey.Enter);
             Assert.That(settings.Model.IsOn(0), Is.False);
 

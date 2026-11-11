@@ -57,7 +57,6 @@ namespace Rootborn.Host.World
         private List<PlacedNpc> _npcs = new List<PlacedNpc>();
         private string _placedMap, _placedSlot;
         private int _placedDay;
-        private Texture2D _white;
 
         public LoadedMap Current => Maps.LoadMap(Session.Map.Id);
         public int Zoom { get; private set; } = 1;
@@ -206,7 +205,6 @@ namespace Rootborn.Host.World
                 if (actor.npc < 0) DrawCharacter(batch, walker); else DrawNpc(batch, _npcs[actor.npc]);
             }
             for (; drawn < sorted.Count; drawn++) DrawSprite(batch, sorted[drawn]);
-            DrawTargetMarker(batch, grid.CellSize);
             batch.End();
         }
 
@@ -249,28 +247,7 @@ namespace Rootborn.Host.World
             batch.Draw(Load(f.Texture), position, new Rectangle(f.X, f.Y, f.W, f.H), _tint);
         }
 
-        /// <summary>
-        /// 잡힌 대상 위의 작은 표시(Unity 판은 대상 위 1.1칸쯤에 "[E] ..." 글자를 띄웠다. 글자 안내는 화면 옮기기 때 넣는다).
-        /// 자동문처럼 눌러도 아무 일 없는 대상은 표시하지 않는다(Unity 판도 빈 안내였다).
-        /// </summary>
-        private void DrawTargetMarker(SpriteBatch batch, int cell)
-        {
-            InteractionCandidate target = Interactions.Target;
-            if (target == null || !target.Acts) return;
-            if (_white == null) { _white = new Texture2D(_device, 1, 1); _white.SetData(new[] { Color.White }); }
-            int cx = (int)MathF.Round(target.X), top = (int)MathF.Round(target.Y - MarkerCellsAbove * cell);
-            var outline = new Color(30, 24, 40);
-            var fill = new Color(255, 245, 173); // Unity 안내 글자 색 (1, 0.96, 0.68)
-            for (int row = 0; row < 5; row++)
-            {
-                int half = 4 - row; // 아래를 가리키는 삼각형
-                batch.Draw(_white, new Rectangle(cx - half - 1, top + row, half * 2 + 3, 1), outline);
-                if (half > 0) batch.Draw(_white, new Rectangle(cx - half + 0, top + row, half * 2 + 1, 1), fill);
-            }
-        }
-
-        /// <summary>표시를 대상 가운데에서 몇 칸 위에 그릴지(Unity NpcInteractor 안내 높이 1.15).</summary>
-        public const float MarkerCellsAbove = 1.15f;
+        // 잡힌 대상 위의 "[E] …" 안내 글자는 화면 쌓기의 HUD(InteractionPromptScreen)가 그린다. Host가 대상과 그 화면 위치를 넘긴다.
 
         private Color _tint = Color.White;
 
@@ -279,7 +256,6 @@ namespace Rootborn.Host.World
 
         public void Dispose()
         {
-            _white?.Dispose();
             foreach (Texture2D texture in _textures.Values) texture.Dispose();
             _textures.Clear();
         }

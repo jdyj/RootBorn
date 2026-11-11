@@ -17,7 +17,7 @@
 | `tests/Rootborn.World.Tests` | 실제 LDtk로 맵 만들기, Unity 씬에 구워진 충돌과 칸 단위 대조, 도착 지점·문 목적지, 크기가 다른 집, 장면 목록·고정 세이브, 캐릭터 그림, 낮밤, 상호작용 데이터 | 없음 |
 | `tests/Rootborn.Game.Tests` | 실제 `data/`와 임시 폴더 저장소로 새 게임 초기값, 메인 체인 끝까지(화면 없이, 가구 방 칸은 실제 집 맵), 성인기, 보상 한 번만, Unity QA 세이브·스냅샷 이전 슬롯 이어 하기 | 없음 |
 | `tests/Rootborn.Ui.Tests` | 화면 없이 도는 테스트 | 없음 |
-| `tests/Rootborn.Screens.Tests` | 창 없이 도는 화면 테스트: 화면 쌓기의 층·배타·이동 막음·입력 넘기기, 실제 `ko.json`·`en.json`, 설정 화면을 눌러 보기 | 없음 |
+| `tests/Rootborn.Screens.Tests` | 창 없이 도는 화면 테스트: 화면 쌓기의 층·배타·이동 막음·입력 넘기기, 실제 `ko.json`·`en.json`, 설정·HUD·대화·하루 이벤트 화면을 실제 `data/`와 `GameSession`으로 눌러 보기(알려진 빠진 현지화 키는 `KnownMissingKeys`) | 없음 |
 | `tests/Rootborn.Host.Tests` | 실제 창과 게임 루프를 한 프레임씩 돌리는 테스트(새 게임 → 집 → 마을 → 가게 → 이어 하기 시나리오 `NewGameJourneyTests` 포함) | 있음 |
 
 ## 명령
@@ -56,7 +56,7 @@ dotnet run --project game/Rootborn.Host -- --save-root <세이브 폴더> --slot
 낮밤은 맵 목록의 `dayNight`가 켜진 맵(마을)에만 입힌다. NPC는 일정(data/npcs)과 시간대로 `interactions.json`의 장소 자리에 선다.
 슬롯으로 시작하면 같은 정의로 `GameSession`도 시작하고, 월드 위에 화면 쌓기를 올린다(`--world`도 화면 쌓기는 올린다).
 E·Space·Ctrl(Unity 판과 같은 상호작용 키)을 누르면 앞의 대상과 상호작용한 이벤트가 나오고(`[상호작용] 맵:종류/id`), 그 종류에 등록된 화면이 열린다.
-Esc는 설정, I는 가방, C는 상태, Tab은 목표 수첩(등록된 화면만). 이동을 막는 화면이 떠 있거나 글자를 치는 동안은 걷지 않는다. 월드 화면에서는 화살표나 WASD를 누르고 있는 동안 걷고, 문에 들어서면 0.35초 뒤 목적지 맵으로 간다. 증거 폴더 기본값은 `<저장소>/output/host-world-evidence`.
+Esc는 설정, I는 가방, C는 상태, Tab은 목표 수첩(등록된 화면만). HUD(시계, 체력·집중, 추적 목표, HUD 버튼, 상호작용 안내 글자)는 월드를 띄우면 늘 떠 있다. NPC 앞에서 E는 대화, 장소 지점(location-activity)에서 E를 누르면 그 장소의 하루 이벤트가 열린다. 이동을 막지 않는 화면의 버튼은 Shift+방향 키로 옮기고 Enter로 누른다. 이동을 막는 화면이 떠 있거나 글자를 치는 동안은 걷지 않는다. 월드 화면에서는 화살표나 WASD를 누르고 있는 동안 걷고, 문에 들어서면 0.35초 뒤 목적지 맵으로 간다. 증거 폴더 기본값은 `<저장소>/output/host-world-evidence`.
 
 견본·월드 화면에서 F12는 지금 화면을 증거 폴더에 저장한다. 견본 화면에서 Esc는 포커스를 풀고, 포커스가 없으면 끝낸다.
 

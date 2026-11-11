@@ -144,21 +144,81 @@ namespace Rootborn.Screens.Tests
         }
 
         [Test]
-        public void NonBlockingScreen_DoesNotTakeArrowKeys_ButTakesTabAndEnter()
+        public void NonBlockingScreen_DoesNotTakePlainArrows_ButShiftArrowsMoveFocusAndEnterRuns()
         {
             _stack.Open("settings");
             foreach (ScreenKey arrow in new[] { ScreenKey.Up, ScreenKey.Down, ScreenKey.Left, ScreenKey.Right })
                 Assert.That(_stack.Key(arrow, false), Is.False, arrow + "는 캐릭터로 간다");
             Assert.That(_stack.Tree.Focused, Is.Null);
+            Assert.That(_stack.MovementBlockedWhile(false), Is.False);
+            Assert.That(_stack.MovementBlockedWhile(true), Is.True, "Shift를 누르고 있는 동안은 방향 키가 포커스를 옮기므로 걷지 않는다");
 
-            Assert.That(_stack.Key(ScreenKey.Tab, false), Is.True);
+            Assert.That(_stack.Key(ScreenKey.Right, true), Is.True);
             Assert.That(_stack.Tree.Focused, Is.SameAs(Screen("settings").First));
-            _stack.Key(ScreenKey.Tab, false);
+            _stack.Key(ScreenKey.Right, true);
             Assert.That(_stack.Tree.Focused, Is.SameAs(Screen("settings").Second));
-            _stack.Key(ScreenKey.Tab, true);
+            _stack.Key(ScreenKey.Left, true);
             Assert.That(_stack.Tree.Focused, Is.SameAs(Screen("settings").First));
             Assert.That(_stack.Key(ScreenKey.Enter, false), Is.True);
             Assert.That(Screen("settings").Log, Does.Contain("click:first"));
+        }
+
+        [Test]
+        public void Tab_DoesNotMoveFocus_ItIsLeftForItsKeyBinding()
+        {
+            _stack.Open("settings");
+            Assert.That(_stack.Key(ScreenKey.Tab, false), Is.False, "Tab이 배정된 화면이 없으면 아무 일도 없다");
+            Assert.That(_stack.Tree.Focused, Is.Null);
+        }
+
+        [Test]
+        public void Interaction_IsReported_EvenWhenNoScreenIsRegisteredForIt()
+        {
+            var seen = new List<(string, GameScreen)>();
+            _stack.Interacted += (e, s) => seen.Add((e.Kind, s));
+            _stack.Interaction(new InteractionEvent("Town", "location-activity", "location.library"));
+            _stack.Interaction(new InteractionEvent("Town", "npc", "npc.first-guide"));
+            Assert.That(seen[0], Is.EqualTo(("location-activity", (GameScreen)null)));
+            Assert.That(seen[1].Item2, Is.SameAs(_stack.Find("talk")));
+        }
+
+        [Test]
+        public void EnterMap_TellsOpenScreensOnce()
+        {
+            _stack.Open("settings");
+            _stack.EnterMap("House");
+            _stack.EnterMap("House");
+            Assert.That(_stack.MapId, Is.EqualTo("House"));
+            Assert.That(Screen("settings").Log.Count(l => l == "changed:map"), Is.EqualTo(1));
+        }
+
+        [Test]
+        public void InteractionTarget_RaisesOnlyWhenItChanges()
+        {
+            int raised = 0;
+            _stack.TargetChanged += () => raised++;
+            var t = new InteractionTargetView("npc", "npc.first-guide", 100, 200, 64);
+            _stack.SetInteractionTarget(t);
+            _stack.SetInteractionTarget(t);
+            _stack.SetInteractionTarget(null);
+            Assert.That(raised, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void OpenHud_OpensEveryHudScreen_AndNothingElse()
+        {
+            _stack.OpenHud();
+            Assert.That(_stack.OpenScreens.Select(s => s.Id), Is.EqualTo(new[] { "hud" }));
+        }
+
+        [Test]
+        public void Listener_IsAttachedWhenTheStackIsMade()
+        {
+            var registry = new ScreenRegistry();
+            ScreenStack seen = null;
+            registry.AddListener(s => seen = s.Screens);
+            var stack = new ScreenStack(registry, new ScreenServices(TestData.Text(), null));
+            Assert.That(seen, Is.SameAs(stack));
         }
 
         [Test]
@@ -176,10 +236,11 @@ namespace Rootborn.Screens.Tests
         {
             _stack.Open("settings");
             _stack.Open("talk");
-            _stack.Key(ScreenKey.Tab, false);
-            _stack.Key(ScreenKey.Tab, false);
-            _stack.Key(ScreenKey.Tab, false);
-            Assert.That(_stack.Tree.Focused, Is.SameAs(Screen("talk").First));
+            _stack.Key(ScreenKey.Right, true);
+            _stack.Key(ScreenKey.Right, true);
+            _stack.Key(ScreenKey.Right, true);
+            Assert.That(_stack.Tree.Focused, Is.Not.Null);
+            Assert.That(new[] { Screen("talk").First, Screen("talk").Second }, Does.Contain(_stack.Tree.Focused), "포커스는 맨 위 화면 안에만 있다");
         }
 
         [Test]
@@ -266,7 +327,8 @@ namespace Rootborn.Screens.Tests
         public void ClosingTheFocusedScreen_ClearsFocus()
         {
             _stack.Open("settings");
-            _stack.Key(ScreenKey.Tab, false);
+            _stack.Key(ScreenKey.Right, true);
+            Assert.That(_stack.Tree.Focused, Is.Not.Null);
             _stack.Close("settings");
             Assert.That(_stack.Tree.Focused, Is.Null);
         }

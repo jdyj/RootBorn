@@ -117,7 +117,10 @@ namespace Rootborn.Host
             }
             ScreenRegistry registry = ScreenCatalog.Create();
             ExtraScreens?.Invoke(registry);
-            Screens = new ScreenStack(registry, new ScreenServices(Text, commands));
+            var services = new ScreenServices(Text, commands) { Names = DisplayNames.Load(Path.Combine(_options.RepoRoot, "data")) };
+            Screens = new ScreenStack(registry, services);
+            Screens.EnterMap(World.Session.Map.Id);
+            Screens.OpenHud();
         }
 
         /// <summary>견본 화면을 새로 만들어 띄운다.</summary>
@@ -215,13 +218,27 @@ namespace Rootborn.Host
             bool interact = keys.Interact && !s.Key(ScreenKey.Interact, keys.Shift) && !s.MovementBlocked;
 
             float dt = _options.TestMode ? TestFrameSeconds : (float)gameTime.ElapsedGameTime.TotalSeconds;
-            bool blocked = s.MovementBlocked;
+            bool blocked = s.MovementBlockedWhile(keys.Shift);
             World.Update(blocked ? 0 : keys.MoveX, blocked ? 0 : keys.MoveY, dt);
+            s.EnterMap(World.Session.Map.Id);
+            s.SetInteractionTarget(TargetOnScreen());
             if (interact)
             {
                 InteractionEvent? happened = World.Interact();
                 if (happened.HasValue) s.Interaction(happened.Value);
             }
+        }
+
+        /// <summary>
+        /// 앞의 상호작용 대상을 화면 논리 좌표로(지난 프레임의 카메라 기준). 눌러도 아무 일 없는 대상(자동문)은 넘기지 않는다.
+        /// </summary>
+        private InteractionTargetView? TargetOnScreen()
+        {
+            InteractionCandidate target = World.Interactions.Target;
+            if (target == null || !target.Acts) return null;
+            float zoom = World.Zoom / Fit.Scale;
+            return new InteractionTargetView(target.Kind, target.Id,
+                (target.X - World.CameraOffset.X) * zoom, (target.Y - World.CameraOffset.Y) * zoom, World.Current.World.Grid.CellSize * zoom);
         }
 
         /// <summary>글자 칸이 선택된 동안에만 입력기를 켠다.</summary>

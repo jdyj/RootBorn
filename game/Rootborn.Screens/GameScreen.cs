@@ -23,6 +23,8 @@ namespace Rootborn.Screens
         public const string Career = "career";
         public const string World = "world";
         public const string Language = "language";
+        /// <summary>플레이어가 다른 맵에 들어섰다(ScreenStack.EnterMap).</summary>
+        public const string Map = "map";
         /// <summary>무엇이 바뀌었는지 모를 때(이어 하기 직후 등). 화면은 전부 다시 받는다.</summary>
         public const string All = "all";
     }
@@ -67,15 +69,20 @@ namespace Rootborn.Screens
 
         public GameText Text { get; }
         public SessionCommands Commands { get; }
+        /// <summary>게임 한 판(Commands가 없으면 null).</summary>
+        public GameSession Session => Commands?.Session;
         /// <summary>ScreenStack이 만들어질 때 채운다.</summary>
         public ScreenStack Screens { get; internal set; }
+        /// <summary>엔티티 id → 화면 이름 키(Core 정의에 없는 것). 없으면 빈 표.</summary>
+        public DisplayNames Names { get; set; } = DisplayNames.Empty;
     }
 
-    /// <summary>화면을 연 까닭. 상호작용으로 열었으면 그 이벤트가 있다.</summary>
+    /// <summary>화면을 연 까닭. 상호작용으로 열었으면 그 이벤트가 있다. Argument는 여는 쪽이 넘긴 값(예: 하루 이벤트 id).</summary>
     public readonly struct ScreenOpenContext
     {
-        public ScreenOpenContext(InteractionEvent? interaction) { Interaction = interaction; }
+        public ScreenOpenContext(InteractionEvent? interaction, object argument = null) { Interaction = interaction; Argument = argument; }
         public InteractionEvent? Interaction { get; }
+        public object Argument { get; }
     }
 
     /// <summary>
@@ -120,6 +127,22 @@ namespace Rootborn.Screens
         {
             _textKeys.Add(key);
             return Services.Text.Get(key);
+        }
+
+        protected string F(string key, params object[] args)
+        {
+            _textKeys.Add(key);
+            return Services.Text.Format(key, args);
+        }
+
+        /// <summary>
+        /// 데이터가 넘긴 값이 키면 문구로, 키가 아니면 그대로(Unity ObjectiveJournalSourceText.Shown과 같음). 조건 요약처럼
+        /// 키일 수도 글일 수도 있는 값에만 쓴다. 키가 아니어도 빠진 키로 세지 않는다.
+        /// </summary>
+        protected string Shown(string keyOrText)
+        {
+            if (string.IsNullOrEmpty(keyOrText)) return string.Empty;
+            return Services.Text.Has(keyOrText, Services.Text.Language) ? T(keyOrText) : keyOrText;
         }
 
         protected void Close() => Services.Screens?.Close(this);

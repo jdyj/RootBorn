@@ -70,11 +70,12 @@ namespace Rootborn.Screens.Tests
         }
 
         [Test]
-        public void Tab_ThenEnter_FlipsAToggleFromTheKeyboard()
+        public void ShiftArrow_ThenEnter_FlipsAToggleFromTheKeyboard()
         {
             _stack.Key(ScreenKey.Escape, false);
             var screen = (SettingsScreen)_stack.Find(ScreenCatalog.Settings);
-            _stack.Key(ScreenKey.Tab, false);
+            _stack.Key(ScreenKey.Down, true);
+            Assert.That(_stack.Tree.Focused?.Id, Is.EqualTo(SettingsScreen.ToggleId(0)));
             _stack.Key(ScreenKey.Enter, false);
             Assert.That(screen.Model.IsOn(0), Is.False);
         }
