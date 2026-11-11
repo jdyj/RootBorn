@@ -130,7 +130,7 @@
 **종류를 나누는 방법.** `data/export-report.json`의 `typeCounts`에 있는 모든 종류에 대해:
 1. `Packages/com.rootborn.core/Runtime`에 대응하는 Core 클래스가 있으면 `Add`. 대응은 Core 테스트 파일 머리 주석과 원본 `Assets/Scripts/Game/**/<type>.cs`를 보고 찾는다. 이름이 다를 수 있다(예: `TraitDeltaActivityEffect` → `Rootborn.Core.StudentLife.TraitDeltaEffect`).
 2. 그림·타일·화면·맵·캐릭터 겉모습 전용이면 `NotARule(type, 이유)`.
-3. 규칙인데 Core에 아직 없으면 `NotPortedYet(type, 기다리는 영역)`. 영역 이름은 `core-student-b`(하루 이벤트, 캠페인, 장소, 알바, 탐색, 발견, 마일스톤), `core-world`(월드 상태, 도감, 발견 단서, 대화, NPC 일정), `legacy`(Family, Knowledge, Tools, Resources, Recipes 등 지금 게임이 쓰는지 확인되지 않은 것), `status`.
+3. 규칙인데 Core에 아직 없으면 `NotPortedYet(type, 기다리는 영역)`. (2026-11-11 갱신: 하루 이벤트, 캠페인, 장소, 알바, 마을 돕기, 탐색, 발견, 마일스톤은 main에 합쳐졌으므로 1번에 해당한다. 영역 파일을 `StudentLifeBuilders` 옆에 필요한 만큼 더 만든다.) 영역 이름은 `core-world`(월드 상태, 도감, 발견 단서, 대화, NPC 일정), `legacy`(Family, Knowledge, Tools, Resources, Recipes 등 지금 게임이 쓰는지 확인되지 않은 것), `status`.
 
 **필드 대응.** JSON 필드 이름은 원본 Unity 클래스의 직렬화 필드에서 `_`를 뗀 것이다. Core 생성자 인자와의 대응은 원본 클래스가 그 필드를 어떻게 쓰는지를 보고 정한다. Core 생성자가 id 문자열을 받으면 `RefId`, 객체를 받으면 `One`/`All`. Core 생성자에 받는 곳이 없는 JSON 필드(아이콘, 그림, 화면 문구 배치 등)는 읽지 않는다. 받는 곳이 없는데 규칙에 영향을 주는 필드로 보이면 읽지 말고 보고에 적는다.
 
@@ -232,8 +232,8 @@ public static class SaveFileNames
 **Interfaces:**
 - Consumes: Task 4의 `FileSaveStore`, `SaveFileNames`.
 - Produces: `static class SaveShapeCoverage` — 파일 이름 무늬 → 세이브 모양 `Type` 표, "아직 모양 없음" 파일 목록(이유 포함), "모양에 없는 필드" 허용 목록(파일 무늬, JSON 경로, 이유).
-  - 모양 있음: `quest-log.json` → `QuestLogSaveData`, `adult-career-snapshot-*.json` → `AdultCareerSnapshotSaveData`.
-  - 아직 모양 없음: `metadata.json`(슬롯 정보, Host 몫), `world-progress.json`(월드 프로젝트), `campaign-progress.json`·`location-state-progress.json`·`milestone-progress.json`(core-student-b 합친 뒤), `student-day-result-quest-inventory-summary.json`(화면 요약), `career-interest-progress.json`·`house-furniture-layout-stage-0.json`·`objective-journal-tracking.json`(고정 폴더에 있으면).
+  - 모양 있음: `quest-log.json` → `QuestLogSaveData`, `adult-career-snapshot-*.json` → `AdultCareerSnapshotSaveData`. `campaign-progress.json`, `location-state-progress.json`, `milestone-progress.json`도 main의 Core에 세이브 모양이 있으므로 표에 넣는다(모양 클래스는 Core 소스에서 찾는다).
+  - 아직 모양 없음: `metadata.json`(슬롯 정보, Host 몫), `world-progress.json`(월드 프로젝트), `student-day-result-quest-inventory-summary.json`(화면 요약), `career-interest-progress.json`·`house-furniture-layout-stage-0.json`·`objective-journal-tracking.json`(고정 폴더에 있으면).
   - 허용 목록 초기값: 스냅샷의 `World`, `Furniture`, `Unlocks`("Core에 모양 없음, 월드·가구 영역을 옮길 때 뺀다").
 
 - [ ] **Step 1: 실패 테스트** (`OldSaveTests.cs`, 고정 폴더의 모든 `.json`에 대해 `[TestCaseSource]`)

@@ -96,3 +96,10 @@ public sealed class TraitDeltaEffect : ILifeActivityEffect {
 - 퀘스트: 체인 세이브 상태는 이름만 받고 숫자는 `Available`로 읽는다. 옛 세이브는 이름이라 그대로 읽힌다. `ChainSaveState_AcceptsOnlyStateNames`
 - 퀘스트: 체인 진행 저장소는 이미 가진 로그를 체인 목록 없이도 돌려준다(원본은 null). `Store_ReturnsAHeldLogEvenWithoutAChainList`
 - 알바 정산: 정산 뒤 요청을 서비스가 직접 적용됨으로 표시해, 정산 쪽이 빠뜨려도 두 번 정산되지 않는다. `ChangedBehavior_SettledJobIsMarkedEvenIfPayrollForgetsTheReceipt`
+- 캠페인: 진행 상태 없이 보상을 받으면 거절하고 아무것도 기록하지 않는다(원본은 받은 것으로만 기록). `RewardWithoutStudentProgressIsRejectedAndNotRecorded`
+- 캠페인: 진행 적용기는 바뀐 것이 없으면 결과 id를 남기지 않는다(원본은 소모). 캠페인 테스트로 고정.
+- 하루 이벤트: 실행기가 선택지 가용 규칙을 검사하고, 안 되면 무변경으로 거절한다. `ChoiceAvailabilityRuleIsCheckedAndRejectionChangesNothing`
+- 탐색: 한 선택지의 물건 지급·소모를 합쳐 확인하고, 안 들어가면 아무것도 주지 않는다(원본은 일부만 지급). `SeveralItemGrantsThatDoNotFitTogetherAreRejectedWithoutPartialGrant`, `SpendAndGrantInTheSameChoiceApplyTogether`
+- 탐색: 거절한 선택은 빈 기록을 세이브에 남기지 않는다. `DismissAtZeroEnergyBypassesDefaultRiskAndCreatesNoRecordActivityOrOutcome`
+- 탐색: 이어지는 퀘스트 결과가 이미 시작한 퀘스트를 다시 더하지 않는다(원본은 진행을 지워 보상을 두 번 받을 수 있었다). 탐색 테스트로 고정.
+- 마일스톤: 보상 물건을 합쳐 확인하고, 안 들어가면 아무것도 바꾸지 않는다(원본은 일부만 주고 받은 것으로 기록). `SeveralItemRewardsThatDoNotFitTogetherAreRejectedWithoutPartialGrant`
