@@ -126,6 +126,7 @@ namespace Rootborn.Host.Input
             (ScreenKey.AltLeft, new[] { Keys.A }),
             (ScreenKey.AltRight, new[] { Keys.D }),
             (ScreenKey.Help, new[] { Keys.F1 }),
+            (ScreenKey.LocationLog, new[] { Keys.L }),
         };
 
         /// <summary>걷기: 방향 키나 WASD를 누르고 있는 동안(Read의 Held*).</summary>

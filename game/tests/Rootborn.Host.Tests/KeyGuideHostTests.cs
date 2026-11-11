@@ -56,6 +56,7 @@ namespace Rootborn.Host.Tests
                 case Keys.I: return TestKey.I;
                 case Keys.C: return TestKey.C;
                 case Keys.F1: return TestKey.F1;
+                case Keys.L: return TestKey.L;
                 case Keys.Enter: return TestKey.Enter;
                 case Keys.E: return TestKey.E;
                 case Keys.Space: return TestKey.Space;
