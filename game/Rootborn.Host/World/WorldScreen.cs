@@ -206,6 +206,15 @@ namespace Rootborn.Host.World
             PlayerLook = ResolveLook(stage);
         }
 
+        /// <summary>플레이어가 고른 옷(옷장이 고치고 저장한다). 시작할 때 슬롯에서 읽는다.</summary>
+        public WearableState Wearing => _look;
+
+        /// <summary>옷장이 옷을 바꿨을 때 월드의 캐릭터 모습을 새로 입힌다.</summary>
+        public void ApplyPlayerLook(CharacterLook look)
+        {
+            if (look != null) PlayerLook = look;
+        }
+
         private Texture2D Load(string path)
         {
             if (_textures.TryGetValue(path, out Texture2D texture)) return texture;

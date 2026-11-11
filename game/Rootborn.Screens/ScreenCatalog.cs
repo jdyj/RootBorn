@@ -7,6 +7,7 @@ using Rootborn.Screens.Minigames;
 using Rootborn.Screens.Objectives;
 using Rootborn.Screens.Quests;
 using Rootborn.Screens.Inventory;
+using Rootborn.Screens.Records;
 using Rootborn.Screens.Settings;
 using Rootborn.Screens.Status;
 using Rootborn.Screens.Start;
@@ -49,6 +50,8 @@ namespace Rootborn.Screens
         public const string DailyPlan = "daily-plan";
         public const string Location = "location";
         public const string DayResult = "day-result";
+        /// <summary>장소 기록(Unity LocationStateLogPanel). HUD 버튼은 없다(Unity 버튼은 도감 버튼 밑에 깔려 보이지 않았다).</summary>
+        public const string LocationStateLog = "location-state-log";
 
         public static void Register(ScreenRegistry r)
         {
@@ -85,6 +88,10 @@ namespace Rootborn.Screens
             r.Add(DeleteSlot, ScreenLayer.Modal, blocksMovement: true, s => new DeleteSlotScreen(s));
             // 가구 배치: 집 HUD 버튼(가구 배치 켬/끔)이 연다. 이동을 막지 않는다(Unity 판 패널은 입력을 잠그지 않았다).
             r.Add(FurniturePlacement, ScreenLayer.Panel, blocksMovement: false, s => new FurniturePlacementScreen(s));
+            r.Add(Encyclopedia, ScreenLayer.Panel, blocksMovement: true, s => new EncyclopediaScreen(s));
+            r.Add(Wardrobe, ScreenLayer.Panel, blocksMovement: true, s => new WardrobeScreen(s));
+            r.Add(WorldStateLog, ScreenLayer.Panel, blocksMovement: true, s => new WorldStateLogScreen(s));
+            r.Add(LocationStateLog, ScreenLayer.Panel, blocksMovement: false, s => new LocationStateLogScreen(s));
         }
 
         /// <summary>표를 채운 새 등록 표.</summary>

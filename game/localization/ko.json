@@ -111,5 +111,8 @@
   "ui.furniture.search.placeholder": "이름 또는 ID로 검색",
   "ui.furniture.select-prompt": "가구를 선택하세요",
   "ui.furniture.size": "{0}x{1}",
-  "ui.furniture.title": "가구 배치"
+  "ui.furniture.title": "가구 배치",
+  "ui.encyclopedia.row-new": "새 항목 {0}",
+  "ui.location-log.title": "장소 상태",
+  "ui.location-log.empty": "발견한 장소 상태가 없습니다"
 }

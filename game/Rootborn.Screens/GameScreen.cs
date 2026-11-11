@@ -78,6 +78,8 @@ namespace Rootborn.Screens
         public ScreenStack Screens { get; internal set; }
         /// <summary>엔티티 id → 화면 이름 키(Core 정의에 없는 것). 없으면 빈 표.</summary>
         public DisplayNames Names { get; set; } = DisplayNames.Empty;
+        /// <summary>옷장이 부르는 캐릭터 쪽(Host가 채운다). 없으면 옷장은 비어 있다.</summary>
+        public Records.IWardrobeBackend Wardrobe { get; set; }
     }
 
     /// <summary>화면을 연 까닭. 상호작용으로 열었으면 그 이벤트가 있다. Argument는 여는 쪽이 넘긴 값(예: 하루 이벤트 id).</summary>

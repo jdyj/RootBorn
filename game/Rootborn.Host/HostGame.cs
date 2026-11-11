@@ -186,6 +186,8 @@ namespace Rootborn.Host
             ScreenRegistry registry = ScreenCatalog.Create();
             ExtraScreens?.Invoke(registry);
             var services = new ScreenServices(Text, commands) { Names = DisplayNames.Load(Path.Combine(_options.RepoRoot, "data")) };
+            if (Session != null)
+                services.Wardrobe = new HostWardrobe(World, Session, new FileSaveStore(_options.SaveRoot), _options.SaveSlot, SaveFileNames.DefaultPlayerId, _options.RepoRoot);
             var screens = new ScreenStack(registry, services);
             screens.EnterMap(World.Session.Map.Id);
             Screens = screens;

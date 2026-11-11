@@ -111,5 +111,8 @@
   "ui.furniture.search.placeholder": "Search by name or ID",
   "ui.furniture.select-prompt": "Select furniture",
   "ui.furniture.size": "{0}x{1}",
-  "ui.furniture.title": "Furniture"
+  "ui.furniture.title": "Furniture",
+  "ui.encyclopedia.row-new": "NEW {0}",
+  "ui.location-log.title": "Location States",
+  "ui.location-log.empty": "No location states discovered"
 }

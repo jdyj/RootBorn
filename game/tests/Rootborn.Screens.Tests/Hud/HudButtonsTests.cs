@@ -35,13 +35,22 @@ namespace Rootborn.Screens.Tests.Hud
         [Test]
         public void ButtonForAScreenNotPortedYet_DoesNothing()
         {
+            // 화면이 하나씩 옮겨져도 이 시험이 흔들리지 않게, 버튼 화면만 든 등록 표로 쌓는다(여는 화면이 하나도 등록돼 있지 않다).
             using var t = new TestSession();
-            t.Stack.OpenHud();
-            t.Click("hud.button.encyclopedia");
-            var hud = t.Screen<HudButtonsScreen>(ScreenCatalog.HudButtons);
+            var registry = new ScreenRegistry();
+            registry.Add(ScreenCatalog.HudButtons, ScreenLayer.Hud, false, s => new HudButtonsScreen(s));
+            var stack = new ScreenStack(registry, t.Services);
+            stack.Layout(1920, 1080);
+            stack.OpenHud();
+            UiNode button = stack.Tree.Root.Find("hud.button.encyclopedia");
+            UiRect r = button.Rect;
+            stack.Pointer(r.CenterX, r.CenterY, false, 0);
+            stack.Pointer(r.CenterX, r.CenterY, true, 0);
+            stack.Pointer(r.CenterX, r.CenterY, false, 0);
+            var hud = (HudButtonsScreen)stack.Find(ScreenCatalog.HudButtons);
             Assert.That(hud.LastRequested, Is.EqualTo(ScreenCatalog.Encyclopedia));
-            Assert.That(t.Stack.OpenScreens.All(s => s.Layer == ScreenLayer.Hud), Is.True, "아무 화면도 열리지 않는다");
-            Assert.That(t.Node("hud.button.encyclopedia").Visible, Is.True, "숨기지 않는다");
+            Assert.That(stack.OpenScreens.All(s => s.Layer == ScreenLayer.Hud), Is.True, "아무 화면도 열리지 않는다");
+            Assert.That(button.Visible, Is.True, "숨기지 않는다");
         }
 
         [Test]
@@ -49,7 +58,9 @@ namespace Rootborn.Screens.Tests.Hud
         {
             using var t = new TestSession(extra: r =>
             {
-                r.Add(ScreenCatalog.Encyclopedia, ScreenLayer.Panel, true, s => new Probe(s));
+                // 이미 옮겨진 화면은 그 화면이 열리는 것으로 본다. 아직 없는 화면만 시험용 화면을 놓는다.
+                if (!r.Screens.Any(e => e.Id == ScreenCatalog.Encyclopedia)) r.Add(ScreenCatalog.Encyclopedia, ScreenLayer.Panel, true, s => new Probe(s));
+                if (!r.Screens.Any(e => e.Id == ScreenCatalog.FurniturePlacement)) r.Add(ScreenCatalog.FurniturePlacement, ScreenLayer.Panel, false, s => new Probe(s));
             });
             t.Stack.EnterMap("House");
             t.Stack.OpenHud();
