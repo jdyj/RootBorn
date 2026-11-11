@@ -1,0 +1,161 @@
+{
+  // 맵 목록. id는 Unity 판 씬 이름(세이브의 CurrentScene과 같다). 맵 크기는 적지 않는다 — LDtk 레벨에서 읽는다.
+  // spawns: 도착 지점, LDtk 레벨 픽셀 좌표(왼쪽 위 원점, 아래로 +y). Unity 씬의 WorldSpawnPoint 위치(x, y 유닛)를 그림 기준으로 (x*32, (1-y)*32)로 옮겼다
+  // (Unity의 LDtk 가져오기가 그림을 한 줄 위에 놓았으므로, 그림에 대한 자리를 지키려면 한 줄을 더한다. 집은 house.ldtk를 씬에서 새로 만들어 (x+14)*32, (9-y)*32).
+  // doors: 문 엔티티의 목적지 값(앞뒤 공백 제거, 소문자, '-'는 공백으로 비교) → 목적지 맵과 도착 지점. 표에 없는 값의 문은 열리지 않는다.
+  // viewCells: 화면에 보일 높이(칸). Unity 판 카메라 orthographic size × 2.
+  // entityRowShift: 문 엔티티와 칠한 Collision 층을 그림보다 몇 줄 아래로 읽을지. Unity 판 LDtk 가져오기가 그림을 한 줄 위에 놓아
+  //   게임에서는 문·칠한 칸이 그림보다 한 줄 아래였다. Unity 판에서 맞춰 쓴 마을·실내는 1, 씬에서 새로 만든 집은 0.
+  // collision.rule: interior-auto(실내 자동 판정) 또는 collider-layers(정해 둔 층의 타일이 막음). 칠한 Collision 층은 언제나 덮는다.
+  "walker": { "bodyCells": 1, "speedCellsPerSecond": 4 },
+  "maps": [
+    {
+      "id": "Town",
+      "ldtk": "Assets/LDtk/Town/town.ldtk",
+      "level": "Level_0",
+      "viewCells": 18,
+      "entityRowShift": 1,
+      "collision": { "rule": "collider-layers", "layers": [ "Building", "School", "Police", "Fense", "Shop", "Hospital" ] },
+      "doorField": "Door",
+      "spawnField": "SpawnPointID",
+      "doors": {
+        "house": { "map": "House", "spawn": "house-entry" },
+        "hospital": { "map": "HospitalInterior", "spawn": "hospital-entry" },
+        "shopping center": { "map": "ShopInterior", "spawn": "shop-entry" },
+        "police": { "map": "PoliceInterior", "spawn": "police-entry" },
+        "kitchen": { "map": "KitchenInterior", "spawn": "kitchen-entry" }
+      },
+      "spawns": {
+        "town-entry": [ 336, 496 ],
+        "town-home-entry": [ 592, 528 ],
+        "town-shop-entry": [ 1984, 464 ],
+        "town-hospital-entry": [ 1600, 1520 ],
+        "town-police-entry": [ 784, 1360 ],
+        "town-kitchen-entry": [ 784, 1872 ],
+        "town-bottom-entry": [ 1200, 1984 ]
+      }
+    },
+    {
+      "id": "House",
+      "ldtk": "Assets/LDtk/House/house.ldtk",
+      "level": "Level_0",
+      "viewCells": 10,
+      "collision": { "rule": "collider-layers", "layers": [] },
+      "doorField": "Where",
+      "spawnField": "Position",
+      "doors": {
+        "town": { "map": "Town", "spawn": "town-home-entry" },
+        "outside": { "map": "Town", "spawn": "town-home-entry" }
+      },
+      "spawns": { "house-entry": [ 464, 496 ] }
+    },
+    {
+      "id": "ShopInterior",
+      "ldtk": "Assets/LDtk/Interiors/interiors.ldtk",
+      "level": "Shop",
+      "entityRowShift": 1,
+      "viewCells": 13,
+      "collision": { "rule": "interior-auto" },
+      "doorField": "Where",
+      "spawnField": "Position",
+      "doors": {
+        "town": { "map": "Town", "spawn": "town-shop-entry" },
+        "outside": { "map": "Town", "spawn": "town-shop-entry" },
+        "shop": { "map": "Town", "spawn": "town-shop-entry" }
+      },
+      "spawns": { "shop-entry": [ 304, 176 ] }
+    },
+    {
+      "id": "HospitalInterior",
+      "ldtk": "Assets/LDtk/Interiors/interiors.ldtk",
+      "level": "Hospital_1",
+      "entityRowShift": 1,
+      "viewCells": 13,
+      "collision": { "rule": "interior-auto" },
+      "doorField": "Where",
+      "spawnField": "Position",
+      "doors": {
+        "town": { "map": "Town", "spawn": "town-hospital-entry" },
+        "outside": { "map": "Town", "spawn": "town-hospital-entry" },
+        "hospital": { "map": "Town", "spawn": "town-hospital-entry" }
+      },
+      "spawns": { "hospital-entry": [ 128, 432 ] }
+    },
+    {
+      "id": "PoliceInterior",
+      "ldtk": "Assets/LDtk/Interiors/interiors.ldtk",
+      "level": "Police_1",
+      "entityRowShift": 1,
+      "viewCells": 13,
+      "collision": { "rule": "interior-auto" },
+      "doorField": "Where",
+      "spawnField": "Position",
+      "doors": {
+        "town": { "map": "Town", "spawn": "town-police-entry" },
+        "outside": { "map": "Town", "spawn": "town-police-entry" },
+        "police_1": { "map": "Town", "spawn": "town-police-entry" },
+        "police_2": { "map": "PoliceShootingInterior", "spawn": "police-2-entry" },
+        "kitchen2": { "map": "Kitchen2Interior", "spawn": "kitchen-2-entry" },
+        "kitchen1": { "map": "KitchenInterior", "spawn": "kitchen-entry" }
+      },
+      "spawns": { "police-entry": [ 336, 304 ] }
+    },
+    {
+      "id": "PoliceShootingInterior",
+      "ldtk": "Assets/LDtk/Interiors/interiors.ldtk",
+      "level": "Police_2",
+      "entityRowShift": 1,
+      "viewCells": 13,
+      "collision": { "rule": "interior-auto" },
+      "doorField": "Where",
+      "spawnField": "Position",
+      "doors": {
+        "town": { "map": "Town", "spawn": "town-police-entry" },
+        "outside": { "map": "Town", "spawn": "town-police-entry" },
+        "police_2": { "map": "Town", "spawn": "town-police-entry" },
+        "police_1": { "map": "PoliceInterior", "spawn": "police-entry" },
+        "kitchen2": { "map": "Kitchen2Interior", "spawn": "kitchen-2-entry" },
+        "kitchen1": { "map": "KitchenInterior", "spawn": "kitchen-entry" }
+      },
+      "spawns": { "police-2-entry": [ 80, 304 ] }
+    },
+    {
+      "id": "KitchenInterior",
+      "ldtk": "Assets/LDtk/Interiors/interiors.ldtk",
+      "level": "Level_14",
+      "entityRowShift": 1,
+      "viewCells": 13,
+      "collision": { "rule": "interior-auto" },
+      "doorField": "Where",
+      "spawnField": "Position",
+      "doors": {
+        "town": { "map": "Town", "spawn": "town-kitchen-entry" },
+        "outside": { "map": "Town", "spawn": "town-kitchen-entry" },
+        "kitchen1": { "map": "Town", "spawn": "town-kitchen-entry" },
+        "police_2": { "map": "PoliceShootingInterior", "spawn": "police-2-entry" },
+        "police_1": { "map": "PoliceInterior", "spawn": "police-entry" },
+        "kitchen2": { "map": "Kitchen2Interior", "spawn": "kitchen-2-entry" }
+      },
+      "spawns": { "kitchen-entry": [ 208, 304 ] }
+    },
+    {
+      "id": "Kitchen2Interior",
+      "ldtk": "Assets/LDtk/Interiors/interiors.ldtk",
+      "level": "Kitchen2",
+      "entityRowShift": 1,
+      "viewCells": 13,
+      "collision": { "rule": "interior-auto" },
+      "doorField": "Where",
+      "spawnField": "Position",
+      "doors": {
+        "town": { "map": "Town", "spawn": "town-kitchen-entry" },
+        "outside": { "map": "Town", "spawn": "town-kitchen-entry" },
+        "kitchen2": { "map": "Town", "spawn": "town-kitchen-entry" },
+        "police_2": { "map": "PoliceShootingInterior", "spawn": "police-2-entry" },
+        "police_1": { "map": "PoliceInterior", "spawn": "police-entry" },
+        "kitchen1": { "map": "KitchenInterior", "spawn": "kitchen-entry" }
+      },
+      "spawns": { "kitchen-2-entry": [ 80, 144 ] }
+    }
+  ]
+}

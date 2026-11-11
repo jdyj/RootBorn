@@ -40,14 +40,15 @@ namespace Rootborn.Host.Rendering
     public sealed class UiRenderer : IDisposable
     {
         // 색은 알파를 곱하지 않은 채로 섞고, 알파는 불투명하게 쌓는다(저장한 화면이 반투명해지지 않게).
-        private static readonly BlendState Blend = new BlendState
+        // 상태 객체는 그래픽 장치에 묶이므로 렌더러마다 만들고 버린다(한 프로세스에서 창을 다시 띄우는 테스트가 있다).
+        private readonly BlendState _blend = new BlendState
         {
             ColorSourceBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceAlpha,
             ColorDestinationBlend = Microsoft.Xna.Framework.Graphics.Blend.InverseSourceAlpha,
             AlphaSourceBlend = Microsoft.Xna.Framework.Graphics.Blend.One,
             AlphaDestinationBlend = Microsoft.Xna.Framework.Graphics.Blend.InverseSourceAlpha,
         };
-        private static readonly RasterizerState Scissor = new RasterizerState { CullMode = CullMode.None, ScissorTestEnable = true };
+        private readonly RasterizerState _scissor = new RasterizerState { CullMode = CullMode.None, ScissorTestEnable = true };
 
         private readonly GraphicsDevice _device;
         private readonly SpriteBatch _batch;
@@ -111,12 +112,14 @@ namespace Rootborn.Host.Rendering
             _device.ScissorRectangle = full;
         }
 
-        private void Begin() => _batch.Begin(SpriteSortMode.Deferred, Blend, SamplerState.PointClamp, null, Scissor);
+        private void Begin() => _batch.Begin(SpriteSortMode.Deferred, _blend, SamplerState.PointClamp, null, _scissor);
 
         public void Dispose()
         {
             _batch.Dispose();
             _white.Dispose();
+            _blend.Dispose();
+            _scissor.Dispose();
         }
     }
 }

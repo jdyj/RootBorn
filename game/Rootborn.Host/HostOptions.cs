@@ -13,6 +13,7 @@ namespace Rootborn.Host
         public const string RootVariable = "ROOTBORN_REPO_ROOT";
         public const string FontVariable = "ROOTBORN_FONT";
         public const string EvidenceVariable = "ROOTBORN_EVIDENCE_DIR";
+        public const string WorldMapsVariable = "ROOTBORN_WORLD_MAPS";
 
         public string RepoRoot;
         public string FontPath;
@@ -22,10 +23,20 @@ namespace Rootborn.Host
         /// <summary>견본 화면을 띄운다.</summary>
         public bool Sample;
 
+        /// <summary>월드 화면으로 시작할 맵(맵 id 또는 LDtk 레벨 이름, 예: Shop). 없으면 월드 화면을 띄우지 않는다.</summary>
+        public string World;
+        /// <summary>시작 도착 지점 id. 없으면 맵 목록에서 그 맵의 첫 도착 지점.</summary>
+        public string WorldSpawn;
+        /// <summary>맵 목록 파일. 없으면 저장소의 game/world/maps.json.</summary>
+        public string WorldMapsPath;
+
         /// <summary>테스트가 한 프레임씩 돌린다: 고정 시간 간격, 수직 동기 끔, 창이 뒤에 있어도 쉬지 않음.</summary>
         public bool TestMode;
 
         public string UiSheetPath => Path.Combine(RepoRoot, "Assets", "modernuserinterface-win", "16x16", "Modern_UI_Style_2.png");
+
+        /// <summary>월드 화면의 캐릭터 그림. 레이어 캐릭터는 다음 단계라 지금은 Premade 한 장을 쓴다.</summary>
+        public string CharacterSheetPath => Path.Combine(RepoRoot, "Assets", "ModernInteriors", "Characters", "Premade32", "Premade_Character_32x32_02.png");
 
         /// <param name="environment">환경 변수 읽기. 테스트가 바꿔 넣는다.</param>
         /// <param name="searchFrom">저장소를 찾아 올라가기 시작할 폴더. 기본은 실행 파일 위치.</param>
@@ -37,6 +48,7 @@ namespace Rootborn.Host
                 RepoRoot = environment(RootVariable),
                 FontPath = environment(FontVariable),
                 EvidenceDir = environment(EvidenceVariable),
+                WorldMapsPath = environment(WorldMapsVariable),
             };
             for (int i = 0; i < args.Length; i++)
             {
@@ -49,6 +61,9 @@ namespace Rootborn.Host
                     case "--root": o.RepoRoot = value; break;
                     case "--font": o.FontPath = value; break;
                     case "--evidence": o.EvidenceDir = value; break;
+                    case "--world": o.World = value; break;
+                    case "--spawn": o.WorldSpawn = value; break;
+                    case "--maps": o.WorldMapsPath = value; break;
                     case "--size":
                         string[] wh = value.Split('x');
                         if (wh.Length != 2 || !int.TryParse(wh[0], out o.Width) || !int.TryParse(wh[1], out o.Height) || o.Width < 320 || o.Height < 180)
@@ -74,7 +89,11 @@ namespace Rootborn.Host
             if (!File.Exists(o.FontPath))
                 throw new InvalidOperationException("글꼴 파일이 없다: " + o.FontPath);
 
-            if (string.IsNullOrEmpty(o.EvidenceDir)) o.EvidenceDir = Path.Combine(o.RepoRoot, "output", "host-ui-evidence");
+            if (string.IsNullOrEmpty(o.EvidenceDir)) o.EvidenceDir = Path.Combine(o.RepoRoot, "output", o.World != null ? "host-world-evidence" : "host-ui-evidence");
+            if (o.World != null && !File.Exists(o.CharacterSheetPath))
+                throw new InvalidOperationException("캐릭터 그림이 없다: " + o.CharacterSheetPath);
+            if (o.World != null && o.WorldMapsPath != null && !File.Exists(o.WorldMapsPath))
+                throw new InvalidOperationException("맵 목록 파일이 없다: " + o.WorldMapsPath);
             return o;
         }
 

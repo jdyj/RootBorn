@@ -6,6 +6,7 @@ using Rootborn.Host.Input;
 using Rootborn.Host.Rendering;
 using Rootborn.Host.Sample;
 using Rootborn.Host.Text;
+using Rootborn.Host.World;
 using Rootborn.Ui;
 
 namespace Rootborn.Host
@@ -13,10 +14,12 @@ namespace Rootborn.Host
     /// <summary>
     /// 창과 게임 루프. 프레임마다 장치 계층(키보드, 포인터, 글자)을 한 번씩 읽어 UI에 값으로 넘기고,
     /// UI가 낸 그리기 명령을 창 크기의 화면 버퍼에 그린 뒤 창에 옮긴다. 규칙 판단은 여기에 쓰지 않는다.
+    /// 월드 화면(--world)이면 누르고 있는 방향 키를 월드에 넘기고 월드를 먼저 그린다. 테스트 모드는 프레임마다 1/60초씩 흐른다.
     /// </summary>
     public sealed class HostGame : Game
     {
         private static readonly Color Background = new Color(24, 22, 30);
+        private const float TestFrameSeconds = 1f / 60f;
 
         private readonly HostOptions _options;
         private readonly GraphicsDeviceManager _graphics;
@@ -38,6 +41,7 @@ namespace Rootborn.Host
 
         public ScreenFit Fit { get; private set; }
         public SampleScreen Sample { get; private set; }
+        public WorldScreen World { get; private set; }
         public UiTree Ui => _tree;
 
         /// <summary>글자 칸이 선택되어 입력기가 켜져 있다.</summary>
@@ -68,7 +72,12 @@ namespace Rootborn.Host
             _measurer = new HostTextMeasurer(_text);
             _renderer = new UiRenderer(GraphicsDevice, _sheet, _text);
             _textInput = new TextInputDevice(Window);
-            ShowSample();
+            if (_options.World != null)
+            {
+                World = new WorldScreen(GraphicsDevice, _options);
+                SetTree(new UiTree());
+            }
+            else ShowSample();
         }
 
         /// <summary>견본 화면을 새로 만들어 띄운다.</summary>
@@ -136,6 +145,11 @@ namespace Rootborn.Host
                 if (_tree.Focused != null) _tree.SetFocus(null);
                 else if (!_options.TestMode) Exit();
             }
+            if (World != null)
+            {
+                float dt = _options.TestMode ? TestFrameSeconds : (float)gameTime.ElapsedGameTime.TotalSeconds;
+                World.Update(keys.MoveX, keys.MoveY, dt);
+            }
             if (keys.Screenshot) SaveScreenshot(Path.Combine(_options.EvidenceDir, "manual-" + (++_shotCount).ToString("00") + ".png"));
 
             SyncTextInput();
@@ -158,6 +172,7 @@ namespace Rootborn.Host
             _tree.Emit(_drawList, _measurer);
             GraphicsDevice.SetRenderTarget(_scene);
             GraphicsDevice.Clear(Background);
+            World?.Draw(_batch, _scene.Width, _scene.Height);
             _renderer.Draw(_drawList, Fit);
             GraphicsDevice.SetRenderTarget(null);
             _batch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, null, null);
@@ -176,6 +191,7 @@ namespace Rootborn.Host
 
         protected override void UnloadContent()
         {
+            World?.Dispose();
             _textInput?.Dispose();
             _renderer?.Dispose();
             _text?.Dispose();

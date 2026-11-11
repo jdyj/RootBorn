@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using Microsoft.Xna.Framework;
+using Rootborn.Core.World;
 using Rootborn.Host.Input;
 using Rootborn.Ui;
 
@@ -179,6 +180,123 @@ namespace Rootborn.Host.Tests
         {
             Sdl2Native.PushTextEditing(Game.Window.Handle, text);
             Frames(2);
+        }
+
+        // ---------- 월드: 걷기와 문 ----------
+        // 어디로 갈지(칸 경로)만 Core의 GridPath로 정하고, 움직임은 언제나 방향 키를 누르고 떼는 것으로만 만든다.
+        // 매 프레임 몸 상자가 막힌 칸에 들어갔는지 세어 둔다(CollisionViolations).
+
+        private const int MaxFramesPerRun = 900;
+
+        public WorldSession World => Game.World?.Session ?? throw new InvalidOperationException("월드 화면이 아니다(--world)");
+        public int CollisionViolations { get; private set; }
+        public int WorldFrames { get; private set; }
+
+        public CellPos PlayerCell
+        {
+            get
+            {
+                Walker w = World.Walker;
+                return CellPos.Containing(w.X, w.Y, World.Map.Grid.CellSize);
+            }
+        }
+
+        private void WorldFrame()
+        {
+            Frames(1);
+            WorldFrames++;
+            if (World.Map.Collision.AnyBlocked(World.Walker.Box)) CollisionViolations++;
+        }
+
+        private static TestKey KeyFor(int dx, int dy) => dx > 0 ? TestKey.Right : dx < 0 ? TestKey.Left : dy > 0 ? TestKey.Down : TestKey.Up;
+
+        /// <summary>
+        /// 방향 키 하나를 누르고 있다가, 그 축으로 목표 좌표에 닿으면(한 프레임 걸음의 반 안) 뗀다. 맵이 바뀌면 바로 떼고 false.
+        /// </summary>
+        private bool HoldUntil(int dx, int dy, float target, string what)
+        {
+            string map = World.Map.Id;
+            float Remaining() => dx != 0 ? (target - World.Walker.X) * dx : (target - World.Walker.Y) * dy;
+            float step = World.Map.Grid.CellSize * 4f / 60f;
+            TestKey key = KeyFor(dx, dy);
+            KeyDown(key);
+            WorldFrames += 2;
+            int frames = 0;
+            while (World.Map.Id == map && Remaining() > step / 2f)
+            {
+                if (++frames > MaxFramesPerRun) { KeyUp(key); throw new InvalidOperationException(what + ": " + MaxFramesPerRun + "프레임 안에 닿지 못했다. 지금 " + World.Walker.X + "," + World.Walker.Y); }
+                WorldFrame();
+            }
+            KeyUp(key);
+            WorldFrames += 2;
+            return World.Map.Id == map;
+        }
+
+        /// <summary>칸 경로를 따라 걷는다. 같은 방향 칸은 한 번에 누르고 간다. 도중에 문을 지나 맵이 바뀌면 false.</summary>
+        private bool FollowPath(Func<CellPos, bool> goal, string what)
+        {
+            CellPos start = PlayerCell;
+            List<CellPos> path = GridPath.Find(World.Map.Collision, start, goal) ?? throw new InvalidOperationException(what + ": " + World.Map.Id + "에서 " + start + "부터 갈 길이 없다");
+            int size = World.Map.Grid.CellSize;
+            int i = 0;
+            while (i < path.Count)
+            {
+                CellPos from = i == 0 ? start : path[i - 1];
+                int dx = path[i].X - from.X, dy = path[i].Y - from.Y;
+                int j = i;
+                while (j + 1 < path.Count && path[j + 1].X - path[j].X == dx && path[j + 1].Y - path[j].Y == dy) j++;
+                var center = CellPos.Center(path[j], size);
+                if (!HoldUntil(dx, dy, dx != 0 ? center.X : center.Y, what + " → " + path[j])) return false;
+                i = j + 1;
+            }
+            return true;
+        }
+
+        /// <summary>걸어가기: 칸 경로를 찾아 방향 키로 그 칸 가운데까지 걷는다.</summary>
+        public void WalkTo(CellPos cell)
+        {
+            if (!FollowPath(c => c.Equals(cell), "걸어가기 " + cell)) throw new InvalidOperationException("걸어가는 도중 맵이 바뀌었다: " + World.Map.Id);
+        }
+
+        /// <summary>
+        /// 문 통과: 문 칸이나 문에 맞닿은 칸까지 걸어간 뒤 문 쪽으로 키를 누르고 있다가 맵이 바뀌면 뗀다.
+        /// target은 문 엔티티의 목적지 값(예: town, house, shopping center). 바뀐 맵 id를 돌려준다.
+        /// </summary>
+        public string WalkThroughDoor(string target)
+        {
+            string from = World.Map.Id;
+            DoorArea door = null;
+            foreach (DoorArea d in World.Map.Doors)
+                if (d.Destination.HasValue && DoorRoutes.Normalize(d.Target) == DoorRoutes.Normalize(target)) { door = d; break; }
+            if (door == null) throw new InvalidOperationException(from + "에 '" + target + "' 문이 없다");
+            int size = World.Map.Grid.CellSize;
+            var doorCells = new HashSet<CellPos>(CollisionInput.CellsUnder(door.Area, size));
+            bool Near(CellPos c) => doorCells.Contains(c) || doorCells.Contains(new CellPos(c.X + 1, c.Y)) || doorCells.Contains(new CellPos(c.X - 1, c.Y))
+                || doorCells.Contains(new CellPos(c.X, c.Y + 1)) || doorCells.Contains(new CellPos(c.X, c.Y - 1));
+            if (FollowPath(Near, "문 " + target + "까지"))
+            {
+                Walker w = World.Walker;
+                float ddx = door.Area.CenterX - w.X, ddy = door.Area.CenterY - w.Y;
+                int dx = Math.Abs(ddx) > Math.Abs(ddy) ? Math.Sign(ddx) : 0, dy = dx == 0 ? Math.Sign(ddy) : 0;
+                TestKey key = KeyFor(dx, dy);
+                KeyDown(key);
+                WorldFrames += 2;
+                for (int i = 0; i < 240 && World.Map.Id == from; i++) WorldFrame();
+                KeyUp(key);
+            }
+            for (int i = 0; i < 60 && World.Map.Id == from; i++) WorldFrame(); // 문이 열리는 0.35초
+            if (World.Map.Id == from) throw new InvalidOperationException("문 '" + target + "'을 지나지 못했다. 지금 " + World.Walker.X + "," + World.Walker.Y);
+            Frames(2);
+            return World.Map.Id;
+        }
+
+        /// <summary>한 방향 키를 정해진 프레임 동안 누르고 있는다(벽에 부딪히는지 볼 때).</summary>
+        public void HoldKey(TestKey key, int frames)
+        {
+            KeyDown(key);
+            WorldFrames += 2;
+            for (int i = 0; i < frames; i++) WorldFrame();
+            KeyUp(key);
         }
 
         public string Screenshot(string name)

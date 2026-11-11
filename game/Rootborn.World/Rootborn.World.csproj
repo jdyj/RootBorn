@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 맵 읽기: LDtk 파일과 맵 목록(game/world/maps.json)을 변환 단계 없이 읽어 Core 월드(충돌·문·도착 지점)와 그릴 목록을 만든다.
+       Core만 참조한다(게임 엔진 참조 금지). -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Rootborn.World</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Rootborn.Core/Rootborn.Core.csproj" />
+  </ItemGroup>
+</Project>

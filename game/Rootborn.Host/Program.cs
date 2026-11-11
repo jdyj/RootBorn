@@ -17,10 +17,10 @@ namespace Rootborn.Host
                 Console.Error.WriteLine(e.Message);
                 return 2;
             }
-            if (!options.Sample)
+            if (!options.Sample && options.World == null)
             {
-                Console.Error.WriteLine("아직 옮긴 게임 화면이 없다. --sample 을 주면 UI 견본 화면을 띄운다.");
-                Console.Error.WriteLine("인자: --sample  --size 1280x720  --root <저장소>  --font <TTF>  --evidence <스크린샷 폴더>");
+                Console.Error.WriteLine("띄울 화면을 고른다: --world <맵>(예: Shop, Town, House) 또는 --sample(UI 견본).");
+                Console.Error.WriteLine("인자: --world <맵>  --spawn <도착 지점>  --maps <맵 목록>  --sample  --size 1280x720  --root <저장소>  --font <TTF>  --evidence <스크린샷 폴더>");
                 return 2;
             }
             using var game = new HostGame(options);

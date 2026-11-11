@@ -30,10 +30,15 @@ namespace Rootborn.Host.Input
         }
     }
 
-    /// <summary>이번 프레임에 새로 눌린 키. Shift만 누르고 있는 상태다.</summary>
+    /// <summary>이번 프레임에 새로 눌린 키. Shift와 Held*는 누르고 있는 상태다(걷기는 화살표나 WASD를 누르고 있는 동안).</summary>
     public struct KeyFrame
     {
         public bool Up, Down, Left, Right, Tab, Enter, Escape, Screenshot, Shift;
+        public bool HeldUp, HeldDown, HeldLeft, HeldRight;
+
+        /// <summary>누르고 있는 방향 키로 정한 걷기 방향(-1, 0, 1). 반대 방향을 함께 누르면 0.</summary>
+        public int MoveX => (HeldRight ? 1 : 0) - (HeldLeft ? 1 : 0);
+        public int MoveY => (HeldDown ? 1 : 0) - (HeldUp ? 1 : 0);
     }
 
     /// <summary>키보드 장치를 읽는 유일한 곳. 한 프레임 안에 눌렀다 뗀 키는 보이지 않는다.</summary>
@@ -55,6 +60,10 @@ namespace Rootborn.Host.Input
                 Escape = Pressed(now, Keys.Escape),
                 Screenshot = Pressed(now, Keys.F12),
                 Shift = now.IsKeyDown(Keys.LeftShift) || now.IsKeyDown(Keys.RightShift),
+                HeldUp = now.IsKeyDown(Keys.Up) || now.IsKeyDown(Keys.W),
+                HeldDown = now.IsKeyDown(Keys.Down) || now.IsKeyDown(Keys.S),
+                HeldLeft = now.IsKeyDown(Keys.Left) || now.IsKeyDown(Keys.A),
+                HeldRight = now.IsKeyDown(Keys.Right) || now.IsKeyDown(Keys.D),
             };
             _previous = now;
             return frame;

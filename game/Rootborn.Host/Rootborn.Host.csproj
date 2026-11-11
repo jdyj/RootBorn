@@ -14,6 +14,8 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Rootborn.Ui/Rootborn.Ui.csproj" />
+    <ProjectReference Include="../Rootborn.Core/Rootborn.Core.csproj" />
+    <ProjectReference Include="../Rootborn.World/Rootborn.World.csproj" />
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="[3.8.6.1]" />
     <PackageReference Include="StbTrueTypeSharp" Version="[1.26.12]" />
   </ItemGroup>
