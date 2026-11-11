@@ -300,7 +300,7 @@ namespace Rootborn.Screens
             foreach (GameScreen screen in ReverseSnapshot())
                 if (screen.IsOpen && screen.OnKey(key, shift)) return true;
 
-            if (!ScreenBlocksMovement && _registry.TryGetByKey(key, out string bound))
+            if (_registry.TryGetByKey(key, out string bound) && KeyBindingOpen(bound))
             {
                 Toggle(bound);
                 return true;
@@ -328,6 +328,38 @@ namespace Rootborn.Screens
                 return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// 키 배정이 들리는가: 이동을 막는 화면이 없을 때. 단, 여는 키가 시작 화면 위에서도 듣는 화면(KeyWorksOnStartScreens)은
+        /// 막는 화면이 모두 시작 화면(WithoutWorld)일 때도 연다. 미니게임처럼 월드 위에서 막는 화면이 떠 있으면 열지 않는다.
+        /// </summary>
+        private bool KeyBindingOpen(string screenId)
+        {
+            if (!ScreenBlocksMovement) return true;
+            if (!_registry.TryGet(screenId, out ScreenEntry entry) || !entry.KeyWorksOnStartScreens) return false;
+            for (int i = 0; i < _open.Count; i++)
+                if (_open[i].BlocksMovement && (!_registry.TryGet(_open[i].Id, out ScreenEntry open) || !open.WithoutWorld)) return false;
+            return true;
+        }
+
+        /// <summary>등록 표(읽기 전용 조회: 단축키 안내가 키 배정을 읽는다).</summary>
+        public ScreenRegistry Registry => _registry;
+
+        /// <summary>
+        /// 화면 안에서 버튼을 옮기는 키의 안내 줄. 이 키를 처리하는 곳(Key)과 같은 규칙: 이동을 막는 화면은 방향 키, 막지 않는 화면은
+        /// Shift+방향 키로 옮기고 Enter로 누른다. 장치 키 이름은 Host가 채운 이름표에서 받는다.
+        /// </summary>
+        public static IReadOnlyList<KeyGuide.KeyGuideRow> NavigationGuide(KeyGuide.KeyGuideKeys keys)
+        {
+            KeyGuide.KeyChord directions = keys.Directions;
+            var withShift = directions.With(keys.Shift);
+            return new[]
+            {
+                new KeyGuide.KeyGuideRow(KeyGuide.KeyGuideGroups.Navigation, "ui.keys.navigate-blocking", new[] { directions }),
+                new KeyGuide.KeyGuideRow(KeyGuide.KeyGuideGroups.Navigation, "ui.keys.navigate-walking", new[] { withShift }),
+                new KeyGuide.KeyGuideRow(KeyGuide.KeyGuideGroups.Navigation, "ui.keys.press", keys.For(ScreenKey.Enter)),
+            };
         }
 
         private IEnumerable<GameScreen> ReverseSnapshot()

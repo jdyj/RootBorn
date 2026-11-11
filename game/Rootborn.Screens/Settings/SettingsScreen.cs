@@ -68,12 +68,20 @@ namespace Rootborn.Screens.Settings
         public const string LanguageButtonId = "settings.language.value";
         public const string DisplayLabelId = "settings.display.label";
         public const string DisplayButtonId = "settings.display.value";
+        public const string KeyGuideButtonId = "settings.key-guide";
+
+        /// <summary>단축키 안내 단추: 아래 테두리 띠 위 가운데(무늬 줄 -204보다 아래). 누르면 단축키 안내가 위에 뜬다.</summary>
+        internal static class KeyGuideButton
+        {
+            public const float Y = -230f, Width = 200f, Height = 40f, Font = 18f;
+        }
 
         private readonly UiToggle[] _toggles = new UiToggle[SettingsModel.ToggleNames.Length];
         private UiLabel _languageLabel;
         private UiButton _languageButton;
         private UiLabel _displayLabel;
         private UiButton _displayButton;
+        private UiButton _keyGuideButton;
 
         public SettingsScreen(ScreenServices services) : base(services)
         {
@@ -108,6 +116,7 @@ namespace Rootborn.Screens.Settings
             CornerOrnaments(root);
             PatternRow(root, 154f);
             PatternRow(root, -204f);
+            KeyGuideLine(root);
             return root;
         }
 
@@ -116,13 +125,24 @@ namespace Rootborn.Screens.Settings
             for (int i = 0; i < _toggles.Length; i++) _toggles[i].IsOn = Model.IsOn(i);
             WriteLanguage();
             WriteDisplay();
+            WriteKeyGuide();
         }
 
         protected internal override void OnChanged(string topic)
         {
             if (topic == ChangeTopics.Language || topic == ChangeTopics.All) { WriteLanguage(); WriteDisplay(); }
             else if (topic == ChangeTopics.Display) WriteDisplay();
+            if (topic == ChangeTopics.Language || topic == ChangeTopics.All) WriteKeyGuide();
         }
+
+        private void KeyGuideLine(UiNode root)
+        {
+            _keyGuideButton = root.Add(new UiButton { Id = KeyGuideButtonId, FontSize = KeyGuideButton.Font })
+                .Centered(0f, KeyGuideButton.Y, KeyGuideButton.Width, KeyGuideButton.Height);
+            _keyGuideButton.Clicked += () => Services.Screens?.Open(ScreenCatalog.KeyGuide);
+        }
+
+        private void WriteKeyGuide() => _keyGuideButton.Text = T("ui.settings.key-guide");
 
         private void LanguageLine(UiNode root)
         {

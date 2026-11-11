@@ -13,8 +13,9 @@ namespace Rootborn.Screens
     /// 화면 쌓기가 받는 키(장치 키가 아니라 Host가 옮겨 준 값). Interact는 Unity 상호작용 키(E·Space·Ctrl) 묶음이다.
     /// Space·Rotate(R)·AltLeft(A)·AltRight(D)는 미니게임 키(Unity MinigamePanel). Space는 같은 프레임의 Interact보다 먼저 온다.
     /// LocationLog(L)는 장소 기록(Unity 판에는 키가 없었다 — 사용자 결정 2026-11-12).
+    /// Help는 단축키 안내(F1).
     /// </summary>
-    public enum ScreenKey { Up, Down, Left, Right, Tab, Enter, Escape, Inventory, Status, Interact, Space, Rotate, AltLeft, AltRight, LocationLog }
+    public enum ScreenKey { Up, Down, Left, Right, Tab, Enter, Escape, Inventory, Status, Interact, Space, Rotate, AltLeft, AltRight, LocationLog, Help }
 
     /// <summary>
     /// "무엇이 바뀌었다" 알림의 이름. 게임 진행 쪽 이름은 GameSession.Changed가 알리는 GameChangeTopics 그대로이고,
@@ -73,6 +74,8 @@ namespace Rootborn.Screens
         public Settings.DisplayModeSetting Display { get; set; }
         /// <summary>옷장이 부르는 캐릭터 쪽(Host가 채운다). 없으면 옷장은 비어 있다.</summary>
         public Records.IWardrobeBackend Wardrobe { get; set; }
+        /// <summary>장치 키 이름표(단축키 안내). Host가 Input/Devices.cs의 배정으로 채운다. 없으면 ScreenKey 이름으로 보인다.</summary>
+        public Rootborn.Screens.KeyGuide.KeyGuideKeys KeyGuide { get; set; } = new Rootborn.Screens.KeyGuide.KeyGuideKeys();
     }
 
     /// <summary>화면을 연 까닭. 상호작용으로 열었으면 그 이벤트가 있다. Argument는 여는 쪽이 넘긴 값(예: 하루 이벤트 id).</summary>

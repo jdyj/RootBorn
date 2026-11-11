@@ -69,6 +69,7 @@ E·Space·Ctrl(Unity 판과 같은 상호작용 키)을 누르면 앞의 대상�
 Esc는 설정, I는 가방, C는 상태, Tab은 목표 수첩(등록된 화면만). HUD(시계, 체력·집중, 추적 목표, HUD 버튼, 상호작용 안내 글자)는 월드를 띄우면 늘 떠 있다. NPC 앞에서 E는 대화, 장소 지점(location-activity)에서 E를 누르면 그 장소의 하루 이벤트가 열린다. 이동을 막지 않는 화면의 버튼은 Shift+방향 키로 옮기고 Enter로 누른다. 이동을 막는 화면이 떠 있거나 글자를 치는 동안은 걷지 않는다. 월드 화면에서는 화살표나 WASD를 누르고 있는 동안 걷고, 문에 들어서면 0.35초 뒤 목적지 맵으로 간다. 증거 폴더 기본값은 `<저장소>/output/host-world-evidence`.
 
 발견 지점(`discovery`)에서 E를 누르면 알림 층에 발견 알림(`discovery-notice`)이 뜬다: 화면이 `GameSession.Discover(지점 id)`를 부르고 발견 이름, 결과(새로 알게 됨·이미 살펴봄·아직 알 수 없음), 바뀐 성장 줄을 보인 뒤 4초 뒤 저절로 닫힌다(이동을 막지 않고 포인터도 가져가지 않는다). 한 번만 적용되는지와 저장은 Core·`GameSession`이 정한다.
+F1은 단축키 안내(모달, 이동을 막음, 시작 화면에서도 열림, 설정의 "단축키" 단추로도). 줄은 등록 표의 키 배정(`ScreenRegistry.KeyBindings`, 하는 일 문구 키 `ui.keys.<화면 id>`), 화면 쌓기의 버튼 옮기기, Host 이름표(`Input/Devices.cs`의 `KeyGuideNames`)에서 만든다 — 키 배정을 바꾸면 이름표에도 한 줄.
 미니게임은 알바·연습·시설 일이 예약되면 저절로 열리고(누가 예약했든 "게임 진행이 바뀜" 알림으로 본다), 일터 지점(`part-time-work`)·연습 지점(`career-practice`)에서 E를 누르면 예약한다. Space 박자, R 돌리기, A/D·←/→ 줄 옮기기, 포인터로 단추·칸·조준 판. 시간은 Host가 넘기는 프레임 dt(`ScreenStack.Tick`)로만 흐르고, 끝나면 한 번 정산하고 결과를 보인 채 둔다. Esc·닫기는 끝나지 않은 판을 포기로 정산하고 닫는다. 도전 종류마다 그리는 부분은 `Minigames/ChallengeViewCatalog`에 한 줄로 등록한다.
 목표 수첩(Tab, 1440x840, 걸으면서 볼 수 있음)은 분류 줄 + 목록(보이는 줄만 그림, 긴 글은 말줄임) + 상세 + 추적·행동 단추다. 항목은 `Objectives/ObjectiveJournalSourceCatalog`에 한 줄씩 등록한 모으는 쪽이 `GameSession` 조회로 만들고, 글자는 키와 값(`JournalText`)으로만 넘긴다. 추적 목표 HUD는 수첩에서 "추적"한 항목 하나만 보인다(추적하지 않았으면 숨음). 추적 지정은 `GameSession.TrackObjective`로 세이브에 저장되어 이어 해도 남는다.
 

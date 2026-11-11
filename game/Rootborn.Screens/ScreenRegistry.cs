@@ -17,6 +17,8 @@ namespace Rootborn.Screens
         public Func<ScreenServices, GameScreen> Create { get; }
         /// <summary>월드(HUD) 없이 뜨는 화면(슬롯 선택처럼 게임 한 판 전). HUD와 함께 떠 있지 않는다.</summary>
         public bool WithoutWorld { get; internal set; }
+        /// <summary>여는 키가 시작 화면(WithoutWorld) 위에서도 듣는다.</summary>
+        public bool KeyWorksOnStartScreens { get; internal set; }
     }
 
     /// <summary>
@@ -28,6 +30,7 @@ namespace Rootborn.Screens
         private readonly Dictionary<string, ScreenEntry> _screens = new Dictionary<string, ScreenEntry>(StringComparer.Ordinal);
         private readonly Dictionary<ScreenKey, string> _keys = new Dictionary<ScreenKey, string>();
         private readonly Dictionary<string, string> _interactions = new Dictionary<string, string>(StringComparer.Ordinal);
+        private readonly List<KeyValuePair<ScreenKey, string>> _keyOrder = new List<KeyValuePair<ScreenKey, string>>();
 
         public Registration Add(string id, ScreenLayer layer, bool blocksMovement, Func<ScreenServices, GameScreen> create)
         {
@@ -56,6 +59,8 @@ namespace Rootborn.Screens
         public bool Has(string id) => id != null && _screens.ContainsKey(id);
         public bool TryGet(string id, out ScreenEntry entry) => _screens.TryGetValue(id ?? string.Empty, out entry);
         public bool TryGetByKey(ScreenKey key, out string screenId) => _keys.TryGetValue(key, out screenId);
+        /// <summary>키 → 화면 배정, 등록한 순서(단축키 안내가 읽는다).</summary>
+        public IReadOnlyList<KeyValuePair<ScreenKey, string>> KeyBindings => _keyOrder;
         public bool TryGetByInteraction(string kind, out string screenId) => _interactions.TryGetValue(kind ?? string.Empty, out screenId);
         /// <summary>등록된 상호작용 종류 → 그 종류가 여는 화면 id(OpenedByInteraction으로 등록한 것 전부).</summary>
         public IReadOnlyDictionary<string, string> InteractionKinds => _interactions;
@@ -72,6 +77,17 @@ namespace Rootborn.Screens
             {
                 if (_owner._keys.TryGetValue(key, out string other)) throw new InvalidOperationException($"키 {key}는 이미 화면 {other}에 배정됐다");
                 _owner._keys[key] = _id;
+                _owner._keyOrder.Add(new KeyValuePair<ScreenKey, string>(key, _id));
+                return this;
+            }
+
+            /// <summary>
+            /// 이 화면의 키는 시작 화면(WithoutWorld) 위에서도 연다(시작 화면은 이동을 막는 화면이라 보통은 키 배정이 막힌다).
+            /// 게임 한 판 없이도 뜨는 화면에만 쓴다(단축키 안내).
+            /// </summary>
+            public Registration KeyWorksOnStartScreens()
+            {
+                _owner._screens[_id].KeyWorksOnStartScreens = true;
                 return this;
             }
 

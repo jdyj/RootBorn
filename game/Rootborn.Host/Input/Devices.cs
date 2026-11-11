@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using Rootborn.Screens;
+using Rootborn.Screens.KeyGuide;
 
 namespace Rootborn.Host.Input
 {
@@ -47,6 +49,8 @@ namespace Rootborn.Host.Input
         public bool ToggleDisplay;
         /// <summary>L: 장소 기록(사용자 결정 2026-11-12, Unity 판에는 키가 없었다).</summary>
         public bool LocationLog;
+        /// <summary>F1: 단축키 안내.</summary>
+        public bool Help;
 
         /// <summary>누르고 있는 방향 키로 정한 걷기 방향(-1, 0, 1). 반대 방향을 함께 누르면 0.</summary>
         public int MoveX => (HeldRight ? 1 : 0) - (HeldLeft ? 1 : 0);
@@ -75,6 +79,7 @@ namespace Rootborn.Host.Input
                 Screenshot = Pressed(now, Keys.F12),
                 ToggleDisplay = Pressed(now, Keys.F11),
                 LocationLog = Pressed(now, Keys.L),
+                Help = Pressed(now, Keys.F1),
                 Interact = Pressed(now, Keys.E) || Pressed(now, Keys.Space) || Pressed(now, Keys.LeftControl) || Pressed(now, Keys.RightControl),
                 Space = Pressed(now, Keys.Space),
                 Rotate = Pressed(now, Keys.R),
@@ -94,6 +99,81 @@ namespace Rootborn.Host.Input
         }
 
         private bool Pressed(KeyboardState now, Keys key) => now.IsKeyDown(key) && !_previous.IsKeyDown(key);
+    }
+
+    /// <summary>
+    /// 단축키 안내에 넘기는 장치 키 이름(Screens는 장치를 모른다). 위 KeyboardDevice.Read의 배정과 같아야 한다 — 배정을 바꾸거나
+    /// 화면 쌓기로 넘기는 키를 더하면 여기에도 한 줄. 화면을 여는 키는 Host 테스트(KeyGuideHostTests)가 이 표대로 눌러 본다.
+    /// 키 이름은 번역하지 않는 글자다. "방향 키"처럼 말로 된 것만 현지화 키.
+    /// </summary>
+    public static class KeyGuideNames
+    {
+        /// <summary>화면 쌓기가 받는 키 → 그 키를 내는 장치 키(어느 것이든). Read와 같은 배정.</summary>
+        public static readonly (ScreenKey Key, Keys[] Device)[] ScreenKeys =
+        {
+            (ScreenKey.Up, new[] { Keys.Up }),
+            (ScreenKey.Down, new[] { Keys.Down }),
+            (ScreenKey.Left, new[] { Keys.Left }),
+            (ScreenKey.Right, new[] { Keys.Right }),
+            (ScreenKey.Tab, new[] { Keys.Tab }),
+            (ScreenKey.Enter, new[] { Keys.Enter }),
+            (ScreenKey.Escape, new[] { Keys.Escape }),
+            (ScreenKey.Inventory, new[] { Keys.I }),
+            (ScreenKey.Status, new[] { Keys.C }),
+            (ScreenKey.Interact, new[] { Keys.E, Keys.Space, Keys.LeftControl }),
+            (ScreenKey.Space, new[] { Keys.Space }),
+            (ScreenKey.Rotate, new[] { Keys.R }),
+            (ScreenKey.AltLeft, new[] { Keys.A }),
+            (ScreenKey.AltRight, new[] { Keys.D }),
+            (ScreenKey.Help, new[] { Keys.F1 }),
+        };
+
+        /// <summary>걷기: 방향 키나 WASD를 누르고 있는 동안(Read의 Held*).</summary>
+        public static readonly Keys[] WalkLetters = { Keys.W, Keys.A, Keys.S, Keys.D };
+        public const Keys FullscreenKey = Keys.F11;
+        public const Keys ScreenshotKey = Keys.F12;
+
+        /// <summary>안내 이름표: 화면 쌓기 키의 장치 이름 + 화면이 아닌 키의 줄(걷기, 상호작용, 전체 화면, 화면 저장).</summary>
+        public static KeyGuideKeys Create()
+        {
+            var keys = new KeyGuideKeys { Shift = KeyCap.Name("Shift") };
+            foreach ((ScreenKey key, Keys[] device) in ScreenKeys) keys.Name(key, Chords(device));
+            keys.AddRow(new KeyGuideRow(KeyGuideGroups.Movement, "ui.keys.move", new[] { keys.Directions, new KeyChord(KeyCap.Name(string.Concat(Names(WalkLetters)))) }));
+            keys.AddRow(new KeyGuideRow(KeyGuideGroups.Interact, "ui.keys.interact", keys.For(ScreenKey.Interact)));
+            keys.AddRow(new KeyGuideRow(KeyGuideGroups.System, "ui.keys.fullscreen", new[] { KeyChord.Of(Name(FullscreenKey)) }));
+            keys.AddRow(new KeyGuideRow(KeyGuideGroups.System, "ui.keys.screenshot", new[] { KeyChord.Of(Name(ScreenshotKey)) }));
+            return keys;
+        }
+
+        private static KeyChord[] Chords(Keys[] device)
+        {
+            var chords = new KeyChord[device.Length];
+            for (int i = 0; i < device.Length; i++) chords[i] = KeyChord.Of(Name(device[i]));
+            return chords;
+        }
+
+        private static string[] Names(Keys[] device)
+        {
+            var names = new string[device.Length];
+            for (int i = 0; i < device.Length; i++) names[i] = Name(device[i]);
+            return names;
+        }
+
+        /// <summary>키 모양에 쓰는 이름(번역하지 않는다). 따로 적지 않은 키는 MonoGame 키 이름 그대로.</summary>
+        public static string Name(Keys key)
+        {
+            switch (key)
+            {
+                case Keys.Escape: return "Esc";
+                case Keys.LeftControl: case Keys.RightControl: return "Ctrl";
+                case Keys.LeftShift: case Keys.RightShift: return "Shift";
+                case Keys.Up: return "↑";
+                case Keys.Down: return "↓";
+                case Keys.Left: return "←";
+                case Keys.Right: return "→";
+                default: return key.ToString();
+            }
+        }
     }
 
     public enum TextEventKind { Text, Backspace, Composition }

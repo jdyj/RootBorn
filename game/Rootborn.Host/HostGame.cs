@@ -245,6 +245,7 @@ namespace Rootborn.Host
             ScreenRegistry registry = ScreenCatalog.Create();
             ExtraScreens?.Invoke(registry);
             var services = new ScreenServices(Text, null) { Settings = Settings, Display = Display };
+            services.KeyGuide = KeyGuideNames.Create();
             Screens = new ScreenStack(registry, services);
             Screens.Open(ScreenCatalog.SaveSlotSelect, argument: StartMenu);
             SetTree(Screens.Tree);
@@ -345,6 +346,7 @@ namespace Rootborn.Host
             ScreenRegistry registry = ScreenCatalog.Create();
             ExtraScreens?.Invoke(registry);
             var services = new ScreenServices(Text, Session) { Definitions = World.Content.Definitions, Settings = Settings, Display = Display, Names = DisplayNames.Load(Path.Combine(_options.RepoRoot, "data")) };
+            services.KeyGuide = KeyGuideNames.Create();
             if (Session != null)
                 services.Wardrobe = new HostWardrobe(World, Session, new FileSaveStore(_options.SaveRoot), _options.SaveSlot, SaveFileNames.DefaultPlayerId, _options.RepoRoot);
             var screens = new ScreenStack(registry, services);
@@ -559,6 +561,7 @@ namespace Rootborn.Host
             if (keys.Right) s.Key(ScreenKey.Right, keys.Shift);
             if (keys.Enter) s.Key(ScreenKey.Enter, keys.Shift);
             if (keys.Escape) s.Key(ScreenKey.Escape, keys.Shift);
+            if (keys.Help) s.Key(ScreenKey.Help, keys.Shift);
         }
 
         /// <summary>
@@ -578,6 +581,7 @@ namespace Rootborn.Host
             if (keys.Inventory) s.Key(ScreenKey.Inventory, keys.Shift);
             if (keys.Status) s.Key(ScreenKey.Status, keys.Shift);
             if (keys.LocationLog) s.Key(ScreenKey.LocationLog, keys.Shift);
+            if (keys.Help) s.Key(ScreenKey.Help, keys.Shift);
             // 미니게임 키는 상호작용 키보다 먼저 넘긴다(Space는 두 묶음에 다 든다).
             if (keys.Space) s.Key(ScreenKey.Space, keys.Shift);
             if (keys.Rotate) s.Key(ScreenKey.Rotate, keys.Shift);

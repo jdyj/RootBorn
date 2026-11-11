@@ -9,6 +9,7 @@ using Rootborn.Screens.Minigames;
 using Rootborn.Screens.Objectives;
 using Rootborn.Screens.Quests;
 using Rootborn.Screens.Inventory;
+using Rootborn.Screens.KeyGuide;
 using Rootborn.Screens.Records;
 using Rootborn.Screens.Settings;
 using Rootborn.Screens.Status;
@@ -60,6 +61,8 @@ namespace Rootborn.Screens
         public const string Facility = "facility";
         /// <summary>발견 알림(알림 층). 발견 지점 상호작용으로 열려 GameSession.Discover를 부르고 결과를 보인다. 이동을 막지 않는다.</summary>
         public const string DiscoveryNotice = "discovery-notice";
+        /// <summary>단축키 안내(F1, 설정의 단축키 단추, 시작 화면에서도 F1). 읽는 모달이라 이동을 막는다. 줄은 이 등록 표의 키 배정에서 만든다.</summary>
+        public const string KeyGuide = "key-guide";
 
         public static void Register(ScreenRegistry r)
         {
@@ -103,6 +106,7 @@ namespace Rootborn.Screens
             r.Add(LocationStateLog, ScreenLayer.Panel, blocksMovement: false, s => new LocationStateLogScreen(s)).OpenedBy(ScreenKey.LocationLog);
             r.Add(Facility, ScreenLayer.Modal, blocksMovement: true, s => new FacilityScreen(s)).OpenedByInteraction(FacilityScreen.InteractionKind);
             r.Add(DiscoveryNotice, ScreenLayer.Notice, blocksMovement: false, s => new DiscoveryNoticeScreen(s)).OpenedByInteraction(DiscoveryNoticeScreen.InteractionKind);
+            r.Add(KeyGuide, ScreenLayer.Modal, blocksMovement: true, s => new KeyGuideScreen(s)).OpenedBy(ScreenKey.Help).KeyWorksOnStartScreens();
         }
 
         /// <summary>표를 채운 새 등록 표.</summary>
