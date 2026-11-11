@@ -1,7 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
+using System.Text.Json;
 using NUnit.Framework;
 using Rootborn.Core.World;
 using Rootborn.World.Ldtk;
@@ -44,10 +45,8 @@ namespace Rootborn.World.Tests
             LoadedMap school = Repo.Loader().LoadMap("School");
             Assert.That((school.World.Grid.Columns, school.World.Grid.Rows), Is.EqualTo((23, 18)));
             Assert.That(school.Problems, Is.Empty);
-            // School.unity의 Structure_x_y 상자(칸마다 하나). 줄 밀림이 없어 씬 칸 (x, y) = LDtk 칸 (x, -y-1).
-            string scene = File.ReadAllText(Path.Combine(Repo.Root, "Assets/Scenes/School.unity"));
-            var baked = new HashSet<CellPos>(Regex.Matches(scene, @"m_Name: Structure_(-?\d+)_(-?\d+)")
-                .Select(m => new CellPos(int.Parse(m.Groups[1].Value), -int.Parse(m.Groups[2].Value) - 1)));
+            // School.unity의 Structure_x_y 상자(칸마다 하나)를 그림 칸으로 옮겨 둔 고정 파일. 씬을 직접 읽지 않는다.
+            HashSet<CellPos> baked = SchoolStructureCells();
             var blocked = new HashSet<CellPos>();
             CollisionGrid grid = school.World.Collision;
             for (int y = 0; y < grid.Grid.Rows; y++)
@@ -57,6 +56,16 @@ namespace Rootborn.World.Tests
             Assert.That(baked.Where(c => grid.Grid.Contains(c.X, c.Y)).Except(blocked), Is.Empty, "씬만 막은 칸");
             school.World.TryGetSpawn("school-entry", out var spawn);
             Assert.That(grid.IsBlocked(CellPos.Containing(spawn.X, spawn.Y, 32).X, CellPos.Containing(spawn.X, spawn.Y, 32).Y), Is.False);
+        }
+
+        private static HashSet<CellPos> SchoolStructureCells()
+        {
+            string path = Path.Combine(AppContext.BaseDirectory, "Fixtures", "school-structure-colliders.json");
+            using JsonDocument doc = JsonDocument.Parse(File.ReadAllText(path));
+            var cells = new HashSet<CellPos>();
+            foreach (JsonElement c in doc.RootElement.GetProperty("cells").EnumerateArray()) cells.Add(new CellPos(c[0].GetInt32(), c[1].GetInt32()));
+            Assert.That(cells.Count, Is.EqualTo(doc.RootElement.GetProperty("count").GetInt32()), "고정 파일의 칸 수");
+            return cells;
         }
 
         [Test]
