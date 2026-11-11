@@ -23,6 +23,10 @@ C:\Users\jdyj\.dotnet\dotnet.exe run --project game/Rootborn.Host -- --sample --
 | 실제 루프 | `game/tests/Rootborn.Host.Tests` | 창을 띄우고 한 프레임씩 진행하며 입력을 넣음 | 장치 이벤트 주입, OS 입력 계층 미확인 |
 | OS 입력 | FEVM의 Xvfb + xdotool, 또는 사람이 직접 | 실제 마우스, 키보드, 입력기 | 실제 입력(OS) |
 
+## 무거운 테스트는 원격 Linux에서
+
+이 PC에서 세션 여럿이 Host 테스트를 함께 돌리면 메모리가 모자란다. 전체 테스트나 Host 테스트 묶음은 `bash Scripts/remote-test/run.sh [<커밋>] [-- <dotnet test 인자>]`로 Strix Halo의 가상 화면(Xvfb)에서 돌린다. 접속 정보는 환경 변수 `ROOTBORN_REMOTE_HOST`·`ROOTBORN_REMOTE_USER`·`ROOTBORN_REMOTE_KEY`(값은 사용자 전역 지침에, 저장소에는 적지 않는다). 커밋된 것만 가고, 결과(프로젝트별 건수, 실패 목록, 스크린샷)는 `output/remote-test/<실행 id>/`에 온다. 근거는 여전히 "장치 이벤트 주입(OS 입력 계층 미확인)"이고 그리기는 소프트웨어 GL이다. 쓰는 법과 원격 준비는 `Scripts/remote-test/README.md`.
+
 ## 실제 루프 테스트 쓰는 법
 
 - 조작은 `PlayerDriver`의 동사만 쓴다(키 누르기와 떼기, 포인터 이동·누름·뗌·휠, 글자 입력, 스크린샷). 게임 내부 메서드를 직접 불러 상태를 만들지 않는다. 필요한 동사가 없으면 드라이버에 더한다.
