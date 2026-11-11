@@ -26,6 +26,55 @@ namespace Rootborn.Core.Tests
         }
 
         [Test]
+        public void ChangedBehavior_TransitionIsRefusedAfterTheDayHasEnded()
+        {
+            var f = new Fixture();
+            f.Student.TryEndDay(null, out _);
+            Assert.That(f.Transition("transition").Kind, Is.EqualTo(AdultCareerResultKind.RequirementFailed));
+            Assert.That(f.Progress.IsAdult, Is.False);
+            f.Student.TryStartNextDay();
+            Assert.That(f.Transition("transition").Kind, Is.EqualTo(AdultCareerResultKind.Applied), "거절한 요청은 소모되지 않는다.");
+        }
+
+        [Test]
+        public void ChangedBehavior_UnsettledWorkIsForfeitedWhenTheNextDayStarts()
+        {
+            var f = new Fixture();
+            f.Transition("transition");
+            Assert.That(f.Reserve("attempt-1").Applied, Is.True);
+            f.Student.TryEndDay(null, out _); f.Student.TryStartNextDay();
+
+            Assert.That(f.Service.ForfeitWorkLeftFromEarlierDays(f.Student, f.Progress), Is.True);
+
+            Assert.That(f.Progress.HasPendingWork, Is.False);
+            Assert.That(f.Progress.HasAppliedRequest("attempt-1"), Is.True);
+            Assert.That(f.Service.ForfeitWorkLeftFromEarlierDays(f.Student, f.Progress), Is.False);
+        }
+
+        [Test]
+        public void ChangedBehavior_WorkLeftFromAnEarlierDayDoesNotBlockANewReservation()
+        {
+            var f = new Fixture();
+            f.Transition("transition");
+            f.Reserve("attempt-1");
+            f.Student.TryEndDay(null, out _); f.Student.TryStartNextDay();
+
+            Assert.That(f.Reserve("attempt-2").Kind, Is.EqualTo(AdultCareerResultKind.Applied));
+            Assert.That(f.Progress.PendingWork.RequestId, Is.EqualTo("attempt-2"));
+            Assert.That(f.Progress.HasAppliedRequest("attempt-1"), Is.True);
+        }
+
+        [Test]
+        public void WorkReservedToday_IsNotForfeited()
+        {
+            var f = new Fixture();
+            f.Transition("transition");
+            f.Reserve("attempt-1");
+            Assert.That(f.Service.ForfeitWorkLeftFromEarlierDays(f.Student, f.Progress), Is.False);
+            Assert.That(f.Progress.HasPendingWork, Is.True);
+        }
+
+        [Test]
         public void ADULT_002_TransitionPreservesStudentGrowthAndRejectsSecondFacility()
         {
             var f = new Fixture();

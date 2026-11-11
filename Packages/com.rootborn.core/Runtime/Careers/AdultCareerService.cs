@@ -48,7 +48,8 @@ namespace Rootborn.Core.Careers
             if (adult.HasAppliedRequest(requestId)) return Result(AdultCareerResultKind.DuplicateRequest);
             if (!Registered(facility)) return Result(AdultCareerResultKind.InvalidDefinition);
             if (adult.IsAdult) return Result(AdultCareerResultKind.AlreadyAdult);
-            if (student.HasPendingMinigame) return Result(AdultCareerResultKind.RequirementFailed);
+            // 하루가 끝난 뒤(결과 화면)에는 시설을 고를 수 없다(Unity 판은 됐다).
+            if (student.HasPendingMinigame || student.DayState != StudentDayState.InProgress) return Result(AdultCareerResultKind.RequirementFailed);
             if (!facility.CanTransition(new FacilityTransitionContext(facility, student, candidates))) return Result(AdultCareerResultKind.RequirementFailed);
             adult.Select(facility, requestId);
             return Result(AdultCareerResultKind.Applied);
@@ -59,6 +60,7 @@ namespace Rootborn.Core.Careers
         {
             if (_executing || !SameIdentity(student, adult) || inventory == null || string.IsNullOrEmpty(requestId)) return Result(AdultCareerResultKind.InvalidRequest);
             if (adult.HasAppliedRequest(requestId)) return Result(AdultCareerResultKind.DuplicateRequest);
+            ForfeitWorkLeftFromEarlierDays(student, adult);
             if (adult.HasPendingWork || student.HasPendingMinigame) return Result(AdultCareerResultKind.RequirementFailed);
             var facility = FacilityOf(work);
             if (facility == null) return Result(AdultCareerResultKind.InvalidDefinition);
@@ -104,6 +106,7 @@ namespace Rootborn.Core.Careers
         {
             if (_executing || !SameIdentity(student, adult) || string.IsNullOrEmpty(requestId)) return Result(AdultCareerResultKind.InvalidRequest);
             if (adult.HasAppliedRequest(requestId)) return Result(AdultCareerResultKind.DuplicateRequest);
+            ForfeitWorkLeftFromEarlierDays(student, adult);
             if (adult.HasPendingWork || student.HasPendingMinigame) return Result(AdultCareerResultKind.RequirementFailed);
             var facility = FacilityOf(work);
             if (facility == null || work.Minigame == null || !work.Minigame.IsValid) return Result(AdultCareerResultKind.InvalidDefinition);
@@ -146,6 +149,19 @@ namespace Rootborn.Core.Careers
             if (pending == null || pending.RequestId != requestId) return Result(AdultCareerResultKind.InvalidRequest);
             adult.ForfeitPendingWork();
             return Result(AdultCareerResultKind.Applied);
+        }
+
+        /// <summary>
+        /// 앞선 날에 예약하고 정산하지 않은 일을 포기 처리한다(쓴 시간은 돌려주지 않고 요청은 쓴 것으로 남긴다).
+        /// 다음 날을 시작할 때 부른다. 부르지 않았더라도 새 일을 예약할 때 같은 처리를 한다. Unity 판은 예약이 남으면 날을 넘기지 못하게 막았다.
+        /// </summary>
+        public bool ForfeitWorkLeftFromEarlierDays(StudentLifeProgress student, AdultCareerProgress adult)
+        {
+            if (_executing || !SameIdentity(student, adult)) return false;
+            var pending = adult.PendingWork;
+            if (pending == null || pending.Day >= student.CurrentDay) return false;
+            adult.ForfeitPendingWork();
+            return true;
         }
 
         private AdultCareerResult Exchange(ICareerInventory inventory, IReadOnlyList<ItemAmount<string>> costs, IReadOnlyList<ItemAmount<string>> rewards, AdultCareerResultKind failure, Action commit)

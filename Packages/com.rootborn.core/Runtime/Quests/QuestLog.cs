@@ -174,10 +174,20 @@ namespace Rootborn.Core.Quests
         public int GetObjectiveCount(QuestDefinition quest, int objectiveIndex)
             => TryGetProgress(quest, out var progress) ? progress.GetObjectiveCount(objectiveIndex) : 0;
 
-        public bool Accept(QuestDefinition quest)
+        public bool Accept(QuestDefinition quest) => Accept(quest, default);
+
+        /// <summary>제공 조건과 선행 조건이 모두 맞을 때만 받는다(Unity 판은 확인하지 않았다). 조건이 있는 퀘스트는 문맥 없이 받을 수 없다.</summary>
+        public bool Accept(QuestDefinition quest, in QuestRuntimeContext context)
         {
-            if (!TryGetProgress(quest, out var progress) || !progress.TryAccept()) return false;
+            if (!TryGetProgress(quest, out var progress) || !ConditionsHold(quest.ProviderConditions, in context) || !ConditionsHold(quest.Prerequisites, in context) || !progress.TryAccept()) return false;
             RaiseStateChanged(new QuestStateChange(quest, progress.State, QuestStateChangeKind.Accepted));
+            return true;
+        }
+
+        private static bool ConditionsHold(IReadOnlyList<QuestCondition> conditions, in QuestRuntimeContext context)
+        {
+            for (int i = 0; i < conditions.Count; i++)
+                if (conditions[i] != null && !conditions[i].IsSatisfied(in context)) return false;
             return true;
         }
 

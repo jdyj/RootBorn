@@ -125,7 +125,12 @@ namespace Rootborn.Core.Minigames
             {
                 if (IsComplete || index < 0 || index >= _symbols.Length) return false;
                 if (index == _answers[_index]) _correct++;
-                else Mistakes++;
+                else
+                {
+                    // 다른 도전처럼 허용한 실수를 넘으면 실패한다(Unity 판은 끝까지 가서 맞힌 비율로 점수를 냈다).
+                    Wrong();
+                    if (IsComplete) return true;
+                }
                 _index++;
                 if (_index == _answers.Length) Complete(Percent(_correct, _answers.Length));
                 return true;

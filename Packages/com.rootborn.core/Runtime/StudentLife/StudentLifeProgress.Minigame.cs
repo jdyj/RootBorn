@@ -63,6 +63,8 @@ namespace Rootborn.Core.StudentLife
 
         partial void OnNextDayStarted()
         {
+            // 정산하지 않은 미니게임 예약은 날이 바뀌면 포기 처리한다(Unity 판은 화면을 다시 불러올 때에야 포기 처리했다).
+            ClearReservedMinigame(true);
             CareerCandidates.ClearTodayHintResults();
             _dailyPlan?.SynchronizeDay(this);
         }

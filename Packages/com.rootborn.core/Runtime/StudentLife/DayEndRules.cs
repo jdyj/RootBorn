@@ -24,6 +24,17 @@ namespace Rootborn.Core.StudentLife
         public string NextDayEntryPointId { get; }
         public IReadOnlyList<IDayEndRule> Rules => _rules;
 
+        /// <summary>하루를 끝낼 때 채워지는 집중(규칙이 여럿이면 마지막 것). 없으면 0.</summary>
+        public int DailyFocus
+        {
+            get
+            {
+                int focus = 0;
+                for (int i = 0; i < _rules.Length; i++) if (_rules[i] is IDailyFocusRule rule) focus = Math.Max(0, rule.DailyFocus);
+                return focus;
+            }
+        }
+
         public void Apply(StudentLifeProgress progress)
         {
             if (progress == null) return;
@@ -38,10 +49,17 @@ namespace Rootborn.Core.StudentLife
         public void Apply(StudentLifeProgress progress) => progress?.RestoreEnergyForDay(RestoredEnergy);
     }
 
-    public sealed class FocusRestoreRule : IDayEndRule
+    /// <summary>하루 집중을 정하는 규칙이 밝히는 값.</summary>
+    public interface IDailyFocusRule
+    {
+        int DailyFocus { get; }
+    }
+
+    public sealed class FocusRestoreRule : IDayEndRule, IDailyFocusRule
     {
         public FocusRestoreRule(int restoredFocus) { RestoredFocus = restoredFocus; }
         public int RestoredFocus { get; }
+        public int DailyFocus => RestoredFocus;
         public void Apply(StudentLifeProgress progress) => progress?.RestoreFocusForDay(RestoredFocus);
     }
 

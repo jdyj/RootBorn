@@ -78,6 +78,19 @@ namespace Rootborn.Core.StudentLife
             VitalsChanged?.Invoke();
         }
 
+        /// <summary>하루에 채워지는 집중. 0이면 정해지지 않은 것이다. 세이브에 넣지 않고, 진행 상태를 만든 쪽이 하루 끝 규칙에서 읽어 넣는다.</summary>
+        public int DailyFocus { get; private set; }
+
+        public void ConfigureDailyFocus(int dailyFocus) => DailyFocus = Math.Max(0, dailyFocus);
+
+        /// <summary>집중을 늘리되 하루 집중을 넘기지 않는다. 이미 넘어 있으면 그대로 둔다. 하루 집중이 정해지지 않았으면 막지 않는다.</summary>
+        public void AddFocusUpToDailyFocus(int delta)
+        {
+            int target = Focus + Math.Max(0, delta);
+            if (DailyFocus > 0) target = Math.Max(Focus, Math.Min(target, DailyFocus));
+            RestoreFocusForDay(target);
+        }
+
         public void RestoreFocusForDay(int value)
         {
             int next = Math.Max(0, value);

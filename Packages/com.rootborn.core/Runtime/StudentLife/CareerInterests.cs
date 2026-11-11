@@ -199,7 +199,7 @@ namespace Rootborn.Core.StudentLife
         public string[] GetRecommendationKeys(CareerInterestEvaluationContext context) => _keys;
     }
 
-    /// <summary>집중을 지금 값에서 늘린다.</summary>
+    /// <summary>집중을 지금 값에서 늘린다. 하루 집중을 넘기지 않는다(Unity 판은 상한이 없었다).</summary>
     public sealed class CareerInterestFocusReward : ICareerInterestReward
     {
         public CareerInterestFocusReward(string rewardId, int focusDelta = 1) { RewardId = rewardId ?? string.Empty; FocusDelta = focusDelta; }
@@ -208,7 +208,7 @@ namespace Rootborn.Core.StudentLife
 
         public void Apply(CareerInterestEvaluationContext context)
         {
-            if (context.StudentProgress != null) context.StudentProgress.RestoreFocusForDay(context.StudentProgress.Focus + Math.Max(0, FocusDelta));
+            context.StudentProgress?.AddFocusUpToDailyFocus(FocusDelta);
         }
     }
 

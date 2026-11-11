@@ -106,3 +106,9 @@ public sealed class TraitDeltaEffect : ILifeActivityEffect {
 - 마일스톤: 대상이 정해진 학교 밖 기록 목표는 그 대상의 기록이 있을 때만 하루 결과 적용에서 채워진다(원본은 다른 대상의 기록으로도 채워졌다). 사용자 결정 2026-11-11. `ChangedBehavior_DayResultDoesNotFillATargetedObjectiveFromAnotherTargetsLog`
 - 하루 요약: 관계·상태의 음수 변화 기록('+' 없음)도 읽는다. 어제의 관계·상태 변화 목록도 같다(원본은 '+'가 붙은 기록만 읽었다). 사용자 결정 2026-11-11. `ResultLogSummaryReadsPlusLogsUsesKnownNamesAndSkipsOthers`
 - 장소 상태: 요약과 오늘 기록의 숨김 여부가 첫 상태의 `IsHidden`을 따른다(원본은 항상 false). 지금 데이터에는 숨은 상태가 없어 화면은 그대로다. 사용자 결정 2026-11-11. `ChangedBehavior_HiddenStateMakesTheSummaryAndTodayRecordHidden`
+- 퀘스트: 받을 때 제공 조건과 선행 조건을 확인한다. 조건이 있는 퀘스트는 판정할 문맥 없이 받을 수 없다(원본은 확인하지 않았다). 지금 데이터의 퀘스트는 조건이 비어 있다. 사용자 결정 2026-11-11. `ChangedBehavior_QuestIsAcceptedOnlyWhenItsPrerequisitesHold`, `ChangedBehavior_QuestIsAcceptedOnlyWhenItsProviderConditionsHold`
+- 장래희망 집중 보상: 하루 집중(하루 끝 규칙의 집중 회복 값)을 넘기지 않는다. 진행 상태를 만드는 쪽이 `ConfigureDailyFocus(dayEndRules.DailyFocus)`를 불러야 하며, 부르지 않으면 막지 않는다. 사용자 결정 2026-11-11. `ChangedBehavior_FocusRewardStopsAtTheDailyFocus`
+- 고르기 도전: 다른 도전처럼 허용한 실수를 넘으면 0점으로 끝난다(원본은 끝까지 가서 맞힌 비율로 점수를 냈다). 사용자 결정 2026-11-11. `ChangedBehavior_ChoiceChallengeFailsWhenMistakesPassTheAllowance`
+- 성인 직업: 하루가 끝난 뒤(결과 화면)에는 시설을 고를 수 없다. 사용자 결정 2026-11-11. `ChangedBehavior_TransitionIsRefusedAfterTheDayHasEnded`
+- 장소 상태 시간대: 8:00까지는 오전이다(원본은 정확히 8:00만 오전이라 7:00이 오후였다). 8:00 뒤는 그대로 오후다. 사용자 결정 2026-11-11. `ChangedBehavior_EarlyHoursAreMorning`
+- 미니게임 예약: 정산하지 않은 학생 미니게임 예약은 다음 날을 시작할 때 포기 처리한다(원본은 화면을 다시 불러올 때 처리). 성인 일 예약도 앞선 날의 것은 포기 처리한다 — 다음 날을 시작할 때 `ForfeitWorkLeftFromEarlierDays`를 부르고, 새 일을 예약하거나 바로 할 때도 같은 처리를 한다(원본은 예약이 남으면 날을 넘기지 못하게 막았다). 사용자 결정 2026-11-11. `ChangedBehavior_UnsettledStudentMinigameIsForfeitedWhenTheNextDayStarts`, `ChangedBehavior_UnsettledWorkIsForfeitedWhenTheNextDayStarts`, `ChangedBehavior_WorkLeftFromAnEarlierDayDoesNotBlockANewReservation`

@@ -200,7 +200,7 @@ namespace Rootborn.Core.Tests
 
             Assert.That(LocationStateTimeSlots.FromMinutes(0), Is.EqualTo("time.morning"));
             Assert.That(LocationStateTimeSlots.FromMinutes(8 * 60), Is.EqualTo("time.morning"));
-            Assert.That(LocationStateTimeSlots.FromMinutes(7 * 60), Is.EqualTo("time.afternoon"));
+            Assert.That(LocationStateTimeSlots.FromMinutes(7 * 60), Is.EqualTo("time.morning"));
             Assert.That(LocationStateTimeSlots.FromMinutes(21 * 60), Is.EqualTo("time.night"));
         }
 
