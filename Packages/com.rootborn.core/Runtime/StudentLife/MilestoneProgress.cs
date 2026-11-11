@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Rootborn.Core.Inventory;
+using Rootborn.Core.Save;
 
 namespace Rootborn.Core.StudentLife
 {
@@ -36,12 +37,19 @@ namespace Rootborn.Core.StudentLife
 
     // 세이브 모양: 원본과 필드 이름·형이 같다(옛 세이브를 읽는다).
     [Serializable]
-    public sealed class MilestoneProgressSaveData
+    public sealed class MilestoneProgressSaveData : IVersionedSave
     {
+        /// <summary>이 프로그램이 아는 가장 높은 형식 버전. 0은 Unity 판이 쓴 파일(Version 필드 없음)이다.</summary>
+        public const int KnownVersion = 1;
+
+        public int Version;
         public string SaveSlot;
         public string PlayerId;
         public MilestoneRecordSaveData[] Records = Array.Empty<MilestoneRecordSaveData>();
         public string[] AppliedDayResultKeys = Array.Empty<string>();
+
+        int IVersionedSave.Version { get => Version; set => Version = value; }
+        int IVersionedSave.KnownVersion => KnownVersion;
     }
 
     [Serializable]
@@ -264,20 +272,6 @@ namespace Rootborn.Core.StudentLife
                 if (saveData.Objectives != null) for (int i = 0; i < saveData.Objectives.Length; i++) record.SetObjectiveProgress(saveData.Objectives[i].ObjectiveId, saveData.Objectives[i].Value);
                 return record;
             }
-        }
-    }
-
-    /// <summary>세이브 파일 이름 규칙. 파일 읽고 쓰기는 실행 프로그램이 한다.</summary>
-    public static class MilestoneProgressPersistence
-    {
-        public const string FileName = "milestone-progress.json";
-
-        public static string FileNameFor(string playerId)
-        {
-            if (string.IsNullOrEmpty(playerId) || playerId == "player" || playerId == "local-player") return FileName;
-            var chars = playerId.ToCharArray();
-            for (int i = 0; i < chars.Length; i++) if (!char.IsLetterOrDigit(chars[i]) && chars[i] != '-' && chars[i] != '_') chars[i] = '_';
-            return "milestone-progress-" + new string(chars) + ".json";
         }
     }
 

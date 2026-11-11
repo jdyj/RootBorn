@@ -15,13 +15,6 @@ namespace Rootborn.Core.Tests
             public string NpcName(string npcId) => npcId + ".display";
         }
 
-        private sealed class MemoryStore : IWorldStateSaveStore
-        {
-            public readonly Dictionary<string, WorldStateProgressSaveData> Files = new Dictionary<string, WorldStateProgressSaveData>();
-            public WorldStateProgressSaveData Read(string saveSlot, string fileName) => Files.TryGetValue(saveSlot + "/" + fileName, out var data) ? data : null;
-            public void Write(string saveSlot, string fileName, WorldStateProgressSaveData data) => Files[saveSlot + "/" + fileName] = data;
-        }
-
         private sealed class Target : IWorldStateEffectTarget
         {
             public int Calls;
@@ -235,7 +228,7 @@ namespace Rootborn.Core.Tests
         [Test]
         public void WORLD_STATE_EDIT_006_007_PersistenceSavesLoadsPersonalAndSharedWorldStatePerPlayer()
         {
-            var store = new MemoryStore();
+            var store = new InMemorySaveStore();
             var shared = MakeFlag("world.library.archive-open", null, WorldStateScopeKind.Shared);
             var personal = MakeFlag("world.mentor.notice", null, WorldStateScopeKind.Personal);
             var slotWide = MakeFlag("world.slot.notice", null, WorldStateScopeKind.SaveSlot);
@@ -258,17 +251,9 @@ namespace Rootborn.Core.Tests
             Assert.IsTrue(loadedB.IsActive(slotWide), "Save-slot flags are visible to another player in the same slot.");
             Assert.IsFalse(loadedB.IsActive(personal), "Personal flags must not leak between players.");
             Assert.AreEqual("player-b", loadedB.PlayerId);
-            Assert.AreEqual(string.Empty, store.Files["slot-0/world-state-progress-shared.json"].PlayerId);
+            Assert.IsTrue(store.TryRead("slot-0", "world-state-progress-shared.json", out WorldStateProgressSaveData sharedFile));
+            Assert.AreEqual(string.Empty, sharedFile.PlayerId);
             Assert.IsFalse(WorldStateSaveFiles.LoadOrCreate(store, "slot-1", "player-a").IsActive(shared));
-        }
-
-        [Test]
-        public void WORLD_STATE_CORE_FileNamesUseDefaultForLocalPlayerAndSanitizeOthers()
-        {
-            Assert.AreEqual("world-state-progress.json", WorldStateSaveFiles.FileNameFor(null));
-            Assert.AreEqual("world-state-progress.json", WorldStateSaveFiles.FileNameFor("player"));
-            Assert.AreEqual("world-state-progress.json", WorldStateSaveFiles.FileNameFor("local-player"));
-            Assert.AreEqual("world-state-progress-steam_42_a.json", WorldStateSaveFiles.FileNameFor("steam:42/a"));
         }
 
         [Test]

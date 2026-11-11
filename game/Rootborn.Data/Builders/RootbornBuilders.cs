@@ -23,6 +23,10 @@ namespace Rootborn.Data.Builders
             MilestoneBuilders.Register(b);
             CharacterBuilders.Register(b);
             TimeBuilders.Register(b);
+            WorldStateBuilders.Register(b);
+            EncyclopediaBuilders.Register(b);
+            DiscoveryClueBuilders.Register(b);
+            DialogueBuilders.Register(b);
 
             NotRules.Register(b);
             NotPortedYet.Register(b);

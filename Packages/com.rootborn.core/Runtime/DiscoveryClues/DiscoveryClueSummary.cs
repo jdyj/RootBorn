@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Core.Save;
 using Rootborn.Core.StudentLife;
 
 namespace Rootborn.Core.DiscoveryClues
@@ -179,36 +180,25 @@ namespace Rootborn.Core.DiscoveryClues
         }
     }
 
-    /// <summary>단서 세이브 파일 읽기·쓰기. 파일이 없거나 읽을 수 없으면 Read가 null을 돌려준다.</summary>
-    public interface IDiscoveryClueSaveStore
-    {
-        DiscoveryClueProgressSaveData Read(string saveSlot, string fileName);
-        void Write(string saveSlot, string fileName, DiscoveryClueProgressSaveData data);
-    }
-
     /// <summary>
-    /// 플레이어마다 파일 하나(원본 DiscoveryClueProgressPersistence). 파일 이름은 원본처럼 플레이어 id를 정리하지 않는다
-    /// (기존 파일을 찾아야 한다). 저장소를 합칠 때 정리 여부를 정한다.
+    /// 플레이어마다 파일 하나(원본 DiscoveryClueProgressPersistence). 새로 쓸 때는 정리한 플레이어 id 이름을 쓰고,
+    /// 읽을 때 그 파일이 없으면 Unity 판의 정리하지 않은 이름을 찾는다.
     /// </summary>
     public static class DiscoveryClueSaveFiles
     {
-        public static string FileNameFor(string playerId)
-        {
-            return "discovery-clues-" + (string.IsNullOrEmpty(playerId) ? "player" : playerId) + ".json";
-        }
-
-        public static DiscoveryClueProgress LoadOrCreate(IDiscoveryClueSaveStore store, string saveSlot, string playerId)
+        public static DiscoveryClueProgress LoadOrCreate(ISaveStore store, string saveSlot, string playerId)
         {
             string slot = string.IsNullOrEmpty(saveSlot) ? "default" : saveSlot;
-            string player = string.IsNullOrEmpty(playerId) ? "player" : playerId;
-            var data = store?.Read(slot, FileNameFor(player));
-            return data == null ? new DiscoveryClueProgress(slot, player) : DiscoveryClueProgress.FromSaveData(data);
+            string player = string.IsNullOrEmpty(playerId) ? SaveFileNames.LegacyPlayerId : playerId;
+            return store.TryReadWithLegacyName(slot, SaveFileNames.DiscoveryClues(player), SaveFileNames.LegacyDiscoveryClues(player), out DiscoveryClueProgressSaveData data)
+                ? DiscoveryClueProgress.FromSaveData(data)
+                : new DiscoveryClueProgress(slot, player);
         }
 
-        public static void Save(IDiscoveryClueSaveStore store, DiscoveryClueProgress progress)
+        public static void Save(ISaveStore store, DiscoveryClueProgress progress)
         {
             if (store == null || progress == null) return;
-            store.Write(progress.SaveSlot, FileNameFor(progress.PlayerId), progress.ToSaveData());
+            store.Write(progress.SaveSlot, SaveFileNames.DiscoveryClues(progress.PlayerId), progress.ToSaveData());
         }
     }
 }

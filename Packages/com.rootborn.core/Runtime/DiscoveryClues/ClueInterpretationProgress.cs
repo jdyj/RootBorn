@@ -1,16 +1,24 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Core.Save;
 
 namespace Rootborn.Core.DiscoveryClues
 {
     /// <summary>세이브 파일에 쓰는 모양. 필드 이름은 기존 세이브 파일과 같아야 한다.</summary>
     [Serializable]
-    public sealed class ClueInterpretationProgressSaveData
+    public sealed class ClueInterpretationProgressSaveData : IVersionedSave
     {
+        /// <summary>이 프로그램이 아는 가장 높은 형식 버전. 0은 Unity 판이 쓴 파일(Version 필드 없음)이다.</summary>
+        public const int KnownVersion = 1;
+
+        public int Version;
         public string SaveSlot;
         public string PlayerId;
         public ClueInterpretationRecordSaveData[] Records = Array.Empty<ClueInterpretationRecordSaveData>();
         public string[] TodayInterpretationIds = Array.Empty<string>();
+
+        int IVersionedSave.Version { get => Version; set => Version = value; }
+        int IVersionedSave.KnownVersion => KnownVersion;
     }
 
     [Serializable]
@@ -331,33 +339,25 @@ namespace Rootborn.Core.DiscoveryClues
         }
     }
 
-    /// <summary>해석 세이브 파일 읽기·쓰기. 파일이 없거나 읽을 수 없으면 Read가 null을 돌려준다.</summary>
-    public interface IClueInterpretationSaveStore
-    {
-        ClueInterpretationProgressSaveData Read(string saveSlot, string fileName);
-        void Write(string saveSlot, string fileName, ClueInterpretationProgressSaveData data);
-    }
-
     /// <summary>
-    /// 플레이어마다 파일 하나(원본 ClueInterpretationProgressPersistence). 파일 이름은 원본처럼 플레이어 id를 정리하지 않는다
-    /// (기존 파일을 찾아야 한다). 저장소를 합칠 때 정리 여부를 정한다.
+    /// 플레이어마다 파일 하나(원본 ClueInterpretationProgressPersistence). 새로 쓸 때는 정리한 플레이어 id 이름을 쓰고,
+    /// 읽을 때 그 파일이 없으면 Unity 판의 정리하지 않은 이름을 찾는다.
     /// </summary>
     public static class ClueInterpretationSaveFiles
     {
-        public static string FileNameFor(string playerId) => "clue-interpretations-" + (string.IsNullOrEmpty(playerId) ? "player" : playerId) + ".json";
-
-        public static ClueInterpretationProgress LoadOrCreate(IClueInterpretationSaveStore store, string saveSlot, string playerId)
+        public static ClueInterpretationProgress LoadOrCreate(ISaveStore store, string saveSlot, string playerId)
         {
             string slot = string.IsNullOrEmpty(saveSlot) ? "default" : saveSlot;
-            string player = string.IsNullOrEmpty(playerId) ? "player" : playerId;
-            var data = store?.Read(slot, FileNameFor(player));
-            return data == null ? new ClueInterpretationProgress(slot, player) : ClueInterpretationProgress.FromSaveData(data);
+            string player = string.IsNullOrEmpty(playerId) ? SaveFileNames.LegacyPlayerId : playerId;
+            return store.TryReadWithLegacyName(slot, SaveFileNames.ClueInterpretations(player), SaveFileNames.LegacyClueInterpretations(player), out ClueInterpretationProgressSaveData data)
+                ? ClueInterpretationProgress.FromSaveData(data)
+                : new ClueInterpretationProgress(slot, player);
         }
 
-        public static void Save(IClueInterpretationSaveStore store, ClueInterpretationProgress progress)
+        public static void Save(ISaveStore store, ClueInterpretationProgress progress)
         {
             if (store == null || progress == null) return;
-            store.Write(progress.SaveSlot, FileNameFor(progress.PlayerId), progress.ToSaveData());
+            store.Write(progress.SaveSlot, SaveFileNames.ClueInterpretations(progress.PlayerId), progress.ToSaveData());
         }
     }
 }

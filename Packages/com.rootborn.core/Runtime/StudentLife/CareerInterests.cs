@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Core.Save;
 
 namespace Rootborn.Core.StudentLife
 {
@@ -214,8 +215,12 @@ namespace Rootborn.Core.StudentLife
 
     /// <summary>세이브 파일에 쓰는 모양. 필드 이름은 기존 세이브 파일과 같아야 한다.</summary>
     [Serializable]
-    public sealed class CareerInterestProgressSaveData
+    public sealed class CareerInterestProgressSaveData : IVersionedSave
     {
+        /// <summary>이 프로그램이 아는 가장 높은 형식 버전. 0은 Unity 판이 쓴 파일(Version 필드 없음)이다.</summary>
+        public const int KnownVersion = 1;
+
+        public int Version;
         public string SaveSlot;
         public string PlayerId;
         public string CurrentInterestId;
@@ -227,6 +232,9 @@ namespace Rootborn.Core.StudentLife
         public string LastRecommendationSourceVersion;
         public string[] TodayInterestActionSummary = Array.Empty<string>();
         public string LastFollowUpInterestId;
+
+        int IVersionedSave.Version { get => Version; set => Version = value; }
+        int IVersionedSave.KnownVersion => KnownVersion;
     }
 
     /// <summary>한 플레이어가 고른 장래희망. 보상은 장래희망·보상마다 한 번만 준다.</summary>

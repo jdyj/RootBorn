@@ -1,4 +1,5 @@
 using System;
+using Rootborn.Core.Encyclopedia;
 using Rootborn.Core.Inventory;
 using Rootborn.Core.Quests;
 using Rootborn.Core.StudentLife;
@@ -29,11 +30,11 @@ namespace Rootborn.Data.Builders
             b.Add("ExplorationTraitDeltaOutcome", (n, c) => new ExplorationTraitDeltaOutcome(n.RefId("trait"), n.Int("delta")));
             b.Add("ExplorationCareerHintOutcome", (n, c) => new ExplorationCareerHintOutcome(n.RefId("career")));
             b.Add("ExplorationClueOutcome", (n, c) => new ExplorationClueOutcome(n.RefId("clue"), n.RefId("source")));
-            // 도감 항목 정의는 아직 Core에 없다(core-world). 공개 단계만 들여다본다(Unity 게터처럼 1 이상).
+            // 공개 단계는 도감 항목의 것(EncyclopediaEntry가 1 이상으로 다듬는다). 항목이 없으면 1.
             b.Add("ExplorationEncyclopediaOutcome", (n, c) =>
             {
-                var stage = c.TryPeek(n, "entry", out var entry) ? Math.Max(1, entry.Int("revealStage")) : 1;
-                return new ExplorationEncyclopediaOutcome(n.RefId("entry"), stage);
+                var entry = c.One<EncyclopediaEntry>(n, "entry");
+                return new ExplorationEncyclopediaOutcome(n.RefId("entry"), entry != null ? entry.RevealStage : 1);
             });
             b.Add("ExplorationFollowUpQuestOutcome", (n, c) => new ExplorationFollowUpQuestOutcome(c.One<QuestDefinition>(n, "quest")));
             // allowDuplicate는 Core 생성자가 받지 않는다(Unity 원본도 Apply에서 쓰지 않았다).

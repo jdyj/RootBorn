@@ -69,7 +69,11 @@ namespace Rootborn.Core.StudentLife
                 return Result(AdultCareerResultKind.InvalidRequest);
             if (!succeeded) return Forfeit(student, requestId);
             var activity = practice.Activity;
-            ReservedActivitySettlement.Apply(activity, student, requestId);
+            // 비용은 예약 때 냈다. 효과만 적용하고 생활 활동 실행기와 같은 변화 기록을 남긴다.
+            var before = ActivityDeltaSnapshot.Capture(student);
+            activity.ApplyEffects(student);
+            student.MarkRequestApplied(requestId);
+            student.RecordActivityCompleted(activity.Id, before.BuildResultLogs(activity.Id, student));
             // 이번 연습에서 나온 기록만 힌트 출처로 본다. 예전 기록이 다른 연습의 힌트를 가져가지 않게 한다.
             var logs = student.GetTodayResultLogIds();
             var currentLogs = new List<string> { activity.Id };
@@ -139,51 +143,5 @@ namespace Rootborn.Core.StudentLife
         }
 
         private static AdultCareerResult Result(AdultCareerResultKind kind) => new AdultCareerResult(kind);
-    }
-
-    /// <summary>
-    /// 비용을 이미 낸 예약 활동의 효과를 적용하고, 활동 실행기와 같은 모양의 변화 기록("활동:+id=변화량", "활동:unlock=진로")을 남긴다.
-    /// 활동 실행기의 기록 만들기와 같은 규칙이다(그쪽이 공개되면 합친다).
-    /// </summary>
-    internal static class ReservedActivitySettlement
-    {
-        public static void Apply(LifeActivity activity, StudentLifeProgress progress, string requestId)
-        {
-            var traits = Snapshot(progress.GetTraitIds(), progress.GetTraitValue);
-            var skills = Snapshot(progress.GetSkillIds(), progress.GetSkillValue);
-            var relationships = Snapshot(progress.GetRelationshipIds(), progress.GetRelationshipValue);
-            var statuses = Snapshot(progress.GetStatusIds(), progress.GetStatusValue);
-            var careers = new HashSet<string>(progress.GetCareerHintIds());
-
-            activity.ApplyEffects(progress);
-            progress.MarkRequestApplied(requestId);
-
-            var logs = new List<string>();
-            string prefix = string.IsNullOrEmpty(activity.Id) ? "activity" : activity.Id;
-            AddDeltas(logs, prefix, progress.GetTraitIds(), progress.GetTraitValue, traits);
-            AddDeltas(logs, prefix, progress.GetSkillIds(), progress.GetSkillValue, skills);
-            AddDeltas(logs, prefix, progress.GetRelationshipIds(), progress.GetRelationshipValue, relationships);
-            AddDeltas(logs, prefix, progress.GetStatusIds(), progress.GetStatusValue, statuses);
-            foreach (string careerId in progress.GetCareerHintIds())
-                if (!careers.Contains(careerId)) logs.Add(prefix + ":unlock=" + careerId);
-            progress.RecordActivityCompleted(activity.Id, logs.ToArray());
-        }
-
-        private static Dictionary<string, int> Snapshot(string[] ids, Func<string, int> getter)
-        {
-            var values = new Dictionary<string, int>();
-            for (int i = 0; i < ids.Length; i++) values[ids[i]] = getter(ids[i]);
-            return values;
-        }
-
-        private static void AddDeltas(List<string> logs, string prefix, string[] ids, Func<string, int> getter, Dictionary<string, int> before)
-        {
-            for (int i = 0; i < ids.Length; i++)
-            {
-                before.TryGetValue(ids[i], out int previous);
-                int delta = getter(ids[i]) - previous;
-                if (delta != 0) logs.Add(prefix + ":+" + ids[i] + "=" + delta.ToString());
-            }
-        }
     }
 }

@@ -1,10 +1,22 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Core.Save;
 
 namespace Rootborn.Core.StudentLife
 {
     // 세이브 모양: 원본과 필드 이름·형이 같다(옛 세이브를 읽는다).
-    [Serializable] public sealed class LocationStateProgressSaveData { public string SaveSlot; public string PlayerId; public LocationStateRecordSaveData[] Records = Array.Empty<LocationStateRecordSaveData>(); public LocationStateLastVisitSaveData[] LastVisitedStates = Array.Empty<LocationStateLastVisitSaveData>(); public LocationStateTodaySummarySaveData[] TodaySummary = Array.Empty<LocationStateTodaySummarySaveData>(); public string[] HiddenHintVisibleStateIds = Array.Empty<string>(); }
+    [Serializable]
+    public sealed class LocationStateProgressSaveData : IVersionedSave
+    {
+        /// <summary>이 프로그램이 아는 가장 높은 형식 버전. 0은 Unity 판이 쓴 파일(Version 필드 없음)이다.</summary>
+        public const int KnownVersion = 1;
+
+        public int Version;
+        public string SaveSlot; public string PlayerId; public LocationStateRecordSaveData[] Records = Array.Empty<LocationStateRecordSaveData>(); public LocationStateLastVisitSaveData[] LastVisitedStates = Array.Empty<LocationStateLastVisitSaveData>(); public LocationStateTodaySummarySaveData[] TodaySummary = Array.Empty<LocationStateTodaySummarySaveData>(); public string[] HiddenHintVisibleStateIds = Array.Empty<string>();
+
+        int IVersionedSave.Version { get => Version; set => Version = value; }
+        int IVersionedSave.KnownVersion => KnownVersion;
+    }
     [Serializable] public sealed class LocationStateRecordSaveData { public string StateId; public bool Discovered; public int FirstDiscoveredDay; public string FirstDiscoveredTimeSlotId; public string[] RewardClaimedIds = Array.Empty<string>(); }
     [Serializable] public sealed class LocationStateLastVisitSaveData { public string LocationId; public string StateId; }
     [Serializable] public sealed class LocationStateTodaySummarySaveData { public string LocationId; public string StateId; public int Day; public string TimeSlotId; public string DisplayName; public bool Hidden; }
@@ -140,20 +152,6 @@ namespace Rootborn.Core.StudentLife
         {
             if (values == null) return;
             for (int i = 0; i < values.Length; i++) if (!string.IsNullOrEmpty(values[i])) target.Add(values[i]);
-        }
-    }
-
-    /// <summary>세이브 파일 이름 규칙. 파일 읽고 쓰기는 실행 프로그램이 한다.</summary>
-    public static class LocationStateProgressPersistence
-    {
-        public const string FileName = "location-state-progress.json";
-
-        public static string FileNameFor(string playerId)
-        {
-            if (string.IsNullOrEmpty(playerId) || playerId == "player" || playerId == "local-player") return FileName;
-            var chars = playerId.ToCharArray();
-            for (int i = 0; i < chars.Length; i++) if (!char.IsLetterOrDigit(chars[i]) && chars[i] != '-' && chars[i] != '_') chars[i] = '_';
-            return "location-state-progress-" + new string(chars) + ".json";
         }
     }
 }

@@ -1,16 +1,24 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Core.Save;
 
 namespace Rootborn.Core.StudentLife
 {
     // 세이브 모양: 원본과 필드 이름·형이 같다(옛 세이브를 읽는다).
     [Serializable]
-    public sealed class ExplorationProgressSaveData
+    public sealed class ExplorationProgressSaveData : IVersionedSave
     {
+        /// <summary>이 프로그램이 아는 가장 높은 형식 버전. 0은 Unity 판이 쓴 파일(Version 필드 없음)이다.</summary>
+        public const int KnownVersion = 1;
+
+        public int Version;
         public string SaveSlot;
         public string PlayerId;
         public ExplorationProgressRecordSaveData[] Records = Array.Empty<ExplorationProgressRecordSaveData>();
         public string[] TodayExplorationSummary = Array.Empty<string>();
+
+        int IVersionedSave.Version { get => Version; set => Version = value; }
+        int IVersionedSave.KnownVersion => KnownVersion;
     }
 
     [Serializable]
@@ -229,14 +237,25 @@ namespace Rootborn.Core.StudentLife
     }
 
     /// <summary>
-    /// 탐색 세이브 파일 이름 규칙(원본은 ExplorationInteractionPointInteractor 안에 있었다). 파일 읽고 쓰기는 실행 프로그램이 한다.
-    /// 원본처럼 플레이어 id를 그대로 붙인다(다른 진행 파일과 달리 문자를 바꾸지 않는다).
+    /// 탐색 진행의 읽기·쓰기 순서(원본은 ExplorationInteractionPointInteractor 안에 있었다). 파일 이름은 SaveFileNames, 형식(JSON)은 저장소가 맡는다.
+    /// 기본 플레이어는 공용 파일 하나를 쓴다. 다른 플레이어는 새로 쓸 때 정리한 id 이름을 쓰고,
+    /// 읽을 때 그 파일이 없으면 Unity 판의 정리하지 않은 이름을 찾는다.
     /// </summary>
     public static class ExplorationProgressPersistence
     {
-        public const string FileName = "exploration-progress.json";
+        public static ExplorationProgress LoadOrCreate(ISaveStore store, string saveSlot, string playerId)
+        {
+            string slot = string.IsNullOrEmpty(saveSlot) ? "default" : saveSlot;
+            string player = string.IsNullOrEmpty(playerId) ? SaveFileNames.LegacyPlayerId : playerId;
+            return store.TryReadWithLegacyName(slot, SaveFileNames.Exploration(player), SaveFileNames.LegacyExploration(player), out ExplorationProgressSaveData data)
+                ? ExplorationProgress.FromSaveData(data)
+                : new ExplorationProgress(slot, player);
+        }
 
-        public static string FileNameFor(string playerId)
-            => string.IsNullOrEmpty(playerId) || playerId == "player" || playerId == "local-player" ? FileName : "exploration-progress-" + playerId + ".json";
+        public static void Save(ISaveStore store, ExplorationProgress progress)
+        {
+            if (store == null || progress == null) return;
+            store.Write(progress.SaveSlot, SaveFileNames.Exploration(progress.PlayerId), progress.ToSaveData());
+        }
     }
 }

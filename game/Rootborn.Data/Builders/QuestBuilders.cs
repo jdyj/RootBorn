@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Rootborn.Core.Inventory;
 using Rootborn.Core.Quests;
+using Rootborn.Core.WorldState;
 
 namespace Rootborn.Data.Builders
 {
@@ -70,18 +71,13 @@ namespace Rootborn.Data.Builders
         private static int Count(NodeReader n) => Math.Max(1, n.Int("requiredCount"));
 
         /// <summary>
-        /// 월드 상태 깃발 정의는 아직 Core에 없다(core-world). 보상에 필요한 id와 효과 버전만 들여다본다.
-        /// 효과 버전은 Unity WorldStateFlagDefinition.EffectVersion처럼 1 이상.
+        /// 퀘스트 보상은 월드 상태 깃발의 id와 효과 버전만 쓴다(Quests는 WorldState 영역을 참조하지 않는다).
+        /// 효과 버전은 WorldStateFlag가 1 이상으로 다듬은 값이다.
         /// </summary>
         private static List<QuestWorldStateFlag> WorldStateFlags(NodeReader n, BuildContext c)
         {
             var flags = new List<QuestWorldStateFlag>();
-            foreach (var element in n.Items("flags"))
-            {
-                if (!c.TryPeekReference(element, out var flag, "flags")) continue;
-                flags.Add(new QuestWorldStateFlag(flag.Id, Math.Max(1, flag.Int("effectVersion"))));
-            }
-
+            foreach (var flag in c.All<WorldStateFlag>(n, "flags")) flags.Add(new QuestWorldStateFlag(flag.Id, flag.EffectVersion));
             return flags;
         }
     }

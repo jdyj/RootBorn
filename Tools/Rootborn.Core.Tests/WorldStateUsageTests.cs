@@ -11,13 +11,6 @@ namespace Rootborn.Core.Tests
     // 옮겨 옴: Assets/Tests/EditMode/WorldState/WorldStateUsageLoopTests.cs
     public sealed class WorldStateUsageTests
     {
-        private sealed class MemoryStore : IWorldStateUsageSaveStore
-        {
-            public readonly Dictionary<string, WorldStateUsageProgressSaveData> Files = new Dictionary<string, WorldStateUsageProgressSaveData>();
-            public WorldStateUsageProgressSaveData Read(string saveSlot, string fileName) => Files.TryGetValue(saveSlot + "/" + fileName, out var data) ? data : null;
-            public void Write(string saveSlot, string fileName, WorldStateUsageProgressSaveData data) => Files[saveSlot + "/" + fileName] = data;
-        }
-
         private static WorldStateFlag MakeFlag(string id)
             => new WorldStateFlag(id, id, id + ".desc", null, null, null, WorldStateScopeKind.Shared, WorldStateChangeKind.ObjectRevealed, "Use it",
                 new[] { WorldStateSummarySurface.WorldLog }, new[] { WorldStateBadgeKind.Shared }, 0, 1);
@@ -269,18 +262,17 @@ namespace Rootborn.Core.Tests
         [Test]
         public void WORLD_USAGE_CORE_SaveFilesRoundTripPerPlayerWithSanitizedNames()
         {
-            var store = new MemoryStore();
+            var store = new InMemorySaveStore();
             var progress = WorldStateUsageSaveFiles.LoadOrCreate(store, "slot-a", "steam:7");
             var usage = MakeUsage("usage.a", MakeFlag("world.a"), null, null);
             progress.MarkUsed(usage, 2, usage.RepeatPolicy, new[] { "activity" }, new[] { "activity.a" }, null, null, null);
             WorldStateUsageSaveFiles.Save(store, progress);
 
-            Assert.IsTrue(store.Files.ContainsKey("slot-a/world-state-usage-steam_7.json"));
+            Assert.IsTrue(store.Contains("slot-a", "world-state-usage-steam_7.json"));
             var loaded = WorldStateUsageSaveFiles.LoadOrCreate(store, "slot-a", "steam:7");
             Assert.AreEqual("steam:7", loaded.PlayerId);
             Assert.AreEqual(2, loaded.GetRecord("usage.a").LastUsedDay);
             Assert.AreEqual(0, WorldStateUsageSaveFiles.LoadOrCreate(store, "slot-a", "player-b").RecordCount);
-            Assert.AreEqual("world-state-usage-player.json", WorldStateUsageSaveFiles.FileNameFor(null));
         }
 
         [Test]

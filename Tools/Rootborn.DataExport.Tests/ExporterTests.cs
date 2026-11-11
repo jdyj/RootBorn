@@ -48,6 +48,8 @@ namespace Rootborn.DataExport.Tests
                 + "  _portrait: {fileID: 21300000, guid: " + ChairPng + ", type: 3}\n"
                 + "  _prefab: {fileID: 123, guid: " + Prefab + ", type: 3}\n"
                 + "  _none: {fileID: 0}\n"
+                + "  _packedDigits: 6400000004000000\n  _packedExponent: 1e00000003000000\n  _packedOne: 64000000\n"
+                + "  _bigCount: 1234567\n"
                 + "  _nested:\n    _inner: 1\n    _cells:\n    - {x: 0, y: -1}\n"));
             _repo.Asset("Assets/Data/Quests/Quest_A.asset", QuestA, TempRepo.Mono(Quest, "Quest_A", "  _id: quest.a\n"));
             _repo.Asset("Assets/Data/Quests/Rewards/Reward_Item.asset", RewardItem,
@@ -117,6 +119,20 @@ namespace Rootborn.DataExport.Tests
             Assert.AreEqual(1, b.GetProperty("nested").GetProperty("inner").GetInt32());
             Assert.AreEqual(-1, b.GetProperty("nested").GetProperty("cells")[0].GetProperty("y").GetInt32());
             StringAssert.Contains("요리 12", _repo.Read("quests/QuestDefinition.json"), "한글은 이스케이프하지 않는다");
+        }
+
+        [Test]
+        public void PackedIntArrays_AreStrings_EvenWhenTheyLookLikeNumbers()
+        {
+            // Unity는 int 배열을 원소마다 8글자(리틀엔디언 16진)로 묶어 따옴표 없이 쓴다. 숫자처럼 보여도 문자열로 낸다.
+            Run();
+            var b = Entity("quests/QuestDefinition.json", "quest.b");
+
+            Assert.AreEqual(JsonValueKind.String, b.GetProperty("packedDigits").ValueKind);
+            Assert.AreEqual("6400000004000000", b.GetProperty("packedDigits").GetString());
+            Assert.AreEqual("1e00000003000000", b.GetProperty("packedExponent").GetString());
+            Assert.AreEqual("64000000", b.GetProperty("packedOne").GetString());
+            Assert.AreEqual(1234567, b.GetProperty("bigCount").GetInt32(), "길이가 8의 배수가 아닌 정수는 숫자 그대로");
         }
 
         [Test]

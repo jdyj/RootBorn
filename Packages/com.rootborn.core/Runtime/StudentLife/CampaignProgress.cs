@@ -1,12 +1,17 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Core.Save;
 
 namespace Rootborn.Core.StudentLife
 {
     /// <summary>세이브 파일 모양. 필드 이름을 바꾸지 않는다.</summary>
     [Serializable]
-    public sealed class CampaignProgressSaveData
+    public sealed class CampaignProgressSaveData : IVersionedSave
     {
+        /// <summary>이 프로그램이 아는 가장 높은 형식 버전. 0은 Unity 판이 쓴 파일(Version 필드 없음)이다.</summary>
+        public const int KnownVersion = 1;
+
+        public int Version;
         public string SaveSlot;
         public string PlayerId;
         public string ActiveCampaignId;
@@ -23,6 +28,9 @@ namespace Rootborn.Core.StudentLife
             public string DayId;
             public string RouteId;
         }
+
+        int IVersionedSave.Version { get => Version; set => Version = value; }
+        int IVersionedSave.KnownVersion => KnownVersion;
     }
 
     /// <summary>한 플레이어의 캠페인 진행. 끝낸 목표, 날마다 고른 경로, 받은 보상, 적용한 결과 id.</summary>
@@ -137,27 +145,6 @@ namespace Rootborn.Core.StudentLife
             var result = new string[values.Count];
             values.CopyTo(result);
             return result;
-        }
-    }
-
-    /// <summary>캠페인 세이브 파일 이름. 읽고 쓰는 일은 실행 프로그램이 한다.</summary>
-    public static class CampaignProgressPersistence
-    {
-        private const string FileName = "campaign-progress.json";
-
-        public static string FileNameFor(string playerId)
-            => string.IsNullOrEmpty(playerId) || playerId == "player" || playerId == "local-player" ? FileName : "campaign-progress-" + SaveFileNames.Sanitize(playerId) + ".json";
-    }
-
-    /// <summary>플레이어 id를 파일 이름에 넣을 때 글자·숫자·'-'·'_' 밖의 글자를 '_'로 바꾼다.</summary>
-    public static class SaveFileNames
-    {
-        public static string Sanitize(string value)
-        {
-            if (string.IsNullOrEmpty(value)) return string.Empty;
-            char[] chars = value.ToCharArray();
-            for (int i = 0; i < chars.Length; i++) if (!char.IsLetterOrDigit(chars[i]) && chars[i] != '-' && chars[i] != '_') chars[i] = '_';
-            return new string(chars);
         }
     }
 }

@@ -326,11 +326,12 @@ namespace Rootborn.Data.Tests
         }
 
         [Test]
-        public void IntArray_ReadsUnityHex_QuotedOrLeftBareByTheExporter()
+        public void IntArray_ReadsUnityHexStrings()
         {
+            // 변환기는 Unity의 묶은 int 배열을 늘 문자열로 낸다(숫자처럼 보이는 "1e00000003000000"도).
             using var dir = new TempDir();
             dir.Write("p/Probe.json", @"[{""type"":""Probe"",""id"":""p"",
-                ""hex"":""0100000002000000"", ""bare"":1e00000003000000, ""bareBig"":2800000004000000, ""empty"":"""", ""plain"":[5,6]}]");
+                ""hex"":""0100000002000000"", ""bare"":""1e00000003000000"", ""bareBig"":""2800000004000000"", ""empty"":"""", ""plain"":[5,6]}]");
 
             var result = Load(dir, b => b.Add("Probe", (n, c) => new Probe
             {
@@ -341,10 +342,23 @@ namespace Rootborn.Data.Tests
             Assert.That(result.Errors, Is.Empty, string.Join("\n", result.Errors));
             var probe = result.Definitions.Get<Probe>("p");
             Assert.That(probe.Hex, Is.EqualTo(new[] { 1, 2 }));
-            Assert.That(probe.Bare, Is.EqualTo(new[] { 30, 3 }), "1e00000003000000은 JSON 숫자로는 무한대지만 원문은 16진 배열이다");
+            Assert.That(probe.Bare, Is.EqualTo(new[] { 30, 3 }));
             Assert.That(probe.BareBig, Is.EqualTo(new[] { 40, 4 }));
             Assert.That(probe.Empty, Is.Empty);
             Assert.That(probe.Plain, Is.EqualTo(new[] { 5, 6 }));
+        }
+
+        [Test]
+        public void IntArray_ABareNumber_IsAWrongTypeError()
+        {
+            // 따옴표 없는 16진 숫자를 원문으로 풀던 임시 처리는 변환기를 고친 뒤 지웠다.
+            using var dir = new TempDir();
+            dir.Write("p/Probe.json", @"[{""type"":""Probe"",""id"":""p"",""bare"":2800000004000000}]");
+
+            var result = Load(dir, b => b.Add("Probe", (n, c) => new Probe { Bare = n.IntArray("bare") }));
+
+            Assert.That(result.Errors.Single().Kind, Is.EqualTo("wrong-type"));
+            Assert.That(result.Definitions.Get<Probe>("p").Bare, Is.Empty);
         }
 
         [Test]

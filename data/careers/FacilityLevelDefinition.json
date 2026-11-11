@@ -27,7 +27,7 @@
         "type": "ItemDefinition"
       }
     ],
-    "costCounts": 6400000004000000,
+    "costCounts": "6400000004000000",
     "worldFlags": [
       {
         "ref": "world.chef.level2",
@@ -95,7 +95,7 @@
         "type": "ItemDefinition"
       }
     ],
-    "costCounts": 6400000004000000,
+    "costCounts": "6400000004000000",
     "worldFlags": [
       {
         "ref": "world.emergency-care.level2",
@@ -163,7 +163,7 @@
         "type": "ItemDefinition"
       }
     ],
-    "costCounts": 6400000004000000,
+    "costCounts": "6400000004000000",
     "worldFlags": [
       {
         "ref": "world.interior.level2",
@@ -231,7 +231,7 @@
         "type": "ItemDefinition"
       }
     ],
-    "costCounts": 6400000004000000,
+    "costCounts": "6400000004000000",
     "worldFlags": [
       {
         "ref": "world.soldier.level2",

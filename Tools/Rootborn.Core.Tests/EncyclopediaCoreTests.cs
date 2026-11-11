@@ -27,13 +27,6 @@ namespace Rootborn.Core.Tests
             return inventory;
         }
 
-        private sealed class MemoryStore : IEncyclopediaSaveStore
-        {
-            public readonly Dictionary<string, EncyclopediaProgressSaveData> Files = new Dictionary<string, EncyclopediaProgressSaveData>();
-            public EncyclopediaProgressSaveData Read(string saveSlot, string fileName) => Files.TryGetValue(saveSlot + "/" + fileName, out var data) ? data : null;
-            public void Write(string saveSlot, string fileName, EncyclopediaProgressSaveData data) => Files[saveSlot + "/" + fileName] = data;
-        }
-
         private static EncyclopediaEntry Entry(string id, EncyclopediaCategory category, IEncyclopediaUnlockCondition[] conditions = null, int revealStage = 1)
             => new EncyclopediaEntry(id, category, id, "???", "Description " + id, "Find a clue", Array.Empty<string>(), conditions, revealStage);
 
@@ -96,7 +89,7 @@ namespace Rootborn.Core.Tests
             Assert.IsTrue(progress.TryUnlock("entry-a", 2, 123L));
             Assert.IsTrue(progress.IsNew("entry-a"));
             progress.MarkSeen("entry-a");
-            var store = new MemoryStore();
+            var store = new InMemorySaveStore();
 
             EncyclopediaSaveFiles.Save(store, progress);
             var loaded = EncyclopediaSaveFiles.LoadOrCreate(store, "slot-a", "player-a");
@@ -105,7 +98,7 @@ namespace Rootborn.Core.Tests
             Assert.AreEqual(2, loaded.GetRevealStage("entry-a"));
             Assert.IsFalse(loaded.IsNew("entry-a"));
             Assert.IsFalse(EncyclopediaSaveFiles.LoadOrCreate(store, "slot-a", "player-b").IsUnlocked("entry-a"));
-            Assert.IsTrue(store.Files.ContainsKey("slot-a/encyclopedia-player-a.json"));
+            Assert.IsTrue(store.Contains("slot-a", "encyclopedia-player-a.json"));
         }
 
         [Test]

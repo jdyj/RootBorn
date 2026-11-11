@@ -148,7 +148,6 @@ namespace Rootborn.Data
 
         /// <summary>
         /// Unity가 int 배열을 묶어 쓴 16진 문자열(원소마다 8글자, 리틀엔디언)이나 숫자 배열을 읽는다.
-        /// 변환기가 숫자로만 된 16진 문자열을 따옴표 없이 내보낸 경우(예: 1e00000003000000)도 원문 토큰을 16진으로 읽는다.
         /// </summary>
         public int[] IntArray(string field)
         {
@@ -168,8 +167,6 @@ namespace Rootborn.Data
                 }
                 case JsonValueKind.String:
                     return HexInts(field, value.GetString());
-                case JsonValueKind.Number:
-                    return HexInts(field, value.GetRawText());
                 default:
                     return WrongType(field, "정수 배열", value, Array.Empty<int>());
             }

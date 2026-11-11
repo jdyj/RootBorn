@@ -4,19 +4,34 @@ using System.Text;
 namespace Rootborn.Core.Save
 {
     /// <summary>
-    /// 세이브 파일 이름을 한 곳에서 만든다. 결과는 Unity 판이 쓴 파일 이름과 같다.
-    /// (Rootborn.Core.StudentLife.SaveFileNames.Sanitize는 캠페인·장소 상태·마일스톤이 아직 쓰는 정리 규칙이다.)
+    /// 모든 세이브 파일 이름을 한 곳에서 만든다. 기본 플레이어의 이름은 Unity 판이 쓴 파일 이름과 같다.
+    /// 다른 플레이어는 id를 <see cref="Sanitize"/>로 정리해 붙인다. Unity 판이 정리하지 않고 쓰던 파일(도감, 발견 단서,
+    /// 단서 해석, 탐색)은 Legacy* 이름으로 옛 파일을 찾을 수 있다(<see cref="SaveStoreReads.TryReadWithLegacyName"/>).
     /// </summary>
     public static class SaveFileNames
     {
         /// <summary>기본 플레이어 id(PlayerIdentity.DefaultPlayerId). 이것과 "player"는 옛 공용 파일을 같이 쓴다.</summary>
         public const string DefaultPlayerId = "local-player";
-        private const string LegacyPlayerId = "player";
+
+        /// <summary>빈 플레이어 id 대신 쓰는 옛 기본값.</summary>
+        public const string LegacyPlayerId = "player";
 
         public const string QuestLog = "quest-log.json";
 
+        /// <summary>월드 상태 중 Shared·SaveSlot 범위만 담는 슬롯 공유 파일.</summary>
+        public const string WorldStateShared = "world-state-progress-shared.json";
+
         public static bool IsDefaultPlayer(string playerId)
             => string.IsNullOrEmpty(playerId) || playerId == DefaultPlayerId || playerId == LegacyPlayerId;
+
+        /// <summary>플레이어 id를 파일 이름에 넣을 때 글자·숫자·'-'·'_' 밖의 글자를 '_'로 바꾼다. null은 빈 문자열.</summary>
+        public static string Sanitize(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return string.Empty;
+            var chars = value.ToCharArray();
+            for (int i = 0; i < chars.Length; i++) if (!char.IsLetterOrDigit(chars[i]) && chars[i] != '-' && chars[i] != '_') chars[i] = '_';
+            return new string(chars);
+        }
 
         /// <summary>기본 플레이어는 "quest-chain-progress.json"을 같이 쓰고, 다른 플레이어는 id의 UTF-8 바이트를 모두 16진으로 적어 겹치지 않는다.</summary>
         public static string QuestChain(string playerId)
@@ -36,5 +51,40 @@ namespace Rootborn.Core.Save
             for (int i = 0; i < value.Length; i++) encoded.Append(((int)value[i]).ToString("x4", CultureInfo.InvariantCulture));
             return encoded.Append(".json").ToString();
         }
+
+        // 기본 플레이어가 공용 파일 하나를 쓰는 진행 파일들.
+        public static string Campaign(string playerId) => SharedForDefault("campaign-progress", playerId);
+        public static string LocationState(string playerId) => SharedForDefault("location-state-progress", playerId);
+        public static string Milestone(string playerId) => SharedForDefault("milestone-progress", playerId);
+        public static string WorldState(string playerId) => SharedForDefault("world-state-progress", playerId);
+        public static string Exploration(string playerId) => SharedForDefault("exploration-progress", playerId);
+
+        /// <summary>Unity CareerInterestProgressPersistence.FileNameFor와 같다: 빈 id와 "local-player"만 공용 파일이고 "player"는 따로 쓴다.</summary>
+        public static string CareerInterest(string playerId)
+            => string.IsNullOrEmpty(playerId) || playerId == DefaultPlayerId ? "career-interest-progress.json" : "career-interest-progress-" + Sanitize(playerId) + ".json";
+
+        /// <summary>Unity 판 탐색 파일 이름(플레이어 id를 정리하지 않았다).</summary>
+        public static string LegacyExploration(string playerId)
+            => IsDefaultPlayer(playerId) ? "exploration-progress.json" : "exploration-progress-" + playerId + ".json";
+
+        // 플레이어마다 파일 하나. 빈 id는 "player".
+        public static string WorldStateUsage(string playerId) => PerPlayer("world-state-usage-", playerId);
+        public static string Encyclopedia(string playerId) => PerPlayer("encyclopedia-", playerId);
+        public static string DiscoveryClues(string playerId) => PerPlayer("discovery-clues-", playerId);
+        public static string ClueInterpretations(string playerId) => PerPlayer("clue-interpretations-", playerId);
+
+        // Unity 판이 플레이어 id를 정리하지 않고 쓰던 이름.
+        public static string LegacyEncyclopedia(string playerId) => LegacyPerPlayer("encyclopedia-", playerId);
+        public static string LegacyDiscoveryClues(string playerId) => LegacyPerPlayer("discovery-clues-", playerId);
+        public static string LegacyClueInterpretations(string playerId) => LegacyPerPlayer("clue-interpretations-", playerId);
+
+        private static string SharedForDefault(string stem, string playerId)
+            => IsDefaultPlayer(playerId) ? stem + ".json" : stem + "-" + Sanitize(playerId) + ".json";
+
+        private static string PerPlayer(string prefix, string playerId)
+            => prefix + Sanitize(string.IsNullOrEmpty(playerId) ? LegacyPlayerId : playerId) + ".json";
+
+        private static string LegacyPerPlayer(string prefix, string playerId)
+            => prefix + (string.IsNullOrEmpty(playerId) ? LegacyPlayerId : playerId) + ".json";
     }
 }

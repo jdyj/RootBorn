@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Core.Save;
 
 namespace Rootborn.Core.WorldState
 {
@@ -143,37 +144,25 @@ namespace Rootborn.Core.WorldState
         }
     }
 
-    /// <summary>사용 기록 세이브 파일 읽기·쓰기. 파일이 없거나 읽을 수 없으면 Read가 null을 돌려준다.</summary>
-    public interface IWorldStateUsageSaveStore
-    {
-        WorldStateUsageProgressSaveData Read(string saveSlot, string fileName);
-        void Write(string saveSlot, string fileName, WorldStateUsageProgressSaveData data);
-    }
-
-    /// <summary>플레이어마다 파일 하나(원본 WorldStateUsageProgressPersistence). 파일 형식(JSON)은 저장소가 맡는다.</summary>
+    /// <summary>플레이어마다 파일 하나(원본 WorldStateUsageProgressPersistence). 파일 이름은 SaveFileNames, 형식(JSON)은 저장소가 맡는다.</summary>
     public static class WorldStateUsageSaveFiles
     {
-        public static string FileNameFor(string playerId)
-        {
-            string player = string.IsNullOrEmpty(playerId) ? "player" : playerId;
-            return "world-state-usage-" + WorldStateSaveFiles.Sanitize(player) + ".json";
-        }
-
         /// <summary>
         /// 파일의 슬롯·플레이어 값을 그대로 쓴다(원본과 같다). 파일에 플레이어 id가 원래 값으로 들어 있어 이름 정리 전의 id가 돌아온다.
         /// </summary>
-        public static WorldStateUsageProgress LoadOrCreate(IWorldStateUsageSaveStore store, string saveSlot, string playerId)
+        public static WorldStateUsageProgress LoadOrCreate(ISaveStore store, string saveSlot, string playerId)
         {
             string slot = string.IsNullOrEmpty(saveSlot) ? "default" : saveSlot;
-            string player = string.IsNullOrEmpty(playerId) ? "player" : playerId;
-            var data = store?.Read(slot, FileNameFor(player));
-            return data == null ? new WorldStateUsageProgress(slot, player) : WorldStateUsageProgress.FromSaveData(data);
+            string player = string.IsNullOrEmpty(playerId) ? SaveFileNames.LegacyPlayerId : playerId;
+            return store != null && store.TryRead(slot, SaveFileNames.WorldStateUsage(player), out WorldStateUsageProgressSaveData data)
+                ? WorldStateUsageProgress.FromSaveData(data)
+                : new WorldStateUsageProgress(slot, player);
         }
 
-        public static void Save(IWorldStateUsageSaveStore store, WorldStateUsageProgress progress)
+        public static void Save(ISaveStore store, WorldStateUsageProgress progress)
         {
             if (store == null || progress == null) return;
-            store.Write(progress.SaveSlot, FileNameFor(progress.PlayerId), progress.ToSaveData());
+            store.Write(progress.SaveSlot, SaveFileNames.WorldStateUsage(progress.PlayerId), progress.ToSaveData());
         }
     }
 }

@@ -82,6 +82,7 @@ namespace Rootborn.Data.Builders
                 n.Id, n.Str("displayNameKey"), n.Str("descriptionKey"), n.RefId("location"), n.Int("priority"),
                 c.All<ILocationStateCondition>(n, "conditions").ToArray(),
                 c.All<ILocationStateEffect>(n, "effects").ToArray()));
+            b.Add("LocationStateConflictPolicyDefinition", (n, c) => new LocationStateConflictPolicy(n.Id, n.Enum<LocationStateConflictMode>("mode")));
             b.Add("LocationStateActivityLogCondition", (n, c) => new LocationStateActivityLogCondition(
                 n.Str("requiredActivityId"), n.Int("minimumCount")));
             b.Add("LocationStateTimeSlotCondition", (n, c) => new LocationStateTimeSlotCondition(n.RefIds("timeSlots")));

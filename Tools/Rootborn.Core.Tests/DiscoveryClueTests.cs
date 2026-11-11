@@ -12,13 +12,6 @@ namespace Rootborn.Core.Tests
     // 옮겨 옴: Assets/Tests/EditMode/DiscoveryClues/DiscoveryClueLoopTests.cs (DiscoveryClueRegistryTests는 등록부 검사라 옮기지 않음)
     public sealed class DiscoveryClueTests
     {
-        private sealed class MemoryStore : IDiscoveryClueSaveStore
-        {
-            public readonly Dictionary<string, DiscoveryClueProgressSaveData> Files = new Dictionary<string, DiscoveryClueProgressSaveData>();
-            public DiscoveryClueProgressSaveData Read(string saveSlot, string fileName) => Files.TryGetValue(saveSlot + "/" + fileName, out var data) ? data : null;
-            public void Write(string saveSlot, string fileName, DiscoveryClueProgressSaveData data) => Files[saveSlot + "/" + fileName] = data;
-        }
-
         private static WorldStateFlag MakeFlag(string id)
             => new WorldStateFlag(id, id, id + ".desc", null, null, null, WorldStateScopeKind.Shared, WorldStateChangeKind.ObjectRevealed, "Use it",
                 new[] { WorldStateSummarySurface.WorldLog }, new[] { WorldStateBadgeKind.Shared }, 0, 1);
@@ -278,14 +271,13 @@ namespace Rootborn.Core.Tests
         [Test]
         public void DISCOVERY_CLUE_CORE_SaveFilesRoundTripAndClampNegatives()
         {
-            var store = new MemoryStore();
+            var store = new InMemorySaveStore();
             var progress = DiscoveryClueSaveFiles.LoadOrCreate(store, null, null);
             var clue = MakeClue("clue.a", null, null, null, null, null);
             progress.MarkSourceSeen(clue, null, 2);
             DiscoveryClueSaveFiles.Save(store, progress);
 
-            Assert.IsTrue(store.Files.ContainsKey("default/discovery-clues-player.json"));
-            Assert.AreEqual("discovery-clues-steam:7.json", DiscoveryClueSaveFiles.FileNameFor("steam:7"), "Unity did not sanitize this file name; kept as is.");
+            Assert.IsTrue(store.Contains("default", "discovery-clues-player.json"));
             var loaded = DiscoveryClueSaveFiles.LoadOrCreate(store, "default", "player");
             Assert.IsTrue(loaded.GetRecord("clue.a").Seen);
 

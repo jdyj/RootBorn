@@ -1,8 +1,11 @@
 using System;
 using NUnit.Framework;
+using Rootborn.Core.Dialogue;
+using Rootborn.Core.DiscoveryClues;
 using Rootborn.Core.Inventory;
 using Rootborn.Core.Minigames;
 using Rootborn.Core.StudentLife;
+using Rootborn.Core.WorldState;
 using Rootborn.Data.Builders;
 
 namespace Rootborn.Data.Tests
@@ -72,6 +75,58 @@ namespace Rootborn.Data.Tests
             // Assets/Scripts/Game/StudentLife/LocationActivityProgressDeltaOutcome.cs
             Assert.That(Enum.GetNames(typeof(LocationBuilders.ProgressTarget)),
                 Is.EqualTo(new[] { "Trait", "Skill", "Relationship", "Status", "CareerHint" }));
+        }
+
+        [Test]
+        public void WorldStateEnums_HaveTheUnityOrder()
+        {
+            // Assets/Scripts/Game/WorldState/WorldStateTypes.cs
+            Assert.That(Enum.GetNames(typeof(WorldStateScopeKind)), Is.EqualTo(new[] { "Personal", "Shared", "SaveSlot" }));
+            Assert.That(Enum.GetNames(typeof(WorldStateChangeKind)), Is.EqualTo(new[]
+                { "LocationUnlocked", "ObjectRevealed", "PortalEnabled", "NpcDialogueChanged", "ShopStockAdded", "InteractionAdded", "EventAvailable" }));
+            Assert.That(Enum.GetNames(typeof(WorldStateSummarySurface)), Is.EqualTo(new[] { "DayResult", "LocationPanel", "WorldLog" }));
+            Assert.That(Enum.GetNames(typeof(WorldStateBadgeKind)), Is.EqualTo(new[] { "Blocked", "Locked", "New", "Seen", "Shared", "Personal" }));
+        }
+
+        [Test]
+        public void WorldStateUsageEnums_HaveTheUnityOrder()
+        {
+            // Assets/Scripts/Game/WorldState/WorldStateUsageCore.cs
+            Assert.That(Enum.GetNames(typeof(WorldStateUsageRepeatMode)), Is.EqualTo(new[] { "Once", "Repeatable", "OncePerDay", "DailyCooldown", "MaxUses" }));
+            Assert.That(Enum.GetNames(typeof(WorldStateUsageSummarySurface)), Is.EqualTo(new[] { "LocationPanel", "WorldLog", "DayResult", "Hud" }));
+        }
+
+        [Test]
+        public void DiscoveryClueEnums_HaveTheUnityOrder()
+        {
+            // Assets/Scripts/Game/DiscoveryClues/DiscoveryClueCore.cs
+            Assert.That(Enum.GetNames(typeof(DiscoveryClueSourceKind)), Is.EqualTo(new[]
+                { "NpcDialogue", "BoardPost", "MapHint", "EncyclopediaUnknown", "LocationTrace", "DailyResult" }));
+            Assert.That(Enum.GetNames(typeof(DiscoveryClueSummarySurface)), Is.EqualTo(new[]
+                { "NpcDialogue", "Board", "Map", "Encyclopedia", "LocationPanel", "WorldLog", "DayResult", "Hud" }));
+        }
+
+        [Test]
+        public void ClueInterpretationEnums_HaveTheUnityOrder()
+        {
+            // Assets/Scripts/Game/DiscoveryClues/ClueInterpretationCore.cs
+            Assert.That(Enum.GetNames(typeof(ClueInterpretationSourceKind)), Is.EqualTo(new[]
+                { "NpcDialogue", "LocationInvestigation", "ObjectInteraction", "ActivityReview", "EncyclopediaReview", "BoardRecord", "MapCheck" }));
+            Assert.That(Enum.GetNames(typeof(ClueInterpretationPolicyKind)), Is.EqualTo(new[] { "Exclusive", "NonExclusive", "Sequential", "Repeatable" }));
+        }
+
+        [Test]
+        public void DialogueQuestAction_HasTheUnityOrder()
+        {
+            // Assets/Scripts/Game/Dialogue/DialogueChoiceDefinition.cs
+            Assert.That(Enum.GetNames(typeof(DialogueQuestAction)), Is.EqualTo(new[] { "None", "AcceptQuest", "ClaimReward", "Close" }));
+        }
+
+        [Test]
+        public void LocationStateConflictMode_HasTheUnityOrder()
+        {
+            // Assets/Scripts/Game/StudentLife/LocationStateCore.cs
+            Assert.That(Enum.GetNames(typeof(LocationStateConflictMode)), Is.EqualTo(new[] { "HighestPriority", "MergeAll", "FallbackFirst" }));
         }
     }
 }

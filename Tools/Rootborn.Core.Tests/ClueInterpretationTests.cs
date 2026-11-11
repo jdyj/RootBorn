@@ -13,13 +13,6 @@ namespace Rootborn.Core.Tests
     // (ClueInterpretationRegistryTests는 등록부 검사라 옮기지 않음)
     public sealed class ClueInterpretationTests
     {
-        private sealed class MemoryStore : IClueInterpretationSaveStore
-        {
-            public readonly Dictionary<string, ClueInterpretationProgressSaveData> Files = new Dictionary<string, ClueInterpretationProgressSaveData>();
-            public ClueInterpretationProgressSaveData Read(string saveSlot, string fileName) => Files.TryGetValue(saveSlot + "/" + fileName, out var data) ? data : null;
-            public void Write(string saveSlot, string fileName, ClueInterpretationProgressSaveData data) => Files[saveSlot + "/" + fileName] = data;
-        }
-
         private const string ClueId = "clue.archive.shard";
 
         private static ClueInterpretation MakeInterpretation(string id, ClueInterpretationSource[] sources, IClueInterpretationCondition[] conditions, IClueInterpretationOutcome[] outcomes, ClueInterpretationPolicy policy, int sortPriority = 0)
@@ -133,7 +126,7 @@ namespace Rootborn.Core.Tests
         [Test]
         public void CLUE_INTERPRET_EDIT_009_SaveFilesRestoreSelectedCompletedRewardAndExpansionState()
         {
-            var store = new MemoryStore();
+            var store = new InMemorySaveStore();
             var interpretation = MakeInterpretation("interpret.ask-librarian", null, null, null, MakePolicy("policy.interpret.nonexclusive", ClueInterpretationPolicyKind.NonExclusive, "policy.group.play-loop"));
             var progress = new ClueInterpretationProgress("slot-a", "player-a");
             progress.MarkCompleted(interpretation, 2, new[] { "encyclopedia", "career-hint" }, new[] { "entry.archive" }, new[] { "career.researcher" }, new[] { "quest.followup" },
@@ -143,7 +136,7 @@ namespace Rootborn.Core.Tests
             var restored = ClueInterpretationSaveFiles.LoadOrCreate(store, "slot-a", "player-a");
             var record = restored.GetRecord("interpret.ask-librarian");
 
-            Assert.IsTrue(store.Files.ContainsKey("slot-a/clue-interpretations-player-a.json"));
+            Assert.IsTrue(store.Contains("slot-a", "clue-interpretations-player-a.json"));
             Assert.AreEqual("slot-a", restored.SaveSlot);
             Assert.AreEqual("player-a", restored.PlayerId);
             Assert.IsTrue(record.Selected);
@@ -312,7 +305,6 @@ namespace Rootborn.Core.Tests
             Assert.AreEqual(1, progress.TodayInterpretationSummary.Length);
             Assert.AreEqual(1, progress.ToSaveData().Records.Length);
             Assert.AreEqual("player", ClueInterpretationProgress.FromSaveData(null).PlayerId);
-            Assert.AreEqual("clue-interpretations-steam:7.json", ClueInterpretationSaveFiles.FileNameFor("steam:7"), "Unity did not sanitize this file name; kept as is.");
         }
     }
 }

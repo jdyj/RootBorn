@@ -1,16 +1,24 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Core.Save;
 
 namespace Rootborn.Core.DiscoveryClues
 {
     /// <summary>세이브 파일에 쓰는 모양. 필드 이름은 기존 세이브 파일과 같아야 한다.</summary>
     [Serializable]
-    public sealed class DiscoveryClueProgressSaveData
+    public sealed class DiscoveryClueProgressSaveData : IVersionedSave
     {
+        /// <summary>이 프로그램이 아는 가장 높은 형식 버전. 0은 Unity 판이 쓴 파일(Version 필드 없음)이다.</summary>
+        public const int KnownVersion = 1;
+
+        public int Version;
         public string SaveSlot;
         public string PlayerId;
         public DiscoveryClueRecordSaveData[] Records = Array.Empty<DiscoveryClueRecordSaveData>();
         public string[] TodayClueIds = Array.Empty<string>();
+
+        int IVersionedSave.Version { get => Version; set => Version = value; }
+        int IVersionedSave.KnownVersion => KnownVersion;
     }
 
     [Serializable]

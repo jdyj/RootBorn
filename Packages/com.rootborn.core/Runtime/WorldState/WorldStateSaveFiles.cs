@@ -1,48 +1,36 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Core.Save;
 
 namespace Rootborn.Core.WorldState
 {
-    /// <summary>월드 상태 세이브 파일 읽기·쓰기. 파일이 없거나 읽을 수 없으면 Read가 null을 돌려준다.</summary>
-    public interface IWorldStateSaveStore
-    {
-        WorldStateProgressSaveData Read(string saveSlot, string fileName);
-        void Write(string saveSlot, string fileName, WorldStateProgressSaveData data);
-    }
-
     /// <summary>
     /// 플레이어 파일과 슬롯 공유 파일을 나눠 쓰고 합쳐 읽는다(원본 WorldStateProgressPersistence).
-    /// 공유 파일에는 Shared·SaveSlot 범위만 들어간다. 파일 형식(JSON)은 저장소가 맡는다.
+    /// 공유 파일에는 Shared·SaveSlot 범위만 들어간다. 파일 이름은 SaveFileNames, 형식(JSON)은 저장소가 맡는다.
     /// 원본이 먼저 확인하던 성인 진로 묶음 세이브(AdultCareer*) 경로는 Careers 영역이라 여기 없다. 부르는 쪽이 먼저 확인한다.
     /// </summary>
     public static class WorldStateSaveFiles
     {
-        private const string FileName = "world-state-progress.json";
-        public const string SharedFileName = "world-state-progress-shared.json";
-
-        public static string FileNameFor(string playerId)
-        {
-            if (string.IsNullOrEmpty(playerId) || playerId == "player" || playerId == "local-player") return FileName;
-            return "world-state-progress-" + Sanitize(playerId) + ".json";
-        }
-
-        public static WorldStateProgress LoadOrCreate(IWorldStateSaveStore store, string saveSlot, string playerId)
+        public static WorldStateProgress LoadOrCreate(ISaveStore store, string saveSlot, string playerId)
         {
             string slot = string.IsNullOrEmpty(saveSlot) ? "default" : saveSlot;
-            string player = string.IsNullOrEmpty(playerId) ? "player" : playerId;
-            var playerData = store?.Read(slot, FileNameFor(player));
-            var sharedData = store?.Read(slot, SharedFileName);
+            string player = string.IsNullOrEmpty(playerId) ? SaveFileNames.LegacyPlayerId : playerId;
+            var playerData = Read(store, slot, SaveFileNames.WorldState(player));
+            var sharedData = Read(store, slot, SaveFileNames.WorldStateShared);
             var merged = MergeSaveData(slot, player, sharedData, playerData);
             return WorldStateProgress.FromSaveData(merged, slot, player);
         }
 
-        public static void Save(IWorldStateSaveStore store, WorldStateProgress progress)
+        public static void Save(ISaveStore store, WorldStateProgress progress)
         {
             if (store == null || progress == null) return;
             var saveData = progress.ToSaveData();
-            store.Write(progress.SaveSlot, FileNameFor(progress.PlayerId), saveData);
-            store.Write(progress.SaveSlot, SharedFileName, FilterByScope(saveData, WorldStateScopeKind.Shared, WorldStateScopeKind.SaveSlot));
+            store.Write(progress.SaveSlot, SaveFileNames.WorldState(progress.PlayerId), saveData);
+            store.Write(progress.SaveSlot, SaveFileNames.WorldStateShared, FilterByScope(saveData, WorldStateScopeKind.Shared, WorldStateScopeKind.SaveSlot));
         }
+
+        private static WorldStateProgressSaveData Read(ISaveStore store, string slot, string fileName)
+            => store != null && store.TryRead(slot, fileName, out WorldStateProgressSaveData data) ? data : null;
 
         public static WorldStateProgressSaveData FilterByScope(WorldStateProgressSaveData source, params WorldStateScopeKind[] scopes)
         {
@@ -126,13 +114,6 @@ namespace Rootborn.Core.WorldState
             if (scopes == null) return false;
             for (int i = 0; i < scopes.Length; i++) if (parsed == scopes[i]) return true;
             return false;
-        }
-
-        internal static string Sanitize(string value)
-        {
-            var chars = value.ToCharArray();
-            for (int i = 0; i < chars.Length; i++) if (!char.IsLetterOrDigit(chars[i]) && chars[i] != '-' && chars[i] != '_') chars[i] = '_';
-            return new string(chars);
         }
     }
 }

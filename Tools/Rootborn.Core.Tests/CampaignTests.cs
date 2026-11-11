@@ -175,10 +175,10 @@ namespace Rootborn.Core.Tests
             Assert.That(restored.CompleteObjective("o.1"), Is.False);
             Assert.That(CampaignProgress.FromSaveData(null, f.Campaign).ActiveCampaignId, Is.EqualTo(f.Campaign.Id));
 
-            Assert.That(CampaignProgressPersistence.FileNameFor("player"), Is.EqualTo("campaign-progress.json"));
-            Assert.That(CampaignProgressPersistence.FileNameFor("local-player"), Is.EqualTo("campaign-progress.json"));
-            Assert.That(CampaignProgressPersistence.FileNameFor(""), Is.EqualTo("campaign-progress.json"));
-            Assert.That(CampaignProgressPersistence.FileNameFor("steam:12 a"), Is.EqualTo("campaign-progress-steam_12_a.json"));
+            Assert.That(Save.SaveFileNames.Campaign("player"), Is.EqualTo("campaign-progress.json"));
+            Assert.That(Save.SaveFileNames.Campaign("local-player"), Is.EqualTo("campaign-progress.json"));
+            Assert.That(Save.SaveFileNames.Campaign(""), Is.EqualTo("campaign-progress.json"));
+            Assert.That(Save.SaveFileNames.Campaign("steam:12 a"), Is.EqualTo("campaign-progress-steam_12_a.json"));
         }
 
         private sealed class BlockedReward : CampaignReward

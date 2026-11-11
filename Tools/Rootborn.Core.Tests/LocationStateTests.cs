@@ -231,8 +231,8 @@ namespace Rootborn.Core.Tests
             var restored = LocationStateProgress.FromSaveData(null, "fb", "fp");
             Assert.That(restored.SaveSlot, Is.EqualTo("fb"));
             Assert.That(restored.PlayerId, Is.EqualTo("fp"));
-            Assert.That(LocationStateProgressPersistence.FileNameFor("player"), Is.EqualTo("location-state-progress.json"));
-            Assert.That(LocationStateProgressPersistence.FileNameFor("p 2"), Is.EqualTo("location-state-progress-p_2.json"));
+            Assert.That(Save.SaveFileNames.LocationState("player"), Is.EqualTo("location-state-progress.json"));
+            Assert.That(Save.SaveFileNames.LocationState("p 2"), Is.EqualTo("location-state-progress-p_2.json"));
         }
     }
 }

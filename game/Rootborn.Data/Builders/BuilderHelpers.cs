@@ -54,6 +54,22 @@ namespace Rootborn.Data.Builders
             return refs.ToArray();
         }
 
+        /// <summary>
+        /// 숫자로 내보낸 열거형 배열(Unity의 16진 문자열 또는 숫자 배열). 정의되지 않은 숫자는 enum-range 오류를 남기고 뺀다.
+        /// </summary>
+        public static TEnum[] EnumArray<TEnum>(NodeReader node, string field) where TEnum : struct, Enum
+        {
+            var numbers = node.IntArray(field);
+            var values = new List<TEnum>(numbers.Length);
+            foreach (var number in numbers)
+            {
+                if (Enum.IsDefined(typeof(TEnum), number)) values.Add((TEnum)Enum.ToObject(typeof(TEnum), number));
+                else node.Report("enum-range", $"필드 '{field}'의 값 {number}는 {typeof(TEnum).Name}에 없다");
+            }
+
+            return values.ToArray();
+        }
+
         /// <summary>Unity의 아이템 배열 + 개수 배열을 짝지어 id 기준 수량으로. 길이가 다르거나 빈 칸·0 이하가 있으면 오류.</summary>
         public static ItemAmount<string>[] StrictItemAmounts(NodeReader node, string itemsField, string countsField)
         {

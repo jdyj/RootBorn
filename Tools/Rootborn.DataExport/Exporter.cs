@@ -52,6 +52,9 @@ namespace Rootborn.DataExport
             ".png", ".jpg", ".jpeg", ".psd", ".tga", ".bmp", ".gif", ".tif", ".tiff",
         };
         private static readonly Regex BuiltinGuid = new Regex(@"^0{16}[def]0{15}$", RegexOptions.Compiled);
+        // Unity가 int 배열을 묶어 쓴 값: 원소마다 8글자(리틀엔디언 16진), 따옴표 없음. 숫자로만 되거나 "1e0..."처럼
+        // 지수 표기로 보여도 숫자가 아니라 문자열로 낸다. int 필드 하나는 8글자 배수 길이의 10진수가 될 일이 거의 없다(int32는 최대 10자리).
+        private static readonly Regex PackedIntArray = new Regex(@"^(?:[0-9a-f]{8})+$", RegexOptions.Compiled);
         private static readonly Regex JsonNumber = new Regex(@"^-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?$", RegexOptions.Compiled);
         private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions
         {
@@ -361,7 +364,8 @@ namespace Rootborn.DataExport
             switch (node)
             {
                 case YScalar scalar:
-                    return scalar.Plain && JsonNumber.IsMatch(scalar.Value) ? JsonNode.Parse(scalar.Value) : JsonValue.Create(scalar.Value);
+                    return scalar.Plain && JsonNumber.IsMatch(scalar.Value) && !PackedIntArray.IsMatch(scalar.Value)
+                        ? JsonNode.Parse(scalar.Value) : JsonValue.Create(scalar.Value);
                 case YSeq seq:
                     var array = new JsonArray();
                     for (int i = 0; i < seq.Items.Count; i++) array.Add(Convert(seq.Items[i], asset, field + "[" + i + "]"));

@@ -223,8 +223,8 @@ namespace Rootborn.Core.Tests
         [Test]
         public void SaveFileNameAndFallbackMilestoneAndActiveSummary()
         {
-            Assert.That(MilestoneProgressPersistence.FileNameFor("local-player"), Is.EqualTo("milestone-progress.json"));
-            Assert.That(MilestoneProgressPersistence.FileNameFor("p 2"), Is.EqualTo("milestone-progress-p_2.json"));
+            Assert.That(Save.SaveFileNames.Milestone("local-player"), Is.EqualTo("milestone-progress.json"));
+            Assert.That(Save.SaveFileNames.Milestone("p 2"), Is.EqualTo("milestone-progress-p_2.json"));
 
             var fallback = MilestoneFallback.Create("outside.help");
             Assert.That(fallback.Id, Is.EqualTo("milestone.open-ended-town-growth"));
