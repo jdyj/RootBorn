@@ -1,3 +1,4 @@
+using Rootborn.Screens.Career;
 using Rootborn.Screens.Dialogue;
 using Rootborn.Screens.Hud;
 using Rootborn.Screens.Day;
@@ -30,6 +31,7 @@ namespace Rootborn.Screens
         public const string Minigame = "minigame";
         public const string ObjectiveJournal = "objective-journal";
         public const string QuestChainLog = "quest-chain-log";
+        public const string Exploration = "exploration";
 
         // HUD 버튼이 여는 화면. 아직 옮기지 않은 화면은 id만 정해 두고, 그 화면을 등록하면 버튼이 저절로 이어진다.
         public const string CareerCandidates = "career-candidates";
@@ -54,6 +56,10 @@ namespace Rootborn.Screens
             r.Add(HudPrompt, ScreenLayer.Hud, blocksMovement: false, s => new InteractionPromptScreen(s));
             r.Add(Dialogue, ScreenLayer.Modal, blocksMovement: false, s => new DialogueScreen(s)).OpenedByInteraction("npc");
             r.Add(DailyEvent, ScreenLayer.Modal, blocksMovement: true, s => new DailyEventScreen(s));
+            // 진로 묶음: 장래희망·진로 후보는 HUD 버튼(화면 id)이 열고, 탐색 선택은 탐색 지점 상호작용 종류로 열린다. 셋 다 Unity 판에서 이동을 막는다.
+            r.Add(CareerInterest, ScreenLayer.Modal, blocksMovement: true, s => new CareerInterestScreen(s));
+            r.Add(CareerCandidates, ScreenLayer.Modal, blocksMovement: true, s => new CareerCandidateScreen(s));
+            r.Add(Exploration, ScreenLayer.Modal, blocksMovement: true, s => new ExplorationScreen(s)).OpenedByInteraction("exploration");
             // 하루 이벤트는 장소 지점 상호작용 뒤에 연다(Unity DailyEventRuntimeInstaller).
             r.AddListener(s => new DailyEventTrigger(s, DailyEvent, "location-activity"));
             r.Add(DailyPlan, ScreenLayer.Panel, blocksMovement: false, s => new DailyPlanScreen(s)).OpenedByInteraction(DailyPlanScreen.InteractionKind);
