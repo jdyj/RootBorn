@@ -7,6 +7,8 @@ description: "ROOTBORN의 Unity 게임 규칙 한 영역을 엔진 무관 Rootbo
 
 Unity 판은 얼렸다(태그 `unity-playable-20261111`). `Assets/` 아래는 읽기만 한다. 규칙은 Unity 코드를 읽고 `Rootborn.Core`에 같은 동작으로 새로 쓴다. 설계: `docs/superpowers/specs/2026-11-11-core-rules-extraction-design.md`, 규칙: `.claude/rules/engine-migration.md`.
 
+지금 `game/Rootborn.Data/Builders/NotPortedYet.cs`는 비어 있다(게임이 쓰는 규칙은 다 옮겼다). 남은 대상은 `NotUsedByGame.cs`에 이유와 함께 적힌 종류로, 게임이 쓰게 될 때 옮긴다.
+
 ## 본보기
 
 원본 `Assets/Scripts/Game/StudentLife/StudentLifeCore.cs` ↔ 옮긴 것 `Packages/com.rootborn.core/Runtime/StudentLife/*.cs`, 테스트 `Tools/Rootborn.Core.Tests/StudentLifeActivityTests.cs`. 나란히 보면 방식이 보인다.
@@ -19,7 +21,7 @@ Unity 판은 얼렸다(태그 `unity-playable-20261111`). `Assets/` 아래는 �
 4. Core 구현을 쓴다. 통과를 확인한다.
 5. 원래 테스트가 안 다루던 경계를 더한다: 거절 시 무변경, 중복 요청, 빈 id와 null, 세이브 왕복.
 6. 묶음마다 커밋한다(`[REFACTOR]`, 한글).
-7. `game/Rootborn.Data/Builders`에 그 영역의 만들기 함수를 등록하고(JSON `type` 하나에 `b.Add` 한 줄) `NotPortedYet`에서 뺀다. `dotnet test game/Rootborn.sln`의 `RealDataTests`가 실제 `data/` 전체를 오류 없이 만드는지 본다.
+7. `game/Rootborn.Data/Builders`에 그 영역의 만들기 함수를 등록하고(JSON `type` 하나에 `b.Add` 한 줄) `NotPortedYet`·`NotUsedByGame`에서 뺀다. `dotnet test game/Rootborn.sln`의 `RealDataTests`가 실제 `data/` 전체를 오류 없이 만드는지 본다.
 8. 세이브 파일이 있으면 `ISaveStore`와 `SaveFileNames`(`Rootborn.Core.Save`)를 쓰고, 맨 위 모양을 `game/tests/Rootborn.Data.Tests/SaveShapeCoverage.cs`에 등록한다.
 
 ## 지킬 것
@@ -31,7 +33,7 @@ Unity 판은 얼렸다(태그 `unity-playable-20261111`). `Assets/` 아래는 �
 - 세이브 데이터 클래스는 필드 이름과 형을 그대로 둔다(옛 세이브를 읽어야 한다).
 - 규칙이 엔진·전역 상태에 닿던 자리(SaveService, 레지스트리, GameClock, Debug.Log)는 값이나 인터페이스로 받는다.
 - 아직 안 옮겨진 다른 영역의 타입이 필요하면 그 영역을 옮기지 말고 최소 인터페이스를 두고 보고에 적는다.
-- Core 제약: `Packages/com.rootborn.core/Runtime/<영역>`, 네임스페이스 `Rootborn.Core.<영역>`, LangVersion 9(파일 범위 네임스페이스·record·global using 금지), `UnityEngine`·`System.Text.Json` 금지, `Mathf` 대신 `System.Math`나 `Rootborn.Core.Common.CoreMath`.
+- Core 제약: `Packages/com.rootborn.core/Runtime/<영역>`, 네임스페이스 `Rootborn.Core.<영역>`, LangVersion 9(파일 범위 네임스페이스·record·global using 금지), `UnityEngine`·`System.Text.Json`·`System.IO` 금지(CI `check-core-references.sh`), `Mathf` 대신 `System.Math`나 `Rootborn.Core.Common.CoreMath`.
 - 새 `.cs`와 새 폴더마다 `.meta`: 파일은 `fileFormatVersion: 2`와 `guid: <새 32자리 16진수>` 두 줄. 폴더는 `Packages/com.rootborn.core/Runtime/Quests.meta`와 같은 모양.
 
 ## 명령

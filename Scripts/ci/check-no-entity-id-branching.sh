@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 엔티티 데이터-드리븐 원칙(.claude/rules/path-based/assets-data.md): 코드는 특정 엔티티 id로 갈라지지 않는다.
+# 엔티티 데이터-드리븐 원칙(.claude/rules/data-driven.md): 코드는 특정 엔티티 id로 갈라지지 않는다.
 # 대상: Packages/com.rootborn.core/Runtime, game/ (tests 폴더 제외). 주석은 보지 않는다.
 # 찾는 것: id 이름(id, xxxId)을 문자열 리터럴과 ==, !=, is, Equals로 비교, switch (…Id), enum …Id.
 # 지금 코드에서 걸리는 것은 Scripts/ci/allowlists/entity-id-branching.txt 에 이유와 함께 고정한다.
@@ -45,7 +45,7 @@ if [ "${#files[@]}" -gt 0 ]; then
 fi
 
 if [ "$violations" -gt 0 ]; then
-  echo "FAIL: 엔티티 id 분기 ${violations}건 (허용 목록 ${allowed}건 제외). .claude/rules/path-based/assets-data.md 참고." >&2
+  echo "FAIL: 엔티티 id 분기 ${violations}건 (허용 목록 ${allowed}건 제외). .claude/rules/data-driven.md 참고." >&2
   exit 1
 fi
 echo "OK: 엔티티 id 분기가 없다 (${#files[@]}개 파일, 허용 목록 ${allowed}건)."

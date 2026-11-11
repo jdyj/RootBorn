@@ -1,138 +1,64 @@
-# UI/UX 표준 — Unity 2D PC
+# 화면 규칙 — MonoGame 판
 
-> **경로별 세부 규칙**: `rules/path-based/assets-ui.md` (본 파일 내용 준수 + 경로 한정 추가 규칙)
-> **다국어**: `rules/localization.md`
+화면 코드(`game/Rootborn.Screens`, `game/Rootborn.Ui`, Host의 그리기)에 적용한다. 화면 더하는 순서는 `game/README.md` "화면 더하기", 테마는 `game/themes/README.md`, 문구는 `rules/localization.md`, 목표성 UI는 `rules/objective-journal-ui.md`.
 
-헌법 `constitution.md`의 보조 규칙. 모든 UI 생성 에이전트는 이 파일을 따른다.
+## 화면 하나 = 표시 모델 + 화면 클래스 + 등록 한 줄
 
-## 타겟 플랫폼
+- **표시 모델**: 화면이 그릴 값만 담은 순수 데이터(문구 키, 수치, 줄 목록, 누를 수 있는지와 이유). `GameSession` 조회로 만든다.
+- **화면 클래스**: `GameScreen`을 상속한다. `Build()`에서 `UiNode` 나무를 한 번 만들고, `OnOpened`·`OnChanged(topic)`에서 값만 고친다. 상태를 바꿀 때는 `Services.Session`의 명령을 부른다. 무엇이 바뀌었는지는 화면 쌓기가 `GameSession.Changed`를 받아 열린 화면들에 넘긴다(누가 부른 명령이든 같다).
+- **등록 한 줄**: `ScreenCatalog.Register`에 `r.Add(id, 층, blocksMovement, 만들기).OpenedBy(키).OpenedByInteraction("종류")`.
+- 왜: 새 화면이 다른 화면과 설치 코드를 건드리지 않고 더해지게. 화면이 규칙을 판단하지 않게(필요한 값이 없으면 `GameSession` 조회에 더한다).
+- 화면은 매 프레임 상태를 읽지 않는다. 노드를 열 때마다 다시 만들지 않는다. 긴 목록은 보이는 줄만 그린다. 왜: 항목이 수백 개로 늘어도 끊기지 않게.
 
-ROOTBORN은 **PC 데스크톱** 기준이다 (Windows 64-bit 1순위, macOS/Linux 후속).
+## 화면 쌓기(`ScreenStack`)
 
-- **기본 해상도**: 1920×1080 (Full HD, Steam Hardware Survey 1위)
-- **최소 지원**: 1280×720
-- **상한**: 2560×1440 / 3840×2160까지 자동 스케일
-- **표시 모드**: Borderless Fullscreen 기본 (`fullscreenMode: 3`), 창 모드 토글 가능, resizable=true
-- **종횡비**: 16:9 우선, 16:10 / 21:9 그레이스풀 디그레이드 (UI는 안전 영역에 정렬)
+- 층: HUD → 패널 → 모달 → 알림(`ScreenLayer`). 위층이 포인터를 먼저 받고, 모달이 떠 있으면 아래층은 포인터를 받지 않는다.
+- **큰 패널은 한 번에 하나.** 패널을 열면 다른 패널은 닫힌다(가방·상태·설정·목표 수첩). 모달과 알림은 위로 쌓인다.
+- **이동을 막는지는 등록할 때 화면마다 정한다**(`blocksMovement`). Unity 판과 같은 값을 둔다: 가방·상태·설정·수첩·대화·일과·가구 배치는 막지 않고, 하루 이벤트·장소·탐색·장래희망·진로 후보·하루 결과·미니게임·성인 시설·도감·옷장·마을 기록은 막는다(사용자 결정 2026-11-12, 설계 `docs/superpowers/specs/2026-11-12-screens-port-design.md` 3.1절). 왜: 화면이 떠 있어도 걸을 수 있는 조작감을 지킨다.
+- 이동을 막지 않는 화면이 맨 위면 방향 키는 캐릭터로 간다. 그런 화면의 버튼은 Shift+방향 키로 옮기고 Enter로 누른다. 이동을 막는 화면은 방향 키와 Enter. 글자 칸에 포커스가 있으면 글자 입력이 먼저고 키 배정을 건너뛴다.
+- 시작 화면(슬롯 선택, 캐릭터 만들기, 슬롯 지우기)은 걸을 캐릭터가 없으므로 이동을 막는 화면으로 둔다(방향 키가 버튼을 옮긴다).
+- 화면을 여는 상호작용은 상호작용 **종류**로 등록한다. 엔티티 id로 고르지 않는다.
+- 맵에 따라 달라지는 화면은 맵 id가 아니라 맵 **성질**(`MapFeatures`, 예: 가구를 놓는 면이 있다)을 본다. Host가 맵 데이터에서 읽어 `ScreenStack.EnterMap`으로 넘긴다. 왜: 맵은 새로 그릴 예정이다.
 
-## Canvas Scaler 표준
+## 키 배정
 
-모든 UI Canvas는 다음 설정 사용:
+| 키 | 하는 일 |
+|---|---|
+| I | 가방 |
+| C | 상태 |
+| Esc | 설정(끝나지 않은 미니게임은 포기로 정산하고 닫는다) |
+| Tab | 목표 수첩. 그래서 포커스 이동에 쓰지 않는다 |
+| E·Space·Ctrl | 앞의 대상과 상호작용 |
 
-- `UI Scale Mode`: Scale With Screen Size
-- `Reference Resolution`: 1920×1080
-- `Screen Match Mode`: Match Width Or Height = 0.5 (균형)
-- `Reference Pixels Per Unit`: 16 (Modern 16x16 타일/아이콘 기준)
+- 키 → 화면은 `ScreenCatalog` 한 곳, 장치 키 → `ScreenKey`는 Host `Input/Devices.cs` 한 곳에 둔다. 왜: 키가 겹치는지 한 눈에 보이게.
 
-## Modern UI Style2 공통 패널
+## 그림은 갈아 끼울 수 있게
 
-2026-10-27 사용자 승인 예외: ComfyUI v5 도시형 몰딩 UI를 게임에 적용한다. `ModernUiTileImage`는 `data/ui/urban-molding` Addressables 테마의 공용 아틀라스를 사용해 패널·버튼·슬롯을 각각 단일 Sliced Image로 표시할 수 있다. 모서리 크기 보존, Point 필터, 분리된 현지화 텍스트를 유지하며 테마가 없는 경우 아래 Style2 구현으로 돌아간다. 실제 입력 흐름과 저장된 에셋 참조를 검증한다.
+- 화면 코드는 **스킨 이름**(`panel`, `button`, `slot`, `field`, `dialogue`)과 **아이콘 키**만 말한다. PNG 경로, 그림 좌표, 테두리 두께, 그림 색을 화면 코드에 적지 않는다. 그것은 테마 폴더(`game/themes/<이름>/theme.json`)에 있다. 왜: UI 그림을 전부 새로 그릴 예정이라 그림을 바꾸는 일이 폴더 하나를 바꾸는 일이어야 한다(`rules/engine-migration.md`).
+- 화면이 새 아이콘 키를 쓰면 `ThemeRequirements.cs`와 `game/themes/README.md` 표에 더하고 모든 테마에 넣는다.
+- 패널 안 여백은 테마의 테두리(또는 `padding`)에서 얻는다. 테두리 두께를 화면에 가정하지 않는다.
+- 아이템 그림은 테마가 아니라 아이템 데이터(`data/items`)의 그림 키로 온다.
 
-공통 패널 배경은 반드시 `Assets/modernuserinterface-win/16x16/Modern_UI_Style_2.png`의 16x16 Style2 패널 블록을 사용한다.
+## 배치 수치는 화면마다 한 곳
 
-- 소스 address: `sprites/ui/modern/16/style-2` (`ModernUISpriteAddresses.Style16Alt`)
-- 구현 경로: `ModernUiTileImage + ModernUiRecipes.CommonPanel`
-- 좌상단/상단/우상단: `ModernUI_16_Style2_r2_c0`, `ModernUI_16_Style2_r2_c1`, `ModernUI_16_Style2_r2_c2`
-- 좌측/중앙 fill/우측: `ModernUI_16_Style2_r3_c0`, `ModernUI_16_Style2_r3_c1`, `ModernUI_16_Style2_r3_c2`
-- 좌하단/하단/우하단: `ModernUI_16_Style2_r4_c0`, `ModernUI_16_Style2_r4_c1`, `ModernUI_16_Style2_r4_c2`
-- `r3_c1`은 패널 내부 fill tile로 16x16 반복 배치한다.
-- 공통 패널에 `Image.sprite`로 단일 corner/edge sprite를 직접 넣는 방식은 금지한다. 크기가 변하는 패널은 `ModernUiTileImage`가 3x3 역할 타일을 반복 생성해야 한다.
+- 패널 크기·위치, 줄 높이, 칸 크기는 그 화면의 배치 한 곳(상수 묶음이나 `HudLayout` 같은 클래스)에 모은다. 왜: 새 디자인에서 크기가 바뀌어도 한 곳만 고치게.
+- 기준은 **1920x1080** 논리 크기이고 Host가 창 크기에 맞춰 배율을 정한다. 해상도마다 따로 만든 배치를 두지 않는다. 최소 1280x720에서도 깨지지 않아야 한다.
+- 글자 크기는 1920x1080 기준 **14 미만을 쓰지 않는다.** 왜: 그보다 작으면 실제 화면에서 읽히지 않는다.
+- 글자가 길어져도 깨지지 않게: 여러 줄 글자는 줄바꿈, 한 줄 글자는 넘치면 줄이거나 말줄임. 글자 폭을 한국어 기준으로 가정하지 않는다(`rules/localization.md`).
 
-## PC 타이포그래피 (1920×1080 기준)
+## 누를 수 있는 것과 고른 것
 
-| 용도 | 최소 fontSize | 권장 fontSize |
-|------|-------------|-------------|
-| 제목 (Title) | 32 | 36-48 |
-| 부제목 (Subtitle) | 24 | 24-32 |
-| 본문 (Body) | 18 | 18-22 |
-| 보조 텍스트 (Caption) | 14 | 14-16 |
-| 버튼 텍스트 | 18 | 20-24 |
-| 절대 하한선 | 14 | -- |
+- 버튼은 바탕·테두리로 누를 수 있음이 보여야 한다. 글자와 버튼이 구별되지 않으면 안 된다.
+- 고른 탭·분류·카드는 **위치(튀어나옴) 또는 밝기·색** 중 하나 이상으로 표시한다. 정적인 색 하나로 끝내지 않는다. 왜: 무엇이 골라졌는지 한눈에 보여야 한다.
+- 분류마다 내용 구조가 다르면 분류마다 따로 노드를 두고 켜고 끈다. 한 페이지에 모든 분류 내용을 섞고 일부만 바꾸지 않는다.
 
-12px 이하 텍스트는 금지. 픽셀아트 폰트(Modern 계열 UI 무드와 일치) 사용 시 16/24/32 단계로만 가는 것을 권장.
+## 정할 수 없는 것은 묻는다
 
-## Modern 비주얼 에셋 우선
+- 슬롯 수, 격자 크기, 재화량, 시간 같은 게임 수치는 데이터에서 읽는다. 없으면 사용자에게 묻는다. 지어 넣지 않는다.
+- 화면 구성(따로 된 창인지 탭인지, 팝업인지 전체 화면인지)을 바꾸는 일은 사용자에게 묻는다. 옮기는 동안은 Unity 판과 같은 구성으로 둔다.
 
-Town, StudentLife, NPC, 상호작용 포인트, 월드 타일, 가구/실내, 공통 UI의 신규/수정 sprite는 Modern 계열 에셋을 우선 사용한다.
+## 확인
 
-- 우선 후보: `Assets/Modern_Town/`, `Assets/Modern_Exteriors_32x32/`, `Assets/Modern_Farm_v1.2/`, `Assets/moderninteriors-win/`, `Assets/modernuserinterface-win/`
-- 직업/장소/건물/교통/공공시설/상점/학교/병원/경찰서/오피스/작업장 계열 월드 sprite는 `Assets/Modern_Exteriors_32x32/`를 1차 후보로 검토한다.
-- 타일/팔레트 후보: `Assets/Tiles/ModernTownOffice/`, `Assets/TilePalettes/ModernTownOffice/`
-- Town 신규 상호작용 sprite 작업에서 Pixelwood를 기본 후보로 제안하지 않는다.
-- Pixelwood는 레거시 Farm/Crop 회귀, 이전 비교 기준, 이미 해당 에셋으로 고정된 기존 기능 보수에만 사용한다.
-- Modern sprite 적용 후에는 실제 PlayMode Game View, `SpriteRenderer.sprite`, `Tilemap` tile 이름/개수, UI overlay 상태를 함께 검증한다.
-
-## 마우스/키보드 어포던스
-
-- 버튼/클릭 가능 요소: 최소 32×32px, 권장 48×48px
-- 호버 상태(`PointerEnter`)에 시각 변화 필수 (밝기 +10% 또는 outline)
-- 누름 상태(`PointerDown`) 추가 시각 변화
-- 툴팁: 호버 0.5초 후 표시
-- 포커스 가능 요소는 키보드 네비게이션 지원 (`Selectable.navigation` 명시)
-- 단축키 표기: 버튼 텍스트 옆 `[E]`, `[Esc]` 형식
-
-## 인터랙티브 요소 가시성
-
-- 버튼은 배경색, 테두리, 또는 그림자로 "누를 수 있음"을 시각 표현해야 한다
-- 탭 바: 활성 탭은 AccentColor 배경 + Bold, 비활성 탭은 테두리(Outline) + 구분 가능한 배경색
-- 텍스트와 버튼이 시각적으로 구분 불가능하면 안 된다
-- 비활성 탭에도 최소한의 배경색(Surface보다 밝은)과 테두리를 적용한다
-- **선택된 탭/북마크/카테고리 버튼은 위치 offset 또는 색조 강조 중 하나 이상**으로 시각 표시 의무 (정적 색만으로 부족 — 사용자가 어느 항목이 활성인지 한눈에 식별 가능해야 함)
-  - 예: 선택된 북마크는 비선택 대비 24~32px 더 튀어나옴 + 채도 ↑
-
-## 카테고리/탭 콘텐츠 컨테이너 분리
-
-여러 카테고리(탭/북마크) 가 있는 UI 패널은 **카테고리당 별도 GameObject 컨테이너** 를 만들고, 카테고리 전환 시 SetActive 토글 한다.
-
-### 금지
-- 한 페이지에 모든 카테고리 콘텐츠를 혼재 시키고 일부만 enable 토글 (디버깅 어렵고 anchor 충돌)
-- 카테고리 전환 시 sprite/text 만 갈아끼우는 패턴 (페이지 구조 자체가 카테고리마다 다른 경우 부적합)
-
-### 허용
-```csharp
-// 카테고리당 컨테이너 1개. ApplyCategory 시 토글.
-private readonly Dictionary<Category, GameObject> _pagesByCat = new();
-
-void BuildItemsPage(...) { _pagesByCat[Category.Items] = leftItems; }
-void BuildEquipmentPage(...) { _pagesByCat[Category.Equipment] = leftEquip; }
-
-void ApplyCategory(Category cat) {
-    foreach (var kv in _pagesByCat) {
-        kv.Value.SetActive(kv.Key == cat);
-    }
-}
-```
-
-### 같은 콘텐츠를 여러 카테고리가 공유 시
-같은 컨테이너를 여러 카테고리 키에 매핑 — 필터만 다른 케이스에서 유용.
-```csharp
-_pagesByCat[Category.All]      = sharedItemsPage;
-_pagesByCat[Category.Resource] = sharedItemsPage; // 같은 GameObject
-_pagesByCat[Category.Tool]     = sharedItemsPage;
-```
-
-## 직렬화 참조 완전성 (Serialized Reference Completeness)
-
-Editor 스크립트가 UI를 절차적으로 생성할 때:
-1. `AddComponent<T>()` 후 T의 모든 `[SerializeField]` 필드를 와이어링해야 한다
-2. `_panel`만 설정하고 `_closeButton`, `_tabButton` 등을 누락하면 안 된다
-3. 생성 완료 후 null 참조 검증 로그를 출력해야 한다
-
-## 게임 수치는 추정 금지
-
-슬롯 수, 그리드 크기, 재화량, 타이머 등 게임플레이 관련 숫자는:
-- 디자인 문서 또는 ScriptableObject에서 참조
-- 없으면 사용자에게 확인
-- 에이전트가 임의 값을 넣으면 안 된다
-
-## UI 정보 구조 확인
-
-메뉴 계층 구조(별도 패널 vs 탭, 팝업 vs 전체 화면)는 사용자 확인 후 구현.
-모호하면 추정하지 말고 질문한다.
-
-## 입력 시스템
-
-- New Input System 사용 (`Assets/InputSystem_Actions.inputactions`)
-- 액션 맵: `Player` (이동/상호작용/도구 사용), `UI` (포커스/메뉴/창 토글)
-- 키보드 + 마우스 기본, Gamepad는 후속 확장 옵션
-- ESC = 메뉴/취소, F11 = 풀스크린 토글, F10 = 디버그 시간 가속
+- 화면 테스트(`Rootborn.Screens.Tests`)는 구성과 동작(무엇이 어디에 몇 개, 누르면 무엇이 바뀌는지)과 문구 키가 모든 언어에 있는지를 본다. 특정 그림의 픽셀에 기대지 않는다.
+- 크기와 테두리가 다른 시험용 테마로 모든 화면을 그려 예외, 빠진 아이콘, 패널 밖 글자를 본다(`TestThemeScreensTests`).
+- 스크린샷은 결함(겹친 글자, 잘린 패널, 빈 그림)을 찾는 데 쓴다. 근거 종류는 `rules/core-logic-and-play-evidence.md`.

@@ -1,11 +1,13 @@
 ---
 name: export-game-data
-description: "ROOTBORN의 Unity 에셋(Assets/Data)을 Unity 없이 data/ 아래 JSON으로 다시 내보낸다. '데이터 내보내기', '데이터 변환 다시', 'data/ 갱신', 에셋을 고친 뒤 JSON을 맞출 때 사용."
+description: "ROOTBORN의 Unity 에셋(Assets/Data)을 Unity 없이 data/ 아래 JSON으로 다시 내보낸다. '데이터 내보내기', '데이터 변환 다시', 'data/ 갱신', 변환기를 고친 뒤 JSON을 맞출 때 사용."
 ---
 
 # 게임 데이터를 JSON으로 내보내기
 
 전환 전까지 원본은 Unity 에셋(`Assets/Data`)이고 `data/`는 변환 결과다. 변환기는 `Tools/Rootborn.DataExport`(Unity 불필요).
+
+Unity 판은 얼렸으므로(`Assets/`는 고치지 않는다) 다시 내보내는 것은 변환기를 고쳤을 때뿐이다. `data/`는 손으로 고치지 않는다. MonoGame 판이 직접 갖는 `game/localization`·`game/world`·`game/themes`는 변환기가 건드리지 않는다(`.claude/rules/engine-migration.md` "지금 상태").
 
 ## 명령
 
@@ -29,5 +31,5 @@ C:\Users\jdyj\.dotnet\dotnet.exe test Tools/Rootborn.DataExport.Tests
 
 1. `data/export-report.json`에서 `unresolved`, `duplicateIds`, `missingPngs`, `parseErrors`를 이전과 비교한다. 늘었으면 원인을 찾는다.
 2. `git status --short data`로 바뀐 파일을 본다. 에셋을 안 고쳤는데 바뀌면 변환기가 결정적이지 않은 것이다(버그).
-3. 고친 에셋의 JSON을 원본 `.asset`과 눈으로 대조한다.
+3. 변환기 변경으로 바뀐 JSON을 원본 `.asset`과 눈으로 대조한다. 그다음 `dotnet test game/tests/Rootborn.Data.Tests`(`RealDataTests`)로 정의가 다 만들어지는지 본다.
 4. `data/`만 따로 커밋한다(`[ASSET]` 또는 `[CHORE]`, 한글).

@@ -18,7 +18,8 @@ C:\Users\jdyj\.dotnet\dotnet.exe run --project game/Rootborn.Host -- --sample --
 
 | 층 | 어디에 | 무엇을 | 보고에서의 이름 |
 |---|---|---|---|
-| 화면 없음 | `game/tests/Rootborn.Ui.Tests`, `Tools/Rootborn.Core.Tests` | 배치, 판정, 규칙 계산 | 자동 테스트 |
+| 화면 없음 | `Tools/Rootborn.Core.Tests`, `game/tests/Rootborn.Data.Tests`·`World.Tests`·`Game.Tests`·`Ui.Tests` | 규칙 계산, 데이터 읽기, 칸 단위 걷기, `GameSession` 흐름, 배치·판정 | 자동 테스트 |
+| 창 없는 화면 | `game/tests/Rootborn.Screens.Tests` | 화면을 눌러 보기, 화면 쌓기, 모든 언어의 문구 키 | 자동 테스트(화면 근거 아님) |
 | 실제 루프 | `game/tests/Rootborn.Host.Tests` | 창을 띄우고 한 프레임씩 진행하며 입력을 넣음 | 장치 이벤트 주입, OS 입력 계층 미확인 |
 | OS 입력 | FEVM의 Xvfb + xdotool, 또는 사람이 직접 | 실제 마우스, 키보드, 입력기 | 실제 입력(OS) |
 
@@ -28,7 +29,7 @@ C:\Users\jdyj\.dotnet\dotnet.exe run --project game/Rootborn.Host -- --sample --
 - 키와 글자는 SDL 이벤트 큐에, 포인터는 게임의 포인터 장치 계층에 넣는다(MonoGame이 마우스를 OS에서 직접 읽어서다). 클릭은 UI 포인터 판정을 거쳐야 한다.
 - 프레임 진행은 `FrameStepper` 한 곳만 쓴다(MonoGame 내부 `SdlRunLoop` 호출). 다른 곳에서 리플렉션으로 MonoGame 내부를 부르지 않는다.
 - 테스트 모드는 고정 시간 간격으로 돈다. 실시간을 기다리지 않는다.
-- 대상은 화면 좌표가 아니라 요소 id로 찾는다.
+- 대상은 화면 좌표가 아니라 요소 id로 찾는다. 화면은 `OpenScreenWithKey`·`WaitForScreen`으로 열고 `PressButton`으로 누르고 `ScreenshotScreen`으로 찍는다(`game/README.md` "화면 더하기").
 - 테스트가 띄운 창과 프로세스는 반드시 끝낸다. 사용자의 마우스와 키보드를 OS 수준으로 조작하지 않는다.
 
 ## 스크린샷

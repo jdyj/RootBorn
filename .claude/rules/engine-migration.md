@@ -5,8 +5,13 @@
 ## 지금 상태
 
 - **Unity 판은 얼렸다.** 태그 `unity-playable-20261111`이 플레이 가능한 기준본이다. Unity 코드와 `Assets/` 아래는 고치지 않고 읽기 전용 참고 자료로만 쓴다. Unity 테스트를 돌리지 않는다.
-- MonoGame 판이 메인 체인을 돌릴 때까지 새 기능을 넣지 않는다. 같은 게임을 옮기는 일만 한다.
-- 게임 데이터와 맵의 원본: Unity 에셋(`Assets/Data`)과 LDtk 파일. `Tools/Rootborn.DataExport`가 JSON(`data/`)으로 바꾼다. 데이터 변환이 끝나 JSON이 원본이 되면 이 줄을 고친다.
+- **끝난 것**: 규칙 옮기기(Core, `NotPortedYet` 비어 있음), 데이터 변환기와 정의 로더·세이브 저장소, 월드(LDtk 직접 읽기, 걷기·문·상호작용, 세이브 슬롯), 화면 옮기기(메인 체인을 MonoGame 판에서 처음부터 끝까지 — Host `MainChainHostTests`, 장치 이벤트 주입). CI는 dotnet 기준(`Scripts/ci`).
+- **남은 것**: 멀티플레이와 Steam(프로젝트 5, 조사만 `docs/superpowers/specs/2026-11-12-multiplayer-research.md`), Unity 제거(프로젝트 7). 아직 없는 것의 규칙은 미리 쓰지 않는다.
+- 새 기능을 넣을지는 사용자가 정한다. 그 전까지는 같은 게임을 옮기고 고치는 일만 한다.
+- 데이터의 원본:
+  - 규칙 데이터(`data/`)는 아직 Unity 에셋(`Assets/Data`)을 `Tools/Rootborn.DataExport`로 바꾼 결과다. `data/`를 손으로 고치지 않는다(다시 내보내면 덮인다). Unity 판을 얼렸으므로 다시 내보내는 것은 변환기를 고쳤을 때뿐이다. JSON을 원본으로 삼기로 하면 이 줄을 고친다.
+  - MonoGame 판이 직접 갖는 데이터: 덧붙인 문구 `game/localization`, 맵 목록·상호작용 지점 `game/world/*.json`, UI 테마 `game/themes`. 이것들은 손으로 고친다.
+  - 맵은 LDtk 파일이 원본이다(지금은 `Assets/LDtk/` 아래, `game/world/README.md`).
 
 ## 어디에 무엇을 쓰는가
 
