@@ -1,0 +1,43 @@
+{
+  // 월드의 빛: 바깥 맵의 때별 밝기(ambient)와 맵마다 놓인 빛 지점(maps). 그리기는 Host(WorldScreen), 읽기는 Rootborn.World WorldLightingData.
+  // 때 이름은 Core LocationStateTimeSlots(time.morning·time.afternoon·time.evening·time.night)와 같다. 밝기는 "때"로만 정한다
+  // (분 단위 시각에 기대지 않는다 — 멀티플레이 설계 2.1절: 방의 시계는 (날짜, 때)).
+  //
+  // ambient: 맵 목록(maps.json)에서 dayNight가 켜진 맵(바깥)에만 입힌다. 실내는 늘 흰색(Unity 판 실내 씬에는 2D 조명이 없었다).
+  //   color [r, g, b] 0~1, intensity 0 이상. 화면 색 = color × intensity. 때가 바뀌면 lerpSpeed로 따라간다(t = 1 - exp(-속도 × dt)),
+  //   맵에 들어선 순간에는 바로 맞춘다. 표에 없는 때는 흰색.
+  //   지금 값: Unity 판 DayNightLighting_Default(data/time/DayNightLightingProfile.json, 속도 2)를 때마다 대표 시각 하나에서 잰 값.
+  //   오전 8시(학생 하루 시작), 오후 12시(정오), 저녁 19시(17~21시 가운데), 밤 22.5시(학생 시각이 닿는 21~24시 가운데).
+  //
+  // maps: 맵 id → 빛 지점 목록. at [x, y]는 LDtk 레벨 픽셀(왼쪽 위 원점, 그림 기준). radius는 빛이 닿는 끝(픽셀), innerRadius까지는 최대 밝기.
+  //   color [r, g, b], intensityByTime: 때 → 세기(표에 없는 때는 꺼짐 0). lerpSpeed: 세기가 바뀔 때 따라가는 속도(없으면 6, Unity LocalLightController).
+  //   빛은 그림 색에 더해지는 빛이다(화면 색 = 그림 × (바깥 밝기 + 빛)). 화면 안에 들어온 빛만 그린다.
+  //   temporary + reason: 새 맵이 오기 전까지 Unity 판 자리를 옮겨 둔 것. 맵을 새로 그리면 새 자리로 바꾸거나 지운다.
+  "ambient": {
+    "lerpSpeed": 2,
+    "byTime": {
+      "time.morning": { "color": [ 1, 0.912, 0.752 ], "intensity": 0.955 },
+      "time.afternoon": { "color": [ 1, 1, 1 ], "intensity": 1 },
+      "time.evening": { "color": [ 0.508, 0.45, 0.442 ], "intensity": 0.526 },
+      "time.night": { "color": [ 0.124, 0.209, 0.358 ], "intensity": 0.282 }
+    }
+  },
+  "maps": {
+    "Town": [
+      {
+        // Unity Town.unity "Town Night Guide Light"(Lighting 아래, 점 조명 Light2D + LocalLightController): 씬 원점 (0, 0)유닛,
+        // 바깥 반경 4유닛·안 반경 0.75유닛, 색 (1, 0.72, 0.38). 세기는 낮 0.1·저녁(17~20시) 0.55·밤(20~5시) 0.85, 따라가는 속도 6.
+        // 자리는 maps.json의 도착 지점과 같은 변환 (x*32, (1-y)*32) → 마을 왼쪽 위 모서리. 반경은 ×32.
+        "name": "town-night-guide",
+        "at": [ 0, 32 ],
+        "radius": 128,
+        "innerRadius": 24,
+        "color": [ 1, 0.72, 0.38 ],
+        "lerpSpeed": 6,
+        "intensityByTime": { "time.morning": 0.1, "time.afternoon": 0.1, "time.evening": 0.55, "time.night": 0.85 },
+        "temporary": true,
+        "reason": "임시: Unity 판 Town 씬의 빛 하나를 그 자리(씬 원점 = 마을 왼쪽 위 모서리)에 그대로 옮겼다. 거리 가로등 자리가 아니라 원점에 남은 것으로 보인다. 맵을 새로 그릴 때 가로등 자리를 새로 정한다"
+      }
+    ]
+  }
+}

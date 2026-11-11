@@ -20,8 +20,10 @@ namespace Rootborn.Host.World
 {
     /// <summary>
     /// 월드 화면(--world 맵). 걷기·충돌·문은 Core의 WorldSession이 계산하고, 여기서는 입력 방향을 넘기고 결과를 그리기만 한다.
-    /// 그리는 순서: 타일 층(모두 캐릭터 아래) → 발 위치로 정렬된 가구와 캐릭터. 배율은 맵이 정한 보이는 높이에 가장 가까운 정수,
-    /// 카메라는 캐릭터를 따라가되 맵 밖을 비추지 않는다(맵이 화면보다 작으면 가운데).
+    /// 그리는 순서: 타일 층(모두 캐릭터 아래) → 발 위치로 정렬된 가구와 캐릭터 → (빛 지점이 화면에 있으면) 빛 지도를 곱한다.
+    /// 배율은 맵이 정한 보이는 높이에 가장 가까운 정수, 카메라는 캐릭터를 따라가되 맵 밖을 비추지 않는다(CameraFrame — 맵이 화면보다 작으면 가운데,
+    /// maps.json의 cameraBounds가 있으면 맵 안의 그 상자). 밝기는 "때"로 정한다(game/world/lights.json): 바깥 맵(maps.json dayNight)은 때별 화면 색,
+    /// 빛 지점은 그림 색에 더해지는 빛(화면 색 = 그림 × (바깥 밝기 + 빛)).
     /// </summary>
     public sealed class WorldScreen : IDisposable
     {
@@ -42,8 +44,18 @@ namespace Rootborn.Host.World
         /// <summary>게임 시계. Host가 넘긴 시간(dt × 배속)으로만 흐른다.</summary>
         public readonly DayClock Clock;
         private readonly float _timeScale;
-        private readonly DayNightLight _light;
+        /// <summary>때별 바깥 밝기와 맵별 빛 지점(game/world/lights.json).</summary>
+        public readonly WorldLightingData LightingData;
+        private readonly AmbientLight _ambient;
+        private readonly MapLights _mapLights = new MapLights();
+        private readonly List<VisibleLight> _visible = new List<VisibleLight>(8);
+        private readonly MapCameraBounds _cameraBounds;
+        private string _lightsMap;
         private bool _lightSnapped;
+        /// <summary>마지막으로 그린 화면에 그린 빛 지점(화면 안의 켜진 것만, 지금 세기를 곱한 색).</summary>
+        public IReadOnlyList<VisibleLight> VisibleLights => _visible;
+        /// <summary>마지막으로 그린 화면이 비춘 맵 사각형(맵 픽셀).</summary>
+        public AreaRect CameraView { get; private set; }
         /// <summary>지금 화면에 입힌 빛 색(낮밤이 없는 맵은 흰색).</summary>
         public LightColor Tint { get; private set; } = LightColor.White;
 
@@ -96,7 +108,9 @@ namespace Rootborn.Host.World
             Clock = Content.NewClock();
             Clock.SetCurrentHour(options.StartHour);
             _timeScale = options.TimeScale;
-            _light = new DayNightLight(Content.Lighting);
+            LightingData = WorldLightingData.Load(Path.Combine(options.RepoRoot, WorldLightingData.DefaultRelativePath));
+            _ambient = new AmbientLight(LightingData);
+            _cameraBounds = MapCameraBounds.Load(catalog);
             _interactionData = InteractionData.Load(options.InteractionsPath ?? Path.Combine(options.RepoRoot, InteractionData.DefaultRelativePath));
             Interactions = new InteractionTargets(_interactionData.RadiusCells);
             Interactions.Interacted += e => { InteractionLog.Add(e); Console.WriteLine("[상호작용] " + e); };
@@ -147,6 +161,7 @@ namespace Rootborn.Host.World
             _studentDay = day ?? throw new ArgumentNullException(nameof(day));
             _studentHour = hour ?? throw new ArgumentNullException(nameof(hour));
             _lightSnapped = false;
+            _lightsMap = null;
             UpdateLight(0f);
             RefreshInteractions();
         }
@@ -236,18 +251,24 @@ namespace Rootborn.Host.World
             RefreshInteractions();
         }
 
-        /// <summary>낮밤이 있는 맵은 시각의 빛을 따라가고(들어선 순간에는 바로 맞춤), 없는 맵은 흰색.</summary>
+        /// <summary>
+        /// 빛은 "때"(TimeSlot)를 따라간다. 맵에 들어선 순간에는 바로 맞춘다. 바깥 맵(맵 목록 dayNight — 맵 id가 아니라 맵 성질)만 때별 화면 색,
+        /// 나머지는 흰색. 빛 지점은 맵마다 데이터에 있는 것.
+        /// </summary>
         private void UpdateLight(float dt)
         {
+            string slot = TimeSlot, map = Session.Map.Id;
+            if (map != _lightsMap) { _lightsMap = map; _mapLights.Enter(LightingData.LightsOf(map), slot); _lightSnapped = false; }
+            else _mapLights.Update(slot, dt);
             if (!Current.Entry.DayNight)
             {
                 _lightSnapped = false;
                 Tint = LightColor.White;
                 return;
             }
-            if (!_lightSnapped) { _light.Snap(CurrentHour); _lightSnapped = true; }
-            else _light.Update(CurrentHour, dt);
-            Tint = _light.Tint;
+            if (!_lightSnapped) { _ambient.Snap(slot); _lightSnapped = true; }
+            else _ambient.Update(slot, dt);
+            Tint = _ambient.Tint;
         }
 
         public void Draw(SpriteBatch batch, int screenWidth, int screenHeight)
@@ -269,22 +290,32 @@ namespace Rootborn.Host.World
             {
                 Scale = Zoom;
                 float viewW = screenWidth / (float)Zoom, viewH = screenHeight / (float)Zoom;
-                offset = new Vector2(WorldCamera.Offset(walker.X, grid.PixelWidth, viewW), WorldCamera.Offset(walker.Y, grid.PixelHeight, viewH));
+                AreaRect bounds = CameraFrame.Bounds(grid.PixelWidth, grid.PixelHeight,
+                    _cameraBounds.TryGet(map.Entry.Id, out AreaRect authored) ? authored : (AreaRect?)null);
+                AreaRect frame = CameraFrame.View(walker.X, walker.Y, bounds, viewW, viewH);
+                offset = new Vector2(frame.X, frame.Y);
             }
             CameraOffset = offset;
+            CameraView = new AreaRect(offset.X, offset.Y, screenWidth / Scale, screenHeight / Scale);
 
-            _device.Clear(_background);
             Matrix view = Matrix.CreateTranslation(-offset.X, -offset.Y, 0f) * Matrix.CreateScale(Scale, Scale, 1f);
-            _tint = new Color(Math.Clamp(Tint.R, 0f, 1f), Math.Clamp(Tint.G, 0f, 1f), Math.Clamp(Tint.B, 0f, 1f));
+            _mapLights.CollectVisible(CameraView, _visible);
+            bool lit = _visible.Count > 0;
+            var ambient = new Color(Math.Clamp(Tint.R, 0f, 1f), Math.Clamp(Tint.G, 0f, 1f), Math.Clamp(Tint.B, 0f, 1f));
+            // 빛 지점이 보이면 빛 지도(바깥 밝기 + 빛)를 먼저 만들고 월드를 흰색으로 그린 뒤 곱한다. 없으면 월드를 바깥 밝기로 바로 칠한다.
+            if (lit) DrawLightMap(batch, view, ambient, screenWidth, screenHeight);
+            _device.Clear(_background);
+            _tint = lit ? Color.White : ambient;
             batch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointClamp, null, null, null, view);
             foreach (SpriteDraw s in map.Picture.Under) DrawSprite(batch, s);
             List<SpriteDraw> sorted = SortedWithFurniture(map);
             // 플레이어와 NPC를 발 위치(몸 가운데 Y)로 정렬해 가구 사이에 끼운다.
-            var actors = new List<(float sortY, int npc)>(_npcs.Count + 1) { (walker.Y, -1) };
-            for (int i = 0; i < _npcs.Count; i++) actors.Add((_npcs[i].Y, i));
-            actors.Sort((a, b) => a.sortY != b.sortY ? a.sortY.CompareTo(b.sortY) : a.npc.CompareTo(b.npc));
+            _actors.Clear();
+            _actors.Add((walker.Y, -1));
+            for (int i = 0; i < _npcs.Count; i++) _actors.Add((_npcs[i].Y, i));
+            _actors.Sort(ActorOrder);
             int drawn = 0;
-            foreach (var actor in actors)
+            foreach (var actor in _actors)
             {
                 int upTo = ActorIndex(sorted, actor.sortY);
                 for (; drawn < upTo; drawn++) DrawSprite(batch, sorted[drawn]);
@@ -292,6 +323,92 @@ namespace Rootborn.Host.World
             }
             for (; drawn < sorted.Count; drawn++) DrawSprite(batch, sorted[drawn]);
             batch.End();
+            if (lit)
+            {
+                batch.Begin(SpriteSortMode.Deferred, MultiplyBlend, SamplerState.PointClamp, null, null, null, null);
+                batch.Draw(_lightMap, Vector2.Zero, Color.White);
+                batch.End();
+            }
+        }
+
+        private readonly List<(float sortY, int npc)> _actors = new List<(float sortY, int npc)>(8);
+        private static readonly Comparison<(float sortY, int npc)> ActorOrder = (a, b) => a.sortY != b.sortY ? a.sortY.CompareTo(b.sortY) : a.npc.CompareTo(b.npc);
+
+        // ---------- 빛 지도 ----------
+
+        /// <summary>그린 화면 × 빛 지도(색만 곱하고 알파는 그대로). 상태는 한 장치에 묶이므로 화면마다 하나.</summary>
+        private readonly BlendState MultiplyBlend = new BlendState
+        {
+            ColorSourceBlend = Blend.DestinationColor, ColorDestinationBlend = Blend.Zero,
+            AlphaSourceBlend = Blend.Zero, AlphaDestinationBlend = Blend.One,
+        };
+
+        /// <summary>빛 그림의 크기(픽셀). 늘려 그리므로 부드럽게 거른다.</summary>
+        private const int LightTextureSize = 128;
+        private RenderTarget2D _lightMap;
+        private RenderTargetBinding[] _bindings = Array.Empty<RenderTargetBinding>();
+        /// <summary>안 반경 비율(1/64 단위)마다 한 번 만든 빛 그림.</summary>
+        private readonly Dictionary<int, Texture2D> _lightTextures = new Dictionary<int, Texture2D>();
+
+        /// <summary>
+        /// 빛 지도를 따로 그린다: 바깥 밝기로 채우고 보이는 빛을 더한다. 지금 그리던 대상(장면 버퍼)으로 돌아온다 — 돌아온 대상은 비워질 수 있으므로
+        /// 월드를 그리기 전에 부른다. 화면 크기가 바뀔 때만 빛 지도를 새로 만든다.
+        /// </summary>
+        private void DrawLightMap(SpriteBatch batch, Matrix view, Color ambient, int width, int height)
+        {
+            if (_lightMap == null || _lightMap.Width != width || _lightMap.Height != height)
+            {
+                _lightMap?.Dispose();
+                _lightMap = new RenderTarget2D(_device, width, height);
+            }
+            int count = _device.RenderTargetCount;
+            if (_bindings.Length != count) _bindings = new RenderTargetBinding[count];
+            if (count > 0) _device.GetRenderTargets(_bindings);
+            _device.SetRenderTarget(_lightMap);
+            _device.Clear(ambient);
+            batch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp, null, null, null, view);
+            for (int i = 0; i < _visible.Count; i++)
+            {
+                VisibleLight l = _visible[i];
+                Texture2D texture = LightTexture(l.InnerRadius / l.Radius);
+                float scale = l.Radius * 2f / LightTextureSize;
+                var color = new Color(Math.Clamp(l.R, 0f, 1f), Math.Clamp(l.G, 0f, 1f), Math.Clamp(l.B, 0f, 1f));
+                batch.Draw(texture, new Vector2(l.X - l.Radius, l.Y - l.Radius), null, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+            }
+            batch.End();
+            if (count > 0) _device.SetRenderTargets(_bindings); else _device.SetRenderTarget(null);
+        }
+
+        /// <summary>
+        /// 둥근 빛 그림: 안 반경까지 1, 그 바깥은 끝까지 부드럽게 0(Unity 점 조명의 안·바깥 반경). 흰색에 알파로 세기를 둔다.
+        /// 안 반경 비율마다 처음 쓸 때 한 번 만든다.
+        /// </summary>
+        private Texture2D LightTexture(float innerRatio)
+        {
+            int key = (int)MathF.Round(Math.Clamp(innerRatio, 0f, 1f) * 64f);
+            if (_lightTextures.TryGetValue(key, out Texture2D texture)) return texture;
+            float inner = key / 64f;
+            var pixels = new Color[LightTextureSize * LightTextureSize];
+            float half = LightTextureSize / 2f;
+            for (int y = 0; y < LightTextureSize; y++)
+                for (int x = 0; x < LightTextureSize; x++)
+                {
+                    float dx = (x + 0.5f - half) / half, dy = (y + 0.5f - half) / half;
+                    float d = MathF.Sqrt(dx * dx + dy * dy);
+                    float a;
+                    if (d >= 1f) a = 0f;
+                    else if (d <= inner) a = 1f;
+                    else
+                    {
+                        float f = 1f - (d - inner) / (1f - inner);
+                        a = f * f * (3f - 2f * f);
+                    }
+                    pixels[y * LightTextureSize + x] = new Color(1f, 1f, 1f, a);
+                }
+            texture = new Texture2D(_device, LightTextureSize, LightTextureSize);
+            texture.SetData(pixels);
+            _lightTextures[key] = texture;
+            return texture;
         }
 
         /// <summary>
@@ -399,6 +516,11 @@ namespace Rootborn.Host.World
         {
             foreach (Texture2D texture in _textures.Values) texture.Dispose();
             _textures.Clear();
+            foreach (Texture2D texture in _lightTextures.Values) texture.Dispose();
+            _lightTextures.Clear();
+            _lightMap?.Dispose();
+            _lightMap = null;
+            MultiplyBlend.Dispose();
         }
     }
 }

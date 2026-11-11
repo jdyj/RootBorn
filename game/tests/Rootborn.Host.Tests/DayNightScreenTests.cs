@@ -35,18 +35,19 @@ namespace Rootborn.Host.Tests
         [Test]
         public void DAYNIGHT_PLAY_001_TownGrowsDarkAsTheClockRunsIntoTheNight()
         {
-            // 하루 600초(데이터) × 배속 300: 게임 1시간 = 5프레임.
-            using PlayerDriver player = Start("Town", "12", "300");
+            // 하루 600초(데이터) × 배속 30: 게임 1시간 = 50프레임. 밝기는 "때"(Core 시간대: 21시부터 밤, 0~12시는 오전)로 정하므로
+            // 밤 때(21~24시, 150프레임) 안에서 빛이 따라오기를 기다린다.
+            using PlayerDriver player = Start("Town", "12", "30");
             Assert.That(player.Game.World.Clock.CurrentHour, Is.EqualTo(12f).Within(1f), "시작 뒤 몇 프레임(1프레임 = 게임 0.2시간)");
             LightColor noon = player.Game.World.Tint;
             Assert.That(noon.R, Is.EqualTo(1f).Within(0.01f), "정오는 흰 빛, 세기 1");
             double noonBrightness = Brightness(player);
             player.Screenshot("daynight-01-town-noon");
 
-            player.Frames(50); // 22시 무렵
-            player.Frames(150); // 빛이 따라오는 시간(속도 2) — 그사이 자정을 넘는다
+            player.Frames(455); // 21.1시 무렵 — 밤 때
+            player.Frames(120); // 빛이 따라오는 시간(속도 2, 2초 → 98%). 자정 전이다
             float hour = player.Game.World.Clock.CurrentHour;
-            Assert.That(hour < 5f || hour >= 20f, Is.True, "밤이 됐다: " + hour);
+            Assert.That(hour >= 21f && hour < 24f, Is.True, "밤 때다: " + hour);
             LightColor night = player.Game.World.Tint;
             Assert.That(night.R, Is.LessThan(0.2f), "밤 빛 " + night);
             Assert.That(night.B, Is.GreaterThan(night.R), "밤은 푸르다");
