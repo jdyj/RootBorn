@@ -25,7 +25,7 @@ C:\Users\jdyj\.dotnet\dotnet.exe run --project game/Rootborn.Host -- --sample --
 
 ## 무거운 테스트는 원격 Linux에서
 
-이 PC에서 세션 여럿이 Host 테스트를 함께 돌리면 메모리가 모자란다. 전체 테스트나 Host 테스트 묶음은 `bash Scripts/remote-test/run.sh [<커밋>] [-- <dotnet test 인자>]`로 Strix Halo의 가상 화면(Xvfb)에서 돌린다. 접속 정보는 환경 변수 `ROOTBORN_REMOTE_HOST`·`ROOTBORN_REMOTE_USER`·`ROOTBORN_REMOTE_KEY`(값은 사용자 전역 지침에, 저장소에는 적지 않는다). 커밋된 것만 가고, 결과(프로젝트별 건수, 실패 목록, 스크린샷)는 `output/remote-test/<실행 id>/`에 온다. 근거는 여전히 "장치 이벤트 주입(OS 입력 계층 미확인)"이고 그리기는 소프트웨어 GL이다. 쓰는 법과 원격 준비는 `Scripts/remote-test/README.md`.
+이 PC에서 세션 여럿이 Host 테스트를 함께 돌리면 메모리가 모자란다. 전체 테스트나 Host 테스트 묶음은 `bash Scripts/remote-test/run.sh [<커밋>] [-- <dotnet test 인자>]`로 Strix Halo의 가상 화면(Xvfb)에서 돌린다. 접속 정보는 환경 변수 `ROOTBORN_REMOTE_HOST`·`ROOTBORN_REMOTE_USER`·`ROOTBORN_REMOTE_KEY`(값은 사용자 전역 지침에, 저장소에는 적지 않는다). 커밋된 것만 가고, 결과(프로젝트별 건수, 실패 목록, 스크린샷)는 `output/remote-test/<실행 id>/`에 온다. 원격 실행은 연결에서 떼어 돌기 때문에 이 PC 쪽이 끊기거나 꺼져도 끝까지 간다 — 시작하면 바로 찍히는 실행 id로 `run.sh --resume [<실행 id>]`(id가 없으면 이 작업 폴더의 가장 최근 안 받은 실행)를 하면 이어서 기다리거나 받는다. 오래 걸리는 전체 실행은 `run.sh --no-wait HEAD`로 시작만 하고 나중에 `--resume`해도 된다. 같은 커밋·인자의 실행이 있으면 거기에 붙고(`--force`로 새로), `--status`는 원격에서 도는 실행과 안 받아 간 실행을, `--cancel <실행 id>`는 그 실행만 멈춘다. 근거는 여전히 "장치 이벤트 주입(OS 입력 계층 미확인)"이고 그리기는 소프트웨어 GL이다. 쓰는 법과 원격 준비는 `Scripts/remote-test/README.md`.
 
 ## 실제 루프 테스트 쓰는 법
 

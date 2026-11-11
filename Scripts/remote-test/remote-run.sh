@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# 원격에서 한 번의 테스트 실행. 이 PC의 run.sh가 ssh 표준 입력으로 넘긴다(스크립트는 늘 이 PC의 것이 돈다).
+# 원격에서 한 번의 테스트 실행. remote-ctl.sh start가 연결에서 떼어(setsid nohup) 띄운다 — ssh가 끊겨도 끝까지 돈다.
+# 스크립트는 이 PC의 것이 runs/<실행 id>/bin/에 복사되어 돈다(옛 커밋을 돌려도 같다).
 # 인자: <작업 폴더 이름> <실행 id> <커밋 해시> [dotnet test 인자...]
-# 결과는 <작업 폴더>/runs/<실행 id>/results 에 남고, 가져가는 것과 지우는 것은 run.sh가 한다.
-# 이 실행이 띄운 가상 화면과 프로세스는 끝날 때(실패, 끊김 포함) 모두 끝낸다.
+# 결과는 <작업 폴더>/runs/<실행 id>/results 에 남고(끝나면 exit-code와 .done), 가져가는 것과 지우는 것은 run.sh가 한다.
+# 이 실행이 띄운 가상 화면과 프로세스는 끝날 때(실패, 취소 포함) 모두 끝낸다.
 set -uo pipefail
 
 DIR_NAME="$1"; RUN_ID="$2"; SHA="$3"; shift 3
@@ -26,10 +27,14 @@ SRC="$RUN/src"
 RES="$RUN/results"
 mkdir -p "$RES"
 log() { echo "[원격 $(date +%H:%M:%S)] $*"; }
+# 주인 확인용: pid와 시작 시각(/proc/<pid>/stat 22번째 칸 — pid가 다시 쓰여도 구별된다).
+proc_start() { sed 's/.*) //' "/proc/$1/stat" 2>/dev/null | awk '{print $20}'; }
+MAIN_PID=$$
+echo "$MAIN_PID $(proc_start "$MAIN_PID")" > "$RUN/pid"
 
-XVFB_PID=""; SAMPLER_PID=""; WATCH_PID=""
+XVFB_PID=""; SAMPLER_PID=""
 cleanup() {
-  [ -n "$WATCH_PID" ] && kill "$WATCH_PID" 2>/dev/null
+  local rc=$?
   [ -n "$SAMPLER_PID" ] && kill "$SAMPLER_PID" 2>/dev/null
   # 이 실행이 띄운 프로세스(환경 변수 표시가 붙은 것)를 모두 끝낸다. 다른 실행이나 다른 일은 건드리지 않는다.
   for p in $(own_pids); do kill "$p" 2>/dev/null; done
@@ -39,8 +44,10 @@ cleanup() {
   if [ -d "$SRC" ]; then git -C "$BASE/repo.git" worktree remove --force "$SRC" 2>/dev/null || rm -rf "$SRC"; fi
   git -C "$BASE/repo.git" worktree prune 2>/dev/null
   git -C "$BASE/repo.git" update-ref -d "refs/runs/$RUN_ID" 2>/dev/null
-  # run.sh는 이 표시가 있어야 결과를 가져가고 실행 폴더를 지운다(연결만 끊긴 채 원격이 돌고 있을 때 지우지 않게).
-  [ -d "$RES" ] && : > "$RES/.done"
+  [ -n "${SLOT_OWNER:-}" ] && rm -f "$SLOT_OWNER"
+  # run.sh는 이 표시가 있어야 결과를 가져가고 실행 폴더를 지운다(아직 도는 실행을 지우지 않게).
+  if [ -d "$RES" ]; then echo "$rc" > "$RES/exit-code"; : > "$RES/.done"; fi
+  log "정리 끝(종료 코드 $rc)"
 }
 own_pids() {
   local d
@@ -53,22 +60,9 @@ own_pids() {
 trap cleanup EXIT
 trap 'exit 130' INT TERM HUP
 
-# ---- 연결 감시: pty 없는 ssh는 이 PC 쪽이 끊겨도 원격에 HUP을 보내지 않는다(2026-11-12 실제로 남았다).
-# 1분마다 진행 줄을 써 보고(끊겼으면 쓰기가 실패한다), 부모(ssh 세션)가 바뀌었는지 본다. 끊겼으면 이 실행을 끝낸다.
-MAIN_PID=$$; MAIN_PARENT=$PPID
-(
-  trap '' PIPE
-  elapsed=0
-  while kill -0 "$MAIN_PID" 2>/dev/null; do
-    sleep 15; elapsed=$((elapsed + 15))
-    parent=$(awk '{print $4}' "/proc/$MAIN_PID/stat" 2>/dev/null)
-    lost=""
-    [ -n "$parent" ] && [ "$parent" != "$MAIN_PARENT" ] && lost=1
-    if [ $((elapsed % 60)) = 0 ] && ! echo "[원격 $(date +%H:%M:%S)] 진행 중 ${elapsed}초" 2>/dev/null; then lost=1; fi
-    if [ -n "$lost" ]; then kill -TERM "$MAIN_PID" 2>/dev/null; exit 0; fi
-  done
-) &
-WATCH_PID=$!
+# 연결 감시는 없다: 이 실행은 ssh에서 떼어 떠 있어 이 PC 쪽이 끊기거나 꺼져도 끝까지 돈다.
+# 아무도 받아 가지 않은 결과는 다음 실행을 시작할 때 remote-ctl.sh가 정해진 시간 뒤 지운다.
+# 아래에서 배경으로 띄우는 것은 모두 9>&- 로 자리 잠금을 물려받지 않게 한다(이 셸이 죽으면 자리가 곧 풀린다).
 
 # ---- 동시 실행 수 제한: locks/slot-N 중 빈 것을 잡는다(이 셸이 끝나면 풀린다). ----
 exec 9>/dev/null
@@ -78,10 +72,22 @@ for wait_round in $(seq 1 180); do
     exec 9>"$BASE/locks/slot-$n"
     if flock -n 9; then got="$n"; break 2; fi
   done
-  [ "$wait_round" = 1 ] && log "다른 실행 $MAX_RUNS개가 돌고 있어 기다린다"
+  if [ "$wait_round" = 1 ]; then
+    log "다른 실행 $MAX_RUNS개가 돌고 있어 기다린다"
+    # 자리의 주인이 이미 죽었는데 남은 프로세스가 잠금을 쥐고 있으면 알린다(남의 실행이라 끝내지는 않는다).
+    for n in $(seq 1 "$MAX_RUNS"); do
+      [ -f "$BASE/locks/slot-$n.owner" ] || continue
+      read -r o_id o_pid o_start < "$BASE/locks/slot-$n.owner" || continue
+      if [ "$(proc_start "$o_pid")" != "$o_start" ]; then
+        log "자리 $n: 주인 실행 $o_id가 이미 끝났는데 남은 프로세스가 자리를 쥐고 있다 — 'run.sh --cancel $o_id'로 끝낼 수 있다"
+      fi
+    done
+  fi
   sleep 10
 done
 [ -n "$got" ] || { echo "30분 기다려도 빈 자리가 없다" >&2; exit 4; }
+SLOT_OWNER="$BASE/locks/slot-$got.owner"
+echo "$RUN_ID $MAIN_PID $(proc_start "$MAIN_PID")" > "$SLOT_OWNER"
 log "자리 $got"
 
 # ---- 가용 메모리 ----
@@ -103,7 +109,7 @@ DISPLAY_NUM=""
 for d in $(seq "${ROOTBORN_TEST_DISPLAY_FIRST:-140}" "${ROOTBORN_TEST_DISPLAY_LAST:-199}"); do
   [ -e "/tmp/.X$d-lock" ] || [ -e "/tmp/.X11-unix/X$d" ] && continue
   ROOTBORN_TEST_RUN_ID="$RUN_ID" "$ROOTBORN_TEST_XVFB" ":$d" -screen 0 1920x1080x24 -nolisten tcp -noreset \
-    -xkbdir "$ROOTBORN_TEST_XKBDIR" > "$RES/xvfb.log" 2>&1 &
+    -xkbdir "$ROOTBORN_TEST_XKBDIR" > "$RES/xvfb.log" 2>&1 9>&- &
   XVFB_PID=$!
   for _ in $(seq 1 50); do
     [ -e "/tmp/.X11-unix/X$d" ] && break
@@ -132,7 +138,7 @@ mkdir -p "$DOTNET_CLI_HOME"
 # ---- 메모리 표본: 1초마다 이 실행의 프로세스 RSS를 더하고, testhost 하나의 최고 값도 적는다. ----
 (
   peak_total=0; peak_one=0
-  while :; do
+  while kill -0 "$MAIN_PID" 2>/dev/null; do
     total=0; one=0
     for p in $(own_pids); do
       rss=$(awk '/^VmRSS:/ {print $2}' "/proc/$p/status" 2>/dev/null); [ -n "$rss" ] || continue
@@ -147,7 +153,7 @@ mkdir -p "$DOTNET_CLI_HOME"
     printf 'peak_total_mb=%d\npeak_testhost_mb=%d\n' $((peak_total / 1024)) $((peak_one / 1024)) > "$RES/memory.txt"
     sleep 1
   done
-) &
+) 9>&- &
 SAMPLER_PID=$!
 
 # ---- 테스트 ----
@@ -159,15 +165,15 @@ start=$(date +%s)
 status=0
 if [ $# -eq 0 ]; then
   log "dotnet test Tools/Rootborn.Core.Tests"
-  nice -n 10 dotnet test Tools/Rootborn.Core.Tests "${common[@]}" > "$RES/core.log" 2>&1 &
+  nice -n 10 dotnet test Tools/Rootborn.Core.Tests "${common[@]}" > "$RES/core.log" 2>&1 9>&- &
   wait $! || status=1
   log "dotnet test game/Rootborn.sln (동시 $PARALLEL)"
-  nice -n 10 dotnet test game/Rootborn.sln "${common[@]}" > "$RES/game.log" 2>&1 &
+  nice -n 10 dotnet test game/Rootborn.sln "${common[@]}" > "$RES/game.log" 2>&1 9>&- &
   wait $! || status=1
 else
   case "$1" in -*) set -- game/Rootborn.sln "$@" ;; esac
   log "dotnet test $*"
-  nice -n 10 dotnet test "$@" "${common[@]}" > "$RES/test.log" 2>&1 &
+  nice -n 10 dotnet test "$@" "${common[@]}" > "$RES/test.log" 2>&1 9>&- &
   wait $! || status=1
 fi
 end=$(date +%s)

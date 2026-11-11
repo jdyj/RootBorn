@@ -5,7 +5,7 @@
 #   dotnet/       .NET 8 SDK (dotnet-install.sh)
 #   x/            Xvfb와 xkb 자료 (apt-get download + dpkg -x)
 #   nuget/        NuGet 패키지 캐시(실행끼리 함께 씀)
-#   env.sh        위 위치와 한계 값. 이미 있으면 덮어쓰지 않는다.
+#   env.sh        위 위치와 한계 값. 이미 있으면 덮어쓰지 않고, 새로 생긴 값 중 없는 것만 끝에 더한다.
 set -euo pipefail
 
 DIR_NAME="${1:?작업 폴더 이름(원격 홈 기준)을 인자로 준다}"
@@ -55,5 +55,12 @@ export ROOTBORN_TEST_PARALLEL=2
 export ROOTBORN_TEST_MIN_AVAILABLE_GB=8
 ENV
 fi
+# 나중에 생긴 값: 없을 때만 더한다(있는 값은 손으로 고친 것일 수 있어 덮어쓰지 않는다).
+add_missing() {
+  grep -q "^export $1=" "$BASE/env.sh" && return 0
+  { echo "# $3"; echo "export $1=$2"; } >> "$BASE/env.sh"
+  echo "env.sh에 더함: $1=$2"
+}
+add_missing ROOTBORN_TEST_RESULT_TTL_HOURS 24 "끝난 뒤 아무도 받아 가지 않은 결과를 지우기까지의 시간(다음 실행을 시작할 때 지운다)."
 cat "$BASE/env.sh"
 step "끝"
