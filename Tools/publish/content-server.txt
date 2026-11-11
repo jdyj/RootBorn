@@ -1,0 +1,12 @@
+# 데디케이티드 서버(game/Rootborn.Server) 배포 폴더에 같은 상대 경로로 복사할 파일 목록. 형식은 content.txt 와 같다.
+# 서버가 실제로 읽는 것(코드에서 확인, 2026-11-12):
+#   - data/ 아래 *.json 전부: GameDataLoader 가 정의를 읽고, DataFingerprint 가 data 아래 *.json 전부를 지문에 넣는다.
+#   - game/economy.json: 데이터 폴더 옆의 game/economy.json(Rootborn.Data/EconomySettings). 서버도 GameDefinitions 를 만들 때 읽는다.
+# 그림·글꼴·테마·맵(LDtk)·문구(game/localization)·월드 지점(game/world)은 서버가 읽지 않으므로 넣지 않는다.
+#
+# data/atlases 와 data/export-report.json 도 넣는다(클라이언트 content.txt 는 뺀다). 이유: DataFingerprint 는 data 아래 모든 .json 을
+# 셈하므로 한 파일이라도 빠지면 개발 PC 에서 돌린 서버와 지문이 달라진다. 5.8MB 안팎이라 크기 부담은 작다.
+# 클라이언트 배포 폴더는 atlases 를 일부만 가지므로 Host 가 지문을 셈하게 되면 같은 지문이 나오지 않는다 — 그때 정할 일(README "지문").
+
+data/**/*.json
+game/economy.json

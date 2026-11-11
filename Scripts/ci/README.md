@@ -41,8 +41,13 @@ bash Scripts/ci/run-all.sh --skip-host     # dotnet 테스트에서 창을 띄�
 ## 워크플로(`.github/workflows/ci.yml`)
 
 - `static-checks`: 자체 시험 + 검사 6개. 실패하면 막는다.
-- `dotnet-tests`: Core, DataExport, `game/tests`의 Host 테스트를 뺀 나머지. 실패하면 막는다.
+- `dotnet-tests`: Core, DataExport, `game/tests`의 Host 테스트를 뺀 나머지(`Rootborn.Server.Tests`, `Rootborn.Simulation.Tests` 포함). 실패하면 막는다.
+  서버 테스트는 UDP를 루프백(`127.0.0.1`, 포트 0)에서만 열고 별도 프로세스(`dotnet Rootborn.Server.dll`)를 띄운다. 러너에서 문제 없었다
+  (main 43011799437: Server 34건 통과, Simulation 23건 통과·1건 건너뜀 — GitHub 기록을 읽어 확인).
 - `host-tests`: `game/tests/Rootborn.Host.Tests`만 `xvfb-run`으로(나머지는 `dotnet-tests`가 돌린다). 러너에 `fonts-nanum`을 깔고 `ROOTBORN_FONT`로 준다.
-  GitHub 러너에서 도는지 확인되기 전까지 `continue-on-error: true`다. 2026-11-11까지의 실행은 한글 글꼴이 없어 130건 중 104건이 `HostOptions.Resolve`에서 멈췄다(원인 하나). 글꼴을 넣은 뒤의 결과는 GitHub에서 아직 보지 못했다.
+  `continue-on-error: true`, 시간 제한 45분. 글꼴을 넣은 뒤의 실행(main 43011799437, 23분)은 160건 중 157건 통과, 2건 실패다.
+  실패는 소프트웨어 렌더링 러너에서 프레임 시간 기준을 못 맞춘 성능 시험(`OBJECTIVE_JOURNAL_PERF_200Rows_OpenAndScroll_FrameTime`, `SCREENS_003_Performance_1500CellGrid_OpenAndScroll`)이다. 이 둘을 정하기 전에는 막는 job으로 바꾸지 않는다.
+- `server-publish`: ubuntu 에서 `Tools/publish/publish.sh --server linux-x64` 뒤 `verify.sh --server linux-x64`(저장소 밖 복사본에서 듣기 → stop → 저장 → 이어서 열기).
+  **GitHub 미확인**(`gh run list`로 읽기만 했고 이 job은 아직 돈 적이 없다). 처음 통과가 확인되기 전까지 `continue-on-error: true`.
 - 새 테스트 프로젝트는 `game/tests/<이름>/<이름>.csproj`에 두면 `dotnet-tests`가 저절로 돌린다(글롭). `Tools/` 아래 테스트 프로젝트는 워크플로와 `run-all.sh`에 한 줄씩 더한다.
-- 배포 폴더(`Tools/publish`)는 CI가 만들거나 확인하지 않는다. 로컬에서 `Tools/publish/publish.sh` 뒤 `Tools/publish/verify.sh`(`Tools/publish/README.md`).
+- 클라이언트 배포 폴더(`Tools/publish/publish.sh`)는 CI가 만들지 않는다(Windows 와 글꼴 때문). 로컬에서 `Tools/publish/publish.sh` 뒤 `Tools/publish/verify.sh`(`Tools/publish/README.md`). 서버 배포 폴더는 위 `server-publish`가 만든다.

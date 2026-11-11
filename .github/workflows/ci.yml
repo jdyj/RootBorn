@@ -53,9 +53,12 @@ jobs:
     name: Host 테스트 (실제 창, xvfb)
     runs-on: ubuntu-latest
     # 막지 않는다(continue-on-error): Host 테스트는 SDL로 실제 창을 띄우고 장치 입력을 주입한다.
-    # 2026-11-11까지의 실행은 모두 러너에 한글 글꼴이 없어 HostOptions.Resolve에서 멈췄다(130건 중 104건 실패, 원인 하나).
-    # 그래서 가상 화면(xvfb)과 OpenGL(소프트웨어 렌더링)로 실제로 그려지는지는 아직 확인하지 못했다.
-    # 글꼴을 넣은 뒤 통과가 확인되면 이 줄을 지워 다른 job처럼 실패 시 막게 한다.
+    # 글꼴을 넣은 뒤의 실행(main 43011799437, 2026-11-11, GitHub 기록 읽기)은 160건 중 157건 통과, 2건 실패, 1건 건너뜀, 23분이다.
+    # 실패 2건은 소프트웨어 렌더링(LIBGL_ALWAYS_SOFTWARE) 러너에서 프레임 시간 기준을 못 맞춘 성능 시험이다:
+    # OBJECTIVE_JOURNAL_PERF_200Rows_OpenAndScroll_FrameTime, SCREENS_003_Performance_1500CellGrid_OpenAndScroll.
+    # 이 둘을 러너에서 어떻게 다룰지(기준 완화, 러너에서 건너뜀)는 Host 테스트를 맡은 쪽이 정한다. 그 전까지 이 줄을 지우지 않는다.
+    # 무한히 걸리지 않게 시간 제한을 둔다(23분 걸리는 job 이다).
+    timeout-minutes: 45
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
@@ -74,3 +77,22 @@ jobs:
           # 러너의 글꼴 위치. 테스트가 운영체제 글꼴 찾기에 기대지 않게 직접 준다(배포용 글꼴은 사용자 결정 대기).
           ROOTBORN_FONT: /usr/share/fonts/truetype/nanum/NanumGothic.ttf
         run: xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" dotnet test game/tests/Rootborn.Host.Tests
+
+  server-publish:
+    name: 서버 배포 폴더 만들고 확인 (linux-x64)
+    runs-on: ubuntu-latest
+    # 막지 않는다(continue-on-error): 이 job 은 GitHub 러너에서 아직 돌려 보지 못했다(2026-11-12, Windows 에서는 win-x64 로 통과).
+    # 처음 통과가 확인되면 이 줄을 지워 다른 job 처럼 실패 시 막게 한다.
+    # 서버는 창·그림·글꼴이 필요 없어 Host 처럼 xvfb·글꼴 설치가 없다. 듣는 주소는 루프백(시험용, 밖에 열리지 않음)이다.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: 배포 스크립트 문법
+        run: for f in Tools/publish/*.sh; do bash -n "$f"; done
+      - name: 서버 배포 폴더 만들기
+        run: bash Tools/publish/publish.sh --server linux-x64
+      - name: 서버 배포 폴더 확인 (저장소 밖 복사본에서 듣기 → stop → 저장 → 이어서 열기)
+        run: bash Tools/publish/verify.sh --server linux-x64

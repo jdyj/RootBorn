@@ -1,19 +1,36 @@
 #!/usr/bin/env bash
 # 배포용 실행 폴더를 만든다. 사용법과 목록 고치는 법은 README.md.
-#   Tools/publish/publish.sh [플랫폼...]   (기본: win-x64 linux-x64)
-#   Tools/publish/publish.sh --list       복사할 게임 파일 목록만 낸다(게시하지 않는다. verify.sh 가 쓴다)
+#   Tools/publish/publish.sh [플랫폼...]            클라이언트(Rootborn.Host) 배포 폴더 (기본: win-x64 linux-x64)
+#   Tools/publish/publish.sh --server [플랫폼...]   데디케이티드 서버(Rootborn.Server) 배포 폴더. 목록은 content-server.txt, 출력은 server-<플랫폼>
+#   Tools/publish/publish.sh [--server] --list      복사할 게임 파일 목록만 낸다(게시하지 않는다. verify.sh 가 쓴다)
 set -euo pipefail
 shopt -s globstar nullglob dotglob
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/../.." && pwd)"
-LIST="${PUBLISH_CONTENT_LIST:-$HERE/content.txt}"
 OUT_ROOT="${PUBLISH_OUT:-$REPO/output/publish}"
 export PATH="$HOME/.dotnet:$PATH"
 export DOTNET_ROOT="${DOTNET_ROOT:-$HOME/.dotnet}"
 
 LIST_ONLY=0
-if [ "${1:-}" = "--list" ]; then LIST_ONLY=1; shift; fi
+SERVER=0
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --list) LIST_ONLY=1; shift ;;
+    --server) SERVER=1; shift ;;
+    --*) echo "모르는 인자: $1" >&2; exit 2 ;;
+    *) break ;;
+  esac
+done
+if [ $SERVER -eq 1 ]; then
+  LIST="${PUBLISH_CONTENT_LIST:-$HERE/content-server.txt}"
+  PROJECT=game/Rootborn.Server
+  DEST_PREFIX=server-
+else
+  LIST="${PUBLISH_CONTENT_LIST:-$HERE/content.txt}"
+  PROJECT=game/Rootborn.Host
+  DEST_PREFIX=
+fi
 PLATFORMS=("$@")
 [ ${#PLATFORMS[@]} -gt 0 ] || PLATFORMS=(win-x64 linux-x64)
 
@@ -126,11 +143,11 @@ fi
 
 # ---- 플랫폼마다: 게시 + 복사 ----
 for rid in "${PLATFORMS[@]}"; do
-  dest="$OUT_ROOT/$rid"
+  dest="$OUT_ROOT/$DEST_PREFIX$rid"
   echo "== $rid -> $dest"
   case "$dest" in "$REPO"/output/publish/*|"$OUT_ROOT"/*) ;; *) echo "출력 폴더가 이상하다: $dest" >&2; exit 2 ;; esac
   rm -rf "$dest"
-  dotnet publish game/Rootborn.Host -c Release -r "$rid" --self-contained -o "$dest" -nologo -v quiet
+  dotnet publish "$PROJECT" -c Release -r "$rid" --self-contained -o "$dest" -nologo -v quiet
   # 파일마다 cp 를 띄우면 Windows 에서 몹시 느리다 — tar 한 번으로 같은 상대 경로에 푼다.
   printf '%s\n' "${!FILES[@]}" | LC_ALL=C sort | tar -cf - -T - | tar -xf - -C "$dest"
   echo "   복사한 게임 파일 ${#FILES[@]}개"
