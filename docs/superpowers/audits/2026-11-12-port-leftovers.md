@@ -11,7 +11,7 @@
 | 무엇 | 수 | 결론 |
 |---|---|---|
 | `Assets/Scripts/Game` 파일 | 459 | 옮김 320(같은 이름 227, 데이터 종류 54, 이름 다름 39) · 데이터 종류 분류에 이유가 있음 25 · Unity 컴포넌트 52 · 다른 것으로 대체 16 · 게임이 쓰지 않음 12 · 쓰이지 않음 10 · 규칙 아님 14 · Unity 전용 8 · 데이터 없음 1 · 빈 파일 1. **이유가 없는 파일 0** |
-| `Assets/Tests/EditMode` 파일 | 415 | 대응 있음 70 · 대응 일부 8 · 다른 것으로 대체 1 · **옮겨야 할 것 5(모두 일부만 대응)** · 옮기지 않음(작성자 판정) 16 · 옮기지 않음(분류 규칙) 218 · 대응 추정(분류 규칙) 97 |
+| `Assets/Tests/EditMode` 파일 | 415 | 대응 있음 77 · 대응 일부 9 · 다른 것으로 대체 1 · 옮겨야 할 것 0(5개를 2026-11-12에 옮김, 아래) · 옮기지 않음(작성자 판정) 16 · 옮기지 않음(분류 규칙) 218 · 대응 추정(분류 규칙) 94 |
 | `Assets/Tests/PlayMode` 파일 | 76 | `SCENARIOS.md`에 있음 68 · 도우미 파일(테스트 0) 7 · 없음 1(테스트 도우미 계약 테스트, Unity 전용) |
 | Unity에 있고 MonoGame에 없는 런타임 동작 | 13 + 안 쓰이던 것 4 | 문 열림·구역 페이드 연출, 카메라 부드러운 추적, 마우스 클릭 행동, 상호작용 실패 안내가 크다(3절) |
 
@@ -22,19 +22,25 @@
 - **이야기 깃발(Story)**: 전수조사 4.1의 `null` 버그는 main에서 이미 고쳐졌다. `GameSession.cs:122-125`가 Unity `new StoryFlagSet()`처럼 저장하지 않는 메모리 묶음(`UnsavedStoryFlags`)을 넘긴다.
 - 그 밖에 전수조사가 "이유 없음"으로 짚은 것도 판정했다: `WaitOnSurfaceStep`(데이터 0, Unity 안에서 테스트 말고 부르는 곳 0), `LifeChoiceDefinition`·`Trait/SkillThresholdActivityRequirement`(Core에 다른 이름으로 옮겨져 있고 data/에 쓰는 곳이 0이라 데이터 종류로만 등록하지 않음), `CareerPracticeBoard`·`LifeActivityBoard`(파일 이름과 다른 MonoBehaviour라 씬에 붙일 수 없고 `AddComponent`하는 곳도 0 — Unity에서도 안 쓰임), `StudentLifeDeltaSnapshot`(`StudentLifeCore` 안의 private 형).
 
-### 옮겨야 할 것 (우선순위 순)
+### 옮겨야 할 것 — 옮김 (2026-11-12, 브랜치 `jdyj/missing-tests`)
 
-지금 게임이 쓰는 규칙을 지키던 Unity 테스트인데 dotnet에 같은 확인이 없는 것이다. 모두 **일부는 이미 대응이 있고 나머지 몇 가지 경우만 빠졌다.** "없는 것"은 해당 동작 이름으로 `Tools/Rootborn.Core.Tests`·`game/tests`를 grep해서 찾지 못한 것이다(못 찾은 것이 없다는 증명은 아니다).
+조사 때 "옮겨야 할 것"이던 5개의 빠진 경우를 dotnet 테스트로 옮겼다. 근거는 모두 **자동 테스트**다(화면 근거 아님).
+테스트를 먼저 쓰고 돌려서, 지금 코드가 지키는지 보았다. 3·4·5에서 **잃은 보호**가 나와 `GameSession`을 고쳤다.
 
-1. **`StudentLife/StudentLifeTimePointTests` (17건) — 하루 행동 예산.** 지키는 것: 시간 포인트를 두 번 쓰거나 저장·다시 읽기로 다시 채울 수 없다. 이미 있음: 주말 3회, 평일만 허용, 하루 1회(Core `StudentLifeActivityTests`). 빠진 것: 세이브 왕복·달력 다시 묶기 뒤 예산을 다시 채우지 않음, 정산한 날 유료·무료 모두 거절, 시간 필드 없는 옛 세이브의 시작 예산, 학교 정책(평일 1회 무료, 학교 밖 성장을 막지 않음), 모든 유료 진입점(장소 활동·학교 밖·도움·알바)이 같은 예산을 씀.
-2. **`Save/SaveSlotServiceTests` (11건) — 새 게임이 이야기를 지우지 않음.** 이미 있음: 슬롯 3개, 지우기, 이상한 슬롯 id, 원자적 쓰기, 깨진 파일을 새 게임이 덮어쓰지 않음(Data `FileSaveStoreTests`, Screens·Host `SaveSlotScreenTests`, Core `WorldSlotTests`, Game `CorruptSaveStartTests`). 빠진 것: 메타데이터가 사라진 슬롯의 남은 파일을 새 게임 시작 때 지움, 멀쩡히 읽히는 이야기를 새 게임이 덮어쓰지 않음, 메타데이터의 씨앗·겉모습 부위 id 왕복.
-3. **`Careers/AdultCareerSnapshotTests` (14건) — 성인 스냅숏 복원은 전부 아니면 전무.** 이미 있음: 임시 파일 무시(Game `LeftoverTempFileTests`), 깨진 파일 안 덮어씀(Data `FileSaveStoreTests`). 빠진 것: 다른 플레이어의 스냅숏 복원 거절(아무것도 안 바뀜), 모르는 아이템이 있으면 복원 전체 거절(보상을 잃지 않음), 장비 선택이 인벤토리와 같은 스냅숏에 남음.
-4. **`Careers/PlayerLifeAggregateTests` (8건) — 플레이어 id가 섞인 세이브 거절.** 이미 있음: 실패한 쓰기 뒤 반복이 안전함(Game `PartialWriteTests`). 빠진 것: 퀘스트·가구의 플레이어 id가 다른 스냅숏 전체 거절, 옛 성인 스냅숏에 없는 영역을 빈 상태로 읽음.
-5. **`StudentLife/DailyPlanSchedulePersistenceTests` (11건) — 일과 완료 기록은 그 플레이어 것만.** 이미 있음: 저장·다시 읽기·플레이어별 파일(Core `DailyPlanScheduleTests`·`SaveFileNamesTests`, Game `TwoPlayersInterleavedTests`). 빠진 것: 다른 플레이어 id가 박힌 완료 기록 가져오기 거절, 다음 날로 넘길 때 일과를 스냅숏 전에 보관.
+| # | Unity 파일 | 옮긴 곳 | 결과 |
+|---|---|---|---|
+| 1 | `StudentLife/StudentLifeTimePointTests` | Core `StudentLifeTimePointBudgetTests` 13건 | 처음부터 통과. 세 번째 유료 행동 무변경 거절, 같은 요청은 포인트를 더 쓰지 않음, 학교는 평일 하루 한 번 무료이고 학교 밖 성장을 막지 않음(다시 읽은 뒤에도 한 번), 주말 3회, 세이브 왕복·달력 다시 묶기로 예산이 차지 않음, 정산한 날 유료·무료·정책 없음 모두 거절, 시간 필드 없는 옛 세이브의 예산, 장소 활동·학교 밖·도움·알바가 한 예산을 씀. 게임 진행에서의 "다시 시작해도 예산이 차지 않음"은 이미 Game `SelfStudyAndClassTests.FreePath004`가 지킨다 |
+| 2 | `Save/SaveSlotServiceTests` | Data `SaveSlotMetadataFileTests` 3건 | 처음부터 통과. 씨앗·몸 부위·방향, 겉모습 부위 id·만들기 화면 스냅샷 왕복, 겉모습 없는 Unity 슬롯 정보 읽기. 읽을 수 없는 슬롯 정보 위의 새 이야기가 남은 파일을 지우는 것과 읽히는 이야기를 덮지 않는 것은 Screens `CharacterCreatorScreenTests`(`NewStoryInAnUnreadableSlot_…`, `ASlotThatGotAStoryMeanwhile_…`)에 이미 있었다(조사 때 못 찾음). 4절 2번 |
+| 3 | `Careers/AdultCareerSnapshotTests` | Game `SnapshotOwnerTests` | **실패 → 고침.** 다른 플레이어 id가 든 스냅샷을 거절하지 않고 학생 id를 지금 플레이어로 덮어 읽었다(성인·월드는 다른 id를 그대로 둠). 데이터에 없는 아이템은 빼고 읽어 다음 저장이 지웠다. 장비 선택은 저장할 때마다 빈 값으로 덮였다 |
+| 4 | `Careers/PlayerLifeAggregateTests` | Game `SnapshotOwnerTests` | **실패 → 고침.** 체인·가구 해금의 다른 플레이어 id를 지금 플레이어로 덮어 읽었다. 버전 1 스냅샷(체인·가구 없음)을 이 플레이어의 빈 상태로 읽는 것은 처음부터 통과 |
+| 5 | `StudentLife/DailyPlanSchedulePersistenceTests` | Game `SnapshotOwnerTests` | Core 규칙(`DailyPlanProgress.FromSaveData`가 다른 플레이어 일과를 버림)은 이미 Core `DailyPlanRouteTests.WrongEmbeddedIdentity_…`·`StudentNextDay_ArchivesOwnedScheduleBeforeSnapshotCapture`에 있었다(조사 때 못 찾음). 그러나 **`GameSession.Load`가 읽기 전에 일과·진로 후보 id를 지금 플레이어로 덮어 그 보호를 건너뛰었다 → 고침** |
 
-3~5는 한 슬롯에 플레이어가 둘 이상일 때 중요해진다(멀티플레이, 프로젝트 5). 1·2는 혼자 하는 지금 게임에도 걸린다.
+고친 것(`game/Rootborn.Game/GameSession.SnapshotOwner.cs` 새 파일, `GameSession.cs`·`GameSession.StartReads.cs` 몇 줄): 스냅샷의 성인·학생·일과·진로 후보·월드·체인·가구 해금 중 하나라도 비어 있지 않은 다른 플레이어 id를 가졌거나, 가방·장비에 데이터에 없는 아이템이 있으면 `SaveSlotDamagedException`(문제 종류 `Unreadable`)으로 시작을 거절한다. 슬롯 파일은 바꾸지 않는다. 빈 id는 이 플레이어로 읽고, 슬롯 이름이 다른 것은 지금처럼 복사한 슬롯으로 읽는다. 장비 선택은 읽은 값을 그대로 다시 쓴다.
 
-**아직 판정하지 못한 것**: "대응 추정(분류 규칙)" 97개. 옮긴 규칙 형을 부르지만 Unity 컴포넌트·UI를 거치는 테스트가 대부분(86개)이다. 작성자가 순수 규칙 테스트 16개는 열어 보았고 그중 시나리오 id로 dotnet 대응이 확인된 것은 "대응 있음"으로 옮겼다. 남은 97개 안에 6번째 "옮겨야 할 것"이 있을 수 있다(부록 B에서 판정 열이 "대응 추정"인 줄).
+**"대응 추정"에서 더 열어 본 것**(세이브·보상·플레이어 구분 우선): `Interiors/QuestFurniturePlacementEventTests` → Core `FurniturePlacementEventTests` 3건(대응 있음), `StudentLife/QuestGameplayEventAdapterTests` → Game `RefusedActionQuestTests` 4건(대응 일부 — 거절·중복은 옮겼고, 성공 때 정확한 이벤트는 메인 체인 테스트가 간접으로만 본다), `StudentLife/OutsideSchoolInteractorRequestPersistenceTests` → Core `OutsideSchoolActivityTests`에 같은 이름의 테스트 4개와 Game `FreePath004`(대응 있음). 셋 다 처음부터 통과.
+테스트 이름만 보고 판정을 바꾸지 않은 것: `Careers/AdultCareerRuntimeTests`(소유자·라우터·관찰자), `StudentLife/QuestChainOwnerLeaseTests`, `StudentLife/QuestChainSessionEventTests`, `World/AuthoredHousePlacementOwnerTests`, `World/WorldTravelStudentRestoreTests` — Unity 컴포넌트 여럿이 한 세이브를 나눠 쓰던 소유권 문제라 `GameSession` 하나가 모든 영역을 갖고 명령마다 묶음 저장하는 MonoGame 판에는 같은 위험이 없어 보인다(Game `PartialWriteTests`·`TwoPlayersInterleavedTests`·`CorruptSaveStartTests`·`SnapshotOwnerTests`). 내용 대조는 하지 않았다.
+
+**아직 판정하지 못한 것**: "대응 추정(분류 규칙)" 94개. 대부분 Unity 컴포넌트·UI를 거치는 테스트다. 부록 B에서 판정 열이 "대응 추정"인 줄.
 
 ---
 
@@ -121,11 +127,11 @@
 | 판정 | 파일 수 |
 |---|---|
 | 옮기지 않음(분류 규칙) | 218 |
-| 대응 추정(분류 규칙) | 97 |
-| 대응 있음 | 70 |
+| 대응 추정(분류 규칙) | 94 |
+| 대응 있음 | 77 |
 | 옮기지 않음 | 16 |
-| 대응 있음(일부) | 8 |
-| 옮겨야 할 것(부분) | 5 |
+| 대응 있음(일부) | 9 |
+| 옮겨야 할 것(부분) | 0 (5개를 옮김, 0절) |
 | 다른 것으로 대체 | 1 |
 
 - 5단계의 "에셋·씬·주소 검사"는 Unity 에셋 연결(SO 와이어링, Addressables 주소, 스프라이트 자르기, 씬 구성)을 지키던 것이다. MonoGame 판은 그런 연결이 없고, 데이터 쪽은 Data `RealDataTests`와 데이터 온전성 검사(`4f72c7bae`: 그림·맵 파일, 엔티티 참조, 문구 키)가 맡는다.
@@ -173,13 +179,13 @@
 ## 4. 필요한 변경 (이 작업 범위 밖이라 고치지 않음)
 
 1. `game/tests/Rootborn.Game.Tests/SCENARIOS.md` 1절 "그 밖" 표에 `E2EDriverContractTests`(5건, Unity 테스트 도우미 계약, 옮기지 않음 — Host `PlayerDriver`가 같은 역할) 한 줄.
-2. "옮겨야 할 것" 5개의 빠진 경우를 Core·Data·Game 테스트로 옮기기. 1·2는 지금 게임에도 걸리므로 먼저 한다. 테스트를 먼저 써서 지금 코드가 그 경우를 지키는지 본다. 지키지 않으면 버그다.
+2. ~~"옮겨야 할 것" 5개 옮기기~~ — 2026-11-12에 했다(0절). 남은 것: Screens `CharacterCreatorScreenTests.ASlotThatGotAStoryMeanwhile_…`는 슬롯 정보만 그대로인지 보고, 진행 파일(예: 스냅샷)이 그대로인지는 보지 않는다. `SaveSlots.StartNewSlot`이 지우기 전에 돌아가므로 지금은 안전하지만, Screens를 맡은 세션이 진행 파일 확인 한 줄을 더하면 Unity `StartNewSlot_NeverOverwritesAStoryThatStillLoads`와 같아진다. 슬롯 정보 파일이 아예 없는(깨진 것이 아닌) 슬롯의 남은 파일 지우기도 같은 테스트 파일에 한 경우로 더할 수 있다.
 3. `docs/superpowers/specs/2026-11-12-unity-removal-plan.md` 112줄·127줄은 "`MissingPathsTests.School_…`가 `School.unity`를 직접 읽는다"고 적고 있다. 지금은 고정 파일 `Fixtures/school-structure-colliders.json`을 읽으므로 낡았다(5절). 단계 1의 (다)는 끝났다고 적어야 한다.
 4. 전수조사 문서 2절의 이야기 깃발 버그(4.1)는 main에서 고쳐졌다(`GameSession.cs:122-125`). 그 문서를 갱신할 때 반영한다.
 
 ## Unity 판과 달라진 동작
 
-없음. 이 작업은 코드를 바꾸지 않았다.
+조사 자체는 코드를 바꾸지 않았다. 2026-11-12 옮기기(0절)에서: 스냅샷의 슬롯 이름이 다르면 Unity 판은 거절했지만 MonoGame 판은 복사한 슬롯으로 읽는다(그 전부터의 결정, `OlderSlotTests`·`SnapshotOwnerTests.ASnapshotWithAnotherSlotName_…`). 거절할 때 Unity 판은 "복구 필요"로 멈췄고 MonoGame 판은 `SaveSlotDamagedException`으로 시작을 거절한다.
 
 ---
 
@@ -886,7 +892,7 @@ git grep -n "SetVerticalSliceSummary\|AppendVerticalSliceGuide" -- Assets/Script
 | `Careers/AdultCareerCommandCoordinatorTests.cs` | 6 | 다른 것으로 대체 | Unity 조정자 테스트. MonoGame 판은 `GameSession`이 명령마다 저장한다: Game `PartialWriteTests`, `RewardOnceTests` |
 | `Careers/AdultCareerFoundationTests.cs` | 20 | 대응 있음 | 옮겨 온 곳: `Tools/Rootborn.Core.Tests/AdultCareerTests.cs` |
 | `Careers/AdultCareerRuntimeTests.cs` | 21 | 대응 추정(분류 규칙) | Unity 컴포넌트·UI를 거쳐 옮긴 규칙(`ActiveSaveContext`, `AdultCareerPersistenceRouter`, `AdultCareerProgress`, `AdultCareerProgressSaveData`)을 부른다. 규칙 자체는 Core·Game 테스트가 맡는다고 보았다(내용 대조 안 함) |
-| `Careers/AdultCareerSnapshotTests.cs` | 14 | 옮겨야 할 것(부분) | 임시 파일 무시는 Game `LeftoverTempFileTests`, 깨진 파일 안 덮어씀은 Data `FileSaveStoreTests`. 없는 것: 다른 플레이어의 스냅숏 복원 거절(아무것도 안 바꿈), 모르는 아이템이 있으면 복원 전체 거절(보상 잃지 않음), 장비 선택이 인벤토리와 같은 스냅숏에 남음 |
+| `Careers/AdultCareerSnapshotTests.cs` | 14 | 대응 있음 | Game `SnapshotOwnerTests`(다른 플레이어·모르는 아이템·장비 선택, 2026-11-12 옮기며 `GameSession` 고침), `LeftoverTempFileTests`, Data `FileSaveStoreTests` |
 | `Careers/CareerAchievementArtAssetTests.cs` | 4 | 옮기지 않음(분류 규칙) | Unity 에셋·씬·주소 검사. MonoGame 판의 데이터 검사는 Data `RealDataTests`와 데이터 온전성 검사(`4f72c7bae`) |
 | `Careers/CareerFacilityCanvasSelectionTests.cs` | 5 | 옮기지 않음(분류 규칙) | Unity 컴포넌트·UI만 다룸(옮긴 규칙 형을 쓰지 않음). 화면은 Screens·Host 테스트가 따로 맡는다 |
 | `Careers/CenteredFacilityEntranceAssetTests.cs` | 9 | 옮기지 않음(분류 규칙) | Unity 에셋·씬·주소 검사. MonoGame 판의 데이터 검사는 Data `RealDataTests`와 데이터 온전성 검사(`4f72c7bae`) |
@@ -899,7 +905,7 @@ git grep -n "SetVerticalSliceSummary\|AppendVerticalSliceGuide" -- Assets/Script
 | `Careers/MinigamePresentationBridgeTests.cs` | 6 | 대응 추정(분류 규칙) | Unity 컴포넌트·UI를 거쳐 옮긴 규칙(`ActiveSaveContext`, `ActivityTimePolicyDefinition`, `AdultCareerResult`, `AppConfig`)을 부른다. 규칙 자체는 Core·Game 테스트가 맡는다고 보았다(내용 대조 안 함) |
 | `Careers/PartTimeWorkRegistryIdentityTests.cs` | 5 | 옮기지 않음(분류 규칙) | Unity 에셋·씬·주소 검사. MonoGame 판의 데이터 검사는 Data `RealDataTests`와 데이터 온전성 검사(`4f72c7bae`) |
 | `Careers/PendingFacilityWorkTests.cs` | 16 | 대응 있음 | 옮겨 온 곳: `Tools/Rootborn.Core.Tests/AdultCareerTests.cs` |
-| `Careers/PlayerLifeAggregateTests.cs` | 8 | 옮겨야 할 것(부분) | 실패한 쓰기 뒤 반복이 안전함은 Game `PartialWriteTests`. 없는 것: 퀘스트·가구의 플레이어 id가 다른 스냅숏 전체 거절, 옛 성인 스냅숏에 없는 영역은 빈 상태로 읽음 |
+| `Careers/PlayerLifeAggregateTests.cs` | 8 | 대응 있음 | Game `SnapshotOwnerTests`(체인·가구의 다른 플레이어 거절, 버전 1 스냅샷, 2026-11-12), `PartialWriteTests` |
 | `Careers/StudentMinigameReservationTests.cs` | 19 | 대응 있음 | 옮겨 온 곳: `Tools/Rootborn.Core.Tests/PartTimeWorkTests.cs`, `Tools/Rootborn.Core.Tests/StudentMinigameServiceTests.cs` |
 | `Careers/StudioLevel2ExteriorArtTests.cs` | 3 | 옮기지 않음(분류 규칙) | Unity 에셋·씬·주소 검사. MonoGame 판의 데이터 검사는 Data `RealDataTests`와 데이터 온전성 검사(`4f72c7bae`) |
 | `Characters/GrowingCharacterInstallTests.cs` | 6 | 옮기지 않음(분류 규칙) | Unity 에셋·씬·주소 검사. MonoGame 판의 데이터 검사는 Data `RealDataTests`와 데이터 온전성 검사(`4f72c7bae`) |
@@ -975,7 +981,7 @@ git grep -n "SetVerticalSliceSummary\|AppendVerticalSliceGuide" -- Assets/Script
 | `Interiors/ModernOfficePaletteAssetTests.cs` | 3 | 옮기지 않음(분류 규칙) | Unity 에셋·씬·주소 검사. MonoGame 판의 데이터 검사는 Data `RealDataTests`와 데이터 온전성 검사(`4f72c7bae`) |
 | `Interiors/PlacedFurnitureDepthPresentationTests.cs` | 5 | 옮기지 않음(분류 규칙) | Unity 컴포넌트·UI만 다룸(옮긴 규칙 형을 쓰지 않음). 화면은 Screens·Host 테스트가 따로 맡는다 |
 | `Interiors/PlacementCameraControllerTests.cs` | 4 | 옮기지 않음(분류 규칙) | Unity 컴포넌트·UI만 다룸(옮긴 규칙 형을 쓰지 않음). 화면은 Screens·Host 테스트가 따로 맡는다 |
-| `Interiors/QuestFurniturePlacementEventTests.cs` | 3 | 대응 추정(분류 규칙) | Unity 컴포넌트·UI를 거쳐 옮긴 규칙(`ActiveSaveContext`, `FurnitureDefinition`, `FurniturePlacementLayoutPersistence`, `FurniturePlacementPreference`)을 부른다. 규칙 자체는 Core·Game 테스트가 맡는다고 보았다(내용 대조 안 함) |
+| `Interiors/QuestFurniturePlacementEventTests.cs` | 3 | 대응 있음 | Core `FurniturePlacementEventTests`(2026-11-12) |
 | `Interiors/QuestInteriorUnlockRewardTests.cs` | 9 | 대응 있음 | 옮겨 온 곳: `Tools/Rootborn.Core.Tests/FurnitureUnlockTests.cs`, `Tools/Rootborn.Core.Tests/QuestConditionRewardTests.cs` |
 | `Interiors/ScenePlayerRenderPolicyTests.cs` | 3 | 옮기지 않음(분류 규칙) | Unity 컴포넌트·UI만 다룸(옮긴 규칙 형을 쓰지 않음). 화면은 Screens·Host 테스트가 따로 맡는다 |
 | `Interiors/SchoolDesignComfyAssetTests.cs` | 12 | 옮기지 않음(분류 규칙) | Unity 에셋·씬·주소 검사. MonoGame 판의 데이터 검사는 Data `RealDataTests`와 데이터 온전성 검사(`4f72c7bae`) |
@@ -1066,7 +1072,7 @@ git grep -n "SetVerticalSliceSummary\|AppendVerticalSliceGuide" -- Assets/Script
 | `Registry/GameDataRegistryBrokenReferenceTests.cs` | 1 | 옮기지 않음(분류 규칙) | Unity 에셋·씬·주소 검사. MonoGame 판의 데이터 검사는 Data `RealDataTests`와 데이터 온전성 검사(`4f72c7bae`) |
 | `Registry/GameDataRegistryProviderTests.cs` | 5 | 옮기지 않음(분류 규칙) | Addressables·`Managers` 수명 주기 |
 | `Save/SaveSlotSelectPanelTests.cs` | 6 | 대응 추정(분류 규칙) | Unity 컴포넌트·UI를 거쳐 옮긴 규칙(`CharacterCustomization`, `Facing`, `SaveSlotMetadata`)을 부른다. 규칙 자체는 Core·Game 테스트가 맡는다고 보았다(내용 대조 안 함) |
-| `Save/SaveSlotServiceTests.cs` | 11 | 옮겨야 할 것(부분) | 슬롯 3개·지우기·이상한 슬롯 id·원자적 쓰기는 Data `FileSaveStoreTests`, Screens `SaveSlotScreenTests`, Core `WorldSlotTests`에 있다. 깨진 파일을 새 게임이 덮어쓰지 않음은 Game `CorruptSaveStartTests`. 없는 것: 메타데이터가 사라진 슬롯에 새 게임을 시작하면 남은 파일을 지움, 멀쩡히 읽히는 이야기를 새 게임이 덮어쓰지 않음, 메타데이터의 씨앗·겉모습 부위 id 왕복 |
+| `Save/SaveSlotServiceTests.cs` | 11 | 대응 있음 | Data `SaveSlotMetadataFileTests`(2026-11-12), `FileSaveStoreTests`, Screens `CharacterCreatorScreenTests`·`SaveSlotScreenTests`, Core `WorldSlotTests`. 4절 2번 |
 | `Scenarios/ScenarioCoverageMappingTests.cs` | 4 | 옮기지 않음(분류 규칙) | Unity 소스 문자열 검사(코드 모양을 지킴). Unity 코드와 함께 사라진다 |
 | `Scenarios/StudentLifeScenarioRegistryCoverageGateTests.cs` | 8 | 대응 있음(일부) | 시나리오 id 1/12개가 dotnet 테스트에 있음: `ActivityStatusAndRecipeTests.cs` |
 | `SessionApprovalTests.cs` | 2 | 옮기지 않음(분류 규칙) | Unity Netcode. 멀티플레이는 프로젝트 5에서 새로 만든다 |
@@ -1093,7 +1099,7 @@ git grep -n "SetVerticalSliceSummary\|AppendVerticalSliceGuide" -- Assets/Script
 | `StudentLife/DailyPlanRouteUnlockAssetWiringTests.cs` | 5 | 옮기지 않음(분류 규칙) | Unity 에셋·씬·주소 검사. MonoGame 판의 데이터 검사는 Data `RealDataTests`와 데이터 온전성 검사(`4f72c7bae`) |
 | `StudentLife/DailyPlanRouteUnlockSecondSliceAssetWiringTests.cs` | 6 | 옮기지 않음(분류 규칙) | Unity 에셋·씬·주소 검사. MonoGame 판의 데이터 검사는 Data `RealDataTests`와 데이터 온전성 검사(`4f72c7bae`) |
 | `StudentLife/DailyPlanScheduleIntegrationTests.cs` | 4 | 옮기지 않음(분류 규칙) | Unity 에셋·씬·주소 검사. MonoGame 판의 데이터 검사는 Data `RealDataTests`와 데이터 온전성 검사(`4f72c7bae`) |
-| `StudentLife/DailyPlanSchedulePersistenceTests.cs` | 11 | 옮겨야 할 것(부분) | 일과 저장·다시 읽기·플레이어별 파일은 Core `DailyPlanScheduleTests`·`SaveFileNamesTests`, Game `TwoPlayersInterleavedTests`. 없는 것: 다른 플레이어 id가 박힌 완료 기록 가져오기 거절, 다음 날로 넘길 때 일과를 스냅숏 전에 보관 |
+| `StudentLife/DailyPlanSchedulePersistenceTests.cs` | 11 | 대응 있음 | Core `DailyPlanRouteTests`(`WrongEmbeddedIdentity_…`, `StudentNextDay_…`), `DailyPlanScheduleTests`, Game `SnapshotOwnerTests`(게임 진행이 다른 플레이어 일과를 덮어 읽던 것 고침, 2026-11-12), `TwoPlayersInterleavedTests`. 조정자·컴포넌트 묶기는 `GameSession`이 대신함 |
 | `StudentLife/DailyPlanScheduleTests.cs` | 15 | 대응 있음 | 옮겨 온 곳: `Tools/Rootborn.Core.Tests/DailyPlanScheduleTests.cs` |
 | `StudentLife/DailyPlanTypedCompletionTests.cs` | 7 | 대응 있음 | Core `DailyPlanRouteTests`(Typed 완료 기록) |
 | `StudentLife/ExplorationDismissChoiceTests.cs` | 10 | 옮기지 않음(분류 규칙) | Unity 에셋·씬·주소 검사. MonoGame 판의 데이터 검사는 Data `RealDataTests`와 데이터 온전성 검사(`4f72c7bae`) |
@@ -1109,7 +1115,7 @@ git grep -n "SetVerticalSliceSummary\|AppendVerticalSliceGuide" -- Assets/Script
 | `StudentLife/OpenEndedMilestoneGrowthTests.cs` | 9 | 대응 있음 | 옮겨 온 곳: `Tools/Rootborn.Core.Tests/MilestoneTests.cs` |
 | `StudentLife/OpeningStoryAddressableTests.cs` | 3 | 옮기지 않음(분류 규칙) | Unity 에셋·씬·주소 검사. MonoGame 판의 데이터 검사는 Data `RealDataTests`와 데이터 온전성 검사(`4f72c7bae`) |
 | `StudentLife/OutsideSchoolGrowthFoundationTests.cs` | 8 | 대응 있음 | 옮겨 온 곳: `Tools/Rootborn.Core.Tests/OutsideSchoolActivityTests.cs` |
-| `StudentLife/OutsideSchoolInteractorRequestPersistenceTests.cs` | 6 | 대응 추정(분류 규칙) | Unity 컴포넌트·UI를 거쳐 옮긴 규칙(`ActiveSaveContext`, `ActivityTimePolicyDefinition`, `CareerDefinition`, `GameDataRegistry`)을 부른다. 규칙 자체는 Core·Game 테스트가 맡는다고 보았다(내용 대조 안 함) |
+| `StudentLife/OutsideSchoolInteractorRequestPersistenceTests.cs` | 6 | 대응 있음 | Core `OutsideSchoolActivityTests`(같은 이름 4개), Game `SelfStudyAndClassTests.FreePath004` |
 | `StudentLife/PartTimeWorkGrowthTests.cs` | 7 | 대응 있음 | 옮겨 온 곳: `Tools/Rootborn.Core.Tests/PartTimeWorkTests.cs` |
 | `StudentLife/QuestChainBranchingTests.cs` | 15 | 대응 있음 | 옮겨 온 곳: `Tools/Rootborn.Core.Tests/QuestChainTests.cs` |
 | `StudentLife/QuestChainDailyPlanRouteRewardAssetWiringTests.cs` | 4 | 옮기지 않음(분류 규칙) | Unity 소스 문자열 검사(코드 모양을 지킴). Unity 코드와 함께 사라진다 |
@@ -1119,7 +1125,7 @@ git grep -n "SetVerticalSliceSummary\|AppendVerticalSliceGuide" -- Assets/Script
 | `StudentLife/QuestChainRegistryAssetTests.cs` | 1 | 옮기지 않음(분류 규칙) | Unity 에셋·씬·주소 검사. MonoGame 판의 데이터 검사는 Data `RealDataTests`와 데이터 온전성 검사(`4f72c7bae`) |
 | `StudentLife/QuestChainSessionEventTests.cs` | 2 | 대응 추정(분류 규칙) | Unity 컴포넌트·UI를 거쳐 옮긴 규칙(`AdultCareerCommandCoordinator`, `AdultCareerProgress`, `AdultCareerResult`, `AdultCareerResultKind`)을 부른다. 규칙 자체는 Core·Game 테스트가 맡는다고 보았다(내용 대조 안 함) |
 | `StudentLife/QuestChainStateTests.cs` | 8 | 대응 있음 | 옮겨 온 곳: `Tools/Rootborn.Core.Tests/QuestChainTests.cs` |
-| `StudentLife/QuestGameplayEventAdapterTests.cs` | 6 | 대응 추정(분류 규칙) | Unity 컴포넌트·UI를 거쳐 옮긴 규칙(`DailyPlanProgressComponent`, `DailyPlanRouteDefinition`, `Inventory`, `InventoryGrant`)을 부른다. 규칙 자체는 Core·Game 테스트가 맡는다고 보았다(내용 대조 안 함) |
+| `StudentLife/QuestGameplayEventAdapterTests.cs` | 6 | 대응 있음(일부) | Game `RefusedActionQuestTests`(거절·중복은 퀘스트를 진행시키지 않고 쓰지 않음, 2026-11-12). 성공 때의 정확한 이벤트는 메인 체인 테스트가 간접으로만 본다 |
 | `StudentLife/QuestGameplayObjectiveTests.cs` | 5 | 대응 있음 | 옮겨 온 곳: `Tools/Rootborn.Core.Tests/QuestObjectiveTests.cs` |
 | `StudentLife/RegistryTestBinder.cs` | 0 | 옮기지 않음(분류 규칙) | 옮긴 규칙 형을 쓰지 않음(NotRules·NotUsedByGame 영역 또는 Unity 전용) |
 | `StudentLife/SecondNpcRelationshipRouteTests.cs` | 3 | 옮기지 않음(분류 규칙) | Unity 에셋·씬·주소 검사. MonoGame 판의 데이터 검사는 Data `RealDataTests`와 데이터 온전성 검사(`4f72c7bae`) |
@@ -1136,7 +1142,7 @@ git grep -n "SetVerticalSliceSummary\|AppendVerticalSliceGuide" -- Assets/Script
 | `StudentLife/StudentLifeProgressIdentityTests.cs` | 1 | 옮기지 않음(분류 규칙) | Unity 컴포넌트·UI만 다룸(옮긴 규칙 형을 쓰지 않음). 화면은 Screens·Host 테스트가 따로 맡는다 |
 | `StudentLife/StudentLifeRegistryTests.cs` | 1 | 대응 추정(분류 규칙) | 옮긴 규칙(`GameDataRegistry`)을 부르는 순수 테스트. 같은 이름의 dotnet 테스트는 없다(내용 대조 안 함) |
 | `StudentLife/StudentLifeTimeBudgetUiTests.cs` | 5 | 대응 추정(분류 규칙) | Unity 컴포넌트·UI를 거쳐 옮긴 규칙(`ActiveSaveContext`, `ActivityTimePolicyDefinition`, `Button`, `GameDataRegistry`)을 부른다. 규칙 자체는 Core·Game 테스트가 맡는다고 보았다(내용 대조 안 함) |
-| `StudentLife/StudentLifeTimePointTests.cs` | 17 | 옮겨야 할 것(부분) | 주말 3회·평일만 허용·하루 1회는 Core `StudentLifeActivityTests`에 있다. 없는 것: 세이브 왕복·달력 다시 묶기 뒤 예산을 다시 채우지 않음, 정산한 날 유료·무료 모두 거절, 시간 필드가 없는 옛 세이브의 시작 예산, 학교 정책(평일 1회 무료·학교 밖 성장 안 막음), 모든 유료 진입점(장소 활동·학교 밖·도움·알바)이 같은 예산을 씀 |
+| `StudentLife/StudentLifeTimePointTests.cs` | 17 | 대응 있음 | Core `StudentLifeTimePointBudgetTests`(2026-11-12), `StudentLifeActivityTests`, Game `SelfStudyAndClassTests.FreePath004` |
 | `StudentLife/StudentLifeTraitActivityNetworkTests.cs` | 2 | 옮기지 않음 | Netcode 동기화(프로젝트 5) |
 | `StudentLife/StudentLifeTraitActivitySourceAuditTests.cs` | 1 | 옮기지 않음(분류 규칙) | Unity 소스 문자열 검사(코드 모양을 지킴). Unity 코드와 함께 사라진다 |
 | `StudentLife/StudentLifeTraitActivityTests.cs` | 7 | 옮기지 않음 | 합성 정의(`CreateLifestyleSet`)로 선택지 성장을 본다. 같은 규칙은 Core `StudentLifeActivityTests.Choice_…`·`LIFE_STUDENT_007_…`. data/의 활동은 선택지가 0개 |

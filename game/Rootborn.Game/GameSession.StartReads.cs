@@ -46,6 +46,13 @@ namespace Rootborn.Game
                 return true;
             }
 
+            /// <summary>읽혔지만 이어 갈 수 없는 파일을 문제로 적는다(reason이 비면 아무것도 하지 않는다).</summary>
+            public void Refuse(string fileName, string reason)
+            {
+                if (string.IsNullOrEmpty(reason) || !_unreadable.Add(_slot + "/" + fileName)) return;
+                _problems.Add(new SaveSlotProblem(fileName, SaveSlotProblemKind.Unreadable, new InvalidDataException(fileName + ": " + reason)));
+            }
+
             public void Write<T>(string saveSlot, string fileName, T data) where T : class
                 => throw new InvalidOperationException("시작할 때는 세이브를 쓰지 않는다: " + saveSlot + "/" + fileName);
 

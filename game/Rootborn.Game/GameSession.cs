@@ -147,6 +147,7 @@ namespace Rootborn.Game
             var store = new StartReads(_store, SaveSlot);
             var snapshotName = SaveFileNames.AdultCareerSnapshot(PlayerId);
             bool hasSnapshot = store.TryRead<AdultCareerSnapshotSaveData>(SaveSlot, snapshotName, out var snapshot);
+            if (hasSnapshot) store.Refuse(snapshotName, SnapshotRefusal(snapshot));
 
             // 스냅샷이 없는 슬롯은 Unity 판의 옛 영역 파일(학생 진행·인벤토리·일과·진로 후보)에서 이어 간다(Core PreSnapshotSlotFiles).
             var olderStudent = hasSnapshot ? null : PreSnapshotSlotFiles.ReadStudent(store, SaveSlot, PlayerId);
@@ -163,6 +164,7 @@ namespace Rootborn.Game
             // 지갑을 먼저 읽는다. 옛 세이브(스냅샷 버전 2 이하, Unity 판 영역 파일)는 지갑이 없고 가방의 돈 칸을 지갑으로 옮긴다.
             _wallet.LoadFromSaveData(hasSnapshot ? snapshot.Wallet : null);
             if (inventory != null) Inventory.LoadFromSaveData(inventory, FindItem);
+            _equippedToolItemId = inventory?.EquippedToolItemId ?? string.Empty;
 
             World = hasSnapshot && snapshot.World != null
                 ? WorldStateProgress.FromSaveData(snapshot.World, SaveSlot, PlayerId)
@@ -282,7 +284,7 @@ namespace Rootborn.Game
                 {
                     Adult = Adult.ToSaveData(),
                     Student = Student.ToSaveData(),
-                    Inventory = Inventory.ToSaveData(string.Empty),
+                    Inventory = Inventory.ToSaveData(_equippedToolItemId),
                     World = World.ToSaveData(),
                     QuestChains = QuestChains.ToSaveData(),
                     FurnitureUnlocks = FurnitureUnlocks.ToSaveData(),
