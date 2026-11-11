@@ -1,6 +1,7 @@
 {
   "ui.hud.energy": "체력",
   "ui.hud.focus": "집중",
+  "ui.inventory.title": "가방",
   "ui.objectives.tracked": "추적 중인 목표",
   "ui.career-candidate.open": "진로",
   "ui.career-interest.open": "장래희망",

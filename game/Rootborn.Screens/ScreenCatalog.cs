@@ -4,7 +4,9 @@ using Rootborn.Screens.Day;
 using Rootborn.Screens.Minigames;
 using Rootborn.Screens.Objectives;
 using Rootborn.Screens.Quests;
+using Rootborn.Screens.Inventory;
 using Rootborn.Screens.Settings;
+using Rootborn.Screens.Status;
 
 namespace Rootborn.Screens
 {
@@ -16,6 +18,8 @@ namespace Rootborn.Screens
     public static class ScreenCatalog
     {
         public const string Settings = "settings";
+        public const string Inventory = "inventory";
+        public const string Status = "status";
         public const string HudClock = "hud.clock";
         public const string HudVitals = "hud.vitals";
         public const string HudTracked = "hud.tracked-objective";
@@ -41,6 +45,8 @@ namespace Rootborn.Screens
         public static void Register(ScreenRegistry r)
         {
             r.Add(Settings, ScreenLayer.Panel, blocksMovement: false, s => new SettingsScreen(s)).OpenedBy(ScreenKey.Escape);
+            r.Add(Inventory, ScreenLayer.Panel, blocksMovement: false, s => new InventoryScreen(s)).OpenedBy(ScreenKey.Inventory);
+            r.Add(Status, ScreenLayer.Panel, blocksMovement: false, s => new StatusScreen(s)).OpenedBy(ScreenKey.Status);
             r.Add(HudClock, ScreenLayer.Hud, blocksMovement: false, s => new ClockHudScreen(s));
             r.Add(HudVitals, ScreenLayer.Hud, blocksMovement: false, s => new VitalsHudScreen(s));
             r.Add(HudTracked, ScreenLayer.Hud, blocksMovement: false, s => new TrackedObjectiveHudScreen(s));

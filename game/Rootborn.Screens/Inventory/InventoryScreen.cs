@@ -1,0 +1,385 @@
+using System;
+using Rootborn.Core.Inventory;
+using Rootborn.Ui;
+
+namespace Rootborn.Screens.Inventory
+{
+    /// <summary>
+    /// 가방(I). Unity ModernUiInventoryPanel을 같은 구성·수치로 옮겼다: 가운데 1040x760 패널, 위로 튀어나온 탭 넷(전체·도구·자원과 씨앗·기타),
+    /// 제목, 분류 이름, 닫기, 검색 칸(+ 휴지통·정렬 칸), 5열 칸 격자(스크롤, 칸 168 간격 16), 표시할 것이 없을 때의 빈 안내,
+    /// 칸을 누르면 패널 오른쪽에 뜨는 상세 팝업(그림, 이름, 수량, 설명, 닫기).
+    /// 이동을 막지 않는다. 다른 큰 패널(상태·설정·목표 수첩)과 함께 열리지 않는다(층 규칙).
+    /// 칸 그림은 아이콘 키 "item:&lt;아이템 id&gt;"로만 말하고 어느 PNG인지는 Host가 정한다.
+    /// 휴지통·정렬 칸은 Unity 판에서도 누르면 아무 일도 없었다(그림만) — 그대로 옮겼다.
+    /// </summary>
+    public sealed class InventoryScreen : GameScreen
+    {
+        /// <summary>배치와 구성 — 새 디자인에서는 이 표만 고친다(1920x1080 논리 좌표, 패널 왼쪽 위 기준).</summary>
+        public static class Layout
+        {
+            public const float Width = 1040f, Height = 760f;
+
+            public const int SlotColumns = 5;
+            public const float SlotSize = 168f, SlotSpacing = 16f;
+            public const float GridPadX = 40f, GridPadTop = 184f;
+            public const float ScrollbarWidth = 48f;
+            public const float VisibleRows = 3f;
+            /// <summary>격자가 차지하는 폭: 칸 5개 + 간격 + 스크롤 막대 자리(Unity InventoryInnerPanel).</summary>
+            public const float GridWidth = SlotColumns * SlotSize + (SlotColumns - 1) * SlotSpacing + ScrollbarWidth + 8f;
+            public const float GridHeight = VisibleRows * SlotSize + (VisibleRows - 1) * SlotSpacing;
+
+            public const float TabWidth = 128f, TabHeight = 96f, TabSpacing = 8f, TabOverlap = 36f;
+            public const float TabIconSize = 56f, TabIconDown = 8f;
+
+            public const float TitleX = 40f, TitleY = 40f, TitleW = 240f, TitleH = 44f, TitleFont = 32f;
+            public const float CategoryX = 304f, CategoryY = 40f, CategoryH = 44f, CategoryFont = 24f, CategoryRightMargin = 116f;
+            public const float CloseRight = 88f, CloseY = 38f, CloseSize = 48f, CloseIconSize = 32f;
+
+            public const float SearchHeight = 56f, SearchGap = 8f, SearchIconSize = 32f, SearchFont = 24f, SearchTextX = 48f;
+            public const float SearchY = GridPadTop - SlotSpacing - SearchHeight;
+
+            public const float CountFont = 24f, CountRight = 148f, CountTop = 116f, CountHeight = 32f;
+            public const float IconInset = 16f;
+
+            public const float EmptyX = 72f, EmptyY = 104f, EmptyH = 288f, EmptyIconSize = 96f, EmptyIconY = 40f;
+            public const float EmptyHintX = 24f, EmptyHintY = 168f, EmptyHintH = 56f, EmptyHintFont = 28f;
+
+            public const float PopupOffsetX = 32f, PopupW = 480f, PopupH = 400f;
+            public const float PopupIconX = 36f, PopupIconY = 36f, PopupIconSize = 104f;
+            public const float PopupNameX = 156f, PopupNameY = 36f, PopupNameW = 280f, PopupNameH = 56f, PopupNameMaxFont = 36f, PopupNameMinFont = 24f;
+            public const float PopupCountY = 96f, PopupCountH = 48f, PopupCountFont = 28f;
+            public const float PopupDescX = 36f, PopupDescY = 164f, PopupDescW = 408f, PopupDescH = 140f, PopupDescFont = 28f;
+            public const float PopupCloseW = 192f, PopupCloseH = 64f, PopupCloseFromBottom = 0f, PopupCloseFont = 26f;
+            public const float PopupCloseLabelX = 16f, PopupCloseLabelY = 12f, PopupCloseLabelW = 112f, PopupCloseLabelH = 40f;
+            public const float PopupCloseIconX = 144f, PopupCloseIconY = 16f, PopupCloseIconSize = 32f;
+        }
+
+        public const string RootId = "inventory", TabsId = "inventory.tabs", SearchId = "inventory.search", GridId = "inventory.grid",
+            CloseId = "inventory.close", EmptyId = "inventory.empty", PopupId = "inventory.popup", PopupCloseId = "inventory.popup.close",
+            TitleId = "inventory.title", CategoryId = "inventory.category", PopupNameId = "inventory.popup.name",
+            PopupCountId = "inventory.popup.count", PopupDescId = "inventory.popup.description";
+
+        private static readonly UiColor Ink = UnityLayout.Color(0.12f, 0.18f, 0.25f);
+
+        private int _tab;
+        private string _query = string.Empty;
+        private InventoryModel _model = InventoryModel.Empty;
+        private bool _subscribed;
+
+        private UiTabBar _tabs;
+        private UiLabel _title, _category, _emptyHint;
+        private UiTextField _search;
+        private UiCardGrid _grid;
+        private UiNode _emptyState, _popup;
+        private InventoryNameLabel _popupName;
+        private UiLabel _popupCount, _popupCloseLabel;
+        private UiTextBlock _popupDescription;
+        private UiImage _popupIcon;
+
+        public InventoryScreen(ScreenServices services) : base(services) { }
+
+        public InventoryModel Model => _model;
+        public int Tab => _tab;
+        public string Query => _query;
+        public bool PopupOpen => _popup != null && _popup.Visible;
+
+        public static string TabIconId(int index) => "inventory.tab-icon." + index;
+
+        protected override UiNode Build()
+        {
+            var root = new UiPanel { Id = RootId, Skin = UiSkin.Panel };
+            root.Centered(0f, 0f, Layout.Width, Layout.Height);
+
+            BuildTabs(root);
+            _title = root.Add(new UiLabel { Id = TitleId, FontSize = Layout.TitleFont, Color = Ink });
+            _title.Place(0f, 0f, Layout.TitleX, Layout.TitleY, Layout.TitleW, Layout.TitleH);
+            _category = root.Add(new UiLabel { Id = CategoryId, FontSize = Layout.CategoryFont, Color = Ink, Align = UiAlign.Right });
+            _category.Place(0f, 0f, Layout.CategoryX, Layout.CategoryY, Layout.Width - Layout.CategoryX - Layout.CategoryRightMargin, Layout.CategoryH);
+            BuildCloseButton(root);
+            BuildSearchRow(root);
+            BuildGrid(root);
+            BuildEmptyState(root);
+            BuildPopup(root);
+            return root;
+        }
+
+        private void BuildTabs(UiNode root)
+        {
+            int count = InventoryFilter.Tabs.Length;
+            float total = Layout.TabWidth * count + Layout.TabSpacing * (count - 1);
+            float startX = (Layout.Width - total) / 2f;
+            _tabs = root.Add(new UiTabBar { Id = TabsId, RaiseSelected = 0f });
+            _tabs.Place(0f, 0f, startX, -(Layout.TabHeight - Layout.TabOverlap), total, Layout.TabHeight);
+            var labels = new string[count];
+            for (int i = 0; i < count; i++) labels[i] = string.Empty; // Unity 판 탭에는 아이콘만 있다
+            _tabs.SetTabs(labels);
+            _tabs.SelectionChanged += SelectTab;
+            float step = total / count;
+            for (int i = 0; i < count; i++)
+            {
+                float x = startX + i * step + (step - Layout.TabIconSize) / 2f;
+                float y = -(Layout.TabHeight - Layout.TabOverlap) + (Layout.TabHeight - Layout.TabIconSize) / 2f + Layout.TabIconDown;
+                root.Add(new UiImage { Id = TabIconId(i), Image = InventoryFilter.Tabs[i].IconKey }).Place(0f, 0f, x, y, Layout.TabIconSize, Layout.TabIconSize);
+            }
+        }
+
+        private void BuildCloseButton(UiNode root)
+        {
+            var close = root.Add(new UiButton { Id = CloseId, Skin = UiSkin.Slot });
+            close.Place(0f, 0f, Layout.Width - Layout.CloseRight, Layout.CloseY, Layout.CloseSize, Layout.CloseSize);
+            close.Clicked += Close;
+            float inset = (Layout.CloseSize - Layout.CloseIconSize) / 2f;
+            close.Add(new UiImage { Image = "icon:close" }).Place(0f, 0f, inset, inset, Layout.CloseIconSize, Layout.CloseIconSize);
+        }
+
+        private void BuildSearchRow(UiNode root)
+        {
+            float rowRight = Layout.Width - Layout.GridPadX - Layout.ScrollbarWidth - 8f;
+            float rowWidth = rowRight - Layout.GridPadX;
+            float searchWidth = rowWidth - (Layout.SearchHeight + Layout.SearchGap) * 2f - Layout.SearchGap;
+
+            _search = root.Add(new UiTextField
+            {
+                Id = SearchId, MaxLength = 64, FontSize = Layout.SearchFont, PaddingX = Layout.SearchTextX, Skin = UiSkin.Slot,
+            });
+            _search.Place(0f, 0f, Layout.GridPadX, Layout.SearchY, searchWidth, Layout.SearchHeight);
+            float iconTop = (Layout.SearchHeight - Layout.SearchIconSize) / 2f;
+            _search.Add(new UiImage { Image = "icon:inventory-search" }).Place(0f, 0f, Layout.SearchGap, iconTop, Layout.SearchIconSize, Layout.SearchIconSize);
+
+            float x = Layout.GridPadX + searchWidth + Layout.SearchGap;
+            SideSlot(root, "inventory.delete", "icon:inventory-delete", x);
+            SideSlot(root, "inventory.filter", "icon:inventory-filter", x + Layout.SearchHeight + Layout.SearchGap);
+
+            // 글자 칸에는 바뀜 알림이 없어서, 그릴 때(= 보일 때만) 글자가 달라졌는지 본다. 값은 글자 칸의 글자뿐이고 게임 상태는 읽지 않는다.
+            root.Add(new InventoryQueryWatcher(() => _search.Text, () => _query, ApplyQuery) { Id = "inventory.query-watcher" });
+        }
+
+        private static void SideSlot(UiNode root, string id, string icon, float x)
+        {
+            var slot = root.Add(new UiPanel { Id = id, Skin = UiSkin.Slot });
+            slot.Place(0f, 0f, x, Layout.SearchY, Layout.SearchHeight, Layout.SearchHeight);
+            float inset = (Layout.SearchHeight - Layout.SearchIconSize) / 2f;
+            slot.Add(new UiImage { Image = icon }).Place(0f, 0f, inset, inset, Layout.SearchIconSize, Layout.SearchIconSize);
+        }
+
+        private void BuildGrid(UiNode root)
+        {
+            _grid = root.Add(new UiCardGrid
+            {
+                Id = GridId, Padding = 0f, DrawBackground = false, Spacing = Layout.SlotSpacing,
+                CellWidth = Layout.SlotSize, CellHeight = Layout.SlotSize, StepsPerNotch = 1f,
+            });
+            _grid.Place(0f, 0f, Layout.GridPadX, Layout.GridPadTop, Layout.GridWidth, Layout.GridHeight);
+            _grid.DrawCell = DrawCell;
+            _grid.CellClicked += OnCellClicked;
+        }
+
+        private void BuildEmptyState(UiNode root)
+        {
+            float width = Layout.GridWidth - Layout.ScrollbarWidth - 8f - Layout.EmptyX * 2f;
+            var panel = root.Add(new UiPanel { Id = EmptyId, Skin = UiSkin.Slot });
+            panel.Place(0f, 0f, Layout.GridPadX + Layout.EmptyX, Layout.GridPadTop + Layout.EmptyY, width, Layout.EmptyH);
+            panel.Add(new UiImage { Image = "icon:inventory-empty" })
+                .Place(0f, 0f, (width - Layout.EmptyIconSize) / 2f, Layout.EmptyIconY, Layout.EmptyIconSize, Layout.EmptyIconSize);
+            _emptyHint = panel.Add(new UiLabel { FontSize = Layout.EmptyHintFont, Color = Ink, Align = UiAlign.Center });
+            _emptyHint.Place(0f, 0f, Layout.EmptyHintX, Layout.EmptyHintY, width - Layout.EmptyHintX * 2f, Layout.EmptyHintH);
+            _emptyState = panel;
+        }
+
+        private void BuildPopup(UiNode root)
+        {
+            var popup = root.Add(new UiPanel { Id = PopupId, Skin = UiSkin.Panel, Visible = false });
+            popup.Centered(Layout.Width / 2f + Layout.PopupOffsetX, 0f, Layout.PopupW, Layout.PopupH);
+            _popupIcon = popup.Add(new UiImage());
+            _popupIcon.Place(0f, 0f, Layout.PopupIconX, Layout.PopupIconY, Layout.PopupIconSize, Layout.PopupIconSize);
+            _popupName = popup.Add(new InventoryNameLabel { Id = PopupNameId, MaxFontSize = Layout.PopupNameMaxFont, MinFontSize = Layout.PopupNameMinFont, Color = Ink });
+            _popupName.Place(0f, 0f, Layout.PopupNameX, Layout.PopupNameY, Layout.PopupNameW, Layout.PopupNameH);
+            _popupCount = popup.Add(new UiLabel { Id = PopupCountId, FontSize = Layout.PopupCountFont, Color = Ink });
+            _popupCount.Place(0f, 0f, Layout.PopupNameX, Layout.PopupCountY, Layout.PopupNameW, Layout.PopupCountH);
+            _popupDescription = popup.Add(new UiTextBlock { Id = PopupDescId, FontSize = Layout.PopupDescFont, Color = Ink });
+            _popupDescription.Place(0f, 0f, Layout.PopupDescX, Layout.PopupDescY, Layout.PopupDescW, Layout.PopupDescH);
+
+            var close = popup.Add(new UiButton { Id = PopupCloseId, Skin = UiSkin.Button });
+            close.Place(0.5f, 1f, -Layout.PopupCloseW / 2f, -Layout.PopupCloseH - Layout.PopupCloseFromBottom, Layout.PopupCloseW, Layout.PopupCloseH);
+            close.Clicked += ClosePopup;
+            _popupCloseLabel = close.Add(new UiLabel { FontSize = Layout.PopupCloseFont, Color = UiTheme.Ink, Align = UiAlign.Center });
+            _popupCloseLabel.Place(0f, 0f, Layout.PopupCloseLabelX, Layout.PopupCloseLabelY, Layout.PopupCloseLabelW, Layout.PopupCloseLabelH);
+            close.Add(new UiImage { Image = "icon:close" })
+                .Place(0f, 0f, Layout.PopupCloseIconX, Layout.PopupCloseIconY, Layout.PopupCloseIconSize, Layout.PopupCloseIconSize);
+            _popup = popup;
+        }
+
+        // ---------- 열고 닫기, 알림 ----------
+
+        protected internal override void OnOpened(ScreenOpenContext context)
+        {
+            if (!_subscribed && Services.Session != null)
+            {
+                Services.Session.Inventory.OnChanged += OnInventoryChanged;
+                _subscribed = true;
+            }
+            Refresh();
+        }
+
+        protected internal override void OnClosed()
+        {
+            ClosePopup();
+            ResetQuery();
+        }
+
+        protected internal override void OnChanged(string topic)
+        {
+            if (topic == ChangeTopics.Language || topic == ChangeTopics.All) Refresh();
+        }
+
+        private void OnInventoryChanged()
+        {
+            if (IsOpen) Refresh();
+        }
+
+        private void ResetQuery()
+        {
+            _query = string.Empty;
+            _search?.SetText(string.Empty);
+            if (_grid != null) _grid.ScrollOffset = 0f;
+        }
+
+        private void SelectTab(int index)
+        {
+            _tab = index;
+            ClosePopup();
+            Refresh();
+            _grid.ScrollOffset = 0f;
+        }
+
+        private void ApplyQuery(string text)
+        {
+            _query = text ?? string.Empty;
+            Refresh();
+            _grid.ScrollOffset = 0f;
+        }
+
+        private string NameOf(string key) => string.IsNullOrEmpty(key) ? string.Empty : Services.Text.Get(key);
+
+        private void Refresh()
+        {
+            ClosePopup();
+            _title.Text = T("ui.inventory.title");
+            _category.Text = T(InventoryFilter.Tabs[_tab].CategoryKey);
+            _search.Placeholder = T("ui.inventory.search");
+            _emptyHint.Text = T("ui.inventory.empty");
+            _popupCloseLabel.Text = T("ui.inventory.close-detail");
+            _tabs.Selected = _tab;
+
+            _model = InventoryModel.From(Services.Session, NameOf, _tab, _query);
+            bool hasMatches = _model.Rows.Count > 0;
+            // Unity 판: 맞는 것이 있으면 칸 틀 전부(빈 칸 포함)를 보이고, 없으면 빈 안내만 보인다.
+            _grid.ItemCount = hasMatches ? ItemInventory.MaxSlots : 0;
+            _grid.Visible = hasMatches;
+            _emptyState.Visible = !hasMatches;
+        }
+
+        // ---------- 칸, 상세 팝업 ----------
+
+        private void DrawCell(int index, UiRect rect, CardState state, DrawList list, ITextMeasurer text)
+        {
+            bool hasItem = index < _model.Rows.Count;
+            list.Panel(rect, UiSkin.Slot, hasItem && state.Hovered ? UiTheme.ButtonHovered : UiTheme.ButtonNormal);
+            if (hasItem)
+            {
+                InventoryRow row = _model.Rows[index];
+                var icon = new UiRect(rect.X + Layout.IconInset, rect.Y + Layout.IconInset, rect.W - Layout.IconInset * 2f, rect.H - Layout.IconInset * 2f);
+                list.Image(icon, ItemIconId(row.Item), default, UiTheme.White);
+                if (row.Count > 1)
+                {
+                    string count = row.Count.ToString();
+                    float x = rect.X + Layout.CountRight - text.Width(count, Layout.CountFont);
+                    float y = rect.Y + Layout.CountTop + (Layout.CountHeight - text.LineHeight(Layout.CountFont)) / 2f;
+                    list.Text(x, y, count, Layout.CountFont, Ink);
+                }
+            }
+            if (state.Selected && state.Focused) list.Outline(rect, UiTheme.FocusOutline, UiTheme.Accent);
+        }
+
+        /// <summary>아이템 그림 키. 어느 PNG의 어디인지는 Host가 정한다.</summary>
+        public static string ItemIconId(ItemDefinition item) => "item:" + item.Id;
+
+        private void OnCellClicked(int index)
+        {
+            if (index < 0 || index >= _model.Rows.Count) return; // 빈 칸은 눌러도 아무 일도 없다
+            OpenPopup(_model.Rows[index]);
+        }
+
+        private void OpenPopup(InventoryRow row)
+        {
+            _popupIcon.Image = ItemIconId(row.Item);
+            _popupName.Text = NameOf(row.Item.DisplayKey);
+            if (!string.IsNullOrEmpty(row.Item.DisplayKey)) T(row.Item.DisplayKey);
+            _popupCount.Text = F("ui.inventory.item-count", row.Count);
+            _popupDescription.Text = Shown(row.Item.Description);
+            _popup.Visible = true;
+        }
+
+        private void ClosePopup()
+        {
+            if (_popup == null) return;
+            if (_popup.Visible && Services.Screens?.Tree.Focused != null && IsInside(Services.Screens.Tree.Focused, _popup))
+                Services.Screens.Tree.SetFocus(null);
+            _popup.Visible = false;
+        }
+
+        private static bool IsInside(UiNode node, UiNode root)
+        {
+            for (UiNode n = node; n != null; n = n.Parent) if (n == root) return true;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// 글자 칸의 글자가 바뀌었는지 그릴 때 한 번씩 본다(Rootborn.Ui의 UiTextField에는 바뀜 알림이 없다 — 보고서 "필요한 변경").
+    /// 화면이 보일 때만 그려지므로 닫혀 있으면 아무 일도 하지 않는다. 글자가 같으면 문자열 비교 하나뿐이다.
+    /// </summary>
+    internal sealed class InventoryQueryWatcher : UiNode
+    {
+        private readonly Func<string> _current, _applied;
+        private readonly Action<string> _changed;
+
+        public InventoryQueryWatcher(Func<string> current, Func<string> applied, Action<string> changed)
+        {
+            _current = current; _applied = applied; _changed = changed;
+        }
+
+        public override void Emit(DrawList list, ITextMeasurer text)
+        {
+            string now = _current();
+            if (!string.Equals(now, _applied(), StringComparison.Ordinal)) _changed(now);
+        }
+    }
+
+    /// <summary>
+    /// 한 줄 이름 글자: 폭에 맞을 때까지 글자 크기를 MaxFontSize에서 MinFontSize까지 줄인다(Unity resizeTextForBestFit 24~36).
+    /// 그래도 넘치면 말줄임표로 줄인다.
+    /// </summary>
+    public sealed class InventoryNameLabel : UiNode
+    {
+        public string Text;
+        public float MaxFontSize = 36f, MinFontSize = 24f;
+        public UiColor Color = UiTheme.Ink;
+
+        public override void Emit(DrawList list, ITextMeasurer text)
+        {
+            if (string.IsNullOrEmpty(Text)) return;
+            float size = MaxFontSize;
+            while (size > MinFontSize && text.Width(Text, size) > Rect.W) size -= 2f;
+            string shown = Text;
+            if (text.Width(shown, size) > Rect.W)
+            {
+                const string ellipsis = "…";
+                int length = shown.Length;
+                while (length > 1 && text.Width(shown.Substring(0, length) + ellipsis, size) > Rect.W) length--;
+                shown = shown.Substring(0, length) + ellipsis;
+            }
+            list.Text(Rect.X, Rect.Y + (Rect.H - text.LineHeight(size)) / 2f, shown, size, Color);
+        }
+    }
+}

@@ -209,18 +209,21 @@ namespace Rootborn.Host.Rendering
     /// <summary>
     /// 그림 id → PNG와 그 안의 칸. 그림 id 꼴:
     /// "icon:&lt;키&gt;"(도시형 몰딩 테마의 아이콘 키, 예: icon:journal), "icon:&lt;키&gt;@&lt;정의 id&gt;"(테마가 정의마다 정한 아이콘, 없으면 그 키), "&lt;PNG 경로&gt;#&lt;스프라이트 이름&gt;"(좌표표), "&lt;PNG 경로&gt;"(그림 전체).
+    /// "icon:&lt;키&gt;"(도시형 몰딩 테마의 아이콘 키, 예: icon:journal), "item:&lt;아이템 id&gt;"(data/items의 icon), "&lt;PNG 경로&gt;#&lt;스프라이트 이름&gt;"(좌표표), "&lt;PNG 경로&gt;"(그림 전체).
     /// 그리기 명령에 원본 칸(Source)이 있으면 그 PNG 안의 그 칸을 쓴다.
     /// </summary>
     public sealed class ImageCatalog
     {
         private readonly SpriteAtlases _atlases;
         private readonly UrbanTheme _theme;
+        private readonly ItemIcons _items;
         private readonly Dictionary<string, (string texture, PixelRect source)> _cache = new Dictionary<string, (string, PixelRect)>(StringComparer.Ordinal);
 
-        public ImageCatalog(SpriteAtlases atlases, UrbanTheme theme)
+        public ImageCatalog(SpriteAtlases atlases, UrbanTheme theme, ItemIcons items = null)
         {
             _atlases = atlases;
             _theme = theme;
+            _items = items ?? ItemIcons.Empty;
         }
 
         /// <summary>PNG 경로와 칸. 칸 W가 0이면 그림 전체.</summary>
@@ -254,6 +257,13 @@ namespace Rootborn.Host.Rendering
                 }
                 if (_theme == null || !_theme.Icons.TryGetValue(key, out SpriteRef icon)) return (null, default);
                 return _atlases.TryFind(icon.Path, icon.Name, out AtlasSprite s) ? (icon.Path, s.Rect) : (null, default);
+            }
+            if (imageId.StartsWith("item:", StringComparison.Ordinal))
+            {
+                // 아이템 그림: 좌표표에 있으면 그 칸, 없으면 PNG 전체(낱장 그림).
+                if (!_items.TryGet(imageId.Substring(5), out SpriteRef item)) return (null, default);
+                if (_atlases.TryFind(item.Path, item.Name, out AtlasSprite itemSprite)) return (item.Path, itemSprite.Rect);
+                return File.Exists(_atlases.FullPath(item.Path)) ? (item.Path, default) : (null, default);
             }
             int hash = imageId.IndexOf('#');
             if (hash < 0) return (imageId, default);

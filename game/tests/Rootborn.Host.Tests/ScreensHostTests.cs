@@ -151,11 +151,11 @@ namespace Rootborn.Host.Tests
         public void SCREENS_003_Performance_1500CellGrid_OpenAndScroll()
         {
             using PlayerDriver player = Start("1920x1080",
-                r => r.Add("grid-probe", ScreenLayer.Panel, true, s => new GridProbeScreen(s)).OpenedBy(ScreenKey.Inventory));
+                r => r.Add("grid-probe", ScreenLayer.Panel, true, s => new GridProbeScreen(s)));
 
-            // 열기: 키를 누른 프레임부터 화면이 그려진 프레임까지
+            // 열기: 연 프레임부터 화면이 그려진 프레임까지
             var open = Stopwatch.StartNew();
-            player.PressKey(TestKey.I);
+            player.Screens.Open("grid-probe"); // I 키는 실제 가방 화면이 쓴다
             player.WaitForScreen("grid-probe");
             player.Frames(1);
             open.Stop();
