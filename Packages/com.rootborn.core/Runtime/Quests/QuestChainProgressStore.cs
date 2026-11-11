@@ -1,37 +1,29 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
+using Rootborn.Core.Save;
+using SaveNames = Rootborn.Core.Save.SaveFileNames;
 using Rootborn.Core.StudentLife;
 
 namespace Rootborn.Core.Quests
 {
     /// <summary>
-    /// Where quest chain progress files live. The game wrote them as JSON per save slot; Core only hands over the data.
-    /// <see cref="Read"/> returns a fresh copy, or null when there is no file or it cannot be read.
-    /// </summary>
-    public interface IQuestChainSaveStorage
-    {
-        QuestChainLogSaveData Read(string saveSlot, string fileName);
-        void Write(string saveSlot, string fileName, QuestChainLogSaveData data);
-    }
-
-    /// <summary>
     /// One store per runtime session. Keeps one chain log per save slot and player, loads it from that player's file
     /// on first use, and never lets one player load another's records. A log bound by its owner is used as it is.
+    /// Files go through <see cref="ISaveStore"/>; a file that exists but cannot be read throws instead of starting over.
     /// </summary>
     public sealed class QuestChainProgressStore
     {
         /// <summary>The game's default local player id (PlayerIdentity.DefaultPlayerId). It and "player" share the legacy file.</summary>
-        public const string DefaultPlayerId = "local-player";
+        public const string DefaultPlayerId = SaveNames.DefaultPlayerId;
         private const string LegacyPlayerId = "player";
 
-        private readonly IQuestChainSaveStorage _storage;
+        private readonly ISaveStore _storage;
         private readonly Dictionary<string, Dictionary<string, QuestChainLog>> _logs =
             new Dictionary<string, Dictionary<string, QuestChainLog>>(StringComparer.Ordinal);
         private readonly Dictionary<string, Dictionary<string, Action<StudentLifeProgress>>> _boundSaves =
             new Dictionary<string, Dictionary<string, Action<StudentLifeProgress>>>(StringComparer.Ordinal);
 
-        public QuestChainProgressStore(IQuestChainSaveStorage storage)
+        public QuestChainProgressStore(ISaveStore storage)
         {
             _storage = storage;
         }
@@ -55,8 +47,8 @@ namespace Rootborn.Core.Quests
             var initial = log.ToSaveData();
             BindIdentity(initial, student);
             log.LoadFromSaveData(initial);
-            var saved = _storage?.Read(student.SaveSlot, FileNameFor(student.PlayerId));
-            if (saved != null) log.LoadFromSaveData(FilterIdentity(saved, student));
+            if (_storage != null && _storage.TryRead<QuestChainLogSaveData>(student.SaveSlot, SaveNames.QuestChain(student.PlayerId), out var saved))
+                log.LoadFromSaveData(FilterIdentity(saved, student));
             players.Add(student.PlayerId, log);
             return log;
         }
@@ -96,7 +88,7 @@ namespace Rootborn.Core.Quests
             }
 
             if (student == null || !_logs.TryGetValue(student.SaveSlot, out var players) || !players.TryGetValue(student.PlayerId, out var log)) return;
-            _storage?.Write(student.SaveSlot, FileNameFor(student.PlayerId), log.ToSaveData());
+            _storage?.Write(student.SaveSlot, SaveNames.QuestChain(student.PlayerId), log.ToSaveData());
         }
 
         public void Clear()
@@ -104,18 +96,6 @@ namespace Rootborn.Core.Quests
             _logs.Clear();
             _boundSaves.Clear();
         }
-
-        /// <summary>The default players share "quest-chain-progress.json"; others get every UTF-8 byte of their id in hex, so ids never collide.</summary>
-        public static string FileNameFor(string playerId)
-        {
-            if (IsDefaultPlayer(playerId)) return "quest-chain-progress.json";
-            var bytes = Encoding.UTF8.GetBytes(playerId);
-            var name = new StringBuilder("quest-chain-progress-");
-            for (int i = 0; i < bytes.Length; i++) name.Append(bytes[i].ToString("x2"));
-            return name.Append(".json").ToString();
-        }
-
-        private static bool IsDefaultPlayer(string playerId) => string.IsNullOrEmpty(playerId) || playerId == DefaultPlayerId || playerId == LegacyPlayerId;
 
         private bool IsBound(StudentLifeProgress student) => _boundSaves.TryGetValue(student.SaveSlot, out var saves) && saves.ContainsKey(student.PlayerId);
 

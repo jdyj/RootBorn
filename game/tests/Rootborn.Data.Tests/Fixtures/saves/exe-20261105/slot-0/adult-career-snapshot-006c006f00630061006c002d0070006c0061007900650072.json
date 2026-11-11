@@ -1,0 +1,279 @@
+{
+    "Version": 2,
+    "Adult": {
+        "Version": 1,
+        "SaveSlot": "slot-0",
+        "PlayerId": "local-player",
+        "FacilityId": "",
+        "FacilityLevel": 0,
+        "Reputation": 0,
+        "Works": [],
+        "AppliedRequestIds": [],
+        "EndingIds": [],
+        "PendingWork": {
+            "RequestId": "",
+            "WorkId": "",
+            "MinigameId": "",
+            "Day": 0,
+            "ReservedTimePoints": 0,
+            "Seed": 0,
+            "FacilityLevel": 0,
+            "RewardPercent": 0
+        }
+    },
+    "Student": {
+        "SaveSlot": "slot-0",
+        "PlayerId": "local-player",
+        "Energy": 11,
+        "Focus": 9,
+        "Stress": 0,
+        "TimeMinutes": 510,
+        "CurrentDay": 2,
+        "TimePointsSpentToday": 1,
+        "DailyTimePolicyIds": [],
+        "DailyPlan": {
+            "Version": 2,
+            "SaveSlot": "slot-0",
+            "PlayerId": "local-player",
+            "CurrentDay": 2,
+            "SelectedRouteId": "",
+            "CompletedRouteId": "",
+            "MatchedActivityId": "",
+            "AppliedCompletionKeys": [],
+            "LastNextHintKey": "",
+            "Slots": [
+                {
+                    "SlotIndex": 0,
+                    "PeriodKey": "daily-plan.period.after-school",
+                    "RouteId": "",
+                    "Completed": false,
+                    "MatchedActivityId": "",
+                    "MatchedActivityKind": 0,
+                    "CompletionRequestKey": "",
+                    "NextHintKey": "",
+                    "ResultLogs": []
+                },
+                {
+                    "SlotIndex": 1,
+                    "PeriodKey": "daily-plan.period.evening",
+                    "RouteId": "",
+                    "Completed": false,
+                    "MatchedActivityId": "",
+                    "MatchedActivityKind": 0,
+                    "CompletionRequestKey": "",
+                    "NextHintKey": "",
+                    "ResultLogs": []
+                }
+            ],
+            "Diary": [
+                {
+                    "DayNumber": 1,
+                    "Slots": [
+                        {
+                            "SlotIndex": 0,
+                            "PeriodKey": "daily-plan.period.after-school",
+                            "RouteId": "daily.town-square.help",
+                            "Completed": false,
+                            "MatchedActivityId": "",
+                            "MatchedActivityKind": 0,
+                            "CompletionRequestKey": "",
+                            "NextHintKey": "objective.daily.town-square.next",
+                            "ResultLogs": []
+                        },
+                        {
+                            "SlotIndex": 1,
+                            "PeriodKey": "daily-plan.period.evening",
+                            "RouteId": "",
+                            "Completed": false,
+                            "MatchedActivityId": "",
+                            "MatchedActivityKind": 0,
+                            "CompletionRequestKey": "",
+                            "NextHintKey": "",
+                            "ResultLogs": []
+                        }
+                    ],
+                    "CompletionKeys": []
+                }
+            ]
+        },
+        "PendingMinigame": {
+            "Kind": 0,
+            "RequestId": "",
+            "DefinitionId": "",
+            "MinigameId": "",
+            "Day": 0,
+            "ReservedTimePoints": 0,
+            "Seed": 0
+        },
+        "CareerCandidates": {
+            "SaveSlot": "slot-0",
+            "PlayerId": "local-player",
+            "Candidates": [],
+            "AppliedSourceRequestIds": [],
+            "ClaimedRewardIds": [],
+            "TodayHintResultLines": []
+        },
+        "DayState": "InProgress",
+        "LastSettledDay": 1,
+        "NextDayEntryPointId": "home-entry",
+        "LastActivityId": "location.restaurant",
+        "TutorialStageId": "tutorial.day2",
+        "NextObjectiveId": "goal.talk-to-guide-day2",
+        "NextGuideText": "ui.tutorial.next_goal_hint",
+        "Traits": [],
+        "Skills": [
+            {
+                "Id": "skill.cooking",
+                "Value": 1
+            }
+        ],
+        "Relationships": [],
+        "StudentConditionStatuses": [],
+        "CareerHintIds": [],
+        "AppliedRequestIds": [
+            "npc-meet:npc.first-guide",
+            "location-visit:location.corner-store",
+            "location-activity:location.activity.store-browse:3:0",
+            "npc-meet:npc.teacher",
+            "part-time-work:512cf37999544cc1ab3fde19f47bfaa1",
+            "location-visit:location.restaurant"
+        ],
+        "ActivityLogIds": [
+            "npc.first-guide",
+            "npc.first-guide@location.town-square@time.morning",
+            "location.corner-store",
+            "location.activity.store-browse",
+            "npc.teacher",
+            "npc.teacher@location.town-square@time.afternoon",
+            "location.restaurant"
+        ],
+        "TodayActivityIds": [
+            "location.restaurant"
+        ],
+        "TodayResultLogIds": [
+            "location:location.restaurant:visited"
+        ],
+        "PreviousDayActivityIds": [
+            "npc.first-guide",
+            "npc.first-guide@location.town-square@time.morning",
+            "location.corner-store",
+            "location.activity.store-browse",
+            "npc.teacher",
+            "npc.teacher@location.town-square@time.afternoon"
+        ],
+        "PreviousDayResultLogIds": [
+            "npc:npc.first-guide:met",
+            "npc.first-guide.notice.today-route",
+            "location:location.corner-store:visited",
+            "location-activity:location.activity.store-browse:+skill.cooking=1",
+            "npc:npc.teacher:met",
+            "npc.teacher.notice.outside-school"
+        ]
+    },
+    "Inventory": {
+        "Items": [],
+        "EquippedToolItemId": ""
+    },
+    "World": {
+        "SaveSlot": "slot-0",
+        "PlayerId": "local-player",
+        "Records": [],
+        "TodayWorldChangeFlagIds": []
+    },
+    "QuestChains": {
+        "Chains": [
+            {
+                "SaveSlot": "slot-0",
+                "PlayerId": "local-player",
+                "ChainId": "questchain.test.career-interest.library",
+                "ChainState": "Available",
+                "IsTracked": false,
+                "CurrentStepId": "step.questchain.test.library.start",
+                "CompletedStepIds": [],
+                "ObjectiveProgressValues": [
+                    0,
+                    0
+                ],
+                "ProcessedEventKeys": [],
+                "RewardClaimedIds": [],
+                "BlockedReasonId": "",
+                "LastEvaluatedConditionSummary": "",
+                "TransitionHistory": [],
+                "RelatedCareerInterestId": "interest.learning",
+                "TodayQuestChainSummary": "",
+                "AcceptedDayIndex": -1,
+                "CompletedDayIndex": -1,
+                "FailedDayIndex": -1,
+                "ExpiredDayIndex": -1
+            },
+            {
+                "SaveSlot": "slot-0",
+                "PlayerId": "local-player",
+                "ChainId": "questchain.test.career-interest.blocked-library-access",
+                "ChainState": "Available",
+                "IsTracked": false,
+                "CurrentStepId": "step.questchain.test.blocked.library.access",
+                "CompletedStepIds": [],
+                "ObjectiveProgressValues": [
+                    0
+                ],
+                "ProcessedEventKeys": [],
+                "RewardClaimedIds": [],
+                "BlockedReasonId": "",
+                "LastEvaluatedConditionSummary": "",
+                "TransitionHistory": [],
+                "RelatedCareerInterestId": "interest.learning",
+                "TodayQuestChainSummary": "",
+                "AcceptedDayIndex": -1,
+                "CompletedDayIndex": -1,
+                "FailedDayIndex": -1,
+                "ExpiredDayIndex": -1
+            },
+            {
+                "SaveSlot": "slot-0",
+                "PlayerId": "local-player",
+                "ChainId": "main-story.school-opening",
+                "ChainState": "Tracked",
+                "IsTracked": true,
+                "CurrentStepId": "mainquest.AfterSchoolTour",
+                "CompletedStepIds": [
+                    "mainquest.BackToSchool"
+                ],
+                "ObjectiveProgressValues": [
+                    1,
+                    0,
+                    0,
+                    0
+                ],
+                "ProcessedEventKeys": [
+                    "npc-talk:83168fa119df41988c766eb799cc0a1f",
+                    "daily-plan-selected:dbd43f464f88496fac94446ebdf5a2cc",
+                    "location-visit:678b53c7a3c94595b17563604ae8f505",
+                    "location-activity:location.activity.store-browse:3:0",
+                    "npc-talk:268b3610a7764ab0a5cc6bd931a0ec32",
+                    "day-started:ebef88ac02d943aea9a97759878f82d2",
+                    "location-visit:92e7c6e3aa134fe79da9ec270be56a8d"
+                ],
+                "RewardClaimedIds": [
+                    "step:mainquest.BackToSchool"
+                ],
+                "BlockedReasonId": "",
+                "LastEvaluatedConditionSummary": "",
+                "TransitionHistory": [
+                    "mainquest.BackToSchool->mainquest.AfterSchoolTour"
+                ],
+                "RelatedCareerInterestId": "",
+                "TodayQuestChainSummary": "opening.quest.BackToSchool.name",
+                "AcceptedDayIndex": 1,
+                "CompletedDayIndex": -1,
+                "FailedDayIndex": -1,
+                "ExpiredDayIndex": -1
+            }
+        ]
+    },
+    "FurnitureUnlocks": {
+        "SaveSlot": "slot-0",
+        "PlayerId": "local-player",
+        "UnlockTokens": []
+    }
+}

@@ -1,0 +1,53 @@
+{
+    "SlotId": "slot-1",
+    "DisplayName": "slot-1",
+    "CreatedAtUtcTicks": 639294418224171544,
+    "UpdatedAtUtcTicks": 639294418224171544,
+    "WorldSeed": -2052454917,
+    "TileSeed": -1251756963,
+    "Character": {
+        "_bodyVariant": 0,
+        "_hairVariant": 0,
+        "_outfitVariant": 0,
+        "_defaultFacing": 0
+    },
+    "Appearance": {
+        "_parts": []
+    },
+    "CharacterAppearanceSnapshot": {
+        "schemaVersion": 1,
+        "visualKind": "spum",
+        "appearanceDefinitionId": "appearance.spum.generated",
+        "catalogId": "spum.catalog.newgame.generated",
+        "selectedParts": [
+            {
+                "categoryId": "accessory",
+                "partId": "spum.accessory.none"
+            },
+            {
+                "categoryId": "body",
+                "partId": "spum.body.default"
+            },
+            {
+                "categoryId": "eye",
+                "partId": "spum.eye.default"
+            },
+            {
+                "categoryId": "hair",
+                "partId": "spum.hair.short"
+            },
+            {
+                "categoryId": "outfit",
+                "partId": "spum.outfit.default"
+            },
+            {
+                "categoryId": "skin",
+                "partId": "spum.skin.default"
+            },
+            {
+                "categoryId": "weapon",
+                "partId": "spum.weapon.none"
+            }
+        ]
+    }
+}

@@ -41,9 +41,16 @@ namespace Rootborn.Core.Quests
 
     /// <summary>Same field names and types as the game's save file (written by JsonUtility; the enum is saved as its number).</summary>
     [Serializable]
-    public sealed class QuestLogSaveData
+    public sealed class QuestLogSaveData : Save.IVersionedSave
     {
+        /// <summary>The highest format version this program reads. Version 0 is a file written by the Unity build.</summary>
+        public const int KnownVersion = 1;
+
+        public int Version;
         public QuestProgressSaveData[] Quests = Array.Empty<QuestProgressSaveData>();
+
+        int Save.IVersionedSave.Version { get => Version; set => Version = value; }
+        int Save.IVersionedSave.KnownVersion => KnownVersion;
     }
 
     [Serializable]

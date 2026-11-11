@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- data/ JSON으로 Core 정의를 만들고, 세이브 파일을 읽고 쓴다. Core만 참조한다(게임 엔진 참조 금지). -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Rootborn.Core/Rootborn.Core.csproj" />
+  </ItemGroup>
+</Project>

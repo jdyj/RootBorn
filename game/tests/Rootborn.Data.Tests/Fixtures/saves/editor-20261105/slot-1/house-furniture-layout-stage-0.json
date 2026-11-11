@@ -1,0 +1,13 @@
+{
+    "Items": [
+        {
+            "FurnitureId": "story.study-desk",
+            "SurfaceId": "house",
+            "AnchorX": 4,
+            "AnchorY": -5,
+            "Direction": 0,
+            "StateJson": "",
+            "TileName": ""
+        }
+    ]
+}

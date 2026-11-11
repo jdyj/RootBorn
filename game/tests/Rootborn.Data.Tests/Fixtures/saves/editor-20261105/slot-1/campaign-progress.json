@@ -1,0 +1,27 @@
+{
+    "SaveSlot": "slot-1",
+    "PlayerId": "local-player",
+    "ActiveCampaignId": "campaign.school-opening-three-days",
+    "CurrentDayNumber": 2,
+    "CompletedObjectiveIds": [
+        "opening.campaign.objective.Teacher",
+        "opening.campaign.objective.TrainingWork"
+    ],
+    "SelectedRoutes": [],
+    "RewardClaimedIds": [],
+    "AppliedResultIds": [
+        "campaign-location:location.school",
+        "campaign-npc:npc.first-guide",
+        "campaign-npc:npc.teacher",
+        "campaign-location:location.restaurant",
+        "campaign-location:location.medical-clinic",
+        "campaign-location:location.design-studio",
+        "campaign-location:location.training-ground",
+        "campaign-result-day-1",
+        "campaign-location:location.corner-store"
+    ],
+    "LastProgressLogIds": [
+        "opening.campaign.objective.Teacher",
+        "opening.campaign.objective.TrainingWork"
+    ]
+}

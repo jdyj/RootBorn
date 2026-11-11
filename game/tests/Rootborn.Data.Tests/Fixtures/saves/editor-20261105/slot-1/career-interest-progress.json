@@ -1,0 +1,19 @@
+{
+    "SaveSlot": "slot-1",
+    "PlayerId": "local-player",
+    "CurrentInterestId": "interest.interior",
+    "PreviousInterestId": "",
+    "LastChangedDay": 1,
+    "ChangeCountForCurrentDay": 1,
+    "SelectionHistoryIds": [
+        "interest.interior"
+    ],
+    "ClaimedRewardIds": [
+        "interest.interior:interest.interior:reward.focus"
+    ],
+    "LastRecommendationSourceVersion": "interest.interior:1",
+    "TodayInterestActionSummary": [
+        "interest.interior:selected"
+    ],
+    "LastFollowUpInterestId": ""
+}

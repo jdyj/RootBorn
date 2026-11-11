@@ -19,6 +19,8 @@ Unity 판은 얼렸다(태그 `unity-playable-20261111`). `Assets/` 아래는 �
 4. Core 구현을 쓴다. 통과를 확인한다.
 5. 원래 테스트가 안 다루던 경계를 더한다: 거절 시 무변경, 중복 요청, 빈 id와 null, 세이브 왕복.
 6. 묶음마다 커밋한다(`[REFACTOR]`, 한글).
+7. `game/Rootborn.Data/Builders`에 그 영역의 만들기 함수를 등록하고(JSON `type` 하나에 `b.Add` 한 줄) `NotPortedYet`에서 뺀다. `dotnet test game/Rootborn.sln`의 `RealDataTests`가 실제 `data/` 전체를 오류 없이 만드는지 본다.
+8. 세이브 파일이 있으면 `ISaveStore`와 `SaveFileNames`(`Rootborn.Core.Save`)를 쓰고, 맨 위 모양을 `game/tests/Rootborn.Data.Tests/SaveShapeCoverage.cs`에 등록한다.
 
 ## 지킬 것
 
@@ -36,6 +38,7 @@ Unity 판은 얼렸다(태그 `unity-playable-20261111`). `Assets/` 아래는 �
 
 ```
 C:\Users\jdyj\.dotnet\dotnet.exe test Tools/Rootborn.Core.Tests
+C:\Users\jdyj\.dotnet\dotnet.exe test game/Rootborn.sln
 ```
 
 ## 보고에 적을 것

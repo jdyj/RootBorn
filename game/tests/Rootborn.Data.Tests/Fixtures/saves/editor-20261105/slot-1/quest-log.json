@@ -1,0 +1,58 @@
+{
+    "Quests": [
+        {
+            "QuestId": "quest.gatherWood",
+            "State": 0,
+            "StateName": "NotStarted",
+            "ObjectiveCounts": [
+                0
+            ],
+            "ProcessedEventKeys": []
+        },
+        {
+            "QuestId": "quest.career.chef",
+            "State": 0,
+            "StateName": "NotStarted",
+            "ObjectiveCounts": [
+                0
+            ],
+            "ProcessedEventKeys": []
+        },
+        {
+            "QuestId": "quest.career.interior",
+            "State": 0,
+            "StateName": "NotStarted",
+            "ObjectiveCounts": [
+                0
+            ],
+            "ProcessedEventKeys": []
+        },
+        {
+            "QuestId": "quest.career.soldier",
+            "State": 0,
+            "StateName": "NotStarted",
+            "ObjectiveCounts": [
+                0
+            ],
+            "ProcessedEventKeys": []
+        },
+        {
+            "QuestId": "quest.career.emergency-care",
+            "State": 0,
+            "StateName": "NotStarted",
+            "ObjectiveCounts": [
+                0
+            ],
+            "ProcessedEventKeys": []
+        },
+        {
+            "QuestId": "quest.tile-placement.interior",
+            "State": 0,
+            "StateName": "NotStarted",
+            "ObjectiveCounts": [
+                0
+            ],
+            "ProcessedEventKeys": []
+        }
+    ]
+}

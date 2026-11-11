@@ -1,0 +1,14 @@
+{
+    "QuestEntries": [],
+    "InventoryDeltas": [
+        {
+            "ItemId": "item.allowance",
+            "DisplayName": "item.allowance.name",
+            "BeforeCount": 0,
+            "AfterCount": 5,
+            "Delta": 5,
+            "FromReward": false
+        }
+    ],
+    "RewardEntries": []
+}

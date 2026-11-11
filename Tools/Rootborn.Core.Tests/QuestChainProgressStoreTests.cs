@@ -8,17 +8,18 @@ using Rootborn.Core.StudentLife;
 namespace Rootborn.Core.Tests
 {
     // 옮겨 옴: Assets/Tests/EditMode/StudentLife/QuestChainProgressStoreTests.cs, Assets/Tests/EditMode/StudentLife/QuestChainOwnedStoreTests.cs
-    // 파일 대신 메모리 저장소를 쓴다. 저장소는 읽을 때마다 새 사본을 준다(JsonUtility가 매번 새 객체를 만들던 것과 같다).
+    // 파일 대신 메모리 저장소(InMemorySaveStore)를 쓴다. 저장소는 읽을 때마다 새 사본을 준다(JsonUtility가 매번 새 객체를 만들던 것과 같다).
+    // 파일 이름 규칙 테스트는 SaveFileNamesTests로 옮겼다.
     public sealed class QuestChainProgressStoreTests
     {
-        private MemoryChainStorage _storage;
+        private InMemorySaveStore _storage;
         private QuestChainDefinition _chain;
         private QuestChainDefinition[] _chains;
 
         [SetUp]
         public void SetUp()
         {
-            _storage = new MemoryChainStorage();
+            _storage = new InMemorySaveStore();
             _chain = MakeChain("chain.fixture", null, "npc.teacher", "npc.teacher");
             _chains = new[] { _chain };
         }
@@ -160,18 +161,6 @@ namespace Rootborn.Core.Tests
         }
 
         [Test]
-        public void FileNames_DefaultPlayersShareTheLegacyFile_OthersAreHexEncoded()
-        {
-            Assert.That(QuestChainProgressStore.FileNameFor(null), Is.EqualTo("quest-chain-progress.json"));
-            Assert.That(QuestChainProgressStore.FileNameFor(""), Is.EqualTo("quest-chain-progress.json"));
-            Assert.That(QuestChainProgressStore.FileNameFor("player"), Is.EqualTo("quest-chain-progress.json"));
-            Assert.That(QuestChainProgressStore.FileNameFor(QuestChainProgressStore.DefaultPlayerId), Is.EqualTo("quest-chain-progress.json"));
-            Assert.That(QuestChainProgressStore.DefaultPlayerId, Is.EqualTo("local-player"));
-            Assert.That(QuestChainProgressStore.FileNameFor("a:"), Is.EqualTo("quest-chain-progress-613a.json"));
-            Assert.That(QuestChainProgressStore.FileNameFor("한"), Is.EqualTo("quest-chain-progress-ed959c.json"), "every UTF-8 byte is encoded");
-        }
-
-        [Test]
         public void LegacyRecordsWithoutIdentity_LoadOnlyForTheDefaultPlayer()
         {
             var legacy = new QuestChainLogSaveData { Chains = new[]
@@ -188,14 +177,14 @@ namespace Rootborn.Core.Tests
             Assert.That(record.SaveSlot, Is.EqualTo("slot-a"), "the loaded record takes the owner's identity");
             Assert.That(record.PlayerId, Is.EqualTo(QuestChainProgressStore.DefaultPlayerId));
 
-            _storage.Put("slot-a", QuestChainProgressStore.FileNameFor("player-b"), legacy);
+            _storage.Put("slot-a", Save.SaveFileNames.QuestChain("player-b"), legacy);
             Assert.That(Get(store, Progress("slot-a", "player-b")).GetState(_chain), Is.EqualTo(QuestChainState.Available), "another player never takes a record without identity");
         }
 
         [Test]
         public void RecordsForAnotherIdentityInTheSameFile_AreIgnored()
         {
-            _storage.Put("slot-a", QuestChainProgressStore.FileNameFor("player-a"), new QuestChainLogSaveData { Chains = new[]
+            _storage.Put("slot-a", Save.SaveFileNames.QuestChain("player-a"), new QuestChainLogSaveData { Chains = new[]
             {
                 new QuestChainProgressSaveData { SaveSlot = "slot-b", PlayerId = "player-a", ChainId = _chain.Id, ChainState = "Active" },
             } });
@@ -216,6 +205,17 @@ namespace Rootborn.Core.Tests
             Assert.That(_storage.Writes, Is.Zero);
             Assert.That(store.GetOrCreate(null, Progress("slot-a", "player-new")), Is.Null, "nothing held and nothing to create from");
             Assert.That(store.GetOrCreate(_chains, null), Is.Null);
+        }
+
+        [Test]
+        public void UnreadableFile_Throws_InsteadOfStartingOver()
+        {
+            // Unity: a file that could not be read was treated as no file, so the next save replaced it with a fresh log.
+            var store = new QuestChainProgressStore(new UnreadableStore());
+            var student = Progress("slot-a", "player-a");
+
+            Assert.Throws<InvalidOperationException>(() => store.GetOrCreate(_chains, student));
+            store.Save(student);
         }
 
         [Test]
@@ -241,46 +241,11 @@ namespace Rootborn.Core.Tests
             Assert.That(reloaded.GetOrCreate(_chains, student).GetCurrentStep(chain).Id, Is.EqualTo("step.after"));
         }
 
-        private sealed class MemoryChainStorage : IQuestChainSaveStorage
+        private sealed class UnreadableStore : Save.ISaveStore
         {
-            private readonly Dictionary<string, QuestChainLogSaveData> _files = new Dictionary<string, QuestChainLogSaveData>(StringComparer.Ordinal);
-            public int Reads;
-            public int Writes;
-
-            public void Put(string saveSlot, string fileName, QuestChainLogSaveData data) => _files[saveSlot + "/" + fileName] = Copy(data);
-
-            public QuestChainLogSaveData Read(string saveSlot, string fileName)
-            {
-                Reads++;
-                return _files.TryGetValue(saveSlot + "/" + fileName, out var data) ? Copy(data) : null;
-            }
-
-            public void Write(string saveSlot, string fileName, QuestChainLogSaveData data)
-            {
-                Writes++;
-                _files[saveSlot + "/" + fileName] = Copy(data);
-            }
-
-            private static QuestChainLogSaveData Copy(QuestChainLogSaveData data)
-            {
-                var chains = new QuestChainProgressSaveData[data.Chains.Length];
-                for (int i = 0; i < chains.Length; i++)
-                {
-                    var c = data.Chains[i];
-                    if (c == null) continue;
-                    chains[i] = new QuestChainProgressSaveData
-                    {
-                        SaveSlot = c.SaveSlot, PlayerId = c.PlayerId, ChainId = c.ChainId, ChainState = c.ChainState, IsTracked = c.IsTracked, CurrentStepId = c.CurrentStepId,
-                        CompletedStepIds = (string[])c.CompletedStepIds.Clone(), ObjectiveProgressValues = (int[])c.ObjectiveProgressValues.Clone(),
-                        ProcessedEventKeys = (string[])c.ProcessedEventKeys.Clone(), RewardClaimedIds = (string[])c.RewardClaimedIds.Clone(),
-                        BlockedReasonId = c.BlockedReasonId, LastEvaluatedConditionSummary = c.LastEvaluatedConditionSummary, TransitionHistory = (string[])c.TransitionHistory.Clone(),
-                        RelatedCareerInterestId = c.RelatedCareerInterestId, TodayQuestChainSummary = c.TodayQuestChainSummary,
-                        AcceptedDayIndex = c.AcceptedDayIndex, CompletedDayIndex = c.CompletedDayIndex, FailedDayIndex = c.FailedDayIndex, ExpiredDayIndex = c.ExpiredDayIndex,
-                    };
-                }
-
-                return new QuestChainLogSaveData { Chains = chains };
-            }
+            public bool TryRead<T>(string saveSlot, string fileName, out T data) where T : class, new() => throw new InvalidOperationException("corrupt");
+            public void Write<T>(string saveSlot, string fileName, T data) where T : class => Assert.Fail("an unreadable file must not be overwritten");
+            public void Delete(string saveSlot, string fileName) => Assert.Fail("unexpected delete");
         }
     }
 }
