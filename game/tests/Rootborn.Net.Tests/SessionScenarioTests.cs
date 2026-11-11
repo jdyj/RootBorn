@@ -2,6 +2,7 @@ using System.Linq;
 using NUnit.Framework;
 using Rootborn.Core.Network;
 using Rootborn.Core.Save;
+using Rootborn.Core.Time;
 using Rootborn.Core.World;
 using Rootborn.Net.Session;
 
@@ -146,28 +147,28 @@ namespace Rootborn.Net.Tests
             var a = rig.Join("a");
             var b = rig.Join("b");
             rig.Run(0.3);
-            Assert.That(a.WorldTime.Known, Is.True);
-            Assert.That(a.WorldTime.Day, Is.EqualTo(1));
-            Assert.That(a.WorldTime.PlayerCount, Is.EqualTo(2));
+            Assert.That(a.RoomClock.Known, Is.True);
+            Assert.That(a.RoomClock.Day, Is.EqualTo(1));
+            Assert.That(a.RoomClock.PlayerCount, Is.EqualTo(2));
 
             a.RequestDayEndReady();
             rig.Run(0.3);
-            Assert.That(rig.Server.WorldTime.Day, Is.EqualTo(1));
-            Assert.That(b.WorldTime.Day, Is.EqualTo(1));
-            Assert.That(b.WorldTime.Phase, Is.EqualTo(WorldSchedulePhase.DayEndReady));
-            Assert.That(b.WorldTime.ReadyCount, Is.EqualTo(1));
+            Assert.That(rig.Server.Clock.Day, Is.EqualTo(1));
+            Assert.That(b.RoomClock.Day, Is.EqualTo(1));
+            Assert.That(b.RoomClock.IsDayEnded(a.NetId), Is.True, "누가 마감했는지 보인다");
+            Assert.That(b.RoomClock.DayEndedCount, Is.EqualTo(1));
 
             b.RequestDayEndReady();
             rig.Run(0.3);
-            Assert.That(rig.Server.WorldTime.Day, Is.EqualTo(2));
-            Assert.That(a.WorldTime.Day, Is.EqualTo(2));
-            Assert.That(b.WorldTime.Day, Is.EqualTo(2));
-            Assert.That(a.WorldTime.PartOfDay, Is.EqualTo(WorldPartOfDay.Morning));
-            Assert.That(a.WorldTime.ReadyCount, Is.EqualTo(0));
+            Assert.That(rig.Server.Clock.Day, Is.EqualTo(2));
+            Assert.That(a.RoomClock.Day, Is.EqualTo(2));
+            Assert.That(b.RoomClock.Day, Is.EqualTo(2));
+            Assert.That(a.RoomClock.PartIndex, Is.EqualTo(0));
+            Assert.That(a.RoomClock.DayEndedCount, Is.EqualTo(0));
         }
 
         [Test]
-        public void AdvancePartOfDay_IsSharedAndSaved()
+        public void FinishingAPart_IsSharedAndSaved()
         {
             var store = new MemorySaveStore();
             using (var rig = new SessionRig(store: store, saveSlot: "slot-0"))
@@ -175,15 +176,16 @@ namespace Rootborn.Net.Tests
                 var a = rig.Join("a");
                 var b = rig.Join("b");
                 rig.Run(0.3);
-                a.RequestAdvancePartOfDay();
+                a.RequestFinishPart(1);
+                b.RequestSkipPart();
                 rig.Run(0.3);
-                Assert.That(b.WorldTime.PartOfDay, Is.EqualTo(WorldPartOfDay.Afternoon));
-                Assert.That(b.WorldTime.Phase, Is.EqualTo(WorldSchedulePhase.Activity));
+                Assert.That(b.RoomClock.PartIndex, Is.EqualTo(1));
+                Assert.That(a.RoomClock.PartIndex, Is.EqualTo(1));
             }
 
-            Assert.That(store.Contains(SaveFileNames.WorldTimeSlot, "slot-0.json"), Is.True);
+            Assert.That(store.Contains("slot-0", RoomClockSaveFiles.FileName), Is.True);
             using var again = new SessionRig(store: store, saveSlot: "slot-0");
-            Assert.That(again.Server.WorldTime.PartOfDay, Is.EqualTo(WorldPartOfDay.Afternoon), "서버를 다시 켜면 이어진다");
+            Assert.That(again.Server.Clock.PartIndex, Is.EqualTo(1), "서버를 다시 켜면 이어진다");
         }
 
         [Test]
@@ -195,7 +197,8 @@ namespace Rootborn.Net.Tests
             rig.Run(0.3);
             a.SetPose("Town", 11f, 12f, Facing.Left, false);
             b.SetPose("House", 21f, 22f, Facing.Up, false);
-            a.RequestAdvancePartOfDay();
+            a.RequestFinishPart(1);
+            b.RequestFinishPart(1);
             rig.Run(0.5);
 
             var c = rig.Join("c");
@@ -209,8 +212,9 @@ namespace Rootborn.Net.Tests
             Assert.That(inHouse.PlayerId, Is.EqualTo("b"));
             Assert.That(inHouse.Facing, Is.EqualTo(Facing.Up));
             Assert.That(inHouse.Look, Is.EqualTo("teen|"));
-            Assert.That(c.WorldTime.PartOfDay, Is.EqualTo(WorldPartOfDay.Afternoon));
-            Assert.That(c.WorldTime.PlayerCount, Is.EqualTo(3));
+            Assert.That(c.RoomClock.PartIndex, Is.EqualTo(1));
+            Assert.That(c.RoomClock.PlayerCount, Is.EqualTo(3));
+            Assert.That(c.RoomClock.HasFinished(c.NetId), Is.False, "도중에 들어오면 지금 때부터");
             Assert.That(c.JoinIndex, Is.EqualTo(2));
             Assert.That(a.RemotePlayerIds, Does.Contain("c"), "먼저 있던 사람도 새 사람을 안다");
         }
@@ -232,7 +236,7 @@ namespace Rootborn.Net.Tests
             Assert.That(b.RemotePlayerIds, Is.Empty);
             Assert.That(b.PlayersOn("Town", rig.Now), Is.Empty);
             Assert.That(rig.Server.Players.Select(p => p.PlayerId), Is.EqualTo(new[] { "b" }));
-            Assert.That(b.WorldTime.PlayerCount, Is.EqualTo(1));
+            Assert.That(b.RoomClock.PlayerCount, Is.EqualTo(1));
 
             var again = rig.Join("a");
             rig.Run(0.3);
@@ -303,10 +307,10 @@ namespace Rootborn.Net.Tests
             rig.Run(0.3);
             rig.Quit(a);
             rig.Run(0.3);
-            Assert.That(b.WorldTime.Day, Is.EqualTo(1));
+            Assert.That(b.RoomClock.Day, Is.EqualTo(1));
             b.RequestDayEndReady();
             rig.Run(0.3);
-            Assert.That(b.WorldTime.Day, Is.EqualTo(2));
+            Assert.That(b.RoomClock.Day, Is.EqualTo(2));
         }
 
         [Test]

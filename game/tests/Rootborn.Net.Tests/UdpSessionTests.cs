@@ -59,10 +59,10 @@ namespace Rootborn.Net.Tests
             Assert.That(Pump(() => b.PlayersOn("Town", Now()).Count == 0 && b.PlayersOn("House", Now()).Count == 1), Is.True, "맵을 옮기면 따라간다");
 
             a.RequestDayEndReady();
-            Assert.That(Pump(() => b.WorldTime.ReadyCount == 1), Is.True);
-            Assert.That(server.WorldTime.Day, Is.EqualTo(1), "한쪽만 준비하면 안 넘어간다");
+            Assert.That(Pump(() => b.RoomClock.DayEndedCount == 1), Is.True);
+            Assert.That(server.Clock.Day, Is.EqualTo(1), "한쪽만 준비하면 안 넘어간다");
             b.RequestDayEndReady();
-            Assert.That(Pump(() => a.WorldTime.Day == 2 && b.WorldTime.Day == 2), Is.True, "둘 다 준비하면 넘어간다");
+            Assert.That(Pump(() => a.RoomClock.Day == 2 && b.RoomClock.Day == 2), Is.True, "둘 다 준비하면 넘어간다");
 
             using var c = new SessionClient(UdpTransport.Connect(IPAddress.Loopback, IPAddress.Loopback.ToString(), port, Key), "c", "child|", new SessionClientSettings());
             Assert.That(Pump(() =>

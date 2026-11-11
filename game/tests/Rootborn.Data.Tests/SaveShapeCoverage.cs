@@ -46,6 +46,7 @@ namespace Rootborn.Data.Tests
             ("objective-journal-tracking.json", typeof(Rootborn.Core.Objectives.ObjectiveJournalTrackingSaveData)),
             // 슬롯과 무관한 설정 파일(SaveFileNames.SettingsSlot 자리). Unity 판에는 없었다.
             ("settings.json", typeof(Rootborn.Core.Settings.GameSettingsSaveData)),
+            ("room-clock.json", typeof(Rootborn.Core.Time.RoomClockSaveData)),
         };
 
         /// <summary>

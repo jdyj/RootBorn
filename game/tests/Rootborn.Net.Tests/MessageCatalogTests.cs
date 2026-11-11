@@ -50,11 +50,17 @@ namespace Rootborn.Net.Tests
             Assert.That(RoundTrip(new PlayerLeftMessage { NetId = 9 }).NetId, Is.EqualTo(9));
             Assert.That(RoundTrip(new LookMessage { NetId = 1, Look = "child|x" }).Look, Is.EqualTo("child|x"));
 
-            var time = RoundTrip(new WorldTimeMessage { Day = 12, PartOfDay = 3, Phase = 2, ReadyCount = 1, PlayerCount = 2 });
-            Assert.That((time.Day, time.PartOfDay, time.Phase, time.ReadyCount, time.PlayerCount), Is.EqualTo((12, (byte)3, (byte)2, (byte)1, (byte)2)));
+            var clock = RoundTrip(new RoomClockMessage
+            {
+                Day = 12, PartIndex = 1, PartsToday = 3,
+                Entries = new[] { new RoomClockEntry { NetId = 4, FinishedPart = true }, new RoomClockEntry { NetId = 7, FinishedPart = true, DayEnded = true }, new RoomClockEntry { NetId = 9 } },
+            });
+            Assert.That((clock.Day, clock.PartIndex, clock.PartsToday, clock.Entries.Length), Is.EqualTo((12, (byte)1, (byte)3, 3)));
+            Assert.That((clock.Entries[1].NetId, clock.Entries[1].FinishedPart, clock.Entries[1].DayEnded), Is.EqualTo(((ushort)7, true, true)));
+            Assert.That((clock.Entries[2].FinishedPart, clock.Entries[2].DayEnded), Is.EqualTo((false, false)));
+            Assert.That(RoundTrip(new FinishPartMessage { Points = 2 }).Points, Is.EqualTo(2));
 
             Assert.That(RoundTrip(new DayEndReadyMessage()), Is.Not.Null);
-            Assert.That(RoundTrip(new AdvancePartOfDayMessage()), Is.Not.Null);
             Assert.That(RoundTrip(new HeartbeatMessage()), Is.Not.Null);
         }
 
@@ -94,8 +100,12 @@ namespace Rootborn.Net.Tests
             Assert.That(catalog.Decode(facing, out _), Is.EqualTo(DecodeOutcome.Malformed), "없는 방향");
             catalog.TryEncode(new PoseMessage { MapId = "" }, out var noMap);
             Assert.That(catalog.Decode(noMap, out _), Is.EqualTo(DecodeOutcome.Malformed), "맵 없는 위치");
-            catalog.TryEncode(new WorldTimeMessage { Day = 0 }, out var day0);
+            catalog.TryEncode(new RoomClockMessage { Day = 0 }, out var day0);
             Assert.That(catalog.Decode(day0, out _), Is.EqualTo(DecodeOutcome.Malformed), "0일");
+            catalog.TryEncode(new RoomClockMessage { Day = 1, PartIndex = 3, PartsToday = 2 }, out var pastTheDay);
+            Assert.That(catalog.Decode(pastTheDay, out _), Is.EqualTo(DecodeOutcome.Malformed), "하루의 때 수를 넘은 때");
+            catalog.TryEncode(new FinishPartMessage { Points = 0 }, out var noPoints);
+            Assert.That(catalog.Decode(noPoints, out _), Is.EqualTo(DecodeOutcome.Malformed), "0 포인트로 때를 끝내기");
             catalog.TryEncode(new HelloMessage { PlayerId = new string('a', RootbornMessages.MaxPlayerIdBytes + 1) }, out var longId);
             Assert.That(catalog.Decode(longId, out _), Is.EqualTo(DecodeOutcome.Malformed), "너무 긴 신원");
             Assert.That(catalog.Decode(new byte[] { 1, 0, 1, 2, 0, 0xC3, 0x28, 0, 0 }, out _), Is.EqualTo(DecodeOutcome.Malformed), "UTF-8이 아닌 글자");

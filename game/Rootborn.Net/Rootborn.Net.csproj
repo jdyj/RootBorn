@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- 멀티플레이 바탕: 전송 인터페이스(같은 프로세스·UDP), 메시지 종류 등록 표와 이진 형식, 접속 세션.
-       규칙 판단(정원, 도착 위치, 공용 시간, 사이 메우기)은 Core에 있다. 게임 엔진 참조 금지. -->
+       규칙 판단(정원, 도착 위치, 방의 시계, 사이 메우기)은 Core에 있다. 게임 엔진 참조 금지. -->
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>disable</Nullable>

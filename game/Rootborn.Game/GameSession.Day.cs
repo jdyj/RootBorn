@@ -30,13 +30,14 @@ namespace Rootborn.Game
         private static readonly string[] CareerTopics = { GameChangeTopics.Career, GameChangeTopics.Student, GameChangeTopics.Inventory };
 
         /// <summary>
-        /// 하루를 끝낸다(Unity StudentDayEndInteractor 순서): 하루 끝 규칙 → 마일스톤 하루 결과("day:N") → 캠페인 하루 결과("campaign-result-day-N") → 저장.
+        /// 하루를 끝낸다(Unity StudentDayEndInteractor 순서): 하루 끝 규칙 → 방의 시계에 마감 알림 → 마일스톤 하루 결과("day:N") → 캠페인 하루 결과("campaign-result-day-N") → 저장.
         /// 이미 끝낸 날이면 아무것도 바꾸지 않는다.
         /// </summary>
         public GameDayResult EndDay()
         {
             int day = Student.CurrentDay;
             if (!Student.TryEndDay(_dayEndRules, out var summary)) return new GameDayResult(false, summary, default, default);
+            Room.EndDay(PlayerId); // 혼자인 방은 여기서 다음 날로 넘어간다. 같이 하는 방은 모두 마감해야 넘어간다.
             var milestones = Milestones.ApplyDayResult(_milestones, Student, Inventory, "day:" + day);
             var campaign = ApplyCampaign("campaign-result-day-" + day);
             LastDayResult = new GameDayResult(true, summary, milestones, campaign);

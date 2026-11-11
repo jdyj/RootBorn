@@ -1,4 +1,5 @@
 using System;
+using Rootborn.Core.Time;
 
 namespace Rootborn.Net.Session
 {
@@ -17,8 +18,12 @@ namespace Rootborn.Net.Session
         /// <summary>메시지 하나의 최대 바이트(머리 포함). 넘는 것은 보내지도 받지도 않는다.</summary>
         public int MaxMessageBytes { get; set; } = 4096;
 
+        /// <summary>방의 시계 설정(자동 넘기기, 기본 끔). 틱은 서버 Update 한 번이다.</summary>
+        public RoomClockSettings Clock { get; set; } = RoomClockSettings.Default;
+
         internal void Validate()
         {
+            if (Clock == null) throw new ArgumentException("방의 시계 설정이 없다");
             if (HeartbeatSeconds <= 0 || TimeoutSeconds <= 0) throw new ArgumentException("간격과 시간 초과는 양수여야 한다");
             if (MaxMessageBytes < 256) throw new ArgumentException("최대 메시지 크기가 너무 작다");
         }

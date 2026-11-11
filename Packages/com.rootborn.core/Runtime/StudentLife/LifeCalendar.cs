@@ -1,18 +1,26 @@
 using System;
+using Rootborn.Core.Time;
 
 namespace Rootborn.Core.StudentLife
 {
-    /// <summary>요일별 하루 시간 포인트. 1일차가 주의 첫날이고 기본 주말은 6·7번째 날이다.</summary>
+    /// <summary>
+    /// 요일별 하루 시간 포인트. 1일차가 주의 첫날이고 기본 주말은 6·7번째 날이다.
+    /// 시간 포인트 한 칸이 방의 시계(<see cref="RoomClock"/>)의 "때" 하나다. 때마다의 대표 시각은 <see cref="PartTimes"/>.
+    /// </summary>
     public sealed class LifeCalendar
     {
         private readonly int _weekdayBudget, _weekendBudget, _weekendDaysMask;
 
-        public LifeCalendar(int weekdayBudget = 2, int weekendBudget = 3, int weekendDaysMask = 96)
+        /// <param name="partTimes">때의 대표 시각. 없으면 <see cref="PartOfDayTimes.Default"/>.</param>
+        public LifeCalendar(int weekdayBudget = 2, int weekendBudget = 3, int weekendDaysMask = 96, PartOfDayTimes partTimes = null)
         {
             _weekdayBudget = Math.Max(0, weekdayBudget);
             _weekendBudget = Math.Max(0, weekendBudget);
             _weekendDaysMask = weekendDaysMask & 127;
+            PartTimes = partTimes ?? PartOfDayTimes.Default;
         }
+
+        public PartOfDayTimes PartTimes { get; }
 
         /// <summary>0~6. 1보다 작은 날은 1일로 본다.</summary>
         public static int WeekdayIndexForDay(int day) => (Math.Max(1, day) - 1) % 7;

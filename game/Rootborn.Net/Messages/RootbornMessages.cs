@@ -1,3 +1,4 @@
+using System;
 using Rootborn.Core.Characters;
 using Rootborn.Core.Network;
 using Rootborn.Core.World;
@@ -66,24 +67,34 @@ namespace Rootborn.Net.Messages
         public string Look;
     }
 
-    /// <summary>서버 → 클라이언트: 같이 쓰는 시간과 하루 끝 준비 현황.</summary>
-    public sealed class WorldTimeMessage
+    /// <summary>
+    /// 서버 → 클라이언트: 방의 시계(Core RoomClock). 날짜, 지금 때(0부터, PartsToday면 하루의 때를 다 쓴 것), 하루의 때 수,
+    /// 지금 있는 사람마다 이 때를 끝냈는지와 하루를 마감했는지.
+    /// </summary>
+    public sealed class RoomClockMessage
     {
         public int Day;
-        public byte PartOfDay;
-        public byte Phase;
-        public byte ReadyCount;
-        public byte PlayerCount;
+        public byte PartIndex;
+        public byte PartsToday;
+        public RoomClockEntry[] Entries = Array.Empty<RoomClockEntry>();
     }
 
-    /// <summary>클라이언트 → 서버: 내 하루를 끝냈다.</summary>
+    public struct RoomClockEntry
+    {
+        public ushort NetId;
+        public bool FinishedPart;
+        public bool DayEnded;
+    }
+
+    /// <summary>클라이언트 → 서버: 내 하루를 끝냈다(남은 때도 모두 끝낸 것으로 센다).</summary>
     public sealed class DayEndReadyMessage
     {
     }
 
-    /// <summary>클라이언트 → 서버: 다음 때로(Unity 판 AdvanceTimeOfDayServerRpc, 누구나 부를 수 있었다).</summary>
-    public sealed class AdvancePartOfDayMessage
+    /// <summary>클라이언트 → 서버: 시간 포인트를 Points만큼 써서 그만큼의 때를 끝냈다. "넘기기"는 1.</summary>
+    public sealed class FinishPartMessage
     {
+        public byte Points = 1;
     }
 
     /// <summary>살아 있다는 표시. 아무것도 보내지 않은 동안만 보낸다.</summary>
@@ -118,10 +129,11 @@ namespace Rootborn.Net.Messages
             c.Add<PlayerLeftMessage>(5, 1, (w, m) => w.WriteUInt16(m.NetId), ReadLeft);
             c.Add<PoseMessage>(6, 1, WritePose, ReadPose);
             c.Add<LookMessage>(7, 1, WriteLook, ReadLook);
-            c.Add<WorldTimeMessage>(8, 1, WriteWorldTime, ReadWorldTime);
+            // 8(공용 시간 WorldTime)과 10(때 넘기기 AdvancePartOfDay)은 방의 시계(12, 13)로 바뀌어 쓰지 않는다.
             c.Add<DayEndReadyMessage>(9, 1, (w, m) => { }, Empty);
-            c.Add<AdvancePartOfDayMessage>(10, 1, (w, m) => { }, Empty);
             c.Add<HeartbeatMessage>(11, 1, (w, m) => { }, Empty);
+            c.Add<RoomClockMessage>(12, 1, WriteRoomClock, ReadRoomClock);
+            c.Add<FinishPartMessage>(13, 1, (w, m) => w.WriteByte(m.Points), ReadFinishPart);
         }
 
         private static bool Empty<T>(NetReader r, int version, out T message) where T : class, new()
@@ -229,20 +241,43 @@ namespace Rootborn.Net.Messages
             return r.TryReadUInt16(out m.NetId) && r.TryReadString(MaxLookBytes, out m.Look);
         }
 
-        private static void WriteWorldTime(NetWriter w, WorldTimeMessage m)
+        private const byte FinishedFlag = 1, DayEndedFlag = 2;
+
+        private static void WriteRoomClock(NetWriter w, RoomClockMessage m)
         {
+            var entries = m.Entries ?? Array.Empty<RoomClockEntry>();
+            int count = Math.Min(entries.Length, byte.MaxValue);
             w.WriteInt32(m.Day);
-            w.WriteByte(m.PartOfDay);
-            w.WriteByte(m.Phase);
-            w.WriteByte(m.ReadyCount);
-            w.WriteByte(m.PlayerCount);
+            w.WriteByte(m.PartIndex);
+            w.WriteByte(m.PartsToday);
+            w.WriteByte((byte)count);
+            for (int i = 0; i < count; i++)
+            {
+                w.WriteUInt16(entries[i].NetId);
+                w.WriteByte((byte)((entries[i].FinishedPart ? FinishedFlag : 0) | (entries[i].DayEnded ? DayEndedFlag : 0)));
+            }
         }
 
-        private static bool ReadWorldTime(NetReader r, int version, out WorldTimeMessage m)
+        private static bool ReadRoomClock(NetReader r, int version, out RoomClockMessage m)
         {
-            m = new WorldTimeMessage();
-            return r.TryReadInt32(out m.Day) && m.Day >= 1 && r.TryReadByte(out m.PartOfDay) && m.PartOfDay < WorldPartOfDay.Count
-                   && r.TryReadByte(out m.Phase) && m.Phase < WorldSchedulePhase.Count && r.TryReadByte(out m.ReadyCount) && r.TryReadByte(out m.PlayerCount);
+            m = new RoomClockMessage();
+            if (!r.TryReadInt32(out m.Day) || m.Day < 1 || !r.TryReadByte(out m.PartIndex) || !r.TryReadByte(out m.PartsToday)) return false;
+            if (m.PartIndex > m.PartsToday || !r.TryReadByte(out byte count)) return false;
+            m.Entries = new RoomClockEntry[count];
+            for (int i = 0; i < count; i++)
+            {
+                if (!r.TryReadUInt16(out m.Entries[i].NetId) || !r.TryReadByte(out byte flags) || flags > (FinishedFlag | DayEndedFlag)) return false;
+                m.Entries[i].FinishedPart = (flags & FinishedFlag) != 0;
+                m.Entries[i].DayEnded = (flags & DayEndedFlag) != 0;
+            }
+
+            return true;
+        }
+
+        private static bool ReadFinishPart(NetReader r, int version, out FinishPartMessage m)
+        {
+            m = new FinishPartMessage();
+            return r.TryReadByte(out m.Points) && m.Points >= 1;
         }
     }
 }

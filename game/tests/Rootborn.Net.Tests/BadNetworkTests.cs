@@ -43,8 +43,8 @@ namespace Rootborn.Net.Tests
             Assert.That(seen.Y, Is.EqualTo(40f));
             Assert.That(seen.Facing, Is.EqualTo(Facing.Up));
             Assert.That(seen.Look, Is.EqualTo("child|hat"));
-            Assert.That(a.WorldTime.Day, Is.EqualTo(2));
-            Assert.That(b.WorldTime.Day, Is.EqualTo(2));
+            Assert.That(a.RoomClock.Day, Is.EqualTo(2));
+            Assert.That(b.RoomClock.Day, Is.EqualTo(2));
         }
 
         [Test]
@@ -151,7 +151,8 @@ namespace Rootborn.Net.Tests
             rig.Run(0.2, now => raw.Update(now));
             Assert.That(rig.Server.Players, Is.Empty);
             Assert.That(rig.Server.Drops.Unexpected, Is.EqualTo(2));
-            Assert.That(rig.Server.WorldTime.ReadyCount, Is.EqualTo(0));
+            Assert.That(rig.Server.Clock.PresentCount, Is.EqualTo(0));
+            Assert.That(rig.Server.Clock.Day, Is.EqualTo(1));
         }
 
         [Test]

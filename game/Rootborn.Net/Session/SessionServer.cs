@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using Rootborn.Core.Network;
 using Rootborn.Core.Save;
+using Rootborn.Core.StudentLife;
+using Rootborn.Core.Time;
 using Rootborn.Net.Messages;
 using Rootborn.Net.Transport;
 
@@ -32,7 +34,9 @@ namespace Rootborn.Net.Session
     /// - 신원: 클라이언트가 Hello로 보낸 안정된 id. 같은 신원은 같은 번호(NetId)와 같은 도착 자리(Core SpawnSpread 순번)를 받는다.
     ///   같은 신원이 다시 붙으면 옛 연결을 끊고 새 연결로 바꾼다(다른 사람에게는 나갔다 들어온 것으로 보인다).
     /// - 위치는 주인 것만 받는다(보낸 연결로 누구인지 정한다). 번호가 더 새 것만 쓰고 다른 사람에게 전한다.
-    /// - 공용 시간(Core SharedWorldTime)을 가지고, 바뀔 때마다 모두에게 보내고 저장소에 쓴다.
+    /// - 방의 시계(Core RoomClock)를 가진다. 들어오면 참가자로 넣고 나가면 뺀다(같은 신원이 연결만 바꾸는 것은 나간 것이 아니다).
+    ///   클라이언트가 때를 끝냈다(FinishPart)·하루를 마감했다(DayEndReady)고 하면 Core 규칙으로 판정한다. 바뀔 때마다 모두에게 보내고
+    ///   저장소의 그 슬롯(room-clock.json)에 쓴다. 자동 넘기기의 틱은 Update 한 번이 하나다.
     /// - 끊김과 시간 초과: 끊기거나 TimeoutSeconds 동안 아무것도 받지 못하면 그 사람을 지우고 다른 사람에게 알린다.
     /// 깨진·모르는·너무 큰 메시지는 버리고 <see cref="Drops"/>에 센다. 시간은 Update에 넘긴 값만 쓴다.
     /// </summary>
@@ -52,14 +56,15 @@ namespace Rootborn.Net.Session
         private readonly Dictionary<PeerId, Connection> _connections = new Dictionary<PeerId, Connection>(8);
         private readonly Dictionary<string, ServerPlayer> _players = new Dictionary<string, ServerPlayer>(StringComparer.Ordinal);
         private readonly Dictionary<string, (ushort NetId, int JoinIndex)> _known = new Dictionary<string, (ushort, int)>(StringComparer.Ordinal);
-        private readonly List<string> _present = new List<string>(8);
+        private readonly List<RoomParticipantState> _clockScratch = new List<RoomParticipantState>(8);
         private readonly List<PeerId> _peerScratch = new List<PeerId>(8);
         private ushort _nextNetId = 1;
         private double _now;
         private bool _disposed;
 
-        /// <param name="store">공용 시간을 읽고 쓸 저장소. 없으면 저장하지 않는다.</param>
-        public SessionServer(ITransport transport, SessionServerSettings settings, ISaveStore store = null, string saveSlot = null)
+        /// <param name="store">방의 시계를 읽고 쓸 저장소. 없으면 저장하지 않는다.</param>
+        /// <param name="calendar">하루의 때 수를 주는 달력(정의 데이터). 없으면 Core 기본 달력.</param>
+        public SessionServer(ITransport transport, SessionServerSettings settings, ISaveStore store = null, string saveSlot = null, LifeCalendar calendar = null)
         {
             _transport = transport ?? throw new ArgumentNullException(nameof(transport));
             _settings = settings ?? new SessionServerSettings();
@@ -67,16 +72,16 @@ namespace Rootborn.Net.Session
             _catalog = RootbornMessages.CreateCatalog(_settings.MaxMessageBytes);
             _store = store;
             _saveSlot = saveSlot;
-            WorldTime = SharedWorldTime.Load(store, saveSlot);
+            Clock = RoomClockSaveFiles.Load(store, saveSlot, calendar ?? new LifeCalendar(), _settings.Clock);
             _handlers = new MessageHandlers<PeerId>()
                 .On<HeartbeatMessage>((p, m) => { })
                 .On<PoseMessage>(OnPose)
                 .On<LookMessage>(OnLook)
                 .On<DayEndReadyMessage>(OnDayEndReady)
-                .On<AdvancePartOfDayMessage>(OnAdvancePartOfDay);
+                .On<FinishPartMessage>(OnFinishPart);
         }
 
-        public SharedWorldTime WorldTime { get; }
+        public RoomClock Clock { get; }
         public DropCounters Drops { get; } = new DropCounters();
         public IReadOnlyCollection<ServerPlayer> Players => _players.Values;
 
@@ -106,6 +111,8 @@ namespace Rootborn.Net.Session
                         break;
                 }
             }
+
+            if (Clock.Tick(1)) ClockChanged(saveIt: true);
 
             _peerScratch.Clear();
             _peerScratch.AddRange(_connections.Keys);
@@ -169,7 +176,12 @@ namespace Rootborn.Net.Session
                 return;
             }
 
-            if (previous != null) Drop(previous.Peer, ReplacedReason);
+            if (previous != null)
+            {
+                // 연결만 바뀐다. 방의 시계에서는 나간 것이 아니다(남은 사람만으로 때가 넘어가지 않게).
+                Drop(previous.Peer, ReplacedReason, notify: false);
+                RemovePlayer(previous, leaveClock: false);
+            }
 
             if (!_known.TryGetValue(hello.PlayerId, out var known))
             {
@@ -191,8 +203,8 @@ namespace Rootborn.Net.Session
                 Send(other.Peer, Joined(player), Delivery.ReliableOrdered);
             }
 
-            WorldTime.PlayersChanged(Present());
-            TimeChanged(saveIt: false);
+            bool joined = Clock.Join(player.PlayerId);
+            ClockChanged(saveIt: joined);
         }
 
         private void OnPose(PeerId peer, PoseMessage pose)
@@ -219,25 +231,27 @@ namespace Rootborn.Net.Session
             Broadcast(look, Delivery.ReliableOrdered, except: player);
         }
 
+        // 받아들이지 않은 요청(기다리는 동안 보낸 것 등)은 지금 시계를 그 사람에게 다시 보내 맞춘다.
         private void OnDayEndReady(PeerId peer, DayEndReadyMessage message)
         {
-            WorldTime.MarkReady(_connections[peer].Player.PlayerId, Present());
-            TimeChanged(saveIt: true);
+            if (Clock.EndDay(_connections[peer].Player.PlayerId)) ClockChanged(saveIt: true);
+            else SendClock(peer);
         }
 
-        private void OnAdvancePartOfDay(PeerId peer, AdvancePartOfDayMessage message)
+        private void OnFinishPart(PeerId peer, FinishPartMessage message)
         {
-            WorldTime.AdvancePartOfDay();
-            TimeChanged(saveIt: true);
+            if (Clock.Spend(_connections[peer].Player.PlayerId, message.Points)) ClockChanged(saveIt: true);
+            else SendClock(peer);
         }
 
-        private void RemovePlayer(ServerPlayer player)
+        private void RemovePlayer(ServerPlayer player, bool leaveClock = true)
         {
             if (!_players.TryGetValue(player.PlayerId, out var current) || current != player) return;
             _players.Remove(player.PlayerId);
             Broadcast(new PlayerLeftMessage { NetId = player.NetId }, Delivery.ReliableOrdered, except: null);
-            bool advanced = WorldTime.PlayersChanged(Present());
-            TimeChanged(saveIt: advanced);
+            if (!leaveClock) return;
+            bool left = Clock.Leave(player.PlayerId);
+            ClockChanged(saveIt: left);
         }
 
         /// <summary>연결을 끊고(이유를 실어), 들어와 있던 사람이면 지운다.</summary>
@@ -249,18 +263,31 @@ namespace Rootborn.Net.Session
             if (connection.Player != null && notify) RemovePlayer(connection.Player);
         }
 
-        private void TimeChanged(bool saveIt)
+        private void ClockChanged(bool saveIt)
         {
-            var message = new WorldTimeMessage
+            Broadcast(ClockMessage(), Delivery.ReliableOrdered, except: null);
+            if (saveIt) RoomClockSaveFiles.Save(_store, _saveSlot, Clock);
+        }
+
+        private void SendClock(PeerId peer) => Send(peer, ClockMessage(), Delivery.ReliableOrdered);
+
+        private RoomClockMessage ClockMessage()
+        {
+            Clock.CopyPresent(_clockScratch);
+            var entries = new List<RoomClockEntry>(_clockScratch.Count);
+            foreach (var state in _clockScratch)
             {
-                Day = WorldTime.Day,
-                PartOfDay = (byte)WorldTime.PartOfDay,
-                Phase = (byte)WorldTime.Phase,
-                ReadyCount = (byte)Math.Min(byte.MaxValue, WorldTime.ReadyCount),
-                PlayerCount = (byte)Math.Min(byte.MaxValue, _players.Count),
+                if (!_players.TryGetValue(state.ParticipantId, out var player)) continue;
+                entries.Add(new RoomClockEntry { NetId = player.NetId, FinishedPart = state.FinishedPart, DayEnded = state.DayEnded });
+            }
+
+            return new RoomClockMessage
+            {
+                Day = Clock.Day,
+                PartIndex = (byte)Math.Min(byte.MaxValue, Clock.PartIndex),
+                PartsToday = (byte)Math.Min(byte.MaxValue, Clock.PartsToday),
+                Entries = entries.ToArray(),
             };
-            Broadcast(message, Delivery.ReliableOrdered, except: null);
-            if (saveIt) SharedWorldTime.Save(_store, _saveSlot, WorldTime);
         }
 
         private PlayerJoinedMessage Joined(ServerPlayer player)
@@ -277,13 +304,6 @@ namespace Rootborn.Net.Session
             }
 
             return message;
-        }
-
-        private IReadOnlyCollection<string> Present()
-        {
-            _present.Clear();
-            _present.AddRange(_players.Keys);
-            return _present;
         }
 
         private bool IndexTaken(int index)
