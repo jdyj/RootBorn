@@ -37,7 +37,7 @@ namespace Rootborn.Screens.Inventory
     }
 
     /// <summary>
-    /// 가방 화면의 표시 모델: 가방 칸 순서대로 탭·검색어에 맞는 줄. 빈 칸과 수량 0인 칸은 뺀다(Unity Refresh와 같음).
+    /// 가방 화면의 표시 모델: (지갑의 돈 한 줄 +) 가방 칸 순서대로 탭·검색어에 맞는 줄. 빈 칸과 수량 0인 칸은 뺀다(Unity Refresh와 같음).
     /// 이름은 displayName(문구 키 → 문구)으로 받아 검색에만 쓴다.
     /// </summary>
     public sealed class InventoryModel
@@ -52,7 +52,11 @@ namespace Rootborn.Screens.Inventory
         {
             if (session == null) return Empty;
             IReadOnlyList<ItemInventory.Slot> slots = session.Inventory.Slots;
-            var rows = new List<InventoryRow>(slots.Count);
+            var rows = new List<InventoryRow>(slots.Count + 1);
+            // 돈은 지갑에 있고 가방 칸을 쓰지 않는다. 가방에 칸으로 보이던 것과 같은 카드를 맨 앞에 둔다(같은 분류·검색 규칙).
+            ItemDefinition currency = session.Inventory.Currency;
+            int balance = currency != null ? session.Inventory.CountOf(currency) : 0;
+            if (balance > 0 && InventoryFilter.Matches(currency.Category, displayName(currency.DisplayKey), tab, query)) rows.Add(new InventoryRow(currency, balance));
             for (int i = 0; i < slots.Count; i++)
             {
                 ItemInventory.Slot slot = slots[i];

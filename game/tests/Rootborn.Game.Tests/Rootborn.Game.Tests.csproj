@@ -15,5 +15,7 @@
   <ItemGroup>
     <!-- Unity 판 QA 세이브는 Data 테스트의 고정 파일을 읽기만 한다(테스트가 임시 폴더로 복사해 쓴다). -->
     <None Include="../Rootborn.Data.Tests/Fixtures/saves/**/*" Link="Fixtures/saves/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <!-- 지갑 전 세이브(스냅샷 버전 2, 가방에 용돈 칸). WalletTests가 읽는다. -->
+    <None Include="Fixtures/**/*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

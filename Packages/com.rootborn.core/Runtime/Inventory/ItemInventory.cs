@@ -7,6 +7,8 @@ namespace Rootborn.Core.Inventory
     /// <summary>
     /// The player's slot inventory: 32 slots, stacking by each item's max stack, all-or-nothing exchanges.
     /// Same rules and API as the game's Inventory; the slot logic is <see cref="ItemSlots{TItem,TSlot}"/>.
+    /// 지갑과 통화 아이템을 받으면 그 아이템은 칸에 두지 않고 지갑으로 보낸다(멀티플레이 설계 2.2절). 주고받기는 칸과 지갑을 함께 확인하고
+    /// 함께 바꾼다. 통화 아이템을 묻는 CountOf는 지갑 잔액이다. 지갑이 없으면 지금까지처럼 모든 아이템이 칸에 든다.
     /// </summary>
     public sealed class ItemInventory : IRewardInventory<ItemDefinition>
     {
@@ -17,44 +19,75 @@ namespace Rootborn.Core.Inventory
         }
 
         private readonly ItemSlots<ItemDefinition, Slot> _slots = new ItemSlots<ItemDefinition, Slot>(MaxSlots, item => item.MaxStack);
+        private readonly IWallet _wallet;
+        private bool _walletInsideExchange;
+
+        public ItemInventory()
+        {
+            _slots.Changed += RaiseChanged;
+        }
+
+        /// <param name="wallet">돈을 주는 쪽.</param>
+        /// <param name="currency">지갑으로 갈 아이템(데이터가 정한 통화). 둘 중 하나라도 null이면 지갑 없이 쓴다.</param>
+        public ItemInventory(IWallet wallet, ItemDefinition currency) : this()
+        {
+            if (wallet == null || currency == null) return;
+            _wallet = wallet;
+            Currency = currency;
+            _wallet.Changed += OnWalletChanged;
+        }
 
         public IReadOnlyList<Slot> Slots => _slots.Slots;
 
-        public event Action OnChanged
-        {
-            add => _slots.Changed += value;
-            remove => _slots.Changed -= value;
-        }
+        /// <summary>지갑으로 가는 통화 아이템. 지갑이 없으면 null.</summary>
+        public ItemDefinition Currency { get; }
+
+        public event Action OnChanged;
 
         public bool CanExchange(IReadOnlyList<InventoryGrant> costs, IReadOnlyList<InventoryGrant> rewards)
-            => _slots.CanExchange(ToAmounts(costs), ToAmounts(rewards));
+            => CanExchangeAmounts(ToAmounts(costs), ToAmounts(rewards));
 
-        public bool CanReceive(IReadOnlyList<ItemAmount<ItemDefinition>> grants) => _slots.CanExchange(null, grants);
+        public bool CanReceive(IReadOnlyList<ItemAmount<ItemDefinition>> grants) => CanExchangeAmounts(null, grants);
 
-        public bool TryReceive(IReadOnlyList<ItemAmount<ItemDefinition>> grants, Action commit) => _slots.TryExchange(null, grants, commit);
+        public bool TryReceive(IReadOnlyList<ItemAmount<ItemDefinition>> grants, Action commit) => TryExchangeAmounts(null, grants, commit);
 
         public bool TryAddAll(IReadOnlyList<InventoryGrant> rewards, Action commitState = null) => TryExchange(null, rewards, commitState);
 
         // commitState must contain only prevalidated, nonthrowing progress changes and no I/O.
         // Observers run after both sides commit; the reentry guard stays held through notification.
         public bool TryExchange(IReadOnlyList<InventoryGrant> costs, IReadOnlyList<InventoryGrant> rewards, Action commitState = null)
-            => _slots.TryExchange(ToAmounts(costs), ToAmounts(rewards), commitState);
+            => TryExchangeAmounts(ToAmounts(costs), ToAmounts(rewards), commitState);
 
-        public void Add(ItemDefinition item, int count = 1) => _slots.Add(item, count);
+        public void Add(ItemDefinition item, int count = 1)
+        {
+            if (!IsCurrency(item))
+            {
+                _slots.Add(item, count);
+                return;
+            }
 
-        public bool CanAdd(ItemDefinition item, int count = 1) => _slots.CanAdd(item, count);
+            // 칸에 넣는 Add처럼 들어가지 않는 만큼은 버린다(먼저 CanAdd로 확인한다).
+            if (count <= 0) return;
+            long room = (long)PersonalWallet.MaxBalance - _wallet.Balance;
+            _wallet.TryExchange(0, (int)Math.Min(count, room), null);
+        }
 
-        public bool CanAddAll(IReadOnlyList<InventoryGrant> grants) => _slots.CanAddAll(ToAmounts(grants));
+        public bool CanAdd(ItemDefinition item, int count = 1)
+            => IsCurrency(item) ? count > 0 && _wallet.CanExchange(0, count) : _slots.CanAdd(item, count);
+
+        public bool CanAddAll(IReadOnlyList<InventoryGrant> grants) => CanExchangeAmounts(null, ToAmounts(grants));
 
         public bool TryMoveSlot(int sourceIndex, int targetIndex) => _slots.TryMoveSlot(sourceIndex, targetIndex);
 
-        public bool Remove(ItemDefinition item, int count = 1) => _slots.Remove(item, count);
+        public bool Remove(ItemDefinition item, int count = 1)
+            => IsCurrency(item) ? count > 0 && _wallet.TryExchange(count, 0, null) : _slots.Remove(item, count);
 
-        public int CountOf(ItemDefinition item) => _slots.CountOf(item);
+        public int CountOf(ItemDefinition item) => IsCurrency(item) ? _wallet.Balance : _slots.CountOf(item);
 
+        /// <summary>가방 칸을 비운다. 지갑은 그대로다.</summary>
         public void Clear() => _slots.Clear();
 
-        /// <summary>Saves filled slots by item id, in slot order. Empty slots and items without an id are left out.</summary>
+        /// <summary>Saves filled slots by item id, in slot order. Empty slots and items without an id are left out. 지갑은 따로 저장한다.</summary>
         public PlayerInventorySaveData ToSaveData(string equippedToolItemId)
         {
             var slots = _slots.Slots;
@@ -72,6 +105,7 @@ namespace Rootborn.Core.Inventory
         /// <summary>
         /// Replaces the contents with the saved items. Ids <paramref name="findById"/> cannot resolve are skipped.
         /// A null save changes nothing. The equipped tool id is left to the caller.
+        /// 지갑이 있으면 옛 세이브의 통화 아이템 칸은 지갑에 더한다(지갑을 먼저 읽어 둔다). 다음 저장부터 가방에는 돈 칸이 없다.
         /// </summary>
         public void LoadFromSaveData(PlayerInventorySaveData saveData, Func<string, ItemDefinition> findById)
         {
@@ -87,12 +121,85 @@ namespace Rootborn.Core.Inventory
             }
         }
 
+        private bool IsCurrency(ItemDefinition item) => _wallet != null && item != null && ReferenceEquals(item, Currency);
+
+        private bool CanExchangeAmounts(IReadOnlyList<ItemAmount<ItemDefinition>> costs, IReadOnlyList<ItemAmount<ItemDefinition>> rewards)
+        {
+            if (_wallet == null) return _slots.CanExchange(costs, rewards);
+            return Split(costs, out var itemCosts, out int moneyCost) && Split(rewards, out var itemRewards, out int moneyReward)
+                   && _wallet.CanExchange(moneyCost, moneyReward) && _slots.CanExchange(itemCosts, itemRewards);
+        }
+
+        private bool TryExchangeAmounts(IReadOnlyList<ItemAmount<ItemDefinition>> costs, IReadOnlyList<ItemAmount<ItemDefinition>> rewards, Action commitState)
+        {
+            if (_wallet == null) return _slots.TryExchange(costs, rewards, commitState);
+            if (!Split(costs, out var itemCosts, out int moneyCost) || !Split(rewards, out var itemRewards, out int moneyReward)) return false;
+            if (!_wallet.CanExchange(moneyCost, moneyReward) || !_slots.CanExchange(itemCosts, itemRewards)) return false;
+
+            // 칸을 바꾸는 안에서 지갑을 바꾸고, 지갑 안에서 진행 상태를 바꾼다. 어느 단계가 던지면 둘 다 되돌린다.
+            // 알림은 칸 쪽이 끝에 한 번 낸다(지갑 알림은 이 동안 넘기지 않는다). 칸의 다시 들어오기 막기가 알림까지 이어진다.
+            try
+            {
+                return _slots.TryExchange(itemCosts, itemRewards, () =>
+                {
+                    _walletInsideExchange = true;
+                    try
+                    {
+                        if (!_wallet.TryExchange(moneyCost, moneyReward, commitState)) throw new WalletRefused();
+                    }
+                    finally { _walletInsideExchange = false; }
+                });
+            }
+            catch (WalletRefused)
+            {
+                return false;
+            }
+        }
+
+        // 통화 아이템과 나머지를 나눈다. 수량이 0 이하이거나 통화 합이 int를 넘으면 false(칸 쪽 계획과 같이 잘못된 수량은 전체 실패).
+        private bool Split(IReadOnlyList<ItemAmount<ItemDefinition>> amounts, out IReadOnlyList<ItemAmount<ItemDefinition>> items, out int money)
+        {
+            items = amounts;
+            money = 0;
+            if (amounts == null) return true;
+            long sum = 0;
+            bool any = false;
+            for (int i = 0; i < amounts.Count; i++)
+            {
+                if (!IsCurrency(amounts[i].Item)) continue;
+                if (amounts[i].Count <= 0) return false;
+                sum += amounts[i].Count;
+                if (sum > int.MaxValue) return false;
+                any = true;
+            }
+
+            if (!any) return true;
+            var rest = new List<ItemAmount<ItemDefinition>>(amounts.Count);
+            for (int i = 0; i < amounts.Count; i++)
+                if (!IsCurrency(amounts[i].Item)) rest.Add(amounts[i]);
+            items = rest;
+            money = (int)sum;
+            return true;
+        }
+
+        private void OnWalletChanged()
+        {
+            if (!_walletInsideExchange) RaiseChanged();
+        }
+
+        private void RaiseChanged() => OnChanged?.Invoke();
+
         private static List<ItemAmount<ItemDefinition>> ToAmounts(IReadOnlyList<InventoryGrant> grants)
         {
             if (grants == null) return null;
             var amounts = new List<ItemAmount<ItemDefinition>>(grants.Count);
             for (int i = 0; i < grants.Count; i++) amounts.Add(new ItemAmount<ItemDefinition>(grants[i].Item, grants[i].Count));
             return amounts;
+        }
+
+        /// <summary>지갑이 칸 교환 안에서 거절했을 때 칸 쪽을 되돌리려고 던진다. 밖으로 나가지 않는다.</summary>
+        private sealed class WalletRefused : Exception
+        {
         }
     }
 

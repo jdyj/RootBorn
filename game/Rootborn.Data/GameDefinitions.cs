@@ -30,6 +30,9 @@ namespace Rootborn.Data
 
         public int Count => _entries.Count;
 
+        /// <summary>지갑으로 가는 통화 아이템(game/economy.json, EconomySettings). 없으면 null — 돈도 가방의 아이템이다.</summary>
+        public Rootborn.Core.Inventory.ItemDefinition Currency { get; internal set; }
+
         /// <summary>registry.json의 그 키 아래 id 목록(순서 있음). 키가 없으면 빈 목록. 문자열 하나인 키는 원소 하나짜리 목록.</summary>
         public IReadOnlyList<string> RegistryIds(string registryKey) => _table.RegistryIds(registryKey);
 

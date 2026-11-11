@@ -79,6 +79,32 @@ namespace Rootborn.Screens.Tests.Inventory
         }
 
         [Test]
+        public void Money_IsInTheWallet_ButStillShowsAsTheFirstCard_WithTheBalance()
+        {
+            // 돈은 가방 칸을 쓰지 않지만(지갑), 가방 화면에는 지금처럼 용돈 카드로 보인다(사용자 확인 필요: 맨 앞 자리).
+            using var t = new TestSession();
+            t.Session.Inventory.Clear();
+            Give(t, "Wood", 5);
+            Give(t, "item.allowance", 7);
+            var screen = Open(t);
+            Assert.That(t.Session.Inventory.Slots.Count, Is.EqualTo(1), "가방 칸은 나무 하나");
+            Assert.That(t.Session.Wallet.Balance, Is.EqualTo(7));
+            Assert.That(screen.Model.Rows.Select(r => (r.Item.Id, r.Count)), Is.EqualTo(new[] { ("item.allowance", 7), ("Wood", 5) }));
+        }
+
+        [Test]
+        public void AFullBagAndMoney_EveryCardStillHasAFrame()
+        {
+            using var t = new TestSession();
+            t.Session.Inventory.Clear();
+            for (int i = 0; i < ItemInventory.MaxSlots; i++) Give(t, "Stone", t.Session.Item("Stone").MaxStack);
+            Give(t, "item.allowance", 3);
+            var screen = Open(t);
+            Assert.That(screen.Model.Rows.Count, Is.EqualTo(ItemInventory.MaxSlots + 1));
+            Assert.That(((UiCardGrid)t.Node(InventoryScreen.GridId)).ItemCount, Is.EqualTo(ItemInventory.MaxSlots + 1), "돈 카드 때문에 마지막 물건이 가려지지 않는다");
+        }
+
+        [Test]
         public void Items_ShowInSlotOrder_WithAllThirtyTwoSlotFrames()
         {
             using var t = new TestSession();

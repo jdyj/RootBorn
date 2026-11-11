@@ -273,7 +273,8 @@ namespace Rootborn.Screens.Inventory
             _model = InventoryModel.From(Services.Session, NameOf, _tab, _query);
             bool hasMatches = _model.Rows.Count > 0;
             // Unity 판: 맞는 것이 있으면 칸 틀 전부(빈 칸 포함)를 보이고, 없으면 빈 안내만 보인다.
-            _grid.ItemCount = hasMatches ? ItemInventory.MaxSlots : 0;
+            // 돈 카드는 칸이 아니라서 줄이 칸 수보다 하나 많을 수 있다.
+            _grid.ItemCount = hasMatches ? Math.Max(ItemInventory.MaxSlots, _model.Rows.Count) : 0;
             _grid.Visible = hasMatches;
             _emptyState.Visible = !hasMatches;
         }

@@ -37,7 +37,9 @@ namespace Rootborn.Data
                 if (context.TryGetBuilt(node, out var built)) entries.Add(new GameDefinitions.Entry(node.Id, node.Type, built));
             }
 
-            return new LoadResult(new GameDefinitions(entries, table), errors, unclassified.ToArray(), builders);
+            var definitions = new GameDefinitions(entries, table);
+            definitions.Currency = EconomySettings.ReadCurrency(dataDirectory, definitions, errors);
+            return new LoadResult(definitions, errors, unclassified.ToArray(), builders);
         }
     }
 

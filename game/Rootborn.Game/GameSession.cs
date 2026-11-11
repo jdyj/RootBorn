@@ -35,6 +35,7 @@ namespace Rootborn.Game
         private readonly StudentMinigameService _minigames;
         private readonly LocationStateResolver _locationStates;
         private readonly NpcScheduleAccess _npcSchedules;
+        private readonly PersonalWallet _wallet = new PersonalWallet();
 
         private GameSession(GameDefinitions definitions, GameStartSettings settings, ISaveStore store, Func<string, string> newEventKey)
         {
@@ -59,6 +60,7 @@ namespace Rootborn.Game
             // Unity LocationStateRuntimeInstaller: 정책이 없으면 HighestPriority.
             _locationStates = policy != null ? policy.CreateResolver(stateCache) : new LocationStateResolver(stateCache, LocationStateConflictMode.HighestPriority);
             _npcSchedules = new NpcScheduleAccess(new NpcScheduleLookupCache(_definitions.All<NpcSchedule>()));
+            Inventory = new ItemInventory(_wallet, _definitions.Currency);
         }
 
         public string SaveSlot { get; private set; }
@@ -66,7 +68,9 @@ namespace Rootborn.Game
 
         // 진행 상태(읽기용).
         public StudentLifeProgress Student { get; private set; }
-        public ItemInventory Inventory { get; } = new ItemInventory();
+        public ItemInventory Inventory { get; }
+        /// <summary>돈(멀티플레이 설계 2.2절). 가방에 통화 아이템을 주고받으면 여기가 바뀐다. 혼자 하기는 개인 지갑이다.</summary>
+        public IWallet Wallet => _wallet;
         public QuestLog QuestLog { get; private set; }
         public QuestChainLog QuestChains { get; private set; }
         public AdultCareerProgress Adult { get; private set; }
@@ -156,6 +160,8 @@ namespace Rootborn.Game
 
             Adult = hasSnapshot && snapshot.Adult != null ? AdultCareerProgress.FromSaveData(snapshot.Adult) : new AdultCareerProgress(SaveSlot, PlayerId);
             var inventory = hasSnapshot ? snapshot.Inventory : PreSnapshotSlotFiles.ReadInventory(store, SaveSlot, PlayerId);
+            // 지갑을 먼저 읽는다. 옛 세이브(스냅샷 버전 2 이하, Unity 판 영역 파일)는 지갑이 없고 가방의 돈 칸을 지갑으로 옮긴다.
+            _wallet.LoadFromSaveData(hasSnapshot ? snapshot.Wallet : null);
             if (inventory != null) Inventory.LoadFromSaveData(inventory, FindItem);
 
             World = hasSnapshot && snapshot.World != null
@@ -280,6 +286,7 @@ namespace Rootborn.Game
                     World = World.ToSaveData(),
                     QuestChains = QuestChains.ToSaveData(),
                     FurnitureUnlocks = FurnitureUnlocks.ToSaveData(),
+                    Wallet = _wallet.ToSaveData(),
                 });
                 WorldStateSaveFiles.Save(store, World);
                 store.Write(SaveSlot, SaveFileNames.PlayerQuestLog(PlayerId), QuestLog.ToSaveData());

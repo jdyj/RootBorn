@@ -1,0 +1,4 @@
+{
+  "about": "돈 설정. currencyItem은 지갑으로 가는 통화 아이템의 id다(가방 칸을 쓰지 않는다). 읽는 곳: game/Rootborn.Data/EconomySettings.cs",
+  "currencyItem": "item.allowance"
+}

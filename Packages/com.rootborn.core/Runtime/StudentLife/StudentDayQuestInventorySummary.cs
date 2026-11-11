@@ -148,6 +148,14 @@ namespace Rootborn.Core.StudentLife
                 if (!byItem.TryGetValue(itemId, out var existing)) order.Add(itemId);
                 byItem[itemId] = new InventorySnapshotEntry(slot.Item, itemId, string.IsNullOrEmpty(slot.Item.DisplayKey) ? itemId : slot.Item.DisplayKey, existing.Count + slot.Count);
             }
+            // 지갑의 돈도 물건 하나로 센다(가방 칸에 있던 때와 같은 줄이 나오게). 칸 뒤에 둔다.
+            var currency = inventory.Currency;
+            int balance = currency != null ? inventory.CountOf(currency) : 0;
+            if (balance > 0 && !string.IsNullOrEmpty(currency.Id) && !byItem.ContainsKey(currency.Id))
+            {
+                order.Add(currency.Id);
+                byItem[currency.Id] = new InventorySnapshotEntry(currency, currency.Id, string.IsNullOrEmpty(currency.DisplayKey) ? currency.Id : currency.DisplayKey, balance);
+            }
             var entries = new InventorySnapshotEntry[order.Count];
             for (int i = 0; i < order.Count; i++) entries[i] = byItem[order[i]];
             return entries;
