@@ -30,15 +30,33 @@ namespace Rootborn.Screens
         }
 
         /// <summary>폴더의 *.json을 언어 표로 읽는다(파일 이름이 언어 코드).</summary>
-        public static GameText Load(string localizationDirectory, string language)
+        public static GameText Load(string localizationDirectory, string language) => LoadMerged(language, localizationDirectory);
+
+        /// <summary>
+        /// 여러 폴더를 차례로 읽어 합친다. 같은 키는 뒤 폴더의 문구가 이긴다.
+        /// 첫 폴더는 변환기가 다시 쓰는 data/localization이고, 뒤 폴더(game/localization)는 MonoGame 판에서 더하거나 고친 문구다.
+        /// 첫 폴더는 있어야 하고, 뒤 폴더는 없으면 건너뛴다.
+        /// </summary>
+        public static GameText LoadMerged(string language, params string[] localizationDirectories)
         {
-            if (!Directory.Exists(localizationDirectory)) throw new DirectoryNotFoundException("현지화 폴더가 없다: " + localizationDirectory);
+            if (localizationDirectories == null || localizationDirectories.Length == 0) throw new ArgumentException("현지화 폴더가 없다", nameof(localizationDirectories));
             var tables = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
-            foreach (string file in Directory.GetFiles(localizationDirectory, "*.json"))
+            for (int i = 0; i < localizationDirectories.Length; i++)
             {
-                Dictionary<string, string> table = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(file))
-                    ?? throw new InvalidDataException("현지화 파일이 비었다: " + file);
-                tables[Path.GetFileNameWithoutExtension(file)] = table;
+                string directory = localizationDirectories[i];
+                if (!Directory.Exists(directory))
+                {
+                    if (i == 0) throw new DirectoryNotFoundException("현지화 폴더가 없다: " + directory);
+                    continue;
+                }
+                foreach (string file in Directory.GetFiles(directory, "*.json"))
+                {
+                    Dictionary<string, string> table = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(file))
+                        ?? throw new InvalidDataException("현지화 파일이 비었다: " + file);
+                    string code = Path.GetFileNameWithoutExtension(file);
+                    if (!tables.TryGetValue(code, out Dictionary<string, string> merged)) tables[code] = merged = new Dictionary<string, string>(StringComparer.Ordinal);
+                    foreach (KeyValuePair<string, string> pair in table) merged[pair.Key] = pair.Value;
+                }
             }
             return new GameText(tables, language);
         }

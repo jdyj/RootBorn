@@ -107,7 +107,7 @@ namespace Rootborn.Host
         /// </summary>
         private void StartScreens()
         {
-            Text = GameText.Load(Path.Combine(_options.RepoRoot, "data", "localization"), _options.Language);
+            Text = GameText.LoadMerged(_options.Language, Path.Combine(_options.RepoRoot, "data", "localization"), Path.Combine(_options.RepoRoot, "game", "localization"));
             SessionCommands commands = null;
             if (_options.SaveSlot != null)
             {

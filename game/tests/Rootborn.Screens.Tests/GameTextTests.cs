@@ -16,6 +16,37 @@ namespace Rootborn.Screens.Tests
         }
 
         [Test]
+        public void ExtraFolder_AddsKeys_AndWinsOverTheFirstFolder()
+        {
+            string root = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "rootborn-text-" + System.Guid.NewGuid().ToString("N"));
+            string first = System.IO.Path.Combine(root, "first"), extra = System.IO.Path.Combine(root, "extra");
+            System.IO.Directory.CreateDirectory(first);
+            System.IO.Directory.CreateDirectory(extra);
+            try
+            {
+                System.IO.File.WriteAllText(System.IO.Path.Combine(first, "ko.json"), "{\"a\":\"처음\",\"b\":\"그대로\"}");
+                System.IO.File.WriteAllText(System.IO.Path.Combine(extra, "ko.json"), "{\"a\":\"고침\",\"c\":\"더함\"}");
+
+                GameText text = GameText.LoadMerged("ko", first, extra, System.IO.Path.Combine(root, "missing"));
+
+                Assert.That(text.Get("a"), Is.EqualTo("고침"));
+                Assert.That(text.Get("b"), Is.EqualTo("그대로"));
+                Assert.That(text.Get("c"), Is.EqualTo("더함"));
+                Assert.That(() => GameText.LoadMerged("ko", System.IO.Path.Combine(root, "missing")), Throws.InstanceOf<System.IO.DirectoryNotFoundException>());
+            }
+            finally { System.IO.Directory.Delete(root, true); }
+        }
+
+        [Test]
+        public void RealExtraFolder_HasTheSameKeysInBothLanguages()
+        {
+            var ko = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, string>>(System.IO.File.ReadAllText(System.IO.Path.Combine(TestData.ExtraLocalizationDirectory, "ko.json")));
+            var en = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, string>>(System.IO.File.ReadAllText(System.IO.Path.Combine(TestData.ExtraLocalizationDirectory, "en.json")));
+            Assert.That(ko.Keys.OrderBy(k => k), Is.EqualTo(en.Keys.OrderBy(k => k)));
+            Assert.That(TestData.Text().Get("ui.hud.energy"), Is.EqualTo("체력"));
+        }
+
+        [Test]
         public void LanguageSwitch_ChangesTheText_AndRaisesOnce()
         {
             GameText text = TestData.Text();

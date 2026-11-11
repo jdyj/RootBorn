@@ -13,11 +13,6 @@ namespace Rootborn.Screens.Tests
     {
         public static readonly string[] All =
         {
-            "ui.hud.energy",
-            "ui.hud.focus",
-            "ui.objectives.tracked",
-            "ui.career-candidate.open",
-            "ui.career-interest.open",
             "dialogue.firstNpc.greeting",
         };
 
