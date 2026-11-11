@@ -6,6 +6,7 @@ using System.Net;
 using System.Threading;
 using NUnit.Framework;
 using Rootborn.Core.Save;
+using Rootborn.Core.Time;
 using Rootborn.Data.Save;
 using Rootborn.Net.Room;
 using Rootborn.Net.Session;
@@ -69,10 +70,10 @@ namespace Rootborn.Server.Tests
                 Assert.That(Pump(() => stranger.Status == ClientStatus.Refused), Is.True, "데이터가 다르면 거절\n" + server.Output);
                 Assert.That(stranger.FarewellReason, Is.EqualTo(RoomRefusal.DataVersionMismatch));
 
-                Assert.That(Pump(() => player.WorldTime.Known), Is.True);
-                Assert.That(player.WorldTime.Day, Is.EqualTo(1));
+                Assert.That(Pump(() => player.RoomClock.Known), Is.True);
+                Assert.That(player.RoomClock.Day, Is.EqualTo(1));
                 player.RequestDayEndReady();
-                Assert.That(Pump(() => player.WorldTime.Day == 2), Is.True, "혼자인 방: 내가 끝내면 다음 날\n" + server.Output);
+                Assert.That(Pump(() => player.RoomClock.Day == 2), Is.True, "혼자인 방: 내가 끝내면 다음 날\n" + server.Output);
 
                 server.Stop();
                 Assert.That(server.WaitForExit(TimeSpan.FromSeconds(20)), Is.True, "stop 으로 끝난다\n" + server.Output);
@@ -87,8 +88,8 @@ namespace Rootborn.Server.Tests
             }
 
             var store = new FileSaveStore(_saveRoot);
-            Assert.That(store.TryRead(SaveFileNames.WorldTimeSlot, SaveFileNames.WorldTime("room-p"), out WorldTimeSaveData saved), Is.True);
-            Assert.That(saved.CurrentDay, Is.EqualTo(2), "끝낼 때 저장한 날");
+            Assert.That(store.TryRead("room-p", RoomClockSaveFiles.FileName, out RoomClockSaveData saved), Is.True);
+            Assert.That(saved.Day, Is.EqualTo(2), "끝낼 때 저장한 날");
 
             using var again = ServerProcess.Start("--root", root, "--save-root", _saveRoot, "--slot", "room-p", "--bind", IPAddress.Loopback.ToString(), "--port", "0");
             try

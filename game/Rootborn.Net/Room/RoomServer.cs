@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Rootborn.Core.Network;
 using Rootborn.Core.Save;
+using Rootborn.Core.Time;
 using Rootborn.Net.Session;
 using Rootborn.Net.Transport;
 
@@ -69,7 +70,9 @@ namespace Rootborn.Net.Room
             _log = log;
             Versions = versions;
 
-            IsNewRoom = !_store.TryRead(SaveFileNames.WorldTimeSlot, SaveFileNames.WorldTime(saveSlot), out WorldTimeSaveData _);
+            // 방의 시계 파일도, 옛 공용 시간 파일도 없으면 새 방이다(옛 파일만 있으면 그 날에서 잇는다 — RoomClockSaveFiles.Load).
+            IsNewRoom = !_store.TryRead(saveSlot, RoomClockSaveFiles.FileName, out RoomClockSaveData _)
+                && !_store.TryRead(SaveFileNames.WorldTimeSlot, SaveFileNames.WorldTime(saveSlot), out WorldTimeSaveData _);
 
             var gate = new HandshakeServerTransport(transport, versions, settings.HandshakeTimeoutSeconds, settings.Session.MaxMessageBytes);
             gate.Refused += (peer, reason, theirs) =>
@@ -77,7 +80,7 @@ namespace Rootborn.Net.Room
             settings.Session.MaxPlayers = settings.MaxPlayers;
             _session = new SessionServer(gate, settings.Session, store, saveSlot);
 
-            if (IsNewRoom) SharedWorldTime.Save(_store, _saveSlot, _session.WorldTime);
+            if (IsNewRoom) RoomClockSaveFiles.Save(_store, _saveSlot, _session.Clock);
             Log((IsNewRoom ? "새 방을 만듦" : "방을 이어서 엶") + $": 슬롯 {saveSlot}, {DayText()}, 정원 {settings.MaxPlayers}, {versions}");
         }
 
@@ -86,7 +89,8 @@ namespace Rootborn.Net.Room
         /// <summary>이 슬롯에 방 상태가 없어서 새로 만들었다.</summary>
         public bool IsNewRoom { get; }
 
-        public SharedWorldTime WorldTime => _session.WorldTime;
+        /// <summary>방의 시계(날짜, 때, 참가자별 끝냄).</summary>
+        public RoomClock Clock => _session.Clock;
         public IReadOnlyCollection<ServerPlayer> Players => _session.Players;
         public IEnumerable<ServerPlayer> PlayersOnMap(string mapId) => _session.PlayersOnMap(mapId);
         public bool IsShutDown => _shutDown;
@@ -95,17 +99,17 @@ namespace Rootborn.Net.Room
         public void Tick(double now)
         {
             if (_shutDown) return;
-            int day = _session.WorldTime.Day;
+            int day = _session.Clock.Day;
             _session.Update(now);
             NoteArrivalsAndDepartures();
-            if (_session.WorldTime.Day != day) Log("날이 바뀜: " + DayText());
+            if (_session.Clock.Day != day) Log("날이 바뀜: " + DayText());
         }
 
         /// <summary>방 상태를 저장하고 모두를 끊고 전송을 닫는다. 두 번 불러도 된다.</summary>
         public void Shutdown()
         {
             if (_shutDown) return;
-            SharedWorldTime.Save(_store, _saveSlot, _session.WorldTime);
+            RoomClockSaveFiles.Save(_store, _saveSlot, _session.Clock);
             int count = _session.Players.Count;
             _session.Dispose();
             _shutDown = true;
@@ -134,7 +138,7 @@ namespace Rootborn.Net.Room
             }
         }
 
-        private string DayText() => $"{_session.WorldTime.Day}일째 때 {_session.WorldTime.PartOfDay}";
+        private string DayText() => $"{_session.Clock.Day}일째 때 {_session.Clock.PartIndex + 1}/{_session.Clock.PartsToday}";
 
         private void Log(string line) => _log?.Invoke(line);
     }
