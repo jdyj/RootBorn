@@ -191,6 +191,11 @@ namespace Rootborn.Core.Quests
             return true;
         }
 
+        /// <summary>지금 받을 수 있는지(시작 전이고 제공 조건·선행 조건이 맞는지). Accept와 같은 판정이고 아무것도 바꾸지 않는다.</summary>
+        public bool CanAccept(QuestDefinition quest, in QuestRuntimeContext context)
+            => TryGetProgress(quest, out var progress) && progress.State == QuestStage.NotStarted
+               && ConditionsHold(quest.ProviderConditions, in context) && ConditionsHold(quest.Prerequisites, in context);
+
         private static bool ConditionsHold(IReadOnlyList<QuestCondition> conditions, in QuestRuntimeContext context)
         {
             for (int i = 0; i < conditions.Count; i++)

@@ -50,6 +50,8 @@ namespace Rootborn.Data.Tests
             Names.UnityCareerCandidates(DefaultPlayer),
             Names.ResourceRecipe(DefaultPlayer),
             Names.ResourceRecipe(Names.LegacyPlayerId),
+            Names.ObjectiveJournalTracking,
+            Names.Settings,
         };
 
         [TestCaseSource(nameof(DefaultPlayerFiles))]

@@ -85,5 +85,59 @@ namespace Rootborn.Screens.Tests
             GameText text = TestData.Text();
             Assert.That(() => text.Language = "fr", Throws.ArgumentException);
         }
+
+        private static GameText TwoLanguages(string language) => new GameText(new Dictionary<string, Dictionary<string, string>>
+        {
+            ["ko"] = new Dictionary<string, string> { ["both"] = "둘 다", ["ko.only"] = "한국어만" },
+            ["en"] = new Dictionary<string, string> { ["both"] = "both", ["en.only"] = "english only" },
+        }, language);
+
+        [Test]
+        public void KeyMissingInTheCurrentLanguage_ShowsTheBaseLanguageText_AndIsRecorded()
+        {
+            GameText text = TwoLanguages("en");
+            Assert.That(text.BaseLanguage, Is.EqualTo(GameText.DefaultBaseLanguage));
+            Assert.That(text.Get("both"), Is.EqualTo("both"));
+            Assert.That(text.Get("ko.only"), Is.EqualTo("한국어만"), "기준 언어 문구로 대신한다");
+            Assert.That(text.MissingKeys, Is.EqualTo(new[] { "en:ko.only" }));
+        }
+
+        [Test]
+        public void KeyMissingEverywhere_ShowsTheKey_AndRecordsEachLanguageOnce()
+        {
+            GameText text = TwoLanguages("en");
+            Assert.That(text.Get("nowhere"), Is.EqualTo("nowhere"));
+            text.Get("nowhere");
+            Assert.That(text.MissingKeys, Is.EqualTo(new[] { "en:nowhere", "ko:nowhere" }));
+
+            GameText ko = TwoLanguages("ko");
+            Assert.That(ko.Get("en.only"), Is.EqualTo("en.only"), "기준 언어에 없으면 다른 언어로 대신하지 않는다");
+            Assert.That(ko.MissingKeys, Is.EqualTo(new[] { "ko:en.only" }));
+        }
+
+        [Test]
+        public void BaseLanguage_IsGivenWhenMakingTheText()
+        {
+            var text = new GameText(new Dictionary<string, Dictionary<string, string>>
+            {
+                ["ko"] = new Dictionary<string, string> { ["a"] = "가" },
+                ["en"] = new Dictionary<string, string> { ["a"] = "a", ["b"] = "bee" },
+            }, "ko", baseLanguage: "en");
+            Assert.That(text.BaseLanguage, Is.EqualTo("en"));
+            Assert.That(text.Get("b"), Is.EqualTo("bee"));
+            Assert.That(() => new GameText(new Dictionary<string, Dictionary<string, string>> { ["ko"] = new Dictionary<string, string>() }, "ko", baseLanguage: "fr"),
+                Throws.ArgumentException, "기준 언어 표가 있어야 한다");
+        }
+
+        [Test]
+        public void Format_UsesTheBaseLanguageTextWhenMissing()
+        {
+            var text = new GameText(new Dictionary<string, Dictionary<string, string>>
+            {
+                ["ko"] = new Dictionary<string, string> { ["day"] = "{0}일째" },
+                ["en"] = new Dictionary<string, string>(),
+            }, "en");
+            Assert.That(text.Format("day", 3), Is.EqualTo("3일째"));
+        }
     }
 }

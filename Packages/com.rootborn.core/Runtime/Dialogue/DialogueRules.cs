@@ -61,6 +61,41 @@ namespace Rootborn.Core.Dialogue
         }
     }
 
+    /// <summary>대화 선택지를 지금 못 고르는 이유. None이면 고를 수 있다.</summary>
+    public enum DialogueChoiceBlock
+    {
+        None,
+        /// <summary>퀘스트 행동인데 퀘스트나 퀘스트 로그가 없다.</summary>
+        MissingQuest,
+        /// <summary>받기: 이미 받았거나 끝냈다.</summary>
+        QuestAlreadyStarted,
+        /// <summary>받기: 퀘스트의 제공 조건이나 선행 조건이 아직 맞지 않는다.</summary>
+        QuestConditionsNotMet,
+        /// <summary>보상 받기: 퀘스트를 아직 끝내지 않았다(시작 전 포함).</summary>
+        QuestNotCompleted,
+        /// <summary>보상 받기: 이미 받았다.</summary>
+        RewardAlreadyClaimed,
+        /// <summary>보상 받기: 보상이 가방에 다 들어가지 않는다(또는 다른 받기가 진행 중이다).</summary>
+        RewardDoesNotFit
+    }
+
+    /// <summary>
+    /// 선택지 판정 결과. Visible은 Unity 판의 숨김 규칙(IsAvailable)과 같고, CanChoose는 지금 골랐을 때 적용되는지다.
+    /// 받기 선택지는 조건이 맞지 않아도 보인다(Unity 판과 같음) — 그때 CanChoose는 거짓이고 Block이 이유다.
+    /// </summary>
+    public readonly struct DialogueChoiceEvaluation
+    {
+        public DialogueChoiceEvaluation(bool visible, DialogueChoiceBlock block)
+        {
+            Visible = visible;
+            Block = block;
+        }
+
+        public bool Visible { get; }
+        public bool CanChoose => Block == DialogueChoiceBlock.None;
+        public DialogueChoiceBlock Block { get; }
+    }
+
     /// <summary>
     /// 대화 선택지 하나. 퀘스트 받기는 시작 전일 때만 보이고, 받을 때는 퀘스트의 조건을 보상 문맥의 지식·이야기 깃발·학생 진행으로 판정한다
     /// (Core QuestLog.Accept 규칙). 보상 받기는 QuestLog의 사전 확인을 거친다.
@@ -88,6 +123,29 @@ namespace Rootborn.Core.Dialogue
             }
 
             return true;
+        }
+
+        /// <summary>보이는지, 지금 고를 수 있는지와 못 고르는 이유. 아무것도 바꾸지 않는다.</summary>
+        public DialogueChoiceEvaluation Evaluate(in DialogueChoiceContext context)
+        {
+            if (QuestAction != DialogueQuestAction.AcceptQuest && QuestAction != DialogueQuestAction.ClaimReward)
+                return new DialogueChoiceEvaluation(true, DialogueChoiceBlock.None);
+            if (context.QuestLog == null || Quest == null) return new DialogueChoiceEvaluation(false, DialogueChoiceBlock.MissingQuest);
+            var state = context.QuestLog.GetState(Quest);
+            if (QuestAction == DialogueQuestAction.AcceptQuest)
+            {
+                if (state != QuestStage.NotStarted) return new DialogueChoiceEvaluation(false, DialogueChoiceBlock.QuestAlreadyStarted);
+                var reward = context.RewardContext;
+                var questContext = new QuestRuntimeContext(context.QuestLog, Quest, reward.KnowledgeProgress, reward.StoryFlags, reward.StudentLifeProgress);
+                return new DialogueChoiceEvaluation(true, context.QuestLog.CanAccept(Quest, in questContext) ? DialogueChoiceBlock.None : DialogueChoiceBlock.QuestConditionsNotMet);
+            }
+
+            if (state == QuestStage.RewardClaimed) return new DialogueChoiceEvaluation(false, DialogueChoiceBlock.RewardAlreadyClaimed);
+            if (state != QuestStage.Completed) return new DialogueChoiceEvaluation(false, DialogueChoiceBlock.QuestNotCompleted);
+            var rewardContext = context.RewardContext;
+            return context.QuestLog.CanClaimReward(Quest, in rewardContext)
+                ? new DialogueChoiceEvaluation(true, DialogueChoiceBlock.None)
+                : new DialogueChoiceEvaluation(false, DialogueChoiceBlock.RewardDoesNotFit);
         }
 
         public bool TryExecute(in DialogueChoiceContext context)

@@ -44,6 +44,21 @@ namespace Rootborn.Game
         public int Required { get; }
     }
 
+    /// <summary>열린 대화의 선택지 하나: 대화 정의 안의 순번, 선택지, 보이는지·고를 수 있는지·못 고르는 이유(Core DialogueChoice.Evaluate).</summary>
+    public readonly struct DialogueChoiceView
+    {
+        public DialogueChoiceView(int index, DialogueChoice choice, DialogueChoiceEvaluation evaluation)
+        {
+            Index = index;
+            Choice = choice;
+            Evaluation = evaluation;
+        }
+
+        public int Index { get; }
+        public DialogueChoice Choice { get; }
+        public DialogueChoiceEvaluation Evaluation { get; }
+    }
+
     /// <summary>읽기 전용 조회. Core의 요약기와 판정을 그대로 쓴다.</summary>
     public sealed partial class GameSession
     {
@@ -62,6 +77,25 @@ namespace Rootborn.Game
             }
 
             return default;
+        }
+
+        /// <summary>
+        /// 열린 대화의 선택지마다 보이는지와 지금 고를 수 있는지·이유(정의 순서, 빈 선택지는 뺀다). 열린 대화가 없으면 빈 목록.
+        /// 판정 문맥은 ChooseDialogueOption이 쓰는 것과 같다.
+        /// </summary>
+        public IReadOnlyList<DialogueChoiceView> DialogueChoices()
+        {
+            var dialogue = CurrentDialogue;
+            if (dialogue == null) return Array.Empty<DialogueChoiceView>();
+            var context = new DialogueChoiceContext(QuestLog, Rewards());
+            var list = new List<DialogueChoiceView>(dialogue.Choices.Count);
+            for (int i = 0; i < dialogue.Choices.Count; i++)
+            {
+                var choice = dialogue.Choices[i];
+                if (choice != null) list.Add(new DialogueChoiceView(i, choice, choice.Evaluate(in context)));
+            }
+
+            return list;
         }
 
         /// <summary>장소 활동을 지금 할 수 없는 이유(시간·오늘 안 됨·오늘 했음·기력). None이면 비용으로는 할 수 있다(요구 조건은 따로 본다).</summary>

@@ -16,14 +16,19 @@ namespace Rootborn.Screens.Tests
             "dialogue.firstNpc.greeting",
         };
 
-        /// <summary>화면이 쓴 키가 두 언어에 다 있는지(알려진 빠진 키는 빼고), 그리고 빠진 키 기록이 알려진 것뿐인지.</summary>
+        /// <summary>
+        /// 화면이 쓴 키가 폴더에 있는 모든 언어(GameText.Languages)에 다 있는지(알려진 빠진 키는 빼고),
+        /// 그리고 빠진 키 기록이 알려진 것뿐인지. 언어 목록을 여기에 적지 않는다 — 언어 파일을 더하면 그 언어도 본다.
+        /// </summary>
         public static void AssertOnlyKnownMissing(GameText text, IEnumerable<string> usedKeys)
         {
+            string[] languages = text.Languages.ToArray();
+            Assert.That(languages, Is.Not.Empty);
             foreach (string key in usedKeys)
             {
                 if (All.Contains(key)) continue;
-                Assert.That(text.Has(key, "ko"), Is.True, "ko에 없는 키: " + key);
-                Assert.That(text.Has(key, "en"), Is.True, "en에 없는 키: " + key);
+                foreach (string language in languages)
+                    Assert.That(text.Has(key, language), Is.True, language + "에 없는 키: " + key);
             }
             string[] unknown = text.MissingKeys.Select(k => k.Substring(k.IndexOf(':') + 1)).Where(k => !All.Contains(k)).ToArray();
             Assert.That(unknown, Is.Empty, "알려진 목록 밖의 빠진 키");

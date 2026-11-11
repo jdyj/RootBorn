@@ -31,17 +31,23 @@ namespace Rootborn.Ui
         public float FontSize = 20;
         public UiColor Color = UiTheme.Ink;
         public UiAlign Align = UiAlign.Left;
+        /// <summary>칸보다 길면 뒤를 말줄임(…)으로 줄인다. 기본은 켬.</summary>
+        public bool Ellipsis = true;
+
+        private FittedText _fitted;
 
         public override void Emit(DrawList list, ITextMeasurer text)
         {
             if (string.IsNullOrEmpty(Text)) return;
+            string shown = Ellipsis ? _fitted.Get(Text, Rect.W, FontSize, text) : Text;
+            if (shown.Length == 0) return;
             float x = Rect.X;
             if (Align != UiAlign.Left)
             {
-                float width = text.Width(Text, FontSize);
+                float width = text.Width(shown, FontSize);
                 x = Align == UiAlign.Center ? Rect.X + (Rect.W - width) / 2f : Rect.Right - width;
             }
-            list.Text(x, Rect.Y + (Rect.H - text.LineHeight(FontSize)) / 2f, Text, FontSize, Color);
+            list.Text(x, Rect.Y + (Rect.H - text.LineHeight(FontSize)) / 2f, shown, FontSize, Color);
         }
     }
 
@@ -50,6 +56,10 @@ namespace Rootborn.Ui
         public string Text;
         public float FontSize = 20;
         public string Skin = UiSkin.Button;
+        /// <summary>칸보다 길면 뒤를 말줄임(…)으로 줄인다. 기본은 켬.</summary>
+        public bool Ellipsis = true;
+
+        private FittedText _fitted;
 
         public UiButton() { Interactive = true; Focusable = true; }
 
@@ -58,11 +68,12 @@ namespace Rootborn.Ui
             bool active = IsActive;
             UiColor tint = !active ? UiTheme.ButtonDisabled : Pressed ? UiTheme.ButtonPressed : Hovered ? UiTheme.ButtonHovered : UiTheme.ButtonNormal;
             list.Panel(Rect, Skin, tint);
-            if (!string.IsNullOrEmpty(Text))
+            string shown = string.IsNullOrEmpty(Text) ? string.Empty : Ellipsis ? _fitted.Get(Text, Rect.W, FontSize, text) : Text;
+            if (shown.Length > 0)
             {
-                float x = Rect.X + (Rect.W - text.Width(Text, FontSize)) / 2f;
+                float x = Rect.X + (Rect.W - text.Width(shown, FontSize)) / 2f;
                 float y = Rect.Y + (Rect.H - text.LineHeight(FontSize)) / 2f + (Pressed ? UiTheme.PressedOffset : 0f);
-                list.Text(x, y, Text, FontSize, active ? UiTheme.Ink : UiTheme.InkMuted, Skin);
+                list.Text(x, y, shown, FontSize, active ? UiTheme.Ink : UiTheme.InkMuted, Skin);
             }
             if (Focused) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
         }

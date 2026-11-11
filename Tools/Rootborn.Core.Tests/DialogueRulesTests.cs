@@ -139,6 +139,66 @@ namespace Rootborn.Core.Tests
             Assert.IsTrue(new DialogueChoice("choice.none", DialogueQuestAction.None, null).TryExecute(new DialogueChoiceContext(null, default)));
         }
 
+        [Test]
+        public void DIALOGUE_CORE_EvaluateGivesWhetherChoosableAndWhy()
+        {
+            var knowledge = new FakeKnowledge();
+            var gatedQuest = TalkQuest("quest.gated", providerConditions: new QuestCondition[] { new KnowledgeUnlockedCondition("knowledge.open") });
+            var log = new QuestLog(new[] { gatedQuest });
+            var context = new DialogueChoiceContext(log, new RewardRuntimeContext(log, new ItemInventory(), knowledge, null));
+            var accept = new DialogueChoice("choice.accept", DialogueQuestAction.AcceptQuest, gatedQuest);
+
+            var blocked = accept.Evaluate(in context);
+            Assert.IsTrue(blocked.Visible, "Unity 판처럼 시작 전 퀘스트의 받기는 보인다.");
+            Assert.IsFalse(blocked.CanChoose);
+            Assert.AreEqual(DialogueChoiceBlock.QuestConditionsNotMet, blocked.Block);
+
+            knowledge.Seed("knowledge.open");
+            var open = accept.Evaluate(in context);
+            Assert.IsTrue(open.Visible && open.CanChoose);
+            Assert.AreEqual(DialogueChoiceBlock.None, open.Block);
+
+            Assert.IsTrue(accept.TryExecute(in context));
+            var taken = accept.Evaluate(in context);
+            Assert.IsFalse(taken.Visible || taken.CanChoose);
+            Assert.AreEqual(DialogueChoiceBlock.QuestAlreadyStarted, taken.Block);
+
+            var noQuest = new DialogueChoice(null, DialogueQuestAction.AcceptQuest, null).Evaluate(in context);
+            Assert.AreEqual(DialogueChoiceBlock.MissingQuest, noQuest.Block);
+            Assert.IsFalse(noQuest.Visible);
+
+            var close = new DialogueChoice("choice.close", DialogueQuestAction.Close, null).Evaluate(new DialogueChoiceContext(null, default));
+            Assert.IsTrue(close.Visible && close.CanChoose);
+        }
+
+        [Test]
+        public void DIALOGUE_CORE_EvaluateClaimReasons()
+        {
+            var item = new ItemDefinition("item.a", 1);
+            var quest = TalkQuest("quest.a", new QuestReward[] { new ItemQuestReward(item, 1) });
+            var log = new QuestLog(new[] { quest });
+            var inventory = new ItemInventory();
+            var context = new DialogueChoiceContext(log, new RewardRuntimeContext(log, inventory, null, null));
+            var claim = new DialogueChoice("choice.claim", DialogueQuestAction.ClaimReward, quest);
+
+            Assert.AreEqual(DialogueChoiceBlock.QuestNotCompleted, claim.Evaluate(in context).Block);
+            log.Accept(quest);
+            Assert.AreEqual(DialogueChoiceBlock.QuestNotCompleted, claim.Evaluate(in context).Block);
+            log.RecordEvent(new QuestEvent(QuestEventKind.Talk, "t1", "npc.a"));
+
+            for (int i = 0; i < ItemInventory.MaxSlots; i++)
+                Assert.IsTrue(inventory.TryAddAll(new[] { new InventoryGrant(new ItemDefinition("filler." + i, 1), 1) }));
+            var full = claim.Evaluate(in context);
+            Assert.IsFalse(full.Visible || full.CanChoose, "Unity 판처럼 받을 수 없는 보상 받기는 숨긴다.");
+            Assert.AreEqual(DialogueChoiceBlock.RewardDoesNotFit, full.Block);
+
+            inventory.LoadFromSaveData(new ItemInventory().ToSaveData(string.Empty), id => null);
+            var ready = claim.Evaluate(in context);
+            Assert.IsTrue(ready.Visible && ready.CanChoose);
+            Assert.IsTrue(claim.TryExecute(in context));
+            Assert.AreEqual(DialogueChoiceBlock.RewardAlreadyClaimed, claim.Evaluate(in context).Block);
+        }
+
         private sealed class FakeKnowledge : IQuestKnowledge
         {
             private readonly System.Collections.Generic.HashSet<string> _set = new System.Collections.Generic.HashSet<string>();

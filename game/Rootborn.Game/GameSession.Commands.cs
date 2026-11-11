@@ -22,7 +22,7 @@ namespace Rootborn.Game
             Announce(NewEvent(QuestEventKind.LocationVisit, "location-visit", locationId), true);
             ApplyCampaign("campaign-location:" + locationId);
             LastLocationState = _locationStates.Resolve(new LocationStateContext(locationId, null, Student, WorldAccess, QuestLog, _npcSchedules, LocationStates));
-            Save();
+            SaveAndNotify(AnnounceTopics);
             return result;
         }
 
@@ -43,7 +43,7 @@ namespace Rootborn.Game
             Announce(NewEvent(QuestEventKind.Talk, "npc-talk", npc.Id), false);
             ApplyCampaign("campaign-npc:" + npc.Id);
             new LocationVisitProgress(Student).TryRecordNpcMeeting(npc.Id, out _);
-            Save();
+            SaveAndNotify(AnnounceTopics, GameChangeTopics.Dialogue);
             return dialogue;
         }
 
@@ -56,13 +56,15 @@ namespace Rootborn.Game
             var dialogue = CurrentDialogue;
             if (dialogue == null || choiceIndex < 0 || choiceIndex >= dialogue.Choices.Count) return false;
             var applied = dialogue.Choices[choiceIndex].TryExecute(new DialogueChoiceContext(QuestLog, Rewards()));
-            return Saved(applied, applied);
+            return Saved(applied, applied, RewardTopics, GameChangeTopics.Dialogue);
         }
 
         public void CloseDialogue()
         {
+            bool wasOpen = CurrentDialogue != null || CurrentDialogueNpcId != null;
             CurrentDialogue = null;
             CurrentDialogueNpcId = null;
+            if (wasOpen) Notify(null, GameChangeTopics.Dialogue);
         }
 
         // ---------- 퀘스트 ----------
@@ -71,14 +73,14 @@ namespace Rootborn.Game
         {
             if (!_definitions.TryGet<QuestDefinition>(questId, out var quest)) return false;
             var applied = QuestLog.Accept(quest, QuestContext(quest));
-            return Saved(applied, applied);
+            return Saved(applied, applied, null, GameChangeTopics.Quests);
         }
 
         public bool ClaimQuestReward(string questId)
         {
             if (!_definitions.TryGet<QuestDefinition>(questId, out var quest)) return false;
             var applied = QuestLog.ClaimReward(quest, Rewards());
-            return Saved(applied, applied);
+            return Saved(applied, applied, RewardTopics);
         }
 
         /// <summary>체인을 직접 받는다(Unity QuestChainLogPanel). 받으면 추적한다.</summary>
@@ -86,14 +88,14 @@ namespace Rootborn.Game
         {
             if (!_definitions.TryGet<QuestChainDefinition>(chainId, out var chain) || !QuestChains.AcceptWithContext(chain, QuestContext())) return false;
             QuestChains.Track(chain);
-            return Saved(true, true);
+            return Saved(true, true, null, GameChangeTopics.Quests);
         }
 
         public bool ClaimQuestChainRewards(string chainId)
         {
             if (!_definitions.TryGet<QuestChainDefinition>(chainId, out var chain)) return false;
             var applied = QuestChains.ClaimCompletionRewards(chain, Rewards());
-            return Saved(applied, applied);
+            return Saved(applied, applied, RewardTopics);
         }
 
         // ---------- 활동 ----------
@@ -107,7 +109,7 @@ namespace Rootborn.Game
             bool applied = choiceIndex < 0
                 ? runner.TryPerform(activity, Student, requestId, out result)
                 : runner.TryPerformChoice(activity, activity.GetChoice(choiceIndex), Student, requestId, out result);
-            return Saved(result, applied);
+            return Saved(result, applied, null, GameChangeTopics.Student);
         }
 
         /// <summary>
@@ -121,7 +123,7 @@ namespace Rootborn.Game
             CareerCandidates.ApplyFirstMatchingHint(_definitions.All<CareerHint>(), Student, result.RequestId, result.OutcomeLogIds);
             new DailyPlanRouteRunner().TryRecordScheduledActivity(DailyPlan, _routeSets, activity, Student, Student.CurrentDay, requestId, out _);
             Announce(new QuestEvent(QuestEventKind.LocationActivity, requestId, activity.Id), true);
-            Save();
+            SaveAndNotify(AnnounceTopics, GameChangeTopics.Career);
             return result;
         }
 
@@ -130,7 +132,7 @@ namespace Rootborn.Game
         {
             _definitions.TryGet<OutsideSchoolActivity>(activityId, out var activity);
             bool applied = new OutsideSchoolActivityRunner().TryPerform(activity, Student, requestId, out var result);
-            return Saved(result, applied);
+            return Saved(result, applied, null, GameChangeTopics.Student);
         }
 
         /// <summary>마을 돕기. Unity 판처럼 실행하고 저장만 한다.</summary>
@@ -138,7 +140,7 @@ namespace Rootborn.Game
         {
             _definitions.TryGet<TownHelpAction>(actionId, out var action);
             bool applied = new TownHelpActionRunner().TryPerform(action, Student, requestId, out var result);
-            return Saved(result, applied);
+            return Saved(result, applied, null, GameChangeTopics.Student);
         }
 
         /// <summary>미니게임 없는 알바: 실행 → 퀘스트 로그·체인.</summary>
@@ -147,7 +149,7 @@ namespace Rootborn.Game
             _definitions.TryGet<PartTimeWork>(workId, out var work);
             if (!new PartTimeWorkRunner().TryPerform(work, Student, Inventory, requestId, out var result)) return result;
             Announce(new QuestEvent(QuestEventKind.PartTimeWork, requestId, work.Id), true);
-            Save();
+            SaveAndNotify(AnnounceTopics);
             return result;
         }
 
@@ -157,7 +159,7 @@ namespace Rootborn.Game
             var result = new LifeActivityResult(LifeActivityResultKind.InvalidRequest, SaveSlot, PlayerId, practiceId, requestId);
             if (!_definitions.TryGet<CareerPractice>(practiceId, out var practice)) return result;
             bool applied = new CareerPracticeRunner().TryPerform(practice, Student, requestId, out result);
-            return Saved(result, applied);
+            return Saved(result, applied, null, GameChangeTopics.Student, GameChangeTopics.Career);
         }
 
         // ---------- 미니게임 ----------
@@ -167,14 +169,14 @@ namespace Rootborn.Game
         {
             _definitions.TryGet<IMinigamePartTimeWork>(workId, out var work);
             var result = _minigames.TryBeginPartTimeWork(work, Student, Adult, new PartTimeWorkPayroll(Inventory), requestId, seed);
-            return Saved(result, result.Applied);
+            return Saved(result, result.Applied, null, GameChangeTopics.Student, GameChangeTopics.Career);
         }
 
         public AdultCareerResult BeginPractice(string practiceId, string requestId, int seed)
         {
             _definitions.TryGet<CareerPractice>(practiceId, out var practice);
             var result = _minigames.TryBeginPractice(practice, Student, Adult, requestId, seed);
-            return Saved(result, result.Applied);
+            return Saved(result, result.Applied, null, GameChangeTopics.Student, GameChangeTopics.Career);
         }
 
         /// <summary>
@@ -204,13 +206,13 @@ namespace Rootborn.Game
                 if (result.Applied && succeeded) new DailyPlanRouteRunner().TryRecordPractice(DailyPlan, _routeSets, practice, Student, day, requestId, out _);
             }
 
-            return Saved(result, result.Applied);
+            return Saved(result, result.Applied, AnnounceTopics, GameChangeTopics.Career);
         }
 
         public AdultCareerResult ForfeitMinigame(string requestId)
         {
             var result = _minigames.Forfeit(Student, requestId);
-            return Saved(result, result.Applied);
+            return Saved(result, result.Applied, null, GameChangeTopics.Student, GameChangeTopics.Career);
         }
 
         // ---------- 일과 ----------
@@ -223,7 +225,7 @@ namespace Rootborn.Game
             var route = new DailyPlanRouteRunner().FindRoute(_routeSets, routeId);
             if (!new DailyPlanRouteRunner().TrySelectRoute(DailyPlan, route, new DailyPlanRouteContext(Student, WorldAccess))) return false;
             Announce(NewEvent(QuestEventKind.DailyPlanSelected, "daily-plan-selected", route.Id), true);
-            return Saved(true, true);
+            return Saved(true, true, AnnounceTopics);
         }
 
         /// <summary>일과 칸 하나에 길을 넣는다. 넣으면 일과 선택 이벤트를 알린다.</summary>
@@ -232,7 +234,7 @@ namespace Rootborn.Game
             var route = new DailyPlanRouteRunner().FindRoute(_routeSets, routeId);
             if (route == null || !route.IsAvailable(new DailyPlanRouteContext(Student, WorldAccess)) || !DailyPlan.TryAssignSlot(slotIndex, route, Student)) return false;
             Announce(NewEvent(QuestEventKind.DailyPlanSelected, "daily-plan-selected", route.Id), true);
-            return Saved(true, true);
+            return Saved(true, true, AnnounceTopics);
         }
 
         // ---------- 장래희망 ----------
@@ -243,7 +245,7 @@ namespace Rootborn.Game
             _definitions.TryGet<CareerInterest>(interestId, out var interest);
             var result = CareerInterests.TrySelect(interest, CareerCandidates, Student, Student.CurrentDay, requestId);
             if (result.Applied) Announce(new QuestEvent(QuestEventKind.CareerInterestSelected, "career-interest:" + requestId, interest.Id), true);
-            return Saved(result, result.Applied);
+            return Saved(result, result.Applied, AnnounceTopics, GameChangeTopics.Career);
         }
     }
 }

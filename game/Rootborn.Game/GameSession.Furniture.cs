@@ -55,7 +55,7 @@ namespace Rootborn.Game
             layout.PlacementCommitted += AnnouncePlacement;
             if (House != null) House.PlacementCommitted -= AnnouncePlacement;
             House = layout;
-            if (ReplayPlacedFurniture()) Save();
+            if (ReplayPlacedFurniture()) SaveAndNotify(AnnounceTopics, GameChangeTopics.Furniture);
         }
 
         /// <summary>배치 목록에 보이는 가구(해금이 필요 없거나 해금한 것, 얻은 가구가 먼저).</summary>
@@ -69,7 +69,7 @@ namespace Rootborn.Game
         {
             if (!_definitions.TryGet<FurnitureDefinition>(furnitureId, out var furniture)) return FurniturePurchaseResult.NotForSale;
             var result = FurniturePurchase.Try(furniture, Inventory, FurnitureUnlocks);
-            return Saved(result, result == FurniturePurchaseResult.Purchased);
+            return Saved(result, result == FurniturePurchaseResult.Purchased, null, GameChangeTopics.Furniture, GameChangeTopics.Inventory);
         }
 
         /// <summary>목록에 보이는 가구를 방에 놓는다. 놓으면 가구 배치 이벤트를 퀘스트·체인에 알린다.</summary>
@@ -78,17 +78,24 @@ namespace Rootborn.Game
             if (House == null || !_definitions.TryGet<FurnitureDefinition>(furnitureId, out var furniture)
                 || !FurnitureCatalog.IsAvailable(furniture, FurnitureUnlocks)) return false;
             bool placed = House.TryPlace(furniture, anchor, direction);
-            return Saved(placed, placed);
+            return Saved(placed, placed, AnnounceTopics, GameChangeTopics.Furniture);
         }
 
         /// <summary>놓인 가구를 옮긴다(instanceId는 House.Placed의 InstanceId). 다시 알리지 않는다.</summary>
         public bool MoveFurniture(string instanceId, GridPoint anchor, FurniturePlacementDirection direction)
-            => House != null && House.TryMove(instanceId, anchor, direction);
+            => FurnitureChanged(House != null && House.TryMove(instanceId, anchor, direction));
 
-        public bool RemoveFurniture(string instanceId) => House != null && House.Delete(instanceId);
+        public bool RemoveFurniture(string instanceId) => FurnitureChanged(House != null && House.Delete(instanceId));
 
         /// <summary>놓인 가구를 모두 치운다. 놓지 못했던 기록은 남긴다.</summary>
-        public bool ClearFurniture() => House != null && House.ClearUserFurniture();
+        public bool ClearFurniture() => FurnitureChanged(House != null && House.ClearUserFurniture());
+
+        // 옮기기·치우기는 배치 기록만 바꾸고 그 기록은 House가 바로 쓴다(CommitHouseLayout). 여기서는 알리기만 한다.
+        private bool FurnitureChanged(bool changed)
+        {
+            if (changed) Notify(null, GameChangeTopics.Furniture);
+            return changed;
+        }
 
         private bool CommitHouseLayout(FurniturePlacementSaveData[] records)
         {

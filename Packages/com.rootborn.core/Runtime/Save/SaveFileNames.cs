@@ -27,6 +27,17 @@ namespace Rootborn.Core.Save
         /// <summary>옷 선택(Unity WearableWardrobeStore.FileNameFor): 글자·숫자·'-'·'_' 밖은 '_'. 빈 id는 "wearables-.json".</summary>
         public static string Wearables(string playerId) => "wearables-" + Sanitize(playerId) + ".json";
 
+        /// <summary>
+        /// 슬롯과 무관한 설정 파일이 놓이는 슬롯 자리(ISaveStore의 saveSlot에 넣는다). 세이브 슬롯 이름("slot-0" 등)과 겹치지 않게 '_'로 시작한다.
+        /// </summary>
+        public const string SettingsSlot = "_settings";
+
+        /// <summary>설정 파일(언어, 켬/끔 값). Unity 판에는 없었다.</summary>
+        public const string Settings = "settings.json";
+
+        /// <summary>목표 수첩의 추적 지정(Unity ObjectiveJournalTrackingStore). 슬롯마다 하나.</summary>
+        public const string ObjectiveJournalTracking = "objective-journal-tracking.json";
+
         /// <summary>월드 상태 중 Shared·SaveSlot 범위만 담는 슬롯 공유 파일.</summary>
         public const string WorldStateShared = "world-state-progress-shared.json";
 

@@ -43,6 +43,9 @@ namespace Rootborn.Data.Tests
             ("house-state.json", typeof(HouseStateSaveData)),
             ("daily-event-progress*.json", typeof(DailyEventProgressSaveData)),
             ("resource-recipe-progress*.json", typeof(ResourceRecipeProgressSaveData)),
+            ("objective-journal-tracking.json", typeof(Rootborn.Core.Objectives.ObjectiveJournalTrackingSaveData)),
+            // 슬롯과 무관한 설정 파일(SaveFileNames.SettingsSlot 자리). Unity 판에는 없었다.
+            ("settings.json", typeof(Rootborn.Core.Settings.GameSettingsSaveData)),
         };
 
         /// <summary>
@@ -61,7 +64,6 @@ namespace Rootborn.Data.Tests
             ("metadata.json", "슬롯 정보(이름, 시드, 캐릭터 겉모습). Host 몫"),
             ("world-progress.json", "현재 장면과 입구(Core WorldState의 월드 상태가 아니다). 월드 프로젝트(Runtime/World) 몫"),
             ("student-day-result-quest-inventory-summary.json", "하루 결과 화면 요약. 화면 몫"),
-            ("objective-journal-tracking.json", "목표 저널 추적. 화면 몫"),
         };
 
         /// <summary>(파일 무늬, JSON 경로, 이유). 경로 아래 전체를 허용한다. 배열은 "[]"로 원소 형으로 내려간다.</summary>

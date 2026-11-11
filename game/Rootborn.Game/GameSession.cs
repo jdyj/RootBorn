@@ -251,12 +251,6 @@ namespace Rootborn.Game
             SaveOptionalDomains();
         }
 
-        private T Saved<T>(T result, bool applied)
-        {
-            if (applied) Save();
-            return result;
-        }
-
         // ---------- 퀘스트 이벤트 ----------
 
         /// <summary>

@@ -290,5 +290,20 @@ namespace Rootborn.Core.Tests
             Assert.That(restored.HasCompletionRequest("req-a"), Is.True);
             Assert.That(DailyEventProgress.FromSaveData(null).SaveSlot, Is.EqualTo("default"));
         }
+
+        [Test]
+        public void DailyEventAndChoice_DisplayNameKeyFallsBackToId()
+        {
+            // Unity StudentLifeDefinitionBase.DisplayNameKey: 비면 id.
+            var choice = new DailyEventChoice("choice.a", "summary.a", null, 0, 0, 0, 0, false, false, null, null, "choice.a.name");
+            var unnamedChoice = new DailyEventChoice("choice.b", "summary.b", null, 0, 0, 0, 0, false, false, null, null);
+            var dailyEvent = new DailyEvent("event.a", "event.a.description", "location.a", null, null, null, new[] { choice }, "event.a.name");
+            var unnamedEvent = new DailyEvent("event.b", null, null, null, null, null, null);
+
+            Assert.That(choice.DisplayNameKey, Is.EqualTo("choice.a.name"));
+            Assert.That(unnamedChoice.DisplayNameKey, Is.EqualTo("choice.b"));
+            Assert.That(dailyEvent.DisplayNameKey, Is.EqualTo("event.a.name"));
+            Assert.That(unnamedEvent.DisplayNameKey, Is.EqualTo("event.b"));
+        }
     }
 }

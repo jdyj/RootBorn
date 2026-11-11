@@ -24,6 +24,9 @@ namespace Rootborn.Game
     /// <summary>하루 끝과 다음 날, 성인 직업 명령.</summary>
     public sealed partial class GameSession
     {
+        // 성인 직업 명령은 직업 진행·생활 수치·가방(급여·비용)을 바꾼다.
+        private static readonly string[] CareerTopics = { GameChangeTopics.Career, GameChangeTopics.Student, GameChangeTopics.Inventory };
+
         /// <summary>
         /// 하루를 끝낸다(Unity StudentDayEndInteractor 순서): 하루 끝 규칙 → 마일스톤 하루 결과("day:N") → 캠페인 하루 결과("campaign-result-day-N") → 저장.
         /// 이미 끝낸 날이면 아무것도 바꾸지 않는다.
@@ -35,7 +38,7 @@ namespace Rootborn.Game
             var milestones = Milestones.ApplyDayResult(_milestones, Student, Inventory, "day:" + day);
             var campaign = ApplyCampaign("campaign-result-day-" + day);
             LastDayResult = new GameDayResult(true, summary, milestones, campaign);
-            Save();
+            SaveAndNotify(RewardTopics, GameChangeTopics.Day);
             return LastDayResult;
         }
 
@@ -56,7 +59,7 @@ namespace Rootborn.Game
             if (!string.IsNullOrEmpty(CareerInterests.CurrentInterestId))
                 Announce(NewEvent(QuestEventKind.CareerInterestSelected, "career-interest-kept", CareerInterests.CurrentInterestId), true);
             ReplayPlacedFurniture();
-            Save();
+            SaveAndNotify(AnnounceTopics, GameChangeTopics.Day, GameChangeTopics.Career);
             return true;
         }
 
@@ -66,14 +69,14 @@ namespace Rootborn.Game
         {
             _definitions.TryGet<Facility>(facilityId, out var facility);
             var result = _adultService.TryTransition(facility, Student, CareerCandidates, Adult, requestId);
-            return Saved(result, result.Applied);
+            return Saved(result, result.Applied, CareerTopics);
         }
 
         public AdultCareerResult ReserveFacilityWork(string workId, string requestId, int seed)
         {
             _definitions.TryGet<FacilityWork>(workId, out var work);
             var result = _adultService.TryReserveWork(work, Student, Adult, requestId, seed);
-            return Saved(result, result.Applied);
+            return Saved(result, result.Applied, CareerTopics);
         }
 
         /// <summary>예약한 일을 끝낸 판의 점수(0~100)로 정산한다.</summary>
@@ -83,13 +86,13 @@ namespace Rootborn.Game
             FacilityWork work = null;
             if (pending != null) _definitions.TryGet(pending.WorkId, out work);
             var result = _adultService.TrySettleReservedWork(work, Student, Adult, CareerInventory, requestId, score);
-            return Saved(result, result.Applied);
+            return Saved(result, result.Applied, CareerTopics);
         }
 
         public AdultCareerResult ForfeitFacilityWork(string requestId)
         {
             var result = _adultService.TryForfeitReservedWork(Student, Adult, requestId);
-            return Saved(result, result.Applied);
+            return Saved(result, result.Applied, CareerTopics);
         }
 
         /// <summary>미니게임 없이 바로 하는 일, 또는 자동 완료(autoSkip).</summary>
@@ -97,7 +100,7 @@ namespace Rootborn.Game
         {
             _definitions.TryGet<FacilityWork>(workId, out var work);
             var result = _adultService.TryCompleteWork(work, Student, Adult, CareerInventory, requestId, score, autoSkip);
-            return Saved(result, result.Applied);
+            return Saved(result, result.Applied, CareerTopics);
         }
 
         /// <summary>지금 시설을 한 단계 올린다. 비용은 인벤토리에서, 단계의 월드 깃발은 월드 상태에 켠다.</summary>
@@ -105,7 +108,7 @@ namespace Rootborn.Game
         {
             _definitions.TryGet<Facility>(Adult.FacilityId, out var facility);
             var result = _adultService.TryUpgrade(facility, Student, Adult, CareerInventory, WorldAccess, requestId);
-            return Saved(result, result.Applied);
+            return Saved(result, result.Applied, CareerTopics, GameChangeTopics.World);
         }
     }
 }

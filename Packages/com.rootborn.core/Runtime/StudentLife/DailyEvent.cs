@@ -58,9 +58,12 @@ namespace Rootborn.Core.StudentLife
         private readonly IDailyEventAvailabilityRule[] _availabilityRules;
         private readonly DailyEventChoice[] _choices;
 
-        public DailyEvent(string id, string descriptionKey, string locationId, string npcId, DailyEventKind kind, IDailyEventAvailabilityRule[] availabilityRules, DailyEventChoice[] choices)
+        /// <param name="displayNameKey">화면 이름 키. 비면 id(Unity StudentLifeDefinitionBase.DisplayNameKey).</param>
+        public DailyEvent(string id, string descriptionKey, string locationId, string npcId, DailyEventKind kind, IDailyEventAvailabilityRule[] availabilityRules, DailyEventChoice[] choices,
+            string displayNameKey = null)
         {
             Id = id ?? string.Empty;
+            DisplayNameKey = string.IsNullOrEmpty(displayNameKey) ? Id : displayNameKey;
             DescriptionKey = string.IsNullOrEmpty(descriptionKey) ? Id : descriptionKey;
             LocationId = locationId ?? string.Empty;
             NpcId = npcId ?? string.Empty;
@@ -70,6 +73,7 @@ namespace Rootborn.Core.StudentLife
         }
 
         public string Id { get; }
+        public string DisplayNameKey { get; }
         public string DescriptionKey { get; }
         public string LocationId { get; }
         public string NpcId { get; }
@@ -94,9 +98,10 @@ namespace Rootborn.Core.StudentLife
         private readonly IDailyEventOutcome[] _outcomes;
 
         public DailyEventChoice(string id, string resultSummaryKey, ActivityTimePolicy timePolicy, int timeCostMinutes, int energyCost, int focusCost, int stressDelta,
-            bool isDeferChoice, bool isDeclineChoice, IDailyEventAvailabilityRule[] availabilityRules, IDailyEventOutcome[] outcomes)
+            bool isDeferChoice, bool isDeclineChoice, IDailyEventAvailabilityRule[] availabilityRules, IDailyEventOutcome[] outcomes, string displayNameKey = null)
         {
             Id = id ?? string.Empty;
+            DisplayNameKey = string.IsNullOrEmpty(displayNameKey) ? Id : displayNameKey;
             ResultSummaryKey = string.IsNullOrEmpty(resultSummaryKey) ? Id : resultSummaryKey;
             TimePolicy = timePolicy;
             TimeCostMinutes = Math.Max(0, timeCostMinutes);
@@ -110,6 +115,7 @@ namespace Rootborn.Core.StudentLife
         }
 
         public string Id { get; }
+        public string DisplayNameKey { get; }
         public string ResultSummaryKey { get; }
         public ActivityTimePolicy TimePolicy { get; }
         public int TimeCostMinutes { get; }
