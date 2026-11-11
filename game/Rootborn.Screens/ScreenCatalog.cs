@@ -8,6 +8,7 @@ using Rootborn.Screens.Quests;
 using Rootborn.Screens.Inventory;
 using Rootborn.Screens.Settings;
 using Rootborn.Screens.Status;
+using Rootborn.Screens.Start;
 
 namespace Rootborn.Screens
 {
@@ -32,6 +33,10 @@ namespace Rootborn.Screens
         public const string ObjectiveJournal = "objective-journal";
         public const string QuestChainLog = "quest-chain-log";
         public const string Exploration = "exploration";
+        // 시작 화면(슬롯 선택, 캐릭터 만들기, 슬롯 지우기 확인). 게임 한 판이 없을 때 Host가 슬롯 선택을 연다.
+        public const string SaveSlotSelect = "save-slot-select";
+        public const string CharacterCreator = "character-creator";
+        public const string DeleteSlot = "delete-slot";
 
         // HUD 버튼이 여는 화면. 아직 옮기지 않은 화면은 id만 정해 두고, 그 화면을 등록하면 버튼이 저절로 이어진다.
         public const string CareerCandidates = "career-candidates";
@@ -73,6 +78,10 @@ namespace Rootborn.Screens
             // 퀘스트 체인 기록: Unity 판에도 여는 키·상호작용이 없었다(등록만, Open(id)로만 연다).
             r.Add(QuestChainLog, ScreenLayer.Panel, blocksMovement: false, s => new QuestChainLogScreen(s));
             r.AddListener(s => new MinigameWorkPoints(s, new[] { "part-time-work" }, new[] { "career-practice" }));
+            // 시작 화면은 월드가 없을 때 뜬다. 캐릭터가 없으니 방향 키가 버튼 사이를 옮기도록 이동을 막는 화면으로 둔다.
+            r.Add(SaveSlotSelect, ScreenLayer.Panel, blocksMovement: true, s => new SaveSlotScreen(s));
+            r.Add(CharacterCreator, ScreenLayer.Panel, blocksMovement: true, s => new CharacterCreatorScreen(s));
+            r.Add(DeleteSlot, ScreenLayer.Modal, blocksMovement: true, s => new DeleteSlotScreen(s));
         }
 
         /// <summary>표를 채운 새 등록 표.</summary>

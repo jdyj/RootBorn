@@ -15,6 +15,7 @@ using Rootborn.Host.World;
 using Rootborn.Screens;
 using Rootborn.Screens.Day;
 using Rootborn.World;
+using Rootborn.Screens.Start;
 using Rootborn.Ui;
 
 namespace Rootborn.Host
@@ -25,6 +26,7 @@ namespace Rootborn.Host
     /// 월드 화면(--world, --slot)이면 월드를 먼저 그리고 그 위에 화면 쌓기(ScreenStack)를 올린다. 키는 화면 쌓기가 먼저 받고,
     /// 화면이 가져가지 않은 상호작용 키와 누르고 있는 방향 키를 월드에 넘긴다(이동을 막는 화면이 떠 있으면 넘기지 않는다).
     /// 월드의 상호작용 이벤트는 화면 쌓기의 등록 표(상호작용 종류 → 화면)로 넘긴다. --slot이면 GameSession으로 게임 한 판을 시작한다.
+    /// 세이브 폴더만 주면(--slot 없이) 시작 화면(슬롯 선택 → 캐릭터 만들기)부터 띄우고, 슬롯을 고르면 그 슬롯으로 월드와 게임을 시작한다.
     /// 테스트 모드는 프레임마다 1/60초씩 흐른다.
     /// </summary>
     public sealed class HostGame : Microsoft.Xna.Framework.Game
@@ -52,8 +54,10 @@ namespace Rootborn.Host
         public ScreenFit Fit { get; private set; }
         public SampleScreen Sample { get; private set; }
         public WorldScreen World { get; private set; }
-        /// <summary>월드 위의 화면들(월드 화면일 때만).</summary>
+        /// <summary>월드 위의 화면들(월드 화면일 때), 또는 시작 화면(슬롯을 고르기 전).</summary>
         public ScreenStack Screens { get; private set; }
+        /// <summary>시작 화면이 쓰는 것(시작 화면부터 띄웠을 때만).</summary>
+        public StartMenu StartMenu { get; private set; }
         /// <summary>게임 한 판(--slot으로 시작했을 때만).</summary>
         public GameSession Session { get; private set; }
         public GameText Text { get; private set; }
@@ -100,7 +104,67 @@ namespace Rootborn.Host
                 StartScreens();
                 SetTree(Screens.Tree);
             }
+            else if (_options.StartMenu) ShowStartMenu();
             else ShowSample();
+        }
+
+        private GameText LoadText() =>
+            GameText.LoadMerged(_options.Language, Path.Combine(_options.RepoRoot, "data", "localization"), Path.Combine(_options.RepoRoot, "game", "localization"));
+
+        /// <summary>
+        /// 시작 화면: 게임 한 판이 없는 화면 쌓기에 슬롯 선택을 연다. 슬롯 파일은 세이브 폴더의 FileSaveStore로 읽고 쓴다.
+        /// 미리보기 그림은 월드와 같은 캐릭터 시트에서 온다.
+        /// </summary>
+        private void ShowStartMenu()
+        {
+            Text = LoadText();
+            var store = new FileSaveStore(_options.SaveRoot);
+            GameContent content = GameContent.Load(_options.RepoRoot);
+            StartMenu = new StartMenu(new SaveSlots(store, slot => DeleteSlotFolder(store, slot)), CreatorLooks.Load(Path.Combine(_options.RepoRoot, "data")),
+                new CharacterPreviewArt(content.Characters), EnterSlot, Exit);
+            ScreenRegistry registry = ScreenCatalog.Create();
+            ExtraScreens?.Invoke(registry);
+            var services = new ScreenServices(Text, null) { Names = DisplayNames.Load(Path.Combine(_options.RepoRoot, "data")) };
+            Screens = new ScreenStack(registry, services);
+            Screens.Open(ScreenCatalog.SaveSlotSelect, argument: StartMenu);
+            SetTree(Screens.Tree);
+        }
+
+        /// <summary>슬롯 폴더를 통째로 지운다(Unity SaveService.DeleteSlot). ISaveStore에 슬롯 지우기가 없어 여기서 한다.</summary>
+        private static void DeleteSlotFolder(FileSaveStore store, string slot)
+        {
+            if (!Rootborn.Core.Save.SaveSlotMetadata.IsSafeSlotId(slot)) throw new ArgumentException("슬롯 id에 쓸 수 없는 글자가 있다: " + slot, nameof(slot));
+            string dir = Path.Combine(store.RootDirectory, slot);
+            if (Directory.Exists(dir)) Directory.Delete(dir, true);
+        }
+
+        /// <summary>
+        /// 시작 화면에서 고른 슬롯으로 들어간다: --slot으로 띄운 것과 같게 월드와 게임 한 판을 시작하고 화면 쌓기를 월드 것으로 바꾼다.
+        /// 시작하지 못하면(읽을 수 없는 세이브, 맞지 않는 자리) 아무것도 바꾸지 않고 false.
+        /// </summary>
+        private bool EnterSlot(StartEntry entry)
+        {
+            string before = _options.SaveSlot;
+            _options.SaveSlot = entry.SlotId;
+            WorldScreen world = null;
+            try
+            {
+                world = new WorldScreen(GraphicsDevice, _options);
+                World = world;
+                StartScreens();
+            }
+            catch (Exception e) when (e is InvalidOperationException || e is IOException || e is UnauthorizedAccessException || e is ArgumentException || e is System.Text.Json.JsonException)
+            {
+                Console.Error.WriteLine("[시작] 슬롯 " + entry.SlotId + "으로 들어가지 못했다: " + e.Message);
+                world?.Dispose();
+                World = null;
+                Session = null;
+                _options.SaveSlot = before;
+                return false;
+            }
+            StartMenu = null;
+            SetTree(Screens.Tree);
+            return true;
         }
 
         /// <summary>
@@ -109,7 +173,7 @@ namespace Rootborn.Host
         /// </summary>
         private void StartScreens()
         {
-            Text = GameText.LoadMerged(_options.Language, Path.Combine(_options.RepoRoot, "data", "localization"), Path.Combine(_options.RepoRoot, "game", "localization"));
+            Text = LoadText();
             SessionCommands commands = null;
             if (_options.SaveSlot != null)
             {
@@ -120,8 +184,9 @@ namespace Rootborn.Host
             ScreenRegistry registry = ScreenCatalog.Create();
             ExtraScreens?.Invoke(registry);
             var services = new ScreenServices(Text, commands) { Names = DisplayNames.Load(Path.Combine(_options.RepoRoot, "data")) };
-            Screens = new ScreenStack(registry, services);
-            Screens.EnterMap(World.Session.Map.Id);
+            var screens = new ScreenStack(registry, services);
+            screens.EnterMap(World.Session.Map.Id);
+            Screens = screens;
             Screens.OpenHud();
             if (Session != null)
             {
@@ -210,7 +275,8 @@ namespace Rootborn.Host
             _tree.UpdatePointer(pointer.X / Fit.Scale, pointer.Y / Fit.Scale, pointer.LeftDown, pointer.Wheel);
 
             KeyFrame keys = _keyboard.Read();
-            if (Screens != null) UpdateWorld(keys, gameTime);
+            if (Screens != null && World != null) UpdateWorld(keys, gameTime);
+            else if (Screens != null) UpdateMenu(keys);
             else
             {
                 if (keys.Tab) _tree.Navigate(keys.Shift ? UiNav.Previous : UiNav.Next);
@@ -229,6 +295,19 @@ namespace Rootborn.Host
 
             SyncTextInput();
             base.Update(gameTime);
+        }
+
+        /// <summary>시작 화면의 한 프레임: 키는 화면 쌓기로만 간다(걸을 캐릭터가 없다).</summary>
+        private void UpdateMenu(KeyFrame keys)
+        {
+            ScreenStack s = Screens;
+            if (keys.Tab) s.Key(ScreenKey.Tab, keys.Shift);
+            if (keys.Up) s.Key(ScreenKey.Up, keys.Shift);
+            if (keys.Down) s.Key(ScreenKey.Down, keys.Shift);
+            if (keys.Left) s.Key(ScreenKey.Left, keys.Shift);
+            if (keys.Right) s.Key(ScreenKey.Right, keys.Shift);
+            if (keys.Enter) s.Key(ScreenKey.Enter, keys.Shift);
+            if (keys.Escape) s.Key(ScreenKey.Escape, keys.Shift);
         }
 
         /// <summary>

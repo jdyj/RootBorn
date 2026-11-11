@@ -27,6 +27,7 @@ dotnet test game/Rootborn.sln
 dotnet test Tools/Rootborn.Core.Tests
 dotnet run --project game/Rootborn.Host -- --sample --size 1920x1080
 dotnet run --project game/Rootborn.Host -- --world Shop --size 1920x1080
+dotnet run --project game/Rootborn.Host -- --save-root <세이브 폴더>
 dotnet run --project game/Rootborn.Host -- --save-root <세이브 폴더> --slot slot-0
 ```
 
@@ -45,12 +46,13 @@ dotnet run --project game/Rootborn.Host -- --save-root <세이브 폴더> --slot
 | `--interactions <파일>` | | `<저장소>/game/world/interactions.json` |
 | `--hour <시각>` | | 8(Unity 판 학생 생활 하루 시작). `--world`일 때만(슬롯은 학생 시각을 따른다) |
 | `--time-scale <배속>` | | 1. 하루 길이는 data/time의 TimeDefinition(600초). `--world`일 때만 |
-| `--save-root <세이브 폴더>` | `ROOTBORN_SAVE_ROOT` | 없음. `--slot`을 쓰면 반드시 준다 |
+| `--save-root <세이브 폴더>` | `ROOTBORN_SAVE_ROOT` | 없음. `--slot`을 쓰면 반드시 준다. `--slot`·`--world`·`--sample` 없이 주면 슬롯 선택 화면부터 시작한다 |
 | `--lang <언어>` | | ko. `data/localization`의 파일 이름 |
 | `--ui-theme <스킨>` | | urban(Unity 판의 도시형 몰딩). style2는 대체 스킨 |
 | `--slot <슬롯 id>` | | 슬롯으로 월드를 시작한다. `metadata.json`이 없으면 새 게임(장면 목록 데이터의 새 게임 자리), 있으면 `world-progress.json`의 자리에서 이어 한다. `--world`와 함께 줄 수 없다 |
 
-`--sample`도 `--world`도 `--slot`도 없으면 안내 후 끝난다. 슬롯으로 시작하면 맵에 들어갈 때마다(처음 들어갈 때 포함) `world-progress.json`에 쓴다.
+`--sample`도 `--world`도 `--slot`도 없으면 슬롯 선택 화면(슬롯 3개: 새 이야기 → 캐릭터 만들기, 이어서 시작, 삭제)부터 띄운다. 세이브 폴더가 없으면 안내 후 끝난다.
+캐릭터 만들기의 시작하기는 슬롯 정보(이름, 고른 겉모습, 시각으로 만든 시드)를 쓰고 그 슬롯으로 `--slot`과 같게 시작한다. 슬롯으로 시작하면 맵에 들어갈 때마다(처음 들어갈 때 포함) `world-progress.json`에 쓴다.
 읽을 수 없는 세이브 파일은 덮어쓰지 않고 시작을 거절한다.
 캐릭터는 슬롯의 옷 선택(`wearables-local-player.json`, 없으면 칸 기본값)으로 성장 단계 몸에 옷·머리를 겹쳐 그린다.
 낮밤은 맵 목록의 `dayNight`가 켜진 맵(마을)에만 입힌다. 슬롯으로 시작하면 낮밤·NPC 자리는 학생 날·시각(`GameSession.StudentDay`·`StudentHour`)을, 캐릭터 몸은 `GrowthStageId()`를 따른다. `interactions.json`에서 `placementSurface`가 있는 맵(집)에 들어가면 그 맵에서 방 칸을 만들어 `GameSession.EnterHouse`를 부른다. NPC는 일정(data/npcs)과 시간대로 `interactions.json`의 장소 자리에 선다.

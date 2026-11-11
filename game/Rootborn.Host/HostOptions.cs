@@ -51,6 +51,11 @@ namespace Rootborn.Host
         /// <summary>월드 화면을 띄우는가(--world 또는 --slot).</summary>
         public bool WorldActive => World != null || SaveSlot != null;
 
+        /// <summary>
+        /// 시작 화면(슬롯 선택)부터 띄우는가: 견본도 월드도 슬롯도 주지 않았고 세이브 폴더가 있다. 슬롯을 고르면 그 슬롯으로 월드를 시작한다.
+        /// </summary>
+        public bool StartMenu => !Sample && !WorldActive && !string.IsNullOrWhiteSpace(SaveRoot);
+
         /// <summary>화면 문구 언어(data/localization의 파일 이름). Unity 판은 운영체제 언어로 골랐다. 여기서는 1차 언어 ko가 기본이다.</summary>
         public string Language = "ko";
 
@@ -137,10 +142,12 @@ namespace Rootborn.Host
                 throw new InvalidOperationException("--world 와 --slot 은 함께 줄 수 없다(슬롯이 시작 맵을 정한다)");
             if (o.SaveSlot != null && o._timeGiven)
                 throw new InvalidOperationException("--hour 와 --time-scale 은 --slot 과 함께 줄 수 없다(슬롯은 학생 시각을 따른다 — 시각은 활동으로만 흐른다)");
+            if (o.StartMenu && o._timeGiven)
+                throw new InvalidOperationException("--hour 와 --time-scale 은 슬롯 선택 화면과 함께 줄 수 없다(고른 슬롯은 학생 시각을 따른다)");
             if (o.SaveSlot != null && string.IsNullOrWhiteSpace(o.SaveRoot))
                 throw new InvalidOperationException($"--slot 을 쓰려면 세이브 폴더를 --save-root 또는 환경 변수 {SaveRootVariable} 로 준다.");
-            if (string.IsNullOrEmpty(o.EvidenceDir)) o.EvidenceDir = Path.Combine(o.RepoRoot, "output", o.WorldActive ? "host-world-evidence" : "host-ui-evidence");
-            if (o.WorldActive && o.WorldMapsPath != null && !File.Exists(o.WorldMapsPath))
+            if (string.IsNullOrEmpty(o.EvidenceDir)) o.EvidenceDir = Path.Combine(o.RepoRoot, "output", o.WorldActive || o.StartMenu ? "host-world-evidence" : "host-ui-evidence");
+            if ((o.WorldActive || o.StartMenu) && o.WorldMapsPath != null && !File.Exists(o.WorldMapsPath))
                 throw new InvalidOperationException("맵 목록 파일이 없다: " + o.WorldMapsPath);
             return o;
         }
