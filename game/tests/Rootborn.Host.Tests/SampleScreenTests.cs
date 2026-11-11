@@ -301,7 +301,7 @@ namespace Rootborn.Host.Tests
         public void WrongRoot_NamesTheMissingFile()
         {
             var e = Assert.Throws<InvalidOperationException>(() => HostOptions.Resolve(new[] { "--root", Path.GetTempPath() }, name => null));
-            Assert.That(e.Message, Does.Contain("Modern_UI_Style_2.png"));
+            Assert.That(e.Message, Does.Contain(Path.Combine("game", "themes", "urban")), "저장소가 틀리면 기본 UI 테마 폴더가 없다고 알린다");
         }
 
         [Test]

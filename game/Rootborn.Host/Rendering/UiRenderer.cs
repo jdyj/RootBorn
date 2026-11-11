@@ -10,7 +10,7 @@ namespace Rootborn.Host.Rendering
 {
     /// <summary>
     /// UI 토대가 낸 그리기 명령을 화면 픽셀로 그린다. 패널 타일은 정수 배율, 글자는 찍힐 크기 그대로.
-    /// 패널 그림은 UiSkins, 아이콘·스프라이트는 ImageCatalog가 정한 PNG를 그 자리에서 읽어 둔다(변환 단계 없음).
+    /// 패널 그림·글자 색은 테마 폴더(ThemeFolder), 아이콘·스프라이트는 ImageCatalog가 정한 PNG를 그 자리에서 읽어 둔다(변환 단계 없음).
     /// </summary>
     public sealed class UiRenderer : IDisposable
     {
@@ -30,6 +30,7 @@ namespace Rootborn.Host.Rendering
         private readonly Texture2D _white;
         private readonly TextRenderer _text;
         private readonly UiSkins _skins;
+        private readonly ThemeTextColors _textColors;
         private readonly ImageCatalog _images;
         private readonly SpriteAtlases _atlases;
         private readonly Dictionary<string, Texture2D> _textures = new Dictionary<string, Texture2D>(StringComparer.OrdinalIgnoreCase);
@@ -37,12 +38,13 @@ namespace Rootborn.Host.Rendering
         private readonly List<SlicePiece> _pieces = new List<SlicePiece>(1024);
         private readonly Stack<Rectangle> _clips = new Stack<Rectangle>();
 
-        public UiRenderer(GraphicsDevice device, TextRenderer text, UiSkins skins, ImageCatalog images, SpriteAtlases atlases)
+        public UiRenderer(GraphicsDevice device, TextRenderer text, ThemeFolder theme, ImageCatalog images, SpriteAtlases atlases)
         {
             _device = device;
             _batch = new SpriteBatch(device);
             _text = text;
-            _skins = skins;
+            _skins = theme.Skins;
+            _textColors = theme.TextColors;
             _images = images;
             _atlases = atlases;
             _white = new Texture2D(device, 1, 1);
@@ -120,12 +122,11 @@ namespace Rootborn.Host.Rendering
             _device.ScissorRectangle = full;
         }
 
-        /// <summary>글자가 올라앉은 그림에 글자 색이 정해져 있으면 그 색(흐린 글자는 반투명으로).</summary>
+        /// <summary>글자가 올라앉은 그림에 글자 색이 정해져 있으면 그 색(흐린 글자는 반투명으로), 아니면 테마의 글자 색 묶음.</summary>
         private UiColor TextColor(DrawCommand command)
         {
-            if (command.Skin == null) return command.Color;
-            UiColor? themed = _skins.Get(command.Skin).TextColor;
-            if (!themed.HasValue) return command.Color;
+            UiColor? themed = command.Skin == null ? null : _skins.Get(command.Skin).TextColor;
+            if (!themed.HasValue) return _textColors.Map(command.Color);
             UiColor c = themed.Value;
             return command.Color == UiTheme.InkMuted ? new UiColor(c.R, c.G, c.B, (byte)(c.A / 2)) : c;
         }

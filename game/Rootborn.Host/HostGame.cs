@@ -97,8 +97,7 @@ namespace Rootborn.Host
             _text = new TextRenderer(GraphicsDevice, _options.FontPath);
             _measurer = new HostTextMeasurer(_text);
             var atlases = new SpriteAtlases(_options.RepoRoot);
-            UrbanTheme theme = UrbanTheme.Load(_options.RepoRoot);
-            _renderer = new UiRenderer(GraphicsDevice, _text, UiSkins.For(_options.UiTheme, _options.RepoRoot, atlases), new ImageCatalog(atlases, theme, ItemIcons.Load(_options.RepoRoot)), atlases);
+            _renderer = new UiRenderer(GraphicsDevice, _text, _options.UiTheme, new ImageCatalog(atlases, _options.UiTheme, ItemIcons.Load(_options.RepoRoot)), atlases);
             _textInput = new TextInputDevice(Window);
             if (_options.WorldActive)
             {

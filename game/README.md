@@ -48,7 +48,7 @@ dotnet run --project game/Rootborn.Host -- --save-root <세이브 폴더> --slot
 | `--time-scale <배속>` | | 1. 하루 길이는 data/time의 TimeDefinition(600초). `--world`일 때만 |
 | `--save-root <세이브 폴더>` | `ROOTBORN_SAVE_ROOT` | 없음. `--slot`을 쓰면 반드시 준다. `--slot`·`--world`·`--sample` 없이 주면 슬롯 선택 화면부터 시작한다 |
 | `--lang <언어>` | | ko. `data/localization`의 파일 이름 |
-| `--ui-theme <스킨>` | | urban(Unity 판의 도시형 몰딩). style2는 대체 스킨 |
+| `--ui-theme <테마>` | `ROOTBORN_UI_THEME` | urban(Unity 판의 도시형 몰딩). `game/themes/<이름>`의 이름이나 테마 폴더 경로. 빠진 스킨·아이콘이 있으면 목록을 보이고 멈춘다 |
 | `--slot <슬롯 id>` | | 슬롯으로 월드를 시작한다. `metadata.json`이 없으면 새 게임(장면 목록 데이터의 새 게임 자리), 있으면 `world-progress.json`의 자리에서 이어 한다. `--world`와 함께 줄 수 없다 |
 
 `--sample`도 `--world`도 `--slot`도 없으면 슬롯 선택 화면(슬롯 3개: 새 이야기 → 캐릭터 만들기, 이어서 시작, 삭제)부터 띄운다. 세이브 폴더가 없으면 안내 후 끝난다.
@@ -75,13 +75,22 @@ Esc는 설정, I는 가방, C는 상태, Tab은 목표 수첩(등록된 화면�
 4. 테스트: `Rootborn.Screens.Tests`에서 화면을 눌러 보고 `TextKeys`가 두 언어에 다 있는지, `Rootborn.Host.Tests`에서 `PlayerDriver`로
    열고(`OpenScreenWithKey`·`WaitForScreen`) 누르고(`PressButton`) 찍는다(`ScreenshotScreen`).
 
+## 새 UI 그림을 넣는 법
+
+1. `game/themes/urban`을 `game/themes/<새 이름>`으로 복사한다.
+2. 폴더 안 PNG를 새 그림으로 바꾼다(크기는 자유).
+3. `theme.json`의 그림 파일, 칸(`rect`), 9조각 테두리(`border`)를 고친다. 형식과 필요한 스킨 5개·아이콘 18개는 `game/themes/README.md`.
+4. `--ui-theme <새 이름>`(또는 폴더 경로)으로 띄워 본다. 빠진 것이 있으면 시작할 때 목록이 나온다.
+5. 검사 테스트: `dotnet test game/tests/Rootborn.Host.Tests --filter "FullyQualifiedName~TestThemeScreensTests|FullyQualifiedName~UiSkinDataTests"`
+   (테두리·크기가 다른 시험용 테마로 등록된 모든 화면을 그려 예외·빠진 아이콘·패널 밖 글자를 본다. 보고서는 `output/host-theme-evidence/theme-report.md`).
+
 ## 한 곳에만 두는 것
 
 - SDL2 직접 호출: `Rootborn.Host/Input/Sdl2Native.cs`
 - MonoGame 내부 `SdlRunLoop` 리플렉션 호출: `tests/Rootborn.Host.Tests/PlayerDriver.cs`의 `FrameStepper`
 - 키보드·포인터·글자 입력 읽기: `Rootborn.Host/Input/Devices.cs`의 `KeyboardDevice`, `OsPointer`, `TextInputDevice`
-- 패널 그림 좌표: `Rootborn.Host/Rendering/UiSkins.cs`. Style2는 PNG 실측값, 도시형 몰딩은 `data/ui`의 테마와 `data/atlases` 좌표표에서 읽는다.
-  아이콘·스프라이트 그림 id(`icon:<키>`, `<PNG>#<이름>`)도 여기서 푼다
+- UI 그림(스킨·아이콘·글자 색): 테마 폴더 `game/themes/<이름>/theme.json`(형식과 필요한 그림 목록은 `game/themes/README.md`). 읽기·검사는
+  `Rootborn.Host/Rendering/ThemeFolder.cs`, 모든 테마가 가져야 할 스킨·아이콘은 `ThemeRequirements.cs`, 그림 id(`icon:<키>`, `item:<id>`, `<PNG>#<이름>`) 풀기는 `UiSkins.cs`의 `ImageCatalog`
 - 키 → 화면, 상호작용 종류 → 화면: `Rootborn.Screens/ScreenCatalog.cs`
 - 맵 목록(맵 id, LDtk 레벨, 문 목적지, 도착 지점, 충돌 규칙, 보이는 높이, 낮밤): `game/world/maps.json`. 맵 크기는 적지 않는다(레벨에서 읽는다)
 - 맵별 상호작용 물건과 NPC 자리, 반경·우선순위: `game/world/interactions.json`

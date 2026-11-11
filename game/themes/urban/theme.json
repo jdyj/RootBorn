@@ -1,0 +1,173 @@
+{
+  "format": 1,
+  "name": "urban",
+  "about": "도시형 몰딩(Unity 판의 승인된 기본 스킨, 2026-10-27). data/ui/UrbanUiThemeDefinition.json과 data/atlases 좌표표에서 옮겼다. 글자 칸은 테두리가 얇은 칸 그림, 대화창은 패널 그림.",
+  "skins": {
+    "panel": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/urban-molding-atlas.png",
+      "rect": [ 8, 8, 96, 96 ],
+      "border": [ 18, 18, 18, 18 ],
+      "fill": "stretch",
+      "pixelSize": 2
+    },
+    "dialogue": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/urban-molding-atlas.png",
+      "rect": [ 8, 8, 96, 96 ],
+      "border": [ 18, 18, 18, 18 ],
+      "fill": "stretch",
+      "pixelSize": 2
+    },
+    "button": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/urban-molding-atlas.png",
+      "rect": [ 112, 8, 96, 24 ],
+      "border": [ 6, 6, 6, 6 ],
+      "fill": "stretch",
+      "pixelSize": 2,
+      "textColor": "#F4EDDA"
+    },
+    "slot": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/urban-molding-atlas.png",
+      "rect": [ 112, 48, 48, 48 ],
+      "border": [ 6, 6, 6, 6 ],
+      "fill": "stretch",
+      "pixelSize": 2
+    },
+    "field": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/urban-molding-atlas.png",
+      "rect": [ 112, 48, 48, 48 ],
+      "border": [ 6, 6, 6, 6 ],
+      "fill": "stretch",
+      "pixelSize": 2
+    }
+  },
+  "icons": {
+    "journal": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+      "rect": [ 4, 4, 48, 48 ]
+    },
+    "plan": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+      "rect": [ 60, 4, 48, 48 ]
+    },
+    "town_map": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+      "rect": [ 116, 4, 48, 48 ]
+    },
+    "discovery": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+      "rect": [ 172, 4, 48, 48 ]
+    },
+    "chef": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+      "rect": [ 4, 60, 48, 48 ]
+    },
+    "care": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+      "rect": [ 60, 60, 48, 48 ]
+    },
+    "interior": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+      "rect": [ 116, 60, 48, 48 ]
+    },
+    "training": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+      "rect": [ 172, 60, 48, 48 ]
+    },
+    "time": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+      "rect": [ 4, 116, 48, 48 ]
+    },
+    "energy": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+      "rect": [ 60, 116, 48, 48 ]
+    },
+    "focus": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+      "rect": [ 116, 116, 48, 48 ]
+    },
+    "money": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+      "rect": [ 172, 116, 48, 48 ]
+    },
+    "school": {
+      "image": "repo:Assets/Art/SchoolPixels/sprites/school.png",
+      "rect": [ 0, 0, 256, 160 ]
+    },
+    "inventory-all": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/student_backpack.png",
+      "rect": [ 0, 0, 64, 64 ]
+    },
+    "inventory-tools": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/toolbox.png",
+      "rect": [ 0, 0, 64, 64 ]
+    },
+    "inventory-consumables": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/water_bottle.png",
+      "rect": [ 0, 0, 64, 64 ]
+    },
+    "inventory-misc": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/folder.png",
+      "rect": [ 0, 0, 64, 64 ]
+    },
+    "inventory-search": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/inventory_search.png",
+      "rect": [ 0, 0, 32, 32 ]
+    },
+    "inventory-delete": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/inventory_delete.png",
+      "rect": [ 0, 0, 32, 32 ]
+    },
+    "inventory-filter": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/inventory_filter.png",
+      "rect": [ 0, 0, 32, 32 ]
+    },
+    "close": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/inventory_close.png",
+      "rect": [ 0, 0, 32, 32 ]
+    },
+    "stress": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/urban_icon_stress.png",
+      "rect": [ 0, 0, 48, 48 ]
+    },
+    "daily-planner": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/daily_planner.png",
+      "rect": [ 0, 0, 64, 64 ]
+    },
+    "inventory-empty": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/inventory_empty.png",
+      "rect": [ 0, 0, 64, 64 ]
+    },
+    "encyclopedia": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/encyclopedia_reference.png",
+      "rect": [ 0, 0, 64, 64 ]
+    },
+    "facility-upgrade": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/facility_upgrade_blueprint.png",
+      "rect": [ 0, 0, 64, 64 ]
+    }
+  },
+  "definitionIcons": {
+    "interest.investigation": "discovery",
+    "interest.learning": "journal",
+    "interest.service": "care",
+    "interest.technical": "interior",
+    "daily.practice.chef": "chef",
+    "daily.practice.emergency-care": "care",
+    "daily.practice.interior": "interior",
+    "daily.practice.soldier": "training",
+    "daily.work.corner-store": "money",
+    "daily.work.workshop-helper": "interior",
+    "daily.library.self-study": "focus",
+    "daily.route.library.archive-research": "discovery",
+    "daily.route.questchain.library-reward": "journal",
+    "daily.workshop.shift": "money",
+    "daily.route.workshop.repair-ledger": "interior",
+    "daily.town-square.help": "care",
+    "daily.route.career.interior-practice": "interior"
+  },
+  "textColors": {
+    "ink": "#282434",
+    "inkMuted": "#848096",
+    "inkOnDark": "#EBE4F2"
+  }
+}

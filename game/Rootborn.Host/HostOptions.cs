@@ -15,6 +15,9 @@ namespace Rootborn.Host
         public const string EvidenceVariable = "ROOTBORN_EVIDENCE_DIR";
         public const string WorldMapsVariable = "ROOTBORN_WORLD_MAPS";
         public const string SaveRootVariable = "ROOTBORN_SAVE_ROOT";
+        public const string UiThemeVariable = "ROOTBORN_UI_THEME";
+        /// <summary>UI 테마를 주지 않았을 때: Unity 판의 승인된 도시형 몰딩(2026-10-27).</summary>
+        public const string DefaultUiTheme = "urban";
 
         public string RepoRoot;
         public string FontPath;
@@ -59,13 +62,13 @@ namespace Rootborn.Host
         /// <summary>화면 문구 언어(data/localization의 파일 이름). Unity 판은 운영체제 언어로 골랐다. 여기서는 1차 언어 ko가 기본이다.</summary>
         public string Language = "ko";
 
-        /// <summary>UI 스킨. 기본은 Unity 판의 승인된 도시형 몰딩(2026-10-27), style2는 대체 스킨.</summary>
-        public Rendering.SkinTheme UiTheme = Rendering.SkinTheme.Urban;
+        /// <summary>UI 테마 폴더(game/themes/&lt;이름&gt; 또는 --ui-theme로 준 폴더).</summary>
+        public string UiThemeDir;
+        /// <summary>읽고 검사한 UI 테마. 화면이 쓰는 스킨·아이콘이 빠졌으면 Resolve가 빠진 이름 목록과 함께 멈춘다.</summary>
+        public Rendering.ThemeFolder UiTheme;
 
         /// <summary>테스트가 한 프레임씩 돌린다: 고정 시간 간격, 수직 동기 끔, 창이 뒤에 있어도 쉬지 않음.</summary>
         public bool TestMode;
-
-        public string UiSheetPath => Path.Combine(RepoRoot, Rendering.UiSkins.Style2Sheet);
 
         /// <param name="environment">환경 변수 읽기. 테스트가 바꿔 넣는다.</param>
         /// <param name="searchFrom">저장소를 찾아 올라가기 시작할 폴더. 기본은 실행 파일 위치.</param>
@@ -80,6 +83,7 @@ namespace Rootborn.Host
                 WorldMapsPath = environment(WorldMapsVariable),
                 SaveRoot = environment(SaveRootVariable),
             };
+            string uiTheme = environment(UiThemeVariable);
             for (int i = 0; i < args.Length; i++)
             {
                 string arg = args[i];
@@ -98,11 +102,7 @@ namespace Rootborn.Host
                     case "--save-root": o.SaveRoot = value; break;
                     case "--slot": o.SaveSlot = value; break;
                     case "--lang": o.Language = value; break;
-                    case "--ui-theme":
-                        if (value == "urban") o.UiTheme = Rendering.SkinTheme.Urban;
-                        else if (value == "style2") o.UiTheme = Rendering.SkinTheme.Style2;
-                        else throw new InvalidOperationException("--ui-theme 은 urban 또는 style2: " + value);
-                        break;
+                    case "--ui-theme": uiTheme = value; break;
                     case "--time-scale":
                         if (!float.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out o.TimeScale) || o.TimeScale < 0f)
                             throw new InvalidOperationException("--time-scale 은 0 이상의 수: " + value);
@@ -129,8 +129,10 @@ namespace Rootborn.Host
             }
             if (string.IsNullOrEmpty(o.RepoRoot))
                 throw new InvalidOperationException($"저장소 위치를 모른다. --root 또는 환경 변수 {RootVariable} 로 준다.");
-            if (!File.Exists(o.UiSheetPath))
-                throw new InvalidOperationException("저장소 위치가 맞지 않다. UI 그림이 없다: " + o.UiSheetPath);
+            o.UiThemeDir = Rendering.ThemeFolder.Locate(string.IsNullOrWhiteSpace(uiTheme) ? DefaultUiTheme : uiTheme, o.RepoRoot);
+            if (!Directory.Exists(o.UiThemeDir))
+                throw new InvalidOperationException($"UI 테마 폴더가 없다: {o.UiThemeDir} (--ui-theme <이름 또는 폴더> 또는 환경 변수 {UiThemeVariable}. 이름은 game/themes 아래 폴더)");
+            o.UiTheme = Rendering.ThemeFolder.Load(o.UiThemeDir, o.RepoRoot);
 
             if (string.IsNullOrEmpty(o.FontPath)) o.FontPath = FindSystemKoreanFont();
             if (string.IsNullOrEmpty(o.FontPath))
