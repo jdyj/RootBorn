@@ -78,6 +78,7 @@ namespace Rootborn.Screens.Start
             public const float ChooseCharacterY = -114f, ChooseCharacterH = 58f, ChooseCharacterFont = 18f;
             public const float CardButtonY = -190f, CardButtonH = 58f, PairButtonX = 87f, PairButtonW = 152f, NewButtonW = 278f, CardButtonFont = 22f;
             public const float BackX = -505f, BottomY = -350f, BackW = 240f, BackH = 58f, BackFont = 22f;
+            public const float JoinX = -155f, JoinW = 300f;
             public const float HintX = 325f, HintW = 600f, HintH = 44f, HintFont = 18f;
             public const float ErrorY = -304f, ErrorW = 1100f, ErrorH = 36f, ErrorFont = 18f;
             public static readonly UiColor Backdrop = new UiColor(211, 216, 212);
@@ -89,6 +90,7 @@ namespace Rootborn.Screens.Start
         public const string FrameId = "save-slots.frame";
         public const string TitleId = "save-slots.title";
         public const string BackId = "save-slots.back";
+        public const string JoinId = "save-slots.join";
         public const string HintId = "save-slots.delete-hint";
         public const string ErrorId = "save-slots.error";
         public static string CardId(int i) => "save-slots.card." + i;
@@ -113,7 +115,7 @@ namespace Rootborn.Screens.Start
 
         private readonly Card[] _cards = new Card[SaveSlots.MaxUiSlots];
         private UiLabel _title, _hint, _error;
-        private UiButton _back;
+        private UiButton _back, _join;
         private StartMenu _menu;
         private string _errorKey;
 
@@ -132,6 +134,8 @@ namespace Rootborn.Screens.Start
             for (int i = 0; i < _cards.Length; i++) _cards[i] = BuildCard(frame, i);
             _back = frame.Add(new UiButton { Id = BackId, FontSize = Metrics.BackFont }).Centered(Metrics.BackX, Metrics.BottomY, Metrics.BackW, Metrics.BackH);
             _back.Clicked += () => _menu?.Quit?.Invoke();
+            _join = frame.Add(new UiButton { Id = JoinId, FontSize = Metrics.BackFont }).Centered(Metrics.JoinX, Metrics.BottomY, Metrics.JoinW, Metrics.BackH);
+            _join.Clicked += OpenJoin;
             _hint = frame.Add(new UiLabel { Id = HintId, FontSize = Metrics.HintFont, Color = Metrics.Ink, Align = UiAlign.Right })
                 .Centered(Metrics.HintX, Metrics.BottomY, Metrics.HintW, Metrics.HintH);
             _error = frame.Add(new UiLabel { Id = ErrorId, FontSize = Metrics.ErrorFont, Color = Metrics.ErrorInk, Align = UiAlign.Center, Visible = false })
@@ -187,6 +191,8 @@ namespace Rootborn.Screens.Start
             _title.Text = T("ui.save.title");
             _back.Text = T("ui.save.back");
             _back.Visible = _menu.Quit != null;
+            _join.Text = T("ui.save.join-server");
+            _join.Visible = _menu.Join != null;
             _hint.Text = T("ui.save.delete-hint");
             for (int i = 0; i < _cards.Length; i++)
             {
@@ -242,6 +248,13 @@ namespace Rootborn.Screens.Start
             SaveSlotRow row = Row(index);
             if (_menu == null || row == null || !row.Exists) return;
             Services.Screens?.Open(ScreenCatalog.DeleteSlot, argument: new DeleteSlotOpen(_menu, _menu.Slots.Read(row.SlotId), Refresh));
+        }
+
+        /// <summary>서버 주소로 들어가기 창을 연다(들어가는 쪽이 있을 때만 보이는 단추).</summary>
+        private void OpenJoin()
+        {
+            if (_menu?.Join == null) return;
+            Services.Screens?.Open(ScreenCatalog.JoinServer, argument: new JoinServerOpen(_menu));
         }
 
         private void NewGame(int index)

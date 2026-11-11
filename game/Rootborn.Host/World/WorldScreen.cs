@@ -313,16 +313,22 @@ namespace Rootborn.Host.World
             _actors.Clear();
             _actors.Add((walker.Y, -1));
             for (int i = 0; i < _npcs.Count; i++) _actors.Add((_npcs[i].Y, i));
+            IReadOnlyList<RemoteAvatar> remotes = Remotes?.Visible;
+            if (remotes != null)
+                for (int i = 0; i < remotes.Count; i++) _actors.Add((remotes[i].Y, RemoteActor(i)));
             _actors.Sort(ActorOrder);
-            int drawn = 0;
+            int drawn = 0, drawnRemotes = 0;
             foreach (var actor in _actors)
             {
                 int upTo = ActorIndex(sorted, actor.sortY);
                 for (; drawn < upTo; drawn++) DrawSprite(batch, sorted[drawn]);
-                if (actor.npc < 0) DrawCharacter(batch, walker); else DrawNpc(batch, _npcs[actor.npc]);
+                if (actor.npc == -1) DrawCharacter(batch, walker);
+                else if (actor.npc < -1) { DrawRemote(batch, remotes[RemoteActor(actor.npc)], walker); drawnRemotes++; }
+                else DrawNpc(batch, _npcs[actor.npc]);
             }
             for (; drawn < sorted.Count; drawn++) DrawSprite(batch, sorted[drawn]);
             batch.End();
+            RemotesDrawn = drawnRemotes;
             if (lit)
             {
                 batch.Begin(SpriteSortMode.Deferred, MultiplyBlend, SamplerState.PointClamp, null, null, null, null);
@@ -483,16 +489,38 @@ namespace Rootborn.Host.World
         private void DrawCharacter(SpriteBatch batch, Walker walker)
         {
             AreaRect body = walker.Box;
-            DrawLayer(batch, PlayerLook.Body, body);
-            foreach (CharacterSheet layer in PlayerLook.Layers) DrawLayer(batch, layer, body);
+            DrawLayer(batch, PlayerLook.Body, body, PlayerAnimator);
+            foreach (CharacterSheet layer in PlayerLook.Layers) DrawLayer(batch, layer, body, PlayerAnimator);
         }
 
-        private void DrawLayer(SpriteBatch batch, CharacterSheet sheet, AreaRect body)
+        private void DrawLayer(SpriteBatch batch, CharacterSheet sheet, AreaRect body, CharacterAnimator animator)
         {
-            CharacterFrame f = sheet.Frame(PlayerAnimator.Row, PlayerAnimator.Column);
+            CharacterFrame f = sheet.Frame(animator.Row, animator.Column);
             if (f == null) return;
             var position = new Vector2(MathF.Round(body.CenterX - f.W * f.PivotX), MathF.Round(body.Bottom - f.H * f.PivotY));
             batch.Draw(Load(f.Texture), position, new Rectangle(f.X, f.Y, f.W, f.H), _tint);
+        }
+
+        /// <summary>
+        /// 같은 맵의 다른 참가자들(멀티플레이, 방에 들어갔을 때만 Host가 넣는다). 없으면 그리지 않는다. 이름표는 없다(Unity 판에도 없었다).
+        /// 몸은 걷기를 막지 않는다(충돌 격자에 넣지 않는다).
+        /// </summary>
+        public RemoteAvatars Remotes { get; set; }
+
+        /// <summary>마지막으로 그린 화면에 그린 다른 참가자 수.</summary>
+        public int RemotesDrawn { get; private set; }
+
+        /// <summary>정렬 목록의 액터 번호: -1 나, 0 이상 NPC, -2 이하 다른 참가자(-2 - 순번). 거꾸로도 같은 식이다.</summary>
+        private static int RemoteActor(int index) => -2 - index;
+
+        /// <summary>다른 참가자: 내 몸과 같은 크기의 상자를 그 사람의 몸 가운데에 두고 같은 방법(발 기준)으로 겹쳐 그린다.</summary>
+        private void DrawRemote(SpriteBatch batch, RemoteAvatar remote, Walker walker)
+        {
+            AreaRect mine = walker.Box;
+            var body = new AreaRect(remote.X - mine.W / 2f, remote.Y - mine.H / 2f, mine.W, mine.H);
+            DrawLayer(batch, remote.Look.Body, body, remote.Animator);
+            IReadOnlyList<CharacterSheet> layers = remote.Look.Layers;
+            for (int i = 0; i < layers.Count; i++) DrawLayer(batch, layers[i], body, remote.Animator);
         }
 
         /// <summary>NPC 그림: 기준점(발)을 자리에서 반 칸 아래(몸 가운데가 자리)에 맞춘다 — 플레이어와 같은 기준.</summary>

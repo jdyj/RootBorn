@@ -18,6 +18,8 @@
     <ProjectReference Include="../Rootborn.World/Rootborn.World.csproj" />
     <ProjectReference Include="../Rootborn.Data/Rootborn.Data.csproj" />
     <ProjectReference Include="../Rootborn.Screens/Rootborn.Screens.csproj" />
+    <!-- 멀티플레이 접속(UDP, 방 접속 확인, 세션). 방에 들어갔을 때만 프레임마다 돈다. -->
+    <ProjectReference Include="../Rootborn.Net/Rootborn.Net.csproj" />
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="[3.8.6.1]" />
     <PackageReference Include="StbTrueTypeSharp" Version="[1.26.12]" />
   </ItemGroup>

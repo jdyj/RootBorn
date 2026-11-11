@@ -146,12 +146,7 @@ namespace Rootborn.Server
         /// 이 서버의 버전: 프로토콜, 게임 프로그램(Rootborn.Game 어셈블리의 정보 버전 — 같은 커밋에서 빌드하면 같다), 데이터 지문.
         /// </summary>
         public static RoomVersions CurrentVersions(string dataDirectory)
-        {
-            var assembly = typeof(GameSession).Assembly;
-            string game = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
-                          ?? assembly.GetName().Version?.ToString() ?? string.Empty;
-            return new RoomVersions(RoomProtocol.Version, game, DataFingerprint.Compute(dataDirectory));
-        }
+            => RoomVersions.ForProgram(typeof(GameSession).Assembly, Rootborn.Data.DataFingerprint.Compute(dataDirectory));
 
         private static void WatchConsole(CancellationTokenSource stop)
         {

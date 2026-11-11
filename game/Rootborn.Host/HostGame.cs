@@ -3,6 +3,7 @@ using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Rootborn.Host.Display;
+using Rootborn.Host.Net;
 using Rootborn.Host.Input;
 using Rootborn.Host.Rendering;
 using Rootborn.Host.Sample;
@@ -76,6 +77,18 @@ namespace Rootborn.Host
 
         /// <summary>글자 칸이 선택되어 입력기가 켜져 있다.</summary>
         public bool TextInputActive => _textInput != null && _textInput.Active;
+
+        // ---------- 방(멀티플레이) ----------
+
+        /// <summary>서버 주소로 들어가는 쪽(시작 화면이 있을 때 만든다). 방에 들어가지 않으면 프레임마다 아무것도 하지 않는다.</summary>
+        public RoomConnection Room { get; private set; }
+        /// <summary>같은 맵의 다른 참가자(방에 들어갔을 때만).</summary>
+        public RemoteAvatars Remotes { get; private set; }
+        /// <summary>
+        /// 방 접속이 쓰는 시각(초). 네트워크는 실제 시간으로 흐르므로(상대의 살아 있다는 표시, 전송의 시간 초과) 테스트 모드에서도 실제 시간이다.
+        /// 다른 참가자의 걷기 칸은 프레임 dt로 돈다.
+        /// </summary>
+        private readonly Rootborn.Net.Room.StopwatchRoomClock _netClock = new Rootborn.Net.Room.StopwatchRoomClock();
 
         public HostGame(HostOptions options)
         {
@@ -247,7 +260,53 @@ namespace Rootborn.Host
             var services = new ScreenServices(Text, null) { Settings = Settings, Display = Display };
             services.KeyGuide = KeyGuideNames.Create();
             Screens = new ScreenStack(registry, services);
+            StartMenu.Join = Room ??= CreateRoom();
             Screens.Open(ScreenCatalog.SaveSlotSelect, argument: StartMenu);
+            if (_options.JoinAddress != null && !_joinOffered)
+            {
+                // --join: 들어가기 창을 그 주소로 연다. --slot도 줬으면 그 인물로 바로 접속을 시작한다.
+                _joinOffered = true;
+                Screens.Open(ScreenCatalog.JoinServer, argument: new JoinServerOpen(StartMenu, _options.JoinAddress, _options.SaveSlot));
+                if (_options.JoinOnStart) Room.Begin(_options.JoinAddress, _options.SaveSlot);
+            }
+            SetTree(Screens.Tree);
+        }
+
+        private bool _joinOffered;
+
+        /// <summary>
+        /// 방 접속을 만든다. 버전은 서버(Rootborn.Server)와 같은 셈법(RoomVersions.ForProgram + Rootborn.Data.DataFingerprint),
+        /// 신원은 슬롯 정보에서(GuestProgress.RoomIdentity), 방이 받아들이면 시작 화면에서 슬롯을 고른 것과 같게 그 슬롯으로 들어간다.
+        /// </summary>
+        private RoomConnection CreateRoom()
+        {
+            var room = new RoomConnection(
+                () => Rootborn.Net.Room.RoomVersions.ForProgram(typeof(GameSession).Assembly, Rootborn.Data.DataFingerprint.Compute(Path.Combine(_options.RepoRoot, "data"))),
+                new Rootborn.Net.Session.SessionClientSettings(),
+                slot => GuestProgress.RoomIdentity(slot, new FileSaveStore(_options.SaveRoot).TryRead(slot, SaveFileNames.Metadata, out SaveSlotMetadata m) ? m : null),
+                EnterSlot);
+            room.PhaseChanged += () => Screens?.NotifyChanged(Rootborn.Screens.Start.RoomJoinText.Topic);
+            room.Lost += ReturnToStartMenu;
+            return room;
+        }
+
+        /// <summary>
+        /// 방과 끊겼다: 시작 화면으로 돌아가 이유를 알린다. 게임 한 판은 명령마다, 월드 자리는 맵에 들어갈 때마다 이미 저장했으므로
+        /// 따로 저장할 것이 남아 있지 않다(GameSession·WorldSlot). 같은 주소로 다시 들어가기 창을 열 수 있게 주소는 남긴다.
+        /// </summary>
+        private void ReturnToStartMenu(string reason)
+        {
+            World?.Dispose();
+            World = null;
+            Session = null;
+            Remotes = null;
+            _placement = null;
+            _houseMap = null;
+            _featuresMap = null;
+            _sessionDay = -1;
+            _options.SaveSlot = null;
+            ShowStartMenu();
+            Screens.Open(ScreenCatalog.RoomNotice, argument: new RoomNoticeOpen(reason));
             SetTree(Screens.Tree);
         }
 
@@ -294,6 +353,8 @@ namespace Rootborn.Host
                 return false;
             }
             StartMenu = null;
+            if (Room != null && Room.Phase == Rootborn.Screens.Start.RoomJoinPhase.Joined)
+                World.Remotes = Remotes = new RemoteAvatars(World.Content.Characters, World.Content.Wearables);
             SetTree(Screens.Tree);
             return true;
         }
@@ -340,8 +401,9 @@ namespace Rootborn.Host
         {
             Text = LoadText();
             if (_options.SaveSlot != null)
+                // 방에 들어간 인물도 지금은 자기 PC의 그 슬롯에 저장한다(임시 — 바뀔 자리는 GuestProgress 한 곳).
                 Session = GameSession.Start(World.Content.Definitions, GameStartSettings.FromRegistry(Path.Combine(_options.RepoRoot, "data")),
-                    new FileSaveStore(_options.SaveRoot), _options.SaveSlot, SaveFileNames.DefaultPlayerId);
+                    GuestProgress.StoreFor(_options.SaveRoot), _options.SaveSlot, GuestProgress.SavePlayerId);
             if (Session != null && _options.DayCopies.HasValue) Session.KeepDayCopies(_options.DayCopies.Value);
             ScreenRegistry registry = ScreenCatalog.Create();
             ExtraScreens?.Invoke(registry);
@@ -528,7 +590,14 @@ namespace Rootborn.Host
 
             KeyFrame keys = _keyboard.Read();
             if (keys.ToggleDisplay) ToggleFullscreen();
-            if (Screens != null && World != null) UpdateWorld(keys, gameTime, pointer);
+            float frameSeconds = _options.TestMode ? TestFrameSeconds : (float)gameTime.ElapsedGameTime.TotalSeconds;
+            if (Room != null && Room.Phase == Rootborn.Screens.Start.RoomJoinPhase.Connecting)
+                Room.UpdateJoining(_netClock.Now); // 들어가면 이 안에서 월드로 바뀐다
+            if (Screens != null && World != null)
+            {
+                UpdateWorld(keys, gameTime, pointer);
+                if (Room != null && Room.InRoom) UpdateRoom(frameSeconds);
+            }
             else if (Screens != null) UpdateMenu(keys);
             else
             {
@@ -606,6 +675,19 @@ namespace Rootborn.Host
         }
 
         /// <summary>
+        /// 방에 들어가 있을 때의 한 프레임: 내 몸·겉모습을 넘기고(보내는 횟수는 Net 설정) 같은 맵의 남을 받아 걷기 칸을 돌린다.
+        /// 끊기면 RoomConnection.Lost가 시작 화면으로 돌려보낸다.
+        /// </summary>
+        private void UpdateRoom(float dt)
+        {
+            Rootborn.Core.World.Walker walker = World.Session.Walker;
+            string map = World.Session.Map.Id;
+            double now = _netClock.Now;
+            if (!Room.UpdateInRoom(now, map, walker.X, walker.Y, walker.Facing, walker.Moving, World.PlayerLook.Code)) return;
+            Remotes?.Update(Room.PlayersOn(map, now), dt);
+        }
+
+        /// <summary>
         /// 앞의 상호작용 대상을 화면 논리 좌표로(지난 프레임의 카메라 기준). 눌러도 아무 일 없는 대상(자동문)은 넘기지 않는다.
         /// </summary>
         private InteractionTargetView? TargetOnScreen()
@@ -670,8 +752,20 @@ namespace Rootborn.Host
             _scene.SaveAsPng(stream, _scene.Width, _scene.Height);
         }
 
+        /// <summary>게임을 끈다: 방에 들어가 있으면 나간다고 알린다(서버가 시간 초과를 기다리지 않는다).</summary>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                Room?.Dispose();
+                Room = null;
+            }
+            base.Dispose(disposing);
+        }
+
         protected override void UnloadContent()
         {
+            Room?.Leave();
             World?.Dispose();
             _textInput?.Dispose();
             _renderer?.Dispose();

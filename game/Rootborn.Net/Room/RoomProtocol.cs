@@ -25,6 +25,18 @@ namespace Rootborn.Net.Room
             Data = data ?? string.Empty;
         }
 
+        /// <summary>
+        /// 이 빌드의 버전: 프로토콜, 게임 프로그램(그 어셈블리의 정보 버전 — Directory.Build.props가 1.0.0+커밋으로 찍는다), 데이터 지문
+        /// (Rootborn.Data.DataFingerprint). 서버와 들어가는 쪽(Host)이 같은 어셈블리(Rootborn.Game)를 넘긴다.
+        /// </summary>
+        public static RoomVersions ForProgram(System.Reflection.Assembly program, string dataFingerprint)
+        {
+            if (program == null) throw new ArgumentNullException(nameof(program));
+            string game = (Attribute.GetCustomAttribute(program, typeof(System.Reflection.AssemblyInformationalVersionAttribute)) as System.Reflection.AssemblyInformationalVersionAttribute)?.InformationalVersion
+                          ?? program.GetName().Version?.ToString() ?? string.Empty;
+            return new RoomVersions(RoomProtocol.Version, game, dataFingerprint);
+        }
+
         public int Protocol { get; }
 
         /// <summary>게임 프로그램 버전(빌드가 정한다).</summary>

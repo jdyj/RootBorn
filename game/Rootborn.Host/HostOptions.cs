@@ -17,6 +17,7 @@ namespace Rootborn.Host
         public const string SaveRootVariable = "ROOTBORN_SAVE_ROOT";
         public const string UiThemeVariable = "ROOTBORN_UI_THEME";
         public const string DayCopiesVariable = "ROOTBORN_DAY_COPIES";
+        public const string JoinVariable = "ROOTBORN_JOIN";
         /// <summary>UI 테마를 주지 않았을 때: Unity 판의 승인된 도시형 몰딩(2026-10-27).</summary>
         public const string DefaultUiTheme = "urban";
 
@@ -61,13 +62,22 @@ namespace Rootborn.Host
         public float StartHour = 8f;
         private bool _timeGiven;
 
-        /// <summary>월드 화면을 띄우는가(--world 또는 --slot).</summary>
-        public bool WorldActive => World != null || SaveSlot != null;
+        /// <summary>
+        /// 서버 주소로 들어간다(--join, "호스트:포트"). 기본값이 없다. 시작 화면에서 들어가기 창을 이 주소로 연다.
+        /// --slot도 주면 그 슬롯의 인물로 바로 접속을 시작하고, 방이 받아들이면 그 슬롯으로 월드를 띄운다.
+        /// </summary>
+        public string JoinAddress;
+
+        /// <summary>월드 화면을 바로 띄우는가(--world, 또는 --join 없이 --slot).</summary>
+        public bool WorldActive => World != null || (SaveSlot != null && JoinAddress == null);
 
         /// <summary>
         /// 시작 화면(슬롯 선택)부터 띄우는가: 견본도 월드도 슬롯도 주지 않았고 세이브 폴더가 있다. 슬롯을 고르면 그 슬롯으로 월드를 시작한다.
         /// </summary>
         public bool StartMenu => !Sample && !WorldActive && !string.IsNullOrWhiteSpace(SaveRoot);
+
+        /// <summary>시작 화면에서 바로 방에 들어가기 시작한다(--join과 --slot).</summary>
+        public bool JoinOnStart => JoinAddress != null && SaveSlot != null;
 
         /// <summary>
         /// --lang으로 준 화면 문구 언어(언어 파일 이름). 주지 않으면 null이고, 언어는 LanguageChoice 순서(이 값 → 저장된 설정 →
@@ -106,6 +116,7 @@ namespace Rootborn.Host
                 EvidenceDir = environment(EvidenceVariable),
                 WorldMapsPath = environment(WorldMapsVariable),
                 SaveRoot = environment(SaveRootVariable),
+                JoinAddress = environment(JoinVariable),
             };
             string uiTheme = environment(UiThemeVariable);
             string dayCopies = environment(DayCopiesVariable);
@@ -135,6 +146,7 @@ namespace Rootborn.Host
                     case "--interactions": o.InteractionsPath = value; break;
                     case "--save-root": o.SaveRoot = value; break;
                     case "--slot": o.SaveSlot = value; break;
+                    case "--join": o.JoinAddress = value; break;
                     case "--lang": o.Language = value; break;
                     case "--ui-theme": uiTheme = value; break;
                     case "--frames":
@@ -183,6 +195,16 @@ namespace Rootborn.Host
 
             if (o.ScreenshotPath != null && o.ExitAfterFrames == 0)
                 throw new InvalidOperationException("--screenshot 은 --frames <N> 과 함께 준다(N프레임 뒤 저장하고 끝낸다)");
+            if (string.IsNullOrWhiteSpace(o.JoinAddress)) o.JoinAddress = null;
+            if (o.JoinAddress != null)
+            {
+                if (!Net.RoomAddress.TryParse(o.JoinAddress, out _, out _))
+                    throw new InvalidOperationException("--join 은 \"호스트:포트\" 꼴로 준다(예: 192.168.0.10:7777): " + o.JoinAddress);
+                if (o.Sample || o.World != null)
+                    throw new InvalidOperationException("--join 은 --sample, --world 와 함께 줄 수 없다(들어갈 인물은 세이브 슬롯에서 고른다)");
+                if (string.IsNullOrWhiteSpace(o.SaveRoot))
+                    throw new InvalidOperationException($"--join 을 쓰려면 세이브 폴더를 --save-root 또는 환경 변수 {SaveRootVariable} 로 준다(들어갈 인물은 그 슬롯에서 고른다).");
+            }
             if (o.SaveSlot != null && o.World != null)
                 throw new InvalidOperationException("--world 와 --slot 은 함께 줄 수 없다(슬롯이 시작 맵을 정한다)");
             if (o.SaveSlot != null && o._timeGiven)

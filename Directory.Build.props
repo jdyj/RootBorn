@@ -1,0 +1,26 @@
+<Project>
+  <!--
+    게임 버전 찍기. 방에 들어갈 때 서버와 클라이언트가 게임 버전(어셈블리 정보 버전)을 맞춰 본다
+    (game/Rootborn.Net/Room/RoomProtocol.cs). 모든 빌드가 1.0.0이면 다른 커밋끼리 가려내지 못하므로 커밋 해시를 붙인다: 1.0.0+<커밋>.
+
+    - git 저장소에서 빌드하면 .NET SDK(소스 링크)가 지금 커밋을 SourceRevisionId로 넣는다. 그 동작을 끄지 않도록 여기서 켜 둔다.
+    - git이 없는 곳(배포 폴더에서 다시 빌드, 압축본)에서도 빌드는 깨지지 않는다. 그때는 환경 변수나 인자 ROOTBORN_COMMIT
+      (예: dotnet build -p:ROOTBORN_COMMIT=<커밋>)을 쓰고, 그것도 없으면 "unknown-commit"을 붙인다.
+      unknown-commit 빌드끼리는 같은 버전으로 보이므로, git 없이 빌드해 나눠 줄 때는 ROOTBORN_COMMIT을 준다.
+    - 커밋하지 않은 수정은 해시에 드러나지 않는다(같은 커밋 + 다른 수정은 같은 버전으로 보인다).
+  -->
+  <PropertyGroup>
+    <IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+
+  <Target Name="RootbornSourceRevisionFallback"
+          AfterTargets="InitializeSourceControlInformation"
+          BeforeTargets="AddSourceRevisionToInformationalVersion">
+    <PropertyGroup Condition="'$(SourceRevisionId)' == '' and '$(ROOTBORN_COMMIT)' != ''">
+      <SourceRevisionId>$(ROOTBORN_COMMIT)</SourceRevisionId>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(SourceRevisionId)' == ''">
+      <SourceRevisionId>unknown-commit</SourceRevisionId>
+    </PropertyGroup>
+  </Target>
+</Project>
