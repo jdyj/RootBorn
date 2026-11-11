@@ -4,6 +4,7 @@ using Rootborn.Screens.Dialogue;
 using Rootborn.Screens.Furniture;
 using Rootborn.Screens.Hud;
 using Rootborn.Screens.Day;
+using Rootborn.Screens.Discoveries;
 using Rootborn.Screens.Minigames;
 using Rootborn.Screens.Objectives;
 using Rootborn.Screens.Quests;
@@ -40,6 +41,8 @@ namespace Rootborn.Screens
         public const string SaveSlotSelect = "save-slot-select";
         public const string CharacterCreator = "character-creator";
         public const string DeleteSlot = "delete-slot";
+        /// <summary>손상된 슬롯 알림(모달). 고른 슬롯의 시작이 SaveSlotDamagedException으로 거절되면 Host가 슬롯 선택 위에 연다.</summary>
+        public const string SaveSlotDamaged = "save-slot-damaged";
 
         // HUD 버튼이 여는 화면. 아직 옮기지 않은 화면은 id만 정해 두고, 그 화면을 등록하면 버튼이 저절로 이어진다.
         public const string CareerCandidates = "career-candidates";
@@ -55,6 +58,8 @@ namespace Rootborn.Screens
         public const string LocationStateLog = "location-state-log";
         /// <summary>성인 시설 관리(Unity FacilityManagementPanel). 시설 앞 상호작용으로 열린다. 이동을 막는다.</summary>
         public const string Facility = "facility";
+        /// <summary>발견 알림(알림 층). 발견 지점 상호작용으로 열려 GameSession.Discover를 부르고 결과를 보인다. 이동을 막지 않는다.</summary>
+        public const string DiscoveryNotice = "discovery-notice";
 
         public static void Register(ScreenRegistry r)
         {
@@ -89,6 +94,7 @@ namespace Rootborn.Screens
             r.Add(SaveSlotSelect, ScreenLayer.Panel, blocksMovement: true, s => new SaveSlotScreen(s)).WithoutWorld();
             r.Add(CharacterCreator, ScreenLayer.Panel, blocksMovement: true, s => new CharacterCreatorScreen(s)).WithoutWorld();
             r.Add(DeleteSlot, ScreenLayer.Modal, blocksMovement: true, s => new DeleteSlotScreen(s)).WithoutWorld();
+            r.Add(SaveSlotDamaged, ScreenLayer.Modal, blocksMovement: true, s => new SaveSlotDamagedScreen(s)).WithoutWorld();
             // 가구 배치: 집 HUD 버튼(가구 배치 켬/끔)이 연다. 이동을 막지 않는다(Unity 판 패널은 입력을 잠그지 않았다).
             r.Add(FurniturePlacement, ScreenLayer.Panel, blocksMovement: false, s => new FurniturePlacementScreen(s));
             r.Add(Encyclopedia, ScreenLayer.Panel, blocksMovement: true, s => new EncyclopediaScreen(s));
@@ -96,6 +102,7 @@ namespace Rootborn.Screens
             r.Add(WorldStateLog, ScreenLayer.Panel, blocksMovement: true, s => new WorldStateLogScreen(s));
             r.Add(LocationStateLog, ScreenLayer.Panel, blocksMovement: false, s => new LocationStateLogScreen(s)).OpenedBy(ScreenKey.LocationLog);
             r.Add(Facility, ScreenLayer.Modal, blocksMovement: true, s => new FacilityScreen(s)).OpenedByInteraction(FacilityScreen.InteractionKind);
+            r.Add(DiscoveryNotice, ScreenLayer.Notice, blocksMovement: false, s => new DiscoveryNoticeScreen(s)).OpenedByInteraction(DiscoveryNoticeScreen.InteractionKind);
         }
 
         /// <summary>표를 채운 새 등록 표.</summary>

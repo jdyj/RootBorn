@@ -57,6 +57,8 @@ namespace Rootborn.Screens
         public bool TryGet(string id, out ScreenEntry entry) => _screens.TryGetValue(id ?? string.Empty, out entry);
         public bool TryGetByKey(ScreenKey key, out string screenId) => _keys.TryGetValue(key, out screenId);
         public bool TryGetByInteraction(string kind, out string screenId) => _interactions.TryGetValue(kind ?? string.Empty, out screenId);
+        /// <summary>등록된 상호작용 종류 → 그 종류가 여는 화면 id(OpenedByInteraction으로 등록한 것 전부).</summary>
+        public IReadOnlyDictionary<string, string> InteractionKinds => _interactions;
 
         public readonly struct Registration
         {

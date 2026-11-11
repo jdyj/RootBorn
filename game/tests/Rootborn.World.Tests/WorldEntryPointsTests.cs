@@ -133,6 +133,7 @@ namespace Rootborn.World.Tests
         [TestCase("exploration", typeof(ExplorationInteraction))]
         [TestCase("career-facility", typeof(Facility))]
         [TestCase("career-practice", typeof(CareerPractice))]
+        [TestCase("discovery", typeof(Discovery))]
         public void EveryDefinition_OfThisKind_HasAWalkablePoint(string kind, Type definitionType)
         {
             var ids = ((System.Collections.IEnumerable)typeof(Rootborn.Data.GameDefinitions).GetMethod(nameof(Rootborn.Data.GameDefinitions.All))

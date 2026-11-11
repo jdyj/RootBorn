@@ -19,6 +19,7 @@ namespace Rootborn.Screens.Hud
         public static string Location(GameDefinitions definitions, string id) => Of<Location>(definitions, id, l => l.DisplayNameKey);
         public static string PartTimeWork(GameDefinitions definitions, string id) => Of<PartTimeWork>(definitions, id, w => w.DisplayNameKey);
         public static string Exploration(GameDefinitions definitions, string id) => Of<ExplorationInteraction>(definitions, id, e => e.DisplayNameKey);
+        public static string Discovery(GameDefinitions definitions, string id) => Of<Rootborn.Core.StudentLife.Discovery>(definitions, id, d => d.DisplayNameKey);
 
         private static string Of<T>(GameDefinitions definitions, string id, Func<T, string> key) where T : class
             => definitions != null && !string.IsNullOrEmpty(id) && definitions.TryGet(id, out T found) ? key(found) : null;
@@ -58,6 +59,8 @@ namespace Rootborn.Screens.Hud
             new InteractionPromptSpec("exploration", "ui.prompt.explore", 1.15f, InteractionPromptNames.Exploration,
                 NoNameTextKey: "ui.prompt.explore-generic"),                                                                                // ExplorationInteractionPointInteractor
             new InteractionPromptSpec(AdultFacility.FacilityScreen.InteractionKind, "facility.interact", 1.1f),                          // CareerFacilityInteractor
+            new InteractionPromptSpec(Discoveries.DiscoveryNoticeScreen.InteractionKind, "ui.prompt.discovery", 1.05f, InteractionPromptNames.Discovery,
+                NoNameTextKey: "ui.prompt.discovery-generic"),                                                                              // DiscoveryPointInteractor
         };
 
         public const string LabelId = "hud.prompt";

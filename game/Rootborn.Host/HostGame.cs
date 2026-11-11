@@ -193,6 +193,7 @@ namespace Rootborn.Host
             var atlases = new SpriteAtlases(_options.RepoRoot);
             _renderer = new UiRenderer(GraphicsDevice, _text, _options.UiTheme, new ImageCatalog(atlases, _options.UiTheme, ItemIcons.Load(_options.RepoRoot)), atlases);
             _textInput = new TextInputDevice(Window);
+            if (_options.SaveSlot != null) { StartFromSlotArgument(); return; }
             if (_options.WorldActive)
             {
                 World = new WorldScreen(GraphicsDevice, _options);
@@ -272,6 +273,16 @@ namespace Rootborn.Host
                 World = world;
                 StartScreens();
             }
+            catch (Rootborn.Game.SaveSlotDamagedException damaged)
+            {
+                Console.Error.WriteLine("[시작] " + damaged.Message);
+                world?.Dispose();
+                World = null;
+                Session = null;
+                _options.SaveSlot = before;
+                ShowSlotDamage(damaged);
+                return false;
+            }
             catch (Exception e) when (e is InvalidOperationException || e is IOException || e is UnauthorizedAccessException || e is ArgumentException || e is System.Text.Json.JsonException)
             {
                 Console.Error.WriteLine("[시작] 슬롯 " + entry.SlotId + "으로 들어가지 못했다: " + e.Message);
@@ -287,6 +298,40 @@ namespace Rootborn.Host
         }
 
         /// <summary>
+        /// --slot으로 띄웠을 때: 그 슬롯으로 월드와 게임 한 판을 시작한다. 슬롯이 손상돼 시작을 거절하면(SaveSlotDamagedException)
+        /// 슬롯 선택 화면을 띄우고 그 위에 손상 알림을 연다(돌아가기만 있다). 슬롯 파일은 바꾸지 않는다.
+        /// </summary>
+        private void StartFromSlotArgument()
+        {
+            try
+            {
+                World = new WorldScreen(GraphicsDevice, _options);
+                StartScreens();
+                SetTree(Screens.Tree);
+            }
+            catch (Rootborn.Game.SaveSlotDamagedException damaged)
+            {
+                Console.Error.WriteLine("[시작] " + damaged.Message);
+                World?.Dispose();
+                World = null;
+                Session = null;
+                _options.SaveSlot = null;
+                ShowStartMenu();
+                ShowSlotDamage(damaged);
+            }
+        }
+
+        /// <summary>손상된 슬롯 알림을 지금 화면 쌓기(슬롯 선택) 위에 연다. 무엇이 문제인지는 예외의 Problems가 정한다.</summary>
+        private void ShowSlotDamage(Rootborn.Game.SaveSlotDamagedException damaged)
+        {
+            SlotDamage = damaged;
+            Screens?.Open(ScreenCatalog.SaveSlotDamaged, argument: damaged);
+        }
+
+        /// <summary>마지막으로 알린 손상 슬롯(테스트와 로그용). 없으면 null.</summary>
+        public Rootborn.Game.SaveSlotDamagedException SlotDamage { get; private set; }
+
+        /// <summary>
         /// 화면 쌓기를 만든다. 슬롯으로 시작했으면 정의(월드 화면이 읽은 것과 같은 data/)로 GameSession을 시작해 화면이 부를 명령으로 넘긴다.
         /// 세이브 폴더 위치는 실행 인자에서만 온다.
         /// </summary>
@@ -296,6 +341,7 @@ namespace Rootborn.Host
             if (_options.SaveSlot != null)
                 Session = GameSession.Start(World.Content.Definitions, GameStartSettings.FromRegistry(Path.Combine(_options.RepoRoot, "data")),
                     new FileSaveStore(_options.SaveRoot), _options.SaveSlot, SaveFileNames.DefaultPlayerId);
+            if (Session != null && _options.DayCopies.HasValue) Session.KeepDayCopies(_options.DayCopies.Value);
             ScreenRegistry registry = ScreenCatalog.Create();
             ExtraScreens?.Invoke(registry);
             var services = new ScreenServices(Text, Session) { Definitions = World.Content.Definitions, Settings = Settings, Display = Display, Names = DisplayNames.Load(Path.Combine(_options.RepoRoot, "data")) };
@@ -340,6 +386,7 @@ namespace Rootborn.Host
             if (Session.StudentDay != _sessionDay)
             {
                 _sessionDay = Session.StudentDay;
+                if (Session.DayCopyError != null) Console.Error.WriteLine("[세이브] 날마다 남기는 슬롯 사본을 쓰지 못했다(그날 저장은 끝났다): " + Session.DayCopyError.Message);
                 World.SetGrowthStage(Session.GrowthStageId());
             }
         }

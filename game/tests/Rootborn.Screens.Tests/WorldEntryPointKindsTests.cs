@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text.Json;
 using NUnit.Framework;
 
@@ -23,19 +22,13 @@ namespace Rootborn.Screens.Tests
             ["npc"] = "npcAnchors",
         };
 
-        /// <summary>
-        /// 등록 표의 상호작용 종류 → 화면 id. ScreenRegistry는 종류 목록을 공개하지 않아(TryGetByInteraction만 있다) 리플렉션으로 읽는다.
-        /// 등록 표에 종류 목록 조회가 생기면 그것으로 바꾼다.
-        /// </summary>
+        /// <summary>등록 표의 상호작용 종류 → 화면 id(ScreenRegistry.InteractionKinds). 조회와 같은지도 본다.</summary>
         private static IReadOnlyDictionary<string, string> RegisteredInteractionKinds()
         {
             ScreenRegistry registry = ScreenCatalog.Create();
-            FieldInfo field = typeof(ScreenRegistry).GetFields(BindingFlags.Instance | BindingFlags.NonPublic)
-                .SingleOrDefault(f => f.FieldType == typeof(Dictionary<string, string>) && f.Name.IndexOf("interaction", StringComparison.OrdinalIgnoreCase) >= 0);
-            Assert.That(field, Is.Not.Null, "ScreenRegistry의 상호작용 종류 표를 찾지 못했다(이름이 바뀌었으면 이 테스트를 고친다)");
-            var kinds = (Dictionary<string, string>)field.GetValue(registry);
-            foreach (string kind in kinds.Keys)
-                Assert.That(registry.TryGetByInteraction(kind, out string id) && id == kinds[kind], Is.True, "읽은 표가 등록 표 조회와 같아야 한다: " + kind);
+            IReadOnlyDictionary<string, string> kinds = registry.InteractionKinds;
+            foreach (var pair in kinds)
+                Assert.That(registry.TryGetByInteraction(pair.Key, out string id) && id == pair.Value, Is.True, "종류 목록이 등록 표 조회와 같아야 한다: " + pair.Key);
             return kinds;
         }
 

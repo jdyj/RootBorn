@@ -16,6 +16,7 @@ namespace Rootborn.Host
         public const string WorldMapsVariable = "ROOTBORN_WORLD_MAPS";
         public const string SaveRootVariable = "ROOTBORN_SAVE_ROOT";
         public const string UiThemeVariable = "ROOTBORN_UI_THEME";
+        public const string DayCopiesVariable = "ROOTBORN_DAY_COPIES";
         /// <summary>UI 테마를 주지 않았을 때: Unity 판의 승인된 도시형 몰딩(2026-10-27).</summary>
         public const string DefaultUiTheme = "urban";
 
@@ -45,6 +46,11 @@ namespace Rootborn.Host
         public string SaveRoot;
         /// <summary>세이브 슬롯 id. 주면 그 슬롯에서 월드를 시작한다(없으면 새 게임, 있으면 이어 하기).</summary>
         public string SaveSlot;
+        /// <summary>
+        /// 다음 날을 시작할 때 슬롯 폴더의 backups/&lt;날&gt;/에 남길 사본 개수(--day-copies, ROOTBORN_DAY_COPIES). 0이면 남기지 않는다.
+        /// 주지 않으면 null이고 게임 한 판의 기본값(GameSession.DefaultDayCopiesToKeep)을 쓴다.
+        /// </summary>
+        public int? DayCopies;
 
         /// <summary>
         /// 게임 시각이 실제 시간의 몇 배로 흐르는가(Unity GameClock 시간 배속, TimeDefinition initialTimeScale 1).
@@ -102,6 +108,8 @@ namespace Rootborn.Host
                 SaveRoot = environment(SaveRootVariable),
             };
             string uiTheme = environment(UiThemeVariable);
+            string dayCopies = environment(DayCopiesVariable);
+            if (!string.IsNullOrWhiteSpace(dayCopies)) o.DayCopies = ParseDayCopies(dayCopies, "환경 변수 " + DayCopiesVariable);
             for (int i = 0; i < args.Length; i++)
             {
                 string arg = args[i];
@@ -134,6 +142,7 @@ namespace Rootborn.Host
                             throw new InvalidOperationException("--frames 는 1 이상의 정수: " + value);
                         break;
                     case "--screenshot": o.ScreenshotPath = value; break;
+                    case "--day-copies": o.DayCopies = ParseDayCopies(value, "--day-copies"); break;
                     case "--time-scale":
                         if (!float.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out o.TimeScale) || o.TimeScale < 0f)
                             throw new InvalidOperationException("--time-scale 은 0 이상의 수: " + value);
@@ -186,6 +195,13 @@ namespace Rootborn.Host
             if ((o.WorldActive || o.StartMenu) && o.WorldMapsPath != null && !File.Exists(o.WorldMapsPath))
                 throw new InvalidOperationException("맵 목록 파일이 없다: " + o.WorldMapsPath);
             return o;
+        }
+
+        private static int ParseDayCopies(string value, string from)
+        {
+            if (!int.TryParse(value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int count) || count < 0)
+                throw new InvalidOperationException(from + " 는 0 이상의 정수(0이면 날마다 사본을 남기지 않는다): " + value);
+            return count;
         }
 
         /// <summary>

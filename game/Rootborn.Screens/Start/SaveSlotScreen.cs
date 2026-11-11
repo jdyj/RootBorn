@@ -231,6 +231,7 @@ namespace Rootborn.Screens.Start
             SaveSlotRow row = Row(index);
             if (_menu == null || row == null || !row.Exists) return;
             if (!_menu.Enter(new StartEntry(row.SlotId, false))) ShowError(EntryFailedKey);
+            if (Services.Screens != null && Services.Screens.IsOpen(ScreenCatalog.SaveSlotDamaged)) ShowError(null); // 손상 알림이 문제를 말한다
         }
 
         /// <summary>Unity SaveSlotSelectPanel.EntryFailure의 문구.</summary>
