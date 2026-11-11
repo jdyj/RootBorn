@@ -221,5 +221,8 @@
   "ui.join.reason.cannot-listen": "그 주소와 포트로 방을 열 수 없어요. 이 PC의 주소인지, 다른 프로그램이 그 포트를 쓰고 있지 않은지 확인해 주세요.",
   "ui.join.reason.room-save-unreadable": "이 이야기의 방 기록을 읽을 수 없어요. 기록은 덮어쓰지 않았어요.",
   "ui.settings.room-open": "방이 열려 있어요 · {1}/{2}명\n주소 {0}",
-  "ui.settings.room-close": "방 닫기"
+  "ui.settings.room-close": "방 닫기",
+  "ui.prompt.requirements-unmet": "아직 조건이 맞지 않아요.",
+  "ui.prompt.bag-full": "가방에 자리가 없어요.",
+  "ui.prompt.cannot-now": "지금은 할 수 없어요."
 }

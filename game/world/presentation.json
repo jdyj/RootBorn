@@ -1,0 +1,23 @@
+{
+  // 월드의 조작감·연출 수치. 읽기는 Rootborn.World WorldPresentation, 그리기와 입력은 Host(WorldScreen, WorldFeel). 규칙이 아니다(세이브·진행과 무관).
+  // 지금 값은 모두 Unity 판의 값이다. 바꾸면 손맛이 바뀐다 — 기획 결정이다.
+  //
+  // camera.smoothSeconds: 카메라가 캐릭터를 따라가는 시간(Unity CameraFollow._smoothTime, 모든 씬 0.15, Vector3.SmoothDamp).
+  //   데드존은 없다. 맵에 들어선 순간에는 바로 맞춘다(Unity SnapToTarget). 0이면 늘 바로 맞춘다. 맵 경계(maps.json cameraBounds)는 그대로 지킨다.
+  // action: 마우스 왼클릭 행동(Unity PlayerController.BeginAttack + GrowingCharacterVisualView.PlayAction). 누른 쪽을 바라보고 seconds 동안
+  //   캐릭터 그림의 firstColumn부터 columnCount칸을 차례로 보인다(칸 번호는 캐릭터 시트의 열, 0부터). 그리고 E와 같은 상호작용을 한다.
+  // door: 자동문이 열리는 동안(시간은 maps.json doorOpenSeconds, 없으면 Core DoorWatch 0.35초) 문 위의 사각형(Unity TownAutoDoorPortal의 덮개).
+  //   폭 비율 widthFrom→widthTo, 알파 alphaFrom→alphaTo로 바뀐다. 크기는 칸 단위(Unity 18×26px / 16PPU), 문 가운데에서 liftCells만큼 위가 아래 끝.
+  //   fill·edge [r, g, b]는 안쪽과 테두리 색, edgeCells는 테두리 두께(Unity 1px / 16PPU). 문 그림이 바뀌면 이 사각형 대신 그 그림을 쓸 수 있다(지금은 데이터에 열린 문 그림이 없다).
+  // area: 이동 구역(maps.json areas — 마을↔해변)에 들어선 동안 화면 전체를 덮는 색(Unity TownLevelTransitionTrigger: 검정 82%, 0.25초).
+  // blocksInput: 연출 동안 걷기를 막는가. Unity 판은 막지 않았다(문이 열리는 동안에도 걸을 수 있었다).
+  "camera": { "smoothSeconds": 0.15 },
+  "action": { "seconds": 0.3, "firstColumn": 3, "columnCount": 2 },
+  "door": {
+    "widthFrom": 0.25, "widthTo": 1.0, "alphaFrom": 0.55, "alphaTo": 1.0,
+    "widthCells": 1.125, "heightCells": 1.625, "liftCells": 0.35,
+    "fill": [ 0.025, 0.02, 0.018 ], "edge": [ 0.95, 0.58, 0.16 ], "edgeCells": 0.0625
+  },
+  "area": { "color": [ 0, 0, 0 ], "alpha": 0.82 },
+  "blocksInput": false
+}

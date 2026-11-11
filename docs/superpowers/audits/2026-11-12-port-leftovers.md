@@ -13,7 +13,7 @@
 | `Assets/Scripts/Game` 파일 | 459 | 옮김 320(같은 이름 227, 데이터 종류 54, 이름 다름 39) · 데이터 종류 분류에 이유가 있음 25 · Unity 컴포넌트 52 · 다른 것으로 대체 16 · 게임이 쓰지 않음 12 · 쓰이지 않음 10 · 규칙 아님 14 · Unity 전용 8 · 데이터 없음 1 · 빈 파일 1. **이유가 없는 파일 0** |
 | `Assets/Tests/EditMode` 파일 | 415 | 대응 있음 77 · 대응 일부 9 · 다른 것으로 대체 1 · 옮겨야 할 것 0(5개를 2026-11-12에 옮김, 아래) · 옮기지 않음(작성자 판정) 16 · 옮기지 않음(분류 규칙) 218 · 대응 추정(분류 규칙) 94 |
 | `Assets/Tests/PlayMode` 파일 | 76 | `SCENARIOS.md`에 있음 68 · 도우미 파일(테스트 0) 7 · 없음 1(테스트 도우미 계약 테스트, Unity 전용) |
-| Unity에 있고 MonoGame에 없는 런타임 동작 | 13 + 안 쓰이던 것 4 | 문 열림·구역 페이드 연출, 카메라 부드러운 추적, 마우스 클릭 행동, 상호작용 실패 안내가 크다(3절) |
+| Unity에 있고 MonoGame에 없는 런타임 동작 | 13 + 안 쓰이던 것 4 | 2026-11-12에 큰 넷(문 열림·구역 페이드, 카메라 부드러운 추적, 마우스 클릭, 실패 안내)과 가로등을 옮겼다. 남은 것은 3절 표의 "남은 것" |
 
 **전수조사가 걱정한 세 가지의 결론**
 
@@ -152,21 +152,21 @@
 
 `Assets/Scripts/Game`의 규칙 아닌 MonoBehaviour와 `UI/Lighting`, `UI/WorldState`를 보았다. "쓰임"은 스크립트 `.cs.meta` guid를 `*.unity`·`*.prefab`에서 찾은 결과와 `AddComponent<>` 호출 위치다. 영향이 큰 순이다. 일부는 읽기 전용 조사 도우미가 찾았고, 작성자가 1·3·5·8번의 핵심 근거(game/에 `OpeningDoor` 읽는 곳 0, `CameraFollow`의 `SmoothDamp`와 `WorldScreen.cs:272` 바로 맞춤, `ui.prompt.no-time` 0건, LDtk `ysort` 층 수)를 다시 grep했다. "추정"은 추정이다.
 
-| # | 동작 | Unity 위치 | Unity 판에서 쓰임 | MonoGame 판 | 플레이에 주는 영향 | 옮기는 데 필요한 것 |
+| # | 동작 | Unity 위치 | Unity 판에서 쓰임 | MonoGame 판(2026-11-12 `jdyj/runtime-feel` 뒤) | 플레이에 주는 영향 | 남은 것 |
 |---|---|---|---|---|---|---|
-| 1 | 자동문 열림 연출(문 그림이 0.25→1 폭으로 넓어지고 알파 0.55→1, 그 뒤 이동) | `Game/World/TownAutoDoorPortal.cs` | Town 씬 5곳과 실내 6씬. `InteriorDoorPortalRuntimeInstaller`가 AddComponent | 일부: 기다리는 시간만(`Runtime/World/Doors.cs:134`, `maps.json` `doorOpenSeconds`). Core `WorldSession.OpeningDoor`를 game/에서 읽는 곳 0 | 문에 들어서고 0.35~0.8초 동안 아무 표시 없이 멈춘 듯 보임 | WorldScreen이 열리는 문과 경과 비율을 받아 문 위에 넓어지는 사각형을 그림(경과 비율 조회 필요) |
-| 2 | 이동 구역 페이드(검정 82% 덮개 0.25초, 0.75초 재진입 금지) | `Game/World/TownLevelTransitionTrigger.cs` | Town 1, Beach 1 | 일부: 0.25초 지연만(`WorldMapLoader.cs:107`). 재진입은 "나갔다 다시 들어와야 반응"으로 대신 | 마을↔해변 전환이 페이드 없이 툭 바뀜 | 지연 동안 화면 전체 검정 덮개 그리기 |
-| 3 | 카메라 부드러운 추적(SmoothDamp 0.15초) | `Game/Player/CameraFollow.cs` | 실내 5씬, 마을은 설치기가 AddComponent | 다름: 매 프레임 바로 맞춤(`Host/World/WorldScreen.cs:272`). 맵 끝 고정·정수 배율은 있음 | 카메라가 딱딱하게 붙어 움직임 | 카메라 위치 상태와 SmoothDamp를 WorldScreen에, 맵에 들어설 때는 바로 맞춤 |
-| 4 | 마우스 왼클릭 행동(0.3초 행동 칸, 마우스 쪽 바라보기, E와 같은 상호작용) | `Game/Player/PlayerController.cs`, `Game/Characters/Growing/GrowingCharacterVisualView.cs` | Player 프리팹, 캐릭터 그림 프리팹 | 없음: 걷기·서기만(`World/CharacterArt.cs:192-222`), 월드 클릭 처리 없음 | 클릭해도 반응이 없고 마우스로 상호작용할 수 없음 | 행동 타이머(열 3~4) + Host 월드 클릭 → 방향·행동·상호작용 |
-| 5 | 상호작용 실패 안내(이유를 2.5초, 예: `ui.prompt.no-time`) | `Game/Player/PlayerInteractionRouter.cs:89-93` | Town 씬(학교 밖 활동·알바·도움) | 없음: 그 키가 game/에 0건. 활동 화면 안의 거절 이유는 있음(`Screens/Day/LocationModel.cs:103`) | 시간이 없을 때 알바·도움 지점을 눌러도 아무 말이 없음 | 안내 화면에 실패 문구 상태, 상호작용 결과에 실패 이유 |
-| 6 | 안내 글자를 화면 안에 맞추고 HUD 피하기 | `PlayerInteractionRouter.cs:136-200`, `Game/Player/InteractionPromptScreenReservations.cs` | 씬 4개 + 마을 설치기 | 없음: 대상 위에 그대로(`Screens/Hud/InteractionPromptScreen.cs:117-118`) | 화면 가장자리·HUD 아래 대상이면 글자가 잘리거나 가려짐 | 글자 상자를 화면·HUD 밖으로 옮기는 배치 |
-| 7 | 대상별 안내 글자 색 | `UI/StudentLife/DailyPlanBoardInteractor.cs:22` | School 씬 1곳 | 다름: 색 하나(`InteractionPromptScreen.cs:41`) | 작음 | 안내 사양에 색 하나 |
-| 8 | 학교 책상·의자·칠판의 앞뒤 가림(y-sort) | `Game/Interiors/GroundDepthSort.cs` | School 씬 13개(마을 32개는 그림 없는 지점) | 일부: 장치는 있음(`World/MapPicture.cs:23`). LDtk `ysort` 층이 house 1, interiors 0, town 0 | 학교에서 캐릭터가 책상 뒤로 가려지지 않음(추정) | 맵 데이터 작업(학교 가구 층에 `ysort`). 맵은 새로 그릴 예정 |
-| 9 | 마을 북쪽 구역 그림과 그 카메라 경계 | Town 씬 `CameraBounds`, 씬에서 칠한 땅 | Town 씬 | 없음: LDtk Level_0만. `interactions.json` 머리에 "북쪽 구역 아직 없음" | 학교 입구·시설이 있던 구역이 없어 임시 연결로 대신 | 맵 작업(새 맵) |
-| 10 | 가로등 지역 조명(주황 점광원, 반경 4, 낮 0.1 / 저녁 0.55 / 밤 0.85) | `Game/Lighting/LocalLightController.cs` | Town 씬 1개뿐, 자리가 마을 왼쪽 위 모서리 | 없음: 전역 낮밤 색조만(`World/DayNightLighting.cs:95`) | 작음(자리로 보아, 추정) | 점광원 목록 데이터 + 가산 혼합 빛 그림 |
-| 11 | 월드 상태 변화 표시물(바뀐 장소에 노란 사각형과 글자) | `UI/WorldState/WorldStateLogRuntimeInstaller.cs:275-303` | 씬에 없고 코드로 모든 플레이 씬에 생성. 깃발이 켜지고 장소가 있을 때만 | 없음: 기록 화면만(`Screens/Records/WorldStateLogScreen.cs`) | 바뀐 장소가 월드에 표시되지 않음 | 켜진 깃발 → 장소 좌표 → WorldScreen에 그리기 |
-| 12 | 낮밤 디버그 버튼 | `UI/Lighting/DayNightDebugCycleButton.cs` | Town 씬. 시간 HUD가 있으면 숨으므로 실제 플레이에서는 안 보였을 것(추정) | 없음. `HostOptions.StartHour`로 대신 | 없음 | 필요 없음 |
-| 13 | 나무 자원 지점 3개(치면 꺼짐, 보이지 않는 판정 상자) | `Game/Resources/ResourceNode.cs`, `Game/Player/GatherInteractor.cs:162` | Town 씬 3개 | 없음: `interactions.json`에 자원 종류 없음. 명령 `GameSession.GatherResource`는 있음 | 나무 퀘스트를 실제 맵에서 끝낼 수 없음(전수조사 0절) | 상호작용 종류 하나 + 지점 데이터 |
+| 1 | 자동문 열림 연출(문 그림이 0.25→1 폭으로 넓어지고 알파 0.55→1, 그 뒤 이동) | `Game/World/TownAutoDoorPortal.cs` | Town 씬 5곳과 실내 6씬. `InteriorDoorPortalRuntimeInstaller`가 AddComponent | 옮김(2026-11-12, `jdyj/runtime-feel`): `World/WorldTransition.cs`가 열리는 문의 경과 비율을 세고 `Host/World/WorldFeel.cs`가 문 위 사각형(폭 0.25→1, 알파 0.55→1)을 그린다. 수치 `game/world/presentation.json` door. 열린 문 그림은 데이터에 없어 사각형만 | 문에 들어서고 0.35~0.8초 동안 아무 표시 없이 멈춘 듯 보임 | 끝. 남은 것: 새 문 그림이 오면 "열린 그림이 있으면 그 그림" 한 갈래(지금은 데이터에 없음) |
+| 2 | 이동 구역 페이드(검정 82% 덮개 0.25초, 0.75초 재진입 금지) | `Game/World/TownLevelTransitionTrigger.cs` | Town 1, Beach 1 | 옮김(같은 날): 이동 구역(maps.json areas)에 들어선 동안 화면 전체 검정 82%(`presentation.json` area). 0.75초 재진입 금지는 전과 같이 "나갔다 다시 들어와야" 로 대신 | 마을↔해변 전환이 페이드 없이 툭 바뀜 | 끝. 학교 출구(임시 이동 구역)도 페이드로 보인다 |
+| 3 | 카메라 부드러운 추적(SmoothDamp 0.15초) | `Game/Player/CameraFollow.cs` | 실내 5씬, 마을은 설치기가 AddComponent | 옮김(같은 날): `World/SmoothCamera.cs`(Unity SmoothDamp 식 그대로, 0.15초는 `presentation.json` camera). 맵에 들어설 때·가구 배치 카메라에서 돌아올 때 바로 맞춤. 경계(`CameraFrame`)는 원하는 자리와 결과 둘 다에 | 카메라가 딱딱하게 붙어 움직임 | 끝 |
+| 4 | 마우스 왼클릭 행동(0.3초 행동 칸, 마우스 쪽 바라보기, E와 같은 상호작용) | `Game/Player/PlayerController.cs`, `Game/Characters/Growing/GrowingCharacterVisualView.cs` | Player 프리팹, 캐릭터 그림 프리팹 | 옮김(같은 날): 왼클릭 → 누른 쪽 바라보기(`PointerFacing`), 0.3초 3·4열(`CharacterActionTimer`, `presentation.json` action), E와 같은 상호작용. UI 위(모달이면 막는 판)·이동이 막힌 때·가구 배치 중에는 월드로 가지 않는다 | 클릭해도 반응이 없고 마우스로 상호작용할 수 없음 | 끝. Unity 판은 UI 버튼 위 클릭도 휘둘렀다 — 달라진 동작 |
+| 5 | 상호작용 실패 안내(이유를 2.5초, 예: `ui.prompt.no-time`) | `Game/Player/PlayerInteractionRouter.cs:89-93` | Town 씬(학교 밖 활동·알바·도움) | 옮김(같은 날): 일터·진로 연습 지점의 명령이 거절되면 알림 층 `interaction-refusal`에 이유 2.5초(`Screens/Hud/InteractionRefusalNoticeScreen.cs`). 이유는 결과 종류 + Core `StudentActivityRefusal`. 다른 종류(장소·시설·발견·대화)는 화면이 열려 이유를 보인다 | 시간이 없을 때 알바·도움 지점을 눌러도 아무 말이 없음 | 끝. Unity 판의 학교 밖 활동·마을 돕기 지점은 MonoGame 맵에 아직 없다 |
+| 6 | 안내 글자를 화면 안에 맞추고 HUD 피하기 | `PlayerInteractionRouter.cs:136-200`, `Game/Player/InteractionPromptScreenReservations.cs` | 씬 4개 + 마을 설치기 | 옮기지 않음(같은 날 판단): 대상 위에 그대로(`Screens/Hud/InteractionPromptScreen.cs:117-118`) | 화면 가장자리·HUD 아래 대상이면 글자가 잘리거나 가려짐 | 필요한 것: 배치 단계에서 글자 폭을 아는 길(`Rootborn.Ui` `UiLabel`은 그릴 때만 잰다)과 HUD 사각형 조회. Ui·Screens를 맡은 세션의 일 |
+| 7 | 대상별 안내 글자 색 | `UI/StudentLife/DailyPlanBoardInteractor.cs:22` | School 씬 1곳 | 옮기지 않음(같은 날 판단): 색 하나 | 작음 | 그림·테마를 새로 만들 때 테마가 정한다(대상 종류별 색이 필요하면 안내 사양에 색 하나) |
+| 8 | 학교 책상·의자·칠판의 앞뒤 가림(y-sort) | `Game/Interiors/GroundDepthSort.cs` | School 씬 13개(마을 32개는 그림 없는 지점) | 옮기지 않음: 장치는 있음(`World/MapPicture.cs`). 맵은 새로 그린다 | 학교에서 캐릭터가 책상 뒤로 가려지지 않음(추정) | 새 맵의 가구 층에 `ysort`(맵 작업) |
+| 9 | 마을 북쪽 구역 그림과 그 카메라 경계 | Town 씬 `CameraBounds`, 씬에서 칠한 땅 | Town 씬 | 옮기지 않음: 맵 작업(새 맵). 그 사이 북쪽 광장 임시 지점 | 학교 입구·시설이 있던 구역이 없어 임시 연결로 대신 | 새 맵 |
+| 10 | 가로등 지역 조명(주황 점광원, 반경 4, 낮 0.1 / 저녁 0.55 / 밤 0.85) | `Game/Lighting/LocalLightController.cs` | Town 씬 1개뿐, 자리가 마을 왼쪽 위 모서리 | 이미 들어감: `game/world/lights.json` + 빛 지도(`Host/World/WorldScreen.cs` DrawLightMap) | 작음(자리로 보아, 추정) | 끝 |
+| 11 | 월드 상태 변화 표시물(바뀐 장소에 노란 사각형과 글자) | `UI/WorldState/WorldStateLogRuntimeInstaller.cs:275-303` | 씬에 없고 코드로 모든 플레이 씬에 생성. 깃발이 켜지고 장소가 있을 때만 | 옮기지 않음(같은 날 판단): 기록 화면만(`Screens/Records/WorldStateLogScreen.cs`) | 바뀐 장소가 월드에 표시되지 않음 | Unity 판 표시물은 단색 사각형과 id를 사람 말처럼 바꾼 글자(현지화 아님)를 모든 씬의 같은 좌표에 둔 임시 표시였고, 그 좌표(장소 WorldPosition)는 LDtk에 없는 북쪽 구역이다. 새 맵에서 장소 자리와 표시물 그림을 정할 때 다시 본다 |
+| 12 | 낮밤 디버그 버튼 | `UI/Lighting/DayNightDebugCycleButton.cs` | Town 씬. 시간 HUD가 있으면 숨으므로 실제 플레이에서는 안 보였을 것(추정) | 옮기지 않음: `HostOptions.StartHour`로 대신 | 없음 | 필요 없음 |
+| 13 | 나무 자원 지점 3개(치면 꺼짐, 보이지 않는 판정 상자) | `Game/Resources/ResourceNode.cs`, `Game/Player/GatherInteractor.cs:162` | Town 씬 3개 | 옮기지 않음(이번 작업 범위 밖): `interactions.json`에 자원 종류 없음. 명령 `GameSession.GatherResource`는 있음 | 나무 퀘스트를 실제 맵에서 끝낼 수 없음(전수조사 0절) | 연출이 아니라 퀘스트 진행에 닿는다: 상호작용 종류 하나(Screens 듣는 쪽 + 결과 알림) + 지점 데이터(`interactions.json`). 월드 데이터·Screens를 맡은 세션의 일 |
 
 **Unity 판에서도 쓰이지 않던 것**: 도구 휘두르기 그림(도구를 장착할 길이 없음), 낚시 연출(낚싯대를 장착할 수 없음), 부위 조립 캐릭터와 Pixelwood·NPC 그림 어댑터(씬·프리팹 0, AddComponent 0).
 

@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Core.Careers;
 using Rootborn.Core.Interaction;
 using Rootborn.Core.StudentLife;
 using Rootborn.Game;
+using Rootborn.Screens.Hud;
 
 namespace Rootborn.Screens.Minigames
 {
@@ -42,6 +44,8 @@ namespace Rootborn.Screens.Minigames
     /// 일터 지점(Unity PartTimeWorkInteractor)과 진로 연습 지점(StudentLifeSceneInteraction의 연습): 상호작용하면 그 알바·연습을 시작한다.
     /// 미니게임이 있으면 예약하고(그러면 MinigameTrigger가 화면을 연다), 없으면 바로 한다. 어느 상호작용 종류가 어느 쪽인지는 등록할 때 넘긴다.
     /// 지점의 대상 id가 알바·연습 id다(엔티티 id로 분기하지 않는다).
+    /// 거절되면 이유를 실패 안내(InteractionRefusalNoticeScreen)에 보인다(Unity PartTimeWorkInteractor.ExplainFailure). 이유는 명령의 결과 종류와
+    /// Core 판정(StudentActivityRefusal)에서 온다.
     /// </summary>
     public sealed class MinigameWorkPoints
     {
@@ -73,21 +77,54 @@ namespace Rootborn.Screens.Minigames
         private void Work(GameSession session, string workId)
         {
             string request = "part-time-work:" + Guid.NewGuid().ToString("N");
-            bool hasMinigame = session.Definitions.TryGet(workId, out IMinigamePartTimeWork work) && work.Minigame != null;
+            bool known = session.Definitions.TryGet(workId, out IMinigamePartTimeWork work);
+            bool hasMinigame = known && work.Minigame != null;
             int seed = _seeds();
-            LastResult = hasMinigame
-                ? (object)_services.Session.BeginPartTimeWork(workId, request, seed)
-                : (object)_services.Session.PerformPartTimeWork(workId, request);
+            if (hasMinigame)
+            {
+                AdultCareerResult result = session.BeginPartTimeWork(workId, request, seed);
+                LastResult = result;
+                Refused(result.Kind, known ? Why(session, work.TimePolicy, work.EnergyCost, work.FocusCost) : StudentActivityRefusalReason.None);
+            }
+            else
+            {
+                PartTimeWorkResult result = session.PerformPartTimeWork(workId, request);
+                LastResult = result;
+                Refused(result.Kind, known ? Why(session, work.TimePolicy, work.EnergyCost, work.FocusCost) : StudentActivityRefusalReason.None);
+            }
         }
 
         private void Practice(GameSession session, string practiceId)
         {
             string request = "career-practice:" + Guid.NewGuid().ToString("N");
-            bool hasMinigame = session.Definitions.TryGet(practiceId, out CareerPractice practice) && practice.Minigame != null;
+            bool known = session.Definitions.TryGet(practiceId, out CareerPractice practice);
+            bool hasMinigame = known && practice.Minigame != null;
             int seed = _seeds();
-            LastResult = hasMinigame
-                ? (object)_services.Session.BeginPractice(practiceId, request, seed)
-                : (object)_services.Session.PerformPractice(practiceId, request);
+            LifeActivity activity = known ? practice.Activity : null;
+            StudentActivityRefusalReason why = activity != null ? Why(session, activity.TimePolicy, activity.EnergyCost, activity.FocusCost) : StudentActivityRefusalReason.None;
+            if (hasMinigame)
+            {
+                AdultCareerResult result = session.BeginPractice(practiceId, request, seed);
+                LastResult = result;
+                Refused(result.Kind, why);
+            }
+            else
+            {
+                LifeActivityResult result = session.PerformPractice(practiceId, request);
+                LastResult = result;
+                Refused(result.Kind, why);
+            }
         }
+
+        /// <summary>마지막 거절로 보인 실패 안내의 문구 키(없으면 null).</summary>
+        public string LastRefusalKey { get; private set; }
+
+        // 이유는 명령을 부른 뒤의 상태로 판정한다: 거절이면 상태가 그대로다(Core는 거절할 때 바꾸지 않는다).
+        private static StudentActivityRefusalReason Why(GameSession session, ActivityTimePolicy policy, int energy, int focus) =>
+            StudentActivityRefusal.Explain(session.Student, policy, energy, focus);
+
+        private void Refused(AdultCareerResultKind kind, StudentActivityRefusalReason why) => LastRefusalKey = InteractionRefusals.Show(_services, InteractionRefusals.KeyFor(kind, why));
+
+        private void Refused(LifeActivityResultKind kind, StudentActivityRefusalReason why) => LastRefusalKey = InteractionRefusals.Show(_services, InteractionRefusals.KeyFor(kind, why));
     }
 }

@@ -96,6 +96,9 @@ namespace Rootborn.Host.World
         /// <summary>마지막으로 그린 화면의 왼쪽 위가 맵의 어느 픽셀이었나(맵이 작으면 음수).</summary>
         public Vector2 CameraOffset { get; private set; }
 
+        /// <summary>조작감·연출(game/world/presentation.json): 부드러운 카메라, 클릭 행동, 문 덮개·구역 페이드. 계산과 그리기는 WorldFeel에 있다.</summary>
+        public readonly WorldFeel Feel;
+
         /// <summary>새 게임의 학생 일차(Unity StudentLifeProgress 첫날).</summary>
         public const int NewGameStudentDay = 1;
 
@@ -111,6 +114,7 @@ namespace Rootborn.Host.World
             LightingData = WorldLightingData.Load(Path.Combine(options.RepoRoot, WorldLightingData.DefaultRelativePath));
             _ambient = new AmbientLight(LightingData);
             _cameraBounds = MapCameraBounds.Load(catalog);
+            Feel = new WorldFeel(device, WorldPresentation.Load(Path.Combine(options.RepoRoot, WorldPresentation.DefaultRelativePath)));
             _interactionData = InteractionData.Load(options.InteractionsPath ?? Path.Combine(options.RepoRoot, InteractionData.DefaultRelativePath));
             Interactions = new InteractionTargets(_interactionData.RadiusCells);
             Interactions.Interacted += e => { InteractionLog.Add(e); Console.WriteLine("[상호작용] " + e); };
@@ -315,6 +319,7 @@ namespace Rootborn.Host.World
             Session.Update(dx, dy, dt);
             if (Session.Map.Id != before)
                 foreach (string problem in Current.Problems) Console.Error.WriteLine("[월드] " + Session.Map.Id + ": " + problem);
+            Feel.AfterWalk(Session, Current.Entry, dt);
             PlayerAnimator.Advance(Session.Walker.Moving, Session.Walker.Facing, dt);
             if (_studentHour == null) Clock.Tick(dt * _timeScale);
             UpdateLight(dt);
@@ -356,6 +361,7 @@ namespace Rootborn.Host.World
                 Scale = PlacementCamera.Scale(screenHeight);
                 (float x, float y) = PlacementCamera.TopLeft(screenWidth, screenHeight);
                 offset = new Vector2(x, y);
+                Feel.CameraReleased();
             }
             else
             {
@@ -363,7 +369,7 @@ namespace Rootborn.Host.World
                 float viewW = screenWidth / (float)Zoom, viewH = screenHeight / (float)Zoom;
                 AreaRect bounds = CameraFrame.Bounds(grid.PixelWidth, grid.PixelHeight,
                     _cameraBounds.TryGet(map.Entry.Id, out AreaRect authored) ? authored : (AreaRect?)null);
-                AreaRect frame = CameraFrame.View(walker.X, walker.Y, bounds, viewW, viewH);
+                AreaRect frame = Feel.Follow(map.Entry.Id, walker.X, walker.Y, bounds, viewW, viewH);
                 offset = new Vector2(frame.X, frame.Y);
             }
             CameraOffset = offset;
@@ -406,6 +412,7 @@ namespace Rootborn.Host.World
                 batch.Draw(_lightMap, Vector2.Zero, Color.White);
                 batch.End();
             }
+            Feel.DrawOverlays(batch, view, screenWidth, screenHeight, grid.CellSize);
             if (_trimPending) TrimTextures();
         }
 
@@ -561,14 +568,15 @@ namespace Rootborn.Host.World
         private void DrawCharacter(SpriteBatch batch, Walker walker)
         {
             AreaRect body = walker.Box;
-            DrawLayer(batch, PlayerLook.Body, body, PlayerAnimator);
+            int column = Feel.Action.ColumnOr(PlayerAnimator.Column); // 클릭 행동 중이면 행동 칸
+            DrawLayer(batch, PlayerLook.Body, body, PlayerAnimator, column);
             IReadOnlyList<CharacterSheet> layers = PlayerLook.Layers; // foreach는 열거자를 매 프레임 상자에 담는다
-            for (int i = 0; i < layers.Count; i++) DrawLayer(batch, layers[i], body, PlayerAnimator);
+            for (int i = 0; i < layers.Count; i++) DrawLayer(batch, layers[i], body, PlayerAnimator, column);
         }
 
-        private void DrawLayer(SpriteBatch batch, CharacterSheet sheet, AreaRect body, CharacterAnimator animator)
+        private void DrawLayer(SpriteBatch batch, CharacterSheet sheet, AreaRect body, CharacterAnimator animator, int column = -1)
         {
-            CharacterFrame f = sheet.Frame(animator.Row, animator.Column);
+            CharacterFrame f = sheet.Frame(animator.Row, column >= 0 ? column : animator.Column);
             if (f == null) return;
             var position = new Vector2(MathF.Round(body.CenterX - f.W * f.PivotX), MathF.Round(body.Bottom - f.H * f.PivotY));
             batch.Draw(Load(f.Texture), position, new Rectangle(f.X, f.Y, f.W, f.H), _tint);
@@ -623,6 +631,7 @@ namespace Rootborn.Host.World
             _lightMap?.Dispose();
             _lightMap = null;
             MultiplyBlend.Dispose();
+            Feel.Dispose();
         }
     }
 }

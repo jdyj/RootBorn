@@ -718,13 +718,16 @@ namespace Rootborn.Host
 
             float dt = _options.TestMode ? TestFrameSeconds : (float)gameTime.ElapsedGameTime.TotalSeconds;
             s.Tick(dt); // 실시간 화면(미니게임)의 시간은 이 dt로만 흐른다
-            bool blocked = s.MovementBlockedWhile(keys.Shift);
+            bool blocked = s.MovementBlockedWhile(keys.Shift) || World.Feel.BlocksInput;
             World.Update(blocked ? 0 : keys.MoveX, blocked ? 0 : keys.MoveY, dt);
             s.EnterMap(World.Session.Map.Id, MapFeaturesHere());
             SyncSession();
             SyncHouse();
             UpdatePlacement(keys, pointer, dt);
             s.SetInteractionTarget(TargetOnScreen());
+            // 마우스 왼클릭: UI 위(모달이 떠 있으면 막는 판)가 아니고 막히지 않았으면 누른 쪽을 보고 E와 같은 상호작용(WorldFeel.Click).
+            bool overUi = _tree.HitTest(pointer.X / Fit.Scale, pointer.Y / Fit.Scale) != null;
+            if (World.Feel.Click(pointer, overUi, s.MovementBlocked || (_placement != null && _placement.IsOpen), World)) interact = true;
             if (interact)
             {
                 InteractionEvent? happened = World.Interact();

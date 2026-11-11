@@ -66,6 +66,8 @@ namespace Rootborn.Screens
         public const string DiscoveryNotice = "discovery-notice";
         /// <summary>단축키 안내(F1, 설정의 단축키 단추, 시작 화면에서도 F1). 읽는 모달이라 이동을 막는다. 줄은 이 등록 표의 키 배정에서 만든다.</summary>
         public const string KeyGuide = "key-guide";
+        /// <summary>상호작용 실패 안내(알림 층, Unity PlayerInteractionRouter의 실패 이유 2.5초). 일터·연습 지점의 명령이 거절되면 연다.</summary>
+        public const string InteractionRefusal = "interaction-refusal";
 
         public static void Register(ScreenRegistry r)
         {
@@ -112,6 +114,7 @@ namespace Rootborn.Screens
             r.Add(LocationStateLog, ScreenLayer.Panel, blocksMovement: false, s => new LocationStateLogScreen(s)).OpenedBy(ScreenKey.LocationLog);
             r.Add(Facility, ScreenLayer.Modal, blocksMovement: true, s => new FacilityScreen(s)).OpenedByInteraction(FacilityScreen.InteractionKind);
             r.Add(DiscoveryNotice, ScreenLayer.Notice, blocksMovement: false, s => new DiscoveryNoticeScreen(s)).OpenedByInteraction(DiscoveryNoticeScreen.InteractionKind);
+            r.Add(InteractionRefusal, ScreenLayer.Notice, blocksMovement: false, s => new InteractionRefusalNoticeScreen(s));
             r.Add(KeyGuide, ScreenLayer.Modal, blocksMovement: true, s => new KeyGuideScreen(s)).OpenedBy(ScreenKey.Help).KeyWorksOnStartScreens();
         }
 

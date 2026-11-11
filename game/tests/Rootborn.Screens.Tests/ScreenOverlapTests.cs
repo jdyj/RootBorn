@@ -30,6 +30,7 @@ namespace Rootborn.Screens.Tests
             [ScreenCatalog.Dialogue] = t => t.Stack.Interaction(new InteractionEvent("House", "npc", "npc.first-guide")),
             [ScreenCatalog.Location] = t => t.Stack.Interaction(new InteractionEvent("Town", "location-activity", "location.library")),
             [ScreenCatalog.Minigame] = t => t.Stack.Interaction(new InteractionEvent("Town", "part-time-work", "work.shift.corner-store")),
+            [ScreenCatalog.InteractionRefusal] = t => Rootborn.Screens.Hud.InteractionRefusals.Show(t.Services, "ui.prompt.no-time"),
         };
 
         /// <summary>시험 준비가 따로 필요한 화면(성인 단계): 따로 연다.</summary>

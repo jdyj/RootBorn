@@ -221,5 +221,8 @@
   "ui.join.reason.cannot-listen": "Could not open a room on that address and port. Check that it is this PC's address and that no other program is using the port.",
   "ui.join.reason.room-save-unreadable": "The room save of this story could not be read. It was not overwritten.",
   "ui.settings.room-open": "Room open · {1}/{2} players\nAddress {0}",
-  "ui.settings.room-close": "Close room"
+  "ui.settings.room-close": "Close room",
+  "ui.prompt.requirements-unmet": "You don't meet the requirements yet.",
+  "ui.prompt.bag-full": "Your bag is full.",
+  "ui.prompt.cannot-now": "You can't do this right now."
 }
