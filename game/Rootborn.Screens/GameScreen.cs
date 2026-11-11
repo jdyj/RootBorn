@@ -9,8 +9,11 @@ namespace Rootborn.Screens
     /// <summary>화면이 놓이는 층. 아래에서 위로: 월드(Host) → HUD → 패널 → 모달 → 알림.</summary>
     public enum ScreenLayer { Hud = 0, Panel = 1, Modal = 2, Notice = 3 }
 
-    /// <summary>화면 쌓기가 받는 키(장치 키가 아니라 Host가 옮겨 준 값). E는 Unity 상호작용 키(E·Space·Ctrl) 묶음이다.</summary>
-    public enum ScreenKey { Up, Down, Left, Right, Tab, Enter, Escape, Inventory, Status, Interact }
+    /// <summary>
+    /// 화면 쌓기가 받는 키(장치 키가 아니라 Host가 옮겨 준 값). Interact는 Unity 상호작용 키(E·Space·Ctrl) 묶음이다.
+    /// Space·Rotate(R)·AltLeft(A)·AltRight(D)는 미니게임 키(Unity MinigamePanel). Space는 같은 프레임의 Interact보다 먼저 온다.
+    /// </summary>
+    public enum ScreenKey { Up, Down, Left, Right, Tab, Enter, Escape, Inventory, Status, Interact, Space, Rotate, AltLeft, AltRight }
 
     /// <summary>"무엇이 바뀌었다" 알림의 이름. 화면은 자기가 그리는 값과 관련된 알림만 보고 그 부분만 고친다. 새 이름은 상수 하나로 더한다.</summary>
     public static class ChangeTopics
@@ -120,6 +123,11 @@ namespace Rootborn.Screens
         protected internal virtual void OnClosed() { }
         /// <summary>게임 명령이 무언가를 바꿨다(이 화면이 열려 있을 때만 불린다). topic은 ChangeTopics.</summary>
         protected internal virtual void OnChanged(string topic) { }
+        /// <summary>
+        /// 시간이 흘렀다(열려 있을 때만, Host가 프레임마다 넘기는 dt). 실시간으로 도는 화면(미니게임)만 쓴다. 화면은 시계를 직접 읽지 않는다.
+        /// 배치를 바꿨으면 true(화면 쌓기가 다시 배치한다).
+        /// </summary>
+        protected internal virtual bool OnTick(float seconds) => false;
         /// <summary>화면이 가져갈 키. true면 다른 화면과 키 배정은 그 키를 보지 않는다.</summary>
         protected internal virtual bool OnKey(ScreenKey key, bool shift) => false;
 

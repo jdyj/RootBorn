@@ -247,9 +247,15 @@ namespace Rootborn.Host
             if (keys.Escape) s.Key(ScreenKey.Escape, keys.Shift);
             if (keys.Inventory) s.Key(ScreenKey.Inventory, keys.Shift);
             if (keys.Status) s.Key(ScreenKey.Status, keys.Shift);
+            // 미니게임 키는 상호작용 키보다 먼저 넘긴다(Space는 두 묶음에 다 든다).
+            if (keys.Space) s.Key(ScreenKey.Space, keys.Shift);
+            if (keys.Rotate) s.Key(ScreenKey.Rotate, keys.Shift);
+            if (keys.AltLeft) s.Key(ScreenKey.AltLeft, keys.Shift);
+            if (keys.AltRight) s.Key(ScreenKey.AltRight, keys.Shift);
             bool interact = keys.Interact && !s.Key(ScreenKey.Interact, keys.Shift) && !s.MovementBlocked;
 
             float dt = _options.TestMode ? TestFrameSeconds : (float)gameTime.ElapsedGameTime.TotalSeconds;
+            s.Tick(dt); // 실시간 화면(미니게임)의 시간은 이 dt로만 흐른다
             bool blocked = s.MovementBlockedWhile(keys.Shift);
             World.Update(blocked ? 0 : keys.MoveX, blocked ? 0 : keys.MoveY, dt);
             s.EnterMap(World.Session.Map.Id);

@@ -1,6 +1,9 @@
 using Rootborn.Screens.Dialogue;
 using Rootborn.Screens.Hud;
 using Rootborn.Screens.Day;
+using Rootborn.Screens.Minigames;
+using Rootborn.Screens.Objectives;
+using Rootborn.Screens.Quests;
 using Rootborn.Screens.Settings;
 
 namespace Rootborn.Screens
@@ -20,6 +23,9 @@ namespace Rootborn.Screens
         public const string HudPrompt = "hud.interaction-prompt";
         public const string Dialogue = "dialogue";
         public const string DailyEvent = "daily-event";
+        public const string Minigame = "minigame";
+        public const string ObjectiveJournal = "objective-journal";
+        public const string QuestChainLog = "quest-chain-log";
 
         // HUD 버튼이 여는 화면. 아직 옮기지 않은 화면은 id만 정해 두고, 그 화면을 등록하면 버튼이 저절로 이어진다.
         public const string CareerCandidates = "career-candidates";
@@ -47,6 +53,14 @@ namespace Rootborn.Screens
             r.Add(DailyPlan, ScreenLayer.Panel, blocksMovement: false, s => new DailyPlanScreen(s)).OpenedByInteraction(DailyPlanScreen.InteractionKind);
             r.Add(Location, ScreenLayer.Modal, blocksMovement: true, s => new LocationScreen(s)).OpenedByInteraction(LocationScreen.InteractionKind);
             r.Add(DayResult, ScreenLayer.Modal, blocksMovement: true, s => new DayResultScreen(s)).OpenedByInteraction(DayResultScreen.InteractionKind);
+            // 미니게임은 예약이 생기면 연다(Unity MinigamePresentationBridge). 일터·연습 지점은 상호작용 종류로 등록한다.
+            r.Add(Minigame, ScreenLayer.Modal, blocksMovement: true, s => new MinigameScreen(s));
+            r.AddListener(s => new MinigameTrigger(s, Minigame));
+            // 목표 수첩(Tab, 큰 패널, 이동을 막지 않음). 목표성 UI는 수첩이 소유한다(objective-journal-ui 규칙).
+            r.Add(ObjectiveJournal, ScreenLayer.Panel, blocksMovement: false, s => new ObjectiveJournalScreen(s)).OpenedBy(ScreenKey.Tab);
+            // 퀘스트 체인 기록: Unity 판에도 여는 키·상호작용이 없었다(등록만, Open(id)로만 연다).
+            r.Add(QuestChainLog, ScreenLayer.Panel, blocksMovement: false, s => new QuestChainLogScreen(s));
+            r.AddListener(s => new MinigameWorkPoints(s, new[] { "part-time-work" }, new[] { "career-practice" }));
         }
 
         /// <summary>표를 채운 새 등록 표.</summary>

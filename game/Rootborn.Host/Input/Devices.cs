@@ -38,6 +38,8 @@ namespace Rootborn.Host.Input
         public bool Inventory, Status;
         /// <summary>상호작용 키(Unity GatherInteractor: E, Space, 왼쪽·오른쪽 Ctrl)가 이번 프레임에 눌렸다.</summary>
         public bool Interact;
+        /// <summary>미니게임 키(Unity MinigamePanel): Space 탭, R 회전, A·D 줄 이동(누른 순간만).</summary>
+        public bool Space, Rotate, AltLeft, AltRight;
         public bool HeldUp, HeldDown, HeldLeft, HeldRight;
 
         /// <summary>누르고 있는 방향 키로 정한 걷기 방향(-1, 0, 1). 반대 방향을 함께 누르면 0.</summary>
@@ -66,6 +68,10 @@ namespace Rootborn.Host.Input
                 Status = Pressed(now, Keys.C),
                 Screenshot = Pressed(now, Keys.F12),
                 Interact = Pressed(now, Keys.E) || Pressed(now, Keys.Space) || Pressed(now, Keys.LeftControl) || Pressed(now, Keys.RightControl),
+                Space = Pressed(now, Keys.Space),
+                Rotate = Pressed(now, Keys.R),
+                AltLeft = Pressed(now, Keys.A),
+                AltRight = Pressed(now, Keys.D),
                 Shift = now.IsKeyDown(Keys.LeftShift) || now.IsKeyDown(Keys.RightShift),
                 HeldUp = now.IsKeyDown(Keys.Up) || now.IsKeyDown(Keys.W),
                 HeldDown = now.IsKeyDown(Keys.Down) || now.IsKeyDown(Keys.S),

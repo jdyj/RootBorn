@@ -88,12 +88,12 @@ namespace Rootborn.Screens.Tests.Dialogue
         }
 
         [Test]
-        public void TalkingToMom_StartsTheMainChain_SoTheTrackedHudChanges()
+        public void TalkingToMom_StartsTheMainChain_ButTheHudWaitsForJournalTracking()
         {
             using TestSession t = StartAndTalkToMom();
             var hud = t.Screen<TrackedObjectiveHudScreen>(ScreenCatalog.HudTracked);
-            Assert.That(hud.Model.StepId, Is.EqualTo("mainquest.BackToSchool"));
-            Assert.That(hud.IsShown, Is.True);
+            Assert.That(t.Session.TrackedObjective().StepId, Is.EqualTo("mainquest.BackToSchool"));
+            Assert.That(hud.IsShown, Is.False, "Unity TrackedObjectiveHud: 수첩에서 추적한 항목만 보인다");
         }
 
         [Test]

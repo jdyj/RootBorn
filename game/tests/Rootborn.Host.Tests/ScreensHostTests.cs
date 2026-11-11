@@ -101,8 +101,16 @@ namespace Rootborn.Host.Tests
             player.KeyUp(TestKey.LeftShift);
             Assert.That(player.Game.Ui.Focused?.Id, Is.EqualTo(SettingsScreen.ToggleId(0)));
             Assert.That((player.World.Walker.X, player.World.Walker.Y), Is.EqualTo((sx, sy)), "Shift+방향 키는 포커스만 옮기고 걷지 않는다");
+            // Tab은 포커스를 옮기지 않고 목표 수첩을 연다. 큰 패널은 하나만 떠서 설정이 닫힌다(Unity ModernUiPanelInputRouter).
             player.PressKey(TestKey.Tab);
-            Assert.That(player.Game.Ui.Focused?.Id, Is.EqualTo(SettingsScreen.ToggleId(0)), "Tab은 포커스를 옮기지 않는다(목표 수첩 키)");
+            Assert.That(player.Screens.IsOpen(ScreenCatalog.ObjectiveJournal), Is.True, "Tab은 목표 수첩 키");
+            Assert.That(player.Screens.IsOpen(ScreenCatalog.Settings), Is.False);
+            player.CloseScreenWithKey(TestKey.Tab, ScreenCatalog.ObjectiveJournal);
+            player.OpenScreenWithKey(TestKey.Escape, ScreenCatalog.Settings);
+            player.KeyDown(TestKey.LeftShift);
+            player.PressKey(TestKey.Down);
+            player.KeyUp(TestKey.LeftShift);
+            Assert.That(player.Game.Ui.Focused?.Id, Is.EqualTo(SettingsScreen.ToggleId(0)));
             player.PressKey(TestKey.Enter);
             Assert.That(settings.Model.IsOn(0), Is.False);
 

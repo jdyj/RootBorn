@@ -1,85 +1,51 @@
-using System;
-using System.Text;
-using Rootborn.Core.Quests;
-using Rootborn.Game;
+using Rootborn.Screens.Objectives;
 using Rootborn.Ui;
 
 namespace Rootborn.Screens.Hud
 {
-    /// <summary>힌트 줄이 무엇인가: 문구 키, "다음: {목표}" 형식, 또는 데이터가 준 값(키일 수도 글일 수도 있다).</summary>
-    public enum TrackedHintKind { None, Key, NextObjective, DataText }
-
     /// <summary>
-    /// 추적 목표 HUD의 표시 모델: 추적 중인 체인 하나의 지금 단계(GameSession.TrackedObjective). 제목·목표 줄·힌트는 Unity
-    /// QuestChainObjectiveSource가 수첩 줄을 만들던 순서 그대로: 제목은 단계 이름(없으면 체인 이름), 목표는 "목표 진행 / 필요" 줄을 " | "로 잇고,
-    /// 힌트는 완료 → 막힘 요약 → 목표를 다 채우고 기다리는 조건 → 첫 목표("다음: ...") → 수첩을 보라는 문구.
+    /// 추적 목표 HUD의 표시 모델: 목표 수첩에서 "추적"한 항목 하나(ObjectiveJournalTracking). Unity TrackedObjectiveHud.Show와 같은 규칙:
+    /// 제목은 항목 제목(없으면 "추적 중인 목표"), 진행은 항목 진행(없으면 상태), 힌트는 다음 할 일(없으면 부제).
+    /// 추적한 것이 없거나 그 항목이 목록에서 사라지면 없음(Unity: 추적 지정이 없으면 HUD를 띄우지 않고, 사라지면 숨긴다).
     /// </summary>
     public sealed class TrackedObjectiveModel
     {
         public static readonly TrackedObjectiveModel None = new TrackedObjectiveModel();
 
-        public bool HasChain { get; private set; }
-        public string ChainId { get; private set; } = string.Empty;
-        public string StepId { get; private set; } = string.Empty;
-        public string TitleKey { get; private set; } = string.Empty;
-        public QuestChainState State { get; private set; }
-        public ObjectiveLine[] Objectives { get; private set; } = Array.Empty<ObjectiveLine>();
-        public TrackedHintKind HintKind { get; private set; }
-        /// <summary>HintKind에 따라: 문구 키, 다음 목표의 표시 키, 데이터 값.</summary>
-        public string Hint { get; private set; } = string.Empty;
+        public bool HasItem { get; private set; }
+        public string StableKey { get; private set; } = string.Empty;
+        public JournalText Title { get; private set; } = JournalText.Empty;
+        public JournalText Progress { get; private set; } = JournalText.Empty;
+        public JournalText Hint { get; private set; } = JournalText.Empty;
 
-        public const string GenericObjectiveKey = "ui.journal.objective.generic";
-
-        public static TrackedObjectiveModel From(GameSession session)
+        public static TrackedObjectiveModel From(ScreenServices services)
         {
-            if (session == null) return None;
-            TrackedObjectiveView view = session.TrackedObjective();
-            if (!view.HasChain) return None;
-            QuestChainDefinition chain = session.Chain(view.ChainId);
-            var model = new TrackedObjectiveModel
+            if (services?.Session == null) return None;
+            ObjectiveJournalTracking tracking = ObjectiveJournalTracking.For(services);
+            if (!tracking.HasTracked) return None;
+            var items = new ObjectiveJournalAggregator(ObjectiveJournalSources.For(services)).Build(services.Session);
+            JournalItem item = ObjectiveJournalAggregator.Find(items, tracking.StableKey, out _);
+            if (item == null) return None;
+            return new TrackedObjectiveModel
             {
-                HasChain = true,
-                ChainId = view.ChainId,
-                StepId = view.StepId,
-                TitleKey = string.IsNullOrEmpty(view.StepNameKey) ? chain?.DisplayNameKey ?? string.Empty : view.StepNameKey,
-                State = view.State,
-                Objectives = view.Objectives,
+                HasItem = true,
+                StableKey = item.StableKey,
+                Title = item.Title.IsEmpty ? JournalText.Key("ui.objectives.tracked") : item.Title,
+                Progress = item.Progress.IsEmpty ? item.State : item.Progress,
+                Hint = item.NextHint.IsEmpty ? item.Subtitle : item.NextHint,
             };
-
-            QuestStepDefinition step = chain != null ? session.QuestChains.GetCurrentStep(chain) : null;
-            if (view.State == QuestChainState.Completed) model.SetHint(TrackedHintKind.Key, "ui.journal.chain.completed-hint");
-            else if (view.State == QuestChainState.Blocked)
-            {
-                if (string.IsNullOrEmpty(view.BlockedSummary)) model.SetHint(TrackedHintKind.Key, "ui.journal.chain.blocked-hint");
-                else model.SetHint(TrackedHintKind.DataText, view.BlockedSummary);
-            }
-            else if (step != null && step.CompletionConditions.Count > 0 && session.QuestChains.AreCurrentObjectivesComplete(chain) && step.CompletionConditions[0] != null)
-                model.SetHint(TrackedHintKind.DataText, step.CompletionConditions[0].BlockedSummary);
-            else if (view.Objectives.Length > 0)
-                model.SetHint(TrackedHintKind.NextObjective, string.IsNullOrEmpty(view.Objectives[0].DisplayKey) ? GenericObjectiveKey : view.Objectives[0].DisplayKey);
-            else model.SetHint(TrackedHintKind.Key, "ui.journal.chain.open-hint");
-            return model;
         }
 
-        private void SetHint(TrackedHintKind kind, string value) { HintKind = kind; Hint = value ?? string.Empty; }
-
-        /// <summary>바뀐 것이 없는지(같은 단계, 같은 진행, 같은 힌트).</summary>
-        public bool SameAs(TrackedObjectiveModel other)
-        {
-            if (other == null || HasChain != other.HasChain || ChainId != other.ChainId || StepId != other.StepId || State != other.State
-                || HintKind != other.HintKind || Hint != other.Hint || Objectives.Length != other.Objectives.Length) return false;
-            for (int i = 0; i < Objectives.Length; i++)
-                if (!Objectives[i].Equals(other.Objectives[i])) return false;
-            return true;
-        }
+        public bool SameAs(TrackedObjectiveModel other) => other != null && HasItem == other.HasItem && StableKey == other.StableKey
+            && Title.Equals(other.Title) && Progress.Equals(other.Progress) && Hint.Equals(other.Hint);
     }
 
     /// <summary>
     /// 추적 목표 HUD(Unity TrackedObjectiveHud): 위쪽 줄 아래 오른쪽의 640x200 칸, 수첩 아이콘과 제목·진행·힌트 세 줄.
-    /// 추적 중인 체인이 없으면 보이지 않는다(Unity 판도 추적 대상이 없으면 숨겼다). 이동을 막는 화면이 떠 있는 동안도 숨긴다
-    /// (Unity: 입력 잠금 중 투명). 상시 HUD는 이것 하나다(목표 수첩 규칙).
+    /// 수첩에서 추적한 항목 하나만 보인다(목표 수첩 규칙: 상시 목표 HUD는 이것 하나). 이동을 막는 화면이 떠 있는 동안 숨긴다
+    /// (Unity: 입력 잠금 중 투명). 게임 진행이 바뀌거나 추적이 바뀌면 그 항목을 다시 받는다.
     /// </summary>
-    public sealed class TrackedObjectiveHudScreen : GameScreen
+    public sealed class TrackedObjectiveHudScreen : GameScreen, IJournalTextResolver
     {
         /// <summary>배치(칸 안, 왼쪽 위 기준). Unity: 아이콘 (40, 52) 80x80 / 글자 x 136, 오른쪽 36 안쪽: 제목 y 36 높이 32 22, 진행 y 76 높이 28 18, 힌트 y 110 높이 54 18.</summary>
         private static class Layout
@@ -90,7 +56,6 @@ namespace Rootborn.Screens.Hud
             public const float ProgressY = 76f, ProgressHeight = 28f, ProgressFont = 18f;
             public const float HintY = 110f, HintHeight = 54f, HintFont = 18f;
             public const string Icon = "icon:journal";
-            public const string ObjectiveSeparator = " | ";
         }
 
         public const string PanelId = "hud.tracked";
@@ -143,45 +108,29 @@ namespace Rootborn.Screens.Hud
             Refresh(true);
         }
 
-        protected internal override void OnChanged(string topic) => Refresh(false);
+        protected internal override void OnChanged(string topic)
+        {
+            if (topic == ChangeTopics.Map) return;
+            Refresh(false);
+        }
 
         private void Refresh(bool force)
         {
-            TrackedObjectiveModel model = TrackedObjectiveModel.From(Services.Session);
+            TrackedObjectiveModel model = TrackedObjectiveModel.From(Services);
             bool language = _shownLanguage != Services.Text.Language;
             if (force || language || !model.SameAs(Model))
             {
                 Model = model;
                 _shownLanguage = Services.Text.Language;
-                if (model.HasChain) WriteText(model);
+                if (model.HasItem)
+                {
+                    _title.Text = model.Title.Resolve(this);
+                    _progress.Text = model.Progress.Resolve(this);
+                    _hint.Text = model.Hint.Resolve(this);
+                }
             }
             UpdateVisibility();
         }
-
-        private void WriteText(TrackedObjectiveModel model)
-        {
-            _title.Text = string.IsNullOrEmpty(model.TitleKey) ? T("ui.objectives.tracked") : T(model.TitleKey);
-            if (model.Objectives.Length == 0) _progress.Text = T("ui.journal.state." + model.State);
-            else
-            {
-                var line = new StringBuilder(64);
-                foreach (ObjectiveLine objective in model.Objectives)
-                {
-                    if (line.Length > 0) line.Append(Layout.ObjectiveSeparator);
-                    line.Append(ObjectiveLabel(objective.DisplayKey)).Append(' ').Append(objective.Current).Append(" / ").Append(objective.Required);
-                }
-                _progress.Text = line.ToString();
-            }
-            switch (model.HintKind)
-            {
-                case TrackedHintKind.Key: _hint.Text = T(model.Hint); break;
-                case TrackedHintKind.NextObjective: _hint.Text = F("ui.journal.next", ObjectiveLabel(model.Hint)); break;
-                case TrackedHintKind.DataText: _hint.Text = Shown(model.Hint); break;
-                default: _hint.Text = string.Empty; break;
-            }
-        }
-
-        private string ObjectiveLabel(string displayKey) => T(string.IsNullOrEmpty(displayKey) ? TrackedObjectiveModel.GenericObjectiveKey : displayKey);
 
         private void UpdateVisibility()
         {
@@ -190,7 +139,11 @@ namespace Rootborn.Screens.Hud
             if (Services.Screens != null)
                 foreach (GameScreen screen in Services.Screens.OpenScreens)
                     if (screen.BlocksMovement) { blocked = true; break; }
-            _panel.Visible = IsOpen && Model.HasChain && !blocked;
+            _panel.Visible = IsOpen && Model.HasItem && !blocked;
         }
+
+        string IJournalTextResolver.T(string key) => T(key);
+        string IJournalTextResolver.F(string key, object[] args) => F(key, args);
+        string IJournalTextResolver.Shown(string keyOrText) => Shown(keyOrText);
     }
 }

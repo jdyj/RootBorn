@@ -59,7 +59,7 @@ namespace Rootborn.Host.Tests
         }
     }
 
-    public enum TestKey { Up, Down, Left, Right, Tab, Enter, Backspace, Escape, LeftShift, E, Space, I, C }
+    public enum TestKey { Up, Down, Left, Right, Tab, Enter, Backspace, Escape, LeftShift, E, Space, I, C, R, A, D }
 
     /// <summary>
     /// 플레이어를 대신해 조작한다. 근거의 종류:
@@ -104,6 +104,9 @@ namespace Rootborn.Host.Tests
                 case TestKey.Space: return (44, ' ');
                 case TestKey.I: return (12, 'i');
                 case TestKey.C: return (6, 'c');
+                case TestKey.R: return (21, 'r');
+                case TestKey.A: return (4, 'a');
+                case TestKey.D: return (7, 'd');
                 default: throw new ArgumentOutOfRangeException(nameof(key));
             }
         }

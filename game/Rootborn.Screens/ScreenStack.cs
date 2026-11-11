@@ -99,6 +99,9 @@ namespace Rootborn.Screens
         /// <summary>지금 상호작용 키를 누르면 반응할 대상(없으면 null).</summary>
         public InteractionTargetView? Target { get; private set; }
 
+        /// <summary>지금 크기로 다시 배치한다(화면이 노드를 새로 단 직후).</summary>
+        internal void Relayout() => Tree.Layout(_width, _height);
+
         public void Layout(float width, float height)
         {
             _width = width; _height = height;
@@ -200,6 +203,16 @@ namespace Rootborn.Screens
         }
 
         // ---------- 입력 ----------
+
+        /// <summary>프레임마다 한 번. 열린 화면에 흐른 시간을 넘긴다(Host의 dt, 테스트는 고정 간격).</summary>
+        public void Tick(float seconds)
+        {
+            if (seconds <= 0f || float.IsNaN(seconds) || float.IsInfinity(seconds)) return;
+            bool relayout = false;
+            foreach (GameScreen screen in Snapshot().ToArray())
+                if (screen.IsOpen && screen.OnTick(seconds)) relayout = true;
+            if (relayout) Tree.Layout(_width, _height);
+        }
 
         /// <summary>프레임마다 한 번. 논리 좌표.</summary>
         public void Pointer(float x, float y, bool down, float wheel) => Tree.UpdatePointer(x, y, down, wheel);
