@@ -12,8 +12,10 @@
 - 영향 범위 (테스트 결과, 호환성, 회귀)
 - 관련 ADR/스토리/이슈 ID
 
-Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+Co-Authored-By: <그 커밋을 만든 모델 이름> <noreply@anthropic.com>
 ```
+
+끝줄은 그 커밋을 만든 모델 이름을 쓴다. 특정 모델 이름을 문서에 고정해 두지 않는다(세션 시작 때 받은 지침의 끝줄을 따른다).
 
 ## Prefix 카탈로그
 
@@ -22,62 +24,61 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
 | `[FEATURE]` | 신규 기능 추가 |
 | `[BUGFIX]` | 버그 수정 |
 | `[REFACTOR]` | 동작 변경 없는 구조 개선 |
-| `[UI]` | UI/UX 변경 (Inspector·Scene 포함) |
-| `[ASSET]` | .asset / Prefab / 텍스처 / 오디오 등 자산 (Modern 스프라이트/타일 매핑 포함, Pixelwood는 레거시 범위) |
-| `[BALANCE]` | 수치 튜닝, 성장 시간, 도구 효율, 상태 감쇠율 등 |
+| `[UI]` | 화면·UI 부품·테마 변경 |
+| `[ASSET]` | 그림·오디오·맵(LDtk)·좌표표 등 자산 |
+| `[BALANCE]` | 수치 튜닝(`data/`의 규칙 수치) |
 | `[TEST]` | 테스트 추가/수정 (코드 동작 변경 X) |
 | `[DOCS]` | 문서·헌법·규칙·ADR·CHANGELOG |
 | `[CHORE]` | 빌드 설정·gitignore·CI·도구 |
-| `[NETWORK]` | NGO 동기화·dedicated server 부트·세션 |
-| `[META]` | 세대·가문·후계자·조상 등 메타 시스템 |
+| `[NETWORK]` | 멀티플레이 통신·세션(`Rootborn.Net`) |
+| `[META]` | 세이브 형식·진행 구조 등 메타 시스템 |
 
-복수 prefix 가능: `[ASSET][BALANCE]` (예: 작물 성장 시간 + 스프라이트 동시 변경).
+복수 prefix 가능: `[ASSET][UI]` (예: 테마 그림 교체 + 좌표표 수정).
 
 ## 제목 규칙
 
 - 한글 명령형 또는 명사형. 50자 이내.
-- 변경의 **결과**를 표현 ("Wheat 성장 시간 60→45초 리밸런스" ○, "Wheat 수정" ✗).
-- 파일·함수명·기호는 영어 그대로 ("FinalStateHash 에 Star opt-in segment 추가" ○).
+- 변경의 **결과**를 표현 ("알바 보수 100→120 리밸런스" ○, "알바 수정" ✗).
+- 파일·함수명·기호는 영어 그대로 ("GameSession 에 SaveSlotId 조회 추가" ○).
 
 ## 본문 규칙
 
 - 한글 산문 또는 불릿. 120자/줄 권장.
 - "왜" 가 비명시적이면 한 줄 추가.
-- 숫자·메트릭 포함 시 단위 명시 (DPS, 시드, ★, ms 등).
+- 숫자·메트릭 포함 시 단위 명시 (건수, ms, 프레임 등).
 - AI 에이전트 리뷰 결과 반영 시 그 출처 명시 (예: "code-reviewer APPROVE — MEDIUM 1건 주석 처리").
 
 ## 예시
 
-### 좋은 예
+### 좋은 예 (형식을 보이는 가상의 예)
 
 ```
-[FEATURE] 도구 해금 — 지식 트리거 SO 평가기 추가
+[FEATURE] 수첩 추적 지정을 세이브에 저장 — 이어 하기 뒤에도 추적 목표 HUD 유지
 
-- KnowledgeProgress가 액션 버스(OnGather/OnHit)를 받아 KnowledgeNode._triggers
-  배열을 모두 평가, 전부 만족 시 unlocksTools/unlocksRecipes를 인벤토리에 추가.
-- 트리거 평가는 SO 다형 (KnowledgeTriggerBase). 신규 트리거 = 신규 SO 클래스 1개.
-- 시스템 코드는 특정 knowledgeId에 분기하지 않음 (CI 게이트 통과).
+- 추적한 목표 id를 세이브 모양(TrackedObjective)에 더하고 Version을 올림.
+  옛 세이브는 추적 없음으로 읽힌다.
+- 화면은 GameSession 조회·명령만 부른다. 규칙 판단은 Core에 있다.
 
-테스트: 4 EditMode 신규 (Trigger_HitGroundWithRock 임계 10회, 기타 트리거 누락 시
-미해금, 멀티 트리거 AND 평가, GameDataRegistry 일관성). 통과.
+테스트: Game 3건 신규(저장 뒤 새 GameSession으로 읽기, 옛 세이브 고정 파일,
+추적 해제). dotnet test game/Rootborn.sln 통과, 프로젝트별 건수 증가 확인.
 
 리뷰: code-reviewer APPROVE.
 
-Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+Co-Authored-By: <그 커밋을 만든 모델 이름> <noreply@anthropic.com>
 ```
 
 ### 나쁜 예
 
 ```
-fix: knowledge bug                       ← 영어 + 모호함
+fix: quest bug                           ← 영어 + 모호함
 [FEATURE] update files                   ← 무엇을 추가했는지 불명
-[패치] 도구 좀 손봤음                       ← prefix 외래 + 비정형
+[패치] 화면 좀 손봤음                       ← prefix 외래 + 비정형
 ```
 
 ## 다중 변경 분리 원칙
 
 한 커밋에 다른 카테고리 변경이 섞이면 분리 권장:
-- 데이터 수치 + 시뮬 코드 = 두 커밋
+- 데이터 수치 + 규칙 코드 = 두 커밋
 - 새 기능 + 무관한 docs = 두 커밋
 
 예외: 한 변경이 본질적으로 묶여야 의미 있는 경우 (예: 신규 클래스 + 그 클래스에 대한 테스트).

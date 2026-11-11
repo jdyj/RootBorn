@@ -119,16 +119,16 @@ constitution-updater → .claude/constitution.md 또는 rules/*.md (Edit)
 분석과 갱신 모두 **일반화된 원리 수준**에서 수행한다.
 
 **오버피팅 수정 (금지):**
-> "PlayerController.cs에서 _rigidbody 이름 쓰지 마"
+> "HudLayout.cs에서 줄 높이 28 쓰지 마"
 
 **일반화된 수정 (권장):**
-> **§ 네이밍**
+> **§ 배치 수치**
 >
-> MonoBehaviour의 SerializeField 필드는 언더스코어 접두사를 사용한다 (`_moveSpeed`, `_rigidbody`).
+> 패널 크기·위치, 줄 높이, 칸 크기는 그 화면의 배치 한 곳에 모은다.
 >
-> **Why:** 일반 지역 변수/프로퍼티와 시각적으로 구분되어, 에디터 직렬화 대상임을 코드 리뷰 시 즉시 알 수 있다.
+> **Why:** 새 디자인에서 크기가 바뀌어도 한 곳만 고치면 된다.
 >
-> **How to apply:** 모든 신규 MonoBehaviour 작성 시, 그리고 기존 코드 수정 시.
+> **How to apply:** 새 화면을 만들 때, 기존 화면을 고칠 때.
 
 ## 에러 핸들링
 
@@ -143,22 +143,16 @@ constitution-updater → .claude/constitution.md 또는 rules/*.md (Edit)
 ## 테스트 시나리오
 
 ### 정상 흐름
-1. 사용자: "왜 또 Update에서 GetComponent 불렀어? 이거 성능상 안 된다고 했잖아"
-2. 훅이 "왜", "안 된다" 키워드 감지 → 시스템 리마인더 출력
-3. Claude가 이 스킬 호출
-4. feedback-analyzer:
-   - 원인: "규칙 위반 + 규칙이 충분히 강조되지 않음"
-   - 일반화: "Update/FixedUpdate 핫패스에서 GetComponent 금지 원칙을 csharp-developer 에이전트 정의에 추가"
-5. constitution-updater:
-   - `.claude/rules/coding-standards.md`의 "금지 패턴" 테이블 강조
-   - `.claude/agents/csharp-developer.md`에 작업 원칙 추가 항목
-   - changelog.md에 이력 기록
-6. 사용자에게 diff 제시 → 승인
-7. 다음 세션부터 csharp-developer가 로드 시 강화된 규칙 확인
+1. 사용자: "왜 또 화면 코드에 문구를 직접 적었어? 키로 받으라고 했잖아"
+2. 훅이 "왜" 키워드를 감지해 시스템 리마인더를 출력한다.
+3. Claude가 이 스킬을 호출한다.
+4. feedback-analyzer: 원인 "규칙 위반 + 강조 부족", 일반화 "사람이 읽는 문구는 모두 현지화 키로"
+5. constitution-updater: `.claude/rules/localization.md`의 해당 항목을 강화하고, 필요하면 `AGENTS.md` 요약을 맞추고, changelog.md에 이력을 적는다.
+6. 사용자에게 diff를 보이고 승인을 받는다.
 
 ### 에러 흐름
 1. 사용자: "아니 그게 아니야"
-2. 훅이 감지 → 스킬 호출
-3. feedback-analyzer가 컨텍스트를 봐도 무엇에 대한 불만인지 불명확
+2. 훅이 감지해 스킬을 호출한다.
+3. feedback-analyzer가 컨텍스트를 봐도 무엇에 대한 불만인지 불명확하다.
 4. 사용자에게 구체화 질문 — "어떤 파일/어떤 결정이 잘못됐나요?"
-5. 답변 후 재분석
+5. 답변 후 재분석한다.
