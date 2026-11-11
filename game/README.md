@@ -12,10 +12,12 @@
 | `Rootborn.World` | LDtk 파일(.ldtk·.ldtkl)을 그대로 읽고, 맵 목록 `game/world/maps.json`으로 Core 월드(충돌·문·도착 지점)와 그릴 목록을 만든다. 장면 목록·낮밤 조명은 정의 로더가 만든 것을 받는다(`WorldTravelData.From`, `DayNightLighting.From`). 새 맵 검사 `MapChecks`. 맵을 그리는 사람의 약속은 `game/world/README.md` | 없음 |
 | `Rootborn.Ui` | 배치, 포인터 판정, 클릭, 포커스 이동, 9조각 계산과 부품(패널, 글자, 여러 줄 글자, 그림, 버튼, 칸, 글자 칸, 스크롤 목록, 탭 줄, 게이지, 켬/끔, 미끄럼 막대, 카드 줄·격자). 그리기 명령 목록만 낸다 | 없음 |
 | `Rootborn.Screens` | 화면들, 화면 쌓기(`ScreenStack`), 등록 표(`ScreenCatalog`), 현지화 문구(`GameText`), 게임 명령 감싸개(`SessionCommands`) | 없음 |
+| `Rootborn.Net` | 멀티플레이 바탕: 전송 인터페이스(`ITransport`)와 같은 프로세스 전송(`LoopbackNetwork`, 지연·손실·순서 바뀜)·UDP 전송(`UdpTransport`, LiteNetLib 1.3.5 고정), 메시지 종류 등록 표(`RootbornMessages`, 종류 번호 + 형식 버전 + 이진 몸통), 접속 세션(`SessionServer`·`SessionClient`: 승인·신원·위치·겉모습·공용 시간). 각자 자기 판을 돌리는 모델이라 진행은 보내지 않는다. 규칙(정원, 도착 자리, 공용 시간, 사이 메우기)은 Core `Rootborn.Core.Network` | 없음 |
 | `Rootborn.Host` | 창, 화면 배율, 입력 장치 계층, 한글 조합 입력, TTF 글자, 그리기, 화면 저장, 견본 화면 | 3.8.6.1 고정 |
 | `tests/Rootborn.Data.Tests` | 정의 로더, 실제 `data/` 전체 읽기, 세이브 저장소, Unity 판 QA 세이브 고정 파일 | 없음 |
 | `tests/Rootborn.World.Tests` | 모든 맵에 도는 새 맵 검사(`MapContractTests`, 지금 맵의 알려진 문제 고정), 새 게임 자리에서 메인 체인 지점까지 걷기(`MainChainWalkTests`), 실제 LDtk로 맵 만들기, Unity 씬에 구워진 충돌과 칸 단위 대조, 도착 지점·문 목적지, 크기가 다른 집, 장면 목록·고정 세이브, 캐릭터 그림, 낮밤, 상호작용 데이터 | 없음 |
 | `tests/Rootborn.Game.Tests` | 실제 `data/`와 임시 폴더 저장소로 새 게임 초기값, 메인 체인 끝까지(화면 없이, 가구 방 칸은 실제 집 맵), 성인기, 보상 한 번만, Unity QA 세이브·스냅샷 이전 슬롯 이어 하기 | 없음 |
+| `tests/Rootborn.Net.Tests` | 같은 프로세스 전송으로 서버 1 + 클라이언트 여럿(승인·정원 초과, 서로 보임, 맵 옮김, 하루 끝 준비, 늦게 들어온 사람, 끊김·재접속·시간 초과, 손실·지연·순서 바뀜, 깨진 메시지), 메시지 형식, UDP 루프백(포트는 운영체제가 준다) | 없음 |
 | `tests/Rootborn.Ui.Tests` | 화면 없이 도는 테스트 | 없음 |
 | `tests/Rootborn.Screens.Tests` | 창 없이 도는 화면 테스트: 화면 쌓기의 층·배타·이동 막음·입력 넘기기, 실제 `ko.json`·`en.json`, 설정·HUD·대화·하루 이벤트·가방·상태 화면을 실제 `data/`와 `GameSession`으로 눌러 보기(알려진 빠진 현지화 키는 `KnownMissingKeys`) | 없음 |
 | `tests/Rootborn.Host.Tests` | 실제 창과 게임 루프를 한 프레임씩 돌리는 테스트(새 게임 → 집 → 마을 → 가게 → 이어 하기 시나리오 `NewGameJourneyTests` 포함) | 있음 |
@@ -101,6 +103,7 @@ MonoGame 버전을 올릴 때는 앞의 두 곳을 먼저 확인하고 `Rootborn
 
 - `Rootborn.Data.Tests`: 자동 테스트. 종류를 더하면 `Rootborn.Data/Builders`에 등록하거나 `NotRules`·`NotPortedYet`에 적어야 `RealDataTests`가 통과한다.
 - `Rootborn.World.Tests`: 자동 테스트. 화면 근거가 아니다.
+- `Rootborn.Net.Tests`: 자동 테스트. UDP는 같은 기계의 루프백 소켓 둘이고, 두 프로세스·두 기계·Steam 근거가 아니다.
 - `Rootborn.Ui.Tests`, `Rootborn.Screens.Tests`: 자동 테스트. 화면 근거가 아니다.
 - `Rootborn.Host.Tests`: 장치 이벤트 주입. 키와 글자는 SDL 이벤트 큐에, 포인터는 게임의 포인터 장치 계층에 넣는다.
   클릭은 UI 포인터 판정을 거친다. OS 입력 계층은 거치지 않으므로 보고할 때 "OS 입력 계층 미확인"으로 적는다.

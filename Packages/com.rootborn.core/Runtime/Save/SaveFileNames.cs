@@ -49,6 +49,16 @@ namespace Rootborn.Core.Save
         /// <summary>월드 상태 중 Shared·SaveSlot 범위만 담는 슬롯 공유 파일.</summary>
         public const string WorldStateShared = "world-state-progress-shared.json";
 
+        /// <summary>
+        /// 같이 쓰는 시간 파일이 놓이는 슬롯 자리(Unity SaveService.WorldTimeDirectory의 "world-time" 폴더). 파일 이름은 <see cref="WorldTime"/>.
+        /// Unity 판은 세이브 폴더를 따로 준 실행(-saveRoot)에서 &lt;root&gt;/world-time/&lt;슬롯&gt;.json에 썼다.
+        /// </summary>
+        public const string WorldTimeSlot = "world-time";
+
+        /// <summary>Unity NetworkWorldTimeState.SavePath: 빈 슬롯은 "default", 경로 구분자 등은 '_'.</summary>
+        public static string WorldTime(string saveSlot)
+            => (string.IsNullOrEmpty(saveSlot) ? "default" : Sanitize(saveSlot)) + ".json";
+
         public static bool IsDefaultPlayer(string playerId)
             => string.IsNullOrEmpty(playerId) || playerId == DefaultPlayerId || playerId == LegacyPlayerId;
 
