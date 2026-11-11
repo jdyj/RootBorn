@@ -3,6 +3,7 @@ using System.Globalization;
 using Rootborn.Core.Placement;
 using Rootborn.Core.StudentLife;
 using Rootborn.Ui;
+using Rootborn.Screens.Hud;
 
 namespace Rootborn.Screens.Day
 {
@@ -99,7 +100,39 @@ namespace Rootborn.Screens.Day
 
         protected internal override void OnChanged(string topic)
         {
-            if (Services.Session != null && _locationId != null) Render();
+            if (Services.Session == null || _locationId == null) return;
+            FinishWaitedPurchase();
+            Render();
+        }
+
+        // 방의 허락을 기다리던 구매(돈을 같이 쓰는 방, 설계 3.2절). 끝나면 결과 문구로 바꾼다.
+        private string _waitingPurchase;
+
+        private void FinishWaitedPurchase()
+        {
+            var session = Services.Session;
+            if (_waitingPurchase == null || session.WaitingForRoom || !session.LastRoomCommandApplied.HasValue) return;
+            string id = _waitingPurchase;
+            _waitingPurchase = null;
+            if (session.LastRoomCommandApplied.Value)
+            {
+                _resultText = string.Format(CultureInfo.InvariantCulture, T("dream.shop.bought"), TryFindRow(id, out LocationRow row) ? Name(row) : string.Empty);
+            }
+            else _resultText = session.LastRoomRefusal ? T(RoomMoneyText.RefusedKey) : T("dream.shop.failed");
+        }
+
+        private bool TryFindRow(string id, out LocationRow found)
+        {
+            found = default;
+            if (Model == null) return false;
+            foreach (LocationRow row in Model.Rows)
+            {
+                if (row.Id != id) continue;
+                found = row;
+                return true;
+            }
+
+            return false;
         }
 
         private void Press(int index)
@@ -107,6 +140,7 @@ namespace Rootborn.Screens.Day
             if (Model == null || index < 0 || index >= Model.Rows.Count) return;
             LocationRow row = Model.Rows[index];
             if (!row.Enabled) return; // Unity 판처럼 못 하는 줄은 눌리지 않는다(이유는 줄에 보인다)
+            if (Services.Session.WaitingForRoom) return; // 방의 허락을 기다리는 동안은 다시 누르지 않는다
             if (row.Kind == LocationRowKind.Activity) PerformActivity(row);
             else Purchase(row);
         }
@@ -129,6 +163,14 @@ namespace Rootborn.Screens.Day
         private void Purchase(LocationRow row)
         {
             FurniturePurchaseResult result = Services.Session.PurchaseFurniture(row.Id);
+            if (Services.Session.WaitingForRoom)
+            {
+                _waitingPurchase = row.Id;
+                _resultText = T(RoomMoneyText.WaitingKey);
+                _result.Text = _resultText;
+                return;
+            }
+
             string name = Name(row);
             _resultText = result == FurniturePurchaseResult.Purchased ? string.Format(CultureInfo.InvariantCulture, T("dream.shop.bought"), name)
                 : result == FurniturePurchaseResult.NotEnoughMoney ? T("dream.shop.not-enough")
@@ -146,7 +188,8 @@ namespace Rootborn.Screens.Day
             _title.Text = Model.NameKey.Length > 0 ? T(Model.NameKey) : string.Empty;
             _description.Text = T(Model.DescriptionKey);
             string time = StudentTimeText.Format(T, session.Student);
-            _timeBudget.Text = Model.OfferBalance >= 0 ? string.Format(CultureInfo.InvariantCulture, T("life.location.time-with-balance"), time, Model.OfferBalance) : time;
+            string balanceKey = session.SharesWallet ? "life.location.time-with-room-balance" : "life.location.time-with-balance"; // 돈을 같이 쓰는 방이면 방 지갑
+            _timeBudget.Text = Model.OfferBalance >= 0 ? string.Format(CultureInfo.InvariantCulture, T(balanceKey), time, Model.OfferBalance) : time;
             _state.Visible = Model.ShowsState;
             _state.Text = Model.ShowsState ? T(Model.StateNameKey) + (Model.StateDescriptionKey.Length == 0 ? string.Empty : "\n" + T(Model.StateDescriptionKey)) : string.Empty;
             string hints = T(LocationModel.HintsTitleKey);

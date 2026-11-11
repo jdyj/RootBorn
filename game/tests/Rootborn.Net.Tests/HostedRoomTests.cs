@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using NUnit.Framework;
+using Rootborn.Core.Room;
 using Rootborn.Core.Save;
 using Rootborn.Core.World;
 using Rootborn.Net.Room;
@@ -194,6 +195,108 @@ namespace Rootborn.Net.Tests
             Assert.That(cb.TryReceive(out TransportEvent gone) && gone.Kind == TransportEventKind.Disconnected, Is.True);
             merged.Send(new PeerId(-3), new byte[] { 1 }, Delivery.Unreliable); // 모르는 번호는 아무 일 없다
             merged.Send(new PeerId(5 * MergedServerTransport.MaxTransports + 6), new byte[] { 1 }, Delivery.Unreliable);
+        }
+
+        [Test]
+        public void ReopeningASlot_KeepsTheSharesAndCapacityChosenWhenTheRoomWasMade()
+        {
+            var store = new MemorySaveStore();
+            var clock = new TestClock();
+            Assert.That(HostedRoom.TryReadSaved(store, "slot-0", out _), Is.False, "방이 없는 슬롯");
+            using (HostedRoom first = HostedRoom.Open(IPAddress.Loopback, 0, new RoomServerSettings { MaxPlayers = 3, SharedPieces = new[] { "wallet" } },
+                       Versions, store, "slot-0", clock, null))
+                Assert.That(first.MaxPlayers, Is.EqualTo(3));
+
+            Assert.That(HostedRoom.TryReadSaved(store, "slot-0", out SavedRoomSettings saved), Is.True);
+            Assert.That(saved.SharedPieces, Is.EqualTo(new[] { "wallet" }));
+            Assert.That(saved.MaxPlayers, Is.EqualTo(3));
+
+            var log = new List<string>();
+            using HostedRoom again = HostedRoom.Open(IPAddress.Loopback, 0, new RoomServerSettings { MaxPlayers = 6, SharedPieces = new[] { "town" } },
+                Versions, store, "slot-0", clock, l => log.Add(l));
+            Assert.That(again.MaxPlayers, Is.EqualTo(3), "정원은 방 설정 — 다시 열 때 받은 값은 쓰지 않는다");
+            Assert.That(again.Server.ShareSettings.SharedPieces, Is.EqualTo(new[] { "wallet" }));
+            Assert.That(log.Any(l => l.Contains("정원")), Is.True, string.Join(" | ", log));
+        }
+
+        [Test]
+        public void ARoomMadeBeforeSettingsFiles_IsReadAsSavedWithNothingShared()
+        {
+            var store = new MemorySaveStore();
+            using (HostedRoom.Open(IPAddress.Loopback, 0, new RoomServerSettings(), Versions, store, "slot-0", new TestClock(), null)) { }
+            store.Delete("slot-0", Rootborn.Core.Save.SaveFileNames.RoomSettings);
+            Assert.That(HostedRoom.TryReadSaved(store, "slot-0", out SavedRoomSettings saved), Is.True, "방의 시계가 있으면 이미 있는 방");
+            Assert.That(saved.SharedPieces, Is.Empty);
+            Assert.That(saved.MaxPlayers, Is.EqualTo(0), "정원을 적지 않은 방");
+        }
+
+        // ---------- 손님 저장을 받지 않는 방(내 PC에서 연 방)의 공유 조각 ----------
+
+        private static (SessionClient Client, RoomGuestLink Link) Linked(SessionClient client)
+            => (client, new RoomGuestLink(client, new SessionClientSettings().MaxMessageBytes));
+
+        private static RoomWalletClient WalletOf(RoomGuestLink link) => link.Shares?.Find<RoomWalletClient>();
+
+        [Test]
+        public void RoomWithoutGuestSaves_TakesRequestsDirectly_AndEveryoneSeesTheWallet()
+        {
+            var clock = new TestClock();
+            using HostedRoom room = HostedRoom.Open(IPAddress.Loopback, 0, new RoomServerSettings { SharedPieces = new[] { "wallet" } }, Versions,
+                new MemorySaveStore(), "slot-0", clock, null);
+            var (me, mine) = Linked(Me(room));
+            var (friend, theirs) = Linked(Friend(room, "friend"));
+            using (me)
+            using (friend)
+            {
+                Assert.That(Pump(room, clock, () => mine.Ready && theirs.Ready && WalletOf(mine)?.Known == true && WalletOf(theirs)?.Known == true, me, friend), Is.True);
+                Assert.That(mine.TakesGuestSaves, Is.False, "내 PC에서 연 방은 손님 저장을 받지 않는다(진행은 각자 PC)");
+
+                mine.Shares.Outbox.Add(new RoomRequestSaveData { Piece = "wallet", RequestId = "me-1", Kind = RoomWallet.Deposit, Amount = 5 });
+                Assert.That(mine.FlushRequests(), Is.EqualTo(1), "저장한 뒤 보낼 요청을 방으로 보낸다");
+                Assert.That(mine.FlushRequests(), Is.EqualTo(0), "같은 접속에서 같은 요청을 두 번 보내지 않는다");
+                Assert.That(Pump(room, clock, () => WalletOf(theirs).Balance == 5 && mine.Shares.Outbox.Requests.Count == 0, me, friend), Is.True,
+                    "친구의 화면에도 방 지갑 잔액이 바뀐다");
+                Assert.That(((RoomWallet)room.Server.Pieces.Pieces[0]).Balance, Is.EqualTo(5));
+
+                // 같은 요청 id를 다시 보내도(다시 붙어서 보냄) 한 번만 반영된다.
+                mine.Shares.Outbox.Add(new RoomRequestSaveData { Piece = "wallet", RequestId = "me-1", Kind = RoomWallet.Deposit, Amount = 5 });
+                Assert.That(mine.FlushRequests(), Is.EqualTo(1));
+                Assert.That(Pump(room, clock, () => mine.Shares.Outbox.Requests.Count == 0, me, friend), Is.True);
+                Assert.That(((RoomWallet)room.Server.Pieces.Pieces[0]).Balance, Is.EqualTo(5), "장부가 같은 id를 막는다");
+            }
+        }
+
+        [Test]
+        public void RoomWithoutGuestSaves_TwoHoldsAtOnce_OnlyTheFirstIsGranted()
+        {
+            var clock = new TestClock();
+            using HostedRoom room = HostedRoom.Open(IPAddress.Loopback, 0, new RoomServerSettings { SharedPieces = new[] { "wallet" } }, Versions,
+                new MemorySaveStore(), "slot-0", clock, null);
+            var (me, mine) = Linked(Me(room));
+            var (friend, theirs) = Linked(Friend(room, "friend"));
+            using (me)
+            using (friend)
+            {
+                Assert.That(Pump(room, clock, () => WalletOf(mine)?.Known == true && WalletOf(theirs)?.Known == true, me, friend), Is.True);
+                mine.Shares.Outbox.Add(new RoomRequestSaveData { Piece = "wallet", RequestId = "me-d", Kind = RoomWallet.Deposit, Amount = 10 });
+                mine.FlushRequests();
+                Assert.That(Pump(room, clock, () => WalletOf(theirs).Balance == 10, me, friend), Is.True);
+
+                var granted = new List<string>();
+                var refused = new List<string>();
+                WalletOf(mine).Granted += id => granted.Add("me:" + id);
+                WalletOf(mine).Refused += id => refused.Add("me:" + id);
+                WalletOf(theirs).Granted += id => granted.Add("friend:" + id);
+                WalletOf(theirs).Refused += id => refused.Add("friend:" + id);
+                mine.Shares.Outbox.Add(new RoomRequestSaveData { Piece = "wallet", RequestId = "me-h", Kind = RoomWallet.Hold, Amount = 8 });
+                theirs.Shares.Outbox.Add(new RoomRequestSaveData { Piece = "wallet", RequestId = "fr-h", Kind = RoomWallet.Hold, Amount = 8 });
+                mine.FlushRequests();
+                theirs.FlushRequests();
+                Assert.That(Pump(room, clock, () => granted.Count + refused.Count == 2, me, friend), Is.True);
+                Assert.That(granted.Count, Is.EqualTo(1), "먼저 온 요청만: " + string.Join(", ", granted));
+                Assert.That(refused.Count, Is.EqualTo(1));
+                Assert.That(((RoomWallet)room.Server.Pieces.Pieces[0]).Balance, Is.EqualTo(2), "음수가 되지 않는다");
+            }
         }
     }
 }

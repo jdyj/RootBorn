@@ -149,6 +149,8 @@ namespace Rootborn.Net.Messages
             c.Add<Room.SaveTransferAnswerMessage>(16, 1, Room.RoomShareMessageBodies.WriteTransferAnswer, Room.RoomShareMessageBodies.ReadTransferAnswer);
             c.Add<Room.RoomPieceStateMessage>(17, 1, Room.RoomShareMessageBodies.WritePieceState, Room.RoomShareMessageBodies.ReadPieceState);
             c.Add<Room.RoomAnswerMessage>(18, 1, Room.RoomShareMessageBodies.WriteAnswer, Room.RoomShareMessageBodies.ReadAnswer);
+            // 손님 저장을 받지 않는 방의 공유 조각 요청(30번 — 다른 단계가 19번부터 쓸 자리를 비워 둔다).
+            c.Add<Room.RoomRequestsMessage>(30, 1, Room.RoomShareMessageBodies.WriteRequests, Room.RoomShareMessageBodies.ReadRequests);
         }
 
         private static bool Empty<T>(NetReader r, int version, out T message) where T : class, new()

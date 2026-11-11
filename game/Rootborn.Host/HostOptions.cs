@@ -20,6 +20,8 @@ namespace Rootborn.Host
         public const string JoinVariable = "ROOTBORN_JOIN";
         public const string HostVariable = "ROOTBORN_HOST_ROOM";
         public const string MaxPlayersVariable = "ROOTBORN_MAX_PLAYERS";
+        /// <summary>같이 쓸 것(데디케이티드 서버의 --share와 같은 이름·규칙 — Net RoomShareArgument).</summary>
+        public const string ShareVariable = Rootborn.Net.Room.RoomShareArgument.Variable;
         /// <summary>UI 테마를 주지 않았을 때: Unity 판의 승인된 도시형 몰딩(2026-10-27).</summary>
         public const string DefaultUiTheme = "urban";
 
@@ -80,6 +82,12 @@ namespace Rootborn.Host
         /// <summary>내 PC에서 여는 방의 정원(--max-players). 주지 않으면 null이고 방 설정의 기본값(4)이다. --host와만 준다.</summary>
         public int? MaxPlayers;
 
+        /// <summary>
+        /// 내 PC에서 여는 방이 같이 쓸 것(--share, 쉼표로 나눈 공유 조각 이름, none이면 시간만). 주지 않으면 null이고 방 열기 창에서 고른다.
+        /// --host와만 준다. 방을 처음 만들 때만 쓴다 — 이미 있는 방은 저장된 설정을 따른다(창에서도 바꿀 수 없다).
+        /// </summary>
+        public string[] SharedPieces;
+
         /// <summary>시작 화면에서 바로 방을 연다(--host와 --slot).</summary>
         public bool HostOnStart => HostAddress != null && SaveSlot != null;
 
@@ -137,6 +145,8 @@ namespace Rootborn.Host
             string maxPlayers = environment(MaxPlayersVariable); // 서버와 같은 이름이라 --host가 없으면 그냥 쓰지 않는다
             bool maxPlayersGiven = false;
             if (!string.IsNullOrWhiteSpace(maxPlayers)) o.MaxPlayers = ParseMaxPlayers(maxPlayers, "환경 변수 " + MaxPlayersVariable);
+            string share = environment(ShareVariable); // 서버와 같은 이름이라 --host가 없으면 그냥 쓰지 않는다
+            bool shareGiven = false;
             string uiTheme = environment(UiThemeVariable);
             string dayCopies = environment(DayCopiesVariable);
             if (!string.IsNullOrWhiteSpace(dayCopies)) o.DayCopies = ParseDayCopies(dayCopies, "환경 변수 " + DayCopiesVariable);
@@ -168,6 +178,7 @@ namespace Rootborn.Host
                     case "--join": o.JoinAddress = value; break;
                     case "--host": o.HostAddress = value; break;
                     case "--max-players": o.MaxPlayers = ParseMaxPlayers(value, "--max-players"); maxPlayersGiven = true; break;
+                    case "--share": share = value; shareGiven = true; break;
                     case "--lang": o.Language = value; break;
                     case "--ui-theme": uiTheme = value; break;
                     case "--frames":
@@ -240,6 +251,14 @@ namespace Rootborn.Host
             }
             else if (maxPlayersGiven)
                 throw new InvalidOperationException("--max-players 는 --host 와 함께 준다(내 PC에서 여는 방의 정원)");
+            else if (shareGiven)
+                throw new InvalidOperationException("--share 는 --host 와 함께 준다(내 PC에서 여는 방이 같이 쓸 것)");
+            if (o.HostAddress != null && share != null)
+            {
+                var catalog = Rootborn.Core.Room.RoomPieceCatalog.CreateDefault();
+                if (!Rootborn.Net.Room.RoomShareArgument.TryParse(share, catalog, out o.SharedPieces, out string unknown))
+                    throw new InvalidOperationException("--share 에 모르는 조각: " + unknown + " (" + Rootborn.Net.Room.RoomShareArgument.Known(catalog) + ")");
+            }
             if (o.SaveSlot != null && o.World != null)
                 throw new InvalidOperationException("--world 와 --slot 은 함께 줄 수 없다(슬롯이 시작 맵을 정한다)");
             if (o.SaveSlot != null && o._hourGiven)

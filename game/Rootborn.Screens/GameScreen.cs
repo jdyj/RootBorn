@@ -152,6 +152,13 @@ namespace Rootborn.Screens
             return Services.Text.Format(key, args);
         }
 
+        /// <summary>방이 같이 쓰는 것의 문구("같이 쓰는 것: 돈" — <see cref="Start.RoomShareText"/>). 쓴 키를 TextKeys에 더한다.</summary>
+        protected string SharesText(System.Collections.Generic.IReadOnlyList<string> pieces)
+        {
+            Start.RoomShareText.AddKeys(_textKeys, pieces);
+            return Start.RoomShareText.Describe(Services.Text, pieces);
+        }
+
         /// <summary>
         /// 데이터가 넘긴 값이 키면 문구로, 키가 아니면 그대로(Unity ObjectiveJournalSourceText.Shown과 같음). 조건 요약처럼
         /// 키일 수도 글일 수도 있는 값에만 쓴다. 키가 아니어도 빠진 키로 세지 않는다.

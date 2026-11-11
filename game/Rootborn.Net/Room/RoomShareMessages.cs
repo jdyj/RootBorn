@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Rootborn.Core.Room;
 using Rootborn.Net.Messages;
 
 namespace Rootborn.Net.Room
@@ -41,6 +42,15 @@ namespace Rootborn.Net.Room
         public string Piece = string.Empty;
         public int Amount;
         public string[] Ids = Array.Empty<string>();
+    }
+
+    /// <summary>
+    /// 사람 → 방: 공유 조각 요청들(Core Room RoomRequestSaveData). 손님 저장을 받지 않는 방(내 PC에서 연 방)에서만 쓴다 — 받는 방은 요청이
+    /// 저장과 함께 간다(개인 진행과 한 번에). 보내는 쪽은 그 요청을 자기 세이브에 쓴 뒤에 보낸다(<see cref="RoomGuestLink.FlushRequests"/>).
+    /// </summary>
+    public sealed class RoomRequestsMessage
+    {
+        public RoomRequestSaveData[] Requests = Array.Empty<RoomRequestSaveData>();
     }
 
     /// <summary>방 → 보낸 사람: 요청 하나의 답(Core Room RoomAnswer).</summary>
@@ -328,6 +338,41 @@ namespace Rootborn.Net.Room
         {
             m = new SaveTransferAnswerMessage();
             return r.TryReadUInt32(out m.TransferId) && r.TryReadBool(out m.Accepted) && r.TryReadString(RootbornMessages.MaxReasonBytes, out m.Reason);
+        }
+
+        /// <summary>요청 메시지 하나에 실을 수 있는 요청 수(깨진 메시지가 방을 키우지 않게).</summary>
+        public const int MaxRequests = 64;
+
+        public static void WriteRequests(NetWriter w, RoomRequestsMessage m)
+        {
+            var requests = m.Requests ?? Array.Empty<RoomRequestSaveData>();
+            int count = Math.Min(requests.Length, MaxRequests);
+            w.WriteUInt16((ushort)count);
+            for (int i = 0; i < count; i++)
+            {
+                var r = requests[i] ?? new RoomRequestSaveData();
+                w.WriteString(r.Piece ?? string.Empty);
+                w.WriteString(r.RequestId ?? string.Empty);
+                w.WriteString(r.Kind ?? string.Empty);
+                w.WriteInt32(r.Amount);
+                WriteStrings(w, r.Ids);
+            }
+        }
+
+        public static bool ReadRequests(NetReader r, int version, out RoomRequestsMessage m)
+        {
+            m = new RoomRequestsMessage();
+            if (!r.TryReadUInt16(out ushort count) || count > MaxRequests) return false;
+            m.Requests = new RoomRequestSaveData[count];
+            for (int i = 0; i < count; i++)
+            {
+                var q = new RoomRequestSaveData();
+                if (!r.TryReadString(MaxPieceNameBytes, out q.Piece) || !r.TryReadString(MaxIdBytes, out q.RequestId) || q.RequestId.Length == 0
+                    || !r.TryReadString(MaxOutcomeBytes, out q.Kind) || !r.TryReadInt32(out q.Amount) || !ReadStrings(r, MaxIdBytes, MaxIds, out q.Ids)) return false;
+                m.Requests[i] = q;
+            }
+
+            return true;
         }
 
         public static void WritePieceState(NetWriter w, RoomPieceStateMessage m)

@@ -71,6 +71,7 @@ namespace Rootborn.Screens.Settings
         public const string KeyGuideButtonId = "settings.key-guide";
         public const string RoomLineId = "settings.room";
         public const string RoomTextId = "settings.room.text";
+        public const string RoomSharesId = "settings.room.shares";
         public const string RoomCloseId = "settings.room.close";
 
         /// <summary>
@@ -80,6 +81,8 @@ namespace Rootborn.Screens.Settings
         internal static class RoomRow
         {
             public const float TextX = -72f, TextW = 290f, TextH = 76f, Font = 16f;
+            /// <summary>같이 쓰는 것 한 줄(넘치면 말줄임): 방 글자를 위로 올리고 그 아래.</summary>
+            public const float SharedTextY = 4f, SharedTextH = 52f, SharesY = -25f, SharesH = 20f;
             public const float ButtonX = 152f, ButtonW = 130f, ButtonH = 40f, ButtonFont = 18f;
         }
 
@@ -97,6 +100,7 @@ namespace Rootborn.Screens.Settings
         private UiButton _keyGuideButton;
         private UiBox _roomLine;
         private UiTextBlock _roomText;
+        private UiLabel _roomShares;
         private UiButton _roomClose;
         private readonly List<UiNode> _iconGroup = new List<UiNode>(16);
 
@@ -171,21 +175,38 @@ namespace Rootborn.Screens.Settings
             _roomLine.Add(new UiBox { Color = PanelLight }).Centered(0f, 0f, 434f, h - 8f);
             _roomText = _roomLine.Add(new UiTextBlock { Id = RoomTextId, FontSize = RoomRow.Font, Color = UiTheme.Ink })
                 .Centered(RoomRow.TextX, 0f, RoomRow.TextW, RoomRow.TextH);
+            _roomShares = _roomLine.Add(new UiLabel { Id = RoomSharesId, FontSize = RoomRow.Font, Color = UiTheme.Ink })
+                .Centered(RoomRow.TextX, RoomRow.SharesY, RoomRow.TextW, RoomRow.SharesH);
             _roomClose = _roomLine.Add(new UiButton { Id = RoomCloseId, FontSize = RoomRow.ButtonFont })
                 .Centered(RoomRow.ButtonX, 0f, RoomRow.ButtonW, RoomRow.ButtonH);
             _roomClose.Clicked += () => Services.RoomHost?.Close();
         }
 
-        /// <summary>방 줄: 내 PC에서 연 방이 열려 있으면 아이콘 묶음 대신 보인다. 사람 수가 바뀌면 Host가 알린다(RoomHostText.Topic).</summary>
+        /// <summary>
+        /// 방 줄: 방에 있으면 아이콘 묶음 대신 보인다. 내 PC에서 연 방이면 "방 열림 · 사람 수/정원 · 주소"와 방 닫기, 남의 방에 들어갔으면 "방에 들어와 있어요".
+        /// 둘 다 마지막 줄에 그 방이 같이 쓰는 것(만들 때 정한 것). 사람 수가 바뀌면 Host가 알린다(RoomHostText.Topic).
+        /// </summary>
         private void WriteRoom()
         {
             Start.IRoomHost room = Services.RoomHost;
-            bool open = room != null && room.IsOpen;
-            _roomLine.Visible = open;
-            foreach (UiNode node in _iconGroup) node.Visible = !open;
-            if (!open) return;
-            _roomText.Text = F("ui.settings.room-open", room.ListenAddress, room.PlayerCount, room.MaxPlayers);
-            _roomClose.Text = T("ui.settings.room-close");
+            bool hosting = room != null && room.IsOpen;
+            var guestShares = Services.Session?.Shares?.Settings;
+            bool inRoom = hosting || guestShares != null;
+            _roomLine.Visible = inRoom;
+            foreach (UiNode node in _iconGroup) node.Visible = !inRoom;
+            if (!inRoom) return;
+            _roomClose.Visible = hosting;
+            _roomText.Centered(RoomRow.TextX, RoomRow.SharedTextY, RoomRow.TextW, RoomRow.SharedTextH);
+            if (hosting)
+            {
+                _roomText.Text = F("ui.settings.room-open", room.ListenAddress, room.PlayerCount, room.MaxPlayers);
+                _roomShares.Text = SharesText(room.SharedPieces);
+                _roomClose.Text = T("ui.settings.room-close");
+                return;
+            }
+
+            _roomText.Text = T("ui.settings.room-joined");
+            _roomShares.Text = SharesText(guestShares.SharedPieces);
         }
 
         private void LanguageLine(UiNode root)

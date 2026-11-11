@@ -79,6 +79,9 @@ namespace Rootborn.Screens.Inventory
         public InventoryScreen(ScreenServices services) : base(services) { }
 
         public InventoryModel Model => _model;
+
+        /// <summary>돈 카드가 방 지갑이다(돈을 같이 쓰는 방 — 상세의 이름이 "방 지갑").</summary>
+        public bool RoomWalletShown => Services.Session != null && Services.Session.SharesWallet;
         public int Tab => _tab;
         public string Query => _query;
         public bool PopupOpen => _popup != null && _popup.Visible;
@@ -313,7 +316,8 @@ namespace Rootborn.Screens.Inventory
         private void OpenPopup(InventoryRow row)
         {
             _popupIcon.Image = ItemIconId(row.Item);
-            _popupName.Text = NameOf(row.Item.DisplayKey);
+            bool roomWallet = RoomWalletShown && ReferenceEquals(row.Item, Services.Session.Inventory.Currency);
+            _popupName.Text = roomWallet ? T("ui.inventory.room-wallet") : NameOf(row.Item.DisplayKey);
             if (!string.IsNullOrEmpty(row.Item.DisplayKey)) T(row.Item.DisplayKey);
             _popupCount.Text = F("ui.inventory.item-count", row.Count);
             _popupDescription.Text = Shown(row.Item.Description);

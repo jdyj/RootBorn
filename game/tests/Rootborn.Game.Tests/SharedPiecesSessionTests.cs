@@ -119,9 +119,12 @@ namespace Rootborn.Game.Tests
             Assert.That(game.WaitingForRoom, Is.True, "방의 허락을 기다린다");
             Assert.That(game.FurnitureUnlocks.IsUnlocked(offer.UnlockToken), Is.False, "허락 전에는 아무것도 바뀌지 않는다");
 
+            Assert.That(game.LastRoomCommandApplied, Is.Null, "기다리는 동안은 결과가 없다");
             room.Deliver(shares);
             Assert.That(game.WaitingForRoom, Is.False);
             Assert.That(game.FurnitureUnlocks.IsUnlocked(offer.UnlockToken), Is.True, "허락이 오면 같은 명령이 끝난다");
+            Assert.That(game.LastRoomCommandApplied, Is.True, "화면은 기다리던 명령이 됐는지 안다");
+            Assert.That(game.LastRoomRefusal, Is.False);
             Assert.That(room.Balance, Is.EqualTo(before - offer.Price));
             Assert.That(game.Wallet.Balance, Is.EqualTo(before - offer.Price));
 
@@ -153,6 +156,9 @@ namespace Rootborn.Game.Tests
             Assert.That(b.FurnitureUnlocks.IsUnlocked(offer.UnlockToken), Is.True);
             Assert.That(a.FurnitureUnlocks.IsUnlocked(offer.UnlockToken), Is.False, "늦게 온 요청은 거절되고 아무것도 바뀌지 않는다");
             Assert.That(a.WaitingForRoom, Is.False);
+            Assert.That(a.LastRoomRefusal, Is.True, "화면은 거절을 구별해 보인다");
+            Assert.That(a.LastRoomCommandApplied, Is.False);
+            Assert.That(b.LastRoomCommandApplied, Is.True);
             Assert.That(room.Balance, Is.GreaterThanOrEqualTo(0));
         }
 

@@ -177,6 +177,7 @@ namespace Rootborn.Host.Net
             if (!InRoom) return false;
             _client.SetPose(mapId, x, y, facing, walking);
             _client.SetLook(look);
+            _link?.FlushRequests(); // 손님 저장을 받지 않는 방: 게임 한 판이 저장까지 끝낸 공유 조각 요청을 보낸다(받는 방이면 아무것도 하지 않는다)
             _client.Update(now);
             if (_client.Status == ClientStatus.Joined) return true;
             string reason = string.IsNullOrEmpty(_client.FarewellReason) ? SessionClient.ClosedReason : _client.FarewellReason;

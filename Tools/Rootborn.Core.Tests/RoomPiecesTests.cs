@@ -65,9 +65,43 @@ namespace Rootborn.Core.Tests
         public void ROOMSET_004_UnknownPiece_IsReported()
         {
             var unknown = new List<string>();
-            new RoomShareSettings(new[] { "wallet", "house" }).CopyUnknown(RoomPieceCatalog.CreateDefault(), unknown);
-            Assert.That(unknown, Is.EqualTo(new[] { "house" }));
-            Assert.Throws<ArgumentException>(() => Room("house"));
+            new RoomShareSettings(new[] { "wallet", "chest" }).CopyUnknown(RoomPieceCatalog.CreateDefault(), unknown);
+            Assert.That(unknown, Is.EqualTo(new[] { "chest" }));
+            Assert.Throws<ArgumentException>(() => Room("chest"));
+        }
+
+        [Test]
+        public void ROOMSET_006_NewRoom_KeepsTheCapacity_LaterOpensUseTheSavedOne()
+        {
+            var store = new InMemorySaveStore();
+            RoomSettingsSaveFiles.LoadOrCreate(store, "room", true, new RoomShareSettings(new[] { "wallet" }), 6, out bool created, out int capacity);
+            Assert.That(created, Is.True);
+            Assert.That(capacity, Is.EqualTo(6));
+
+            RoomSettingsSaveFiles.LoadOrCreate(store, "room", false, RoomShareSettings.Nothing, 2, out created, out capacity);
+            Assert.That(created, Is.False);
+            Assert.That(capacity, Is.EqualTo(6), "정원은 방 설정이다(설계 6절) — 만들 때의 값");
+        }
+
+        [Test]
+        public void ROOMSET_007_SettingsFileWithoutCapacity_UsesTheRequestedOne()
+        {
+            var store = new InMemorySaveStore();
+            store.Write("room", SaveFileNames.RoomSettings, new RoomSettingsSaveData { Version = 1, SharedPieces = new[] { "town" } });
+            var settings = RoomSettingsSaveFiles.LoadOrCreate(store, "room", false, RoomShareSettings.Nothing, 3, out _, out int capacity);
+            Assert.That(settings.SharedPieces, Is.EqualTo(new[] { "town" }));
+            Assert.That(capacity, Is.EqualTo(3), "정원을 적지 않은 옛 방 설정 파일은 받은 정원을 쓴다");
+        }
+
+        [Test]
+        public void ROOMSET_008_TryReadSaved_TellsAnExistingRoomFromANewOne()
+        {
+            var store = new InMemorySaveStore();
+            Assert.That(RoomSettingsSaveFiles.TryReadSaved(store, "room", out _, out _), Is.False, "파일이 없으면 저장된 설정이 없다");
+            RoomSettingsSaveFiles.LoadOrCreate(store, "room", true, new RoomShareSettings(new[] { "wallet", "town" }), 5, out _, out _);
+            Assert.That(RoomSettingsSaveFiles.TryReadSaved(store, "room", out var saved, out int capacity), Is.True);
+            Assert.That(saved.SharedPieces, Is.EqualTo(new[] { "town", "wallet" }));
+            Assert.That(capacity, Is.EqualTo(5));
         }
 
         [Test]

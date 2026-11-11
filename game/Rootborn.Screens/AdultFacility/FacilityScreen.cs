@@ -7,6 +7,7 @@ using Rootborn.Game;
 using Rootborn.Screens.Career;
 using Rootborn.Screens.Day;
 using Rootborn.Ui;
+using Rootborn.Screens.Hud;
 
 namespace Rootborn.Screens.AdultFacility
 {
@@ -138,6 +139,15 @@ namespace Rootborn.Screens.AdultFacility
         protected internal override void OnChanged(string topic)
         {
             if (_facilityId == null) return;
+            var session = Services.Session;
+            if (_waitingForRoom && session != null && !session.WaitingForRoom && session.LastRoomCommandApplied.HasValue)
+            {
+                // 기다리던 명령이 끝났다: 됐으면 그 결과, 거절이면 방 지갑이 모자란 이유. 예약이 됐으면 미니게임이 저절로 열린다(MinigameTrigger).
+                _waitingForRoom = false;
+                _statusText = session.LastRoomCommandApplied.Value ? T(FacilityModel.ResultKey(AdultCareerResultKind.Applied))
+                    : session.LastRoomRefusal ? T(RoomMoneyText.RefusedKey) : T(FacilityModel.ResultKey(AdultCareerResultKind.InsufficientResources));
+            }
+
             if (topic != ChangeTopics.Career && topic != ChangeTopics.Student && topic != ChangeTopics.Inventory && topic != ChangeTopics.World
                 && topic != ChangeTopics.Day && topic != ChangeTopics.Language && topic != ChangeTopics.All) return;
             Model = FacilityModel.From(Services.Session, _facilityId);
@@ -196,6 +206,7 @@ namespace Rootborn.Screens.AdultFacility
 
         private void PressCell(int cell)
         {
+            if (Services.Session != null && Services.Session.WaitingForRoom) return; // 방의 허락을 기다리는 동안은 다시 누르지 않는다
             int work = cell / ColumnsPerWork, column = cell % ColumnsPerWork;
             if (Services.Session == null || work < 0 || work >= Model.Works.Length || column == InfoColumn) return;
             string workId = Model.Works[work].Id;
@@ -212,6 +223,7 @@ namespace Rootborn.Screens.AdultFacility
 
         private void ChooseRoute()
         {
+            if (Services.Session != null && Services.Session.WaitingForRoom) return;
             if (Services.Session == null || !Model.Exists) return;
             string facility = Model.FacilityId, request = "facility-transition:" + facility + ":" + Guid.NewGuid().ToString("N");
             Report(Services.Session.ChooseFacility(facility, request).Kind);
@@ -219,6 +231,7 @@ namespace Rootborn.Screens.AdultFacility
 
         private void Upgrade()
         {
+            if (Services.Session != null && Services.Session.WaitingForRoom) return;
             if (Services.Session == null || !Model.Exists) return;
             string request = "facility-upgrade:" + Model.FacilityId + ":" + Guid.NewGuid().ToString("N");
             Report(Services.Session.UpgradeFacility(request).Kind);
@@ -242,10 +255,14 @@ namespace Rootborn.Screens.AdultFacility
             }
         }
 
+        // 방의 허락을 기다리는 명령(돈을 같이 쓰는 방, 설계 3.2절). 끝나면 결과 문구로 바꾼다.
+        private bool _waitingForRoom;
+
         private void Report(AdultCareerResultKind kind)
         {
             LastResult = kind;
-            _statusText = T(FacilityModel.ResultKey(kind));
+            _waitingForRoom = Services.Session != null && Services.Session.WaitingForRoom;
+            _statusText = _waitingForRoom ? T(RoomMoneyText.WaitingKey) : T(FacilityModel.ResultKey(kind));
             Model = FacilityModel.From(Services.Session, _facilityId);
             Show();
         }

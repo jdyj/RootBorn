@@ -23,7 +23,6 @@ namespace Rootborn.Net.Room
         {
             BindAddress = bind;
             Port = port;
-            MaxPlayers = settings.MaxPlayers;
             _local = local;
             Server = server;
             _loop = new RoomLoop(server, clock, settings.TickSeconds);
@@ -74,7 +73,11 @@ namespace Rootborn.Net.Room
         /// <summary>다른 사람이 들어올 주소 "주소:포트".</summary>
         public string ListenAddress => BindAddress + ":" + Port.ToString(CultureInfo.InvariantCulture);
 
-        public int MaxPlayers { get; }
+        /// <summary>정원(방 설정 — 다시 연 방이면 만들 때의 값).</summary>
+        public int MaxPlayers => Server.MaxPlayers;
+
+        /// <summary>그 슬롯에 이미 방이 있으면 true와 그 설정(<see cref="RoomServer.TryReadSaved"/>).</summary>
+        public static bool TryReadSaved(ISaveStore store, string saveSlot, out SavedRoomSettings saved) => RoomServer.TryReadSaved(store, saveSlot, out saved);
 
         /// <summary>지금 들어와 있는 사람 수(방을 연 사람 포함).</summary>
         public int PlayerCount => Server.IsShutDown ? 0 : Server.Players.Count;

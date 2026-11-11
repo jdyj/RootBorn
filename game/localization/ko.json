@@ -238,5 +238,21 @@
   "life.time.unavailable": "지금은 할 수 없어요. 체력·집중과 오늘 한 활동을 확인하세요.",
   "facility.work-progress-time": "{0}분 · 숙련 {1}/{2} · 성공 {3}회",
   "ui.status.day-time": "{0}일차 · {1:00}:{2:00}",
-  "daily-plan.period-now": "{0} · 지금"
+  "daily-plan.period-now": "{0} · 지금",
+  "ui.host.share": "같이 쓸 것",
+  "ui.host.share-always": "시간은 항상 같이 흘러요. 가방과 개인 성장(특성·기술·진로·관계)은 항상 각자예요.",
+  "ui.host.saved-room": "이 이야기의 방은 이미 있어요. 만들 때 정한 설정으로 열려요(바꿀 수 없어요).",
+  "ui.room.share.wallet": "돈",
+  "ui.room.share.town": "마을 상태",
+  "ui.room.share.house": "집과 가구",
+  "ui.room.shares": "같이 쓰는 것: {0}",
+  "ui.room.shares-nothing": "같이 쓰는 것: 시간만",
+  "ui.room.share-separator": ", ",
+  "ui.settings.room-joined": "방에 들어와 있어요",
+  "ui.room.joined-notice": "방에 들어왔어요 · {0}",
+  "ui.hud.room-balance": " · 방 지갑 {0}",
+  "ui.room.wallet-waiting": "방의 허락을 기다리는 중이에요...",
+  "ui.room.wallet-refused": "방 지갑의 돈이 모자라요. 다른 사람이 먼저 썼을 수 있어요.",
+  "ui.inventory.room-wallet": "방 지갑",
+  "life.location.time-with-room-balance": "{0} · 방 지갑 {1}"
 }

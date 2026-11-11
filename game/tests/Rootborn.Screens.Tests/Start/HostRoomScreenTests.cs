@@ -11,6 +11,12 @@ namespace Rootborn.Screens.Tests.Start
     internal sealed class FakeRoomHost : IRoomHost
     {
         public readonly List<(string Address, int MaxPlayers, string Slot)> Begun = new List<(string, int, string)>();
+        public readonly List<string[]> BegunShares = new List<string[]>();
+        public readonly Dictionary<string, SavedRoom> Saved = new Dictionary<string, SavedRoom>();
+        public IReadOnlyList<string> ShareablePieces { get; set; } = new[] { "wallet", "town" };
+        public IReadOnlyList<string> DefaultSharedPieces { get; set; } = new string[0];
+        public IReadOnlyList<string> SharedPieces { get; set; } = new string[0];
+        public SavedRoom SavedRoomIn(string slotId) => slotId != null && Saved.TryGetValue(slotId, out var saved) ? saved : null;
         public int Cancelled, Closed;
         public RoomJoinPhase Phase { get; set; }
         public string FailureCode { get; set; } = string.Empty;
@@ -21,9 +27,10 @@ namespace Rootborn.Screens.Tests.Start
         public int PlayerCount { get; set; } = 1;
         public int MaxPlayers { get; set; } = 4;
 
-        public void Begin(string listenAddress, int maxPlayers, string slotId)
+        public void Begin(string listenAddress, int maxPlayers, string slotId, IReadOnlyList<string> sharedPieces)
         {
             Begun.Add((listenAddress, maxPlayers, slotId));
+            BegunShares.Add(sharedPieces.ToArray());
             Phase = RoomJoinPhase.Connecting;
         }
 
@@ -122,6 +129,95 @@ namespace Rootborn.Screens.Tests.Start
             Assert.That(Status(t), Is.EqualTo(t.Text.Get("ui.join.reason.cannot-listen")));
             Assert.That(t.Node(HostRoomScreen.OpenId).IsActive, Is.True, "실패하면 다시 시도할 수 있다");
             KnownMissingKeys.AssertOnlyKnownMissing(t.Text, screen.TextKeys.Concat(t.UsedKeys()));
+        }
+
+        private static UiToggle ShareToggle(StartMenuFixture t, string piece) => (UiToggle)t.Node(HostRoomScreen.ShareToggleId(piece));
+
+        [Test]
+        public void ShareRows_OnePerPiece_PlusTheFixedLine_OpenSendsWhatWasChosen()
+        {
+            using var t = new StartMenuFixture();
+            t.WriteStory("slot-0", "하늘");
+            var host = new FakeRoomHost { DefaultSharedPieces = new[] { "town" } };
+            t.Menu.Host = host;
+            HostRoomScreen screen = OpenHost(t);
+
+            Assert.That(ShareToggle(t, "wallet").IsOn, Is.False);
+            Assert.That(ShareToggle(t, "town").IsOn, Is.True, "--share로 준 것이 처음 켜져 있다");
+            Assert.That(t.LabelText(HostRoomScreen.ShareLabelId("wallet")), Is.EqualTo(t.Text.Get("ui.room.share.wallet")));
+            string always = ((UiTextBlock)t.Node(HostRoomScreen.ShareAlwaysId)).Text;
+            Assert.That(always, Is.EqualTo(t.Text.Get("ui.host.share-always")), "시간은 항상 같이, 가방·개인 성장은 항상 각자 — 고를 수 없는 줄");
+            Assert.That(t.Node(HostRoomScreen.ShareAlwaysId).Rect.Y, Is.GreaterThan(t.Node(HostRoomScreen.ShareToggleId("wallet")).Rect.Y));
+            Assert.That(t.Node(HostRoomScreen.ShareToggleId("wallet")).Rect.Y, Is.GreaterThan(t.Node(HostRoomScreen.SlotsId).Rect.Y), "인물 줄 아래");
+
+            t.Click(HostRoomScreen.ShareToggleId("wallet"));
+            t.Click(HostRoomScreen.ShareToggleId("town"));
+            Assert.That(screen.ChosenSharedPieces, Is.EqualTo(new[] { "wallet" }));
+            t.Click(HostRoomScreen.AddressId);
+            t.Stack.TextInput("10.0.0.5:7777");
+            t.Click(HostRoomScreen.OpenId);
+            Assert.That(host.BegunShares.Single(), Is.EqualTo(new[] { "wallet" }));
+            Assert.That(ShareToggle(t, "wallet").IsActive, Is.False, "여는 동안은 바꾸지 못한다");
+            KnownMissingKeys.AssertOnlyKnownMissing(t.Text, screen.TextKeys.Concat(t.UsedKeys()));
+        }
+
+        [Test]
+        public void ExistingRoom_ShowsItsSavedSettings_Locked_AndOpensWithThem()
+        {
+            using var t = new StartMenuFixture();
+            t.WriteStory("slot-0", "하늘");
+            t.WriteStory("slot-1", "바다");
+            var host = new FakeRoomHost { DefaultSharedPieces = new[] { "wallet" } };
+            host.Saved["slot-1"] = new SavedRoom(new[] { "town" }, 3);
+            t.Menu.Host = host;
+            HostRoomScreen screen = OpenHost(t);
+            Assert.That(ShareToggle(t, "wallet").IsActive, Is.True, "새 방이면 고른다");
+
+            ClickTab(t, HostRoomScreen.SlotsId, 1);
+            Assert.That(ShareToggle(t, "wallet").IsOn, Is.False);
+            Assert.That(ShareToggle(t, "town").IsOn, Is.True, "저장된 설정을 보인다");
+            Assert.That(ShareToggle(t, "town").IsActive || ShareToggle(t, "wallet").IsActive, Is.False, "이미 만든 방은 바꿀 수 없다(설계 10절 3번)");
+            Assert.That(screen.MaxPlayers, Is.EqualTo(3), "정원도 방 설정");
+            Assert.That(t.Node(HostRoomScreen.CapacityId).IsActive, Is.False);
+            Assert.That(screen.StatusKey, Is.EqualTo("ui.host.saved-room"));
+            t.Click(HostRoomScreen.AddressId);
+            t.Stack.TextInput("10.0.0.5:7777");
+            t.Click(HostRoomScreen.OpenId);
+            Assert.That(host.Begun.Single(), Is.EqualTo(("10.0.0.5:7777", 3, "slot-1")));
+            Assert.That(host.BegunShares.Single(), Is.EqualTo(new[] { "town" }));
+
+            host.Phase = RoomJoinPhase.Idle;
+            t.Stack.NotifyChanged(RoomHostText.Topic);
+            ClickTab(t, HostRoomScreen.SlotsId, 0);
+            Assert.That(ShareToggle(t, "wallet").IsActive, Is.True, "새 방 슬롯으로 돌아가면 다시 고른다");
+            Assert.That(ShareToggle(t, "wallet").IsOn, Is.True, "그 슬롯에서 고른 값(처음 값)으로 돌아온다");
+            Assert.That(t.Node(HostRoomScreen.CapacityId).IsActive, Is.True);
+            KnownMissingKeys.AssertOnlyKnownMissing(t.Text, screen.TextKeys.Concat(t.UsedKeys()));
+        }
+
+        [Test]
+        public void ExistingRoomWithoutACapacity_KeepsTheCapacityChoosable()
+        {
+            using var t = new StartMenuFixture();
+            t.WriteStory("slot-0", "하늘");
+            var host = new FakeRoomHost();
+            host.Saved["slot-0"] = new SavedRoom(new string[0], 0); // 방 설정 파일보다 먼저 만든 방
+            t.Menu.Host = host;
+            OpenHost(t);
+            Assert.That(ShareToggle(t, "wallet").IsActive, Is.False);
+            Assert.That(t.Node(HostRoomScreen.CapacityId).IsActive, Is.True, "정원을 적지 않은 방은 열 때 받은 정원을 쓴다");
+        }
+
+        /// <summary>등록된 모든 공유 조각의 이름 문구가 모든 언어에 있다(조각을 더하면 문구도 더한다).</summary>
+        [Test]
+        public void EveryRoomPiece_HasANameInEveryLanguage()
+        {
+            GameText text = TestData.Text();
+            var keys = Rootborn.Core.Room.RoomPieceCatalog.CreateDefault().Names.Select(RoomShareText.PieceKey).ToList();
+            keys.AddRange(new[] { "ui.room.shares", "ui.room.shares-nothing", "ui.host.share-always", "ui.host.share", "ui.host.saved-room" });
+            KnownMissingKeys.AssertOnlyKnownMissing(text, keys);
+            Assert.That(RoomShareText.Describe(text, new[] { "wallet" }), Does.Contain(text.Get("ui.room.share.wallet")));
+            Assert.That(RoomShareText.Describe(text, new string[0]), Is.EqualTo(text.Get("ui.room.shares-nothing")));
         }
 
         [Test]
@@ -224,6 +320,10 @@ namespace Rootborn.Screens.Tests.Start
             stack.NotifyChanged(RoomHostText.Topic);
             Assert.That(line.Text, Is.EqualTo(text.Format("ui.settings.room-open", "192.168.0.10:7777", 3, 4)), "들어온 사람 수가 바뀌면 고친다");
 
+            host.SharedPieces = new[] { "wallet" };
+            stack.NotifyChanged(RoomHostText.Topic);
+            Assert.That(((UiLabel)Find(stack, SettingsScreen.RoomSharesId)).Text, Is.EqualTo(RoomShareText.Describe(text, new[] { "wallet" })), "같이 쓰는 것도 보인다");
+
             UiRect r = Find(stack, SettingsScreen.RoomCloseId).Rect;
             Assert.That(((UiButton)Find(stack, SettingsScreen.RoomCloseId)).Text, Is.EqualTo(text.Get("ui.settings.room-close")));
             stack.Pointer(r.CenterX, r.CenterY, false, 0);
@@ -234,6 +334,46 @@ namespace Rootborn.Screens.Tests.Start
             stack.NotifyChanged(RoomHostText.Topic);
             Assert.That(Find(stack, SettingsScreen.RoomLineId).IsVisibleInTree(), Is.False, "닫히면 줄이 숨는다");
             KnownMissingKeys.AssertOnlyKnownMissing(text, stack.Find(ScreenCatalog.Settings).TextKeys);
+        }
+
+        // ---------- 들어간 직후 알림 ----------
+
+        [Test]
+        public void JoinedNotice_SaysWhatTheRoomShares_ThenClosesByItself_WithoutBlockingWalking()
+        {
+            GameText text = TestData.Text();
+            var stack = new ScreenStack(ScreenCatalog.Create(), new ScreenServices(text, null));
+            stack.Layout(1920, 1080);
+            stack.Open(ScreenCatalog.RoomSharesNotice, argument: new RoomSharesNoticeOpen(new[] { "wallet", "town" }));
+            Assert.That(stack.IsOpen(ScreenCatalog.RoomSharesNotice), Is.True);
+            Assert.That(stack.MovementBlocked, Is.False, "걸으면서 본다");
+            string shown = ((UiTextBlock)Find(stack, RoomSharesNoticeScreen.MessageId)).Text;
+            Assert.That(shown, Is.EqualTo(text.Format("ui.room.joined-notice", RoomShareText.Describe(text, new[] { "wallet", "town" }))));
+            Assert.That(shown, Does.Contain(text.Get("ui.room.share.wallet")).And.Contain(text.Get("ui.room.share.town")));
+            stack.Tick(RoomSharesNoticeScreen.ShowSeconds - 0.5f);
+            Assert.That(stack.IsOpen(ScreenCatalog.RoomSharesNotice), Is.True);
+            stack.Tick(1f);
+            Assert.That(stack.IsOpen(ScreenCatalog.RoomSharesNotice), Is.False, "몇 초 뒤 저절로 닫힌다");
+            KnownMissingKeys.AssertOnlyKnownMissing(text, stack.Find(ScreenCatalog.RoomSharesNotice).TextKeys);
+
+            stack.Open(ScreenCatalog.RoomSharesNotice);
+            Assert.That(stack.IsOpen(ScreenCatalog.RoomSharesNotice), Is.False, "열 값이 없으면(등록 표 순회) 바로 닫는다");
+
+            stack.Open(ScreenCatalog.RoomSharesNotice, argument: new RoomSharesNoticeOpen(new[] { "wallet" }));
+            stack.Open(ScreenCatalog.Settings);
+            stack.Tick(0.016f);
+            Assert.That(stack.IsOpen(ScreenCatalog.RoomSharesNotice), Is.False, "패널이 열리면 닫는다(방 줄을 가리지 않게)");
+        }
+
+        [TestCaseSource(nameof(Languages))]
+        public void JoinedNotice_DoubleLengthText_StaysInsideTheBox(string language)
+        {
+            var stack = new ScreenStack(ScreenCatalog.Create(), new ScreenServices(LongText.Create(language), null));
+            stack.Open(ScreenCatalog.RoomSharesNotice, argument: new RoomSharesNoticeOpen(Rootborn.Core.Room.RoomPieceCatalog.CreateDefault().Names));
+            TextBounds.Settle(stack);
+            var found = new List<string>();
+            TextBounds.Inspect(stack.Find(ScreenCatalog.RoomSharesNotice), found);
+            Assert.That(found, Is.Empty);
         }
 
         // ---------- 긴 문구 ----------
@@ -259,11 +399,11 @@ namespace Rootborn.Screens.Tests.Start
             TextBounds.Settle(stack);
             TextBounds.Inspect(stack.Find(ScreenCatalog.SaveSlotSelect), found, SaveSlotScreen.HostId, SaveSlotScreen.JoinId, SaveSlotScreen.BackId, SaveSlotScreen.HintId);
 
-            var open = new FakeRoomHost { Phase = RoomJoinPhase.Joined, ListenAddress = "192.168.100.200:65535", PlayerCount = 8, MaxPlayers = 8 };
+            var open = new FakeRoomHost { Phase = RoomJoinPhase.Joined, ListenAddress = "192.168.100.200:65535", PlayerCount = 8, MaxPlayers = 8, SharedPieces = new[] { "wallet", "town" } };
             var settings = new ScreenStack(ScreenCatalog.Create(), new ScreenServices(text, null) { RoomHost = open });
             settings.Open(ScreenCatalog.Settings);
             TextBounds.Settle(settings);
-            TextBounds.Inspect(settings.Find(ScreenCatalog.Settings), found, SettingsScreen.RoomTextId, SettingsScreen.RoomCloseId);
+            TextBounds.Inspect(settings.Find(ScreenCatalog.Settings), found, SettingsScreen.RoomTextId, SettingsScreen.RoomSharesId, SettingsScreen.RoomCloseId);
             Assert.That(found, Is.Empty);
         }
 

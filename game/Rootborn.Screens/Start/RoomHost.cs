@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Rootborn.Screens.Start
 {
     /// <summary>
@@ -17,11 +19,23 @@ namespace Rootborn.Screens.Start
         int DefaultMaxPlayers { get; }
         int MaxPlayersLimit { get; }
 
+        /// <summary>같이 쓸 수 있는 것(공유 조각 이름, 등록 순서). 시간은 항상 같이, 가방·개인 성장은 항상 각자라 여기 없다.</summary>
+        IReadOnlyList<string> ShareablePieces { get; }
+
+        /// <summary>창을 열 때 켜 둘 것(--share). 주지 않았으면 빈 목록.</summary>
+        IReadOnlyList<string> DefaultSharedPieces { get; }
+
+        /// <summary>그 슬롯에 이미 있는 방의 설정(없으면 null — 새 방). 이미 있는 방은 만들 때 정한 것으로 열린다(바꿀 수 없다, 설계 10절 3번).</summary>
+        SavedRoom SavedRoomIn(string slotId);
+
         /// <summary>
         /// 방을 열고 그 슬롯의 인물로 들어간다. listenAddress는 이 PC에서 들을 "IP 주소:포트"(포트 0이면 운영체제가 빈 포트를 준다).
-        /// 주소가 틀리거나 듣지 못하면 바로 Failed.
+        /// sharedPieces는 같이 쓸 것(방을 처음 만들 때만 쓴다). 주소가 틀리거나 듣지 못하면 바로 Failed.
         /// </summary>
-        void Begin(string listenAddress, int maxPlayers, string slotId);
+        void Begin(string listenAddress, int maxPlayers, string slotId, IReadOnlyList<string> sharedPieces);
+
+        /// <summary>열린 방이 같이 쓰는 것(열려 있을 때. 아니면 빈 목록).</summary>
+        IReadOnlyList<string> SharedPieces { get; }
 
         /// <summary>여는 중이면 그만둔다(Idle).</summary>
         void Cancel();

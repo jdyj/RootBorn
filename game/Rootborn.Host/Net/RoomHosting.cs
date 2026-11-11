@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using Rootborn.Core.Save;
@@ -29,6 +30,8 @@ namespace Rootborn.Host.Net
         private RoomJoinPhase _ownPhase = RoomJoinPhase.Idle;
         private string _ownFailure = string.Empty;
         private int _shownPlayers = -1;
+        private readonly string[] _shareable;
+        private IReadOnlyList<string> _defaultShares = Array.Empty<string>();
 
         /// <param name="connection">내 게임이 방에 들어가는 쪽(들어가기와 같은 것). 들어가면 그것이 그 슬롯으로 게임을 시작한다.</param>
         /// <param name="store">방 상태를 쓸 저장소(내 세이브 폴더).</param>
@@ -42,6 +45,9 @@ namespace Rootborn.Host.Net
             _clock = clock ?? throw new ArgumentNullException(nameof(clock));
             _calendar = calendar;
             _closed = closed;
+            var names = Rootborn.Core.Room.RoomPieceCatalog.CreateDefault().Names;
+            _shareable = new string[names.Count];
+            for (int i = 0; i < names.Count; i++) _shareable[i] = names[i];
         }
 
         /// <summary>무엇이 바뀌었다(단계, 들어온 사람 수). Host가 화면 쌓기에 RoomHostText.Topic으로 넘긴다.</summary>
@@ -66,7 +72,32 @@ namespace Rootborn.Host.Net
 
         public int MaxPlayers => _room?.MaxPlayers ?? 0;
 
-        public void Begin(string listenAddress, int maxPlayers, string slotId)
+        public IReadOnlyList<string> ShareablePieces => _shareable;
+
+        /// <summary>창을 열 때 켜 둘 것(--share). Host가 실행 인자에서 정한다.</summary>
+        public IReadOnlyList<string> DefaultSharedPieces
+        {
+            get => _defaultShares;
+            set => _defaultShares = value ?? Array.Empty<string>();
+        }
+
+        public IReadOnlyList<string> SharedPieces => _room != null ? _room.Server.ShareSettings.SharedPieces : (IReadOnlyList<string>)Array.Empty<string>();
+
+        /// <summary>그 슬롯에 이미 있는 방의 설정(없거나 읽을 수 없으면 null — 읽을 수 없는 방은 열 때 RoomSaveUnreadable로 실패한다).</summary>
+        public SavedRoom SavedRoomIn(string slotId)
+        {
+            if (string.IsNullOrEmpty(slotId)) return null;
+            try
+            {
+                return HostedRoom.TryReadSaved(_store(), slotId, out SavedRoomSettings saved) ? new SavedRoom(saved.SharedPieces, saved.MaxPlayers) : null;
+            }
+            catch (Exception e) when (e is SaveFileCorruptException || e is SaveFileTooNewException || e is System.IO.IOException)
+            {
+                return null;
+            }
+        }
+
+        public void Begin(string listenAddress, int maxPlayers, string slotId, IReadOnlyList<string> sharedPieces)
         {
             ShutDownRoom();
             if (!RoomAddress.TryParseListen(listenAddress, out IPAddress bind, out int port))
@@ -75,7 +106,11 @@ namespace Rootborn.Host.Net
                 return;
             }
 
-            var settings = new RoomServerSettings { MaxPlayers = Math.Max(1, Math.Min(MaxPlayersLimit, maxPlayers)) };
+            var settings = new RoomServerSettings
+            {
+                MaxPlayers = Math.Max(1, Math.Min(MaxPlayersLimit, maxPlayers)),
+                SharedPieces = sharedPieces ?? Array.Empty<string>(), // 방을 처음 만들 때만 쓴다(이미 있는 방은 저장된 설정)
+            };
             try
             {
                 _room = HostedRoom.Open(bind, port, settings, _connection.Versions, _store(), slotId, _clock, line => Console.WriteLine("[내 방] " + line), _calendar?.Invoke());

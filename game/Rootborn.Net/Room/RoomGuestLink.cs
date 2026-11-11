@@ -65,6 +65,8 @@ namespace Rootborn.Net.Room
         private readonly Func<string> _newRequestId;
         private readonly ChunkAssembler _download = new ChunkAssembler();
         private readonly int _maxMessageBytes;
+        private readonly HashSet<string> _sent = new HashSet<string>(StringComparer.Ordinal);
+        private readonly List<RoomRequestSaveData> _toSend = new List<RoomRequestSaveData>(4);
 
         /// <param name="uploads">끊겼다 다시 붙을 때 이어서 보낼 저장. 없으면 새로 만든다.</param>
         /// <param name="newRequestId">공유 조각 요청 id를 만든다. 없으면 GUID.</param>
@@ -116,6 +118,55 @@ namespace Rootborn.Net.Room
             return true;
         }
 
+        /// <summary>
+        /// 손님 저장을 받지 않는 방: 보낼 목록(Shares.Outbox)에서 이 접속으로 아직 보내지 않은 요청을 방으로 보낸다. 게임 한 판이 그 요청을 자기 세이브에
+        /// 쓴 뒤에 부른다(Host는 프레임마다 — 명령은 그 안에서 저장까지 끝낸다). 답을 받으면 목록에서 빠진다. 다시 붙으면(새 접속) 다시 보낸다 — 같은 id라
+        /// 방은 한 번만 반영한다. 받는 방이거나 아직 들어가지 않았으면 아무것도 하지 않는다. 보낼 것이 없으면 할당하지 않는다.
+        /// </summary>
+        /// <returns>이번에 보낸 요청 수.</returns>
+        public int FlushRequests()
+        {
+            if (!Ready || TakesGuestSaves || Shares == null) return 0;
+            var requests = Shares.Outbox.Requests;
+            if (requests.Count == 0)
+            {
+                if (_sent.Count > 0) _sent.Clear();
+                return 0;
+            }
+
+            _toSend.Clear();
+            for (int i = 0; i < requests.Count; i++)
+                if (!_sent.Contains(requests[i].RequestId)) _toSend.Add(requests[i]);
+            if (_toSend.Count == 0) return 0;
+            if (_sent.Count > requests.Count * 2) Forget(requests);
+            int sent = 0;
+            for (int start = 0; start < _toSend.Count; start += RoomShareMessageBodies.MaxRequests)
+            {
+                int count = Math.Min(RoomShareMessageBodies.MaxRequests, _toSend.Count - start);
+                var batch = new RoomRequestSaveData[count];
+                for (int i = 0; i < count; i++)
+                {
+                    batch[i] = _toSend[start + i];
+                    _sent.Add(batch[i].RequestId);
+                }
+
+                _client.Send(new RoomRequestsMessage { Requests = batch });
+                sent += count;
+            }
+
+            _toSend.Clear();
+            return sent;
+        }
+
+        // 답을 받아 목록에서 빠진 요청은 잊는다(같은 id가 다시 적히면 다시 보낸다 — 방은 같은 답을 준다).
+        private void Forget(IReadOnlyList<RoomRequestSaveData> requests)
+        {
+            var keep = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var r in requests) if (_sent.Contains(r.RequestId)) keep.Add(r.RequestId);
+            _sent.Clear();
+            foreach (var id in keep) _sent.Add(id);
+        }
+
         private void OnSettings(RoomSettingsMessage m)
         {
             if (Settings != null) return;
@@ -147,7 +198,11 @@ namespace Rootborn.Net.Room
 
         private void OnState(RoomPieceStateMessage m) => Shares?.Receive(new RoomPieceState(m.Piece, m.Amount, m.Ids));
 
-        private void OnAnswer(RoomAnswerMessage m) => Shares?.Receive(new RoomAnswer(m.Piece, m.RequestId, m.Outcome, m.Amount));
+        private void OnAnswer(RoomAnswerMessage m)
+        {
+            _sent.Remove(m.RequestId);
+            Shares?.Receive(new RoomAnswer(m.Piece, m.RequestId, m.Outcome, m.Amount));
+        }
 
         private void Send(uint id, SaveFileSet changes)
         {

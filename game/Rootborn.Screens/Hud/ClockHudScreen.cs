@@ -14,7 +14,7 @@ namespace Rootborn.Screens.Hud
     /// Together는 같이 하는 방이다: 그때만 남은 때와 Waiting(지금 때를 아직 안 끝낸 다른 사람)을 보인다.
     /// </summary>
     public readonly record struct ClockModel(bool HasSession, int Day, int Hour, int Minute, int Allowance, ClockAlert Alert,
-        bool Together, int TimePointsRemaining, int TimePointsToday, IReadOnlyList<string> Waiting)
+        bool Together, int TimePointsRemaining, int TimePointsToday, IReadOnlyList<string> Waiting, bool RoomWallet = false)
     {
         /// <summary>취침 시각이 몇 분 남았을 때부터 "곧 잘 시간"을 보이는가(게임 분, 표시 선택 — 규칙 수치가 아니다).</summary>
         public const int BedtimeWarningMinutes = 60;
@@ -28,7 +28,7 @@ namespace Rootborn.Screens.Hud
             var waiting = new List<string>(4);
             if (together) session.RoomWaitingFor(waiting);
             return new ClockModel(true, session.Student.CurrentDay, minutes / 60, minutes % 60, allowance, AlertFor(session),
-                together, together ? session.RoomTimePointsRemaining : 0, together ? session.Room.PartsToday : 0, waiting);
+                together, together ? session.RoomTimePointsRemaining : 0, together ? session.Room.PartsToday : 0, waiting, session.SharesWallet);
         }
 
         /// <summary>지금의 시간 경고. 시간 규칙이 없으면(시험 데이터) 지침만 본다.</summary>
@@ -132,7 +132,7 @@ namespace Rootborn.Screens.Hud
             _shownLanguage = Services.Text.Language;
             if (!model.HasSession) { _label.Text = T("life.tp.loading"); _room.Text = string.Empty; _icon.Image = Layout.Icon; return; }
             string text = F("life.time.hud", model.Day, model.Hour, model.Minute);
-            if (model.Allowance >= 0) text += F("dream.shop.balance", model.Allowance);
+            if (model.Allowance >= 0) text += F(model.RoomWallet ? "ui.hud.room-balance" : "dream.shop.balance", model.Allowance); // 돈을 같이 쓰는 방이면 방 지갑
             _label.Text = text;
             (string alertKey, string icon) = AlertLook(model.Alert);
             _icon.Image = icon;

@@ -26,11 +26,21 @@ namespace Rootborn.Game
         /// <summary>같이 하는 방의 조각 묶음. 혼자 하기는 null.</summary>
         public RoomShares Shares { get; private set; }
 
+        /// <summary>돈을 같이 쓰는 방이다(지갑이 방 지갑 — 화면이 "방 지갑"이라고 보인다).</summary>
+        public bool SharesWallet => _roomWallet != null;
+
         /// <summary>돈을 쓰는 명령이 방의 허락을 기다린다(화면은 그 명령의 버튼을 잠깐 막는다).</summary>
         public bool WaitingForRoom => _waiting.Count > 0;
 
         /// <summary>마지막으로 방이 거절한 명령이 있었다(돈이 모자람). 다음 명령에서 지운다.</summary>
         public bool LastRoomRefusal { get; private set; }
+
+        /// <summary>
+        /// 방의 허락을 기다리던 마지막 명령이 끝났는지: true면 허락받아 그 명령이 됐다, false면 거절됐거나(<see cref="LastRoomRefusal"/>) 허락받고도
+        /// 다시 한 명령이 되지 않았다(그 사이 다른 확인이 바뀜 — 잡은 돈은 풀었다). 기다리는 중이거나 아직 기다린 명령이 없으면 null.
+        /// 화면이 기다림 표시 뒤에 결과 문구를 고르는 데 쓴다. 다음 돈 쓰는 명령에서 지운다.
+        /// </summary>
+        public bool? LastRoomCommandApplied { get; private set; }
 
         private void UseShares(RoomShares shares)
         {
@@ -75,6 +85,7 @@ namespace Rootborn.Game
         {
             if (_roomWallet == null) return run();
             LastRoomRefusal = false;
+            LastRoomCommandApplied = null;
             string scope = Shares.Outbox.NewId();
             T result = InScope(scope, run);
             if (applied(result) || !_roomWallet.WasAsked(scope)) return result;
@@ -94,9 +105,16 @@ namespace Rootborn.Game
         private void OnGranted(string scope)
         {
             // 다시 한 명령이 되면 그 명령이 저장하고 알린다(쓰기 요청이 같은 저장에 든다). 안 되면 잡은 돈을 푼다.
-            bool done = _waiting.TryGetValue(scope, out var again) && again();
+            // 다시 하는 명령이 알리는 동안 이미 기다림이 끝나 있게 먼저 뺀다. 결과는 명령 뒤에 정해지므로 한 번 더 알린다(화면이 결과 문구를 고른다).
+            _waiting.TryGetValue(scope, out var again);
             _waiting.Remove(scope);
-            if (done) return;
+            bool done = again != null && again();
+            LastRoomCommandApplied = done;
+            if (done)
+            {
+                Notify(SharedMoneyTopics);
+                return;
+            }
             _roomWallet.ReleaseGrant(scope);
             SaveAndNotify(SharedMoneyTopics);
         }
@@ -105,6 +123,7 @@ namespace Rootborn.Game
         {
             _waiting.Remove(scope);
             LastRoomRefusal = true;
+            LastRoomCommandApplied = false;
             SaveAndNotify(SharedMoneyTopics);
         }
 

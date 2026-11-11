@@ -238,5 +238,21 @@
   "life.time.unavailable": "You can't do this now. Check your energy, focus and today's activities.",
   "facility.work-progress-time": "{0} min · Mastery {1}/{2} · {3} successes",
   "ui.status.day-time": "Day {0} · {1:00}:{2:00}",
-  "daily-plan.period-now": "{0} · now"
+  "daily-plan.period-now": "{0} · now",
+  "ui.host.share": "Share in this room",
+  "ui.host.share-always": "Time always flows together. Bags and personal growth (traits, skills, careers, relationships) always stay your own.",
+  "ui.host.saved-room": "This story already has a room. It opens with the settings chosen when it was made (they can't be changed).",
+  "ui.room.share.wallet": "Money",
+  "ui.room.share.town": "Town state",
+  "ui.room.share.house": "Home and furniture",
+  "ui.room.shares": "Shared: {0}",
+  "ui.room.shares-nothing": "Shared: time only",
+  "ui.room.share-separator": ", ",
+  "ui.settings.room-joined": "You are in a room",
+  "ui.room.joined-notice": "You joined the room · {0}",
+  "ui.hud.room-balance": " · Room wallet {0}",
+  "ui.room.wallet-waiting": "Waiting for the room to approve...",
+  "ui.room.wallet-refused": "Not enough money in the room wallet. Someone may have spent it first.",
+  "ui.inventory.room-wallet": "Room wallet",
+  "life.location.time-with-room-balance": "{0} · Room wallet {1}"
 }

@@ -70,6 +70,9 @@ namespace Rootborn.Core.Room
         public int Version;
         public string[] SharedPieces = Array.Empty<string>();
 
+        /// <summary>정원(설계 6절 "정원은 방 설정이다"). 0이면 적지 않은 옛 파일이다 — 그때는 방을 열 때 받은 정원을 쓴다.</summary>
+        public int MaxPlayers;
+
         int IVersionedSave.Version { get => Version; set => Version = value; }
         int IVersionedSave.KnownVersion => KnownVersion;
     }
@@ -83,15 +86,42 @@ namespace Rootborn.Core.Room
         /// </summary>
         /// <param name="isNewRoom">이 슬롯에 방 상태가 하나도 없다(새 방).</param>
         public static RoomShareSettings LoadOrCreate(ISaveStore store, string saveSlot, bool isNewRoom, RoomShareSettings requested, out bool created)
+            => LoadOrCreate(store, saveSlot, isNewRoom, requested, 0, out created, out _);
+
+        /// <summary>
+        /// 위와 같고 정원도 다룬다: 새 방이면 requestedMaxPlayers를 같이 쓰고, 파일에 정원이 있으면 그것(만들 때의 값), 없으면(옛 파일, 설정 파일보다 먼저 만든 방)
+        /// requestedMaxPlayers를 maxPlayers로 준다. 옛 파일에 정원을 덧쓰지 않는다(파일은 만들 때 한 번만 쓴다).
+        /// </summary>
+        public static RoomShareSettings LoadOrCreate(ISaveStore store, string saveSlot, bool isNewRoom, RoomShareSettings requested, int requestedMaxPlayers,
+            out bool created, out int maxPlayers)
         {
             created = false;
+            maxPlayers = requestedMaxPlayers;
             if (store == null) throw new ArgumentNullException(nameof(store));
-            if (store.TryRead(saveSlot, SaveFileNames.RoomSettings, out RoomSettingsSaveData data)) return RoomShareSettings.FromSaveData(data);
+            if (store.TryRead(saveSlot, SaveFileNames.RoomSettings, out RoomSettingsSaveData data))
+            {
+                if (data.MaxPlayers > 0) maxPlayers = data.MaxPlayers;
+                return RoomShareSettings.FromSaveData(data);
+            }
+
             if (!isNewRoom) return RoomShareSettings.Nothing;
             var settings = requested ?? RoomShareSettings.Nothing;
-            store.Write(saveSlot, SaveFileNames.RoomSettings, settings.ToSaveData());
+            var save = settings.ToSaveData();
+            save.MaxPlayers = Math.Max(0, requestedMaxPlayers);
+            store.Write(saveSlot, SaveFileNames.RoomSettings, save);
             created = true;
             return settings;
+        }
+
+        /// <summary>그 슬롯에 방 설정 파일이 있으면 true와 그 설정, 정원(적지 않았으면 0). 방을 다시 열기 전에 화면이 보이려고 읽는다.</summary>
+        public static bool TryReadSaved(ISaveStore store, string saveSlot, out RoomShareSettings settings, out int maxPlayers)
+        {
+            settings = null;
+            maxPlayers = 0;
+            if (store == null || !store.TryRead(saveSlot, SaveFileNames.RoomSettings, out RoomSettingsSaveData data)) return false;
+            settings = RoomShareSettings.FromSaveData(data);
+            maxPlayers = Math.Max(0, data.MaxPlayers);
+            return true;
         }
     }
 }

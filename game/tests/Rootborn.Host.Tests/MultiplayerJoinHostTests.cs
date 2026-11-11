@@ -318,6 +318,28 @@ namespace Rootborn.Host.Tests
         }
 
         [Test]
+        public void MP_GUEST_002_JoiningARoom_SaysWhatItShares_AndTheSettingsRoomLineKeepsSayingIt()
+        {
+            using var room = GuestSavingRoom(Rootborn.Core.Room.RoomWallet.PieceName, Rootborn.Core.Room.RoomWorldFlags.PieceName);
+            WriteStory("slot-0", "별");
+            using PlayerDriver player = Launch("--join", room.Address, "--slot", "slot-0");
+            Assert.That(Until(player, () => player.Game.World != null), Is.True);
+            Assert.That(player.Screens.IsOpen(ScreenCatalog.RoomSharesNotice), Is.True, "들어간 직후 알림");
+            string expected = player.Game.Text.Format("ui.room.joined-notice",
+                Rootborn.Screens.Start.RoomShareText.Describe(player.Game.Text, new[] { "town", "wallet" }));
+            Assert.That(((UiTextBlock)player.Node(Rootborn.Screens.Start.RoomSharesNoticeScreen.MessageId)).Text, Is.EqualTo(expected));
+            Assert.That(player.Screens.MovementBlocked, Is.False, "알림은 걷기를 막지 않는다");
+            player.Screenshot("multiplayer-guest-02-joined-notice");
+
+            player.OpenScreenWithKey(TestKey.Escape, ScreenCatalog.Settings);
+            Assert.That(player.Node(Rootborn.Screens.Settings.SettingsScreen.RoomLineId).IsActive, Is.True, "남의 방에 들어간 사람도 방 줄");
+            Assert.That(player.Node(Rootborn.Screens.Settings.SettingsScreen.RoomCloseId).IsActive, Is.False, "방 닫기는 방을 연 사람만");
+            Assert.That(((UiLabel)player.Node(Rootborn.Screens.Settings.SettingsScreen.RoomSharesId)).Text,
+                Is.EqualTo(Rootborn.Screens.Start.RoomShareText.Describe(player.Game.Text, new[] { "town", "wallet" })));
+            TestContext.WriteLine("스크린샷: " + player.ScreenshotScreen(ScreenCatalog.Settings, "multiplayer-guest-03-settings-room-shares"));
+        }
+
+        [Test]
         public void MP_JOIN_003_DifferentGameVersion_IsRefusedWithTheReason()
         {
             RoomVersions mine = Versions();

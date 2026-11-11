@@ -21,11 +21,11 @@ namespace Rootborn.Server
         public const string BindVariable = "ROOTBORN_SERVER_BIND";
         public const string PortVariable = "ROOTBORN_SERVER_PORT";
         public const string MaxPlayersVariable = "ROOTBORN_MAX_PLAYERS";
-        public const string ShareVariable = "ROOTBORN_ROOM_SHARE";
+        public const string ShareVariable = Rootborn.Net.Room.RoomShareArgument.Variable;
         public const string DayCopiesVariable = "ROOTBORN_DAY_COPIES";
 
         /// <summary>--share 값 "none": 시간만 같이 쓴다.</summary>
-        public const string ShareNothing = "none";
+        public const string ShareNothing = Rootborn.Net.Room.RoomShareArgument.Nothing;
 
         public static readonly string HelpText = string.Join(Environment.NewLine, new[]
         {
@@ -140,22 +140,13 @@ namespace Rootborn.Server
             return o;
         }
 
-        // 쉼표로 나눈 조각 이름. "none"이나 빈 값은 시간만. 모르는 이름은 오류(아는 이름을 알려 준다).
+        // 쉼표로 나눈 조각 이름(Net RoomShareArgument — Host --host와 같은 규칙). 모르는 이름은 오류(아는 이름을 알려 준다).
         private static string[] ParseShare(string value)
         {
-            if (string.IsNullOrWhiteSpace(value) || string.Equals(value.Trim(), ShareNothing, StringComparison.Ordinal)) return Array.Empty<string>();
             var catalog = Rootborn.Core.Room.RoomPieceCatalog.CreateDefault();
-            var names = new List<string>();
-            foreach (var part in value.Split(','))
-            {
-                var name = part.Trim();
-                if (name.Length == 0) continue;
-                if (!catalog.Knows(name))
-                    throw new ServerOptionsException("--share 에 모르는 조각: " + name + " (" + string.Join(", ", catalog.Names) + " 또는 " + ShareNothing + ")");
-                if (!names.Contains(name)) names.Add(name);
-            }
-
-            return names.ToArray();
+            if (!Rootborn.Net.Room.RoomShareArgument.TryParse(value, catalog, out var names, out var unknown))
+                throw new ServerOptionsException("--share 에 모르는 조각: " + unknown + " (" + Rootborn.Net.Room.RoomShareArgument.Known(catalog) + ")");
+            return names;
         }
 
         private static string FindRepoRoot(string from)

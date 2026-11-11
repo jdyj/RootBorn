@@ -408,6 +408,22 @@ namespace Rootborn.Host.Tests
         }
 
         [Test]
+        public void HostOption_Share_UsesTheServersNameAndRules_OnlyWithHost()
+        {
+            HostOptions given = HostOptions.Resolve(new[] { "--save-root", _saves, "--host", "127.0.0.1:0", "--share", "wallet, town" });
+            Assert.That(given.SharedPieces, Is.EqualTo(new[] { "wallet", "town" }));
+            Assert.That(HostOptions.Resolve(new[] { "--save-root", _saves, "--host", "127.0.0.1:0", "--share", "none" }).SharedPieces, Is.Empty, "시간만");
+            Assert.That(HostOptions.Resolve(new[] { "--save-root", _saves, "--host", "127.0.0.1:0" }).SharedPieces, Is.Null, "주지 않으면 창에서 고른다");
+            Assert.That(HostOptions.ShareVariable, Is.EqualTo(Rootborn.Server.ServerOptions.ShareVariable), "데디케이티드 서버와 같은 환경 변수 이름");
+            HostOptions viaEnv = HostOptions.Resolve(new[] { "--save-root", _saves, "--host", "127.0.0.1:0" }, name => name == HostOptions.ShareVariable ? "wallet" : null);
+            Assert.That(viaEnv.SharedPieces, Is.EqualTo(new[] { "wallet" }));
+            Assert.Throws<InvalidOperationException>(() => HostOptions.Resolve(new[] { "--save-root", _saves, "--host", "127.0.0.1:0", "--share", "items" }), "가방은 조각이 아니다");
+            Assert.Throws<InvalidOperationException>(() => HostOptions.Resolve(new[] { "--save-root", _saves, "--share", "wallet" }), "--share는 --host와");
+            HostOptions envOnly = HostOptions.Resolve(new[] { "--save-root", _saves }, name => name == HostOptions.ShareVariable ? "wallet" : null);
+            Assert.That(envOnly.SharedPieces, Is.Null, "서버와 같은 이름의 환경 변수만 있으면 그냥 쓰지 않는다");
+        }
+
+        [Test]
         public void ListenAddress_Parsing()
         {
             Assert.That(RoomAddress.TryParseListen("192.168.0.10:7777", out IPAddress ip, out int port), Is.True);

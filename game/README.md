@@ -70,7 +70,8 @@ dotnet run --project game/Rootborn.Host -- --save-root <세이브 폴더> --slot
 | `--screenshot <PNG>` | | 없음. `--frames`와 함께 준다: 끝내기 직전 화면을 그 파일로 저장한다(없는 폴더는 만든다) |
 | `--day-copies <N>` | `ROOTBORN_DAY_COPIES` | 3(`GameSession.DefaultDayCopiesToKeep`). 다음 날을 시작할 때 슬롯 폴더의 `backups/<날>/`에 남길 사본 수(최근 것부터). 0이면 남기지 않는다. 사본을 못 쓰면(디스크가 참 등) 그날 저장은 끝난 채로 두고 오류 출력에 `[세이브]` 한 줄을 남긴다 |
 | `--host <IP 주소:포트>` | `ROOTBORN_HOST_ROOM` | 없음(주소 기본값이 없다). 내 PC에서 방을 연다. 이 PC에서 들을 IPv4 주소와 포트(0이면 운영체제가 빈 포트를 준다). `--save-root`가 필요하다. 시작 화면에서 방 열기 창을 그 주소로 열고, `--slot`도 주면 그 슬롯으로 바로 방을 열고 들어가 월드를 띄운다. `--join`·`--world`·`--sample`과 함께 줄 수 없다 |
-| `--max-players <정원>` | `ROOTBORN_MAX_PLAYERS` | 4(방 설정 기본값). 1~8. `--host`와 함께만 준다(환경 변수는 `--host`가 없으면 쓰지 않는다 — 서버와 같은 이름) |
+| `--max-players <정원>` | `ROOTBORN_MAX_PLAYERS` | 4(방 설정 기본값). 1~8. `--host`와 함께만 준다(환경 변수는 `--host`가 없으면 쓰지 않는다 — 서버와 같은 이름). 방을 처음 만들 때만 쓰고 방 설정 파일에 남는다(이미 있는 방은 저장된 정원) |
+| `--share <조각,...>` | `ROOTBORN_ROOM_SHARE` | 없음(방 열기 창에서 고른다). 서버의 `--share`와 같은 이름·규칙(`Rootborn.Net/Room/RoomShareArgument`): `wallet`(돈), `town`(마을 상태)을 쉼표로, `none`이면 시간만. 방 열기 창에 처음 켜 둘 것이고 `--slot`과 함께면 그대로 연다. `--host`와 함께만 준다. 방을 처음 만들 때만 쓴다 |
 
 `--sample`도 `--world`도 `--slot`도 없으면 슬롯 선택 화면(슬롯 3개: 새 이야기 → 캐릭터 만들기, 이어서 시작, 삭제)부터 띄운다. 세이브 폴더가 없으면 안내 후 끝난다.
 캐릭터 만들기의 시작하기는 슬롯 정보(이름, 고른 겉모습, 시각으로 만든 시드)를 쓰고 그 슬롯으로 `--slot`과 같게 시작한다. 슬롯으로 시작하면 맵에 들어갈 때마다(처음 들어갈 때 포함) `world-progress.json`에 쓴다.
@@ -94,14 +95,21 @@ F1은 단축키 안내(모달, 이동을 막음, 시작 화면에서도 열림, 
 저장할 때마다 바뀐 파일을 방으로 보낸다(`Rootborn.Net/Room/RoomGuestLink`, 나눠 보내기와 크기 한도는 `RoomTransfer` 한 곳). 이 PC의 슬롯에는 진행을 남기지 않는다.
 방이 받았다고 답하지 않은 저장은 들고 있다가 다시 들어갈 때 다시 보낸다. 손님 저장을 받지 않는 방이면 지금처럼 자기 PC의 그 슬롯에 저장한다. 어느 쪽인지는 `Rootborn.Host/Net/GuestProgress.cs` 한 곳이다.
 아직 이 PC에 남는 것: 맵 자리(`world-progress.json`)와 옷 선택. 돈·마을 상태를 같이 쓰는 방이면 게임 한 판의 지갑·월드 상태 깃발이 방의 것을 따른다(`GameSession.Shares`).
+손님 저장을 받지 않는 방(내 PC에서 연 방 — 연 사람도 들어온 사람도)에서도 공유 조각은 방의 것이다: 진행은 각자 PC의 슬롯에 저장하고, 저장한 공유 조각 요청은 방 접속이 프레임마다
+방으로 보낸다(`RoomGuestLink.FlushRequests`, 메시지 `RoomRequestsMessage`). 받는 방(데디케이티드 서버)은 요청이 저장과 함께 가므로 이 메시지를 버린다.
+돈을 같이 쓰는 방이면 HUD 시계 칸의 잔액이 "방 지갑", 가방의 용돈 카드 상세 이름이 "방 지갑", 가게 화면의 잔액 줄도 방 지갑이다. 다른 사람이 벌거나 쓰면 알림으로 바뀐다.
+돈 쓰는 명령(가게의 가구 구매, 성인 시설)이 방의 허락을 기다리는 동안은 기다림 문구를 보이고 다시 누르지 않으며, 거절되면 거절 문구를 보인다(`Screens/Hud/RoomMoneyText`).
+설정 화면(Esc)의 방 줄 아래 줄에 그 방이 같이 쓰는 것을 보인다(남의 방에 들어간 사람도).
 방에서의 신원은 슬롯 정보(만든 시각·시드)로 만든 그 인물의 고정 id다(슬롯의 플레이어 id는 모든 슬롯이 `local-player`라 두 PC가 서로를 밀어낸다). 방에 들어가지 않으면 Net 코드는 프레임마다 돌지 않는다.
 게임 버전은 `1.0.0+<커밋>`이다(저장소 루트 `Directory.Build.props`, git이 없으면 `-p:ROOTBORN_COMMIT=<커밋>` 또는 `unknown-commit`). 데이터 지문은 `Rootborn.Data.DataFingerprint`(서버와 같은 셈법).
-내 PC에서 방 열기(설계 6절 "내 PC에서 열기"): 슬롯 선택 아래 "방 열기" → 이 PC에서 들을 주소(`IP 주소:포트`), 정원, 방을 열 인물(이야기가 있는 슬롯)을 고르고 열기(또는 `--host`).
+내 PC에서 방 열기(설계 6절 "내 PC에서 열기"): 슬롯 선택 아래 "방 열기" → 이 PC에서 들을 주소(`IP 주소:포트`), 정원, 방을 열 인물(이야기가 있는 슬롯),
+같이 쓸 것(공유 조각마다 켬/끔 — 고를 수 없는 줄 "시간은 항상 같이, 가방·개인 성장은 항상 각자")을 고르고 열기(또는 `--host`).
+고른 슬롯에 이미 방이 있으면(방 설정 파일 `room-settings.json`, 또는 그 파일보다 먼저 만든 방) 그 방을 만들 때 정한 같이 쓸 것·정원을 보이고 잠근다(정원을 적지 않은 옛 방이면 정원은 고른다).
 같은 프로세스 안에 데디케이티드 서버와 같은 방(`Rootborn.Net/Room/HostedRoom` — `RoomServer`, 같은 프로세스 안 전송과 UDP를 묶어 듣는다)이 돌고, 내 게임은 들어가기와 같은 방 접속(`Net/RoomConnection`)으로 같은 프로세스 안 전송을 타고 들어간다. 다른 사람은 그 주소로 들어오기(UDP)로 온다.
 방의 틱은 Host 게임 루프가 프레임마다 돌린다(`Net/RoomHosting.Update`, 고정 간격, 시계는 Host의 네트워크 시계 — 들어가기와 같은 실제 시간). 방을 열지 않으면 방 코드는 프레임마다 돌지 않는다.
 방의 상태(방의 시계 `room-clock.json`)는 고른 슬롯 폴더에 저장되고, 같은 슬롯으로 다시 열면 잇는다. 그 슬롯은 혼자 이어 하기로도 그대로 읽힌다(혼자 하기는 방의 파일을 읽지도 지우지도 않는다).
 방이 열려 있으면 설정 화면(Esc)의 아이콘 묶음 자리에 "방 열림 · 사람 수/정원 · 주소"와 방 닫기가 보인다. 방을 닫거나 게임을 끄면 들어와 있던 사람에게 닫혔다고 알리고(`server shutdown`) 방을 저장한 뒤, 닫기면 시작 화면으로 돌아간다(Unity 판에는 이때의 화면 처리가 없었다).
-임시: 내 게임 한 판은 아직 방의 시계를 따르지 않는다(들어가기와 같다 — 시간 공유를 잇는 일은 남았다). 방 설정(공유할 것 고르기)이 생기면 방 열기 창의 정원 줄 아래에 줄을 더한다.
+임시: 내 게임 한 판은 아직 방의 시계를 따르지 않는다(들어가기와 같다 — 시간 공유를 잇는 일은 남았다).
 테스트: Net `HostedRoomTests`(같은 프로세스 + UDP), Screens `HostRoomScreenTests`(창 없이), Host `MultiplayerHostModeHostTests`(실제 창, 장치 이벤트 주입, 친구는 루프백 UDP의 `SessionClient`).
 
 F1은 단축키 안내(모달, 이동을 막음, 시작 화면에서도 열림, 설정의 "단축키" 단추로도). 줄은 등록 표의 키 배정(`ScreenRegistry.KeyBindings`, 하는 일 문구 키 `ui.keys.<화면 id>`), 화면 쌓기의 버튼 옮기기, 화면 안에서만 듣는 키를 그 화면이 등록 때 넘긴 줄(`.GuidesKeys(...)`, 지금은 미니게임), Host 이름표(`Input/Devices.cs`의 `KeyGuideNames`: 걷기·상호작용·F11·F12·가구 배치 카메라 F·=·-)에서 만든다 — 키 배정을 바꾸면 이름표에도 한 줄.
@@ -125,7 +133,7 @@ dotnet run --project game/Rootborn.Server -- --save-root <세이브 폴더> --sl
 | `--slot <슬롯 id>` | `ROOTBORN_SAVE_SLOT` | 없음. 반드시 준다. 슬롯이 없으면 새 방을 만들고, 있으면 이어서 연다 |
 | `--bind <IP 주소>` | `ROOTBORN_SERVER_BIND` | 없음. 반드시 준다. 듣는 주소(이 기계의 LAN 주소 등). IP 주소만 받는다 |
 | `--port <포트>` | `ROOTBORN_SERVER_PORT` | 없음. 반드시 준다. 0~65535, 0이면 운영체제가 빈 포트를 준다(로그의 `듣는 중: ` 줄에 찍힌다) |
-| `--max-players <정원>` | `ROOTBORN_MAX_PLAYERS` | 4. 1~8(`RoomServer.MaxPlayersLimit`) |
+| `--max-players <정원>` | `ROOTBORN_MAX_PLAYERS` | 4. 1~8(`RoomServer.MaxPlayersLimit`). 방을 처음 만들 때 방 설정 파일에 남고, 이미 있는 방은 저장된 정원을 쓴다(정원을 적지 않은 옛 방 설정이면 이 값. 다르면 로그에 남긴다) |
 | `--share <조각,...>` | `ROOTBORN_ROOM_SHARE` | `none`(시간만 같이 쓴다). `wallet`(돈), `town`(마을 상태 깃발)을 쉼표로. 방을 처음 만들 때만 쓰고 `room-settings.json`에 남는다 — 이미 있는 방은 저장된 설정을 따른다(다른 값을 주면 로그에 남기고 쓰지 않는다). 모르는 이름은 인자 오류 |
 | `--day-copies <N>` | `ROOTBORN_DAY_COPIES` | 3. 방의 날이 바뀔 때 방 슬롯 파일(`<슬롯>/backups/<날>/`)과 손님 세이브마다(`<슬롯>/guests/<플레이어>/backups/<날>/`) 남길 사본 수. 0이면 안 남김 |
 | `--root <저장소>` | `ROOTBORN_REPO_ROOT` | 실행 파일 위치에서 위로 올라가며 찾는다. 데이터는 `<저장소>/data` |

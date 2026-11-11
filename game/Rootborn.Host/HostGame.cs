@@ -281,7 +281,7 @@ namespace Rootborn.Host
                 // --host: 방 열기 창을 그 주소로 연다. --slot도 줬으면 그 슬롯으로 바로 방을 열고 들어간다.
                 _hostOffered = true;
                 Screens.Open(ScreenCatalog.HostRoom, argument: new HostRoomOpen(StartMenu, _options.HostAddress, _options.SaveSlot));
-                if (_options.HostOnStart) Hosting.Begin(_options.HostAddress, _options.MaxPlayers ?? Hosting.DefaultMaxPlayers, _options.SaveSlot);
+                if (_options.HostOnStart) Hosting.Begin(_options.HostAddress, _options.MaxPlayers ?? Hosting.DefaultMaxPlayers, _options.SaveSlot, _options.SharedPieces);
             }
             SetTree(Screens.Tree);
         }
@@ -300,6 +300,7 @@ namespace Rootborn.Host
                 Rootborn.Data.GameDefinitions definitions = GameContent.Load(_options.RepoRoot).Definitions;
                 return definitions.Get<Rootborn.Core.StudentLife.LifeCalendar>(GameStartSettings.FromDefinitions(definitions).CalendarId);
             }, () => ReturnToStartMenu(null));
+            hosting.DefaultSharedPieces = _options.SharedPieces; // --share: 방 열기 창에 처음 켜 둘 것
             hosting.Changed += () => Screens?.NotifyChanged(RoomHostText.Topic);
             return hosting;
         }
@@ -445,6 +446,9 @@ namespace Rootborn.Host
             screens.EnterMap(World.Session.Map.Id, MapFeaturesHere());
             Screens = screens;
             Screens.OpenHud();
+            // 남의 방에 들어갔으면 그 방이 같이 쓰는 것을 잠깐 알린다(방을 연 사람은 방 열기 창에서 골랐다). 설정 화면의 방 줄에도 계속 보인다.
+            if (Session?.Shares != null && (Hosting == null || !Hosting.IsOpen))
+                Screens.Open(ScreenCatalog.RoomSharesNotice, argument: new RoomSharesNoticeOpen(Session.Shares.Settings.SharedPieces));
             ConnectFurniture(Session);
             if (Session != null)
             {
@@ -467,6 +471,8 @@ namespace Rootborn.Host
         /// <summary>
         /// 게임 한 판을 시작한다. 손님 저장을 받는 방에 들어갔으면 방이 내려 준 세이브와 공유 조각, 방의 시계로(GuestProgress.RoomStoreFor),
         /// 아니면 이 PC의 그 슬롯으로. 방의 시계가 바뀌면 SyncWithRoom을 부른다(다른 사람이 때를 끝냄, 방에 없던 날).
+        /// 손님 저장을 받지 않는 방(내 PC에서 연 방 — 연 사람도 들어온 사람도)도 공유 조각은 방의 것을 쓴다: 진행은 이 PC의 슬롯에 저장하고,
+        /// 저장한 요청은 방 접속이 프레임마다 방으로 보낸다(RoomGuestLink.FlushRequests). 방의 시계는 아직 잇지 않았다(흐르는 시간 4단계).
         /// </summary>
         private GameSession StartSession()
         {
@@ -474,7 +480,8 @@ namespace Rootborn.Host
             var settings = GameStartSettings.FromDefinitions(definitions); // FromRegistry는 time.json의 07:00 시작을 모른다
             var link = Room != null && Room.Phase == Rootborn.Screens.Start.RoomJoinPhase.Joined ? Room.Link : null;
             if (link == null || !link.TakesGuestSaves)
-                return GameSession.Start(definitions, settings, GuestProgress.LocalStoreFor(_options.SaveRoot), _options.SaveSlot, GuestProgress.SavePlayerId);
+                return GameSession.Start(definitions, settings, GuestProgress.LocalStoreFor(_options.SaveRoot), _options.SaveSlot, GuestProgress.SavePlayerId,
+                    shares: link?.Shares);
 
             var time = Room.CreateRoomTime(definitions.Get<Rootborn.Core.StudentLife.LifeCalendar>(settings.CalendarId));
             var session = GameSession.Start(definitions, settings, GuestProgress.RoomStoreFor(link), Rootborn.Net.Room.RoomGuestLink.Slot, Room.PlayerId,

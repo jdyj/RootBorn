@@ -10,7 +10,20 @@ using Rootborn.Net.Transport;
 
 namespace Rootborn.Net.Room
 {
-    /// <summary>방 설정. 값은 실행 인자에서 넘긴다(데디케이티드 서버) 또는 방 만들기 화면에서(호스트 모드, 아직 없음).</summary>
+    /// <summary>이미 있는 방의 설정(<see cref="RoomServer.TryReadSaved"/>): 같이 쓰는 조각 이름, 정원(적지 않은 옛 방이면 0).</summary>
+    public sealed class SavedRoomSettings
+    {
+        public SavedRoomSettings(IReadOnlyList<string> sharedPieces, int maxPlayers)
+        {
+            SharedPieces = sharedPieces ?? Array.Empty<string>();
+            MaxPlayers = maxPlayers;
+        }
+
+        public IReadOnlyList<string> SharedPieces { get; }
+        public int MaxPlayers { get; }
+    }
+
+    /// <summary>방을 열 때 받는 값. 실행 인자(데디케이티드 서버) 또는 방 열기 화면·--host 인자(내 PC에서 열기)에서 넘긴다. 정원과 같이 쓰는 것은 방을 처음 만들 때만 쓰고 방 설정 파일에 남는다.</summary>
     public sealed class RoomServerSettings
     {
         /// <summary>정원의 상한(설계 10절 1번: 기본 4명, 설정으로 8명까지. 도착 자리 규칙 SpawnSpread의 한계).</summary>
@@ -123,31 +136,33 @@ namespace Rootborn.Net.Room
             _guests = guests;
             Versions = versions;
 
-            // 방의 시계 파일도, 옛 공용 시간 파일도 없으면 새 방이다(옛 파일만 있으면 그 날에서 잇는다 — RoomClockSaveFiles.Load).
-            IsNewRoom = !_store.TryRead(saveSlot, SaveFileNames.RoomClock, out RoomClockSaveData _)
-                && !_store.TryRead(SaveFileNames.WorldTimeSlot, SaveFileNames.WorldTime(saveSlot), out WorldTimeSaveData _);
+            IsNewRoom = IsNew(_store, saveSlot);
 
             var catalog = pieces ?? RoomPieceCatalog.CreateDefault();
             var requested = new RoomShareSettings(settings.SharedPieces);
             var unknown = new List<string>();
             requested.CopyUnknown(catalog, unknown);
             if (unknown.Count > 0) throw new ArgumentException("모르는 공유 조각: " + string.Join(", ", unknown) + " (아는 것: " + string.Join(", ", catalog.Names) + ")");
-            ShareSettings = RoomSettingsSaveFiles.LoadOrCreate(_store, saveSlot, IsNewRoom, requested, out bool created);
+            ShareSettings = RoomSettingsSaveFiles.LoadOrCreate(_store, saveSlot, IsNewRoom, requested, settings.MaxPlayers, out bool created, out int maxPlayers);
             ShareSettings.CopyUnknown(catalog, unknown);
             if (unknown.Count > 0) throw new ArgumentException("저장된 방 설정에 모르는 공유 조각이 있다: " + string.Join(", ", unknown));
             if (!created && requested.SharedPieces.Count > 0 && !requested.SameAs(ShareSettings))
                 Log("방 설정은 방을 만들 때만 정한다 — 저장된 설정을 쓴다: " + ShareSettings + " (받은 값 " + requested + "은 쓰지 않음)");
+            MaxPlayers = Math.Max(1, Math.Min(RoomServerSettings.MaxPlayersLimit, maxPlayers));
+            if (MaxPlayers != settings.MaxPlayers)
+                Log("정원은 방 설정이다 — 저장된 정원을 쓴다: " + MaxPlayers + " (받은 값 " + settings.MaxPlayers + "은 쓰지 않음)");
             _pieces = new RoomPieceSet(ShareSettings, catalog);
             _pieces.Load(_store, saveSlot);
 
             var gate = new HandshakeServerTransport(transport, versions, settings.HandshakeTimeoutSeconds, settings.Session.MaxMessageBytes);
             gate.Refused += (peer, reason, theirs) =>
                 Log(theirs.HasValue ? $"접속 거절 {peer}: {reason} (상대 {theirs.Value}, 방 {versions})" : $"접속 거절 {peer}: {reason}");
-            settings.Session.MaxPlayers = settings.MaxPlayers;
+            settings.Session.MaxPlayers = MaxPlayers;
             _session = new SessionServer(gate, settings.Session, store, saveSlot, calendar);
             _session.PlayerJoined += OnJoined;
             _session.PlayerLeft += player => _uploads.Remove(player.PlayerId);
             _session.On<SaveChunkMessage>(OnSaveChunk);
+            _session.On<RoomRequestsMessage>(OnRequests);
 
             if (IsNewRoom)
             {
@@ -155,7 +170,7 @@ namespace Rootborn.Net.Room
                 _pieces.Save(_store, _saveSlot);
             }
 
-            Log((IsNewRoom ? "새 방을 만듦" : "방을 이어서 엶") + $": 슬롯 {saveSlot}, {DayText()}, 정원 {settings.MaxPlayers}, 같이 쓰는 것 {ShareSettings}, {versions}");
+            Log((IsNewRoom ? "새 방을 만듦" : "방을 이어서 엶") + $": 슬롯 {saveSlot}, {DayText()}, 정원 {MaxPlayers}, 같이 쓰는 것 {ShareSettings}, {versions}");
         }
 
         public RoomVersions Versions { get; }
@@ -165,6 +180,33 @@ namespace Rootborn.Net.Room
 
         /// <summary>이 방이 같이 쓰는 것(만들 때 정한 것).</summary>
         public RoomShareSettings ShareSettings { get; }
+
+        /// <summary>이 방의 정원(방 설정에 적힌 것. 적지 않은 옛 방이면 열 때 받은 값).</summary>
+        public int MaxPlayers { get; }
+
+        /// <summary>방의 시계 파일도, 옛 공용 시간 파일도 없으면 새 방이다(옛 파일만 있으면 그 날에서 잇는다 — RoomClockSaveFiles.Load).</summary>
+        public static bool IsNew(ISaveStore store, string saveSlot)
+            => !store.TryRead(saveSlot, SaveFileNames.RoomClock, out RoomClockSaveData _)
+               && !store.TryRead(SaveFileNames.WorldTimeSlot, SaveFileNames.WorldTime(saveSlot), out WorldTimeSaveData _);
+
+        /// <summary>
+        /// 그 슬롯에 이미 방이 있으면 true와 그 방의 설정(같이 쓰는 것, 정원 — 적지 않았으면 0). 방 설정 파일보다 먼저 만든 방은 아무것도 같이 쓰지 않는다.
+        /// 방을 다시 열기 전에 화면이 보이려고 읽는다. 읽을 수 없는 파일이면 저장소가 던진 예외가 그대로 나온다.
+        /// </summary>
+        public static bool TryReadSaved(ISaveStore store, string saveSlot, out SavedRoomSettings saved)
+        {
+            saved = null;
+            if (store == null || string.IsNullOrWhiteSpace(saveSlot)) return false;
+            if (RoomSettingsSaveFiles.TryReadSaved(store, saveSlot, out var shares, out int maxPlayers))
+            {
+                saved = new SavedRoomSettings(shares.SharedPieces, maxPlayers);
+                return true;
+            }
+
+            if (IsNew(store, saveSlot)) return false;
+            saved = new SavedRoomSettings(Array.Empty<string>(), 0);
+            return true;
+        }
 
         /// <summary>이 방의 공유 조각과 요청 장부.</summary>
         public RoomPieceSet Pieces => _pieces;
@@ -262,6 +304,25 @@ namespace Rootborn.Net.Room
             _pieces.Apply(player.PlayerId, requests, _session.Clock.Day, _answers, _changed);
             if (_answers.Count > 0) _pieces.Save(_store, _saveSlot);
             _session.Send(player, new SaveTransferAnswerMessage { TransferId = id, Accepted = true });
+            foreach (var answer in _answers) _session.Send(player, AnswerMessage(answer));
+            foreach (var piece in _changed) _session.Broadcast(StateMessage(piece));
+        }
+
+        /// <summary>
+        /// 손님 저장을 받지 않는 방: 요청을 바로 반영하고 답한다(받는 방이면 요청은 저장과 함께 와야 하므로 버린다 — 개인 진행과 한 번에 바뀌게).
+        /// </summary>
+        private void OnRequests(ServerPlayer player, RoomRequestsMessage message)
+        {
+            if (_guests != null || message?.Requests == null || message.Requests.Length == 0) return;
+            ApplyAndAnswer(player, message.Requests);
+        }
+
+        private void ApplyAndAnswer(ServerPlayer player, IReadOnlyList<RoomRequestSaveData> requests)
+        {
+            _answers.Clear();
+            _changed.Clear();
+            _pieces.Apply(player.PlayerId, requests, _session.Clock.Day, _answers, _changed);
+            if (_answers.Count > 0) _pieces.Save(_store, _saveSlot);
             foreach (var answer in _answers) _session.Send(player, AnswerMessage(answer));
             foreach (var piece in _changed) _session.Broadcast(StateMessage(piece));
         }
