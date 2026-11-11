@@ -35,8 +35,11 @@
       ]
     },
     "Town": {
-      // 임시 지점(game/world/README.md "임시 연결 목록"): 메인 체인이 거치는 일터 네 곳·도서관·가게와 가게 알바 자리.
+      // 임시 지점(game/world/README.md "임시 연결 목록"): 메인 체인이 거치는 일터 네 곳·도서관·가게와 가게 알바 자리,
+      //   그리고 화면을 여는 지점(성인 시설, 탐색, 진로 연습).
       // 북쪽 광장(칸 32~52열, 0~11행)에 4칸 간격으로 둔다. 칸 (c, r)의 가운데 = ((c+0.5)*32, (r+0.5)*32).
+      // 성인 시설 네 곳은 위쪽 줄(3행 40·43·46·49열. 1행은 화면 위 시계 HUD 밑에 캐릭터가 서서 피했다), 탐색 지점은 (49,5), 진로 연습 네 곳은 아래쪽 줄(11행 36·42·48·51열).
+      //   시설·연습 순서는 일터 줄과 같다(식당·병원·디자인·훈련장). 대상은 가까운 것이 먼저라(InteractionTargetRule) 지점끼리 두 칸 이상 떨어뜨려 각 지점 칸에 서면 그 지점이 대상이 된다.
       "things": [
         { "kind": "location-activity", "id": "location.restaurant", "at": [ 1072, 176 ], "priority": 45, "temporary": true, "reason": "임시 지점: Unity 판의 이 지점은 LDtk 마을 그림 밖 북쪽 구역에 있었다. 새 맵 전까지 북쪽 광장에 둔다" },
         { "kind": "location-visit", "id": "location.restaurant", "at": [ 1072, 176 ], "priority": 35, "temporary": true, "reason": "임시 지점: Unity 판의 이 지점은 LDtk 마을 그림 밖 북쪽 구역에 있었다. 새 맵 전까지 북쪽 광장에 둔다" },
@@ -50,7 +53,16 @@
         { "kind": "location-visit", "id": "location.library", "at": [ 1072, 304 ], "priority": 35, "temporary": true, "reason": "임시 지점: Unity 판의 이 지점은 LDtk 마을 그림 밖 북쪽 구역에 있었다. 새 맵 전까지 북쪽 광장에 둔다" },
         { "kind": "location-activity", "id": "location.corner-store", "at": [ 1264, 304 ], "priority": 45, "temporary": true, "reason": "임시 지점: Unity 판의 이 지점은 LDtk 마을 그림 밖 북쪽 구역에 있었다. 새 맵 전까지 북쪽 광장에 둔다" },
         { "kind": "location-visit", "id": "location.corner-store", "at": [ 1264, 304 ], "priority": 35, "temporary": true, "reason": "임시 지점: Unity 판의 이 지점은 LDtk 마을 그림 밖 북쪽 구역에 있었다. 새 맵 전까지 북쪽 광장에 둔다" },
-        { "kind": "part-time-work", "id": "work.shift.corner-store", "at": [ 1456, 304 ], "priority": 45, "temporary": true, "reason": "임시 지점: Unity 판 가게 알바 자리(PartTimeWorkInteractor, 우선순위 45)는 LDtk 마을 그림 밖 북쪽 구역에 있었다. 새 맵 전까지 북쪽 광장에 둔다" }
+        { "kind": "part-time-work", "id": "work.shift.corner-store", "at": [ 1456, 304 ], "priority": 45, "temporary": true, "reason": "임시 지점: Unity 판 가게 알바 자리(PartTimeWorkInteractor, 우선순위 45)는 LDtk 마을 그림 밖 북쪽 구역에 있었다. 새 맵 전까지 북쪽 광장에 둔다" },
+        { "kind": "career-facility", "id": "facility.chef", "at": [ 1296, 112 ], "priority": 55, "temporary": true, "reason": "임시 지점: Unity 판 성인 시설(Town.unity Facility_*의 문, CareerFacilityInteractor 우선순위 55)은 LDtk 마을 그림 밖 북쪽 구역에 있었다. 새 맵 전까지 북쪽 광장 위쪽(3행)에 둔다" },
+        { "kind": "career-facility", "id": "facility.emergency-care", "at": [ 1392, 112 ], "priority": 55, "temporary": true, "reason": "임시 지점: Unity 판 성인 시설(Town.unity Facility_*의 문, CareerFacilityInteractor 우선순위 55)은 LDtk 마을 그림 밖 북쪽 구역에 있었다. 새 맵 전까지 북쪽 광장 위쪽(3행)에 둔다" },
+        { "kind": "career-facility", "id": "facility.interior", "at": [ 1488, 112 ], "priority": 55, "temporary": true, "reason": "임시 지점: Unity 판 성인 시설(Town.unity Facility_*의 문, CareerFacilityInteractor 우선순위 55)은 LDtk 마을 그림 밖 북쪽 구역에 있었다. 새 맵 전까지 북쪽 광장 위쪽(3행)에 둔다" },
+        { "kind": "career-facility", "id": "facility.soldier", "at": [ 1584, 112 ], "priority": 55, "temporary": true, "reason": "임시 지점: Unity 판 성인 시설(Town.unity Facility_*의 문, CareerFacilityInteractor 우선순위 55)은 LDtk 마을 그림 밖 북쪽 구역에 있었다. 새 맵 전까지 북쪽 광장 위쪽(3행)에 둔다" },
+        { "kind": "exploration", "id": "exploration.test.alley-crate", "at": [ 1584, 176 ], "priority": 50, "temporary": true, "reason": "임시 지점: Unity 판 탐색 지점(Town.unity TownExplorationInteractionPoint, 우선순위 50)은 LDtk 마을 그림 밖 북쪽 구역에 있었다. 새 맵 전까지 북쪽 광장에 둔다" },
+        { "kind": "career-practice", "id": "practice.chef", "at": [ 1168, 368 ], "priority": 45, "temporary": true, "reason": "임시 지점(작성자 판단): Unity 판에는 진로 연습 지점이 어느 씬에도 놓이지 않았다(CareerPracticeBoard는 쓰는 씬이 없다). 새 맵 전까지 일터 지점이 있는 북쪽 광장 아래쪽 줄에 둔다" },
+        { "kind": "career-practice", "id": "practice.emergency-care", "at": [ 1360, 368 ], "priority": 45, "temporary": true, "reason": "임시 지점(작성자 판단): Unity 판에는 진로 연습 지점이 어느 씬에도 놓이지 않았다(CareerPracticeBoard는 쓰는 씬이 없다). 새 맵 전까지 일터 지점이 있는 북쪽 광장 아래쪽 줄에 둔다" },
+        { "kind": "career-practice", "id": "practice.interior", "at": [ 1552, 368 ], "priority": 45, "temporary": true, "reason": "임시 지점(작성자 판단): Unity 판에는 진로 연습 지점이 어느 씬에도 놓이지 않았다(CareerPracticeBoard는 쓰는 씬이 없다). 새 맵 전까지 일터 지점이 있는 북쪽 광장 아래쪽 줄에 둔다" },
+        { "kind": "career-practice", "id": "practice.soldier", "at": [ 1648, 368 ], "priority": 45, "temporary": true, "reason": "임시 지점(작성자 판단): Unity 판에는 진로 연습 지점이 어느 씬에도 놓이지 않았다(CareerPracticeBoard는 쓰는 씬이 없다). 새 맵 전까지 일터 지점이 있는 북쪽 광장 아래쪽 줄에 둔다" }
       ]
     }
   }

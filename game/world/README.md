@@ -123,9 +123,17 @@ LDtk 엔티티가 아니라 **`interactions.json`**에 맵 id별로 적는다(LD
 | `location-visit` | 장소 방문 | 35 | 없음(같은 자리의 `location-activity`가 우선순위로 먼저 대상이 된다) |
 | `location-activity` | 장소 활동 | 45 | 장소(열 때 방문 기록), 닫으면 그 장소의 하루 이벤트 |
 | `part-time-work` | 알바 자리(`id`는 data의 알바 id) | 45 | 미니게임(알바를 예약하면 열린다) |
+| `career-practice` | 진로 연습 자리(`id`는 data의 진로 연습 id) | 45(Unity 판에 놓인 곳이 없어 알바와 같게) | 미니게임(연습을 예약하면 열린다) |
+| `career-facility` | 성인 시설(`id`는 data의 시설 id) | 55 | 성인 시설 관리 |
+| `exploration` | 탐색 지점(`id`는 data의 탐색 id) | 50 | 탐색 선택 |
 | `door` | 자동문(자동, 목적지 있는 문) | 110 | 없음 — 걸어 들어가야 열린다 |
 
-  탐색 지점 종류는 아직 없다. 새 종류는 화면 쪽에 등록하면 되고, 이 파일에는 문자열만 적는다.
+  새 종류는 화면 쪽에 등록하면 되고, 이 파일에는 문자열만 적는다. 발견 지점(Unity `DiscoveryPointInteractor`, 우선순위 15)과
+  장소 기록은 아직 화면 쪽에 여는 종류가 없어 지점을 두지 않았다.
+- 검사(`game/tests/Rootborn.World.Tests/WorldEntryPointsTests.cs`): 모든 지점이 새 게임 자리에서 걸어서 닿고, 그 자리에 서면 대상으로 골라지고
+  (같은 자리의 더 높은 우선순위 지점에 가려진 것은 빼고), `id`가 data/의 정의다(`daily-plan-board`·`student-day-end`의 `id`는 지점 이름일 뿐이다).
+  data/의 탐색·성인 시설·진로 연습 정의는 하나도 빠짐없이 지점을 가진다. 화면을 여는 종류마다 지점이 있는지는
+  `game/tests/Rootborn.Screens.Tests/WorldEntryPointKindsTests.cs`가 화면 등록 표로 본다.
 
 ## 6. 집
 
@@ -164,6 +172,9 @@ LDtk 엔티티가 아니라 **`interactions.json`**에 맵 id별로 적는다(LD
 | maps.json | School | 이동 구역 `town`(아래 가장자리 한 줄) → Town/town-school-entry | School_1에 문 엔티티가 없고 학교 출구도 LDtk에 없다 |
 | interactions.json | Town | `location-activity`·`location-visit` × `location.restaurant`(1072,176), `location.medical-clinic`(1200,176), `location.design-studio`(1328,176), `location.training-ground`(1456,176), `location.library`(1072,304), `location.corner-store`(1264,304) — 12개 | 이 지점들이 북쪽 구역에 있었다 |
 | interactions.json | Town | `part-time-work` / `work.shift.corner-store` (1456, 304) | 가게 알바 자리가 북쪽 구역에 있었다 |
+| interactions.json | Town | `career-facility` × `facility.chef`(1296,112), `facility.emergency-care`(1392,112), `facility.interior`(1488,112), `facility.soldier`(1584,112) — 4개 | Unity 판 성인 시설(Town.unity `Facility_*`)이 북쪽 구역에 있었다 |
+| interactions.json | Town | `exploration` / `exploration.test.alley-crate` (1584, 176) | Unity 판 탐색 지점(`TownExplorationInteractionPoint`)이 북쪽 구역에 있었다 |
+| interactions.json | Town | `career-practice` × `practice.chef`(1168,368), `practice.emergency-care`(1360,368), `practice.interior`(1552,368), `practice.soldier`(1648,368) — 4개 | 작성자 판단: Unity 판에는 진로 연습 지점이 어느 씬에도 없었다. 일터 지점이 있는 북쪽 광장에 둔다 |
 
 ## 9. 새 맵을 넣은 뒤 돌려 볼 것
 

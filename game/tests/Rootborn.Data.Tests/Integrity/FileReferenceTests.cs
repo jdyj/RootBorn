@@ -238,6 +238,8 @@ namespace Rootborn.Data.Tests.Integrity
             ["location-visit"] = "LocationDefinition",
             ["part-time-work"] = "PartTimeWorkDefinition",
             ["career-practice"] = "CareerPracticeDefinition",
+            ["career-facility"] = "FacilityDefinition",
+            ["exploration"] = "ExplorationInteractionDefinition",
             ["daily-plan-board"] = null, // 점 이름(그 맵의 일과판)
             ["student-day-end"] = null,  // 점 이름(하루 끝내기)
         };
