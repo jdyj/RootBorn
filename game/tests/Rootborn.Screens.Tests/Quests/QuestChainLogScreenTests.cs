@@ -17,7 +17,7 @@ namespace Rootborn.Screens.Tests.Quests
         [Test]
         public void Opens_ListsChains_CardSelectsDetail_LayoutLikeUnity()
         {
-            using var t = new TestSession();
+            using var t = new TestSession(definitions: VisibleTestChains.Definitions); // 체인이 둘 이상 보여야 카드를 고른다
             t.Stack.Open(ScreenCatalog.QuestChainLog);
             var screen = t.Screen<QuestChainLogScreen>(ScreenCatalog.QuestChainLog);
             Assert.That(t.Node(QuestChainLogScreen.PanelId).Rect, Is.EqualTo(new UiRect(580, 330, 760, 420)), "Unity 760x420 가운데");
@@ -36,9 +36,22 @@ namespace Rootborn.Screens.Tests.Quests
         }
 
         [Test]
-        public void AcceptButton_StartsTheSelectedAvailableChain()
+        public void DeveloperOnlyChains_AreNotListed_EvenWhenNoFilterIsSet()
         {
             using var t = new TestSession();
+            Assume.That(t.Session.Definitions.All<QuestChainDefinition>().Any(c => c.DeveloperOnly), "실제 data/에 개발용 체인이 있다");
+            t.Stack.Open(ScreenCatalog.QuestChainLog);
+            var screen = t.Screen<QuestChainLogScreen>(ScreenCatalog.QuestChainLog);
+            var shown = t.Session.Definitions.All<QuestChainDefinition>().Where(c => !c.DeveloperOnly).Select(c => c.Id);
+            Assert.That(screen.Model.Rows.Select(r => r.ChainId), Is.EquivalentTo(shown), "목표 수첩과 같은 기준(DeveloperOnly)으로 거른다");
+            foreach (var row in screen.Model.Rows)
+                Assert.That(t.Text.Has(row.NameKey, "ko") && t.Text.Has(row.NameKey, "en"), Is.True, "보이는 체인은 이름 문구가 있다(키가 그대로 보이지 않는다): " + row.ChainId);
+        }
+
+        [Test]
+        public void AcceptButton_StartsTheSelectedAvailableChain()
+        {
+            using var t = new TestSession(definitions: VisibleTestChains.Definitions); // 조건 없이 받을 수 있는 체인은 개발용뿐이다
             t.Stack.Open(ScreenCatalog.QuestChainLog);
             var screen = t.Screen<QuestChainLogScreen>(ScreenCatalog.QuestChainLog);
             int index = -1;

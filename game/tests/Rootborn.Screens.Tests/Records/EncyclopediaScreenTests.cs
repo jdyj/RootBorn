@@ -77,6 +77,29 @@ namespace Rootborn.Screens.Tests.Records
         }
 
         [Test]
+        public void SeeingAnEntry_GoesThroughTheGameCommand_IsSavedAndAnnounced()
+        {
+            using var t = new TestSession();
+            const string entry = "ency.location.first-discovery";
+            t.Session.Discover("discovery.clocktower-notice"); // 준비: 발견으로 항목을 연다(저장된다)
+            Assume.That(t.Session.Encyclopedia.IsNew(entry), Is.True);
+            var topics = new System.Collections.Generic.List<string>();
+            t.Session.Changed += topics.Add;
+            t.Stack.OpenHud();
+            t.Emit();
+            t.Click("hud.button.encyclopedia");
+            var screen = t.Screen<EncyclopediaScreen>(ScreenCatalog.Encyclopedia);
+            EncyclopediaEntry def = t.Session.Definitions.Get<EncyclopediaEntry>(entry);
+            t.Click(EncyclopediaScreen.CategoryId(screen.Model.Categories.ToList().FindIndex(c => c.Id == def.Category.Id)));
+            Assert.That(screen.SelectedEntryId, Is.EqualTo(entry));
+            Assert.That(topics, Is.EqualTo(new[] { ChangeTopics.Discovery }), "GameSession 명령이 한 번 알린다");
+            Assert.That(screen.Rows.First(r => r.EntryId == entry).IsNew, Is.False, "화면의 새 표시도 사라진다");
+            using TestSession again = t.Reopen();
+            Assert.That(again.Session.Encyclopedia.IsUnlocked(entry), Is.True);
+            Assert.That(again.Session.Encyclopedia.IsNew(entry), Is.False, "본 표시가 세이브에 남는다");
+        }
+
+        [Test]
         public void NewEntry_RowShowsTheNewMark_UntilSeen()
         {
             using TestSession t = Open(unlockFirst: true);

@@ -45,6 +45,7 @@ namespace Rootborn.Screens
             _modalBlocker = _layers[(int)ScreenLayer.Modal].Add(new UiNode { Id = "modal-blocker", Interactive = true, Visible = false });
             if (_services.Session != null) _services.Session.Changed += NotifyChanged;
             _services.Text.LanguageChanged += () => NotifyChanged(ChangeTopics.Language);
+            if (_services.Display != null) _services.Display.Changed += _ => NotifyChanged(ChangeTopics.Display);
             foreach (Action<ScreenServices> attach in registry.Listeners) attach(_services);
         }
 

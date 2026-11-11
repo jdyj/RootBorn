@@ -32,7 +32,8 @@ namespace Rootborn.Screens.Settings
     /// <summary>
     /// 설정(Esc). Unity SettingsPanel(660x510, 가운데)을 같은 수치로 옮겼다: 바탕·테두리, 위 탭 다섯, 양옆 꽃무늬 기둥, 장식 스크롤 막대,
     /// 켬/끔 네 칸 묶음, 아이콘 다섯 칸 묶음, 모서리 장식, 무늬 줄. Unity 판에는 글자가 없었다.
-    /// 더한 것: 두 묶음 사이의 언어 줄(이름 + 지금 언어 단추). 단추를 누르면 언어 파일 폴더에 있는 언어를 사전 순으로 돌고, 열린 화면 글자가
+    /// 더한 것: 두 묶음 사이의 언어 줄과 표시 모드 줄(이름 + 지금 값 단추). 표시 모드 단추는 창 ↔ 테두리 없는 전체 화면을 바꾸고(F11과 같음)
+    /// 바로 적용·저장한다. 언어 줄: 단추를 누르면 언어 파일 폴더에 있는 언어를 사전 순으로 돌고, 열린 화면 글자가
     /// 바로 바뀌며 설정 파일에 저장된다. 언어 이름은 그 언어 파일의 ui.settings.language-name이다(언어를 더하는 일은 파일을 더하는 일).
     /// 이동을 막지 않는다. 닫기는 Esc(키 배정 표의 열고 닫기).
     /// </summary>
@@ -51,20 +52,28 @@ namespace Rootborn.Screens.Settings
         private static readonly UiColor AccentGold = UnityLayout.Color(0.84f, 0.57f, 0.28f);
         private static readonly UiColor White = UnityLayout.Color(1f, 1f, 1f);
 
-        /// <summary>언어 줄 배치(패널 가운데 기준, Unity 좌표처럼 y가 위로). 켬/끔 묶음(아래 끝 -10)과 아이콘 묶음(위 끝 -68) 사이.</summary>
-        internal static class LanguageRow
+        /// <summary>
+        /// 언어 줄·표시 모드 줄 배치(패널 가운데 기준, Unity 좌표처럼 y가 위로). 켬/끔 묶음(아래 끝 -10)과 아이콘 묶음(위 끝 IconGroupTop) 사이에
+        /// 두 줄을 둔다. 두 줄이 들어가도록 아이콘 묶음(Unity 판에서 뜻 없는 장식)을 아래로 내리고 낮췄다.
+        /// </summary>
+        internal static class OptionRows
         {
-            public const float Y = -39f, Height = 40f, Font = 18f, LabelFont = 24f;
+            public const float LanguageY = -32f, DisplayY = -80f, Height = 40f, Font = 18f, LabelFont = 24f;
             public const float LabelX = -98f, LabelW = 170f;
             public const float ButtonX = 92f, ButtonW = 190f;
+            public const float IconGroupY = -150f, IconGroupH = 84f;
         }
 
         public const string LanguageLabelId = "settings.language.label";
         public const string LanguageButtonId = "settings.language.value";
+        public const string DisplayLabelId = "settings.display.label";
+        public const string DisplayButtonId = "settings.display.value";
 
         private readonly UiToggle[] _toggles = new UiToggle[SettingsModel.ToggleNames.Length];
         private UiLabel _languageLabel;
         private UiButton _languageButton;
+        private UiLabel _displayLabel;
+        private UiButton _displayButton;
 
         public SettingsScreen(ScreenServices services) : base(services)
         {
@@ -94,7 +103,8 @@ namespace Rootborn.Screens.Settings
             Scrollbar(root);
             SettingsGroup(root, 0f, 58f);
             LanguageLine(root);
-            IconGroup(root, 0f, -126f);
+            DisplayLine(root);
+            IconGroup(root, 0f, OptionRows.IconGroupY);
             CornerOrnaments(root);
             PatternRow(root, 154f);
             PatternRow(root, -204f);
@@ -105,20 +115,47 @@ namespace Rootborn.Screens.Settings
         {
             for (int i = 0; i < _toggles.Length; i++) _toggles[i].IsOn = Model.IsOn(i);
             WriteLanguage();
+            WriteDisplay();
         }
 
         protected internal override void OnChanged(string topic)
         {
-            if (topic == ChangeTopics.Language || topic == ChangeTopics.All) WriteLanguage();
+            if (topic == ChangeTopics.Language || topic == ChangeTopics.All) { WriteLanguage(); WriteDisplay(); }
+            else if (topic == ChangeTopics.Display) WriteDisplay();
         }
 
         private void LanguageLine(UiNode root)
         {
-            _languageLabel = root.Add(new UiLabel { Id = LanguageLabelId, FontSize = LanguageRow.LabelFont, Color = UiTheme.Ink, Align = UiAlign.Right })
-                .Centered(LanguageRow.LabelX, LanguageRow.Y, LanguageRow.LabelW, LanguageRow.Height);
-            _languageButton = root.Add(new UiButton { Id = LanguageButtonId, FontSize = LanguageRow.Font })
-                .Centered(LanguageRow.ButtonX, LanguageRow.Y, LanguageRow.ButtonW, LanguageRow.Height);
+            _languageLabel = root.Add(new UiLabel { Id = LanguageLabelId, FontSize = OptionRows.LabelFont, Color = UiTheme.Ink, Align = UiAlign.Right })
+                .Centered(OptionRows.LabelX, OptionRows.LanguageY, OptionRows.LabelW, OptionRows.Height);
+            _languageButton = root.Add(new UiButton { Id = LanguageButtonId, FontSize = OptionRows.Font })
+                .Centered(OptionRows.ButtonX, OptionRows.LanguageY, OptionRows.ButtonW, OptionRows.Height);
             _languageButton.Clicked += NextLanguage;
+        }
+
+        private void DisplayLine(UiNode root)
+        {
+            _displayLabel = root.Add(new UiLabel { Id = DisplayLabelId, FontSize = OptionRows.LabelFont, Color = UiTheme.Ink, Align = UiAlign.Right })
+                .Centered(OptionRows.LabelX, OptionRows.DisplayY, OptionRows.LabelW, OptionRows.Height);
+            _displayButton = root.Add(new UiButton { Id = DisplayButtonId, FontSize = OptionRows.Font })
+                .Centered(OptionRows.ButtonX, OptionRows.DisplayY, OptionRows.ButtonW, OptionRows.Height);
+            _displayButton.Clicked += FlipDisplay;
+        }
+
+        /// <summary>표시 모드 단추: 지금 모드 이름. Host 창이 없으면(창 없이 도는 화면) 누를 수 없다.</summary>
+        private void WriteDisplay()
+        {
+            DisplayModeSetting display = Services.Display;
+            _displayLabel.Text = T("ui.settings.display");
+            _displayButton.Text = display != null && display.Fullscreen ? T("ui.settings.display-fullscreen") : T("ui.settings.display-windowed");
+            _displayButton.Enabled = display != null;
+        }
+
+        /// <summary>창 ↔ 테두리 없는 전체 화면. 저장과 창 적용은 DisplayModeSetting과 Host가 한다. 글자는 Display 알림으로 바뀐다.</summary>
+        private void FlipDisplay()
+        {
+            DisplayModeSetting display = Services.Display;
+            if (display != null) display.Fullscreen = !display.Fullscreen;
         }
 
         private void WriteLanguage()
@@ -181,14 +218,15 @@ namespace Rootborn.Screens.Settings
 
         private static void IconGroup(UiNode root, float cx, float cy)
         {
-            Box(root, cx, cy, 386f, 116f, FrameDark);
-            Box(root, cx, cy, 356f, 82f, PanelLight);
-            Box(root, cx, cy, 328f, 62f, PanelFill);
+            float h = OptionRows.IconGroupH;
+            Box(root, cx, cy, 386f, h, FrameDark);
+            Box(root, cx, cy, 356f, h - 22f, PanelLight);
+            Box(root, cx, cy, 328f, h - 36f, PanelFill);
             for (int i = 0; i < 5; i++)
             {
                 float x = cx - 128f + i * 64f;
-                Box(root, x, cy, 50f, 50f, FrameMid);
-                Box(root, x, cy, 34f, 34f, i == 0 ? White : AccentBlue);
+                Box(root, x, cy, 42f, 42f, FrameMid);
+                Box(root, x, cy, 28f, 28f, i == 0 ? White : AccentBlue);
             }
             Cursor(root, cx - 128f, cy - 2f);
         }

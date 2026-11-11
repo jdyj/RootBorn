@@ -96,7 +96,8 @@ namespace Rootborn.Host
             _windowedSize = (options.Width, options.Height);
             _minimumSize = DisplayChoice.MinimumSize(options.Width, options.Height);
             if (Settings.Settings.TryGetToggle(DisplayChoice.FullscreenSetting, out bool saved)) SavedFullscreen = saved;
-            Fullscreen = DisplayChoice.StartFullscreen(options.FullscreenRequested, options.SizeGiven, options.TestMode, SavedFullscreen);
+            Display = new DisplayModeSetting(Settings, DisplayChoice.StartFullscreen(options.FullscreenRequested, options.SizeGiven, options.TestMode, SavedFullscreen));
+            Display.Changed += ApplyDisplayMode;
             if (Fullscreen) PrepareFullscreen();
             Window.ClientSizeChanged += OnClientSizeChanged;
         }
@@ -108,10 +109,13 @@ namespace Rootborn.Host
         private bool _applyingSize;
 
         /// <summary>
-        /// 지금 표시 모드가 테두리 없는 전체 화면인가(F11로 바꾼다). 테스트 모드는 이 값만 바꾸고 실제 창은 창 모드 그대로 둔다
-        /// (테스트용 이음매 — 테스트가 사용자의 화면을 덮지 않는다).
+        /// 지금 표시 모드가 테두리 없는 전체 화면인가(F11이나 설정 화면의 표시 모드 줄로 바꾼다). 테스트 모드는 이 값만 바꾸고 실제 창은 창 모드
+        /// 그대로 둔다(테스트용 이음매 — 테스트가 사용자의 화면을 덮지 않는다).
         /// </summary>
-        public bool Fullscreen { get; private set; }
+        public bool Fullscreen => Display.Fullscreen;
+
+        /// <summary>표시 모드. 화면 쌓기에 넘겨 설정 화면이 바꾸고, 바뀌면 ApplyDisplayMode가 창에 적용한다. 저장은 DisplayModeSetting이 한다.</summary>
+        public DisplayModeSetting Display { get; }
 
         /// <summary>시작할 때 설정 파일에서 읽은 표시 모드(없으면 null).</summary>
         public bool? SavedFullscreen { get; }
@@ -123,13 +127,13 @@ namespace Rootborn.Host
         public (int Width, int Height) MinimumWindowSize => _minimumSize;
 
         /// <summary>창 모드 ↔ 테두리 없는 전체 화면. 고른 모드는 설정 파일에 남겨 다음 실행이 따른다(실행 인자가 있으면 인자가 먼저).</summary>
-        public void ToggleFullscreen()
+        public void ToggleFullscreen() => Display.Fullscreen = !Display.Fullscreen;
+
+        /// <summary>표시 모드가 바뀌었다(F11이든 설정 화면이든): 창에 바로 적용한다. 테스트 모드는 실제 창을 바꾸지 않는다.</summary>
+        private void ApplyDisplayMode(bool fullscreen)
         {
-            Fullscreen = !Fullscreen;
-            Settings.Settings.SetToggle(DisplayChoice.FullscreenSetting, Fullscreen);
-            Settings.Save();
             if (_options.TestMode) return;
-            if (Fullscreen)
+            if (fullscreen)
             {
                 _windowedSize = (GraphicsDevice.PresentationParameters.BackBufferWidth, GraphicsDevice.PresentationParameters.BackBufferHeight);
                 PrepareFullscreen();
@@ -239,7 +243,7 @@ namespace Rootborn.Host
                 new CharacterPreviewArt(content.Characters), EnterSlot, Exit);
             ScreenRegistry registry = ScreenCatalog.Create();
             ExtraScreens?.Invoke(registry);
-            var services = new ScreenServices(Text, null) { Settings = Settings };
+            var services = new ScreenServices(Text, null) { Settings = Settings, Display = Display };
             Screens = new ScreenStack(registry, services);
             Screens.Open(ScreenCatalog.SaveSlotSelect, argument: StartMenu);
             SetTree(Screens.Tree);
@@ -294,7 +298,7 @@ namespace Rootborn.Host
                     new FileSaveStore(_options.SaveRoot), _options.SaveSlot, SaveFileNames.DefaultPlayerId);
             ScreenRegistry registry = ScreenCatalog.Create();
             ExtraScreens?.Invoke(registry);
-            var services = new ScreenServices(Text, Session) { Definitions = World.Content.Definitions, Settings = Settings, Names = DisplayNames.Load(Path.Combine(_options.RepoRoot, "data")) };
+            var services = new ScreenServices(Text, Session) { Definitions = World.Content.Definitions, Settings = Settings, Display = Display, Names = DisplayNames.Load(Path.Combine(_options.RepoRoot, "data")) };
             if (Session != null)
                 services.Wardrobe = new HostWardrobe(World, Session, new FileSaveStore(_options.SaveRoot), _options.SaveSlot, SaveFileNames.DefaultPlayerId, _options.RepoRoot);
             var screens = new ScreenStack(registry, services);

@@ -30,12 +30,13 @@ namespace Rootborn.Screens.Tests
         private readonly bool _ownsSaves;
 
         /// <param name="saves">이어 할 세이브 폴더(Reopen). 비면 새 임시 폴더를 만들고 Dispose에서 지운다.</param>
-        public TestSession(string language = "ko", Action<ScreenRegistry> extra = null, string saves = null)
+        /// <param name="definitions">쓸 정의(비면 실제 data/).</param>
+        public TestSession(string language = "ko", Action<ScreenRegistry> extra = null, string saves = null, GameDefinitions definitions = null)
         {
             _ownsSaves = saves == null;
             _saves = saves ?? Path.Combine(Path.GetTempPath(), "rootborn-screens-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_saves);
-            Session = GameSession.Start(_definitions.Value, GameStartSettings.FromRegistry(TestData.DataDirectory), new FileSaveStore(_saves), "slot-test", null);
+            Session = GameSession.Start(definitions ?? _definitions.Value, GameStartSettings.FromRegistry(TestData.DataDirectory), new FileSaveStore(_saves), "slot-test", null);
             Text = TestData.Text(language);
             ScreenRegistry registry = ScreenCatalog.Create();
             extra?.Invoke(registry);
@@ -45,7 +46,7 @@ namespace Rootborn.Screens.Tests
         }
 
         /// <summary>같은 세이브 폴더로 게임을 다시 불러온다(새 화면 쌓기). 폴더는 이 세션이 지운다.</summary>
-        public TestSession Reopen(Action<ScreenRegistry> extra = null) => new TestSession(Text.Language, extra, _saves);
+        public TestSession Reopen(Action<ScreenRegistry> extra = null) => new TestSession(Text.Language, extra, _saves, Session.Definitions);
 
         public GameSession Session { get; }
         public GameText Text { get; }

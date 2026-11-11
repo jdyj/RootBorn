@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using NUnit.Framework;
 using Rootborn.Core.Minigames;
@@ -332,20 +331,52 @@ namespace Rootborn.Screens.Tests.Furniture
                 Assert.That(f.T.Text.Has("ui.furniture.direction." + direction, "ko") && f.T.Text.Has("ui.furniture.direction." + direction, "en"), Is.True);
         }
 
+        /// <summary>
+        /// 가구 1,500여 개에서 열기·닫기와 쪽 넘기기가 가구 수에 따라 커지지 않는지. 벽시계는 기계 부하로 흔들려 쓰지 않고
+        /// 흔들리지 않는 기준을 본다: 만든 노드 수(열고 닫고 넘겨도 늘지 않는다), 그린 명령 수(한 쪽 20칸만 그린다 — 쪽마다 같다),
+        /// 쪽 넘기기 한 번의 할당 바이트(쪽 크기만큼만, 전체 목록을 훑어 새로 만들지 않는다. 그림 좌표표를 읽은 뒤 — 2026-11-12 잰 값 약 9KB).
+        /// </summary>
         [Test]
         public void OpeningAndPaging_With1500Pieces_IsCheap()
         {
             using var f = new Fixture();
-            var watch = Stopwatch.StartNew();
+            Assume.That(f.Screen.Palette.TotalCount, Is.GreaterThan(1000), "실제 data/의 가구가 많다");
+            int nodes = CountNodes(f.Screen.Root);
+            int drawn = f.T.Emit().Commands.Count;
+
             for (int i = 0; i < 10; i++) { f.T.Click("hud.button.placement"); f.T.Click("hud.button.placement"); }
-            double openMs = watch.Elapsed.TotalMilliseconds / 10;
-            watch.Restart();
-            for (int i = 0; i < 50; i++) f.T.Click(FurniturePlacementScreen.NextId);
-            double pageMs = watch.Elapsed.TotalMilliseconds / 50;
-            TestContext.Out.WriteLine($"열기+닫기 {openMs:F2} ms, 쪽 넘기기 {pageMs:F3} ms (가구 {f.Screen.Palette.TotalCount}개)");
-            Assert.That(openMs, Is.LessThan(16.6), "한 프레임 안");
-            Assert.That(pageMs, Is.LessThan(16.6));
+            Assert.That(CountNodes(f.Screen.Root), Is.EqualTo(nodes), "열고 닫아도 노드를 새로 만들지 않는다");
             Assert.That(f.Screen.Root.Find(FurniturePlacementScreen.SlotId(20)), Is.Null, "칸은 한 쪽 20개만 만든다");
+
+            // 가구 그림 좌표표는 그 쪽을 처음 볼 때 한 번 읽는다(FurnitureArt 캐시). 한 바퀴 돌아 읽힌 뒤 두 번째 바퀴를 잰다.
+            const int pages = 50;
+            for (int i = 0; i < pages; i++) f.T.Click(FurniturePlacementScreen.NextId);
+            while (f.T.Node(FurniturePlacementScreen.PreviousId).IsActive) f.T.Click(FurniturePlacementScreen.PreviousId);
+            f.T.Emit();
+            long before = GC.GetAllocatedBytesForCurrentThread();
+            for (int i = 0; i < pages; i++) f.T.Click(FurniturePlacementScreen.NextId); // 포인터로 누르기(판정 포함)
+            long perPage = (GC.GetAllocatedBytesForCurrentThread() - before) / pages;
+            TestContext.Out.WriteLine($"노드 {nodes}개, 그린 명령 {drawn}개, 쪽 넘기기 한 번 할당 {perPage} 바이트 (가구 {f.Screen.Palette.TotalCount}개)");
+            Assert.That(CountNodes(f.Screen.Root), Is.EqualTo(nodes), "쪽을 넘겨도 노드를 새로 만들지 않는다");
+            Assert.That(perPage, Is.LessThan(PagingAllocationBudget), "쪽 넘기기는 한 쪽 분량만 다룬다(가구 수에 비례해 할당하지 않는다)");
+            for (int i = 0; i < 3; i++)
+            {
+                f.T.Click(FurniturePlacementScreen.NextId);
+                Assert.That(f.T.Emit().Commands.Count, Is.LessThanOrEqualTo(drawn + DrawSlack), "그린 명령 수가 쪽마다 거의 같다(보이는 칸만 그린다)");
+            }
+        }
+
+        /// <summary>쪽 넘기기 한 번에 허용하는 할당. 가구 정의 하나를 훑을 때마다 작은 객체 하나만 만들어도 1,500개면 이를 넘는다.</summary>
+        private const long PagingAllocationBudget = 32 * 1024;
+
+        /// <summary>쪽마다 이름 길이가 달라 줄바꿈 글자 명령 수가 조금 다를 수 있다.</summary>
+        private const int DrawSlack = 40;
+
+        private static int CountNodes(UiNode node)
+        {
+            int count = 1;
+            foreach (UiNode child in node.Children) count += CountNodes(child);
+            return count;
         }
     }
 }

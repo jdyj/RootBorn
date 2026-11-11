@@ -113,6 +113,73 @@ namespace Rootborn.Screens.Tests
 
 
         [Test]
+        public void DisplayRow_ShowsTheMode_FlipsIt_TellsTheHost_AndSaves()
+        {
+            var display = new DisplayModeSetting(new SettingsStore(_store), fullscreen: false);
+            var stack = new ScreenStack(ScreenCatalog.Create(), new ScreenServices(_text, null) { Settings = display.Store, Display = display });
+            stack.Layout(1920, 1080);
+            var told = new System.Collections.Generic.List<bool>();
+            display.Changed += told.Add;
+            stack.Key(ScreenKey.Escape, false);
+            var label = (UiLabel)stack.Tree.Root.Find(SettingsScreen.DisplayLabelId);
+            var value = (UiButton)stack.Tree.Root.Find(SettingsScreen.DisplayButtonId);
+            Assert.That(label.Text, Is.EqualTo(_text.Get("ui.settings.display")));
+            Assert.That(value.Text, Is.EqualTo(_text.Get("ui.settings.display-windowed")));
+            Assert.That(value.Enabled, Is.True);
+
+            UiRect r = value.Rect;
+            stack.Pointer(r.CenterX, r.CenterY, false, 0);
+            stack.Pointer(r.CenterX, r.CenterY, true, 0);
+            stack.Pointer(r.CenterX, r.CenterY, false, 0);
+            Assert.That(display.Fullscreen, Is.True);
+            Assert.That(told, Is.EqualTo(new[] { true }), "Host가 받아 바로 적용한다");
+            Assert.That(value.Text, Is.EqualTo(_text.Get("ui.settings.display-fullscreen")), "단추 글자가 바로 바뀐다");
+            Assert.That(new SettingsStore(_store).Settings.GetToggle(DisplayModeSetting.SettingName), Is.True, "설정 파일에 저장된다");
+        }
+
+        [Test]
+        public void DisplayRow_FollowsAChangeMadeElsewhere_LikeF11()
+        {
+            var display = new DisplayModeSetting(new SettingsStore(_store), fullscreen: true);
+            var stack = new ScreenStack(ScreenCatalog.Create(), new ScreenServices(_text, null) { Settings = display.Store, Display = display });
+            stack.Layout(1920, 1080);
+            stack.Key(ScreenKey.Escape, false);
+            var value = (UiButton)stack.Tree.Root.Find(SettingsScreen.DisplayButtonId);
+            Assert.That(value.Text, Is.EqualTo(_text.Get("ui.settings.display-fullscreen")));
+            display.Fullscreen = false;
+            Assert.That(value.Text, Is.EqualTo(_text.Get("ui.settings.display-windowed")));
+            display.Fullscreen = false; // 같은 값은 알리지도 저장하지도 않는다
+        }
+
+        [Test]
+        public void DisplayRow_WithoutAHostDisplay_IsShownButCannotBePressed()
+        {
+            _stack.Key(ScreenKey.Escape, false);
+            var value = (UiButton)_stack.Tree.Root.Find(SettingsScreen.DisplayButtonId);
+            Assert.That(value.Enabled, Is.False);
+            Assert.That(value.Text, Is.EqualTo(_text.Get("ui.settings.display-windowed")));
+        }
+
+        [Test]
+        public void LanguageAndDisplayRows_DoNotOverlapEachOtherOrTheGroups()
+        {
+            _stack.Key(ScreenKey.Escape, false);
+            UiNode root = _stack.Tree.Root;
+            UiRect panel = root.Find("settings").Rect;
+            var rows = new[] { SettingsScreen.LanguageLabelId, SettingsScreen.LanguageButtonId, SettingsScreen.DisplayLabelId, SettingsScreen.DisplayButtonId }
+                .Select(id => root.Find(id).Rect).ToList();
+            UiRect toggle = root.Find(SettingsScreen.ToggleId(2)).Rect;
+            for (int i = 0; i < rows.Count; i++)
+            {
+                Assert.That(rows[i].X >= panel.X && rows[i].Right <= panel.Right && rows[i].Y >= panel.Y && rows[i].Bottom <= panel.Bottom, Is.True, "패널 안: " + i);
+                Assert.That(Overlaps(rows[i], toggle), Is.False, "켬/끔 칸과 겹치지 않는다: " + i);
+                for (int j = i + 1; j < rows.Count; j++) Assert.That(Overlaps(rows[i], rows[j]), Is.False, i + "와 " + j);
+            }
+        }
+
+        private static bool Overlaps(UiRect a, UiRect b) => a.X < b.Right && b.X < a.Right && a.Y < b.Bottom && b.Y < a.Bottom;
+
+        [Test]
         public void TogglePosition_MatchesUnity()
         {
             _stack.Key(ScreenKey.Escape, false);

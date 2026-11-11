@@ -84,6 +84,7 @@ namespace Rootborn.Host.Tests
         [TestCase(3840, 2160)]
         [TestCase(1920, 1200)]
         [TestCase(2560, 1080)]
+        [TestCase(1280, 800)]
         public void WINDOW_001_EachResolution_HudInventoryDayResult_StayOnScreen_PointerClicks_Walks(int width, int height)
         {
             if (!FitsOnDisplay(width, height))
@@ -163,6 +164,34 @@ namespace Rootborn.Host.Tests
                 Assert.That(again.Game.Fullscreen, Is.False, "테스트 모드는 늘 창 모드");
             }
             Assert.That(DisplayChoice.StartFullscreen(null, false, false, true), Is.True, "테스트가 아니고 --size도 없으면 저장된 전체 화면을 따른다");
+        }
+
+        [Test]
+        public void WINDOW_005_SettingsDisplayRow_PointerClick_FlipsHostMode_SavesIt_AndFollowsF11()
+        {
+            using (PlayerDriver player = Start(1280, 720))
+            {
+                player.OpenScreenWithKey(TestKey.Escape, ScreenCatalog.Settings);
+                var value = (UiButton)player.Node(Rootborn.Screens.Settings.SettingsScreen.DisplayButtonId);
+                string windowed = player.Game.Text.Get("ui.settings.display-windowed");
+                string fullscreen = player.Game.Text.Get("ui.settings.display-fullscreen");
+                Assert.That(value.Text, Is.EqualTo(windowed));
+
+                player.Click(Rootborn.Screens.Settings.SettingsScreen.DisplayButtonId);
+                Assert.That(player.Game.Fullscreen, Is.True, "설정 화면 단추가 Host 표시 모드를 바꿨다");
+                Assert.That(player.Game.Settings.Settings.GetToggle(DisplayChoice.FullscreenSetting), Is.True, "고른 모드를 설정에 남긴다");
+                Assert.That(value.Text, Is.EqualTo(fullscreen));
+                Assert.That(player.Game.Window.ClientBounds.Width, Is.EqualTo(1280), "테스트 모드는 실제 창을 바꾸지 않는다");
+                player.ScreenshotScreen(ScreenCatalog.Settings, "settings-display-fullscreen");
+
+                player.PressKey(TestKey.F11);
+                Assert.That(player.Game.Fullscreen, Is.False);
+                Assert.That(value.Text, Is.EqualTo(windowed), "F11로 바꾼 것이 열린 설정 화면에 바로 보인다");
+                player.Click(Rootborn.Screens.Settings.SettingsScreen.DisplayButtonId);
+                Assert.That(player.Game.Fullscreen, Is.True);
+            }
+            using (PlayerDriver again = Start(1280, 720))
+                Assert.That(again.Game.SavedFullscreen, Is.True, "다음 실행이 설정 화면에서 고른 모드를 읽는다");
         }
 
         [Test]

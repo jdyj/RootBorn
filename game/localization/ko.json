@@ -127,5 +127,8 @@
   "ui.prompt.part-time-work": "{0}",
   "ui.prompt.part-time-work-generic": "알바하기",
   "ui.settings.language": "언어",
-  "ui.settings.language-name": "한국어"
+  "ui.settings.language-name": "한국어",
+  "ui.settings.display": "표시",
+  "ui.settings.display-windowed": "창",
+  "ui.settings.display-fullscreen": "전체 화면"
 }

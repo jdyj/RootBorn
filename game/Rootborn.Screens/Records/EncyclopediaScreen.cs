@@ -180,6 +180,7 @@ namespace Rootborn.Screens.Records
 
         protected internal override void OnChanged(string topic)
         {
+            if (_markingSeen) return;
             if (topic == ChangeTopics.Language || topic == ChangeTopics.Discovery || topic == ChangeTopics.All) { _title.Text = T("ui.encyclopedia.open"); RefreshCategories(); RefreshRows(keepEntry: true); }
         }
 
@@ -218,13 +219,18 @@ namespace Rootborn.Screens.Records
             SelectEntry(_rows[at >= 0 ? at : 0].EntryId);
         }
 
+        private bool _markingSeen;
+
         private void SelectEntry(string entryId)
         {
             SelectedEntryId = entryId;
-            // 해금된 항목을 열어 보면 새 표시가 사라진다. 저장은 다음 명령이 세이브를 쓸 때 함께 된다(보고서 "필요한 변경").
-            if (Services.Session?.Encyclopedia != null && Services.Session.Encyclopedia.IsUnlocked(entryId))
+            // 해금된 항목을 열어 보면 새 표시가 사라진다: GameSession 명령이 저장하고 알린다. 그 알림으로 목록을 다시 만들면 스크롤이
+            // 처음으로 돌아가므로, 자기 명령이 낸 알림은 건너뛰고 여기서 줄만 다시 읽는다.
+            if (Services.Session?.Encyclopedia != null && Services.Session.Encyclopedia.IsNew(entryId))
             {
-                Services.Session.Encyclopedia.MarkSeen(entryId);
+                _markingSeen = true;
+                try { Services.Session.MarkEncyclopediaSeen(entryId); }
+                finally { _markingSeen = false; }
                 _rows = Model.Rows(SelectedCategoryId);
             }
             int row = Array.FindIndex(_rows, r => r.EntryId == entryId);

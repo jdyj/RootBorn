@@ -130,12 +130,17 @@ namespace Rootborn.Host.Tests
             using PlayerDriver player = Start();
             player.Screens.Open(ScreenCatalog.QuestChainLog);
             player.Frames(2);
-            player.PressButton(Rootborn.Screens.Quests.QuestChainLogScreen.CardId(1));
+            // 개발용 체인(DeveloperOnly)은 보이지 않는다. 실제 data/에서 보이는 체인은 메인 이야기 하나다.
+            player.PressButton(Rootborn.Screens.Quests.QuestChainLogScreen.CardId(0));
             player.MovePointer(-50, -50);
             player.Frames(2);
             player.ScreenshotScreen(ScreenCatalog.QuestChainLog, "quest-chain-log-01");
             var screen = (Rootborn.Screens.Quests.QuestChainLogScreen)player.Screens.Find(ScreenCatalog.QuestChainLog);
-            Assert.That(screen.Model.Selected, Is.EqualTo(1));
+            Assert.That(screen.Model.Selected, Is.EqualTo(0));
+            Assert.That(screen.Model.Rows.Select(r => r.ChainId), Has.None.Matches<string>(id => player.Game.Session.Chain(id).DeveloperOnly));
+            var card = (Rootborn.Screens.Quests.QuestChainCard)player.Node(Rootborn.Screens.Quests.QuestChainLogScreen.CardId(0));
+            Assert.That(card.Title, Is.Not.EqualTo(screen.Model.Rows[0].NameKey), "이름은 키가 아니라 문구");
+            Assert.That(player.Node(Rootborn.Screens.Quests.QuestChainLogScreen.CardId(1)).Visible, Is.False);
             Assert.That(player.Game.Renderer.MissingImages, Is.Empty);
         }
 

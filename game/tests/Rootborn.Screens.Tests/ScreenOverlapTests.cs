@@ -14,14 +14,15 @@ namespace Rootborn.Screens.Tests
 {
     /// <summary>
     /// 동시에 떠 있을 수 있는 화면들이 서로 겹쳐 보이지 않는지: HUD 전체(추적 목표 포함) 위에 등록 표의 패널·모달을 하나씩 띄우고(집과 마을,
-    /// 1920x1080과 1280x720의 논리 크기), 보이는 겉면(UiSurfaces)끼리 겹치는 곳을 찾는다. 화면 목록은 ScreenCatalog에서 읽는다
+    /// 1920x1080·1280x720·1920x1200·2560x1080·1280x800의 논리 크기), 보이는 겉면(UiSurfaces)끼리 겹치는 곳을 찾는다. 화면 목록은 ScreenCatalog에서 읽는다
     /// (월드 없이 뜨는 시작 화면은 HUD와 함께 뜨지 않으므로 뺀다). 열려면 상호작용이나 예약이 필요한 화면은 Openers에 여는 법을 둔다.
     /// 패널·모달이 덮는 HUD 요소는 화면 쌓기가 숨긴다(ScreenStack.UpdateCoveredHud). 그래서 여기서 걸리는 것은
     /// HUD끼리의 겹침, 덮였는데도 보이는 HUD, 화면 밖으로 나간 패널, 그리고 연 화면을 끄는 HUD 단추가 덮이는 것이다. 자동 테스트다.
     /// </summary>
     public sealed class ScreenOverlapTests
     {
-        private static readonly (int W, int H)[] Sizes = { (1920, 1080), (1280, 720) };
+        /// <summary>16:9 둘과 16:10·21:9(창 비율이 다르면 논리 크기의 폭이나 높이가 늘어난다).</summary>
+        private static readonly (int W, int H)[] Sizes = { (1920, 1080), (1280, 720), (1920, 1200), (2560, 1080), (1280, 800) };
 
         /// <summary>그냥 Open(id)로는 내용이 없어 바로 닫히는 화면: 실제로 여는 길(상호작용, 예약).</summary>
         private static readonly Dictionary<string, Action<TestSession>> Openers = new Dictionary<string, Action<TestSession>>(StringComparer.Ordinal)
@@ -124,14 +125,14 @@ namespace Rootborn.Screens.Tests
                 for (int j = i + 1; j < hud.Count; j++)
                     if (UiSurfaces.Overlap(hud[i].Node.Rect, hud[j].Node.Rect))
                         found.Add(label + Name(hud[i]) + " + " + Name(hud[j]) + " | HUD끼리 겹침");
+            foreach (var h in hud)
+                if (OffScreen(h.Node.Rect, fit)) found.Add(label + Name(h) + " | HUD가 화면 밖");
 
             foreach (var o in others)
             {
                 foreach (var h in hud)
                     if (UiSurfaces.Overlap(o.Node.Rect, h.Node.Rect)) found.Add(label + Name(o) + " + " + Name(h) + " | 패널이 보이는 HUD와 겹침");
-                UiRect r = o.Node.Rect;
-                if (r.X < -0.5f || r.Y < -0.5f || r.Right > fit.LogicalWidth + 0.5f || r.Bottom > fit.LogicalHeight + 0.5f)
-                    found.Add(label + Name(o) + " | 화면 밖");
+                if (OffScreen(o.Node.Rect, fit)) found.Add(label + Name(o) + " | 화면 밖");
             }
 
             // 연 화면을 끄는 HUD 단추(켬/끔)는 그 화면이 떠 있는 동안 보여야 한다.
@@ -143,6 +144,9 @@ namespace Rootborn.Screens.Tests
                 if (button != null && button.Visible && button.Covered) found.Add(label + spec.Id + " | 연 화면이 그 켬/끔 단추를 덮음");
             }
         }
+
+        private static bool OffScreen(UiRect r, ScreenFit fit) =>
+            r.X < -0.5f || r.Y < -0.5f || r.Right > fit.LogicalWidth + 0.5f || r.Bottom > fit.LogicalHeight + 0.5f;
 
         private static string Name((string Screen, UiNode Node) s) => s.Screen + ":" + (s.Node.Id ?? s.Node.GetType().Name);
 

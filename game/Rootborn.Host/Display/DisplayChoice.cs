@@ -9,7 +9,7 @@ namespace Rootborn.Host.Display
     public static class DisplayChoice
     {
         /// <summary>설정 파일(Core GameSettings 켬/끔 목록)에 표시 모드를 적는 이름. 켬 = 테두리 없는 전체 화면.</summary>
-        public const string FullscreenSetting = "Fullscreen";
+        public const string FullscreenSetting = Rootborn.Screens.Settings.DisplayModeSetting.SettingName;
 
         /// <summary>Unity 판 기본값: 테두리 없는 전체 화면(fullscreenMode 3).</summary>
         public const bool DefaultFullscreen = true;

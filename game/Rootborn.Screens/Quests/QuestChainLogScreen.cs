@@ -12,7 +12,7 @@ namespace Rootborn.Screens.Quests
 
     /// <summary>
     /// 퀘스트 체인 기록의 표시 모델(Unity QuestChainLogPanel.Refresh): 진로·상태 거르기, 보이는 체인(최대 8), 고른 체인의 상세와
-    /// 받기·추적·보상 단추를 누를 수 있는지. 거르기는 Unity처럼 화면 안에서 고를 수단이 없어 "전체"다.
+    /// 받기·추적·보상 단추를 누를 수 있는지. 개발용 체인(DeveloperOnly)은 넣지 않는다. 거르기는 Unity처럼 화면 안에서 고를 수단이 없어 "전체"다.
     /// </summary>
     public sealed class QuestChainLogModel
     {
@@ -44,7 +44,7 @@ namespace Rootborn.Screens.Quests
             var rows = new List<QuestChainRow>(MaxCards);
             foreach (QuestChainDefinition chain in session.Definitions.All<QuestChainDefinition>())
             {
-                if (chain == null) continue;
+                if (chain == null || chain.DeveloperOnly) continue; // 개발용 체인은 목표 수첩(QuestChainSource)과 같이 보이지 않는다
                 QuestChainState state = log.GetState(chain);
                 if (!string.IsNullOrEmpty(model.CareerFilter) && chain.RelatedCareerInterestId != model.CareerFilter) continue;
                 if (stateFilter.HasValue && state != stateFilter.Value) continue;

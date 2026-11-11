@@ -127,5 +127,8 @@
   "ui.prompt.part-time-work": "{0}",
   "ui.prompt.part-time-work-generic": "Work a shift",
   "ui.settings.language": "Language",
-  "ui.settings.language-name": "English"
+  "ui.settings.language-name": "English",
+  "ui.settings.display": "Display",
+  "ui.settings.display-windowed": "Windowed",
+  "ui.settings.display-fullscreen": "Fullscreen"
 }

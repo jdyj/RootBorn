@@ -34,6 +34,8 @@ namespace Rootborn.Screens
         public const string Furniture = GameChangeTopics.Furniture;
         public const string Objectives = GameChangeTopics.Objectives;
         public const string Language = "language";
+        /// <summary>표시 모드(창 / 전체 화면)가 바뀌었다(DisplayModeSetting.Changed).</summary>
+        public const string Display = "display";
         /// <summary>플레이어가 다른 맵에 들어섰다(ScreenStack.EnterMap).</summary>
         public const string Map = "map";
         /// <summary>무엇이 바뀌었는지 모를 때(이어 하기 직후 등). 화면은 전부 다시 받는다.</summary>
@@ -66,6 +68,8 @@ namespace Rootborn.Screens
         public DisplayNames Names { get; set; } = DisplayNames.Empty;
         /// <summary>슬롯과 무관한 설정(언어, 켬/끔). Host가 세이브 폴더의 설정 파일로 채운다. 없으면 저장하지 않는 기본값.</summary>
         public Settings.SettingsStore Settings { get; set; } = Rootborn.Screens.Settings.SettingsStore.InMemory();
+        /// <summary>창의 표시 모드(Host가 채운다). 없으면(창 없이 도는 화면) 설정 화면의 표시 모드 단추는 누를 수 없다.</summary>
+        public Settings.DisplayModeSetting Display { get; set; }
         /// <summary>옷장이 부르는 캐릭터 쪽(Host가 채운다). 없으면 옷장은 비어 있다.</summary>
         public Records.IWardrobeBackend Wardrobe { get; set; }
     }
