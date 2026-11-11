@@ -1,3 +1,4 @@
+using Rootborn.Screens.AdultFacility;
 using Rootborn.Screens.Career;
 using Rootborn.Screens.Dialogue;
 using Rootborn.Screens.Furniture;
@@ -52,6 +53,8 @@ namespace Rootborn.Screens
         public const string DayResult = "day-result";
         /// <summary>장소 기록(Unity LocationStateLogPanel). HUD 버튼은 없다(Unity 버튼은 도감 버튼 밑에 깔려 보이지 않았다).</summary>
         public const string LocationStateLog = "location-state-log";
+        /// <summary>성인 시설 관리(Unity FacilityManagementPanel). 시설 앞 상호작용으로 열린다. 이동을 막는다.</summary>
+        public const string Facility = "facility";
 
         public static void Register(ScreenRegistry r)
         {
@@ -92,6 +95,7 @@ namespace Rootborn.Screens
             r.Add(Wardrobe, ScreenLayer.Panel, blocksMovement: true, s => new WardrobeScreen(s));
             r.Add(WorldStateLog, ScreenLayer.Panel, blocksMovement: true, s => new WorldStateLogScreen(s));
             r.Add(LocationStateLog, ScreenLayer.Panel, blocksMovement: false, s => new LocationStateLogScreen(s));
+            r.Add(Facility, ScreenLayer.Modal, blocksMovement: true, s => new FacilityScreen(s)).OpenedByInteraction(FacilityScreen.InteractionKind);
         }
 
         /// <summary>표를 채운 새 등록 표.</summary>

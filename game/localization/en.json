@@ -1,5 +1,8 @@
 {
   "exploration.ui.choice-label": "{0} — {1}",
+  "facility.cost-item": "{0} × {1}",
+  "facility.cost-separator": " · ",
+  "facility.work-reward": "Max reward: {0}",
   "ui.career-candidate.activities": "Related Activities",
   "ui.career-candidate.count": "{0} career candidates",
   "ui.career-candidate.discover": "Explore related activities and collect hints to discover this career.",

@@ -1,5 +1,8 @@
 {
   "exploration.ui.choice-label": "{0} — {1}",
+  "facility.cost-item": "{0} × {1}",
+  "facility.cost-separator": " · ",
+  "facility.work-reward": "최대 보상: {0}",
   "ui.career-candidate.activities": "관련 활동",
   "ui.career-candidate.count": "진로 후보 {0}개",
   "ui.career-candidate.discover": "관련 활동을 경험하고 단서를 모아 이 진로를 알아가 보세요.",
