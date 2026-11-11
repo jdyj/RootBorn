@@ -32,6 +32,9 @@ namespace Rootborn.Host.Tests
                 ?? throw new InvalidOperationException("MonoGame 내부 Platform을 찾지 못했다. MonoGame 버전이 바뀌었는지 확인한다.");
             _pump = _platform.GetType().GetMethod("SdlRunLoop", any)
                 ?? throw new InvalidOperationException("MonoGame 내부 SdlRunLoop를 찾지 못했다. MonoGame 버전이 바뀌었는지 확인한다.");
+            var graphics = game.Services.GetService(typeof(IGraphicsDeviceManager)) as GraphicsDeviceManager
+                ?? throw new InvalidOperationException("GraphicsDeviceManager가 없다.");
+            graphics.Disposed += (sender, e) => ReleaseClosedContexts();
         }
 
         public void Step(int frames = 1)
@@ -41,6 +44,22 @@ namespace Rootborn.Host.Tests
                 _pump.Invoke(_platform, null);
                 _game.RunOneFrame();
             }
+        }
+
+        /// <summary>
+        /// 닫은 게임의 GL 컨텍스트를 지운다. MonoGame 3.8.6.1은 GraphicsDevice를 닫을 때 컨텍스트를 정적 목록에 미뤄 두고,
+        /// 그 목록은 Run()의 루프(SdlGamePlatform.RunLoop) 안에서만 GraphicsDevice.DisposeContexts()로 지운다.
+        /// 테스트는 Run() 없이 한 프레임씩 돌리므로 그대로 두면 테스트마다 컨텍스트와 그 안의 텍스처가 프로세스 끝까지 남는다
+        /// (2026-11-12: 130건에 10GB 넘게 쌓였다, HostMemoryTests).
+        /// 때가 중요하다: Game.Dispose는 장치를 닫은 다음 플랫폼을 닫으며 SDL_Quit을 부르고, SDL이 꺼진 뒤의 SDL_GL_DeleteContext는
+        /// 아무것도 하지 않는다. 그래서 장치가 닫힌 직후(GraphicsDeviceManager.Disposed, 플랫폼을 닫기 전)에 부른다.
+        /// </summary>
+        private static void ReleaseClosedContexts()
+        {
+            const BindingFlags anyStatic = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+            MethodInfo release = typeof(GraphicsDevice).GetMethod("DisposeContexts", anyStatic)
+                ?? throw new InvalidOperationException("MonoGame 내부 GraphicsDevice.DisposeContexts를 찾지 못했다. MonoGame 버전이 바뀌었는지 확인한다.");
+            release.Invoke(null, null);
         }
     }
 
