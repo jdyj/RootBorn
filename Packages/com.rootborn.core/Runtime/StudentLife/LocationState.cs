@@ -44,7 +44,7 @@ namespace Rootborn.Core.StudentLife
 
     /// <summary>
     /// 진행 상태 시각을 시간대 id로 바꾼다. 원본 NpcScheduleResolver.ResolveTimeSlotId와 같다:
-    /// 8:00까지는 오전, 17:00 전은 오후, 21:00 전은 저녁, 그 뒤는 밤. 원본은 정확히 8:00과 0분 이하만 오전이라 7:00이 오후였다.
+    /// 12:00 전은 오전, 17:00 전은 오후, 21:00 전은 저녁, 그 뒤는 밤. 원본은 정확히 8:00과 0분 이하만 오전이라 7:00과 9:00이 오후였다.
     /// </summary>
     public static class LocationStateTimeSlots
     {
@@ -57,7 +57,7 @@ namespace Rootborn.Core.StudentLife
 
         public static string FromMinutes(int minutes)
         {
-            if (minutes <= 8 * 60) return Morning;
+            if (minutes < 12 * 60) return Morning;
             if (minutes < 17 * 60) return Afternoon;
             if (minutes < 21 * 60) return Evening;
             return Night;

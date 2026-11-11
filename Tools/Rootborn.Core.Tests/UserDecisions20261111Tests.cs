@@ -99,7 +99,8 @@ namespace Rootborn.Core.Tests
             Assert.That(LocationStateTimeSlots.FromMinutes(7 * 60), Is.EqualTo(LocationStateTimeSlots.Morning));
             Assert.That(LocationStateTimeSlots.FromMinutes(1), Is.EqualTo(LocationStateTimeSlots.Morning));
             Assert.That(LocationStateTimeSlots.FromMinutes(8 * 60), Is.EqualTo(LocationStateTimeSlots.Morning));
-            Assert.That(LocationStateTimeSlots.FromMinutes(8 * 60 + 1), Is.EqualTo(LocationStateTimeSlots.Afternoon), "하루를 시작한 뒤는 그대로 오후다.");
+            Assert.That(LocationStateTimeSlots.FromMinutes(11 * 60 + 59), Is.EqualTo(LocationStateTimeSlots.Morning));
+            Assert.That(LocationStateTimeSlots.FromMinutes(12 * 60), Is.EqualTo(LocationStateTimeSlots.Afternoon));
         }
 
         [Test]
