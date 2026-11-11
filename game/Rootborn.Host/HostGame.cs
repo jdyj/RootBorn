@@ -206,7 +206,7 @@ namespace Rootborn.Host
             var atlases = new SpriteAtlases(_options.RepoRoot);
             _renderer = new UiRenderer(GraphicsDevice, _text, _options.UiTheme, new ImageCatalog(atlases, _options.UiTheme, ItemIcons.Load(_options.RepoRoot)), atlases);
             _textInput = new TextInputDevice(Window);
-            if (_options.SaveSlot != null) { StartFromSlotArgument(); return; }
+            if (_options.SaveSlot != null && _options.JoinAddress == null) { StartFromSlotArgument(); return; } // --join과 함께면 시작 화면에서 들어가기 창으로
             if (_options.WorldActive)
             {
                 World = new WorldScreen(GraphicsDevice, _options);
