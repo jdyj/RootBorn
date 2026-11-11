@@ -6,6 +6,11 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
+    <!-- 묶음 쓰기 도중 꺼지는 시험(FileSaveStore.BatchStepForTests) -->
+    <InternalsVisibleTo Include="Rootborn.Data.Tests" />
+    <InternalsVisibleTo Include="Rootborn.Game.Tests" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../Rootborn.Core/Rootborn.Core.csproj" />
   </ItemGroup>
 </Project>

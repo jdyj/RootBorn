@@ -8,9 +8,9 @@ using NUnit.Framework;
 namespace Rootborn.Game.Tests
 {
     /// <summary>
-    /// 세이브 견고성 2(마): 파일 하나가 없을 때 지금 동작을 그대로 적어 둔다. 없는 파일은 "그 영역의 세이브 없음"이라 거절하지 않고
-    /// 그 영역만 처음 상태로 시작하며, 다음 명령이 그 파일을 새로 쓴다. 스냅샷 파일이 없으면 학생·성인·인벤토리·월드·체인이
-    /// 모두 처음으로 돌아간다(다른 영역 파일은 남는다). 자동 테스트다.
+    /// 세이브 견고성 2(마): 파일 하나가 없을 때. 스냅샷 말고 영역 파일이 없으면 "그 영역의 세이브 없음"이라 거절하지 않고
+    /// 그 영역만 처음 상태로 시작하며, 다음 명령이 그 파일을 새로 쓴다. 스냅샷 파일만 없으면 슬롯이 손상된 것으로 보고 시작을 거절한다
+    /// (새 게임으로 남은 파일을 덮지 않는다, SlotDamageTests). 자동 테스트다.
     /// </summary>
     public sealed class DeletedSaveFileTests
     {
@@ -69,18 +69,18 @@ namespace Rootborn.Game.Tests
         [TestCase("first-command")]
         [TestCase("day-3")]
         [TestCase("adult-chosen")]
-        public void DeletingTheSnapshot_StartsTheStudentOverAndKeepsTheOtherAreaFiles(string checkpoint)
+        public void DeletingTheSnapshot_RefusesToStart_NamesIt_AndKeepsTheOtherAreaFiles(string checkpoint)
         {
             using var saves = SlotCheckpoints.Restore(checkpoint);
             var snapshot = SlotCheckpoints.FileNames(checkpoint).Single(f => f.StartsWith("adult-career-snapshot", StringComparison.Ordinal));
             File.Delete(Path.Combine(saves.Path, SlotCheckpoints.Slot, snapshot));
             var others = SlotCheckpoints.Read(saves);
 
-            var game = TestWorld.Start(saves.Store, SlotCheckpoints.Slot);
+            var error = Assert.Throws<SaveSlotDamagedException>(() => TestWorld.Start(saves.Store, SlotCheckpoints.Slot));
 
-            Assert.That(game.Student.CurrentDay, Is.EqualTo(1), "스냅샷이 없으면 학생은 새 게임이다");
-            Assert.That(game.Adult.IsAdult, Is.False);
-            Assert.That(SlotCheckpoints.Same(others, SlotCheckpoints.Read(saves)), Is.True, "읽기만 해서는 아무것도 쓰지 않는다");
+            Assert.That(error.Problems.Single().FileName, Is.EqualTo(snapshot), "빠진 스냅샷을 알린다");
+            Assert.That(error.Problems.Single().Kind, Is.EqualTo(SaveSlotProblemKind.Missing));
+            Assert.That(SlotCheckpoints.Same(others, SlotCheckpoints.Read(saves)), Is.True, "거절한 시작은 아무것도 쓰지 않는다");
         }
 
         [Test]

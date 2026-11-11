@@ -1,4 +1,6 @@
+using System;
 using Rootborn.Core.Careers;
+using Rootborn.Core.Save;
 using Rootborn.Core.Quests;
 using Rootborn.Core.StudentLife;
 
@@ -59,8 +61,49 @@ namespace Rootborn.Game
             if (!string.IsNullOrEmpty(CareerInterests.CurrentInterestId))
                 Announce(NewEvent(QuestEventKind.CareerInterestSelected, "career-interest-kept", CareerInterests.CurrentInterestId), true);
             ReplayPlacedFurniture();
-            SaveAndNotify(AnnounceTopics, GameChangeTopics.Day, GameChangeTopics.Career);
+            Save();
+            KeepDayCopy();
+            Notify(AnnounceTopics, GameChangeTopics.Day, GameChangeTopics.Career);
             return true;
+        }
+
+        // ---------- 날마다 슬롯 사본 ----------
+
+        /// <summary>날마다 남기는 슬롯 사본 개수의 기본값.</summary>
+        public const int DefaultDayCopiesToKeep = 3;
+
+        /// <summary>다음 날을 시작할 때 남기는 슬롯 사본 개수(최근 것부터). 0이면 남기지 않는다.</summary>
+        public int DayCopiesToKeep { get; private set; } = DefaultDayCopiesToKeep;
+
+        /// <summary>마지막 사본 남기기의 오류(디스크가 찼거나 폴더를 쓸 수 없음). 사본이 실패해도 그 날의 저장은 이미 끝나 있어 명령은 적용된다. 성공하면 null.</summary>
+        public Exception DayCopyError { get; private set; }
+
+        /// <summary>
+        /// 슬롯 사본 개수를 정한다(실행 인자·설정에서 Host가 넘긴다). 줄이면 다음 날 사본을 남길 때 오래된 것을 지운다.
+        /// 저장소가 사본을 지원하지 않으면(ISaveSlotDayCopies가 아님) 아무것도 남기지 않는다.
+        /// </summary>
+        public void KeepDayCopies(int count)
+        {
+            if (count < 0) throw new ArgumentOutOfRangeException(nameof(count), count, "사본 개수는 0 이상이다");
+            DayCopiesToKeep = count;
+        }
+
+        private void KeepDayCopy()
+        {
+            DayCopyError = null;
+            if (DayCopiesToKeep <= 0 || !(_store is ISaveSlotDayCopies copies)) return;
+            try
+            {
+                copies.KeepDayCopy(SaveSlot, Student.CurrentDay, DayCopiesToKeep);
+            }
+            catch (System.IO.IOException error)
+            {
+                DayCopyError = error;
+            }
+            catch (UnauthorizedAccessException error)
+            {
+                DayCopyError = error;
+            }
         }
 
         // ---------- 성인 직업 ----------

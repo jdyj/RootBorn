@@ -25,7 +25,7 @@ namespace Rootborn.Game
         /// <summary>지금 집 단계 번호(house-state.json). 배치 파일이 단계마다 따로다.</summary>
         public int HouseStage { get; private set; }
 
-        private void LoadFurniture(AdultCareerSnapshotSaveData snapshot)
+        private void LoadFurniture(ISaveStore store, AdultCareerSnapshotSaveData snapshot)
         {
             if (snapshot != null)
             {
@@ -36,10 +36,10 @@ namespace Rootborn.Game
             }
             else
             {
-                FurnitureUnlocks = FurnitureSaveFiles.LoadUnlocksOrCreate(_store, SaveSlot, PlayerId);
+                FurnitureUnlocks = FurnitureSaveFiles.LoadUnlocksOrCreate(store, SaveSlot, PlayerId);
             }
 
-            HouseStage = FurnitureSaveFiles.LoadHouseStage(_store, SaveSlot);
+            HouseStage = FurnitureSaveFiles.LoadHouseStage(store, SaveSlot);
         }
 
         /// <summary>

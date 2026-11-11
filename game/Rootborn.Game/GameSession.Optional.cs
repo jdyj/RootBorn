@@ -22,24 +22,24 @@ namespace Rootborn.Game
         /// <summary>도감 발견 시각 등에 쓰는 지금 시각(UTC 틱). Host가 넘긴다. 넘기지 않으면 0이다.</summary>
         public void UseClock(Func<long> utcNowTicks) => _utcNowTicks = utcNowTicks ?? (() => 0L);
 
-        private void LoadOptionalDomains()
+        private void LoadOptionalDomains(Rootborn.Core.Save.ISaveStore store)
         {
-            Exploration = ExplorationProgressPersistence.LoadOrCreate(_store, SaveSlot, PlayerId);
-            DiscoveryClues = DiscoveryClueSaveFiles.LoadOrCreate(_store, SaveSlot, PlayerId);
-            ClueInterpretations = ClueInterpretationSaveFiles.LoadOrCreate(_store, SaveSlot, PlayerId);
-            Encyclopedia = EncyclopediaSaveFiles.LoadOrCreate(_store, SaveSlot, PlayerId);
-            DailyEvents = DailyEventSaveFiles.LoadOrCreate(_store, SaveSlot, PlayerId);
-            ObjectiveJournalTrackingSaveFiles.TryLoad(_store, SaveSlot, out var tracking);
+            Exploration = ExplorationProgressPersistence.LoadOrCreate(store, SaveSlot, PlayerId);
+            DiscoveryClues = DiscoveryClueSaveFiles.LoadOrCreate(store, SaveSlot, PlayerId);
+            ClueInterpretations = ClueInterpretationSaveFiles.LoadOrCreate(store, SaveSlot, PlayerId);
+            Encyclopedia = EncyclopediaSaveFiles.LoadOrCreate(store, SaveSlot, PlayerId);
+            DailyEvents = DailyEventSaveFiles.LoadOrCreate(store, SaveSlot, PlayerId);
+            ObjectiveJournalTrackingSaveFiles.TryLoad(store, SaveSlot, out var tracking);
             ObjectiveTracking = tracking;
         }
 
-        private void SaveOptionalDomains()
+        private void SaveOptionalDomains(Rootborn.Core.Save.ISaveStore store)
         {
-            ExplorationProgressPersistence.Save(_store, Exploration);
-            DiscoveryClueSaveFiles.Save(_store, DiscoveryClues);
-            ClueInterpretationSaveFiles.Save(_store, ClueInterpretations);
-            EncyclopediaSaveFiles.Save(_store, Encyclopedia);
-            DailyEventSaveFiles.Save(_store, DailyEvents);
+            ExplorationProgressPersistence.Save(store, Exploration);
+            DiscoveryClueSaveFiles.Save(store, DiscoveryClues);
+            ClueInterpretationSaveFiles.Save(store, ClueInterpretations);
+            EncyclopediaSaveFiles.Save(store, Encyclopedia);
+            DailyEventSaveFiles.Save(store, DailyEvents);
         }
 
         private DiscoveryClueLookupCache ClueCache => new DiscoveryClueLookupCache(_definitions.All<DiscoveryClue>());

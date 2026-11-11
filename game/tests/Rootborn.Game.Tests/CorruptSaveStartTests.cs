@@ -15,9 +15,9 @@ namespace Rootborn.Game.Tests
     {
         public enum Damage { Empty, Truncated, ArrayAtTop, NumberAtTop, HugeVersion }
 
-        // 시작할 때 읽지 않는 파일(다른 파일에서 다시 만들어지는 사본, 집에 들어올 때 읽는 배치)은 이 시험의 대상이 아니다.
+        // 집에 들어올 때 읽는 배치는 이 시험의 대상이 아니다(ADamagedHouseLayout_...). 월드 상태 사본도 시작할 때 확인한다.
         private static bool ReadAtStart(string file)
-            => !file.StartsWith("world-state-progress", StringComparison.Ordinal) && !file.StartsWith("house-furniture-layout", StringComparison.Ordinal);
+            => !file.StartsWith("house-furniture-layout", StringComparison.Ordinal);
 
         public static IEnumerable<TestCaseData> Cases()
         {

@@ -8,7 +8,8 @@
 # 분류 (표의 한 파일은 딱 한 분류에 든다. 위에서부터 먼저 맞는 것):
 #   가   MonoGame 판이 실행 중에 읽는 것 — Tools/publish/content.txt 규칙을 같게 따라 만든 목록
 #   가*  실행 중에 읽지만 content.txt 에 없는 것 (game/themes)
-#   나   테스트가 읽는 것 — game/tests 의 코드 아닌 고정 파일, 테스트가 직접 여는 Unity 씬
+#   나   테스트가 읽는 것 — game/tests 의 코드 아닌 고정 파일. 테스트가 직접 여는 Unity 씬은 없다
+#        (학교 충돌 대조는 2026-11-12부터 School.unity 대신 고정 파일 school-structure-colliders.json 을 읽는다)
 #   다   변환기(Tools/Rootborn.DataExport)가 원본으로 읽는 Unity 에셋 — Assets/Data, 문구 카탈로그,
 #        실행용 PNG 의 .meta(스프라이트 자르는 표), 스크립트 .cs.meta(guid → 클래스 이름)
 #   라   Unity 전용 — 스크립트, 씬, 프리팹, 설정, 나머지 .meta, ProjectSettings, Unity 패키지 정보
@@ -86,7 +87,6 @@ awk -F'\t' -v out="$OUT" '
   function classify(p,   base) {
     if (p in rt) return "가  실행 중에 읽음 (content.txt)"
     if (p ~ /^game\/themes\//) return "가* 실행 중에 읽지만 content.txt 에 없음 (game/themes)"
-    if (p == "Assets/Scenes/School.unity") return "나  테스트가 읽는 Unity 씬"
     if (p ~ /^game\/tests\// && p !~ /\.(cs|csproj)$/) return "나  테스트 고정 파일 (game/tests)"
     if (p ~ /^Assets\/Data\//) return "다  변환기 원본: Assets/Data"
     if (p ~ /^Assets\/Localization\/GameTextCatalog\.asset/) return "다  변환기 원본: 문구 카탈로그"

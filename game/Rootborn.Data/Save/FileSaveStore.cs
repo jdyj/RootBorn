@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -11,9 +12,23 @@ namespace Rootborn.Data.Save
     /// 세이브 파일을 &lt;root&gt;/&lt;슬롯&gt;/&lt;파일&gt;에 JSON으로 읽고 쓴다. Unity 판과 같은 배치다. 저장 폴더는 Host가 넘긴다.
     /// 옛 파일 읽기: 파일에 없는 필드는 클래스 기본값, 모양에 없는 필드는 버린다(무엇이 버려지는지는 고정 파일 테스트가 잡는다).
     /// 쓰기는 같은 폴더의 임시 파일에 쓴 뒤 바꿔치기해서, 쓰다 꺼져도 원래 파일이 깨지지 않는다.
+    /// 여러 파일을 함께 쓰는 묶음(<see cref="BeginBatch"/>)은 슬롯 폴더의 준비 폴더(<see cref="BatchFolder"/>)에 모두 쓰고, 끝났다는 표시
+    /// (<see cref="BatchMark"/>: 바꿔 넣을 파일과 지울 파일 목록)를 남긴 뒤 바꿔 넣는다. 그 슬롯을 다음에 읽거나 쓸 때 표시가 있는 묶음은 마저 적용하고,
+    /// 표시가 없는 묶음(준비 중에 꺼짐)은 버린다. 그래서 묶음 도중 꺼져도 슬롯은 전부 옛것이거나 전부 새것이다.
+    /// 준비 폴더가 없는 슬롯(묶음 전에 만든 세이브 포함)은 지금처럼 읽는다.
+    /// 한 프로세스 안의 묶음 적용·되살리기는 하나씩 한다. 같은 저장 폴더를 두 프로세스가 동시에 쓰는 것은 다루지 않는다.
+    /// 파일을 디스크에 강제로 내리지(fsync) 않는다: 프로그램이 꺼지는 것은 막지만 전원이 나가는 경우는 운영체제 캐시에 따른다.
     /// </summary>
-    public sealed class FileSaveStore : ISaveStore
+    public sealed partial class FileSaveStore : IBatchSaveStore
     {
+        /// <summary>슬롯 폴더 안의 묶음 준비 폴더 이름. 세이브 파일 이름과 겹치지 않게 '.'으로 시작한다.</summary>
+        public const string BatchFolder = ".save-batch";
+
+        /// <summary>준비 폴더 안의 "준비가 끝났다" 표시 파일 이름.</summary>
+        public const string BatchMark = ".batch-ready.json";
+
+        private static readonly object BatchLock = new object();
+
         private static readonly JsonSerializerOptions Options = new JsonSerializerOptions
         {
             IncludeFields = true,
@@ -34,13 +49,22 @@ namespace Rootborn.Data.Save
 
         public string RootDirectory => _root;
 
+        /// <summary>테스트용: 묶음의 단계(준비 쓰기, 표시, 바꿔 넣기, 지우기, 정리)가 끝날 때마다 단계 이름으로 부른다. 여기서 던지면 그 자리에서 꺼진 것과 같다.</summary>
+        internal Action<string> BatchStepForTests { get; set; }
+
         public bool TryRead<T>(string saveSlot, string fileName, out T data) where T : class, new()
         {
             var path = PathFor(saveSlot, fileName);
             data = null;
+            RecoverBatch(saveSlot);
             if (!File.Exists(path)) return false;
 
-            var text = File.ReadAllText(path, Encoding.UTF8);
+            data = Parse<T>(File.ReadAllText(path, Encoding.UTF8), path);
+            return true;
+        }
+
+        private static T Parse<T>(string text, string path) where T : class, new()
+        {
             if (string.IsNullOrWhiteSpace(text)) throw new SaveFileCorruptException(path, "파일이 비어 있다");
 
             T read;
@@ -62,19 +86,28 @@ namespace Rootborn.Data.Save
             if (read is IVersionedSave versioned && versioned.Version > versioned.KnownVersion)
                 throw new SaveFileTooNewException(path, versioned.Version, versioned.KnownVersion);
 
-            data = read;
-            return true;
+            return read;
         }
 
         public void Write<T>(string saveSlot, string fileName, T data) where T : class
         {
             if (data == null) throw new ArgumentNullException(nameof(data));
             var path = PathFor(saveSlot, fileName);
+            var json = Serialize(data);
+            RecoverBatch(saveSlot);
+            WriteReplacing(path, json);
+        }
 
+        private static string Serialize<T>(T data) where T : class
+        {
             // 버전 없이 만든 모양(옛 파일에서 읽은 것 포함)은 이 프로그램이 아는 버전으로 쓴다.
             if (data is IVersionedSave versioned && versioned.Version == SaveVersion.Unity) versioned.Version = versioned.KnownVersion;
+            return JsonSerializer.Serialize(data, Options);
+        }
 
-            var json = JsonSerializer.Serialize(data, Options);
+        // 같은 폴더의 임시 파일에 쓰고 바꿔치기한다.
+        private static void WriteReplacing(string path, string json)
+        {
             var folder = Path.GetDirectoryName(path);
             Directory.CreateDirectory(folder);
             var temp = Path.Combine(folder, "." + Path.GetFileName(path) + "." + Guid.NewGuid().ToString("N") + ".tmp");
@@ -92,7 +125,182 @@ namespace Rootborn.Data.Save
         public void Delete(string saveSlot, string fileName)
         {
             var path = PathFor(saveSlot, fileName);
+            RecoverBatch(saveSlot);
             if (File.Exists(path)) File.Delete(path);
+        }
+
+        // ---------- 묶음 ----------
+
+        public ISaveBatch BeginBatch(string saveSlot)
+        {
+            CheckName(saveSlot, nameof(saveSlot));
+            RecoverBatch(saveSlot);
+            return new Batch(this, saveSlot);
+        }
+
+        /// <summary>표시 파일 내용. 바꿔 넣을 파일(준비 폴더에 같은 이름으로 있다)과 지울 파일.</summary>
+        private sealed class BatchMarkData
+        {
+            public string[] Writes = Array.Empty<string>();
+            public string[] Deletes = Array.Empty<string>();
+        }
+
+        private string SlotFolder(string saveSlot) => Path.GetDirectoryName(PathFor(saveSlot, BatchMark));
+
+        private void Step(string label) => BatchStepForTests?.Invoke(label);
+
+        private void CommitBatch(string saveSlot, List<KeyValuePair<string, string>> writes, List<string> deletes)
+        {
+            lock (BatchLock)
+            {
+                RecoverBatchLocked(saveSlot);
+                var folder = SlotFolder(saveSlot);
+                var staging = Path.Combine(folder, BatchFolder);
+                Directory.CreateDirectory(staging);
+                var mark = new BatchMarkData { Writes = new string[writes.Count], Deletes = deletes.ToArray() };
+                for (int i = 0; i < writes.Count; i++)
+                {
+                    File.WriteAllText(Path.Combine(staging, writes[i].Key), writes[i].Value, Utf8NoBom);
+                    mark.Writes[i] = writes[i].Key;
+                    Step("stage:" + writes[i].Key);
+                }
+
+                // 표시는 한 번에 생겨야 한다(임시 이름에 쓰고 바꿔치기). 표시가 생긴 순간부터 이 묶음은 "새것"이다.
+                WriteReplacing(Path.Combine(staging, BatchMark), JsonSerializer.Serialize(mark, Options));
+                Step("mark");
+                ApplyLocked(folder, staging, mark);
+            }
+        }
+
+        // 표시대로 바꿔 넣고 지운 뒤 표시와 준비 폴더를 치운다. 중간에 끊겨도 다시 부르면 남은 것만 한다.
+        private void ApplyLocked(string folder, string staging, BatchMarkData mark)
+        {
+            foreach (var name in mark.Writes ?? Array.Empty<string>())
+            {
+                CheckName(name, nameof(mark));
+                var staged = Path.Combine(staging, name);
+                if (!File.Exists(staged)) continue; // 앞서 바꿔 넣었다
+                File.Move(staged, Path.Combine(folder, name), overwrite: true);
+                Step("replace:" + name);
+            }
+
+            foreach (var name in mark.Deletes ?? Array.Empty<string>())
+            {
+                CheckName(name, nameof(mark));
+                var target = Path.Combine(folder, name);
+                if (File.Exists(target)) File.Delete(target);
+                Step("delete:" + name);
+            }
+
+            File.Delete(Path.Combine(staging, BatchMark));
+            Step("unmark");
+            Directory.Delete(staging, true);
+            Step("cleanup");
+        }
+
+        private void RecoverBatch(string saveSlot)
+        {
+            if (!Directory.Exists(Path.Combine(SlotFolder(saveSlot), BatchFolder))) return;
+            lock (BatchLock) RecoverBatchLocked(saveSlot);
+        }
+
+        /// <summary>남은 묶음: 표시가 있으면 마저 적용하고, 없으면(준비 중에 꺼짐) 버린다. 표시가 깨졌으면 읽기 오류로 알린다(슬롯은 그대로 둔다).</summary>
+        private void RecoverBatchLocked(string saveSlot)
+        {
+            var folder = SlotFolder(saveSlot);
+            var staging = Path.Combine(folder, BatchFolder);
+            if (!Directory.Exists(staging)) return;
+            var markPath = Path.Combine(staging, BatchMark);
+            if (!File.Exists(markPath))
+            {
+                Directory.Delete(staging, true);
+                return;
+            }
+
+            ApplyLocked(folder, staging, Parse<BatchMarkData>(File.ReadAllText(markPath, Encoding.UTF8), markPath));
+        }
+
+        /// <summary>
+        /// 한 슬롯의 쓰기·지우기를 모았다가 Commit 때 함께 적용한다. 모으는 동안 슬롯 폴더는 그대로다.
+        /// 모양은 Write 때 JSON으로 바꿔 두므로 그 뒤에 객체가 바뀌어도 묶음에 들어간 내용은 그대로다.
+        /// </summary>
+        private sealed class Batch : ISaveBatch
+        {
+            private readonly FileSaveStore _store;
+            private readonly string _slot;
+            private readonly List<KeyValuePair<string, string>> _writes = new List<KeyValuePair<string, string>>();
+            private readonly List<string> _deletes = new List<string>();
+            private bool _done;
+
+            public Batch(FileSaveStore store, string slot)
+            {
+                _store = store;
+                _slot = slot;
+            }
+
+            public bool TryRead<T>(string saveSlot, string fileName, out T data) where T : class, new()
+            {
+                if (saveSlot == _slot)
+                {
+                    int index = IndexOf(fileName);
+                    if (index >= 0)
+                    {
+                        data = Parse<T>(_writes[index].Value, _store.PathFor(saveSlot, fileName));
+                        return true;
+                    }
+
+                    if (_deletes.Contains(fileName))
+                    {
+                        data = null;
+                        return false;
+                    }
+                }
+
+                return _store.TryRead(saveSlot, fileName, out data);
+            }
+
+            public void Write<T>(string saveSlot, string fileName, T data) where T : class
+            {
+                if (data == null) throw new ArgumentNullException(nameof(data));
+                Check(saveSlot, fileName);
+                var json = Serialize(data);
+                _deletes.Remove(fileName);
+                int index = IndexOf(fileName);
+                if (index >= 0) _writes[index] = new KeyValuePair<string, string>(fileName, json);
+                else _writes.Add(new KeyValuePair<string, string>(fileName, json));
+            }
+
+            public void Delete(string saveSlot, string fileName)
+            {
+                Check(saveSlot, fileName);
+                int index = IndexOf(fileName);
+                if (index >= 0) _writes.RemoveAt(index);
+                if (!_deletes.Contains(fileName)) _deletes.Add(fileName);
+            }
+
+            public void Commit()
+            {
+                if (_done) throw new InvalidOperationException("이미 끝난 묶음이다");
+                _done = true;
+                if (_writes.Count == 0 && _deletes.Count == 0) return;
+                _store.CommitBatch(_slot, _writes, _deletes);
+            }
+
+            public void Dispose() => _done = true;
+
+            private void Check(string saveSlot, string fileName)
+            {
+                if (_done) throw new InvalidOperationException("이미 끝난 묶음이다");
+                if (saveSlot != _slot) throw new ArgumentException($"묶음은 슬롯 '{_slot}'에만 쓴다: {saveSlot}/{fileName}", nameof(saveSlot));
+                _store.PathFor(saveSlot, fileName);
+                if (fileName == BatchFolder || fileName == BatchMark) throw new ArgumentException("묶음이 쓰는 이름이다: " + fileName, nameof(fileName));
+            }
+
+            private int IndexOf(string fileName)
+            {
+                for (int i = 0; i < _writes.Count; i++) if (_writes[i].Key == fileName) return i;
+                return -1;
+            }
         }
 
         private string PathFor(string saveSlot, string fileName)

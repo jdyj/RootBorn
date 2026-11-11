@@ -132,55 +132,79 @@ namespace Rootborn.Game
 
         // ---------- 읽기 ----------
 
+        /// <summary>
+        /// 슬롯을 읽는다. 읽기 문제는 하나에서 멈추지 않고 모두 모아 끝에 <see cref="SaveSlotDamagedException"/>으로 알린다(StartReads).
+        /// 이 플레이어의 영역 파일은 있는데 스냅샷이 없으면(옛 Unity 영역 파일도 없으면) 손상으로 본다. 새 게임으로 남은 파일을 덮지 않기 위해서다.
+        /// </summary>
         private void Load()
         {
+            var store = new StartReads(_store, SaveSlot);
             var snapshotName = SaveFileNames.AdultCareerSnapshot(PlayerId);
-            bool hasSnapshot = _store.TryRead<AdultCareerSnapshotSaveData>(SaveSlot, snapshotName, out var snapshot);
+            bool hasSnapshot = store.TryRead<AdultCareerSnapshotSaveData>(SaveSlot, snapshotName, out var snapshot);
 
             // 스냅샷이 없는 슬롯은 Unity 판의 옛 영역 파일(학생 진행·인벤토리·일과·진로 후보)에서 이어 간다(Core PreSnapshotSlotFiles).
-            var olderStudent = hasSnapshot ? null : PreSnapshotSlotFiles.ReadStudent(_store, SaveSlot, PlayerId);
+            var olderStudent = hasSnapshot ? null : PreSnapshotSlotFiles.ReadStudent(store, SaveSlot, PlayerId);
             Student = hasSnapshot && snapshot.Student != null
                 ? StudentLifeProgress.FromSaveData(Rebind(snapshot.Student))
                 : olderStudent != null ? StudentLifeProgress.FromSaveData(olderStudent) : NewStudent();
             // 하루 예산과 하루 집중은 세이브에 없다. 읽은 진행 상태에도 다시 넣는다.
             Student.ConfigureCalendar(_calendar);
             Student.ConfigureDailyFocus(_dayEndRules.DailyFocus);
-            if (!hasSnapshot) PreSnapshotSlotFiles.ImportInto(Student, _store);
+            if (!hasSnapshot) PreSnapshotSlotFiles.ImportInto(Student, store);
 
             Adult = hasSnapshot && snapshot.Adult != null ? AdultCareerProgress.FromSaveData(snapshot.Adult) : new AdultCareerProgress(SaveSlot, PlayerId);
-            var inventory = hasSnapshot ? snapshot.Inventory : PreSnapshotSlotFiles.ReadInventory(_store, SaveSlot, PlayerId);
+            var inventory = hasSnapshot ? snapshot.Inventory : PreSnapshotSlotFiles.ReadInventory(store, SaveSlot, PlayerId);
             if (inventory != null) Inventory.LoadFromSaveData(inventory, FindItem);
 
             World = hasSnapshot && snapshot.World != null
                 ? WorldStateProgress.FromSaveData(snapshot.World, SaveSlot, PlayerId)
-                : WorldStateSaveFiles.LoadOrCreate(_store, SaveSlot, PlayerId);
+                : WorldStateSaveFiles.LoadOrCreate(store, SaveSlot, PlayerId);
+            // 스냅샷이 월드 상태의 원본이어도 사본 파일(플레이어·슬롯 공유)이 깨졌으면 다른 영역처럼 알린다. 다음 저장이 조용히 덮지 않게.
+            if (hasSnapshot && snapshot.World != null) WorldStateSaveFiles.LoadOrCreate(store, SaveSlot, PlayerId);
 
-            QuestChains = LoadChains(hasSnapshot ? snapshot.QuestChains : null);
-            LoadFurniture(hasSnapshot ? snapshot : null);
+            QuestChains = LoadChains(store, hasSnapshot ? snapshot.QuestChains : null);
+            LoadFurniture(store, hasSnapshot ? snapshot : null);
 
             QuestLog = new QuestLog(_definitions.All<QuestDefinition>());
-            if (_store.TryRead<QuestLogSaveData>(SaveSlot, SaveFileNames.PlayerQuestLog(PlayerId), out var questLog)) QuestLog.LoadFromSaveData(questLog);
+            if (store.TryRead<QuestLogSaveData>(SaveSlot, SaveFileNames.PlayerQuestLog(PlayerId), out var questLog)) QuestLog.LoadFromSaveData(questLog);
 
             if (_campaign != null)
             {
-                Campaign = _store.TryRead<CampaignProgressSaveData>(SaveSlot, SaveFileNames.Campaign(PlayerId), out var campaign)
+                Campaign = store.TryRead<CampaignProgressSaveData>(SaveSlot, SaveFileNames.Campaign(PlayerId), out var campaign)
                     ? CampaignProgress.FromSaveData(campaign, _campaign)
                     : new CampaignProgress(SaveSlot, PlayerId, _campaign);
                 Campaign.SetCurrentDayNumber(Student.CurrentDay);
             }
 
-            Milestones = _store.TryRead<MilestoneProgressSaveData>(SaveSlot, SaveFileNames.Milestone(PlayerId), out var milestones)
+            Milestones = store.TryRead<MilestoneProgressSaveData>(SaveSlot, SaveFileNames.Milestone(PlayerId), out var milestones)
                 ? MilestoneProgress.FromSaveData(milestones, _milestones)
                 : new MilestoneProgress(SaveSlot, PlayerId, _milestones);
-            CareerInterests = _store.TryRead<CareerInterestProgressSaveData>(SaveSlot, SaveFileNames.CareerInterest(PlayerId), out var interests)
+            CareerInterests = store.TryRead<CareerInterestProgressSaveData>(SaveSlot, SaveFileNames.CareerInterest(PlayerId), out var interests)
                 ? CareerInterestProgress.FromSaveData(interests)
                 : new CareerInterestProgress(SaveSlot, PlayerId);
-            LocationStates = _store.TryRead<LocationStateProgressSaveData>(SaveSlot, SaveFileNames.LocationState(PlayerId), out var states)
+            LocationStates = store.TryRead<LocationStateProgressSaveData>(SaveSlot, SaveFileNames.LocationState(PlayerId), out var states)
                 ? LocationStateProgress.FromSaveData(states, SaveSlot, PlayerId)
                 : new LocationStateProgress(SaveSlot, PlayerId);
 
-            LoadOptionalDomains();
+            LoadOptionalDomains(store);
+
+            store.ThrowIfDamaged(hasSnapshot ? null : snapshotName, SlotSharedFiles(), PreSnapshotFiles());
         }
+
+        // 이 플레이어 것이 아닌 슬롯 공용 파일. 다른 플레이어가 논 슬롯에 처음 들어온 플레이어는 이것만 있어도 새 게임이다.
+        private string[] SlotSharedFiles() => new[]
+        {
+            SaveFileNames.WorldStateShared, SaveFileNames.ObjectiveJournalTracking, SaveFileNames.HouseState,
+            SaveFileNames.HouseFurnitureLayoutBeforeStages, SaveFileNames.HouseFurnitureLayout(HouseStage),
+        };
+
+        // 이 판(Save)은 쓰지 않고 스냅샷 전 Unity 판만 쓰던 영역 파일. 이것이 있으면 스냅샷 없이 이어 가는 옛 슬롯이다.
+        private string[] PreSnapshotFiles() => new[]
+        {
+            SaveFileNames.UnityStudentLife(PlayerId), SaveFileNames.UnityInventory(PlayerId), SaveFileNames.UnityCareerCandidates(PlayerId),
+            SaveFileNames.UnityDailyPlan(PlayerId), SaveFileNames.UnityDailyPlanSanitized(PlayerId),
+            SaveFileNames.FurnitureUnlocks(PlayerId), SaveFileNames.QuestChain(PlayerId),
+        };
 
         private StudentLifeProgress NewStudent()
         {
@@ -209,7 +233,7 @@ namespace Rootborn.Game
             return data;
         }
 
-        private QuestChainLog LoadChains(QuestChainLogSaveData snapshotChains)
+        private QuestChainLog LoadChains(ISaveStore store, QuestChainLogSaveData snapshotChains)
         {
             var log = new QuestChainLog(_chains);
             var initial = log.ToSaveData();
@@ -217,7 +241,7 @@ namespace Rootborn.Game
             log.LoadFromSaveData(initial);
 
             var saved = snapshotChains;
-            if (saved == null) _store.TryRead(SaveSlot, SaveFileNames.QuestChain(PlayerId), out saved);
+            if (saved == null) store.TryRead(SaveSlot, SaveFileNames.QuestChain(PlayerId), out saved);
             if (saved?.Chains != null)
             {
                 foreach (var record in saved.Chains) if (record != null) SetIdentity(record);
@@ -240,25 +264,30 @@ namespace Rootborn.Game
         /// <summary>
         /// 적용된 명령마다 부른다. Unity 판은 집합체 스냅샷(학생·성인·인벤토리·월드·체인)을 명령마다 쓰고, 나머지 영역 파일은 그 영역이 바뀔 때 썼다.
         /// 여기서는 명령마다 전부 쓴다(내용은 같고, 바뀌지 않은 파일도 다시 쓴다).
+        /// 한 묶음(SaveBatches)으로 써서, 묶음을 지원하는 저장소(FileSaveStore)에서는 도중에 꺼져도 슬롯이 전부 옛것이거나 전부 새것이다.
         /// </summary>
         private void Save()
         {
-            _store.Write(SaveSlot, SaveFileNames.AdultCareerSnapshot(PlayerId), new AdultCareerSnapshotSaveData
+            using (var store = SaveBatches.Begin(_store, SaveSlot))
             {
-                Adult = Adult.ToSaveData(),
-                Student = Student.ToSaveData(),
-                Inventory = Inventory.ToSaveData(string.Empty),
-                World = World.ToSaveData(),
-                QuestChains = QuestChains.ToSaveData(),
-                FurnitureUnlocks = FurnitureUnlocks.ToSaveData(),
-            });
-            WorldStateSaveFiles.Save(_store, World);
-            _store.Write(SaveSlot, SaveFileNames.PlayerQuestLog(PlayerId), QuestLog.ToSaveData());
-            if (Campaign != null) _store.Write(SaveSlot, SaveFileNames.Campaign(PlayerId), Campaign.ToSaveData());
-            _store.Write(SaveSlot, SaveFileNames.Milestone(PlayerId), Milestones.ToSaveData());
-            _store.Write(SaveSlot, SaveFileNames.CareerInterest(PlayerId), CareerInterests.ToSaveData());
-            _store.Write(SaveSlot, SaveFileNames.LocationState(PlayerId), LocationStates.ToSaveData());
-            SaveOptionalDomains();
+                store.Write(SaveSlot, SaveFileNames.AdultCareerSnapshot(PlayerId), new AdultCareerSnapshotSaveData
+                {
+                    Adult = Adult.ToSaveData(),
+                    Student = Student.ToSaveData(),
+                    Inventory = Inventory.ToSaveData(string.Empty),
+                    World = World.ToSaveData(),
+                    QuestChains = QuestChains.ToSaveData(),
+                    FurnitureUnlocks = FurnitureUnlocks.ToSaveData(),
+                });
+                WorldStateSaveFiles.Save(store, World);
+                store.Write(SaveSlot, SaveFileNames.PlayerQuestLog(PlayerId), QuestLog.ToSaveData());
+                if (Campaign != null) store.Write(SaveSlot, SaveFileNames.Campaign(PlayerId), Campaign.ToSaveData());
+                store.Write(SaveSlot, SaveFileNames.Milestone(PlayerId), Milestones.ToSaveData());
+                store.Write(SaveSlot, SaveFileNames.CareerInterest(PlayerId), CareerInterests.ToSaveData());
+                store.Write(SaveSlot, SaveFileNames.LocationState(PlayerId), LocationStates.ToSaveData());
+                SaveOptionalDomains(store);
+                store.Commit();
+            }
         }
 
         // ---------- 퀘스트 이벤트 ----------
