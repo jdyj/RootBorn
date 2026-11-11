@@ -54,7 +54,7 @@ namespace Rootborn.Data
         public GameDefinitions Definitions { get; }
         public IReadOnlyList<LoadError> Errors { get; }
 
-        /// <summary>표에 있지만 Add/NotARule/NotPortedYet 어디에도 없는 종류.</summary>
+        /// <summary>표에 있지만 Add/NotARule/NotPortedYet/NotUsedByGame 어디에도 없는 종류.</summary>
         public IReadOnlyList<string> UnclassifiedTypes { get; }
 
         /// <summary>등록 내용(분류 집계·보고용).</summary>

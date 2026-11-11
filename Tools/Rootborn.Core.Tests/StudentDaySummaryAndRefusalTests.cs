@@ -8,8 +8,8 @@ namespace Rootborn.Core.Tests
     // (등록부·대화 조건·결과 화면 검사와 생활 활동 중복 검사 005는 이 영역이 아니라 옮기지 않음)
     public sealed class StudentDaySummaryAndRefusalTests
     {
-        private static readonly RelationshipSummaryInfo Trust = new RelationshipSummaryInfo("relationship.first-guide.trust", "Guide Trust");
-        private static readonly StatusSummaryInfo Fatigue = new StatusSummaryInfo("status.fatigue", "Fatigue", true);
+        private static readonly RelationshipDefinition Trust = new RelationshipDefinition("relationship.first-guide.trust", "Guide Trust");
+        private static readonly StatusDefinition Fatigue = new StatusDefinition("status.fatigue", "Fatigue", true);
 
         [Test]
         public void RELCOND_EDIT_004_ResultSummaryBuildsBeforeAfterDeltasForRelationshipAndCondition()
@@ -99,7 +99,7 @@ namespace Rootborn.Core.Tests
                 "activity.help:+relationship.first-guide.trust=2", "activity.rest:+status.unknown=2", "activity.rest:status.fatigue=-1", "noise", null,
             };
 
-            var summary = StudentDayRelationshipConditionSummaryBuilder.BuildFromResultLogs(progress, logs, new[] { Trust }, new[] { new StatusSummaryInfo("status.other", "Other", false) });
+            var summary = StudentDayRelationshipConditionSummaryBuilder.BuildFromResultLogs(progress, logs, new[] { Trust }, new[] { new StatusDefinition("status.other", "Other", false) });
 
             Assert.AreEqual(1, summary.RelationshipEntries.Length);
             Assert.AreEqual("Guide Trust", summary.RelationshipEntries[0].DisplayName);

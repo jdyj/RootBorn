@@ -52,6 +52,21 @@ namespace Rootborn.Core.Save
             return encoded.Append(".json").ToString();
         }
 
+        /// <summary>Unity FurniturePlacementLayoutPersistence.GetHouseLayoutFileNameForStage와 같다. 음수 단계는 0단계다.</summary>
+        public static string HouseFurnitureLayout(int stageIndex)
+            => "house-furniture-layout-stage-" + System.Math.Max(0, stageIndex).ToString(CultureInfo.InvariantCulture) + ".json";
+
+        /// <summary>집 단계가 생기기 전의 배치 파일. 0단계 파일이 없을 때만 읽는다.</summary>
+        public const string HouseFurnitureLayoutBeforeStages = "house-furniture-layout.json";
+
+        /// <summary>Unity FurnitureUnlockProgressPersistence.FileNameFor와 같다: 빈 id·"player"·"local-player"는 공용 파일.</summary>
+        public static string FurnitureUnlocks(string playerId)
+            => IsDefaultPlayer(playerId) ? "furniture-unlocks.json" : "furniture-unlocks-" + Sanitize(playerId) + ".json";
+
+        /// <summary>Unity ResourceRecipeProgressPersistence.FileNameFor와 같다: 빈 id와 "player"만 공용 파일이고 "local-player"는 따로 쓴다.</summary>
+        public static string ResourceRecipe(string playerId)
+            => string.IsNullOrEmpty(playerId) || playerId == LegacyPlayerId ? "resource-recipe-progress.json" : "resource-recipe-progress-" + Sanitize(playerId) + ".json";
+
         // 기본 플레이어가 공용 파일 하나를 쓰는 진행 파일들.
         public static string Campaign(string playerId) => SharedForDefault("campaign-progress", playerId);
         public static string LocationState(string playerId) => SharedForDefault("location-state-progress", playerId);

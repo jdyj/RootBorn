@@ -4,6 +4,7 @@ using Rootborn.Core.Dialogue;
 using Rootborn.Core.DiscoveryClues;
 using Rootborn.Core.Inventory;
 using Rootborn.Core.Minigames;
+using Rootborn.Core.Placement;
 using Rootborn.Core.StudentLife;
 using Rootborn.Core.WorldState;
 using Rootborn.Data.Builders;
@@ -22,6 +23,14 @@ namespace Rootborn.Data.Tests
             // Assets/Scripts/Game/StudentLife/StudentLifeCore.cs
             Assert.That(Enum.GetNames(typeof(LifeActivityCategory)),
                 Is.EqualTo(new[] { "School", "Work", "Hobby", "Errand", "Social", "Rest", "SelfStudy" }));
+        }
+
+        [Test]
+        public void FurniturePlacementEnums_HaveTheUnityOrder()
+        {
+            // Assets/Scripts/Game/Placement/FurniturePlacementTypes.cs. 방향은 세이브에도 숫자로 들어 있다.
+            Assert.That(Enum.GetNames(typeof(FurniturePlacementDirection)), Is.EqualTo(new[] { "North", "East", "South", "West" }));
+            Assert.That(Enum.GetNames(typeof(FurniturePlacementPreference)), Is.EqualTo(new[] { "Any", "AvoidBlockedCells", "NearWall", "NearWindow" }));
         }
 
         [Test]

@@ -259,24 +259,27 @@ namespace Rootborn.Data.Tests
         }
 
         [Test]
-        public void NotARule_And_NotPortedYet_AreClassified()
+        public void NotARule_NotPortedYet_And_NotUsedByGame_AreClassified()
         {
             using var dir = new TempDir();
             dir.Write("leaf/Leaf.json", TwoLeaves);
             dir.Write("art/Sprite.json", @"[{""type"":""SpriteSheet"",""id"":""sheet.1""}]");
             dir.Write("later/Later.json", @"[{""type"":""LaterRule"",""id"":""later.1""}]");
+            dir.Write("old/Old.json", @"[{""type"":""OldRule"",""id"":""old.1""}]");
 
             var result = Load(dir, b =>
             {
                 Register(b);
                 b.NotARule("SpriteSheet", "그림 전용");
                 b.NotPortedYet("LaterRule", "core-world");
+                b.NotUsedByGame("OldRule", "부르는 곳 없음");
             });
 
             Assert.That(result.Ok, Is.True, string.Join("\n", result.Errors));
             Assert.That(result.UnclassifiedTypes, Is.Empty);
             Assert.That(result.Definitions.TryGet<object>("sheet.1", out _), Is.False);
             Assert.That(result.Definitions.TryGet<object>("later.1", out _), Is.False);
+            Assert.That(result.Definitions.TryGet<object>("old.1", out _), Is.False);
             Assert.DoesNotThrow(() => result.ThrowIfFailed());
         }
 

@@ -75,7 +75,7 @@ namespace Rootborn.Core.StudentLife
         }
     }
 
-    /// <summary>자원·레시피 공개(자원·레시피 진행 영역은 아직 Core에 없다). 불러오기·저장은 구현하는 쪽이 한다. 새로 공개했으면 true.</summary>
+    /// <summary>자원·레시피 공개. 구현은 Gathering.ResourceRecipeReveal(불러오기·저장 포함). 새로 공개했으면 true.</summary>
     public interface ILocationActivityRecipeReveal
     {
         bool TryReveal(StudentLifeProgress progress, string resourceId, string recipeId, string sourceActivityId);

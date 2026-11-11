@@ -38,6 +38,11 @@ namespace Rootborn.Data.Tests
             Names.Encyclopedia(DefaultPlayer),
             Names.DiscoveryClues(DefaultPlayer),
             Names.ClueInterpretations(DefaultPlayer),
+            Names.HouseFurnitureLayout(0),
+            Names.HouseFurnitureLayoutBeforeStages,
+            Names.FurnitureUnlocks(DefaultPlayer),
+            Names.ResourceRecipe(DefaultPlayer),
+            Names.ResourceRecipe(Names.LegacyPlayerId),
         };
 
         [TestCaseSource(nameof(DefaultPlayerFiles))]

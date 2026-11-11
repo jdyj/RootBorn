@@ -40,7 +40,7 @@ namespace Rootborn.Data.Builders
             return GrowthRouteNames[0];
         }
 
-        internal static void Register(DefinitionBuilders b)
+        internal static void Register(DefinitionBuilders b, RuleServices services)
         {
             // worldPosition은 맵 배치라 Host·월드 몫이다.
             b.Add("LocationDefinition", (n, c) => new Location(
@@ -74,9 +74,9 @@ namespace Rootborn.Data.Builders
             // 한 Unity 클래스가 target 값에 따라 다섯 가지로 쓰였다. Core의 대상별 결과로 나눈다.
             b.Add("LocationActivityProgressDeltaOutcome", BuilderHelpers.AddedLater(new[] { "logCareerHintEveryTime" }, (n, c) => ProgressDelta(n)));
             b.Add("LocationActivityTraitDeltaOutcome", (n, c) => new LocationActivityTraitDeltaOutcome(n.RefId("trait"), n.Int("delta")));
-            // 레시피 공개는 레거시 레시피 영역의 실행 서비스가 필요하다. 아직 없어 null을 넘기며, 그동안 이 결과는 아무것도 하지 않는다.
+            // 레시피 공개는 레시피 진행 파일을 읽고 쓰는 실행 서비스가 필요하다. 서비스 없이 읽으면 이 결과는 아무것도 하지 않는다.
             b.Add("LocationActivityResourceRecipeOutcome", (n, c) => new LocationActivityResourceRecipeOutcome(
-                n.RefId("resource"), n.RefId("recipe"), n.Str("nextHintKey"), null));
+                n.RefId("resource"), n.RefId("recipe"), n.Str("nextHintKey"), services?.RecipeReveal));
 
             b.Add("LocationStateDefinition", (n, c) => new LocationState(
                 n.Id, n.Str("displayNameKey"), n.Str("descriptionKey"), n.RefId("location"), n.Int("priority"),

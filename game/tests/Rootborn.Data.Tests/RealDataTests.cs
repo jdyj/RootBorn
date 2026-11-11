@@ -4,9 +4,12 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using NUnit.Framework;
+using Rootborn.Core.Gathering;
+using Rootborn.Core.Placement;
 using Rootborn.Core.Quests;
 using Rootborn.Core.StudentLife;
 using Rootborn.Data.Builders;
+using Rootborn.Data.Save;
 
 namespace Rootborn.Data.Tests
 {
@@ -58,6 +61,89 @@ namespace Rootborn.Data.Tests
             Assert.That(talk.TargetNpcId, Is.EqualTo("npc.first-guide"));
             Assert.That(talk.RequiredCount, Is.EqualTo(1));
             Assert.That(quest.CompletionEffects.Count, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void TheTownTree_AndTheFieldNotesRecipe_CarryTheirValues()
+        {
+            var tree = _result.Definitions.Get<ResourceNodeDefinition>("Tree");
+            Assert.That((tree.BaseHitsToBreak, tree.BareHandPenaltyMul, tree.PreferredToolId, tree.IsWalkable), Is.EqualTo((5f, 0.3f, "StoneAxe", true)));
+            Assert.That(tree.Drops.Single().ResourceId, Is.EqualTo("Wood"));
+            Assert.That((tree.Drops.Single().MinCount, tree.Drops.Single().MaxCount), Is.EqualTo((1, 3)));
+            Assert.That(tree.Sprite, Does.EndWith("tree_01.png"));
+            var recipe = _result.Definitions.Get<RecipeDefinition>("recipe.town.field-notes");
+            Assert.That((recipe.DisplayNameKey, recipe.NextHintKey), Is.EqualTo(("recipe.town.field-notes.name", "objective.recipe.field-notes.next")));
+        }
+
+        [Test]
+        public void WithRuleServices_TheSquareHelpActivityRevealsTheFieldNotesRecipe()
+        {
+            using var dir = new TempDir();
+            var store = new FileSaveStore(dir.Path);
+            var result = GameDataLoader.Load(RepoPaths.DataDirectory, b => RootbornBuilders.Register(b, new RuleServices(store)));
+            result.ThrowIfFailed();
+            var activity = result.Definitions.Get<LocationActivity>("location.activity.square-help-request");
+            var progress = new StudentLifeProgress("slot-1", "local-player", 10, 10);
+
+            var logs = activity.ApplyOutcomes(progress);
+
+            Assert.That(logs, Does.Contain("location-activity:location.activity.square-help-request:unlock=recipe.town.field-notes"));
+            var recipes = ResourceRecipeSaveFiles.LoadOrCreate(store, "slot-1", "local-player");
+            Assert.That(recipes.IsRecipeRevealed("recipe.town.field-notes"), Is.True);
+            Assert.That(recipes.IsResourceSeen("Rock"), Is.True);
+        }
+
+        [Test]
+        public void WithoutRuleServices_TheRecipeOutcomeDoesNothing()
+        {
+            var activity = _result.Definitions.Get<LocationActivity>("location.activity.square-help-request");
+            var logs = activity.ApplyOutcomes(new StudentLifeProgress("slot-1", "local-player", 10, 10));
+            Assert.That(logs, Has.None.Contains("recipe.town.field-notes"));
+        }
+
+        [Test]
+        public void OnlyTheWorldTravelTypesAreStillWaitingToBePorted()
+        {
+            var builders = new DefinitionBuilders();
+            RootbornBuilders.Register(builders);
+            Assert.That(builders.NotPorted.Keys, Is.EquivalentTo(new[] { "WorldDestinationDefinition", "WorldTravelCatalogDefinition" }));
+            Assert.That(builders.NotUsed.Keys, Is.EquivalentTo(new[]
+            {
+                "StatusEffectDefinition", "KnowledgeNode", "HitGroundWithRockTrigger", "ToolDefinition", "FishingAnimationEffect",
+                "GatherResourceStep", "HeirTrait",
+            }));
+        }
+
+        [Test]
+        public void TheConditionStatus_CarriesItsName()
+        {
+            var fatigue = _result.Definitions.Get<StatusDefinition>("status.fatigue");
+            Assert.That((fatigue.DisplayNameKey, fatigue.PersistsToNextDay), Is.EqualTo(("Fatigue", true)));
+        }
+
+        [Test]
+        public void RelationshipsAndTimeSlots_CarryTheirValues()
+        {
+            var trust = _result.Definitions.Get<RelationshipDefinition>("relationship.first-guide.trust");
+            Assert.That((trust.DisplayNameKey, trust.TargetId), Is.EqualTo(("Guide Trust", "npc.first-guide")));
+            var slots = _result.Definitions.All<TimeSlotDefinition>().OrderBy(slot => slot.Order).Select(slot => slot.Id);
+            Assert.That(slots, Is.EqualTo(new[] { "time.morning", "time.afternoon", "time.evening", "time.night" }));
+        }
+
+        [Test]
+        public void Furniture_CarriesItsFootprintAndSale()
+        {
+            var desk = _result.Definitions.Get<FurnitureDefinition>("story.study-desk");
+            Assert.That(desk.FootprintCells.Count, Is.EqualTo(2));
+            Assert.That(desk.IsForSale, Is.True);
+            Assert.That((desk.PriceItem.Id, desk.Price, desk.PurchaseLocationId), Is.EqualTo(("item.allowance", 10, "location.corner-store")));
+            Assert.That(desk.AllowsSurface("house"), Is.True);
+            Assert.That(desk.PlacementPreference, Is.EqualTo(FurniturePlacementPreference.NearWall));
+
+            // 그림 참조를 풀지 못한 책상은 Unity처럼 그림 칸 없이 차지 칸만 갖는다.
+            var basic = _result.Definitions.Get<FurnitureDefinition>("desk.basic");
+            Assert.That(basic.TileParts, Is.Empty);
+            Assert.That(_result.Definitions.All<FurnitureDefinition>().Count, Is.EqualTo(1503));
         }
 
         [Test]

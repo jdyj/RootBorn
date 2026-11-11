@@ -3,34 +3,6 @@ using System.Collections.Generic;
 
 namespace Rootborn.Core.StudentLife
 {
-    /// <summary>요약에 필요한 관계 정의의 값(관계 정의는 아직 Core에 없다).</summary>
-    public readonly struct RelationshipSummaryInfo
-    {
-        public RelationshipSummaryInfo(string id, string displayNameKey)
-        {
-            Id = id ?? string.Empty;
-            DisplayNameKey = string.IsNullOrEmpty(displayNameKey) ? Id : displayNameKey;
-        }
-
-        public string Id { get; }
-        public string DisplayNameKey { get; }
-    }
-
-    /// <summary>요약에 필요한 상태 정의의 값(상태 정의는 아직 Core에 없다).</summary>
-    public readonly struct StatusSummaryInfo
-    {
-        public StatusSummaryInfo(string id, string displayNameKey, bool persistsToNextDay)
-        {
-            Id = id ?? string.Empty;
-            DisplayNameKey = string.IsNullOrEmpty(displayNameKey) ? Id : displayNameKey;
-            PersistsToNextDay = persistsToNextDay;
-        }
-
-        public string Id { get; }
-        public string DisplayNameKey { get; }
-        public bool PersistsToNextDay { get; }
-    }
-
     public readonly struct RelationshipDeltaEntry
     {
         public readonly string RelationshipId;
@@ -87,7 +59,7 @@ namespace Rootborn.Core.StudentLife
     public static class StudentDayRelationshipConditionSummaryBuilder
     {
         /// <summary>전·후 진행 상태를 정의 목록 순서로 비교한다.</summary>
-        public static StudentDayRelationshipConditionSummary Build(StudentLifeProgress before, StudentLifeProgress after, IReadOnlyList<RelationshipSummaryInfo> relationships, IReadOnlyList<StatusSummaryInfo> statuses)
+        public static StudentDayRelationshipConditionSummary Build(StudentLifeProgress before, StudentLifeProgress after, IReadOnlyList<RelationshipDefinition> relationships, IReadOnlyList<StatusDefinition> statuses)
         {
             var relationshipEntries = new List<RelationshipDeltaEntry>();
             var statusEntries = new List<StatusDeltaEntry>();
@@ -97,7 +69,7 @@ namespace Rootborn.Core.StudentLife
                 for (int i = 0; i < relationships.Count; i++)
                 {
                     var relationship = relationships[i];
-                    if (relationship.Id.Length == 0) continue;
+                    if (relationship == null || relationship.Id.Length == 0) continue;
                     int beforeValue = before != null ? before.GetRelationshipValue(relationship.Id) : 0;
                     int afterValue = after.GetRelationshipValue(relationship.Id);
                     if (beforeValue != afterValue) AddRelationship(relationshipEntries, impacts, relationship.Id, relationship.DisplayNameKey, beforeValue, afterValue);
@@ -108,7 +80,7 @@ namespace Rootborn.Core.StudentLife
                 for (int i = 0; i < statuses.Count; i++)
                 {
                     var status = statuses[i];
-                    if (status.Id.Length == 0) continue;
+                    if (status == null || status.Id.Length == 0) continue;
                     int beforeValue = before != null ? before.GetStatusValue(status.Id) : 0;
                     int afterValue = after.GetStatusValue(status.Id);
                     if (beforeValue != afterValue) AddStatus(statusEntries, impacts, status.Id, status.DisplayNameKey, status.PersistsToNextDay, beforeValue, afterValue);
@@ -121,7 +93,7 @@ namespace Rootborn.Core.StudentLife
         /// 결과 기록에서 "relationship.&lt;id&gt;=&lt;변화&gt;", "status.&lt;id&gt;=&lt;변화&gt;"를 찾아 지금 값과 그 전 값을 만든다.
         /// 양수 기록("+relationship.…")과 음수 기록('+' 없음)을 모두 읽는다(원본은 '+'가 붙은 것만 읽어 음수 변화가 빠졌다). 정의 목록에 없는 id는 id를 이름으로, 상태는 내일까지 이어지는 것으로 본다.
         /// </summary>
-        public static StudentDayRelationshipConditionSummary BuildFromResultLogs(StudentLifeProgress progress, string[] resultLogIds, IReadOnlyList<RelationshipSummaryInfo> relationships, IReadOnlyList<StatusSummaryInfo> statuses)
+        public static StudentDayRelationshipConditionSummary BuildFromResultLogs(StudentLifeProgress progress, string[] resultLogIds, IReadOnlyList<RelationshipDefinition> relationships, IReadOnlyList<StatusDefinition> statuses)
         {
             if (progress == null || resultLogIds == null) return new StudentDayRelationshipConditionSummary(null, null, null);
             var relationshipEntries = new List<RelationshipDeltaEntry>();
@@ -159,19 +131,19 @@ namespace Rootborn.Core.StudentLife
             impacts.Add(display + (persists ? " carries into tomorrow." : " recovers before tomorrow."));
         }
 
-        private static bool TryFind(IReadOnlyList<RelationshipSummaryInfo> values, string id, out RelationshipSummaryInfo found)
+        private static bool TryFind(IReadOnlyList<RelationshipDefinition> values, string id, out RelationshipDefinition found)
         {
-            found = default;
+            found = null;
             if (values == null) return false;
-            for (int i = 0; i < values.Count; i++) if (values[i].Id.Length > 0 && values[i].Id == id) { found = values[i]; return true; }
+            for (int i = 0; i < values.Count; i++) if (values[i] != null && values[i].Id.Length > 0 && values[i].Id == id) { found = values[i]; return true; }
             return false;
         }
 
-        private static bool TryFind(IReadOnlyList<StatusSummaryInfo> values, string id, out StatusSummaryInfo found)
+        private static bool TryFind(IReadOnlyList<StatusDefinition> values, string id, out StatusDefinition found)
         {
-            found = default;
+            found = null;
             if (values == null) return false;
-            for (int i = 0; i < values.Count; i++) if (values[i].Id.Length > 0 && values[i].Id == id) { found = values[i]; return true; }
+            for (int i = 0; i < values.Count; i++) if (values[i] != null && values[i].Id.Length > 0 && values[i].Id == id) { found = values[i]; return true; }
             return false;
         }
     }

@@ -4,6 +4,8 @@ using System.Text.RegularExpressions;
 using Rootborn.Core.Careers;
 using Rootborn.Core.DiscoveryClues;
 using Rootborn.Core.Encyclopedia;
+using Rootborn.Core.Gathering;
+using Rootborn.Core.Placement;
 using Rootborn.Core.Quests;
 using Rootborn.Core.StudentLife;
 using Rootborn.Core.WorldState;
@@ -35,6 +37,10 @@ namespace Rootborn.Data.Tests
             ("encyclopedia-*.json", typeof(EncyclopediaProgressSaveData)),
             ("discovery-clues-*.json", typeof(DiscoveryClueProgressSaveData)),
             ("clue-interpretations-*.json", typeof(ClueInterpretationProgressSaveData)),
+            ("house-furniture-layout-stage-*.json", typeof(FurniturePlacementLayoutSaveData)),
+            ("house-furniture-layout.json", typeof(FurniturePlacementLayoutSaveData)),
+            ("furniture-unlocks*.json", typeof(FurnitureUnlockProgressSaveData)),
+            ("resource-recipe-progress*.json", typeof(ResourceRecipeProgressSaveData)),
         };
 
         public static readonly IReadOnlyList<(string Pattern, string Reason)> NotShapedYet = new[]
@@ -42,15 +48,12 @@ namespace Rootborn.Data.Tests
             ("metadata.json", "슬롯 정보(이름, 시드, 캐릭터 겉모습). Host 몫"),
             ("world-progress.json", "현재 장면과 입구(Core WorldState의 월드 상태가 아니다). 월드 프로젝트(Runtime/World) 몫"),
             ("student-day-result-quest-inventory-summary.json", "하루 결과 화면 요약. 화면 몫"),
-            ("house-furniture-layout-stage-0.json", "집 가구 배치. 집 꾸미기(house) 영역을 옮길 때"),
             ("objective-journal-tracking.json", "목표 저널 추적. 화면 몫"),
         };
 
         /// <summary>(파일 무늬, JSON 경로, 이유). 경로 아래 전체를 허용한다. 배열은 "[]"로 원소 형으로 내려간다.</summary>
-        public static readonly IReadOnlyList<(string Pattern, string Path, string Reason)> DroppedFields = new[]
-        {
-            ("adult-career-snapshot-*.json", "FurnitureUnlocks", "Core에 가구 해금 모양 없음. 집 꾸미기 영역을 옮길 때 뺀다"),
-        };
+        public static readonly IReadOnlyList<(string Pattern, string Path, string Reason)> DroppedFields =
+            Array.Empty<(string Pattern, string Path, string Reason)>();
 
         public static Type ShapeFor(string fileName)
         {

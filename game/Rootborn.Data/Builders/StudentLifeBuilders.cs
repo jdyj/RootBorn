@@ -8,6 +8,11 @@ namespace Rootborn.Data.Builders
     {
         public static void Register(DefinitionBuilders b)
         {
+            // 컨디션 상태. 값은 진행 상태가 id로 갖는다. persistsToNextDay의 Unity 초기값은 true다.
+            b.Add("StatusDefinition", (n, c) => new StatusDefinition(n.Id, n.Str("displayNameKey"), n.Bool("persistsToNextDay")));
+            b.Add("RelationshipDefinition", (n, c) => new RelationshipDefinition(n.Id, n.Str("displayNameKey"), n.Str("targetId")));
+            b.Add("TimeSlotDefinition", (n, c) => new TimeSlotDefinition(n.Id, n.Str("displayNameKey"), n.Int("order")));
+
             // displayNameKey는 화면 문구라 Core가 받지 않는다. 비용은 Unity 게터처럼 0 이상.
             b.Add("LifeActivityDefinition", (n, c) => new LifeActivity(
                 n.Id,
