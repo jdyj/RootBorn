@@ -72,7 +72,7 @@ namespace Rootborn.Screens.Tests
             {
                 _saves = Path.Combine(Path.GetTempPath(), "rootborn-longtext-" + Guid.NewGuid().ToString("N"));
                 Directory.CreateDirectory(_saves);
-                Session = GameSession.Start(Definitions.Value, GameStartSettings.FromRegistry(TestData.DataDirectory), new FileSaveStore(_saves), "slot-test", null);
+                Session = GameSession.Start(Definitions.Value, GameStartSettings.FromDefinitions(Definitions.Value), new FileSaveStore(_saves), "slot-test", null);
                 Text = LongText.Create(language);
                 var services = new ScreenServices(Text, Session) { Names = DisplayNames.Load(TestData.DataDirectory) };
                 ScreenRegistry registry = ScreenCatalog.Create();

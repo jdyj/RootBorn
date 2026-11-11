@@ -29,11 +29,16 @@ namespace Rootborn.Host.Tests.Simulation
                     yield return new TestCaseData(policy, seed).SetName("HostPlays_" + policy + "_seed" + seed);
         }
 
-        private static PlayResult Play(string policy, int seed, PlaySettings settings, string name, int shots)
+        /// <summary>밤샘 정책은 날이 넘어갈 때까지 서서 기다리므로 학생 시계를 빨리 돌린다(--time-scale — 하루 60초).</summary>
+        private const float StayUpTimeScale = 10f;
+
+        private static float TimeScaleFor(string policy) => policy == PlayPolicyCatalog.StayUp ? StayUpTimeScale : 1f;
+
+        private static PlayResult Play(string policy, int seed, PlaySettings settings, string name, int shots, float timeScale = 1f)
         {
             PlayAtlas atlas = PlayAtlas.Load(Root);
             string evidence = Path.Combine(Root, "output", "host-sim-evidence");
-            using var body = new DriverBody(Root, evidence);
+            using var body = new DriverBody(Root, evidence, timeScale);
             var runner = new PlayRunner(body, PlayPolicyCatalog.Default().Create(policy, atlas), seed, settings, atlas, name);
             var shot = new HashSet<string>(StringComparer.Ordinal);
             runner.AfterStep += (step, action) =>
@@ -61,10 +66,32 @@ namespace Rootborn.Host.Tests.Simulation
                 Days = PlaySettings.EnvInt("ROOTBORN_SIM_HOST_DAYS", 2),
                 StepsPerDay = PlaySettings.EnvInt("ROOTBORN_SIM_HOST_STEPS_PER_DAY", 30),
             };
-            PlayResult result = Play(policy, seed, settings, "host-" + policy + "-" + seed, ShotsPerPlay);
+            PlayResult result = Play(policy, seed, settings, "host-" + policy + "-" + seed, ShotsPerPlay, TimeScaleFor(policy));
             if (result.Failure != null) Assert.Fail(result.Failure.What + "\n기록: " + result.OutputDir + "\n" + result.Failure.Report);
             Assert.That(result.DaysCompleted, Is.GreaterThanOrEqualTo(settings.Days), "날을 넘기며 플레이했다");
         }
+
+        /// <summary>
+        /// 밤샘이 이득이 아니다(흐르는 시간 설계 3.4)를 실제 창에서: 같은 씨앗·같은 배속으로 밤샘 정책과 학교 밖 정책(같은 선호, 잔다)을 이틀 돌려
+        /// 특성·기술 합을 비교한다. 배속은 둘 다 같다(하루 60초).
+        /// </summary>
+        [Test]
+        public void StayingUp_IsNotBetterThanSleeping_InTheRealWindow()
+        {
+            var settings = new PlaySettings { Days = 2, StepsPerDay = 40 };
+            PlayResult up = Play(PlayPolicyCatalog.StayUp, 1, settings, "host-stay-up-vs-sleep-up", 4, StayUpTimeScale);
+            PlayResult slept = Play(PlayPolicyCatalog.OffSchool, 1, settings, "host-stay-up-vs-sleep-slept", 4, StayUpTimeScale);
+            if (up.Failure != null) Assert.Fail(up.Failure.What + "\n" + up.Failure.Report);
+            if (slept.Failure != null) Assert.Fail(slept.Failure.What + "\n" + slept.Failure.Report);
+            int grownUp = Growth(up), grownSlept = Growth(slept);
+            TestContext.WriteLine("성장 합(특성+기술): 밤샘 " + grownUp + ", 잠 " + grownSlept);
+            Assert.That(up.Notes.Any(n => n.Contains("자지 않고 넘어왔다")), Is.True, "밤샘 쪽은 자지 않고 날을 넘겼다");
+            Assert.That(grownUp, Is.LessThanOrEqualTo(grownSlept), "밤샘이 자는 것보다 이득이면 안 된다");
+        }
+
+        private static int Growth(PlayResult result) => result.FinalState
+            .Where(l => l.StartsWith("trait ", StringComparison.Ordinal) || l.StartsWith("skill ", StringComparison.Ordinal))
+            .Sum(l => int.Parse(l.Substring(l.LastIndexOf('=') + 1)));
 
         /// <summary>
         /// 메인 체인 우선 정책으로 실제 창에서 메인 체인을 끝까지(대본 없음, 40초쯤). 창 없는 층의

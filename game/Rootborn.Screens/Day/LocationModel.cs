@@ -15,8 +15,9 @@ namespace Rootborn.Screens.Day
     public readonly struct LocationRow
     {
         public LocationRow(LocationRowKind kind, string id, string nameKey, string literalName, ActivityTimePolicy timePolicy,
-            StudentActivityRefusalReason refusal, bool requirementsMet, int price, bool owned, bool affordable)
+            StudentActivityRefusalReason refusal, bool requirementsMet, int price, bool owned, bool affordable, int timeCostMinutes = 0)
         {
+            TimeCostMinutes = System.Math.Max(0, timeCostMinutes);
             Kind = kind;
             Id = id ?? string.Empty;
             NameKey = nameKey ?? string.Empty;
@@ -35,6 +36,8 @@ namespace Rootborn.Screens.Day
         public string NameKey { get; }
         public string LiteralName { get; }
         public ActivityTimePolicy TimePolicy { get; }
+        /// <summary>활동이 걸리는 분(데이터 timeCostMinutes). 물건 줄은 0.</summary>
+        public int TimeCostMinutes { get; }
         public StudentActivityRefusalReason Refusal { get; }
         public bool RequirementsMet { get; }
         public int Price { get; }
@@ -101,7 +104,7 @@ namespace Rootborn.Screens.Day
                     if (activity == null) continue;
                     rows.Add(new LocationRow(LocationRowKind.Activity, activity.Id, activity.DisplayNameKey, null, activity.TimePolicy,
                         StudentActivityRefusal.Explain(student, activity.TimePolicy, activity.EnergyCost, activity.FocusCost),
-                        activity.HasSatisfiedRequirements(student), 0, false, false));
+                        activity.HasSatisfiedRequirements(student), 0, false, false, activity.TimeCostMinutes));
                 }
 
             IReadOnlyList<FurnitureDefinition> offers = string.IsNullOrEmpty(locationId) ? Array.Empty<FurnitureDefinition>() : session.FurnitureForSaleAt(locationId);

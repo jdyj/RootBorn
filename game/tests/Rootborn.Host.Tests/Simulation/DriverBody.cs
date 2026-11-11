@@ -27,12 +27,15 @@ namespace Rootborn.Host.Tests.Simulation
         private HostPlacementView _placementView;
         private WorldScreen _placementWorld;
 
-        public DriverBody(string repoRoot, string evidenceDir)
+        /// <param name="timeScale">학생 시계 배속(실행 인자 --time-scale과 같다). 여러 날을 실제 창으로 돌릴 때 하루를 줄인다.</param>
+        public DriverBody(string repoRoot, string evidenceDir, float timeScale = 1f)
         {
+            ClockSecondsPerFrame = timeScale / 60f; // 테스트 모드의 고정 프레임 간격 1/60초 × 배속
             _saves = Path.Combine(Path.GetTempPath(), "rootborn-sim-host-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_saves);
             HostOptions options = HostOptions.Resolve(new[] { "--root", repoRoot, "--save-root", _saves, "--size", "1920x1080", "--evidence", evidenceDir });
             options.TestMode = true;
+            options.TimeScale = timeScale;
             Player = new PlayerDriver(options);
             _counter = new FrameCounter(Player.Game);
             Player.Game.Components.Add(_counter);
@@ -63,6 +66,7 @@ namespace Rootborn.Host.Tests.Simulation
         public float Width => Game.Fit.LogicalWidth;
         public float Height => Game.Fit.LogicalHeight;
         public long Frames => _counter.Count;
+        public float ClockSecondsPerFrame { get; }
         public int CollisionViolations => Player.CollisionViolations;
         public string SaveRoot => _saves;
         public string SlotId => Game.Session?.SaveSlot;

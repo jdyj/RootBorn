@@ -18,9 +18,13 @@ namespace Rootborn.Screens.Tests.Quests
 
         private static GameDefinitions Load()
         {
-            string copy = Path.Combine(Path.GetTempPath(), "rootborn-visible-chains-" + Guid.NewGuid().ToString("N"));
+            // 저장소 모양 그대로(root/data, root/game/time.json): 흐르는 시간의 수치 파일은 data 폴더 옆의 game/에서 읽는다(TimeSettings).
+            string root = Path.Combine(Path.GetTempPath(), "rootborn-visible-chains-" + Guid.NewGuid().ToString("N"));
+            string copy = Path.Combine(root, "data");
             CopyDirectory(TestData.DataDirectory, copy);
-            AppDomain.CurrentDomain.ProcessExit += (_, _) => { try { Directory.Delete(copy, true); } catch (IOException) { } };
+            Directory.CreateDirectory(Path.Combine(root, "game"));
+            File.Copy(Path.Combine(TestData.RepoRoot, "game", "time.json"), Path.Combine(root, "game", "time.json"));
+            AppDomain.CurrentDomain.ProcessExit += (_, _) => { try { Directory.Delete(root, true); } catch (IOException) { } };
             string file = Path.Combine(copy, "studentlife", "QuestChainDefinition.json");
             JsonArray chains = JsonNode.Parse(File.ReadAllText(file))!.AsArray();
             foreach (JsonNode chain in chains)

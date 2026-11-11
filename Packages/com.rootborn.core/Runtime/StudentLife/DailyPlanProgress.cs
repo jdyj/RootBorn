@@ -184,11 +184,34 @@ namespace Rootborn.Core.StudentLife
             return null;
         }
 
+        private const string MorningPeriod = "daily-plan.period.morning", AfternoonPeriod = "daily-plan.period.afternoon",
+            AfterSchoolPeriod = "daily-plan.period.after-school", EveningPeriod = "daily-plan.period.evening";
+
         private static string PeriodKey(bool weekend, int index, int count)
         {
-            if (index == count - 1) return "daily-plan.period.evening";
-            if (weekend) return index == 0 ? "daily-plan.period.morning" : "daily-plan.period.afternoon";
-            return "daily-plan.period.after-school";
+            if (index == count - 1) return EveningPeriod;
+            if (weekend) return index == 0 ? MorningPeriod : AfternoonPeriod;
+            return AfterSchoolPeriod;
+        }
+
+        /// <summary>
+        /// 칸의 문구 키 → 하루의 시간대(흐르는 시간 2026-11-12, 설계 4절: 시간 포인트 칸을 시간대에 묶는다). 칸 수와 문구 키(화면)는 그대로다.
+        /// 방과 후는 낮(time.afternoon)이다. 모르는 키는 빈 문자열.
+        /// </summary>
+        public static string TimeSlotFor(string periodKey)
+        {
+            if (periodKey == MorningPeriod) return LocationStateTimeSlots.Morning;
+            if (periodKey == AfternoonPeriod || periodKey == AfterSchoolPeriod) return LocationStateTimeSlots.Afternoon;
+            if (periodKey == EveningPeriod) return LocationStateTimeSlots.Evening;
+            return string.Empty;
+        }
+
+        /// <summary>그 시각(그날 0시부터 센 분)의 시간대에 묶인 첫 칸의 번호. 그 시간대에 칸이 없으면 -1. 시간대는 장소 상태와 같은 셈(<see cref="LocationStateTimeSlots"/>).</summary>
+        public int SlotIndexAt(int minutes)
+        {
+            string slot = LocationStateTimeSlots.FromMinutes(minutes);
+            for (int i = 0; i < _slots.Count; i++) if (_slots[i].TimeSlotId == slot) return i;
+            return -1;
         }
 
         public DailyPlanProgressSaveData ToSaveData()

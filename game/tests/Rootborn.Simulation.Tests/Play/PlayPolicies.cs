@@ -45,7 +45,7 @@ namespace Rootborn.Simulation
         private readonly Dictionary<string, Func<PlayAtlas, IPlayPolicy>> _make = new Dictionary<string, Func<PlayAtlas, IPlayPolicy>>(StringComparer.Ordinal);
         private readonly List<string> _names = new List<string>();
 
-        public const string Random = "random", MainChain = "main-chain", OffSchool = "off-school", Novelty = "novelty", Wander = "wander";
+        public const string Random = "random", MainChain = "main-chain", OffSchool = "off-school", Novelty = "novelty", Wander = "wander", StayUp = "stay-up";
 
         public static void Register(PlayPolicyCatalog r)
         {
@@ -54,6 +54,7 @@ namespace Rootborn.Simulation
             r.Add(OffSchool, _ => new PreferKindsPolicy(OffSchool, OffSchoolKinds));
             r.Add(Novelty, _ => new NoveltyPolicy());
             r.Add(Wander, _ => new WanderPolicy());
+            r.Add(StayUp, _ => new StayUpPolicy());
         }
 
         /// <summary>
@@ -143,6 +144,26 @@ namespace Rootborn.Simulation
             if (a.Category == "door") return 2 + novelty;
             return novelty;
         }, random);
+    }
+
+    /// <summary>자러 가지 않는 정책(달리는 쪽이 하루 마감 순서로 재우지 않는다 — 걸음을 다 쓰면 날이 넘어갈 때까지 서 있는다).</summary>
+    public interface IStaysUp { }
+
+    /// <summary>
+    /// 밤샘하는 플레이어: 학교 밖 정책처럼 마을 활동을 되는 대로 하되 잠자리(하루 마감 지점)에는 가지 않는다. 지치면 할 수 있는 것이 없어지고
+    /// 07:00이 지나면 회복 없이 다음 날이 된다(흐르는 시간 설계 3.4). 며칠 돌려 예외·막힘이 없는지와 "밤샘이 이득이 아니다"를 본다.
+    /// </summary>
+    public sealed class StayUpPolicy : IPlayPolicy, IStaysUp
+    {
+        private readonly PreferKindsPolicy _inner = new PreferKindsPolicy(PlayPolicyCatalog.StayUp, PlayPolicyCatalog.OffSchoolKinds);
+
+        public string Name => PlayPolicyCatalog.StayUp;
+
+        public PlayAction Choose(PlayView view, PlayMemory memory, Random random)
+        {
+            view.Actions.RemoveAll(a => a.InteractionKind == DayResultScreen.InteractionKind); // 잠자리에는 가지 않는다
+            return _inner.Choose(view, memory, random) ?? view.Idle(PlayRunner.IdleFrames);
+        }
     }
 
     /// <summary>

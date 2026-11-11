@@ -6,7 +6,9 @@ namespace Rootborn.Core.StudentLife
         NoTime,
         NotToday,
         DoneToday,
-        NoEnergy
+        NoEnergy,
+        /// <summary>체력이 0이 되어 지쳤다. 자야 풀린다.</summary>
+        Exhausted
     }
 
     /// <summary>
@@ -18,7 +20,9 @@ namespace Rootborn.Core.StudentLife
         public static StudentActivityRefusalReason Explain(StudentLifeProgress progress, ActivityTimePolicy timePolicy, int energyCost, int focusCost)
         {
             if (progress == null) return StudentActivityRefusalReason.None;
-            if (progress.DayState != StudentDayState.InProgress || (timePolicy != null && !progress.CanSpendTimePoints(timePolicy.TimePointCost))) return StudentActivityRefusalReason.NoTime;
+            if (progress.DayState == StudentDayState.InProgress && progress.IsExhausted) return StudentActivityRefusalReason.Exhausted;
+            if (progress.DayState != StudentDayState.InProgress || (timePolicy != null && !progress.CanSpendTimePoints(timePolicy.TimePointCost))
+                || !progress.CanStartActivity) return StudentActivityRefusalReason.NoTime;
             if (timePolicy != null && !timePolicy.IsAllowedDay(progress.CurrentDay)) return StudentActivityRefusalReason.NotToday;
             if (!progress.CanUseTimePolicy(timePolicy)) return StudentActivityRefusalReason.DoneToday;
             if (!progress.CanSpend(energyCost, focusCost)) return StudentActivityRefusalReason.NoEnergy;
@@ -34,6 +38,7 @@ namespace Rootborn.Core.StudentLife
                 case StudentActivityRefusalReason.NotToday: return "ui.prompt.not-today";
                 case StudentActivityRefusalReason.DoneToday: return "ui.prompt.done-today";
                 case StudentActivityRefusalReason.NoEnergy: return "ui.prompt.no-energy";
+                case StudentActivityRefusalReason.Exhausted: return "ui.prompt.exhausted";
                 default: return string.Empty;
             }
         }
@@ -47,6 +52,7 @@ namespace Rootborn.Core.StudentLife
                 case StudentActivityRefusalReason.NotToday: return "You can't do this today.";
                 case StudentActivityRefusalReason.DoneToday: return "You already did this today. Try again tomorrow.";
                 case StudentActivityRefusalReason.NoEnergy: return "Not enough energy or focus. Rest first.";
+                case StudentActivityRefusalReason.Exhausted: return "You are exhausted. Go to sleep.";
                 default: return string.Empty;
             }
         }

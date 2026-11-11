@@ -126,7 +126,7 @@ namespace Rootborn.Core.Tests
             Assert.That(f.Student.TimeMinutes, Is.EqualTo(start + 90));
             Assert.That(f.Work("clock", 100, false).Kind, Is.EqualTo(AdultCareerResultKind.DuplicateRequest));
             Assert.That(f.Student.TimeMinutes, Is.EqualTo(start + 90));
-            f.Student.TrySpendTimePoints(1);
+            FlowFixtures.Exhaust(f.Student);
             int beforeRefusal = f.Student.TimeMinutes;
             Assert.That(f.Work("clock-no-time", 100, false).Kind, Is.EqualTo(AdultCareerResultKind.InsufficientTime));
             Assert.That(f.Student.TimeMinutes, Is.EqualTo(beforeRefusal));
@@ -145,9 +145,10 @@ namespace Rootborn.Core.Tests
         }
 
         [Test]
-        public void ADULT_006_TimeBudgetExhaustionDoesNotPayOrAdvanceMastery()
+        public void ADULT_006_ExhaustionDoesNotPayOrAdvanceMastery()
         {
-            var f = new Fixture(); f.Transition("transition"); f.Student.TrySpendTimePoints(2);
+            // 흐르는 시간: 하루 시간 포인트 한도 대신 지침이 막는다.
+            var f = new Fixture(); f.Transition("transition"); FlowFixtures.Exhaust(f.Student);
             Assert.That(f.Work("job", 100, false).Kind, Is.EqualTo(AdultCareerResultKind.InsufficientTime));
             Assert.That(f.Inventory.CountOf(Fixture.Coin), Is.Zero);
             Assert.That(f.Progress.GetMastery(f.FacilityWork), Is.Zero);
@@ -361,7 +362,7 @@ namespace Rootborn.Core.Tests
             f.Reserve("attempt-1");
             Assert.That(f.Service.CanWork(f.FacilityWork, f.Student, f.Progress, f.Inventory), Is.EqualTo(AdultCareerResultKind.RequirementFailed), "예약이 남아 있다");
             f.Service.TryForfeitReservedWork(f.Student, f.Progress, "attempt-1");
-            f.Student.TrySpendTimePoints(1);
+            FlowFixtures.Exhaust(f.Student);
             Assert.That(f.Service.CanWork(f.FacilityWork, f.Student, f.Progress, f.Inventory), Is.EqualTo(AdultCareerResultKind.InsufficientTime));
             Assert.That(f.Reserve("attempt-2").Kind, Is.EqualTo(AdultCareerResultKind.InsufficientTime), "명령도 같은 이유");
         }

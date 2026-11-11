@@ -18,8 +18,8 @@ namespace Rootborn.Host.Rendering
 
         public static readonly IReadOnlyList<string> Icons = new[]
         {
-            // HUD: 시계, 체력·집중, 추적 목표
-            "time", "energy", "focus", "journal",
+            // HUD: 시계, 시계의 시간 경고(취침 시각 무렵·지남, 지침), 체력·집중, 추적 목표
+            "time", "bedtime", "exhausted", "energy", "focus", "journal",
             // 상태 화면
             "stress",
             // 도감

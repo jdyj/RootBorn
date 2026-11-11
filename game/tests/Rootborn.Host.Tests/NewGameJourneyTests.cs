@@ -34,7 +34,7 @@ namespace Rootborn.Host.Tests
 
         private PlayerDriver Start()
         {
-            // 슬롯은 학생 시각을 따른다(시각은 활동으로만 흐른다). --hour·--time-scale은 슬롯과 함께 줄 수 없다.
+            // 슬롯은 저장된 학생 시각에서 이어지고 시계는 흐른다(배속 1). --hour는 슬롯과 함께 줄 수 없다.
             HostOptions options = HostOptions.Resolve(new[] { "--save-root", _saves, "--slot", "slot-1", "--size", "1280x720" });
             options.TestMode = true;
             var player = new PlayerDriver(options);

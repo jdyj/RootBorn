@@ -46,7 +46,7 @@ namespace Rootborn.Screens.Tests.Hud
             t.Stack.SetInteractionTarget(new InteractionTargetView("daily-plan-board", "house.daily-plan-board", 100, 100, 32));
             Assert.That(Prompt(t).Text, Is.EqualTo("[E] 오늘의 계획 세우기"));
             t.Stack.SetInteractionTarget(new InteractionTargetView("student-day-end", "house.day-end", 100, 100, 32));
-            Assert.That(Prompt(t).Text, Is.EqualTo("[E] 하루 마무리"));
+            Assert.That(Prompt(t).Text, Is.EqualTo("[E] 자기"), "하루 마감 지점은 잠자리다(흐르는 시간 설계 3.3)");
         }
 
         [Test]

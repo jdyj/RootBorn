@@ -49,7 +49,11 @@ namespace Rootborn.Core.Tests
             var progress = Student(10, 10);
             var paid = new ActivityTimePolicy("policy.paid", 1, 0x7F, false);
             Assert.AreEqual(StudentActivityRefusalReason.None, StudentActivityRefusal.Explain(progress, paid, 1, 1));
-            Assert.IsTrue(progress.TrySpendTimePoints(2));
+            // 흐르는 시간: 시간 포인트 한도가 없다. "시간 없음"은 하루를 끝낸 뒤(또는 하는 중), 지침은 따로.
+            var exhaustedStudent = Student(10, 10);
+            FlowFixtures.Exhaust(exhaustedStudent);
+            var exhausted = StudentActivityRefusal.Explain(exhaustedStudent, paid, 0, 0);
+            Assert.IsTrue(progress.TryEndDay(null, out _));
             var noTime = StudentActivityRefusal.Explain(progress, paid, 1, 1);
             var fresh = Student(10, 10);
             var once = new ActivityTimePolicy("policy.once", 0, 0x7F, true);
@@ -62,16 +66,17 @@ namespace Rootborn.Core.Tests
             Assert.AreEqual(StudentActivityRefusalReason.DoneToday, doneToday);
             Assert.AreEqual(StudentActivityRefusalReason.NotToday, notToday);
             Assert.AreEqual(StudentActivityRefusalReason.NoEnergy, noEnergy);
+            Assert.AreEqual(StudentActivityRefusalReason.Exhausted, exhausted);
             var texts = new HashSet<string>();
             var keys = new HashSet<string>();
-            foreach (var reason in new[] { noTime, doneToday, notToday, noEnergy })
+            foreach (var reason in new[] { noTime, doneToday, notToday, noEnergy, exhausted })
             {
                 Assert.IsNotEmpty(StudentActivityRefusal.FallbackText(reason));
                 texts.Add(StudentActivityRefusal.FallbackText(reason));
                 keys.Add(StudentActivityRefusal.LocalizationKey(reason));
             }
-            Assert.AreEqual(4, texts.Count);
-            Assert.AreEqual(4, keys.Count);
+            Assert.AreEqual(5, texts.Count);
+            Assert.AreEqual(5, keys.Count);
         }
 
         // 더한 경계

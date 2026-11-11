@@ -85,6 +85,18 @@ namespace Rootborn.Screens
             }
         }
 
+        /// <summary>
+        /// 혼자 하기의 시계를 멈출 화면이 떠 있다(패널·모달·대화 — 등록 때 정한 값). Host가 창 활성 여부와 함께 GameSession.AdvanceTime에 넘긴다.
+        /// </summary>
+        public bool PausesClock
+        {
+            get
+            {
+                for (int i = 0; i < _open.Count; i++) if (_open[i].PausesClock) return true;
+                return false;
+            }
+        }
+
         public bool IsOpen(string id) => _screens.TryGetValue(id, out GameScreen s) && s.IsOpen;
 
         /// <summary>등록 표에 그 화면이 있다(아직 옮기지 않은 화면을 여는 버튼은 이것으로 본다).</summary>
@@ -175,6 +187,7 @@ namespace Rootborn.Screens
             screen.Id = entry.Id;
             screen.Layer = entry.Layer;
             screen.BlocksMovement = entry.BlocksMovement;
+            screen.PausesClock = entry.PausesClock;
             UiNode root = screen.Root;
             root.Visible = false;
             _layers[(int)entry.Layer].Add(root);

@@ -448,15 +448,16 @@ namespace Rootborn.Host
             ConnectFurniture(Session);
             if (Session != null)
             {
-                // 학생 시각·날이 NPC 자리를, 학생 날·성인 여부가 성장 단계를 정한다(Unity 판과 같음). 낮밤 빛은 HUD 시계와 같은 방의 때
-                // (때의 대표 시각, GameSession.RoomShownMinutes)를 따른다 — Unity 판은 빛도 분 단위 학생 시각을 따랐다.
+                // 학생 시각·날이 NPC 자리를, 학생 날·성인 여부가 성장 단계를 정한다(Unity 판과 같음). 낮밤 빛은 HUD 시계와 같은 시각
+                // (GameSession.RoomShownMinutes)을 따른다: 혼자 하기에서는 흐르는 시계 그 자체라 NPC 자리·장소 상태와 같은 시각이다.
+                // 같이 하는 방은 아직 때의 대표 시각(흐르는 시간 4단계에서 방의 시계도 흐르는 시각이 된다).
                 World.FollowStudentTime(() => Session.StudentDay, () => Session.StudentHour, () => RoomLightHour(Session));
                 DayBaseline.For(Session); // 하루 결과의 퀘스트·물건 변화 기준점(Unity: 마을 씬을 불러올 때)
                 SyncSession();
             }
         }
 
-        /// <summary>HUD 시계가 보이는 시각(방의 때의 대표 시각)을 0~24시로.</summary>
+        /// <summary>HUD 시계가 보이는 시각(혼자면 흐르는 시계, 같이 하는 방이면 때의 대표 시각)을 0~24시로.</summary>
         private static float RoomLightHour(GameSession session)
         {
             const int Day = 24 * 60;
@@ -470,7 +471,7 @@ namespace Rootborn.Host
         private GameSession StartSession()
         {
             var definitions = World.Content.Definitions;
-            var settings = GameStartSettings.FromRegistry(Path.Combine(_options.RepoRoot, "data"));
+            var settings = GameStartSettings.FromDefinitions(definitions); // FromRegistry는 time.json의 07:00 시작을 모른다
             var link = Room != null && Room.Phase == Rootborn.Screens.Start.RoomJoinPhase.Joined ? Room.Link : null;
             if (link == null || !link.TakesGuestSaves)
                 return GameSession.Start(definitions, settings, GuestProgress.LocalStoreFor(_options.SaveRoot), _options.SaveSlot, GuestProgress.SavePlayerId);
@@ -718,6 +719,9 @@ namespace Rootborn.Host
 
             float dt = _options.TestMode ? TestFrameSeconds : (float)gameTime.ElapsedGameTime.TotalSeconds;
             s.Tick(dt); // 실시간 화면(미니게임)의 시간은 이 dt로만 흐른다
+            // 학생의 시계(흐르는 시간 설계 3.1): 혼자 하기에서는 패널·모달·대화가 떠 있거나(등록 값) 창이 비활성이면 멈춘다 — 멈출지는 GameSession이 정한다.
+            // 테스트 모드는 창 활성 여부를 보지 않는다(가상 화면에서 포커스가 정해지지 않는다 — 프레임 간격처럼 결정적으로).
+            Session?.AdvanceTime(dt * _options.TimeScale, s.PausesClock || (!_options.TestMode && !IsActive));
             bool blocked = s.MovementBlockedWhile(keys.Shift) || World.Feel.BlocksInput;
             World.Update(blocked ? 0 : keys.MoveX, blocked ? 0 : keys.MoveY, dt);
             s.EnterMap(World.Session.Map.Id, MapFeaturesHere());

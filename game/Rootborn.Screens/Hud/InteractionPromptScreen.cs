@@ -50,7 +50,7 @@ namespace Rootborn.Screens.Hud
         {
             new InteractionPromptSpec("npc", "ui.prompt.talk", 1.15f),                                                                  // NpcInteractor
             new InteractionPromptSpec("daily-plan-board", "ui.prompt.plan-day", 1.1f),                                                   // DailyPlanBoardInteractor
-            new InteractionPromptSpec("student-day-end", "day-result.end-day", 1.15f),                                                   // StudentDayEndInteractor
+            new InteractionPromptSpec("student-day-end", "ui.prompt.sleep", 1.15f),                                                   // StudentDayEndInteractor
             new InteractionPromptSpec("location-visit", "ui.prompt.visit", 1.05f, InteractionPromptNames.Location, GenericLocationKey),          // LocationVisitInteractor
             new InteractionPromptSpec("location-activity", "life.location.explore", 1.25f, InteractionPromptNames.Location, GenericLocationKey), // LocationActivityInteractor
             new InteractionPromptSpec("part-time-work", "ui.prompt.part-time-work", 1.05f, InteractionPromptNames.PartTimeWork,

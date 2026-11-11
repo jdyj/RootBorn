@@ -179,6 +179,9 @@ namespace Rootborn.Core.Save
         public static string DiscoveryClues(string playerId) => PerPlayer("discovery-clues-", playerId);
         public static string ClueInterpretations(string playerId) => PerPlayer("clue-interpretations-", playerId);
 
+        /// <summary>흐르는 시계의 개인 상태(지침, 밤에 깎은 시간, 하는 중). MonoGame 판이 더한 파일이다.</summary>
+        public static string StudentClock(string playerId) => PerPlayer("student-clock-", playerId);
+
         // Unity 판이 플레이어 id를 정리하지 않고 쓰던 이름.
         public static string LegacyEncyclopedia(string playerId) => LegacyPerPlayer("encyclopedia-", playerId);
         public static string LegacyDiscoveryClues(string playerId) => LegacyPerPlayer("discovery-clues-", playerId);

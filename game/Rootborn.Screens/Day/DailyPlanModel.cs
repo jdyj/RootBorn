@@ -8,8 +8,9 @@ namespace Rootborn.Screens.Day
     /// <summary>일과 칸 하나: 시간대 키, 넣은 일과 길(없으면 빈 id), 끝났는지, 누를 수 있는지, 골랐는지.</summary>
     public readonly struct DailyPlanSlotView
     {
-        public DailyPlanSlotView(string periodKey, string routeId, string routeNameKey, bool completed, bool interactable, bool selected)
+        public DailyPlanSlotView(string periodKey, string routeId, string routeNameKey, bool completed, bool interactable, bool selected, bool now = false)
         {
+            Now = now;
             PeriodKey = periodKey ?? string.Empty;
             RouteId = routeId ?? string.Empty;
             RouteNameKey = routeNameKey ?? string.Empty;
@@ -25,6 +26,8 @@ namespace Rootborn.Screens.Day
         public bool Completed { get; }
         public bool Interactable { get; }
         public bool Selected { get; }
+        /// <summary>지금 시각의 시간대에 묶인 칸이다(GameSession.CurrentDailyPlanSlotIndex — 오늘을 볼 때만).</summary>
+        public bool Now { get; }
     }
 
     /// <summary>고를 수 있는 일과 길 하나: id, 이름 키, 아이콘(정의별 테마 아이콘, 없으면 "plan").</summary>
@@ -63,10 +66,14 @@ namespace Rootborn.Screens.Day
         public bool CanGoPrevious { get; private set; }
         public bool CanGoNext { get; private set; }
 
-        /// <summary>처음 열 때 고를 칸: 끝나지 않은 첫 칸(Unity BindSchedule).</summary>
+        /// <summary>
+        /// 처음 열 때 고를 칸: 지금 시간대의 칸이 끝나지 않았으면 그 칸(흐르는 시간 — 칸은 시간대에 묶인다), 아니면 끝나지 않은 첫 칸(Unity BindSchedule).
+        /// </summary>
         public static int FirstOpenSlot(GameSession session)
         {
             IReadOnlyList<DailyPlanSlotRecord> slots = session.DailyPlan.Slots;
+            int now = session.CurrentDailyPlanSlotIndex;
+            if (now >= 0 && now < slots.Count && !slots[now].Completed) return now;
             for (int i = 0; i < slots.Count; i++) if (!slots[i].Completed) return i;
             return 0;
         }
@@ -94,6 +101,7 @@ namespace Rootborn.Screens.Day
             bool inProgress = student.DayState == StudentDayState.InProgress;
             int selected = Math.Clamp(selectedSlot, 0, Math.Max(0, slots.Count - 1));
             var slotViews = new DailyPlanSlotView[slots.Count];
+            int nowSlot = isCurrent ? session.CurrentDailyPlanSlotIndex : -1;
             for (int i = 0; i < slots.Count; i++)
             {
                 DailyPlanSlotRecord slot = slots[i];
@@ -101,7 +109,7 @@ namespace Rootborn.Screens.Day
                 if (!string.IsNullOrEmpty(slot.RouteId))
                     nameKey = runner.FindRoute(sets, slot.RouteId)?.DisplayNameKey ?? slot.RouteId;
                 slotViews[i] = new DailyPlanSlotView(slot.PeriodKey, slot.RouteId, nameKey, slot.Completed,
-                    isCurrent && !slot.Completed && inProgress, isCurrent && i == selected);
+                    isCurrent && !slot.Completed && inProgress, isCurrent && i == selected, i == nowSlot);
             }
 
             DailyPlanRoute[] available = session.AvailableDailyPlanRoutes();

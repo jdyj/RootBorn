@@ -26,7 +26,9 @@ namespace Rootborn.Game
         /// HUD가 보일 시각(분): 하루가 진행 중이면 방의 지금 때의 대표 시각, 오늘을 마감했으면 밤 시각(방은 이미 다음 날일 수 있다).
         /// 분 단위 개인 시각(<see cref="StudentLifeProgress.TimeMinutes"/>)과 다르다 — 장소 상태·NPC 일정은 아직 개인 시각을 따른다.
         /// </summary>
-        public int RoomShownMinutes => Student.DayState == StudentDayState.InProgress ? Room.RepresentativeMinutes : Student.Calendar?.PartTimes.DayOverMinutes ?? Room.RepresentativeMinutes;
+        /// 혼자인 방은 흐르는 개인 시계(<see cref="ClockMinutes"/>)를 보인다(흐르는 시간 2단계 — 때는 4단계에서 없앤다).
+        public int RoomShownMinutes => IsSoloRoom && TimeRules != null ? ClockMinutes
+            : Student.DayState == StudentDayState.InProgress ? Room.RepresentativeMinutes : Student.Calendar?.PartTimes.DayOverMinutes ?? Room.RepresentativeMinutes;
 
         /// <summary>방의 시계 기준 오늘 남은 시간 포인트(때). 오늘을 마감했으면 0.</summary>
         public int RoomTimePointsRemaining => Student.DayState == StudentDayState.InProgress ? Math.Max(0, Room.PartsToday - Room.CompletedParts(PlayerId)) : 0;
@@ -52,7 +54,7 @@ namespace Rootborn.Game
         private readonly List<RoomParticipantState> _roomScratch = new List<RoomParticipantState>(8);
 
         /// <summary>지금 때를 넘길 수 있다: 하루가 진행 중이고, 이 때를 아직 안 끝냈고, 남은 시간 포인트가 있다.</summary>
-        public bool CanSkipPart => Student.CanSpendTimePoints(1);
+        public bool CanSkipPart => Student.CanSpendTimePoints(1) && Room.CanSpend(PlayerId, 1);
 
         /// <summary>
         /// "넘기기": 지금 때를 아무것도 하지 않고 끝낸다. 개인 시간 포인트도 하나 써서 개인 진행과 방이 어긋나지 않는다.
@@ -61,7 +63,7 @@ namespace Rootborn.Game
         /// </summary>
         public bool SkipPart(int partIndex)
         {
-            if (Room.PartIndex != partIndex || Room.Day != Student.CurrentDay || !Student.TrySpendTimePoints(1)) return false;
+            if (Room.PartIndex != partIndex || Room.Day != Student.CurrentDay || !CanSkipPart || !Student.TrySpendTimePoints(1)) return false;
             SaveAndNotify(RoomTopics);
             return true;
         }
@@ -120,11 +122,13 @@ namespace Rootborn.Game
         }
 
         // 읽은 뒤 한 번 부른다. 같이 하는 방의 참가자 들이기는 방을 가진 쪽이 한다.
+        // 혼자인 방은 활동을 막지 않는다(흐르는 시간 — GameSession.Time의 SoloRoomGate).
         private void UseRoom(IRoomTime room)
         {
+            IsSoloRoom = room == null;
             Room = room ?? RoomClock.FromProgress(Student, PlayerId);
             _roomGate = new RoomTimePointGate(Room, PlayerId);
-            Student.ConfigureTimeGate(_roomGate);
+            Student.ConfigureTimeGate(IsSoloRoom ? new SoloRoomGate(Room, PlayerId) : (ITimePointGate)_roomGate);
         }
     }
 }

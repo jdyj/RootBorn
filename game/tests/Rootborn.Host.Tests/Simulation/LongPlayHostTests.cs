@@ -42,6 +42,7 @@ namespace Rootborn.Host.Tests.Simulation
         /// <summary>메모리를 비교할 때 가장 작은 값을 고르는 창(잰 횟수).</summary>
         private const int Window = 3;
         private const int IdleFrames = 30;
+        private const float LongPlayTimeScale = 4f;
 
         private sealed class Sample
         {
@@ -61,9 +62,17 @@ namespace Rootborn.Host.Tests.Simulation
 
         private static Sample Measure(DriverBody body, int step, int mapsSeen)
         {
-            long before = GC.GetAllocatedBytesForCurrentThread();
-            body.Player.Frames(IdleFrames); // 아무것도 누르지 않는다
-            long idle = (GC.GetAllocatedBytesForCurrentThread() - before) / IdleFrames;
+            // 흐르는 시계는 게임 1시간마다 세이브를 쓴다(그 프레임은 파일 묶음을 만든다 — 매 프레임 비용이 아니다). 잰 프레임 안에서 정시가 지나면 다시 잰다.
+            // 분이 바뀌는 프레임(HUD 시각 글자)은 그대로 넣는다.
+            long idle = 0;
+            for (int attempt = 0; attempt < 3; attempt++)
+            {
+                int hour = body.Session == null ? -1 : body.Session.StudentDay * 100 + body.Session.StudentTimeMinutes / 60;
+                long before = GC.GetAllocatedBytesForCurrentThread();
+                body.Player.Frames(IdleFrames); // 아무것도 누르지 않는다
+                idle = (GC.GetAllocatedBytesForCurrentThread() - before) / IdleFrames;
+                if (body.Session == null || body.Session.StudentDay * 100 + body.Session.StudentTimeMinutes / 60 == hour) break;
+            }
             GC.Collect();
             GC.WaitForPendingFinalizers();
             GC.Collect();
@@ -85,7 +94,8 @@ namespace Rootborn.Host.Tests.Simulation
             var settings = new PlaySettings { Days = days, StepsPerDay = 40, MaxSteps = days * 120 };
             PlayAtlas atlas = PlayAtlas.Load(root);
             const string name = "host-longplay-wander-1";
-            using var body = new DriverBody(root, Path.Combine(root, "output", "host-sim-evidence"));
+            // 학생 시계 배속 4(하루 150초): 끝에 밤이 될 때까지 기다리는 프레임을 줄인다(흐르는 시간 — 혼자 하기에는 넘기기가 없다).
+            using var body = new DriverBody(root, Path.Combine(root, "output", "host-sim-evidence"), LongPlayTimeScale);
             var runner = new PlayRunner(body, PlayPolicyCatalog.Default().Create(PlayPolicyCatalog.Wander, atlas), 1, settings, atlas, name);
             var samples = new List<Sample>();
             var seen = new HashSet<string>(StringComparer.Ordinal);
@@ -136,23 +146,16 @@ namespace Rootborn.Host.Tests.Simulation
         }
 
         /// <summary>
-        /// 끝: 일과 판이 있는 맵으로 걸어가 넘기기로 오늘의 때를 다 쓰면 방의 때가 밤이 된다. 낮밤이 있는 맵으로 걸어 나가 찍는다(직접 볼 스크린샷).
+        /// 끝: 낮밤이 있는 맵으로 걸어 나가 시계가 밤이 될 때까지 서 있다가 찍는다(직접 볼 스크린샷). 혼자 하기에는 넘기기가 없고 시계가 흐른다.
         /// </summary>
         private static void NightInTown(DriverBody body, PlayAtlas atlas)
         {
             CloseScreens(body);
-            WalkTo(body, atlas, map => atlas.HasThing(map, DailyPlanScreen.InteractionKind, null));
-            InteractionThing board = atlas.Interactions.Map(body.Walk.Map.Id).Things.First(t => t.Kind == DailyPlanScreen.InteractionKind);
-            Assert.That(body.WalkNear(board.X, board.Y, 24f), Is.True, "일과 판까지 걸었다");
-            body.Interact();
-            body.Player.WaitForScreen(ScreenCatalog.DailyPlan);
-            for (int i = 0; i < 8 && ((UiButton)body.Player.Node(DailyPlanScreen.SkipId)).Enabled; i++) body.Player.PressButton(DailyPlanScreen.SkipId);
-            body.Player.PressButton(DailyPlanScreen.CloseBottomId);
-            body.Player.WaitForScreenClosed(ScreenCatalog.DailyPlan);
-            Assert.That(body.Player.Game.World.LightTimeSlot, Is.EqualTo(Rootborn.Core.StudentLife.LocationStateTimeSlots.Night), "오늘의 때를 다 쓰면 밤");
-
             WalkTo(body, atlas, map => atlas.Maps.Catalog.Find(map)?.DayNight == true);
-            body.Player.Frames(2);
+            string night = Rootborn.Core.StudentLife.LocationStateTimeSlots.Night;
+            for (int i = 0; i < 12000 && body.Player.Game.World.LightTimeSlot != night; i++) body.Player.Frames(1);
+            Assert.That(body.Player.Game.World.LightTimeSlot, Is.EqualTo(night), "시계가 흘러 밤이 됐다: " + body.Session.StudentTimeMinutes + "분");
+            body.Player.Frames(120); // 빛이 따라오는 시간(2초)
             Assert.That(atlas.Maps.Catalog.Find(body.Walk.Map.Id).DayNight, Is.True);
             Assert.That(body.Player.Game.World.Tint.R, Is.LessThan(0.3f), "밤의 바깥은 어둡다: " + body.Player.Game.World.Tint);
             body.Player.MovePointer(-50, -50);

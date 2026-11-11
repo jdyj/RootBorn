@@ -4,21 +4,22 @@ using Rootborn.Ui;
 namespace Rootborn.Screens.Status
 {
     /// <summary>
-    /// 상태 화면의 표시 모델: 며칠째인지, 남은 활동 점수, 체력·집중·스트레스. 게임 한 판이 없으면 HasGame이 false다
+    /// 상태 화면의 표시 모델: 며칠째인지, 지금 시각(보이는 0~1439분), 체력·집중·스트레스. 게임 한 판이 없으면 HasGame이 false다
     /// (Unity 판의 "상태를 불러오는 중" 모양).
     /// </summary>
     public sealed class StatusModel
     {
         public static readonly StatusModel Empty = new StatusModel(false, 0, 0, 0, 0, 0);
 
-        public StatusModel(bool hasGame, int day, int timePointsRemaining, int energy, int focus, int stress)
+        public StatusModel(bool hasGame, int day, int clockMinutes, int energy, int focus, int stress)
         {
-            HasGame = hasGame; Day = day; TimePointsRemaining = timePointsRemaining; Energy = energy; Focus = focus; Stress = stress;
+            HasGame = hasGame; Day = day; ClockMinutes = clockMinutes; Energy = energy; Focus = focus; Stress = stress;
         }
 
         public bool HasGame { get; }
         public int Day { get; }
-        public int TimePointsRemaining { get; }
+        /// <summary>보이는 시각(0~1439분). 시간 포인트는 보이지 않는다(흐르는 시간 설계 4절).</summary>
+        public int ClockMinutes { get; }
         public int Energy { get; }
         public int Focus { get; }
         public int Stress { get; }
@@ -26,13 +27,13 @@ namespace Rootborn.Screens.Status
         public static StatusModel From(GameSession session)
         {
             if (session == null) return Empty;
-            return new StatusModel(true, session.StudentDay, session.TimePoints.Remaining,
+            return new StatusModel(true, session.StudentDay, Rootborn.Screens.Day.StudentTimeText.ClockMinutes(session.Student.TimeMinutes),
                 session.Student.Energy, session.Student.Focus, session.Student.Stress);
         }
     }
 
     /// <summary>
-    /// 상태(C). Unity ModernUiStatusPanel을 같은 구성·수치로 옮겼다: 가운데 560x540 패널, 제목, "N일차 · 남은 활동 M", 닫기,
+    /// 상태(C). Unity ModernUiStatusPanel을 같은 구성·수치로 옮겼다: 가운데 560x540 패널, 제목, "N일차 · 14:05"(흐르는 시간 — 남은 활동 점수 대신 지금 시각), 닫기,
     /// 체력·집중·스트레스 카드 셋(아이콘, 이름, 값), 아래 닫기 안내. 이동을 막지 않는다.
     /// 값은 열 때와 학생 상태·하루·언어 알림을 받을 때만 고친다(매 프레임 읽지 않는다).
     /// </summary>
@@ -131,7 +132,7 @@ namespace Rootborn.Screens.Status
                 foreach (UiLabel value in _values) value.Text = "--";
                 return;
             }
-            _dayPoints.Text = F("ui.status.day-points", _model.Day, _model.TimePointsRemaining);
+            _dayPoints.Text = F("ui.status.day-time", _model.Day, _model.ClockMinutes / 60, _model.ClockMinutes % 60);
             _values[0].Text = _model.Energy.ToString();
             _values[1].Text = _model.Focus.ToString();
             _values[2].Text = _model.Stress.ToString();

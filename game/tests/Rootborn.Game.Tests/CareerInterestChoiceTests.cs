@@ -53,7 +53,7 @@ namespace Rootborn.Game.Tests
             }
             finally
             {
-                Directory.Delete(data, true);
+                Directory.Delete(Path.GetDirectoryName(data), true);
             }
         }
 
@@ -69,9 +69,15 @@ namespace Rootborn.Game.Tests
         }
 
         // 지금 데이터의 장래희망에는 이어진 퀘스트가 없다. data/를 임시 폴더로 복사해 한 장래희망에 퀘스트 하나를 이어 둔다.
+        // data 옆의 game/ 설정 파일(time.json, economy.json)도 같은 자리에 복사한다(정의 로더가 data 폴더 옆에서 읽는다).
         private static string CopyDataWithLinkedQuest(string interestId, string questId)
         {
-            var target = Path.Combine(Path.GetTempPath(), "rootborn-game-tests", "data-" + System.Guid.NewGuid().ToString("N"));
+            var root = Path.Combine(Path.GetTempPath(), "rootborn-game-tests", System.Guid.NewGuid().ToString("N"));
+            var target = Path.Combine(root, "data");
+            var gameSide = Path.Combine(TestWorld.RepoRoot, "game");
+            Directory.CreateDirectory(Path.Combine(root, "game"));
+            foreach (var name in new[] { "time.json", "economy.json" })
+                File.Copy(Path.Combine(gameSide, name), Path.Combine(root, "game", name));
             foreach (var file in Directory.GetFiles(TestWorld.DataDirectory, "*", SearchOption.AllDirectories))
             {
                 var copy = Path.Combine(target, Path.GetRelativePath(TestWorld.DataDirectory, file));

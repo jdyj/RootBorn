@@ -59,10 +59,12 @@ namespace Rootborn.Game.Tests
             var paid = Counts(game, top);
             Assert.That(paid, Is.EqualTo(before.Select((b, i) => b + top[i].Count).ToArray()), "만점 보상을 한 번 준다");
             Assert.That(game.Adult.GetSuccessfulCompletions(work), Is.EqualTo(6));
-            Assert.That(game.Student.TimePointsRemaining, Is.EqualTo(0), "일 한 번과 자동 완료 한 번으로 오늘 시간을 다 쓴다");
+            // 흐르는 시간: 하루에 몇 번이라는 한도는 없다. 오늘을 마감(잠)한 뒤에는 일을 못 한다.
+            Assert.That(game.Sleep().Ended, Is.True);
 
             Assert.That(game.CompleteFacilityWork(FirstWork, "auto:chef:2", 100, autoSkip: true).Kind, Is.EqualTo(AdultCareerResultKind.InsufficientTime));
-            Assert.That(game.ReserveFacilityWork(FirstWork, "work:chef:6", 7).Kind, Is.EqualTo(AdultCareerResultKind.InsufficientTime));
+            Assert.That(game.ReserveFacilityWork(FirstWork, "work:chef:6", 7).Kind, Is.Not.EqualTo(AdultCareerResultKind.Applied),
+                "마감한 날에는 예약도 안 된다(예약은 하루 진행 여부를 요구 조건에서 먼저 본다)");
             Assert.That(game.CompleteFacilityWork(FirstWork, "auto:chef:1", 100, autoSkip: true).Kind, Is.EqualTo(AdultCareerResultKind.DuplicateRequest));
 
             var again = TestWorld.Start(saves.Store);

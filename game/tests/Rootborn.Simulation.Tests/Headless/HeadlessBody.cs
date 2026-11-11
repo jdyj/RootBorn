@@ -19,11 +19,11 @@ namespace Rootborn.Simulation.Headless
 {
     /// <summary>
     /// 창 없는 몸(자동 테스트): 슬롯 선택 화면부터 시작해 Host HostGame.UpdateWorld와 같은 순서로 한 프레임씩 돈다 —
-    /// 포인터 → 키(화면 쌓기 → 키 배정 표) → 화면 시간(Tick) → 걷기(이동을 막는 화면이면 서 있음) → 맵 들어감 → 가구 방 → 상호작용.
+    /// 포인터 → 키(화면 쌓기 → 키 배정 표) → 화면 시간(Tick) → 학생 시계(AdvanceTime, 시계를 멈추는 화면이 떠 있으면 멈춤) → 걷기(이동을 막는 화면이면 서 있음) → 맵 들어감 → 가구 방 → 상호작용.
     /// 입력은 화면 포인터 판정과 키 배정을 거친다. GameSession 명령을 부르지 않는다(가구 방에 들어갈 때 Host가 부르는 EnterHouse만 같게 부른다).
     /// 시간은 고정 간격(1/60초), 시작 시각·시드는 고정값이라 같은 입력은 같은 판이 된다.
     /// </summary>
-    public sealed class HeadlessBody : IPlayBody, IFrameCost
+    public sealed class HeadlessBody : IPlayBody, IFrameCost, IClockWatch
     {
         public const float FrameSeconds = 1f / 60f;
         public const long FixedUtcTicks = 638_600_000_000_000_000L; // 2024-??: 고정 시각(결정적 시작). 값 자체에는 뜻이 없다.
@@ -72,6 +72,7 @@ namespace Rootborn.Simulation.Headless
         public float Width => 1920f;
         public float Height => 1080f;
         public long Frames { get; private set; }
+        public float ClockSecondsPerFrame => FrameSeconds;
         public int CollisionViolations { get; private set; }
         public string SaveRoot { get; }
         public string SlotId { get; private set; }
@@ -104,7 +105,7 @@ namespace Rootborn.Simulation.Headless
             var slot = new WorldSlot(store, entry.SlotId, WorldTravelData.From(_atlas.Definitions));
             WorldSlotStart start = slot.Begin(FixedUtcTicks);
             if (!start.Ok) return false;
-            GameSession session = GameSession.Start(_atlas.Definitions, GameStartSettings.FromRegistry(_data), store, entry.SlotId, SaveFileNames.DefaultPlayerId,
+            GameSession session = GameSession.Start(_atlas.Definitions, GameStartSettings.FromDefinitions(_atlas.Definitions), store, entry.SlotId, SaveFileNames.DefaultPlayerId,
                 action => action + "-" + (++_eventCounter).ToString(CultureInfo.InvariantCulture));
             _slot = slot;
             SlotId = entry.SlotId;
@@ -179,6 +180,7 @@ namespace Rootborn.Simulation.Headless
             if (key.HasValue) s.Key(key.Value, false);
             interact = interact && !s.Key(ScreenKey.Interact, false) && !s.MovementBlocked;
             s.Tick(FrameSeconds);
+            AdvanceClock(s);
             bool blocked = s.MovementBlockedWhile(false);
             string before = _world.Session.Map.Id;
             _world.Update(blocked ? 0 : dx, blocked ? 0 : dy, FrameSeconds);
@@ -200,6 +202,27 @@ namespace Rootborn.Simulation.Headless
             Frames++;
             if (_world.Session.Map.Id == before && _world.Session.Map.Collision.AnyBlocked(_world.Session.Walker.Box)) CollisionViolations++;
         }
+
+        /// <summary>
+        /// 학생 시계: Host HostGame.UpdateWorld처럼 프레임 시간을 넘긴다(창은 늘 활성). 혼자인 방에서 시계를 멈추는 화면이 떠 있는데 시각이 움직이면
+        /// 불변식 위반으로 센다(흐르는 시간 설계 3.1 — 시계를 멈출지는 GameSession이 정하고, 여기서는 그 결과만 본다).
+        /// </summary>
+        private void AdvanceClock(ScreenStack s)
+        {
+            GameSession session = Session;
+            if (session == null) return;
+            bool paused = s.PausesClock;
+            int day = session.StudentDay, minutes = session.StudentTimeMinutes;
+            int moved = session.AdvanceTime(FrameSeconds, paused);
+            if (paused && session.IsSoloRoom && (moved != 0 || session.StudentDay != day || session.StudentTimeMinutes != minutes)) ClockViolations++;
+            if (session.StudentTimeMinutes != minutes || session.StudentDay != day) MinuteFrames++;
+        }
+
+        /// <summary>혼자인 방에서 시계를 멈추는 화면이 떠 있는데 시계가 움직인 프레임 수.</summary>
+        public int ClockViolations { get; private set; }
+
+        /// <summary>시계의 분이 바뀐 프레임 수(분마다 HUD가 글자를 새로 만드는 프레임 — 할당 측정이 따로 센다).</summary>
+        public long MinuteFrames { get; private set; }
 
         /// <summary>한 번 그린다(여러 줄 글자 높이가 글자 폭에 맞춰진다) — Host가 프레임마다 그리는 것 대신 행동마다.</summary>
         private void Settle()
@@ -245,17 +268,31 @@ namespace Rootborn.Simulation.Headless
         public void Interact() => PressKey(ScreenKey.Interact);
 
         /// <summary>
-        /// 아무것도 누르지 않은 프레임(Host가 매 프레임 도는 화면 쌓기 Tick·포인터·걷기·맵·대상 고르기) 한 번에 새로 잡는 바이트(이 스레드).
+        /// 아무것도 누르지 않은 프레임(Host가 매 프레임 도는 화면 쌓기 Tick·포인터·걷기·맵·대상 고르기·학생 시계) 한 번에 새로 잡는 바이트(이 스레드).
         /// 벽시계 대신 흔들리지 않는 기준으로 매 프레임 쓰레기가 생기는지 본다. 그리기(Emit)는 넣지 않는다(Host가 그린다).
+        /// 시계의 분이 바뀐 프레임(게임 1분 = 약 25프레임에 한 번 — 알림을 받은 HUD가 글자를 새로 만들고, 게임 1시간마다 저장한다)은 빼고 센다.
+        /// 그 프레임의 가장 큰 값은 <see cref="MaxBytesInMinuteFrame"/>에 남는다.
         /// </summary>
         public double AllocatedBytesPerIdleFrame(int frames)
         {
             for (int i = 0; i < 5; i++) Frame(); // 처음 한 번 만드는 것(캐시)은 뺀다
-            long before = GC.GetAllocatedBytesForCurrentThread();
-            for (int i = 0; i < frames; i++) Frame();
-            long after = GC.GetAllocatedBytesForCurrentThread();
-            return (after - before) / (double)frames;
+            long idle = 0;
+            int idleFrames = 0;
+            for (int i = 0; i < frames; i++)
+            {
+                long minuteFrames = MinuteFrames;
+                long before = GC.GetAllocatedBytesForCurrentThread();
+                Frame();
+                long bytes = GC.GetAllocatedBytesForCurrentThread() - before;
+                if (MinuteFrames != minuteFrames) { if (bytes > MaxBytesInMinuteFrame) MaxBytesInMinuteFrame = bytes; continue; }
+                idle += bytes;
+                idleFrames++;
+            }
+            return idleFrames == 0 ? 0 : idle / (double)idleFrames;
         }
+
+        /// <summary>분이 바뀐 프레임 한 번에 새로 잡은 바이트의 최대(AllocatedBytesPerIdleFrame이 잰 것).</summary>
+        public long MaxBytesInMinuteFrame { get; private set; }
 
         public string Screenshot(string name) => null;
 

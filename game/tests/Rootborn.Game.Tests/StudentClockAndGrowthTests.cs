@@ -6,14 +6,15 @@ namespace Rootborn.Game.Tests
     public sealed class StudentClockAndGrowthTests
     {
         [Test]
-        public void ANewGame_StartsOnDayOneAtEight()
+        public void ANewGame_StartsOnDayOneAtSeven()
         {
+            // 흐르는 시간(2026-11-12): 하루는 07:00에 시작한다(game/time.json). Unity 판은 8:00.
             using var saves = new TempSaves();
             var game = TestWorld.Start(saves.Store);
 
             Assert.That(game.StudentDay, Is.EqualTo(1));
-            Assert.That(game.StudentTimeMinutes, Is.EqualTo(GameStartSettings.UnityStartTimeMinutes));
-            Assert.That(game.StudentHour, Is.EqualTo(8f));
+            Assert.That(game.StudentTimeMinutes, Is.EqualTo(7 * 60));
+            Assert.That(game.StudentHour, Is.EqualTo(7f));
         }
 
         [Test]

@@ -7,23 +7,29 @@ using Rootborn.Ui;
 namespace Rootborn.Screens.Day
 {
     /// <summary>
-    /// 학생 시간 문구(Unity TimeBudgetText). 문구는 현지화 키로만 받는다. t는 화면의 T(key)다(쓴 키가 화면 기록에 남도록).
+    /// 학생 시간 문구(Unity TimeBudgetText를 흐르는 시간에 맞춰 고침 — 시간 포인트는 보이지 않는다, 흐르는 시간 설계 4절).
+    /// 문구는 현지화 키로만 받는다. t는 화면의 T(key)다(쓴 키가 화면 기록에 남도록).
     /// </summary>
     public static class StudentTimeText
     {
-        public const string Loading = "life.tp.loading", Summary = "life.tp.summary", Free = "life.tp.free", Cost = "life.tp.cost", WeekdayPrefix = "life.weekday.";
+        public const string Loading = "life.tp.loading", Summary = "life.time.summary", Cost = "life.time.cost", Instant = "life.time.instant",
+            WeekdayPrefix = "life.weekday.";
 
-        /// <summary>"N일째 · 요일 · 남은 TP r/b". 달력이 없으면 불러오는 중 문구.</summary>
+        /// <summary>"N일차 · 요일 · 14:05"(보이는 시각은 24시간으로 감는다). 달력이 없으면 불러오는 중 문구.</summary>
         public static string Format(Func<string, string> t, StudentLifeProgress progress)
         {
             if (progress == null || progress.Calendar == null) return t(Loading);
+            int clock = ClockMinutes(progress.TimeMinutes);
             return string.Format(CultureInfo.InvariantCulture, t(Summary), progress.CurrentDay,
-                t(WeekdayPrefix + progress.Calendar.GetWeekdayIndex(progress.CurrentDay)), progress.TimePointsRemaining, progress.DailyTimePointBudget);
+                t(WeekdayPrefix + progress.Calendar.GetWeekdayIndex(progress.CurrentDay)), clock / 60, clock % 60);
         }
 
-        /// <summary>활동 비용 한 줄: TP가 들지 않으면 "TP 소모 없음", 아니면 "n TP".</summary>
-        public static string FormatCost(Func<string, string> t, ActivityTimePolicy policy) =>
-            policy == null || policy.TimePointCost == 0 ? t(Free) : string.Format(CultureInfo.InvariantCulture, t(Cost), policy.TimePointCost);
+        /// <summary>활동이 걸리는 시간 한 줄: 0분이면 "금방", 아니면 "n분".</summary>
+        public static string FormatCost(Func<string, string> t, int minutes) =>
+            minutes <= 0 ? t(Instant) : string.Format(CultureInfo.InvariantCulture, t(Cost), minutes);
+
+        /// <summary>그날 0시부터 센 분을 보이는 시각(0~1439)으로 감는다(26:00 → 02:00).</summary>
+        public static int ClockMinutes(int dayMinutes) => ((dayMinutes % (24 * 60)) + 24 * 60) % (24 * 60);
     }
 
     /// <summary>

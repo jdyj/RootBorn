@@ -42,11 +42,23 @@ namespace Rootborn.Core.StudentLife
         }
     }
 
+    /// <summary>
+    /// 잠으로 체력을 돌린다. 잔 시각(<see cref="StudentLifeProgress.LastNight"/>)이 입력이다: 취침 시각까지 자면 전부(옛 동작과 같다),
+    /// 늦게 자면 시간 규칙(<see cref="Time.TimeRules.SleepRecovery"/>)만큼 덜 돌아오되 자서 체력이 줄지는 않는다. 자지 않고 날이 넘어갔으면 돌리지 않는다.
+    /// 시간 규칙이 없으면 늘 전부 돌린다.
+    /// </summary>
     public sealed class EnergyRestoreRule : IDayEndRule
     {
         public EnergyRestoreRule(int restoredEnergy) { RestoredEnergy = restoredEnergy; }
         public int RestoredEnergy { get; }
-        public void Apply(StudentLifeProgress progress) => progress?.RestoreEnergyForDay(RestoredEnergy);
+
+        public void Apply(StudentLifeProgress progress)
+        {
+            if (progress == null || !progress.LastNight.HasSlept) return;
+            var rules = progress.TimeRules;
+            int target = rules != null && progress.LastNight.SleptAtMinutes >= 0 ? rules.SleepRecovery(RestoredEnergy, progress.LastNight.SleptAtMinutes) : RestoredEnergy;
+            progress.RestoreEnergyForDay(target >= RestoredEnergy ? RestoredEnergy : Math.Max(progress.Energy, target));
+        }
     }
 
     /// <summary>하루 집중을 정하는 규칙이 밝히는 값.</summary>
@@ -60,7 +72,12 @@ namespace Rootborn.Core.StudentLife
         public FocusRestoreRule(int restoredFocus) { RestoredFocus = restoredFocus; }
         public int RestoredFocus { get; }
         public int DailyFocus => RestoredFocus;
-        public void Apply(StudentLifeProgress progress) => progress?.RestoreFocusForDay(RestoredFocus);
+        /// <summary>잤으면 돌린다(잔 시각과 무관). 자지 않고 날이 넘어갔으면 돌리지 않는다.</summary>
+        public void Apply(StudentLifeProgress progress)
+        {
+            if (progress == null || !progress.LastNight.HasSlept) return;
+            progress.RestoreFocusForDay(RestoredFocus);
+        }
     }
 
     /// <summary>지정한 단계에 있을 때만(비어 있으면 언제나) 안내 단계를 다음으로 옮긴다.</summary>

@@ -37,12 +37,24 @@ namespace Rootborn.Host.Tests
                     AtlasSprite s = atlases.Find(sprite.Path, sprite.Name);
                     icons[icon.GetProperty("key").GetString()] = new JsonObject { ["image"] = ThemeFolder.RepoPrefix + sprite.Path, ["rect"] = Ints(s.X, s.Y, s.W, s.H) };
                 }
+                AddedIcons(icons);
                 var definitionIcons = new JsonObject();
                 foreach (JsonElement p in root.GetProperty("presentations").EnumerateArray())
                     if (p.TryGetProperty("definition", out JsonElement d) && d.TryGetProperty("ref", out JsonElement id) && p.TryGetProperty("iconKey", out JsonElement key))
                         definitionIcons[id.GetString()] = key.GetString();
                 return (icons, definitionIcons);
             }
+        }
+
+        /// <summary>
+        /// 예전 데이터에 없고 MonoGame 판에서 더한 아이콘(변환 결과 뒤에 붙인다). 화면이 새 아이콘 키를 쓰면 여기에도 한 줄.
+        /// - bedtime: 시계 HUD의 취침 경고(흐르는 시간, 2026-11-12) — 집의 하루 마감 침대 그림.
+        /// - exhausted: 시계 HUD의 지침 경고 — 스트레스 아이콘 그림.
+        /// </summary>
+        private static void AddedIcons(JsonObject icons)
+        {
+            icons["bedtime"] = new JsonObject { ["image"] = ThemeFolder.RepoPrefix + "Assets/Art/HousePixels/Furniture31/house_day_end_bed.png", ["rect"] = Ints(0, 0, 120, 120) };
+            icons["exhausted"] = new JsonObject { ["image"] = ThemeFolder.RepoPrefix + "Assets/Art/UI/UrbanMolding/urban_icon_stress.png", ["rect"] = Ints(0, 0, 48, 48) };
         }
 
         public static JsonObject Urban(string repoRoot)

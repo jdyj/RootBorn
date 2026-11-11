@@ -7,7 +7,8 @@ using Rootborn.Core.StudentLife;
 namespace Rootborn.Core.Tests
 {
     // 옮겨 옴: Assets/Tests/EditMode/StudentLife/StudentLifeTimePointTests.cs
-    // 하루 행동 예산: 시간 포인트를 두 번 쓰거나 저장·다시 읽기로 다시 채울 수 없다.
+    // 흐르는 시간(2026-11-12)으로 바뀜: 하루 시간 포인트는 한도가 아니다. 하루에 할 수 있는 양은 깨어 있는 시간과 체력이 정하고,
+    // "오늘은 더 못 한다"는 지침(체력 0)이 맡는다. 같이 지키는 것: 거절되면 무변경, 같은 요청은 한 번, 하루 한 번은 저장·다시 읽기로 다시 채울 수 없다.
     // 이미 있는 것(달력 평일 2·주말 3, 하루 한 번 정책, 달력 없으면 예산 0)은 StudentLifeActivityTests에 있다.
     public sealed class StudentLifeTimePointBudgetTests
     {
@@ -44,19 +45,20 @@ namespace Rootborn.Core.Tests
             => new LifeActivity(Guid.NewGuid().ToString("N"), LifeActivityCategory.SelfStudy, policy, 30, 1, 1, 0, null, null, null);
 
         [Test]
-        public void Weekday_ThirdPaidActionIsRejectedWithoutChangingAnyProgress()
+        public void Weekday_ThirdPaidActionIsAllowed_ButExhaustionRejectsWithoutChangingAnyProgress()
         {
             var p = Progress();
             var action = Activity(Policy("paid", 1, AllDays, false));
             var runner = new LifeActivityRunner();
             Assert.That(runner.TryPerform(action, p, "a", out _), Is.True);
             Assert.That(runner.TryPerform(action, p, "b", out _), Is.True);
+            Assert.That(runner.TryPerform(action, p, "c", out _), Is.True, "평일 세 번째도 된다(시간 포인트 한도 없음)");
+            FlowFixtures.Exhaust(p);
             string before = Saved(p);
 
-            Assert.That(runner.TryPerform(action, p, "c", out var third), Is.False);
-            Assert.That(third.Kind, Is.EqualTo(LifeActivityResultKind.InsufficientResources));
+            Assert.That(runner.TryPerform(action, p, "d", out var refused), Is.False);
+            Assert.That(refused.Kind, Is.EqualTo(LifeActivityResultKind.InsufficientResources));
             Assert.That(Saved(p), Is.EqualTo(before));
-            Assert.That(p.TimePointsRemaining, Is.EqualTo(0));
         }
 
         [Test]
@@ -89,7 +91,7 @@ namespace Rootborn.Core.Tests
         }
 
         [Test]
-        public void Weekend_HasThreeActions_AndDisallowsWeekdaySchool()
+        public void Weekend_DisallowsWeekdaySchool_AndHasNoActionCount()
         {
             var p = Progress();
             for (int i = 0; i < 5; i++) NextDay(p);
@@ -100,7 +102,7 @@ namespace Rootborn.Core.Tests
 
             Assert.That(runner.TryPerform(school, p, "school", out _), Is.False);
             for (int i = 0; i < 3; i++) Assert.That(runner.TryPerform(paid, p, "work-" + i, out _), Is.True);
-            Assert.That(runner.TryPerform(paid, p, "fourth", out _), Is.False);
+            Assert.That(runner.TryPerform(paid, p, "fourth", out _), Is.True, "주말 네 번째도 된다(시간 포인트 한도 없음)");
         }
 
         [Test]
@@ -145,39 +147,41 @@ namespace Rootborn.Core.Tests
         }
 
         [Test]
-        public void CostlyActionWithoutCalendar_FailsClosed()
+        public void CostlyActionWithoutCalendar_IsNotBlockedByABudget_ButASettledDayStillIs()
         {
             var p = new StudentLifeProgress("test", "p", 100, 100);
-            Assert.That(p.TrySpendTimePoints(1), Is.False);
+            Assert.That(p.TrySpendTimePoints(1), Is.True, "달력이 없어도 예산으로 막지 않는다");
+            Assert.That(p.TryEndDay(null, out _), Is.True);
+            Assert.That(p.TrySpendTimePoints(1), Is.False, "정산한 날에는 닫혀 있다");
         }
 
-        // Unity EveryPaidActivityEntryPoint_UsesTheSharedBudget: 진입점마다 세 번째 유료 행동이 무변경으로 거절된다.
+        // Unity EveryPaidActivityEntryPoint_UsesTheSharedBudget을 바꿈: 진입점마다 세 번째도 되고, 지치면 무변경으로 거절된다.
         [TestCase("location")]
         [TestCase("outside")]
         [TestCase("help")]
         [TestCase("work")]
-        public void EveryPaidActivityEntryPoint_UsesTheSharedBudget(string entryPoint)
+        public void EveryPaidActivityEntryPoint_IsLimitedByExhaustion_NotByACount(string entryPoint)
         {
             var p = Progress();
             var perform = EntryPoint(entryPoint, Policy("shared", 1, AllDays, false));
-            for (int i = 0; i < 3; i++)
-            {
-                string before = Saved(p);
-                Assert.That(perform(p, "step-" + i), Is.EqualTo(i < 2), entryPoint + " " + i);
-                if (i == 2) Assert.That(Saved(p), Is.EqualTo(before));
-            }
-            Assert.That(p.TimePointsSpentToday, Is.EqualTo(2));
+            for (int i = 0; i < 3; i++) Assert.That(perform(p, "step-" + i), Is.True, entryPoint + " " + i);
+            Assert.That(p.TimePointsSpentToday, Is.EqualTo(3), "방에 알릴 몫은 센다");
+            FlowFixtures.Exhaust(p);
+            string before = Saved(p);
+            Assert.That(perform(p, "after-exhausted"), Is.False, entryPoint);
+            Assert.That(Saved(p), Is.EqualTo(before));
         }
 
         [Test]
-        public void DifferentEntryPoints_DrawFromOneBudget()
+        public void DifferentEntryPoints_ShareOneBody()
         {
             var p = Progress();
             var policy = Policy("shared", 1, AllDays, false);
             Assert.That(EntryPoint("location", policy)(p, "location"), Is.True);
             Assert.That(EntryPoint("work", policy)(p, "work"), Is.True);
+            FlowFixtures.Exhaust(p);
             string before = Saved(p);
-            Assert.That(EntryPoint("help", policy)(p, "help"), Is.False, "장소 활동과 알바가 하루 예산을 다 썼다");
+            Assert.That(EntryPoint("help", policy)(p, "help"), Is.False, "지치면 어느 진입점도 시작하지 못한다");
             Assert.That(EntryPoint("outside", policy)(p, "outside"), Is.False);
             Assert.That(new LifeActivityRunner().TryPerform(Activity(policy), p, "life", out _), Is.False);
             Assert.That(Saved(p), Is.EqualTo(before));

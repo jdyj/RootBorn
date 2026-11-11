@@ -36,6 +36,8 @@ namespace Rootborn.Simulation
         /// <summary>논리 화면 크기(1920x1080).</summary>
         float Width { get; }
         float Height { get; }
+        /// <summary>한 프레임에 학생 시계로 넘기는 실제 초(고정 프레임 간격 × 시간 배속).</summary>
+        float ClockSecondsPerFrame { get; }
         /// <summary>지금까지 돈 프레임 수.</summary>
         long Frames { get; }
         /// <summary>벽을 뚫고 걸은 프레임 수(몸 상자가 막힌 칸에 들어갔다).</summary>

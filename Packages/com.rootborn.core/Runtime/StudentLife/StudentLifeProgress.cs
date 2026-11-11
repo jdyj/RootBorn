@@ -61,13 +61,14 @@ namespace Rootborn.Core.StudentLife
 
         public void Spend(int timeCostMinutes, int energyCost, int focusCost, int stressDelta)
         {
-            int previousEnergy = Energy, previousFocus = Focus, previousStress = Stress, previousMinutes = TimeMinutes;
+            int previousEnergy = Energy, previousFocus = Focus, previousStress = Stress;
             Energy = Math.Max(0, Energy - Math.Max(0, energyCost));
             Focus = Math.Max(0, Focus - Math.Max(0, focusCost));
             Stress = Math.Max(0, Stress + stressDelta);
-            TimeMinutes = Math.Max(0, TimeMinutes + Math.Max(0, timeCostMinutes));
+            CheckExhaustion();
             if (Energy != previousEnergy || Focus != previousFocus || Stress != previousStress) VitalsChanged?.Invoke();
-            if (TimeMinutes != previousMinutes) TimeChanged?.Invoke();
+            // 걸리는 시간: 혼자면 시계가 건너뛰고(밤이면 체력도 준다), 같이 하면 끝나는 시각까지 하는 중이다(StudentLifeProgress.Clock).
+            SpendActivityTime(Math.Max(0, timeCostMinutes));
         }
 
         public void RestoreEnergyForDay(int value)
@@ -169,12 +170,16 @@ namespace Rootborn.Core.StudentLife
         public string[] GetPreviousDayRelationshipDeltas() => FilterLogs(_previousDayResultLogIds, "relationship.");
         public string[] GetPreviousDayStatusDeltas() => FilterLogs(_previousDayResultLogIds, "status.");
 
-        /// <summary>하루를 정산한다. 같은 날을 두 번 정산하지 않는다. 요약은 실패해도 채워진다.</summary>
-        public bool TryEndDay(DayEndRuleSet rules, out StudentDaySummary summary)
+        /// <summary>하루를 정산한다(지금 시각에 잔 것으로 본다 — <see cref="TrySleep"/>와 같다). 같은 날을 두 번 정산하지 않는다. 요약은 실패해도 채워진다.</summary>
+        public bool TryEndDay(DayEndRuleSet rules, out StudentDaySummary summary) => TrySleep(rules, out summary);
+
+        private bool TryEndDay(DayEndRuleSet rules, NightRecord night, out StudentDaySummary summary)
         {
             summary = BuildCurrentDaySummary(rules);
             if (DayState != StudentDayState.InProgress || LastSettledDay == CurrentDay) return false;
+            LastNight = night;
             rules?.Apply(this);
+            AfterNight();
             _previousDayActivityIds.Clear();
             _previousDayActivityIds.AddRange(_todayActivityIds);
             _previousDayResultLogIds.Clear();
@@ -186,13 +191,17 @@ namespace Rootborn.Core.StudentLife
             return true;
         }
 
-        /// <summary>정산이 끝난 뒤에만 다음 날로 넘어간다. 시각은 아침 8시로 돌아간다.</summary>
+        /// <summary>
+        /// 정산이 끝난 뒤에만 다음 날로 넘어간다. 시각은 시간 규칙의 하루 시작(07:00)으로, 규칙이 없으면 Unity 판처럼 아침 8시로 돌아간다.
+        /// 날이 넘어가는 시각을 넘긴 활동 시간은 다음 날 아침으로 잇는다.
+        /// </summary>
         public bool TryStartNextDay()
         {
             if (DayState != StudentDayState.ResultReady) return false;
             CurrentDay = Math.Max(1, CurrentDay + 1);
             DayState = StudentDayState.InProgress;
-            TimeMinutes = 8 * 60;
+            TimeMinutes = NextDayStartMinutes();
+            ResetNight();
             ResetDailyTimeBudget();
             _todayActivityIds.Clear();
             _todayResultLogIds.Clear();

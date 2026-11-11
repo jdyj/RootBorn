@@ -27,6 +27,8 @@ namespace Rootborn.Game
         public const string Objectives = "objectives";
         /// <summary>방의 시계(날짜, 때, 누가 이 때를 끝냈는지).</summary>
         public const string Room = "room";
+        /// <summary>흐르는 시계의 시각(분마다). 체력이 바뀌면 Student도 함께 알린다.</summary>
+        public const string Time = "time";
     }
 
     /// <summary>변경 알림. 적용된 명령이 저장을 마친 뒤에 주제마다 한 번 알린다. 적용되지 않은 명령은 알리지 않는다.</summary>

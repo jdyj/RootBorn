@@ -32,7 +32,7 @@ namespace Rootborn.Screens.Tests.Status
             Assert.That((screen.Model.Day, screen.Model.Energy, screen.Model.Focus, screen.Model.Stress),
                 Is.EqualTo((t.Session.StudentDay, s.Energy, s.Focus, s.Stress)));
             Assert.That(((UiLabel)t.Node(StatusScreen.DayPointsId)).Text,
-                Is.EqualTo(t.Text.Format("ui.status.day-points", t.Session.StudentDay, t.Session.TimePoints.Remaining)));
+                Is.EqualTo(t.Text.Format("ui.status.day-time", t.Session.StudentDay, 7, 0)), "날과 지금 시각(시간 포인트 대신)");
             Assert.That(((UiLabel)t.Node(StatusScreen.ValueId(0))).Text, Is.EqualTo(s.Energy.ToString()));
             Assert.That(((UiLabel)t.Node(StatusScreen.ValueId(1))).Text, Is.EqualTo(s.Focus.ToString()));
             Assert.That(((UiLabel)t.Node(StatusScreen.ValueId(2))).Text, Is.EqualTo(s.Stress.ToString()));

@@ -9,12 +9,18 @@ namespace Rootborn.Screens
         internal ScreenEntry(string id, ScreenLayer layer, bool blocksMovement, Func<ScreenServices, GameScreen> create)
         {
             Id = id; Layer = layer; BlocksMovement = blocksMovement; Create = create;
+            PausesClock = layer == ScreenLayer.Panel || layer == ScreenLayer.Modal;
         }
 
         public string Id { get; }
         public ScreenLayer Layer { get; }
         public bool BlocksMovement { get; }
         public Func<ScreenServices, GameScreen> Create { get; }
+        /// <summary>
+        /// 떠 있는 동안 혼자 하기의 시계를 멈춘다(흐르는 시간 설계 3.1: 패널·모달·대화). 기본은 패널·모달 층이면 true, HUD·알림은 false.
+        /// 미니게임처럼 떠 있어도 시간이 흘러야 하는 화면은 등록 때 KeepsClockRunning으로 끈다. 멈출지 판단은 GameSession이 한다(같이 하기는 멈추지 않는다).
+        /// </summary>
+        public bool PausesClock { get; internal set; }
         /// <summary>월드(HUD) 없이 뜨는 화면(슬롯 선택처럼 게임 한 판 전). HUD와 함께 떠 있지 않는다.</summary>
         public bool WithoutWorld { get; internal set; }
         /// <summary>여는 키가 시작 화면(WithoutWorld) 위에서도 듣는다.</summary>
@@ -97,6 +103,13 @@ namespace Rootborn.Screens
             public Registration GuidesKeys(Func<Rootborn.Screens.KeyGuide.KeyGuideKeys, IReadOnlyList<Rootborn.Screens.KeyGuide.KeyGuideRow>> rows)
             {
                 _owner._screens[_id].KeyGuide = rows ?? throw new ArgumentNullException(nameof(rows));
+                return this;
+            }
+
+            /// <summary>떠 있어도 혼자 하기의 시계를 멈추지 않는다(미니게임 — 하는 동안 시간이 흐른다).</summary>
+            public Registration KeepsClockRunning()
+            {
+                _owner._screens[_id].PausesClock = false;
                 return this;
             }
 

@@ -109,6 +109,9 @@ namespace Rootborn.Screens
         public ScreenLayer Layer { get; internal set; }
         /// <summary>떠 있는 동안 캐릭터가 걷지 못하는가(등록할 때 정한다).</summary>
         public bool BlocksMovement { get; internal set; }
+
+        /// <summary>떠 있는 동안 혼자 하기의 시계를 멈춘다(등록 값 ScreenEntry.PausesClock).</summary>
+        public bool PausesClock { get; internal set; }
         public bool IsOpen { get; internal set; }
 
         /// <summary>화면의 뿌리. 처음 부를 때 Build로 만든다.</summary>

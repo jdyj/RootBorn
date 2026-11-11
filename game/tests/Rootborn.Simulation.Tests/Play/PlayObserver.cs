@@ -53,10 +53,15 @@ namespace Rootborn.Simulation
             {
                 view.Day = session.StudentDay;
                 view.Minutes = session.StudentTimeMinutes;
-                view.TimePoints = session.TimePoints;
                 ReadTracked(session, view, body);
             }
             if (body.InWorld) view.MapId = body.Walk.Map.Id;
+            // 시각과 시간 경고는 HUD 시계가 보이는 것(사람이 보는 것)에서 읽는다.
+            if (stack.Find(ScreenCatalog.HudClock) is Rootborn.Screens.Hud.ClockHudScreen clock && clock.IsOpen && clock.Model.HasSession)
+            {
+                view.ClockMinutes = clock.Model.Hour * 60 + clock.Model.Minute;
+                view.Alert = clock.Model.Alert;
+            }
             ReadMinigame(body, stack, view);
 
             _seenKeys.Clear();

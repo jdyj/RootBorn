@@ -224,5 +224,19 @@
   "ui.settings.room-close": "방 닫기",
   "ui.prompt.requirements-unmet": "아직 조건이 맞지 않아요.",
   "ui.prompt.bag-full": "가방에 자리가 없어요.",
-  "ui.prompt.cannot-now": "지금은 할 수 없어요."
+  "ui.prompt.cannot-now": "지금은 할 수 없어요.",
+  "ui.prompt.exhausted": "너무 지쳤어요. 자야 해요.",
+  "ui.prompt.sleep": "자기",
+  "ui.hud.bedtime-soon": "곧 잘 시간이에요",
+  "ui.hud.past-bedtime": "잘 시간이 지났어요",
+  "ui.hud.exhausted": "지쳤어요 — 자야 해요",
+  "ui.notice.stayed-up": "밤을 새웠어요. 쉬지 못해 몸이 무거워요.",
+  "life.time.summary": "{0}일차 · {1} · {2:00}:{3:00}",
+  "life.time.cost": "{0}분",
+  "life.time.instant": "금방 끝나요",
+  "life.time.applied": "활동을 마쳤어요. 지금 {0:00}:{1:00}",
+  "life.time.unavailable": "지금은 할 수 없어요. 체력·집중과 오늘 한 활동을 확인하세요.",
+  "facility.work-progress-time": "{0}분 · 숙련 {1}/{2} · 성공 {3}회",
+  "ui.status.day-time": "{0}일차 · {1:00}:{2:00}",
+  "daily-plan.period-now": "{0} · 지금"
 }

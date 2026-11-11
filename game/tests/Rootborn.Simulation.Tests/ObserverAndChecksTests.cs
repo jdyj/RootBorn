@@ -87,8 +87,11 @@ namespace Rootborn.Simulation.Tests
             using (body)
             {
                 double bytes = body.AllocatedBytesPerIdleFrame(600);
-                TestContext.WriteLine("가만히 선 프레임 한 번에 새로 잡는 바이트: " + bytes.ToString("0.0"));
+                TestContext.WriteLine("가만히 선 프레임 한 번에 새로 잡는 바이트: " + bytes.ToString("0.0") + ", 분이 바뀐 프레임 최대 " + body.MaxBytesInMinuteFrame
+                    + "(" + body.MinuteFrames + "번)");
                 Assert.That(bytes, Is.LessThanOrEqualTo(PlayLimits.IdleFrameBytes), "매 프레임 쓰레기(coding-standards 성능)");
+                Assert.That(body.MinuteFrames, Is.GreaterThan(0), "흐르는 시계: 600프레임(10초)이면 게임 24분이 간다");
+                Assert.That(body.MaxBytesInMinuteFrame, Is.LessThanOrEqualTo(PlayLimits.MinuteFrameBytes), "분마다 HUD가 글자를 새로 만드는 비용(매 프레임이 아니다)");
             }
         }
 
@@ -124,7 +127,7 @@ namespace Rootborn.Simulation.Tests
         public void EveryPolicyIsRegistered_AndNamesAreTheLogNames()
         {
             PlayPolicyCatalog catalog = PlayPolicyCatalog.Default();
-            Assert.That(catalog.Names, Is.EquivalentTo(new[] { PlayPolicyCatalog.Random, PlayPolicyCatalog.MainChain, PlayPolicyCatalog.OffSchool, PlayPolicyCatalog.Novelty, PlayPolicyCatalog.Wander }));
+            Assert.That(catalog.Names, Is.EquivalentTo(new[] { PlayPolicyCatalog.Random, PlayPolicyCatalog.MainChain, PlayPolicyCatalog.OffSchool, PlayPolicyCatalog.Novelty, PlayPolicyCatalog.Wander, PlayPolicyCatalog.StayUp }));
             foreach (string name in catalog.Names) Assert.That(catalog.Create(name, FastPlayTests.Atlas).Name, Is.EqualTo(name));
         }
     }

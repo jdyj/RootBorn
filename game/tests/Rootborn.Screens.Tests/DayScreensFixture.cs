@@ -32,7 +32,7 @@ namespace Rootborn.Screens.Tests
             _saves = Path.Combine(Path.GetTempPath(), "rootborn-day-screens-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_saves);
             Store = new FileSaveStore(_saves);
-            Session = GameSession.Start(_definitions.Value, GameStartSettings.FromRegistry(TestData.DataDirectory), Store, "slot-test", playerId, room: room);
+            Session = GameSession.Start(_definitions.Value, GameStartSettings.FromDefinitions(_definitions.Value), Store, "slot-test", playerId, room: room);
             Text = TestData.Text(language);
             Stack = new ScreenStack(ScreenCatalog.Create(), new ScreenServices(Text, Session));
             Stack.Layout(1920, 1080);

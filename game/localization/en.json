@@ -224,5 +224,19 @@
   "ui.settings.room-close": "Close room",
   "ui.prompt.requirements-unmet": "You don't meet the requirements yet.",
   "ui.prompt.bag-full": "Your bag is full.",
-  "ui.prompt.cannot-now": "You can't do this right now."
+  "ui.prompt.cannot-now": "You can't do this right now.",
+  "ui.prompt.exhausted": "You are exhausted. Go to sleep.",
+  "ui.prompt.sleep": "Sleep",
+  "ui.hud.bedtime-soon": "Bedtime soon",
+  "ui.hud.past-bedtime": "Past bedtime",
+  "ui.hud.exhausted": "Exhausted — go to sleep",
+  "ui.notice.stayed-up": "You stayed up all night and got no rest.",
+  "life.time.summary": "Day {0} · {1} · {2:00}:{3:00}",
+  "life.time.cost": "{0} min",
+  "life.time.instant": "Quick",
+  "life.time.applied": "Done. It is now {0:00}:{1:00}.",
+  "life.time.unavailable": "You can't do this now. Check your energy, focus and today's activities.",
+  "facility.work-progress-time": "{0} min · Mastery {1}/{2} · {3} successes",
+  "ui.status.day-time": "Day {0} · {1:00}:{2:00}",
+  "daily-plan.period-now": "{0} · now"
 }

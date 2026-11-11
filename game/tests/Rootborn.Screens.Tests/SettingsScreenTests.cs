@@ -239,7 +239,7 @@ namespace Rootborn.Screens.Tests
             {
                 LoadResult loaded = GameDataLoader.Load(TestData.DataDirectory, RootbornBuilders.Register);
                 loaded.ThrowIfFailed();
-                GameSession session = GameSession.Start(loaded.Definitions, GameStartSettings.FromRegistry(TestData.DataDirectory),
+                GameSession session = GameSession.Start(loaded.Definitions, GameStartSettings.FromDefinitions(loaded.Definitions),
                     new FileSaveStore(saves), "slot-test", null);
                 var registry = new ScreenRegistry();
                 registry.Add("listener", ScreenLayer.Hud, false, s => new Listener(s));

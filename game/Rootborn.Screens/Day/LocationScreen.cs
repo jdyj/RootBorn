@@ -118,8 +118,9 @@ namespace Rootborn.Screens.Day
             LocationActivityResult result = Services.Session.PerformLocationActivity(row.Id, requestId);
             bool applied = result.Kind == LifeActivityResultKind.Applied;
             _resultText = applied
-                ? string.Format(CultureInfo.InvariantCulture, T("life.tp.applied"), session.Student.TimePointsRemaining, session.Student.DailyTimePointBudget)
-                : T("life.tp.unavailable");
+                ? string.Format(CultureInfo.InvariantCulture, T("life.time.applied"), StudentTimeText.ClockMinutes(session.Student.TimeMinutes) / 60,
+                    StudentTimeText.ClockMinutes(session.Student.TimeMinutes) % 60)
+                : T("life.time.unavailable");
             if (applied && session.Definitions.TryGet<LocationActivity>(row.Id, out LocationActivity activity) && !string.IsNullOrEmpty(activity.ResultTextKey))
                 _resultText += "\n" + T(activity.ResultTextKey);
             _result.Text = _resultText;
@@ -166,7 +167,7 @@ namespace Rootborn.Screens.Day
                     : string.Format(CultureInfo.InvariantCulture, T("dream.shop.buy"), Name(row), row.Price);
                 return (text, row.Owned || row.Affordable ? string.Empty : T("dream.shop.not-enough"));
             }
-            string main = T(row.NameKey) + "\n" + StudentTimeText.FormatCost(T, row.TimePolicy);
+            string main = T(row.NameKey) + "\n" + StudentTimeText.FormatCost(T, row.TimeCostMinutes);
             string reason = row.Refusal != StudentActivityRefusalReason.None ? T(StudentActivityRefusal.LocalizationKey(row.Refusal))
                 : !row.RequirementsMet ? T("life.location.requirements-unmet") : string.Empty;
             return (main, reason);

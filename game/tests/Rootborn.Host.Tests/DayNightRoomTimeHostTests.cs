@@ -12,7 +12,7 @@ using Rootborn.World;
 namespace Rootborn.Host.Tests
 {
     /// <summary>
-    /// 낮밤 빛은 방의 때(HUD 시계가 보이는 때의 대표 시각)를 따른다. NPC 자리·장소 상태의 시간대는 지금처럼 분 단위 개인 시각을 따른다(바꾸지 않는다).
+    /// 낮밤 빛은 HUD 시계가 보이는 시각을 따른다(혼자 하기에서는 흐르는 시계 — NPC 자리·장소 상태의 개인 시각과 같다. 같이 하는 방은 때의 대표 시각).
     /// 장치 이벤트 주입(OS 입력 계층 미확인): 걷기·문·상호작용·단추 누르기는 PlayerDriver로.
     /// </summary>
     [TestFixture, SingleThreaded, NonParallelizable]
@@ -35,12 +35,12 @@ namespace Rootborn.Host.Tests
             try { Directory.Delete(_saves, true); } catch (IOException) { }
         }
 
-        private PlayerDriver Start()
+        private PlayerDriver Start(string timeScale = "1")
         {
             HostOptions options = HostOptions.Resolve(new[]
             {
                 "--save-root", _saves, "--slot", "slot-1", "--size", "1280x720",
-                "--evidence", Path.Combine(_root, "output", "host-room-light-evidence"),
+                "--evidence", Path.Combine(_root, "output", "host-room-light-evidence"), "--time-scale", timeScale,
             });
             options.TestMode = true;
             var player = new PlayerDriver(options);
@@ -86,20 +86,12 @@ namespace Rootborn.Host.Tests
         }
 
         [Test]
-        public void ROOM_LIGHT_002_SkippingAPart_ChangesHudAndBrightnessTogether_IndoorsStaysWhite()
+        public void ROOM_LIGHT_002_TheClockFlowsIntoTheNextPart_HudAndBrightnessChangeTogether_IndoorsStaysWhite()
         {
-            using PlayerDriver player = Start();
+            // 혼자 하기에는 넘기기가 없다(흐르는 시간 — 시계가 흐른다). 배속 60(게임 1시간 = 25프레임)으로 오전에서 오후로 흘러가게 둔다.
+            using PlayerDriver player = Start("60");
             string first = HudSlot(player);
-
-            // 집의 일과 판에서 "넘기기"를 누른다.
-            InteractionThing board = InteractionData.Load(Path.Combine(_root, InteractionData.DefaultRelativePath)).Map("House").Things.First(t => t.Kind == DailyPlanScreen.InteractionKind);
-            player.WalkNear(board.X, board.Y, 24f);
-            player.PressKey(TestKey.E);
-            player.WaitForScreen(ScreenCatalog.DailyPlan);
-            Assume.That(((UiButton)player.Node(DailyPlanScreen.SkipId)).Enabled, Is.True, "새 게임 첫 때를 넘길 수 있다");
-            player.PressButton(DailyPlanScreen.SkipId);
-            player.PressButton(DailyPlanScreen.CloseBottomId);
-            player.WaitForScreenClosed(ScreenCatalog.DailyPlan);
+            for (int i = 0; i < 400 && HudSlot(player) == first; i++) player.Frames(1);
 
             string next = HudSlot(player);
             Assert.That(next, Is.Not.EqualTo(first), "HUD의 때가 넘어갔다");
@@ -109,7 +101,9 @@ namespace Rootborn.Host.Tests
 
             Assert.That(player.WalkThroughDoor("town"), Is.EqualTo("Town"));
             player.Frames(2);
-            AssertTint(player, Ambient(player, next), "마을은 넘긴 뒤의 때(" + next + ")의 밝기");
+            string now = HudSlot(player); // 문까지 걷는 동안에도 시계가 흐른다
+            Assert.That(player.Game.World.LightTimeSlot, Is.EqualTo(now));
+            AssertTint(player, Ambient(player, now), "마을은 지금 때(" + now + ")의 밝기");
             player.Screenshot("room-light-03-town-after-skip");
         }
     }

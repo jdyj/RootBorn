@@ -124,6 +124,49 @@ namespace Rootborn.Screens.Tests
         }
 
         [Test]
+        public void PausesClock_WhilePanelModalOrDialogueIsOpen_NotForHudOrNotice()
+        {
+            _stack.Open("hud");
+            _stack.Open("toast");
+            Assert.That(_stack.PausesClock, Is.False, "HUD와 알림은 혼자 하기의 시계를 멈추지 않는다(흐르는 시간 설계 3.1)");
+            _stack.Open("bag");
+            Assert.That(_stack.PausesClock, Is.True, "패널이 떠 있으면 멈춘다 — 이동을 막지 않는 패널이라도");
+            _stack.Close("bag");
+            _stack.Open("talk");
+            Assert.That(_stack.PausesClock, Is.True, "대화가 떠 있으면 멈춘다");
+            _stack.Close("talk");
+            Assert.That(_stack.PausesClock, Is.False);
+        }
+
+        [Test]
+        public void KeepsClockRunning_IsChosenAtRegistration()
+        {
+            var registry = new ScreenRegistry();
+            registry.Add("game", ScreenLayer.Modal, true, s => new ProbeScreen(s)).KeepsClockRunning();
+            registry.Add("bag", ScreenLayer.Panel, false, s => new ProbeScreen(s));
+            var stack = new ScreenStack(registry, new ScreenServices(TestData.Text(), null));
+            stack.Layout(1920, 1080);
+            stack.Open("game");
+            Assert.That(stack.PausesClock, Is.False, "미니게임처럼 등록 때 시계를 멈추지 않는다고 정한 화면");
+            stack.Open("bag");
+            Assert.That(stack.PausesClock, Is.True);
+        }
+
+        [Test]
+        public void Catalog_MinigameKeepsTheClockRunning_PanelsAndDialoguePauseIt()
+        {
+            ScreenRegistry r = ScreenCatalog.Create();
+            bool Pauses(string id) { r.TryGet(id, out ScreenEntry e); return e.PausesClock; }
+            Assert.That(Pauses(ScreenCatalog.Minigame), Is.False, "미니게임 중에는 시간이 흐른다(설계 3.1)");
+            Assert.That(Pauses(ScreenCatalog.Dialogue), Is.True);
+            Assert.That(Pauses(ScreenCatalog.Inventory), Is.True);
+            Assert.That(Pauses(ScreenCatalog.ObjectiveJournal), Is.True);
+            Assert.That(Pauses(ScreenCatalog.DayResult), Is.True);
+            Assert.That(Pauses(ScreenCatalog.HudClock), Is.False);
+            Assert.That(Pauses(ScreenCatalog.DiscoveryNotice), Is.False);
+        }
+
+        [Test]
         public void BoundKey_TogglesItsPanel()
         {
             Assert.That(_stack.Key(ScreenKey.Escape, false), Is.True);

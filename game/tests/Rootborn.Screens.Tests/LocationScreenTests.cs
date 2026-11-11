@@ -70,8 +70,9 @@ namespace Rootborn.Screens.Tests
             PressRow(screen, index);
             Assert.That(_f.Session.Student.GetActivityLogIds().Length, Is.EqualTo(before + 1));
             string result = ((UiTextBlock)_f.Node(LocationScreen.ResultId)).Text;
-            Assert.That(result, Does.StartWith(string.Format(_f.Text.Get("life.tp.applied"), _f.Session.Student.TimePointsRemaining, _f.Session.Student.DailyTimePointBudget)));
-            Assert.That(((UiLabel)_f.Node(LocationScreen.TimeBudgetId)).Text, Does.Contain(_f.Session.Student.TimePointsRemaining + "/"));
+            int clock = _f.Session.ClockMinutes;
+            Assert.That(result, Does.StartWith(string.Format(_f.Text.Get("life.time.applied"), clock / 60, clock % 60)), "끝난 시각을 보인다");
+            Assert.That(((UiLabel)_f.Node(LocationScreen.TimeBudgetId)).Text, Does.EndWith((clock / 60).ToString("00") + ":" + (clock % 60).ToString("00")), "시간 줄이 바로 바뀐다");
             Assert.That(activity, Is.Not.Empty);
         }
 
@@ -107,7 +108,7 @@ namespace Rootborn.Screens.Tests
             Assert.That(screen.Model.Rows.Where(r => r.Kind == LocationRowKind.Offer).Select(r => r.Id), Is.EqualTo(offers.Select(o => o.StableId)));
             Assert.That(screen.Model.Rows.SkipWhile(r => r.Kind == LocationRowKind.Activity).All(r => r.Kind == LocationRowKind.Offer), Is.True, "활동 다음에 물건");
             int balance = _f.Session.Inventory.CountOf(offers[0].PriceItem);
-            Assert.That(((UiLabel)_f.Node(LocationScreen.TimeBudgetId)).Text, Is.EqualTo(string.Format(_f.Text.Get("life.location.time-with-balance"), string.Format(_f.Text.Get("life.tp.summary"), 1, _f.Text.Get("life.weekday." + _f.Session.Student.Calendar.GetWeekdayIndex(1)), _f.Session.Student.TimePointsRemaining, _f.Session.Student.DailyTimePointBudget), balance)));
+            Assert.That(((UiLabel)_f.Node(LocationScreen.TimeBudgetId)).Text, Is.EqualTo(string.Format(_f.Text.Get("life.location.time-with-balance"), string.Format(_f.Text.Get("life.time.summary"), 1, _f.Text.Get("life.weekday." + _f.Session.Student.Calendar.GetWeekdayIndex(1)), 7, 0), balance)));
         }
 
         [Test]

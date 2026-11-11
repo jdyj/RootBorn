@@ -191,6 +191,7 @@ namespace Rootborn.Screens.Day
             _refusal.Text = _refusalKey.Length == 0 ? string.Empty : T(_refusalKey);
             _shownPart = session.Room.PartIndex;
             _skip.Text = T("daily-plan.skip");
+            _skip.Visible = !session.IsSoloRoom; // 넘기기는 같이 하는 방의 때에만(흐르는 시간 4단계에서 지운다). 혼자 하기에서는 시계가 흐른다.
             _skip.Enabled = Model.IsCurrentDay && session.CanSkipPart;
 
             int n = Math.Min(Model.Slots.Count, _slots.Length);
@@ -205,7 +206,8 @@ namespace Rootborn.Screens.Day
                 _slots[i].Enabled = slot.Interactable;
                 string route = slot.RouteId.Length == 0 ? T("daily-plan.empty-slot") : T(slot.RouteNameKey);
                 string status = slot.Completed ? T("daily-plan.completed") : T("daily-plan.planned");
-                _slotTexts[i].Text = string.Format(CultureInfo.InvariantCulture, T(slot.Selected ? "daily-plan.slot-selected" : "daily-plan.slot"), T(slot.PeriodKey), route, status);
+                _slotTexts[i].Text = string.Format(CultureInfo.InvariantCulture, T(slot.Selected ? "daily-plan.slot-selected" : "daily-plan.slot"),
+                    slot.Now ? F("daily-plan.period-now", T(slot.PeriodKey)) : T(slot.PeriodKey), route, status);
             }
 
             _routes.ItemCount = Model.Routes.Count;

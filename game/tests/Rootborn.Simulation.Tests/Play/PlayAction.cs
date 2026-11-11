@@ -63,7 +63,12 @@ namespace Rootborn.Simulation
         public bool MovementBlocked;
         public int Day;
         public int Minutes;
-        public (int Remaining, int Budget) TimePoints;
+        /// <summary>HUD 시계가 보이는 시각(0~1439분). HUD가 없으면 -1.</summary>
+        public int ClockMinutes = -1;
+        /// <summary>HUD 시계의 시간 경고(곧 잘 시간, 잘 시간이 지남, 지침) — 사람이 화면에서 보는 것.</summary>
+        public Rootborn.Screens.Hud.ClockAlert Alert;
+        /// <summary>잘 시간이다: HUD가 잘 시간이 지났거나 지쳤다고 보인다.</summary>
+        public bool TimeToSleep => Alert == Rootborn.Screens.Hud.ClockAlert.PastBedtime || Alert == Rootborn.Screens.Hud.ClockAlert.Exhausted;
         /// <summary>추적 중인 목표가 있다.</summary>
         public bool HasTracked;
         public string TrackedStep;
@@ -78,7 +83,7 @@ namespace Rootborn.Simulation
         /// <summary>오늘 이 날이 몇 걸음째인가(달리는 쪽이 센다).</summary>
         public int StepsToday;
 
-        public const string WaitPrefix = "wait:", PointPrefix = "point:";
+        public const string WaitPrefix = "wait:", PointPrefix = "point:", IdlePrefix = "idle:";
 
         /// <summary>
         /// 이름으로 지금 할 수 있는 일을 찾는다. 관찰이 내놓은 것 외에 두 모양을 만들어 준다(기록·재생이 같은 일을 다시 고르게):
@@ -95,6 +100,12 @@ namespace Rootborn.Simulation
                 if (wait == null || !int.TryParse(key.Substring(WaitPrefix.Length), NumberStyles.Integer, CultureInfo.InvariantCulture, out int frames) || frames < 1) return null;
                 return new PlayAction { Kind = PlayActionKind.Wait, Key = key, Category = "wait", Frames = frames };
             }
+            if (key.StartsWith(IdlePrefix, StringComparison.Ordinal))
+            {
+                // 월드에서 아무것도 누르지 않고 서 있기(시간이 흐르기를 기다린다 — 밤샘하는 플레이어가 지쳐서 할 것이 없을 때).
+                if (!InWorld || TopScreen != null || !int.TryParse(key.Substring(IdlePrefix.Length), NumberStyles.Integer, CultureInfo.InvariantCulture, out int idle) || idle < 1) return null;
+                return new PlayAction { Kind = PlayActionKind.Wait, Key = key, Category = "idle", Frames = idle };
+            }
             if (key.StartsWith(PointPrefix, StringComparison.Ordinal))
             {
                 int at = key.LastIndexOf('>');
@@ -106,6 +117,9 @@ namespace Rootborn.Simulation
             }
             return null;
         }
+
+        /// <summary>월드에서 N프레임 서 있기(맨 위 화면이 없을 때만).</summary>
+        public PlayAction Idle(int frames) => Find(IdlePrefix + Math.Max(1, frames).ToString(CultureInfo.InvariantCulture));
 
         /// <summary>N프레임 기다리기(미니게임처럼 기다리기가 있을 때만).</summary>
         public PlayAction WaitFrames(int frames) => Find(WaitPrefix + Math.Max(1, frames).ToString(CultureInfo.InvariantCulture));

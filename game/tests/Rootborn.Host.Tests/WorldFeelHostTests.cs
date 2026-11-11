@@ -105,25 +105,27 @@ namespace Rootborn.Host.Tests
         // ---------- 상호작용 실패 안내 ----------
 
         [Test]
-        public void FEEL_REFUSAL_001_WorkPointWithNoTimeLeft_EAndMouseClick_ShowTheReason_ThenItGoes()
+        public void FEEL_REFUSAL_001_WorkPointWhileExhausted_EAndMouseClick_ShowTheReason_ThenItGoes()
         {
             using PlayerDriver player = StartNewGame();
             WalkOutToTown(player);
-            // 준비(상태 강제 설정): 오늘 시간을 다 쓴다. 실제로 다 쓰려면 하루를 다 보내야 해서 여기만 줄였다.
+            // 준비(GameSession 명령, 플레이어 경로 아님): 지치게 한다(이웃 돕기 되풀이 — 체력 0). 흐르는 시간에서는 시간 포인트로 막지 않고
+            // 지침이 활동을 막는다(설계 2026-11-12-flowing-time-design.md 3.4). 실제로 지치려면 하루를 다 보내야 해서 여기만 줄였다.
             var student = player.Game.Session.Student;
-            Assert.That(student.TrySpendTimePoints(student.TimePointsRemaining), Is.True);
+            for (int n = 0; !player.Game.Session.IsExhausted && n < 40; n++) player.Game.Session.PerformOutsideSchoolActivity("outside.help-neighbor", "feel-exhaust:" + n);
+            Assert.That(player.Game.Session.IsExhausted, Is.True);
 
             InteractionThing work = WalkToPoint(player, "part-time-work", "work.clinic-helper");
             player.PressKey(TestKey.E);
             player.WaitForScreen(ScreenCatalog.InteractionRefusal);
             var notice = (InteractionRefusalNoticeScreen)player.Screens.Find(ScreenCatalog.InteractionRefusal);
-            Assert.That(notice.MessageKey, Is.EqualTo("ui.prompt.no-time"));
+            Assert.That(notice.MessageKey, Is.EqualTo("ui.prompt.exhausted"));
             Assert.That(player.Screens.IsOpen(ScreenCatalog.Minigame), Is.False, "거절되면 미니게임을 열지 않는다");
             Assert.That(student.HasPendingMinigame, Is.False);
             Assert.That(player.Screens.MovementBlocked, Is.False, "알림이 떠 있어도 걷는다");
             player.MovePointer(-50, -50);
             player.Frames(3);
-            string shot = player.ScreenshotScreen(ScreenCatalog.InteractionRefusal, "refusal-01-no-time");
+            string shot = player.ScreenshotScreen(ScreenCatalog.InteractionRefusal, "refusal-01-exhausted");
             Assert.That(File.Exists(shot));
 
             int frames = player.WaitForScreenClosed(ScreenCatalog.InteractionRefusal, 240);

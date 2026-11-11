@@ -44,9 +44,11 @@ namespace Rootborn.Game
         public static GameStartSettings FromDefinitions(GameDefinitions definitions)
         {
             if (definitions == null) throw new ArgumentNullException(nameof(definitions));
+            // 새 게임은 흐르는 시간의 하루 시작(game/time.json, 07:00)에서 시작한다. 규칙이 없으면 Unity 판의 8시.
             return new GameStartSettings(definitions.RegistryDefault("studentLifeCalendar"), definitions.RegistryDefault("defaultDayEndRule"),
                 definitions.RegistryDefault("defaultTutorialStage"), definitions.RegistryDefault("defaultStudentCampaign"),
-                definitions.RegistryDefault("locationStateConflictPolicies"));
+                definitions.RegistryDefault("locationStateConflictPolicies"),
+                startTimeMinutes: definitions.TimeRules?.DayStartMinutes ?? UnityStartTimeMinutes);
         }
 
         /// <summary>

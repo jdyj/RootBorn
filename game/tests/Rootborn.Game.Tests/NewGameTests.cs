@@ -25,7 +25,7 @@ namespace Rootborn.Game.Tests
             Assert.That(student.Energy, Is.EqualTo(12));
             Assert.That(student.Focus, Is.EqualTo(10));
             Assert.That(student.Stress, Is.EqualTo(0));
-            Assert.That(student.TimeMinutes, Is.EqualTo(480));
+            Assert.That(student.TimeMinutes, Is.EqualTo(420), "흐르는 시간: 하루는 07:00에 시작한다(game/time.json, Unity 판은 8:00)");
             Assert.That(student.CurrentDay, Is.EqualTo(1));
             Assert.That(student.DayState, Is.EqualTo(StudentDayState.InProgress));
             Assert.That(student.TutorialStageId, Is.EqualTo("tutorial.day1"));

@@ -163,6 +163,7 @@ namespace Rootborn.Game
             // 하루 예산과 하루 집중은 세이브에 없다. 읽은 진행 상태에도 다시 넣는다.
             Student.ConfigureCalendar(_calendar);
             Student.ConfigureDailyFocus(_dayEndRules.DailyFocus);
+            LoadClock(store); // 흐르는 시간(GameSession.Time)
             if (!hasSnapshot) PreSnapshotSlotFiles.ImportInto(Student, store);
 
             Adult = hasSnapshot && snapshot.Adult != null ? AdultCareerProgress.FromSaveData(Rebind(snapshot.Adult)) : new AdultCareerProgress(SaveSlot, PlayerId);
@@ -306,6 +307,7 @@ namespace Rootborn.Game
                 store.Write(SaveSlot, SaveFileNames.LocationState(PlayerId), LocationStates.ToSaveData());
                 SaveOptionalDomains(store);
                 if (Shares != null) store.Write(SaveSlot, SaveFileNames.RoomOutbox(PlayerId), Shares.Outbox.ToSaveData());
+                SaveClock(store);
                 store.Commit();
             }
         }

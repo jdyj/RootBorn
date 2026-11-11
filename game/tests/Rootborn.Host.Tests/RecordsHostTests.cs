@@ -157,8 +157,8 @@ namespace Rootborn.Host.Tests
         private void PrepareSlotAtSchoolStage()
         {
             using (PlayerDriver first = Start()) first.Frames(2);
-            string data = Path.Combine(_root, "data");
-            var session = GameSession.Start(Rootborn.Host.World.GameContent.Load(_root).Definitions, GameStartSettings.FromRegistry(data),
+            var definitions = Rootborn.Host.World.GameContent.Load(_root).Definitions;
+            var session = GameSession.Start(definitions, GameStartSettings.FromDefinitions(definitions),
                 new FileSaveStore(_saves), "slot-1", SaveFileNames.DefaultPlayerId);
             Assert.That(session.EndDay().Ended, Is.True);
             Assert.That(session.StartNextDay(), Is.True);

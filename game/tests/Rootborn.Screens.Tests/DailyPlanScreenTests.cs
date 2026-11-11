@@ -43,24 +43,58 @@ namespace Rootborn.Screens.Tests
             Assert.That(model.IsCurrentDay && model.CanAssign, Is.True);
             Assert.That(model.CanGoPrevious || model.CanGoNext, Is.False, "첫날은 지난 일기가 없다");
             Assert.That(((UiLabel)_f.Node(DailyPlanScreen.TimeBudgetId)).Text,
-                Is.EqualTo(string.Format(_f.Text.Get("life.tp.summary"), 1, _f.Text.Get("life.weekday." + _f.Session.Student.Calendar.GetWeekdayIndex(1)),
-                    _f.Session.Student.TimePointsRemaining, _f.Session.Student.DailyTimePointBudget)));
+                Is.EqualTo(string.Format(_f.Text.Get("life.time.summary"), 1, _f.Text.Get("life.weekday." + _f.Session.Student.Calendar.GetWeekdayIndex(1)), 7, 0)),
+                "날·요일·지금 시각(시간 포인트는 보이지 않는다)");
         }
 
         [Test]
-        public void SkipButton_EndsThisPartWithoutAnActivity_AndIsOffWhenNothingIsLeft()
+        public void SkipButton_IsHiddenWhenAlone_TheClockFlowsInstead()
         {
             Open();
-            Assert.That(_f.Node(DailyPlanScreen.SkipId).Enabled, Is.True);
-            _f.Click(DailyPlanScreen.SkipId);
-            Assert.That(_f.Session.Student.TimePointsSpentToday, Is.EqualTo(1), "시간 포인트 하나를 쓴다");
-            Assert.That(_f.Session.Room.PartIndex, Is.EqualTo(1), "혼자면 바로 다음 때");
-            Assert.That(_f.Session.Student.GetTodayActivityIds(), Is.Empty);
-            Assert.That(((UiLabel)_f.Node(DailyPlanScreen.TimeBudgetId)).Text, Does.Contain("1/2"), "시간 줄이 바로 바뀐다");
+            Assert.That(_f.Node(DailyPlanScreen.SkipId).Visible, Is.False, "혼자 하기에서는 넘기기가 없다(흐르는 시간 — 4단계에서 지운다)");
+        }
 
-            _f.Click(DailyPlanScreen.SkipId);
-            Assert.That(_f.Session.Room.IsDayOver, Is.True);
-            Assert.That(_f.Node(DailyPlanScreen.SkipId).Enabled, Is.False, "넘길 때가 없다");
+        [Test]
+        public void SkipButton_InARoom_EndsThisPartWithoutAnActivity_AndIsOffWhenNothingIsLeft()
+        {
+            var clock = new RoomClock(_f.Session.Student.Calendar);
+            clock.Join("me");
+            using var room = new DayScreensFixture(room: clock, playerId: "me");
+            Assert.That(room.Interact("House", DailyPlanScreen.InteractionKind, "house.daily-plan-board"), Is.True);
+            Assert.That(room.Node(DailyPlanScreen.SkipId).Visible && room.Node(DailyPlanScreen.SkipId).Enabled, Is.True, "같이 하는 방에는 아직 넘기기가 있다");
+            room.Click(DailyPlanScreen.SkipId);
+            Assert.That(room.Session.Student.TimePointsSpentToday, Is.EqualTo(1), "방의 때 하나를 쓴다");
+            Assert.That(room.Session.Room.PartIndex, Is.EqualTo(1), "나 혼자인 방이면 바로 다음 때");
+            Assert.That(room.Session.Student.GetTodayActivityIds(), Is.Empty);
+
+            room.Click(DailyPlanScreen.SkipId);
+            Assert.That(room.Session.Room.IsDayOver, Is.True);
+            Assert.That(room.Node(DailyPlanScreen.SkipId).Enabled, Is.False, "넘길 때가 없다");
+        }
+
+        [Test]
+        public void TheSlotOfTheCurrentTimeSlot_IsMarkedNow_AndChosenFirst()
+        {
+            // 일과 칸은 시간대에 묶인다(GameSession.CurrentDailyPlanSlotIndex). 지금 시간대의 칸이 없으면 표시도 없다.
+            DailyPlanScreen screen = Open();
+            int now = _f.Session.CurrentDailyPlanSlotIndex;
+            for (int i = 0; i < screen.Model.Slots.Count; i++)
+                Assert.That(screen.Model.Slots[i].Now, Is.EqualTo(i == now), "칸 " + i);
+            _f.Click(DailyPlanScreen.CloseTopId);
+
+            // 시계가 흘러 칸이 묶인 시간대에 들어가면 그 칸이 "지금"이 되고 처음 고르는 칸이 된다.
+            int target = -1;
+            for (int guard = 0; guard < 24 * 60 && target < 0; guard++)
+            {
+                _f.Session.AdvanceTime(25f / 60f, false);
+                if (_f.Session.CurrentDailyPlanSlotIndex >= 0) target = _f.Session.CurrentDailyPlanSlotIndex;
+            }
+            Assert.That(target, Is.GreaterThanOrEqualTo(0), "그날의 어느 시간대에는 칸이 있다");
+            screen = Open();
+            Assert.That(screen.Model.Slots[target].Now, Is.True);
+            Assert.That(screen.Model.SelectedSlot, Is.EqualTo(target), "지금 시간대의 칸을 먼저 고른다");
+            string label = ((UiCenteredText)_f.Node(DailyPlanScreen.SlotTextId(target))).Text;
+            Assert.That(label, Does.Contain(_f.Text.Format("daily-plan.period-now", _f.Text.Get(screen.Model.Slots[target].PeriodKey))));
         }
 
         [Test]

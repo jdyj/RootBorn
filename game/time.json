@@ -1,0 +1,7 @@
+{
+  "about": "흐르는 시간의 수치(설계 docs/superpowers/specs/2026-11-12-flowing-time-design.md). 하루 길이는 data/time의 TimeDefinition. 시각은 \"HH:MM\". 읽는 곳: game/Rootborn.Data/TimeSettings.cs",
+  "dayStart": "07:00",
+  "bedtime": "22:00",
+  "nightEnergyLossPerHour": 1,
+  "lateSleepRecoveryLossPerHour": 2
+}

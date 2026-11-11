@@ -38,7 +38,7 @@ namespace Rootborn.Screens.Tests
             _ownsSaves = saves == null;
             _saves = saves ?? Path.Combine(Path.GetTempPath(), "rootborn-screens-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_saves);
-            Session = GameSession.Start(definitions ?? _definitions.Value, GameStartSettings.FromRegistry(TestData.DataDirectory), new FileSaveStore(_saves), "slot-test", playerId, room: room);
+            Session = GameSession.Start(definitions ?? _definitions.Value, GameStartSettings.FromDefinitions(definitions ?? _definitions.Value), new FileSaveStore(_saves), "slot-test", playerId, room: room);
             Text = TestData.Text(language);
             ScreenRegistry registry = ScreenCatalog.Create();
             extra?.Invoke(registry);

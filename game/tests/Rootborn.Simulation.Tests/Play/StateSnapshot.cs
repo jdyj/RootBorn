@@ -18,8 +18,9 @@ namespace Rootborn.Simulation
         {
             var lines = new List<string>(64);
             var st = s.Student;
-            lines.Add("day=" + st.CurrentDay + " minutes=" + st.TimeMinutes + " state=" + st.DayState);
-            lines.Add("energy=" + st.Energy + " focus=" + st.Focus + " stress=" + st.Stress);
+            // 시각은 시(時)까지: 흐르는 시계는 게임 1시간마다 저장한다(그 사이 분은 꺼지면 잃는다 — 흐르는 시간 설계, GameSession.AdvanceTime).
+            lines.Add("day=" + st.CurrentDay + " hour=" + st.TimeMinutes / 60 + " state=" + st.DayState);
+            lines.Add("energy=" + st.Energy + " focus=" + st.Focus + " stress=" + st.Stress + " exhausted=" + st.IsExhausted);
             lines.Add("time-points=" + s.TimePoints.Remaining + "/" + s.TimePoints.Budget);
             Values(lines, "trait", st.GetTraitIds(), st.GetTraitValue);
             Values(lines, "skill", st.GetSkillIds(), st.GetSkillValue);

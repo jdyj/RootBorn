@@ -133,6 +133,14 @@ namespace Rootborn.Simulation
             return _result;
         }
 
+        /// <summary>이만큼 걸음 동안 상태(화면·자리·시각·활동 기록)가 전혀 바뀌지 않으면 할 것이 없는 것으로 본다(사람이면 자러 간다).</summary>
+        public const int NothingWorksSteps = 40;
+
+        private bool NothingWorks => _stall >= NothingWorksSteps;
+
+        /// <summary>밤샘하는 플레이어가 서 있는 한 번의 프레임 수(10초 — 게임 24분).</summary>
+        public const int IdleFrames = 600;
+
         private int _day = -1, _dayStartStep, _windDownFrom = -1, _empty, _stall;
         private string _lastFingerprint;
 
@@ -165,9 +173,11 @@ namespace Rootborn.Simulation
                 _memory.Note(view, action);
                 _result.Steps.Add(new PlayStep(step, view.Day, view.Minutes, view.MapId, view.TopScreen, by, action.Key));
                 if (view.InWorld) _result.Maps.Add(view.MapId);
+                TimeBefore before = TimeBefore.Of(_body.Session, _body.Frames);
                 Do(action, view);
                 AfterStep?.Invoke(step, action);
                 CheckAfter(view, step);
+                CheckTime(before, action, view);
             }
         }
 
@@ -188,8 +198,22 @@ namespace Rootborn.Simulation
             if (_policy is ReplayPolicy) return (_policy.Choose(view, _memory, _random), _policy.Name);
             PlayAction a = StartRoutine.Choose(view, _memory);
             if (a != null) return (a, "start");
-            if (_pace && view.InWorld && (view.StepsToday >= _settings.StepsPerDay || view.TimePoints.Budget > 0 && view.TimePoints.Remaining <= 0))
+            if (_pace && view.InWorld && _policy is IStaysUp)
             {
+                // 밤샘하는 플레이어: 자러 가지 않는다. 오늘 걸음을 다 썼거나 할 것이 없으면 날이 넘어갈 때까지 서 있는다(떠 있는 화면은 닫는다).
+                if (view.StepsToday >= _settings.StepsPerDay || NothingWorks)
+                {
+                    a = view.TopScreen != null || view.MovementBlocked ? DayEndRoutine.Close(view) : view.Idle(IdleFrames);
+                    if (a != null) return (a, "stay-up");
+                }
+                return (_policy.Choose(view, _memory, _random), _policy.Name);
+            }
+            // 하루 마감(잠): 오늘 걸음을 다 썼거나, HUD가 잘 시간이 지났다·지쳤다고 보이거나, 한동안 해 봐도 아무것도 바뀌지 않으면(할 것이 없다)
+            // 집으로 걸어가 잔다(흐르는 시간 5단계).
+            if (_pace && view.InWorld && (_windDownFrom >= 0 || view.StepsToday >= _settings.StepsPerDay || view.TimeToSleep || NothingWorks)) // 한 번 시작하면 그날은 끝까지
+            {
+                if (_windDownFrom < 0) _result.Notes.Add(view.Day + "일째 " + view.Minutes + "분: 하루 마감 순서(" + (view.TimeToSleep ? "HUD: " + view.Alert
+                    : NothingWorks ? "할 것이 없다 — " + NothingWorksSteps + "걸음 동안 바뀐 것 없음" : "걸음 " + view.StepsToday) + ")");
                 if (_windDownFrom < 0) _windDownFrom = step;
                 bool playing = view.OpenScreens.Contains(ScreenCatalog.Minigame) && step - _windDownFrom < _settings.WindDownSteps / 2;
                 if (playing) return (_policy.Choose(view, _memory, _random), _policy.Name); // 하던 미니게임은 마저 한다(닫으면 포기로 정산된다)
@@ -266,8 +290,6 @@ namespace Rootborn.Simulation
                 var st = s2.Student;
                 if (st.Energy < 0 || st.Focus < 0 || st.Stress < 0 || st.TimeMinutes < 0)
                     Fail("수치 범위: 체력 " + st.Energy + ", 집중 " + st.Focus + ", 스트레스 " + st.Stress + ", 분 " + st.TimeMinutes, view);
-                var tp = s2.TimePoints;
-                if (tp.Remaining < 0 || tp.Budget > 0 && tp.Remaining > tp.Budget) Fail("수치 범위: 시간 칸 " + tp.Remaining + "/" + tp.Budget, view);
                 foreach (var slot in s2.Inventory.Slots)
                     if (slot.Item != null && slot.Count <= 0) Fail("수치 범위: 가방 " + slot.Item.Id + " " + slot.Count + "개", view);
                 CheckClaims(s2, view);
@@ -276,6 +298,63 @@ namespace Rootborn.Simulation
             if (unknown.Length > 0) Fail("빠진 문구 키가 새로 생겼다: " + string.Join(", ", unknown), view);
             if (_body.CollisionViolations > 0) Fail("벽을 뚫고 걸었다: " + _body.CollisionViolations + "프레임", view);
         }
+
+        // ---------- 흐르는 시간의 불변식 ----------
+
+        /// <summary>행동 앞의 시간 상태: 날, 그날 0시부터 센 분, 지쳤는지, 활동 기록 수, 체력.</summary>
+        private readonly struct TimeBefore
+        {
+            public readonly bool Has;
+            public readonly int Day, Minutes, Focus, Energy;
+            public readonly long Frames;
+            public readonly bool Exhausted;
+
+            private TimeBefore(GameSession s, long frames)
+            {
+                Has = true; Day = s.StudentDay; Minutes = s.StudentTimeMinutes; Exhausted = s.IsExhausted;
+                Focus = s.Student.Focus; Energy = s.Student.Energy; Frames = frames;
+            }
+
+            public static TimeBefore Of(GameSession s, long frames) => s == null ? default : new TimeBefore(s, frames);
+        }
+
+        /// <summary>
+        /// 시계가 거꾸로 가지 않는다, 지친 동안 활동이 시작되지 않는다, 자면 다음 날 07:00(넘긴 활동 시간만큼 늦게), 자지 않고 넘긴 날은 회복이 없다,
+        /// 메뉴가 열려 있으면 혼자 하기의 시계가 멈춘다(창 없는 몸이 프레임마다 센다).
+        /// </summary>
+        private void CheckTime(TimeBefore before, PlayAction action, PlayView view)
+        {
+            GameSession s = _body.Session;
+            if (s == null || !before.Has) return;
+            int day = s.StudentDay, minutes = s.StudentTimeMinutes;
+            if (day < before.Day || day == before.Day && minutes < before.Minutes)
+                Fail("시계가 거꾸로 갔다: " + before.Day + "일 " + before.Minutes + "분 → " + day + "일 " + minutes + "분(" + action.Key + ")", view);
+            // 지친 동안 활동이 시작되지 않는다: 집중을 쓰거나, 흐른 프레임보다 시계가 더 건너뛰었으면(혼자 하기의 활동은 걸리는 분만큼 건너뛴다) 활동을 한 것이다.
+            // 장소 첫 방문·처음 만남은 활동 기록에 남지만 비용이 없어 활동이 아니다.
+            if (before.Exhausted && day == before.Day)
+            {
+                long frames = _body.Frames - before.Frames;
+                int flowed = s.TimeRules == null ? 0 : (int)Math.Ceiling(frames * _body.ClockSecondsPerFrame * Rootborn.Core.Time.TimeRules.MinutesPerDay / s.TimeRules.RealSecondsPerGameDay) + 1;
+                if (s.Student.Focus < before.Focus || minutes - before.Minutes > flowed)
+                    Fail("지친 동안 활동이 시작됐다(" + action.Key + "): 집중 " + before.Focus + " → " + s.Student.Focus + ", 시각 +" + (minutes - before.Minutes) + "분(흐른 것 " + flowed + "분)", view);
+            }
+            if (day > before.Day && s.Student.DayState == Rootborn.Core.StudentLife.StudentDayState.InProgress && s.TimeRules != null)
+            {
+                bool slept = s.Student.LastNight.HasSlept;
+                int start = s.TimeRules.DayStartMinutes;
+                // 잤으면 다음 날 단추를 누른 걸음 끝에 본다. 안 잤으면 걷는 도중에 넘어갈 수 있어 늦은 쪽은 보지 않는다.
+                if (minutes < start || slept && minutes > start + MaxMinutesAfterWaking)
+                    Fail("새 날의 시각: " + minutes + "분(하루 시작 " + start + "분, " + (slept ? "잤다" : "안 잤다") + ")", view);
+                if (!slept && s.Student.Energy > before.Energy)
+                    Fail("자지 않고 넘긴 날에 체력이 돌아왔다: " + before.Energy + " → " + s.Student.Energy, view);
+                if (!slept) _result.Notes.Add(day + "일째: 자지 않고 넘어왔다(체력 " + s.Student.Energy + (s.IsExhausted ? ", 지침" : string.Empty) + ")");
+            }
+            if (_body is IClockWatch watch && watch.ClockViolations > 0)
+                Fail("메뉴가 열린 혼자 하기에서 시계가 흘렀다: " + watch.ClockViolations + "프레임", view);
+        }
+
+        /// <summary>새 날을 처음 본 시각이 하루 시작보다 늦어도 되는 분(넘긴 활동 시간 + 다음 날 단추를 누른 뒤 몇 프레임).</summary>
+        private const int MaxMinutesAfterWaking = 90;
 
         private void CheckClaims(GameSession s, PlayView view)
         {
@@ -330,7 +409,7 @@ namespace Rootborn.Simulation
         {
             GameSession live = _body.Session;
             if (live == null) return;
-            GameSession reloaded = GameSession.Start(_atlas.Definitions, GameStartSettings.FromRegistry(Path.Combine(_atlas.RepoRoot, "data")),
+            GameSession reloaded = GameSession.Start(_atlas.Definitions, GameStartSettings.FromDefinitions(_atlas.Definitions),
                 new FileSaveStore(_body.SaveRoot), _body.SlotId, null);
             if (_body.HouseEntered.HasValue) reloaded.EnterHouse(_body.HouseEntered.Value.Grid, _body.HouseEntered.Value.Surface);
             List<string> diff = StateSnapshot.Diff(StateSnapshot.Of(live), StateSnapshot.Of(reloaded));
@@ -363,7 +442,8 @@ namespace Rootborn.Simulation
             if (_body.InWorld)
                 sb.AppendLine("맵 " + _body.Walk.Map.Id + ", 자리 " + _body.Walk.Walker.X.ToString("0.0", CultureInfo.InvariantCulture) + "," + _body.Walk.Walker.Y.ToString("0.0", CultureInfo.InvariantCulture)
                     + ", E 대상 " + (_body.Target == null ? "(없음)" : _body.Target.Kind + "/" + _body.Target.Id));
-            if (_body.Session != null) sb.AppendLine(_body.Session.StudentDay + "일째 " + _body.Session.StudentTimeMinutes + "분, 시간 칸 " + _body.Session.TimePoints.Remaining + "/" + _body.Session.TimePoints.Budget);
+            if (_body.Session != null) sb.AppendLine(_body.Session.StudentDay + "일째 " + _body.Session.StudentTimeMinutes + "분, 체력 " + _body.Session.Student.Energy
+                + ", 집중 " + _body.Session.Student.Focus + (_body.Session.IsExhausted ? ", 지침" : string.Empty));
             if (view != null) sb.AppendLine("할 수 있던 것(" + view.Actions.Count + "): " + string.Join(", ", view.Actions.Take(40).Select(a => a.Key)));
             sb.AppendLine("최근 행동:");
             foreach (PlayStep s in _result.Steps.Skip(Math.Max(0, _result.Steps.Count - 20)))

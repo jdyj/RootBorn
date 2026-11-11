@@ -209,12 +209,13 @@ namespace Rootborn.Core.Tests
         }
 
         [Test]
-        public void TimePolicy_WithoutCalendar_HasNoBudget()
+        public void TimePolicy_WithoutCalendar_IsNotABudget()
         {
+            // 흐르는 시간(2026-11-12): 시간 포인트는 한도가 아니다. 달력이 없어도 활동은 된다(막는 것은 체력·지침·시각).
             var activity = Activity("activity.library", LifeActivityCategory.SelfStudy, timePolicy: new ActivityTimePolicy("policy.library", 1));
             var progress = new StudentLifeProgress("slot-a", "player-1", 5, 5);
-            Assert.That(new LifeActivityRunner().TryPerform(activity, progress, "r1", out var result), Is.False);
-            Assert.That(result.Kind, Is.EqualTo(LifeActivityResultKind.InsufficientResources));
+            Assert.That(new LifeActivityRunner().TryPerform(activity, progress, "r1", out var result), Is.True);
+            Assert.That(result.Kind, Is.EqualTo(LifeActivityResultKind.Applied));
         }
 
         [Test]

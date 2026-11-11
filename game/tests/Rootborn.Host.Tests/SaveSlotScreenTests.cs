@@ -85,7 +85,8 @@ namespace Rootborn.Host.Tests
             Assert.Throws<InvalidOperationException>(() => HostOptions.Resolve(new[] { "--slot", "slot-0" }, name => null));
             Assert.Throws<InvalidOperationException>(() => HostOptions.Resolve(new[] { "--slot", "slot-0", "--save-root", _saves, "--world", "Shop" }));
             Assert.Throws<InvalidOperationException>(() => HostOptions.Resolve(new[] { "--slot", "slot-0", "--save-root", _saves, "--hour", "12" }), "슬롯은 학생 시각을 따른다");
-            Assert.Throws<InvalidOperationException>(() => HostOptions.Resolve(new[] { "--slot", "slot-0", "--save-root", _saves, "--time-scale", "20" }));
+            // --time-scale은 슬롯에서도 받는다(학생의 흐르는 시계 배속 — 흐르는 시간 3단계). --hour는 여전히 거절한다(위).
+            Assert.That(HostOptions.Resolve(new[] { "--slot", "slot-0", "--save-root", _saves, "--time-scale", "20" }).TimeScale, Is.EqualTo(20f));
         }
     }
 }

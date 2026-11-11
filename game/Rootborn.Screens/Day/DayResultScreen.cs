@@ -21,7 +21,7 @@ namespace Rootborn.Screens.Day
 
     /// <summary>
     /// 하루 결과(하루 마감 지점 상호작용 "student-day-end"). Unity StudentDayEndInteractor → StudentDayResultPanel 순서:
-    /// 하루가 진행 중이면 하루를 끝내고(GameSession.EndDay), 결산 구역을 위에서부터 보인다 — 한 활동, 결과(성장·학교 밖·진로 후보·장래희망·일과 칸),
+    /// 하루가 진행 중이면 잠들어 하루를 끝내고(GameSession.Sleep — 취침 시각 전이어도 막지 않는다, 다음 날 07:00), 결산 구역을 위에서부터 보인다 — 한 활동, 결과(성장·학교 밖·진로 후보·장래희망·일과 칸),
     /// 퀘스트, 관계, 상태, 보상, 물건, 다음 날 안내, 장소 상태 기록, 캠페인, 체인. 다음 날 버튼이 다음 날을 시작하고 닫는다.
     /// 이미 끝난 날이면 끝내지 않고 그 날의 결산만 다시 보인다. 모달, 이동을 막는다. 닫기 버튼은 없다(Unity 판과 같음).
     /// </summary>
@@ -65,7 +65,7 @@ namespace Rootborn.Screens.Day
             DayBaseline.For(session);
             _displayKeys ??= DayResultText.BuildDisplayKeys(session);
             if (session.Student.DayState == StudentDayState.InProgress)
-                _result = Services.Session.EndDay();
+                _result = Services.Session.Sleep(); // 잠자리에서 잔다(흐르는 시간 설계 3.3 — 하루 마감 흐름 그대로, 회복은 잔 시각으로)
             else
             {
                 GameDayResult last = session.LastDayResult;

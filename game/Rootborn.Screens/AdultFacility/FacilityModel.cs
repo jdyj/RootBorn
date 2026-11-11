@@ -6,17 +6,18 @@ using Rootborn.Game;
 
 namespace Rootborn.Screens.AdultFacility
 {
-    /// <summary>일 한 줄의 표시 값. 숙련·성공 횟수·TP·최대 보상은 조회일 뿐이고, 할 수 있는지는 명령이 거절 이유로 말한다.</summary>
+    /// <summary>일 한 줄의 표시 값. 숙련·성공 횟수·걸리는 분·최대 보상은 조회일 뿐이고, 할 수 있는지는 명령이 거절 이유로 말한다.</summary>
     public sealed class FacilityWorkRow
     {
-        public FacilityWorkRow(string id, string nameKey, int timePoints, int mastery, int maximumMastery, int successes, ItemAmount<string>[] maximumRewards)
+        public FacilityWorkRow(string id, string nameKey, int minutes, int mastery, int maximumMastery, int successes, ItemAmount<string>[] maximumRewards)
         {
-            Id = id; NameKey = nameKey; TimePoints = timePoints; Mastery = mastery; MaximumMastery = maximumMastery; Successes = successes; MaximumRewards = maximumRewards;
+            Id = id; NameKey = nameKey; Minutes = minutes; Mastery = mastery; MaximumMastery = maximumMastery; Successes = successes; MaximumRewards = maximumRewards;
         }
 
         public string Id { get; }
         public string NameKey { get; }
-        public int TimePoints { get; }
+        /// <summary>일이 걸리는 분(데이터 timeCostMinutes). 시간 포인트는 보이지 않는다(흐르는 시간 설계 4절).</summary>
+        public int Minutes { get; }
         public int Mastery { get; }
         public int MaximumMastery { get; }
         public int Successes { get; }
@@ -74,7 +75,7 @@ namespace Rootborn.Screens.AdultFacility
             {
                 if (work == null) continue;
                 work.TryBuildRewards(100, percent, out ItemAmount<string>[] rewards);
-                rows.Add(new FacilityWorkRow(work.Id, work.DisplayNameKey, work.TimePointCost, adult.GetMastery(work), work.MaximumMastery, adult.GetSuccessfulCompletions(work), rewards));
+                rows.Add(new FacilityWorkRow(work.Id, work.DisplayNameKey, work.TimeCostMinutes, adult.GetMastery(work), work.MaximumMastery, adult.GetSuccessfulCompletions(work), rewards));
             }
             model.Works = rows.ToArray();
             return model;

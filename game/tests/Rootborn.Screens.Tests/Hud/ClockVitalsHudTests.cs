@@ -23,19 +23,22 @@ namespace Rootborn.Screens.Tests.Hud
             Assert.That(t.Node("hud.focus").Rect, Is.EqualTo(new UiRect(1920 - 344, 36, 140, 144)));
         }
 
+        private const float GameHour = 25f; // 하루 600초 → 게임 1시간이 실제 25초
+
         [Test]
-        public void NewGame_ShowsDayOneAndTheFirstPartsTime_TimePoints_AndTheStartingVitals()
+        public void NewGame_ShowsDayOneAtSeven_NoTimePoints_AndTheStartingVitals()
         {
             using var t = new TestSession();
             t.Stack.OpenHud();
             var clock = t.Screen<ClockHudScreen>(ScreenCatalog.HudClock);
-            // 시각 숫자는 방의 시계의 때 대표 시각(멀티플레이 설계 2.1절). 1일째는 평일(때 2개: 방과 후·저녁) — 하루의 첫 때는 07:00(사용자 결정 2026-11-12).
-            Assert.That((clock.Model.Day, clock.Model.Hour * 60 + clock.Model.Minute), Is.EqualTo((1, t.Session.RoomTimeMinutes)));
-            Assert.That((clock.Model.Hour, clock.Model.Minute), Is.EqualTo((7, 0)));
-            Assert.That((clock.Model.TimePointsRemaining, clock.Model.TimePointsToday), Is.EqualTo((2, 2)));
+            // 혼자 하기의 시계는 흐르는 시각(흐르는 시간 설계 3.1). 하루는 07:00에 시작한다(사용자 결정 2026-11-12).
+            Assert.That((clock.Model.Day, clock.Model.Hour, clock.Model.Minute), Is.EqualTo((1, 7, 0)));
+            Assert.That(clock.Model.Together, Is.False);
+            Assert.That(clock.Model.Alert, Is.EqualTo(ClockAlert.None));
             Assert.That(clock.Model.Allowance, Is.EqualTo(0), "가게 화폐를 알고 가방에 없다");
             Assert.That(((UiLabel)t.Node(ClockHudScreen.LabelId)).Text, Is.EqualTo("1일  07:00 · 용돈 0"));
-            Assert.That(((UiLabel)t.Node(ClockHudScreen.RoomLabelId)).Text, Is.EqualTo("남은 TP 2/2"), "혼자면 누가 기다리는지 보이지 않는다");
+            Assert.That(((UiLabel)t.Node(ClockHudScreen.RoomLabelId)).Text, Is.Empty, "혼자 하기에는 시간 포인트 줄도 기다리는 사람도 없다");
+            Assert.That(((UiImage)t.Node(ClockHudScreen.IconId)).Image, Is.EqualTo("icon:time"));
 
             var vitals = t.Screen<VitalsHudScreen>(ScreenCatalog.HudVitals);
             Assert.That((vitals.Model.Energy, vitals.Model.Focus), Is.EqualTo((t.Session.Student.Energy, t.Session.Student.Focus)));
@@ -53,9 +56,54 @@ namespace Rootborn.Screens.Tests.Hud
             Assert.That(t.Screen<VitalsHudScreen>(ScreenCatalog.HudVitals).Model.Energy, Is.EqualTo(t.Session.Student.Energy));
             Assert.That(t.Session.Student.Energy, Is.LessThan(energy));
             var clock = t.Screen<ClockHudScreen>(ScreenCatalog.HudClock);
-            Assert.That(clock.Model.Hour * 60 + clock.Model.Minute, Is.EqualTo(t.Session.RoomTimeMinutes), "다음 때의 대표 시각");
-            Assert.That(t.Session.Room.PartIndex, Is.EqualTo(1));
-            Assert.That(((UiLabel)t.Node(ClockHudScreen.RoomLabelId)).Text, Is.EqualTo("남은 TP 1/2"));
+            Assert.That(clock.Model.Hour * 60 + clock.Model.Minute, Is.EqualTo(7 * 60 + 40), "혼자면 활동 시간(어려운 책 40분)만큼 시계가 건너뛴다");
+            Assert.That(((UiLabel)t.Node(ClockHudScreen.LabelId)).Text, Is.EqualTo("1일  07:40 · 용돈 0"));
+        }
+
+        [Test]
+        public void FlowingTime_UpdatesTheClockOnTheTimeNoticeOnly()
+        {
+            using var t = new TestSession();
+            t.Stack.OpenHud();
+            var label = (UiLabel)t.Node(ClockHudScreen.LabelId);
+            t.Session.AdvanceTime(GameHour, false);
+            Assert.That(label.Text, Is.EqualTo("1일  08:00 · 용돈 0"), "분이 가면 GameSession이 time을 알리고 HUD는 그때 고친다");
+            t.Session.AdvanceTime(GameHour, true);
+            Assert.That(label.Text, Is.EqualTo("1일  08:00 · 용돈 0"), "메뉴가 열린 혼자 하기는 멈춘다");
+        }
+
+        [Test]
+        public void NearAndPastBedtime_AndExhausted_ShowAWarningLineAndIcon()
+        {
+            using var t = new TestSession();
+            t.Stack.OpenHud();
+            var clock = t.Screen<ClockHudScreen>(ScreenCatalog.HudClock);
+            var room = (UiLabel)t.Node(ClockHudScreen.RoomLabelId);
+            var icon = (UiImage)t.Node(ClockHudScreen.IconId);
+            int bedtime = t.Session.TimeRules.BedtimeMinutes;
+
+            PassUntil(t.Session, bedtime - ClockModel.BedtimeWarningMinutes - 1);
+            Assert.That(clock.Model.Alert, Is.EqualTo(ClockAlert.None));
+            PassUntil(t.Session, bedtime - ClockModel.BedtimeWarningMinutes);
+            Assert.That(clock.Model.Alert, Is.EqualTo(ClockAlert.BedtimeSoon));
+            Assert.That(room.Text, Is.EqualTo(t.Text.Get("ui.hud.bedtime-soon")));
+            Assert.That(icon.Image, Is.EqualTo(ClockHudScreen.BedtimeIcon));
+
+            PassUntil(t.Session, bedtime);
+            Assert.That(clock.Model.Alert, Is.EqualTo(ClockAlert.PastBedtime));
+            Assert.That(room.Text, Is.EqualTo(t.Text.Get("ui.hud.past-bedtime")));
+
+            // 체력을 다 쓰면 지친다(밤샘이나 활동 — 수치는 데이터에 있다). 준비는 이웃 돕기(체력 1)를 되풀이한다.
+            for (int n = 0; !t.Session.IsExhausted && n < 40; n++) t.Session.PerformOutsideSchoolActivity("outside.help-neighbor", "hud-exhaust:" + n);
+            Assert.That(t.Session.IsExhausted, Is.True, "준비: 지침");
+            Assert.That(clock.Model.Alert, Is.EqualTo(ClockAlert.Exhausted));
+            Assert.That(room.Text, Is.EqualTo(t.Text.Get("ui.hud.exhausted")));
+            Assert.That(icon.Image, Is.EqualTo(ClockHudScreen.ExhaustedIcon));
+        }
+
+        private static void PassUntil(GameSession game, int minutes)
+        {
+            while (game.Student.TimeMinutes < minutes) game.AdvanceTime(GameHour / 60f, false);
         }
 
         [Test]
@@ -96,7 +144,7 @@ namespace Rootborn.Screens.Tests.Hud
             t.Stack.OpenHud();
             t.Text.Language = "en";
             Assert.That(((UiLabel)t.Node(ClockHudScreen.LabelId)).Text, Is.EqualTo("Day 1  07:00 · Allowance 0"));
-            Assert.That(((UiLabel)t.Node(ClockHudScreen.RoomLabelId)).Text, Is.EqualTo("TP 2/2 left"));
+            Assert.That(((UiLabel)t.Node(ClockHudScreen.RoomLabelId)).Text, Is.Empty);
             t.Emit();
             KnownMissingKeys.AssertOnlyKnownMissing(t.Text,
                 t.Stack.Find(ScreenCatalog.HudClock).TextKeys.Concat(t.Stack.Find(ScreenCatalog.HudVitals).TextKeys));

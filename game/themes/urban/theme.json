@@ -146,6 +146,14 @@
     "facility-upgrade": {
       "image": "repo:Assets/Art/UI/UrbanMolding/facility_upgrade_blueprint.png",
       "rect": [ 0, 0, 64, 64 ]
+    },
+    "bedtime": {
+      "image": "repo:Assets/Art/HousePixels/Furniture31/house_day_end_bed.png",
+      "rect": [ 0, 0, 120, 120 ]
+    },
+    "exhausted": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/urban_icon_stress.png",
+      "rect": [ 0, 0, 48, 48 ]
     }
   },
   "definitionIcons": {

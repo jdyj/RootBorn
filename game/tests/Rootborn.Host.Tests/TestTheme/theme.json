@@ -20,6 +20,8 @@
   "icons": {
     "time": { "image": "icons.png", "rect": [ 0, 0, 32, 32 ] },
     "energy": { "image": "icons.png", "rect": [ 32, 0, 32, 32 ] },
+    "bedtime": { "image": "icons.png", "rect": [ 32, 0, 32, 32 ] },
+    "exhausted": { "image": "icons.png", "rect": [ 0, 0, 32, 32 ] },
     "focus": { "image": "icons.png", "rect": [ 0, 0, 32, 32 ] },
     "journal": { "image": "icons.png", "rect": [ 32, 0, 32, 32 ] },
     "stress": { "image": "icons.png", "rect": [ 0, 0, 32, 32 ] },

@@ -38,7 +38,7 @@ namespace Rootborn.Screens.Tests.AdultFacility
             _saves = Path.Combine(Path.GetTempPath(), "rootborn-facility-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_saves);
             Store = new FileSaveStore(_saves);
-            GameStartSettings settings = GameStartSettings.FromRegistry(TestData.DataDirectory);
+            GameStartSettings settings = GameStartSettings.FromDefinitions(Definitions.Value);
             GameSession first = GameSession.Start(Definitions.Value, settings, Store, Slot, null);
             Assert.That(first.EndDay().Ended && first.StartNextDay(), Is.True, "준비: 한 번 저장한다");
             if (candidateReady || edit != null)
@@ -133,7 +133,7 @@ namespace Rootborn.Screens.Tests.AdultFacility
         }
 
         /// <summary>저장했다가 읽은 새 게임 한 판(저장된 값만 보려고).</summary>
-        public GameSession Reload() => GameSession.Start(Definitions.Value, GameStartSettings.FromRegistry(TestData.DataDirectory), Store, Slot, null);
+        public GameSession Reload() => GameSession.Start(Definitions.Value, GameStartSettings.FromDefinitions(Definitions.Value), Store, Slot, null);
 
         public void Dispose()
         {

@@ -20,7 +20,7 @@ namespace Rootborn.Screens.Objectives.Sources
             JournalText title = JournalText.Key(adult ? "ui.objectives.career_day_guide" : "ui.objectives.student_day_guide");
             JournalText hint;
             if (student.HasPendingMinigame || session.Adult.HasPendingWork) hint = JournalText.Key("ui.objectives.pending_activity_hint");
-            else if (student.TimePointsRemaining <= 0) hint = JournalText.Key("ui.objectives.finish_day_hint");
+            else if (session.IsExhausted || session.MinutesUntilBedtime == 0) hint = JournalText.Key("ui.objectives.finish_day_hint"); // 지쳤거나 잘 시간이 지났다
             else if (adult) hint = JournalText.Key("ui.objectives.career_day_hint");
             else
             {

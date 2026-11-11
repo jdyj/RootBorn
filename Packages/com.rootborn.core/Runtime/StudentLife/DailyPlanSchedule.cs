@@ -39,6 +39,10 @@ namespace Rootborn.Core.StudentLife
 
         public int SlotIndex { get; }
         public string PeriodKey { get; internal set; }
+
+        /// <summary>이 칸이 묶인 하루의 시간대(TimeSlotDefinition id, 흐르는 시간). 칸의 문구 키에서 얻는다(세이브 모양은 그대로). 모르면 빈 문자열.</summary>
+        public string TimeSlotId => DailyPlanProgress.TimeSlotFor(PeriodKey);
+
         public string RouteId { get; internal set; } = string.Empty;
         public bool Completed { get; internal set; }
         public string MatchedActivityId { get; internal set; } = string.Empty;
