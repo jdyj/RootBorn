@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # 엔티티 데이터-드리븐 원칙(.claude/rules/data-driven.md): 코드는 특정 엔티티 id로 갈라지지 않는다.
-# 대상: Packages/com.rootborn.core/Runtime, game/ (tests 폴더 제외). 주석은 보지 않는다.
+# 대상: game/ (Core 규칙 game/Rootborn.Core/src 포함, tests 폴더 제외). 주석은 보지 않는다.
 # 찾는 것: id 이름(id, xxxId)을 문자열 리터럴과 ==, !=, is, Equals로 비교, switch (…Id), enum …Id.
 # 지금 코드에서 걸리는 것은 Scripts/ci/allowlists/entity-id-branching.txt 에 이유와 함께 고정한다.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 
 ALLOW="${ENTITY_ID_ALLOWLIST:-$CI_DIR/allowlists/entity-id-branching.txt}"
-SCAN=("Packages/com.rootborn.core/Runtime" "game")
+SCAN=("game")
 
 # id로 읽히는 이름 한 덩어리(낱말 전체): id, _id, Id, someId. valid·android 같은 낱말 끝은 id가 아니다.
 ID='([A-Za-z0-9_]*Id|_?id)'

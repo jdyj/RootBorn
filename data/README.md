@@ -178,7 +178,7 @@
 
 새 엔티티는 JSON만 더하면 되지만, **새 종류**(지금 없는 `type`, 예: 새 효과나 새 조건)는 코드가 필요하다.
 
-1. Core(`Packages/com.rootborn.core/Runtime`)에 그 종류의 클래스를 만든다. 엔진·파일·JSON 라이브러리를 참조하지 않는다.
+1. Core(`game/Rootborn.Core/src`)에 그 종류의 클래스를 만든다. 엔진·파일·JSON 라이브러리를 참조하지 않는다.
 2. `game/Rootborn.Data/Builders/<영역>Builders.cs`에 한 줄: `b.Add("<type>", (n, c) => new 클래스(n.Id, n.Int("delta"), c.One<…>(n, "trait")))`.
    - `n.Str/Int/Float/Bool/Enum`은 값, `c.One/All`은 다른 엔티티를 만들어 받음(없으면 `missing-ref` 오류), `n.RefId/RefIds`는 id 문자열만 받음.
    - 모든 영역을 부르는 곳은 `RootbornBuilders.Register` 하나다. 새 영역 파일을 만들면 거기에 한 줄 더한다.

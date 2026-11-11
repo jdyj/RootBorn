@@ -2,7 +2,7 @@
 set -euo pipefail
 T_NAME=no-entity-id-branching
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
-C=Packages/com.rootborn.core/Runtime/A.cs
+C=game/Rootborn.Core/src/A.cs
 G=game/Rootborn.Game/G.cs
 
 new_root; put $C 'class A { bool F(string id) => id != null && id.Length > 0; string s = "id"; }'

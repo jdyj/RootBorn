@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 한국어 요약: 커밋 전 검증. TODO 형식, JSON 파싱. (Core의 .meta는 CI check-meta-files가 본다)
+# 한국어 요약: 커밋 전 검증. TODO 형식, JSON 파싱.
 
 set -eu
 

@@ -18,7 +18,7 @@ run_check check-monogame-references.sh; expect "다른 csproj의 PackageReferenc
 new_root; put game/Rootborn.World/W.cs 'class W { Microsoft.Xna.Framework.Vector2 v; }'
 run_check check-monogame-references.sh; expect "완전한 이름도 걸림" fail
 
-new_root; put Packages/com.rootborn.core/Runtime/C.cs '// Microsoft.Xna 이야기
+new_root; put game/Rootborn.Core/src/C.cs '// Microsoft.Xna 이야기
 class C { string s = "Microsoft.Xna"; }'
 run_check check-monogame-references.sh; expect "주석·문자열 안은 무시" pass
 finish

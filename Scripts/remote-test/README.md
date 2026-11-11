@@ -3,7 +3,7 @@
 이 PC에서 커밋 하나를 원격 Linux 장치(지금은 Strix Halo)로 보내 가상 화면(Xvfb)에서 dotnet 테스트를 돌리고, 프로젝트별 건수·실패 목록·스크린샷을 가져온다. 여러 세션이 이 PC에서 동시에 Host 테스트를 돌리면 메모리가 모자라서 만들었다.
 
 ```bash
-bash Scripts/remote-test/run.sh                                  # HEAD로 전체(Core 테스트 + game/Rootborn.sln)
+bash Scripts/remote-test/run.sh                                  # HEAD로 전체(game/Rootborn.sln. 옛 커밋은 Tools/Rootborn.Core.Tests도)
 bash Scripts/remote-test/run.sh jdyj/my-branch                   # 브랜치·커밋 이름(푸시 안 된 것도 된다)
 bash Scripts/remote-test/run.sh HEAD -- --filter "FullyQualifiedName~MainChain"          # 인자가 -로 시작하면 game/Rootborn.sln에
 bash Scripts/remote-test/run.sh HEAD -- game/tests/Rootborn.Host.Tests --filter "..."    # 대상을 직접 주기

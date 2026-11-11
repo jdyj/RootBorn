@@ -164,9 +164,13 @@ common=(--logger trx --results-directory "$TRX" --disable-build-servers "-maxcpu
 start=$(date +%s)
 status=0
 if [ $# -eq 0 ]; then
-  log "dotnet test Tools/Rootborn.Core.Tests"
-  nice -n 10 dotnet test Tools/Rootborn.Core.Tests "${common[@]}" > "$RES/core.log" 2>&1 9>&- &
-  wait $! || status=1
+  # Core 테스트는 지금 game/Rootborn.sln 안에 있다(game/tests/Rootborn.Core.Tests).
+  # 그 전 커밋은 Tools/Rootborn.Core.Tests에 따로 있었으므로, 있으면 따로 돌린다.
+  if [ -d Tools/Rootborn.Core.Tests ]; then
+    log "dotnet test Tools/Rootborn.Core.Tests (옛 자리)"
+    nice -n 10 dotnet test Tools/Rootborn.Core.Tests "${common[@]}" > "$RES/core.log" 2>&1 9>&- &
+    wait $! || status=1
+  fi
   log "dotnet test game/Rootborn.sln (동시 $PARALLEL)"
   nice -n 10 dotnet test game/Rootborn.sln "${common[@]}" > "$RES/game.log" 2>&1 9>&- &
   wait $! || status=1

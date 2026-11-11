@@ -1,15 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Packages/com.rootborn.core/Runtime 소스를 그대로 묶는다. 이 폴더에 코드 파일을 두지 않는다.
-       LangVersion 9는 Unity가 컴파일하는 버전과 같다. -->
+  <!-- 게임 규칙(Rootborn.Core). 소스는 src/ 아래에 있다. 엔진·파일·JSON 라이브러리를 참조하지 않는다(CI check-core-references.sh).
+       언어 버전은 프로젝트 기본값이다. 코드는 Unity 판이 같은 폴더를 읽던 때의 C# 9 문법 그대로 두었다. -->
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <LangVersion>9.0</LangVersion>
     <Nullable>disable</Nullable>
     <IsPackable>false</IsPackable>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <RootNamespace>Rootborn.Core</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="../../Packages/com.rootborn.core/Runtime/**/*.cs" Link="Runtime/%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="src/**/*.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Core 테스트가 internal 멤버(예: StudentLifeProgress.ReserveMinigame)를 쓴다. 전에는 테스트가 소스를 직접 묶었다. -->
+    <InternalsVisibleTo Include="Rootborn.Core.Tests" />
   </ItemGroup>
 </Project>

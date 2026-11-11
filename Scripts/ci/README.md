@@ -1,12 +1,12 @@
 # Scripts/ci — 정적 검사
 
-MonoGame 판(`game/`, `Packages/com.rootborn.core`, `Tools/`)을 검사한다. Unity 판은 저장소에서 지웠다(태그 `unity-playable-20261111`에 있다). GitHub Actions(`.github/workflows/ci.yml`)도 같은 스크립트를 부른다.
+MonoGame 판(`game/` — Core 규칙 `game/Rootborn.Core/src` 포함, `Tools/`)을 검사한다. Unity 판은 저장소에서 지웠다(태그 `unity-playable-20261111`에 있다). GitHub Actions(`.github/workflows/ci.yml`)도 같은 스크립트를 부른다.
 
 ## 한 번에 돌리기
 
 ```bash
 export PATH="$HOME/.dotnet:$PATH" DOTNET_ROOT="$HOME/.dotnet"
-bash Scripts/ci/run-all.sh                 # 자체 시험 + 검사 7개 + dotnet 테스트 전부 (Host 테스트는 실제 창을 띄운다)
+bash Scripts/ci/run-all.sh                 # 자체 시험 + 검사 6개 + dotnet 테스트 전부 (Host 테스트는 실제 창을 띄운다)
 bash Scripts/ci/run-all.sh --checks-only   # 검사 스크립트만 (몇 초)
 bash Scripts/ci/run-all.sh --skip-host     # dotnet 테스트에서 창을 띄우는 Host 테스트를 뺀다
 ```
@@ -19,12 +19,11 @@ bash Scripts/ci/run-all.sh --skip-host     # dotnet 테스트에서 창을 띄�
 
 | 스크립트 | 보는 것 |
 |---|---|
-| `check-core-references.sh` | `Packages/com.rootborn.core/Runtime`에 `UnityEngine`, `System.Text.Json`, `System.IO` 참조가 없고 asmdef의 `noEngineReferences`가 true |
+| `check-core-references.sh` | `game/Rootborn.Core/src`에 `UnityEngine`, `System.Text.Json`, `System.IO` 참조가 없다 |
 | `check-monogame-references.sh` | MonoGame(`Microsoft.Xna`)·`MonoGame` 참조(csproj와 .cs의 using·완전한 이름)가 `game/Rootborn.Host`, `game/tests/Rootborn.Host.Tests` 밖에 없다 |
-| `check-no-entity-id-branching.sh` | Core 런타임과 `game/`(tests 제외)에서 `…Id == "…"`, `switch (…Id)`, `Equals`, `is "…"`, `enum …Id` 같은 엔티티 id 분기가 없다. 허용 목록: `allowlists/entity-id-branching.txt` |
+| `check-no-entity-id-branching.sh` | `game/`(Core 포함, tests 제외)에서 `…Id == "…"`, `switch (…Id)`, `Equals`, `is "…"`, `enum …Id` 같은 엔티티 id 분기가 없다. 허용 목록: `allowlists/entity-id-branching.txt` |
 | `check-no-hardcoded-text.sh` | `game/Rootborn.Screens` 코드에 한글 문구 리터럴이 없다(주석·예외 메시지·tests 제외). 허용 목록: `allowlists/hardcoded-text.txt` |
 | `check-localization-keys.sh` | `data/localization`과 `game/localization`을 합친 뒤 모든 언어가 같은 키를 가진다(언어는 파일 이름에서 읽는다). `jq`가 있으면 jq, 없으면 파이썬 |
-| `check-meta-files.sh` | Core 런타임의 `.cs`와 폴더마다 `.meta`가 있다(Unity 판이 같은 폴더를 패키지로 읽는다) |
 | `check-host-test-shards.sh` | CI Host 테스트 묶음 정의(`host-test-shards.txt`)가 클래스를 빠뜨리거나 겹치지 않는다: 적은 클래스가 모두 있고, 두 묶음에 든 클래스가 없고, 나머지 묶음(`*`)이 하나 맨 끝에 있고, 워크플로 matrix 목록과 같다 |
 
 주석과 문자열은 `lib/cs_scan.py`가 갈라서 본다(주석 안의 이름이나 문자열 안의 `//`에 속지 않는다).
@@ -45,8 +44,8 @@ GitHub 기록(`gh run view`)을 읽어 확인한 값이다(main 43022156721, 202
 
 | job | 하는 일 | 마지막 결과 | 시간 | 막는가 |
 |---|---|---|---|---|
-| `static-checks` | 자체 시험 + 검사 7개 | 통과 | 약 20초 | 막는다 |
-| `dotnet-tests` | Core, `game/tests`의 Host 테스트를 뺀 나머지(Server, Simulation 포함) | 통과(Core 970, Data 256, Game 520, Screens 393, Server 40, Simulation 36 …) | 약 1.5분 | 막는다 |
+| `static-checks` | 자체 시험 + 검사 6개 | 통과 | 약 20초 | 막는다 |
+| `dotnet-tests` | `game/tests`의 Host 테스트를 뺀 나머지(Core, Server, Simulation 포함) | 통과(Core 970, Data 256, Game 520, Screens 393, Server 40, Simulation 36 …) | 약 1.5분 | 막는다 |
 | `server-publish` | `Tools/publish/publish.sh --server linux-x64` 뒤 `verify.sh --server linux-x64` | 연속 두 번 통과(43022156721, 43027519152) | 35~50초 | 막는다 |
 | `host-tests` (묶음 4개 matrix) | `game/tests/Rootborn.Host.Tests`를 `xvfb-run` + 소프트웨어 GL로, 묶음마다 따로 | 나누기 전 한 job: 171건 중 169 통과, 성능 시험 2건 실패 | 나누기 전 테스트 단계 28~29분 | **막지 않는다**(`continue-on-error`), 묶음마다 시간 제한 30분 |
 

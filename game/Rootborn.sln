@@ -41,6 +41,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rootborn.Server.Tests", "te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rootborn.Simulation.Tests", "tests\Rootborn.Simulation.Tests\Rootborn.Simulation.Tests.csproj", "{F54CBD16-14B8-4508-B26C-E4019BB99812}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rootborn.Core.Tests", "tests\Rootborn.Core.Tests\Rootborn.Core.Tests.csproj", "{69DB0798-87BF-4E42-9E7B-4E752B318569}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -122,6 +124,10 @@ Global
 		{F54CBD16-14B8-4508-B26C-E4019BB99812}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F54CBD16-14B8-4508-B26C-E4019BB99812}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F54CBD16-14B8-4508-B26C-E4019BB99812}.Release|Any CPU.Build.0 = Release|Any CPU
+		{69DB0798-87BF-4E42-9E7B-4E752B318569}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{69DB0798-87BF-4E42-9E7B-4E752B318569}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{69DB0798-87BF-4E42-9E7B-4E752B318569}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{69DB0798-87BF-4E42-9E7B-4E752B318569}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{9809DB3E-3282-4095-B1D7-B5CC6080D1B5} = {704DBE29-350A-43F6-9018-D043B419DACF}
@@ -133,5 +139,6 @@ Global
 		{3FBA7E35-F29E-401F-BD40-920E074E5F7D} = {704DBE29-350A-43F6-9018-D043B419DACF}
 		{D5AFAF8B-0A44-4BC4-ABF1-1188B4798FF8} = {704DBE29-350A-43F6-9018-D043B419DACF}
 		{F54CBD16-14B8-4508-B26C-E4019BB99812} = {704DBE29-350A-43F6-9018-D043B419DACF}
+		{69DB0798-87BF-4E42-9E7B-4E752B318569} = {704DBE29-350A-43F6-9018-D043B419DACF}
 	EndGlobalSection
 EndGlobal

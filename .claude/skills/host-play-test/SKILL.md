@@ -18,7 +18,7 @@ C:\Users\jdyj\.dotnet\dotnet.exe run --project game/Rootborn.Host -- --sample --
 
 | 층 | 어디에 | 무엇을 | 보고에서의 이름 |
 |---|---|---|---|
-| 화면 없음 | `Tools/Rootborn.Core.Tests`, `game/tests/Rootborn.Data.Tests`·`World.Tests`·`Game.Tests`·`Ui.Tests` | 규칙 계산, 데이터 읽기, 칸 단위 걷기, `GameSession` 흐름, 배치·판정 | 자동 테스트 |
+| 화면 없음 | `game/tests/Rootborn.Core.Tests`·`Data.Tests`·`World.Tests`·`Game.Tests`·`Ui.Tests` | 규칙 계산, 데이터 읽기, 칸 단위 걷기, `GameSession` 흐름, 배치·판정 | 자동 테스트 |
 | 창 없는 화면 | `game/tests/Rootborn.Screens.Tests` | 화면을 눌러 보기, 화면 쌓기, 모든 언어의 문구 키 | 자동 테스트(화면 근거 아님) |
 | 실제 루프 | `game/tests/Rootborn.Host.Tests` | 창을 띄우고 한 프레임씩 진행하며 입력을 넣음 | 장치 이벤트 주입, OS 입력 계층 미확인 |
 | OS 입력 | FEVM의 Xvfb + xdotool, 또는 사람이 직접 | 실제 마우스, 키보드, 입력기 | 실제 입력(OS) |

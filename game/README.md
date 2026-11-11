@@ -6,7 +6,7 @@
 
 | 폴더 | 내용 | MonoGame 참조 |
 |---|---|---|
-| `Rootborn.Core` | `Packages/com.rootborn.core/Runtime`의 게임 규칙을 그대로 묶는 프로젝트(코드 없음, LangVersion 9) | 없음 |
+| `Rootborn.Core` | 게임 규칙, 진행 상태, 세이브 모양, 월드 판정. 소스는 `Rootborn.Core/src/<영역>`. 엔진·파일·JSON 라이브러리를 참조하지 않는다 | 없음 |
 | `Rootborn.Data` | `data/` JSON으로 Core 정의 만들기(`GameDataLoader.Load(dir, RootbornBuilders.Register)`), 세이브 파일 저장소(`FileSaveStore`) | 없음 |
 | `Rootborn.Game` | 게임 한 판(`GameSession.StartFromData(data, 저장소, 슬롯, 플레이어)`, 또는 `Start(정의, GameStartSettings.FromDefinitions(정의), …)`). 화면이 부를 명령과 조회(가구는 `EnterHouse(방 칸, "house")` 뒤에). 규칙은 Core가 판단하고 여기서는 영역을 잇고 저장만 한다 | 없음 |
 | `Rootborn.World` | LDtk 파일(.ldtk·.ldtkl)을 그대로 읽고, 맵 목록 `game/world/maps.json`으로 Core 월드(충돌·문·도착 지점)와 그릴 목록을 만든다. 장면 목록·낮밤 조명은 정의 로더가 만든 것을 받는다(`WorldTravelData.From`, `DayNightLighting.From`). 새 맵 검사 `MapChecks`. 맵을 그리는 사람의 약속은 `game/world/README.md` | 없음 |
@@ -16,6 +16,7 @@
 | `Rootborn.Host` | 창, 화면 배율, 입력 장치 계층, 한글 조합 입력, TTF 글자, 그리기, 화면 저장, 견본 화면, 방 접속(`Net/RoomConnection`)과 다른 참가자 그리기(`World/RemoteAvatars`) | 3.8.6.1 고정 |
 | `Rootborn.Host` | 창, 화면 배율, 입력 장치 계층, 한글 조합 입력, TTF 글자, 그리기, 화면 저장, 견본 화면 | 3.8.6.1 고정 |
 | `Rootborn.Server` | 화면 없는 데디케이티드 서버(방 하나): 인자 읽기 → 데이터 읽기 → 슬롯 열기 → UDP로 듣기 → 고정 간격 루프 → 끝낼 때 저장하고 닫기. 방의 논리는 `Rootborn.Net/Room`(`RoomServer`). 인자는 아래 "서버" | 없음 |
+| `tests/Rootborn.Core.Tests` | Core 규칙 단위(생성자로 만든 정의, 메모리 저장소). 엔진 없이 몇 초에 돈다 | 없음 |
 | `tests/Rootborn.Data.Tests` | 정의 로더, 실제 `data/` 전체 읽기, 세이브 저장소, Unity 판 QA 세이브 고정 파일 | 없음 |
 | `tests/Rootborn.World.Tests` | 모든 맵에 도는 새 맵 검사(`MapContractTests`, 지금 맵의 알려진 문제 고정), 새 게임 자리에서 메인 체인 지점까지 걷기(`MainChainWalkTests`), 실제 LDtk로 맵 만들기, Unity 씬에 구워진 충돌과 칸 단위 대조, 도착 지점·문 목적지, 크기가 다른 집, 장면 목록·고정 세이브, 캐릭터 그림, 낮밤, 상호작용 데이터 | 없음 |
 | `tests/Rootborn.Game.Tests` | 실제 `data/`와 임시 폴더 저장소로 새 게임 초기값, 메인 체인 끝까지(화면 없이, 가구 방 칸은 실제 집 맵), 성인기, 보상 한 번만, Unity QA 세이브·스냅샷 이전 슬롯 이어 하기 | 없음 |
@@ -38,7 +39,7 @@
 
 ```
 dotnet test game/Rootborn.sln
-dotnet test Tools/Rootborn.Core.Tests
+dotnet test game/tests/Rootborn.Core.Tests
 dotnet run --project game/Rootborn.Host -- --sample --size 1920x1080
 dotnet run --project game/Rootborn.Host -- --world Shop --size 1920x1080
 dotnet run --project game/Rootborn.Host -- --save-root <세이브 폴더>

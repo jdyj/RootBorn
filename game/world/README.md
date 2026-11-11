@@ -4,7 +4,7 @@
 맵을 바꾸는 일은 LDtk 파일, 타일셋 PNG, 이 폴더의 `maps.json`·`interactions.json`을 바꾸는 일이다.
 
 읽는 코드: `game/Rootborn.World`(LDtk 읽기 `Ldtk/LdtkFile.cs`, 맵 만들기 `WorldMapLoader.cs`, 맵 목록 `WorldCatalog.cs`,
-그리기 순서 `MapPicture.cs`, 상호작용 `WorldInteractionData.cs`, 검사 `MapChecks.cs`), 규칙은 Core `Packages/com.rootborn.core/Runtime/World`.
+그리기 순서 `MapPicture.cs`, 상호작용 `WorldInteractionData.cs`, 검사 `MapChecks.cs`), 규칙은 Core `game/Rootborn.Core/src/World`.
 
 ## 1. 파일 두는 곳
 

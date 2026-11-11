@@ -6,7 +6,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 
 violations=0
 # 소스 폴더만 본다. 저장소 전체를 훑으면 git 밖 폴더(output/의 스파이크 코드, Unity Library 등)가 걸리고 몇 분이 걸린다.
-SOURCE_DIRS=(game Packages/com.rootborn.core Tools)
+SOURCE_DIRS=(game Tools)
 is_host_path() {
   case "$1" in
     game/Rootborn.Host/*|game/tests/Rootborn.Host.Tests/*) return 0 ;;
