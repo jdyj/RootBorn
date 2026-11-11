@@ -1,10 +1,35 @@
 # 규칙 변경 이력
 
+## 2026-11-12 — 헌법과 AGENTS.md를 MonoGame 판 기준으로 다시 씀, Unity 규칙 삭제
+- 요청: "규칙문서 직접 고쳐도돼 unity 관련된거 지워"
+- 배경: 게임이 MonoGame 판으로 옮겨져 메인 체인이 실제 입력으로 통과했다. `AGENTS.md`와 `constitution.md`에는 Unity 기준 조항(SO 와이어링, PlayMode, Addressables, Style2 좌표, NGO, Unity 빌드)이 남아 있었다.
+- 변경: `AGENTS.md`와 `constitution.md`를 지금 구조 기준으로 다시 씀. `rules/strix-verification.md` 삭제(Unity 판 검증 절차). 그 밖의 `rules/*.md`는 같은 날 먼저 정리됨(`path-based/` 삭제, `data-driven.md` 신규).
+- 같은 날 사용자 지시로 더한 규칙: 그림과 맵은 갈아 끼울 수 있게(`engine-migration.md`), 다국어(`localization.md`).
+- 일반화: 규칙 문서는 지금 코드의 사실만 담는다. 옮겨 간 뒤의 낡은 조항은 다음 세션이 낡은 전제를 따르게 하므로 그때 지운다. 아래 이력은 Unity 판과 그 전 프로젝트 시절의 기록이라 지금 코드와 맞지 않는 것이 많다.
+
+## 2026-11-11 — Unity 판 동결, Unity 도구·규칙 삭제
+- 요청: "MonoGame으로 가자", "1번 + 2번으로 가자", "unity 관련된걸 하나하나 끝내면 문서나 메모리 등 남기지 않도록 진행해", "추천대로 계속 진행해"
+- 배경: 게임을 Unity에서 MonoGame으로 옮긴다. 속도를 위해 Unity 판을 태그 `unity-playable-20261111`로 얼리고 규칙은 `Rootborn.Core`에 바로 새로 쓴다.
+- 변경: `rules/engine-migration.md` 신규. `rules/unity-cli.md`, Unity MCP 스킬(`.claude/skills` 93개, `.agents/skills` 전체), Unity 전용 에이전트 6개, `.mcp.json` 삭제. AGENTS.md 1번 삭제. `rules/strix-verification.md`와 `Scripts/fevm`은 기준본 화면 비교가 끝날 때까지만 둔다.
+- 일반화: 끝난 부분의 규칙·도구·메모리는 그때 지운다. 남겨 두면 다음 세션이 낡은 전제를 따른다.
+
 ## 2026-11-09 — 새 .cs 직접 작성 허용을 AGENTS.md 1번에 반영
 - 요청: "새 .cs를 왜 Unity를 거쳐 만들어? 이러면 더 유니티에 결합되는거 아니야?"(11-08), "승인할게 수정하고 진행해봐"(11-09)
 - 배경: `unity-cli.md`는 11-08에 고쳤지만 AGENTS.md 1번에는 'MCP·편집기 경유 의무'가 남아 두 문서가 어긋났다. `unity-cli.md`의 MCP 편집기 사본 갱신 절차는 열린 편집기 밑에서 체크아웃하는 것이라 같은 위험이 있었다.
 - 변경: AGENTS.md 1번 문구 교체, `unity-cli.md` MCP 사본 갱신은 편집기를 닫고 체크아웃한 뒤 다시 띄우도록 수정.
 - 일반화: 금지 대상은 '직접 쓰기'가 아니라 '열린 편집기 밑에서 소스가 바뀌는 것'이다. 커밋 체크아웃도 여기에 포함된다.
+
+## 2026-11-07 — 엔진 무관 게임 규칙, 실제 플레이 근거 보고
+- 요청: "권하는 쪽으로 진행해보자", "헌법에도 적어놔 codex, claude", "직접 플레이를 안해놓고 한 척하고 있어서 짜증나서 계속 얘기한거"
+- 배경: Unity 에디터 테스트가 수 분과 4~10GB 메모리를 쓰고, 에디터가 열린 채 파일을 고치면 테스트가 깨진다. 내부 호출·값 직접 대입으로 확인한 것을 실제 플레이 확인처럼 보고한 일이 반복됐다.
+- 변경: `rules/core-logic-and-play-evidence.md` 신규, `AGENTS.md` 13번과 Rules Reference, `constitution.md` 4-3절 추가.
+- 일반화: 화면과 무관한 규칙은 엔진 밖에서 빠르게 검증한다. 완료 보고는 근거의 종류(실제 입력, 스크린샷, 자동 테스트, 내부 호출)를 나눠 쓰고, 실제 입력 근거가 없는 항목은 확인했다고 쓰지 않는다.
+
+## 2026-11-05 — Strix Halo 커밋 기준 검증 절차
+- 요청: "어떻게 진행되는건지 claude, codex 헌법에 넣어주고", "그냥 git 가져와서 해당 버전으로 검증", "ai를 사용했으면 좋겠는데 … 토큰도 아껴야할 필요가 있는데"
+- 배경: 복사한 사본이 Windows의 후속 수정과 어긋났고, 미커밋 작업은 git 기준 검증에 포함되지 않는다. 검증 AI 검토에서는 토큰 비용과 FEVM 로컬 비전 모델을 고려하지 않았다.
+- 변경: `rules/strix-verification.md` 신규, `AGENTS.md` 12번과 Rules Reference, `constitution.md` 4-2절 추가.
+- 일반화: 검증 대상은 해시로 고정하고, 판정은 스크립트 → 로컬 모델 → 상위 모델 → 사용자 순으로 필요한 만큼만 올린다. 로컬 모델은 보정 전이나 단독으로 필수 항목을 완료 처리하지 못한다.
 
 ## 2026-05-16 - Runtime-only tilemap verification false completion
 - Feedback: "전혀 안됐는데 어딜 했다고하는거야?"

@@ -1,120 +1,66 @@
 # Repository Guidelines
 
-## Approved urban molding UI exception (2026-10-27)
+ROOTBORN은 도시 생활 성장 시뮬레이션이다. 2026-11-11부터 Unity에서 MonoGame으로 옮겼고, Unity 판은 태그 `unity-playable-20261111`에 얼려 두었다. `Assets/`의 Unity 코드와 씬은 고치지 않는다(지울 예정). 최상위 규칙은 `.claude/constitution.md`, 자세한 규칙은 `.claude/rules/`에 있다. Claude와 Codex 모두 따른다.
 
-The user approved applying the ComfyUI v5 urban molding skin to the game. For common UI, `ModernUiTileImage` may use the Addressables theme `data/ui/urban-molding` and one sliced Image per panel/button/slot. Preserve the approved corners, Point sampling, shared atlas, separate localized text, and existing Style2 fallback. This explicit approval overrides the Style2-only rule below for this skin. Verify actual player input and saved theme references before declaring completion.
+## 절대 원칙
 
-## Constitutional Addendum — Direct Visual Play Verification Gate
+1. **엔티티는 데이터로, id로 분기하지 않는다.** 활동, 선택지, 특성, 기술, 진로, 관계, 장소, 퀘스트, 가구 같은 엔티티는 `data/` JSON으로 정의한다. `if (id == "X")`, `switch (id)`, 엔티티 id enum, 엔티티마다 C# 클래스를 두지 않는다. 새 종류는 클래스 하나와 등록 한 줄로 더한다. (`.claude/rules/data-driven.md`, CI `Scripts/ci/check-no-entity-id-branching.sh`)
+2. **규칙은 `Rootborn.Core`에만.** Core는 엔진, 파일, JSON 라이브러리를 참조하지 않는다. 화면은 `GameSession`의 명령과 조회만 부르고, MonoGame 참조는 `Rootborn.Host`와 그 테스트에만 둔다. (`.claude/rules/coding-standards.md`)
+3. **실패 테스트 먼저.** AI가 쓴 코드도 같다. 사용자 흐름(걷기, 문, 상호작용, 버튼, 이어 하기)은 입력으로 그 흐름을 지나는 테스트로 확인한다. 사용자가 "걸어가서", "버튼을 눌러서"라고 정한 길을 내부 호출이나 상태 강제 설정으로 대신하지 않는다. (`.claude/rules/testing-discipline.md`)
+4. **"확인했다"는 실제 근거로만.** 보고할 때 자동 테스트, 입력 이벤트를 넣은 테스트(OS 입력 계층 미확인), 실제 입력, 직접 본 화면을 나눠 쓴다. 테스트 통과만으로 "화면에 보인다"고 하지 않는다. 보이는 것을 바꿨으면 스크린샷을 직접 열어 본 뒤에 끝났다고 한다. (`.claude/rules/core-logic-and-play-evidence.md`)
+5. **보상은 한 번만, 전부 아니면 전무.** 보상을 주기 전에 받을 공간이 있는지와 이미 받았는지를 확인한다. 실패하면 인벤토리와 진행을 바꾸지 않는다. 저장하고 다시 읽은 뒤 다시 요청해도 한 번만 준다. (`.claude/rules/data-driven.md`)
+6. **자유 경로 성장.** 학교 수업 하나만 정답인 구조로 만들지 않는다. 같은 핵심 성장 목표에는 가능하면 길을 두 개 이상 둔다. (`.claude/rules/game-design.md`)
+7. **성능을 처음부터 같이 설계한다.** 긴 목록은 보이는 줄만 그리고, 매 프레임 상태를 다시 읽거나 계산하지 않는다. 완료 보고에 성능을 어디까지 확인했는지 적는다. (`.claude/rules/game-design.md`, `.claude/rules/coding-standards.md`)
+8. **목표성 UI는 목표 수첩이 맡는다.** "지금 무엇을 하면 되는가"를 알려 주는 UI는 Tab으로 여는 목표 수첩에 넣고, 늘 떠 있는 것은 추적 목표 HUD 하나뿐이다. (`.claude/rules/objective-journal-ui.md`)
+9. **그림과 맵은 갈아 끼울 수 있게.** 그림과 맵은 전부 새로 만들 예정이다. 화면 코드는 스킨 이름과 아이콘 키만 쓰고, 코드가 특정 맵의 이름·크기·좌표에 기대지 않는다. 테스트는 그림의 픽셀에 기대지 않는다. (`.claude/rules/engine-migration.md`, `.claude/rules/ui-standards.md`)
+10. **여러 언어.** 사람이 읽는 문구를 코드에 적지 않고 현지화 키로 받는다. 문장을 코드에서 이어 붙이지 않는다. (`.claude/rules/localization.md`)
+11. **기획은 사용자에게 묻는다.** 수치, 콘텐츠, 진행 순서, 화면 구성, 스토리를 바꾸는 결정은 묻는다. 옛 세이브는 계속 읽혀야 한다. Unity 판과 달라지는 동작은 테스트로 고정하고 `docs/superpowers/specs/2026-11-11-core-rules-extraction-design.md` 9절에 적는다.
 
-Visible gameplay, UI, sprite, tilemap, placement, scene, prefab, camera, or interaction changes are not complete until they are verified through the actual player-facing flow.
+## 규칙 문서 (`.claude/rules/`)
 
-- Automated EditMode/PlayMode tests are required, but they are not enough by themselves for visible or interactive work.
-- This verification gate is always on by default. The user does not need to ask for "actual PlayMode testing" again for visible gameplay, UI, camera, tilemap, placement, scene, prefab, or interaction work.
-- The agent must reproduce the user-facing path in PlayMode: input, movement, trigger, UI click/selection, placement, scene transition, or the exact flow the user described.
-- The agent must capture or inspect a Game View or Camera screenshot when the result is visual.
-- For camera, placement, construction, House expansion, and tile-editing work, the agent must test as a player would: enter PlayMode, use the relevant input/UI flow, observe the Game View, inspect runtime state, and verify saved state after reload when persistence is expected.
-- For tilemap/sprite/placement work, the agent must also inspect runtime Tilemap/Renderer/UI state, including the selected asset name, cell position, overlay state, and whether stale sample/debug tilemaps or placeholder objects are still visible.
-- Runtime-only visual checks are not enough when the requested result should persist in a scene, prefab, ScriptableObject, or palette asset. The agent must separately verify the saved EditMode asset/scene state after applying the change, including the exact Tilemap tile names/counts or serialized asset references, then reopen or inspect the saved scene/asset before claiming it is reflected for the user.
-- Internal method calls, forced state setup, forced scene loading, asset-name checks, or passing tests alone cannot be reported as "done" when the user's concern is what appears in the game.
-- If direct visual verification is blocked, the agent must say so explicitly before claiming completion and must describe what was verified and what remains unverified.
-- Previous failure pattern to prevent: a chair placement task passed asset and Tilemap checks while the Game View still showed stale sample/debug tiles or the placed result was hidden by overlay/UI. Future sessions must verify the visible result, not just the data path.
-- Previous failure pattern to prevent: a House wall tile task was reported as done after PlayMode runtime generation showed `tile_r02_c09`, but the saved `Assets/Scenes/House.unity` Tilemap still had only the original two window tiles using it. Future tilemap/palette changes must distinguish runtime generated state from saved scene/palette state and must not report completion until the saved state the user will see is verified.
-- Previous failure pattern to prevent: LDtk Town Ground tiles looked correct by `Tile.name`, layer count, and sorting order, but the generated `Sprite.rect` was cut from a downscaled Unity import height instead of the original PNG height. LDtk `src` is top-left origin; Unity `Sprite.rect.y` must be `originalPngHeight - srcY - tileHeight`. Future LDtk imports must verify original PNG size, TextureImporter max size/compression/filter settings, `Sprite.rect`, saved Tilemap references, and actual PlayMode Game View screenshot before claiming visual parity.
+- `engine-migration.md` — 옮기는 동안의 규칙, 지금 상태, 그림과 맵 교체 대비
+- `coding-standards.md` — 프로젝트 나눔과 참조 방향, Core 제약, 성능
+- `data-driven.md` — 데이터에서 Core 정의까지, id 분기 금지, 보상·인벤토리·세이브
+- `testing-discipline.md` — 어느 테스트 프로젝트에 무엇을, 명령, 시나리오 id
+- `core-logic-and-play-evidence.md` — 근거의 종류와 보고 규칙
+- `ui-standards.md` — 화면 구조, 화면 쌓기, 키 배정, 테마, 배치 수치
+- `objective-journal-ui.md` — 목표 수첩과 추적 목표 HUD
+- `localization.md` — 다국어
+- `game-design.md` — 자유 경로 성장, 성능 동시 설계
+- `environment-config.md` — 환경에 따라 달라지는 값
+- `commit-conventions.md` — 커밋 메시지
+- `changelog.md` — 규칙이 바뀐 이력
 
-> **헌법급 절대 원칙 — 모든 AI 에이전트는 위반 금지.** 상세 규칙은 `.claude/rules/` 참조.
+## 저장소 구조
 
-## Constitutional Rules (절대 원칙)
+- `Packages/com.rootborn.core/Runtime` — `Rootborn.Core`: 게임 규칙, 진행 상태, 세이브 모양, 월드 판정
+- `game/` — MonoGame 판: `Rootborn.Data`(데이터 읽기, 세이브 파일), `Rootborn.Game`(게임 한 판 `GameSession`), `Rootborn.World`(맵), `Rootborn.Ui`(UI 부품), `Rootborn.Screens`(화면), `Rootborn.Net`(멀티플레이 바탕), `Rootborn.Host`(실행 프로그램), `tests/`, `world/`(맵 목록과 상호작용 지점), `themes/`(UI 그림), `localization/`(더한 문구)
+- `data/` — 게임 데이터 JSON. 지금은 Unity 에셋에서 변환한 결과다(`Tools/Rootborn.DataExport`). 고치는 법은 `data/README.md`
+- `Tools/` — Core 테스트, 변환기, 배포 빌드(`Tools/publish`)
+- `Scripts/ci` — 정적 검사
+- `docs/superpowers/specs` — 설계 문서
+- `Assets/` — 얼린 Unity 판. 게임이 읽는 그림과 LDtk 맵이 아직 이 아래에 있다
 
-1. **열려 있는 Unity 편집기 밑에서 `.cs`·`.asmdef`를 바깥에서 고치지 않는다.** 새 `.cs`와 그 `.meta`(`fileFormatVersion: 2` + 새 32자리 GUID)는 직접 작성해 함께 커밋한다. 편집기가 열린 동안 바깥에서 고치면 컴파일 캐시가 바뀐 파일을 놓쳐 CS0103이 난다. (`.claude/rules/unity-cli.md`)
+자세한 설명과 실행 인자는 `game/README.md`.
 
-2. **엔티티 데이터-드리븐 절대 원칙.** 모든 게임 엔티티(생활 활동·선택지·특성·기술·진로·직무·관계·장소·도구·자원·지식·상태이상·레시피·레거시 작물/세대 프로필)는 100% ScriptableObject로 정의. `if (activityId == "X")`, `if (cropId == "X")`, `switch(toolId)`, 활동/선택지/작물/도구별 C# 클래스, ID enum 모두 **금지**. 메카닉은 `LifeActivityDefinition` SO + 전략 배열, `LifeChoiceDefinition` SO + outcome 전략 배열, `ToolDefinition` SO + `ToolEffectBase[]`, `KnowledgeNode` SO + `KnowledgeTriggerBase[]` 처럼 SO 전략 배열로만 표현. (`.claude/rules/path-based/assets-data.md`, CI 게이트 `Scripts/ci/check-no-entity-id-branching.sh`)
+## 명령
 
-3. **TDD 의무 + 시나리오 100% 커버.** 모든 신규 코드는 실패 테스트 먼저, 구현 다음. 코어 루프(Town 진입/생활 활동/특성·기술·진로/관계·직무/상태/네트워크) 시나리오는 명명된 테스트로 ≥95% 커버. 레거시 Farm/Crop/Generation 수정은 격리된 회귀 시나리오를 유지한다. AI 생성 코드도 예외 없음. (`.claude/rules/testing-discipline.md`)
-
-4. **엔티티 SO 와이어링 규약.** SO 클래스는 `Assets/Scripts/Game/{Domain}/`, 인스턴스는 `Assets/Data/{StudentLife|LifeActivities|Choices|Skills|Careers|Jobs|Relationships|Locations|Tools|Resources|Recipes|Knowledge|Traits|Status|Family|Generations|Crops}/`. 모든 SO는 `Assets/Data/Registry/GameDataRegistry.asset`에 등록 (Resources.Load 대용). SO 인스턴스 = 튜닝 단위.
-
-5. **커밋 prefix 카탈로그 (한글 본문 의무).** `[FEATURE] [BUGFIX] [REFACTOR] [UI] [ASSET] [BALANCE] [TEST] [DOCS] [CHORE] [NETWORK] [META]` — 11종. 복수 가능 (예: `[ASSET][BALANCE]`). 다중 카테고리 변경은 분리 커밋 권장. (`.claude/rules/commit-conventions.md`)
-
-6. **보상·인벤토리 트랜잭션 원칙.** 퀘스트/스토리/미션/지식/툴 해금 등 모든 보상 수령은 지급 전에 인벤토리 수용 가능 여부와 중복 수령 여부를 검증한다. 검증 실패 시 인벤토리와 보상 상태를 변경하지 않는다. 보상 지급은 아이템 복사·삭제·부분 지급·이중 지급이 발생하지 않도록 원자적으로 처리하고, 저장/로드 후 재호출해도 멱등이어야 한다. (`.claude/rules/testing-discipline.md`)
-
-7. **Modern UI Style2 공통 패널 규약.** 공통 패널은 `Assets/modernuserinterface-win/16x16/Modern_UI_Style_2.png`의 16x16 Style2 3×3 블록만 사용한다. 좌표는 top=`r2_c0/r2_c1/r2_c2`, middle=`r3_c0/r3_c1/r3_c2`, bottom=`r4_c0/r4_c1/r4_c2`이며 `r3_c1`을 fill tile로 반복한다. 패널 배경에 단일 `Image.sprite`를 직접 넣지 말고 `ModernUiTileImage + ModernUiRecipes.CommonPanel`을 사용한다. (`.claude/rules/ui-standards.md`)
-
-7-1. **Modern 비주얼 에셋 우선 규약.** Town, StudentLife, NPC, 상호작용 포인트, 월드 타일, 직업/장소 외관, 가구/실내, 공통 UI의 신규/수정 sprite는 Modern 계열 에셋을 우선 사용한다. 기본 후보 경로는 `Assets/Modern_Town/`, `Assets/Modern_Exteriors_32x32/`, `Assets/Modern_Farm_v1.2/`, `Assets/moderninteriors-win/`, `Assets/modernuserinterface-win/`, `Assets/Tiles/ModernTownOffice/`, `Assets/TilePalettes/ModernTownOffice/`이다. 특히 직업·장소·건물·교통·공공시설·상점·학교·병원·경찰서·오피스·작업장 계열 월드 sprite는 `Assets/Modern_Exteriors_32x32/`를 1차 후보로 검토한다. Pixelwood 경로는 레거시 Farm/Crop 회귀, 이전 비교 기준, 이미 해당 에셋으로 고정된 기존 기능 보수에만 사용하며, Town 신규 상호작용 sprite의 기본 후보로 제안하지 않는다. Modern 에셋 적용도 실제 PlayMode Game View와 Renderer/Tilemap 상태로 검증해야 한다. (`.claude/constitution.md`, `.claude/rules/ui-standards.md`, `.claude/rules/path-based/sprite-slicing.md`)
-
-8. **플레이어 대리 테스트 + 사용자 지정 플레이 흐름 우회 금지.** 모든 유저 여정/코어 루프/PlayMode 시나리오의 완료 판정은 실제 플레이 방식의 입력, 이동, 트리거, UI 클릭/선택, 씬 전환 관찰로 증명한다. 사용자가 "직접 이동", "직접 클릭", "포탈로 가서", "UI에서 선택"처럼 구체적인 조작 경로를 지정하면 테스트와 구현은 그 경로를 그대로 재현해야 한다. 내부 메서드 직접 호출, 상태 강제 세팅, 씬 강제 로드 등 우회로 통과시킨 검증은 완료로 인정하지 않는다. 자동화가 어렵다면 먼저 명시적으로 알리고, 최소 PlayMode/입력/트리거/UI 경로 테스트로 실제 사용자 흐름을 증명한다. (`.claude/rules/testing-discipline.md`)
-
-9. **자유 경로 성장 원칙.** 학생 생활은 학교 수업·등교 루트 하나만 정답인 선형 구조로 설계하지 않는다. 플레이어는 학교를 중간에 나가거나, 마을 활동·관계·알바·탐험·제작·도움 행동·독학·휴식·이벤트 선택 등 다양한 경로로 특성·성향·스킬·진로 힌트·관계·컨디션을 성장시킬 수 있어야 한다. 동일한 핵심 성장 목표에는 가능한 한 2개 이상의 대체 경로를 제공하고, 모든 경로는 ScriptableObject 데이터와 전략 배열로 표현한다. 학교 밖 활동을 핵심 성장/진로/관계 진행에서 배제하거나 특정 활동/장소/퀘스트 ID별 C# 분기로 진행 경로를 제한하는 것은 금지한다. (`.claude/rules/game-design.md`)
-
-10. **성능·최적화 동시 설계 원칙.** 신규 시스템은 기능 구현 후 뒤늦게 최적화하지 않고, 기획·데이터 구조·UI 목업·테스트 단계부터 성능 예산과 확장 비용을 함께 고려한다. 대량 도감/퀘스트/인벤토리/마일스톤 UI는 가상화·페이징·캐싱·지연 로딩·dirty 갱신을 우선 검토하고, `Update()` 폴링, 반복 전체 스캔, 런타임 문자열 조립/할당 폭증, 불필요한 Instantiate/Destroy 루프를 금지한다. 완료 보고에는 관련 성능 리스크와 검증 범위를 포함한다. (`.claude/rules/game-design.md`, `.claude/rules/coding-standards.md`)
-
-11. **Objective Journal 목표성 UI 소유권.** 목표·퀘스트·캠페인·진로 힌트처럼 "플레이어가 지금 무엇을 하면 되는가"를 설명하는 UI는 `Tab`으로 여는 `ObjectiveJournalPanel`이 소유한다. 상시 HUD는 `TrackedObjectiveHud` 하나만 사용하고 추적 중인 목표 1개만 표시한다. 신규 goal/quest/campaign/hint UI가 각자 Canvas·좌표·크기를 직접 들고 상시 패널을 만드는 것은 금지한다. (`.claude/rules/objective-journal-ui.md`)
-
-## Rules Reference (`.claude/rules/`)
-
-- `coding-standards.md` — Unity C# 표준 (sealed, [SerializeField] private, Update 내 GetComponent 금지)
-- `ui-standards.md` — PC 1920×1080 기본, Borderless Fullscreen, Canvas Scaler 1920×1080 기준
-- `objective-journal-ui.md` — Tab 목표 저널, 추적 목표 HUD, 목표성 UI 소유권 규약
-- `testing-discipline.md` — Tier 1~4 테스트, 시나리오 카탈로그 (TOWN/LIFE/CAREER/REL/JOB/KNOW/STATUS/NET, 레거시 GEN/HEIR/CROP)
-- `path-based/assets-gameplay.md`, `assets-data.md`, `assets-ui.md`, `assets-addressables.md`
-- `unity-cli.md` — batchmode 빌드/테스트
-- `game-design.md` — GDD/ADR/TR/Epic/Story 경로
-- `localization.md` — ko/en 키 기반
-- `environment-config.md` — host/port/url/credential 환경 의존 값
-- `commit-conventions.md` — 위 5번 상세
-
-## Project Structure & Module Organization
-
-이 저장소는 Unity 6000.3.13f1 (URP 2D) + Unity Netcode for GameObjects 기반 ROOTBORN 클라이언트와 dedicated server를 단일 프로젝트로 관리합니다 (백엔드/관리자 웹 미사용).
-
-- Unity 소스: `Assets/Scripts/Game`, `Assets/Scripts/UI`, `Assets/Scripts/Network`, `Assets/Scripts/Editor` — 각각 `Rootborn.Game`, `Rootborn.UI`, `Rootborn.Network`, `Rootborn.Editor` asmdef 경계
-- 씬: `Assets/Scenes/Boot.unity`, `MainMenu.unity`, `HostLobby.unity`, `Town.unity`, `Farm.unity`(레거시/migration source)
-- 게임 데이터: `Assets/Data/{StudentLife,LifeActivities,Choices,Skills,Careers,Jobs,Relationships,Locations,Tools,Resources,Recipes,Knowledge,Traits,Status,Family,Generations,Crops,Registry}/` (모두 ScriptableObject)
-- 로컬라이즈 리소스: `Assets/Localization`
-- 테스트: `Assets/Tests/EditMode`, `Assets/Tests/PlayMode`
-- 스프라이트 에셋: Modern 우선 `Assets/Modern_Town/`, `Assets/Modern_Exteriors_32x32/`, `Assets/Modern_Farm_v1.2/`, `Assets/moderninteriors-win/`, `Assets/modernuserinterface-win/`, `Assets/Tiles/ModernTownOffice/`, `Assets/TilePalettes/ModernTownOffice/`; Pixelwood는 레거시/회귀 비교용 `Assets/Pixelwood Valley/Pixelwood Valley 1.1.2/`, `Assets/Pixelwood Valley Icon Pack 1.0/`
-
-## Build, Test, and Development Commands
-
-### Unity 빌드 (CLI batchmode)
-- 클라이언트 (Windows 64): `-executeMethod Rootborn.Editor.BuildScripts.BuildScript.BuildClientWindows64`
-- Dedicated Server (Windows 64): `-executeMethod Rootborn.Editor.BuildScripts.BuildScript.BuildServerWindows64`
-- Dedicated Server (Linux 64): `-executeMethod Rootborn.Editor.BuildScripts.BuildScript.BuildServerLinux64`
-
-### 산출물 실행 (사용자 흐름)
-```cmd
-:: Dedicated server (옵션만 줘서 실행)
-rootborn-server.exe -mode server -batchmode -nographics -port 7777 -maxPlayers 4 -saveSlot myfarm
-
-:: Client
-rootborn.exe -mode client -joinIp 192.168.0.10 -port 7777
-
-:: Host (서버 + 자기 자신 플레이)
-rootborn.exe -mode host -port 7777 -maxPlayers 4 -saveSlot localhost-farm
+```bash
+export PATH="$HOME/.dotnet:$PATH" DOTNET_ROOT="$HOME/.dotnet"
+dotnet test Tools/Rootborn.Core.Tests          # 규칙
+dotnet test game/Rootborn.sln                  # 데이터, 맵, 게임 진행, 화면, 실제 창
+bash Scripts/ci/run-all.sh --checks-only       # 정적 검사
+dotnet run --project game/Rootborn.Host        # 실행(슬롯 선택부터)
 ```
 
-### Unity 테스트 (CLI)
-```cmd
-"<UnityPath>" -batchmode -nographics -projectPath "c:\Users\jdyj\farmer" ^
-  -runTests -testPlatform editmode ^
-  -testResults "Builds/Logs/editmode-results.xml" -logFile "Builds/Logs/editmode.log"
-```
+평소에는 고친 프로젝트의 테스트만 돌리고, 커밋 전에는 전부 돌린다. 통과 줄만 보지 말고 프로젝트별 건수가 줄지 않았는지 본다.
 
-## Coding Style & Naming Conventions
+## 커밋과 병합
 
-C# 코드는 `Rootborn.*` 네임스페이스와 폴더별 책임을 유지합니다. 런타임 도메인 로직은 `Rootborn.Game.{Domain}`, UI는 `Rootborn.UI.{Domain}`, NGO 의존 코드는 `Rootborn.Network.{Domain}`, 에디터 자동화는 `Rootborn.Editor.{Domain}`. Unity 에셋을 추가하면 `.meta` 파일을 함께 커밋합니다. 새 코드는 의미 있는 도메인명으로 작성하고, 임시 하드코딩이나 엔티티 ID별 분기 로직은 피합니다 (CI 게이트가 차단).
+- 커밋 제목과 본문은 한글, 제목 앞에 `[FEATURE]`, `[BUGFIX]`, `[REFACTOR]`, `[UI]`, `[ASSET]`, `[BALANCE]`, `[TEST]`, `[DOCS]`, `[CHORE]`, `[NETWORK]`, `[META]` 중 하나. (`.claude/rules/commit-conventions.md`)
+- 작은 단위로 나누고, 단위마다 테스트와 함께 커밋한다.
+- 여러 세션이 나눠 일할 때는 작업 폴더 하나에 쓰는 세션 하나, 자기 브랜치에만 커밋한다. main에 합치는 일은 조정 담당이 한다(스킬 `parallel-claude-session`).
 
-## Testing Guidelines
+## 보안과 설정
 
-Unity 변경은 영향 범위에 맞춰 EditMode 또는 PlayMode 테스트를 추가합니다. 테스트 파일은 대상 도메인 폴더 아래에 두고 `*Tests.cs` 패턴을 사용합니다. PR 전에는 최소한 변경 영역의 EditMode 테스트와 빌드 검증(`BuildClientWindows64`)을 실행합니다. 시나리오 ID(TOWN/LIFE/CAREER/REL/JOB/KNOW/STATUS/NET-NNN, 레거시 GEN/HEIR/CROP-NNN)를 testing-discipline.md에 등록한 경우 대응 테스트가 존재해야 합니다 (CI `check-scenario-registry-sync.sh`가 검증).
-
-## Commit & Pull Request Guidelines
-
-커밋 제목과 본문은 한글로 작성합니다. 제목에는 반드시 `[FEATURE]`, `[BUGFIX]`, `[UI]`, `[ASSET]`, `[NETWORK]`, `[TEST]`, `[DOCS]`, `[CHORE]` 같은 prefix를 붙입니다. 예: `[NETWORK] dedicated server 부트스트랩 추가`. 모든 작업은 작은 작업 단위로 나누고, 각 단위마다 자동화 테스트와 코드리뷰를 완료한 뒤 커밋합니다. PR에는 변경 목적, 테스트 결과, 코드리뷰 결과, 관련 이슈를 적고 UI 변경은 스크린샷을 첨부합니다. Unity 씬, 프리팹, 생성 에셋을 바꾼 경우 재생성 절차와 영향을 받은 씬 이름도 명시합니다.
-
-## Branch & Merge Workflow
-
-기능 브랜치 작업 후 `main`에 병합할 때는 먼저 최신 `main` 커밋 위로 리베이스합니다. 병합은 머지 커밋이 생기지 않도록 스쿼시 머지로 처리합니다. 예: `git fetch origin`, `git rebase origin/main`, `git checkout main`, `git merge --squash feature/name`, `git commit -m "[FEATURE] 기능 요약"`.
-
-## Security & Configuration Tips
-
-비밀값은 커밋하지 않습니다. 환경 의존 값(host/port/saveSlot)은 명령줄 인자 또는 `.env`로만 주입합니다. 코드 하드코딩 금지 — `.claude/rules/environment-config.md` 참조.
+비밀값은 커밋하지 않는다. 주소, 포트, 저장 폴더, 글꼴·테마·맵 경로는 실행 인자나 환경 변수로 받는다. (`.claude/rules/environment-config.md`)

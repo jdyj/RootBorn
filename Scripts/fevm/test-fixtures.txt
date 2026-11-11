@@ -1,6 +1,0 @@
-# output/ 아래에서 테스트가 읽기만 하는 고정 증거(git 미추적). sync.sh가 FEVM 사본에 복사한다. 원본은 고치지 않는다.
-output/design-comfy-20261031/evidence
-output/design-only-20261101/room-border-238-reuse-20261102
-output/design-only-20261101/room-wall-tile-kit-20261102
-output/harvested-wheat-20261102-integration/evidence
-output/house-material-20261102-integration
