@@ -15,6 +15,7 @@ using Rootborn.Host.World;
 using Rootborn.Screens;
 using Rootborn.Screens.Day;
 using Rootborn.World;
+using Rootborn.Screens.Furniture;
 using Rootborn.Screens.Start;
 using Rootborn.Ui;
 
@@ -38,6 +39,7 @@ namespace Rootborn.Host
         private readonly GraphicsDeviceManager _graphics;
         private readonly KeyboardDevice _keyboard = new KeyboardDevice();
         private readonly DrawList _drawList = new DrawList();
+        private readonly DrawList _worldOverlay = new DrawList();
         private SpriteBatch _batch;
         private RenderTarget2D _scene;
         private TextRenderer _text;
@@ -188,6 +190,7 @@ namespace Rootborn.Host
             screens.EnterMap(World.Session.Map.Id);
             Screens = screens;
             Screens.OpenHud();
+            ConnectFurniture(commands);
             if (Session != null)
             {
                 // 학생 시각·날이 낮밤과 NPC 자리를, 학생 날·성인 여부가 성장 단계를 정한다(Unity 판과 같음).
@@ -197,12 +200,10 @@ namespace Rootborn.Host
             }
         }
 
-        private string _sessionMap;
         private int _sessionDay = -1;
 
         /// <summary>
-        /// 게임 한 판과 월드를 맞춘다(프레임마다, 바뀐 것만): 날이 바뀌면 성장 단계, 가구 방(interactions.json의 placementSurface)에
-        /// 들어오면 그 맵에서 방 칸을 만들어 GameSession.EnterHouse(Unity AuthoredHousePlacementBinding.Bind). 맵 크기는 맵에서 읽는다.
+        /// 게임 한 판과 월드를 맞춘다(프레임마다, 바뀐 것만): 날이 바뀌면 성장 단계. 가구 방에 들어오는 일은 SyncHouse가 한다.
         /// 맵에 들어갈 때 장소 방문은 기록하지 않는다(Unity 판은 장소 지점을 눌렀을 때만 기록했다).
         /// </summary>
         private void SyncSession()
@@ -213,11 +214,83 @@ namespace Rootborn.Host
                 _sessionDay = Session.StudentDay;
                 World.SetGrowthStage(Session.GrowthStageId());
             }
+        }
+
+        // ---------- 가구 배치 (묶음 7) ----------
+
+        private string _houseMap;
+        private FurniturePlacementScreen _placement;
+
+        /// <summary>
+        /// 가구 배치를 잇는다: 가구 방(interactions.json의 placementSurface)에 들어오면 GameSession.EnterHouse(그 맵의 방 칸, 면 id)
+        /// (Unity AuthoredHousePlacementBinding.Bind), 게임 명령이 월드를 바꾸면 놓인 가구 그림과 충돌을 다시 맞추고,
+        /// 배치 화면이 열리면 배치 카메라를 켠다(Unity HousePlacementCameraRuntimeInstaller.SetPlacementMode).
+        /// </summary>
+        private void ConnectFurniture(SessionCommands commands)
+        {
+            var view = new HostPlacementView(World, () => Fit.Scale);
+            Screens.Opened += screen =>
+            {
+                if (!(screen is FurniturePlacementScreen placement)) return;
+                _placement = placement;
+                placement.Attach(World.FurnitureArt, view);
+                FurnitureRoom room = World.Room;
+                if (room != null)
+                {
+                    var grid = room.Map.Grid;
+                    World.PlacementCamera.Begin(grid.PixelWidth, grid.PixelHeight, grid.CellSize, _scene == null ? 16f / 9f : _scene.Width / (float)_scene.Height);
+                }
+            };
+            Screens.Closed += screen =>
+            {
+                if (screen is FurniturePlacementScreen) World.PlacementCamera.End();
+            };
+            if (commands != null)
+                commands.Changed += topic => { if (topic == ChangeTopics.World || topic == ChangeTopics.All) RefreshFurniture(); };
+            SyncHouse();
+        }
+
+        /// <summary>맵이 바뀌었을 때만: 가구 방이면 EnterHouse(들어올 때마다 저장된 배치를 다시 읽는다). 맵 크기는 맵에서 읽는다.</summary>
+        private void SyncHouse()
+        {
             string map = World.Session.Map.Id;
-            if (map == _sessionMap) return;
-            _sessionMap = map;
+            if (map == _houseMap) return;
+            _houseMap = map;
+            FurnitureRoom room = World.Room;
             string surface = World.HereData.PlacementSurface;
-            if (!string.IsNullOrEmpty(surface)) Session.EnterHouse(RoomPlacementGrid.FromMap(World.Current.World), surface);
+            if (room != null && Session != null && !string.IsNullOrEmpty(surface)) Session.EnterHouse(room.Grid, surface);
+            if (room == null && World.PlacementCamera.Active) Screens.Close(ScreenCatalog.FurniturePlacement);
+            RefreshFurniture();
+        }
+
+        /// <summary>놓인 가구로 월드 그림과 캐릭터 충돌을 맞춘다(바뀔 때만 부른다).</summary>
+        private void RefreshFurniture()
+        {
+            FurnitureRoom room = World.Room;
+            var house = Session?.House;
+            if (room != null && house != null)
+            {
+                room.SetFurnitureBlocking(house.BlockingCells);
+                World.SetPlacedFurniture(house.Placed);
+            }
+            else World.SetPlacedFurniture(null);
+        }
+
+        /// <summary>배치 중의 한 프레임: 카메라(방향 키·WASD 이동, +/- 확대, F 전체 보기, UI 밖 휠)와 UI 밖 포인터를 배치 화면에.</summary>
+        private void UpdatePlacement(KeyFrame keys, PointerState pointer, float dt)
+        {
+            if (_placement == null || !_placement.IsOpen) return;
+            float x = pointer.X / Fit.Scale, y = pointer.Y / Fit.Scale;
+            bool overUi = _tree.HitTest(x, y) != null;
+            PlacementCamera camera = World.PlacementCamera;
+            if (camera.Active && !Screens.TextInputFocused)
+            {
+                camera.Pan(keys.MoveX, keys.MoveY, dt);
+                camera.KeyboardZoom((keys.ZoomOutHeld ? 1 : 0) - (keys.ZoomInHeld ? 1 : 0), dt);
+                if (keys.FullView) camera.FullView();
+                if (!overUi) camera.Wheel(pointer.Wheel);
+            }
+            _placement.WorldPointer(x, y, pointer.LeftDown, overUi);
         }
 
         /// <summary>견본 화면을 새로 만들어 띄운다.</summary>
@@ -275,7 +348,7 @@ namespace Rootborn.Host
             _tree.UpdatePointer(pointer.X / Fit.Scale, pointer.Y / Fit.Scale, pointer.LeftDown, pointer.Wheel);
 
             KeyFrame keys = _keyboard.Read();
-            if (Screens != null && World != null) UpdateWorld(keys, gameTime);
+            if (Screens != null && World != null) UpdateWorld(keys, gameTime, pointer);
             else if (Screens != null) UpdateMenu(keys);
             else
             {
@@ -314,7 +387,7 @@ namespace Rootborn.Host
         /// 월드 화면의 한 프레임. 눌린 키를 화면 쌓기에 먼저 넘기고, 가져가지 않은 상호작용 키는 이동이 막히지 않았을 때 월드로.
         /// 걷기는 누르고 있는 방향 키로, 이동을 막는 화면이 떠 있거나 글자를 치는 동안은 서 있는다.
         /// </summary>
-        private void UpdateWorld(KeyFrame keys, GameTime gameTime)
+        private void UpdateWorld(KeyFrame keys, GameTime gameTime, PointerState pointer)
         {
             ScreenStack s = Screens;
             if (keys.Tab) s.Key(ScreenKey.Tab, keys.Shift);
@@ -339,6 +412,8 @@ namespace Rootborn.Host
             World.Update(blocked ? 0 : keys.MoveX, blocked ? 0 : keys.MoveY, dt);
             s.EnterMap(World.Session.Map.Id);
             SyncSession();
+            SyncHouse();
+            UpdatePlacement(keys, pointer, dt);
             s.SetInteractionTarget(TargetOnScreen());
             if (interact)
             {
@@ -354,7 +429,7 @@ namespace Rootborn.Host
         {
             InteractionCandidate target = World.Interactions.Target;
             if (target == null || !target.Acts) return null;
-            float zoom = World.Zoom / Fit.Scale;
+            float zoom = World.Scale / Fit.Scale;
             return new InteractionTargetView(target.Kind, target.Id,
                 (target.X - World.CameraOffset.X) * zoom, (target.Y - World.CameraOffset.Y) * zoom, World.Current.World.Grid.CellSize * zoom);
         }
@@ -377,6 +452,13 @@ namespace Rootborn.Host
             GraphicsDevice.SetRenderTarget(_scene);
             GraphicsDevice.Clear(Background);
             World?.Draw(_batch, _scene.Width, _scene.Height);
+            if (_placement != null && _placement.IsOpen)
+            {
+                // 가구 배치 미리보기는 월드의 한 층: 월드 다음, 화면들(HUD·패널) 앞에.
+                _worldOverlay.Clear();
+                _placement.EmitWorldOverlay(_worldOverlay);
+                _renderer.Draw(_worldOverlay, Fit);
+            }
             _renderer.Draw(_drawList, Fit);
             GraphicsDevice.SetRenderTarget(null);
             _batch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, null, null);

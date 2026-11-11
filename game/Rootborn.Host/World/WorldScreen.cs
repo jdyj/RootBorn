@@ -6,11 +6,14 @@ using Microsoft.Xna.Framework.Graphics;
 using Rootborn.Core.Characters;
 using Rootborn.Core.Dialogue;
 using Rootborn.Core.Interaction;
+using Rootborn.Core.Minigames;
+using Rootborn.Core.Placement;
 using Rootborn.Core.Save;
 using Rootborn.Core.StudentLife;
 using Rootborn.Core.Time;
 using Rootborn.Core.World;
 using Rootborn.Data.Save;
+using Rootborn.Screens.Furniture;
 using Rootborn.World;
 
 namespace Rootborn.Host.World
@@ -60,6 +63,24 @@ namespace Rootborn.Host.World
 
         public LoadedMap Current => Maps.LoadMap(Session.Map.Id);
         public int Zoom { get; private set; } = 1;
+        /// <summary>마지막으로 그린 화면에서 맵 1픽셀이 화면 몇 픽셀인가(평소에는 Zoom, 가구 배치 중에는 배치 카메라의 배율).</summary>
+        public float Scale { get; private set; } = 1f;
+
+        /// <summary>걷는 맵(가구 방이면 가구가 막는 칸을 더한 맵).</summary>
+        public readonly RoomAwareMaps Rooms;
+        /// <summary>지금 맵이 가구 방이면 그 방, 아니면 null.</summary>
+        public FurnitureRoom Room => Rooms.RoomOf(Session.Map.Id);
+        /// <summary>가구 그림 좌표표(data/atlases).</summary>
+        public readonly FurnitureArt FurnitureArt;
+        /// <summary>가구 배치 중의 카메라(Active일 때 캐릭터를 따라가지 않는다).</summary>
+        public readonly PlacementCamera PlacementCamera = new PlacementCamera();
+        private readonly string _repoRoot;
+        private readonly List<SpriteDraw> _furniture = new List<SpriteDraw>();
+        private readonly List<SpriteDraw> _sorted = new List<SpriteDraw>();
+        private string _sortedMap;
+        private bool _sortedDirty = true;
+        /// <summary>지금 방에 그리는 가구 그림 수(시험용).</summary>
+        public int FurnitureDrawCount => _furniture.Count;
         /// <summary>마지막으로 그린 화면의 왼쪽 위가 맵의 어느 픽셀이었나(맵이 작으면 음수).</summary>
         public Vector2 CameraOffset { get; private set; }
 
@@ -82,7 +103,10 @@ namespace Rootborn.Host.World
             _npcArt = Content.Npcs;
             _schedules = new NpcScheduleLookupCache(Content.Definitions.All<NpcSchedule>());
             _scheduleAccess = new NpcScheduleAccess(_schedules);
-            Session = new WorldSession(Maps, Maps.Catalog.Walker);
+            _repoRoot = options.RepoRoot;
+            FurnitureArt = new FurnitureArt(Path.Combine(options.RepoRoot, "data"));
+            Rooms = new RoomAwareMaps(Maps, _interactionData);
+            Session = new WorldSession(Rooms, Maps.Catalog.Walker);
             string startMap;
             if (options.SaveSlot != null)
             {
@@ -223,16 +247,29 @@ namespace Rootborn.Host.World
             MapGrid grid = map.World.Grid;
             Zoom = WorldCamera.Zoom(screenHeight, map.Entry.ViewCells, grid.CellSize);
             Walker walker = Session.Walker;
-            float viewW = screenWidth / (float)Zoom, viewH = screenHeight / (float)Zoom;
-            var offset = new Vector2(WorldCamera.Offset(walker.X, grid.PixelWidth, viewW), WorldCamera.Offset(walker.Y, grid.PixelHeight, viewH));
+            Vector2 offset;
+            if (PlacementCamera.Active)
+            {
+                // 가구 배치 중: 배치 카메라(Unity HousePlacementCameraController — 캐릭터를 따라가지 않는다).
+                PlacementCamera.SetAspect(screenWidth / (float)screenHeight);
+                Scale = PlacementCamera.Scale(screenHeight);
+                (float x, float y) = PlacementCamera.TopLeft(screenWidth, screenHeight);
+                offset = new Vector2(x, y);
+            }
+            else
+            {
+                Scale = Zoom;
+                float viewW = screenWidth / (float)Zoom, viewH = screenHeight / (float)Zoom;
+                offset = new Vector2(WorldCamera.Offset(walker.X, grid.PixelWidth, viewW), WorldCamera.Offset(walker.Y, grid.PixelHeight, viewH));
+            }
             CameraOffset = offset;
 
             _device.Clear(_background);
-            Matrix view = Matrix.CreateTranslation(-offset.X, -offset.Y, 0f) * Matrix.CreateScale(Zoom, Zoom, 1f);
+            Matrix view = Matrix.CreateTranslation(-offset.X, -offset.Y, 0f) * Matrix.CreateScale(Scale, Scale, 1f);
             _tint = new Color(Math.Clamp(Tint.R, 0f, 1f), Math.Clamp(Tint.G, 0f, 1f), Math.Clamp(Tint.B, 0f, 1f));
             batch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointClamp, null, null, null, view);
             foreach (SpriteDraw s in map.Picture.Under) DrawSprite(batch, s);
-            List<SpriteDraw> sorted = map.Picture.Sorted;
+            List<SpriteDraw> sorted = SortedWithFurniture(map);
             // 플레이어와 NPC를 발 위치(몸 가운데 Y)로 정렬해 가구 사이에 끼운다.
             var actors = new List<(float sortY, int npc)>(_npcs.Count + 1) { (walker.Y, -1) };
             for (int i = 0; i < _npcs.Count; i++) actors.Add((_npcs[i].Y, i));
@@ -240,12 +277,67 @@ namespace Rootborn.Host.World
             int drawn = 0;
             foreach (var actor in actors)
             {
-                int upTo = map.Picture.ActorIndex(actor.sortY);
+                int upTo = ActorIndex(sorted, actor.sortY);
                 for (; drawn < upTo; drawn++) DrawSprite(batch, sorted[drawn]);
                 if (actor.npc < 0) DrawCharacter(batch, walker); else DrawNpc(batch, _npcs[actor.npc]);
             }
             for (; drawn < sorted.Count; drawn++) DrawSprite(batch, sorted[drawn]);
             batch.End();
+        }
+
+        /// <summary>
+        /// 놓인 가구를 그릴 목록으로 바꾼다(Unity PlacedFurnitureDepthPresentation): 그림 칸마다 좌표표의 그림을 기준점이 칸 가운데에 오게,
+        /// 크기는 그림 픽셀 / PPU 칸. 앞뒤는 그 칸 가운데의 높이로 캐릭터·맵 가구와 함께 정렬한다. 지금 방이 아니면 비운다.
+        /// 가구가 바뀔 때만 부른다(Host가 게임 명령의 바뀜 알림에서).
+        /// </summary>
+        public void SetPlacedFurniture(IReadOnlyList<PlacedFurniture> placed)
+        {
+            _furniture.Clear();
+            _sortedDirty = true;
+            FurnitureRoom room = Room;
+            if (room == null || placed == null) return;
+            foreach (PlacedFurniture p in placed)
+            {
+                IReadOnlyList<FurnitureTilePart> parts = p.Definition.GetTileParts(p.Direction);
+                foreach (FurnitureTilePart part in parts)
+                {
+                    if (!FurnitureArt.TryGet(part, out FurnitureSprite sprite)) continue;
+                    AreaRect cell = room.CellArea(new GridPoint(p.Anchor.X + part.LocalCell.X, p.Anchor.Y + part.LocalCell.Y));
+                    float w = sprite.WidthCells * cell.W, h = sprite.HeightCells * cell.H;
+                    _furniture.Add(new SpriteDraw(Path.Combine(_repoRoot, sprite.Texture), sprite.X, sprite.Y, sprite.W, sprite.H,
+                        cell.CenterX - w * sprite.PivotX, cell.CenterY - h * sprite.PivotY, w, h, 0, 1f, cell.CenterY));
+                }
+            }
+        }
+
+        private List<SpriteDraw> SortedWithFurniture(LoadedMap map)
+        {
+            if (_furniture.Count == 0) return map.Picture.Sorted;
+            if (!_sortedDirty && _sortedMap == map.Entry.Id) return _sorted;
+            _sorted.Clear();
+            _sorted.AddRange(map.Picture.Sorted);
+            int fixedCount = _sorted.Count;
+            _sorted.AddRange(_furniture);
+            var order = new List<(SpriteDraw draw, int i)>(_sorted.Count);
+            for (int i = 0; i < _sorted.Count; i++) order.Add((_sorted[i], i));
+            order.Sort((a, b) => a.draw.SortY != b.draw.SortY ? a.draw.SortY.CompareTo(b.draw.SortY) : a.i.CompareTo(b.i));
+            _sorted.Clear();
+            foreach (var o in order) _sorted.Add(o.draw);
+            _sortedMap = map.Entry.Id;
+            _sortedDirty = false;
+            return _sorted;
+        }
+
+        /// <summary>정렬된 목록에서 높이 sortY인 캐릭터보다 먼저(뒤에) 그릴 것의 수(MapPicture.ActorIndex와 같은 규칙).</summary>
+        private static int ActorIndex(List<SpriteDraw> sorted, float sortY)
+        {
+            int lo = 0, hi = sorted.Count;
+            while (lo < hi)
+            {
+                int mid = (lo + hi) / 2;
+                if (sorted[mid].SortY <= sortY) lo = mid + 1; else hi = mid;
+            }
+            return lo;
         }
 
         private void DrawSprite(SpriteBatch batch, SpriteDraw s)

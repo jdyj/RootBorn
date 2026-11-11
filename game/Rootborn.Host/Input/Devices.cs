@@ -41,6 +41,8 @@ namespace Rootborn.Host.Input
         /// <summary>미니게임 키(Unity MinigamePanel): Space 탭, R 회전, A·D 줄 이동(누른 순간만).</summary>
         public bool Space, Rotate, AltLeft, AltRight;
         public bool HeldUp, HeldDown, HeldLeft, HeldRight;
+        /// <summary>가구 배치 카메라(Unity HousePlacementCameraController): F 전체 보기(눌림), = 또는 키패드 + 가까이·- 멀리(누르고 있음).</summary>
+        public bool FullView, ZoomInHeld, ZoomOutHeld;
 
         /// <summary>누르고 있는 방향 키로 정한 걷기 방향(-1, 0, 1). 반대 방향을 함께 누르면 0.</summary>
         public int MoveX => (HeldRight ? 1 : 0) - (HeldLeft ? 1 : 0);
@@ -77,6 +79,9 @@ namespace Rootborn.Host.Input
                 HeldDown = now.IsKeyDown(Keys.Down) || now.IsKeyDown(Keys.S),
                 HeldLeft = now.IsKeyDown(Keys.Left) || now.IsKeyDown(Keys.A),
                 HeldRight = now.IsKeyDown(Keys.Right) || now.IsKeyDown(Keys.D),
+                FullView = Pressed(now, Keys.F),
+                ZoomInHeld = now.IsKeyDown(Keys.OemPlus) || now.IsKeyDown(Keys.Add),
+                ZoomOutHeld = now.IsKeyDown(Keys.OemMinus) || now.IsKeyDown(Keys.Subtract),
             };
             _previous = now;
             return frame;

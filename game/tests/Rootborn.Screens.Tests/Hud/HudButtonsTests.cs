@@ -50,7 +50,6 @@ namespace Rootborn.Screens.Tests.Hud
             using var t = new TestSession(extra: r =>
             {
                 r.Add(ScreenCatalog.Encyclopedia, ScreenLayer.Panel, true, s => new Probe(s));
-                r.Add(ScreenCatalog.FurniturePlacement, ScreenLayer.Panel, false, s => new Probe(s));
             });
             t.Stack.EnterMap("House");
             t.Stack.OpenHud();

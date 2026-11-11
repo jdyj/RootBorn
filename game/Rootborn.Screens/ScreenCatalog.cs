@@ -1,5 +1,6 @@
 using Rootborn.Screens.Career;
 using Rootborn.Screens.Dialogue;
+using Rootborn.Screens.Furniture;
 using Rootborn.Screens.Hud;
 using Rootborn.Screens.Day;
 using Rootborn.Screens.Minigames;
@@ -82,6 +83,8 @@ namespace Rootborn.Screens
             r.Add(SaveSlotSelect, ScreenLayer.Panel, blocksMovement: true, s => new SaveSlotScreen(s));
             r.Add(CharacterCreator, ScreenLayer.Panel, blocksMovement: true, s => new CharacterCreatorScreen(s));
             r.Add(DeleteSlot, ScreenLayer.Modal, blocksMovement: true, s => new DeleteSlotScreen(s));
+            // 가구 배치: 집 HUD 버튼(가구 배치 켬/끔)이 연다. 이동을 막지 않는다(Unity 판 패널은 입력을 잠그지 않았다).
+            r.Add(FurniturePlacement, ScreenLayer.Panel, blocksMovement: false, s => new FurniturePlacementScreen(s));
         }
 
         /// <summary>표를 채운 새 등록 표.</summary>

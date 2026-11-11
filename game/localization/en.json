@@ -94,5 +94,22 @@
   "ui.quest-chain-log.claim": "Claim",
   "ui.quest-chain-log.reward": "Reward: {0}",
   "ui.quest-chain-log.reward-claimed": "Claimed",
-  "ui.quest-chain-log.reward-ready": "Ready"
+  "ui.quest-chain-log.reward-ready": "Ready",
+  "ui.furniture.delete": "Delete",
+  "ui.furniture.direction": "Facing: {0}",
+  "ui.furniture.direction.auto": "Auto",
+  "ui.furniture.direction.east": "East",
+  "ui.furniture.direction.north": "North",
+  "ui.furniture.direction.south": "South",
+  "ui.furniture.direction.west": "West",
+  "ui.furniture.move": "Move",
+  "ui.furniture.page": "Page {0} / {1}\n{2} items",
+  "ui.furniture.page.empty": "No results",
+  "ui.furniture.page.next": "Next",
+  "ui.furniture.page.previous": "Prev",
+  "ui.furniture.rotate": "Rotate",
+  "ui.furniture.search.placeholder": "Search by name or ID",
+  "ui.furniture.select-prompt": "Select furniture",
+  "ui.furniture.size": "{0}x{1}",
+  "ui.furniture.title": "Furniture"
 }
