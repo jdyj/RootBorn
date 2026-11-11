@@ -16,6 +16,8 @@ data/**/*.json
 # 좌표표(atlases)는 쓰는 그림 몫만 자동으로 따라온다. 변환 보고서는 게임이 쓰지 않는다.
 !data/atlases/**
 !data/export-report.json
+# 돈 설정: 데이터 폴더 옆의 game/economy.json(통화 아이템). 정의를 만들 때 읽고 데이터 지문에도 들어간다(서버와 같은 지문).
+game/economy.json
 
 # --- 월드: 맵 목록, 상호작용 지점 ---
 game/world/*.json

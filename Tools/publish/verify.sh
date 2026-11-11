@@ -3,6 +3,7 @@
 #   Tools/publish/verify.sh [플랫폼]                  (기본: 이 PC 의 플랫폼 — Windows 는 win-x64, Linux 는 linux-x64)
 #   Tools/publish/verify.sh --contents-only <플랫폼>  1번(목록 대조)만 한다. 이 PC 에서 실행할 수 없는 플랫폼(예: Windows 에서 linux-x64)용
 #   Tools/publish/verify.sh --server [--bind <IP>] [플랫폼]   데디케이티드 서버 배포 폴더(server-<플랫폼>)를 확인한다(아래 "서버")
+#   Tools/publish/verify.sh --remote [--server] linux-x64       1번은 이 PC 에서, 2~4번은 원격 Linux 장치에서(아래 "원격")
 #
 # 하는 일
 #   1. content.txt 가 가리키는 파일(publish.sh --list)이 배포 폴더에 다 있는지, Unity 전용 파일이 없는지 본다.
@@ -25,6 +26,22 @@
 #      --root·ROOTBORN_REPO_ROOT·ROOTBORN_DATA_DIR 없이 돈다(실행 파일 위치에서 data/registry.json 을 찾는다). 표준 오류는 비어야 한다.
 #   듣는 주소는 --bind(또는 VERIFY_BIND)로 받는다. 기본 127.0.0.1 은 이 시험용이다: 같은 기계 안에서만 닿고, 방화벽 창이 뜨지 않고,
 #   밖에 열리지 않아 안전하다. 실제 서버를 여는 값(LAN 주소 등)을 이 스크립트에 적지 않는다.
+#   Linux 에서는 종료 신호(SIGTERM)로 끝내도 저장하고 닫는지 한 번 더 본다(sigterm). Windows 에는 같은 신호가 없어 건너뛴다.
+#
+# 들어가기(클라이언트 확인에서, 같은 플랫폼의 서버 배포 폴더가 있을 때)
+#   새 게임 뒤 그 서버 배포 폴더를 빈 포트로 띄우고, 클라이언트를 --slot slot-1 --join <BIND>:<포트> 로 띄운다.
+#   서버 로그에 "들어옴:" 이 있고 "접속 거절" 이 없으면 통과 — 배포한 두 폴더의 버전(프로그램·데이터 지문)이 맞는다는 실제 확인이다.
+#   서버 배포 폴더가 없으면 건너뛰고 그렇게 알린다.
+#
+# 원격(--remote) — 이 PC 에서 실행할 수 없는 linux-x64 용(verify-remote.sh)
+#   1번(목록 대조)은 이 PC 에서 한다. 배포 폴더(클라이언트면 같은 플랫폼의 서버 배포 폴더도)와 이 스크립트를 원격의
+#   ~/<ROOTBORN_REMOTE_DIR>/deploy/<실행 id>/ 로 보내 실행 권한을 주고, 거기서 이 스크립트를 --copied 로 돌린다.
+#   클라이언트는 가상 화면(Xvfb)에서 돈다: Scripts/remote-test 가 준비한 원격 env.sh 의 Xvfb·글꼴(ROOTBORN_FONT)을 쓰고,
+#   화면 번호는 원격 테스트의 범위(140~199)와 겹치지 않는 VERIFY_DISPLAY_FIRST~LAST(기본 200~219)에서 빈 것을 고른다.
+#   임시 폴더도 그 실행 폴더 안에 둔다. 끝나면 스크린샷·로그를 output/publish-verify/<실행 id>/ 로 가져오고
+#   원격 실행 폴더와 화면을 지운다. 원격에서는 sudo 를 쓰지 않고 작업 폴더 밖을 건드리지 않는다.
+#   접속 값은 Scripts/remote-test 와 같은 환경 변수(ROOTBORN_REMOTE_HOST·USER·KEY, ROOTBORN_REMOTE_DIR)로만 받는다.
+#   없으면 1번만 하고 "원격 실행을 건너뛰었다"고 알린다(종료 코드는 1번 결과).
 #
 # 스크린샷이 "제대로 그려졌는지"(그림·글자)는 이 스크립트가 판단하지 않는다. 남긴 스크린샷을 사람이 열어 본다.
 #
@@ -36,6 +53,7 @@
 #   VERIFY_BIND     서버가 들을 주소(기본 127.0.0.1, --server 에서만)
 #   VERIFY_MAPS     띄울 맵 id(공백으로 나눔). 없으면 복사본의 game/world/maps.json 에서 읽는다
 #   ROOTBORN_FONT   한글 글꼴(운영체제에서 못 찾는 곳에서만. 배포용 글꼴은 아직 정하지 않았다)
+#   VERIFY_SERVER_SRC  들어가기 확인에 쓸 서버 배포 폴더(기본: <PUBLISH_OUT>/server-<플랫폼>)
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -51,6 +69,8 @@ case "$(uname -s)" in
 esac
 CONTENTS_ONLY=0
 SERVER=0
+REMOTE=0
+COPIED=""
 # 서버 시험용 듣는 주소: 같은 기계 안에서만 닿는 루프백이라 시험에 안전하다(밖에 열지 않는다).
 BIND="${VERIFY_BIND:-127.0.0.1}"
 while [ $# -gt 0 ]; do
@@ -58,6 +78,9 @@ while [ $# -gt 0 ]; do
     --contents-only) CONTENTS_ONLY=1; shift ;;
     --server) SERVER=1; shift ;;
     --bind) [ $# -ge 2 ] || { echo "--bind 에 값이 없다" >&2; exit 2; }; BIND="$2"; shift 2 ;;
+    --remote) REMOTE=1; shift ;;
+    # 원격에서 쓰는 내부 인자: 저장소 없이 이미 복사된 배포 폴더를 실행만 한다(1번은 보낸 쪽이 했다)
+    --copied) [ $# -ge 2 ] || { echo "--copied 에 값이 없다" >&2; exit 2; }; COPIED="$2"; shift 2 ;;
     --*) echo "모르는 인자: $1" >&2; exit 2 ;;
     *) break ;;
   esac
@@ -69,7 +92,9 @@ if [ $SERVER -eq 1 ]; then
 else
   SRC="$OUT_ROOT/$RID"; PROJECT_NAME=Rootborn.Host; LIST_ARGS=(--list); PUBLISH_HINT="publish.sh $RID"
 fi
-case "$RID" in win-*) EXE_NAME=$PROJECT_NAME.exe ;; *) EXE_NAME=$PROJECT_NAME ;; esac
+[ -z "$COPIED" ] || SRC="$COPIED"
+SERVER_SRC="${VERIFY_SERVER_SRC:-$OUT_ROOT/server-$RID}"
+case "$RID" in win-*) EXE_NAME=$PROJECT_NAME.exe; SERVER_EXE_NAME=Rootborn.Server.exe ;; *) EXE_NAME=$PROJECT_NAME; SERVER_EXE_NAME=Rootborn.Server ;; esac
 [ -d "$SRC" ] || { echo "배포 폴더가 없다: $SRC (먼저 Tools/publish/$PUBLISH_HINT)" >&2; exit 2; }
 [ -f "$SRC/$EXE_NAME" ] || { echo "실행 파일이 없다: $SRC/$EXE_NAME" >&2; exit 2; }
 
@@ -79,7 +104,8 @@ fail() { failures+=("$1"); echo "  실패: $1"; }
 # Windows 실행 파일에는 Windows 경로를 넘긴다.
 native_path() { if command -v cygpath >/dev/null 2>&1; then cygpath -m "$1"; else printf '%s' "$1"; fi; }
 
-# ---- 1. 목록대로 들어갔는가 ----
+# ---- 1. 목록대로 들어갔는가 (--copied 면 보낸 쪽이 이미 했다) ----
+if [ -z "$COPIED" ]; then
 echo "== 1. 목록 대조 ($SRC)"
 list_file="$(mktemp)"
 if ! bash "$HERE/publish.sh" "${LIST_ARGS[@]}" > "$list_file" 2> "$list_file.err"; then
@@ -103,10 +129,14 @@ fi
 rm -f "$list_file" "$list_file.err"
 unity_only="$(find "$SRC" -type f \( -name '*.meta' -o -name '*.unity' -o -name '*.asset' -o -name '*.prefab' -o -name '*.cs' \) | head -5)"
 [ -z "$unity_only" ] || fail "Unity 전용 파일이 들어 있다: $(echo "$unity_only" | tr '\n' ' ')"
+# 테스트·문서는 배포에 들어가지 않는다(게시한 프로젝트가 테스트를 참조하거나 목록이 문서 폴더를 집으면 여기서 잡힌다).
+not_shipped="$(find "$SRC" -type f \( -iname '*.md' -o -iname '*.Tests.dll' -o -iname 'nunit*' -o -iname 'Microsoft.TestPlatform*' -o -iname 'testhost*' \) | head -5)"
+[ -z "$not_shipped" ] || fail "테스트·문서 파일이 들어 있다: $(echo "$not_shipped" | tr '\n' ' ')"
 if [ $SERVER -eq 1 ]; then
   # 서버는 그림·글꼴·테마·맵을 읽지 않는다. 들어 있으면 목록이 새고 있는 것이다.
   extra="$(find "$SRC" -type f \( -iname '*.png' -o -iname '*.ttf' -o -iname '*.otf' -o -iname '*.ldtk' -o -iname '*.ldtkl' \) | head -5)"
   [ -z "$extra" ] || fail "서버 폴더에 그림·글꼴·맵 파일이 들어 있다: $(echo "$extra" | tr '\n' ' ')"
+fi
 fi
 
 if [ $CONTENTS_ONLY -eq 1 ]; then
@@ -115,11 +145,22 @@ if [ $CONTENTS_ONLY -eq 1 ]; then
   echo "===== 실패 ${#failures[@]}건"; printf '  %s\n' "${failures[@]}"; exit 1
 fi
 
+if [ $REMOTE -eq 1 ]; then
+  # shellcheck source=/dev/null
+  . "$HERE/verify-remote.sh"
+  run_remote
+  exit $?
+fi
+
 # ---- 2. 저장소 밖으로 복사 ----
 WORK="$(mktemp -d)"
-case "$(cd "$WORK" && pwd -P)/" in
-  "$(cd "$REPO" && pwd -P)"/*) echo "임시 폴더가 저장소 안이다: $WORK (TMPDIR 를 바꾼다)" >&2; exit 2 ;;
-esac
+if [ -z "$COPIED" ]; then
+  case "$(cd "$WORK" && pwd -P)/" in
+    "$(cd "$REPO" && pwd -P)"/*) echo "임시 폴더가 저장소 안이다: $WORK (TMPDIR 를 바꾼다)" >&2; exit 2 ;;
+  esac
+else
+  REPO="/nonexistent-repo"   # 원격 복사본 곁에는 저장소가 없다(4번의 '저장소 파일을 열었다' 검사가 헛걸리지 않게)
+fi
 GAME="$WORK/game"
 echo "== 2. 저장소 밖으로 복사: $GAME"
 cp -r "$SRC" "$GAME"
@@ -166,6 +207,7 @@ run_client_checks() {
   run_case resume --save-root "$SAVE" --slot slot-1 --lang ko
   run_case start-menu-with-slot --save-root "$SAVE" --lang ko
   run_case sample --sample --lang ko
+  run_join_check
 
   local maps="${VERIFY_MAPS:-}" m first_map=""
   if [ -z "$maps" ] && [ -f "$GAME/game/world/maps.json" ]; then
@@ -212,20 +254,21 @@ SERVER_ENV_CLEAR=(-u ROOTBORN_REPO_ROOT -u ROOTBORN_DATA_DIR -u ROOTBORN_SAVE_RO
 
 # 콘솔에 stop 을 넣으려고 stdin 을 파이프로 잇는다: 앞쪽 묶음이 stopfile 이 생길 때까지 기다렸다가 "stop" 을 쓴다.
 # (서버는 stdin 이 닫혀도 끝나지 않는다 — 서비스로 도는 경우를 위해서. 그래서 stopfile 로 끝낸다.)
-# run_server <이름> <슬롯> <로그에 있어야 할 열기 문구>
-run_server() {
-  local name="$1" slot="$2" expect="$3"
+# start_server <이름> <서버 폴더> <슬롯> : 백그라운드로 띄우고 "듣는 중:" 을 기다린다. SERVER_PORT 에 들은 포트를 둔다.
+start_server() {
+  local name="$1" dir="$2" slot="$3"
   local out="$WORK/logs/$name.out" err="$WORK/logs/$name.err" stopfile="$WORK/logs/$name.stop" rcfile="$WORK/logs/$name.rc"
-  local waited=0 rc
+  local waited=0 exe="$2/$SERVER_EXE_NAME"
   rm -f "$stopfile" "$rcfile"
-  echo "-- $name: $EXE_NAME --slot $slot --bind $BIND --port 0"
+  SERVER_PORT=""
+  echo "-- $name: $SERVER_EXE_NAME --slot $slot --bind $BIND --port 0"
   (
     cd "$WORK" || exit 99
     {
       while [ ! -f "$stopfile" ]; do sleep 0.2; done
       echo stop
     } 2>/dev/null | (
-      env "${SERVER_ENV_CLEAR[@]}" "${TIMEOUT_CMD[@]+"${TIMEOUT_CMD[@]}"}" "$EXE"         --save-root "$SAVE" --slot "$slot" --bind "$BIND" --port 0 > "$out" 2> "$err"
+      env "${SERVER_ENV_CLEAR[@]}" "${TIMEOUT_CMD[@]+"${TIMEOUT_CMD[@]}"}" "$exe" --save-root "$SAVE" --slot "$slot" --bind "$BIND" --port 0 > "$out" 2> "$err"
       echo $? > "$rcfile"
       touch "$stopfile"   # 서버가 stop 없이 먼저 끝났어도(인자 오류 등) 앞쪽 기다림이 끝나게
     )
@@ -236,16 +279,16 @@ run_server() {
   done
   if grep -q "듣는 중: " "$out" 2>/dev/null; then
     echo "   $(grep -m1 '듣는 중: ' "$out")"
+    SERVER_PORT="$(grep -m1 '듣는 중: ' "$out" | sed -E 's/.*:([0-9]+)[[:space:]]*$/\1/')"
   else
     fail "$name: 로그에 '듣는 중:' 이 없다(듣기 시작하지 못했다)"
   fi
-  grep -qF "$expect" "$out" || fail "$name: 로그에 '$expect' 이 없다"
-  # 데이터는 복사본(저장소 밖)의 data 에서 읽어야 한다. 서버는 Windows 에서 경로를 \ 로 찍는다.
-  if ! tr '\\' '/' < "$out" | grep -iqF "데이터 읽는 중: $(native_path "$GAME")/data"; then
-    fail "$name: 데이터를 복사본의 data 에서 읽지 않았다(로그: $(grep -m1 '데이터 읽는 중' "$out"))"
-  fi
-  touch "$stopfile"
-  waited=0
+}
+
+# stop_server <이름> : 콘솔에 stop 을 넣고 끝나기를 기다린다. 종료 코드 0, "저장하고 닫음", 빈 표준 오류를 본다.
+stop_server() {
+  local name="$1" out="$WORK/logs/$1.out" err="$WORK/logs/$1.err" rcfile="$WORK/logs/$1.rc" waited=0 rc
+  touch "$WORK/logs/$name.stop"
   until [ -f "$rcfile" ]; do
     sleep 0.3; waited=$((waited + 1))
     if [ $waited -gt $((LIMIT * 3)) ]; then fail "$name: stop 을 넣은 뒤 ${LIMIT}초 안에 끝나지 않았다"; return; fi
@@ -260,11 +303,58 @@ run_server() {
   fi
 }
 
+# run_server <이름> <슬롯> <로그에 있어야 할 열기 문구>
+run_server() {
+  local name="$1" slot="$2" expect="$3" out="$WORK/logs/$1.out"
+  start_server "$name" "$GAME" "$slot"
+  grep -qF "$expect" "$out" || fail "$name: 로그에 '$expect' 이 없다"
+  # 데이터는 복사본(저장소 밖)의 data 에서 읽어야 한다. 서버는 Windows 에서 경로를 \ 로 찍는다.
+  if ! tr '\\' '/' < "$out" | grep -iqF "데이터 읽는 중: $(native_path "$GAME")/data"; then
+    fail "$name: 데이터를 복사본의 data 에서 읽지 않았다(로그: $(grep -m1 '데이터 읽는 중' "$out"))"
+  fi
+  stop_server "$name"
+}
+
+# run_server_sigterm <이름> <슬롯> : 콘솔 없이(서비스처럼) 띄우고 종료 신호로 끝낸다. 저장하고 닫고 종료 코드 0 이어야 한다.
+run_server_sigterm() {
+  local name="$1" slot="$2"
+  local out="$WORK/logs/$name.out" err="$WORK/logs/$name.err" pid waited=0 rc
+  echo "-- $name: $EXE_NAME --slot $slot --bind $BIND --port 0 (입력 없음, SIGTERM 으로 끝냄)"
+  # exec 로 바꿔 띄워 $! 가 서버 프로세스 자신이 되게 한다(timeout 으로 감싸지 않는다 — 신호를 직접 받게).
+  ( cd "$WORK" && exec env "${SERVER_ENV_CLEAR[@]}" "$EXE" --save-root "$SAVE" --slot "$slot" --bind "$BIND" --port 0 < /dev/null > "$out" 2> "$err" ) &
+  pid=$!
+  until grep -q "듣는 중: " "$out" 2>/dev/null; do
+    sleep 0.3; waited=$((waited + 1))
+    if ! kill -0 "$pid" 2>/dev/null || [ $waited -gt $((LIMIT * 3)) ]; then break; fi
+  done
+  grep -q "듣는 중: " "$out" 2>/dev/null || fail "$name: 로그에 '듣는 중:' 이 없다"
+  kill -TERM "$pid" 2>/dev/null
+  waited=0
+  while kill -0 "$pid" 2>/dev/null; do
+    sleep 0.3; waited=$((waited + 1))
+    if [ $waited -gt $((LIMIT * 3)) ]; then kill -KILL "$pid" 2>/dev/null; fail "$name: SIGTERM 뒤 ${LIMIT}초 안에 끝나지 않았다"; break; fi
+  done
+  wait "$pid"; rc=$?
+  echo "   종료 코드 $rc"
+  [ "$rc" = "0" ] || fail "$name: SIGTERM 뒤 종료 코드 $rc"
+  grep -qF "저장하고 닫음" "$out" || fail "$name: SIGTERM 뒤 로그에 '저장하고 닫음' 이 없다"
+  if [ -s "$err" ]; then
+    fail "$name: 표준 오류에 출력이 있다"
+    sed 's/^/     /' "$err" | head -20
+  fi
+}
+
 run_server_checks() {
   echo "== 3. 실행(서버, 듣는 주소 $BIND)"
   run_server first-start verify "새 방을 만듦"
   [ -n "$(ls -A "$WORK/save/verify" 2>/dev/null)" ] || fail "first-start: 세이브 슬롯에 아무것도 저장되지 않았다"
   run_server reopen verify "방을 이어서 엶"
+  if [ "$(uname -s)" = Linux ]; then
+    run_server_sigterm sigterm verify
+    grep -qF "방을 이어서 엶" "$WORK/logs/sigterm.out" || fail "sigterm: 같은 세이브인데 '방을 이어서 엶' 이 없다"
+  else
+    echo "-- sigterm: 건너뜀(이 플랫폼에는 종료 신호가 없다 — Linux 에서 본다)"
+  fi
   # 인자 없이 켜면 빠진 값을 알리고 종료 코드 2 로 끝난다(도움말에 값 이름이 나온다)
   local help_out="$WORK/logs/no-args.out" rc
   ( cd "$WORK" && env "${SERVER_ENV_CLEAR[@]}" "${TIMEOUT_CMD[@]+"${TIMEOUT_CMD[@]}"}" "$EXE" < /dev/null > "$help_out" 2>&1 )
@@ -274,10 +364,31 @@ run_server_checks() {
   grep -qF -- "--port" "$help_out" || fail "no-args: 도움말에 --port 가 없다"
 }
 
+# ---- 3c. 들어가기: 배포한 서버에 배포한 클라이언트가 들어가는가(버전·데이터 지문이 맞는가) ----
+# run_join_check : new-game 이 만든 slot-1 로 들어간다. 서버 배포 폴더가 없으면 건너뛴다.
+run_join_check() {
+  echo "== 3+. 들어가기(배포한 서버 ← 배포한 클라이언트, $BIND)"
+  if [ ! -f "$SERVER_SRC/$SERVER_EXE_NAME" ]; then
+    echo "  건너뜀: 서버 배포 폴더가 없다: $SERVER_SRC (Tools/publish/publish.sh --server $RID)"
+    JOIN_SKIPPED=1
+    return
+  fi
+  local server_copy="$WORK/server" out="$WORK/logs/join-server.out"
+  cp -r "$SERVER_SRC" "$server_copy"
+  start_server join-server "$server_copy" join-room
+  if [ -n "$SERVER_PORT" ]; then
+    run_case join --save-root "$SAVE" --slot slot-1 --join "$BIND:$SERVER_PORT" --lang ko
+    if grep -q "들어옴: " "$out"; then echo "   서버: $(grep -m1 '들어옴: ' "$out")"; else fail "join: 서버 로그에 '들어옴:' 이 없다"; fi
+    if grep -q "접속 거절" "$out"; then fail "join: 서버가 거절했다: $(grep -m1 '접속 거절' "$out")"; fi
+  fi
+  stop_server join-server
+}
+
 if [ $SERVER -eq 1 ]; then run_server_checks; else run_client_checks; fi
 
 # ---- 요약 ----
 echo
+[ -z "${JOIN_SKIPPED:-}" ] || echo "(들어가기 확인은 서버 배포 폴더가 없어 건너뛰었다)"
 if [ ${#failures[@]} -eq 0 ]; then
   echo "===== 통과: 배포 폴더 $SRC"
   if [ "${VERIFY_KEEP:-0}" = "1" ]; then echo "임시 폴더(스크린샷·로그): $(native_path "$WORK")"; else rm -rf "$WORK"; fi

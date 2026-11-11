@@ -7,6 +7,8 @@ Tools/publish/publish.sh --list       # 복사할 게임 파일 목록만(게시
 Tools/publish/publish.sh --server     # 데디케이티드 서버(game/Rootborn.Server) 배포 폴더, 둘 다(아래 "서버")
 Tools/publish/verify.sh               # 만든 폴더가 저장소 없이 도는지 확인(아래 "확인하는 법")
 Tools/publish/verify.sh --server      # 서버 배포 폴더 확인
+Tools/publish/verify.sh --remote linux-x64           # linux-x64 를 원격 Linux 장치에서 실행해 확인(아래 "Linux 에서 확인")
+Tools/publish/verify.sh --remote --server linux-x64  # linux-x64 서버를 원격에서
 ```
 
 Git Bash(또는 Linux/macOS bash)에서 돈다. dotnet 은 `~/.dotnet` 또는 PATH 에 있으면 된다.
@@ -14,7 +16,8 @@ Git Bash(또는 Linux/macOS bash)에서 돈다. dotnet 은 `~/.dotnet` 또는 PA
 실행 파일 위치에서 위로 올라가며 `Assets/modernuserinterface-win` 을 찾아 루트를 정하고, `--root <폴더>` 로 줄 수도 있다.
 
 하는 일: `dotnet publish game/Rootborn.Host -c Release -r <플랫폼> --self-contained` → 출력 폴더에
-`content.txt` 가 가리키는 게임 파일을 **같은 상대 경로로** 복사한다(`data/…`, `Assets/…`, `game/world/…`, `game/localization/…`, `game/themes/…`).
+`content.txt` 가 가리키는 게임 파일을 **같은 상대 경로로** 복사한다(`data/…`, `Assets/…`, `game/economy.json`, `game/world/…`, `game/localization/…`, `game/themes/…`).
+테스트·문서(`*.md`, `*.Tests.dll`, NUnit·테스트 호스트)는 들어가지 않는다(`verify.sh`가 본다). 우리 어셈블리의 `.pdb`(클라이언트 8개 520KB)는 오류 위치를 남기려고 둔다.
 Unity 전용 파일(`.meta .unity .asset .prefab .cs`)은 어떤 줄로도 복사되지 않는다.
 
 2026-11-11 이 PC(Windows 11, dotnet 8.0.422, 빌드 캐시 있음)에서 잰 값:
@@ -26,7 +29,7 @@ Unity 전용 파일(`.meta .unity .asset .prefab .cs`)은 어떤 줄로도 복�
 
 목록 만들기는 그중 20초쯤이다. Windows 에서는 프로세스 하나 띄우는 데 수십 ms가 들므로 스크립트가 파일마다 grep·cp 를 띄우지 않게 했다.
 
-**Linux 폴더를 Windows 에서 만들었으면** NTFS 가 실행 권한을 남기지 않는다. Linux 로 옮긴 뒤 `chmod +x Rootborn.Host` 한다.
+**Linux 폴더를 Windows 에서 만들었으면** NTFS 가 실행 권한을 남기지 않는다. Linux 로 옮긴 뒤 `chmod +x Rootborn.Host` 한다(`verify.sh --remote`는 보낸 뒤 스스로 준다).
 
 ## 서버
 
@@ -37,19 +40,29 @@ Unity 전용 파일(`.meta .unity .asset .prefab .cs`)은 어떤 줄로도 복�
 
 | 파일 | 왜 |
 |---|---|
-| `data/**/*.json` | 정의를 읽고, 데이터 지문이 data 아래 모든 `.json`을 셈한다 |
+| `data/**/*.json`(좌표표 `data/atlases`, 보고서 `export-report.json`, 문구 `data/localization` 제외) | 정의(등록부·엔티티 파일)를 읽는다 |
 | `game/economy.json` | 통화 아이템 설정. 데이터 폴더 옆의 `game/economy.json`을 읽는다(없으면 통화 없음) |
 
-그림·글꼴·테마·맵(LDtk)·문구(`game/localization`)·월드 지점(`game/world`)은 넣지 않는다 — 서버는 읽지 않는다(`verify.sh --server`가 PNG·글꼴·LDtk가 들어갔는지 본다).
+그림·글꼴·테마·맵(LDtk)·문구·월드 지점(`game/world`)은 넣지 않는다 — 서버는 읽지 않는다(`verify.sh --server`가 PNG·글꼴·LDtk가 들어갔는지 본다).
 서버가 새 파일을 읽게 되면 `content-server.txt`에 한 줄 더한다.
 
-2026-11-12 이 PC에서 잰 값(dotnet 8.0.422): win-x64 11초 / 78MB / 1,978개(실행 파일·런타임 196개 + 게임 파일 1,782개), linux-x64 78MB / 1,978개.
+2026-11-12 이 PC에서 잰 값(dotnet 8.0.422, 지문 범위를 고친 뒤): linux-x64 75MB / 400개(실행 파일·런타임 196개 + 게임 파일 204개, data 2.8MB).
+클라이언트 linux-x64 는 101MB / 3,625개(`Assets` 17MB, `data` 5.4MB, `game` 77KB).
 
 - **실행**: 실행 파일 위치에서 위로 올라가며 `data/registry.json`을 찾아 루트를 정하므로 배포 폴더에서 `--root` 없이 돈다.
   `--save-root`, `--slot`, `--bind`, `--port`는 기본값이 없어 반드시 준다(`Rootborn.Server --help`). 끝내기는 콘솔 `stop`, Ctrl+C, 종료 신호.
-- **지문**: 서버의 데이터 지문은 data 아래 *모든* `.json`을 셈한다. 그래서 서버 폴더는 `data/atlases`와 `data/export-report.json`까지 넣는다(개발 PC에서 돌린 서버와 같은 지문).
-  클라이언트 배포 폴더(`content.txt`)는 `data/atlases`를 쓰는 그림 몫만 갖고 `export-report.json`을 뺀다. 그래서 **Host가 같은 방법으로 지문을 셈하게 되면 서버와 다른 값이 나온다.** 그때 정할 일이다
-  (지문을 `registry.json`이 가리키는 파일로 한정하거나, 클라이언트 폴더에도 모든 `.json`을 넣는다). 지금 Host는 지문을 셈하지 않는다.
+- **지문**: 방에 들어갈 때 맞춰 보는 데이터 지문(`Rootborn.Data/DataFingerprint`)은 **규칙에 쓰이는 데이터만** 셈한다.
+  서버와 클라이언트가 같은 셈법을 쓰고, 두 배포 목록으로 셈한 지문이 같다(`DataFingerprintScopeTests`가 두 목록 파일을 읽어 확인한다).
+
+  | 셈하는 것 | 셈하지 않는 것 |
+  |---|---|
+  | `data/registry.json`(등록부) | `data/atlases/**`(그림 좌표표 — 클라이언트는 쓰는 그림 몫만 갖는다) |
+  | `data` 아래 맨 위가 배열인 `.json`(엔티티 파일, 정의 로더와 같은 기준) | `data/export-report.json`(변환기 기록, 게임이 읽지 않는다) |
+  | data 옆 `game/economy.json`(통화 설정, 없으면 빠진다) | `data/localization/**`(문구 — 언어가 다른 두 사람도 같이 해야 한다) |
+  | | `game/world`·`game/themes`·`game/localization`·그림·맵(서버가 읽지 않는다) |
+
+  줄바꿈(CRLF/LF)과 맨 앞 UTF-8 BOM은 맞춰서 넣는다 — Windows 에서 만든 배포와 Linux 에서 만든 배포가 같은 지문이다.
+  규칙 데이터를 한 글자만 바꿔도 지문이 달라져 "데이터 버전이 다르다"로 거절된다(같은 커밋에서 만든 두 폴더끼리만 들어간다).
 - **버전**: 서버 로그의 `game 1.0.0+<커밋 해시>`는 .NET SDK가 git 저장소에서 빌드할 때 정보 버전에 붙이는 해시다. git이 없는 곳에서 빌드한 배포는 해시 없이 `1.0.0`이 된다.
   게임 버전을 `Directory.Build.props`로 정하는 세션(`mp-join-screen`)이 합쳐진 뒤에도 배포 빌드가 그 값을 깨지 않는지 확인할 일이다.
 
@@ -79,6 +92,7 @@ Unity 전용 파일(`.meta .unity .asset .prefab .cs`)은 어떤 줄로도 복�
 지금은 Host 가 운영체제 글꼴을 찾는다(`HostOptions.FindSystemKoreanFont`, 순서: `malgun.ttf` → `NanumGothic.ttf` → Noto CJK …).
 Windows 에서는 맑은 고딕(`C:\Windows\Fonts\malgun.ttf`, Windows 와 함께 깔리는 Microsoft 글꼴 — 게임과 함께 배포할 수 없다)을 쓴다.
 못 찾으면 `--font <TTF>` 또는 `ROOTBORN_FONT` 를 요구하며 종료 코드 2로 멈춘다(예: 한글 글꼴이 없는 Linux, GitHub ubuntu 러너).
+Linux 원격 확인(`--remote`)은 원격 `env.sh`의 `ROOTBORN_FONT`(Strix Halo: 시스템의 Noto Sans CJK `.ttc`)로 돌았다 — 배포 폴더의 글꼴이 아니다.
 글꼴이 정해지면 폴더에 넣고 `content.txt` 에 한 줄 더한 뒤 Host 가 그 경로를 기본으로 보게 한다(Host 변경 필요).
 
 ## 확인하는 법
@@ -108,7 +122,28 @@ Tools/publish/verify.sh --server --bind <IP>    # 서버가 들을 주소를 바
 임시 세이브 폴더·슬롯과 `--port 0`(빈 포트)으로 실행 → 로그에 `듣는 중:` → 로그의 데이터 폴더가 복사본 안인지 → 콘솔에 `stop`을 넣어 종료 코드 0과 `저장하고 닫음` →
 같은 세이브로 다시 켜서 `방을 이어서 엶` → 다시 `stop` → 인자 없이 켜면 종료 코드 2와 도움말. 표준 오류는 비어 있어야 한다.
 `--root`·`ROOTBORN_*` 환경 변수 없이 돈다. 2026-11-12 win-x64: 통과 34초. 잘못된 `--bind`로는 실패 13건으로 잡힌다.
-이 PC에서 linux-x64 서버는 실행하지 못해 목록 대조만 했다(`verify.sh --server --contents-only linux-x64`). GitHub Actions의 `server-publish` job이 ubuntu 에서 실행까지 한다(아직 GitHub 미확인).
+Linux(SIGTERM 포함)는 아래 "Linux 에서 확인". GitHub Actions의 `server-publish` job도 ubuntu 에서 실행까지 한다(아직 GitHub 미확인).
+
+클라이언트 확인(인자 없는 `verify.sh <플랫폼>`)은 같은 플랫폼의 서버 배포 폴더(`server-<플랫폼>`, 또는 `VERIFY_SERVER_SRC`)가 있으면
+**들어가기**도 본다: 새 게임 뒤 그 서버를 빈 포트로 띄우고 클라이언트를 `--slot slot-1 --join 127.0.0.1:<포트>`로 띄워
+서버 로그에 `들어옴:`이 있고 `접속 거절`이 없는지 본다 — 배포한 두 폴더의 버전(프로그램·데이터 지문)이 맞는다는 실제 확인이다.
+서버 폴더가 없으면 건너뛰고 끝에 알린다. 서버 확인은 Linux 에서 콘솔 없이 띄워 SIGTERM 으로 끝내도 `저장하고 닫음`·종료 코드 0 인지 본다.
+
+## Linux 에서 확인 (`--remote`)
+
+이 PC(Windows)에서 만든 linux-x64 폴더를 원격 Linux 장치(지금은 Strix Halo)에서 실행한다.
+접속 값은 `Scripts/remote-test`와 같은 환경 변수(`ROOTBORN_REMOTE_HOST`·`ROOTBORN_REMOTE_USER`·`ROOTBORN_REMOTE_KEY`, 작업 폴더 `ROOTBORN_REMOTE_DIR` 기본 `rootborn-test`)로만 받는다.
+**값이 없으면 1번(목록 대조)만 하고 "원격 실행을 건너뛰었다"고 알린다.** 원격은 `Scripts/remote-test/run.sh --setup`으로 준비된 것(`env.sh`의 Xvfb·글꼴)을 쓴다.
+
+1. 목록 대조는 이 PC 에서 한다.
+2. 배포 폴더(클라이언트면 `server-linux-x64`도)와 `verify.sh`를 원격 `~/<작업 폴더>/deploy/<실행 id>/`로 보내 실행 권한을 준다(Windows 가 실행 권한을 남기지 않으므로).
+3. 원격에서 `verify.sh --copied`로 위 2~4번을 돈다. 클라이언트는 가상 화면(Xvfb, 소프트웨어 GL)에서 돈다.
+   화면 번호는 원격 테스트의 범위(140~199)와 겹치지 않는 `VERIFY_DISPLAY_FIRST`~`LAST`(기본 200~219)에서 빈 것을 고른다.
+   임시 폴더·홈(글꼴·셰이더 캐시)도 그 실행 폴더 안에 둔다 — 원격 작업 폴더 밖에 쓰지 않고 sudo 를 쓰지 않는다.
+4. 스크린샷·로그를 `output/publish-verify/<실행 id>/`로 가져오고, 원격 실행 폴더·띄운 프로세스·화면을 지운다.
+
+2026-11-12 Strix Halo(Ubuntu, 원격 `env.sh`의 글꼴 Noto Sans CJK): 서버 통과 45초(새 방 → stop → 이어서 엶 → SIGTERM 으로 저장하고 닫음 → 인자 없음 종료 코드 2),
+클라이언트 통과 2분(화면 19개 + 들어가기, 서버 로그 `들어옴:`, 지문 `65bc37d92f8fbaeb` 일치). strace 로 본 복사본 밖 열기는 실행 폴더 안 셰이더 캐시, `/var/lib/dbus/machine-id`뿐이었다.
 
 호스트 테스트를 출력 폴더를 루트로 삼아 돌릴 수도 있다(테스트가 `HostOptions.Resolve` 로 루트를 얻으므로 환경 변수가 먹는다).
 
