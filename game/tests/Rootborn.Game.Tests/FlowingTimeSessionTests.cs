@@ -64,7 +64,9 @@ namespace Rootborn.Game.Tests
             for (int i = 0; i < 3; i++)
                 Assert.That(game.PerformOutsideSchoolActivity(LibraryStudy, "flow:study:" + i).Kind, Is.EqualTo(LifeActivityResultKind.Applied),
                     "평일 세 번째 큰 활동도 된다(시간 포인트 없음)");
-            Assert.That(game.Student.TimeMinutes, Is.EqualTo(start + 3 * 45), "자습 45분 × 3");
+            int minutes = TestWorld.Definitions.Get<OutsideSchoolActivity>(LibraryStudy).TimeCostMinutes;
+            Assert.That(minutes, Is.GreaterThan(0), "준비: 자습은 시간이 든다");
+            Assert.That(game.Student.TimeMinutes, Is.EqualTo(start + 3 * minutes), "자습 시간(data/) × 3");
             Assert.That(game.ActivityEndsAtMinutes, Is.EqualTo(game.Student.TimeMinutes));
             Assert.That(game.IsBusy, Is.False, "혼자면 끝나는 시각으로 곧바로 건너뛴다");
         }

@@ -13,7 +13,7 @@
       "ref": "paid-activity",
       "type": "ActivityTimePolicyDefinition"
     },
-    "timeCostMinutes": 40,
+    "timeCostMinutes": 150,
     "energyCost": 1,
     "focusCost": 2,
     "stressDelta": 0,
@@ -39,7 +39,7 @@
       "ref": "free-morning",
       "type": "ActivityTimePolicyDefinition"
     },
-    "timeCostMinutes": 45,
+    "timeCostMinutes": 240,
     "energyCost": 1,
     "focusCost": 2,
     "stressDelta": 1,
@@ -69,7 +69,7 @@
       "ref": "paid-activity",
       "type": "ActivityTimePolicyDefinition"
     },
-    "timeCostMinutes": 30,
+    "timeCostMinutes": 120,
     "energyCost": 1,
     "focusCost": 1,
     "stressDelta": 0,
@@ -99,7 +99,7 @@
       "ref": "paid-activity",
       "type": "ActivityTimePolicyDefinition"
     },
-    "timeCostMinutes": 20,
+    "timeCostMinutes": 120,
     "energyCost": 0,
     "focusCost": 1,
     "stressDelta": 0,
@@ -125,7 +125,7 @@
       "ref": "paid-activity",
       "type": "ActivityTimePolicyDefinition"
     },
-    "timeCostMinutes": 60,
+    "timeCostMinutes": 180,
     "energyCost": 2,
     "focusCost": 1,
     "stressDelta": 2,
@@ -152,7 +152,7 @@
       "ref": "paid-activity",
       "type": "ActivityTimePolicyDefinition"
     },
-    "timeCostMinutes": 20,
+    "timeCostMinutes": 120,
     "energyCost": 0,
     "focusCost": 1,
     "stressDelta": 0,
@@ -179,7 +179,7 @@
       "ref": "paid-activity",
       "type": "ActivityTimePolicyDefinition"
     },
-    "timeCostMinutes": 20,
+    "timeCostMinutes": 120,
     "energyCost": 0,
     "focusCost": 1,
     "stressDelta": 0,

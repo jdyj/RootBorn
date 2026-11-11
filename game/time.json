@@ -3,5 +3,12 @@
   "dayStart": "07:00",
   "bedtime": "22:00",
   "nightEnergyLossPerHour": 1,
-  "lateSleepRecoveryLossPerHour": 2
+  "lateSleepRecoveryLossPerHour": 2,
+  "balance": {
+    "about": "게임은 읽지 않는다. 균형 검사(game/tests/Rootborn.Game.Tests/DayBalanceTests.cs)의 목표와 가정이다. 활동 시간 값은 data/의 timeCostMinutes, 정한 원칙과 표는 docs/superpowers/specs/2026-11-12-time-balance.md",
+    "bigActivitiesPerDay": { "min": 4, "max": 6 },
+    "bodyMayStopFrom": "19:00",
+    "travelMinutesPerActivity": 30,
+    "minigamePlayShareOfTimeLimit": 0.5
+  }
 }

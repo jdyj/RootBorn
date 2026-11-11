@@ -188,7 +188,7 @@ namespace Rootborn.Data.Tests
         {
             var activity = _result.Definitions.Get<LifeActivity>("practice.chef");
 
-            Assert.That(activity.TimeCostMinutes, Is.EqualTo(45));
+            Assert.That(activity.TimeCostMinutes, Is.EqualTo(120), "흐르는 시간의 균형(docs/superpowers/specs/2026-11-12-time-balance.md)");
             Assert.That(activity.EnergyCost, Is.EqualTo(1));
             Assert.That(activity.FocusCost, Is.EqualTo(1));
             Assert.That(activity.Category, Is.EqualTo(LifeActivityCategory.School));

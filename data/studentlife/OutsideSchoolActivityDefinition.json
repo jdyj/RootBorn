@@ -12,7 +12,7 @@
       "ref": "paid-activity",
       "type": "ActivityTimePolicyDefinition"
     },
-    "timeCostMinutes": 30,
+    "timeCostMinutes": 120,
     "energyCost": 1,
     "focusCost": 0,
     "stressDelta": 0,
@@ -37,7 +37,7 @@
       "ref": "paid-activity",
       "type": "ActivityTimePolicyDefinition"
     },
-    "timeCostMinutes": 45,
+    "timeCostMinutes": 150,
     "energyCost": 1,
     "focusCost": 2,
     "stressDelta": 1,
