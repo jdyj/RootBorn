@@ -27,18 +27,17 @@ namespace Rootborn.Screens.Records
 
         public IReadOnlyList<LocationLogRow> Rows { get; }
 
-        public static LocationStateLogModel From(GameSession session, DisplayNames names)
+        public static LocationStateLogModel From(GameSession session)
         {
             if (session?.LocationStates == null) return Empty;
             LocationStateTodaySummarySaveData[] summaries = session.LocationStates.TodaySummary;
             var rows = new LocationLogRow[summaries.Length];
-            for (int i = 0; i < rows.Length; i++) rows[i] = RowFor(summaries[i], session, names);
+            for (int i = 0; i < rows.Length; i++) rows[i] = RowFor(summaries[i], session);
             return new LocationStateLogModel(rows);
         }
 
-        public static LocationLogRow RowFor(LocationStateTodaySummarySaveData summary, GameSession session, DisplayNames names)
+        public static LocationLogRow RowFor(LocationStateTodaySummarySaveData summary, GameSession session)
         {
-            names = names ?? DisplayNames.Empty;
             string title;
             if (summary.Hidden) title = HiddenTitleKey;
             else
@@ -46,8 +45,8 @@ namespace Rootborn.Screens.Records
                 string key = session.Definitions.TryGet<LocationState>(summary.StateId, out LocationState state) ? state.DisplayNameKey : summary.DisplayName;
                 title = string.IsNullOrEmpty(key) ? UnknownTitleKey : key;
             }
-            string location = names.Get("LocationDefinition", summary.LocationId);
-            string time = names.Get("TimeSlotDefinition", summary.TimeSlotId);
+            string location = session.Definitions.TryGet(summary.LocationId ?? string.Empty, out Location place) ? place.DisplayNameKey : null;
+            string time = session.Definitions.TryGet(summary.TimeSlotId ?? string.Empty, out TimeSlotDefinition slot) ? slot.DisplayNameKey : null;
             return new LocationLogRow(summary.StateId, title, string.IsNullOrEmpty(location) ? DefaultLocationKey : location,
                 string.IsNullOrEmpty(time) ? DefaultTimeKey : time, summary.Day);
         }
@@ -129,7 +128,7 @@ namespace Rootborn.Screens.Records
             _ = Root;
             _title.Text = T("ui.location-log.title");
             _empty.Text = T("ui.location-log.empty");
-            Model = LocationStateLogModel.From(Services.Session, Services.Names);
+            Model = LocationStateLogModel.From(Services.Session);
             int count = Model.Rows.Count;
             _titles = new string[count];
             _details = new string[count];

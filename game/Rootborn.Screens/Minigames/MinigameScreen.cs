@@ -189,10 +189,10 @@ namespace Rootborn.Screens.Minigames
 
         private bool Settle()
         {
-            if (Services.Commands == null) return false;
+            if (Services.Session == null) return false;
             MinigameModel model = Model;
             MinigameSession played = Session;
-            AdultCareerResult result = Services.Commands.Run(s => model.Settle(s, played), ChangeTopics.Student);
+            AdultCareerResult result = model.Settle(Services.Session, played);
             LastSettlement = result;
             if (result.Applied)
             {

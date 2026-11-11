@@ -92,6 +92,8 @@ namespace Rootborn.Screens.Tests.Dialogue
             Assert.That(t.Stack.MovementBlocked, Is.False);
             t.Stack.Interaction(Library);
             Assert.That(t.Stack.IsOpen(ScreenCatalog.DailyEvent), Is.False, "미룬 이벤트는 오늘 다시 나오지 않는다");
+            using TestSession again = t.Reopen();
+            Assert.That(again.Session.DailyEvents.GetRecord(screen.Model.EventId)?.State, Is.EqualTo(DailyEventStates.Deferred), "미루기는 저장된다(GameSession.DeferDailyEvent)");
         }
 
         [Test]
@@ -101,6 +103,18 @@ namespace Rootborn.Screens.Tests.Dialogue
             t.Click(DailyEventScreen.DeclineId);
             Assert.That(t.Screen<DailyEventScreen>(ScreenCatalog.DailyEvent).LastRecord.State, Is.EqualTo(DailyEventStates.Declined));
             Assert.That(((UiTextBlock)t.Node(DailyEventScreen.ResultId)).Text, Is.EqualTo(t.Text.Get("life.event.ui.declined")));
+            using TestSession again = t.Reopen();
+            Assert.That(again.Session.DailyEvents.GetRecord("daily-event.library-hard-book")?.State, Is.EqualTo(DailyEventStates.Declined), "지나가기는 저장된다");
+        }
+
+        [Test]
+        public void Names_ComeFromTheCoreDefinitions()
+        {
+            using TestSession t = OpenAtLibrary();
+            var screen = t.Screen<DailyEventScreen>(ScreenCatalog.DailyEvent);
+            DailyEvent dailyEvent = t.Session.Definitions.Get<DailyEvent>(screen.Model.EventId);
+            Assert.That(screen.Model.TitleKey, Is.EqualTo(dailyEvent.DisplayNameKey));
+            Assert.That(screen.Model.Choices.Select(c => c.NameKey), Is.EqualTo(dailyEvent.Choices.Take(DailyEventModel.MaxChoices).Select(c => c.DisplayNameKey)));
         }
 
         [Test]

@@ -115,7 +115,7 @@ namespace Rootborn.Screens.Career
 
         private UiLabel _title;
         private UiCardRow _cards;
-        private ScrollText _details;
+        private UiScrollText _details;
         private UiButton _close;
         private readonly CardLabel _cardLabel = new CardLabel();
         private string[] _cardTexts = Array.Empty<string>();
@@ -141,7 +141,7 @@ namespace Rootborn.Screens.Career
             _cards.Centered(0f, Metrics.CardsY, Metrics.CardsW, Metrics.CardsH);
             _cards.DrawCard = PaintCard;
             _cards.CardClicked += SelectAndShow;
-            _details = root.Add(new ScrollText { Id = DetailsId, FontSize = Metrics.DetailsFont, Color = Metrics.Ink, PaddingX = Metrics.DetailsPadX, PaddingTop = Metrics.DetailsPadTop });
+            _details = root.Add(new UiScrollText { Id = DetailsId, FontSize = Metrics.DetailsFont, Color = Metrics.Ink, PaddingX = Metrics.DetailsPadX, PaddingTop = Metrics.DetailsPadTop });
             _details.Centered(0f, Metrics.DetailsY, Metrics.DetailsW, Metrics.DetailsH);
             _close = root.Add(new UiButton { Id = CloseId, FontSize = Metrics.CloseFont });
             _close.Centered(Metrics.CloseX, Metrics.CloseY, Metrics.CloseW, Metrics.CloseH);
@@ -167,15 +167,13 @@ namespace Rootborn.Screens.Career
 
         private void SelectAndShow(int index)
         {
-            if (index < 0 || index >= Model.Cards.Length || Services.Commands == null) return;
+            if (index < 0 || index >= Model.Cards.Length || Services.Session == null) return;
             DetailIndex = index;
             string id = Model.Cards[index].InterestId;
             // Unity 요청 id와 같은 모양: 같은 날 같은 희망을 다시 눌러도 같은 요청이다.
             string requestId = "career-interest-ui-" + id + "-" + Services.Session.StudentDay;
-            CareerInterestSelectionResult result = Services.Commands.Run(s => s.SelectCareerInterest(id, requestId), ChangeTopics.Career);
+            CareerInterestSelectionResult result = Services.Session.SelectCareerInterest(id, requestId);
             LastResult = result;
-            // 장래희망 선택은 퀘스트·체인 목표를 움직일 수 있다(추적 목표 HUD 등이 다시 읽는다).
-            if (result.Applied) Services.Screens?.NotifyChanged(ChangeTopics.Quests);
             Model = CareerInterestModel.From(Services.Session);
             Show();
         }

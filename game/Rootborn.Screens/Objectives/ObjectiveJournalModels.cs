@@ -36,20 +36,20 @@ namespace Rootborn.Screens.Objectives
 
     /// <summary>
     /// 항목 하나의 상세 행동 단추(예: 끝낸 퀘스트의 보상 받기). 모으는 쪽이 데이터와 상태로 정한다(엔티티 id로 고르지 않는다).
-    /// 화면은 이름을 보이고 누르면 실행할 뿐이다. 실행은 SessionCommands로 게임 명령을 부른다.
+    /// 화면은 이름을 보이고 누르면 실행할 뿐이다. 실행은 GameSession의 게임 명령을 부른다.
     /// </summary>
     public sealed class JournalAction
     {
-        private readonly Func<SessionCommands, JournalActionResult> _run;
+        private readonly Func<GameSession, JournalActionResult> _run;
 
-        public JournalAction(JournalText label, Func<SessionCommands, JournalActionResult> run)
+        public JournalAction(JournalText label, Func<GameSession, JournalActionResult> run)
         {
             Label = label ?? JournalText.Empty;
             _run = run;
         }
 
         public JournalText Label { get; }
-        public JournalActionResult Run(SessionCommands commands) => _run != null && commands != null ? _run(commands) : new JournalActionResult(false, JournalText.Empty);
+        public JournalActionResult Run(GameSession session) => _run != null && session != null ? _run(session) : new JournalActionResult(false, JournalText.Empty);
     }
 
     /// <summary>
@@ -158,37 +158,5 @@ namespace Rootborn.Screens.Objectives
 
         public static List<IObjectiveJournalSource> For(ScreenServices services) =>
             _bySession.GetValue(services, _ => { var list = new List<IObjectiveJournalSource>(16); ObjectiveJournalSourceCatalog.Register(list); return list; });
-    }
-
-    /// <summary>
-    /// 수첩에서 "추적"한 항목 하나(Unity ObjectiveJournalTrackingStore). 추적 목표 HUD는 이것만 보인다.
-    /// 게임 한 판이 있으면 GameSession.ObjectiveTracking에 두고 추적할 때 저장한다(TrackObjective) — 다시 시작해도 남는다.
-    /// 게임 한 판이 없으면(견본 등) 메모리에만 둔다. 바뀌면 화면 쌓기에 Topic 알림을 낸다.
-    /// </summary>
-    public sealed class ObjectiveJournalTracking
-    {
-        public const string Topic = "objective-tracking";
-        private static readonly ConditionalWeakTable<ScreenServices, ObjectiveJournalTracking> _bySession = new ConditionalWeakTable<ScreenServices, ObjectiveJournalTracking>();
-        private readonly ScreenServices _services;
-        private string _categoryId = string.Empty, _stableKey = string.Empty;
-
-        private ObjectiveJournalTracking(ScreenServices services) { _services = services; }
-
-        public static ObjectiveJournalTracking For(ScreenServices services) => _bySession.GetValue(services, s => new ObjectiveJournalTracking(s));
-
-        public string CategoryId => _services.Session != null ? _services.Session.ObjectiveTracking.CategoryId : _categoryId;
-        public string StableKey => _services.Session != null ? _services.Session.ObjectiveTracking.StableKey : _stableKey;
-        public bool HasTracked => !string.IsNullOrEmpty(StableKey);
-
-        public void Track(string categoryId, string stableKey)
-        {
-            if (string.IsNullOrEmpty(stableKey)) return;
-            bool changed = stableKey != StableKey || (categoryId ?? string.Empty) != CategoryId;
-            if (!changed) return;
-            if (_services.Commands != null) { _services.Commands.Run(s => s.TrackObjective(categoryId, stableKey), Topic); return; } // Run이 화면 쌓기에 알린다
-            _categoryId = categoryId ?? string.Empty;
-            _stableKey = stableKey;
-            _services.Screens?.NotifyChanged(Topic);
-        }
     }
 }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Rootborn.Core.Encyclopedia;
 using Rootborn.Game;
-using Rootborn.Screens.Common;
 using Rootborn.Ui;
 
 namespace Rootborn.Screens.Records
@@ -106,7 +105,7 @@ namespace Rootborn.Screens.Records
         private UiScrollList _list;
         private UiBox _marker;
         private UiNode _categoryPanel;
-        private readonly List<MultilineButton> _categoryButtons = new List<MultilineButton>();
+        private readonly List<UiMultilineButton> _categoryButtons = new List<UiMultilineButton>();
         private EncyclopediaRow[] _rows = Array.Empty<EncyclopediaRow>();
 
         public EncyclopediaScreen(ScreenServices services) : base(services) { }
@@ -144,13 +143,13 @@ namespace Rootborn.Screens.Records
             for (int i = 0; i < Model.Categories.Count; i++)
             {
                 int index = i;
-                var button = _categoryPanel.Add(new MultilineButton { Id = CategoryId(i), FontSize = Metrics.CategoryFont });
+                var button = _categoryPanel.Add(new UiMultilineButton { Id = CategoryId(i), FontSize = Metrics.CategoryFont });
                 button.Place(0f, 0f, Metrics.CategoryButtonX, Metrics.CategoryButtonY + i * Metrics.CategoryStep, Metrics.CategoryButtonW, Metrics.CategoryButtonH);
                 button.Clicked += () => SelectCategory(Model.Categories[index].Id);
                 _categoryButtons.Add(button);
             }
             // 분류가 더 늘어도 마지막 버튼 다음 id는 숨겨진 빈 자리로 둔다(시험이 "그 다음 칸은 없다"를 본다).
-            var spare = _categoryPanel.Add(new MultilineButton { Id = CategoryId(Model.Categories.Count), Visible = false });
+            var spare = _categoryPanel.Add(new UiMultilineButton { Id = CategoryId(Model.Categories.Count), Visible = false });
             spare.Place(0f, 0f, Metrics.CategoryButtonX, Metrics.CategoryButtonY + Model.Categories.Count * Metrics.CategoryStep, Metrics.CategoryButtonW, Metrics.CategoryButtonH);
 
             _list = panel.Add(new UiScrollList
@@ -182,7 +181,7 @@ namespace Rootborn.Screens.Records
 
         protected internal override void OnChanged(string topic)
         {
-            if (topic == ChangeTopics.Language || topic == ChangeTopics.All) { _title.Text = T("ui.encyclopedia.open"); RefreshCategories(); RefreshRows(keepEntry: true); }
+            if (topic == ChangeTopics.Language || topic == ChangeTopics.Discovery || topic == ChangeTopics.All) { _title.Text = T("ui.encyclopedia.open"); RefreshCategories(); RefreshRows(keepEntry: true); }
         }
 
         protected internal override bool OnKey(ScreenKey key, bool shift)

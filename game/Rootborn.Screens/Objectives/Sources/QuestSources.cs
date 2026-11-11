@@ -25,14 +25,14 @@ namespace Rootborn.Screens.Objectives.Sources
                 string questId = quest.Id;
                 items.Add(new JournalItem("quest." + quest.Id, CategoryId, JournalSourceText.Safe(quest.DisplayNameKey, quest.Id), JournalText.Data(quest.DescriptionKey),
                     JournalSourceText.State(state == QuestStage.NotStarted ? "Available" : state.ToString()), Objectives(session.QuestLog, quest, state), Hint(state), false, Priority(state),
-                    state == QuestStage.Completed ? new JournalAction(JournalText.Key("ui.journal.quest.claim"), commands => Claim(commands, questId)) : null));
+                    state == QuestStage.Completed ? new JournalAction(JournalText.Key("ui.journal.quest.claim"), session => Claim(session, questId)) : null));
             }
             return items;
         }
 
-        private static JournalActionResult Claim(SessionCommands commands, string questId)
+        private static JournalActionResult Claim(GameSession session, string questId)
         {
-            bool claimed = commands.Run(s => s.ClaimQuestReward(questId), ChangeTopics.Quests);
+            bool claimed = session.ClaimQuestReward(questId);
             return new JournalActionResult(claimed, JournalText.Key(claimed ? "ui.journal.quest.claimed" : "ui.journal.quest.claim-failed"));
         }
 
@@ -70,6 +70,9 @@ namespace Rootborn.Screens.Objectives.Sources
     public sealed class QuestChainSource : IObjectiveJournalSource
     {
         public string SourceId => "quest-chain-log";
+
+        /// <summary>체인 한 줄의 안정 키(추적 지정에 저장되는 값). 체인 기록 화면의 추적 단추도 이 키로 추적한다.</summary>
+        public static string StableKeyFor(string chainId) => "questchain." + chainId;
         public string CategoryId => JournalCategories.Quests;
 
         public IReadOnlyList<JournalItem> BuildItems(GameSession session)
@@ -82,7 +85,7 @@ namespace Rootborn.Screens.Objectives.Sources
                 if (chain == null || chain.DeveloperOnly || string.IsNullOrEmpty(chain.Id)) continue;
                 QuestChainState state = log.GetState(chain);
                 QuestStepDefinition step = log.GetCurrentStep(chain);
-                items.Add(new JournalItem("questchain." + chain.Id, CategoryId,
+                items.Add(new JournalItem(StableKeyFor(chain.Id), CategoryId,
                     JournalSourceText.Safe(step?.DisplayNameKey, chain.DisplayNameKey), JournalSourceText.Safe(step?.DescriptionKey, chain.DescriptionKey),
                     JournalSourceText.State(state.ToString()), Objectives(log, chain, step, state), Hint(log, chain, step, state), log.IsTracked(chain), Priority(chain, state)));
             }

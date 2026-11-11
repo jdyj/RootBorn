@@ -32,14 +32,14 @@ namespace Rootborn.Host.Tests
             try { Directory.Delete(_saves, true); } catch (IOException) { }
         }
 
-        private PlayerDriver Start(string size, Action<ScreenRegistry> extra = null)
+        private PlayerDriver Start(string size, Action<ScreenRegistry> extra = null, params string[] more)
         {
             string root = HostOptions.Resolve(new[] { "--sample" }).RepoRoot;
             HostOptions options = HostOptions.Resolve(new[]
             {
                 "--save-root", _saves, "--slot", "slot-1", "--size", size,
                 "--evidence", Path.Combine(root, "output", "host-screens-evidence"),
-            });
+            }.Concat(more).ToArray());
             options.TestMode = true;
             var player = new PlayerDriver(options, extra);
             player.Frames(3);
@@ -87,6 +87,33 @@ namespace Rootborn.Host.Tests
             Rootborn.Screens.Tests.KnownMissingKeys.AssertOnlyKnownMissing(player.Game.Text, System.Array.Empty<string>());
             Assert.That(player.Game.Renderer.MissingImages, Is.Empty);
             player.CloseScreenWithKey(TestKey.Escape, ScreenCatalog.Settings);
+        }
+
+        [Test]
+        public void SCREENS_003_SettingsLanguageButton_ChangesOpenTextAtOnce_SavesIt_AndTheNextStartUsesIt()
+        {
+            using (PlayerDriver player = Start("1920x1080"))
+            {
+                Assert.That(player.Game.Text.Language, Is.EqualTo("ko"), "--lang도 저장된 설정도 없으면 운영체제 언어(시험에서는 ko)");
+                player.OpenScreenWithKey(TestKey.Escape, ScreenCatalog.Settings);
+                string koLabel = ((UiLabel)player.Node(SettingsScreen.LanguageLabelId)).Text;
+                player.ScreenshotScreen(ScreenCatalog.Settings, "screens-06-settings-language-ko");
+                player.PressButton(SettingsScreen.LanguageButtonId);
+                Assert.That(player.Game.Text.Language, Is.EqualTo("en"), "언어 파일 폴더의 다음 언어");
+                player.Frames(2);
+                Assert.That(((UiLabel)player.Node(SettingsScreen.LanguageLabelId)).Text, Is.Not.EqualTo(koLabel), "열린 화면 글자가 바로 바뀐다");
+                Assert.That(((UiButton)player.Node(SettingsScreen.LanguageButtonId)).Text, Is.EqualTo("English"));
+                player.ScreenshotScreen(ScreenCatalog.Settings, "screens-07-settings-language-en");
+                player.CloseScreenWithKey(TestKey.Escape, ScreenCatalog.Settings);
+                player.Screenshot("screens-08-world-in-english");
+            }
+            var saved = new SettingsStore(new Rootborn.Data.Save.FileSaveStore(_saves));
+            Assert.That(saved.Settings.Language, Is.EqualTo("en"), "세이브 폴더의 설정 파일에 저장된다");
+
+            using (PlayerDriver again = Start("1280x720"))
+                Assert.That(again.Game.Text.Language, Is.EqualTo("en"), "다음 시작은 저장된 언어");
+            using (PlayerDriver forced = Start("1280x720", null, "--lang", "ko"))
+                Assert.That(forced.Game.Text.Language, Is.EqualTo("ko"), "--lang이 저장된 설정보다 먼저");
         }
 
         [Test]

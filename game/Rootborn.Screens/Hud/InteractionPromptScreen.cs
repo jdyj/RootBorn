@@ -1,12 +1,28 @@
+using System;
 using System.Collections.Generic;
+using Rootborn.Core.StudentLife;
+using Rootborn.Data;
 using Rootborn.Ui;
 
 namespace Rootborn.Screens.Hud
 {
     /// <summary>
-    /// 상호작용 종류 하나의 안내: 문구 키, 대상 이름을 끼우는 형식인지(대상 id가 장소 id), 대상 가운데에서 몇 칸 위에 띄우는지.
+    /// 상호작용 종류 하나의 안내: 문구 키, 대상 가운데에서 몇 칸 위에 띄우는지, 대상 이름을 끼우는 경우 이름 키를 찾는 법(정의 + 대상 id → 이름 키).
+    /// 이름을 끼우는 문구는 {0} 자리에 이름을 넣는다. 이름을 못 찾으면 FallbackNameKey를 이름으로, 그것도 없으면 NoNameTextKey 문구를 쓴다.
     /// </summary>
-    public sealed record InteractionPromptSpec(string Kind, string TextKey, bool NamesLocation, float CellsAbove);
+    public sealed record InteractionPromptSpec(string Kind, string TextKey, float CellsAbove,
+        Func<GameDefinitions, string, string> NameKeyOf = null, string FallbackNameKey = null, string NoNameTextKey = null);
+
+    /// <summary>안내 문구에 끼울 대상 이름 키 찾기(정의 종류마다 하나). 대상 id로 그 정의를 찾아 DisplayNameKey를 준다.</summary>
+    public static class InteractionPromptNames
+    {
+        public static string Location(GameDefinitions definitions, string id) => Of<Location>(definitions, id, l => l.DisplayNameKey);
+        public static string PartTimeWork(GameDefinitions definitions, string id) => Of<PartTimeWork>(definitions, id, w => w.DisplayNameKey);
+        public static string Exploration(GameDefinitions definitions, string id) => Of<ExplorationInteraction>(definitions, id, e => e.DisplayNameKey);
+
+        private static string Of<T>(GameDefinitions definitions, string id, Func<T, string> key) where T : class
+            => definitions != null && !string.IsNullOrEmpty(id) && definitions.TryGet(id, out T found) ? key(found) : null;
+    }
 
     /// <summary>
     /// 상호작용 안내 글자(Unity PlayerInteractionRouter의 "[E] …"). 앞의 대상 위에 한 줄. 종류별 문구 키와 높이는 Unity 판 상호작용
@@ -26,18 +42,23 @@ namespace Rootborn.Screens.Hud
             public const string KeyHint = "[E] ";
         }
 
-        /// <summary>종류 → 안내. 새 상호작용 종류는 여기 한 줄.</summary>
+        private const string GenericLocationKey = "life.location.generic";
+
+        /// <summary>종류 → 안내(등록 표). 새 상호작용 종류는 여기 한 줄. 높이는 Unity 판 상호작용 구현체의 InteractionPromptOffset.</summary>
         public static readonly InteractionPromptSpec[] Prompts =
         {
-            new InteractionPromptSpec("npc", "ui.prompt.talk", false, 1.15f),                     // NpcInteractor
-            new InteractionPromptSpec("daily-plan-board", "ui.prompt.plan-day", false, 1.1f),      // DailyPlanBoardInteractor
-            new InteractionPromptSpec("student-day-end", "day-result.end-day", false, 1.15f),      // StudentDayEndInteractor
-            new InteractionPromptSpec("location-visit", "ui.prompt.visit", true, 1.05f),           // LocationVisitInteractor
-            new InteractionPromptSpec("location-activity", "life.location.explore", true, 1.25f),  // LocationActivityInteractor
+            new InteractionPromptSpec("npc", "ui.prompt.talk", 1.15f),                                                                  // NpcInteractor
+            new InteractionPromptSpec("daily-plan-board", "ui.prompt.plan-day", 1.1f),                                                   // DailyPlanBoardInteractor
+            new InteractionPromptSpec("student-day-end", "day-result.end-day", 1.15f),                                                   // StudentDayEndInteractor
+            new InteractionPromptSpec("location-visit", "ui.prompt.visit", 1.05f, InteractionPromptNames.Location, GenericLocationKey),          // LocationVisitInteractor
+            new InteractionPromptSpec("location-activity", "life.location.explore", 1.25f, InteractionPromptNames.Location, GenericLocationKey), // LocationActivityInteractor
+            new InteractionPromptSpec("part-time-work", "ui.prompt.part-time-work", 1.05f, InteractionPromptNames.PartTimeWork,
+                NoNameTextKey: "ui.prompt.part-time-work-generic"),                                                                         // PartTimeWorkInteractor
+            new InteractionPromptSpec("career-practice", "ui.prompt.career-practice", 1.15f),                                            // StudentLifeSceneInteraction(연습)
+            new InteractionPromptSpec("exploration", "ui.prompt.explore", 1.15f, InteractionPromptNames.Exploration,
+                NoNameTextKey: "ui.prompt.explore-generic"),                                                                                // ExplorationInteractionPointInteractor
+            new InteractionPromptSpec(AdultFacility.FacilityScreen.InteractionKind, "facility.interact", 1.1f),                          // CareerFacilityInteractor
         };
-
-        private const string LocationType = "LocationDefinition";
-        private const string GenericLocationKey = "life.location.generic";
 
         public const string LabelId = "hud.prompt";
 
@@ -90,7 +111,7 @@ namespace Rootborn.Screens.Hud
             InteractionTargetView t = target.Value;
             if (t.Kind != _shownKind || t.Id != _shownId || _shownLanguage != Services.Text.Language)
             {
-                _label.Text = Layout.KeyHint + (spec.NamesLocation ? F(spec.TextKey, LocationName(t.Id)) : T(spec.TextKey));
+                _label.Text = Layout.KeyHint + PromptText(spec, t.Id);
                 _shownKind = t.Kind; _shownId = t.Id; _shownLanguage = Services.Text.Language;
             }
             float y = t.Y - spec.CellsAbove * t.Cell;
@@ -99,10 +120,13 @@ namespace Rootborn.Screens.Hud
             if (_label.Parent != null && _label.Parent.Rect.W > 0) _label.Layout(_label.Parent.Rect);
         }
 
-        private string LocationName(string locationId)
+        private string PromptText(InteractionPromptSpec spec, string targetId)
         {
-            string key = Services.Names.Get(LocationType, locationId);
-            return T(string.IsNullOrEmpty(key) ? GenericLocationKey : key);
+            if (spec.NameKeyOf == null) return T(spec.TextKey);
+            string nameKey = spec.NameKeyOf(Services.Definitions, targetId);
+            if (string.IsNullOrEmpty(nameKey)) nameKey = spec.FallbackNameKey;
+            if (string.IsNullOrEmpty(nameKey)) return T(spec.NoNameTextKey ?? spec.TextKey);
+            return F(spec.TextKey, T(nameKey));
         }
     }
 }

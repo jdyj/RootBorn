@@ -50,16 +50,14 @@ namespace Rootborn.Screens.Tests.AdultFacility
                 Store.Write(Slot, name, snapshot);
             }
             Session = GameSession.Start(Definitions.Value, settings, Store, Slot, null);
-            Commands = new SessionCommands(Session);
             Text = longText ? LongText.Create(language) : TestData.Text(language);
-            Stack = new ScreenStack(ScreenCatalog.Create(), new ScreenServices(Text, Commands) { Names = DisplayNames.Load(TestData.DataDirectory) });
+            Stack = new ScreenStack(ScreenCatalog.Create(), new ScreenServices(Text, Session));
             Stack.Layout(1920, 1080);
             Stack.OpenHud();
         }
 
         public FileSaveStore Store { get; }
         public GameSession Session { get; private set; }
-        public SessionCommands Commands { get; }
         public GameText Text { get; }
         public ScreenStack Stack { get; }
 

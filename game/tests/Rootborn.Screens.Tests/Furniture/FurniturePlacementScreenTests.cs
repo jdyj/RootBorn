@@ -70,7 +70,7 @@ namespace Rootborn.Screens.Tests.Furniture
             {
                 View = new TestView(Room);
                 T.Session.EnterHouse(Room.Grid, "house");
-                T.Stack.EnterMap("House");
+                T.Stack.EnterMap("House", new[] { MapFeatures.FurniturePlacement });
                 T.Stack.OpenHud();
                 T.Click("hud.button.placement");
                 Screen = T.Screen<FurniturePlacementScreen>(ScreenCatalog.FurniturePlacement);
@@ -135,7 +135,7 @@ namespace Rootborn.Screens.Tests.Furniture
             {
                 Assert.That(f.Screen.Palette.At(i), Is.SameAs(available[i]));
                 Assert.That(f.T.Node(FurniturePlacementScreen.SlotId(i)).Visible, Is.True);
-                Assert.That(((FittedImage)f.T.Node(FurniturePlacementScreen.SlotId(i) + ".icon")).Image, Is.Not.Null.And.Not.Empty, "가구 그림");
+                Assert.That(((UiFittedImage)f.T.Node(FurniturePlacementScreen.SlotId(i) + ".icon")).Image, Is.Not.Null.And.Not.Empty, "가구 그림");
             }
             var page = (UiTextBlock)f.T.Node(FurniturePlacementScreen.PageTextId);
             Assert.That(page.Text, Is.EqualTo($"1 / {f.Screen.Palette.PageCount} 페이지\n가구 {available.Count}개"));
@@ -185,7 +185,7 @@ namespace Rootborn.Screens.Tests.Furniture
             int h = desk.FootprintCells.Max(c => c.Y) - desk.FootprintCells.Min(c => c.Y) + 1;
             Assert.That(((UiLabel)f.T.Node(FurniturePlacementScreen.SelectedSizeId)).Text, Is.EqualTo(w + "x" + h));
             Assert.That(((UiLabel)f.T.Node(FurniturePlacementScreen.SelectedDirectionId)).Text, Is.EqualTo("방향: 자동"));
-            Assert.That(((FittedImage)f.T.Node(FurniturePlacementScreen.SelectedIconId)).Image, Does.Contain(desk.TileParts[0].Name));
+            Assert.That(((UiFittedImage)f.T.Node(FurniturePlacementScreen.SelectedIconId)).Image, Does.Contain(desk.TileParts[0].Name));
 
             f.T.Click(FurniturePlacementScreen.RotateId);
             Assert.That(f.Screen.Direction, Is.EqualTo(FurniturePlacementDirection.East));

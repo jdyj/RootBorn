@@ -59,8 +59,14 @@ namespace Rootborn.Host
         /// </summary>
         public bool StartMenu => !Sample && !WorldActive && !string.IsNullOrWhiteSpace(SaveRoot);
 
-        /// <summary>화면 문구 언어(data/localization의 파일 이름). Unity 판은 운영체제 언어로 골랐다. 여기서는 1차 언어 ko가 기본이다.</summary>
-        public string Language = "ko";
+        /// <summary>
+        /// --lang으로 준 화면 문구 언어(언어 파일 이름). 주지 않으면 null이고, 언어는 LanguageChoice 순서(이 값 → 저장된 설정 →
+        /// 운영체제 언어 → 기준 언어)로 고른다.
+        /// </summary>
+        public string Language;
+
+        /// <summary>운영체제 언어(예: ko-KR). 기본은 지금 UI 문화권. 테스트는 운영체제에 기대지 않도록 바꿔 넣는다.</summary>
+        public string SystemLanguage = System.Globalization.CultureInfo.CurrentUICulture.Name;
 
         /// <summary>UI 테마 폴더(game/themes/&lt;이름&gt; 또는 --ui-theme로 준 폴더).</summary>
         public string UiThemeDir;

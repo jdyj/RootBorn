@@ -58,7 +58,7 @@ namespace Rootborn.Screens.Tests.Records
         {
             using TestSession t = Open();
             var screen = t.Screen<LocationStateLogScreen>(ScreenCatalog.LocationStateLog);
-            LocationLogRow row = LocationStateLogModel.RowFor(new LocationStateTodaySummarySaveData { Hidden = true, StateId = "x", Day = 1 }, t.Session, t.Services.Names);
+            LocationLogRow row = LocationStateLogModel.RowFor(new LocationStateTodaySummarySaveData { Hidden = true, StateId = "x", Day = 1 }, t.Session);
             Assert.That(row.TitleKey, Is.EqualTo("dream.location-state.record.hidden"));
             Assert.That(screen, Is.Not.Null);
         }
@@ -67,7 +67,7 @@ namespace Rootborn.Screens.Tests.Records
         public void UnknownState_ShowsTheGenericTitle_AndNoDayUsesTheNoDayFormat()
         {
             using var t = new TestSession();
-            LocationLogRow row = LocationStateLogModel.RowFor(new LocationStateTodaySummarySaveData { StateId = "no-such", Day = 0, LocationId = "no-such" }, t.Session, t.Services.Names);
+            LocationLogRow row = LocationStateLogModel.RowFor(new LocationStateTodaySummarySaveData { StateId = "no-such", Day = 0, LocationId = "no-such" }, t.Session);
             Assert.That(row.TitleKey, Is.EqualTo("life.location-state.record.unknown"));
             Assert.That(row.LocationNameKey, Is.EqualTo("life.location-state.record.location"));
             Assert.That(row.TimeNameKey, Is.EqualTo("life.location-state.record.time"));

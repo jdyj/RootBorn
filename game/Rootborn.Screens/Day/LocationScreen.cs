@@ -89,18 +89,18 @@ namespace Rootborn.Screens.Day
         protected internal override void OnOpened(ScreenOpenContext context)
         {
             string locationId = context.Interaction?.TargetId;
-            if (Services.Commands == null || !LocationModel.CanOpen(Services.Commands.Session, locationId)) { Close(); return; }
+            if (Services.Session == null || !LocationModel.CanOpen(Services.Session, locationId)) { Close(); return; }
             _locationId = locationId;
             _resultText = string.Empty;
             _rows.ScrollOffset = 0;
             _rows.SelectedIndex = -1;
-            Services.Commands.Run(s => s.VisitLocation(locationId), ChangeTopics.World); // OnChanged가 다시 그린다
+            Services.Session.VisitLocation(locationId); // OnChanged가 다시 그린다
             Render();
         }
 
         protected internal override void OnChanged(string topic)
         {
-            if (Services.Commands != null && _locationId != null) Render();
+            if (Services.Session != null && _locationId != null) Render();
         }
 
         private void Press(int index)
@@ -114,9 +114,9 @@ namespace Rootborn.Screens.Day
 
         private void PerformActivity(LocationRow row)
         {
-            var session = Services.Commands.Session;
+            var session = Services.Session;
             string requestId = "location-activity:" + row.Id + ":" + session.Student.GetActivityLogIds().Length + ":" + _requestSequence++;
-            LocationActivityResult result = Services.Commands.Run(s => s.PerformLocationActivity(row.Id, requestId), ChangeTopics.Student);
+            LocationActivityResult result = Services.Session.PerformLocationActivity(row.Id, requestId);
             bool applied = result.Kind == LifeActivityResultKind.Applied;
             _resultText = applied
                 ? string.Format(CultureInfo.InvariantCulture, T("life.tp.applied"), session.Student.TimePointsRemaining, session.Student.DailyTimePointBudget)
@@ -128,7 +128,7 @@ namespace Rootborn.Screens.Day
 
         private void Purchase(LocationRow row)
         {
-            FurniturePurchaseResult result = Services.Commands.Run(s => s.PurchaseFurniture(row.Id), ChangeTopics.Inventory);
+            FurniturePurchaseResult result = Services.Session.PurchaseFurniture(row.Id);
             string name = Name(row);
             _resultText = result == FurniturePurchaseResult.Purchased ? string.Format(CultureInfo.InvariantCulture, T("dream.shop.bought"), name)
                 : result == FurniturePurchaseResult.NotEnoughMoney ? T("dream.shop.not-enough")
@@ -141,7 +141,7 @@ namespace Rootborn.Screens.Day
 
         private void Render()
         {
-            var session = Services.Commands.Session;
+            var session = Services.Session;
             Model = LocationModel.From(session, _locationId);
             _title.Text = Model.NameKey.Length > 0 ? T(Model.NameKey) : string.Empty;
             _description.Text = T(Model.DescriptionKey);

@@ -83,12 +83,12 @@ namespace Rootborn.Screens.Furniture
 
         private readonly FurniturePaletteModel _model;
         private readonly UiSlot[] _slots = new UiSlot[Metrics.PageSize];
-        private readonly FittedImage[] _icons = new FittedImage[Metrics.PageSize];
+        private readonly UiFittedImage[] _icons = new UiFittedImage[Metrics.PageSize];
         private UiTextField _search;
         private UiButton _previous, _next, _close, _delete, _rotate, _move;
         private UiTextBlock _pageText;
         private UiLabel _title, _settingsTitle, _name, _size, _direction;
-        private FittedImage _selectedIcon;
+        private UiFittedImage _selectedIcon;
 
         private FurnitureArt _art;
         private IPlacementView _view;
@@ -145,19 +145,20 @@ namespace Rootborn.Screens.Furniture
 
         protected override UiNode Build()
         {
-            var root = new PlacementRoot(EmitPanels) { Id = RootId };
+            var root = new UiNode { Id = RootId };
 
             UiPanel palette = root.Add(new UiPanel { Id = PaletteId }).Centered(Metrics.PaletteX, Metrics.PaletteY, Metrics.PaletteW, Metrics.PaletteH);
             _title = palette.Add(new UiLabel { Id = "furniture.title", FontSize = Metrics.TitleFont, Color = Metrics.Ink })
                 .Centered(Metrics.TitleX, Metrics.TitleY, Metrics.TitleW, Metrics.TitleH);
             _search = palette.Add(new UiTextField { Id = SearchId, FontSize = Metrics.SearchFont, MaxLength = Metrics.SearchMaxLength })
                 .Centered(Metrics.SearchX, Metrics.SearchY, Metrics.SearchW, Metrics.SearchH);
+            _search.TextChanged += OnSearchChanged;
             for (int i = 0; i < Metrics.PageSize; i++)
             {
                 int slot = i;
                 float x = Metrics.SlotX0 + (i % Metrics.Columns) * Metrics.SlotPitchX, y = Metrics.SlotY0 - (i / Metrics.Columns) * Metrics.SlotPitchY;
                 _slots[i] = palette.Add(new UiSlot { Id = SlotId(i) }).Centered(x, y, Metrics.SlotSize, Metrics.SlotSize);
-                _icons[i] = _slots[i].Add(new FittedImage { Id = SlotId(i) + ".icon" }).Centered(0f, 0f, Metrics.SlotIcon, Metrics.SlotIcon);
+                _icons[i] = _slots[i].Add(new UiFittedImage { Id = SlotId(i) + ".icon" }).Centered(0f, 0f, Metrics.SlotIcon, Metrics.SlotIcon);
                 _slots[i].Clicked += () => SelectFromPalette(_model.At(slot));
             }
             _previous = palette.Add(new UiButton { Id = PreviousId, FontSize = Metrics.PageButtonFont })
@@ -176,7 +177,7 @@ namespace Rootborn.Screens.Furniture
                 .Centered(Metrics.CloseX, Metrics.CloseY, Metrics.CloseSize, Metrics.CloseSize);
             _close.Clicked += Close;
             UiPanel frame = settings.Add(new UiPanel { Id = "furniture.selected.frame" }).Centered(Metrics.PreviewX, Metrics.PreviewY, Metrics.PreviewSize, Metrics.PreviewSize);
-            _selectedIcon = frame.Add(new FittedImage { Id = SelectedIconId }).Centered(0f, 0f, Metrics.PreviewIcon, Metrics.PreviewIcon);
+            _selectedIcon = frame.Add(new UiFittedImage { Id = SelectedIconId }).Centered(0f, 0f, Metrics.PreviewIcon, Metrics.PreviewIcon);
             _name = settings.Add(new UiLabel { Id = SelectedNameId, FontSize = Metrics.NameFont, Color = Metrics.Ink })
                 .Centered(Metrics.InfoX, Metrics.NameY, Metrics.InfoW, Metrics.NameH);
             _size = settings.Add(new UiLabel { Id = SelectedSizeId, FontSize = Metrics.InfoFont, Color = Metrics.Ink })
@@ -221,7 +222,7 @@ namespace Rootborn.Screens.Furniture
         {
             if (topic == ChangeTopics.Language) { ApplyTexts(); return; }
             if (topic == ChangeTopics.All) ReloadFurniture();
-            if (topic == ChangeTopics.World || topic == ChangeTopics.Map || topic == ChangeTopics.All)
+            if (topic == ChangeTopics.Furniture || topic == ChangeTopics.World || topic == ChangeTopics.Map || topic == ChangeTopics.All)
             {
                 _validDirty = true;
                 _hasHover = false;
@@ -270,7 +271,7 @@ namespace Rootborn.Screens.Furniture
             _pageText.Text = _model.IsEmpty ? T("ui.furniture.page.empty") : F("ui.furniture.page", _model.Page + 1, _model.PageCount, _model.FilteredCount);
         }
 
-        private void ShowIcon(FittedImage icon, FurnitureDefinition f)
+        private void ShowIcon(UiFittedImage icon, FurnitureDefinition f)
         {
             if (f != null && _art != null && _art.TryPrimary(f, out FurnitureTilePart part, out FurnitureSprite sprite))
                 icon.Show(FurnitureArt.ImageId(part), sprite.W, sprite.H);
@@ -338,9 +339,9 @@ namespace Rootborn.Screens.Furniture
 
         private void DeleteSelected()
         {
-            if (SelectedInstanceId == null || Services.Commands == null) return;
+            if (SelectedInstanceId == null || Services.Session == null) return;
             string id = SelectedInstanceId;
-            bool removed = Services.Commands.Run(s => s.RemoveFurniture(id), ChangeTopics.World);
+            bool removed = Services.Session.RemoveFurniture(id);
             if (!removed) return;
             SelectedInstanceId = null;
             Carrying = false;
@@ -402,7 +403,7 @@ namespace Rootborn.Screens.Furniture
         private void Press(GridPoint cell)
         {
             HouseFurnitureLayout house = Services.Session?.House;
-            if (house == null || Services.Commands == null) return;
+            if (house == null || Services.Session == null) return;
             if (house.TryFindAt(cell, out PlacedFurniture there))
             {
                 SelectedInstanceId = there.InstanceId;
@@ -414,7 +415,7 @@ namespace Rootborn.Screens.Furniture
             if (Carrying && SelectedInstanceId != null)
             {
                 string id = SelectedInstanceId;
-                bool moved = Services.Commands.Run(s => s.MoveFurniture(id, cell, direction), ChangeTopics.World);
+                bool moved = Services.Session.MoveFurniture(id, cell, direction);
                 LastAction = moved ? "moved" : "rejected";
                 if (!moved) { _overlayVisible = true; return; }
                 Carrying = false;
@@ -424,7 +425,7 @@ namespace Rootborn.Screens.Furniture
 
             if (Active == null) return;
             string furnitureId = Active.StableId;
-            bool placed = Services.Commands.Run(s => s.PlaceFurniture(furnitureId, cell, direction), ChangeTopics.World);
+            bool placed = Services.Session.PlaceFurniture(furnitureId, cell, direction);
             LastAction = placed ? "placed" : "rejected";
             if (!placed) { _overlayVisible = true; return; }
             AfterCommit(cell);
@@ -458,14 +459,12 @@ namespace Rootborn.Screens.Furniture
             }
         }
 
-        /// <summary>패널을 그리기 전: 검색 칸 글자가 바뀌었으면 거른다(UiTextField에 바뀜 알림이 없어 그릴 때 본다 — 같은 글자면 아무것도 하지 않는다).</summary>
-        private void EmitPanels(DrawList list, ITextMeasurer text)
+        /// <summary>검색 칸 글자가 바뀌면 거른다(같은 검색어면 아무것도 하지 않는다).</summary>
+        private void OnSearchChanged(string text)
         {
-            if (_search != null && !string.Equals(_search.Text.Trim(), _model.Query, StringComparison.Ordinal))
-            {
-                _model.Filter(_search.Text);
-                RefreshPage();
-            }
+            if (string.Equals((text ?? string.Empty).Trim(), _model.Query, StringComparison.Ordinal)) return;
+            _model.Filter(text);
+            RefreshPage();
         }
 
         /// <summary>

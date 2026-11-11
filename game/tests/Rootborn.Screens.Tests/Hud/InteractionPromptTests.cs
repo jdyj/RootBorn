@@ -1,3 +1,4 @@
+using System.Linq;
 using NUnit.Framework;
 using Rootborn.Screens.Hud;
 using Rootborn.Ui;
@@ -46,6 +47,46 @@ namespace Rootborn.Screens.Tests.Hud
             Assert.That(Prompt(t).Text, Is.EqualTo("[E] 오늘의 계획 세우기"));
             t.Stack.SetInteractionTarget(new InteractionTargetView("student-day-end", "house.day-end", 100, 100, 32));
             Assert.That(Prompt(t).Text, Is.EqualTo("[E] 하루 마무리"));
+        }
+
+        [Test]
+        public void PartTimeWork_Practice_AndExploration_HaveTheirOwnPrompts()
+        {
+            using TestSession t = Start();
+            var defs = t.Session.Definitions;
+            string work = t.Text.Get(defs.Get<Rootborn.Core.StudentLife.PartTimeWork>("work.shift.corner-store").DisplayNameKey);
+            t.Stack.SetInteractionTarget(new InteractionTargetView("part-time-work", "work.shift.corner-store", 100, 100, 32));
+            Assert.That(Prompt(t).Text, Is.EqualTo("[E] " + t.Text.Format("ui.prompt.part-time-work", work)));
+            Assert.That(t.Node(InteractionPromptScreen.LabelId).Rect.CenterY, Is.EqualTo(100f - 1.05f * 32f).Within(0.01f), "PartTimeWorkInteractor 1.05칸");
+
+            t.Stack.SetInteractionTarget(new InteractionTargetView("career-practice", "anything", 100, 100, 32));
+            Assert.That(Prompt(t).Text, Is.EqualTo("[E] " + t.Text.Get("ui.prompt.career-practice")));
+
+            var exploration = defs.All<Rootborn.Core.StudentLife.ExplorationInteraction>().First(e => !string.IsNullOrEmpty(e.DisplayNameKey));
+            t.Stack.SetInteractionTarget(new InteractionTargetView("exploration", exploration.Id, 100, 100, 32));
+            Assert.That(Prompt(t).Text, Is.EqualTo("[E] " + t.Text.Format("ui.prompt.explore", t.Text.Get(exploration.DisplayNameKey))));
+            t.Stack.SetInteractionTarget(new InteractionTargetView("exploration", "no-such", 100, 100, 32));
+            Assert.That(Prompt(t).Text, Is.EqualTo("[E] " + t.Text.Get("ui.prompt.explore-generic")), "이름을 모르면 일반 문구");
+            KnownMissingKeys.AssertOnlyKnownMissing(t.Text, Prompt(t).TextKeys);
+        }
+
+        [Test]
+        public void EveryPromptKind_IsRegisteredOnce()
+        {
+            var kinds = InteractionPromptScreen.Prompts.Select(p => p.Kind).ToList();
+            Assert.That(kinds, Is.Unique);
+            Assert.That(kinds, Is.SupersetOf(new[] { "npc", "location-visit", "location-activity", "daily-plan-board", "student-day-end", "part-time-work", "career-practice", "exploration", Rootborn.Screens.AdultFacility.FacilityScreen.InteractionKind }));
+        }
+
+        [Test]
+        public void WithoutAGame_LocationNames_ComeFromTheDefinitions()
+        {
+            var stack = new ScreenStack(ScreenCatalog.Create(), new ScreenServices(TestData.Text(), null) { Definitions = TestSession.Definitions });
+            stack.Layout(1920, 1080);
+            stack.OpenHud();
+            stack.SetInteractionTarget(new InteractionTargetView("location-visit", "location.school", 100, 100, 32));
+            string school = TestData.Text().Get(TestSession.Definitions.Get<Rootborn.Core.StudentLife.Location>("location.school").DisplayNameKey);
+            Assert.That(((InteractionPromptScreen)stack.Find(ScreenCatalog.HudPrompt)).Text, Is.EqualTo("[E] " + school + " 둘러보기"));
         }
 
         [Test]

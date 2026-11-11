@@ -105,7 +105,21 @@ namespace Rootborn.Ui
     /// </summary>
     public sealed class UiTextField : UiNode
     {
-        public string Text { get; private set; } = "";
+        private string _text = "";
+
+        /// <summary>확정된 글자(조합 중인 글자는 Composition). 바뀌면 TextChanged.</summary>
+        public string Text
+        {
+            get => _text;
+            private set
+            {
+                value ??= "";
+                if (string.Equals(value, _text, StringComparison.Ordinal)) return;
+                _text = value;
+                TextChanged?.Invoke(_text);
+            }
+        }
+
         public string Composition { get; private set; } = "";
         public string Placeholder;
         public int MaxLength = 12;
@@ -116,9 +130,12 @@ namespace Rootborn.Ui
         /// <summary>포커스된 채 실행 키(Enter)를 눌렀다.</summary>
         public event Action<string> Submitted;
 
+        /// <summary>확정된 글자가 바뀌었다(입력, 지우기, SetText). 조합 중인 글자와 같은 글자로 바꾸기는 알리지 않는다.</summary>
+        public event Action<string> TextChanged;
+
         public UiTextField() { Interactive = true; Focusable = true; }
 
-        public void SetText(string text) { Text = text ?? ""; Composition = ""; }
+        public void SetText(string text) { Composition = ""; Text = text ?? ""; }
 
         public override void OnClick(float x, float y) { }
         public override void OnSubmit() => Submitted?.Invoke(Text);

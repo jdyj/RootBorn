@@ -45,14 +45,12 @@ namespace Rootborn.Screens.Tests.Status
         }
 
         [Test]
-        public void ValuesFollowACommand_OnlyThroughTheChangeNotice()
+        public void ValuesFollowACommand_ThroughTheSessionNotice()
         {
             using var t = new TestSession();
             var screen = Open(t);
             int energy = t.Session.Student.Energy;
-            t.Session.PerformLocationActivity("location.activity.school-class", "req-direct");
-            Assert.That(screen.Model.Energy, Is.EqualTo(energy), "a change outside the wrapper is not seen until a notice");
-            t.Commands.Run(s => s.PerformLocationActivity("location.activity.library-hard-book", "req-1"), ChangeTopics.Student);
+            t.Session.PerformLocationActivity("location.activity.library-hard-book", "req-1");
             Assert.That(screen.Model.Energy, Is.EqualTo(t.Session.Student.Energy));
             Assert.That(((UiLabel)t.Node(StatusScreen.ValueId(0))).Text, Is.EqualTo(t.Session.Student.Energy.ToString()));
             Assert.That(t.Session.Student.Energy, Is.LessThan(energy));

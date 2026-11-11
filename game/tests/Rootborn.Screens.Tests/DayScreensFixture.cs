@@ -33,16 +33,14 @@ namespace Rootborn.Screens.Tests
             Directory.CreateDirectory(_saves);
             Store = new FileSaveStore(_saves);
             Session = GameSession.Start(_definitions.Value, GameStartSettings.FromRegistry(TestData.DataDirectory), Store, "slot-test", null);
-            Commands = new SessionCommands(Session);
             Text = TestData.Text(language);
-            Stack = new ScreenStack(ScreenCatalog.Create(), new ScreenServices(Text, Commands));
+            Stack = new ScreenStack(ScreenCatalog.Create(), new ScreenServices(Text, Session));
             Stack.Layout(1920, 1080);
             Measurer = new TestMeasurer();
         }
 
         public FileSaveStore Store { get; }
         public GameSession Session { get; }
-        public SessionCommands Commands { get; }
         public GameText Text { get; }
         public ScreenStack Stack { get; }
         public TestMeasurer Measurer { get; }

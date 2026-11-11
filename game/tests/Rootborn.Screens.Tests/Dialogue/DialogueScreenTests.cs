@@ -37,6 +37,18 @@ namespace Rootborn.Screens.Tests.Dialogue
         }
 
         [Test]
+        public void ShownChoices_AreTheVisibleOnesFromGameSessionDialogueChoices()
+        {
+            using TestSession t = StartAndTalkToMom();
+            var screen = t.Screen<DialogueScreen>(ScreenCatalog.Dialogue);
+            var judged = t.Session.DialogueChoices();
+            Assert.That(judged.Count, Is.GreaterThan(screen.Model.Choices.Length), "숨긴 선택지가 있다(보상 받기)");
+            Assert.That(screen.Model.Choices.Select(c => c.Index), Is.EqualTo(judged.Where(c => c.Evaluation.Visible).Select(c => c.Index)));
+            Assert.That(screen.Model.Choices.Select(c => c.Block), Is.EqualTo(judged.Where(c => c.Evaluation.Visible).Select(c => c.Evaluation.Block)),
+                "못 고르는 이유도 GameSession 판정 그대로");
+        }
+
+        [Test]
         public void Panel_IsBottomCenter760Wide_AndTallEnoughForTheLinesAndChoices()
         {
             using TestSession t = StartAndTalkToMom();

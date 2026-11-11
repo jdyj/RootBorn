@@ -73,7 +73,7 @@ namespace Rootborn.Screens.Tests
         public void CategoryButtons_AndRows_ChangeTheSelectionAndDetail()
         {
             using var t = new TestSession();
-            t.Commands.Run(s => s.TalkTo("npc.first-guide"), ChangeTopics.Dialogue);
+            t.Session.TalkTo("npc.first-guide");
             ObjectiveJournalScreen journal = Open(t);
 
             t.Click(ObjectiveJournalScreen.CategoryButtonId(JournalCategories.Quests));
@@ -101,15 +101,15 @@ namespace Rootborn.Screens.Tests
         {
             using var t = new TestSession();
             t.Stack.OpenHud();
-            t.Commands.Run(s => s.TalkTo("npc.first-guide"), ChangeTopics.Dialogue);
+            t.Session.TalkTo("npc.first-guide");
             ObjectiveJournalScreen journal = Open(t);
             t.Click(ObjectiveJournalScreen.CategoryButtonId(JournalCategories.Quests));
             int row = journal.Items.ToList().FindIndex(i => i.StableKey.StartsWith("questchain.") && i.IsTracked);
             ClickRow(t, journal, row);
             string key = journal.SelectedStableKey;
             t.Click(ObjectiveJournalScreen.TrackId);
-            Assert.That(ObjectiveJournalTracking.For(t.Services).StableKey, Is.EqualTo(key));
-            Assert.That(ObjectiveJournalTracking.For(t.Services).CategoryId, Is.EqualTo(JournalCategories.Quests));
+            Assert.That(t.Session.ObjectiveTracking.StableKey, Is.EqualTo(key));
+            Assert.That(t.Session.ObjectiveTracking.CategoryId, Is.EqualTo(JournalCategories.Quests));
 
             t.Click(ObjectiveJournalScreen.CloseId);
             Assert.That(t.Stack.IsOpen(ScreenCatalog.ObjectiveJournal), Is.False, "닫기 단추");
@@ -122,6 +122,29 @@ namespace Rootborn.Screens.Tests
         }
 
         [Test]
+        public void Tracking_IsSaved_ReloadingKeepsTheHudAndTheJournalOnIt()
+        {
+            using var t = new TestSession();
+            t.Stack.OpenHud();
+            t.Session.TalkTo("npc.first-guide");
+            ObjectiveJournalScreen journal = Open(t);
+            t.Click(ObjectiveJournalScreen.CategoryButtonId(JournalCategories.Quests));
+            int row = journal.Items.ToList().FindIndex(i => i.StableKey.StartsWith("questchain.") && i.IsTracked);
+            ClickRow(t, journal, row);
+            string key = journal.SelectedStableKey;
+            t.Click(ObjectiveJournalScreen.TrackId);
+
+            using TestSession again = t.Reopen();
+            again.Stack.OpenHud();
+            Assert.That(again.Session.ObjectiveTracking.StableKey, Is.EqualTo(key));
+            var hud = again.Screen<Rootborn.Screens.Hud.TrackedObjectiveHudScreen>(ScreenCatalog.HudTracked);
+            Assert.That(hud.IsShown, Is.True, "다시 불러와도 추적 목표 HUD가 그 항목을 보인다");
+            Assert.That(hud.Model.StableKey, Is.EqualTo(key));
+            ObjectiveJournalScreen reopened = Open(again);
+            Assert.That(reopened.SelectedStableKey, Is.EqualTo(key), "수첩은 추적 중인 항목을 고른 채 열린다");
+        }
+
+        [Test]
         public void GameProgress_RebuildsItems_AndKeepsTheSelectedRowByKey()
         {
             using var t = new TestSession();
@@ -129,7 +152,7 @@ namespace Rootborn.Screens.Tests
             Assert.That(journal.Items.Any(i => i.StableKey == "daily-plan:choose"), Is.True);
             var routes = t.Session.AvailableDailyPlanRoutes();
             Assume.That(routes.Length, Is.GreaterThan(0));
-            t.Commands.Run(s => s.SelectDailyPlanRoute(routes[0].Id), ChangeTopics.Quests);
+            t.Session.SelectDailyPlanRoute(routes[0].Id);
             Assert.That(journal.Items.Any(i => i.StableKey == "daily-plan:" + routes[0].Id), Is.True, "일과를 고르면 그 길 줄이 생긴다");
         }
 
@@ -163,7 +186,7 @@ namespace Rootborn.Screens.Tests
         {
             using var t = new TestSession();
             t.Stack.OpenHud();
-            t.Commands.Run(s => s.TalkTo("npc.first-guide"), ChangeTopics.Dialogue);
+            t.Session.TalkTo("npc.first-guide");
             ObjectiveJournalScreen journal = Open(t);
             foreach (string language in t.Text.Languages.ToArray())
             {

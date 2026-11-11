@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Rootborn.Core.StudentLife;
 using Rootborn.Core.Interaction;
 using Rootborn.Game;
-using Rootborn.Screens.Common;
 using Rootborn.Ui;
 
 namespace Rootborn.Screens.Dialogue
@@ -16,13 +15,11 @@ namespace Rootborn.Screens.Dialogue
 
     /// <summary>
     /// 하루 이벤트 화면의 표시 모델(Unity DailyEventPanel.Show): 제목·설명 키, 기한 문구(정한 시각 / 미룰 수 있음 / 선택),
-    /// 선택지(최대 3), 미루기 버튼이 보이는지. 이름 키는 Core 정의에 없어 데이터에서 읽는다(DisplayNames, 보고서 "필요한 변경").
+    /// 선택지(최대 3), 미루기 버튼이 보이는지. 이름 키는 Core 정의의 DisplayNameKey(비면 id — Unity와 같음).
     /// </summary>
     public sealed class DailyEventModel
     {
         public const int MaxChoices = 3;
-        public const string EventType = "DailyEventDefinition";
-        public const string ChoiceType = "DailyEventChoiceDefinition";
 
         public string EventId { get; private set; }
         public string LocationId { get; private set; }
@@ -34,7 +31,7 @@ namespace Rootborn.Screens.Dialogue
         public DailyEventChoiceRow[] Choices { get; private set; } = Array.Empty<DailyEventChoiceRow>();
         public bool CanDefer { get; private set; }
 
-        public static DailyEventModel From(DailyEvent dailyEvent, string locationId, DisplayNames names)
+        public static DailyEventModel From(DailyEvent dailyEvent, string locationId)
         {
             var model = new DailyEventModel { EventId = dailyEvent?.Id, LocationId = locationId };
             if (dailyEvent == null)
@@ -43,8 +40,7 @@ namespace Rootborn.Screens.Dialogue
                 model.DescriptionKey = "life.event.ui.none";
                 return model;
             }
-            string title = names.Get(EventType, dailyEvent.Id);
-            model.TitleKey = string.IsNullOrEmpty(title) ? "life.event.ui.title" : title;
+            model.TitleKey = string.IsNullOrEmpty(dailyEvent.DisplayNameKey) ? "life.event.ui.title" : dailyEvent.DisplayNameKey;
             model.DescriptionKey = string.IsNullOrEmpty(dailyEvent.DescriptionKey) ? "life.event.ui.none" : dailyEvent.DescriptionKey;
             DailyEventKind kind = dailyEvent.Kind;
             if (kind != null)
@@ -58,7 +54,7 @@ namespace Rootborn.Screens.Dialogue
             {
                 DailyEventChoice choice = dailyEvent.Choices[i];
                 if (choice == null) continue;
-                choices.Add(new DailyEventChoiceRow(choice.Id, names.Get(ChoiceType, choice.Id), choice.ResultSummaryKey));
+                choices.Add(new DailyEventChoiceRow(choice.Id, choice.DisplayNameKey, choice.ResultSummaryKey));
             }
             model.Choices = choices.ToArray();
             return model;
@@ -100,7 +96,7 @@ namespace Rootborn.Screens.Dialogue
 
         private UiLabel _title, _deadline;
         private UiTextBlock _description, _result;
-        private readonly MultilineButton[] _choices = new MultilineButton[DailyEventModel.MaxChoices];
+        private readonly UiMultilineButton[] _choices = new UiMultilineButton[DailyEventModel.MaxChoices];
         private UiButton _defer, _decline;
         private string _resultKey;
         private object[] _resultArgs;
@@ -127,7 +123,7 @@ namespace Rootborn.Screens.Dialogue
             for (int i = 0; i < _choices.Length; i++)
             {
                 int index = i;
-                _choices[i] = root.Add(new MultilineButton { Id = ChoiceId(i), FontSize = Metrics.ChoiceFont })
+                _choices[i] = root.Add(new UiMultilineButton { Id = ChoiceId(i), FontSize = Metrics.ChoiceFont })
                     .Centered(0f, Metrics.ChoiceTopY - i * Metrics.ChoiceStep, Metrics.ChoiceW, Metrics.ChoiceH);
                 _choices[i].Clicked += () => Choose(index);
             }
@@ -148,7 +144,7 @@ namespace Rootborn.Screens.Dialogue
             var open = context.Argument as DailyEventOpen;
             DailyEvent dailyEvent = null;
             Services.Session?.Definitions.TryGet(open?.EventId ?? string.Empty, out dailyEvent);
-            Model = DailyEventModel.From(dailyEvent, open?.LocationId ?? context.Interaction?.TargetId, Services.Names);
+            Model = DailyEventModel.From(dailyEvent, open?.LocationId ?? context.Interaction?.TargetId);
             LastResult = null;
             LastRecord = null;
             SetResult(null);
@@ -197,43 +193,33 @@ namespace Rootborn.Screens.Dialogue
             _result.Text = text;
         }
 
-        private DailyEvent Event => Services.Session != null && Model?.EventId != null && Services.Session.Definitions.TryGet(Model.EventId, out DailyEvent e) ? e : null;
 
         /// <summary>선택지 고르기(Unity: 요청 id = 이벤트 id + ":" + 선택지 id). 결과는 결과 글로.</summary>
         private void Choose(int index)
         {
-            if (Services.Commands == null || Model == null || index >= Model.Choices.Length) return;
+            if (Services.Session == null || Model == null || index >= Model.Choices.Length) return;
             DailyEventChoiceRow row = Model.Choices[index];
             string eventId = Model.EventId, location = Model.LocationId;
-            LifeActivityResult result = Services.Commands.Run(s => s.ChooseDailyEvent(eventId, row.Id, eventId + ":" + row.Id, location), ChangeTopics.Student);
+            LifeActivityResult result = Services.Session.ChooseDailyEvent(eventId, row.Id, eventId + ":" + row.Id, location);
             LastResult = result;
             LastRecord = Services.Session.DailyEvents.GetRecord(eventId);
             if (result.Kind == LifeActivityResultKind.Applied) SetResult("life.event.ui.applied", null, row.SummaryKey);
             else SetResult(result.Kind == LifeActivityResultKind.DuplicateRequest ? "life.event.ui.duplicate" : "life.event.ui.unavailable");
         }
 
-        /// <summary>
-        /// 미루기·지나가기. GameSession에 명령이 없어 Core DailyEventRunner를 그대로 부른다(Unity DailyEventPanel과 같은 호출,
-        /// 보고서 "필요한 변경"). 하루 이벤트 진행은 GameSession이 아직 저장하지 않는다.
-        /// </summary>
+        /// <summary>미루기·지나가기(GameSession이 판정하고 저장한다). 적용되지 않으면 아무것도 바꾸지 않는다.</summary>
         private void Defer()
         {
-            DailyEvent dailyEvent = Event;
-            if (dailyEvent == null) return;
-            DailyEventRecord record = null;
-            bool done = Services.Commands.Run(s => new DailyEventRunner().TryDefer(dailyEvent, s.DailyEvents, s.Student.CurrentDay, out record), ChangeTopics.Student);
-            if (!done) return;
+            if (Services.Session == null || Model?.EventId == null) return;
+            if (!Services.Session.DeferDailyEvent(Model.EventId, out DailyEventRecord record)) return;
             LastRecord = record;
             SetResult("life.event.ui.deferred", new object[] { record.DueDay });
         }
 
         private void Decline()
         {
-            DailyEvent dailyEvent = Event;
-            if (dailyEvent == null) return;
-            DailyEventRecord record = null;
-            bool done = Services.Commands.Run(s => new DailyEventRunner().TryDecline(dailyEvent, s.DailyEvents, s.Student.CurrentDay, out record), ChangeTopics.Student);
-            if (!done) return;
+            if (Services.Session == null || Model?.EventId == null) return;
+            if (!Services.Session.DeclineDailyEvent(Model.EventId, out DailyEventRecord record)) return;
             LastRecord = record;
             SetResult("life.event.ui.declined");
         }

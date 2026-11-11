@@ -57,7 +57,7 @@ namespace Rootborn.Screens.Tests
 
             Assert.That(_f.Session.DailyPlan.Slots[0].RouteId, Is.EqualTo(route));
             Assert.That(screen.Model.Slots[0].RouteId, Is.EqualTo(route));
-            string label = ((CenteredText)_f.Node(DailyPlanScreen.SlotTextId(0))).Text;
+            string label = ((UiCenteredText)_f.Node(DailyPlanScreen.SlotTextId(0))).Text;
             Assert.That(label, Does.StartWith("> "), "고른 칸 표시");
             Assert.That(label, Does.Contain(_f.Text.Get(before.Routes[0].NameKey)));
             Assert.That(label, Does.Contain(_f.Text.Get("daily-plan.planned")));

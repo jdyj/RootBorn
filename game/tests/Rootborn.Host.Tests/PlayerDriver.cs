@@ -80,6 +80,7 @@ namespace Rootborn.Host.Tests
         {
             _evidenceDir = options.EvidenceDir;
             Directory.CreateDirectory(_evidenceDir);
+            options.SystemLanguage = "ko"; // 운영체제 언어에 기대지 않는다(--lang도 설정도 없으면 기준 언어와 같은 ko)
             Game = new HostGame(options) { Pointer = _pointer, ExtraScreens = extraScreens };
             _stepper = new FrameStepper(Game);
         }

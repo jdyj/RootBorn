@@ -19,7 +19,7 @@ namespace Rootborn.Screens.Tests.Career
         }
 
         private static UiCardGrid List(TestSession t) => (UiCardGrid)t.Node(CareerCandidateScreen.ListId);
-        private static ScrollText Details(TestSession t) => (ScrollText)t.Node(CareerCandidateScreen.DetailsId);
+        private static UiScrollText Details(TestSession t) => (UiScrollText)t.Node(CareerCandidateScreen.DetailsId);
         private static void ClickRow(TestSession t, int index) => CareerTestSupport.ClickRect(t, List(t), List(t).CellRect(index));
 
         [Test]

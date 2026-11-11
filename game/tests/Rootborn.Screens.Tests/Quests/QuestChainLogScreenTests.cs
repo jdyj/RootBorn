@@ -1,5 +1,7 @@
 using System.Linq;
 using NUnit.Framework;
+using Rootborn.Screens.Objectives;
+using Rootborn.Screens.Objectives.Sources;
 using Rootborn.Core.Quests;
 using Rootborn.Screens.Quests;
 using Rootborn.Ui;
@@ -57,7 +59,7 @@ namespace Rootborn.Screens.Tests.Quests
         public void TrackButton_IsEnabledOnlyForActiveChains_AndTracks()
         {
             using var t = new TestSession();
-            t.Commands.Run(s => s.TalkTo("npc.first-guide"), ChangeTopics.Dialogue);
+            t.Session.TalkTo("npc.first-guide");
             t.Stack.Open(ScreenCatalog.QuestChainLog);
             var screen = t.Screen<QuestChainLogScreen>(ScreenCatalog.QuestChainLog);
             int active = System.Array.FindIndex(screen.Model.Rows, r => r.State == QuestChainState.Tracked || r.State == QuestChainState.Active);
@@ -65,8 +67,12 @@ namespace Rootborn.Screens.Tests.Quests
             t.Click(QuestChainLogScreen.CardId(active));
             Assert.That(t.Node(QuestChainLogScreen.TrackId).Enabled, Is.True);
             Assert.That(t.Node(QuestChainLogScreen.AcceptId).Enabled, Is.False, "이미 받은 체인");
+            string chainId = screen.Model.SelectedChainId;
             t.Click(QuestChainLogScreen.TrackId);
-            Assert.That(t.Session.QuestChains.IsTracked(t.Session.Chain(screen.Model.SelectedChainId)), Is.True);
+            Assert.That(t.Session.ObjectiveTracking.StableKey, Is.EqualTo(QuestChainSource.StableKeyFor(chainId)), "목표 수첩과 같은 추적(GameSession.TrackObjective)");
+            Assert.That(t.Session.ObjectiveTracking.CategoryId, Is.EqualTo(JournalCategories.Quests));
+            using TestSession again = t.Reopen();
+            Assert.That(again.Session.ObjectiveTracking.StableKey, Is.EqualTo(QuestChainSource.StableKeyFor(chainId)), "다시 불러와도 남는다");
         }
     }
 }

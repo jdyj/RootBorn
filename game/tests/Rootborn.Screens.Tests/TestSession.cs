@@ -23,28 +23,31 @@ namespace Rootborn.Screens.Tests
             return loaded.Definitions;
         });
 
+        /// <summary>실제 data/의 정의(한 번만 읽는다).</summary>
+        public static GameDefinitions Definitions => _definitions.Value;
+
         private readonly string _saves;
         private readonly bool _ownsSaves;
 
-        /// <param name="saves">이어 할 세이브 폴더(다른 TestSession의 SavesDirectory). 주면 끝날 때 지우지 않는다.</param>
+        /// <param name="saves">이어 할 세이브 폴더(Reopen). 비면 새 임시 폴더를 만들고 Dispose에서 지운다.</param>
         public TestSession(string language = "ko", Action<ScreenRegistry> extra = null, string saves = null)
         {
             _ownsSaves = saves == null;
             _saves = saves ?? Path.Combine(Path.GetTempPath(), "rootborn-screens-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_saves);
             Session = GameSession.Start(_definitions.Value, GameStartSettings.FromRegistry(TestData.DataDirectory), new FileSaveStore(_saves), "slot-test", null);
-            Commands = new SessionCommands(Session);
             Text = TestData.Text(language);
             ScreenRegistry registry = ScreenCatalog.Create();
             extra?.Invoke(registry);
-            Services = new ScreenServices(Text, Commands) { Names = DisplayNames.Load(TestData.DataDirectory) };
+            Services = new ScreenServices(Text, Session) { Names = DisplayNames.Load(TestData.DataDirectory) };
             Stack = new ScreenStack(registry, Services);
             Stack.Layout(1920, 1080);
         }
 
+        /// <summary>같은 세이브 폴더로 게임을 다시 불러온다(새 화면 쌓기). 폴더는 이 세션이 지운다.</summary>
+        public TestSession Reopen(Action<ScreenRegistry> extra = null) => new TestSession(Text.Language, extra, _saves);
+
         public GameSession Session { get; }
-        public string SavesDirectory => _saves;
-        public SessionCommands Commands { get; }
         public GameText Text { get; }
         public ScreenServices Services { get; }
         public ScreenStack Stack { get; }

@@ -117,5 +117,11 @@
   "ui.furniture.title": "가구 배치",
   "ui.encyclopedia.row-new": "새 항목 {0}",
   "ui.location-log.title": "장소 상태",
-  "ui.location-log.empty": "발견한 장소 상태가 없습니다"
+  "ui.location-log.empty": "발견한 장소 상태가 없습니다",
+  "ui.prompt.explore": "{0} 살펴보기",
+  "ui.prompt.explore-generic": "이곳 살펴보기",
+  "ui.prompt.part-time-work": "{0}",
+  "ui.prompt.part-time-work-generic": "알바하기",
+  "ui.settings.language": "언어",
+  "ui.settings.language-name": "한국어"
 }

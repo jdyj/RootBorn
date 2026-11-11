@@ -268,7 +268,7 @@ namespace Rootborn.Screens.Tests.Inventory
             Give(t, "Wood", 7);
             Open(t);
             ClickCell(t, 0);
-            var name = (InventoryNameLabel)t.Node(InventoryScreen.PopupNameId);
+            var name = (UiShrinkLabel)t.Node(InventoryScreen.PopupNameId);
             name.Text = new string('A', 80);
             var measurer = new TestMeasurer();
             var list = new DrawList();

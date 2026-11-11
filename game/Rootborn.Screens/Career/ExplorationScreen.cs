@@ -183,7 +183,7 @@ namespace Rootborn.Screens.Career
         private UiLabel _title;
         private UiButton _close;
         private UiTextBlock _result;
-        private readonly List<Common.MultilineButton> _choices = new List<Common.MultilineButton>(4);
+        private readonly List<UiMultilineButton> _choices = new List<UiMultilineButton>(4);
         private ExplorationResultModel _lastResult;
         private bool _compactResult;
 
@@ -239,7 +239,7 @@ namespace Rootborn.Screens.Career
             while (_choices.Count < Model.Choices.Length)
             {
                 int index = _choices.Count;
-                var button = _root.Add(new Common.MultilineButton { Id = ChoiceId(index), FontSize = Metrics.ChoiceFont });
+                var button = _root.Add(new UiMultilineButton { Id = ChoiceId(index), FontSize = Metrics.ChoiceFont });
                 button.Centered(0f, Metrics.ChoiceFirstY - index * Metrics.ChoiceStep, Metrics.ChoiceW, Metrics.ChoiceH);
                 button.Clicked += () => Choose(index);
                 if (_root.Rect.W > 0) button.Layout(_root.Rect); // 이미 배치된 뒤에 만든 버튼도 바로 제자리에(다음 배치를 기다리지 않는다)
@@ -266,9 +266,9 @@ namespace Rootborn.Screens.Career
 
         private void Choose(int index)
         {
-            if (index < 0 || index >= Model.Choices.Length || !Model.Choices[index].Available || Services.Commands == null) return;
+            if (index < 0 || index >= Model.Choices.Length || !Model.Choices[index].Available || Services.Session == null) return;
             string interactionId = Model.InteractionId, choiceId = Model.Choices[index].ChoiceId;
-            ExplorationChoiceResult result = Services.Commands.Run(s => s.ChooseExploration(interactionId, choiceId), ChangeTopics.All);
+            ExplorationChoiceResult result = Services.Session.ChooseExploration(interactionId, choiceId);
             LastResult = result;
             if (result.Kind == ExplorationChoiceResultKind.Dismissed) { Close(); return; }
             _lastResult = ExplorationResultModel.From(result, ItemNameKey);

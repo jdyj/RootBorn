@@ -51,7 +51,7 @@ namespace Rootborn.Screens.Tests.Hud
         {
             using TestSession t = Start();
             t.Stack.OpenHud();
-            t.Commands.Run(s => s.TalkTo("npc.first-guide"), ChangeTopics.Dialogue);
+            t.Session.TalkTo("npc.first-guide");
             Assert.That(t.Session.TrackedObjective().HasChain, Is.True, "Core에서는 체인이 추적 중이다");
             Assert.That(t.Screen<TrackedObjectiveHudScreen>(ScreenCatalog.HudTracked).IsShown, Is.False, "Unity: 수첩에서 추적하기 전에는 HUD가 없다");
         }
@@ -61,7 +61,7 @@ namespace Rootborn.Screens.Tests.Hud
         {
             using TestSession t = Start();
             t.Stack.OpenHud();
-            t.Commands.Run(s => s.TalkTo("npc.first-guide"), ChangeTopics.Dialogue);
+            t.Session.TalkTo("npc.first-guide");
             JournalItem tracked = TrackMainChainFromJournal(t);
             var hud = t.Screen<TrackedObjectiveHudScreen>(ScreenCatalog.HudTracked);
             Assert.That(hud.Model.StableKey, Is.EqualTo(tracked.StableKey));
@@ -82,12 +82,12 @@ namespace Rootborn.Screens.Tests.Hud
         {
             using TestSession t = Start();
             t.Stack.OpenHud();
-            t.Commands.Run(s => s.TalkTo("npc.first-guide"), ChangeTopics.Dialogue);
+            t.Session.TalkTo("npc.first-guide");
             string key = TrackMainChainFromJournal(t).StableKey;
             Assert.That(t.Session.ObjectiveTracking.StableKey, Is.EqualTo(key), "수첩의 추적은 게임 한 판에 저장된다");
 
             // 같은 세이브 폴더로 새 게임 한 판과 새 화면 쌓기(끄고 다시 시작한 것과 같다).
-            using var again = new TestSession(saves: t.SavesDirectory);
+            using TestSession again = t.Reopen();
             Assert.That(again.Session.ObjectiveTracking.StableKey, Is.EqualTo(key), "다시 읽은 게임 한 판의 추적 지정");
             again.Stack.OpenHud();
             var hud = again.Screen<TrackedObjectiveHudScreen>(ScreenCatalog.HudTracked);
@@ -102,7 +102,7 @@ namespace Rootborn.Screens.Tests.Hud
         {
             using TestSession t = Start();
             t.Stack.OpenHud();
-            t.Commands.Run(s => s.TalkTo("npc.first-guide"), ChangeTopics.Dialogue);
+            t.Session.TalkTo("npc.first-guide");
             TrackMainChainFromJournal(t);
             var hud = t.Screen<TrackedObjectiveHudScreen>(ScreenCatalog.HudTracked);
             t.Stack.Open("blocker");
@@ -116,13 +116,13 @@ namespace Rootborn.Screens.Tests.Hud
         {
             using TestSession t = Start();
             t.Stack.OpenHud();
-            t.Commands.Run(s => s.TalkTo("npc.first-guide"), ChangeTopics.Dialogue);
+            t.Session.TalkTo("npc.first-guide");
             TrackMainChainFromJournal(t);
             var hud = t.Screen<TrackedObjectiveHudScreen>(ScreenCatalog.HudTracked);
             string before = ((UiLabel)t.Node(TrackedObjectiveHudScreen.ProgressId)).Text;
             var routes = t.Session.AvailableDailyPlanRoutes();
             Assume.That(routes.Length, Is.GreaterThan(0));
-            t.Commands.Run(s => s.SelectDailyPlanRoute(routes[0].Id), ChangeTopics.Quests);
+            t.Session.SelectDailyPlanRoute(routes[0].Id);
             Assert.That(((UiLabel)t.Node(TrackedObjectiveHudScreen.ProgressId)).Text, Is.Not.EqualTo(before), "일과를 고르면 BackToSchool 목표 하나가 찬다");
             Assert.That(hud.IsShown, Is.True);
         }

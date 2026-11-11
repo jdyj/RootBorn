@@ -110,7 +110,7 @@ namespace Rootborn.Host.Tests
             ClickCard(player, cards, 2);
             Assert.That(player.Game.Session.CareerInterests.CurrentInterestId, Is.EqualTo("interest.chef"), "같은 날에는 바뀌지 않는다");
             Assert.That(screen.LastResult?.State, Is.EqualTo(CareerInterestSelectionState.ChangedToday));
-            var details = (ScrollText)player.Node(CareerInterestScreen.DetailsId);
+            var details = (UiScrollText)player.Node(CareerInterestScreen.DetailsId);
             Assert.That(details.Text, Does.Contain(player.Game.Text.Get("ui.interest-state.changed")), "제한 이유가 보인다");
             player.Frames(2);
             player.MovePointer(-50, -50);

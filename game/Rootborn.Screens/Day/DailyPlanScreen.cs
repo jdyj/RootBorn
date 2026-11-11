@@ -53,7 +53,7 @@ namespace Rootborn.Screens.Day
         private UiButton _closeTop, _previous, _next, _closeBottom;
         private UiNode _slotRow;
         private readonly UiButton[] _slots = new UiButton[DailyPlanLayout.MaxSlots];
-        private readonly CenteredText[] _slotTexts = new CenteredText[DailyPlanLayout.MaxSlots];
+        private readonly UiCenteredText[] _slotTexts = new UiCenteredText[DailyPlanLayout.MaxSlots];
         private UiCardGrid _routes;
         private int _displayedDay, _selectedSlot;
         private string _refusalKey = string.Empty;
@@ -82,7 +82,7 @@ namespace Rootborn.Screens.Day
             {
                 int index = i;
                 _slots[i] = _slotRow.Add(new UiButton { Id = SlotId(i), Visible = false });
-                _slotTexts[i] = _slots[i].Add(new CenteredText { Id = SlotTextId(i), FontSize = DailyPlanLayout.SlotFont, OnSkin = UiSkin.Button });
+                _slotTexts[i] = _slots[i].Add(new UiCenteredText { Id = SlotTextId(i), FontSize = DailyPlanLayout.SlotFont, OnSkin = UiSkin.Button });
                 _slotTexts[i].Stretch(8, 3, 8, 3);
                 _slots[i].Clicked += () => SelectSlot(index);
             }
@@ -116,8 +116,8 @@ namespace Rootborn.Screens.Day
         protected internal override void OnOpened(ScreenOpenContext context)
         {
             // 게임 한 판 없이(--world) 띄운 월드에서는 일과가 없다. 열자마자 닫는다.
-            if (Services.Commands == null) { Close(); return; }
-            var session = Services.Commands.Session;
+            if (Services.Session == null) { Close(); return; }
+            var session = Services.Session;
             _displayedDay = session.DailyPlan.CurrentDay;
             _selectedSlot = DailyPlanModel.FirstOpenSlot(session);
             _refusalKey = string.Empty;
@@ -127,7 +127,7 @@ namespace Rootborn.Screens.Day
 
         protected internal override void OnChanged(string topic)
         {
-            if (Services.Commands != null) Render();
+            if (Services.Session != null) Render();
         }
 
         private void SelectSlot(int index)
@@ -139,7 +139,7 @@ namespace Rootborn.Screens.Day
 
         private void MoveDiary(int delta)
         {
-            _displayedDay = DailyPlanModel.MoveDiary(Services.Commands.Session, _displayedDay, delta);
+            _displayedDay = DailyPlanModel.MoveDiary(Services.Session, _displayedDay, delta);
             _refusalKey = string.Empty;
             Render();
         }
@@ -149,14 +149,14 @@ namespace Rootborn.Screens.Day
             if (Model == null || !Model.CanAssign || index < 0 || index >= Model.Routes.Count) return;
             string routeId = Model.Routes[index].RouteId;
             int slot = Model.SelectedSlot;
-            bool assigned = Services.Commands.Run(s => s.AssignDailyPlanSlot(slot, routeId), ChangeTopics.Day);
+            bool assigned = Services.Session.AssignDailyPlanSlot(slot, routeId);
             _refusalKey = assigned ? string.Empty : "daily-plan.assign-refused";
             _refusal.Text = _refusalKey.Length == 0 ? string.Empty : T(_refusalKey);
         }
 
         private void Render()
         {
-            var session = Services.Commands.Session;
+            var session = Services.Session;
             Model = DailyPlanModel.From(session, _displayedDay, _selectedSlot);
             _displayedDay = Model.DisplayedDay;
             _selectedSlot = Model.SelectedSlot;

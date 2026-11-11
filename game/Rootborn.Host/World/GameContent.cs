@@ -50,7 +50,7 @@ namespace Rootborn.Host.World
                 if (Cache.TryGetValue(data, out GameContent cached)) return cached;
                 LoadResult result = GameDataLoader.Load(data, RootbornBuilders.Register);
                 result.ThrowIfFailed();
-                var content = new GameContent(result.Definitions, CharacterArt.Load(repoRoot), DayNightLighting.Load(repoRoot), NpcArt.Load(repoRoot));
+                var content = new GameContent(result.Definitions, CharacterArt.Load(repoRoot), DayNightLighting.From(result.Definitions), NpcArt.Load(repoRoot));
                 foreach (string problem in content.Npcs.Problems) Console.Error.WriteLine("[NPC 그림] " + problem);
                 foreach (string problem in content.Characters.Problems) Console.Error.WriteLine("[캐릭터 그림] " + problem);
                 Cache[data] = content;

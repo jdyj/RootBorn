@@ -6,9 +6,9 @@ using System.Text.Json;
 namespace Rootborn.Screens
 {
     /// <summary>
-    /// 엔티티의 화면 이름 키(displayNameKey)를 data/의 JSON에서 읽는다. Core 정의가 화면 이름 키를 갖지 않는 종류(하루 이벤트와 그 선택지,
-    /// 장소)에만 쓴다. 파일은 종류 이름(예: DailyEventDefinition.json)으로 찾고, 처음 물을 때 그 파일 하나만 읽는다.
-    /// Core에 키가 들어오면 이 표 대신 정의를 쓴다(보고서 "필요한 변경").
+    /// 엔티티의 화면 이름 키(displayNameKey)를 data/의 JSON에서 읽는다. Core 정의가 화면 이름 키를 갖지 않는 종류에만 쓴다 —
+    /// 지금은 옷 칸(WearableSlotDefinition)과 옷(WearableDefinition)뿐이다(옷장). 다른 종류는 Core 정의의 DisplayNameKey를 쓴다.
+    /// 파일은 종류 이름으로 찾고, 처음 물을 때 그 파일 하나만 읽는다. Core 옷 규칙에 이름 키가 들어오면 이 파일을 지운다.
     /// </summary>
     public sealed class DisplayNames
     {

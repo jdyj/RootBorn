@@ -19,7 +19,7 @@ namespace Rootborn.Screens.Tests.Career
         }
 
         private static UiCardRow Cards(TestSession t) => (UiCardRow)t.Node(CareerInterestScreen.CardsId);
-        private static ScrollText Details(TestSession t) => (ScrollText)t.Node(CareerInterestScreen.DetailsId);
+        private static UiScrollText Details(TestSession t) => (UiScrollText)t.Node(CareerInterestScreen.DetailsId);
         private static void ClickCard(TestSession t, int index) => CareerTestSupport.ClickRect(t, Cards(t), Cards(t).CardRect(index));
 
         [Test]

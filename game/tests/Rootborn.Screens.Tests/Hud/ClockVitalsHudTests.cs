@@ -36,16 +36,13 @@ namespace Rootborn.Screens.Tests.Hud
         }
 
         [Test]
-        public void Command_UpdatesTimeAndVitals_OnlyThroughTheChangeNotice()
+        public void Command_UpdatesTimeAndVitals_ThroughTheSessionNotice()
         {
             using var t = new TestSession();
             t.Stack.OpenHud();
             int energy = t.Session.Student.Energy;
-            // 게임 명령을 감싸개 밖에서 부르면 HUD는 모른다(매 프레임 읽지 않는다).
-            t.Session.PerformLocationActivity("location.activity.school-class", "req-direct");
-            Assert.That(t.Screen<VitalsHudScreen>(ScreenCatalog.HudVitals).Model.Energy, Is.EqualTo(energy));
-            // 감싸개로 부르면 알림을 받아 고친다.
-            t.Commands.Run(s => s.PerformLocationActivity("location.activity.library-hard-book", "req-1"), ChangeTopics.Student);
+            // 누가 부르든 GameSession 명령은 Changed로 알리고, HUD는 그 알림을 받아 고친다(매 프레임 읽지 않는다).
+            t.Session.PerformLocationActivity("location.activity.library-hard-book", "req-1");
             Assert.That(t.Screen<VitalsHudScreen>(ScreenCatalog.HudVitals).Model.Energy, Is.EqualTo(t.Session.Student.Energy));
             Assert.That(t.Session.Student.Energy, Is.LessThan(energy));
             var clock = t.Screen<ClockHudScreen>(ScreenCatalog.HudClock);

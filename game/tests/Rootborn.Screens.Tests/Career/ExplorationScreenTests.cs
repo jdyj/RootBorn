@@ -76,7 +76,7 @@ namespace Rootborn.Screens.Tests.Career
             if (locked < 0) Assert.Ignore("시험 지점에 잠긴 선택지가 없다");
             UiNode button = t.Node(ExplorationScreen.ChoiceId(locked));
             Assert.That(button.IsActive, Is.False, "조건이 안 되면 누를 수 없다");
-            Assert.That(((Screens.Common.MultilineButton)button).Text, Does.Contain(" — "));
+            Assert.That(((UiMultilineButton)button).Text, Does.Contain(" — "));
             UiRect r = button.Rect;
             t.Stack.Pointer(r.CenterX, r.CenterY, false, 0);
             t.Stack.Pointer(r.CenterX, r.CenterY, true, 0);

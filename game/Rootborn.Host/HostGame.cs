@@ -16,6 +16,7 @@ using Rootborn.Screens;
 using Rootborn.Screens.Day;
 using Rootborn.World;
 using Rootborn.Screens.Furniture;
+using Rootborn.Screens.Settings;
 using Rootborn.Screens.Start;
 using Rootborn.Ui;
 
@@ -109,8 +110,32 @@ namespace Rootborn.Host
             else ShowSample();
         }
 
-        private GameText LoadText() =>
-            GameText.LoadMerged(_options.Language, Path.Combine(_options.RepoRoot, "data", "localization"), Path.Combine(_options.RepoRoot, "game", "localization"));
+        /// <summary>
+        /// 문구를 읽는다(두 현지화 폴더를 합친다 — 언어 목록은 폴더의 파일). 언어는 이미 띄운 문구가 있으면 그 언어(설정에서 바꾼 것 포함),
+        /// 처음이면 LanguageChoice(--lang → 저장된 설정 → 운영체제 언어 → 기준 언어).
+        /// </summary>
+        private GameText LoadText()
+        {
+            GameText text = GameText.LoadMerged(GameText.DefaultBaseLanguage, Path.Combine(_options.RepoRoot, "data", "localization"), Path.Combine(_options.RepoRoot, "game", "localization"));
+            string language = Text?.Language
+                ?? LanguageChoice.Pick(_options.Language, Settings.Settings.Language, _options.SystemLanguage, text.Languages).Language;
+            text.Language = language;
+            return text;
+        }
+
+        private SettingsStore _settings;
+
+        /// <summary>슬롯과 무관한 설정(언어, 켬/끔). 세이브 폴더가 있으면 그 안의 설정 파일, 없으면 메모리에만.</summary>
+        public SettingsStore Settings
+        {
+            get
+            {
+                if (_settings != null) return _settings;
+                _settings = new SettingsStore(string.IsNullOrWhiteSpace(_options.SaveRoot) ? null : new FileSaveStore(_options.SaveRoot));
+                if (_settings.LoadError != null) Console.Error.WriteLine("[설정] 설정 파일을 읽지 못해 기본값으로 시작한다: " + _settings.LoadError);
+                return _settings;
+            }
+        }
 
         /// <summary>
         /// 시작 화면: 게임 한 판이 없는 화면 쌓기에 슬롯 선택을 연다. 슬롯 파일은 세이브 폴더의 FileSaveStore로 읽고 쓴다.
@@ -125,7 +150,7 @@ namespace Rootborn.Host
                 new CharacterPreviewArt(content.Characters), EnterSlot, Exit);
             ScreenRegistry registry = ScreenCatalog.Create();
             ExtraScreens?.Invoke(registry);
-            var services = new ScreenServices(Text, null) { Names = DisplayNames.Load(Path.Combine(_options.RepoRoot, "data")) };
+            var services = new ScreenServices(Text, null) { Settings = Settings };
             Screens = new ScreenStack(registry, services);
             Screens.Open(ScreenCatalog.SaveSlotSelect, argument: StartMenu);
             SetTree(Screens.Tree);
@@ -175,23 +200,19 @@ namespace Rootborn.Host
         private void StartScreens()
         {
             Text = LoadText();
-            SessionCommands commands = null;
             if (_options.SaveSlot != null)
-            {
                 Session = GameSession.Start(World.Content.Definitions, GameStartSettings.FromRegistry(Path.Combine(_options.RepoRoot, "data")),
                     new FileSaveStore(_options.SaveRoot), _options.SaveSlot, SaveFileNames.DefaultPlayerId);
-                commands = new SessionCommands(Session);
-            }
             ScreenRegistry registry = ScreenCatalog.Create();
             ExtraScreens?.Invoke(registry);
-            var services = new ScreenServices(Text, commands) { Names = DisplayNames.Load(Path.Combine(_options.RepoRoot, "data")) };
+            var services = new ScreenServices(Text, Session) { Definitions = World.Content.Definitions, Settings = Settings, Names = DisplayNames.Load(Path.Combine(_options.RepoRoot, "data")) };
             if (Session != null)
                 services.Wardrobe = new HostWardrobe(World, Session, new FileSaveStore(_options.SaveRoot), _options.SaveSlot, SaveFileNames.DefaultPlayerId, _options.RepoRoot);
             var screens = new ScreenStack(registry, services);
-            screens.EnterMap(World.Session.Map.Id);
+            screens.EnterMap(World.Session.Map.Id, MapFeaturesHere());
             Screens = screens;
             Screens.OpenHud();
-            ConnectFurniture(commands);
+            ConnectFurniture(Session);
             if (Session != null)
             {
                 // 학생 시각·날이 낮밤과 NPC 자리를, 학생 날·성인 여부가 성장 단계를 정한다(Unity 판과 같음).
@@ -199,6 +220,19 @@ namespace Rootborn.Host
                 DayBaseline.For(Session); // 하루 결과의 퀘스트·물건 변화 기준점(Unity: 마을 씬을 불러올 때)
                 SyncSession();
             }
+        }
+
+        private string _featuresMap;
+        private string[] _features = Array.Empty<string>();
+
+        /// <summary>지금 맵의 성질(화면이 맵 id 대신 본다). 맵 데이터(interactions.json)에서 읽고, 맵이 바뀔 때만 다시 만든다.</summary>
+        private string[] MapFeaturesHere()
+        {
+            string map = World.Session.Map.Id;
+            if (map == _featuresMap) return _features;
+            _featuresMap = map;
+            _features = string.IsNullOrEmpty(World.HereData.PlacementSurface) ? Array.Empty<string>() : new[] { MapFeatures.FurniturePlacement };
+            return _features;
         }
 
         private int _sessionDay = -1;
@@ -227,7 +261,7 @@ namespace Rootborn.Host
         /// (Unity AuthoredHousePlacementBinding.Bind), 게임 명령이 월드를 바꾸면 놓인 가구 그림과 충돌을 다시 맞추고,
         /// 배치 화면이 열리면 배치 카메라를 켠다(Unity HousePlacementCameraRuntimeInstaller.SetPlacementMode).
         /// </summary>
-        private void ConnectFurniture(SessionCommands commands)
+        private void ConnectFurniture(GameSession session)
         {
             var view = new HostPlacementView(World, () => Fit.Scale);
             Screens.Opened += screen =>
@@ -246,8 +280,8 @@ namespace Rootborn.Host
             {
                 if (screen is FurniturePlacementScreen) World.PlacementCamera.End();
             };
-            if (commands != null)
-                commands.Changed += topic => { if (topic == ChangeTopics.World || topic == ChangeTopics.All) RefreshFurniture(); };
+            if (session != null)
+                session.Changed += topic => { if (topic == ChangeTopics.Furniture || topic == ChangeTopics.World) RefreshFurniture(); };
             SyncHouse();
         }
 
@@ -411,7 +445,7 @@ namespace Rootborn.Host
             s.Tick(dt); // 실시간 화면(미니게임)의 시간은 이 dt로만 흐른다
             bool blocked = s.MovementBlockedWhile(keys.Shift);
             World.Update(blocked ? 0 : keys.MoveX, blocked ? 0 : keys.MoveY, dt);
-            s.EnterMap(World.Session.Map.Id);
+            s.EnterMap(World.Session.Map.Id, MapFeaturesHere());
             SyncSession();
             SyncHouse();
             UpdatePlacement(keys, pointer, dt);

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Rootborn.Core.Dialogue;
+using Rootborn.Core.StudentLife;
 using Rootborn.Core.WorldState;
 using Rootborn.Game;
 using Rootborn.Ui;
@@ -23,11 +25,11 @@ namespace Rootborn.Screens.Records
 
         public IReadOnlyList<WorldLogCard> Cards { get; }
 
-        public static WorldStateLogModel From(GameSession session, DisplayNames names)
+        public static WorldStateLogModel From(GameSession session)
         {
             if (session == null) return Empty;
             WorldStateSummaryModel[] summaries = WorldStateSummaryBuilder.BuildForSurface(
-                session.Definitions.All<WorldStateFlag>(), session.World, WorldStateSummarySurface.WorldLog, new Lookup(names));
+                session.Definitions.All<WorldStateFlag>(), session.World, WorldStateSummarySurface.WorldLog, new Lookup(session.Definitions));
             var cards = new WorldLogCard[summaries.Length];
             for (int i = 0; i < cards.Length; i++)
             {
@@ -39,10 +41,10 @@ namespace Rootborn.Screens.Records
 
         private sealed class Lookup : IWorldStateDisplayNames
         {
-            private readonly DisplayNames _names;
-            public Lookup(DisplayNames names) { _names = names ?? DisplayNames.Empty; }
-            public string LocationName(string locationId) => _names.Get("LocationDefinition", locationId);
-            public string NpcName(string npcId) => _names.Get("NpcDefinition", npcId);
+            private readonly Rootborn.Data.GameDefinitions _definitions;
+            public Lookup(Rootborn.Data.GameDefinitions definitions) { _definitions = definitions; }
+            public string LocationName(string locationId) => _definitions.TryGet(locationId ?? string.Empty, out Location location) ? location.DisplayNameKey : string.Empty;
+            public string NpcName(string npcId) => _definitions.TryGet(npcId ?? string.Empty, out NpcDefinition npc) ? npc.DisplayNameKey : string.Empty;
         }
     }
 
@@ -146,7 +148,7 @@ namespace Rootborn.Screens.Records
             _title.Text = T("ui.world-log.title");
             _empty.Text = T("ui.world-log.empty");
             _hint.Text = T("ui.world-log.scroll");
-            Model = WorldStateLogModel.From(Services.Session, Services.Names);
+            Model = WorldStateLogModel.From(Services.Session);
             int count = Model.Cards.Count;
             _resolved = new ResolvedCard[count];
             for (int i = 0; i < count; i++) _resolved[i] = Resolve(Model.Cards[i]);

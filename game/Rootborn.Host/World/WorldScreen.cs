@@ -110,7 +110,7 @@ namespace Rootborn.Host.World
             string startMap;
             if (options.SaveSlot != null)
             {
-                Slot = new WorldSlot(new FileSaveStore(options.SaveRoot), options.SaveSlot, WorldTravelData.Load(options.RepoRoot));
+                Slot = new WorldSlot(new FileSaveStore(options.SaveRoot), options.SaveSlot, WorldTravelData.From(Content.Definitions));
                 SlotStart = Slot.Begin(DateTime.UtcNow.Ticks);
                 if (!SlotStart.Ok) throw new InvalidOperationException("세이브 슬롯으로 시작하지 못했다: " + SlotStart.Problem);
                 Session.Arrivals = Slot; // Unity 판처럼 처음 들어갈 때도 도착을 쓴다

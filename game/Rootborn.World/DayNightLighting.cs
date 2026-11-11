@@ -46,10 +46,6 @@ namespace Rootborn.World
             return new DayNightLighting(all[0]);
         }
 
-        /// <summary>옛 진입점(Host가 아직 부른다). 저장소의 data/를 정의 로더로 읽어 From과 같은 값을 낸다.</summary>
-        [Obsolete("Host에서 바꿀 곳: DayNightLighting.From(정의)를 쓴다. 이 진입점은 data/를 한 번 더 읽는다.")]
-        public static DayNightLighting Load(string repoRoot) => From(LoadedDefinitions.Of(repoRoot));
-
         private static float Wrap(float hour)
         {
             float h = hour % 24f;

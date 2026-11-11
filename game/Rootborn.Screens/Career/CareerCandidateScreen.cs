@@ -54,7 +54,7 @@ namespace Rootborn.Screens.Career
 
         private UiLabel _title, _count;
         private UiCardGrid _list;
-        private ScrollText _details;
+        private UiScrollText _details;
         private UiButton _close;
         private readonly CardLabel _rowLabel = new CardLabel();
         private string[] _rowTexts = Array.Empty<string>();
@@ -81,7 +81,7 @@ namespace Rootborn.Screens.Career
             _list.Centered(Metrics.ListX, Metrics.ListY, Metrics.ListW + UiCardScroller.ScrollbarWidth + UiCardScroller.ScrollbarGap, Metrics.ListH);
             _list.DrawCell = PaintRow;
             _list.CellClicked += ShowDetails;
-            _details = root.Add(new ScrollText { Id = DetailsId, FontSize = Metrics.DetailsFont, Color = Metrics.Ink, PaddingX = 0f, PaddingTop = 0f, PaddingBottom = 16f });
+            _details = root.Add(new UiScrollText { Id = DetailsId, FontSize = Metrics.DetailsFont, Color = Metrics.Ink, PaddingX = 0f, PaddingTop = 0f, PaddingBottom = 16f });
             _details.Centered(Metrics.DetailsX, Metrics.DetailsY, Metrics.DetailsW, Metrics.DetailsH);
             _close = root.Add(new UiButton { Id = CloseId, FontSize = Metrics.CloseFont });
             _close.Centered(Metrics.CloseX, Metrics.CloseY, Metrics.CloseW, Metrics.CloseH);

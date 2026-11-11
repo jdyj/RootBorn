@@ -74,7 +74,7 @@ namespace Rootborn.Screens.Tests
                 Directory.CreateDirectory(_saves);
                 Session = GameSession.Start(Definitions.Value, GameStartSettings.FromRegistry(TestData.DataDirectory), new FileSaveStore(_saves), "slot-test", null);
                 Text = LongText.Create(language);
-                var services = new ScreenServices(Text, new SessionCommands(Session)) { Names = DisplayNames.Load(TestData.DataDirectory) };
+                var services = new ScreenServices(Text, Session) { Names = DisplayNames.Load(TestData.DataDirectory) };
                 ScreenRegistry registry = ScreenCatalog.Create();
                 extra?.Invoke(registry);
                 Stack = new ScreenStack(registry, services);

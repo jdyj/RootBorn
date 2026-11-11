@@ -1,28 +1,39 @@
 using System;
+using System.Collections.Generic;
+using Rootborn.Core.Settings;
 using Rootborn.Ui;
 
 namespace Rootborn.Screens.Settings
 {
     /// <summary>
-    /// 설정 화면의 표시 모델: 켬/끔 네 칸의 값. Unity SettingsPanel의 처음 모양(소리 켬, 음소거 끔, 음악 끔, 글자 켬)에서 시작한다.
-    /// Unity 판은 이 값을 어디에도 저장하지 않았고 켬/끔도 눌리지 않는 그림이었다. 여기서는 눌러서 바뀌지만 저장하지 않는다
-    /// (저장할 설정 영역이 Core·Game에 없다 — 보고에 적음).
+    /// 설정 화면의 표시 모델: 켬/끔 네 칸의 값. 값은 Core GameSettings에 있고(Unity SettingsPanel의 처음 모양: 소리 켬, 음소거 끔, 음악 끔,
+    /// 글자 켬), 바꾸면 설정 파일에 저장한다. 칸 순서와 설정 이름은 Unity MakeSettingsGroup 순서(옆 아이콘 이름)다. 뜻은 아직 없다.
     /// </summary>
     public sealed class SettingsModel
     {
         /// <summary>줄마다 두 칸: [소리, 음소거], [음악, 글자]. Unity MakeSettingsGroup 순서.</summary>
-        public const int ToggleCount = 4;
+        public static readonly string[] ToggleNames = { GameSettingNames.Speaker, GameSettingNames.Muted, GameSettingNames.Music, GameSettingNames.Text };
+        public static int ToggleCount => ToggleNames.Length;
 
-        private readonly bool[] _on = { true, false, false, true };
+        private readonly SettingsStore _store;
 
-        public bool IsOn(int index) => _on[index];
+        public SettingsModel(SettingsStore store) { _store = store ?? SettingsStore.InMemory(); }
 
-        public void Set(int index, bool on) => _on[index] = on;
+        public bool IsOn(int index) => _store.Settings.GetToggle(ToggleNames[index]);
+
+        public void Set(int index, bool on)
+        {
+            if (IsOn(index) == on) return;
+            _store.Settings.SetToggle(ToggleNames[index], on);
+            _store.Save();
+        }
     }
 
     /// <summary>
     /// 설정(Esc). Unity SettingsPanel(660x510, 가운데)을 같은 수치로 옮겼다: 바탕·테두리, 위 탭 다섯, 양옆 꽃무늬 기둥, 장식 스크롤 막대,
-    /// 켬/끔 네 칸 묶음, 아이콘 다섯 칸 묶음, 모서리 장식, 무늬 줄. Unity 판에는 글자가 없다(문구 키 없음).
+    /// 켬/끔 네 칸 묶음, 아이콘 다섯 칸 묶음, 모서리 장식, 무늬 줄. Unity 판에는 글자가 없었다.
+    /// 더한 것: 두 묶음 사이의 언어 줄(이름 + 지금 언어 단추). 단추를 누르면 언어 파일 폴더에 있는 언어를 사전 순으로 돌고, 열린 화면 글자가
+    /// 바로 바뀌며 설정 파일에 저장된다. 언어 이름은 그 언어 파일의 ui.settings.language-name이다(언어를 더하는 일은 파일을 더하는 일).
     /// 이동을 막지 않는다. 닫기는 Esc(키 배정 표의 열고 닫기).
     /// </summary>
     public sealed class SettingsScreen : GameScreen
@@ -40,11 +51,27 @@ namespace Rootborn.Screens.Settings
         private static readonly UiColor AccentGold = UnityLayout.Color(0.84f, 0.57f, 0.28f);
         private static readonly UiColor White = UnityLayout.Color(1f, 1f, 1f);
 
-        private readonly UiToggle[] _toggles = new UiToggle[SettingsModel.ToggleCount];
+        /// <summary>언어 줄 배치(패널 가운데 기준, Unity 좌표처럼 y가 위로). 켬/끔 묶음(아래 끝 -10)과 아이콘 묶음(위 끝 -68) 사이.</summary>
+        internal static class LanguageRow
+        {
+            public const float Y = -39f, Height = 40f, Font = 18f;
+            public const float LabelX = -98f, LabelW = 170f;
+            public const float ButtonX = 92f, ButtonW = 190f;
+        }
 
-        public SettingsScreen(ScreenServices services) : base(services) { }
+        public const string LanguageLabelId = "settings.language.label";
+        public const string LanguageButtonId = "settings.language.value";
 
-        public SettingsModel Model { get; } = new SettingsModel();
+        private readonly UiToggle[] _toggles = new UiToggle[SettingsModel.ToggleNames.Length];
+        private UiLabel _languageLabel;
+        private UiButton _languageButton;
+
+        public SettingsScreen(ScreenServices services) : base(services)
+        {
+            Model = new SettingsModel(services.Settings);
+        }
+
+        public SettingsModel Model { get; }
 
         public static string ToggleId(int index) => "settings.toggle." + index;
 
@@ -66,6 +93,7 @@ namespace Rootborn.Screens.Settings
             SideRail(root, 252f);
             Scrollbar(root);
             SettingsGroup(root, 0f, 58f);
+            LanguageLine(root);
             IconGroup(root, 0f, -126f);
             CornerOrnaments(root);
             PatternRow(root, 154f);
@@ -76,6 +104,40 @@ namespace Rootborn.Screens.Settings
         protected internal override void OnOpened(ScreenOpenContext context)
         {
             for (int i = 0; i < _toggles.Length; i++) _toggles[i].IsOn = Model.IsOn(i);
+            WriteLanguage();
+        }
+
+        protected internal override void OnChanged(string topic)
+        {
+            if (topic == ChangeTopics.Language || topic == ChangeTopics.All) WriteLanguage();
+        }
+
+        private void LanguageLine(UiNode root)
+        {
+            _languageLabel = root.Add(new UiLabel { Id = LanguageLabelId, FontSize = LanguageRow.Font, Color = FrameDark })
+                .Centered(LanguageRow.LabelX, LanguageRow.Y, LanguageRow.LabelW, LanguageRow.Height);
+            _languageButton = root.Add(new UiButton { Id = LanguageButtonId, FontSize = LanguageRow.Font })
+                .Centered(LanguageRow.ButtonX, LanguageRow.Y, LanguageRow.ButtonW, LanguageRow.Height);
+            _languageButton.Clicked += NextLanguage;
+        }
+
+        private void WriteLanguage()
+        {
+            _languageLabel.Text = T("ui.settings.language");
+            _languageButton.Text = T("ui.settings.language-name");
+        }
+
+        /// <summary>언어 파일이 있는 언어를 사전 순으로 하나 넘긴다. 글자는 GameText.LanguageChanged 알림으로 바뀐다.</summary>
+        private void NextLanguage()
+        {
+            var languages = new List<string>(Services.Text.Languages);
+            if (languages.Count < 2) return;
+            languages.Sort(StringComparer.OrdinalIgnoreCase);
+            int at = languages.FindIndex(l => string.Equals(l, Services.Text.Language, StringComparison.OrdinalIgnoreCase));
+            string next = languages[(at + 1) % languages.Count];
+            Services.Settings.Settings.Language = next;
+            Services.Settings.Save();
+            Services.Text.Language = next;
         }
 
         private static UiBox Box(UiNode parent, float x, float y, float w, float h, UiColor color) =>

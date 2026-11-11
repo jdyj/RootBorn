@@ -2,19 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Rootborn.Core.Dialogue;
-using Rootborn.Core.Quests;
-using Rootborn.Core.WorldState;
 using Rootborn.Game;
 using Rootborn.Ui;
 
 namespace Rootborn.Screens.Dialogue
 {
-    /// <summary>대화 선택지 한 줄: 대화 정의 안의 순번, 문구 키(비면 퀘스트 행동 이름), 고르면 대화가 닫히는지.</summary>
-    public readonly record struct DialogueChoiceRow(int Index, string LabelKey, string FallbackLabel, bool ClosesDialogue);
+    /// <summary>
+    /// 대화 선택지 한 줄: 대화 정의 안의 순번, 문구 키(비면 퀘스트 행동 이름), 고르면 대화가 닫히는지,
+    /// 지금 못 고르는 이유(None이면 고를 수 있다 — GameSession.DialogueChoices 판정 그대로).
+    /// </summary>
+    public readonly record struct DialogueChoiceRow(int Index, string LabelKey, string FallbackLabel, bool ClosesDialogue, DialogueChoiceBlock Block);
 
     /// <summary>
     /// 대화 화면의 표시 모델: 대사 키(모두 한꺼번에 보인다 — Unity DialoguePanel은 줄을 넘기지 않고 줄바꿈으로 이어 보였다)와
-    /// 지금 고를 수 있는 선택지(Unity 판처럼 고를 수 없는 것은 숨긴다). 고를 수 있는지는 Core DialogueChoice.IsAvailable이 판단한다.
+    /// 보이는 선택지(Unity 판처럼 숨김 규칙에 걸린 것은 뺀다). 보이는지·고를 수 있는지는 GameSession.DialogueChoices가 판단한다.
     /// </summary>
     public sealed class DialogueModel
     {
@@ -35,15 +36,13 @@ namespace Rootborn.Screens.Dialogue
             if (dialogue == null) return Empty;
             var lines = new List<string>(dialogue.LineKeys.Count);
             foreach (string key in dialogue.LineKeys) if (!string.IsNullOrEmpty(key)) lines.Add(key);
-            // 고를 수 있는지 보는 문맥(읽기만). GameSession에 이 조회가 없어 여기서 같은 값으로 만든다(보고서 "필요한 변경").
-            var context = new DialogueChoiceContext(session.QuestLog, new RewardRuntimeContext(session.QuestLog, session.Inventory, null, null, session.Student,
-                new WorldStateAccess(session.World, session.Definitions.All<WorldStateFlag>()), null));
-            var choices = new List<DialogueChoiceRow>(dialogue.Choices.Count);
-            for (int i = 0; i < dialogue.Choices.Count; i++)
+            IReadOnlyList<DialogueChoiceView> judged = session.DialogueChoices();
+            var choices = new List<DialogueChoiceRow>(judged.Count);
+            foreach (DialogueChoiceView view in judged)
             {
-                DialogueChoice choice = dialogue.Choices[i];
-                if (choice == null || !choice.IsAvailable(in context)) continue;
-                choices.Add(new DialogueChoiceRow(i, choice.LabelKey, choice.QuestAction.ToString(), choice.QuestAction != DialogueQuestAction.None));
+                if (!view.Evaluation.Visible) continue;
+                DialogueChoice choice = view.Choice;
+                choices.Add(new DialogueChoiceRow(view.Index, choice.LabelKey, choice.QuestAction.ToString(), choice.QuestAction != DialogueQuestAction.None, view.Evaluation.Block));
             }
             return new DialogueModel(dialogue.Id, lines.ToArray(), choices.ToArray());
         }
@@ -113,11 +112,11 @@ namespace Rootborn.Screens.Dialogue
         protected internal override void OnOpened(ScreenOpenContext context)
         {
             LastChoiceApplied = null;
-            if (context.Interaction.HasValue && Services.Commands != null)
+            if (context.Interaction.HasValue && Services.Session != null)
             {
                 NpcId = context.Interaction.Value.TargetId;
                 string npc = NpcId;
-                Services.Commands.Run(s => s.TalkTo(npc), ChangeTopics.Dialogue);
+                Services.Session.TalkTo(npc);
             }
             Rebuild();
             if (Model.DialogueId == null) Close(); // 보여 줄 대화가 없다
@@ -125,8 +124,8 @@ namespace Rootborn.Screens.Dialogue
 
         protected internal override void OnClosed()
         {
-            if (Services.Commands != null && Services.Session.CurrentDialogue != null)
-                Services.Commands.Run(s => s.CloseDialogue(), ChangeTopics.Dialogue);
+            if (Services.Session != null && Services.Session.CurrentDialogue != null)
+                Services.Session.CloseDialogue();
         }
 
         protected internal override void OnChanged(string topic)
@@ -145,9 +144,9 @@ namespace Rootborn.Screens.Dialogue
         /// <summary>보이는 선택지 하나를 고른다.</summary>
         private void Choose(int visibleIndex)
         {
-            if (visibleIndex < 0 || visibleIndex >= Model.Choices.Length || Services.Commands == null) return;
+            if (visibleIndex < 0 || visibleIndex >= Model.Choices.Length || Services.Session == null) return;
             DialogueChoiceRow row = Model.Choices[visibleIndex];
-            bool applied = Services.Commands.Run(s => s.ChooseDialogueOption(row.Index), ChangeTopics.Quests);
+            bool applied = Services.Session.ChooseDialogueOption(row.Index);
             LastChoiceApplied = applied;
             if (applied && row.ClosesDialogue) { Close(); return; }
             Rebuild();

@@ -48,7 +48,7 @@ namespace Rootborn.Screens.Tests.Start
             Assert.That(t.LabelText(CharacterCreatorScreen.CaptionId), Is.EqualTo("어릴 때 모습"));
             var preview = (CharacterPreview)t.Node(CharacterCreatorScreen.CharacterId);
             Assert.That(preview.Frames.Select(f => f.Image), Is.EqualTo(new[] { "sheet:body_playground", "sheet:outfit_playground_casual", "sheet:head_playground_short_brown" }));
-            Assert.That(((SelectableRow)t.Node(CharacterCreatorScreen.StageRowId(0))).Selected, Is.True);
+            Assert.That(((UiSelectableRow)t.Node(CharacterCreatorScreen.StageRowId(0))).Selected, Is.True);
             Assert.That(screen.PlayerName, Is.Empty, "Unity: 기본 이름은 빈 글자");
             KnownMissingKeys.AssertOnlyKnownMissing(t.Text, t.UsedKeys());
         }

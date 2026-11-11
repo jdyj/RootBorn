@@ -6,6 +6,15 @@ using Rootborn.Ui;
 namespace Rootborn.Screens
 {
     /// <summary>
+    /// 맵의 성질 이름(화면이 맵 id 대신 보는 것). Host가 맵 데이터에서 읽어 ScreenStack.EnterMap으로 넘긴다. 새 성질은 상수 하나로 더한다.
+    /// </summary>
+    public static class MapFeatures
+    {
+        /// <summary>가구를 놓는 면이 있다(game/world/interactions.json의 placementSurface).</summary>
+        public const string FurniturePlacement = "furniture-placement";
+    }
+
+    /// <summary>
     /// 지금 떠 있는 화면들. 층(HUD → 패널 → 모달 → 알림)마다 노드를 두고 화면 뿌리를 그 아래에 단다. UiTree 하나가 포인터 판정과
     /// 그리기를 맡으므로 위층 화면이 포인터를 먼저 받는다. 모달이 떠 있으면 그 아래 층은 포인터를 받지 않는다.
     /// 큰 패널은 한 번에 하나(Unity ModernUiPanelInputRouter의 배타 규칙), 모달·알림은 위로 쌓인다.
@@ -34,7 +43,7 @@ namespace Rootborn.Screens
             for (int i = 0; i < _layers.Length; i++)
                 _layers[i] = Tree.Root.Add(new UiNode { Id = "layer-" + ((ScreenLayer)i).ToString().ToLowerInvariant() });
             _modalBlocker = _layers[(int)ScreenLayer.Modal].Add(new UiNode { Id = "modal-blocker", Interactive = true, Visible = false });
-            if (_services.Commands != null) _services.Commands.Changed += NotifyChanged;
+            if (_services.Session != null) _services.Session.Changed += NotifyChanged;
             _services.Text.LanguageChanged += () => NotifyChanged(ChangeTopics.Language);
             foreach (Action<ScreenServices> attach in registry.Listeners) attach(_services);
         }
@@ -95,6 +104,7 @@ namespace Rootborn.Screens
 
         /// <summary>지금 맵 id(Host가 EnterMap으로 넘긴다). 모르면 빈 글자.</summary>
         public string MapId { get; private set; } = string.Empty;
+        private readonly HashSet<string> _mapFeatures = new HashSet<string>(StringComparer.Ordinal);
 
         /// <summary>지금 상호작용 키를 누르면 반응할 대상(없으면 null).</summary>
         public InteractionTargetView? Target { get; private set; }
@@ -287,13 +297,34 @@ namespace Rootborn.Screens
             return opened != null;
         }
 
-        /// <summary>플레이어가 맵에 들어섰다(처음 들어갈 때 포함). 같은 맵이면 아무것도 하지 않는다.</summary>
-        public void EnterMap(string mapId)
+        /// <summary>
+        /// 플레이어가 맵에 들어섰다(처음 들어갈 때 포함). features는 그 맵의 성질(MapFeatures — 맵 데이터에서 Host가 읽는다).
+        /// 화면은 맵 id가 아니라 성질을 본다(맵은 새로 그릴 예정이다). 같은 맵·같은 성질이면 아무것도 하지 않는다.
+        /// </summary>
+        public void EnterMap(string mapId, IReadOnlyCollection<string> features = null)
         {
             mapId ??= string.Empty;
-            if (mapId == MapId) return;
+            if (mapId == MapId && SameFeatures(features)) return;
             MapId = mapId;
+            _mapFeatures.Clear();
+            if (features != null) foreach (string feature in features) if (!string.IsNullOrEmpty(feature)) _mapFeatures.Add(feature);
             NotifyChanged(ChangeTopics.Map);
+        }
+
+        /// <summary>지금 맵에 그 성질이 있는가(MapFeatures).</summary>
+        public bool HasMapFeature(string feature) => feature != null && _mapFeatures.Contains(feature);
+
+        private bool SameFeatures(IReadOnlyCollection<string> features)
+        {
+            int count = 0;
+            if (features != null)
+                foreach (string feature in features)
+                {
+                    if (string.IsNullOrEmpty(feature)) continue;
+                    if (!_mapFeatures.Contains(feature)) return false;
+                    count++;
+                }
+            return count == _mapFeatures.Count;
         }
 
         /// <summary>앞의 상호작용 대상(없으면 null). 바뀐 것이 있을 때만 TargetChanged를 낸다.</summary>

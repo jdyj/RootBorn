@@ -119,7 +119,7 @@ namespace Rootborn.Screens.Start
 
         private sealed class StageRow
         {
-            public SelectableRow Background;
+            public UiSelectableRow Background;
             public UiLabel Label, Choice;
             public UiButton Previous, Next;
         }
@@ -172,7 +172,7 @@ namespace Rootborn.Screens.Start
             {
                 int stage = i;
                 var row = new StageRow();
-                row.Background = panel.Add(new SelectableRow { Id = StageRowId(i), SelectedColor = Metrics.SelectedRow })
+                row.Background = panel.Add(new UiSelectableRow { Id = StageRowId(i), SelectedColor = Metrics.SelectedRow })
                     .Centered(Metrics.ChoicesX, y, Metrics.RowW, Metrics.RowH);
                 row.Background.Clicked += () => PreviewStage(stage);
                 row.Label = Label(panel, StageLabelId(i), y);
@@ -280,24 +280,6 @@ namespace Rootborn.Screens.Start
             SaveSlotMetadata metadata = SaveSlots.CreateMetadata(_slotId, PlayerName, Model.Snapshot(), _menu.UtcNow(), _menu.TickCount());
             if (!_menu.Slots.StartNewSlot(metadata) || !_menu.Enter(new StartEntry(_slotId, true)))
                 Services.Screens?.Open(ScreenCatalog.SaveSlotSelect, argument: new SlotSelectReturn(_menu, SaveSlotScreen.EntryFailedKey));
-        }
-    }
-
-    /// <summary>
-    /// 눌러 고르는 줄의 바탕(Unity 단계 줄: 투명한 버튼, 고른 줄만 옅은 색). 포커스를 받는다.
-    /// Rootborn.Ui에 없는 부품이라 화면 폴더에 둔다(보고서).
-    /// </summary>
-    public sealed class SelectableRow : UiNode
-    {
-        public bool Selected;
-        public UiColor SelectedColor = UiTheme.Accent;
-
-        public SelectableRow() { Interactive = true; Focusable = true; }
-
-        public override void Emit(DrawList list, ITextMeasurer text)
-        {
-            if (Selected) list.Fill(Rect, SelectedColor);
-            if (Focused) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
         }
     }
 }

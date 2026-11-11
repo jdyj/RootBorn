@@ -15,16 +15,24 @@ namespace Rootborn.Screens
     /// </summary>
     public enum ScreenKey { Up, Down, Left, Right, Tab, Enter, Escape, Inventory, Status, Interact, Space, Rotate, AltLeft, AltRight }
 
-    /// <summary>"무엇이 바뀌었다" 알림의 이름. 화면은 자기가 그리는 값과 관련된 알림만 보고 그 부분만 고친다. 새 이름은 상수 하나로 더한다.</summary>
+    /// <summary>
+    /// "무엇이 바뀌었다" 알림의 이름. 게임 진행 쪽 이름은 GameSession.Changed가 알리는 GameChangeTopics 그대로이고,
+    /// 화면 쪽에서만 생기는 것(언어, 맵 들어감, 전부)은 화면 쌓기가 낸다. 화면은 자기가 그리는 값과 관련된 알림만 보고 그 부분만 고친다.
+    /// 새 이름은 상수 하나로 더한다.
+    /// </summary>
     public static class ChangeTopics
     {
-        public const string Student = "student";
-        public const string Inventory = "inventory";
-        public const string Quests = "quests";
-        public const string Dialogue = "dialogue";
-        public const string Day = "day";
-        public const string Career = "career";
-        public const string World = "world";
+        public const string Student = GameChangeTopics.Student;
+        public const string Inventory = GameChangeTopics.Inventory;
+        public const string Quests = GameChangeTopics.Quests;
+        public const string Dialogue = GameChangeTopics.Dialogue;
+        public const string Day = GameChangeTopics.Day;
+        public const string Career = GameChangeTopics.Career;
+        public const string World = GameChangeTopics.World;
+        public const string DailyEvents = GameChangeTopics.DailyEvents;
+        public const string Discovery = GameChangeTopics.Discovery;
+        public const string Furniture = GameChangeTopics.Furniture;
+        public const string Objectives = GameChangeTopics.Objectives;
         public const string Language = "language";
         /// <summary>플레이어가 다른 맵에 들어섰다(ScreenStack.EnterMap).</summary>
         public const string Map = "map";
@@ -33,51 +41,31 @@ namespace Rootborn.Screens
     }
 
     /// <summary>
-    /// 게임 명령을 부르는 얇은 감싸개. GameSession에는 변경 알림이 없어서, 명령을 부른 뒤 열린 화면들에 "바뀜"을 알린다.
-    /// 화면은 상태를 바꿀 때 이것만 부른다. 읽기는 Session의 조회를 쓰되, 알림을 받았을 때만 읽는다(매 프레임 읽지 않는다).
+    /// 화면이 쓰는 것. Session은 게임 한 판이 없을 때(견본, 슬롯 선택) null이다. 화면은 상태를 바꿀 때 Session의 명령을 부르고,
+    /// 무엇이 바뀌었는지는 화면 쌓기가 Session.Changed를 받아 열린 화면들에 넘긴다(누가 부른 명령이든 같다).
     /// </summary>
-    public sealed class SessionCommands
-    {
-        public SessionCommands(GameSession session)
-        {
-            Session = session ?? throw new ArgumentNullException(nameof(session));
-        }
-
-        public GameSession Session { get; }
-
-        public event Action<string> Changed;
-
-        public T Run<T>(Func<GameSession, T> command, string topic)
-        {
-            T result = command(Session);
-            Changed?.Invoke(topic ?? ChangeTopics.All);
-            return result;
-        }
-
-        public void Run(Action<GameSession> command, string topic)
-        {
-            command(Session);
-            Changed?.Invoke(topic ?? ChangeTopics.All);
-        }
-    }
-
-    /// <summary>화면이 쓰는 것. Commands는 게임 한 판이 없을 때(견본 등) null이다.</summary>
     public sealed class ScreenServices
     {
-        public ScreenServices(GameText text, SessionCommands commands)
+        public ScreenServices(GameText text, GameSession session)
         {
             Text = text ?? throw new ArgumentNullException(nameof(text));
-            Commands = commands;
+            Session = session;
         }
 
         public GameText Text { get; }
-        public SessionCommands Commands { get; }
-        /// <summary>게임 한 판(Commands가 없으면 null).</summary>
-        public GameSession Session => Commands?.Session;
+        /// <summary>게임 한 판(없으면 null). 읽기는 알림을 받았을 때만 한다(매 프레임 읽지 않는다).</summary>
+        public GameSession Session { get; }
         /// <summary>ScreenStack이 만들어질 때 채운다.</summary>
         public ScreenStack Screens { get; internal set; }
-        /// <summary>엔티티 id → 화면 이름 키(Core 정의에 없는 것). 없으면 빈 표.</summary>
+        /// <summary>
+        /// 게임 정의(이름 키 등 읽기 전용 조회). 게임 한 판이 있으면 그 정의, 없으면(--world) Host가 넣어 준 정의. 둘 다 없으면 null.
+        /// </summary>
+        public Rootborn.Data.GameDefinitions Definitions { get => _definitions ?? Session?.Definitions; set => _definitions = value; }
+        private Rootborn.Data.GameDefinitions _definitions;
+        /// <summary>옷 칸·옷 id → 화면 이름 키. Core 옷 규칙에 이름 키가 없어 data/에서 읽는다. 없으면 빈 표.</summary>
         public DisplayNames Names { get; set; } = DisplayNames.Empty;
+        /// <summary>슬롯과 무관한 설정(언어, 켬/끔). Host가 세이브 폴더의 설정 파일로 채운다. 없으면 저장하지 않는 기본값.</summary>
+        public Settings.SettingsStore Settings { get; set; } = Rootborn.Screens.Settings.SettingsStore.InMemory();
         /// <summary>옷장이 부르는 캐릭터 쪽(Host가 채운다). 없으면 옷장은 비어 있다.</summary>
         public Records.IWardrobeBackend Wardrobe { get; set; }
     }
@@ -92,7 +80,7 @@ namespace Rootborn.Screens
 
     /// <summary>
     /// 화면 하나. 표시 모델로 UiNode 나무를 한 번만 만들고(Build), 열릴 때·닫힐 때·"무엇이 바뀌었다" 알림을 받을 때 값만 고친다.
-    /// 버튼이 눌리면 Services.Commands로 게임 명령을 부른다. 규칙 판단은 쓰지 않는다. 화면 인스턴스는 처음 열 때 만들고 닫아도 버리지 않는다.
+    /// 버튼이 눌리면 Services.Session의 게임 명령을 부른다. 규칙 판단은 쓰지 않는다. 화면 인스턴스는 처음 열 때 만들고 닫아도 버리지 않는다.
     /// 문구는 T(key)로 받는다(쓴 키를 모아 두어 테스트가 두 언어에 다 있는지 본다).
     /// </summary>
     public abstract class GameScreen

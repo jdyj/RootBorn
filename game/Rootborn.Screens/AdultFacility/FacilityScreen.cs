@@ -194,47 +194,47 @@ namespace Rootborn.Screens.AdultFacility
         private void PressCell(int cell)
         {
             int work = cell / ColumnsPerWork, column = cell % ColumnsPerWork;
-            if (Services.Commands == null || work < 0 || work >= Model.Works.Length || column == InfoColumn) return;
+            if (Services.Session == null || work < 0 || work >= Model.Works.Length || column == InfoColumn) return;
             string workId = Model.Works[work].Id;
             string request = "facility-work:" + workId + ":" + Guid.NewGuid().ToString("N");
             if (column == PlayColumn)
             {
                 int seed = _seeds();
-                AdultCareerResultKind kind = Services.Commands.Run(s => s.ReserveFacilityWork(workId, request, seed), ChangeTopics.Career).Kind;
+                AdultCareerResultKind kind = Services.Session.ReserveFacilityWork(workId, request, seed).Kind;
                 Report(kind);
                 if (kind == AdultCareerResultKind.Applied) Close(); // Unity: 일을 예약하면 패널을 닫고 미니게임 화면이 열린다
             }
-            else Report(Services.Commands.Run(s => s.CompleteFacilityWork(workId, request, 100, true), ChangeTopics.Career).Kind);
+            else Report(Services.Session.CompleteFacilityWork(workId, request, 100, true).Kind);
         }
 
         private void ChooseRoute()
         {
-            if (Services.Commands == null || !Model.Exists) return;
+            if (Services.Session == null || !Model.Exists) return;
             string facility = Model.FacilityId, request = "facility-transition:" + facility + ":" + Guid.NewGuid().ToString("N");
-            Report(Services.Commands.Run(s => s.ChooseFacility(facility, request), ChangeTopics.Career).Kind);
+            Report(Services.Session.ChooseFacility(facility, request).Kind);
         }
 
         private void Upgrade()
         {
-            if (Services.Commands == null || !Model.Exists) return;
+            if (Services.Session == null || !Model.Exists) return;
             string request = "facility-upgrade:" + Model.FacilityId + ":" + Guid.NewGuid().ToString("N");
-            Report(Services.Commands.Run(s => s.UpgradeFacility(request), ChangeTopics.Career).Kind);
+            Report(Services.Session.UpgradeFacility(request).Kind);
         }
 
         /// <summary>진로 체험(Unity RequestPractice): 연습이 미니게임을 가지면 예약(미니게임 화면이 열린다), 없으면 바로 한다.</summary>
         private void Practice()
         {
-            if (Services.Commands == null || !Model.Exists) return;
+            if (Services.Session == null || !Model.Exists) return;
             string practiceId = Model.PracticeId, request = "career-practice:" + Guid.NewGuid().ToString("N");
             if (string.IsNullOrEmpty(practiceId)) { Report(AdultCareerResultKind.InvalidDefinition); return; }
             if (Services.Session.Definitions.TryGet(practiceId, out CareerPractice practice) && practice.Minigame != null)
             {
                 int seed = _seeds();
-                Report(Services.Commands.Run(s => s.BeginPractice(practiceId, request, seed), ChangeTopics.Student).Kind);
+                Report(Services.Session.BeginPractice(practiceId, request, seed).Kind);
             }
             else
             {
-                LifeActivityResult result = Services.Commands.Run(s => s.PerformPractice(practiceId, request), ChangeTopics.Student);
+                LifeActivityResult result = Services.Session.PerformPractice(practiceId, request);
                 Report(result.Kind == LifeActivityResultKind.Applied ? AdultCareerResultKind.Applied : AdultCareerResultKind.RequirementFailed);
             }
         }

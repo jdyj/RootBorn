@@ -18,7 +18,7 @@ namespace Rootborn.Screens.Tests.Minigames
 
         private static MinigameScreen Begin(TestSession t, string workId, string request = "req-test")
         {
-            AdultCareerResult begun = t.Commands.Run(s => s.BeginPartTimeWork(workId, request, 7), ChangeTopics.Student);
+            AdultCareerResult begun = t.Session.BeginPartTimeWork(workId, request, 7);
             Assert.That(begun.Kind, Is.EqualTo(AdultCareerResultKind.Applied), "알바 예약: " + workId);
             Assert.That(t.Stack.IsOpen(ScreenCatalog.Minigame), Is.True, "예약하면 미니게임이 열린다");
             Assert.That(t.Stack.MovementBlocked, Is.True, "미니게임은 이동을 막는다");
@@ -27,7 +27,7 @@ namespace Rootborn.Screens.Tests.Minigames
 
         private static MinigameScreen BeginPractice(TestSession t, string practiceId, string request = "req-practice")
         {
-            AdultCareerResult begun = t.Commands.Run(s => s.BeginPractice(practiceId, request, 7), ChangeTopics.Student);
+            AdultCareerResult begun = t.Session.BeginPractice(practiceId, request, 7);
             Assert.That(begun.Kind, Is.EqualTo(AdultCareerResultKind.Applied), "연습 예약: " + practiceId);
             return t.Screen<MinigameScreen>(ScreenCatalog.Minigame);
         }
@@ -316,13 +316,27 @@ namespace Rootborn.Screens.Tests.Minigames
         }
 
         [Test]
-        public void ReservationAlreadyInTheSave_DoesNotOpenByItself()
+        public void ReservationLeftInTheSave_OnTheSameDay_OpensRightAfterLoading()
         {
             using var t = new TestSession();
-            t.Session.BeginPartTimeWork("work.shift.corner-store", "req-old", 1); // 화면 쌓기 밖에서(예: 세이브에 남은 판) 생긴 예약
-            var fresh = new ScreenStack(ScreenCatalog.Create(), new ScreenServices(t.Text, t.Commands));
-            t.Commands.Run(s => s.TalkTo("npc.first-guide"), ChangeTopics.Dialogue);
-            Assert.That(fresh.IsOpen(ScreenCatalog.Minigame), Is.False, "쌓기를 만들 때 이미 있던 예약은 열지 않는다");
+            MinigameScreen first = Begin(t, "work.shift.corner-store", "req-left");
+            string request = first.Model.RequestId;
+            // 정산하지 않고 게임을 끝낸 뒤 다시 불러온다(같은 날).
+            using TestSession again = t.Reopen();
+            Assert.That(again.Session.Student.HasPendingMinigame, Is.True);
+            Assert.That(again.Stack.IsOpen(ScreenCatalog.Minigame), Is.True, "같은 날 남은 예약은 불러오자마자 미니게임 화면을 연다");
+            Assert.That(again.Screen<MinigameScreen>(ScreenCatalog.Minigame).Model.RequestId, Is.EqualTo(request));
+            again.Session.TalkTo("npc.first-guide");
+            Assert.That(again.Screen<MinigameScreen>(ScreenCatalog.Minigame).Settlements, Is.Zero, "다른 알림으로 다시 열거나 정산하지 않는다");
+        }
+
+        [Test]
+        public void StaleReservation_WithAnEarlierDay_DoesNotOpen()
+        {
+            using var t = new TestSession();
+            t.Session.BeginPartTimeWork("work.shift.corner-store", "req-stale", 1);
+            Assert.That(MinigameModel.CanResumeOnLoad(t.Session), Is.True, "오늘 예약");
+            Assert.That(MinigameModel.CanResumeOnLoad(t.Session, t.Session.StudentDay + 1), Is.False, "날이 지난 예약은 열지 않는다(Core가 포기 처리)");
         }
     }
 }

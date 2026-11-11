@@ -41,6 +41,20 @@ namespace Rootborn.Screens.Minigames
             return session.Student.PendingMinigame?.RequestId ?? session.Adult.PendingWork?.RequestId ?? string.Empty;
         }
 
+        /// <summary>
+        /// 불러온 직후 남은 예약을 이어 할지: 예약한 날이 오늘(today, 기본은 학생 날)이면 연다. 날이 지난 예약은 열지 않는다 —
+        /// Core가 다음 날 시작 때 포기 처리한다(사용자 결정 2026-11-12).
+        /// </summary>
+        public static bool CanResumeOnLoad(GameSession session, int? today = null)
+        {
+            if (session == null) return false;
+            int day = today ?? session.StudentDay;
+            PendingStudentMinigameSaveData student = session.Student.PendingMinigame;
+            if (student != null) return student.Day == day;
+            PendingFacilityWorkSaveData work = session.Adult.PendingWork;
+            return work != null && work.Day == day;
+        }
+
         private static MinigameModel Create(GameSession session, MinigameOwner owner, string requestId, string minigameId, int seed)
         {
             session.Definitions.TryGet(minigameId ?? string.Empty, out Minigame definition);

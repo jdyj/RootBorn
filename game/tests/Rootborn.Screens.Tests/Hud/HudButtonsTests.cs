@@ -26,10 +26,24 @@ namespace Rootborn.Screens.Tests.Hud
             Assert.That(t.Node("hud.button.wardrobe").Rect, Is.EqualTo(new UiRect(1920 - 24 - 150, 126, 150, 34)));
             Assert.That(t.Node("hud.button.placement").Visible, Is.False, "가구 배치 토글은 집에서만");
 
-            t.Stack.EnterMap("House");
+            t.Stack.EnterMap("House", new[] { MapFeatures.FurniturePlacement });
             Assert.That(t.Node("hud.button.placement").Visible, Is.True);
             Assert.That(t.Node("hud.button.placement").Rect, Is.EqualTo(new UiRect(960 - 790 - 120, 540 - 480 - 32, 240, 64)));
             Assert.That(((UiButton)t.Node("hud.button.placement")).Text, Is.EqualTo("가구 배치 꺼짐"));
+        }
+
+        [Test]
+        public void PlacementToggle_FollowsTheMapsFeature_NotItsName()
+        {
+            using var t = new TestSession();
+            t.Stack.EnterMap("House");
+            t.Stack.OpenHud();
+            Assert.That(t.Node("hud.button.placement").Visible, Is.False, "이름이 House여도 가구 놓는 면이 없으면 숨는다");
+            t.Stack.EnterMap("any-new-room", new[] { MapFeatures.FurniturePlacement });
+            Assert.That(t.Node("hud.button.placement").Visible, Is.True, "새로 그린 맵도 가구 놓는 면이 있으면 보인다");
+            Assert.That(t.Stack.HasMapFeature(MapFeatures.FurniturePlacement), Is.True);
+            t.Stack.EnterMap("any-new-room");
+            Assert.That(t.Node("hud.button.placement").Visible, Is.False, "같은 맵 id라도 성질이 바뀌면 다시 본다");
         }
 
         [Test]
@@ -62,7 +76,7 @@ namespace Rootborn.Screens.Tests.Hud
                 if (!r.Screens.Any(e => e.Id == ScreenCatalog.Encyclopedia)) r.Add(ScreenCatalog.Encyclopedia, ScreenLayer.Panel, true, s => new Probe(s));
                 if (!r.Screens.Any(e => e.Id == ScreenCatalog.FurniturePlacement)) r.Add(ScreenCatalog.FurniturePlacement, ScreenLayer.Panel, false, s => new Probe(s));
             });
-            t.Stack.EnterMap("House");
+            t.Stack.EnterMap("House", new[] { MapFeatures.FurniturePlacement });
             t.Stack.OpenHud();
             t.Click("hud.button.encyclopedia");
             Assert.That(t.Stack.IsOpen(ScreenCatalog.Encyclopedia), Is.True);

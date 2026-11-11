@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Rootborn.Core.Quests;
+using Rootborn.Screens.Objectives;
+using Rootborn.Screens.Objectives.Sources;
 using Rootborn.Ui;
 
 namespace Rootborn.Screens.Quests
@@ -185,9 +187,9 @@ namespace Rootborn.Screens.Quests
             _accept.Text = T("ui.quest-chain-log.accept");
             _track.Text = T("ui.quest-chain-log.track");
             _claim.Text = T("ui.quest-chain-log.claim");
-            _accept.Enabled = Services.Commands != null && Model.CanAccept;
-            _track.Enabled = Services.Commands != null && Model.CanTrack;
-            _claim.Enabled = Services.Commands != null && Model.CanClaim;
+            _accept.Enabled = Services.Session != null && Model.CanAccept;
+            _track.Enabled = Services.Session != null && Model.CanTrack;
+            _claim.Enabled = Services.Session != null && Model.CanClaim;
         }
 
         private string StateName(QuestChainState state) => T("ui.journal.state." + state);
@@ -218,23 +220,24 @@ namespace Rootborn.Screens.Quests
         private void Accept()
         {
             string id = Model.SelectedChainId;
-            if (Model.CanAccept) Services.Commands.Run(s => s.AcceptQuestChain(id), ChangeTopics.Quests);
+            if (Model.CanAccept) Services.Session.AcceptQuestChain(id);
         }
 
         /// <summary>
-        /// 추적. GameSession에 체인 추적 명령이 없어 Core QuestChainLog.Track을 그대로 부른다(Unity QuestChainLogPanel과 같은 호출).
-        /// 저장은 다음 게임 명령 때 같이 된다(보고서 "필요한 변경": GameSession.TrackQuestChain).
+        /// 추적: 목표 수첩의 추적과 같은 길(GameSession.TrackObjective, 바로 저장). 추적 목표 HUD가 이 체인을 보인다.
+        /// Unity QuestChainLogPanel은 체인 상태를 Tracked로 바꿨다 — GameSession에 그 명령이 없어 하지 않는다(보고서 "필요한 변경").
         /// </summary>
         private void Track()
         {
             string id = Model.SelectedChainId;
-            if (Model.CanTrack) Services.Commands.Run(s => s.QuestChains.Track(s.Chain(id)), ChangeTopics.Quests);
+            if (!Model.CanTrack) return;
+            Services.Session.TrackObjective(JournalCategories.Quests, QuestChainSource.StableKeyFor(id));
         }
 
         private void Claim()
         {
             string id = Model.SelectedChainId;
-            if (Model.CanClaim) Services.Commands.Run(s => s.ClaimQuestChainRewards(id), ChangeTopics.Quests);
+            if (Model.CanClaim) Services.Session.ClaimQuestChainRewards(id);
         }
 
         /// <summary>진로·상태 거르기(Unity SelectCareerFilter·SelectStateFilter·ClearStateFilter). Unity 판에도 화면 안의 조작은 없었다.</summary>

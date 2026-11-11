@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Core.Objectives;
 using Rootborn.Ui;
 
 namespace Rootborn.Screens.Objectives
@@ -58,7 +59,6 @@ namespace Rootborn.Screens.Objectives
         public JournalList List => _list;
         public JournalDetail Detail => _detail;
 
-        private ObjectiveJournalTracking Tracking => ObjectiveJournalTracking.For(Services);
         private JournalItem[] Current => _items.TryGetValue(SelectedCategory, out JournalItem[] items) && items != null ? items : Array.Empty<JournalItem>();
 
         protected override UiNode Build()
@@ -98,8 +98,8 @@ namespace Rootborn.Screens.Objectives
         {
             WriteStaticText();
             Rebuild();
-            ObjectiveJournalTracking tracking = Tracking;
-            if (tracking.HasTracked)
+            ObjectiveTracking tracking = Services.Session?.ObjectiveTracking ?? ObjectiveTracking.None;
+            if (tracking.IsTracking)
             {
                 JournalItem tracked = ObjectiveJournalAggregator.Find(_items, tracking.StableKey, out string category);
                 if (tracked != null)
@@ -114,7 +114,7 @@ namespace Rootborn.Screens.Objectives
 
         protected internal override void OnChanged(string topic)
         {
-            if (topic == ChangeTopics.Map || topic == ObjectiveJournalTracking.Topic) return;
+            if (topic == ChangeTopics.Map || topic == ChangeTopics.Objectives) return;
             if (topic == ChangeTopics.Language) WriteStaticText();
             else Rebuild();
             RefreshCategory();
@@ -156,7 +156,7 @@ namespace Rootborn.Screens.Objectives
             if (SelectedIndex < 0 || SelectedIndex >= items.Length) return;
             JournalItem selected = items[SelectedIndex];
             SelectedStableKey = selected.StableKey;
-            Tracking.Track(selected.CategoryId, selected.StableKey);
+            Services.Session?.TrackObjective(selected.CategoryId, selected.StableKey); // 저장하고 objectives를 알린다(추적 목표 HUD가 다시 읽는다)
         }
 
         private void RunAction()
@@ -166,7 +166,7 @@ namespace Rootborn.Screens.Objectives
             JournalAction action = items[SelectedIndex].Action;
             if (action == null || !ReferenceEquals(action, _shownAction)) return;
             string key = items[SelectedIndex].StableKey;
-            JournalActionResult result = action.Run(Services.Commands); // 명령이 "바뀜" 알림을 내면 항목을 다시 받는다(OnChanged)
+            JournalActionResult result = action.Run(Services.Session); // 명령이 "바뀜" 알림을 내면 항목을 다시 받는다(OnChanged)
             _feedbackKey = key;
             _feedback = result.Message ?? JournalText.Empty;
             Rebuild();

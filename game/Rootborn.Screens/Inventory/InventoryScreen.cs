@@ -71,7 +71,7 @@ namespace Rootborn.Screens.Inventory
         private UiTextField _search;
         private UiCardGrid _grid;
         private UiNode _emptyState, _popup;
-        private InventoryNameLabel _popupName;
+        private UiShrinkLabel _popupName;
         private UiLabel _popupCount, _popupCloseLabel;
         private UiTextBlock _popupDescription;
         private UiImage _popupIcon;
@@ -150,8 +150,7 @@ namespace Rootborn.Screens.Inventory
             SideSlot(root, "inventory.delete", "icon:inventory-delete", x);
             SideSlot(root, "inventory.filter", "icon:inventory-filter", x + Layout.SearchHeight + Layout.SearchGap);
 
-            // 글자 칸에는 바뀜 알림이 없어서, 그릴 때(= 보일 때만) 글자가 달라졌는지 본다. 값은 글자 칸의 글자뿐이고 게임 상태는 읽지 않는다.
-            root.Add(new InventoryQueryWatcher(() => _search.Text, () => _query, ApplyQuery) { Id = "inventory.query-watcher" });
+            _search.TextChanged += text => { if (!string.Equals(text, _query, StringComparison.Ordinal)) ApplyQuery(text); };
         }
 
         private static void SideSlot(UiNode root, string id, string icon, float x)
@@ -192,7 +191,7 @@ namespace Rootborn.Screens.Inventory
             popup.Centered(Layout.Width / 2f + Layout.PopupOffsetX, 0f, Layout.PopupW, Layout.PopupH);
             _popupIcon = popup.Add(new UiImage());
             _popupIcon.Place(0f, 0f, Layout.PopupIconX, Layout.PopupIconY, Layout.PopupIconSize, Layout.PopupIconSize);
-            _popupName = popup.Add(new InventoryNameLabel { Id = PopupNameId, MaxFontSize = Layout.PopupNameMaxFont, MinFontSize = Layout.PopupNameMinFont, Color = Ink });
+            _popupName = popup.Add(new UiShrinkLabel { Id = PopupNameId, MaxFontSize = Layout.PopupNameMaxFont, MinFontSize = Layout.PopupNameMinFont, Color = Ink });
             _popupName.Place(0f, 0f, Layout.PopupNameX, Layout.PopupNameY, Layout.PopupNameW, Layout.PopupNameH);
             _popupCount = popup.Add(new UiLabel { Id = PopupCountId, FontSize = Layout.PopupCountFont, Color = Ink });
             _popupCount.Place(0f, 0f, Layout.PopupNameX, Layout.PopupCountY, Layout.PopupNameW, Layout.PopupCountH);
@@ -335,51 +334,4 @@ namespace Rootborn.Screens.Inventory
         }
     }
 
-    /// <summary>
-    /// 글자 칸의 글자가 바뀌었는지 그릴 때 한 번씩 본다(Rootborn.Ui의 UiTextField에는 바뀜 알림이 없다 — 보고서 "필요한 변경").
-    /// 화면이 보일 때만 그려지므로 닫혀 있으면 아무 일도 하지 않는다. 글자가 같으면 문자열 비교 하나뿐이다.
-    /// </summary>
-    internal sealed class InventoryQueryWatcher : UiNode
-    {
-        private readonly Func<string> _current, _applied;
-        private readonly Action<string> _changed;
-
-        public InventoryQueryWatcher(Func<string> current, Func<string> applied, Action<string> changed)
-        {
-            _current = current; _applied = applied; _changed = changed;
-        }
-
-        public override void Emit(DrawList list, ITextMeasurer text)
-        {
-            string now = _current();
-            if (!string.Equals(now, _applied(), StringComparison.Ordinal)) _changed(now);
-        }
-    }
-
-    /// <summary>
-    /// 한 줄 이름 글자: 폭에 맞을 때까지 글자 크기를 MaxFontSize에서 MinFontSize까지 줄인다(Unity resizeTextForBestFit 24~36).
-    /// 그래도 넘치면 말줄임표로 줄인다.
-    /// </summary>
-    public sealed class InventoryNameLabel : UiNode
-    {
-        public string Text;
-        public float MaxFontSize = 36f, MinFontSize = 24f;
-        public UiColor Color = UiTheme.Ink;
-
-        public override void Emit(DrawList list, ITextMeasurer text)
-        {
-            if (string.IsNullOrEmpty(Text)) return;
-            float size = MaxFontSize;
-            while (size > MinFontSize && text.Width(Text, size) > Rect.W) size -= 2f;
-            string shown = Text;
-            if (text.Width(shown, size) > Rect.W)
-            {
-                const string ellipsis = "…";
-                int length = shown.Length;
-                while (length > 1 && text.Width(shown.Substring(0, length) + ellipsis, size) > Rect.W) length--;
-                shown = shown.Substring(0, length) + ellipsis;
-            }
-            list.Text(Rect.X, Rect.Y + (Rect.H - text.LineHeight(size)) / 2f, shown, size, Color);
-        }
-    }
 }

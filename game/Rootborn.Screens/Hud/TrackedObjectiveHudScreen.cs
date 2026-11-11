@@ -1,10 +1,11 @@
+using Rootborn.Core.Objectives;
 using Rootborn.Screens.Objectives;
 using Rootborn.Ui;
 
 namespace Rootborn.Screens.Hud
 {
     /// <summary>
-    /// 추적 목표 HUD의 표시 모델: 목표 수첩에서 "추적"한 항목 하나(ObjectiveJournalTracking). Unity TrackedObjectiveHud.Show와 같은 규칙:
+    /// 추적 목표 HUD의 표시 모델: 목표 수첩에서 "추적"한 항목 하나(GameSession.ObjectiveTracking, 슬롯에 저장된다). Unity TrackedObjectiveHud.Show와 같은 규칙:
     /// 제목은 항목 제목(없으면 "추적 중인 목표"), 진행은 항목 진행(없으면 상태), 힌트는 다음 할 일(없으면 부제).
     /// 추적한 것이 없거나 그 항목이 목록에서 사라지면 없음(Unity: 추적 지정이 없으면 HUD를 띄우지 않고, 사라지면 숨긴다).
     /// </summary>
@@ -21,8 +22,8 @@ namespace Rootborn.Screens.Hud
         public static TrackedObjectiveModel From(ScreenServices services)
         {
             if (services?.Session == null) return None;
-            ObjectiveJournalTracking tracking = ObjectiveJournalTracking.For(services);
-            if (!tracking.HasTracked) return None;
+            ObjectiveTracking tracking = services.Session.ObjectiveTracking;
+            if (!tracking.IsTracking) return None;
             var items = new ObjectiveJournalAggregator(ObjectiveJournalSources.For(services)).Build(services.Session);
             JournalItem item = ObjectiveJournalAggregator.Find(items, tracking.StableKey, out _);
             if (item == null) return None;

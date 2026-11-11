@@ -9,8 +9,8 @@ namespace Rootborn.Screens.Minigames
     /// <summary>
     /// 예약된 미니게임이 생기면 미니게임 화면을 연다(Unity MinigamePresentationBridge.Begin: 예약 직후 패널을 띄웠다).
     /// 예약하는 쪽(장소 화면, 일터 지점, 시설 화면)은 GameSession 명령만 부르고, 여기는 "게임 진행이 바뀜" 알림에서 새 예약을 본다.
-    /// 화면 쌓기가 만들어질 때 이미 있던 예약(세이브에 남은 판)은 열지 않는다 — Unity 판은 다시 불러올 때 그 판을 포기 처리했다
-    /// (보고서 "필요한 변경": 불러올 때 남은 예약 처리는 GameSession 몫).
+    /// 화면 쌓기가 만들어질 때(불러온 직후) 이미 있던 예약은 같은 날이면 바로 연다. 날이 지난 예약은 열지 않는다 — Core가 다음 날
+    /// 시작 때 포기 처리한다(사용자 결정 2026-11-12. Unity 판은 다시 불러올 때 그 판을 포기 처리했다).
     /// </summary>
     public sealed class MinigameTrigger
     {
@@ -23,7 +23,9 @@ namespace Rootborn.Screens.Minigames
             _services = services ?? throw new ArgumentNullException(nameof(services));
             _screenId = screenId;
             _handledRequest = MinigameModel.PendingRequestId(services.Session);
-            if (_services.Commands != null) _services.Commands.Changed += OnChanged;
+            if (_services.Session != null) _services.Session.Changed += OnChanged;
+            if (_handledRequest.Length > 0 && MinigameModel.CanResumeOnLoad(services.Session) && _services.Screens != null)
+                _services.Screens.Open(_screenId);
         }
 
         private void OnChanged(string topic)
@@ -74,8 +76,8 @@ namespace Rootborn.Screens.Minigames
             bool hasMinigame = session.Definitions.TryGet(workId, out IMinigamePartTimeWork work) && work.Minigame != null;
             int seed = _seeds();
             LastResult = hasMinigame
-                ? _services.Commands.Run(s => (object)s.BeginPartTimeWork(workId, request, seed), ChangeTopics.Student)
-                : _services.Commands.Run(s => (object)s.PerformPartTimeWork(workId, request), ChangeTopics.Student);
+                ? (object)_services.Session.BeginPartTimeWork(workId, request, seed)
+                : (object)_services.Session.PerformPartTimeWork(workId, request);
         }
 
         private void Practice(GameSession session, string practiceId)
@@ -84,8 +86,8 @@ namespace Rootborn.Screens.Minigames
             bool hasMinigame = session.Definitions.TryGet(practiceId, out CareerPractice practice) && practice.Minigame != null;
             int seed = _seeds();
             LastResult = hasMinigame
-                ? _services.Commands.Run(s => (object)s.BeginPractice(practiceId, request, seed), ChangeTopics.Student)
-                : _services.Commands.Run(s => (object)s.PerformPractice(practiceId, request), ChangeTopics.Student);
+                ? (object)_services.Session.BeginPractice(practiceId, request, seed)
+                : (object)_services.Session.PerformPractice(practiceId, request);
         }
     }
 }

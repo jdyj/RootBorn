@@ -31,7 +31,7 @@ namespace Rootborn.Screens.Day
         public const string RootId = "day-result", PanelId = "day-result.panel", TitleId = "day-result.title", BodyId = "day-result.body", NextDayId = "day-result.next-day";
 
         private UiLabel _title;
-        private ScrollingTextView _body;
+        private UiSectionScrollView _body;
         private UiButton _next;
         private Dictionary<string, string> _displayKeys;
         private GameDayResult _result;
@@ -39,7 +39,7 @@ namespace Rootborn.Screens.Day
         public DayResultScreen(ScreenServices services) : base(services) { }
 
         public DayResultModel Model { get; private set; }
-        public ScrollingTextView Body => _body;
+        public UiSectionScrollView Body => _body;
 
         protected override UiNode Build()
         {
@@ -50,7 +50,7 @@ namespace Rootborn.Screens.Day
             panel.Centered(0, 0, DayResultLayout.Width, DayResultLayout.Height);
             var t = DayResultLayout.Title;
             _title = panel.Add(new UiLabel { Id = TitleId, FontSize = DayResultLayout.TitleFont, Align = UiAlign.Center }).Centered(t.X, t.Y, t.W, t.H);
-            _body = panel.Add(new ScrollingTextView { Id = BodyId, FontSize = DayResultLayout.BodyFont, SectionSpacing = DayResultLayout.SectionSpacing });
+            _body = panel.Add(new UiSectionScrollView { Id = BodyId, FontSize = DayResultLayout.BodyFont, SectionSpacing = DayResultLayout.SectionSpacing });
             _body.Stretch(DayResultLayout.BodyLeft, DayResultLayout.BodyTop, DayResultLayout.BodyRight, DayResultLayout.BodyBottom);
             var n = DayResultLayout.NextDay;
             _next = panel.Add(new UiButton { Id = NextDayId, FontSize = DayResultLayout.ButtonFont }).Centered(n.X, n.Y, n.W, n.H);
@@ -60,12 +60,12 @@ namespace Rootborn.Screens.Day
 
         protected internal override void OnOpened(ScreenOpenContext context)
         {
-            if (Services.Commands == null) { Close(); return; }
-            GameSession session = Services.Commands.Session;
+            if (Services.Session == null) { Close(); return; }
+            GameSession session = Services.Session;
             DayBaseline.For(session);
             _displayKeys ??= DayResultText.BuildDisplayKeys(session);
             if (session.Student.DayState == StudentDayState.InProgress)
-                _result = Services.Commands.Run(s => s.EndDay(), ChangeTopics.Day);
+                _result = Services.Session.EndDay();
             else
             {
                 GameDayResult last = session.LastDayResult;
@@ -77,21 +77,21 @@ namespace Rootborn.Screens.Day
 
         protected internal override void OnChanged(string topic)
         {
-            if (Services.Commands != null && Model != null) Render();
+            if (Services.Session != null && Model != null) Render();
         }
 
         private void StartNextDay()
         {
             if (Model == null || !Model.CanStartNextDay) return;
-            GameSession session = Services.Commands.Session;
-            if (!Services.Commands.Run(s => s.StartNextDay(), ChangeTopics.Day)) return;
+            GameSession session = Services.Session;
+            if (!Services.Session.StartNextDay()) return;
             DayBaseline.For(session).Capture();
             Close();
         }
 
         private void Render()
         {
-            GameSession session = Services.Commands.Session;
+            GameSession session = Services.Session;
             Model = DayResultModel.From(session, _result, DayBaseline.For(session).Summary());
             var text = new DayResultText(T, Services.Text, _displayKeys);
             _title.Text = text.Title(Model.Summary.DayNumber);
