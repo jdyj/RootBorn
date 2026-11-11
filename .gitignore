@@ -56,3 +56,6 @@ artifacts/
 # LDtk automatic save backups
 Assets/LDtk/**/backups/
 Assets/LDtk/**/backups.meta
+
+# 증거와 빌드 출력(git 밖)
+output/
