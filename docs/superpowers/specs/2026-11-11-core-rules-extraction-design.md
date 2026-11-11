@@ -103,3 +103,6 @@ public sealed class TraitDeltaEffect : ILifeActivityEffect {
 - 탐색: 거절한 선택은 빈 기록을 세이브에 남기지 않는다. `DismissAtZeroEnergyBypassesDefaultRiskAndCreatesNoRecordActivityOrOutcome`
 - 탐색: 이어지는 퀘스트 결과가 이미 시작한 퀘스트를 다시 더하지 않는다(원본은 진행을 지워 보상을 두 번 받을 수 있었다). 탐색 테스트로 고정.
 - 마일스톤: 보상 물건을 합쳐 확인하고, 안 들어가면 아무것도 바꾸지 않는다(원본은 일부만 주고 받은 것으로 기록). `SeveralItemRewardsThatDoNotFitTogetherAreRejectedWithoutPartialGrant`
+- 마일스톤: 대상이 정해진 학교 밖 기록 목표는 그 대상의 기록이 있을 때만 하루 결과 적용에서 채워진다(원본은 다른 대상의 기록으로도 채워졌다). 사용자 결정 2026-11-11. `ChangedBehavior_DayResultDoesNotFillATargetedObjectiveFromAnotherTargetsLog`
+- 하루 요약: 관계·상태의 음수 변화 기록('+' 없음)도 읽는다. 어제의 관계·상태 변화 목록도 같다(원본은 '+'가 붙은 기록만 읽었다). 사용자 결정 2026-11-11. `ResultLogSummaryReadsPlusLogsUsesKnownNamesAndSkipsOthers`
+- 장소 상태: 요약과 오늘 기록의 숨김 여부가 첫 상태의 `IsHidden`을 따른다(원본은 항상 false). 지금 데이터에는 숨은 상태가 없어 화면은 그대로다. 사용자 결정 2026-11-11. `ChangedBehavior_HiddenStateMakesTheSummaryAndTodayRecordHidden`

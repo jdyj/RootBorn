@@ -158,7 +158,8 @@ namespace Rootborn.Core.StudentLife
 
     /// <summary>
     /// 오늘·어제 학교 밖 기록과 추가 기록에서 대상(비면 모두)의 양의 변화를 더한다.
-    /// 하루 결과 적용에서는 원본처럼, 평가값이 0 이하여도 학교 밖 기록이 하나라도 있으면 목표를 채운다(대상과 무관).
+    /// 하루 결과 적용에서는 평가값이 0 이하여도 이 목표의 대상(비면 모두)에 해당하는 학교 밖 기록이 하나라도 있으면 목표를 채운다.
+    /// 원본은 대상을 보지 않아 다른 대상의 기록으로도 채워졌다.
     /// </summary>
     public sealed class OutsideSchoolLogMilestoneObjective : MilestoneObjective
     {
@@ -194,10 +195,11 @@ namespace Rootborn.Core.StudentLife
             }
         }
 
-        private static bool HasAny(string[] logs)
+        private bool HasAny(string[] logs)
         {
             if (logs == null) return false;
-            for (int i = 0; i < logs.Length; i++) if (OutsideSchoolLogCodec.TryParseDelta(logs[i], out _)) return true;
+            for (int i = 0; i < logs.Length; i++)
+                if (OutsideSchoolLogCodec.TryParseDelta(logs[i], out var entry) && (TargetId.Length == 0 || string.Equals(entry.TargetId, TargetId, StringComparison.Ordinal))) return true;
             return false;
         }
     }

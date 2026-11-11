@@ -87,13 +87,14 @@ namespace Rootborn.Core.StudentLife
         private readonly ILocationStateCondition[] _conditions;
         private readonly ILocationStateEffect[] _effects;
 
-        public LocationState(string id, string displayNameKey, string descriptionKey, string locationId, int priority, ILocationStateCondition[] conditions, ILocationStateEffect[] effects)
+        public LocationState(string id, string displayNameKey, string descriptionKey, string locationId, int priority, ILocationStateCondition[] conditions, ILocationStateEffect[] effects, bool isHidden = false)
         {
             Id = id ?? string.Empty;
             DisplayNameKey = displayNameKey ?? string.Empty;
             DescriptionKey = string.IsNullOrEmpty(descriptionKey) ? DisplayNameKey : descriptionKey;
             LocationId = locationId ?? string.Empty;
             Priority = priority;
+            IsHidden = isHidden;
             _conditions = conditions ?? Array.Empty<ILocationStateCondition>();
             _effects = effects ?? Array.Empty<ILocationStateEffect>();
         }
@@ -103,6 +104,8 @@ namespace Rootborn.Core.StudentLife
         public string DescriptionKey { get; }
         public string LocationId { get; }
         public int Priority { get; }
+        /// <summary>아직 알려지지 않은 상태. 요약과 오늘 기록에 숨김으로 남는다.</summary>
+        public bool IsHidden { get; }
         public IReadOnlyList<ILocationStateCondition> Conditions => _conditions;
         public IReadOnlyList<ILocationStateEffect> Effects => _effects;
 
@@ -228,13 +231,13 @@ namespace Rootborn.Core.StudentLife
         public void AddPortals(string[] values) => AddIds(_portalIds, values);
         public void AddShopItems(string[] values) => AddIds(_shopItemIds, values);
 
-        /// <summary>숨김 여부는 원본처럼 항상 false다(숨은 상태를 정하는 데이터가 아직 없다).</summary>
+        /// <summary>숨김 여부는 첫 상태를 따른다(원본은 항상 false였다).</summary>
         public LocationStateSummaryModel Build()
         {
             var primary = _states.Count > 0 ? _states[0] : null;
             var stateIds = new string[_states.Count];
             for (int i = 0; i < _states.Count; i++) stateIds[i] = _states[i].Id;
-            return new LocationStateSummaryModel(_locationId, primary, stateIds, primary != null ? primary.DisplayNameKey : string.Empty, primary != null ? primary.DescriptionKey : string.Empty, false,
+            return new LocationStateSummaryModel(_locationId, primary, stateIds, primary != null ? primary.DisplayNameKey : string.Empty, primary != null ? primary.DescriptionKey : string.Empty, primary != null && primary.IsHidden,
                 _activityIds.ToArray(), _npcIds.ToArray(), _clueIds.ToArray(), _objectIds.ToArray(), _portalIds.ToArray(), _shopItemIds.ToArray());
         }
 

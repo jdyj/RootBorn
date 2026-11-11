@@ -130,6 +130,20 @@ namespace Rootborn.Core.Tests
         // 더한 경계
 
         [Test]
+        public void ChangedBehavior_HiddenStateMakesTheSummaryAndTodayRecordHidden()
+        {
+            var hidden = new LocationState("state.secret", "state.secret.name", "state.secret.description", "location.cafe", 1, null, null, isHidden: true);
+            var stateProgress = new LocationStateProgress("slot", "player");
+            var progress = new StudentLifeProgress("slot", "player", 10, 10, 0, 18 * 60);
+            var resolver = new LocationStateResolver(new LocationStateLookupCache(new[] { hidden }), LocationStateConflictMode.FallbackFirst);
+
+            var summary = resolver.Resolve(Context("location.cafe", "time.evening", progress, stateProgress: stateProgress));
+
+            Assert.That(summary.IsHidden, Is.True);
+            Assert.That(stateProgress.TodaySummary[0].Hidden, Is.True);
+        }
+
+        [Test]
         public void ResolveMarksPrimaryStateDiscoveredOnceAndFallbackModeTakesFirstMatch()
         {
             var first = State("state.first", "location.cafe", 1);

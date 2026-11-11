@@ -118,8 +118,8 @@ namespace Rootborn.Core.StudentLife
         }
 
         /// <summary>
-        /// 결과 기록에서 "+relationship.&lt;id&gt;=&lt;변화&gt;", "+status.&lt;id&gt;=&lt;변화&gt;"를 찾아 지금 값과 그 전 값을 만든다.
-        /// 원본처럼 '+'가 붙은 기록만 읽는다(음수 변화 기록은 '+'가 없어 빠진다). 정의 목록에 없는 id는 id를 이름으로, 상태는 내일까지 이어지는 것으로 본다.
+        /// 결과 기록에서 "relationship.&lt;id&gt;=&lt;변화&gt;", "status.&lt;id&gt;=&lt;변화&gt;"를 찾아 지금 값과 그 전 값을 만든다.
+        /// 양수 기록("+relationship.…")과 음수 기록('+' 없음)을 모두 읽는다(원본은 '+'가 붙은 것만 읽어 음수 변화가 빠졌다). 정의 목록에 없는 id는 id를 이름으로, 상태는 내일까지 이어지는 것으로 본다.
         /// </summary>
         public static StudentDayRelationshipConditionSummary BuildFromResultLogs(StudentLifeProgress progress, string[] resultLogIds, IReadOnlyList<RelationshipSummaryInfo> relationships, IReadOnlyList<StatusSummaryInfo> statuses)
         {
@@ -131,13 +131,13 @@ namespace Rootborn.Core.StudentLife
             {
                 string log = resultLogIds[i];
                 if (string.IsNullOrEmpty(log)) continue;
-                if (TryParseDelta(log, "+relationship.", out string relationshipId, out int relationshipDelta))
+                if (StudentResultLogDeltas.TryParse(log, "relationship.", out string relationshipId, out int relationshipDelta))
                 {
                     int afterValue = progress.GetRelationshipValue(relationshipId);
                     string display = TryFind(relationships, relationshipId, out var relationship) ? relationship.DisplayNameKey : relationshipId;
                     AddRelationship(relationshipEntries, impacts, relationshipId, display, afterValue - relationshipDelta, afterValue);
                 }
-                else if (TryParseDelta(log, "+status.", out string statusId, out int statusDelta))
+                else if (StudentResultLogDeltas.TryParse(log, "status.", out string statusId, out int statusDelta))
                 {
                     int afterValue = progress.GetStatusValue(statusId);
                     bool found = TryFind(statuses, statusId, out var status);
@@ -174,19 +174,32 @@ namespace Rootborn.Core.StudentLife
             for (int i = 0; i < values.Count; i++) if (values[i].Id.Length > 0 && values[i].Id == id) { found = values[i]; return true; }
             return false;
         }
+    }
 
-        /// <summary>표시 문자 다음 글자부터 '='까지가 id다(표시 문자 "+relationship."이면 id는 "relationship.…").</summary>
-        private static bool TryParseDelta(string log, string marker, out string id, out int delta)
+    /// <summary>결과 기록 "…:[+]&lt;종류&gt;.&lt;id&gt;=&lt;변화&gt;" 읽기. 종류 앞은 기록의 처음이거나 ':' 또는 '+'여야 한다.</summary>
+    public static class StudentResultLogDeltas
+    {
+        public static bool Has(string log, string kindPrefix) => TryParse(log, kindPrefix, out _, out _);
+
+        /// <summary>id는 종류를 포함한다("relationship.first-guide.trust").</summary>
+        public static bool TryParse(string log, string kindPrefix, out string id, out int delta)
         {
             id = string.Empty;
             delta = 0;
-            int markerIndex = log.IndexOf(marker, StringComparison.Ordinal);
-            if (markerIndex < 0) return false;
-            int idStart = markerIndex + 1;
-            int equals = log.IndexOf('=', idStart);
-            if (equals <= idStart) return false;
-            id = log.Substring(idStart, equals - idStart);
-            return int.TryParse(log.Substring(equals + 1), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out delta);
+            if (string.IsNullOrEmpty(log) || string.IsNullOrEmpty(kindPrefix)) return false;
+            int from = 0;
+            while (true)
+            {
+                int idStart = log.IndexOf(kindPrefix, from, StringComparison.Ordinal);
+                if (idStart < 0) return false;
+                from = idStart + 1;
+                if (idStart > 0 && log[idStart - 1] != ':' && log[idStart - 1] != '+') continue;
+                int equals = log.IndexOf('=', idStart);
+                if (equals <= idStart) return false;
+                if (!int.TryParse(log.Substring(equals + 1), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out delta)) return false;
+                id = log.Substring(idStart, equals - idStart);
+                return true;
+            }
         }
     }
 }

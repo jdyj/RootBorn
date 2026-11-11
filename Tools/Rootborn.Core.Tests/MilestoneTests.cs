@@ -221,22 +221,6 @@ namespace Rootborn.Core.Tests
         }
 
         [Test]
-        public void OutsideSchoolLogObjectiveFallbackCompletesOnAnyOutsideSchoolLogLikeTheOriginal()
-        {
-            // 원본 동작 그대로: 대상이 달라도 학교 밖 기록이 있으면 하루 결과 적용에서 그 목표를 채운다(버그로 보여 보고에 적음).
-            var objective = new OutsideSchoolLogMilestoneObjective("o", "skill.other", 3);
-            var milestone = Milestone("m", new MilestoneObjective[] { objective }, null, null, 1);
-            var student = new StudentLifeProgress("slot", "player", 8, 8);
-            student.RecordActivityCompleted("a", new[] { OutsideSchoolLogCodec.EncodeDelta("a", "skill.unrelated", 1) });
-
-            Assert.That(objective.Evaluate(new MilestoneEvaluationContext(student, null, null)).Current, Is.Zero);
-            var progress = new MilestoneProgress("slot", "player", new[] { milestone });
-            progress.ApplyDayResult(new[] { milestone }, student, null, "d");
-            Assert.That(progress.GetObjectiveProgress(milestone, objective), Is.EqualTo(3));
-            Assert.That(progress.IsCompleted(milestone), Is.True);
-        }
-
-        [Test]
         public void SaveFileNameAndFallbackMilestoneAndActiveSummary()
         {
             Assert.That(MilestoneProgressPersistence.FileNameFor("local-player"), Is.EqualTo("milestone-progress.json"));
@@ -251,6 +235,22 @@ namespace Rootborn.Core.Tests
             Assert.That(summary.ProgressLines, Is.EqualTo(new[] { "milestone.open-ended-town-growth active" }));
             var restored = MilestoneProgress.FromSaveData(null, null);
             Assert.That(restored.PlayerId, Is.EqualTo("player"));
+        }
+
+        [Test]
+        public void ChangedBehavior_DayResultDoesNotFillATargetedObjectiveFromAnotherTargetsLog()
+        {
+            var objective = new OutsideSchoolLogMilestoneObjective("study-anywhere", "skill-study", 2);
+            var anyObjective = new OutsideSchoolLogMilestoneObjective("anything-outside", string.Empty, 1);
+            var milestone = Milestone("find-my-study", new MilestoneObjective[] { objective, anyObjective }, null, null, 2);
+            var progress = new StudentLifeProgress("slot-a", "player-a", 12, 10);
+            progress.RecordActivityCompleted("cafe-help", new[] { OutsideSchoolLogCodec.EncodeDelta("cafe-help", "skill-other", -1) });
+            var milestoneProgress = new MilestoneProgress("slot-a", "player-a", new[] { milestone });
+
+            milestoneProgress.ApplyDayResult(new[] { milestone }, progress, new ItemInventory(), "day-1");
+
+            Assert.That(milestoneProgress.GetObjectiveProgress(milestone, objective), Is.EqualTo(0), "다른 대상의 기록은 이 목표를 채우지 않는다.");
+            Assert.That(milestoneProgress.GetObjectiveProgress(milestone, anyObjective), Is.EqualTo(1), "대상이 없는 목표는 학교 밖 기록 하나로 채워진다.");
         }
     }
 }

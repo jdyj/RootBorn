@@ -93,6 +93,7 @@ namespace Rootborn.Core.Tests
             var progress = new StudentLifeProgress("slot", "player", 8, 8);
             progress.AddRelationship(Trust.Id, 3);
             progress.AddStatus("status.unknown", 2);
+            progress.AddStatus("status.fatigue", 3);
             var logs = new[]
             {
                 "activity.help:+relationship.first-guide.trust=2", "activity.rest:+status.unknown=2", "activity.rest:status.fatigue=-1", "noise", null,
@@ -103,10 +104,13 @@ namespace Rootborn.Core.Tests
             Assert.AreEqual(1, summary.RelationshipEntries.Length);
             Assert.AreEqual("Guide Trust", summary.RelationshipEntries[0].DisplayName);
             Assert.AreEqual(1, summary.RelationshipEntries[0].BeforeValue);
-            Assert.AreEqual(1, summary.StatusEntries.Length, "음수 변화 기록은 '+'가 없어 읽지 않는다(원본과 같음).");
+            Assert.AreEqual(2, summary.StatusEntries.Length, "음수 변화 기록('+' 없음)도 읽는다.");
+            Assert.AreEqual("status.fatigue", summary.StatusEntries[1].StatusId);
+            Assert.AreEqual(-1, summary.StatusEntries[1].Delta);
+            Assert.AreEqual(4, summary.StatusEntries[1].BeforeValue);
             Assert.AreEqual("status.unknown", summary.StatusEntries[0].DisplayName);
             Assert.IsTrue(summary.StatusEntries[0].PersistsToNextDay);
-            CollectionAssert.AreEqual(new[] { "Guide Trust affects tomorrow's NPC response.", "status.unknown carries into tomorrow." }, summary.NextDayImpacts);
+            CollectionAssert.AreEqual(new[] { "Guide Trust affects tomorrow's NPC response.", "status.unknown carries into tomorrow.", "status.fatigue carries into tomorrow." }, summary.NextDayImpacts);
             Assert.IsEmpty(StudentDayRelationshipConditionSummaryBuilder.BuildFromResultLogs(null, logs, null, null).StatusEntries);
             Assert.IsEmpty(StudentDayRelationshipConditionSummaryBuilder.Build(progress, progress, new[] { Trust }, null).RelationshipEntries);
         }

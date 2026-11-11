@@ -153,8 +153,8 @@ namespace Rootborn.Core.StudentLife
         public string[] GetTodayResultLogIds() => _todayResultLogIds.ToArray();
         public string[] GetPreviousDayActivityIds() => _previousDayActivityIds.ToArray();
         public string[] GetPreviousDayResultLogIds() => _previousDayResultLogIds.ToArray();
-        public string[] GetPreviousDayRelationshipDeltas() => FilterLogs(_previousDayResultLogIds, "+relationship.");
-        public string[] GetPreviousDayStatusDeltas() => FilterLogs(_previousDayResultLogIds, "+status.");
+        public string[] GetPreviousDayRelationshipDeltas() => FilterLogs(_previousDayResultLogIds, "relationship.");
+        public string[] GetPreviousDayStatusDeltas() => FilterLogs(_previousDayResultLogIds, "status.");
 
         /// <summary>하루를 정산한다. 같은 날을 두 번 정산하지 않는다. 요약은 실패해도 채워진다.</summary>
         public bool TryEndDay(DayEndRuleSet rules, out StudentDaySummary summary)
@@ -231,7 +231,7 @@ namespace Rootborn.Core.StudentLife
         {
             var result = new List<string>();
             for (int i = 0; i < logs.Count; i++)
-                if (!string.IsNullOrEmpty(logs[i]) && logs[i].Contains(marker)) result.Add(logs[i]);
+                if (StudentResultLogDeltas.Has(logs[i], marker)) result.Add(logs[i]);
             return result.ToArray();
         }
     }
