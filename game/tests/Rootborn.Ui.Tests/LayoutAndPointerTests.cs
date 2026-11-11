@@ -73,10 +73,14 @@ namespace Rootborn.Ui.Tests
         }
 
         [Test]
-        public void OtherAspect_BalancesWidthAndHeight_LikeCanvasScalerMatchHalf()
+        public void OtherAspect_KeepsWholeReferenceAreaOnScreen_LikeCanvasScalerExpand()
         {
             ScreenFit fit = ScreenFit.For(2560, 1080);
-            Assert.That(fit.Scale, Is.EqualTo(System.MathF.Sqrt(2560f / 1920f)).Within(1e-5));
+            Assert.That(fit.Scale, Is.EqualTo(1f).Within(1e-5), "세로가 기준과 같으니 배율 1, 남는 가로는 논리 공간이 된다");
+            Assert.That(fit.LogicalHeight, Is.GreaterThanOrEqualTo(1080f - 1e-2));
+            ScreenFit tall = ScreenFit.For(1920, 1200);
+            Assert.That(tall.LogicalWidth, Is.GreaterThanOrEqualTo(1920f - 1e-2));
+            Assert.That(tall.LogicalHeight, Is.EqualTo(1200f).Within(1e-2));
             Assert.That(fit.LogicalWidth * fit.Scale, Is.EqualTo(2560f).Within(1e-2));
             Assert.That(fit.LogicalHeight * fit.Scale, Is.EqualTo(1080f).Within(1e-2));
         }

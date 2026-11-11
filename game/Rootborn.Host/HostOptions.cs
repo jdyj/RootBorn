@@ -23,6 +23,10 @@ namespace Rootborn.Host
         public string FontPath;
         public string EvidenceDir;
         public int Width = 1280, Height = 720;
+        /// <summary>--size로 창 크기를 줬다(그러면 처음에 창 모드로 띄운다).</summary>
+        public bool SizeGiven;
+        /// <summary>--fullscreen이면 true, --windowed면 false, 둘 다 없으면 null(저장된 설정 → 기본값).</summary>
+        public bool? FullscreenRequested;
 
         /// <summary>견본 화면을 띄운다.</summary>
         public bool Sample;
@@ -94,6 +98,14 @@ namespace Rootborn.Host
             {
                 string arg = args[i];
                 if (arg == "--sample") { o.Sample = true; continue; }
+                if (arg == "--fullscreen" || arg == "--windowed")
+                {
+                    bool fullscreen = arg == "--fullscreen";
+                    if (o.FullscreenRequested.HasValue && o.FullscreenRequested.Value != fullscreen)
+                        throw new InvalidOperationException("--fullscreen 과 --windowed 는 함께 줄 수 없다");
+                    o.FullscreenRequested = fullscreen;
+                    continue;
+                }
                 if (i + 1 >= args.Length) throw new InvalidOperationException("값이 빠진 인자: " + arg);
                 string value = args[++i];
                 switch (arg)
@@ -123,6 +135,7 @@ namespace Rootborn.Host
                         string[] wh = value.Split('x');
                         if (wh.Length != 2 || !int.TryParse(wh[0], out o.Width) || !int.TryParse(wh[1], out o.Height) || o.Width < 320 || o.Height < 180)
                             throw new InvalidOperationException("--size 는 1280x720 같은 꼴로 준다(최소 320x180): " + value);
+                        o.SizeGiven = true;
                         break;
                     default: throw new InvalidOperationException("모르는 인자: " + arg);
                 }

@@ -43,6 +43,8 @@ namespace Rootborn.Host.Input
         public bool HeldUp, HeldDown, HeldLeft, HeldRight;
         /// <summary>가구 배치 카메라(Unity HousePlacementCameraController): F 전체 보기(눌림), = 또는 키패드 + 가까이·- 멀리(누르고 있음).</summary>
         public bool FullView, ZoomInHeld, ZoomOutHeld;
+        /// <summary>F11: 창 모드 ↔ 테두리 없는 전체 화면(Unity 판과 같은 키).</summary>
+        public bool ToggleDisplay;
 
         /// <summary>누르고 있는 방향 키로 정한 걷기 방향(-1, 0, 1). 반대 방향을 함께 누르면 0.</summary>
         public int MoveX => (HeldRight ? 1 : 0) - (HeldLeft ? 1 : 0);
@@ -69,6 +71,7 @@ namespace Rootborn.Host.Input
                 Inventory = Pressed(now, Keys.I),
                 Status = Pressed(now, Keys.C),
                 Screenshot = Pressed(now, Keys.F12),
+                ToggleDisplay = Pressed(now, Keys.F11),
                 Interact = Pressed(now, Keys.E) || Pressed(now, Keys.Space) || Pressed(now, Keys.LeftControl) || Pressed(now, Keys.RightControl),
                 Space = Pressed(now, Keys.Space),
                 Rotate = Pressed(now, Keys.R),

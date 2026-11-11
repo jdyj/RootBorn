@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Rootborn.Host.Display;
 using Rootborn.Host.Input;
 using Rootborn.Host.Rendering;
 using Rootborn.Host.Sample;
@@ -84,12 +85,100 @@ namespace Rootborn.Host
                 PreferredBackBufferWidth = options.Width,
                 PreferredBackBufferHeight = options.Height,
                 SynchronizeWithVerticalRetrace = !options.TestMode,
+                HardwareModeSwitch = false, // 전체 화면은 테두리 없는 창(Unity fullscreenMode 3) — 모니터 해상도를 바꾸지 않는다
             };
             IsFixedTimeStep = false;
             if (options.TestMode) InactiveSleepTime = TimeSpan.Zero;
             IsMouseVisible = true;
             Window.AllowUserResizing = !options.TestMode;
             Window.Title = "ROOTBORN";
+
+            _windowedSize = (options.Width, options.Height);
+            _minimumSize = DisplayChoice.MinimumSize(options.Width, options.Height);
+            if (Settings.Settings.TryGetToggle(DisplayChoice.FullscreenSetting, out bool saved)) SavedFullscreen = saved;
+            Fullscreen = DisplayChoice.StartFullscreen(options.FullscreenRequested, options.SizeGiven, options.TestMode, SavedFullscreen);
+            if (Fullscreen) PrepareFullscreen();
+            Window.ClientSizeChanged += OnClientSizeChanged;
+        }
+
+        // ---------- 창 모드와 전체 화면 ----------
+
+        private (int Width, int Height) _windowedSize;
+        private readonly (int Width, int Height) _minimumSize;
+        private bool _applyingSize;
+
+        /// <summary>
+        /// 지금 표시 모드가 테두리 없는 전체 화면인가(F11로 바꾼다). 테스트 모드는 이 값만 바꾸고 실제 창은 창 모드 그대로 둔다
+        /// (테스트용 이음매 — 테스트가 사용자의 화면을 덮지 않는다).
+        /// </summary>
+        public bool Fullscreen { get; private set; }
+
+        /// <summary>시작할 때 설정 파일에서 읽은 표시 모드(없으면 null).</summary>
+        public bool? SavedFullscreen { get; }
+
+        /// <summary>창 모드로 돌아갈 때의 창 크기(전체 화면으로 가기 전 크기, 또는 마지막으로 바꾼 크기).</summary>
+        public (int Width, int Height) WindowedSize => _windowedSize;
+
+        /// <summary>창을 이보다 작게 줄이지 못한다(1280x720, 그보다 작은 --size로 띄웠으면 그 크기).</summary>
+        public (int Width, int Height) MinimumWindowSize => _minimumSize;
+
+        /// <summary>창 모드 ↔ 테두리 없는 전체 화면. 고른 모드는 설정 파일에 남겨 다음 실행이 따른다(실행 인자가 있으면 인자가 먼저).</summary>
+        public void ToggleFullscreen()
+        {
+            Fullscreen = !Fullscreen;
+            Settings.Settings.SetToggle(DisplayChoice.FullscreenSetting, Fullscreen);
+            Settings.Save();
+            if (_options.TestMode) return;
+            if (Fullscreen)
+            {
+                _windowedSize = (GraphicsDevice.PresentationParameters.BackBufferWidth, GraphicsDevice.PresentationParameters.BackBufferHeight);
+                PrepareFullscreen();
+            }
+            else
+            {
+                _graphics.IsFullScreen = false;
+                _graphics.PreferredBackBufferWidth = _windowedSize.Width;
+                _graphics.PreferredBackBufferHeight = _windowedSize.Height;
+            }
+            ApplySize();
+        }
+
+        /// <summary>테두리 없는 전체 화면: 화면 버퍼를 모니터 크기로.</summary>
+        private void PrepareFullscreen()
+        {
+            DisplayMode mode = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode;
+            _graphics.PreferredBackBufferWidth = mode.Width;
+            _graphics.PreferredBackBufferHeight = mode.Height;
+            _graphics.IsFullScreen = true;
+        }
+
+        private void ApplySize()
+        {
+            _applyingSize = true;
+            try { _graphics.ApplyChanges(); }
+            finally { _applyingSize = false; }
+            EnsureScene();
+        }
+
+        /// <summary>사람이 창 가장자리를 끌어 크기를 바꿨다: 화면 버퍼를 창에 맞춘다(배치는 다음 프레임의 EnsureScene이 다시 한다).</summary>
+        private void OnClientSizeChanged(object sender, EventArgs e)
+        {
+            if (_applyingSize || Fullscreen || GraphicsDevice == null) return;
+            Rectangle bounds = Window.ClientBounds;
+            if (bounds.Width <= 0 || bounds.Height <= 0) return;
+            (int w, int h) = DisplayChoice.ClampToMinimum(bounds.Width, bounds.Height, _minimumSize);
+            _windowedSize = (w, h);
+            PresentationParameters pp = GraphicsDevice.PresentationParameters;
+            if (pp.BackBufferWidth == w && pp.BackBufferHeight == h) return;
+            _graphics.PreferredBackBufferWidth = w;
+            _graphics.PreferredBackBufferHeight = h;
+            ApplySize();
+        }
+
+        protected override void Initialize()
+        {
+            base.Initialize();
+            Sdl2Native.SetWindowMinimumSize(Window.Handle, _minimumSize.Width, _minimumSize.Height);
         }
 
         protected override void LoadContent()
@@ -345,13 +434,15 @@ namespace Rootborn.Host
             EnsureScene();
         }
 
-        /// <summary>창 크기를 바꾼다.</summary>
+        /// <summary>창 크기를 바꾼다(창 모드). 최소 크기보다 작게 주면 최소 크기에서 멈춘다.</summary>
         public void Resize(int width, int height)
         {
+            (width, height) = DisplayChoice.ClampToMinimum(width, height, _minimumSize);
+            _windowedSize = (width, height);
+            if (Fullscreen && !_options.TestMode) return; // 전체 화면이면 창 모드로 돌아갈 때 쓴다
             _graphics.PreferredBackBufferWidth = width;
             _graphics.PreferredBackBufferHeight = height;
-            _graphics.ApplyChanges();
-            EnsureScene();
+            ApplySize();
         }
 
         /// <summary>화면 버퍼와 배율, 배치를 지금 창 크기에 맞춘다.</summary>
@@ -383,6 +474,7 @@ namespace Rootborn.Host
             _tree.UpdatePointer(pointer.X / Fit.Scale, pointer.Y / Fit.Scale, pointer.LeftDown, pointer.Wheel);
 
             KeyFrame keys = _keyboard.Read();
+            if (keys.ToggleDisplay) ToggleFullscreen();
             if (Screens != null && World != null) UpdateWorld(keys, gameTime, pointer);
             else if (Screens != null) UpdateMenu(keys);
             else

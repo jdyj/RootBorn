@@ -41,6 +41,7 @@ dotnet run --project game/Rootborn.Host -- --save-root <세이브 폴더> --slot
 | `--font <TTF>` | `ROOTBORN_FONT` | 운영체제 한글 글꼴을 찾는다. 못 찾으면 오류 |
 | `--evidence <폴더>` | `ROOTBORN_EVIDENCE_DIR` | `<저장소>/output/host-ui-evidence` |
 | `--size 1280x720` | | 1280x720 |
+| `--fullscreen` / `--windowed` | | 설정 파일에 저장된 표시 모드(F11로 바꾸면 저장된다), 그것도 없으면 테두리 없는 전체 화면. `--size`를 주면 창 모드. 테스트 모드는 늘 창 모드. 창은 1280x720(그보다 작은 `--size`면 그 크기)보다 작게 줄지 않는다 |
 | `--sample` | | UI 견본 화면 |
 | `--world <맵>` | | 월드 화면. 맵 id(Unity 씬 이름) 또는 LDtk 레벨 이름(예: Shop, Town, House) |
 | `--spawn <도착 지점>` | | 맵 목록에서 그 맵의 첫 도착 지점 |

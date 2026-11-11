@@ -6,7 +6,7 @@ namespace Rootborn.Host.Input
 {
     /// <summary>
     /// SDL2를 직접 부르는 유일한 곳. MonoGame(DesktopGL)이 공개하지 않는 기능만 쓴다:
-    /// 조합 중 글자 이벤트 받기, 글자 입력 켜고 끄기, 그리고 테스트용 이벤트 넣기.
+    /// 조합 중 글자 이벤트 받기, 글자 입력 켜고 끄기, 창 최소 크기, 그리고 테스트용 이벤트 넣기.
     /// MonoGame이 함께 배포하는 SDL2 라이브러리를 그대로 쓴다. MonoGame 버전을 올릴 때 이 파일을 먼저 확인한다.
     /// 구조체 자리는 SDL 2.x의 SDL_TextEditingEvent, SDL_TextInputEvent, SDL_KeyboardEvent 기준이다.
     /// </summary>
@@ -40,6 +40,8 @@ namespace Rootborn.Host.Input
         [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] private static extern void SDL_SetTextInputRect(ref Rect rect);
         [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] private static extern int SDL_PushEvent(byte* evt);
         [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] private static extern uint SDL_GetWindowID(IntPtr window);
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] private static extern void SDL_SetWindowMinimumSize(IntPtr window, int minW, int minH);
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] private static extern void SDL_GetWindowMinimumSize(IntPtr window, out int w, out int h);
 
         private static EventFilter _filter; // 가비지 수집되지 않게 잡아 둔다
         private static Action<string> _onEditing;
@@ -67,6 +69,15 @@ namespace Rootborn.Host.Input
             if (_filter != null) SDL_DelEventWatch(_filter, IntPtr.Zero);
             _filter = null;
             _onEditing = null;
+        }
+
+        /// <summary>창을 이보다 작게 줄이지 못하게 한다(MonoGame이 창 최소 크기를 공개하지 않는다).</summary>
+        public static void SetWindowMinimumSize(IntPtr window, int width, int height) => SDL_SetWindowMinimumSize(window, width, height);
+
+        public static (int Width, int Height) GetWindowMinimumSize(IntPtr window)
+        {
+            SDL_GetWindowMinimumSize(window, out int w, out int h);
+            return (w, h);
         }
 
         public static void StartTextInput() => SDL_StartTextInput();
