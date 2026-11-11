@@ -76,18 +76,22 @@ namespace Rootborn.Game.Tests
         {
             using var saves = new TempSaves();
             var game = TestWorld.Start(saves.Store);
-            // 낮에 체력을 2까지 쓴다(자습은 체력 1·집중 2, 이웃 돕기는 체력 1·집중 0).
+            // 낮에 체력을 쓴다(이웃 돕기는 체력 1·집중 0). 활동이 얼마나 걸리든(data/의 값) 취침 시각 전에 끝나게 오후 5시 전에만 시작한다.
             int n = 0;
-            while (game.Student.Energy > 2)
+            while (game.Student.Energy > 2 && game.Student.TimeMinutes < 17 * 60)
                 Assert.That(game.PerformOutsideSchoolActivity("outside.help-neighbor", "flow:help:" + n++).Kind, Is.EqualTo(LifeActivityResultKind.Applied));
+            Assert.That(game.Student.TimeMinutes, Is.LessThan(22 * 60), "준비: 낮 활동이 취침 시각 전에 끝났다");
+            int atBedtime = game.Student.Energy;
+            Assert.That(atBedtime, Is.InRange(1, 11), "준비: 체력을 썼고 남아 있다");
             PassUntil(game, 22 * 60);
-            Assert.That(game.Student.Energy, Is.EqualTo(2), "취침 시각까지는 줄지 않는다");
+            Assert.That(game.Student.Energy, Is.EqualTo(atBedtime), "취침 시각까지는 줄지 않는다");
             Assert.That(game.MinutesUntilBedtime, Is.EqualTo(0));
 
-            PassHours(game, 1);
-            Assert.That(game.Student.Energy, Is.EqualTo(1), "23:00");
-            PassHours(game, 1);
-            Assert.That(game.Student.Energy, Is.EqualTo(0));
+            for (int late = 1; late <= atBedtime; late++)
+            {
+                PassHours(game, 1);
+                Assert.That(game.Student.Energy, Is.EqualTo(atBedtime - late), "취침 시각 뒤 " + late + "시간");
+            }
             Assert.That(game.IsExhausted, Is.True);
             Assert.That(game.PerformOutsideSchoolActivity(LibraryStudy, "flow:exhausted").Kind, Is.Not.EqualTo(LifeActivityResultKind.Applied));
             Assert.That(game.PerformLocationActivity("opening.introduce.restaurant", "flow:free").Kind, Is.Not.EqualTo(LifeActivityResultKind.Applied),
@@ -95,7 +99,7 @@ namespace Rootborn.Game.Tests
 
             var again = TestWorld.Start(saves.Store);
             Assert.That(again.IsExhausted, Is.True, "지침은 저장된다");
-            Assert.That(again.ClockMinutes, Is.EqualTo(0), "00:00");
+            Assert.That(again.ClockMinutes, Is.EqualTo((22 + atBedtime) % 24 * 60), "체력이 0이 된 시각");
             PassHours(again, 1);
             Assert.That(again.Student.Energy, Is.EqualTo(0));
         }
@@ -108,11 +112,11 @@ namespace Rootborn.Game.Tests
             var topics = new List<string>();
             game.Changed += topics.Add;
             int n = 0;
-            while (game.Student.Energy > 3)
+            while (game.Student.Energy > 3 && game.Student.TimeMinutes < 17 * 60) // 활동 길이(data/)와 무관하게 낮에만 한다
                 game.PerformOutsideSchoolActivity("outside.help-neighbor", "flow:help:" + n++);
             int focus = game.Student.Focus;
 
-            PassHours(game, 24); // 낮을 지나 밤을 새고 07:00을 넘긴다
+            for (int hour = 0; hour < 30 && game.Student.CurrentDay == 1; hour++) PassHours(game, 1); // 낮을 지나 밤을 새고 07:00을 넘긴다
             Assert.That(game.Student.CurrentDay, Is.EqualTo(2), "07:00에 날이 넘어간다");
             Assert.That(game.Student.DayState, Is.EqualTo(StudentDayState.InProgress), "자지 않은 날은 곧바로 다음 날이 열린다");
             Assert.That(game.LastDayResult.Ended, Is.True, "어제의 결과는 남는다");
