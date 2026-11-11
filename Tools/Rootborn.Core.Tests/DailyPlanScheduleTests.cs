@@ -59,7 +59,7 @@ namespace Rootborn.Core.Tests
             _activity = new FakeLocationActivity("activity.study", null, "SelfStudy");
             _route = Route("route.study");
             _other = Route("route.alternative");
-            _set = new DailyPlanRouteSet("set", "Plans", new[] { _route, _other }, 1);
+            _set = new DailyPlanRouteSet("set", "Plans", new[] { _route, _other }, 2); // 같은 길을 두 칸에 넣는 시나리오가 있어 하루 2번까지 허용한다
         }
 
         [Test]

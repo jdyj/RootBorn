@@ -128,6 +128,9 @@ namespace Rootborn.Core.StudentLife
         private bool AssignAt(int index, DailyPlanRoute route)
         {
             if (index < 0 || index >= _slots.Count || _slots[index].Completed || _slots[index].RouteId == route.Id) return false;
+            int used = 0;
+            for (int i = 0; i < _slots.Count; i++) if (i != index && _slots[i].RouteId == route.Id) used++;
+            if (used >= route.MaxSelectionsPerDay) return false;
             var slot = _slots[index];
             slot.RouteId = route.Id;
             slot.NextHintKey = route.NextHintKey;

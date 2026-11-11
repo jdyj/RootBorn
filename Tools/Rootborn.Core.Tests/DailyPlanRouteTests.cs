@@ -471,7 +471,7 @@ namespace Rootborn.Core.Tests
                 Student.ConfigureCalendar(Calendar);
                 Route = new DailyPlanRoute("route.fixture", "Plan", null, "SelfStudy", new IDailyPlanLocationActivity[] { Activity }, new[] { Practice }, new IMinigamePartTimeWork[] { Work },
                     null, new IDailyPlanRouteOutcome[] { new TraitOutcome(Trait) }, "Plan title", "Plan detail", "Plan next");
-                Sets = new[] { new DailyPlanRouteSet("set.fixture", "Plan set", new[] { Route }, 1) };
+                Sets = new[] { new DailyPlanRouteSet("set.fixture", "Plan set", new[] { Route }, 2) }; // 같은 길을 두 칸에 넣는 시나리오라 하루 2번까지 허용한다
             }
 
             public void Assign(int slot) => Assert.That(Student.DailyPlan.TryAssignSlot(slot, Route, Student), Is.True);

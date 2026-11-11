@@ -49,6 +49,11 @@ namespace Rootborn.Core.StudentLife
         public string ObjectiveDetailKey => string.IsNullOrEmpty(_objectiveDetailKey) ? DisplayNameKey : _objectiveDetailKey;
         public string NextHintKey { get; }
 
+        /// <summary>하루에 이 길을 넣을 수 있는 계획 칸 수. 길이 속한 묶음이 정한다(여러 묶음이면 가장 작은 값). 묶음에 없으면 제한이 없다.</summary>
+        public int MaxSelectionsPerDay { get; private set; } = int.MaxValue;
+
+        internal void LimitSelectionsPerDay(int max) => MaxSelectionsPerDay = Math.Min(MaxSelectionsPerDay, Math.Max(1, max));
+
         public bool IsAvailable(StudentLifeProgress progress) => IsAvailable(new DailyPlanRouteContext(progress));
 
         public bool IsAvailable(DailyPlanRouteContext context)
@@ -110,11 +115,13 @@ namespace Rootborn.Core.StudentLife
             DisplayNameKey = string.IsNullOrEmpty(displayNameKey) ? Id : displayNameKey;
             _routes = routes ?? Array.Empty<DailyPlanRoute>();
             _maxSelectionsPerDay = maxSelectionsPerDay;
+            for (int i = 0; i < _routes.Length; i++) _routes[i]?.LimitSelectionsPerDay(MaxSelectionsPerDay);
         }
 
         public string Id { get; }
         public string DisplayNameKey { get; }
         public IReadOnlyList<DailyPlanRoute> Routes => _routes;
+        /// <summary>이 묶음의 길 하나를 하루에 몇 칸까지 넣을 수 있는지(데이터 값, 1 이상). Unity 판에서는 쓰이지 않던 값이다.</summary>
         public int MaxSelectionsPerDay => Math.Max(1, _maxSelectionsPerDay);
 
         public DailyPlanRoute[] GetAvailableRoutes(StudentLifeProgress progress) => GetAvailableRoutes(new DailyPlanRouteContext(progress));

@@ -115,5 +115,51 @@ namespace Rootborn.Core.Tests
             Assert.That(student.HasPendingMinigame, Is.False);
             Assert.That(student.HasAppliedRequest("attempt-1"), Is.True, "포기한 요청은 쓴 것으로 남아 다시 정산하지 못한다.");
         }
+
+        private static DailyPlanRoute PlanRoute(string id) => new DailyPlanRoute(id, id, null, null, null, null, null, null, null, null, null, null);
+
+        private static StudentLifeProgress StudentWithThreeSlots()
+        {
+            var student = new StudentLifeProgress("slot", "player", 10, 10);
+            student.ConfigureCalendar(new LifeCalendar(3, 3));
+            student.DailyPlan.SynchronizeDay(student);
+            return student;
+        }
+
+        [Test]
+        public void ChangedBehavior_TheSameRouteFillsOnlyAsManySlotsADayAsItsSetAllows()
+        {
+            var once = PlanRoute("route.once");
+            var other = PlanRoute("route.other");
+            new DailyPlanRouteSet("set", null, new[] { once, other }, 1);
+            var student = StudentWithThreeSlots();
+
+            Assert.That(student.DailyPlan.TryAssignSlot(0, once, student), Is.True);
+            Assert.That(student.DailyPlan.TryAssignSlot(1, once, student), Is.False, "같은 길은 하루 한 번까지.");
+            Assert.That(student.DailyPlan.Slots[1].RouteId, Is.Empty);
+            Assert.That(student.DailyPlan.TryAssignSlot(1, other, student), Is.True);
+            Assert.That(student.DailyPlan.TryAssignSlot(0, other, student), Is.False);
+        }
+
+        [Test]
+        public void TheDailyLimitOfARoute_ComesFromData()
+        {
+            var twice = PlanRoute("route.twice");
+            var set = new DailyPlanRouteSet("set", null, new[] { twice }, 2);
+            var student = StudentWithThreeSlots();
+
+            Assert.That(set.MaxSelectionsPerDay, Is.EqualTo(2));
+            Assert.That(student.DailyPlan.TryAssignSlot(0, twice, student), Is.True);
+            Assert.That(student.DailyPlan.TryAssignSlot(1, twice, student), Is.True);
+            Assert.That(student.DailyPlan.TryAssignSlot(2, twice, student), Is.False);
+        }
+
+        [Test]
+        public void ARouteOutsideAnySet_HasNoDailyLimit()
+        {
+            var free = PlanRoute("route.free");
+            var student = StudentWithThreeSlots();
+            for (int i = 0; i < 3; i++) Assert.That(student.DailyPlan.TryAssignSlot(i, free, student), Is.True);
+        }
     }
 }
