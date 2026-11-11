@@ -88,7 +88,7 @@ namespace Rootborn.Screens
             r.Add(Location, ScreenLayer.Modal, blocksMovement: true, s => new LocationScreen(s)).OpenedByInteraction(LocationScreen.InteractionKind);
             r.Add(DayResult, ScreenLayer.Modal, blocksMovement: true, s => new DayResultScreen(s)).OpenedByInteraction(DayResultScreen.InteractionKind);
             // 미니게임은 예약이 생기면 연다(Unity MinigamePresentationBridge). 일터·연습 지점은 상호작용 종류로 등록한다.
-            r.Add(Minigame, ScreenLayer.Modal, blocksMovement: true, s => new MinigameScreen(s));
+            r.Add(Minigame, ScreenLayer.Modal, blocksMovement: true, s => new MinigameScreen(s)).GuidesKeys(MinigameScreen.KeyGuideRows);
             r.AddListener(s => new MinigameTrigger(s, Minigame));
             // 목표 수첩(Tab, 큰 패널, 이동을 막지 않음). 목표성 UI는 수첩이 소유한다(objective-journal-ui 규칙).
             r.Add(ObjectiveJournal, ScreenLayer.Panel, blocksMovement: false, s => new ObjectiveJournalScreen(s)).OpenedBy(ScreenKey.Tab);

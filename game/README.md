@@ -14,11 +14,15 @@
 | `Rootborn.Screens` | 화면들, 화면 쌓기(`ScreenStack`, `GameSession.Changed`를 받아 열린 화면에 넘긴다), 등록 표(`ScreenCatalog`), 현지화 문구(`GameText`), 언어 고르기(`LanguageChoice`), 설정 저장(`SettingsStore`) | 없음 |
 | `Rootborn.Net` | 멀티플레이 바탕: 전송 인터페이스(`ITransport`)와 같은 프로세스 전송(`LoopbackNetwork`, 지연·손실·순서 바뀜)·UDP 전송(`UdpTransport`, LiteNetLib 1.3.5 고정), 메시지 종류 등록 표(`RootbornMessages`, 종류 번호 + 형식 버전 + 이진 몸통), 접속 세션(`SessionServer`·`SessionClient`: 승인·신원·위치·겉모습·공용 시간). 각자 자기 판을 돌리는 모델이라 진행은 보내지 않는다. 규칙(정원, 도착 자리, 공용 시간, 사이 메우기)은 Core `Rootborn.Core.Network` | 없음 |
 | `Rootborn.Host` | 창, 화면 배율, 입력 장치 계층, 한글 조합 입력, TTF 글자, 그리기, 화면 저장, 견본 화면, 방 접속(`Net/RoomConnection`)과 다른 참가자 그리기(`World/RemoteAvatars`) | 3.8.6.1 고정 |
+| `Rootborn.Host` | 창, 화면 배율, 입력 장치 계층, 한글 조합 입력, TTF 글자, 그리기, 화면 저장, 견본 화면 | 3.8.6.1 고정 |
+| `Rootborn.Server` | 화면 없는 데디케이티드 서버(방 하나): 인자 읽기 → 데이터 읽기 → 슬롯 열기 → UDP로 듣기 → 고정 간격 루프 → 끝낼 때 저장하고 닫기. 방의 논리는 `Rootborn.Net/Room`(`RoomServer`). 인자는 아래 "서버" | 없음 |
 | `tests/Rootborn.Data.Tests` | 정의 로더, 실제 `data/` 전체 읽기, 세이브 저장소, Unity 판 QA 세이브 고정 파일 | 없음 |
 | `tests/Rootborn.World.Tests` | 모든 맵에 도는 새 맵 검사(`MapContractTests`, 지금 맵의 알려진 문제 고정), 새 게임 자리에서 메인 체인 지점까지 걷기(`MainChainWalkTests`), 실제 LDtk로 맵 만들기, Unity 씬에 구워진 충돌과 칸 단위 대조, 도착 지점·문 목적지, 크기가 다른 집, 장면 목록·고정 세이브, 캐릭터 그림, 낮밤, 상호작용 데이터 | 없음 |
 | `tests/Rootborn.Game.Tests` | 실제 `data/`와 임시 폴더 저장소로 새 게임 초기값, 메인 체인 끝까지(화면 없이, 가구 방 칸은 실제 집 맵), 성인기, 보상 한 번만, Unity QA 세이브·스냅샷 이전 슬롯 이어 하기 | 없음 |
 | `tests/Rootborn.Net.Tests` | 같은 프로세스 전송으로 서버 1 + 클라이언트 여럿(승인·정원 초과, 서로 보임, 맵 옮김, 하루 끝 준비, 늦게 들어온 사람, 끊김·재접속·시간 초과, 손실·지연·순서 바뀜, 깨진 메시지), 메시지 형식, UDP 루프백(포트는 운영체제가 준다) | 없음 |
 | `tests/Rootborn.Ui.Tests` | 화면 없이 도는 테스트 | 없음 |
+| `tests/Rootborn.Server.Tests` | 서버 인자(`ServerOptionsTests`), 데이터 지문, 방 루프·방 서버(메모리 저장소), 빌드한 서버를 별도 프로세스로 띄워 루프백 UDP로 들어가기(`ServerProcessTests`, 두 기계·Steam 아님) | 없음 |
+| `tests/Rootborn.Simulation.Tests` | 대본 없이 정책이 화면에 보이는 것만 보고 여러 날을 플레이(입력은 화면 포인터 판정·키 배정을 거친다): 걸음마다 불변식, 날마다 저장 뒤 다시 읽기, 같은 씨앗은 같은 플레이·기록 다시 재생. 씨앗·날 수는 `ROOTBORN_SIM_SEEDS`·`ROOTBORN_SIM_DAYS`, 기록은 `output/simulation/`. 알려진 결함 재현은 이유와 함께 건너뛴다. 사람의 실제 플레이를 대신하지 않는다 | 없음 |
 | `tests/Rootborn.Screens.Tests` | 창 없이 도는 화면 테스트: 화면 쌓기의 층·배타·이동 막음·입력 넘기기, 실제 `ko.json`·`en.json`, 설정·HUD·대화·하루 이벤트·가방·상태 화면을 실제 `data/`와 `GameSession`으로 눌러 보기(알려진 빠진 현지화 키는 `KnownMissingKeys`) | 없음 |
 | `tests/Rootborn.Host.Tests` | 실제 창과 게임 루프를 한 프레임씩 돌리는 테스트(새 게임 → 집 → 마을 → 가게 → 이어 하기 `NewGameJourneyTests`, 메인 체인 처음부터 끝까지 `MainChainHostTests`, 영어로 모든 화면 찍기 `EnglishScreensTests`, `--frames`·`--screenshot` 프로세스 시험 `FramesScreenshotTests`, 같은 프로세스 안 방에 UDP 루프백으로 들어가 다른 참가자 보기·거절·끊김 `MultiplayerJoinHostTests` 포함) | 있음 |
 
@@ -62,7 +66,8 @@ dotnet run --project game/Rootborn.Host -- --save-root <세이브 폴더> --slot
 캐릭터 만들기의 시작하기는 슬롯 정보(이름, 고른 겉모습, 시각으로 만든 시드)를 쓰고 그 슬롯으로 `--slot`과 같게 시작한다. 슬롯으로 시작하면 맵에 들어갈 때마다(처음 들어갈 때 포함) `world-progress.json`에 쓴다.
 읽을 수 없는 세이브 파일은 덮어쓰지 않고 시작을 거절한다.
 슬롯이 손상돼(이 플레이어의 다른 파일은 있는데 스냅샷이 없음, 파일이 깨짐) 시작을 거절하면 슬롯 선택 위에 손상 알림(`save-slot-damaged`)이 뜬다: 문제 파일마다 한 줄(없는 파일·읽을 수 없는 파일), 단추는 돌아가기뿐이다. `--slot`으로 띄웠을 때도 슬롯 선택과 그 알림을 띄운다(예외로 끝나지 않는다). 새 게임으로 덮기·사본에서 되살리기는 아직 없다(기획 결정 대기). 슬롯 선택 칸에서는 손상을 미리 구별하지 않는다(슬롯 정보만 읽고, 손상은 시작할 때 모든 파일을 읽어야 알 수 있다).
-세이브 폴더 배치: `<세이브 폴더>/<슬롯>/`에 영역마다 JSON 파일 하나. 한 명령의 저장은 묶음 하나로 `<슬롯>/.save-batch/`에 다 쓴 뒤 바꿔 넣는다(도중에 꺼지면 다음에 읽을 때 마저 넣거나 버려서 전부 옛것 또는 전부 새것). 다음 날을 시작할 때 `<슬롯>/backups/<날 번호>/`에 슬롯 파일 사본을 남긴다(`--day-copies`).
+세이브 폴더 배치: `<세이브 폴더>/<슬롯>/`에 영역마다 JSON 파일 하나. 한 명령의 저장은 묶음 하나로 `<슬롯>/.save-batch/`에 다 쓴 뒤 바꿔 넣는다(도중에 꺼지면 다음에 읽을 때 마저 넣거나 버려서 전부 옛것 또는 전부 새것). 다음 날을 시작할 때 `<슬롯>/backups/<날 번호>/`에 슬롯 파일 사본을 남긴다(`--day-copies`, 맨 위 칸 파일만, `.`으로 시작하는 임시 파일 빼고. 임시 폴더에 다 복사한 뒤 이름을 바꿔 넣어 반쯤 찬 사본은 남지 않는다).
+되살리는 명령은 없다: 사본 폴더의 파일을 슬롯 폴더(같은 슬롯이든 다른 이름의 슬롯이든)에 복사해 넣고 그 슬롯으로 이어 한다. 슬롯 폴더를 다른 이름으로 복사해도 같다 — 세이브 안의 슬롯 이름이 옛 이름이어도 지금 슬롯으로 읽고 저장한다(Game `CopiedSlotTests`).
 캐릭터는 슬롯의 옷 선택(`wearables-local-player.json`, 없으면 칸 기본값)으로 성장 단계 몸에 옷·머리를 겹쳐 그린다.
 낮밤은 맵 목록의 `dayNight`가 켜진 맵(마을)에만 입힌다. 슬롯으로 시작하면 낮밤·NPC 자리는 학생 날·시각(`GameSession.StudentDay`·`StudentHour`)을, 캐릭터 몸은 `GrowthStageId()`를 따른다. `interactions.json`에서 `placementSurface`가 있는 맵(집)에 들어가면 그 맵에서 방 칸을 만들어 `GameSession.EnterHouse`를 부른다. NPC는 일정(data/npcs)과 시간대로 `interactions.json`의 장소 자리에 선다.
 슬롯으로 시작하면 같은 정의로 `GameSession`도 시작하고, 월드 위에 화면 쌓기를 올린다(`--world`도 화면 쌓기는 올린다).
@@ -78,11 +83,34 @@ F1은 단축키 안내(모달, 이동을 막음, 시작 화면에서도 열림, 
 방에서의 신원은 슬롯 정보(만든 시각·시드)로 만든 그 인물의 고정 id다(슬롯의 플레이어 id는 모든 슬롯이 `local-player`라 두 PC가 서로를 밀어낸다). 방에 들어가지 않으면 Net 코드는 프레임마다 돌지 않는다.
 게임 버전은 `1.0.0+<커밋>`이다(저장소 루트 `Directory.Build.props`, git이 없으면 `-p:ROOTBORN_COMMIT=<커밋>` 또는 `unknown-commit`). 데이터 지문은 `Rootborn.Data.DataFingerprint`(서버와 같은 셈법).
 
+F1은 단축키 안내(모달, 이동을 막음, 시작 화면에서도 열림, 설정의 "단축키" 단추로도). 줄은 등록 표의 키 배정(`ScreenRegistry.KeyBindings`, 하는 일 문구 키 `ui.keys.<화면 id>`), 화면 쌓기의 버튼 옮기기, 화면 안에서만 듣는 키를 그 화면이 등록 때 넘긴 줄(`.GuidesKeys(...)`, 지금은 미니게임), Host 이름표(`Input/Devices.cs`의 `KeyGuideNames`: 걷기·상호작용·F11·F12·가구 배치 카메라 F·=·-)에서 만든다 — 키 배정을 바꾸면 이름표에도 한 줄.
 미니게임은 알바·연습·시설 일이 예약되면 저절로 열리고(누가 예약했든 "게임 진행이 바뀜" 알림으로 본다), 일터 지점(`part-time-work`)·연습 지점(`career-practice`)에서 E를 누르면 예약한다. Space 박자, R 돌리기, A/D·←/→ 줄 옮기기, 포인터로 단추·칸·조준 판. 시간은 Host가 넘기는 프레임 dt(`ScreenStack.Tick`)로만 흐르고, 끝나면 한 번 정산하고 결과를 보인 채 둔다. Esc·닫기는 끝나지 않은 판을 포기로 정산하고 닫는다. 도전 종류마다 그리는 부분은 `Minigames/ChallengeViewCatalog`에 한 줄로 등록한다.
 목표 수첩(Tab, 1440x840, 걸으면서 볼 수 있음)은 분류 줄 + 목록(보이는 줄만 그림, 긴 글은 말줄임) + 상세 + 추적·행동 단추다. 항목은 `Objectives/ObjectiveJournalSourceCatalog`에 한 줄씩 등록한 모으는 쪽이 `GameSession` 조회로 만들고, 글자는 키와 값(`JournalText`)으로만 넘긴다. 추적 목표 HUD는 수첩에서 "추적"한 항목 하나만 보인다(추적하지 않았으면 숨음). 추적 지정은 `GameSession.TrackObjective`로 세이브에 저장되어 이어 해도 남는다.
 
 견본·월드 화면에서 F12는 지금 화면을 증거 폴더에 저장한다(`--frames N --screenshot <PNG>`는 N프레임 뒤 저장하고 끝낸다). 견본 화면에서 Esc는 포커스를 풀고, 포커스가 없으면 끝낸다.
 포커스 테두리는 키보드(Shift+방향 키 등)로 옮긴 포커스에만 그린다. 포인터로 누른 단추·줄에는 그리지 않는다.
+
+## 서버
+
+```
+dotnet run --project game/Rootborn.Server -- --save-root <세이브 폴더> --slot <슬롯 id> --bind <이 기계의 LAN IP> --port <포트>
+```
+
+인자와 환경 변수(인자가 먼저다, `game/Rootborn.Server/ServerOptions.cs`):
+
+| 인자 | 환경 변수 | 없을 때 |
+|---|---|---|
+| `--save-root <세이브 폴더>` | `ROOTBORN_SAVE_ROOT` | 없음. 반드시 준다 |
+| `--slot <슬롯 id>` | `ROOTBORN_SAVE_SLOT` | 없음. 반드시 준다. 슬롯이 없으면 새 방을 만들고, 있으면 이어서 연다 |
+| `--bind <IP 주소>` | `ROOTBORN_SERVER_BIND` | 없음. 반드시 준다. 듣는 주소(이 기계의 LAN 주소 등). IP 주소만 받는다 |
+| `--port <포트>` | `ROOTBORN_SERVER_PORT` | 없음. 반드시 준다. 0~65535, 0이면 운영체제가 빈 포트를 준다(로그의 `듣는 중: ` 줄에 찍힌다) |
+| `--max-players <정원>` | `ROOTBORN_MAX_PLAYERS` | 4. 1~8(`RoomServer.MaxPlayersLimit`) |
+| `--root <저장소>` | `ROOTBORN_REPO_ROOT` | 실행 파일 위치에서 위로 올라가며 찾는다. 데이터는 `<저장소>/data` |
+| `--data <데이터 폴더>` | `ROOTBORN_DATA_DIR` | `--root` 대신 데이터 폴더를 바로 준다 |
+| `--help`, `-h` | | 도움말을 찍고 끝낸다 |
+
+끝내기: Ctrl+C, 종료 신호(SIGINT·SIGTERM·SIGQUIT), 또는 콘솔에 `stop` 입력. 방 상태를 저장하고 닫는다. 입력이 닫히면(서비스로 돌 때) 끝내지 않는다.
+끝 코드: 0 정상, 2 인자 오류(빠진 값 목록과 도움말), 3 데이터 오류, 4 세이브 오류, 5 듣지 못함. 로그는 운영자가 읽는 것이라 현지화하지 않는다(UTF-8).
 
 ## 화면 더하기
 

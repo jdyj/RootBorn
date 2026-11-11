@@ -114,7 +114,7 @@ namespace Rootborn.Game
         }
 
         /// <summary>자원 레시피 공개 진행(resource-recipe-progress*.json)을 읽는다. 공개는 장소 활동 결과가 바로 저장한다.</summary>
-        public ResourceRecipeProgress ResourceRecipes() => ResourceRecipeSaveFiles.LoadOrCreate(_store, SaveSlot, PlayerId);
+        public ResourceRecipeProgress ResourceRecipes() => Rebind(ResourceRecipeSaveFiles.LoadOrCreate(_store, SaveSlot, PlayerId));
 
         public QuestChainDefinition Chain(string chainId) => _definitions.Get<QuestChainDefinition>(chainId);
         public ItemDefinition Item(string itemId) => _definitions.Get<ItemDefinition>(itemId);
@@ -159,7 +159,7 @@ namespace Rootborn.Game
             Student.ConfigureDailyFocus(_dayEndRules.DailyFocus);
             if (!hasSnapshot) PreSnapshotSlotFiles.ImportInto(Student, store);
 
-            Adult = hasSnapshot && snapshot.Adult != null ? AdultCareerProgress.FromSaveData(snapshot.Adult) : new AdultCareerProgress(SaveSlot, PlayerId);
+            Adult = hasSnapshot && snapshot.Adult != null ? AdultCareerProgress.FromSaveData(Rebind(snapshot.Adult)) : new AdultCareerProgress(SaveSlot, PlayerId);
             var inventory = hasSnapshot ? snapshot.Inventory : PreSnapshotSlotFiles.ReadInventory(store, SaveSlot, PlayerId);
             // 지갑을 먼저 읽는다. 옛 세이브(스냅샷 버전 2 이하, Unity 판 영역 파일)는 지갑이 없고 가방의 돈 칸을 지갑으로 옮긴다.
             _wallet.LoadFromSaveData(hasSnapshot ? snapshot.Wallet : null);
@@ -167,8 +167,8 @@ namespace Rootborn.Game
             _equippedToolItemId = inventory?.EquippedToolItemId ?? string.Empty;
 
             World = hasSnapshot && snapshot.World != null
-                ? WorldStateProgress.FromSaveData(snapshot.World, SaveSlot, PlayerId)
-                : WorldStateSaveFiles.LoadOrCreate(store, SaveSlot, PlayerId);
+                ? WorldStateProgress.FromSaveData(Rebind(snapshot.World), SaveSlot, PlayerId)
+                : Rebind(WorldStateSaveFiles.LoadOrCreate(store, SaveSlot, PlayerId));
             // 스냅샷이 월드 상태의 원본이어도 사본 파일(플레이어·슬롯 공유)이 깨졌으면 다른 영역처럼 알린다. 다음 저장이 조용히 덮지 않게.
             if (hasSnapshot && snapshot.World != null) WorldStateSaveFiles.LoadOrCreate(store, SaveSlot, PlayerId);
 
@@ -181,19 +181,19 @@ namespace Rootborn.Game
             if (_campaign != null)
             {
                 Campaign = store.TryRead<CampaignProgressSaveData>(SaveSlot, SaveFileNames.Campaign(PlayerId), out var campaign)
-                    ? CampaignProgress.FromSaveData(campaign, _campaign)
+                    ? CampaignProgress.FromSaveData(Rebind(campaign), _campaign)
                     : new CampaignProgress(SaveSlot, PlayerId, _campaign);
                 Campaign.SetCurrentDayNumber(Student.CurrentDay);
             }
 
             Milestones = store.TryRead<MilestoneProgressSaveData>(SaveSlot, SaveFileNames.Milestone(PlayerId), out var milestones)
-                ? MilestoneProgress.FromSaveData(milestones, _milestones)
+                ? MilestoneProgress.FromSaveData(Rebind(milestones), _milestones)
                 : new MilestoneProgress(SaveSlot, PlayerId, _milestones);
             CareerInterests = store.TryRead<CareerInterestProgressSaveData>(SaveSlot, SaveFileNames.CareerInterest(PlayerId), out var interests)
-                ? CareerInterestProgress.FromSaveData(interests)
+                ? CareerInterestProgress.FromSaveData(Rebind(interests))
                 : new CareerInterestProgress(SaveSlot, PlayerId);
             LocationStates = store.TryRead<LocationStateProgressSaveData>(SaveSlot, SaveFileNames.LocationState(PlayerId), out var states)
-                ? LocationStateProgress.FromSaveData(states, SaveSlot, PlayerId)
+                ? LocationStateProgress.FromSaveData(Rebind(states), SaveSlot, PlayerId)
                 : new LocationStateProgress(SaveSlot, PlayerId);
 
             LoadOptionalDomains(store);

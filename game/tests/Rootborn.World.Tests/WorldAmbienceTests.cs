@@ -133,13 +133,39 @@ namespace Rootborn.World.Tests
             IReadOnlyList<PointLightDef> town = data.LightsOf("Town");
             Assert.That(town.Count, Is.EqualTo(1), "Unity Town.unity의 LocalLightController는 하나");
             PointLightDef l = town[0];
-            Assert.That((l.X, l.Y, l.Radius, l.InnerRadius), Is.EqualTo((0f, 32f, 128f, 24f)));
+            Assert.That((l.Radius, l.InnerRadius), Is.EqualTo((128f, 24f)));
             Assert.That(l.IntensityAt(LocationStateTimeSlots.Afternoon), Is.EqualTo(0.1f));
             Assert.That(l.IntensityAt(LocationStateTimeSlots.Evening), Is.EqualTo(0.55f));
             Assert.That(l.IntensityAt(LocationStateTimeSlots.Night), Is.EqualTo(0.85f));
             Assert.That(l.Temporary, Is.True);
             Assert.That(data.Temporary.Count, Is.EqualTo(1));
             Assert.That(data.LightsOf("House"), Is.Empty, "빛이 없는 맵은 빈 목록");
+        }
+
+        /// <summary>
+        /// 빛 지점은 화면에 보이는 자리에 둔다: 빛이 닿는 원 전체가 맵 안이고, 가운데가 걸어서 닿는 칸 옆이다(그 맵의 도착 지점들에서 걸어서).
+        /// 맵 모서리에 두면 원 대부분이 맵 밖이라 카메라가 맵 안만 비추는 화면에 거의 보이지 않는다(2026-11-12 밝기 세션 보고).
+        /// </summary>
+        [Test]
+        public void Lights_EveryLightCircleIsInsideItsMap_NextToWalkableCells()
+        {
+            WorldLightingData data = Real;
+            WorldMapLoader loader = Repo.Loader();
+            var problems = new List<string>();
+            foreach (string mapId in data.MapIds)
+            {
+                WorldMap map = loader.LoadMap(mapId).World;
+                var reached = new HashSet<CellPos>();
+                foreach (string spawn in map.SpawnIds) reached.UnionWith(MapChecks.Reachable(map, spawn));
+                foreach (PointLightDef l in data.LightsOf(mapId))
+                {
+                    string name = mapId + ": 빛 " + l.Name + " (" + l.X + ", " + l.Y + ") 반경 " + l.Radius;
+                    if (l.X - l.Radius < 0f || l.Y - l.Radius < 0f || l.X + l.Radius > map.Grid.PixelWidth || l.Y + l.Radius > map.Grid.PixelHeight)
+                        problems.Add(name + "의 원이 맵(" + map.Grid.PixelWidth + "x" + map.Grid.PixelHeight + ") 밖으로 나간다");
+                    if (!MapChecks.NextTo(reached, l.X, l.Y, map.Grid.CellSize)) problems.Add(name + "이 걸어서 닿는 칸 옆에 없다");
+                }
+            }
+            Assert.That(problems, Is.Empty, string.Join("\n", problems));
         }
 
         [Test]

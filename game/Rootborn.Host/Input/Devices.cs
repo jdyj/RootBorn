@@ -90,15 +90,21 @@ namespace Rootborn.Host.Input
                 HeldDown = now.IsKeyDown(Keys.Down) || now.IsKeyDown(Keys.S),
                 HeldLeft = now.IsKeyDown(Keys.Left) || now.IsKeyDown(Keys.A),
                 HeldRight = now.IsKeyDown(Keys.Right) || now.IsKeyDown(Keys.D),
-                FullView = Pressed(now, Keys.F),
-                ZoomInHeld = now.IsKeyDown(Keys.OemPlus) || now.IsKeyDown(Keys.Add),
-                ZoomOutHeld = now.IsKeyDown(Keys.OemMinus) || now.IsKeyDown(Keys.Subtract),
+                FullView = Pressed(now, KeyGuideNames.FullViewKey),
+                ZoomInHeld = AnyDown(now, KeyGuideNames.ZoomInKeys),
+                ZoomOutHeld = AnyDown(now, KeyGuideNames.ZoomOutKeys),
             };
             _previous = now;
             return frame;
         }
 
         private bool Pressed(KeyboardState now, Keys key) => now.IsKeyDown(key) && !_previous.IsKeyDown(key);
+
+        private static bool AnyDown(KeyboardState now, Keys[] keys)
+        {
+            for (int i = 0; i < keys.Length; i++) if (now.IsKeyDown(keys[i])) return true;
+            return false;
+        }
     }
 
     /// <summary>
@@ -133,8 +139,12 @@ namespace Rootborn.Host.Input
         public static readonly Keys[] WalkLetters = { Keys.W, Keys.A, Keys.S, Keys.D };
         public const Keys FullscreenKey = Keys.F11;
         public const Keys ScreenshotKey = Keys.F12;
+        /// <summary>가구 배치 카메라(Read의 FullView·Zoom*Held가 이 값을 읽는다): F 전체 보기, = 또는 키패드 + 가까이, - 또는 키패드 - 멀리.</summary>
+        public const Keys FullViewKey = Keys.F;
+        public static readonly Keys[] ZoomInKeys = { Keys.OemPlus, Keys.Add };
+        public static readonly Keys[] ZoomOutKeys = { Keys.OemMinus, Keys.Subtract };
 
-        /// <summary>안내 이름표: 화면 쌓기 키의 장치 이름 + 화면이 아닌 키의 줄(걷기, 상호작용, 전체 화면, 화면 저장).</summary>
+        /// <summary>안내 이름표: 화면 쌓기 키의 장치 이름 + 화면이 아닌 키의 줄(걷기, 상호작용, 전체 화면, 화면 저장, 가구 배치 카메라).</summary>
         public static KeyGuideKeys Create()
         {
             var keys = new KeyGuideKeys { Shift = KeyCap.Name("Shift") };
@@ -143,6 +153,9 @@ namespace Rootborn.Host.Input
             keys.AddRow(new KeyGuideRow(KeyGuideGroups.Interact, "ui.keys.interact", keys.For(ScreenKey.Interact)));
             keys.AddRow(new KeyGuideRow(KeyGuideGroups.System, "ui.keys.fullscreen", new[] { KeyChord.Of(Name(FullscreenKey)) }));
             keys.AddRow(new KeyGuideRow(KeyGuideGroups.System, "ui.keys.screenshot", new[] { KeyChord.Of(Name(ScreenshotKey)) }));
+            keys.AddRow(new KeyGuideRow(KeyGuideGroups.Furniture, "ui.keys.furniture.full-view", new[] { KeyChord.Of(Name(FullViewKey)) }));
+            keys.AddRow(new KeyGuideRow(KeyGuideGroups.Furniture, "ui.keys.furniture.zoom-in", Chords(ZoomInKeys)));
+            keys.AddRow(new KeyGuideRow(KeyGuideGroups.Furniture, "ui.keys.furniture.zoom-out", Chords(ZoomOutKeys)));
             return keys;
         }
 
@@ -172,6 +185,10 @@ namespace Rootborn.Host.Input
                 case Keys.Down: return "↓";
                 case Keys.Left: return "←";
                 case Keys.Right: return "→";
+                case Keys.OemPlus: return "=";
+                case Keys.OemMinus: return "-";
+                case Keys.Add: return "Num +";
+                case Keys.Subtract: return "Num -";
                 default: return key.ToString();
             }
         }

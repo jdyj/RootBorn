@@ -744,12 +744,21 @@ namespace Rootborn.Host
             Exit();
         }
 
-        /// <summary>마지막으로 그려진 화면 버퍼를 PNG로 저장한다.</summary>
+        /// <summary>
+        /// 마지막으로 그려진 화면 버퍼를 PNG로 저장한다. 알파는 모두 불투명(255)으로 쓴다: 장면 버퍼는 반투명 그림을 NonPremultiplied로 섞으며
+        /// 알파가 깎이는데, 창에는 Opaque로 복사해 보이지 않던 것이 PNG에서는 바탕이 비쳐 보인다(창과 같은 그림이 되게 한다).
+        /// 저장할 때만 도는 길이라 픽셀 배열을 그때 만든다.
+        /// </summary>
         public void SaveScreenshot(string path)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path)));
+            var pixels = new Color[_scene.Width * _scene.Height];
+            _scene.GetData(pixels);
+            for (int i = 0; i < pixels.Length; i++) pixels[i].A = 255;
+            using var opaque = new Texture2D(GraphicsDevice, _scene.Width, _scene.Height, false, SurfaceFormat.Color);
+            opaque.SetData(pixels);
             using FileStream stream = File.Create(path);
-            _scene.SaveAsPng(stream, _scene.Width, _scene.Height);
+            opaque.SaveAsPng(stream, opaque.Width, opaque.Height);
         }
 
         /// <summary>게임을 끈다: 방에 들어가 있으면 나간다고 알린다(서버가 시간 초과를 기다리지 않는다).</summary>

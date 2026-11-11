@@ -76,10 +76,14 @@ namespace Rootborn.Screens.KeyGuide
         public const string Interact = "interact";
         public const string Screens = "screens";
         public const string Navigation = "navigation";
+        /// <summary>미니게임 안(미니게임 화면이 등록 때 넘긴다).</summary>
+        public const string Minigame = "minigame";
+        /// <summary>가구 배치 카메라(Host가 넘긴다).</summary>
+        public const string Furniture = "furniture";
         public const string System = "system";
 
         /// <summary>보이는 순서. 여기 없는 묶음은 맨 뒤(넘겨준 순서대로).</summary>
-        public static readonly string[] Order = { Movement, Interact, Screens, Navigation, System };
+        public static readonly string[] Order = { Movement, Interact, Screens, Navigation, Minigame, Furniture, System };
 
         public static string TitleKey(string group) => "ui.keys.group." + group;
     }
@@ -126,7 +130,8 @@ namespace Rootborn.Screens.KeyGuide
 
     /// <summary>
     /// 단축키 안내의 표시 모델: 묶음 순서대로 줄. 화면을 여는 키는 등록 표(ScreenRegistry.KeyBindings)에서, 화면 안 버튼 옮기기는
-    /// 그 키를 처리하는 화면 쌓기(ScreenStack.NavigationGuide)에서, 걷기·상호작용·전체 화면처럼 Host만 아는 키는 KeyGuideKeys.Rows에서 온다.
+    /// 그 키를 처리하는 화면 쌓기(ScreenStack.NavigationGuide)에서, 화면 안에서만 듣는 키(미니게임)는 그 화면이 등록 때 넘긴 줄(ScreenEntry.KeyGuide)에서,
+    /// 걷기·상호작용·전체 화면·가구 배치 카메라처럼 Host만 아는 키는 KeyGuideKeys.Rows에서 온다.
     /// 손으로 적은 목록이 없다: 화면을 키와 함께 등록하면 줄이 저절로 생긴다. 화면 줄의 하는 일 키는 ui.keys.&lt;화면 id&gt;.
     /// </summary>
     public sealed class KeyGuideModel
@@ -147,6 +152,8 @@ namespace Rootborn.Screens.KeyGuide
             foreach (KeyValuePair<ScreenKey, string> binding in registry.KeyBindings)
                 all.Add(new KeyGuideRow(KeyGuideGroups.Screens, ScreenActionKey(binding.Value), keys.For(binding.Key)));
             all.AddRange(ScreenStack.NavigationGuide(keys));
+            foreach (ScreenEntry entry in registry.Screens)
+                if (entry.KeyGuide != null) all.AddRange(entry.KeyGuide(keys));
 
             var ordered = new List<KeyGuideRow>(all.Count);
             foreach (string group in KeyGuideGroups.Order)

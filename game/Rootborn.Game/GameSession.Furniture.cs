@@ -36,7 +36,7 @@ namespace Rootborn.Game
             }
             else
             {
-                FurnitureUnlocks = FurnitureSaveFiles.LoadUnlocksOrCreate(store, SaveSlot, PlayerId);
+                FurnitureUnlocks = Rebind(FurnitureSaveFiles.LoadUnlocksOrCreate(store, SaveSlot, PlayerId));
             }
 
             HouseStage = FurnitureSaveFiles.LoadHouseStage(store, SaveSlot);

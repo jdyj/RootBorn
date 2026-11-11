@@ -24,10 +24,10 @@ namespace Rootborn.Game
 
         private void LoadOptionalDomains(Rootborn.Core.Save.ISaveStore store)
         {
-            Exploration = ExplorationProgressPersistence.LoadOrCreate(store, SaveSlot, PlayerId);
-            DiscoveryClues = DiscoveryClueSaveFiles.LoadOrCreate(store, SaveSlot, PlayerId);
-            ClueInterpretations = ClueInterpretationSaveFiles.LoadOrCreate(store, SaveSlot, PlayerId);
-            Encyclopedia = EncyclopediaSaveFiles.LoadOrCreate(store, SaveSlot, PlayerId);
+            Exploration = Rebind(ExplorationProgressPersistence.LoadOrCreate(store, SaveSlot, PlayerId));
+            DiscoveryClues = Rebind(DiscoveryClueSaveFiles.LoadOrCreate(store, SaveSlot, PlayerId));
+            ClueInterpretations = Rebind(ClueInterpretationSaveFiles.LoadOrCreate(store, SaveSlot, PlayerId));
+            Encyclopedia = Rebind(EncyclopediaSaveFiles.LoadOrCreate(store, SaveSlot, PlayerId));
             DailyEvents = DailyEventSaveFiles.LoadOrCreate(store, SaveSlot, PlayerId);
             ObjectiveJournalTrackingSaveFiles.TryLoad(store, SaveSlot, out var tracking);
             ObjectiveTracking = tracking;

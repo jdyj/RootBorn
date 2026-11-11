@@ -40,6 +40,7 @@
 | `areas` | LDtk에 없는 이동 구역 목록(3절) | 없음 |
 | `dayNight` | 시각에 따라 화면 색을 바꾸는가(바깥 맵) | `false` |
 | `entityRowShift` | 문 엔티티와 칠한 Collision 층을 그림보다 몇 줄 아래로 읽을지 | 0 |
+| `cameraBounds` | 카메라가 비출 맵 안의 부분 `[x, y, 너비, 높이]`(레벨 픽셀, 그림 기준, 줄 밀기 없음). 카메라는 이 사각형 밖을 비추지 않는다(`CameraFrame.cs`). 지금은 이 값을 쓰는 맵이 없다 | 맵 전체 |
 
 `entityRowShift`는 Unity 판에서 가져온 지금 맵의 어긋남(문이 그림보다 한 줄 아래)을 재현하는 값이다. **새 맵에는 적지 않는다.**
 
@@ -126,10 +127,15 @@ LDtk 엔티티가 아니라 **`interactions.json`**에 맵 id별로 적는다(LD
 | `career-practice` | 진로 연습 자리(`id`는 data의 진로 연습 id) | 45(Unity 판에 놓인 곳이 없어 알바와 같게) | 미니게임(연습을 예약하면 열린다) |
 | `career-facility` | 성인 시설(`id`는 data의 시설 id) | 55 | 성인 시설 관리 |
 | `exploration` | 탐색 지점(`id`는 data의 탐색 id) | 50 | 탐색 선택 |
+| `discovery` | 발견 지점(`id`는 data의 발견 id) | 15 | 발견 알림(알림 층, 이동을 막지 않음) |
 | `door` | 자동문(자동, 목적지 있는 문) | 110 | 없음 — 걸어 들어가야 열린다 |
 
-  새 종류는 화면 쪽에 등록하면 되고, 이 파일에는 문자열만 적는다. 발견 지점(Unity `DiscoveryPointInteractor`, 우선순위 15)과
-  장소 기록은 아직 화면 쪽에 여는 종류가 없어 지점을 두지 않았다.
+  새 종류는 화면 쪽에 등록하면 되고, 이 파일에는 문자열만 적는다. 장소 기록은 지점이 아니라 L 키와 HUD 버튼으로 연다.
+- 대상 고르기는 가까운 것이 먼저다(Core `InteractionTargetRule`: 거리 차가 0.5칸 안일 때만 우선순위로 가른다).
+  자리가 다른 지점끼리는 상호작용 범위(`radiusCells`)보다 멀리 두면 한 지점 칸에 섰을 때 다른 지점이 범위 밖이라 서로 가리지 않는다
+  (임시 지점은 `TemporaryPointsTests`가 확인한다). 같은 자리에 겹쳐 둔 장소 방문 + 장소 활동은 우선순위로 고르도록 일부러 둔 것이다.
+- **맵 성질**: 화면은 맵 id가 아니라 맵 성질을 본다. 지금 성질은 하나 — `placementSurface`가 있는 맵은 "가구를 놓는 면이 있다"
+  (`MapFeatures.FurniturePlacement`)이고, Host가 맵에 들어갈 때 `ScreenStack.EnterMap`으로 넘긴다(가구 배치 HUD 단추가 이 성질을 본다).
 - 검사(`game/tests/Rootborn.World.Tests/WorldEntryPointsTests.cs`): 모든 지점이 새 게임 자리에서 걸어서 닿고, 그 자리에 서면 대상으로 골라지고
   (같은 자리의 더 높은 우선순위 지점에 가려진 것은 빼고), `id`가 data/의 정의다(`daily-plan-board`·`student-day-end`의 `id`는 지점 이름일 뿐이다).
   data/의 탐색·성인 시설·진로 연습 정의는 하나도 빠짐없이 지점을 가진다. 화면을 여는 종류마다 지점이 있는지는
@@ -164,17 +170,21 @@ LDtk 엔티티가 아니라 **`interactions.json`**에 맵 id별로 적는다(LD
 
 새 맵이 오기 전까지 메인 체인을 걸어서 확인하려고 데이터에만 둔 연결이다. 항목마다 `"temporary": true`와 `"reason"`이 있다
 (이유가 없으면 읽기를 거절한다). 게임은 다른 값과 똑같이 쓰고, 화면에서 구별하지 않는다. **맵을 새로 그리면 지운다.**
+자리가 있는 항목은 `이름` (x, y)로 적는다. 이 목록과 데이터가 어긋나면 `TemporaryPointsTests.TheReadmeTemporaryList_MatchesTheTemporaryMarksInTheData`가 실패한다.
+마을 임시 지점은 북쪽 광장(칸 32~52열, 0~11행)에 두 줄 이상 간격으로 둔다(칸 (c, r)의 가운데 = ((c+0.5)×32, (r+0.5)×32)).
 
 | 파일 | 맵 | 항목 | 이유 |
 |---|---|---|---|
 | maps.json | Town | 문 `north` → School/school-entry | LDtk 마을 그림 밖 북쪽 구역(학교 입구가 있던 곳)이 LDtk에 없다 |
 | maps.json | Town | 도착 지점 `town-school-entry` (1168, 144) | 학교 앞 도착 지점이 북쪽 구역에 있었다. 문 `north` 아래 북쪽 광장 |
 | maps.json | School | 이동 구역 `town`(아래 가장자리 한 줄) → Town/town-school-entry | School_1에 문 엔티티가 없고 학교 출구도 LDtk에 없다 |
-| interactions.json | Town | `location-activity`·`location-visit` × `location.restaurant`(1072,176), `location.medical-clinic`(1200,176), `location.design-studio`(1328,176), `location.training-ground`(1456,176), `location.library`(1072,304), `location.corner-store`(1264,304) — 12개 | 이 지점들이 북쪽 구역에 있었다 |
-| interactions.json | Town | `part-time-work` / `work.shift.corner-store` (1456, 304) | 가게 알바 자리가 북쪽 구역에 있었다 |
-| interactions.json | Town | `career-facility` × `facility.chef`(1296,112), `facility.emergency-care`(1392,112), `facility.interior`(1488,112), `facility.soldier`(1584,112) — 4개 | Unity 판 성인 시설(Town.unity `Facility_*`)이 북쪽 구역에 있었다 |
-| interactions.json | Town | `exploration` / `exploration.test.alley-crate` (1584, 176) | Unity 판 탐색 지점(`TownExplorationInteractionPoint`)이 북쪽 구역에 있었다 |
-| interactions.json | Town | `career-practice` × `practice.chef`(1168,368), `practice.emergency-care`(1360,368), `practice.interior`(1552,368), `practice.soldier`(1648,368) — 4개 | 작성자 판단: Unity 판에는 진로 연습 지점이 어느 씬에도 없었다. 일터 지점이 있는 북쪽 광장에 둔다 |
+| interactions.json | Town | 장소 6곳, `location-activity`·`location-visit`를 같은 자리에 하나씩(12개): `location.restaurant` (1072, 176), `location.medical-clinic` (1200, 176), `location.design-studio` (1328, 176), `location.training-ground` (1456, 176), `location.library` (1072, 304), `location.corner-store` (1264, 304) | 이 지점들이 북쪽 구역에 있었다 |
+| interactions.json | Town | 성인 시설 4곳 `career-facility`: `facility.chef` (1296, 112), `facility.emergency-care` (1392, 112), `facility.interior` (1488, 112), `facility.soldier` (1584, 112) | Unity 판 성인 시설(Town.unity `Facility_*`)이 북쪽 구역에 있었다 |
+| interactions.json | Town | 탐색 1곳 `exploration`: `exploration.test.alley-crate` (1584, 176) | Unity 판 탐색 지점(`TownExplorationInteractionPoint`)이 북쪽 구역에 있었다 |
+| interactions.json | Town | 진로 연습 4곳 `career-practice`: `practice.chef` (1168, 368), `practice.emergency-care` (1360, 368), `practice.interior` (1552, 368), `practice.soldier` (1648, 368) | 작성자 판단: Unity 판에는 진로 연습 지점이 어느 씬에도 없었다. 일터 지점이 있는 북쪽 광장에 둔다 |
+| interactions.json | Town | 알바 9곳 `part-time-work` — 가게 알바 `work.shift.corner-store` (1456, 304)와 알바 8곳(7행 2칸 간격): `work.workshop-helper` (1104, 240), `work.restaurant-helper` (1168, 240), `work.studio-helper` (1232, 240), `work.supply-helper` (1296, 240), `work.training-helper` (1360, 240), `work.clinic-helper` (1424, 240), `work.fitness-helper` (1488, 240), `work.errand-helper` (1552, 240) | Unity 판 알바 자리(Town.unity `PartTimeWorkInteractor`)가 북쪽 구역에 있었다 |
+| interactions.json | Town | 발견 1곳 `discovery`: `discovery.clocktower-notice` (1360, 304) — 9행 도서관과 가게 알바 사이 | Unity 판 발견 지점(`TownDiscoveryPoint`)이 북쪽 구역에 있었다 |
+| lights.json | Town | 빛 지점 `town-night-guide` (1072, 176) | Unity 판 유일한 빛은 씬 원점(마을 모서리)에 남아 거의 보이지 않았다. Unity 판 가로등 그림 자리(학교 앞 도착 지점에서 (-3, -1)유닛)를 임시 학교 앞 도착 지점에 맞춰 옮겼다 |
 
 ## 9. 새 맵을 넣은 뒤 돌려 볼 것
 
@@ -190,3 +200,11 @@ dotnet run --project game/Rootborn.Host -- --world <맵 id 또는 LDtk 레벨 �
 - `MainChainWalkTests`: 7절.
 - `--world`로 띄우면 맵 목록의 첫 도착 지점에 선다(`--spawn <이름>`으로 바꾼다). 화면에서 F12로 찍어 겹침·빈 그림·어긋난 문을 본다.
 - 이 테스트들은 자동 테스트다(칸 단위 경로). 실제로 걸어 본 것은 Host의 장치 입력 테스트나 직접 본 화면으로만 말한다.
+
+## 10. 빛(`lights.json`)
+
+- `ambient`: 때(`time.morning`·`time.afternoon`·`time.evening`·`time.night`)마다 바깥 밝기. 맵 목록에서 `dayNight`가 켜진 맵에만 입힌다.
+- `maps`: 맵 id → 빛 지점 목록. `at`은 레벨 픽셀(왼쪽 위 원점), `radius`는 빛이 닿는 끝, `innerRadius`까지 최대 밝기, `intensityByTime`은 때별 세기.
+  읽기는 `Rootborn.World` `WorldLighting.cs`, 그리기는 Host `WorldScreen`(화면 안에 들어온 빛만).
+- 빛 지점은 화면에 보이는 자리에 둔다: 빛이 닿는 원 전체가 맵 안이고 가운데가 걸어서 닿는 칸 옆이어야 한다
+  (`WorldAmbienceTests.Lights_EveryLightCircleIsInsideItsMap_NextToWalkableCells`). 새 맵에서는 가로등 그림 위에 둔다.

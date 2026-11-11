@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using Rootborn.Core.Careers;
 using Rootborn.Core.Minigames;
+using Rootborn.Screens.KeyGuide;
 using Rootborn.Ui;
 
 namespace Rootborn.Screens.Minigames
@@ -126,6 +128,22 @@ namespace Rootborn.Screens.Minigames
             if (Session != null && !Session.IsComplete && _view != null && _view.OnKey(key, Session.Current)) return true;
             // 판이 떠 있는 동안 상호작용 키·Space는 월드로 가지 않는다(Space는 Unity에서도 박자 도전에서만 쓴다).
             return key == ScreenKey.Interact || key == ScreenKey.Space || key == ScreenKey.Rotate || key == ScreenKey.AltLeft || key == ScreenKey.AltRight;
+        }
+
+        /// <summary>
+        /// 단축키 안내에 넘기는 이 화면의 키(등록 때 GuidesKeys로). 도전 그리기(ChallengeViews)의 OnKey와 같은 배정:
+        /// Space 박자, R 돌리기, A/D·←/→ 줄 옮기기. 장치 키 이름은 Host 이름표에서 받는다.
+        /// </summary>
+        public static IReadOnlyList<KeyGuideRow> KeyGuideRows(KeyGuideKeys keys)
+        {
+            var lanes = new List<KeyChord>(4);
+            foreach (ScreenKey key in new[] { ScreenKey.AltLeft, ScreenKey.AltRight, ScreenKey.Left, ScreenKey.Right }) lanes.AddRange(keys.For(key));
+            return new[]
+            {
+                new KeyGuideRow(KeyGuideGroups.Minigame, "ui.keys.minigame.tap", keys.For(ScreenKey.Space)),
+                new KeyGuideRow(KeyGuideGroups.Minigame, "ui.keys.minigame.rotate", keys.For(ScreenKey.Rotate)),
+                new KeyGuideRow(KeyGuideGroups.Minigame, "ui.keys.minigame.lane", lanes),
+            };
         }
 
         private (int, int, int, int, bool, bool) Signature()

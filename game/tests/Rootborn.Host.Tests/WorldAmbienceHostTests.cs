@@ -100,11 +100,11 @@ namespace Rootborn.Host.Tests
         [Test]
         public void AMBIENCE_PLAY_003_TownBrightnessAndTheLightFollowTheTimeOfDay()
         {
-            // 하루 600초 × 배속 1: 게임 1시간 = 1500프레임. 16.8시(오후)에 시작해 걸어서 빛 지점 가까이 간 뒤 저녁이 되기를 기다린다.
-            using PlayerDriver p = Start("Town", 16.8f, 1f);
+            // 하루 600초 × 배속 1: 게임 1시간 = 1500프레임. 16.4시(오후)에 시작해 걸어서(약 0.4시간) 빛 지점 가까이 간 뒤 저녁이 되기를 기다린다.
+            using PlayerDriver p = Start("Town", 16.4f, 1f, "town-shop-entry"); // 첫 도착 지점에서는 빛으로 가는 길이 집 문을 밟는다
             WorldLightingData data = W(p).LightingData;
             PointLightDef light = data.LightsOf("Town")[0];
-            p.WalkNear(light.X, light.Y, 600f); // 모서리 둘레는 막혀 있다 — 빛이 화면에 들어오는 거리까지
+            p.WalkNear(light.X, light.Y, p.World.Map.Grid.CellSize * 1.5f); // 빛 가까이(멀리서 멈추면 그 자리가 문 앞일 수 있다)
             Assert.That(W(p).TimeSlot, Is.EqualTo(LocationStateTimeSlots.Afternoon), "아직 오후: " + W(p).CurrentHour);
             data.TryGetAmbient(LocationStateTimeSlots.Afternoon, out LightColor afternoon);
             Assert.That(Same(W(p).Tint, afternoon, 0.01f), Is.True, "오후 밝기 " + W(p).Tint + " / 데이터 " + afternoon);
@@ -133,10 +133,12 @@ namespace Rootborn.Host.Tests
             Assert.That(Same(W(p).Tint, night, 0.001f), Is.True, "맵에 들어선 순간 밤 밝기로 바로 맞춘다: " + W(p).Tint);
             Assert.That(W(p).VisibleLights, Is.Empty, "빛 지점이 화면 밖이면 그리지 않는다");
             PointLightDef light = data.LightsOf("Town")[0];
-            // 빛 둘레(마을 왼쪽 위 모서리)는 막혀 있다. 빛이 화면에 들어오는 마을 입구 도착 지점까지 걷는다.
-            p.World.Map.TryGetSpawn("town-entry", out var entry);
-            p.WalkNear(entry.X, entry.Y, 16f);
+            // 빛 가운데까지 걸어간다(빛은 걸어서 닿는 칸 옆에 있다 — World Lights_EveryLightCircleIsInsideItsMap_NextToWalkableCells).
+            p.WalkNear(light.X, light.Y, p.World.Map.Grid.CellSize * 1.5f);
             Assert.That(W(p).VisibleLights.Count, Is.EqualTo(1));
+            AreaRect view = W(p).CameraView;
+            Assert.That(light.X - light.Radius >= view.X && light.Y - light.Radius >= view.Y && light.X + light.Radius <= view.Right && light.Y + light.Radius <= view.Bottom, Is.True,
+                "빛 원 전체가 화면 안: 카메라 " + view.X + "," + view.Y + " " + view.W + "x" + view.H);
             Assert.That(W(p).VisibleLights[0].R, Is.EqualTo(light.Color.R * light.IntensityAt(LocationStateTimeSlots.Night)).Within(0.01f));
             p.Screenshot("ambience-04-town-night");
         }

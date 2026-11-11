@@ -19,6 +19,8 @@ namespace Rootborn.Screens
         public bool WithoutWorld { get; internal set; }
         /// <summary>여는 키가 시작 화면(WithoutWorld) 위에서도 듣는다.</summary>
         public bool KeyWorksOnStartScreens { get; internal set; }
+        /// <summary>이 화면 안에서만 듣는 키의 단축키 안내 줄(장치 키 이름표를 받아 만든다). 없으면 null.</summary>
+        public Func<Rootborn.Screens.KeyGuide.KeyGuideKeys, IReadOnlyList<Rootborn.Screens.KeyGuide.KeyGuideRow>> KeyGuide { get; internal set; }
     }
 
     /// <summary>
@@ -88,6 +90,13 @@ namespace Rootborn.Screens
             public Registration KeyWorksOnStartScreens()
             {
                 _owner._screens[_id].KeyWorksOnStartScreens = true;
+                return this;
+            }
+
+            /// <summary>이 화면 안에서만 듣는 키를 단축키 안내에 넘긴다(키를 처리하는 화면이 줄을 만든다).</summary>
+            public Registration GuidesKeys(Func<Rootborn.Screens.KeyGuide.KeyGuideKeys, IReadOnlyList<Rootborn.Screens.KeyGuide.KeyGuideRow>> rows)
+            {
+                _owner._screens[_id].KeyGuide = rows ?? throw new ArgumentNullException(nameof(rows));
                 return this;
             }
 

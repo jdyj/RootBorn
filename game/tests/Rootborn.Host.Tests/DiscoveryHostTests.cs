@@ -63,7 +63,7 @@ namespace Rootborn.Host.Tests
         {
             InteractionThing thing = player.Game.World.HereData.Things.FirstOrDefault(t => t.Kind == DiscoveryNoticeScreen.InteractionKind);
             Assert.That(thing, Is.Not.Null, player.World.Map.Id + "에 발견 지점이 없다");
-            player.WalkNear(thing.X, thing.Y, player.World.Map.Grid.CellSize * 1.25f);
+            player.WalkNear(thing.X, thing.Y, player.World.Map.Grid.CellSize * 0.5f); // 지점 칸에 선다(다른 지점은 상호작용 범위 밖 — World TemporaryPointsTests)
             var target = player.Game.World.Interactions.Target;
             Assert.That((target?.Kind, target?.Id), Is.EqualTo((thing.Kind, thing.Id)), "걸어간 자리에서 E의 대상");
             return thing;

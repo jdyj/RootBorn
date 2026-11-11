@@ -26,9 +26,12 @@ namespace Rootborn.Screens.AdultFacility
         public static readonly (float X, float Y, float W, float H) Works = (32, 178, 816, 262);
         /// <summary>
         /// 일 한 줄 = 칸 셋(정보, 직접 일하기, 자동 완료). Unity는 정보 450 + 단추 142 둘이었다. 같은 폭 칸 셋으로 줄을 이룬다.
-        /// 칸 폭 264 + 간격 12 셋이 보이는 폭 816과 같다(오른쪽 스크롤 막대 자리는 따로 더한다).
+        /// 칸 셋 + 간격 둘 + 오른쪽 스크롤 막대 자리가 목록 폭(다른 줄과 같은 글 칸 816) 안에 든다. 막대 자리를 폭 밖에 더하면 패널 여백·테두리에 겹쳤다.
         /// </summary>
-        public const float CellWidth = 264, CellHeight = 114, CellSpacing = 12;
+        public const float CellHeight = 114, CellSpacing = 12;
+        public static readonly float CellWidth = MathF.Floor((Works.W - CellSpacing * 2 - UiCardScroller.ScrollbarWidth - UiCardScroller.ScrollbarGap) / 3f);
+        /// <summary>칸 안 글자와 칸 가장자리 사이(정보 칸·단추 칸 같게).</summary>
+        public const float CellPadding = 10;
         public const float InfoFont = 18, ButtonFont = 20, HintFont = 16;
         public static readonly (float X, float Y, float W, float H) Cost = (32, 450, 816, 88); // Unity는 54였다. 비용 글이 길어지는 언어를 위해 세 줄 자리를 둔다
         public const float CostFont = 18;
@@ -93,7 +96,7 @@ namespace Rootborn.Screens.AdultFacility
             _works = At(root.Add(new UiCardGrid
             {
                 Id = WorksId, Padding = 0, DrawBackground = false, CellWidth = FacilityLayout.CellWidth, CellHeight = FacilityLayout.CellHeight, Spacing = FacilityLayout.CellSpacing,
-            }), (FacilityLayout.Works.X, FacilityLayout.Works.Y, FacilityLayout.Works.W + UiCardScroller.ScrollbarWidth + UiCardScroller.ScrollbarGap, FacilityLayout.Works.H));
+            }), FacilityLayout.Works);
             _works.DrawCell = PaintCell;
             _works.CellClicked += PressCell;
             _cost = At(root.Add(new UiTextBlock { Id = CostId, FontSize = FacilityLayout.CostFont, Color = FacilityLayout.Ink }), FacilityLayout.Cost);
@@ -254,11 +257,11 @@ namespace Rootborn.Screens.AdultFacility
             if (column == InfoColumn)
             {
                 list.Panel(rect, UiSkin.Field, UiTheme.ButtonDisabled);
-                DrawLeft(list, text, rect.Inset(8f), _infoTexts[work], FacilityLayout.InfoFont);
+                DrawLeft(list, text, rect.Inset(FacilityLayout.CellPadding), _infoTexts[work], FacilityLayout.InfoFont);
                 return;
             }
             list.Panel(rect, UiSkin.Button, state.Hovered ? UiTheme.ButtonHovered : UiTheme.ButtonNormal);
-            UiRect inner = rect.Inset(6f);
+            UiRect inner = rect.Inset(FacilityLayout.CellPadding);
             if (column == PlayColumn)
             {
                 _label.Draw(list, text, inner, T("facility.play-work"), FacilityLayout.ButtonFont, UiTheme.Ink, centerVertically: true);

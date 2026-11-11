@@ -27,16 +27,19 @@
       {
         // Unity Town.unity "Town Night Guide Light"(Lighting 아래, 점 조명 Light2D + LocalLightController): 씬 원점 (0, 0)유닛,
         // 바깥 반경 4유닛·안 반경 0.75유닛, 색 (1, 0.72, 0.38). 세기는 낮 0.1·저녁(17~20시) 0.55·밤(20~5시) 0.85, 따라가는 속도 6.
-        // 자리는 maps.json의 도착 지점과 같은 변환 (x*32, (1-y)*32) → 마을 왼쪽 위 모서리. 반경은 ×32.
+        // 그 자리(씬 원점)는 도착 지점과 같은 변환 (x*32, (1-y)*32)으로 (0, 32) — 마을 왼쪽 위 모서리라 원 대부분이 맵 밖이고
+        // 걸어서 닿지 않아 화면에 거의 보이지 않았다. Unity 판 마을의 가로등 그림(SchoolPlazaUrbanProps/Urban_lamp, (40, 27)유닛)은
+        // 학교 앞 도착 지점 TownSchoolReturn (43, 28)유닛에서 (-3, -1)유닛 = (-96, +32)픽셀에 있었다. 학교 앞 구역은 LDtk에 없어
+        // 북쪽 광장의 임시 학교 앞 도착 지점 town-school-entry (1168, 144)에 같은 차이를 주어 (1072, 176)에 둔다. 반경은 ×32.
         "name": "town-night-guide",
-        "at": [ 0, 32 ],
+        "at": [ 1072, 176 ],
         "radius": 128,
         "innerRadius": 24,
         "color": [ 1, 0.72, 0.38 ],
         "lerpSpeed": 6,
         "intensityByTime": { "time.morning": 0.1, "time.afternoon": 0.1, "time.evening": 0.55, "time.night": 0.85 },
         "temporary": true,
-        "reason": "임시: Unity 판 Town 씬의 빛 하나를 그 자리(씬 원점 = 마을 왼쪽 위 모서리)에 그대로 옮겼다. 거리 가로등 자리가 아니라 원점에 남은 것으로 보인다. 맵을 새로 그릴 때 가로등 자리를 새로 정한다"
+        "reason": "임시: Unity 판 Town 씬의 빛 하나(씬 원점에 남아 마을 모서리라 거의 보이지 않았다)를 Unity 판 가로등 그림 자리에 맞춰 북쪽 광장(임시 학교 앞 도착 지점에서 가로등까지의 차이)으로 옮겼다. 맵을 새로 그릴 때 가로등 자리를 새로 정한다"
       }
     ]
   }

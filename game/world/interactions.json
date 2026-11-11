@@ -39,7 +39,8 @@
       //   그리고 화면을 여는 지점(성인 시설, 탐색, 진로 연습).
       // 북쪽 광장(칸 32~52열, 0~11행)에 4칸 간격으로 둔다. 칸 (c, r)의 가운데 = ((c+0.5)*32, (r+0.5)*32).
       // 성인 시설 네 곳은 위쪽 줄(3행 40·43·46·49열. 1행은 화면 위 시계 HUD 밑에 캐릭터가 서서 피했다), 탐색 지점은 (49,5), 진로 연습 네 곳은 아래쪽 줄(11행 36·42·48·51열).
-      //   발견 지점(discovery)은 가운데 (43,7).
+      //   발견 지점(discovery)은 (42,9) — 9행 도서관(39열)과 가게 알바(45열) 사이. 7행 알바 줄 사이에 끼우면 이웃 알바와 한 칸이라 서로 가렸다.
+//   자리가 다른 임시 지점끼리는 상호작용 범위(radiusCells)보다 멀리 둔다(World TemporaryPointsTests).
       //   시설·연습 순서는 일터 줄과 같다(식당·병원·디자인·훈련장). 대상은 가까운 것이 먼저라(InteractionTargetRule) 지점끼리 두 칸 이상 떨어뜨려 각 지점 칸에 서면 그 지점이 대상이 된다.
       //   가게 말고 알바 여덟 곳(Unity Town.unity의 PartTimeWorkInteractor 순서)은 가운데 줄(7행 34~48열, 2칸 간격 — 5·9행 지점과도 두 칸 이상 떨어진다).
       "things": [
@@ -73,7 +74,7 @@
         { "kind": "part-time-work", "id": "work.clinic-helper", "at": [ 1424, 240 ], "priority": 45, "temporary": true, "reason": "임시 지점: Unity 판 알바 자리(Town.unity PartTimeWorkInteractor, 우선순위 45)는 LDtk 마을 그림 밖 북쪽 구역에 있었다. 새 맵 전까지 북쪽 광장 가운데 줄(7행)에 둔다" },
         { "kind": "part-time-work", "id": "work.fitness-helper", "at": [ 1488, 240 ], "priority": 45, "temporary": true, "reason": "임시 지점: Unity 판 알바 자리(Town.unity PartTimeWorkInteractor, 우선순위 45)는 LDtk 마을 그림 밖 북쪽 구역에 있었다. 새 맵 전까지 북쪽 광장 가운데 줄(7행)에 둔다" },
         { "kind": "part-time-work", "id": "work.errand-helper", "at": [ 1552, 240 ], "priority": 45, "temporary": true, "reason": "임시 지점: Unity 판 알바 자리(Town.unity PartTimeWorkInteractor, 우선순위 45)는 LDtk 마을 그림 밖 북쪽 구역에 있었다. 새 맵 전까지 북쪽 광장 가운데 줄(7행)에 둔다" },
-        { "kind": "discovery", "id": "discovery.clocktower-notice", "at": [ 1392, 240 ], "priority": 15, "temporary": true, "reason": "임시 지점: Unity 판 발견 지점(Town.unity TownDiscoveryPoint (12, 7), DiscoveryPointInteractor 우선순위 15)은 LDtk 마을 그림 밖 북쪽 구역에 있었다. 새 맵 전까지 북쪽 광장 가운데(7행 43열)에 둔다" }
+        { "kind": "discovery", "id": "discovery.clocktower-notice", "at": [ 1360, 304 ], "priority": 15, "temporary": true, "reason": "임시 지점: Unity 판 발견 지점(Town.unity TownDiscoveryPoint (12, 7), DiscoveryPointInteractor 우선순위 15)은 LDtk 마을 그림 밖 북쪽 구역에 있었다. 새 맵 전까지 북쪽 광장 9행 42열(도서관과 가게 알바 사이 빈 자리)에 둔다" }
       ]
     }
   }

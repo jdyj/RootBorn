@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using Rootborn.Core.Careers;
@@ -69,6 +70,42 @@ namespace Rootborn.Screens.Tests.AdultFacility
             Assert.That(buttons[1].Right, Is.LessThanOrEqualTo(buttons[2].X));
             foreach (UiRect r in new[] { title, close, summary, works, cost, status, buttons[0], buttons[2] })
                 Assert.That(r.X >= panel.X && r.Right <= panel.Right && r.Y >= panel.Y && r.Bottom <= panel.Bottom, Is.True, r.ToString());
+        }
+
+        /// <summary>
+        /// 일 목록(스크롤 막대 포함)은 다른 줄(요약·비용)과 같은 글 칸 안에 들어간다 — 스크롤 막대가 패널 여백·테두리에 겹치지 않게.
+        /// 칸 안 글자(정보 칸, 자동 완료 칸의 제목·안내)는 칸 가장자리에서 정보 칸과 같은 만큼(8px) 이상 떨어진다.
+        /// </summary>
+        [Test]
+        public void WorkList_StaysInTheTextColumn_AndCellTextKeepsItsMargin()
+        {
+            using var f = new FacilityFixture();
+            f.OpenAt();
+            f.Click(FacilityScreen.TransitionId); // 준비: 진로를 골라 일 목록을 채운다
+            f.Emit();
+            DrawList list = f.Emit();
+            UiRect works = f.Node(FacilityScreen.WorksId).Rect, summary = f.Node(FacilityScreen.SummaryId).Rect;
+            Assert.That(works.X, Is.EqualTo(summary.X));
+            Assert.That(works.Right, Is.LessThanOrEqualTo(summary.Right), "스크롤 막대까지 글 칸 안: 목록 " + works + " / 요약 " + summary);
+            Assert.That(f.Screen.Model.Works.Length, Is.GreaterThan(0));
+
+            var measurer = new TestMeasurer();
+            const float margin = 8f;
+            var problems = new List<string>();
+            for (int cell = 0; cell < f.Screen.Model.Works.Length * 3; cell++)
+            {
+                UiRect r = f.Screen.CellRect(cell);
+                if (r.Bottom > works.Bottom || r.Y < works.Y) continue; // 보이는 칸만
+                Assert.That(r.Right, Is.LessThanOrEqualTo(works.Right - UiCardScroller.ScrollbarWidth - UiCardScroller.ScrollbarGap + 0.01f), "칸은 스크롤 막대 자리 왼쪽");
+                foreach (DrawCommand c in list.Commands)
+                {
+                    if (c.Kind != DrawKind.Text || c.Rect.X < r.X || c.Rect.X > r.Right || c.Rect.Y < r.Y || c.Rect.Y > r.Bottom) continue;
+                    float width = measurer.Width(c.Text, c.FontSize);
+                    if (c.Rect.X < r.X + margin - 0.01f || c.Rect.X + width > r.Right - margin + 0.01f)
+                        problems.Add("칸 " + cell + " " + r + ": '" + c.Text + "' x " + c.Rect.X + "~" + (c.Rect.X + width));
+                }
+            }
+            Assert.That(problems, Is.Empty, string.Join("\n", problems));
         }
 
         [Test]

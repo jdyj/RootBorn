@@ -85,6 +85,10 @@ namespace Rootborn.Host.Tests
             Assert.That(guide.Model.Rows.Count(r => r.Group == KeyGuideGroups.Screens), Is.EqualTo(bindings.Count));
             Assert.That(guide.Model.Rows.Select(r => r.ActionKey), Does.Contain("ui.keys.move").And.Contain("ui.keys.interact").And.Contain("ui.keys.fullscreen"));
             Assert.That(guide.Model.Rows.Single(r => r.ActionKey == "ui.keys.interact").Alternatives.Select(a => a.ToString()), Is.EqualTo(new[] { "E", "Space", "Ctrl" }));
+            Assert.That(guide.Model.Rows.Single(r => r.ActionKey == "ui.keys.minigame.lane").Alternatives.Select(a => a.ToString()), Is.EqualTo(new[] { "A", "D", "←", "→" }), "미니게임 키(미니게임 화면이 넘긴 줄)");
+            Assert.That(guide.Model.Rows.Single(r => r.ActionKey == "ui.keys.furniture.full-view").Alternatives.Select(a => a.ToString()), Is.EqualTo(new[] { "F" }), "가구 배치 카메라(Host 이름표)");
+            Assert.That(guide.Model.Rows.Single(r => r.ActionKey == "ui.keys.furniture.zoom-in").Alternatives.Select(a => a.ToString()), Is.EqualTo(new[] { "=", "Num +" }));
+            Assert.That(guide.Model.Rows.Single(r => r.ActionKey == "ui.keys.furniture.zoom-out").Alternatives.Select(a => a.ToString()), Is.EqualTo(new[] { "-", "Num -" }));
             foreach (string language in player.Game.Text.Languages)
                 Assert.That(guide.TextKeys.Where(k => !player.Game.Text.Has(k, language)), Is.Empty, language + "에 없는 문구 키");
 

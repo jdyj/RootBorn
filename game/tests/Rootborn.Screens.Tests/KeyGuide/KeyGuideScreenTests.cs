@@ -26,11 +26,17 @@ namespace Rootborn.Screens.Tests.KeyGuide
                 .Name(ScreenKey.Tab, KeyChord.Of("Tab"))
                 .Name(ScreenKey.Enter, KeyChord.Of("Enter"))
                 .Name(ScreenKey.Help, KeyChord.Of("F1"))
-                .Name(ScreenKey.Interact, KeyChord.Of("E"), KeyChord.Of("Space"), KeyChord.Of("Ctrl"));
+                .Name(ScreenKey.Interact, KeyChord.Of("E"), KeyChord.Of("Space"), KeyChord.Of("Ctrl"))
+                .Name(ScreenKey.Left, KeyChord.Of("←")).Name(ScreenKey.Right, KeyChord.Of("→"))
+                .Name(ScreenKey.Space, KeyChord.Of("Space")).Name(ScreenKey.Rotate, KeyChord.Of("R"))
+                .Name(ScreenKey.AltLeft, KeyChord.Of("A")).Name(ScreenKey.AltRight, KeyChord.Of("D"));
             keys.AddRow(new KeyGuideRow(KeyGuideGroups.Movement, "ui.keys.move", new[] { keys.Directions, KeyChord.Of("WASD") }));
             keys.AddRow(new KeyGuideRow(KeyGuideGroups.Interact, "ui.keys.interact", keys.For(ScreenKey.Interact)));
             keys.AddRow(new KeyGuideRow(KeyGuideGroups.System, "ui.keys.fullscreen", new[] { KeyChord.Of("F11") }));
             keys.AddRow(new KeyGuideRow(KeyGuideGroups.System, "ui.keys.screenshot", new[] { KeyChord.Of("F12") }));
+            keys.AddRow(new KeyGuideRow(KeyGuideGroups.Furniture, "ui.keys.furniture.full-view", new[] { KeyChord.Of("F") }));
+            keys.AddRow(new KeyGuideRow(KeyGuideGroups.Furniture, "ui.keys.furniture.zoom-in", new[] { KeyChord.Of("=") }));
+            keys.AddRow(new KeyGuideRow(KeyGuideGroups.Furniture, "ui.keys.furniture.zoom-out", new[] { KeyChord.Of("-") }));
             return keys;
         }
 
@@ -130,6 +136,33 @@ namespace Rootborn.Screens.Tests.KeyGuide
             Assert.That(screen.Lines.First().Label, Is.EqualTo("이동"));
             Line(screen, "걷기");
             Assert.That(Line(screen, "걷기").Chords.Select(c => string.Join("+", c)), Is.EqualTo(new[] { "방향 키", "WASD" }), "방향 키는 현지화 문구, 키 이름은 그대로");
+        }
+
+        /// <summary>미니게임 키는 그 키를 처리하는 미니게임 화면이 등록 때 넘긴 줄에서 온다(손으로 적은 목록이 아니다).</summary>
+        [Test]
+        public void MinigameKeys_ComeFromTheMinigameScreenRegistration()
+        {
+            using TestSession t = Session();
+            KeyGuideScreen screen = Open(t);
+            Assert.That(screen.Model.Rows.Where(r => r.Group == KeyGuideGroups.Minigame).Select(r => r.ToString()), Is.EqualTo(new[]
+            {
+                "minigame | ui.keys.minigame.tap | Space",
+                "minigame | ui.keys.minigame.rotate | R",
+                "minigame | ui.keys.minigame.lane | A / D / ← / →",
+            }));
+            Assert.That(screen.Model.Rows.Where(r => r.Group == KeyGuideGroups.Furniture).Select(r => r.ActionKey), Is.EqualTo(new[]
+            {
+                "ui.keys.furniture.full-view", "ui.keys.furniture.zoom-in", "ui.keys.furniture.zoom-out",
+            }), "가구 배치 카메라 키는 Host 이름표의 줄");
+        }
+
+        [Test]
+        public void ARegisteredScreenCanGuideItsOwnKeys()
+        {
+            using TestSession t = Session(extra: r => r.Add("probe", ScreenLayer.Panel, false, s => new SettingsScreen(s))
+                .GuidesKeys(keys => new[] { new KeyGuideRow("probe-group", "ui.keys.title", keys.For(ScreenKey.Rotate)) }));
+            KeyGuideScreen screen = Open(t);
+            Assert.That(screen.Model.Rows.Last().ToString(), Is.EqualTo("probe-group | ui.keys.title | R"), "Order에 없는 묶음은 맨 뒤");
         }
 
         private static KeyGuideLine Line(KeyGuideScreen screen, string label) => screen.Lines.Single(l => !l.IsHeader && l.Label == label);
