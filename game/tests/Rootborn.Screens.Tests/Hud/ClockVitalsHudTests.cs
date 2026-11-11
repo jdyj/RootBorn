@@ -56,8 +56,12 @@ namespace Rootborn.Screens.Tests.Hud
             Assert.That(t.Screen<VitalsHudScreen>(ScreenCatalog.HudVitals).Model.Energy, Is.EqualTo(t.Session.Student.Energy));
             Assert.That(t.Session.Student.Energy, Is.LessThan(energy));
             var clock = t.Screen<ClockHudScreen>(ScreenCatalog.HudClock);
-            Assert.That(clock.Model.Hour * 60 + clock.Model.Minute, Is.EqualTo(7 * 60 + 40), "혼자면 활동 시간(어려운 책 40분)만큼 시계가 건너뛴다");
-            Assert.That(((UiLabel)t.Node(ClockHudScreen.LabelId)).Text, Is.EqualTo("1일  07:40 · 용돈 0"));
+            // 걸리는 분은 data/의 값이다(균형 조정으로 바뀐다 — 숫자를 여기에 적지 않는다).
+            int minutes = t.Session.Definitions.Get<Rootborn.Core.StudentLife.LocationActivity>("location.activity.library-hard-book").TimeCostMinutes;
+            Assert.That(minutes, Is.GreaterThan(0), "준비: 이 활동은 시간이 든다");
+            int expected = 7 * 60 + minutes;
+            Assert.That(clock.Model.Hour * 60 + clock.Model.Minute, Is.EqualTo(expected), "혼자면 활동 시간만큼 시계가 건너뛴다");
+            Assert.That(((UiLabel)t.Node(ClockHudScreen.LabelId)).Text, Is.EqualTo($"1일  {expected / 60:00}:{expected % 60:00} · 용돈 0"));
         }
 
         [Test]
