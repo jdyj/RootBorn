@@ -1,5 +1,6 @@
 using System.IO;
 using NUnit.Framework;
+using Rootborn.Core.Save;
 using Rootborn.Core.StudentLife;
 using Rootborn.Core.Time;
 
@@ -87,6 +88,126 @@ namespace Rootborn.Game.Tests
             Assert.That(clock.Day, Is.EqualTo(2));
         }
 
+        [Test]
+        public void StartNextDay_WaitsUntilTheRoomHasMovedToTheNextDay()
+        {
+            using var saves = new TempSaves();
+            var (clock, one, two) = SharedRoom(saves);
+            Assert.That(one.EndDay().Ended, Is.True);
+            Assert.That(one.CanStartNextDay, Is.False, "방이 아직 같은 날");
+            Assert.That(one.StartNextDay(), Is.False);
+            Assert.That(one.Student.CurrentDay, Is.EqualTo(1));
+            Assert.That(one.Student.DayState, Is.EqualTo(StudentDayState.ResultReady), "기다리는 동안 결과를 그대로 본다");
+
+            Assert.That(two.EndDay().Ended, Is.True);
+            Assert.That(clock.Day, Is.EqualTo(2));
+            Assert.That(one.CanStartNextDay, Is.True);
+            Assert.That(one.StartNextDay(), Is.True);
+            Assert.That(two.StartNextDay(), Is.True);
+            Assert.That(one.Student.CurrentDay, Is.EqualTo(2));
+            Assert.That(two.Student.CurrentDay, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void Alone_CanStartNextDay_RightAfterEndingTheDay()
+        {
+            using var saves = new TempSaves();
+            var game = TestWorld.Start(saves.Store);
+            Assert.That(game.CanStartNextDay, Is.False, "하루가 진행 중");
+            game.EndDay();
+            Assert.That(game.CanStartNextDay, Is.True);
+        }
+
+        [Test]
+        public void SkipPart_Alone_SpendsOnePointWithoutAnActivity_AndIsSaved()
+        {
+            using var saves = new TempSaves();
+            var game = TestWorld.Start(saves.Store);
+            int energy = game.Student.Energy, focus = game.Student.GetTraitValue("trait.focus");
+            var topics = new System.Collections.Generic.List<string>();
+            game.Changed += topics.Add;
+
+            Assert.That(game.CanSkipPart, Is.True);
+            Assert.That(game.SkipPart(0), Is.True);
+            Assert.That(game.Student.TimePointsSpentToday, Is.EqualTo(1), "개인 시간 포인트도 하나 쓴다");
+            Assert.That(game.Room.PartIndex, Is.EqualTo(1), "혼자면 바로 다음 때");
+            Assert.That(game.Student.GetTodayActivityIds(), Is.Empty, "활동 기록은 없다");
+            Assert.That(game.Student.Energy, Is.EqualTo(energy));
+            Assert.That(game.Student.GetTraitValue("trait.focus"), Is.EqualTo(focus));
+            Assert.That(topics, Does.Contain(GameChangeTopics.Student).And.Contain(GameChangeTopics.Room));
+
+            Assert.That(game.SkipPart(0), Is.False, "이미 넘긴 때를 다시 누르면(두 번 누름) 다음 때를 넘기지 않는다");
+            Assert.That(game.Student.TimePointsSpentToday, Is.EqualTo(1));
+
+            game = TestWorld.Start(saves.Store);
+            Assert.That(game.Student.TimePointsSpentToday, Is.EqualTo(1), "저장된다");
+            Assert.That(game.Room.PartIndex, Is.EqualTo(1));
+            Assert.That(game.SkipPart(1), Is.True);
+            Assert.That(game.Room.IsDayOver, Is.True);
+            Assert.That(game.CanSkipPart, Is.False, "때를 다 쓰면 넘길 것이 없다");
+            Assert.That(game.SkipPart(2), Is.False);
+            Assert.That(game.EndDay().Ended, Is.True, "하루 마감은 그대로");
+        }
+
+        [Test]
+        public void EndingTheDay_WithoutSpendingAnyPoint_StillWorks_AndSkipIsNotNeeded()
+        {
+            using var saves = new TempSaves();
+            var game = TestWorld.Start(saves.Store);
+            Assert.That(game.Student.TimePointsSpentToday, Is.EqualTo(0));
+            Assert.That(game.EndDay().Ended, Is.True, "지금도 시간 포인트를 안 쓰고 하루를 끝낼 수 있다");
+            Assert.That(game.CanSkipPart, Is.False, "마감한 날은 넘기지 않는다");
+            Assert.That(game.SkipPart(0), Is.False);
+        }
+
+        [Test]
+        public void SkipPart_Shared_FinishesMyPart_AndWaitsForTheOther()
+        {
+            using var saves = new TempSaves();
+            var (clock, one, two) = SharedRoom(saves);
+            Assert.That(one.SkipPart(0), Is.True);
+            Assert.That(clock.PartIndex, Is.EqualTo(0));
+            Assert.That(clock.HasFinishedPart("player-1"), Is.True);
+            Assert.That(one.CanSkipPart, Is.False, "기다리는 동안은 넘길 수 없다");
+            Assert.That(two.PerformOutsideSchoolActivity(LibraryStudy, "outside:two:skip").Kind, Is.EqualTo(LifeActivityResultKind.Applied));
+            Assert.That(clock.PartIndex, Is.EqualTo(1));
+            Assert.That(one.Student.TimePointsSpentToday, Is.EqualTo(clock.CompletedParts("player-1")));
+        }
+
+        [Test]
+        public void SyncWithRoom_AfterTheRoomSkippedMe_CatchesUpPersonalPoints_AndSavesIt()
+        {
+            using var saves = new TempSaves();
+            var (clock, one, two) = SharedRoom(saves, new RoomClockSettings(autoSkipAfterTicks: 1));
+            Assert.That(one.PerformOutsideSchoolActivity(LibraryStudy, "outside:one:sync").Kind, Is.EqualTo(LifeActivityResultKind.Applied));
+            Assert.That(clock.Tick(1), Is.True, "player-2를 넘겼다");
+            Assert.That(two.Student.TimePointsSpentToday, Is.EqualTo(0));
+
+            var topics = new System.Collections.Generic.List<string>();
+            two.Changed += topics.Add;
+            Assert.That(two.SyncWithRoom(), Is.True);
+            Assert.That(two.Student.TimePointsSpentToday, Is.EqualTo(1));
+            Assert.That(topics, Does.Contain(GameChangeTopics.Room).And.Contain(GameChangeTopics.Student));
+            Assert.That(clock.PartIndex, Is.EqualTo(1), "방에 두 번 알리지 않는다");
+
+            topics.Clear();
+            Assert.That(two.SyncWithRoom(), Is.False, "맞춘 뒤에는 바뀌는 것이 없다");
+            Assert.That(topics, Is.EqualTo(new[] { GameChangeTopics.Room }), "방이 바뀌었다는 알림만(HUD가 다시 읽는다)");
+
+            var again = GameSession.Start(TestWorld.Definitions, TestWorld.Settings, saves.Store, "slot-room", "player-2", room: clock);
+            Assert.That(again.Student.TimePointsSpentToday, Is.EqualTo(1), "맞춘 값이 저장된다");
+        }
+
+        private static (RoomClock Clock, GameSession One, GameSession Two) SharedRoom(TempSaves saves, RoomClockSettings settings = null)
+        {
+            var clock = new RoomClock(TestWorld.Definitions.Get<LifeCalendar>(TestWorld.Settings.CalendarId), settings);
+            clock.Join("player-1");
+            clock.Join("player-2");
+            var one = GameSession.Start(TestWorld.Definitions, TestWorld.Settings, saves.Store, "slot-room", "player-1", room: clock);
+            var two = GameSession.Start(TestWorld.Definitions, TestWorld.Settings, saves.Store, "slot-room", "player-2", room: clock);
+            return (clock, one, two);
+        }
+
         [TestCaseSource(typeof(UnityFixtureSlotsTests), nameof(UnityFixtureSlotsTests.Slots))]
         public void OldSaves_WithoutAClock_MakeTheRoomFromPersonalProgress(string fixture, string slot)
         {
@@ -96,7 +217,7 @@ namespace Rootborn.Game.Tests
             bool ended = game.Student.DayState != StudentDayState.InProgress;
             Assert.That(game.Room.Day, Is.EqualTo(ended ? game.Student.CurrentDay + 1 : game.Student.CurrentDay));
             Assert.That(game.Room.PartIndex, Is.EqualTo(ended ? 0 : System.Math.Min(game.Student.TimePointsSpentToday, game.Room.PartsToday)));
-            Assert.That(File.Exists(Path.Combine(saves.Path, slot, RoomClockSaveFiles.FileName)), Is.False, "혼자 하는 판은 시계 파일을 쓰지 않는다");
+            Assert.That(File.Exists(Path.Combine(saves.Path, slot, SaveFileNames.RoomClock)), Is.False, "혼자 하는 판은 시계 파일을 쓰지 않는다");
         }
     }
 }

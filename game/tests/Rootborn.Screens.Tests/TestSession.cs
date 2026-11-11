@@ -31,12 +31,14 @@ namespace Rootborn.Screens.Tests
 
         /// <param name="saves">이어 할 세이브 폴더(Reopen). 비면 새 임시 폴더를 만들고 Dispose에서 지운다.</param>
         /// <param name="definitions">쓸 정의(비면 실제 data/).</param>
-        public TestSession(string language = "ko", Action<ScreenRegistry> extra = null, string saves = null, GameDefinitions definitions = null)
+        /// <param name="room">게임 한 판이 따를 방의 시계(비면 혼자인 방). playerId는 그 방에서의 신원(비면 기본 플레이어).</param>
+        public TestSession(string language = "ko", Action<ScreenRegistry> extra = null, string saves = null, GameDefinitions definitions = null,
+            Rootborn.Core.Time.IRoomTime room = null, string playerId = null)
         {
             _ownsSaves = saves == null;
             _saves = saves ?? Path.Combine(Path.GetTempPath(), "rootborn-screens-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_saves);
-            Session = GameSession.Start(definitions ?? _definitions.Value, GameStartSettings.FromRegistry(TestData.DataDirectory), new FileSaveStore(_saves), "slot-test", null);
+            Session = GameSession.Start(definitions ?? _definitions.Value, GameStartSettings.FromRegistry(TestData.DataDirectory), new FileSaveStore(_saves), "slot-test", playerId, room: room);
             Text = TestData.Text(language);
             ScreenRegistry registry = ScreenCatalog.Create();
             extra?.Invoke(registry);

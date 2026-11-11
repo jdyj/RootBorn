@@ -65,6 +65,8 @@ namespace Rootborn.Net.Session
         public int DayEndedCount => Count(e => e.DayEnded);
 
         public bool HasFinished(ushort netId) => Find(netId, out var e) && e.FinishedPart;
+        public int CompletedParts(ushort netId) => Find(netId, out var e) ? e.CompletedParts : 0;
+        public bool TryGetEntry(ushort netId, out RoomClockEntry entry) => Find(netId, out entry);
         public bool IsDayEnded(ushort netId) => Find(netId, out var e) && e.DayEnded;
 
         public int RepresentativeMinutes(PartOfDayTimes times) => (times ?? PartOfDayTimes.Default).MinutesFor(PartIndex, PartsToday);
@@ -136,7 +138,7 @@ namespace Rootborn.Net.Session
                 .On<PlayerLeftMessage>((now, m) => _remotes.Remove(m.NetId))
                 .On<PoseMessage>(OnPose)
                 .On<LookMessage>(OnLook)
-                .On<RoomClockMessage>((now, m) => RoomClock = new RoomClockView(m));
+                .On<RoomClockMessage>(OnRoomClock);
         }
 
         public ClientStatus Status { get; private set; } = ClientStatus.Connecting;
@@ -148,6 +150,9 @@ namespace Rootborn.Net.Session
         public int JoinIndex { get; private set; } = -1;
         public SpawnOffset SpawnOffset { get; private set; }
         public RoomClockView RoomClock { get; private set; } = RoomClockView.Unknown;
+
+        /// <summary>서버에서 방의 시계를 받을 때마다(Update 안에서).</summary>
+        public event Action RoomClockChanged;
         public DropCounters Drops { get; } = new DropCounters();
 
         public IEnumerable<string> RemotePlayerIds
@@ -180,16 +185,32 @@ namespace Rootborn.Net.Session
             if (Status == ClientStatus.Joined) Send(new LookMessage { Look = look }, Delivery.ReliableOrdered);
         }
 
-        public void RequestDayEndReady()
+        /// <summary>그 날(day)의 내 하루를 끝냈다. 0이면 서버의 지금 날. 서버는 다른 날의 마감은 받지 않는다.</summary>
+        public void RequestDayEndReady(int day = 0)
         {
-            if (Status == ClientStatus.Joined) Send(new DayEndReadyMessage(), Delivery.ReliableOrdered);
+            if (Status == ClientStatus.Joined && day >= 0) Send(new DayEndReadyMessage { Day = day }, Delivery.ReliableOrdered);
         }
 
-        /// <summary>시간 포인트를 points만큼 써서 그만큼의 때를 끝냈다. 판정은 서버가 한다(기다리는 중이면 받지 않고 시계를 다시 보낸다).</summary>
-        public void RequestFinishPart(int points)
+        /// <summary>시간 포인트를 points만큼 써서 그만큼의 때를 끝냈다(서버의 지금 날·지금 때). 판정은 서버가 한다(기다리는 중이면 받지 않고 시계를 다시 보낸다).</summary>
+        public void RequestFinishPart(int points) => RequestFinishPart(0, 0, points);
+
+        /// <summary>(day, fromPart)에서 시간 포인트를 points만큼 써서 그만큼의 때를 끝냈다. 늦게 와도 서버가 두 번 세지 않는다.</summary>
+        public void RequestFinishPart(int day, int fromPart, int points)
         {
-            if (Status != ClientStatus.Joined || points < 1) return;
-            Send(new FinishPartMessage { Points = (byte)Math.Min(byte.MaxValue, points) }, Delivery.ReliableOrdered);
+            if (Status != ClientStatus.Joined || points < 1 || day < 0 || fromPart < 0) return;
+            Send(new FinishPartMessage
+            {
+                Day = day, FromPart = (byte)Math.Min(byte.MaxValue, fromPart), Points = (byte)Math.Min(byte.MaxValue, points),
+            }, Delivery.ReliableOrdered);
+        }
+
+        /// <summary>그 번호의 사람의 신원(자기 포함). 모르면 false.</summary>
+        public bool TryGetPlayerId(ushort netId, out string playerId)
+        {
+            if (Status == ClientStatus.Joined && netId == NetId) { playerId = _playerId; return true; }
+            if (_remotes.TryGetValue(netId, out var remote)) { playerId = remote.PlayerId; return true; }
+            playerId = null;
+            return false;
         }
 
         /// <summary>"넘기기": 시간 포인트를 쓰지 않고 지금 때를 끝낸다.</summary>
@@ -297,6 +318,12 @@ namespace Rootborn.Net.Session
             _sequence = 0;
             _sentMapId = null;
             _poseMapChanged = true;
+        }
+
+        private void OnRoomClock(double now, RoomClockMessage m)
+        {
+            RoomClock = new RoomClockView(m);
+            RoomClockChanged?.Invoke();
         }
 
         private void OnJoined(double now, PlayerJoinedMessage m)

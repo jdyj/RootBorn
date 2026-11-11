@@ -49,7 +49,11 @@ namespace Rootborn.Core.Save
         /// <summary>월드 상태 중 Shared·SaveSlot 범위만 담는 슬롯 공유 파일.</summary>
         public const string WorldStateShared = "world-state-progress-shared.json";
 
+        /// <summary>방의 시계(Core Time RoomClock). 슬롯마다 하나이고 방을 가진 쪽(서버)만 쓴다. 혼자 하는 판은 쓰지 않는다. Unity 판에는 없었다.</summary>
+        public const string RoomClock = "room-clock.json";
+
         /// <summary>
+        /// 옛 공용 시간 파일이 놓이는 슬롯 자리. 지금은 방의 시계(<see cref="RoomClock"/>)가 없는 옛 방을 읽을 때만 쓴다.
         /// 같이 쓰는 시간 파일이 놓이는 슬롯 자리(Unity SaveService.WorldTimeDirectory의 "world-time" 폴더). 파일 이름은 <see cref="WorldTime"/>.
         /// Unity 판은 세이브 폴더를 따로 준 실행(-saveRoot)에서 &lt;root&gt;/world-time/&lt;슬롯&gt;.json에 썼다.
         /// </summary>

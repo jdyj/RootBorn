@@ -88,7 +88,7 @@ namespace Rootborn.Server.Tests
             }
 
             var store = new FileSaveStore(_saveRoot);
-            Assert.That(store.TryRead("room-p", RoomClockSaveFiles.FileName, out RoomClockSaveData saved), Is.True);
+            Assert.That(store.TryRead("room-p", SaveFileNames.RoomClock, out RoomClockSaveData saved), Is.True);
             Assert.That(saved.Day, Is.EqualTo(2), "끝낼 때 저장한 날");
 
             using var again = ServerProcess.Start("--root", root, "--save-root", _saveRoot, "--slot", "room-p", "--bind", IPAddress.Loopback.ToString(), "--port", "0");
@@ -115,6 +115,8 @@ namespace Rootborn.Server.Tests
             StringAssert.Contains("--port", server.Output);
             StringAssert.Contains(ServerOptions.SaveRootVariable, server.Output);
         }
+
+        internal static string RepoRoot() => FindRepoRoot();
 
         private static string FindRepoRoot()
         {

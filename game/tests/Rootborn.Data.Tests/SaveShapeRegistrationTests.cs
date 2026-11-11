@@ -52,6 +52,7 @@ namespace Rootborn.Data.Tests
             Names.ResourceRecipe(Names.LegacyPlayerId),
             Names.ObjectiveJournalTracking,
             Names.Settings,
+            Names.RoomClock,
         };
 
         [TestCaseSource(nameof(DefaultPlayerFiles))]

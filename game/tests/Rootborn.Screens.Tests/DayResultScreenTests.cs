@@ -1,5 +1,6 @@
 using System.Linq;
 using NUnit.Framework;
+using Rootborn.Core.Time;
 using Rootborn.Core.StudentLife;
 using Rootborn.Screens.Day;
 using Rootborn.Ui;
@@ -72,6 +73,26 @@ namespace Rootborn.Screens.Tests
             Assert.That(_f.Session.Student.DayState, Is.EqualTo(StudentDayState.InProgress));
             Assert.That(_f.Stack.IsOpen(ScreenCatalog.DayResult), Is.False);
             Assert.That(_f.Stack.MovementBlocked, Is.False);
+        }
+
+        [Test]
+        public void Together_NextDayWaits_UntilEveryoneEndedTheDay()
+        {
+            var clock = new RoomClock(_f.Session.Student.Calendar);
+            clock.Join("me");
+            clock.Join("friend");
+            using var shared = new DayScreensFixture(room: clock, playerId: "me");
+            Assert.That(shared.Interact("House", DayResultScreen.InteractionKind, "house.day-end"), Is.True);
+            var next = (UiButton)shared.Node(DayResultScreen.NextDayId);
+            Assert.That(next.Enabled, Is.False, "friend가 마감하기 전");
+            Assert.That(next.Text, Is.EqualTo(shared.Text.Get("day-result.waiting-others")));
+
+            clock.EndDay("friend");
+            shared.Session.SyncWithRoom();
+            Assert.That(next.Enabled, Is.True, "방이 다음 날로 넘어갔다");
+            Assert.That(next.Text, Is.EqualTo(shared.Text.Get("day-result.next-day")));
+            shared.Click(DayResultScreen.NextDayId);
+            Assert.That(shared.Session.Student.CurrentDay, Is.EqualTo(2));
         }
 
         [Test]

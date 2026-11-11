@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Rootborn.Core.Save;
+using Rootborn.Core.StudentLife;
 using Rootborn.Data;
 using Rootborn.Data.Builders;
 using Rootborn.Data.Save;
@@ -103,7 +104,7 @@ namespace Rootborn.Server
             RoomServer room;
             try
             {
-                room = new RoomServer(transport, settings, versions, store, options.SaveSlot, Log);
+                room = new RoomServer(transport, settings, versions, store, options.SaveSlot, Log, RoomCalendar(load.Definitions));
             }
             catch (Exception e) when (e is SaveFileCorruptException || e is SaveFileTooNewException)
             {
@@ -130,6 +131,15 @@ namespace Rootborn.Server
             }
 
             return ExitOk;
+        }
+
+        /// <summary>
+        /// 방의 시계가 쓸 달력: 게임 한 판(GameSession)과 같은 정의(registry.json 기본값의 달력 id). 대표 시각은 아직 데이터에 없어 달력의 기본값이다.
+        /// </summary>
+        public static LifeCalendar RoomCalendar(GameDefinitions definitions)
+        {
+            if (definitions == null) throw new ArgumentNullException(nameof(definitions));
+            return definitions.Get<LifeCalendar>(GameStartSettings.FromDefinitions(definitions).CalendarId);
         }
 
         /// <summary>

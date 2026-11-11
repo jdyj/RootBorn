@@ -183,7 +183,7 @@ namespace Rootborn.Net.Tests
                 Assert.That(a.RoomClock.PartIndex, Is.EqualTo(1));
             }
 
-            Assert.That(store.Contains("slot-0", RoomClockSaveFiles.FileName), Is.True);
+            Assert.That(store.Contains("slot-0", SaveFileNames.RoomClock), Is.True);
             using var again = new SessionRig(store: store, saveSlot: "slot-0");
             Assert.That(again.Server.Clock.PartIndex, Is.EqualTo(1), "서버를 다시 켜면 이어진다");
         }

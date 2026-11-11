@@ -165,5 +165,11 @@
   "ui.settings.language-name": "한국어",
   "ui.settings.display": "표시",
   "ui.settings.display-windowed": "창",
-  "ui.settings.display-fullscreen": "전체 화면"
+  "ui.settings.display-fullscreen": "전체 화면",
+  "ui.hud.time-points": "남은 TP {0}/{1}",
+  "ui.hud.room-waiting": " · 아직: {0}",
+  "ui.hud.room-separator": ", ",
+  "daily-plan.skip": "이 때 넘기기",
+  "daily-plan.skip-refused": "지금은 넘길 수 없어요",
+  "day-result.waiting-others": "다른 사람의 마감을 기다리는 중"
 }

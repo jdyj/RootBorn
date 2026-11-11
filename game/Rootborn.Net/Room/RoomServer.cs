@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Rootborn.Core.Network;
 using Rootborn.Core.Save;
+using Rootborn.Core.StudentLife;
 using Rootborn.Core.Time;
 using Rootborn.Net.Session;
 using Rootborn.Net.Transport;
@@ -59,7 +60,9 @@ namespace Rootborn.Net.Room
         /// <param name="store">방 상태를 읽고 쓸 저장소.</param>
         /// <param name="saveSlot">세이브 슬롯 id.</param>
         /// <param name="log">사람이 읽는 운영 로그(현지화 대상 아님). 없으면 남기지 않는다.</param>
-        public RoomServer(ITransport transport, RoomServerSettings settings, RoomVersions versions, ISaveStore store, string saveSlot, Action<string> log)
+        /// <param name="calendar">하루의 때 수와 때의 대표 시각을 주는 달력(게임 데이터의 정의). 없으면 Core 기본 달력.</param>
+        public RoomServer(ITransport transport, RoomServerSettings settings, RoomVersions versions, ISaveStore store, string saveSlot, Action<string> log,
+            LifeCalendar calendar = null)
         {
             if (transport == null) throw new ArgumentNullException(nameof(transport));
             settings ??= new RoomServerSettings();
@@ -71,14 +74,14 @@ namespace Rootborn.Net.Room
             Versions = versions;
 
             // 방의 시계 파일도, 옛 공용 시간 파일도 없으면 새 방이다(옛 파일만 있으면 그 날에서 잇는다 — RoomClockSaveFiles.Load).
-            IsNewRoom = !_store.TryRead(saveSlot, RoomClockSaveFiles.FileName, out RoomClockSaveData _)
+            IsNewRoom = !_store.TryRead(saveSlot, SaveFileNames.RoomClock, out RoomClockSaveData _)
                 && !_store.TryRead(SaveFileNames.WorldTimeSlot, SaveFileNames.WorldTime(saveSlot), out WorldTimeSaveData _);
 
             var gate = new HandshakeServerTransport(transport, versions, settings.HandshakeTimeoutSeconds, settings.Session.MaxMessageBytes);
             gate.Refused += (peer, reason, theirs) =>
                 Log(theirs.HasValue ? $"접속 거절 {peer}: {reason} (상대 {theirs.Value}, 방 {versions})" : $"접속 거절 {peer}: {reason}");
             settings.Session.MaxPlayers = settings.MaxPlayers;
-            _session = new SessionServer(gate, settings.Session, store, saveSlot);
+            _session = new SessionServer(gate, settings.Session, store, saveSlot, calendar);
 
             if (IsNewRoom) RoomClockSaveFiles.Save(_store, _saveSlot, _session.Clock);
             Log((IsNewRoom ? "새 방을 만듦" : "방을 이어서 엶") + $": 슬롯 {saveSlot}, {DayText()}, 정원 {settings.MaxPlayers}, {versions}");

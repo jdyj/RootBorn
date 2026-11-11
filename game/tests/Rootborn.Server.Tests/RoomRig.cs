@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Rootborn.Core.Save;
+using Rootborn.Core.StudentLife;
 using Rootborn.Net.Room;
 using Rootborn.Net.Session;
 using Rootborn.Net.Transport;
@@ -14,13 +15,13 @@ namespace Rootborn.Server.Tests
 
         private readonly List<SessionClient> _clients = new List<SessionClient>();
 
-        public RoomRig(ISaveStore store, string slot = "room-a", int maxPlayers = 4, RoomServerSettings settings = null)
+        public RoomRig(ISaveStore store, string slot = "room-a", int maxPlayers = 4, RoomServerSettings settings = null, LifeCalendar calendar = null)
         {
             Network = new LoopbackNetwork(1);
             Clock = new ManualRoomClock();
             Settings = settings ?? new RoomServerSettings { MaxPlayers = maxPlayers };
             Log = new List<string>();
-            Room = new RoomServer(Network.Listen(), Settings, Versions, store, slot, Log.Add);
+            Room = new RoomServer(Network.Listen(), Settings, Versions, store, slot, Log.Add, calendar);
             Loop = new RoomLoop(Room, Clock, Settings.TickSeconds);
         }
 

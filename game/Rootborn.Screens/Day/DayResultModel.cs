@@ -94,8 +94,11 @@ namespace Rootborn.Screens.Day
         public string[] CareerCandidateLines { get; private set; }
         public string CareerInterestId { get; private set; }
         public string[] CareerInterestRecommendations { get; private set; }
-        /// <summary>다음 날 버튼을 누를 수 있다(하루 결과가 준비됨).</summary>
+        /// <summary>다음 날 버튼을 누를 수 있다(하루 결과가 준비됐고 방이 다음 날로 넘어감 — GameSession.CanStartNextDay).</summary>
         public bool CanStartNextDay { get; private set; }
+
+        /// <summary>하루 결과는 준비됐지만 같이 하는 방의 다른 사람이 아직 마감하지 않았다.</summary>
+        public bool WaitingForOthers { get; private set; }
 
         /// <summary>
         /// result는 방금 끝낸 날의 결과(GameSession.EndDay). 이미 끝난 날을 다시 보는 경우(Ended=false)는 Unity 판처럼
@@ -134,7 +137,8 @@ namespace Rootborn.Screens.Day
                 CareerCandidateLines = session.CareerCandidates?.TodayHintResultLines ?? Array.Empty<string>(),
                 CareerInterestId = session.CareerInterests?.CurrentInterestId ?? string.Empty,
                 CareerInterestRecommendations = Array.Empty<string>(),
-                CanStartNextDay = student.DayState == StudentDayState.ResultReady,
+                CanStartNextDay = session.CanStartNextDay,
+                WaitingForOthers = student.DayState == StudentDayState.ResultReady && !session.CanStartNextDay,
             };
 
             if (model.CareerInterestId.Length > 0 && session.Definitions.TryGet<CareerInterest>(model.CareerInterestId, out CareerInterest interest))

@@ -165,5 +165,11 @@
   "ui.settings.language-name": "English",
   "ui.settings.display": "Display",
   "ui.settings.display-windowed": "Windowed",
-  "ui.settings.display-fullscreen": "Fullscreen"
+  "ui.settings.display-fullscreen": "Fullscreen",
+  "ui.hud.time-points": "TP {0}/{1} left",
+  "ui.hud.room-waiting": " · Waiting for: {0}",
+  "ui.hud.room-separator": ", ",
+  "daily-plan.skip": "Skip this part",
+  "daily-plan.skip-refused": "You can't skip now",
+  "day-result.waiting-others": "Waiting for others to end the day"
 }

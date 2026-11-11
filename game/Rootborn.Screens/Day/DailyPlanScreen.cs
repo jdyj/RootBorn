@@ -18,8 +18,12 @@ namespace Rootborn.Screens.Day
         public static readonly UiRect CloseTop = new UiRect(Width - 40 - 160, 40, 160, 54);
         public static readonly UiRect TimeBudget = new UiRect(136, 100, Width - 136 - 40, 54);
         public const float TimeBudgetFont = 24;
-        /// <summary>거절 이유: 시간 줄의 오른쪽(Unity 판에는 없던 줄 — 지시문이 이유를 보이라고 했다).</summary>
-        public static readonly UiRect Refusal = new UiRect(560, 100, Width - 560 - 40, 54);
+        /// <summary>거절 이유: 시간 줄의 오른쪽(Unity 판에는 없던 줄 — 지시문이 이유를 보이라고 했다). 넘기기 단추 자리만큼 줄였다.</summary>
+        public static readonly UiRect Refusal = new UiRect(560, 100, Width - 560 - 40 - 200 - 12, 54);
+        /// <summary>
+        /// "넘기기" 단추: 시간 줄의 오른쪽 끝(Unity 판에는 없다 — 멀티플레이 설계 2.1절). 일과 화면의 다른 자리를 옮기지 않는 곳이다(사용자 확인 필요).
+        /// </summary>
+        public static readonly UiRect Skip = new UiRect(Width - 40 - 200, 100, 200, 54);
         public const float RefusalFont = 18;
         public static readonly UiRect Slots = new UiRect(40, 184, Width - 80, 132);
         public const float SlotSpacing = 8, SlotFont = 18;
@@ -44,13 +48,14 @@ namespace Rootborn.Screens.Day
         public const string InteractionKind = "daily-plan-board";
         public const string RootId = "daily-plan", TimeBudgetId = "daily-plan.time-budget", RefusalId = "daily-plan.refusal",
             RouteGridId = "daily-plan.routes", EmptyId = "daily-plan.empty", CloseTopId = "daily-plan.close-top",
-            PreviousId = "daily-plan.previous", NextId = "daily-plan.next", CloseBottomId = "daily-plan.close";
+            PreviousId = "daily-plan.previous", NextId = "daily-plan.next", CloseBottomId = "daily-plan.close", SkipId = "daily-plan.skip";
 
         public static string SlotId(int index) => "daily-plan.slot." + index;
         public static string SlotTextId(int index) => "daily-plan.slot." + index + ".text";
 
         private UiLabel _title, _timeBudget, _refusal, _empty;
-        private UiButton _closeTop, _previous, _next, _closeBottom;
+        private UiButton _closeTop, _previous, _next, _closeBottom, _skip;
+        private int _shownPart;
         private UiNode _slotRow;
         private readonly UiButton[] _slots = new UiButton[DailyPlanLayout.MaxSlots];
         private readonly UiCenteredText[] _slotTexts = new UiCenteredText[DailyPlanLayout.MaxSlots];
@@ -76,6 +81,8 @@ namespace Rootborn.Screens.Day
             _closeTop.Clicked += Close;
             _timeBudget = Place(root.Add(new UiLabel { Id = TimeBudgetId, FontSize = DailyPlanLayout.TimeBudgetFont }), DailyPlanLayout.TimeBudget);
             _refusal = Place(root.Add(new UiLabel { Id = RefusalId, FontSize = DailyPlanLayout.RefusalFont, Align = UiAlign.Right, Text = string.Empty }), DailyPlanLayout.Refusal);
+            _skip = Place(root.Add(new UiButton { Id = SkipId, FontSize = DailyPlanLayout.ButtonFont }), DailyPlanLayout.Skip);
+            _skip.Clicked += SkipPart;
 
             _slotRow = Place(root.Add(new UiNode { Id = "daily-plan.slots" }), DailyPlanLayout.Slots);
             for (int i = 0; i < _slots.Length; i++)
@@ -144,6 +151,16 @@ namespace Rootborn.Screens.Day
             Render();
         }
 
+        // 화면이 보인 때를 넘긴다(그 사이 때가 바뀌었으면 GameSession이 넘기지 않는다).
+        private void SkipPart()
+        {
+            if (Services.Session == null || !Services.Session.SkipPart(_shownPart))
+            {
+                _refusalKey = "daily-plan.skip-refused";
+                _refusal.Text = T(_refusalKey);
+            }
+        }
+
         private void AssignRoute(int index)
         {
             if (Model == null || !Model.CanAssign || index < 0 || index >= Model.Routes.Count) return;
@@ -172,6 +189,9 @@ namespace Rootborn.Screens.Day
                 ? StudentTimeText.Format(T, session.Student)
                 : string.Format(CultureInfo.InvariantCulture, T("daily-plan.diary-day"), Model.DisplayedDay);
             _refusal.Text = _refusalKey.Length == 0 ? string.Empty : T(_refusalKey);
+            _shownPart = session.Room.PartIndex;
+            _skip.Text = T("daily-plan.skip");
+            _skip.Enabled = Model.IsCurrentDay && session.CanSkipPart;
 
             int n = Math.Min(Model.Slots.Count, _slots.Length);
             float w = n == 0 ? 0 : (DailyPlanLayout.Slots.W - (n - 1) * DailyPlanLayout.SlotSpacing) / n;

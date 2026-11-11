@@ -1,6 +1,7 @@
 using System.Linq;
 using NUnit.Framework;
 using Rootborn.Core.StudentLife;
+using Rootborn.Core.Time;
 using Rootborn.Screens.Day;
 using Rootborn.Ui;
 
@@ -44,6 +45,36 @@ namespace Rootborn.Screens.Tests
             Assert.That(((UiLabel)_f.Node(DailyPlanScreen.TimeBudgetId)).Text,
                 Is.EqualTo(string.Format(_f.Text.Get("life.tp.summary"), 1, _f.Text.Get("life.weekday." + _f.Session.Student.Calendar.GetWeekdayIndex(1)),
                     _f.Session.Student.TimePointsRemaining, _f.Session.Student.DailyTimePointBudget)));
+        }
+
+        [Test]
+        public void SkipButton_EndsThisPartWithoutAnActivity_AndIsOffWhenNothingIsLeft()
+        {
+            Open();
+            Assert.That(_f.Node(DailyPlanScreen.SkipId).Enabled, Is.True);
+            _f.Click(DailyPlanScreen.SkipId);
+            Assert.That(_f.Session.Student.TimePointsSpentToday, Is.EqualTo(1), "시간 포인트 하나를 쓴다");
+            Assert.That(_f.Session.Room.PartIndex, Is.EqualTo(1), "혼자면 바로 다음 때");
+            Assert.That(_f.Session.Student.GetTodayActivityIds(), Is.Empty);
+            Assert.That(((UiLabel)_f.Node(DailyPlanScreen.TimeBudgetId)).Text, Does.Contain("1/2"), "시간 줄이 바로 바뀐다");
+
+            _f.Click(DailyPlanScreen.SkipId);
+            Assert.That(_f.Session.Room.IsDayOver, Is.True);
+            Assert.That(_f.Node(DailyPlanScreen.SkipId).Enabled, Is.False, "넘길 때가 없다");
+        }
+
+        [Test]
+        public void SkipButton_WhileWaitingForOthers_IsOff()
+        {
+            var clock = new RoomClock(_f.Session.Student.Calendar);
+            clock.Join("me");
+            clock.Join("friend");
+            using var shared = new DayScreensFixture(room: clock, playerId: "me");
+            Assert.That(shared.Interact("House", DailyPlanScreen.InteractionKind, "house.daily-plan-board"), Is.True);
+            shared.Click(DailyPlanScreen.SkipId);
+            Assert.That(clock.HasFinishedPart("me"), Is.True);
+            Assert.That(clock.PartIndex, Is.EqualTo(0), "friend를 기다린다");
+            Assert.That(shared.Node(DailyPlanScreen.SkipId).Enabled, Is.False, "기다리는 동안은 넘기지 못한다");
         }
 
         [Test]

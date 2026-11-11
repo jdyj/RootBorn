@@ -232,15 +232,19 @@ namespace Rootborn.Net.Session
         }
 
         // 받아들이지 않은 요청(기다리는 동안 보낸 것 등)은 지금 시계를 그 사람에게 다시 보내 맞춘다.
+        // 날이 적힌 요청(v2)은 그 날에만 받는다(지난 날의 마감이 새 날을 마감하지 않게). 날 0은 지금 날(v1).
         private void OnDayEndReady(PeerId peer, DayEndReadyMessage message)
         {
-            if (Clock.EndDay(_connections[peer].Player.PlayerId)) ClockChanged(saveIt: true);
+            bool sameDay = message.Day == 0 || message.Day == Clock.Day;
+            if (sameDay && Clock.EndDay(_connections[peer].Player.PlayerId)) ClockChanged(saveIt: true);
             else SendClock(peer);
         }
 
         private void OnFinishPart(PeerId peer, FinishPartMessage message)
         {
-            if (Clock.Spend(_connections[peer].Player.PlayerId, message.Points)) ClockChanged(saveIt: true);
+            string id = _connections[peer].Player.PlayerId;
+            bool changed = message.Day == 0 ? Clock.Spend(id, message.Points) : Clock.SpendFrom(id, message.Day, message.FromPart, message.Points);
+            if (changed) ClockChanged(saveIt: true);
             else SendClock(peer);
         }
 
@@ -278,7 +282,11 @@ namespace Rootborn.Net.Session
             foreach (var state in _clockScratch)
             {
                 if (!_players.TryGetValue(state.ParticipantId, out var player)) continue;
-                entries.Add(new RoomClockEntry { NetId = player.NetId, FinishedPart = state.FinishedPart, DayEnded = state.DayEnded });
+                entries.Add(new RoomClockEntry
+                {
+                    NetId = player.NetId, FinishedPart = state.FinishedPart, DayEnded = state.DayEnded,
+                    CompletedParts = (byte)Math.Min(byte.MaxValue, Math.Max(0, state.CompletedParts)),
+                });
             }
 
             return new RoomClockMessage

@@ -49,6 +49,12 @@ namespace Rootborn.Net.Tests
         /// <summary>고장 난 클라이언트처럼 아무것도 하지 않게 한다(돌리지 않음).</summary>
         public void Freeze(SessionClient client) => _clients.Remove(client);
 
+        /// <summary>얼린 클라이언트를 다시 돌린다(그동안 온 것은 전송에 쌓여 있다).</summary>
+        public void Thaw(SessionClient client)
+        {
+            if (!_clients.Contains(client)) _clients.Add(client);
+        }
+
         public void Run(double seconds, Action<double> eachStep = null)
         {
             double end = Now + seconds;

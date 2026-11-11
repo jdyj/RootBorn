@@ -27,12 +27,12 @@ namespace Rootborn.Screens.Tests
 
         private readonly string _saves;
 
-        public DayScreensFixture(string language = "ko")
+        public DayScreensFixture(string language = "ko", Rootborn.Core.Time.IRoomTime room = null, string playerId = null)
         {
             _saves = Path.Combine(Path.GetTempPath(), "rootborn-day-screens-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_saves);
             Store = new FileSaveStore(_saves);
-            Session = GameSession.Start(_definitions.Value, GameStartSettings.FromRegistry(TestData.DataDirectory), Store, "slot-test", null);
+            Session = GameSession.Start(_definitions.Value, GameStartSettings.FromRegistry(TestData.DataDirectory), Store, "slot-test", playerId, room: room);
             Text = TestData.Text(language);
             Stack = new ScreenStack(ScreenCatalog.Create(), new ScreenServices(Text, Session));
             Stack.Layout(1920, 1080);

@@ -56,6 +56,13 @@ namespace Rootborn.Core.Time
         int RepresentativeMinutes { get; }
 
         bool HasFinishedPart(string participantId);
+
+        /// <summary>그 참가자가 오늘 끝낸 때의 수(쓴 시간 포인트와 넘긴 때, 방이 대신 넘긴 때). 모르면 0.</summary>
+        int CompletedParts(string participantId);
+
+        /// <summary>지금 있는 참가자를 into에 채운다(비우고 채운다). 화면이 누가 아직 안 끝냈는지 보인다.</summary>
+        void CopyPresent(List<RoomParticipantState> into);
+
         bool CanSpend(string participantId, int points);
 
         /// <returns>받아들였으면 true. 0 포인트는 아무것도 바꾸지 않고 true.</returns>
@@ -165,6 +172,19 @@ namespace Rootborn.Core.Time
 
         /// <summary>"넘기기": 시간 포인트를 쓰지 않고 지금 때를 끝낸다.</summary>
         public bool Skip(string participantId) => Spend(participantId, 1);
+
+        /// <summary>
+        /// 멀리 있는 참가자가 (day, fromPart)에서 시간 포인트를 points만큼 썼다는 요청. 요청이 늦게 와서 그 사이 방이 대신 넘긴 때(자동 넘기기)는
+        /// 이미 센 것으로 보고 나머지만 끝낸다. 같은 요청을 다시 받아도, 다른 날·앞으로 올 때의 요청이어도 바꾸지 않는다. 바뀌었으면 true.
+        /// 그래서 참가자는 방이 "이 때를 아직 안 끝냈다"고 알린 동안 쓴 포인트를 되돌릴 일이 없다.
+        /// </summary>
+        public bool SpendFrom(string participantId, int day, int fromPart, int points)
+        {
+            if (points < 1 || fromPart < 0 || day != Day || !Find(participantId, out var p) || !p.Present || p.DayEnded) return false;
+            int target = fromPart + points;
+            if (p.Completed >= target || fromPart > p.Completed || p.Completed != PartIndex) return false;
+            return Spend(participantId, target - p.Completed);
+        }
 
         public bool EndDay(string participantId)
         {
@@ -305,11 +325,15 @@ namespace Rootborn.Core.Time
         }
     }
 
-    /// <summary>개인 시간 포인트를 방의 시계에 잇는다: 쓸 수 있는지는 방에 묻고, 쓴 포인트는 방에 알린다.</summary>
+    /// <summary>
+    /// 개인 시간 포인트를 방의 시계에 잇는다: 쓸 수 있는지는 방에 묻고, 쓴 포인트는 방에 알린다.
+    /// 방이 그 참가자의 때를 대신 끝냈으면(자동 넘기기) <see cref="CatchUp"/>으로 개인 포인트를 방에 맞춘다.
+    /// </summary>
     public sealed class RoomTimePointGate : ITimePointGate
     {
         private readonly IRoomTime _room;
         private readonly string _participantId;
+        private bool _catchingUp;
 
         public RoomTimePointGate(IRoomTime room, string participantId)
         {
@@ -317,7 +341,31 @@ namespace Rootborn.Core.Time
             _participantId = participantId ?? string.Empty;
         }
 
-        public bool CanSpend(int points) => _room.CanSpend(_participantId, points);
-        public void Spent(int points) => _room.Spend(_participantId, points);
+        public bool CanSpend(int points) => _catchingUp || _room.CanSpend(_participantId, points);
+
+        public void Spent(int points)
+        {
+            if (!_catchingUp) _room.Spend(_participantId, points);
+        }
+
+        /// <summary>
+        /// 이 문을 쓰는 진행(progress)의 오늘 쓴 시간 포인트가 방이 센 끝낸 때보다 적으면 그만큼 쓴 것으로 맞춘다. 방에는 다시 알리지 않는다.
+        /// 방과 같은 날이고 하루가 진행 중일 때만 한다. 맞춘 포인트 수(없으면 0). 앞선 쪽(개인이 방보다 많이 씀)은 건드리지 않는다.
+        /// </summary>
+        public int CatchUp(StudentLifeProgress progress)
+        {
+            if (progress == null || progress.DayState != StudentDayState.InProgress || progress.CurrentDay != _room.Day) return 0;
+            int behind = Math.Min(_room.CompletedParts(_participantId), progress.DailyTimePointBudget) - progress.TimePointsSpentToday;
+            if (behind <= 0) return 0;
+            _catchingUp = true;
+            try
+            {
+                return progress.TrySpendTimePoints(behind) ? behind : 0;
+            }
+            finally
+            {
+                _catchingUp = false;
+            }
+        }
     }
 }

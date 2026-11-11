@@ -1,5 +1,8 @@
 using System.Linq;
 using NUnit.Framework;
+using Rootborn.Core.StudentLife;
+using Rootborn.Core.Time;
+using Rootborn.Game;
 using Rootborn.Screens.Hud;
 using Rootborn.Ui;
 
@@ -21,14 +24,18 @@ namespace Rootborn.Screens.Tests.Hud
         }
 
         [Test]
-        public void NewGame_ShowsDayOneEightOClock_AndTheStartingVitals()
+        public void NewGame_ShowsDayOneAndTheFirstPartsTime_TimePoints_AndTheStartingVitals()
         {
             using var t = new TestSession();
             t.Stack.OpenHud();
             var clock = t.Screen<ClockHudScreen>(ScreenCatalog.HudClock);
-            Assert.That((clock.Model.Day, clock.Model.Hour, clock.Model.Minute), Is.EqualTo((1, 8, 0)));
+            // 시각 숫자는 방의 시계의 때 대표 시각(멀티플레이 설계 2.1절). 1일째는 평일(때 2개: 방과 후·저녁) — 첫 때는 14:00.
+            Assert.That((clock.Model.Day, clock.Model.Hour * 60 + clock.Model.Minute), Is.EqualTo((1, t.Session.RoomTimeMinutes)));
+            Assert.That((clock.Model.Hour, clock.Model.Minute), Is.EqualTo((14, 0)));
+            Assert.That((clock.Model.TimePointsRemaining, clock.Model.TimePointsToday), Is.EqualTo((2, 2)));
             Assert.That(clock.Model.Allowance, Is.EqualTo(0), "가게 화폐를 알고 가방에 없다");
-            Assert.That(((UiLabel)t.Node(ClockHudScreen.LabelId)).Text, Is.EqualTo("1일  08:00 · 용돈 0"));
+            Assert.That(((UiLabel)t.Node(ClockHudScreen.LabelId)).Text, Is.EqualTo("1일  14:00 · 용돈 0"));
+            Assert.That(((UiLabel)t.Node(ClockHudScreen.RoomLabelId)).Text, Is.EqualTo("남은 TP 2/2"), "혼자면 누가 기다리는지 보이지 않는다");
 
             var vitals = t.Screen<VitalsHudScreen>(ScreenCatalog.HudVitals);
             Assert.That((vitals.Model.Energy, vitals.Model.Focus), Is.EqualTo((t.Session.Student.Energy, t.Session.Student.Focus)));
@@ -46,8 +53,30 @@ namespace Rootborn.Screens.Tests.Hud
             Assert.That(t.Screen<VitalsHudScreen>(ScreenCatalog.HudVitals).Model.Energy, Is.EqualTo(t.Session.Student.Energy));
             Assert.That(t.Session.Student.Energy, Is.LessThan(energy));
             var clock = t.Screen<ClockHudScreen>(ScreenCatalog.HudClock);
-            Assert.That(clock.Model.Hour * 60 + clock.Model.Minute, Is.EqualTo(t.Session.Student.TimeMinutes % 1440));
-            Assert.That(clock.Model.Hour * 60 + clock.Model.Minute, Is.GreaterThan(8 * 60));
+            Assert.That(clock.Model.Hour * 60 + clock.Model.Minute, Is.EqualTo(t.Session.RoomTimeMinutes), "다음 때의 대표 시각");
+            Assert.That(t.Session.Room.PartIndex, Is.EqualTo(1));
+            Assert.That(((UiLabel)t.Node(ClockHudScreen.RoomLabelId)).Text, Is.EqualTo("남은 TP 1/2"));
+        }
+
+        [Test]
+        public void Together_ShowsWhoHasNotFinishedThisPart_AndUpdatesWhenTheRoomChanges()
+        {
+            var clock = new RoomClock(TestSession.Definitions.Get<LifeCalendar>(GameStartSettings.FromDefinitions(TestSession.Definitions).CalendarId));
+            clock.Join("me");
+            clock.Join("friend");
+            using var t = new TestSession(room: clock, playerId: "me");
+            t.Stack.OpenHud();
+            var label = (UiLabel)t.Node(ClockHudScreen.RoomLabelId);
+            Assert.That(label.Text, Is.EqualTo("남은 TP 2/2 · 아직: friend"));
+
+            t.Session.PerformLocationActivity("location.activity.library-hard-book", "req-together");
+            Assert.That(label.Text, Is.EqualTo("남은 TP 1/2 · 아직: friend"), "나는 끝냈고 friend를 기다린다");
+            Assert.That(t.Screen<ClockHudScreen>(ScreenCatalog.HudClock).Model.Hour, Is.EqualTo(14), "때가 아직 안 넘어갔다");
+
+            clock.Skip("friend");
+            t.Session.SyncWithRoom();
+            Assert.That(label.Text, Is.EqualTo("남은 TP 1/2 · 아직: friend"), "새 때에서는 둘 다 아직");
+            Assert.That(t.Screen<ClockHudScreen>(ScreenCatalog.HudClock).Model.Hour, Is.EqualTo(18), "둘 다 끝내서 저녁");
         }
 
         [Test]
@@ -66,7 +95,8 @@ namespace Rootborn.Screens.Tests.Hud
             using var t = new TestSession();
             t.Stack.OpenHud();
             t.Text.Language = "en";
-            Assert.That(((UiLabel)t.Node(ClockHudScreen.LabelId)).Text, Is.EqualTo("Day 1  08:00 · Allowance 0"));
+            Assert.That(((UiLabel)t.Node(ClockHudScreen.LabelId)).Text, Is.EqualTo("Day 1  14:00 · Allowance 0"));
+            Assert.That(((UiLabel)t.Node(ClockHudScreen.RoomLabelId)).Text, Is.EqualTo("TP 2/2 left"));
             t.Emit();
             KnownMissingKeys.AssertOnlyKnownMissing(t.Text,
                 t.Stack.Find(ScreenCatalog.HudClock).TextKeys.Concat(t.Stack.Find(ScreenCatalog.HudVitals).TextKeys));

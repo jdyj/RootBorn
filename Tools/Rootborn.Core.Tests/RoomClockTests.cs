@@ -336,7 +336,7 @@ namespace Rootborn.Core.Tests
             fromOld.Join("a");
             fromOld.Spend("a", 1);
             RoomClockSaveFiles.Save(store, "slot-1", fromOld);
-            Assert.That(store.TryRead<RoomClockSaveData>("slot-1", RoomClockSaveFiles.FileName, out _), Is.True);
+            Assert.That(store.TryRead<RoomClockSaveData>("slot-1", SaveFileNames.RoomClock, out _), Is.True);
             var again = RoomClockSaveFiles.Load(store, "slot-1", new LifeCalendar());
             Assert.That(again.Day, Is.EqualTo(9));
             Assert.That(again.PartIndex, Is.EqualTo(1), "시계 파일이 있으면 옛 파일보다 먼저");
@@ -424,11 +424,79 @@ namespace Rootborn.Core.Tests
             Assert.That(clock.PartIndex, Is.EqualTo(a.TimePointsSpentToday));
         }
 
-        private static StudentLifeProgress NewStudent(string id, RoomClock clock)
+        [Test]
+        public void Gate_CatchUp_AfterTheRoomSkippedMe_BringsPersonalPointsUpToTheRoom()
+        {
+            var clock = new RoomClock(new LifeCalendar(), new RoomClockSettings(autoSkipAfterTicks: 1));
+            clock.Join("a"); clock.Join("b");
+            var a = NewStudent("a", clock, out _);
+            var b = NewStudent("b", clock, out var bGate);
+            Assert.That(a.TrySpendTimePoints(1), Is.True);
+            Assert.That(clock.Tick(1), Is.True, "b를 넘겼다");
+            Assert.That(clock.CompletedParts("b"), Is.EqualTo(1));
+            Assert.That(b.TimePointsSpentToday, Is.EqualTo(0), "개인 진행은 아직 뒤처져 있다");
+
+            Assert.That(bGate.CatchUp(b), Is.EqualTo(1));
+            Assert.That(b.TimePointsSpentToday, Is.EqualTo(1));
+            Assert.That(clock.PartIndex, Is.EqualTo(1), "따라잡기는 방에 다시 알리지 않는다(두 번 세지 않는다)");
+            Assert.That(clock.CompletedParts("b"), Is.EqualTo(1));
+            Assert.That(bGate.CatchUp(b), Is.EqualTo(0), "맞춘 뒤에는 아무것도 하지 않는다");
+            Assert.That(b.TrySpendTimePoints(1), Is.True, "다음 때는 그대로 쓴다");
+            Assert.That(clock.CompletedParts("b"), Is.EqualTo(2));
+        }
+
+        [Test]
+        public void Gate_CatchUp_OnlyOnTheSameDay_WhileTheDayIsInProgress()
+        {
+            var clock = Room("a");
+            var a = NewStudent("a", clock, out var gate);
+            Assert.That(gate.CatchUp(a), Is.EqualTo(0), "같으면 아무것도 하지 않는다");
+            clock.EndDay("a");
+            Assert.That(clock.Day, Is.EqualTo(2));
+            Assert.That(gate.CatchUp(a), Is.EqualTo(0), "방이 다른 날이면 개인 시간 포인트를 건드리지 않는다");
+            Assert.That(a.TimePointsSpentToday, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void SpendFrom_IsTheSpendForThatPart_AndALateOneForAPartAlreadyCounted_ChangesNothing()
+        {
+            var clock = new RoomClock(new LifeCalendar(), new RoomClockSettings(autoSkipAfterTicks: 1));
+            clock.Join("a"); clock.Join("b");
+            Assert.That(clock.SpendFrom("a", 1, 0, 1), Is.True);
+            Assert.That(clock.SpendFrom("a", 1, 0, 1), Is.False, "같은 요청을 다시 해도 한 번만");
+            Assert.That(clock.CompletedParts("a"), Is.EqualTo(1));
+
+            Assert.That(clock.Tick(1), Is.True, "b는 넘겨졌다");
+            Assert.That(clock.PartIndex, Is.EqualTo(1));
+            Assert.That(clock.SpendFrom("b", 1, 0, 1), Is.False, "넘겨진 때에 늦게 온 요청은 이미 센 것");
+            Assert.That(clock.CompletedParts("b"), Is.EqualTo(1));
+            Assert.That(clock.PartIndex, Is.EqualTo(1), "다음 때까지 끝낸 것으로 세지 않는다");
+
+            Assert.That(clock.SpendFrom("b", 1, 1, 1), Is.True);
+            Assert.That(clock.SpendFrom("a", 2, 1, 1), Is.False, "다른 날의 요청은 받지 않는다");
+            Assert.That(clock.CompletedParts("a"), Is.EqualTo(1));
+        }
+
+        [Test]
+        public void SpendFrom_TwoPoints_WhenOneWasAlreadySkipped_FinishesOnlyTheRest()
+        {
+            var clock = new RoomClock(new LifeCalendar(weekdayBudget: 3), new RoomClockSettings(autoSkipAfterTicks: 1));
+            clock.Join("a"); clock.Join("b");
+            clock.Spend("a", 1);
+            clock.Tick(1);
+            Assert.That(clock.PartIndex, Is.EqualTo(1));
+            Assert.That(clock.SpendFrom("b", 1, 0, 2), Is.True, "두 포인트 중 넘겨진 앞 때를 빼고 나머지만");
+            Assert.That(clock.CompletedParts("b"), Is.EqualTo(2));
+        }
+
+        private static StudentLifeProgress NewStudent(string id, RoomClock clock) => NewStudent(id, clock, out _);
+
+        private static StudentLifeProgress NewStudent(string id, RoomClock clock, out RoomTimePointGate gate)
         {
             var student = new StudentLifeProgress("s", id, 10, 10);
             student.ConfigureCalendar(new LifeCalendar());
-            student.ConfigureTimeGate(new RoomTimePointGate(clock, id));
+            gate = new RoomTimePointGate(clock, id);
+            student.ConfigureTimeGate(gate);
             return student;
         }
     }

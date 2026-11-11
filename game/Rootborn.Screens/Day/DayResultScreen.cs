@@ -95,7 +95,7 @@ namespace Rootborn.Screens.Day
             Model = DayResultModel.From(session, _result, DayBaseline.For(session).Summary());
             var text = new DayResultText(T, Services.Text, _displayKeys);
             _title.Text = text.Title(Model.Summary.DayNumber);
-            _next.Text = text.Ui("next-day");
+            _next.Text = text.Ui(Model.WaitingForOthers ? "waiting-others" : "next-day");
             _next.Enabled = Model.CanStartNextDay;
             var sections = new List<string>(16)
             {

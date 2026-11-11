@@ -48,14 +48,19 @@ namespace Rootborn.Game
         /// <summary>마지막으로 끝낸 날의 결과(이 GameSession에서 끝낸 경우).</summary>
         public GameDayResult LastDayResult { get; private set; }
 
+        /// <summary>다음 날을 시작할 수 있다: 오늘을 마감했고 방이 다음 날로 넘어갔다(혼자면 마감하는 순간 넘어간다).</summary>
+        public bool CanStartNextDay => Student.DayState == StudentDayState.ResultReady && Room.Day > Student.CurrentDay;
+
         /// <summary>
-        /// 다음 날을 시작한다(Unity StudentDayResultPanel.StartNextDay 순서): 날 넘기기(학생 미니게임 예약 포기는 Core가 한다)
+        /// 다음 날을 시작한다. 방이 다음 날로 넘어가기 전(같이 하는 방에서 아직 마감 안 한 사람이 있음)에는 하지 않는다(<see cref="CanStartNextDay"/>).
+        /// 순서(Unity StudentDayResultPanel.StartNextDay): 날 넘기기(학생 미니게임 예약 포기는 Core가 한다)
         /// → 앞선 날의 성인 일 예약 포기 → 날 시작 이벤트, 장래희망이 있으면 장래희망 이벤트 → 집에 들어와 있으면 이미 놓은 가구 다시 알리기
         /// (Unity PublishDayStartEvents) → 저장.
         /// </summary>
         public bool StartNextDay()
         {
-            if (!Student.TryStartNextDay()) return false;
+            if (!CanStartNextDay || !Student.TryStartNextDay()) return false;
+            _roomGate.CatchUp(Student); // 다음 날의 때가 이미 넘어갔으면(자동 넘기기) 맞춘다. 아래에서 저장한다.
             _adultService.ForfeitWorkLeftFromEarlierDays(Student, Adult);
             Campaign?.SetCurrentDayNumber(Student.CurrentDay);
             Announce(NewEvent(QuestEventKind.DayStarted, "day-started", null), true);

@@ -65,6 +65,33 @@ namespace Rootborn.Net.Tests
         }
 
         [Test]
+        public void RoomClock_V2_CarriesCompletedParts_AndRequestsCarryTheirDayAndPart()
+        {
+            var clock = RoundTrip(new RoomClockMessage
+            {
+                Day = 3, PartIndex = 1, PartsToday = 2, Entries = new[] { new RoomClockEntry { NetId = 4, FinishedPart = true, CompletedParts = 2 } },
+            });
+            Assert.That(clock.Entries[0].CompletedParts, Is.EqualTo(2));
+            var finish = RoundTrip(new FinishPartMessage { Day = 3, FromPart = 1, Points = 1 });
+            Assert.That((finish.Day, finish.FromPart, finish.Points), Is.EqualTo((3, (byte)1, (byte)1)));
+            Assert.That(RoundTrip(new DayEndReadyMessage { Day = 5 }).Day, Is.EqualTo(5));
+        }
+
+        [Test]
+        public void RoomClockAndRequests_V1_AreStillRead_AsTheCurrentDayAndPart()
+        {
+            var catalog = Catalog();
+            // 몸통 v1: 날(4) · 때 · 때 수 · 사람 수 · (번호(2) · 깃발)
+            Assert.That(catalog.Decode(new byte[] { 12, 0, 1, 2, 0, 0, 0, 1, 2, 1, 4, 0, 1 }, out var old), Is.EqualTo(DecodeOutcome.Ok));
+            var entry = ((RoomClockMessage)old).Entries[0];
+            Assert.That((entry.NetId, entry.FinishedPart, entry.CompletedParts), Is.EqualTo(((ushort)4, true, (byte)2)), "끝낸 때 수는 지금 때 + 끝냈으면 1");
+            Assert.That(catalog.Decode(new byte[] { 13, 0, 1, 2 }, out var finish), Is.EqualTo(DecodeOutcome.Ok));
+            Assert.That((((FinishPartMessage)finish).Day, ((FinishPartMessage)finish).Points), Is.EqualTo((0, (byte)2)), "날 0 = 지금 날·지금 때");
+            Assert.That(catalog.Decode(new byte[] { 9, 0, 1 }, out var end), Is.EqualTo(DecodeOutcome.Ok));
+            Assert.That(((DayEndReadyMessage)end).Day, Is.EqualTo(0));
+        }
+
+        [Test]
         public void UnknownKind_TooNewVersion_Truncated_TooLarge_AreReportedWithoutThrowing()
         {
             var catalog = Catalog();
@@ -106,6 +133,10 @@ namespace Rootborn.Net.Tests
             Assert.That(catalog.Decode(pastTheDay, out _), Is.EqualTo(DecodeOutcome.Malformed), "하루의 때 수를 넘은 때");
             catalog.TryEncode(new FinishPartMessage { Points = 0 }, out var noPoints);
             Assert.That(catalog.Decode(noPoints, out _), Is.EqualTo(DecodeOutcome.Malformed), "0 포인트로 때를 끝내기");
+            catalog.TryEncode(new FinishPartMessage { Day = -1, Points = 1 }, out var negativeDay);
+            Assert.That(catalog.Decode(negativeDay, out _), Is.EqualTo(DecodeOutcome.Malformed), "음수 날의 요청");
+            catalog.TryEncode(new DayEndReadyMessage { Day = -1 }, out var negativeEnd);
+            Assert.That(catalog.Decode(negativeEnd, out _), Is.EqualTo(DecodeOutcome.Malformed), "음수 날의 마감");
             catalog.TryEncode(new HelloMessage { PlayerId = new string('a', RootbornMessages.MaxPlayerIdBytes + 1) }, out var longId);
             Assert.That(catalog.Decode(longId, out _), Is.EqualTo(DecodeOutcome.Malformed), "너무 긴 신원");
             Assert.That(catalog.Decode(new byte[] { 1, 0, 1, 2, 0, 0xC3, 0x28, 0, 0 }, out _), Is.EqualTo(DecodeOutcome.Malformed), "UTF-8이 아닌 글자");

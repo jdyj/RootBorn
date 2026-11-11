@@ -84,16 +84,25 @@ namespace Rootborn.Net.Messages
         public ushort NetId;
         public bool FinishedPart;
         public bool DayEnded;
+
+        /// <summary>그 사람이 오늘 끝낸 때의 수(v2). v1에서 읽으면 지금 때 + 끝냈으면 1.</summary>
+        public byte CompletedParts;
     }
 
-    /// <summary>클라이언트 → 서버: 내 하루를 끝냈다(남은 때도 모두 끝낸 것으로 센다).</summary>
+    /// <summary>클라이언트 → 서버: 내 하루를 끝냈다(남은 때도 모두 끝낸 것으로 센다). Day는 마감한 날(v2). 0이면 지금 날(v1).</summary>
     public sealed class DayEndReadyMessage
     {
+        public int Day;
     }
 
-    /// <summary>클라이언트 → 서버: 시간 포인트를 Points만큼 써서 그만큼의 때를 끝냈다. "넘기기"는 1.</summary>
+    /// <summary>
+    /// 클라이언트 → 서버: (Day, FromPart)에서 시간 포인트를 Points만큼 써서 그만큼의 때를 끝냈다. "넘기기"는 1.
+    /// Day가 0이면(v1) 지금 날·지금 때. 서버는 늦게 온 요청을 이미 센 때로 본다(Core RoomClock.SpendFrom).
+    /// </summary>
     public sealed class FinishPartMessage
     {
+        public int Day;
+        public byte FromPart;
         public byte Points = 1;
     }
 
@@ -130,10 +139,10 @@ namespace Rootborn.Net.Messages
             c.Add<PoseMessage>(6, 1, WritePose, ReadPose);
             c.Add<LookMessage>(7, 1, WriteLook, ReadLook);
             // 8(공용 시간 WorldTime)과 10(때 넘기기 AdvancePartOfDay)은 방의 시계(12, 13)로 바뀌어 쓰지 않는다.
-            c.Add<DayEndReadyMessage>(9, 1, (w, m) => { }, Empty);
+            c.Add<DayEndReadyMessage>(9, 2, (w, m) => w.WriteInt32(m.Day), ReadDayEndReady);
             c.Add<HeartbeatMessage>(11, 1, (w, m) => { }, Empty);
-            c.Add<RoomClockMessage>(12, 1, WriteRoomClock, ReadRoomClock);
-            c.Add<FinishPartMessage>(13, 1, (w, m) => w.WriteByte(m.Points), ReadFinishPart);
+            c.Add<RoomClockMessage>(12, 2, WriteRoomClock, ReadRoomClock);
+            c.Add<FinishPartMessage>(13, 2, WriteFinishPart, ReadFinishPart);
         }
 
         private static bool Empty<T>(NetReader r, int version, out T message) where T : class, new()
@@ -255,6 +264,7 @@ namespace Rootborn.Net.Messages
             {
                 w.WriteUInt16(entries[i].NetId);
                 w.WriteByte((byte)((entries[i].FinishedPart ? FinishedFlag : 0) | (entries[i].DayEnded ? DayEndedFlag : 0)));
+                w.WriteByte(entries[i].CompletedParts);
             }
         }
 
@@ -269,15 +279,34 @@ namespace Rootborn.Net.Messages
                 if (!r.TryReadUInt16(out m.Entries[i].NetId) || !r.TryReadByte(out byte flags) || flags > (FinishedFlag | DayEndedFlag)) return false;
                 m.Entries[i].FinishedPart = (flags & FinishedFlag) != 0;
                 m.Entries[i].DayEnded = (flags & DayEndedFlag) != 0;
+                if (version >= 2)
+                {
+                    if (!r.TryReadByte(out m.Entries[i].CompletedParts) || m.Entries[i].CompletedParts > m.PartsToday) return false;
+                }
+                else m.Entries[i].CompletedParts = (byte)Math.Min(m.PartsToday, m.PartIndex + (m.Entries[i].FinishedPart ? 1 : 0));
             }
 
             return true;
         }
 
+        private static void WriteFinishPart(NetWriter w, FinishPartMessage m)
+        {
+            w.WriteInt32(m.Day);
+            w.WriteByte(m.FromPart);
+            w.WriteByte(m.Points);
+        }
+
         private static bool ReadFinishPart(NetReader r, int version, out FinishPartMessage m)
         {
             m = new FinishPartMessage();
+            if (version >= 2 && (!r.TryReadInt32(out m.Day) || m.Day < 0 || !r.TryReadByte(out m.FromPart))) return false;
             return r.TryReadByte(out m.Points) && m.Points >= 1;
+        }
+
+        private static bool ReadDayEndReady(NetReader r, int version, out DayEndReadyMessage m)
+        {
+            m = new DayEndReadyMessage();
+            return version < 2 || (r.TryReadInt32(out m.Day) && m.Day >= 0);
         }
     }
 }

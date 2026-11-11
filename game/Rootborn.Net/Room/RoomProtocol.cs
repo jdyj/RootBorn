@@ -11,7 +11,7 @@ namespace Rootborn.Net.Room
     /// </summary>
     public static class RoomProtocol
     {
-        public const int Version = 1;
+        public const int Version = 2; // 2: 방의 시계에 끝낸 때 수, 때 끝내기·하루 마감 요청에 날과 때
         public const string ConnectionKey = "rootborn-room";
     }
 
