@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Rootborn.Core.Network;
 using Rootborn.Core.Save;
-using Rootborn.Core.StudentLife;
 using Rootborn.Core.Time;
 using Rootborn.Net.Messages;
 using Rootborn.Net.Transport;
@@ -34,9 +33,11 @@ namespace Rootborn.Net.Session
     /// - 신원: 클라이언트가 Hello로 보낸 안정된 id. 같은 신원은 같은 번호(NetId)와 같은 도착 자리(Core SpawnSpread 순번)를 받는다.
     ///   같은 신원이 다시 붙으면 옛 연결을 끊고 새 연결로 바꾼다(다른 사람에게는 나갔다 들어온 것으로 보인다).
     /// - 위치는 주인 것만 받는다(보낸 연결로 누구인지 정한다). 번호가 더 새 것만 쓰고 다른 사람에게 전한다.
-    /// - 방의 시계(Core RoomClock)를 가진다. 들어오면 참가자로 넣고 나가면 뺀다(같은 신원이 연결만 바꾸는 것은 나간 것이 아니다).
-    ///   클라이언트가 때를 끝냈다(FinishPart)·하루를 마감했다(DayEndReady)고 하면 Core 규칙으로 판정한다. 바뀔 때마다 모두에게 보내고
-    ///   저장소의 그 슬롯(room-clock.json)에 쓴다. 자동 넘기기의 틱은 Update 한 번이 하나다.
+    /// - 방의 시계(Core RoomClock, 흐르는 시간 4단계)를 가진다. 시계는 Update에 넘긴 시각의 차이(실제 초)를 게임 분으로 바꿔(Core FlowingClock) 흐르고
+    ///   멈추지 않는다 — 방에 아무도 없을 때만 멈춘다. 들어오면 참가자로 넣고 나가면 뺀다(같은 신원이 연결만 바꾸는 것은 나간 것이 아니다).
+    ///   클라이언트가 잠들었다(DayEndReady, 그 날)고 하면 Core 규칙으로 판정한다(모두 잠들면 곧바로 다음 날 하루 시작).
+    ///   바뀔 때(잠, 들어옴·나감, 다음 날)는 곧바로, 그 사이에는 ClockSyncSeconds마다 모두에게 보낸다(매 프레임 보내지 않는다).
+    ///   저장소의 그 슬롯(room-clock.json)에는 바뀔 때와 게임 1시간마다 쓴다.
     /// - 끊김과 시간 초과: 끊기거나 TimeoutSeconds 동안 아무것도 받지 못하면 그 사람을 지우고 다른 사람에게 알린다.
     /// 깨진·모르는·너무 큰 메시지는 버리고 <see cref="Drops"/>에 센다. 시간은 Update에 넘긴 값만 쓴다.
     /// </summary>
@@ -58,13 +59,14 @@ namespace Rootborn.Net.Session
         private readonly Dictionary<string, (ushort NetId, int JoinIndex)> _known = new Dictionary<string, (ushort, int)>(StringComparer.Ordinal);
         private readonly List<RoomParticipantState> _clockScratch = new List<RoomParticipantState>(8);
         private readonly List<PeerId> _peerScratch = new List<PeerId>(8);
+        private readonly FlowingClock _flow;
         private ushort _nextNetId = 1;
-        private double _now;
+        private double _now, _lastFlowAt = double.NaN, _nextSyncAt;
         private bool _disposed;
 
         /// <param name="store">방의 시계를 읽고 쓸 저장소. 없으면 저장하지 않는다.</param>
-        /// <param name="calendar">하루의 때 수를 주는 달력(정의 데이터). 없으면 Core 기본 달력.</param>
-        public SessionServer(ITransport transport, SessionServerSettings settings, ISaveStore store = null, string saveSlot = null, LifeCalendar calendar = null)
+        /// <param name="timeRules">흐르는 시간의 규칙(하루 길이, 하루 시작 — 게임 데이터). 없으면 시계가 흐르지 않는다(Core TimeRules.Legacy의 날만 센다).</param>
+        public SessionServer(ITransport transport, SessionServerSettings settings, ISaveStore store = null, string saveSlot = null, TimeRules timeRules = null)
         {
             _transport = transport ?? throw new ArgumentNullException(nameof(transport));
             _settings = settings ?? new SessionServerSettings();
@@ -72,13 +74,13 @@ namespace Rootborn.Net.Session
             _catalog = RootbornMessages.CreateCatalog(_settings.MaxMessageBytes);
             _store = store;
             _saveSlot = saveSlot;
-            Clock = RoomClockSaveFiles.Load(store, saveSlot, calendar ?? new LifeCalendar(), _settings.Clock);
+            Clock = RoomClockSaveFiles.Load(store, saveSlot, timeRules ?? TimeRules.Legacy);
+            _flow = timeRules != null ? new FlowingClock(timeRules.RealSecondsPerGameDay) : null;
             _handlers = new MessageHandlers<PeerId>()
                 .On<HeartbeatMessage>((p, m) => { })
                 .On<PoseMessage>(OnPose)
                 .On<LookMessage>(OnLook)
-                .On<DayEndReadyMessage>(OnDayEndReady)
-                .On<FinishPartMessage>(OnFinishPart);
+                .On<DayEndReadyMessage>(OnSleep);
         }
 
         public RoomClock Clock { get; }
@@ -139,7 +141,7 @@ namespace Rootborn.Net.Session
                 }
             }
 
-            if (Clock.Tick(1)) ClockChanged(saveIt: true);
+            FlowClock(now);
 
             _peerScratch.Clear();
             _peerScratch.AddRange(_connections.Keys);
@@ -205,7 +207,7 @@ namespace Rootborn.Net.Session
 
             if (previous != null)
             {
-                // 연결만 바뀐다. 방의 시계에서는 나간 것이 아니다(남은 사람만으로 때가 넘어가지 않게).
+                // 연결만 바뀐다. 방의 시계에서는 나간 것이 아니다(남은 사람만으로 다음 날이 되지 않게).
                 Drop(previous.Peer, ReplacedReason, notify: false);
                 RemovePlayer(previous, leaveClock: false);
             }
@@ -259,21 +261,26 @@ namespace Rootborn.Net.Session
             Broadcast(look, Delivery.ReliableOrdered, except: player);
         }
 
-        // 받아들이지 않은 요청(기다리는 동안 보낸 것 등)은 지금 시계를 그 사람에게 다시 보내 맞춘다.
-        // 날이 적힌 요청(v2)은 그 날에만 받는다(지난 날의 마감이 새 날을 마감하지 않게). 날 0은 지금 날(v1).
-        private void OnDayEndReady(PeerId peer, DayEndReadyMessage message)
+        // 그 날의 잠만 받는다(지난 날의 잠이 새 날을 재우지 않게). 날 0은 지금 날. 받지 않으면 지금 시계를 그 사람에게 다시 보내 맞춘다.
+        private void OnSleep(PeerId peer, DayEndReadyMessage message)
         {
-            bool sameDay = message.Day == 0 || message.Day == Clock.Day;
-            if (sameDay && Clock.EndDay(_connections[peer].Player.PlayerId)) ClockChanged(saveIt: true);
+            int day = message.Day == 0 ? Clock.Day : message.Day;
+            if (Clock.SleepOn(_connections[peer].Player.PlayerId, day)) ClockChanged(saveIt: true);
             else SendClock(peer);
         }
 
-        private void OnFinishPart(PeerId peer, FinishPartMessage message)
+        // 시계 흐르기: 지난 Update에서 흐른 시각(실제 초, 한 번에 MaxClockStepSeconds까지)을 게임 분으로. 아무도 없으면 멈춘다.
+        // 날이 바뀌거나 게임 1시간이 바뀌면 보내고 저장한다. 그 사이에는 ClockSyncSeconds마다 보내기만 한다.
+        private void FlowClock(double now)
         {
-            string id = _connections[peer].Player.PlayerId;
-            bool changed = message.Day == 0 ? Clock.Spend(id, message.Points) : Clock.SpendFrom(id, message.Day, message.FromPart, message.Points);
-            if (changed) ClockChanged(saveIt: true);
-            else SendClock(peer);
+            double step = double.IsNaN(_lastFlowAt) ? 0d : Math.Min(_settings.MaxClockStepSeconds, Math.Max(0d, now - _lastFlowAt));
+            _lastFlowAt = now;
+            if (_flow == null) return;
+            int day = Clock.Day, hour = Clock.Minutes / 60;
+            int minutes = _flow.Advance((float)step, paused: Clock.PresentCount == 0);
+            if (minutes > 0) Clock.Advance(minutes);
+            if (Clock.Day != day || Clock.Minutes / 60 != hour) ClockChanged(saveIt: true);
+            else if (Clock.PresentCount > 0 && now >= _nextSyncAt) ClockChanged(saveIt: false);
         }
 
         private void RemovePlayer(ServerPlayer player, bool leaveClock = true)
@@ -298,33 +305,24 @@ namespace Rootborn.Net.Session
 
         private void ClockChanged(bool saveIt)
         {
+            _nextSyncAt = _now + _settings.ClockSyncSeconds;
             Broadcast(ClockMessage(), Delivery.ReliableOrdered, except: null);
             if (saveIt) RoomClockSaveFiles.Save(_store, _saveSlot, Clock);
         }
 
         private void SendClock(PeerId peer) => Send(peer, ClockMessage(), Delivery.ReliableOrdered);
 
-        private RoomClockMessage ClockMessage()
+        private RoomTimeMessage ClockMessage()
         {
             Clock.CopyPresent(_clockScratch);
-            var entries = new List<RoomClockEntry>(_clockScratch.Count);
+            var entries = new List<RoomTimeEntry>(_clockScratch.Count);
             foreach (var state in _clockScratch)
             {
                 if (!_players.TryGetValue(state.ParticipantId, out var player)) continue;
-                entries.Add(new RoomClockEntry
-                {
-                    NetId = player.NetId, FinishedPart = state.FinishedPart, DayEnded = state.DayEnded,
-                    CompletedParts = (byte)Math.Min(byte.MaxValue, Math.Max(0, state.CompletedParts)),
-                });
+                entries.Add(new RoomTimeEntry { NetId = player.NetId, Asleep = state.Asleep });
             }
 
-            return new RoomClockMessage
-            {
-                Day = Clock.Day,
-                PartIndex = (byte)Math.Min(byte.MaxValue, Clock.PartIndex),
-                PartsToday = (byte)Math.Min(byte.MaxValue, Clock.PartsToday),
-                Entries = entries.ToArray(),
-            };
+            return new RoomTimeMessage { Day = Clock.Day, Minutes = Clock.Minutes, Entries = entries.ToArray() };
         }
 
         private PlayerJoinedMessage Joined(ServerPlayer player)

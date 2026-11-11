@@ -131,14 +131,13 @@ namespace Rootborn.Server.Tests
                 var a = rig.Join("a");
                 var b = rig.Join("b");
                 rig.Run(0.5);
-                a.RequestDayEndReady();
-                b.RequestDayEndReady();
+                a.RequestSleep();
+                b.RequestSleep();
                 rig.Run(0.5);
-                a.RequestSkipPart();
-                b.RequestSkipPart();
+                Assert.That(rig.Room.Clock.Day, Is.EqualTo(2), "둘 다 자서 다음 날");
+                a.RequestSleep(2);
                 rig.Run(0.5);
-                Assert.That(rig.Room.Clock.Day, Is.EqualTo(2));
-                Assert.That(rig.Room.Clock.PartIndex, Is.EqualTo(1), "둘 다 넘겨서 다음 때");
+                Assert.That(rig.Room.Clock.IsAsleep("a"), Is.True, "그 날의 잠");
                 rig.Room.Shutdown();
                 rig.Run(0.5);
                 Assert.That(a.Status, Is.EqualTo(ClientStatus.Disconnected), "끄면 들어와 있던 사람은 끊긴다");
@@ -149,10 +148,10 @@ namespace Rootborn.Server.Tests
             {
                 Assert.That(again.Room.IsNewRoom, Is.False);
                 Assert.That(again.Room.Clock.Day, Is.EqualTo(2));
-                Assert.That(again.Room.Clock.PartIndex, Is.EqualTo(1));
                 var a = again.Join("a");
                 again.Run(0.5);
-                Assert.That(a.RoomClock.Day, Is.EqualTo(2), "다시 들어온 사람도 이어진 날을 받는다");
+                Assert.That(a.RoomTime.Day, Is.EqualTo(2), "다시 들어온 사람도 이어진 날을 받는다");
+                Assert.That(again.Room.Clock.IsAsleep("a"), Is.True, "같은 날 다시 들어오면 자는 중 그대로");
             }
         }
 
@@ -172,11 +171,10 @@ namespace Rootborn.Server.Tests
             rig.Run(30.0);
             Assert.That(rig.Loop.Ticks, Is.GreaterThan(0), "틱은 돈다");
             Assert.That(rig.Room.Clock.Day, Is.EqualTo(1));
-            Assert.That(rig.Room.Clock.PartIndex, Is.EqualTo(0));
 
             var a = rig.Join("a");
             rig.Run(0.5);
-            a.RequestDayEndReady();
+            a.RequestSleep();
             rig.Run(0.5);
             Assert.That(rig.Room.Clock.Day, Is.EqualTo(2));
             rig.Quit(a);

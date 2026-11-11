@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Rootborn.Core.Network;
-using Rootborn.Core.Time;
 using Rootborn.Core.World;
 using Rootborn.Net.Messages;
 using Rootborn.Net.Transport;
@@ -32,46 +31,47 @@ namespace Rootborn.Net.Session
 
     /// <summary>
     /// 서버에서 받은 방의 시계(Core RoomClock의 상태). Known이 false면 아직 받지 않았다. 사람은 NetId로 가리킨다(자기 것은 SessionClient.NetId).
-    /// 대표 시각은 부르는 쪽이 자기 달력으로 정한다(<see cref="RepresentativeMinutes"/>).
+    /// ReceivedAt은 받은 때의 클라이언트 시각(SessionClient.Update에 넘긴 값) — 사이를 메우는 쪽(RemoteRoomTime)이 쓴다.
     /// </summary>
-    public sealed class RoomClockView
+    public sealed class RoomTimeView
     {
-        private static readonly RoomClockEntry[] None = Array.Empty<RoomClockEntry>();
-        private readonly RoomClockEntry[] _entries;
+        private static readonly RoomTimeEntry[] None = Array.Empty<RoomTimeEntry>();
+        private readonly RoomTimeEntry[] _entries;
 
-        public static RoomClockView Unknown { get; } = new RoomClockView();
+        public static RoomTimeView Unknown { get; } = new RoomTimeView();
 
-        private RoomClockView() { _entries = None; }
+        private RoomTimeView() { _entries = None; }
 
-        internal RoomClockView(RoomClockMessage m)
+        internal RoomTimeView(RoomTimeMessage m, double receivedAt)
         {
             Known = true;
             Day = m.Day;
-            PartIndex = m.PartIndex;
-            PartsToday = m.PartsToday;
+            Minutes = m.Minutes;
+            ReceivedAt = receivedAt;
             _entries = m.Entries ?? None;
         }
 
         public bool Known { get; }
         public int Day { get; }
-        public int PartIndex { get; }
-        public int PartsToday { get; }
-        public bool IsDayOver => Known && PartIndex >= PartsToday;
+
+        /// <summary>서버가 보낸 때의 시각(그날 0시부터 센 분).</summary>
+        public int Minutes { get; }
+
+        public double ReceivedAt { get; }
         public int PlayerCount => _entries.Length;
-        public IReadOnlyList<RoomClockEntry> Entries => _entries;
-        public int WeekdayIndex => Day < 1 ? 0 : (Day - 1) % 7;
+        public IReadOnlyList<RoomTimeEntry> Entries => _entries;
 
-        public int FinishedCount => Count(e => e.FinishedPart);
-        public int DayEndedCount => Count(e => e.DayEnded);
+        public int AsleepCount
+        {
+            get
+            {
+                int count = 0;
+                foreach (var e in _entries) if (e.Asleep) count++;
+                return count;
+            }
+        }
 
-        public bool HasFinished(ushort netId) => Find(netId, out var e) && e.FinishedPart;
-        public int CompletedParts(ushort netId) => Find(netId, out var e) ? e.CompletedParts : 0;
-        public bool TryGetEntry(ushort netId, out RoomClockEntry entry) => Find(netId, out entry);
-        public bool IsDayEnded(ushort netId) => Find(netId, out var e) && e.DayEnded;
-
-        public int RepresentativeMinutes(PartOfDayTimes times) => (times ?? PartOfDayTimes.Default).MinutesFor(PartIndex, PartsToday);
-
-        private bool Find(ushort netId, out RoomClockEntry entry)
+        public bool TryGetEntry(ushort netId, out RoomTimeEntry entry)
         {
             foreach (var e in _entries)
                 if (e.NetId == netId) { entry = e; return true; }
@@ -79,12 +79,7 @@ namespace Rootborn.Net.Session
             return false;
         }
 
-        private int Count(Func<RoomClockEntry, bool> test)
-        {
-            int count = 0;
-            foreach (var e in _entries) if (test(e)) count++;
-            return count;
-        }
+        public bool IsAsleep(ushort netId) => TryGetEntry(netId, out var e) && e.Asleep;
     }
 
     /// <summary>
@@ -138,7 +133,7 @@ namespace Rootborn.Net.Session
                 .On<PlayerLeftMessage>((now, m) => _remotes.Remove(m.NetId))
                 .On<PoseMessage>(OnPose)
                 .On<LookMessage>(OnLook)
-                .On<RoomClockMessage>(OnRoomClock);
+                .On<RoomTimeMessage>(OnRoomTime);
         }
 
         public ClientStatus Status { get; private set; } = ClientStatus.Connecting;
@@ -149,10 +144,13 @@ namespace Rootborn.Net.Session
         public ushort NetId { get; private set; }
         public int JoinIndex { get; private set; } = -1;
         public SpawnOffset SpawnOffset { get; private set; }
-        public RoomClockView RoomClock { get; private set; } = RoomClockView.Unknown;
+        public RoomTimeView RoomTime { get; private set; } = RoomTimeView.Unknown;
 
         /// <summary>서버에서 방의 시계를 받을 때마다(Update 안에서).</summary>
-        public event Action RoomClockChanged;
+        public event Action RoomTimeChanged;
+
+        /// <summary>마지막으로 Update에 넘긴 시각(초). 방의 시계 사이를 메우는 쪽이 읽는다.</summary>
+        public double Now { get; private set; }
 
         /// <summary>들어온 뒤 서버가 보낸 그 종류의 메시지를 받는다(세션이 처리하지 않는 종류만, Update 안에서). 종류마다 한 줄로 더한다.</summary>
         public SessionClient On<T>(Action<T> handler) where T : class
@@ -201,23 +199,10 @@ namespace Rootborn.Net.Session
             if (Status == ClientStatus.Joined) Send(new LookMessage { Look = look }, Delivery.ReliableOrdered);
         }
 
-        /// <summary>그 날(day)의 내 하루를 끝냈다. 0이면 서버의 지금 날. 서버는 다른 날의 마감은 받지 않는다.</summary>
-        public void RequestDayEndReady(int day = 0)
+        /// <summary>그 날(day) 잠들었다. 0이면 서버의 지금 날. 서버는 다른 날의 잠은 받지 않는다.</summary>
+        public void RequestSleep(int day = 0)
         {
             if (Status == ClientStatus.Joined && day >= 0) Send(new DayEndReadyMessage { Day = day }, Delivery.ReliableOrdered);
-        }
-
-        /// <summary>시간 포인트를 points만큼 써서 그만큼의 때를 끝냈다(서버의 지금 날·지금 때). 판정은 서버가 한다(기다리는 중이면 받지 않고 시계를 다시 보낸다).</summary>
-        public void RequestFinishPart(int points) => RequestFinishPart(0, 0, points);
-
-        /// <summary>(day, fromPart)에서 시간 포인트를 points만큼 써서 그만큼의 때를 끝냈다. 늦게 와도 서버가 두 번 세지 않는다.</summary>
-        public void RequestFinishPart(int day, int fromPart, int points)
-        {
-            if (Status != ClientStatus.Joined || points < 1 || day < 0 || fromPart < 0) return;
-            Send(new FinishPartMessage
-            {
-                Day = day, FromPart = (byte)Math.Min(byte.MaxValue, fromPart), Points = (byte)Math.Min(byte.MaxValue, points),
-            }, Delivery.ReliableOrdered);
         }
 
         /// <summary>그 번호의 사람의 신원(자기 포함). 모르면 false.</summary>
@@ -228,9 +213,6 @@ namespace Rootborn.Net.Session
             playerId = null;
             return false;
         }
-
-        /// <summary>"넘기기": 시간 포인트를 쓰지 않고 지금 때를 끝낸다.</summary>
-        public void RequestSkipPart() => RequestFinishPart(1);
 
         /// <summary>그 맵에 있는 남(자기 제외)을 지금 시각으로 메워서. 돌려준 목록은 다음 부를 때 다시 쓴다.</summary>
         public IReadOnlyList<RemotePlayerView> PlayersOn(string mapId, double now)
@@ -256,6 +238,7 @@ namespace Rootborn.Net.Session
         public void Update(double now)
         {
             if (_disposed) return;
+            Now = now;
             _transport.Update(now);
             while (_transport.TryReceive(out var e))
             {
@@ -336,10 +319,10 @@ namespace Rootborn.Net.Session
             _poseMapChanged = true;
         }
 
-        private void OnRoomClock(double now, RoomClockMessage m)
+        private void OnRoomTime(double now, RoomTimeMessage m)
         {
-            RoomClock = new RoomClockView(m);
-            RoomClockChanged?.Invoke();
+            RoomTime = new RoomTimeView(m, now);
+            RoomTimeChanged?.Invoke();
         }
 
         private void OnJoined(double now, PlayerJoinedMessage m)

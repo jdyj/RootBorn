@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Rootborn.Core.Save;
-using Rootborn.Core.StudentLife;
+using Rootborn.Core.Time;
 using Rootborn.Net.Room;
 using Rootborn.Net.Session;
 using Rootborn.Net.Transport;
@@ -16,14 +16,14 @@ namespace Rootborn.Server.Tests
         private readonly List<SessionClient> _clients = new List<SessionClient>();
         private readonly Dictionary<SessionClient, LoopbackTransport> _lines = new Dictionary<SessionClient, LoopbackTransport>();
 
-        public RoomRig(ISaveStore store, string slot = "room-a", int maxPlayers = 4, RoomServerSettings settings = null, LifeCalendar calendar = null,
+        public RoomRig(ISaveStore store, string slot = "room-a", int maxPlayers = 4, RoomServerSettings settings = null, TimeRules timeRules = null,
             IGuestSaves guests = null)
         {
             Network = new LoopbackNetwork(1);
             Clock = new ManualRoomClock();
             Settings = settings ?? new RoomServerSettings { MaxPlayers = maxPlayers };
             Log = new List<string>();
-            Room = new RoomServer(Network.Listen(), Settings, Versions, store, slot, Log.Add, calendar, guests);
+            Room = new RoomServer(Network.Listen(), Settings, Versions, store, slot, Log.Add, timeRules, guests);
             Loop = new RoomLoop(Room, Clock, Settings.TickSeconds);
         }
 
@@ -60,7 +60,8 @@ namespace Rootborn.Server.Tests
             _clients.Remove(client);
         }
 
-        public void Run(double seconds)
+        /// <param name="afterTick">틱마다 클라이언트를 돌린 뒤 부른다(인자: 그 틱의 초). 게임 한 판의 AdvanceTime을 Host처럼 부를 때.</param>
+        public void Run(double seconds, Action<float> afterTick = null)
         {
             double end = Clock.Now + seconds;
             while (Clock.Now < end - 1e-9)
@@ -68,6 +69,7 @@ namespace Rootborn.Server.Tests
                 Clock.Now += Settings.TickSeconds;
                 Loop.RunDue();
                 foreach (var client in _clients.ToArray()) client.Update(Clock.Now);
+                afterTick?.Invoke((float)Settings.TickSeconds);
             }
         }
 

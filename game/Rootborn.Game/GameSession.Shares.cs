@@ -60,7 +60,7 @@ namespace Rootborn.Game
         // 시작한 뒤 한 번: 알림을 잇고, 다시 할 명령이 없는 허락(꺼졌다 켜지기 전에 보낸 잡기)을 풀고, 방이 이미 켠 깃발을 따른다.
         private void AfterStartInRoom()
         {
-            bool changed = CatchUpRoomDay() | ResendToRoom();
+            bool changed = FollowRoom(out _) | ResendToRoom();
             if (Shares != null)
             {
                 Shares.Changed += OnSharesChanged;

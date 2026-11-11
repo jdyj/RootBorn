@@ -50,45 +50,29 @@ namespace Rootborn.Net.Tests
             Assert.That(RoundTrip(new PlayerLeftMessage { NetId = 9 }).NetId, Is.EqualTo(9));
             Assert.That(RoundTrip(new LookMessage { NetId = 1, Look = "child|x" }).Look, Is.EqualTo("child|x"));
 
-            var clock = RoundTrip(new RoomClockMessage
+            var clock = RoundTrip(new RoomTimeMessage
             {
-                Day = 12, PartIndex = 1, PartsToday = 3,
-                Entries = new[] { new RoomClockEntry { NetId = 4, FinishedPart = true }, new RoomClockEntry { NetId = 7, FinishedPart = true, DayEnded = true }, new RoomClockEntry { NetId = 9 } },
+                Day = 12, Minutes = 25 * 60 + 30,
+                Entries = new[] { new RoomTimeEntry { NetId = 4 }, new RoomTimeEntry { NetId = 7, Asleep = true } },
             });
-            Assert.That((clock.Day, clock.PartIndex, clock.PartsToday, clock.Entries.Length), Is.EqualTo((12, (byte)1, (byte)3, 3)));
-            Assert.That((clock.Entries[1].NetId, clock.Entries[1].FinishedPart, clock.Entries[1].DayEnded), Is.EqualTo(((ushort)7, true, true)));
-            Assert.That((clock.Entries[2].FinishedPart, clock.Entries[2].DayEnded), Is.EqualTo((false, false)));
-            Assert.That(RoundTrip(new FinishPartMessage { Points = 2 }).Points, Is.EqualTo(2));
+            Assert.That((clock.Day, clock.Minutes, clock.Entries.Length), Is.EqualTo((12, 25 * 60 + 30, 2)));
+            Assert.That((clock.Entries[1].NetId, clock.Entries[1].Asleep), Is.EqualTo(((ushort)7, true)));
+            Assert.That(clock.Entries[0].Asleep, Is.False);
 
             Assert.That(RoundTrip(new DayEndReadyMessage()), Is.Not.Null);
             Assert.That(RoundTrip(new HeartbeatMessage()), Is.Not.Null);
         }
 
         [Test]
-        public void RoomClock_V2_CarriesCompletedParts_AndRequestsCarryTheirDayAndPart()
+        public void TheSleepRequest_CarriesItsDay_AndTheOldPartsMessagesAreGone()
         {
-            var clock = RoundTrip(new RoomClockMessage
-            {
-                Day = 3, PartIndex = 1, PartsToday = 2, Entries = new[] { new RoomClockEntry { NetId = 4, FinishedPart = true, CompletedParts = 2 } },
-            });
-            Assert.That(clock.Entries[0].CompletedParts, Is.EqualTo(2));
-            var finish = RoundTrip(new FinishPartMessage { Day = 3, FromPart = 1, Points = 1 });
-            Assert.That((finish.Day, finish.FromPart, finish.Points), Is.EqualTo((3, (byte)1, (byte)1)));
             Assert.That(RoundTrip(new DayEndReadyMessage { Day = 5 }).Day, Is.EqualTo(5));
-        }
-
-        [Test]
-        public void RoomClockAndRequests_V1_AreStillRead_AsTheCurrentDayAndPart()
-        {
             var catalog = Catalog();
-            // 몸통 v1: 날(4) · 때 · 때 수 · 사람 수 · (번호(2) · 깃발)
-            Assert.That(catalog.Decode(new byte[] { 12, 0, 1, 2, 0, 0, 0, 1, 2, 1, 4, 0, 1 }, out var old), Is.EqualTo(DecodeOutcome.Ok));
-            var entry = ((RoomClockMessage)old).Entries[0];
-            Assert.That((entry.NetId, entry.FinishedPart, entry.CompletedParts), Is.EqualTo(((ushort)4, true, (byte)2)), "끝낸 때 수는 지금 때 + 끝냈으면 1");
-            Assert.That(catalog.Decode(new byte[] { 13, 0, 1, 2 }, out var finish), Is.EqualTo(DecodeOutcome.Ok));
-            Assert.That((((FinishPartMessage)finish).Day, ((FinishPartMessage)finish).Points), Is.EqualTo((0, (byte)2)), "날 0 = 지금 날·지금 때");
-            Assert.That(catalog.Decode(new byte[] { 9, 0, 1 }, out var end), Is.EqualTo(DecodeOutcome.Ok));
+            Assert.That(catalog.Decode(new byte[] { 9, 0, 1 }, out var end), Is.EqualTo(DecodeOutcome.Ok), "몸통 v1(날 없음)은 지금 날");
             Assert.That(((DayEndReadyMessage)end).Day, Is.EqualTo(0));
+            // 12(때 단위 방의 시계)와 13(때 끝내기)은 흐르는 시간 4단계에서 없앴다. 번호는 다시 쓰지 않는다.
+            Assert.That(catalog.Decode(new byte[] { 12, 0, 2, 0, 0, 0, 1, 0, 2, 0 }, out _), Is.Not.EqualTo(DecodeOutcome.Ok));
+            Assert.That(catalog.Decode(new byte[] { 13, 0, 2, 0, 0, 0, 1, 0, 1 }, out _), Is.Not.EqualTo(DecodeOutcome.Ok));
         }
 
         [Test]
@@ -127,14 +111,12 @@ namespace Rootborn.Net.Tests
             Assert.That(catalog.Decode(facing, out _), Is.EqualTo(DecodeOutcome.Malformed), "없는 방향");
             catalog.TryEncode(new PoseMessage { MapId = "" }, out var noMap);
             Assert.That(catalog.Decode(noMap, out _), Is.EqualTo(DecodeOutcome.Malformed), "맵 없는 위치");
-            catalog.TryEncode(new RoomClockMessage { Day = 0 }, out var day0);
+            catalog.TryEncode(new RoomTimeMessage { Day = 0 }, out var day0);
             Assert.That(catalog.Decode(day0, out _), Is.EqualTo(DecodeOutcome.Malformed), "0일");
-            catalog.TryEncode(new RoomClockMessage { Day = 1, PartIndex = 3, PartsToday = 2 }, out var pastTheDay);
-            Assert.That(catalog.Decode(pastTheDay, out _), Is.EqualTo(DecodeOutcome.Malformed), "하루의 때 수를 넘은 때");
-            catalog.TryEncode(new FinishPartMessage { Points = 0 }, out var noPoints);
-            Assert.That(catalog.Decode(noPoints, out _), Is.EqualTo(DecodeOutcome.Malformed), "0 포인트로 때를 끝내기");
-            catalog.TryEncode(new FinishPartMessage { Day = -1, Points = 1 }, out var negativeDay);
-            Assert.That(catalog.Decode(negativeDay, out _), Is.EqualTo(DecodeOutcome.Malformed), "음수 날의 요청");
+            catalog.TryEncode(new RoomTimeMessage { Day = 1, Minutes = -1 }, out var negativeMinutes);
+            Assert.That(catalog.Decode(negativeMinutes, out _), Is.EqualTo(DecodeOutcome.Malformed), "음수 분");
+            catalog.TryEncode(new RoomTimeMessage { Day = 1, Minutes = 99999 }, out var pastTheDay);
+            Assert.That(catalog.Decode(pastTheDay, out _), Is.EqualTo(DecodeOutcome.Malformed), "이틀을 넘는 분");
             catalog.TryEncode(new DayEndReadyMessage { Day = -1 }, out var negativeEnd);
             Assert.That(catalog.Decode(negativeEnd, out _), Is.EqualTo(DecodeOutcome.Malformed), "음수 날의 마감");
             catalog.TryEncode(new HelloMessage { PlayerId = new string('a', RootbornMessages.MaxPlayerIdBytes + 1) }, out var longId);

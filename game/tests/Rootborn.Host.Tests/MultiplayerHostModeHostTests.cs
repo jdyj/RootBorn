@@ -18,6 +18,7 @@ using Rootborn.Screens;
 using Rootborn.Screens.Settings;
 using Rootborn.Screens.Start;
 using Rootborn.Ui;
+using Rootborn.World;
 
 namespace Rootborn.Host.Tests
 {
@@ -334,6 +335,73 @@ namespace Rootborn.Host.Tests
                 host?.Dispose();
                 try { Directory.Delete(otherPc, true); } catch (IOException) { }
             }
+        }
+
+        /// <summary>
+        /// 흐르는 시간 4단계: 방을 연 창(--host)과 UDP로 들어온 손님(창 없는 게임 한 판 — GameSession + RemoteRoomTime)이 같은 방의 시각을 본다.
+        /// 방을 연 사람이 잠자리에서 E로 자면 "자는 중" 화면(아직 깨어 있는 사람)이 보이고 다음 날 단추가 꺼져 있다. 손님도 자면(명령) 곧바로 둘 다
+        /// 다음 날 07:00 — 방을 연 사람이 단추를 눌러 2일째를 연다. 그 뒤 활동 하나는 시계를 건너뛰지 않고 HUD에 "하는 중 · 끝나는 시각"이 보인다
+        /// (활동 시작은 명령 직접 호출 — 준비). 방을 연 창: 장치 이벤트 주입(OS 입력 계층 미확인). 손님: 자동 테스트(명령).
+        /// 한 프로세스에 창을 둘 띄우면 입력과 그리기가 한 창에만 맞아 손님을 창 없는 판으로 둔다.
+        /// </summary>
+        [Test]
+        public void MP_HOST_009_HostSleeps_SeesWhoIsAwake_TheGuestSleepsToo_BothWakeAtSeven_ThenTheHostIsBusy()
+        {
+            using PlayerDriver host = Launch("--host", Loopback, "--slot", "slot-0");
+            Assert.That(Until(host, () => HostedAndIn(host)), Is.True);
+            var definitions = host.Game.Session.Definitions;
+            SessionClient friend = AddFriend(host, "friend", "child|");
+            Assert.That(Until(host, () => friend.Status == ClientStatus.Joined && friend.RoomTime.Known), Is.True, "손님이 들어온다");
+            string guestSaves = Path.Combine(_saves, "guest-pc");
+            var time = new RemoteRoomTime(friend, "friend", definitions.TimeRules);
+            var guest = Rootborn.Game.GameSession.Start(definitions, Rootborn.Game.GameStartSettings.FromDefinitions(definitions), new FileSaveStore(guestSaves), "slot-g", "friend", room: time);
+            time.Changed += () => guest.SyncWithRoom();
+            bool Run(Func<bool> condition, double seconds = 10) => Until(host, () => { guest.AdvanceTime(1f / 60f, false); return condition(); }, seconds);
+
+            var hostGame = host.Game.Session;
+            Assert.That(hostGame.IsSoloRoom, Is.False, "방을 연 사람의 게임도 방의 시계(손님 저장이 없는 방)");
+            Assert.That(Run(() => hostGame.Room.Known && Math.Abs(guest.StudentTimeMinutes - hostGame.StudentTimeMinutes) <= RemoteRoomTime.ResyncMinutes), Is.True, "둘이 같은 시각");
+            Assert.That(guest.Student.CurrentDay, Is.EqualTo(hostGame.Student.CurrentDay));
+
+            // 방을 연 사람이 잠자리에서 잔다(E).
+            InteractionThing bed = host.Game.World.HereData.Things.FirstOrDefault(t => t.Kind == Rootborn.Screens.Day.DayResultScreen.InteractionKind);
+            Assert.That(bed, Is.Not.Null, host.World.Map.Id + "에 잠자리가 있다");
+            host.WalkNear(bed.X, bed.Y, host.World.Map.Grid.CellSize * 1.25f);
+            host.PressKey(TestKey.E);
+            host.WaitForScreen(ScreenCatalog.DayResult);
+            var result = (Rootborn.Screens.Day.DayResultScreen)host.Screens.Find(ScreenCatalog.DayResult);
+            Assert.That(Run(() => result.Model.Sleeping && result.Model.AwakeOthers.Count == 1), Is.True, "자는 중 — 손님은 아직 깨어 있다");
+            Assert.That(result.Model.AwakeOthers[0], Is.EqualTo("friend"));
+            var next = (UiButton)host.Node(Rootborn.Screens.Day.DayResultScreen.NextDayId);
+            Assert.That(next.Enabled, Is.False, "자면 07:00까지 깨어날 수 없다");
+            Assert.That(next.Text, Is.EqualTo(host.Game.Text.Get("day-result.sleeping")));
+            Assert.That(host.Game.Hosting.Room.Server.Clock.IsAsleep(host.Game.Room.PlayerId), Is.True, "방이 내 잠을 셌다");
+            host.ScreenshotScreen(ScreenCatalog.DayResult, "hostmode-09-host-sleeping");
+
+            // 손님도 잔다(명령) → 모두 잠들었으니 곧바로 다음 날 07:00.
+            Assert.That(guest.Sleep().Ended, Is.True);
+            Assert.That(Run(() => next.Enabled), Is.True, "모두 잠들면 다음 날 단추가 켜진다");
+            Assert.That(next.Text, Is.EqualTo(host.Game.Text.Get("day-result.next-day")));
+            Assert.That(host.Game.Hosting.Room.Server.Clock.Day, Is.EqualTo(2));
+            Assert.That(TimeRules.ClockMinutes(host.Game.Hosting.Room.Server.Clock.Minutes) / 60, Is.EqualTo(7), "07:00");
+            host.PressButton(Rootborn.Screens.Day.DayResultScreen.NextDayId);
+            host.WaitForScreenClosed(ScreenCatalog.DayResult);
+            Assert.That(hostGame.Student.CurrentDay, Is.EqualTo(2));
+            Assert.That(((UiLabel)host.Node(Rootborn.Screens.Hud.ClockHudScreen.LabelId)).Text, Does.StartWith("2일  07:"));
+            Assert.That(guest.StartNextDay(), Is.True);
+
+            // 활동 하나(준비: 명령 직접 호출) — 시계를 건너뛰지 않고 하는 중.
+            int before = hostGame.StudentTimeMinutes;
+            Assert.That(hostGame.PerformOutsideSchoolActivity("outside.help-neighbor", "host:busy").Kind, Is.EqualTo(Rootborn.Core.StudentLife.LifeActivityResultKind.Applied));
+            host.Frames(5);
+            Assert.That(hostGame.StudentTimeMinutes - before, Is.LessThan(10), "같이 할 때 활동은 시계를 건너뛰지 않는다");
+            var clock = (Rootborn.Screens.Hud.ClockHudScreen)host.Screens.Find(ScreenCatalog.HudClock);
+            Assert.That(clock.Model.Busy, Is.True);
+            int ends = TimeRules.ClockMinutes(hostGame.ActivityEndsAtMinutes);
+            Assert.That(((UiLabel)host.Node(Rootborn.Screens.Hud.ClockHudScreen.RoomLabelId)).Text,
+                Does.Contain(string.Format("{0:00}:{1:00}", ends / 60, ends % 60)), "HUD에 끝나는 시각");
+            Assert.That(guest.IsBusy, Is.False, "손님은 하는 중이 아니다");
+            host.Screenshot("hostmode-10-host-busy");
         }
 
         /// <summary>

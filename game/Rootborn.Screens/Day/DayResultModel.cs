@@ -97,8 +97,14 @@ namespace Rootborn.Screens.Day
         /// <summary>다음 날 버튼을 누를 수 있다(하루 결과가 준비됐고 방이 다음 날로 넘어감 — GameSession.CanStartNextDay).</summary>
         public bool CanStartNextDay { get; private set; }
 
-        /// <summary>하루 결과는 준비됐지만 같이 하는 방의 다른 사람이 아직 마감하지 않았다.</summary>
+        /// <summary>하루 결과는 준비됐지만 같이 하는 방이 아직 다음 날이 아니다(다른 사람이 깨어 있다 — 07:00이나 모두 잠들 때까지).</summary>
         public bool WaitingForOthers { get; private set; }
+
+        /// <summary>자는 중이다(잠들어 하루를 끝냈고 방이 아직 다음 날이 아니다). 자면 07:00까지 깨어날 수 없다.</summary>
+        public bool Sleeping { get; private set; }
+
+        /// <summary>자는 중일 때 방에 아직 깨어 있는 다른 사람의 신원(GameSession.RoomAwakeOthers). 아니면 비어 있다.</summary>
+        public IReadOnlyList<string> AwakeOthers { get; private set; } = Array.Empty<string>();
 
         /// <summary>
         /// result는 방금 끝낸 날의 결과(GameSession.EndDay). 이미 끝난 날을 다시 보는 경우(Ended=false)는 Unity 판처럼
@@ -139,7 +145,14 @@ namespace Rootborn.Screens.Day
                 CareerInterestRecommendations = Array.Empty<string>(),
                 CanStartNextDay = session.CanStartNextDay,
                 WaitingForOthers = student.DayState == StudentDayState.ResultReady && !session.CanStartNextDay,
+                Sleeping = session.IsSleepingInRoom,
             };
+            if (model.Sleeping)
+            {
+                var awake = new List<string>(4);
+                session.RoomAwakeOthers(awake);
+                model.AwakeOthers = awake;
+            }
 
             if (model.CareerInterestId.Length > 0 && session.Definitions.TryGet<CareerInterest>(model.CareerInterestId, out CareerInterest interest))
                 model.CareerInterestRecommendations = interest.BuildRecommendations(session.CareerInterests, null, null, session.CareerInterests.LastChangedDay) ?? Array.Empty<string>();

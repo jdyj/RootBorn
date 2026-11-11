@@ -9,7 +9,7 @@
       "ref": "paid-activity",
       "type": "ActivityTimePolicyDefinition"
     },
-    "timeCostMinutes": 120,
+    "timeCostMinutes": 150,
     "energyCost": 1,
     "focusCost": 1,
     "stressDelta": 0,
@@ -60,7 +60,7 @@
       "ref": "paid-activity",
       "type": "ActivityTimePolicyDefinition"
     },
-    "timeCostMinutes": 90,
+    "timeCostMinutes": 150,
     "energyCost": 1,
     "focusCost": 1,
     "stressDelta": 0,
@@ -111,7 +111,7 @@
       "ref": "paid-activity",
       "type": "ActivityTimePolicyDefinition"
     },
-    "timeCostMinutes": 90,
+    "timeCostMinutes": 150,
     "energyCost": 1,
     "focusCost": 1,
     "stressDelta": 0,

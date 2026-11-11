@@ -76,18 +76,21 @@ namespace Rootborn.Screens.Tests
         }
 
         [Test]
-        public void Together_NextDayWaits_UntilEveryoneEndedTheDay()
+        public void Together_TheSleeperWaits_ShowsWhoIsAwake_UntilEveryoneSleeps()
         {
-            var clock = new RoomClock(_f.Session.Student.Calendar);
+            var clock = new RoomClock(TestSession.Definitions.TimeRules);
             clock.Join("me");
             clock.Join("friend");
             using var shared = new DayScreensFixture(room: clock, playerId: "me");
             Assert.That(shared.Interact("House", DayResultScreen.InteractionKind, "house.day-end"), Is.True);
             var next = (UiButton)shared.Node(DayResultScreen.NextDayId);
-            Assert.That(next.Enabled, Is.False, "friend가 마감하기 전");
-            Assert.That(next.Text, Is.EqualTo(shared.Text.Get("day-result.waiting-others")));
+            var screen = (DayResultScreen)shared.Stack.Find(ScreenCatalog.DayResult);
+            Assert.That(screen.Model.Sleeping, Is.True, "자는 중 화면");
+            Assert.That(screen.Model.AwakeOthers, Is.EqualTo(new[] { "friend" }), "아직 깨어 있는 사람");
+            Assert.That(next.Enabled, Is.False, "자면 07:00까지 깨어날 수 없다");
+            Assert.That(next.Text, Is.EqualTo(shared.Text.Get("day-result.sleeping")));
 
-            clock.EndDay("friend");
+            clock.Sleep("friend");
             shared.Session.SyncWithRoom();
             Assert.That(next.Enabled, Is.True, "방이 다음 날로 넘어갔다");
             Assert.That(next.Text, Is.EqualTo(shared.Text.Get("day-result.next-day")));

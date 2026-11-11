@@ -152,13 +152,16 @@ namespace Rootborn.Host.World
         }
 
         /// <summary>NPC 자리·상호작용 후보의 시간대(Core LocationStateTimeSlots: 오전·오후·저녁·밤). 분 단위 개인 시각(CurrentHour)에서 정한다.</summary>
-        public string TimeSlot => LocationStateTimeSlots.FromMinutes((int)(CurrentHour * 60f));
+        public string TimeSlot => LocationStateTimeSlots.FromMinutes((int)(CurrentHour * 60f), DayStartMinutes);
+
+        /// <summary>하루 시작 시각(분, 시간 규칙 game/time.json). 그 전의 새벽은 밤 시간대다(NPC 자리·장소 상태·낮밤 빛 모두). Host가 게임 한 판의 규칙에서 넣는다.</summary>
+        public int DayStartMinutes { get; set; } = LocationStateTimeSlots.DefaultDayStartMinutes;
 
         /// <summary>
         /// 낮밤 빛(바깥 밝기·빛 지점 세기)의 시간대. 게임 한 판이 있으면 방의 때(HUD 시계가 보이는 때의 대표 시각), 아니면 TimeSlot과 같다.
         /// NPC 자리·장소 상태는 이것이 아니라 TimeSlot(개인 시각)을 따른다 — 플레이(누가 어디 있는지)는 바꾸지 않고 HUD와 밝기만 맞춘다.
         /// </summary>
-        public string LightTimeSlot => _lightHour != null ? LocationStateTimeSlots.FromMinutes((int)(_lightHour() * 60f)) : TimeSlot;
+        public string LightTimeSlot => _lightHour != null ? LocationStateTimeSlots.FromMinutes((int)(_lightHour() * 60f), DayStartMinutes) : TimeSlot;
 
         private Func<int> _studentDay;
         private Func<float> _studentHour;

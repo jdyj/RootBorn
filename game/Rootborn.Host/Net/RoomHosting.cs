@@ -24,7 +24,7 @@ namespace Rootborn.Host.Net
         private readonly RoomConnection _connection;
         private readonly Func<ISaveStore> _store;
         private readonly IRoomClock _clock;
-        private readonly Func<LifeCalendar> _calendar;
+        private readonly Func<Rootborn.Core.Time.TimeRules> _timeRules;
         private readonly Action _closed;
         private HostedRoom _room;
         private RoomJoinPhase _ownPhase = RoomJoinPhase.Idle;
@@ -36,14 +36,14 @@ namespace Rootborn.Host.Net
         /// <param name="connection">내 게임이 방에 들어가는 쪽(들어가기와 같은 것). 들어가면 그것이 그 슬롯으로 게임을 시작한다.</param>
         /// <param name="store">방 상태를 쓸 저장소(내 세이브 폴더).</param>
         /// <param name="clock">방의 틱을 세는 시계(Host의 네트워크 시계).</param>
-        /// <param name="calendar">방의 시계가 쓸 달력(게임 데이터의 정의 — 데디케이티드 서버와 같은 것).</param>
+        /// <param name="timeRules">방의 시계가 쓸 시간 규칙(게임 데이터의 정의 — 데디케이티드 서버와 같은 것).</param>
         /// <param name="closed">내가 방을 닫았다(<see cref="Close"/>): Host가 시작 화면으로 돌아간다.</param>
-        public RoomHosting(RoomConnection connection, Func<ISaveStore> store, IRoomClock clock, Func<LifeCalendar> calendar, Action closed)
+        public RoomHosting(RoomConnection connection, Func<ISaveStore> store, IRoomClock clock, Func<Rootborn.Core.Time.TimeRules> timeRules, Action closed)
         {
             _connection = connection ?? throw new ArgumentNullException(nameof(connection));
             _store = store ?? throw new ArgumentNullException(nameof(store));
             _clock = clock ?? throw new ArgumentNullException(nameof(clock));
-            _calendar = calendar;
+            _timeRules = timeRules;
             _closed = closed;
             var names = Rootborn.Core.Room.RoomPieceCatalog.CreateDefault().Names;
             _shareable = new string[names.Count];
@@ -113,7 +113,7 @@ namespace Rootborn.Host.Net
             };
             try
             {
-                _room = HostedRoom.Open(bind, port, settings, _connection.Versions, _store(), slotId, _clock, line => Console.WriteLine("[내 방] " + line), _calendar?.Invoke());
+                _room = HostedRoom.Open(bind, port, settings, _connection.Versions, _store(), slotId, _clock, line => Console.WriteLine("[내 방] " + line), _timeRules?.Invoke());
             }
             catch (Exception e) when (e is InvalidOperationException || e is SocketException || e is ArgumentException)
             {

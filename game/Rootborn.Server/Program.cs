@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Rootborn.Core.Save;
-using Rootborn.Core.StudentLife;
+using Rootborn.Core.Time;
 using Rootborn.Data;
 using Rootborn.Data.Builders;
 using Rootborn.Data.Save;
@@ -106,7 +106,7 @@ namespace Rootborn.Server
             RoomServer room;
             try
             {
-                room = new RoomServer(transport, settings, versions, store, options.SaveSlot, Log, RoomCalendar(load.Definitions), guests);
+                room = new RoomServer(transport, settings, versions, store, options.SaveSlot, Log, RoomTimeRules(load.Definitions), guests);
             }
             catch (Exception e) when (e is SaveFileCorruptException || e is SaveFileTooNewException || e is ArgumentException)
             {
@@ -136,12 +136,12 @@ namespace Rootborn.Server
         }
 
         /// <summary>
-        /// 방의 시계가 쓸 달력: 게임 한 판(GameSession)과 같은 정의(registry.json 기본값의 달력 id). 대표 시각은 아직 데이터에 없어 달력의 기본값이다.
+        /// 방의 시계가 쓸 시간 규칙: 게임 한 판(GameSession)과 같은 정의(game/time.json + data/time). 하루 길이가 없는 데이터면 null(시계가 흐르지 않는다).
         /// </summary>
-        public static LifeCalendar RoomCalendar(GameDefinitions definitions)
+        public static TimeRules RoomTimeRules(GameDefinitions definitions)
         {
             if (definitions == null) throw new ArgumentNullException(nameof(definitions));
-            return definitions.Get<LifeCalendar>(GameStartSettings.FromDefinitions(definitions).CalendarId);
+            return definitions.TimeRules;
         }
 
         /// <summary>

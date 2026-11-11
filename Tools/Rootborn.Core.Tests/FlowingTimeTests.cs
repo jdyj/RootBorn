@@ -228,7 +228,8 @@ namespace Rootborn.Core.Tests
             Assert.That(p.BusyUntilMinutes, Is.EqualTo(8 * Hour));
             Assert.That(p.IsBusy, Is.True);
             Assert.That(new LifeActivityRunner().TryPerform(Activity(15, 0), p, "b", out _), Is.False, "하는 중에는 다른 활동을 시작하지 못한다");
-            Assert.That(StudentActivityRefusal.Explain(p, null, 0, 0), Is.EqualTo(StudentActivityRefusalReason.NoTime));
+            Assert.That(StudentActivityRefusal.Explain(p, null, 0, 0), Is.EqualTo(StudentActivityRefusalReason.Busy), "하는 중이라 못 한다(문구 ui.prompt.busy)");
+            Assert.That(StudentActivityRefusal.LocalizationKey(StudentActivityRefusalReason.Busy), Is.EqualTo("ui.prompt.busy"));
             p.AdvanceClock(60);
             Assert.That(p.IsBusy, Is.False);
             Assert.That(new LifeActivityRunner().TryPerform(Activity(15, 0), p, "c", out _), Is.True);

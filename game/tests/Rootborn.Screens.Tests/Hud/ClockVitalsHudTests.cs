@@ -33,11 +33,11 @@ namespace Rootborn.Screens.Tests.Hud
             var clock = t.Screen<ClockHudScreen>(ScreenCatalog.HudClock);
             // 혼자 하기의 시계는 흐르는 시각(흐르는 시간 설계 3.1). 하루는 07:00에 시작한다(사용자 결정 2026-11-12).
             Assert.That((clock.Model.Day, clock.Model.Hour, clock.Model.Minute), Is.EqualTo((1, 7, 0)));
-            Assert.That(clock.Model.Together, Is.False);
+            Assert.That(clock.Model.Busy, Is.False);
             Assert.That(clock.Model.Alert, Is.EqualTo(ClockAlert.None));
             Assert.That(clock.Model.Allowance, Is.EqualTo(0), "가게 화폐를 알고 가방에 없다");
             Assert.That(((UiLabel)t.Node(ClockHudScreen.LabelId)).Text, Is.EqualTo("1일  07:00 · 용돈 0"));
-            Assert.That(((UiLabel)t.Node(ClockHudScreen.RoomLabelId)).Text, Is.Empty, "혼자 하기에는 시간 포인트 줄도 기다리는 사람도 없다");
+            Assert.That(((UiLabel)t.Node(ClockHudScreen.RoomLabelId)).Text, Is.Empty, "혼자 하기에는 하는 중이 없다(활동은 시계를 건너뛴다)");
             Assert.That(((UiImage)t.Node(ClockHudScreen.IconId)).Image, Is.EqualTo("icon:time"));
 
             var vitals = t.Screen<VitalsHudScreen>(ScreenCatalog.HudVitals);
@@ -111,24 +111,33 @@ namespace Rootborn.Screens.Tests.Hud
         }
 
         [Test]
-        public void Together_ShowsWhoHasNotFinishedThisPart_AndUpdatesWhenTheRoomChanges()
+        public void Together_ShowsTheRoomsTime_AndBusyUntilTheActivityEnds_NoTimePointsLine()
         {
-            var clock = new RoomClock(TestSession.Definitions.Get<LifeCalendar>(GameStartSettings.FromDefinitions(TestSession.Definitions).CalendarId));
+            var clock = new RoomClock(TestSession.Definitions.TimeRules);
             clock.Join("me");
             clock.Join("friend");
             using var t = new TestSession(room: clock, playerId: "me");
             t.Stack.OpenHud();
             var label = (UiLabel)t.Node(ClockHudScreen.RoomLabelId);
-            Assert.That(label.Text, Is.EqualTo("남은 TP 2/2 · 아직: friend"));
+            Assert.That(label.Text, Is.Empty, "남은 때·아직 안 끝낸 사람 줄은 없다(흐르는 시간 4단계)");
 
+            clock.Advance(60);
+            t.Session.AdvanceTime(0.1f, false);
+            var hud = t.Screen<ClockHudScreen>(ScreenCatalog.HudClock);
+            Assert.That((hud.Model.Hour, hud.Model.Minute), Is.EqualTo((8, 0)), "방의 시각");
+
+            int minutes = t.Session.Definitions.Get<Rootborn.Core.StudentLife.LocationActivity>("location.activity.library-hard-book").TimeCostMinutes;
             t.Session.PerformLocationActivity("location.activity.library-hard-book", "req-together");
-            Assert.That(label.Text, Is.EqualTo("남은 TP 1/2 · 아직: friend"), "나는 끝냈고 friend를 기다린다");
-            Assert.That(t.Screen<ClockHudScreen>(ScreenCatalog.HudClock).Model.Hour, Is.EqualTo(7), "때가 아직 안 넘어갔다");
+            int ends = 8 * 60 + minutes;
+            Assert.That(hud.Model.Busy, Is.True);
+            Assert.That((hud.Model.BusyHour, hud.Model.BusyMinute), Is.EqualTo((ends / 60, ends % 60)));
+            Assert.That(label.Text, Is.EqualTo(string.Format("하는 중 · {0:00}:{1:00}에 끝나요", ends / 60, ends % 60)));
+            Assert.That((hud.Model.Hour, hud.Model.Minute), Is.EqualTo((8, 0)), "같이 하면 시계를 건너뛰지 않는다");
 
-            clock.Skip("friend");
-            t.Session.SyncWithRoom();
-            Assert.That(label.Text, Is.EqualTo("남은 TP 1/2 · 아직: friend"), "새 때에서는 둘 다 아직");
-            Assert.That(t.Screen<ClockHudScreen>(ScreenCatalog.HudClock).Model.Hour, Is.EqualTo(18), "둘 다 끝내서 저녁");
+            clock.Advance(minutes);
+            t.Session.AdvanceTime(0.1f, false);
+            Assert.That(hud.Model.Busy, Is.False, "끝나는 시각이 지나면 표시가 사라진다");
+            Assert.That(label.Text, Is.Empty);
         }
 
         [Test]

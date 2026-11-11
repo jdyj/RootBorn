@@ -201,7 +201,7 @@ namespace Rootborn.Host.Tests
             var screen = (DailyPlanScreen)p.Screens.Find(ScreenCatalog.DailyPlan);
             Assert.That(screen.Model.Slots[s.CurrentDailyPlanSlotIndex].Now, Is.True, "지금 시간대의 칸");
             Assert.That(screen.Model.SelectedSlot, Is.EqualTo(s.CurrentDailyPlanSlotIndex), "지금 칸을 먼저 고른다");
-            Assert.That(p.Node(DailyPlanScreen.SkipId).Visible, Is.False, "혼자 하기에는 넘기기가 없다");
+            Assert.That(p.Screens.Tree.Root.Find("daily-plan.skip"), Is.Null, "넘기기는 없다(흐르는 시간 4단계)");
             int paused = s.StudentTimeMinutes;
             p.Frames(100);
             Assert.That(s.StudentTimeMinutes, Is.EqualTo(paused), "일과 계획판(패널)이 열려 있으면 시계가 멈춘다");

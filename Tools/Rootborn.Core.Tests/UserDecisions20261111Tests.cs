@@ -94,13 +94,32 @@ namespace Rootborn.Core.Tests
         }
 
         [Test]
-        public void ChangedBehavior_EarlyHoursAreMorning()
+        public void ChangedBehavior_EarlyHoursAreMorning_FromTheDayStart()
         {
             Assert.That(LocationStateTimeSlots.FromMinutes(7 * 60), Is.EqualTo(LocationStateTimeSlots.Morning));
-            Assert.That(LocationStateTimeSlots.FromMinutes(1), Is.EqualTo(LocationStateTimeSlots.Morning));
+            // 흐르는 시간(2026-11-12): 하루 시작(07:00) 전의 새벽은 밤이다(아래 NightBeforeTheDayStart).
+            Assert.That(LocationStateTimeSlots.FromMinutes(1), Is.EqualTo(LocationStateTimeSlots.Night));
             Assert.That(LocationStateTimeSlots.FromMinutes(8 * 60), Is.EqualTo(LocationStateTimeSlots.Morning));
             Assert.That(LocationStateTimeSlots.FromMinutes(11 * 60 + 59), Is.EqualTo(LocationStateTimeSlots.Morning));
             Assert.That(LocationStateTimeSlots.FromMinutes(12 * 60), Is.EqualTo(LocationStateTimeSlots.Afternoon));
+        }
+
+        [Test]
+        public void ChangedBehavior_NightBeforeTheDayStart_IsNight_EvenPastMidnightOfTheSameDay()
+        {
+            // 흐르는 시각은 하루 시작(07:00) 전에도 흐른다. 그 새벽(00:00~06:59)을 아침으로 보면 마을이 아침처럼 밝고 NPC가 아침 자리에 선다.
+            Assert.That(LocationStateTimeSlots.FromMinutes(0), Is.EqualTo(LocationStateTimeSlots.Night));
+            Assert.That(LocationStateTimeSlots.FromMinutes(6 * 60 + 59), Is.EqualTo(LocationStateTimeSlots.Night));
+            Assert.That(LocationStateTimeSlots.FromMinutes(26 * 60), Is.EqualTo(LocationStateTimeSlots.Night), "같은 날의 26:00(= 02:00)");
+            Assert.That(LocationStateTimeSlots.FromMinutes(31 * 60), Is.EqualTo(LocationStateTimeSlots.Morning), "31:00 = 다음 날 07:00");
+            Assert.That(LocationStateTimeSlots.FromMinutes(5 * 60, dayStartMinutes: 5 * 60), Is.EqualTo(LocationStateTimeSlots.Morning), "하루 시작은 시간 규칙에서 온다");
+            Assert.That(LocationStateTimeSlots.FromMinutes(5 * 60), Is.EqualTo(LocationStateTimeSlots.Night));
+
+            var rules = new Rootborn.Core.Time.TimeRules(600f, 6 * 60, 22 * 60, 1, 2);
+            var student = new StudentLifeProgress("slot", "player", 10, 10, 0, 6 * 60 + 30);
+            Assert.That(LocationStateTimeSlots.FromProgress(student), Is.EqualTo(LocationStateTimeSlots.Night), "규칙이 없으면 기본 하루 시작(07:00)");
+            student.ConfigureTimeRules(rules);
+            Assert.That(LocationStateTimeSlots.FromProgress(student), Is.EqualTo(LocationStateTimeSlots.Morning), "진행의 시간 규칙의 하루 시작(06:00)");
         }
 
         [Test]

@@ -8,7 +8,9 @@ namespace Rootborn.Core.StudentLife
         DoneToday,
         NoEnergy,
         /// <summary>체력이 0이 되어 지쳤다. 자야 풀린다.</summary>
-        Exhausted
+        Exhausted,
+        /// <summary>같이 하는 방에서 앞의 활동을 하는 중이다(끝나는 시각까지). 걷기·대화는 된다.</summary>
+        Busy
     }
 
     /// <summary>
@@ -21,6 +23,7 @@ namespace Rootborn.Core.StudentLife
         {
             if (progress == null) return StudentActivityRefusalReason.None;
             if (progress.DayState == StudentDayState.InProgress && progress.IsExhausted) return StudentActivityRefusalReason.Exhausted;
+            if (progress.DayState == StudentDayState.InProgress && progress.IsBusy) return StudentActivityRefusalReason.Busy;
             if (progress.DayState != StudentDayState.InProgress || (timePolicy != null && !progress.CanSpendTimePoints(timePolicy.TimePointCost))
                 || !progress.CanStartActivity) return StudentActivityRefusalReason.NoTime;
             if (timePolicy != null && !timePolicy.IsAllowedDay(progress.CurrentDay)) return StudentActivityRefusalReason.NotToday;
@@ -39,6 +42,7 @@ namespace Rootborn.Core.StudentLife
                 case StudentActivityRefusalReason.DoneToday: return "ui.prompt.done-today";
                 case StudentActivityRefusalReason.NoEnergy: return "ui.prompt.no-energy";
                 case StudentActivityRefusalReason.Exhausted: return "ui.prompt.exhausted";
+                case StudentActivityRefusalReason.Busy: return "ui.prompt.busy";
                 default: return string.Empty;
             }
         }
@@ -53,6 +57,7 @@ namespace Rootborn.Core.StudentLife
                 case StudentActivityRefusalReason.DoneToday: return "You already did this today. Try again tomorrow.";
                 case StudentActivityRefusalReason.NoEnergy: return "Not enough energy or focus. Rest first.";
                 case StudentActivityRefusalReason.Exhausted: return "You are exhausted. Go to sleep.";
+                case StudentActivityRefusalReason.Busy: return "You are still busy with your last activity.";
                 default: return string.Empty;
             }
         }

@@ -227,7 +227,7 @@ namespace Rootborn.Game.Tests
 
         private static RoomClock RoomAt(int day, string player)
         {
-            var clock = new RoomClock(TestWorld.Definitions.Get<LifeCalendar>(TestWorld.Settings.CalendarId), day: day);
+            var clock = new RoomClock(TestWorld.Definitions.TimeRules, day);
             clock.Join(player);
             return clock;
         }
@@ -257,7 +257,7 @@ namespace Rootborn.Game.Tests
             var room = RoomAt(1, TestWorld.Player);
             var game = GameSession.Start(TestWorld.Definitions, TestWorld.Settings, saves.Store, TestWorld.Slot, TestWorld.Player, room: room);
             Assert.That(game.EndDay().Ended, Is.True);
-            // 방은 이 사람 없이 3일째까지 갔다(다른 사람들이 마감).
+            // 방은 이 사람 없이 3일째까지 갔다(다른 사람들이 잠듦).
             var later = RoomAt(3, TestWorld.Player);
             var again = GameSession.Start(TestWorld.Definitions, TestWorld.Settings, saves.Store, TestWorld.Slot, TestWorld.Player, room: later);
             Assert.That(again.CanStartNextDay, Is.True);
@@ -268,23 +268,7 @@ namespace Rootborn.Game.Tests
         // ---------- 끊긴 동안 보낸 요청 ----------
 
         [Test]
-        public void ARequestLostBeforeTheRoomCountedIt_IsSentAgain_AndCountedOnce()
-        {
-            using var saves = new TempSaves();
-            var game = TestWorld.Start(saves.Store);
-            Shift(game, "w1"); // 개인 진행은 시간 포인트를 썼다
-            int spent = game.Student.TimePointsSpentToday;
-            Assume.That(spent, Is.GreaterThan(0));
-
-            var room = RoomAt(1, TestWorld.Player); // 방은 그 요청을 받지 못했다
-            var again = GameSession.Start(TestWorld.Definitions, TestWorld.Settings, saves.Store, TestWorld.Slot, TestWorld.Player, room: room);
-            Assert.That(room.CompletedParts(TestWorld.Player), Is.EqualTo(spent), "다시 보내 방이 센다");
-            again.SyncWithRoom();
-            Assert.That(room.CompletedParts(TestWorld.Player), Is.EqualTo(spent), "한 번만 센다");
-        }
-
-        [Test]
-        public void ADayEndLostBeforeTheRoomCountedIt_IsSentAgain()
+        public void ASleepLostBeforeTheRoomCountedIt_IsSentAgain()
         {
             using var saves = new TempSaves();
             var game = TestWorld.Start(saves.Store);
@@ -292,8 +276,8 @@ namespace Rootborn.Game.Tests
             var room = RoomAt(1, TestWorld.Player);
             room.Join("other");
             GameSession.Start(TestWorld.Definitions, TestWorld.Settings, saves.Store, TestWorld.Slot, TestWorld.Player, room: room);
-            Assert.That(room.IsDayEnded(TestWorld.Player), Is.True);
-            Assert.That(room.Day, Is.EqualTo(1), "다른 사람은 아직 마감하지 않았다");
+            Assert.That(room.IsAsleep(TestWorld.Player), Is.True, "그 날의 잠을 다시 알린다");
+            Assert.That(room.Day, Is.EqualTo(1), "다른 사람은 아직 깨어 있다");
         }
     }
 }

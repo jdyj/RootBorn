@@ -16,7 +16,8 @@ namespace Rootborn.Core.Tests
             Assert.That(f.BeginPractice("practice-1").Applied, Is.True);
             Assert.That(f.Student.TimePointsRemaining, Is.EqualTo(2));
             Assert.That(f.Student.Energy, Is.EqualTo(11));
-            Assert.That(f.Student.TimeMinutes, Is.EqualTo(480 + 30));
+            Assert.That(f.Student.TimeMinutes, Is.EqualTo(480), "시계는 정산 때 남은 몫만 간다(MinigameActivityTimeTests)");
+            Assert.That(f.Student.BusyUntilMinutes, Is.EqualTo(480 + 30));
             Assert.That(f.Student.GetTraitValue("trait.fixture"), Is.Zero);
             var pending = f.Student.PendingMinigame;
             Assert.That(pending.Kind, Is.EqualTo(StudentMinigameKind.Practice));
@@ -185,7 +186,7 @@ namespace Rootborn.Core.Tests
             Assert.That(f.Service.Forfeit(f.Student, "p").Kind, Is.EqualTo(AdultCareerResultKind.DuplicateRequest));
         }
 
-        private sealed class FakePayroll : IPartTimeWorkPayroll
+        internal sealed class FakePayroll : IPartTimeWorkPayroll
         {
             public bool HasRoom = true;
             public bool MarksRequest = true;

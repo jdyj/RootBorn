@@ -1,12 +1,12 @@
 using System;
-using System.Collections.Generic;
 using Rootborn.Data;
 
 namespace Rootborn.Game
 {
     /// <summary>
-    /// 새 게임을 시작할 때 쓰는 값. 정의 id는 registry.json의 기본값 키에서 읽는다.
-    /// 시작 에너지·집중·시각은 데이터에 없고 Unity StudentLifeProgressComponent의 직렬화 기본값(12, 10, 480분)이다.
+    /// 새 게임을 시작할 때 쓰는 값. 정의 id는 registry.json의 기본값 키에서, 시작 시각은 흐르는 시간의 하루 시작(game/time.json)에서 읽는다
+    /// (<see cref="FromDefinitions"/> 하나로 만든다 — data 폴더를 따로 읽던 길은 하루 시작을 몰라 지웠다).
+    /// 시작 에너지·집중은 데이터에 없고 Unity StudentLifeProgressComponent의 직렬화 기본값(12, 10)이다. 시간 규칙이 없는 시험 데이터면 Unity 판의 8시.
     /// </summary>
     public sealed class GameStartSettings
     {
@@ -49,25 +49,6 @@ namespace Rootborn.Game
                 definitions.RegistryDefault("defaultTutorialStage"), definitions.RegistryDefault("defaultStudentCampaign"),
                 definitions.RegistryDefault("locationStateConflictPolicies"),
                 startTimeMinutes: definitions.TimeRules?.DayStartMinutes ?? UnityStartTimeMinutes);
-        }
-
-        /// <summary>
-        /// FromDefinitions와 같은 값을 data 폴더에서 직접 읽는다(표를 한 번 더 읽는다). 정의를 이미 읽었으면 FromDefinitions를 쓴다.
-        /// 다른 세션이 부르고 있을 수 있어 남겨 둔다.
-        /// </summary>
-        public static GameStartSettings FromRegistry(string dataDirectory)
-        {
-            var errors = new List<LoadError>();
-            var table = EntityTable.ReadDirectory(dataDirectory, errors);
-            if (errors.Count > 0) throw new InvalidOperationException("registry.json을 읽지 못했다: " + errors[0]);
-            string First(string key)
-            {
-                var ids = table.RegistryIds(key);
-                return ids.Count > 0 ? ids[0] : string.Empty;
-            }
-
-            return new GameStartSettings(First("studentLifeCalendar"), First("defaultDayEndRule"), First("defaultTutorialStage"),
-                First("defaultStudentCampaign"), First("locationStateConflictPolicies"));
         }
     }
 }

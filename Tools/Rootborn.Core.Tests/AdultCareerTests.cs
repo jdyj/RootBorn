@@ -255,7 +255,9 @@ namespace Rootborn.Core.Tests
             int start = f.Student.TimeMinutes;
             Assert.That(f.Reserve("attempt-1").Applied, Is.True);
             Assert.That(f.Student.TimePointsRemaining, Is.EqualTo(1));
-            Assert.That(f.Student.TimeMinutes, Is.EqualTo(start + 90));
+            // 흐르는 시간 3.2절: 예약은 끝나는 시각만 정하고 시계는 정산 때 남은 몫만 간다(MinigameActivityTimeTests).
+            Assert.That(f.Student.TimeMinutes, Is.EqualTo(start));
+            Assert.That(f.Student.BusyUntilMinutes, Is.EqualTo(start + 90));
             Assert.That(f.Inventory.CountOf(Fixture.Coin), Is.Zero);
             var pending = f.Progress.ToSaveData().PendingWork;
             Assert.That(pending.RequestId, Is.EqualTo("attempt-1"));
@@ -523,7 +525,7 @@ namespace Rootborn.Core.Tests
             public int CountOf(string itemId) => _inner.CountOf(itemId);
         }
 
-        private sealed class Fixture
+        internal sealed class Fixture
         {
             public const string Coin = "currency.fixture";
             public const string Equipment = "equipment.fixture";

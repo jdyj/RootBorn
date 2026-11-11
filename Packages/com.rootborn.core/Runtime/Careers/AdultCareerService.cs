@@ -84,7 +84,10 @@ namespace Rootborn.Core.Careers
             });
         }
 
-        /// <summary>미니게임으로 할 일을 예약한다. 시간 포인트와 시계는 지금 쓴다(정산 때 다시 쓰지 않는다).</summary>
+        /// <summary>
+        /// 미니게임으로 할 일을 예약한다. 시계는 건너뛰지 않고 끝나는 시각만 정한다 — 정산·포기 때 미니게임 동안 흐른 시간을 뺀 나머지만 쓴다
+        /// (흐르는 시간 설계 3.2절).
+        /// </summary>
         public AdultCareerResult TryReserveWork(FacilityWork work, StudentLifeProgress student, AdultCareerProgress adult, string requestId, int seed)
         {
             if (_executing || !SameIdentity(student, adult) || string.IsNullOrEmpty(requestId)) return Result(AdultCareerResultKind.InvalidRequest);
@@ -93,7 +96,7 @@ namespace Rootborn.Core.Careers
             var check = CheckReserveWork(work, student, adult, out var level);
             if (check != AdultCareerResultKind.Applied) return Result(check);
             if (!student.TrySpendTimePoints(work.TimePointCost)) return Result(AdultCareerResultKind.InsufficientTime);
-            student.Spend(work.TimeCostMinutes, 0, 0, 0);
+            student.ReserveActivityTime(work.TimeCostMinutes);
             adult.ReserveWork(work, requestId, student.CurrentDay, seed, level.RewardPercent);
             return Result(AdultCareerResultKind.Applied);
         }
@@ -104,7 +107,7 @@ namespace Rootborn.Core.Careers
             if (_executing || !SameIdentity(student, adult) || inventory == null || string.IsNullOrEmpty(requestId) || score < 0 || score > 100) return Result(AdultCareerResultKind.InvalidRequest);
             if (adult.HasAppliedRequest(requestId)) return Result(AdultCareerResultKind.DuplicateRequest);
             var pending = adult.PendingWork;
-            if (pending == null || pending.RequestId != requestId || pending.Day != student.CurrentDay || pending.ReservedTimePoints > student.TimePointsSpentToday)
+            if (pending == null || pending.RequestId != requestId || pending.Day != student.CurrentDay)
                 return Result(AdultCareerResultKind.InvalidRequest);
             var facility = FacilityOf(work);
             if (facility == null || work.Minigame == null || pending.WorkId != work.Id || pending.MinigameId != work.Minigame.Id || adult.FacilityId != facility.Id || pending.FacilityLevel != adult.FacilityLevel)
@@ -115,6 +118,7 @@ namespace Rootborn.Core.Careers
             {
                 adult.CompleteWork(work, requestId, score >= work.MinimumSuccessScore);
                 student.RecordActivityCompleted(work.Id);
+                student.FinishReservedActivityTime();
             });
         }
 
@@ -126,6 +130,7 @@ namespace Rootborn.Core.Careers
             var pending = adult.PendingWork;
             if (pending == null || pending.RequestId != requestId) return Result(AdultCareerResultKind.InvalidRequest);
             adult.ForfeitPendingWork();
+            if (pending.Day == student.CurrentDay) student.FinishReservedActivityTime();
             return Result(AdultCareerResultKind.Applied);
         }
 

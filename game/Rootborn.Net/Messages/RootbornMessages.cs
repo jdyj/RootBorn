@@ -68,42 +68,27 @@ namespace Rootborn.Net.Messages
     }
 
     /// <summary>
-    /// 서버 → 클라이언트: 방의 시계(Core RoomClock). 날짜, 지금 때(0부터, PartsToday면 하루의 때를 다 쓴 것), 하루의 때 수,
-    /// 지금 있는 사람마다 이 때를 끝냈는지와 하루를 마감했는지.
+    /// 서버 → 클라이언트: 방의 시계(Core RoomClock, 흐르는 시간 4단계). 날짜, 그날 0시부터 센 분, 지금 있는 사람마다 자는 중인지.
+    /// 서버는 매 프레임 보내지 않는다 — 바뀔 때(잠, 들어옴·나감, 다음 날)와 가끔(SessionServerSettings.ClockSyncSeconds) 보내고,
+    /// 받는 쪽이 사이를 같은 속도로 메운다(RemoteRoomTime).
     /// </summary>
-    public sealed class RoomClockMessage
+    public sealed class RoomTimeMessage
     {
         public int Day;
-        public byte PartIndex;
-        public byte PartsToday;
-        public RoomClockEntry[] Entries = Array.Empty<RoomClockEntry>();
+        public int Minutes;
+        public RoomTimeEntry[] Entries = Array.Empty<RoomTimeEntry>();
     }
 
-    public struct RoomClockEntry
+    public struct RoomTimeEntry
     {
         public ushort NetId;
-        public bool FinishedPart;
-        public bool DayEnded;
-
-        /// <summary>그 사람이 오늘 끝낸 때의 수(v2). v1에서 읽으면 지금 때 + 끝냈으면 1.</summary>
-        public byte CompletedParts;
+        public bool Asleep;
     }
 
-    /// <summary>클라이언트 → 서버: 내 하루를 끝냈다(남은 때도 모두 끝낸 것으로 센다). Day는 마감한 날(v2). 0이면 지금 날(v1).</summary>
+    /// <summary>클라이언트 → 서버: 그 날(Day) 잠들었다. 0이면 지금 날. 서버는 다른 날의 잠은 받지 않는다(Core RoomClock.SleepOn).</summary>
     public sealed class DayEndReadyMessage
     {
         public int Day;
-    }
-
-    /// <summary>
-    /// 클라이언트 → 서버: (Day, FromPart)에서 시간 포인트를 Points만큼 써서 그만큼의 때를 끝냈다. "넘기기"는 1.
-    /// Day가 0이면(v1) 지금 날·지금 때. 서버는 늦게 온 요청을 이미 센 때로 본다(Core RoomClock.SpendFrom).
-    /// </summary>
-    public sealed class FinishPartMessage
-    {
-        public int Day;
-        public byte FromPart;
-        public byte Points = 1;
     }
 
     /// <summary>살아 있다는 표시. 아무것도 보내지 않은 동안만 보낸다.</summary>
@@ -138,17 +123,17 @@ namespace Rootborn.Net.Messages
             c.Add<PlayerLeftMessage>(5, 1, (w, m) => w.WriteUInt16(m.NetId), ReadLeft);
             c.Add<PoseMessage>(6, 1, WritePose, ReadPose);
             c.Add<LookMessage>(7, 1, WriteLook, ReadLook);
-            // 8(공용 시간 WorldTime)과 10(때 넘기기 AdvancePartOfDay)은 방의 시계(12, 13)로 바뀌어 쓰지 않는다.
+            // 8(공용 시간 WorldTime)과 10(때 넘기기 AdvancePartOfDay)은 방의 시계로 바뀌어 쓰지 않는다.
+            // 12(때 단위 방의 시계 RoomClock)와 13(때 끝내기 FinishPart)은 흐르는 시간 4단계에서 흐르는 방의 시계(19)로 바뀌어 쓰지 않는다.
             c.Add<DayEndReadyMessage>(9, 2, (w, m) => w.WriteInt32(m.Day), ReadDayEndReady);
             c.Add<HeartbeatMessage>(11, 1, (w, m) => { }, Empty);
-            c.Add<RoomClockMessage>(12, 2, WriteRoomClock, ReadRoomClock);
-            c.Add<FinishPartMessage>(13, 2, WriteFinishPart, ReadFinishPart);
             // 방 설정·손님 저장·공유 조각(설계 7절 3~5단계).
             c.Add<Room.RoomSettingsMessage>(14, 1, Room.RoomShareMessageBodies.WriteSettings, Room.RoomShareMessageBodies.ReadSettings);
             c.Add<Room.SaveChunkMessage>(15, 1, Room.RoomShareMessageBodies.WriteChunk, Room.RoomShareMessageBodies.ReadChunk);
             c.Add<Room.SaveTransferAnswerMessage>(16, 1, Room.RoomShareMessageBodies.WriteTransferAnswer, Room.RoomShareMessageBodies.ReadTransferAnswer);
             c.Add<Room.RoomPieceStateMessage>(17, 1, Room.RoomShareMessageBodies.WritePieceState, Room.RoomShareMessageBodies.ReadPieceState);
             c.Add<Room.RoomAnswerMessage>(18, 1, Room.RoomShareMessageBodies.WriteAnswer, Room.RoomShareMessageBodies.ReadAnswer);
+            c.Add<RoomTimeMessage>(19, 1, WriteRoomTime, ReadRoomTime);
             // 손님 저장을 받지 않는 방의 공유 조각 요청(30번 — 다른 단계가 19번부터 쓸 자리를 비워 둔다).
             c.Add<Room.RoomRequestsMessage>(30, 1, Room.RoomShareMessageBodies.WriteRequests, Room.RoomShareMessageBodies.ReadRequests);
         }
@@ -258,57 +243,38 @@ namespace Rootborn.Net.Messages
             return r.TryReadUInt16(out m.NetId) && r.TryReadString(MaxLookBytes, out m.Look);
         }
 
-        private const byte FinishedFlag = 1, DayEndedFlag = 2;
+        private const byte AsleepFlag = 1;
 
-        private static void WriteRoomClock(NetWriter w, RoomClockMessage m)
+        /// <summary>하루 안의 분(그날 0시부터)의 상한: 다음 날 하루 시작이 아무리 늦어도 이틀을 넘지 않는다.</summary>
+        private const int MaxDayMinutes = 2 * 24 * 60;
+
+        private static void WriteRoomTime(NetWriter w, RoomTimeMessage m)
         {
-            var entries = m.Entries ?? Array.Empty<RoomClockEntry>();
+            var entries = m.Entries ?? Array.Empty<RoomTimeEntry>();
             int count = Math.Min(entries.Length, byte.MaxValue);
             w.WriteInt32(m.Day);
-            w.WriteByte(m.PartIndex);
-            w.WriteByte(m.PartsToday);
+            w.WriteInt32(m.Minutes);
             w.WriteByte((byte)count);
             for (int i = 0; i < count; i++)
             {
                 w.WriteUInt16(entries[i].NetId);
-                w.WriteByte((byte)((entries[i].FinishedPart ? FinishedFlag : 0) | (entries[i].DayEnded ? DayEndedFlag : 0)));
-                w.WriteByte(entries[i].CompletedParts);
+                w.WriteByte(entries[i].Asleep ? AsleepFlag : (byte)0);
             }
         }
 
-        private static bool ReadRoomClock(NetReader r, int version, out RoomClockMessage m)
+        private static bool ReadRoomTime(NetReader r, int version, out RoomTimeMessage m)
         {
-            m = new RoomClockMessage();
-            if (!r.TryReadInt32(out m.Day) || m.Day < 1 || !r.TryReadByte(out m.PartIndex) || !r.TryReadByte(out m.PartsToday)) return false;
-            if (m.PartIndex > m.PartsToday || !r.TryReadByte(out byte count)) return false;
-            m.Entries = new RoomClockEntry[count];
+            m = new RoomTimeMessage();
+            if (!r.TryReadInt32(out m.Day) || m.Day < 1 || !r.TryReadInt32(out m.Minutes) || m.Minutes < 0 || m.Minutes >= MaxDayMinutes) return false;
+            if (!r.TryReadByte(out byte count)) return false;
+            m.Entries = new RoomTimeEntry[count];
             for (int i = 0; i < count; i++)
             {
-                if (!r.TryReadUInt16(out m.Entries[i].NetId) || !r.TryReadByte(out byte flags) || flags > (FinishedFlag | DayEndedFlag)) return false;
-                m.Entries[i].FinishedPart = (flags & FinishedFlag) != 0;
-                m.Entries[i].DayEnded = (flags & DayEndedFlag) != 0;
-                if (version >= 2)
-                {
-                    if (!r.TryReadByte(out m.Entries[i].CompletedParts) || m.Entries[i].CompletedParts > m.PartsToday) return false;
-                }
-                else m.Entries[i].CompletedParts = (byte)Math.Min(m.PartsToday, m.PartIndex + (m.Entries[i].FinishedPart ? 1 : 0));
+                if (!r.TryReadUInt16(out m.Entries[i].NetId) || !r.TryReadByte(out byte flags) || flags > AsleepFlag) return false;
+                m.Entries[i].Asleep = flags == AsleepFlag;
             }
 
             return true;
-        }
-
-        private static void WriteFinishPart(NetWriter w, FinishPartMessage m)
-        {
-            w.WriteInt32(m.Day);
-            w.WriteByte(m.FromPart);
-            w.WriteByte(m.Points);
-        }
-
-        private static bool ReadFinishPart(NetReader r, int version, out FinishPartMessage m)
-        {
-            m = new FinishPartMessage();
-            if (version >= 2 && (!r.TryReadInt32(out m.Day) || m.Day < 0 || !r.TryReadByte(out m.FromPart))) return false;
-            return r.TryReadByte(out m.Points) && m.Points >= 1;
         }
 
         private static bool ReadDayEndReady(NetReader r, int version, out DayEndReadyMessage m)

@@ -137,9 +137,9 @@ namespace Rootborn.Net.Tests
                 using SessionClient me = Me(room);
                 using SessionClient friend = Friend(room, "friend");
                 Assert.That(Pump(room, clock, () => me.Status == ClientStatus.Joined && friend.Status == ClientStatus.Joined, me, friend), Is.True);
-                me.RequestDayEndReady();
-                friend.RequestDayEndReady();
-                Assert.That(Pump(room, clock, () => room.Server.Clock.Day == 2, me, friend), Is.True, "둘 다 하루를 마감하면 다음 날");
+                me.RequestSleep();
+                friend.RequestSleep();
+                Assert.That(Pump(room, clock, () => room.Server.Clock.Day == 2, me, friend), Is.True, "둘 다 자면 다음 날");
             }
 
             using HostedRoom again = Open(store, clock);

@@ -305,14 +305,14 @@ namespace Rootborn.Simulation
         private readonly struct TimeBefore
         {
             public readonly bool Has;
-            public readonly int Day, Minutes, Focus, Energy;
+            public readonly int Day, Minutes, Focus, Energy, BusyUntil;
             public readonly long Frames;
             public readonly bool Exhausted;
 
             private TimeBefore(GameSession s, long frames)
             {
                 Has = true; Day = s.StudentDay; Minutes = s.StudentTimeMinutes; Exhausted = s.IsExhausted;
-                Focus = s.Student.Focus; Energy = s.Student.Energy; Frames = frames;
+                Focus = s.Student.Focus; Energy = s.Student.Energy; Frames = frames; BusyUntil = s.ActivityEndsAtMinutes;
             }
 
             public static TimeBefore Of(GameSession s, long frames) => s == null ? default : new TimeBefore(s, frames);
@@ -331,7 +331,8 @@ namespace Rootborn.Simulation
                 Fail("시계가 거꾸로 갔다: " + before.Day + "일 " + before.Minutes + "분 → " + day + "일 " + minutes + "분(" + action.Key + ")", view);
             // 지친 동안 활동이 시작되지 않는다: 집중을 쓰거나, 흐른 프레임보다 시계가 더 건너뛰었으면(혼자 하기의 활동은 걸리는 분만큼 건너뛴다) 활동을 한 것이다.
             // 장소 첫 방문·처음 만남은 활동 기록에 남지만 비용이 없어 활동이 아니다.
-            if (before.Exhausted && day == before.Day)
+            // 지치기 전에 시작한 미니게임 활동을 끝내면 그 활동의 끝나는 시각(ActivityEndsAtMinutes)까지는 건너뛸 수 있다(흐르는 시간 3.2절).
+            if (before.Exhausted && day == before.Day && minutes > before.BusyUntil)
             {
                 long frames = _body.Frames - before.Frames;
                 int flowed = s.TimeRules == null ? 0 : (int)Math.Ceiling(frames * _body.ClockSecondsPerFrame * Rootborn.Core.Time.TimeRules.MinutesPerDay / s.TimeRules.RealSecondsPerGameDay) + 1;

@@ -33,8 +33,8 @@ namespace Rootborn.Net.Tests
             });
             a.SetPose("House", 300f, 40f, Facing.Up, false);
             a.SetLook("child|hat");
-            a.RequestDayEndReady();
-            b.RequestDayEndReady();
+            a.RequestSleep();
+            b.RequestSleep();
             rig.Run(2.0);
 
             Assert.That(b.PlayersOn("Town", rig.Now), Is.Empty);
@@ -43,8 +43,8 @@ namespace Rootborn.Net.Tests
             Assert.That(seen.Y, Is.EqualTo(40f));
             Assert.That(seen.Facing, Is.EqualTo(Facing.Up));
             Assert.That(seen.Look, Is.EqualTo("child|hat"));
-            Assert.That(a.RoomClock.Day, Is.EqualTo(2));
-            Assert.That(b.RoomClock.Day, Is.EqualTo(2));
+            Assert.That(a.RoomTime.Day, Is.EqualTo(2));
+            Assert.That(b.RoomTime.Day, Is.EqualTo(2));
         }
 
         [Test]

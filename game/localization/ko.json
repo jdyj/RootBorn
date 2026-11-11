@@ -179,7 +179,7 @@
   "ui.hud.room-separator": ", ",
   "daily-plan.skip": "이 때 넘기기",
   "daily-plan.skip-refused": "지금은 넘길 수 없어요",
-  "day-result.waiting-others": "다른 사람의 마감을 기다리는 중",
+  "day-result.waiting-others": "다음 날을 기다리는 중",
   "ui.save.join-server": "서버 주소로 들어가기",
   "ui.join.title": "서버 주소로 들어가기",
   "ui.join.address": "서버 주소",
@@ -254,5 +254,9 @@
   "ui.room.wallet-waiting": "방의 허락을 기다리는 중이에요...",
   "ui.room.wallet-refused": "방 지갑의 돈이 모자라요. 다른 사람이 먼저 썼을 수 있어요.",
   "ui.inventory.room-wallet": "방 지갑",
-  "life.location.time-with-room-balance": "{0} · 방 지갑 {1}"
+  "life.location.time-with-room-balance": "{0} · 방 지갑 {1}",
+  "ui.hud.busy-until": "하는 중 · {0:00}:{1:00}에 끝나요",
+  "ui.prompt.busy": "앞의 활동을 하는 중이에요. 끝난 뒤에 할 수 있어요.",
+  "day-result.sleeping-awake-others": "자는 중 · 아직 깨어 있는 사람: {0}",
+  "day-result.sleeping": "자는 중 · 07:00에 일어나요"
 }

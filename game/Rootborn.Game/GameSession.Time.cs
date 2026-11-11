@@ -48,13 +48,20 @@ namespace Rootborn.Game
 
         /// <summary>
         /// 시간 흐르기: Host가 프레임마다 지난 실제 초를 넘긴다(테스트는 손으로 돌린다). menuOpen은 패널·모달·대화가 열려 있거나 창이 비활성이라
-        /// 혼자 하기의 시계를 멈출 때 true다(같이 하기는 멈추지 않는다).
+        /// 혼자 하기의 시계를 멈출 때 true다. 같이 하는 방은 개인 시계를 방의 시각에 맞출 뿐 스스로 흐르지 않는다(방의 시계는 서버에서 흐르고 멈추지 않는다).
         /// 날이 넘어가는 시각(07:00)이 되면 자지 않은 날로 마감하고(회복 없음) 다음 날을 시작한다. 하루를 마감하고 결과를 보는 동안은 흐르지 않는다.
         /// 저장은 게임 1시간이 바뀔 때, 체력·지침이 바뀔 때, 날이 넘어갈 때 한다(분마다는 하지 않는다 — 꺼지면 1시간이 안 되는 시각을 잃는다).
         /// 알림: 분이 가면 <see cref="GameChangeTopics.Time"/>, 체력이 바뀌면 Student, 날이 넘어가면 Day. 지난 게임 분을 돌려준다.
         /// </summary>
         public int AdvanceTime(float realSeconds, bool menuOpen)
         {
+            // 같이 하는 방: 시계는 방의 것이다. 개인 시계는 방의 시각을 따라간다(GameSession.Room).
+            if (!IsSoloRoom)
+            {
+                FollowRoom(out int followed);
+                return followed;
+            }
+
             if (_flow == null || Student.DayState != StudentDayState.InProgress) return 0;
             int minutes = _flow.Advance(realSeconds, menuOpen && IsSoloRoom);
             if (minutes <= 0 && !Student.HasDayRunOut) return 0;
@@ -89,10 +96,13 @@ namespace Rootborn.Game
         public GameDayResult Sleep() => FinishDay(slept: true);
 
         // 자지 않고 날이 넘어갔다: 회복 없이 마감하고 곧바로 다음 날을 연다(혼자인 방은 마감하는 순간 다음 날). 열었으면 true.
+        // 같이 하는 방이 아직 다음 날을 알리지 않았으면 기다렸다가 방이 다음 날이 되는 순간 연다(FollowRoom).
         private bool RollOverAwake()
         {
             if (!FinishDay(slept: false).Ended) return false;
-            return StartNextDay();
+            if (StartNextDay()) return true;
+            _rollOverPending = true;
+            return false;
         }
 
         private GameDayResult FinishDay(bool slept)
@@ -101,7 +111,9 @@ namespace Rootborn.Game
             StudentDaySummary summary;
             bool ended = slept ? Student.TrySleep(_dayEndRules, out summary) : Student.TryEndDayAwake(_dayEndRules, out summary);
             if (!ended) return new GameDayResult(false, summary, default, default);
-            Room.EndDay(PlayerId); // 혼자인 방은 여기서 다음 날로 넘어간다. 같이 하는 방은 모두 마감해야 넘어간다.
+            // 혼자인 방은 여기서 다음 날로 넘어간다. 같이 하는 방은 모두 잠들거나 07:00이 되어야 넘어간다.
+            // 자지 않고 넘긴 날(방은 이미 다음 날)의 잠은 방이 받지 않는다(지난 날의 잠).
+            Room.SleepOn(PlayerId, day);
             var milestones = Milestones.ApplyDayResult(_milestones, Student, Inventory, "day:" + day);
             var campaign = ApplyCampaign("campaign-result-day-" + day);
             LastDayResult = new GameDayResult(true, summary, milestones, campaign);
@@ -122,28 +134,5 @@ namespace Rootborn.Game
         }
 
         private void SaveClock(ISaveStore store) => store.Write(SaveSlot, SaveFileNames.StudentClock(PlayerId), Student.ToClockSaveData());
-
-        /// <summary>
-        /// 혼자인 방의 문: 활동을 막지 않는다(하루에 할 수 있는 양은 깨어 있는 시간과 체력이 정한다). 쓴 몫은 방이 받을 수 있을 때만 알려
-        /// 방의 때가 하루 안에서 나아가게 한다. 방의 때·넘기기는 4단계에서 없앤다.
-        /// </summary>
-        private sealed class SoloRoomGate : ITimePointGate
-        {
-            private readonly IRoomTime _room;
-            private readonly string _participantId;
-
-            public SoloRoomGate(IRoomTime room, string participantId)
-            {
-                _room = room;
-                _participantId = participantId;
-            }
-
-            public bool CanSpend(int points) => points >= 0;
-
-            public void Spent(int points)
-            {
-                if (points > 0 && _room.CanSpend(_participantId, points)) _room.Spend(_participantId, points);
-            }
-        }
     }
 }

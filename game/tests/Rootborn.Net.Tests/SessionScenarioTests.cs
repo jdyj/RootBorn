@@ -141,34 +141,33 @@ namespace Rootborn.Net.Tests
         }
 
         [Test]
-        public void DayAdvances_OnlyWhenBothAreReady()
+        public void DayAdvances_OnlyWhenBothSleep()
         {
             using var rig = new SessionRig();
             var a = rig.Join("a");
             var b = rig.Join("b");
             rig.Run(0.3);
-            Assert.That(a.RoomClock.Known, Is.True);
-            Assert.That(a.RoomClock.Day, Is.EqualTo(1));
-            Assert.That(a.RoomClock.PlayerCount, Is.EqualTo(2));
+            Assert.That(a.RoomTime.Known, Is.True);
+            Assert.That(a.RoomTime.Day, Is.EqualTo(1));
+            Assert.That(a.RoomTime.PlayerCount, Is.EqualTo(2));
 
-            a.RequestDayEndReady();
+            a.RequestSleep();
             rig.Run(0.3);
             Assert.That(rig.Server.Clock.Day, Is.EqualTo(1));
-            Assert.That(b.RoomClock.Day, Is.EqualTo(1));
-            Assert.That(b.RoomClock.IsDayEnded(a.NetId), Is.True, "누가 마감했는지 보인다");
-            Assert.That(b.RoomClock.DayEndedCount, Is.EqualTo(1));
+            Assert.That(b.RoomTime.Day, Is.EqualTo(1));
+            Assert.That(b.RoomTime.IsAsleep(a.NetId), Is.True, "누가 자는지 보인다");
+            Assert.That(b.RoomTime.AsleepCount, Is.EqualTo(1));
 
-            b.RequestDayEndReady();
+            b.RequestSleep();
             rig.Run(0.3);
             Assert.That(rig.Server.Clock.Day, Is.EqualTo(2));
-            Assert.That(a.RoomClock.Day, Is.EqualTo(2));
-            Assert.That(b.RoomClock.Day, Is.EqualTo(2));
-            Assert.That(a.RoomClock.PartIndex, Is.EqualTo(0));
-            Assert.That(a.RoomClock.DayEndedCount, Is.EqualTo(0));
+            Assert.That(a.RoomTime.Day, Is.EqualTo(2));
+            Assert.That(b.RoomTime.Day, Is.EqualTo(2));
+            Assert.That(a.RoomTime.AsleepCount, Is.EqualTo(0), "다음 날에는 모두 깨어 있다");
         }
 
         [Test]
-        public void FinishingAPart_IsSharedAndSaved()
+        public void Sleeping_IsSharedAndSaved()
         {
             var store = new MemorySaveStore();
             using (var rig = new SessionRig(store: store, saveSlot: "slot-0"))
@@ -176,16 +175,14 @@ namespace Rootborn.Net.Tests
                 var a = rig.Join("a");
                 var b = rig.Join("b");
                 rig.Run(0.3);
-                a.RequestFinishPart(1);
-                b.RequestSkipPart();
+                a.RequestSleep(1);
                 rig.Run(0.3);
-                Assert.That(b.RoomClock.PartIndex, Is.EqualTo(1));
-                Assert.That(a.RoomClock.PartIndex, Is.EqualTo(1));
+                Assert.That(b.RoomTime.IsAsleep(a.NetId), Is.True);
             }
 
             Assert.That(store.Contains("slot-0", SaveFileNames.RoomClock), Is.True);
             using var again = new SessionRig(store: store, saveSlot: "slot-0");
-            Assert.That(again.Server.Clock.PartIndex, Is.EqualTo(1), "서버를 다시 켜면 이어진다");
+            Assert.That(again.Server.Clock.IsAsleep("a"), Is.True, "서버를 다시 켜면 이어진다(같은 날 다시 들어오면 자는 중)");
         }
 
         [Test]
@@ -197,8 +194,7 @@ namespace Rootborn.Net.Tests
             rig.Run(0.3);
             a.SetPose("Town", 11f, 12f, Facing.Left, false);
             b.SetPose("House", 21f, 22f, Facing.Up, false);
-            a.RequestFinishPart(1);
-            b.RequestFinishPart(1);
+            a.RequestSleep(1);
             rig.Run(0.5);
 
             var c = rig.Join("c");
@@ -212,9 +208,10 @@ namespace Rootborn.Net.Tests
             Assert.That(inHouse.PlayerId, Is.EqualTo("b"));
             Assert.That(inHouse.Facing, Is.EqualTo(Facing.Up));
             Assert.That(inHouse.Look, Is.EqualTo("teen|"));
-            Assert.That(c.RoomClock.PartIndex, Is.EqualTo(1));
-            Assert.That(c.RoomClock.PlayerCount, Is.EqualTo(3));
-            Assert.That(c.RoomClock.HasFinished(c.NetId), Is.False, "도중에 들어오면 지금 때부터");
+            Assert.That(c.RoomTime.Day, Is.EqualTo(1));
+            Assert.That(c.RoomTime.PlayerCount, Is.EqualTo(3));
+            Assert.That(c.RoomTime.IsAsleep(a.NetId), Is.True, "누가 자는지도 받는다");
+            Assert.That(c.RoomTime.IsAsleep(c.NetId), Is.False, "도중에 들어온 사람은 깨어 있다");
             Assert.That(c.JoinIndex, Is.EqualTo(2));
             Assert.That(a.RemotePlayerIds, Does.Contain("c"), "먼저 있던 사람도 새 사람을 안다");
         }
@@ -236,7 +233,7 @@ namespace Rootborn.Net.Tests
             Assert.That(b.RemotePlayerIds, Is.Empty);
             Assert.That(b.PlayersOn("Town", rig.Now), Is.Empty);
             Assert.That(rig.Server.Players.Select(p => p.PlayerId), Is.EqualTo(new[] { "b" }));
-            Assert.That(b.RoomClock.PlayerCount, Is.EqualTo(1));
+            Assert.That(b.RoomTime.PlayerCount, Is.EqualTo(1));
 
             var again = rig.Join("a");
             rig.Run(0.3);
@@ -303,14 +300,14 @@ namespace Rootborn.Net.Tests
             var a = rig.Join("a");
             var b = rig.Join("b");
             rig.Run(0.3);
-            a.RequestDayEndReady();
+            a.RequestSleep();
             rig.Run(0.3);
             rig.Quit(a);
             rig.Run(0.3);
-            Assert.That(b.RoomClock.Day, Is.EqualTo(1));
-            b.RequestDayEndReady();
+            Assert.That(b.RoomTime.Day, Is.EqualTo(1));
+            b.RequestSleep();
             rig.Run(0.3);
-            Assert.That(b.RoomClock.Day, Is.EqualTo(2));
+            Assert.That(b.RoomTime.Day, Is.EqualTo(2));
         }
 
         [Test]

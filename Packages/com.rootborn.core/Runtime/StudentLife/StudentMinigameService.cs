@@ -16,7 +16,8 @@ namespace Rootborn.Core.StudentLife
     }
 
     /// <summary>
-    /// 학생의 진로 연습·알바를 미니게임 한 판으로 진행한다. 시작할 때 시간·체력·집중을 먼저 쓰고 예약을 남긴다.
+    /// 학생의 진로 연습·알바를 미니게임 한 판으로 진행한다. 시작할 때 체력·집중을 먼저 쓰고 예약을 남긴다. 시간은 끝나는 시각만 정하고
+    /// 정산·포기 때 미니게임 동안 흐른 시간을 뺀 나머지만 쓴다(흐르는 시간 설계 3.2절, StudentLifeProgress.ReserveActivityTime).
     /// 성공하면 성장·진로 힌트·후보 보상을 정산하고, 실패·취소하면 쓴 비용은 돌려주지 않는다. 한 번에 한 판만 예약한다.
     /// 등록한 정의(같은 객체)만 받는다.
     /// </summary>
@@ -43,7 +44,8 @@ namespace Rootborn.Core.StudentLife
             if (check != AdultCareerResultKind.Applied) return Result(check);
             var activity = practice.Activity;
             student.TryUseTimePolicy(activity.TimePolicy);
-            student.Spend(activity.TimeCostMinutes, activity.EnergyCost, activity.FocusCost, activity.StressDelta);
+            student.Spend(0, activity.EnergyCost, activity.FocusCost, activity.StressDelta);
+            student.ReserveActivityTime(activity.TimeCostMinutes);
             student.ReserveMinigame(Reservation(StudentMinigameKind.Practice, practice.Id, practice.Minigame, student, requestId, seed, activity.TimePolicy.TimePointCost));
             return Result(AdultCareerResultKind.Applied);
         }
@@ -57,7 +59,8 @@ namespace Rootborn.Core.StudentLife
             if (!CanPay(student, work.TimePolicy, work.EnergyCost, work.FocusCost)) return Result(AdultCareerResultKind.InsufficientTime);
             if (!payroll.CanReceiveRewards(work)) return Result(AdultCareerResultKind.InsufficientCapacity);
             student.TryUseTimePolicy(work.TimePolicy);
-            student.Spend(work.TimeCostMinutes, work.EnergyCost, work.FocusCost, work.StressDelta);
+            student.Spend(0, work.EnergyCost, work.FocusCost, work.StressDelta);
+            student.ReserveActivityTime(work.TimeCostMinutes);
             student.ReserveMinigame(Reservation(StudentMinigameKind.PartTimeWork, work.Id, work.Minigame, student, requestId, seed, work.TimePolicy.TimePointCost));
             return Result(AdultCareerResultKind.Applied);
         }
@@ -80,6 +83,7 @@ namespace Rootborn.Core.StudentLife
                 if (logs[i].StartsWith(activity.Id + ":", StringComparison.Ordinal)) currentLogs.Add(logs[i]);
             CreditCareer(student, requestId, currentLogs.ToArray());
             student.ClearReservedMinigame(false);
+            student.FinishReservedActivityTime();
             return Result(AdultCareerResultKind.Applied);
         }
 
@@ -92,6 +96,7 @@ namespace Rootborn.Core.StudentLife
             CreditCareer(student, requestId, new[] { work.Id });
             // 정산한 요청은 알바 쪽이 표시하지 않았더라도 여기서 표시한다(다시 정산하지 못하게).
             student.ClearReservedMinigame(true);
+            student.FinishReservedActivityTime();
             return Result(AdultCareerResultKind.Applied);
         }
 
@@ -103,6 +108,7 @@ namespace Rootborn.Core.StudentLife
             var pending = student.PendingMinigame;
             if (pending == null || pending.RequestId != requestId) return Result(AdultCareerResultKind.InvalidRequest);
             student.ClearReservedMinigame(true);
+            if (pending.Day == student.CurrentDay) student.FinishReservedActivityTime();
             return Result(AdultCareerResultKind.Applied);
         }
 
@@ -157,7 +163,7 @@ namespace Rootborn.Core.StudentLife
         {
             var pending = student?.PendingMinigame;
             return pending != null && minigame != null && pending.Kind == kind && pending.DefinitionId == definitionId && pending.MinigameId == minigame.Id
-                && pending.RequestId == requestId && pending.Day == student.CurrentDay && student.TimePointsSpentToday >= pending.ReservedTimePoints && !student.HasAppliedRequest(requestId);
+                && pending.RequestId == requestId && pending.Day == student.CurrentDay && !student.HasAppliedRequest(requestId);
         }
 
         private static bool Registered<T>(IReadOnlyList<T> definitions, T target) where T : class

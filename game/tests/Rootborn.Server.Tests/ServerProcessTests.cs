@@ -70,10 +70,10 @@ namespace Rootborn.Server.Tests
                 Assert.That(Pump(() => stranger.Status == ClientStatus.Refused), Is.True, "데이터가 다르면 거절\n" + server.Output);
                 Assert.That(stranger.FarewellReason, Is.EqualTo(RoomRefusal.DataVersionMismatch));
 
-                Assert.That(Pump(() => player.RoomClock.Known), Is.True);
-                Assert.That(player.RoomClock.Day, Is.EqualTo(1));
-                player.RequestDayEndReady();
-                Assert.That(Pump(() => player.RoomClock.Day == 2), Is.True, "혼자인 방: 내가 끝내면 다음 날\n" + server.Output);
+                Assert.That(Pump(() => player.RoomTime.Known), Is.True);
+                Assert.That(player.RoomTime.Day, Is.EqualTo(1));
+                player.RequestSleep();
+                Assert.That(Pump(() => player.RoomTime.Day == 2), Is.True, "혼자인 방: 내가 자면 다음 날\n" + server.Output);
 
                 server.Stop();
                 Assert.That(server.WaitForExit(TimeSpan.FromSeconds(20)), Is.True, "stop 으로 끝난다\n" + server.Output);

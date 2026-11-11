@@ -86,6 +86,20 @@ namespace Rootborn.Core.StudentLife
             return TimeMinutes - previous;
         }
 
+        /// <summary>
+        /// 같이 하는 방에 들어와(낮 도중, 또는 방에 없던 사이) 방의 시각으로 옮긴다: 앞으로만 가고, 방에 없던 동안의 밤 시간은 거슬러 깎지 않는다
+        /// (옛 세이브를 읽을 때와 같다 — <see cref="RestoreClock"/>). 하루가 진행 중일 때만. 간 분을 돌려준다.
+        /// </summary>
+        public int JumpClockTo(int minutes)
+        {
+            if (DayState != StudentDayState.InProgress || minutes <= TimeMinutes) return 0;
+            int previous = TimeMinutes;
+            TimeMinutes = minutes;
+            if (TimeRules != null) NightHoursCharged = Math.Max(NightHoursCharged, TimeRules.HoursPastBedtime(TimeMinutes));
+            TimeChanged?.Invoke();
+            return TimeMinutes - previous;
+        }
+
         /// <summary>잠: 지금 시각에 자고 하루를 끝낸다. 회복은 하루 끝 규칙이 잔 시각(<see cref="LastNight"/>)으로 정한다. 지침이 풀린다.</summary>
         public bool TrySleep(DayEndRuleSet rules, out StudentDaySummary summary) => TryEndDay(rules, NightRecord.Slept(TimeMinutes), out summary);
 
@@ -128,6 +142,23 @@ namespace Rootborn.Core.StudentLife
             int start = Math.Max(TimeMinutes, BusyUntilMinutes);
             BusyUntilMinutes = start > int.MaxValue - minutes ? int.MaxValue : start + minutes;
             if (ActivityClock == ActivityClockMode.SkipAhead) AdvanceClock(BusyUntilMinutes - TimeMinutes);
+        }
+
+        /// <summary>
+        /// 미니게임이 있는 활동의 시간(설계 3.2절): 시계를 건너뛰지 않고 끝나는 시각만 정한다(하는 중). 미니게임을 하는 동안 시계는 스스로 흐르고,
+        /// 정산·포기 때 <see cref="FinishReservedActivityTime"/>이 남은 몫만 쓴다. 그래서 걸리는 시간은 활동 분과 미니게임 동안 흐른 분 중 큰 것이다.
+        /// </summary>
+        internal void ReserveActivityTime(int minutes)
+        {
+            int start = Math.Max(TimeMinutes, BusyUntilMinutes);
+            int cost = Math.Max(0, minutes);
+            BusyUntilMinutes = start > int.MaxValue - cost ? int.MaxValue : start + cost;
+        }
+
+        /// <summary>예약한 활동 시간을 끝낸다: 혼자면 끝나는 시각까지 남은 몫만 건너뛰고(0 아래로는 안 감), 같이 하면 그 시각까지 하는 중으로 둔다.</summary>
+        internal void FinishReservedActivityTime()
+        {
+            if (ActivityClock == ActivityClockMode.SkipAhead && BusyUntilMinutes > TimeMinutes) AdvanceClock(BusyUntilMinutes - TimeMinutes);
         }
 
         private void ChargeNight()

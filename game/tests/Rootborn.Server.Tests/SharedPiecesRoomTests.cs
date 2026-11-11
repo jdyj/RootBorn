@@ -75,7 +75,7 @@ namespace Rootborn.Server.Tests
         {
             var settings = new RoomServerSettings { MaxPlayers = 4, SharedPieces = shared };
             var guests = new GuestSaveFolder(GuestSaveFolder.FolderFor(Path.Combine(_root, "saves"), "room-a"), _definitions, _settings);
-            return new RoomRig(RoomStore, settings: settings, calendar: Program.RoomCalendar(_definitions), guests: guests);
+            return new RoomRig(RoomStore, settings: settings, timeRules: Program.RoomTimeRules(_definitions), guests: guests);
         }
 
         private static Guest Join(RoomRig rig, string playerId, GuestUploads uploads = null)
@@ -86,7 +86,7 @@ namespace Rootborn.Server.Tests
             Assert.That(guest.Link.Ready, Is.True, playerId + ": 방 설정과 세이브를 받았다");
             guest.Store = new MemorySaveSlot(RoomGuestLink.Slot, guest.Link.Files.Writes);
             guest.Store.Committed += c => guest.Link.Upload(SaveFileSet.From(c.Writes, c.Deletes));
-            var time = new RemoteRoomTime(guest.Client, playerId, _definitions.Get<LifeCalendar>(_settings.CalendarId));
+            var time = new RemoteRoomTime(guest.Client, playerId, _definitions.TimeRules);
             guest.Game = GameSession.Start(_definitions, _settings, guest.Store, RoomGuestLink.Slot, playerId, room: time, shares: guest.Link.Shares);
             time.Changed += () => guest.Game.SyncWithRoom();
             rig.Run(0.3);
@@ -334,10 +334,9 @@ namespace Rootborn.Server.Tests
             var a = Join(rig, "a");
             var b = Join(rig, "b");
             var uploads = a.Link.Uploads;
-            Shift(a, "a:w1"); // 시간 포인트를 쓰고 돈을 벌었다 — 저장과 방의 시계 요청이 나간다
+            Shift(a, "a:w1"); // 돈을 벌었다 — 저장(방 지갑 넣기 요청을 담은)이 나간다
             rig.Sever(a.Client);
             rig.Run(11.0); // 방은 시간 초과로 a를 내보낸다
-            Assert.That(rig.Room.Clock.CompletedParts("a"), Is.Zero, "방은 a의 요청을 받지 못했다");
             Assert.That(RoomBalance(rig), Is.Zero);
             Assert.That(uploads.Count, Is.GreaterThan(0), "답을 받지 못한 저장은 들고 있다");
 
@@ -345,7 +344,6 @@ namespace Rootborn.Server.Tests
             var back = Join(rig, "a", uploads);
             rig.Run(0.5);
             Assert.That(back.Game.Wallet.Balance, Is.EqualTo(5), "들고 있던 저장을 겹쳐 시작한다");
-            Assert.That(rig.Room.Clock.CompletedParts("a"), Is.EqualTo(back.Game.Student.TimePointsSpentToday), "다시 보내 방이 센다");
             Assert.That(RoomBalance(rig), Is.EqualTo(5), "넣기도 다시 가서 한 번만 반영된다");
             Assert.That(uploads.Count, Is.Zero);
 
@@ -380,7 +378,8 @@ namespace Rootborn.Server.Tests
             Assert.That(a2.Game.Wallet.Balance, Is.EqualTo(10));
             Assert.That(a2.Game.Student.TimePointsSpentToday, Is.EqualTo(1), "a의 진행이 이어진다");
             Assert.That(b2.Game.Student.TimePointsSpentToday, Is.EqualTo(1), "b의 진행이 이어진다");
-            Assert.That(again.Room.Clock.IsDayOver || again.Room.Clock.PartIndex == 1, Is.True, "방의 시계도 이어진다");
+            Assert.That(again.Room.Clock.Day, Is.EqualTo(1), "방의 시계도 이어진다");
+            Assert.That(a2.Game.StudentTimeMinutes, Is.EqualTo(b2.Game.StudentTimeMinutes).Within(RemoteRoomTime.ResyncMinutes), "둘이 같은 시각");
         }
 
         // ---------- UDP ----------
@@ -392,7 +391,7 @@ namespace Rootborn.Server.Tests
             using var transport = UdpTransport.Listen(IPAddress.Loopback, 0, RoomProtocol.ConnectionKey);
             var guests = new GuestSaveFolder(GuestSaveFolder.FolderFor(saves, "room-u"), _definitions, _settings);
             using var room = new RoomServer(transport, new RoomServerSettings { SharedPieces = new[] { RoomWallet.PieceName } }, RoomRig.Versions,
-                new FileSaveStore(saves), "room-u", null, Program.RoomCalendar(_definitions), guests);
+                new FileSaveStore(saves), "room-u", null, Program.RoomTimeRules(_definitions), guests);
             var client = RoomClient.Create(UdpTransport.Connect(IPAddress.Loopback, IPAddress.Loopback.ToString(), transport.LocalPort, RoomProtocol.ConnectionKey),
                 RoomRig.Versions, "u", "child|", new SessionClientSettings());
             var link = new RoomGuestLink(client, new SessionClientSettings().MaxMessageBytes);
@@ -416,7 +415,7 @@ namespace Rootborn.Server.Tests
                 Assert.That(Pump(() => link.Ready), Is.True);
                 var store = new MemorySaveSlot(RoomGuestLink.Slot, link.Files.Writes);
                 store.Committed += c => link.Upload(SaveFileSet.From(c.Writes, c.Deletes));
-                var time = new RemoteRoomTime(client, "u", _definitions.Get<LifeCalendar>(_settings.CalendarId));
+                var time = new RemoteRoomTime(client, "u", _definitions.TimeRules);
                 var game = GameSession.Start(_definitions, _settings, store, RoomGuestLink.Slot, "u", room: time, shares: link.Shares);
                 Assert.That(Pump(() => time.Known), Is.True);
                 Assert.That(game.BeginPartTimeWork(MoneyOnlyWork, "u:w1", 1).Applied, Is.True);

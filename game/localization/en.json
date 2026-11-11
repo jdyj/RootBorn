@@ -179,7 +179,7 @@
   "ui.hud.room-separator": ", ",
   "daily-plan.skip": "Skip this part",
   "daily-plan.skip-refused": "You can't skip now",
-  "day-result.waiting-others": "Waiting for others to end the day",
+  "day-result.waiting-others": "Waiting for the next day",
   "ui.save.join-server": "Join by server address",
   "ui.join.title": "Join by server address",
   "ui.join.address": "Server address",
@@ -254,5 +254,9 @@
   "ui.room.wallet-waiting": "Waiting for the room to approve...",
   "ui.room.wallet-refused": "Not enough money in the room wallet. Someone may have spent it first.",
   "ui.inventory.room-wallet": "Room wallet",
-  "life.location.time-with-room-balance": "{0} · Room wallet {1}"
+  "life.location.time-with-room-balance": "{0} · Room wallet {1}",
+  "ui.hud.busy-until": "Busy · done at {0:00}:{1:00}",
+  "ui.prompt.busy": "You are still busy with your last activity.",
+  "day-result.sleeping-awake-others": "Asleep · Still awake: {0}",
+  "day-result.sleeping": "Asleep · You wake up at 07:00"
 }

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Rootborn.Core.Save;
-using Rootborn.Core.StudentLife;
+using Rootborn.Core.Time;
 using Rootborn.Net.Session;
 using Rootborn.Net.Transport;
 
@@ -16,11 +16,11 @@ namespace Rootborn.Net.Tests
         private readonly Dictionary<SessionClient, LoopbackTransport> _transports = new Dictionary<SessionClient, LoopbackTransport>();
 
         public SessionRig(int maxPlayers = 4, int seed = 1, ISaveStore store = null, string saveSlot = "slot-0", SessionServerSettings serverSettings = null,
-            LifeCalendar calendar = null)
+            TimeRules timeRules = null)
         {
             Network = new LoopbackNetwork(seed);
             ServerSettings = serverSettings ?? new SessionServerSettings { MaxPlayers = maxPlayers };
-            Server = new SessionServer(Network.Listen(), ServerSettings, store, saveSlot, calendar);
+            Server = new SessionServer(Network.Listen(), ServerSettings, store, saveSlot, timeRules);
         }
 
         public LoopbackNetwork Network { get; }

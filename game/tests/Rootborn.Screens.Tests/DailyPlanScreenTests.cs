@@ -48,28 +48,17 @@ namespace Rootborn.Screens.Tests
         }
 
         [Test]
-        public void SkipButton_IsHiddenWhenAlone_TheClockFlowsInstead()
+        public void ThereIsNoSkipButton_AloneOrInARoom()
         {
+            // 방의 "때"와 넘기기는 흐르는 시간 4단계에서 없앴다. 일과판의 칸 수는 달력의 하루 칸(평일 2·주말 3) 그대로다.
             Open();
-            Assert.That(_f.Node(DailyPlanScreen.SkipId).Visible, Is.False, "혼자 하기에서는 넘기기가 없다(흐르는 시간 — 4단계에서 지운다)");
-        }
-
-        [Test]
-        public void SkipButton_InARoom_EndsThisPartWithoutAnActivity_AndIsOffWhenNothingIsLeft()
-        {
-            var clock = new RoomClock(_f.Session.Student.Calendar);
+            Assert.That(_f.Stack.Tree.Root.Find("daily-plan.skip"), Is.Null);
+            var clock = new RoomClock(TestSession.Definitions.TimeRules);
             clock.Join("me");
             using var room = new DayScreensFixture(room: clock, playerId: "me");
             Assert.That(room.Interact("House", DailyPlanScreen.InteractionKind, "house.daily-plan-board"), Is.True);
-            Assert.That(room.Node(DailyPlanScreen.SkipId).Visible && room.Node(DailyPlanScreen.SkipId).Enabled, Is.True, "같이 하는 방에는 아직 넘기기가 있다");
-            room.Click(DailyPlanScreen.SkipId);
-            Assert.That(room.Session.Student.TimePointsSpentToday, Is.EqualTo(1), "방의 때 하나를 쓴다");
-            Assert.That(room.Session.Room.PartIndex, Is.EqualTo(1), "나 혼자인 방이면 바로 다음 때");
-            Assert.That(room.Session.Student.GetTodayActivityIds(), Is.Empty);
-
-            room.Click(DailyPlanScreen.SkipId);
-            Assert.That(room.Session.Room.IsDayOver, Is.True);
-            Assert.That(room.Node(DailyPlanScreen.SkipId).Enabled, Is.False, "넘길 때가 없다");
+            Assert.That(room.Stack.Tree.Root.Find("daily-plan.skip"), Is.Null);
+            Assert.That(room.Session.DailyPlan.SlotCount, Is.EqualTo(room.Session.Student.Calendar.GetBudget(room.Session.Student.CurrentDay)));
         }
 
         [Test]
@@ -95,20 +84,6 @@ namespace Rootborn.Screens.Tests
             Assert.That(screen.Model.SelectedSlot, Is.EqualTo(target), "지금 시간대의 칸을 먼저 고른다");
             string label = ((UiCenteredText)_f.Node(DailyPlanScreen.SlotTextId(target))).Text;
             Assert.That(label, Does.Contain(_f.Text.Format("daily-plan.period-now", _f.Text.Get(screen.Model.Slots[target].PeriodKey))));
-        }
-
-        [Test]
-        public void SkipButton_WhileWaitingForOthers_IsOff()
-        {
-            var clock = new RoomClock(_f.Session.Student.Calendar);
-            clock.Join("me");
-            clock.Join("friend");
-            using var shared = new DayScreensFixture(room: clock, playerId: "me");
-            Assert.That(shared.Interact("House", DailyPlanScreen.InteractionKind, "house.daily-plan-board"), Is.True);
-            shared.Click(DailyPlanScreen.SkipId);
-            Assert.That(clock.HasFinishedPart("me"), Is.True);
-            Assert.That(clock.PartIndex, Is.EqualTo(0), "friend를 기다린다");
-            Assert.That(shared.Node(DailyPlanScreen.SkipId).Enabled, Is.False, "기다리는 동안은 넘기지 못한다");
         }
 
         [Test]

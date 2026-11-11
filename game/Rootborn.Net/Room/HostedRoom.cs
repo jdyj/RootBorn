@@ -38,7 +38,7 @@ namespace Rootborn.Net.Room
         /// <exception cref="System.Net.Sockets.SocketException">듣지 못했다.</exception>
         /// <remarks>그 슬롯의 방 상태를 읽을 수 없으면 저장소가 던진 예외가 그대로 나온다(파일 저장소: 깨진 파일·새 형식). 덮어쓰지 않는다.</remarks>
         public static HostedRoom Open(IPAddress bind, int port, RoomServerSettings settings, RoomVersions versions, ISaveStore store, string saveSlot,
-            IRoomClock clock, Action<string> log, LifeCalendar calendar = null)
+            IRoomClock clock, Action<string> log, Rootborn.Core.Time.TimeRules timeRules = null)
         {
             if (bind == null) throw new ArgumentNullException(nameof(bind));
             if (clock == null) throw new ArgumentNullException(nameof(clock));
@@ -50,7 +50,7 @@ namespace Rootborn.Net.Room
             RoomServer server;
             try
             {
-                server = new RoomServer(merged, settings, versions, store, saveSlot, log, calendar);
+                server = new RoomServer(merged, settings, versions, store, saveSlot, log, timeRules);
             }
             catch
             {

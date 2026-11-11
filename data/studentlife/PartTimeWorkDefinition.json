@@ -16,7 +16,7 @@
       "ref": "paid-activity",
       "type": "ActivityTimePolicyDefinition"
     },
-    "timeCostMinutes": 60,
+    "timeCostMinutes": 120,
     "energyCost": 1,
     "focusCost": 1,
     "stressDelta": 0,
@@ -52,7 +52,7 @@
       "ref": "paid-activity",
       "type": "ActivityTimePolicyDefinition"
     },
-    "timeCostMinutes": 90,
+    "timeCostMinutes": 120,
     "energyCost": 1,
     "focusCost": 1,
     "stressDelta": 0,
@@ -124,7 +124,7 @@
       "ref": "paid-activity",
       "type": "ActivityTimePolicyDefinition"
     },
-    "timeCostMinutes": 90,
+    "timeCostMinutes": 120,
     "energyCost": 1,
     "focusCost": 1,
     "stressDelta": 0,
@@ -160,7 +160,7 @@
       "ref": "paid-activity",
       "type": "ActivityTimePolicyDefinition"
     },
-    "timeCostMinutes": 120,
+    "timeCostMinutes": 150,
     "energyCost": 2,
     "focusCost": 1,
     "stressDelta": 1,
@@ -200,7 +200,7 @@
       "ref": "paid-activity",
       "type": "ActivityTimePolicyDefinition"
     },
-    "timeCostMinutes": 60,
+    "timeCostMinutes": 120,
     "energyCost": 1,
     "focusCost": 1,
     "stressDelta": 0,
@@ -236,7 +236,7 @@
       "ref": "paid-activity",
       "type": "ActivityTimePolicyDefinition"
     },
-    "timeCostMinutes": 60,
+    "timeCostMinutes": 120,
     "energyCost": 1,
     "focusCost": 1,
     "stressDelta": 0,
@@ -308,7 +308,7 @@
       "ref": "paid-activity",
       "type": "ActivityTimePolicyDefinition"
     },
-    "timeCostMinutes": 90,
+    "timeCostMinutes": 120,
     "energyCost": 1,
     "focusCost": 1,
     "stressDelta": 0,

@@ -291,14 +291,13 @@ namespace Rootborn.Host
 
         /// <summary>
         /// 내 PC에서 방을 여는 쪽을 만든다. 방은 데디케이티드 서버와 같은 RoomServer이고, 내 게임은 들어가기와 같은 방 접속(Room)으로 들어간다.
-        /// 방의 상태는 내 세이브 폴더의 그 슬롯에, 틱은 Host의 네트워크 시계로 센다. 달력은 서버와 같은 정의(registry.json 기본값의 달력 id).
+        /// 방의 상태는 내 세이브 폴더의 그 슬롯에, 틱은 Host의 네트워크 시계로 센다. 시간 규칙은 서버와 같은 정의(game/time.json + data/time).
         /// </summary>
         private RoomHosting CreateHosting()
         {
             var hosting = new RoomHosting(Room, () => new FileSaveStore(_options.SaveRoot), _netClock, () =>
             {
-                Rootborn.Data.GameDefinitions definitions = GameContent.Load(_options.RepoRoot).Definitions;
-                return definitions.Get<Rootborn.Core.StudentLife.LifeCalendar>(GameStartSettings.FromDefinitions(definitions).CalendarId);
+                return GameContent.Load(_options.RepoRoot).Definitions.TimeRules;
             }, () => ReturnToStartMenu(null));
             hosting.DefaultSharedPieces = _options.SharedPieces; // --share: 방 열기 창에 처음 켜 둘 것
             hosting.Changed += () => Screens?.NotifyChanged(RoomHostText.Topic);
@@ -455,6 +454,7 @@ namespace Rootborn.Host
                 // 학생 시각·날이 NPC 자리를, 학생 날·성인 여부가 성장 단계를 정한다(Unity 판과 같음). 낮밤 빛은 HUD 시계와 같은 시각
                 // (GameSession.RoomShownMinutes)을 따른다: 혼자 하기에서는 흐르는 시계 그 자체라 NPC 자리·장소 상태와 같은 시각이다.
                 // 같이 하는 방은 아직 때의 대표 시각(흐르는 시간 4단계에서 방의 시계도 흐르는 시각이 된다).
+                if (Session.TimeRules != null) World.DayStartMinutes = Session.TimeRules.DayStartMinutes;
                 World.FollowStudentTime(() => Session.StudentDay, () => Session.StudentHour, () => RoomLightHour(Session));
                 DayBaseline.For(Session); // 하루 결과의 퀘스트·물건 변화 기준점(Unity: 마을 씬을 불러올 때)
                 SyncSession();
@@ -470,20 +470,27 @@ namespace Rootborn.Host
 
         /// <summary>
         /// 게임 한 판을 시작한다. 손님 저장을 받는 방에 들어갔으면 방이 내려 준 세이브와 공유 조각, 방의 시계로(GuestProgress.RoomStoreFor),
-        /// 아니면 이 PC의 그 슬롯으로. 방의 시계가 바뀌면 SyncWithRoom을 부른다(다른 사람이 때를 끝냄, 방에 없던 날).
-        /// 손님 저장을 받지 않는 방(내 PC에서 연 방 — 연 사람도 들어온 사람도)도 공유 조각은 방의 것을 쓴다: 진행은 이 PC의 슬롯에 저장하고,
-        /// 저장한 요청은 방 접속이 프레임마다 방으로 보낸다(RoomGuestLink.FlushRequests). 방의 시계는 아직 잇지 않았다(흐르는 시간 4단계).
+        /// 아니면 이 PC의 그 슬롯으로. 방의 시계가 바뀌면 SyncWithRoom을 부른다(다른 사람이 잠듦, 다음 날, 방에 없던 날).
+        /// 손님 저장을 받지 않는 방(내 PC에서 연 방 — 연 사람도 들어온 사람도)은 진행이 이 PC의 슬롯에 남지만, 공유 조각과 시간은 방의 것을 쓴다.
+        /// 저장한 요청은 방 접속이 프레임마다 방으로 보낸다(RoomGuestLink.FlushRequests).
         /// </summary>
         private GameSession StartSession()
         {
             var definitions = World.Content.Definitions;
-            var settings = GameStartSettings.FromDefinitions(definitions); // FromRegistry는 time.json의 07:00 시작을 모른다
+            var settings = GameStartSettings.FromDefinitions(definitions);
             var link = Room != null && Room.Phase == Rootborn.Screens.Start.RoomJoinPhase.Joined ? Room.Link : null;
-            if (link == null || !link.TakesGuestSaves)
-                return GameSession.Start(definitions, settings, GuestProgress.LocalStoreFor(_options.SaveRoot), _options.SaveSlot, GuestProgress.SavePlayerId,
-                    shares: link?.Shares);
+            if (link == null)
+                return GameSession.Start(definitions, settings, GuestProgress.LocalStoreFor(_options.SaveRoot), _options.SaveSlot, GuestProgress.SavePlayerId);
+            if (!link.TakesGuestSaves)
+            {
+                // 손님 저장을 받지 않는 방(내 PC에서 연 방): 진행은 이 PC의 슬롯에 남지만 시간은 방의 것이다(흐르는 시간 4단계 — 시간은 항상 공유).
+                var shared = Room.CreateRoomTime(definitions.TimeRules, GuestProgress.SavePlayerId);
+                var local = GameSession.Start(definitions, settings, GuestProgress.LocalStoreFor(_options.SaveRoot), _options.SaveSlot, GuestProgress.SavePlayerId, room: shared, shares: link.Shares);
+                shared.Changed += () => local.SyncWithRoom();
+                return local;
+            }
 
-            var time = Room.CreateRoomTime(definitions.Get<Rootborn.Core.StudentLife.LifeCalendar>(settings.CalendarId));
+            var time = Room.CreateRoomTime(definitions.TimeRules);
             var session = GameSession.Start(definitions, settings, GuestProgress.RoomStoreFor(link), Rootborn.Net.Room.RoomGuestLink.Slot, Room.PlayerId,
                 room: time, shares: link.Shares);
             time.Changed += () => session.SyncWithRoom();

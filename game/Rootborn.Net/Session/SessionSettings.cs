@@ -1,5 +1,4 @@
 using System;
-using Rootborn.Core.Time;
 
 namespace Rootborn.Net.Session
 {
@@ -18,12 +17,18 @@ namespace Rootborn.Net.Session
         /// <summary>메시지 하나의 최대 바이트(머리 포함). 넘는 것은 보내지도 받지도 않는다.</summary>
         public int MaxMessageBytes { get; set; } = 4096;
 
-        /// <summary>방의 시계 설정(자동 넘기기, 기본 끔). 틱은 서버 Update 한 번이다.</summary>
-        public RoomClockSettings Clock { get; set; } = RoomClockSettings.Default;
+        /// <summary>
+        /// 방의 시계를 보내는 간격(실제 초). 바뀔 때(잠, 들어옴·나감, 다음 날)는 곧바로 보내고, 그 사이에는 이 간격으로만 맞춘다
+        /// (받는 쪽이 같은 속도로 메운다). 하루 10분이면 5초는 게임 12분이다.
+        /// </summary>
+        public double ClockSyncSeconds { get; set; } = 5.0;
+
+        /// <summary>서버 틱 한 번에 시계에 넘기는 실제 초의 상한. 서버가 멈췄다 돌아와도(밀린 틱을 버림) 시계가 한꺼번에 뛰지 않게.</summary>
+        public double MaxClockStepSeconds { get; set; } = 1.0;
 
         internal void Validate()
         {
-            if (Clock == null) throw new ArgumentException("방의 시계 설정이 없다");
+            if (ClockSyncSeconds <= 0 || MaxClockStepSeconds <= 0) throw new ArgumentException("시계 맞춤 간격과 한 번에 넘기는 초는 양수여야 한다");
             if (HeartbeatSeconds <= 0 || TimeoutSeconds <= 0) throw new ArgumentException("간격과 시간 초과는 양수여야 한다");
             if (MaxMessageBytes < 256) throw new ArgumentException("최대 메시지 크기가 너무 작다");
         }

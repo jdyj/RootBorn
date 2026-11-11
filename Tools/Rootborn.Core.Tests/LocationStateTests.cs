@@ -198,7 +198,7 @@ namespace Rootborn.Core.Tests
             new LocationStateNpcScheduleCondition("schedule.librarian", null).IsSatisfied(Context("location.library", null, new StudentLifeProgress("s", "p", 1, 1, 0, 13 * 60), schedules: schedules));
             Assert.That(schedules.LastTimeSlotId, Is.EqualTo("time.afternoon"));
 
-            Assert.That(LocationStateTimeSlots.FromMinutes(0), Is.EqualTo("time.morning"));
+            Assert.That(LocationStateTimeSlots.FromMinutes(0), Is.EqualTo("time.night"), "하루 시작(07:00) 전의 새벽은 밤");
             Assert.That(LocationStateTimeSlots.FromMinutes(8 * 60), Is.EqualTo("time.morning"));
             Assert.That(LocationStateTimeSlots.FromMinutes(7 * 60), Is.EqualTo("time.morning"));
             Assert.That(LocationStateTimeSlots.FromMinutes(21 * 60), Is.EqualTo("time.night"));

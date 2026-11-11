@@ -43,8 +43,10 @@ namespace Rootborn.Core.StudentLife
     }
 
     /// <summary>
-    /// 진행 상태 시각을 시간대 id로 바꾼다. 원본 NpcScheduleResolver.ResolveTimeSlotId와 같다:
-    /// 12:00 전은 오전, 17:00 전은 오후, 21:00 전은 저녁, 그 뒤는 밤. 원본은 정확히 8:00과 0분 이하만 오전이라 7:00과 9:00이 오후였다.
+    /// 진행 상태 시각을 시간대 id로 바꾼다. 원본 NpcScheduleResolver.ResolveTimeSlotId를 따르되:
+    /// 하루 시작(흐르는 시간의 07:00, 시간 규칙에서) 전의 새벽은 밤, 12:00 전은 오전, 17:00 전은 오후, 21:00 전은 저녁, 그 뒤는 밤.
+    /// 시각은 24시간으로 감아서 본다(같은 날의 26:00 = 02:00). 원본은 정확히 8:00과 0분 이하만 오전이라 7:00과 9:00이 오후였다.
+    /// 흐르는 시간(2026-11-12) 전에는 새벽에 깨어 있을 일이 없어 00:00~11:59를 모두 오전으로 봤다.
     /// </summary>
     public static class LocationStateTimeSlots
     {
@@ -53,13 +55,23 @@ namespace Rootborn.Core.StudentLife
         public const string Evening = "time.evening";
         public const string Night = "time.night";
 
-        public static string FromProgress(StudentLifeProgress progress) => FromMinutes(progress != null ? progress.TimeMinutes : 8 * 60);
+        /// <summary>시간 규칙을 모를 때의 하루 시작(game/time.json의 dayStart와 같은 07:00).</summary>
+        public const int DefaultDayStartMinutes = 7 * 60;
 
-        public static string FromMinutes(int minutes)
+        private const int MinutesPerDay = 24 * 60;
+
+        /// <summary>진행의 시각과 진행에 넣은 시간 규칙의 하루 시작으로 정한다(진행이 없으면 08:00).</summary>
+        public static string FromProgress(StudentLifeProgress progress)
+            => progress == null ? FromMinutes(8 * 60) : FromMinutes(progress.TimeMinutes, progress.TimeRules?.DayStartMinutes ?? DefaultDayStartMinutes);
+
+        public static string FromMinutes(int minutes, int dayStartMinutes = DefaultDayStartMinutes)
         {
-            if (minutes < 12 * 60) return Morning;
-            if (minutes < 17 * 60) return Afternoon;
-            if (minutes < 21 * 60) return Evening;
+            int clock = minutes % MinutesPerDay;
+            if (clock < 0) clock += MinutesPerDay;
+            if (clock < dayStartMinutes) return Night;
+            if (clock < 12 * 60) return Morning;
+            if (clock < 17 * 60) return Afternoon;
+            if (clock < 21 * 60) return Evening;
             return Night;
         }
     }

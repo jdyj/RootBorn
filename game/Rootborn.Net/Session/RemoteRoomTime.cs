@@ -1,84 +1,78 @@
 using System;
 using System.Collections.Generic;
-using Rootborn.Core.StudentLife;
 using Rootborn.Core.Time;
 
 namespace Rootborn.Net.Session
 {
     /// <summary>
-    /// 클라이언트 쪽 방의 시계: 서버의 시계(<see cref="SessionClient.RoomClock"/>)를 비추고, 쓴 시간 포인트와 하루 마감을 서버에 보낸다.
-    /// <c>GameSession.Start(..., room: new RemoteRoomTime(client, playerId, calendar))</c>로 끼우면 그 게임 한 판이 방의 시계를 따른다.
+    /// 클라이언트 쪽 방의 시계(흐르는 시간 4단계): 서버의 시계(<see cref="SessionClient.RoomTime"/>)를 비추고, 잠을 서버에 보낸다.
+    /// <c>GameSession.Start(..., room: new RemoteRoomTime(client, playerId, rules))</c>로 끼우면 그 게임 한 판의 시계가 방의 시각을 따른다.
     ///
-    /// 개인 진행을 되돌리지 않는 방법(멀티플레이 설계 3.2절, data-driven "주고 나서 실패하면 되돌리는 흐름을 쓰지 않는다"):
-    /// - 쓸 수 있는지는 서버가 마지막으로 보낸 시계로만 정한다. "이 때를 아직 안 끝냈다"는 서버의 알림이 곧 허락이다. 시계를 받기 전·접속이 끊긴 뒤에는 허락이 없다.
-    /// - 쓰면 (날, 때, 포인트)를 적어 보내고, 서버의 시계가 그것을 셀 때까지 더 쓰지 못한다(보낸 요청 하나만 둔다).
-    /// - 서버는 그 허락으로 보낸 요청을 거절하지 않는다: 그 사이 방이 대신 넘긴 때(자동 넘기기)는 이미 센 것으로 보고(Core RoomClock.SpendFrom),
-    ///   다른 날의 요청은 받지 않는다. 그래서 개인 진행이 먼저 바뀌어도 방과 어긋나지 않고 되돌릴 일이 없다.
-    /// - 방이 이 사람의 때를 대신 끝내면 개인 포인트가 뒤처진다. <see cref="Changed"/>에서 GameSession.SyncWithRoom을 불러 맞춘다(Host가 잇는다).
-    /// 이 신원(playerId)만 다룬다. 다른 신원을 물으면 아무것도 허락하지 않는다.
+    /// 시각을 비추는 법: 서버는 매 프레임 보내지 않는다. 받은 시각에 그 뒤로 흐른 클라이언트 시간(<see cref="SessionClient.Now"/>)을 같은 속도로
+    /// 더해 보인다(하루 길이는 시간 규칙에서). 새 시각을 받았을 때 보이던 시각이 조금(<see cref="ResyncMinutes"/> 이하) 앞서 있으면 뒤로 돌리지 않고
+    /// 따라잡을 때까지 그대로 두고, 그보다 어긋나면 받은 시각으로 맞춘다. 같은 날 안에서 날 넘김 시각을 넘겨 보이지 않는다(다음 날은 서버가 알린다).
+    ///
+    /// 잠: 개인 진행(GameSession)이 먼저 하루를 끝낸 뒤 그 날의 잠을 보낸다. 서버는 다른 날의 잠은 받지 않는다. 보낸 잠은 서버의 시계가 그것을 셀 때까지
+    /// 자는 중으로 보인다(되돌리지 않는다). 이 신원(playerId — 끼운 게임 한 판의 플레이어 id)만 다룬다.
     /// </summary>
     public sealed class RemoteRoomTime : IRoomTime, IDisposable
     {
+        /// <summary>새로 받은 시각보다 보이던 시각이 이만큼(게임 분) 이하로 앞서 있으면 뒤로 돌리지 않는다.</summary>
+        public const int ResyncMinutes = 5;
+
         private readonly SessionClient _client;
         private readonly string _playerId;
-        private readonly PartOfDayTimes _times;
-        private int _spendDay, _spendTarget;
-        private int _dayEndSent;
+        private readonly TimeRules _rules;
+        private readonly double _secondsPerMinute;
+        private int _sleepSent;
+        private int _shownDay = -1, _shownMinutes;
         private bool _disposed;
 
-        public RemoteRoomTime(SessionClient client, string playerId, LifeCalendar calendar)
+        /// <param name="rules">시간 규칙(하루 길이, 날 넘김 시각). 서버와 같은 데이터. 없으면 사이를 메우지 않는다(받은 시각만 보인다).</param>
+        public RemoteRoomTime(SessionClient client, string playerId, TimeRules rules)
         {
             _client = client ?? throw new ArgumentNullException(nameof(client));
             _playerId = playerId ?? string.Empty;
-            _times = calendar?.PartTimes ?? PartOfDayTimes.Default;
-            _client.RoomClockChanged += OnRoomClock;
+            _rules = rules;
+            _secondsPerMinute = rules == null ? double.PositiveInfinity : rules.RealSecondsPerGameDay / TimeRules.MinutesPerDay;
+            _client.RoomTimeChanged += OnRoomTime;
         }
 
-        /// <summary>서버에서 방의 시계를 받을 때마다(SessionClient.Update 안에서). 보낸 요청이 셌는지 정리한 뒤에 부른다.</summary>
+        /// <summary>서버에서 방의 시계를 받을 때마다(SessionClient.Update 안에서). 보낸 잠이 셌는지 정리한 뒤에 부른다.</summary>
         public event Action Changed;
 
         /// <summary>들어와 있고 서버의 시계를 받았다.</summary>
         public bool Known => _client.Status == ClientStatus.Joined && View.Known;
 
-        /// <summary>보냈지만 서버의 시계가 아직 세지 않은 시간 포인트가 있다.</summary>
-        public bool HasPendingSpend => _spendTarget > 0;
-
         public int Day => Known ? View.Day : 0;
-        public int PartIndex => Known ? View.PartIndex : 0;
-        public int PartsToday => Known ? View.PartsToday : 0;
-        public bool IsDayOver => Known && View.IsDayOver;
-        public int RepresentativeMinutes => View.RepresentativeMinutes(_times);
 
-        public bool HasFinishedPart(string participantId) => IsMe(participantId) && (HasPendingSpend || (Mine(out var e) && e.FinishedPart));
-
-        public int CompletedParts(string participantId) => IsMe(participantId) && Mine(out var e) ? e.CompletedParts : 0;
-
-        public bool CanSpend(string participantId, int points)
+        public int Minutes
         {
-            if (points < 0 || !IsMe(participantId) || !Mine(out var e)) return false;
-            if (points == 0) return true;
-            return !HasPendingSpend && _dayEndSent == 0 && !e.DayEnded && e.CompletedParts == View.PartIndex && View.PartIndex + points <= View.PartsToday;
+            get
+            {
+                if (!Known) return 0;
+                int estimate = Estimate();
+                if (_shownDay == View.Day && estimate < _shownMinutes && _shownMinutes - estimate <= ResyncMinutes) return _shownMinutes;
+                _shownDay = View.Day;
+                _shownMinutes = estimate;
+                return estimate;
+            }
         }
 
-        public bool Spend(string participantId, int points)
+        /// <summary>보냈지만 서버의 시계가 아직 세지 않은 잠이 있다.</summary>
+        public bool HasPendingSleep => _sleepSent != 0;
+
+        public bool IsAsleep(string participantId) => IsMe(participantId) && Known && (_sleepSent == View.Day || View.IsAsleep(_client.NetId));
+
+        public bool SleepOn(string participantId, int day)
         {
-            if (!CanSpend(participantId, points)) return false;
-            if (points == 0) return true;
-            _spendDay = View.Day;
-            _spendTarget = View.PartIndex + points;
-            _client.RequestFinishPart(View.Day, View.PartIndex, points);
+            if (!IsMe(participantId) || !Known || day != View.Day || IsAsleep(participantId)) return false;
+            _sleepSent = day;
+            _client.RequestSleep(day);
             return true;
         }
 
-        public bool EndDay(string participantId)
-        {
-            if (!IsMe(participantId) || !Mine(out var e) || e.DayEnded || _dayEndSent != 0) return false;
-            _dayEndSent = View.Day;
-            _client.RequestDayEndReady(View.Day);
-            return true;
-        }
-
-        /// <summary>서버가 마지막으로 보낸 시계의 사람들. 신원을 모르는 번호는 뺀다. 자기가 보낸 요청은 끝낸 것으로 보인다.</summary>
+        /// <summary>서버가 마지막으로 보낸 시계의 사람들. 신원을 모르는 번호는 뺀다. 자기가 보낸 잠은 자는 중으로 보인다.</summary>
         public void CopyPresent(List<RoomParticipantState> into)
         {
             if (into == null) return;
@@ -88,34 +82,36 @@ namespace Rootborn.Net.Session
             {
                 if (!_client.TryGetPlayerId(entry.NetId, out var id)) continue;
                 bool me = entry.NetId == _client.NetId;
-                into.Add(new RoomParticipantState(id, entry.CompletedParts, entry.FinishedPart || (me && HasPendingSpend), entry.DayEnded || (me && _dayEndSent != 0)));
+                // 자기 자신은 이 시계를 끼운 게임 한 판의 신원으로 보인다(방의 신원과 세이브의 플레이어 id가 다를 수 있다 — 손님 저장이 없는 방).
+                into.Add(new RoomParticipantState(me ? _playerId : id, entry.Asleep || (me && _sleepSent == View.Day)));
             }
         }
 
         public void Dispose()
         {
             if (_disposed) return;
-            _client.RoomClockChanged -= OnRoomClock;
+            _client.RoomTimeChanged -= OnRoomTime;
             _disposed = true;
         }
 
-        private RoomClockView View => _client.RoomClock;
+        private RoomTimeView View => _client.RoomTime;
 
         private bool IsMe(string participantId) => string.Equals(participantId, _playerId, StringComparison.Ordinal);
 
-        private bool Mine(out Messages.RoomClockEntry entry)
+        // 받은 시각 + 그 뒤로 흐른 클라이언트 시간. 같은 날 안에서 날 넘김 시각 앞까지만.
+        private int Estimate()
         {
-            entry = default;
-            return Known && View.TryGetEntry(_client.NetId, out entry);
+            double elapsed = Math.Max(0d, _client.Now - View.ReceivedAt);
+            long minutes = View.Minutes + (long)Math.Floor(elapsed / _secondsPerMinute + 1e-9);
+            if (_rules != null && minutes > _rules.DayEndMinutes - 1) minutes = Math.Max(View.Minutes, _rules.DayEndMinutes - 1);
+            return minutes > int.MaxValue ? int.MaxValue : (int)minutes;
         }
 
-        // 보낸 요청은 서버의 시계가 그것을 셌을 때(끝낸 때 수가 닿음), 날이 바뀌었을 때, 방에서 빠졌을 때 정리한다.
-        // "아무 시계나 받으면" 정리하지 않는다: 서버가 요청을 처리하기 전에 보낸 시계일 수 있다.
-        private void OnRoomClock()
+        // 보낸 잠은 서버의 시계가 그것을 셌을 때, 날이 바뀌었을 때, 방에서 빠졌을 때 정리한다.
+        private void OnRoomTime()
         {
-            bool mine = Mine(out var e);
-            if (HasPendingSpend && (!mine || View.Day != _spendDay || e.CompletedParts >= _spendTarget || e.DayEnded)) _spendTarget = 0;
-            if (_dayEndSent != 0 && (!mine || View.Day != _dayEndSent || e.DayEnded)) _dayEndSent = 0;
+            bool mine = View.TryGetEntry(_client.NetId, out var e);
+            if (_sleepSent != 0 && (!mine || View.Day != _sleepSent || e.Asleep)) _sleepSent = 0;
             Changed?.Invoke();
         }
     }

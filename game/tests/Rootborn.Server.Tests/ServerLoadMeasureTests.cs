@@ -58,7 +58,7 @@ namespace Rootborn.Server.Tests
             var settings = new RoomServerSettings { MaxPlayers = Players, SharedPieces = new[] { RoomWallet.PieceName } };
             string saves = Path.Combine(_root, "saves");
             var guestsFolder = new GuestSaveFolder(GuestSaveFolder.FolderFor(saves, "room-a"), _definitions, _settings);
-            using var rig = new RoomRig(new FileSaveStore(saves), settings: settings, calendar: Program.RoomCalendar(_definitions), guests: guestsFolder);
+            using var rig = new RoomRig(new FileSaveStore(saves), settings: settings, timeRules: Program.RoomTimeRules(_definitions), guests: guestsFolder);
             var guests = new List<Guest>();
             for (int i = 0; i < Players; i++)
             {

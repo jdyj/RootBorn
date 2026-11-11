@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Rootborn.Core.Inventory;
 using Rootborn.Core.Placement;
 using Rootborn.Game;
@@ -7,14 +6,15 @@ using Rootborn.Ui;
 namespace Rootborn.Screens.Hud
 {
     /// <summary>
-    /// 시계 HUD의 표시 모델: 학생 날, 시각, 용돈, 시간 경고, (같이 하는 방이면) 남은 때와 기다리는 사람.
-    /// 시각은 GameSession.RoomShownMinutes — 혼자면 흐르는 시계, 같이 하는 방이면 때의 대표 시각(4단계에서 흐르는 시각으로 바뀐다).
+    /// 시계 HUD의 표시 모델: 학생 날, 시각, 용돈, 시간 경고, 하는 중이면 끝나는 시각.
+    /// 시각은 GameSession.RoomShownMinutes — 혼자면 흐르는 시계, 같이 하는 방이면 방의 시각(개인 시계가 따라간다).
     /// 용돈은 가게가 받는 화폐(판매 가구의 가격 아이템 중 첫 것)의 가방 수량. 화폐를 모르면 용돈은 보이지 않는다(-1).
     /// Alert는 시간 경고(취침 시각이 가까움·지남·지침 — <see cref="ClockAlert"/>). 혼자 하기에는 시간 포인트 줄이 없다(흐르는 시간 설계 4절).
-    /// Together는 같이 하는 방이다: 그때만 남은 때와 Waiting(지금 때를 아직 안 끝낸 다른 사람)을 보인다.
+    /// Busy는 같이 하는 방에서 앞의 활동을 하는 중이다(설계 3.2절 — 시계를 건너뛰지 않는다). 그때 끝나는 시각(BusyHour:BusyMinute)을 보인다.
+    /// 혼자 하기의 활동은 시계를 건너뛰므로 하는 중이 없다(미니게임 중에는 미니게임 화면이 덮는다). 방의 때·남은 때 줄은 흐르는 시간 4단계에서 없앴다.
     /// </summary>
     public readonly record struct ClockModel(bool HasSession, int Day, int Hour, int Minute, int Allowance, ClockAlert Alert,
-        bool Together, int TimePointsRemaining, int TimePointsToday, IReadOnlyList<string> Waiting, bool RoomWallet = false)
+        bool Busy, int BusyHour, int BusyMinute, bool RoomWallet = false)
     {
         /// <summary>취침 시각이 몇 분 남았을 때부터 "곧 잘 시간"을 보이는가(게임 분, 표시 선택 — 규칙 수치가 아니다).</summary>
         public const int BedtimeWarningMinutes = 60;
@@ -24,11 +24,9 @@ namespace Rootborn.Screens.Hud
             if (session == null) return default;
             int minutes = ((session.RoomShownMinutes % (24 * 60)) + 24 * 60) % (24 * 60);
             int allowance = currency == null ? -1 : session.Inventory.CountOf(currency);
-            bool together = !session.IsSoloRoom;
-            var waiting = new List<string>(4);
-            if (together) session.RoomWaitingFor(waiting);
-            return new ClockModel(true, session.Student.CurrentDay, minutes / 60, minutes % 60, allowance, AlertFor(session),
-                together, together ? session.RoomTimePointsRemaining : 0, together ? session.Room.PartsToday : 0, waiting, session.SharesWallet);
+            bool busy = session.IsBusy && session.Student.DayState == Rootborn.Core.StudentLife.StudentDayState.InProgress;
+            int ends = busy ? Rootborn.Core.Time.TimeRules.ClockMinutes(session.ActivityEndsAtMinutes) : 0;
+            return new ClockModel(true, session.Student.CurrentDay, minutes / 60, minutes % 60, allowance, AlertFor(session), busy, ends / 60, ends % 60, session.SharesWallet);
         }
 
         /// <summary>지금의 시간 경고. 시간 규칙이 없으면(시험 데이터) 지침만 본다.</summary>
@@ -58,7 +56,7 @@ namespace Rootborn.Screens.Hud
     /// <summary>
     /// 시계 HUD(Unity TownTimeHudRuntimeInstaller + TimeHud). 위쪽 줄의 시계 칸에 시계 아이콘, 첫 줄 "1일  14:00 · 용돈 0",
     /// 둘째 줄은 시간 경고("곧 잘 시간이에요", "잘 시간이 지났어요", "지쳤어요 — 자야 해요")이고 그때 시계 아이콘도 바뀐다(icon:bedtime, icon:exhausted).
-    /// 같이 하는 방이면 둘째 줄에 남은 때와 " · 아직: 누구"를 잇는다(4단계에서 바뀐다). GameSession이 바뀌었다는 알림(시각은 분마다 "time")을 받을 때만
+    /// 같이 하는 방에서 활동을 하는 중이면 둘째 줄에 "하는 중 · HH:MM에 끝나요"를 잇는다. GameSession이 바뀌었다는 알림(시각은 분마다 "time")을 받을 때만
     /// 다시 읽는다 — 매 프레임 읽지 않는다.
     /// 게임 한 판이 없으면 불러오는 중 문구.
     /// </summary>
@@ -66,7 +64,7 @@ namespace Rootborn.Screens.Hud
     {
         /// <summary>
         /// 배치(시계 칸 안, 왼쪽 위 기준). Unity: 아이콘 (40, 40) 64x64, 글자는 왼쪽 128·위아래 36·오른쪽 36 안쪽, 24 굵게.
-        /// 시간 포인트 줄을 더하면서 그 글자 칸을 위(날·시각·용돈)와 아래(시간 포인트·기다리는 사람)로 나눴다.
+        /// 그 글자 칸을 위(날·시각·용돈)와 아래(시간 경고·하는 중)로 나눴다.
         /// </summary>
         private static class Layout
         {
@@ -137,26 +135,15 @@ namespace Rootborn.Screens.Hud
             (string alertKey, string icon) = AlertLook(model.Alert);
             _icon.Image = icon;
             string room = alertKey == null ? string.Empty : T(alertKey);
-            if (model.Together)
+            if (model.Busy)
             {
-                // 같이 하는 방의 때·기다리는 사람(멀티플레이 설계 2.1절). 흐르는 시간 4단계에서 바뀐다.
                 if (room.Length > 0) room += T("ui.hud.room-separator");
-                room += F("ui.hud.time-points", model.TimePointsRemaining, model.TimePointsToday);
-                if (model.Waiting.Count > 0) room += F("ui.hud.room-waiting", string.Join(T("ui.hud.room-separator"), model.Waiting));
+                room += F("ui.hud.busy-until", model.BusyHour, model.BusyMinute);
             }
             _room.Text = room;
         }
 
-        // 기다리는 사람 목록은 새로 만든 목록이라 레코드 비교로는 늘 다르다. 내용을 비교한다.
-        private bool SameAsShown(ClockModel model)
-        {
-            ClockModel shown = Model;
-            if (model.Waiting == null || shown.Waiting == null) return model == shown;
-            if ((model with { Waiting = null }) != (shown with { Waiting = null }) || model.Waiting.Count != shown.Waiting.Count) return false;
-            for (int i = 0; i < model.Waiting.Count; i++)
-                if (model.Waiting[i] != shown.Waiting[i]) return false;
-            return true;
-        }
+        private bool SameAsShown(ClockModel model) => model == Model;
 
         private string _shownLanguage;
         private bool LanguageChangedSinceLastText => _shownLanguage != Services.Text.Language;

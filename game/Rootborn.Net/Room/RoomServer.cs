@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Rootborn.Core.Network;
 using Rootborn.Core.Room;
 using Rootborn.Core.Save;
-using Rootborn.Core.StudentLife;
 using Rootborn.Core.Time;
 using Rootborn.Net.Session;
 using Rootborn.Net.Transport;
@@ -92,7 +91,7 @@ namespace Rootborn.Net.Room
     /// - 손님 저장: 저장 한 번이 묶음 하나로 온다. 검사(<see cref="IGuestSaves.Accept"/>)를 지나면 쓰고, 그 저장에 든 요청을 조각에 반영한다
     ///   (저장과 요청이 한 번에 — 장부가 같은 요청 id를 한 번만 반영). 답은 보낸 사람에게, 바뀐 조각 상태는 모두에게.
     /// - 틱: <see cref="Tick"/>을 고정 간격으로 부른다(<see cref="RoomLoop"/>). 시간은 넘긴 값만 쓴다. 날이 바뀌면 슬롯 사본을 남긴다.
-    ///   공용 시간은 사람이 하루를 끝내야 넘어가므로 아무도 없으면 저절로 멈춘다.
+    ///   방의 시계는 그 틱 시각으로 흐르고(Core RoomClock — 흐르는 시간 4단계) 아무도 없으면 멈춘다.
     /// - 끝: <see cref="Shutdown"/>이 방 상태를 저장하고 모두를 이유 코드(<see cref="RoomRefusal.Shutdown"/>)와 함께 끊는다.
     /// </summary>
     public sealed class RoomServer : IDisposable
@@ -118,12 +117,12 @@ namespace Rootborn.Net.Room
         /// <param name="store">방 상태를 읽고 쓸 저장소.</param>
         /// <param name="saveSlot">세이브 슬롯 id.</param>
         /// <param name="log">사람이 읽는 운영 로그(현지화 대상 아님). 없으면 남기지 않는다.</param>
-        /// <param name="calendar">하루의 때 수와 때의 대표 시각을 주는 달력(게임 데이터의 정의). 없으면 Core 기본 달력.</param>
+        /// <param name="timeRules">흐르는 시간의 규칙(게임 데이터의 정의: 하루 길이, 하루 시작). 없으면 방의 시계가 흐르지 않는다.</param>
         /// <param name="guests">손님 세이브를 갖는 곳. 없으면 손님 저장을 받지 않는다(조각은 있어도 요청이 오지 않는다).</param>
         /// <param name="pieces">공유 조각 종류 등록 표. 없으면 Core 기본(RoomPieceCatalog.CreateDefault).</param>
         /// <exception cref="ArgumentException">저장된 방 설정에 이 프로그램이 모르는 조각이 있다(더 새 버전이 만든 방).</exception>
         public RoomServer(ITransport transport, RoomServerSettings settings, RoomVersions versions, ISaveStore store, string saveSlot, Action<string> log,
-            LifeCalendar calendar = null, IGuestSaves guests = null, RoomPieceCatalog pieces = null)
+            TimeRules timeRules = null, IGuestSaves guests = null, RoomPieceCatalog pieces = null)
         {
             if (transport == null) throw new ArgumentNullException(nameof(transport));
             settings ??= new RoomServerSettings();
@@ -158,7 +157,7 @@ namespace Rootborn.Net.Room
             gate.Refused += (peer, reason, theirs) =>
                 Log(theirs.HasValue ? $"접속 거절 {peer}: {reason} (상대 {theirs.Value}, 방 {versions})" : $"접속 거절 {peer}: {reason}");
             settings.Session.MaxPlayers = MaxPlayers;
-            _session = new SessionServer(gate, settings.Session, store, saveSlot, calendar);
+            _session = new SessionServer(gate, settings.Session, store, saveSlot, timeRules);
             _session.PlayerJoined += OnJoined;
             _session.PlayerLeft += player => _uploads.Remove(player.PlayerId);
             _session.On<SaveChunkMessage>(OnSaveChunk);
@@ -211,7 +210,7 @@ namespace Rootborn.Net.Room
         /// <summary>이 방의 공유 조각과 요청 장부.</summary>
         public RoomPieceSet Pieces => _pieces;
 
-        /// <summary>방의 시계(날짜, 때, 참가자별 끝냄).</summary>
+        /// <summary>방의 시계(날짜, 분, 참가자별 자는 중).</summary>
         public RoomClock Clock => _session.Clock;
         public IReadOnlyCollection<ServerPlayer> Players => _session.Players;
         public IEnumerable<ServerPlayer> PlayersOnMap(string mapId) => _session.PlayersOnMap(mapId);
@@ -385,7 +384,11 @@ namespace Rootborn.Net.Room
             }
         }
 
-        private string DayText() => $"{_session.Clock.Day}일째 때 {_session.Clock.PartIndex + 1}/{_session.Clock.PartsToday}";
+        private string DayText()
+        {
+            int clock = TimeRules.ClockMinutes(_session.Clock.Minutes);
+            return $"{_session.Clock.Day}일째 {clock / 60:00}:{clock % 60:00}";
+        }
 
         private void Log(string line) => _log?.Invoke(line);
     }

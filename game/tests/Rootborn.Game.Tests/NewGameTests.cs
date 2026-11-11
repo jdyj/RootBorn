@@ -61,15 +61,20 @@ namespace Rootborn.Game.Tests
         }
     
         [Test]
-        public void StartSettings_FromTheDefinitions_MatchTheRegistryFile()
+        public void StartSettings_FromTheDefinitions_MatchTheRegistryFile_AndStartAtTheDayStart()
         {
-            var fromDefinitions = GameStartSettings.FromDefinitions(TestWorld.Definitions);
-            var fromFile = GameStartSettings.FromRegistry(TestWorld.DataDirectory);
+            var settings = GameStartSettings.FromDefinitions(TestWorld.Definitions);
+            var errors = new System.Collections.Generic.List<Rootborn.Data.LoadError>();
+            var table = Rootborn.Data.EntityTable.ReadDirectory(TestWorld.DataDirectory, errors);
+            Assert.That(errors, Is.Empty);
+            string First(string key) => table.RegistryIds(key).Count > 0 ? table.RegistryIds(key)[0] : string.Empty;
 
-            Assert.That((fromDefinitions.CalendarId, fromDefinitions.DayEndRuleId, fromDefinitions.TutorialStageId, fromDefinitions.CampaignId, fromDefinitions.LocationStateConflictPolicyId),
-                Is.EqualTo((fromFile.CalendarId, fromFile.DayEndRuleId, fromFile.TutorialStageId, fromFile.CampaignId, fromFile.LocationStateConflictPolicyId)));
-            Assert.That(fromDefinitions.CalendarId, Is.Not.Empty);
-            Assert.That(fromDefinitions.CampaignId, Is.Not.Empty);
+            Assert.That((settings.CalendarId, settings.DayEndRuleId, settings.TutorialStageId, settings.CampaignId, settings.LocationStateConflictPolicyId),
+                Is.EqualTo((First("studentLifeCalendar"), First("defaultDayEndRule"), First("defaultTutorialStage"), First("defaultStudentCampaign"), First("locationStateConflictPolicies"))));
+            Assert.That(settings.CalendarId, Is.Not.Empty);
+            Assert.That(settings.CampaignId, Is.Not.Empty);
+            Assert.That(settings.StartTimeMinutes, Is.EqualTo(TestWorld.Definitions.TimeRules.DayStartMinutes), "새 게임은 흐르는 시간의 하루 시작(07:00)에서");
+            Assert.That(settings.StartTimeMinutes, Is.EqualTo(7 * 60));
         }
     }
 }

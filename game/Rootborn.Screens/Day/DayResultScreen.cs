@@ -95,9 +95,12 @@ namespace Rootborn.Screens.Day
             Model = DayResultModel.From(session, _result, DayBaseline.For(session).Summary());
             var text = new DayResultText(T, Services.Text, _displayKeys);
             _title.Text = text.Title(Model.Summary.DayNumber);
-            _next.Text = text.Ui(Model.WaitingForOthers ? "waiting-others" : "next-day");
+            _next.Text = text.Ui(Model.Sleeping ? "sleeping" : Model.WaitingForOthers ? "waiting-others" : "next-day");
             _next.Enabled = Model.CanStartNextDay;
-            var sections = new List<string>(16)
+            var sections = new List<string>(17);
+            // 자는 중 화면(흐르는 시간 설계 3.3절): 방에 아직 깨어 있는 사람. 모두 잠들거나 07:00이 되면 다음 날 단추가 켜진다.
+            if (Model.Sleeping && Model.AwakeOthers.Count > 0) sections.Add(F("day-result.sleeping-awake-others", string.Join(T("ui.hud.room-separator"), Model.AwakeOthers)));
+            sections.AddRange(new[]
             {
                 text.List("activities", Model.Summary.CompletedActivityIds, "empty-activities"),
                 text.Results(Model),
@@ -107,7 +110,7 @@ namespace Rootborn.Screens.Day
                 text.Rewards(Model.QuestInventory.RewardEntries),
                 text.Inventory(Model.QuestInventory.InventoryDeltas),
                 text.NextGuide(Model),
-            };
+            });
             sections.AddRange(text.LocationStates(session, Model.LocationStates));
             sections.Add(text.Campaign(Model.Campaign));
             sections.Add(text.Chain(Model));

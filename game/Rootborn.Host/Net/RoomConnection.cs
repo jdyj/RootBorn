@@ -68,13 +68,14 @@ namespace Rootborn.Host.Net
         public RoomGuestLink Link => _link;
 
         /// <summary>
-        /// 이 접속의 방의 시계를 게임 한 판에 끼울 것으로 만든다(달력은 게임 데이터의 정의). 접속이 끝나면 같이 끝난다. 들어가 있지 않으면 null.
+        /// 이 접속의 방의 시계를 게임 한 판에 끼울 것으로 만든다(시간 규칙은 게임 데이터의 정의 — 받은 시각 사이를 메운다). 접속이 끝나면 같이 끝난다. 들어가 있지 않으면 null.
         /// </summary>
-        public RemoteRoomTime CreateRoomTime(Rootborn.Core.StudentLife.LifeCalendar calendar)
+        /// <param name="sessionPlayerId">시계를 끼울 게임 한 판의 플레이어 id(세이브의 id). 없으면 방에서의 신원.</param>
+        public RemoteRoomTime CreateRoomTime(Rootborn.Core.Time.TimeRules rules, string sessionPlayerId = null)
         {
             if (_client == null) return null;
             _time?.Dispose();
-            _time = new RemoteRoomTime(_client, PlayerId, calendar);
+            _time = new RemoteRoomTime(_client, sessionPlayerId ?? PlayerId, rules);
             return _time;
         }
 

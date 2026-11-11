@@ -26,6 +26,12 @@ namespace Rootborn.Core.Time
             LateSleepRecoveryLossPerHour = Math.Max(0, lateSleepRecoveryLossPerHour);
         }
 
+        /// <summary>
+        /// 시간 규칙이 없는 정의(하루 길이가 없는 옛 시험 데이터)를 대신하는 값: 옛 하루 시작 8시, 밤의 체력 감소·늦잠 감소 없음.
+        /// 흐르지 않는 시계(혼자인 방의 날 세기, 시간 규칙 없이 띄운 방)에만 쓴다. 규칙 수치가 아니라 "규칙 없음"의 자리다.
+        /// </summary>
+        public static TimeRules Legacy { get; } = new TimeRules(600f, 8 * 60, 22 * 60, 0, 0);
+
         public float RealSecondsPerGameDay { get; }
         public int DayStartMinutes { get; }
 
