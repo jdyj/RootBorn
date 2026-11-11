@@ -9,13 +9,15 @@ namespace Rootborn.Ui
         float LineHeight(float fontSize);
     }
 
-    public enum DrawKind { Panel, Text, Fill, PushClip, PopClip }
+    public enum DrawKind { Panel, Text, Fill, PushClip, PopClip, Image }
 
     /// <summary>
-    /// 그리기 명령 하나. Panel: Rect에 Skin 9조각을 Color로 물들여 그린다. Text: (Rect.X, Rect.Y)가 글줄 상자의 왼쪽 위.
+    /// 그리기 명령 하나. Panel: Rect에 Skin 9조각을 Color로 물들여 그린다. Text: (Rect.X, Rect.Y)가 글줄 상자의 왼쪽 위, Skin은 글자가 올라앉은 패널 그림(없으면 null).
     /// Fill: Rect를 Color로 칠한다. PushClip/PopClip: Rect 밖을 잘라 낸다.
+    /// Image: Rect에 그림(Skin = 그림 id)을 Color로 물들여 그린다. Source가 비어 있지 않으면 그 그림 안의 칸만 그린다.
+    /// 그림 id가 어느 PNG의 어디인지는 그리는 쪽(Host)이 정한다.
     /// </summary>
-    public readonly record struct DrawCommand(DrawKind Kind, UiRect Rect, string Skin, string Text, float FontSize, UiColor Color);
+    public readonly record struct DrawCommand(DrawKind Kind, UiRect Rect, string Skin, string Text, float FontSize, UiColor Color, PixelRect Source = default);
 
     public sealed class DrawList
     {
@@ -26,9 +28,11 @@ namespace Rootborn.Ui
         public void Panel(UiRect rect, string skin, UiColor tint) =>
             Commands.Add(new DrawCommand(DrawKind.Panel, rect, skin, null, 0, tint));
 
-        public void Text(float x, float y, string text, float fontSize, UiColor color)
+        /// <param name="onSkin">글자가 올라앉은 패널 그림 이름(버튼 글자 등). 그리는 쪽이 그 그림에 맞는 글자 색을 정해 두었으면 그 색으로 그린다
+        /// (Unity 도시형 몰딩 테마의 버튼 글자 색). 비우면 color 그대로.</param>
+        public void Text(float x, float y, string text, float fontSize, UiColor color, string onSkin = null)
         {
-            if (!string.IsNullOrEmpty(text)) Commands.Add(new DrawCommand(DrawKind.Text, new UiRect(x, y, 0, 0), null, text, fontSize, color));
+            if (!string.IsNullOrEmpty(text)) Commands.Add(new DrawCommand(DrawKind.Text, new UiRect(x, y, 0, 0), onSkin, text, fontSize, color));
         }
 
         public void Fill(UiRect rect, UiColor color) =>
@@ -43,6 +47,11 @@ namespace Rootborn.Ui
             Fill(new UiRect(rect.Right, rect.Y, thickness, rect.H), color);
         }
 
+        public void Image(UiRect rect, string imageId, PixelRect source, UiColor tint)
+        {
+            if (!string.IsNullOrEmpty(imageId)) Commands.Add(new DrawCommand(DrawKind.Image, rect, imageId, null, 0, tint, source));
+        }
+
         public void PushClip(UiRect rect) => Commands.Add(new DrawCommand(DrawKind.PushClip, rect, null, null, 0, default));
         public void PopClip() => Commands.Add(new DrawCommand(DrawKind.PopClip, default, null, null, 0, default));
     }
@@ -54,6 +63,8 @@ namespace Rootborn.Ui
         public const string Button = "button";
         public const string Slot = "slot";
         public const string Field = "field";
+        /// <summary>대화창(둥근 밝은 상자).</summary>
+        public const string Dialogue = "dialogue";
     }
 
     public static class UiTheme

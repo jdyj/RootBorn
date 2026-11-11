@@ -16,6 +16,14 @@ namespace Rootborn.Ui
         public override void Emit(DrawList list, ITextMeasurer text) => list.Panel(Rect, Skin, Tint);
     }
 
+    /// <summary>색으로 칠한 사각형. 포인터를 받지 않는다(장식, 구분선, 바탕).</summary>
+    public sealed class UiBox : UiNode
+    {
+        public UiColor Color = UiTheme.White;
+
+        public override void Emit(DrawList list, ITextMeasurer text) => list.Fill(Rect, Color);
+    }
+
     /// <summary>한 줄 글자. 사각형 안에서 세로 가운데, 가로는 Align.</summary>
     public sealed class UiLabel : UiNode
     {
@@ -54,7 +62,7 @@ namespace Rootborn.Ui
             {
                 float x = Rect.X + (Rect.W - text.Width(Text, FontSize)) / 2f;
                 float y = Rect.Y + (Rect.H - text.LineHeight(FontSize)) / 2f + (Pressed ? UiTheme.PressedOffset : 0f);
-                list.Text(x, y, Text, FontSize, active ? UiTheme.Ink : UiTheme.InkMuted);
+                list.Text(x, y, Text, FontSize, active ? UiTheme.Ink : UiTheme.InkMuted, Skin);
             }
             if (Focused) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
         }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Rootborn.Host.Text;
@@ -8,35 +9,9 @@ using Rootborn.Ui;
 namespace Rootborn.Host.Rendering
 {
     /// <summary>
-    /// 패널 그림이 Modern_UI_Style_2.png(16x16 판)의 어디에 있는가. 모든 값은 PNG 픽셀을 직접 재서 정했다(2026-11-11).
-    /// 16px 칸 안에서 그림은 일부만 차지하므로 칸 단위(r, c)로 자르면 안 된다.
+    /// UI 토대가 낸 그리기 명령을 화면 픽셀로 그린다. 패널 타일은 정수 배율, 글자는 찍힐 크기 그대로.
+    /// 패널 그림은 UiSkins, 아이콘·스프라이트는 ImageCatalog가 정한 PNG를 그 자리에서 읽어 둔다(변환 단계 없음).
     /// </summary>
-    public static class UiSkins
-    {
-        // 공통 패널(r2~r4, c0~c2): 그림 x11~37, y42~69. 모서리 그림이 들어가는 폭: 왼쪽 5, 오른쪽 5, 위 6, 아래 5.
-        private static readonly NineSliceSource CommonPanel = new NineSliceSource(11, 16, 32, 37, 42, 48, 64, 69);
-
-        // 둥근 밝은 상자(r14~r16, c3~c5 대화 패널): 그림 x60~84, y235~260.
-        // 왼쪽 위 모서리의 밝은 점이 x63, y239까지 내려와 왼쪽 4, 위 5로 잡는다. 오른쪽 3, 아래 3.
-        private static readonly NineSliceSource RoundedLight = new NineSliceSource(60, 64, 81, 84, 235, 240, 257, 260);
-
-        // 둥근 어두운 상자(r14~r16, c0~c2): 그림 x12~36, y235~260. 밝은 상자와 모양이 같고 안쪽 색만 다르다.
-        private static readonly NineSliceSource RoundedDark = new NineSliceSource(12, 16, 33, 36, 235, 240, 257, 260);
-
-        public static NineSliceSource Resolve(string skin)
-        {
-            switch (skin)
-            {
-                case UiSkin.Panel: return CommonPanel;
-                case UiSkin.Button: return RoundedLight;
-                case UiSkin.Field: return RoundedLight;
-                case UiSkin.Slot: return RoundedDark;
-                default: throw new InvalidOperationException("모르는 패널 그림 이름: " + skin);
-            }
-        }
-    }
-
-    /// <summary>UI 토대가 낸 그리기 명령을 화면 픽셀로 그린다. 패널 타일은 정수 배율, 글자는 찍힐 크기 그대로.</summary>
     public sealed class UiRenderer : IDisposable
     {
         // 색은 알파를 곱하지 않은 채로 섞고, 알파는 불투명하게 쌓는다(저장한 화면이 반투명해지지 않게).
@@ -52,19 +27,39 @@ namespace Rootborn.Host.Rendering
 
         private readonly GraphicsDevice _device;
         private readonly SpriteBatch _batch;
-        private readonly Texture2D _sheet, _white;
+        private readonly Texture2D _white;
         private readonly TextRenderer _text;
+        private readonly UiSkins _skins;
+        private readonly ImageCatalog _images;
+        private readonly SpriteAtlases _atlases;
+        private readonly Dictionary<string, Texture2D> _textures = new Dictionary<string, Texture2D>(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _missing = new HashSet<string>(StringComparer.Ordinal);
         private readonly List<SlicePiece> _pieces = new List<SlicePiece>(1024);
         private readonly Stack<Rectangle> _clips = new Stack<Rectangle>();
 
-        public UiRenderer(GraphicsDevice device, Texture2D sheet, TextRenderer text)
+        public UiRenderer(GraphicsDevice device, TextRenderer text, UiSkins skins, ImageCatalog images, SpriteAtlases atlases)
         {
             _device = device;
             _batch = new SpriteBatch(device);
-            _sheet = sheet;
             _text = text;
+            _skins = skins;
+            _images = images;
+            _atlases = atlases;
             _white = new Texture2D(device, 1, 1);
             _white.SetData(new[] { Color.White });
+        }
+
+        public UiSkins Skins => _skins;
+
+        /// <summary>그리려 했지만 찾지 못한 그림 id(빈 그림 검사용).</summary>
+        public IReadOnlyCollection<string> MissingImages => _missing;
+
+        private Texture2D Texture(string texture)
+        {
+            if (_textures.TryGetValue(texture, out Texture2D loaded)) return loaded;
+            using (FileStream stream = File.OpenRead(_atlases.FullPath(texture))) loaded = Texture2D.FromStream(_device, stream);
+            _textures[texture] = loaded;
+            return loaded;
         }
 
         private static Color ToColor(UiColor c) => new Color(c.R, c.G, c.B, c.A);
@@ -82,18 +77,31 @@ namespace Rootborn.Host.Rendering
                 switch (command.Kind)
                 {
                     case DrawKind.Panel:
+                    {
+                        SkinSource skin = _skins.Get(command.Skin);
                         _pieces.Clear();
-                        NineSlice.Build(fit.ToPixels(command.Rect), UiSkins.Resolve(command.Skin), fit.TileScale, _pieces);
+                        if (skin.Stretch) NineSlice.BuildStretched(fit.ToPixels(command.Rect), skin.Slices, skin.Scale(fit), _pieces);
+                        else NineSlice.Build(fit.ToPixels(command.Rect), skin.Slices, skin.Scale(fit), _pieces);
+                        Texture2D sheet = Texture(skin.Texture);
                         Color tint = ToColor(command.Color);
                         for (int i = 0; i < _pieces.Count; i++)
-                            _batch.Draw(_sheet, ToRectangle(_pieces[i].Dest), ToRectangle(_pieces[i].Source), tint);
+                            _batch.Draw(sheet, ToRectangle(_pieces[i].Dest), ToRectangle(_pieces[i].Source), tint);
                         break;
+                    }
+                    case DrawKind.Image:
+                    {
+                        if (!_images.TryResolve(command.Skin, command.Source, out string path, out PixelRect source)) { _missing.Add(command.Skin); break; }
+                        Texture2D texture = Texture(path);
+                        Rectangle from = source.W > 0 ? ToRectangle(source) : texture.Bounds;
+                        _batch.Draw(texture, ToRectangle(fit.ToPixels(command.Rect)), from, ToColor(command.Color));
+                        break;
+                    }
                     case DrawKind.Fill:
                         _batch.Draw(_white, ToRectangle(fit.ToPixels(command.Rect)), ToColor(command.Color));
                         break;
                     case DrawKind.Text:
                         _text.Draw(_batch, command.Text, TextRenderer.PixelSize(command.FontSize, fit.Scale),
-                            command.Rect.X * fit.Scale, command.Rect.Y * fit.Scale, ToColor(command.Color));
+                            command.Rect.X * fit.Scale, command.Rect.Y * fit.Scale, ToColor(TextColor(command)));
                         break;
                     case DrawKind.PushClip:
                         _batch.End();
@@ -112,12 +120,24 @@ namespace Rootborn.Host.Rendering
             _device.ScissorRectangle = full;
         }
 
+        /// <summary>글자가 올라앉은 그림에 글자 색이 정해져 있으면 그 색(흐린 글자는 반투명으로).</summary>
+        private UiColor TextColor(DrawCommand command)
+        {
+            if (command.Skin == null) return command.Color;
+            UiColor? themed = _skins.Get(command.Skin).TextColor;
+            if (!themed.HasValue) return command.Color;
+            UiColor c = themed.Value;
+            return command.Color == UiTheme.InkMuted ? new UiColor(c.R, c.G, c.B, (byte)(c.A / 2)) : c;
+        }
+
         private void Begin() => _batch.Begin(SpriteSortMode.Deferred, _blend, SamplerState.PointClamp, null, _scissor);
 
         public void Dispose()
         {
             _batch.Dispose();
             _white.Dispose();
+            foreach (Texture2D texture in _textures.Values) texture.Dispose();
+            _textures.Clear();
             _blend.Dispose();
             _scissor.Dispose();
         }

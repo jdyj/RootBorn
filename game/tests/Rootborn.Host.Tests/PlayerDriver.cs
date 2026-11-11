@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Rootborn.Core.World;
 using Rootborn.Host.Input;
+using Rootborn.Screens;
 using Rootborn.Ui;
+using XnaGame = Microsoft.Xna.Framework.Game;
 
 namespace Rootborn.Host.Tests
 {
@@ -16,16 +19,16 @@ namespace Rootborn.Host.Tests
     /// </summary>
     public sealed class FrameStepper
     {
-        private readonly Game _game;
+        private readonly XnaGame _game;
         private readonly object _platform;
         private readonly MethodInfo _pump;
 
-        public FrameStepper(Game game)
+        public FrameStepper(XnaGame game)
         {
             _game = game;
             _game.RunOneFrame(); // 창을 만들고 초기화한다
             const BindingFlags any = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-            _platform = typeof(Game).GetField("Platform", any)?.GetValue(game) ?? typeof(Game).GetProperty("Platform", any)?.GetValue(game)
+            _platform = typeof(XnaGame).GetField("Platform", any)?.GetValue(game) ?? typeof(XnaGame).GetProperty("Platform", any)?.GetValue(game)
                 ?? throw new InvalidOperationException("MonoGame 내부 Platform을 찾지 못했다. MonoGame 버전이 바뀌었는지 확인한다.");
             _pump = _platform.GetType().GetMethod("SdlRunLoop", any)
                 ?? throw new InvalidOperationException("MonoGame 내부 SdlRunLoop를 찾지 못했다. MonoGame 버전이 바뀌었는지 확인한다.");
@@ -56,7 +59,7 @@ namespace Rootborn.Host.Tests
         }
     }
 
-    public enum TestKey { Up, Down, Left, Right, Tab, Enter, Backspace, Escape, LeftShift, E, Space }
+    public enum TestKey { Up, Down, Left, Right, Tab, Enter, Backspace, Escape, LeftShift, E, Space, I, C }
 
     /// <summary>
     /// 플레이어를 대신해 조작한다. 근거의 종류:
@@ -72,11 +75,12 @@ namespace Rootborn.Host.Tests
         private readonly HashSet<TestKey> _held = new HashSet<TestKey>();
         private readonly string _evidenceDir;
 
-        public PlayerDriver(HostOptions options)
+        /// <param name="extraScreens">등록 표에 시험용 화면을 더 얹는다(성능 측정용 화면 등).</param>
+        public PlayerDriver(HostOptions options, Action<ScreenRegistry> extraScreens = null)
         {
             _evidenceDir = options.EvidenceDir;
             Directory.CreateDirectory(_evidenceDir);
-            Game = new HostGame(options) { Pointer = _pointer };
+            Game = new HostGame(options) { Pointer = _pointer, ExtraScreens = extraScreens };
             _stepper = new FrameStepper(Game);
         }
 
@@ -98,6 +102,8 @@ namespace Rootborn.Host.Tests
                 case TestKey.LeftShift: return (225, 0x400000E1);
                 case TestKey.E: return (8, 'e');
                 case TestKey.Space: return (44, ' ');
+                case TestKey.I: return (12, 'i');
+                case TestKey.C: return (6, 'c');
                 default: throw new ArgumentOutOfRangeException(nameof(key));
             }
         }
@@ -313,6 +319,92 @@ namespace Rootborn.Host.Tests
             WorldFrames += 2;
             for (int i = 0; i < frames; i++) WorldFrame();
             KeyUp(key);
+        }
+
+        // ---------- 화면 ----------
+
+        public ScreenStack Screens => Game.Screens ?? throw new InvalidOperationException("화면 쌓기가 없다(월드 화면이 아니다)");
+
+        /// <summary>화면이 열릴 때까지 한 프레임씩 돌린다. 지나간 프레임 수를 돌려준다.</summary>
+        public int WaitForScreen(string screenId, int maxFrames = 120)
+        {
+            for (int i = 0; i <= maxFrames; i++)
+            {
+                if (Screens.IsOpen(screenId)) return i;
+                Frames(1);
+            }
+            throw new InvalidOperationException(maxFrames + "프레임 안에 화면이 열리지 않았다: " + screenId);
+        }
+
+        public int WaitForScreenClosed(string screenId, int maxFrames = 120)
+        {
+            for (int i = 0; i <= maxFrames; i++)
+            {
+                if (!Screens.IsOpen(screenId)) return i;
+                Frames(1);
+            }
+            throw new InvalidOperationException(maxFrames + "프레임 안에 화면이 닫히지 않았다: " + screenId);
+        }
+
+        /// <summary>키를 눌러 화면을 열고 열릴 때까지 기다린다.</summary>
+        public void OpenScreenWithKey(TestKey key, string screenId)
+        {
+            if (Screens.IsOpen(screenId)) throw new InvalidOperationException("이미 열려 있다: " + screenId);
+            PressKey(key);
+            WaitForScreen(screenId);
+        }
+
+        /// <summary>키를 눌러 화면을 닫고 닫힐 때까지 기다린다.</summary>
+        public void CloseScreenWithKey(TestKey key, string screenId)
+        {
+            if (!Screens.IsOpen(screenId)) throw new InvalidOperationException("열려 있지 않다: " + screenId);
+            PressKey(key);
+            WaitForScreenClosed(screenId);
+        }
+
+        /// <summary>
+        /// id로 찾은 버튼을 포인터로 누른다. 요소의 메서드를 부르지 않고 포인터를 그 가운데로 옮겨 누르고 뗀다(UI 포인터 판정을 거친다).
+        /// 그 자리의 맨 위 요소가 그 버튼이 아니면(다른 화면에 가려졌으면) 누르지 않고 실패한다.
+        /// </summary>
+        public void PressButton(string id)
+        {
+            UiNode node = Node(id);
+            if (!node.IsActive) throw new InvalidOperationException("보이지 않거나 비활성인 요소: " + id);
+            UiRect rect = node.Rect;
+            UiNode top = Game.Ui.HitTest(rect.CenterX, rect.CenterY);
+            if (top != node) throw new InvalidOperationException("요소 " + id + " 위에 다른 요소가 있다: " + (top?.Id ?? "(없음)"));
+            Click(id);
+        }
+
+        /// <summary>
+        /// 화면 스크린샷: 전체 화면(name.png)과 그 화면의 뿌리 사각형만 잘라 낸 그림(name-crop.png). 잘라 낸 그림 경로를 돌려준다.
+        /// </summary>
+        public string ScreenshotScreen(string screenId, string name)
+        {
+            Screenshot(name);
+            GameScreen screen = Screens.Find(screenId) ?? throw new InvalidOperationException("만들어진 적 없는 화면: " + screenId);
+            PixelRect r = Game.Fit.ToPixels(screen.Root.Rect);
+            RenderTarget2D scene = Game.Scene;
+            int x = Math.Max(0, r.X), y = Math.Max(0, r.Y);
+            int w = Math.Min(scene.Width, r.X + r.W) - x, h = Math.Min(scene.Height, r.Y + r.H) - y;
+            var pixels = new Microsoft.Xna.Framework.Color[w * h];
+            scene.GetData(0, new Microsoft.Xna.Framework.Rectangle(x, y, w, h), pixels, 0, pixels.Length);
+            string path = Path.Combine(_evidenceDir, name + "-crop.png");
+            using (var crop = new Texture2D(Game.GraphicsDevice, w, h))
+            {
+                crop.SetData(pixels);
+                using FileStream stream = File.Create(path);
+                crop.SaveAsPng(stream, w, h);
+            }
+            return path;
+        }
+
+        /// <summary>지금 칸에서 칸 거리로 cells 이상 떨어진 곳까지 방향 키로 걷는다(어느 쪽이든 막히지 않은 길).</summary>
+        public void WalkAway(int cells)
+        {
+            CellPos start = PlayerCell;
+            if (!FollowPath(c => Math.Abs(c.X - start.X) + Math.Abs(c.Y - start.Y) >= cells, "걸어 나가기 " + cells + "칸"))
+                throw new InvalidOperationException("걸어가는 도중 맵이 바뀌었다: " + World.Map.Id);
         }
 
         public string Screenshot(string name)

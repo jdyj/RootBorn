@@ -50,10 +50,16 @@ namespace Rootborn.Host
         /// <summary>월드 화면을 띄우는가(--world 또는 --slot).</summary>
         public bool WorldActive => World != null || SaveSlot != null;
 
+        /// <summary>화면 문구 언어(data/localization의 파일 이름). Unity 판은 운영체제 언어로 골랐다. 여기서는 1차 언어 ko가 기본이다.</summary>
+        public string Language = "ko";
+
+        /// <summary>UI 스킨. 기본은 Unity 판의 승인된 도시형 몰딩(2026-10-27), style2는 대체 스킨.</summary>
+        public Rendering.SkinTheme UiTheme = Rendering.SkinTheme.Urban;
+
         /// <summary>테스트가 한 프레임씩 돌린다: 고정 시간 간격, 수직 동기 끔, 창이 뒤에 있어도 쉬지 않음.</summary>
         public bool TestMode;
 
-        public string UiSheetPath => Path.Combine(RepoRoot, "Assets", "modernuserinterface-win", "16x16", "Modern_UI_Style_2.png");
+        public string UiSheetPath => Path.Combine(RepoRoot, Rendering.UiSkins.Style2Sheet);
 
         /// <param name="environment">환경 변수 읽기. 테스트가 바꿔 넣는다.</param>
         /// <param name="searchFrom">저장소를 찾아 올라가기 시작할 폴더. 기본은 실행 파일 위치.</param>
@@ -85,6 +91,12 @@ namespace Rootborn.Host
                     case "--interactions": o.InteractionsPath = value; break;
                     case "--save-root": o.SaveRoot = value; break;
                     case "--slot": o.SaveSlot = value; break;
+                    case "--lang": o.Language = value; break;
+                    case "--ui-theme":
+                        if (value == "urban") o.UiTheme = Rendering.SkinTheme.Urban;
+                        else if (value == "style2") o.UiTheme = Rendering.SkinTheme.Style2;
+                        else throw new InvalidOperationException("--ui-theme 은 urban 또는 style2: " + value);
+                        break;
                     case "--time-scale":
                         if (!float.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out o.TimeScale) || o.TimeScale < 0f)
                             throw new InvalidOperationException("--time-scale 은 0 이상의 수: " + value);

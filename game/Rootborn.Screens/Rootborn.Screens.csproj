@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 화면들과 화면 쌓기(ScreenStack), 키·상호작용 등록 표, 현지화 문구(GameText). 엔진 참조 없음:
+       화면은 UiNode 나무를 만들고 GameSession 명령만 부른다. 그림과 입력 장치는 Host가 맡는다. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <RootNamespace>Rootborn.Screens</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Rootborn.Ui/Rootborn.Ui.csproj" />
+    <ProjectReference Include="../Rootborn.Game/Rootborn.Game.csproj" />
+    <ProjectReference Include="../Rootborn.Core/Rootborn.Core.csproj" />
+  </ItemGroup>
+</Project>

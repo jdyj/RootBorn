@@ -34,6 +34,8 @@ namespace Rootborn.Host.Input
     public struct KeyFrame
     {
         public bool Up, Down, Left, Right, Tab, Enter, Escape, Screenshot, Shift;
+        /// <summary>Unity ModernUiPanelInputRouter의 패널 키: I 가방, C 상태.</summary>
+        public bool Inventory, Status;
         /// <summary>상호작용 키(Unity GatherInteractor: E, Space, 왼쪽·오른쪽 Ctrl)가 이번 프레임에 눌렸다.</summary>
         public bool Interact;
         public bool HeldUp, HeldDown, HeldLeft, HeldRight;
@@ -60,6 +62,8 @@ namespace Rootborn.Host.Input
                 Tab = Pressed(now, Keys.Tab),
                 Enter = Pressed(now, Keys.Enter),
                 Escape = Pressed(now, Keys.Escape),
+                Inventory = Pressed(now, Keys.I),
+                Status = Pressed(now, Keys.C),
                 Screenshot = Pressed(now, Keys.F12),
                 Interact = Pressed(now, Keys.E) || Pressed(now, Keys.Space) || Pressed(now, Keys.LeftControl) || Pressed(now, Keys.RightControl),
                 Shift = now.IsKeyDown(Keys.LeftShift) || now.IsKeyDown(Keys.RightShift),

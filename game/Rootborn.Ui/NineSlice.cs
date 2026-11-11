@@ -61,5 +61,25 @@ namespace Rootborn.Ui
                 }
             }
         }
+
+        /// <summary>
+        /// 늘이기 9조각(Unity Image.Type.Sliced): 모서리는 원본 크기의 scale배, 변과 가운데는 남는 자리만큼 늘인다.
+        /// 사각형이 테두리보다 작으면 테두리를 반씩 나눠 줄이고 가운데는 내지 않는다.
+        /// </summary>
+        public static void BuildStretched(PixelRect dest, NineSliceSource source, int scale, List<SlicePiece> into)
+        {
+            int left = Math.Min(source.ColW(0) * scale, dest.W / 2), right = Math.Min(source.ColW(2) * scale, dest.W - left);
+            int top = Math.Min(source.RowH(0) * scale, dest.H / 2), bottom = Math.Min(source.RowH(2) * scale, dest.H - top);
+            int[] xs = { dest.X, dest.X + left, dest.X + dest.W - right, dest.X + dest.W };
+            int[] ys = { dest.Y, dest.Y + top, dest.Y + dest.H - bottom, dest.Y + dest.H };
+            for (int row = 0; row < 3; row++)
+                for (int col = 0; col < 3; col++)
+                {
+                    int w = xs[col + 1] - xs[col], h = ys[row + 1] - ys[row];
+                    if (w <= 0 || h <= 0) continue;
+                    into.Add(new SlicePiece(new PixelRect(xs[col], ys[row], w, h),
+                        new PixelRect(source.ColX(col), source.RowY(row), source.ColW(col), source.RowH(row))));
+                }
+        }
     }
 }

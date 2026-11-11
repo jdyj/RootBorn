@@ -12,6 +12,9 @@ namespace Rootborn.Ui
         public readonly UiNode Root = new UiNode { Id = "root" };
 
         public UiNode Focused { get; private set; }
+
+        /// <summary>키보드 포커스 이동(Tab, 방향키)이 이 요소 안에서만 돈다. 비우면 Root. 화면을 겹쳐 띄울 때 맨 위 화면으로 둔다.</summary>
+        public UiNode FocusScope;
         public UiNode Hovered { get; private set; }
 
         /// <summary>포인터 클릭이나 실행 키로 요소가 실행됐다.</summary>
@@ -113,7 +116,7 @@ namespace Rootborn.Ui
         public void Navigate(UiNav nav)
         {
             _focusables.Clear();
-            Collect(Root, _focusables);
+            Collect(FocusScope ?? Root, _focusables);
             if (_focusables.Count == 0) return;
 
             int current = Focused == null ? -1 : _focusables.IndexOf(Focused);
