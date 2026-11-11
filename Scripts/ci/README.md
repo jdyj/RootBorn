@@ -40,14 +40,20 @@ bash Scripts/ci/run-all.sh --skip-host     # dotnet 테스트에서 창을 띄�
 
 ## 워크플로(`.github/workflows/ci.yml`)
 
-- `static-checks`: 자체 시험 + 검사 6개. 실패하면 막는다.
-- `dotnet-tests`: Core, DataExport, `game/tests`의 Host 테스트를 뺀 나머지(`Rootborn.Server.Tests`, `Rootborn.Simulation.Tests` 포함). 실패하면 막는다.
-  서버 테스트는 UDP를 루프백(`127.0.0.1`, 포트 0)에서만 열고 별도 프로세스(`dotnet Rootborn.Server.dll`)를 띄운다. 러너에서 문제 없었다
-  (main 43011799437: Server 34건 통과, Simulation 23건 통과·1건 건너뜀 — GitHub 기록을 읽어 확인).
-- `host-tests`: `game/tests/Rootborn.Host.Tests`만 `xvfb-run`으로(나머지는 `dotnet-tests`가 돌린다). 러너에 `fonts-nanum`을 깔고 `ROOTBORN_FONT`로 준다.
-  `continue-on-error: true`, 시간 제한 45분. 글꼴을 넣은 뒤의 실행(main 43011799437, 23분)은 160건 중 157건 통과, 2건 실패다.
-  실패는 소프트웨어 렌더링 러너에서 프레임 시간 기준을 못 맞춘 성능 시험(`OBJECTIVE_JOURNAL_PERF_200Rows_OpenAndScroll_FrameTime`, `SCREENS_003_Performance_1500CellGrid_OpenAndScroll`)이다. 이 둘을 정하기 전에는 막는 job으로 바꾸지 않는다.
-- `server-publish`: ubuntu 에서 `Tools/publish/publish.sh --server linux-x64` 뒤 `verify.sh --server linux-x64`(저장소 밖 복사본에서 듣기 → stop → 저장 → 이어서 열기).
-  **GitHub 미확인**(`gh run list`로 읽기만 했고 이 job은 아직 돈 적이 없다). 처음 통과가 확인되기 전까지 `continue-on-error: true`.
-- 새 테스트 프로젝트는 `game/tests/<이름>/<이름>.csproj`에 두면 `dotnet-tests`가 저절로 돌린다(글롭). `Tools/` 아래 테스트 프로젝트는 워크플로와 `run-all.sh`에 한 줄씩 더한다.
-- 클라이언트 배포 폴더(`Tools/publish/publish.sh`)는 CI가 만들지 않는다(Windows 와 글꼴 때문). 로컬에서 `Tools/publish/publish.sh` 뒤 `Tools/publish/verify.sh`(`Tools/publish/README.md`). 서버 배포 폴더는 위 `server-publish`가 만든다.
+GitHub 기록(`gh run view`)을 읽어 확인한 값이다(main 43022156721, 2026-11-11).
+
+| job | 하는 일 | 마지막 결과 | 시간 | 막는가 |
+|---|---|---|---|---|
+| `static-checks` | 자체 시험 + 검사 6개 | 통과 | 약 20초 | 막는다 |
+| `dotnet-tests` | Core, DataExport, `game/tests`의 Host 테스트를 뺀 나머지(Server, Simulation 포함) | 통과(Core 970, Data 256, Game 520, Screens 393, Server 40, Simulation 36 …) | 약 1.5분 | 막는다 |
+| `server-publish` | `Tools/publish/publish.sh --server linux-x64` 뒤 `verify.sh --server linux-x64` | 연속 두 번 통과(43022156721, 43027519152) | 35~50초 | 막는다 |
+| `host-tests` | `game/tests/Rootborn.Host.Tests`를 `xvfb-run` + 소프트웨어 GL로 | 171건 중 169 통과, 성능 시험 2건 실패 | 27분 | **막지 않는다**(`continue-on-error`), 시간 제한 45분 |
+
+- `dotnet-tests`는 한 프로젝트가 실패해도 나머지를 끝까지 돌리고 실패를 모아 알린다. 새 테스트 프로젝트는 `game/tests/<이름>/<이름>.csproj`에 두면 저절로 돈다(글롭). `Tools/` 아래 테스트 프로젝트는 워크플로와 `run-all.sh`에 한 줄씩 더한다.
+- 서버 테스트는 UDP를 루프백(`127.0.0.1`, 포트 0)에서만 열고 별도 프로세스를 띄운다. 러너에서 문제 없었다.
+- `host-tests`는 러너에 `fonts-nanum`을 깔고 `ROOTBORN_FONT`로 준다(깔기 전 실행은 한글 글꼴을 못 찾아 125건이 실패했다). 통과한 테스트도 시간과 함께 로그에 남기고(`verbosity=normal`) trx를 아티팩트 `host-test-results`로 올린다(14일).
+  실패 2건(`OBJECTIVE_JOURNAL_PERF_200Rows_OpenAndScroll_FrameTime`, `SCREENS_003_Performance_1500CellGrid_OpenAndScroll`)은 소프트웨어 렌더링 러너가 프레임 시간 중앙값 16.7ms 기준을 못 맞춘 것이다. 기준은 다른 세션(play-soak)이 바꾸는 중이라 이 쪽에서 고치지 않는다.
+  `continue-on-error`를 떼는 조건: (1) 위 두 시험이 러너에서 통과한다(기준이 바뀌었거나 러너에서 건너뛴다), (2) 그 뒤 main 실행에서 `host-tests`가 연속 두 번 통과한다, (3) 실행 시간이 시간 제한(45분)에 한참 못 미친다.
+- `concurrency`: 같은 PR의 낡은 실행만 취소하고, main 푸시는 취소하지 않는다(연달아 푸시해도 커밋마다 결과가 남는다).
+- Host는 원격 Linux 장치(Xvfb, 소프트웨어 GL)에서는 전체가 약 4분에 통과한다. 러너(2 코어쯤)에서는 27분이다. 느린 이유는 소프트웨어 그리기와 코어 수로 보인다. 어느 테스트가 느린지는 `verbosity=normal` 로그를 읽은 뒤에 정한다.
+- 클라이언트 배포 폴더(`Tools/publish/publish.sh`)는 CI가 만들지 않는다(Windows 와 글꼴 때문). 로컬에서 `Tools/publish/publish.sh` 뒤 `Tools/publish/verify.sh`(`Tools/publish/README.md`).

@@ -11,7 +11,9 @@ on:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # main 에 연달아 푸시해도 앞 실행을 취소하지 않는다(2026-11-11 main 43026837837 이 취소돼 그 커밋의 결과가 없었다).
+  # 같은 PR 의 낡은 실행만 취소한다.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -42,22 +44,25 @@ jobs:
         run: dotnet test Tools/Rootborn.DataExport.Tests
       # Host 테스트는 실제 창을 띄우므로 아래 별도 job에서 돌린다. 나머지 프로젝트는 창이 필요 없다.
       - name: game 테스트 (Host.Tests 제외)
+        # 한 프로젝트가 실패해도 나머지를 끝까지 돌려 실패를 한꺼번에 보이고, 실패가 하나라도 있으면 job 이 실패한다.
         run: |
-          set -euo pipefail
+          set -uo pipefail
+          failed=0
           for proj in game/tests/*/*.csproj; do
             case "$proj" in *Rootborn.Host.Tests*) continue ;; esac
-            dotnet test "$proj"
+            dotnet test "$proj" || { echo "::error::실패: $proj"; failed=1; }
           done
+          exit $failed
 
   host-tests:
     name: Host 테스트 (실제 창, xvfb)
     runs-on: ubuntu-latest
     # 막지 않는다(continue-on-error): Host 테스트는 SDL로 실제 창을 띄우고 장치 입력을 주입한다.
-    # 글꼴을 넣은 뒤의 실행(main 43011799437, 2026-11-11, GitHub 기록 읽기)은 160건 중 157건 통과, 2건 실패, 1건 건너뜀, 23분이다.
-    # 실패 2건은 소프트웨어 렌더링(LIBGL_ALWAYS_SOFTWARE) 러너에서 프레임 시간 기준을 못 맞춘 성능 시험이다:
+    # 마지막 완료 실행(main 43022156721, 2026-11-11, GitHub 기록 읽기)은 171건 중 169건 통과, 2건 실패, 27분이다.
+    # 실패 2건은 소프트웨어 렌더링(LIBGL_ALWAYS_SOFTWARE) 러너에서 프레임 시간 기준(중앙값 16.7ms)을 못 맞춘 성능 시험이다:
     # OBJECTIVE_JOURNAL_PERF_200Rows_OpenAndScroll_FrameTime, SCREENS_003_Performance_1500CellGrid_OpenAndScroll.
-    # 이 둘을 러너에서 어떻게 다룰지(기준 완화, 러너에서 건너뜀)는 Host 테스트를 맡은 쪽이 정한다. 그 전까지 이 줄을 지우지 않는다.
-    # 무한히 걸리지 않게 시간 제한을 둔다(23분 걸리는 job 이다).
+    # 기준은 Host 테스트를 맡은 세션(play-soak)이 바꾸는 중이다. 그 세션이 합쳐지고 이 job 이 통과하면 아래 continue-on-error 를 뗀다.
+    # 시간 제한: 평소 27분이라 45분으로 둔다.
     timeout-minutes: 45
     continue-on-error: true
     steps:
@@ -71,20 +76,33 @@ jobs:
           sudo apt-get install -y xvfb libsdl2-2.0-0 libopenal1 libgl1 libglu1-mesa mesa-utils libegl1 fonts-nanum
           test -f /usr/share/fonts/truetype/nanum/NanumGothic.ttf
       # 나머지 테스트 프로젝트는 dotnet-tests job이 돌리므로 여기서는 Host 테스트만 돌린다.
+      # 통과한 테스트도 시간과 함께 로그에 남긴다(verbosity=normal). 2026-11-11 실행은 18분 동안 출력이 없어 어느 테스트가 느린지 알 수 없었다.
+      # 같은 내용을 trx 로 올려 job 을 나눌 때 균형을 맞추는 데 쓴다.
       - name: Host 테스트
         env:
           LIBGL_ALWAYS_SOFTWARE: '1'
           # 러너의 글꼴 위치. 테스트가 운영체제 글꼴 찾기에 기대지 않게 직접 준다(배포용 글꼴은 사용자 결정 대기).
           ROOTBORN_FONT: /usr/share/fonts/truetype/nanum/NanumGothic.ttf
-        run: xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" dotnet test game/tests/Rootborn.Host.Tests
+        run: >
+          xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24"
+          dotnet test game/tests/Rootborn.Host.Tests
+          --logger "console;verbosity=normal"
+          --logger "trx;LogFileName=host.trx"
+          --results-directory host-test-results
+      - name: Host 테스트 결과(trx) 올리기
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: host-test-results
+          path: host-test-results/
+          if-no-files-found: ignore
+          retention-days: 14
 
   server-publish:
     name: 서버 배포 폴더 만들고 확인 (linux-x64)
     runs-on: ubuntu-latest
-    # 막지 않는다(continue-on-error): 이 job 은 GitHub 러너에서 아직 돌려 보지 못했다(2026-11-12, Windows 에서는 win-x64 로 통과).
-    # 처음 통과가 확인되면 이 줄을 지워 다른 job 처럼 실패 시 막게 한다.
+    # GitHub 러너에서 두 번 연속 통과했다(main 43022156721, 43027519152 — 각 35~50초). 그래서 다른 job 처럼 실패 시 막는다.
     # 서버는 창·그림·글꼴이 필요 없어 Host 처럼 xvfb·글꼴 설치가 없다. 듣는 주소는 루프백(시험용, 밖에 열리지 않음)이다.
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
