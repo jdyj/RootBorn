@@ -76,6 +76,27 @@ namespace Rootborn.Screens.Tests.Hud
             KnownMissingKeys.AssertOnlyKnownMissing(t.Text, t.Stack.Find(ScreenCatalog.HudTracked).TextKeys);
         }
 
+        /// <summary>메인 체인 Host 시나리오에서 드러남: 끄고 같은 슬롯으로 다시 시작하면 추적 지정이 사라졌다(화면 쪽 메모리에만 있었다).</summary>
+        [Test]
+        public void TrackedInTheJournal_IsSaved_AndTheHudShowsItAfterReadingTheSlotAgain()
+        {
+            using TestSession t = Start();
+            t.Stack.OpenHud();
+            t.Commands.Run(s => s.TalkTo("npc.first-guide"), ChangeTopics.Dialogue);
+            string key = TrackMainChainFromJournal(t).StableKey;
+            Assert.That(t.Session.ObjectiveTracking.StableKey, Is.EqualTo(key), "수첩의 추적은 게임 한 판에 저장된다");
+
+            // 같은 세이브 폴더로 새 게임 한 판과 새 화면 쌓기(끄고 다시 시작한 것과 같다).
+            using var again = new TestSession(saves: t.SavesDirectory);
+            Assert.That(again.Session.ObjectiveTracking.StableKey, Is.EqualTo(key), "다시 읽은 게임 한 판의 추적 지정");
+            again.Stack.OpenHud();
+            var hud = again.Screen<TrackedObjectiveHudScreen>(ScreenCatalog.HudTracked);
+            Assert.That(hud.IsShown, Is.True, "다시 읽어도 추적 목표 HUD가 보인다");
+            Assert.That(hud.Model.StableKey, Is.EqualTo(key));
+            again.Stack.Key(ScreenKey.Tab, false);
+            Assert.That(again.Screen<ObjectiveJournalScreen>(ScreenCatalog.ObjectiveJournal).SelectedStableKey, Is.EqualTo(key), "수첩도 추적한 줄을 고른 채 열린다");
+        }
+
         [Test]
         public void BlockingScreen_HidesTheHud_UntilItCloses()
         {

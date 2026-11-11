@@ -50,7 +50,7 @@
         { "kind": "location-visit", "id": "location.library", "at": [ 1072, 304 ], "priority": 35, "temporary": true, "reason": "임시 지점: Unity 판의 이 지점은 LDtk 마을 그림 밖 북쪽 구역에 있었다. 새 맵 전까지 북쪽 광장에 둔다" },
         { "kind": "location-activity", "id": "location.corner-store", "at": [ 1264, 304 ], "priority": 45, "temporary": true, "reason": "임시 지점: Unity 판의 이 지점은 LDtk 마을 그림 밖 북쪽 구역에 있었다. 새 맵 전까지 북쪽 광장에 둔다" },
         { "kind": "location-visit", "id": "location.corner-store", "at": [ 1264, 304 ], "priority": 35, "temporary": true, "reason": "임시 지점: Unity 판의 이 지점은 LDtk 마을 그림 밖 북쪽 구역에 있었다. 새 맵 전까지 북쪽 광장에 둔다" },
-        { "kind": "part-time-work", "id": "work.shift.corner-store", "at": [ 1456, 304 ], "priority": 45, "temporary": true, "reason": "임시 지점: Unity 판 가게 알바 자리(PartTimeWorkInteractor, 우선순위 45)는 LDtk 마을 그림 밖 북쪽 구역에 있었다. 새 맵 전까지 북쪽 광장에 둔다. 이 종류를 여는 화면은 아직 없다" }
+        { "kind": "part-time-work", "id": "work.shift.corner-store", "at": [ 1456, 304 ], "priority": 45, "temporary": true, "reason": "임시 지점: Unity 판 가게 알바 자리(PartTimeWorkInteractor, 우선순위 45)는 LDtk 마을 그림 밖 북쪽 구역에 있었다. 새 맵 전까지 북쪽 광장에 둔다" }
       ]
     }
   }

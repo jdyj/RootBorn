@@ -24,10 +24,13 @@ namespace Rootborn.Screens.Tests
         });
 
         private readonly string _saves;
+        private readonly bool _ownsSaves;
 
-        public TestSession(string language = "ko", Action<ScreenRegistry> extra = null)
+        /// <param name="saves">이어 할 세이브 폴더(다른 TestSession의 SavesDirectory). 주면 끝날 때 지우지 않는다.</param>
+        public TestSession(string language = "ko", Action<ScreenRegistry> extra = null, string saves = null)
         {
-            _saves = Path.Combine(Path.GetTempPath(), "rootborn-screens-" + Guid.NewGuid().ToString("N"));
+            _ownsSaves = saves == null;
+            _saves = saves ?? Path.Combine(Path.GetTempPath(), "rootborn-screens-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_saves);
             Session = GameSession.Start(_definitions.Value, GameStartSettings.FromRegistry(TestData.DataDirectory), new FileSaveStore(_saves), "slot-test", null);
             Commands = new SessionCommands(Session);
@@ -40,6 +43,7 @@ namespace Rootborn.Screens.Tests
         }
 
         public GameSession Session { get; }
+        public string SavesDirectory => _saves;
         public SessionCommands Commands { get; }
         public GameText Text { get; }
         public ScreenServices Services { get; }
@@ -73,6 +77,7 @@ namespace Rootborn.Screens.Tests
 
         public void Dispose()
         {
+            if (!_ownsSaves) return;
             try { Directory.Delete(_saves, true); } catch (IOException) { }
         }
     }

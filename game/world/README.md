@@ -115,14 +115,14 @@ LDtk 엔티티가 아니라 **`interactions.json`**에 맵 id별로 적는다(LD
   자리가 모자라면 그 NPC는 그 맵에 서지 않는다.
 - `kind`는 그대로 이벤트로 나가는 문자열이고, 화면 등록 표(`Rootborn.Screens/ScreenCatalog.cs`)가 종류로 화면을 연다. 지금 종류:
 
-| kind | 무엇 | 우선순위(Unity 판) | 지금 여는 화면(2026-11-12) |
+| kind | 무엇 | 우선순위(Unity 판) | 지금 여는 화면(2026-11-11 메인 체인 Host 시나리오로 확인) |
 |---|---|---|---|
 | `npc` | NPC(자동, `npcAnchors`에서) | 30 | 대화 |
-| `daily-plan-board` | 하루 계획판 | 80 | 아직 없음 |
-| `student-day-end` | 하루 마감 | 80 | 아직 없음 |
-| `location-visit` | 장소 방문 | 35 | 아직 없음(안내 글자만) |
-| `location-activity` | 장소 활동 | 45 | 그 장소의 하루 이벤트 |
-| `part-time-work` | 알바 자리(`id`는 data의 알바 id) | 45 | 아직 없음 |
+| `daily-plan-board` | 하루 계획판 | 80 | 일과 |
+| `student-day-end` | 하루 마감 | 80 | 하루 결과(다음 날) |
+| `location-visit` | 장소 방문 | 35 | 없음(같은 자리의 `location-activity`가 우선순위로 먼저 대상이 된다) |
+| `location-activity` | 장소 활동 | 45 | 장소(열 때 방문 기록), 닫으면 그 장소의 하루 이벤트 |
+| `part-time-work` | 알바 자리(`id`는 data의 알바 id) | 45 | 미니게임(알바를 예약하면 열린다) |
 | `door` | 자동문(자동, 목적지 있는 문) | 110 | 없음 — 걸어 들어가야 열린다 |
 
   탐색 지점 종류는 아직 없다. 새 종류는 화면 쪽에 등록하면 되고, 이 파일에는 문자열만 적는다.
@@ -163,7 +163,7 @@ LDtk 엔티티가 아니라 **`interactions.json`**에 맵 id별로 적는다(LD
 | maps.json | Town | 도착 지점 `town-school-entry` (1168, 144) | 학교 앞 도착 지점이 북쪽 구역에 있었다. 문 `north` 아래 북쪽 광장 |
 | maps.json | School | 이동 구역 `town`(아래 가장자리 한 줄) → Town/town-school-entry | School_1에 문 엔티티가 없고 학교 출구도 LDtk에 없다 |
 | interactions.json | Town | `location-activity`·`location-visit` × `location.restaurant`(1072,176), `location.medical-clinic`(1200,176), `location.design-studio`(1328,176), `location.training-ground`(1456,176), `location.library`(1072,304), `location.corner-store`(1264,304) — 12개 | 이 지점들이 북쪽 구역에 있었다 |
-| interactions.json | Town | `part-time-work` / `work.shift.corner-store` (1456, 304) | 가게 알바 자리가 북쪽 구역에 있었다. 여는 화면은 아직 없다 |
+| interactions.json | Town | `part-time-work` / `work.shift.corner-store` (1456, 304) | 가게 알바 자리가 북쪽 구역에 있었다 |
 
 ## 9. 새 맵을 넣은 뒤 돌려 볼 것
 

@@ -162,30 +162,33 @@ namespace Rootborn.Screens.Objectives
 
     /// <summary>
     /// 수첩에서 "추적"한 항목 하나(Unity ObjectiveJournalTrackingStore). 추적 목표 HUD는 이것만 보인다.
-    /// 세이브 파일(objective-journal-tracking.json)의 모양과 이름이 Core에 없어 지금은 메모리에만 둔다(보고서 "필요한 변경").
-    /// 바뀌면 화면 쌓기에 Topic 알림을 낸다.
+    /// 게임 한 판이 있으면 GameSession.ObjectiveTracking에 두고 추적할 때 저장한다(TrackObjective) — 다시 시작해도 남는다.
+    /// 게임 한 판이 없으면(견본 등) 메모리에만 둔다. 바뀌면 화면 쌓기에 Topic 알림을 낸다.
     /// </summary>
     public sealed class ObjectiveJournalTracking
     {
         public const string Topic = "objective-tracking";
         private static readonly ConditionalWeakTable<ScreenServices, ObjectiveJournalTracking> _bySession = new ConditionalWeakTable<ScreenServices, ObjectiveJournalTracking>();
         private readonly ScreenServices _services;
+        private string _categoryId = string.Empty, _stableKey = string.Empty;
 
         private ObjectiveJournalTracking(ScreenServices services) { _services = services; }
 
         public static ObjectiveJournalTracking For(ScreenServices services) => _bySession.GetValue(services, s => new ObjectiveJournalTracking(s));
 
-        public string CategoryId { get; private set; } = string.Empty;
-        public string StableKey { get; private set; } = string.Empty;
+        public string CategoryId => _services.Session != null ? _services.Session.ObjectiveTracking.CategoryId : _categoryId;
+        public string StableKey => _services.Session != null ? _services.Session.ObjectiveTracking.StableKey : _stableKey;
         public bool HasTracked => !string.IsNullOrEmpty(StableKey);
 
         public void Track(string categoryId, string stableKey)
         {
             if (string.IsNullOrEmpty(stableKey)) return;
             bool changed = stableKey != StableKey || (categoryId ?? string.Empty) != CategoryId;
-            CategoryId = categoryId ?? string.Empty;
-            StableKey = stableKey;
-            if (changed) _services.Screens?.NotifyChanged(Topic);
+            if (!changed) return;
+            if (_services.Commands != null) { _services.Commands.Run(s => s.TrackObjective(categoryId, stableKey), Topic); return; } // Run이 화면 쌓기에 알린다
+            _categoryId = categoryId ?? string.Empty;
+            _stableKey = stableKey;
+            _services.Screens?.NotifyChanged(Topic);
         }
     }
 }
