@@ -285,6 +285,25 @@ namespace Rootborn.Core.Tests
         }
 
         [Test]
+        public void DefaultTimes_TheDayStartsAtSeven_ThenTheUsualPartTimes()
+        {
+            // 사용자 결정 2026-11-12: 하루는 07:00에 시작한다. 첫 때만 그 시각이고 나머지 때와 밤은 그대로다.
+            var weekday = new RoomClock(new LifeCalendar());
+            weekday.Join("a");
+            Assert.That(weekday.RepresentativeMinutes, Is.EqualTo(7 * 60), "평일 첫 때");
+            weekday.Spend("a", 1);
+            Assert.That(weekday.RepresentativeMinutes, Is.EqualTo(18 * 60 + 30), "평일 둘째 때(저녁)");
+            weekday.Spend("a", 1);
+            Assert.That(weekday.RepresentativeMinutes, Is.EqualTo(22 * 60), "때를 다 쓰면 밤");
+
+            var weekend = new RoomClock(new LifeCalendar(), day: 6);
+            weekend.Join("a");
+            Assert.That(weekend.RepresentativeMinutes, Is.EqualTo(7 * 60), "주말 첫 때");
+            weekend.Spend("a", 1);
+            Assert.That(weekend.RepresentativeMinutes, Is.EqualTo(14 * 60), "주말 둘째 때(오후)");
+        }
+
+        [Test]
         public void PartOfDayTimes_MoreParts_ThanTimes_ReuseTheFirstTime()
         {
             var times = new PartOfDayTimes(new[] { 600, 900 }, 1300);

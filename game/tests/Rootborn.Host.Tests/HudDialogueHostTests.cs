@@ -60,7 +60,7 @@ namespace Rootborn.Host.Tests
             // HUD가 처음부터 떠 있다.
             Assert.That(player.Screens.IsOpen(ScreenCatalog.HudClock) && player.Screens.IsOpen(ScreenCatalog.HudVitals)
                 && player.Screens.IsOpen(ScreenCatalog.HudButtons) && player.Screens.IsOpen(ScreenCatalog.HudTracked), Is.True);
-            Assert.That(((UiLabel)player.Node(ClockHudScreen.LabelId)).Text, Is.EqualTo("1일  14:00 · 용돈 0"));
+            Assert.That(((UiLabel)player.Node(ClockHudScreen.LabelId)).Text, Is.EqualTo("1일  07:00 · 용돈 0"));
             Assert.That(player.Node("hud.button.placement").Visible, Is.True, "집에서는 가구 배치 켬/끔이 보인다");
             Assert.That(Screen<TrackedObjectiveHudScreen>(player, ScreenCatalog.HudTracked).IsShown, Is.False, "추적 중인 것이 없다");
             player.Screenshot("hud-01-new-slot-house");
@@ -165,7 +165,7 @@ namespace Rootborn.Host.Tests
             int minutes = player.Game.Session.Student.TimeMinutes;
             player.PressButton(DailyEventScreen.ChoiceId(0));
             Assert.That(player.Game.Session.Student.TimeMinutes, Is.GreaterThan(minutes), "선택지가 적용됐다");
-            Assert.That(((UiLabel)player.Node(ClockHudScreen.LabelId)).Text, Is.Not.EqualTo("1일  14:00 · 용돈 0"), "시계 HUD가 바뀐 시각을 보인다");
+            Assert.That(((UiLabel)player.Node(ClockHudScreen.LabelId)).Text, Is.Not.EqualTo("1일  07:00 · 용돈 0"), "시계 HUD가 바뀐 시각을 보인다");
             player.Frames(2);
             player.ScreenshotScreen(ScreenCatalog.DailyEvent, "daily-event-02-chosen");
 

@@ -12,8 +12,10 @@ namespace Rootborn.Core.Time
     {
         private readonly int[] _dayPartMinutes;
 
-        public PartOfDayTimes(int[] dayPartMinutes, int dayOverMinutes)
+        /// <param name="dayStartMinutes">하루의 첫 때에 보일 시각(분). 음수면 따로 두지 않고 그 때의 대표 시각을 쓴다.</param>
+        public PartOfDayTimes(int[] dayPartMinutes, int dayOverMinutes, int dayStartMinutes = -1)
         {
+            DayStartMinutes = dayStartMinutes < 0 ? -1 : Clamp(dayStartMinutes);
             _dayPartMinutes = dayPartMinutes == null || dayPartMinutes.Length == 0 ? new[] { 0 } : (int[])dayPartMinutes.Clone();
             for (int i = 0; i < _dayPartMinutes.Length; i++) _dayPartMinutes[i] = Clamp(_dayPartMinutes[i]);
             DayOverMinutes = Clamp(dayOverMinutes);
@@ -25,7 +27,14 @@ namespace Rootborn.Core.Time
         /// </summary>
         public static PartOfDayTimes Default { get; } = new PartOfDayTimes(
             new[] { Minutes(WorldPartOfDay.Morning), Minutes(WorldPartOfDay.Afternoon), Minutes(WorldPartOfDay.Evening) },
-            Minutes(WorldPartOfDay.Night));
+            Minutes(WorldPartOfDay.Night),
+            DefaultDayStartMinutes);
+
+        /// <summary>하루는 07:00에 시작한다(사용자 결정 2026-11-12). 달력 데이터가 값을 주면 그것으로 바꾼다.</summary>
+        public const int DefaultDayStartMinutes = 7 * 60;
+
+        /// <summary>하루의 첫 때에 보일 시각. -1이면 없다.</summary>
+        public int DayStartMinutes { get; }
 
         public int DayOverMinutes { get; }
 
@@ -33,6 +42,7 @@ namespace Rootborn.Core.Time
         public int MinutesFor(int partIndex, int partsInDay)
         {
             if (partsInDay <= 0 || partIndex >= partsInDay) return DayOverMinutes;
+            if (partIndex <= 0 && DayStartMinutes >= 0) return DayStartMinutes;
             int index = Math.Max(0, partIndex) + _dayPartMinutes.Length - partsInDay;
             return _dayPartMinutes[index < 0 ? 0 : index];
         }
