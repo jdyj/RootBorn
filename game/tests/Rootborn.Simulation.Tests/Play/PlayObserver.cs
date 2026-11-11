@@ -33,7 +33,7 @@ namespace Rootborn.Simulation
         private readonly PlayAtlas _atlas;
         private readonly HashSet<string> _seenKeys = new HashSet<string>(StringComparer.Ordinal);
         private ChallengeSession _remembered;
-        private int[] _rememberedSequence;
+        private int _challenge;
 
         public PlayObserver(PlayAtlas atlas)
         {
@@ -57,7 +57,7 @@ namespace Rootborn.Simulation
                 ReadTracked(session, view, body);
             }
             if (body.InWorld) view.MapId = body.Walk.Map.Id;
-            ReadMinigame(stack, view);
+            ReadMinigame(body, stack, view);
 
             _seenKeys.Clear();
             AddScreenActions(body, stack, view);
@@ -273,23 +273,49 @@ namespace Rootborn.Simulation
             foreach (string p in places) view.TrackedTargets.Add(p);
         }
 
-        private void ReadMinigame(ScreenStack stack, PlayView view)
+        /// <summary>
+        /// 미니게임 화면에서 보이는 것을 읽는다: 제목이 말하는 도전 종류, 끝났는지(결과 줄), 안내 글, 진행 줄, 도전 자리의 요소(사각형·글자·색).
+        /// 판의 정답(순서, 답, 꼭 덮을 칸)은 읽지 않는다.
+        /// </summary>
+        private void ReadMinigame(IPlayBody body, ScreenStack stack, PlayView view)
         {
-            if (!(stack.Find(ScreenCatalog.Minigame) is MinigameScreen screen) || !screen.IsOpen || screen.Session == null || screen.Session.IsComplete)
+            if (!(stack.Find(ScreenCatalog.Minigame) is MinigameScreen screen) || !screen.IsOpen || screen.Session == null || screen.Session.Current == null)
             {
-                _remembered = null; _rememberedSequence = null;
+                _remembered = null;
                 return;
             }
             ChallengeSession current = screen.Session.Current;
-            if (current == null) return;
-            if (current != _remembered)
+            if (current != _remembered) { _remembered = current; _challenge++; }
+            var sight = new MinigameSight
             {
-                _remembered = current;
-                _rememberedSequence = null;
+                Mechanic = current.Mechanic,
+                Challenge = _challenge,
+                Complete = screen.Session.IsComplete,
+                Frame = body.Frames,
+                Text = body.Text,
+            };
+            Collect(screen.Root, sight, false);
+            view.Minigame = sight;
+        }
+
+        private static void Collect(UiNode node, MinigameSight sight, bool inBody)
+        {
+            if (node.Id == MinigameScreen.FeedbackId && node is UiTextBlock feedback) sight.Feedback = feedback.Text ?? string.Empty;
+            else if (node.Id == MinigameScreen.StatusId && node is UiLabel status) sight.Status = status.Text ?? string.Empty;
+            else if (inBody && node.Id != null)
+            {
+                var e = new SightElement { Id = node.Id, Rect = node.Rect, Visible = node.Visible, Enabled = node.IsActive };
+                switch (node)
+                {
+                    case UiButton b: e.Text = b.Text; break;
+                    case MinigameCell c: e.Text = c.Text; e.Color = c.Color; break;
+                    case UiBox x: e.Color = x.Color; break;
+                    case UiLabel l: e.Text = l.Text; break;
+                }
+                sight.Elements.Add(e);
             }
-            // 화면에 미리 보기가 떠 있는 동안 본 순서를 외운다(사람이 보는 미리 보기 문구와 같은 값).
-            if (current.PreviewVisible) _rememberedSequence = current.PreviewSequence;
-            view.RememberedSequence = _rememberedSequence;
+            bool body = inBody || node.Id == MinigameScreen.BodyId;
+            for (int i = 0; i < node.Children.Count; i++) Collect(node.Children[i], sight, body);
         }
     }
 

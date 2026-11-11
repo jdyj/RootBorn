@@ -6,11 +6,10 @@ namespace Rootborn.Simulation
     public static class PlayLimits
     {
         /// <summary>
-        /// 가만히 선 프레임 한 번에 새로 잡아도 되는 바이트. 지금 게임 코드가 매 프레임 약 100바이트를 잡는다(알려진 결함 SIM-001:
-        /// ScreenStack.Tick 64, 가구 방에서 ScreenStack.EnterMap 32). 그보다 크게 늘면(목록을 매 프레임 다시 만드는 식) 실패한다.
-        /// SIM-001이 고쳐지면 이 값을 줄인다.
+        /// 가만히 선 프레임 한 번에 새로 잡아도 되는 바이트. 화면 쌓기(ScreenStack.Tick·EnterMap)와 창 없는 몸의 월드 갱신은 0이다
+        /// (SIM-001을 고친 뒤). 화면이 매 프레임 무언가를 만들기 시작하면 실패한다(coding-standards "성능": 매 프레임 새 객체 금지).
         /// </summary>
-        public const double IdleFrameBytes = 256;
+        public const double IdleFrameBytes = 0;
     }
 
     /// <summary>프레임 비용을 잴 수 있는 몸(창 없는 몸).</summary>

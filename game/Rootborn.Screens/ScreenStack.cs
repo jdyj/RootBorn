@@ -33,6 +33,8 @@ namespace Rootborn.Screens
         private readonly UiNode _modalBlocker;
         private readonly List<GameScreen> _open = new List<GameScreen>(8);
         private readonly List<GameScreen> _snapshot = new List<GameScreen>(8);
+        // Tick 전용 사본: 화면의 OnTick이 다른 화면을 열고 닫으면(그 안에서 Snapshot을 다시 쓴다) 도는 목록이 바뀌지 않게 따로 둔다. 매 프레임 새 배열을 만들지 않는다.
+        private readonly List<GameScreen> _tickSnapshot = new List<GameScreen>(8);
         private float _width = 1920, _height = 1080;
 
         public ScreenStack(ScreenRegistry registry, ScreenServices services)
@@ -268,8 +270,11 @@ namespace Rootborn.Screens
         {
             if (seconds <= 0f || float.IsNaN(seconds) || float.IsInfinity(seconds)) return;
             bool relayout = false;
-            foreach (GameScreen screen in Snapshot().ToArray())
-                if (screen.IsOpen && screen.OnTick(seconds)) relayout = true;
+            _tickSnapshot.Clear();
+            _tickSnapshot.AddRange(_open);
+            for (int i = 0; i < _tickSnapshot.Count; i++)
+                if (_tickSnapshot[i].IsOpen && _tickSnapshot[i].OnTick(seconds)) relayout = true;
+            _tickSnapshot.Clear();
             if (relayout) LayoutTree();
         }
 
@@ -398,14 +403,24 @@ namespace Rootborn.Screens
         private bool SameFeatures(IReadOnlyCollection<string> features)
         {
             int count = 0;
-            if (features != null)
+            if (features is IReadOnlyList<string> list)
+            {
+                // Host가 매 프레임 같은 배열로 부른다: 열거자를 만들지 않게 번호로 돈다.
+                for (int i = 0; i < list.Count; i++)
+                    if (!SameFeature(list[i], ref count)) return false;
+            }
+            else if (features != null)
                 foreach (string feature in features)
-                {
-                    if (string.IsNullOrEmpty(feature)) continue;
-                    if (!_mapFeatures.Contains(feature)) return false;
-                    count++;
-                }
+                    if (!SameFeature(feature, ref count)) return false;
             return count == _mapFeatures.Count;
+        }
+
+        private bool SameFeature(string feature, ref int count)
+        {
+            if (string.IsNullOrEmpty(feature)) return true;
+            if (!_mapFeatures.Contains(feature)) return false;
+            count++;
+            return true;
         }
 
         /// <summary>앞의 상호작용 대상(없으면 null). 바뀐 것이 있을 때만 TargetChanged를 낸다.</summary>

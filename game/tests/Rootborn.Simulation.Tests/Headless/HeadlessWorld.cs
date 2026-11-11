@@ -60,6 +60,15 @@ namespace Rootborn.Simulation.Headless
             int day = _day();
             string slot = LocationStateTimeSlots.FromMinutes((int)(_hour() * 60f));
             if (map == _placedMap && slot == _placedSlot && day == _placedDay) { Interactions.Update(Session.Walker.X, Session.Walker.Y); return; }
+            Place(map, day, slot);
+        }
+
+        /// <summary>
+        /// 맵·날·시간대가 바뀌었을 때만. 따로 둔 까닭: 아래 지역 함수가 day·slot을 잡으면 그 메서드에 들어올 때마다 잡는 객체가 생긴다
+        /// (Host WorldScreen.RefreshInteractions가 같은 모양으로 프레임마다 약 40바이트를 잡는다 — 보고함).
+        /// </summary>
+        private void Place(string map, int day, string slot)
+        {
             _placedMap = map; _placedSlot = slot; _placedDay = day;
             MapInteractions here = HereData;
             string LocationOf(string npcId) => _schedules.TryGetByNpcId(npcId, out NpcSchedule s) ? _access.ResolveLocationId(s.Id, day, slot, null) : string.Empty;

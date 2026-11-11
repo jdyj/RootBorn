@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Rootborn.Screens;
 
 namespace Rootborn.Simulation
@@ -72,15 +73,44 @@ namespace Rootborn.Simulation
         public readonly HashSet<string> TrackedKinds = new HashSet<string>(StringComparer.Ordinal);
         /// <summary>추적 중인 단계의 목표를 다 채웠다(단계가 넘어가려면 다른 일 — 예: 하루 마감 — 이 필요하다).</summary>
         public bool TrackedObjectivesDone;
-        /// <summary>미니게임이 미리 보여 준 순서(사람이 보고 외우는 것). 없으면 null.</summary>
-        public int[] RememberedSequence;
+        /// <summary>미니게임 화면에서 보이는 것(떠 있지 않으면 null).</summary>
+        public MinigameSight Minigame;
         /// <summary>오늘 이 날이 몇 걸음째인가(달리는 쪽이 센다).</summary>
         public int StepsToday;
 
+        public const string WaitPrefix = "wait:", PointPrefix = "point:";
+
+        /// <summary>
+        /// 이름으로 지금 할 수 있는 일을 찾는다. 관찰이 내놓은 것 외에 두 모양을 만들어 준다(기록·재생이 같은 일을 다시 고르게):
+        /// "wait:N"(기다리기가 있을 때 N프레임), "point:화면/요소>표시"(그 요소를 누를 수 있을 때, 그 위에 보이는 표시 — 예: 움직이는 과녁 — 의 가운데).
+        /// 표시의 자리는 이름에 넣지 않는다: 같은 판을 다시 하면 그때 보이는 자리를 누른다.
+        /// </summary>
         public PlayAction Find(string key)
         {
             for (int i = 0; i < Actions.Count; i++) if (Actions[i].Key == key) return Actions[i];
+            if (key == null) return null;
+            if (key.StartsWith(WaitPrefix, StringComparison.Ordinal))
+            {
+                PlayAction wait = Find("wait");
+                if (wait == null || !int.TryParse(key.Substring(WaitPrefix.Length), NumberStyles.Integer, CultureInfo.InvariantCulture, out int frames) || frames < 1) return null;
+                return new PlayAction { Kind = PlayActionKind.Wait, Key = key, Category = "wait", Frames = frames };
+            }
+            if (key.StartsWith(PointPrefix, StringComparison.Ordinal))
+            {
+                int at = key.LastIndexOf('>');
+                if (at < 0 || Minigame == null) return null;
+                PlayAction on = Find("button:" + key.Substring(PointPrefix.Length, at - PointPrefix.Length));
+                SightElement mark = Minigame.Get(key.Substring(at + 1));
+                if (on == null || mark == null || !mark.Visible) return null;
+                return new PlayAction { Kind = PlayActionKind.Click, Key = key, Category = "point", Screen = on.Screen, Element = on.Element, X = mark.Rect.CenterX, Y = mark.Rect.CenterY };
+            }
             return null;
         }
+
+        /// <summary>N프레임 기다리기(미니게임처럼 기다리기가 있을 때만).</summary>
+        public PlayAction WaitFrames(int frames) => Find(WaitPrefix + Math.Max(1, frames).ToString(CultureInfo.InvariantCulture));
+
+        /// <summary>누를 수 있는 요소 위에 보이는 표시(움직이는 과녁처럼 요소 가운데가 아닌 곳)를 누른다.</summary>
+        public PlayAction Point(string screen, string element, string mark) => Find(PointPrefix + screen + "/" + element + ">" + mark);
     }
 }

@@ -119,10 +119,12 @@ namespace Rootborn.Simulation
 
     /// <summary>
     /// 정해 준 상호작용 종류를 먼저: 그 종류의 지점으로 걸어가고, 그 지점이 연 화면에서는 줄·카드(활동)를 고른다. 없으면 안 해 본 것.
+    /// 미니게임은 메인 체인 정책처럼 풀이로 푼다.
     /// </summary>
     public sealed class PreferKindsPolicy : IPlayPolicy
     {
         private readonly HashSet<string> _kinds;
+        private readonly MinigamePlayer _minigame = new MinigamePlayer();
 
         public PreferKindsPolicy(string name, IEnumerable<string> kinds)
         {
@@ -132,7 +134,7 @@ namespace Rootborn.Simulation
 
         public string Name { get; }
 
-        public PlayAction Choose(PlayView view, PlayMemory memory, Random random) => Pick.Best(view.Actions, a =>
+        public PlayAction Choose(PlayView view, PlayMemory memory, Random random) => _minigame.Choose(view, random) ?? Pick.Best(view.Actions, a =>
         {
             double novelty = -Math.Min(memory.Tried(a.Key), 20) * 0.5;
             if (a.Category == "interaction" && _kinds.Contains(a.InteractionKind)) return 10 + novelty;
@@ -174,13 +176,12 @@ namespace Rootborn.Simulation
     /// <summary>
     /// 메인 체인 우선: 수첩에서 목표를 추적하고(없으면 Tab → 퀘스트 분류 → 첫 줄 → 추적), 추적 목표가 가리키는 것(NPC, 장소, 활동 줄, 일터,
     /// 가구)을 찾아간다. 다른 맵에 있으면 문을 따라간다(지도의 문 연결). 목표를 다 채웠는데 단계가 그대로면 하루를 마감한다.
-    /// 미니게임은 미리 보기에서 외운 순서대로 누른다. 대본은 없다 — 못 가면 어디서 막히는지가 결과다.
+    /// 미니게임은 도전 종류의 풀이(ChallengeSolvers)로 화면에 보이는 것만 보고 푼다. 대본은 없다 — 못 가면 어디서 막히는지가 결과다.
     /// </summary>
     public sealed class MainChainPolicy : IPlayPolicy
     {
         private readonly PlayAtlas _atlas;
-        private int _answered;
-        private int[] _answering;
+        private readonly MinigamePlayer _minigame = new MinigamePlayer();
 
         public MainChainPolicy(PlayAtlas atlas) { _atlas = atlas; }
 
@@ -190,17 +191,18 @@ namespace Rootborn.Simulation
         {
             PlayAtlas atlas = _atlas;
             PlayAction a;
-            if ((a = Minigame(view)) != null) return a;
+            if ((a = _minigame.Choose(view, random)) != null) return a;
             if (!view.HasTracked && view.InWorld && (a = TrackSomething(view, memory)) != null) return a;
             if (view.HasTracked && view.TrackedObjectivesDone && (a = DayEndRoutine.Choose(view, atlas)) != null) return a;
 
-            // 추적 목표가 가리키는 것: 같은 단계에서 두 번까지만(해도 목표가 안 오르면 다른 것을 해 본다).
+            // 추적 목표가 가리키는 것: 같은 단계에서 두 번까지만(해도 목표가 안 오르면 다른 것을 해 본다). 같은 종류의 지점이 여럿이면
+            // 그 단계에서 아직 안 해 본 곳을 먼저(알바 지점 9곳 중 하나가 실패하면 다음 날은 다른 곳).
             a = Pick.Best(view.Actions, x =>
             {
                 bool target = x.Subject != null && view.TrackedTargets.Contains(x.Subject) || x.Category == "cell" || ObjectiveHints.Matches(view, x);
                 if (!target) return double.NegativeInfinity;
                 if (memory.TriedThisStep(x.Key) >= 2) return double.NegativeInfinity;
-                return x.Category == "cell" ? 3 : x.Category == "interaction" ? 2 : 1;
+                return (x.Category == "cell" ? 3 : x.Category == "interaction" ? 2 : 1) - 0.5 * memory.TriedThisStep(x.Key);
             }, random);
             if (a != null) return a;
 
@@ -236,21 +238,6 @@ namespace Rootborn.Simulation
                 PlayAction a = string.IsNullOrEmpty(door) ? null : view.Find("door:" + door);
                 if (a != null) yield return a;
             }
-        }
-
-        private PlayAction Minigame(PlayView view)
-        {
-            if (!view.OpenScreens.Contains(ScreenCatalog.Minigame)) { _answering = null; return null; }
-            int[] seq = view.RememberedSequence;
-            if (seq == null) return view.Find("wait");
-            if (!ReferenceEquals(seq, _answering)) { _answering = seq; _answered = 0; }
-            if (_answered < seq.Length)
-            {
-                PlayAction choice = view.Find("button:" + ScreenCatalog.Minigame + "/" + Rootborn.Screens.Minigames.SymbolChoiceView.ChoiceId(seq[_answered]));
-                if (choice != null) { _answered++; return choice; }
-                return view.Find("wait"); // 미리 보기 중에는 단추가 꺼져 있다
-            }
-            return view.Find("wait");
         }
 
         private int _journalRow, _exploreUntil = -1, _steps;

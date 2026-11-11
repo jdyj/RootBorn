@@ -327,7 +327,9 @@ namespace Rootborn.Host.Tests
             if (FollowPath(Near, "문 " + target + "까지"))
             {
                 Walker w = World.Walker;
-                float ddx = door.Area.CenterX - w.X, ddy = door.Area.CenterY - w.Y;
+                // 문 사각형에서 가장 가까운 점 쪽으로 누른다(가운데 쪽이면 맵 가장자리를 따라 긴 문의 끝에서 옆으로만 걷는다 — SIM-002).
+                float ddx = Math.Max(door.Area.X, Math.Min(w.X, door.Area.X + door.Area.W)) - w.X, ddy = Math.Max(door.Area.Y, Math.Min(w.Y, door.Area.Y + door.Area.H)) - w.Y;
+                if (Math.Abs(ddx) < 0.001f && Math.Abs(ddy) < 0.001f) { ddx = door.Area.CenterX - w.X; ddy = door.Area.CenterY - w.Y; }
                 int dx = Math.Abs(ddx) > Math.Abs(ddy) ? Math.Sign(ddx) : 0, dy = dx == 0 ? Math.Sign(ddy) : 0;
                 TestKey key = KeyFor(dx, dy);
                 KeyDown(key);

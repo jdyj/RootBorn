@@ -81,14 +81,14 @@ namespace Rootborn.Simulation.Tests
         }
 
         [Test]
-        public void IdleFrame_DoesNotAllocateMuch()
+        public void IdleFrame_DoesNotAllocate()
         {
             var (body, _) = NewGame();
             using (body)
             {
                 double bytes = body.AllocatedBytesPerIdleFrame(600);
                 TestContext.WriteLine("가만히 선 프레임 한 번에 새로 잡는 바이트: " + bytes.ToString("0.0"));
-                Assert.That(bytes, Is.LessThan(PlayLimits.IdleFrameBytes), "매 프레임 쓰레기(coding-standards 성능)");
+                Assert.That(bytes, Is.LessThanOrEqualTo(PlayLimits.IdleFrameBytes), "매 프레임 쓰레기(coding-standards 성능)");
             }
         }
 
