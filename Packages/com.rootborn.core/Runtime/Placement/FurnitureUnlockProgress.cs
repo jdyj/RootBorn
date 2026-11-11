@@ -104,10 +104,24 @@ namespace Rootborn.Core.Placement
             foreach (var definition in catalog)
             {
                 if (definition == null) continue;
-                if (definition.UnlockToken.Length == 0 || (unlocks != null && unlocks.IsUnlocked(definition.UnlockToken))) result.Add(definition);
+                if (IsAvailable(definition, unlocks)) result.Add(definition);
             }
 
             result.Sort(Compare);
+            return result;
+        }
+
+        /// <summary>목록에 보이는(놓을 수 있는) 가구인가: 해금이 필요 없거나 해금했다.</summary>
+        public static bool IsAvailable(FurnitureDefinition definition, FurnitureUnlockProgress unlocks)
+            => definition != null && (definition.UnlockToken.Length == 0 || (unlocks != null && unlocks.IsUnlocked(definition.UnlockToken)));
+
+        /// <summary>그 장소에서 파는 가구(가게 화면의 살 목록). 목록 순서 그대로다.</summary>
+        public static List<FurnitureDefinition> ForSaleAt(IEnumerable<FurnitureDefinition> catalog, string locationId)
+        {
+            var result = new List<FurnitureDefinition>();
+            if (catalog == null || string.IsNullOrEmpty(locationId)) return result;
+            foreach (var definition in catalog)
+                if (definition != null && definition.IsForSale && string.Equals(definition.PurchaseLocationId, locationId, StringComparison.Ordinal)) result.Add(definition);
             return result;
         }
 

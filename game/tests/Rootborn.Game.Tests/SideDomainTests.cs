@@ -90,5 +90,20 @@ namespace Rootborn.Game.Tests
                 Is.EqualTo(LifeActivityResultKind.DuplicateRequest));
             Assert.That(again.Student.GetTraitValue("trait.empathy"), Is.EqualTo(1));
         }
+    
+        [Test]
+        public void DailyEvent_ProgressIsSaved_SoTheSameEventStaysAnsweredAfterReading()
+        {
+            using var saves = new TempSaves();
+            var game = TestWorld.Start(saves.Store);
+            game.ChooseDailyEvent("daily-event.square-friend-request", "daily-event-choice.square-help-now", "event:square:1", "location.town-square");
+            var expected = game.AvailableDailyEvents("location.town-square").Select(e => e.Id).ToArray();
+            Assert.That(expected, Does.Not.Contain("daily-event.square-friend-request"), "고른 이벤트는 오늘 다시 나오지 않는다");
+
+            var again = TestWorld.Start(saves.Store);
+            Assert.That(again.DailyEvents.GetRecord("daily-event.square-friend-request").SelectedChoiceId, Is.EqualTo("daily-event-choice.square-help-now"));
+            Assert.That(again.AvailableDailyEvents("location.town-square").Select(e => e.Id), Is.EqualTo(expected));
+            Assert.That(saves.Store.TryRead<DailyEventProgressSaveData>(TestWorld.Slot, Rootborn.Core.Save.SaveFileNames.DailyEvent(TestWorld.Player), out _), Is.True);
+        }
     }
 }

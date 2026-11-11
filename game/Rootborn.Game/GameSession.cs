@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Rootborn.Core.Careers;
 using Rootborn.Core.Dialogue;
+using Rootborn.Core.Gathering;
 using Rootborn.Core.Inventory;
 using Rootborn.Core.Quests;
 using Rootborn.Core.Save;
@@ -92,14 +93,31 @@ namespace Rootborn.Game
             return session;
         }
 
+        /// <summary>
+        /// data/를 이 저장소의 실행 서비스(RuleServices: 레시피 공개처럼 다른 세이브 파일을 쓰는 결과)와 함께 읽어 시작한다.
+        /// 시작 값은 registry.json의 기본값 키에서 온다. 정의 읽기가 실패하면 예외를 낸다(일부만 읽힌 채 시작하지 않는다).
+        /// 정의를 직접 넘기는 <see cref="Start"/>는 서비스 없이 읽은 정의면 레시피 공개를 저장하지 않는다.
+        /// </summary>
+        public static GameSession StartFromData(string dataDirectory, ISaveStore store, string saveSlot, string playerId, Func<string, string> newEventKey = null)
+        {
+            if (store == null) throw new ArgumentNullException(nameof(store));
+            var services = new RuleServices(store);
+            var loaded = GameDataLoader.Load(dataDirectory, b => Rootborn.Data.Builders.RootbornBuilders.Register(b, services));
+            loaded.ThrowIfFailed();
+            return Start(loaded.Definitions, GameStartSettings.FromDefinitions(loaded.Definitions), store, saveSlot, playerId, newEventKey);
+        }
+
+        /// <summary>자원 레시피 공개 진행(resource-recipe-progress*.json)을 읽는다. 공개는 장소 활동 결과가 바로 저장한다.</summary>
+        public ResourceRecipeProgress ResourceRecipes() => ResourceRecipeSaveFiles.LoadOrCreate(_store, SaveSlot, PlayerId);
+
         public QuestChainDefinition Chain(string chainId) => _definitions.Get<QuestChainDefinition>(chainId);
         public ItemDefinition Item(string itemId) => _definitions.Get<ItemDefinition>(itemId);
         public GameDefinitions Definitions => _definitions;
 
         private WorldStateAccess WorldAccess => new WorldStateAccess(World, _definitions.All<WorldStateFlag>());
-        private CareerInventoryAdapter CareerInventory => new CareerInventoryAdapter(Inventory, _definitions);
+        private ICareerInventory CareerInventory => new ItemInventoryCareerInventory(Inventory, FindItem);
 
-        private RewardRuntimeContext Rewards() => new RewardRuntimeContext(QuestLog, Inventory, null, null, Student, WorldAccess, null);
+        private RewardRuntimeContext Rewards() => new RewardRuntimeContext(QuestLog, Inventory, null, null, Student, WorldAccess, FurnitureUnlocks);
         private QuestRuntimeContext QuestContext(QuestDefinition quest = null) => new QuestRuntimeContext(QuestLog, quest, null, null, Student);
 
         // ---------- 읽기 ----------
@@ -109,21 +127,26 @@ namespace Rootborn.Game
             var snapshotName = SaveFileNames.AdultCareerSnapshot(PlayerId);
             bool hasSnapshot = _store.TryRead<AdultCareerSnapshotSaveData>(SaveSlot, snapshotName, out var snapshot);
 
+            // 스냅샷이 없는 슬롯은 Unity 판의 옛 영역 파일(학생 진행·인벤토리·일과·진로 후보)에서 이어 간다(Core PreSnapshotSlotFiles).
+            var olderStudent = hasSnapshot ? null : PreSnapshotSlotFiles.ReadStudent(_store, SaveSlot, PlayerId);
             Student = hasSnapshot && snapshot.Student != null
                 ? StudentLifeProgress.FromSaveData(Rebind(snapshot.Student))
-                : NewStudent();
+                : olderStudent != null ? StudentLifeProgress.FromSaveData(olderStudent) : NewStudent();
             // 하루 예산과 하루 집중은 세이브에 없다. 읽은 진행 상태에도 다시 넣는다.
             Student.ConfigureCalendar(_calendar);
             Student.ConfigureDailyFocus(_dayEndRules.DailyFocus);
+            if (!hasSnapshot) PreSnapshotSlotFiles.ImportInto(Student, _store);
 
             Adult = hasSnapshot && snapshot.Adult != null ? AdultCareerProgress.FromSaveData(snapshot.Adult) : new AdultCareerProgress(SaveSlot, PlayerId);
-            if (hasSnapshot) Inventory.LoadFromSaveData(snapshot.Inventory, FindItem);
+            var inventory = hasSnapshot ? snapshot.Inventory : PreSnapshotSlotFiles.ReadInventory(_store, SaveSlot, PlayerId);
+            if (inventory != null) Inventory.LoadFromSaveData(inventory, FindItem);
 
             World = hasSnapshot && snapshot.World != null
                 ? WorldStateProgress.FromSaveData(snapshot.World, SaveSlot, PlayerId)
                 : WorldStateSaveFiles.LoadOrCreate(_store, SaveSlot, PlayerId);
 
             QuestChains = LoadChains(hasSnapshot ? snapshot.QuestChains : null);
+            LoadFurniture(hasSnapshot ? snapshot : null);
 
             QuestLog = new QuestLog(_definitions.All<QuestDefinition>());
             if (_store.TryRead<QuestLogSaveData>(SaveSlot, SaveFileNames.QuestLog, out var questLog)) QuestLog.LoadFromSaveData(questLog);
@@ -217,6 +240,7 @@ namespace Rootborn.Game
                 Inventory = Inventory.ToSaveData(string.Empty),
                 World = World.ToSaveData(),
                 QuestChains = QuestChains.ToSaveData(),
+                FurnitureUnlocks = FurnitureUnlocks.ToSaveData(),
             });
             WorldStateSaveFiles.Save(_store, World);
             _store.Write(SaveSlot, SaveFileNames.QuestLog, QuestLog.ToSaveData());
@@ -237,38 +261,13 @@ namespace Rootborn.Game
 
         /// <summary>
         /// 행동 하나를 퀘스트에 알린다. toQuestLog면 일반 퀘스트 로그에도 센다(다시 알리는 이벤트는 로그가 세지 않는다).
-        /// 체인 쪽은 Unity AdultCareerRuntime의 ApplyRegisteredEventToSession과 같은 순서: 대화 상대가 시작 NPC인 체인을 받고 추적하고,
-        /// 받기 전에 고른 일과를 소급해 세고, 이벤트를 기록한 뒤 모든 체인의 단계 진행을 평가한다.
+        /// 체인에 적용하는 순서(시작 NPC 체인 받기 → 받기 전 일과 소급 → 기록 → 모든 체인 평가)는 Core QuestChainEvents가 정한다.
         /// </summary>
         private void Announce(QuestEvent questEvent, bool toQuestLog)
         {
-            if (string.IsNullOrEmpty(questEvent.EventKey) || questEvent.Count <= 0) return;
+            if (!QuestChainEvents.IsApplicable(in questEvent)) return;
             if (toQuestLog) QuestLog.RecordEvent(in questEvent);
-
-            var context = QuestContext();
-            var rewards = Rewards();
-            if (questEvent.Kind == QuestEventKind.Talk && !string.IsNullOrEmpty(questEvent.SubjectId))
-            {
-                foreach (var chain in _chains)
-                {
-                    if (chain == null || !chain.IsStartedByTalkingTo(questEvent.SubjectId) || QuestChains.GetState(chain) != QuestChainState.Available
-                        || !QuestChains.AcceptWithContext(chain, context)) continue;
-                    QuestChains.Track(chain);
-                    CreditPlanChosenBeforeStart(context, rewards);
-                }
-            }
-
-            QuestChains.RecordEventWithContext(questEvent, context, rewards);
-            foreach (var chain in _chains) if (chain != null) QuestChains.EvaluateStepProgress(chain, context, rewards);
-        }
-
-        // Unity QuestChainRuntimeService.CreditPlanChosenBeforeStart.
-        private void CreditPlanChosenBeforeStart(QuestRuntimeContext context, RewardRuntimeContext rewards)
-        {
-            string routeId = DailyPlan.SelectedRouteId;
-            if (string.IsNullOrEmpty(routeId) || new DailyPlanRouteRunner().FindRoute(_routeSets, routeId) == null) return;
-            QuestChains.RecordEventWithContext(new QuestEvent(QuestEventKind.DailyPlanSelected, "daily-plan-before-start:" + Student.CurrentDay + ":" + routeId, routeId),
-                context, rewards);
+            QuestChainEvents.Apply(QuestChains, _chains, _routeSets, questEvent, QuestContext(), Rewards());
         }
 
         private QuestEvent NewEvent(QuestEventKind kind, string action, string subjectId) => new QuestEvent(kind, _newEventKey(action), subjectId);

@@ -28,6 +28,49 @@ namespace Rootborn.Core.Careers
     }
 
     /// <summary>
+    /// 플레이어 인벤토리(ItemInventory, 아이템 = 정의)를 성인 직업 인벤토리(아이템 = id)로 쓴다. id는 받은 찾기 함수로 정의로 바꾼다.
+    /// 정의가 없는 id가 섞이면 교환하지 않는다(아무것도 바뀌지 않는다). 판정은 ItemInventory가 한다.
+    /// </summary>
+    public sealed class ItemInventoryCareerInventory : ICareerInventory
+    {
+        private readonly ItemInventory _inventory;
+        private readonly Func<string, ItemDefinition> _findItem;
+
+        public ItemInventoryCareerInventory(ItemInventory inventory, Func<string, ItemDefinition> findItem)
+        {
+            _inventory = inventory ?? throw new ArgumentNullException(nameof(inventory));
+            _findItem = findItem ?? throw new ArgumentNullException(nameof(findItem));
+        }
+
+        public bool CanExchange(IReadOnlyList<ItemAmount<string>> costs, IReadOnlyList<ItemAmount<string>> rewards)
+            => TryConvert(costs, out var c) && TryConvert(rewards, out var r) && _inventory.CanExchange(c, r);
+
+        public bool TryExchange(IReadOnlyList<ItemAmount<string>> costs, IReadOnlyList<ItemAmount<string>> rewards, Action commit)
+            => TryConvert(costs, out var c) && TryConvert(rewards, out var r) && _inventory.TryExchange(c, r, commit);
+
+        public int CountOf(string itemId)
+        {
+            var item = string.IsNullOrEmpty(itemId) ? null : _findItem(itemId);
+            return item != null ? _inventory.CountOf(item) : 0;
+        }
+
+        private bool TryConvert(IReadOnlyList<ItemAmount<string>> amounts, out List<InventoryGrant> grants)
+        {
+            grants = null;
+            if (amounts == null) return true;
+            grants = new List<InventoryGrant>(amounts.Count);
+            for (int i = 0; i < amounts.Count; i++)
+            {
+                var item = string.IsNullOrEmpty(amounts[i].Item) ? null : _findItem(amounts[i].Item);
+                if (item == null) return false;
+                grants.Add(new InventoryGrant(item, amounts[i].Count));
+            }
+
+            return true;
+        }
+    }
+
+    /// <summary>
     /// 세계 상태(아직 Core에 없는 영역). 같은 세이브 슬롯·플레이어인지 확인하고, 깃발을 켠다.
     /// 그 영역을 옮기면 그쪽 진행 상태가 이 인터페이스를 구현해 잇는다.
     /// </summary>

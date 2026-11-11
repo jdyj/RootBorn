@@ -6,8 +6,7 @@ using Rootborn.Core.StudentLife;
 namespace Rootborn.Game
 {
     /// <summary>
-    /// 따로 파일을 쓰는 영역: 탐색, 발견 단서, 단서 해석, 도감, 하루 이벤트. Unity 판에서 이 명령들은 퀘스트 이벤트를 내지 않았다.
-    /// 하루 이벤트 진행은 SaveFileNames에 파일 이름이 없어 아직 저장하지 않는다(같은 요청은 학생 진행의 적용 요청이 막는다).
+    /// 따로 파일을 쓰는 영역: 탐색, 발견 단서, 단서 해석, 도감, 하루 이벤트(daily-event-progress*.json). Unity 판에서 이 명령들은 퀘스트 이벤트를 내지 않았다.
     /// </summary>
     public sealed partial class GameSession
     {
@@ -28,7 +27,7 @@ namespace Rootborn.Game
             DiscoveryClues = DiscoveryClueSaveFiles.LoadOrCreate(_store, SaveSlot, PlayerId);
             ClueInterpretations = ClueInterpretationSaveFiles.LoadOrCreate(_store, SaveSlot, PlayerId);
             Encyclopedia = EncyclopediaSaveFiles.LoadOrCreate(_store, SaveSlot, PlayerId);
-            DailyEvents = new DailyEventProgress(SaveSlot, PlayerId);
+            DailyEvents = DailyEventSaveFiles.LoadOrCreate(_store, SaveSlot, PlayerId);
         }
 
         private void SaveOptionalDomains()
@@ -37,6 +36,7 @@ namespace Rootborn.Game
             DiscoveryClueSaveFiles.Save(_store, DiscoveryClues);
             ClueInterpretationSaveFiles.Save(_store, ClueInterpretations);
             EncyclopediaSaveFiles.Save(_store, Encyclopedia);
+            DailyEventSaveFiles.Save(_store, DailyEvents);
         }
 
         private DiscoveryClueLookupCache ClueCache => new DiscoveryClueLookupCache(_definitions.All<DiscoveryClue>());

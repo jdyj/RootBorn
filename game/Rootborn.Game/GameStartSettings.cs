@@ -38,8 +38,20 @@ namespace Rootborn.Game
         public int StartTimeMinutes { get; }
 
         /// <summary>
-        /// data/registry.json의 studentLifeCalendar, defaultDayEndRule, defaultTutorialStage, defaultStudentCampaign,
-        /// locationStateConflictPolicies(첫 것)를 읽는다. GameDefinitions가 이 키들을 내주지 않아 표를 한 번 더 읽는다.
+        /// 읽은 정의의 registry.json 기본값 키(studentLifeCalendar, defaultDayEndRule, defaultTutorialStage, defaultStudentCampaign,
+        /// locationStateConflictPolicies의 첫 것)로 만든다. 데이터 표를 다시 읽지 않는다.
+        /// </summary>
+        public static GameStartSettings FromDefinitions(GameDefinitions definitions)
+        {
+            if (definitions == null) throw new ArgumentNullException(nameof(definitions));
+            return new GameStartSettings(definitions.RegistryDefault("studentLifeCalendar"), definitions.RegistryDefault("defaultDayEndRule"),
+                definitions.RegistryDefault("defaultTutorialStage"), definitions.RegistryDefault("defaultStudentCampaign"),
+                definitions.RegistryDefault("locationStateConflictPolicies"));
+        }
+
+        /// <summary>
+        /// FromDefinitions와 같은 값을 data 폴더에서 직접 읽는다(표를 한 번 더 읽는다). 정의를 이미 읽었으면 FromDefinitions를 쓴다.
+        /// 다른 세션이 부르고 있을 수 있어 남겨 둔다.
         /// </summary>
         public static GameStartSettings FromRegistry(string dataDirectory)
         {

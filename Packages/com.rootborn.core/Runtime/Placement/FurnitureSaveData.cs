@@ -108,6 +108,14 @@ namespace Rootborn.Core.Placement
             return records.ToArray();
         }
 
+        /// <summary>지금 집 단계(Unity HouseStatePersistence.Load). 파일이 없으면 0, 음수는 0이다.</summary>
+        public static int LoadHouseStage(ISaveStore store, string saveSlot)
+        {
+            if (store == null) return 0;
+            string slot = string.IsNullOrEmpty(saveSlot) ? "default" : saveSlot;
+            return store.TryRead(slot, SaveFileNames.HouseState, out HouseStateSaveData state) ? Math.Max(0, state.CurrentStageIndex) : 0;
+        }
+
         public static void SaveHouseLayout(ISaveStore store, string saveSlot, int stageIndex, IReadOnlyList<FurniturePlacementSaveData> records)
         {
             if (store == null) return;

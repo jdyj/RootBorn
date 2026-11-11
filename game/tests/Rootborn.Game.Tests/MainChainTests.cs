@@ -9,7 +9,7 @@ namespace Rootborn.Game.Tests
 {
     /// <summary>
     /// Unity MainChainOpeningE2EScenarioTests 001~006의 흐름을 화면 없이 명령으로 따라간다(자동 테스트).
-    /// 007(집에 가구 놓기)은 Core에 가구 배치 영역이 아직 없어 MyOwnSpace 단계에 도착하는 데까지만 간다.
+    /// 007~011(가구 놓기·사기, 장래희망 고르기)은 MainChainEndTests가 이어 간다.
     /// </summary>
     public sealed class MainChainTests
     {
@@ -104,6 +104,20 @@ namespace Rootborn.Game.Tests
         internal static Outcome Play(GameSession game, Func<GameSession> between)
         {
             var steps = new List<string>();
+            game = PlayToMyDream(game, between, steps);
+            string Step() => game.QuestChains.GetCurrentStep(game.Chain(ChainId)).Id;
+
+            // 006: 도서관에서 직업 책 읽기.
+            Assert.That(game.PerformLocationActivity("opening.clue.archive-door", "location-activity:archive-door:day3").Kind,
+                Is.EqualTo(LifeActivityResultKind.Applied));
+            game = between();
+            steps.Add(Step());
+            return new Outcome { Steps = steps.ToArray(), Final = Fingerprint(game) };
+        }
+
+        /// <summary>001~005: MyDream 단계(3일째)까지. 거친 단계를 steps에 더하고 마지막 GameSession을 돌려준다.</summary>
+        internal static GameSession PlayToMyDream(GameSession game, Func<GameSession> between, List<string> steps)
+        {
             string Step() => game.QuestChains.GetCurrentStep(game.Chain(ChainId)).Id;
 
             // 001: 집에서 엄마 → 일과 → 학교 선생님.
@@ -143,18 +157,19 @@ namespace Rootborn.Game.Tests
             game = between();
             steps.Add(Step());
 
-            // 006: 도서관에서 직업 책 읽기.
-            Assert.That(game.PerformLocationActivity("opening.clue.archive-door", "location-activity:archive-door:day3").Kind,
-                Is.EqualTo(LifeActivityResultKind.Applied));
-            game = between();
-            steps.Add(Step());
+            return game;
+        }
 
+        /// <summary>세이브를 다시 읽어도 같아야 하는 값들.</summary>
+        internal static string Fingerprint(GameSession game)
+        {
             var student = game.Student;
             var traits = string.Join(",", student.GetTraitIds().OrderBy(id => id, StringComparer.Ordinal).Select(id => id + "=" + student.GetTraitValue(id)));
-            var final = string.Join("|", student.CurrentDay, student.Energy, student.Focus, student.Stress, student.TimeMinutes,
+            return string.Join("|", student.CurrentDay, student.Energy, student.Focus, student.Stress, student.TimeMinutes,
                 student.TimePointsSpentToday, traits, game.Inventory.CountOf(game.Item("item.allowance")),
-                game.QuestChains.GetState(game.Chain(ChainId)), string.Join(",", game.Campaign.ToSaveData().CompletedObjectiveIds));
-            return new Outcome { Steps = steps.ToArray(), Final = final };
+                game.QuestChains.GetState(game.Chain(ChainId)), string.Join(",", game.Campaign.ToSaveData().CompletedObjectiveIds),
+                string.Join(",", game.FurnitureUnlocks.ToSaveData().UnlockTokens), game.CareerInterests.CurrentInterestId,
+                game.House == null ? "-" : string.Join(",", game.House.Placed.Select(p => p.Definition.StableId + "@" + p.Anchor.X + "," + p.Anchor.Y)));
         }
     }
 }

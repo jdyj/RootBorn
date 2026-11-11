@@ -32,6 +32,7 @@ namespace Rootborn.Data.Builders
             DialogueBuilders.Register(b);
             PlacementBuilders.Register(b);
             GatheringBuilders.Register(b);
+            WorldBuilders.Register(b);
 
             NotRules.Register(b);
             NotPortedYet.Register(b);

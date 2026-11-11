@@ -12,8 +12,9 @@ namespace Rootborn.Game.Tests
     {
         private static readonly Lazy<string> _root = new Lazy<string>(FindRoot);
         private static readonly Lazy<GameDefinitions> _definitions = new Lazy<GameDefinitions>(LoadDefinitions);
-        private static readonly Lazy<GameStartSettings> _settings = new Lazy<GameStartSettings>(() => GameStartSettings.FromRegistry(DataDirectory));
+        private static readonly Lazy<GameStartSettings> _settings = new Lazy<GameStartSettings>(() => GameStartSettings.FromDefinitions(Definitions));
 
+        public static string RepoRoot => _root.Value;
         public static string DataDirectory => Path.Combine(_root.Value, "data");
         public static GameDefinitions Definitions => _definitions.Value;
         public static GameStartSettings Settings => _settings.Value;

@@ -41,6 +41,13 @@ namespace Rootborn.Data.Tests
             Names.HouseFurnitureLayout(0),
             Names.HouseFurnitureLayoutBeforeStages,
             Names.FurnitureUnlocks(DefaultPlayer),
+            Names.HouseState,
+            Names.DailyEvent(DefaultPlayer),
+            Names.UnityStudentLife(DefaultPlayer),
+            Names.UnityInventory(DefaultPlayer),
+            Names.UnityDailyPlan(DefaultPlayer),
+            Names.UnityDailyPlanSanitized(DefaultPlayer),
+            Names.UnityCareerCandidates(DefaultPlayer),
             Names.ResourceRecipe(DefaultPlayer),
             Names.ResourceRecipe(Names.LegacyPlayerId),
         };

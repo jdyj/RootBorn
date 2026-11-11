@@ -6,6 +6,8 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../Rootborn.Game/Rootborn.Game.csproj" />
+    <!-- 실제 집 맵(LDtk)으로 가구 방 칸을 만든다. 테스트만 참조한다. -->
+    <ProjectReference Include="../../Rootborn.World/Rootborn.World.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageReference Include="NUnit" Version="3.14.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />

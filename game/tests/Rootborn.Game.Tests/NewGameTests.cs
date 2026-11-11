@@ -59,5 +59,17 @@ namespace Rootborn.Game.Tests
             Assert.That(again.Student.DailyFocus, Is.EqualTo(10), "읽은 진행 상태에도 하루 집중을 다시 넣는다");
             Assert.That(again.Student.DailyTimePointBudget, Is.EqualTo(2), "읽은 진행 상태에도 달력을 다시 넣는다");
         }
+    
+        [Test]
+        public void StartSettings_FromTheDefinitions_MatchTheRegistryFile()
+        {
+            var fromDefinitions = GameStartSettings.FromDefinitions(TestWorld.Definitions);
+            var fromFile = GameStartSettings.FromRegistry(TestWorld.DataDirectory);
+
+            Assert.That((fromDefinitions.CalendarId, fromDefinitions.DayEndRuleId, fromDefinitions.TutorialStageId, fromDefinitions.CampaignId, fromDefinitions.LocationStateConflictPolicyId),
+                Is.EqualTo((fromFile.CalendarId, fromFile.DayEndRuleId, fromFile.TutorialStageId, fromFile.CampaignId, fromFile.LocationStateConflictPolicyId)));
+            Assert.That(fromDefinitions.CalendarId, Is.Not.Empty);
+            Assert.That(fromDefinitions.CampaignId, Is.Not.Empty);
+        }
     }
 }

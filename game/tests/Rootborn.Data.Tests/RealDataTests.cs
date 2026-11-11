@@ -4,6 +4,8 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using NUnit.Framework;
+using Rootborn.Core.Time;
+using Rootborn.Core.World;
 using Rootborn.Core.Gathering;
 using Rootborn.Core.Placement;
 using Rootborn.Core.Quests;
@@ -102,16 +104,51 @@ namespace Rootborn.Data.Tests
         }
 
         [Test]
-        public void OnlyTheWorldTravelTypesAreStillWaitingToBePorted()
+        public void NothingIsStillWaitingToBePorted()
         {
             var builders = new DefinitionBuilders();
             RootbornBuilders.Register(builders);
-            Assert.That(builders.NotPorted.Keys, Is.EquivalentTo(new[] { "WorldDestinationDefinition", "WorldTravelCatalogDefinition" }));
+            Assert.That(builders.NotPorted.Keys, Is.Empty);
             Assert.That(builders.NotUsed.Keys, Is.EquivalentTo(new[]
             {
                 "StatusEffectDefinition", "KnowledgeNode", "HitGroundWithRockTrigger", "ToolDefinition", "FishingAnimationEffect",
                 "GatherResourceStep", "HeirTrait",
             }));
+        }
+
+        [Test]
+        public void TheWorldTravelCatalog_IsBuiltFromItsDestinations()
+        {
+            var catalog = _result.Definitions.All<WorldTravelCatalog>().Single();
+            Assert.That(catalog.IsValid, Is.True);
+            Assert.That((catalog.NewGameScene, catalog.NewGameSpawnId), Is.EqualTo(("House", "house-entry")));
+            Assert.That(catalog.Destinations.Count, Is.EqualTo(10), "data/locations/WorldTravelCatalogDefinition.json의 목적지 수");
+            Assert.That(_table.RegistryIds("worldTravelCatalog"), Is.EqualTo(new[] { "WorldTravelCatalog" }));
+            Assert.That(catalog.Find("Beach").SpawnIds, Is.EqualTo(new[] { "beach-to-town-top-entry", "beach-top-entry" }));
+            Assert.That(_result.Definitions.Get<WorldDestination>("Destination_House").SceneName, Is.EqualTo("House"));
+        }
+
+        [Test]
+        public void TheDayNightLighting_CarriesItsKeysInTimeOrder()
+        {
+            var lighting = _result.Definitions.Get<DayNightLightingProfile>("DayNightLighting_Default");
+            Assert.That(lighting.ColorKeys.Count, Is.EqualTo(7), "m_NumColorKeys");
+            Assert.That(lighting.ColorKeys[0].DayFraction, Is.EqualTo(0f));
+            Assert.That(lighting.ColorKeys[6].DayFraction, Is.EqualTo(1f));
+            Assert.That((lighting.ColorKeys[0].R, lighting.ColorKeys[0].G, lighting.ColorKeys[0].B), Is.EqualTo((0.09f, 0.16f, 0.29f)));
+            Assert.That(lighting.IntensityKeys.Count, Is.GreaterThan(1));
+            Assert.That(lighting.IntensityKeys[0].Value, Is.EqualTo(0.25f));
+            Assert.That(lighting.LerpSpeed, Is.GreaterThanOrEqualTo(0.01f));
+        }
+
+        [Test]
+        public void TheRegistryDefaults_AreGivenByTheDefinitions()
+        {
+            var definitions = _result.Definitions;
+            Assert.That(definitions.RegistryDefault("defaultDayEndRule"), Is.EqualTo(_table.RegistryIds("defaultDayEndRule")[0]));
+            Assert.That(definitions.RegistryDefault("studentLifeCalendar"), Is.Not.Empty);
+            Assert.That(definitions.RegistryDefault("no.such.key"), Is.Empty);
+            Assert.That(definitions.RegistryIds("questChains"), Is.EqualTo(_table.RegistryIds("questChains")));
         }
 
         [Test]

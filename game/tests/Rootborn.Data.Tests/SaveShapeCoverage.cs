@@ -40,7 +40,20 @@ namespace Rootborn.Data.Tests
             ("house-furniture-layout-stage-*.json", typeof(FurniturePlacementLayoutSaveData)),
             ("house-furniture-layout.json", typeof(FurniturePlacementLayoutSaveData)),
             ("furniture-unlocks*.json", typeof(FurnitureUnlockProgressSaveData)),
+            ("house-state.json", typeof(HouseStateSaveData)),
+            ("daily-event-progress*.json", typeof(DailyEventProgressSaveData)),
             ("resource-recipe-progress*.json", typeof(ResourceRecipeProgressSaveData)),
+        };
+
+        /// <summary>
+        /// 스냅샷 이전 Unity 판 영역 파일. Core가 읽기만 하고 쓰지 않아(PreSnapshotSlotFiles) 형식 버전이 없다.
+        /// </summary>
+        public static readonly IReadOnlyList<(string Pattern, Type Shape)> ReadOnlyUnityShapes = new[]
+        {
+            ("student-life-progress*.json", typeof(StudentLifeProgressSaveData)),
+            ("inventory*.json", typeof(Rootborn.Core.Inventory.PlayerInventorySaveData)),
+            ("daily-plan-progress*.json", typeof(DailyPlanProgressSaveData)),
+            ("career-candidate-progress*.json", typeof(CareerCandidateProgressSaveData)),
         };
 
         public static readonly IReadOnlyList<(string Pattern, string Reason)> NotShapedYet = new[]
@@ -58,6 +71,8 @@ namespace Rootborn.Data.Tests
         public static Type ShapeFor(string fileName)
         {
             foreach (var (pattern, shape) in Shapes)
+                if (Matches(pattern, fileName)) return shape;
+            foreach (var (pattern, shape) in ReadOnlyUnityShapes)
                 if (Matches(pattern, fileName)) return shape;
             return null;
         }

@@ -30,6 +30,16 @@ namespace Rootborn.Data
 
         public int Count => _entries.Count;
 
+        /// <summary>registry.json의 그 키 아래 id 목록(순서 있음). 키가 없으면 빈 목록. 문자열 하나인 키는 원소 하나짜리 목록.</summary>
+        public IReadOnlyList<string> RegistryIds(string registryKey) => _table.RegistryIds(registryKey);
+
+        /// <summary>registry.json의 기본값 키(달력, 하루 끝 규칙, 캠페인 등)의 첫 id. 없으면 빈 문자열.</summary>
+        public string RegistryDefault(string registryKey)
+        {
+            var ids = _table.RegistryIds(registryKey);
+            return ids.Count > 0 ? ids[0] : string.Empty;
+        }
+
         public T Get<T>(string id) where T : class
         {
             if (TryGet<T>(id, out var definition)) return definition;

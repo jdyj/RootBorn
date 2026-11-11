@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Core.Characters;
 using Rootborn.Core.Dialogue;
 using Rootborn.Core.Quests;
 using Rootborn.Core.StudentLife;
+using Rootborn.Core.Time;
 
 namespace Rootborn.Game
 {
@@ -99,6 +101,30 @@ namespace Rootborn.Game
 
             return result;
         }
+
+        /// <summary>장래희망마다 지금 고를 수 있는지와 그 이유(정의 순서). 장래희망 화면이 그린다. 판정은 Core CareerInterest가 한다.</summary>
+        public IReadOnlyList<(CareerInterest Interest, CareerInterestSelectionEvaluation Evaluation)> CareerInterestChoices()
+        {
+            var list = new List<(CareerInterest, CareerInterestSelectionEvaluation)>();
+            foreach (var interest in _definitions.All<CareerInterest>())
+                if (interest != null) list.Add((interest, interest.Evaluate(CareerInterests, CareerCandidates, Student, Student.CurrentDay)));
+            return list;
+        }
+
+        /// <summary>지금 학생 날(1일째부터).</summary>
+        public int StudentDay => Student.CurrentDay;
+
+        /// <summary>지금 학생 시각(0시부터 분). 활동으로만 흐르고 세이브에 들어간다(Unity LifeTimePresentation.Minutes).</summary>
+        public int StudentTimeMinutes => Student.TimeMinutes;
+
+        /// <summary>학생 시각을 0~24시로(Unity LifeTimePresentation.Hour). 마을 낮밤과 시계 화면이 쓴다.</summary>
+        public float StudentHour => DayParts.WrapHour(Student.TimeMinutes / 60f);
+
+        /// <summary>
+        /// 캐릭터의 성장 단계 id(Unity WearableLook.StageFor → Core WearableRules.SelectStage): 성인 직업을 가졌으면 첫 성인 단계,
+        /// 학생이면 도달한 날 중 가장 늦은 학생 단계. 맞는 단계가 없으면 빈 문자열.
+        /// </summary>
+        public string GrowthStageId() => WearableRules.SelectStage(_definitions.All<GrowthStageRule>(), Student.CurrentDay, Adult.IsAdult);
 
         /// <summary>오늘 할 수 있는 시간 포인트와 쓴 것.</summary>
         public (int Remaining, int Budget) TimePoints => (Student.TimePointsRemaining, Student.DailyTimePointBudget);

@@ -44,8 +44,8 @@ namespace Rootborn.Game
 
         /// <summary>
         /// 다음 날을 시작한다(Unity StudentDayResultPanel.StartNextDay 순서): 날 넘기기(학생 미니게임 예약 포기는 Core가 한다)
-        /// → 앞선 날의 성인 일 예약 포기 → 저장 → 날 시작 이벤트, 장래희망이 있으면 장래희망 이벤트.
-        /// Unity 판의 "이미 놓은 가구 다시 알리기"는 가구 영역이 Core에 없어 하지 않는다.
+        /// → 앞선 날의 성인 일 예약 포기 → 날 시작 이벤트, 장래희망이 있으면 장래희망 이벤트 → 집에 들어와 있으면 이미 놓은 가구 다시 알리기
+        /// (Unity PublishDayStartEvents) → 저장.
         /// </summary>
         public bool StartNextDay()
         {
@@ -55,6 +55,7 @@ namespace Rootborn.Game
             Announce(NewEvent(QuestEventKind.DayStarted, "day-started", null), true);
             if (!string.IsNullOrEmpty(CareerInterests.CurrentInterestId))
                 Announce(NewEvent(QuestEventKind.CareerInterestSelected, "career-interest-kept", CareerInterests.CurrentInterestId), true);
+            ReplayPlacedFurniture();
             Save();
             return true;
         }

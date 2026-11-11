@@ -8,14 +8,14 @@
 |---|---|---|
 | `Rootborn.Core` | `Packages/com.rootborn.core/Runtime`의 게임 규칙을 그대로 묶는 프로젝트(코드 없음, LangVersion 9) | 없음 |
 | `Rootborn.Data` | `data/` JSON으로 Core 정의 만들기(`GameDataLoader.Load(dir, RootbornBuilders.Register)`), 세이브 파일 저장소(`FileSaveStore`) | 없음 |
-| `Rootborn.Game` | 게임 한 판(`GameSession.Start(정의, GameStartSettings.FromRegistry(data), 저장소, 슬롯, 플레이어)`). 화면이 부를 명령과 조회. 규칙은 Core가 판단하고 여기서는 영역을 잇고 저장만 한다 | 없음 |
+| `Rootborn.Game` | 게임 한 판(`GameSession.StartFromData(data, 저장소, 슬롯, 플레이어)`, 또는 `Start(정의, GameStartSettings.FromDefinitions(정의), …)`). 화면이 부를 명령과 조회(가구는 `EnterHouse(방 칸, "house")` 뒤에). 규칙은 Core가 판단하고 여기서는 영역을 잇고 저장만 한다 | 없음 |
 | `Rootborn.World` | LDtk 파일(.ldtk·.ldtkl)을 그대로 읽고, 맵 목록 `game/world/maps.json`으로 Core 월드(충돌·문·도착 지점)와 그릴 목록을 만든다 | 없음 |
 | `Rootborn.Ui` | 배치, 포인터 판정, 클릭, 포커스 이동, 9조각 계산과 부품(패널, 글자, 여러 줄 글자, 그림, 버튼, 칸, 글자 칸, 스크롤 목록, 탭 줄, 게이지, 켬/끔, 미끄럼 막대, 카드 줄·격자). 그리기 명령 목록만 낸다 | 없음 |
 | `Rootborn.Screens` | 화면들, 화면 쌓기(`ScreenStack`), 등록 표(`ScreenCatalog`), 현지화 문구(`GameText`), 게임 명령 감싸개(`SessionCommands`) | 없음 |
 | `Rootborn.Host` | 창, 화면 배율, 입력 장치 계층, 한글 조합 입력, TTF 글자, 그리기, 화면 저장, 견본 화면 | 3.8.6.1 고정 |
 | `tests/Rootborn.Data.Tests` | 정의 로더, 실제 `data/` 전체 읽기, 세이브 저장소, Unity 판 QA 세이브 고정 파일 | 없음 |
 | `tests/Rootborn.World.Tests` | 실제 LDtk로 맵 만들기, Unity 씬에 구워진 충돌과 칸 단위 대조, 도착 지점·문 목적지, 크기가 다른 집, 장면 목록·고정 세이브, 캐릭터 그림, 낮밤, 상호작용 데이터 | 없음 |
-| `tests/Rootborn.Game.Tests` | 실제 `data/`와 임시 폴더 저장소로 새 게임 초기값, 메인 체인(화면 없이), 성인기, 보상 한 번만, Unity QA 세이브 이어 하기 | 없음 |
+| `tests/Rootborn.Game.Tests` | 실제 `data/`와 임시 폴더 저장소로 새 게임 초기값, 메인 체인 끝까지(화면 없이, 가구 방 칸은 실제 집 맵), 성인기, 보상 한 번만, Unity QA 세이브·스냅샷 이전 슬롯 이어 하기 | 없음 |
 | `tests/Rootborn.Ui.Tests` | 화면 없이 도는 테스트 | 없음 |
 | `tests/Rootborn.Screens.Tests` | 창 없이 도는 화면 테스트: 화면 쌓기의 층·배타·이동 막음·입력 넘기기, 실제 `ko.json`·`en.json`, 설정 화면을 눌러 보기 | 없음 |
 | `tests/Rootborn.Host.Tests` | 실제 창과 게임 루프를 한 프레임씩 돌리는 테스트(새 게임 → 집 → 마을 → 가게 → 이어 하기 시나리오 `NewGameJourneyTests` 포함) | 있음 |

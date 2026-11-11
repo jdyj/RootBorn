@@ -1,12 +1,16 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Core.Save;
 
 namespace Rootborn.Core.StudentLife
 {
-    /// <summary>세이브 파일 모양. 필드 이름을 바꾸지 않는다.</summary>
+    /// <summary>세이브 파일(daily-event-progress*.json) 모양. 필드 이름을 바꾸지 않는다. Version은 Unity 판 파일에 없다(0으로 읽힘).</summary>
     [Serializable]
-    public sealed class DailyEventProgressSaveData
+    public sealed class DailyEventProgressSaveData : IVersionedSave
     {
+        public const int KnownVersion = 1;
+
+        public int Version;
         public string SaveSlot;
         public string PlayerId;
         public Record[] Records = Array.Empty<Record>();
@@ -26,6 +30,9 @@ namespace Rootborn.Core.StudentLife
             public int CooldownUntilDay;
             public string[] ResultSummaryLogIds = Array.Empty<string>();
         }
+
+        int IVersionedSave.Version { get => Version; set => Version = value; }
+        int IVersionedSave.KnownVersion => KnownVersion;
     }
 
     /// <summary>이벤트 하나의 상태 기록.</summary>
@@ -201,6 +208,27 @@ namespace Rootborn.Core.StudentLife
                 if (!string.IsNullOrEmpty(record.EventId)) progress._records[record.EventId] = record;
             }
             return progress;
+        }
+    }
+
+    /// <summary>하루 이벤트 진행 파일을 읽고 쓴다(원본 DailyEventProgressPersistence). 이름은 SaveFileNames.DailyEvent.</summary>
+    public static class DailyEventSaveFiles
+    {
+        /// <summary>파일이 없으면 빈 기록. 파일의 슬롯·플레이어가 달라도(복사한 슬롯) 지금 슬롯·플레이어로 읽는다.</summary>
+        public static DailyEventProgress LoadOrCreate(ISaveStore store, string saveSlot, string playerId)
+        {
+            string slot = string.IsNullOrEmpty(saveSlot) ? "default" : saveSlot;
+            string player = string.IsNullOrEmpty(playerId) ? SaveFileNames.DefaultPlayerId : playerId;
+            if (store == null || !store.TryRead(slot, SaveFileNames.DailyEvent(player), out DailyEventProgressSaveData data)) return new DailyEventProgress(slot, player);
+            data.SaveSlot = slot;
+            data.PlayerId = player;
+            return DailyEventProgress.FromSaveData(data);
+        }
+
+        public static void Save(ISaveStore store, DailyEventProgress progress)
+        {
+            if (store == null || progress == null) return;
+            store.Write(progress.SaveSlot, SaveFileNames.DailyEvent(progress.PlayerId), progress.ToSaveData());
         }
     }
 }

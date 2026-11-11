@@ -65,6 +65,9 @@ namespace Rootborn.Core.Save
         public static string HouseFurnitureLayout(int stageIndex)
             => "house-furniture-layout-stage-" + System.Math.Max(0, stageIndex).ToString(CultureInfo.InvariantCulture) + ".json";
 
+        /// <summary>집 상태(Unity HouseStatePersistence): 지금 집 단계 번호. 슬롯마다 하나.</summary>
+        public const string HouseState = "house-state.json";
+
         /// <summary>집 단계가 생기기 전의 배치 파일. 0단계 파일이 없을 때만 읽는다.</summary>
         public const string HouseFurnitureLayoutBeforeStages = "house-furniture-layout.json";
 
@@ -86,6 +89,37 @@ namespace Rootborn.Core.Save
         /// <summary>Unity CareerInterestProgressPersistence.FileNameFor와 같다: 빈 id와 "local-player"만 공용 파일이고 "player"는 따로 쓴다.</summary>
         public static string CareerInterest(string playerId)
             => string.IsNullOrEmpty(playerId) || playerId == DefaultPlayerId ? "career-interest-progress.json" : "career-interest-progress-" + Sanitize(playerId) + ".json";
+
+        /// <summary>Unity DailyEventProgressPersistence.FileNameFor와 같다: 빈 id와 "local-player"만 공용 파일이고 "player"는 따로 쓴다.</summary>
+        public static string DailyEvent(string playerId)
+            => string.IsNullOrEmpty(playerId) || playerId == DefaultPlayerId ? "daily-event-progress.json" : "daily-event-progress-" + Sanitize(playerId) + ".json";
+
+        // ---- 스냅샷 이전 Unity 판 영역 파일(읽기만 한다. 스냅샷이 생기면 그쪽이 원본이다) ----
+
+        /// <summary>Unity StudentLifeProgressPersistence.FileNameFor: 빈 id와 "local-player"는 공용 파일.</summary>
+        public static string UnityStudentLife(string playerId)
+            => string.IsNullOrEmpty(playerId) || playerId == DefaultPlayerId ? "student-life-progress.json" : "student-life-progress-" + Sanitize(playerId) + ".json";
+
+        /// <summary>Unity AdultCareerRuntimeComponent.LoadLegacyInventory: "local-player"만 공용 파일(빈 id도 공용으로 본다).</summary>
+        public static string UnityInventory(string playerId)
+            => string.IsNullOrEmpty(playerId) || playerId == DefaultPlayerId ? "inventory.json" : "inventory-" + Sanitize(playerId) + ".json";
+
+        /// <summary>Unity CareerCandidateProgressPersistence.FileNameFor: 빈 id와 "local-player"는 공용 파일.</summary>
+        public static string UnityCareerCandidates(string playerId)
+            => string.IsNullOrEmpty(playerId) || playerId == DefaultPlayerId ? "career-candidate-progress.json" : "career-candidate-progress-" + Sanitize(playerId) + ".json";
+
+        /// <summary>Unity DailyPlanProgressPersistence.FileNameFor: 빈 id와 "player"만 공용 파일, 그 밖은 UTF-16 글자마다 4자리 16진.</summary>
+        public static string UnityDailyPlan(string playerId)
+        {
+            if (string.IsNullOrEmpty(playerId) || playerId == LegacyPlayerId) return "daily-plan-progress.json";
+            var encoded = new StringBuilder("daily-plan-progress-", 20 + playerId.Length * 4 + 5);
+            for (int i = 0; i < playerId.Length; i++) encoded.Append(((int)playerId[i]).ToString("x4", CultureInfo.InvariantCulture));
+            return encoded.Append(".json").ToString();
+        }
+
+        /// <summary>Unity DailyPlanProgressPersistence.LegacyFileNameFor: 위 이름이 없을 때 찾는 더 옛 이름(정리한 id).</summary>
+        public static string UnityDailyPlanSanitized(string playerId)
+            => string.IsNullOrEmpty(playerId) || playerId == LegacyPlayerId ? "daily-plan-progress.json" : "daily-plan-progress-" + Sanitize(playerId) + ".json";
 
         /// <summary>Unity 판 탐색 파일 이름(플레이어 id를 정리하지 않았다).</summary>
         public static string LegacyExploration(string playerId)

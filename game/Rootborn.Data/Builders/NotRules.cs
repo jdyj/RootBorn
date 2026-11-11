@@ -20,7 +20,6 @@ namespace Rootborn.Data.Builders
             b.NotARule("CharacterPartAnimationClipDefinition", Look);
             b.NotARule("CharacterPartMotionDefinition", Look);
             b.NotARule("FishingAnimationDefinition", Look);
-            b.NotARule("DayNightLightingProfile", "낮밤 조명 색");
             b.NotARule("UrbanUiThemeDefinition", "UI 테마 그림");
 
             b.NotARule("LdtkTownMapDefinition", MapGeneration);
