@@ -13,9 +13,8 @@
 
 # --- 게임 데이터: 시작할 때 data/ 아래 *.json 을 전부 읽는다 ---
 data/**/*.json
-# 좌표표(atlases)는 쓰는 그림 몫만 자동으로 따라온다. 변환 보고서는 게임이 쓰지 않는다.
+# 좌표표(atlases)는 쓰는 그림 몫만 자동으로 따라온다.
 !data/atlases/**
-!data/export-report.json
 # 돈 설정: 데이터 폴더 옆의 game/economy.json(통화 아이템). 정의를 만들 때 읽고 데이터 지문에도 들어간다(서버와 같은 지문).
 game/economy.json
 
@@ -35,6 +34,3 @@ game/themes/*/
 # --- 그림: 데이터가 가리키는 PNG 전부(가구·캐릭터·NPC·아이템·UI·미니게임·시설) ---
 @refs data/**/*.json
 @refs game/world/*.json
-
-# --- 코드에 경로가 적힌 그림: 루트 표지이자 style2 대체 스킨의 UI 그림 ---
-@png Assets/modernuserinterface-win/16x16/Modern_UI_Style_2.png

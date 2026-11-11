@@ -13,7 +13,7 @@ Tools/publish/verify.sh --remote --server linux-x64  # linux-x64 서버를 원�
 
 Git Bash(또는 Linux/macOS bash)에서 돈다. dotnet 은 `~/.dotnet` 또는 PATH 에 있으면 된다.
 출력은 `output/publish/<플랫폼>/`(git 밖). 그 폴더가 곧 게임의 "저장소 루트"다 — 실행 파일을 거기서 바로 실행하면
-실행 파일 위치에서 위로 올라가며 `Assets/modernuserinterface-win` 을 찾아 루트를 정하고, `--root <폴더>` 로 줄 수도 있다.
+실행 파일 위치에서 위로 올라가며 `data/registry.json` 을 찾아 루트를 정하고(서버와 같다), `--root <폴더>` 로 줄 수도 있다.
 
 하는 일: `dotnet publish game/Rootborn.Host -c Release -r <플랫폼> --self-contained` → 출력 폴더에
 `content.txt` 가 가리키는 게임 파일을 **같은 상대 경로로** 복사한다(`data/…`, `Assets/…`, `game/economy.json`, `game/world/…`, `game/localization/…`, `game/themes/…`).

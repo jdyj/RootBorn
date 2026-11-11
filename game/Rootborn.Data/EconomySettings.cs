@@ -7,7 +7,7 @@ using Rootborn.Core.Inventory;
 namespace Rootborn.Data
 {
     /// <summary>
-    /// 돈 설정(game/economy.json). data/는 변환기 결과라 고치지 않고, 아이템 정의에는 통화임을 알리는 필드가 없어서
+    /// 돈 설정(game/economy.json). 아이템 정의에는 통화임을 알리는 필드가 없어서
     /// 어느 아이템이 지갑으로 가는지는 MonoGame 판이 직접 갖는 이 파일이 정한다. 코드는 아이템 id를 모른다.
     /// 위치는 data 폴더 옆의 game/economy.json이다(저장소 안의 상대 위치). 파일이 없으면 통화가 없다(돈도 가방의 아이템).
     /// 파일이 있는데 읽지 못하거나 가리키는 아이템이 없으면 읽기 오류다.

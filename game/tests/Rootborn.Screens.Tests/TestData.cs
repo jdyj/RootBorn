@@ -11,7 +11,7 @@ namespace Rootborn.Screens.Tests
         public static string RepoRoot => _root.Value;
         public static string DataDirectory => Path.Combine(RepoRoot, "data");
         public static string LocalizationDirectory => Path.Combine(DataDirectory, "localization");
-        /// <summary>MonoGame 판에서 더하거나 고친 문구(변환기가 다시 쓰지 않는 폴더).</summary>
+        /// <summary>MonoGame 판에서 더하거나 고친 문구(data/localization 위에 덮어 읽는다).</summary>
         public static string ExtraLocalizationDirectory => Path.Combine(RepoRoot, "game", "localization");
 
         /// <summary>실제 ko.json·en.json. 테스트마다 새로 만든다(언어와 빠진 키 목록이 테스트끼리 섞이지 않게).</summary>

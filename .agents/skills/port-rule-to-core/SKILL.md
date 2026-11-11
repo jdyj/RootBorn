@@ -5,18 +5,19 @@ description: "ROOTBORN의 Unity 게임 규칙 한 영역을 엔진 무관 Rootbo
 
 # 규칙 한 영역을 Rootborn.Core로 옮기기
 
-Unity 판은 얼렸다(태그 `unity-playable-20261111`). `Assets/` 아래는 읽기만 한다. 규칙은 Unity 코드를 읽고 `Rootborn.Core`에 같은 동작으로 새로 쓴다. 설계: `docs/superpowers/specs/2026-11-11-core-rules-extraction-design.md`, 규칙: `.claude/rules/engine-migration.md`.
+Unity 판은 저장소에서 지웠다. Unity 코드와 테스트(`Assets/Scripts`, `Assets/Tests`)는 태그 `unity-playable-20261111`에서 읽는다
+(`git show unity-playable-20261111:Assets/Scripts/Game/StudentLife/StudentLifeCore.cs`, 한 영역을 통째로 보려면 `git worktree add <임시 폴더> unity-playable-20261111` — 끝나면 `git worktree remove`). 규칙은 Unity 코드를 읽고 `Rootborn.Core`에 같은 동작으로 새로 쓴다. 설계: `docs/superpowers/specs/2026-11-11-core-rules-extraction-design.md`, 규칙: `.claude/rules/engine-migration.md`.
 
 지금 `game/Rootborn.Data/Builders/NotPortedYet.cs`는 비어 있다(게임이 쓰는 규칙은 다 옮겼다). 남은 대상은 `NotUsedByGame.cs`에 이유와 함께 적힌 종류로, 게임이 쓰게 될 때 옮긴다.
 
 ## 본보기
 
-원본 `Assets/Scripts/Game/StudentLife/StudentLifeCore.cs` ↔ 옮긴 것 `Packages/com.rootborn.core/Runtime/StudentLife/*.cs`, 테스트 `Tools/Rootborn.Core.Tests/StudentLifeActivityTests.cs`. 나란히 보면 방식이 보인다.
+원본 `Assets/Scripts/Game/StudentLife/StudentLifeCore.cs`(태그) ↔ 옮긴 것 `Packages/com.rootborn.core/Runtime/StudentLife/*.cs`, 테스트 `Tools/Rootborn.Core.Tests/StudentLifeActivityTests.cs`. 나란히 보면 방식이 보인다.
 
 ## 순서
 
 1. 영역 폴더를 훑어 파일을 넷으로 나눈다: 진행 상태·실행기(옮김), 정의 SO(값만 가진 Core 클래스로), 전략 SO(값을 생성자로 받는 Core 클래스로), MonoBehaviour·씬·UI(옮기지 않음).
-2. `Assets/Tests/EditMode`에서 그 영역의 규칙 테스트를 찾는다. 에셋·씬·등록부·UI를 검사하는 테스트는 뺀다.
+2. 태그의 `Assets/Tests/EditMode`에서 그 영역의 규칙 테스트를 찾는다. 에셋·씬·등록부·UI를 검사하는 테스트는 뺀다.
 3. 테스트를 먼저 옮긴다: SO 만들기(`CreateInstance` + `ConfigureForTests`) → 생성자 호출, SO 참조 → id 문자열. 파일 머리에 `// 옮겨 옴: <원래 경로>` 한 줄. `dotnet test`로 컴파일 실패를 확인한다.
 4. Core 구현을 쓴다. 통과를 확인한다.
 5. 원래 테스트가 안 다루던 경계를 더한다: 거절 시 무변경, 중복 요청, 빈 id와 null, 세이브 왕복.

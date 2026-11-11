@@ -8,7 +8,7 @@ namespace Rootborn.Data.Tests.Integrity
     /// </summary>
     internal static class KnownDataGaps
     {
-        // 변환 보고서(data/export-report.json) unresolved 12건: Unity 에셋이 가리키던 GUID의 파일이 저장소에 없다(guidNotFound).
+        // 마지막 변환(변환기와 보고서는 Unity 지우기 4단계에서 지웠다, 태그 unity-playable-20261111) unresolved 12건: Unity 에셋이 가리키던 GUID의 파일이 저장소에 없다(guidNotFound).
         private const string DeskTileGone =
             "Unity 판에서도 이 책상 그림 타일 에셋이 저장소에 없었다. 가구 만들기 함수는 그 칸을 건너뛰어 그림 칸 없이 차지 칸만 갖는다(RealDataTests.Furniture_CarriesItsFootprintAndSale)";
 
@@ -19,7 +19,7 @@ namespace Rootborn.Data.Tests.Integrity
             "옛 마을2 LDtk 지도 정의(LdtkTownMapDefinition, 규칙이 아님 — 게임이 읽지 않는다). 가리키던 LDtk 프로젝트·합성 그림이 Unity 판에서도 저장소에 없었다. 지금 마을은 game/world/maps.json이 정한다";
 
         private const string CharacterPrefab =
-            "Unity 판 캐릭터 프리팹. MonoGame 판은 이 필드를 읽지 않는다(겉모습은 그림 시트 id로, game/Rootborn.World/CharacterArt). Unity를 지우면 파일이 사라지므로 그때 데이터에서 필드를 지운다";
+            "Unity 판 캐릭터 프리팹. MonoGame 판은 이 필드를 읽지 않는다(겉모습은 그림 시트 id로, game/Rootborn.World/CharacterArt). 프리팹은 Unity를 지울 때 지웠다(태그 unity-playable-20261111에 있다) — 데이터에서 필드를 지우면 이 항목도 지운다";
 
         public static readonly IReadOnlyList<KnownGap> All = new List<KnownGap>
         {
@@ -36,7 +36,7 @@ namespace Rootborn.Data.Tests.Integrity
             new KnownGap("unresolved", "data/locations/LdtkTownMapDefinition.json LdtkTownMapDefinition/Town2LdtkMapDefinition projectAsset", Town2Gone),
             new KnownGap("unresolved", "data/locations/LdtkTownMapDefinition.json LdtkTownMapDefinition/Town2LdtkMapDefinition compositeSprite", Town2Gone),
 
-            // 그림이 아닌 Unity 파일을 가리키는 참조(파일은 지금 있다).
+            // Unity 파일을 가리키던 참조. 파일은 Unity를 지울 때 지웠다.
             new KnownGap("unity-file", "data/characters/GrowingCharacterAppearanceDefinition.json GrowingCharacterAppearanceDefinition/adult_short_brown_adult_casual visualPrefab", CharacterPrefab),
             new KnownGap("unity-file", "data/characters/GrowingCharacterAppearanceDefinition.json GrowingCharacterAppearanceDefinition/adult_short_brown_chef visualPrefab", CharacterPrefab),
             new KnownGap("unity-file", "data/characters/GrowingCharacterAppearanceDefinition.json GrowingCharacterAppearanceDefinition/adult_short_brown_interior visualPrefab", CharacterPrefab),

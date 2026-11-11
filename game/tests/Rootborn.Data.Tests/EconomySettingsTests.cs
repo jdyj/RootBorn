@@ -7,7 +7,7 @@ using Rootborn.Data.Builders;
 namespace Rootborn.Data.Tests
 {
     /// <summary>
-    /// 어느 아이템이 돈인지(지갑으로 가는 통화 아이템)는 game/economy.json이 정한다. data/는 변환기 결과라 고치지 않고,
+    /// 어느 아이템이 돈인지(지갑으로 가는 통화 아이템)는 game/economy.json이 정한다.
     /// 아이템 정의에는 통화임을 알리는 필드나 분류가 없다(분류는 Misc). 코드는 아이템 id를 모른다.
     /// </summary>
     public sealed class EconomySettingsTests

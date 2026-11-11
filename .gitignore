@@ -1,24 +1,13 @@
-# Unity
-[Ll]ibrary/
-[Tt]emp/
+# dotnet·편집기 산출물
+[Bb]in/
 [Oo]bj/
 [Bb]uild/
 [Bb]uilds/
-[Ll]ogs/
-[Uu]ser[Ss]ettings/
-*.csproj
-*.unityproj
-*.sln
+TestResults/
 *.suo
 *.tmp
 *.user
-*.userprefs
-*.pidb
-*.booproj
-*.svd
 *.pdb
-*.mdb
-*.opendb
 *.VC.db
 
 # OS
@@ -55,7 +44,6 @@ artifacts/
 
 # LDtk automatic save backups
 Assets/LDtk/**/backups/
-Assets/LDtk/**/backups.meta
 
 # 증거와 빌드 출력(git 밖)
 output/

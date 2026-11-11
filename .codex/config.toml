@@ -1,4 +1,0 @@
-# 이 프로젝트의 Unity MCP 포트. UserSettings/AI-Game-Developer-Config.json 과 같아야 한다.
-# 전역 ~/.codex/config.toml 의 값(29101)은 다른 프로젝트(sword)의 포트다.
-[mcp_servers.ai-game-developer]
-url = "http://localhost:22394"

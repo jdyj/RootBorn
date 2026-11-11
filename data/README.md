@@ -5,17 +5,13 @@
 
 이 문서는 MonoGame 판(`game/`)이 **지금 실제로 읽는 것**만 적는다. 규칙의 원칙은 `.claude/rules/data-driven.md`.
 
-## 먼저 알아 둘 것: 지금은 Unity 에셋이 원본이다
+## 먼저 알아 둘 것: 이 폴더가 원본이다
 
-- 지금 이 폴더는 Unity 에셋(`Assets/Data`)을 변환기 `Tools/Rootborn.DataExport`로 바꾼 결과다.
-  **변환기를 다시 돌리면 이 폴더의 JSON을 손으로 고친 것은 덮어써진다.** 그래서 지금은 손으로 고치지 않는다
-  (`.claude/rules/engine-migration.md` "지금 상태").
-- Unity 판은 얼렸으므로 변환기를 다시 돌리는 것은 변환기를 고쳤을 때뿐이다.
-- Unity를 지우는 계획(`docs/superpowers/specs/2026-11-12-unity-removal-plan.md` 5절 단계 1·4)에서 마지막으로 한 번 변환해 고정하고
-  변환기를 지우면, **그때부터 이 폴더가 원본**이 되고 사람이 직접 고친다. 그 전까지 아래 절차는 그때를 위한 안내이고,
-  지금 시험해 보려면 커밋하지 않는 작업 폴더에서 한다.
-- 같은 이유로 `data/localization/*.json`(문구 표)도 변환기가 다시 쓴다. MonoGame 판에서 더하는 문구는 `game/localization/<언어>.json`에 넣는다
-  (게임이 두 폴더를 합쳐 읽고, 같은 키는 `game/localization`이 이긴다).
+- 이 폴더의 JSON이 게임 데이터의 원본이다. **사람이 직접 고친다.**
+- 처음 내용은 Unity 에셋(`Assets/Data`)을 변환기로 바꾼 결과다. 변환기와 Unity 에셋은 Unity를 지울 때(2026-11-12) 지웠다
+  — 태그 `unity-playable-20261111`에 있다. 그래서 엔티티의 `asset` 필드(옛 Unity 경로)는 이제 없는 파일을 가리킨다(아래 "엔티티의 모양").
+- 문구는 `data/localization/<언어>.json`(옛 문구 표)과 `game/localization/<언어>.json`(MonoGame 판에서 더한 문구) 두 곳이다.
+  게임이 두 폴더를 합쳐 읽고, 같은 키는 `game/localization`이 이긴다. 새 문구는 `game/localization`에 넣는다.
 
 ## 폴더와 파일
 
@@ -25,7 +21,6 @@
 | 등록부 | `data/registry.json` | 목록마다 id의 순서, 기본값(첫 id) |
 | 문구 표 | `data/localization/<언어>.json` (+ `game/localization/<언어>.json`) | 키 → 문구 |
 | 그림 좌표표 | `data/atlases/<PNG 경로>.atlas.json` | PNG 안의 칸 이름 → 사각형 |
-| 변환 보고서 | `data/export-report.json` | 게임은 읽지 않는다(변환기의 기록) |
 
 - 폴더 이름(`studentlife`, `quests`, `interiors` …)은 사람이 찾기 쉽게 나눈 것이다. 게임은 `data/` 아래 모든 `*.json`을 읽으므로 폴더가 달라도 된다.
 - 파일 이름은 그 안의 `type`과 같게 한다(`QuestDefinition.json` 안에는 `"type": "QuestDefinition"`만). 같은 종류가 두 폴더에 있어도 된다
@@ -49,7 +44,7 @@
 - **`type`**: 종류. 게임 코드에 이 종류의 만들기 함수가 등록돼 있어야 한다(아래 "새 종류를 더할 때").
 - **`id`**: 이름. 같은 `type` 안에서 겹치면 안 된다(`duplicate` 오류). 다른 종류와는 같은 id를 써도 되지만(예: 아이템과 도구 `StoneAxe`)
   헷갈리므로 새 엔티티는 `quest.…`, `furniture.…`처럼 영역을 앞에 붙인다.
-- **`asset`**: Unity 원본 경로. 오류 메시지에 출처로만 쓴다. **새 엔티티는 적지 않아도 된다**(없으면 오류 위치가 JSON 파일 경로가 된다).
+- **`asset`**: 옛 Unity 원본 경로(그 파일은 이제 없다). 오류 메시지에 출처로만 쓴다. **새 엔티티는 적지 않는다**(없으면 오류 위치가 JSON 파일 경로가 된다).
 - **다른 엔티티 가리키기**: `{ "ref": "<id>", "type": "<종류>" }`. 가리키지 않으면 `null`. 배열이면 `[ {…}, {…} ]`.
   다른 엔티티 안에만 쓰이는 작은 전략(효과·조건 등)은 `ref` 없이 `{ "type": "…", 필드… }`로 그 자리에 바로 적을 수도 있다.
 - **필드는 빠짐없이**: 만들기 함수가 읽는 필드가 파일에 없으면 `missing-field` 오류다(옛 에셋 때문에 일부만 생략을 허락한다).

@@ -46,7 +46,7 @@ namespace Rootborn.Screens
 
         /// <summary>
         /// 여러 폴더를 차례로 읽어 합친다. 같은 키는 뒤 폴더의 문구가 이긴다.
-        /// 첫 폴더는 변환기가 다시 쓰는 data/localization이고, 뒤 폴더(game/localization)는 MonoGame 판에서 더하거나 고친 문구다.
+        /// 첫 폴더는 data/localization이고, 뒤 폴더(game/localization)는 MonoGame 판에서 더하거나 고친 문구다.
         /// 첫 폴더는 있어야 하고, 뒤 폴더는 없으면 건너뛴다.
         /// </summary>
         public static GameText LoadMerged(string language, params string[] localizationDirectories)

@@ -6,8 +6,7 @@
 # 설계와 해석은 docs/superpowers/specs/2026-11-12-unity-removal-plan.md.
 #
 # 분류 (표의 한 파일은 딱 한 분류에 든다. 위에서부터 먼저 맞는 것):
-#   가   MonoGame 판이 실행 중에 읽는 것 — Tools/publish/content.txt 규칙을 같게 따라 만든 목록
-#   가*  실행 중에 읽지만 content.txt 에 없는 것 (game/themes)
+#   가   MonoGame 판이 실행 중에 읽는 것 — 배포 목록(Tools/publish/publish.sh --list, 클라이언트·서버) 그대로
 #   나   테스트가 읽는 것 — game/tests 의 코드 아닌 고정 파일. 테스트가 직접 여는 Unity 씬은 없다
 #        (학교 충돌 대조는 2026-11-12부터 School.unity 대신 고정 파일 school-structure-colliders.json 을 읽는다)
 #   다   변환기(Tools/Rootborn.DataExport)가 원본으로 읽는 Unity 에셋 — Assets/Data, 문구 카탈로그,
@@ -31,62 +30,25 @@ REV="${UNITY_REMOVAL_REV:-HEAD}"
 # 1. 커밋된 파일 전부: 크기 \t 경로 (제출 안 된 BRIEF.local.md 같은 것은 빠진다)
 git -c core.quotepath=off ls-tree -r -l "$REV" | awk -F'\t' '{ split($1, a, / +/); print a[4] "\t" $2 }' > "$OUT/tree.tsv"
 
-# 2. 실행 프로그램이 읽는 파일 목록 (content.txt 규칙을 같게 따른다)
-CAND="$OUT/.cand"; : > "$CAND"
-# 줄 하나 = 후보 경로. content.txt 의 줄 종류별로 만든다.
-awk -F'\t' '
-  $2 ~ /^data\/.*\.json$/ && $2 !~ /^data\/atlases\// && $2 != "data/export-report.json" { print $2 }   # data/**/*.json, !data/atlases/**, !data/export-report.json
-  $2 ~ /^game\/world\/[^\/]*\.json$/ { print $2 }                                                       # game/world/*.json
-  $2 ~ /^game\/localization\/[^\/]*\.json$/ { print $2 }                                                # game/localization/*.json
-  $2 == "Assets/modernuserinterface-win/16x16/Modern_UI_Style_2.png" { print $2 }                       # @png
-' "$OUT/tree.tsv" >> "$CAND"
-
-# @refs data/**/*.json, game/world/*.json — 글롭이 data/atlases 안의 .json 도 잡으므로 publish.sh 와 같게 atlases 도 읽는다
-git grep -ohE 'Assets/[^"]+\.png' "$REV" -- 'data/*.json' 'game/world/*.json' | sort -u >> "$CAND"
-
-# @ldtk Assets/LDtk/*/*.ldtk — .ldtk, 같은 이름 폴더의 .ldtkl, relPath 가 가리키는 타일셋 PNG(저장소 밖이면 건너뜀)
-while IFS= read -r ldtk; do
-  [ -n "$ldtk" ] || continue
-  echo "$ldtk" >> "$CAND"
-  dir="${ldtk%/*}"; name="${ldtk##*/}"; name="${name%.ldtk}"
-  awk -F'\t' -v d="$dir/$name/" 'index($2, d) == 1 && $2 ~ /\.ldtkl$/ && index(substr($2, length(d) + 1), "/") == 0 { print $2 }' "$OUT/tree.tsv" >> "$CAND"
-  git show "$REV:$ldtk" | grep -ohE '"relPath": *"[^"]+"' | sed -E 's/.*: *"([^"]+)"/\1/' | sort -u |
-    awk -v d="$dir" '{
-      n = split(d "/" $0, parts, "/"); m = 0
-      for (i = 1; i <= n; i++) {
-        if (parts[i] == "" || parts[i] == ".") continue
-        if (parts[i] == "..") { if (m == 0) { m = -1; break } m--; continue }
-        out[++m] = parts[i]
-      }
-      if (m <= 0) next
-      s = out[1]; for (i = 2; i <= m; i++) s = s "/" out[i]; print s
-    }' >> "$CAND"
-done < <(awk -F'\t' '$2 ~ /^Assets\/LDtk\/[^\/]+\/[^\/]+\.ldtk$/ { print $2 }' "$OUT/tree.tsv")
-
-# 후보 중 커밋된 것만 남기고(없는 것은 따로), Unity 전용 확장자는 뺀다. 그림마다 좌표표를 더한다.
-awk -F'\t' -v out="$OUT" '
-  FNR == NR { tree[$2] = $1; next }
-  {
-    p = $0
-    if (p in seen) next
-    seen[p] = 1
-    if (p ~ /\.(meta|unity|asset|prefab|cs)$/) next
-    if (p in tree) { rt[p] = 1 } else { print p > (out "/runtime-missing.txt") }
-  }
-  END {
-    for (p in rt) if (p ~ /\.png$/) { a = "data/atlases/" p ".atlas.json"; if (a in tree) rt[a] = 1 }
-    for (p in rt) print p
-  }
-' "$OUT/tree.tsv" "$CAND" | sort > "$OUT/runtime-files.txt"
+# 2. 실행 프로그램이 읽는 파일 목록: 배포 목록 그대로(publish.sh --list, 클라이언트와 서버). 규칙을 여기서 다시 만들지 않는다.
+#    배포 목록은 작업 폴더를 읽는다 — 커밋 기준과 같으려면 추적 파일에 커밋 안 한 변경이 없어야 한다.
+if [ "$REV" = HEAD ] && [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+  echo "경고: 추적 파일에 커밋 안 한 변경이 있다. 실행 목록(작업 폴더)과 분류(HEAD)가 어긋날 수 있다." >&2
+fi
+{ bash "$REPO/Tools/publish/publish.sh" --list; bash "$REPO/Tools/publish/publish.sh" --server --list; } 2>"$OUT/runtime-warnings.txt" |
+  LC_ALL=C sort -u > "$OUT/.cand"
+awk -F'	' -v out="$OUT" '
+  FNR == NR { tree[$2] = 1; next }
+  { if ($0 in tree) print $0; else print $0 > (out "/runtime-missing.txt") }
+' "$OUT/tree.tsv" "$OUT/.cand" > "$OUT/runtime-files.txt"
 touch "$OUT/runtime-missing.txt"
-rm -f "$CAND"
+rm -f "$OUT/.cand"
 
 # 3. 분류
 awk -F'\t' -v out="$OUT" '
   function top(p,   n, a) { n = split(p, a, "/"); if (n == 1) return "(루트 파일)"; if (n == 2) return a[1] "/(직속 파일)"; return a[1] "/" a[2] }
   function classify(p,   base) {
     if (p in rt) return "가  실행 중에 읽음 (content.txt)"
-    if (p ~ /^game\/themes\//) return "가* 실행 중에 읽지만 content.txt 에 없음 (game/themes)"
     if (p ~ /^game\/tests\// && p !~ /\.(cs|csproj)$/) return "나  테스트 고정 파일 (game/tests)"
     if (p ~ /^Assets\/Data\//) return "다  변환기 원본: Assets/Data"
     if (p ~ /^Assets\/Localization\/GameTextCatalog\.asset/) return "다  변환기 원본: 문구 카탈로그"
@@ -125,7 +87,6 @@ awk -F'\t' -v out="$OUT" '
     else if (code == "라\x27") print p > (out "/art-pack-unread.txt")
     else if (code == "나") print p > (out "/tests-read.txt")
     else if (c ~ /^마  Unity 를/ || c ~ /^마  찌꺼기/) print p > (out "/unity-pointing-leftovers.txt")
-    else if (code == "가*") print p > (out "/runtime-not-in-content-list.txt")
   }
   END {
     for (c in n) printf "%s\t%d\t%d\t%.1f\n", c, n[c], b[c], b[c] / 1048576 | "sort > \"" out "/.summary.body\""
@@ -138,7 +99,7 @@ awk -F'\t' -v out="$OUT" '
 { printf '분류\t파일 수\t바이트\tMB\n'; cat "$OUT/.summary.body" "$OUT/.summary.total"; } > "$OUT/summary.tsv"
 { printf '분류\t폴더\t파일 수\t바이트\tMB\n'; cat "$OUT/.folder.body"; } > "$OUT/by-folder.tsv"
 rm -f "$OUT"/.summary.* "$OUT"/.folder.body
-for f in delete-unity-only delete-after-data-is-source art-pack-unread tests-read unity-pointing-leftovers runtime-not-in-content-list; do
+for f in delete-unity-only delete-after-data-is-source art-pack-unread tests-read unity-pointing-leftovers; do
   touch "$OUT/$f.txt"; sort -o "$OUT/$f.txt" "$OUT/$f.txt"
 done
 
@@ -147,4 +108,4 @@ echo "== 분류별 (커밋 기준 $REV) =="; cat "$OUT/summary.tsv"
 echo
 echo "실행 중에 읽는 파일 $(wc -l < "$OUT/runtime-files.txt")개, 목록에 있는데 저장소에 없는 것 $(wc -l < "$OUT/runtime-missing.txt")개"
 echo "지워도 되는 Unity 전용 파일 목록: $OUT/delete-unity-only.txt ($(wc -l < "$OUT/delete-unity-only.txt")줄)"
-echo "나머지 목록: $OUT/{summary,by-folder}.tsv, delete-after-data-is-source.txt, art-pack-unread.txt, tests-read.txt, unity-pointing-leftovers.txt, runtime-not-in-content-list.txt, runtime-files.txt, runtime-missing.txt"
+echo "나머지 목록: $OUT/{summary,by-folder}.tsv, delete-after-data-is-source.txt, art-pack-unread.txt, tests-read.txt, unity-pointing-leftovers.txt, runtime-files.txt, runtime-missing.txt, runtime-warnings.txt"

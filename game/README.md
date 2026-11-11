@@ -26,6 +26,14 @@
 | `tests/Rootborn.Screens.Tests` | 창 없이 도는 화면 테스트: 화면 쌓기의 층·배타·이동 막음·입력 넘기기, 실제 `ko.json`·`en.json`, 설정·HUD·대화·하루 이벤트·가방·상태 화면을 실제 `data/`와 `GameSession`으로 눌러 보기(알려진 빠진 현지화 키는 `KnownMissingKeys`) | 없음 |
 | `tests/Rootborn.Host.Tests` | 실제 창과 게임 루프를 한 프레임씩 돌리는 테스트(새 게임 → 집 → 마을 → 가게 → 이어 하기 `NewGameJourneyTests`, 메인 체인 처음부터 끝까지 `MainChainHostTests`, 영어로 모든 화면 찍기 `EnglishScreensTests`, `--frames`·`--screenshot` 프로세스 시험 `FramesScreenshotTests`, 같은 프로세스 안 방에 UDP 루프백으로 들어가 다른 참가자 보기·거절·끊김 `MultiplayerJoinHostTests` 포함) | 있음 |
 
+## 데이터·그림·맵 파일의 자리
+
+- **게임 데이터는 `data/`가 원본이다.** 사람이 직접 고친다(`data/README.md`). Unity 에셋에서 바꾸던 변환기는 Unity를 지울 때 지웠다(태그 `unity-playable-20261111`에 있다).
+- **그림(PNG)과 맵(LDtk)은 아직 `Assets/` 아래에 있다.** Unity가 없는데 폴더 이름이 `Assets`인 것은 Unity 시절 이름이다.
+  게임이 읽는 파일만 남겼고(`Tools/publish/content.txt`가 고르는 것), 새 그림·맵이 오면 새 자리로 가면서 사라진다.
+  옮기지 않은 이유: 그림·맵을 전부 새로 그릴 예정이라 지금 옮기면 같은 경로 수천 곳을 두 번 고친다(`docs/superpowers/specs/2026-11-12-unity-removal-plan.md` 4절).
+- 저장소 루트는 `data/registry.json`이 있는 폴더다(실행 프로그램·서버·테스트 도우미가 이것으로 찾는다).
+
 ## 명령
 
 ```
@@ -41,7 +49,7 @@ dotnet run --project game/Rootborn.Host -- --save-root <세이브 폴더> --slot
 
 | 인자 | 환경 변수 | 없을 때 |
 |---|---|---|
-| `--root <저장소>` | `ROOTBORN_REPO_ROOT` | 실행 파일 위치에서 위로 올라가며 찾는다 |
+| `--root <저장소>` | `ROOTBORN_REPO_ROOT` | 실행 파일 위치에서 위로 올라가며 `data/registry.json`이 있는 폴더를 찾는다(서버와 같다) |
 | `--font <TTF>` | `ROOTBORN_FONT` | 운영체제 한글 글꼴을 찾는다. 못 찾으면 오류 |
 | `--evidence <폴더>` | `ROOTBORN_EVIDENCE_DIR` | `<저장소>/output/host-ui-evidence` |
 | `--size 1280x720` | | 1280x720 |

@@ -8,7 +8,7 @@ namespace Rootborn.Data.Tests.Integrity
     /// <summary>
     /// data/ 엔티티와 registry.json 안의 그림·파일 참조를 훑어 빈 곳을 모은다.
     /// - { "sprite": PNG, "name": 칸 }: PNG가 있고, 좌표표 data/atlases/&lt;PNG&gt;.atlas.json이 그 PNG를 가리키며 그 이름의 칸이 그림 안에 있다.
-    /// - { "asset": 경로 }: 파일이 있다. PNG가 아니면 unity-file(Unity를 지우면 사라질 파일).
+    /// - { "asset": 경로 }: PNG가 아니면 unity-file(게임이 읽지 않는 Unity 파일, Unity를 지울 때 지웠다). PNG면 파일이 있다.
     /// - { "unresolved": GUID }: 변환기가 풀지 못한 Unity 참조.
     /// PNG 크기는 머리에서만 읽고, PNG·좌표표는 한 번씩만 읽는다.
     /// </summary>
@@ -77,8 +77,9 @@ namespace Rootborn.Data.Tests.Integrity
             if (DataScan.HasOnlyStrings(obj, "asset"))
             {
                 var asset = obj.GetProperty("asset").GetString();
-                if (!File.Exists(_data.Full(asset))) gaps.Add(new DataGap("missing-file", where, asset));
-                else if (!asset.EndsWith(".png", StringComparison.OrdinalIgnoreCase)) gaps.Add(new DataGap("unity-file", where, asset));
+                // 그림이 아닌 파일(Unity 프리팹 등)은 게임이 읽지 않는다 — 파일이 있든 없든(Unity를 지운 뒤) 같은 종류로 센다.
+                if (!asset.EndsWith(".png", StringComparison.OrdinalIgnoreCase)) gaps.Add(new DataGap("unity-file", where, asset));
+                else if (!File.Exists(_data.Full(asset))) gaps.Add(new DataGap("missing-file", where, asset));
                 else if (!PngAt(_data.Full(asset), out _, out _)) gaps.Add(new DataGap("not-png", where, asset));
                 return;
             }

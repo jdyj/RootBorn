@@ -1,7 +1,6 @@
 name: CI
 
-# MonoGame 판(game/, Packages/com.rootborn.core, Tools/) 기준 CI. Unity 판은 얼렸고(태그 unity-playable-20261111)
-# Unity 테스트는 돌리지 않는다. 같은 검사를 로컬에서는 `bash Scripts/ci/run-all.sh`로 돌린다.
+# MonoGame 판(game/, Packages/com.rootborn.core, Tools/) 기준 CI. Unity 판은 저장소에서 지웠다(태그 unity-playable-20261111에 있다). 같은 검사를 로컬에서는 `bash Scripts/ci/run-all.sh`로 돌린다.
 
 on:
   push:
@@ -31,7 +30,7 @@ jobs:
         run: bash Scripts/ci/run-all.sh --checks-only
 
   dotnet-tests:
-    name: dotnet 테스트 (Core, DataExport, game — Host 제외)
+    name: dotnet 테스트 (Core, game — Host 제외)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -40,8 +39,6 @@ jobs:
           dotnet-version: '8.0.x'
       - name: Core 규칙 테스트
         run: dotnet test Tools/Rootborn.Core.Tests
-      - name: 데이터 변환기 테스트
-        run: dotnet test Tools/Rootborn.DataExport.Tests
       # Host 테스트는 실제 창을 띄우므로 아래 별도 job에서 돌린다. 나머지 프로젝트는 창이 필요 없다.
       - name: game 테스트 (Host.Tests 제외)
         # 한 프로젝트가 실패해도 나머지를 끝까지 돌려 실패를 한꺼번에 보이고, 실패가 하나라도 있으면 job 이 실패한다.

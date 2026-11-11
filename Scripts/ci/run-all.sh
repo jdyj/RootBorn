@@ -48,7 +48,6 @@ if [ "$checks_only" -eq 0 ]; then
     exit 2
   fi
   run_step "dotnet test Tools/Rootborn.Core.Tests" dotnet test Tools/Rootborn.Core.Tests
-  run_step "dotnet test Tools/Rootborn.DataExport.Tests" dotnet test Tools/Rootborn.DataExport.Tests
   if [ "$skip_host" -eq 1 ]; then
     while IFS= read -r proj; do
       run_step "dotnet test $proj" dotnet test "$proj"

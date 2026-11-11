@@ -1,6 +1,6 @@
-# Scripts/ci — Unity 없이 도는 검사
+# Scripts/ci — 정적 검사
 
-MonoGame 판(`game/`, `Packages/com.rootborn.core`, `Tools/`)을 검사한다. Unity 판은 얼렸고(태그 `unity-playable-20261111`) 여기서 Unity 테스트는 돌리지 않는다. GitHub Actions(`.github/workflows/ci.yml`)도 같은 스크립트를 부른다.
+MonoGame 판(`game/`, `Packages/com.rootborn.core`, `Tools/`)을 검사한다. Unity 판은 저장소에서 지웠다(태그 `unity-playable-20261111`에 있다). GitHub Actions(`.github/workflows/ci.yml`)도 같은 스크립트를 부른다.
 
 ## 한 번에 돌리기
 
@@ -45,7 +45,7 @@ GitHub 기록(`gh run view`)을 읽어 확인한 값이다(main 43022156721, 202
 | job | 하는 일 | 마지막 결과 | 시간 | 막는가 |
 |---|---|---|---|---|
 | `static-checks` | 자체 시험 + 검사 6개 | 통과 | 약 20초 | 막는다 |
-| `dotnet-tests` | Core, DataExport, `game/tests`의 Host 테스트를 뺀 나머지(Server, Simulation 포함) | 통과(Core 970, Data 256, Game 520, Screens 393, Server 40, Simulation 36 …) | 약 1.5분 | 막는다 |
+| `dotnet-tests` | Core, `game/tests`의 Host 테스트를 뺀 나머지(Server, Simulation 포함) | 통과(Core 970, Data 256, Game 520, Screens 393, Server 40, Simulation 36 …) | 약 1.5분 | 막는다 |
 | `server-publish` | `Tools/publish/publish.sh --server linux-x64` 뒤 `verify.sh --server linux-x64` | 연속 두 번 통과(43022156721, 43027519152) | 35~50초 | 막는다 |
 | `host-tests` | `game/tests/Rootborn.Host.Tests`를 `xvfb-run` + 소프트웨어 GL로 | 171건 중 169 통과, 성능 시험 2건 실패 | 27분 | **막지 않는다**(`continue-on-error`), 시간 제한 45분 |
 

@@ -197,8 +197,9 @@ namespace Rootborn.Host
 
             if (string.IsNullOrEmpty(o.RepoRoot))
             {
+                // 표지는 게임 데이터(data/registry.json) — 서버와 같다. 그림 폴더는 새 그림이 오면 바뀌므로 표지로 쓰지 않는다.
                 for (var d = new DirectoryInfo(searchFrom ?? AppContext.BaseDirectory); d != null; d = d.Parent)
-                    if (Directory.Exists(Path.Combine(d.FullName, "Assets", "modernuserinterface-win"))) { o.RepoRoot = d.FullName; break; }
+                    if (File.Exists(Path.Combine(d.FullName, "data", Rootborn.Data.EntityTable.RegistryFileName))) { o.RepoRoot = d.FullName; break; }
             }
             if (string.IsNullOrEmpty(o.RepoRoot))
                 throw new InvalidOperationException($"저장소 위치를 모른다. --root 또는 환경 변수 {RootVariable} 로 준다.");
