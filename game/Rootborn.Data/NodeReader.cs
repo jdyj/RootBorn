@@ -218,6 +218,23 @@ namespace Rootborn.Data
             return items;
         }
 
+        /// <summary>Items와 같지만 null 원소도 null 자리로 남긴다(다른 배열과 순번을 맞춰야 할 때).</summary>
+        public IReadOnlyList<NodeReader?> ItemsKeepingNulls(string field)
+        {
+            if (!TryField(field, out var value)) return Array.Empty<NodeReader?>();
+            if (value.ValueKind != JsonValueKind.Array) return WrongType(field, "배열", value, Array.Empty<NodeReader?>());
+
+            var items = new List<NodeReader?>(value.GetArrayLength());
+            foreach (var element in value.EnumerateArray())
+            {
+                if (element.ValueKind == JsonValueKind.Object) items.Add(new NodeReader(Type, Id, Source, element, _errors));
+                else if (element.ValueKind == JsonValueKind.Null) items.Add(null);
+                else WrongType(field, "객체 원소", element, 0);
+            }
+
+            return items;
+        }
+
         /// <summary>엔티티 안에 바로 적힌 객체 하나. 없거나 null이면 false.</summary>
         public bool TryChild(string field, out NodeReader child)
         {

@@ -29,6 +29,12 @@ namespace Rootborn.Core.StudentLife
                 result = Result(LifeActivityResultKind.DuplicateRequest);
                 return false;
             }
+            // 이미 답한 이벤트(고름·지나감·만료, 아직 다시 나오지 않은 미룸·쉬는 중)는 목록에 없듯 고를 수도 없다. 원본은 요청 id만 봤다.
+            if (DailyEventResolver.IsClosed(eventProgress.GetRecord(dailyEvent.Id), dailyEvent, progress.CurrentDay))
+            {
+                result = Result(LifeActivityResultKind.DuplicateRequest);
+                return false;
+            }
             var context = new DailyEventContext(progress, eventProgress, string.IsNullOrEmpty(currentLocationId) ? dailyEvent.LocationId : currentLocationId, progress.CurrentDay, progress.TimeMinutes);
             if (!choice.HasSatisfiedAvailability(context, dailyEvent))
             {
@@ -99,7 +105,7 @@ namespace Rootborn.Core.StudentLife
                 DailyEvent dailyEvent = _events[i];
                 if (dailyEvent == null || context.EventProgress == null) continue;
                 DailyEventRecord record = context.EventProgress.GetRecord(dailyEvent.Id);
-                if (ShouldSkipForState(record, dailyEvent, context)) continue;
+                if (IsClosed(record, dailyEvent, context.Day)) continue;
                 if (IsExpired(record, dailyEvent, context)) continue;
                 if (!dailyEvent.HasSatisfiedAvailability(context)) continue;
                 record.MarkAvailable(context.Day);
@@ -108,13 +114,18 @@ namespace Rootborn.Core.StudentLife
             return available.ToArray();
         }
 
-        private static bool ShouldSkipForState(DailyEventRecord record, DailyEvent dailyEvent, DailyEventContext context)
+        /// <summary>
+        /// 그 날에 이 이벤트를 보이거나 고를 수 없는 상태인지: 다시 나오지 않는 이벤트를 이미 고름·지나감·만료, 쉬는 중, 다시 나올 날 전의 미룸.
+        /// 목록(GetAvailableEvents)과 고르기(DailyEventRunner.TryChoose)가 같은 규칙을 쓴다.
+        /// </summary>
+        public static bool IsClosed(DailyEventRecord record, DailyEvent dailyEvent, int day)
         {
+            if (dailyEvent == null) return true;
             if (record == null) return true;
             bool repeatable = dailyEvent.Kind != null && dailyEvent.Kind.IsRepeatable;
             if (!repeatable && (record.State == DailyEventStates.Completed || record.State == DailyEventStates.Declined || record.State == DailyEventStates.Expired)) return true;
-            if (record.State == DailyEventStates.Cooldown && record.CooldownUntilDay > context.Day) return true;
-            if (record.State == DailyEventStates.Deferred && record.DueDay > context.Day) return true;
+            if (record.State == DailyEventStates.Cooldown && record.CooldownUntilDay > day) return true;
+            if (record.State == DailyEventStates.Deferred && record.DueDay > day) return true;
             return false;
         }
 

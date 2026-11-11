@@ -10,6 +10,14 @@ namespace Rootborn.Core.Tests
     // (등록부 검사 001과 등록부·목표 저널을 보는 SecondNpcRelationshipRouteTests는 옮기지 않음)
     public sealed class MilestoneTests
     {
+        [Test]
+        public void ObjectiveNameKey_ComesFromTheDefinition_OrFallsBackToTheId()
+        {
+            Assert.That(new TraitMilestoneObjective("objective.a", "trait.a", 1, "milestone.objective.a.name").DisplayNameKey, Is.EqualTo("milestone.objective.a.name"));
+            Assert.That(new SkillMilestoneObjective("objective.b", "skill.b", 1).DisplayNameKey, Is.EqualTo("objective.b"));
+            Assert.That(new OutsideSchoolLogMilestoneObjective("objective.c", null, 1, "").DisplayNameKey, Is.EqualTo("objective.c"));
+        }
+
         private static Milestone Milestone(string id, MilestoneObjective[] objectives, IMilestoneReward[] rewards, MilestoneRoute[] routes, int requiredObjectiveCount, string[] prerequisites = null)
             => new Milestone(id, id, objectives, rewards, routes, prerequisites, requiredObjectiveCount);
 

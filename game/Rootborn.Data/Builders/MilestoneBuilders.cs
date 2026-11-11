@@ -20,9 +20,9 @@ namespace Rootborn.Data.Builders
 
             // Unity MilestoneObjectiveBase.RequiredValue는 1 이상.
             b.Add("RelationshipMilestoneObjective", (n, c) => new RelationshipMilestoneObjective(
-                n.Id, n.RefId("relationship"), Math.Max(1, n.Int("requiredValue"))));
+                n.Id, n.RefId("relationship"), Math.Max(1, n.Int("requiredValue")), n.Str("displayNameKey")));
             b.Add("OutsideSchoolLogMilestoneObjective", (n, c) => new OutsideSchoolLogMilestoneObjective(
-                n.Id, n.Str("targetId"), Math.Max(1, n.Int("requiredValue"))));
+                n.Id, n.Str("targetId"), Math.Max(1, n.Int("requiredValue")), n.Str("displayNameKey")));
         }
     }
 }

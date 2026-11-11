@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Rootborn.Core.Minigames
 {
@@ -9,17 +10,24 @@ namespace Rootborn.Core.Minigames
         ChallengeSession Create(MinigameTuning tuning, int seed);
     }
 
-    /// <summary>도전 정의의 공통 값: 안내 문구 키, 제한 시간, 허용 실수.</summary>
+    /// <summary>도전 정의의 공통 값: 안내 문구 키, 제한 시간, 허용 실수, 기호 그림 주소.</summary>
     public abstract class ChallengeBase : IChallenge
     {
-        protected ChallengeBase(string instructionKey, float timeLimitSeconds, int mistakeAllowance)
+        private readonly string[] _symbolSprites;
+
+        /// <param name="symbolSprites">기호마다의 그림 주소(Unity ChallengeDefinitionBase._symbolSprites). 화면 몫이고 규칙은 쓰지 않는다.</param>
+        protected ChallengeBase(string instructionKey, float timeLimitSeconds, int mistakeAllowance, string[] symbolSprites = null)
         {
             InstructionKey = instructionKey;
             TimeLimitSeconds = timeLimitSeconds;
             MistakeAllowance = mistakeAllowance;
+            _symbolSprites = symbolSprites == null ? Array.Empty<string>() : (string[])symbolSprites.Clone();
         }
 
         public string InstructionKey { get; }
+
+        /// <summary>기호마다의 그림 주소(없으면 빈 목록). 기호 순서와 같다.</summary>
+        public IReadOnlyList<string> SymbolSprites => _symbolSprites;
         public float TimeLimitSeconds { get; }
         public int MistakeAllowance { get; }
 
@@ -28,7 +36,7 @@ namespace Rootborn.Core.Minigames
         public abstract ChallengeSession Create(MinigameTuning tuning, int seed);
 
         protected void Bind(ChallengeSession session, MinigameTuning tuning)
-            => session.Initialize(InstructionKey, TimeLimitSeconds + tuning.ExtraSeconds, MistakeAllowance + tuning.ExtraMistakes, tuning.HintCount);
+            => session.Initialize(InstructionKey, TimeLimitSeconds + tuning.ExtraSeconds, MistakeAllowance + tuning.ExtraMistakes, tuning.HintCount, _symbolSprites);
     }
 
     /// <summary>진행 중인 도전 하나. 입력을 받아 점수(0~100)를 낸다. 끝난 뒤의 입력은 거절한다.</summary>
@@ -36,6 +44,9 @@ namespace Rootborn.Core.Minigames
     {
         public abstract MinigameMechanic Mechanic { get; }
         public string InstructionKey { get; private set; }
+
+        /// <summary>도전 정의의 기호 그림 주소(Unity ChallengeSession.SymbolSprites).</summary>
+        public IReadOnlyList<string> SymbolSprites { get; private set; } = Array.Empty<string>();
         public float Elapsed { get; private set; }
         public float Duration { get; private set; }
         public float RemainingSeconds => Math.Max(0, Duration - Elapsed);
@@ -65,9 +76,10 @@ namespace Rootborn.Core.Minigames
         public virtual int NextObstacleLane => -1;
         public virtual float NextObstacleFraction => 0;
 
-        internal void Initialize(string instruction, float duration, int allowance, int hints)
+        internal void Initialize(string instruction, float duration, int allowance, int hints, string[] symbolSprites = null)
         {
             InstructionKey = instruction;
+            SymbolSprites = symbolSprites ?? Array.Empty<string>();
             Duration = Math.Max(.01f, duration);
             MistakeAllowance = Math.Max(0, allowance);
             HintCount = Math.Max(0, hints);

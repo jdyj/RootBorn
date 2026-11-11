@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using NUnit.Framework;
 using Rootborn.Core.StudentLife;
@@ -45,6 +46,48 @@ namespace Rootborn.Data.Tests
             var expected = Read("LocationDefinition");
             Assert.That(expected, Is.Not.Empty);
             foreach (var pair in expected) Assert.That(_definitions.Get<Location>(pair.Key).DisplayNameKey, Is.EqualTo(pair.Value), pair.Key);
+        }
+
+        [TestCase("RelationshipMilestoneObjective")]
+        [TestCase("OutsideSchoolLogMilestoneObjective")]
+        public void MilestoneObjectives_CarryTheDisplayNameKeyFromData(string type)
+        {
+            var expected = Read(type);
+            Assert.That(expected, Is.Not.Empty);
+            foreach (var pair in expected) Assert.That(_definitions.Get<MilestoneObjective>(pair.Key).DisplayNameKey, Is.EqualTo(pair.Value), pair.Key);
+        }
+
+        [TestCase("CampaignActivityLogObjective")]
+        [TestCase("CampaignLocationVisitObjective")]
+        public void CampaignObjectives_CarryTheDisplayNameKeyFromData(string type)
+        {
+            var expected = Read(type);
+            Assert.That(expected, Is.Not.Empty);
+            foreach (var pair in expected) Assert.That(_definitions.Get<CampaignObjective>(pair.Key).DisplayNameKey, Is.EqualTo(pair.Value), pair.Key);
+        }
+
+        [Test]
+        public void CampaignsAndCampaignDays_CarryTheDisplayNameKeyFromData()
+        {
+            var campaigns = Read("CampaignDefinition");
+            var days = Read("CampaignDayDefinition");
+            Assert.That(campaigns, Is.Not.Empty);
+            Assert.That(days, Is.Not.Empty);
+            foreach (var pair in campaigns) Assert.That(_definitions.Get<Campaign>(pair.Key).DisplayNameKey, Is.EqualTo(pair.Value), pair.Key);
+            foreach (var pair in days) Assert.That(_definitions.Get<CampaignDay>(pair.Key).DisplayNameKey, Is.EqualTo(pair.Value), pair.Key);
+            Assert.That(_definitions.Get<Campaign>("campaign.first-three-days").DisplayNameKey, Is.Not.EqualTo("campaign.first-three-days"), "id가 아니라 데이터 값");
+        }
+
+        [Test]
+        public void ChallengeSymbolSprites_ComeFromData_KeepingEmptySlots()
+        {
+            var minigames = _definitions.All<Rootborn.Core.Minigames.Minigame>();
+            var all = minigames.SelectMany(m => m.Challenges).OfType<Rootborn.Core.Minigames.ChallengeBase>().ToArray();
+            Assert.That(all.Any(c => c.SymbolSprites.Count > 0), Is.True);
+            Assert.That(all.SelectMany(c => c.SymbolSprites).Where(s => s.Length > 0).All(s => s.EndsWith(".png")), Is.True, "그림 경로");
+            var care1 = all.OfType<Rootborn.Core.Minigames.ChoiceChallenge>().First(c => c.InstructionKey == "minigame.care.instructions" && c.SymbolSprites.Count == 3);
+            Assert.That(care1.SymbolSprites[0], Does.EndWith("bandage.png"));
+            Assert.That(all.Any(c => c.SymbolSprites.Contains(string.Empty)), Is.True, "그림이 빠진 칸은 빈 문자열로 자리를 지킨다(Travel2)");
         }
 
         // 종류 이름의 JSON 파일에서 id → displayNameKey(비면 id).

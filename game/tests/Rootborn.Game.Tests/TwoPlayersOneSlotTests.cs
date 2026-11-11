@@ -1,4 +1,5 @@
-// 원래 파일: Assets/Tests/PlayMode/Quests/PlayerGlobalStateMultiplayerPlayModeTests.cs (PLAYER_STATE_NET_PM_001. PM_002는 옮기지 못했다 — 아래 주석)
+// 원래 파일: Assets/Tests/PlayMode/Quests/PlayerGlobalStateMultiplayerPlayModeTests.cs (PLAYER_STATE_NET_PM_001, PM_002)
+using System.IO;
 using NUnit.Framework;
 using Rootborn.Core.Quests;
 
@@ -41,7 +42,33 @@ namespace Rootborn.Game.Tests
             Assert.That(TestWorld.Start(saves.Store, Slot, "player-2").QuestChains.GetState(chain), Is.Not.EqualTo(QuestChainState.Tracked));
         }
 
-        // PLAYER_STATE_NET_PM_002(일반 퀘스트 기록을 플레이어마다 따로)는 옮기지 못했다: GameSession은 모든 플레이어가 슬롯의 quest-log.json 하나를 쓴다.
-        // Unity 판은 기본 플레이어가 아니면 quest-log-<플레이어>.json을 썼다. SCENARIOS.md의 "필요한 변경" 참고.
+        [Test]
+        public void PlayerStateNetPm002_TwoPlayersKeepSeparateQuestLogs_InTheSameSlot()
+        {
+            using var saves = new TempSaves();
+            var one = TestWorld.Start(saves.Store, Slot, "player-1");
+            var two = TestWorld.Start(saves.Store, Slot, "player-2");
+
+            Assert.That(one.AcceptQuest("quest.gatherWood"), Is.True);
+            Assert.That(one.QuestLog.GetState("quest.gatherWood"), Is.EqualTo(QuestStage.Active));
+            Assert.That(two.QuestLog.GetState("quest.gatherWood"), Is.EqualTo(QuestStage.NotStarted));
+
+            // 다시 읽어도 나뉘어 있다. 다른 플레이어가 저장해도 player-1의 기록을 덮지 않는다.
+            Assert.That(TestWorld.Start(saves.Store, Slot, "player-2").AcceptQuest("quest.gatherWood"), Is.True);
+            Assert.That(TestWorld.Start(saves.Store, Slot, "player-1").QuestLog.GetState("quest.gatherWood"), Is.EqualTo(QuestStage.Active));
+            Assert.That(HasFile(saves, "quest-log-player-1.json"), Is.True);
+            Assert.That(HasFile(saves, "quest-log-player-2.json"), Is.True);
+            Assert.That(HasFile(saves, "quest-log.json"), Is.False, "기본 플레이어가 아니면 공용 파일을 쓰지 않는다");
+        }
+
+        [Test]
+        public void DefaultPlayer_KeepsUsingTheSharedQuestLogFile()
+        {
+            using var saves = new TempSaves();
+            Assert.That(TestWorld.Start(saves.Store, Slot, null).AcceptQuest("quest.gatherWood"), Is.True);
+            Assert.That(HasFile(saves, "quest-log.json"), Is.True);
+        }
+
+        private static bool HasFile(TempSaves saves, string name) => File.Exists(Path.Combine(saves.Path, Slot, name));
     }
 }

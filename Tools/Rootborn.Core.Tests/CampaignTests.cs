@@ -7,6 +7,22 @@ namespace Rootborn.Core.Tests
     // 옮겨 옴: Assets/Tests/EditMode/StudentLife/CampaignLoopTests.cs (CAMPAIGN_EDIT_004_008; 001과 등록부 캐시 검사는 에셋 검사라 옮기지 않음)
     public sealed class CampaignTests
     {
+        [Test]
+        public void NameKeys_ComeFromTheDefinition_OrFallBackToTheId()
+        {
+            var named = new CampaignLocationVisitObjective("objective.a", "location.a", 1, "campaign.objective.a.name");
+            var unnamed = new CampaignCareerHintObjective("objective.b", "career.b");
+            var day = new CampaignDay("day.1", 1, null, null, null, null, "campaign.day.1.name");
+            var campaign = new Campaign("campaign.x", null, new[] { day }, null, "campaign.x.name");
+            Assert.That(named.DisplayNameKey, Is.EqualTo("campaign.objective.a.name"));
+            Assert.That(unnamed.DisplayNameKey, Is.EqualTo("objective.b"));
+            Assert.That(new CampaignActivityLogObjective("objective.c", "x", 1, false, "").DisplayNameKey, Is.EqualTo("objective.c"));
+            Assert.That(day.DisplayNameKey, Is.EqualTo("campaign.day.1.name"));
+            Assert.That(new CampaignDay("day.2", 2, null, null, null, null).DisplayNameKey, Is.EqualTo("day.2"));
+            Assert.That(campaign.DisplayNameKey, Is.EqualTo("campaign.x.name"));
+            Assert.That(new Campaign("campaign.y", null, null, null).DisplayNameKey, Is.EqualTo("campaign.y"));
+        }
+
         private sealed class Fixture
         {
             public readonly CampaignLocationVisitObjective VisitTown = new CampaignLocationVisitObjective("campaign.objective.visit-town", "location.town-square", 1);

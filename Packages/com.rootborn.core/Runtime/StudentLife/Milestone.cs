@@ -37,13 +37,18 @@ namespace Rootborn.Core.StudentLife
     /// <summary>마일스톤 목표. 새 종류는 이 클래스를 상속해 지금 값을 계산하면 된다. 필요한 값은 1 이상.</summary>
     public abstract class MilestoneObjective
     {
-        protected MilestoneObjective(string id, int requiredValue)
+        /// <param name="displayNameKey">이름 문구 키(Unity StudentLifeDefinitionBase). 비면 id.</param>
+        protected MilestoneObjective(string id, int requiredValue, string displayNameKey = null)
         {
             Id = id ?? string.Empty;
             RequiredValue = Math.Max(1, requiredValue);
+            DisplayNameKey = string.IsNullOrEmpty(displayNameKey) ? Id : displayNameKey;
         }
 
         public string Id { get; }
+
+        /// <summary>목표의 이름 문구 키. 비어 있던 정의는 id.</summary>
+        public string DisplayNameKey { get; }
         public int RequiredValue { get; }
 
         public MilestoneObjectiveEvaluation Evaluate(in MilestoneEvaluationContext context) => new MilestoneObjectiveEvaluation(Id, EvaluateCurrent(in context), RequiredValue);
@@ -130,28 +135,28 @@ namespace Rootborn.Core.StudentLife
 
     public sealed class TraitMilestoneObjective : MilestoneObjective
     {
-        public TraitMilestoneObjective(string id, string traitId, int requiredValue) : base(id, requiredValue) { TraitId = traitId ?? string.Empty; }
+        public TraitMilestoneObjective(string id, string traitId, int requiredValue, string displayNameKey = null) : base(id, requiredValue, displayNameKey) { TraitId = traitId ?? string.Empty; }
         public string TraitId { get; }
         protected override int EvaluateCurrent(in MilestoneEvaluationContext context) => context.StudentLifeProgress == null || TraitId.Length == 0 ? 0 : context.StudentLifeProgress.GetTraitValue(TraitId);
     }
 
     public sealed class SkillMilestoneObjective : MilestoneObjective
     {
-        public SkillMilestoneObjective(string id, string skillId, int requiredValue) : base(id, requiredValue) { SkillId = skillId ?? string.Empty; }
+        public SkillMilestoneObjective(string id, string skillId, int requiredValue, string displayNameKey = null) : base(id, requiredValue, displayNameKey) { SkillId = skillId ?? string.Empty; }
         public string SkillId { get; }
         protected override int EvaluateCurrent(in MilestoneEvaluationContext context) => context.StudentLifeProgress == null || SkillId.Length == 0 ? 0 : context.StudentLifeProgress.GetSkillValue(SkillId);
     }
 
     public sealed class StatusMilestoneObjective : MilestoneObjective
     {
-        public StatusMilestoneObjective(string id, string statusId, int requiredValue) : base(id, requiredValue) { StatusId = statusId ?? string.Empty; }
+        public StatusMilestoneObjective(string id, string statusId, int requiredValue, string displayNameKey = null) : base(id, requiredValue, displayNameKey) { StatusId = statusId ?? string.Empty; }
         public string StatusId { get; }
         protected override int EvaluateCurrent(in MilestoneEvaluationContext context) => context.StudentLifeProgress == null || StatusId.Length == 0 ? 0 : context.StudentLifeProgress.GetStatusValue(StatusId);
     }
 
     public sealed class RelationshipMilestoneObjective : MilestoneObjective
     {
-        public RelationshipMilestoneObjective(string id, string relationshipId, int requiredValue) : base(id, requiredValue) { RelationshipId = relationshipId ?? string.Empty; }
+        public RelationshipMilestoneObjective(string id, string relationshipId, int requiredValue, string displayNameKey = null) : base(id, requiredValue, displayNameKey) { RelationshipId = relationshipId ?? string.Empty; }
         public string RelationshipId { get; }
         protected override int EvaluateCurrent(in MilestoneEvaluationContext context) => context.StudentLifeProgress == null || RelationshipId.Length == 0 ? 0 : context.StudentLifeProgress.GetRelationshipValue(RelationshipId);
     }
@@ -163,7 +168,7 @@ namespace Rootborn.Core.StudentLife
     /// </summary>
     public sealed class OutsideSchoolLogMilestoneObjective : MilestoneObjective
     {
-        public OutsideSchoolLogMilestoneObjective(string id, string targetId, int requiredDelta) : base(id, requiredDelta) { TargetId = targetId ?? string.Empty; }
+        public OutsideSchoolLogMilestoneObjective(string id, string targetId, int requiredDelta, string displayNameKey = null) : base(id, requiredDelta, displayNameKey) { TargetId = targetId ?? string.Empty; }
         public string TargetId { get; }
 
         protected override int EvaluateCurrent(in MilestoneEvaluationContext context)

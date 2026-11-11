@@ -136,12 +136,20 @@ namespace Rootborn.Game
             return result;
         }
 
-        /// <summary>장래희망마다 지금 고를 수 있는지와 그 이유(정의 순서). 장래희망 화면이 그린다. 판정은 Core CareerInterest가 한다.</summary>
+        /// <summary>registry.json에서 장래희망 화면에 보일 장래희망을 담은 목록(Unity GameDataRegistry.CareerInterests).</summary>
+        public const string CareerInterestRegistryKey = "careerInterests";
+
+        /// <summary>
+        /// 장래희망마다 지금 고를 수 있는지와 그 이유. 장래희망 화면이 그린다. 판정은 Core CareerInterest가 한다.
+        /// Unity 판처럼 등록부(registry.json의 careerInterests)에 있는 것만 그 순서로 준다. 데이터에는 등록부에 없는 장래희망 정의도 있다.
+        /// </summary>
         public IReadOnlyList<(CareerInterest Interest, CareerInterestSelectionEvaluation Evaluation)> CareerInterestChoices()
         {
-            var list = new List<(CareerInterest, CareerInterestSelectionEvaluation)>();
-            foreach (var interest in _definitions.All<CareerInterest>())
-                if (interest != null) list.Add((interest, interest.Evaluate(CareerInterests, CareerCandidates, Student, Student.CurrentDay)));
+            var ids = _definitions.RegistryIds(CareerInterestRegistryKey);
+            var list = new List<(CareerInterest, CareerInterestSelectionEvaluation)>(ids.Count);
+            foreach (var id in ids)
+                if (_definitions.TryGet<CareerInterest>(id, out var interest) && interest != null)
+                    list.Add((interest, interest.Evaluate(CareerInterests, CareerCandidates, Student, Student.CurrentDay)));
             return list;
         }
 

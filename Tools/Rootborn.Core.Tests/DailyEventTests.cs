@@ -250,6 +250,75 @@ namespace Rootborn.Core.Tests
         }
 
         [Test]
+        public void ChangedBehavior_AnsweredEventCannotBeChosenAgainWithANewRequestId()
+        {
+            // 원본은 요청 id 중복만 봐서, 이미 고른 이벤트를 새 요청 id로 다시 고르면 결과가 또 적용됐다.
+            var choice = Choice("c", energyCost: 1, outcomes: new IDailyEventOutcome[] { new DailyEventTraitDeltaOutcome("trait.grit", 1) });
+            var dailyEvent = Event("event.once", null, Kind("kind"), null, choice);
+            var progress = new StudentLifeProgress("slot", "player", 8, 8);
+            var eventProgress = new DailyEventProgress("slot", "player");
+            var runner = new DailyEventRunner();
+            Assert.That(runner.TryChoose(dailyEvent, choice, progress, eventProgress, "r1", out _), Is.True);
+            var before = progress.ToSaveData();
+
+            Assert.That(runner.TryChoose(dailyEvent, choice, progress, eventProgress, "r2", out var again), Is.False);
+
+            Assert.That(again.Kind, Is.EqualTo(LifeActivityResultKind.DuplicateRequest));
+            Assert.That(progress.GetTraitValue("trait.grit"), Is.EqualTo(1));
+            Assert.That(progress.Energy, Is.EqualTo(7));
+            Assert.That(progress.HasAppliedRequest("r2"), Is.False);
+            Assert.That(eventProgress.GetRecord("event.once").CompletionRequestId, Is.EqualTo("r1"));
+            Assert.That(eventProgress.GetRecord("event.once").RepeatCount, Is.EqualTo(1));
+            Assert.That(progress.ToSaveData().AppliedRequestIds, Is.EqualTo(before.AppliedRequestIds));
+        }
+
+        [Test]
+        public void ChangedBehavior_DeclinedEventCannotBeChosenLaterTheSameDay()
+        {
+            var choice = Choice("c", outcomes: new IDailyEventOutcome[] { new DailyEventTraitDeltaOutcome("trait.grit", 1) });
+            var dailyEvent = Event("event.once", null, Kind("kind"), null, choice);
+            var progress = new StudentLifeProgress("slot", "player", 8, 8);
+            var eventProgress = new DailyEventProgress("slot", "player");
+            var runner = new DailyEventRunner();
+            Assert.That(runner.TryDecline(dailyEvent, eventProgress, progress.CurrentDay, out _), Is.True);
+
+            Assert.That(runner.TryChoose(dailyEvent, choice, progress, eventProgress, "r1", out var result), Is.False);
+
+            Assert.That(result.Kind, Is.EqualTo(LifeActivityResultKind.DuplicateRequest));
+            Assert.That(progress.GetTraitValue("trait.grit"), Is.EqualTo(0));
+            Assert.That(eventProgress.GetRecord("event.once").State, Is.EqualTo(DailyEventStates.Declined));
+        }
+
+        [Test]
+        public void ChangedBehavior_DeferredEventCannotBeChosenBeforeItComesBack()
+        {
+            var choice = Choice("c");
+            var dailyEvent = Event("event.later", null, Kind("kind", deferrable: true, deferDays: 2), null, choice);
+            var progress = new StudentLifeProgress("slot", "player", 8, 8);
+            var eventProgress = new DailyEventProgress("slot", "player");
+            var runner = new DailyEventRunner();
+            Assert.That(runner.TryDefer(dailyEvent, eventProgress, progress.CurrentDay, out _), Is.True);
+
+            Assert.That(runner.TryChoose(dailyEvent, choice, progress, eventProgress, "r1", out var result), Is.False);
+            Assert.That(result.Kind, Is.EqualTo(LifeActivityResultKind.DuplicateRequest));
+            Assert.That(eventProgress.GetRecord("event.later").State, Is.EqualTo(DailyEventStates.Deferred));
+        }
+
+        [Test]
+        public void RepeatableEventCanStillBeChosenAgainWithANewRequestId()
+        {
+            var choice = Choice("c", outcomes: new IDailyEventOutcome[] { new DailyEventTraitDeltaOutcome("trait.grit", 1) });
+            var dailyEvent = Event("event.again", null, Kind("kind.repeat", repeatable: true), null, choice);
+            var progress = new StudentLifeProgress("slot", "player", 8, 8);
+            var eventProgress = new DailyEventProgress("slot", "player");
+            var runner = new DailyEventRunner();
+
+            Assert.That(runner.TryChoose(dailyEvent, choice, progress, eventProgress, "r1", out _), Is.True);
+            Assert.That(runner.TryChoose(dailyEvent, choice, progress, eventProgress, "r2", out _), Is.True, "다시 나오는 이벤트는 목록 규칙과 같이 다시 고를 수 있다");
+            Assert.That(progress.GetTraitValue("trait.grit"), Is.EqualTo(2));
+        }
+
+        [Test]
         public void NonDeferrableEventCannotBeDeferredAndCooldownBlocksUntilDay()
         {
             var dailyEvent = Event("event", null, Kind("kind"), null, Choice("c"));

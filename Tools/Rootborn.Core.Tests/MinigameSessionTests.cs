@@ -23,6 +23,18 @@ namespace Rootborn.Core.Tests
         private static MinigameSession Session(IChallenge challenge) => new MinigameSession(Game(challenge), null, 123);
 
         [Test]
+        public void SymbolSprites_AreKeptOnTheChallengeAndTheSession_InOrder()
+        {
+            var sprites = new[] { "art/a.png", "", "art/c.png" };
+            var challenge = new SequenceChallenge("seq", new[] { 0, 1, 2 }, new[] { "a", "b", "c" }, symbolSprites: sprites);
+            sprites[0] = "changed";
+            Assert.That(challenge.SymbolSprites, Is.EqualTo(new[] { "art/a.png", "", "art/c.png" }), "정의는 넘긴 배열을 복사한다");
+            Assert.That(Session(challenge).Current.SymbolSprites, Is.EqualTo(new[] { "art/a.png", "", "art/c.png" }));
+            Assert.That(Sequence().SymbolSprites, Is.Empty);
+            Assert.That(Session(Timing()).Current.SymbolSprites, Is.Empty);
+        }
+
+        [Test]
         public void Sequence_PreviewRejectsInput_ThenCorrectOrderCompletes()
         {
             var s = Session(Sequence());

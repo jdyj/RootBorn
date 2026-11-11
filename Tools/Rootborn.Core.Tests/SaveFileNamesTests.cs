@@ -31,6 +31,23 @@ namespace Rootborn.Core.Tests
             Assert.That(Names.QuestLog, Is.EqualTo("quest-log.json"));
         }
 
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("local-player")]
+        public void PlayerQuestLog_DefaultPlayerKeepsTheSharedName(string player)
+        {
+            // Assets/Scripts/Game/Player/PlayerGlobalState.cs PlayerQuestRuntime.LogFileName: 빈 id와 "local-player"만 공용 파일.
+            Assert.That(Names.PlayerQuestLog(player), Is.EqualTo("quest-log.json"));
+        }
+
+        [Test]
+        public void PlayerQuestLog_OtherPlayersGetTheirOwnSanitizedFile()
+        {
+            Assert.That(Names.PlayerQuestLog("player-2"), Is.EqualTo("quest-log-player-2.json"));
+            Assert.That(Names.PlayerQuestLog("steam:7"), Is.EqualTo("quest-log-steam_7.json"));
+            Assert.That(Names.PlayerQuestLog("player"), Is.EqualTo("quest-log-player.json"), "Unity 판은 옛 기본값 \"player\"도 따로 썼다");
+        }
+
         [Test]
         public void AdultCareerSnapshot_LocalPlayer()
         {

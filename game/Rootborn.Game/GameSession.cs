@@ -117,7 +117,17 @@ namespace Rootborn.Game
         private WorldStateAccess WorldAccess => new WorldStateAccess(World, _definitions.All<WorldStateFlag>());
         private ICareerInventory CareerInventory => new ItemInventoryCareerInventory(Inventory, FindItem);
 
-        private RewardRuntimeContext Rewards() => new RewardRuntimeContext(QuestLog, Inventory, null, null, Student, WorldAccess, FurnitureUnlocks);
+        // Unity PlayerQuestSession.RewardContext처럼 이야기 깃발은 그때마다 빈 묶음이다(어디에도 저장되지 않는다).
+        // null을 넘기면 이야기 깃발 효과가 있는 퀘스트(quest.gatherWood)의 보상을 받을 수 없다.
+        private RewardRuntimeContext Rewards() => new RewardRuntimeContext(QuestLog, Inventory, null, new UnsavedStoryFlags(), Student, WorldAccess, FurnitureUnlocks);
+
+        /// <summary>Unity StoryFlagSet(new StoryFlagSet())과 같은 메모리 전용 묶음.</summary>
+        private sealed class UnsavedStoryFlags : IQuestStoryFlags
+        {
+            private readonly HashSet<string> _set = new HashSet<string>(StringComparer.Ordinal);
+            public bool IsSet(string flagId) => !string.IsNullOrEmpty(flagId) && _set.Contains(flagId);
+            public bool Set(string flagId) => !string.IsNullOrEmpty(flagId) && _set.Add(flagId);
+        }
         private QuestRuntimeContext QuestContext(QuestDefinition quest = null) => new QuestRuntimeContext(QuestLog, quest, null, null, Student);
 
         // ---------- 읽기 ----------
@@ -149,7 +159,7 @@ namespace Rootborn.Game
             LoadFurniture(hasSnapshot ? snapshot : null);
 
             QuestLog = new QuestLog(_definitions.All<QuestDefinition>());
-            if (_store.TryRead<QuestLogSaveData>(SaveSlot, SaveFileNames.QuestLog, out var questLog)) QuestLog.LoadFromSaveData(questLog);
+            if (_store.TryRead<QuestLogSaveData>(SaveSlot, SaveFileNames.PlayerQuestLog(PlayerId), out var questLog)) QuestLog.LoadFromSaveData(questLog);
 
             if (_campaign != null)
             {
@@ -243,7 +253,7 @@ namespace Rootborn.Game
                 FurnitureUnlocks = FurnitureUnlocks.ToSaveData(),
             });
             WorldStateSaveFiles.Save(_store, World);
-            _store.Write(SaveSlot, SaveFileNames.QuestLog, QuestLog.ToSaveData());
+            _store.Write(SaveSlot, SaveFileNames.PlayerQuestLog(PlayerId), QuestLog.ToSaveData());
             if (Campaign != null) _store.Write(SaveSlot, SaveFileNames.Campaign(PlayerId), Campaign.ToSaveData());
             _store.Write(SaveSlot, SaveFileNames.Milestone(PlayerId), Milestones.ToSaveData());
             _store.Write(SaveSlot, SaveFileNames.CareerInterest(PlayerId), CareerInterests.ToSaveData());

@@ -333,6 +333,83 @@ namespace Rootborn.Core.Tests
             Assert.That(f.Inventory.CountOf(Fixture.Coin), Is.EqualTo(10));
         }
 
+        // --- 할 수 있는지 조회(Unity AdultCareerRuntimeComponent.CanTransition/CanWork/CanAutoSkip/CanUpgrade) ---
+
+        [Test]
+        public void CanTransition_GivesTheSameReasonAsTheCommand_AndChangesNothing()
+        {
+            var f = new Fixture(earned: false);
+            Assert.That(f.Service.CanTransition(f.Facility, f.Student, f.Candidates, f.Progress), Is.EqualTo(AdultCareerResultKind.RequirementFailed));
+            f.Student.UnlockCareerHint("career.fixture");
+            f.Candidates = Fixture.ReadyCandidates();
+            Assert.That(f.Service.CanTransition(f.Facility, f.Student, f.Candidates, f.Progress), Is.EqualTo(AdultCareerResultKind.Applied));
+            Assert.That(f.Progress.IsAdult, Is.False, "조회는 바꾸지 않는다");
+            f.Transition("transition");
+            Assert.That(f.Service.CanTransition(f.Facility, f.Student, f.Candidates, f.Progress), Is.EqualTo(AdultCareerResultKind.AlreadyAdult));
+            Assert.That(f.Service.CanTransition(new Facility("facility.other", null, null, null, "c", null, null, Fixture.Levels(), null), f.Student, f.Candidates, f.Progress),
+                Is.EqualTo(AdultCareerResultKind.InvalidDefinition), "등록하지 않은 시설");
+        }
+
+        [Test]
+        public void CanWork_FollowsReservationRules_ForAMinigameWork()
+        {
+            var f = new Fixture();
+            Assert.That(f.Service.CanWork(f.FacilityWork, f.Student, f.Progress, f.Inventory), Is.EqualTo(AdultCareerResultKind.RequirementFailed), "아직 성인이 아니다");
+            f.Transition("transition");
+            Assert.That(f.Service.CanWork(f.FacilityWork, f.Student, f.Progress, f.Inventory), Is.EqualTo(AdultCareerResultKind.Applied));
+            Assert.That(f.Student.TimePointsRemaining, Is.EqualTo(2), "조회는 시간을 쓰지 않는다");
+            f.Reserve("attempt-1");
+            Assert.That(f.Service.CanWork(f.FacilityWork, f.Student, f.Progress, f.Inventory), Is.EqualTo(AdultCareerResultKind.RequirementFailed), "예약이 남아 있다");
+            f.Service.TryForfeitReservedWork(f.Student, f.Progress, "attempt-1");
+            f.Student.TrySpendTimePoints(1);
+            Assert.That(f.Service.CanWork(f.FacilityWork, f.Student, f.Progress, f.Inventory), Is.EqualTo(AdultCareerResultKind.InsufficientTime));
+            Assert.That(f.Reserve("attempt-2").Kind, Is.EqualTo(AdultCareerResultKind.InsufficientTime), "명령도 같은 이유");
+        }
+
+        [Test]
+        public void CanWork_ForADirectWork_ChecksTheFullRewardFits()
+        {
+            var f = new Fixture(withMinigame: false); f.Transition("transition");
+            Assert.That(f.Service.CanWork(f.FacilityWork, f.Student, f.Progress, f.Inventory), Is.EqualTo(AdultCareerResultKind.Applied));
+            for (int i = 0; i < Fixture.MaxSlots; i++) f.Slots.Add("full-" + i, 1);
+            Assert.That(f.Service.CanWork(f.FacilityWork, f.Student, f.Progress, f.Inventory), Is.EqualTo(AdultCareerResultKind.InsufficientCapacity));
+            Assert.That(f.Work("job", 100, false).Kind, Is.EqualTo(AdultCareerResultKind.InsufficientCapacity));
+        }
+
+        [Test]
+        public void CanWork_IgnoresAReservationLeftFromAnEarlierDay_LikeTheCommand()
+        {
+            var f = new Fixture(); f.Transition("transition"); f.Reserve("attempt-1");
+            f.Student.TryEndDay(null, out _);
+            f.Student.TryStartNextDay();
+            Assert.That(f.Progress.HasPendingWork, Is.True, "아직 포기 처리하지 않았다");
+            Assert.That(f.Service.CanWork(f.FacilityWork, f.Student, f.Progress, f.Inventory), Is.EqualTo(AdultCareerResultKind.Applied));
+            Assert.That(f.Progress.HasPendingWork, Is.True, "조회는 포기 처리하지 않는다");
+        }
+
+        [Test]
+        public void CanAutoSkip_NeedsTheAutoSkipRulesAndRoom()
+        {
+            var f = new Fixture(); f.Transition("transition");
+            Assert.That(f.Service.CanAutoSkip(f.FacilityWork, f.Student, f.Progress, f.Inventory), Is.EqualTo(AdultCareerResultKind.RequirementFailed));
+            f.Seed(2, 2, 2); f.Slots.Add(Fixture.Equipment);
+            Assert.That(f.Service.CanAutoSkip(f.FacilityWork, f.Student, f.Progress, f.Inventory), Is.EqualTo(AdultCareerResultKind.Applied));
+            Assert.That(f.Inventory.CountOf(Fixture.Coin), Is.Zero);
+            Assert.That(f.Work("skip", 0, true).Kind, Is.EqualTo(AdultCareerResultKind.Applied));
+        }
+
+        [Test]
+        public void CanUpgrade_ReportsMissingCostsAndTheMaximumLevel()
+        {
+            var f = new Fixture(); f.Transition("transition"); f.Slots.Add(Fixture.Coin, 9);
+            Assert.That(f.Service.CanUpgrade(f.Facility, f.Student, f.Progress, f.Inventory), Is.EqualTo(AdultCareerResultKind.InsufficientResources));
+            f.Slots.Add(Fixture.Coin);
+            Assert.That(f.Service.CanUpgrade(f.Facility, f.Student, f.Progress, f.Inventory), Is.EqualTo(AdultCareerResultKind.Applied));
+            Assert.That(f.Inventory.CountOf(Fixture.Coin), Is.EqualTo(10), "조회는 비용을 쓰지 않는다");
+            f.Seed(3, 0, 0);
+            Assert.That(f.Service.CanUpgrade(f.Facility, f.Student, f.Progress, f.Inventory), Is.EqualTo(AdultCareerResultKind.AtMaximumLevel));
+        }
+
         // --- 원래 테스트가 안 다루던 경계 ---
 
         [Test]

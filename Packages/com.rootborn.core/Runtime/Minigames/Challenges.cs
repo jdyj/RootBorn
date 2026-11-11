@@ -9,8 +9,8 @@ namespace Rootborn.Core.Minigames
         private readonly int[] _answers;
         private readonly string[] _symbols;
 
-        public SequenceChallenge(string instructionKey, int[] answers, string[] symbols, float revealSeconds = 3f, float timeLimitSeconds = 30f, int mistakeAllowance = 3)
-            : base(instructionKey, timeLimitSeconds, mistakeAllowance)
+        public SequenceChallenge(string instructionKey, int[] answers, string[] symbols, float revealSeconds = 3f, float timeLimitSeconds = 30f, int mistakeAllowance = 3, string[] symbolSprites = null)
+            : base(instructionKey, timeLimitSeconds, mistakeAllowance, symbolSprites)
         {
             _answers = answers ?? Array.Empty<int>();
             _symbols = symbols ?? Array.Empty<string>();
@@ -76,8 +76,8 @@ namespace Rootborn.Core.Minigames
         private readonly string[] _prompts;
         private readonly string[] _symbols;
 
-        public ChoiceChallenge(string instructionKey, int[] answers, string[] prompts, string[] symbols, float timeLimitSeconds = 30f, int mistakeAllowance = 3)
-            : base(instructionKey, timeLimitSeconds, mistakeAllowance)
+        public ChoiceChallenge(string instructionKey, int[] answers, string[] prompts, string[] symbols, float timeLimitSeconds = 30f, int mistakeAllowance = 3, string[] symbolSprites = null)
+            : base(instructionKey, timeLimitSeconds, mistakeAllowance, symbolSprites)
         {
             _answers = answers ?? Array.Empty<int>();
             _prompts = prompts ?? Array.Empty<string>();
@@ -145,8 +145,8 @@ namespace Rootborn.Core.Minigames
     {
         private readonly float[] _beatTimes;
 
-        public TimingChallenge(string instructionKey, float[] beatTimes, float windowSeconds = .15f, float timeLimitSeconds = 30f, int mistakeAllowance = 3)
-            : base(instructionKey, timeLimitSeconds, mistakeAllowance)
+        public TimingChallenge(string instructionKey, float[] beatTimes, float windowSeconds = .15f, float timeLimitSeconds = 30f, int mistakeAllowance = 3, string[] symbolSprites = null)
+            : base(instructionKey, timeLimitSeconds, mistakeAllowance, symbolSprites)
         {
             _beatTimes = beatTimes ?? Array.Empty<float>();
             WindowSeconds = windowSeconds;
@@ -227,8 +227,8 @@ namespace Rootborn.Core.Minigames
         private readonly GridPoint[] _blockedCells;
         private readonly GridPoint[] _requiredCells;
 
-        public PlacementChallenge(string instructionKey, GridPoint boardSize, GridPoint[] pieceSizes, GridPoint[] blockedCells, GridPoint[] requiredCells, float timeLimitSeconds = 30f, int mistakeAllowance = 3)
-            : base(instructionKey, timeLimitSeconds, mistakeAllowance)
+        public PlacementChallenge(string instructionKey, GridPoint boardSize, GridPoint[] pieceSizes, GridPoint[] blockedCells, GridPoint[] requiredCells, float timeLimitSeconds = 30f, int mistakeAllowance = 3, string[] symbolSprites = null)
+            : base(instructionKey, timeLimitSeconds, mistakeAllowance, symbolSprites)
         {
             BoardSize = boardSize;
             _pieceSizes = pieceSizes ?? Array.Empty<GridPoint>();
@@ -312,8 +312,8 @@ namespace Rootborn.Core.Minigames
         private readonly PlanePoint[] _targets;
         private readonly int[] _obstacleLanes;
 
-        public TargetDodgeChallenge(string instructionKey, PlanePoint[] targets, int[] obstacleLanes, float obstacleIntervalSeconds = 2f, float targetRadius = .08f, float targetWobble = .03f, int laneCount = 3, float timeLimitSeconds = 30f, int mistakeAllowance = 3)
-            : base(instructionKey, timeLimitSeconds, mistakeAllowance)
+        public TargetDodgeChallenge(string instructionKey, PlanePoint[] targets, int[] obstacleLanes, float obstacleIntervalSeconds = 2f, float targetRadius = .08f, float targetWobble = .03f, int laneCount = 3, float timeLimitSeconds = 30f, int mistakeAllowance = 3, string[] symbolSprites = null)
+            : base(instructionKey, timeLimitSeconds, mistakeAllowance, symbolSprites)
         {
             _targets = targets ?? Array.Empty<PlanePoint>();
             _obstacleLanes = obstacleLanes ?? Array.Empty<int>();

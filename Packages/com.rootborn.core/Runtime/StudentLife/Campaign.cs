@@ -35,13 +35,18 @@ namespace Rootborn.Core.StudentLife
 
     public abstract class CampaignObjective
     {
-        protected CampaignObjective(string id, bool requiresSchoolClass)
+        /// <param name="displayNameKey">이름 문구 키(Unity StudentLifeDefinitionBase). 비면 id.</param>
+        protected CampaignObjective(string id, bool requiresSchoolClass, string displayNameKey = null)
         {
             Id = id ?? string.Empty;
             RequiresSchoolClass = requiresSchoolClass;
+            DisplayNameKey = string.IsNullOrEmpty(displayNameKey) ? Id : displayNameKey;
         }
 
         public string Id { get; }
+
+        /// <summary>목표의 이름 문구 키. 비어 있던 정의는 id.</summary>
+        public string DisplayNameKey { get; }
         public bool RequiresSchoolClass { get; }
         public abstract CampaignObjectiveEvaluation Evaluate(in CampaignEvaluationContext context);
     }
@@ -87,9 +92,10 @@ namespace Rootborn.Core.StudentLife
     {
         private readonly CampaignRoute[] _routes;
 
-        public CampaignDay(string id, int dayNumber, string themeKey, string directionText, string nextGuideText, CampaignRoute[] routes)
+        public CampaignDay(string id, int dayNumber, string themeKey, string directionText, string nextGuideText, CampaignRoute[] routes, string displayNameKey = null)
         {
             Id = id ?? string.Empty;
+            DisplayNameKey = string.IsNullOrEmpty(displayNameKey) ? Id : displayNameKey;
             DayNumber = Math.Max(1, dayNumber);
             ThemeKey = string.IsNullOrEmpty(themeKey) ? Id : themeKey;
             DirectionText = string.IsNullOrEmpty(directionText) ? ThemeKey : directionText;
@@ -98,6 +104,9 @@ namespace Rootborn.Core.StudentLife
         }
 
         public string Id { get; }
+
+        /// <summary>날의 이름 문구 키(Unity StudentLifeDefinitionBase). 비어 있던 정의는 id.</summary>
+        public string DisplayNameKey { get; }
         public int DayNumber { get; }
         public string ThemeKey { get; }
         public string DirectionText { get; }
@@ -116,15 +125,19 @@ namespace Rootborn.Core.StudentLife
         private readonly CampaignDay[] _days;
         private readonly CampaignReward[] _rewards;
 
-        public Campaign(string id, string descriptionKey, CampaignDay[] days, CampaignReward[] rewards)
+        public Campaign(string id, string descriptionKey, CampaignDay[] days, CampaignReward[] rewards, string displayNameKey = null)
         {
             Id = id ?? string.Empty;
+            DisplayNameKey = string.IsNullOrEmpty(displayNameKey) ? Id : displayNameKey;
             DescriptionKey = string.IsNullOrEmpty(descriptionKey) ? Id : descriptionKey;
             _days = days ?? Array.Empty<CampaignDay>();
             _rewards = rewards ?? Array.Empty<CampaignReward>();
         }
 
         public string Id { get; }
+
+        /// <summary>캠페인의 이름 문구 키(Unity StudentLifeDefinitionBase). 비어 있던 정의는 id.</summary>
+        public string DisplayNameKey { get; }
         public string DescriptionKey { get; }
         public IReadOnlyList<CampaignDay> Days => _days;
         public IReadOnlyList<CampaignReward> Rewards => _rewards;

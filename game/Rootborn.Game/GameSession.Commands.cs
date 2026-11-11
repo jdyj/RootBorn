@@ -91,6 +91,28 @@ namespace Rootborn.Game
             return Saved(true, true, null, GameChangeTopics.Quests);
         }
 
+        /// <summary>
+        /// 체인을 지금 받을 수 있는지(Unity QuestChainLogPanel의 받기 단추): 받을 수 있는 상태이고 시작 조건을 만족한다. 아무것도 바꾸지 않는다.
+        /// </summary>
+        public bool CanAcceptQuestChain(string chainId)
+            => _definitions.TryGet<QuestChainDefinition>(chainId, out var chain)
+               && QuestChains.GetState(chain) == QuestChainState.Available
+               && QuestChains.EvaluateAvailability(chain, QuestContext());
+
+        /// <summary>체인의 완료 보상을 지금 받을 수 있는지(끝났고, 아직 안 받았고, 보상이 가방에 다 들어간다). Unity 보상 받기 단추.</summary>
+        public bool CanClaimQuestChainRewards(string chainId)
+            => _definitions.TryGet<QuestChainDefinition>(chainId, out var chain) && QuestChains.CanClaimCompletionRewards(chain, Rewards());
+
+        /// <summary>
+        /// 체인을 추적한다(Unity QuestChainLogPanel의 추적 단추). 진행 중·멈춤·추적 중인 체인만 되고, 다른 추적 중인 체인은 멈춘다(Core QuestChainLog.Track).
+        /// 되면 저장한다.
+        /// </summary>
+        public bool TrackQuestChain(string chainId)
+        {
+            bool applied = _definitions.TryGet<QuestChainDefinition>(chainId, out var chain) && QuestChains.Track(chain);
+            return Saved(applied, applied, null, GameChangeTopics.Quests);
+        }
+
         public bool ClaimQuestChainRewards(string chainId)
         {
             if (!_definitions.TryGet<QuestChainDefinition>(chainId, out var chain)) return false;
@@ -239,13 +261,47 @@ namespace Rootborn.Game
 
         // ---------- 장래희망 ----------
 
-        /// <summary>장래희망을 고른다. 바뀌면 장래희망 선택 이벤트를 퀘스트·체인에 알린다.</summary>
+        /// <summary>
+        /// 장래희망을 고른다(Unity CareerInterestPanel.SelectAndShow 순서): 바뀌면 그 장래희망에 이어진 퀘스트를 받고 → 장래희망 선택 이벤트를
+        /// 퀘스트·체인에 알린다.
+        /// </summary>
         public CareerInterestSelectionResult SelectCareerInterest(string interestId, string requestId)
         {
             _definitions.TryGet<CareerInterest>(interestId, out var interest);
             var result = CareerInterests.TrySelect(interest, CareerCandidates, Student, Student.CurrentDay, requestId);
-            if (result.Applied) Announce(new QuestEvent(QuestEventKind.CareerInterestSelected, "career-interest:" + requestId, interest.Id), true);
+            if (result.Applied)
+            {
+                AcceptLinkedQuests(interest);
+                Announce(new QuestEvent(QuestEventKind.CareerInterestSelected, "career-interest:" + requestId, interest.Id), true);
+            }
+
             return Saved(result, result.Applied, AnnounceTopics, GameChangeTopics.Career);
+        }
+
+        /// <summary>
+        /// 지금 장래희망에 이어진 퀘스트 중 아직 받지 않은 것을 받는다(Unity CareerInterestPanel.EnsureCurrentInterestLinkedQuests — 장래희망 화면을 열 때).
+        /// 받은 퀘스트 수를 돌려주고, 받은 것이 있으면 저장한다.
+        /// </summary>
+        public int AcceptCareerInterestQuests()
+        {
+            if (!_definitions.TryGet<CareerInterest>(CareerInterests.CurrentInterestId, out var interest)) return 0;
+            int accepted = AcceptLinkedQuests(interest);
+            if (accepted > 0) SaveAndNotify(null, GameChangeTopics.Quests);
+            return accepted;
+        }
+
+        // 이어진 퀘스트 중 받지 않은 것만 받는다. 받기는 퀘스트의 제공 조건·선행 조건을 따른다(Core QuestLog.Accept).
+        private int AcceptLinkedQuests(CareerInterest interest)
+        {
+            int accepted = 0;
+            if (interest == null) return accepted;
+            foreach (var questId in interest.LinkedQuestIds)
+            {
+                if (!_definitions.TryGet<QuestDefinition>(questId, out var quest) || QuestLog.GetState(quest) != QuestStage.NotStarted) continue;
+                if (QuestLog.Accept(quest, QuestContext(quest))) accepted++;
+            }
+
+            return accepted;
         }
     }
 }

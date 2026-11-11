@@ -15,7 +15,7 @@
 | MAIN_E2E_000 SchoolOpeningChainFromNewGameToMyRoom | 새 게임에서 메인 체인 끝(내 방)까지 | MainChainEndTests.MainChain_RunsToCompletion_TheSameWhenEveryCommandIsReadAgain | 예 |
 | MAIN_E2E_001 BackToSchool_MomStartsChainThenPlanAndTeacherCount | 엄마 대화로 체인 시작, 일과·선생님 목표 | MainChainTests.Step001_… | 예 |
 | MAIN_E2E_002 SleepingIntoDayTwoOpensTheTour | 자고 2일째 둘러보기 단계 | MainChainTests.MainChain_RunsFromTalkingToMomToMyOwnSpace | 예 |
-| MAIN_E2E_003 VisitingTheFourCareerPlaces | 일터 네 곳 방문 | MainChainTests(같은 흐름) | 예 |
+| MAIN_E2E_003 VisitingTheFourCareerPlaces | 일터 네 곳 방문 | MainChainTests(같은 흐름), FacilityAvailabilityTests.VisitingTheFacilities_…(시설 화면 열기로 방문) | 예 |
 | MAIN_E2E_004 FirstPartTimeJob_AShiftCounts | 가게 알바 한 번 | MainChainTests(같은 흐름) | 예 |
 | MAIN_E2E_005 DayThreeOpensMyDream | 3일째 장래희망 단계 | MainChainTests(같은 흐름) | 예 |
 | MAIN_E2E_006 ReadingJobBooksAtTheLibrary | 도서관 직업 책 | MainChainTests(같은 흐름) | 예 |
@@ -32,16 +32,16 @@
 | SAVE_E2E_001 SaveSlotUiUsesInjectedTestRoot… | 슬롯 화면이 테스트 저장 폴더를 쓰고 메타데이터 보존 | — | 아니오: 슬롯 화면. 저장 쪽은 Data.Tests의 저장소 테스트 |
 | BOOT_FLOW_PM_001 NewGameFromBootCanEnterPoliceInteriorDoor | 새 게임 → 경찰서 문 | — | 아니오: 맵 이동(World.Tests·Host.Tests 몫) |
 | CAREER_001 SquareHelpGivesServiceCareerHint… | 광장 도움으로 서비스 진로 힌트, 다시 읽어도 | FreePathTests.SquareHelpRequest_… | 예 |
-| ENCYCLOPEDIA_E2E_001_008 SaveSlotDiscoveryUiReloadAndDedupe | 발견 지점 → 도감 해금·새 표시, 도감 화면, 다시 읽기, 중복 없음 | ExplorationAndEncyclopediaTests.Encyclopedia_… (탐색 선택으로 해금) | 부분: 발견 지점(Discovery) 명령과 본 표시 지우기 명령이 GameSession에 없다(아래 필요한 변경). 화면 부분은 아니오 |
+| ENCYCLOPEDIA_E2E_001_008 SaveSlotDiscoveryUiReloadAndDedupe | 발견 지점 → 도감 해금·새 표시, 도감 화면, 다시 읽기, 중복 없음 | ExplorationAndEncyclopediaTests.Encyclopedia_… (탐색 선택으로 해금), DiscoveryGatherAndSeenTests.Discover_…, MarkEncyclopediaSeen_… | 부분: 규칙·저장은 옮김. 도감 화면 부분은 아니오 |
 | EXPLORATION_CHOICE_E2E_005_011 OpenChoosePersistAndDedupe… | 합성 탐색 지점의 선택·결과·저장·중복 | ExplorationAndEncyclopediaTests.Exploration001_… (실제 data의 지점으로) | 예(합성 정의 대신 실제 data) |
 | REL_001 TalkToMomAtHomeThenSquareHelpRaisesTrust… | 엄마 대화 뒤 광장 도움으로 신뢰, 한 번씩 | HelpAndTrustTests.Rel001_… | 예 |
 | QUEST_DIALOGUE_E2E_001 ClickMomsAcceptChoiceThenJournal… | 2일째 엄마 대화로 퀘스트 받기, 바로 저장, 다시 권하지 않음 | MomQuestTests.QuestDialogue001_… | 예(수첩·씬 넘나들기는 화면) |
-| QUEST_WOOD_E2E_001 AcceptFromMomGatherTownTrees… | 나무 퀘스트 받기 → 나무 베기 → 보상 한 번 | MomQuestTests.QuestDialogue001_…(받기까지) | 부분: 자원 채집 명령이 GameSession에 없다 |
+| QUEST_WOOD_E2E_001 AcceptFromMomGatherTownTrees… | 나무 퀘스트 받기 → 나무 베기 → 보상 한 번 | DiscoveryGatherAndSeenTests.GatherWoodQuest_RunsToTheEnd_ByHittingATree | 예(나무 앞까지 걷기는 화면) |
 | QUEST_DECORATE_E2E_001 PlaceThreeFurniture…ClaimOnce | 가구 세 개로 완료, 보상 한 번, 다시 읽어도 | MomQuestTests.QuestDecorate001_… | 예 |
 | HOUSE_FLOW_001_003 NewGamePlaceSaveExitLoadRestores… | 놓은 가구가 저장되고 다시 들어오면 돌아옴 | FurnitureTests.PlacedFurniture_IsSavedToTheStageFile_… | 예(그림 증거는 화면) |
 | KNOWLEDGE_STATUS_E2E_001 ActivityChainHintReloadNoDuplicate | 작업장 일로 피로 +1·기록 한 번, 새 요청은 한 번 더 | ActivityStatusAndRecipeTests.KnowledgeStatus001_… | 예(수첩 줄·HUD는 화면) |
 | BOOT_E2E_003 MainMenuSinglePlayButtonRespondsToRealPointerClick | 메인 메뉴 단추 실제 포인터 | — | 아니오: 입력 장치 |
-| OBJECTIVE_JOURNAL_SOURCE_COLLISION_PM_001 MultiSourceReload… | 수첩 출처별 줄 키가 겹치지 않음, 추적 지정이 저장됨 | — | 아니오: 수첩 화면. 추적 지정 저장은 Core에 세이브 모양이 없다(game/README.md) |
+| OBJECTIVE_JOURNAL_SOURCE_COLLISION_PM_001 MultiSourceReload… | 수첩 출처별 줄 키가 겹치지 않음, 추적 지정이 저장됨 | ObjectiveTrackingTests(추적 지정 저장) | 부분: 줄 키는 수첩 화면 몫 |
 | JOB_001 CornerStoreShiftThroughMinigameSurvivesReloadOnce | 가게 알바 성장 한 번, 기록 한 번 | PartTimeWorkGrowthTests.Job001_… | 예 |
 | JOB_002 EveryJobPassesFromTheScreen (9개 알바) | 알바마다 성장 한 번, 이어진 진로 후보만 이해도 | PartTimeWorkGrowthTests.Job002_… (9건) | 예(미니게임 판 플레이는 화면) |
 | REGISTRY_PROVIDER_002 ManagersDestroyedMidLoad… | Unity 매니저가 로드 중 사라져도 다시 읽음 | — | 아니오: Unity Addressables·매니저 |
@@ -82,9 +82,9 @@
 | OBJECTIVE_JOURNAL_PM_001/002 | Tab으로 수첩, 줄 클릭·추적 | — | 아니오: 화면(Host ObjectiveJournalHostTests) |
 | NonHouseTilePlacementSurface_… | 집 밖 면에서도 같은 배치 흐름 | — | 부분: 면 id 규칙은 Core FurniturePlacementTests. 집 밖 방 칸을 넘길 명령이 없다(EnterHouse만) |
 | PLAYER_STATE_NET_PM_001 TwoRuntimePlayersKeepSeparateInventories… | 한 슬롯 두 플레이어 인벤토리 따로 | TwoPlayersOneSlotTests.PlayerStateNet001_…, …KeepSeparateQuestChains | 예 |
-| PLAYER_STATE_NET_PM_002 TwoRuntimePlayersKeepSeparateQuestProgress… | 한 슬롯 두 플레이어 일반 퀘스트 따로 | — | 예, 그러나 GameSession이 막는다: 모든 플레이어가 `quest-log.json` 하나를 쓴다(아래 필요한 변경) |
+| PLAYER_STATE_NET_PM_002 TwoRuntimePlayersKeepSeparateQuestProgress… | 한 슬롯 두 플레이어 일반 퀘스트 따로 | TwoPlayersOneSlotTests.PlayerStateNetPm002_…, DefaultPlayer_KeepsUsingTheSharedQuestLogFile | 예 |
 | QUEST_001 NpcInteraction_OpensAndClosesDialogue | NPC 대화 열고 닫기 | SideDomainTests.DialogueChoice_… | 부분(창은 화면) |
-| QUEST_015 NpcQuest_FullFlow_ClaimReward_SetsStoryFlag | 합성 퀘스트 받기→채집→보상·깃발, 두 번 안 줌 | Core QuestLogTests·QuestConditionRewardTests(합성 정의) | 예(규칙은 Core에 있음). 실제 data로는 채집 명령이 없어 못 함 |
+| QUEST_015 NpcQuest_FullFlow_ClaimReward_SetsStoryFlag | 합성 퀘스트 받기→채집→보상·깃발, 두 번 안 줌 | Core QuestLogTests·QuestConditionRewardTests(합성 정의), DiscoveryGatherAndSeenTests.GatherWoodQuest_…(실제 data) | 예. 이야기 깃발은 Unity 판처럼 저장되지 않는다 |
 | QUEST_003 InteractableObject_ProvidesQuestDefinition | 물건이 퀘스트를 줌 | — | 아니오: Unity 컴포넌트 |
 | SaveSlotSelectPanel_Show_DisplaysThreeSlotCards | 슬롯 카드 셋 | — | 아니오: 화면 |
 | TOWN_UI_PM_002 | 이벤트 시스템 중복 제거 | — | 아니오: Unity |
@@ -111,10 +111,15 @@
 | NET-002 | 없음 | 전용 서버·네트워크 동기화가 MonoGame 판에 없다. 규칙 일부만 Core SteamSessionRulesTests·SessionCapacityTests |
 | HEIR-001 | 없음 | HeirGenerator는 Unity(`Assets/Scripts/Game/Heir`)에만 있고 Core로 옮기지 않았다 |
 
-## 3. 옮기다 찾은 필요한 변경 (여기서는 고치지 않음)
+## 3. 옮기다 찾은 필요한 변경 — 2026-11-11 처리함
 
-1. **일반 퀘스트 기록이 플레이어마다 나뉘지 않는다.** `GameSession`은 `SaveFileNames.QuestLog`(`quest-log.json`)를 모든 플레이어에게 쓴다. 한 슬롯에서 player-1이 받은 퀘스트가 player-2에게도 받은 상태로 읽힌다. Unity 판(`PlayerQuestRuntime.LogFileName`)은 기본 플레이어가 아니면 `quest-log-<플레이어>.json`을 썼다. 필요한 변경: Core `SaveFileNames`에 플레이어별 퀘스트 기록 이름을 더하고 `GameSession.Load/Save`가 그것을 쓴다(기본 플레이어는 `quest-log.json` 그대로).
-2. **답한 하루 이벤트를 새 요청 id로 다시 고를 수 있다.** Core `DailyEventRunner.TryChoose`는 요청 id 중복만 보고 기록 상태(완료·거절)를 보지 않는다. 되풀이 안 되는 광장 이벤트를 거절한 뒤 같은 날 새 요청으로 "지금 돕기"를 고르면 적용된다(목록 `AvailableDailyEvents`에는 안 나오므로 화면으로는 못 고르지만, 명령은 막지 않는다). 필요한 변경: `TryChoose`가 `GetAvailableEvents`와 같은 상태 판정(되풀이 안 되는 완료·거절·만료, 쿨다운, 미룬 날)을 하고 거절한다.
-3. **발견 지점 명령이 없다.** Unity `DiscoveryPointInteractor`(Core `DiscoveryRunner.TryDiscover` + 도감 해금 평가)에 해당하는 `GameSession` 명령이 없다. 필요한 변경: `Discover(discoveryId)`(실행 → 저장 → 도감 해금 조건 평가).
-4. **도감 본 표시를 지우는 명령이 없다.** Core `EncyclopediaProgress.MarkSeen`이 있지만 `GameSession`이 내주지 않는다. 필요한 변경: `MarkEncyclopediaEntrySeen(entryId)`(적용되면 저장).
-5. **자원 채집 명령이 없다.** 나무 모으기 퀘스트(`quest.gatherWood`)를 실제 data로 끝까지 진행할 수 없다. 필요한 변경: 자원 노드 치기·채집 명령(채집 이벤트를 퀘스트에 알리고 저장).
+1. **일반 퀘스트 기록을 플레이어마다.** `SaveFileNames.PlayerQuestLog`(Unity `PlayerQuestRuntime.LogFileName`과 같다). 기본 플레이어는 `quest-log.json` 그대로. `TwoPlayersOneSlotTests`.
+2. **답한 하루 이벤트 다시 고르기.** Core `DailyEventRunner.TryChoose`가 목록과 같은 상태 판정(`DailyEventResolver.IsClosed`)으로 거절한다(Unity 판과 달라진 동작). `DailyEventDayTests.ChangedBehavior_…`.
+3. **발견 지점 명령.** `GameSession.Discover`(실행 → 도감 해금 평가 → 저장), 도감 해금 평가만 하는 `EvaluateEncyclopediaUnlocks`. `DiscoveryGatherAndSeenTests`.
+4. **도감 본 표시.** `GameSession.MarkEncyclopediaSeen`(적용되면 저장).
+5. **자원 채집.** `GameSession.GatherResource`(치기마다 퀘스트 로그에 채집 이벤트). 같이 고친 것: 보상 문맥의 이야기 깃발 자리가 null이라 `quest.gatherWood` 보상을 받을 수 없었다.
+
+같은 묶음에서 더한 조회와 명령(화면 세션 요청):
+- 성인 시설: `FacilityStatus`, `CanChooseFacility`, `CanUpgradeFacility`, `VisitFacility` — `FacilityAvailabilityTests`.
+- 장래희망: `CareerInterestChoices`가 등록부의 것만, 고르면 이어진 퀘스트 받기, `AcceptCareerInterestQuests` — `CareerInterestChoiceTests`.
+- 체인: `CanAcceptQuestChain`, `CanClaimQuestChainRewards`, `TrackQuestChain` — `QuestChainQueryTests`.

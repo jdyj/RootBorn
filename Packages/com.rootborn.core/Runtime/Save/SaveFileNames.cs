@@ -16,7 +16,15 @@ namespace Rootborn.Core.Save
         /// <summary>빈 플레이어 id 대신 쓰는 옛 기본값.</summary>
         public const string LegacyPlayerId = "player";
 
+        /// <summary>기본 플레이어의 일반 퀘스트 기록 파일. 플레이어마다 다른 이름은 <see cref="PlayerQuestLog"/>.</summary>
         public const string QuestLog = "quest-log.json";
+
+        /// <summary>
+        /// Unity PlayerQuestRuntime.LogFileName과 같다: 빈 id와 "local-player"만 공용 파일(quest-log.json)이고,
+        /// 그 밖(옛 기본값 "player" 포함)은 id를 정리해 붙인다.
+        /// </summary>
+        public static string PlayerQuestLog(string playerId)
+            => string.IsNullOrEmpty(playerId) || playerId == DefaultPlayerId ? QuestLog : "quest-log-" + Sanitize(playerId) + ".json";
 
         /// <summary>슬롯 정보(Unity SaveService).</summary>
         public const string Metadata = "metadata.json";

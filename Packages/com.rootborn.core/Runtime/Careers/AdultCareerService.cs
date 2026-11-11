@@ -46,11 +46,8 @@ namespace Rootborn.Core.Careers
             if (_executing || !SameIdentity(student, adult) || candidates == null || candidates.SaveSlot != adult.SaveSlot || candidates.PlayerId != adult.PlayerId || string.IsNullOrEmpty(requestId))
                 return Result(AdultCareerResultKind.InvalidRequest);
             if (adult.HasAppliedRequest(requestId)) return Result(AdultCareerResultKind.DuplicateRequest);
-            if (!Registered(facility)) return Result(AdultCareerResultKind.InvalidDefinition);
-            if (adult.IsAdult) return Result(AdultCareerResultKind.AlreadyAdult);
-            // 하루가 끝난 뒤(결과 화면)에는 시설을 고를 수 없다(Unity 판은 됐다).
-            if (student.HasPendingMinigame || student.DayState != StudentDayState.InProgress) return Result(AdultCareerResultKind.RequirementFailed);
-            if (!facility.CanTransition(new FacilityTransitionContext(facility, student, candidates))) return Result(AdultCareerResultKind.RequirementFailed);
+            var check = CanTransition(facility, student, candidates, adult);
+            if (check != AdultCareerResultKind.Applied) return Result(check);
             adult.Select(facility, requestId);
             return Result(AdultCareerResultKind.Applied);
         }
@@ -61,17 +58,9 @@ namespace Rootborn.Core.Careers
             if (_executing || !SameIdentity(student, adult) || inventory == null || string.IsNullOrEmpty(requestId)) return Result(AdultCareerResultKind.InvalidRequest);
             if (adult.HasAppliedRequest(requestId)) return Result(AdultCareerResultKind.DuplicateRequest);
             ForfeitWorkLeftFromEarlierDays(student, adult);
-            if (adult.HasPendingWork || student.HasPendingMinigame) return Result(AdultCareerResultKind.RequirementFailed);
-            var facility = FacilityOf(work);
-            if (facility == null) return Result(AdultCareerResultKind.InvalidDefinition);
-            if (!adult.IsAdult || adult.FacilityId != facility.Id || adult.FacilityLevel < work.MinimumFacilityLevel) return Result(AdultCareerResultKind.RequirementFailed);
-            if (score < 0 || score > 100) return Result(AdultCareerResultKind.InvalidRequest);
-            if (autoSkip && !work.CanAutoSkip(new AutoSkipContext(work, adult, inventory))) return Result(AdultCareerResultKind.RequirementFailed);
-            if (!student.CanSpendTimePoints(work.TimePointCost)) return Result(AdultCareerResultKind.InsufficientTime);
+            var check = CheckCompleteWork(work, student, adult, inventory, score, autoSkip, out var rewards);
+            if (check != AdultCareerResultKind.Applied) return Result(check);
             int effectiveScore = autoSkip ? 100 : score;
-            var level = facility.GetLevel(adult.FacilityLevel);
-            if (level == null || !work.TryBuildRewards(effectiveScore, level.RewardPercent, out var rewards)) return Result(AdultCareerResultKind.InvalidDefinition);
-            if (!inventory.CanExchange(null, rewards)) return Result(AdultCareerResultKind.InsufficientCapacity);
             return Exchange(inventory, null, rewards, AdultCareerResultKind.InsufficientCapacity, () =>
             {
                 if (!student.TrySpendTimePoints(work.TimePointCost)) throw new InvalidOperationException("Prevalidated facility work budget changed during settlement.");
@@ -86,14 +75,8 @@ namespace Rootborn.Core.Careers
             if (_executing || !SameIdentity(student, adult) || inventory == null || world == null || world.SaveSlot != adult.SaveSlot || world.PlayerId != adult.PlayerId || string.IsNullOrEmpty(requestId))
                 return Result(AdultCareerResultKind.InvalidRequest);
             if (adult.HasAppliedRequest(requestId)) return Result(AdultCareerResultKind.DuplicateRequest);
-            if (adult.HasPendingWork || student.HasPendingMinigame) return Result(AdultCareerResultKind.RequirementFailed);
-            if (!Registered(facility)) return Result(AdultCareerResultKind.InvalidDefinition);
-            if (!adult.IsAdult || adult.FacilityId != facility.Id) return Result(AdultCareerResultKind.RequirementFailed);
-            if (adult.FacilityLevel >= 3) return Result(AdultCareerResultKind.AtMaximumLevel);
-            var level = facility.GetLevel(adult.FacilityLevel + 1);
-            if (level == null || !level.IsValid) return Result(AdultCareerResultKind.InvalidDefinition);
-            var costs = level.BuildCosts();
-            if (!inventory.CanExchange(costs, null)) return Result(AdultCareerResultKind.InsufficientResources);
+            var check = CheckUpgrade(facility, student, adult, inventory, out var level, out var costs);
+            if (check != AdultCareerResultKind.Applied) return Result(check);
             return Exchange(inventory, costs, null, AdultCareerResultKind.InsufficientResources, () =>
             {
                 adult.Upgrade(facility, level, requestId);
@@ -107,13 +90,8 @@ namespace Rootborn.Core.Careers
             if (_executing || !SameIdentity(student, adult) || string.IsNullOrEmpty(requestId)) return Result(AdultCareerResultKind.InvalidRequest);
             if (adult.HasAppliedRequest(requestId)) return Result(AdultCareerResultKind.DuplicateRequest);
             ForfeitWorkLeftFromEarlierDays(student, adult);
-            if (adult.HasPendingWork || student.HasPendingMinigame) return Result(AdultCareerResultKind.RequirementFailed);
-            var facility = FacilityOf(work);
-            if (facility == null || work.Minigame == null || !work.Minigame.IsValid) return Result(AdultCareerResultKind.InvalidDefinition);
-            if (!adult.IsAdult || adult.FacilityId != facility.Id || adult.FacilityLevel < work.MinimumFacilityLevel || student.DayState != StudentDayState.InProgress)
-                return Result(AdultCareerResultKind.RequirementFailed);
-            var level = facility.GetLevel(adult.FacilityLevel);
-            if (level == null || !level.IsValid) return Result(AdultCareerResultKind.InvalidDefinition);
+            var check = CheckReserveWork(work, student, adult, out var level);
+            if (check != AdultCareerResultKind.Applied) return Result(check);
             if (!student.TrySpendTimePoints(work.TimePointCost)) return Result(AdultCareerResultKind.InsufficientTime);
             student.Spend(work.TimeCostMinutes, 0, 0, 0);
             adult.ReserveWork(work, requestId, student.CurrentDay, seed, level.RewardPercent);
@@ -162,6 +140,106 @@ namespace Rootborn.Core.Careers
             if (pending == null || pending.Day >= student.CurrentDay) return false;
             adult.ForfeitPendingWork();
             return true;
+        }
+
+        // ---------- 할 수 있는지(명령과 같은 판정, 아무것도 바꾸지 않는다) ----------
+        // 돌려주는 값이 Applied면 할 수 있다. 그 밖은 명령이 지금 상태에서 돌려줄 거절 이유다(요청 id·중복 검사는 빼고 본다).
+        // 앞선 날에 예약하고 정산하지 않은 일은 명령이 먼저 포기 처리하므로 여기서도 없는 것으로 본다.
+
+        /// <summary>이 시설을 성인 진로로 고를 수 있는지(Unity AdultCareerRuntimeComponent.CanTransition. 하루가 끝난 뒤에는 막는다).</summary>
+        public AdultCareerResultKind CanTransition(Facility facility, StudentLifeProgress student, CareerCandidateProgress candidates, AdultCareerProgress adult)
+        {
+            if (_executing || !SameIdentity(student, adult) || candidates == null || candidates.SaveSlot != adult.SaveSlot || candidates.PlayerId != adult.PlayerId)
+                return AdultCareerResultKind.InvalidRequest;
+            if (!Registered(facility)) return AdultCareerResultKind.InvalidDefinition;
+            if (adult.IsAdult) return AdultCareerResultKind.AlreadyAdult;
+            // 하루가 끝난 뒤(결과 화면)에는 시설을 고를 수 없다(Unity 판은 됐다).
+            if (student.HasPendingMinigame || student.DayState != StudentDayState.InProgress) return AdultCareerResultKind.RequirementFailed;
+            if (!facility.CanTransition(new FacilityTransitionContext(facility, student, candidates))) return AdultCareerResultKind.RequirementFailed;
+            return AdultCareerResultKind.Applied;
+        }
+
+        /// <summary>
+        /// 이 일을 직접 할 수 있는지(Unity CanWork). 미니게임이 있는 일은 예약(TryReserveWork)의 판정, 없는 일은 바로 하기(TryCompleteWork, 만점 보상 기준)의 판정이다.
+        /// </summary>
+        public AdultCareerResultKind CanWork(FacilityWork work, StudentLifeProgress student, AdultCareerProgress adult, ICareerInventory inventory)
+        {
+            if (_executing || !SameIdentity(student, adult)) return AdultCareerResultKind.InvalidRequest;
+            if (work != null && work.Minigame != null)
+            {
+                var check = CheckReserveWork(work, student, adult, out _);
+                if (check != AdultCareerResultKind.Applied) return check;
+                return student.CanSpendTimePoints(work.TimePointCost) ? AdultCareerResultKind.Applied : AdultCareerResultKind.InsufficientTime;
+            }
+
+            if (inventory == null) return AdultCareerResultKind.InvalidRequest;
+            return CheckCompleteWork(work, student, adult, inventory, 100, false, out _);
+        }
+
+        /// <summary>이 일을 자동 완료할 수 있는지(Unity CanAutoSkip: 자동 완료 조건 + 만점 보상이 가방에 들어가는지).</summary>
+        public AdultCareerResultKind CanAutoSkip(FacilityWork work, StudentLifeProgress student, AdultCareerProgress adult, ICareerInventory inventory)
+        {
+            if (_executing || !SameIdentity(student, adult) || inventory == null) return AdultCareerResultKind.InvalidRequest;
+            return CheckCompleteWork(work, student, adult, inventory, 100, true, out _);
+        }
+
+        /// <summary>지금 시설을 한 단계 올릴 수 있는지(Unity CanUpgrade). 월드 상태는 보지 않는다(올릴 때 깃발을 켜기만 한다).</summary>
+        public AdultCareerResultKind CanUpgrade(Facility facility, StudentLifeProgress student, AdultCareerProgress adult, ICareerInventory inventory)
+        {
+            if (_executing || !SameIdentity(student, adult) || inventory == null) return AdultCareerResultKind.InvalidRequest;
+            return CheckUpgrade(facility, student, adult, inventory, out _, out _);
+        }
+
+        // 명령은 앞선 날의 예약을 먼저 포기 처리한 뒤 이 판정을 부른다. 조회는 포기 처리를 하지 않으므로 오늘 이후 예약만 막는다.
+        private static bool HasPendingWorkFromToday(StudentLifeProgress student, AdultCareerProgress adult)
+            => adult.PendingWork != null && adult.PendingWork.Day >= student.CurrentDay;
+
+        private AdultCareerResultKind CheckCompleteWork(FacilityWork work, StudentLifeProgress student, AdultCareerProgress adult, ICareerInventory inventory, int score, bool autoSkip,
+            out IReadOnlyList<ItemAmount<string>> rewards)
+        {
+            rewards = null;
+            if (HasPendingWorkFromToday(student, adult) || student.HasPendingMinigame) return AdultCareerResultKind.RequirementFailed;
+            var facility = FacilityOf(work);
+            if (facility == null) return AdultCareerResultKind.InvalidDefinition;
+            if (!adult.IsAdult || adult.FacilityId != facility.Id || adult.FacilityLevel < work.MinimumFacilityLevel) return AdultCareerResultKind.RequirementFailed;
+            if (score < 0 || score > 100) return AdultCareerResultKind.InvalidRequest;
+            if (autoSkip && !work.CanAutoSkip(new AutoSkipContext(work, adult, inventory))) return AdultCareerResultKind.RequirementFailed;
+            if (!student.CanSpendTimePoints(work.TimePointCost)) return AdultCareerResultKind.InsufficientTime;
+            int effectiveScore = autoSkip ? 100 : score;
+            var level = facility.GetLevel(adult.FacilityLevel);
+            if (level == null || !work.TryBuildRewards(effectiveScore, level.RewardPercent, out var built)) return AdultCareerResultKind.InvalidDefinition;
+            if (!inventory.CanExchange(null, built)) return AdultCareerResultKind.InsufficientCapacity;
+            rewards = built;
+            return AdultCareerResultKind.Applied;
+        }
+
+        private AdultCareerResultKind CheckReserveWork(FacilityWork work, StudentLifeProgress student, AdultCareerProgress adult, out FacilityLevel level)
+        {
+            level = null;
+            if (HasPendingWorkFromToday(student, adult) || student.HasPendingMinigame) return AdultCareerResultKind.RequirementFailed;
+            var facility = FacilityOf(work);
+            if (facility == null || work.Minigame == null || !work.Minigame.IsValid) return AdultCareerResultKind.InvalidDefinition;
+            if (!adult.IsAdult || adult.FacilityId != facility.Id || adult.FacilityLevel < work.MinimumFacilityLevel || student.DayState != StudentDayState.InProgress)
+                return AdultCareerResultKind.RequirementFailed;
+            level = facility.GetLevel(adult.FacilityLevel);
+            if (level == null || !level.IsValid) return AdultCareerResultKind.InvalidDefinition;
+            return AdultCareerResultKind.Applied;
+        }
+
+        private AdultCareerResultKind CheckUpgrade(Facility facility, StudentLifeProgress student, AdultCareerProgress adult, ICareerInventory inventory,
+            out FacilityLevel level, out IReadOnlyList<ItemAmount<string>> costs)
+        {
+            level = null;
+            costs = null;
+            if (adult.HasPendingWork || student.HasPendingMinigame) return AdultCareerResultKind.RequirementFailed;
+            if (!Registered(facility)) return AdultCareerResultKind.InvalidDefinition;
+            if (!adult.IsAdult || adult.FacilityId != facility.Id) return AdultCareerResultKind.RequirementFailed;
+            if (adult.FacilityLevel >= 3) return AdultCareerResultKind.AtMaximumLevel;
+            level = facility.GetLevel(adult.FacilityLevel + 1);
+            if (level == null || !level.IsValid) return AdultCareerResultKind.InvalidDefinition;
+            costs = level.BuildCosts();
+            if (!inventory.CanExchange(costs, null)) return AdultCareerResultKind.InsufficientResources;
+            return AdultCareerResultKind.Applied;
         }
 
         private AdultCareerResult Exchange(ICareerInventory inventory, IReadOnlyList<ItemAmount<string>> costs, IReadOnlyList<ItemAmount<string>> rewards, AdultCareerResultKind failure, Action commit)

@@ -39,10 +39,9 @@ namespace Rootborn.Core.StudentLife
         {
             var invalid = CheckStart(student, adult, requestId);
             if (!invalid.Applied) return invalid;
-            if (!Registered(_practices, practice) || practice.Activity == null || practice.Minigame == null || !practice.Minigame.IsValid) return Result(AdultCareerResultKind.InvalidDefinition);
+            var check = CheckPractice(practice, student);
+            if (check != AdultCareerResultKind.Applied) return Result(check);
             var activity = practice.Activity;
-            if (!activity.HasSatisfiedRequirements(student)) return Result(AdultCareerResultKind.RequirementFailed);
-            if (!CanPay(student, activity.TimePolicy, activity.EnergyCost, activity.FocusCost)) return Result(AdultCareerResultKind.InsufficientTime);
             student.TryUseTimePolicy(activity.TimePolicy);
             student.Spend(activity.TimeCostMinutes, activity.EnergyCost, activity.FocusCost, activity.StressDelta);
             student.ReserveMinigame(Reservation(StudentMinigameKind.Practice, practice.Id, practice.Minigame, student, requestId, seed, activity.TimePolicy.TimePointCost));
@@ -114,13 +113,39 @@ namespace Rootborn.Core.StudentLife
                 if (_candidates[i] != null) student.CareerCandidates.TryClaimRewards(_candidates[i], student);
         }
 
+        /// <summary>
+        /// 진로 체험(미니게임 진로 연습)을 지금 시작할 수 있는지(Unity FacilityManagementPanel.CanRequestPractice). TryBeginPractice와 같은 판정이고
+        /// 아무것도 바꾸지 않는다. Applied면 할 수 있다. 미니게임이 없는 연습은 InvalidDefinition(그 연습은 CareerPracticeRunner가 한다).
+        /// </summary>
+        public AdultCareerResultKind CanBeginPractice(CareerPractice practice, StudentLifeProgress student, AdultCareerProgress adult)
+        {
+            if (!SameIdentity(student, adult)) return AdultCareerResultKind.InvalidRequest;
+            if (!CanStart(student, adult)) return AdultCareerResultKind.RequirementFailed;
+            return CheckPractice(practice, student);
+        }
+
+        private AdultCareerResultKind CheckPractice(CareerPractice practice, StudentLifeProgress student)
+        {
+            if (!Registered(_practices, practice) || practice.Activity == null || practice.Minigame == null || !practice.Minigame.IsValid) return AdultCareerResultKind.InvalidDefinition;
+            var activity = practice.Activity;
+            if (!activity.HasSatisfiedRequirements(student)) return AdultCareerResultKind.RequirementFailed;
+            if (!CanPay(student, activity.TimePolicy, activity.EnergyCost, activity.FocusCost)) return AdultCareerResultKind.InsufficientTime;
+            return AdultCareerResultKind.Applied;
+        }
+
         private static AdultCareerResult CheckStart(StudentLifeProgress student, AdultCareerProgress adult, string requestId)
         {
-            if (student == null || adult == null || student.SaveSlot != adult.SaveSlot || student.PlayerId != adult.PlayerId || string.IsNullOrEmpty(requestId)) return Result(AdultCareerResultKind.InvalidRequest);
+            if (!SameIdentity(student, adult) || string.IsNullOrEmpty(requestId)) return Result(AdultCareerResultKind.InvalidRequest);
             if (student.HasAppliedRequest(requestId)) return Result(AdultCareerResultKind.DuplicateRequest);
-            if (adult.IsAdult || adult.HasPendingWork || student.HasPendingMinigame || student.DayState != StudentDayState.InProgress) return Result(AdultCareerResultKind.RequirementFailed);
+            if (!CanStart(student, adult)) return Result(AdultCareerResultKind.RequirementFailed);
             return Result(AdultCareerResultKind.Applied);
         }
+
+        private static bool SameIdentity(StudentLifeProgress student, AdultCareerProgress adult)
+            => student != null && adult != null && student.SaveSlot == adult.SaveSlot && student.PlayerId == adult.PlayerId;
+
+        private static bool CanStart(StudentLifeProgress student, AdultCareerProgress adult)
+            => !adult.IsAdult && !adult.HasPendingWork && !student.HasPendingMinigame && student.DayState == StudentDayState.InProgress;
 
         private static bool CanPay(StudentLifeProgress student, ActivityTimePolicy policy, int energy, int focus)
             => policy != null && policy.TimePointCost > 0 && student.CanUseTimePolicy(policy) && student.CanSpend(energy, focus);

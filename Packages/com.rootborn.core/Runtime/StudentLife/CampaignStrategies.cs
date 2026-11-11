@@ -5,7 +5,7 @@ namespace Rootborn.Core.StudentLife
     /// <summary>활동 기록·오늘 결과·어제 결과 중 접두어가 맞는 줄 수를 센다.</summary>
     public sealed class CampaignActivityLogObjective : CampaignObjective
     {
-        public CampaignActivityLogObjective(string id, string requiredLogPrefix, int requiredCount, bool requiresSchoolClass) : base(id, requiresSchoolClass)
+        public CampaignActivityLogObjective(string id, string requiredLogPrefix, int requiredCount, bool requiresSchoolClass, string displayNameKey = null) : base(id, requiresSchoolClass, displayNameKey)
         {
             RequiredLogPrefix = string.IsNullOrEmpty(requiredLogPrefix) ? string.Empty : requiredLogPrefix;
             RequiredCount = Math.Max(1, requiredCount);
@@ -38,7 +38,7 @@ namespace Rootborn.Core.StudentLife
 
     public sealed class CampaignCareerHintObjective : CampaignObjective
     {
-        public CampaignCareerHintObjective(string id, string careerId) : base(id, false) { CareerId = careerId ?? string.Empty; }
+        public CampaignCareerHintObjective(string id, string careerId, string displayNameKey = null) : base(id, false, displayNameKey) { CareerId = careerId ?? string.Empty; }
         public string CareerId { get; }
 
         public override CampaignObjectiveEvaluation Evaluate(in CampaignEvaluationContext context)
@@ -48,7 +48,7 @@ namespace Rootborn.Core.StudentLife
     /// <summary>방문한 장소 목록에서 정한 장소가 나온 횟수를 센다.</summary>
     public sealed class CampaignLocationVisitObjective : CampaignObjective
     {
-        public CampaignLocationVisitObjective(string id, string locationId, int requiredCount) : base(id, false)
+        public CampaignLocationVisitObjective(string id, string locationId, int requiredCount, string displayNameKey = null) : base(id, false, displayNameKey)
         {
             LocationId = locationId ?? string.Empty;
             RequiredCount = Math.Max(1, requiredCount);

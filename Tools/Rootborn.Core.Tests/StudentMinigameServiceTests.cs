@@ -204,6 +204,33 @@ namespace Rootborn.Core.Tests
             }
         }
 
+        [Test]
+        public void CanBeginPractice_GivesTheCommandsReason_AndChangesNothing()
+        {
+            var f = new Fixture();
+            Assert.That(f.Service.CanBeginPractice(f.Practice, f.Student, f.Adult), Is.EqualTo(AdultCareerResultKind.Applied));
+            Assert.That(f.Student.TimePointsRemaining, Is.EqualTo(3));
+            Assert.That(f.Student.HasPendingMinigame, Is.False);
+
+            var unregistered = new CareerPractice("other", "other", f.Practice.Activity, null, null, f.Practice.Minigame);
+            Assert.That(f.Service.CanBeginPractice(unregistered, f.Student, f.Adult), Is.EqualTo(AdultCareerResultKind.InvalidDefinition));
+            Assert.That(f.Service.CanBeginPractice(f.Practice, f.Student, new AdultCareerProgress("slot", "someone")), Is.EqualTo(AdultCareerResultKind.InvalidRequest));
+
+            Assert.That(f.BeginPractice("practice-1").Applied, Is.True);
+            Assert.That(f.Service.CanBeginPractice(f.Practice, f.Student, f.Adult), Is.EqualTo(AdultCareerResultKind.RequirementFailed), "한 판이 예약돼 있다");
+            Assert.That(f.BeginPractice("practice-2").Kind, Is.EqualTo(AdultCareerResultKind.RequirementFailed));
+        }
+
+        [Test]
+        public void CanBeginPractice_IsRefusedForAnAdultAndAfterTheDayEnds()
+        {
+            var f = new Fixture();
+            var adult = AdultCareerProgress.FromSaveData(new AdultCareerProgressSaveData { SaveSlot = "slot", PlayerId = "player", FacilityId = "facility.x", FacilityLevel = 1 });
+            Assert.That(f.Service.CanBeginPractice(f.Practice, f.Student, adult), Is.EqualTo(AdultCareerResultKind.RequirementFailed));
+            f.Student.TryEndDay(null, out _);
+            Assert.That(f.Service.CanBeginPractice(f.Practice, f.Student, f.Adult), Is.EqualTo(AdultCareerResultKind.RequirementFailed));
+        }
+
         private sealed class Fixture
         {
             public readonly StudentLifeProgress Student;
