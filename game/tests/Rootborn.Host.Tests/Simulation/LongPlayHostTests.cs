@@ -37,7 +37,12 @@ namespace Rootborn.Host.Tests.Simulation
         /// 맨 위 화면 없이 가만히 선 실제 창 프레임 한 번의 할당 한계(바이트). 0이다: 월드 갱신·그리기(WORLD_FRAME_001)와 UI 배치·포인터·그리기 명령·9조각
         /// (Rootborn.Ui FrameAllocationTests)가 모두 새 객체를 만들지 않는다. 고치기 전(2026-11-12) 720(집 800) — NineSlice.BuildStretched가 HUD 패널마다 int[4] 두 개.
         /// </summary>
-        private const long IdleFrameBytesLimit = 0;
+        /// <remarks>
+        /// 시계가 흐르면(흐르는 시간) 게임 1분마다 HUD 시계 글자를 새로 만든다 — 매 프레임이 아니라 분마다이고(실제 약 0.4초),
+        /// 30프레임 평균으로 프레임당 120바이트쯤이다(원격 Linux에서 잰 값 118). 그 몫만 허용한다. 프레임마다 생기는 할당은 여전히 0이어야 한다
+        /// (그것은 WORLD_FRAME_001과 Ui FrameAllocationTests가 시계 없이 0으로 지킨다).
+        /// </remarks>
+        private const long IdleFrameBytesLimit = 256;
         /// <summary>메모리를 비교할 때 가장 작은 값을 고르는 창(잰 횟수).</summary>
         private const int Window = 3;
         private const int IdleFrames = 30;
