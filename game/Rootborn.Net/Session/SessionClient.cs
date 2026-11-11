@@ -153,6 +153,22 @@ namespace Rootborn.Net.Session
 
         /// <summary>서버에서 방의 시계를 받을 때마다(Update 안에서).</summary>
         public event Action RoomClockChanged;
+
+        /// <summary>들어온 뒤 서버가 보낸 그 종류의 메시지를 받는다(세션이 처리하지 않는 종류만, Update 안에서). 종류마다 한 줄로 더한다.</summary>
+        public SessionClient On<T>(Action<T> handler) where T : class
+        {
+            if (handler == null) throw new ArgumentNullException(nameof(handler));
+            _handlers.On<T>((now, m) => handler(m));
+            return this;
+        }
+
+        /// <summary>들어와 있으면 서버에 신뢰 순서로 보낸다. 보냈으면 true(등록하지 않은 메시지이거나 너무 크면 false).</summary>
+        public bool Send(object message)
+        {
+            if (Status != ClientStatus.Joined || message == null || !_catalog.TryEncode(message, out var bytes)) return false;
+            _transport.Send(_server, bytes, Delivery.ReliableOrdered);
+            return true;
+        }
         public DropCounters Drops { get; } = new DropCounters();
 
         public IEnumerable<string> RemotePlayerIds

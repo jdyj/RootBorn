@@ -6,6 +6,7 @@ using Rootborn.Core.Dialogue;
 using Rootborn.Core.Gathering;
 using Rootborn.Core.Inventory;
 using Rootborn.Core.Quests;
+using Rootborn.Core.Room;
 using Rootborn.Core.Save;
 using Rootborn.Core.StudentLife;
 using Rootborn.Core.WorldState;
@@ -37,7 +38,7 @@ namespace Rootborn.Game
         private readonly NpcScheduleAccess _npcSchedules;
         private readonly PersonalWallet _wallet = new PersonalWallet();
 
-        private GameSession(GameDefinitions definitions, GameStartSettings settings, ISaveStore store, Func<string, string> newEventKey)
+        private GameSession(GameDefinitions definitions, GameStartSettings settings, ISaveStore store, Func<string, string> newEventKey, RoomShares shares)
         {
             _definitions = definitions ?? throw new ArgumentNullException(nameof(definitions));
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
@@ -60,7 +61,8 @@ namespace Rootborn.Game
             // Unity LocationStateRuntimeInstaller: 정책이 없으면 HighestPriority.
             _locationStates = policy != null ? policy.CreateResolver(stateCache) : new LocationStateResolver(stateCache, LocationStateConflictMode.HighestPriority);
             _npcSchedules = new NpcScheduleAccess(new NpcScheduleLookupCache(_definitions.All<NpcSchedule>()));
-            Inventory = new ItemInventory(_wallet, _definitions.Currency);
+            UseShares(shares);
+            Inventory = new ItemInventory(_roomWallet != null ? (IWallet)_roomWallet : _wallet, _definitions.Currency);
         }
 
         public string SaveSlot { get; private set; }
@@ -69,8 +71,11 @@ namespace Rootborn.Game
         // 진행 상태(읽기용).
         public StudentLifeProgress Student { get; private set; }
         public ItemInventory Inventory { get; }
-        /// <summary>돈(멀티플레이 설계 2.2절). 가방에 통화 아이템을 주고받으면 여기가 바뀐다. 혼자 하기는 개인 지갑이다.</summary>
-        public IWallet Wallet => _wallet;
+        /// <summary>
+        /// 돈(멀티플레이 설계 2.2절). 가방에 통화 아이템을 주고받으면 여기가 바뀐다. 혼자 하기와 돈을 각자 쓰는 방은 개인 지갑,
+        /// 돈을 같이 쓰는 방은 방 지갑(<see cref="RoomWalletClient"/>)이다. 개인 지갑은 그동안에도 세이브에 그대로 남는다.
+        /// </summary>
+        public IWallet Wallet => _roomWallet != null ? (IWallet)_roomWallet : _wallet;
         public QuestLog QuestLog { get; private set; }
         public QuestChainLog QuestChains { get; private set; }
         public AdultCareerProgress Adult { get; private set; }
@@ -87,14 +92,15 @@ namespace Rootborn.Game
         /// newEventKey는 퀘스트 이벤트 키를 만든다(기본: 행동 이름 + 새 GUID, Unity 판과 같음).
         /// </summary>
         public static GameSession Start(GameDefinitions definitions, GameStartSettings settings, ISaveStore store, string saveSlot, string playerId,
-            Func<string, string> newEventKey = null, Rootborn.Core.Time.IRoomTime room = null)
+            Func<string, string> newEventKey = null, Rootborn.Core.Time.IRoomTime room = null, RoomShares shares = null)
         {
             if (string.IsNullOrEmpty(saveSlot)) throw new ArgumentException("세이브 슬롯이 비어 있다", nameof(saveSlot));
-            var session = new GameSession(definitions, settings, store, newEventKey);
+            var session = new GameSession(definitions, settings, store, newEventKey, shares);
             session.SaveSlot = saveSlot;
             session.PlayerId = string.IsNullOrEmpty(playerId) ? SaveFileNames.DefaultPlayerId : playerId;
             session.Load();
             session.UseRoom(room);
+            session.AfterStartInRoom();
             return session;
         }
 
@@ -104,13 +110,13 @@ namespace Rootborn.Game
         /// 정의를 직접 넘기는 <see cref="Start"/>는 서비스 없이 읽은 정의면 레시피 공개를 저장하지 않는다.
         /// </summary>
         public static GameSession StartFromData(string dataDirectory, ISaveStore store, string saveSlot, string playerId, Func<string, string> newEventKey = null,
-            Rootborn.Core.Time.IRoomTime room = null)
+            Rootborn.Core.Time.IRoomTime room = null, RoomShares shares = null)
         {
             if (store == null) throw new ArgumentNullException(nameof(store));
             var services = new RuleServices(store);
             var loaded = GameDataLoader.Load(dataDirectory, b => Rootborn.Data.Builders.RootbornBuilders.Register(b, services));
             loaded.ThrowIfFailed();
-            return Start(loaded.Definitions, GameStartSettings.FromDefinitions(loaded.Definitions), store, saveSlot, playerId, newEventKey, room);
+            return Start(loaded.Definitions, GameStartSettings.FromDefinitions(loaded.Definitions), store, saveSlot, playerId, newEventKey, room, shares);
         }
 
         /// <summary>자원 레시피 공개 진행(resource-recipe-progress*.json)을 읽는다. 공개는 장소 활동 결과가 바로 저장한다.</summary>
@@ -197,6 +203,7 @@ namespace Rootborn.Game
                 : new LocationStateProgress(SaveSlot, PlayerId);
 
             LoadOptionalDomains(store);
+            LoadRoomOutbox(store);
 
             store.ThrowIfDamaged(hasSnapshot ? null : snapshotName, SlotSharedFiles(), PreSnapshotFiles());
         }
@@ -278,6 +285,7 @@ namespace Rootborn.Game
         /// </summary>
         private void Save()
         {
+            PublishTownFlags();
             using (var store = SaveBatches.Begin(_store, SaveSlot))
             {
                 store.Write(SaveSlot, SaveFileNames.AdultCareerSnapshot(PlayerId), new AdultCareerSnapshotSaveData
@@ -297,6 +305,7 @@ namespace Rootborn.Game
                 store.Write(SaveSlot, SaveFileNames.CareerInterest(PlayerId), CareerInterests.ToSaveData());
                 store.Write(SaveSlot, SaveFileNames.LocationState(PlayerId), LocationStates.ToSaveData());
                 SaveOptionalDomains(store);
+                if (Shares != null) store.Write(SaveSlot, SaveFileNames.RoomOutbox(PlayerId), Shares.Outbox.ToSaveData());
                 store.Commit();
             }
         }

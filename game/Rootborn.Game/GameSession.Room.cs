@@ -72,14 +72,51 @@ namespace Rootborn.Game
         /// </summary>
         public bool SyncWithRoom()
         {
-            if (_roomGate.CatchUp(Student) > 0)
+            bool newDay = CatchUpRoomDay();
+            bool caughtUp = _roomGate.CatchUp(Student) > 0;
+            ResendToRoom();
+            if (newDay || caughtUp)
             {
-                SaveAndNotify(RoomTopics);
+                if (newDay) SaveNewDay();
+                else SaveAndNotify(RoomTopics);
                 return true;
             }
 
             Notify(null, GameChangeTopics.Room);
             return false;
+        }
+
+        /// <summary>
+        /// 방이 이 사람의 날보다 앞서 있고 이 사람의 하루가 진행 중이면(방에 없던 사이 날이 지났다) 그 사이를 쉰 날로 넘겨 방의 날에서 시작한다
+        /// (멀티플레이 설계 10절 7번, Core StudentLifeProgress.RestUntil). 오늘을 마감한 뒤라면 다음 날 시작(<see cref="StartNextDay"/>)이 한다.
+        /// 방의 날을 모르면(접속 직후) 하지 않는다. 저장은 부르는 쪽이 한다.
+        /// </summary>
+        private bool CatchUpRoomDay()
+        {
+            if (Room.Day <= Student.CurrentDay || Student.DayState != StudentDayState.InProgress) return false;
+            if (Student.RestUntil(Room.Day, _dayEndRules) == 0) return false;
+            BeginNewDay();
+            return true;
+        }
+
+        /// <summary>
+        /// 개인 진행이 방보다 앞서 있으면(요청을 보낸 직후 끊겨 방이 세지 못했다) 같은 날·같은 때의 요청을 다시 보낸다. 방은 (날, 때)로 받으므로
+        /// 이미 센 것은 두 번 세지 않는다(Core RoomClock.SpendFrom). 오늘을 마감했는데 방이 모르면 마감을 다시 알린다.
+        /// </summary>
+        private bool ResendToRoom()
+        {
+            if (Room.Day != Student.CurrentDay) return false;
+            if (Student.DayState != StudentDayState.InProgress) return !RoomKnowsMyDayEnded() && Room.EndDay(PlayerId);
+            int ahead = Math.Min(Student.TimePointsSpentToday, Room.PartsToday) - Room.CompletedParts(PlayerId);
+            return ahead > 0 && Room.CanSpend(PlayerId, ahead) && Room.Spend(PlayerId, ahead);
+        }
+
+        private bool RoomKnowsMyDayEnded()
+        {
+            Room.CopyPresent(_roomScratch);
+            foreach (var p in _roomScratch)
+                if (string.Equals(p.ParticipantId, PlayerId, StringComparison.Ordinal)) return p.DayEnded;
+            return true; // 방에 없으면(모름) 보내지 않는다
         }
 
         // 읽은 뒤 한 번 부른다. 같이 하는 방의 참가자 들이기는 방을 가진 쪽이 한다.

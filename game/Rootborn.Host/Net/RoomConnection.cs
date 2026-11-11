@@ -25,7 +25,12 @@ namespace Rootborn.Host.Net
         private readonly Func<string, string> _identityForSlot;
         private readonly Func<StartEntry, bool> _enter;
         private SessionClient _client;
+        private RoomGuestLink _link;
+        private RemoteRoomTime _time;
         private string _slotId;
+
+        // 신원마다 방이 아직 받았다고 답하지 않은 저장. 끊겼다 같은 인물로 다시 들어가면 이어서 보낸다(설계 3.1절).
+        private readonly Dictionary<string, GuestUploads> _uploads = new Dictionary<string, GuestUploads>(StringComparer.Ordinal);
 
         /// <param name="versions">이 프로그램의 버전(서버와 맞춰 본다). 처음 들어갈 때 한 번 부른다(데이터 지문은 모든 data/ 파일을 읽는다).</param>
         /// <param name="identityForSlot">슬롯 id → 방에서의 신원(<see cref="GuestProgress.RoomIdentity"/>).</param>
@@ -56,6 +61,23 @@ namespace Rootborn.Host.Net
         /// <summary>방에서의 신원(접속을 시작한 뒤).</summary>
         public string PlayerId { get; private set; }
 
+        /// <summary>
+        /// 손님 저장과 공유 조각(들어간 뒤). 이 방이 손님 저장을 받으면(<see cref="RoomGuestLink.TakesGuestSaves"/>) 게임 한 판은 이것의 세이브와
+        /// 조각 묶음으로 시작한다(<see cref="GuestProgress.RoomStoreFor"/>).
+        /// </summary>
+        public RoomGuestLink Link => _link;
+
+        /// <summary>
+        /// 이 접속의 방의 시계를 게임 한 판에 끼울 것으로 만든다(달력은 게임 데이터의 정의). 접속이 끝나면 같이 끝난다. 들어가 있지 않으면 null.
+        /// </summary>
+        public RemoteRoomTime CreateRoomTime(Rootborn.Core.StudentLife.LifeCalendar calendar)
+        {
+            if (_client == null) return null;
+            _time?.Dispose();
+            _time = new RemoteRoomTime(_client, PlayerId, calendar);
+            return _time;
+        }
+
         public void Begin(string address, string slotId)
         {
             Close();
@@ -82,6 +104,8 @@ namespace Rootborn.Host.Net
             PlayerId = _identityForSlot(slotId);
             _versions ??= _versionsSource();
             _client = RoomClient.Create(transport, _versions.Value, PlayerId, string.Empty, _settings);
+            if (!_uploads.TryGetValue(PlayerId, out var uploads)) _uploads[PlayerId] = uploads = new GuestUploads();
+            _link = new RoomGuestLink(_client, _settings.MaxMessageBytes, uploads);
             Console.WriteLine("[방] " + host + ":" + port + "에 접속하는 중(신원 " + PlayerId + ", " + _versions.Value + ")");
             SetPhase(RoomJoinPhase.Connecting);
         }
@@ -101,7 +125,8 @@ namespace Rootborn.Host.Net
             switch (_client.Status)
             {
                 case ClientStatus.Joined:
-                    Console.WriteLine("[방] 들어감: 번호 " + _client.NetId);
+                    if (!_link.Ready) break; // 방 설정과(손님 저장을 받는 방이면) 그 사람의 세이브를 기다린다
+                    Console.WriteLine("[방] 들어감: 번호 " + _client.NetId + (_link.TakesGuestSaves ? ", 진행은 방에 저장" : ", 진행은 이 PC에 저장"));
                     Phase = RoomJoinPhase.Joined; // Entered가 화면을 바꾸기 전에 단계를 맞춘다
                     if (!_enter(new StartEntry(_slotId, false)))
                     {
@@ -173,6 +198,9 @@ namespace Rootborn.Host.Net
         /// <summary>전송을 닫는다. UDP 전송은 닫을 때 상대에게 끊는다고 보낸다(LiteNetLib Stop(true)) — 서버가 시간 초과를 기다리지 않는다.</summary>
         private void Close()
         {
+            _time?.Dispose();
+            _time = null;
+            _link = null;
             _client?.Dispose();
             _client = null;
         }

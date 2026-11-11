@@ -53,6 +53,11 @@ namespace Rootborn.Data.Tests
             Names.ObjectiveJournalTracking,
             Names.Settings,
             Names.RoomClock,
+            Names.RoomSettings,
+            Names.RoomRequestLedger,
+            Names.RoomPiece(Rootborn.Core.Room.RoomWallet.PieceName),
+            Names.RoomPiece(Rootborn.Core.Room.RoomWorldFlags.PieceName),
+            Names.RoomOutbox(DefaultPlayer),
         };
 
         [TestCaseSource(nameof(DefaultPlayerFiles))]

@@ -143,6 +143,12 @@ namespace Rootborn.Net.Messages
             c.Add<HeartbeatMessage>(11, 1, (w, m) => { }, Empty);
             c.Add<RoomClockMessage>(12, 2, WriteRoomClock, ReadRoomClock);
             c.Add<FinishPartMessage>(13, 2, WriteFinishPart, ReadFinishPart);
+            // 방 설정·손님 저장·공유 조각(설계 7절 3~5단계).
+            c.Add<Room.RoomSettingsMessage>(14, 1, Room.RoomShareMessageBodies.WriteSettings, Room.RoomShareMessageBodies.ReadSettings);
+            c.Add<Room.SaveChunkMessage>(15, 1, Room.RoomShareMessageBodies.WriteChunk, Room.RoomShareMessageBodies.ReadChunk);
+            c.Add<Room.SaveTransferAnswerMessage>(16, 1, Room.RoomShareMessageBodies.WriteTransferAnswer, Room.RoomShareMessageBodies.ReadTransferAnswer);
+            c.Add<Room.RoomPieceStateMessage>(17, 1, Room.RoomShareMessageBodies.WritePieceState, Room.RoomShareMessageBodies.ReadPieceState);
+            c.Add<Room.RoomAnswerMessage>(18, 1, Room.RoomShareMessageBodies.WriteAnswer, Room.RoomShareMessageBodies.ReadAnswer);
         }
 
         private static bool Empty<T>(NetReader r, int version, out T message) where T : class, new()

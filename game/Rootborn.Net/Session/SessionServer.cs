@@ -83,6 +83,33 @@ namespace Rootborn.Net.Session
 
         public RoomClock Clock { get; }
         public DropCounters Drops { get; } = new DropCounters();
+
+        /// <summary>
+        /// 들어왔다(받아들임 인사·다른 사람·방의 시계를 보낸 뒤). 같은 신원이 연결만 바꿔도 부른다(그 연결에 다시 보낼 것이 있다).
+        /// 방(RoomServer)이 방 설정·세이브·조각 상태를 보낸다.
+        /// </summary>
+        public event Action<ServerPlayer> PlayerJoined;
+
+        /// <summary>나갔다(끊김, 시간 초과, 연결 바꿈).</summary>
+        public event Action<ServerPlayer> PlayerLeft;
+
+        /// <summary>들어온 사람이 보낸 그 종류의 메시지를 받는다(세션이 처리하지 않는 종류만). 종류마다 한 줄로 더한다.</summary>
+        public SessionServer On<T>(Action<ServerPlayer, T> handler) where T : class
+        {
+            if (handler == null) throw new ArgumentNullException(nameof(handler));
+            _handlers.On<T>((peer, m) => handler(_connections[peer].Player, m));
+            return this;
+        }
+
+        /// <summary>그 사람에게 신뢰 순서로 보낸다. 나간 사람이면 아무 일도 없다.</summary>
+        public void Send(ServerPlayer player, object message)
+        {
+            if (player == null || !_players.TryGetValue(player.PlayerId, out var current) || current != player) return;
+            Send(player.Peer, message, Delivery.ReliableOrdered);
+        }
+
+        /// <summary>들어와 있는 모두에게 신뢰 순서로 보낸다.</summary>
+        public void Broadcast(object message) => Broadcast(message, Delivery.ReliableOrdered, except: null);
         public IReadOnlyCollection<ServerPlayer> Players => _players.Values;
 
         public IEnumerable<ServerPlayer> PlayersOnMap(string mapId)
@@ -205,6 +232,7 @@ namespace Rootborn.Net.Session
 
             bool joined = Clock.Join(player.PlayerId);
             ClockChanged(saveIt: joined);
+            PlayerJoined?.Invoke(player);
         }
 
         private void OnPose(PeerId peer, PoseMessage pose)
@@ -253,6 +281,7 @@ namespace Rootborn.Net.Session
             if (!_players.TryGetValue(player.PlayerId, out var current) || current != player) return;
             _players.Remove(player.PlayerId);
             Broadcast(new PlayerLeftMessage { NetId = player.NetId }, Delivery.ReliableOrdered, except: null);
+            PlayerLeft?.Invoke(player);
             if (!leaveClock) return;
             bool left = Clock.Leave(player.PlayerId);
             ClockChanged(saveIt: left);

@@ -100,13 +100,15 @@ namespace Rootborn.Server
                 return ExitCannotListen;
             }
 
-            var settings = new RoomServerSettings { MaxPlayers = options.MaxPlayers };
+            var settings = new RoomServerSettings { MaxPlayers = options.MaxPlayers, SharedPieces = options.SharedPieces, DayCopiesToKeep = options.DayCopies };
+            var guests = new GuestSaveFolder(GuestSaveFolder.FolderFor(options.SaveRoot, options.SaveSlot), load.Definitions,
+                GameStartSettings.FromDefinitions(load.Definitions), Log);
             RoomServer room;
             try
             {
-                room = new RoomServer(transport, settings, versions, store, options.SaveSlot, Log, RoomCalendar(load.Definitions));
+                room = new RoomServer(transport, settings, versions, store, options.SaveSlot, Log, RoomCalendar(load.Definitions), guests);
             }
-            catch (Exception e) when (e is SaveFileCorruptException || e is SaveFileTooNewException)
+            catch (Exception e) when (e is SaveFileCorruptException || e is SaveFileTooNewException || e is ArgumentException)
             {
                 transport.Dispose();
                 Log("세이브를 읽을 수 없다(덮어쓰지 않는다): " + e.Message);

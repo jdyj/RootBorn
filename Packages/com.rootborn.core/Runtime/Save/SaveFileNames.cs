@@ -52,6 +52,21 @@ namespace Rootborn.Core.Save
         /// <summary>방의 시계(Core Time RoomClock). 슬롯마다 하나이고 방을 가진 쪽(서버)만 쓴다. 혼자 하는 판은 쓰지 않는다. Unity 판에는 없었다.</summary>
         public const string RoomClock = "room-clock.json";
 
+        /// <summary>방 설정(Core Room RoomShareSettings: 무엇을 같이 쓰는지). 방을 처음 만들 때 한 번 쓴다. 방을 가진 쪽만 쓴다.</summary>
+        public const string RoomSettings = "room-settings.json";
+
+        /// <summary>방이 답한 요청 장부(Core Room RoomRequestLedger). 같은 요청 id를 두 번 반영하지 않게 한다. 방을 가진 쪽만 쓴다.</summary>
+        public const string RoomRequestLedger = "room-request-ledger.json";
+
+        /// <summary>방의 공유 조각 하나의 상태(지갑, 마을 상태 등). 조각 이름은 글자·숫자·'-'·'_'만 쓴다(Core Room RoomPieceCatalog).</summary>
+        public static string RoomPiece(string pieceName) => "room-piece-" + Sanitize(pieceName) + ".json";
+
+        /// <summary>
+        /// 같이 하는 방에 있는 플레이어가 방에 보냈고 아직 답을 받지 않은 요청(Core Room RoomOutbox). 그 플레이어의 저장과 함께 방으로 가고,
+        /// 방은 저장을 받을 때 이 파일의 요청을 반영한다(저장과 요청이 한 번에). 혼자 하는 판은 쓰지 않는다.
+        /// </summary>
+        public static string RoomOutbox(string playerId) => PerPlayer("room-outbox-", playerId);
+
         /// <summary>
         /// 옛 공용 시간 파일이 놓이는 슬롯 자리. 지금은 방의 시계(<see cref="RoomClock"/>)가 없는 옛 방을 읽을 때만 쓴다.
         /// 같이 쓰는 시간 파일이 놓이는 슬롯 자리(Unity SaveService.WorldTimeDirectory의 "world-time" 폴더). 파일 이름은 <see cref="WorldTime"/>.

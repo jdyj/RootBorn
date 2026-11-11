@@ -47,6 +47,12 @@ namespace Rootborn.Data.Tests
             // 슬롯과 무관한 설정 파일(SaveFileNames.SettingsSlot 자리). Unity 판에는 없었다.
             ("settings.json", typeof(Rootborn.Core.Settings.GameSettingsSaveData)),
             ("room-clock.json", typeof(Rootborn.Core.Time.RoomClockSaveData)),
+            // 방(서버)의 슬롯: 방 설정, 요청 장부, 공유 조각마다 상태. 같이 하는 방의 플레이어 세이브: 보낼 요청 목록.
+            ("room-settings.json", typeof(Rootborn.Core.Room.RoomSettingsSaveData)),
+            ("room-request-ledger.json", typeof(Rootborn.Core.Room.RoomRequestLedgerSaveData)),
+            ("room-piece-wallet.json", typeof(Rootborn.Core.Room.RoomWalletSaveData)),
+            ("room-piece-town.json", typeof(Rootborn.Core.Room.RoomWorldFlagsSaveData)),
+            ("room-outbox-*.json", typeof(Rootborn.Core.Room.RoomOutboxSaveData)),
         };
 
         /// <summary>

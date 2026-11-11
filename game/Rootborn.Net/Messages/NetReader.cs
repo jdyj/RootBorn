@@ -83,6 +83,17 @@ namespace Rootborn.Net.Messages
             return double.IsFinite(value);
         }
 
+        /// <summary>바이트 count개를 그대로 읽는다(길이는 부르는 쪽이 앞에서 읽었다).</summary>
+        public bool TryReadBytes(int count, out byte[] value)
+        {
+            value = Array.Empty<byte>();
+            if (count < 0 || count > Remaining) return false;
+            if (count == 0) return true;
+            value = _data.AsSpan(_position, count).ToArray();
+            _position += count;
+            return true;
+        }
+
         public bool TryReadString(int maxBytes, out string value)
         {
             value = string.Empty;

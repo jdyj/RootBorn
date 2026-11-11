@@ -403,10 +403,7 @@ namespace Rootborn.Host
         private void StartScreens()
         {
             Text = LoadText();
-            if (_options.SaveSlot != null)
-                // 방에 들어간 인물도 지금은 자기 PC의 그 슬롯에 저장한다(임시 — 바뀔 자리는 GuestProgress 한 곳).
-                Session = GameSession.Start(World.Content.Definitions, GameStartSettings.FromRegistry(Path.Combine(_options.RepoRoot, "data")),
-                    GuestProgress.StoreFor(_options.SaveRoot), _options.SaveSlot, GuestProgress.SavePlayerId);
+            if (_options.SaveSlot != null) Session = StartSession();
             if (Session != null && _options.DayCopies.HasValue) Session.KeepDayCopies(_options.DayCopies.Value);
             ScreenRegistry registry = ScreenCatalog.Create();
             ExtraScreens?.Invoke(registry);
@@ -434,6 +431,25 @@ namespace Rootborn.Host
         {
             const int Day = 24 * 60;
             return ((session.RoomShownMinutes % Day) + Day) % Day / 60f;
+        }
+
+        /// <summary>
+        /// 게임 한 판을 시작한다. 손님 저장을 받는 방에 들어갔으면 방이 내려 준 세이브와 공유 조각, 방의 시계로(GuestProgress.RoomStoreFor),
+        /// 아니면 이 PC의 그 슬롯으로. 방의 시계가 바뀌면 SyncWithRoom을 부른다(다른 사람이 때를 끝냄, 방에 없던 날).
+        /// </summary>
+        private GameSession StartSession()
+        {
+            var definitions = World.Content.Definitions;
+            var settings = GameStartSettings.FromRegistry(Path.Combine(_options.RepoRoot, "data"));
+            var link = Room != null && Room.Phase == Rootborn.Screens.Start.RoomJoinPhase.Joined ? Room.Link : null;
+            if (link == null || !link.TakesGuestSaves)
+                return GameSession.Start(definitions, settings, GuestProgress.LocalStoreFor(_options.SaveRoot), _options.SaveSlot, GuestProgress.SavePlayerId);
+
+            var time = Room.CreateRoomTime(definitions.Get<Rootborn.Core.StudentLife.LifeCalendar>(settings.CalendarId));
+            var session = GameSession.Start(definitions, settings, GuestProgress.RoomStoreFor(link), Rootborn.Net.Room.RoomGuestLink.Slot, Room.PlayerId,
+                room: time, shares: link.Shares);
+            time.Changed += () => session.SyncWithRoom();
+            return session;
         }
 
         private string _featuresMap;

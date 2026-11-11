@@ -68,8 +68,11 @@ namespace Rootborn.Game
         public FurniturePurchaseResult PurchaseFurniture(string furnitureId)
         {
             if (!_definitions.TryGet<FurnitureDefinition>(furnitureId, out var furniture)) return FurniturePurchaseResult.NotForSale;
-            var result = FurniturePurchase.Try(furniture, Inventory, FurnitureUnlocks);
-            return Saved(result, result == FurniturePurchaseResult.Purchased, null, GameChangeTopics.Furniture, GameChangeTopics.Inventory);
+            return Shared(() =>
+            {
+                var result = FurniturePurchase.Try(furniture, Inventory, FurnitureUnlocks);
+                return Saved(result, result == FurniturePurchaseResult.Purchased, null, GameChangeTopics.Furniture, GameChangeTopics.Inventory);
+            }, r => r == FurniturePurchaseResult.Purchased);
         }
 
         /// <summary>목록에 보이는 가구를 방에 놓는다. 놓으면 가구 배치 이벤트를 퀘스트·체인에 알린다.</summary>

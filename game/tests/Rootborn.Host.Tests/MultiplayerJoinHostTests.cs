@@ -38,13 +38,16 @@ namespace Rootborn.Host.Tests
         private readonly Thread _thread;
         private volatile bool _stop;
 
-        public LoopbackRoom(string saveRoot, RoomVersions versions, int maxPlayers = 4)
+        /// <param name="guests">손님 저장을 받는 방이면 손님 세이브 폴더(데디케이티드 서버와 같은 것). 없으면 받지 않는 방(들어간 사람은 자기 PC에 저장).</param>
+        /// <param name="shared">같이 쓰는 조각(방을 만들 때).</param>
+        public LoopbackRoom(string saveRoot, RoomVersions versions, int maxPlayers = 4, IGuestSaves guests = null, string[] shared = null)
         {
             var transport = UdpTransport.Listen(IPAddress.Loopback, 0, RoomProtocol.ConnectionKey);
             Port = transport.LocalPort;
             Versions = versions;
-            var settings = new RoomServerSettings { MaxPlayers = maxPlayers };
-            _server = new RoomServer(transport, settings, versions, new FileSaveStore(saveRoot), "room", line => TestContext.Progress.WriteLine("[방] " + line));
+            var settings = new RoomServerSettings { MaxPlayers = maxPlayers, SharedPieces = shared ?? Array.Empty<string>() };
+            _server = new RoomServer(transport, settings, versions, new FileSaveStore(saveRoot), "room", line => TestContext.Progress.WriteLine("[방] " + line),
+                guests: guests);
             _loop = new RoomLoop(_server, _clock, settings.TickSeconds);
             _thread = new Thread(Run) { IsBackground = true, Name = "loopback-room" };
             _thread.Start();
@@ -254,6 +257,64 @@ namespace Rootborn.Host.Tests
             Assert.That(player.Game.World.SlotStart.NewGame, Is.False, "고른 이야기로 이어서 시작한다");
             string expected = GuestProgress.RoomIdentity("slot-1", new FileSaveStore(_saves).TryRead("slot-1", SaveFileNames.Metadata, out SaveSlotMetadata m) ? m : null);
             Assert.That(UntilReal(() => room.Read(s => s.Players.Any(p => p.PlayerId == expected)), 3), Is.True, "신원은 그 슬롯의 인물에 고정된 id");
+        }
+
+        /// <summary>손님 저장을 받는 방(데디케이티드 서버와 같은 손님 세이브 폴더)을 띄운다.</summary>
+        private LoopbackRoom GuestSavingRoom(params string[] shared)
+        {
+            _repoRoot ??= HostOptions.Resolve(new[] { "--sample" }).RepoRoot;
+            var load = Rootborn.Data.GameDataLoader.Load(Path.Combine(_repoRoot, "data"), Rootborn.Data.Builders.RootbornBuilders.Register);
+            load.ThrowIfFailed();
+            var guests = new Rootborn.Server.GuestSaveFolder(Rootborn.Server.GuestSaveFolder.FolderFor(_roomSaves, "room"), load.Definitions,
+                Rootborn.Game.GameStartSettings.FromDefinitions(load.Definitions));
+            return new LoopbackRoom(_roomSaves, Versions(), guests: guests, shared: shared);
+        }
+
+        [Test]
+        public void MP_GUEST_001_InARoomThatKeepsGuestSaves_ProgressIsSavedOnTheServer_NotThisPc_AndComesBack()
+        {
+            using var room = GuestSavingRoom(Rootborn.Core.Room.RoomWallet.PieceName);
+            WriteStory("slot-0", "별"); // 들어가기 창처럼 이야기가 있는 인물로 들어간다(신원은 슬롯 정보에서 — 이야기가 없는 슬롯은 처음 들어간 뒤 신원이 바뀐다)
+            string route;
+            string guestFolder;
+            using (PlayerDriver player = Launch("--join", room.Address, "--slot", "slot-0"))
+            {
+                Assert.That(Until(player, () => player.Game.World != null), Is.True, "방이 받아들이고 세이브를 내려 주면 월드가 뜬다");
+                Assert.That(player.Game.Room.Link.TakesGuestSaves, Is.True);
+                GameSession session = player.Game.Session;
+                Assert.That(session.PlayerId, Is.EqualTo(player.Game.Room.PlayerId), "방의 세이브에서 이 인물은 방의 신원이다");
+                Assert.That(session.Shares, Is.Not.Null);
+                Assert.That(session.Wallet, Is.InstanceOf<Rootborn.Core.Room.RoomWalletClient>(), "돈을 같이 쓰는 방이라 방 지갑");
+                Assert.That(session.Student.CurrentDay, Is.EqualTo(1), "처음 온 사람은 새 게임");
+                Assert.That(session.DailyPlan.Slots[0].RouteId, Is.Empty.Or.Null);
+                guestFolder = Path.Combine(Rootborn.Server.GuestSaveFolder.FolderFor(_roomSaves, "room"), player.Game.Room.PlayerId);
+
+                // 일과판까지 걸어가 E, 포인터로 일과 길 하나 → 명령이 저장한다(방으로 간다).
+                var board = Rootborn.World.InteractionData.Load(Path.Combine(_repoRoot, Rootborn.World.InteractionData.DefaultRelativePath)).Map("House").Things
+                    .First(t => t.Kind == Rootborn.Screens.Day.DailyPlanScreen.InteractionKind);
+                player.WalkNear(board.X, board.Y, 24f);
+                player.PressKey(TestKey.E);
+                player.WaitForScreen(ScreenCatalog.DailyPlan);
+                var plan = (Rootborn.Screens.Day.DailyPlanScreen)player.Screens.Find(ScreenCatalog.DailyPlan);
+                route = plan.Model.Routes[0].RouteId;
+                var card = plan.RouteCardRect(0);
+                Assert.That(player.Game.Ui.HitTest(card.CenterX, card.CenterY)?.Id, Is.EqualTo(Rootborn.Screens.Day.DailyPlanScreen.RouteGridId));
+                player.ClickAt(card.CenterX, card.CenterY);
+                Assert.That(session.DailyPlan.Slots[0].RouteId, Is.EqualTo(route));
+                Assert.That(Until(player, () => File.Exists(Path.Combine(guestFolder, SaveFileNames.AdultCareerSnapshot(player.Game.Room.PlayerId)))), Is.True,
+                    "진행이 서버의 손님 세이브에 남는다");
+                Assert.That(Until(player, () => player.Game.Room.Link.Uploads.Count == 0), Is.True, "서버가 받았다고 답했다");
+                Assert.That(File.Exists(Path.Combine(_saves, "slot-0", SaveFileNames.AdultCareerSnapshot(SaveFileNames.DefaultPlayerId))), Is.False,
+                    "이 PC의 슬롯에는 진행을 남기지 않는다");
+                player.ScreenshotScreen(ScreenCatalog.DailyPlan, "multiplayer-guest-01-plan-saved-on-server");
+            }
+
+            using (PlayerDriver again = Launch("--join", room.Address, "--slot", "slot-0"))
+            {
+                Assert.That(Until(again, () => again.Game.World != null), Is.True);
+                Assert.That(again.Game.Room.PlayerId, Is.EqualTo(Path.GetFileName(guestFolder)), "같은 인물");
+                Assert.That(again.Game.Session.DailyPlan.Slots[0].RouteId, Is.EqualTo(route), "다시 들어오면 서버가 내려 준 세이브로 이어진다");
+            }
         }
 
         [Test]

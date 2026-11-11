@@ -48,6 +48,27 @@ namespace Rootborn.Server.Tests
         }
 
         [Test]
+        public void Share_DefaultsToTimeOnly_ReadsNamesFromArgumentOrEnvironment_AndRefusesUnknownOnes()
+        {
+            Assert.That(ServerOptions.Resolve(Full(), Env()).SharedPieces, Is.Empty, "기본은 시간만");
+            Assert.That(ServerOptions.Resolve(Full("--share", "wallet, town"), Env()).SharedPieces, Is.EqualTo(new[] { "wallet", "town" }));
+            Assert.That(ServerOptions.Resolve(Full("--share", ServerOptions.ShareNothing), Env()).SharedPieces, Is.Empty);
+            Assert.That(ServerOptions.Resolve(Full(), Env(new Dictionary<string, string> { [ServerOptions.ShareVariable] = "wallet" })).SharedPieces,
+                Is.EqualTo(new[] { "wallet" }));
+            var e = Assert.Throws<ServerOptionsException>(() => ServerOptions.Resolve(Full("--share", "items"), Env()));
+            StringAssert.Contains("items", e.Message);
+            StringAssert.Contains("wallet", e.Message, "아는 이름을 알려 준다");
+        }
+
+        [Test]
+        public void DayCopies_DefaultsToThree_AndMustNotBeNegative()
+        {
+            Assert.That(ServerOptions.Resolve(Full(), Env()).DayCopies, Is.EqualTo(RoomServerSettings.DefaultDayCopies));
+            Assert.That(ServerOptions.Resolve(Full("--day-copies", "0"), Env()).DayCopies, Is.Zero);
+            Assert.Throws<ServerOptionsException>(() => ServerOptions.Resolve(Full("--day-copies", "-1"), Env()));
+        }
+
+        [Test]
         public void Missing_SaveSlotAddressAndPort_ListsEveryMissingValue()
         {
             var e = Assert.Throws<ServerOptionsException>(() => ServerOptions.Resolve(new[] { "--root", _root }, Env()));

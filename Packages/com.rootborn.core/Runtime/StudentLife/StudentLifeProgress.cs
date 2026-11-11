@@ -201,6 +201,25 @@ namespace Rootborn.Core.StudentLife
             return true;
         }
 
+        /// <summary>
+        /// 방에 없던 날을 쉰 날로 넘겨 day에 닿는다(멀티플레이 설계 10절 7번). 진행 중인 날은 그 날을 정산하고, 사이의 날마다
+        /// 하루 끝 규칙(체력·집중 회복)을 적용한다. 그날 못 한 활동에 대한 불이익은 없다. 닿은 날은 처음부터 한다(진행 중).
+        /// 지금 날 이하면 아무것도 바꾸지 않는다.
+        /// </summary>
+        /// <returns>쉰 날로 넘긴 날 수.</returns>
+        public int RestUntil(int day, DayEndRuleSet rules)
+        {
+            int rested = 0;
+            while (CurrentDay < day)
+            {
+                if (DayState == StudentDayState.InProgress) TryEndDay(rules, out _);
+                if (!TryStartNextDay()) break;
+                rested++;
+            }
+
+            return rested;
+        }
+
         // 일과·진로 후보처럼 뒤에 옮겨 오는 부분이 다음 날 시작에 할 일을 여기에 잇는다.
         partial void OnNextDayStarted();
 

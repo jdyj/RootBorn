@@ -14,14 +14,16 @@ namespace Rootborn.Server.Tests
         public static readonly RoomVersions Versions = new RoomVersions(RoomProtocol.Version, "game-1", "data-1");
 
         private readonly List<SessionClient> _clients = new List<SessionClient>();
+        private readonly Dictionary<SessionClient, LoopbackTransport> _lines = new Dictionary<SessionClient, LoopbackTransport>();
 
-        public RoomRig(ISaveStore store, string slot = "room-a", int maxPlayers = 4, RoomServerSettings settings = null, LifeCalendar calendar = null)
+        public RoomRig(ISaveStore store, string slot = "room-a", int maxPlayers = 4, RoomServerSettings settings = null, LifeCalendar calendar = null,
+            IGuestSaves guests = null)
         {
             Network = new LoopbackNetwork(1);
             Clock = new ManualRoomClock();
             Settings = settings ?? new RoomServerSettings { MaxPlayers = maxPlayers };
             Log = new List<string>();
-            Room = new RoomServer(Network.Listen(), Settings, Versions, store, slot, Log.Add, calendar);
+            Room = new RoomServer(Network.Listen(), Settings, Versions, store, slot, Log.Add, calendar, guests);
             Loop = new RoomLoop(Room, Clock, Settings.TickSeconds);
         }
 
@@ -34,10 +36,15 @@ namespace Rootborn.Server.Tests
 
         public SessionClient Join(string playerId, RoomVersions? versions = null, string look = "child|")
         {
-            var client = RoomClient.Create(Network.Connect(), versions ?? Versions, playerId, look, new SessionClientSettings());
+            var line = Network.Connect();
+            var client = RoomClient.Create(line, versions ?? Versions, playerId, look, new SessionClientSettings());
             _clients.Add(client);
+            _lines[client] = line;
             return client;
         }
+
+        /// <summary>그 클라이언트의 선을 끊는다: 이후 바이트를 양쪽 모두 알림 없이 잃는다(보낸 직후 끊김).</summary>
+        public void Sever(SessionClient client) => Network.Sever(_lines[client]);
 
         /// <summary>관문 없이 들어오는 옛 클라이언트(프로토콜이 다르다).</summary>
         public SessionClient JoinWithoutHandshake(string playerId)

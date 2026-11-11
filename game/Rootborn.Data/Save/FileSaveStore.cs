@@ -63,7 +63,7 @@ namespace Rootborn.Data.Save
             return true;
         }
 
-        private static T Parse<T>(string text, string path) where T : class, new()
+        internal static T Parse<T>(string text, string path) where T : class, new()
         {
             if (string.IsNullOrWhiteSpace(text)) throw new SaveFileCorruptException(path, "파일이 비어 있다");
 
@@ -98,7 +98,7 @@ namespace Rootborn.Data.Save
             WriteReplacing(path, json);
         }
 
-        private static string Serialize<T>(T data) where T : class
+        internal static string Serialize<T>(T data) where T : class
         {
             // 버전 없이 만든 모양(옛 파일에서 읽은 것 포함)은 이 프로그램이 아는 버전으로 쓴다.
             if (data is IVersionedSave versioned && versioned.Version == SaveVersion.Unity) versioned.Version = versioned.KnownVersion;
@@ -127,6 +127,49 @@ namespace Rootborn.Data.Save
             var path = PathFor(saveSlot, fileName);
             RecoverBatch(saveSlot);
             if (File.Exists(path)) File.Delete(path);
+        }
+
+        // ---------- 원문 파일(방이 손님의 세이브를 해석하지 않고 옮길 때) ----------
+
+        /// <summary>
+        /// 슬롯 폴더 맨 위 칸의 세이브 파일 이름과 내용(JSON 원문). '.'으로 시작하는 임시·묶음 파일과 폴더(사본 등)는 뺀다. 슬롯이 없으면 빈 목록.
+        /// 이름 순이다.
+        /// </summary>
+        public IReadOnlyList<KeyValuePair<string, string>> ReadSlotFiles(string saveSlot)
+        {
+            var folder = SlotFolder(saveSlot);
+            RecoverBatch(saveSlot);
+            var files = new List<KeyValuePair<string, string>>();
+            if (!Directory.Exists(folder)) return files;
+            var names = new List<string>();
+            foreach (var file in Directory.GetFiles(folder))
+            {
+                var name = Path.GetFileName(file);
+                if (!name.StartsWith(".", StringComparison.Ordinal)) names.Add(name);
+            }
+
+            names.Sort(StringComparer.Ordinal);
+            foreach (var name in names) files.Add(new KeyValuePair<string, string>(name, File.ReadAllText(Path.Combine(folder, name), Encoding.UTF8)));
+            return files;
+        }
+
+        /// <summary>원문 쓰기·지우기를 한 묶음으로 적용한다(도중에 꺼져도 전부 옛것 또는 전부 새것). 내용은 해석하지 않는다.</summary>
+        public void WriteSlotFiles(string saveSlot, IReadOnlyList<KeyValuePair<string, string>> writes, IReadOnlyList<string> deletes)
+        {
+            CheckName(saveSlot, nameof(saveSlot));
+            var w = new List<KeyValuePair<string, string>>(writes ?? Array.Empty<KeyValuePair<string, string>>());
+            var d = new List<string>(deletes ?? Array.Empty<string>());
+            foreach (var pair in w) CheckWritable(pair.Key);
+            foreach (var name in d) CheckWritable(name);
+            if (w.Count == 0 && d.Count == 0) return;
+            CommitBatch(saveSlot, w, d);
+        }
+
+        private static void CheckWritable(string fileName)
+        {
+            CheckName(fileName, nameof(fileName));
+            if (fileName.StartsWith(".", StringComparison.Ordinal) || fileName == DayCopiesFolder)
+                throw new ArgumentException("세이브 파일 이름이 아니다: " + fileName, nameof(fileName));
         }
 
         // ---------- 묶음 ----------
