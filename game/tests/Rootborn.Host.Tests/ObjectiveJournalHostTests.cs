@@ -176,21 +176,32 @@ namespace Rootborn.Host.Tests
             var frames = new List<double>(400);
             UiRect view = journal.List.View;
             player.MovePointer(view.CenterX, view.CenterY);
+            player.Wheel(-1); // 첫 휠은 글자 그림(글리프)을 채운다
+            player.Wheel(1);
+            int maxCommands = 0;
+            long allocated = 0;
             for (int i = 0; i < 120; i++)
             {
                 clock.Restart();
+                long before = GC.GetAllocatedBytesForCurrentThread();
                 player.Wheel(i < 60 ? -1 : 1);
+                allocated += GC.GetAllocatedBytesForCurrentThread() - before;
                 frames.Add(clock.Elapsed.TotalMilliseconds / 2.0); // Wheel은 두 프레임을 돈다
                 Assert.That(journal.List.LastEmittedRows, Is.LessThanOrEqualTo(8), "보이는 줄만 그린다");
+                maxCommands = Math.Max(maxCommands, player.Game.DrawCommandCount);
             }
+            long bytesPerFrame = allocated / (120 * 2);
             ClickRow(player, journal, 150);
             Assert.That(journal.SelectedIndex, Is.EqualTo(150));
             player.MovePointer(-50, -50);
             player.Frames(2);
             player.ScreenshotScreen(ScreenCatalog.ObjectiveJournal, "journal-04-200-rows");
             frames.Sort();
-            TestContext.Progress.WriteLine($"[OBJECTIVE_JOURNAL_PERF] 열기 {openMs:0.0}ms(Tab 누름·뗌 4프레임 포함), 분류 바꾸기 {categoryMs:0.0}ms(포인터 4프레임 포함), 200줄 넘기기 프레임 {frames.Count}개: 중앙 {frames[frames.Count / 2]:0.00}ms, 95% {frames[(int)(frames.Count * 0.95)]:0.00}ms, 최대 {frames[frames.Count - 1]:0.00}ms");
-            Assert.That(frames[frames.Count / 2], Is.LessThan(16.7), "넘기는 동안 한 프레임 안");
+            TestContext.Progress.WriteLine($"[OBJECTIVE_JOURNAL_PERF] 열기 {openMs:0.0}ms(Tab 누름·뗌 4프레임 포함), 분류 바꾸기 {categoryMs:0.0}ms(포인터 4프레임 포함), 200줄 넘기기 프레임 {frames.Count}개: 중앙 {frames[frames.Count / 2]:0.00}ms, 95% {frames[(int)(frames.Count * 0.95)]:0.00}ms, 최대 {frames[frames.Count - 1]:0.00}ms (참고 — 판정 안 함), 프레임당 할당 {bytesPerFrame}바이트, 그리기 명령 최대 {maxCommands}");
+            // 벽시계는 CI 러너(소프트웨어 그리기)에서 흔들려 판정하지 않는다. 대신 흔들리지 않는 값: 보이는 줄만(위), 그리기 명령 수, 프레임당 할당.
+            // 200줄을 다 그리면 명령이 1,000개를 넘는다. 할당 한계는 Rootborn.Ui NineSlice의 패널당 int[4] 두 개(범위 밖)를 감안한 넉넉한 값이다.
+            Assert.That(maxCommands, Is.LessThan(300), "보이는 것만 그린다(그리기 명령 수)");
+            Assert.That(bytesPerFrame, Is.LessThan(4096), "넘기는 동안 프레임마다 새로 잡는 바이트");
         }
     }
 }

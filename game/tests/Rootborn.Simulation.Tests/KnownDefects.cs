@@ -19,16 +19,8 @@ namespace Rootborn.Simulation.Tests
         public static readonly Defect[] All =
         {
             // 판을 실패시키지 않는 결함(한계 값으로 받아 둔 것)도 보고를 위해 여기에 적는다. Matches가 false면 판 실패를 덮지 않는다.
-            // 고친 것: SIM-001 ScreenStack 매 프레임 할당(FoundDefectRegressionTests), SIM-002 PlayerDriver 긴 문(DriverDoorReproTests).
-            new Defect
-            {
-                Id = "SIM-003",
-                What = "Host WorldScreen.RefreshInteractions가 매 프레임 지역 함수 LocationOf가 잡는 객체(약 40바이트)를 새로 만든다(매 프레임 새 객체 금지 위반)",
-                Seed = "코드를 읽어 찾음: 창 없는 몸 HeadlessWorld.Refresh의 같은 모양이 가만히 선 프레임마다 40바이트였고, 지역 함수를 바뀔 때만 도는 메서드로 옮기자 0이 됐다. "
-                    + "Host 창 루프는 그리기도 할당해 이것만 따로 재는 재현 테스트는 없다",
-                Cause = "game/Rootborn.Host/World/WorldScreen.cs RefreshInteractions: day·slot을 잡는 지역 함수가 맵·시간대가 같은 프레임에도 메서드에 들어올 때마다 객체를 만든다",
-                Matches = _ => false,
-            },
+            // 고친 것: SIM-001 ScreenStack 매 프레임 할당(FoundDefectRegressionTests), SIM-002 PlayerDriver 긴 문(DriverDoorReproTests),
+            // SIM-003 Host WorldScreen 가만히 선 프레임의 클로저·열거자 할당(Host WorldFrameCostHostTests.WORLD_FRAME_001).
         };
 
         public static Defect Matches(PlayFailure failure)

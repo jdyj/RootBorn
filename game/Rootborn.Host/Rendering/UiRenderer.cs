@@ -56,6 +56,9 @@ namespace Rootborn.Host.Rendering
         /// <summary>그리려 했지만 찾지 못한 그림 id(빈 그림 검사용).</summary>
         public IReadOnlyCollection<string> MissingImages => _missing;
 
+        /// <summary>읽어 둔 UI·아이콘·아이템 그림 PNG 수(그림 시트 단위라 항목 수와 함께 늘지 않는다).</summary>
+        public int CachedTextureCount => _textures.Count;
+
         private Texture2D Texture(string texture)
         {
             if (_textures.TryGetValue(texture, out Texture2D loaded)) return loaded;

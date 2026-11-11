@@ -72,6 +72,9 @@ namespace Rootborn.Host
         public UiTree Ui => _tree;
         /// <summary>UI 그리기(스킨, 찾지 못한 그림 목록).</summary>
         public UiRenderer Renderer => _renderer;
+
+        /// <summary>마지막으로 그린 화면의 UI 그리기 명령 수(무거운 화면이 보이는 것만 그리는지 보는 흔들리지 않는 기준).</summary>
+        public int DrawCommandCount => _drawList.Commands.Count;
         /// <summary>마지막으로 그린 화면 버퍼(스크린샷과 같은 그림).</summary>
         public RenderTarget2D Scene => _scene;
 
@@ -418,11 +421,19 @@ namespace Rootborn.Host
             ConnectFurniture(Session);
             if (Session != null)
             {
-                // 학생 시각·날이 낮밤과 NPC 자리를, 학생 날·성인 여부가 성장 단계를 정한다(Unity 판과 같음).
-                World.FollowStudentTime(() => Session.StudentDay, () => Session.StudentHour);
+                // 학생 시각·날이 NPC 자리를, 학생 날·성인 여부가 성장 단계를 정한다(Unity 판과 같음). 낮밤 빛은 HUD 시계와 같은 방의 때
+                // (때의 대표 시각, GameSession.RoomShownMinutes)를 따른다 — Unity 판은 빛도 분 단위 학생 시각을 따랐다.
+                World.FollowStudentTime(() => Session.StudentDay, () => Session.StudentHour, () => RoomLightHour(Session));
                 DayBaseline.For(Session); // 하루 결과의 퀘스트·물건 변화 기준점(Unity: 마을 씬을 불러올 때)
                 SyncSession();
             }
+        }
+
+        /// <summary>HUD 시계가 보이는 시각(방의 때의 대표 시각)을 0~24시로.</summary>
+        private static float RoomLightHour(GameSession session)
+        {
+            const int Day = 24 * 60;
+            return ((session.RoomShownMinutes % Day) + Day) % Day / 60f;
         }
 
         private string _featuresMap;

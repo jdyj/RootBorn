@@ -28,7 +28,7 @@ namespace Rootborn.Host.World
     public sealed class WorldScreen : IDisposable
     {
         private readonly GraphicsDevice _device;
-        private readonly Dictionary<string, Texture2D> _textures = new Dictionary<string, Texture2D>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, CachedTexture> _textures = new Dictionary<string, CachedTexture>(StringComparer.OrdinalIgnoreCase);
         private readonly Color _background = new Color(24, 22, 30);
 
         public readonly WorldMapLoader Maps;
@@ -117,6 +117,7 @@ namespace Rootborn.Host.World
             _npcArt = Content.Npcs;
             _schedules = new NpcScheduleLookupCache(Content.Definitions.All<NpcSchedule>());
             _scheduleAccess = new NpcScheduleAccess(_schedules);
+            _locationOf = LocationOf;
             _repoRoot = options.RepoRoot;
             FurnitureArt = new FurnitureArt(Path.Combine(options.RepoRoot, "data"));
             Rooms = new RoomAwareMaps(Maps, _interactionData);
@@ -146,20 +147,28 @@ namespace Rootborn.Host.World
             RefreshInteractions();
         }
 
-        /// <summary>시간대(Core LocationStateTimeSlots: 오전·오후·저녁·밤).</summary>
+        /// <summary>NPC 자리·상호작용 후보의 시간대(Core LocationStateTimeSlots: 오전·오후·저녁·밤). 분 단위 개인 시각(CurrentHour)에서 정한다.</summary>
         public string TimeSlot => LocationStateTimeSlots.FromMinutes((int)(CurrentHour * 60f));
+
+        /// <summary>
+        /// 낮밤 빛(바깥 밝기·빛 지점 세기)의 시간대. 게임 한 판이 있으면 방의 때(HUD 시계가 보이는 때의 대표 시각), 아니면 TimeSlot과 같다.
+        /// NPC 자리·장소 상태는 이것이 아니라 TimeSlot(개인 시각)을 따른다 — 플레이(누가 어디 있는지)는 바꾸지 않고 HUD와 밝기만 맞춘다.
+        /// </summary>
+        public string LightTimeSlot => _lightHour != null ? LocationStateTimeSlots.FromMinutes((int)(_lightHour() * 60f)) : TimeSlot;
 
         private Func<int> _studentDay;
         private Func<float> _studentHour;
+        private Func<float> _lightHour;
 
         /// <summary>
-        /// 게임 한 판이 있으면 낮밤과 NPC 자리를 학생 날·시각으로 정한다(Unity 판: 마을 낮밤과 NPC 일정이 학생 시각을 따랐다).
-        /// 그 뒤로 게임 시계(Clock)는 흐르지 않는다. 시각은 활동으로만 흐른다.
+        /// 게임 한 판이 있으면 NPC 자리를 학생 날·시각으로 정한다(Unity 판: NPC 일정이 학생 시각을 따랐다). 낮밤 빛은 lightHour(0~24시)를 따른다 —
+        /// Host는 방의 때의 대표 시각을 넘긴다. 주지 않으면 hour. 그 뒤로 게임 시계(Clock)는 흐르지 않는다. 시각은 활동으로만 흐른다.
         /// </summary>
-        public void FollowStudentTime(Func<int> day, Func<float> hour)
+        public void FollowStudentTime(Func<int> day, Func<float> hour, Func<float> lightHour = null)
         {
             _studentDay = day ?? throw new ArgumentNullException(nameof(day));
             _studentHour = hour ?? throw new ArgumentNullException(nameof(hour));
+            _lightHour = lightHour;
             _lightSnapped = false;
             _lightsMap = null;
             UpdateLight(0f);
@@ -180,13 +189,21 @@ namespace Rootborn.Host.World
             if (map == _placedMap && slot == _placedSlot && day == _placedDay) { Interactions.Update(Session.Walker.X, Session.Walker.Y); return; }
             _placedMap = map; _placedSlot = slot; _placedDay = day;
             MapInteractions here = _interactionData.Map(map);
-            string LocationOf(string npcId) => _schedules.TryGetByNpcId(npcId, out NpcSchedule s) ? _scheduleAccess.ResolveLocationId(s.Id, day, slot, null) : string.Empty;
-            _npcs = NpcPlacement.Place(_npcArt.Order, LocationOf, here);
+            _npcs = NpcPlacement.Place(_npcArt.Order, _locationOf, here);
             Interactions.MapId = map;
             Interactions.RadiusPixels = _interactionData.RadiusCells * Session.Map.Grid.CellSize;
             Interactions.SetCandidates(NpcPlacement.Candidates(_interactionData, here, _npcs, Session.Map.Doors));
             Interactions.Update(Session.Walker.X, Session.Walker.Y);
         }
+
+        /// <summary>
+        /// NPC가 지금(마지막으로 자리를 정한 날·시간대) 있을 장소. 생성자에서 한 번 만든 위임으로 넘긴다 — 지역 함수로 두면 RefreshInteractions에
+        /// 들어올 때마다(가만히 선 프레임에도) 날·시간대를 잡는 객체가 생겼다(SIM-003).
+        /// </summary>
+        private string LocationOf(string npcId) =>
+            _schedules.TryGetByNpcId(npcId, out NpcSchedule s) ? _scheduleAccess.ResolveLocationId(s.Id, _placedDay, _placedSlot, null) : string.Empty;
+
+        private readonly Func<string, string> _locationOf;
 
         /// <summary>지금 맵의 상호작용 데이터(물건, NPC 자리, 가구 방이면 면 id).</summary>
         public MapInteractions HereData => _interactionData.Map(Session.Map.Id);
@@ -232,10 +249,63 @@ namespace Rootborn.Host.World
 
         private Texture2D Load(string path)
         {
-            if (_textures.TryGetValue(path, out Texture2D texture)) return texture;
-            using (FileStream stream = File.OpenRead(path)) texture = Texture2D.FromStream(_device, stream); // PNG를 그 자리에서 읽는다
-            _textures[path] = texture;
-            return texture;
+            if (!_textures.TryGetValue(path, out CachedTexture cached))
+            {
+                cached = new CachedTexture();
+                using (FileStream stream = File.OpenRead(path)) cached.Texture = Texture2D.FromStream(_device, stream); // PNG를 그 자리에서 읽는다
+                cached.Bytes = (long)cached.Texture.Width * cached.Texture.Height * 4;
+                _textures[path] = cached;
+                CachedTextureBytes += cached.Bytes;
+            }
+            cached.LastUsed = _mapTurn;
+            return cached.Texture;
+        }
+
+        /// <summary>읽어 둔 그림과 그 그림을 마지막으로 그린 맵 차례(맵에 들어갈 때마다 하나씩 는다).</summary>
+        private sealed class CachedTexture
+        {
+            public Texture2D Texture;
+            public long Bytes;
+            public int LastUsed;
+        }
+
+        /// <summary>
+        /// 그림 캐시 기본 한도(바이트, 가로 × 세로 × 4의 합). 2026-11-12 data의 맵 10개를 다 돌았을 때 약 220MB(추정)라 지금은 풀 일이 없다.
+        /// 맵을 새로 그려 그림이 늘면 넘는 만큼 오래 안 쓴 맵의 그림부터 푼다(다시 들어가면 다시 읽는다).
+        /// </summary>
+        public const long DefaultTextureBudgetBytes = 256L * 1048576;
+
+        /// <summary>그림 캐시 한도(바이트). 넘으면 맵에 들어가 첫 화면을 그린 뒤 이번 맵이 쓰지 않은 그림을 오래 안 쓴 것부터 푼다.</summary>
+        public long TextureBudgetBytes { get; set; } = DefaultTextureBudgetBytes;
+
+        /// <summary>그림 캐시에 든 PNG 수(맵·캐릭터·NPC·가구 그림).</summary>
+        public int CachedTextureCount => _textures.Count;
+
+        /// <summary>그림 캐시가 잡은 GPU 메모리 추정(가로 × 세로 × 4바이트의 합).</summary>
+        public long CachedTextureBytes { get; private set; }
+
+        private int _mapTurn;
+        private string _drawnMap;
+        private bool _trimPending;
+        private readonly List<(int lastUsed, string path)> _trimOrder = new List<(int, string)>();
+
+        /// <summary>맵에 들어간 첫 화면을 그린 뒤(이번 맵이 쓰는 그림을 다 만진 뒤): 한도를 넘으면 이번 맵 차례에 안 쓴 그림을 오래된 것부터 푼다.</summary>
+        private void TrimTextures()
+        {
+            _trimPending = false;
+            if (CachedTextureBytes <= TextureBudgetBytes) return;
+            _trimOrder.Clear();
+            foreach (KeyValuePair<string, CachedTexture> pair in _textures)
+                if (pair.Value.LastUsed < _mapTurn) _trimOrder.Add((pair.Value.LastUsed, pair.Key));
+            _trimOrder.Sort((a, b) => a.lastUsed != b.lastUsed ? a.lastUsed.CompareTo(b.lastUsed) : string.CompareOrdinal(a.path, b.path));
+            for (int i = 0; i < _trimOrder.Count && CachedTextureBytes > TextureBudgetBytes; i++)
+            {
+                CachedTexture cached = _textures[_trimOrder[i].path];
+                _textures.Remove(_trimOrder[i].path);
+                CachedTextureBytes -= cached.Bytes;
+                cached.Texture.Dispose();
+            }
+            _trimOrder.Clear();
         }
 
         /// <summary>한 프레임: 입력 방향과 지난 시간으로 걷고, 문을 지나면 맵이 바뀐다.</summary>
@@ -252,12 +322,12 @@ namespace Rootborn.Host.World
         }
 
         /// <summary>
-        /// 빛은 "때"(TimeSlot)를 따라간다. 맵에 들어선 순간에는 바로 맞춘다. 바깥 맵(맵 목록 dayNight — 맵 id가 아니라 맵 성질)만 때별 화면 색,
+        /// 빛은 "때"(LightTimeSlot — 게임 한 판이 있으면 방의 때)를 따라간다. 맵에 들어선 순간에는 바로 맞춘다. 바깥 맵(맵 목록 dayNight — 맵 id가 아니라 맵 성질)만 때별 화면 색,
         /// 나머지는 흰색. 빛 지점은 맵마다 데이터에 있는 것.
         /// </summary>
         private void UpdateLight(float dt)
         {
-            string slot = TimeSlot, map = Session.Map.Id;
+            string slot = LightTimeSlot, map = Session.Map.Id;
             if (map != _lightsMap) { _lightsMap = map; _mapLights.Enter(LightingData.LightsOf(map), slot); _lightSnapped = false; }
             else _mapLights.Update(slot, dt);
             if (!Current.Entry.DayNight)
@@ -274,6 +344,7 @@ namespace Rootborn.Host.World
         public void Draw(SpriteBatch batch, int screenWidth, int screenHeight)
         {
             LoadedMap map = Current;
+            if (!string.Equals(map.Entry.Id, _drawnMap, StringComparison.Ordinal)) { _drawnMap = map.Entry.Id; _mapTurn++; _trimPending = true; }
             MapGrid grid = map.World.Grid;
             Zoom = WorldCamera.Zoom(screenHeight, map.Entry.ViewCells, grid.CellSize);
             Walker walker = Session.Walker;
@@ -335,6 +406,7 @@ namespace Rootborn.Host.World
                 batch.Draw(_lightMap, Vector2.Zero, Color.White);
                 batch.End();
             }
+            if (_trimPending) TrimTextures();
         }
 
         private readonly List<(float sortY, int npc)> _actors = new List<(float sortY, int npc)>(8);
@@ -490,7 +562,8 @@ namespace Rootborn.Host.World
         {
             AreaRect body = walker.Box;
             DrawLayer(batch, PlayerLook.Body, body, PlayerAnimator);
-            foreach (CharacterSheet layer in PlayerLook.Layers) DrawLayer(batch, layer, body, PlayerAnimator);
+            IReadOnlyList<CharacterSheet> layers = PlayerLook.Layers; // foreach는 열거자를 매 프레임 상자에 담는다
+            for (int i = 0; i < layers.Count; i++) DrawLayer(batch, layers[i], body, PlayerAnimator);
         }
 
         private void DrawLayer(SpriteBatch batch, CharacterSheet sheet, AreaRect body, CharacterAnimator animator)
@@ -542,8 +615,9 @@ namespace Rootborn.Host.World
 
         public void Dispose()
         {
-            foreach (Texture2D texture in _textures.Values) texture.Dispose();
+            foreach (CachedTexture cached in _textures.Values) cached.Texture.Dispose();
             _textures.Clear();
+            CachedTextureBytes = 0;
             foreach (Texture2D texture in _lightTextures.Values) texture.Dispose();
             _lightTextures.Clear();
             _lightMap?.Dispose();

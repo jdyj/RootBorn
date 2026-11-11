@@ -1,0 +1,116 @@
+using System;
+using System.IO;
+using System.Linq;
+using NUnit.Framework;
+using Rootborn.Core.StudentLife;
+using Rootborn.Screens;
+using Rootborn.Screens.Day;
+using Rootborn.Screens.Hud;
+using Rootborn.Ui;
+using Rootborn.World;
+
+namespace Rootborn.Host.Tests
+{
+    /// <summary>
+    /// 낮밤 빛은 방의 때(HUD 시계가 보이는 때의 대표 시각)를 따른다. NPC 자리·장소 상태의 시간대는 지금처럼 분 단위 개인 시각을 따른다(바꾸지 않는다).
+    /// 장치 이벤트 주입(OS 입력 계층 미확인): 걷기·문·상호작용·단추 누르기는 PlayerDriver로.
+    /// </summary>
+    [TestFixture, SingleThreaded, NonParallelizable]
+    public sealed class DayNightRoomTimeHostTests
+    {
+        private string _saves;
+        private string _root;
+
+        [SetUp]
+        public void SetUp()
+        {
+            _saves = Path.Combine(Path.GetTempPath(), "rootborn-room-light-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(_saves);
+            _root = HostOptions.Resolve(new[] { "--sample" }).RepoRoot;
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            try { Directory.Delete(_saves, true); } catch (IOException) { }
+        }
+
+        private PlayerDriver Start()
+        {
+            HostOptions options = HostOptions.Resolve(new[]
+            {
+                "--save-root", _saves, "--slot", "slot-1", "--size", "1280x720",
+                "--evidence", Path.Combine(_root, "output", "host-room-light-evidence"),
+            });
+            options.TestMode = true;
+            var player = new PlayerDriver(options);
+            player.Frames(3);
+            return player;
+        }
+
+        /// <summary>HUD 시계 글자("1일  14:00 · …")의 시각이 가리키는 때.</summary>
+        private static string HudSlot(PlayerDriver player)
+        {
+            string text = ((UiLabel)player.Node(ClockHudScreen.LabelId)).Text;
+            int colon = text.IndexOf(':');
+            Assert.That(colon, Is.GreaterThan(1), "HUD 시계 글자: " + text);
+            int hour = int.Parse(text.Substring(colon - 2, 2).Trim()), minute = int.Parse(text.Substring(colon + 1, 2));
+            return LocationStateTimeSlots.FromMinutes(hour * 60 + minute);
+        }
+
+        private static LightColor Ambient(PlayerDriver player, string slot)
+        {
+            Assert.That(player.Game.World.LightingData.TryGetAmbient(slot, out LightColor tint), Is.True, slot);
+            return tint;
+        }
+
+        private static void AssertTint(PlayerDriver player, LightColor expected, string why)
+        {
+            LightColor t = player.Game.World.Tint;
+            Assert.That(new[] { t.R, t.G, t.B }, Is.EqualTo(new[] { expected.R, expected.G, expected.B }).Within(0.02f), why + ": 지금 " + t);
+        }
+
+        [Test]
+        public void ROOM_LIGHT_001_NewGame_HudAndBrightnessShowTheSamePartOfDay_NpcTimeStaysPersonal()
+        {
+            using PlayerDriver player = Start();
+            string hud = HudSlot(player);
+            Assert.That(player.Game.World.LightTimeSlot, Is.EqualTo(hud), "새 게임 첫 화면: 밝기는 HUD의 때를 따른다");
+            // NPC 자리·상호작용의 시간대는 지금처럼 개인 시각(분)이다.
+            Assert.That(player.Game.World.TimeSlot, Is.EqualTo(LocationStateTimeSlots.FromMinutes(player.Game.Session.Student.TimeMinutes)));
+
+            Assert.That(player.WalkThroughDoor("town"), Is.EqualTo("Town"));
+            player.Frames(2);
+            AssertTint(player, Ambient(player, HudSlot(player)), "마을에 나오면 HUD의 때(" + HudSlot(player) + ")의 밝기");
+            player.Screenshot("room-light-01-town-first-part");
+        }
+
+        [Test]
+        public void ROOM_LIGHT_002_SkippingAPart_ChangesHudAndBrightnessTogether_IndoorsStaysWhite()
+        {
+            using PlayerDriver player = Start();
+            string first = HudSlot(player);
+
+            // 집의 일과 판에서 "넘기기"를 누른다.
+            InteractionThing board = InteractionData.Load(Path.Combine(_root, InteractionData.DefaultRelativePath)).Map("House").Things.First(t => t.Kind == DailyPlanScreen.InteractionKind);
+            player.WalkNear(board.X, board.Y, 24f);
+            player.PressKey(TestKey.E);
+            player.WaitForScreen(ScreenCatalog.DailyPlan);
+            Assume.That(((UiButton)player.Node(DailyPlanScreen.SkipId)).Enabled, Is.True, "새 게임 첫 때를 넘길 수 있다");
+            player.PressButton(DailyPlanScreen.SkipId);
+            player.PressButton(DailyPlanScreen.CloseBottomId);
+            player.WaitForScreenClosed(ScreenCatalog.DailyPlan);
+
+            string next = HudSlot(player);
+            Assert.That(next, Is.Not.EqualTo(first), "HUD의 때가 넘어갔다");
+            Assert.That(player.Game.World.LightTimeSlot, Is.EqualTo(next), "밝기도 같은 때로");
+            AssertTint(player, LightColor.White, "실내는 그대로 흰 빛");
+            player.Screenshot("room-light-02-house-after-skip");
+
+            Assert.That(player.WalkThroughDoor("town"), Is.EqualTo("Town"));
+            player.Frames(2);
+            AssertTint(player, Ambient(player, next), "마을은 넘긴 뒤의 때(" + next + ")의 밝기");
+            player.Screenshot("room-light-03-town-after-skip");
+        }
+    }
+}

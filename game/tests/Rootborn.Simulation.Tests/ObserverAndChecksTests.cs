@@ -124,7 +124,7 @@ namespace Rootborn.Simulation.Tests
         public void EveryPolicyIsRegistered_AndNamesAreTheLogNames()
         {
             PlayPolicyCatalog catalog = PlayPolicyCatalog.Default();
-            Assert.That(catalog.Names, Is.EquivalentTo(new[] { PlayPolicyCatalog.Random, PlayPolicyCatalog.MainChain, PlayPolicyCatalog.OffSchool, PlayPolicyCatalog.Novelty }));
+            Assert.That(catalog.Names, Is.EquivalentTo(new[] { PlayPolicyCatalog.Random, PlayPolicyCatalog.MainChain, PlayPolicyCatalog.OffSchool, PlayPolicyCatalog.Novelty, PlayPolicyCatalog.Wander }));
             foreach (string name in catalog.Names) Assert.That(catalog.Create(name, FastPlayTests.Atlas).Name, Is.EqualTo(name));
         }
     }

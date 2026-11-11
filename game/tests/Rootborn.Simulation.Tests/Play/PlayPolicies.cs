@@ -45,7 +45,7 @@ namespace Rootborn.Simulation
         private readonly Dictionary<string, Func<PlayAtlas, IPlayPolicy>> _make = new Dictionary<string, Func<PlayAtlas, IPlayPolicy>>(StringComparer.Ordinal);
         private readonly List<string> _names = new List<string>();
 
-        public const string Random = "random", MainChain = "main-chain", OffSchool = "off-school", Novelty = "novelty";
+        public const string Random = "random", MainChain = "main-chain", OffSchool = "off-school", Novelty = "novelty", Wander = "wander";
 
         public static void Register(PlayPolicyCatalog r)
         {
@@ -53,6 +53,7 @@ namespace Rootborn.Simulation
             r.Add(MainChain, atlas => new MainChainPolicy(atlas));
             r.Add(OffSchool, _ => new PreferKindsPolicy(OffSchool, OffSchoolKinds));
             r.Add(Novelty, _ => new NoveltyPolicy());
+            r.Add(Wander, _ => new WanderPolicy());
         }
 
         /// <summary>
@@ -140,6 +141,25 @@ namespace Rootborn.Simulation
             if (a.Category == "interaction" && _kinds.Contains(a.InteractionKind)) return 10 + novelty;
             if ((a.Category == "card" || a.Category == "row") && view.TopScreen != null) return 6 + novelty;
             if (a.Category == "door") return 2 + novelty;
+            return novelty;
+        }, random);
+    }
+
+    /// <summary>
+    /// 돌아다니기(긴 플레이 검사용): 문을 먼저 — 가장 적게 지나 본 문으로 맵을 오간다. 화면이 떠 있으면 닫는 단추를 먼저 누르고,
+    /// 미니게임은 풀이로 푼다. 할 것이 문밖에 없지 않으면 안 해 본 것. 맵을 여러 번 오가며 그림 캐시·메모리가 쌓이는지 보는 데 쓴다.
+    /// </summary>
+    public sealed class WanderPolicy : IPlayPolicy
+    {
+        private readonly MinigamePlayer _minigame = new MinigamePlayer();
+
+        public string Name => PlayPolicyCatalog.Wander;
+
+        public PlayAction Choose(PlayView view, PlayMemory memory, Random random) => _minigame.Choose(view, random) ?? Pick.Best(view.Actions, a =>
+        {
+            double novelty = -Math.Min(memory.Tried(a.Key), 40) * 0.25;
+            if (view.TopScreen != null && Pick.IsClose(a)) return 20 + novelty;
+            if (a.Category == "door") return 10 + novelty;
             return novelty;
         }, random);
     }
