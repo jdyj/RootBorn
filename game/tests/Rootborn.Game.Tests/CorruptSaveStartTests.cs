@@ -15,9 +15,9 @@ namespace Rootborn.Game.Tests
     {
         public enum Damage { Empty, Truncated, ArrayAtTop, NumberAtTop, HugeVersion }
 
-        // 집에 들어올 때 읽는 배치는 이 시험의 대상이 아니다(ADamagedHouseLayout_...). 월드 상태 사본도 시작할 때 확인한다.
+        // 집·일터에 들어올 때 읽는 배치는 이 시험의 대상이 아니다(ADamagedHouseLayout_..., ADamagedWorkspaceLayout_...). 월드 상태 사본도 시작할 때 확인한다.
         private static bool ReadAtStart(string file)
-            => !file.StartsWith("house-furniture-layout", StringComparison.Ordinal);
+            => !file.StartsWith("house-furniture-layout", StringComparison.Ordinal) && !file.StartsWith("workspace-layout", StringComparison.Ordinal);
 
         public static IEnumerable<TestCaseData> Cases()
         {
@@ -110,6 +110,26 @@ namespace Rootborn.Game.Tests
 
             Assert.That(error.ToString(), Does.Contain(layout));
             Assert.That(SlotCheckpoints.Same(before, SlotCheckpoints.Read(saves)), Is.True);
+        }
+
+        [TestCase(Damage.Empty)]
+        [TestCase(Damage.Truncated)]
+        [TestCase(Damage.ArrayAtTop)]
+        [TestCase(Damage.NumberAtTop)]
+        [TestCase(Damage.HugeVersion)]
+        public void ADamagedWorkspaceLayout_RefusesToEnterTheWorkspace_AndStaysAsItWas(Damage damage)
+        {
+            const string checkpoint = "workspace-entered";
+            using var saves = SlotCheckpoints.Restore(checkpoint);
+            var layout = SlotCheckpoints.FileNames(checkpoint).Single(f => f.StartsWith("workspace-layout", StringComparison.Ordinal));
+            File.WriteAllBytes(Path.Combine(saves.Path, SlotCheckpoints.Slot, layout), Apply(SlotCheckpoints.Files(checkpoint)[layout], damage));
+            var game = TestWorld.Start(saves.Store, SlotCheckpoints.Slot);
+            var before = SlotCheckpoints.Read(saves);
+
+            var error = Assert.Catch<Exception>(() => SlotCheckpoints.EnterChefWorkspace(game));
+
+            Assert.That(error.ToString(), Does.Contain(layout));
+            Assert.That(SlotCheckpoints.Same(before, SlotCheckpoints.Read(saves)), Is.True, "망가진 일터 배치를 기본 템플릿으로 덮지 않는다");
         }
 
         [Test]

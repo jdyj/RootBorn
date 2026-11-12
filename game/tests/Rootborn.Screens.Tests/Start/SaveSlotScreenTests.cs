@@ -100,16 +100,45 @@ namespace Rootborn.Screens.Tests.Start
         }
 
         [Test]
-        public void UnreadableSlotInfo_LooksEmpty_AsInUnity()
+        public void UnreadableSlotInfo_IsShownAsUnreadable_NotAsAnEmptySlot()
         {
+            // Unity 판은 빈 슬롯으로 보였고, 거기서 새 이야기를 시작하면 슬롯 폴더(하루 사본 포함)가 지워졌다.
             using var t = new StartMenuFixture();
-            Directory.CreateDirectory(Path.Combine(t.Saves, "slot-1"));
-            File.WriteAllText(Path.Combine(t.Saves, "slot-1", SaveFileNames.Metadata), "{ 깨진");
+            string dir = Path.Combine(t.Saves, "slot-1");
+            Directory.CreateDirectory(dir);
+            File.WriteAllText(Path.Combine(dir, SaveFileNames.Metadata), "{ 깨진");
+            File.WriteAllText(Path.Combine(dir, SaveFileNames.WorldProgress), "{}");
             SaveSlotSummary summary = t.Menu.Slots.Read("slot-1");
             Assert.That(summary.Exists, Is.False);
             Assert.That(summary.Unreadable, Is.True);
             t.OpenSlots();
-            Assert.That(t.Node(SaveSlotScreen.NewGameId(1)).IsActive, Is.True);
+            Assert.That(t.Node(SaveSlotScreen.NewGameId(1)).Visible, Is.False, "읽을 수 없는 슬롯에 새 이야기를 권하지 않는다");
+            Assert.That(t.Node(SaveSlotScreen.ContinueId(1)).Visible, Is.False);
+            Assert.That(t.Node(SaveSlotScreen.DeleteId(1)).IsActive, Is.True, "지우는 것은 확인 창을 거쳐서만");
+            Assert.That(t.LabelText(SaveSlotScreen.CardTitleId(1)), Is.EqualTo(t.Text.Get("ui.save.unreadable")));
+            Assert.That(t.Node(SaveSlotScreen.NewGameId(0)).IsActive, Is.True, "다른 빈 슬롯은 그대로");
+            KnownMissingKeys.AssertOnlyKnownMissing(t.Text, t.UsedKeys());
+
+            t.Click(SaveSlotScreen.DeleteId(1));
+            Assert.That(t.Stack.IsOpen(ScreenCatalog.DeleteSlot), Is.True);
+            t.Click(DeleteSlotScreen.CancelId);
+            Assert.That(File.Exists(Path.Combine(dir, SaveFileNames.WorldProgress)), Is.True, "취소하면 파일은 그대로");
+
+            t.Click(SaveSlotScreen.DeleteId(1));
+            t.Click(DeleteSlotScreen.ConfirmId);
+            Assert.That(Directory.Exists(dir), Is.False);
+            Assert.That(t.Node(SaveSlotScreen.NewGameId(1)).IsActive, Is.True, "지운 뒤에는 새 이야기 칸");
+        }
+
+        [Test]
+        public void UnreadableSlot_InEnglish_HasEveryKey()
+        {
+            using var t = new StartMenuFixture("en");
+            Directory.CreateDirectory(Path.Combine(t.Saves, "slot-1"));
+            File.WriteAllText(Path.Combine(t.Saves, "slot-1", SaveFileNames.Metadata), "{ 깨진");
+            t.OpenSlots();
+            Assert.That(t.LabelText(SaveSlotScreen.CardTitleId(1)), Is.EqualTo(t.Text.Get("ui.save.unreadable")));
+            KnownMissingKeys.AssertOnlyKnownMissing(t.Text, t.UsedKeys());
         }
 
         [Test]

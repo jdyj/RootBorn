@@ -444,7 +444,8 @@ namespace Rootborn.Core.Tests
         {
             IVersionedSave fresh = new WorkspaceProgressSaveData();
             Assert.That(fresh.KnownVersion, Is.EqualTo(1));
-            Assert.That(fresh.Version, Is.EqualTo(1), "새 파일은 버전 1로 쓴다");
+            Assert.That(fresh.Version, Is.Zero, "새로 만든 모양은 버전 없는 파일과 같다(0)");
+            Assert.That(((IVersionedSave)new WorkspaceProgress(Slot, Player).ToSaveData()).Version, Is.EqualTo(1), "쓸 때는 버전 1로 쓴다");
 
             var store = new VersionCheckingStore();
             store.Inner.Put(Slot, SaveFileNames.WorkspaceProgress(Player), new WorkspaceProgressSaveData { Version = 2, AppliedRequestIds = new[] { "req-1" } });

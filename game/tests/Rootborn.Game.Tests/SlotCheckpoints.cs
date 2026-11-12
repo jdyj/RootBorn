@@ -6,6 +6,7 @@ using System.Text.Json;
 using NUnit.Framework;
 using Rootborn.Core.Careers;
 using Rootborn.Core.Placement;
+using Rootborn.Core.Workspaces;
 
 namespace Rootborn.Game.Tests
 {
@@ -14,8 +15,15 @@ namespace Rootborn.Game.Tests
     {
         public const string Slot = "slot-robust";
         public const string FreeDesk = "growth31.assembly.desk";
+        public const string ChefWorkspace = "workspace.chef";
 
-        public static readonly string[] Names = { "first-command", "day-3", "furniture-placed", "adult-chosen" };
+        /// <summary>요리사 일터 면 id(데이터에서 읽는다).</summary>
+        public static string ChefSurface => TestWorld.Definitions.Get<Workspace>(ChefWorkspace).SurfaceId;
+
+        /// <summary>요리사 일터 면에 들어간다(처음이면 기본 템플릿이 깔리고 일터 배치 파일이 생긴다).</summary>
+        public static void EnterChefWorkspace(GameSession game) => game.EnterPlacementSurface(WorkspaceRoom.GridFor(game.Definitions, ChefWorkspace), ChefSurface);
+
+        public static readonly string[] Names = { "first-command", "day-3", "furniture-placed", "adult-chosen", "workspace-entered" };
 
         private static readonly Dictionary<string, Lazy<SortedDictionary<string, byte[]>>> Built = Names.ToDictionary(
             n => n, n => new Lazy<SortedDictionary<string, byte[]>>(() => Build(n)));
@@ -95,6 +103,15 @@ namespace Rootborn.Game.Tests
                     SaveEdits.EditSnapshot(saves.Store, SaveEdits.MakeChefCandidateReady, Slot);
                     var game = TestWorld.Start(saves.Store, Slot);
                     Assert.That(game.ChooseFacility("facility.chef", "facility:chef").Kind, Is.EqualTo(AdultCareerResultKind.Applied));
+                    break;
+                }
+                case "workspace-entered":
+                {
+                    TestWorld.Start(saves.Store, Slot).TalkTo("npc.first-guide");
+                    SaveEdits.EditSnapshot(saves.Store, SaveEdits.MakeChefCandidateReady, Slot);
+                    var game = TestWorld.Start(saves.Store, Slot);
+                    Assert.That(game.ChooseFacility("facility.chef", "facility:chef").Kind, Is.EqualTo(AdultCareerResultKind.Applied));
+                    EnterChefWorkspace(game);
                     break;
                 }
                 default: throw new ArgumentException(checkpoint);

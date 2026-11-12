@@ -1,0 +1,50 @@
+{
+  "Version": 1,
+  "SaveSlot": "slot-robust",
+  "PlayerId": "local-player",
+  "Records": [
+    {
+      "MilestoneId": "milestone.first-guide-trust",
+      "Completed": false,
+      "RewardClaimed": false,
+      "Objectives": [
+        {
+          "ObjectiveId": "milestone.objective.first-guide-trust",
+          "Value": 0
+        }
+      ]
+    },
+    {
+      "MilestoneId": "milestone.teacher-commitment",
+      "Completed": false,
+      "RewardClaimed": false,
+      "Objectives": []
+    },
+    {
+      "MilestoneId": "milestone.teacher-support",
+      "Completed": false,
+      "RewardClaimed": false,
+      "Objectives": [
+        {
+          "ObjectiveId": "milestone.objective.teacher-support",
+          "Value": 0
+        }
+      ]
+    },
+    {
+      "MilestoneId": "milestone.village-adaptation",
+      "Completed": false,
+      "RewardClaimed": false,
+      "Objectives": [
+        {
+          "ObjectiveId": "milestone.objective.responsibility-log",
+          "Value": 0
+        }
+      ]
+    }
+  ],
+  "AppliedDayResultKeys": [
+    "day:1",
+    "day:2"
+  ]
+}

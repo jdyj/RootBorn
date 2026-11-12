@@ -66,7 +66,8 @@ namespace Rootborn.Screens.Start
         private void Refresh()
         {
             _prompt.Text = T("ui.save.delete-prompt");
-            _name.Text = _open?.Slot?.Metadata?.DisplayName ?? string.Empty;
+            // 읽을 수 없는 슬롯은 이름을 알 수 없어 "읽을 수 없는 기록"이라고 적는다.
+            _name.Text = _open?.Slot != null && _open.Slot.Unreadable ? T("ui.save.unreadable") : _open?.Slot?.Metadata?.DisplayName ?? string.Empty;
             _warning.Text = T("ui.save.delete-warning");
             _confirm.Text = T("ui.save.confirm-delete");
             _cancel.Text = T("ui.save.cancel");
@@ -75,7 +76,7 @@ namespace Rootborn.Screens.Start
         private void ConfirmDelete()
         {
             DeleteSlotOpen open = _open;
-            if (open?.Slot == null || !open.Slot.Exists) { Close(); return; }
+            if (open?.Slot == null || !(open.Slot.Exists || open.Slot.Unreadable)) { Close(); return; }
             open.Menu.Slots.Delete(open.Slot.SlotId);
             Close();
             open.Deleted?.Invoke();

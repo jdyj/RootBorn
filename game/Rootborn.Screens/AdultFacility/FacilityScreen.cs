@@ -99,6 +99,9 @@ namespace Rootborn.Screens.AdultFacility
         /// <summary>미니게임 판 시드를 정하는 쪽(테스트에서 고정한다).</summary>
         public void UseSeeds(Func<int> seeds) => _seeds = seeds ?? _seeds;
 
+        /// <summary>키보드 처음 포커스: 일 칸에서 시작한다.</summary>
+        protected internal override UiNode InitialFocus => _works;
+
         protected override UiNode Build()
         {
             var root = new UiPanel { Id = RootId, Skin = UiSkin.Panel };
@@ -305,7 +308,6 @@ namespace Rootborn.Screens.AdultFacility
                 _label.Draw(list, text, new UiRect(inner.X, inner.Y, inner.W, labelHeight), T("facility.auto-skip"), FacilityLayout.ButtonFont, UiTheme.Ink);
                 _label.Draw(list, text, new UiRect(inner.X, inner.Y + labelHeight, inner.W, inner.H - labelHeight), T("facility.auto-skip-requirements"), FacilityLayout.HintFont, UiTheme.Ink, lineSpacing: 1f);
             }
-            if (state.Focused && state.Selected) list.Outline(rect, UiTheme.FocusOutline, UiTheme.Accent);
         }
 
         /// <summary>왼쪽 맞춤 여러 줄 글자(폭에 맞춰 줄바꿈, 영역 밖은 자른다).</summary>

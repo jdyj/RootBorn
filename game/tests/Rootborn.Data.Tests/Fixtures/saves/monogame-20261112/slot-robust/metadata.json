@@ -1,0 +1,19 @@
+{
+  "Version": 1,
+  "SlotId": "slot-robust",
+  "DisplayName": "slot-robust",
+  "CreatedAtUtcTicks": 639300384000000000,
+  "UpdatedAtUtcTicks": 639300384000000000,
+  "WorldSeed": -1675685909,
+  "TileSeed": 1176427208,
+  "Character": {
+    "_bodyVariant": 0,
+    "_hairVariant": 0,
+    "_outfitVariant": 0,
+    "_defaultFacing": 0
+  },
+  "Appearance": {
+    "_parts": []
+  },
+  "CharacterAppearanceSnapshot": null
+}

@@ -160,7 +160,6 @@ namespace Rootborn.Screens.Career
             list.Panel(rect, UiSkin.Button, tint);
             _rowLabel.Draw(list, text, rect.Inset(2f), _rowTexts[index], Metrics.RowFont, UiTheme.Ink, lineSpacing: 0f, centerVertically: true);
             if (index == DetailIndex) list.Outline(rect, 2f, UiTheme.Accent);
-            if (state.Focused && state.Selected) list.Outline(rect, UiTheme.FocusOutline, UiTheme.Accent);
         }
     }
 }

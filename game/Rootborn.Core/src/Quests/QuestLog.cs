@@ -264,7 +264,24 @@ namespace Rootborn.Core.Quests
                 list.Add(pair.Value.ToSaveData(pair.Key.Id));
             }
 
+            for (int i = 0; i < _unknownRecords.Count; i++) list.Add(_unknownRecords[i]);
             return new QuestLogSaveData { Quests = list.ToArray() };
+        }
+
+        // 세이브에 있지만 지금 데이터에 없는 퀘스트의 기록. 규칙에는 보이지 않고 그대로 다시 쓴다.
+        // 버리면 다음 저장에 사라지고, 그 퀘스트가 데이터에 돌아왔을 때 받은 보상을 다시 받을 수 있다.
+        private readonly List<QuestProgressSaveData> _unknownRecords = new List<QuestProgressSaveData>();
+
+        private void KeepUnknown(QuestProgressSaveData saved)
+        {
+            for (int i = 0; i < _unknownRecords.Count; i++)
+            {
+                if (_unknownRecords[i].QuestId != saved.QuestId) continue;
+                _unknownRecords[i] = saved;
+                return;
+            }
+
+            _unknownRecords.Add(saved);
         }
 
         public void LoadFromSaveData(QuestLogSaveData saveData)
@@ -274,8 +291,15 @@ namespace Rootborn.Core.Quests
             {
                 var saved = saveData.Quests[i];
                 if (saved == null || string.IsNullOrEmpty(saved.QuestId)) continue;
+                bool known = false;
                 foreach (var pair in _progressByQuest)
-                    if (pair.Key.Id == saved.QuestId) pair.Value.LoadFromSaveData(saved);
+                {
+                    if (pair.Key.Id != saved.QuestId) continue;
+                    pair.Value.LoadFromSaveData(saved);
+                    known = true;
+                }
+
+                if (!known) KeepUnknown(saved);
             }
         }
 

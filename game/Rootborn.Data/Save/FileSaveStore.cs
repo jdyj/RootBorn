@@ -17,7 +17,9 @@ namespace Rootborn.Data.Save
     /// 표시가 없는 묶음(준비 중에 꺼짐)은 버린다. 그래서 묶음 도중 꺼져도 슬롯은 전부 옛것이거나 전부 새것이다.
     /// 준비 폴더가 없는 슬롯(묶음 전에 만든 세이브 포함)은 지금처럼 읽는다.
     /// 한 프로세스 안의 묶음 적용·되살리기는 하나씩 한다. 같은 저장 폴더를 두 프로세스가 동시에 쓰는 것은 다루지 않는다.
-    /// 파일을 디스크에 강제로 내리지(fsync) 않는다: 프로그램이 꺼지는 것은 막지만 전원이 나가는 경우는 운영체제 캐시에 따른다.
+    /// 평소 저장은 파일을 디스크에 강제로 내리지(fsync) 않는다: 프로그램이 꺼지는 것은 막지만 전원이 나가는 경우는 운영체제 캐시에 따른다.
+    /// 명령마다 십여 개 파일을 내리면 저장이 몇 배 느려져 끊긴다(2026-11-12 측정: SSD에서 16개 파일 8~15ms → 약 30ms).
+    /// 대신 하루가 넘어갈 때 사본을 남기면서 슬롯 파일과 사본을 한 번 내린다(<see cref="KeepDayCopy"/>). 사본을 끄면(0개) 내리지 않는다.
     /// </summary>
     public sealed partial class FileSaveStore : IBatchSaveStore
     {
@@ -83,10 +85,32 @@ namespace Rootborn.Data.Save
 
             if (read == null) throw new SaveFileCorruptException(path, "파일 내용이 null이다");
 
-            if (read is IVersionedSave versioned && versioned.Version > versioned.KnownVersion)
-                throw new SaveFileTooNewException(path, versioned.Version, versioned.KnownVersion);
+            if (read is IVersionedSave versioned) RefuseNewer(versioned, path);
 
             return read;
+        }
+
+        // 형마다 "형식 버전이 있는 모양을 담는 필드" 목록. 읽을 때마다 리플렉션으로 다시 찾지 않는다.
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<Type, System.Reflection.FieldInfo[]> VersionedFields =
+            new System.Collections.Concurrent.ConcurrentDictionary<Type, System.Reflection.FieldInfo[]>();
+
+        /// <summary>
+        /// 맨 위 모양과 그 안에 필드로 든 모양(스냅샷의 월드 상태·체인·가구 해금·지갑 등)의 형식 버전을 본다. 하나라도 이 프로그램이 아는 것보다
+        /// 높으면 읽지 않는다. 안쪽 모양의 버전만 올린 세이브를 옛 프로그램이 읽고 모르는 필드를 버린 채 다시 쓰지 않게 한다.
+        /// 배열 안의 기록은 보지 않는다(형식 버전을 가진 기록이 없다).
+        /// </summary>
+        private static void RefuseNewer(IVersionedSave shape, string path)
+        {
+            if (shape.Version > shape.KnownVersion) throw new SaveFileTooNewException(path, shape.Version, shape.KnownVersion);
+            var fields = VersionedFields.GetOrAdd(shape.GetType(), type =>
+            {
+                var found = new List<System.Reflection.FieldInfo>();
+                foreach (var field in type.GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+                    if (typeof(IVersionedSave).IsAssignableFrom(field.FieldType)) found.Add(field);
+                return found.ToArray();
+            });
+            for (int i = 0; i < fields.Length; i++)
+                if (fields[i].GetValue(shape) is IVersionedSave inner) RefuseNewer(inner, path);
         }
 
         public void Write<T>(string saveSlot, string fileName, T data) where T : class

@@ -65,6 +65,9 @@ namespace Rootborn.Screens.Day
         /// <summary>일과 길 카드 i의 화면 사각형(테스트가 포인터로 누를 자리).</summary>
         public UiRect RouteCardRect(int index) => _routes.CellRect(index);
 
+        /// <summary>키보드 처음 포커스: 고를 일과 칸에서 시작한다.</summary>
+        protected internal override UiNode InitialFocus => _routes;
+
         protected override UiNode Build()
         {
             var root = new UiPanel { Id = RootId, Skin = UiSkin.Panel };
@@ -210,7 +213,6 @@ namespace Rootborn.Screens.Day
             string name = Services.Text.Get(route.NameKey);
             if (string.IsNullOrEmpty(route.NameKey)) name = Services.Text.Get("life.daily-plan.title");
             DrawMiddle(list, text, label, name, DailyPlanLayout.RouteFont, active ? UiTheme.Ink : UiTheme.InkDisabled);
-            if (state.Selected && state.Focused) list.Outline(rect, UiTheme.FocusOutline, UiTheme.Accent);
         }
 
         private static readonly System.Collections.Generic.List<string> _wrap = new System.Collections.Generic.List<string>(4);

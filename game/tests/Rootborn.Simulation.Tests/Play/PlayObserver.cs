@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using Rootborn.Core.Interaction;
 using Rootborn.Core.Minigames;
@@ -34,6 +35,7 @@ namespace Rootborn.Simulation
         private readonly HashSet<string> _seenKeys = new HashSet<string>(StringComparer.Ordinal);
         private ChallengeSession _remembered;
         private int _challenge;
+        private string[] _storageFurniture;
 
         public PlayObserver(PlayAtlas atlas)
         {
@@ -43,6 +45,8 @@ namespace Rootborn.Simulation
         public PlayView Observe(IPlayBody body)
         {
             var view = new PlayView();
+            _storageFurniture ??= _atlas.Definitions.All<Rootborn.Core.Placement.FurnitureStorageDefinition>().Select(d => d.Furniture.StableId).ToArray();
+            view.StorageFurniture.AddRange(_storageFurniture);
             ScreenStack stack = body.Screens;
             view.InWorld = body.InWorld;
             view.MovementBlocked = stack.MovementBlocked;
@@ -425,6 +429,13 @@ namespace Rootborn.Simulation
             {
                 var items = ((ObjectiveJournalScreen)s).Items;
                 return e == ObjectiveJournalScreen.ListId && i >= 0 && i < items.Count ? items[i].StableKey : null;
+            });
+            Register(typeof(Rootborn.Screens.Storage.StorageScreen), (s, e, i) =>
+            {
+                // 상자 화면의 칸: 그 칸에 든 아이템(빈 칸이면 null — 눌러도 아무 일도 없다).
+                var model = ((Rootborn.Screens.Storage.StorageScreen)s).Model;
+                var rows = e == Rootborn.Screens.Storage.StorageScreen.BagGridId ? model.Bag : e == Rootborn.Screens.Storage.StorageScreen.ChestGridId ? model.Chest : null;
+                return rows != null && i >= 0 && i < rows.Count ? rows[i].Item.Id : null;
             });
             Register(typeof(FurniturePlacementScreen), (s, e, i) =>
             {

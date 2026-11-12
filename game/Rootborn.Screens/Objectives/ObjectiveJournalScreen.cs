@@ -61,6 +61,9 @@ namespace Rootborn.Screens.Objectives
 
         private JournalItem[] Current => _items.TryGetValue(SelectedCategory, out JournalItem[] items) && items != null ? items : Array.Empty<JournalItem>();
 
+        /// <summary>키보드 처음 포커스: 목록에서 시작한다(닫기 단추가 나무의 앞에 있다).</summary>
+        protected internal override UiNode InitialFocus => _list;
+
         protected override UiNode Build()
         {
             var root = new UiPanel { Id = PanelId, Skin = UiSkin.Panel };

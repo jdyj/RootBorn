@@ -227,7 +227,6 @@ namespace Rootborn.Screens.KeyGuide
                 UiRect sep = line.SeparatorRects[i];
                 list.Text(rect.X + sep.X + Metrics.SeparatorPad, rect.Y + sepY, line.Separators[i], Metrics.CapFont, UiTheme.Ink);
             }
-            if (state.Selected && state.Focused) list.Outline(rect, UiTheme.FocusOutline, UiTheme.Accent);
         }
     }
 }

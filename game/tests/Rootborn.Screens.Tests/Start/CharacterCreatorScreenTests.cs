@@ -207,16 +207,35 @@ namespace Rootborn.Screens.Tests.Start
         }
 
         [Test]
-        public void NewStoryInAnUnreadableSlot_ClearsTheFilesLeftBehind()
+        public void NewStoryInAnUnreadableSlot_IsRefused_AndKeepsEveryFile()
         {
+            // Unity StartNewSlot은 남은 파일을 지웠다. 읽을 수 없는 기록(깨짐·더 새 버전)을 새 이야기로 덮지 않는다.
+            // 슬롯 화면은 읽을 수 없는 슬롯에 새 이야기 단추를 보이지 않는다. 만들기 화면이 열린 사이에 그렇게 된 경우를 본다.
             using var t = new StartMenuFixture();
             string dir = Path.Combine(t.Saves, "slot-1");
+            OpenCreator(t, slot: 1);
             Directory.CreateDirectory(dir);
             File.WriteAllText(Path.Combine(dir, SaveFileNames.Metadata), "{ 깨진");
             File.WriteAllText(Path.Combine(dir, SaveFileNames.WorldProgress), "{}");
+            t.Click(CharacterCreatorScreen.ConfirmId);
+            Assert.That(File.ReadAllText(Path.Combine(dir, SaveFileNames.Metadata)), Is.EqualTo("{ 깨진"));
+            Assert.That(File.Exists(Path.Combine(dir, SaveFileNames.WorldProgress)), Is.True);
+            Assert.That(t.Entries, Is.Empty);
+            Assert.That(t.Stack.IsOpen(ScreenCatalog.SaveSlotSelect), Is.True);
+            Assert.That(t.Node(SaveSlotScreen.ErrorId).Visible, Is.True);
+        }
+
+        [Test]
+        public void NewStoryInASlotWithLeftoverFilesButNoSlotInfo_ClearsThem()
+        {
+            // 슬롯 정보가 없는 슬롯(지우다 끊긴 것 등)은 빈 슬롯이다. 남은 파일은 새 이야기에 섞이지 않게 지운다.
+            using var t = new StartMenuFixture();
+            string dir = Path.Combine(t.Saves, "slot-1");
+            Directory.CreateDirectory(dir);
+            File.WriteAllText(Path.Combine(dir, SaveFileNames.WorldProgress), "{}");
             OpenCreator(t, slot: 1);
             t.Click(CharacterCreatorScreen.ConfirmId);
-            Assert.That(File.Exists(Path.Combine(dir, SaveFileNames.WorldProgress)), Is.False, "Unity StartNewSlot: 남은 파일을 지운다");
+            Assert.That(File.Exists(Path.Combine(dir, SaveFileNames.WorldProgress)), Is.False);
             Assert.That(t.Menu.Slots.Read("slot-1").Exists, Is.True);
         }
 

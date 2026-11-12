@@ -11,7 +11,8 @@ namespace Rootborn.Core.Workspaces
     {
         public const int KnownVersion = 1;
 
-        public int Version = KnownVersion;
+        /// <summary>형식 버전. 새로 만든 모양은 0(버전 없는 파일과 같다)이고 쓸 때 <see cref="KnownVersion"/>을 넣는다.</summary>
+        public int Version;
         public string SaveSlot;
         public string PlayerId;
         public string[] AppliedRequestIds = Array.Empty<string>();
@@ -69,6 +70,7 @@ namespace Rootborn.Core.Workspaces
 
         public WorkspaceProgressSaveData ToSaveData() => new WorkspaceProgressSaveData
         {
+            Version = WorkspaceProgressSaveData.KnownVersion,
             SaveSlot = SaveSlot,
             PlayerId = PlayerId,
             AppliedRequestIds = Sorted(_requests),

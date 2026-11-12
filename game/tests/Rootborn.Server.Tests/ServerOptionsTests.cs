@@ -48,6 +48,48 @@ namespace Rootborn.Server.Tests
         }
 
         [Test]
+        public void LogAndAutosave_HaveSafeDefaults_AndReadArgumentsBeforeEnvironment()
+        {
+            var o = ServerOptions.Resolve(Full(), Env());
+            Assert.That(o.LogFile, Is.Null, "로그 파일 기본 경로를 지어내지 않는다 — 표준 출력만");
+            Assert.That(o.LogMaxBytes, Is.EqualTo(ServerOptions.DefaultLogMaxBytes));
+            Assert.That(o.LogFiles, Is.EqualTo(ServerOptions.DefaultLogFiles));
+            Assert.That(o.AutosaveSeconds, Is.EqualTo(ServerOptions.DefaultAutosaveSeconds));
+
+            string file = Path.Combine(_root, "server.log");
+            o = ServerOptions.Resolve(Full("--log", file, "--log-max-mb", "2", "--log-files", "0", "--autosave-seconds", "0"), Env(new Dictionary<string, string>
+            {
+                [ServerOptions.LogVariable] = "ignored.log", [ServerOptions.AutosaveVariable] = "30",
+            }));
+            Assert.That(o.LogFile, Is.EqualTo(file));
+            Assert.That(o.LogMaxBytes, Is.EqualTo(2L * 1024 * 1024));
+            Assert.That(o.LogFiles, Is.EqualTo(0));
+            Assert.That(o.AutosaveSeconds, Is.EqualTo(0), "0이면 끈다");
+
+            o = ServerOptions.Resolve(Full(), Env(new Dictionary<string, string> { [ServerOptions.LogVariable] = file, [ServerOptions.AutosaveVariable] = "2.5" }));
+            Assert.That(o.LogFile, Is.EqualTo(file));
+            Assert.That(o.AutosaveSeconds, Is.EqualTo(2.5));
+        }
+
+        [TestCase("--autosave-seconds", "-1")]
+        [TestCase("--autosave-seconds", "soon")]
+        [TestCase("--log-max-mb", "0")]
+        [TestCase("--log-max-mb", "big")]
+        [TestCase("--log-files", "-1")]
+        public void BadLogOrAutosaveValues_AreArgumentErrors(string name, string value)
+        {
+            var e = Assert.Throws<ServerOptionsException>(() => ServerOptions.Resolve(Full(name, value), Env()));
+            StringAssert.Contains(name, e.Message);
+        }
+
+        [Test]
+        public void Help_MentionsTheNewArguments_TheConsoleCommands_AndTheExitCodes()
+        {
+            foreach (var word in new[] { "--log ", "--log-max-mb", "--log-files", "--autosave-seconds", "status", "6 슬롯이 이미 열려 있음", "7 세이브" })
+                StringAssert.Contains(word, ServerOptions.HelpText);
+        }
+
+        [Test]
         public void Share_DefaultsToTimeOnly_ReadsNamesFromArgumentOrEnvironment_AndRefusesUnknownOnes()
         {
             Assert.That(ServerOptions.Resolve(Full(), Env()).SharedPieces, Is.Empty, "기본은 시간만");
@@ -58,6 +100,19 @@ namespace Rootborn.Server.Tests
             var e = Assert.Throws<ServerOptionsException>(() => ServerOptions.Resolve(Full("--share", "items"), Env()));
             StringAssert.Contains("items", e.Message);
             StringAssert.Contains("wallet", e.Message, "아는 이름을 알려 준다");
+        }
+
+        [TestCase("../outside")]
+        [TestCase("..\\outside")]
+        [TestCase("a/b")]
+        [TestCase("slot 1")]
+        [TestCase("C:room")]
+        public void Slot_MustBeOneSafeFolderName_BeforeAnythingIsCreated(string slot)
+        {
+            // 슬롯 잠금이 세이브 폴더 검사보다 먼저 폴더를 만든다. 잘못된 이름은 인자 단계에서 거절해 세이브 폴더 밖에 아무것도 만들지 않는다.
+            var args = new[] { "--root", _root, "--save-root", Path.Combine(_root, "saves"), "--slot", slot, "--bind", "127.0.0.1", "--port", "0" };
+            var error = Assert.Throws<ServerOptionsException>(() => ServerOptions.Resolve(args, Env()));
+            Assert.That(error.Message, Does.Contain("--slot"));
         }
 
         [Test]

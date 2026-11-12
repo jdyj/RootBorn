@@ -33,6 +33,8 @@ namespace Rootborn.Screens
         private readonly UiNode _modalBlocker;
         private readonly List<GameScreen> _open = new List<GameScreen>(8);
         private readonly List<GameScreen> _snapshot = new List<GameScreen>(8);
+        // 화면마다 마지막으로 포커스가 있던 요소(위의 모달을 닫으면 그리로 돌아간다).
+        private readonly Dictionary<GameScreen, UiNode> _lastFocus = new Dictionary<GameScreen, UiNode>();
         // Tick 전용 사본: 화면의 OnTick이 다른 화면을 열고 닫으면(그 안에서 Snapshot을 다시 쓴다) 도는 목록이 바뀌지 않게 따로 둔다. 매 프레임 새 배열을 만들지 않는다.
         private readonly List<GameScreen> _tickSnapshot = new List<GameScreen>(8);
         private float _width = 1920, _height = 1080;
@@ -45,6 +47,7 @@ namespace Rootborn.Screens
             for (int i = 0; i < _layers.Length; i++)
                 _layers[i] = Tree.Root.Add(new UiNode { Id = "layer-" + ((ScreenLayer)i).ToString().ToLowerInvariant() });
             _modalBlocker = _layers[(int)ScreenLayer.Modal].Add(new UiNode { Id = "modal-blocker", Interactive = true, Visible = false });
+            Tree.FocusChanged += RememberFocus;
             if (_services.Session != null) _services.Session.Changed += NotifyChanged;
             _services.Text.LanguageChanged += () => NotifyChanged(ChangeTopics.Language);
             if (_services.Display != null) _services.Display.Changed += _ => NotifyChanged(ChangeTopics.Display);
@@ -239,6 +242,7 @@ namespace Rootborn.Screens
             screen.OnOpened(new ScreenOpenContext(interaction, argument));
             Opened?.Invoke(screen);
             LayoutTree(); // 연 화면과 Opened를 들은 화면이 보이는 것을 바꿨을 수 있다(덮인 HUD를 다시 정한다)
+            if (screen.IsOpen && FocusScreen == screen) GiveFocus(screen, remembered: false);
             return screen;
         }
 
@@ -262,6 +266,8 @@ namespace Rootborn.Screens
             screen.OnClosed();
             Closed?.Invoke(screen);
             LayoutTree();
+            GameScreen below = FocusScreen;
+            if (below != null && (Tree.Focused == null || !IsInside(Tree.Focused, below.Root))) GiveFocus(below, remembered: true);
             return true;
         }
 
@@ -270,6 +276,28 @@ namespace Rootborn.Screens
             if (IsOpen(id)) { Close(id); return false; }
             Open(id);
             return true;
+        }
+
+        /// <summary>
+        /// 키보드로 일할 수 있게 포커스를 둔다(테두리 없이 — 테두리는 키보드로 옮길 때만 보인다). 화면이 OnOpened에서 이미 자기 안에 포커스를 뒀으면
+        /// 그대로 둔다. remembered면 그 화면에서 마지막으로 포커스가 있던 요소(아직 누를 수 있으면)로 돌아간다(위의 모달을 닫았을 때).
+        /// 아니면 화면이 정한 처음 요소(InitialFocus), 없으면 나무 순서의 첫 요소(글자 칸은 건너뛴다).
+        /// </summary>
+        private void GiveFocus(GameScreen screen, bool remembered)
+        {
+            if (Tree.Focused != null && IsInside(Tree.Focused, screen.Root)) return;
+            UiNode target = null;
+            if (remembered && _lastFocus.TryGetValue(screen, out UiNode last) && last.Focusable && last.IsActive && IsInside(last, screen.Root)) target = last;
+            target ??= screen.InitialFocus;
+            if (target == null || !target.Focusable || !target.IsActive) target = UiTree.FirstFocusable(screen.Root);
+            if (target != null) Tree.SetFocusQuietly(target);
+        }
+
+        private void RememberFocus(UiNode focused)
+        {
+            if (focused == null) return;
+            for (int i = _open.Count - 1; i >= 0; i--)
+                if (IsInside(focused, _open[i].Root)) { _lastFocus[_open[i]] = focused; return; }
         }
 
         private static bool IsInside(UiNode node, UiNode root)
@@ -321,14 +349,18 @@ namespace Rootborn.Screens
         {
             if (TextInputFocused)
             {
+                // 조합 중인 글자가 있으면 방향 키·Enter·Esc는 입력기의 것이다(칸 안에서 조합을 끝내거나 지운다). 확정 글자는 Host가 키보다 먼저 넘긴다.
+                bool composing = ((UiTextField)Tree.Focused).Composing;
+                // 이동을 막는 화면(캐릭터 만들기, 방 열기)에서는 걸을 캐릭터가 없으니 위·아래 키만으로 칸을 나간다. 막지 않는 화면은 Shift+위·아래.
+                bool leaveVertically = shift || (FocusScreen != null && FocusScreen.BlocksMovement);
                 switch (key)
                 {
-                    case ScreenKey.Escape: Tree.SetFocus(null); break;
+                    case ScreenKey.Escape: if (!composing) Tree.SetFocus(null); break;
                     case ScreenKey.Enter: Tree.Submit(); break;
                     case ScreenKey.Left: Tree.Navigate(UiNav.Left); break;
                     case ScreenKey.Right: Tree.Navigate(UiNav.Right); break;
-                    case ScreenKey.Up: if (shift) Tree.Navigate(UiNav.Up); break;
-                    case ScreenKey.Down: if (shift) Tree.Navigate(UiNav.Down); break;
+                    case ScreenKey.Up: if (leaveVertically) Tree.Navigate(UiNav.Up); break;
+                    case ScreenKey.Down: if (leaveVertically) Tree.Navigate(UiNav.Down); break;
                 }
                 return true; // 글자 칸이 잡고 있는 동안 키 배정과 월드는 키를 보지 않는다
             }
@@ -395,7 +427,18 @@ namespace Rootborn.Screens
                 new KeyGuide.KeyGuideRow(KeyGuide.KeyGuideGroups.Navigation, "ui.keys.navigate-blocking", new[] { directions }),
                 new KeyGuide.KeyGuideRow(KeyGuide.KeyGuideGroups.Navigation, "ui.keys.navigate-walking", new[] { withShift }),
                 new KeyGuide.KeyGuideRow(KeyGuide.KeyGuideGroups.Navigation, "ui.keys.press", keys.For(ScreenKey.Enter)),
+                // 글자 칸(Key의 글자 칸 갈래): 위·아래로 나온다(걸으면서 보는 화면은 Shift와 함께), Esc는 칸을 놓는다.
+                new KeyGuide.KeyGuideRow(KeyGuide.KeyGuideGroups.Navigation, "ui.keys.field-leave", Concat(keys.For(ScreenKey.Up), keys.For(ScreenKey.Down))),
+                new KeyGuide.KeyGuideRow(KeyGuide.KeyGuideGroups.Navigation, "ui.keys.field-release", keys.For(ScreenKey.Escape)),
             };
+        }
+
+        private static IReadOnlyList<KeyGuide.KeyChord> Concat(IReadOnlyList<KeyGuide.KeyChord> a, IReadOnlyList<KeyGuide.KeyChord> b)
+        {
+            var all = new List<KeyGuide.KeyChord>(a.Count + b.Count);
+            all.AddRange(a);
+            all.AddRange(b);
+            return all;
         }
 
         private IEnumerable<GameScreen> ReverseSnapshot()

@@ -17,5 +17,7 @@
     <None Include="../Rootborn.Data.Tests/Fixtures/saves/**/*" Link="Fixtures/saves/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <!-- 지갑 전 세이브(스냅샷 버전 2, 가방에 용돈 칸). WalletTests가 읽는다. -->
     <None Include="Fixtures/**/*" CopyToOutputDirectory="PreserveNewest" />
+    <!-- 세이브 파일 이름 → 모양 등록표. 게임이 쓴 파일이 모두 등록됐는지 본다(SavedFilesAreRegisteredTests). -->
+    <Compile Include="../Rootborn.Data.Tests/SaveShapeCoverage.cs" Link="SaveShapeCoverage.cs" />
   </ItemGroup>
 </Project>

@@ -130,6 +130,8 @@ namespace Rootborn.Screens.Tests.KeyGuide
                 "navigation | ui.keys.navigate-blocking | [ui.keys.name.arrows]",
                 "navigation | ui.keys.navigate-walking | Shift+[ui.keys.name.arrows]",
                 "navigation | ui.keys.press | Enter",
+                "navigation | ui.keys.field-leave | Up / Down",
+                "navigation | ui.keys.field-release | Esc",
             }));
             Assert.That(screen.Model.Rows.Single(r => r.ActionKey == "ui.keys.interact").ToString(), Is.EqualTo("interact | ui.keys.interact | E / Space / Ctrl"));
             Assert.That(screen.Lines.Count(l => l.IsHeader), Is.EqualTo(KeyGuideGroups.Order.Length), "묶음마다 제목 줄 하나");

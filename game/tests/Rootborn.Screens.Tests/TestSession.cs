@@ -51,6 +51,8 @@ namespace Rootborn.Screens.Tests
         public TestSession Reopen(Action<ScreenRegistry> extra = null) => new TestSession(Text.Language, extra, _saves, Session.Definitions);
 
         public GameSession Session { get; }
+        /// <summary>이 판의 세이브 폴더(시작 화면 시험이 슬롯 목록을 같은 폴더에 만든다).</summary>
+        public string SavesDirectory => _saves;
         public GameText Text { get; }
         public ScreenServices Services { get; }
         public ScreenStack Stack { get; }

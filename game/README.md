@@ -142,6 +142,8 @@ F1은 단축키 안내(모달, 이동을 막음, 시작 화면에서도 열림, 
 
 ## 서버
 
+서버를 돌리는 사람을 위한 안내(띄우기, 같이 쓸 것, 집 밖에서 들어오기, 세이브와 되살리기, 콘솔 명령, 로그 `--log`, 주기 저장 `--autosave-seconds`, 슬롯 잠금, 끝 코드 6·7·8, 옮기기, systemd)는 `game/Rootborn.Server/README.md`.
+
 ```
 dotnet run --project game/Rootborn.Server -- --save-root <세이브 폴더> --slot <슬롯 id> --bind <이 기계의 LAN IP> --port <포트>
 ```

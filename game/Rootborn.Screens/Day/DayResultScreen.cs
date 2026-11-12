@@ -41,6 +41,9 @@ namespace Rootborn.Screens.Day
         public DayResultModel Model { get; private set; }
         public UiSectionScrollView Body => _body;
 
+        /// <summary>키보드 처음 포커스: 다음 날 단추에서 시작한다(Enter 한 번으로 넘긴다).</summary>
+        protected internal override UiNode InitialFocus => _next;
+
         protected override UiNode Build()
         {
             var root = new UiNode { Id = RootId };

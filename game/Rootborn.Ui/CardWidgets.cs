@@ -45,6 +45,8 @@ namespace Rootborn.Ui
         protected abstract void EnsureVisible(int index);
         protected abstract int Move(int from, UiNav nav);
         protected abstract void EmitCards(DrawList list, ITextMeasurer text);
+        /// <summary>그 카드(칸)가 화면에서 차지하는 사각형(보이는 영역 밖일 수 있다).</summary>
+        public abstract UiRect ItemRect(int index);
 
         public float MaxScroll => MathF.Max(0, ContentLength - ViewLength);
 
@@ -136,6 +138,9 @@ namespace Rootborn.Ui
             UiRect view = View;
             list.PushClip(view);
             EmitCards(list, text);
+            // 키보드로 고른 칸의 포커스 테두리는 여기 한 곳에서 그린다. 칸 안쪽에 그려 보이는 영역 가장자리의 칸에서도 잘리지 않는다.
+            if (FocusRing && _selected >= 0 && _selected < _count)
+                list.Outline(ItemRect(_selected).Inset(UiTheme.FocusOutline), UiTheme.FocusOutline, UiTheme.Accent);
             list.PopClip();
             float max = MaxScroll;
             if (max > 0)
@@ -156,7 +161,7 @@ namespace Rootborn.Ui
                     list.Fill(new UiRect(x, view.Y + at, ScrollbarWidth, thumb), ScrollThumb);
                 }
             }
-            // 고른 칸이 있으면 그 칸이 포커스 테두리를 그린다(DrawCell). 목록 전체에 또 두르지 않는다.
+            // 고른 칸이 있으면 위에서 그 칸에 테두리를 그렸다. 목록 전체에 또 두르지 않는다.
             if (FocusRing && _selected < 0) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
         }
     }
@@ -177,6 +182,8 @@ namespace Rootborn.Ui
         protected override float ContentLength => _count == 0 ? 0 : _count * Pitch - Spacing;
         protected override float ViewLength => View.W;
         protected override bool Horizontal => true;
+
+        public override UiRect ItemRect(int index) => CardRect(index);
 
         public UiRect CardRect(int index)
         {
@@ -238,6 +245,8 @@ namespace Rootborn.Ui
         protected override float ContentLength => RowCount == 0 ? 0 : RowCount * RowPitch - Spacing;
         protected override float ViewLength => View.H;
         protected override bool Horizontal => false;
+
+        public override UiRect ItemRect(int index) => CellRect(index);
 
         public UiRect CellRect(int index)
         {

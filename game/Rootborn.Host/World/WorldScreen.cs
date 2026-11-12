@@ -136,6 +136,8 @@ namespace Rootborn.Host.World
                 Slot = new WorldSlot(new FileSaveStore(options.SaveRoot), options.SaveSlot, WorldTravelData.From(Content.Definitions));
                 SlotStart = Slot.Begin(DateTime.UtcNow.Ticks);
                 if (!SlotStart.Ok) throw new InvalidOperationException("세이브 슬롯으로 시작하지 못했다: " + SlotStart.Problem);
+                if (SlotStart.MovedFrom != null)
+                    Console.Error.WriteLine("[시작] 슬롯 " + options.SaveSlot + ": 저장된 자리 " + SlotStart.MovedFrom + "가 지금 맵 목록에 없어 새 게임 자리에서 이어 간다");
                 Session.Arrivals = Slot; // Unity 판처럼 처음 들어갈 때도 도착을 쓴다
                 startMap = SlotStart.Entry.SceneName;
                 if (!Session.Enter(startMap, SlotStart.Entry.SpawnId)) throw new InvalidOperationException(Session.LastProblem);

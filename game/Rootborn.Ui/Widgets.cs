@@ -157,9 +157,13 @@ namespace Rootborn.Ui
 
         public void SetText(string text) { Composition = ""; Text = text ?? ""; }
 
+        /// <summary>입력기가 글자를 조합하고 있다. 그동안 방향 키·Enter는 입력기의 것이다(조합을 깨지 않게 칸에서 나가거나 보내지 않는다).</summary>
+        public bool Composing => Composition.Length > 0;
+
         public override void OnClick(float x, float y) { }
-        public override void OnSubmit() => Submitted?.Invoke(Text);
-        public override bool OnNavigate(UiNav nav) => nav == UiNav.Left || nav == UiNav.Right;
+        public override void OnSubmit() { if (!Composing) Submitted?.Invoke(Text); }
+        /// <summary>왼쪽·오른쪽은 칸 안의 것(글자는 끝에만 붙는다), 위·아래는 칸을 나간다. 조합 중에는 모두 칸 안에 둔다.</summary>
+        public override bool OnNavigate(UiNav nav) => Composing || nav == UiNav.Left || nav == UiNav.Right;
         public override void OnFocusChanged(bool focused) { if (!focused) Composition = ""; }
 
         public override void OnTextInput(string text)

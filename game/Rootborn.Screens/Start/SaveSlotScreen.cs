@@ -8,6 +8,8 @@ namespace Rootborn.Screens.Start
     {
         public string SlotId;
         public bool Exists;
+        /// <summary>슬롯 정보를 읽을 수 없다(깨짐·더 새 버전). 이어 하기도 새 이야기도 없고 지우기만 있다.</summary>
+        public bool Unreadable;
         /// <summary>플레이어가 지은 이름(있는 슬롯만). 비면 TitleKey를 보인다.</summary>
         public string DisplayName;
         public string TitleKey;
@@ -32,7 +34,7 @@ namespace Rootborn.Screens.Start
             var rows = new List<SaveSlotRow>(SaveSlots.MaxUiSlots);
             foreach (SaveSlotSummary slot in menu.Slots.List())
             {
-                var row = new SaveSlotRow { SlotId = slot.SlotId, Exists = slot.Exists };
+                var row = new SaveSlotRow { SlotId = slot.SlotId, Exists = slot.Exists, Unreadable = slot.Unreadable };
                 if (slot.Exists)
                 {
                     row.DisplayName = string.IsNullOrWhiteSpace(slot.Metadata.DisplayName) ? null : slot.Metadata.DisplayName;
@@ -42,6 +44,12 @@ namespace Rootborn.Screens.Start
                     row.IconKey = "journal";
                     row.Look = menu.Looks.SlotLook(slot.Metadata);
                     row.UpdatedAtUtcTicks = slot.Metadata.UpdatedAtUtcTicks;
+                }
+                else if (slot.Unreadable)
+                {
+                    row.TitleKey = "ui.save.unreadable";
+                    row.DescriptionKey = "ui.save.unreadable-description";
+                    row.IconKey = "journal";
                 }
                 else
                 {
@@ -209,13 +217,21 @@ namespace Rootborn.Screens.Start
                 c.Icon.Image = "icon:" + row.IconKey;
                 c.Title.Text = row.DisplayName ?? T(row.TitleKey);
                 c.Description.Text = T(row.DescriptionKey);
-                c.Preview.Visible = c.Saved.Visible = c.Continue.Visible = c.Delete.Visible = row.Exists;
-                c.Choose.Visible = c.NewGame.Visible = !row.Exists;
+                c.Preview.Visible = c.Saved.Visible = c.Continue.Visible = row.Exists;
+                c.Delete.Visible = row.Exists || row.Unreadable;
+                c.Choose.Visible = c.NewGame.Visible = !row.Exists && !row.Unreadable;
+                // 읽을 수 없는 슬롯은 단추가 삭제 하나라 가운데에 둔다.
+                if (row.Unreadable) c.Delete.Centered(0f, Metrics.CardButtonY, Metrics.NewButtonW, Metrics.CardButtonH);
+                else c.Delete.Centered(Metrics.PairButtonX, Metrics.CardButtonY, Metrics.PairButtonW, Metrics.CardButtonH);
                 if (row.Exists)
                 {
                     c.Preview.Show(row.Look, _menu.Art);
                     c.Saved.Text = T(row.CharacterKey);
                     c.Continue.Text = T("ui.save.load");
+                    c.Delete.Text = T("ui.save.delete");
+                }
+                else if (row.Unreadable)
+                {
                     c.Delete.Text = T("ui.save.delete");
                 }
                 else
@@ -253,7 +269,7 @@ namespace Rootborn.Screens.Start
         private void AskDelete(int index)
         {
             SaveSlotRow row = Row(index);
-            if (_menu == null || row == null || !row.Exists) return;
+            if (_menu == null || row == null || !(row.Exists || row.Unreadable)) return;
             Services.Screens?.Open(ScreenCatalog.DeleteSlot, argument: new DeleteSlotOpen(_menu, _menu.Slots.Read(row.SlotId), Refresh));
         }
 
@@ -274,7 +290,7 @@ namespace Rootborn.Screens.Start
         private void NewGame(int index)
         {
             SaveSlotRow row = Row(index);
-            if (_menu == null || row == null || row.Exists) return;
+            if (_menu == null || row == null || row.Exists || row.Unreadable) return;
             Services.Screens?.Open(ScreenCatalog.CharacterCreator, argument: new CreatorOpen(_menu, row.SlotId));
         }
     }
