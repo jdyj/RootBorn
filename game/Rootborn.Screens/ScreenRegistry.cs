@@ -27,6 +27,10 @@ namespace Rootborn.Screens
         public bool KeyWorksOnStartScreens { get; internal set; }
         /// <summary>이 화면 안에서만 듣는 키의 단축키 안내 줄(장치 키 이름표를 받아 만든다). 없으면 null.</summary>
         public Func<Rootborn.Screens.KeyGuide.KeyGuideKeys, IReadOnlyList<Rootborn.Screens.KeyGuide.KeyGuideRow>> KeyGuide { get; internal set; }
+        /// <summary>
+        /// Esc로 닫지 않는 까닭(고르기를 끝내야 하는 화면). null이면 Esc가 이 화면을 닫는다(패널·모달). Esc 규칙은 ScreenStack.Key.
+        /// </summary>
+        public string EscapeKeepsOpenReason { get; internal set; }
         /// <summary>월드의 상호작용이 여는 화면이다(OpenedByInteraction). 떠 있는 동안 상호작용 안내를 숨긴다.</summary>
         public bool OpenedByInteraction { get; internal set; }
     }
@@ -105,6 +109,17 @@ namespace Rootborn.Screens
             public Registration GuidesKeys(Func<Rootborn.Screens.KeyGuide.KeyGuideKeys, IReadOnlyList<Rootborn.Screens.KeyGuide.KeyGuideRow>> rows)
             {
                 _owner._screens[_id].KeyGuide = rows ?? throw new ArgumentNullException(nameof(rows));
+                return this;
+            }
+
+            /// <summary>
+            /// Esc로 닫지 않는다(고르기를 끝내야 하는 모달, 시작 화면). 이유를 적는다 — 단축키 안내와 시험이 읽는다.
+            /// 기본은 Esc가 맨 위의 패널·모달을 닫는다.
+            /// </summary>
+            public Registration KeepsOpenOnEscape(string reason)
+            {
+                if (string.IsNullOrWhiteSpace(reason)) throw new ArgumentException("Esc로 닫지 않는 이유가 비었다", nameof(reason));
+                _owner._screens[_id].EscapeKeepsOpenReason = reason;
                 return this;
             }
 

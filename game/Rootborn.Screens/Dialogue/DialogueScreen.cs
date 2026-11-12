@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Rootborn.Core.Dialogue;
 using Rootborn.Game;
+using Rootborn.Screens.KeyGuide;
 using Rootborn.Ui;
 
 namespace Rootborn.Screens.Dialogue
@@ -132,6 +133,14 @@ namespace Rootborn.Screens.Dialogue
         protected internal override void OnChanged(string topic)
         {
             if (topic == ChangeTopics.Language) Rebuild();
+        }
+
+        /// <summary>단축키 안내 줄(등록 때 GuidesKeys로 넘긴다): 상호작용 키나 Enter(포커스가 없을 때)가 첫 선택지를 고른다(OnKey와 같은 키).</summary>
+        public static IReadOnlyList<KeyGuideRow> KeyGuideRows(KeyGuideKeys keys)
+        {
+            var chords = new List<KeyChord>(keys.For(ScreenKey.Interact));
+            chords.AddRange(keys.For(ScreenKey.Enter));
+            return new[] { new KeyGuideRow(KeyGuideGroups.Interact, "ui.keys.dialogue.first-choice", chords) };
         }
 
         protected internal override bool OnKey(ScreenKey key, bool shift)

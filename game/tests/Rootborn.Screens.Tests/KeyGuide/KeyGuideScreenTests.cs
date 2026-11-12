@@ -89,6 +89,27 @@ namespace Rootborn.Screens.Tests.KeyGuide
         }
 
         [Test]
+        public void EscapeRow_SaysItClosesTheScreen_OrOpensSettings()
+        {
+            using TestSession t = Session();
+            KeyGuideScreen screen = Open(t);
+            KeyGuideRow esc = screen.Model.Rows.Single(r => r.Alternatives.Any(a => a.ToString() == "Esc") && r.Group == KeyGuideGroups.Screens);
+            // Esc 규칙(EscapeKeyTests): 맨 위 화면을 닫고, 닫을 화면이 없으면 설정을 연다. 안내도 둘 다 말한다.
+            Assert.That(TestData.Text("ko").Get(esc.ActionKey), Does.Contain("닫기").And.Contain("설정"));
+            Assert.That(TestData.Text("en").Get(esc.ActionKey), Does.Contain("Close").And.Contain("Settings"));
+        }
+
+        [Test]
+        public void DialogueFirstChoice_HasItsOwnLine_WithInteractAndEnter()
+        {
+            using TestSession t = Session();
+            KeyGuideScreen screen = Open(t);
+            KeyGuideRow row = screen.Model.Rows.Single(r => r.ActionKey == "ui.keys.dialogue.first-choice");
+            Assert.That(row.Group, Is.EqualTo(KeyGuideGroups.Interact));
+            Assert.That(row.Alternatives.Select(a => a.ToString()), Is.SupersetOf(new[] { "E", "Enter" }));
+        }
+
+        [Test]
         public void RegisteringAScreenWithAKey_AddsOneLine()
         {
             const string probe = "probe-log";

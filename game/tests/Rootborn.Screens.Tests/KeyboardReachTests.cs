@@ -22,7 +22,7 @@ namespace Rootborn.Screens.Tests
         private static readonly ScreenKey[] Directions = { ScreenKey.Up, ScreenKey.Down, ScreenKey.Left, ScreenKey.Right };
 
         /// <summary>화면 하나를 연 판(TestSession 또는 성인 시설 준비). 같은 화면을 새로 열어 단추를 하나씩 눌러 볼 때 다시 만든다.</summary>
-        private sealed class Harness : IDisposable
+        internal sealed class Harness : IDisposable
         {
             private readonly IDisposable _owner;
             public Harness(ScreenStack stack, IDisposable owner) { Stack = stack; _owner = owner; }
@@ -31,7 +31,7 @@ namespace Rootborn.Screens.Tests
         }
 
         /// <summary>그냥 Open(id)로는 내용이 없어 바로 닫히거나 비는 화면을 실제로 여는 길. 나머지는 Open(id).</summary>
-        private static Harness OpenScreen(ScreenEntry entry)
+        internal static Harness OpenScreen(ScreenEntry entry)
         {
             if (entry.Id == ScreenCatalog.Facility)
             {

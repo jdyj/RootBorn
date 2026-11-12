@@ -249,9 +249,15 @@ namespace Rootborn.Screens.Tests.Inventory
             t.Stack.Key(ScreenKey.Inventory, false);
             Assert.That(t.Stack.IsOpen(ScreenCatalog.Status), Is.False);
             Assert.That(t.Stack.IsOpen(ScreenCatalog.Inventory), Is.True);
+            // Esc는 맨 위 패널(가방)을 닫는다. 닫을 화면이 없을 때의 Esc가 설정을 연다(EscapeKeyTests, 2026-11-13 임시 규칙).
+            t.Stack.Key(ScreenKey.Escape, false);
+            Assert.That(t.Stack.IsOpen(ScreenCatalog.Inventory), Is.False);
+            Assert.That(t.Stack.IsOpen(ScreenCatalog.Settings), Is.False);
             t.Stack.Key(ScreenKey.Escape, false);
             Assert.That(t.Stack.IsOpen(ScreenCatalog.Settings), Is.True);
-            Assert.That(t.Stack.IsOpen(ScreenCatalog.Inventory), Is.False);
+            t.Stack.Key(ScreenKey.Inventory, false);
+            Assert.That(t.Stack.IsOpen(ScreenCatalog.Settings), Is.False, "설정과 가방은 함께 열리지 않는다");
+            Assert.That(t.Stack.IsOpen(ScreenCatalog.Inventory), Is.True);
         }
 
         [Test]

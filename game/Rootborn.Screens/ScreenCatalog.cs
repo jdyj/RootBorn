@@ -75,6 +75,13 @@ namespace Rootborn.Screens
         /// <summary>일터 템플릿 고르기(모달, 이동을 막는다). 가구 배치 화면의 템플릿 단추만 연다(키 배정 없음). 화면 구성은 추천으로 정함(사용자 확인 전).</summary>
         public const string WorkspaceTemplates = "workspace-template-select";
 
+        // Esc로 닫지 않는 화면의 이유(2026-11-13 임시로 정함 — Esc는 맨 위의 패널·모달을 닫고, 닫을 것이 없으면 설정을 연다).
+        // 지금 Esc가 아무것도 하지 않던 화면 중 고르기를 끝내야 하는 것만 그대로 둔다(닫으면 진행이 꼬일 수 있다).
+        private const string EscapeChoose = "하루 이벤트: 선택지(나중에·지나가기 포함)를 골라 끝낸다.";
+        private const string EscapeLocation = "장소: 방문과 활동 예약이 열 때 정해진다. 닫기 단추로만 닫는다(Esc로 닫으면 하루 이벤트 흐름이 꼬일 수 있다).";
+        private const string EscapeDayResult = "하루 결과: 다음 날 시작 단추가 다음 날을 연다. 닫기만 하면 하루가 넘어가지 않는다.";
+        private const string EscapeStart = "시작 화면: 월드가 없어 설정이 없고, 돌아가기·취소는 화면의 단추로 한다.";
+
         public static void Register(ScreenRegistry r)
         {
             r.Add(Settings, ScreenLayer.Panel, blocksMovement: false, s => new SettingsScreen(s)).OpenedBy(ScreenKey.Escape);
@@ -86,8 +93,8 @@ namespace Rootborn.Screens
             r.Add(HudTracked, ScreenLayer.Hud, blocksMovement: false, s => new TrackedObjectiveHudScreen(s));
             r.Add(HudButtons, ScreenLayer.Hud, blocksMovement: false, s => new HudButtonsScreen(s));
             r.Add(HudPrompt, ScreenLayer.Hud, blocksMovement: false, s => new InteractionPromptScreen(s));
-            r.Add(Dialogue, ScreenLayer.Modal, blocksMovement: false, s => new DialogueScreen(s)).OpenedByInteraction("npc");
-            r.Add(DailyEvent, ScreenLayer.Modal, blocksMovement: true, s => new DailyEventScreen(s));
+            r.Add(Dialogue, ScreenLayer.Modal, blocksMovement: false, s => new DialogueScreen(s)).OpenedByInteraction("npc").GuidesKeys(DialogueScreen.KeyGuideRows);
+            r.Add(DailyEvent, ScreenLayer.Modal, blocksMovement: true, s => new DailyEventScreen(s)).KeepsOpenOnEscape(EscapeChoose);
             // 진로 묶음: 장래희망·진로 후보는 HUD 버튼(화면 id)이 열고, 탐색 선택은 탐색 지점 상호작용 종류로 열린다. 셋 다 Unity 판에서 이동을 막는다.
             r.Add(CareerInterest, ScreenLayer.Modal, blocksMovement: true, s => new CareerInterestScreen(s));
             r.Add(CareerCandidates, ScreenLayer.Modal, blocksMovement: true, s => new CareerCandidateScreen(s));
@@ -95,8 +102,8 @@ namespace Rootborn.Screens
             // 하루 이벤트는 장소 지점 상호작용 뒤에 연다(Unity DailyEventRuntimeInstaller).
             r.AddListener(s => new DailyEventTrigger(s, DailyEvent, "location-activity"));
             r.Add(DailyPlan, ScreenLayer.Panel, blocksMovement: false, s => new DailyPlanScreen(s)).OpenedByInteraction(DailyPlanScreen.InteractionKind);
-            r.Add(Location, ScreenLayer.Modal, blocksMovement: true, s => new LocationScreen(s)).OpenedByInteraction(LocationScreen.InteractionKind);
-            r.Add(DayResult, ScreenLayer.Modal, blocksMovement: true, s => new DayResultScreen(s)).OpenedByInteraction(DayResultScreen.InteractionKind);
+            r.Add(Location, ScreenLayer.Modal, blocksMovement: true, s => new LocationScreen(s)).OpenedByInteraction(LocationScreen.InteractionKind).KeepsOpenOnEscape(EscapeLocation);
+            r.Add(DayResult, ScreenLayer.Modal, blocksMovement: true, s => new DayResultScreen(s)).OpenedByInteraction(DayResultScreen.InteractionKind).KeepsOpenOnEscape(EscapeDayResult);
             // 미니게임은 예약이 생기면 연다(Unity MinigamePresentationBridge). 일터·연습 지점은 상호작용 종류로 등록한다.
             r.Add(Minigame, ScreenLayer.Modal, blocksMovement: true, s => new MinigameScreen(s)).KeepsClockRunning().GuidesKeys(MinigameScreen.KeyGuideRows);
             r.AddListener(s => new MinigameTrigger(s, Minigame));
@@ -106,13 +113,13 @@ namespace Rootborn.Screens
             r.Add(QuestChainLog, ScreenLayer.Panel, blocksMovement: false, s => new QuestChainLogScreen(s));
             r.AddListener(s => new MinigameWorkPoints(s, new[] { "part-time-work" }, new[] { "career-practice" }));
             // 시작 화면은 월드가 없을 때 뜬다. 캐릭터가 없으니 방향 키가 버튼 사이를 옮기도록 이동을 막는 화면으로 둔다.
-            r.Add(SaveSlotSelect, ScreenLayer.Panel, blocksMovement: true, s => new SaveSlotScreen(s)).WithoutWorld();
-            r.Add(CharacterCreator, ScreenLayer.Panel, blocksMovement: true, s => new CharacterCreatorScreen(s)).WithoutWorld();
-            r.Add(DeleteSlot, ScreenLayer.Modal, blocksMovement: true, s => new DeleteSlotScreen(s)).WithoutWorld();
+            r.Add(SaveSlotSelect, ScreenLayer.Panel, blocksMovement: true, s => new SaveSlotScreen(s)).WithoutWorld().KeepsOpenOnEscape(EscapeStart);
+            r.Add(CharacterCreator, ScreenLayer.Panel, blocksMovement: true, s => new CharacterCreatorScreen(s)).WithoutWorld().KeepsOpenOnEscape(EscapeStart);
+            r.Add(DeleteSlot, ScreenLayer.Modal, blocksMovement: true, s => new DeleteSlotScreen(s)).WithoutWorld().KeepsOpenOnEscape(EscapeStart);
             r.Add(SaveSlotDamaged, ScreenLayer.Modal, blocksMovement: true, s => new SaveSlotDamagedScreen(s)).WithoutWorld();
-            r.Add(JoinServer, ScreenLayer.Modal, blocksMovement: true, s => new JoinServerScreen(s)).WithoutWorld();
-            r.Add(RoomNotice, ScreenLayer.Modal, blocksMovement: true, s => new RoomNoticeScreen(s)).WithoutWorld();
-            r.Add(HostRoom, ScreenLayer.Modal, blocksMovement: true, s => new HostRoomScreen(s)).WithoutWorld();
+            r.Add(JoinServer, ScreenLayer.Modal, blocksMovement: true, s => new JoinServerScreen(s)).WithoutWorld().KeepsOpenOnEscape(EscapeStart);
+            r.Add(RoomNotice, ScreenLayer.Modal, blocksMovement: true, s => new RoomNoticeScreen(s)).WithoutWorld().KeepsOpenOnEscape(EscapeStart);
+            r.Add(HostRoom, ScreenLayer.Modal, blocksMovement: true, s => new HostRoomScreen(s)).WithoutWorld().KeepsOpenOnEscape(EscapeStart);
             r.Add(RoomSharesNotice, ScreenLayer.Notice, blocksMovement: false, s => new RoomSharesNoticeScreen(s));
             // 가구 배치: 집 HUD 버튼(가구 배치 켬/끔)이 연다. 이동을 막지 않는다(Unity 판 패널은 입력을 잠그지 않았다).
             r.Add(FurniturePlacement, ScreenLayer.Panel, blocksMovement: false, s => new FurniturePlacementScreen(s));
