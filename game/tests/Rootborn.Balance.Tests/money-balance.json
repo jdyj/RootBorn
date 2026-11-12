@@ -1,0 +1,19 @@
+{
+  "about": "게임은 읽지 않는다. 균형 시뮬레이터(game/tests/Rootborn.Balance.Tests)의 전략과 가정이다. 배포와 데이터 지문에 들어가지 않는다. 걷기·미니게임 가정은 game/tests/Rootborn.Game.Tests/day-balance.json. 설계 docs/superpowers/specs/2026-11-12-balance-simulator-design.md",
+  "days": 30,
+  "sleep": "finish-by-bedtime",
+  "scoreTiers": [
+    { "id": "low", "score": 60 },
+    { "id": "mid", "score": 80 },
+    { "id": "max", "score": 100 }
+  ],
+  "strategies": [
+    { "id": "one-part-time-work", "each": "part-time-work", "start": "new-game", "scored": false, "do": ["part-time-work"] },
+    { "id": "rotate-part-time-work", "each": "none", "start": "new-game", "scored": false, "do": ["any-part-time-work"] },
+    { "id": "facility-work-only", "each": "facility", "start": "adult", "scored": true, "do": ["best-facility-work"] },
+    { "id": "facility-work-upgrade", "each": "facility", "start": "adult", "scored": true, "do": ["upgrade-facility", "best-facility-work"] },
+    { "id": "facility-autoskip-upgrade", "each": "facility", "start": "adult", "scored": true, "do": ["upgrade-facility", "auto-skip-facility-work", "best-facility-work"],
+      "note": "넘길 수 있는 일이 있으면 그것만 하므로 올린 뒤 새 레벨 일의 숙련을 쌓지 않는다(직접 하는 전략보다 적게 벌 수 있다)." }
+  ],
+  "bands": []
+}

@@ -146,8 +146,9 @@ namespace Rootborn.Host.Tests.TwoGames
         /// <summary>
         /// 집 HUD 버튼으로 배치를 켜고 검색 칸에 가구 id를 쳐 고른 뒤, 화면 안의 놓을 수 있는 빈 칸(다른 상호작용 지점에서 4칸 넘게 떨어진)을 포인터로 누른다.
         /// 배치를 끄고 놓은 칸(가구 방 칸)을 돌려준다. 방이 허락할 때까지 기다리는 것은 부른 쪽이 한다.
+        /// near(맵 픽셀)를 주면 그 자리에 가까운 칸부터 고르고, 지점과는 1.5칸만 떨어지면 되며, 걷는 NPC의 후보(움직인다)는 떨어질 지점으로 세지 않는다.
         /// </summary>
-        public static GridPoint PlaceFurniture(this PlayerDriver p, string stableId)
+        public static GridPoint PlaceFurniture(this PlayerDriver p, string stableId, (float X, float Y)? near = null)
         {
             var session = p.Game.Session;
             FurnitureDefinition definition = session.Definitions.Get<FurnitureDefinition>(stableId);
@@ -169,20 +170,24 @@ namespace Rootborn.Host.Tests.TwoGames
             Check(placement.Active?.StableId == stableId, "고른 가구가 " + placement.Active?.StableId);
 
             FurnitureRoom room = p.Game.World.Room;
-            var others = p.Game.World.Interactions.Candidates.Where(c => c.Acts).ToList();
+            var others = p.Game.World.Interactions.Candidates.Where(c => c.Acts && (near == null || c.Kind != "npc")).ToList();
             int size = p.World.Map.Grid.CellSize;
             var view = new HostPlacementView(p.Game.World, () => p.Game.Fit.Scale);
             float w = p.Game.Fit.LogicalWidth, h = p.Game.Fit.LogicalHeight;
             GridPoint target = default;
             bool found = false;
-            foreach (GridPoint c in room.FloorCells)
+            float keepAway = near.HasValue ? 1.5f : 4.5f; // 자리를 고르면 지점 칸만 비켜 둔다(지점 곁의 자리도 고를 수 있게)
+            IEnumerable<GridPoint> cells = room.FloorCells;
+            if (near.HasValue)
+                cells = cells.OrderBy(c => { AreaRect a = room.CellArea(c); return Math.Abs(a.CenterX - near.Value.X) + Math.Abs(a.CenterY - near.Value.Y); }).ToList();
+            foreach (GridPoint c in cells)
             {
                 UiRect r = view.CellRect(c);
                 if (r.X < 0 || r.Y < 0 || r.Right > w || r.Bottom > h || p.Game.Ui.HitTest(r.CenterX, r.CenterY) != null) continue;
                 if (Math.Abs(c.X - room.Grid.Spawn.X) <= 2 && Math.Abs(c.Y - room.Grid.Spawn.Y) <= 2) continue;
                 if (!session.House.CanPlace(definition, c, FurniturePlacementDirection.North)) continue;
                 AreaRect a = room.CellArea(c);
-                if (!others.All(o => Math.Abs(o.X - a.CenterX) + Math.Abs(o.Y - a.CenterY) > size * 4.5f)) continue;
+                if (!others.All(o => Math.Abs(o.X - a.CenterX) + Math.Abs(o.Y - a.CenterY) > size * keepAway)) continue;
                 target = c; found = true; break;
             }
             Check(found, stableId + "를 놓을 칸이 화면에 없다");

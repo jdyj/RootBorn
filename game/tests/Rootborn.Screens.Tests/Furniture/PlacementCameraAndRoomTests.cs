@@ -49,6 +49,20 @@ namespace Rootborn.Screens.Tests.Furniture
         }
 
         [Test]
+        public void SetFurnitureBlocking_IsTrueOnlyWhenTheBlockedCellsChange()
+        {
+            // 걷는 NPC는 이것이 true일 때만 그 방의 길을 다시 찾는다(배치 화면이 열려 있는 동안 같은 칸으로 다시 불려도 다시 찾지 않는다).
+            var room = new FurnitureRoom(FurniturePlacementScreenTests.TestRoomMap());
+            GridPoint desk = room.ToPlacement(new CellPos(3, 3)), wall = room.ToPlacement(new CellPos(0, 3));
+            Assert.That(room.SetFurnitureBlocking(Enumerable.Empty<GridPoint>()), Is.False, "처음과 같다(가구 없음)");
+            Assert.That(room.SetFurnitureBlocking(new[] { desk }), Is.True, "칸이 막혔다");
+            Assert.That(room.SetFurnitureBlocking(new[] { desk }), Is.False, "같은 칸");
+            Assert.That(room.SetFurnitureBlocking(new[] { desk, wall, new GridPoint(500, 500) }), Is.False, "원래 막힌 칸과 맵 밖 칸은 바꾸지 않는다");
+            Assert.That(room.SetFurnitureBlocking(null), Is.True, "가구를 치웠다");
+            Assert.That(room.SetFurnitureBlocking(null), Is.False);
+        }
+
+        [Test]
         public void RoomCells_HaveYUp_LikeTheFurnitureDefinitions_AndBlockingReachesTheWalkMap()
         {
             WorldMap map = FurniturePlacementScreenTests.TestRoomMap();

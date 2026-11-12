@@ -66,7 +66,7 @@ namespace Rootborn.Game
             Announce(NewEvent(QuestEventKind.DayStarted, "day-started", null), true);
             if (!string.IsNullOrEmpty(CareerInterests.CurrentInterestId))
                 Announce(NewEvent(QuestEventKind.CareerInterestSelected, "career-interest-kept", CareerInterests.CurrentInterestId), true);
-            ReplayPlacedFurniture();
+            if (_houseEntered) ReplayPlacedFurniture(); // 집에 들어간 적이 없는 판은 미리 읽은 배치로 진행이 달라지지 않게
         }
 
         private void SaveNewDay()

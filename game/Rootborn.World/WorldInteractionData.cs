@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using Rootborn.Core.Interaction;
+using Rootborn.Core.NpcMovement;
 using Rootborn.Core.World;
 
 namespace Rootborn.World
@@ -44,6 +45,19 @@ namespace Rootborn.World
         public IEnumerable<string> MapIds => _maps.Keys;
 
         public MapInteractions Map(string mapId) => mapId != null && _maps.TryGetValue(mapId, out MapInteractions m) ? m : MapInteractions.Empty;
+
+        /// <summary>가구를 놓는 면이 있는 맵(맵 성질 placementSurface)과 그 면 id, 맵 목록 순서.</summary>
+        public List<(string MapId, string Surface)> PlacementMaps(WorldCatalog catalog)
+        {
+            if (catalog == null) throw new ArgumentNullException(nameof(catalog));
+            var list = new List<(string, string)>();
+            foreach (MapEntry m in catalog.Maps)
+            {
+                string surface = Map(m.Id).PlacementSurface;
+                if (!string.IsNullOrEmpty(surface)) list.Add((m.Id, surface));
+            }
+            return list;
+        }
 
         public static InteractionData Load(string path) => Parse(File.ReadAllText(path));
 
@@ -93,47 +107,43 @@ namespace Rootborn.World
         }
     }
 
-    /// <summary>맵에 선 NPC 하나.</summary>
-    public readonly struct PlacedNpc
+    /// <summary>
+    /// 장소 id의 NPC 자리(interactions.json npcAnchors, 레벨 픽셀 그대로). 맵 목록 순서로 찾아 그 장소의 자리가 처음 나오는 맵의 자리를 쓴다
+    /// — 그 맵의 자리가 모자라면 다음 맵에서 찾지 않는다. 표는 만들 때 한 번 짓는다.
+    /// </summary>
+    public sealed class MapAnchors : INpcAnchors
     {
-        public readonly string NpcId, LocationId;
-        public readonly float X, Y;
+        private readonly Dictionary<string, (string MapId, List<(float X, float Y)> Spots)> _byLocation =
+            new Dictionary<string, (string, List<(float, float)>)>(StringComparer.Ordinal);
 
-        public PlacedNpc(string npcId, string locationId, float x, float y)
+        public MapAnchors(InteractionData data, IEnumerable<string> mapIds)
         {
-            NpcId = npcId; LocationId = locationId; X = x; Y = y;
+            if (data == null) throw new ArgumentNullException(nameof(data));
+            if (mapIds == null) throw new ArgumentNullException(nameof(mapIds));
+            foreach (string mapId in mapIds)
+                foreach (var location in data.Map(mapId).NpcAnchors)
+                    if (!_byLocation.ContainsKey(location.Key)) _byLocation[location.Key] = (mapId, location.Value);
+        }
+
+        public bool TryGet(string locationId, int slot, out NpcSpot spot)
+        {
+            spot = default;
+            if (locationId == null || slot < 0 || !_byLocation.TryGetValue(locationId, out var found) || slot >= found.Spots.Count) return false;
+            spot = new NpcSpot(found.MapId, found.Spots[slot].X, found.Spots[slot].Y);
+            return true;
         }
     }
 
     /// <summary>
-    /// NPC를 맵에 세우는 규칙(Unity LocationNpcRuntimeInstaller): NPC마다 일정이 정한 장소를 묻고, 그 장소에 앞서 배정된 NPC 수가
-    /// 자리 번호다(순서는 레지스트리의 NPC 순서). 그 맵에 그 장소의 그 번호 자리가 없으면 세우지 않는다.
+    /// 맵의 고정 상호작용 후보. NPC 자리는 <see cref="NpcStage"/>가 정하고(일정에 따라 걷는다) NPC 후보도 그쪽이 더한다.
     /// </summary>
     public static class NpcPlacement
     {
-        public static List<PlacedNpc> Place(IEnumerable<string> npcIdsInOrder, Func<string, string> locationOf, MapInteractions map)
-        {
-            var placed = new List<PlacedNpc>();
-            var used = new Dictionary<string, int>(StringComparer.Ordinal);
-            if (npcIdsInOrder == null || locationOf == null || map == null) return placed;
-            foreach (string npcId in npcIdsInOrder)
-            {
-                string location = locationOf(npcId) ?? string.Empty;
-                if (location.Length == 0) continue;
-                used.TryGetValue(location, out int slot);
-                used[location] = slot + 1;
-                if (map.NpcAnchors.TryGetValue(location, out var anchors) && slot < anchors.Count)
-                    placed.Add(new PlacedNpc(npcId, location, anchors[slot].X, anchors[slot].Y));
-            }
-            return placed;
-        }
-
-        /// <summary>상호작용 후보: 물건, NPC, 자동문(목적지가 있는 문 — 대상은 되지만 키로는 아무 일도 하지 않는다).</summary>
-        public static List<InteractionCandidate> Candidates(InteractionData data, MapInteractions map, IEnumerable<PlacedNpc> npcs, IEnumerable<DoorArea> doors)
+        /// <summary>상호작용 후보: 물건, 자동문(목적지가 있는 문 — 대상은 되지만 키로는 아무 일도 하지 않는다). 물건이 앞, 문이 뒤다.</summary>
+        public static List<InteractionCandidate> Candidates(InteractionData data, MapInteractions map, IEnumerable<DoorArea> doors)
         {
             var list = new List<InteractionCandidate>();
             foreach (InteractionThing t in map.Things) list.Add(new InteractionCandidate(t.Kind, t.Id, t.X, t.Y, t.Priority, true));
-            if (npcs != null) foreach (PlacedNpc n in npcs) list.Add(new InteractionCandidate("npc", n.NpcId, n.X, n.Y, data.NpcPriority, true));
             if (doors != null)
                 foreach (DoorArea d in doors)
                     if (d.Destination.HasValue) list.Add(new InteractionCandidate("door", d.Target, d.Area.CenterX, d.Area.CenterY, data.DoorPriority, false));

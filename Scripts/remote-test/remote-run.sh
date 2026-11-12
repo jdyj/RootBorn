@@ -219,9 +219,9 @@ with open(sys.argv[2], "w", encoding="utf-8") as f:
         f.write("\n실패 %d건\n" % len(failures))
         for p, n, m in failures: f.write("- %s :: %s\n    %s\n" % (p, n, m))
 PY
-# 스크린샷(output/ 아래 PNG)만 가져갈 수 있게 옮긴다.
+# 스크린샷(output/ 아래 PNG)과 균형 보고(output/balance/ 아래 파일)만 가져갈 수 있게 옮긴다.
 if [ -d "$SRC/output" ]; then
-  ( cd "$SRC" && find output -name '*.png' -print0 | tar --null -cf - -T - ) | tar -xf - -C "$RES"
+  ( cd "$SRC" && find output \( -name '*.png' -o -path 'output/balance/*' \) -type f -print0 | tar --null -cf - -T - ) | tar -xf - -C "$RES"
 fi
 log "끝 ($((end - start))초, 상태 $status)"
 exit "$status"

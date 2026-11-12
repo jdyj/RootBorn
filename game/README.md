@@ -24,6 +24,7 @@
 | `tests/Rootborn.Ui.Tests` | 화면 없이 도는 테스트 | 없음 |
 | `tests/Rootborn.Server.Tests` | 서버 인자(`ServerOptionsTests`), 데이터 지문, 방 루프·방 서버(메모리 저장소), 빌드한 서버를 별도 프로세스로 띄워 루프백 UDP로 들어가기(`ServerProcessTests`, 두 기계·Steam 아님) | 없음 |
 | `tests/Rootborn.Simulation.Tests` | 대본 없이 정책이 화면에 보이는 것만 보고 여러 날을 플레이(입력은 화면 포인터 판정·키 배정을 거친다): 걸음마다 불변식, 날마다 저장 뒤 다시 읽기, 같은 씨앗은 같은 플레이·기록 다시 재생. 씨앗·날 수는 `ROOTBORN_SIM_SEEDS`·`ROOTBORN_SIM_DAYS`, 기록은 `output/simulation/`. 알려진 결함 재현은 이유와 함께 건너뛴다. 사람의 실제 플레이를 대신하지 않는다 | 없음 |
+| `tests/Rootborn.Balance.Tests` | 수치 균형 시뮬레이터: 전략(`money-balance.json`)대로 시설 일·알바를 실제 `data/`와 `GameSession` 명령으로 여러 날 돌려 수입을 잰다(메모리 저장소, 걷기·미니게임 가정은 Game 테스트의 `day-balance.json`). 빠른 검사는 짧은 날 수, 전체 보고는 손으로(`FullReport`) `output/balance/`에 `days.csv`·`summary.csv`·`report.md`. 가정을 넣은 계산이고 실제 플레이가 아니다 | 없음 |
 | `tests/Rootborn.Screens.Tests` | 창 없이 도는 화면 테스트: 화면 쌓기의 층·배타·이동 막음·입력 넘기기, 실제 `ko.json`·`en.json`, 설정·HUD·대화·하루 이벤트·가방·상태 화면을 실제 `data/`와 `GameSession`으로 눌러 보기(알려진 빠진 현지화 키는 `KnownMissingKeys`) | 없음 |
 | `tests/Rootborn.Host.Tests` | 실제 창과 게임 루프를 한 프레임씩 돌리는 테스트(새 게임 → 집 → 마을 → 가게 → 이어 하기 `NewGameJourneyTests`, 메인 체인 처음부터 끝까지 `MainChainHostTests`, 영어로 모든 화면 찍기 `EnglishScreensTests`, `--frames`·`--screenshot` 프로세스 시험 `FramesScreenshotTests`, 같은 프로세스 안 방에 UDP 루프백으로 들어가 다른 참가자 보기·거절·끊김 `MultiplayerJoinHostTests` 포함) | 있음 |
 
@@ -51,6 +52,7 @@ dotnet run --project game/Rootborn.Host -- --save-root <세이브 폴더> --slot
 `bash Scripts/remote-test/run.sh [<커밋>]`(커밋된 것만 간다, `Scripts/remote-test/README.md`), 정적 검사는 `bash Scripts/ci/run-all.sh --checks-only`.
 손으로만 도는 테스트(`[Explicit]`, 평소 실행에서 건너뜀): Host `ThemeConversionWriter`(테마 파일을 다시 쓴다), Simulation `ReplayFromEnvironment`(`ROOTBORN_SIM_REPLAY`),
 Server `ServerLoadMeasureTests`(부하 측정)·`DeployedServerSharingTests`(배포 폴더가 있어야 한다 — `Tools/publish/verify.sh --server`가 돌린다).
+Balance `WriteFullReport`(전체 균형 보고): `dotnet test game/tests/Rootborn.Balance.Tests --filter "FullyQualifiedName~WriteFullReport"`, 원격은 `bash Scripts/remote-test/run.sh HEAD -- game/tests/Rootborn.Balance.Tests --filter "FullyQualifiedName~WriteFullReport"`(결과의 `output/balance/`로 받는다).
 
 인자와 환경 변수(인자가 먼저다):
 
@@ -64,8 +66,8 @@ Server `ServerLoadMeasureTests`(부하 측정)·`DeployedServerSharingTests`(배
 | `--sample` | | UI 견본 화면 |
 | `--world <맵>` | | 월드 화면. 맵 id(Unity 씬 이름) 또는 LDtk 레벨 이름(예: Shop, Town, House) |
 | `--spawn <도착 지점>` | | 맵 목록에서 그 맵의 첫 도착 지점 |
-| `--maps <맵 목록>` | `ROOTBORN_WORLD_MAPS` | `<저장소>/game/world/maps.json` |
-| `--interactions <파일>` | | `<저장소>/game/world/interactions.json` |
+| `--maps <맵 목록>` | `ROOTBORN_WORLD_MAPS` | `<저장소>/game/world/maps.json`. 개발용: 다른 파일로 바꿔도 데이터 지문(같이 하기에서 맞춰 보는 값)에는 들지 않는다 — 지문은 저장소의 `game/world/maps.json`·`interactions.json`을 센다 |
+| `--interactions <파일>` | | `<저장소>/game/world/interactions.json`. 개발용: `--maps`와 같이 데이터 지문에는 저장소의 파일이 든다 |
 | `--buildings <건물 목록>` | `ROOTBORN_WORLD_BUILDINGS` | `<저장소>/game/world/buildings.json`(맵 목록의 부지가 가리키는 건물, `game/world/README.md` 4-1절) |
 | `--hour <시각>` | | 8. `--world`일 때만(슬롯은 저장된 학생 시각에서 이어진다) |
 | `--time-scale <배속>` | | 1. 하루 길이는 data/time의 TimeDefinition(600초). `--world`면 시험 화면의 시계, 슬롯이면 학생의 흐르는 시계에 곱한다(0이면 시계가 서 있다) |
@@ -81,6 +83,8 @@ Server `ServerLoadMeasureTests`(부하 측정)·`DeployedServerSharingTests`(배
 | `--host <IP 주소:포트>` | `ROOTBORN_HOST_ROOM` | 없음(주소 기본값이 없다). 내 PC에서 방을 연다. 이 PC에서 들을 IPv4 주소와 포트(0이면 운영체제가 빈 포트를 준다). `--save-root`가 필요하다. 시작 화면에서 방 열기 창을 그 주소로 열고, `--slot`도 주면 그 슬롯으로 바로 방을 열고 들어가 월드를 띄운다. `--join`·`--world`·`--sample`과 함께 줄 수 없다 |
 | `--max-players <정원>` | `ROOTBORN_MAX_PLAYERS` | 4(방 설정 기본값). 1~8. `--host`와 함께만 준다(환경 변수는 `--host`가 없으면 쓰지 않는다 — 서버와 같은 이름). 방을 처음 만들 때만 쓰고 방 설정 파일에 남는다(이미 있는 방은 저장된 정원) |
 | `--share <조각,...>` | `ROOTBORN_ROOM_SHARE` | 없음(방 열기 창에서 고른다). 서버의 `--share`와 같은 이름·규칙(`Rootborn.Net/Room/RoomShareArgument`): `wallet`(돈), `house`(집과 가구), `town`(마을 상태)을 쉼표로, `none`이면 시간만. 방 열기 창에 처음 켜 둘 것이고 `--slot`과 함께면 그대로 연다. `--host`와 함께만 준다. 방을 처음 만들 때만 쓴다 |
+| (Balance 테스트) | `ROOTBORN_BALANCE_OUT` | `<저장소>/output/balance`. 균형 보고 파일 셋을 쓸 폴더 |
+| (Balance 테스트) | `ROOTBORN_BALANCE_DAYS` | `money-balance.json`의 `days`(30). 전체 보고의 날 수. 1 이상의 정수가 아니면 변수 이름과 값을 말하며 실패한다 |
 
 `--sample`도 `--world`도 `--slot`도 없으면 슬롯 선택 화면(슬롯 3개: 새 이야기 → 캐릭터 만들기, 이어서 시작, 삭제)부터 띄운다. 세이브 폴더가 없으면 안내 후 끝난다.
 캐릭터 만들기의 시작하기는 슬롯 정보(이름, 고른 겉모습, 시각으로 만든 시드)를 쓰고 그 슬롯으로 `--slot`과 같게 시작한다. 슬롯으로 시작하면 맵에 들어갈 때마다(처음 들어갈 때 포함) `world-progress.json`에 쓴다.
@@ -89,7 +93,8 @@ Server `ServerLoadMeasureTests`(부하 측정)·`DeployedServerSharingTests`(배
 세이브 폴더 배치: `<세이브 폴더>/<슬롯>/`에 영역마다 JSON 파일 하나. 한 명령의 저장은 묶음 하나로 `<슬롯>/.save-batch/`에 다 쓴 뒤 바꿔 넣는다(도중에 꺼지면 다음에 읽을 때 마저 넣거나 버려서 전부 옛것 또는 전부 새것). 다음 날을 시작할 때 `<슬롯>/backups/<날 번호>/`에 슬롯 파일 사본을 남긴다(`--day-copies`, 맨 위 칸 파일만, `.`으로 시작하는 임시 파일 빼고. 임시 폴더에 다 복사한 뒤 이름을 바꿔 넣어 반쯤 찬 사본은 남지 않는다).
 되살리는 명령은 없다: 사본 폴더의 파일을 슬롯 폴더(같은 슬롯이든 다른 이름의 슬롯이든)에 복사해 넣고 그 슬롯으로 이어 한다. 슬롯 폴더를 다른 이름으로 복사해도 같다 — 세이브 안의 슬롯 이름이 옛 이름이어도 지금 슬롯으로 읽고 저장한다(Game `CopiedSlotTests`).
 캐릭터는 슬롯의 옷 선택(`wearables-local-player.json`, 없으면 칸 기본값)으로 성장 단계 몸에 옷·머리를 겹쳐 그린다.
-낮밤은 맵 목록의 `dayNight`가 켜진 맵(마을)에만 입힌다. 슬롯으로 시작하면 낮밤·NPC 자리는 학생 날·시각(`GameSession.StudentDay`·`StudentHour`)을, 캐릭터 몸은 `GrowthStageId()`를 따른다. `interactions.json`에서 `placementSurface`가 있는 맵(집, 일터)에 들어가면 그 맵에서 방 칸을 만들어 `GameSession.EnterPlacementSurface(칸, 면 id)`를 부른다(면 id가 일터의 것이면 일터로 열린다 — `game/world/README.md` 6절 "일터 면"). NPC는 일정(data/npcs)과 시간대로 `interactions.json`의 장소 자리에 선다.
+낮밤은 맵 목록의 `dayNight`가 켜진 맵(마을)에만 입힌다. 슬롯으로 시작하면 낮밤은 학생 날·시각(`GameSession.StudentDay`·`StudentHour`)을, NPC 자리는 분 아래까지 든 시각(`GameSession.DayMinutesExact`)을, 캐릭터 몸은 `GrowthStageId()`를 따른다. `interactions.json`에서 `placementSurface`가 있는 맵(집, 일터)에 들어가면 그 맵에서 방 칸을 만들어 `GameSession.EnterPlacementSurface(칸, 면 id)`를 부른다(면 id가 일터의 것이면 일터로 열린다 — `game/world/README.md` 6절 "일터 면"). NPC는 일정(data/npcs)의 일과표를 따라 걸어서 옮기고, 머무는 곳(`interactions.json`의 장소 자리)에서 서 있거나 어슬렁거린다. 자리는 (데이터, 날, 그날의 분)에서 계산하고 저장하지 않는다.
+NPC 이동(설계 `docs/superpowers/specs/2026-11-12-npc-movement-design.md`): NPC 자리는 프레임마다 쌓아 가지 않고 **(데이터, 날, 그날의 분)으로 계산한다**(Core `NpcWorld` — 시간대가 바뀌면 앞 자리에서 다음 자리까지 문을 지나 초당 2.5칸으로 걷고, 자리에서는 둘레 3칸 안을 2~6초 쉬며 어슬렁거린다). 그래서 활동으로 시간이 건너뛰거나 자고 일어나도 그 시각의 자리에 있고, **NPC 자리는 저장하지 않는다**(세이브 모양 그대로). 하루 계획과 길은 날이 바뀔 때·가구가 바뀐 맵(`NpcStage.ForgetMap`)에서만 만들고, 프레임마다 `NpcStage.Tick`이 모든 NPC의 자리를 계산하고(시각의 함수라 싸다 — NPC 60명에 Tick 평균 10.9µs) 지금 맵의 NPC만 그리고 상호작용 후보를 켠다(걸음이 넘어가지 않는 프레임에서는 새 객체 없음, 새 머무름이 시작될 때 NPC 한 명에 약 4.4KB). 집의 가구는 플레이어가 어느 맵에 있든 집의 걷는 격자에 든다(`Rootborn.Screens` `HouseFurnitureBlocking` — 게임 한 판을 잇는 순간 집 배치를 읽어 두고(`GameSession.PrepareHouse`, 체인에는 집에 들어설 때, 그리고 이 판에서 집에 들어간 적이 있으면 다음 날 시작 때 알린다), 가구 알림마다 막힌 칸이 바뀐 가구 방만 NPC 계획을 다시 만들고 그 프레임에 자리를 다시 낸다). 걷는 NPC에게도 말을 걸 수 있고, 혼자 하기에서는 대화가 시계를 멈추므로 NPC도 선다. 같이 하기에서는 방의 (날, 분)에서 각자 계산하고 NPC용 메시지는 없다(대화 중에도 걷는다). 맵 쪽 약속은 `game/world/README.md` 5절.
 흐르는 시간(설계 `docs/superpowers/specs/2026-11-12-flowing-time-design.md`): 하루 시작·취침 시각·밤 체력 감소·늦잠 회복 감소는 `game/time.json`(하루 길이는 data/time), 시계는 `GameSession.AdvanceTime(지난 초, 메뉴 열림)`으로 가고 `Sleep()`으로 잔다(규칙은 Core `TimeRules`·`StudentLifeProgress.Clock`, 화면·Host 연결은 다음 단계).
 슬롯으로 시작하면 같은 정의로 `GameSession`도 시작하고, 월드 위에 화면 쌓기를 올린다(`--world`도 화면 쌓기는 올린다).
 E·Space·Ctrl(Unity 판과 같은 상호작용 키)을 누르면 앞의 대상과 상호작용한 이벤트가 나오고(`[상호작용] 맵:종류/id`), 그 종류에 등록된 화면이 열린다.

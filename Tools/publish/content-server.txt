@@ -7,7 +7,8 @@
 #     없으면 집 공유 방의 놓기·옮기기가 모두 거절된다. 타일셋 PNG 는 읽지 않으므로 넣지 않는다(@ldtk 를 쓰지 않는 이유).
 # 그림·글꼴·테마·문구는 서버가 읽지 않으므로 넣지 않는다.
 #
-# 데이터 지문(Rootborn.Data/DataFingerprint)은 등록부·엔티티 파일·game/economy.json 만 셈하므로 좌표표·보고서·문구는 빠져도
+# 데이터 지문(Rootborn.Data/DataFingerprint)은 등록부·엔티티 파일·game/economy.json·game/time.json·game/world/maps.json·
+# game/world/interactions.json 만 셈하므로 좌표표·보고서·문구는 빠져도
 # 클라이언트 배포(content.txt)와 같은 지문이 나온다(DataFingerprintScopeTests 가 두 목록으로 확인한다).
 
 data/**/*.json

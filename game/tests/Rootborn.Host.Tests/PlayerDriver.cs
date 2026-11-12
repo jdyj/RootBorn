@@ -4,10 +4,12 @@ using System.IO;
 using System.Reflection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Rootborn.Core.NpcMovement;
 using Rootborn.Core.World;
 using Rootborn.Host.Input;
 using Rootborn.Screens;
 using Rootborn.Ui;
+using Rootborn.World;
 using XnaGame = Microsoft.Xna.Framework.Game;
 
 namespace Rootborn.Host.Tests
@@ -109,11 +111,15 @@ namespace Rootborn.Host.Tests
         /// </summary>
         public Action AfterFrame;
 
+        /// <summary>지금까지 돌린 프레임 수.</summary>
+        public int FrameCount { get; private set; }
+
         public void Frames(int count = 1)
         {
             for (int i = 0; i < count; i++)
             {
                 _stepper.Step(1);
+                FrameCount++;
                 AfterFrame?.Invoke();
             }
         }
@@ -326,6 +332,78 @@ namespace Rootborn.Host.Tests
             if (Close(PlayerCell)) return;
             if (!FollowPath(Close, "가까이 걷기 (" + x + "," + y + ")")) throw new InvalidOperationException("걸어가는 도중 맵이 바뀌었다: " + World.Map.Id);
         }
+
+        /// <summary>한 번에 곧게 걷는 칸 수(WalkToNpc). 그만큼 걷고 NPC 자리를 다시 읽는다.</summary>
+        private const int NpcChaseRunCells = 2;
+
+        /// <summary>
+        /// 걷는 NPC에게 다가간다: 몸 가운데가 NPC 자리에서 withinCells칸 안에 들 때까지. NPC가 걷는 사이에도 움직이므로 두 칸씩 걷고 NPC 자리(Npcs.TryPose)를
+        /// 다시 읽어 길을 다시 찾는다. 움직임은 방향 키로만 만든다. NPC가 지금 맵에 없거나 maxFrames 안에 닿지 못하면 둘이 어디 있었는지 적은 예외.
+        /// </summary>
+        public void WalkToNpc(string npcId, float withinCells = 1.5f, int maxFrames = 3600)
+        {
+            NpcStage npcs = Game.World.Npcs;
+            int deadline = FrameCount + maxFrames;
+            while (true)
+            {
+                string map = World.Map.Id;
+                float size = World.Map.Grid.CellSize, within = withinCells * size;
+                Walker w = World.Walker;
+                if (!npcs.TryPose(npcId, out NpcPose pose) || pose.MapId != map)
+                    throw new InvalidOperationException(npcId + "에게 다가가기: 지금 맵 " + map + "에 없다(" + (pose.Present ? pose.MapId + " " + pose.X + "," + pose.Y : "어느 맵에도 없음")
+                        + ", 그날의 " + Minutes() + "분). 나는 " + w.X + "," + w.Y);
+                float ddx = pose.X - w.X, ddy = pose.Y - w.Y;
+                if (ddx * ddx + ddy * ddy <= within * within) return;
+                if (FrameCount >= deadline)
+                    throw new InvalidOperationException(npcId + "에게 " + maxFrames + "프레임 안에 닿지 못했다(" + map + "). NPC " + pose.X + "," + pose.Y + (pose.Moving ? " 걷는 중" : " 서 있음")
+                        + ", 나 " + w.X + "," + w.Y + ", 그날의 " + Minutes() + "분");
+                float nx = pose.X, ny = pose.Y;
+                bool Close(CellPos c)
+                {
+                    var center = CellPos.Center(c, (int)size);
+                    float cx = center.X - nx, cy = center.Y - ny;
+                    return cx * cx + cy * cy <= within * within;
+                }
+                CellPos start = PlayerCell;
+                List<CellPos> path = GridPath.Find(World.Map.Collision, start, Close)
+                    ?? throw new InvalidOperationException(npcId + "에게 다가가기: " + map + "에서 " + start + "부터 NPC(" + nx + "," + ny + ") 곁으로 갈 길이 없다");
+                if (path.Count == 0)
+                {
+                    // 칸 가운데는 NPC 곁인데 몸이 칸 가장자리에 있다: 칸 가운데로 간다.
+                    var center = CellPos.Center(start, (int)size);
+                    float cx = center.X - w.X, cy = center.Y - w.Y;
+                    int dx = Math.Abs(cx) >= Math.Abs(cy) ? Math.Sign(cx) : 0, dy = dx == 0 ? Math.Sign(cy) : 0;
+                    if (dx == 0 && dy == 0)
+                        throw new InvalidOperationException(npcId + "에게 다가가기: 칸 " + start + " 가운데(" + w.X + "," + w.Y + ")가 NPC 곁이라는데 NPC(" + nx + "," + ny
+                            + ")까지 " + MathF.Sqrt(ddx * ddx + ddy * ddy) + "픽셀로 " + within + "픽셀 밖이다(" + map + ", 그날의 " + Minutes() + "분)");
+                    if (!HoldUntil(dx, dy, dx != 0 ? center.X : center.Y, npcId + "에게 다가가기 → " + start)) throw new InvalidOperationException("걸어가는 도중 맵이 바뀌었다: " + World.Map.Id);
+                    continue;
+                }
+                int sx = path[0].X - start.X, sy = path[0].Y - start.Y;
+                int j = 0;
+                while (j + 1 < path.Count && j + 1 < NpcChaseRunCells && path[j + 1].X - path[j].X == sx && path[j + 1].Y - path[j].Y == sy) j++;
+                var end = CellPos.Center(path[j], (int)size);
+                if (!HoldUntil(sx, sy, sx != 0 ? end.X : end.Y, npcId + "에게 다가가기 → " + path[j])) throw new InvalidOperationException("걸어가는 도중 맵이 바뀌었다: " + World.Map.Id);
+            }
+        }
+
+        /// <summary>
+        /// 가만히 서서(키를 누르지 않고) 그날의 분(GameSession.DayMinutesExact)이 minutes에 닿을 때까지 프레임을 돌린다. 시각을 강제로 바꾸지 않는다.
+        /// maxFrames 안에 닿지 않으면(시계를 멈추는 화면이 떠 있었다 등) 지금 시각과 맨 위 화면을 적은 예외. 돌린 프레임 수를 돌려준다.
+        /// </summary>
+        public int WaitUntilDayMinutes(double minutes, int maxFrames)
+        {
+            var session = Game.Session ?? throw new InvalidOperationException("게임 한 판이 없다(--world). 그날의 분은 게임 한 판의 시계다");
+            for (int i = 0; ; i++)
+            {
+                if (session.DayMinutesExact >= minutes) return i;
+                if (i >= maxFrames)
+                    throw new InvalidOperationException(maxFrames + "프레임 안에 그날의 " + minutes + "분에 닿지 못했다: 지금 " + session.DayMinutesExact.ToString("0.00") + "분, 맨 위 화면 " + (Screens.Top?.Id ?? "(없음)"));
+                WorldFrame();
+            }
+        }
+
+        private string Minutes() => Game.Session != null ? Game.Session.DayMinutesExact.ToString("0.00") : "(게임 한 판 없음)";
 
         /// <summary>
         /// 문 통과: 문 칸이나 문에 맞닿은 칸까지 걸어간 뒤 문 쪽으로 키를 누르고 있다가 맵이 바뀌면 뗀다.

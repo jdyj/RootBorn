@@ -49,6 +49,15 @@
 //   자리가 다른 임시 지점끼리는 상호작용 범위(radiusCells)보다 멀리 둔다(World TemporaryPointsTests).
       //   시설·연습 순서는 일터 줄과 같다(식당·병원·디자인·훈련장). 대상은 가까운 것이 먼저라(InteractionTargetRule) 지점끼리 두 칸 이상 떨어뜨려 각 지점 칸에 서면 그 지점이 대상이 된다.
       //   가게 말고 알바 여덟 곳(Unity Town.unity의 PartTimeWorkInteractor 순서)은 가운데 줄(7행 34~48열, 2칸 간격 — 5·9행 지점과도 두 칸 이상 떨어진다).
+      // NPC 자리(임시, "temporary": 새 맵 전까지 — 목록은 game/world/README.md "임시 연결 목록"의 NPC 자리 표): Unity 판 마을의 NPC 자리는
+      //   LDtk 마을 그림 밖 북쪽 구역에 있었다. 일과표의 마을 장소마다 북쪽 광장 안, 다른 임시 지점과 2칸 이상 떨어진 칸에 둔다.
+      //   광장은 저녁에 두 명(사서, 가게 주인)이 겹쳐 자리 둘. 새 맵을 그리면 자리를 새 맵 좌표로 옮긴다.
+      "npcAnchors": {
+        "location.library": [ [ 1040, 368 ] ],
+        "location.corner-store": [ [ 1264, 368 ] ],
+        "location.workshop": [ [ 1040, 240 ] ],
+        "location.town-square": [ [ 1680, 240 ], [ 1680, 304 ] ]
+      },
       "things": [
         { "kind": "location-activity", "id": "location.restaurant", "at": [ 1072, 176 ], "priority": 45, "temporary": true, "reason": "임시 지점: Unity 판의 이 지점은 LDtk 마을 그림 밖 북쪽 구역에 있었다. 새 맵 전까지 북쪽 광장에 둔다" },
         { "kind": "location-visit", "id": "location.restaurant", "at": [ 1072, 176 ], "priority": 35, "temporary": true, "reason": "임시 지점: Unity 판의 이 지점은 LDtk 마을 그림 밖 북쪽 구역에 있었다. 새 맵 전까지 북쪽 광장에 둔다" },

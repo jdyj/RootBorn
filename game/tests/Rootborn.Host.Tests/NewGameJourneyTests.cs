@@ -69,9 +69,9 @@ namespace Rootborn.Host.Tests
                 AssertAt(player, "House", "house-entry");
                 player.Screenshot("journey-01-new-game-house");
 
-                PlacedNpc guide = player.Game.World.Npcs[0];
-                Assert.That(guide.NpcId, Is.EqualTo("npc.first-guide"));
-                player.WalkNear(guide.X, guide.Y + 32f, 20f);
+                Assert.That(player.Game.World.Npcs.Count, Is.EqualTo(1));
+                Assert.That(player.Game.World.Npcs[0].NpcId, Is.EqualTo("npc.first-guide"));
+                player.WalkToNpc("npc.first-guide"); // 안내인은 집 안을 걸어 다닌다
                 Assert.That(player.Game.World.Interactions.Target?.Id, Is.EqualTo("npc.first-guide"));
                 player.PressKey(TestKey.E);
                 Assert.That(player.Game.World.InteractionLog, Is.EqualTo(new[] { new InteractionEvent("House", "npc", "npc.first-guide") }));

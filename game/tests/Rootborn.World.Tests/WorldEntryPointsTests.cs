@@ -94,9 +94,12 @@ namespace Rootborn.World.Tests
                 WorldMap map = pair.Value;
                 int size = map.Grid.CellSize;
                 MapInteractions here = data.Map(pair.Key);
-                var npcs = here.NpcAnchors.SelectMany(a => a.Value.Select((p, i) => new PlacedNpc("anchor:" + a.Key + "#" + i, a.Key, p.X, p.Y)));
+                // NPC는 걷지만 자리(앵커)에 선 순간에도 지점을 가리지 않아야 한다: 앵커마다 서 있는 NPC 후보를 넣는다.
+                List<InteractionCandidate> candidates = NpcPlacement.Candidates(data, here, map.Doors);
+                candidates.InsertRange(here.Things.Count, here.NpcAnchors.SelectMany(a => a.Value.Select((p, i) =>
+                    new InteractionCandidate("npc", "anchor:" + a.Key + "#" + i, p.X, p.Y, data.NpcPriority, true))));
                 var targets = new InteractionTargets(data.RadiusCells * size);
-                targets.SetCandidates(NpcPlacement.Candidates(data, here, npcs, map.Doors));
+                targets.SetCandidates(candidates);
                 foreach (InteractionThing t in here.Things)
                 {
                     bool covered = here.Things.Any(o => !ReferenceEquals(o, t) && o.X == t.X && o.Y == t.Y && o.Priority > t.Priority);

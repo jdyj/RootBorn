@@ -19,6 +19,7 @@
 | `game/tests/Rootborn.Data.Tests` | 정의 로더, 실제 `data/` 전체 읽기(`RealDataTests`), 세이브 저장소, 옛 세이브 고정 파일 | 자동 테스트 |
 | `game/tests/Rootborn.World.Tests` | 맵 만들기, 새 맵 검사(`MapContractTests`), 메인 체인 지점까지 칸 단위 걷기(`MainChainWalkTests`) | 자동 테스트(화면 근거 아님) |
 | `game/tests/Rootborn.Game.Tests` | `GameSession` 명령만으로 흐름(메인 체인, 성인기, 보상 한 번, 이어 하기). 실제 `data/`, 임시 폴더 저장소 | 자동 테스트(화면 근거 아님) |
+| `game/tests/Rootborn.Balance.Tests` | 수치 균형: 전략대로 `GameSession` 명령으로 여러 날 돌려 수입을 잰다(빠른 검사 + 손으로 도는 전체 보고 `output/balance/`). 가정을 넣은 계산 | 자동 테스트(실제 플레이 아님) |
 | `game/tests/Rootborn.Ui.Tests` | 배치, 포인터 판정, 포커스, 부품 | 자동 테스트 |
 | `game/tests/Rootborn.Screens.Tests` | 창 없이 화면을 눌러 보기, 화면 쌓기, 모든 언어의 문구 키 | 자동 테스트(화면 근거 아님) |
 | `game/tests/Rootborn.Host.Tests` | 실제 창과 게임 루프를 한 프레임씩 돌리며 `PlayerDriver`로 키·포인터를 넣고 스크린샷 | 장치 이벤트 주입(OS 입력 계층 미확인) |
@@ -60,6 +61,9 @@ bash Scripts/ci/run-all.sh                 # 자체 시험 + 검사 + dotnet 테
 | WORKSPACE-002 | 일터 템플릿은 미리 확인하고 한 번만 적용, 안 되면 무변경 | Game `WorkspaceTests`, Screens `WorkspaceTemplateScreenTests` |
 | SKILL-001 | 가구를 놓으면 인테리어 기술이, 요리 일을 하면 요리 기술이 자란다(하루 한도) | Game `WorkspaceTests` |
 | MAIN_E2E_000~011 | 메인 체인을 실행부터 끝까지 실제 입력으로(이어 하기 포함) | Host `MainChainHostTests`, 화면 없이는 Game `MainChainTests`·`MainChainEndTests` |
+| NPC-001 | NPC가 일과표대로 다음 자리까지 걸어 도착 | Core `NpcDayPlanTests`, World `NpcRouteContractTests`, Simulation `NpcWalkingTests`, Host `NpcWalkHostTests` |
+| NPC-002 | 자리에 없는 NPC는 만날 수 없다(걷는 중에는 말을 건다) | World `NpcStageTests`, Core `NpcDayPlanTests`, Host `NpcWalkHostTests` |
+| NPC-003 | 같은 시각이면 같은 자리 — 이어 하기·같이 하기 | Core `NpcStayTests`·`NpcDayPlanTests`, World `NpcStageTests`, Simulation `NpcWalkingTests`, Game `NpcTimeTests`, Host `TwoGamesHostTests.TWO_GAMES_NPC_001` |
 
 - 지금 대응이 없는 id(KNOW-001·002, TOOL-001, NET-001·002, HEIR-001, STATUS-001의 일부)는 게임이 그 영역을 쓰지 않거나 MonoGame 판에 아직 없다. 이유는 `SCENARIOS.md` 2절. 그 영역을 옮기거나 만들 때 테스트를 더하고 이 표에 올린다.
 - 새 메카닉(활동, 선택지, 진로, 관계, 알바, 퀘스트 종류)을 더하면 시나리오 테스트를 하나 이상 더한다. 새 보상 지급 경로는 원칙 2의 다섯 경우를 더한다.

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using Rootborn.Core.Interaction;
+using Rootborn.Core.NpcMovement;
 using Rootborn.Core.Placement;
 using Rootborn.Core.Save;
 using Rootborn.Core.World;
@@ -105,6 +106,8 @@ namespace Rootborn.Simulation.Headless
         public WorldSession Walk => _world?.Session;
         public IReadOnlyList<InteractionCandidate> Candidates => _world?.Interactions.Candidates ?? (IReadOnlyList<InteractionCandidate>)Array.Empty<InteractionCandidate>();
         public InteractionCandidate Target => _world?.Interactions.Target;
+        /// <summary>걷는 NPC(월드에 들어가기 전에는 null). 시험은 TryPose로 NPC를 찾아간다.</summary>
+        public NpcStage Npcs => _world?.Npcs;
         public FurnitureRoom Room => _world?.Room;
         public IPlacementView PlacementView => _placementView;
         public float Width => 1920f;
@@ -151,7 +154,7 @@ namespace Rootborn.Simulation.Headless
             _slot = slot;
             SlotId = entry.SlotId;
             Session = session;
-            _world = new HeadlessWorld(_atlas, slot, start.Entry.SceneName, start.Entry.SpawnId, () => session.StudentDay, () => session.StudentHour);
+            _world = new HeadlessWorld(_atlas, slot, start.Entry.SceneName, start.Entry.SpawnId, () => session.StudentDay, () => session.DayMinutesExact);
             Screens = NewStack(session);
             Screens.EnterMap(_world.Session.Map.Id, Features());
             Screens.OpenHud();
@@ -161,7 +164,9 @@ namespace Rootborn.Simulation.Headless
                 if (s is FurniturePlacementScreen p) { _placement = p; p.Attach(new FurnitureArt(_data), _placementView); }
             };
             DayBaseline.For(session);
+            session.Changed += topic => { if (Session == session && (topic == ChangeTopics.Furniture || topic == ChangeTopics.World)) RefreshFurniture(); }; // Host ConnectFurniture와 같다(방과 끊겨 시작 화면으로 돌아간 뒤의 옛 판 알림은 버린다)
             SyncHouse();
+            _world.AttachHouseFurniture(session);
             return true;
         }
 
@@ -191,17 +196,22 @@ namespace Rootborn.Simulation.Headless
                 HouseEntered = (room.Grid, surface);
             }
             if (room == null) Screens.Close(ScreenCatalog.FurniturePlacement);
+            _furnitureDirty = true; // 맵이 바뀌었다: 놓인 상자 후보를 이 맵 기준으로 다시(가구 방 밖이면 비운다 — Host RefreshFurniture는 맵이 바뀔 때마다 SetPlacedFurniture)
             RefreshFurniture();
         }
 
         private bool _furnitureDirty = true;
 
+        /// <summary>
+        /// 가구가 막는 칸은 플레이어가 어느 맵에 있든 가구 방의 걷는 격자에 넣는다(Host와 같은 HouseFurnitureBlocking — 막힌 칸이 실제로 바뀐 맵만 NPC 길을 다시 만든다).
+        /// 놓인 상자의 상호작용 후보는 가구·상자가 바뀌었거나 맵이 바뀌었을 때만 다시 만든다(Host WorldScreen.SetPlacedFurniture).
+        /// </summary>
         private void RefreshFurniture()
         {
-            FurnitureRoom room = _world.Room;
-            if (room != null && Session.House != null) room.SetFurnitureBlocking(Session.House.BlockingCells);
+            _world.ApplyHouseFurniture(Session);
             if (!_furnitureDirty) return;
             _furnitureDirty = false;
+            FurnitureRoom room = _world.Room;
             _world.SetPlacedStorage(room != null ? Session.House?.Placed : null, Session.IsStorage); // 놓인 상자마다 상호작용 후보(Host WorldScreen.SetPlacedFurniture)
         }
 
@@ -322,12 +332,15 @@ namespace Rootborn.Simulation.Headless
         /// 벽시계 대신 흔들리지 않는 기준으로 매 프레임 쓰레기가 생기는지 본다. 그리기(Emit)는 넣지 않는다(Host가 그린다).
         /// 시계의 분이 바뀐 프레임(게임 1분 = 약 25프레임에 한 번 — 알림을 받은 HUD가 글자를 새로 만들고, 게임 1시간마다 저장한다)은 빼고 센다.
         /// 그 프레임의 가장 큰 값은 <see cref="MaxBytesInMinuteFrame"/>에 남는다.
+        /// 어느 NPC든 어슬렁 걸음이 끝난 프레임(걷기 ↔ 쉼이 바뀐다 — Core 머무는 행동이 다음 걸음의 길을 만든다)도 빼고 센다.
+        /// 그 프레임의 가장 큰 값은 <see cref="MaxBytesInNpcStepFrame"/>에 남는다.
         /// </summary>
         public bool MeasuresFrameCost => _seat == null;
 
         public double AllocatedBytesPerIdleFrame(int frames)
         {
             for (int i = 0; i < 5; i++) Frame(); // 처음 한 번 만드는 것(캐시)은 뺀다
+            NpcStepChanged();
             long idle = 0;
             int idleFrames = 0;
             for (int i = 0; i < frames; i++)
@@ -336,15 +349,41 @@ namespace Rootborn.Simulation.Headless
                 long before = GC.GetAllocatedBytesForCurrentThread();
                 Frame();
                 long bytes = GC.GetAllocatedBytesForCurrentThread() - before;
+                if (NpcStepChanged()) { if (bytes > MaxBytesInNpcStepFrame) MaxBytesInNpcStepFrame = bytes; continue; }
                 if (MinuteFrames != minuteFrames) { if (bytes > MaxBytesInMinuteFrame) MaxBytesInMinuteFrame = bytes; continue; }
                 idle += bytes;
                 idleFrames++;
             }
+            MeasuredIdleFrames = idleFrames;
             return idleFrames == 0 ? 0 : idle / (double)idleFrames;
         }
 
+        /// <summary>마지막 AllocatedBytesPerIdleFrame이 실제로 잰 프레임 수(분·NPC 걸음 프레임은 뺀다). 0이면 아무것도 재지 않은 것이다.</summary>
+        public int MeasuredIdleFrames { get; private set; }
+
         /// <summary>분이 바뀐 프레임 한 번에 새로 잡은 바이트의 최대(AllocatedBytesPerIdleFrame이 잰 것).</summary>
         public long MaxBytesInMinuteFrame { get; private set; }
+
+        /// <summary>NPC 어슬렁 걸음이 끝난 프레임 한 번에 새로 잡은 바이트의 최대(AllocatedBytesPerIdleFrame이 잰 것).</summary>
+        public long MaxBytesInNpcStepFrame { get; private set; }
+
+        private bool[] _npcMoving;
+
+        /// <summary>마지막으로 본 뒤 걷는 중인지가 바뀐 NPC가 있는가(어느 맵에 있든).</summary>
+        private bool NpcStepChanged()
+        {
+            if (_world == null) return false;
+            IReadOnlyList<string> ids = _world.NpcIds;
+            if (_npcMoving == null) _npcMoving = new bool[ids.Count];
+            bool changed = false;
+            for (int i = 0; i < ids.Count; i++)
+            {
+                bool moving = _world.Npcs.TryPose(ids[i], out NpcPose pose) && pose.Moving;
+                if (moving != _npcMoving[i]) changed = true;
+                _npcMoving[i] = moving;
+            }
+            return changed;
+        }
 
         public string Screenshot(string name) => null;
 

@@ -42,7 +42,7 @@ namespace Rootborn.Host.Tests
         {
             using PlayerDriver player = Start("--world", "School", "--hour", "9", "--time-scale", "0");
             AssertAt(player, "School", "school-entry");
-            Assert.That(player.Game.World.Npcs.Select(n => n.NpcId), Is.EqualTo(new[] { "npc.teacher" }));
+            Assert.That(Enumerable.Range(0, player.Game.World.Npcs.Count).Select(i => player.Game.World.Npcs[i].NpcId), Is.EqualTo(new[] { "npc.teacher" }));
             player.Screenshot("path-03-school-morning");
         }
     }

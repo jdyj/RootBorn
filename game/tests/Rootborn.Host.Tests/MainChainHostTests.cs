@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using Rootborn.Core.Minigames;
+using Rootborn.Core.NpcMovement;
 using Rootborn.Core.Placement;
 using Rootborn.Core.Quests;
 using Rootborn.Core.World;
@@ -530,9 +531,9 @@ namespace Rootborn.Host.Tests
 
         public void TalkTo(string npcId, string shot)
         {
-            PlacedNpc npc = Player.Game.World.Npcs.FirstOrDefault(n => n.NpcId == npcId);
-            Assert.That(npc, Is.Not.Null, Player.World.Map.Id + "에 " + npcId + "가 서 있지 않다 (" + Session.StudentHour + "시)");
-            Player.WalkNear(npc.X, npc.Y + Player.World.Map.Grid.CellSize, Player.World.Map.Grid.CellSize * 0.75f);
+            Assert.That(Player.Game.World.Npcs.TryPose(npcId, out NpcPose pose) && pose.MapId == Player.World.Map.Id, Is.True,
+                Player.World.Map.Id + "에 " + npcId + "가 없다 (그날의 " + Session.DayMinutesExact.ToString("0.0") + "분, " + (pose.Present ? pose.MapId : "어느 맵에도 없음") + ")");
+            Player.WalkToNpc(npcId);
             Assert.That(Player.Game.World.Interactions.Target?.Id, Is.EqualTo(npcId), "NPC 앞에서 E의 대상");
             Player.PressKey(TestKey.E);
             Player.WaitForScreen(ScreenCatalog.Dialogue);

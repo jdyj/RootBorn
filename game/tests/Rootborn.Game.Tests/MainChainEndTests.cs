@@ -147,6 +147,47 @@ namespace Rootborn.Game.Tests
             Assert.That(StateOf(TestWorld.Start(saves.Store)), Is.EqualTo(QuestChainState.Completed), "다시 알린 결과도 저장된다");
         }
 
+        /// <summary>집 밖에서 집 배치를 읽어 둔 것(NPC 길에 가구를 넣으려고)은 체인에 놓인 가구를 알리지 않는다 — 알리는 것은 집에 들어설 때다.</summary>
+        [Test]
+        public void PrepareHouse_ReadsTheLayout_ButCountsPlacedFurnitureOnlyWhenEnteringTheHouse()
+        {
+            using var saves = new TempSaves();
+            var game = ToMyDream(saves);
+            game.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
+            Assert.That(Place(game, FreeDesk), Is.True);
+            game.PerformLocationActivity("opening.clue.archive-door", "location-activity:archive-door:day3");
+
+            var again = TestWorld.Start(saves.Store);
+            again.PrepareHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
+            Assert.That(again.House, Is.Not.Null);
+            Assert.That(again.House.Placed.Select(p => p.Definition.StableId), Does.Contain(FreeDesk), "저장된 배치를 읽었다");
+            Assert.That(StateOf(again), Is.EqualTo(QuestChainState.Tracked), "집 밖에서는 세지 않는다");
+            var layout = again.House;
+            again.PrepareHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
+            Assert.That(again.House, Is.SameAs(layout), "이미 읽었으면 그대로");
+            again.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
+            Assert.That(StateOf(again), Is.EqualTo(QuestChainState.Completed), "집에 들어서면 센다");
+        }
+
+        /// <summary>집에 한 번도 들어가지 않은 판은, 집 배치를 미리 읽었어도 다음 날 시작 때 가구를 다시 알리지 않는다(진행 시점이 바뀌지 않는다).</summary>
+        [Test]
+        public void PrepareHouseOnly_DoesNotReplayPlacedFurnitureWhenTheNextDayStarts()
+        {
+            using var saves = new TempSaves();
+            var game = ToMyDream(saves);
+            game.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
+            Assert.That(Place(game, FreeDesk), Is.True);
+            game.PerformLocationActivity("opening.clue.archive-door", "location-activity:archive-door:day3");
+
+            var again = TestWorld.Start(saves.Store);
+            again.PrepareHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
+            Assert.That(again.EndDay().Ended, Is.True);
+            Assert.That(again.StartNextDay(), Is.True);
+            Assert.That(StateOf(again), Is.EqualTo(QuestChainState.Tracked), "집에 들어간 적이 없으면 다음 날 시작도 세지 않는다");
+            again.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
+            Assert.That(StateOf(again), Is.EqualTo(QuestChainState.Completed), "집에 들어서면 센다");
+        }
+
         [Test]
         public void ReplayingWhenNoStepWantsFurniture_LeavesTheChainUntouched()
         {

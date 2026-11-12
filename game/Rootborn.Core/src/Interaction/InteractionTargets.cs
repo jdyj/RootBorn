@@ -6,11 +6,11 @@ namespace Rootborn.Core.Interaction
     /// <summary>
     /// 상호작용 후보 하나: 종류(npc, daily-plan-board 등 데이터의 문자열), id, 맵 픽셀 좌표의 중심, 우선순위,
     /// 눌렀을 때 무언가 하는가(Acts). 자동문처럼 대상은 되지만 눌러도 아무것도 하지 않는 후보는 Acts가 false다.
+    /// 걷는 NPC처럼 움직이는 후보는 목록을 다시 만들지 않고 자리(MoveTo)와 켜짐(SetActive)만 고친다. 꺼진 후보는 대상이 되지 않는다.
     /// </summary>
     public sealed class InteractionCandidate
     {
         public readonly string Kind, Id;
-        public readonly float X, Y;
         public readonly int Priority;
         public readonly bool Acts;
 
@@ -23,6 +23,20 @@ namespace Rootborn.Core.Interaction
             Priority = priority;
             Acts = acts;
         }
+
+        public float X { get; private set; }
+        public float Y { get; private set; }
+
+        /// <summary>대상이 될 수 있는가. 처음에는 켜져 있다.</summary>
+        public bool Active { get; private set; } = true;
+
+        public void MoveTo(float x, float y)
+        {
+            X = x;
+            Y = y;
+        }
+
+        public void SetActive(bool active) => Active = active;
     }
 
     /// <summary>무엇과 상호작용했는가. 대화창·활동 화면은 이것을 받아 연다(다음 프로젝트).</summary>
@@ -43,7 +57,7 @@ namespace Rootborn.Core.Interaction
     /// <summary>
     /// 플레이어 앞의 상호작용 대상(Unity PlayerInteractionRouter): 플레이어 중심에서 반경 안에 중심이 있는 후보 가운데
     /// <see cref="InteractionTargetRule"/>로 고른다. 바라보는 방향은 따지지 않는다(Unity 판도 그랬다).
-    /// 후보는 맵에 들어설 때나 NPC 자리가 바뀔 때만 바꾼다(프레임마다 다시 만들지 않는다).
+    /// 후보 목록은 맵에 들어설 때만 바꾼다(프레임마다 다시 만들지 않는다). 움직이는 후보는 자리와 켜짐만 고치고, 꺼진 후보는 건너뛴다.
     /// </summary>
     public sealed class InteractionTargets
     {
@@ -89,6 +103,7 @@ namespace Rootborn.Core.Interaction
             float bestDistance = float.MaxValue;
             foreach (InteractionCandidate c in _candidates)
             {
+                if (!c.Active) continue;
                 float dx = c.X - playerX, dy = c.Y - playerY;
                 float distance = (float)Math.Sqrt(dx * dx + dy * dy);
                 if (distance > _radius) continue;

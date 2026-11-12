@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using Rootborn.Core.NpcMovement;
 using Rootborn.Core.World;
 
 namespace Rootborn.World
@@ -100,6 +101,8 @@ namespace Rootborn.World
         public const string DefaultRelativePath = "game/world/maps.json";
 
         public WalkerSettings Walker = WalkerSettings.UnityPlayer;
+        /// <summary>NPC가 걷는 빠르기(maps.json npcWalker). 맵 목록에 없으면 읽기를 거절한다(기본값으로 메우지 않는다).</summary>
+        public NpcWalkSettings NpcWalker;
         public readonly List<MapEntry> Maps = new List<MapEntry>();
 
         /// <summary>id 또는 LDtk 레벨 이름(대소문자 무시)으로 찾는다. 예: "ShopInterior" 또는 "Shop".</summary>
@@ -119,6 +122,7 @@ namespace Rootborn.World
             var catalog = new WorldCatalog();
             if (root.TryGetProperty("walker", out JsonElement w))
                 catalog.Walker = new WalkerSettings(w.GetProperty("bodyCells").GetSingle(), w.GetProperty("speedCellsPerSecond").GetSingle());
+            catalog.NpcWalker = NpcWalkerOf(root, sourceName);
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (JsonElement m in root.GetProperty("maps").EnumerateArray())
             {
@@ -197,6 +201,15 @@ namespace Rootborn.World
             };
             if (l.TryGetProperty("to", out JsonElement to)) lot.To = new TravelTarget(Required(to, "map", sourceName), Required(to, "spawn", sourceName));
             return lot;
+        }
+
+        private static NpcWalkSettings NpcWalkerOf(JsonElement root, string sourceName)
+        {
+            if (!root.TryGetProperty("npcWalker", out JsonElement npc) || npc.ValueKind != JsonValueKind.Object
+                || !npc.TryGetProperty("speedCellsPerSecond", out JsonElement speed) || speed.ValueKind != JsonValueKind.Number)
+                throw new InvalidDataException(sourceName + ": 'npcWalker.speedCellsPerSecond' 값이 없다");
+            try { return new NpcWalkSettings(speed.GetSingle()); }
+            catch (ArgumentOutOfRangeException e) { throw new InvalidDataException(sourceName + ": 'npcWalker.speedCellsPerSecond': " + e.Message, e); }
         }
 
         private static void NoteTemporary(MapEntry entry, JsonElement e, string kind, string name)

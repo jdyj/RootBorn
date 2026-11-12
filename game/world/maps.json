@@ -20,6 +20,8 @@
   // lots: 건물 부지(새 맵부터 쓴다 — 지금 맵에는 없다). 건물 그림·칸은 buildings.json, 부지는 { name, building, doorCell [x, y],
   //   cells [x, y, 너비, 높이], level { kind, key?, value? }, to? { map, spawn }, openSeconds? }. 좌표는 그림 기준 칸. game/world/README.md "건물 부지".
   "walker": { "bodyCells": 1, "speedCellsPerSecond": 4 },
+  // npcWalker: 마을 NPC가 걷는 빠르기(실제 초당 칸). 플레이어보다 느리게 둔다. 데이터 지문에 들어간다(방 안 모두가 NPC 자리를 같이 셈한다).
+  "npcWalker": { "speedCellsPerSecond": 2.5 },
   "maps": [
     {
       "id": "Town",
