@@ -14,8 +14,24 @@ namespace Rootborn.Host.Tests.TwoGames
     /// </summary>
     public static class PeerProgram
     {
+        /// <summary>시험용 가짜 자식: 동사 한 줄을 읽은 뒤 Tick만 계속 보내고(Go를 받을 때마다) 답은 하지 않는다. PeerGame의 총 한도 시험용.</summary>
+        private static int RunFakeTicker()
+        {
+            var utf8 = new UTF8Encoding(false);
+            TextReader input = new StreamReader(Console.OpenStandardInput(), utf8);
+            var output = new StreamWriter(Console.OpenStandardOutput(), utf8) { AutoFlush = true };
+            if (input.ReadLine() == null) return 0;
+            output.WriteLine("가짜 자식이 Tick을 보내기 시작한다");
+            while (true)
+            {
+                output.WriteLine(PeerProtocol.Tick);
+                if (input.ReadLine() == null) return 0; // 부모가 죽거나 끝나면 입력이 닫힌다
+            }
+        }
+
         public static int Main(string[] args)
         {
+            if (args.Length > 0 && args[0] == PeerProtocol.FakeTickerArgument) return RunFakeTicker();
             if (args.Length == 0 || args[0] != PeerProtocol.PeerArgument)
             {
                 Console.Error.WriteLine("Rootborn.Host.Tests: 테스트는 dotnet test로 돈다. 두 번째 게임으로 띄울 때만 " + PeerProtocol.PeerArgument + "를 준다.");

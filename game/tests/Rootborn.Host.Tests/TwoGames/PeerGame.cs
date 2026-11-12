@@ -24,6 +24,14 @@ namespace Rootborn.Host.Tests.TwoGames
         /// <summary>자식이 한 동사에 답하지 않고 이만큼 지나면 멈춘 것으로 본다(안전장치).</summary>
         private static readonly TimeSpan Stuck = TimeSpan.FromSeconds(180);
 
+        /// <summary>동사 하나(<see cref="Call"/>)의 총 벽시계 한도. 줄마다 한도(<see cref="Stuck"/>)와 별개다: 자식이 Tick만 계속 보내면 줄마다 한도에 안 걸린다.</summary>
+        public static readonly TimeSpan DefaultCallLimit = TimeSpan.FromMinutes(10);
+
+        /// <summary>이 게임의 동사 하나 총 한도. 넘으면 자식을 죽이고 자식 출력의 끝 줄들과 함께 실패한다. 테스트가 짧게 줄 수 있다.</summary>
+        public TimeSpan CallLimit { get; set; } = DefaultCallLimit;
+
+        private const int FailureTailLines = 30;
+
         private readonly Process _process;
         private readonly BlockingCollection<string> _lines = new BlockingCollection<string>();
         private readonly List<string> _log = new List<string>();
@@ -105,6 +113,12 @@ namespace Rootborn.Host.Tests.TwoGames
         /// <summary>자식의 로그(게임이 찍은 줄과 오류 줄).</summary>
         public string Output { get { lock (_log) return string.Join(Environment.NewLine, _log); } }
 
+        /// <summary>자식 출력의 끝 줄들(실패 메시지용).</summary>
+        private string OutputTail()
+        {
+            lock (_log) return string.Join(Environment.NewLine, _log.Skip(Math.Max(0, _log.Count - FailureTailLines)));
+        }
+
         private void Log(string line)
         {
             lock (_log) _log.Add(line);
@@ -127,10 +141,18 @@ namespace Rootborn.Host.Tests.TwoGames
             {
                 _process.StandardInput.WriteLine(PeerProtocol.Encode(parts));
                 _process.StandardInput.Flush();
+                var total = Stopwatch.StartNew();
                 while (true)
                 {
-                    if (!_lines.TryTake(out string line, Stuck))
+                    TimeSpan left = CallLimit - total.Elapsed;
+                    if (left <= TimeSpan.Zero)
                     {
+                        Kill();
+                        throw new PeerException(_name + "의 동사가 총 " + CallLimit.TotalSeconds + "초를 넘겼다(자식을 죽였다): " + string.Join(" ", parts) + "\n" + OutputTail());
+                    }
+                    if (!_lines.TryTake(out string line, left < Stuck ? left : Stuck))
+                    {
+                        if (left <= Stuck) continue; // 줄 한도보다 총 한도가 먼저 왔다: 위에서 총 한도로 끝낸다
                         if (_lines.IsCompleted) throw new PeerException(_name + "이(가) 끝났다: " + string.Join(" ", parts) + "\n" + Output);
                         throw new PeerException(_name + "이(가) " + Stuck.TotalSeconds + "초 동안 답하지 않았다: " + string.Join(" ", parts) + "\n" + Output);
                     }

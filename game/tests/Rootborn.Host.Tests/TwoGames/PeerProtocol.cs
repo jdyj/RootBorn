@@ -17,6 +17,9 @@ namespace Rootborn.Host.Tests.TwoGames
         /// <summary>자식을 두 번째 게임으로 띄우는 인자(테스트 어셈블리의 진입점이 이것을 보고 동사 루프를 돈다).</summary>
         public const string PeerArgument = "--two-games-peer";
 
+        /// <summary>시험용 가짜 자식(Tick만 보내고 답하지 않는다)으로 띄우는 인자.</summary>
+        public const string FakeTickerArgument = "--two-games-fake-ticker";
+
         public const string Tick = "@@tick";
         public const string Go = "go";
         public const string Ok = "@@ok";
