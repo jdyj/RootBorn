@@ -61,6 +61,7 @@ namespace Rootborn.Core.NpcMovement
     /// <summary>
     /// 찾은 길. 다리마다 한 맵이고 문을 지나는 데는 0칸이 든다. 지난 칸 수로 그 순간의 자리를 준다.
     /// 다리의 끝(문 앞)에 정확히 선 순간은 다음 다리의 출발 칸으로 친다 — 그래서 언제나 정확히 한 맵에 있다.
+    /// TotalCells에서는(0칸 길이어도) 마지막 다리의 끝, 곧 목적지 맵이다.
     /// </summary>
     public sealed class NpcRoute
     {
@@ -99,8 +100,8 @@ namespace Rootborn.Core.NpcMovement
         {
             int leg;
             float local;
-            if (!(cellsTravelled > 0f)) { leg = 0; local = 0f; }
-            else if (cellsTravelled >= TotalCells) { leg = Legs.Count - 1; local = Legs[leg].Cells.Count - 1; }
+            if (cellsTravelled >= TotalCells) { leg = Legs.Count - 1; local = Legs[leg].Cells.Count - 1; }
+            else if (!(cellsTravelled > 0f)) { leg = 0; local = 0f; }
             else
             {
                 leg = 0;
@@ -141,8 +142,12 @@ namespace Rootborn.Core.NpcMovement
     public sealed class NpcRouteFinder
     {
         private readonly IWorldMapSource _maps;
+        private int _loadFailures;
         private readonly Dictionary<string, WorldMap> _loaded = new Dictionary<string, WorldMap>(StringComparer.Ordinal);
         private readonly Dictionary<(string, CellPos, string, CellPos), NpcRoute> _routes = new Dictionary<(string, CellPos, string, CellPos), NpcRoute>();
+
+        /// <summary>마지막으로 맵을 읽지 못한 이유(맵 id 포함). 길을 찾아도 지우지 않는다. 없었으면 null.</summary>
+        public string LastProblem { get; private set; }
 
         public NpcRouteFinder(IWorldMapSource maps)
         {
@@ -158,8 +163,9 @@ namespace Rootborn.Core.NpcMovement
             CellPos toCell = CellPos.Containing(to.X, to.Y, toMap.Grid.CellSize);
             var key = (from.MapId, fromCell, to.MapId, toCell);
             if (_routes.TryGetValue(key, out NpcRoute known)) return known;
+            int failures = _loadFailures;
             NpcRoute route = Search(from.MapId, fromMap, fromCell, to.MapId, toMap, toCell);
-            _routes[key] = route;
+            if (failures == _loadFailures) _routes[key] = route; // 맵을 읽지 못해 생긴 결과는 기억하지 않는다(고쳐지면 다시 찾는다)
             return route;
         }
 
@@ -243,7 +249,13 @@ namespace Rootborn.Core.NpcMovement
             mapId = mapId ?? string.Empty;
             if (_loaded.TryGetValue(mapId, out WorldMap map)) return map;
             try { map = _maps.Load(mapId); }
-            catch (Exception) { map = null; } // 읽지 못한 맵은 지나지 않는다(MapChecks.Walk와 같다)
+            catch (InvalidOperationException e)
+            {
+                // 읽지 못한 맵은 이번에는 지나지 않는다(MapChecks.Walk와 같다). 기억하지 않아 다음 Find에서 다시 읽는다.
+                _loadFailures++;
+                LastProblem = "맵 " + mapId + "을 불러오지 못했다: " + e.Message;
+                return null;
+            }
             _loaded[mapId] = map;
             return map;
         }

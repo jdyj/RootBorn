@@ -233,6 +233,109 @@ namespace Rootborn.Core.Tests.NpcMovement
             Assert.That(maps.Loads, Is.EqualTo(loads));
         }
 
+        /// <summary>정해 둔 맵 id를 읽으면 정해 둔 예외를 던진다. Broken을 비우면 고쳐진 것.</summary>
+        private sealed class FlakyMaps : IWorldMapSource
+        {
+            public readonly Maps Inner;
+            public readonly Dictionary<string, System.Exception> Broken = new Dictionary<string, System.Exception>();
+            public FlakyMaps(Maps inner) { Inner = inner; }
+            public WorldMap Load(string mapId)
+            {
+                if (Broken.TryGetValue(mapId, out var e)) throw e;
+                return Inner.Load(mapId);
+            }
+        }
+
+        /// <summary>A(1,1) → 문 → B(1,1) → 문 → C(1,1). C는 (1,1)~(3,1)이 열려 있다.</summary>
+        private static Maps ThreeMapsInARow()
+        {
+            var maps = new Maps();
+            maps.All["A"] = Map("A", Grid(
+                "#####",
+                "#....",
+                "#####"), new[] { new DoorArea("b", new AreaRect(4 * Cell, 1 * Cell, Cell, Cell), new TravelTarget("B", "in")) });
+            maps.All["B"] = Map("B", Grid(
+                "###",
+                "#.#",
+                "###"), new[] { new DoorArea("c", new AreaRect(1 * Cell, 0, Cell, Cell), new TravelTarget("C", "in")) },
+                new Dictionary<string, (float X, float Y)> { ["in"] = Center(1, 1) });
+            maps.All["C"] = Map("C", Grid(
+                "#####",
+                "#...#",
+                "#####"), spawns: new Dictionary<string, (float X, float Y)> { ["in"] = Center(1, 1) });
+            return maps;
+        }
+
+        [Test]
+        public void 읽지_못한_맵으로_가는_길은_null이고_이유를_남긴다()
+        {
+            var maps = new FlakyMaps(ThreeMapsInARow());
+            maps.Broken["C"] = new System.InvalidOperationException("층이 없다");
+            var finder = new NpcRouteFinder(maps);
+
+            Assert.That(finder.Find(Spot("A", 1, 1), Spot("C", 3, 1)), Is.Null);
+            Assert.That(finder.LastProblem, Does.Contain("C"));
+        }
+
+        [Test]
+        public void 읽지_못했던_맵은_고쳐지면_Forget_없이_다시_찾는다()
+        {
+            var maps = new FlakyMaps(ThreeMapsInARow());
+            maps.Broken["B"] = new System.InvalidOperationException("층이 없다");
+            var finder = new NpcRouteFinder(maps);
+            Assert.That(finder.Find(Spot("A", 1, 1), Spot("C", 3, 1)), Is.Null, "가운데 맵을 읽지 못해 길이 없다");
+            Assert.That(finder.LastProblem, Does.Contain("B"));
+
+            maps.Broken.Clear();
+            NpcRoute route = finder.Find(Spot("A", 1, 1), Spot("C", 3, 1));
+            Assert.That(route, Is.Not.Null);
+            Assert.That(route.Legs.Count, Is.EqualTo(3));
+        }
+
+        [Test]
+        public void 맵_원본의_다른_예외는_그대로_올라온다()
+        {
+            var maps = new FlakyMaps(ThreeMapsInARow());
+            maps.Broken["B"] = new System.NullReferenceException();
+            var finder = new NpcRouteFinder(maps);
+            Assert.Throws<System.NullReferenceException>(() => finder.Find(Spot("A", 1, 1), Spot("C", 3, 1)));
+        }
+
+        [Test]
+        public void 길이_0인_다리에서도_정확히_한_맵에_있다()
+        {
+            var finder = new NpcRouteFinder(ThreeMapsInARow());
+            // 출발 칸 (3,1)이 이미 B 문에 닿고, B 도착 칸이 바로 C 문에 닿는다: 첫 두 다리가 0칸.
+            NpcRoute toFar = finder.Find(Spot("A", 3, 1), Spot("C", 3, 1));
+            // 끝 다리도 0칸: C 도착 칸이 곧 목적지.
+            NpcRoute toSpawn = finder.Find(Spot("A", 3, 1), Spot("C", 1, 1));
+            Assert.That(toFar.Legs.Count, Is.EqualTo(3));
+            Assert.That(toFar.Legs[0].Cells.Count, Is.EqualTo(1));
+            Assert.That(toFar.Legs[1].Cells.Count, Is.EqualTo(1));
+            Assert.That(toFar.TotalCells, Is.EqualTo(2f));
+            Assert.That(toSpawn.TotalCells, Is.EqualTo(0f));
+
+            foreach (NpcRoute route in new[] { toFar, toSpawn })
+            {
+                var seen = new List<string>();
+                var ts = new List<float> { 0f, route.TotalCells };
+                for (float t = 0f; t <= route.TotalCells + 1e-4f; t += 0.1f) ts.Add(t);
+                foreach (float t in ts)
+                {
+                    NpcPose pose = route.PoseAt(t);
+                    Assert.That(pose.Present, Is.True, "t=" + t);
+                    Assert.That(pose.MapId, Is.AnyOf("A", "B", "C"), "t=" + t);
+                }
+                for (float t = 0f; t <= route.TotalCells + 1e-4f; t += 0.1f)
+                {
+                    string map = route.PoseAt(t).MapId;
+                    if (seen.Count == 0 || seen[seen.Count - 1] != map) seen.Add(map);
+                }
+                Assert.That(route.PoseAt(route.TotalCells).MapId, Is.EqualTo("C"), "끝은 목적지 맵");
+                Assert.That(seen.Count, Is.EqualTo(new HashSet<string>(seen).Count), "한 맵으로 되돌아가지 않는다");
+            }
+        }
+
         [Test]
         public void Forget_뒤에는_새_격자로_다시_찾는다()
         {
