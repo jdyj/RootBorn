@@ -30,6 +30,8 @@ namespace Rootborn.Screens.Tests
             [ScreenCatalog.Dialogue] = t => t.Stack.Interaction(new InteractionEvent("House", "npc", "npc.first-guide")),
             [ScreenCatalog.Location] = t => t.Stack.Interaction(new InteractionEvent("Town", "location-activity", "location.library")),
             [ScreenCatalog.Minigame] = t => t.Stack.Interaction(new InteractionEvent("Town", "part-time-work", "work.shift.corner-store")),
+            [ScreenCatalog.Storage] = t => t.Stack.Interaction(new InteractionEvent("House", Rootborn.Screens.Storage.StorageScreen.InteractionKind,
+                Storage.StorageScreenTests.PlaceChest(t))),
             [ScreenCatalog.InteractionRefusal] = t => Rootborn.Screens.Hud.InteractionRefusals.Show(t.Services, "ui.prompt.no-time"),
             [ScreenCatalog.RoomSharesNotice] = t => t.Stack.Open(ScreenCatalog.RoomSharesNotice,
                 argument: new Rootborn.Screens.Start.RoomSharesNoticeOpen(Rootborn.Core.Room.RoomPieceCatalog.CreateDefault().Names)),

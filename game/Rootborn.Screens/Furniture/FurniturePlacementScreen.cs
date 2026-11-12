@@ -381,6 +381,14 @@ namespace Rootborn.Screens.Furniture
             if (SelectedInstanceId == null || Services.Session == null) return;
             string id = SelectedInstanceId;
             if (Services.Session.WaitingForRoom) return;
+            // 물건이 든 상자는 치우지 않는다(Core가 거절한다) — 이유를 알린다. 비우면 치울 수 있다.
+            var contents = Services.Session.StorageAt(id);
+            if (contents != null && !contents.IsEmpty)
+            {
+                LastAction = "storage-not-empty";
+                SetRoomStatus("ui.furniture.storage-not-empty");
+                return;
+            }
             bool removed = Services.Session.RemoveFurniture(id);
             if (!removed && AskedRoom("removed")) { SelectedInstanceId = null; Carrying = false; return; }
             if (!removed) return;

@@ -23,6 +23,9 @@ namespace Rootborn.Data.Builders
                 c.One<ItemDefinition>(n, "priceItem"),
                 n.Int("price"),
                 n.Str("purchaseLocationId"))));
+
+            // 상자: 어느 가구가 몇 칸을 담는가(MonoGame 판이 더한 종류). 어느 그림을 상자로 쓸지는 이 파일만 고친다.
+            b.Add("FurnitureStorageDefinition", (n, c) => new FurnitureStorageDefinition(n.Id, c.One<FurnitureDefinition>(n, "furniture"), n.Int("slots")));
         }
 
         /// <summary>

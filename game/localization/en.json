@@ -262,5 +262,17 @@
   "ui.room.joined-progress.new": "You start a new character in this room. Your progress is saved in the room.",
   "ui.room.joined-progress.continue": "You continue your progress in this room.",
   "ui.furniture.room-waiting": "Waiting for the room to approve...",
-  "ui.furniture.room-refused": "Someone else used that spot first. Please choose again."
+  "ui.furniture.room-refused": "Someone else used that spot first. Please choose again.",
+  "ui.storage.title": "Storage chest",
+  "ui.storage.bag": "Bag",
+  "ui.storage.chest": "Chest ({0}/{1} slots)",
+  "ui.storage.hint": "Press a slot to move the whole stack to the other side. Shift+arrow keys to choose, Enter to move.",
+  "ui.storage.moved": "Moved.",
+  "ui.storage.no-room": "There is no room on the other side, so nothing was moved.",
+  "ui.storage.not-enough": "There are not that many, so nothing was moved.",
+  "ui.storage.currency": "Money stays in your wallet and cannot go in a chest.",
+  "ui.storage.waiting": "Waiting for the room to approve...",
+  "ui.storage.not-storage": "This chest cannot be opened.",
+  "ui.furniture.storage-not-empty": "A chest with items in it cannot be removed. Empty it first.",
+  "ui.prompt.open-storage": "Open chest"
 }

@@ -19,10 +19,20 @@ namespace Rootborn.Core.Room
         private readonly Func<string, IPlacementGrid> _gridFor;
         private readonly Dictionary<string, HousePlacementModel> _models = new Dictionary<string, HousePlacementModel>(StringComparer.Ordinal);
 
+        private readonly FurnitureStorageCatalog _storage;
+        private readonly Dictionary<string, int> _maxStack = new Dictionary<string, int>(StringComparer.Ordinal);
+
         /// <param name="gridFor">면 id → 방 칸. 모르는 면이면 null.</param>
-        public RoomHouseRules(IEnumerable<FurnitureDefinition> furniture, Func<string, IPlacementGrid> gridFor)
+        /// <param name="storage">어느 가구가 상자이고 몇 칸인가(같이 쓰는 상자). 없으면 상자가 없다.</param>
+        /// <param name="items">아이템 정의(같이 쓰는 상자의 쌓기 수). 없는 아이템은 상자에 넣지 못한다.</param>
+        public RoomHouseRules(IEnumerable<FurnitureDefinition> furniture, Func<string, IPlacementGrid> gridFor,
+            FurnitureStorageCatalog storage = null, IEnumerable<Rootborn.Core.Inventory.ItemDefinition> items = null)
         {
             _gridFor = gridFor ?? throw new ArgumentNullException(nameof(gridFor));
+            _storage = storage ?? FurnitureStorageCatalog.Empty;
+            if (items != null)
+                foreach (var item in items)
+                    if (item != null && !string.IsNullOrEmpty(item.Id) && !_maxStack.ContainsKey(item.Id)) _maxStack.Add(item.Id, item.MaxStack);
             if (furniture == null) return;
             foreach (var f in furniture)
             {
@@ -33,6 +43,12 @@ namespace Rootborn.Core.Room
         }
 
         public bool TryGetFurniture(string id, out FurnitureDefinition definition) => _furniture.TryGetValue(id ?? string.Empty, out definition);
+
+        /// <summary>그 가구의 상자 칸 수(상자가 아니면 0).</summary>
+        public int StorageSlotsOf(string furnitureId) => _storage.SlotsOf(furnitureId);
+
+        /// <summary>그 아이템의 쌓기 수(모르는 아이템이면 0).</summary>
+        public int MaxStackOf(string itemId) => itemId != null && _maxStack.TryGetValue(itemId, out int max) ? max : 0;
 
         /// <summary>그 면의 배치를 records로 다시 채운 판(저장하지 않는다). 칸을 모르는 면이면 null.</summary>
         internal HouseFurnitureLayout Layout(string surfaceId, IReadOnlyList<FurniturePlacementSaveData> records)
@@ -76,6 +92,7 @@ namespace Rootborn.Core.Room
         private readonly RoomHouseRules _rules;
         private readonly List<RoomHousePlacementSaveData> _placed = new List<RoomHousePlacementSaveData>(16);
         private int _nextNumber = 1;
+        private Func<string, bool> _keeps;
 
         /// <param name="rules">배치 판정(가구 정의, 면의 칸). 없으면 놓기·옮기기를 판정할 수 없어 거절한다(치우기는 된다).</param>
         public RoomHouse(RoomHouseRules rules = null)
@@ -86,6 +103,18 @@ namespace Rootborn.Core.Room
         public string Name => PieceName;
         public int Revision { get; private set; }
         public IReadOnlyList<RoomHousePlacementSaveData> Placed => _placed;
+
+        /// <summary>치우지 않을 가구(인스턴스 id → true면 남긴다 — 물건이 든 같이 쓰는 상자). 조각끼리 이을 때 상자 조각이 넘긴다.</summary>
+        public void GuardRemoval(Func<string, bool> keeps) => _keeps = keeps;
+
+        public bool TryFind(string instanceId, out RoomHousePlacementSaveData placement)
+        {
+            int index = IndexOf(instanceId);
+            placement = index >= 0 ? _placed[index] : null;
+            return placement != null;
+        }
+
+        private bool Keeps(string instanceId) => _keeps != null && _keeps(instanceId);
 
         public RoomAnswer Apply(string playerId, RoomRequestSaveData request, int day)
         {
@@ -130,7 +159,7 @@ namespace Rootborn.Core.Room
                 {
                     if (request.Ids.Length != 1) return Answer(RoomOutcomes.Invalid);
                     int index = IndexOf(request.Ids[0]);
-                    if (index < 0) return Answer(RoomOutcomes.Refused);
+                    if (index < 0 || Keeps(request.Ids[0])) return Answer(RoomOutcomes.Refused); // 없거나 물건이 든 상자
                     _placed.RemoveAt(index);
                     Revision++;
                     return Answer(RoomOutcomes.Applied);
@@ -138,7 +167,7 @@ namespace Rootborn.Core.Room
                 case Clear:
                 {
                     if (request.Ids.Length != 1) return Answer(RoomOutcomes.Invalid);
-                    if (_placed.RemoveAll(p => p.SurfaceId == request.Ids[0]) > 0) Revision++;
+                    if (_placed.RemoveAll(p => p.SurfaceId == request.Ids[0] && !Keeps(p.InstanceId)) > 0) Revision++; // 물건이 든 상자는 남는다
                     return Answer(RoomOutcomes.Applied);
                 }
                 default:

@@ -18,7 +18,7 @@ namespace Rootborn.Server
     /// </summary>
     public static class HouseGrids
     {
-        /// <summary>집 공유의 배치 판정(가구 정의 + 저장소의 맵).</summary>
+        /// <summary>집 공유의 배치 판정(가구 정의 + 저장소의 맵) — 같이 쓰는 상자의 칸 수와 아이템 쌓기 수도(데이터).</summary>
         public static RoomHouseRules Rules(GameDefinitions definitions, string repoRoot, Action<string> log)
         {
             if (definitions == null) throw new ArgumentNullException(nameof(definitions));
@@ -27,7 +27,7 @@ namespace Rootborn.Server
             {
                 grids ??= Load(repoRoot, log);
                 return surface != null && grids.TryGetValue(surface, out var grid) ? grid : null;
-            });
+            }, new FurnitureStorageCatalog(definitions.All<FurnitureStorageDefinition>()), definitions.All<Rootborn.Core.Inventory.ItemDefinition>());
         }
 
         /// <summary>저장소(맵 목록·상호작용 데이터·LDtk)에서 면 id → 방 칸. 읽지 못하면 빈 표와 로그 한 줄.</summary>

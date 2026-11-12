@@ -70,11 +70,14 @@ namespace Rootborn.Screens
         public const string KeyGuide = "key-guide";
         /// <summary>상호작용 실패 안내(알림 층, Unity PlayerInteractionRouter의 실패 이유 2.5초). 일터·연습 지점의 명령이 거절되면 연다.</summary>
         public const string InteractionRefusal = "interaction-refusal";
+        /// <summary>상자(놓인 상자 앞 상호작용 "storage"). 왼쪽 가방, 오른쪽 상자. 이동을 막지 않는다(가방과 같다).</summary>
+        public const string Storage = "storage";
 
         public static void Register(ScreenRegistry r)
         {
             r.Add(Settings, ScreenLayer.Panel, blocksMovement: false, s => new SettingsScreen(s)).OpenedBy(ScreenKey.Escape);
             r.Add(Inventory, ScreenLayer.Panel, blocksMovement: false, s => new InventoryScreen(s)).OpenedBy(ScreenKey.Inventory);
+            r.Add(Storage, ScreenLayer.Panel, blocksMovement: false, s => new Rootborn.Screens.Storage.StorageScreen(s)).OpenedByInteraction(Rootborn.Screens.Storage.StorageScreen.InteractionKind);
             r.Add(Status, ScreenLayer.Panel, blocksMovement: false, s => new StatusScreen(s)).OpenedBy(ScreenKey.Status);
             r.Add(HudClock, ScreenLayer.Hud, blocksMovement: false, s => new ClockHudScreen(s));
             r.Add(HudVitals, ScreenLayer.Hud, blocksMovement: false, s => new VitalsHudScreen(s));

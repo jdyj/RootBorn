@@ -49,6 +49,8 @@ namespace Rootborn.Core.Room
     {
         private readonly Dictionary<string, Entry> _entries = new Dictionary<string, Entry>(8, StringComparer.Ordinal);
         private readonly List<string> _names = new List<string>(8);
+        private readonly Dictionary<string, Entry> _followers = new Dictionary<string, Entry>(4, StringComparer.Ordinal);
+        private readonly List<KeyValuePair<string, string>> _followerOrder = new List<KeyValuePair<string, string>>(4);
 
         /// <summary>이 게임의 조각들: 돈(방 지갑), 집과 가구(같이 쓰는 집), 마을 상태(월드 상태 깃발).</summary>
         /// <param name="houseRules">같이 쓰는 집의 배치 판정(방 쪽만 필요 — 가구 정의와 집 맵의 칸). 없으면 방은 가구 놓기·옮기기를 거절한다.</param>
@@ -57,8 +59,36 @@ namespace Rootborn.Core.Room
             return new RoomPieceCatalog()
                 .Add(RoomWallet.PieceName, () => new RoomWallet(), outbox => new RoomWalletClient(outbox))
                 .Add(RoomHouse.PieceName, () => new RoomHouse(houseRules), outbox => new RoomHouseClient(outbox))
-                .Add(RoomWorldFlags.PieceName, () => new RoomWorldFlags(), outbox => new RoomWorldFlagsClient(outbox));
+                .Add(RoomWorldFlags.PieceName, () => new RoomWorldFlags(), outbox => new RoomWorldFlagsClient(outbox))
+                .Follow(RoomChests.PieceName, RoomHouse.PieceName, () => new RoomChests(houseRules), outbox => new RoomChestsClient(outbox));
         }
+
+        /// <summary>
+        /// 따라 켜지는 조각: 방 설정에서 고르지 않고 leader를 같이 쓰면 늘 함께 켜진다(같이 쓰는 집의 상자). <see cref="Names"/>·<see cref="Knows"/>에는 없다.
+        /// </summary>
+        public RoomPieceCatalog Follow(string name, string leader, Func<IRoomPiece> room, Func<RoomOutbox, IRoomPieceClient> player)
+        {
+            if (string.IsNullOrEmpty(name) || SaveFileNames.Sanitize(name) != name) throw new ArgumentException("조각 이름은 글자·숫자·'-'·'_'만 쓴다: " + name, nameof(name));
+            if (_entries.ContainsKey(name) || _followers.ContainsKey(name)) throw new ArgumentException("이미 등록한 조각: " + name, nameof(name));
+            if (leader == null || !_entries.ContainsKey(leader)) throw new ArgumentException("먼저 등록한 고르는 조각이어야 한다: " + leader, nameof(leader));
+            _followers.Add(name, new Entry(room ?? throw new ArgumentNullException(nameof(room)), player ?? throw new ArgumentNullException(nameof(player))));
+            _followerOrder.Add(new KeyValuePair<string, string>(name, leader));
+            return this;
+        }
+
+        /// <summary>방 설정이 고른 조각과, 그것을 따라 켜지는 조각(끝에).</summary>
+        public IReadOnlyList<string> ActiveNames(RoomShareSettings settings)
+        {
+            var names = new List<string>(8);
+            if (settings == null) return names;
+            foreach (var name in settings.SharedPieces) names.Add(name);
+            foreach (var pair in _followerOrder)
+                if (settings.Shares(pair.Value)) names.Add(pair.Key);
+            return names;
+        }
+
+        /// <summary>따라 켜지는 조각 이름이다.</summary>
+        public bool Follows(string name) => !string.IsNullOrEmpty(name) && _followers.ContainsKey(name);
 
         public RoomPieceCatalog Add(string name, Func<IRoomPiece> room, Func<RoomOutbox, IRoomPieceClient> player)
         {
@@ -79,7 +109,7 @@ namespace Rootborn.Core.Room
 
         private Entry Get(string name)
         {
-            if (name == null || !_entries.TryGetValue(name, out var entry)) throw new ArgumentException("모르는 조각: " + name, nameof(name));
+            if (name == null || !(_entries.TryGetValue(name, out var entry) || _followers.TryGetValue(name, out entry))) throw new ArgumentException("모르는 조각: " + name, nameof(name));
             return entry;
         }
 
@@ -111,12 +141,15 @@ namespace Rootborn.Core.Room
         {
             if (catalog == null) throw new ArgumentNullException(nameof(catalog));
             Settings = settings ?? RoomShareSettings.Nothing;
-            foreach (var name in Settings.SharedPieces)
+            foreach (var name in catalog.ActiveNames(Settings))
             {
                 var piece = catalog.CreateRoomPiece(name);
                 _pieces.Add(piece);
                 _byName[name] = piece;
             }
+
+            foreach (var piece in _pieces)
+                if (piece is IRoomPieceLinks links) links.Link(n => _byName.TryGetValue(n ?? string.Empty, out var p) ? p : null);
         }
 
         public RoomShareSettings Settings { get; }
@@ -195,9 +228,9 @@ namespace Rootborn.Core.Room
             if (catalog == null) throw new ArgumentNullException(nameof(catalog));
             Settings = settings ?? RoomShareSettings.Nothing;
             Outbox = new RoomOutbox(newRequestId);
-            foreach (var name in Settings.SharedPieces)
+            foreach (var name in catalog.ActiveNames(Settings))
             {
-                if (!catalog.Knows(name)) continue; // 모르는 조각은 각자(방은 들어올 때 이미 같은 버전인지 봤다)
+                if (!catalog.Knows(name) && !catalog.Follows(name)) continue; // 모르는 조각은 각자(방은 들어올 때 이미 같은 버전인지 봤다)
                 var piece = catalog.CreatePlayerPiece(name, Outbox);
                 _pieces.Add(piece);
                 _byName[name] = piece;

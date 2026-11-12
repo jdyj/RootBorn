@@ -39,6 +39,8 @@ namespace Rootborn.Screens.Inventory
             public const float SearchY = GridPadTop - SlotSpacing - SearchHeight;
 
             public const float CountFont = 24f, CountRight = 148f, CountTop = 116f, CountHeight = 32f;
+            /// <summary>작은 칸(상자 화면)에서도 수량 글자를 이보다 줄이지 않는다(1920x1080 기준 14 미만 금지).</summary>
+            public const float MinSlotFont = 18f;
             public const float IconInset = 16f;
 
             public const float EmptyX = 72f, EmptyY = 104f, EmptyH = 288f, EmptyIconSize = 96f, EmptyIconY = 40f;
@@ -287,18 +289,30 @@ namespace Rootborn.Screens.Inventory
         private void DrawCell(int index, UiRect rect, CardState state, DrawList list, ITextMeasurer text)
         {
             bool hasItem = index < _model.Rows.Count;
+            DrawItemSlot(rect, hasItem ? _model.Rows[index].Item : null, hasItem ? _model.Rows[index].Count : 0, state, list, text);
+        }
+
+        /// <summary>
+        /// 아이템 칸 하나(가방 칸과 같은 모양 — 상자 화면도 이것을 쓴다): 칸 바탕, 그림, 수량(2 이상), 포커스 테두리. 크기는 칸에 비례한다(가방 칸 168 기준).
+        /// item이 null이면 빈 칸.
+        /// </summary>
+        public static void DrawItemSlot(UiRect rect, ItemDefinition item, int count, CardState state, DrawList list, ITextMeasurer text)
+        {
+            bool hasItem = item != null && count > 0;
             list.Panel(rect, UiSkin.Slot, hasItem && state.Hovered ? UiTheme.ButtonHovered : UiTheme.ButtonNormal);
             if (hasItem)
             {
-                InventoryRow row = _model.Rows[index];
-                var icon = new UiRect(rect.X + Layout.IconInset, rect.Y + Layout.IconInset, rect.W - Layout.IconInset * 2f, rect.H - Layout.IconInset * 2f);
-                list.Image(icon, ItemIconId(row.Item), default, UiTheme.White);
-                if (row.Count > 1)
+                float k = rect.W / Layout.SlotSize;
+                float inset = Layout.IconInset * k;
+                var icon = new UiRect(rect.X + inset, rect.Y + inset, rect.W - inset * 2f, rect.H - inset * 2f);
+                list.Image(icon, ItemIconId(item), default, UiTheme.White);
+                if (count > 1)
                 {
-                    string count = row.Count.ToString();
-                    float x = rect.X + Layout.CountRight - text.Width(count, Layout.CountFont);
-                    float y = rect.Y + Layout.CountTop + (Layout.CountHeight - text.LineHeight(Layout.CountFont)) / 2f;
-                    list.Text(x, y, count, Layout.CountFont, Ink);
+                    string shown = count.ToString();
+                    float font = System.Math.Max(Layout.MinSlotFont, Layout.CountFont * k);
+                    float x = rect.X + Layout.CountRight * k - text.Width(shown, font);
+                    float y = rect.Y + Layout.CountTop * k + (Layout.CountHeight * k - text.LineHeight(font)) / 2f;
+                    list.Text(x, y, shown, font, Ink);
                 }
             }
             if (state.Selected && state.Focused) list.Outline(rect, UiTheme.FocusOutline, UiTheme.Accent);

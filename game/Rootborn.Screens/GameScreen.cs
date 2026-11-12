@@ -35,6 +35,8 @@ namespace Rootborn.Screens
         public const string Discovery = GameChangeTopics.Discovery;
         public const string Furniture = GameChangeTopics.Furniture;
         public const string Objectives = GameChangeTopics.Objectives;
+        /// <summary>상자 내용물(넣기·꺼내기, 같이 쓰는 상자의 상태와 허락).</summary>
+        public const string Storage = GameChangeTopics.Storage;
         public const string Language = "language";
         /// <summary>표시 모드(창 / 전체 화면)가 바뀌었다(DisplayModeSetting.Changed).</summary>
         public const string Display = "display";

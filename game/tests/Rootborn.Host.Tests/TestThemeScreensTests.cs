@@ -141,7 +141,7 @@ namespace Rootborn.Host.Tests
                 }
 
                 // 내용이 있어야 보이는 화면(대화, 장소, 미니게임)은 그 상호작용으로 한 번 더 연다.
-                foreach (Rootborn.Core.Interaction.InteractionEvent interaction in ContentInteractions)
+                foreach (Rootborn.Core.Interaction.InteractionEvent interaction in ContentInteractions.Append(StorageChestHostTests.PrepareChest(player)))
                 {
                     try
                     {

@@ -61,6 +61,7 @@ namespace Rootborn.Screens.Hud
             new InteractionPromptSpec(AdultFacility.FacilityScreen.InteractionKind, "facility.interact", 1.1f),                          // CareerFacilityInteractor
             new InteractionPromptSpec(Discoveries.DiscoveryNoticeScreen.InteractionKind, "ui.prompt.discovery", 1.05f, InteractionPromptNames.Discovery,
                 NoNameTextKey: "ui.prompt.discovery-generic"),                                                                              // DiscoveryPointInteractor
+            new InteractionPromptSpec(Storage.StorageScreen.InteractionKind, "ui.prompt.open-storage", 1.1f),                            // 놓인 상자(MonoGame 판이 더함)
         };
 
         public const string LabelId = "hud.prompt";

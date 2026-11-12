@@ -52,6 +52,8 @@ namespace Rootborn.Data.Tests
             ("room-request-ledger.json", typeof(Rootborn.Core.Room.RoomRequestLedgerSaveData)),
             ("room-piece-wallet.json", typeof(Rootborn.Core.Room.RoomWalletSaveData)),
             ("room-piece-town.json", typeof(Rootborn.Core.Room.RoomWorldFlagsSaveData)),
+            // 같이 쓰는 상자(집을 같이 쓰는 방에서 따라 켜진다). MonoGame 판이 더한 파일.
+            ("room-piece-chests.json", typeof(Rootborn.Core.Room.RoomChestsSaveData)),
             ("room-outbox-*.json", typeof(Rootborn.Core.Room.RoomOutboxSaveData)),
             // 흐르는 시계의 개인 상태(지침, 밤에 깎은 시간, 하는 중). MonoGame 판이 더한 파일(2026-11-12).
             ("student-clock-*.json", typeof(StudentClockSaveData)),

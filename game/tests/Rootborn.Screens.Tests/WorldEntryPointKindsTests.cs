@@ -22,6 +22,12 @@ namespace Rootborn.Screens.Tests
             ["npc"] = "npcAnchors",
         };
 
+        /// <summary>놓인 가구에서 생기는 종류: "storage"(상자)는 가구를 놓는 면(placementSurface)이 있는 맵에 상자를 놓으면 생긴다.</summary>
+        private static readonly Dictionary<string, string> KindsFromPlacedFurniture = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            [Rootborn.Screens.Storage.StorageScreen.InteractionKind] = "placementSurface",
+        };
+
         /// <summary>등록 표의 상호작용 종류 → 화면 id(ScreenRegistry.InteractionKinds). 조회와 같은지도 본다.</summary>
         private static IReadOnlyDictionary<string, string> RegisteredInteractionKinds()
         {
@@ -33,20 +39,21 @@ namespace Rootborn.Screens.Tests
         }
 
         /// <summary>실제 interactions.json에서 맵마다 지점 종류와 NPC 자리가 있는지 모은다.</summary>
-        private static (HashSet<string> ThingKinds, bool HasNpcAnchors) RealPoints()
+        private static (HashSet<string> ThingKinds, bool HasNpcAnchors, bool HasPlacementSurface) RealPoints()
         {
             string path = Path.Combine(TestData.RepoRoot, "game", "world", "interactions.json");
             using JsonDocument doc = JsonDocument.Parse(File.ReadAllText(path),
                 new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true });
             var kinds = new HashSet<string>(StringComparer.Ordinal);
-            bool anchors = false;
+            bool anchors = false, surface = false;
             foreach (JsonProperty map in doc.RootElement.GetProperty("maps").EnumerateObject())
             {
                 if (map.Value.TryGetProperty("things", out JsonElement things))
                     foreach (JsonElement thing in things.EnumerateArray()) kinds.Add(thing.GetProperty("kind").GetString());
                 if (map.Value.TryGetProperty("npcAnchors", out JsonElement npc) && npc.EnumerateObject().Any(a => a.Value.GetArrayLength() > 0)) anchors = true;
+                if (map.Value.TryGetProperty("placementSurface", out JsonElement s) && s.ValueKind == JsonValueKind.String && s.GetString().Length > 0) surface = true;
             }
-            return (kinds, anchors);
+            return (kinds, anchors, surface);
         }
 
         [Test]
@@ -54,12 +61,13 @@ namespace Rootborn.Screens.Tests
         {
             IReadOnlyDictionary<string, string> registered = RegisteredInteractionKinds();
             Assert.That(registered, Is.Not.Empty);
-            var (thingKinds, hasAnchors) = RealPoints();
+            var (thingKinds, hasAnchors, hasSurface) = RealPoints();
 
             var missing = new List<string>();
             foreach (var pair in registered)
             {
-                bool present = KindsWithoutThings.ContainsKey(pair.Key) ? hasAnchors : thingKinds.Contains(pair.Key);
+                bool present = KindsWithoutThings.ContainsKey(pair.Key) ? hasAnchors
+                    : KindsFromPlacedFurniture.ContainsKey(pair.Key) ? hasSurface : thingKinds.Contains(pair.Key);
                 if (!present) missing.Add(pair.Key + " (화면 " + pair.Value + ")");
             }
             Assert.That(missing, Is.Empty, "실제 맵에 지점이 없어 열 수 없는 화면:\n" + string.Join("\n", missing));

@@ -31,6 +31,9 @@ namespace Rootborn.Core.Placement
         /// <summary>가구 그림이 그려지는 칸(다른 가구의 그림과 겹칠 수 없다).</summary>
         public IReadOnlyList<GridPoint> TileCells { get; }
 
+        /// <summary>상자이고 물건이 들었다(치울 수 없다).</summary>
+        public bool HoldsItems => FurnitureStorageSaveData.HoldsItems(Record.Storage);
+
         internal FurniturePlacementSaveData Record { get; }
     }
 
@@ -161,20 +164,51 @@ namespace Rootborn.Core.Placement
             return true;
         }
 
+        /// <summary>치운다. 물건이 든 상자는 치우지 않는다(비우면 치울 수 있다).</summary>
         public bool Delete(string instanceId)
         {
             int index = IndexOf(instanceId);
-            if (index < 0) return false;
+            if (index < 0 || _placed[index].HoldsItems) return false;
             if (!Commit(Records(_placed[index], null))) return false;
             _placed.RemoveAt(index);
             return true;
         }
 
-        /// <summary>놓인 가구를 모두 치운다. 되살리지 못한 기록은 남긴다.</summary>
+        /// <summary>놓인 가구를 모두 치운다. 물건이 든 상자와 되살리지 못한 기록은 남긴다.</summary>
         public bool ClearUserFurniture()
         {
-            if (!Commit(new List<FurniturePlacementSaveData>(_unresolved))) return false;
+            var kept = new List<PlacedFurniture>();
+            var records = new List<FurniturePlacementSaveData>(_unresolved.Count + 4);
+            for (int i = 0; i < _placed.Count; i++)
+            {
+                if (!_placed[i].HoldsItems) continue;
+                kept.Add(_placed[i]);
+                records.Add(_placed[i].Record);
+            }
+
+            records.AddRange(_unresolved);
+            if (!Commit(records)) return false;
             _placed.Clear();
+            _placed.AddRange(kept);
+            return true;
+        }
+
+        /// <summary>그 가구의 상자 내용물(사본). 없거나 비었으면 빈 내용물.</summary>
+        public FurnitureStorageSaveData StorageOf(string instanceId)
+        {
+            int index = IndexOf(instanceId);
+            return index >= 0 && _placed[index].Record.Storage != null ? _placed[index].Record.Storage.Clone() : new FurnitureStorageSaveData();
+        }
+
+        /// <summary>
+        /// 상자 내용물을 바꾼다. 메모리만 바꾸고 저장하지 않는다 — 가방과 함께 바뀌므로 부르는 쪽이 가방과 같은 묶음으로
+        /// <see cref="BuildSaveRecords"/>를 저장한다(가방 교환 안에서 부르므로 던지지 않는다). 없는 가구면 false.
+        /// </summary>
+        public bool SetStorage(string instanceId, FurnitureStorageSaveData storage)
+        {
+            int index = IndexOf(instanceId);
+            if (index < 0) return false;
+            _placed[index].Record.Storage = storage?.Clone();
             return true;
         }
 

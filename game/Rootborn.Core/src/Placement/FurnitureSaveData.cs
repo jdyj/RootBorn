@@ -19,6 +19,9 @@ namespace Rootborn.Core.Placement
         public string StateJson = string.Empty;
         public string TileName = string.Empty;
 
+        /// <summary>상자의 내용물(MonoGame 판이 더한 필드, 배치 파일 버전 2). 상자가 아니거나 한 번도 쓰지 않았으면 null.</summary>
+        public FurnitureStorageSaveData Storage;
+
         public FurniturePlacementSaveData Clone()
         {
             return new FurniturePlacementSaveData
@@ -30,6 +33,7 @@ namespace Rootborn.Core.Placement
                 Direction = Direction,
                 StateJson = StateJson,
                 TileName = TileName,
+                Storage = Storage?.Clone(),
             };
         }
     }
@@ -38,7 +42,8 @@ namespace Rootborn.Core.Placement
     [Serializable]
     public sealed class FurniturePlacementLayoutSaveData : IVersionedSave
     {
-        public const int KnownVersion = 1;
+        /// <summary>2: 놓인 가구 기록에 상자 내용물(Storage)이 생겼다. 1 파일은 그대로 읽힌다(내용물 없음).</summary>
+        public const int KnownVersion = 2;
 
         public int Version;
 

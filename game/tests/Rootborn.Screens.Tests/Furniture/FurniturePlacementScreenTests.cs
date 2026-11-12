@@ -362,6 +362,28 @@ namespace Rootborn.Screens.Tests.Furniture
         }
 
         [Test]
+        public void DeletingAChestWithItems_IsRefused_WithAReason_AndAnEmptyChestIsDeleted()
+        {
+            using var f = new Fixture();
+            string crate = f.T.Session.Definitions.All<FurnitureStorageDefinition>().First().Furniture.StableId;
+            f.PickFromPalette(crate);
+            f.ClickCell(new GridPoint(3, 3));
+            string id = f.Screen.SelectedInstanceId;
+            Assert.That(id, Is.Not.Null);
+            f.T.Session.Inventory.Add(f.T.Session.Item("Wood"), 2);
+            Assert.That(f.T.Session.PutIntoStorage(id, "Wood", 2), Is.EqualTo(StorageTransferResult.Moved)); // 준비
+
+            f.T.Click(FurniturePlacementScreen.DeleteId);
+            Assert.That(f.T.Session.House.Placed.Single().InstanceId, Is.EqualTo(id), "물건이 든 상자는 남는다");
+            Assert.That(f.Screen.LastAction, Is.EqualTo("storage-not-empty"));
+            Assert.That(f.T.Texts(f.T.Emit()), Does.Contain(f.T.Text.Get("ui.furniture.storage-not-empty")));
+
+            Assert.That(f.T.Session.TakeFromStorage(id, "Wood", 2), Is.EqualTo(StorageTransferResult.Moved));
+            f.T.Click(FurniturePlacementScreen.DeleteId);
+            Assert.That(f.T.Session.House.Placed, Is.Empty, "비우면 치운다");
+        }
+
+        [Test]
         public void PointerOverThePanels_DoesNotReachTheWorld()
         {
             using var f = new Fixture();

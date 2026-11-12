@@ -89,7 +89,7 @@ namespace Rootborn.Data.Tests
             var table = EntityTable.ReadDirectory(RepoPaths.DataDirectory, errors);
 
             Assert.That(errors, Is.Empty, string.Join("\n", errors.Take(20)));
-            Assert.That(table.All.Count(), Is.EqualTo(2289));
+            Assert.That(table.All.Count(), Is.EqualTo(2290)); // 2026-11-12 상자 데이터(FurnitureStorageDefinition) 1개
         }
 
         [Test]

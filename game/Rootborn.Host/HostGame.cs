@@ -308,8 +308,15 @@ namespace Rootborn.Host
                 },
                 // 같이 쓰는 집의 판정 칸: 이 PC의 화면이 쓰는 것과 같은 가구 방 칸(RoomAwareMaps). 방은 시작 화면에서 열리므로(월드가 아직 없다)
                 // 처음 물을 때의 월드에서 찾는다.
-                () => Rootborn.Core.Room.RoomPieceCatalog.CreateDefault(new Rootborn.Core.Room.RoomHouseRules(
-                    GameContent.Load(_options.RepoRoot).Definitions.All<Rootborn.Core.Placement.FurnitureDefinition>(), surface => World?.Rooms.GridForSurface(surface))));
+                // 같이 쓰는 상자의 칸 수와 아이템 쌓기 수도 같은 데이터에서.
+                () =>
+                {
+                    var definitions = GameContent.Load(_options.RepoRoot).Definitions;
+                    return Rootborn.Core.Room.RoomPieceCatalog.CreateDefault(new Rootborn.Core.Room.RoomHouseRules(
+                        definitions.All<Rootborn.Core.Placement.FurnitureDefinition>(), surface => World?.Rooms.GridForSurface(surface),
+                        new Rootborn.Core.Placement.FurnitureStorageCatalog(definitions.All<Rootborn.Core.Placement.FurnitureStorageDefinition>()),
+                        definitions.All<Rootborn.Core.Inventory.ItemDefinition>()));
+                });
             hosting.DefaultSharedPieces = _options.SharedPieces; // --share: 방 열기 창에 처음 켜 둘 것
             hosting.Changed += () => Screens?.NotifyChanged(RoomHostText.Topic);
             return hosting;
@@ -599,7 +606,7 @@ namespace Rootborn.Host
             if (room != null && house != null)
             {
                 room.SetFurnitureBlocking(house.BlockingCells);
-                World.SetPlacedFurniture(house.Placed);
+                World.SetPlacedFurniture(house.Placed, Session.IsStorage);
             }
             else World.SetPlacedFurniture(null);
         }

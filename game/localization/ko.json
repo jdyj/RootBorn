@@ -262,5 +262,17 @@
   "ui.room.joined-progress.new": "이 방에서는 새 캐릭터로 시작해요. 진행은 방에 저장돼요.",
   "ui.room.joined-progress.continue": "이 방에서 하던 진행을 이어 해요.",
   "ui.furniture.room-waiting": "방의 허락을 기다리는 중이에요...",
-  "ui.furniture.room-refused": "다른 사람이 먼저 그 자리를 썼어요. 다시 골라 주세요."
+  "ui.furniture.room-refused": "다른 사람이 먼저 그 자리를 썼어요. 다시 골라 주세요.",
+  "ui.storage.title": "상자",
+  "ui.storage.bag": "가방",
+  "ui.storage.chest": "상자 ({0}/{1}칸)",
+  "ui.storage.hint": "칸을 누르면 반대쪽으로 통째로 옮겨요. Shift+방향 키로 고르고 Enter.",
+  "ui.storage.moved": "옮겼어요.",
+  "ui.storage.no-room": "받을 자리가 없어서 아무것도 옮기지 않았어요.",
+  "ui.storage.not-enough": "그만큼 없어서 아무것도 옮기지 않았어요.",
+  "ui.storage.currency": "돈은 지갑에 있어서 상자에 넣을 수 없어요.",
+  "ui.storage.waiting": "방의 허락을 기다리는 중이에요...",
+  "ui.storage.not-storage": "이 상자를 열 수 없어요.",
+  "ui.furniture.storage-not-empty": "물건이 든 상자는 치울 수 없어요. 먼저 비워 주세요.",
+  "ui.prompt.open-storage": "상자 열기"
 }

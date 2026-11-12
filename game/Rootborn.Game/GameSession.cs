@@ -319,8 +319,11 @@ namespace Rootborn.Game
                 SaveOptionalDomains(store);
                 if (Shares != null) store.Write(SaveSlot, SaveFileNames.RoomOutbox(PlayerId), Shares.Outbox.ToSaveData());
                 SaveClock(store);
+                SaveHouseLayoutIfDirty(store);
                 store.Commit();
             }
+
+            _houseLayoutDirty = false;
         }
 
         // ---------- 퀘스트 이벤트 ----------

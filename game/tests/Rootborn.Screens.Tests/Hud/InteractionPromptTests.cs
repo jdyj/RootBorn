@@ -79,6 +79,16 @@ namespace Rootborn.Screens.Tests.Hud
         }
 
         [Test]
+        public void AStorageChest_HasAnOpenPrompt()
+        {
+            var stack = new ScreenStack(ScreenCatalog.Create(), new ScreenServices(TestData.Text(), null) { Definitions = TestSession.Definitions });
+            stack.Layout(1920, 1080);
+            stack.OpenHud();
+            stack.SetInteractionTarget(new InteractionTargetView(Rootborn.Screens.Storage.StorageScreen.InteractionKind, "3", 100, 100, 32));
+            Assert.That(((InteractionPromptScreen)stack.Find(ScreenCatalog.HudPrompt)).Text, Is.EqualTo("[E] " + TestData.Text().Get("ui.prompt.open-storage")));
+        }
+
+        [Test]
         public void WithoutAGame_LocationNames_ComeFromTheDefinitions()
         {
             var stack = new ScreenStack(ScreenCatalog.Create(), new ScreenServices(TestData.Text(), null) { Definitions = TestSession.Definitions });

@@ -57,6 +57,7 @@ namespace Rootborn.Data.Tests
             Names.RoomRequestLedger,
             Names.RoomPiece(Rootborn.Core.Room.RoomWallet.PieceName),
             Names.RoomPiece(Rootborn.Core.Room.RoomWorldFlags.PieceName),
+            Names.RoomPiece(Rootborn.Core.Room.RoomChests.PieceName),
             Names.RoomOutbox(DefaultPlayer),
         };
 

@@ -166,6 +166,19 @@
 - 팔지 않는 가구는 `displayNameKey`, `priceItem`, `price`, `purchaseLocationId`를 빼도 된다(옛 가구 대부분이 그렇다. 예: `desk.basic`).
 - 등록부: `"furnitureDefinitions"`에 id를 더한다. 문구: `furniture.reading-lamp.name`.
 
+### 상자(보관 칸이 있는 가구)
+
+어느 가구가 상자이고 몇 칸을 담는지는 한 파일 `data/interiors/FurnitureStorageDefinition.json`에만 둔다. 지금은 `studentlife.snack.delivery.crate`(나무 상자) 하나, 64칸(가방 32칸의 두 배).
+
+```json
+{ "type": "FurnitureStorageDefinition", "id": "storage.crate",
+  "furniture": { "ref": "studentlife.snack.delivery.crate", "type": "FurnitureDefinition" }, "slots": 64 }
+```
+
+- 다른 그림을 상자로 쓰려면 `furniture`의 ref만 바꾼다. 상자를 더 두려면 같은 모양을 하나 더(같은 가구를 두 번 적으면 앞의 것). 등록부: `"furnitureStorageDefinitions"`.
+- 상자 가구도 보통 가구처럼 놓는다(놓을 수 있는 면이 있는 맵 어디든, 여러 개). 해금이 필요 없는 가구(`unlockToken` 비어 있음)면 처음부터 놓을 수 있다.
+- 내용물은 놓인 가구 기록에 묶여 저장된다. 상자를 그만 쓰게 데이터에서 빼도 이미 든 물건은 세이브에 남는다(다시 상자로 만들면 보인다).
+
 ## 그림 좌표표
 
 `data/atlases/<PNG 경로>.atlas.json` 하나가 PNG 하나다. 좌표는 **PNG 왼쪽 위 기준 픽셀**이다.

@@ -143,5 +143,26 @@ namespace Rootborn.Net.Tests
             Assert.That(whole.Ids, Is.EqualTo(ids));
             Assert.That(RoomPieceStates.TryDecode(new byte[] { 1, 2, 3 }, out _), Is.False, "깨진 바이트");
         }
+
+        [Test]
+        public void ManyFullChests_AreSplit_AndComeBackAsTheSameLines()
+        {
+            // 같이 쓰는 상자: 64칸 상자 여덟 개가 꽉 찬 상태(512줄). 줄은 "인스턴스|아이템|수".
+            const int max = 4096;
+            uint next = 1;
+            var ids = Enumerable.Range(0, 512)
+                .Select(i => Rootborn.Core.Room.RoomChestLine.Encode((i / 64 + 1).ToString(), "modern.item.long-name." + (i % 64), 99)).ToArray();
+            var state = new Rootborn.Core.Room.RoomPieceState(Rootborn.Core.Room.RoomChests.PieceName, ids.Length, ids);
+            var messages = RoomPieceStates.Messages(state, max, ref next);
+            Assert.That(messages.Count, Is.GreaterThan(1));
+            var assembler = new ChunkAssembler();
+            byte[] payload = null;
+            foreach (var m in messages.Cast<RoomPieceStateChunkMessage>())
+                assembler.Add(new SaveChunkMessage { TransferId = m.TransferId, Index = m.Index, Count = m.Count, Bytes = m.Bytes }, out _, out payload);
+            Assert.That(RoomPieceStates.TryDecode(payload, out var whole), Is.True);
+            Assert.That(whole.Ids, Is.EqualTo(ids));
+            Assert.That(Rootborn.Core.Room.RoomChestLine.TryDecode(whole.Ids[70], out var chest, out var item, out var count), Is.True);
+            Assert.That((chest, item, count), Is.EqualTo(("2", "modern.item.long-name.6", 99)));
+        }
     }
 }

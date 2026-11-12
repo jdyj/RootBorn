@@ -103,7 +103,7 @@ namespace Rootborn.Host.Tests
                 // 월드 화면 전체(HUD가 영어로 보이는지)
                 player.Screenshot("en-world");
                 // 내용이 있어야 보이는 화면(미니게임, 대화, 장소)을 먼저 상호작용으로 연다(다른 화면이 시간을 쓰기 전에).
-                foreach (InteractionEvent interaction in ContentInteractions)
+                foreach (InteractionEvent interaction in ContentInteractions.Append(StorageChestHostTests.PrepareChest(player)))
                 {
                     try
                     {

@@ -1,0 +1,8 @@
+[
+  {
+    "type": "FurnitureStorageDefinition",
+    "id": "storage.crate",
+    "furniture": { "ref": "studentlife.snack.delivery.crate", "type": "FurnitureDefinition" },
+    "slots": 64
+  }
+]

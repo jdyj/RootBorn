@@ -2122,6 +2122,9 @@
     "activity31.wheat.planter.green",
     "activity31.wheat.planter.ripe"
   ],
+  "furnitureStorageDefinitions": [
+    "storage.crate"
+  ],
   "milestones": [
     "milestone.first-guide-trust",
     "milestone.teacher-commitment",
