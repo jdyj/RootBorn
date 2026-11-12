@@ -265,6 +265,47 @@ namespace Rootborn.Core.Tests
             Assert.That(g.Layout.Placed, Is.Empty);
         }
 
+        [Test]
+        public void FreeSeed_AfterPaidApply_Refused_NothingChanges()
+        {
+            var f = new Fixture(10);
+            var paid = Template(10, new TemplatePlacement("chair", P(1, 2), FurniturePlacementDirection.North));
+            Assert.That(f.Apply(paid), Is.EqualTo(WorkspaceResultKind.Applied));
+            int commits = f.Commits;
+
+            Assert.That(f.Apply(Template(), requestId: f.Workspace.Id, free: true), Is.EqualTo(WorkspaceResultKind.InvalidRequest), "돈을 내고 깐 배치를 지우지 않는다");
+            Assert.That(f.Placed(), Is.EqualTo(new[] { "chair@1,2" }));
+            Assert.That(f.Money, Is.Zero);
+            Assert.That(f.Commits, Is.EqualTo(commits));
+            Assert.That(f.Progress.IsSeeded(f.Workspace.Id), Is.False);
+            Assert.That(f.Progress.HasApplied(f.Workspace.Id), Is.False);
+        }
+
+        [Test]
+        public void FreeSeed_AfterPlayerPlaced_Refused_NothingChanges()
+        {
+            var f = new Fixture(0);
+            Assert.That(f.Layout.TryPlace(Chair, P(1, 2), FurniturePlacementDirection.North), Is.True);
+            int commits = f.Commits;
+
+            Assert.That(f.Check(Template(), requestId: f.Workspace.Id, free: true), Is.EqualTo(WorkspaceResultKind.InvalidRequest));
+            Assert.That(f.Apply(Template(), requestId: f.Workspace.Id, free: true), Is.EqualTo(WorkspaceResultKind.InvalidRequest));
+            Assert.That(f.Placed(), Is.EqualTo(new[] { "chair@1,2" }));
+            Assert.That(f.Commits, Is.EqualTo(commits));
+            Assert.That(f.Progress.IsSeeded(f.Workspace.Id), Is.False);
+        }
+
+        [Test]
+        public void FreeSeed_WithUnresolvedRecords_Refused()
+        {
+            var f = new Fixture(0);
+            f.Layout.Restore(new[] { new FurniturePlacementSaveData { FurnitureId = "missing", SurfaceId = Surface, AnchorX = 1, AnchorY = 2 } }, f.Catalog.Values);
+            Assert.That(f.Layout.UnresolvedCount, Is.EqualTo(1));
+            Assert.That(f.Apply(Template(), requestId: f.Workspace.Id, free: true), Is.EqualTo(WorkspaceResultKind.InvalidRequest), "되살리지 못한 기록이 있는 일터는 빈 일터가 아니다");
+            Assert.That(f.Layout.Placed, Is.Empty);
+            Assert.That(f.Progress.IsSeeded(f.Workspace.Id), Is.False);
+        }
+
         // --- 꾸미며 배우기 ---
 
         [Test]

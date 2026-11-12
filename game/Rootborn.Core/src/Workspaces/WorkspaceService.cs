@@ -81,7 +81,9 @@ namespace Rootborn.Core.Workspaces
                 if (!catalog.TryGetValue(placements[i].FurnitureId, out var definition) || definition == null) return WorkspaceResultKind.InvalidDefinition;
                 built.Add(new FurniturePlacementRequest(definition, placements[i].Anchor, placements[i].Direction));
             }
-            if (free && template.Id != workspace.DefaultTemplateId) return WorkspaceResultKind.InvalidRequest;
+            // 공짜는 빈 일터에 기본 템플릿을 처음 까는 것뿐이다: 이미 놓인 가구(돈을 내고 깐 것, 플레이어가 놓은 것)나
+            // 되살리지 못한 기록이 있으면 지우지 않는다.
+            if (free && (template.Id != workspace.DefaultTemplateId || layout.Placed.Count != 0 || layout.UnresolvedCount != 0)) return WorkspaceResultKind.InvalidRequest;
 
             if (!ownsFacility) return WorkspaceResultKind.NotOwner;
             if ((long)built.Count + KeptChestCount(layout) > Math.Max(0, capacity)) return WorkspaceResultKind.OverCapacity;
