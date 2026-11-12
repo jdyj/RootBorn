@@ -132,6 +132,29 @@ namespace Rootborn.Core.Tests
         }
 
         [Test]
+        public void WORLD_SLOT_020_SlotInfoWithoutASlotId_IsRefused_NotRewritten()
+        {
+            // Unity 판과 전에는 슬롯 정보를 새로 만들어 덮어썼다(시드·겉모습이 바뀌고 진행 파일은 그대로 이어졌다).
+            var store = new InMemorySaveStore();
+            store.Put("slot-0", SaveFileNames.Metadata, new SaveSlotMetadata { SlotId = "", DisplayName = "하늘", WorldSeed = 77 });
+            WorldSlotStart start = new WorldSlot(store, "slot-0", Catalog()).Begin(Now);
+            Assert.That(start.Ok, Is.False);
+            Assert.That(start.Problem, Does.Contain(SaveFileNames.Metadata));
+            Assert.That(store.Writes, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void WORLD_SLOT_021_ProgressWithoutSlotInfo_IsRefused_NotStartedOver()
+        {
+            var store = new InMemorySaveStore();
+            store.Put("slot-0", SaveFileNames.WorldProgress, new WorldProgressSaveData { Version = 1, SaveSlot = "slot-0", CurrentScene = "Town", CurrentEntryPointId = "town-home-entry" });
+            WorldSlotStart start = new WorldSlot(store, "slot-0", Catalog()).Begin(Now);
+            Assert.That(start.Ok, Is.False);
+            Assert.That(start.Problem, Does.Contain(SaveFileNames.Metadata));
+            Assert.That(store.Writes, Is.EqualTo(0), "슬롯 정보를 새로 써서 이어 붙이지 않는다");
+        }
+
+        [Test]
         public void WORLD_SLOT_009_MetadataWithoutCharacterPartsGetsEmptyOnes()
         {
             var store = new InMemorySaveStore();

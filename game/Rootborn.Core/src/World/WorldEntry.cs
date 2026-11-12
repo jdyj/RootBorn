@@ -179,6 +179,7 @@ namespace Rootborn.Core.World
     /// <summary>
     /// 세이브 슬롯 하나에서 월드를 시작하고 도착을 기록한다. 슬롯 정보가 없으면 새 게임(슬롯 정보를 쓰고 새 게임 자리),
     /// 있으면 이어 하기(world-progress의 자리, 파일이 없으면 새 게임 자리). 읽을 수 없는 파일은 덮어쓰지 않고 시작을 거절한다.
+    /// 슬롯 id가 빈 슬롯 정보, 슬롯 정보 없이 남은 진행 파일도 거절한다(Unity 판은 슬롯 정보를 새로 썼다).
     /// </summary>
     public sealed class WorldSlot : IWorldArrivals
     {
@@ -202,7 +203,20 @@ namespace Rootborn.Core.World
             if (!_catalog.IsValid) { start.Problem = "장면 목록이 올바르지 않다(새 게임 자리가 목록에 없다)"; return start; }
             try
             {
-                if (!_store.TryRead(SlotId, SaveFileNames.Metadata, out SaveSlotMetadata metadata) || metadata == null || string.IsNullOrEmpty(metadata.SlotId))
+                bool hasInfo = _store.TryRead(SlotId, SaveFileNames.Metadata, out SaveSlotMetadata metadata) && metadata != null;
+                // 슬롯 정보를 새로 쓰는 것은 정말 새 슬롯일 때만이다. 파일은 있는데 슬롯 id가 비었거나, 슬롯 정보 없이 진행 파일만 있으면
+                // 덮어쓰지 않고 거절한다(새로 쓰면 시드·겉모습·방 식별 값이 바뀐 채 옛 진행이 이어진다).
+                if (hasInfo && string.IsNullOrEmpty(metadata.SlotId))
+                {
+                    start.Problem = "슬롯 정보(" + SaveFileNames.Metadata + ")에 슬롯 id가 없다. 덮어쓰지 않았다";
+                    return start;
+                }
+                if (!hasInfo && _store.TryRead(SlotId, SaveFileNames.WorldProgress, out WorldProgressSaveData orphan) && orphan != null)
+                {
+                    start.Problem = "슬롯 정보(" + SaveFileNames.Metadata + ")가 없는데 진행 파일(" + SaveFileNames.WorldProgress + ")이 있다. 새로 쓰지 않았다";
+                    return start;
+                }
+                if (!hasInfo)
                 {
                     metadata = SaveSlotMetadata.CreateDeterministic(SlotId, nowUtcTicks);
                     metadata.FillMissing();
