@@ -1,3 +1,5 @@
+2026-11-13 임시 문구를 넣었다 — `docs/superpowers/specs/2026-11-13-placeholder-text-open-decisions.md`
+
 # 빠진 문구 목록 — 원본(Unity 판)에도 없는 것 (2026-11-12)
 
 문구를 정하는 것은 사용자 결정이다. 이 문서는 **정할 거리**만 모은다. 문구를 지어 넣지 않았다.
