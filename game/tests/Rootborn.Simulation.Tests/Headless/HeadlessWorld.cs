@@ -59,7 +59,7 @@ namespace Rootborn.Simulation.Headless
         public void SetFurnitureBlocking(IEnumerable<GridPoint> cells)
         {
             FurnitureRoom room = Room;
-            if (room != null && Rooms.SetFurnitureBlocking(room, cells)) Npcs.ForgetMap(room.Map.Id);
+            if (room != null && room.SetFurnitureBlocking(cells)) Npcs.ForgetMap(room.Map.Id);
         }
 
         /// <summary>맵이 바뀌면 후보 목록을 한 번 만들고, 프레임마다 NPC 자리와 대상을 고친다(새 객체를 만들지 않는다).</summary>
@@ -84,8 +84,6 @@ namespace Rootborn.Simulation.Headless
         private readonly WorldMapLoader _maps;
         private readonly InteractionData _interactions;
         private readonly Dictionary<string, FurnitureRoom> _rooms = new Dictionary<string, FurnitureRoom>(StringComparer.OrdinalIgnoreCase);
-        /// <summary>방마다 마지막으로 맞춘 막힌 칸(가구가 바뀌었는지 보려고).</summary>
-        private readonly Dictionary<FurnitureRoom, bool[]> _lastBlocked = new Dictionary<FurnitureRoom, bool[]>();
 
         public HeadlessRooms(WorldMapLoader maps, InteractionData interactions) { _maps = maps; _interactions = interactions; }
 
@@ -101,31 +99,6 @@ namespace Rootborn.Simulation.Headless
         }
 
         public WorldMap Load(string mapId) => RoomOf(mapId)?.WalkMap ?? ((IWorldMapSource)_maps).Load(mapId);
-
-        /// <summary>방의 걷는 맵에 가구가 막는 칸을 맞춘다(격자 배열을 제자리에서 고친다). 막힌 칸이 전과 달라졌으면 true.</summary>
-        public bool SetFurnitureBlocking(FurnitureRoom room, IEnumerable<GridPoint> cells)
-        {
-            CollisionGrid walk = room.WalkMap.Collision;
-            MapGrid grid = walk.Grid;
-            if (!_lastBlocked.TryGetValue(room, out bool[] last))
-            {
-                // 처음에는 걷는 맵이 가구 없는 맵과 같다.
-                _lastBlocked[room] = last = new bool[grid.Count];
-                for (int y = 0; y < grid.Rows; y++)
-                    for (int x = 0; x < grid.Columns; x++) last[grid.Index(x, y)] = room.Map.Collision.IsBlocked(x, y);
-            }
-            room.SetFurnitureBlocking(cells);
-            bool changed = false;
-            for (int y = 0; y < grid.Rows; y++)
-                for (int x = 0; x < grid.Columns; x++)
-                {
-                    int i = grid.Index(x, y);
-                    bool now = walk.IsBlocked(x, y);
-                    if (last[i] != now) changed = true;
-                    last[i] = now;
-                }
-            return changed;
-        }
     }
 
     /// <summary>창 없는 배치 카메라: 방 전체를 1920x1080 가운데에 맞춘다(Host 배치 카메라의 "전체 보기"와 같은 모양).</summary>

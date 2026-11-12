@@ -373,7 +373,9 @@ namespace Rootborn.Host.Tests
                     var center = CellPos.Center(start, (int)size);
                     float cx = center.X - w.X, cy = center.Y - w.Y;
                     int dx = Math.Abs(cx) >= Math.Abs(cy) ? Math.Sign(cx) : 0, dy = dx == 0 ? Math.Sign(cy) : 0;
-                    if (dx == 0 && dy == 0) return;
+                    if (dx == 0 && dy == 0)
+                        throw new InvalidOperationException(npcId + "에게 다가가기: 칸 " + start + " 가운데(" + w.X + "," + w.Y + ")가 NPC 곁이라는데 NPC(" + nx + "," + ny
+                            + ")까지 " + MathF.Sqrt(ddx * ddx + ddy * ddy) + "픽셀로 " + within + "픽셀 밖이다(" + map + ", 그날의 " + Minutes() + "분)");
                     if (!HoldUntil(dx, dy, dx != 0 ? center.X : center.Y, npcId + "에게 다가가기 → " + start)) throw new InvalidOperationException("걸어가는 도중 맵이 바뀌었다: " + World.Map.Id);
                     continue;
                 }

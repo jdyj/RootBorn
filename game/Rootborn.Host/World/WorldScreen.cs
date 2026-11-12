@@ -565,7 +565,7 @@ namespace Rootborn.Host.World
         public void SetFurnitureBlocking(IEnumerable<GridPoint> cells)
         {
             FurnitureRoom room = Room;
-            if (room != null && Rooms.SetFurnitureBlocking(room, cells)) _stage.ForgetMap(room.Map.Id);
+            if (room != null && room.SetFurnitureBlocking(cells)) _stage.ForgetMap(room.Map.Id);
         }
 
         /// <summary>후보를 지금 다시 만든다(놓인 상자가 바뀌었다).</summary>

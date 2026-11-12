@@ -118,9 +118,15 @@ namespace Rootborn.Host.Tests
             Assert.That(walking.Moving, Is.True, "걷고 있다");
             Assert.That(Enumerable.Range(0, p.Game.World.Npcs.Count).Select(i => p.Game.World.Npcs[i].NpcId), Does.Contain(Teacher), "지금 맵의 NPC 목록에 있다(그린다)");
 
-            p.Frames(30);
-            NpcPose later = PoseOf(p, Teacher);
-            Assert.That((later.X, later.Y), Is.Not.EqualTo((walking.X, walking.Y)), "30프레임 뒤 자리가 달라졌다");
+            // 분 아래까지 든 시각(GameSession.DayMinutesExact)을 따라 매 프레임 조금씩 걷는다. 분 단위로 끊긴 시각이면 약 25프레임 동안 같은 자리에 선다.
+            NpcPose previous = walking;
+            for (int frame = 1; frame <= 5; frame++)
+            {
+                p.Frames(1);
+                NpcPose now = PoseOf(p, Teacher);
+                Assert.That((now.X, now.Y), Is.Not.EqualTo((previous.X, previous.Y)), frame + "번째 프레임에도 자리가 달라졌다(" + now.X + "," + now.Y + ")");
+                previous = now;
+            }
             Assert.That(p.CollisionViolations, Is.EqualTo(0));
             p.Screenshot("npc-walk-01-teacher-walks-in-town");
         }

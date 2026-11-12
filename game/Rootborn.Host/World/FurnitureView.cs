@@ -38,38 +38,6 @@ namespace Rootborn.Host.World
 
         public WorldMap Load(string mapId) => RoomOf(mapId)?.WalkMap ?? ((IWorldMapSource)_maps).Load(mapId);
 
-        /// <summary>방마다 마지막으로 맞춘 막힌 칸(가구가 바뀌었는지 보려고).</summary>
-        private readonly Dictionary<FurnitureRoom, bool[]> _lastBlocked = new Dictionary<FurnitureRoom, bool[]>();
-
-        /// <summary>
-        /// 방의 걷는 맵에 가구가 막는 칸을 맞춘다(격자 배열을 제자리에서 고친다). 막힌 칸이 전과 달라졌으면 true.
-        /// 창 없는 판의 HeadlessRooms.SetFurnitureBlocking과 같다 — 바뀌면 같이 고친다.
-        /// </summary>
-        public bool SetFurnitureBlocking(FurnitureRoom room, IEnumerable<GridPoint> cells)
-        {
-            if (room == null) throw new ArgumentNullException(nameof(room));
-            CollisionGrid walk = room.WalkMap.Collision;
-            MapGrid grid = walk.Grid;
-            if (!_lastBlocked.TryGetValue(room, out bool[] last))
-            {
-                // 처음에는 걷는 맵이 가구 없는 맵과 같다.
-                _lastBlocked[room] = last = new bool[grid.Count];
-                for (int y = 0; y < grid.Rows; y++)
-                    for (int x = 0; x < grid.Columns; x++) last[grid.Index(x, y)] = room.Map.Collision.IsBlocked(x, y);
-            }
-            room.SetFurnitureBlocking(cells);
-            bool changed = false;
-            for (int y = 0; y < grid.Rows; y++)
-                for (int x = 0; x < grid.Columns; x++)
-                {
-                    int i = grid.Index(x, y);
-                    bool now = walk.IsBlocked(x, y);
-                    if (last[i] != now) changed = true;
-                    last[i] = now;
-                }
-            return changed;
-        }
-
         /// <summary>
         /// 그 면 id(placementSurface)의 가구 방 칸 — 이 PC의 화면이 GameSession.EnterHouse에 넘기는 것과 같은 칸. 내 PC에서 연 방이 같이 쓰는 집을
         /// 판정할 때 쓴다(Core RoomHouseRules). 그런 맵이 없으면 null.

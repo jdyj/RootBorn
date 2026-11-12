@@ -20,6 +20,8 @@ namespace Rootborn.Screens.Furniture
     {
         private readonly bool[] _blocked;
         private readonly bool[] _baseBlocked;
+        /// <summary>SetFurnitureBlocking이 바뀌었는지 보려고 앞의 막힌 칸을 옮겨 두는 칸(한 번 만들어 다시 쓴다).</summary>
+        private readonly bool[] _previous;
         private readonly List<GridPoint> _floor;
 
         public FurnitureRoom(WorldMap map)
@@ -55,6 +57,7 @@ namespace Rootborn.Screens.Furniture
 
             // 캐릭터가 걷는 맵: 문과 도착 지점은 그대로, 막힌 칸 표만 이 방이 가진다(가구가 놓이면 그 칸을 더한다).
             _blocked = (bool[])_baseBlocked.Clone();
+            _previous = new bool[_blocked.Length];
             WalkMap = new WorldMap(map.Id, new CollisionGrid(grid, _blocked, map.Collision.OpenOutside), map.Doors, spawnPoints);
         }
 
@@ -82,17 +85,26 @@ namespace Rootborn.Screens.Furniture
             return new AreaRect(c.X * size, c.Y * size, size, size);
         }
 
-        /// <summary>이동을 막는 가구가 차지한 칸(House.BlockingCells)으로 캐릭터 충돌을 다시 맞춘다. 맵 밖 칸은 무시한다.</summary>
-        public void SetFurnitureBlocking(IEnumerable<GridPoint> cells)
+        /// <summary>
+        /// 이동을 막는 가구가 차지한 칸(House.BlockingCells)으로 캐릭터 충돌을 다시 맞춘다. 맵 밖 칸은 무시한다.
+        /// 막힌 칸이 전과 달라졌으면 true — 걷는 NPC는 그때만 이 방의 길을 다시 찾는다. 새 객체를 만들지 않는다(배치 화면이 열린 동안 자주 불린다).
+        /// </summary>
+        public bool SetFurnitureBlocking(IEnumerable<GridPoint> cells)
         {
+            Array.Copy(_blocked, _previous, _blocked.Length);
             Array.Copy(_baseBlocked, _blocked, _blocked.Length);
-            if (cells == null) return;
-            MapGrid grid = Map.Grid;
-            foreach (GridPoint cell in cells)
+            if (cells != null)
             {
-                CellPos c = ToMap(cell);
-                if (grid.Contains(c.X, c.Y)) _blocked[grid.Index(c.X, c.Y)] = true;
+                MapGrid grid = Map.Grid;
+                foreach (GridPoint cell in cells)
+                {
+                    CellPos c = ToMap(cell);
+                    if (grid.Contains(c.X, c.Y)) _blocked[grid.Index(c.X, c.Y)] = true;
+                }
             }
+            for (int i = 0; i < _blocked.Length; i++)
+                if (_blocked[i] != _previous[i]) return true;
+            return false;
         }
     }
 }
