@@ -23,6 +23,8 @@ namespace Rootborn.Balance.Tests
     {
         private static readonly Dictionary<string, IRunStart> Kinds = Register(new NewGameStart(), new AdultStart());
 
+        public static bool Knows(string kind) => kind != null && Kinds.ContainsKey(kind);
+
         public static IRunStart Get(string kind)
         {
             if (kind != null && Kinds.TryGetValue(kind, out var start)) return start;
