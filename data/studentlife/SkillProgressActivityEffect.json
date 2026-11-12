@@ -74,7 +74,7 @@
     "id": "Practice_Interior_Activity/Practice_Interior_SkillProgressActivityEffect#2",
     "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_Interior_Activity.asset",
     "skill": {
-      "ref": "skill.color-harmony",
+      "ref": "skill.interior",
       "type": "SkillDefinition"
     },
     "delta": 2
@@ -84,7 +84,7 @@
     "id": "Practice_Interior_Activity/Practice_Interior_SkillProgressActivityEffect#3",
     "asset": "Assets/Data/StudentLife/CareerPractices/Activities/Practice_Interior_Activity.asset",
     "skill": {
-      "ref": "skill.space-layout",
+      "ref": "skill.interior",
       "type": "SkillDefinition"
     },
     "delta": 3

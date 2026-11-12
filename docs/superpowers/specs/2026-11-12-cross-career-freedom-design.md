@@ -20,7 +20,7 @@
 
 | 있는 것 | 어디 | 이 설계에서 |
 |---|---|---|
-| 기술 값(`AddSkill`/`GetSkillValue`, id 문자열) | Core `StudentLifeProgress` | 그대로 쓴다. 기술 정의는 13개 있었다(`data/skills`의 `skill.basic-study`, `data/studentlife`의 12개 — `skill.cooking` 포함). 요리 기술은 있는 `skill.cooking`을 쓰고, 1단계에서 `skill.interior` 하나만 `data/workspaces`에 더했다(지금 14개) |
+| 기술 값(`AddSkill`/`GetSkillValue`, id 문자열) | Core `StudentLifeProgress` | 그대로 쓴다. 기술 정의는 13개 있었다(`data/skills`의 `skill.basic-study`, `data/studentlife`의 12개 — `skill.cooking` 포함). 요리 기술은 있는 `skill.cooking`을 쓰고, 1단계에서 `skill.interior` 하나만 `data/workspaces`에 더했다. 2026-11-13에 옛 인테리어 진로 기술 둘(`skill.space-layout`, `skill.color-harmony`)을 `skill.interior`로 합쳐 지금 12개다 — 인테리어 진로 연습이 `skill.interior`를 올린다 |
 | 일마다 숙련(`Mastery`), 성공 횟수 | Core `AdultCareerProgress` | 그대로 둔다(일 하나를 얼마나 익혔는지). 기술과 구별한다 |
 | 시설 레벨 1~3, 레벨별 보상 비율 | Core `Facility`, `FacilityLevel` | 그대로 둔다. 공간 보정이 그 위에 곱해진다 |
 | 조건 종류를 클래스 하나로 더하는 구조 | `IFacilityTransitionRequirement`, `IAutoSkipRequirement`, 활동의 조건·효과 | 같은 방식으로 새 종류를 더한다 |

@@ -32,6 +32,27 @@ namespace Rootborn.Data.Tests
             Assert.That(result.Definitions.WorkLinks, Is.Not.Null);
         }
 
+        /// <summary>
+        /// 인테리어 진로 연습은 꾸미기 단계가 보는 바로 그 기술을 올린다(사용자 결정 2026-11-13: 옛 공간 배치·색상 조화 기술을 합쳤다).
+        /// 기술 id를 적지 않고 단계 데이터에서 읽는다 — 단계가 보는 기술이 바뀌어도 연결이 끊기면 실패한다.
+        /// </summary>
+        [Test]
+        public void RealData_InteriorPractice_RaisesTheSkillDecorationTiersRead()
+        {
+            var result = LoadReal();
+            result.ThrowIfFailed();
+            var definitions = result.Definitions;
+            var tierSkills = definitions.All<SkillTier>().Select(t => t.SkillId).Distinct().ToArray();
+            Assert.That(tierSkills, Has.Length.EqualTo(1), "꾸미기 단계는 기술 하나를 본다");
+
+            var student = new Rootborn.Core.StudentLife.StudentLifeProgress("slot", "p1", 100, 100);
+            definitions.Get<Rootborn.Core.StudentLife.LifeActivity>("practice.interior").ApplyEffects(student);
+
+            Assert.That(student.GetSkillValue(tierSkills[0]), Is.GreaterThan(0), "연습 한 번이 꾸미기 기술을 올린다");
+            Assert.That(student.GetSkillValue("skill.space-layout"), Is.Zero, "합친 옛 기술은 더 오르지 않는다");
+            Assert.That(student.GetSkillValue("skill.color-harmony"), Is.Zero, "합친 옛 기술은 더 오르지 않는다");
+        }
+
         [Test]
         public void DuplicateWorkspaceId_IsError()
         {

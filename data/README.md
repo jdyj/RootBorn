@@ -186,7 +186,7 @@
 
 | type | 무엇 | 필드 |
 |---|---|---|
-| `SkillDefinition` | 기술(이름만, 규칙 아님). 여기에는 `skill.interior`만 — `skill.cooking`은 `studentlife/`에 있다 | `displayNameKey` |
+| `SkillDefinition` | 기술(이름만, 규칙 아님). 여기에는 `skill.interior`만 — `skill.cooking`은 `studentlife/`에 있다. 인테리어 진로 연습(`studentlife/SkillProgressActivityEffect.json`)도 `skill.interior`를 올린다 | `displayNameKey` |
 | `SkillTierDefinition` | 기술 단계(값 이상이면 닿음) | `skill`(ref), `minimumValue`, `displayNameKey` |
 | `SpaceQualityDefinition` | 공간 성질(아늑함, 위생, 동선, 안전, 집중) | `displayNameKey`, `iconKey` |
 | `FurnitureQualityRule` | 가구 분류 또는 가구 하나가 성질에 주는 점수 | `category` 또는 `furniture`(가구 `stableId`) 하나, `quality`(ref), `score` |

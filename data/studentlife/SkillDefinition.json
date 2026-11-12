@@ -13,12 +13,6 @@
   },
   {
     "type": "SkillDefinition",
-    "id": "skill.color-harmony",
-    "asset": "Assets/Data/StudentLife/CareerPractices/Skills/Skill_ColorHarmony.asset",
-    "displayNameKey": "skill.color-harmony"
-  },
-  {
-    "type": "SkillDefinition",
     "id": "skill.cooking",
     "asset": "Assets/Data/StudentLife/CareerPractices/Skills/Skill_Cooking.asset",
     "displayNameKey": "skill.cooking"
@@ -40,12 +34,6 @@
     "id": "skill.reaction-speed",
     "asset": "Assets/Data/StudentLife/CareerPractices/Skills/Skill_ReactionSpeed.asset",
     "displayNameKey": "skill.reaction-speed"
-  },
-  {
-    "type": "SkillDefinition",
-    "id": "skill.space-layout",
-    "asset": "Assets/Data/StudentLife/CareerPractices/Skills/Skill_SpaceLayout.asset",
-    "displayNameKey": "skill.space-layout"
   },
   {
     "type": "SkillDefinition",

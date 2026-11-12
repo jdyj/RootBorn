@@ -10,7 +10,8 @@
 |---|---|---|---|
 | 1 | **실제 수치 표** — 가구 한도, 되풀이 줄이기, 성질 점수, 이득 단계, 템플릿 값, 꾸미며 배우기 횟수 | 한도 6/10/14, 되풀이 70%, 아늑함 10마다 보상 +5%(한도 30), 위생 10마다 명성 +1(한도 3), 템플릿 값 용돈 20, 하루 3번 | `data/workspaces/*.json` |
 | 2 | **한도 규칙을 더하는 방식** — 닿은 단계를 모두 더할지, 가장 높은 단계만 쓸지 | 모두 더한다(1단계 +2, 2단계 +4 → 2단계에서 합계 +6) | `data/workspaces/SkillTierCapacityRule.json`(숫자) 또는 Core `Workspace.Capacity` |
-| 3 | **인테리어 기술과 기존 진로 기술의 관계** — 새 `skill.interior`가 인테리어 진로 연습이 올리는 `skill.space-layout`·`skill.color-harmony`와 따로 논다. 인테리어 진로 학생이 꾸미기에 유리하지 않다 | 따로 논다. `skill.interior`는 가구 놓기로만 오른다 | `data/workspaces/SkillTierDefinition.json`(단계가 보는 기술), `data/careers`의 연습 효과 |
+| 3 | **인테리어 진로 연습이 올리는 양** — 기술을 합친 뒤(아래 "정해진 것") 연습 한 번이 `skill.interior`를 5(옛 두 기술의 2+3) 올린다. 1단계(10)에 연습 두 번이면 닿는다. 가구 놓기는 한 번에 3, 하루 3번 | 5(옛 값의 합 그대로) | `data/studentlife/SkillProgressActivityEffect.json`의 인테리어 연습 두 줄 |
+| 22 | **합치기 전 세이브의 옛 기술 값** — `skill.space-layout`·`skill.color-harmony`에 쌓인 값을 `skill.interior`로 옮길지 | 옮기지 않는다. 값은 세이브에 그대로 남고(버리지 않는다) 쓰이지 않는다. 옮기려면 읽을 때 옮기는 코드가 필요하다 | Core `StudentLifeProgress` 읽기 |
 | 4 | **성질 목록과 기술 목록** — 성질 다섯(아늑함·위생·동선·안전·집중)과 직업마다 기술 하나가 맞는지 | 성질 5개 가운데 아늑함·위생만 이득에 쓰인다. 기술은 요리·인테리어 | `data/workspaces/SpaceQualityDefinition.json` 등 |
 | 5 | **다른 세 시설의 데이터** — 일터, 이득, 기술 성장 | 없음(요리사만). 일터가 없는 시설도 기술 성장 데이터만 더하면 자란다 | `data/workspaces/` |
 | 6 | **같은 템플릿을 다시 적용** — 바뀌는 것 없이 돈을 또 낸다. "이미 깔림"으로 막을지 | 막지 않는다 | Core `WorkspaceService.Check` |
@@ -50,4 +51,5 @@
 | 날짜 | 결정 |
 |---|---|
 | 2026-11-12 | 누구나 가구를 놓을 수 있다. 인테리어 기술은 놓을 수 있는 수와 점수 배율만 올린다(자유 배치를 기술로 잠그지 않는다). |
+| 2026-11-13 | 기존 인테리어 진로 기술(`skill.space-layout`, `skill.color-harmony`)을 `skill.interior`로 합친다. 인테리어 진로 연습이 `skill.interior`를 올리고, 옛 두 기술 정의는 지웠다(두 기술을 읽는 조건·마일스톤은 없었다). |
 | 2026-11-12 | 추천안으로 진행: 주 직업 하나·기술은 무엇이든, 꾸미기는 필수가 아니다(기본 템플릿이 깔린다), 내 방 꾸미기가 인테리어 기술을 올린다. |
