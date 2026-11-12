@@ -315,7 +315,6 @@ namespace Rootborn.Screens.Inventory
                     list.Text(x, y, shown, font, Ink);
                 }
             }
-            if (state.Selected && state.Focused) list.Outline(rect, UiTheme.FocusOutline, UiTheme.Accent);
         }
 
         /// <summary>아이템 그림 키. 어느 PNG의 어디인지는 Host가 정한다.</summary>

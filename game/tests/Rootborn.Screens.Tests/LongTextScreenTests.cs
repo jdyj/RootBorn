@@ -90,22 +90,8 @@ namespace Rootborn.Screens.Tests
 
             private Rootborn.Screens.Start.StartMenu _menu;
 
-            /// <summary>시작 화면을 실제처럼 여는 메뉴(이 판의 저장 폴더). 슬롯 하나에는 이야기를 써 둬 이어 하기·지우기 칸도 보인다.</summary>
-            public Rootborn.Screens.Start.StartMenu Menu
-            {
-                get
-                {
-                    if (_menu != null) return _menu;
-                    var store = new FileSaveStore(_saves);
-                    var looks = Rootborn.Screens.Start.CreatorLooks.Load(TestData.DataDirectory);
-                    var model = new Rootborn.Screens.Start.CharacterCreatorModel(looks);
-                    long now = new DateTime(2026, 11, 12, 9, 0, 0, DateTimeKind.Utc).Ticks;
-                    store.Write("slot-1", SaveFileNames.Metadata, Rootborn.Screens.Start.SaveSlots.CreateMetadata("slot-1", "Name", model.Snapshot(), now, 1));
-                    _menu = new Rootborn.Screens.Start.StartMenu(new Rootborn.Screens.Start.SaveSlots(store, _ => { }), looks,
-                        new Rootborn.Screens.Tests.Start.FakePreviewArt(), _ => true, () => { }, () => now, () => 1);
-                    return _menu;
-                }
-            }
+            /// <summary>시작 화면을 실제처럼 여는 메뉴(이 판의 저장 폴더).</summary>
+            public Rootborn.Screens.Start.StartMenu Menu => _menu ??= StartMenus.Create(_saves);
             public GameText Text { get; }
             public ScreenStack Stack { get; }
 
@@ -176,19 +162,6 @@ namespace Rootborn.Screens.Tests
                 "고쳐진 넘침은 목록에서 지운다");
         }
 
-        /// <summary>그냥 Open(id)로는 내용이 없어 바로 닫히거나 비는 화면: 실제로 여는 길(상호작용, 예약, 인자).</summary>
-        private static readonly Dictionary<string, Action<LongSession>> Openers = new Dictionary<string, Action<LongSession>>(StringComparer.Ordinal)
-        {
-            [ScreenCatalog.Dialogue] = t => t.Stack.Interaction(new InteractionEvent("House", "npc", "npc.first-guide")),
-            [ScreenCatalog.Location] = t => t.Stack.Interaction(new InteractionEvent("Town", "location-activity", "location.library")),
-            [ScreenCatalog.Minigame] = t => t.Stack.Interaction(new InteractionEvent("Town", "part-time-work", "work.shift.corner-store")),
-            [ScreenCatalog.SaveSlotSelect] = t => t.Stack.Open(ScreenCatalog.SaveSlotSelect, argument: t.Menu),
-            [ScreenCatalog.CharacterCreator] = t => t.Stack.Open(ScreenCatalog.CharacterCreator, argument: new Rootborn.Screens.Start.CreatorOpen(t.Menu, "slot-2")),
-            [ScreenCatalog.InteractionRefusal] = t => Rootborn.Screens.Hud.InteractionRefusals.Show(t.Services, "ui.prompt.no-time"),
-            [ScreenCatalog.RoomSharesNotice] = t => t.Stack.Open(ScreenCatalog.RoomSharesNotice,
-                argument: new Rootborn.Screens.Start.RoomSharesNoticeOpen(Rootborn.Core.Room.RoomPieceCatalog.CreateDefault().Names)),
-        };
-
         /// <summary>
         /// 따로 2배 문구 시험이 있는 화면: 화면 id → 그 시험. 이 시험에서는 열지 않는다(준비가 따로 필요하다).
         /// </summary>
@@ -214,7 +187,7 @@ namespace Rootborn.Screens.Tests
                 t.Stack.EnterMap("House", new[] { MapFeatures.FurniturePlacement });
                 if (!entry.WithoutWorld) t.Stack.OpenHud();
                 t.Stack.SetInteractionTarget(new InteractionTargetView("location-activity", "location.library", 800, 500, 64));
-                if (Openers.TryGetValue(entry.Id, out Action<LongSession> open)) open(t);
+                if (ScreenOpeners.TryOpen(entry.Id, t.Stack, t.Services, () => t.Menu)) { }
                 else if (!t.Stack.IsOpen(entry.Id)) t.Stack.Open(entry.Id);
                 t.Settle();
                 if (entry.Id == ScreenCatalog.HudTracked && !t.Stack.Find(entry.Id).Root.Children.Any(c => c.IsVisibleInTree()))

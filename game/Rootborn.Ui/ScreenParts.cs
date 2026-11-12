@@ -8,6 +8,7 @@ namespace Rootborn.Ui
     /// <summary>
     /// 세로로 스크롤하는 글자 묶음(Unity의 ScrollRect + VerticalLayoutGroup + 줄바꿈 Text 구역들). 구역마다 줄바꿈해 쌓고,
     /// 보이는 줄만 그린다. 휠·끌기로 스크롤한다. 줄바꿈 결과는 글자나 폭이 바뀔 때만 다시 계산한다.
+    /// 글이 넘칠 때만 키보드 포커스를 받아 위·아래 키로 WheelStep씩 스크롤하고, 끝에서 누르면 다른 요소로 나간다(넘치지 않으면 지나치는 칸이 되지 않게 포커스를 받지 않는다).
     /// </summary>
     public sealed class UiSectionScrollView : UiNode
     {
@@ -73,6 +74,18 @@ namespace Rootborn.Ui
             _contentHeight = height;
             _wrappedWidth = area.W; _wrappedSize = FontSize; _dirty = false;
             ScrollOffset = _scroll;
+            Focusable = MaxScroll > 0;
+        }
+
+        public override void OnClick(float x, float y) { }
+        public override void OnSubmit() { }
+
+        public override bool OnNavigate(UiNav nav)
+        {
+            if (nav != UiNav.Up && nav != UiNav.Down) return false;
+            float before = _scroll;
+            ScrollOffset = _scroll + (nav == UiNav.Down ? WheelStep : -WheelStep);
+            return _scroll != before; // 끝에서는 나간다
         }
 
         public override bool OnWheel(float notches)
@@ -116,6 +129,7 @@ namespace Rootborn.Ui
             float thumbH = max <= 0 ? track.H : MathF.Max(24, track.H * area.H / MathF.Max(area.H, _contentHeight));
             float thumbY = max <= 0 ? track.Y : track.Y + (track.H - thumbH) * (_scroll / max);
             list.Fill(new UiRect(track.X, thumbY, track.W, thumbH), Thumb);
+            if (FocusRing) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
         }
     }
 

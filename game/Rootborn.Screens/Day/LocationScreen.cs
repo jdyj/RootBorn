@@ -234,7 +234,6 @@ namespace Rootborn.Screens.Day
             y = Line(list, text, rect, y, lines[0], LocationLayout.RowFont, ink) + 2;
             if (lines.Length > 1) y = Line(list, text, rect, y, lines[1], LocationLayout.RowSubFont, ink) + 2;
             if (reason.Length > 0) Line(list, text, rect, y, reason, LocationLayout.RowReasonFont, ink);
-            if (state.Selected && state.Focused) list.Outline(rect, UiTheme.FocusOutline, UiTheme.Accent);
         }
 
         private static float Line(DrawList list, ITextMeasurer text, UiRect rect, float y, string value, float size, UiColor color)

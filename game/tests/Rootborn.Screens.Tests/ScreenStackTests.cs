@@ -60,6 +60,7 @@ namespace Rootborn.Screens.Tests
             registry.Add("search", ScreenLayer.Panel, false, s => new ProbeScreen(s, withField: true)).OpenedBy(ScreenKey.Status);
             registry.Add("event", ScreenLayer.Modal, true, s => new ProbeScreen(s)).OpenedByInteraction("daily-event");
             registry.Add("result", ScreenLayer.Modal, true, s => new ProbeScreen(s));
+            registry.Add("name", ScreenLayer.Modal, true, s => new ProbeScreen(s, withField: true));
             registry.Add("talk", ScreenLayer.Modal, false, s => new ProbeScreen(s)).OpenedByInteraction("npc");
             registry.Add("toast", ScreenLayer.Notice, false, s => new ProbeScreen(s));
             _services = new ScreenServices(TestData.Text(), null);
@@ -192,12 +193,14 @@ namespace Rootborn.Screens.Tests
             _stack.Open("settings");
             foreach (ScreenKey arrow in new[] { ScreenKey.Up, ScreenKey.Down, ScreenKey.Left, ScreenKey.Right })
                 Assert.That(_stack.Key(arrow, false), Is.False, arrow + "는 캐릭터로 간다");
-            Assert.That(_stack.Tree.Focused, Is.Null);
+            Assert.That(_stack.Tree.Focused, Is.SameAs(Screen("settings").First), "열면 첫 요소에 포커스가 있다");
+            Assert.That(_stack.Tree.Focused.FocusRing, Is.False, "테두리는 키보드로 옮길 때만");
             Assert.That(_stack.MovementBlockedWhile(false), Is.False);
             Assert.That(_stack.MovementBlockedWhile(true), Is.True, "Shift를 누르고 있는 동안은 방향 키가 포커스를 옮기므로 걷지 않는다");
 
             Assert.That(_stack.Key(ScreenKey.Right, true), Is.True);
-            Assert.That(_stack.Tree.Focused, Is.SameAs(Screen("settings").First));
+            Assert.That(_stack.Tree.Focused, Is.SameAs(Screen("settings").First), "첫 키는 그 자리에 테두리를 보인다");
+            Assert.That(_stack.Tree.Focused.FocusRing, Is.True);
             _stack.Key(ScreenKey.Right, true);
             Assert.That(_stack.Tree.Focused, Is.SameAs(Screen("settings").Second));
             _stack.Key(ScreenKey.Left, true);
@@ -210,8 +213,10 @@ namespace Rootborn.Screens.Tests
         public void Tab_DoesNotMoveFocus_ItIsLeftForItsKeyBinding()
         {
             _stack.Open("settings");
+            UiNode before = _stack.Tree.Focused;
             Assert.That(_stack.Key(ScreenKey.Tab, false), Is.False, "Tab이 배정된 화면이 없으면 아무 일도 없다");
-            Assert.That(_stack.Tree.Focused, Is.Null);
+            Assert.That(_stack.Tree.Focused, Is.SameAs(before), "Tab은 포커스를 옮기지 않는다");
+            Assert.That(before?.FocusRing, Is.False);
         }
 
         [Test]
@@ -303,6 +308,77 @@ namespace Rootborn.Screens.Tests
             _stack.Key(ScreenKey.Escape, false);
             Assert.That(_stack.TextInputFocused, Is.False, "Esc는 먼저 글자 칸을 놓는다");
             Assert.That(_stack.IsOpen("search"), Is.True);
+        }
+
+        [Test]
+        public void OpeningAScreen_PutsQuietFocusOnItsFirstElement_ClosingAModal_ReturnsToWhereYouWere()
+        {
+            _stack.Open("bag");
+            ProbeScreen bag = Screen("bag");
+            Assert.That(_stack.Tree.Focused, Is.SameAs(bag.First));
+            _stack.Key(ScreenKey.Right, true);
+            _stack.Key(ScreenKey.Right, true);
+            Assert.That(_stack.Tree.Focused, Is.SameAs(bag.Second));
+
+            _stack.Open("result");
+            Assert.That(_stack.Tree.Focused, Is.SameAs(Screen("result").First), "위에 연 모달이 포커스를 받는다");
+            Assert.That(_stack.Key(ScreenKey.Enter, false), Is.True, "열자마자 Enter가 그 요소를 누른다");
+            Assert.That(Screen("result").Log, Does.Contain("click:first"));
+            _stack.Close("result");
+            Assert.That(_stack.Tree.Focused, Is.SameAs(bag.Second), "모달을 닫으면 아래 화면의 마지막 포커스로 돌아간다");
+        }
+
+        [Test]
+        public void InitialFocus_SkipsTextFields_SoOpeningDoesNotStartTyping()
+        {
+            _stack.Open("search");
+            Assert.That(_stack.Tree.Focused, Is.SameAs(Screen("search").First));
+            Assert.That(_stack.TextInputFocused, Is.False);
+            Assert.That(_stack.MovementBlocked, Is.False, "검색 칸이 있는 패널을 열어도 걸을 수 있다");
+        }
+
+        [Test]
+        public void TextField_OnABlockingScreen_IsLeftWithPlainUpDown_OnAWalkingScreenWithShiftUpDown()
+        {
+            _stack.Open("name");
+            ProbeScreen name = Screen("name");
+            _stack.Tree.SetFocus(name.Field);
+            Assert.That(_stack.Key(ScreenKey.Left, false), Is.True);
+            Assert.That(_stack.Tree.Focused, Is.SameAs(name.Field), "왼쪽·오른쪽은 칸 안의 것");
+            _stack.Key(ScreenKey.Up, false);
+            Assert.That(_stack.Tree.Focused, Is.Not.SameAs(name.Field), "막는 화면: 위 키만으로 칸을 나간다");
+            _stack.Close("name");
+
+            _stack.Open("search");
+            ProbeScreen search = Screen("search");
+            _stack.Tree.SetFocus(search.Field);
+            _stack.Key(ScreenKey.Up, false);
+            Assert.That(_stack.Tree.Focused, Is.SameAs(search.Field), "막지 않는 화면: 위 키만으로는 나가지 않는다(글자 칸 안)");
+            _stack.Key(ScreenKey.Up, true);
+            Assert.That(_stack.Tree.Focused, Is.Not.SameAs(search.Field), "Shift+위로 나간다");
+        }
+
+        [Test]
+        public void WhileComposing_ArrowsEnterAndEsc_StayWithTheInputMethod()
+        {
+            _stack.Open("name");
+            ProbeScreen name = Screen("name");
+            var submitted = new List<string>();
+            name.Field.Submitted += t => submitted.Add(t);
+            _stack.Tree.SetFocus(name.Field);
+            _stack.TextInput("가");
+            _stack.TextComposition("나");
+            foreach (ScreenKey key in new[] { ScreenKey.Up, ScreenKey.Down, ScreenKey.Left, ScreenKey.Right, ScreenKey.Enter, ScreenKey.Escape })
+            {
+                _stack.Key(key, false);
+                Assert.That(_stack.Tree.Focused, Is.SameAs(name.Field), key + "가 조합 중인 칸을 떠나게 하지 않는다");
+                Assert.That(name.Field.Composition, Is.EqualTo("나"), key + "가 조합을 지우지 않는다");
+            }
+            Assert.That(submitted, Is.Empty, "조합 중 Enter는 보내지 않는다");
+
+            _stack.TextInput("나"); // 입력기가 확정한다(Host는 확정 글자를 키보다 먼저 넘긴다)
+            _stack.Key(ScreenKey.Enter, false);
+            Assert.That(submitted, Is.EqualTo(new[] { "가나" }));
         }
 
         [Test]

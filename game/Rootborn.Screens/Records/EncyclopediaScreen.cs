@@ -122,6 +122,9 @@ namespace Rootborn.Screens.Records
             return row.IsNew ? F("ui.encyclopedia.row-new", Shown(row.TitleKey)) : title;
         }
 
+        /// <summary>키보드 처음 포커스: 항목 목록에서 시작한다.</summary>
+        protected internal override UiNode InitialFocus => _list;
+
         protected override UiNode Build()
         {
             Model = new EncyclopediaModel(Services.Session);

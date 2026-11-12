@@ -128,6 +128,9 @@ namespace Rootborn.Screens.Records
             return null;
         }
 
+        /// <summary>키보드 처음 포커스: 첫 옷 칸(없으면 닫기). 닫기 단추가 나무의 앞에 있다.</summary>
+        protected internal override UiNode InitialFocus => UiTree.FirstFocusable(Root, Root.Find(CloseId));
+
         protected override UiNode Build()
         {
             var root = new UiNode { Id = "wardrobe.root" };

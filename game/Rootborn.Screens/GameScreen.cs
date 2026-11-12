@@ -139,6 +139,12 @@ namespace Rootborn.Screens
         /// </summary>
         protected internal virtual bool CoveredAsOne => false;
 
+        /// <summary>
+        /// 화면을 열 때 키보드 포커스를 둘 요소(테두리 없이). null이면 나무 순서의 첫 요소(글자 칸은 건너뛴다). OnOpened에서 직접 포커스를 두면 그것이 먼저다.
+        /// 화면 배치가 특별해 첫 요소가 맞지 않을 때만 고친다.
+        /// </summary>
+        protected internal virtual UiNode InitialFocus => null;
+
         /// <summary>화면이 가져갈 키. true면 다른 화면과 키 배정은 그 키를 보지 않는다.</summary>
         protected internal virtual bool OnKey(ScreenKey key, bool shift) => false;
 

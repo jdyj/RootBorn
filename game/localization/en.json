@@ -24,6 +24,8 @@
   "ui.keys.navigate-blocking": "Move between buttons (screens that stop walking)",
   "ui.keys.navigate-walking": "Move between buttons (screens you can walk with)",
   "ui.keys.press": "Press the chosen button",
+  "ui.keys.field-leave": "Leave a text box (with Shift on screens you can walk with)",
+  "ui.keys.field-release": "Let go of a text box",
   "ui.keys.fullscreen": "Toggle full screen",
   "ui.keys.screenshot": "Save a screenshot",
   "ui.keys.name.arrows": "Arrow keys",

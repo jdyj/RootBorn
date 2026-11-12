@@ -195,6 +195,9 @@ namespace Rootborn.Screens.Career
         /// <summary>결과 글(고르기 전에는 빈 글).</summary>
         public string ResultText => _result?.Text ?? string.Empty;
 
+        /// <summary>키보드 처음 포커스: 첫 선택지(없으면 닫기). 닫기 단추가 나무의 앞에 있다.</summary>
+        protected internal override UiNode InitialFocus => UiTree.FirstFocusable(Root, _close);
+
         protected override UiNode Build()
         {
             var root = new PanelRoot(this) { Id = PanelId };

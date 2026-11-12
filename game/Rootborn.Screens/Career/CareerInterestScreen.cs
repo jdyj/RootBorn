@@ -224,7 +224,6 @@ namespace Rootborn.Screens.Career
             list.Image(icon, Metrics.IconKey, default, UiTheme.White);
             var label = new UiRect(rect.CenterX - Metrics.LabelW / 2f, rect.Y + Metrics.LabelTop, Metrics.LabelW, Metrics.LabelH);
             _cardLabel.Draw(list, text, label, Shown(card.NameKey) + "\n" + T(card.StateKey), Metrics.LabelFont, Metrics.Ink);
-            if (state.Focused && state.Selected) list.Outline(rect, UiTheme.FocusOutline, UiTheme.Accent);
         }
     }
 }

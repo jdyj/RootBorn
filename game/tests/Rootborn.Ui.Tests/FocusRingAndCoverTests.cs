@@ -57,10 +57,7 @@ namespace Rootborn.Ui.Tests
             var tree = new UiTree();
             var grid = tree.Root.Add(new UiCardGrid { CellWidth = 100, CellHeight = 40, ItemCount = 3 });
             grid.Place(0, 0, 0, 0, 300, 200);
-            grid.DrawCell = (index, rect, state, list, text) =>
-            {
-                if (state.Selected && state.Focused) list.Outline(rect, UiTheme.FocusOutline, UiTheme.Accent);
-            };
+            grid.DrawCell = (index, rect, state, list, text) => { }; // 고른 칸의 테두리는 격자가 그린다(칸 그리기는 그리지 않는다)
             tree.Layout(400, 300);
             tree.SetFocus(grid);
             Assert.That(AccentOutlines(tree), Is.EqualTo(1), "고른 칸이 없으면 목록 테두리");

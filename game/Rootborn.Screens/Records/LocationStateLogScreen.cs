@@ -152,7 +152,6 @@ namespace Rootborn.Screens.Records
             float x = rect.X + Metrics.TextInset;
             list.Text(x, rect.Y + Metrics.CardTitleTop + (Metrics.CardTitleH - text.LineHeight(Metrics.CardTitleFont)) / 2f, _titles[index], Metrics.CardTitleFont, Metrics.Ink);
             list.Text(x, rect.Y + Metrics.CardDetailTop + (Metrics.CardDetailH - text.LineHeight(Metrics.CardDetailFont)) / 2f, _details[index], Metrics.CardDetailFont, Metrics.Ink);
-            if (state.Selected && state.Focused) list.Outline(rect, UiTheme.FocusOutline, UiTheme.Accent);
         }
     }
 }

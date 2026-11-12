@@ -95,6 +95,9 @@ namespace Rootborn.Screens.Dialogue
         /// <summary>마지막으로 고른 선택지가 적용됐는지.</summary>
         public bool? LastChoiceApplied { get; private set; }
 
+        /// <summary>키보드 처음 포커스: 선택지가 있으면 첫 선택지, 없으면 닫기. 닫기 단추가 나무의 앞에 있다.</summary>
+        protected internal override UiNode InitialFocus => UiTree.FirstFocusable(Root, _close);
+
         protected override UiNode Build()
         {
             var root = new UiNode { Id = "dialogue.root" };

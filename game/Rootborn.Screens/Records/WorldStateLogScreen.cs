@@ -102,6 +102,9 @@ namespace Rootborn.Screens.Records
 
         public WorldStateLogModel Model { get; private set; } = WorldStateLogModel.Empty;
 
+        /// <summary>키보드 처음 포커스: 기록 카드에서 시작한다.</summary>
+        protected internal override UiNode InitialFocus => _grid;
+
         protected override UiNode Build()
         {
             var root = new UiNode { Id = "world-state-log.root" };
@@ -211,7 +214,6 @@ namespace Rootborn.Screens.Records
             list.PopClip();
 
             DrawLine(list, text, card.Badges, x, rect.Y + Metrics.BadgeTop, Metrics.BadgeH, Metrics.BadgeFont);
-            if (state.Selected && state.Focused) list.Outline(rect, UiTheme.FocusOutline, UiTheme.Accent);
         }
 
         private static void DrawLine(DrawList list, ITextMeasurer text, string value, float x, float top, float height, float fontSize) =>

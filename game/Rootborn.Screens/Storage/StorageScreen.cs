@@ -97,6 +97,9 @@ namespace Rootborn.Screens.Storage
         /// <summary>아래 안내 줄의 문구 키(없으면 null).</summary>
         public string NoticeKey => _noticeKey;
 
+        /// <summary>키보드 처음 포커스: 가방 칸에서 시작한다(넣기가 먼저다).</summary>
+        protected internal override UiNode InitialFocus => _bagGrid;
+
         protected override UiNode Build()
         {
             var root = new UiPanel { Id = RootId, Skin = UiSkin.Panel };

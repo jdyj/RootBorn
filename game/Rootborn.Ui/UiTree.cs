@@ -23,6 +23,7 @@ namespace Rootborn.Ui
 
         private readonly List<UiNode> _focusables = new List<UiNode>(64);
         private UiNode _pressed;
+        private bool _quiet;
         private float _pressX, _pressY;
         private bool _wasDown, _dragging;
 
@@ -105,10 +106,35 @@ namespace Rootborn.Ui
         /// <summary>포커스를 옮긴다(키보드·코드). 포커스 테두리를 그린다.</summary>
         public void SetFocus(UiNode node) => SetFocus(node, ring: true);
 
+        /// <summary>
+        /// 테두리 없이 포커스를 둔다(화면을 열 때의 처음 포커스). Enter는 바로 그 요소를 누르고, 첫 방향 키는 옮기지 않고 그 자리에 테두리를 보인다
+        /// — 포커스가 없을 때 첫 방향 키가 첫 요소를 고르던 것과 같은 결과다. 포인터로 눌러 받은 포커스는 이렇지 않다(방향 키가 바로 옮긴다).
+        /// </summary>
+        public void SetFocusQuietly(UiNode node)
+        {
+            SetFocus(node, ring: false);
+            _quiet = Focused != null;
+        }
+
+        /// <summary>그 안에서 처음 포커스를 둘 요소: 나무 순서로 처음 만나는 포커스 받는 요소. 글자 칸은 건너뛴다(열자마자 글자 입력이 키를 가져가지 않게).</summary>
+        /// <param name="skip">건너뛸 요소(예: 나무의 앞에 있는 닫기 단추). 그것밖에 없으면 null.</param>
+        public static UiNode FirstFocusable(UiNode scope, UiNode skip = null)
+        {
+            if (scope == null || !scope.Visible || !scope.Enabled || scope.Covered) return null;
+            if (scope.Focusable && scope != skip && !(scope is UiTextField) && scope.IsActive) return scope;
+            for (int i = 0; i < scope.Children.Count; i++)
+            {
+                UiNode found = FirstFocusable(scope.Children[i], skip);
+                if (found != null) return found;
+            }
+            return null;
+        }
+
         /// <param name="ring">포커스 테두리를 그리는가. 포인터로 눌러 받은 포커스는 false.</param>
         private void SetFocus(UiNode node, bool ring)
         {
             if (node != null && (!node.Focusable || !node.IsActive)) return;
+            _quiet = false;
             if (node == Focused)
             {
                 if (node != null) node.FocusRing = ring;
@@ -137,6 +163,7 @@ namespace Rootborn.Ui
             }
 
             if (current < 0) { SetFocus(_focusables[0]); return; }
+            if (_quiet) { SetFocus(Focused); return; } // 조용히 둔 처음 포커스: 첫 키는 그 자리에 테두리만
             if (Focused.OnNavigate(nav)) return;
             UiNode target = Nearest(Focused, nav);
             if (target != null) SetFocus(target);
