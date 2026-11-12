@@ -180,8 +180,8 @@ namespace Rootborn.Balance.Tests
                 MdRow(b, keep.Select(_ => "---").ToList());
                 foreach (var row in rows) MdRow(b, keep.Select(c => row[c]).ToList());
 
-                b.Append('\n');
-                if (dropped.Count > 0) b.Append(DroppedColumnsLine).Append(' ').Append(string.Join(", ", dropped)).Append(".\n\n");
+                if (dropped.Count > 0) b.Append('\n').Append(DroppedColumnsLine).Append(' ').Append(string.Join(", ", dropped)).Append(".\n");
+                bool firstRatio = true;
                 foreach (var tier in tiers)
                 {
                     int hi = -1, lo = -1, count = 0;
@@ -193,6 +193,8 @@ namespace Rootborn.Balance.Tests
                         if (lo < 0 || summaries[i].IncomePerDay < summaries[lo].IncomePerDay) lo = i;
                     }
                     if (count < 2) continue; // 대상이 하나면 견줄 것이 없다
+                    if (firstRatio) b.Append('\n');
+                    firstRatio = false;
                     b.Append("- ").Append(tier == "" ? "" : tier + ": ").Append("하루 수입 ");
                     if (summaries[hi].IncomePerDay == summaries[lo].IncomePerDay)
                         b.Append("모두 같음 (").Append(F1(summaries[hi].IncomePerDay)).Append(")\n");
