@@ -153,6 +153,7 @@ LDtk 엔티티가 아니라 **`interactions.json`**에 맵 id별로 적는다(LD
   (임시 지점은 `TemporaryPointsTests`가 확인한다). 같은 자리에 겹쳐 둔 장소 방문 + 장소 활동은 우선순위로 고르도록 일부러 둔 것이다.
 - **맵 성질**: 화면은 맵 id가 아니라 맵 성질을 본다. 지금 성질은 하나 — `placementSurface`가 있는 맵은 "가구를 놓는 면이 있다"
   (`MapFeatures.FurniturePlacement`)이고, Host가 맵에 들어갈 때 `ScreenStack.EnterMap`으로 넘긴다(가구 배치 HUD 단추가 이 성질을 본다).
+- 집 밖에서 가구 배치를 미리 읽는 것(`HouseFurnitureBlocking`)은 맵 목록에서 처음 나오는 가구 방(가구를 놓는 면이 있는 맵)이다 — 가구 방은 지금 하나라는 약속이다.
 - 검사(`game/tests/Rootborn.World.Tests/WorldEntryPointsTests.cs`): 모든 지점이 새 게임 자리에서 걸어서 닿고, 그 자리에 서면 대상으로 골라지고
   (같은 자리의 더 높은 우선순위 지점에 가려진 것은 빼고), `id`가 data/의 정의다(`daily-plan-board`·`student-day-end`의 `id`는 지점 이름일 뿐이다).
   data/의 탐색·성인 시설·진로 연습 정의는 하나도 빠짐없이 지점을 가진다. 화면을 여는 종류마다 지점이 있는지는

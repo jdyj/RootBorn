@@ -200,7 +200,7 @@ namespace Rootborn.Core.NpcMovement
             LocationStateTimeSlots.SlotStarts(_rules.DayStartMinutes, _rules.DayEndMinutes, slots);
             int n = _npcIds.Length;
 
-            // 시간대마다 NPC 모두의 자리: npcIdsInOrder 순서로, 같은 장소에 앞서 배정된 NPC 수가 자리 번호다(NpcPlacement.Place와 같다).
+            // 시간대마다 NPC 모두의 자리: npcIdsInOrder 순서로, 같은 장소에 앞서 배정된 NPC 수가 자리 번호이고, 순서는 레지스트리의 NPC 순서다.
             var present = new bool[slots.Count][];
             var spots = new NpcSpot[slots.Count][];
             var stays = new INpcStayBehavior[slots.Count][];

@@ -293,8 +293,12 @@ namespace Rootborn.Simulation.Headless
                 idle += bytes;
                 idleFrames++;
             }
+            MeasuredIdleFrames = idleFrames;
             return idleFrames == 0 ? 0 : idle / (double)idleFrames;
         }
+
+        /// <summary>마지막 AllocatedBytesPerIdleFrame이 실제로 잰 프레임 수(분·NPC 걸음 프레임은 뺀다). 0이면 아무것도 재지 않은 것이다.</summary>
+        public int MeasuredIdleFrames { get; private set; }
 
         /// <summary>분이 바뀐 프레임 한 번에 새로 잡은 바이트의 최대(AllocatedBytesPerIdleFrame이 잰 것).</summary>
         public long MaxBytesInMinuteFrame { get; private set; }
