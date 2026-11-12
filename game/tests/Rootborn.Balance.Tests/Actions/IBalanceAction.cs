@@ -1,21 +1,21 @@
 using System;
 using Rootborn.Game;
-using Rootborn.Game.Tests;
 
 namespace Rootborn.Balance.Tests
 {
-    /// <summary>판 하나가 행동에 넘기는 것: 대상, 점수 단계의 점수, 걷기·미니게임 가정, 지금 시작해도 취침 규칙에 맞는지.</summary>
+    /// <summary>판 하나가 행동에 넘기는 것: 대상, 그 판의 점수·알바 성공 모델(판마다 새 것), 미니게임 몫, 지금 시작해도 잠 규칙에 맞는지.</summary>
     internal sealed class RunContext
     {
         public object Target;
-        public int Score;
-        public DayAssumptions Assumptions;
+        public IScoreModel Score;        // 시설 일을 정산할 때마다 Next()
+        public ISuccessModel Success;    // 알바를 정산할 때마다 Next()
+        public float MinigameShare;
 
-        /// <summary>걷기가 끝난 지금 그 길이(게임 분)의 행동을 시작해도 되는지(설정의 잠 규칙). 행동이 계획과 다른 것으로 바꿔 할 때 쓴다.</summary>
+        /// <summary>걷기가 끝난 지금 그 길이(게임 분)의 행동을 시작해도 되는지(그 판의 잠 규칙). 행동이 계획과 다른 것으로 바꿔 할 때 쓴다.</summary>
         public Func<GameSession, int, bool> FitsNow;
     }
 
-    /// <summary>행동 하나의 계획. 판을 돌리는 쪽이 취침 판정 → 걷기 → <see cref="Do"/> 순으로 쓴다.</summary>
+    /// <summary>행동 하나의 계획. 판을 돌리는 쪽이 잠 규칙 판정 → 걷기 → <see cref="Do"/> 순으로 쓴다.</summary>
     internal sealed class PlannedStep
     {
         public string Id;                                  // 기록에 남길 이름(일·알바 id, 올리기는 종류 이름)

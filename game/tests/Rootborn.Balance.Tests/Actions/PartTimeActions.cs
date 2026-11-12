@@ -6,7 +6,7 @@ using Rootborn.Game.Tests;
 
 namespace Rootborn.Balance.Tests
 {
-    /// <summary>판의 대상인 알바를 한다(성공으로 끝낸다).</summary>
+    /// <summary>판의 대상인 알바를 한다(성공인지는 그 판의 성공 모델).</summary>
     internal sealed class PartTimeWorkAction : IBalanceAction
     {
         public string Kind => "part-time-work";
@@ -14,7 +14,7 @@ namespace Rootborn.Balance.Tests
         public PlannedStep Plan(GameSession game, RunContext context)
         {
             if (!(context.Target is IMinigamePartTimeWork work)) return null;
-            return new PlannedStep { Id = work.Id, Minutes = work.TimeCostMinutes, Walks = true, Do = (g, request) => PartTimeWorks.Play(g, work, request) };
+            return new PlannedStep { Id = work.Id, Minutes = work.TimeCostMinutes, Walks = true, Do = (g, request) => PartTimeWorks.Play(g, work, request, context) };
         }
     }
 
@@ -45,7 +45,7 @@ namespace Rootborn.Balance.Tests
                 int index = (_turn + k) % _works.Count;
                 var work = (IMinigamePartTimeWork)_works[index];
                 if (k > 0 && !context.FitsNow(game, work.TimeCostMinutes)) continue;
-                var outcome = PartTimeWorks.Play(game, work, request + ":" + work.Id);
+                var outcome = PartTimeWorks.Play(game, work, request + ":" + work.Id, context);
                 if (outcome.Done)
                 {
                     _turn = index + 1;
@@ -59,15 +59,19 @@ namespace Rootborn.Balance.Tests
 
     internal static class PartTimeWorks
     {
-        /// <summary>시작 → 미니게임 시간 → 성공으로 정산. 정산이 거절되면 실패로 끝내 예약을 남기지 않는다.</summary>
-        public static StepOutcome Play(GameSession game, IMinigamePartTimeWork work, string request)
+        /// <summary>
+        /// 시작 → 미니게임 시간 → 성공 모델이 낸 결과로 정산(시작이 된 것마다 한 차례). 성공 정산이 거절되면 실패로 끝내 예약을 남기지 않는다.
+        /// 실패로 정산된 알바도 한 행동이다(시간을 썼다).
+        /// </summary>
+        public static StepOutcome Play(GameSession game, IMinigamePartTimeWork work, string request, RunContext context)
         {
             var begun = game.BeginPartTimeWork(work.Id, request, 1);
             if (!begun.Applied) return BalanceActions.Refused(begun);
-            DayAssumptions.PlayMinigame(game, work.Minigame);
-            var settled = game.SettleMinigame(request, succeeded: true);
-            if (settled.Applied) return new StepOutcome { Done = true, MinigameRealSeconds = DayAssumptions.MinigameSeconds(work.Minigame) };
-            game.SettleMinigame(request, succeeded: false);
+            DayAssumptions.PlayMinigame(game, work.Minigame, context.MinigameShare);
+            bool succeeded = context.Success.Next();
+            var settled = game.SettleMinigame(request, succeeded);
+            if (settled.Applied) return new StepOutcome { Done = true, MinigameRealSeconds = DayAssumptions.MinigameSeconds(work.Minigame, context.MinigameShare) };
+            if (succeeded) game.SettleMinigame(request, succeeded: false);
             return BalanceActions.Refused(settled);
         }
     }

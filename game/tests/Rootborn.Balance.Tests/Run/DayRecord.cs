@@ -18,7 +18,10 @@ namespace Rootborn.Balance.Tests
         public int FacilityLevel;
         public bool Upgraded;
         public int AutoSkips;
-        public int EnergyAtEnd, FocusAtEnd;
+        public int EnergyAtEnd, FocusAtEnd;                                      // 밤(잠·날 넘김) 전의 값
+        public bool Slept;                                                       // 그 밤에 잤는가
+        public int SleptAtMinutes = -1;                                          // 잔 시각(그날 0시부터 센 분). 안 잤으면 -1
+        public bool Exhausted;                                                   // 그날 지침(game.IsExhausted)을 한 번이라도 봤는가
         public string Stop;                                                      // StopReasons의 값
     }
 
@@ -26,12 +29,19 @@ namespace Rootborn.Balance.Tests
     internal static class StopReasons
     {
         public const string Bedtime = "bedtime", BagFull = "bag-full", Body = "body", NothingToDo = "nothing-to-do";
+
+        /// <summary>지쳐서 아무것도 시작하지 못해 그 자리에서 잤다(자는 밤).</summary>
+        public const string Exhausted = "exhausted";
+
+        /// <summary>자지 않는 밤: 날이 넘어가기 전에 끝낼 것을 다 했거나 지쳐서 날이 넘어가기를 기다렸다.</summary>
+        public const string DayRanOut = "day-ran-out";
     }
 
-    /// <summary>판 한 번의 결과: 시작 조건과 날마다의 기록.</summary>
+    /// <summary>판 한 번의 결과: 시작 조건, 그 판의 가정, 날마다의 기록.</summary>
     internal sealed class RunResult
     {
-        public string StrategyId, TargetId, TierId;      // TargetId는 대상이 없으면 "", TierId는 점수를 안 쓰면 ""
+        public string StrategyId, TargetId;              // TargetId는 대상이 없으면 ""
+        public RunSetup Setup;                           // 손으로 만든 판(보고 시험)은 null일 수 있다
         public int StartDay, StartWallet;
         public bool StartWeekend;
         public List<DayRecord> Days = new List<DayRecord>();

@@ -25,18 +25,24 @@ namespace Rootborn.Game.Tests
             game.AdvanceTime(minutes * game.TimeRules.RealSecondsPerGameDay / (24 * 60) + 0.001f, false);
         }
 
-        /// <summary>미니게임을 하는 실제 초: 제한 시간 합의 일정 몫.</summary>
-        public static float MinigameSeconds(Minigame minigame)
+        /// <summary>미니게임을 하는 실제 초: 제한 시간 합의 일정 몫(day-balance.json의 몫).</summary>
+        public static float MinigameSeconds(Minigame minigame) => MinigameSeconds(minigame, Current.MinigameShare);
+
+        /// <summary>미니게임을 하는 실제 초: 제한 시간 합의 share만큼(균형 시뮬레이터가 몫을 바꿔 돌릴 때).</summary>
+        public static float MinigameSeconds(Minigame minigame, float share)
         {
             float limit = 0f;
             foreach (var challenge in minigame.Challenges)
                 if (challenge is ChallengeBase c) limit += c.TimeLimitSeconds;
-            return limit * Current.MinigameShare;
+            return limit * share;
         }
 
         // 미니게임을 하는 동안 시계가 흐른다(혼자 하기, 미니게임 화면은 시계를 멈추지 않는다).
         public static void PlayMinigame(GameSession game, Minigame minigame)
-            => game.AdvanceTime(MinigameSeconds(minigame), false);
+            => PlayMinigame(game, minigame, Current.MinigameShare);
+
+        public static void PlayMinigame(GameSession game, Minigame minigame, float share)
+            => game.AdvanceTime(MinigameSeconds(minigame, share), false);
 
         private static DayAssumptions Read()
         {

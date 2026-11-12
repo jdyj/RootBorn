@@ -198,12 +198,7 @@ namespace Rootborn.Balance.Tests
         // 1단계 점수 단계 하나를 기준 가정에 넣은 것(RunAll이 도는 것과 같다).
         private static RunSetup Scored(BalanceConfig config, string tierId) => Scored(config, config.Tiers.Single(t => t.Id == tierId));
 
-        private static RunSetup Scored(BalanceConfig config, ScoreTier tier)
-        {
-            var setup = RunSetup.Baseline(config);
-            setup.Score = ScoreModels.Fixed(tier.Score);
-            return setup;
-        }
+        private static RunSetup Scored(BalanceConfig config, ScoreTier tier) => BalanceRunner.TierSetup(config, tier);
 
         private static string Name(RunResult run) => run.StrategyId + "/" + run.TargetId + "/" + run.Setup.Id;
 
