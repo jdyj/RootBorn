@@ -68,8 +68,11 @@ namespace Rootborn.World.Tests
             var names = new List<string>();
             InteractionData interactions = Interactions;
             foreach (string mapId in interactions.MapIds)
+            {
                 foreach (InteractionThing t in interactions.Map(mapId).Things)
                     if (t.Temporary) data.Add(Point(t.Id, t.X, t.Y));
+                if (interactions.Map(mapId).PlacementSurfaceTemporary) names.Add(interactions.Map(mapId).PlacementSurface); // 자리가 없는 항목(맵 전체의 면 표시)
+            }
             WorldLightingData lights = WorldLightingData.Load(Path.Combine(Repo.Root, WorldLightingData.DefaultRelativePath));
             foreach (PointLightDef l in lights.Temporary) data.Add(Point(l.Name, l.X, l.Y));
             foreach (MapEntry map in Repo.Loader().Catalog.Maps)

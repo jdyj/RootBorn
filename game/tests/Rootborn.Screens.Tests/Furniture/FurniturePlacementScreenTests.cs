@@ -47,14 +47,17 @@ namespace Rootborn.Screens.Tests.Furniture
         }
 
         /// <summary>10x8칸 방: 가장자리가 벽, 아래쪽 가운데(5,6)에 도착 지점.</summary>
-        internal static WorldMap TestRoomMap()
+        internal static WorldMap TestRoomMap() => TestRoomMap(10, 8);
+
+        /// <summary>벽으로 둘러싼 시험용 방. 들어오는 칸은 가운데 열, 아래 벽 바로 위 줄이다.</summary>
+        internal static WorldMap TestRoomMap(int columns, int rows)
         {
-            var grid = new MapGrid(10, 8, 32);
+            var grid = new MapGrid(columns, rows, 32);
             var blocked = new bool[grid.Count];
             for (int y = 0; y < grid.Rows; y++)
                 for (int x = 0; x < grid.Columns; x++)
                     blocked[grid.Index(x, y)] = x == 0 || y == 0 || x == grid.Columns - 1 || y == grid.Rows - 1;
-            var spawns = new Dictionary<string, (float X, float Y)> { ["entry"] = (5 * 32 + 16, 6 * 32 + 16) };
+            var spawns = new Dictionary<string, (float X, float Y)> { ["entry"] = (columns / 2 * 32 + 16, (rows - 2) * 32 + 16) };
             return new WorldMap("TestRoom", new CollisionGrid(grid, blocked), new List<DoorArea>(), spawns);
         }
 

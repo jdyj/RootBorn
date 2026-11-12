@@ -153,6 +153,20 @@ LDtk 엔티티가 아니라 **`interactions.json`**에 맵 id별로 적는다(LD
 - 집 단계: 세이브의 집 상태(`HouseStage`, 0부터)와 단계마다 따로 저장하는 가구 배치가 있다. 단계마다 다른 집 맵으로 바꾸는 표는 아직 없다
   (지금 `maps.json`의 집은 하나). 새 집 그림이 단계별로 오면 그때 맵 목록에 단계 → 맵을 더한다.
 
+### 일터 면
+
+시설(성인 진로)의 일터는 집과 같은 방식의 가구 방이다. 면 id만 다르다.
+
+- `interactions.json`에서 맵의 `placementSurface`를 **일터의 면 id**(data/workspaces `WorkspaceDefinition`의 `surfaceId`, 예: `workspace.chef`)로 두면
+  그 맵이 그 일터다. Host는 맵 id도 일터 id도 모르고 이 면 id만 `GameSession.EnterPlacementSurface(방 칸, 면 id)`에 넘긴다.
+  그 면의 일터가 데이터에 있으면 일터로, 없으면 집으로 열린다. 방 칸 만드는 법(바닥, 고정 칸, 들어오는 칸)은 집과 같다.
+- 일터 면 하나에 맵 하나를 둔다. 일터마다 면을 가진 맵이 있어야 한다.
+- 시설을 맡은 뒤 처음 들어오면 그 일터의 기본 템플릿이 깔린다. **템플릿 칸(`data/workspaces/WorkspaceTemplate.json`의 `cell`)은 가구 칸 좌표**
+  (x는 맵 칸과 같고 y는 위로 커진다: 가구 칸 y = 맵 줄 수 − 1 − 맵 칸 y)이고, 그 맵의 막히지 않은 칸에 놓여 들어오는 칸에서 걸어 닿는 길을
+  막지 않아야 한다. 맵을 새로 그리면 템플릿 칸도 그 맵에 맞춘다. `WorkspaceTemplateMapTests.EveryWorkspaceTemplate_FitsItsMap`이 확인한다.
+- 시설의 일 지점(`career-facility`)은 일터 맵이 아니어도 된다(지금은 마을 임시 지점). 일의 보상은 저장된 일터 배치로 낸다.
+- 지금 요리사 일터는 주방 실내(`KitchenInterior`)를 임시로 쓴다(8절).
+
 ## 7. 메인 체인이 요구하는 곳
 
 새 게임 시작 자리(data/locations 장면 목록의 새 게임 자리, 지금 `House/house-entry`)에서 **문을 지나 걸어서** 아래에 모두 닿고,
@@ -178,8 +192,8 @@ LDtk 엔티티가 아니라 **`interactions.json`**에 맵 id별로 적는다(LD
 
 ### 새 맵을 그릴 사람을 위한 한 장 요약 (2026-11-12 데이터 기준)
 
-임시 표시는 모두 35개다: `interactions.json` 상호작용 지점 31개, `lights.json` 빛 지점 1개, `maps.json` 연결 3개(문 1, 도착 지점 1, 이동 구역 1).
-전부 **LDtk 마을 그림에 Unity 판의 북쪽 구역(학교 입구, 가게·식당 등 장소, 성인 시설, 알바 자리)이 없어서** 생겼다. 새 맵에 아래 자리를 그리면
+임시 표시는 모두 36개다: `interactions.json` 상호작용 지점 31개와 일터 면 표시 1개, `lights.json` 빛 지점 1개, `maps.json` 연결 3개(문 1, 도착 지점 1, 이동 구역 1).
+일터 면 표시 말고는 전부 **LDtk 마을 그림에 Unity 판의 북쪽 구역(학교 입구, 가게·식당 등 장소, 성인 시설, 알바 자리)이 없어서** 생겼다. 새 맵에 아래 자리를 그리면
 그 항목의 `temporary`·`reason`을 지우고 자리를 새 맵 좌표로 옮긴다(목록 표의 같은 줄도 지운다 — 어긋나면 테스트가 알려 준다).
 
 | 새 맵에 있어야 할 것 | 맵 | 지금 임시로 둔 것 | 개수 |
@@ -191,6 +205,7 @@ LDtk 엔티티가 아니라 **`interactions.json`**에 맵 id별로 적는다(LD
 | 알바 자리 9곳(가게 알바 + 도우미 8곳) | Town | `part-time-work` | 9 |
 | 탐색 1곳, 발견 1곳(골목 상자, 시계탑 안내문) | Town | `exploration`, `discovery` | 2 |
 | 밤에 학교 앞을 비추는 가로등 | Town | 빛 지점 `town-night-guide` | 1 |
+| 요리사 일터(식당 안) — 새 맵을 그리면 면 id를 그 맵에 옮기고 템플릿 칸을 맞춘다(6절 "일터 면") | KitchenInterior | 일터 면 표시 `workspace.chef` | 1 |
 
 | 파일 | 맵 | 항목 | 이유 |
 |---|---|---|---|
@@ -203,6 +218,7 @@ LDtk 엔티티가 아니라 **`interactions.json`**에 맵 id별로 적는다(LD
 | interactions.json | Town | 진로 연습 4곳 `career-practice`: `practice.chef` (1168, 368), `practice.emergency-care` (1360, 368), `practice.interior` (1552, 368), `practice.soldier` (1648, 368) | 작성자 판단: Unity 판에는 진로 연습 지점이 어느 씬에도 없었다. 일터 지점이 있는 북쪽 광장에 둔다 |
 | interactions.json | Town | 알바 9곳 `part-time-work` — 가게 알바 `work.shift.corner-store` (1456, 304)와 알바 8곳(7행 2칸 간격): `work.workshop-helper` (1104, 240), `work.restaurant-helper` (1168, 240), `work.studio-helper` (1232, 240), `work.supply-helper` (1296, 240), `work.training-helper` (1360, 240), `work.clinic-helper` (1424, 240), `work.fitness-helper` (1488, 240), `work.errand-helper` (1552, 240) | Unity 판 알바 자리(Town.unity `PartTimeWorkInteractor`)가 북쪽 구역에 있었다 |
 | interactions.json | Town | 발견 1곳 `discovery`: `discovery.clocktower-notice` (1360, 304) — 9행 도서관과 가게 알바 사이 | Unity 판 발견 지점(`TownDiscoveryPoint`)이 북쪽 구역에 있었다 |
+| interactions.json | KitchenInterior | 일터 면 표시 `workspace.chef`(맵 전체, 자리 없음) | 새 맵 전까지 요리사 일터로 쓴다. 주방 둘 중 마을 문에서 바로 들어가고 빈 바닥이 더 넓은 쪽 |
 | lights.json | Town | 빛 지점 `town-night-guide` (1072, 176) | Unity 판 유일한 빛은 씬 원점(마을 모서리)에 남아 거의 보이지 않았다. Unity 판 가로등 그림 자리(학교 앞 도착 지점에서 (-3, -1)유닛)를 임시 학교 앞 도착 지점에 맞춰 옮겼다 |
 
 ## 9. 새 맵을 넣은 뒤 돌려 볼 것

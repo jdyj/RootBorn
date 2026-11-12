@@ -87,7 +87,7 @@ Server `ServerLoadMeasureTests`(부하 측정)·`DeployedServerSharingTests`(배
 세이브 폴더 배치: `<세이브 폴더>/<슬롯>/`에 영역마다 JSON 파일 하나. 한 명령의 저장은 묶음 하나로 `<슬롯>/.save-batch/`에 다 쓴 뒤 바꿔 넣는다(도중에 꺼지면 다음에 읽을 때 마저 넣거나 버려서 전부 옛것 또는 전부 새것). 다음 날을 시작할 때 `<슬롯>/backups/<날 번호>/`에 슬롯 파일 사본을 남긴다(`--day-copies`, 맨 위 칸 파일만, `.`으로 시작하는 임시 파일 빼고. 임시 폴더에 다 복사한 뒤 이름을 바꿔 넣어 반쯤 찬 사본은 남지 않는다).
 되살리는 명령은 없다: 사본 폴더의 파일을 슬롯 폴더(같은 슬롯이든 다른 이름의 슬롯이든)에 복사해 넣고 그 슬롯으로 이어 한다. 슬롯 폴더를 다른 이름으로 복사해도 같다 — 세이브 안의 슬롯 이름이 옛 이름이어도 지금 슬롯으로 읽고 저장한다(Game `CopiedSlotTests`).
 캐릭터는 슬롯의 옷 선택(`wearables-local-player.json`, 없으면 칸 기본값)으로 성장 단계 몸에 옷·머리를 겹쳐 그린다.
-낮밤은 맵 목록의 `dayNight`가 켜진 맵(마을)에만 입힌다. 슬롯으로 시작하면 낮밤·NPC 자리는 학생 날·시각(`GameSession.StudentDay`·`StudentHour`)을, 캐릭터 몸은 `GrowthStageId()`를 따른다. `interactions.json`에서 `placementSurface`가 있는 맵(집)에 들어가면 그 맵에서 방 칸을 만들어 `GameSession.EnterHouse`를 부른다. NPC는 일정(data/npcs)과 시간대로 `interactions.json`의 장소 자리에 선다.
+낮밤은 맵 목록의 `dayNight`가 켜진 맵(마을)에만 입힌다. 슬롯으로 시작하면 낮밤·NPC 자리는 학생 날·시각(`GameSession.StudentDay`·`StudentHour`)을, 캐릭터 몸은 `GrowthStageId()`를 따른다. `interactions.json`에서 `placementSurface`가 있는 맵(집, 일터)에 들어가면 그 맵에서 방 칸을 만들어 `GameSession.EnterPlacementSurface(칸, 면 id)`를 부른다(면 id가 일터의 것이면 일터로 열린다 — `game/world/README.md` 6절 "일터 면"). NPC는 일정(data/npcs)과 시간대로 `interactions.json`의 장소 자리에 선다.
 흐르는 시간(설계 `docs/superpowers/specs/2026-11-12-flowing-time-design.md`): 하루 시작·취침 시각·밤 체력 감소·늦잠 회복 감소는 `game/time.json`(하루 길이는 data/time), 시계는 `GameSession.AdvanceTime(지난 초, 메뉴 열림)`으로 가고 `Sleep()`으로 잔다(규칙은 Core `TimeRules`·`StudentLifeProgress.Clock`, 화면·Host 연결은 다음 단계).
 슬롯으로 시작하면 같은 정의로 `GameSession`도 시작하고, 월드 위에 화면 쌓기를 올린다(`--world`도 화면 쌓기는 올린다).
 E·Space·Ctrl(Unity 판과 같은 상호작용 키)을 누르면 앞의 대상과 상호작용한 이벤트가 나오고(`[상호작용] 맵:종류/id`), 그 종류에 등록된 화면이 열린다.

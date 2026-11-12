@@ -560,7 +560,7 @@ namespace Rootborn.Host
         private FurniturePlacementScreen _placement;
 
         /// <summary>
-        /// 가구 배치를 잇는다: 가구 방(interactions.json의 placementSurface)에 들어오면 GameSession.EnterHouse(그 맵의 방 칸, 면 id)
+        /// 가구 배치를 잇는다: 가구 방(interactions.json의 placementSurface)에 들어오면 GameSession.EnterPlacementSurface(그 맵의 방 칸, 면 id)
         /// (Unity AuthoredHousePlacementBinding.Bind), 게임 명령이 월드를 바꾸면 놓인 가구 그림과 충돌을 다시 맞추고,
         /// 배치 화면이 열리면 배치 카메라를 켠다(Unity HousePlacementCameraRuntimeInstaller.SetPlacementMode).
         /// </summary>
@@ -588,7 +588,10 @@ namespace Rootborn.Host
             SyncHouse();
         }
 
-        /// <summary>맵이 바뀌었을 때만: 가구 방이면 EnterHouse(들어올 때마다 저장된 배치를 다시 읽는다). 맵 크기는 맵에서 읽는다.</summary>
+        /// <summary>
+        /// 맵이 바뀌었을 때만: 가구 방이면 EnterPlacementSurface(들어올 때마다 저장된 배치를 다시 읽는다). 면 id가 일터의 것이면 일터, 아니면 집 —
+        /// 고르는 일은 GameSession이 한다(Host는 맵 데이터의 면 id만 넘긴다). 맵 크기는 맵에서 읽는다.
+        /// </summary>
         private void SyncHouse()
         {
             string map = World.Session.Map.Id;
@@ -596,7 +599,7 @@ namespace Rootborn.Host
             _houseMap = map;
             FurnitureRoom room = World.Room;
             string surface = World.HereData.PlacementSurface;
-            if (room != null && Session != null && !string.IsNullOrEmpty(surface)) Session.EnterHouse(room.Grid, surface);
+            if (room != null && Session != null && !string.IsNullOrEmpty(surface)) Session.EnterPlacementSurface(room.Grid, surface);
             if (room == null && World.PlacementCamera.Active) Screens.Close(ScreenCatalog.FurniturePlacement);
             RefreshFurniture();
         }

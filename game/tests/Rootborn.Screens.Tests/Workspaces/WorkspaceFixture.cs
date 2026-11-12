@@ -16,7 +16,7 @@ namespace Rootborn.Screens.Tests.Workspaces
 {
     /// <summary>
     /// 일터 꾸미기 화면 시험 준비: 성인 요리사(또는 학생) 한 판(FacilityFixture와 같은 저장 고치기)에서 요리사 일터 면에 들어가
-    /// HUD 단추로 가구 배치 화면을 연다. 방은 시험용 맵(벽으로 둘러싼 10x8칸)이고 월드 좌표는 칸 48픽셀 시험용 보기다(Host가 카메라로 하는 일).
+    /// HUD 단추로 가구 배치 화면을 연다. 방은 시험용 맵(벽으로 둘러싼, 데이터의 템플릿 칸이 다 들어가는 크기)이고 월드 좌표는 칸 48픽셀 시험용 보기다(Host가 카메라로 하는 일).
     /// 실제 일터 맵·카메라·그림은 Host 시나리오가 본다. 창 없이 화면을 눌러 보는 자동 테스트다.
     /// </summary>
     internal sealed class WorkspaceFixture : IDisposable
@@ -30,7 +30,19 @@ namespace Rootborn.Screens.Tests.Workspaces
         public const string FreeDesk = "growth31.assembly.desk";
 
         public readonly FacilityFixture F;
-        public readonly FurnitureRoom Room = new FurnitureRoom(FurniturePlacementScreenTests.TestRoomMap());
+        public readonly FurnitureRoom Room = new FurnitureRoom(RoomCoveringTemplates());
+
+        /// <summary>
+        /// 시험용 방: 데이터의 일터 템플릿 칸(가구 칸 좌표, 실제 일터 맵에 맞춘 값)이 모두 들어가고 둘레에 여유가 있는 크기. 최소 10x8.
+        /// 템플릿 칸이 바뀌어도(맵을 새로 그리면) 이 시험이 따라간다.
+        /// </summary>
+        private static Rootborn.Core.World.WorldMap RoomCoveringTemplates()
+        {
+            int maxX = 0, maxY = 0;
+            foreach (WorkspaceTemplate t in TestSession.Definitions.All<WorkspaceTemplate>())
+                foreach (TemplatePlacement p in t.Placements) { maxX = System.Math.Max(maxX, p.Anchor.X); maxY = System.Math.Max(maxY, p.Anchor.Y); }
+            return FurniturePlacementScreenTests.TestRoomMap(System.Math.Max(10, maxX + 4), System.Math.Max(8, maxY + 4));
+        }
         public readonly FurniturePlacementScreenTests.TestView View;
 
         /// <param name="adult">요리사 시설 1단계 성인(자기 일터). 거짓이면 학생(남의 일터).</param>

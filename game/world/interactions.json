@@ -25,6 +25,12 @@
         { "kind": "student-day-end", "id": "house.day-end", "at": [ 720, 496 ], "priority": 80 }
       ]
     },
+    "KitchenInterior": {
+      // 요리사 일터(data/workspaces WorkspaceDefinition의 면 id). 이 맵에 들어오면 Host가 방 칸을 만들어 GameSession.EnterPlacementSurface(칸, 이 면 id)를 부른다.
+      "placementSurface": "workspace.chef",
+      "temporary": true,
+      "reason": "임시: 새 맵 전까지 요리사 일터로 쓴다. 주방 둘 중 마을 문(kitchen)에서 바로 걸어 들어가고 빈 바닥이 더 넓은 쪽(열린 칸 113, Kitchen2Interior는 71이고 마을 문이 없다)"
+    },
     "School": {
       // School.unity: 선생님 자리 (4.5,-2.5), 수업(LocationVisit 35 + LocationActivity 45) (2.5,-6.5), 하루 계획판 (9.5,-2)
       "npcAnchors": { "location.school": [ [ 144, 80 ] ] },

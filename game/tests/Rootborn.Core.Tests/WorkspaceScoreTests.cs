@@ -131,5 +131,57 @@ namespace Rootborn.Core.Tests
             Assert.That(scores.Get("tidy"), Is.EqualTo(int.MaxValue));
             Assert.That(scores.Get("cozy"), Is.EqualTo(2));
         }
+
+        // ---------- 성능 측정(출력만, 실패 조건이 아니다) ----------
+
+        // 지금 가구 수(data/ FurnitureDefinition 1,503개)와 같은 수의 시험용 가구, 분류 규칙 6개(data/workspaces와 같은 모양).
+        private const int FurnitureCount = 1503;
+        // 데이터의 가장 큰 일터 한도: 레벨 3 한도 14 + 인테리어 단계 규칙 +2 +4(둘 다 닿으면 더한다).
+        private const int MaxCapacity = 20;
+        private static readonly string[] Categories = { "Kitchen", "LivingRoom", "Bedroom", "Bathroom", "Plant", "Decor", "Other" };
+
+        private static FurnitureDefinition[] ManyFurniture()
+        {
+            var all = new FurnitureDefinition[FurnitureCount];
+            for (int i = 0; i < all.Length; i++) all[i] = Furniture("f" + i, Categories[i % Categories.Length]);
+            return all;
+        }
+
+        private static FurnitureQualityRule[] DataShapedRules() => new[]
+        {
+            CategoryRule("Kitchen", "hygiene", 2), CategoryRule("LivingRoom", "cozy", 2), CategoryRule("Bedroom", "cozy", 1),
+            CategoryRule("Bathroom", "hygiene", 1), CategoryRule("Plant", "cozy", 3), CategoryRule("Decor", "cozy", 3),
+        };
+
+        [Test]
+        public void SpaceScore_AtMaxCapacity_IsFast()
+        {
+            var table = new FurnitureQualityTable(DataShapedRules(), ManyFurniture());
+            var placed = new string[MaxCapacity];
+            for (int i = 0; i < placed.Length; i++) placed[i] = "f" + (i % 9); // 되풀이 줄임도 거치게 같은 가구를 섞는다
+            Score(table, placed, 70, 125); // 데우기
+
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            SpaceScores last = null;
+            for (int i = 0; i < 1000; i++) last = Score(table, placed, 70, 125);
+            watch.Stop();
+            TestContext.Out.WriteLine($"[성능] 가구 {MaxCapacity}개 점수 계산 1,000번: {watch.Elapsed.TotalMilliseconds:0.00}ms (한 번 평균 {watch.Elapsed.TotalMilliseconds:0.00}µs)");
+            Assert.That(last.All, Is.Not.Empty);
+        }
+
+        [Test]
+        public void QualityTable_ForAllFurniture_BuildTime()
+        {
+            var furniture = ManyFurniture();
+            var rules = DataShapedRules();
+            new FurnitureQualityTable(rules, furniture); // 데우기
+
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            FurnitureQualityTable table = null;
+            for (int i = 0; i < 10; i++) table = new FurnitureQualityTable(rules, furniture);
+            watch.Stop();
+            TestContext.Out.WriteLine($"[성능] 가구 {FurnitureCount}개 성질 표 만들기: 한 번 평균 {watch.Elapsed.TotalMilliseconds / 10:0.000}ms");
+            Assert.That(table.Problems, Is.Empty);
+        }
     }
 }

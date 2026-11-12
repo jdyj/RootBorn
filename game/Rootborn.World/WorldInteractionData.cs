@@ -26,6 +26,9 @@ namespace Rootborn.World
         public readonly Dictionary<string, List<(float X, float Y)>> NpcAnchors = new Dictionary<string, List<(float X, float Y)>>(StringComparer.Ordinal);
         /// <summary>가구를 놓는 방이면 그 면 id(가구 정의의 allowedSurfaceIds, 집은 "house"). 아니면 빈 문자열.</summary>
         public string PlacementSurface = string.Empty;
+        /// <summary>가구를 놓는 면 표시가 임시인가(새 맵이 오기 전까지 그 맵을 그 면으로 쓴다). 게임은 다른 표시와 똑같이 쓴다.</summary>
+        public bool PlacementSurfaceTemporary;
+        public string PlacementSurfaceReason;
     }
 
     /// <summary>상호작용 데이터(game/world/interactions.json).</summary>
@@ -80,6 +83,10 @@ namespace Rootborn.World
                         m.NpcAnchors[location.Name] = list;
                     }
                 if (map.Value.TryGetProperty("placementSurface", out JsonElement surface)) m.PlacementSurface = surface.GetString() ?? string.Empty;
+                m.PlacementSurfaceTemporary = map.Value.TryGetProperty("temporary", out JsonElement mapTmp) && mapTmp.ValueKind == JsonValueKind.True;
+                m.PlacementSurfaceReason = map.Value.TryGetProperty("reason", out JsonElement mapWhy) ? mapWhy.GetString() : null;
+                if (m.PlacementSurfaceTemporary && (m.PlacementSurface.Length == 0 || string.IsNullOrWhiteSpace(m.PlacementSurfaceReason)))
+                    throw new InvalidDataException(map.Name + ": 임시 표시는 placementSurface와 reason이 함께 있어야 한다");
                 data._maps[map.Name] = m;
             }
             return data;

@@ -110,6 +110,9 @@
 | NET-001 | 없음 | Unity ArgsParser(-mode/-port/-joinIp)는 옮기지 않았다. MonoGame Host는 다른 인자(`HostOptions`, game/README.md)이고 네트워크 실행 모드가 없다 |
 | NET-002 | 없음 | 전용 서버·네트워크 동기화가 MonoGame 판에 없다. 규칙 일부만 Core SteamSessionRulesTests·SessionCapacityTests |
 | HEIR-001 | 없음 | HeirGenerator는 Unity(`Assets/Scripts/Game/Heir`)에만 있고 Core로 옮기지 않았다 |
+| WORKSPACE-001 | Game WorkspaceTests.WORKSPACE_001_DecoratingRaisesWorkReward·CompleteWork_PaysMoreInDecoratedWorkspace, Host WorkspaceHostTests.ChefDecoratesRestaurant | 새 기능(원본 없음). Host는 성인 요리사 슬롯 준비만 명령으로 하고 일터에 걸어 들어가 꾸미고 일하기까지 입력으로 |
+| WORKSPACE-002 | Game WorkspaceTests.WORKSPACE_002_TemplateOnce·Template_WithoutMoney_ChangesNothing, Screens WorkspaceTemplateScreenTests | 템플릿은 한 번만, 돈이 모자라면 무변경, 다시 읽은 뒤에도 한 번 |
+| SKILL-001 | Game WorkspaceTests.SKILL_001_ChefLearnsInteriorByDecorating·CompleteWork_GrowsCookingSkill·HousePlacement_GrowsInteriorSkill_UpToDailyLimit | 꾸미면 인테리어, 요리 일을 하면 요리 기술. 집(학교 밖 길)에서 놓아도 자란다 |
 
 ## 3. 옮기다 찾은 필요한 변경 — 2026-11-11 처리함
 

@@ -56,6 +56,9 @@ bash Scripts/ci/run-all.sh                 # 자체 시험 + 검사 + dotnet 테
 | REL-001 | 관계 활동으로 관계 값이 바뀌고 같은 요청은 한 번만 | Game `HelpAndTrustTests` |
 | JOB-001 | 알바로 시간·체력·돈·성장이 데이터대로 바뀜 | Game `PartTimeWorkGrowthTests`, Core `PartTimeWorkTests` |
 | STATUS-002 | 하루 시계의 날·시각이 결정적 | Core `DayClockTests` |
+| WORKSPACE-001 | 일터를 꾸미면 시설 일의 보상이 늘고, 꾸미지 않아도 손해가 없다 | Game `WorkspaceTests`, Host `WorkspaceHostTests` |
+| WORKSPACE-002 | 일터 템플릿은 미리 확인하고 한 번만 적용, 안 되면 무변경 | Game `WorkspaceTests`, Screens `WorkspaceTemplateScreenTests` |
+| SKILL-001 | 가구를 놓으면 인테리어 기술이, 요리 일을 하면 요리 기술이 자란다(하루 한도) | Game `WorkspaceTests` |
 | MAIN_E2E_000~011 | 메인 체인을 실행부터 끝까지 실제 입력으로(이어 하기 포함) | Host `MainChainHostTests`, 화면 없이는 Game `MainChainTests`·`MainChainEndTests` |
 
 - 지금 대응이 없는 id(KNOW-001·002, TOOL-001, NET-001·002, HEIR-001, STATUS-001의 일부)는 게임이 그 영역을 쓰지 않거나 MonoGame 판에 아직 없다. 이유는 `SCENARIOS.md` 2절. 그 영역을 옮기거나 만들 때 테스트를 더하고 이 표에 올린다.

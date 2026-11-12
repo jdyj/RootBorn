@@ -82,6 +82,12 @@ namespace Rootborn.World.Tests
             const string things = @"{ ""radiusCells"": 1.75, ""npcPriority"": 30, ""doorPriority"": 110, ""maps"": { ""A"": { ""things"": [
                 { ""kind"": ""location-visit"", ""id"": ""x"", ""at"": [ 16, 16 ], ""priority"": 35, ""temporary"": true } ] } } }";
             Assert.Throws<InvalidDataException>(() => InteractionData.Parse(things));
+
+            // 맵 전체의 임시 면 표시(placementSurface)도 이유가 있어야 읽는다.
+            const string surface = @"{ ""radiusCells"": 1.75, ""npcPriority"": 30, ""doorPriority"": 110, ""maps"": { ""A"": { ""placementSurface"": ""s"", ""temporary"": true } } }";
+            Assert.Throws<InvalidDataException>(() => InteractionData.Parse(surface));
+            MapInteractions marked = InteractionData.Parse(surface.Replace(@"""temporary"": true", @"""temporary"": true, ""reason"": ""새 맵 전까지""")).Map("A");
+            Assert.That((marked.PlacementSurface, marked.PlacementSurfaceTemporary, marked.PlacementSurfaceReason), Is.EqualTo(("s", true, "새 맵 전까지")));
         }
     }
 
