@@ -768,6 +768,32 @@ namespace Rootborn.Game.Tests
         }
 
         [Test]
+        public void ProgressFileDeleted_SlotOpens_LayoutStays_AndTheDefaultTemplateIsNotSeededAgain()
+        {
+            // 지금 동작을 고정한다(결정 대기 21번의 추천, 설계 2026-11-13 6절): 일터 진행 파일만 없는 슬롯은 손상으로 알리지 않고 연다.
+            // 배치 파일이 있으면 기본 템플릿을 다시 깔지 않는다 — 꾸민 배치든 다 치운 빈 배치든.
+            using var saves = new TempSaves();
+            var game = ChefSetup.Adult(saves);
+            EnterChef(game);
+            Assert.That(game.PlaceFurniture(FreeDesk, WorkspaceRoom.FreeAnchor(game, FreeDesk), FurniturePlacementDirection.North), Is.True);
+            var decorated = game.House.Placed.Select(p => (p.Definition.StableId, p.Anchor)).ToArray();
+            Assert.That(decorated.Length, Is.EqualTo(BasicTemplate.Placements.Count + 1), "준비: 기본 템플릿 + 책상");
+
+            saves.Store.Delete(TestWorld.Slot, SaveFileNames.WorkspaceProgress(TestWorld.Player));
+            GameSession opened = null;
+            Assert.DoesNotThrow(() => opened = TestWorld.Start(saves.Store), "진행 파일만 없는 슬롯이 열린다");
+            EnterChef(opened);
+            Assert.That(opened.House.Placed.Select(p => (p.Definition.StableId, p.Anchor)), Is.EqualTo(decorated), "놓인 배치는 그대로, 다시 깔지 않는다");
+
+            Assert.That(opened.ClearFurniture(), Is.True);
+            saves.Store.Delete(TestWorld.Slot, SaveFileNames.WorkspaceProgress(TestWorld.Player));
+            var empty = TestWorld.Start(saves.Store);
+            EnterChef(empty);
+            Assert.That(empty.House.Placed, Is.Empty, "다 치운 빈 배치도 그대로");
+            Assert.That(TestWorld.Start(saves.Store).WorkspaceOf(ChefFacility).Placed, Is.EqualTo(0), "다시 읽어도 빈 채");
+        }
+
+        [Test]
         public void OldSave_WithoutWorkspaceFiles_Starts()
         {
             // Fixtures에 성인 슬롯이 없어, 일터 파일이 없는 저장소에서 성인 요리사를 명령으로 만든 뒤 다시 읽는다.
