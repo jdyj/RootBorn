@@ -14,6 +14,7 @@ namespace Rootborn.Host
         public const string FontVariable = "ROOTBORN_FONT";
         public const string EvidenceVariable = "ROOTBORN_EVIDENCE_DIR";
         public const string WorldMapsVariable = "ROOTBORN_WORLD_MAPS";
+        public const string WorldBuildingsVariable = "ROOTBORN_WORLD_BUILDINGS";
         public const string SaveRootVariable = "ROOTBORN_SAVE_ROOT";
         public const string UiThemeVariable = "ROOTBORN_UI_THEME";
         public const string DayCopiesVariable = "ROOTBORN_DAY_COPIES";
@@ -43,6 +44,8 @@ namespace Rootborn.Host
         public string WorldSpawn;
         /// <summary>맵 목록 파일. 없으면 저장소의 game/world/maps.json.</summary>
         public string WorldMapsPath;
+        /// <summary>건물 목록 파일. 없으면 저장소의 game/world/buildings.json.</summary>
+        public string WorldBuildingsPath;
 
         /// <summary>상호작용 데이터 파일. 없으면 저장소의 game/world/interactions.json.</summary>
         public string InteractionsPath;
@@ -138,6 +141,7 @@ namespace Rootborn.Host
                 FontPath = environment(FontVariable),
                 EvidenceDir = environment(EvidenceVariable),
                 WorldMapsPath = environment(WorldMapsVariable),
+                WorldBuildingsPath = environment(WorldBuildingsVariable),
                 SaveRoot = environment(SaveRootVariable),
                 JoinAddress = environment(JoinVariable),
                 HostAddress = environment(HostVariable),
@@ -173,6 +177,7 @@ namespace Rootborn.Host
                     case "--spawn": o.WorldSpawn = value; break;
                     case "--maps": o.WorldMapsPath = value; break;
                     case "--interactions": o.InteractionsPath = value; break;
+                    case "--buildings": o.WorldBuildingsPath = value; break;
                     case "--save-root": o.SaveRoot = value; break;
                     case "--slot": o.SaveSlot = value; break;
                     case "--join": o.JoinAddress = value; break;
@@ -270,6 +275,8 @@ namespace Rootborn.Host
             if (string.IsNullOrEmpty(o.EvidenceDir)) o.EvidenceDir = Path.Combine(o.RepoRoot, "output", o.WorldActive || o.StartMenu ? "host-world-evidence" : "host-ui-evidence");
             if ((o.WorldActive || o.StartMenu) && o.WorldMapsPath != null && !File.Exists(o.WorldMapsPath))
                 throw new InvalidOperationException("맵 목록 파일이 없다: " + o.WorldMapsPath);
+            if ((o.WorldActive || o.StartMenu) && o.WorldBuildingsPath != null && !File.Exists(o.WorldBuildingsPath))
+                throw new InvalidOperationException("건물 목록 파일이 없다: " + o.WorldBuildingsPath);
             return o;
         }
 

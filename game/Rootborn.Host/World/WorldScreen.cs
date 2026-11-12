@@ -106,11 +106,14 @@ namespace Rootborn.Host.World
         /// <summary>새 게임의 학생 일차(Unity StudentLifeProgress 첫날).</summary>
         public const int NewGameStudentDay = 1;
 
-        public WorldScreen(GraphicsDevice device, HostOptions options)
+        /// <param name="game">게임 한 판(없으면 null을 돌려준다). 부지의 단계 종류 house-stage·facility-level이 읽는다(HostBuildingLevels).</param>
+        public WorldScreen(GraphicsDevice device, HostOptions options, Func<Rootborn.Game.GameSession> game = null)
         {
             _device = device;
             string catalog = options.WorldMapsPath ?? Path.Combine(options.RepoRoot, WorldCatalog.DefaultRelativePath);
-            Maps = new WorldMapLoader(options.RepoRoot, WorldCatalog.Load(catalog));
+            Maps = new WorldMapLoader(options.RepoRoot, WorldCatalog.Load(catalog),
+                BuildingCatalog.Load(options.WorldBuildingsPath ?? Path.Combine(options.RepoRoot, BuildingCatalog.DefaultRelativePath)),
+                HostBuildingLevels.Create(game ?? (() => null)));
             Content = GameContent.Load(options.RepoRoot);
             Clock = Content.NewClock();
             Clock.SetCurrentHour(options.StartHour);
@@ -148,7 +151,7 @@ namespace Rootborn.Host.World
                 startMap = entry.Id;
                 if (!Session.Enter(startMap, spawn)) throw new InvalidOperationException(Session.LastProblem);
             }
-            foreach (string problem in Current.Problems) Console.Error.WriteLine("[월드] " + startMap + ": " + problem);
+            ReportProblems();
             _look = LoadWearables(options);
             PlayerLook = ResolveLook(WearableRules.SelectStage(Content.Wearables.Stages, NewGameStudentDay, false));
             UpdateLight(0f);
@@ -321,13 +324,36 @@ namespace Rootborn.Host.World
             _trimOrder.Clear();
         }
 
+        private void ReportProblems()
+        {
+            LoadedMap map = Current;
+            foreach (string problem in map.Problems) Console.Error.WriteLine("[월드] " + map.Entry.Id + ": " + problem);
+            foreach (string problem in map.LotProblems) Console.Error.WriteLine("[월드] " + map.Entry.Id + ": 부지: " + problem);
+        }
+
+        /// <summary>서 있는 맵을 다시 읽은 수(부지의 건물 단계가 바뀌어서 — 시험용).</summary>
+        public int Reloads { get; private set; }
+
+        /// <summary>
+        /// 부지가 있는 맵에서 건물 단계가 바뀌었으면(맵 읽기가 다시 만든 맵이 걷는 맵과 다르면) 서 있는 맵을 다시 읽는다.
+        /// 부지가 없는 맵은 표 조회 한 번뿐이다. 가구 방에는 부지를 두지 않는다(맵 검사가 알린다).
+        /// </summary>
+        private void FollowBuildingLevels()
+        {
+            LoadedMap map = Current;
+            if (map.Entry.Lots.Count == 0 || ReferenceEquals(map.World, Session.Map)) return;
+            if (!Session.Reload()) { Console.Error.WriteLine("[월드] " + Session.LastProblem); return; }
+            Reloads++;
+            ReportProblems();
+        }
+
         /// <summary>한 프레임: 입력 방향과 지난 시간으로 걷고, 문을 지나면 맵이 바뀐다.</summary>
         public void Update(int dx, int dy, float dt)
         {
+            FollowBuildingLevels();
             string before = Session.Map.Id;
             Session.Update(dx, dy, dt);
-            if (Session.Map.Id != before)
-                foreach (string problem in Current.Problems) Console.Error.WriteLine("[월드] " + Session.Map.Id + ": " + problem);
+            if (Session.Map.Id != before) ReportProblems();
             Feel.AfterWalk(Session, Current.Entry, dt);
             PlayerAnimator.Advance(Session.Walker.Moving, Session.Walker.Facing, dt);
             if (_studentHour == null) Clock.Tick(dt * _timeScale);
@@ -395,6 +421,7 @@ namespace Rootborn.Host.World
             batch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointClamp, null, null, null, view);
             foreach (SpriteDraw s in map.Picture.Under) DrawSprite(batch, s);
             List<SpriteDraw> sorted = SortedWithFurniture(map);
+            PickDoorFrame(map, sorted);
             // 플레이어와 NPC를 발 위치(몸 가운데 Y)로 정렬해 가구 사이에 끼운다.
             _actors.Clear();
             _actors.Add((walker.Y, -1));
@@ -407,12 +434,12 @@ namespace Rootborn.Host.World
             foreach (var actor in _actors)
             {
                 int upTo = ActorIndex(sorted, actor.sortY);
-                for (; drawn < upTo; drawn++) DrawSprite(batch, sorted[drawn]);
+                for (; drawn < upTo; drawn++) DrawSorted(batch, sorted, drawn);
                 if (actor.npc == -1) DrawCharacter(batch, walker);
                 else if (actor.npc < -1) { DrawRemote(batch, remotes[RemoteActor(actor.npc)], walker); drawnRemotes++; }
                 else DrawNpc(batch, _npcs[actor.npc]);
             }
-            for (; drawn < sorted.Count; drawn++) DrawSprite(batch, sorted[drawn]);
+            for (; drawn < sorted.Count; drawn++) DrawSorted(batch, sorted, drawn);
             batch.End();
             RemotesDrawn = drawnRemotes;
             if (lit)
@@ -421,7 +448,7 @@ namespace Rootborn.Host.World
                 batch.Draw(_lightMap, Vector2.Zero, Color.White);
                 batch.End();
             }
-            Feel.DrawOverlays(batch, view, screenWidth, screenHeight, grid.CellSize);
+            Feel.DrawOverlays(batch, view, screenWidth, screenHeight, grid.CellSize, DoorFrameShown >= 0);
             if (_trimPending) TrimTextures();
         }
 
@@ -555,6 +582,33 @@ namespace Rootborn.Host.World
         {
             _placedMap = null;
             RefreshInteractions();
+        }
+
+        private int _doorFrameAfter = -1;
+        private SpriteDraw _doorFrame;
+
+        /// <summary>마지막으로 그린 화면의 건물 문 프레임 번호(열리는 건물 문에 프레임이 있을 때만, 아니면 -1 — 시험용).</summary>
+        public int DoorFrameShown { get; private set; } = -1;
+
+        /// <summary>
+        /// 열리는 문이 건물 문이고 프레임이 있으면, 그 진행도(Core가 센 값)의 프레임을 건물 그림 바로 다음에 그리도록 정한다.
+        /// 닫혀 있을 때는 그리지 않는다(건물 그림에 닫힌 문이 있다). 가구를 섞은 목록에서는 번호가 달라 그리지 않는다(가구 방에는 부지가 없다).
+        /// </summary>
+        private void PickDoorFrame(LoadedMap map, List<SpriteDraw> sorted)
+        {
+            _doorFrameAfter = -1;
+            DoorFrameShown = -1;
+            BuildingDoorArt art = map.DoorArtFor(Session.OpeningDoor);
+            if (art == null || art.SortedIndex < 0 || !ReferenceEquals(sorted, map.Picture.Sorted)) return;
+            DoorFrameShown = art.FrameAt(Session.OpeningProgress);
+            _doorFrame = art.Frames[DoorFrameShown];
+            _doorFrameAfter = art.SortedIndex;
+        }
+
+        private void DrawSorted(SpriteBatch batch, List<SpriteDraw> sorted, int index)
+        {
+            DrawSprite(batch, sorted[index]);
+            if (index == _doorFrameAfter) DrawSprite(batch, _doorFrame);
         }
 
         private List<SpriteDraw> SortedWithFurniture(LoadedMap map)

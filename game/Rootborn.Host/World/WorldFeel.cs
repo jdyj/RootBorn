@@ -98,10 +98,14 @@ namespace Rootborn.Host.World
             return true;
         }
 
-        /// <summary>월드를 다 그린 뒤(빛을 곱한 뒤): 열리는 문 위의 사각형(맵 좌표), 이동 구역의 화면 덮개(화면 좌표).</summary>
-        public void DrawOverlays(SpriteBatch batch, Matrix view, int screenWidth, int screenHeight, int cellSize)
+        /// <summary>
+        /// 월드를 다 그린 뒤(빛을 곱한 뒤): 열리는 문 위의 사각형(맵 좌표), 이동 구역의 화면 덮개(화면 좌표).
+        /// doorFramesDrawn이면 건물 문 프레임을 이미 그렸으므로 문 사각형은 그리지 않는다.
+        /// </summary>
+        public void DrawOverlays(SpriteBatch batch, Matrix view, int screenWidth, int screenHeight, int cellSize, bool doorFramesDrawn = false)
         {
             if (Transition.Kind == WorldTransitionKind.None) return;
+            if (Transition.Kind == WorldTransitionKind.Door && doorFramesDrawn) return;
             if (_pixel == null)
             {
                 _pixel = new Texture2D(_device, 1, 1);
