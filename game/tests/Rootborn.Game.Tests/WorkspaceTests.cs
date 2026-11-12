@@ -214,6 +214,41 @@ namespace Rootborn.Game.Tests
         }
 
         [Test]
+        public void NotOwner_CannotMoveRemoveOrClear_AndTheLayoutStays()
+        {
+            // 남의 일터에 저장된 배치가 있다(예: 그 시설에서 일하던 슬롯을 학생으로 되돌린 것과 같은 상태 — 파일을 직접 써서 준비한다).
+            using var saves = new TempSaves();
+            var student = TestWorld.Start(saves.Store);
+            student.VisitLocation("location.town-square"); // 첫 저장
+            var grid = WorkspaceRoom.GridFor(student.Definitions, ChefWorkspace);
+            var records = new[]
+            {
+                new FurniturePlacementSaveData { FurnitureId = Plant, SurfaceId = Chef.SurfaceId, AnchorX = grid.Spawn.X + 1, AnchorY = grid.Spawn.Y + 1, Direction = FurniturePlacementDirection.North },
+                new FurniturePlacementSaveData { FurnitureId = Plant, SurfaceId = Chef.SurfaceId, AnchorX = grid.Spawn.X + 3, AnchorY = grid.Spawn.Y + 1, Direction = FurniturePlacementDirection.North },
+            };
+            WorkspaceSaveFiles.SaveLayout(saves.Store, TestWorld.Slot, Chef.SurfaceId, TestWorld.Player, records);
+            byte[] fileBefore = System.IO.File.ReadAllBytes(System.IO.Path.Combine(saves.Path, TestWorld.Slot, SaveFileNames.WorkspaceLayout(Chef.SurfaceId, TestWorld.Player)));
+
+            student = TestWorld.Start(saves.Store);
+            EnterChef(student);
+            Assert.That(student.OwnsActiveWorkspace, Is.False);
+            var placed = student.House.Placed.Select(p => (p.Definition.StableId, p.Anchor)).ToArray();
+            Assert.That(placed.Length, Is.EqualTo(2), "준비: 남의 일터에 놓인 가구가 보인다");
+            var first = student.House.Placed[0];
+            Assert.That(WorkspaceRoom.TryFreeAnchor(student, Plant, out var free), Is.True);
+
+            Assert.That(student.MoveFurniture(first.InstanceId, free, FurniturePlacementDirection.North), Is.False, "옮기기 거절");
+            Assert.That(student.RemoveFurniture(first.InstanceId), Is.False, "치우기 거절");
+            Assert.That(student.ClearFurniture(), Is.False, "다 치우기 거절");
+            Assert.That(student.House.Placed.Select(p => (p.Definition.StableId, p.Anchor)), Is.EqualTo(placed), "배치 그대로");
+            Assert.That(System.IO.File.ReadAllBytes(System.IO.Path.Combine(saves.Path, TestWorld.Slot, SaveFileNames.WorkspaceLayout(Chef.SurfaceId, TestWorld.Player))), Is.EqualTo(fileBefore),
+                "배치 파일도 그대로");
+            var again = TestWorld.Start(saves.Store);
+            EnterChef(again);
+            Assert.That(again.House.Placed.Select(p => (p.Definition.StableId, p.Anchor)), Is.EqualTo(placed));
+        }
+
+        [Test]
         public void AtCapacity_PlaceRefused_MoveAndRemoveAllowed()
         {
             using var saves = new TempSaves();
