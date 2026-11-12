@@ -19,6 +19,9 @@ done
 
 export PATH="$HOME/.dotnet:$PATH" DOTNET_ROOT="${DOTNET_ROOT:-$HOME/.dotnet}"
 
+# 멈춤 감시: 한 테스트가 이 시간(분) 동안 끝나지 않으면 testhost를 죽이고 돌던 테스트 이름을 남긴다(blame Sequence 파일은 TestResults 아래).
+hang_args=(--blame-hang --blame-hang-timeout "${ROOTBORN_TEST_HANG_MINUTES:-10}m" --blame-hang-dump-type none)
+
 results=()
 failed=0
 run_step() { # run_step <이름> <명령...>
@@ -52,7 +55,7 @@ if [ "$checks_only" -eq 0 ]; then
       run_step "dotnet test $proj" dotnet test "$proj"
     done < <(find game/tests -name '*.csproj' -not -path '*/obj/*' -not -name 'Rootborn.Host.Tests.csproj' | sort)
   else
-    run_step "dotnet test game/Rootborn.sln (Host 테스트가 창을 띄운다)" dotnet test game/Rootborn.sln
+    run_step "dotnet test game/Rootborn.sln (Host 테스트가 창을 띄운다)" dotnet test game/Rootborn.sln "${hang_args[@]}"
   fi
 fi
 

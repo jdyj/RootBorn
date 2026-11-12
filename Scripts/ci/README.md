@@ -11,6 +11,8 @@ bash Scripts/ci/run-all.sh --checks-only   # 검사 스크립트만 (몇 초)
 bash Scripts/ci/run-all.sh --skip-host     # dotnet 테스트에서 창을 띄우는 Host 테스트를 뺀다
 ```
 
+Host 테스트가 든 `dotnet test`(`run-all.sh`의 sln 실행, CI의 Host 묶음)에는 멈춤 감시가 붙는다: 한 테스트가 `ROOTBORN_TEST_HANG_MINUTES`분(기본 10) 동안 끝나지 않으면 testhost를 죽이고 돌던 테스트 이름을 blame `Sequence_*.xml`(결과 폴더 아래)에 남긴다. 덤프는 만들지 않는다. 한 테스트가 정말 그보다 길면 환경 변수를 올린다.
+
 끝에 통과/실패 요약을 내고, 실패가 하나라도 있으면 종료 코드 1이다. 필요한 것: bash, git, `python3`(검사가 C# 주석·문자열을 가를 때), dotnet 8.
 
 ## 검사 목록

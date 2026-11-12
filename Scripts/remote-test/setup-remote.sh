@@ -62,5 +62,6 @@ add_missing() {
   echo "env.sh에 더함: $1=$2"
 }
 add_missing ROOTBORN_TEST_RESULT_TTL_HOURS 24 "끝난 뒤 아무도 받아 가지 않은 결과를 지우기까지의 시간(다음 실행을 시작할 때 지운다)."
+add_missing ROOTBORN_TEST_HANG_MINUTES 10 "한 테스트가 이 시간(분) 동안 끝나지 않으면 testhost를 죽이고 돌던 테스트 이름을 남긴다(dotnet test --blame-hang)."
 cat "$BASE/env.sh"
 step "끝"

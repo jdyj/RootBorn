@@ -99,6 +99,7 @@ jobs:
           --logger "console;verbosity=normal"
           --logger "trx;LogFileName=host-${{ matrix.shard }}.trx"
           --results-directory host-test-results
+          --blame-hang --blame-hang-timeout "${ROOTBORN_TEST_HANG_MINUTES:-10}m" --blame-hang-dump-type none
       - name: Host 테스트 결과(trx) 올리기
         if: always()
         uses: actions/upload-artifact@v4

@@ -160,7 +160,10 @@ SAMPLER_PID=$!
 # 테스트는 배경에서 띄우고 wait로 기다린다: bash는 앞에서 도는 자식이 끝날 때까지 TERM 처리(정리)를 미룬다.
 cd "$SRC" || exit 5
 TRX="$RES/trx"
-common=(--logger trx --results-directory "$TRX" --disable-build-servers "-maxcpucount:$PARALLEL")
+# 멈춤 감시: 한 테스트가 이 시간(분) 동안 끝나지 않으면 testhost를 죽이고 돌던 테스트 이름을 남긴다(Sequence_*.xml이 $TRX 아래에 생기고
+# 결과 폴더째 받는다). 덤프는 크기 때문에 만들지 않는다.
+hang_minutes="${ROOTBORN_TEST_HANG_MINUTES:-10}"
+common=(--logger trx --results-directory "$TRX" --disable-build-servers "-maxcpucount:$PARALLEL" --blame-hang --blame-hang-timeout "${hang_minutes}m" --blame-hang-dump-type none)
 start=$(date +%s)
 status=0
 if [ $# -eq 0 ]; then

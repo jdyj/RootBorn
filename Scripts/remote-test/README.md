@@ -22,6 +22,8 @@ bash Scripts/remote-test/run.sh --setup                          # 원격 준비
 - 결과: `output/remote-test/<실행 id>/` — `run-id`, 받은 뒤 `fetched`, `remote.log`(원격 진행 줄), `exit-code`, `run.txt`(커밋, 화면 번호, 걸린 초, 최고 메모리), `summary.txt`(프로젝트별 전체·통과·실패·건너뜀과 실패 목록), `trx/`, `*.log`, `output/`(테스트가 찍은 PNG). 종료 코드는 원격 `dotnet test`의 것이다(취소는 130, 정리 없이 죽은 실행은 137).
 - 근거의 종류: 원격 Xvfb의 Host 테스트도 **장치 이벤트 주입(OS 입력 계층 미확인)**이다. 그리기는 소프트웨어 GL(`LIBGL_ALWAYS_SOFTWARE=1`)이라 GPU 렌더링과 픽셀 값이 1쯤 다를 수 있다.
 
+멈춤 감시: 원격 `dotnet test`는 `--blame-hang --blame-hang-timeout <ROOTBORN_TEST_HANG_MINUTES>m`(기본 10, 원격 `env.sh`의 값 — `--setup`이 없을 때만 더한다)로 돈다. 한 테스트가 그 시간 동안 끝나지 않으면 testhost를 죽이고 돌던 테스트 이름을 `trx/` 아래 `Sequence_*.xml`에 남기며, 결과 폴더째 받아진다(덤프는 만들지 않는다).
+
 ## 환경 변수 (이 PC)
 
 | 변수 | 뜻 |
