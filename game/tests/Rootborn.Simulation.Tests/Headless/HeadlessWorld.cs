@@ -29,6 +29,7 @@ namespace Rootborn.Simulation.Headless
         private readonly Func<int> _day;
         private readonly Func<double> _dayMinutes;
         private string _enteredMap;
+        private readonly HouseFurnitureBlocking _houseBlocking;
 
         /// <param name="dayMinutes">그날의 분(하루 시작~하루 끝 축, GameSession.DayMinutesExact).</param>
         public HeadlessWorld(PlayAtlas atlas, IWorldArrivals arrivals, string startMap, string spawn, Func<int> day, Func<double> dayMinutes)
@@ -43,6 +44,7 @@ namespace Rootborn.Simulation.Headless
             NpcIds = NpcArt.Load(atlas.RepoRoot).Order;
             Npcs = NpcStage.Create(new NpcScheduleLookupCache(atlas.Definitions.All<NpcSchedule>()), NpcIds, atlas.Interactions,
                 atlas.Maps.Catalog, Rooms, atlas.Definitions.TimeRules);
+            _houseBlocking = new HouseFurnitureBlocking(Rooms.RoomOf, atlas.Interactions.PlacementMaps(atlas.Maps.Catalog), FurnitureBlockingChanged);
             Refresh();
         }
 
@@ -55,11 +57,16 @@ namespace Rootborn.Simulation.Headless
             Refresh();
         }
 
-        /// <summary>지금 가구 방의 막는 칸을 맞춘다. 막힌 칸이 바뀌었으면 NPC가 그 맵의 길과 머무름을 새 격자로 다시 만든다.</summary>
-        public void SetFurnitureBlocking(IEnumerable<GridPoint> cells)
+        /// <summary>게임 한 판을 이을 때: 집 배치를 아직 모르면 집 밖에서 읽어 두고 가구 방의 걷는 격자에 가구를 넣는다(Host WorldScreen과 같은 코드).</summary>
+        public void AttachHouseFurniture(Rootborn.Game.GameSession session) => _houseBlocking.Attach(session, Session.Map.Id);
+
+        /// <summary>가구가 바뀌었을 때: 플레이어가 어느 맵에 있든 가구 방에 막힌 칸을 맞춘다(Host WorldScreen과 같은 코드).</summary>
+        public void ApplyHouseFurniture(Rootborn.Game.GameSession session) => _houseBlocking.Apply(session);
+
+        private void FurnitureBlockingChanged(string mapId)
         {
-            FurnitureRoom room = Room;
-            if (room != null && room.SetFurnitureBlocking(cells)) Npcs.ForgetMap(room.Map.Id);
+            Npcs.ForgetMap(mapId);
+            Refresh(); // 옛 계획의 자리를 다음 프레임까지 두지 않는다
         }
 
         /// <summary>맵이 바뀌면 후보 목록을 한 번 만들고, 프레임마다 NPC 자리와 대상을 고친다(새 객체를 만들지 않는다).</summary>

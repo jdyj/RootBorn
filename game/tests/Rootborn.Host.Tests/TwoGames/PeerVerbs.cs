@@ -26,6 +26,9 @@ namespace Rootborn.Host.Tests.TwoGames
         private readonly Dictionary<string, Func<string[], string>> _verbs = new Dictionary<string, Func<string[], string>>(StringComparer.Ordinal);
         private PlayerDriver _player;
         private bool _ticking;
+        // record-npcs: 켜 두면 프레임마다(그린 뒤) "맵|npc-poses"를 남긴다 — 두 게임 테스트가 맵이 바뀐 첫 프레임부터 NPC 자리를 견준다.
+        private bool _recordNpcs;
+        private readonly List<string> _npcLog = new List<string>();
         private bool _quit;
 
         public PeerVerbs(TextReader input, TextWriter output)
@@ -66,6 +69,8 @@ namespace Rootborn.Host.Tests.TwoGames
             Register("dismiss-popups", a => { P.DismissPopups(); return string.Empty; });
             Register("screenshot", a => P.Screenshot(a[0]));
             Register("screenshot-screen", a => P.ScreenshotScreen(a[0], a[1]));
+            Register("record-npcs", a => { _recordNpcs = a[0] == "on"; _npcLog.Clear(); return string.Empty; });
+            Register("npc-log", a => { _recordNpcs = false; string log = string.Join("!", _npcLog); _npcLog.Clear(); return log; });
             Register("query", a => PeerQueries.Ask(_player, a[0], a.Skip(1).ToArray()));
             // 이쪽에서 조건이 될 때까지 프레임을 돈다(프레임마다 부모도 한 프레임). 칸: 조회 이름, 기다리는 값, 최대 프레임, 조회 인자…
             Register("wait-query", a =>
@@ -91,9 +96,17 @@ namespace Rootborn.Host.Tests.TwoGames
             ClosePlayer();
             HostOptions options = HostOptions.Resolve(args);
             options.TestMode = true;
-            _player = new PlayerDriver(options) { AfterFrame = AskParent };
+            _player = new PlayerDriver(options) { AfterFrame = AfterEachFrame };
             _player.Frames(3);
             return string.Empty;
+        }
+
+        /// <summary>한 프레임을 돌렸다: NPC 자리를 남기기로 했으면 남기고 부모에게 묻는다.</summary>
+        private void AfterEachFrame()
+        {
+            if (_recordNpcs && _player != null && _player.Game.World != null)
+                _npcLog.Add(PeerQueries.Ask(_player, "map", Array.Empty<string>()) + "|" + PeerQueries.Ask(_player, "npc-poses", Array.Empty<string>()));
+            AskParent();
         }
 
         /// <summary>한 프레임을 돌렸다: 부모가 자기 게임을 한 프레임 돌릴 때까지 기다린다(step 중에는 묻지 않는다).</summary>

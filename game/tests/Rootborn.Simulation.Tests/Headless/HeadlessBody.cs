@@ -123,7 +123,9 @@ namespace Rootborn.Simulation.Headless
                 if (s is FurniturePlacementScreen p) { _placement = p; p.Attach(new FurnitureArt(_data), _placementView); }
             };
             DayBaseline.For(session);
+            session.Changed += topic => { if (topic == ChangeTopics.Furniture || topic == ChangeTopics.World) RefreshFurniture(); }; // Host ConnectFurniture와 같다
             SyncHouse();
+            _world.AttachHouseFurniture(session);
             return true;
         }
 
@@ -156,11 +158,7 @@ namespace Rootborn.Simulation.Headless
             RefreshFurniture();
         }
 
-        private void RefreshFurniture()
-        {
-            FurnitureRoom room = _world.Room;
-            if (room != null && Session.House != null) _world.SetFurnitureBlocking(Session.House.BlockingCells);
-        }
+        private void RefreshFurniture() => _world.ApplyHouseFurniture(Session);
 
         // ---------- 한 프레임 ----------
 

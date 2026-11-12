@@ -49,6 +49,24 @@ namespace Rootborn.Game
         /// </summary>
         public void EnterHouse(IPlacementGrid grid, string surfaceId)
         {
+            LoadHouse(grid, surfaceId);
+            if (ReplayPlacedFurniture()) SaveAndNotify(AnnounceTopics, GameChangeTopics.Furniture);
+        }
+
+        /// <summary>
+        /// 집 밖에서 집 배치를 읽어 둔다(아직 <see cref="House"/>가 없을 때만): 집 맵의 걷는 격자에 가구가 막는 칸을 넣으려고(NPC 자리는 플레이어가
+        /// 어느 맵에 있든 같아야 한다). <see cref="EnterHouse"/>와 같은 배치를 읽지만 체인 단계에 놓인 가구를 다시 알리지 않는다 — 그것은 집에 들어설 때 한다.
+        /// 같이 쓰는 집이면 방이 알린 배치이고, 그 뒤 방의 집이 바뀌면 다른 맵에 있어도 따라간다. 알림: 읽었으면 <see cref="GameChangeTopics.Furniture"/>.
+        /// </summary>
+        public void PrepareHouse(IPlacementGrid grid, string surfaceId)
+        {
+            if (House != null) return;
+            LoadHouse(grid, surfaceId);
+            Notify(null, GameChangeTopics.Furniture);
+        }
+
+        private void LoadHouse(IPlacementGrid grid, string surfaceId)
+        {
             if (grid == null) throw new ArgumentNullException(nameof(grid));
             _houseGrid = grid;
             HouseFurnitureLayout layout;
@@ -60,7 +78,6 @@ namespace Rootborn.Game
             }
 
             UseHouseLayout(layout);
-            if (ReplayPlacedFurniture()) SaveAndNotify(AnnounceTopics, GameChangeTopics.Furniture);
         }
 
         /// <summary>배치 목록에 보이는 가구(해금이 필요 없거나 해금한 것, 얻은 가구가 먼저).</summary>

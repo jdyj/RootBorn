@@ -69,6 +69,8 @@ namespace Rootborn.Host.World
         private readonly NpcArt _npcArt;
         private readonly NpcScheduleLookupCache _schedules;
         private readonly NpcStage _stage;
+        /// <summary>가구 방의 걷는 격자에 게임 한 판의 가구를 맞춘다(플레이어가 어느 맵에 있든 — 창 없는 판과 같은 코드).</summary>
+        private readonly HouseFurnitureBlocking _houseBlocking;
         private string _placedMap;
         /// <summary>놓인 상자마다 상호작용 후보("storage", 인스턴스 id). 가구가 바뀔 때만 다시 만든다.</summary>
         private readonly List<InteractionCandidate> _storageCandidates = new List<InteractionCandidate>();
@@ -126,6 +128,7 @@ namespace Rootborn.Host.World
             FurnitureArt = new FurnitureArt(Path.Combine(options.RepoRoot, "data"));
             Rooms = new RoomAwareMaps(Maps, _interactionData);
             _stage = NpcStage.Create(_schedules, _npcArt.Order, _interactionData, Maps.Catalog, Rooms, Content.Definitions.TimeRules);
+            _houseBlocking = new HouseFurnitureBlocking(Rooms.RoomOf, _interactionData.PlacementMaps(Maps.Catalog), FurnitureBlockingChanged);
             Session = new WorldSession(Rooms, Maps.Catalog.Walker);
             string startMap;
             if (options.SaveSlot != null)
@@ -559,13 +562,20 @@ namespace Rootborn.Host.World
         }
 
         /// <summary>
-        /// 가구 방의 걷는 맵에 이동을 막는 가구 칸을 맞춘다. 막힌 칸이 실제로 바뀌었을 때만 NPC가 그 맵의 길과 머무름을 새 격자로 다시 만든다
-        /// (배치 화면이 열려 있어도 프레임마다 다시 계획하지 않는다). 가구 방이 아니면 아무것도 하지 않는다.
+        /// 게임 한 판을 이을 때: 집 배치를 아직 모르면 집 밖에서 읽어 두고, 가구 방의 걷는 격자에 가구가 막는 칸을 넣는다(지금 맵과 상관없이).
         /// </summary>
-        public void SetFurnitureBlocking(IEnumerable<GridPoint> cells)
+        public void AttachHouseFurniture(global::Rootborn.Game.GameSession session) => _houseBlocking.Attach(session, Session.Map.Id);
+
+        /// <summary>
+        /// 가구가 바뀌었을 때(게임 한 판의 가구 알림): 플레이어가 어느 맵에 있든 그 면의 가구 방에 막힌 칸을 맞춘다. 막힌 칸이 실제로 바뀐 맵만
+        /// NPC가 길과 머무름을 새 격자로 다시 만들고, 그 프레임을 그리기 전에 NPC 자리를 다시 낸다(배치 화면이 열려 있어도 프레임마다 다시 계획하지 않는다).
+        /// </summary>
+        public void ApplyHouseFurniture(global::Rootborn.Game.GameSession session) => _houseBlocking.Apply(session);
+
+        private void FurnitureBlockingChanged(string mapId)
         {
-            FurnitureRoom room = Room;
-            if (room != null && room.SetFurnitureBlocking(cells)) _stage.ForgetMap(room.Map.Id);
+            _stage.ForgetMap(mapId);
+            RefreshInteractions(); // 옛 계획의 자리가 한 번 그려지지 않게 바로 다시 낸다(후보 좌표도)
         }
 
         /// <summary>후보를 지금 다시 만든다(놓인 상자가 바뀌었다).</summary>

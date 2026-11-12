@@ -13,7 +13,7 @@ namespace Rootborn.Host.Tests.TwoGames
     /// <summary>
     /// 같이 하기에서 NPC는 모두에게 똑같이 움직인다(NPC 이동 설계 4절): 자리는 방의 (날, 분)에서 각자 계산하고 NPC용 메시지는 없다.
     /// 방을 연 판(이 프로세스)과 들어간 판(자식 프로세스)을 번갈아 한 프레임씩 돌리며, 같은 프레임에 두 판의 모든 NPC 자리를 견준다.
-    /// 다른 점은 분 아래 조각뿐이라(각자 메운다, 1분 안) 자리 차이는 2칸 이하여야 한다. 근거와 준비는 <see cref="TwoGamesHostTests"/> 머리말.
+    /// 다른 점은 분 아래 조각뿐이라(각자 메운다) 자리 차이는 2칸 이하여야 한다. 근거와 준비는 <see cref="TwoGamesHostTests"/> 머리말.
     /// </summary>
     public sealed partial class TwoGamesHostTests
     {
@@ -21,8 +21,8 @@ namespace Rootborn.Host.Tests.TwoGames
 
         /// <summary>
         /// 둘 다 집 → 손님만 마을에 간 사이 방장이 집 NPC 곁에 가구를 놓는다(같이 쓰는 집) → 손님이 집으로 돌아온다 → 둘 다 마을.
-        /// 같은 맵에 있는 동안은 모든 NPC 자리가 같아야 한다. 손님이 마을에 있는 동안 손님의 집 격자에는 새 가구가 아직 없다(가구 반영은 집에 들어설 때) —
-        /// 그동안 집 안 NPC 자리는 달라도 되고(손님에게 보이지 않는다) 차이를 기록만 한다. 손님이 집에 들어서면 다시 같아야 한다.
+        /// 가구는 플레이어가 어느 맵에 있든 집의 걷는 격자에 들므로, 손님이 마을에 있는 동안에도 모든 NPC(집 NPC 포함) 자리가 같아야 하고,
+        /// 손님이 집에 들어서는 첫 프레임부터 매 프레임(자식이 그린 뒤의 자리) 같아야 한다 — 맵이 바뀐 프레임에 옛 자리가 한 번 그려지지 않는다.
         /// 준비: 이야기가 있는 슬롯 파일(양쪽), 방의 시계 파일(15:00)과 방 설정 파일(집을 같이 씀). 나머지는 입력(문 지나기, 배치 화면 포인터)이다.
         /// </summary>
         [Test]
@@ -40,19 +40,20 @@ namespace Rootborn.Host.Tests.TwoGames
             Assert.That(_host.Game.Hosting.SharedPieces, Is.EquivalentTo(new[] { RoomHouse.PieceName }), "이어 연 방은 저장된 설정(집을 같이 쓴다)");
             _guest = StartGuest();
             GuestJoinsByAddress(_host.Game.Hosting.ListenAddress, null);
-            Assert.That(_host.World.Map.Id, Is.EqualTo("House"));
-            Assert.That(_guest.Query("map"), Is.EqualTo("House"));
+            string houseMap = _host.World.Map.Id;
+            Assert.That(_guest.Query("map"), Is.EqualTo(houseMap), "둘 다 이야기의 첫 맵(집)");
             Assert.That(_guest.QueryBool("shares-house"), Is.True);
             float cell = _host.World.Map.Grid.CellSize;
+            var failures = new List<string>();
 
             NpcComparison inHouse = CompareNpcs(cell, 60, null);
             Report("1. 둘 다 집", inHouse);
-            inHouse.AssertSame();
+            inHouse.Collect("1. 둘 다 집", failures);
             Assert.That(_host.Game.World.Npcs.Count, Is.GreaterThan(0), "이 시험의 전제: 집에 NPC가 있다");
             TestContext.WriteLine("스크린샷: " + _host.Screenshot("two-npc-01-host-house"));
             TestContext.WriteLine("스크린샷(손님): " + _guest.Screenshot("two-npc-01-guest-house"));
 
-            // 손님은 마을로. 방장은 집 NPC 곁에 가구를 놓는다(손님의 집 격자에는 손님이 집에 들어설 때 반영된다).
+            // 손님은 마을로. 방장은 집 NPC 곁에 가구를 놓는다.
             _guest.GoTo("Town");
             NpcPose houseNpc = _host.Game.World.Npcs[0].Pose;
             string furniture = PeerQueries.Ask(_host, "first-free-furniture", Array.Empty<string>());
@@ -62,17 +63,32 @@ namespace Rootborn.Host.Tests.TwoGames
             int hostPlaced = _host.Game.Session.House.Placed.Count;
             Assert.That(_guest.UntilQuery(hostPlaced.ToString(CultureInfo.InvariantCulture), 900, "house-placed"), Is.True, "손님 세이브에도 놓였다");
 
-            NpcComparison split = CompareNpcs(cell, 60, "Town");
-            Report("2. 방장 집, 손님 마을(마을 NPC만 견줌)", split);
-            split.AssertSame();
-            TestContext.WriteLine("[2. 견주지 않은 집 NPC] 두 판의 자리 차이 최대 " + split.OtherMaxCells.ToString("0.00", CultureInfo.InvariantCulture) + "칸, 다른 맵 "
-                + split.OtherMapDiffers + "번 — 손님의 집 격자에 새 가구가 아직 없을 수 있다(보이지 않는 맵)");
+            NpcComparison split = CompareNpcs(cell, 60, null);
+            Report("2. 방장 집, 손님 마을(집 NPC 포함 모두)", split);
+            split.Collect("2. 방장 집, 손님 마을", failures);
             TestContext.WriteLine("스크린샷(손님): " + _guest.Screenshot("two-npc-02-guest-town"));
 
+            // 손님이 집으로 걸어 들어간다 — 걷는 동안 손님 게임의 프레임마다(그린 뒤) 자리를 남기고, 같은 차례의 방장 프레임 자리와 견준다.
+            _guest.Call("record-npcs", "on");
+            var hostLog = new List<string>();
+            _guest.WhileCalling = () => hostLog.Add(PeerQueries.Ask(_host, "npc-poses", Array.Empty<string>()));
             _guest.GoTo("House");
+            _guest.WhileCalling = null;
+            string[] guestLog = _guest.Call("npc-log").Split('!');
+            Assert.That(guestLog.Length, Is.EqualTo(hostLog.Count), "손님 프레임마다 방장 프레임 하나");
+            int entered = Array.FindIndex(guestLog, line => line.Substring(0, line.IndexOf('|')) == houseMap);
+            Assert.That(entered, Is.GreaterThanOrEqualTo(0), "기록 안에 손님이 집에 들어선 프레임이 있다");
+            var entry = new NpcComparison();
+            for (int k = entered; k < guestLog.Length; k++)
+                CompareOnce(entry, k, ParsePoses(hostLog[k]), ParsePoses(guestLog[k].Substring(guestLog[k].IndexOf('|') + 1)), cell, null, null);
+            Report("3a. 손님이 집에 들어선 첫 프레임부터(" + (guestLog.Length - entered) + "프레임, 맵이 바뀐 프레임 " + entered + ")", entry);
+            if (entry.Mismatches.Count > 0)
+                failures.Add("3a. 들어선 첫 프레임부터: " + entry.Mismatches.Count + "번" + Environment.NewLine
+                    + string.Join(Environment.NewLine, entry.Mismatches.GetRange(0, Math.Min(10, entry.Mismatches.Count))));
+
             NpcComparison back = CompareNpcs(cell, 60, null);
             Report("3. 손님이 집으로 돌아옴", back);
-            back.AssertSame();
+            back.Collect("3. 손님이 집으로 돌아옴", failures);
             TestContext.WriteLine("스크린샷: " + _host.Screenshot("two-npc-03-host-house-furniture"));
             TestContext.WriteLine("스크린샷(손님): " + _guest.Screenshot("two-npc-03-guest-house-furniture"));
 
@@ -80,10 +96,11 @@ namespace Rootborn.Host.Tests.TwoGames
             _guest.GoTo("Town");
             NpcComparison town = CompareNpcs(cell, 60, null);
             Report("4. 둘 다 마을", town);
-            town.AssertSame();
+            town.Collect("4. 둘 다 마을", failures);
             Assert.That(_host.Game.World.Npcs.Count, Is.GreaterThan(0), "이 시험의 전제: 마을에 NPC가 있다");
             TestContext.WriteLine("스크린샷: " + _host.Screenshot("two-npc-04-host-town"));
             TestContext.WriteLine("스크린샷(손님): " + _guest.Screenshot("two-npc-04-guest-town"));
+            Assert.That(failures, Is.Empty, "같은 프레임의 두 판에서 NPC 자리가 다르다");
             Assert.That(_host.CollisionViolations, Is.EqualTo(0));
             Assert.That(_guest.QueryInt("collision-violations"), Is.EqualTo(0));
         }
@@ -125,30 +142,38 @@ namespace Rootborn.Host.Tests.TwoGames
                 result.Samples++;
                 Dictionary<string, (string Map, float X, float Y)> mine = ParsePoses(PeerQueries.Ask(_host, "npc-poses", Array.Empty<string>()));
                 Dictionary<string, (string Map, float X, float Y)> theirs = ParsePoses(_guest.Query("npc-poses"));
-                Assert.That(theirs.Keys, Is.EquivalentTo(mine.Keys), "두 판의 NPC 목록이 같다");
-                foreach (var pair in mine)
-                {
-                    var a = pair.Value;
-                    var b = theirs[pair.Key];
-                    bool watched = mapOnly == null || a.Map == mapOnly || b.Map == mapOnly;
-                    bool sameMap = a.Map == b.Map;
-                    float cells = sameMap && a.Map != null ? MathF.Sqrt((a.X - b.X) * (a.X - b.X) + (a.Y - b.Y) * (a.Y - b.Y)) / cell : 0f;
-                    if (!watched)
-                    {
-                        if (!sameMap) result.OtherMapDiffers++;
-                        result.OtherMaxCells = Math.Max(result.OtherMaxCells, cells);
-                        continue;
-                    }
-                    result.Compared++;
-                    result.MaxCells = Math.Max(result.MaxCells, cells);
-                    if (!sameMap || cells > NpcToleranceCells)
-                        result.Mismatches.Add(f + "프레임 " + pair.Key + ": 방장 " + Describe(a) + " / 손님 " + Describe(b));
-                    if (last != null && last.TryGetValue(pair.Key, out var before) && before.Map == a.Map && a.Map != null)
-                        result.MovedCells += MathF.Sqrt((a.X - before.X) * (a.X - before.X) + (a.Y - before.Y) * (a.Y - before.Y)) / cell;
-                }
+                CompareOnce(result, f, mine, theirs, cell, mapOnly, last);
                 last = mine;
             }
             return result;
+        }
+
+        /// <summary>한 프레임의 두 판 자리를 견준다. last(앞에 견준 방장 자리)가 있으면 방장 화면에서 걸은 거리를 더한다.</summary>
+        private static void CompareOnce(NpcComparison result, int frame, Dictionary<string, (string Map, float X, float Y)> mine,
+                                        Dictionary<string, (string Map, float X, float Y)> theirs, float cell, string mapOnly,
+                                        Dictionary<string, (string Map, float X, float Y)> last)
+        {
+            Assert.That(theirs.Keys, Is.EquivalentTo(mine.Keys), "두 판의 NPC 목록이 같다");
+            foreach (var pair in mine)
+            {
+                var a = pair.Value;
+                var b = theirs[pair.Key];
+                bool watched = mapOnly == null || a.Map == mapOnly || b.Map == mapOnly;
+                bool sameMap = a.Map == b.Map;
+                float cells = sameMap && a.Map != null ? MathF.Sqrt((a.X - b.X) * (a.X - b.X) + (a.Y - b.Y) * (a.Y - b.Y)) / cell : 0f;
+                if (!watched)
+                {
+                    if (!sameMap) result.OtherMapDiffers++;
+                    result.OtherMaxCells = Math.Max(result.OtherMaxCells, cells);
+                    continue;
+                }
+                result.Compared++;
+                result.MaxCells = Math.Max(result.MaxCells, cells);
+                if (!sameMap || cells > NpcToleranceCells)
+                    result.Mismatches.Add(frame + "프레임 " + pair.Key + ": 방장 " + Describe(a) + " / 손님 " + Describe(b));
+                if (last != null && last.TryGetValue(pair.Key, out var before) && before.Map == a.Map && a.Map != null)
+                    result.MovedCells += MathF.Sqrt((a.X - before.X) * (a.X - before.X) + (a.Y - before.Y) * (a.Y - before.Y)) / cell;
+            }
         }
 
         private static string Describe((string Map, float X, float Y) p) => p.Map == null ? "없음" : p.Map + " " + p.X.ToString("0.#", CultureInfo.InvariantCulture) + "," + p.Y.ToString("0.#", CultureInfo.InvariantCulture);
@@ -173,12 +198,13 @@ namespace Rootborn.Host.Tests.TwoGames
             public int Frames, Samples, Compared, OtherMapDiffers;
             public float MaxCells, OtherMaxCells, MovedCells;
 
-            public void AssertSame()
+            /// <summary>시험의 전제(견줄 NPC가 있고 걸었다)는 바로 확인하고, 어긋남은 into에 모은다(끝에서 한꺼번에 실패로 보인다).</summary>
+            public void Collect(string phase, List<string> into)
             {
-                Assert.That(Compared, Is.GreaterThan(0), "견줄 NPC가 있다");
-                Assert.That(MovedCells, Is.GreaterThan(3f), "이 시험의 전제: 견주는 동안 NPC가 걸었다");
-                Assert.That(Mismatches, Is.Empty, "같은 프레임의 두 판에서 NPC 자리가 다르다(" + Mismatches.Count + "번):\n"
-                    + string.Join("\n", Mismatches.GetRange(0, Math.Min(20, Mismatches.Count))));
+                Assert.That(Compared, Is.GreaterThan(0), phase + ": 견줄 NPC가 있다");
+                Assert.That(MovedCells, Is.GreaterThan(3f), phase + ": 이 시험의 전제 — 견주는 동안 NPC가 걸었다");
+                if (Mismatches.Count > 0)
+                    into.Add(phase + ": " + Mismatches.Count + "번" + Environment.NewLine + string.Join(Environment.NewLine, Mismatches.GetRange(0, Math.Min(10, Mismatches.Count))));
             }
         }
     }

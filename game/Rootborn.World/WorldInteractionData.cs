@@ -43,6 +43,19 @@ namespace Rootborn.World
 
         public MapInteractions Map(string mapId) => mapId != null && _maps.TryGetValue(mapId, out MapInteractions m) ? m : MapInteractions.Empty;
 
+        /// <summary>가구를 놓는 면이 있는 맵(맵 성질 placementSurface)과 그 면 id, 맵 목록 순서.</summary>
+        public List<(string MapId, string Surface)> PlacementMaps(WorldCatalog catalog)
+        {
+            if (catalog == null) throw new ArgumentNullException(nameof(catalog));
+            var list = new List<(string, string)>();
+            foreach (MapEntry m in catalog.Maps)
+            {
+                string surface = Map(m.Id).PlacementSurface;
+                if (!string.IsNullOrEmpty(surface)) list.Add((m.Id, surface));
+            }
+            return list;
+        }
+
         public static InteractionData Load(string path) => Parse(File.ReadAllText(path));
 
         public static InteractionData Parse(string json)
