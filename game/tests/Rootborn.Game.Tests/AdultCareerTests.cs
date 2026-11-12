@@ -5,14 +5,30 @@ using Rootborn.Core.Careers;
 namespace Rootborn.Game.Tests
 {
     /// <summary>Unity AdultCareerE2EScenarioTests 001~003의 흐름(시설 고르기 → 일 → 올리기)을 명령으로 따라간다. 자동 테스트다.</summary>
-    public sealed class AdultCareerTests
+    /// <summary>성인 요리사 준비(명령과 세이브 편집). 다른 테스트도 쓴다.</summary>
+    internal static class ChefSetup
     {
-        private static GameSession ReadyChefCandidate(TempSaves saves)
+        /// <summary>요리사 시설을 고를 수 있는 학생.</summary>
+        public static GameSession ReadyCandidate(TempSaves saves)
         {
             TestWorld.Start(saves.Store).TalkTo("npc.first-guide"); // 첫 저장
             SaveEdits.EditSnapshot(saves.Store, SaveEdits.MakeChefCandidateReady);
             return TestWorld.Start(saves.Store);
         }
+
+        /// <summary>요리사 시설 레벨 1의 성인.</summary>
+        public static GameSession Adult(TempSaves saves)
+        {
+            var game = ReadyCandidate(saves);
+            if (game.ChooseFacility("facility.chef", "facility:chef").Kind != AdultCareerResultKind.Applied)
+                throw new System.InvalidOperationException("요리사 시설을 고르지 못했다");
+            return game;
+        }
+    }
+
+    public sealed class AdultCareerTests
+    {
+        private static GameSession ReadyChefCandidate(TempSaves saves) => ChefSetup.ReadyCandidate(saves);
 
         [Test]
         public void Adult001_ChoosingTheChefFacilityMakesTheStudentAnAdultAtLevelOne()

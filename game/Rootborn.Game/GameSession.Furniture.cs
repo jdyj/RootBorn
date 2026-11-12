@@ -47,9 +47,11 @@ namespace Rootborn.Game
         /// 가구를 기다리는 체인 단계가 있으면 놓인 가구를 다시 알린다. surfaceId는 방의 면 id다(집은 데이터의 "house").
         /// 들어올 때마다 기록을 새로 읽는다. 놓지 못한 기록은 버리지 않고 함께 저장한다.
         /// </summary>
-        public void EnterHouse(IPlacementGrid grid, string surfaceId)
+        public void EnterHouse(IPlacementGrid grid, string surfaceId) => EnterPlacementSurface(grid, surfaceId);
+
+        // 집으로 연다(EnterPlacementSurface가 그 면의 일터가 없을 때 부른다).
+        private void EnterHouseLayout(IPlacementGrid grid, string surfaceId)
         {
-            if (grid == null) throw new ArgumentNullException(nameof(grid));
             _houseGrid = grid;
             HouseFurnitureLayout layout;
             if (_roomHouse != null) layout = SharedHouseLayout(grid, surfaceId); // 같이 쓰는 집: 방이 알린 배치(GameSession.SharedHouse)
@@ -85,36 +87,50 @@ namespace Rootborn.Game
         {
             if (House == null || !_definitions.TryGet<FurnitureDefinition>(furnitureId, out var furniture)
                 || !FurnitureCatalog.IsAvailable(furniture, FurnitureUnlocks)) return false;
+            if (ActiveWorkspace != null) return PlaceInWorkspace(furniture, anchor, direction); // 일터: 각자 것, 한도(GameSession.Workspace)
             if (_roomHouse != null) return RequestSharedPlace(furniture, anchor, direction);
             bool placed = House.TryPlace(furniture, anchor, direction);
-            return Saved(placed, placed, AnnounceTopics, GameChangeTopics.Furniture);
+            bool grown = placed && GrowByPlacing(House.SurfaceId);
+            return Saved(placed, placed, AnnounceTopics, GameChangeTopics.Furniture, grown ? GameChangeTopics.Workspace : null);
         }
 
         /// <summary>놓인 가구를 옮긴다(instanceId는 House.Placed의 InstanceId). 다시 알리지 않는다.</summary>
-        /// <remarks>같이 쓰는 집이면 놓기·옮기기·치우기는 방에 요청만 하고 false다(허락이 오면 바뀐다 — GameSession.SharedHouse).</remarks>
+        /// <remarks>
+        /// 같이 쓰는 집이면 놓기·옮기기·치우기는 방에 요청만 하고 false다(허락이 오면 바뀐다 — GameSession.SharedHouse).
+        /// 일터는 자기 시설일 때만 된다(한도와 무관).
+        /// </remarks>
         public bool MoveFurniture(string instanceId, GridPoint anchor, FurniturePlacementDirection direction)
         {
-            if (House != null && _roomHouse != null) return RequestSharedMove(instanceId, anchor, direction);
+            if (!MayChangeOpenLayout()) return false;
+            if (House != null && SharedHouseOpen) return RequestSharedMove(instanceId, anchor, direction);
             return FurnitureChanged(House != null && House.TryMove(instanceId, anchor, direction));
         }
 
         public bool RemoveFurniture(string instanceId)
         {
-            if (House != null && _roomHouse != null) return RequestSharedRemove(instanceId);
+            if (!MayChangeOpenLayout()) return false;
+            if (House != null && SharedHouseOpen) return RequestSharedRemove(instanceId);
             return FurnitureChanged(House != null && House.Delete(instanceId));
         }
 
         /// <summary>놓인 가구를 모두 치운다. 놓지 못했던 기록은 남긴다.</summary>
         public bool ClearFurniture()
         {
-            if (House != null && _roomHouse != null) return RequestSharedClear();
+            if (!MayChangeOpenLayout()) return false;
+            if (House != null && SharedHouseOpen) return RequestSharedClear();
             return FurnitureChanged(House != null && House.ClearUserFurniture());
         }
 
-        // 옮기기·치우기는 배치 기록만 바꾸고 그 기록은 House가 바로 쓴다(CommitHouseLayout). 여기서는 알리기만 한다.
+        // 같이 쓰는 집이 열려 있다(일터는 방에 있어도 각자 것이라 공유 길을 타지 않는다).
+        private bool SharedHouseOpen => _roomHouse != null && ActiveWorkspace == null;
+
+        // 남의 일터는 바꾸지 못한다.
+        private bool MayChangeOpenLayout() => ActiveWorkspace == null || OwnsActiveWorkspace;
+
+        // 옮기기·치우기는 배치 기록만 바꾸고 그 기록은 House가 바로 쓴다(CommitHouseLayout·CommitWorkspaceLayout). 여기서는 알리기만 한다.
         private bool FurnitureChanged(bool changed)
         {
-            if (changed) Notify(null, GameChangeTopics.Furniture);
+            if (changed) Notify(null, GameChangeTopics.Furniture, ActiveWorkspace != null ? GameChangeTopics.Workspace : null);
             return changed;
         }
 
@@ -135,7 +151,8 @@ namespace Rootborn.Game
         // Unity AnnouncePlacedFurniture: 일찍 놓은 가구도 그 단계가 시작된 뒤 방에 들어오거나 새 날이 시작되면 센다.
         private bool ReplayPlacedFurniture()
         {
-            if (House == null || !FurnitureQuestEvents.AnyCurrentStepWantsFurniture(QuestChains, _chains)) return false;
+            // 가구 퀘스트 이벤트는 집에서만 낸다(일터는 내지 않는다).
+            if (House == null || ActiveWorkspace != null || !FurnitureQuestEvents.AnyCurrentStepWantsFurniture(QuestChains, _chains)) return false;
             var replays = FurnitureQuestEvents.Replays(House, _newEventKey);
             foreach (var replay in replays) Announce(replay, true);
             return replays.Count > 0;

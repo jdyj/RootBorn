@@ -31,6 +31,8 @@ namespace Rootborn.Game
         public const string Time = "time";
         /// <summary>상자 내용물(놓인 상자에 넣고 꺼내기, 같이 쓰는 상자의 상태).</summary>
         public const string Storage = "storage";
+        /// <summary>일터(놓인 가구 수·한도·공간 점수·템플릿 적용·꾸미며 배운 기술).</summary>
+        public const string Workspace = "workspace";
     }
 
     /// <summary>변경 알림. 적용된 명령이 저장을 마친 뒤에 주제마다 한 번 알린다. 적용되지 않은 명령은 알리지 않는다.</summary>
@@ -48,6 +50,9 @@ namespace Rootborn.Game
 
         private void Notify(string[] first, params string[] more)
         {
+            // 기억한 일터 점수는 듣는 쪽이 없어도 버린다(GameSession.Workspace).
+            if (first != null) foreach (var topic in first) ForgetWorkspaceScores(topic);
+            if (more != null) foreach (var topic in more) ForgetWorkspaceScores(topic);
             var handler = Changed;
             if (handler == null) return;
             var told = new HashSet<string>(StringComparer.Ordinal);

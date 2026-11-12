@@ -40,7 +40,8 @@ namespace Rootborn.Game
             if (placed == null) return null;
             int slots = StorageCatalog.SlotsOf(placed.Definition.StableId);
             if (slots <= 0) return null;
-            if (_roomChests == null) return StorageContents.From(House.StorageOf(instanceId), slots, FindItem);
+            // 일터의 상자는 같이 하는 방에서도 각자 것이다(배치 기록에 묶인다).
+            if (_roomChests == null || ActiveWorkspace != null) return StorageContents.From(House.StorageOf(instanceId), slots, FindItem);
 
             var stacks = _roomChests.ContentsOf(instanceId);
             var items = new PlayerInventoryItemSaveData[stacks.Count];
@@ -69,7 +70,7 @@ namespace Rootborn.Game
             if (chest == null) return Result(StorageTransferResult.NotStorage);
             var item = string.IsNullOrEmpty(itemId) ? null : FindItem(itemId);
             string request = string.IsNullOrEmpty(requestId) ? Guid.NewGuid().ToString("N") : requestId;
-            if (_roomChests != null) return RequestSharedStorage(instanceId, chest, direction, item, count);
+            if (_roomChests != null && ActiveWorkspace == null) return RequestSharedStorage(instanceId, chest, direction, item, count);
 
             var result = StorageTransfer.TryMove(Inventory, chest, direction, item, count, request, next =>
             {
@@ -123,10 +124,17 @@ namespace Rootborn.Game
             return result;
         }
 
-        // 저장 묶음 안에서: 상자 내용물이 바뀌었으면 배치 파일도 같은 묶음으로 쓴다(가방과 함께).
+        // 저장 묶음 안에서: 상자 내용물이 바뀌었으면 배치 파일(집 또는 일터)도 같은 묶음으로 쓴다(가방과 함께).
         private void SaveHouseLayoutIfDirty(Rootborn.Core.Save.ISaveStore batch)
         {
-            if (!_houseLayoutDirty || House == null || _roomHouse != null) return;
+            if (!_houseLayoutDirty || House == null) return;
+            if (ActiveWorkspace != null)
+            {
+                SaveWorkspaceLayout(batch);
+                return;
+            }
+
+            if (_roomHouse != null) return;
             FurnitureSaveFiles.SaveHouseLayout(batch, SaveSlot, HouseStage, House.BuildSaveRecords());
         }
     }

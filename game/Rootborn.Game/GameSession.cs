@@ -193,6 +193,7 @@ namespace Rootborn.Game
 
             QuestChains = LoadChains(store, hasSnapshot ? snapshot.QuestChains : null);
             LoadFurniture(store, hasSnapshot ? snapshot : null);
+            LoadWorkspaces(store);
 
             QuestLog = new QuestLog(_definitions.All<QuestDefinition>());
             if (store.TryRead<QuestLogSaveData>(SaveSlot, SaveFileNames.PlayerQuestLog(PlayerId), out var questLog)) QuestLog.LoadFromSaveData(questLog);
@@ -320,6 +321,7 @@ namespace Rootborn.Game
                 SaveOptionalDomains(store);
                 if (Shares != null) store.Write(SaveSlot, SaveFileNames.RoomOutbox(PlayerId), Shares.Outbox.ToSaveData());
                 SaveClock(store);
+                SaveWorkspaces(store);
                 SaveHouseLayoutIfDirty(store);
                 store.Commit();
             }

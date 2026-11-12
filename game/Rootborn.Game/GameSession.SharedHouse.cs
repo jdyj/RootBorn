@@ -53,7 +53,8 @@ namespace Rootborn.Game
         // 방의 집 상태가 바뀌었다(남이 바꿨거나 내 요청이 허락됐다): 집에 들어와 있으면 다시 채우고 알린다.
         private void FollowRoomHouse()
         {
-            if (_roomHouse == null || House == null || _houseGrid == null) return;
+            // 일터가 열려 있으면 따르지 않는다(일터는 각자 것이다). 집에 다시 들어오면 방의 배치로 채운다.
+            if (_roomHouse == null || House == null || _houseGrid == null || ActiveWorkspace != null) return;
             UseHouseLayout(SharedHouseLayout(_houseGrid, House.SurfaceId));
             Notify(null, GameChangeTopics.Furniture);
         }
