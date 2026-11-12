@@ -504,6 +504,9 @@ namespace Rootborn.Host.World
         /// 크기는 그림 픽셀 / PPU 칸. 앞뒤는 그 칸 가운데의 높이로 캐릭터·맵 가구와 함께 정렬한다. 지금 방이 아니면 비운다.
         /// 가구가 바뀔 때만 부른다(Host가 게임 명령의 바뀜 알림에서).
         /// </summary>
+        /// <summary>그릴 놓인 가구 그림 조각 수(시험·진단용).</summary>
+        public int PlacedFurnitureSpriteCount => _furniture.Count;
+
         public void SetPlacedFurniture(IReadOnlyList<PlacedFurniture> placed)
         {
             _furniture.Clear();

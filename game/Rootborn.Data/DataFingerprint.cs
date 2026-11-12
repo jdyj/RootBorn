@@ -15,6 +15,7 @@ namespace Rootborn.Data
     ///   - data/registry.json (등록부)
     ///   - data 아래에서 맨 위가 배열인 .json (엔티티 파일. EntityTable이 배열 파일만 엔티티로 읽는다)
     ///   - data 폴더 옆의 game/economy.json (통화 설정, EconomySettings). 없으면 넣지 않는다 — 통화가 없는 판은 규칙이 다르다
+    ///   - data 폴더 옆의 game/time.json (하루 시작, 취침, 밤 체력 감소 — TimeSettings). 없으면 넣지 않는다(시간 규칙이 다른 판)
     /// 셈하지 않는 것 — 맨 위가 객체인 그 밖의 data .json: 그림 좌표표(data/atlases), 변환 보고서(export-report.json),
     /// 문구(data/localization). 배포마다 들어가는 몫이 다르고, 문구가 달라도(언어가 다른 두 사람) 같이 할 수 있어야 한다.
     /// 줄바꿈(CRLF/LF)과 맨 앞 UTF-8 BOM은 맞춰서 넣는다 — Windows와 Linux에서 만든 체크아웃·배포가 같은 데이터로 보이게.
@@ -23,6 +24,7 @@ namespace Rootborn.Data
     {
         private const string RegistryFile = "registry.json";
         private const string EconomyRelative = "../game/" + EconomySettings.FileName;
+        private const string TimeRelative = "../game/" + TimeSettings.FileName;
 
         public static string Compute(string dataDirectory)
         {
@@ -38,6 +40,8 @@ namespace Rootborn.Data
 
             string economy = EconomySettings.PathFor(root);
             if (File.Exists(economy)) files.Add((EconomyRelative, Normalize(File.ReadAllBytes(economy))));
+            string time = TimeSettings.PathFor(root);
+            if (File.Exists(time)) files.Add((TimeRelative, Normalize(File.ReadAllBytes(time))));
 
             using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
             foreach (var file in files.OrderBy(f => f.Relative, StringComparer.Ordinal))

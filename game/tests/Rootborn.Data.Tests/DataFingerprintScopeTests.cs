@@ -59,6 +59,26 @@ namespace Rootborn.Data.Tests
             string afterRegistry = DataFingerprint.Compute(data);
             File.WriteAllText(Path.Combine(_root, "game", "economy.json"), "{\"currencyItem\":\"b\"}\n");
             Assert.That(DataFingerprint.Compute(data), Is.Not.EqualTo(afterRegistry), "game/economy.json");
+
+            string afterEconomy = DataFingerprint.Compute(data);
+            File.WriteAllText(Path.Combine(_root, "game", "time.json"), "{\"dayStart\":\"07:30\"}\n");
+            Assert.That(DataFingerprint.Compute(data), Is.Not.EqualTo(afterEconomy), "game/time.json(하루 시작·취침·밤 체력 감소 — 규칙이다)");
+        }
+
+        [Test]
+        public void MissingTimeFile_IsADifferentFingerprint()
+        {
+            string data = SmallData();
+            string with = DataFingerprint.Compute(data);
+            File.Delete(Path.Combine(_root, "game", "time.json"));
+            Assert.That(DataFingerprint.Compute(data), Is.Not.EqualTo(with), "시간 규칙이 있는 판과 없는 판은 규칙이 다르다");
+        }
+
+        [Test]
+        public void BothPublishLists_CarryTheTimeRules()
+        {
+            Assert.That(File.Exists(Path.Combine(CopyPublished("content.txt", "client-time"), "game", "time.json")), Is.True, "클라이언트 배포에 game/time.json");
+            Assert.That(File.Exists(Path.Combine(CopyPublished("content-server.txt", "server-time"), "game", "time.json")), Is.True, "서버 배포에 game/time.json");
         }
 
         [Test]
@@ -111,6 +131,7 @@ namespace Rootborn.Data.Tests
             File.WriteAllText(Path.Combine(data, "localization", "ko.json"), "{\"ui.a\":\"가\"}\n");
             File.WriteAllText(Path.Combine(data, "export-report.json"), "{\"types\":1}\n");
             File.WriteAllText(Path.Combine(_root, "game", "economy.json"), "{\"currencyItem\":\"a\"}\n");
+            File.WriteAllText(Path.Combine(_root, "game", "time.json"), "{\"dayStart\":\"07:00\"}\n");
             return data;
         }
 

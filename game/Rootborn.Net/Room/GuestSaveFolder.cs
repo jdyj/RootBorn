@@ -3,12 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using Rootborn.Core.Room;
 using Rootborn.Core.Save;
-using Rootborn.Data;
 using Rootborn.Data.Save;
-using Rootborn.Game;
-using Rootborn.Net.Room;
 
-namespace Rootborn.Server
+namespace Rootborn.Net.Room
 {
     /// <summary>
     /// 방의 손님 세이브(설계 3절·5절): &lt;세이브 폴더&gt;/&lt;방 슬롯&gt;/guests/&lt;플레이어 id&gt;/에 그 사람의 세이브 파일을 둔다.
@@ -17,22 +14,24 @@ namespace Rootborn.Server
     /// 받은 저장의 검사(<see cref="Accept"/>): 플레이어 id와 파일 이름이 경로 한 칸인지, 크기 한도(<see cref="RoomTransfer.MaxSaveBytes"/>),
     /// 그리고 옛 세이브에 받은 것을 겹친 세이브로 게임 한 판을 시작할 수 있는지(손상 슬롯 검사와 같은 규칙 — 깨진 파일, 더 새 형식 버전,
     /// 다른 플레이어의 진행, 스냅샷이 빠짐). 하나라도 걸리면 쓰지 않는다(옛 세이브를 지킨다).
+    /// 데디케이티드 서버(Rootborn.Server)와 내 PC에서 연 방(Rootborn.Host — 방을 연 사람의 슬롯 폴더 안)이 같은 이것을 쓴다.
+    /// 게임 한 판으로 시작해 보는 검사는 부르는 쪽이 넘긴다(Net은 게임 규칙을 모른다 — Rootborn.Game GameSession.SaveCheck).
     /// </summary>
     public sealed class GuestSaveFolder : IGuestSaves
     {
         public const string FolderName = "guests";
 
         private readonly FileSaveStore _store;
-        private readonly GameDefinitions _definitions;
-        private readonly GameStartSettings _settings;
+        private readonly Action<ISaveStore, string, string> _check;
         private readonly Action<string> _log;
 
-        public GuestSaveFolder(string guestsRoot, GameDefinitions definitions, GameStartSettings settings, Action<string> log = null)
+        /// <param name="check">겹친 세이브(저장소, 슬롯, 플레이어 id)로 게임 한 판을 시작해 본다. 시작할 수 없으면 예외(IOException·ArgumentException·
+        /// InvalidOperationException·FormatException)를 낸다.</param>
+        public GuestSaveFolder(string guestsRoot, Action<ISaveStore, string, string> check, Action<string> log = null)
         {
             if (string.IsNullOrWhiteSpace(guestsRoot)) throw new ArgumentException("손님 세이브 폴더가 비어 있다", nameof(guestsRoot));
             _store = new FileSaveStore(guestsRoot);
-            _definitions = definitions ?? throw new ArgumentNullException(nameof(definitions));
-            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            _check = check ?? throw new ArgumentNullException(nameof(check));
             _log = log;
         }
 
@@ -64,7 +63,7 @@ namespace Rootborn.Server
             RoomOutboxSaveData outbox;
             try
             {
-                GameSession.Start(_definitions, _settings, overlay, RoomGuestLink.Slot, playerId);
+                _check(overlay, RoomGuestLink.Slot, playerId);
                 overlay.TryRead(RoomGuestLink.Slot, SaveFileNames.RoomOutbox(playerId), out outbox);
             }
             catch (Exception e) when (e is IOException || e is ArgumentException || e is InvalidOperationException || e is FormatException)

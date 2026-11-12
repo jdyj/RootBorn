@@ -17,13 +17,13 @@ namespace Rootborn.Server.Tests
         private readonly Dictionary<SessionClient, LoopbackTransport> _lines = new Dictionary<SessionClient, LoopbackTransport>();
 
         public RoomRig(ISaveStore store, string slot = "room-a", int maxPlayers = 4, RoomServerSettings settings = null, TimeRules timeRules = null,
-            IGuestSaves guests = null)
+            IGuestSaves guests = null, Rootborn.Core.Room.RoomPieceCatalog pieces = null, string owner = null)
         {
             Network = new LoopbackNetwork(1);
             Clock = new ManualRoomClock();
             Settings = settings ?? new RoomServerSettings { MaxPlayers = maxPlayers };
             Log = new List<string>();
-            Room = new RoomServer(Network.Listen(), Settings, Versions, store, slot, Log.Add, timeRules, guests);
+            Room = new RoomServer(Network.Listen(), Settings, Versions, store, slot, Log.Add, timeRules, guests, pieces, owner);
             Loop = new RoomLoop(Room, Clock, Settings.TickSeconds);
         }
 

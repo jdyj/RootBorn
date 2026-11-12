@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Net;
+using Rootborn.Core.Room;
 using Rootborn.Core.Save;
 using Rootborn.Core.StudentLife;
 using Rootborn.Net.Transport;
@@ -36,9 +37,13 @@ namespace Rootborn.Net.Room
         /// <param name="clock">방의 틱을 세는 시계(Host가 넘긴다).</param>
         /// <exception cref="InvalidOperationException">듣지 못했다(포트를 쓰는 중 등).</exception>
         /// <exception cref="System.Net.Sockets.SocketException">듣지 못했다.</exception>
+        /// <param name="guests">손님 세이브를 갖는 곳(방을 연 사람의 슬롯 폴더 안 guests/ — 데디케이티드 서버와 같은 자리·같은 검사). 없으면 손님 진행은 손님 PC에 남는다.</param>
+        /// <param name="pieces">공유 조각 종류 등록 표(같이 쓰는 집의 판정 칸을 넣은 것). 없으면 Core 기본.</param>
+        /// <param name="ownerPlayerId">방을 연 사람의 신원. 그 사람의 진행은 이 슬롯 그 자체다(손님 세이브로 받지 않는다).</param>
         /// <remarks>그 슬롯의 방 상태를 읽을 수 없으면 저장소가 던진 예외가 그대로 나온다(파일 저장소: 깨진 파일·새 형식). 덮어쓰지 않는다.</remarks>
         public static HostedRoom Open(IPAddress bind, int port, RoomServerSettings settings, RoomVersions versions, ISaveStore store, string saveSlot,
-            IRoomClock clock, Action<string> log, Rootborn.Core.Time.TimeRules timeRules = null)
+            IRoomClock clock, Action<string> log, Rootborn.Core.Time.TimeRules timeRules = null, IGuestSaves guests = null, RoomPieceCatalog pieces = null,
+            string ownerPlayerId = null)
         {
             if (bind == null) throw new ArgumentNullException(nameof(bind));
             if (clock == null) throw new ArgumentNullException(nameof(clock));
@@ -50,7 +55,7 @@ namespace Rootborn.Net.Room
             RoomServer server;
             try
             {
-                server = new RoomServer(merged, settings, versions, store, saveSlot, log, timeRules);
+                server = new RoomServer(merged, settings, versions, store, saveSlot, log, timeRules, guests, pieces, ownerPlayerId);
             }
             catch
             {

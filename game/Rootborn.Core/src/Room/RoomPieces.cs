@@ -50,11 +50,13 @@ namespace Rootborn.Core.Room
         private readonly Dictionary<string, Entry> _entries = new Dictionary<string, Entry>(8, StringComparer.Ordinal);
         private readonly List<string> _names = new List<string>(8);
 
-        /// <summary>이 게임의 조각들: 돈(방 지갑), 마을 상태(월드 상태 깃발). 집과 가구는 아직 없다(보고서 "필요한 변경").</summary>
-        public static RoomPieceCatalog CreateDefault()
+        /// <summary>이 게임의 조각들: 돈(방 지갑), 집과 가구(같이 쓰는 집), 마을 상태(월드 상태 깃발).</summary>
+        /// <param name="houseRules">같이 쓰는 집의 배치 판정(방 쪽만 필요 — 가구 정의와 집 맵의 칸). 없으면 방은 가구 놓기·옮기기를 거절한다.</param>
+        public static RoomPieceCatalog CreateDefault(RoomHouseRules houseRules = null)
         {
             return new RoomPieceCatalog()
                 .Add(RoomWallet.PieceName, () => new RoomWallet(), outbox => new RoomWalletClient(outbox))
+                .Add(RoomHouse.PieceName, () => new RoomHouse(houseRules), outbox => new RoomHouseClient(outbox))
                 .Add(RoomWorldFlags.PieceName, () => new RoomWorldFlags(), outbox => new RoomWorldFlagsClient(outbox));
         }
 

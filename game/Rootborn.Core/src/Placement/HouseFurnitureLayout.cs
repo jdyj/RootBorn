@@ -75,14 +75,20 @@ namespace Rootborn.Core.Placement
         }
 
         /// <summary>저장된 기록으로 방을 다시 채운다. 놓을 수 없는 기록은 남겨 둔다. 저장하지 않는다.</summary>
-        public void Restore(IReadOnlyList<FurniturePlacementSaveData> records, IEnumerable<FurnitureDefinition> catalog)
+        /// <param name="instanceIds">기록마다(같은 순서) 쓸 인스턴스 id(같이 쓰는 집: 방이 준 id). 없으면 여기서 만든다.</param>
+        public void Restore(IReadOnlyList<FurniturePlacementSaveData> records, IEnumerable<FurnitureDefinition> catalog, IReadOnlyList<string> instanceIds = null)
         {
+            if (instanceIds != null && (records == null || instanceIds.Count != records.Count)) throw new ArgumentException("인스턴스 id는 기록마다 하나다", nameof(instanceIds));
             var plan = FurnitureReplay.Plan(_model, SurfaceId, records, catalog);
             _placed.Clear();
             _unresolved.Clear();
             for (int i = 0; i < plan.Unresolved.Count; i++) _unresolved.Add(plan.Unresolved[i].Record);
             for (int i = 0; i < plan.Accepted.Count; i++)
-                _placed.Add(new PlacedFurniture(NextInstanceId(plan.Accepted[i].Definition.StableId), plan.Accepted[i].Definition, plan.Accepted[i].Record));
+            {
+                var entry = plan.Accepted[i];
+                string id = instanceIds != null ? instanceIds[entry.SourceIndex] : NextInstanceId(entry.Definition.StableId);
+                _placed.Add(new PlacedFurniture(id, entry.Definition, entry.Record));
+            }
         }
 
         public bool CanPlace(FurnitureDefinition definition, GridPoint anchor, FurniturePlacementDirection direction)

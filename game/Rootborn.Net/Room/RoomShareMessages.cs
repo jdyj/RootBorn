@@ -45,6 +45,74 @@ namespace Rootborn.Net.Room
     }
 
     /// <summary>
+    /// 방 → 사람: 메시지 하나(<c>MaxMessageBytes</c>)에 들어가지 않는 공유 조각 상태(같이 쓰는 집의 가구 목록 등)를 나눈 조각 하나.
+    /// 같은 TransferId의 Index 0..Count-1을 모으면 상태 하나다(<see cref="RoomPieceStates"/>). 작은 상태는 <see cref="RoomPieceStateMessage"/> 하나로 간다.
+    /// </summary>
+    public sealed class RoomPieceStateChunkMessage
+    {
+        public uint TransferId;
+        public ushort Index;
+        public ushort Count;
+        public byte[] Bytes = Array.Empty<byte>();
+    }
+
+    /// <summary>
+    /// 공유 조각 상태를 보낼 메시지로 만들고(작으면 하나, 크면 나눠서) 받은 조각을 상태로 되돌린다 — 한 곳.
+    /// 나눈 상태의 한도: id <see cref="MaxStateIds"/>개, 전체 바이트는 세이브 묶음과 같은 <see cref="RoomTransfer.MaxSaveBytes"/>.
+    /// </summary>
+    public static class RoomPieceStates
+    {
+        /// <summary>나눠 보내는 상태 하나의 id 수 한도(깨진 메시지가 받는 쪽을 키우지 않게).</summary>
+        public const int MaxStateIds = 8192;
+
+        // 상태 메시지의 머리(종류·버전 + 조각 이름 + 수 + id 개수)보다 넉넉히 뺀다.
+        private const int StateOverhead = 96;
+
+        /// <summary>상태 하나를 보낼 메시지들(차례로 보낸다). nextTransferId는 나눠 보낼 때마다 오른다.</summary>
+        public static List<object> Messages(RoomPieceState state, int maxMessageBytes, ref uint nextTransferId)
+        {
+            var list = new List<object>(1);
+            if (Fits(state, maxMessageBytes))
+            {
+                list.Add(new RoomPieceStateMessage { Piece = state.Piece, Amount = state.Amount, Ids = state.Ids });
+                return list;
+            }
+
+            var w = new NetWriter(1024);
+            w.WriteString(state.Piece);
+            w.WriteInt32(state.Amount);
+            w.WriteInt32(state.Ids.Length);
+            foreach (var id in state.Ids) w.WriteString(id ?? string.Empty);
+            uint transfer = nextTransferId++;
+            foreach (var chunk in RoomTransfer.Split(transfer, w.ToArray(), maxMessageBytes))
+                list.Add(new RoomPieceStateChunkMessage { TransferId = chunk.TransferId, Index = chunk.Index, Count = chunk.Count, Bytes = chunk.Bytes });
+            return list;
+        }
+
+        public static bool TryDecode(byte[] payload, out RoomPieceState state)
+        {
+            state = default;
+            if (payload == null) return false;
+            var r = new NetReader(payload);
+            if (!r.TryReadString(RoomShareMessageBodies.MaxPieceNameBytes, out string piece) || piece.Length == 0 || !r.TryReadInt32(out int amount)
+                || !r.TryReadInt32(out int count) || count < 0 || count > MaxStateIds) return false;
+            var ids = new string[count];
+            for (int i = 0; i < count; i++)
+                if (!r.TryReadString(RoomShareMessageBodies.MaxIdBytes, out ids[i])) return false;
+            state = new RoomPieceState(piece, amount, ids);
+            return true;
+        }
+
+        private static bool Fits(RoomPieceState state, int maxMessageBytes)
+        {
+            if (state.Ids.Length > RoomShareMessageBodies.MaxIds) return false;
+            long bytes = StateOverhead + Encoding.UTF8.GetByteCount(state.Piece);
+            foreach (var id in state.Ids) bytes += 4 + Encoding.UTF8.GetByteCount(id ?? string.Empty);
+            return bytes <= maxMessageBytes;
+        }
+    }
+
+    /// <summary>
     /// 사람 → 방: 공유 조각 요청들(Core Room RoomRequestSaveData). 손님 저장을 받지 않는 방(내 PC에서 연 방)에서만 쓴다 — 받는 방은 요청이
     /// 저장과 함께 간다(개인 진행과 한 번에). 보내는 쪽은 그 요청을 자기 세이브에 쓴 뒤에 보낸다(<see cref="RoomGuestLink.FlushRequests"/>).
     /// </summary>
@@ -325,6 +393,17 @@ namespace Rootborn.Net.Room
             m = new SaveChunkMessage();
             return r.TryReadUInt32(out m.TransferId) && r.TryReadUInt16(out m.Index) && r.TryReadUInt16(out m.Count) && m.Count > 0 && m.Index < m.Count
                    && r.TryReadInt32(out int length) && r.TryReadBytes(length, out m.Bytes);
+        }
+
+        public static void WriteStateChunk(NetWriter w, RoomPieceStateChunkMessage m)
+            => WriteChunk(w, new SaveChunkMessage { TransferId = m.TransferId, Index = m.Index, Count = m.Count, Bytes = m.Bytes });
+
+        public static bool ReadStateChunk(NetReader r, int version, out RoomPieceStateChunkMessage m)
+        {
+            m = null;
+            if (!ReadChunk(r, version, out var chunk)) return false;
+            m = new RoomPieceStateChunkMessage { TransferId = chunk.TransferId, Index = chunk.Index, Count = chunk.Count, Bytes = chunk.Bytes };
+            return true;
         }
 
         public static void WriteTransferAnswer(NetWriter w, SaveTransferAnswerMessage m)

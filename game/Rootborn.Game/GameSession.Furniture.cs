@@ -50,11 +50,16 @@ namespace Rootborn.Game
         public void EnterHouse(IPlacementGrid grid, string surfaceId)
         {
             if (grid == null) throw new ArgumentNullException(nameof(grid));
-            var layout = new HouseFurnitureLayout(new HousePlacementModel(grid), surfaceId, CommitHouseLayout);
-            layout.Restore(FurnitureSaveFiles.LoadHouseLayout(_store, SaveSlot, HouseStage), _definitions.All<FurnitureDefinition>());
-            layout.PlacementCommitted += AnnouncePlacement;
-            if (House != null) House.PlacementCommitted -= AnnouncePlacement;
-            House = layout;
+            _houseGrid = grid;
+            HouseFurnitureLayout layout;
+            if (_roomHouse != null) layout = SharedHouseLayout(grid, surfaceId); // 같이 쓰는 집: 방이 알린 배치(GameSession.SharedHouse)
+            else
+            {
+                layout = new HouseFurnitureLayout(new HousePlacementModel(grid), surfaceId, CommitHouseLayout);
+                layout.Restore(FurnitureSaveFiles.LoadHouseLayout(_store, SaveSlot, HouseStage), _definitions.All<FurnitureDefinition>());
+            }
+
+            UseHouseLayout(layout);
             if (ReplayPlacedFurniture()) SaveAndNotify(AnnounceTopics, GameChangeTopics.Furniture);
         }
 
@@ -80,18 +85,31 @@ namespace Rootborn.Game
         {
             if (House == null || !_definitions.TryGet<FurnitureDefinition>(furnitureId, out var furniture)
                 || !FurnitureCatalog.IsAvailable(furniture, FurnitureUnlocks)) return false;
+            if (_roomHouse != null) return RequestSharedPlace(furniture, anchor, direction);
             bool placed = House.TryPlace(furniture, anchor, direction);
             return Saved(placed, placed, AnnounceTopics, GameChangeTopics.Furniture);
         }
 
         /// <summary>놓인 가구를 옮긴다(instanceId는 House.Placed의 InstanceId). 다시 알리지 않는다.</summary>
+        /// <remarks>같이 쓰는 집이면 놓기·옮기기·치우기는 방에 요청만 하고 false다(허락이 오면 바뀐다 — GameSession.SharedHouse).</remarks>
         public bool MoveFurniture(string instanceId, GridPoint anchor, FurniturePlacementDirection direction)
-            => FurnitureChanged(House != null && House.TryMove(instanceId, anchor, direction));
+        {
+            if (House != null && _roomHouse != null) return RequestSharedMove(instanceId, anchor, direction);
+            return FurnitureChanged(House != null && House.TryMove(instanceId, anchor, direction));
+        }
 
-        public bool RemoveFurniture(string instanceId) => FurnitureChanged(House != null && House.Delete(instanceId));
+        public bool RemoveFurniture(string instanceId)
+        {
+            if (House != null && _roomHouse != null) return RequestSharedRemove(instanceId);
+            return FurnitureChanged(House != null && House.Delete(instanceId));
+        }
 
         /// <summary>놓인 가구를 모두 치운다. 놓지 못했던 기록은 남긴다.</summary>
-        public bool ClearFurniture() => FurnitureChanged(House != null && House.ClearUserFurniture());
+        public bool ClearFurniture()
+        {
+            if (House != null && _roomHouse != null) return RequestSharedClear();
+            return FurnitureChanged(House != null && House.ClearUserFurniture());
+        }
 
         // 옮기기·치우기는 배치 기록만 바꾸고 그 기록은 House가 바로 쓴다(CommitHouseLayout). 여기서는 알리기만 한다.
         private bool FurnitureChanged(bool changed)

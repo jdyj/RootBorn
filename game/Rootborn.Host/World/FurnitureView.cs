@@ -37,6 +37,18 @@ namespace Rootborn.Host.World
         }
 
         public WorldMap Load(string mapId) => RoomOf(mapId)?.WalkMap ?? ((IWorldMapSource)_maps).Load(mapId);
+
+        /// <summary>
+        /// 그 면 id(placementSurface)의 가구 방 칸 — 이 PC의 화면이 GameSession.EnterHouse에 넘기는 것과 같은 칸. 내 PC에서 연 방이 같이 쓰는 집을
+        /// 판정할 때 쓴다(Core RoomHouseRules). 그런 맵이 없으면 null.
+        /// </summary>
+        public Rootborn.Core.Placement.IPlacementGrid GridForSurface(string surfaceId)
+        {
+            if (string.IsNullOrEmpty(surfaceId)) return null;
+            foreach (string mapId in _interactions.MapIds)
+                if (_interactions.Map(mapId).PlacementSurface == surfaceId) return RoomOf(mapId)?.Grid;
+            return null;
+        }
     }
 
     /// <summary>배치 화면이 묻는 화면 좌표 ↔ 가구 칸(지난 프레임에 그린 카메라 기준).</summary>

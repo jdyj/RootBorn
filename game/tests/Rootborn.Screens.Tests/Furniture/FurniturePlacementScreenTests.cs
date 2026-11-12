@@ -60,13 +60,15 @@ namespace Rootborn.Screens.Tests.Furniture
 
         private sealed class Fixture : IDisposable
         {
-            public readonly TestSession T = new TestSession();
+            public readonly TestSession T;
             public readonly FurnitureRoom Room = new FurnitureRoom(TestRoomMap());
             public readonly TestView View;
             public readonly FurniturePlacementScreen Screen;
 
-            public Fixture()
+            /// <param name="shares">같이 하는 방의 조각 묶음(같이 쓰는 집 시험). 없으면 혼자 하기.</param>
+            public Fixture(Rootborn.Core.Room.RoomShares shares = null)
             {
+                T = new TestSession(playerId: shares == null ? null : "me", shares: shares);
                 View = new TestView(Room);
                 T.Session.EnterHouse(Room.Grid, "house");
                 T.Stack.EnterMap("House", new[] { MapFeatures.FurniturePlacement });
@@ -212,6 +214,100 @@ namespace Rootborn.Screens.Tests.Furniture
             Assert.That(f.Screen.SelectedInstanceId, Is.EqualTo(placed.InstanceId), "놓은 가구를 고른다(회전·삭제·이동 대상)");
             Assert.That(f.Screen.OverlayVisible, Is.False, "놓은 뒤 칸 색이 새 가구를 덮지 않는다");
 
+        }
+
+        // ---------- 같이 쓰는 집 ----------
+
+        /// <summary>같이 쓰는 집의 방 쪽(Core RoomPieceSet, 시험용 방 칸으로 판정). 보낼 요청을 받아 답과 상태를 돌려준다(서버가 할 일).</summary>
+        private sealed class HouseRoom
+        {
+            private readonly List<(string Player, Rootborn.Core.Room.RoomShares Shares)> _players = new List<(string, Rootborn.Core.Room.RoomShares)>();
+            private int _ids;
+            public readonly Rootborn.Core.Room.RoomPieceSet Pieces;
+
+            public HouseRoom(GameDefinitionsSource definitions)
+            {
+                var grid = new FurnitureRoom(TestRoomMap()).Grid;
+                var rules = new Rootborn.Core.Room.RoomHouseRules(definitions(), s => s == "house" ? grid : null);
+                Pieces = new Rootborn.Core.Room.RoomPieceSet(new Rootborn.Core.Room.RoomShareSettings(new[] { Rootborn.Core.Room.RoomHouse.PieceName }),
+                    Rootborn.Core.Room.RoomPieceCatalog.CreateDefault(rules));
+            }
+
+            public Rootborn.Core.Room.RoomShares Join(string player)
+            {
+                var shares = new Rootborn.Core.Room.RoomShares(Pieces.Settings, Rootborn.Core.Room.RoomPieceCatalog.CreateDefault(), () => player + "-r" + (++_ids));
+                foreach (var piece in Pieces.Pieces) shares.Receive(piece.State());
+                _players.Add((player, shares));
+                return shares;
+            }
+
+            public void Deliver(Rootborn.Core.Room.RoomShares from)
+            {
+                var (player, _) = _players.First(p => p.Shares == from);
+                var answers = new List<Rootborn.Core.Room.RoomAnswer>();
+                var changed = new List<Rootborn.Core.Room.IRoomPiece>();
+                Pieces.Apply(player, from.Outbox.Requests.Select(r => r.Copy()).ToList(), 1, answers, changed);
+                foreach (var a in answers) from.Receive(a);
+                foreach (var piece in changed)
+                    foreach (var p in _players) p.Shares.Receive(piece.State());
+            }
+        }
+
+        private delegate IEnumerable<FurnitureDefinition> GameDefinitionsSource();
+
+        private static IEnumerable<FurnitureDefinition> AllFurniture()
+        {
+            using var t = new TestSession();
+            return t.Session.Definitions.All<FurnitureDefinition>().ToList();
+        }
+
+        private static string RoomStatus(Fixture f) => ((UiTextBlock)f.T.Node(FurniturePlacementScreen.RoomStatusId)).Text;
+
+        [Test]
+        public void SharedHouse_ClickingACell_WaitsForTheRoom_ThenThePieceAppears()
+        {
+            var room = new HouseRoom(AllFurniture);
+            var mine = room.Join("me");
+            using var f = new Fixture(mine);
+            Assert.That(f.T.Session.SharesHouse, Is.True);
+            f.PickFromPalette(FreeDesk);
+            var cell = new GridPoint(3, 3);
+            f.ClickCell(cell);
+            f.T.Emit();
+            Assert.That(f.Screen.LastAction, Is.EqualTo("waiting"), "방에 물었다");
+            Assert.That(RoomStatus(f), Is.EqualTo(f.T.Text.Get("ui.furniture.room-waiting")));
+            Assert.That(f.T.Session.House.Placed, Is.Empty, "허락 전에는 바뀌지 않는다");
+            f.ClickCell(new GridPoint(5, 3));
+            Assert.That(mine.Outbox.Requests.Count, Is.EqualTo(1), "기다리는 동안 다시 누를 수 없다");
+
+            room.Deliver(mine);
+            f.T.Emit();
+            Assert.That(f.Screen.LastAction, Is.EqualTo("placed"));
+            Assert.That(RoomStatus(f), Is.Empty);
+            Assert.That(f.T.Session.House.Placed.Single().Anchor, Is.EqualTo(cell));
+            KnownMissingKeys.AssertOnlyKnownMissing(f.T.Text, f.T.Stack.Find(ScreenCatalog.FurniturePlacement).TextKeys);
+        }
+
+        [Test]
+        public void SharedHouse_SomeoneElseTookTheCellFirst_SaysSo_AndNothingIsPlacedForMe()
+        {
+            var room = new HouseRoom(AllFurniture);
+            var mine = room.Join("me");
+            var theirs = room.Join("friend");
+            using var f = new Fixture(mine);
+            f.PickFromPalette(FreeDesk);
+            var cell = new GridPoint(3, 3);
+            f.ClickCell(cell);
+            // 친구가 같은 칸에 먼저 놓았다(준비 — 친구의 요청을 방에 직접 적는다).
+            theirs.Find<Rootborn.Core.Room.RoomHouseClient>().RequestPlace("house", FreeDesk, cell, FurniturePlacementDirection.North);
+            room.Deliver(theirs);
+            room.Deliver(mine);
+            f.T.Emit();
+            Assert.That(f.Screen.LastAction, Is.EqualTo("refused"));
+            Assert.That(RoomStatus(f), Is.EqualTo(f.T.Text.Get("ui.furniture.room-refused")));
+            Assert.That(f.T.Session.House.Placed.Single().Anchor, Is.EqualTo(cell), "친구가 놓은 가구가 보인다");
+            Assert.That(room.Pieces.TryGet(Rootborn.Core.Room.RoomHouse.PieceName, out var house)
+                        && ((Rootborn.Core.Room.RoomHouse)house).Placed.Single().PlacedBy == "friend", Is.True);
         }
 
         [Test]

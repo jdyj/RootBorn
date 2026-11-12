@@ -258,5 +258,9 @@
   "ui.hud.busy-until": "Busy · done at {0:00}:{1:00}",
   "ui.prompt.busy": "You are still busy with your last activity.",
   "day-result.sleeping-awake-others": "Asleep · Still awake: {0}",
-  "day-result.sleeping": "Asleep · You wake up at 07:00"
+  "day-result.sleeping": "Asleep · You wake up at 07:00",
+  "ui.room.joined-progress.new": "You start a new character in this room. Your progress is saved in the room.",
+  "ui.room.joined-progress.continue": "You continue your progress in this room.",
+  "ui.furniture.room-waiting": "Waiting for the room to approve...",
+  "ui.furniture.room-refused": "Someone else used that spot first. Please choose again."
 }

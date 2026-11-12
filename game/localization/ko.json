@@ -258,5 +258,9 @@
   "ui.hud.busy-until": "하는 중 · {0:00}:{1:00}에 끝나요",
   "ui.prompt.busy": "앞의 활동을 하는 중이에요. 끝난 뒤에 할 수 있어요.",
   "day-result.sleeping-awake-others": "자는 중 · 아직 깨어 있는 사람: {0}",
-  "day-result.sleeping": "자는 중 · 07:00에 일어나요"
+  "day-result.sleeping": "자는 중 · 07:00에 일어나요",
+  "ui.room.joined-progress.new": "이 방에서는 새 캐릭터로 시작해요. 진행은 방에 저장돼요.",
+  "ui.room.joined-progress.continue": "이 방에서 하던 진행을 이어 해요.",
+  "ui.furniture.room-waiting": "방의 허락을 기다리는 중이에요...",
+  "ui.furniture.room-refused": "다른 사람이 먼저 그 자리를 썼어요. 다시 골라 주세요."
 }

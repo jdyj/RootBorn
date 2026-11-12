@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- 데디케이티드 서버(화면 없는 콘솔): 인자 읽기와 루프 돌리기만 한다. 방·접속·틱은 Rootborn.Net/Room에 있다.
-       Game(게임 버전), Data(정의 읽기, 세이브 파일), Net만 참조한다. 그림·글꼴·창 참조 금지. Windows와 Linux에서 돈다. -->
+       Game(게임 버전), Data(정의 읽기, 세이브 파일), World(같이 쓰는 집의 판정 칸 — 집 맵), Net만 참조한다(설계 6절). 그림·글꼴·창 참조 금지.
+       Windows와 Linux에서 돈다. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
@@ -12,5 +13,6 @@
     <ProjectReference Include="../Rootborn.Game/Rootborn.Game.csproj" />
     <ProjectReference Include="../Rootborn.Data/Rootborn.Data.csproj" />
     <ProjectReference Include="../Rootborn.Net/Rootborn.Net.csproj" />
+    <ProjectReference Include="../Rootborn.World/Rootborn.World.csproj" />
   </ItemGroup>
 </Project>

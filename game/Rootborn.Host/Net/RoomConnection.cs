@@ -61,6 +61,9 @@ namespace Rootborn.Host.Net
         /// <summary>방에서의 신원(접속을 시작한 뒤).</summary>
         public string PlayerId { get; private set; }
 
+        /// <summary>그 슬롯으로 들어가면 쓸 신원(<see cref="GuestProgress.RoomIdentity"/>). 내 PC에서 방을 열 때 "방을 연 사람"으로 넘긴다.</summary>
+        public string IdentityFor(string slotId) => _identityForSlot(slotId);
+
         /// <summary>
         /// 손님 저장과 공유 조각(들어간 뒤). 이 방이 손님 저장을 받으면(<see cref="RoomGuestLink.TakesGuestSaves"/>) 게임 한 판은 이것의 세이브와
         /// 조각 묶음으로 시작한다(<see cref="GuestProgress.RoomStoreFor"/>).

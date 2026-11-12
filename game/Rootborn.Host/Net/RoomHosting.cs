@@ -26,6 +26,8 @@ namespace Rootborn.Host.Net
         private readonly IRoomClock _clock;
         private readonly Func<Rootborn.Core.Time.TimeRules> _timeRules;
         private readonly Action _closed;
+        private readonly Func<string, IGuestSaves> _guestsFor;
+        private readonly Func<Rootborn.Core.Room.RoomPieceCatalog> _pieces;
         private HostedRoom _room;
         private RoomJoinPhase _ownPhase = RoomJoinPhase.Idle;
         private string _ownFailure = string.Empty;
@@ -38,8 +40,13 @@ namespace Rootborn.Host.Net
         /// <param name="clock">방의 틱을 세는 시계(Host의 네트워크 시계).</param>
         /// <param name="timeRules">방의 시계가 쓸 시간 규칙(게임 데이터의 정의 — 데디케이티드 서버와 같은 것).</param>
         /// <param name="closed">내가 방을 닫았다(<see cref="Close"/>): Host가 시작 화면으로 돌아간다.</param>
-        public RoomHosting(RoomConnection connection, Func<ISaveStore> store, IRoomClock clock, Func<Rootborn.Core.Time.TimeRules> timeRules, Action closed)
+        /// <param name="guestsFor">슬롯 id → 그 방의 손님 세이브(내 슬롯 폴더 안 guests/ — 데디케이티드 서버와 같은 자리·검사). 없으면 손님 진행은 손님 PC에 남는다.</param>
+        /// <param name="pieces">공유 조각 등록 표(같이 쓰는 집의 판정 칸을 넣은 것). 없으면 Core 기본.</param>
+        public RoomHosting(RoomConnection connection, Func<ISaveStore> store, IRoomClock clock, Func<Rootborn.Core.Time.TimeRules> timeRules, Action closed,
+            Func<string, IGuestSaves> guestsFor = null, Func<Rootborn.Core.Room.RoomPieceCatalog> pieces = null)
         {
+            _guestsFor = guestsFor;
+            _pieces = pieces;
             _connection = connection ?? throw new ArgumentNullException(nameof(connection));
             _store = store ?? throw new ArgumentNullException(nameof(store));
             _clock = clock ?? throw new ArgumentNullException(nameof(clock));
@@ -113,7 +120,9 @@ namespace Rootborn.Host.Net
             };
             try
             {
-                _room = HostedRoom.Open(bind, port, settings, _connection.Versions, _store(), slotId, _clock, line => Console.WriteLine("[내 방] " + line), _timeRules?.Invoke());
+                // 손님의 진행은 내 슬롯 폴더 안 guests/<그 사람>/에, 내 진행은 그 슬롯 그 자체다(방을 연 사람 = 내 신원).
+                _room = HostedRoom.Open(bind, port, settings, _connection.Versions, _store(), slotId, _clock, line => Console.WriteLine("[내 방] " + line), _timeRules?.Invoke(),
+                    _guestsFor?.Invoke(slotId), _pieces?.Invoke(), _connection.IdentityFor(slotId));
             }
             catch (Exception e) when (e is InvalidOperationException || e is SocketException || e is ArgumentException)
             {

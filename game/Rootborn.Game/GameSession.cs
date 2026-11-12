@@ -88,6 +88,17 @@ namespace Rootborn.Game
         public DailyPlanProgress DailyPlan => Student.DailyPlan;
 
         /// <summary>
+        /// 방이 받은 손님 저장의 검사(Rootborn.Net GuestSaveFolder): 겹친 세이브(저장소, 슬롯, 플레이어 id)로 게임 한 판을 시작해 본다 — 손상 슬롯 검사와 같은 규칙.
+        /// 시작할 수 없으면 예외를 낸다. 데디케이티드 서버와 내 PC에서 연 방이 같은 이것을 넘긴다.
+        /// </summary>
+        public static Action<ISaveStore, string, string> SaveCheck(GameDefinitions definitions, GameStartSettings settings)
+        {
+            if (definitions == null) throw new ArgumentNullException(nameof(definitions));
+            if (settings == null) throw new ArgumentNullException(nameof(settings));
+            return (store, slot, playerId) => Start(definitions, settings, store, slot, playerId);
+        }
+
+        /// <summary>
         /// 슬롯의 세이브가 있으면 읽어 이어 가고, 없으면 새 게임으로 시작한다. 새 게임은 첫 명령이 적용될 때 처음 저장한다(Unity 판과 같음).
         /// newEventKey는 퀘스트 이벤트 키를 만든다(기본: 행동 이름 + 새 GUID, Unity 판과 같음).
         /// </summary>

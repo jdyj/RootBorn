@@ -101,12 +101,14 @@ namespace Rootborn.Server
             }
 
             var settings = new RoomServerSettings { MaxPlayers = options.MaxPlayers, SharedPieces = options.SharedPieces, DayCopiesToKeep = options.DayCopies };
-            var guests = new GuestSaveFolder(GuestSaveFolder.FolderFor(options.SaveRoot, options.SaveSlot), load.Definitions,
-                GameStartSettings.FromDefinitions(load.Definitions), Log);
+            var guests = new GuestSaveFolder(GuestSaveFolder.FolderFor(options.SaveRoot, options.SaveSlot), GameSession.SaveCheck(load.Definitions,
+                GameStartSettings.FromDefinitions(load.Definitions)), Log);
             RoomServer room;
             try
             {
-                room = new RoomServer(transport, settings, versions, store, options.SaveSlot, Log, RoomTimeRules(load.Definitions), guests);
+                // 같이 쓰는 집의 판정 칸은 데이터 폴더 옆의 game/world와 그 맵(LDtk)에서 처음 물을 때 읽는다(HouseGrids).
+                var pieces = Rootborn.Core.Room.RoomPieceCatalog.CreateDefault(HouseGrids.Rules(load.Definitions, RepoRootOf(options.DataDirectory), Log));
+                room = new RoomServer(transport, settings, versions, store, options.SaveSlot, Log, RoomTimeRules(load.Definitions), guests, pieces);
             }
             catch (Exception e) when (e is SaveFileCorruptException || e is SaveFileTooNewException || e is ArgumentException)
             {
@@ -143,6 +145,10 @@ namespace Rootborn.Server
             if (definitions == null) throw new ArgumentNullException(nameof(definitions));
             return definitions.TimeRules;
         }
+
+        /// <summary>데이터 폴더의 부모(저장소 또는 배포 폴더의 맨 위 — game/world가 그 아래에 있다).</summary>
+        public static string RepoRootOf(string dataDirectory)
+            => Path.GetDirectoryName(Path.GetFullPath(dataDirectory).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)) ?? ".";
 
         /// <summary>
         /// 이 서버의 버전: 프로토콜, 게임 프로그램(Rootborn.Game 어셈블리의 정보 버전 — 같은 커밋에서 빌드하면 같다), 데이터 지문.

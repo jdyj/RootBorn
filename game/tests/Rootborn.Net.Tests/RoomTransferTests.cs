@@ -112,5 +112,36 @@ namespace Rootborn.Net.Tests
             var transfer = (SaveTransferAnswerMessage)Round(new SaveTransferAnswerMessage { TransferId = 9, Accepted = false, Reason = GuestSaveRefusal.Damaged });
             Assert.That((transfer.TransferId, transfer.Accepted, transfer.Reason), Is.EqualTo((9u, false, GuestSaveRefusal.Damaged)));
         }
+
+        [Test]
+        public void APieceStateTooBigForOneMessage_IsSplit_EveryChunkFits_AndComesBackWhole()
+        {
+            const int max = 4096;
+            var catalog = RootbornMessages.CreateCatalog(max);
+            uint next = 1;
+            var small = new Rootborn.Core.Room.RoomPieceState("wallet", 5, Array.Empty<string>());
+            Assert.That(RoomPieceStates.Messages(small, max, ref next).Single(), Is.InstanceOf<RoomPieceStateMessage>(), "작은 상태는 메시지 하나");
+            Assert.That(next, Is.EqualTo(1u));
+
+            var ids = Enumerable.Range(0, 400).Select(i => i + "|" + new string('f', 84) + "|house|" + (i % 28) + "|" + (i / 28) + "|0").ToArray();
+            var big = new Rootborn.Core.Room.RoomPieceState("house", ids.Length, ids);
+            var messages = RoomPieceStates.Messages(big, max, ref next);
+            Assert.That(messages.Count, Is.GreaterThan(1));
+            Assert.That(next, Is.EqualTo(2u));
+            var assembler = new ChunkAssembler();
+            byte[] payload = null;
+            foreach (var m in messages.Cast<RoomPieceStateChunkMessage>())
+            {
+                Assert.That(catalog.TryEncode(m, out var bytes), Is.True, "조각마다 메시지 하나에 들어간다");
+                Assert.That(catalog.Decode(bytes, out var back), Is.EqualTo(DecodeOutcome.Ok));
+                var c = (RoomPieceStateChunkMessage)back;
+                assembler.Add(new SaveChunkMessage { TransferId = c.TransferId, Index = c.Index, Count = c.Count, Bytes = c.Bytes }, out _, out payload);
+            }
+
+            Assert.That(RoomPieceStates.TryDecode(payload, out var whole), Is.True);
+            Assert.That((whole.Piece, whole.Amount), Is.EqualTo(("house", 400)));
+            Assert.That(whole.Ids, Is.EqualTo(ids));
+            Assert.That(RoomPieceStates.TryDecode(new byte[] { 1, 2, 3 }, out _), Is.False, "깨진 바이트");
+        }
     }
 }

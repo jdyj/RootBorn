@@ -345,6 +345,61 @@ namespace Rootborn.Core.Tests
             Assert.That(result.ItemGrantIds, Is.EqualTo(new[] { "item.prize:1" }));
         }
 
+        /// <summary>
+        /// 지갑이 "될 수 있다"고 답한 뒤 실제 바꾸기에서 거절하는 경우(같이 하는 방의 방 지갑: 허락 전에는 잡기만 적고 거절한다).
+        /// </summary>
+        private sealed class RefusingWallet : IWallet
+        {
+            public int Balance { get; set; } = 50;
+            public int Attempts { get; private set; }
+            public bool CanExchange(int cost, int reward) => cost >= 0 && reward >= 0 && cost <= Balance;
+            public bool TryExchange(int cost, int reward, Action commit)
+            {
+                Attempts++;
+                return false;
+            }
+            public event Action Changed { add { } remove { } }
+        }
+
+        [Test]
+        public void SpendingMoneyThatTheWalletRefusesAtTheLastStep_ChangesNothing_NotEvenTheOtherOutcomes()
+        {
+            var money = new ItemDefinition("item.money", 9999);
+            var wallet = new RefusingWallet();
+            var inventory = new ItemInventory(wallet, money);
+            var prize = new ItemDefinition("item.prize", 1);
+            var choice = Choice("choice.pay", outcomes: new IExplorationOutcome[]
+            {
+                new ExplorationItemSpendOutcome(money, 10), new ExplorationItemGrantOutcome(prize, 1), new ExplorationTraitDeltaOutcome("trait.curiosity", 1),
+            }, risk: Risk(1, 1, 0));
+            var context = Context(5, 5, inventory: inventory);
+            string before = Snapshot(context);
+
+            Assert.That(new ExplorationInteractionRunner().TryChoose(Interaction("site", null, false, 0, choice), choice, context, out var result), Is.False);
+            Assert.That(result.Kind, Is.Not.EqualTo(ExplorationChoiceResultKind.Applied));
+            Assert.That(wallet.Attempts, Is.EqualTo(1), "돈은 다른 바뀜과 한 번에 바꾸려 했다");
+            Assert.That(inventory.CountOf(prize), Is.Zero, "물건도 받지 않았다(전부 아니면 전무)");
+            Assert.That(Snapshot(context), Is.EqualTo(before), "위험 비용·성향·탐색 기록도 그대로");
+        }
+
+        [Test]
+        public void SpendingMoneyThroughTheWallet_WithTheOtherOutcomes_HappensInOneExchange()
+        {
+            var money = new ItemDefinition("item.money", 9999);
+            var wallet = new PersonalWallet();
+            var inventory = new ItemInventory(wallet, money);
+            inventory.Add(money, 30);
+            var prize = new ItemDefinition("item.prize", 1);
+            var choice = Choice("choice.pay", outcomes: new IExplorationOutcome[] { new ExplorationItemSpendOutcome(money, 10), new ExplorationItemGrantOutcome(prize, 1) });
+            var context = Context(5, 5, inventory: inventory);
+            Assert.That(new ExplorationInteractionRunner().TryChoose(Interaction("site", null, false, 0, choice), choice, context, out var result), Is.True);
+            Assert.That(wallet.Balance, Is.EqualTo(20));
+            Assert.That(inventory.CountOf(prize), Is.EqualTo(1));
+            Assert.That(result.ItemSpendIds, Is.EqualTo(new[] { "item.money:10" }));
+            Assert.That(result.ItemGrantIds, Is.EqualTo(new[] { "item.prize:1" }));
+            Assert.That(result.OutcomeIds, Is.EqualTo(new[] { "item-spend:item.money", "item-grant:item.prize" }));
+        }
+
         [Test]
         public void CooldownAndInsufficientRiskRejectWithoutChanges()
         {

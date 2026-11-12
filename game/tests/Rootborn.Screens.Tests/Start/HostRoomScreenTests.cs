@@ -339,6 +339,27 @@ namespace Rootborn.Screens.Tests.Start
         // ---------- 들어간 직후 알림 ----------
 
         [Test]
+        public void JoinedNotice_SaysWhetherThisRoomStartsANewCharacterOrContinues()
+        {
+            GameText text = TestData.Text();
+            var stack = new ScreenStack(ScreenCatalog.Create(), new ScreenServices(text, null));
+            stack.Layout(1920, 1080);
+            string Progress() => ((UiTextBlock)Find(stack, RoomSharesNoticeScreen.ProgressId)).Text;
+
+            stack.Open(ScreenCatalog.RoomSharesNotice, argument: new RoomSharesNoticeOpen(new[] { "wallet" }, continuesHere: false));
+            Assert.That(Progress(), Is.EqualTo(text.Get("ui.room.joined-progress.new")), "처음 온 방: 새 캐릭터로 시작한다(진행은 방에)");
+            KnownMissingKeys.AssertOnlyKnownMissing(text, stack.Find(ScreenCatalog.RoomSharesNotice).TextKeys);
+            stack.Close(ScreenCatalog.RoomSharesNotice);
+
+            stack.Open(ScreenCatalog.RoomSharesNotice, argument: new RoomSharesNoticeOpen(new[] { "wallet" }, continuesHere: true));
+            Assert.That(Progress(), Is.EqualTo(text.Get("ui.room.joined-progress.continue")), "방에 내 진행이 있다: 이어 한다");
+            stack.Close(ScreenCatalog.RoomSharesNotice);
+
+            stack.Open(ScreenCatalog.RoomSharesNotice, argument: new RoomSharesNoticeOpen(new[] { "wallet" }));
+            Assert.That(Progress(), Is.Empty, "진행이 이 PC에 남는 방이면 알리지 않는다");
+        }
+
+        [Test]
         public void JoinedNotice_SaysWhatTheRoomShares_ThenClosesByItself_WithoutBlockingWalking()
         {
             GameText text = TestData.Text();
@@ -369,7 +390,8 @@ namespace Rootborn.Screens.Tests.Start
         public void JoinedNotice_DoubleLengthText_StaysInsideTheBox(string language)
         {
             var stack = new ScreenStack(ScreenCatalog.Create(), new ScreenServices(LongText.Create(language), null));
-            stack.Open(ScreenCatalog.RoomSharesNotice, argument: new RoomSharesNoticeOpen(Rootborn.Core.Room.RoomPieceCatalog.CreateDefault().Names));
+            // 같이 쓰는 것 전부 + 진행 줄(두 문구 중 긴 쪽 — 새 캐릭터로 시작)
+            stack.Open(ScreenCatalog.RoomSharesNotice, argument: new RoomSharesNoticeOpen(Rootborn.Core.Room.RoomPieceCatalog.CreateDefault().Names, continuesHere: false));
             TextBounds.Settle(stack);
             var found = new List<string>();
             TextBounds.Inspect(stack.Find(ScreenCatalog.RoomSharesNotice), found);

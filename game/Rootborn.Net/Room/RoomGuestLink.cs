@@ -64,6 +64,7 @@ namespace Rootborn.Net.Room
         private readonly RoomPieceCatalog _catalog;
         private readonly Func<string> _newRequestId;
         private readonly ChunkAssembler _download = new ChunkAssembler();
+        private readonly ChunkAssembler _stateChunks = new ChunkAssembler();
         private readonly int _maxMessageBytes;
         private readonly HashSet<string> _sent = new HashSet<string>(StringComparer.Ordinal);
         private readonly List<RoomRequestSaveData> _toSend = new List<RoomRequestSaveData>(4);
@@ -81,6 +82,7 @@ namespace Rootborn.Net.Room
                 .On<SaveChunkMessage>(OnChunk)
                 .On<SaveTransferAnswerMessage>(OnTransferAnswer)
                 .On<RoomPieceStateMessage>(OnState)
+                .On<RoomPieceStateChunkMessage>(OnStateChunk)
                 .On<RoomAnswerMessage>(OnAnswer);
         }
 
@@ -197,6 +199,14 @@ namespace Rootborn.Net.Room
         }
 
         private void OnState(RoomPieceStateMessage m) => Shares?.Receive(new RoomPieceState(m.Piece, m.Amount, m.Ids));
+
+        // 나눠 온 조각 상태(같이 쓰는 집의 가구 목록 등). 방은 한 상태의 조각을 이어서 보낸다.
+        private void OnStateChunk(RoomPieceStateChunkMessage m)
+        {
+            var chunk = new SaveChunkMessage { TransferId = m.TransferId, Index = m.Index, Count = m.Count, Bytes = m.Bytes };
+            if (!_stateChunks.Add(chunk, out _, out var payload)) return;
+            if (RoomPieceStates.TryDecode(payload, out var state)) Shares?.Receive(state);
+        }
 
         private void OnAnswer(RoomAnswerMessage m)
         {

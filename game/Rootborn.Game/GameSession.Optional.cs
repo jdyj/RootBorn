@@ -44,8 +44,14 @@ namespace Rootborn.Game
 
         private DiscoveryClueLookupCache ClueCache => new DiscoveryClueLookupCache(_definitions.All<DiscoveryClue>());
 
-        /// <summary>탐색 지점의 선택지를 고른다. 비용·위험·물건 지급과 이어지는 퀘스트는 Core 실행기가 한 번에 처리한다.</summary>
+        /// <summary>
+        /// 탐색 지점의 선택지를 고른다. 비용·위험·물건 지급과 이어지는 퀘스트는 Core 실행기가 한 번에 처리한다. 돈을 쓰는 선택지는 돈을 같이 쓰는 방이면
+        /// 다른 돈 쓰는 명령처럼 방의 허락을 기다린 뒤 끝난다(WaitingForRoom) — 허락 전에는 아무것도 바뀌지 않는다.
+        /// </summary>
         public ExplorationChoiceResult ChooseExploration(string interactionId, string choiceId)
+            => Shared(() => ChooseExplorationNow(interactionId, choiceId), r => r.Kind == ExplorationChoiceResultKind.Applied);
+
+        private ExplorationChoiceResult ChooseExplorationNow(string interactionId, string choiceId)
         {
             _definitions.TryGet<ExplorationInteraction>(interactionId, out var interaction);
             ExplorationChoice choice = null;

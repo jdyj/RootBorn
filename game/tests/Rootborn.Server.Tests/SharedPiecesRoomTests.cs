@@ -74,7 +74,7 @@ namespace Rootborn.Server.Tests
         private RoomRig NewRoom(params string[] shared)
         {
             var settings = new RoomServerSettings { MaxPlayers = 4, SharedPieces = shared };
-            var guests = new GuestSaveFolder(GuestSaveFolder.FolderFor(Path.Combine(_root, "saves"), "room-a"), _definitions, _settings);
+            var guests = new GuestSaveFolder(GuestSaveFolder.FolderFor(Path.Combine(_root, "saves"), "room-a"), GameSession.SaveCheck(_definitions, _settings));
             return new RoomRig(RoomStore, settings: settings, timeRules: Program.RoomTimeRules(_definitions), guests: guests);
         }
 
@@ -389,7 +389,7 @@ namespace Rootborn.Server.Tests
         {
             var saves = Path.Combine(_root, "udp");
             using var transport = UdpTransport.Listen(IPAddress.Loopback, 0, RoomProtocol.ConnectionKey);
-            var guests = new GuestSaveFolder(GuestSaveFolder.FolderFor(saves, "room-u"), _definitions, _settings);
+            var guests = new GuestSaveFolder(GuestSaveFolder.FolderFor(saves, "room-u"), GameSession.SaveCheck(_definitions, _settings));
             using var room = new RoomServer(transport, new RoomServerSettings { SharedPieces = new[] { RoomWallet.PieceName } }, RoomRig.Versions,
                 new FileSaveStore(saves), "room-u", null, Program.RoomTimeRules(_definitions), guests);
             var client = RoomClient.Create(UdpTransport.Connect(IPAddress.Loopback, IPAddress.Loopback.ToString(), transport.LocalPort, RoomProtocol.ConnectionKey),

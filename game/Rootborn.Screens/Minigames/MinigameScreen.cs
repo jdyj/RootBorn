@@ -91,6 +91,7 @@ namespace Rootborn.Screens.Minigames
             Model = MinigameModel.From(Services.Session);
             Session = Model.NewSession(Services.Session);
             LastSettlement = null;
+            _awaitingRoom = false;
             _delivered = false;
             _shown = null;
             _retry.Visible = false;
@@ -106,7 +107,8 @@ namespace Rootborn.Screens.Minigames
 
         protected internal override void OnChanged(string topic)
         {
-            if (topic != ChangeTopics.Language || Session == null) return;
+            if (topic != ChangeTopics.Language) { FollowRoomAnswer(); return; }
+            if (Session == null) return;
             _retry.Text = T("minigame.save-again");
             _shown = null; // 글자를 다시 받도록 도전을 다시 그린다(같은 판, 같은 값)
             _signature = default;
@@ -215,9 +217,36 @@ namespace Rootborn.Screens.Minigames
                 Settlements++;
                 return true;
             }
+            if (Services.Session.WaitingForRoom)
+            {
+                // 돈을 같이 쓰는 방: 정산이 방의 허락을 기다린다. 실패로 보이지 않게 기다림을 보이고 다시 하기 단추는 숨긴다(허락이 오면 저절로 끝난다).
+                _awaitingRoom = true;
+                SetFeedback(T("ui.room.wallet-waiting"));
+                _retry.Visible = false;
+                return false;
+            }
             SetFeedback(T("minigame.save-failed"));
             _retry.Visible = true;
             return false;
+        }
+
+        private bool _awaitingRoom;
+
+        // 방의 허락을 기다리던 정산이 끝났다: 허락이면 저장됨, 거절(방 지갑의 돈이 모자람)이면 그 문구와 다시 하기 단추.
+        private void FollowRoomAnswer()
+        {
+            var session = Services.Session;
+            if (!_awaitingRoom || session == null || session.WaitingForRoom) return;
+            _awaitingRoom = false;
+            if (session.LastRoomCommandApplied == true)
+            {
+                Settlements++;
+                LastSettlement = new AdultCareerResult(AdultCareerResultKind.Applied);
+                SetFeedback(T("minigame.saved"));
+                return;
+            }
+            SetFeedback(T(session.LastRoomRefusal ? "ui.room.wallet-refused" : "minigame.save-failed"));
+            _retry.Visible = true;
         }
 
         private void RetrySettlement()

@@ -58,10 +58,16 @@ namespace Rootborn.Core.StudentLife
         bool Apply(in ExplorationInteractionContext context, ExplorationInteraction interaction, ExplorationChoice choice, ExplorationOutcomeCollector collector);
     }
 
-    /// <summary>인벤토리를 바꾸는 결과. 실행기가 한 선택지의 모든 지급·소모를 합쳐 한 번에 들어가는지 확인한다.</summary>
+    /// <summary>
+    /// 인벤토리를 바꾸는 결과. 실행기가 한 선택지의 모든 지급·소모를 합쳐 한 번에 들어가는지 확인하고, 한 번의 교환(ItemInventory.TryExchange)으로
+    /// 나머지 결과와 함께 바꾼다 — 이런 결과의 Apply는 실행기가 부르지 않는다. 바뀐 뒤 <see cref="Record"/>로 결과 기록만 남긴다.
+    /// </summary>
     public interface IExplorationInventoryChange
     {
         void AddTo(List<InventoryGrant> costs, List<InventoryGrant> rewards);
+
+        /// <summary>교환이 끝난 뒤(인벤토리가 있을 때만) 결과 기록을 남긴다. 새 결과로 세면 true.</summary>
+        bool Record(ExplorationOutcomeCollector collector);
     }
 
     /// <summary>위험 비용: 스트레스·체력·집중과 상태 하나. 시간은 쓰지 않는다.</summary>
@@ -273,6 +279,8 @@ namespace Rootborn.Core.StudentLife
     /// 탐색 선택지 고르기. 그만두기 선택지는 조건만 보고 아무것도 바꾸지 않는다(위험·결과를 가진 그만두기는 잘못된 데이터라 거절).
     /// 보통 선택지 순서: 지점 반복·대기 → 선택지 중복 → 조건 → 위험 비용 → 결과별 확인 → 인벤토리 합산 확인 → 적용.
     /// 인벤토리 합산 확인은 원본에 없던 것이다(여러 지급이 함께 넘치면 일부만 주던 것을 막는다).
+    /// 적용은 인벤토리 교환 한 번(쓰는 것·받는 것을 합친 TryExchange) 안에서 나머지 결과(위험 비용, 성향, 단서, 퀘스트, 탐색 기록)를 함께 바꾼다.
+    /// 교환이 거절되면(같이 하는 방의 방 지갑이 허락 전이라 거절하는 등) 아무것도 바뀌지 않는다. 원본은 물건을 빼다 실패해도 나머지를 적용했다.
     /// 거절하면 탐색 기록도 만들지 않는다(원본은 빈 기록을 남겨 세이브에 RepeatCount 0인 기록이 생겼다).
     /// </summary>
     public sealed class ExplorationInteractionRunner
@@ -325,16 +333,44 @@ namespace Rootborn.Core.StudentLife
             }
 
             var collector = new ExplorationOutcomeCollector();
-            risk?.Apply(in context, collector);
-            for (int i = 0; i < choice.Outcomes.Count; i++)
+            var ctx = context;
+            void ApplyAll()
             {
-                var outcome = choice.Outcomes[i];
-                if (outcome != null && outcome.Apply(in context, interaction, choice, collector)) collector.AddOutcome(outcome.OutcomeId);
+                risk?.Apply(in ctx, collector);
+                for (int i = 0; i < choice.Outcomes.Count; i++)
+                {
+                    var outcome = choice.Outcomes[i];
+                    if (outcome == null) continue;
+                    bool counted = outcome is IExplorationInventoryChange change
+                        ? ctx.Inventory != null && change.Record(collector)
+                        : outcome.Apply(in ctx, interaction, choice, collector);
+                    if (counted) collector.AddOutcome(outcome.OutcomeId);
+                }
+                ctx.ExplorationProgress.MarkCompleted(interaction.Id, choice.Id, ctx.CurrentDay, ctx.CurrentTimeMinutes, collector);
+                ctx.StudentProgress.RecordActivityCompleted(interaction.Id, collector.OutcomeIds);
             }
-            context.ExplorationProgress.MarkCompleted(interaction.Id, choice.Id, context.CurrentDay, context.CurrentTimeMinutes, collector);
-            context.StudentProgress.RecordActivityCompleted(interaction.Id, collector.OutcomeIds);
+
+            InventoryChanges(choice, out var costs, out var rewards);
+            if (context.Inventory != null && (costs.Count > 0 || rewards.Count > 0))
+            {
+                if (!context.Inventory.TryExchange(costs, rewards, ApplyAll))
+                {
+                    result = new ExplorationChoiceResult(ExplorationChoiceResultKind.InsufficientResources, interactionId, choiceId, "exploration.outcome.blocked", null);
+                    return false;
+                }
+            }
+            else ApplyAll();
+
             result = new ExplorationChoiceResult(ExplorationChoiceResultKind.Applied, interactionId, choiceId, string.Empty, collector);
             return true;
+        }
+
+        private static void InventoryChanges(ExplorationChoice choice, out List<InventoryGrant> costs, out List<InventoryGrant> rewards)
+        {
+            costs = new List<InventoryGrant>();
+            rewards = new List<InventoryGrant>();
+            for (int i = 0; i < choice.Outcomes.Count; i++)
+                if (choice.Outcomes[i] is IExplorationInventoryChange change) change.AddTo(costs, rewards);
         }
 
         private static bool CanApplyAll(ExplorationChoice choice, ExplorationInteraction interaction, in ExplorationInteractionContext context)

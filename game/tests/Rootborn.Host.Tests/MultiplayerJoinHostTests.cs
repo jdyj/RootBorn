@@ -265,8 +265,8 @@ namespace Rootborn.Host.Tests
             _repoRoot ??= HostOptions.Resolve(new[] { "--sample" }).RepoRoot;
             var load = Rootborn.Data.GameDataLoader.Load(Path.Combine(_repoRoot, "data"), Rootborn.Data.Builders.RootbornBuilders.Register);
             load.ThrowIfFailed();
-            var guests = new Rootborn.Server.GuestSaveFolder(Rootborn.Server.GuestSaveFolder.FolderFor(_roomSaves, "room"), load.Definitions,
-                Rootborn.Game.GameStartSettings.FromDefinitions(load.Definitions));
+            var guests = new Rootborn.Net.Room.GuestSaveFolder(Rootborn.Net.Room.GuestSaveFolder.FolderFor(_roomSaves, "room"),
+                Rootborn.Game.GameSession.SaveCheck(load.Definitions, Rootborn.Game.GameStartSettings.FromDefinitions(load.Definitions)));
             return new LoopbackRoom(_roomSaves, Versions(), guests: guests, shared: shared);
         }
 
@@ -287,7 +287,7 @@ namespace Rootborn.Host.Tests
                 Assert.That(session.Wallet, Is.InstanceOf<Rootborn.Core.Room.RoomWalletClient>(), "돈을 같이 쓰는 방이라 방 지갑");
                 Assert.That(session.Student.CurrentDay, Is.EqualTo(1), "처음 온 사람은 새 게임");
                 Assert.That(session.DailyPlan.Slots[0].RouteId, Is.Empty.Or.Null);
-                guestFolder = Path.Combine(Rootborn.Server.GuestSaveFolder.FolderFor(_roomSaves, "room"), player.Game.Room.PlayerId);
+                guestFolder = Path.Combine(Rootborn.Net.Room.GuestSaveFolder.FolderFor(_roomSaves, "room"), player.Game.Room.PlayerId);
 
                 // 일과판까지 걸어가 E, 포인터로 일과 길 하나 → 명령이 저장한다(방으로 간다).
                 var board = Rootborn.World.InteractionData.Load(Path.Combine(_repoRoot, Rootborn.World.InteractionData.DefaultRelativePath)).Map("House").Things

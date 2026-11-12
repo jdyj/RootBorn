@@ -102,6 +102,7 @@ namespace Rootborn.Net.Room
         private readonly SessionServer _session;
         private readonly RoomServerSettings _settings;
         private readonly IGuestSaves _guests;
+        private readonly string _owner;
         private readonly RoomPieceSet _pieces;
         private readonly HashSet<string> _known = new HashSet<string>(StringComparer.Ordinal);
         private readonly HashSet<string> _seen = new HashSet<string>(StringComparer.Ordinal);
@@ -119,10 +120,14 @@ namespace Rootborn.Net.Room
         /// <param name="log">사람이 읽는 운영 로그(현지화 대상 아님). 없으면 남기지 않는다.</param>
         /// <param name="timeRules">흐르는 시간의 규칙(게임 데이터의 정의: 하루 길이, 하루 시작). 없으면 방의 시계가 흐르지 않는다.</param>
         /// <param name="guests">손님 세이브를 갖는 곳. 없으면 손님 저장을 받지 않는다(조각은 있어도 요청이 오지 않는다).</param>
-        /// <param name="pieces">공유 조각 종류 등록 표. 없으면 Core 기본(RoomPieceCatalog.CreateDefault).</param>
+        /// <param name="pieces">공유 조각 종류 등록 표. 없으면 Core 기본(RoomPieceCatalog.CreateDefault — 같이 쓰는 집의 판정 칸 없음).</param>
+        /// <param name="ownerPlayerId">
+        /// 방을 연 사람(내 PC에서 연 방). 그 사람의 진행은 방의 슬롯 그 자체라 손님 저장을 받지 않고, 공유 조각 요청은 따로 받는다(<see cref="RoomRequestsMessage"/>).
+        /// 데디케이티드 서버는 없다(모두가 손님이다).
+        /// </param>
         /// <exception cref="ArgumentException">저장된 방 설정에 이 프로그램이 모르는 조각이 있다(더 새 버전이 만든 방).</exception>
         public RoomServer(ITransport transport, RoomServerSettings settings, RoomVersions versions, ISaveStore store, string saveSlot, Action<string> log,
-            TimeRules timeRules = null, IGuestSaves guests = null, RoomPieceCatalog pieces = null)
+            TimeRules timeRules = null, IGuestSaves guests = null, RoomPieceCatalog pieces = null, string ownerPlayerId = null)
         {
             if (transport == null) throw new ArgumentNullException(nameof(transport));
             settings ??= new RoomServerSettings();
@@ -133,6 +138,7 @@ namespace Rootborn.Net.Room
             _saveSlot = saveSlot;
             _log = log;
             _guests = guests;
+            _owner = string.IsNullOrEmpty(ownerPlayerId) ? null : ownerPlayerId;
             Versions = versions;
 
             IsNewRoom = IsNew(_store, saveSlot);
@@ -247,11 +253,15 @@ namespace Rootborn.Net.Room
 
         // ---------- 들어온 사람 ----------
 
+        /// <summary>이 사람의 진행을 방이 손님 세이브로 갖는다(손님 저장을 받는 방이고 방을 연 사람이 아니다).</summary>
+        private bool KeepsSavesOf(ServerPlayer player) => _guests != null && !string.Equals(player.PlayerId, _owner, StringComparison.Ordinal);
+
         private void OnJoined(ServerPlayer player)
         {
             _uploads.Remove(player.PlayerId); // 연결을 바꿨으면 덜 받은 묶음은 버린다(다시 보낸다)
-            _session.Send(player, new RoomSettingsMessage { SharedPieces = ToArray(ShareSettings.SharedPieces), GuestSaves = _guests != null });
-            if (_guests != null)
+            bool guest = KeepsSavesOf(player);
+            _session.Send(player, new RoomSettingsMessage { SharedPieces = ToArray(ShareSettings.SharedPieces), GuestSaves = guest });
+            if (guest)
             {
                 var files = _guests.Read(player.PlayerId) ?? new SaveFileSet();
                 if (!RoomTransfer.TryEncode(files, out var bytes))
@@ -263,8 +273,8 @@ namespace Rootborn.Net.Room
                 foreach (var chunk in RoomTransfer.Split(_nextDownloadId++, bytes, _settings.Session.MaxMessageBytes)) _session.Send(player, chunk);
             }
 
-            foreach (var piece in _pieces.Pieces) _session.Send(player, StateMessage(piece));
-            if (_guests == null) return;
+            foreach (var piece in _pieces.Pieces) SendState(player, piece);
+            if (!guest) return;
             foreach (var request in _guests.PendingRequests(player.PlayerId))
                 if (request != null && _pieces.TryAnswer(player.PlayerId, request.RequestId, out var answer)) _session.Send(player, AnswerMessage(answer));
         }
@@ -279,7 +289,7 @@ namespace Rootborn.Net.Room
                 return;
             }
 
-            if (_guests == null)
+            if (!KeepsSavesOf(player))
             {
                 Refuse(player, id, GuestSaveRefusal.NotAccepted);
                 return;
@@ -304,15 +314,16 @@ namespace Rootborn.Net.Room
             if (_answers.Count > 0) _pieces.Save(_store, _saveSlot);
             _session.Send(player, new SaveTransferAnswerMessage { TransferId = id, Accepted = true });
             foreach (var answer in _answers) _session.Send(player, AnswerMessage(answer));
-            foreach (var piece in _changed) _session.Broadcast(StateMessage(piece));
+            foreach (var piece in _changed) BroadcastState(piece);
         }
 
         /// <summary>
-        /// 손님 저장을 받지 않는 방: 요청을 바로 반영하고 답한다(받는 방이면 요청은 저장과 함께 와야 하므로 버린다 — 개인 진행과 한 번에 바뀌게).
+        /// 손님 저장을 받지 않는 방, 또는 방을 연 사람: 요청을 바로 반영하고 답한다(손님 세이브를 갖는 사람이면 요청은 저장과 함께 와야 하므로 버린다 —
+        /// 개인 진행과 한 번에 바뀌게).
         /// </summary>
         private void OnRequests(ServerPlayer player, RoomRequestsMessage message)
         {
-            if (_guests != null || message?.Requests == null || message.Requests.Length == 0) return;
+            if (KeepsSavesOf(player) || message?.Requests == null || message.Requests.Length == 0) return;
             ApplyAndAnswer(player, message.Requests);
         }
 
@@ -323,7 +334,7 @@ namespace Rootborn.Net.Room
             _pieces.Apply(player.PlayerId, requests, _session.Clock.Day, _answers, _changed);
             if (_answers.Count > 0) _pieces.Save(_store, _saveSlot);
             foreach (var answer in _answers) _session.Send(player, AnswerMessage(answer));
-            foreach (var piece in _changed) _session.Broadcast(StateMessage(piece));
+            foreach (var piece in _changed) BroadcastState(piece);
         }
 
         private void Refuse(ServerPlayer player, uint id, string reason)
@@ -348,10 +359,15 @@ namespace Rootborn.Net.Room
             }
         }
 
-        private static RoomPieceStateMessage StateMessage(IRoomPiece piece)
+        // 조각 상태: 작으면 메시지 하나, 메시지 하나에 들어가지 않으면(같이 쓰는 집의 가구 목록) 나눠서(RoomPieceStates).
+        private void SendState(ServerPlayer player, IRoomPiece piece)
         {
-            var state = piece.State();
-            return new RoomPieceStateMessage { Piece = state.Piece, Amount = state.Amount, Ids = state.Ids };
+            foreach (var message in RoomPieceStates.Messages(piece.State(), _settings.Session.MaxMessageBytes, ref _nextDownloadId)) _session.Send(player, message);
+        }
+
+        private void BroadcastState(IRoomPiece piece)
+        {
+            foreach (var message in RoomPieceStates.Messages(piece.State(), _settings.Session.MaxMessageBytes, ref _nextDownloadId)) _session.Broadcast(message);
         }
 
         private static RoomAnswerMessage AnswerMessage(RoomAnswer answer)

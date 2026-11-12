@@ -140,6 +140,13 @@ namespace Rootborn.Core.StudentLife
 
         public void AddTo(List<InventoryGrant> costs, List<InventoryGrant> rewards) { if (Item != null) rewards.Add(new InventoryGrant(Item, Count)); }
 
+        public bool Record(ExplorationOutcomeCollector collector)
+        {
+            if (Item == null) return false;
+            collector?.AddItemGrant(Item.Id + ":" + Count.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            return true;
+        }
+
         public bool Apply(in ExplorationInteractionContext context, ExplorationInteraction interaction, ExplorationChoice choice, ExplorationOutcomeCollector collector)
         {
             if (context.Inventory == null || Item == null) return false;
@@ -160,6 +167,13 @@ namespace Rootborn.Core.StudentLife
         public bool CanApply(in ExplorationInteractionContext context, ExplorationInteraction interaction, ExplorationChoice choice) => context.Inventory != null && Item != null && context.Inventory.CountOf(Item) >= Count;
 
         public void AddTo(List<InventoryGrant> costs, List<InventoryGrant> rewards) { if (Item != null) costs.Add(new InventoryGrant(Item, Count)); }
+
+        public bool Record(ExplorationOutcomeCollector collector)
+        {
+            if (Item == null) return false;
+            collector?.AddItemSpend(Item.Id + ":" + Count.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            return true;
+        }
 
         public bool Apply(in ExplorationInteractionContext context, ExplorationInteraction interaction, ExplorationChoice choice, ExplorationOutcomeCollector collector)
         {

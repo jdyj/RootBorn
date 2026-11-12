@@ -42,6 +42,8 @@ namespace Rootborn.Screens.Furniture
             public const float InfoX = 72f, InfoW = 170f;
             public const float NameY = -254f, NameH = 28f, NameFont = 16f;
             public const float SizeY = -292f, DirectionY = -330f, InfoH = 26f, InfoFont = 15f;
+            /// <summary>같이 쓰는 집: 방의 허락을 기다리는 중·거절 줄(설정 패널 위쪽, 여러 줄로 줄바꿈).</summary>
+            public const float RoomStatusX = 0f, RoomStatusY = 200f, RoomStatusW = 300f, RoomStatusH = 120f, RoomStatusFont = 16f;
 
             public const float ToolbarX = 0f, ToolbarY = 430f, ToolbarW = 760f, ToolbarH = 86f;
             public const float DeleteX = 60f, RotateX = 245f, ToolButtonW = 150f, ToolButtonH = 70f, ToolFont = 18f;
@@ -75,6 +77,7 @@ namespace Rootborn.Screens.Furniture
         public const string DeleteId = "furniture.delete";
         public const string RotateId = "furniture.rotate";
         public const string MoveId = "furniture.move";
+        public const string RoomStatusId = "furniture.room-status";
         public static string SlotId(int slot) => "furniture.slot." + slot;
 
         private static readonly FurniturePlacementDirection[] Directions =
@@ -86,6 +89,8 @@ namespace Rootborn.Screens.Furniture
         private UiTextField _search;
         private UiButton _previous, _next, _close, _delete, _rotate, _move;
         private UiTextBlock _pageText;
+        private UiTextBlock _roomStatus;
+        private string _roomStatusKey;
         private UiLabel _title, _settingsTitle, _name, _size, _direction;
         private UiFittedImage _selectedIcon;
 
@@ -124,7 +129,10 @@ namespace Rootborn.Screens.Furniture
         public bool HoverValid => _hasHover && _hoverValid;
         /// <summary>바닥 칸 중 놓을 수 있는 칸 수(보여 주는 중일 때).</summary>
         public int ValidCellCount { get; private set; }
-        /// <summary>마지막 월드 클릭이 한 일(시험용): placed, moved, selected, rejected, none.</summary>
+        /// <summary>
+        /// 마지막 월드 클릭이 한 일(시험용): placed, moved, selected, rejected, none. 같이 쓰는 집이면 waiting(방에 물었다), 뒤이어 방의 답에 따라
+        /// placed·moved 또는 refused(방이 거절 — 다른 사람이 먼저 그 칸을 썼다).
+        /// </summary>
         public string LastAction { get; private set; } = "none";
 
         /// <summary>Host가 잇는다: 가구 그림 좌표표와 월드 좌표 바꾸기. 열기 전에 한 번.</summary>
@@ -179,6 +187,8 @@ namespace Rootborn.Screens.Furniture
                 .Centered(Metrics.InfoX, Metrics.SizeY, Metrics.InfoW, Metrics.InfoH);
             _direction = settings.Add(new UiLabel { Id = SelectedDirectionId, FontSize = Metrics.InfoFont, Color = Metrics.Ink })
                 .Centered(Metrics.InfoX, Metrics.DirectionY, Metrics.InfoW, Metrics.InfoH);
+            _roomStatus = settings.Add(new UiTextBlock { Id = RoomStatusId, FontSize = Metrics.RoomStatusFont, Color = Metrics.Ink, Align = UiAlign.Center })
+                .Centered(Metrics.RoomStatusX, Metrics.RoomStatusY, Metrics.RoomStatusW, Metrics.RoomStatusH);
 
             UiPanel toolbar = root.Add(new UiPanel { Id = "furniture.toolbar" }).Centered(Metrics.ToolbarX, Metrics.ToolbarY, Metrics.ToolbarW, Metrics.ToolbarH);
             _delete = toolbar.Add(new UiButton { Id = DeleteId, FontSize = Metrics.ToolFont }).Centered(Metrics.DeleteX, 0f, Metrics.ToolButtonW, Metrics.ToolButtonH);
@@ -217,12 +227,45 @@ namespace Rootborn.Screens.Furniture
         {
             if (topic == ChangeTopics.Language) { ApplyTexts(); return; }
             if (topic == ChangeTopics.All) ReloadFurniture();
+            if (topic == ChangeTopics.Furniture || topic == ChangeTopics.All) FollowRoomAnswer();
             if (topic == ChangeTopics.Furniture || topic == ChangeTopics.World || topic == ChangeTopics.Map || topic == ChangeTopics.All)
             {
                 _validDirty = true;
                 _hasHover = false;
                 if (SelectedInstanceId != null && FindPlaced(SelectedInstanceId) == null) { SelectedInstanceId = null; Carrying = false; }
             }
+        }
+
+        // 같이 쓰는 집: 방에 물은 요청이 끝났으면(기다림이 풀림) 결과를 보인다 — 허락이면 줄을 지우고, 거절이면 "다른 사람이 먼저 그 자리를 썼어요".
+        private void FollowRoomAnswer()
+        {
+            var session = Services.Session;
+            if (session == null || !session.SharesHouse) { SetRoomStatus(null); return; }
+            if (session.WaitingForRoom) { SetRoomStatus("ui.furniture.room-waiting"); return; }
+            if (LastAction != "waiting") return;
+            bool applied = session.LastRoomCommandApplied == true;
+            LastAction = applied ? _waitingFor : "refused";
+            SetRoomStatus(applied ? null : "ui.furniture.room-refused");
+            _overlayVisible = true;
+        }
+
+        private string _waitingFor;
+
+        private void SetRoomStatus(string key)
+        {
+            _roomStatusKey = key;
+            _roomStatus.Text = key == null ? string.Empty : T(key);
+        }
+
+        // 같이 쓰는 집에서 명령이 방에 물었으면(지금 바뀌지 않고 기다린다) waiting으로 둔다. 아니면 거절.
+        private bool AskedRoom(string action)
+        {
+            var session = Services.Session;
+            if (session == null || !session.SharesHouse || !session.WaitingForRoom) return false;
+            _waitingFor = action;
+            LastAction = "waiting";
+            SetRoomStatus("ui.furniture.room-waiting");
+            return true;
         }
 
         private void ReloadFurniture()
@@ -236,6 +279,7 @@ namespace Rootborn.Screens.Furniture
         {
             _title.Text = T("ui.furniture.title");
             _settingsTitle.Text = T("ui.furniture.title");
+            _roomStatus.Text = _roomStatusKey == null ? string.Empty : T(_roomStatusKey);
             _search.Placeholder = T("ui.furniture.search.placeholder");
             _previous.Text = T("ui.furniture.page.previous");
             _next.Text = T("ui.furniture.page.next");
@@ -336,7 +380,9 @@ namespace Rootborn.Screens.Furniture
         {
             if (SelectedInstanceId == null || Services.Session == null) return;
             string id = SelectedInstanceId;
+            if (Services.Session.WaitingForRoom) return;
             bool removed = Services.Session.RemoveFurniture(id);
+            if (!removed && AskedRoom("removed")) { SelectedInstanceId = null; Carrying = false; return; }
             if (!removed) return;
             SelectedInstanceId = null;
             Carrying = false;
@@ -399,6 +445,7 @@ namespace Rootborn.Screens.Furniture
         {
             HouseFurnitureLayout house = Services.Session?.House;
             if (house == null || Services.Session == null) return;
+            if (Services.Session.WaitingForRoom) return; // 같이 쓰는 집: 앞의 요청이 방의 답을 기다린다
             if (house.TryFindAt(cell, out PlacedFurniture there))
             {
                 SelectedInstanceId = there.InstanceId;
@@ -412,6 +459,7 @@ namespace Rootborn.Screens.Furniture
                 string id = SelectedInstanceId;
                 bool moved = Services.Session.MoveFurniture(id, cell, direction);
                 LastAction = moved ? "moved" : "rejected";
+                if (!moved && AskedRoom("moved")) { Carrying = false; _overlayVisible = false; return; }
                 if (!moved) { _overlayVisible = true; return; }
                 Carrying = false;
                 AfterCommit(cell);
@@ -422,6 +470,7 @@ namespace Rootborn.Screens.Furniture
             string furnitureId = Active.StableId;
             bool placed = Services.Session.PlaceFurniture(furnitureId, cell, direction);
             LastAction = placed ? "placed" : "rejected";
+            if (!placed && AskedRoom("placed")) { _overlayVisible = false; return; }
             if (!placed) { _overlayVisible = true; return; }
             AfterCommit(cell);
         }
