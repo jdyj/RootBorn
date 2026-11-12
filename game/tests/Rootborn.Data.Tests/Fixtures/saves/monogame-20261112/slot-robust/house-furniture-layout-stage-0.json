@@ -1,0 +1,15 @@
+{
+  "Version": 2,
+  "Items": [
+    {
+      "FurnitureId": "growth31.assembly.desk",
+      "SurfaceId": "house",
+      "AnchorX": 1,
+      "AnchorY": 1,
+      "Direction": 0,
+      "StateJson": "",
+      "TileName": "",
+      "Storage": null
+    }
+  ]
+}

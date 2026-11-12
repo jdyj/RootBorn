@@ -57,6 +57,12 @@ namespace Rootborn.Data.Tests
             ("room-outbox-*.json", typeof(Rootborn.Core.Room.RoomOutboxSaveData)),
             // 흐르는 시계의 개인 상태(지침, 밤에 깎은 시간, 하는 중). MonoGame 판이 더한 파일(2026-11-12).
             ("student-clock-*.json", typeof(StudentClockSaveData)),
+            // 같이 쓰는 집(방의 조각). 등록이 빠져 있었다.
+            ("room-piece-house.json", typeof(Rootborn.Core.Room.RoomHouseSaveData)),
+            // 슬롯 정보와 지금 있는 자리(월드가 쓴다), 옷 선택. Core 모양이 생긴 뒤에도 등록이 빠져 있었다.
+            ("metadata.json", typeof(Rootborn.Core.Save.SaveSlotMetadata)),
+            ("world-progress.json", typeof(Rootborn.Core.World.WorldProgressSaveData)),
+            ("wearables-*.json", typeof(Rootborn.Core.Characters.WearableSaveData)),
         };
 
         /// <summary>
@@ -72,8 +78,6 @@ namespace Rootborn.Data.Tests
 
         public static readonly IReadOnlyList<(string Pattern, string Reason)> NotShapedYet = new[]
         {
-            ("metadata.json", "슬롯 정보(이름, 시드, 캐릭터 겉모습). Host 몫"),
-            ("world-progress.json", "현재 장면과 입구(Core WorldState의 월드 상태가 아니다). 월드 프로젝트(Runtime/World) 몫"),
             ("student-day-result-quest-inventory-summary.json", "하루 결과 화면 요약. 화면 몫"),
         };
 

@@ -83,10 +83,32 @@ namespace Rootborn.Data.Save
 
             if (read == null) throw new SaveFileCorruptException(path, "파일 내용이 null이다");
 
-            if (read is IVersionedSave versioned && versioned.Version > versioned.KnownVersion)
-                throw new SaveFileTooNewException(path, versioned.Version, versioned.KnownVersion);
+            if (read is IVersionedSave versioned) RefuseNewer(versioned, path);
 
             return read;
+        }
+
+        // 형마다 "형식 버전이 있는 모양을 담는 필드" 목록. 읽을 때마다 리플렉션으로 다시 찾지 않는다.
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<Type, System.Reflection.FieldInfo[]> VersionedFields =
+            new System.Collections.Concurrent.ConcurrentDictionary<Type, System.Reflection.FieldInfo[]>();
+
+        /// <summary>
+        /// 맨 위 모양과 그 안에 필드로 든 모양(스냅샷의 월드 상태·체인·가구 해금·지갑 등)의 형식 버전을 본다. 하나라도 이 프로그램이 아는 것보다
+        /// 높으면 읽지 않는다. 안쪽 모양의 버전만 올린 세이브를 옛 프로그램이 읽고 모르는 필드를 버린 채 다시 쓰지 않게 한다.
+        /// 배열 안의 기록은 보지 않는다(형식 버전을 가진 기록이 없다).
+        /// </summary>
+        private static void RefuseNewer(IVersionedSave shape, string path)
+        {
+            if (shape.Version > shape.KnownVersion) throw new SaveFileTooNewException(path, shape.Version, shape.KnownVersion);
+            var fields = VersionedFields.GetOrAdd(shape.GetType(), type =>
+            {
+                var found = new List<System.Reflection.FieldInfo>();
+                foreach (var field in type.GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+                    if (typeof(IVersionedSave).IsAssignableFrom(field.FieldType)) found.Add(field);
+                return found.ToArray();
+            });
+            for (int i = 0; i < fields.Length; i++)
+                if (fields[i].GetValue(shape) is IVersionedSave inner) RefuseNewer(inner, path);
         }
 
         public void Write<T>(string saveSlot, string fileName, T data) where T : class

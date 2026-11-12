@@ -44,8 +44,12 @@ data/<영역>/<종류>.json  →  Rootborn.Data 만들기 함수(b.Add 한 줄) 
 
 - Core 영역은 `ISaveStore`(`TryRead`/`Write`/`Delete`)만 알고, 파일 이름은 `SaveFileNames` 한 곳에서 만든다. 파일 쓰기는 `game/Rootborn.Data`의 `FileSaveStore`.
 - 세이브 모양 클래스의 필드 이름과 형은 바꾸지 않는다. 형식이 바뀌면 `Version`을 올린다. 프로그램이 모르는 높은 버전은 읽지 않고 덮어쓰지도 않는다.
-- 새 세이브 모양은 `game/tests/Rootborn.Data.Tests/SaveShapeCoverage.cs`에 등록한다.
-- 기존 세이브는 계속 읽혀야 한다. 확인은 테스트 고정 파일로 한다. 사용자 세이브 폴더는 쓰지 않는다.
+- 새 세이브 모양은 `game/tests/Rootborn.Data.Tests/SaveShapeCoverage.cs`에 등록한다. 게임 한 판이 쓴 파일이 등록에서 빠지면 Game `SavedFilesAreRegisteredTests`가 실패한다.
+- 기존 세이브는 계속 읽혀야 한다. 확인은 테스트 고정 파일로 한다(`game/tests/Rootborn.Data.Tests/Fixtures/saves/`). 사용자 세이브 폴더는 쓰지 않는다. **있는 고정 폴더는 고치지 않는다** — 형식을 바꾼 뒤에 새 날짜 폴더를 더한다(그 폴더의 `README.md`).
+- 게임 진행을 바꾸는 새 세이브 파일은 `GameSession.Save()`의 묶음 안에서 쓴다(`SaveHouseLayoutIfDirty(store)`처럼). 따로 쓰면 도중에 꺼졌을 때 "받음" 기록과 받은 것이 어긋난다.
+- 세이브에 있는데 지금 데이터에 없는 id(아이템, 퀘스트, 체인, 가구)의 기록은 버리지 않는다. 규칙에는 보이지 않게 들고 있다가 그대로 다시 쓴다. 왜: 데이터를 고칠 때마다 옛 세이브의 진행이 조용히 사라지지 않게.
+- 파일에 숫자로 쓰이는 enum은 값을 명시하고 바꾸지 않는다(새 값은 끝에, Core `SavedEnumValuesTests`). 다른 모양 안에 든 모양의 `Version`도 읽을 때 검사된다.
+- 스냅샷과 늘 함께 쓰는 영역 파일이 빠지면 시작을 거절한다(`GameSession.Load`의 `Require`). 늘 쓰는 파일을 새로 더해도 그 목록에는 "그 파일을 쓰기 시작한 뒤의 세이브"를 가릴 근거가 있을 때만 넣는다 — 아니면 옛 세이브가 안 열린다.
 
 ## 그림 좌표
 

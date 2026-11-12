@@ -1,0 +1,21 @@
+{
+  "Version": 1,
+  "SaveSlot": "slot-robust",
+  "PlayerId": "local-player",
+  "ActiveCampaignId": "campaign.school-opening-three-days",
+  "CurrentDayNumber": 3,
+  "CompletedObjectiveIds": [
+    "opening.campaign.objective.Teacher",
+    "opening.campaign.objective.StoreWork"
+  ],
+  "SelectedRoutes": [],
+  "RewardClaimedIds": [],
+  "AppliedResultIds": [
+    "campaign-result-day-1",
+    "campaign-result-day-2"
+  ],
+  "LastProgressLogIds": [
+    "opening.campaign.objective.Teacher",
+    "opening.campaign.objective.StoreWork"
+  ]
+}
