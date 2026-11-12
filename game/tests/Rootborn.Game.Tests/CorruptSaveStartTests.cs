@@ -43,7 +43,7 @@ namespace Rootborn.Game.Tests
                 default:
                     int version = SlotCheckpoints.TopVersion(original).Value;
                     var text = Encoding.UTF8.GetString(original);
-                    var changed = text.Replace("\"Version\": " + version, "\"Version\": 999999");
+                    var changed = text.Replace("\"Version\": " + version, "\"Version\": 999999, \"ReadableFrom\": 999999");
                     Assert.That(changed, Is.Not.EqualTo(text), "Version 자리를 찾지 못했다");
                     return Encoding.UTF8.GetBytes(changed);
             }
@@ -80,7 +80,7 @@ namespace Rootborn.Game.Tests
         [TestCase("")]
         [TestCase("[1]")]
         [TestCase("{\"CurrentStageIndex\": ")]
-        [TestCase("{\"Version\": 999999}")]
+        [TestCase("{\"Version\": 999999, \"ReadableFrom\": 999999}")]
         public void AHouseStateFileThatCannotBeRead_RefusesToStart_AndStaysAsItWas(string content)
         {
             using var saves = SlotCheckpoints.Restore("furniture-placed");

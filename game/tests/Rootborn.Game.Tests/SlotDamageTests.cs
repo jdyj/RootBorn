@@ -86,7 +86,7 @@ namespace Rootborn.Game.Tests
             var file = SaveFileNames.Milestone(TestWorld.Player);
             var text = File.ReadAllText(Path.Combine(Folder(saves), file));
             int version = SlotCheckpoints.TopVersion(Encoding.UTF8.GetBytes(text)).Value;
-            File.WriteAllText(Path.Combine(Folder(saves), file), text.Replace("\"Version\": " + version, "\"Version\": 999999"));
+            File.WriteAllText(Path.Combine(Folder(saves), file), text.Replace("\"Version\": " + version, "\"Version\": 999999, \"ReadableFrom\": 999999"));
 
             var error = Assert.Throws<SaveSlotDamagedException>(() => TestWorld.Start(saves.Store, SlotCheckpoints.Slot));
 

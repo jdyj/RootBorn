@@ -7,7 +7,7 @@ namespace Rootborn.Core.Save
     public interface ISaveStore
     {
         /// <summary>
-        /// 파일이 없으면 false. 파일이 있는데 읽을 수 없으면(비었거나 깨짐, 더 새 버전) 예외를 던진다.
+        /// 파일이 없으면 false. 파일이 있는데 읽을 수 없으면(비었거나 깨짐, 더 새 프로그램을 요구함) 예외를 던진다.
         /// 깨진 파일을 "세이브 없음"으로 보고 새 게임으로 덮어쓰지 않게 하기 위해서다.
         /// </summary>
         bool TryRead<T>(string saveSlot, string fileName, out T data) where T : class, new();
@@ -26,12 +26,12 @@ namespace Rootborn.Core.Save
     {
         int Version { get; set; }
 
-        /// <summary>이 프로그램이 아는 그 모양의 가장 높은 버전. 이보다 높은 파일은 읽지 않는다.</summary>
+        /// <summary>이 프로그램이 아는 그 모양의 가장 높은 버전. 이보다 높은 파일도 읽는다(모르는 필드는 저장소가 지킨다). 파일이 ReadableFrom으로 더 높은 버전을 요구할 때만 읽지 않는다.</summary>
         int KnownVersion { get; }
     }
 
     /// <summary>
-    /// 저장소가 "이 프로그램이 아는 것보다 새 형식의 파일"이라 읽기를 거절할 때 던지는 예외에 붙이는 표시.
+    /// 저장소가 "더 새 프로그램을 요구하는 파일"이라 읽기를 거절할 때 던지는 예외에 붙이는 표시.
     /// 읽기 실패를 기본값으로 받아 주는 곳(설정)이 깨진 파일과 더 새 파일을 가릴 수 있게 한다: 더 새 파일은 덮어쓰지 않는다.
     /// </summary>
     public interface ISaveFileTooNew

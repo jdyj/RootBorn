@@ -4,7 +4,7 @@ using Rootborn.Core.Save;
 
 namespace Rootborn.Data.Save
 {
-    /// <summary>세이브 모양 ↔ JSON 원문. 파일 저장소(<see cref="FileSaveStore"/>)와 같은 형식이다(같은 옵션, 더 새 버전은 읽지 않는다).</summary>
+    /// <summary>세이브 모양 ↔ JSON 원문. 파일 저장소(<see cref="FileSaveStore"/>)와 같은 형식이다(같은 옵션, 더 새 프로그램을 요구하는 파일은 읽지 않는다).</summary>
     public static class SaveJson
     {
         public static string Serialize<T>(T data) where T : class
@@ -15,7 +15,7 @@ namespace Rootborn.Data.Save
 
         /// <param name="label">오류에 적을 이름(파일 이름 등).</param>
         /// <exception cref="SaveFileCorruptException">비었거나 JSON이 깨졌다.</exception>
-        /// <exception cref="SaveFileTooNewException">이 프로그램이 모르는 높은 형식 버전이다.</exception>
+        /// <exception cref="SaveFileTooNewException">파일이 더 새 프로그램을 요구한다(ReadableFrom).</exception>
         public static T Parse<T>(string text, string label) where T : class, new() => FileSaveStore.Parse<T>(text, label);
     }
 
@@ -37,11 +37,14 @@ namespace Rootborn.Data.Save
     /// 슬롯 하나를 메모리에 든 원문 파일로 갖는 저장소(멀티플레이 설계 3.1절 "손님의 저장이 호스트로 가는 길").
     /// 같이 하는 방의 플레이어는 이 저장소로 게임 한 판을 돌린다: 처음 파일은 방이 내려 준 것이고, 저장할 때마다(묶음 Commit 또는 바로 쓰기)
     /// <see cref="Committed"/>로 바뀐 파일을 알린다 — 방 접속이 그것을 방으로 보낸다. 방도 받은 저장을 검사할 때 이것을 쓴다.
-    /// 읽기는 파일 저장소와 같은 형식 검사를 한다(깨진 파일·더 새 버전은 예외). 다른 슬롯은 없는 것으로 읽고 쓰지 않는다.
+    /// 읽기는 파일 저장소와 같은 형식 검사를 한다(깨진 파일·더 새 프로그램을 요구하는 파일은 예외). 쓸 때 모르는 필드를 지키는 것도 같다. 다른 슬롯은 없는 것으로 읽고 쓰지 않는다.
     /// </summary>
     public sealed class MemorySaveSlot : IBatchSaveStore
     {
         private readonly Dictionary<string, string> _files = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        // 이 프로그램이 모르는 필드가 없다고 확인된 파일. 쓸 때 옛 내용과 합치지 않는다(파일 저장소와 같은 규칙).
+        private readonly HashSet<string> _nothingUnknown = new HashSet<string>(StringComparer.Ordinal);
 
         public MemorySaveSlot(string saveSlot, IEnumerable<KeyValuePair<string, string>> files = null)
         {
@@ -73,22 +76,44 @@ namespace Rootborn.Data.Save
         public void Apply(SaveFileChanges changes)
         {
             if (changes == null) return;
-            foreach (var pair in changes.Writes) _files[pair.Key] = pair.Value ?? string.Empty;
+            foreach (var pair in changes.Writes)
+            {
+                _files[pair.Key] = pair.Value ?? string.Empty;
+                _nothingUnknown.Remove(pair.Key); // 밖에서 온 내용은 무엇이 들었는지 모른다
+            }
+
             foreach (var name in changes.Deletes) _files.Remove(name);
+        }
+
+        // 지금 있는 내용의 모르는 필드를 새 내용에 옮겨 넣는다.
+        private string WithUnknownKept(string fileName, string json, Type shapeType)
+        {
+            if (!_files.TryGetValue(fileName, out var existing))
+            {
+                _nothingUnknown.Add(fileName);
+                return json;
+            }
+
+            if (_nothingUnknown.Contains(fileName)) return json;
+            string merged = FileSaveStore.KeepUnknown(json, existing, shapeType);
+            if (ReferenceEquals(merged, json)) _nothingUnknown.Add(fileName);
+            return merged;
         }
 
         public bool TryRead<T>(string saveSlot, string fileName, out T data) where T : class, new()
         {
             data = null;
             if (saveSlot != Slot || fileName == null || !_files.TryGetValue(fileName, out var text)) return false;
-            data = SaveJson.Parse<T>(text, saveSlot + "/" + fileName);
+            data = FileSaveStore.Parse<T>(text, saveSlot + "/" + fileName, out bool nothingUnknown);
+            if (nothingUnknown) _nothingUnknown.Add(fileName);
+            else _nothingUnknown.Remove(fileName);
             return true;
         }
 
         public void Write<T>(string saveSlot, string fileName, T data) where T : class
         {
             Check(saveSlot, fileName);
-            string json = SaveJson.Serialize(data);
+            string json = WithUnknownKept(fileName, SaveJson.Serialize(data), typeof(T));
             _files[fileName] = json;
             Committed?.Invoke(new SaveFileChanges(new[] { new KeyValuePair<string, string>(fileName, json) }, null));
         }
@@ -146,7 +171,7 @@ namespace Rootborn.Data.Save
             {
                 if (_done) throw new InvalidOperationException("이미 끝난 묶음이다");
                 _owner.Check(saveSlot, fileName);
-                var json = SaveJson.Serialize(data);
+                var json = _owner.WithUnknownKept(fileName, SaveJson.Serialize(data), typeof(T));
                 _deletes.Remove(fileName);
                 int index = IndexOf(fileName);
                 if (index >= 0) _writes[index] = new KeyValuePair<string, string>(fileName, json);
@@ -168,7 +193,8 @@ namespace Rootborn.Data.Save
                 _done = true;
                 if (_writes.Count == 0 && _deletes.Count == 0) return;
                 var changes = new SaveFileChanges(_writes.ToArray(), _deletes.ToArray());
-                _owner.Apply(changes);
+                foreach (var pair in changes.Writes) _owner._files[pair.Key] = pair.Value;
+                foreach (var name in changes.Deletes) _owner._files.Remove(name);
                 _owner.Committed?.Invoke(changes);
             }
 

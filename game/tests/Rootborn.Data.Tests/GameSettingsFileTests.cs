@@ -28,15 +28,15 @@ namespace Rootborn.Data.Tests
         }
 
         [Test]
-        public void AWearablesFileFromANewerProgram_IsRefused_LikeEveryOtherSaveShape()
+        public void AWearablesFileThatNeedsANewerProgram_IsRefused_LikeEveryOtherSaveShape()
         {
-            // 옷 파일은 소문자 version 필드라 버전 검사에서 빠져 있었다: 더 새 파일을 읽고 모르는 필드를 버린 채 다시 썼다.
+            // 옷 파일은 소문자 version 필드라 버전 검사에서 빠져 있었다. 다른 모양처럼 ReadableFrom이 높으면 읽지 않는다.
             using var dir = new TempDir();
             var store = new FileSaveStore(dir.Path);
             string folder = Path.Combine(dir.Path, "slot-0");
             Directory.CreateDirectory(folder);
             string file = SaveFileNames.Wearables(SaveFileNames.DefaultPlayerId);
-            File.WriteAllText(Path.Combine(folder, file), "{ \"version\": 999, \"entries\": [] }");
+            File.WriteAllText(Path.Combine(folder, file), "{ \"version\": 999, \"ReadableFrom\": 999, \"entries\": [] }");
             Assert.Throws<SaveFileTooNewException>(() => store.TryRead("slot-0", file, out Rootborn.Core.Characters.WearableSaveData _));
 
             File.WriteAllText(Path.Combine(folder, file), "{ \"legacyImported\": true, \"entries\": [] }");
