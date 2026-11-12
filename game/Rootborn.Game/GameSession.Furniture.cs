@@ -50,6 +50,7 @@ namespace Rootborn.Game
         public void EnterHouse(IPlacementGrid grid, string surfaceId)
         {
             LoadHouse(grid, surfaceId);
+            _houseEntered = true;
             if (ReplayPlacedFurniture()) SaveAndNotify(AnnounceTopics, GameChangeTopics.Furniture);
         }
 
@@ -64,6 +65,9 @@ namespace Rootborn.Game
             LoadHouse(grid, surfaceId);
             Notify(null, GameChangeTopics.Furniture);
         }
+
+        // 이 판(메모리)에서 집에 들어선 적이 있는가. 저장하지 않는다. 다음 날 시작의 다시 알리기는 이때만 한다(PrepareHouse가 읽어 둔 배치로는 달라지지 않는다).
+        private bool _houseEntered;
 
         private void LoadHouse(IPlacementGrid grid, string surfaceId)
         {
@@ -149,7 +153,7 @@ namespace Rootborn.Game
         private void AnnouncePlacement(FurnitureDefinition furniture)
             => Announce(FurnitureQuestEvents.Placed(furniture, House.SurfaceId, _newEventKey(FurnitureQuestEvents.Action)), true);
 
-        // Unity AnnouncePlacedFurniture: 일찍 놓은 가구도 그 단계가 시작된 뒤 방에 들어오거나 새 날이 시작되면 센다.
+        // Unity AnnouncePlacedFurniture: 일찍 놓은 가구도 그 단계가 시작된 뒤 방에 들어오거나 (이 판에서 집에 들어간 적이 있으면) 새 날이 시작되면 센다.
         private bool ReplayPlacedFurniture()
         {
             if (House == null || !FurnitureQuestEvents.AnyCurrentStepWantsFurniture(QuestChains, _chains)) return false;

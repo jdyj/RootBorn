@@ -211,22 +211,30 @@ namespace Rootborn.Host.World
                 candidates.AddRange(_storageCandidates);
                 Interactions.SetCandidates(candidates);
             }
-            _stage.Tick(CurrentDay, NpcDayMinutes);
+            if (_dayMinutes != null) _stage.Tick(CurrentDay, _dayMinutes());
+            else
+            {
+                NpcTimeWithoutGame(CurrentDay, CurrentHour, DayStartMinutes, out int npcDay, out double npcMinutes);
+                _stage.Tick(npcDay, npcMinutes);
+            }
             Interactions.Update(Session.Walker.X, Session.Walker.Y);
         }
 
         /// <summary>
-        /// NPC 자리의 시각(하루 시작~하루 끝 축의 분). 게임 한 판이 있으면 FollowStudentTime의 dayMinutes, 없으면(--world) 0~24시 시각에서 만들고
-        /// 하루 시작보다 이르면 다음 날 새벽이다.
+        /// 게임 한 판이 없을 때(--world) NPC 자리의 (날, 하루 시작~하루 끝 축의 분). 시계의 날은 00:00에 넘어가지만 NPC의 하루는 하루 시작에 넘어간다:
+        /// 하루 시작보다 이른 시각은 전날 밤의 이어짐이라 분에 하루를 더하고 날은 하나 뺀다(1 아래로는 내려가지 않는다).
+        /// 그래서 23:59와 00:01이 같은 날의 이어진 분이다(자정에 다른 계획으로 건너뛰지 않는다).
         /// </summary>
-        private double NpcDayMinutes
+        public static void NpcTimeWithoutGame(int clockDay, float hour, int dayStartMinutes, out int day, out double dayMinutes)
         {
-            get
+            double minutes = hour * 60.0;
+            day = clockDay;
+            if (minutes < dayStartMinutes)
             {
-                if (_dayMinutes != null) return _dayMinutes();
-                double minutes = CurrentHour * 60.0;
-                return minutes < DayStartMinutes ? minutes + TimeRules.MinutesPerDay : minutes;
+                minutes += TimeRules.MinutesPerDay;
+                if (day > 1) day--;
             }
+            dayMinutes = minutes;
         }
 
         /// <summary>지금 맵의 상호작용 데이터(물건, NPC 자리, 가구 방이면 면 id).</summary>

@@ -169,6 +169,25 @@ namespace Rootborn.Game.Tests
             Assert.That(StateOf(again), Is.EqualTo(QuestChainState.Completed), "집에 들어서면 센다");
         }
 
+        /// <summary>집에 한 번도 들어가지 않은 판은, 집 배치를 미리 읽었어도 다음 날 시작 때 가구를 다시 알리지 않는다(진행 시점이 바뀌지 않는다).</summary>
+        [Test]
+        public void PrepareHouseOnly_DoesNotReplayPlacedFurnitureWhenTheNextDayStarts()
+        {
+            using var saves = new TempSaves();
+            var game = ToMyDream(saves);
+            game.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
+            Assert.That(Place(game, FreeDesk), Is.True);
+            game.PerformLocationActivity("opening.clue.archive-door", "location-activity:archive-door:day3");
+
+            var again = TestWorld.Start(saves.Store);
+            again.PrepareHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
+            Assert.That(again.EndDay().Ended, Is.True);
+            Assert.That(again.StartNextDay(), Is.True);
+            Assert.That(StateOf(again), Is.EqualTo(QuestChainState.Tracked), "집에 들어간 적이 없으면 다음 날 시작도 세지 않는다");
+            again.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
+            Assert.That(StateOf(again), Is.EqualTo(QuestChainState.Completed), "집에 들어서면 센다");
+        }
+
         [Test]
         public void ReplayingWhenNoStepWantsFurniture_LeavesTheChainUntouched()
         {
