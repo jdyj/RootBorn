@@ -331,9 +331,6 @@ namespace Rootborn.Host.World
             foreach (string problem in map.LotProblems) Console.Error.WriteLine("[월드] " + map.Entry.Id + ": 부지: " + problem);
         }
 
-        /// <summary>서 있는 맵을 다시 읽은 수(부지의 건물 단계가 바뀌어서 — 시험용).</summary>
-        public int Reloads { get; private set; }
-
         /// <summary>
         /// 부지가 있는 맵에서 건물 단계가 바뀌었으면(맵 읽기가 다시 만든 맵이 걷는 맵과 다르면) 서 있는 맵을 다시 읽는다.
         /// 부지가 없는 맵은 표 조회 한 번뿐이다. 가구 방에는 부지를 두지 않는다(맵 검사가 알린다).
@@ -343,7 +340,6 @@ namespace Rootborn.Host.World
             LoadedMap map = Current;
             if (map.Entry.Lots.Count == 0 || ReferenceEquals(map.World, Session.Map)) return;
             if (!Session.Reload()) { Console.Error.WriteLine("[월드] " + Session.LastProblem); return; }
-            Reloads++;
             ReportProblems();
         }
 
