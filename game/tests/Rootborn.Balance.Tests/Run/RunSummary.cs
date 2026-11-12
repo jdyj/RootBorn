@@ -28,6 +28,7 @@ namespace Rootborn.Balance.Tests
         public int ExhaustionSeenDays;                   // 지침을 본 날 수(DayRecord.Exhausted — 마지막 일 도중에 지쳐 손해가 없던 날도 든다)
         public int StoppedExhaustedDays;                 // 지쳐서 멈춘 날 수(Stop == exhausted, 자는 밤에 지쳐 그 자리에서 잠)
         public int ZeroActionDays;                       // 행동이 하나도 없던 날 수(하루를 잃은 날)
+        public int RefusedAfterDayEnd;                   // 넘겨 잇는 밤에 날 넘김 뒤 정산이 거절된 행동 수(합)
         public int NightsAwake;                          // 자지 않은 밤 수
         public float AverageEnergyAtEnd;                 // 밤(잠·날 넘김) 전 체력의 평균
         public float? AverageSleptAtMinutes;             // 잔 날의 잔 시각 평균(그날 0시부터 센 분). 잔 날이 없으면 null
@@ -61,6 +62,7 @@ namespace Rootborn.Balance.Tests
                 if (d.Exhausted) s.ExhaustionSeenDays++;
                 if (d.Stop == StopReasons.Exhausted) s.StoppedExhaustedDays++;
                 if (d.Actions == 0) s.ZeroActionDays++;
+                s.RefusedAfterDayEnd += d.RefusedAfterDayEnd;
                 if (d.Slept) { sleptDays++; sleptAt += d.SleptAtMinutes; }
                 else s.NightsAwake++;
                 if (d.Upgraded) upgrades.Add(i);

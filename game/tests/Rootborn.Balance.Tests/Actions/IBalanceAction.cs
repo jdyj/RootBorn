@@ -15,7 +15,7 @@ namespace Rootborn.Balance.Tests
         public float MinigameShare;
 
         /// <summary>걷기가 끝난 지금 그 길이(게임 분)의 행동을 시작해도 되는지(그 판의 잠 규칙). 행동이 계획과 다른 것으로 바꿔 할 때 쓴다.</summary>
-        public Func<GameSession, int, bool> FitsNow;
+        public Func<GameSession, int, int, bool> FitsNow;   // (game, 행동 분, 미니게임 분)
     }
 
     /// <summary>
@@ -26,7 +26,11 @@ namespace Rootborn.Balance.Tests
     internal static class ActionLength
     {
         public static int WithMinigame(GameSession game, int definitionMinutes, Minigame minigame, float share)
-            => minigame == null ? definitionMinutes : Math.Max(definitionMinutes, DayAssumptions.GameMinutesUp(game.TimeRules, DayAssumptions.MinigameSeconds(minigame, share)));
+            => Math.Max(definitionMinutes, MinigameMinutes(game, minigame, share));
+
+        /// <summary>미니게임을 하는 실제 초를 게임 분으로 올림한 값. 미니게임이 없으면 0.</summary>
+        public static int MinigameMinutes(GameSession game, Minigame minigame, float share)
+            => minigame == null ? 0 : DayAssumptions.GameMinutesUp(game.TimeRules, DayAssumptions.MinigameSeconds(minigame, share));
     }
 
     /// <summary>행동 하나의 계획. 판을 돌리는 쪽이 잠 규칙 판정 → 걷기 → (걷기 뒤 다시 판정) → <see cref="Do"/> 순으로 쓴다.</summary>
@@ -34,6 +38,7 @@ namespace Rootborn.Balance.Tests
     {
         public string Id;                                  // 기록에 남길 이름(일·알바 id, 올리기는 종류 이름)
         public int Minutes;                                // 게임 분(미니게임이 더 길면 그 길이, ActionLength). 취침 판정에 쓴다
+        public int MinigameMinutes;                        // 그 행동에서 미니게임을 하는 분(올림, ActionLength). 없으면 0 — 넘겨 잇는 밤의 판정에 쓴다
         public bool Walks;                                 // 시작 전에 걷는 시간을 보내는가(올리기는 false)
         public Func<GameSession, string, StepOutcome> Do;  // (game, 요청 id)
     }

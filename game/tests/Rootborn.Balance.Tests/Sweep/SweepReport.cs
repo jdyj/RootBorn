@@ -24,6 +24,8 @@ namespace Rootborn.Balance.Tests
         public const string DifferentBestLine = "대상마다 1등이 다른 것:";
         public const string TopHeadingPrefix = "많이 버는";
         private const int TopCount = 20, SpreadCount = 10, FailuresShown = 200;
+        private const string SleepAxisName = "자는 때", TravelAxisName = "걷는 분";
+        private const double NearBestShare = 0.99;   // 걷는 분마다 1등 표: 1등의 99% 이상이면 "근소"로 함께 적는다
 
         private static readonly Encoding Utf8 = new UTF8Encoding(false);
 
@@ -45,7 +47,7 @@ namespace Rootborn.Balance.Tests
             BalanceReport.Row(b, "strategy", "target", "sleep", "score", "part_time", "travel_minutes", "minigame_share", "checkpoint_day", "is_baseline", "failed",
                 "income_per_day", "net_income_per_day", "income_per_game_hour", "income_per_real_minute_with_travel", "income_per_real_minute_minigame_only",
                 "level2_day", "level3_day", "recover_days", "payback_days", "payback_gaps", "first_auto_skip_day", "first_bag_full_day", "actions_per_day",
-                "exhaustion_seen_days", "stopped_exhausted_days", "zero_action_days", "nights_awake", "average_energy_at_end", "average_slept_at_minutes", "final_wallet");
+                "exhaustion_seen_days", "stopped_exhausted_days", "zero_action_days", "refused_after_day_end", "nights_awake", "average_energy_at_end", "average_slept_at_minutes", "final_wallet");
             foreach (var r in rows)
             {
                 var s = r.Summary;
@@ -56,7 +58,7 @@ namespace Rootborn.Balance.Tests
                     ok ? F(s.IncomePerRealMinuteMinigameOnly) : "",
                     ok ? I(s.Level2Day) : "", ok ? I(s.Level3Day) : "", ok ? string.Join(";", s.RecoverDays.Select(I)) : "", ok ? string.Join(";", s.PaybackDays.Select(I)) : "",
                     ok ? string.Join(";", s.PaybackGaps.Select(g => g ?? "")) : "", ok ? I(s.FirstAutoSkipDay) : "", ok ? I(s.FirstBagFullDay) : "", ok ? F(s.ActionsPerDay) : "",
-                    ok ? I(s.ExhaustionSeenDays) : "", ok ? I(s.StoppedExhaustedDays) : "", ok ? I(s.ZeroActionDays) : "", ok ? I(s.NightsAwake) : "",
+                    ok ? I(s.ExhaustionSeenDays) : "", ok ? I(s.StoppedExhaustedDays) : "", ok ? I(s.ZeroActionDays) : "", ok ? I(s.RefusedAfterDayEnd) : "", ok ? I(s.NightsAwake) : "",
                     ok ? F(s.AverageEnergyAtEnd) : "", ok ? F(s.AverageSleptAtMinutes) : "", ok ? I(s.FinalWallet) : "");
             }
             return b.ToString();
@@ -78,10 +80,10 @@ namespace Rootborn.Balance.Tests
             var a = config.Axes;
             return new List<Axis>
             {
-                new Axis { Name = "자는 때", Labels = a.Sleep, Of = s => s.Sleep, Set = (s, i) => s.Sleep = a.Sleep[i] },
+                new Axis { Name = SleepAxisName, Labels = a.Sleep, Of = s => s.Sleep, Set = (s, i) => s.Sleep = a.Sleep[i] },
                 new Axis { Name = "점수", Labels = a.Score, Of = s => s.Score, Set = (s, i) => s.Score = a.Score[i] },
                 new Axis { Name = "알바 성공", Labels = a.PartTime, Of = s => s.PartTime, Set = (s, i) => s.PartTime = a.PartTime[i] },
-                new Axis { Name = "걷는 분", Labels = a.TravelMinutes.Select(I).ToArray(), Of = s => I(s.TravelMinutes), Set = (s, i) => s.TravelMinutes = a.TravelMinutes[i] },
+                new Axis { Name = TravelAxisName, Labels = a.TravelMinutes.Select(I).ToArray(), Of = s => I(s.TravelMinutes), Set = (s, i) => s.TravelMinutes = a.TravelMinutes[i] },
                 new Axis { Name = "미니게임 몫", Labels = a.MinigameShare.Select(F).ToArray(), Of = s => F(s.MinigameShare), Set = (s, i) => s.MinigameShare = a.MinigameShare[i] },
             };
         }
@@ -148,18 +150,20 @@ namespace Rootborn.Balance.Tests
                 .Append("- 점수를 쓰는 전략은 점수 축을, 아닌 전략은 알바 성공 축을 돈다(쓰지 않는 축은 기준 값). 축마다 표는 그 축을 쓰는 전략만 보인다.\n")
                 .Append("- 지침 본 날: 그날 지침(체력 0)을 한 번이라도 본 날(마지막 일 도중에 지쳐도 그 일은 끝나 보수를 받으므로 손해가 없을 수 있다). ")
                 .Append("지쳐서 멈춘 날: 자는 밤에 지쳐 그 자리에서 잔 날. 행동 0인 날: 하나도 못 한 날(하루를 잃은 날). 밤샌 날: 자지 않은 밤. 평균 잔 시각은 잔 날만(자정 뒤는 24:00을 넘겨 센다).\n")
-                .Append("- 자지 않는 밤의 두 방식: 글자에 `carry`가 없으면 07:00 전에 끝나는 행동만 시작한다. `carry`가 있으면 07:00 전에 시작하기만 하면 된다(걷기 끝이 07:00 1분 전보다 일러야 한다) — ")
-                .Append("게임은 07:00을 넘긴 시간을 다음 날 아침으로 잇는다(다음 날은 07:00 + 넘긴 분에 시작). 그 행동의 보수·분은 시작한 날의 줄에 적는다. ")
-                .Append("다만 미니게임을 하는 도중에 07:00이 되면 게임이 그 자리에서 날을 넘기고 정산을 거절한다(보수 없음).\n")
+                .Append("- 자지 않는 밤의 두 방식: 글자에 `carry`가 없으면 07:00 전에 끝나는 행동만 시작한다. `carry`가 있으면 끝은 07:00을 넘어도 되지만, ")
+                .Append("걷기 + (미니게임이 있으면) 미니게임을 하는 분(올림)이 07:00 1분 전보다 일찍 끝날 때만 시작한다(걷기 조각 1분 여유) — 미니게임 도중에 07:00이 되면 게임이 그 자리에서 날을 넘기고 정산을 거절하기 때문이다(보수 없음). ")
+                .Append("정산만 07:00을 넘기는 것은 된다: 게임은 넘긴 시간을 다음 날 아침으로 잇고(다음 날은 07:00 + 넘긴 분에 시작), 그 행동의 보수·분은 시작한 날의 줄에 적는다. ")
+                .Append("그래도 날 넘김 뒤 정산이 거절된 행동 수는 sweep.csv `refused_after_day_end`에 센다.\n")
                 .Append("- `stay-up-every N until HH:MM`: N일에 하루 밤새고, 다른 밤은 그 시각까지 끝내고 잔다(없으면 취침 시각 22:00).\n")
                 .Append("- 점수·성공 모델의 차례는 정산을 시도할 때마다 넘어간다(정산이 거절돼도).\n")
                 .Append("- 자지 않는 밤은 다음 날을 시작할 때의 지갑 변화가 그 밤의 날에 들어간다(자는 밤은 다음 날에 들어간다). 넘겨 잇는 밤에 행동 도중 날이 넘어가면 그날의 체력 칸은 넘어간 뒤의 값이다.\n")
                 .Append("- 날 넘김을 기다리는 동안(자지 않는 밤) 지치면 다음 날의 지침 본 날로 센다.\n")
                 .Append("- 행동 길이는 정의의 분과 미니게임을 하는 실제 시간(게임 분으로 올림) 중 큰 것이다. 자는 규칙은 그 길이와 걷는 분이 규칙 시각 안에 끝나야 시작한다.\n")
-                .Append("- 굵게: 그 표에서 하루 수입(마지막 시점)이 가장 큰 줄 — 같은 값이면 모두 굵게 하고 표 아래에 줄 수를 적는다. 위·아래 조합과 벌어짐 표는 요약이 같은 판을 한 줄로 묶는다.\n");
+                .Append("- 굵게: 그 표에서 하루 수입(마지막 시점)이 가장 큰 줄 — 같은 값이면 모두 굵게 하고 표 아래에 줄 수를 적는다. ")
+                .Append("\"같은 값\"은 표에 보이는 소수 한 자리 글자가 같은 것이다. 위·아래 조합과 벌어짐 표는 요약(표에 보이는 값)이 같은 판을 한 줄로 묶는다.\n");
 
             // 1. 자는 때
-            var sleepAxis = axes[0];
+            var sleepAxis = axes.Single(x => x.Name == SleepAxisName);
             b.Append('\n').Append(SleepHeading).Append("\n\n");
             b.Append("전략마다: 줄 = 잠 규칙, 다른 축은 기준 값. ").Append(I(last)).Append("일 하루 수입이 가장 큰 줄을 굵게(같은 값은 모두), 기준 줄에 ").Append(BaselineMark).Append(".\n");
             foreach (var strategy in config.Strategies)
@@ -193,29 +197,40 @@ namespace Rootborn.Balance.Tests
 
             // 1-2. 전략 × 걷는 분마다 1등 잠 규칙(점수·성공·몫은 기준 값)
             b.Append('\n').Append(BestPerTravelHeading).Append("\n\n");
-            b.Append("전략 × 걷는 분마다 ").Append(I(last)).Append("일 하루 수입이 가장 큰 잠 규칙(같은 값은 모두)과 그 값, 기준 잠 규칙(").Append(baseline.Sleep).Append(")의 값. 점수·성공·몫은 기준 값, 대상 평균.\n\n");
-            var travelAxis = axes[3];
+            b.Append("전략 × 걷는 분마다 ").Append(I(last)).Append("일 하루 수입이 가장 큰 잠 규칙(같은 값은 모두)과 그 값, 기준 잠 규칙(").Append(baseline.Sleep).Append(")의 값. 대상 평균.\n\n");
+            b.Append("점수·성공·몫은 기준 값(").Append(baseline.Score).Append(", ").Append(baseline.PartTime).Append(", ").Append(F(baseline.MinigameShare))
+                .Append(")이다. \"근소\"는 1등은 아니지만 1등 값의 ").Append(((1 - NearBestShare) * 100).ToString("0", CultureInfo.InvariantCulture)).Append("% 안으로 붙은 규칙과 그 값.\n\n");
+            var travelAxis = axes.Single(x => x.Name == TravelAxisName);
             var perTravel = new List<List<string>>();
             foreach (var strategy in config.Strategies)
                 for (int t = 0; t < travelAxis.Labels.Length; t++)
                 {
                     var setup = baseline.Copy();
                     travelAxis.Set(setup, t);
-                    var best = BestOver(sleepAxis, setup, i => Mean(index.Get(strategy.Id, WithSleep(setup, sleepAxis, i), last), s => s.IncomePerDay), out string value);
+                    Func<int, float?> measure = i => Mean(index.Get(strategy.Id, WithSleep(setup, sleepAxis, i), last), s => s.IncomePerDay);
+                    var best = BestOver(sleepAxis, setup, measure, out string value);
+                    var near = new List<string>();
+                    if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double top) && top > 0)
+                        for (int i = 0; i < sleepAxis.Labels.Length; i++)
+                        {
+                            var v = measure(i);
+                            if (v.HasValue && F1(v) != value && v.Value >= top * NearBestShare) near.Add(sleepAxis.Labels[i] + " " + F1(v));
+                        }
                     var atBaseline = setup.Copy();
                     atBaseline.Sleep = baseline.Sleep;
                     perTravel.Add(new List<string>
                     {
                         strategy.Id, travelAxis.Labels[t], best.Count == 0 ? "-" : string.Join(", ", best), value,
+                        near.Count == 0 ? "-" : string.Join(", ", near),
                         F1(Mean(index.Get(strategy.Id, atBaseline, last), s => s.IncomePerDay)),
                     });
                 }
-            Table(b, new List<string> { "전략", "걷는 분", "가장 많이 버는 잠 규칙", "하루 수입(" + I(last) + "일)", "기준 " + baseline.Sleep }, perTravel);
+            Table(b, new List<string> { "전략", "걷는 분", "가장 많이 버는 잠 규칙", "하루 수입(" + I(last) + "일)", "근소", "기준 " + baseline.Sleep }, perTravel);
 
             // 2. 축마다
             b.Append("\n## 2. 축마다\n\n");
             b.Append("그 축만 바꾸고 다른 축은 기준 값. 칸은 전략별 ").Append(I(mid)).Append("일 하루 수입(대상 평균). 그 축을 쓰지 않는 전략은 뺀다.\n");
-            foreach (var axis in axes.Skip(1))
+            foreach (var axis in axes.Where(x => x != sleepAxis))
             {
                 b.Append("\n### ").Append(axis.Name).Append("\n\n");
                 var users = config.Strategies.Where(s => Uses(index, s, axis, baseline, mid)).ToList();

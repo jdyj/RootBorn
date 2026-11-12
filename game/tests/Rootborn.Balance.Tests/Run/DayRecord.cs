@@ -19,6 +19,7 @@ namespace Rootborn.Balance.Tests
         public int FacilityLevel;
         public bool Upgraded;
         public int AutoSkips;
+        public int RefusedAfterDayEnd;                                           // 넘겨 잇는 밤에 행동 도중 날이 넘어가 정산이 거절된 행동 수
         public int EnergyAtEnd, FocusAtEnd;                                      // 밤(잠·날 넘김) 전의 값
         public bool Slept;                                                       // 그 밤에 잤는가
         public int SleptAtMinutes = -1;                                          // 잔 시각(그날 0시부터 센 분). 안 잤으면 -1

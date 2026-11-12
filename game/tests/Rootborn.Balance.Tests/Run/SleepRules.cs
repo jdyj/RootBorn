@@ -12,6 +12,7 @@ namespace Rootborn.Balance.Tests
         public int NowMinutes { get; init; }
         public int WalkMinutes { get; init; }
         public int ActionMinutes { get; init; }
+        public int MinigameMinutes { get; init; }   // 그 행동에서 미니게임을 하는 분(올림). 미니게임이 없으면 0
         public int DayEndMinutes { get; init; }
 
         /// <summary>걷기와 행동이 끝나는 시각.</summary>
@@ -181,7 +182,8 @@ namespace Rootborn.Balance.Tests
         }
 
         // " carry": 자지 않는 밤에는 07:00 전에 시작하기만 하면 된다. 걷기는 시계의 남은 조각 때문에 1분 더 걸릴 수 있어 걷기 끝이 07:00 1분 전보다 일러야 한다
-        // (걷다가 날이 넘어가지 않게). 자는 밤은 안의 규칙 그대로.
+        // (걷다가 날이 넘어가지 않게). 미니게임이 있는 행동은 걷기 + 미니게임도 07:00 전에 끝나야 한다 — 미니게임 도중에 07:00이 되면 게임이 날을 넘기고
+        // 정산을 거절한다(CarryFactsTests). 정산만 07:00을 넘기는 것은 된다. 자는 밤은 안의 규칙 그대로.
         private sealed class CarryRule : ISleepRule
         {
             private const int WalkSlack = 1;
@@ -189,7 +191,7 @@ namespace Rootborn.Balance.Tests
             public CarryRule(string id, ISleepRule inner) { Id = id; _inner = inner; }
             public string Id { get; }
             public bool SleepsTonight(int runDay) => _inner.SleepsTonight(runDay);
-            public bool MayStart(SleepMoment m) => SleepsTonight(m.RunDay) ? _inner.MayStart(m) : m.NowMinutes + m.WalkMinutes + WalkSlack < m.DayEndMinutes;
+            public bool MayStart(SleepMoment m) => SleepsTonight(m.RunDay) ? _inner.MayStart(m) : m.NowMinutes + m.WalkMinutes + WalkSlack + m.MinigameMinutes < m.DayEndMinutes;
             public int? LatestEnd(int runDay, int dayEndMinutes) => SleepsTonight(runDay) ? _inner.LatestEnd(runDay, dayEndMinutes) : null;
             public bool CarriesTonight(int runDay) => !SleepsTonight(runDay);
         }

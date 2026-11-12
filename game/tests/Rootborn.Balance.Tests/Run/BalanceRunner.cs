@@ -62,7 +62,7 @@ namespace Rootborn.Balance.Tests
                 Score = ScoreModels.Create(setup.Score, config.Axes.FailScore, config.Axes.PassScore),
                 Success = SuccessModels.Create(setup.PartTime),
                 MinigameShare = setup.MinigameShare,
-                FitsNow = (g, minutes) => rule.MayStart(new SleepMoment { RunDay = runDay, NowMinutes = g.Student.TimeMinutes, ActionMinutes = minutes, DayEndMinutes = dayEnd }),
+                FitsNow = (g, minutes, minigame) => rule.MayStart(new SleepMoment { RunDay = runDay, NowMinutes = g.Student.TimeMinutes, ActionMinutes = minutes, MinigameMinutes = minigame, DayEndMinutes = dayEnd }),
             };
 
             var run = new RunResult
@@ -191,7 +191,7 @@ namespace Rootborn.Balance.Tests
                     anyPlan = true;
                     var moment = new SleepMoment
                     {
-                        RunDay = runDay, NowMinutes = game.Student.TimeMinutes, WalkMinutes = plan.Walks ? travel : 0, ActionMinutes = plan.Minutes, DayEndMinutes = dayEnd,
+                        RunDay = runDay, NowMinutes = game.Student.TimeMinutes, WalkMinutes = plan.Walks ? travel : 0, ActionMinutes = plan.Minutes, MinigameMinutes = plan.MinigameMinutes, DayEndMinutes = dayEnd,
                     };
                     if (!rule.MayStart(moment)) continue;
                     step = plan;
@@ -212,7 +212,7 @@ namespace Rootborn.Balance.Tests
                     if (game.Student.CurrentDay != record.Day) throw new InvalidOperationException(name + ": " + record.Day + "일째 걷기가 날을 넘겼다");
 
                     // 시계의 남은 조각 때문에 걷기가 1분 더 걸릴 수 있다: 걸은 뒤 다시 보고, 규칙 끝을 넘으면 하지 않는다(걷기는 남는다).
-                    if (!context.FitsNow(game, step.Minutes))
+                    if (!context.FitsNow(game, step.Minutes, step.MinigameMinutes))
                     {
                         skipped[chosen] = true;
                         continue;
@@ -253,6 +253,7 @@ namespace Rootborn.Balance.Tests
 
                 if (rolledOver)
                 {
+                    record.RefusedAfterDayEnd++;
                     record.Stop = StopReasons.DayRanOut;
                     return;
                 }

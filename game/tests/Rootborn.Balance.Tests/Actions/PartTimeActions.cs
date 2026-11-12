@@ -14,7 +14,7 @@ namespace Rootborn.Balance.Tests
         public PlannedStep Plan(GameSession game, RunContext context)
         {
             if (!(context.Target is IMinigamePartTimeWork work)) return null;
-            return new PlannedStep { Id = work.Id, Minutes = PartTimeWorks.Length(game, work, context), Walks = true, Do = (g, request) => PartTimeWorks.Play(g, work, request, context) };
+            return new PlannedStep { Id = work.Id, Minutes = PartTimeWorks.Length(game, work, context), MinigameMinutes = ActionLength.MinigameMinutes(game, work.Minigame, context.MinigameShare), Walks = true, Do = (g, request) => PartTimeWorks.Play(g, work, request, context) };
         }
     }
 
@@ -34,7 +34,7 @@ namespace Rootborn.Balance.Tests
             _works ??= RunTargets.All("part-time-work", game.Definitions);
             if (_works.Count == 0) return null;
             var planned = (IMinigamePartTimeWork)_works[_turn % _works.Count];
-            return new PlannedStep { Id = planned.Id, Minutes = PartTimeWorks.Length(game, planned, context), Walks = true, Do = (g, request) => Rotate(g, context, request) };
+            return new PlannedStep { Id = planned.Id, Minutes = PartTimeWorks.Length(game, planned, context), MinigameMinutes = ActionLength.MinigameMinutes(game, planned.Minigame, context.MinigameShare), Walks = true, Do = (g, request) => Rotate(g, context, request) };
         }
 
         private StepOutcome Rotate(GameSession game, RunContext context, string request)
@@ -45,7 +45,7 @@ namespace Rootborn.Balance.Tests
                 int index = (_turn + k) % _works.Count;
                 var work = (IMinigamePartTimeWork)_works[index];
                 int minutes = PartTimeWorks.Length(game, work, context);
-                if (k > 0 && !context.FitsNow(game, minutes)) continue;
+                if (k > 0 && !context.FitsNow(game, minutes, ActionLength.MinigameMinutes(game, work.Minigame, context.MinigameShare))) continue;
                 var outcome = PartTimeWorks.Play(game, work, request + ":" + work.Id, context);
                 if (outcome.Done)
                 {

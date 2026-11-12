@@ -114,6 +114,7 @@ namespace Rootborn.Balance.Tests
             {
                 Id = work.Id,
                 Minutes = ActionLength.WithMinigame(game, work.TimeCostMinutes, work.Minigame, context.MinigameShare),
+                MinigameMinutes = ActionLength.MinigameMinutes(game, work.Minigame, context.MinigameShare),
                 Walks = true,
                 Do = (g, request) => Play(g, work, request, context),
             };
