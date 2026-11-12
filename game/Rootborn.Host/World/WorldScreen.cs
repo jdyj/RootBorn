@@ -73,8 +73,6 @@ namespace Rootborn.Host.World
         private string _placedMap, _placedSlot;
         /// <summary>놓인 상자마다 상호작용 후보("storage", 인스턴스 id). 가구가 바뀔 때만 다시 만든다.</summary>
         private readonly List<InteractionCandidate> _storageCandidates = new List<InteractionCandidate>();
-        /// <summary>상자 후보의 우선순위: 맵 데이터의 물건·NPC보다 앞서지 않는다(같은 거리면 그쪽이 먼저).</summary>
-        public const int PlacedStoragePriority = 0;
         private int _placedDay;
 
         public LoadedMap Current => Maps.LoadMap(Session.Map.Id);
@@ -528,16 +526,10 @@ namespace Rootborn.Host.World
                 if (storageBefore > 0) RefreshCandidatesNow();
                 return;
             }
+            if (isStorage != null)
+                PlacedInteractionCandidates.Fill(placed, isStorage, room.CellArea, Rootborn.Screens.Storage.StorageScreen.InteractionKind, _storageCandidates);
             foreach (PlacedFurniture p in placed)
             {
-                if (isStorage != null && isStorage(p.Definition) && p.OccupiedCells.Count > 0)
-                {
-                    float cx = 0f, cy = 0f;
-                    foreach (GridPoint c in p.OccupiedCells) { AreaRect a = room.CellArea(c); cx += a.CenterX; cy += a.CenterY; }
-                    _storageCandidates.Add(new InteractionCandidate(Rootborn.Screens.Storage.StorageScreen.InteractionKind, p.InstanceId,
-                        cx / p.OccupiedCells.Count, cy / p.OccupiedCells.Count, PlacedStoragePriority, true));
-                }
-
                 IReadOnlyList<FurnitureTilePart> parts = p.Definition.GetTileParts(p.Direction);
                 foreach (FurnitureTilePart part in parts)
                 {

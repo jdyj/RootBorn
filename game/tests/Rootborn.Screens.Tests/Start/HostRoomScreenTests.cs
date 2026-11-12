@@ -278,7 +278,7 @@ namespace Rootborn.Screens.Tests.Start
         public void HostReasons_HaveTextInEveryLanguage()
         {
             GameText text = TestData.Text();
-            string[] codes = { RoomHostText.CannotListen, RoomHostText.RoomSaveUnreadable, RoomJoinText.BadAddress, RoomJoinText.EntryFailed };
+            string[] codes = { RoomHostText.CannotListen, RoomHostText.RoomSaveUnreadable, RoomHostText.SlotInUse, RoomJoinText.BadAddress, RoomJoinText.EntryFailed };
             KnownMissingKeys.AssertOnlyKnownMissing(text, codes.Select(RoomJoinText.ReasonKey));
         }
 

@@ -124,6 +124,13 @@ namespace Rootborn.Host.Net
                 _room = HostedRoom.Open(bind, port, settings, _connection.Versions, _store(), slotId, _clock, line => Console.WriteLine("[내 방] " + line), _timeRules?.Invoke(),
                     _guestsFor?.Invoke(slotId), _pieces?.Invoke(), _connection.IdentityFor(slotId));
             }
+            catch (RoomSlotLockedException e)
+            {
+                // 잠근 쪽 이름(Owner)은 화면에 내지 않고 로그에만 남긴다.
+                Console.Error.WriteLine("[내 방] 슬롯이 이미 열려 있다: " + e.Message);
+                Fail(RoomHostText.SlotInUse);
+                return;
+            }
             catch (Exception e) when (e is InvalidOperationException || e is SocketException || e is ArgumentException)
             {
                 Console.Error.WriteLine("[내 방] 듣지 못했다: " + e.Message);
