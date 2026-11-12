@@ -51,9 +51,11 @@ namespace Rootborn.Screens.Furniture
             /// <summary>같이 쓰는 집: 방의 허락을 기다리는 중·거절 줄(설정 패널 위쪽, 여러 줄로 줄바꿈).</summary>
             public const float RoomStatusX = 0f, RoomStatusY = 200f, RoomStatusW = 300f, RoomStatusH = 120f, RoomStatusFont = 16f;
 
-            public const float ToolbarX = 0f, ToolbarY = 430f, ToolbarW = 760f, ToolbarH = 86f;
+            /// <summary>위 도구 줄: 단추 자리는 ToolbarX + DeleteX·RotateX(가운데 기준), 줄 패널은 단추 폭 + 테마 여백으로 줄인다(ToolRow).</summary>
+            public const float ToolbarX = 0f, ToolbarY = 430f, ToolbarH = 86f;
             public const float DeleteX = 60f, RotateX = 245f, ToolButtonW = 150f, ToolButtonH = 70f, ToolFont = 18f;
-            public const float BottomX = 0f, BottomY = -490f, BottomW = 1760f, BottomH = 86f;
+            /// <summary>아래 도구 줄: 단추 자리는 BottomX + MoveX, 줄 패널은 단추 폭 + 테마 여백(ToolRow).</summary>
+            public const float BottomX = 0f, BottomY = -490f, BottomH = 86f;
             /// <summary>Unity 글자 13 → 규약의 최소 14.</summary>
             public const float MoveX = -320f, MoveW = 64f, MoveH = 40f, MoveFont = 14f;
 
@@ -94,6 +96,7 @@ namespace Rootborn.Screens.Furniture
         public const string DeleteId = "furniture.delete";
         public const string RotateId = "furniture.rotate";
         public const string MoveId = "furniture.move";
+        public const string ToolbarId = "furniture.toolbar", BottomBarId = "furniture.bottom";
         public const string RoomStatusId = "furniture.room-status";
         public static string SlotId(int slot) => "furniture.slot." + slot;
         public const string WorkspaceRowId = "workspace-row";
@@ -232,15 +235,22 @@ namespace Rootborn.Screens.Furniture
             _roomStatus = settings.Add(new UiTextBlock { Id = RoomStatusId, FontSize = Metrics.RoomStatusFont, Color = Metrics.Ink, Align = UiAlign.Center })
                 .Centered(Metrics.RoomStatusX, Metrics.RoomStatusY, Metrics.RoomStatusW, Metrics.RoomStatusH);
 
-            UiPanel toolbar = root.Add(new UiPanel { Id = "furniture.toolbar" }).Centered(Metrics.ToolbarX, Metrics.ToolbarY, Metrics.ToolbarW, Metrics.ToolbarH);
-            _delete = toolbar.Add(new UiButton { Id = DeleteId, FontSize = Metrics.ToolFont }).Centered(Metrics.DeleteX, 0f, Metrics.ToolButtonW, Metrics.ToolButtonH);
+            UiPanel toolbar = root.Add(new UiPanel { Id = ToolbarId });
+            _delete = toolbar.Add(new UiButton { Id = DeleteId, FontSize = Metrics.ToolFont });
             _delete.Clicked += DeleteSelected;
-            _rotate = toolbar.Add(new UiButton { Id = RotateId, FontSize = Metrics.ToolFont }).Centered(Metrics.RotateX, 0f, Metrics.ToolButtonW, Metrics.ToolButtonH);
+            _rotate = toolbar.Add(new UiButton { Id = RotateId, FontSize = Metrics.ToolFont });
             _rotate.Clicked += Rotate;
+            new ToolRow(toolbar, Metrics.ToolbarY, Metrics.ToolbarH, pad)
+                .Add(_delete, Metrics.ToolbarX + Metrics.DeleteX, Metrics.ToolButtonW, Metrics.ToolButtonH)
+                .Add(_rotate, Metrics.ToolbarX + Metrics.RotateX, Metrics.ToolButtonW, Metrics.ToolButtonH)
+                .Fit();
 
-            UiPanel bottom = root.Add(new UiPanel { Id = "furniture.bottom" }).Centered(Metrics.BottomX, Metrics.BottomY, Metrics.BottomW, Metrics.BottomH);
-            _move = bottom.Add(new UiButton { Id = MoveId, FontSize = Metrics.MoveFont }).Centered(Metrics.MoveX, 0f, Metrics.MoveW, Metrics.MoveH);
+            UiPanel bottom = root.Add(new UiPanel { Id = BottomBarId });
+            _move = bottom.Add(new UiButton { Id = MoveId, FontSize = Metrics.MoveFont });
             _move.Clicked += PickUpSelected;
+            new ToolRow(bottom, Metrics.BottomY, Metrics.BottomH, pad)
+                .Add(_move, Metrics.BottomX + Metrics.MoveX, Metrics.MoveW, Metrics.MoveH)
+                .Fit();
 
             BuildWorkspaceRow(root);
             ApplyTexts();
