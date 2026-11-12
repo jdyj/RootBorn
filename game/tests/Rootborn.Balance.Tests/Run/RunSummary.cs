@@ -24,7 +24,10 @@ namespace Rootborn.Balance.Tests
         public string[] PaybackGaps = new string[0];     // PaybackDays와 같은 길이: null이면 값이 있고, 아니면 PaybackGap의 값
         public int?[] RecoverDays = new int?[0];         // 올린 것마다: 올린 날부터 번 것의 합이 쓴 값 이상이 되기까지의 날 수(올린 날 포함). 판 안에서 못 채우면 null
         public float ActionsPerDay;
-        public int ExhaustedDays;                        // 지침을 본 날 수(DayRecord.Exhausted)
+        public float NetIncomePerDay;                    // (번 것 합 − 쓴 것 합) ÷ 날 수
+        public int ExhaustionSeenDays;                   // 지침을 본 날 수(DayRecord.Exhausted — 마지막 일 도중에 지쳐 손해가 없던 날도 든다)
+        public int StoppedExhaustedDays;                 // 지쳐서 멈춘 날 수(Stop == exhausted, 자는 밤에 지쳐 그 자리에서 잠)
+        public int ZeroActionDays;                       // 행동이 하나도 없던 날 수(하루를 잃은 날)
         public int NightsAwake;                          // 자지 않은 밤 수
         public float AverageEnergyAtEnd;                 // 밤(잠·날 넘김) 전 체력의 평균
         public float? AverageSleptAtMinutes;             // 잔 날의 잔 시각 평균(그날 0시부터 센 분). 잔 날이 없으면 null
@@ -40,7 +43,7 @@ namespace Rootborn.Balance.Tests
             int count = upToDay;
             var s = new RunSummary();
 
-            long earned = 0, minigameEarned = 0, actions = 0, workMinutes = 0, energy = 0, sleptAt = 0;
+            long earned = 0, spent = 0, minigameEarned = 0, actions = 0, workMinutes = 0, energy = 0, sleptAt = 0;
             int sleptDays = 0;
             double travelSeconds = 0, minigameSeconds = 0;
             var upgrades = new List<int>();
@@ -54,7 +57,10 @@ namespace Rootborn.Balance.Tests
                 travelSeconds += d.TravelRealSeconds;
                 minigameSeconds += d.MinigameRealSeconds;
                 energy += d.EnergyAtEnd;
-                if (d.Exhausted) s.ExhaustedDays++;
+                spent += d.Spent;
+                if (d.Exhausted) s.ExhaustionSeenDays++;
+                if (d.Stop == StopReasons.Exhausted) s.StoppedExhaustedDays++;
+                if (d.Actions == 0) s.ZeroActionDays++;
                 if (d.Slept) { sleptDays++; sleptAt += d.SleptAtMinutes; }
                 else s.NightsAwake++;
                 if (d.Upgraded) upgrades.Add(i);
@@ -65,6 +71,7 @@ namespace Rootborn.Balance.Tests
             }
 
             s.IncomePerDay = (float)earned / count;
+            s.NetIncomePerDay = (float)(earned - spent) / count;
             s.ActionsPerDay = (float)actions / count;
             s.AverageEnergyAtEnd = (float)energy / count;
             if (sleptDays > 0) s.AverageSleptAtMinutes = (float)sleptAt / sleptDays;

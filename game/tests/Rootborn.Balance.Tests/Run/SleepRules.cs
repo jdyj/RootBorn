@@ -31,6 +31,15 @@ namespace Rootborn.Balance.Tests
         bool SleepsTonight(int runDay);
 
         bool MayStart(SleepMoment m);
+
+        /// <summary>
+        /// 그날 행동이 끝나도 되는 가장 늦은 시각(그날 0시부터 센 분). 행동 뒤 검사에 쓴다(계획 길이 예측이 실제보다 짧았는지).
+        /// 끝 제한이 없으면 null(start-before, 넘겨 잇는 밤).
+        /// </summary>
+        int? LatestEnd(int runDay, int dayEndMinutes);
+
+        /// <summary>그 밤에 07:00을 넘겨 끝나는 행동을 다음 날로 잇는가(" carry" 규칙의 자지 않는 밤).</summary>
+        bool CarriesTonight(int runDay);
     }
 
     /// <summary>
@@ -45,7 +54,7 @@ namespace Rootborn.Balance.Tests
             { "finish-by", (arg, rules, id) => new FinishByRule(id, Clock(arg, rules, id)) },
             { "start-before", (arg, rules, id) => new StartBeforeRule(id, Clock(arg, rules, id)) },
             { "never", (arg, rules, id) => NoArgument(arg, id, new NeverRule(id)) },
-            { "stay-up-every", (arg, rules, id) => new StayUpEveryRule(id, Count(arg, id), rules.BedtimeMinutes) },
+            { "stay-up-every", (arg, rules, id) => StayUpEvery(arg, rules, id) },
         };
 
         /// <summary>글자를 읽을 수 있는가(종류와 인자 모두). 시각은 기준 시간 규칙으로 센다 — 맞는 글자인지만 본다.</summary>
@@ -63,13 +72,23 @@ namespace Rootborn.Balance.Tests
             }
         }
 
+        /// <summary>
+        /// "종류 [인자] [carry]". 끝의 " carry"는 어느 종류에나 붙는다: 자지 않는 밤에는 07:00 전에 시작하기만 하면 되고(끝이 07:00을 넘어도 된다),
+        /// 게임이 넘긴 시간을 다음 날 아침으로 잇는다.
+        /// </summary>
         public static ISleepRule Parse(string text, TimeRules rules)
         {
             if (rules == null) throw new ArgumentNullException(nameof(rules));
-            Split(text, out string kind, out string arg);
+            string core = text;
+            bool carry = text != null && text.EndsWith(CarrySuffix, StringComparison.Ordinal);
+            if (carry) core = text.Substring(0, text.Length - CarrySuffix.Length);
+            Split(core, out string kind, out string arg);
             if (kind == null || !Kinds.TryGetValue(kind, out var make)) throw new ArgumentException("모르는 잠 규칙이다: " + text, nameof(text));
-            return make(arg, rules, text);
+            var rule = make(arg, rules, text);
+            return carry ? new CarryRule(text, rule) : rule;
         }
+
+        private const string CarrySuffix = " carry";
 
         /// <summary>"종류 인자"를 첫 빈칸에서 나눈다. 인자가 없으면 null.</summary>
         internal static void Split(string text, out string kind, out string arg)
@@ -97,6 +116,16 @@ namespace Rootborn.Balance.Tests
             return minutes < rules.DayStartMinutes ? minutes + TimeRules.MinutesPerDay : minutes;
         }
 
+        // "N" 또는 "N until HH:MM"(다른 밤은 그 시각까지 끝내고 잔다. 없으면 취침 시각).
+        private static ISleepRule StayUpEvery(string arg, TimeRules rules, string id)
+        {
+            const string Until = " until ";
+            if (arg == null) return new StayUpEveryRule(id, Count(null, id), rules.BedtimeMinutes);
+            int at = arg.IndexOf(Until, StringComparison.Ordinal);
+            if (at < 0) return new StayUpEveryRule(id, Count(arg, id), rules.BedtimeMinutes);
+            return new StayUpEveryRule(id, Count(arg.Substring(0, at), id), Clock(arg.Substring(at + Until.Length), rules, id));
+        }
+
         private static int Count(string arg, string id)
         {
             if (arg == null || !int.TryParse(arg, NumberStyles.None, CultureInfo.InvariantCulture, out int n) || n < 1)
@@ -112,6 +141,8 @@ namespace Rootborn.Balance.Tests
             public string Id { get; }
             public bool SleepsTonight(int runDay) => true;
             public bool MayStart(SleepMoment m) => m.EndsAt <= _by && m.EndsAt <= m.DayEndMinutes;
+            public int? LatestEnd(int runDay, int dayEndMinutes) => Math.Min(_by, dayEndMinutes);
+            public bool CarriesTonight(int runDay) => false;
         }
 
         // 그 시각 전이면 길이와 상관없이 시작하고, 끝나면 잔다(날 넘김을 넘기지는 않는다).
@@ -122,6 +153,8 @@ namespace Rootborn.Balance.Tests
             public string Id { get; }
             public bool SleepsTonight(int runDay) => true;
             public bool MayStart(SleepMoment m) => m.NowMinutes < _before && m.EndsAt <= m.DayEndMinutes;
+            public int? LatestEnd(int runDay, int dayEndMinutes) => null;
+            public bool CarriesTonight(int runDay) => false;
         }
 
         // 자지 않는다. 날 넘김 전에 끝나는 것만 시작한다.
@@ -131,16 +164,34 @@ namespace Rootborn.Balance.Tests
             public string Id { get; }
             public bool SleepsTonight(int runDay) => false;
             public bool MayStart(SleepMoment m) => m.EndsAt <= m.DayEndMinutes;
+            public int? LatestEnd(int runDay, int dayEndMinutes) => dayEndMinutes;
+            public bool CarriesTonight(int runDay) => false;
         }
 
-        // N일에 하루(N, 2N, …째 날) 밤샌다. 나머지 날은 취침 시각(game/time.json, 지금 22:00)까지 끝내고 잔다.
+        // N일에 하루(N, 2N, …째 날) 밤샌다. 나머지 날은 그 시각(until, 없으면 취침 시각 — game/time.json, 지금 22:00)까지 끝내고 잔다.
         private sealed class StayUpEveryRule : ISleepRule
         {
-            private readonly int _every, _bedtime;
-            public StayUpEveryRule(string id, int every, int bedtime) { Id = id; _every = every; _bedtime = bedtime; }
+            private readonly int _every, _sleepBy;
+            public StayUpEveryRule(string id, int every, int sleepBy) { Id = id; _every = every; _sleepBy = sleepBy; }
             public string Id { get; }
             public bool SleepsTonight(int runDay) => runDay % _every != 0;
-            public bool MayStart(SleepMoment m) => m.EndsAt <= m.DayEndMinutes && (!SleepsTonight(m.RunDay) || m.EndsAt <= _bedtime);
+            public bool MayStart(SleepMoment m) => m.EndsAt <= m.DayEndMinutes && (!SleepsTonight(m.RunDay) || m.EndsAt <= _sleepBy);
+            public int? LatestEnd(int runDay, int dayEndMinutes) => SleepsTonight(runDay) ? Math.Min(_sleepBy, dayEndMinutes) : dayEndMinutes;
+            public bool CarriesTonight(int runDay) => false;
+        }
+
+        // " carry": 자지 않는 밤에는 07:00 전에 시작하기만 하면 된다. 걷기는 시계의 남은 조각 때문에 1분 더 걸릴 수 있어 걷기 끝이 07:00 1분 전보다 일러야 한다
+        // (걷다가 날이 넘어가지 않게). 자는 밤은 안의 규칙 그대로.
+        private sealed class CarryRule : ISleepRule
+        {
+            private const int WalkSlack = 1;
+            private readonly ISleepRule _inner;
+            public CarryRule(string id, ISleepRule inner) { Id = id; _inner = inner; }
+            public string Id { get; }
+            public bool SleepsTonight(int runDay) => _inner.SleepsTonight(runDay);
+            public bool MayStart(SleepMoment m) => SleepsTonight(m.RunDay) ? _inner.MayStart(m) : m.NowMinutes + m.WalkMinutes + WalkSlack < m.DayEndMinutes;
+            public int? LatestEnd(int runDay, int dayEndMinutes) => SleepsTonight(runDay) ? _inner.LatestEnd(runDay, dayEndMinutes) : null;
+            public bool CarriesTonight(int runDay) => !SleepsTonight(runDay);
         }
     }
 }

@@ -122,6 +122,8 @@ namespace Rootborn.Balance.Tests
                 {
                     // 자지 않는 밤: 날이 넘어갈 때까지 시계를 돌린다(혼자인 방은 AdvanceTime이 회복 없이 마감하고 다음 날을 연다).
                     // 다음 날을 여는 것까지 한 부름이라, 그때의 지갑 변화(있다면)는 자는 판과 달리 이 밤의 날에 들어간다.
+                    // 넘겨 잇는 밤에 행동 도중 날이 이미 넘어갔으면 여기서는 아무것도 보내지 않는다(그날의 체력·집중 칸은 넘어간 뒤의 값이다).
+                    // 07:00을 넘겨 끝난 행동 뒤에는 날이 다 간 상태라 날만 넘기고, 다음 날은 게임이 07:00 + 넘긴 분에 시작한다.
                     RollOverAwake(game, record.Day, name);
                     Close(game, record, earned, spent, ref earnedBefore, ref spentBefore);
                     run.Days.Add(record);
@@ -221,7 +223,18 @@ namespace Rootborn.Balance.Tests
                 // 요청 id는 그 판(세션) 안에서만 겹치지 않으면 된다. 게임은 쓴 요청 id를 모두 세이브에 남기고 저장할 때마다 다시 쓰므로
                 // 짧게 둔다(판 이름을 넣으면 100일 판에서 저장이 무거워진다).
                 var outcome = step.Do(game, record.Day + ":" + request++);
-                if (game.Student.CurrentDay != record.Day) throw new InvalidOperationException(name + ": " + record.Day + "일째 행동이 날을 넘겼다(07:00)");
+                // 날 넘김: 넘겨 잇는 밤이면 게임이 하는 대로 둔다(미니게임 도중에 07:00이 되면 게임이 날을 넘기고 정산을 거절한다 — CarryFactsTests).
+                // 그 행동은 시작한 날의 줄에 적고 그날을 끝낸다. 아니면 판을 멈춘다.
+                bool rolledOver = game.Student.CurrentDay != record.Day;
+                if (rolledOver && !rule.CarriesTonight(runDay)) throw new InvalidOperationException(name + ": " + record.Day + "일째 행동이 날을 넘겼다(07:00)");
+                if (!rolledOver)
+                {
+                    // 행동 뒤 검사: 잠 규칙이 허용한 끝을 넘겼으면 계획 길이 예측이 실제보다 짧았다는 뜻이다.
+                    int? latest = rule.LatestEnd(runDay, dayEnd);
+                    if (latest.HasValue && game.Student.TimeMinutes > latest.Value)
+                        throw new InvalidOperationException(name + ": " + record.Day + "일째 " + step.Id + "이 " + game.Student.TimeMinutes + "분에 끝나 잠 규칙의 끝("
+                            + latest.Value + "분)을 넘겼다 — 계획 길이 " + step.Minutes + "분이 실제보다 짧았다");
+                }
                 if (outcome.Done)
                 {
                     // 미니게임을 한 행동이 번 것만(지갑 누적의 앞뒤 차). 자동 넘기기·올리기는 미니게임 초가 0이라 들어가지 않는다.
@@ -234,7 +247,14 @@ namespace Rootborn.Balance.Tests
                     record.EndedAtMinutes = game.Student.TimeMinutes;
                     if (outcome.AutoSkipped) record.AutoSkips++;
                     if (outcome.Upgraded) record.Upgraded = true;
+                    if (rolledOver) { record.Stop = StopReasons.DayRanOut; return; }
                     continue;
+                }
+
+                if (rolledOver)
+                {
+                    record.Stop = StopReasons.DayRanOut;
+                    return;
                 }
 
                 if (outcome.BagFull)
