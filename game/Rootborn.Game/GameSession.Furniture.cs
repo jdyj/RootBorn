@@ -62,6 +62,8 @@ namespace Rootborn.Game
             }
 
             UseHouseLayout(layout);
+            // 열려 있던 일터의 점수는 놓인 가구로 냈다. 닫힌 뒤에는 파일 기록(되살리지 못한 기록 포함)으로 다시 낸다.
+            _workspaceScores.Clear();
             if (ReplayPlacedFurniture()) SaveAndNotify(AnnounceTopics, GameChangeTopics.Furniture);
         }
 

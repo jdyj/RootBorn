@@ -293,6 +293,47 @@ namespace Rootborn.Game.Tests
         }
 
         [Test]
+        public void LeavingAWorkspaceWithUnrestoredRecords_ScoresFromTheSavedRecords()
+        {
+            using var saves = new TempSaves();
+            var game = ChefSetup.Adult(saves);
+            Assert.That(game.Definitions.FurnitureQuality.ScoresOf(Plant), Is.Not.Empty, "준비: 화분은 점수를 준다");
+            var grid = WorkspaceRoom.GridFor(game.Definitions, ChefWorkspace);
+            // 하나는 놓이는 칸, 하나는 방 밖이라 되살리지 못하는 칸. 되살리지 못한 기록도 파일에 남는다.
+            var records = new[]
+            {
+                new FurniturePlacementSaveData { FurnitureId = Plant, SurfaceId = Chef.SurfaceId, AnchorX = grid.Spawn.X + 1, AnchorY = grid.Spawn.Y + 1, Direction = FurniturePlacementDirection.North },
+                new FurniturePlacementSaveData { FurnitureId = Plant, SurfaceId = Chef.SurfaceId, AnchorX = -1000, AnchorY = -1000, Direction = FurniturePlacementDirection.North },
+            };
+            WorkspaceSaveFiles.SaveLayout(saves.Store, TestWorld.Slot, Chef.SurfaceId, TestWorld.Player, records);
+
+            EnterChef(game);
+            Assert.That(game.House.Placed.Count, Is.EqualTo(1), "준비: 하나만 되살아났다");
+            var open = game.WorkspaceOf(ChefFacility).Scores.All.Select(s => (s.QualityId, s.Score)).ToArray();
+            var closed = TestWorld.Start(saves.Store).WorkspaceOf(ChefFacility).Scores.All.Select(s => (s.QualityId, s.Score)).ToArray();
+            Assert.That(closed, Is.Not.EqualTo(open), "준비: 열려 있을 때와 파일 기록의 점수가 다르다");
+
+            game.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
+            Assert.That(game.WorkspaceOf(ChefFacility).Scores.All.Select(s => (s.QualityId, s.Score)), Is.EqualTo(closed), "나간 뒤에는 파일 기록으로 낸다");
+        }
+
+        [Test]
+        public void HousePlacement_ThatGrowsASkill_NotifiesStudent()
+        {
+            using var saves = new TempSaves();
+            var game = TestWorld.Start(saves.Store);
+            var rule = game.Definitions.All<PlacementSkillGrowth>().First(g => g.SurfaceId == HouseRoom.SurfaceId);
+            game.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
+            int before = game.Student.GetSkillValue(rule.SkillId);
+            var topics = new System.Collections.Generic.List<string>();
+            game.Changed += topics.Add;
+
+            Assert.That(game.PlaceFurniture(FreeDesk, HouseRoom.FirstFreeAnchor(game, FreeDesk), FurniturePlacementDirection.North), Is.True);
+            Assert.That(game.Student.GetSkillValue(rule.SkillId), Is.GreaterThan(before), "준비: 기술이 올랐다");
+            Assert.That(topics, Does.Contain(GameChangeTopics.Student));
+        }
+
+        [Test]
         public void HousePlacement_GrowsInteriorSkill_UpToDailyLimit()
         {
             // 학교 밖 길: 학생이 자기 집을 꾸며 인테리어를 배운다.
@@ -406,6 +447,63 @@ namespace Rootborn.Game.Tests
             CompleteAndCount(game, "work:pass");
             Assert.That(game.Student.GetSkillValue(Cooking), Is.EqualTo(before + gains));
             Assert.That(TestWorld.Start(saves.Store).Student.GetSkillValue(Cooking), Is.EqualTo(before + gains), "저장된다");
+        }
+
+        [Test]
+        public void CompleteWork_GrowsSkill_EvenWhenTheFacilityHasNoWorkspace()
+        {
+            // 일을 하면 기술이 자라는 것은 일터와 상관없다. data/를 임시 폴더로 복사해 일터·템플릿 정의만 빼면
+            // 요리사 시설은 일터가 없고 WorkSkillGrowth(요리 일 → 요리 기술)만 남는다.
+            var data = CopyDataWithoutWorkspaces();
+            try
+            {
+                var loaded = Rootborn.Data.GameDataLoader.Load(data, Rootborn.Data.Builders.RootbornBuilders.Register);
+                loaded.ThrowIfFailed();
+                var definitions = loaded.Definitions;
+                Assert.That(definitions.All<Workspace>(), Is.Empty, "준비: 일터가 없다");
+                var settings = GameStartSettings.FromDefinitions(definitions);
+                using var saves = new TempSaves();
+                GameSession Start() => GameSession.Start(definitions, settings, saves.Store, TestWorld.Slot, TestWorld.Player);
+                Start().TalkTo("npc.first-guide"); // 첫 저장
+                SaveEdits.EditSnapshot(saves.Store, SaveEdits.MakeChefCandidateReady);
+                var game = Start();
+                Assert.That(game.ChooseFacility(ChefFacility, "facility:chef").Kind, Is.EqualTo(AdultCareerResultKind.Applied));
+                Assert.That(game.WorkspaceOf(ChefFacility), Is.Null);
+
+                var extras = game.WorkExtrasFor(ChefWork);
+                int gains = extras.SkillGains.Where(g => g.SkillId == Cooking).Sum(g => g.Amount);
+                Assert.That(gains, Is.GreaterThan(0), "일터가 없어도 일의 기술 성장은 남는다");
+                Assert.That(extras.RewardPercentBonus, Is.EqualTo(0), "공간 이득은 없다");
+                Assert.That(extras.ReputationBonus, Is.EqualTo(0));
+                int before = game.Student.GetSkillValue(Cooking);
+
+                Assert.That(game.CompleteFacilityWork(ChefWork, "work:no-workspace", 100, autoSkip: false).Kind, Is.EqualTo(AdultCareerResultKind.Applied));
+                Assert.That(game.Student.GetSkillValue(Cooking), Is.EqualTo(before + gains));
+                Assert.That(Start().Student.GetSkillValue(Cooking), Is.EqualTo(before + gains), "저장된다");
+            }
+            finally
+            {
+                System.IO.Directory.Delete(System.IO.Path.GetDirectoryName(data), true);
+            }
+        }
+
+        // data/와 그 옆 game/ 설정 파일을 임시 폴더로 복사하고 일터·템플릿 정의 파일만 뺀다(CareerInterestChoiceTests와 같은 방식).
+        private static string CopyDataWithoutWorkspaces()
+        {
+            var root = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "rootborn-game-tests", System.Guid.NewGuid().ToString("N"));
+            var target = System.IO.Path.Combine(root, "data");
+            System.IO.Directory.CreateDirectory(System.IO.Path.Combine(root, "game"));
+            foreach (var name in new[] { "time.json", "economy.json" })
+                System.IO.File.Copy(System.IO.Path.Combine(TestWorld.RepoRoot, "game", name), System.IO.Path.Combine(root, "game", name));
+            foreach (var file in System.IO.Directory.GetFiles(TestWorld.DataDirectory, "*", System.IO.SearchOption.AllDirectories))
+            {
+                var relative = System.IO.Path.GetRelativePath(TestWorld.DataDirectory, file).Replace('\\', '/');
+                if (relative == "workspaces/WorkspaceDefinition.json" || relative == "workspaces/WorkspaceTemplate.json") continue;
+                var copy = System.IO.Path.Combine(target, relative);
+                System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(copy));
+                System.IO.File.Copy(file, copy);
+            }
+            return target;
         }
 
         [Test]

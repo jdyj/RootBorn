@@ -44,7 +44,8 @@ namespace Rootborn.Game
     /// - 처음 들어온 자기 일터(배치 파일이 없고 깐 적이 없다)에는 기본 템플릿을 값 없이 깐다. 맞지 않으면 빈 채로 두고 깐 것으로 적지 않는다.
     /// - 놓기는 자기 시설이고 한도 안일 때만 된다. 옮기기·치우기는 자기 시설이면 한도와 무관하다. 남의 일터에서는 모두 안 된다.
     /// - 템플릿으로 놓은 가구와 일터에 놓은 가구는 가구 퀘스트 이벤트를 내지 않는다(집만 낸다).
-    /// - 공간 점수는 면마다 기억하고 Furniture·Workspace 알림 때 버린다(일 명령마다 가구를 훑지 않는다).
+    /// - 공간 점수는 면마다 기억하고 Furniture·Workspace 알림 때와 다른 면에 들어갈 때 버린다(일 명령마다 가구를 훑지 않는다).
+    /// - 일터가 없는 시설의 일도 기술 성장은 받는다(공간 이득만 0).
     /// 규칙 판단(한도, 템플릿 적용, 꾸미며 배우기, 점수)은 Core가 한다.
     /// </summary>
     public sealed partial class GameSession
@@ -134,12 +135,15 @@ namespace Rootborn.Game
             return new WorkspaceStatus(workspace, entry.Placed, capacity, entry.Percent, entry.Scores, owned);
         }
 
-        /// <summary>그 일이 지금 일하는 시설의 일이고 그 시설에 일터가 있으면 공간 이득과 기술 성장, 아니면 default.</summary>
+        /// <summary>
+        /// 그 일이 지금 일하는 시설의 일이면 공간 이득과 기술 성장, 아니면 default.
+        /// 그 시설에 일터가 없으면 공간 이득은 0이고 기술 성장만 남는다(일을 하면 기술이 자라는 것은 일터와 상관없다).
+        /// </summary>
         public WorkExtras WorkExtrasFor(string workId)
         {
             if (workId == null || !FacilityByWork.TryGetValue(workId, out var facilityId) || facilityId != Adult.FacilityId) return default;
-            if (!WorkspaceByFacility.TryGetValue(facilityId, out var workspace)) return default;
-            return _definitions.WorkLinks.ExtrasFor(workId, Scores(workspace).Scores);
+            var scores = WorkspaceByFacility.TryGetValue(facilityId, out var workspace) ? Scores(workspace).Scores : SpaceScores.Empty;
+            return _definitions.WorkLinks.ExtrasFor(workId, scores);
         }
 
         /// <summary>지금 열린 일터의 템플릿(정의 순서). 일터가 아니면 빈 목록.</summary>
