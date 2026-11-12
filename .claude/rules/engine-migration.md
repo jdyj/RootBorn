@@ -32,7 +32,7 @@
 
 ## 테스트
 
-- 규칙은 `dotnet test game/tests/Rootborn.Core.Tests`. 기존 EditMode 규칙 테스트의 내용을 옮겨 와 같은 동작임을 확인한다.
+- 규칙은 `dotnet test game/tests/Rootborn.Core.Tests`.
 - dotnet 통과는 "자동 테스트"다. "실제 플레이로 확인"은 MonoGame 판의 장치 입력 테스트나 직접 본 화면에만 쓴다.
 
 ## 동시에 진행할 때

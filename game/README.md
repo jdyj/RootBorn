@@ -32,7 +32,7 @@
 - **게임 데이터는 `data/`가 원본이다.** 사람이 직접 고친다(`data/README.md`). Unity 에셋에서 바꾸던 변환기는 Unity를 지울 때 지웠다(태그 `unity-playable-20261111`에 있다).
 - **그림(PNG)과 맵(LDtk)은 아직 `Assets/` 아래에 있다.** Unity가 없는데 폴더 이름이 `Assets`인 것은 Unity 시절 이름이다.
   게임이 읽는 파일만 남겼고(`Tools/publish/content.txt`가 고르는 것), 새 그림·맵이 오면 새 자리로 가면서 사라진다.
-  옮기지 않은 이유: 그림·맵을 전부 새로 그릴 예정이라 지금 옮기면 같은 경로 수천 곳을 두 번 고친다(`docs/superpowers/specs/2026-11-12-unity-removal-plan.md` 4절).
+  옮기지 않은 이유: 그림·맵을 전부 새로 그릴 예정이라 지금 옮기면 같은 경로 수천 곳을 두 번 고친다.
 - 저장소 루트는 `data/registry.json`이 있는 폴더다(실행 프로그램·서버·테스트 도우미가 이것으로 찾는다).
 
 ## 명령

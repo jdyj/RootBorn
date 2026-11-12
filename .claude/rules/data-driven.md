@@ -15,7 +15,7 @@ data/<영역>/<종류>.json  →  Rootborn.Data 만들기 함수(b.Add 한 줄) 
 - 게임은 시작할 때 한 번 읽고 `GameDefinitions.Get/TryGet/All<T>()` 표 조회만 한다. 읽기 오류가 하나라도 있으면 목록을 보이고 시작하지 않는다.
 - `data/`의 모든 `type`은 등록됐거나 `NotRules`(규칙이 아님)·`NotUsedByGame`(게임이 안 씀)·`NotPortedYet`(아직 안 옮김)에 이유와 함께 있어야 한다. 아니면 `RealDataTests`가 실패한다. 왜: 빠진 종류가 조용히 버려지지 않게.
 
-데이터 원본이 어디인지(Unity 에셋 → `data/` 변환, MonoGame 판이 직접 쓰는 `game/localization`·`game/world`·`game/themes`)는 `rules/engine-migration.md` "지금 상태".
+데이터 원본이 어디인지(규칙 데이터 `data/`, 규칙 설정 `game/economy.json`·`game/time.json`, 문구 `game/localization`, 맵 `game/world`, 테마 `game/themes` — 모두 손으로 고친다)는 `rules/engine-migration.md` "지금 상태".
 
 ## 금지
 
