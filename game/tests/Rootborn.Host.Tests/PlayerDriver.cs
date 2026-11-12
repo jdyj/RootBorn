@@ -385,6 +385,25 @@ namespace Rootborn.Host.Tests
             throw new InvalidOperationException(maxFrames + "프레임 안에 화면이 열리지 않았다: " + screenId);
         }
 
+        /// <summary>조건을 기다리는 기본 프레임 한도(60프레임 = 게임 시간 1초). 테스트 안에 한도 없는 while을 쓰지 않고 <see cref="FramesUntil"/>을 쓴다.</summary>
+        public const int DefaultMaxWaitFrames = 1800;
+
+        /// <summary>
+        /// 조건이 참이 될 때까지 한 프레임씩(또는 <paramref name="step"/>으로) 돌린다. 지나간 프레임 수를 돌려준다.
+        /// 한도를 넘으면 무엇을 기다렸는지와 그때 맨 위 화면 id를 담아 실패한다.
+        /// </summary>
+        public int FramesUntil(Func<bool> condition, string what, int maxFrames = DefaultMaxWaitFrames, Action step = null)
+        {
+            for (int i = 0; i <= maxFrames; i++)
+            {
+                if (condition()) return i;
+                if (i == maxFrames) break;
+                if (step != null) step(); else Frames(1);
+            }
+            string top = Game.Screens?.Top?.Id ?? "(없음)";
+            throw new InvalidOperationException(maxFrames + "프레임 안에 조건이 되지 않았다: " + what + " (맨 위 화면 " + top + ")");
+        }
+
         public int WaitForScreenClosed(string screenId, int maxFrames = 120)
         {
             for (int i = 0; i <= maxFrames; i++)

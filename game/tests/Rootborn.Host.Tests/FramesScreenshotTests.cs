@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace Rootborn.Host.Tests
@@ -43,8 +44,9 @@ namespace Rootborn.Host.Tests
                 process.Kill(entireProcessTree: true);
                 Assert.Fail("Host가 --frames 뒤에 끝나지 않았다");
             }
-            process.WaitForExit();
-            _ = output.Result;
+            // 죽인 뒤에도 자식이 쥔 파이프 때문에 읽기가 안 끝날 수 있다: 벽시계 한도를 준다.
+            if (!process.WaitForExit(30_000)) Assert.Fail("Host를 죽인 뒤에도 30초 안에 끝나지 않았다");
+            if (!Task.WhenAll(output, error).Wait(30_000)) Assert.Fail("Host 출력을 30초 안에 다 읽지 못했다(--frames 뒤)");
             return (process.ExitCode, error.Result);
         }
 

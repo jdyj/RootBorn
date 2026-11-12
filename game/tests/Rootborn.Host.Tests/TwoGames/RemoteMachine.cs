@@ -198,7 +198,8 @@ namespace Rootborn.Host.Tests.TwoGames
             }
             catch (IOException) { }
             if (!_process.WaitForExit((int)timeout.TotalMilliseconds)) Kill();
-            _process.WaitForExit();
+            // 죽인 뒤에도 출력 읽기가 안 끝날 수 있다(자식이 쥔 파이프): 벽시계 한도를 준다.
+            if (!_process.WaitForExit(30_000)) throw new TimeoutException("원격 서버 프로세스를 죽인 뒤에도 30초 안에 끝나지 않았다");
             string exit = _lines.LastOrDefault(l => l.StartsWith(ExitPrefix, StringComparison.Ordinal));
             return exit != null && int.TryParse(exit.Substring(ExitPrefix.Length), out int code) ? code : -1;
         }

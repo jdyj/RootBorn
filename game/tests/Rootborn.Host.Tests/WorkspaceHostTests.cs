@@ -305,7 +305,7 @@ namespace Rootborn.Host.Tests
                     Assert.That(challenge.Mechanic, Is.EqualTo(MinigameMechanic.Timing), "요리 일 1은 순서 외우기와 박자다");
                     foreach (float beat in challenge.BeatTimes)
                     {
-                        while (challenge.Elapsed < beat - 0.02f) player.Frames(1);
+                        player.FramesUntil(() => challenge.Elapsed >= beat - 0.02f, "박자 시각 " + beat);
                         player.PressKey(TestKey.Space);
                     }
                 }

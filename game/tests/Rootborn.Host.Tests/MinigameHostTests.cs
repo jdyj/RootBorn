@@ -94,7 +94,7 @@ namespace Rootborn.Host.Tests
             ChallengeSession sequence = screen.Session.Current;
             Assert.That(sequence.Mechanic, Is.EqualTo(MinigameMechanic.Sequence));
             int[] order = sequence.PreviewSequence;
-            while (sequence.PreviewVisible) Frame();
+            player.FramesUntil(() => !sequence.PreviewVisible, "순서 보여 주기가 끝나기", step: Frame);
             player.Screenshot("minigame-02-sequence-answer");
             foreach (int answer in order) player.PressButton(SymbolChoiceView.ChoiceId(answer));
 
@@ -106,7 +106,7 @@ namespace Rootborn.Host.Tests
             player.ScreenshotScreen(ScreenCatalog.Minigame, "minigame-03-timing");
             foreach (float beat in timing.BeatTimes)
             {
-                while (timing.Elapsed < beat - 0.02f) Frame();
+                player.FramesUntil(() => timing.Elapsed >= beat - 0.02f, "박자 시각 " + beat, step: Frame);
                 player.PressKey(TestKey.Space);
             }
             for (int i = 0; i < 180 && !screen.Session.IsComplete; i++) Frame();
