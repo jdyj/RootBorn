@@ -90,7 +90,7 @@ namespace Rootborn.Core.NpcMovement
     }
 
     /// <summary>
-    /// 자리 둘레를 어슬렁거린다. 걸음 하나 = [쉼: Range(PauseMin, PauseMax)초] → [후보 칸에서 Next(count)로 고른 칸까지 GridPath.Find로 걷기].
+    /// 자리 둘레를 어슬렁거린다. 걸음 하나 = [쉼: Range(PauseMin, PauseMax)초] → [후보 칸에서 Next(count)로 고른 칸까지 최단 길(GridPath.Find와 같은 길)로 걷기].
     /// 후보는 자리 칸에서 반지름 네모 안으로만 걸어서 닿는 열린 칸((Y, X) 오름차순). 후보가 자리 칸뿐이거나 자리 칸이 막혔으면 서 있기와 같다.
     /// 자리는 (자리, 씨앗, 시각)만으로 정해지고, state는 앞으로 가는 동안 처음부터 다시 따라가지 않게 하는 기억일 뿐이다.
     /// </summary>
@@ -122,8 +122,10 @@ namespace Rootborn.Core.NpcMovement
             public CellPos Cell;
             public Facing Facing;
             public double PauseMinutes, WalkMinutes;
-            /// <summary>지금 걸음의 길. Cell 다음 칸부터(비면 제자리).</summary>
+            /// <summary>지금 걸음의 길. Cell 다음 칸부터(비면 제자리). 걸음마다 같은 목록을 비우고 다시 채운다.</summary>
             public List<CellPos> Path;
+            /// <summary>길 찾기에 다시 쓰는 칸(작은 격자 칸 번호마다 앞 칸 번호, 찾는 차례). 걸음마다 새로 만들지 않는다.</summary>
+            public int[] Previous, Queue;
             public bool Standing;
         }
 
@@ -180,6 +182,10 @@ namespace Rootborn.Core.NpcMovement
             for (int i = 0; i < walk.Candidates.Length; i++)
                 walk.Candidates[i] = new CellPos(walk.Candidates[i].X + walk.Origin.X, walk.Candidates[i].Y + walk.Origin.Y);
 
+            int cells = walk.Area.Grid.Count;
+            walk.Path = new List<CellPos>(cells);
+            walk.Previous = new int[cells];
+            walk.Queue = new int[cells];
             walk.Random = new NpcRandom(context.Seed);
             walk.StepStart = 0.0;
             walk.Cell = anchor;
@@ -209,11 +215,52 @@ namespace Rootborn.Core.NpcMovement
             CellPos o = walk.Origin;
             var from = new CellPos(walk.Cell.X - o.X, walk.Cell.Y - o.Y);
             var goal = new CellPos(target.X - o.X, target.Y - o.Y);
-            List<CellPos> path = goal.Equals(from) ? null : GridPath.Find(walk.Area, from, c => c.Equals(goal));
-            if (path == null) path = new List<CellPos>(0);
+            List<CellPos> path = walk.Path;
+            path.Clear();
+            if (!goal.Equals(from)) FindPath(walk, from, goal);
             for (int i = 0; i < path.Count; i++) path[i] = new CellPos(path[i].X + o.X, path[i].Y + o.Y);
-            walk.Path = path;
-            walk.WalkMinutes = walk.Path.Count / cellsPerMinute;
+            walk.WalkMinutes = path.Count / cellsPerMinute;
+        }
+
+        /// <summary>GridPath.Find와 같은 순서(앞에서부터 넓게, 오른쪽·왼쪽·아래·위)라 같은 길이 나온다.</summary>
+        private static readonly CellPos[] Steps = { new CellPos(1, 0), new CellPos(-1, 0), new CellPos(0, 1), new CellPos(0, -1) };
+
+        /// <summary>
+        /// 작은 격자에서 from부터 goal까지의 최단 길을 walk.Path에 채운다(from은 넣지 않는다, 길이 없으면 비운 채). GridPath.Find와 같은 길이지만
+        /// 걸음마다 새 객체를 만들지 않는다 — 걷는 NPC가 모두 프레임마다 자리를 계산하므로 걸음이 바뀌는 프레임에 쓰레기를 남기지 않게.
+        /// 작은 격자 밖은 막혔다.
+        /// </summary>
+        private static void FindPath(Walk walk, CellPos from, CellPos goal)
+        {
+            CollisionGrid area = walk.Area;
+            MapGrid grid = area.Grid;
+            int[] previous = walk.Previous, queue = walk.Queue;
+            for (int i = 0; i < previous.Length; i++) previous[i] = -1;
+            int start = grid.Index(from.X, from.Y), end = grid.Index(goal.X, goal.Y);
+            previous[start] = start;
+            int head = 0, tail = 0;
+            queue[tail++] = start;
+            while (head < tail)
+            {
+                int current = queue[head++];
+                if (current == end)
+                {
+                    List<CellPos> path = walk.Path;
+                    for (int c = current; c != start; c = previous[c]) path.Add(new CellPos(c % grid.Columns, c / grid.Columns));
+                    path.Reverse();
+                    return;
+                }
+                int cx = current % grid.Columns, cy = current / grid.Columns;
+                for (int s = 0; s < Steps.Length; s++)
+                {
+                    int nx = cx + Steps[s].X, ny = cy + Steps[s].Y;
+                    if (!grid.Contains(nx, ny) || area.IsBlocked(nx, ny)) continue;
+                    int next = grid.Index(nx, ny);
+                    if (previous[next] >= 0) continue;
+                    previous[next] = current;
+                    queue[tail++] = next;
+                }
+            }
         }
 
         /// <summary>

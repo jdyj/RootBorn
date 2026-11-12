@@ -214,6 +214,25 @@ namespace Rootborn.Core.Tests.NpcMovement
         }
 
         [Test]
+        public void 어슬렁거림은_걸음이_바뀌어도_새_객체를_만들지_않는다()
+        {
+            // 걷는 NPC는 모두 프레임마다 자리를 계산한다. 걸음이 바뀌는 프레임(다음 칸을 뽑고 길을 찾는 때)에도 쓰레기를 남기지 않는다
+            // (Host LONGPLAY_001의 가만히 선 프레임 할당 한도).
+            CollisionGrid grid = Yard();
+            NpcStayContext context = Context(grid, 5, 6, 12345u);
+            var stay = Wander();
+            object state = null;
+            stay.PoseAt(in context, 0.0, ref state); // 머무름을 시작할 때 한 번 만드는 것(작은 격자, 후보, 길 목록)
+            int moving = 0;
+            long before = GC.GetAllocatedBytesForCurrentThread();
+            for (int i = 1; i <= 2400; i++)
+                if (stay.PoseAt(in context, i / 4.0, ref state).Moving) moving++;
+            long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+            Assert.That(moving, Is.GreaterThan(0), "이 시험의 전제: 걸음이 여러 번 바뀌었다");
+            Assert.That(allocated, Is.EqualTo(0), "600분 동안 자리를 계산하며 만든 바이트");
+        }
+
+        [Test]
         public void NpcRandom은_같은_씨앗이면_같은_수열이고_0은_1과_같다()
         {
             var a = new NpcRandom(0u);
