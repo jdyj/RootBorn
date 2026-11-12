@@ -31,6 +31,8 @@ namespace Rootborn.Host.Rendering
             "daily-planner", "plan",
             // 목표 수첩 분류(목표 journal, 퀘스트 plan, 캠페인, 힌트)
             "town_map", "discovery",
+            // 일터 성질(가구 배치 화면의 점수 줄). 키는 데이터 SpaceQualityDefinition.iconKey가 말한다.
+            "quality-cozy", "quality-hygiene", "quality-flow", "quality-safety", "quality-focus",
         };
 
         private static IReadOnlyList<string> ReadSkinNames()

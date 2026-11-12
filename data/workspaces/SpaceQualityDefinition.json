@@ -3,30 +3,30 @@
     "type": "SpaceQualityDefinition",
     "id": "quality.cozy",
     "displayNameKey": "quality.cozy.name",
-    "iconKey": ""
+    "iconKey": "quality-cozy"
   },
   {
     "type": "SpaceQualityDefinition",
     "id": "quality.hygiene",
     "displayNameKey": "quality.hygiene.name",
-    "iconKey": ""
+    "iconKey": "quality-hygiene"
   },
   {
     "type": "SpaceQualityDefinition",
     "id": "quality.flow",
     "displayNameKey": "quality.flow.name",
-    "iconKey": ""
+    "iconKey": "quality-flow"
   },
   {
     "type": "SpaceQualityDefinition",
     "id": "quality.safety",
     "displayNameKey": "quality.safety.name",
-    "iconKey": ""
+    "iconKey": "quality-safety"
   },
   {
     "type": "SpaceQualityDefinition",
     "id": "quality.focus",
     "displayNameKey": "quality.focus.name",
-    "iconKey": ""
+    "iconKey": "quality-focus"
   }
 ]

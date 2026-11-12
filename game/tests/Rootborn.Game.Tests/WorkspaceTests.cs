@@ -332,12 +332,16 @@ namespace Rootborn.Game.Tests
             Assert.That(game.SharesHouse, Is.True);
 
             EnterChef(game);
+            Assert.That(game.SharesOpenLayout, Is.False, "일터가 열려 있으면 같이 쓰는 배치가 아니다(화면이 공유 중으로 보이지 않는다)");
             Assert.That(game.House.Placed.Count, Is.EqualTo(BasicTemplate.Placements.Count), "일터는 방의 배치가 아니라 자기 파일이다");
             Assert.That(game.PlaceFurniture(FreeDesk, WorkspaceRoom.FreeAnchor(game, FreeDesk), FurniturePlacementDirection.North), Is.True, "방에 요청하지 않고 바로 놓인다");
             Assert.That(game.WaitingForRoom, Is.False);
             Assert.That(shares.Outbox.Requests.Any(r => r.Piece == Rootborn.Core.Room.RoomHouse.PieceName), Is.False);
             Assert.That(game.ClearFurniture(), Is.True);
             Assert.That(game.House.Placed, Is.Empty);
+
+            game.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
+            Assert.That(game.SharesOpenLayout, Is.True, "집으로 돌아오면 같이 쓰는 배치다");
         }
 
         // ---------- 일 명령이 공간 이득을 받는다 ----------

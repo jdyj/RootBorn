@@ -102,9 +102,17 @@ namespace Rootborn.Game
         private T InScope<T>(string scope, Func<T> run)
         {
             _roomWallet.BeginScope(scope);
+            _walletScopeOpen = true;
             try { return run(); }
-            finally { _roomWallet.EndScope(); }
+            finally
+            {
+                _walletScopeOpen = false;
+                _roomWallet.EndScope();
+            }
         }
+
+        /// <summary>지갑 범위 안에서 명령이 도는 중(그 명령의 알림을 받은 화면이 확인을 부를 때 범위를 겹쳐 열지 않게).</summary>
+        private bool _walletScopeOpen;
 
         private void OnGranted(string scope)
         {

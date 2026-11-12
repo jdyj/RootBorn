@@ -9,9 +9,11 @@ namespace Rootborn.Screens.AdultFacility
     /// <summary>일 한 줄의 표시 값. 숙련·성공 횟수·걸리는 분·최대 보상은 조회일 뿐이고, 할 수 있는지는 명령이 거절 이유로 말한다.</summary>
     public sealed class FacilityWorkRow
     {
-        public FacilityWorkRow(string id, string nameKey, int minutes, int mastery, int maximumMastery, int successes, ItemAmount<string>[] maximumRewards)
+        public FacilityWorkRow(string id, string nameKey, int minutes, int mastery, int maximumMastery, int successes, ItemAmount<string>[] maximumRewards,
+            int rewardPercentBonus = 0, int reputationBonus = 0)
         {
             Id = id; NameKey = nameKey; Minutes = minutes; Mastery = mastery; MaximumMastery = maximumMastery; Successes = successes; MaximumRewards = maximumRewards;
+            RewardPercentBonus = rewardPercentBonus; ReputationBonus = reputationBonus;
         }
 
         public string Id { get; }
@@ -23,6 +25,10 @@ namespace Rootborn.Screens.AdultFacility
         public int Successes { get; }
         /// <summary>점수 100일 때 지금 시설 단계에서 받는 보상(Core FacilityWork.TryBuildRewards).</summary>
         public ItemAmount<string>[] MaximumRewards { get; }
+        /// <summary>지금 일터 꾸미기로 받는 이득(GameSession.WorkExtrasFor): 보상 비율 +%, 명성 +. 둘 다 0이면 화면은 이득 줄을 숨긴다.</summary>
+        public int RewardPercentBonus { get; }
+        public int ReputationBonus { get; }
+        public bool HasBonus => RewardPercentBonus > 0 || ReputationBonus > 0;
     }
 
     /// <summary>
@@ -75,7 +81,9 @@ namespace Rootborn.Screens.AdultFacility
             {
                 if (work == null) continue;
                 work.TryBuildRewards(100, percent, out ItemAmount<string>[] rewards);
-                rows.Add(new FacilityWorkRow(work.Id, work.DisplayNameKey, work.TimeCostMinutes, adult.GetMastery(work), work.MaximumMastery, adult.GetSuccessfulCompletions(work), rewards));
+                WorkExtras extras = session.WorkExtrasFor(work.Id);
+                rows.Add(new FacilityWorkRow(work.Id, work.DisplayNameKey, work.TimeCostMinutes, adult.GetMastery(work), work.MaximumMastery, adult.GetSuccessfulCompletions(work), rewards,
+                    extras.RewardPercentBonus, extras.ReputationBonus));
             }
             model.Works = rows.ToArray();
             return model;

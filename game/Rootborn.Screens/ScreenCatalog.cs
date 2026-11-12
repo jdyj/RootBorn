@@ -72,6 +72,8 @@ namespace Rootborn.Screens
         public const string InteractionRefusal = "interaction-refusal";
         /// <summary>상자(놓인 상자 앞 상호작용 "storage"). 왼쪽 가방, 오른쪽 상자. 이동을 막지 않는다(가방과 같다).</summary>
         public const string Storage = "storage";
+        /// <summary>일터 템플릿 고르기(모달, 이동을 막는다). 가구 배치 화면의 템플릿 단추만 연다(키 배정 없음). 화면 구성은 추천으로 정함(사용자 확인 전).</summary>
+        public const string WorkspaceTemplates = "workspace-template-select";
 
         public static void Register(ScreenRegistry r)
         {
@@ -114,6 +116,7 @@ namespace Rootborn.Screens
             r.Add(RoomSharesNotice, ScreenLayer.Notice, blocksMovement: false, s => new RoomSharesNoticeScreen(s));
             // 가구 배치: 집 HUD 버튼(가구 배치 켬/끔)이 연다. 이동을 막지 않는다(Unity 판 패널은 입력을 잠그지 않았다).
             r.Add(FurniturePlacement, ScreenLayer.Panel, blocksMovement: false, s => new FurniturePlacementScreen(s));
+            r.Add(WorkspaceTemplates, ScreenLayer.Modal, blocksMovement: true, s => new Rootborn.Screens.Workspaces.WorkspaceTemplateScreen(s));
             r.Add(Encyclopedia, ScreenLayer.Panel, blocksMovement: true, s => new EncyclopediaScreen(s));
             r.Add(Wardrobe, ScreenLayer.Panel, blocksMovement: true, s => new WardrobeScreen(s));
             r.Add(WorldStateLog, ScreenLayer.Panel, blocksMovement: true, s => new WorldStateLogScreen(s));

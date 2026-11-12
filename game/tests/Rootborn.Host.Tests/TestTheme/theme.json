@@ -38,7 +38,12 @@
     "daily-planner": { "image": "icons.png", "rect": [ 0, 0, 32, 32 ] },
     "plan": { "image": "icons.png", "rect": [ 32, 0, 32, 32 ] },
     "town_map": { "image": "icons.png", "rect": [ 0, 0, 32, 32 ] },
-    "discovery": { "image": "icons.png", "rect": [ 32, 0, 32, 32 ] }
+    "discovery": { "image": "icons.png", "rect": [ 32, 0, 32, 32 ] },
+    "quality-cozy": { "image": "icons.png", "rect": [ 0, 0, 32, 32 ] },
+    "quality-hygiene": { "image": "icons.png", "rect": [ 32, 0, 32, 32 ] },
+    "quality-flow": { "image": "icons.png", "rect": [ 0, 0, 32, 32 ] },
+    "quality-safety": { "image": "icons.png", "rect": [ 32, 0, 32, 32 ] },
+    "quality-focus": { "image": "icons.png", "rect": [ 0, 0, 32, 32 ] }
   },
   "definitionIcons": {},
   "textColors": { "ink": "#101018", "inkMuted": "#6A6A7A", "inkOnDark": "#FAFAFF" }

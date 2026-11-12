@@ -67,6 +67,7 @@ namespace Rootborn.Screens.AdultFacility
         private readonly List<string> _lines = new List<string>(8);
         private string _facilityId;
         private string[] _infoTexts = Array.Empty<string>();
+        private string[] _bonusTexts = Array.Empty<string>();
         private string _statusText = string.Empty;
         private Func<int> _seeds = () => Guid.NewGuid().GetHashCode();
 
@@ -82,6 +83,17 @@ namespace Rootborn.Screens.AdultFacility
         public static int SkipCell(int workIndex) => workIndex * ColumnsPerWork + SkipColumn;
         public UiRect CellRect(int cell) => _works.CellRect(cell);
         public UiCardGrid WorkGrid => _works;
+
+        /// <summary>일 줄의 이득 글자 id(직접 일하기 칸 안의 한 줄, 노드가 아니다). 그 일의 이득이 0이면 줄이 없다.</summary>
+        public static string WorkBonusId(string workId) => "work-bonus-" + workId;
+
+        /// <summary>그 일의 지금 이득 글자(ui.facility.work-bonus). 이득이 없으면(둘 다 0) null — 줄을 숨긴다.</summary>
+        public string WorkBonusText(string workId)
+        {
+            for (int i = 0; i < Model.Works.Length; i++)
+                if (Model.Works[i].Id == workId) return i < _bonusTexts.Length ? _bonusTexts[i] : null;
+            return null;
+        }
 
         /// <summary>미니게임 판 시드를 정하는 쪽(테스트에서 고정한다).</summary>
         public void UseSeeds(Func<int> seeds) => _seeds = seeds ?? _seeds;
@@ -149,7 +161,7 @@ namespace Rootborn.Screens.AdultFacility
             }
 
             if (topic != ChangeTopics.Career && topic != ChangeTopics.Student && topic != ChangeTopics.Inventory && topic != ChangeTopics.World
-                && topic != ChangeTopics.Day && topic != ChangeTopics.Language && topic != ChangeTopics.All) return;
+                && topic != ChangeTopics.Day && topic != ChangeTopics.Furniture && topic != ChangeTopics.Workspace && topic != ChangeTopics.Language && topic != ChangeTopics.All) return;
             Model = FacilityModel.From(Services.Session, _facilityId);
             Show();
         }
@@ -178,6 +190,12 @@ namespace Rootborn.Screens.AdultFacility
             _works.ItemCount = Model.Works.Length * ColumnsPerWork;
             _infoTexts = new string[Model.Works.Length]; // 칸 글자는 값이 바뀔 때만 만든다
             for (int i = 0; i < _infoTexts.Length; i++) _infoTexts[i] = InfoText(Model.Works[i]);
+            _bonusTexts = new string[Model.Works.Length];
+            for (int i = 0; i < _bonusTexts.Length; i++)
+            {
+                FacilityWorkRow row = Model.Works[i];
+                _bonusTexts[i] = row.HasBonus ? F("ui.facility.work-bonus", row.RewardPercentBonus, row.ReputationBonus) : null;
+            }
             _status.Text = _statusText;
         }
 
@@ -281,7 +299,15 @@ namespace Rootborn.Screens.AdultFacility
             UiRect inner = rect.Inset(FacilityLayout.CellPadding);
             if (column == PlayColumn)
             {
-                _label.Draw(list, text, inner, T("facility.play-work"), FacilityLayout.ButtonFont, UiTheme.Ink, centerVertically: true);
+                string bonus = _bonusTexts.Length > work ? _bonusTexts[work] : null;
+                if (bonus == null) _label.Draw(list, text, inner, T("facility.play-work"), FacilityLayout.ButtonFont, UiTheme.Ink, centerVertically: true);
+                else
+                {
+                    // 이득 줄(work-bonus-<일 id>): 직접 일하기 아래에 안내 글자 크기로. 이득이 0이면 줄이 없다.
+                    float labelHeight = text.LineHeight(FacilityLayout.ButtonFont) + 4f;
+                    _label.Draw(list, text, new UiRect(inner.X, inner.Y, inner.W, labelHeight), T("facility.play-work"), FacilityLayout.ButtonFont, UiTheme.Ink);
+                    _label.Draw(list, text, new UiRect(inner.X, inner.Y + labelHeight, inner.W, inner.H - labelHeight), bonus, FacilityLayout.HintFont, UiTheme.Ink, lineSpacing: 1f);
+                }
             }
             else
             {

@@ -33,13 +33,15 @@ namespace Rootborn.Screens.Tests.AdultFacility
 
         private readonly string _saves;
 
-        public FacilityFixture(Action<AdultCareerSnapshotSaveData> edit = null, string language = "ko", bool candidateReady = true, bool longText = false)
+        /// <param name="shares">같이 하는 방의 조각 묶음(방 지갑 시험). playerId는 그 방에서의 신원.</param>
+        public FacilityFixture(Action<AdultCareerSnapshotSaveData> edit = null, string language = "ko", bool candidateReady = true, bool longText = false,
+            Rootborn.Core.Room.RoomShares shares = null, string playerId = null)
         {
             _saves = Path.Combine(Path.GetTempPath(), "rootborn-facility-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_saves);
             Store = new FileSaveStore(_saves);
             GameStartSettings settings = GameStartSettings.FromDefinitions(Definitions.Value);
-            GameSession first = GameSession.Start(Definitions.Value, settings, Store, Slot, null);
+            GameSession first = GameSession.Start(Definitions.Value, settings, Store, Slot, playerId);
             Assert.That(first.EndDay().Ended && first.StartNextDay(), Is.True, "준비: 한 번 저장한다");
             if (candidateReady || edit != null)
             {
@@ -49,7 +51,7 @@ namespace Rootborn.Screens.Tests.AdultFacility
                 edit?.Invoke(snapshot);
                 Store.Write(Slot, name, snapshot);
             }
-            Session = GameSession.Start(Definitions.Value, settings, Store, Slot, null);
+            Session = GameSession.Start(Definitions.Value, settings, Store, Slot, playerId, shares: shares);
             Text = longText ? LongText.Create(language) : TestData.Text(language);
             Stack = new ScreenStack(ScreenCatalog.Create(), new ScreenServices(Text, Session));
             Stack.Layout(1920, 1080);
@@ -87,6 +89,13 @@ namespace Rootborn.Screens.Tests.AdultFacility
         }
 
         public static void AlreadyAdultAtLevelOne(AdultCareerSnapshotSaveData snapshot) => AlreadyAdult(snapshot, 1);
+
+        /// <summary>그 아이템을 정확히 count개로 둔다(있던 것은 지운다).</summary>
+        public static void SetCount(AdultCareerSnapshotSaveData snapshot, string itemId, int count)
+        {
+            if (snapshot.Inventory?.Items != null) snapshot.Inventory.Items = snapshot.Inventory.Items.Where(i => i.ItemId != itemId).ToArray();
+            if (count > 0) Fill(snapshot, itemId, count);
+        }
 
         public static void Fill(AdultCareerSnapshotSaveData snapshot, string itemId, int count)
         {

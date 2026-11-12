@@ -36,6 +36,35 @@ namespace Rootborn.Game.Tests
             Assert.That(game.ApplyTemplate(CozyTemplate, "req:cozy"), Is.EqualTo(WorkspaceResultKind.DuplicateRequest));
         }
 
+        /// <summary>
+        /// 확인(CanApplyTemplate)은 방 지갑으로 낼 수 있으면 된다고 말한다 — 화면이 적용 단추를 켤 수 있게. 방 지갑은 범위 밖의 돈 쓰기를 늘 거절하므로
+        /// 확인도 확인용 범위 안에서 본다. 확인은 방에 요청하지 않고 아무것도 바꾸지 않는다. 모자라면 InsufficientResources.
+        /// </summary>
+        [Test]
+        public void CanApplyTemplate_InAMoneySharingRoom_FollowsTheRoomWallet_WithoutAsking()
+        {
+            using var saves = new TempSaves();
+            var (game, pieces, shares, wallet) = StartInMoneyRoom(saves);
+            var chef = game.Definitions.Get<Workspace>("workspace.chef");
+            game.EnterPlacementSurface(WorkspaceRoom.GridFor(game.Definitions, chef.Id), chef.SurfaceId);
+            int outbox = shares.Outbox.Requests.Count;
+
+            Assert.That(game.CanApplyTemplate(CozyTemplate), Is.EqualTo(WorkspaceResultKind.Applied), "방 지갑 100이면 낼 수 있다");
+            Assert.That(shares.Outbox.Requests.Count, Is.EqualTo(outbox), "확인은 방에 요청하지 않는다");
+            Assert.That(game.WaitingForRoom, Is.False);
+            Assert.That(game.ApplyTemplate(CozyTemplate, "req:cozy"), Is.Not.EqualTo(WorkspaceResultKind.Applied), "확인 뒤에도 적용은 방의 허락을 기다린다");
+            Assert.That(game.WaitingForRoom, Is.True);
+            // 허락 뒤 다시 하는 적용이 알리는 동안(지갑 범위 안) 화면이 확인을 불러도 된다.
+            game.Changed += _ => game.CanApplyTemplate(CozyTemplate);
+            Assert.DoesNotThrow(() => Deliver(pieces, shares));
+            Assert.That(game.LastRoomCommandApplied, Is.True);
+
+            using var poorSaves = new TempSaves();
+            var poor = StartInMoneyRoom(poorSaves, balance: 0);
+            poor.Item1.EnterPlacementSurface(WorkspaceRoom.GridFor(poor.Item1.Definitions, chef.Id), chef.SurfaceId);
+            Assert.That(poor.Item1.CanApplyTemplate(CozyTemplate), Is.EqualTo(WorkspaceResultKind.InsufficientResources), "방 지갑이 비면 모자라다");
+        }
+
         // 집으로 나가거나, 나갔다가 같은 일터에 다시 들어와 새 배치가 열린 경우(데이터의 일터가 하나라 "다른 일터 면"은 이 길로 본다).
         [TestCase(false)]
         [TestCase(true)]
@@ -71,11 +100,11 @@ namespace Rootborn.Game.Tests
         }
 
         // 요리사 성인이 돈을 같이 쓰는 방(방 지갑 100)에 들어온다.
-        private static (GameSession, RoomPieceSet, RoomShares, RoomWallet) StartInMoneyRoom(TempSaves saves)
+        private static (GameSession, RoomPieceSet, RoomShares, RoomWallet) StartInMoneyRoom(TempSaves saves, int balance = 100)
         {
             ChefSetup.Adult(saves);
             var pieces = new RoomPieceSet(new RoomShareSettings(new[] { RoomWallet.PieceName }), RoomPieceCatalog.CreateDefault());
-            saves.Store.Write("room", SaveFileNames.RoomPiece(RoomWallet.PieceName), new RoomWalletSaveData { Version = RoomWalletSaveData.KnownVersion, Balance = 100 });
+            saves.Store.Write("room", SaveFileNames.RoomPiece(RoomWallet.PieceName), new RoomWalletSaveData { Version = RoomWalletSaveData.KnownVersion, Balance = balance });
             pieces.TryGet(RoomWallet.PieceName, out var walletPiece);
             var wallet = (RoomWallet)walletPiece;
             wallet.Load(saves.Store, "room");

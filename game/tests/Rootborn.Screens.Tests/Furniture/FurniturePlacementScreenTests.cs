@@ -19,7 +19,7 @@ namespace Rootborn.Screens.Tests.Furniture
         private const string FreeDesk = "growth31.assembly.desk";
 
         /// <summary>화면 (OriginX, OriginY)에서 칸 하나가 Cell 픽셀인 보기.</summary>
-        private sealed class TestView : IPlacementView
+        internal sealed class TestView : IPlacementView
         {
             public const float OriginX = 500, OriginY = 200, Cell = 48;
             public TestView(FurnitureRoom room) { Room = room; }
@@ -447,6 +447,146 @@ namespace Rootborn.Screens.Tests.Furniture
             KnownMissingKeys.AssertOnlyKnownMissing(f.T.Text, f.Screen.TextKeys);
             foreach (string direction in new[] { "auto", "north", "east", "south", "west" })
                 Assert.That(f.T.Text.Has("ui.furniture.direction." + direction, "ko") && f.T.Text.Has("ui.furniture.direction." + direction, "en"), Is.True);
+        }
+
+        // ---------- 일터(요리사 식당) — 점수 줄, 한도, 주인 ----------
+
+        private static string Text(UiNode node) => node is UiLabel l ? l.Text : node is UiTextBlock b ? b.Text : ((UiButton)node).Text;
+
+        [Test]
+        public void Placement_InWorkspace_ShowsQualityRowAndCapacity()
+        {
+            using var w = new Workspaces.WorkspaceFixture();
+            var status = w.Session.ActiveWorkspaceStatus;
+            Assert.That(status, Is.Not.Null, "준비: 일터가 열렸다");
+            Assert.That(w.Node(FurniturePlacementScreen.WorkspaceRowId).Visible, Is.True);
+            var qualities = w.Definitions.All<Rootborn.Core.Workspaces.SpaceQuality>().ToList();
+            Assert.That(qualities.Count, Is.GreaterThan(0));
+            foreach (var quality in qualities)
+            {
+                Assert.That(Text(w.Node(FurniturePlacementScreen.QualityId(quality.Id))), Is.EqualTo(status.Scores.Get(quality.Id).ToString()), quality.Id);
+                Assert.That(((UiImage)w.Node(FurniturePlacementScreen.QualityId(quality.Id) + ".icon")).Image, Is.EqualTo("icon:" + quality.IconKey), "아이콘 키는 데이터에서");
+            }
+            Assert.That(Text(w.Node(FurniturePlacementScreen.CapacityId)), Is.EqualTo(w.Text.Format("ui.workspace.capacity", status.Placed, status.Capacity)));
+            Assert.That(status.Placed, Is.EqualTo(w.Session.House.Placed.Count));
+            Assert.That(w.Node(FurniturePlacementScreen.TemplatesId).IsActive, Is.True, "자기 일터면 템플릿 단추를 누를 수 있다");
+            Assert.That(w.Node(FurniturePlacementScreen.SlotId(0)).IsActive, Is.True, "한도 안이면 카드를 누를 수 있다");
+            Assert.That(Text(w.Node(FurniturePlacementScreen.WorkspaceReasonId)), Is.Empty);
+            Assert.That(Text(w.Node(FurniturePlacementScreen.RoomStatusId)), Is.Empty);
+
+            // 줄은 다른 패널과 겹치지 않는다(위 도구 줄 바로 아래).
+            UiRect row = w.Node(FurniturePlacementScreen.WorkspaceRowId).Rect;
+            foreach (string other in new[] { FurniturePlacementScreen.PaletteId, "furniture.settings", "furniture.toolbar", "furniture.bottom" })
+            {
+                UiRect r = w.Node(other).Rect;
+                Assert.That(row.X >= r.Right || r.X >= row.Right || row.Y >= r.Bottom || r.Y >= row.Bottom, Is.True, other + " " + r + " / 줄 " + row);
+            }
+            KnownMissingKeys.AssertOnlyKnownMissing(w.Text, w.Placement.TextKeys);
+        }
+
+        [Test]
+        public void Placement_InHouse_HidesWorkspaceRow()
+        {
+            using var f = new Fixture();
+            Assert.That(f.T.Session.ActiveWorkspace, Is.Null);
+            Assert.That(f.T.Node(FurniturePlacementScreen.WorkspaceRowId).Visible, Is.False, "집에서는 일터 줄이 없다");
+            Assert.That(f.T.Node(FurniturePlacementScreen.SlotId(0)).IsActive, Is.True, "집은 한도가 없다");
+        }
+
+        [Test]
+        public void Placement_AtCapacity_CardsDisabledWithReason()
+        {
+            using var w = new Workspaces.WorkspaceFixture();
+            w.FillToCapacity(); // 준비(GameSession 명령)
+            w.Emit();
+            Assert.That(w.Session.CanAddToActiveWorkspace(), Is.EqualTo(Rootborn.Core.Workspaces.WorkspaceResultKind.OverCapacity));
+            var status = w.Session.ActiveWorkspaceStatus;
+            Assert.That(Text(w.Node(FurniturePlacementScreen.CapacityId)), Is.EqualTo(w.Text.Format("ui.workspace.capacity", status.Capacity, status.Capacity)));
+            for (int i = 0; i < FurniturePlacementScreen.Metrics.PageSize; i++)
+                Assert.That(w.Node(FurniturePlacementScreen.SlotId(i)).IsActive, Is.False, "한도에 닿으면 카드를 누를 수 없다: " + i);
+            Assert.That(Text(w.Node(FurniturePlacementScreen.WorkspaceReasonId)), Is.EqualTo(w.Text.Get("ui.workspace.full")));
+            Assert.That(w.Node(FurniturePlacementScreen.TemplatesId).IsActive, Is.True, "템플릿은 한도와 따로 Core가 판단한다");
+
+            // 하나 치우면 다시 누를 수 있다(삭제 단추로). 패널 밑이 아닌 칸의 가구를 고른다(시험용 보기는 화면 일부를 패널이 덮는다).
+            PlacedFurniture target = w.Session.House.Placed.First(p =>
+            {
+                (float x, float y) = w.View.Center(p.Anchor);
+                return w.Stack.Tree.HitTest(x, y) == null;
+            });
+            w.ClickCell(target.Anchor);
+            Assert.That(w.Placement.LastAction, Is.EqualTo("selected"));
+            w.Click(FurniturePlacementScreen.DeleteId);
+            w.Emit();
+            Assert.That(w.Node(FurniturePlacementScreen.SlotId(0)).IsActive, Is.True, "한도 밑으로 내려가면 카드를 다시 누를 수 있다");
+            Assert.That(Text(w.Node(FurniturePlacementScreen.WorkspaceReasonId)), Is.Empty);
+        }
+
+        [Test]
+        public void Placement_NotOwner_Disabled()
+        {
+            using var w = new Workspaces.WorkspaceFixture(adult: false);
+            Assert.That(w.Session.ActiveWorkspace, Is.Not.Null, "준비: 학생이 요리사 일터에 들어왔다");
+            Assert.That(w.Session.OwnsActiveWorkspace, Is.False);
+            Assert.That(w.Node(FurniturePlacementScreen.WorkspaceRowId).Visible, Is.True);
+            Assert.That(w.Node(FurniturePlacementScreen.TemplatesId).IsActive, Is.False, "남의 일터는 템플릿 단추가 꺼진다");
+            Assert.That(w.Node(FurniturePlacementScreen.SlotId(0)).IsActive, Is.False, "남의 일터는 카드가 꺼진다");
+            Assert.That(Text(w.Node(FurniturePlacementScreen.WorkspaceReasonId)), Is.EqualTo(w.Text.Get("ui.workspace.not-owner")));
+        }
+
+        [Test]
+        public void PlacingFurniture_UpdatesQualityScore()
+        {
+            using var w = new Workspaces.WorkspaceFixture();
+            string cozy = w.FurnitureGiving(Workspaces.WorkspaceFixture.Cozy).First(id => w.Session.House.Placed.All(p => p.Definition.StableId != id));
+            var label = (UiLabel)w.Node(FurniturePlacementScreen.QualityId(Workspaces.WorkspaceFixture.Cozy));
+            string before = label.Text;
+            int placedBefore = w.Session.House.Placed.Count;
+
+            w.PickFromPalette(cozy);
+            w.ClickCell(w.FreeCell(cozy));
+            w.Emit();
+            Assert.That(w.Placement.LastAction, Is.EqualTo("placed"));
+            Assert.That(w.Session.House.Placed.Count, Is.EqualTo(placedBefore + 1));
+            Assert.That(label.Text, Is.Not.EqualTo(before), "놓은 뒤 아늑함 점수 글자가 바뀐다");
+            Assert.That(label.Text, Is.EqualTo(w.Session.ActiveWorkspaceStatus.Scores.Get(Workspaces.WorkspaceFixture.Cozy).ToString()));
+            Assert.That(Text(w.Node(FurniturePlacementScreen.CapacityId)), Does.StartWith((placedBefore + 1) + "/"));
+        }
+
+        [Test]
+        public void SharedHouseRoom_TheWorkspaceIsNotShownAsShared()
+        {
+            var room = new HouseRoom(AllFurniture);
+            var mine = room.Join("me");
+            using var w = new Workspaces.WorkspaceFixture(shares: mine, playerId: "me");
+            Assert.That(w.Session.SharesHouse, Is.True, "준비: 집을 같이 쓰는 방");
+            string cozy = w.FurnitureGiving(Workspaces.WorkspaceFixture.Cozy).First(id => w.Session.House.Placed.All(p => p.Definition.StableId != id));
+            w.PickFromPalette(cozy);
+            w.ClickCell(w.FreeCell(cozy));
+            w.Emit();
+            Assert.That(w.Placement.LastAction, Is.EqualTo("placed"), "일터는 방에 묻지 않고 바로 놓인다");
+            Assert.That(Text(w.Node(FurniturePlacementScreen.RoomStatusId)), Is.Empty, "공유 중·기다림 문구가 없다");
+        }
+
+        [Test]
+        public void WorkspaceRow_LongText_StaysInsideItsPanel()
+        {
+            using var w = new Workspaces.WorkspaceFixture(adult: false, longText: true);
+            var measurer = new WideMeasurer();
+            for (int i = 0; i < 2; i++) { w.Stack.Layout(1920, 1080); w.Stack.Emit(new DrawList(), measurer); }
+            w.Stack.Layout(1920, 1080);
+            UiNode row = w.Node(FurniturePlacementScreen.WorkspaceRowId);
+            Assert.That(row.Visible, Is.True);
+            foreach (UiNode node in new[] { row }.Concat(row.Children))
+            {
+                var list = new DrawList();
+                node.Emit(list, measurer);
+                foreach (DrawCommand text in list.Commands.Where(c => c.Kind == DrawKind.Text))
+                {
+                    float right = text.Rect.X + measurer.Width(text.Text, text.FontSize), bottom = text.Rect.Y + measurer.LineHeight(text.FontSize);
+                    Assert.That(text.Rect.X >= row.Rect.X - 0.5f && right <= row.Rect.Right + 0.5f && text.Rect.Y >= row.Rect.Y - 0.5f && bottom <= row.Rect.Bottom + 0.5f,
+                        Is.True, (node.Id ?? node.GetType().Name) + ": " + text.Text);
+                }
+            }
         }
 
         /// <summary>

@@ -154,6 +154,26 @@
     "exhausted": {
       "image": "repo:Assets/Art/UI/UrbanMolding/urban_icon_stress.png",
       "rect": [ 0, 0, 48, 48 ]
+    },
+    "quality-cozy": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+      "rect": [ 60, 60, 48, 48 ]
+    },
+    "quality-hygiene": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/water_bottle.png",
+      "rect": [ 0, 0, 64, 64 ]
+    },
+    "quality-flow": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+      "rect": [ 116, 4, 48, 48 ]
+    },
+    "quality-safety": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/toolbox.png",
+      "rect": [ 0, 0, 64, 64 ]
+    },
+    "quality-focus": {
+      "image": "repo:Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png",
+      "rect": [ 116, 116, 48, 48 ]
     }
   },
   "definitionIcons": {

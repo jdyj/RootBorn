@@ -36,7 +36,7 @@
 
 같은 그림을 여러 스킨에 써도 된다(도시형 몰딩은 `dialogue`가 `panel`과, `field`가 `slot`과 같다).
 
-### 아이콘 20개 (모두 있어야 한다)
+### 아이콘 26개 (모두 있어야 한다)
 
 | 키 | 쓰이는 곳 |
 |---|---|
@@ -54,6 +54,8 @@
 | `inventory-search`, `inventory-delete`, `inventory-filter` | 가방 검색칸과 옆 단추 |
 | `inventory-empty` | 빈 가방 그림 |
 | `close` | 닫기 단추 |
+| `encyclopedia` | 도감 |
+| `quality-cozy`, `quality-hygiene`, `quality-flow`, `quality-safety`, `quality-focus` | 가구 배치 화면의 일터 점수 줄(아늑함, 위생, 동선, 안전, 집중). 키는 데이터 `data/workspaces/SpaceQualityDefinition.json`의 `iconKey`. **임시**: 두 테마 모두 새 그림 없이 비슷한 기존 그림 칸(돌봄, 물병, 마을 지도, 공구함, 집중)을 가리킨다 |
 
 그 밖의 아이콘을 더 넣어도 된다. 정의별 아이콘(아래 `definitionIcons`)이 가리키는 아이콘은 테마 안에 있어야 한다(도시형 몰딩의 `chef`, `care`, `school` 등).
 

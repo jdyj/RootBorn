@@ -278,6 +278,29 @@ namespace Rootborn.Screens.Tests.AdultFacility
             Assert.That(f.Screen.StatusText, Is.EqualTo(f.Text.Get(FacilityModel.ResultKey(f.Screen.LastResult.Value))));
         }
 
+        /// <summary>일터를 꾸며 이득이 생기면 일 줄에 지금 이득(보상 +%, 명성 +)이 보이고, 이득이 0이면 줄이 없다. 열린 채 꾸며도 알림으로 바뀐다.</summary>
+        [Test]
+        public void Facility_ShowsWorkBonus_WhenPositive()
+        {
+            using var w = new Rootborn.Screens.Tests.Workspaces.WorkspaceFixture();
+            const string work = Rootborn.Screens.Tests.Workspaces.WorkspaceFixture.ChefWork;
+            Assume.That(w.Session.WorkExtrasFor(work).RewardPercentBonus + w.Session.WorkExtrasFor(work).ReputationBonus, Is.EqualTo(0), "준비: 기본 템플릿만으로는 이득이 없다");
+            Assert.That(w.F.OpenAt(), Is.True);
+            w.Emit();
+            Assert.That(w.F.Screen.WorkBonusText(work), Is.Null, "이득이 0이면 줄을 숨긴다");
+            string zero = w.Text.Format("ui.facility.work-bonus", 0, 0);
+            Assert.That(w.Emit().Commands.Where(c => c.Kind == DrawKind.Text).Select(c => c.Text), Has.None.EqualTo(zero));
+
+            w.DecorateUntilBonus(); // 준비: 열린 채 꾸민다(GameSession 명령) — 화면은 알림으로 값을 고친다
+            var extras = w.Session.WorkExtrasFor(work);
+            string expected = w.Text.Format("ui.facility.work-bonus", extras.RewardPercentBonus, extras.ReputationBonus);
+            Assert.That(w.F.Screen.WorkBonusText(work), Is.EqualTo(expected));
+            Assert.That(FacilityScreen.WorkBonusId(work), Is.EqualTo("work-bonus-" + work));
+            string drawn = string.Join(" ", w.Emit().Commands.Where(c => c.Kind == DrawKind.Text).Select(c => c.Text));
+            Assert.That(drawn, Does.Contain(expected), "직접 일하기 칸에 이득 줄이 그려진다");
+            KnownMissingKeys.AssertOnlyKnownMissing(w.Text, w.Stack.Find(ScreenCatalog.Facility).TextKeys);
+        }
+
         [Test]
         public void SwitchingLanguage_ChangesTheOpenScreenText()
         {

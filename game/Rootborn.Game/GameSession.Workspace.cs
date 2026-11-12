@@ -106,6 +106,28 @@ namespace Rootborn.Game
         public WorkspaceStatus WorkspaceOf(string facilityId)
         {
             if (facilityId == null || !WorkspaceByFacility.TryGetValue(facilityId, out var workspace)) return null;
+            return StatusOf(workspace);
+        }
+
+        /// <summary>지금 열린 일터의 상태(화면의 점수 줄). 집이거나 아직 열지 않았으면 null.</summary>
+        public WorkspaceStatus ActiveWorkspaceStatus => ActiveWorkspace == null ? null : StatusOf(ActiveWorkspace);
+
+        /// <summary>
+        /// 지금 열린 일터에 가구를 하나 더 놓을 수 있는가(Applied면 된다). 못 하면 이유: 일터가 아님 InvalidRequest, 남의 일터 NotOwner,
+        /// 한도에 닿음 OverCapacity. 칸이 맞는지는 보지 않는다(놓을 칸마다 House.CanPlace). 아무것도 바꾸지 않는다.
+        /// </summary>
+        public WorkspaceResultKind CanAddToActiveWorkspace()
+        {
+            if (ActiveWorkspace == null || House == null) return WorkspaceResultKind.InvalidRequest;
+            if (!OwnsActiveWorkspace) return WorkspaceResultKind.NotOwner;
+            return ActiveWorkspace.CanAdd(House.Placed.Count, Adult.FacilityLevel, Student) ? WorkspaceResultKind.Applied : WorkspaceResultKind.OverCapacity;
+        }
+
+        /// <summary>지금 열린 배치가 같이 쓰는 집이다(방의 허락을 기다리는 가구 명령). 일터는 방에서도 각자 것이라 false다.</summary>
+        public bool SharesOpenLayout => SharedHouseOpen;
+
+        private WorkspaceStatus StatusOf(Workspace workspace)
+        {
             bool owned = Owns(workspace);
             var entry = Scores(workspace);
             int capacity = owned ? workspace.Capacity(Adult.FacilityLevel, Student) : 0;
@@ -136,8 +158,12 @@ namespace Rootborn.Game
         public WorkspaceResultKind CanApplyTemplate(string templateId)
         {
             if (ActiveWorkspace == null || House == null) return WorkspaceResultKind.InvalidRequest;
-            return _workspaceService.CanApplyTemplate(FindTemplate(templateId), ActiveWorkspace, House, FurnitureById, CareerInventory, _workspaceProgress,
+            var template = FindTemplate(templateId);
+            WorkspaceResultKind Check() => _workspaceService.CanApplyTemplate(template, ActiveWorkspace, House, FurnitureById, CareerInventory, _workspaceProgress,
                 OwnsActiveWorkspace, ActiveCapacity(), TemplateCheckRequestId, false);
+            // 방 지갑은 범위 밖의 돈 쓰기를 늘 거절한다. 확인용 범위(허락받거나 물은 적이 없는 고정 id) 안에서 보면 잔액으로 판단하고, 확인은 요청을 적지 않는다.
+            // 이미 다른 명령의 범위 안이면(그 명령의 알림 중) 그 범위로 본다 — 명령이 끝난 뒤의 알림에서 다시 물으면 바른 값이 된다.
+            return _roomWallet == null || _walletScopeOpen ? Check() : InScope(TemplateCheckRequestId, Check);
         }
 
         /// <summary>

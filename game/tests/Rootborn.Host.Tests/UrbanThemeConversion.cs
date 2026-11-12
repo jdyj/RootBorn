@@ -55,6 +55,13 @@ namespace Rootborn.Host.Tests
         {
             icons["bedtime"] = new JsonObject { ["image"] = ThemeFolder.RepoPrefix + "Assets/Art/HousePixels/Furniture31/house_day_end_bed.png", ["rect"] = Ints(0, 0, 120, 120) };
             icons["exhausted"] = new JsonObject { ["image"] = ThemeFolder.RepoPrefix + "Assets/Art/UI/UrbanMolding/urban_icon_stress.png", ["rect"] = Ints(0, 0, 48, 48) };
+            // 일터 성질(임시, 2026-11-12): 새 그림이 오기 전까지 비슷한 기존 그림 칸을 가리킨다.
+            const string lifeIcons = ThemeFolder.RepoPrefix + "Assets/Art/UI/UrbanMolding/urban-life-icons-atlas.png";
+            icons["quality-cozy"] = new JsonObject { ["image"] = lifeIcons, ["rect"] = Ints(60, 60, 48, 48) };      // care
+            icons["quality-hygiene"] = new JsonObject { ["image"] = ThemeFolder.RepoPrefix + "Assets/Art/UI/UrbanMolding/water_bottle.png", ["rect"] = Ints(0, 0, 64, 64) };
+            icons["quality-flow"] = new JsonObject { ["image"] = lifeIcons, ["rect"] = Ints(116, 4, 48, 48) };      // town_map
+            icons["quality-safety"] = new JsonObject { ["image"] = ThemeFolder.RepoPrefix + "Assets/Art/UI/UrbanMolding/toolbox.png", ["rect"] = Ints(0, 0, 64, 64) };
+            icons["quality-focus"] = new JsonObject { ["image"] = lifeIcons, ["rect"] = Ints(116, 116, 48, 48) };   // focus
         }
 
         public static JsonObject Urban(string repoRoot)

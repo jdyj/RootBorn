@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Rootborn.Core.Minigames;
 using Rootborn.Core.Placement;
+using Rootborn.Core.Workspaces;
+using Rootborn.Game;
 using Rootborn.Ui;
 
 namespace Rootborn.Screens.Furniture
@@ -52,6 +55,17 @@ namespace Rootborn.Screens.Furniture
             /// <summary>Unity 글자 13 → 규약의 최소 14.</summary>
             public const float MoveX = -320f, MoveW = 64f, MoveH = 40f, MoveFont = 14f;
 
+            /// <summary>
+            /// 일터 점수 줄(일터일 때만, 위 도구 줄 바로 아래). 위 칸: 성질마다 아이콘과 점수, 가구 수, 템플릿 단추. 아래 칸: 못 놓는 이유.
+            /// 추천으로 정함(사용자 확인 전).
+            /// </summary>
+            public const float WorkspaceX = 0f, WorkspaceY = 319f, WorkspaceW = 760f, WorkspaceH = 120f;
+            public const float QualityX0 = -320f, QualityPitch = 84f, QualityRowY = 22f, QualityIcon = 32f, QualityIconOffset = -20f;
+            public const float QualityLabelOffset = 20f, QualityLabelW = 44f, QualityLabelH = 32f, QualityFont = 18f;
+            public const float CapacityX = 120f, CapacityW = 110f, CapacityH = 40f, CapacityFont = 18f;
+            public const float TemplatesX = 270f, TemplatesW = 160f, TemplatesH = 52f, TemplatesFont = 18f;
+            public const float WorkspaceReasonY = -32f, WorkspaceReasonW = 700f, WorkspaceReasonH = 44f, WorkspaceReasonFont = 16f;
+
             /// <summary>닫기 버튼 기호(언어와 무관).</summary>
 
             // 미리보기 색(Unity InteriorPlacementPreviewOverlay).
@@ -80,6 +94,19 @@ namespace Rootborn.Screens.Furniture
         public const string MoveId = "furniture.move";
         public const string RoomStatusId = "furniture.room-status";
         public static string SlotId(int slot) => "furniture.slot." + slot;
+        public const string WorkspaceRowId = "workspace-row";
+        public const string CapacityId = "workspace-capacity";
+        public const string TemplatesId = "workspace-templates";
+        public const string WorkspaceReasonId = "workspace-reason";
+        /// <summary>성질 점수 글자(아이콘은 이 id + ".icon").</summary>
+        public static string QualityId(string qualityId) => "workspace-quality-" + qualityId;
+
+        /// <summary>일터에 가구를 더 놓지 못하는 이유(GameSession.CanAddToActiveWorkspace) → 문구 키. 표 한 곳.</summary>
+        private static readonly Dictionary<WorkspaceResultKind, string> AddReasonKeys = new Dictionary<WorkspaceResultKind, string>
+        {
+            [WorkspaceResultKind.OverCapacity] = "ui.workspace.full",
+            [WorkspaceResultKind.NotOwner] = "ui.workspace.not-owner",
+        };
 
         private static readonly FurniturePlacementDirection[] Directions =
             { FurniturePlacementDirection.North, FurniturePlacementDirection.East, FurniturePlacementDirection.South, FurniturePlacementDirection.West };
@@ -94,6 +121,15 @@ namespace Rootborn.Screens.Furniture
         private string _roomStatusKey;
         private UiLabel _title, _settingsTitle, _name, _size, _direction;
         private UiFittedImage _selectedIcon;
+
+        private UiPanel _workspaceRow;
+        private readonly List<(string QualityId, UiLabel Score)> _qualities = new List<(string, UiLabel)>(5);
+        private UiLabel _capacity;
+        private UiButton _templates;
+        private UiTextBlock _workspaceReason;
+        private string _workspaceReasonKey;
+        private WorkspaceStatus _workspace;
+        private bool _cardsEnabled = true;
 
         private FurnitureArt _art;
         private IPlacementView _view;
@@ -201,8 +237,64 @@ namespace Rootborn.Screens.Furniture
             _move = bottom.Add(new UiButton { Id = MoveId, FontSize = Metrics.MoveFont }).Centered(Metrics.MoveX, 0f, Metrics.MoveW, Metrics.MoveH);
             _move.Clicked += PickUpSelected;
 
+            BuildWorkspaceRow(root);
             ApplyTexts();
             return root;
+        }
+
+        // 일터 점수 줄: 성질(데이터 정의 순서)마다 아이콘과 점수 글자 하나. 노드는 한 번 만들고 값만 고친다.
+        private void BuildWorkspaceRow(UiNode root)
+        {
+            _workspaceRow = root.Add(new UiPanel { Id = WorkspaceRowId, Visible = false })
+                .Centered(Metrics.WorkspaceX, Metrics.WorkspaceY, Metrics.WorkspaceW, Metrics.WorkspaceH);
+            int index = 0;
+            IEnumerable<SpaceQuality> qualities = Services.Definitions?.All<SpaceQuality>() ?? Array.Empty<SpaceQuality>();
+            foreach (SpaceQuality quality in qualities)
+            {
+                if (quality == null) continue;
+                float x = Metrics.QualityX0 + index++ * Metrics.QualityPitch;
+                if (!string.IsNullOrEmpty(quality.IconKey))
+                    _workspaceRow.Add(new UiImage { Id = QualityId(quality.Id) + ".icon", Image = Rootborn.Screens.Day.ScreenIcons.Key(quality.IconKey) })
+                        .Centered(x + Metrics.QualityIconOffset, Metrics.QualityRowY, Metrics.QualityIcon, Metrics.QualityIcon);
+                UiLabel score = _workspaceRow.Add(new UiLabel { Id = QualityId(quality.Id), FontSize = Metrics.QualityFont, Color = Metrics.Ink })
+                    .Centered(x + Metrics.QualityLabelOffset, Metrics.QualityRowY, Metrics.QualityLabelW, Metrics.QualityLabelH);
+                _qualities.Add((quality.Id, score));
+            }
+            _capacity = _workspaceRow.Add(new UiLabel { Id = CapacityId, FontSize = Metrics.CapacityFont, Color = Metrics.Ink, Align = UiAlign.Center })
+                .Centered(Metrics.CapacityX, Metrics.QualityRowY, Metrics.CapacityW, Metrics.CapacityH);
+            _templates = _workspaceRow.Add(new UiButton { Id = TemplatesId, FontSize = Metrics.TemplatesFont })
+                .Centered(Metrics.TemplatesX, Metrics.QualityRowY, Metrics.TemplatesW, Metrics.TemplatesH);
+            _templates.Clicked += () => Services.Screens?.Open(ScreenCatalog.WorkspaceTemplates);
+            _workspaceReason = _workspaceRow.Add(new UiTextBlock { Id = WorkspaceReasonId, FontSize = Metrics.WorkspaceReasonFont, Color = Metrics.Ink, Align = UiAlign.Center })
+                .Centered(0f, Metrics.WorkspaceReasonY, Metrics.WorkspaceReasonW, Metrics.WorkspaceReasonH);
+        }
+
+        /// <summary>
+        /// 일터 줄을 GameSession 조회로 고친다: 열린 일터가 없으면(집) 숨긴다. 있으면 성질 점수, 놓은 수/한도, 템플릿 단추(자기 일터일 때만),
+        /// 가구를 더 놓지 못하면 카드를 끄고 이유를 보인다. 판단은 GameSession(CanAddToActiveWorkspace)이 한다.
+        /// </summary>
+        private void RefreshWorkspace()
+        {
+            var session = Services.Session;
+            _workspace = session?.ActiveWorkspaceStatus;
+            _workspaceRow.Visible = _workspace != null;
+            WorkspaceResultKind add = _workspace == null ? WorkspaceResultKind.Applied : session.CanAddToActiveWorkspace();
+            _cardsEnabled = add == WorkspaceResultKind.Applied;
+            _workspaceReasonKey = _cardsEnabled ? null : AddReasonKeys.TryGetValue(add, out string key) ? key : null;
+            if (_workspace != null)
+            {
+                foreach ((string qualityId, UiLabel score) in _qualities) score.Text = _workspace.Scores.Get(qualityId).ToString(CultureInfo.InvariantCulture);
+                _templates.Enabled = _workspace.Owned;
+            }
+            ApplyWorkspaceTexts();
+            for (int i = 0; i < Metrics.PageSize; i++) _slots[i].Enabled = _cardsEnabled;
+        }
+
+        private void ApplyWorkspaceTexts()
+        {
+            _templates.Text = T("ui.workspace.templates");
+            _capacity.Text = _workspace == null ? string.Empty : F("ui.workspace.capacity", _workspace.Placed, _workspace.Capacity);
+            _workspaceReason.Text = _workspaceReasonKey == null ? string.Empty : T(_workspaceReasonKey);
         }
 
         protected internal override void OnOpened(ScreenOpenContext context)
@@ -213,6 +305,7 @@ namespace Rootborn.Screens.Furniture
             _overlayVisible = Active != null;
             _validDirty = true;
             ReloadFurniture();
+            RefreshWorkspace();
         }
 
         protected internal override void OnClosed()
@@ -229,6 +322,8 @@ namespace Rootborn.Screens.Furniture
             if (topic == ChangeTopics.Language) { ApplyTexts(); return; }
             if (topic == ChangeTopics.All) ReloadFurniture();
             if (topic == ChangeTopics.Furniture || topic == ChangeTopics.All) FollowRoomAnswer();
+            if (topic == ChangeTopics.Furniture || topic == ChangeTopics.Workspace || topic == ChangeTopics.Career || topic == ChangeTopics.Map || topic == ChangeTopics.All)
+                RefreshWorkspace();
             if (topic == ChangeTopics.Furniture || topic == ChangeTopics.World || topic == ChangeTopics.Map || topic == ChangeTopics.All)
             {
                 _validDirty = true;
@@ -241,7 +336,7 @@ namespace Rootborn.Screens.Furniture
         private void FollowRoomAnswer()
         {
             var session = Services.Session;
-            if (session == null || !session.SharesHouse) { SetRoomStatus(null); return; }
+            if (session == null || !session.SharesOpenLayout) { SetRoomStatus(null); return; } // 일터는 방에서도 각자 것이라 공유 중으로 보이지 않는다
             if (session.WaitingForRoom) { SetRoomStatus("ui.furniture.room-waiting"); return; }
             if (LastAction != "waiting") return;
             bool applied = session.LastRoomCommandApplied == true;
@@ -262,7 +357,7 @@ namespace Rootborn.Screens.Furniture
         private bool AskedRoom(string action)
         {
             var session = Services.Session;
-            if (session == null || !session.SharesHouse || !session.WaitingForRoom) return false;
+            if (session == null || !session.SharesOpenLayout || !session.WaitingForRoom) return false;
             _waitingFor = action;
             LastAction = "waiting";
             SetRoomStatus("ui.furniture.room-waiting");
@@ -287,6 +382,7 @@ namespace Rootborn.Screens.Furniture
             _delete.Text = T("ui.furniture.delete");
             _rotate.Text = T("ui.furniture.rotate");
             _move.Text = T("ui.furniture.move");
+            if (_workspaceRow != null) ApplyWorkspaceTexts();
             RefreshPage();
             RefreshSelected();
         }
@@ -303,6 +399,7 @@ namespace Rootborn.Screens.Furniture
             {
                 FurnitureDefinition f = _model.At(i);
                 _slots[i].Visible = f != null;
+                _slots[i].Enabled = _cardsEnabled;
                 _slots[i].Selected = f != null && f == Active;
                 ShowIcon(_icons[i], f);
             }
