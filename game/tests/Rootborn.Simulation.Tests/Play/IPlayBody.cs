@@ -66,4 +66,13 @@ namespace Rootborn.Simulation
         /// <summary>그려진 화면을 저장한다(창 없는 몸은 null).</summary>
         string Screenshot(string name);
     }
+
+    /// <summary>
+    /// 저장된 진행을 새 게임 한 판으로 다시 읽을 수 있는 몸(같이 하는 방의 자리 — 진행이 방에 있다). 날마다 다시 읽기 검사가 이것을 쓴다.
+    /// 없으면(혼자 하기) 몸의 세이브 폴더와 슬롯으로 다시 읽는다. 다시 읽을 수 없으면(방에 없다) null.
+    /// </summary>
+    public interface ISavedGameSource
+    {
+        GameSession ReloadSaved();
+    }
 }

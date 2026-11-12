@@ -75,8 +75,35 @@ namespace Rootborn.Simulation.Headless
             List<PlacedNpc> npcs = NpcPlacement.Place(_npcArt.Order, LocationOf, here);
             Interactions.MapId = map;
             Interactions.RadiusPixels = _atlas.Interactions.RadiusCells * Session.Map.Grid.CellSize;
-            Interactions.SetCandidates(NpcPlacement.Candidates(_atlas.Interactions, here, npcs, Session.Map.Doors));
+            List<InteractionCandidate> candidates = NpcPlacement.Candidates(_atlas.Interactions, here, npcs, Session.Map.Doors);
+            candidates.AddRange(_storage);
+            Interactions.SetCandidates(candidates);
             Interactions.Update(Session.Walker.X, Session.Walker.Y);
+        }
+
+        /// <summary>Host WorldScreen.PlacedStoragePriority와 같은 값.</summary>
+        private const int PlacedStoragePriority = 0;
+
+        private readonly List<InteractionCandidate> _storage = new List<InteractionCandidate>();
+
+        /// <summary>
+        /// 놓인 상자마다 가운데에 상호작용 후보 "storage"(Host WorldScreen.SetPlacedFurniture와 같다 — 앞에서 누르면 상자 화면). 가구가 바뀔 때만 부른다.
+        /// </summary>
+        public void SetPlacedStorage(IReadOnlyList<Rootborn.Core.Placement.PlacedFurniture> placed, Func<Rootborn.Core.Placement.FurnitureDefinition, bool> isStorage)
+        {
+            int before = _storage.Count;
+            _storage.Clear();
+            FurnitureRoom room = Room;
+            if (room != null && placed != null)
+                foreach (var p in placed)
+                {
+                    if (!isStorage(p.Definition) || p.OccupiedCells.Count == 0) continue;
+                    float cx = 0f, cy = 0f;
+                    foreach (var c in p.OccupiedCells) { AreaRect a = room.CellArea(c); cx += a.CenterX; cy += a.CenterY; }
+                    _storage.Add(new InteractionCandidate(Rootborn.Screens.Storage.StorageScreen.InteractionKind, p.InstanceId,
+                        cx / p.OccupiedCells.Count, cy / p.OccupiedCells.Count, PlacedStoragePriority, true));
+                }
+            if (before > 0 || _storage.Count > 0) { _placedMap = null; Refresh(); }
         }
     }
 
