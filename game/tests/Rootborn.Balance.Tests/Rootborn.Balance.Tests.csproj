@@ -4,6 +4,8 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>disable</Nullable>
     <IsPackable>false</IsPackable>
+    <!-- 모든 경우 훑기는 판마다 세이브를 JSON으로 자주 쓰므로 할당이 많다. 워크스테이션 GC는 병렬 판을 자주 멈춰 코어를 절반도 못 쓴다. -->
+    <ServerGarbageCollection>true</ServerGarbageCollection>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../Rootborn.Game/Rootborn.Game.csproj" />

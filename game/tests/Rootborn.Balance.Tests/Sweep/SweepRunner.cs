@@ -58,7 +58,12 @@ namespace Rootborn.Balance.Tests
         /// 계획의 판을 모두 axes.days일 돌려 시점마다 한 줄. maxParallel이 없으면 프로세서 수.
         /// 판이 예외로 멈추면 훑기를 멈추지 않고 그 판의 줄에 까닭을 적는다(조용히 버리지 않는다 — 보고서 맨 위와 failed 칸에 나온다).
         /// </summary>
-        public static IReadOnlyList<SweepRow> RunAll(BalanceConfig config, int? maxParallel = null)
+        public static IReadOnlyList<SweepRow> RunAll(BalanceConfig config, int? maxParallel = null) => RunAll(config, maxParallel, null);
+
+        /// <summary>
+        /// progress(끝난 판 수, 전체 판 수)는 판이 끝날 때마다 부른다(여러 스레드에서 — 부르는 쪽이 드물게 쓴다). 결과에는 닿지 않는다.
+        /// </summary>
+        public static IReadOnlyList<SweepRow> RunAll(BalanceConfig config, int? maxParallel, Action<int, int> progress)
         {
             var plan = Plan(config);
             var checkpoints = config.Axes.Checkpoints;
@@ -70,6 +75,7 @@ namespace Rootborn.Balance.Tests
             int cached = SharedDefinitions.CachedTypes(definitions);
 
             var options = new ParallelOptions { MaxDegreeOfParallelism = maxParallel ?? Environment.ProcessorCount };
+            int done = 0;   // 끝난 판 수(진행 알림에만 쓴다)
             Parallel.For(0, plan.Count, options, i =>
             {
                 var (strategy, target, setup) = plan[i];
@@ -98,6 +104,7 @@ namespace Rootborn.Balance.Tests
                     };
                 }
                 perRun[i] = rows;
+                progress?.Invoke(System.Threading.Interlocked.Increment(ref done), plan.Count);
             });
 
             // 판 도중에 함께 쓰는 정의의 조회 캐시가 늘었다면 여러 판이 한 사전에 동시에 썼을 수 있다(GameDefinitions.All<T>의 캐시는 잠그지 않는다).

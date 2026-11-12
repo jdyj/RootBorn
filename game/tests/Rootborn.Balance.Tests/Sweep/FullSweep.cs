@@ -13,6 +13,8 @@ namespace Rootborn.Balance.Tests
     /// </summary>
     public sealed class FullSweep
     {
+        private const int ProgressSteps = 50;   // 진행 알림 횟수(원격 로그에 2%마다 한 줄)
+
         [Test, Explicit("손으로만: 모든 조합을 돌려 output/balance/sweep 에 표를 쓴다"), Category("BalanceReport")]
         public void WriteSweepReport()
         {
@@ -23,7 +25,12 @@ namespace Rootborn.Balance.Tests
             TestContext.Out.WriteLine("훑기: 판 " + runs + "개 × " + config.Axes.Days + "일, 동시 " + parallel);
 
             var watch = Stopwatch.StartNew();
-            var rows = SweepRunner.RunAll(config, parallel);
+            int step = Math.Max(1, runs / ProgressSteps);
+            var rows = SweepRunner.RunAll(config, parallel, (done, total) =>
+            {
+                if (done % step == 0 || done == total)
+                    TestContext.Progress.WriteLine("훑기 진행: 판 " + done + "/" + total + ", " + watch.Elapsed.TotalSeconds.ToString("0") + "초");
+            });
             var ran = watch.Elapsed;
             string directory = SweepReport.OutputDirectory();
             SweepReport.Write(directory, config, rows);

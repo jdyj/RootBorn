@@ -218,7 +218,9 @@ namespace Rootborn.Balance.Tests
                 }
 
                 int earnedBefore = earnedSoFar();
-                var outcome = step.Do(game, name + ":" + record.Day + ":" + request++ + ":" + step.Id);
+                // 요청 id는 그 판(세션) 안에서만 겹치지 않으면 된다. 게임은 쓴 요청 id를 모두 세이브에 남기고 저장할 때마다 다시 쓰므로
+                // 짧게 둔다(판 이름을 넣으면 100일 판에서 저장이 무거워진다).
+                var outcome = step.Do(game, record.Day + ":" + request++);
                 if (game.Student.CurrentDay != record.Day) throw new InvalidOperationException(name + ": " + record.Day + "일째 행동이 날을 넘겼다(07:00)");
                 if (outcome.Done)
                 {
