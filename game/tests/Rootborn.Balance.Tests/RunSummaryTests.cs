@@ -7,7 +7,7 @@ namespace Rootborn.Balance.Tests
     {
         private static RunResult Run(params DayRecord[] days)
         {
-            var r = new RunResult { StrategyId = "t", TargetId = "", TierId = "" };
+            var r = new RunResult { StrategyId = "t", TargetId = "" };
             r.Days.AddRange(days);
             return r;
         }

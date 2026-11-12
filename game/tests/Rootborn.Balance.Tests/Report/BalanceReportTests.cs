@@ -85,7 +85,7 @@ namespace Rootborn.Balance.Tests
         public void EmptyRatesAreBlankNotZero()
         {
             var config = Config.Value;
-            var run = new RunResult { StrategyId = config.Strategies[0].Id, TargetId = "", TierId = "", StartDay = 1, StartWallet = 0 };
+            var run = new RunResult { StrategyId = config.Strategies[0].Id, TargetId = "", StartDay = 1, StartWallet = 0 };
             run.Days.Add(new DayRecord { Day = 1, Stop = StopReasons.NothingToDo });
             BalanceReport.Write(_temp, config, 1, new[] { run });
 
@@ -220,14 +220,14 @@ namespace Rootborn.Balance.Tests
             => new StrategySpec { Id = id, Each = "facility", Start = "adult", Scored = false, Do = new[] { "best-facility-work" } };
 
         private static BalanceConfig With(params StrategySpec[] strategies)
-            => new BalanceConfig { Days = 1, Sleep = Config.Value.Sleep, Tiers = Config.Value.Tiers, Strategies = strategies };
+            => new BalanceConfig { Days = 1, BaselineSetup = Config.Value.BaselineSetup, Axes = Config.Value.Axes, Tiers = Config.Value.Tiers, Strategies = strategies };
 
         private static DayRecord Day(int day, int earned, int spent = 0, bool upgraded = false)
             => new DayRecord { Day = day, Earned = earned, MinigameEarned = earned, Spent = spent, Upgraded = upgraded, Actions = 1, Stop = StopReasons.Bedtime };
 
         private static RunResult Hand(StrategySpec strategy, string target, params DayRecord[] days)
         {
-            var run = new RunResult { StrategyId = strategy.Id, TargetId = target, TierId = "", StartDay = 1 };
+            var run = new RunResult { StrategyId = strategy.Id, TargetId = target, StartDay = 1 };
             run.Days.AddRange(days);
             return run;
         }
