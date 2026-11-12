@@ -81,6 +81,18 @@ namespace Rootborn.Balance.Tests
             Assert.That(SleepRules.Parse("never", Rules).LatestEnd(1, end), Is.EqualTo(end));
         }
 
+        // R1: 넘겨 잇는 밤에도 걷기 + 미니게임(올림, 걷기 조각 1분 포함)이 07:00 전에 끝나야 시작한다(정산만 07:00을 넘기는 것은 된다).
+        [Test]
+        public void NeverCarry_RefusesAMinigameThatWouldStillBeRunningAtDayEnd()
+        {
+            var rule = SleepRules.Parse("never carry", Rules);
+            int end = Rules.DayEndMinutes;
+            Assert.That(rule.MayStart(new SleepMoment { RunDay = 1, NowMinutes = end - 82, WalkMinutes = 30, ActionMinutes = 180, MinigameMinutes = 50, DayEndMinutes = end }), Is.True,
+                "걷기 30 + 1 + 미니게임 50 = 07:00 1분 전에 끝난다");
+            Assert.That(rule.MayStart(new SleepMoment { RunDay = 1, NowMinutes = end - 81, WalkMinutes = 30, ActionMinutes = 180, MinigameMinutes = 50, DayEndMinutes = end }), Is.False,
+                "미니게임이 07:00에 끝나면 게임이 날을 넘겨 정산을 거절한다");
+        }
+
         [Test]
         public void StayUpEvery2Carry_CarriesOnlyOnItsAwakeNights()
         {

@@ -229,6 +229,45 @@ namespace Rootborn.Balance.Tests
             Assert.That(carry.Days[1].Day, Is.EqualTo(first.Day + 1));
         }
 
+        // R1: 넘겨 잇는 밤에도 미니게임이 07:00 전에 끝나지 않을 일은 시작하지 않는다(게임이 정산을 거절한다) —
+        // 그래서 carry는 carry 없는 같은 규칙보다 덜 벌지 않는다. 다시 검토에서 찾은 짝: upgrade / 응급 / 100점 / 걷기 15 / 몫 1.0.
+        [Test]
+        public void Carry_NeverEarnsLessThanTheSameRuleWithoutCarry_AndNothingIsRefusedAfterDayEnd()
+        {
+            const int Days = 100;
+            foreach (var facility in TestWorld.Definitions.All<Facility>())
+            {
+                RunResult Of(string sleep)
+                {
+                    var config = Config.Value;
+                    var setup = RunSetup.Baseline(config);
+                    setup.Sleep = sleep;
+                    setup.Score = "fixed 100";
+                    setup.TravelMinutes = 15;
+                    setup.MinigameShare = FullShare;
+                    return BalanceRunner.Run(config.Strategies.Single(s => s.Id == "facility-work-upgrade"), facility, setup, config, Days);
+                }
+                var plain = RunSummary.From(Of("stay-up-every 2 until 01:00"));
+                var carry = RunSummary.From(Of("stay-up-every 2 until 01:00 carry"));
+                TestContext.Out.WriteLine(facility.Id + ": carry 없음 " + plain.IncomePerDay + ", carry " + carry.IncomePerDay + ", 거절 " + carry.RefusedAfterDayEnd);
+                Assert.That(carry.IncomePerDay, Is.GreaterThanOrEqualTo(plain.IncomePerDay), facility.Id);
+                Assert.That(carry.RefusedAfterDayEnd, Is.Zero, facility.Id + ": 날 넘김 뒤 정산이 거절된 행동");
+            }
+        }
+
+        // R2: 넘겨 잇는 판에서도 번 것 − 쓴 것 = 지갑 변화, 날마다 한 줄.
+        [TestCase("never carry")]
+        [TestCase("stay-up-every 2 carry")]
+        public void CarryRun_WalletChangeEqualsEarnedMinusSpent(string sleep)
+        {
+            const int Days = 6;
+            var run = Run("facility-work-upgrade", s => { s.Sleep = sleep; s.Score = "fixed 100"; }, Days);
+            TestContext.Out.WriteLine(Lines(run));
+            Assert.That(run.Days.Count, Is.EqualTo(Days));
+            Assert.That(run.Days.Sum(d => (long)d.Earned - d.Spent), Is.EqualTo(run.Days[run.Days.Count - 1].WalletAtEnd - run.StartWallet));
+            Assert.That(run.Days.Any(d => d.EndedAtMinutes > Rules.DayEndMinutes), Is.True, "07:00을 넘겨 끝난 날이 없으면 이 검사는 약하다");
+        }
+
         // S6: 행동이 계획 길이보다 오래 걸려 잠 규칙의 끝을 넘기면 판을 멈춘다(예측이 짧았다).
         [Test]
         public void AnActionThatOverrunsItsPlan_PastTheRuleEnd_StopsTheRun()
