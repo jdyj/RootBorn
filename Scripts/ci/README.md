@@ -45,7 +45,7 @@ GitHub 기록(`gh run view`, 읽기만)을 읽어 확인한 값이다(main 43120
 | job | 하는 일 | 마지막 결과(43144463346) | 시간(최근 세 번) | 막는가 |
 |---|---|---|---|---|
 | `static-checks` | 자체 시험 + 검사 6개(아래 표 — `check-meta-files`는 Unity와 함께 지웠고 `check-host-test-shards`를 더했다) | 통과(Core 파일 161개, 엔티티 id 387개 파일, 2개 언어 같은 키 1,360개, Host 클래스 50개가 묶음 4개에) | 10~15초 | 막는다 |
-| `dotnet-tests` | `game/tests`의 Host 테스트를 뺀 나머지 프로젝트(Core 테스트도 `game/tests` 안 — Server, Simulation, Balance 포함) | 통과(Core 1,036, Data 284, Game 572, Net 76, Screens 449, Server 75, Simulation 43, Ui 123, World 94. 건너뜀 0). Balance는 이 실행 뒤에 생겨 이 실행의 숫자가 아니다 — 원격 실행(`Scripts/remote-test`) 기준 통과 77, `[Explicit]` 2건(전체 보고, 모든 경우 훑기 `output/balance/sweep/`) 건너뜀. CI에서는 아직 돈 적이 없다 | 약 2분 | 막는다 |
+| `dotnet-tests` | `game/tests`의 Host 테스트를 뺀 나머지 프로젝트(Core 테스트도 `game/tests` 안 — Server, Simulation, Balance 포함) | 통과(Core 1,036, Data 284, Game 572, Net 76, Screens 449, Server 75, Simulation 43, Ui 123, World 94. 건너뜀 0). Balance는 이 실행 뒤에 생겨 이 실행의 숫자가 아니다 — 원격 실행(`Scripts/remote-test`) 기준 통과 90, `[Explicit]` 2건(전체 보고, 모든 경우 훑기 `output/balance/sweep/`) 건너뜀. CI에서는 아직 돈 적이 없다 | 약 2분 | 막는다 |
 | `server-publish` | `Tools/publish/publish.sh --server linux-x64` 뒤 `verify.sh --server linux-x64` | 통과 | 30초~1분 | 막는다 |
 | `host-tests` (묶음 5개 matrix — 결과 칸은 two-games를 play에서 떼기 전) | `game/tests/Rootborn.Host.Tests`를 `xvfb-run` + 소프트웨어 GL로, 묶음마다 따로 | 통과: rest 191, main-chain 13, play 10, soak 2(합 216 — `[Explicit]` 1건은 돌지 않는다) | 묶음별 job: rest 5~9분, play 10~18분, main-chain 15~18분, soak 8~20분 | **막는다**(2026-11-12부터, 아래), 묶음마다 시간 제한 30분 |
 
