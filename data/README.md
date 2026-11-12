@@ -179,6 +179,33 @@
 - 상자 가구도 보통 가구처럼 놓는다(놓을 수 있는 면이 있는 맵 어디든, 여러 개). 해금이 필요 없는 가구(`unlockToken` 비어 있음)면 처음부터 놓을 수 있다.
 - 내용물은 놓인 가구 기록에 묶여 저장된다. 상자를 그만 쓰게 데이터에서 빼도 이미 든 물건은 세이브에 남는다(다시 상자로 만들면 보인다).
 
+## 일터 `workspaces/`
+
+시설 안에서 꾸미는 일터와 그 공간 점수·이득·기술 성장. 지금은 요리사 식당 한 줄(`workspace.chef`)이다.
+**수치는 전부 시험용이고 사용자 확인 전이다**(한도, 점수, 이득, 단계 값, 템플릿 값, 하루 횟수).
+
+| type | 무엇 | 필드 |
+|---|---|---|
+| `SkillDefinition` | 기술(이름만, 규칙 아님). 여기에는 `skill.interior`만 — `skill.cooking`은 `studentlife/`에 있다 | `displayNameKey` |
+| `SkillTierDefinition` | 기술 단계(값 이상이면 닿음) | `skill`(ref), `minimumValue`, `displayNameKey` |
+| `SpaceQualityDefinition` | 공간 성질(아늑함, 위생, 동선, 안전, 집중) | `displayNameKey`, `iconKey` |
+| `FurnitureQualityRule` | 가구 분류 또는 가구 하나가 성질에 주는 점수 | `category` 또는 `furniture`(가구 `stableId`) 하나, `quality`(ref), `score` |
+| `WorkspaceDefinition` | 일터: 시설, 놓는 면, 받는 가구 면, 시설 레벨 1~3의 가구 한도, 같은 가구 되풀이 비율(%), 꾸미기 규칙, 기본 템플릿 | `facility`(ref), `surfaceId`, `acceptsSurfaceIds`, `capacityByLevel`(3개), `repeatPercent`, `rules`(ref들), `defaultTemplate`(ref) |
+| `SkillTierCapacityRule` | 단계에 닿으면 가구 한도 + | `tier`(ref), `capacityBonus` |
+| `SkillTierScoreRule` | 단계에 닿으면 점수 배율 +% | `tier`(ref), `scorePercentBonus` |
+| `QualityRewardPercentBonus` | 성질 점수 `scorePerStep`마다 일 보상 +%, 한도 | `quality`(ref), `scorePerStep`, `percentPerStep`, `maximumPercent` |
+| `QualityReputationBonus` | 성질 점수 `scorePerStep`마다 명성 +, 한도 | `quality`(ref), `scorePerStep`, `reputationPerStep`, `maximumReputation` |
+| `WorkBonusBinding` | 일 하나에 붙는 이득 | `work`(ref), `bonuses`(ref들) |
+| `WorkSkillGrowth` | 일을 하면 자라는 기술 | `work`(ref), `skill`(ref), `amount` |
+| `PlacementSkillGrowth` | 그 면에 가구를 놓으면 자라는 기술(하루 횟수 한도, 면 사이에 같이 센다) | `surfaceId`, `skill`(ref), `amount`, `dailyLimit` |
+| `WorkspaceTemplate` | 일터에 한꺼번에 까는 가구 묶음과 값 | `workspace`(ref), `displayNameKey`, `costItems`(ref들), `costCounts`, `placements`([{`furniture`, `cell`{x,y}, `direction`(0~3)}]) |
+
+- 꾸미기 규칙은 닿은 것을 모두 더한다(인테리어 단계 2에 닿으면 단계 1의 +2와 단계 2의 +4가 함께 붙는다).
+- 성질 점수는 같은 가구에 분류 규칙과 가구 규칙이 다 있으면 가구 규칙이 이긴다. 없는 분류를 가리키는 규칙은 아무 가구에도 붙지 않는다(오류 아님).
+- 템플릿의 가구는 실제 가구의 `stableId`여야 하고(없으면 읽기 오류), 칸 좌표는 일터 맵의 빈 바닥이어야 한다. 기본 템플릿은 값이 없다.
+- 일터 ↔ 템플릿, 일·기술·시설은 서로 id로 가리킨다(가리키는 것이 표에 있는지는 읽을 때 본다). 등록부 목록은 없다(파일 순서대로).
+- 표 두 개(가구 성질 표, 일 연결 표)는 모두 읽은 뒤 한 번 만든다: `definitions.FurnitureQuality`, `definitions.WorkLinks`.
+
 ## 그림 좌표표
 
 `data/atlases/<PNG 경로>.atlas.json` 하나가 PNG 하나다. 좌표는 **PNG 왼쪽 위 기준 픽셀**이다.

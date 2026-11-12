@@ -59,6 +59,8 @@ namespace Rootborn.Data.Tests
             Names.RoomPiece(Rootborn.Core.Room.RoomWorldFlags.PieceName),
             Names.RoomPiece(Rootborn.Core.Room.RoomChests.PieceName),
             Names.RoomOutbox(DefaultPlayer),
+            Names.WorkspaceProgress(DefaultPlayer),
+            Names.WorkspaceLayout("workspace.chef", DefaultPlayer),
         };
 
         [TestCaseSource(nameof(DefaultPlayerFiles))]
@@ -82,6 +84,12 @@ namespace Rootborn.Data.Tests
             {
                 // Unity 판에도 Version이 있던 모양은 그 값과 뜻을 그대로 둔다(스냅샷은 처음부터 2).
                 if (shape == typeof(AdultCareerSnapshotSaveData)) continue;
+                // 일터 진행은 MonoGame 판이 처음부터 버전 1로 만든 모양이다(계획 결정). 버전 없는 파일이 있었던 적이 없다.
+                if (shape == typeof(Rootborn.Core.Workspaces.WorkspaceProgressSaveData))
+                {
+                    Assert.That(((IVersionedSave)Activator.CreateInstance(shape)).Version, Is.EqualTo(Rootborn.Core.Workspaces.WorkspaceProgressSaveData.KnownVersion));
+                    continue;
+                }
                 var instance = (IVersionedSave)Activator.CreateInstance(shape);
                 Assert.That(instance.Version, Is.EqualTo(SaveVersion.Unity), $"{shape.Name}: 새로 만든 모양(=버전 없는 파일)은 0이어야 한다");
                 Assert.That(instance.KnownVersion, Is.GreaterThanOrEqualTo(SaveVersion.Current), shape.Name);

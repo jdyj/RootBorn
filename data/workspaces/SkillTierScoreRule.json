@@ -1,0 +1,11 @@
+[
+  {
+    "type": "SkillTierScoreRule",
+    "id": "decoration.interior-2.score",
+    "tier": {
+      "ref": "tier.interior.2",
+      "type": "SkillTierDefinition"
+    },
+    "scorePercentBonus": 25
+  }
+]

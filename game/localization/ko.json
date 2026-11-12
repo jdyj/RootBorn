@@ -277,5 +277,15 @@
   "ui.storage.waiting": "방의 허락을 기다리는 중이에요...",
   "ui.storage.not-storage": "이 상자를 열 수 없어요.",
   "ui.furniture.storage-not-empty": "물건이 든 상자는 치울 수 없어요. 먼저 비워 주세요.",
-  "ui.prompt.open-storage": "상자 열기"
+  "ui.prompt.open-storage": "상자 열기",
+  "skill.interior": "인테리어",
+  "tier.interior.1.name": "인테리어 입문",
+  "tier.interior.2.name": "인테리어 숙련",
+  "quality.cozy.name": "아늑함",
+  "quality.hygiene.name": "위생",
+  "quality.flow.name": "동선",
+  "quality.safety.name": "안전",
+  "quality.focus.name": "집중",
+  "template.chef.basic.name": "기본 식당",
+  "template.chef.cozy.name": "아늑한 식당"
 }

@@ -1,0 +1,13 @@
+[
+  {
+    "type": "QualityReputationBonus",
+    "id": "workspace-bonus.hygiene-reputation",
+    "quality": {
+      "ref": "quality.hygiene",
+      "type": "SpaceQualityDefinition"
+    },
+    "scorePerStep": 10,
+    "reputationPerStep": 1,
+    "maximumReputation": 3
+  }
+]

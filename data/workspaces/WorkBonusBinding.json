@@ -1,0 +1,56 @@
+[
+  {
+    "type": "WorkBonusBinding",
+    "id": "work-bonus.chef.level1",
+    "work": {
+      "ref": "work.chef.level1",
+      "type": "FacilityWorkDefinition"
+    },
+    "bonuses": [
+      {
+        "ref": "workspace-bonus.cozy-reward",
+        "type": "QualityRewardPercentBonus"
+      },
+      {
+        "ref": "workspace-bonus.hygiene-reputation",
+        "type": "QualityReputationBonus"
+      }
+    ]
+  },
+  {
+    "type": "WorkBonusBinding",
+    "id": "work-bonus.chef.level2",
+    "work": {
+      "ref": "work.chef.level2",
+      "type": "FacilityWorkDefinition"
+    },
+    "bonuses": [
+      {
+        "ref": "workspace-bonus.cozy-reward",
+        "type": "QualityRewardPercentBonus"
+      },
+      {
+        "ref": "workspace-bonus.hygiene-reputation",
+        "type": "QualityReputationBonus"
+      }
+    ]
+  },
+  {
+    "type": "WorkBonusBinding",
+    "id": "work-bonus.chef.level3",
+    "work": {
+      "ref": "work.chef.level3",
+      "type": "FacilityWorkDefinition"
+    },
+    "bonuses": [
+      {
+        "ref": "workspace-bonus.cozy-reward",
+        "type": "QualityRewardPercentBonus"
+      },
+      {
+        "ref": "workspace-bonus.hygiene-reputation",
+        "type": "QualityReputationBonus"
+      }
+    ]
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "type": "SkillTierCapacityRule",
+    "id": "decoration.interior-1.capacity",
+    "tier": {
+      "ref": "tier.interior.1",
+      "type": "SkillTierDefinition"
+    },
+    "capacityBonus": 2
+  },
+  {
+    "type": "SkillTierCapacityRule",
+    "id": "decoration.interior-2.capacity",
+    "tier": {
+      "ref": "tier.interior.2",
+      "type": "SkillTierDefinition"
+    },
+    "capacityBonus": 4
+  }
+]

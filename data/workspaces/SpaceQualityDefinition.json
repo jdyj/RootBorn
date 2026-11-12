@@ -1,0 +1,32 @@
+[
+  {
+    "type": "SpaceQualityDefinition",
+    "id": "quality.cozy",
+    "displayNameKey": "quality.cozy.name",
+    "iconKey": ""
+  },
+  {
+    "type": "SpaceQualityDefinition",
+    "id": "quality.hygiene",
+    "displayNameKey": "quality.hygiene.name",
+    "iconKey": ""
+  },
+  {
+    "type": "SpaceQualityDefinition",
+    "id": "quality.flow",
+    "displayNameKey": "quality.flow.name",
+    "iconKey": ""
+  },
+  {
+    "type": "SpaceQualityDefinition",
+    "id": "quality.safety",
+    "displayNameKey": "quality.safety.name",
+    "iconKey": ""
+  },
+  {
+    "type": "SpaceQualityDefinition",
+    "id": "quality.focus",
+    "displayNameKey": "quality.focus.name",
+    "iconKey": ""
+  }
+]

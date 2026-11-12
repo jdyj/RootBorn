@@ -1,0 +1,38 @@
+[
+  {
+    "type": "WorkspaceDefinition",
+    "id": "workspace.chef",
+    "facility": {
+      "ref": "facility.chef",
+      "type": "FacilityDefinition"
+    },
+    "surfaceId": "workspace.chef",
+    "acceptsSurfaceIds": [
+      "house"
+    ],
+    "capacityByLevel": [
+      6,
+      10,
+      14
+    ],
+    "repeatPercent": 70,
+    "rules": [
+      {
+        "ref": "decoration.interior-1.capacity",
+        "type": "SkillTierCapacityRule"
+      },
+      {
+        "ref": "decoration.interior-2.capacity",
+        "type": "SkillTierCapacityRule"
+      },
+      {
+        "ref": "decoration.interior-2.score",
+        "type": "SkillTierScoreRule"
+      }
+    ],
+    "defaultTemplate": {
+      "ref": "template.chef.basic",
+      "type": "WorkspaceTemplate"
+    }
+  }
+]

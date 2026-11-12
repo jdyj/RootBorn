@@ -277,5 +277,15 @@
   "ui.storage.waiting": "Waiting for the room to approve...",
   "ui.storage.not-storage": "This chest cannot be opened.",
   "ui.furniture.storage-not-empty": "A chest with items in it cannot be removed. Empty it first.",
-  "ui.prompt.open-storage": "Open chest"
+  "ui.prompt.open-storage": "Open chest",
+  "skill.interior": "Interior",
+  "tier.interior.1.name": "Interior Beginner",
+  "tier.interior.2.name": "Interior Skilled",
+  "quality.cozy.name": "Coziness",
+  "quality.hygiene.name": "Hygiene",
+  "quality.flow.name": "Flow",
+  "quality.safety.name": "Safety",
+  "quality.focus.name": "Focus",
+  "template.chef.basic.name": "Basic Restaurant",
+  "template.chef.cozy.name": "Cozy Restaurant"
 }

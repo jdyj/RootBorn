@@ -1,0 +1,22 @@
+[
+  {
+    "type": "SkillTierDefinition",
+    "id": "tier.interior.1",
+    "skill": {
+      "ref": "skill.interior",
+      "type": "SkillDefinition"
+    },
+    "minimumValue": 10,
+    "displayNameKey": "tier.interior.1.name"
+  },
+  {
+    "type": "SkillTierDefinition",
+    "id": "tier.interior.2",
+    "skill": {
+      "ref": "skill.interior",
+      "type": "SkillDefinition"
+    },
+    "minimumValue": 30,
+    "displayNameKey": "tier.interior.2.name"
+  }
+]

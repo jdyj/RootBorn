@@ -1,0 +1,24 @@
+[
+  {
+    "type": "PlacementSkillGrowth",
+    "id": "placement-growth.house.interior",
+    "surfaceId": "house",
+    "skill": {
+      "ref": "skill.interior",
+      "type": "SkillDefinition"
+    },
+    "amount": 1,
+    "dailyLimit": 3
+  },
+  {
+    "type": "PlacementSkillGrowth",
+    "id": "placement-growth.workspace-chef.interior",
+    "surfaceId": "workspace.chef",
+    "skill": {
+      "ref": "skill.interior",
+      "type": "SkillDefinition"
+    },
+    "amount": 1,
+    "dailyLimit": 3
+  }
+]

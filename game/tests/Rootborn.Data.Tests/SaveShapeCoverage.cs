@@ -57,6 +57,9 @@ namespace Rootborn.Data.Tests
             ("room-outbox-*.json", typeof(Rootborn.Core.Room.RoomOutboxSaveData)),
             // 흐르는 시계의 개인 상태(지침, 밤에 깎은 시간, 하는 중). MonoGame 판이 더한 파일(2026-11-12).
             ("student-clock-*.json", typeof(StudentClockSaveData)),
+            // 일터 진행(쓴 템플릿 요청, 기본 템플릿을 깐 일터, 오늘 꾸미며 배운 횟수)과 일터 면의 배치(집 배치와 같은 모양). MonoGame 판이 더한 파일.
+            ("workspace-progress-*.json", typeof(Rootborn.Core.Workspaces.WorkspaceProgressSaveData)),
+            ("workspace-layout-*.json", typeof(FurniturePlacementLayoutSaveData)),
         };
 
         /// <summary>

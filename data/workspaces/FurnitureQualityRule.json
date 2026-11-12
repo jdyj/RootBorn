@@ -1,0 +1,62 @@
+[
+  {
+    "type": "FurnitureQualityRule",
+    "id": "quality-rule.kitchen.hygiene",
+    "category": "Kitchen",
+    "quality": {
+      "ref": "quality.hygiene",
+      "type": "SpaceQualityDefinition"
+    },
+    "score": 2
+  },
+  {
+    "type": "FurnitureQualityRule",
+    "id": "quality-rule.livingroom.cozy",
+    "category": "LivingRoom",
+    "quality": {
+      "ref": "quality.cozy",
+      "type": "SpaceQualityDefinition"
+    },
+    "score": 2
+  },
+  {
+    "type": "FurnitureQualityRule",
+    "id": "quality-rule.bedroom.cozy",
+    "category": "Bedroom",
+    "quality": {
+      "ref": "quality.cozy",
+      "type": "SpaceQualityDefinition"
+    },
+    "score": 1
+  },
+  {
+    "type": "FurnitureQualityRule",
+    "id": "quality-rule.bathroom.hygiene",
+    "category": "Bathroom",
+    "quality": {
+      "ref": "quality.hygiene",
+      "type": "SpaceQualityDefinition"
+    },
+    "score": 1
+  },
+  {
+    "type": "FurnitureQualityRule",
+    "id": "quality-rule.plant.cozy",
+    "category": "Plant",
+    "quality": {
+      "ref": "quality.cozy",
+      "type": "SpaceQualityDefinition"
+    },
+    "score": 3
+  },
+  {
+    "type": "FurnitureQualityRule",
+    "id": "quality-rule.decor.cozy",
+    "category": "Decor",
+    "quality": {
+      "ref": "quality.cozy",
+      "type": "SpaceQualityDefinition"
+    },
+    "score": 3
+  }
+]

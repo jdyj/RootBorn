@@ -350,7 +350,8 @@
     "skill.first-aid",
     "skill.symptom-judgment",
     "skill.care",
-    "skill.basic-study"
+    "skill.basic-study",
+    "skill.interior"
   ],
   "careers": [
     "career.chef",

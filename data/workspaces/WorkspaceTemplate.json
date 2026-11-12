@@ -1,0 +1,115 @@
+[
+  {
+    "type": "WorkspaceTemplate",
+    "id": "template.chef.basic",
+    "workspace": {
+      "ref": "workspace.chef",
+      "type": "WorkspaceDefinition"
+    },
+    "displayNameKey": "template.chef.basic.name",
+    "costItems": [],
+    "costCounts": [],
+    "placements": [
+      {
+        "furniture": "modern.interiors.shadowless.kitchen.kitchen.singles.shadowless.48x48.100",
+        "cell": {
+          "x": 1,
+          "y": 1
+        },
+        "direction": 0
+      },
+      {
+        "furniture": "modern.interiors.shadowless.kitchen.kitchen.singles.shadowless.48x48.101",
+        "cell": {
+          "x": 2,
+          "y": 1
+        },
+        "direction": 0
+      },
+      {
+        "furniture": "school.potted.plant",
+        "cell": {
+          "x": 4,
+          "y": 1
+        },
+        "direction": 0
+      },
+      {
+        "furniture": "modern.interiors.shadowless.livingroom.living.room.singles.shadowless.48x48.27",
+        "cell": {
+          "x": 1,
+          "y": 3
+        },
+        "direction": 0
+      }
+    ]
+  },
+  {
+    "type": "WorkspaceTemplate",
+    "id": "template.chef.cozy",
+    "workspace": {
+      "ref": "workspace.chef",
+      "type": "WorkspaceDefinition"
+    },
+    "displayNameKey": "template.chef.cozy.name",
+    "costItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      }
+    ],
+    "costCounts": [
+      20
+    ],
+    "placements": [
+      {
+        "furniture": "modern.interiors.shadowless.kitchen.kitchen.singles.shadowless.48x48.100",
+        "cell": {
+          "x": 1,
+          "y": 1
+        },
+        "direction": 0
+      },
+      {
+        "furniture": "modern.interiors.shadowless.kitchen.kitchen.singles.shadowless.48x48.102",
+        "cell": {
+          "x": 2,
+          "y": 1
+        },
+        "direction": 0
+      },
+      {
+        "furniture": "modern.interiors.shadowless.livingroom.living.room.singles.shadowless.48x48.27",
+        "cell": {
+          "x": 1,
+          "y": 3
+        },
+        "direction": 0
+      },
+      {
+        "furniture": "modern.interiors.shadowless.livingroom.living.room.singles.shadowless.48x48.28",
+        "cell": {
+          "x": 2,
+          "y": 3
+        },
+        "direction": 0
+      },
+      {
+        "furniture": "school.potted.plant",
+        "cell": {
+          "x": 4,
+          "y": 1
+        },
+        "direction": 0
+      },
+      {
+        "furniture": "school.waste.basket",
+        "cell": {
+          "x": 4,
+          "y": 3
+        },
+        "direction": 0
+      }
+    ]
+  }
+]

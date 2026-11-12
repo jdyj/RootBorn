@@ -1,0 +1,41 @@
+[
+  {
+    "type": "WorkSkillGrowth",
+    "id": "work-growth.chef.level1",
+    "work": {
+      "ref": "work.chef.level1",
+      "type": "FacilityWorkDefinition"
+    },
+    "skill": {
+      "ref": "skill.cooking",
+      "type": "SkillDefinition"
+    },
+    "amount": 1
+  },
+  {
+    "type": "WorkSkillGrowth",
+    "id": "work-growth.chef.level2",
+    "work": {
+      "ref": "work.chef.level2",
+      "type": "FacilityWorkDefinition"
+    },
+    "skill": {
+      "ref": "skill.cooking",
+      "type": "SkillDefinition"
+    },
+    "amount": 1
+  },
+  {
+    "type": "WorkSkillGrowth",
+    "id": "work-growth.chef.level3",
+    "work": {
+      "ref": "work.chef.level3",
+      "type": "FacilityWorkDefinition"
+    },
+    "skill": {
+      "ref": "skill.cooking",
+      "type": "SkillDefinition"
+    },
+    "amount": 1
+  }
+]

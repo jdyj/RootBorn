@@ -1,0 +1,13 @@
+[
+  {
+    "type": "QualityRewardPercentBonus",
+    "id": "workspace-bonus.cozy-reward",
+    "quality": {
+      "ref": "quality.cozy",
+      "type": "SpaceQualityDefinition"
+    },
+    "scorePerStep": 10,
+    "percentPerStep": 5,
+    "maximumPercent": 30
+  }
+]

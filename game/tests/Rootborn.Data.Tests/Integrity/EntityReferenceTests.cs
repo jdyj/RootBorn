@@ -106,6 +106,9 @@ namespace Rootborn.Data.Tests.Integrity
             ["WorldStateChangeQuestReward.sourceEventId"] = Array.Empty<string>(),     // 원인 기록 이름
             ["WorldStateChangeQuestReward.sourceQuestStepId"] = Array.Empty<string>(),
             ["WorldTravelCatalogDefinition.newGameSpawnId"] = Array.Empty<string>(),   // 도착 지점
+            ["WorkspaceDefinition.surfaceId"] = Array.Empty<string>(),                 // 일터의 놓는 면 이름
+            ["WorkspaceDefinition.acceptsSurfaceIds"] = Array.Empty<string>(),         // 일터가 받는 가구의 면 이름
+            ["PlacementSkillGrowth.surfaceId"] = Array.Empty<string>(),                // 놓으면 기술이 자라는 면 이름
         };
 
         [Test]

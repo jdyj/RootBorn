@@ -40,6 +40,7 @@ namespace Rootborn.Data
             var definitions = new GameDefinitions(entries, table);
             definitions.Currency = EconomySettings.ReadCurrency(dataDirectory, definitions, errors);
             definitions.TimeRules = TimeSettings.Read(dataDirectory, definitions, errors);
+            Builders.WorkspaceTables.Build(definitions, errors);
             return new LoadResult(definitions, errors, unclassified.ToArray(), builders);
         }
     }

@@ -36,6 +36,12 @@ namespace Rootborn.Data
         /// <summary>흐르는 시간의 규칙(game/time.json + data/time의 하루 길이, TimeSettings). 하루 길이가 없는 데이터면 null.</summary>
         public Rootborn.Core.Time.TimeRules TimeRules { get; internal set; }
 
+        /// <summary>가구 id별 성질 점수 표(모든 FurnitureQualityRule과 가구로 한 번 만든다, WorkspaceTables). 규칙이 없으면 빈 표.</summary>
+        public Rootborn.Core.Workspaces.FurnitureQualityTable FurnitureQuality { get; internal set; }
+
+        /// <summary>일 id별 공간 이득과 기술 성장 표(모든 WorkBonusBinding과 WorkSkillGrowth로 한 번 만든다, WorkspaceTables). 연결이 없으면 빈 표.</summary>
+        public Rootborn.Core.Workspaces.WorkLinks WorkLinks { get; internal set; }
+
         /// <summary>registry.json의 그 키 아래 id 목록(순서 있음). 키가 없으면 빈 목록. 문자열 하나인 키는 원소 하나짜리 목록.</summary>
         public IReadOnlyList<string> RegistryIds(string registryKey) => _table.RegistryIds(registryKey);
 
