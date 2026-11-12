@@ -114,47 +114,16 @@ namespace Rootborn.World
         }
     }
 
-    /// <summary>맵에 선 NPC 하나.</summary>
-    public readonly struct PlacedNpc
-    {
-        public readonly string NpcId, LocationId;
-        public readonly float X, Y;
-
-        public PlacedNpc(string npcId, string locationId, float x, float y)
-        {
-            NpcId = npcId; LocationId = locationId; X = x; Y = y;
-        }
-    }
-
     /// <summary>
-    /// NPC를 맵에 세우는 규칙(Unity LocationNpcRuntimeInstaller): NPC마다 일정이 정한 장소를 묻고, 그 장소에 앞서 배정된 NPC 수가
-    /// 자리 번호다(순서는 레지스트리의 NPC 순서). 그 맵에 그 장소의 그 번호 자리가 없으면 세우지 않는다.
+    /// 맵의 고정 상호작용 후보. NPC 자리는 <see cref="NpcStage"/>가 정하고(일정에 따라 걷는다) NPC 후보도 그쪽이 더한다.
     /// </summary>
     public static class NpcPlacement
     {
-        public static List<PlacedNpc> Place(IEnumerable<string> npcIdsInOrder, Func<string, string> locationOf, MapInteractions map)
-        {
-            var placed = new List<PlacedNpc>();
-            var used = new Dictionary<string, int>(StringComparer.Ordinal);
-            if (npcIdsInOrder == null || locationOf == null || map == null) return placed;
-            foreach (string npcId in npcIdsInOrder)
-            {
-                string location = locationOf(npcId) ?? string.Empty;
-                if (location.Length == 0) continue;
-                used.TryGetValue(location, out int slot);
-                used[location] = slot + 1;
-                if (map.NpcAnchors.TryGetValue(location, out var anchors) && slot < anchors.Count)
-                    placed.Add(new PlacedNpc(npcId, location, anchors[slot].X, anchors[slot].Y));
-            }
-            return placed;
-        }
-
-        /// <summary>상호작용 후보: 물건, NPC, 자동문(목적지가 있는 문 — 대상은 되지만 키로는 아무 일도 하지 않는다).</summary>
-        public static List<InteractionCandidate> Candidates(InteractionData data, MapInteractions map, IEnumerable<PlacedNpc> npcs, IEnumerable<DoorArea> doors)
+        /// <summary>상호작용 후보: 물건, 자동문(목적지가 있는 문 — 대상은 되지만 키로는 아무 일도 하지 않는다). 물건이 앞, 문이 뒤다.</summary>
+        public static List<InteractionCandidate> Candidates(InteractionData data, MapInteractions map, IEnumerable<DoorArea> doors)
         {
             var list = new List<InteractionCandidate>();
             foreach (InteractionThing t in map.Things) list.Add(new InteractionCandidate(t.Kind, t.Id, t.X, t.Y, t.Priority, true));
-            if (npcs != null) foreach (PlacedNpc n in npcs) list.Add(new InteractionCandidate("npc", n.NpcId, n.X, n.Y, data.NpcPriority, true));
             if (doors != null)
                 foreach (DoorArea d in doors)
                     if (d.Destination.HasValue) list.Add(new InteractionCandidate("door", d.Target, d.Area.CenterX, d.Area.CenterY, data.DoorPriority, false));

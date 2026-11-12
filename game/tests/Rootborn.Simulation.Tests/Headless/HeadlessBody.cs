@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using Rootborn.Core.Interaction;
+using Rootborn.Core.NpcMovement;
 using Rootborn.Core.Placement;
 using Rootborn.Core.Save;
 using Rootborn.Core.World;
@@ -67,6 +68,8 @@ namespace Rootborn.Simulation.Headless
         public WorldSession Walk => _world?.Session;
         public IReadOnlyList<InteractionCandidate> Candidates => _world?.Interactions.Candidates ?? (IReadOnlyList<InteractionCandidate>)Array.Empty<InteractionCandidate>();
         public InteractionCandidate Target => _world?.Interactions.Target;
+        /// <summary>걷는 NPC(월드에 들어가기 전에는 null). 시험은 TryPose로 NPC를 찾아간다.</summary>
+        public NpcStage Npcs => _world?.Npcs;
         public FurnitureRoom Room => _world?.Room;
         public IPlacementView PlacementView => _placementView;
         public float Width => 1920f;
@@ -110,7 +113,7 @@ namespace Rootborn.Simulation.Headless
             _slot = slot;
             SlotId = entry.SlotId;
             Session = session;
-            _world = new HeadlessWorld(_atlas, slot, start.Entry.SceneName, start.Entry.SpawnId, () => session.StudentDay, () => session.StudentHour);
+            _world = new HeadlessWorld(_atlas, slot, start.Entry.SceneName, start.Entry.SpawnId, () => session.StudentDay, () => session.DayMinutesExact);
             Screens = NewStack(session);
             Screens.EnterMap(_world.Session.Map.Id, Features());
             Screens.OpenHud();
@@ -156,7 +159,7 @@ namespace Rootborn.Simulation.Headless
         private void RefreshFurniture()
         {
             FurnitureRoom room = _world.Room;
-            if (room != null && Session.House != null) room.SetFurnitureBlocking(Session.House.BlockingCells);
+            if (room != null && Session.House != null) _world.SetFurnitureBlocking(Session.House.BlockingCells);
         }
 
         // ---------- 한 프레임 ----------
@@ -272,10 +275,13 @@ namespace Rootborn.Simulation.Headless
         /// 벽시계 대신 흔들리지 않는 기준으로 매 프레임 쓰레기가 생기는지 본다. 그리기(Emit)는 넣지 않는다(Host가 그린다).
         /// 시계의 분이 바뀐 프레임(게임 1분 = 약 25프레임에 한 번 — 알림을 받은 HUD가 글자를 새로 만들고, 게임 1시간마다 저장한다)은 빼고 센다.
         /// 그 프레임의 가장 큰 값은 <see cref="MaxBytesInMinuteFrame"/>에 남는다.
+        /// 어느 NPC든 어슬렁 걸음이 끝난 프레임(걷기 ↔ 쉼이 바뀐다 — Core 머무는 행동이 다음 걸음의 길을 만든다)도 빼고 센다.
+        /// 그 프레임의 가장 큰 값은 <see cref="MaxBytesInNpcStepFrame"/>에 남는다.
         /// </summary>
         public double AllocatedBytesPerIdleFrame(int frames)
         {
             for (int i = 0; i < 5; i++) Frame(); // 처음 한 번 만드는 것(캐시)은 뺀다
+            NpcStepChanged();
             long idle = 0;
             int idleFrames = 0;
             for (int i = 0; i < frames; i++)
@@ -284,6 +290,7 @@ namespace Rootborn.Simulation.Headless
                 long before = GC.GetAllocatedBytesForCurrentThread();
                 Frame();
                 long bytes = GC.GetAllocatedBytesForCurrentThread() - before;
+                if (NpcStepChanged()) { if (bytes > MaxBytesInNpcStepFrame) MaxBytesInNpcStepFrame = bytes; continue; }
                 if (MinuteFrames != minuteFrames) { if (bytes > MaxBytesInMinuteFrame) MaxBytesInMinuteFrame = bytes; continue; }
                 idle += bytes;
                 idleFrames++;
@@ -293,6 +300,27 @@ namespace Rootborn.Simulation.Headless
 
         /// <summary>분이 바뀐 프레임 한 번에 새로 잡은 바이트의 최대(AllocatedBytesPerIdleFrame이 잰 것).</summary>
         public long MaxBytesInMinuteFrame { get; private set; }
+
+        /// <summary>NPC 어슬렁 걸음이 끝난 프레임 한 번에 새로 잡은 바이트의 최대(AllocatedBytesPerIdleFrame이 잰 것).</summary>
+        public long MaxBytesInNpcStepFrame { get; private set; }
+
+        private bool[] _npcMoving;
+
+        /// <summary>마지막으로 본 뒤 걷는 중인지가 바뀐 NPC가 있는가(어느 맵에 있든).</summary>
+        private bool NpcStepChanged()
+        {
+            if (_world == null) return false;
+            IReadOnlyList<string> ids = _world.NpcIds;
+            if (_npcMoving == null) _npcMoving = new bool[ids.Count];
+            bool changed = false;
+            for (int i = 0; i < ids.Count; i++)
+            {
+                bool moving = _world.Npcs.TryPose(ids[i], out NpcPose pose) && pose.Moving;
+                if (moving != _npcMoving[i]) changed = true;
+                _npcMoving[i] = moving;
+            }
+            return changed;
+        }
 
         public string Screenshot(string name) => null;
 

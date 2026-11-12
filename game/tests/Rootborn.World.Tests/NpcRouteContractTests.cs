@@ -99,21 +99,22 @@ namespace Rootborn.World.Tests
         public void 하루를_10분씩_훑어도_NPC는_막힌_칸에_서지_않는다()
         {
             WorldMapLoader loader = Repo.Loader();
-            var world = new NpcWorld(NpcOrder, Schedules, Anchors(loader), loader, loader.Catalog.NpcWalker, Rules);
-            world.Prepare(1);
+            NpcStage stage = NpcStageTests.RealStage(loader);
             var blocked = new List<string>();
             int present = 0;
             for (int minutes = 420; minutes <= 1859; minutes += 10)
-                for (int i = 0; i < world.Count; i++)
+            {
+                stage.Tick(1, minutes);
+                foreach (string npcId in NpcOrder)
                 {
-                    NpcPose pose = world.PoseOf(i, minutes);
-                    if (!pose.Present) continue;
+                    if (!stage.TryPose(npcId, out NpcPose pose)) continue;
                     present++;
                     WorldMap map = loader.LoadMap(pose.MapId).World;
                     CellPos cell = CellPos.Containing(pose.X, pose.Y, map.Grid.CellSize);
                     if (map.Collision.IsBlocked(cell))
-                        blocked.Add(world.NpcId(i) + " " + minutes + "분: " + pose.MapId + " 칸 (" + cell.X + ", " + cell.Y + ")");
+                        blocked.Add(npcId + " " + minutes + "분: " + pose.MapId + " 칸 (" + cell.X + ", " + cell.Y + ")");
                 }
+            }
             Assert.That(present, Is.GreaterThan(0), "이 시험의 전제: 하루 중 어느 맵엔가 선 NPC가 있다");
             Assert.That(blocked, Is.Empty, string.Join("\n", blocked));
         }

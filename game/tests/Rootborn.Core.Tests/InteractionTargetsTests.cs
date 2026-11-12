@@ -73,5 +73,47 @@ namespace Rootborn.Core.Tests
             Assert.That(targets.Target, Is.Null);
             Assert.That(targets.Press(), Is.Null);
         }
+
+        [Test]
+        public void 꺼진_후보는_대상이_되지_않는다()
+        {
+            var targets = new InteractionTargets(56f);
+            InteractionCandidate npc = Npc("npc.a", 100f, 100f);
+            npc.SetActive(false);
+            targets.SetCandidates(new[] { npc });
+            Assert.That(npc.Active, Is.False);
+            Assert.That(targets.Update(100f, 100f), Is.Null, "바로 위에 서도 꺼진 후보는 고르지 않는다");
+            npc.SetActive(true);
+            Assert.That(targets.Update(100f, 100f), Is.SameAs(npc), "다시 켜면 고른다");
+        }
+
+        [Test]
+        public void 대상이던_후보가_꺼지면_Press는_null이다()
+        {
+            var targets = new InteractionTargets(56f);
+            InteractionCandidate c = Npc("npc.a", 100f, 100f);
+            targets.SetCandidates(new[] { c });
+            var events = new List<InteractionEvent>();
+            targets.Interacted += e => events.Add(e);
+            Assert.That(targets.Update(100f, 100f), Is.SameAs(c));
+            c.SetActive(false);
+            Assert.That(targets.Update(100f, 100f), Is.Null, "다음 Update에서 대상이 바뀐다");
+            Assert.That(targets.Target, Is.Null);
+            Assert.That(targets.Press(), Is.Null);
+            Assert.That(events, Is.Empty);
+        }
+
+        [Test]
+        public void 후보가_움직이면_새_자리로_고른다()
+        {
+            var targets = new InteractionTargets(56f);
+            InteractionCandidate c = Npc("npc.a", 100f, 100f);
+            targets.SetCandidates(new[] { c });
+            c.MoveTo(100f + 57f, 100f);
+            Assert.That((c.X, c.Y), Is.EqualTo((157f, 100f)));
+            Assert.That(targets.Update(100f, 100f), Is.Null, "반경(56px) 밖으로 갔다");
+            c.MoveTo(100f + 40f, 100f);
+            Assert.That(targets.Update(100f, 100f), Is.SameAs(c), "반경 안으로 왔다");
+        }
     }
 }

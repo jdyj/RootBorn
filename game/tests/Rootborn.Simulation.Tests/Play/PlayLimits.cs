@@ -17,6 +17,12 @@ namespace Rootborn.Simulation
         /// 가만히 선 프레임 측정(60프레임 안팎)이 시각이 정시를 지나지 않도록 잰다. 매 프레임이 아니라 분마다의 비용이다.
         /// </summary>
         public const long MinuteFrameBytes = 16 * 1024;
+
+        /// <summary>
+        /// NPC 어슬렁 걸음 하나가 끝난 프레임에 새로 잡아도 되는 바이트. Core 머무는 행동(NpcWanderStay)이 다음 걸음의 길을 찾아 새 목록을 만든다
+        /// (NpcWorld 설명의 예외 — 걸음마다 몇 초에 한 번이고 매 프레임이 아니다). 2026-11-12 잰 값은 한 번에 2.5~5KB.
+        /// </summary>
+        public const long NpcStepFrameBytes = 16 * 1024;
     }
 
     /// <summary>프레임 비용을 잴 수 있는 몸(창 없는 몸).</summary>

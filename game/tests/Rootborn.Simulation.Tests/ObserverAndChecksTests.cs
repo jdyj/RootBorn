@@ -88,10 +88,11 @@ namespace Rootborn.Simulation.Tests
             {
                 double bytes = body.AllocatedBytesPerIdleFrame(600);
                 TestContext.WriteLine("가만히 선 프레임 한 번에 새로 잡는 바이트: " + bytes.ToString("0.0") + ", 분이 바뀐 프레임 최대 " + body.MaxBytesInMinuteFrame
-                    + "(" + body.MinuteFrames + "번)");
+                    + "(" + body.MinuteFrames + "번), NPC 걸음이 끝난 프레임 최대 " + body.MaxBytesInNpcStepFrame);
                 Assert.That(bytes, Is.LessThanOrEqualTo(PlayLimits.IdleFrameBytes), "매 프레임 쓰레기(coding-standards 성능)");
                 Assert.That(body.MinuteFrames, Is.GreaterThan(0), "흐르는 시계: 600프레임(10초)이면 게임 24분이 간다");
                 Assert.That(body.MaxBytesInMinuteFrame, Is.LessThanOrEqualTo(PlayLimits.MinuteFrameBytes), "분마다 HUD가 글자를 새로 만드는 비용(매 프레임이 아니다)");
+                Assert.That(body.MaxBytesInNpcStepFrame, Is.LessThanOrEqualTo(PlayLimits.NpcStepFrameBytes), "NPC 어슬렁 걸음이 끝날 때 다음 길을 만드는 비용(걸음마다, 매 프레임이 아니다)");
             }
         }
 

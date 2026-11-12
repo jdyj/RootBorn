@@ -530,9 +530,9 @@ namespace Rootborn.Host.Tests
 
         public void TalkTo(string npcId, string shot)
         {
-            PlacedNpc npc = Player.Game.World.Npcs.FirstOrDefault(n => n.NpcId == npcId);
+            NpcOnMap npc = Player.Game.World.Npcs.FirstOrDefault(n => n.NpcId == npcId);
             Assert.That(npc, Is.Not.Null, Player.World.Map.Id + "에 " + npcId + "가 서 있지 않다 (" + Session.StudentHour + "시)");
-            Player.WalkNear(npc.X, npc.Y + Player.World.Map.Grid.CellSize, Player.World.Map.Grid.CellSize * 0.75f);
+            Player.WalkNear(npc.Pose.X, npc.Pose.Y + Player.World.Map.Grid.CellSize, Player.World.Map.Grid.CellSize * 0.75f);
             Assert.That(Player.Game.World.Interactions.Target?.Id, Is.EqualTo(npcId), "NPC 앞에서 E의 대상");
             Player.PressKey(TestKey.E);
             Player.WaitForScreen(ScreenCatalog.Dialogue);

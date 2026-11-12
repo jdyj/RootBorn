@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -44,32 +45,27 @@ namespace Rootborn.World.Tests
             var schedules = new NpcScheduleLookupCache(defs.All<NpcSchedule>());
             var access = new NpcScheduleAccess(schedules);
             string LocationOf(string npcId) => schedules.TryGetByNpcId(npcId, out NpcSchedule s) ? access.ResolveLocationId(s.Id, 1, LocationStateTimeSlots.Morning, null) : string.Empty;
-            List<PlacedNpc> placed = NpcPlacement.Place(NpcArt.Load(Repo.Root).Order, LocationOf, Data.Map("House"));
-            Assert.That(placed.Count, Is.EqualTo(1));
-            Assert.That(placed[0].NpcId, Is.EqualTo("npc.first-guide"));
-            Assert.That((placed[0].X, placed[0].Y), Is.EqualTo((624f, 432f)));
+            WorldMapLoader loader = Repo.Loader();
+            NpcStage stage = NpcStageTests.RealStage(loader);
+            stage.EnterMap("House", Data.Map("House"), loader.LoadMap("House").World.Doors);
+            stage.Tick(1, 480);
+            Assert.That(stage.Count, Is.EqualTo(1));
+            Assert.That(stage[0].NpcId, Is.EqualTo("npc.first-guide"));
+            Assert.That(Math.Abs(stage[0].Pose.X - 624f), Is.LessThanOrEqualTo(3 * 32f + 16f), "자리(624, 432) 둘레를 어슬렁거린다(반지름 3칸)");
+            Assert.That(Math.Abs(stage[0].Pose.Y - 432f), Is.LessThanOrEqualTo(3 * 32f + 16f));
             Assert.That(LocationOf("npc.teacher"), Is.EqualTo("location.school"));
         }
 
         [Test]
-        public void SecondNpcAtTheSamePlaceTakesTheNextSpotAndAMissingSpotHidesIt()
+        public void CandidatesIncludeThingsEveryNpcAndSilentAutoDoors()
         {
-            var map = new MapInteractions();
-            map.NpcAnchors["square"] = new List<(float, float)> { (10f, 10f) };
-            List<PlacedNpc> placed = NpcPlacement.Place(new[] { "a", "b" }, _ => "square", map);
-            Assert.That(placed.Select(p => p.NpcId), Is.EqualTo(new[] { "a" }), "두 번째 자리가 없으면 b는 서지 않는다");
-            map.NpcAnchors["square"].Add((20f, 10f));
-            placed = NpcPlacement.Place(new[] { "a", "b" }, _ => "square", map);
-            Assert.That(placed[1].X, Is.EqualTo(20f));
-        }
-
-        [Test]
-        public void CandidatesIncludeThingsNpcsAndSilentAutoDoors()
-        {
-            LoadedMap house = Repo.Loader().LoadMap("House");
-            List<InteractionCandidate> candidates = NpcPlacement.Candidates(Data, Data.Map("House"),
-                new[] { new PlacedNpc("npc.first-guide", "location.home", 624f, 432f) }, house.World.Doors);
-            Assert.That(candidates.Count(c => c.Kind == "npc" && c.Priority == 30 && c.Acts), Is.EqualTo(1));
+            WorldMapLoader loader = Repo.Loader();
+            NpcStage stage = NpcStageTests.RealStage(loader);
+            List<InteractionCandidate> candidates = stage.EnterMap("House", Data.Map("House"), loader.LoadMap("House").World.Doors);
+            Assert.That(candidates.Count(c => c.Kind == "npc" && c.Priority == 30 && c.Acts), Is.EqualTo(NpcArt.Load(Repo.Root).Order.Count), "NPC 모두(꺼진 채로)");
+            Assert.That(candidates.Where(c => c.Kind == "npc").All(c => !c.Active), Is.True, "Tick 전에는 모두 꺼져 있다");
+            stage.Tick(1, 480);
+            Assert.That(candidates.Where(c => c.Kind == "npc" && c.Active).Select(c => c.Id), Is.EqualTo(new[] { "npc.first-guide" }));
             Assert.That(candidates.Where(c => c.Kind == "door"), Is.Not.Empty);
             Assert.That(candidates.Where(c => c.Kind == "door").All(c => !c.Acts && c.Priority == 110), Is.True);
         }

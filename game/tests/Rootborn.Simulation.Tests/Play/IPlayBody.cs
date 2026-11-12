@@ -25,7 +25,7 @@ namespace Rootborn.Simulation
         /// <summary>월드가 떠 있다(슬롯을 골랐다).</summary>
         bool InWorld { get; }
         WorldSession Walk { get; }
-        /// <summary>지금 맵의 상호작용 후보(물건, 그 시각에 선 NPC, 문).</summary>
+        /// <summary>지금 맵의 상호작용 후보(물건, NPC, 문). 지금 맵에 없는 NPC의 후보는 꺼져 있다(Active false). 걷는 NPC의 후보는 자리를 따라 움직인다.</summary>
         IReadOnlyList<InteractionCandidate> Candidates { get; }
         /// <summary>지금 E를 누르면 반응할 대상(없으면 null).</summary>
         InteractionCandidate Target { get; }

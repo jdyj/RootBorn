@@ -66,8 +66,8 @@ namespace Rootborn.Host.Tests
             player.Screenshot("hud-01-new-slot-house");
 
             // 엄마 앞으로 걸어가면 안내 글자.
-            PlacedNpc mom = player.Game.World.Npcs.Single(n => n.NpcId == "npc.first-guide");
-            player.WalkNear(mom.X, mom.Y + 32f, 20f);
+            NpcOnMap mom = player.Game.World.Npcs.Single(n => n.NpcId == "npc.first-guide");
+            player.WalkNear(mom.Pose.X, mom.Pose.Y + 32f, 20f);
             Assert.That(Screen<InteractionPromptScreen>(player, ScreenCatalog.HudPrompt).Text, Is.EqualTo("[E] 말 걸기"));
             UiRect prompt = player.Node(InteractionPromptScreen.LabelId).Rect;
             player.Screenshot("hud-02-prompt-at-mom");
@@ -102,7 +102,7 @@ namespace Rootborn.Host.Tests
             player.Screenshot("hud-03-after-mom");
 
             // 다시 말 걸어 E로 퀘스트를 받는다(첫 선택지).
-            player.WalkNear(mom.X, mom.Y + 32f, 20f);
+            player.WalkNear(mom.Pose.X, mom.Pose.Y + 32f, 20f);
             player.PressKey(TestKey.E);
             player.WaitForScreen(ScreenCatalog.Dialogue);
             Assert.That(Screen<DialogueScreen>(player, ScreenCatalog.Dialogue).Model.Choices.Length, Is.EqualTo(1));

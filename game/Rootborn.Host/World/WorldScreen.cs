@@ -61,21 +61,20 @@ namespace Rootborn.Host.World
 
         /// <summary>플레이어 앞의 상호작용 대상(Core). 상호작용 키를 누르면 Interacted 이벤트가 나온다.</summary>
         public readonly InteractionTargets Interactions;
-        /// <summary>지금 맵에 선 NPC(일정과 시간대로 정한다).</summary>
-        public IReadOnlyList<PlacedNpc> Npcs => _npcs;
+        /// <summary>지금 맵에 있는 NPC(NpcStage가 일정과 그날의 분으로 정한다. 프레임마다 고친다).</summary>
+        public IReadOnlyList<NpcOnMap> Npcs => _npcs;
         /// <summary>지금까지 나온 상호작용 이벤트(대화창 등은 다음 프로젝트에서 이것을 받는다).</summary>
         public readonly List<InteractionEvent> InteractionLog = new List<InteractionEvent>();
         private readonly InteractionData _interactionData;
         private readonly NpcArt _npcArt;
         private readonly NpcScheduleLookupCache _schedules;
-        private readonly NpcScheduleAccess _scheduleAccess;
-        private List<PlacedNpc> _npcs = new List<PlacedNpc>();
-        private string _placedMap, _placedSlot;
+        private readonly NpcStage _stage;
+        private readonly List<NpcOnMap> _npcs = new List<NpcOnMap>();
+        private string _placedMap;
         /// <summary>놓인 상자마다 상호작용 후보("storage", 인스턴스 id). 가구가 바뀔 때만 다시 만든다.</summary>
         private readonly List<InteractionCandidate> _storageCandidates = new List<InteractionCandidate>();
         /// <summary>상자 후보의 우선순위: 맵 데이터의 물건·NPC보다 앞서지 않는다(같은 거리면 그쪽이 먼저).</summary>
         public const int PlacedStoragePriority = 0;
-        private int _placedDay;
 
         public LoadedMap Current => Maps.LoadMap(Session.Map.Id);
         public int Zoom { get; private set; } = 1;
@@ -124,11 +123,10 @@ namespace Rootborn.Host.World
             Interactions.Interacted += e => { InteractionLog.Add(e); Console.WriteLine("[상호작용] " + e); };
             _npcArt = Content.Npcs;
             _schedules = new NpcScheduleLookupCache(Content.Definitions.All<NpcSchedule>());
-            _scheduleAccess = new NpcScheduleAccess(_schedules);
-            _locationOf = LocationOf;
             _repoRoot = options.RepoRoot;
             FurnitureArt = new FurnitureArt(Path.Combine(options.RepoRoot, "data"));
             Rooms = new RoomAwareMaps(Maps, _interactionData);
+            _stage = NpcStage.Create(_schedules, _npcArt.Order, _interactionData, Maps.Catalog, Rooms, Content.Definitions.TimeRules);
             Session = new WorldSession(Rooms, Maps.Catalog.Walker);
             string startMap;
             if (options.SaveSlot != null)
@@ -192,31 +190,34 @@ namespace Rootborn.Host.World
         /// <summary>지금 날. 학생 날을 따르면 그것, 아니면 게임 시계.</summary>
         public int CurrentDay => _studentDay != null ? _studentDay() : Clock.Day;
 
-        /// <summary>맵이나 시간대가 바뀌었을 때만 NPC 자리와 후보를 다시 만든다(프레임마다 다시 만들지 않는다).</summary>
+        /// <summary>맵이 바뀌었을 때만 후보 목록을 다시 만들고, 프레임마다 NPC 자리와 후보 좌표를 고친다(새 객체를 만들지 않는다).</summary>
         private void RefreshInteractions()
         {
-            string map = Session.Map.Id, slot = TimeSlot;
-            int day = CurrentDay;
-            if (map == _placedMap && slot == _placedSlot && day == _placedDay) { Interactions.Update(Session.Walker.X, Session.Walker.Y); return; }
-            _placedMap = map; _placedSlot = slot; _placedDay = day;
-            MapInteractions here = _interactionData.Map(map);
-            _npcs = NpcPlacement.Place(_npcArt.Order, _locationOf, here);
-            Interactions.MapId = map;
-            Interactions.RadiusPixels = _interactionData.RadiusCells * Session.Map.Grid.CellSize;
-            var candidates = NpcPlacement.Candidates(_interactionData, here, _npcs, Session.Map.Doors);
-            candidates.AddRange(_storageCandidates);
-            Interactions.SetCandidates(candidates);
+            string map = Session.Map.Id;
+            if (map != _placedMap)
+            {
+                _placedMap = map;
+                Interactions.MapId = map;
+                Interactions.RadiusPixels = _interactionData.RadiusCells * Session.Map.Grid.CellSize;
+                List<InteractionCandidate> candidates = _stage.EnterMap(map, _interactionData.Map(map), Session.Map.Doors);
+                candidates.AddRange(_storageCandidates);
+                Interactions.SetCandidates(candidates);
+            }
+            _stage.Tick(CurrentDay, NpcDayMinutes);
+            _npcs.Clear();
+            for (int i = 0; i < _stage.Count; i++) _npcs.Add(_stage[i]);
             Interactions.Update(Session.Walker.X, Session.Walker.Y);
         }
 
-        /// <summary>
-        /// NPC가 지금(마지막으로 자리를 정한 날·시간대) 있을 장소. 생성자에서 한 번 만든 위임으로 넘긴다 — 지역 함수로 두면 RefreshInteractions에
-        /// 들어올 때마다(가만히 선 프레임에도) 날·시간대를 잡는 객체가 생겼다(SIM-003).
-        /// </summary>
-        private string LocationOf(string npcId) =>
-            _schedules.TryGetByNpcId(npcId, out NpcSchedule s) ? _scheduleAccess.ResolveLocationId(s.Id, _placedDay, _placedSlot, null) : string.Empty;
-
-        private readonly Func<string, string> _locationOf;
+        /// <summary>NPC 자리의 시각(하루 시작~하루 끝 축의 분). 0~24시 시각에서 만들고, 하루 시작보다 이르면 다음 날 새벽이다.</summary>
+        private double NpcDayMinutes
+        {
+            get
+            {
+                double minutes = CurrentHour * 60.0;
+                return minutes < DayStartMinutes ? minutes + TimeRules.MinutesPerDay : minutes;
+            }
+        }
 
         /// <summary>지금 맵의 상호작용 데이터(물건, NPC 자리, 가구 방이면 면 id).</summary>
         public MapInteractions HereData => _interactionData.Map(Session.Map.Id);
@@ -398,7 +399,7 @@ namespace Rootborn.Host.World
             // 플레이어와 NPC를 발 위치(몸 가운데 Y)로 정렬해 가구 사이에 끼운다.
             _actors.Clear();
             _actors.Add((walker.Y, -1));
-            for (int i = 0; i < _npcs.Count; i++) _actors.Add((_npcs[i].Y, i));
+            for (int i = 0; i < _npcs.Count; i++) _actors.Add((_npcs[i].Pose.Y, i));
             IReadOnlyList<RemoteAvatar> remotes = Remotes?.Visible;
             if (remotes != null)
                 for (int i = 0; i < remotes.Count; i++) _actors.Add((remotes[i].Y, RemoteActor(i)));
@@ -641,12 +642,12 @@ namespace Rootborn.Host.World
         }
 
         /// <summary>NPC 그림: 기준점(발)을 자리에서 반 칸 아래(몸 가운데가 자리)에 맞춘다 — 플레이어와 같은 기준.</summary>
-        private void DrawNpc(SpriteBatch batch, PlacedNpc npc)
+        private void DrawNpc(SpriteBatch batch, NpcOnMap npc)
         {
             CharacterFrame f = _npcArt.Frame(npc.NpcId);
             if (f == null) return;
-            float feet = npc.Y + Current.World.Grid.CellSize / 2f;
-            var position = new Vector2(MathF.Round(npc.X - f.W * f.PivotX), MathF.Round(feet - f.H * f.PivotY));
+            float feet = npc.Pose.Y + Current.World.Grid.CellSize / 2f;
+            var position = new Vector2(MathF.Round(npc.Pose.X - f.W * f.PivotX), MathF.Round(feet - f.H * f.PivotY));
             batch.Draw(Load(f.Texture), position, new Rectangle(f.X, f.Y, f.W, f.H), _tint);
         }
 

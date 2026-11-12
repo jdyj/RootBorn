@@ -48,8 +48,8 @@ namespace Rootborn.Host.Tests
         [Test, Order(2)]
         public void INTERACT_PLAY_002_WalkingUpToTheNpcTargetsItAndEFiresItsEvent()
         {
-            PlacedNpc guide = Screen.Npcs.Single();
-            _player.WalkNear(guide.X, guide.Y + 32f, 20f); // NPC 바로 아래 칸
+            NpcOnMap guide = Screen.Npcs.Single();
+            _player.WalkNear(guide.Pose.X, guide.Pose.Y + 32f, 20f); // NPC 바로 아래 칸
             InteractionCandidate target = Screen.Interactions.Target;
             Assert.That(target, Is.Not.Null);
             Assert.That((target.Kind, target.Id), Is.EqualTo(("npc", "npc.first-guide")));

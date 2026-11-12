@@ -177,7 +177,7 @@ namespace Rootborn.Simulation
             HashSet<CellPos> reach = Reachable(map, CellPos.Containing(walk.Walker.X, walk.Walker.Y, size));
             foreach (InteractionCandidate c in body.Candidates)
             {
-                if (!c.Acts || Shadowed(c, body.Candidates)) continue;
+                if (!c.Acts || !c.Active || Shadowed(c, body.Candidates)) continue;
                 string key = "walk:" + c.Kind + "/" + c.Id;
                 if (!_seenKeys.Add(key)) continue;
                 if (!AnyNear(reach, c.X, c.Y, size * 1.25f, size)) continue;
@@ -204,7 +204,7 @@ namespace Rootborn.Simulation
         private static bool Shadowed(InteractionCandidate c, IReadOnlyList<InteractionCandidate> all)
         {
             foreach (InteractionCandidate d in all)
-                if (d != c && d.Acts && d.Priority > c.Priority && Math.Abs(d.X - c.X) < 0.5f && Math.Abs(d.Y - c.Y) < 0.5f) return true;
+                if (d != c && d.Acts && d.Active && d.Priority > c.Priority && Math.Abs(d.X - c.X) < 0.5f && Math.Abs(d.Y - c.Y) < 0.5f) return true;
             return false;
         }
 
