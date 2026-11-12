@@ -333,6 +333,50 @@ namespace Rootborn.Screens.Tests.AdultFacility
         {
             using var f = new FacilityFixture(s => FacilityFixture.AlreadyAdult(s, 2), longText: true);
             Assert.That(f.OpenAt(), Is.True);
+            AssertEveryTextInsideItsNode(f);
+        }
+
+        /// <summary>
+        /// 일터를 꾸며 이득이 생긴 상태(보상 +%, 명성 + 줄이 보인다)에서 2배 길이 문구를 넣는다. 일 목록은 카드 격자라 위의 시험이 건너뛰므로,
+        /// 여기서는 이득 줄의 글줄이 자기 칸의 자르기 영역(PushClip) 안에 온전히 들어 있는지(잘리지 않는지) 본다.
+        /// </summary>
+        [TestCase("ko")]
+        [TestCase("en")]
+        public void LongText_WithAWorkBonusLine_KeepsTheWorkCellsTextInsideItsCell(string language)
+        {
+            using var w = new Rootborn.Screens.Tests.Workspaces.WorkspaceFixture(longText: true, language: language);
+            w.DecorateUntilBonus(); // 준비: GameSession 명령으로 꾸민다(확인 대상 아님)
+            Assert.That(w.F.OpenAt(), Is.True);
+            w.Emit();
+            const string work = Rootborn.Screens.Tests.Workspaces.WorkspaceFixture.ChefWork;
+            Assert.That(w.F.Screen.WorkBonusText(work), Is.Not.Null, "이득 줄이 있다");
+
+            string bonus = w.F.Screen.WorkBonusText(work);
+            var measurer = new WideMeasurer();
+            w.F.Stack.Layout(1920, 1080);
+            var list = new DrawList();
+            w.F.Node(FacilityScreen.WorksId).Emit(list, measurer);
+            var clips = new System.Collections.Generic.Stack<UiRect>();
+            int texts = 0;
+            foreach (DrawCommand c in list.Commands)
+            {
+                if (c.Kind == DrawKind.PushClip) clips.Push(c.Rect);
+                else if (c.Kind == DrawKind.PopClip) clips.Pop();
+                else if (c.Kind == DrawKind.Text && clips.Count > 0 && c.Text.Trim().Length > 0 && bonus.Contains(c.Text.Trim()))
+                {
+                    texts++;
+                    UiRect clip = clips.Peek();
+                    float right = c.Rect.X + measurer.Width(c.Text, c.FontSize), bottom = c.Rect.Y + measurer.LineHeight(c.FontSize);
+                    Assert.That(c.Rect.X >= clip.X - 0.5f && right <= clip.Right + 0.5f && c.Rect.Y >= clip.Y - 0.5f && bottom <= clip.Bottom + 0.5f, Is.True,
+                        "잘린 글줄: " + c.Text);
+                }
+            }
+
+            Assert.That(texts, Is.GreaterThan(0), "이득 줄의 글줄을 봤다");
+        }
+
+        private static void AssertEveryTextInsideItsNode(FacilityFixture f)
+        {
             var measurer = new WideMeasurer();
             f.Stack.Emit(new DrawList(), measurer);
             f.Stack.Layout(1920, 1080);
