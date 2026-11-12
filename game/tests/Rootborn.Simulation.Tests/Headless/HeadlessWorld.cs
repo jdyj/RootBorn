@@ -81,9 +81,6 @@ namespace Rootborn.Simulation.Headless
             Interactions.Update(Session.Walker.X, Session.Walker.Y);
         }
 
-        /// <summary>Host WorldScreen.PlacedStoragePriority와 같은 값.</summary>
-        private const int PlacedStoragePriority = 0;
-
         private readonly List<InteractionCandidate> _storage = new List<InteractionCandidate>();
 
         /// <summary>
@@ -95,14 +92,7 @@ namespace Rootborn.Simulation.Headless
             _storage.Clear();
             FurnitureRoom room = Room;
             if (room != null && placed != null)
-                foreach (var p in placed)
-                {
-                    if (!isStorage(p.Definition) || p.OccupiedCells.Count == 0) continue;
-                    float cx = 0f, cy = 0f;
-                    foreach (var c in p.OccupiedCells) { AreaRect a = room.CellArea(c); cx += a.CenterX; cy += a.CenterY; }
-                    _storage.Add(new InteractionCandidate(Rootborn.Screens.Storage.StorageScreen.InteractionKind, p.InstanceId,
-                        cx / p.OccupiedCells.Count, cy / p.OccupiedCells.Count, PlacedStoragePriority, true));
-                }
+                PlacedInteractionCandidates.Fill(placed, isStorage, room.CellArea, Rootborn.Screens.Storage.StorageScreen.InteractionKind, _storage);
             if (before > 0 || _storage.Count > 0) { _placedMap = null; Refresh(); }
         }
     }
