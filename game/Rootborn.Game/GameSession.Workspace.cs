@@ -148,10 +148,14 @@ namespace Rootborn.Game
         {
             if (ActiveWorkspace == null || House == null) return WorkspaceResultKind.InvalidRequest;
             var template = FindTemplate(templateId);
+            // 돈을 같이 쓰는 방이면 이 람다는 허락이 온 뒤 다시 돈다. 그 사이 일터를 떠났으면(다른 면·다시 들어와 새 배치) 아무것도 바꾸지 않는다.
+            var workspace = ActiveWorkspace;
+            var layout = House;
             return Shared(() =>
             {
-                var result = _workspaceService.TryApplyTemplate(template, ActiveWorkspace, House, FurnitureById, CareerInventory, _workspaceProgress,
-                    OwnsActiveWorkspace, ActiveCapacity(), requestId, false);
+                if (ActiveWorkspace != workspace || House != layout) return WorkspaceResultKind.InvalidRequest;
+                var result = _workspaceService.TryApplyTemplate(template, workspace, layout, FurnitureById, CareerInventory, _workspaceProgress,
+                    Owns(workspace), workspace.Capacity(Adult.FacilityLevel, Student), requestId, false);
                 return Saved(result, result == WorkspaceResultKind.Applied, WorkspaceTopics, GameChangeTopics.Inventory);
             }, r => r == WorkspaceResultKind.Applied);
         }
