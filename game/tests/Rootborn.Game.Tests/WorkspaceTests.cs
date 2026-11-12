@@ -305,6 +305,23 @@ namespace Rootborn.Game.Tests
             Assert.That(again.House.Placed.Select(p => (p.Definition.StableId, p.Anchor)), Is.EqualTo(placed));
         }
 
+        /// <summary>집 밖에서 집 배치를 읽어 두기(NPC 길용)는 일터 면에서는 하지 않는다 — 집 기록을 일터 방에 집 배치로 열지 않는다.</summary>
+        [Test]
+        public void PrepareHouse_OnAWorkspaceSurface_DoesNotOpenTheHouseLayoutThere()
+        {
+            using var saves = new TempSaves();
+            var game = ChefSetup.Adult(saves);
+            game.EnterPlacementSurface(HouseRoom.Grid, HouseRoom.SurfaceId);
+            Assert.That(game.PlaceFurniture(FreeDesk, HouseRoom.FirstFreeAnchor(game, FreeDesk), FurniturePlacementDirection.North), Is.True);
+
+            var again = TestWorld.Start(saves.Store);
+            again.PrepareHouse(WorkspaceRoom.GridFor(again.Definitions, ChefWorkspace), Chef.SurfaceId);
+            Assert.That(again.House, Is.Null, "일터 면에는 집 배치를 읽어 두지 않는다");
+            again.PrepareHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
+            Assert.That(again.House?.SurfaceId, Is.EqualTo(HouseRoom.SurfaceId), "집 면이면 읽어 둔다");
+            Assert.That(again.ActiveWorkspace, Is.Null);
+        }
+
         [Test]
         public void HouseLayout_IsUntouchedByWorkspace()
         {

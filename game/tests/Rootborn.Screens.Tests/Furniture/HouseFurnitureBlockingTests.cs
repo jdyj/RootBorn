@@ -81,5 +81,28 @@ namespace Rootborn.Screens.Tests.Furniture
             Assert.That(changed, Is.EqualTo(new[] { "TestRoom" }), "면이 같은 가구 방만");
             Assert.That(other.WalkMap.Collision.IsBlocked(other.ToMap(new GridPoint(3, 3))), Is.False);
         }
+
+        [Test]
+        public void 일터_면이_먼저_나와도_집_면의_배치를_읽어_둔다()
+        {
+            using var first = new TestSession();
+            var placedRoom = new FurnitureRoom(FurniturePlacementScreenTests.TestRoomMap());
+            first.Session.EnterHouse(placedRoom.Grid, "house"); // 준비: 집에서 가구를 놓아 저장한다
+            var cell = new GridPoint(3, 3);
+            Assert.That(first.Session.PlaceFurniture(Blocker(first.Session), cell, FurniturePlacementDirection.North), Is.True);
+
+            using TestSession again = first.Reopen();
+            var house = new FurnitureRoom(FurniturePlacementScreenTests.TestRoomMap());
+            var kitchen = new FurnitureRoom(new WorldMap("Kitchen", FurniturePlacementScreenTests.TestRoomMap().Collision, new List<DoorArea>(),
+                new Dictionary<string, (float X, float Y)> { ["entry"] = (5 * 32 + 16, 6 * 32 + 16) }));
+            string workspaceSurface = again.Session.Definitions.All<Rootborn.Core.Workspaces.Workspace>().First().SurfaceId;
+            var changed = new List<string>();
+            var sync = new HouseFurnitureBlocking(id => id == "TestRoom" ? house : id == "Kitchen" ? kitchen : null,
+                new[] { ("Kitchen", workspaceSurface), ("TestRoom", "house") }, changed.Add);
+            sync.Attach(again.Session, "Kitchen");
+            Assert.That(again.Session.House?.SurfaceId, Is.EqualTo("house"), "일터 면이 아니라 집 면으로 읽어 둔다");
+            Assert.That(house.WalkMap.Collision.IsBlocked(house.ToMap(cell)), Is.True, "집 격자에 가구 칸이 막혔다");
+            Assert.That(kitchen.WalkMap.Collision.IsBlocked(kitchen.ToMap(cell)), Is.False, "일터 격자에는 집 가구를 넣지 않는다");
+        }
     }
 }

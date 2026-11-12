@@ -33,20 +33,25 @@ namespace Rootborn.Screens.Furniture
 
         /// <summary>
         /// 게임 한 판을 이을 때(새 게임, 이어 하기, 방에 들어감): 집 배치를 아직 모르면 집 밖에서 읽어 둔다(<see cref="GameSession.PrepareHouse"/> —
-        /// 지금 맵이 가구 방이면 그 방, 아니면 맵 목록에서 처음 나오는 가구 방). 그다음 <see cref="Apply"/>.
+        /// 지금 맵이 가구 방이면 그 방, 아니면 맵 목록에서 처음 나오는 집 면의 가구 방 — 일터 면은 건너뛴다). 그다음 <see cref="Apply"/>.
         /// </summary>
         public void Attach(GameSession session, string currentMapId)
         {
             if (session == null) return;
-            if (session.House == null && _houses.Length > 0)
+            if (session.House == null)
             {
-                (string MapId, string Surface) house = _houses[0];
+                // 지금 맵이 가구 방이면 그 방부터, 다음은 맵 목록 순서. 일터 면은 GameSession이 읽지 않으므로 집 배치가 생길 때까지 다음 방으로 간다.
                 foreach (var h in _houses)
-                    if (string.Equals(h.MapId, currentMapId, StringComparison.OrdinalIgnoreCase)) { house = h; break; }
-                FurnitureRoom room = _roomOf(house.MapId);
-                if (room != null) session.PrepareHouse(room.Grid, house.Surface);
+                    if (string.Equals(h.MapId, currentMapId, StringComparison.OrdinalIgnoreCase)) { Prepare(session, h); break; }
+                for (int i = 0; i < _houses.Length && session.House == null; i++) Prepare(session, _houses[i]);
             }
             Apply(session);
+        }
+
+        private void Prepare(GameSession session, (string MapId, string Surface) house)
+        {
+            FurnitureRoom room = _roomOf(house.MapId);
+            if (room != null) session.PrepareHouse(room.Grid, house.Surface);
         }
 
         /// <summary>게임 한 판의 집 배치(<see cref="GameSession.House"/>)가 막는 칸을 그 면의 가구 방에 넣는다. 가구가 바뀌었다는 알림마다 부른다.</summary>

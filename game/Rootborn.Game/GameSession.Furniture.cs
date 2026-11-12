@@ -64,9 +64,10 @@ namespace Rootborn.Game
         /// 어느 맵에 있든 같아야 한다). <see cref="EnterHouse"/>와 같은 배치를 읽지만 체인 단계에 놓인 가구를 다시 알리지 않는다 — 그것은 집에 들어설 때 한다.
         /// 같이 쓰는 집이면 방이 알린 배치이고, 그 뒤 방의 집이 바뀌면 다른 맵에 있어도 따라간다. 알림: 읽었으면 <see cref="GameChangeTopics.Furniture"/>.
         /// </summary>
+        /// <remarks>일터 면(data/workspaces)이면 아무것도 하지 않는다: 집 기록을 일터 방에 집 배치로 열면 집 가구가 일터 격자에 들고 House가 일터 면의 집이 된다.</remarks>
         public void PrepareHouse(IPlacementGrid grid, string surfaceId)
         {
-            if (House != null) return;
+            if (House != null || (surfaceId != null && WorkspaceBySurface.ContainsKey(surfaceId))) return;
             LoadHouse(grid, surfaceId);
             Notify(null, GameChangeTopics.Furniture);
         }
