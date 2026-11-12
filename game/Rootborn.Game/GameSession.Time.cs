@@ -26,6 +26,39 @@ namespace Rootborn.Game
         /// <summary>보이는 시각(0~1439분). 그날 0시부터 센 분을 24시간으로 감는다(26:00 → 02:00).</summary>
         public int ClockMinutes => TimeRules.ClockMinutes(Student.TimeMinutes);
 
+        /// <summary>
+        /// 분 아래까지 든 시각(그날 0시부터 센 분, 정수부는 늘 <c>Student.TimeMinutes</c>). NPC 걷기가 분마다 튀지 않게 쓴다.
+        /// 혼자 하기: 흐르는 시계의 남은 조각. 같이 하는 방: 개인 시계의 분이 바뀐 뒤 들어온 실제 초 ÷ 게임 1분의 실제 초(0.999에서 자른다, 분이 바뀌면 0부터).
+        /// 시간 규칙이 없으면 조각은 0이다.
+        /// </summary>
+        public double DayMinutesExact => Student.TimeMinutes + MinuteFraction();
+
+        // 같이 하는 방의 조각: 개인 시계가 마지막으로 본 분과 그 뒤 들어온 실제 초.
+        private double _sinceMinuteSeconds;
+        private int _lastSeenMinutes = int.MinValue;
+
+        private double MinuteFraction()
+        {
+            if (IsSoloRoom) return _flow?.MinuteFraction ?? 0d;
+            // 방을 잇는 쪽이 시계를 옮겼으면(SyncWithRoom) 아직 그 분의 실제 초를 받지 않았다.
+            if (Student.TimeMinutes != _lastSeenMinutes || TimeRules == null) return 0d;
+            double secondsPerMinute = TimeRules.RealSecondsPerGameDay / (double)Core.Time.TimeRules.MinutesPerDay;
+            return secondsPerMinute <= 0d ? 0d : Math.Min(FlowingClock.MaxMinuteFraction, _sinceMinuteSeconds / secondsPerMinute);
+        }
+
+        // 같이 하는 방: 분이 바뀌면 조각을 0부터, 같은 분이면 실제 초를 더한다(방의 시계는 멈추지 않으므로 menuOpen과 무관하다).
+        private void TrackRoomMinuteFraction(float realSeconds)
+        {
+            if (Student.TimeMinutes != _lastSeenMinutes)
+            {
+                _lastSeenMinutes = Student.TimeMinutes;
+                _sinceMinuteSeconds = 0d;
+                return;
+            }
+            if (float.IsNaN(realSeconds) || realSeconds <= 0f) return;
+            _sinceMinuteSeconds += realSeconds;
+        }
+
         /// <summary>체력이 0이 되어 지쳤다. 걷기·대화·잠만 된다. 자야 풀린다.</summary>
         public bool IsExhausted => Student.IsExhausted;
 
@@ -59,6 +92,7 @@ namespace Rootborn.Game
             if (!IsSoloRoom)
             {
                 FollowRoom(out int followed);
+                TrackRoomMinuteFraction(realSeconds);
                 return followed;
             }
 

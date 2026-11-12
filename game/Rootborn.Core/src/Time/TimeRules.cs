@@ -76,6 +76,12 @@ namespace Rootborn.Core.Time
             _secondsPerMinute = day / TimeRules.MinutesPerDay;
         }
 
+        /// <summary>다음 게임 분까지 흐른 비율 [0, 1). 아직 분이 되지 않은 남은 조각이다(멈춤 동안 그대로).</summary>
+        public double MinuteFraction => Math.Min(MaxMinuteFraction, _pendingSeconds / _secondsPerMinute);
+
+        /// <summary>분 아래 조각의 위 끝. 조각이 다음 분으로 보이지 않게 1 아래에서 자른다.</summary>
+        public const double MaxMinuteFraction = 0.999d;
+
         /// <summary>실제 초를 보낸다. 멈춤이면 흐르지 않고 남은 조각도 그대로다. 음수·NaN은 무시한다. 지난 게임 분을 돌려준다.</summary>
         public int Advance(float realSeconds, bool paused)
         {
