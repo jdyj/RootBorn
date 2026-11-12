@@ -598,7 +598,23 @@ namespace Rootborn.Core.Quests
                 list.Add(pair.Value.ToSaveData());
             }
 
+            for (int i = 0; i < _unknownRecords.Count; i++) list.Add(_unknownRecords[i]);
             return new QuestChainLogSaveData { Chains = list.ToArray() };
+        }
+
+        // 세이브에 있지만 지금 데이터에 없는 체인의 기록. 규칙에는 보이지 않고 그대로 다시 쓴다(QuestLog와 같다).
+        private readonly List<QuestChainProgressSaveData> _unknownRecords = new List<QuestChainProgressSaveData>();
+
+        private void KeepUnknown(QuestChainProgressSaveData saved)
+        {
+            for (int i = 0; i < _unknownRecords.Count; i++)
+            {
+                if (_unknownRecords[i].ChainId != saved.ChainId) continue;
+                _unknownRecords[i] = saved;
+                return;
+            }
+
+            _unknownRecords.Add(saved);
         }
 
         public void LoadFromSaveData(QuestChainLogSaveData saveData)
@@ -608,7 +624,12 @@ namespace Rootborn.Core.Quests
             {
                 var saved = saveData.Chains[i];
                 if (saved == null || string.IsNullOrEmpty(saved.ChainId)) continue;
-                if (!TryGetDefinition(saved.ChainId, out var definition)) continue;
+                if (!TryGetDefinition(saved.ChainId, out var definition))
+                {
+                    KeepUnknown(saved);
+                    continue;
+                }
+
                 var progress = QuestChainProgress.FromSaveData(saved, definition);
                 _progressByChain[definition] = progress;
                 CacheProgress(definition, progress);

@@ -104,16 +104,24 @@ namespace Rootborn.Game.Tests
         }
 
         [Test]
-        public void AnUnknownItemInTheSnapshot_RefusesToStart_RatherThanDroppingIt()
+        public void AnUnknownItemInTheSnapshot_StartsWithoutIt_AndTheNextSaveWritesItBack()
         {
+            // 전에는 슬롯 전체를 거절했다(버리지 않으려고). 데이터에서 아이템 하나를 빼면 그 아이템을 가진 세이브가 모두 안 열렸다.
+            // 이제 가방에는 보이지 않게 들고 있다가 그대로 다시 쓴다(Core ItemInventory).
             using var saves = Played();
             SaveEdits.EditSnapshot(saves.Store, s => SaveEdits.Fill(s, "item.not-in-data", 3));
-            var before = Files(saves);
 
-            var error = Assert.Throws<SaveSlotDamagedException>(() => TestWorld.Start(saves.Store));
+            var game = TestWorld.Start(saves.Store);
+            Assert.That(game.Inventory.Slots.Any(s => s.Item != null && s.Item.Id == "item.not-in-data"), Is.False);
+            game.VisitLocation("location.town-square");
 
-            Assert.That(error.ToString(), Does.Contain("item.not-in-data"), "어느 아이템인지 알린다");
-            Assert.That(SlotCheckpoints.Same(before, Files(saves)), Is.True, "다음 저장이 아이템을 지우지 않게 아무것도 쓰지 않는다");
+            Assert.That(saves.Store.TryRead<AdultCareerSnapshotSaveData>(TestWorld.Slot, SaveFileNames.AdultCareerSnapshot(TestWorld.Player), out var saved), Is.True);
+            Assert.That(saved.Inventory.Items.Where(i => i.ItemId == "item.not-in-data").Sum(i => i.Count), Is.EqualTo(3), "다음 저장이 아이템을 지우지 않는다");
+
+            var again = TestWorld.Start(saves.Store);
+            again.VisitLocation("location.town-square");
+            Assert.That(saves.Store.TryRead(TestWorld.Slot, SaveFileNames.AdultCareerSnapshot(TestWorld.Player), out saved), Is.True);
+            Assert.That(saved.Inventory.Items.Where(i => i.ItemId == "item.not-in-data").Sum(i => i.Count), Is.EqualTo(3), "다시 읽고 써도 늘거나 줄지 않는다");
         }
 
         [Test]
@@ -143,14 +151,16 @@ namespace Rootborn.Game.Tests
         }
 
         [Test]
-        public void AnEquippedToolThatIsNotInData_RefusesToStart()
+        public void AnEquippedToolThatIsNotInData_Starts_AndTheSelectionIsWrittenBack()
         {
             using var saves = Played();
             SaveEdits.EditSnapshot(saves.Store, s => s.Inventory.EquippedToolItemId = "item.not-in-data");
-            var before = Files(saves);
 
-            Assert.Throws<SaveSlotDamagedException>(() => TestWorld.Start(saves.Store));
-            Assert.That(SlotCheckpoints.Same(before, Files(saves)), Is.True);
+            var game = TestWorld.Start(saves.Store);
+            game.VisitLocation("location.town-square");
+
+            Assert.That(saves.Store.TryRead<AdultCareerSnapshotSaveData>(TestWorld.Slot, SaveFileNames.AdultCareerSnapshot(TestWorld.Player), out var saved), Is.True);
+            Assert.That(saved.Inventory.EquippedToolItemId, Is.EqualTo("item.not-in-data"));
         }
 
         [Test]
