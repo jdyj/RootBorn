@@ -64,6 +64,21 @@ namespace Rootborn.Host.Tests.TwoGames
             // 실행 환경의 방·세이브 값이 섞이지 않게 비운다(값은 launch 인자로만 준다).
             foreach (string variable in new[] { HostOptions.JoinVariable, HostOptions.HostVariable, HostOptions.ShareVariable, HostOptions.MaxPlayersVariable, "ROOTBORN_SAVE_ROOT", "ROOTBORN_SAVE_SLOT" })
                 info.Environment.Remove(variable);
+            return Start(info, name);
+        }
+
+        /// <summary>
+        /// 주어진 명령으로 두 번째 게임을 띄운다(그 명령의 표준 입출력이 곧 동사 줄이어야 한다). 다른 기계의 게임을 ssh로 띄울 때 쓴다(<see cref="RemoteMachine.StartPeer"/>).
+        /// 표준 입출력은 이쪽에서 UTF-8로 묶는다.
+        /// </summary>
+        public static PeerGame Start(ProcessStartInfo info, string name)
+        {
+            if (info == null) throw new ArgumentNullException(nameof(info));
+            info.UseShellExecute = false;
+            info.RedirectStandardInput = info.RedirectStandardOutput = info.RedirectStandardError = true;
+            info.CreateNoWindow = true;
+            info.StandardOutputEncoding = info.StandardErrorEncoding = Encoding.UTF8;
+            info.StandardInputEncoding = new UTF8Encoding(false);
             return new PeerGame(Process.Start(info) ?? throw new InvalidOperationException("두 번째 게임 프로세스를 띄우지 못했다"), name);
         }
 

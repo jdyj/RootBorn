@@ -65,3 +65,47 @@ root 없이 원격 홈의 작업 폴더 안에만 만든다. 여러 번 돌려�
 ## 다른 장치를 쓰려면
 
 같은 변수에 그 장치의 값을 주고 `--setup`을 한 번 돌린다. 장치마다 `env.sh`의 한계 값(동시 실행 수, 가용 메모리)을 그 장치의 다른 일에 맞춘다.
+
+## 두 기계로 같이 하기 (`two-machines.sh`)
+
+같이 하기를 실제 네트워크로 본다: 이 PC(Windows)의 게임과 원격 Linux 장치(Strix Halo)의 데디케이티드 서버·게임이 집 안 네트워크(LAN)의 UDP로 만난다.
+같은 기계 루프백 확인(`game/tests/Rootborn.Host.Tests/TwoGames`의 두 프로세스 테스트)이 못 보는 것 — 다른 운영체제, 실제 지연과 패킷, LAN 주소에 묶기, 배포 폴더의 서버 — 을 본다.
+두 기계가 필요해 CI에는 넣지 않는다.
+
+```bash
+bash Scripts/remote-test/two-machines.sh                                   # 전부: 준비 → 테스트 → 증거 받기 → 원격 뒷정리와 확인
+bash Scripts/remote-test/two-machines.sh --filter "FullyQualifiedName~TWO_MACHINES_001"   # 일부
+bash Scripts/remote-test/two-machines.sh --no-publish                      # output/publish 를 그대로(이 스크립트가 이 커밋에서 만든 것일 때만, 아니면 다시 게시)
+bash Scripts/remote-test/two-machines.sh --check                           # 원격에 남은 것(프로세스·듣는 포트·폴더)만 본다
+```
+
+접속 값은 위와 같은 환경 변수(`ROOTBORN_REMOTE_HOST`·`USER`·`KEY`, 작업 폴더 `ROOTBORN_REMOTE_DIR`)로만 받는다. **없으면 아무것도 하지 않고 "건너뛰었다"고 알린다**(종료 코드 0).
+원격은 `run.sh --setup`으로 준비된 것(`env.sh`의 dotnet·Xvfb·글꼴)을 쓴다. 다른 커밋의 서버는 `TWO_MACHINES_OTHER_COMMIT`(기본 `HEAD~1`).
+
+하는 일:
+
+1. 이 PC에서 `Tools/publish/publish.sh linux-x64`·`--server linux-x64`, 다른 커밋의 소스를 `git archive`로 **저장소 밖**에 풀어 `ROOTBORN_COMMIT=<그 커밋>`으로 서버 게시
+   (저장소 안에서 빌드하면 소스 링크가 이 저장소의 HEAD를 찍는다), `Rootborn.Host.Tests`를 Release로 빌드.
+2. 원격 `<작업 폴더>/two-machines/<실행 id>/`에 올린다: `bin/two-machines-remote.sh`(원격 도우미), `peer/`(테스트 어셈블리), `client/`(linux-x64 배포 — 원격 게임의 루트), `server/`, `server-other/`.
+3. 이 PC에서 `dotnet test --filter Category=TwoMachines`(`TwoGames/TwoMachinesHostTests.cs`, `[Explicit]`)를 `ROOTBORN_TWO_MACHINES_RUN=<원격 실행 폴더>`로 돌린다.
+   테스트가 ssh로 원격 도우미를 부른다:
+   - `server` — 서버를 **원격 장치의 LAN 주소 하나**(ssh가 닿은 주소, `SSH_CONNECTION`의 셋째 칸 — 스크립트에 적지 않는다)에 포트 0(운영체제가 준 빈 포트)으로 띄운다. 0.0.0.0으로 듣지 않는다.
+     ssh 표준 입력의 줄이 서버 콘솔로 가고, 입력이 닫히면(테스트·ssh가 끝났다) `stop`을 넣어 저장하고 끝내게 한다. 시간 한도 `TWO_MACHINES_LIMIT`(기본 2h).
+   - `peer` — 원격 가상 화면(범위 220~239, 원격 테스트·배포 확인과 겹치지 않는다)에서 `Rootborn.Host.Tests.dll --two-games-peer`. 동사 줄은 ssh 표준 입출력으로 간다(같은 `PeerGame`).
+     두 게임은 동사 줄로 번갈아 한 프레임씩 돌지만 네트워크는 실제 시간이라 확인은 모두 "조건이 될 때까지 기다린다(넉넉한 프레임 한도)"로 쓴다.
+   - `client-address` — 이 PC의 LAN 주소(ssh 출발 주소). 이 PC에서 방을 열 때 그 주소 하나에 묶는다.
+   - `guest-files` — 서버 세이브(`guests/` 포함) 목록.
+   띄운 프로세스에는 `ROOTBORN_TWO_MACHINES_RUN=<실행 id>` 표시를 붙인다.
+4. 증거를 `output/two-machines/<실행 id>/`로: `two-machines.trx`, `test.log`, 이 PC 스크린샷(`two-machines-*.png`), 원격 스크린샷과 서버 로그(`remote-evidence/`), 재기 표(`two-machines-measurements.md`).
+5. 끝나면(실패·Ctrl+C 포함) 원격 도우미 `cleanup`이 그 표시가 붙은 프로세스만 끝내고 실행 폴더를 지운다. 이어서 `check`가 남은 것(표시가 붙은 프로세스, 이 사용자의 Rootborn 프로세스,
+   이 사용자 프로세스가 듣는 LAN 포트, `two-machines/` 아래 폴더)을 찍어 `check.txt`에 남긴다.
+
+| 테스트 | 무엇 |
+|---|---|
+| `TWO_MACHINES_001` | 원격 서버(돈·집 공유) + 이 PC 게임: 서버 주소로 들어가기 → 걷기, 알바로 돈(방 지갑이 HUD에), 상자 놓고 넣기, 가구 놓기, 자기(혼자라 바로 다음 날), 서버의 `guests/`에 진행, 게임을 끄고 다시 들어오면 이어짐, 서버를 껐다 켜도 이어짐 |
+| `TWO_MACHINES_002` | 원격 서버 + 이 PC 게임 + 원격 게임: 서로 보이고 걷는 것이 양쪽으로 따라옴, 원격이 번 돈이 이 PC HUD에, 이 PC가 상자에 넣은 나무를 원격이 꺼냄, 1분 재기, 둘 다 자면 다음 날 |
+| `TWO_MACHINES_003` | 이 PC가 방 열기(이 PC의 LAN 주소), 원격 게임이 들어옴 — Windows 방화벽이 받는 UDP를 막으면 실패하고 "사용자 확인 필요"로 적는다(방화벽 창은 조작하지 않는다) |
+| `TWO_MACHINES_004` | 다른 커밋의 원격 서버에 이 PC 게임이 들어가려 하면 "게임 버전이 다르다"로 거절되고 들어가기 창에 이유가 보인다 |
+
+근거의 종류: 두 기계(Windows ↔ Linux), 실제 LAN, 장치 이벤트 주입(OS 입력 계층 미확인). 원격 게임의 그리기는 소프트웨어 GL이다. 사람이 직접 한 플레이와 인터넷을 거치는 접속은 미확인이다.
+재기의 왕복 지연·바이트는 이 PC 게임의 연결(LiteNetLib `NetManager`)을 테스트가 리플렉션으로 찾아 통계를 켜고 읽은 값이다(`TwoGames/NetProbe.cs` — 게임 코드에 재는 입구는 없다).
