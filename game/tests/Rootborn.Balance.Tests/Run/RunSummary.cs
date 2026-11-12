@@ -24,17 +24,27 @@ namespace Rootborn.Balance.Tests
         public string[] PaybackGaps = new string[0];     // PaybackDays와 같은 길이: null이면 값이 있고, 아니면 PaybackGap의 값
         public int?[] RecoverDays = new int?[0];         // 올린 것마다: 올린 날부터 번 것의 합이 쓴 값 이상이 되기까지의 날 수(올린 날 포함). 판 안에서 못 채우면 null
         public float ActionsPerDay;
+        public int ExhaustedDays;                        // 지침을 본 날 수(DayRecord.Exhausted)
+        public int NightsAwake;                          // 자지 않은 밤 수
+        public float AverageEnergyAtEnd;                 // 밤(잠·날 넘김) 전 체력의 평균
+        public float? AverageSleptAtMinutes;             // 잔 날의 잔 시각 평균(그날 0시부터 센 분). 잔 날이 없으면 null
 
-        public static RunSummary From(RunResult run)
+        /// <summary>판 전체.</summary>
+        public static RunSummary From(RunResult run) => run.Days.Count == 0 ? new RunSummary() : From(run, run.Days.Count);
+
+        /// <summary>판의 첫 upToDay일만(훑기의 시점). 1 ≤ upToDay ≤ 판의 날 수.</summary>
+        public static RunSummary From(RunResult run, int upToDay)
         {
             var days = run.Days;
+            if (upToDay < 1 || upToDay > days.Count) throw new ArgumentOutOfRangeException(nameof(upToDay), "시점은 1~판의 날 수(" + days.Count + ")다: " + upToDay);
+            int count = upToDay;
             var s = new RunSummary();
-            if (days.Count == 0) return s;
 
-            long earned = 0, minigameEarned = 0, actions = 0, workMinutes = 0;
+            long earned = 0, minigameEarned = 0, actions = 0, workMinutes = 0, energy = 0, sleptAt = 0;
+            int sleptDays = 0;
             double travelSeconds = 0, minigameSeconds = 0;
             var upgrades = new List<int>();
-            for (int i = 0; i < days.Count; i++)
+            for (int i = 0; i < count; i++)
             {
                 var d = days[i];
                 earned += d.Earned;
@@ -43,6 +53,10 @@ namespace Rootborn.Balance.Tests
                 workMinutes += d.WorkMinutes;
                 travelSeconds += d.TravelRealSeconds;
                 minigameSeconds += d.MinigameRealSeconds;
+                energy += d.EnergyAtEnd;
+                if (d.Exhausted) s.ExhaustedDays++;
+                if (d.Slept) { sleptDays++; sleptAt += d.SleptAtMinutes; }
+                else s.NightsAwake++;
                 if (d.Upgraded) upgrades.Add(i);
                 if (s.Level2Day == null && d.FacilityLevel >= 2) s.Level2Day = i + 1;
                 if (s.Level3Day == null && d.FacilityLevel >= 3) s.Level3Day = i + 1;
@@ -50,9 +64,11 @@ namespace Rootborn.Balance.Tests
                 if (s.FirstBagFullDay == null && d.Stop == StopReasons.BagFull) s.FirstBagFullDay = i + 1;
             }
 
-            s.IncomePerDay = (float)earned / days.Count;
-            s.ActionsPerDay = (float)actions / days.Count;
-            s.FinalWallet = days[days.Count - 1].WalletAtEnd;
+            s.IncomePerDay = (float)earned / count;
+            s.ActionsPerDay = (float)actions / count;
+            s.AverageEnergyAtEnd = (float)energy / count;
+            if (sleptDays > 0) s.AverageSleptAtMinutes = (float)sleptAt / sleptDays;
+            s.FinalWallet = days[count - 1].WalletAtEnd;
             if (workMinutes > 0) s.IncomePerGameHour = (float)(earned / (workMinutes / 60.0));
             if (travelSeconds + minigameSeconds > 0) s.IncomePerRealMinuteWithTravel = (float)(earned / ((travelSeconds + minigameSeconds) / 60.0));
             if (minigameSeconds > 0) s.IncomePerRealMinuteMinigameOnly = (float)(minigameEarned / (minigameSeconds / 60.0));
@@ -63,10 +79,10 @@ namespace Rootborn.Balance.Tests
             for (int u = 0; u < upgrades.Count; u++)
             {
                 int at = upgrades[u];
-                s.RecoverDays[u] = Recover(days, at);
+                s.RecoverDays[u] = Recover(days, at, count);
 
                 int from = u == 0 ? 0 : upgrades[u - 1] + 1;                       // 앞 구간: 이전 올린 날 다음부터
-                int to = u + 1 < upgrades.Count ? upgrades[u + 1] : days.Count;    // 뒤 구간: 다음 올린 날 앞까지
+                int to = u + 1 < upgrades.Count ? upgrades[u + 1] : count;         // 뒤 구간: 다음 올린 날 앞까지
                 if (at - from <= 0 || to - (at + 1) <= 0) { s.PaybackGaps[u] = PaybackGap.NoSpan; continue; }
                 double before = Mean(days, from, at), after = Mean(days, at + 1, to);
                 double gain = after - before;
@@ -77,10 +93,10 @@ namespace Rootborn.Balance.Tests
         }
 
         // 올린 날부터 번 것을 더해 그날 쓴 값 이상이 되는 날까지의 날 수(올린 날이 1). 못 채우면 null.
-        private static int? Recover(List<DayRecord> days, int at)
+        private static int? Recover(List<DayRecord> days, int at, int count)
         {
             long cost = days[at].Spent, sum = 0;
-            for (int i = at; i < days.Count; i++)
+            for (int i = at; i < count; i++)
             {
                 sum += days[i].Earned;
                 if (sum >= cost) return i - at + 1;

@@ -230,7 +230,7 @@ namespace Rootborn.Balance.Tests
 
         private static string Name(RunResult run) => run.TargetId == "" ? "(한 판)" : run.TargetId;
 
-        private static void MdRow(StringBuilder b, List<string> cells)
+        internal static void MdRow(StringBuilder b, List<string> cells)
         {
             b.Append('|');
             foreach (var c in cells) b.Append(' ').Append(c.Replace("|", "\\|")).Append(" |");
@@ -239,7 +239,7 @@ namespace Rootborn.Balance.Tests
 
         // ---- 칸 쓰기 ----
 
-        private static void Row(StringBuilder b, params string[] cells)
+        internal static void Row(StringBuilder b, params string[] cells)
         {
             for (int i = 0; i < cells.Length; i++)
             {
@@ -252,13 +252,13 @@ namespace Rootborn.Balance.Tests
         }
 
         private static string Counts(SortedDictionary<string, int> counts) => string.Join(";", counts.Select(p => p.Key + "×" + I(p.Value)));
-        private static string I(int value) => value.ToString(Inv);
-        private static string I(int? value) => value.HasValue ? value.Value.ToString(Inv) : "";
-        private static string F(float value) => value.ToString("0.###", Inv);
-        private static string F(float? value) => value.HasValue ? F(value.Value) : "";
-        private static string F1(float value) => value.ToString("0.0", Inv);
-        private static string F1(float? value) => value.HasValue ? F1(value.Value) : "-";
-        private static string Dash(int? value) => value.HasValue ? value.Value.ToString(Inv) : "-";
+        internal static string I(int value) => value.ToString(Inv);
+        internal static string I(int? value) => value.HasValue ? value.Value.ToString(Inv) : "";
+        internal static string F(float value) => value.ToString("0.###", Inv);
+        internal static string F(float? value) => value.HasValue ? F(value.Value) : "";
+        internal static string F1(float value) => value.ToString("0.0", Inv);
+        internal static string F1(float? value) => value.HasValue ? F1(value.Value) : "-";
+        internal static string Dash(int? value) => value.HasValue ? value.Value.ToString(Inv) : "-";
         private static string B(bool value) => value ? "true" : "false";
     }
 }
