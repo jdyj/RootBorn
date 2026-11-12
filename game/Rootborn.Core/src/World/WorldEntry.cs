@@ -137,10 +137,18 @@ namespace Rootborn.Core.World
         {
             if (catalog == null || !catalog.IsValid) return null;
             if (saved == null) return ResolveNewGame(catalog);
-            if (saved.Version < 0 || saved.Version > WorldProgressSaveData.KnownVersion) return null;
-            if (saved.Version == 1 && !string.Equals(saved.SaveSlot, saveSlot, StringComparison.Ordinal)) return null;
-            if (saved.Version == 0 && !string.IsNullOrEmpty(saved.SaveSlot) && saved.SaveSlot != saveSlot) return null;
+            if (!IsForSlot(saveSlot, saved)) return null;
             return ResolvePair(catalog, saved.CurrentScene, saved.CurrentEntryPointId);
+        }
+
+        /// <summary>이 기록이 이 슬롯의 것이고 아는 버전인가(자리가 목록에 있는지는 보지 않는다).</summary>
+        public static bool IsForSlot(string saveSlot, WorldProgressSaveData saved)
+        {
+            if (saved == null) return false;
+            if (saved.Version < 0 || saved.Version > WorldProgressSaveData.KnownVersion) return false;
+            if (saved.Version == 1 && !string.Equals(saved.SaveSlot, saveSlot, StringComparison.Ordinal)) return false;
+            if (saved.Version == 0 && !string.IsNullOrEmpty(saved.SaveSlot) && saved.SaveSlot != saveSlot) return false;
+            return true;
         }
 
         /// <summary>도착 기록. 목록에 없는 자리면 null.</summary>
@@ -174,12 +182,18 @@ namespace Rootborn.Core.World
         public SaveSlotMetadata Metadata;
         public WorldProgressSaveData Saved;
         public string Problem;
+        /// <summary>
+        /// 저장된 자리("장면/도착 지점")가 지금 목록에 없어 새 게임 자리에서 시작했으면 그 옛 자리. 아니면 null.
+        /// 맵이 바뀌어 사라진 자리 때문에 슬롯이 열리지 않는 일을 막는다. 진행은 그대로다.
+        /// </summary>
+        public string MovedFrom;
     }
 
     /// <summary>
     /// 세이브 슬롯 하나에서 월드를 시작하고 도착을 기록한다. 슬롯 정보가 없으면 새 게임(슬롯 정보를 쓰고 새 게임 자리),
     /// 있으면 이어 하기(world-progress의 자리, 파일이 없으면 새 게임 자리). 읽을 수 없는 파일은 덮어쓰지 않고 시작을 거절한다.
     /// 슬롯 id가 빈 슬롯 정보, 슬롯 정보 없이 남은 진행 파일도 거절한다(Unity 판은 슬롯 정보를 새로 썼다).
+    /// 저장된 자리가 목록에서 사라졌으면(맵 교체) 거절하지 않고 새 게임 자리에서 이어 간다(MovedFrom, Unity 판은 거절했다).
     /// </summary>
     public sealed class WorldSlot : IWorldArrivals
     {
@@ -231,6 +245,12 @@ namespace Rootborn.Core.World
                 _store.TryRead(SlotId, SaveFileNames.WorldProgress, out WorldProgressSaveData saved);
                 start.Saved = saved;
                 WorldEntryPoint? entry = WorldEntryRules.ResolveContinue(_catalog, SlotId, saved);
+                if (entry == null && WorldEntryRules.IsForSlot(SlotId, saved))
+                {
+                    // 이 슬롯의 기록인데 자리만 목록에 없다(맵이 바뀌었다). 새 게임 자리에서 이어 간다. 도착하면 새 자리가 기록된다.
+                    start.MovedFrom = saved.CurrentScene + "/" + saved.CurrentEntryPointId;
+                    entry = WorldEntryRules.ResolveNewGame(_catalog);
+                }
                 if (entry == null)
                 {
                     start.Problem = "이어 할 자리가 올바르지 않다: " + (saved != null ? saved.SaveSlot + " " + saved.CurrentScene + "/" + saved.CurrentEntryPointId + " (버전 " + saved.Version + ")" : "?");
