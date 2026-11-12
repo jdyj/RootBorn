@@ -59,7 +59,7 @@ namespace Rootborn.Data.Tests
             var slot = new MemorySaveSlot("room", new[]
             {
                 new KeyValuePair<string, string>("broken.json", "{ not json"),
-                new KeyValuePair<string, string>("new.json", "{ \"Version\": 99 }"),
+                new KeyValuePair<string, string>("new.json", "{ \"Version\": 99, \"ReadableFrom\": 99 }"),
             });
             Assert.Throws<SaveFileCorruptException>(() => slot.TryRead("room", "broken.json", out RoomClockSaveData _));
             Assert.Throws<SaveFileTooNewException>(() => slot.TryRead("room", "new.json", out RoomClockSaveData _));

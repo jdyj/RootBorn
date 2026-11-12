@@ -10,7 +10,8 @@ namespace Rootborn.Data.Save
 {
     /// <summary>
     /// 세이브 파일을 &lt;root&gt;/&lt;슬롯&gt;/&lt;파일&gt;에 JSON으로 읽고 쓴다. Unity 판과 같은 배치다. 저장 폴더는 Host가 넘긴다.
-    /// 옛 파일 읽기: 파일에 없는 필드는 클래스 기본값, 모양에 없는 필드는 버린다(무엇이 버려지는지는 고정 파일 테스트가 잡는다).
+    /// 옛 파일 읽기: 파일에 없는 필드는 클래스 기본값. 모양에 없는 필드는 읽을 때 넘기고, 그 파일을 다시 쓸 때 그대로 옮겨 쓴다
+    /// (더 새 프로그램이 쓴 세이브를 이 프로그램이 플레이해도 새 필드가 남는다 — <see cref="KeepUnknown"/>). 더 높은 형식 버전도 읽는다.
     /// 쓰기는 같은 폴더의 임시 파일에 쓴 뒤 바꿔치기해서, 쓰다 꺼져도 원래 파일이 깨지지 않는다.
     /// 여러 파일을 함께 쓰는 묶음(<see cref="BeginBatch"/>)은 슬롯 폴더의 준비 폴더(<see cref="BatchFolder"/>)에 모두 쓰고, 끝났다는 표시
     /// (<see cref="BatchMark"/>: 바꿔 넣을 파일과 지울 파일 목록)를 남긴 뒤 바꿔 넣는다. 그 슬롯을 다음에 읽거나 쓸 때 표시가 있는 묶음은 마저 적용하고,
@@ -40,6 +41,19 @@ namespace Rootborn.Data.Save
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, // 한글을 \u 없이 그대로 쓴다
         };
 
+        // 모양에 없는 필드가 있으면 실패하는 읽기. 성공하면 그 파일에는 이 프로그램이 모르는 것이 없다(다시 쓸 때 합칠 것이 없다).
+        private static readonly JsonSerializerOptions StrictOptions = new JsonSerializerOptions(Options)
+        {
+            UnmappedMemberHandling = System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow,
+        };
+
+        /// <summary>파일이 "이 형식 버전을 아는 프로그램부터 읽을 수 있다"고 적는 필드 이름. 없으면 어느 프로그램이든 읽는다.</summary>
+        public const string ReadableFromField = "ReadableFrom";
+
+        // "지금 디스크의 이 파일에는 이 프로그램이 쓰지 않는 것이 없다"고 확인된 경로. 여기 있으면 쓸 때 옛 파일을 다시 읽어 합치지 않는다.
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, bool> NothingUnknown =
+            new System.Collections.Concurrent.ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+
         private static readonly UTF8Encoding Utf8NoBom = new UTF8Encoding(false);
         private readonly string _root;
 
@@ -61,32 +75,56 @@ namespace Rootborn.Data.Save
             RecoverBatch(saveSlot);
             if (!File.Exists(path)) return false;
 
-            data = Parse<T>(File.ReadAllText(path, Encoding.UTF8), path);
+            data = Parse<T>(File.ReadAllText(path, Encoding.UTF8), path, out bool nothingUnknown);
+            if (nothingUnknown) NothingUnknown[path] = true;
+            else NothingUnknown.TryRemove(path, out _);
             return true;
         }
 
-        internal static T Parse<T>(string text, string path) where T : class, new()
+        internal static T Parse<T>(string text, string path) where T : class, new() => Parse<T>(text, path, out _);
+
+        /// <param name="nothingUnknown">파일에 이 프로그램이 모르는 필드도, 더 높은 형식 버전도 없다(다시 쓸 때 지킬 것이 없다).</param>
+        internal static T Parse<T>(string text, string path, out bool nothingUnknown) where T : class, new()
         {
+            nothingUnknown = false;
             if (string.IsNullOrWhiteSpace(text)) throw new SaveFileCorruptException(path, "파일이 비어 있다");
 
-            T read;
+            T read = null;
+            bool strict = false;
             try
             {
-                read = JsonSerializer.Deserialize<T>(text, Options);
+                read = JsonSerializer.Deserialize<T>(text, StrictOptions);
+                strict = read != null;
             }
-            catch (JsonException e)
+            catch (JsonException)
             {
-                throw new SaveFileCorruptException(path, e.Message, e);
+                // 모르는 필드가 있거나 깨졌다. 아래에서 모르는 필드를 넘기며 다시 읽어 가린다.
             }
-            catch (NotSupportedException e)
+            catch (NotSupportedException)
             {
-                throw new SaveFileCorruptException(path, e.Message, e);
+            }
+
+            if (!strict)
+            {
+                try
+                {
+                    read = JsonSerializer.Deserialize<T>(text, Options);
+                }
+                catch (JsonException e)
+                {
+                    throw new SaveFileCorruptException(path, e.Message, e);
+                }
+                catch (NotSupportedException e)
+                {
+                    throw new SaveFileCorruptException(path, e.Message, e);
+                }
             }
 
             if (read == null) throw new SaveFileCorruptException(path, "파일 내용이 null이다");
 
-            if (read is IVersionedSave versioned) RefuseNewer(versioned, path);
-
+            bool newer = read is IVersionedSave versioned && AnyNewer(versioned);
+            if (!strict || newer) RefuseUnreadable(read, System.Text.Json.Nodes.JsonNode.Parse(text), path);
+            nothingUnknown = strict && !newer;
             return read;
         }
 
@@ -94,23 +132,130 @@ namespace Rootborn.Data.Save
         private static readonly System.Collections.Concurrent.ConcurrentDictionary<Type, System.Reflection.FieldInfo[]> VersionedFields =
             new System.Collections.Concurrent.ConcurrentDictionary<Type, System.Reflection.FieldInfo[]>();
 
-        /// <summary>
-        /// 맨 위 모양과 그 안에 필드로 든 모양(스냅샷의 월드 상태·체인·가구 해금·지갑 등)의 형식 버전을 본다. 하나라도 이 프로그램이 아는 것보다
-        /// 높으면 읽지 않는다. 안쪽 모양의 버전만 올린 세이브를 옛 프로그램이 읽고 모르는 필드를 버린 채 다시 쓰지 않게 한다.
-        /// 배열 안의 기록은 보지 않는다(형식 버전을 가진 기록이 없다).
-        /// </summary>
-        private static void RefuseNewer(IVersionedSave shape, string path)
+        private static System.Reflection.FieldInfo[] VersionedFieldsOf(Type shapeType) => VersionedFields.GetOrAdd(shapeType, type =>
         {
-            if (shape.Version > shape.KnownVersion) throw new SaveFileTooNewException(path, shape.Version, shape.KnownVersion);
-            var fields = VersionedFields.GetOrAdd(shape.GetType(), type =>
-            {
-                var found = new List<System.Reflection.FieldInfo>();
-                foreach (var field in type.GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
-                    if (typeof(IVersionedSave).IsAssignableFrom(field.FieldType)) found.Add(field);
-                return found.ToArray();
-            });
+            var found = new List<System.Reflection.FieldInfo>();
+            foreach (var field in type.GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+                if (typeof(IVersionedSave).IsAssignableFrom(field.FieldType)) found.Add(field);
+            return found.ToArray();
+        });
+
+        // 맨 위 모양이나 그 안에 필드로 든 모양 가운데 이 프로그램이 아는 것보다 높은 형식 버전이 있는가. 배열 안의 기록은 보지 않는다.
+        private static bool AnyNewer(IVersionedSave shape)
+        {
+            if (shape.Version > shape.KnownVersion) return true;
+            var fields = VersionedFieldsOf(shape.GetType());
             for (int i = 0; i < fields.Length; i++)
-                if (fields[i].GetValue(shape) is IVersionedSave inner) RefuseNewer(inner, path);
+                if (fields[i].GetValue(shape) is IVersionedSave inner && AnyNewer(inner)) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// 더 높은 형식 버전의 파일도 읽는다(모르는 필드는 쓸 때 그대로 지킨다 — <see cref="KeepUnknown"/>). 읽기를 거절하는 것은 맨 위 모양이나
+        /// 그 안에 필드로 든 모양이 <see cref="ReadableFromField"/>를 적었고 그 값이 이 프로그램이 아는 버전보다 높을 때뿐이다:
+        /// 옛 프로그램이 읽으면 안 되는 변경을 한 새 프로그램이 그렇게 적는다.
+        /// </summary>
+        private static void RefuseUnreadable(object shape, System.Text.Json.Nodes.JsonNode node, string path)
+        {
+            if (!(shape is IVersionedSave versioned) || !(node is System.Text.Json.Nodes.JsonObject json)) return;
+            if (json.TryGetPropertyValue(ReadableFromField, out var from) && from is System.Text.Json.Nodes.JsonValue value
+                && value.TryGetValue(out int readableFrom) && readableFrom > versioned.KnownVersion)
+                throw new SaveFileTooNewException(path, versioned.Version, versioned.KnownVersion);
+            var fields = VersionedFieldsOf(shape.GetType());
+            for (int i = 0; i < fields.Length; i++)
+                if (fields[i].GetValue(shape) is IVersionedSave inner && json.TryGetPropertyValue(fields[i].Name, out var child))
+                    RefuseUnreadable(inner, child, path);
+        }
+
+        // 형마다 "JSON에 쓰이는 이름 → 그 안으로 들어가 합칠 수 있는 모양의 형". 목록·사전·문자열·값은 들어가지 않는다.
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<Type, Dictionary<string, Type>> ShapeFields =
+            new System.Collections.Concurrent.ConcurrentDictionary<Type, Dictionary<string, Type>>();
+
+        private static Dictionary<string, Type> ShapeFieldsOf(Type shapeType) => ShapeFields.GetOrAdd(shapeType, type =>
+        {
+            var found = new Dictionary<string, Type>(StringComparer.Ordinal);
+            const System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance;
+            foreach (var field in type.GetFields(flags)) if (IsShape(field.FieldType)) found[field.Name] = field.FieldType;
+            foreach (var property in type.GetProperties(flags)) if (IsShape(property.PropertyType)) found[property.Name] = property.PropertyType;
+            return found;
+        });
+
+        private static bool IsShape(Type type) =>
+            type.IsClass && type != typeof(string) && type != typeof(object) && !typeof(System.Collections.IEnumerable).IsAssignableFrom(type);
+
+        /// <summary>
+        /// 새로 쓸 내용(<paramref name="json"/>)에, 지금 있는 파일(<paramref name="existing"/>)에만 있는 필드를 그대로 옮겨 넣는다. 더 새 프로그램이 쓴
+        /// 세이브를 이 프로그램이 다시 쓸 때 모르는 필드를 지우지 않기 위해서다. 형식 버전은 낮춰 쓰지 않는다.
+        /// 모양 안의 모양으로는 들어가지만, 목록 안 기록과 사전으로는 들어가지 않는다(이 프로그램이 뺀 것과 모르는 것을 가릴 수 없다).
+        /// 옮길 것이 없으면 <paramref name="json"/>을 그대로 돌려준다(같은 객체).
+        /// </summary>
+        internal static string KeepUnknown(string json, string existing, Type shapeType)
+        {
+            if (string.IsNullOrWhiteSpace(existing)) return json;
+            System.Text.Json.Nodes.JsonNode old;
+            try
+            {
+                old = System.Text.Json.Nodes.JsonNode.Parse(existing);
+            }
+            catch (JsonException)
+            {
+                return json; // 깨진 파일에서는 옮길 것이 없다
+            }
+
+            if (!(old is System.Text.Json.Nodes.JsonObject oldObject)) return json;
+            if (!(System.Text.Json.Nodes.JsonNode.Parse(json) is System.Text.Json.Nodes.JsonObject fresh)) return json;
+            return Merge(fresh, oldObject, shapeType) ? fresh.ToJsonString(Options) : json;
+        }
+
+        private static bool Merge(System.Text.Json.Nodes.JsonObject fresh, System.Text.Json.Nodes.JsonObject old, Type shapeType)
+        {
+            bool changed = false;
+            var shapes = ShapeFieldsOf(shapeType);
+            foreach (var pair in old)
+            {
+                if (!fresh.TryGetPropertyValue(pair.Key, out var mine))
+                {
+                    fresh[pair.Key] = pair.Value?.DeepClone();
+                    changed = true;
+                }
+                else if (mine is System.Text.Json.Nodes.JsonObject mineObject && pair.Value is System.Text.Json.Nodes.JsonObject oldChild
+                         && shapes.TryGetValue(pair.Key, out var childType))
+                {
+                    changed |= Merge(mineObject, oldChild, childType);
+                }
+                else if (IsVersionName(pair.Key) && typeof(IVersionedSave).IsAssignableFrom(shapeType)
+                         && TryInt(pair.Value, out int oldVersion) && TryInt(mine, out int myVersion) && oldVersion > myVersion)
+                {
+                    fresh[pair.Key] = oldVersion;
+                    changed = true;
+                }
+            }
+
+            return changed;
+        }
+
+        // 형식 버전 필드 이름. 옷 파일만 소문자다(Unity 판과 같은 이름).
+        private static bool IsVersionName(string name) => name == "Version" || name == "version";
+
+        private static bool TryInt(System.Text.Json.Nodes.JsonNode node, out int value)
+        {
+            value = 0;
+            return node is System.Text.Json.Nodes.JsonValue v && v.TryGetValue(out value);
+        }
+
+        // 쓰려는 경로에 지금 있는 파일의 모르는 필드를 옮겨 넣는다. 모르는 것이 없다고 확인된 경로는 파일을 다시 읽지 않는다.
+        private static string WithUnknownKept(string path, string json, Type shapeType)
+        {
+            if (!File.Exists(path))
+            {
+                NothingUnknown[path] = true;
+                return json;
+            }
+
+            if (NothingUnknown.ContainsKey(path)) return json;
+            string merged = KeepUnknown(json, File.ReadAllText(path, Encoding.UTF8), shapeType);
+            if (ReferenceEquals(merged, json)) NothingUnknown[path] = true;
+            return merged;
         }
 
         public void Write<T>(string saveSlot, string fileName, T data) where T : class
@@ -119,7 +264,7 @@ namespace Rootborn.Data.Save
             var path = PathFor(saveSlot, fileName);
             var json = Serialize(data);
             RecoverBatch(saveSlot);
-            WriteReplacing(path, json);
+            WriteReplacing(path, WithUnknownKept(path, json, typeof(T)));
         }
 
         internal static string Serialize<T>(T data) where T : class
@@ -151,6 +296,7 @@ namespace Rootborn.Data.Save
             var path = PathFor(saveSlot, fileName);
             RecoverBatch(saveSlot);
             if (File.Exists(path)) File.Delete(path);
+            NothingUnknown.TryRemove(path, out _);
         }
 
         // ---------- 원문 파일(방이 손님의 세이브를 해석하지 않고 옮길 때) ----------
@@ -186,6 +332,7 @@ namespace Rootborn.Data.Save
             foreach (var pair in w) CheckWritable(pair.Key);
             foreach (var name in d) CheckWritable(name);
             if (w.Count == 0 && d.Count == 0) return;
+            foreach (var pair in w) NothingUnknown.TryRemove(PathFor(saveSlot, pair.Key), out _); // 원문은 무엇이 들었는지 모른다
             CommitBatch(saveSlot, w, d);
         }
 
@@ -284,7 +431,9 @@ namespace Rootborn.Data.Save
                 return;
             }
 
-            ApplyLocked(folder, staging, Parse<BatchMarkData>(File.ReadAllText(markPath, Encoding.UTF8), markPath));
+            var mark = Parse<BatchMarkData>(File.ReadAllText(markPath, Encoding.UTF8), markPath);
+            foreach (var name in mark.Writes ?? Array.Empty<string>()) NothingUnknown.TryRemove(Path.Combine(folder, name), out _); // 앞선 실행이 준비한 내용
+            ApplyLocked(folder, staging, mark);
         }
 
         /// <summary>
@@ -330,7 +479,7 @@ namespace Rootborn.Data.Save
             {
                 if (data == null) throw new ArgumentNullException(nameof(data));
                 Check(saveSlot, fileName);
-                var json = Serialize(data);
+                var json = WithUnknownKept(_store.PathFor(saveSlot, fileName), Serialize(data), typeof(T));
                 _deletes.Remove(fileName);
                 int index = IndexOf(fileName);
                 if (index >= 0) _writes[index] = new KeyValuePair<string, string>(fileName, json);

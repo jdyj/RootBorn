@@ -301,10 +301,10 @@ namespace Rootborn.Server.Tests
             Assert.That(a.Link.LastRefusal, Is.EqualTo(GuestSaveRefusal.Damaged));
             Assert.That(File.ReadAllText(snapshot), Is.EqualTo(before), "옛 세이브를 지킨다");
 
-            var tooNew = SaveFileSet.From(new[] { new KeyValuePair<string, string>(SaveFileNames.AdultCareerSnapshot("a"), "{ \"Version\": 999 }") }, null);
+            var tooNew = SaveFileSet.From(new[] { new KeyValuePair<string, string>(SaveFileNames.AdultCareerSnapshot("a"), "{ \"Version\": 999, \"ReadableFrom\": 999 }") }, null);
             a.Link.Upload(tooNew);
             rig.Run(0.5);
-            Assert.That(a.Link.LastRefusal, Is.EqualTo(GuestSaveRefusal.Damaged), "더 새 형식 버전");
+            Assert.That(a.Link.LastRefusal, Is.EqualTo(GuestSaveRefusal.Damaged), "이 프로그램이 읽을 수 없다고 적힌 형식");
 
             var badName = SaveFileSet.From(new[] { new KeyValuePair<string, string>("../escape.json", "{}") }, null);
             a.Link.Upload(badName);

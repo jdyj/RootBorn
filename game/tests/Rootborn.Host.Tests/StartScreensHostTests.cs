@@ -164,7 +164,7 @@ namespace Rootborn.Host.Tests
             // 슬롯 정보가 깨졌거나 더 새 프로그램이 쓴 슬롯: 빈 슬롯으로 보이지 않고, 새 이야기로 덮이지 않는다. 지우려면 확인 창을 거친다.
             string dir = Path.Combine(_saves, "slot-1");
             Directory.CreateDirectory(dir);
-            File.WriteAllText(Path.Combine(dir, SaveFileNames.Metadata), "{ \"Version\": 999, \"SlotId\": \"slot-1\" }");
+            File.WriteAllText(Path.Combine(dir, SaveFileNames.Metadata), "{ \"Version\": 999, \"ReadableFrom\": 999, \"SlotId\": \"slot-1\" }");
             File.WriteAllText(Path.Combine(dir, SaveFileNames.WorldProgress), "{}");
             using PlayerDriver player = Launch(1920, 1080);
             Assert.That(player.Node(SaveSlotScreen.NewGameId(1)).Visible, Is.False);

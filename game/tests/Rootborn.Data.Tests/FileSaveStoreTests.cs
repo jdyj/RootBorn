@@ -93,27 +93,27 @@ namespace Rootborn.Data.Tests
         }
 
         [Test]
-        public void NewerVersion_Throws_TooNew()
+        public void AFileThatNeedsANewerProgram_Throws_TooNew()
         {
-            var path = _dir.Write(Path.Combine("slot-0", "quest-log.json"), "{\"Version\":99,\"Quests\":[]}");
+            var path = _dir.Write(Path.Combine("slot-0", "quest-log.json"), "{\"Version\":99,\"ReadableFrom\":99,\"Quests\":[]}");
 
             var e = Assert.Throws<SaveFileTooNewException>(() => _store.TryRead<QuestLogSaveData>("slot-0", "quest-log.json", out _));
 
             Assert.That(e.Path, Is.EqualTo(path));
             Assert.That(e.FileVersion, Is.EqualTo(99));
             Assert.That(e.KnownVersion, Is.EqualTo(QuestLogSaveData.KnownVersion));
-            Assert.That(File.ReadAllText(path), Is.EqualTo("{\"Version\":99,\"Quests\":[]}"));
+            Assert.That(File.ReadAllText(path), Is.EqualTo("{\"Version\":99,\"ReadableFrom\":99,\"Quests\":[]}"));
         }
 
         [TestCase("World")]
         [TestCase("QuestChains")]
         [TestCase("FurnitureUnlocks")]
         [TestCase("Wallet")]
-        public void NewerVersionOfAShapeInsideTheFile_Throws_TooNew(string part)
+        public void AShapeInsideTheFileThatNeedsANewerProgram_Throws_TooNew(string part)
         {
-            // 스냅샷 안에 든 모양(월드 상태, 체인, 가구 해금, 지갑)도 저마다 형식 버전이 있다. 맨 위 버전만 보면
-            // 안쪽 모양의 버전만 올린 새 프로그램의 세이브를 옛 프로그램이 읽고 모르는 필드를 버린 채 다시 쓴다.
-            var path = _dir.Write(Path.Combine("slot-0", "snapshot.json"), "{\"Version\":3,\"" + part + "\":{\"Version\":99}}");
+            // 스냅샷 안에 든 모양(월드 상태, 체인, 가구 해금, 지갑)도 저마다 "이 버전부터 읽을 수 있다"를 적을 수 있다.
+            // 더 높은 버전만으로는 거절하지 않는다(NewerSaveInAnOlderProgramTests).
+            var path = _dir.Write(Path.Combine("slot-0", "snapshot.json"), "{\"Version\":3,\"" + part + "\":{\"Version\":99,\"ReadableFrom\":99}}");
 
             var e = Assert.Throws<SaveFileTooNewException>(
                 () => _store.TryRead<Rootborn.Core.Careers.AdultCareerSnapshotSaveData>("slot-0", "snapshot.json", out _));

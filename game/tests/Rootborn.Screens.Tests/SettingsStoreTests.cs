@@ -21,13 +21,36 @@ namespace Rootborn.Screens.Tests
         }
 
         [Test]
-        public void ASettingsFileFromANewerProgram_IsNotOverwritten()
+        public void ASettingsFileFromANewerProgram_IsUsed_AndItsUnknownSettingsSurviveASave()
         {
             string root = NewRoot();
             try
             {
                 string path = Path.Combine(root, SaveFileNames.SettingsSlot, SaveFileNames.Settings);
-                const string newer = "{ \"Version\": 999, \"Language\": \"ja\", \"NewThing\": 3 }";
+                File.WriteAllText(path, "{ \"Version\": 999, \"Language\": \"ja\", \"NewThing\": 3 }");
+
+                var settings = new SettingsStore(new FileSaveStore(root));
+                Assert.That(settings.LoadError, Is.Null);
+                Assert.That(settings.Settings.Language, Is.EqualTo("ja"), "더 새 프로그램의 설정을 읽는다");
+                settings.Settings.Language = "en";
+                settings.Save();
+
+                var saved = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(path));
+                Assert.That((string)saved["Language"], Is.EqualTo("en"));
+                Assert.That((int)saved["NewThing"], Is.EqualTo(3), "모르는 설정은 그대로 다시 쓴다");
+                Assert.That((int)saved["Version"], Is.EqualTo(999));
+            }
+            finally { Directory.Delete(root, true); }
+        }
+
+        [Test]
+        public void ASettingsFileThatNeedsANewerProgram_IsNotOverwritten()
+        {
+            string root = NewRoot();
+            try
+            {
+                string path = Path.Combine(root, SaveFileNames.SettingsSlot, SaveFileNames.Settings);
+                const string newer = "{ \"Version\": 999, \"ReadableFrom\": 999, \"Language\": \"ja\", \"NewThing\": 3 }";
                 File.WriteAllText(path, newer);
 
                 var settings = new SettingsStore(new FileSaveStore(root));
