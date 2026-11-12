@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 수치 균형 시뮬레이터: 창 없이 GameSession으로 여러 날 돈 흐름을 돌린다. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../Rootborn.Game/Rootborn.Game.csproj" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- 실제 data/를 읽는 도우미와 하루 균형 가정은 Game 테스트와 같은 사본을 쓴다. -->
+    <Compile Include="../Rootborn.Game.Tests/TestWorld.cs" Link="Shared/TestWorld.cs" />
+    <Compile Include="../Rootborn.Game.Tests/DayAssumptions.cs" Link="Shared/DayAssumptions.cs" />
+  </ItemGroup>
+</Project>

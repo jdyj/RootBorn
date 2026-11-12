@@ -19,12 +19,6 @@ namespace Rootborn.Game.Tests
     /// </summary>
     public sealed class DayBalanceTests
     {
-        private sealed class Balance
-        {
-            public int Min, Max, BodyMayStopFrom, TravelMinutes;
-            public float MinigameShare;
-        }
-
         private sealed class Option
         {
             public string Id;
@@ -37,8 +31,6 @@ namespace Rootborn.Game.Tests
             public string Stop, Line;
             public bool TimeStopped;
         }
-
-        private static readonly Lazy<Balance> Target = new Lazy<Balance>(ReadBalance);
 
         [Test]
         public void AWeekdayWithClass_HasFourToSixBigActivities_AndTimeLimitsTheDay()
@@ -62,7 +54,7 @@ namespace Rootborn.Game.Tests
 
         private static void Check(DayLog day)
         {
-            var b = Target.Value;
+            var b = DayAssumptions.Current;
             TestContext.Out.WriteLine(day.Line);
             Assert.That(day.Actions, Is.InRange(b.Min, b.Max), "하루 큰 활동 수(day-balance.json bigActivitiesPerDay): " + day.Line);
             Assert.That(day.TimeStopped || day.StoppedAt >= b.BodyMayStopFrom, Is.True,
@@ -72,7 +64,7 @@ namespace Rootborn.Game.Tests
         // 하루: 앞 목록을 먼저 본다(위주로 하는 것). 목록 안에서는 돌아가며 고른다(같은 것만 되풀이하지 않는다). 걷는 시간을 먼저 보낸다. 취침 시각이 되면 멈춘다. 아무것도 안 되면 멈춘다.
         private static DayLog Play(string name, bool weekend, params List<Option>[] lists)
         {
-            var b = Target.Value;
+            var b = DayAssumptions.Current;
             var turn = new int[lists.Length];
             using var saves = new TempSaves();
             var game = TestWorld.Start(saves.Store);
@@ -90,7 +82,7 @@ namespace Rootborn.Game.Tests
                 Assert.That(guard, Is.LessThan(200), "끝나지 않는 하루");
                 if (game.Student.TimeMinutes >= game.TimeRules.BedtimeMinutes) { log.Stop = "취침 시각"; log.TimeStopped = true; break; }
                 int before = game.Student.TimeMinutes;
-                Walk(game, b.TravelMinutes);
+                DayAssumptions.Walk(game, b.TravelMinutes);
                 string done = null;
                 for (int l = 0; l < lists.Length && done == null; l++)
                     for (int k = 0; k < lists[l].Count; k++)
@@ -118,21 +110,6 @@ namespace Rootborn.Game.Tests
                 name, day, Clock(start), log.Actions, Clock(log.StoppedAt), log.Stop, game.Student.Energy, game.Student.Focus,
                 string.Join(", ", counts.Select(p => p.Key + "×" + p.Value)));
             return log;
-        }
-
-        private static void Walk(GameSession game, int minutes)
-        {
-            if (minutes <= 0) return;
-            game.AdvanceTime(minutes * game.TimeRules.RealSecondsPerGameDay / (24 * 60) + 0.001f, false);
-        }
-
-        // 미니게임을 하는 동안 시계가 흐른다(혼자 하기, 미니게임 화면은 시계를 멈추지 않는다). 제한 시간 합의 일정 몫만큼 실제 초를 보낸다.
-        private static void PlayMinigame(GameSession game, Minigame minigame)
-        {
-            float limit = 0f;
-            foreach (var challenge in minigame.Challenges)
-                if (challenge is ChallengeBase c) limit += c.TimeLimitSeconds;
-            game.AdvanceTime(limit * Target.Value.MinigameShare, false);
         }
 
         private static List<Option> ClassFirst()
@@ -170,7 +147,7 @@ namespace Rootborn.Game.Tests
         private static bool WithMinigame(GameSession game, Rootborn.Core.Careers.AdultCareerResult begun, string request, Minigame minigame)
         {
             if (!begun.Applied) return false;
-            PlayMinigame(game, minigame);
+            DayAssumptions.PlayMinigame(game, minigame);
             Assert.That(game.SettleMinigame(request, succeeded: true).Applied, Is.True, "미니게임 정산: " + request);
             return true;
         }
@@ -181,23 +158,6 @@ namespace Rootborn.Game.Tests
             if (game.Student.Energy <= 1) return "체력";
             if (game.Student.Focus <= 1) return "집중";
             return "조건(할 수 있는 활동 없음)";
-        }
-
-        private static Balance ReadBalance()
-        {
-            var path = Path.Combine(TestWorld.RepoRoot, "game", "tests", "Rootborn.Game.Tests", "day-balance.json");
-            using var document = JsonDocument.Parse(File.ReadAllBytes(path));
-            var b = document.RootElement;
-            var range = b.GetProperty("bigActivitiesPerDay");
-            var stop = b.GetProperty("bodyMayStopFrom").GetString().Split(':');
-            return new Balance
-            {
-                Min = range.GetProperty("min").GetInt32(),
-                Max = range.GetProperty("max").GetInt32(),
-                BodyMayStopFrom = int.Parse(stop[0]) * 60 + int.Parse(stop[1]),
-                TravelMinutes = b.GetProperty("travelMinutesPerActivity").GetInt32(),
-                MinigameShare = b.GetProperty("minigamePlayShareOfTimeLimit").GetSingle(),
-            };
         }
 
         private static string Clock(int minutes)
