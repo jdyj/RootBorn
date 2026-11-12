@@ -28,7 +28,8 @@ namespace Rootborn.Screens.Hud
     /// <summary>
     /// 상호작용 안내 글자(Unity PlayerInteractionRouter의 "[E] …"). 앞의 대상 위에 한 줄. 종류별 문구 키와 높이는 Unity 판 상호작용
     /// 구현체의 InteractionPrompt·InteractionPromptOffset 값이다. 표에 없는 종류(자동문 등)는 안내가 없다(Unity 판도 빈 안내).
-    /// 이동을 막는 화면이 떠 있거나 글자를 치는 동안은 숨긴다(그동안 상호작용 키가 월드로 가지 않는다).
+    /// 이동을 막는 화면이 떠 있거나 글자를 치는 동안은 숨긴다(그동안 상호작용 키가 월드로 가지 않는다). 상호작용이 연 패널·모달
+    /// (상자, 대화 등)이 떠 있는 동안에도 숨긴다(그 대상과 이미 상호작용하는 중이다).
     /// 대상이 바뀔 때만 글자를 다시 만들고, 움직일 때는 자리만 옮긴다.
     /// </summary>
     public sealed class InteractionPromptScreen : GameScreen
@@ -106,7 +107,7 @@ namespace Rootborn.Screens.Hud
         {
             ScreenStack screens = Services.Screens;
             InteractionTargetView? target = screens?.Target;
-            if (!IsOpen || target == null || screens.MovementBlocked || !_byKind.TryGetValue(target.Value.Kind ?? string.Empty, out InteractionPromptSpec spec))
+            if (!IsOpen || target == null || screens.MovementBlocked || screens.InteractionScreenOpen || !_byKind.TryGetValue(target.Value.Kind ?? string.Empty, out InteractionPromptSpec spec))
             {
                 _label.Visible = false;
                 return;

@@ -183,7 +183,7 @@ namespace Rootborn.Screens.AdultFacility
 
         private string InfoText(FacilityWorkRow row)
         {
-            string text = Name(row.NameKey) + "\n" + F("facility.work-progress-time", row.Minutes, row.Mastery, row.MaximumMastery, row.Successes);
+            string text = Name(row.NameKey) + "\n" + F("facility.work-progress-time", Rootborn.Screens.Day.StudentTimeText.FormatCostAndEnd(T, Services.Session, row.Minutes), row.Mastery, row.MaximumMastery, row.Successes);
             if (row.MaximumRewards.Length > 0) text += "\n" + F("facility.work-reward", Costs(row.MaximumRewards));
             return text;
         }

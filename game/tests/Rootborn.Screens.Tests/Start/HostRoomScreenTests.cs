@@ -386,6 +386,19 @@ namespace Rootborn.Screens.Tests.Start
             Assert.That(stack.IsOpen(ScreenCatalog.RoomSharesNotice), Is.False, "패널이 열리면 닫는다(방 줄을 가리지 않게)");
         }
 
+        /// <summary>
+        /// 글자가 상자 테두리 위에 걸리지 않는다: 위 여백이 옆 여백보다 좁지 않다(위 여백 14가 도시형 몰딩 테두리 36 안에 들어 글자가 테두리 선 위에 그려졌다, 2026-11-12 훑기).
+        /// </summary>
+        [Test]
+        public void JoinedNotice_TheMessage_SitsAsFarFromTheTopAsFromTheSides()
+        {
+            var stack = new ScreenStack(ScreenCatalog.Create(), new ScreenServices(TestData.Text(), null));
+            stack.Layout(1920, 1080);
+            stack.Open(ScreenCatalog.RoomSharesNotice, argument: new RoomSharesNoticeOpen(new[] { "wallet" }));
+            UiRect box = Find(stack, RoomSharesNoticeScreen.BoxId).Rect, message = Find(stack, RoomSharesNoticeScreen.MessageId).Rect;
+            Assert.That(message.Y - box.Y, Is.GreaterThanOrEqualTo(message.X - box.X));
+        }
+
         [TestCaseSource(nameof(Languages))]
         public void JoinedNotice_DoubleLengthText_StaysInsideTheBox(string language)
         {

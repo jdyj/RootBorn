@@ -37,9 +37,10 @@ namespace Rootborn.Host.Tests
         /// <summary>내용이 있어야 보이는 화면을 여는 상호작용(새 게임 데이터의 NPC·장소·알바).</summary>
         private static readonly Rootborn.Core.Interaction.InteractionEvent[] ContentInteractions =
         {
+            // 알바 예약이 먼저다(장소 방문이 시간을 쓰면 예약이 거절돼 미니게임이 그려지지 않았다 — EnglishScreensTests와 같은 순서).
+            new Rootborn.Core.Interaction.InteractionEvent("Town", "part-time-work", "work.shift.corner-store"),
             new Rootborn.Core.Interaction.InteractionEvent("House", "npc", "npc.first-guide"),
             new Rootborn.Core.Interaction.InteractionEvent("Town", "location-activity", "location.library"),
-            new Rootborn.Core.Interaction.InteractionEvent("Town", "part-time-work", "work.shift.corner-store"),
         };
 
         private string _work;
@@ -110,6 +111,7 @@ namespace Rootborn.Host.Tests
             var overflows = new SortedDictionary<string, List<string>>(StringComparer.Ordinal);
             var borderTouches = new SortedDictionary<string, List<string>>(StringComparer.Ordinal);
             var notDrawn = new List<string>();
+            var drawn = new HashSet<string>(StringComparer.Ordinal);
             var report = new StringBuilder();
             List<ScreenEntry> entries = ScreenCatalog.Create().Screens.OrderBy(e => e.Id, StringComparer.Ordinal).ToList();
             Assert.That(entries.Count, Is.GreaterThan(10));
@@ -121,26 +123,7 @@ namespace Rootborn.Host.Tests
                 using var textRenderer = new TextRenderer(player.Game.GraphicsDevice, options.FontPath);
                 var measurer = new HostTextMeasurer(textRenderer) { Scale = player.Game.Fit.Scale };
 
-                foreach (ScreenEntry entry in entries)
-                {
-                    bool openedHere = false;
-                    try
-                    {
-                        if (!player.Screens.IsOpen(entry.Id)) { player.Screens.Open(entry.Id); openedHere = true; }
-                        player.Frames(2); // 실제 그리기(테마 그림으로)
-                    }
-                    catch (Exception e)
-                    {
-                        errors.Add(entry.Id + ": " + e.GetType().Name + ": " + e.Message);
-                        TryClose(player, entry.Id, openedHere);
-                        continue;
-                    }
-
-                    if (!Inspect(entry.Id)) notDrawn.Add(entry.Id);
-                    TryClose(player, entry.Id, openedHere);
-                }
-
-                // 내용이 있어야 보이는 화면(대화, 장소, 미니게임)은 그 상호작용으로 한 번 더 연다.
+                // 내용이 있어야 보이는 화면(대화, 장소, 미니게임, 상자)은 먼저 그 상호작용으로 연다(다른 화면이 시간을 쓰기 전에 — 뒤에 열면 알바 예약이 거절돼 미니게임이 빠졌다).
                 foreach (Rootborn.Core.Interaction.InteractionEvent interaction in ContentInteractions.Append(StorageChestHostTests.PrepareChest(player)))
                 {
                     try
@@ -155,9 +138,29 @@ namespace Rootborn.Host.Tests
                     }
                     foreach (GameScreen open in player.Screens.OpenScreens.Where(o => o.Layer != ScreenLayer.Hud).ToList())
                     {
-                        if (Inspect(open.Id)) notDrawn.Remove(open.Id);
+                        if (Inspect(open.Id)) drawn.Add(open.Id);
                         TryClose(player, open.Id, true);
                     }
+                }
+
+                foreach (ScreenEntry entry in entries)
+                {
+                    if (drawn.Contains(entry.Id)) continue;
+                    bool openedHere = false;
+                    try
+                    {
+                        if (!player.Screens.IsOpen(entry.Id)) { EnglishScreensTests.OpenWithContent(player, entry.Id); openedHere = true; }
+                        player.Frames(2); // 실제 그리기(테마 그림으로)
+                    }
+                    catch (Exception e)
+                    {
+                        errors.Add(entry.Id + ": " + e.GetType().Name + ": " + e.Message);
+                        TryClose(player, entry.Id, openedHere);
+                        continue;
+                    }
+
+                    if (!Inspect(entry.Id)) notDrawn.Add(entry.Id);
+                    TryClose(player, entry.Id, openedHere);
                 }
 
                 bool Inspect(string id)
@@ -187,6 +190,9 @@ namespace Rootborn.Host.Tests
 
                 Assert.That(errors, Is.Empty);
                 Assert.That(missing, Is.Empty, "ThemeRequirements.Icons에 빠진 아이콘 키");
+                // 내용이 있어야만 그릴 것이 있는 화면(EnglishScreensTests의 목록과 같은 이유). 그 밖의 화면이 빠지면 실패한다.
+                Assert.That(notDrawn.Except(new[] { ScreenCatalog.HudTracked, ScreenCatalog.HudPrompt, ScreenCatalog.Facility }), Is.Empty,
+                    "시험용 테마로 그리지 못한 화면");
             }
 
             Assert.That(overflows.Keys.Except(KnownOverflows.Keys), Is.Empty, "새로 넘친 화면(보고서: output/host-theme-evidence/theme-report.md)");

@@ -13,7 +13,7 @@ namespace Rootborn.Screens.Day
     public static class StudentTimeText
     {
         public const string Loading = "life.tp.loading", Summary = "life.time.summary", Cost = "life.time.cost", Instant = "life.time.instant",
-            WeekdayPrefix = "life.weekday.";
+            CostEnds = "life.time.cost-ends", CostEndsLate = "life.time.cost-ends-late", WeekdayPrefix = "life.weekday.";
 
         /// <summary>"N일차 · 요일 · 14:05"(보이는 시각은 24시간으로 감는다). 달력이 없으면 불러오는 중 문구.</summary>
         public static string Format(Func<string, string> t, StudentLifeProgress progress)
@@ -27,6 +27,19 @@ namespace Rootborn.Screens.Day
         /// <summary>활동이 걸리는 시간 한 줄: 0분이면 "금방", 아니면 "n분".</summary>
         public static string FormatCost(Func<string, string> t, int minutes) =>
             minutes <= 0 ? t(Instant) : string.Format(CultureInfo.InvariantCulture, t(Cost), minutes);
+
+        /// <summary>
+        /// 지금 시작하면 끝나는 시각을 붙인 시간 줄: "n분 · 21:30까지". 끝나는 시각이 취침 시각을 넘기면(밤에는 체력이 준다) 다른 문구다.
+        /// 0분이면 "금방", 시간 규칙이 없으면(시험 데이터) 걸리는 시간만. 판단에 쓰는 값은 GameSession 조회(MinutesUntilBedtime)다.
+        /// </summary>
+        public static string FormatCostAndEnd(Func<string, string> t, Rootborn.Game.GameSession session, int minutes)
+        {
+            string cost = FormatCost(t, minutes);
+            if (minutes <= 0 || session == null || session.TimeRules == null) return cost;
+            int end = ClockMinutes(session.Student.TimeMinutes + minutes);
+            string key = minutes > session.MinutesUntilBedtime ? CostEndsLate : CostEnds;
+            return string.Format(CultureInfo.InvariantCulture, t(key), cost, end / 60, end % 60);
+        }
 
         /// <summary>그날 0시부터 센 분을 보이는 시각(0~1439)으로 감는다(26:00 → 02:00).</summary>
         public static int ClockMinutes(int dayMinutes) => ((dayMinutes % (24 * 60)) + 24 * 60) % (24 * 60);

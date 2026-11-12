@@ -55,6 +55,18 @@ namespace Rootborn.Host.Tests
             try { Directory.Delete(_work, true); } catch (IOException) { }
         }
 
+        /// <summary>
+        /// 화면을 연다. 여는 값이 있어야 뜨는 알림(상호작용 실패 안내, 방에 들어간 직후 알림)은 시험용 값을 넘긴다. 시험용 테마 시험도 쓴다.
+        /// </summary>
+        internal static void OpenWithContent(PlayerDriver player, string id)
+        {
+            if (id == ScreenCatalog.InteractionRefusal)
+                player.Screens.Open(id, argument: new Rootborn.Screens.Hud.InteractionRefusalOpen(Rootborn.Screens.Hud.InteractionRefusals.RequirementsKey));
+            else if (id == ScreenCatalog.RoomSharesNotice)
+                player.Screens.Open(id, argument: new Rootborn.Screens.Start.RoomSharesNoticeOpen(Rootborn.Core.Room.RoomPieceCatalog.CreateDefault().Names, continuesHere: false));
+            else player.Screens.Open(id);
+        }
+
         private static bool IsHangul(char c) => (c >= '가' && c <= '힣') || (c >= 'ᄀ' && c <= 'ᇿ') || (c >= '㄰' && c <= '㆏');
 
         [Test]
@@ -126,7 +138,7 @@ namespace Rootborn.Host.Tests
                     bool openedHere = false;
                     try
                     {
-                        if (!player.Screens.IsOpen(entry.Id)) { player.Screens.Open(entry.Id); openedHere = true; }
+                        if (!player.Screens.IsOpen(entry.Id)) { OpenWithContent(player, entry.Id); openedHere = true; }
                         player.Frames(2);
                         Inspect(entry.Id);
                     }
@@ -151,11 +163,10 @@ namespace Rootborn.Host.Tests
 
                 Assert.That(errors, Is.Empty);
                 // 내용이 있어야만 그릴 것이 있는 화면: 추적 목표 HUD(추적한 것이 없으면 숨는다), 상호작용 안내(앞에 대상이 있을 때),
-                // 성인 시설(성인 진행이 있어야 열린다), 상호작용 실패 안내(거절 이유가 있을 때 — InteractionRefusalNoticeTests가 따로 본다).
-                // 방에 들어간 직후 알림(방 설정이 있을 때 — 모든 언어·2배 문구는 Screens HostRoomScreenTests, 실제 창은 MP_GUEST_002).
+                // 성인 시설(성인 진행이 있어야 열린다 — 모든 언어·2배 문구는 Screens FacilityScreenTests).
+                // 상호작용 실패 안내와 방에 들어간 직후 알림은 여는 값을 넘겨 연다(OpenWithContent).
                 // 이 목록 밖의 화면이 찍히지 않으면 실패한다(새 화면이 영어 검사에서 조용히 빠지지 않게).
-                var needsContent = new[] { ScreenCatalog.HudTracked, ScreenCatalog.HudPrompt, ScreenCatalog.Facility, ScreenCatalog.InteractionRefusal,
-                    ScreenCatalog.RoomSharesNotice };
+                var needsContent = new[] { ScreenCatalog.HudTracked, ScreenCatalog.HudPrompt, ScreenCatalog.Facility };
                 Assert.That(entries.Select(e => e.Id).Where(id => !shot.Contains(id)).Except(needsContent), Is.Empty, "내용 없이도 그릴 수 있는 화면은 모두 찍었다");
                 Assert.That(overflows, Is.Empty, "영어 글자가 패널 밖으로 나갔다(보고서 output/host-screens-evidence/en-report.md)");
                 Assert.That(korean.Keys.Except(KnownKorean.Keys), Is.Empty, "영어 화면에 한글이 남았다(보고서 참고)");

@@ -196,6 +196,21 @@ namespace Rootborn.Ui
             return count;
         }
 
+        // 안내 문구를 칸 폭에 맞춘 것(말줄임). 문구·폭·크기가 같으면 다시 재지 않는다(매 프레임 새 글자를 만들지 않게).
+        private string _fittedSource, _fitted;
+        private float _fittedWidth, _fittedSize;
+        private ITextMeasurer _fittedMeasurer;
+
+        private string FittedPlaceholder(float width, ITextMeasurer text)
+        {
+            if (!ReferenceEquals(_fittedSource, Placeholder) || _fittedWidth != width || _fittedSize != FontSize || !ReferenceEquals(_fittedMeasurer, text))
+            {
+                _fittedSource = Placeholder; _fittedWidth = width; _fittedSize = FontSize; _fittedMeasurer = text;
+                _fitted = TextFit.Ellipsize(Placeholder, width, text, FontSize);
+            }
+            return _fitted;
+        }
+
         public override void Emit(DrawList list, ITextMeasurer text)
         {
             bool active = IsActive;
@@ -204,7 +219,7 @@ namespace Rootborn.Ui
             float x = Rect.X + PaddingX, y = Rect.Y + (Rect.H - lineHeight) / 2f;
             if (Text.Length == 0 && Composition.Length == 0)
             {
-                if (!Focused) list.Text(x, y, Placeholder, FontSize, UiTheme.InkMuted);
+                if (!Focused) list.Text(x, y, FittedPlaceholder(Rect.W - PaddingX * 2f, text), FontSize, UiTheme.InkMuted);
             }
             else
             {

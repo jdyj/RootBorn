@@ -175,6 +175,21 @@ namespace Rootborn.Screens.Tests.AdultFacility
             Assert.That(f.Screen.StatusText, Is.EqualTo(f.Text.Get(FacilityModel.ResultKey(f.Screen.LastResult.Value))));
         }
 
+        /// <summary>일 줄이 걸리는 시간과 함께 끝나는 시각을 보인다(장소 화면과 같은 문구, 흐르는 시간 틈 2026-11-12).</summary>
+        [Test]
+        public void WorkRows_ShowWhenTheyEnd()
+        {
+            using var f = new FacilityFixture(FacilityFixture.AlreadyAdultAtLevelOne);
+            f.OpenAt();
+            FacilityWorkRow row = f.Screen.Model.Works[0];
+            Assert.That(row.Minutes, Is.GreaterThan(0));
+            int end = Rootborn.Screens.Day.StudentTimeText.ClockMinutes(f.Session.Student.TimeMinutes + row.Minutes);
+            string key = row.Minutes > f.Session.MinutesUntilBedtime ? "life.time.cost-ends-late" : "life.time.cost-ends";
+            string expected = string.Format(f.Text.Get(key), string.Format(f.Text.Get("life.time.cost"), row.Minutes), end / 60, end % 60);
+            string drawn = string.Join(" ", f.Emit().Commands.Where(c => c.Kind == DrawKind.Text).Select(c => c.Text));
+            Assert.That(drawn, Does.Contain(expected));
+        }
+
         [Test]
         public void TheInfoCell_DoesNothing()
         {

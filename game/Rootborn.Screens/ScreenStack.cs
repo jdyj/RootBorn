@@ -97,6 +97,24 @@ namespace Rootborn.Screens
             }
         }
 
+        /// <summary>
+        /// 상호작용이 연 패널·모달(OpenedByInteraction — 상자, 대화, 장소 등)이 떠 있다. 그동안 앞의 대상 안내("[E] …")를 숨긴다:
+        /// 안내는 대상 위에 떠 패널 사각형 밖에 있을 수 있어 덮임만으로는 숨지 않는다.
+        /// </summary>
+        public bool InteractionScreenOpen
+        {
+            get
+            {
+                for (int i = 0; i < _open.Count; i++)
+                {
+                    GameScreen screen = _open[i];
+                    if ((screen.Layer == ScreenLayer.Panel || screen.Layer == ScreenLayer.Modal)
+                        && _registry.TryGet(screen.Id, out ScreenEntry entry) && entry.OpenedByInteraction) return true;
+                }
+                return false;
+            }
+        }
+
         public bool IsOpen(string id) => _screens.TryGetValue(id, out GameScreen s) && s.IsOpen;
 
         /// <summary>등록 표에 그 화면이 있다(아직 옮기지 않은 화면을 여는 버튼은 이것으로 본다).</summary>

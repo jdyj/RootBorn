@@ -28,6 +28,8 @@ namespace Rootborn.Screens.Day
         /// <summary>활동 목록 보이는 영역(Unity 504x272). 오른쪽에 스크롤 막대 자리(14)를 더했다.</summary>
         public static readonly (float X, float Y, float W, float H) Activities = (7, 0, 504 + 14, 272);
         public const float RowWidth = 504, RowHeight = 76, RowPitch = 92, RowFont = 20, RowSubFont = 18, RowReasonFont = 16;
+        /// <summary>줄 글자의 좌우 안쪽 여백. 긴 글자(다른 언어)는 이 안에서 말줄임한다.</summary>
+        public const float RowTextInset = 12;
         public static readonly (float X, float Y, float W, float H) Result = (0, -296, 976, 112);
         public const float ResultFont = 20;
         public static readonly (float X, float Y, float W, float H) Close = (488, 344, 48, 48);
@@ -210,7 +212,7 @@ namespace Rootborn.Screens.Day
                     : string.Format(CultureInfo.InvariantCulture, T("dream.shop.buy"), Name(row), row.Price);
                 return (text, row.Owned || row.Affordable ? string.Empty : T("dream.shop.not-enough"));
             }
-            string main = T(row.NameKey) + "\n" + StudentTimeText.FormatCost(T, row.TimeCostMinutes);
+            string main = T(row.NameKey) + "\n" + StudentTimeText.FormatCostAndEnd(T, Services.Session, row.TimeCostMinutes);
             string reason = row.Refusal != StudentActivityRefusalReason.None ? T(StudentActivityRefusal.LocalizationKey(row.Refusal))
                 : !row.RequirementsMet ? T("life.location.requirements-unmet") : string.Empty;
             return (main, reason);
@@ -237,6 +239,7 @@ namespace Rootborn.Screens.Day
 
         private static float Line(DrawList list, ITextMeasurer text, UiRect rect, float y, string value, float size, UiColor color)
         {
+            value = TextFit.Ellipsize(value, rect.W - LocationLayout.RowTextInset * 2f, text, size); // 긴 글자(다른 언어)가 줄 밖으로 나가지 않게
             list.Text(rect.X + (rect.W - text.Width(value, size)) / 2f, y, value, size, color, UiSkin.Button);
             return y + text.LineHeight(size);
         }

@@ -10,6 +10,25 @@ namespace Rootborn.Ui.Tests
         private static readonly FakeMeasurer M = new FakeMeasurer();
 
         [Test]
+        public void TextField_Placeholder_IsEllipsized_ToTheFieldWidth()
+        {
+            // 폭 120, 안쪽 여백 양쪽 → 글자 칸. 긴 안내 문구(영어 2배 등)가 칸 밖으로 나가지 않는다.
+            var field = new UiTextField { FontSize = 20, Placeholder = "Search furniture by name Search furniture by name" };
+            field.Place(0, 0, 0, 0, 120, 40);
+            field.Layout(new UiRect(0, 0, 1920, 1080));
+            var list = new DrawList();
+            field.Emit(list, M);
+            DrawCommand placeholder = list.Commands.Single(c => c.Kind == DrawKind.Text);
+            Assert.That(placeholder.Text, Does.EndWith(TextFit.Ellipsis));
+            Assert.That(placeholder.Rect.X + M.Width(placeholder.Text, 20), Is.LessThanOrEqualTo(field.Rect.Right - field.PaddingX + 0.01f));
+
+            field.Placeholder = "Find";
+            list = new DrawList();
+            field.Emit(list, M);
+            Assert.That(list.Commands.Single(c => c.Kind == DrawKind.Text).Text, Is.EqualTo("Find"), "들어가는 문구는 그대로");
+        }
+
+        [Test]
         public void Fit_KeepsTextThatFits()
         {
             Assert.That(TextFit.Ellipsize("abcd", 40, M, 20), Is.EqualTo("abcd"));

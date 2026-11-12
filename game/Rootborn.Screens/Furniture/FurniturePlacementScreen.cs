@@ -35,7 +35,8 @@ namespace Rootborn.Screens.Furniture
             public const float PageButtonX = 112f, PageButtonY = -248f, PageButtonW = 128f, PageButtonH = 48f, PageButtonFont = 18f;
             public const float PageTextX = 0f, PageTextY = -324f, PageTextW = 368f, PageTextH = 64f, PageTextFont = 18f;
 
-            public const float SettingsX = 760f, SettingsY = 0f, SettingsW = 360f, SettingsH = 720f;
+            /// <summary>Unity 판은 SettingsY 0이었다. 위쪽 체력·집중 HUD와 맞닿아 한 덩어리로 보여 16 내렸다(겹침 검사의 최소 틈 8).</summary>
+            public const float SettingsX = 760f, SettingsY = -16f, SettingsW = 360f, SettingsH = 720f;
             public const float SettingsTitleX = -34f, SettingsTitleY = 310f, SettingsTitleW = 230f, SettingsTitleH = 40f;
             public const float CloseX = 150f, CloseY = 310f, CloseSize = 44f;
             public const float PreviewX = -82f, PreviewY = -288f, PreviewSize = 116f, PreviewIcon = 82f;

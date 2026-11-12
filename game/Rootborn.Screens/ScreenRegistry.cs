@@ -27,6 +27,8 @@ namespace Rootborn.Screens
         public bool KeyWorksOnStartScreens { get; internal set; }
         /// <summary>이 화면 안에서만 듣는 키의 단축키 안내 줄(장치 키 이름표를 받아 만든다). 없으면 null.</summary>
         public Func<Rootborn.Screens.KeyGuide.KeyGuideKeys, IReadOnlyList<Rootborn.Screens.KeyGuide.KeyGuideRow>> KeyGuide { get; internal set; }
+        /// <summary>월드의 상호작용이 여는 화면이다(OpenedByInteraction). 떠 있는 동안 상호작용 안내를 숨긴다.</summary>
+        public bool OpenedByInteraction { get; internal set; }
     }
 
     /// <summary>
@@ -126,6 +128,7 @@ namespace Rootborn.Screens
                 if (string.IsNullOrEmpty(kind)) throw new ArgumentException("상호작용 종류가 비었다", nameof(kind));
                 if (_owner._interactions.TryGetValue(kind, out string other)) throw new InvalidOperationException($"상호작용 {kind}는 이미 화면 {other}에 배정됐다");
                 _owner._interactions[kind] = _id;
+                _owner._screens[_id].OpenedByInteraction = true;
                 return this;
             }
         }

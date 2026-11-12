@@ -33,8 +33,8 @@ namespace Rootborn.Screens.Start
         /// <summary>배치(1920x1080 기준): 아래 가운데, 상호작용 실패 안내보다 위(HUD를 가리지 않게). 새 디자인에서는 여기만 고친다.</summary>
         internal static class Metrics
         {
-            public const float BoxW = 900f, BoxH = 240f, Bottom = 340f;
-            public const float TextX = 32f, TextY = 14f, Font = 20f;
+            public const float BoxW = 900f, BoxH = 262f, Bottom = 340f;
+            public const float TextX = 32f, TextY = 36f, Font = 20f; // 위 여백 14는 테두리 위에 글자가 걸렸다(2026-11-12)
             public const float LineH = 124f; // 같이 쓰는 것 줄(세 줄까지), 그 아래 진행 줄
         }
 

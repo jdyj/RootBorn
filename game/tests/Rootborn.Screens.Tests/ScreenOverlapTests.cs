@@ -136,7 +136,11 @@ namespace Rootborn.Screens.Tests
             foreach (var o in others)
             {
                 foreach (var h in hud)
+                {
                     if (UiSurfaces.Overlap(o.Node.Rect, h.Node.Rect)) found.Add(label + Name(o) + " + " + Name(h) + " | 패널이 보이는 HUD와 겹침");
+                    else if (UiSurfaces.Overlap(Inflate(o.Node.Rect, MinimumGap), h.Node.Rect))
+                        found.Add(label + Name(o) + " + " + Name(h) + " | 패널이 보이는 HUD에 붙음(" + MinimumGap + "px 안)");
+                }
                 if (OffScreen(o.Node.Rect, fit)) found.Add(label + Name(o) + " | 화면 밖");
             }
 
@@ -149,6 +153,11 @@ namespace Rootborn.Screens.Tests
                 if (button != null && button.Visible && button.Covered) found.Add(label + spec.Id + " | 연 화면이 그 켬/끔 단추를 덮음");
             }
         }
+
+        /// <summary>패널과 보이는 HUD 사이에 둘 최소 틈(논리 픽셀). 맞닿거나 이보다 가까우면 한 덩어리로 붙어 보인다(가구 배치 화면, 2026-11-12).</summary>
+        private const float MinimumGap = 8f;
+
+        private static UiRect Inflate(UiRect r, float by) => new UiRect(r.X - by, r.Y - by, r.W + by * 2f, r.H + by * 2f);
 
         private static bool OffScreen(UiRect r, ScreenFit fit) =>
             r.X < -0.5f || r.Y < -0.5f || r.Right > fit.LogicalWidth + 0.5f || r.Bottom > fit.LogicalHeight + 0.5f;
@@ -183,6 +192,41 @@ namespace Rootborn.Screens.Tests
             Assert.That((energy.Covered, focus.Covered), Is.EqualTo((true, true)), "한 묶음으로 숨는다");
             Assert.That(t.Node(ClockHudScreen.PanelId).Covered, Is.True);
             Assert.That(t.Node("hud.button.encyclopedia").Covered, Is.False, "버튼 줄은 덮인 것만 숨는다");
+        }
+
+        /// <summary>
+        /// 상호작용으로 연 패널·모달이 떠 있는 동안 그 앞의 "[E] …" 안내는 보이지 않는다(상자 화면 위쪽에 안내가 남던 것, 2026-11-12).
+        /// 안내는 대상 위에 떠서 패널 사각형 밖에 있을 수 있어 덮임(Covered)만으로는 숨지 않는다. 등록 표의 상호작용 종류를 모두 본다.
+        /// </summary>
+        [Test]
+        public void ThePrompt_IsHidden_WhileAScreenOpenedByInteractionIsOpen()
+        {
+            var checkedKinds = new List<string>();
+            foreach (KeyValuePair<string, string> pair in ScreenCatalog.Create().InteractionKinds)
+            {
+                string kind = pair.Key, id = pair.Value;
+                ScreenCatalog.Create().TryGet(id, out ScreenEntry entry);
+                if (entry.Layer != ScreenLayer.Panel && entry.Layer != ScreenLayer.Modal) continue;
+                if (OwnFixture.Contains(id) || InteractionPromptScreen.Prompts.All(p => p.Kind != kind)) continue;
+                using TestSession t = World(house: true, ScreenFit.For(1920, 1080));
+                // 대상은 화면 위쪽(패널 밖에 안내가 뜨는 자리). 그 대상을 상호작용했다.
+                t.Stack.SetInteractionTarget(new InteractionTargetView(kind, "target", 960, 200, 64));
+                UiNode prompt = t.Node(InteractionPromptScreen.LabelId);
+                Assert.That(prompt.Visible, Is.True, kind + ": 대상 앞에서는 안내가 보인다");
+                if (Openers.TryGetValue(id, out Action<TestSession> open)) open(t);
+                else t.Stack.Interaction(new InteractionEvent("House", kind, "target"));
+                if (!t.Stack.IsOpen(id)) t.Stack.Open(id, new InteractionEvent("House", kind, "target"));
+                t.Emit();
+                Assert.That(t.Stack.IsOpen(id), Is.True, id);
+                Assert.That(prompt.Visible && !prompt.Covered, Is.False, id + "가 떠 있는데 안내 [" + kind + "]가 보인다");
+                // 닫으면 뒤따라 뜨는 화면(장소 뒤 하루 이벤트)도 닫는다.
+                for (int round = 0; round < 4 && t.Stack.OpenScreens.Any(x => x.Layer != ScreenLayer.Hud); round++)
+                    foreach (GameScreen screen in t.Stack.OpenScreens.Where(x => x.Layer != ScreenLayer.Hud).Reverse().ToList()) t.Stack.Close(screen);
+                Assert.That(prompt.Visible, Is.True, id + "를 닫으면 안내가 돌아온다. 열린 것: "
+                    + string.Join(",", t.Stack.OpenScreens.Select(s => s.Id)));
+                checkedKinds.Add(kind);
+            }
+            Assert.That(checkedKinds, Does.Contain(Rootborn.Screens.Storage.StorageScreen.InteractionKind).And.Contain("npc"));
         }
 
         [Test]

@@ -76,6 +76,30 @@ namespace Rootborn.Screens.Tests
             Assert.That(activity, Is.Not.Empty);
         }
 
+        /// <summary>활동 줄이 걸리는 시간과 함께 끝나는 시각을 보인다(취침 직전에 시작해 밤 체력 감소를 맞지 않게 — 흐르는 시간 틈, 2026-11-12).</summary>
+        [Test]
+        public void ActivityRows_ShowWhenTheyEnd()
+        {
+            LocationScreen screen = Open(School);
+            LocationRow row = screen.Model.Rows.First(r => r.Kind == LocationRowKind.Activity && r.TimeCostMinutes > 0);
+            int end = StudentTimeText.ClockMinutes(_f.Session.Student.TimeMinutes + row.TimeCostMinutes);
+            string expected = string.Format(_f.Text.Get("life.time.cost-ends"), string.Format(_f.Text.Get("life.time.cost"), row.TimeCostMinutes), end / 60, end % 60);
+            Assert.That(_f.EmitTexts(), Does.Contain(expected));
+        }
+
+        /// <summary>끝나는 시각이 취침 시각을 넘기면 다른 문구로 보인다(밤에는 체력이 준다).</summary>
+        [Test]
+        public void ActivityRows_PastBedtime_SayItEndsAfterBedtime()
+        {
+            for (int guard = 0; guard < 200 && _f.Session.MinutesUntilBedtime > 30; guard++) _f.Session.AdvanceTime(25f / 4f, false); // 15분씩
+            Assert.That(_f.Session.MinutesUntilBedtime, Is.InRange(1, 30), "취침 시각 30분 안쪽");
+            LocationScreen screen = Open(School);
+            LocationRow row = screen.Model.Rows.First(r => r.Kind == LocationRowKind.Activity && r.TimeCostMinutes > _f.Session.MinutesUntilBedtime);
+            int end = StudentTimeText.ClockMinutes(_f.Session.Student.TimeMinutes + row.TimeCostMinutes);
+            string expected = string.Format(_f.Text.Get("life.time.cost-ends-late"), string.Format(_f.Text.Get("life.time.cost"), row.TimeCostMinutes), end / 60, end % 60);
+            Assert.That(_f.EmitTexts(), Does.Contain(expected));
+        }
+
         [Test]
         public void Refused_WhenTimeRunsOut_RowsShowWhy_AndPressingChangesNothing()
         {

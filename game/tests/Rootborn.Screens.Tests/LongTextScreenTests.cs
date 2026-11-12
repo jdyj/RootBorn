@@ -8,6 +8,7 @@ using Rootborn.Core.Interaction;
 using Rootborn.Data;
 using Rootborn.Data.Builders;
 using Rootborn.Data.Save;
+using Rootborn.Core.Save;
 using Rootborn.Game;
 using Rootborn.Ui;
 
@@ -46,7 +47,9 @@ namespace Rootborn.Screens.Tests
     }
 
     /// <summary>
-    /// 지금 main에 있는 화면(설정, HUD 5종, 대화, 하루 이벤트)을 2배 길이 문구로 띄워 글자가 패널 밖으로 나가지 않는지,
+    /// 화면을 2배 길이 문구로 띄워 글자가 패널 밖으로 나가지 않는지, 버튼끼리 겹치지 않는지 본다. 처음 시험은 설정·HUD 5종·대화·하루 이벤트를
+    /// 실제 흐름으로 열고, EveryRegisteredScreen_WithLongText는 등록 표의 모든 화면을 연다(따로 시험이 있는 화면은 CheckedElsewhere).
+    /// 아래는 처음 시험의 설명:
     /// 버튼끼리 겹치지 않는지 본다. 화면 폴더는 다른 세션이 고치고 있어서 넘치는 곳은 고치지 않고 KnownOverflow에 고정한다
     /// (보고서 목록). 목록 밖의 넘침이 생기거나 목록의 넘침이 사라지면 실패한다. 자동 테스트다.
     /// </summary>
@@ -75,6 +78,7 @@ namespace Rootborn.Screens.Tests
                 Session = GameSession.Start(Definitions.Value, GameStartSettings.FromDefinitions(Definitions.Value), new FileSaveStore(_saves), "slot-test", null);
                 Text = LongText.Create(language);
                 var services = new ScreenServices(Text, Session) { Names = DisplayNames.Load(TestData.DataDirectory) };
+                Services = services;
                 ScreenRegistry registry = ScreenCatalog.Create();
                 extra?.Invoke(registry);
                 Stack = new ScreenStack(registry, services);
@@ -82,6 +86,26 @@ namespace Rootborn.Screens.Tests
             }
 
             public GameSession Session { get; }
+            public ScreenServices Services { get; }
+
+            private Rootborn.Screens.Start.StartMenu _menu;
+
+            /// <summary>시작 화면을 실제처럼 여는 메뉴(이 판의 저장 폴더). 슬롯 하나에는 이야기를 써 둬 이어 하기·지우기 칸도 보인다.</summary>
+            public Rootborn.Screens.Start.StartMenu Menu
+            {
+                get
+                {
+                    if (_menu != null) return _menu;
+                    var store = new FileSaveStore(_saves);
+                    var looks = Rootborn.Screens.Start.CreatorLooks.Load(TestData.DataDirectory);
+                    var model = new Rootborn.Screens.Start.CharacterCreatorModel(looks);
+                    long now = new DateTime(2026, 11, 12, 9, 0, 0, DateTimeKind.Utc).Ticks;
+                    store.Write("slot-1", SaveFileNames.Metadata, Rootborn.Screens.Start.SaveSlots.CreateMetadata("slot-1", "Name", model.Snapshot(), now, 1));
+                    _menu = new Rootborn.Screens.Start.StartMenu(new Rootborn.Screens.Start.SaveSlots(store, _ => { }), looks,
+                        new Rootborn.Screens.Tests.Start.FakePreviewArt(), _ => true, () => { }, () => now, () => 1);
+                    return _menu;
+                }
+            }
             public GameText Text { get; }
             public ScreenStack Stack { get; }
 
@@ -150,6 +174,61 @@ namespace Rootborn.Screens.Tests
             Assert.That(found.Except(KnownOverflow), Is.Empty, "알려진 목록 밖의 넘침");
             Assert.That(KnownOverflow.Where(k => k.StartsWith(language + " |", StringComparison.Ordinal) || !k.Contains(" |")).Except(found), Is.Empty,
                 "고쳐진 넘침은 목록에서 지운다");
+        }
+
+        /// <summary>그냥 Open(id)로는 내용이 없어 바로 닫히거나 비는 화면: 실제로 여는 길(상호작용, 예약, 인자).</summary>
+        private static readonly Dictionary<string, Action<LongSession>> Openers = new Dictionary<string, Action<LongSession>>(StringComparer.Ordinal)
+        {
+            [ScreenCatalog.Dialogue] = t => t.Stack.Interaction(new InteractionEvent("House", "npc", "npc.first-guide")),
+            [ScreenCatalog.Location] = t => t.Stack.Interaction(new InteractionEvent("Town", "location-activity", "location.library")),
+            [ScreenCatalog.Minigame] = t => t.Stack.Interaction(new InteractionEvent("Town", "part-time-work", "work.shift.corner-store")),
+            [ScreenCatalog.SaveSlotSelect] = t => t.Stack.Open(ScreenCatalog.SaveSlotSelect, argument: t.Menu),
+            [ScreenCatalog.CharacterCreator] = t => t.Stack.Open(ScreenCatalog.CharacterCreator, argument: new Rootborn.Screens.Start.CreatorOpen(t.Menu, "slot-2")),
+            [ScreenCatalog.InteractionRefusal] = t => Rootborn.Screens.Hud.InteractionRefusals.Show(t.Services, "ui.prompt.no-time"),
+            [ScreenCatalog.RoomSharesNotice] = t => t.Stack.Open(ScreenCatalog.RoomSharesNotice,
+                argument: new Rootborn.Screens.Start.RoomSharesNoticeOpen(Rootborn.Core.Room.RoomPieceCatalog.CreateDefault().Names)),
+        };
+
+        /// <summary>
+        /// 따로 2배 문구 시험이 있는 화면: 화면 id → 그 시험. 이 시험에서는 열지 않는다(준비가 따로 필요하다).
+        /// </summary>
+        internal static readonly Dictionary<string, string> CheckedElsewhere = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            [ScreenCatalog.Facility] = "FacilityScreenTests(성인 단계 준비가 필요하다)",
+            [ScreenCatalog.Storage] = "StorageScreenTests(놓인 상자가 필요하다)",
+        };
+
+        /// <summary>
+        /// 등록된 모든 화면(HUD 포함, 시작 화면 포함)을 모든 언어의 2배 문구로 연다. 화면 목록은 ScreenCatalog에서 읽으므로 새 화면이
+        /// 조용히 빠지지 않는다. 넘침은 KnownOverflow와 같은 형식으로 모은다. 자동 테스트다.
+        /// </summary>
+        [TestCaseSource(nameof(Languages))]
+        public void EveryRegisteredScreen_WithLongText_StaysInsideItsPanel(string language)
+        {
+            var found = new List<string>();
+            var checkedScreens = new List<string>();
+            foreach (ScreenEntry entry in ScreenCatalog.Create().Screens.OrderBy(e => e.Id, StringComparer.Ordinal))
+            {
+                if (CheckedElsewhere.ContainsKey(entry.Id)) continue;
+                using var t = new LongSession(language);
+                t.Stack.EnterMap("House", new[] { MapFeatures.FurniturePlacement });
+                if (!entry.WithoutWorld) t.Stack.OpenHud();
+                t.Stack.SetInteractionTarget(new InteractionTargetView("location-activity", "location.library", 800, 500, 64));
+                if (Openers.TryGetValue(entry.Id, out Action<LongSession> open)) open(t);
+                else if (!t.Stack.IsOpen(entry.Id)) t.Stack.Open(entry.Id);
+                t.Settle();
+                if (entry.Id == ScreenCatalog.HudTracked && !t.Stack.Find(entry.Id).Root.Children.Any(c => c.IsVisibleInTree()))
+                {
+                    // 추적한 것이 없으면 숨는다: 기존 시험이 대화 뒤에 본다.
+                    checkedScreens.Add(entry.Id);
+                    continue;
+                }
+                Inspect(t, entry.Id, found, checkedScreens);
+            }
+            var expected = ScreenCatalog.Create().Screens.Select(e => e.Id).Where(id => !CheckedElsewhere.ContainsKey(id));
+            Assert.That(checkedScreens.Distinct().OrderBy(s => s), Is.EqualTo(expected.OrderBy(s => s)), "등록된 모든 화면을 봤다");
+            TestContext.WriteLine(language + " 넘침: " + (found.Count == 0 ? "없음" : string.Join("\n  ", found)));
+            Assert.That(found.Except(KnownOverflow), Is.Empty, "알려진 목록 밖의 넘침");
         }
 
         private sealed class Overflowing : GameScreen
