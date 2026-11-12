@@ -70,6 +70,28 @@ namespace Rootborn.Host.Tests
         }
 
         [Test]
+        public void Measure_WithFrames_WritesOneLineJsonWithEveryKey()
+        {
+            string file = Path.Combine(_dir, "deeper", "measure.json");
+            (int code, string error) = RunHost("--sample", "--size", "640x360", "--frames", "20", "--measure", file, "--evidence", _dir);
+            Assert.That(code, Is.Zero, error);
+            Assert.That(File.Exists(file), Is.True, "끝날 때 파일을 쓴다(없는 폴더도 만든다)");
+            string[] lines = File.ReadAllLines(file);
+            Assert.That(lines, Has.Length.EqualTo(1), "JSON 한 줄");
+            foreach (string key in new[] { "frames", "frameMsMedian", "frameMsP99", "frameMsMax", "allocatedBytesPerFrame", "peakPrivateBytes" })
+                Assert.That(lines[0], Does.Contain("\"" + key + "\":"), key);
+            Assert.That(lines[0], Does.Contain("\"frames\":19"), "첫 프레임은 기준이라 20프레임이면 19");
+        }
+
+        [Test]
+        public void Frames_WithoutMeasure_WritesNoMeasureFile()
+        {
+            (int code, string error) = RunHost("--sample", "--size", "640x360", "--frames", "2", "--evidence", _dir);
+            Assert.That(code, Is.Zero, error);
+            Assert.That(Directory.GetFiles(_dir, "*.json", SearchOption.AllDirectories), Is.Empty);
+        }
+
+        [Test]
         public void Frames_Alone_Exits_WithoutAScreenshot()
         {
             (int code, string error) = RunHost("--sample", "--size", "640x360", "--frames", "2", "--evidence", _dir);
@@ -91,7 +113,7 @@ namespace Rootborn.Host.Tests
         {
             (int code, string error) = RunHost("--size", "640x360");
             Assert.That(code, Is.EqualTo(2));
-            foreach (string arg in new[] { "--ui-theme", "--lang", "--frames", "--screenshot" }) Assert.That(error, Does.Contain(arg));
+            foreach (string arg in new[] { "--ui-theme", "--lang", "--frames", "--screenshot", "--measure" }) Assert.That(error, Does.Contain(arg));
         }
     }
 }

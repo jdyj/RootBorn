@@ -98,6 +98,7 @@ namespace Rootborn.Host
         public HostGame(HostOptions options)
         {
             _options = options;
+            if (options.MeasurePath != null) _meter = new Measure.FrameMeter(MeasureCapacityFrames);
             _graphics = new GraphicsDeviceManager(this)
             {
                 PreferredBackBufferWidth = options.Width,
@@ -839,7 +840,50 @@ namespace Rootborn.Host
             _batch.Draw(_scene, Vector2.Zero, Color.White);
             _batch.End();
             base.Draw(gameTime);
+            if (_meter != null) MeasureFrame();
             ExitAfterFramesIfAsked();
+        }
+
+        // ---- --measure: 프레임 시간·할당·전용 메모리. --measure가 없으면 _meter가 null이라 아무것도 하지 않는다. ----
+
+        private const int MeasureCapacityFrames = 36000;  // 60프레임/초로 10분. 시작할 때 한 번 잡는다
+        private const int MeasureMemoryEveryFrames = 300; // 전용 메모리 표본 간격(표본 한 번이 작은 할당을 한다)
+        private readonly Measure.FrameMeter _meter;
+        private System.Diagnostics.Process _measureProcess;
+        private int _measureFrames;
+
+        private void MeasureFrame()
+        {
+            _meter.Frame(System.Diagnostics.Stopwatch.GetTimestamp(), GC.GetAllocatedBytesForCurrentThread());
+            if (++_measureFrames % MeasureMemoryEveryFrames == 0) SampleMeasureMemory();
+        }
+
+        private void SampleMeasureMemory()
+        {
+            _measureProcess ??= System.Diagnostics.Process.GetCurrentProcess();
+            _measureProcess.Refresh();
+            _meter.NoteMemory(_measureProcess.PrivateMemorySize64);
+        }
+
+        /// <summary>끝날 때 통계를 한 줄 JSON으로 쓴다. 쓰지 못해도 게임 종료를 막지 않고 오류 한 줄만 남긴다.</summary>
+        private void WriteMeasurement()
+        {
+            try
+            {
+                SampleMeasureMemory();
+                string path = Path.GetFullPath(_options.MeasurePath);
+                Directory.CreateDirectory(Path.GetDirectoryName(path));
+                File.WriteAllText(path, _meter.Summary().ToJson() + Environment.NewLine);
+            }
+            catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
+            {
+                Console.Error.WriteLine("[측정] 파일을 쓰지 못했다: " + e.Message);
+            }
+            finally
+            {
+                _measureProcess?.Dispose();
+                _measureProcess = null;
+            }
         }
 
         private int _drawnFrames;
@@ -875,6 +919,7 @@ namespace Rootborn.Host
         {
             if (disposing)
             {
+                if (_meter != null) WriteMeasurement();
                 Room?.Dispose();
                 Room = null;
                 Hosting?.Dispose(); // 들어와 있던 사람에게 닫혔다고 알리고 저장한다

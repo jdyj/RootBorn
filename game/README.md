@@ -74,6 +74,7 @@ Server `ServerLoadMeasureTests`(부하 측정)·`DeployedServerSharingTests`(배
 | `--slot <슬롯 id>` | | 슬롯으로 월드를 시작한다. `metadata.json`이 없으면 새 게임(장면 목록 데이터의 새 게임 자리), 있으면 `world-progress.json`의 자리에서 이어 한다. `--world`와 함께 줄 수 없다 |
 | `--join <호스트:포트>` | `ROOTBORN_JOIN` | 없음(주소 기본값이 없다). 서버 주소로 방에 들어간다. `--save-root`가 필요하다. 시작 화면에서 들어가기 창을 그 주소로 열고, `--slot`도 주면 그 슬롯의 인물로 바로 접속을 시작해 방이 받아들이면 그 슬롯으로 월드를 띄운다. `--world`·`--sample`과 함께 줄 수 없다 |
 | `--frames <N>` | | 없음(끝내지 않는다). N프레임 그린 뒤 끝낸다. 배포 폴더에서 창을 띄워 화면을 확인할 때 쓴다 |
+| `--measure <파일>` | `ROOTBORN_MEASURE` | 없음(재지 않는다, 비용 없음). 끝날 때 프레임 시간(중앙값·99%·최댓값 ms)·프레임당 할당 바이트 평균·전용 메모리 최고값을 한 줄 JSON(`frames`, `frameMsMedian`, `frameMsP99`, `frameMsMax`, `allocatedBytesPerFrame`, `peakPrivateBytes`)으로 쓴다(없는 폴더는 만든다). `--frames`와 함께 쓴다. 중앙값·99%는 마지막 36,000프레임, 최댓값은 전체. 프레임 시간은 한 프레임 끝에서 다음 프레임 끝까지(그리기와 화면 갱신 대기 포함) |
 | `--screenshot <PNG>` | | 없음. `--frames`와 함께 준다: 끝내기 직전 화면을 그 파일로 저장한다(없는 폴더는 만든다) |
 | `--day-copies <N>` | `ROOTBORN_DAY_COPIES` | 3(`GameSession.DefaultDayCopiesToKeep`). 다음 날을 시작할 때 슬롯 폴더의 `backups/<날>/`에 남길 사본 수(최근 것부터). 0이면 남기지 않는다. 사본을 못 쓰면(디스크가 참 등) 그날 저장은 끝난 채로 두고 오류 출력에 `[세이브]` 한 줄을 남긴다 |
 | `--host <IP 주소:포트>` | `ROOTBORN_HOST_ROOM` | 없음(주소 기본값이 없다). 내 PC에서 방을 연다. 이 PC에서 들을 IPv4 주소와 포트(0이면 운영체제가 빈 포트를 준다). `--save-root`가 필요하다. 시작 화면에서 방 열기 창을 그 주소로 열고, `--slot`도 주면 그 슬롯으로 바로 방을 열고 들어가 월드를 띄운다. `--join`·`--world`·`--sample`과 함께 줄 수 없다 |

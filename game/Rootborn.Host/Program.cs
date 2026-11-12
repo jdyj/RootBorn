@@ -25,6 +25,7 @@ namespace Rootborn.Host
                 Console.Error.WriteLine("      --lang <언어>(없으면 저장된 설정 → 운영체제 언어 → 기준 언어)  --ui-theme <테마 이름 또는 폴더>(없으면 " + HostOptions.UiThemeVariable + " → " + HostOptions.DefaultUiTheme + ")");
                 Console.Error.WriteLine("      --join <호스트:포트>(또는 " + HostOptions.JoinVariable + ": 서버 주소로 들어가기. --save-root가 필요하고, --slot을 주면 그 인물로 바로 접속)");
                 Console.Error.WriteLine("      --frames <N>(N프레임 그린 뒤 끝낸다)  --screenshot <PNG>(--frames와 함께: 끝내기 직전 화면을 저장한다)");
+                Console.Error.WriteLine("      --measure <파일>(또는 " + HostOptions.MeasureVariable + ": 끝날 때 프레임 시간·프레임당 할당·전용 메모리 최고값을 한 줄 JSON으로 쓴다)");
                 Console.Error.WriteLine("      --day-copies <N>(다음 날마다 슬롯의 backups/<날>/에 남길 사본 수, 0이면 끔. 없으면 " + HostOptions.DayCopiesVariable + " → " + Rootborn.Game.GameSession.DefaultDayCopiesToKeep + ")");
                 return 2;
             }

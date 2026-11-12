@@ -20,6 +20,7 @@ namespace Rootborn.Host
         public const string JoinVariable = "ROOTBORN_JOIN";
         public const string HostVariable = "ROOTBORN_HOST_ROOM";
         public const string MaxPlayersVariable = "ROOTBORN_MAX_PLAYERS";
+        public const string MeasureVariable = "ROOTBORN_MEASURE";
         /// <summary>같이 쓸 것(데디케이티드 서버의 --share와 같은 이름·규칙 — Net RoomShareArgument).</summary>
         public const string ShareVariable = Rootborn.Net.Room.RoomShareArgument.Variable;
         /// <summary>UI 테마를 주지 않았을 때: Unity 판의 승인된 도시형 몰딩(2026-10-27).</summary>
@@ -124,6 +125,12 @@ namespace Rootborn.Host
         /// <summary>ExitAfterFrames 뒤에 저장할 PNG 경로. 없으면 저장하지 않는다.</summary>
         public string ScreenshotPath;
 
+        /// <summary>
+        /// --measure로 준 파일. 있으면 끝날 때 프레임 시간(중앙값·99%·최댓값)·프레임당 할당·전용 메모리 최고값을 한 줄 JSON으로 쓴다.
+        /// 없으면 재지 않는다(비용 없음).
+        /// </summary>
+        public string MeasurePath;
+
         /// <summary>테스트가 한 프레임씩 돌린다: 고정 시간 간격, 수직 동기 끔, 창이 뒤에 있어도 쉬지 않음.</summary>
         public bool TestMode;
 
@@ -141,6 +148,7 @@ namespace Rootborn.Host
                 SaveRoot = environment(SaveRootVariable),
                 JoinAddress = environment(JoinVariable),
                 HostAddress = environment(HostVariable),
+                MeasurePath = environment(MeasureVariable),
             };
             string maxPlayers = environment(MaxPlayersVariable); // 서버와 같은 이름이라 --host가 없으면 그냥 쓰지 않는다
             bool maxPlayersGiven = false;
@@ -186,6 +194,7 @@ namespace Rootborn.Host
                             throw new InvalidOperationException("--frames 는 1 이상의 정수: " + value);
                         break;
                     case "--screenshot": o.ScreenshotPath = value; break;
+                    case "--measure": o.MeasurePath = value; break;
                     case "--day-copies": o.DayCopies = ParseDayCopies(value, "--day-copies"); break;
                     case "--time-scale":
                         if (!float.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out o.TimeScale) || o.TimeScale < 0f)
@@ -227,6 +236,7 @@ namespace Rootborn.Host
 
             if (o.ScreenshotPath != null && o.ExitAfterFrames == 0)
                 throw new InvalidOperationException("--screenshot 은 --frames <N> 과 함께 준다(N프레임 뒤 저장하고 끝낸다)");
+            if (string.IsNullOrWhiteSpace(o.MeasurePath)) o.MeasurePath = null;
             if (string.IsNullOrWhiteSpace(o.JoinAddress)) o.JoinAddress = null;
             if (o.JoinAddress != null)
             {
