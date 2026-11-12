@@ -70,6 +70,36 @@ namespace Rootborn.Core.Careers
         }
     }
 
+    /// <summary>일을 하면 오르는 기술 하나.</summary>
+    public readonly struct SkillGain
+    {
+        public SkillGain(string skillId, int amount)
+        {
+            SkillId = skillId;
+            Amount = Math.Max(0, amount);
+        }
+
+        public string SkillId { get; }
+        public int Amount { get; }
+    }
+
+    /// <summary>공간이 일 정산에 더해 주는 것. default는 아무것도 더하지 않는다.</summary>
+    public readonly struct WorkExtras
+    {
+        private readonly IReadOnlyList<SkillGain> _skillGains;
+
+        public WorkExtras(int rewardPercentBonus, int reputationBonus, IReadOnlyList<SkillGain> skillGains)
+        {
+            RewardPercentBonus = Math.Max(0, rewardPercentBonus);
+            ReputationBonus = Math.Max(0, reputationBonus);
+            _skillGains = skillGains;
+        }
+
+        public int RewardPercentBonus { get; }
+        public int ReputationBonus { get; }
+        public IReadOnlyList<SkillGain> SkillGains => _skillGains ?? Array.Empty<SkillGain>();
+    }
+
     /// <summary>
     /// 세계 상태(아직 Core에 없는 영역). 같은 세이브 슬롯·플레이어인지 확인하고, 깃발을 켠다.
     /// 그 영역을 옮기면 그쪽 진행 상태가 이 인터페이스를 구현해 잇는다.
