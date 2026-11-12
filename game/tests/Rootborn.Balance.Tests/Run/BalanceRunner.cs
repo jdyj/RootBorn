@@ -97,7 +97,7 @@ namespace Rootborn.Balance.Tests
                     Weekend = game.Student.Calendar.IsWeekend(game.Student.CurrentDay),
                     EndedAtMinutes = game.Student.TimeMinutes,
                 };
-                PlayDay(game, actions, context, config.Sleep, bedtime, record, name, ref request);
+                PlayDay(game, actions, context, fits, bedtime, record, name, ref request);
 
                 record.FacilityLevel = game.Adult.IsAdult ? game.Adult.FacilityLevel : 0;
                 record.EnergyAtEnd = game.Student.Energy;
@@ -119,10 +119,9 @@ namespace Rootborn.Balance.Tests
             return run;
         }
 
-        private static void PlayDay(GameSession game, IReadOnlyList<IBalanceAction> actions, RunContext context, string sleep, int bedtime,
+        private static void PlayDay(GameSession game, IReadOnlyList<IBalanceAction> actions, RunContext context, Func<int, int, int, bool> fits, int bedtime,
             DayRecord record, string name, ref int request)
         {
-            var fits = SleepRules.Get(sleep);
             var skipped = new bool[actions.Count]; // 이 날 거절된 행동 종류는 다시 보지 않는다
             int travel = context.Assumptions.TravelMinutes;
             for (int guard = 0; ; guard++)
