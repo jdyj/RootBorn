@@ -24,6 +24,7 @@
 | `tests/Rootborn.Ui.Tests` | 화면 없이 도는 테스트 | 없음 |
 | `tests/Rootborn.Server.Tests` | 서버 인자(`ServerOptionsTests`), 데이터 지문, 방 루프·방 서버(메모리 저장소), 빌드한 서버를 별도 프로세스로 띄워 루프백 UDP로 들어가기(`ServerProcessTests`, 두 기계·Steam 아님) | 없음 |
 | `tests/Rootborn.Simulation.Tests` | 대본 없이 정책이 화면에 보이는 것만 보고 여러 날을 플레이(입력은 화면 포인터 판정·키 배정을 거친다): 걸음마다 불변식, 날마다 저장 뒤 다시 읽기, 같은 씨앗은 같은 플레이·기록 다시 재생. 씨앗·날 수는 `ROOTBORN_SIM_SEEDS`·`ROOTBORN_SIM_DAYS`, 기록은 `output/simulation/`. 알려진 결함 재현은 이유와 함께 건너뛴다. 사람의 실제 플레이를 대신하지 않는다 | 없음 |
+| `tests/Rootborn.Balance.Tests` | 수치 균형 시뮬레이터: 전략(`money-balance.json`)대로 시설 일·알바를 실제 `data/`와 `GameSession` 명령으로 여러 날 돌려 수입을 잰다(메모리 저장소, 걷기·미니게임 가정은 Game 테스트의 `day-balance.json`). 빠른 검사는 짧은 날 수, 전체 보고는 손으로(`FullReport`) `output/balance/`에 `days.csv`·`summary.csv`·`report.md`. 가정을 넣은 계산이고 실제 플레이가 아니다 | 없음 |
 | `tests/Rootborn.Screens.Tests` | 창 없이 도는 화면 테스트: 화면 쌓기의 층·배타·이동 막음·입력 넘기기, 실제 `ko.json`·`en.json`, 설정·HUD·대화·하루 이벤트·가방·상태 화면을 실제 `data/`와 `GameSession`으로 눌러 보기(알려진 빠진 현지화 키는 `KnownMissingKeys`) | 없음 |
 | `tests/Rootborn.Host.Tests` | 실제 창과 게임 루프를 한 프레임씩 돌리는 테스트(새 게임 → 집 → 마을 → 가게 → 이어 하기 `NewGameJourneyTests`, 메인 체인 처음부터 끝까지 `MainChainHostTests`, 영어로 모든 화면 찍기 `EnglishScreensTests`, `--frames`·`--screenshot` 프로세스 시험 `FramesScreenshotTests`, 같은 프로세스 안 방에 UDP 루프백으로 들어가 다른 참가자 보기·거절·끊김 `MultiplayerJoinHostTests` 포함) | 있음 |
 
@@ -51,6 +52,7 @@ dotnet run --project game/Rootborn.Host -- --save-root <세이브 폴더> --slot
 `bash Scripts/remote-test/run.sh [<커밋>]`(커밋된 것만 간다, `Scripts/remote-test/README.md`), 정적 검사는 `bash Scripts/ci/run-all.sh --checks-only`.
 손으로만 도는 테스트(`[Explicit]`, 평소 실행에서 건너뜀): Host `ThemeConversionWriter`(테마 파일을 다시 쓴다), Simulation `ReplayFromEnvironment`(`ROOTBORN_SIM_REPLAY`),
 Server `ServerLoadMeasureTests`(부하 측정)·`DeployedServerSharingTests`(배포 폴더가 있어야 한다 — `Tools/publish/verify.sh --server`가 돌린다).
+Balance `WriteFullReport`(전체 균형 보고): `dotnet test game/tests/Rootborn.Balance.Tests --filter "FullyQualifiedName~WriteFullReport"`, 원격은 `bash Scripts/remote-test/run.sh HEAD -- game/tests/Rootborn.Balance.Tests --filter "FullyQualifiedName~WriteFullReport"`(결과의 `output/balance/`로 받는다).
 
 인자와 환경 변수(인자가 먼저다):
 
@@ -79,6 +81,8 @@ Server `ServerLoadMeasureTests`(부하 측정)·`DeployedServerSharingTests`(배
 | `--host <IP 주소:포트>` | `ROOTBORN_HOST_ROOM` | 없음(주소 기본값이 없다). 내 PC에서 방을 연다. 이 PC에서 들을 IPv4 주소와 포트(0이면 운영체제가 빈 포트를 준다). `--save-root`가 필요하다. 시작 화면에서 방 열기 창을 그 주소로 열고, `--slot`도 주면 그 슬롯으로 바로 방을 열고 들어가 월드를 띄운다. `--join`·`--world`·`--sample`과 함께 줄 수 없다 |
 | `--max-players <정원>` | `ROOTBORN_MAX_PLAYERS` | 4(방 설정 기본값). 1~8. `--host`와 함께만 준다(환경 변수는 `--host`가 없으면 쓰지 않는다 — 서버와 같은 이름). 방을 처음 만들 때만 쓰고 방 설정 파일에 남는다(이미 있는 방은 저장된 정원) |
 | `--share <조각,...>` | `ROOTBORN_ROOM_SHARE` | 없음(방 열기 창에서 고른다). 서버의 `--share`와 같은 이름·규칙(`Rootborn.Net/Room/RoomShareArgument`): `wallet`(돈), `house`(집과 가구), `town`(마을 상태)을 쉼표로, `none`이면 시간만. 방 열기 창에 처음 켜 둘 것이고 `--slot`과 함께면 그대로 연다. `--host`와 함께만 준다. 방을 처음 만들 때만 쓴다 |
+| (Balance 테스트) | `ROOTBORN_BALANCE_OUT` | `<저장소>/output/balance`. 균형 보고 파일 셋을 쓸 폴더 |
+| (Balance 테스트) | `ROOTBORN_BALANCE_DAYS` | `money-balance.json`의 `days`(30). 전체 보고의 날 수. 1 이상의 정수가 아니면 변수 이름과 값을 말하며 실패한다 |
 
 `--sample`도 `--world`도 `--slot`도 없으면 슬롯 선택 화면(슬롯 3개: 새 이야기 → 캐릭터 만들기, 이어서 시작, 삭제)부터 띄운다. 세이브 폴더가 없으면 안내 후 끝난다.
 캐릭터 만들기의 시작하기는 슬롯 정보(이름, 고른 겉모습, 시각으로 만든 시드)를 쓰고 그 슬롯으로 `--slot`과 같게 시작한다. 슬롯으로 시작하면 맵에 들어갈 때마다(처음 들어갈 때 포함) `world-progress.json`에 쓴다.
