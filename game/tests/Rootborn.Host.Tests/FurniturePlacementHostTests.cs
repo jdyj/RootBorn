@@ -81,6 +81,44 @@ namespace Rootborn.Host.Tests
 
         private static bool Near(GridPoint a, GridPoint b, int distance) => Math.Abs(a.X - b.X) <= distance && Math.Abs(a.Y - b.Y) <= distance;
 
+        /// <summary>
+        /// 키보드로 놓기: P 키로 가구 배치를 열고(가구 고르기는 검색 칸에 글자 + 칸 누르기), 놓을 칸 아래까지 걸어가 위를 보고 E를 누르면
+        /// 바라보는 칸에 놓인다(포인터로 누른 것과 같은 GameSession 명령). 장치 이벤트 주입, OS 입력 계층 미확인.
+        /// </summary>
+        [Test]
+        public void FURNITURE_007_PKeyOpensPlacement_EPlacesOnTheCellTheCharacterFaces()
+        {
+            using PlayerDriver player = Start();
+            var session = player.Game.Session;
+            FurnitureDefinition desk = session.Definitions.Get<FurnitureDefinition>(Desk);
+            FurnitureRoom room = player.Game.World.Room;
+            var house = session.House;
+            player.OpenScreenWithKey(TestKey.P, ScreenCatalog.FurniturePlacement);
+            FurniturePlacementScreen screen = Placement(player);
+            player.PressButton(FurniturePlacementScreen.SearchId);
+            player.TypeText(Desk);
+            int slot = Enumerable.Range(0, 20).First(i => screen.Palette.At(i)?.StableId == Desk);
+            player.PressButton(FurniturePlacementScreen.SlotId(slot));
+            Assert.That(screen.Active, Is.SameAs(desk));
+
+            // 놓을 칸: 그 아래(맵에서 한 줄 아래) 칸이 걸을 수 있는 바닥. 거기까지 걸어가 위를 본다(위 키를 한 프레임).
+            GridPoint spawn = room.Grid.Spawn;
+            GridPoint target = room.FloorCells.First(c => house.CanPlace(desk, c, FurniturePlacementDirection.North) && !Near(c, spawn, 1)
+                && !player.World.Map.Collision.IsBlocked(new CellPos(room.ToMap(c).X, room.ToMap(c).Y + 1)));
+            CellPos below = new CellPos(room.ToMap(target).X, room.ToMap(target).Y + 1);
+            player.WalkTo(below);
+            player.HoldKey(TestKey.Up, 1);
+            Assert.That(View(player).TryFacingCell(out GridPoint facing) && facing.Equals(target), Is.True, "준비: 놓을 칸을 바라본다");
+            player.Frames(2);
+            player.Screenshot("furniture-12-keyboard-before");
+
+            player.PressKey(TestKey.E);
+            player.Frames(2);
+            Assert.That(screen.LastAction, Is.EqualTo("placed"));
+            Assert.That(house.Placed.Single().Anchor, Is.EqualTo(target), "바라보는 칸에 놓였다");
+            player.Screenshot("furniture-13-keyboard-placed");
+        }
+
         [Test]
         public void FURNITURE_001_NewSlot_PlacementOn_PickFromPalette_PlaceMoveRefuse_Off_BlocksWalking_SurvivesRestart()
         {

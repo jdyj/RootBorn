@@ -38,6 +38,15 @@ namespace Rootborn.Screens.Tests.Furniture
                 return new UiRect(OriginX + c.X * Cell, OriginY + c.Y * Cell, Cell, Cell);
             }
 
+            /// <summary>캐릭터가 바라보는 칸(Host는 걷는 캐릭터의 자리와 방향에서 얻는다). null이면 방 밖을 본다.</summary>
+            public GridPoint? Facing;
+
+            public bool TryFacingCell(out GridPoint cell)
+            {
+                cell = Facing ?? default;
+                return Facing.HasValue;
+            }
+
             /// <summary>그 칸 가운데의 화면 좌표.</summary>
             public (float X, float Y) Center(GridPoint cell)
             {
@@ -217,6 +226,49 @@ namespace Rootborn.Screens.Tests.Furniture
             Assert.That(f.Screen.SelectedInstanceId, Is.EqualTo(placed.InstanceId), "놓은 가구를 고른다(회전·삭제·이동 대상)");
             Assert.That(f.Screen.OverlayVisible, Is.False, "놓은 뒤 칸 색이 새 가구를 덮지 않는다");
 
+        }
+
+        // ---------- 키보드: 캐릭터가 바라보는 칸 ----------
+
+        [Test]
+        public void InteractKey_PlacesTheChosenPiece_OnTheCellTheCharacterFaces()
+        {
+            using var f = new Fixture();
+            f.PickFromPalette(FreeDesk);
+            var cell = new GridPoint(3, 3);
+            Assert.That(f.T.Session.House.CanPlace(f.Desk, cell, FurniturePlacementDirection.North), Is.True, "시험 칸");
+            f.View.Facing = cell;
+            Assert.That(f.T.Stack.Key(ScreenKey.Interact, false), Is.True, "가구 배치가 상호작용 키를 가져간다");
+            Assert.That(f.Screen.LastAction, Is.EqualTo("placed"));
+            Assert.That(f.T.Session.House.Placed.Single().Anchor, Is.EqualTo(cell), "판단과 놓기는 GameSession(포인터로 누른 것과 같은 길)");
+        }
+
+        [Test]
+        public void InteractKey_OnAPlacedPiece_SelectsIt_AndPickUpThenMovesIt()
+        {
+            using var f = new Fixture();
+            f.PickFromPalette(FreeDesk);
+            f.ClickCell(new GridPoint(3, 3));
+            string id = f.T.Session.House.Placed.Single().InstanceId;
+            f.T.Click(FurniturePlacementScreen.MoveId); // 집어 든다
+            Assert.That(f.Screen.Carrying, Is.True);
+            var target = new GridPoint(6, 3);
+            f.View.Facing = target;
+            f.T.Stack.Key(ScreenKey.Interact, false);
+            Assert.That(f.Screen.LastAction, Is.EqualTo("moved"));
+            Assert.That(f.T.Session.House.Placed.Single(p => p.InstanceId == id).Anchor, Is.EqualTo(target));
+        }
+
+        [Test]
+        public void InteractKey_WithNothingToDoThere_GoesToTheWorld()
+        {
+            using var f = new Fixture();
+            f.View.Facing = new GridPoint(3, 3); // 빈 칸, 고른 가구 없음
+            Assert.That(f.T.Stack.Key(ScreenKey.Interact, false), Is.False, "할 일이 없으면 월드 상호작용(문·NPC)으로 간다");
+            f.View.Facing = null;
+            f.PickFromPalette(FreeDesk);
+            Assert.That(f.T.Stack.Key(ScreenKey.Interact, false), Is.False, "방 밖을 보면 월드로");
+            Assert.That(f.T.Session.House.Placed, Is.Empty);
         }
 
         // ---------- 같이 쓰는 집 ----------

@@ -568,6 +568,25 @@ namespace Rootborn.Screens.Furniture
             if (pressed) Press(cell);
         }
 
+        /// <summary>
+        /// 키보드: 상호작용 키(E·Space·Ctrl)가 캐릭터가 바라보는 칸을 포인터로 누른 것과 같게 한다(놓기·고르기·옮기기 — 같은 Press).
+        /// 그 칸에서 할 일이 없으면(고른 가구도 든 가구도 없고 놓인 가구도 없다) 가져가지 않는다 — 월드 상호작용(문·NPC)으로 간다.
+        /// 칸 커서를 따로 두지 않는다(이 화면은 걸으면서 쓴다 — 방향 키는 캐릭터).
+        /// </summary>
+        protected internal override bool OnKey(ScreenKey key, bool shift)
+        {
+            if (key != ScreenKey.Interact || _view == null || _view.Room == null || !_view.TryFacingCell(out GridPoint cell)) return false;
+            HouseFurnitureLayout house = Services.Session?.House;
+            if (house == null) return false;
+            bool somethingThere = house.TryFindAt(cell, out _);
+            if (!somethingThere && Active == null && !(Carrying && SelectedInstanceId != null)) return false;
+            _hover = cell;
+            _hasHover = true;
+            _hoverValid = Active != null && CanPlace(Active, cell);
+            Press(cell);
+            return true;
+        }
+
         private bool CanPlace(FurnitureDefinition f, GridPoint anchor)
         {
             HouseFurnitureLayout house = Services.Session?.House;

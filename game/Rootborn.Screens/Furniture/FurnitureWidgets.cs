@@ -18,5 +18,14 @@ namespace Rootborn.Screens.Furniture
 
         /// <summary>칸의 화면 사각형(논리 좌표).</summary>
         UiRect CellRect(GridPoint cell);
+
+        /// <summary>
+        /// 캐릭터가 바라보는 칸(키보드로 놓기·고르기·옮기기 — 상호작용 키). 방 밖을 보거나 모르면 false. 기본은 모른다.
+        /// </summary>
+        bool TryFacingCell(out GridPoint cell)
+        {
+            cell = default;
+            return false;
+        }
     }
 }

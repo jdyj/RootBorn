@@ -82,6 +82,22 @@ namespace Rootborn.Host.World
             return true;
         }
 
+        /// <summary>걷는 캐릭터가 서 있는 칸에서 바라보는 방향으로 한 칸(키보드로 가구 놓기). 방 밖이면 false.</summary>
+        public bool TryFacingCell(out GridPoint cell)
+        {
+            cell = default;
+            FurnitureRoom room = Room;
+            Walker walker = _world.Session.Walker;
+            if (room == null || walker == null) return false;
+            CellPos here = CellPos.Containing(walker.X, walker.Y, room.Map.Grid.CellSize);
+            int dx = walker.Facing == Facing.Left ? -1 : walker.Facing == Facing.Right ? 1 : 0;
+            int dy = walker.Facing == Facing.Up ? -1 : walker.Facing == Facing.Down ? 1 : 0;
+            var front = new CellPos(here.X + dx, here.Y + dy);
+            if (!room.Map.Grid.Contains(front.X, front.Y)) return false;
+            cell = room.ToPlacement(front);
+            return true;
+        }
+
         public UiRect CellRect(GridPoint cell)
         {
             FurnitureRoom room = Room;

@@ -39,7 +39,7 @@ namespace Rootborn.Screens.Tests.Furniture
         }
 
         [Test]
-        public void ChoosingARoomCell_HasNoKeyboardPath_KnownGap()
+        public void WithoutAFacingCell_NoKeyPlacesAnything()
         {
             using var t = new TestSession();
             FurniturePlacementScreen screen = Open(t);
@@ -47,7 +47,8 @@ namespace Rootborn.Screens.Tests.Furniture
             Assert.That(screen.Active, Is.Not.Null);
             int placed = t.Session.House.Placed.Count;
 
-            // 화면 쌓기가 받는 모든 키를 Shift와 함께·없이 여러 번 눌러도 칸에 놓이지 않는다(칸은 포인터로만 고른다).
+            // 키보드로 놓는 칸은 캐릭터가 바라보는 칸뿐이다(상호작용 키 — FurniturePlacementScreenTests.InteractKey_*). 바라보는 칸을 알려 주는
+            // 보기가 없으면(이 시험은 붙이지 않았다) 화면 쌓기가 받는 모든 키를 Shift와 함께·없이 여러 번 눌러도 칸에 놓이지 않는다(칸 커서는 없다).
             foreach (ScreenKey key in Enum.GetValues(typeof(ScreenKey)).Cast<ScreenKey>().Where(k => k != ScreenKey.Escape && k != ScreenKey.Inventory
                          && k != ScreenKey.Status && k != ScreenKey.Tab && k != ScreenKey.LocationLog && k != ScreenKey.Help
                          && !t.Stack.Registry.TryGetByKey(k, out _))) // 다른 화면을 여는 키는 뺀다(가구 배치를 닫는다)
@@ -57,7 +58,7 @@ namespace Rootborn.Screens.Tests.Furniture
                     t.Stack.Key(key, true);
                 }
             Assert.That(screen.IsOpen, Is.True);
-            Assert.That(t.Session.House.Placed.Count, Is.EqualTo(placed), "알려진 빈 곳: 키보드로는 방의 칸을 고를 수 없다(보고서 '필요한 구성 변경')");
+            Assert.That(t.Session.House.Placed.Count, Is.EqualTo(placed), "바라보는 칸이 없으면 키로는 놓지 않는다");
         }
     }
 }
