@@ -42,13 +42,13 @@ namespace Rootborn.Host.World
         /// <summary>연출 동안 걷기를 막는가(데이터. Unity 판은 막지 않았다).</summary>
         public bool BlocksInput => Transition.BlocksInput;
 
-        /// <summary>걷기를 한 프레임 돌린 직후(그림 칸을 정하기 전)에 부른다: 행동 중이면 누른 쪽을 계속 보고, 문 연출과 카메라 시간을 센다.</summary>
+        /// <summary>걷기를 한 프레임 돌린 직후(그림 칸을 정하기 전)에 부른다: 행동 중이면 누른 쪽을 계속 보고, 문 연출(진행도는 Core가 센다)과 카메라 시간을 맞춘다.</summary>
         public void AfterWalk(WorldSession session, MapEntry entry, float dt)
         {
             Action.Advance(dt);
             if (Action.Active) session.Walker.Face(Action.Facing);
             DoorArea opening = session.OpeningDoor;
-            Transition.Update(opening, opening != null && IsArea(entry, opening), dt);
+            Transition.Show(opening, opening != null && IsArea(entry, opening), session.OpeningProgress);
             _cameraDt += Math.Max(0f, dt);
         }
 
