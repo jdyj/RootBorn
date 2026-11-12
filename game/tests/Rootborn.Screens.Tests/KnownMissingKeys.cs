@@ -13,7 +13,6 @@ namespace Rootborn.Screens.Tests
     {
         public static readonly string[] All =
         {
-            "dialogue.firstNpc.greeting",
         };
 
         /// <summary>

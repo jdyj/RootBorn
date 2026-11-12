@@ -46,11 +46,17 @@ namespace Rootborn.Data.Tests.Integrity
         }
 
         [Test]
-        public void TheMothersFirstLine_IsAKnownMissingKey()
+        public void TheFirstGuidesGreeting_HasATextInEveryLanguage_WithoutAFormOfAddress()
         {
-            // 엄마의 첫 대사 문구는 사용자 결정 대기다. 문구가 들어오면 이 테스트와 고정 파일의 항목을 함께 지운다.
-            Assert.That(KnownMissing().ContainsKey("dialogue.firstNpc.greeting"), Is.True);
-            Assert.That(UsedKeys(DataScan.Real).ContainsKey("dialogue.firstNpc.greeting"), Is.True);
+            // 첫 안내인이 누구인지(호칭)는 스토리 미정이라 임시 문구는 호칭("엄마"·"아빠" 등)을 넣지 않는다(2026-11-13).
+            const string key = "dialogue.firstNpc.greeting";
+            Assert.That(UsedKeys(DataScan.Real).ContainsKey(key), Is.True);
+            foreach (var language in MergedLanguages(DataScan.Real.Root))
+            {
+                Assert.That(language.Value.TryGetValue(key, out var text), Is.True, language.Key);
+                Assert.That(text, Is.Not.Empty, language.Key);
+                Assert.That(text, Does.Not.Contain("엄마").And.Not.Contain("아빠").And.Not.Contain("부모"), language.Key);
+            }
         }
 
         [Test]
