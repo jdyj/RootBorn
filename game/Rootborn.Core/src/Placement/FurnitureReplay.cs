@@ -50,7 +50,9 @@ namespace Rootborn.Core.Placement
     /// </summary>
     public static class FurnitureReplay
     {
-        public static FurnitureReplayPlan Plan(HousePlacementModel model, string surfaceId, IReadOnlyList<FurniturePlacementSaveData> records, IEnumerable<FurnitureDefinition> catalog)
+        /// <param name="acceptedSurfaceIds">이 면에서도 받는 다른 면의 가구(예: 일터가 집 가구를 받는다). 기록의 면은 여전히 surfaceId여야 한다.</param>
+        public static FurnitureReplayPlan Plan(HousePlacementModel model, string surfaceId, IReadOnlyList<FurniturePlacementSaveData> records, IEnumerable<FurnitureDefinition> catalog,
+            IReadOnlyList<string> acceptedSurfaceIds = null)
         {
             if (model == null) throw new ArgumentNullException(nameof(model));
             var accepted = new List<FurnitureReplayEntry>();
@@ -75,7 +77,7 @@ namespace Rootborn.Core.Placement
                 var record = records[i];
                 if (record == null) continue;
                 definitions.TryGetValue(record.FurnitureId ?? string.Empty, out var found);
-                var reason = Check(model, surfaceId, record, found, ambiguous, occupied, out var cells);
+                var reason = Check(model, surfaceId, acceptedSurfaceIds, record, found, ambiguous, occupied, out var cells);
                 if (reason == FurnitureReplayFailure.None && found.BlocksMovement)
                 {
                     var withThis = new List<GridPoint>(blocking);
@@ -101,15 +103,25 @@ namespace Rootborn.Core.Placement
             return new FurnitureReplayPlan(accepted, unresolved);
         }
 
-        private static FurnitureReplayFailure Check(HousePlacementModel model, string surfaceId, FurniturePlacementSaveData record, FurnitureDefinition definition,
-            HashSet<string> ambiguous, HashSet<GridPoint> occupied, out IReadOnlyList<GridPoint> cells)
+        /// <summary>가구가 이 면이나 받는 면 중 하나를 허용하는가.</summary>
+        internal static bool Allows(FurnitureDefinition definition, string surfaceId, IReadOnlyList<string> acceptedSurfaceIds)
+        {
+            if (definition.AllowsSurface(surfaceId)) return true;
+            if (acceptedSurfaceIds == null) return false;
+            for (int i = 0; i < acceptedSurfaceIds.Count; i++)
+                if (!string.IsNullOrEmpty(acceptedSurfaceIds[i]) && definition.AllowsSurface(acceptedSurfaceIds[i])) return true;
+            return false;
+        }
+
+        private static FurnitureReplayFailure Check(HousePlacementModel model, string surfaceId, IReadOnlyList<string> acceptedSurfaceIds, FurniturePlacementSaveData record,
+            FurnitureDefinition definition, HashSet<string> ambiguous, HashSet<GridPoint> occupied, out IReadOnlyList<GridPoint> cells)
         {
             cells = Array.Empty<GridPoint>();
             if (!string.Equals(record.SurfaceId, surfaceId, StringComparison.Ordinal)) return FurnitureReplayFailure.WrongSurface;
             if (definition == null) return FurnitureReplayFailure.MissingDefinition;
             if (ambiguous.Contains(definition.StableId)) return FurnitureReplayFailure.AmbiguousDefinition;
             if (!Enum.IsDefined(typeof(FurniturePlacementDirection), record.Direction)) return FurnitureReplayFailure.InvalidDirection;
-            if (!definition.AllowsSurface(surfaceId)) return FurnitureReplayFailure.WrongSurface;
+            if (!Allows(definition, surfaceId, acceptedSurfaceIds)) return FurnitureReplayFailure.WrongSurface;
             cells = HouseFurnitureLayout.Cells(new GridPoint(record.AnchorX, record.AnchorY), definition.GetFootprintCells(record.Direction));
             if (!model.CanOccupy(cells)) return FurnitureReplayFailure.Blocked;
             for (int i = 0; i < cells.Count; i++) if (occupied.Contains(cells[i])) return FurnitureReplayFailure.DuplicateFootprint;

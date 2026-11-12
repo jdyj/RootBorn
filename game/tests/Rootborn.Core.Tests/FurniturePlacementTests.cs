@@ -400,5 +400,141 @@ namespace Rootborn.Core.Tests
             Assert.That(first, Is.EqualTo("chair#1"));
             Assert.That(layout.Placed.Single().InstanceId, Is.EqualTo("chair#2"));
         }
+
+        // --- 받는 면 목록과 한꺼번에 바꾸기 (일터·템플릿) ---
+
+        private const string Workplace = "workplace.test";
+
+        private static FurniturePlacementRequest Req(FurnitureDefinition definition, int x, int y, FurniturePlacementDirection direction = FurniturePlacementDirection.North)
+            => new FurniturePlacementRequest(definition, P(x, y), direction);
+
+        [Test]
+        public void AcceptedSurface_AllowsHouseFurnitureOnOtherSurface()
+        {
+            FurniturePlacementSaveData[] written = null;
+            var layout = new HouseFurnitureLayout(ReplayRoom(), Workplace, records => { written = records; return true; }, new[] { "house" });
+
+            Assert.That(layout.TryPlace(Chair, P(1, 1), FurniturePlacementDirection.North), Is.True);
+            Assert.That(written.Single().SurfaceId, Is.EqualTo(Workplace), "기록의 면은 이 배치의 면이다");
+            Assert.That(layout.TryMove(layout.Placed.Single().InstanceId, P(3, 1), FurniturePlacementDirection.North), Is.True);
+
+            var restored = new HouseFurnitureLayout(ReplayRoom(), Workplace, null, new[] { "house" });
+            restored.Restore(layout.BuildSaveRecords(), new[] { Chair });
+            Assert.That(restored.Placed.Single().Anchor, Is.EqualTo(P(3, 1)));
+            Assert.That(restored.UnresolvedCount, Is.Zero);
+        }
+
+        [Test]
+        public void WithoutAcceptedSurface_StillRefused()
+        {
+            var plain = new HouseFurnitureLayout(ReplayRoom(), Workplace);
+            Assert.That(plain.CanPlace(Chair, P(1, 1), FurniturePlacementDirection.North), Is.False);
+            var record = Save("chair", 1, 1);
+            record.SurfaceId = Workplace;
+            plain.Restore(new[] { record }, new[] { Chair });
+            Assert.That(plain.Placed, Is.Empty);
+            Assert.That(plain.UnresolvedCount, Is.EqualTo(1));
+
+            var accepting = new HouseFurnitureLayout(ReplayRoom(), Workplace, null, new[] { "house" });
+            Assert.That(accepting.CanPlace(Furniture("outdoor", surfaces: new[] { "farm" }), P(1, 1), FurniturePlacementDirection.North), Is.False, "받는 목록에 없는 면의 가구");
+            Assert.That(accepting.CanReplaceUserFurniture(new[] { Req(Furniture("outdoor", surfaces: new[] { "farm" }), 1, 1) }), Is.False);
+        }
+
+        [Test]
+        public void ReplaceAll_AllOrNothing()
+        {
+            int commits = 0;
+            var layout = Layout(records => { commits++; return true; });
+            Assert.That(layout.TryPlace(Chair, P(1, 1), FurniturePlacementDirection.North), Is.True);
+            var before = layout.BuildSaveRecords();
+
+            var overlapping = new[] { Req(Chair, 3, 1), Req(Chair, 3, 1) };
+            Assert.That(layout.CanReplaceUserFurniture(overlapping), Is.False);
+            Assert.That(layout.TryReplaceUserFurniture(overlapping), Is.False, "둘째가 첫째와 겹친다");
+            Assert.That(layout.TryReplaceUserFurniture(new[] { Req(Chair, 3, 1), Req(Chair, 2, 1) }), Is.False, "둘째가 고정물 칸");
+            Assert.That(layout.TryReplaceUserFurniture(new[] { Req(Chair, 3, 1), Req(null, 1, 2) }), Is.False);
+            Assert.That(layout.TryReplaceUserFurniture(null), Is.False);
+
+            Assert.That(commits, Is.EqualTo(1));
+            Assert.That(layout.Placed.Single().Anchor, Is.EqualTo(P(1, 1)));
+            Assert.That(layout.BuildSaveRecords().Select(r => r.FurnitureId + "@" + r.AnchorX + "," + r.AnchorY),
+                Is.EqualTo(before.Select(r => r.FurnitureId + "@" + r.AnchorX + "," + r.AnchorY)));
+        }
+
+        [Test]
+        public void ReplaceAll_CommitsOnce()
+        {
+            int commits = 0;
+            FurniturePlacementSaveData[] written = null;
+            var layout = Layout(records => { commits++; written = records; return true; });
+            Assert.That(layout.TryPlace(Chair, P(1, 1), FurniturePlacementDirection.North), Is.True);
+            int announced = 0;
+            layout.PlacementCommitted += _ => announced++;
+            var rug = Furniture("rug", blocks: false);
+            // 새 배치는 빈 방 기준이다: 지금 의자가 있는 (1,1)에도 놓을 수 있다.
+            var template = new[] { Req(rug, 1, 1), Req(Chair, 3, 1, FurniturePlacementDirection.East) };
+
+            Assert.That(layout.CanReplaceUserFurniture(template), Is.True);
+            Assert.That(commits, Is.EqualTo(1), "Can은 저장하지 않는다");
+            Assert.That(layout.Placed.Single().Definition, Is.SameAs(Chair), "Can은 바꾸지 않는다");
+
+            Assert.That(layout.TryReplaceUserFurniture(template), Is.True);
+            Assert.That(commits, Is.EqualTo(2));
+            Assert.That(announced, Is.Zero, "한꺼번에 바꾸기는 놓기 알림을 내지 않는다");
+            Assert.That(written.Select(r => r.FurnitureId + "@" + r.AnchorX + "," + r.AnchorY + ":" + r.Direction),
+                Is.EqualTo(new[] { "rug@1,1:North", "chair@3,1:East" }));
+            Assert.That(written.All(r => r.SurfaceId == "house"), Is.True);
+            Assert.That(layout.Placed.Select(p => p.Definition.StableId), Is.EqualTo(new[] { "rug", "chair" }));
+            Assert.That(layout.Placed.Select(p => p.InstanceId), Is.EqualTo(new[] { "rug#2", "chair#3" }), "인스턴스 번호는 이어진다");
+            Assert.That(layout.BlockingCells, Is.EquivalentTo(new[] { P(3, 1) }));
+
+            Assert.That(layout.TryReplaceUserFurniture(Array.Empty<FurniturePlacementRequest>()), Is.True, "빈 템플릿은 모두 치운다");
+            Assert.That(layout.Placed, Is.Empty);
+            Assert.That(commits, Is.EqualTo(3));
+        }
+
+        [Test]
+        public void ReplaceAll_CommitFails_NothingChanges()
+        {
+            int writes = 0;
+            var layout = Layout(records => ++writes == 1);
+            Assert.That(layout.TryPlace(Chair, P(1, 1), FurniturePlacementDirection.North), Is.True);
+
+            Assert.That(layout.TryReplaceUserFurniture(new[] { Req(Chair, 3, 1) }), Is.False);
+            Assert.That(writes, Is.EqualTo(2));
+            Assert.That(layout.Placed.Single().Anchor, Is.EqualTo(P(1, 1)));
+            Assert.That(layout.Placed.Single().InstanceId, Is.EqualTo("chair#1"));
+            Assert.That(layout.BlockingCells, Is.EquivalentTo(new[] { P(1, 1) }));
+            Assert.That(layout.BuildSaveRecords().Single().AnchorX, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void ReplaceAll_KeepsUnresolvedRecords()
+        {
+            FurniturePlacementSaveData[] written = null;
+            var layout = Layout(records => { written = records; return true; });
+            layout.Restore(new[] { Save("chair", 1, 1), Save("missing", 3, 2) }, new[] { Chair });
+
+            Assert.That(layout.TryReplaceUserFurniture(new[] { Req(Chair, 3, 1) }), Is.True);
+            Assert.That(layout.UnresolvedCount, Is.EqualTo(1));
+            Assert.That(written.Select(r => r.FurnitureId + "@" + r.AnchorX), Is.EqualTo(new[] { "chair@3", "missing@3" }));
+            Assert.That(written[1].StateJson, Is.EqualTo("{\"quality\":42}"), "놓지 못한 기록은 그대로");
+        }
+
+        [Test]
+        public void ReplaceAll_KeepsChestsThatHoldItems_AndPlacesAroundThem()
+        {
+            var layout = Layout();
+            Assert.That(layout.TryPlace(Chair, P(1, 1), FurniturePlacementDirection.North), Is.True);
+            Assert.That(layout.TryPlace(Chair, P(3, 1), FurniturePlacementDirection.North), Is.True);
+            var chest = layout.Placed[1].InstanceId;
+            layout.SetStorage(chest, new FurnitureStorageSaveData { Items = new[] { new Rootborn.Core.Inventory.PlayerInventoryItemSaveData { ItemId = "item.wood", Count = 2 } } });
+
+            Assert.That(layout.CanReplaceUserFurniture(new[] { Req(Chair, 3, 1) }), Is.False, "물건이 든 상자 자리에는 놓지 않는다");
+            Assert.That(layout.TryReplaceUserFurniture(new[] { Req(Chair, 1, 2) }), Is.True);
+            Assert.That(layout.Placed.Select(p => p.Anchor), Is.EqualTo(new[] { P(3, 1), P(1, 2) }));
+            Assert.That(layout.Placed[0].InstanceId, Is.EqualTo(chest));
+            Assert.That(layout.Placed[0].HoldsItems, Is.True);
+        }
     }
 }

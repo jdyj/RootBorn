@@ -4,6 +4,21 @@ using Rootborn.Core.Minigames;
 
 namespace Rootborn.Core.Placement
 {
+    /// <summary>놓을 가구 하나(템플릿의 한 줄). 한꺼번에 바꾸기가 받는다.</summary>
+    public readonly struct FurniturePlacementRequest
+    {
+        public FurniturePlacementRequest(FurnitureDefinition definition, GridPoint anchor, FurniturePlacementDirection direction)
+        {
+            Definition = definition;
+            Anchor = anchor;
+            Direction = direction;
+        }
+
+        public FurnitureDefinition Definition { get; }
+        public GridPoint Anchor { get; }
+        public FurniturePlacementDirection Direction { get; }
+    }
+
     /// <summary>방에 놓인 가구 하나.</summary>
     public sealed class PlacedFurniture
     {
@@ -48,14 +63,20 @@ namespace Rootborn.Core.Placement
         private readonly Func<FurniturePlacementSaveData[], bool> _commit;
         private readonly List<PlacedFurniture> _placed = new List<PlacedFurniture>();
         private readonly List<FurniturePlacementSaveData> _unresolved = new List<FurniturePlacementSaveData>();
+        private readonly string[] _acceptedSurfaceIds;
         private int _nextInstanceNumber;
 
         /// <param name="commit">바뀐 뒤의 기록 전체를 저장한다. false면 바꾸지 않는다. null이면 늘 성공으로 본다.</param>
-        public HouseFurnitureLayout(HousePlacementModel model, string surfaceId, Func<FurniturePlacementSaveData[], bool> commit = null)
+        /// <param name="acceptedSurfaceIds">
+        /// 이 면에서도 받는 다른 면의 가구(예: 일터가 "house" 가구를 받는다). 가구가 <see cref="SurfaceId"/>나 이 중 하나를 허용하면 놓는다.
+        /// 기록의 면은 늘 <see cref="SurfaceId"/>다.
+        /// </param>
+        public HouseFurnitureLayout(HousePlacementModel model, string surfaceId, Func<FurniturePlacementSaveData[], bool> commit = null, IReadOnlyList<string> acceptedSurfaceIds = null)
         {
             _model = model ?? throw new ArgumentNullException(nameof(model));
             SurfaceId = surfaceId ?? string.Empty;
             _commit = commit;
+            _acceptedSurfaceIds = Copy(acceptedSurfaceIds);
         }
 
         /// <summary>가구를 새로 놓은 뒤 한 번. 퀘스트의 가구 배치 이벤트를 여기서 낸다.</summary>
@@ -82,7 +103,7 @@ namespace Rootborn.Core.Placement
         public void Restore(IReadOnlyList<FurniturePlacementSaveData> records, IEnumerable<FurnitureDefinition> catalog, IReadOnlyList<string> instanceIds = null)
         {
             if (instanceIds != null && (records == null || instanceIds.Count != records.Count)) throw new ArgumentException("인스턴스 id는 기록마다 하나다", nameof(instanceIds));
-            var plan = FurnitureReplay.Plan(_model, SurfaceId, records, catalog);
+            var plan = FurnitureReplay.Plan(_model, SurfaceId, records, catalog, _acceptedSurfaceIds);
             _placed.Clear();
             _unresolved.Clear();
             for (int i = 0; i < plan.Unresolved.Count; i++) _unresolved.Add(plan.Unresolved[i].Record);
@@ -95,18 +116,71 @@ namespace Rootborn.Core.Placement
         }
 
         public bool CanPlace(FurnitureDefinition definition, GridPoint anchor, FurniturePlacementDirection direction)
+            => Fits(definition, anchor, direction, _placed);
+
+        /// <summary>
+        /// 놓인 가구를 items로 모두 바꿀 수 있는지. 물건이 든 상자만 남긴 방에 차례로 놓아 본다(되살리지 못한 기록은 칸을 차지하지 않는다).
+        /// 아무것도 바꾸지 않고 저장하지 않는다.
+        /// </summary>
+        public bool CanReplaceUserFurniture(IReadOnlyList<FurniturePlacementRequest> items) => PlanReplacement(items) != null;
+
+        /// <summary>
+        /// 놓인 가구를 items로 모두 바꾼다. 물건이 든 상자와 되살리지 못한 기록은 남긴다. 전부 놓일 때만 한 번 저장하고,
+        /// 하나라도 안 되거나 저장이 실패하면 아무것도 바꾸지 않는다. <see cref="PlacementCommitted"/>는 내지 않는다.
+        /// </summary>
+        public bool TryReplaceUserFurniture(IReadOnlyList<FurniturePlacementRequest> items)
         {
-            if (definition == null || !Enum.IsDefined(typeof(FurniturePlacementDirection), direction) || !definition.AllowsSurface(SurfaceId)) return false;
+            var next = PlanReplacement(items);
+            if (next == null) return false;
+            var records = new List<FurniturePlacementSaveData>(next.Count + _unresolved.Count);
+            for (int i = 0; i < next.Count; i++) records.Add(next[i].Record);
+            records.AddRange(_unresolved);
+            if (!Commit(records)) return false;
+
+            _placed.Clear();
+            for (int i = 0; i < next.Count; i++)
+                _placed.Add(next[i].InstanceId != null ? next[i] : new PlacedFurniture(NextInstanceId(next[i].Definition.StableId), next[i].Definition, next[i].Record));
+            return true;
+        }
+
+        /// <summary>바꾼 뒤의 가구 목록(남는 상자 + 새 가구, 새 가구는 인스턴스 id가 아직 없다). 안 되면 null.</summary>
+        private List<PlacedFurniture> PlanReplacement(IReadOnlyList<FurniturePlacementRequest> items)
+        {
+            if (items == null) return null;
+            var next = new List<PlacedFurniture>(items.Count + 2);
+            for (int i = 0; i < _placed.Count; i++) if (_placed[i].HoldsItems) next.Add(_placed[i]);
+            for (int i = 0; i < items.Count; i++)
+            {
+                var item = items[i];
+                if (!Fits(item.Definition, item.Anchor, item.Direction, next)) return null;
+                var record = new FurniturePlacementSaveData
+                {
+                    FurnitureId = item.Definition.StableId,
+                    SurfaceId = SurfaceId,
+                    AnchorX = item.Anchor.X,
+                    AnchorY = item.Anchor.Y,
+                    Direction = item.Direction,
+                };
+                next.Add(new PlacedFurniture(null, item.Definition, record));
+            }
+
+            return next;
+        }
+
+        /// <summary>others가 놓인 방에 가구 하나를 놓을 수 있는가.</summary>
+        private bool Fits(FurnitureDefinition definition, GridPoint anchor, FurniturePlacementDirection direction, IReadOnlyList<PlacedFurniture> others)
+        {
+            if (definition == null || !Enum.IsDefined(typeof(FurniturePlacementDirection), direction) || !FurnitureReplay.Allows(definition, SurfaceId, _acceptedSurfaceIds)) return false;
             var cells = Cells(anchor, definition.GetFootprintCells(direction));
             if (!_model.CanOccupy(cells)) return false;
             var occupied = new HashSet<GridPoint>();
             var tiles = new HashSet<GridPoint>();
             var blocking = new List<GridPoint>();
-            for (int i = 0; i < _placed.Count; i++)
+            for (int i = 0; i < others.Count; i++)
             {
-                occupied.UnionWith(_placed[i].OccupiedCells);
-                tiles.UnionWith(_placed[i].TileCells);
-                if (_placed[i].Definition.BlocksMovement) blocking.AddRange(_placed[i].OccupiedCells);
+                occupied.UnionWith(others[i].OccupiedCells);
+                tiles.UnionWith(others[i].TileCells);
+                if (others[i].Definition.BlocksMovement) blocking.AddRange(others[i].OccupiedCells);
             }
 
             for (int i = 0; i < cells.Count; i++) if (occupied.Contains(cells[i])) return false;
@@ -156,7 +230,7 @@ namespace Rootborn.Core.Placement
                 if (i != index) otherTiles.UnionWith(_placed[i].TileCells);
             }
 
-            var plan = FurnitureReplay.Plan(_model, SurfaceId, placedRecords, definitions);
+            var plan = FurnitureReplay.Plan(_model, SurfaceId, placedRecords, definitions, _acceptedSurfaceIds);
             if (plan.Accepted.Count != placedRecords.Count) return false;
             if (TileOverlaps(original.Definition, anchor, direction, otherTiles)) return false;
             if (!Commit(Records(original, moved))) return false;
@@ -244,6 +318,14 @@ namespace Rootborn.Core.Placement
             var cells = new GridPoint[local.Count];
             for (int i = 0; i < cells.Length; i++) cells[i] = new GridPoint(anchor.X + local[i].X, anchor.Y + local[i].Y);
             return cells;
+        }
+
+        private static string[] Copy(IReadOnlyList<string> ids)
+        {
+            if (ids == null || ids.Count == 0) return Array.Empty<string>();
+            var copy = new string[ids.Count];
+            for (int i = 0; i < copy.Length; i++) copy[i] = ids[i];
+            return copy;
         }
 
         private static bool TileOverlaps(FurnitureDefinition definition, GridPoint anchor, FurniturePlacementDirection direction, HashSet<GridPoint> tiles)
