@@ -38,7 +38,8 @@ namespace Rootborn.Host.Tests.TwoGames
             Assert.That(_host.Game.Hosting.Room.Server.Players.Single(p => p.PlayerId == guestId).Name, Is.EqualTo("새벽"), "방이 받은 이름");
             var next = (UiButton)_host.Node(DayResultScreen.NextDayId);
             Assert.That(next.Enabled, Is.False, "자면 07:00까지 깨어날 수 없다");
-            Assert.That(_guest.Query("awake-others"), Is.Empty, "손님 쪽: 깨어 있는 다른 사람 없음(손님 자신은 세지 않는다)");
+            // 방장의 잠은 UDP로 따로 손님에게 간다 — 도착을 기다린 뒤에 본다(도착 전에는 방장이 아직 깨어 있는 것으로 보인다).
+            Assert.That(_guest.Until(() => _guest.Query("awake-others").Length == 0), Is.True, "손님 쪽: 깨어 있는 다른 사람 없음(손님 자신은 세지 않는다)");
             _host.MovePointer(-50, -50);
             TestContext.WriteLine("스크린샷: " + _host.ScreenshotScreen(ScreenCatalog.DayResult, "two-05-host-sleeping-guest-awake"));
             TestContext.WriteLine("스크린샷(손님): " + _guest.Screenshot("two-05-guest-awake-while-host-sleeps"));
