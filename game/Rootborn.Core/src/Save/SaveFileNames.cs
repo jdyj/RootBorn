@@ -182,6 +182,13 @@ namespace Rootborn.Core.Save
         /// <summary>흐르는 시계의 개인 상태(지침, 밤에 깎은 시간, 하는 중). MonoGame 판이 더한 파일이다.</summary>
         public static string StudentClock(string playerId) => PerPlayer("student-clock-", playerId);
 
+        /// <summary>일터 진행(쓴 템플릿 요청, 기본 템플릿을 깐 일터, 꾸미며 배운 횟수). MonoGame 판이 더한 파일이다.</summary>
+        public static string WorkspaceProgress(string playerId) => PerPlayer("workspace-progress-", playerId);
+
+        /// <summary>일터 면 하나의 가구 배치(모양은 집 배치 파일과 같다). MonoGame 판이 더한 파일이다. 빈 플레이어 id는 "player".</summary>
+        public static string WorkspaceLayout(string surfaceId, string playerId)
+            => "workspace-layout-" + Sanitize(surfaceId) + "-" + Sanitize(string.IsNullOrEmpty(playerId) ? LegacyPlayerId : playerId) + ".json";
+
         // Unity 판이 플레이어 id를 정리하지 않고 쓰던 이름.
         public static string LegacyEncyclopedia(string playerId) => LegacyPerPlayer("encyclopedia-", playerId);
         public static string LegacyDiscoveryClues(string playerId) => LegacyPerPlayer("discovery-clues-", playerId);
