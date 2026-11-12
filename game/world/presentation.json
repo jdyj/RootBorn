@@ -8,7 +8,7 @@
   //   캐릭터 그림의 firstColumn부터 columnCount칸을 차례로 보인다(칸 번호는 캐릭터 시트의 열, 0부터). 그리고 E와 같은 상호작용을 한다.
   // door: 자동문이 열리는 동안(시간은 maps.json doorOpenSeconds, 없으면 Core DoorWatch 0.35초) 문 위의 사각형(Unity TownAutoDoorPortal의 덮개).
   //   폭 비율 widthFrom→widthTo, 알파 alphaFrom→alphaTo로 바뀐다. 크기는 칸 단위(Unity 18×26px / 16PPU), 문 가운데에서 liftCells만큼 위가 아래 끝.
-  //   fill·edge [r, g, b]는 안쪽과 테두리 색, edgeCells는 테두리 두께(Unity 1px / 16PPU). 문 그림이 바뀌면 이 사각형 대신 그 그림을 쓸 수 있다(지금은 데이터에 열린 문 그림이 없다).
+  //   fill·edge [r, g, b]는 안쪽과 테두리 색, edgeCells는 테두리 두께(Unity 1px / 16PPU). 건물 부지의 문이고 buildings.json에 문 프레임이 있으면 이 사각형 대신 그 프레임을 그린다(지금 맵에는 없다).
   // area: 이동 구역(maps.json areas — 마을↔해변)에 들어선 동안 화면 전체를 덮는 색(Unity TownLevelTransitionTrigger: 검정 82%, 0.25초).
   // blocksInput: 연출 동안 걷기를 막는가. Unity 판은 막지 않았다(문이 열리는 동안에도 걸을 수 있었다).
   "camera": { "smoothSeconds": 0.15 },

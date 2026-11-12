@@ -42,6 +42,8 @@ namespace Rootborn.World
     /// - 도착 지점: 걸을 수 있는 칸 위에 있다.
     /// - 상호작용 물건과 NPC 자리: 시작 도착 지점에서 걸어서 닿는 칸이거나 그 옆 칸(8방향)에 있다.
     /// - 그림: 가리키는 타일셋 PNG가 저장소에 있다(맵을 읽으며 모은 문제).
+    /// - 부지: 건물 목록에 있는 건물, 아는 단계 종류, 맵 안·서로 겹치지 않는 부지, 부지 안에 드는 건물, 칸 크기의 배수인 그림, 막는 칸 안의 문 칸.
+    ///   가구 방에는 부지를 두지 않는다. 부지의 문도 위의 문 검사를 받는다.
     /// "걸어서 닿는다"는 Core GridPath(칸 단위 상하좌우)로 판정한다. 문은 그 상자에 들어가거나 맞닿은 열린 칸까지 가면 닿은 것이다.
     /// </summary>
     public static class MapChecks
@@ -69,6 +71,10 @@ namespace Rootborn.World
             string id = map.Id;
             int size = map.Grid.CellSize;
             foreach (string p in loaded.Problems) problems.Add(new MapCheckProblem(id, "그림·층: " + p));
+            foreach (string p in loaded.LotProblems) problems.Add(new MapCheckProblem(id, "부지: " + p));
+            // 가구 방(FurnitureRoom)은 처음 읽은 맵을 기억해 두어 단계가 바뀐 건물을 따라가지 못한다. 지금은 지원하지 않는다고 알린다.
+            if (loaded.Entry.Lots.Count > 0 && !string.IsNullOrEmpty(things.PlacementSurface))
+                problems.Add(new MapCheckProblem(id, "부지: 가구 방(placementSurface " + things.PlacementSurface + ")에는 건물 부지를 둘 수 없다(지원하지 않는다)"));
 
             foreach (string spawn in map.SpawnIds)
             {

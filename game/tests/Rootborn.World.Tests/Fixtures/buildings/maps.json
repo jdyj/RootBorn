@@ -1,0 +1,27 @@
+// 시험용 고정 파일: 부지가 하나 있는 작은 마당(Yard, 12x10칸, 16px)과 들어갈 실내(Inside).
+// 경로는 저장소 뿌리 기준. 테스트가 부지의 단계 종류를 바꿔 쓴다.
+{
+  "walker": { "bodyCells": 1, "speedCellsPerSecond": 4 },
+  "maps": [
+    {
+      "id": "Yard", "ldtk": "game/tests/Rootborn.World.Tests/Fixtures/buildings/lot.ldtk", "level": "Yard", "viewCells": 10,
+      "collision": { "rule": "collider-layers", "layers": [] },
+      "doors": {},
+      "spawns": { "front": [ 104, 136 ] },
+      "lots": [
+        {
+          "name": "shop-lot", "building": "shop",
+          "doorCell": [ 6, 6 ], "cells": [ 2, 1, 9, 7 ],
+          "level": { "kind": "fixed", "value": 1 },
+          "to": { "map": "Inside", "spawn": "inside-entry" }
+        }
+      ]
+    },
+    {
+      "id": "Inside", "ldtk": "game/tests/Rootborn.World.Tests/Fixtures/buildings/lot.ldtk", "level": "Inside", "viewCells": 6,
+      "collision": { "rule": "collider-layers", "layers": [] },
+      "doors": {},
+      "spawns": { "inside-entry": [ 48, 72 ] }
+    }
+  ]
+}
