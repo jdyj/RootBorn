@@ -337,6 +337,20 @@ namespace Rootborn.Screens.Tests.AdultFacility
         }
 
         /// <summary>
+        /// 시설 1단계(다음 단계 비용 줄이 보인다)에서 2배 길이 문구: 비용 글줄(여러 줄)과 닫기 단추 글자(한 줄)도 자기 칸 안에 있다.
+        /// 1단계는 비용이 있어 2단계·최고 단계보다 글줄이 많다. 두 언어 모두(한국어는 비용 줄 수, 영어는 닫기 글자가 길다).
+        /// </summary>
+        [TestCase("ko")]
+        [TestCase("en")]
+        public void LongText_AtLevelOne_KeepsTheCostAndCloseTextInside(string language)
+        {
+            using var f = new FacilityFixture(FacilityFixture.AlreadyAdultAtLevelOne, language: language, longText: true);
+            Assert.That(f.OpenAt(), Is.True);
+            Assert.That(f.Screen.Model.NextLevel, Is.EqualTo(2), "1단계: 다음 단계 비용이 보인다");
+            AssertEveryTextInsideItsNode(f);
+        }
+
+        /// <summary>
         /// 일터를 꾸며 이득이 생긴 상태(보상 +%, 명성 + 줄이 보인다)에서 2배 길이 문구를 넣는다. 일 목록은 카드 격자라 위의 시험이 건너뛰므로,
         /// 여기서는 이득 줄의 글줄이 자기 칸의 자르기 영역(PushClip) 안에 온전히 들어 있는지(잘리지 않는지) 본다.
         /// </summary>

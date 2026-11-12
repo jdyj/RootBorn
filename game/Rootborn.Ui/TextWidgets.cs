@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Rootborn.Ui
@@ -159,7 +160,11 @@ namespace Rootborn.Ui
         }
     }
 
-    /// <summary>여러 줄 글자. 폭에 맞춰 줄바꿈하고 위에서부터 쌓는다. 줄바꿈 결과는 글자·폭·크기가 바뀔 때만 다시 계산한다.</summary>
+    /// <summary>
+    /// 여러 줄 글자. 폭에 맞춰 줄바꿈하고 위에서부터 쌓는다. 줄바꿈 결과는 글자·폭·크기(FitHeight면 높이도)가 바뀔 때만 다시 계산한다.
+    /// FitHeight면 칸 높이를 넘을 때 글자를 1씩 줄이고(MinFontSize까지), 그래도 넘으면 들어가는 줄만 두고 마지막 줄을 말줄임한다
+    /// (긴 문구의 언어에서 글이 칸 아래로 나가지 않게 — localization "화면이 지킬 것").
+    /// </summary>
     public sealed class UiTextBlock : UiNode
     {
         public string Text;
@@ -167,10 +172,17 @@ namespace Rootborn.Ui
         public float LineSpacing = 4;
         public UiColor Color = UiTheme.Ink;
         public UiAlign Align = UiAlign.Left;
+        /// <summary>칸 높이에 맞춘다(줄이기 → 말줄임). 기본은 끔(줄이 칸 아래로 이어진다 — 높이를 글에 맞추는 화면이 ContentHeight로 잰다).</summary>
+        public bool FitHeight;
+        /// <summary>FitHeight로 줄일 때의 가장 작은 글자 크기(1920x1080 기준 14 미만은 쓰지 않는다).</summary>
+        public float MinFontSize = 14;
 
         private readonly List<string> _lines = new List<string>(8);
         private string _wrappedText;
-        private float _wrappedWidth = -1, _wrappedSize;
+        private float _wrappedWidth = -1, _wrappedSize, _wrappedHeight = -1, _shownSize;
+
+        /// <summary>지금 그리는 글자 크기(FitHeight로 줄였으면 줄인 크기).</summary>
+        public float ShownFontSize => _shownSize > 0 ? _shownSize : FontSize;
 
         public int LineCount(ITextMeasurer text)
         {
@@ -182,21 +194,45 @@ namespace Rootborn.Ui
         public float ContentHeight(ITextMeasurer text)
         {
             EnsureWrapped(text);
-            return _lines.Count == 0 ? 0 : _lines.Count * text.LineHeight(FontSize) + (_lines.Count - 1) * LineSpacing;
+            return LinesHeight(text, _shownSize);
         }
+
+        private float LinesHeight(ITextMeasurer text, float size) =>
+            _lines.Count == 0 ? 0 : _lines.Count * text.LineHeight(size) + (_lines.Count - 1) * LineSpacing;
 
         private void EnsureWrapped(ITextMeasurer text)
         {
-            if (_wrappedText == Text && _wrappedWidth == Rect.W && _wrappedSize == FontSize) return;
-            TextWrap.Wrap(Text, Rect.W, text, FontSize, _lines);
-            _wrappedText = Text; _wrappedWidth = Rect.W; _wrappedSize = FontSize;
+            if (_wrappedText == Text && _wrappedWidth == Rect.W && _wrappedSize == FontSize && (!FitHeight || _wrappedHeight == Rect.H)) return;
+            _shownSize = FontSize;
+            TextWrap.Wrap(Text, Rect.W, text, _shownSize, _lines);
+            if (FitHeight && !string.IsNullOrEmpty(Text))
+            {
+                float min = MathF.Min(FontSize, MinFontSize);
+                while (LinesHeight(text, _shownSize) > Rect.H + 0.5f && _shownSize - 1f >= min)
+                {
+                    _shownSize -= 1f;
+                    TextWrap.Wrap(Text, Rect.W, text, _shownSize, _lines);
+                }
+                float lineHeight = text.LineHeight(_shownSize);
+                if (LinesHeight(text, _shownSize) > Rect.H + 0.5f)
+                {
+                    int fit = Math.Max(1, (int)MathF.Floor((Rect.H + LineSpacing + 0.5f) / (lineHeight + LineSpacing)));
+                    if (fit < _lines.Count)
+                    {
+                        _lines.RemoveRange(fit, _lines.Count - fit);
+                        _lines[fit - 1] = TextFit.Ellipsize(_lines[fit - 1] + TextFit.Ellipsis, Rect.W, text, _shownSize);
+                    }
+                }
+            }
+            _wrappedText = Text; _wrappedWidth = Rect.W; _wrappedSize = FontSize; _wrappedHeight = Rect.H;
         }
 
         public override void Emit(DrawList list, ITextMeasurer text)
         {
             if (string.IsNullOrEmpty(Text)) return;
             EnsureWrapped(text);
-            float lineHeight = text.LineHeight(FontSize);
+            float size = _shownSize;
+            float lineHeight = text.LineHeight(size);
             float y = Rect.Y;
             for (int i = 0; i < _lines.Count; i++)
             {
@@ -204,10 +240,10 @@ namespace Rootborn.Ui
                 float x = Rect.X;
                 if (Align != UiAlign.Left && line.Length > 0)
                 {
-                    float w = text.Width(line, FontSize);
+                    float w = text.Width(line, size);
                     x = Align == UiAlign.Center ? Rect.X + (Rect.W - w) / 2f : Rect.Right - w;
                 }
-                list.Text(x, y, line, FontSize, Color);
+                list.Text(x, y, line, size, Color);
                 y += lineHeight + LineSpacing;
             }
         }
