@@ -35,12 +35,26 @@ namespace Rootborn.Data.Save
                 {
                     var fileName = Path.GetFileName(file);
                     if (fileName.StartsWith(".", StringComparison.Ordinal)) continue; // 쓰다 남은 임시 파일
-                    File.Copy(file, Path.Combine(temp, fileName));
+                    // 하루에 한 번, 슬롯 파일과 그 사본을 디스크로 내린다(평소 저장은 내리지 않는다 — FileSaveStore 머리말).
+                    FlushToDisk(file);
+                    var copy = Path.Combine(temp, fileName);
+                    File.Copy(file, copy);
+                    FlushToDisk(copy);
                 }
 
+                // 같은 날 사본이 있으면 옆으로 치워 두고 새 사본을 넣은 뒤 지운다. 도중에 꺼져도 그 날 사본이 하나는 남는다
+                // (치워 둔 폴더는 '.'으로 시작해 다음 Prune이 지운다).
                 var target = Path.Combine(copies, name);
-                if (Directory.Exists(target)) Directory.Delete(target, true);
+                string aside = null;
+                if (Directory.Exists(target))
+                {
+                    aside = Path.Combine(copies, "." + name + "." + Guid.NewGuid().ToString("N") + ".old");
+                    Directory.Move(target, aside);
+                    DayCopyStepForTests?.Invoke("old-aside");
+                }
+
                 Directory.Move(temp, target);
+                if (aside != null) Directory.Delete(aside, true);
             }
             finally
             {
@@ -48,6 +62,19 @@ namespace Rootborn.Data.Save
             }
 
             Prune(copies, keepCount);
+        }
+
+        /// <summary>테스트용: 디스크로 내린 파일 경로마다 부른다.</summary>
+        internal Action<string> FlushedForTests { get; set; }
+
+        /// <summary>테스트용: 사본 바꿔 넣기의 단계 이름으로 부른다.</summary>
+        internal Action<string> DayCopyStepForTests { get; set; }
+
+        // 파일 내용을 운영체제 캐시에서 디스크로 내린다. 내용은 바꾸지 않는다.
+        private void FlushToDisk(string path)
+        {
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Write, FileShare.Read)) stream.Flush(true);
+            FlushedForTests?.Invoke(path);
         }
 
         // 날 번호 이름의 사본은 큰 것부터 keepCount개만 둔다. 앞서 꺼져 남은 임시 폴더('.'으로 시작)는 지운다. 그 밖의 폴더는 건드리지 않는다.
