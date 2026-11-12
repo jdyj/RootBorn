@@ -116,23 +116,12 @@ namespace Rootborn.World
         /// <summary>도착 지점에서 걸어서 닿는 칸 전부(그 칸 포함). 도착 지점이 막혔으면 빈 집합.</summary>
         public static HashSet<CellPos> Reachable(WorldMap map, string spawnId)
         {
-            var reached = new HashSet<CellPos>();
-            if (!map.TryGetSpawn(spawnId, out var point)) return reached;
-            CellPos from = CellPos.Containing(point.X, point.Y, map.Grid.CellSize);
-            if (map.Collision.IsBlocked(from)) return reached;
-            reached.Add(from);
-            GridPath.Find(map.Collision, from, c => { reached.Add(c); return false; });
-            return reached;
+            if (!map.TryGetSpawn(spawnId, out var point)) return new HashSet<CellPos>();
+            return MapReach.From(map.Collision, CellPos.Containing(point.X, point.Y, map.Grid.CellSize));
         }
 
         /// <summary>닿은 칸 중 하나가 상자에 겹치거나 맞닿는가(Unity 판 물리의 접촉 여유처럼 1픽셀 넓혀 본다).</summary>
-        public static bool Touches(HashSet<CellPos> reached, AreaRect area, int cellSize)
-        {
-            var grown = new AreaRect(area.X - 1, area.Y - 1, area.W + 2, area.H + 2);
-            foreach (CellPos c in reached)
-                if (new AreaRect(c.X * cellSize, c.Y * cellSize, cellSize, cellSize).Overlaps(grown)) return true;
-            return false;
-        }
+        public static bool Touches(HashSet<CellPos> reached, AreaRect area, int cellSize) => MapReach.Touches(reached, area, cellSize);
 
         /// <summary>점이 든 칸이나 그 둘레 8칸 중 하나에 걸어서 닿는가.</summary>
         public static bool NextTo(HashSet<CellPos> reached, float x, float y, int cellSize)
