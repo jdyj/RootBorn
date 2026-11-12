@@ -117,6 +117,40 @@ namespace Rootborn.Server.Tests
         }
 
         [Test]
+        public void ClientWithADifferentVersion_IsRefused_AndTheLogFileHasALineWithTheReasonCode()
+        {
+            string logFile = Path.Combine(_saveRoot, "logs", "refused.log");
+            using var server = Start("refused", "--log", logFile, "--autosave-seconds", "0");
+            try
+            {
+                int port = server.WaitForPort(Startup);
+                server.WaitForLine(Program.ReadyLine, Quick);
+                var mine = Program.CurrentVersions(Path.Combine(_root, "data"));
+                var other = new RoomVersions(mine.Protocol, mine.Game + ".other-build", mine.Data);
+                using var player = RoomClient.Create(UdpTransport.Connect(IPAddress.Loopback, IPAddress.Loopback.ToString(), port, RoomProtocol.ConnectionKey), other,
+                    "old-guest", "child|", new SessionClientSettings());
+                var clock = Stopwatch.StartNew();
+                while (player.Status != ClientStatus.Refused && clock.Elapsed < Quick)
+                {
+                    player.Update(clock.Elapsed.TotalSeconds);
+                    Thread.Sleep(5);
+                }
+
+                Assert.That(player.Status, Is.EqualTo(ClientStatus.Refused), server.Output);
+                server.WaitForLine("접속 거절", Quick);
+                StopCleanly(server);
+            }
+            finally
+            {
+                server.Kill();
+            }
+
+            string[] lines = Array.FindAll(File.ReadAllLines(logFile), l => l.Contains("접속 거절"));
+            Assert.That(lines.Length, Is.EqualTo(1), "거절한 접속이 로그 파일에 한 줄");
+            StringAssert.Contains(RoomRefusal.GameVersionMismatch, lines[0], "이유 코드");
+        }
+
+        [Test]
         public void TwoServers_SameSlot_SecondRefusesToStart_AndADeadServersLockIsTakenOver()
         {
             using var first = Start("shared-slot");
