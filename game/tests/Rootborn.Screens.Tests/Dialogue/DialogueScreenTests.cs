@@ -58,9 +58,11 @@ namespace Rootborn.Screens.Tests.Dialogue
             UiRect close = t.Node(DialogueScreen.CloseId).Rect;
             Assert.That((panel.X, panel.W, panel.Bottom), Is.EqualTo((960f - 380f, 760f, 1080f - 36f)));
             Assert.That(lines.H, Is.GreaterThanOrEqualTo(84f));
-            Assert.That(panel.H, Is.EqualTo(42 * 2 + 48 + 24 + lines.H).Within(0.01f));
+            UiInsets pad = t.Services.PaddingOf(UiSkin.Dialogue); // 대화창 안 여백은 테마에서
+            Assert.That(panel.H, Is.EqualTo(pad.Vertical + 48 + 24 + lines.H).Within(0.01f));
+            Assert.That((lines.X, lines.Y), Is.EqualTo((panel.X + pad.Left, panel.Y + pad.Top)));
             Assert.That(choice.Y, Is.EqualTo(lines.Bottom + 24).Within(0.01f), "대사 아래 24 띄워 선택지");
-            Assert.That(choice.Bottom, Is.EqualTo(panel.Bottom - 42).Within(0.01f));
+            Assert.That(choice.Bottom, Is.EqualTo(panel.Bottom - pad.Bottom).Within(0.01f));
             Assert.That((close.Right, close.Y, close.W), Is.EqualTo((panel.Right - 42, panel.Y + 42, 48f)));
             Assert.That(lines.Right, Is.LessThanOrEqualTo(close.X), "대사가 닫기 버튼과 겹치지 않는다");
         }

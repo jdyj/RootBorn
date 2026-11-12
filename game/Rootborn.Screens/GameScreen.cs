@@ -80,6 +80,12 @@ namespace Rootborn.Screens
         public Records.IWardrobeBackend Wardrobe { get; set; }
         /// <summary>장치 키 이름표(단축키 안내). Host가 Input/Devices.cs의 배정으로 채운다. 없으면 ScreenKey 이름으로 보인다.</summary>
         public Rootborn.Screens.KeyGuide.KeyGuideKeys KeyGuide { get; set; } = new Rootborn.Screens.KeyGuide.KeyGuideKeys();
+        /// <summary>
+        /// 스킨 이름 → 그 스킨의 글자 자리 여백(테마의 padding, 없으면 테두리 두께). Host가 테마로 채운다. 없으면(창 없이 도는 화면) 0.
+        /// 화면은 패널 안 여백을 숫자로 적지 않고 PaddingOf로 받는다(ui-standards "패널 안 여백은 테마의 테두리에서 얻는다").
+        /// </summary>
+        public Func<string, UiInsets> SkinPadding { get; set; }
+        public UiInsets PaddingOf(string skin) => SkinPadding == null || skin == null ? default : SkinPadding(skin);
         /// <summary>내 PC에서 연 방(Host가 채운다). 열려 있으면 설정 화면에 한 줄(열림, 주소, 사람 수, 닫기)이 보인다. 없으면 그 줄이 없다.</summary>
         public Start.IRoomHost RoomHost { get; set; }
     }

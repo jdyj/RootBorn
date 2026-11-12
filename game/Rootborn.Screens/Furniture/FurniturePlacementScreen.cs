@@ -31,7 +31,8 @@ namespace Rootborn.Screens.Furniture
             public const int Columns = 5;
 
             public const float PaletteX = -740f, PaletteY = 0f, PaletteW = 430f, PaletteH = 860f;
-            public const float TitleX = -52f, TitleY = 386f, TitleW = 270f, TitleH = 42f, TitleFont = 24f;
+            /// <summary>제목: 팔레트 안쪽(테마 여백 — PanelArea) 왼쪽 위.</summary>
+            public const float TitleW = 270f, TitleH = 42f, TitleFont = 24f;
             public const float SearchX = 0f, SearchY = 296f, SearchW = 368f, SearchH = 64f, SearchFont = 18f;
             public const int SearchMaxLength = 100;
             public const float SlotX0 = -144f, SlotY0 = 168f, SlotPitchX = 72f, SlotPitchY = 88f, SlotSize = 64f, SlotIcon = 48f;
@@ -40,7 +41,8 @@ namespace Rootborn.Screens.Furniture
 
             /// <summary>Unity 판은 SettingsY 0이었다. 위쪽 체력·집중 HUD와 맞닿아 한 덩어리로 보여 16 내렸다(겹침 검사의 최소 틈 8).</summary>
             public const float SettingsX = 760f, SettingsY = -16f, SettingsW = 360f, SettingsH = 720f;
-            public const float SettingsTitleX = -34f, SettingsTitleY = 310f, SettingsTitleW = 230f, SettingsTitleH = 40f;
+            /// <summary>설정 패널 제목: 안쪽(테마 여백) 왼쪽 위.</summary>
+            public const float SettingsTitleW = 230f, SettingsTitleH = 40f;
             public const float CloseX = 150f, CloseY = 310f, CloseSize = 44f;
             public const float PreviewX = -82f, PreviewY = -288f, PreviewSize = 116f, PreviewIcon = 82f;
             public const float InfoX = 72f, InfoW = 170f;
@@ -188,8 +190,10 @@ namespace Rootborn.Screens.Furniture
             var root = new UiNode { Id = RootId };
 
             UiPanel palette = root.Add(new UiPanel { Id = PaletteId }).Centered(Metrics.PaletteX, Metrics.PaletteY, Metrics.PaletteW, Metrics.PaletteH);
-            _title = palette.Add(new UiLabel { Id = "furniture.title", FontSize = Metrics.TitleFont, Color = Metrics.Ink })
-                .Centered(Metrics.TitleX, Metrics.TitleY, Metrics.TitleW, Metrics.TitleH);
+            UiInsets pad = Services.PaddingOf(UiSkin.Panel);
+            var paletteArea = new PanelArea(Metrics.PaletteW, Metrics.PaletteH, pad);
+            _title = palette.Add(new UiLabel { Id = "furniture.title", FontSize = Metrics.TitleFont, Color = Metrics.Ink });
+            _title.Place(0f, 0f, paletteArea.Left, paletteArea.Top, Metrics.TitleW, Metrics.TitleH);
             _search = palette.Add(new UiTextField { Id = SearchId, FontSize = Metrics.SearchFont, MaxLength = Metrics.SearchMaxLength })
                 .Centered(Metrics.SearchX, Metrics.SearchY, Metrics.SearchW, Metrics.SearchH);
             _search.TextChanged += OnSearchChanged;
@@ -211,8 +215,9 @@ namespace Rootborn.Screens.Furniture
                 .Centered(Metrics.PageTextX, Metrics.PageTextY, Metrics.PageTextW, Metrics.PageTextH);
 
             UiPanel settings = root.Add(new UiPanel { Id = "furniture.settings" }).Centered(Metrics.SettingsX, Metrics.SettingsY, Metrics.SettingsW, Metrics.SettingsH);
-            _settingsTitle = settings.Add(new UiLabel { Id = "furniture.settings.title", FontSize = Metrics.TitleFont, Color = Metrics.Ink })
-                .Centered(Metrics.SettingsTitleX, Metrics.SettingsTitleY, Metrics.SettingsTitleW, Metrics.SettingsTitleH);
+            var settingsArea = new PanelArea(Metrics.SettingsW, Metrics.SettingsH, pad);
+            _settingsTitle = settings.Add(new UiLabel { Id = "furniture.settings.title", FontSize = Metrics.TitleFont, Color = Metrics.Ink });
+            _settingsTitle.Place(0f, 0f, settingsArea.Left, settingsArea.Top, Metrics.SettingsTitleW, Metrics.SettingsTitleH);
             _close = settings.Add(new UiButton { Id = CloseId, Icon = Rootborn.Screens.Day.ScreenIcons.Close })
                 .Centered(Metrics.CloseX, Metrics.CloseY, Metrics.CloseSize, Metrics.CloseSize);
             _close.Clicked += Close;

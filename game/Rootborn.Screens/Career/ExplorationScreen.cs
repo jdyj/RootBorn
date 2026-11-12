@@ -161,15 +161,17 @@ namespace Rootborn.Screens.Career
     /// </summary>
     public sealed class ExplorationScreen : CareerScreenBase
     {
-        /// <summary>배치 — Unity ExplorationChoicePanel.BuildStaticUi 수치(가운데 기준, y는 위로). 새 디자인에서는 여기만 고친다.</summary>
+        /// <summary>
+        /// 배치(패널 왼쪽 위 기준, 패널 안 여백은 테마 — PanelArea). 위: 제목과 오른쪽 닫기, 그 아래 선택지 버튼들, 아래: 결과 글. 새 디자인에서는 여기만 고친다.
+        /// </summary>
         internal static class Metrics
         {
             public const float Width = 560f, Height = 360f;
-            public const float TitleX = -20f, TitleY = 140f, TitleW = 420f, TitleH = 42f, TitleFont = 24f;
-            public const float CloseX = 226f, CloseY = 142f, CloseW = 64f, CloseH = 32f, CloseFont = 16f;
-            public const float ResultY = -116f, ResultW = 500f, ResultH = 72f, ResultFont = 16f;
-            /// <summary>선택지 버튼들의 첫 버튼 가운데 y(Unity 목록 영역 가운데 20, 높이 190 → 위에서 19)와 줄 간격.</summary>
-            public const float ChoiceFirstY = 96f, ChoiceStep = 46f, ChoiceW = 480f, ChoiceH = 38f, ChoiceFont = 15f;
+            public const float TitleH = 42f, TitleFont = 24f, TitleCloseGap = 8f;
+            public const float CloseW = 64f, CloseH = 32f, CloseFont = 16f;
+            public const float ResultH = 72f, ResultFont = 16f;
+            /// <summary>선택지 버튼들: 제목 아래 간격, 줄 간격, 크기.</summary>
+            public const float ChoiceGap = 4f, ChoiceStep = 46f, ChoiceW = 480f, ChoiceH = 38f, ChoiceFont = 15f;
             public static readonly UiColor Ink = UnityLayout.Color(0.22f, 0.19f, 0.18f);
         }
 
@@ -180,6 +182,7 @@ namespace Rootborn.Screens.Career
         public static string ChoiceId(int index) => "exploration.choice." + index;
 
         private PanelRoot _root;
+        private PanelArea _area;
         private UiLabel _title;
         private UiButton _close;
         private UiTextBlock _result;
@@ -203,13 +206,14 @@ namespace Rootborn.Screens.Career
             var root = new PanelRoot(this) { Id = PanelId };
             root.Centered(0f, 0f, Metrics.Width, Metrics.Height);
             _root = root;
+            _area = new PanelArea(Metrics.Width, Metrics.Height, Services.PaddingOf(UiSkin.Panel));
             _title = root.Add(new UiLabel { Id = TitleId, FontSize = Metrics.TitleFont, Color = Metrics.Ink, Align = UiAlign.Center });
-            _title.Centered(Metrics.TitleX, Metrics.TitleY, Metrics.TitleW, Metrics.TitleH);
+            _title.Place(0f, 0f, _area.Left, _area.Top, _area.InnerWidth - Metrics.CloseW - Metrics.TitleCloseGap, Metrics.TitleH);
             _close = root.Add(new UiButton { Id = CloseId, FontSize = Metrics.CloseFont });
-            _close.Centered(Metrics.CloseX, Metrics.CloseY, Metrics.CloseW, Metrics.CloseH);
+            _close.Place(0f, 0f, _area.Right - Metrics.CloseW, _area.Top + (Metrics.TitleH - Metrics.CloseH) / 2f, Metrics.CloseW, Metrics.CloseH);
             _close.Clicked += Close;
             _result = root.Add(new UiTextBlock { Id = ResultId, FontSize = Metrics.ResultFont, Color = Metrics.Ink });
-            _result.Centered(0f, Metrics.ResultY, Metrics.ResultW, Metrics.ResultH);
+            _result.Place(0f, 0f, _area.Left, _area.Bottom - Metrics.ResultH, _area.InnerWidth, Metrics.ResultH);
             return root;
         }
 
@@ -243,7 +247,8 @@ namespace Rootborn.Screens.Career
             {
                 int index = _choices.Count;
                 var button = _root.Add(new UiMultilineButton { Id = ChoiceId(index), FontSize = Metrics.ChoiceFont });
-                button.Centered(0f, Metrics.ChoiceFirstY - index * Metrics.ChoiceStep, Metrics.ChoiceW, Metrics.ChoiceH);
+                float choiceW = MathF.Min(Metrics.ChoiceW, _area.InnerWidth);
+                button.Place(0f, 0f, (Metrics.Width - choiceW) / 2f, _area.Top + Metrics.TitleH + Metrics.ChoiceGap + index * Metrics.ChoiceStep, choiceW, Metrics.ChoiceH);
                 button.Clicked += () => Choose(index);
                 if (_root.Rect.W > 0) button.Layout(_root.Rect); // 이미 배치된 뒤에 만든 버튼도 바로 제자리에(다음 배치를 기다리지 않는다)
                 _choices.Add(button);

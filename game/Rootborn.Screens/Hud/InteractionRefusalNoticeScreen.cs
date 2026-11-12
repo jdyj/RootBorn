@@ -81,7 +81,7 @@ namespace Rootborn.Screens.Hud
         internal static class Metrics
         {
             public const float BoxW = 760f, BoxH = 72f, Bottom = 260f;
-            public const float TextX = 28f, TextY = 16f, TextH = 40f, Font = 22f;
+            public const float Font = 22f; // 글자 자리는 상자 − 테마 여백(PanelArea), 그 안에서 세로 가운데
             public static readonly UiColor Ink = new UiColor(120, 52, 40);
         }
 
@@ -107,7 +107,8 @@ namespace Rootborn.Screens.Hud
             var box = root.Add(new UiPanel { Id = BoxId, Skin = UiSkin.Panel, Interactive = false });
             box.Place(0.5f, 1f, -Metrics.BoxW / 2f, -Metrics.Bottom - Metrics.BoxH, Metrics.BoxW, Metrics.BoxH);
             _message = box.Add(new UiLabel { Id = MessageId, FontSize = Metrics.Font, Color = Metrics.Ink });
-            _message.Place(0f, 0f, Metrics.TextX, Metrics.TextY, Metrics.BoxW - Metrics.TextX * 2f, Metrics.TextH);
+            var area = new PanelArea(Metrics.BoxW, Metrics.BoxH, Services.PaddingOf(UiSkin.Panel));
+            _message.Place(0f, 0f, area.Left, area.Top, area.InnerWidth, area.InnerHeight);
             return root;
         }
 

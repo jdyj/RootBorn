@@ -97,9 +97,12 @@ namespace Rootborn.Screens.Inventory
 
             BuildTabs(root);
             _title = root.Add(new UiLabel { Id = TitleId, FontSize = Layout.TitleFont, Color = Ink });
-            _title.Place(0f, 0f, Layout.TitleX, Layout.TitleY, Layout.TitleW, Layout.TitleH);
+            // 제목 줄의 위·왼쪽은 테마 여백(PanelArea)보다 안으로 들어가지 않는다.
+            UiInsets pad = Services.PaddingOf(UiSkin.Panel);
+            float titleY = Math.Max(Layout.TitleY, pad.Top);
+            _title.Place(0f, 0f, Math.Max(Layout.TitleX, pad.Left), titleY, Layout.TitleW, Layout.TitleH);
             _category = root.Add(new UiLabel { Id = CategoryId, FontSize = Layout.CategoryFont, Color = Ink, Align = UiAlign.Right });
-            _category.Place(0f, 0f, Layout.CategoryX, Layout.CategoryY, Layout.Width - Layout.CategoryX - Layout.CategoryRightMargin, Layout.CategoryH);
+            _category.Place(0f, 0f, Layout.CategoryX, Math.Max(Layout.CategoryY, pad.Top), Layout.Width - Layout.CategoryX - Layout.CategoryRightMargin, Layout.CategoryH);
             BuildCloseButton(root);
             BuildSearchRow(root);
             BuildGrid(root);

@@ -73,6 +73,14 @@ namespace Rootborn.Host
         /// <summary>UI 그리기(스킨, 찾지 못한 그림 목록).</summary>
         public UiRenderer Renderer => _renderer;
 
+        /// <summary>테마의 스킨 글자 여백(ScreenServices.SkinPadding). 테마에 없는 스킨이면 0.</summary>
+        private UiInsets SkinPaddingOf(string skin)
+        {
+            if (_renderer == null || !_renderer.Skins.TryGet(skin, out SkinSource source)) return default;
+            SkinPadding p = source.Padding;
+            return new UiInsets(p.Left, p.Top, p.Right, p.Bottom);
+        }
+
         /// <summary>마지막으로 그린 화면의 UI 그리기 명령 수(무거운 화면이 보이는 것만 그리는지 보는 흔들리지 않는 기준).</summary>
         public int DrawCommandCount => _drawList.Commands.Count;
         /// <summary>마지막으로 그린 화면 버퍼(스크린샷과 같은 그림).</summary>
@@ -264,7 +272,7 @@ namespace Rootborn.Host
                 new CharacterPreviewArt(content.Characters), EnterSlot, Exit);
             ScreenRegistry registry = ScreenCatalog.Create();
             ExtraScreens?.Invoke(registry);
-            var services = new ScreenServices(Text, null) { Settings = Settings, Display = Display };
+            var services = new ScreenServices(Text, null) { Settings = Settings, Display = Display, SkinPadding = SkinPaddingOf };
             services.KeyGuide = KeyGuideNames.Create();
             Screens = new ScreenStack(registry, services);
             StartMenu.Join = Room ??= CreateRoom();
@@ -458,7 +466,7 @@ namespace Rootborn.Host
             if (Session != null && _options.DayCopies.HasValue) Session.KeepDayCopies(_options.DayCopies.Value);
             ScreenRegistry registry = ScreenCatalog.Create();
             ExtraScreens?.Invoke(registry);
-            var services = new ScreenServices(Text, Session) { Definitions = World.Content.Definitions, Settings = Settings, Display = Display, Names = DisplayNames.Load(Path.Combine(_options.RepoRoot, "data")) };
+            var services = new ScreenServices(Text, Session) { Definitions = World.Content.Definitions, Settings = Settings, Display = Display, Names = DisplayNames.Load(Path.Combine(_options.RepoRoot, "data")), SkinPadding = SkinPaddingOf };
             services.KeyGuide = KeyGuideNames.Create();
             services.RoomHost = Hosting; // 내 PC에서 연 방이 열려 있으면 설정 화면에 한 줄
             if (Session != null)

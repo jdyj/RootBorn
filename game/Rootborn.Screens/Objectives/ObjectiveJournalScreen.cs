@@ -69,7 +69,8 @@ namespace Rootborn.Screens.Objectives
             var root = new UiPanel { Id = PanelId, Skin = UiSkin.Panel };
             root.Centered(0f, 0f, Metrics.Width, Metrics.Height);
             _title = root.Add(new UiLabel { Id = TitleId, FontSize = Metrics.TitleFont, Color = Metrics.Ink });
-            _title.Place(0f, 0f, Metrics.TitleX, Metrics.TitleY, Metrics.TitleW, Metrics.TitleH);
+            UiInsets pad = Services.PaddingOf(UiSkin.Panel);
+            _title.Place(0f, 0f, Math.Max(Metrics.TitleX, pad.Left), Math.Max(Metrics.TitleY, pad.Top), Metrics.TitleW, Metrics.TitleH);
             _close = root.Add(new UiButton { Id = CloseId, FontSize = Metrics.ButtonFont }).Centered(Metrics.CloseX, Metrics.CloseY, Metrics.CloseW, Metrics.CloseH);
             _close.Clicked += Close;
 

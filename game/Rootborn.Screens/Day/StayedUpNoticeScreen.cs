@@ -16,7 +16,7 @@ namespace Rootborn.Screens.Day
         internal static class Metrics
         {
             public const float BoxW = 720f, BoxH = 96f, Bottom = 48f;
-            public const float TextX = 32f, TextW = 656f, TextY = 28f, TextH = 40f, Font = 22f;
+            public const float Font = 22f; // 글자 자리는 상자 − 테마 여백(PanelArea), 그 안에서 세로 가운데
             public const float ShowSeconds = 5f;
             public static readonly UiColor Ink = new UiColor(48, 71, 83);
         }
@@ -41,7 +41,8 @@ namespace Rootborn.Screens.Day
             var box = root.Add(new UiPanel { Id = BoxId, Skin = UiSkin.Panel, Interactive = false });
             box.Place(0.5f, 1f, -Metrics.BoxW / 2f, -Metrics.Bottom - Metrics.BoxH, Metrics.BoxW, Metrics.BoxH);
             _message = box.Add(new UiLabel { Id = MessageId, FontSize = Metrics.Font, Color = Metrics.Ink, Align = UiAlign.Center });
-            _message.Place(0f, 0f, Metrics.TextX, Metrics.TextY, Metrics.TextW, Metrics.TextH);
+            var area = new PanelArea(Metrics.BoxW, Metrics.BoxH, Services.PaddingOf(UiSkin.Panel));
+            _message.Place(0f, 0f, area.Left, area.Top, area.InnerWidth, area.InnerHeight);
             return root;
         }
 

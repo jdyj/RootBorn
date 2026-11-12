@@ -65,15 +65,15 @@ namespace Rootborn.Screens.Storage
         public static class Layout
         {
             public const float Width = 1520f, Height = 820f;
-            public const float Pad = 40f, ColumnGap = 48f;
-            public const float TitleY = 36f, TitleH = 48f, TitleFont = 32f;
-            public const float CloseRight = 88f, CloseY = 38f, CloseSize = 48f, CloseIconSize = 32f;
+            // 왼쪽·오른쪽 여백과 제목의 위는 테마(PanelArea). 두 열은 안쪽 폭을 ColumnGap을 두고 반씩 나눈다.
+            public const float ColumnGap = 48f;
+            public const float TitleH = 48f, TitleFont = 32f, TitleCloseGap = 40f;
+            public const float CloseSize = 48f, CloseIconSize = 32f;
             public const float HeaderY = 104f, HeaderH = 40f, HeaderFont = 24f;
             public const float GridY = 156f;
             public const float SlotSize = 112f, SlotSpacing = 12f;
             public const int VisibleRows = 4;
             public const float GridHeight = VisibleRows * SlotSize + (VisibleRows - 1) * SlotSpacing;
-            public const float ColumnWidth = (Width - Pad * 2f - ColumnGap) / 2f;
             public const float NoticeY = GridY + GridHeight + 20f, NoticeH = 64f, NoticeFont = 24f;
             public const float HintY = NoticeY + NoticeH + 4f, HintH = 36f, HintFont = 20f;
         }
@@ -105,34 +105,36 @@ namespace Rootborn.Screens.Storage
             var root = new UiPanel { Id = RootId, Skin = UiSkin.Panel };
             root.Centered(0f, 0f, Layout.Width, Layout.Height);
             _title = root.Add(new UiLabel { Id = TitleId, FontSize = Layout.TitleFont, Color = Ink });
-            _title.Place(0f, 0f, Layout.Pad, Layout.TitleY, Layout.Width - Layout.Pad * 2f - Layout.CloseRight, Layout.TitleH);
+            var area = new PanelArea(Layout.Width, Layout.Height, Services.PaddingOf(UiSkin.Panel));
+            float pad = area.Left, inner = area.InnerWidth, columnWidth = (inner - Layout.ColumnGap) / 2f;
+            _title.Place(0f, 0f, pad, area.Top, inner - Layout.CloseSize - Layout.TitleCloseGap, Layout.TitleH);
 
             var close = root.Add(new UiButton { Id = CloseId, Skin = UiSkin.Slot });
-            close.Place(0f, 0f, Layout.Width - Layout.CloseRight, Layout.CloseY, Layout.CloseSize, Layout.CloseSize);
+            close.Place(0f, 0f, area.Right - Layout.CloseSize, area.Top, Layout.CloseSize, Layout.CloseSize);
             close.Clicked += Close;
             float inset = (Layout.CloseSize - Layout.CloseIconSize) / 2f;
             close.Add(new UiImage { Image = "icon:close" }).Place(0f, 0f, inset, inset, Layout.CloseIconSize, Layout.CloseIconSize);
 
-            float rightX = Layout.Pad + Layout.ColumnWidth + Layout.ColumnGap;
+            float rightX = pad + columnWidth + Layout.ColumnGap;
             _bagHeader = root.Add(new UiLabel { Id = BagHeaderId, FontSize = Layout.HeaderFont, Color = Ink });
-            _bagHeader.Place(0f, 0f, Layout.Pad, Layout.HeaderY, Layout.ColumnWidth, Layout.HeaderH);
+            _bagHeader.Place(0f, 0f, pad, Layout.HeaderY, columnWidth, Layout.HeaderH);
             _chestHeader = root.Add(new UiLabel { Id = ChestHeaderId, FontSize = Layout.HeaderFont, Color = Ink });
-            _chestHeader.Place(0f, 0f, rightX, Layout.HeaderY, Layout.ColumnWidth, Layout.HeaderH);
+            _chestHeader.Place(0f, 0f, rightX, Layout.HeaderY, columnWidth, Layout.HeaderH);
 
             _bagGrid = root.Add(NewGrid(BagGridId));
-            _bagGrid.Place(0f, 0f, Layout.Pad, Layout.GridY, Layout.ColumnWidth, Layout.GridHeight);
+            _bagGrid.Place(0f, 0f, pad, Layout.GridY, columnWidth, Layout.GridHeight);
             _bagGrid.DrawCell = (i, r, s, l, t) => DrawRow(_model.Bag, i, r, s, l, t);
             _bagGrid.CellClicked += i => Move(i, put: true);
 
             _chestGrid = root.Add(NewGrid(ChestGridId));
-            _chestGrid.Place(0f, 0f, rightX, Layout.GridY, Layout.ColumnWidth, Layout.GridHeight);
+            _chestGrid.Place(0f, 0f, rightX, Layout.GridY, columnWidth, Layout.GridHeight);
             _chestGrid.DrawCell = (i, r, s, l, t) => DrawRow(_model.Chest, i, r, s, l, t);
             _chestGrid.CellClicked += i => Move(i, put: false);
 
             _notice = root.Add(new UiTextBlock { Id = NoticeId, FontSize = Layout.NoticeFont, Color = Ink });
-            _notice.Place(0f, 0f, Layout.Pad, Layout.NoticeY, Layout.Width - Layout.Pad * 2f, Layout.NoticeH);
+            _notice.Place(0f, 0f, pad, Layout.NoticeY, inner, Layout.NoticeH);
             _hint = root.Add(new UiLabel { Id = HintId, FontSize = Layout.HintFont, Color = Ink });
-            _hint.Place(0f, 0f, Layout.Pad, Layout.HintY, Layout.Width - Layout.Pad * 2f, Layout.HintH);
+            _hint.Place(0f, 0f, pad, Layout.HintY, inner, Layout.HintH);
             return root;
         }
 

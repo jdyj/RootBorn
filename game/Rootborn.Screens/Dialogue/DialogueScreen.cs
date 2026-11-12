@@ -62,7 +62,7 @@ namespace Rootborn.Screens.Dialogue
         {
             public const float Width = 760f;
             public const float BottomMargin = 36f;
-            public const float Inset = 42f;
+            // 대화창 안 여백은 테마의 대화창 스킨 여백(ScreenServices.PaddingOf(dialogue)). 높이는 여백 + 대사 + 간격 + 선택지.
             public const float SectionGap = 24f;
             public const float MinLineHeight = 84f;
             /// <summary>대사 오른쪽에 닫기 버튼과 띄울 자리.</summary>
@@ -189,13 +189,14 @@ namespace Rootborn.Screens.Dialogue
         /// <summary>대사 높이가 정해지면 패널 높이와 줄·버튼 자리를 다시 정한다(Unity RefreshContentLayout).</summary>
         internal void Arrange(float lineHeight)
         {
-            float height = Metrics.Inset * 2f + ChoicesHeight + Metrics.SectionGap + lineHeight;
+            UiInsets pad = Services.PaddingOf(UiSkin.Dialogue);
+            float height = pad.Vertical + ChoicesHeight + Metrics.SectionGap + lineHeight;
             _root.LineHeight = lineHeight;
             _root.Place(0.5f, 1f, -Metrics.Width / 2f, -Metrics.BottomMargin - height, Metrics.Width, height);
-            _lines.Place(0f, 0f, Metrics.Inset, Metrics.Inset, Metrics.Width - Metrics.Inset - Metrics.LineRightReserve, lineHeight);
-            float top = Metrics.Inset + lineHeight + Metrics.SectionGap;
+            _lines.Place(0f, 0f, pad.Left, pad.Top, Metrics.Width - pad.Left - Metrics.LineRightReserve, lineHeight);
+            float top = pad.Top + lineHeight + Metrics.SectionGap;
             for (int i = 0; i < _choiceButtons.Count; i++)
-                _choiceButtons[i].Place(0f, 0f, Metrics.Inset, top + i * Metrics.ChoiceStep, Metrics.Width - Metrics.Inset * 2f, Metrics.ChoiceHeight);
+                _choiceButtons[i].Place(0f, 0f, pad.Left, top + i * Metrics.ChoiceStep, Metrics.Width - pad.Horizontal, Metrics.ChoiceHeight);
             if (_root.Parent != null && _root.Parent.Rect.W > 0) _root.Layout(_root.Parent.Rect);
         }
 

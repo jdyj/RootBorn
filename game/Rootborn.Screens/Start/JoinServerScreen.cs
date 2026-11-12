@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Rootborn.Ui;
 
@@ -66,7 +67,7 @@ namespace Rootborn.Screens.Start
             root.Stretch(0f, 0f, 0f, 0f);
             var box = root.Add(new UiPanel { Id = BoxId, Skin = UiSkin.Panel }).Centered(0f, 0f, Metrics.BoxW, Metrics.BoxH);
             _title = box.Add(new UiLabel { Id = TitleId, FontSize = Metrics.TitleFont, Color = Metrics.Ink, Align = UiAlign.Center })
-                .Centered(0f, Metrics.TitleY, Metrics.LineW, Metrics.TitleH);
+                .Centered(0f, Math.Min(Metrics.TitleY, new PanelArea(Metrics.BoxW, Metrics.BoxH, Services.PaddingOf(UiSkin.Panel)).CenterYFromTop(Metrics.TitleH)), Metrics.LineW, Metrics.TitleH);
             _addressLabel = box.Add(new UiLabel { Id = AddressLabelId, FontSize = Metrics.LabelFont, Color = Metrics.Ink })
                 .Centered(0f, Metrics.AddressLabelY, Metrics.LineW, Metrics.LabelH);
             _address = box.Add(new UiTextField { Id = AddressId, MaxLength = Metrics.AddressMaxLength, FontSize = Metrics.FieldFont })

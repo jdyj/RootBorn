@@ -73,7 +73,9 @@ namespace Rootborn.Screens.Day
             var root = new UiPanel { Id = RootId, Skin = UiSkin.Panel };
             root.Centered(0f, 0f, DailyPlanLayout.Width, DailyPlanLayout.Height);
 
-            _title = Place(root.Add(new UiLabel { FontSize = DailyPlanLayout.TitleFont }), DailyPlanLayout.Title);
+            // 제목의 위는 테마 여백(PanelArea) 아래로 — 숫자 40은 테두리가 두꺼운 테마에서 글자가 테두리에 닿았다.
+            UiRect title = DailyPlanLayout.Title;
+            _title = Place(root.Add(new UiLabel { FontSize = DailyPlanLayout.TitleFont }), new UiRect(title.X, Math.Max(title.Y, Services.PaddingOf(UiSkin.Panel).Top), title.W, title.H));
             Place(root.Add(new UiImage { Image = ScreenIcons.Key("daily-planner") }), DailyPlanLayout.Icon);
             _closeTop = Place(root.Add(new UiButton { Id = CloseTopId, FontSize = DailyPlanLayout.ButtonFont }), DailyPlanLayout.CloseTop);
             _closeTop.Clicked += Close;

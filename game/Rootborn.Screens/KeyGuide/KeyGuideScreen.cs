@@ -102,9 +102,10 @@ namespace Rootborn.Screens.KeyGuide
         public static class Metrics
         {
             public const float PanelW = 1200f, PanelH = 960f;
-            public const float TitleTop = 24f, TitleH = 52f, TitleFont = 30f, TitleInset = 48f;
+            // 패널 안 여백은 테마(PanelArea). 제목은 안쪽 위, 목록은 제목 아래 ListGap부터 안쪽 아래까지.
+            public const float TitleH = 52f, TitleFont = 30f, TitleInset = 12f;
             public const float CloseSize = 56f, CloseIconSize = 32f, CloseInset = 24f;
-            public const float ListX = 48f, ListTop = 96f, ListBottom = 28f;
+            public const float ListGap = 20f;
             public const float RowH = 40f, RowGap = 2f;
             public const float TextInset = 12f, LabelGap = 24f;
             public const float HeaderFont = 24f, LabelFont = 20f;
@@ -138,7 +139,9 @@ namespace Rootborn.Screens.KeyGuide
             panel.Centered(0f, 0f, Metrics.PanelW, Metrics.PanelH);
 
             _title = panel.Add(new UiLabel { Id = TitleId, FontSize = Metrics.TitleFont, Align = UiAlign.Center, Color = UiTheme.Ink });
-            _title.Place(0f, 0f, Metrics.TitleInset + Metrics.CloseSize, Metrics.TitleTop, Metrics.PanelW - (Metrics.TitleInset + Metrics.CloseSize) * 2f, Metrics.TitleH);
+            var area = new PanelArea(Metrics.PanelW, Metrics.PanelH, Services.PaddingOf(UiSkin.Panel));
+            float titleSide = Metrics.CloseInset + Metrics.CloseSize + Metrics.TitleInset;
+            _title.Place(0f, 0f, titleSide, area.Top, Metrics.PanelW - titleSide * 2f, Metrics.TitleH);
 
             var close = panel.Add(new UiButton { Id = CloseId, Skin = UiSkin.Slot });
             close.Place(1f, 0f, -Metrics.CloseInset - Metrics.CloseSize, Metrics.CloseInset, Metrics.CloseSize, Metrics.CloseSize);
@@ -146,13 +149,15 @@ namespace Rootborn.Screens.KeyGuide
             float inset = (Metrics.CloseSize - Metrics.CloseIconSize) / 2f;
             close.Add(new UiImage { Image = "icon:close" }).Place(0f, 0f, inset, inset, Metrics.CloseIconSize, Metrics.CloseIconSize);
 
-            float listW = Metrics.PanelW - Metrics.ListX * 2f;
+            float listW = area.InnerWidth;
+            // 목록은 제목 아래, 그리고 닫기 단추 아래(테마 여백이 얇아도 닫기와 겹치지 않게).
+            float listTop = Math.Max(area.Top + Metrics.TitleH, Metrics.CloseInset + Metrics.CloseSize) + Metrics.ListGap;
             _grid = panel.Add(new UiCardGrid
             {
                 Id = ListId, Padding = 0f, DrawBackground = false, Spacing = Metrics.RowGap, StepsPerNotch = 2f,
                 CellWidth = listW - UiCardScroller.ScrollbarWidth - UiCardScroller.ScrollbarGap, CellHeight = Metrics.RowH,
             });
-            _grid.Place(0f, 0f, Metrics.ListX, Metrics.ListTop, listW, Metrics.PanelH - Metrics.ListTop - Metrics.ListBottom);
+            _grid.Place(0f, 0f, area.Left, listTop, listW, area.Bottom - listTop);
             _grid.DrawCell = DrawLine;
             return root;
         }

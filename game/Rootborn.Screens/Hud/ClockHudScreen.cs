@@ -1,3 +1,4 @@
+using System;
 using Rootborn.Core.Inventory;
 using Rootborn.Core.Placement;
 using Rootborn.Game;
@@ -71,7 +72,7 @@ namespace Rootborn.Screens.Hud
             public const float IconX = 40f, IconY = 40f, IconSize = 64f;
             public const float TextLeft = 128f, TextRight = 36f;
             public const float TopLineTop = 30f, TopLineBottom = 72f;
-            public const float RoomLineTop = 76f, RoomLineBottom = 30f;
+            public const float RoomLineBottom = 30f, LineGap = 4f; // 방 줄은 위 줄 아래 LineGap부터
             public const float FontSize = 24f, RoomFontSize = 18f;
             public const string Icon = "icon:time";
         }
@@ -111,9 +112,13 @@ namespace Rootborn.Screens.Hud
             _icon = panel.Add(new UiImage { Id = IconId, Image = Layout.Icon });
             _icon.Place(0f, 0f, Layout.IconX, Layout.IconY, Layout.IconSize, Layout.IconSize);
             _label = panel.Add(new UiLabel { Id = LabelId, FontSize = Layout.FontSize, Color = HudLayout.Ink });
-            _label.Stretch(Layout.TextLeft, Layout.TopLineTop, Layout.TextRight, Layout.TopLineBottom);
+            // 글줄은 테마 여백(PanelArea)보다 안으로 들어가지 않는다: 위 줄은 여백 아래에서, 방 줄은 위 줄 바로 아래에서 여백 위까지.
+            UiInsets pad = Services.PaddingOf(UiSkin.Panel);
+            float top = Math.Max(Layout.TopLineTop, pad.Top), right = Math.Max(Layout.TextRight, pad.Right);
+            float lineH = HudLayout.RowHeight - Layout.TopLineTop - Layout.TopLineBottom;
+            _label.Stretch(Layout.TextLeft, top, right, HudLayout.RowHeight - top - lineH);
             _room = panel.Add(new UiLabel { Id = RoomLabelId, FontSize = Layout.RoomFontSize, Color = HudLayout.Ink, Text = string.Empty });
-            _room.Stretch(Layout.TextLeft, Layout.RoomLineTop, Layout.TextRight, Layout.RoomLineBottom);
+            _room.Stretch(Layout.TextLeft, top + lineH + Layout.LineGap, right, Math.Max(Layout.RoomLineBottom, pad.Bottom));
             return root;
         }
 

@@ -15,18 +15,19 @@ namespace Rootborn.Screens.Workspaces
     public static class WorkspaceTemplateLayout
     {
         public const float Width = 760, Height = 600;
-        public static readonly (float X, float Y, float W, float H) Title = (32, 24, 600, 44);
+        // 패널 안 여백은 테마(PanelArea). 위에서 아래로: 제목(오른쪽 닫기), 목록, 이름, 값, 상태 — 아래 오른쪽에 적용 단추. 상태는 남는 높이를 쓴다.
+        public const float TitleW = 600, TitleH = 44;
         public const float TitleFont = 28;
-        public static readonly (float X, float Y, float W, float H) Close = (684, 24, 44, 44);
-        public static readonly (float X, float Y, float W, float H) List = (32, 84, 696, 216);
+        public const float CloseSize = 44;
+        public const float ListGap = 8, ListH = 216;
         public const float RowHeight = 48, ListFont = 20, ListPadding = 12;
-        public static readonly (float X, float Y, float W, float H) Name = (32, 316, 696, 36);
+        public const float NameGap = 16, NameH = 36;
         public const float NameFont = 22;
-        public static readonly (float X, float Y, float W, float H) Cost = (32, 360, 696, 56);
+        public const float CostGap = 8, CostH = 56;
         public const float CostFont = 18;
-        public static readonly (float X, float Y, float W, float H) Status = (32, 424, 696, 84);
+        public const float StatusGap = 8;
         public const float StatusFont = 18;
-        public static readonly (float X, float Y, float W, float H) Apply = (488, 524, 240, 52);
+        public const float ApplyW = 240, ApplyH = 52;
         public const float ApplyFont = 20;
         public static readonly UiColor Ink = UnityLayout.Color(0.22f, 0.19f, 0.18f);
     }
@@ -68,19 +69,30 @@ namespace Rootborn.Screens.Workspaces
         {
             var root = new UiPanel { Id = RootId, Skin = UiSkin.Panel };
             root.Centered(0f, 0f, WorkspaceTemplateLayout.Width, WorkspaceTemplateLayout.Height);
-            _title = At(root.Add(new UiLabel { Id = TitleId, FontSize = WorkspaceTemplateLayout.TitleFont, Color = WorkspaceTemplateLayout.Ink }), WorkspaceTemplateLayout.Title);
-            _close = At(root.Add(new UiButton { Id = CloseId, Icon = ScreenIcons.Close }), WorkspaceTemplateLayout.Close);
+            var area = new PanelArea(WorkspaceTemplateLayout.Width, WorkspaceTemplateLayout.Height, Services.PaddingOf(UiSkin.Panel));
+            float w = area.InnerWidth;
+            _title = At(root.Add(new UiLabel { Id = TitleId, FontSize = WorkspaceTemplateLayout.TitleFont, Color = WorkspaceTemplateLayout.Ink }),
+                (area.Left, area.Top, Math.Min(WorkspaceTemplateLayout.TitleW, w - WorkspaceTemplateLayout.CloseSize), WorkspaceTemplateLayout.TitleH));
+            _close = At(root.Add(new UiButton { Id = CloseId, Icon = ScreenIcons.Close }),
+                (area.Right - WorkspaceTemplateLayout.CloseSize, area.Top, WorkspaceTemplateLayout.CloseSize, WorkspaceTemplateLayout.CloseSize));
             _close.Clicked += Close;
+            float listY = area.Top + WorkspaceTemplateLayout.TitleH + WorkspaceTemplateLayout.ListGap;
             _list = At(root.Add(new UiScrollList
             {
                 Id = ListId, RowHeight = WorkspaceTemplateLayout.RowHeight, FontSize = WorkspaceTemplateLayout.ListFont, Padding = WorkspaceTemplateLayout.ListPadding,
-            }), WorkspaceTemplateLayout.List);
+            }), (area.Left, listY, w, WorkspaceTemplateLayout.ListH));
             _list.RowText = row => row >= 0 && row < _rowNames.Length ? _rowNames[row] : string.Empty;
             _list.RowClicked += Select;
-            _name = At(root.Add(new UiLabel { Id = NameId, FontSize = WorkspaceTemplateLayout.NameFont, Color = WorkspaceTemplateLayout.Ink }), WorkspaceTemplateLayout.Name);
-            _cost = At(root.Add(new UiTextBlock { Id = CostId, FontSize = WorkspaceTemplateLayout.CostFont, Color = WorkspaceTemplateLayout.Ink }), WorkspaceTemplateLayout.Cost);
-            _status = At(root.Add(new UiTextBlock { Id = StatusId, FontSize = WorkspaceTemplateLayout.StatusFont, Color = WorkspaceTemplateLayout.Ink }), WorkspaceTemplateLayout.Status);
-            _apply = At(root.Add(new UiButton { Id = ApplyBaseId, FontSize = WorkspaceTemplateLayout.ApplyFont }), WorkspaceTemplateLayout.Apply);
+            float nameY = listY + WorkspaceTemplateLayout.ListH + WorkspaceTemplateLayout.NameGap;
+            _name = At(root.Add(new UiLabel { Id = NameId, FontSize = WorkspaceTemplateLayout.NameFont, Color = WorkspaceTemplateLayout.Ink }), (area.Left, nameY, w, WorkspaceTemplateLayout.NameH));
+            float costY = nameY + WorkspaceTemplateLayout.NameH + WorkspaceTemplateLayout.CostGap;
+            _cost = At(root.Add(new UiTextBlock { Id = CostId, FontSize = WorkspaceTemplateLayout.CostFont, Color = WorkspaceTemplateLayout.Ink }), (area.Left, costY, w, WorkspaceTemplateLayout.CostH));
+            float statusY = costY + WorkspaceTemplateLayout.CostH + WorkspaceTemplateLayout.StatusGap;
+            float applyY = area.Bottom - WorkspaceTemplateLayout.ApplyH;
+            _status = At(root.Add(new UiTextBlock { Id = StatusId, FontSize = WorkspaceTemplateLayout.StatusFont, Color = WorkspaceTemplateLayout.Ink }),
+                (area.Left, statusY, w, Math.Max(0f, applyY - WorkspaceTemplateLayout.StatusGap - statusY)));
+            _apply = At(root.Add(new UiButton { Id = ApplyBaseId, FontSize = WorkspaceTemplateLayout.ApplyFont }),
+                (area.Right - WorkspaceTemplateLayout.ApplyW, applyY, WorkspaceTemplateLayout.ApplyW, WorkspaceTemplateLayout.ApplyH));
             _apply.Clicked += Apply;
             return root;
         }

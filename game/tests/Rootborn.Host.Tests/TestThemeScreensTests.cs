@@ -32,6 +32,28 @@ namespace Rootborn.Host.Tests
         {
         };
 
+        /// <summary>
+        /// 알려진 테두리 닿음: "테마/화면 id" → 이유. 글자가 패널의 안쪽 영역(패널 − 테마의 테두리/padding)에 들어가지 않는 화면.
+        /// 패널 크기를 키워야만 풀리는 것만 둔다(화면 구성·크기는 새 디자인에서 정한다). 새로 생기면 테스트가 실패한다.
+        /// </summary>
+        private static readonly Dictionary<string, string> KnownBorderTouches = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["urban/" + ScreenCatalog.InteractionRefusal] = "알림 상자 높이 72가 테마 여백(위·아래 36씩)보다 작아 글줄이 들어갈 자리가 없다. 상자 높이를 글줄 + 테마 여백으로 정하면 풀린다(패널 크기 — 사용자 결정 대기).",
+            ["test/" + ScreenCatalog.InteractionRefusal] = "알림 상자 높이 72 < 테마 여백 48×2. 위와 같다.",
+            ["test/" + ScreenCatalog.StayedUpNotice] = "알림 상자 높이 96 − 테마 여백 48×2 = 0이라 글줄이 들어갈 자리가 없다. 도시형 몰딩(여백 36)에서는 들어간다. 상자 높이를 글줄 + 테마 여백으로 정하면 풀린다.",
+        };
+
+        /// <summary>
+        /// 테두리 닿음 검사에서 빼는 스킨: 스킨 → 이유. 자기 글자를 가진 작은 조작 요소라 글자 자리를 요소가 정한다(단추는 가운데,
+        /// 칸은 모서리의 수, 글자 칸은 자기 여백). 이 요소들이 패널 밖으로 나가는 것은 넘침 검사가 그대로 본다.
+        /// </summary>
+        internal static readonly Dictionary<string, string> BorderCheckExemptSkins = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            [UiSkin.Button] = "단추 글자는 단추 가운데에 놓인다. 단추 높이는 화면 배치가, 테두리는 테마가 정해 두께가 단추보다 두꺼운 테마에서는 맞출 수 없다.",
+            [UiSkin.Slot] = "칸(아이템 칸·닫기 칸·키 이름표)은 수와 이름을 칸 모서리·가운데에 둔다. 칸 테두리는 그림의 일부다.",
+            [UiSkin.Field] = "글자 칸은 자기 여백(PaddingX)으로 글자를 놓는다.",
+        };
+
         private const float Tolerance = 0.5f;
 
         /// <summary>내용이 있어야 보이는 화면을 여는 상호작용(새 게임 데이터의 NPC·장소·알바).</summary>
@@ -94,11 +116,13 @@ namespace Rootborn.Host.Tests
             }
         }
 
-        [Test]
-        public void EveryRegisteredScreen_DrawsWithTheTestTheme_WithoutErrors_AndTextStaysInsideItsPanel()
+        /// <summary>시험용 테마(두꺼운 테두리)와 지금 테마(도시형 몰딩) 둘 다로 돈다. 테두리 닿음은 두 테마 모두에서 본다.</summary>
+        [TestCase("test")]
+        [TestCase("urban")]
+        public void EveryRegisteredScreen_DrawsWithTheTestTheme_WithoutErrors_AndTextStaysInsideItsPanelPadding(string themeName)
         {
-            string theme = MakeTestTheme();
-            string evidence = Path.Combine(_root, "output", "host-theme-evidence");
+            string theme = themeName == "test" ? MakeTestTheme() : Path.Combine(_root, "game", "themes", themeName);
+            string evidence = Path.Combine(_root, "output", "host-theme-evidence", themeName);
             HostOptions options = HostOptions.Resolve(new[]
             {
                 "--save-root", Path.Combine(_work, "saves"), "--slot", "slot-1", "--size", "1920x1080",
@@ -119,7 +143,7 @@ namespace Rootborn.Host.Tests
             using (var player = new PlayerDriver(options))
             {
                 player.Frames(3);
-                Assert.That(player.Game.Renderer.Skins.Get(UiSkin.Panel).Texture, Does.StartWith(theme), "시험용 테마로 그린다");
+                if (themeName == "test") Assert.That(player.Game.Renderer.Skins.Get(UiSkin.Panel).Texture, Does.StartWith(theme), "시험용 테마로 그린다");
                 using var textRenderer = new TextRenderer(player.Game.GraphicsDevice, options.FontPath);
                 var measurer = new HostTextMeasurer(textRenderer) { Scale = player.Game.Fit.Scale };
 
@@ -182,8 +206,8 @@ namespace Rootborn.Host.Tests
                 report.AppendLine("그릴 것이 없던 화면(숨은 HUD 등): " + (notDrawn.Count == 0 ? "없음" : string.Join(", ", notDrawn)));
                 report.AppendLine("## 패널 밖으로 나간 글자");
                 foreach (var pair in overflows) report.AppendLine("- " + pair.Key + ": " + string.Join(" | ", pair.Value.Distinct()));
-                report.AppendLine("## 패널 테두리(안쪽 여백)에 닿은 글자 — 참고");
-                foreach (var pair in borderTouches) report.AppendLine("- " + pair.Key + ": " + string.Join(" | ", pair.Value.Distinct().Take(6)));
+                report.AppendLine("## 패널 테두리(안쪽 여백)에 닿은 글자");
+                foreach (var pair in borderTouches) report.AppendLine("- " + pair.Key + ": " + string.Join(" | ", pair.Value.Distinct().Take(8)));
                 Directory.CreateDirectory(evidence);
                 File.WriteAllText(Path.Combine(evidence, "theme-report.md"), report.ToString());
                 TestContext.Out.WriteLine(report.ToString());
@@ -195,8 +219,12 @@ namespace Rootborn.Host.Tests
                     "시험용 테마로 그리지 못한 화면");
             }
 
-            Assert.That(overflows.Keys.Except(KnownOverflows.Keys), Is.Empty, "새로 넘친 화면(보고서: output/host-theme-evidence/theme-report.md)");
+            Assert.That(overflows.Keys.Except(KnownOverflows.Keys), Is.Empty, "새로 넘친 화면(보고서: output/host-theme-evidence/<테마>/theme-report.md)");
             Assert.That(KnownOverflows.Keys.Except(overflows.Keys), Is.Empty, "더 넘치지 않는 화면은 KnownOverflows에서 지운다");
+            List<string> touched = borderTouches.Keys.Select(k => themeName + "/" + k).ToList();
+            List<string> known = KnownBorderTouches.Keys.Where(k => k.StartsWith(themeName + "/", StringComparison.Ordinal)).ToList();
+            Assert.That(touched.Except(known), Is.Empty, "글자가 패널 테두리(테마 여백)에 닿은 화면(보고서: output/host-theme-evidence/<테마>/theme-report.md)");
+            Assert.That(known.Except(touched), Is.Empty, "더 닿지 않는 화면은 KnownBorderTouches에서 지운다");
         }
 
         private static void TryClose(PlayerDriver player, string id, bool openedHere)
@@ -246,7 +274,7 @@ namespace Rootborn.Host.Tests
                         string label = "\"" + Short(c.Text) + "\"(" + under.Value.skin + ")";
                         if (box.X < r.X - Tolerance || box.Y < r.Y - Tolerance || box.Right > r.Right + Tolerance || box.Bottom > r.Bottom + Tolerance)
                             Add(overflows, screenId, label);
-                        else if (skins.TryGet(under.Value.skin, out SkinSource skin))
+                        else if (!BorderCheckExemptSkins.ContainsKey(under.Value.skin ?? string.Empty) && skins.TryGet(under.Value.skin, out SkinSource skin))
                         {
                             SkinPadding pad = skin.Padding;
                             if (box.X < r.X + pad.Left - Tolerance || box.Y < r.Y + pad.Top - Tolerance || box.Right > r.Right - pad.Right + Tolerance || box.Bottom > r.Bottom - pad.Bottom + Tolerance)

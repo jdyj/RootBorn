@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Rootborn.Core.StudentLife;
 using Rootborn.Game;
@@ -52,7 +53,8 @@ namespace Rootborn.Screens.Day
             var panel = root.Add(new UiPanel { Id = PanelId, Skin = UiSkin.Panel });
             panel.Centered(0, 0, DayResultLayout.Width, DayResultLayout.Height);
             var t = DayResultLayout.Title;
-            _title = panel.Add(new UiLabel { Id = TitleId, FontSize = DayResultLayout.TitleFont, Align = UiAlign.Center }).Centered(t.X, t.Y, t.W, t.H);
+            var area = new PanelArea(DayResultLayout.Width, DayResultLayout.Height, Services.PaddingOf(UiSkin.Panel));
+            _title = panel.Add(new UiLabel { Id = TitleId, FontSize = DayResultLayout.TitleFont, Align = UiAlign.Center }).Centered(t.X, Math.Min(t.Y, area.CenterYFromTop(t.H)), t.W, t.H);
             _body = panel.Add(new UiSectionScrollView { Id = BodyId, FontSize = DayResultLayout.BodyFont, SectionSpacing = DayResultLayout.SectionSpacing });
             _body.Stretch(DayResultLayout.BodyLeft, DayResultLayout.BodyTop, DayResultLayout.BodyRight, DayResultLayout.BodyBottom);
             var n = DayResultLayout.NextDay;
