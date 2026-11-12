@@ -69,7 +69,7 @@ namespace Rootborn.Simulation.Headless
             Refresh(); // 옛 계획의 자리를 다음 프레임까지 두지 않는다
         }
 
-        /// <summary>맵이 바뀌면 후보 목록을 한 번 만들고, 프레임마다 NPC 자리와 대상을 고친다(새 객체를 만들지 않는다).</summary>
+        /// <summary>맵이 바뀌면(또는 놓인 상자가 바뀌면) 후보 목록을 한 번 만들고(NPC + 놓인 상자), 프레임마다 NPC 자리와 대상을 고친다(새 객체를 만들지 않는다).</summary>
         private void Refresh()
         {
             string map = Session.Map.Id;
@@ -78,10 +78,37 @@ namespace Rootborn.Simulation.Headless
                 _enteredMap = map;
                 Interactions.MapId = map;
                 Interactions.RadiusPixels = _atlas.Interactions.RadiusCells * Session.Map.Grid.CellSize;
-                Interactions.SetCandidates(Npcs.EnterMap(map, HereData, Session.Map.Doors));
+                List<InteractionCandidate> candidates = Npcs.EnterMap(map, HereData, Session.Map.Doors);
+                candidates.AddRange(_storage);
+                Interactions.SetCandidates(candidates);
             }
             Npcs.Tick(_day(), _dayMinutes());
             Interactions.Update(Session.Walker.X, Session.Walker.Y);
+        }
+
+        /// <summary>Host WorldScreen.PlacedStoragePriority와 같은 값.</summary>
+        private const int PlacedStoragePriority = 0;
+
+        private readonly List<InteractionCandidate> _storage = new List<InteractionCandidate>();
+
+        /// <summary>
+        /// 놓인 상자마다 가운데에 상호작용 후보 "storage"(Host WorldScreen.SetPlacedFurniture와 같다 — 앞에서 누르면 상자 화면). 가구가 바뀔 때만 부른다.
+        /// </summary>
+        public void SetPlacedStorage(IReadOnlyList<Rootborn.Core.Placement.PlacedFurniture> placed, Func<Rootborn.Core.Placement.FurnitureDefinition, bool> isStorage)
+        {
+            int before = _storage.Count;
+            _storage.Clear();
+            FurnitureRoom room = Room;
+            if (room != null && placed != null)
+                foreach (var p in placed)
+                {
+                    if (!isStorage(p.Definition) || p.OccupiedCells.Count == 0) continue;
+                    float cx = 0f, cy = 0f;
+                    foreach (var c in p.OccupiedCells) { AreaRect a = room.CellArea(c); cx += a.CenterX; cy += a.CenterY; }
+                    _storage.Add(new InteractionCandidate(Rootborn.Screens.Storage.StorageScreen.InteractionKind, p.InstanceId,
+                        cx / p.OccupiedCells.Count, cy / p.OccupiedCells.Count, PlacedStoragePriority, true));
+                }
+            if (before > 0 || _storage.Count > 0) { _enteredMap = null; Refresh(); } // Host WorldScreen.RefreshCandidatesNow와 같다
         }
     }
 

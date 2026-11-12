@@ -22,6 +22,10 @@ namespace Rootborn.Core.Inventory
         private readonly IWallet _wallet;
         private bool _walletInsideExchange;
 
+        // 세이브에서 읽었지만 가방에 넣지 못한 것: 지금 데이터에 없는 아이템, 칸·묶음이 모자라 안 들어간 수량.
+        // 가방 규칙(칸, 세기, 주고받기)에는 보이지 않고 다음 저장에 그대로 다시 쓴다. 데이터가 돌아오거나 자리가 나면 다음에 읽을 때 가방에 든다.
+        private readonly List<PlayerInventoryItemSaveData> _kept = new List<PlayerInventoryItemSaveData>();
+
         public ItemInventory()
         {
             _slots.Changed += RaiseChanged;
@@ -99,26 +103,52 @@ namespace Rootborn.Core.Inventory
                 items.Add(new PlayerInventoryItemSaveData { ItemId = slot.Item.Id, Count = slot.Count });
             }
 
+            // 읽을 때 가방에 넣지 못한 것은 칸 뒤에 그대로 붙여 쓴다.
+            for (int i = 0; i < _kept.Count; i++) items.Add(_kept[i]);
             return new PlayerInventorySaveData { Items = items.ToArray(), EquippedToolItemId = equippedToolItemId ?? string.Empty };
         }
 
         /// <summary>
-        /// Replaces the contents with the saved items. Ids <paramref name="findById"/> cannot resolve are skipped.
-        /// A null save changes nothing. The equipped tool id is left to the caller.
+        /// Replaces the contents with the saved items. A null save changes nothing. The equipped tool id is left to the caller.
+        /// Ids <paramref name="findById"/> cannot resolve, and counts that no longer fit (the data shrank a stack size), are not dropped:
+        /// they stay out of the slots and <see cref="ToSaveData"/> writes them back. 전에는 버려서 다음 저장에 사라졌다.
         /// 지갑이 있으면 옛 세이브의 통화 아이템 칸은 지갑에 더한다(지갑을 먼저 읽어 둔다). 다음 저장부터 가방에는 돈 칸이 없다.
         /// </summary>
         public void LoadFromSaveData(PlayerInventorySaveData saveData, Func<string, ItemDefinition> findById)
         {
             if (saveData == null) return;
             Clear();
+            _kept.Clear();
             if (saveData.Items == null || findById == null) return;
             for (int i = 0; i < saveData.Items.Length; i++)
             {
                 var saved = saveData.Items[i];
-                if (string.IsNullOrEmpty(saved.ItemId)) continue;
+                if (string.IsNullOrEmpty(saved.ItemId) || saved.Count <= 0) continue;
                 var item = findById(saved.ItemId);
-                if (item != null) Add(item, saved.Count);
+                if (item == null)
+                {
+                    Keep(saved.ItemId, saved.Count);
+                    continue;
+                }
+
+                int before = CountOf(item);
+                Add(item, saved.Count);
+                Keep(saved.ItemId, saved.Count - (CountOf(item) - before));
             }
+        }
+
+        private void Keep(string itemId, int count)
+        {
+            if (count <= 0) return;
+            for (int i = 0; i < _kept.Count; i++)
+            {
+                if (_kept[i].ItemId != itemId) continue;
+                long sum = (long)_kept[i].Count + count;
+                _kept[i] = new PlayerInventoryItemSaveData { ItemId = itemId, Count = (int)Math.Min(int.MaxValue, sum) };
+                return;
+            }
+
+            _kept.Add(new PlayerInventoryItemSaveData { ItemId = itemId, Count = count });
         }
 
         private bool IsCurrency(ItemDefinition item) => _wallet != null && item != null && ReferenceEquals(item, Currency);

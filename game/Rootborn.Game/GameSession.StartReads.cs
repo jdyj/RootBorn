@@ -53,6 +53,13 @@ namespace Rootborn.Game
                 _problems.Add(new SaveSlotProblem(fileName, SaveSlotProblemKind.Unreadable, new InvalidDataException(fileName + ": " + reason)));
             }
 
+            /// <summary>있어야 하는 파일이 읽히지 않았으면 빠진 파일로 적는다(읽을 수 없어서 이미 적힌 파일은 다시 적지 않는다).</summary>
+            public void Require(string fileName)
+            {
+                if (_found.Contains(fileName) || _unreadable.Contains(_slot + "/" + fileName)) return;
+                _problems.Add(new SaveSlotProblem(fileName, SaveSlotProblemKind.Missing));
+            }
+
             public void Write<T>(string saveSlot, string fileName, T data) where T : class
                 => throw new InvalidOperationException("시작할 때는 세이브를 쓰지 않는다: " + saveSlot + "/" + fileName);
 

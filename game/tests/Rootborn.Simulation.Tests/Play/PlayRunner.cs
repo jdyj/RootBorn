@@ -101,8 +101,12 @@ namespace Rootborn.Simulation
         private readonly HashSet<string> _claims = new HashSet<string>(StringComparer.Ordinal);
         private readonly bool _pace;
 
-        public PlayRunner(IPlayBody body, IPlayPolicy policy, int seed, PlaySettings settings, PlayAtlas atlas, string name, bool pace = true)
+        private readonly ISavedGameSource _saved;
+
+        /// <param name="saved">진행이 몸의 세이브 폴더가 아닌 곳(같이 하는 방)에 있으면 날마다 다시 읽기가 그것으로 읽는다.</param>
+        public PlayRunner(IPlayBody body, IPlayPolicy policy, int seed, PlaySettings settings, PlayAtlas atlas, string name, bool pace = true, ISavedGameSource saved = null)
         {
+            _saved = saved ?? body as ISavedGameSource;
             _body = body ?? throw new ArgumentNullException(nameof(body));
             _policy = policy ?? throw new ArgumentNullException(nameof(policy));
             _settings = settings ?? new PlaySettings();
@@ -124,9 +128,42 @@ namespace Rootborn.Simulation
         /// <summary>끝까지 돈다. 불변식이 깨지면 PlayFailure를 Result.Failure에 두고 돌려준다(던지지 않는다).</summary>
         public PlayResult Run()
         {
-            try { Loop(); }
-            catch (PlayFailure f) { _result.Failure = f; }
-            catch (PlayReplayMismatch m) { _result.Failure = new PlayFailure("재생이 어긋났다", m.Message + "\n" + Situation()); }
+            while (Step()) { }
+            return Finish();
+        }
+
+        private int _nextStep;
+        private bool _done;
+
+        /// <summary>
+        /// 한 걸음만 돈다(같이 하는 방은 여러 사람의 달리는 쪽이 번갈아 한 걸음씩 — RoomPlay). 끝났거나 불변식이 깨졌으면 false(실패는 Result.Failure).
+        /// </summary>
+        public bool Step()
+        {
+            if (_done) return false;
+            try
+            {
+                if (_nextStep >= _settings.MaxSteps || !StepOnce(_nextStep)) _done = true;
+                else _nextStep++;
+            }
+            catch (PlayFailure f) { _result.Failure = f; _done = true; }
+            catch (PlayReplayMismatch m) { _result.Failure = new PlayFailure("재생이 어긋났다", m.Message + "\n" + Situation()); _done = true; }
+            return !_done;
+        }
+
+        /// <summary>끝났다(날 수를 넘겼거나, 걸음 상한, 실패).</summary>
+        public bool Done => _done;
+
+        /// <summary>바깥(같이 하는 방의 불변식)이 찾은 실패를 이 판의 실패로 남기고 멈춘다.</summary>
+        public void FailFromOutside(string what, string report)
+        {
+            if (_result.Failure == null) _result.Failure = new PlayFailure(what, report + "\n" + Situation());
+            _done = true;
+        }
+
+        /// <summary>끝 상태와 넓이를 셈해 결과를 준다.</summary>
+        public PlayResult Finish()
+        {
             if (_body.Session != null) _result.FinalState = StateSnapshot.Of(_body.Session);
             _result.Frames = _body.Frames;
             CountProgress();
@@ -144,9 +181,9 @@ namespace Rootborn.Simulation
         private int _day = -1, _dayStartStep, _windDownFrom = -1, _empty, _stall;
         private string _lastFingerprint;
 
-        private void Loop()
+        /// <summary>한 걸음. 끝이면 false.</summary>
+        private bool StepOnce(int step)
         {
-            for (int step = 0; step < _settings.MaxSteps; step++)
             {
                 PlayView view = _observer.Observe(_body);
                 CheckView(view, step);
@@ -156,18 +193,33 @@ namespace Rootborn.Simulation
                     if (_day > 0) DayPassed(view);
                     _day = view.Day; _dayStartStep = step; _windDownFrom = -1;
                 }
-                if (Finished(view)) return;
+                if (Finished(view)) return false;
                 view.StepsToday = step - _dayStartStep;
+
+                // 같이 하는 방에서 자는 중(아직 깨어 있는 사람이 있다): 남이 잘 때까지 또는 07:00까지 기다린다. 하루 마감 순서의 걸음 수에 넣지 않는다.
+                if (_body.Session != null && _body.Session.IsSleepingInRoom && view.InWorld && !(_policy is ReplayPolicy))
+                {
+                    if (_windDownFrom >= 0) _windDownFrom = step;
+                    _empty = 0;
+                    PlayAction hold = view.Hold(IdleFrames);
+                    _result.Steps.Add(new PlayStep(step, view.Day, view.Minutes, view.MapId, view.TopScreen, "room-wait", hold.Key));
+                    TimeBefore waited = TimeBefore.Of(_body.Session, _body.Frames);
+                    Do(hold, view);
+                    AfterStep?.Invoke(step, hold);
+                    CheckAfter(view, step);
+                    CheckTime(waited, hold, view);
+                    return true;
+                }
 
                 if (view.Actions.Count == 0)
                 {
                     if (++_empty >= _settings.EmptyObservations) Fail("막힘: 할 수 있는 것이 없다", view);
                     _body.Wait(30);
-                    continue;
+                    return true;
                 }
                 _empty = 0;
 
-                if (_policy is ReplayPolicy replay && replay.Finished) return;
+                if (_policy is ReplayPolicy replay && replay.Finished) return false;
                 (PlayAction action, string by) = Decide(view, step);
                 if (action == null) Fail("막힘: 고를 것이 없다(" + _policy.Name + ")", view);
                 _memory.Note(view, action);
@@ -179,6 +231,7 @@ namespace Rootborn.Simulation
                 CheckAfter(view, step);
                 CheckTime(before, action, view);
             }
+            return true;
         }
 
         private bool Finished(PlayView view)
@@ -336,6 +389,7 @@ namespace Rootborn.Simulation
             {
                 long frames = _body.Frames - before.Frames;
                 int flowed = s.TimeRules == null ? 0 : (int)Math.Ceiling(frames * _body.ClockSecondsPerFrame * Rootborn.Core.Time.TimeRules.MinutesPerDay / s.TimeRules.RealSecondsPerGameDay) + 1;
+                if (!s.IsSoloRoom) flowed += RoomClockSlackMinutes; // 같이 하는 방: 받은 방의 시각으로 맞출 때 조금 앞으로 뛸 수 있다
                 if (s.Student.Focus < before.Focus || minutes - before.Minutes > flowed)
                     Fail("지친 동안 활동이 시작됐다(" + action.Key + "): 집중 " + before.Focus + " → " + s.Student.Focus + ", 시각 +" + (minutes - before.Minutes) + "분(흐른 것 " + flowed + "분)", view);
             }
@@ -344,7 +398,8 @@ namespace Rootborn.Simulation
                 bool slept = s.Student.LastNight.HasSlept;
                 int start = s.TimeRules.DayStartMinutes;
                 // 잤으면 다음 날 단추를 누른 걸음 끝에 본다. 안 잤으면 걷는 도중에 넘어갈 수 있어 늦은 쪽은 보지 않는다.
-                if (minutes < start || slept && minutes > start + MaxMinutesAfterWaking)
+                // 같이 하는 방은 시계가 흐르는 채로 다음 날 단추를 누른 때의 방 시각이다(끊겼다 늦게 들어오면 늦다 — 방의 불변식이 방의 시각과 같은지 본다).
+                if (minutes < start || slept && s.IsSoloRoom && minutes > start + MaxMinutesAfterWaking)
                     Fail("새 날의 시각: " + minutes + "분(하루 시작 " + start + "분, " + (slept ? "잤다" : "안 잤다") + ")", view);
                 if (!slept && s.Student.Energy > before.Energy)
                     Fail("자지 않고 넘긴 날에 체력이 돌아왔다: " + before.Energy + " → " + s.Student.Energy, view);
@@ -356,6 +411,9 @@ namespace Rootborn.Simulation
 
         /// <summary>새 날을 처음 본 시각이 하루 시작보다 늦어도 되는 분(넘긴 활동 시간 + 다음 날 단추를 누른 뒤 몇 프레임).</summary>
         private const int MaxMinutesAfterWaking = 90;
+
+        /// <summary>같이 하는 방에서 개인 시계가 방의 시각을 받아 앞으로 맞추는 폭(Net RemoteRoomTime.ResyncMinutes와 같다 — 방의 불변식이 따로 본다).</summary>
+        public const int RoomClockSlackMinutes = 5;
 
         private void CheckClaims(GameSession s, PlayView view)
         {
@@ -398,7 +456,7 @@ namespace Rootborn.Simulation
         {
             _result.DaysCompleted++;
             ReloadCheck(view);
-            if (_body is IFrameCost cost && view.TopScreen == null)
+            if (_body is IFrameCost cost && cost.MeasuresFrameCost && view.TopScreen == null)
             {
                 double bytes = cost.AllocatedBytesPerIdleFrame(60);
                 if (bytes > _result.MaxIdleFrameBytes) _result.MaxIdleFrameBytes = bytes;
@@ -410,10 +468,21 @@ namespace Rootborn.Simulation
         {
             GameSession live = _body.Session;
             if (live == null) return;
-            GameSession reloaded = GameSession.Start(_atlas.Definitions, GameStartSettings.FromDefinitions(_atlas.Definitions),
+            GameSession reloaded;
+            bool skipHouse = false;
+            if (_saved != null)
+            {
+                // 같이 하는 방: 방이 가진 그 사람의 세이브(+ 아직 방이 받았다고 답하지 않은 저장)로 시작한다 — 다시 들어오면 보일 진행.
+                reloaded = _saved.ReloadSaved();
+                if (reloaded == null) return;
+                skipHouse = live.SharesHouse; // 같이 쓰는 집은 방의 것이다(방의 불변식이 따로 본다)
+            }
+            else reloaded = GameSession.Start(_atlas.Definitions, GameStartSettings.FromDefinitions(_atlas.Definitions),
                 new FileSaveStore(_body.SaveRoot), _body.SlotId, null);
-            if (_body.HouseEntered.HasValue) reloaded.EnterHouse(_body.HouseEntered.Value.Grid, _body.HouseEntered.Value.Surface);
-            List<string> diff = StateSnapshot.Diff(StateSnapshot.Of(live), StateSnapshot.Of(reloaded));
+            if (_body.HouseEntered.HasValue && !skipHouse) reloaded.EnterHouse(_body.HouseEntered.Value.Grid, _body.HouseEntered.Value.Surface);
+            List<string> liveLines = StateSnapshot.Of(live), reloadedLines = StateSnapshot.Of(reloaded);
+            if (skipHouse) { liveLines.RemoveAll(StateSnapshot.IsFurniture); reloadedLines.RemoveAll(StateSnapshot.IsFurniture); }
+            List<string> diff = StateSnapshot.Diff(liveLines, reloadedLines);
             _result.Reloads++;
             if (diff.Count > 0) Fail("세이브 어긋남: 저장 뒤 새 GameSession으로 다시 읽은 상태가 다르다\n" + string.Join("\n", diff), view);
         }

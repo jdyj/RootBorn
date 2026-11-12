@@ -44,6 +44,9 @@ namespace Rootborn.Simulation
             return lines;
         }
 
+        /// <summary>집에 놓은 가구 줄이다(같이 쓰는 집은 방의 것이라 개인 다시 읽기 비교에서 뺀다).</summary>
+        public static bool IsFurniture(string line) => line.StartsWith("furniture ", StringComparison.Ordinal);
+
         private static void Values(List<string> lines, string name, string[] ids, Func<string, int> value)
         {
             foreach (string id in ids.OrderBy(x => x, StringComparer.Ordinal))

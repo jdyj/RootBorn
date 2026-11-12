@@ -145,6 +145,10 @@ namespace Rootborn.Server
             if (string.IsNullOrWhiteSpace(port)) missing.Add("--port <포트> (또는 " + PortVariable + ")");
             if (missing.Count > 0) throw new ServerOptionsException("빠진 값:" + Environment.NewLine + "  " + string.Join(Environment.NewLine + "  ", missing), missing);
 
+            // 슬롯은 세이브 폴더 안의 폴더 이름 하나다. 슬롯 잠금이 저장소의 경로 검사보다 먼저 그 폴더를 만들므로 여기서 먼저 거절한다.
+            if (!Rootborn.Core.Save.SaveSlotMetadata.IsSafeSlotId(slot))
+                throw new ServerOptionsException("--slot 은 영문자·숫자·'_'·'-'만 쓴 폴더 이름 하나다: " + slot);
+
             o.SaveRoot = saveRoot;
             o.SaveSlot = slot;
             if (!IPAddress.TryParse(bind, out o.BindAddress))

@@ -29,4 +29,12 @@ namespace Rootborn.Core.Save
         /// <summary>이 프로그램이 아는 그 모양의 가장 높은 버전. 이보다 높은 파일은 읽지 않는다.</summary>
         int KnownVersion { get; }
     }
+
+    /// <summary>
+    /// 저장소가 "이 프로그램이 아는 것보다 새 형식의 파일"이라 읽기를 거절할 때 던지는 예외에 붙이는 표시.
+    /// 읽기 실패를 기본값으로 받아 주는 곳(설정)이 깨진 파일과 더 새 파일을 가릴 수 있게 한다: 더 새 파일은 덮어쓰지 않는다.
+    /// </summary>
+    public interface ISaveFileTooNew
+    {
+    }
 }

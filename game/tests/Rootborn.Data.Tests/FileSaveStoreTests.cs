@@ -105,6 +105,32 @@ namespace Rootborn.Data.Tests
             Assert.That(File.ReadAllText(path), Is.EqualTo("{\"Version\":99,\"Quests\":[]}"));
         }
 
+        [TestCase("World")]
+        [TestCase("QuestChains")]
+        [TestCase("FurnitureUnlocks")]
+        [TestCase("Wallet")]
+        public void NewerVersionOfAShapeInsideTheFile_Throws_TooNew(string part)
+        {
+            // 스냅샷 안에 든 모양(월드 상태, 체인, 가구 해금, 지갑)도 저마다 형식 버전이 있다. 맨 위 버전만 보면
+            // 안쪽 모양의 버전만 올린 새 프로그램의 세이브를 옛 프로그램이 읽고 모르는 필드를 버린 채 다시 쓴다.
+            var path = _dir.Write(Path.Combine("slot-0", "snapshot.json"), "{\"Version\":3,\"" + part + "\":{\"Version\":99}}");
+
+            var e = Assert.Throws<SaveFileTooNewException>(
+                () => _store.TryRead<Rootborn.Core.Careers.AdultCareerSnapshotSaveData>("slot-0", "snapshot.json", out _));
+
+            Assert.That(e.FileVersion, Is.EqualTo(99));
+            Assert.That(File.ReadAllText(path), Does.Contain("99"), "읽지 못한 파일은 그대로 둔다");
+        }
+
+        [Test]
+        public void KnownVersionsInsideTheFile_Read()
+        {
+            _dir.Write(Path.Combine("slot-0", "snapshot.json"), "{\"Version\":3,\"World\":{\"Version\":1},\"Wallet\":{\"Version\":0},\"QuestChains\":null}");
+            Assert.That(_store.TryRead<Rootborn.Core.Careers.AdultCareerSnapshotSaveData>("slot-0", "snapshot.json", out var read), Is.True);
+            Assert.That(read.World, Is.Not.Null);
+            Assert.That(read.QuestChains, Is.Null);
+        }
+
         [Test]
         public void FileWithoutVersion_ReadsAsZero_AndIsWrittenAsKnownVersion()
         {

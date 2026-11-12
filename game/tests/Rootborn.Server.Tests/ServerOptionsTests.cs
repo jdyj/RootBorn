@@ -102,6 +102,19 @@ namespace Rootborn.Server.Tests
             StringAssert.Contains("wallet", e.Message, "아는 이름을 알려 준다");
         }
 
+        [TestCase("../outside")]
+        [TestCase("..\\outside")]
+        [TestCase("a/b")]
+        [TestCase("slot 1")]
+        [TestCase("C:room")]
+        public void Slot_MustBeOneSafeFolderName_BeforeAnythingIsCreated(string slot)
+        {
+            // 슬롯 잠금이 세이브 폴더 검사보다 먼저 폴더를 만든다. 잘못된 이름은 인자 단계에서 거절해 세이브 폴더 밖에 아무것도 만들지 않는다.
+            var args = new[] { "--root", _root, "--save-root", Path.Combine(_root, "saves"), "--slot", slot, "--bind", "127.0.0.1", "--port", "0" };
+            var error = Assert.Throws<ServerOptionsException>(() => ServerOptions.Resolve(args, Env()));
+            Assert.That(error.Message, Does.Contain("--slot"));
+        }
+
         [Test]
         public void DayCopies_DefaultsToThree_AndMustNotBeNegative()
         {

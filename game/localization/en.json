@@ -97,6 +97,8 @@
   "ui.save.new": "New story",
   "ui.save.saved-character": "Saved character",
   "ui.save.title": "Choose your story",
+  "ui.save.unreadable": "Unreadable story",
+  "ui.save.unreadable-description": "This story can't be read. Its files were left as they are.",
   "ui.career-candidate.open": "Careers",
   "ui.career-interest.open": "My Dream",
   "daily-plan.assign-refused": "This plan can't go in this slot.",

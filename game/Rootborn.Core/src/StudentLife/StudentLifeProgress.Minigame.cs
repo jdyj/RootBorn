@@ -2,7 +2,8 @@ using System;
 
 namespace Rootborn.Core.StudentLife
 {
-    public enum StudentMinigameKind { Practice, PartTimeWork }
+    // 세이브 파일에 숫자로 쓰인다(PendingStudentMinigameSaveData.Kind). 숫자를 바꾸지 않고 새 값은 끝에 더한다(SavedEnumValuesTests).
+    public enum StudentMinigameKind { Practice = 0, PartTimeWork = 1 }
 
     /// <summary>시작했지만 아직 정산하지 않은 미니게임 한 판. 세이브 파일에 쓰는 모양이라 필드 이름을 바꾸지 않는다.</summary>
     [Serializable]

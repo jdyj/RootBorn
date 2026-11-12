@@ -28,6 +28,8 @@ namespace Rootborn.Simulation
     /// <summary>프레임 비용을 잴 수 있는 몸(창 없는 몸).</summary>
     public interface IFrameCost
     {
+        /// <summary>잴 수 있다(같이 하는 방의 몸은 한 프레임에 방의 틱과 다른 사람의 프레임까지 돌아 재지 않는다).</summary>
+        bool MeasuresFrameCost { get; }
         double AllocatedBytesPerIdleFrame(int frames);
     }
 

@@ -45,20 +45,58 @@ namespace Rootborn.Simulation.Headless
         private bool _pointerDown;
         private int _eventCounter;
 
-        public HeadlessBody(PlayAtlas atlas, string saveRoot = null)
+        private readonly IHeadlessSeat _seat;
+        private bool _inSeatFrame;
+
+        /// <param name="seat">같이 하는 방의 자리(없으면 혼자 하기). 있으면 슬롯을 고를 때 방에 들어간 게임 한 판을 받고, 프레임마다 방을 돌린다.</param>
+        public HeadlessBody(PlayAtlas atlas, string saveRoot = null, IHeadlessSeat seat = null)
         {
             _atlas = atlas ?? throw new ArgumentNullException(nameof(atlas));
             _data = Path.Combine(atlas.RepoRoot, "data");
+            _seat = seat;
             _ownsSaves = saveRoot == null;
             SaveRoot = saveRoot ?? Path.Combine(Path.GetTempPath(), "rootborn-sim-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(SaveRoot);
             Text = GameText.LoadMerged(GameText.DefaultBaseLanguage, Path.Combine(_data, "localization"), Path.Combine(atlas.RepoRoot, "game", "localization"));
             Text.Language = GameText.DefaultBaseLanguage;
+            OpenStart();
+        }
+
+        private void OpenStart()
+        {
             var store = new FileSaveStore(SaveRoot);
             var menu = new StartMenu(new SaveSlots(store, DeleteSlotFolder), CreatorLooks.Load(_data), new BlankPreviewArt(), Enter, () => { }, () => FixedUtcTicks, () => FixedTickCount);
             Screens = NewStack(null);
             Screens.Open(ScreenCatalog.SaveSlotSelect, argument: menu);
             Settle();
+        }
+
+        /// <summary>
+        /// 방과 끊겼으면 시작 화면으로 돌아간다(Host RoomConnection.Lost → 시작 화면). 같이 하는 방의 달리는 쪽이 걸음 사이에 부른다
+        /// (걸음 도중에 몸이 사라지지 않게 — Host는 그 프레임에 돌아간다). 돌아갔으면 true.
+        /// </summary>
+        public bool ReturnToStartIfLost()
+        {
+            if (_seat == null || Session == null || _seat.Connected) return false;
+            Session = null;
+            _world = null;
+            _slot = null;
+            _placement = null;
+            _houseMap = null;
+            _featuresMap = null;
+            _furnitureDirty = true;
+            HouseEntered = null;
+            OpenStart();
+            ScreenOpened?.Invoke(ScreenCatalog.SaveSlotSelect);
+            return true;
+        }
+
+        /// <summary>다른 사람이 걷는 동안 이 몸이 가만히 선 한 프레임(같이 하는 방이 부른다 — 방을 다시 돌리지 않는다).</summary>
+        public void IdleFrame()
+        {
+            _inSeatFrame = true;
+            try { Frame(); }
+            finally { _inSeatFrame = false; }
         }
 
         public ScreenStack Screens { get; private set; }
@@ -108,8 +146,11 @@ namespace Rootborn.Simulation.Headless
             var slot = new WorldSlot(store, entry.SlotId, WorldTravelData.From(_atlas.Definitions));
             WorldSlotStart start = slot.Begin(FixedUtcTicks);
             if (!start.Ok) return false;
-            GameSession session = GameSession.Start(_atlas.Definitions, GameStartSettings.FromDefinitions(_atlas.Definitions), store, entry.SlotId, SaveFileNames.DefaultPlayerId,
-                action => action + "-" + (++_eventCounter).ToString(CultureInfo.InvariantCulture));
+            Func<string, string> newKey = action => action + "-" + (++_eventCounter).ToString(CultureInfo.InvariantCulture);
+            GameSession session = _seat != null ? _seat.StartSession(entry.SlotId, newKey)
+                : GameSession.Start(_atlas.Definitions, GameStartSettings.FromDefinitions(_atlas.Definitions), store, entry.SlotId, SaveFileNames.DefaultPlayerId, newKey);
+            if (session == null) return false; // 아직 방에 들어가 있지 않다(시작 화면에 머문다)
+            session.Changed += topic => { if (topic == GameChangeTopics.Furniture || topic == GameChangeTopics.Storage) _furnitureDirty = true; };
             _slot = slot;
             SlotId = entry.SlotId;
             Session = session;
@@ -123,7 +164,7 @@ namespace Rootborn.Simulation.Headless
                 if (s is FurniturePlacementScreen p) { _placement = p; p.Attach(new FurnitureArt(_data), _placementView); }
             };
             DayBaseline.For(session);
-            session.Changed += topic => { if (topic == ChangeTopics.Furniture || topic == ChangeTopics.World) RefreshFurniture(); }; // Host ConnectFurniture와 같다
+            session.Changed += topic => { if (Session == session && (topic == ChangeTopics.Furniture || topic == ChangeTopics.World)) RefreshFurniture(); }; // Host ConnectFurniture와 같다(방과 끊겨 시작 화면으로 돌아간 뒤의 옛 판 알림은 버린다)
             SyncHouse();
             _world.AttachHouseFurniture(session);
             return true;
@@ -155,10 +196,24 @@ namespace Rootborn.Simulation.Headless
                 HouseEntered = (room.Grid, surface);
             }
             if (room == null) Screens.Close(ScreenCatalog.FurniturePlacement);
+            _furnitureDirty = true; // 맵이 바뀌었다: 놓인 상자 후보를 이 맵 기준으로 다시(가구 방 밖이면 비운다 — Host RefreshFurniture는 맵이 바뀔 때마다 SetPlacedFurniture)
             RefreshFurniture();
         }
 
-        private void RefreshFurniture() => _world.ApplyHouseFurniture(Session);
+        private bool _furnitureDirty = true;
+
+        /// <summary>
+        /// 가구가 막는 칸은 플레이어가 어느 맵에 있든 가구 방의 걷는 격자에 넣는다(Host와 같은 HouseFurnitureBlocking — 막힌 칸이 실제로 바뀐 맵만 NPC 길을 다시 만든다).
+        /// 놓인 상자의 상호작용 후보는 가구·상자가 바뀌었거나 맵이 바뀌었을 때만 다시 만든다(Host WorldScreen.SetPlacedFurniture).
+        /// </summary>
+        private void RefreshFurniture()
+        {
+            _world.ApplyHouseFurniture(Session);
+            if (!_furnitureDirty) return;
+            _furnitureDirty = false;
+            FurnitureRoom room = _world.Room;
+            _world.SetPlacedStorage(room != null ? Session.House?.Placed : null, Session.IsStorage); // 놓인 상자마다 상호작용 후보(Host WorldScreen.SetPlacedFurniture)
+        }
 
         // ---------- 한 프레임 ----------
 
@@ -176,6 +231,7 @@ namespace Rootborn.Simulation.Headless
             {
                 if (key.HasValue) s.Key(key.Value, false);
                 Frames++;
+                if (_seat != null && !_inSeatFrame) _seat.AfterFrame(this);
                 return;
             }
             if (key.HasValue) s.Key(key.Value, false);
@@ -185,8 +241,11 @@ namespace Rootborn.Simulation.Headless
             bool blocked = s.MovementBlockedWhile(false);
             string before = _world.Session.Map.Id;
             _world.Update(blocked ? 0 : dx, blocked ? 0 : dy, FrameSeconds);
+            // 벽 뚫기는 걸음 바로 뒤에 본다. 이 프레임에 가구가 몸 밑에 놓이면(아래 RefreshFurniture) 다음 걸음 앞에 비켜난다(Core WorldSession).
+            if (_world.Session.Map.Id == before && _world.Session.Map.Collision.AnyBlocked(_world.Session.Walker.Box)) CollisionViolations++;
             s.EnterMap(_world.Session.Map.Id, Features());
             SyncHouse();
+            if (_furnitureDirty) RefreshFurniture(); // 가구가 바뀌었다(같이 쓰는 집이면 남이 놓았을 수도 — Host는 바뀜 알림에서)
             if (_placement != null && _placement.IsOpen)
             {
                 bool overUi = s.Tree.HitTest(_pointerX, _pointerY) != null;
@@ -201,7 +260,7 @@ namespace Rootborn.Simulation.Headless
                 if (happened.HasValue) s.Interaction(happened.Value);
             }
             Frames++;
-            if (_world.Session.Map.Id == before && _world.Session.Map.Collision.AnyBlocked(_world.Session.Walker.Box)) CollisionViolations++;
+            if (_seat != null && !_inSeatFrame) _seat.AfterFrame(this); // Host: 월드 프레임 뒤 방 접속(UpdateInRoom), 내 PC의 방이면 그 틱
         }
 
         /// <summary>
@@ -276,6 +335,8 @@ namespace Rootborn.Simulation.Headless
         /// 어느 NPC든 어슬렁 걸음이 끝난 프레임(걷기 ↔ 쉼이 바뀐다 — Core 머무는 행동이 다음 걸음의 길을 만든다)도 빼고 센다.
         /// 그 프레임의 가장 큰 값은 <see cref="MaxBytesInNpcStepFrame"/>에 남는다.
         /// </summary>
+        public bool MeasuresFrameCost => _seat == null;
+
         public double AllocatedBytesPerIdleFrame(int frames)
         {
             for (int i = 0; i < 5; i++) Frame(); // 처음 한 번 만드는 것(캐시)은 뺀다
@@ -402,6 +463,20 @@ namespace Rootborn.Simulation.Headless
             if (!_ownsSaves) return;
             try { Directory.Delete(SaveRoot, true); } catch (IOException) { } catch (UnauthorizedAccessException) { }
         }
+    }
+
+    /// <summary>
+    /// 같이 하는 방의 자리(창 없는 몸 하나가 방에 들어가는 길 — Host RoomConnection과 HostGame.StartSession·UpdateRoom이 하는 일).
+    /// 구현은 같은 프로세스 안 전송 위의 방(RoomPlay의 RoomSeat).
+    /// </summary>
+    public interface IHeadlessSeat
+    {
+        /// <summary>시작 화면에서 슬롯을 골랐다: 방에 들어간 게임 한 판(방의 시계·공유 조각·손님 저장). 아직 방에 들어가 있지 않으면 null.</summary>
+        GameSession StartSession(string slotId, Func<string, string> newEventKey);
+        /// <summary>몸이 한 프레임을 돈 뒤(자기 자리 보내기, 받은 것 처리, 방의 틱, 다른 사람의 프레임).</summary>
+        void AfterFrame(HeadlessBody body);
+        /// <summary>방과 이어져 있다.</summary>
+        bool Connected { get; }
     }
 
     /// <summary>캐릭터 미리 보기 그림이 없는 시작 화면(창 없는 몸은 그림을 그리지 않는다).</summary>

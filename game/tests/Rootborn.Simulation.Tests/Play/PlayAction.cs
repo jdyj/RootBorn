@@ -83,7 +83,16 @@ namespace Rootborn.Simulation
         /// <summary>오늘 이 날이 몇 걸음째인가(달리는 쪽이 센다).</summary>
         public int StepsToday;
 
-        public const string WaitPrefix = "wait:", PointPrefix = "point:", IdlePrefix = "idle:";
+        public const string WaitPrefix = "wait:", PointPrefix = "point:", IdlePrefix = "idle:", HoldPrefix = "hold:", TypePrefix = "type:";
+
+        /// <summary>상자인 가구(데이터 FurnitureStorageDefinition이 가리키는 가구 id — 정책이 검색 칸에 친다). 엔티티 id로 분기하는 데 쓰지 않는다.</summary>
+        public readonly List<string> StorageFurniture = new List<string>(2);
+
+        /// <summary>그 글자 칸에 글자를 친다(기록·재생의 이름에 글자가 든다). 그 칸이 없으면 null.</summary>
+        public PlayAction TypeInto(string screen, string element, string text) => Find(TypePrefix + screen + "/" + element + "=" + text);
+
+        /// <summary>떠 있는 화면 그대로 N프레임 기다리기(같이 하는 방에서 자는 중일 때 — 월드에 있을 때만).</summary>
+        public PlayAction Hold(int frames) => Find(HoldPrefix + Math.Max(1, frames).ToString(CultureInfo.InvariantCulture));
 
         /// <summary>
         /// 이름으로 지금 할 수 있는 일을 찾는다. 관찰이 내놓은 것 외에 두 모양을 만들어 준다(기록·재생이 같은 일을 다시 고르게):
@@ -105,6 +114,20 @@ namespace Rootborn.Simulation
                 // 월드에서 아무것도 누르지 않고 서 있기(시간이 흐르기를 기다린다 — 밤샘하는 플레이어가 지쳐서 할 것이 없을 때).
                 if (!InWorld || TopScreen != null || !int.TryParse(key.Substring(IdlePrefix.Length), NumberStyles.Integer, CultureInfo.InvariantCulture, out int idle) || idle < 1) return null;
                 return new PlayAction { Kind = PlayActionKind.Wait, Key = key, Category = "idle", Frames = idle };
+            }
+            if (key.StartsWith(TypePrefix, StringComparison.Ordinal))
+            {
+                int eq = key.IndexOf('=');
+                if (eq < 0) return null;
+                PlayAction field = Find("text:" + key.Substring(TypePrefix.Length, eq - TypePrefix.Length));
+                if (field == null) return null;
+                return new PlayAction { Kind = PlayActionKind.Type, Key = key, Category = "text", Screen = field.Screen, Element = field.Element, X = field.X, Y = field.Y, Text = key.Substring(eq + 1) };
+            }
+            if (key.StartsWith(HoldPrefix, StringComparison.Ordinal))
+            {
+                // 같이 하는 방에서 남을 기다리기(자는 중 — 다른 사람이 아직 깨어 있다): 떠 있는 화면 그대로 시간이 흐르기를 기다린다.
+                if (!InWorld || !int.TryParse(key.Substring(HoldPrefix.Length), NumberStyles.Integer, CultureInfo.InvariantCulture, out int hold) || hold < 1) return null;
+                return new PlayAction { Kind = PlayActionKind.Wait, Key = key, Category = "hold", Frames = hold };
             }
             if (key.StartsWith(PointPrefix, StringComparison.Ordinal))
             {

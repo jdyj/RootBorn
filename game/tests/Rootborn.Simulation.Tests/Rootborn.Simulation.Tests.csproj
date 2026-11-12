@@ -10,6 +10,8 @@
     <ProjectReference Include="../../Rootborn.Screens/Rootborn.Screens.csproj" />
     <ProjectReference Include="../../Rootborn.World/Rootborn.World.csproj" />
     <ProjectReference Include="../../Rootborn.Data/Rootborn.Data.csproj" />
+    <!-- 같이 하는 방(Rooms/): 데디케이티드 서버와 같은 방(RoomServer, 손님 세이브 폴더, 집 규칙)과 같은 프로세스 안 전송. -->
+    <ProjectReference Include="../../Rootborn.Server/Rootborn.Server.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageReference Include="NUnit" Version="3.14.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />

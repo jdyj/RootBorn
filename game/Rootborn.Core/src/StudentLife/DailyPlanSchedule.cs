@@ -4,7 +4,8 @@ using System.Collections.Generic;
 namespace Rootborn.Core.StudentLife
 {
     [Serializable]
-    public enum DailyPlanActivityKind { LocationActivity, Practice, PartTimeWork }
+    // 세이브 파일에 숫자로 쓰인다(DailyPlanSlotSaveData.MatchedActivityKind). 숫자를 바꾸지 않고 새 값은 끝에 더한다(SavedEnumValuesTests).
+    public enum DailyPlanActivityKind { LocationActivity = 0, Practice = 1, PartTimeWork = 2 }
 
     /// <summary>세이브 파일에 쓰는 일과 칸 하나. 필드 이름은 기존 세이브 파일과 같아야 한다.</summary>
     [Serializable]

@@ -357,6 +357,8 @@ namespace Rootborn.Simulation
             if (view.InWorld) return null;
             PlayAction a = view.Find("button:" + ScreenCatalog.SaveSlotSelect + "/" + SaveSlotScreen.NewGameId(0));
             if (a != null) return a;
+            // 같이 하는 방에서 끊겼다 다시 들어갈 때: 첫 칸에 이미 이야기가 있으면 이어 하기.
+            if ((a = view.Find("button:" + ScreenCatalog.SaveSlotSelect + "/" + SaveSlotScreen.ContinueId(0))) != null) return a;
             if (memory.Flags.Add("start.name") && (a = view.Find("text:" + ScreenCatalog.CharacterCreator + "/" + CharacterCreatorScreen.NameFieldId)) != null) return a;
             return view.Find("button:" + ScreenCatalog.CharacterCreator + "/" + CharacterCreatorScreen.ConfirmId);
         }

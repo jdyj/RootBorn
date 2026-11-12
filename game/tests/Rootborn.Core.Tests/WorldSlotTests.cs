@@ -132,6 +132,55 @@ namespace Rootborn.Core.Tests
         }
 
         [Test]
+        public void WORLD_SLOT_020_SlotInfoWithoutASlotId_IsRefused_NotRewritten()
+        {
+            // Unity 판과 전에는 슬롯 정보를 새로 만들어 덮어썼다(시드·겉모습이 바뀌고 진행 파일은 그대로 이어졌다).
+            var store = new InMemorySaveStore();
+            store.Put("slot-0", SaveFileNames.Metadata, new SaveSlotMetadata { SlotId = "", DisplayName = "하늘", WorldSeed = 77 });
+            WorldSlotStart start = new WorldSlot(store, "slot-0", Catalog()).Begin(Now);
+            Assert.That(start.Ok, Is.False);
+            Assert.That(start.Problem, Does.Contain(SaveFileNames.Metadata));
+            Assert.That(store.Writes, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void WORLD_SLOT_021_ProgressWithoutSlotInfo_IsRefused_NotStartedOver()
+        {
+            var store = new InMemorySaveStore();
+            store.Put("slot-0", SaveFileNames.WorldProgress, new WorldProgressSaveData { Version = 1, SaveSlot = "slot-0", CurrentScene = "Town", CurrentEntryPointId = "town-home-entry" });
+            WorldSlotStart start = new WorldSlot(store, "slot-0", Catalog()).Begin(Now);
+            Assert.That(start.Ok, Is.False);
+            Assert.That(start.Problem, Does.Contain(SaveFileNames.Metadata));
+            Assert.That(store.Writes, Is.EqualTo(0), "슬롯 정보를 새로 써서 이어 붙이지 않는다");
+        }
+
+        [Test]
+        public void WORLD_SLOT_022_SavedPlaceNoLongerInTheCatalog_StartsAtTheNewGamePlace_AndSaysSo()
+        {
+            // 맵을 새로 그리면 저장된 장면·도착 지점이 사라질 수 있다. 전에는 그 슬롯이 다시는 열리지 않았다.
+            var store = new InMemorySaveStore();
+            store.Put("slot-0", SaveFileNames.Metadata, new SaveSlotMetadata { SlotId = "slot-0", DisplayName = "하늘", CreatedAtUtcTicks = 5 });
+            store.Put("slot-0", SaveFileNames.WorldProgress, new WorldProgressSaveData { Version = 1, SaveSlot = "slot-0", CurrentScene = "OldTown", CurrentEntryPointId = "old-gate" });
+            WorldSlotStart start = new WorldSlot(store, "slot-0", Catalog()).Begin(Now);
+            Assert.That(start.Ok, Is.True, start.Problem);
+            Assert.That(start.NewGame, Is.False, "진행은 그대로 이어 간다");
+            Assert.That(start.Entry, Is.EqualTo(new WorldEntryPoint("House", "house-entry")));
+            Assert.That(start.MovedFrom, Is.EqualTo("OldTown/old-gate"));
+            Assert.That(start.Metadata.CreatedAtUtcTicks, Is.EqualTo(5));
+            Assert.That(store.Writes, Is.EqualTo(0), "시작은 쓰지 않는다(도착할 때 새 자리가 기록된다)");
+
+            store.Put("slot-0", SaveFileNames.WorldProgress, new WorldProgressSaveData { Version = 1, SaveSlot = "slot-0", CurrentScene = "Town", CurrentEntryPointId = "gone" });
+            start = new WorldSlot(store, "slot-0", Catalog()).Begin(Now);
+            Assert.That(start.Ok, Is.True, start.Problem);
+            Assert.That(start.MovedFrom, Is.EqualTo("Town/gone"), "장면은 있고 도착 지점만 없어도 같다");
+
+            store.Put("slot-0", SaveFileNames.WorldProgress, new WorldProgressSaveData { Version = 1, SaveSlot = "slot-0", CurrentScene = "Town", CurrentEntryPointId = "town-shop-entry" });
+            start = new WorldSlot(store, "slot-0", Catalog()).Begin(Now);
+            Assert.That(start.MovedFrom, Is.Null, "목록에 있는 자리는 그대로");
+            Assert.That(start.Entry, Is.EqualTo(new WorldEntryPoint("Town", "town-shop-entry")));
+        }
+
+        [Test]
         public void WORLD_SLOT_009_MetadataWithoutCharacterPartsGetsEmptyOnes()
         {
             var store = new InMemorySaveStore();

@@ -97,6 +97,8 @@
   "ui.save.new": "새 이야기",
   "ui.save.saved-character": "저장된 인물",
   "ui.save.title": "이어갈 이야기 선택",
+  "ui.save.unreadable": "읽을 수 없는 기록",
+  "ui.save.unreadable-description": "기록을 읽을 수 없어요. 파일은 그대로 두었어요.",
   "ui.career-candidate.open": "진로",
   "ui.career-interest.open": "장래희망",
   "daily-plan.assign-refused": "이 칸에는 이 계획을 넣을 수 없어요.",

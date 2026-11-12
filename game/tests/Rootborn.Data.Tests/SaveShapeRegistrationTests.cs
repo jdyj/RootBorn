@@ -59,6 +59,11 @@ namespace Rootborn.Data.Tests
             Names.RoomPiece(Rootborn.Core.Room.RoomWorldFlags.PieceName),
             Names.RoomPiece(Rootborn.Core.Room.RoomChests.PieceName),
             Names.RoomOutbox(DefaultPlayer),
+            Names.RoomPiece(Rootborn.Core.Room.RoomHouse.PieceName),
+            Names.StudentClock(DefaultPlayer),
+            Names.Metadata,
+            Names.WorldProgress,
+            Names.Wearables(DefaultPlayer),
         };
 
         [TestCaseSource(nameof(DefaultPlayerFiles))]
@@ -82,6 +87,8 @@ namespace Rootborn.Data.Tests
             {
                 // Unity 판에도 Version이 있던 모양은 그 값과 뜻을 그대로 둔다(스냅샷은 처음부터 2).
                 if (shape == typeof(AdultCareerSnapshotSaveData)) continue;
+                // 옷 파일도 Unity 판부터 소문자 version 필드가 있고 기본값이 1이다.
+                if (shape == typeof(Rootborn.Core.Characters.WearableSaveData)) continue;
                 var instance = (IVersionedSave)Activator.CreateInstance(shape);
                 Assert.That(instance.Version, Is.EqualTo(SaveVersion.Unity), $"{shape.Name}: 새로 만든 모양(=버전 없는 파일)은 0이어야 한다");
                 Assert.That(instance.KnownVersion, Is.GreaterThanOrEqualTo(SaveVersion.Current), shape.Name);

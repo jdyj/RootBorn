@@ -17,7 +17,7 @@ namespace Rootborn.Screens.Start
         public string SlotId { get; }
         /// <summary>읽힌 슬롯 정보. 없거나 읽을 수 없으면 null.</summary>
         public SaveSlotMetadata Metadata { get; }
-        /// <summary>슬롯 정보 파일이 있는데 읽을 수 없다(깨짐·더 새 버전). Unity 판처럼 빈 슬롯으로 보인다.</summary>
+        /// <summary>슬롯 정보 파일이 있는데 읽을 수 없다(깨짐·더 새 버전). 빈 슬롯이 아니다: 새 이야기를 쓰지 않고, 지우려면 확인을 거친다.</summary>
         public bool Unreadable { get; }
         public bool Exists => Metadata != null;
     }
@@ -52,7 +52,7 @@ namespace Rootborn.Screens.Start
             return false;
         }
 
-        /// <summary>UI 슬롯 전부(Unity ListUiSlots). 읽을 수 없는 슬롯 정보는 빈 슬롯으로(Unity LoadMetadata가 null을 돌려주던 것과 같다).</summary>
+        /// <summary>UI 슬롯 전부(Unity ListUiSlots). 읽을 수 없는 슬롯 정보는 Unreadable로 알린다(Unity 판은 빈 슬롯으로 보였다).</summary>
         public IReadOnlyList<SaveSlotSummary> List()
         {
             var result = new List<SaveSlotSummary>(MaxUiSlots);
@@ -101,14 +101,16 @@ namespace Rootborn.Screens.Start
         }
 
         /// <summary>
-        /// 이야기가 없는 슬롯에 새 이야기를 쓴다(Unity StartNewSlot): 읽히는 이야기가 있으면 false이고 아무것도 바꾸지 않는다.
-        /// 없거나 읽을 수 없으면 슬롯에 남은 파일을 먼저 지우고 슬롯 정보를 쓴다.
+        /// 이야기가 없는 슬롯에 새 이야기를 쓴다(Unity StartNewSlot): 읽히는 이야기가 있거나 슬롯 정보를 읽을 수 없으면 false이고 아무것도 바꾸지 않는다
+        /// (Unity 판은 읽을 수 없는 슬롯을 지우고 새로 썼다 — 깨졌거나 더 새 버전인 기록이 하루 사본까지 사라졌다).
+        /// 슬롯 정보가 없으면 슬롯에 남은 파일을 먼저 지우고 슬롯 정보를 쓴다.
         /// </summary>
         public bool StartNewSlot(SaveSlotMetadata metadata)
         {
             if (metadata == null) throw new ArgumentNullException(nameof(metadata));
             if (!IsUiSlot(metadata.SlotId)) return false;
-            if (Read(metadata.SlotId).Exists) return false;
+            SaveSlotSummary now = Read(metadata.SlotId);
+            if (now.Exists || now.Unreadable) return false;
             _deleteSlotFolder(metadata.SlotId);
             _store.Write(metadata.SlotId, SaveFileNames.Metadata, metadata);
             return true;
