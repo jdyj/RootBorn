@@ -49,6 +49,24 @@ namespace Rootborn.World
         /// 게임은 다른 값과 똑같이 쓴다. 문서와 검사가 셀 수 있게 따로 모아 둔다.
         /// </summary>
         public readonly List<TemporaryLink> Temporary = new List<TemporaryLink>();
+        /// <summary>건물 부지(lots). 건물 그림·칸은 건물 목록(buildings.json)에 있고, 맵을 만들 때 지금 단계의 건물을 얹는다.</summary>
+        public readonly List<LotEntry> Lots = new List<LotEntry>();
+    }
+
+    /// <summary>
+    /// 맵의 건물 부지 하나: 이름, 건물 id, 건물 문이 올 칸(기준점), 예약한 칸, 단계를 읽는 곳, 문이 이어지는 곳(없으면 열리지 않는 배경 건물),
+    /// 문이 열리는 시간(없으면 맵의 doorOpenSeconds, 그것도 없으면 Core 기본값). 좌표는 그림 기준 칸(줄 밀기와 무관).
+    /// </summary>
+    public sealed class LotEntry
+    {
+        public string Name, Building;
+        public CellPos DoorCell;
+        public CellRect Cells;
+        public LotLevel Level = new LotLevel();
+        public TravelTarget? To;
+        public float? OpenSeconds;
+
+        public BuildingLot ToLot() => new BuildingLot(Name, Cells, DoorCell);
     }
 
     /// <summary>임시 연결 하나: 무엇(종류와 이름)과 왜.</summary>
@@ -153,9 +171,32 @@ namespace Rootborn.World
                     entry.Spawns[spawn.Name] = (at[0].GetSingle(), at[1].GetSingle());
                     NoteTemporary(entry, spawn.Value, "spawn", spawn.Name);
                 }
+                if (m.TryGetProperty("lots", out JsonElement lots))
+                    foreach (JsonElement l in lots.EnumerateArray()) entry.Lots.Add(ParseLot(l, sourceName));
                 catalog.Maps.Add(entry);
             }
             return catalog;
+        }
+
+        private static LotEntry ParseLot(JsonElement l, string sourceName)
+        {
+            JsonElement door = l.GetProperty("doorCell"), cells = l.GetProperty("cells"), level = l.GetProperty("level");
+            var lot = new LotEntry
+            {
+                Name = Required(l, "name", sourceName),
+                Building = Required(l, "building", sourceName),
+                DoorCell = new CellPos(door[0].GetInt32(), door[1].GetInt32()),
+                Cells = new CellRect(cells[0].GetInt32(), cells[1].GetInt32(), cells[2].GetInt32(), cells[3].GetInt32()),
+                Level = new LotLevel
+                {
+                    Kind = Required(level, "kind", sourceName),
+                    Key = level.TryGetProperty("key", out JsonElement key) ? key.GetString() ?? string.Empty : string.Empty,
+                    Value = level.TryGetProperty("value", out JsonElement value) ? value.GetInt32() : 1,
+                },
+                OpenSeconds = l.TryGetProperty("openSeconds", out JsonElement s) ? s.GetSingle() : (float?)null,
+            };
+            if (l.TryGetProperty("to", out JsonElement to)) lot.To = new TravelTarget(Required(to, "map", sourceName), Required(to, "spawn", sourceName));
+            return lot;
         }
 
         private static void NoteTemporary(MapEntry entry, JsonElement e, string kind, string name)

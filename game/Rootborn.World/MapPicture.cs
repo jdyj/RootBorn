@@ -77,6 +77,15 @@ namespace Rootborn.World
             return picture;
         }
 
+        /// <summary>앞뒤를 가리는 그림 하나를 정렬을 지키며 끼운다(같은 발 위치면 이미 있는 것 뒤 — 원본 순서). 넣은 자리를 돌려준다.</summary>
+        public int AddSorted(SpriteDraw draw)
+        {
+            int at = ActorIndex(draw.SortY);
+            Sorted.Insert(at, draw);
+            if (draw.Texture != null) Textures.Add(draw.Texture);
+            return at;
+        }
+
         /// <summary>발 위치가 actorSortY인 캐릭터를 끼워 넣을 자리: 이 앞의 그림은 캐릭터보다 먼저(뒤에) 그린다. 같으면 캐릭터가 앞.</summary>
         public int ActorIndex(float actorSortY)
         {

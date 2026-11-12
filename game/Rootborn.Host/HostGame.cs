@@ -216,7 +216,7 @@ namespace Rootborn.Host
             if (_options.SaveSlot != null && _options.JoinAddress == null) { StartFromSlotArgument(); return; } // --join과 함께면 시작 화면에서 들어가기 창으로
             if (_options.WorldActive)
             {
-                World = new WorldScreen(GraphicsDevice, _options);
+                World = new WorldScreen(GraphicsDevice, _options, () => Session);
                 StartScreens();
                 SetTree(Screens.Tree);
             }
@@ -383,7 +383,7 @@ namespace Rootborn.Host
             WorldScreen world = null;
             try
             {
-                world = new WorldScreen(GraphicsDevice, _options);
+                world = new WorldScreen(GraphicsDevice, _options, () => Session);
                 World = world;
                 StartScreens();
             }
@@ -421,7 +421,7 @@ namespace Rootborn.Host
         {
             try
             {
-                World = new WorldScreen(GraphicsDevice, _options);
+                World = new WorldScreen(GraphicsDevice, _options, () => Session);
                 StartScreens();
                 SetTree(Screens.Tree);
             }

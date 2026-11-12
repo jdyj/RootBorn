@@ -56,6 +56,29 @@ namespace Rootborn.Core.World
 
         public DoorArea OpeningDoor => _doors?.Opening;
 
+        /// <summary>열리는 문의 진행도(0~1, DoorWatch.Progress). 열리는 문이 없으면 0.</summary>
+        public float OpeningProgress => _doors?.Progress ?? 0f;
+
+        /// <summary>
+        /// 서 있는 맵을 다시 읽는다(부지의 건물 단계가 바뀌었을 때). 자리와 보는 쪽은 그대로 두되, 몸이 막힌 칸에 걸리면 가장 가까운 열린 칸 가운데로 옮긴다.
+        /// 문 지켜보기는 새 문으로 다시 시작한다(이미 겹친 문은 나갔다 들어와야 열린다). 이동이 아니라 도착을 기록하지 않는다.
+        /// 다시 읽지 못하면 지금 맵을 그대로 두고 false.
+        /// </summary>
+        public bool Reload()
+        {
+            if (Map == null) throw new InvalidOperationException("Enter로 맵에 먼저 들어간다");
+            WorldMap map;
+            try { map = _source.Load(Map.Id); }
+            catch (Exception e) { LastProblem = "맵 " + Map.Id + "을 다시 읽지 못했다: " + e.Message; return false; }
+            if (map == null) { LastProblem = "맵이 없다: " + Map.Id; return false; }
+            Map = map;
+            StepAsideIfCaught(); // 건물이 커져 몸 밑이 막혔으면 가장 가까운 빈 칸으로(가구에 갇혔을 때와 같은 규칙)
+            _doors = new DoorWatch(map.Doors, DoorWatch.UnityOpeningSeconds, DoorWatch.UnityContactSkinCells * map.Grid.CellSize);
+            _doors.Reset(Walker.Box);
+            LastProblem = null;
+            return true;
+        }
+
         /// <summary>
         /// 맵에 들어간다. 도착 지점 id가 없거나 맵에 없거나 도착 기록이 거절되면 들어가지 않는다(지금 상태는 그대로).
         /// displayName은 도착 기록에 남는 문 이름(Unity LastPortalDisplayName).

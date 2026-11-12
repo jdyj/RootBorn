@@ -66,6 +66,7 @@ Server `ServerLoadMeasureTests`(부하 측정)·`DeployedServerSharingTests`(배
 | `--spawn <도착 지점>` | | 맵 목록에서 그 맵의 첫 도착 지점 |
 | `--maps <맵 목록>` | `ROOTBORN_WORLD_MAPS` | `<저장소>/game/world/maps.json` |
 | `--interactions <파일>` | | `<저장소>/game/world/interactions.json` |
+| `--buildings <건물 목록>` | `ROOTBORN_WORLD_BUILDINGS` | `<저장소>/game/world/buildings.json`(맵 목록의 부지가 가리키는 건물, `game/world/README.md` 4-1절) |
 | `--hour <시각>` | | 8. `--world`일 때만(슬롯은 저장된 학생 시각에서 이어진다) |
 | `--time-scale <배속>` | | 1. 하루 길이는 data/time의 TimeDefinition(600초). `--world`면 시험 화면의 시계, 슬롯이면 학생의 흐르는 시계에 곱한다(0이면 시계가 서 있다) |
 | `--save-root <세이브 폴더>` | `ROOTBORN_SAVE_ROOT` | 없음. `--slot`을 쓰면 반드시 준다. `--slot`·`--world`·`--sample` 없이 주면 슬롯 선택 화면부터 시작한다 |

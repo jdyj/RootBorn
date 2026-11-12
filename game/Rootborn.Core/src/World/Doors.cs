@@ -98,6 +98,20 @@ namespace Rootborn.Core.World
 
         public DoorArea Opening { get; private set; }
 
+        /// <summary>
+        /// 열리는 문의 진행도: 들어선 프레임 0 ~ 열리는 시간 1. 열리는 문이 없으면 0. 문 열림 시간은 여기서만 센다
+        /// (연출·문 프레임은 이 값을 읽는다).
+        /// </summary>
+        public float Progress
+        {
+            get
+            {
+                if (Opening == null) return 0f;
+                float seconds = Opening.OpenSeconds ?? _openSeconds;
+                return seconds <= 0f ? 1f : Math.Min(1f, Math.Max(0f, _elapsed / seconds));
+            }
+        }
+
         public DoorWatch(IReadOnlyList<DoorArea> doors, float openSeconds = UnityOpeningSeconds, float skin = 0f)
         {
             _doors = doors ?? Array.Empty<DoorArea>();

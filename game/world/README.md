@@ -1,10 +1,11 @@
 # 맵 약속 — LDtk로 맵을 그리는 사람이 지킬 것
 
 이 문서는 MonoGame 판(`game/`)이 맵에서 **실제로 읽는 것**만 적는다. 코드는 특정 맵의 이름, 크기, 좌표를 모른다.
-맵을 바꾸는 일은 LDtk 파일, 타일셋 PNG, 이 폴더의 `maps.json`·`interactions.json`을 바꾸는 일이다.
+맵을 바꾸는 일은 LDtk 파일, 타일셋 PNG, 이 폴더의 `maps.json`·`interactions.json`·`buildings.json`을 바꾸는 일이다.
 
 읽는 코드: `game/Rootborn.World`(LDtk 읽기 `Ldtk/LdtkFile.cs`, 맵 만들기 `WorldMapLoader.cs`, 맵 목록 `WorldCatalog.cs`,
-그리기 순서 `MapPicture.cs`, 상호작용 `WorldInteractionData.cs`, 검사 `MapChecks.cs`), 규칙은 Core `game/Rootborn.Core/src/World`.
+그리기 순서 `MapPicture.cs`, 상호작용 `WorldInteractionData.cs`, 검사 `MapChecks.cs`, 건물 목록 `BuildingCatalog.cs`, 단계 종류 `BuildingLevels.cs`),
+규칙은 Core `game/Rootborn.Core/src/World`(건물 놓기 `BuildingLots.cs`).
 
 ## 1. 파일 두는 곳
 
@@ -99,6 +100,52 @@
 - **도착 지점**: `spawns`의 이름 → 레벨 픽셀 [x, y](몸 가운데). 걸을 수 있는 칸 위에 둔다. 실내는 출구 상자에서 0.9칸 넘게 떨어뜨리고
   그 자리에서 모든 출구까지 걸어갈 수 있어야 한다(Unity 판 저장 검사와 같다). 도착 지점 이름은 맵 사이에서 겹치지 않게 짓는다(`<맵>-<어디>-entry`).
   다른 맵의 문이 이 이름을 가리키므로 이름을 바꾸면 그 문들의 `doors`·`Position`도 바꾼다.
+
+## 4-1. 건물 부지(`lots`)와 건물 목록(`buildings.json`)
+
+건물은 LDtk에 칠하지 않고 데이터로 둔다. 게임을 진행하며 건물이 커질 수 있어서다(단계마다 그림·차지하는 칸이 다르다). 맵에는 **부지**만 둔다.
+**지금 맵에는 부지가 없다**(지금 맵의 건물은 LDtk에 칠해져 있다). 새 맵부터 쓴다. 설계: `docs/superpowers/specs/2026-11-12-building-lots-doors-design.md`.
+
+- **기준점은 문이다.** 건물은 그 단계의 문 칸이 부지의 `doorCell`에 오도록 놓인다. 건물이 커져도 문 자리, 문 앞 길, 도착 지점은 그대로다.
+  건물이 좌우 대칭일 필요는 없다(문 칸이 건물 가운데가 아니어도 된다).
+- 부지(`maps.json` 맵의 `lots`):
+
+```jsonc
+"lots": [
+  {
+    "name": "bakery-lot",                       // 부지 이름(문 이름이 된다 — 도착 기록에 남는다)
+    "building": "bakery",                       // buildings.json의 건물 id
+    "doorCell": [12, 20],                       // 맵 칸. 건물의 문 칸이 여기 온다
+    "cells": [9, 14, 7, 7],                     // 예약한 칸 [x, y, 너비, 높이]. 어느 단계의 건물도 이 안에 들어가야 한다
+    "level": { "kind": "fixed", "value": 1 },   // 단계를 어디서 읽는지(아래 표)
+    "to": { "map": "BakeryInterior", "spawn": "bakery-entry" },  // 문이 이어지는 곳. 없으면 열리지 않는 배경 건물(문 칸도 막는다)
+    "openSeconds": 0.6                          // 없으면 맵의 doorOpenSeconds, 그것도 없으면 0.35초
+  }
+]
+```
+
+- 건물(`buildings.json`): `id`와 `levels`(배열 순서가 단계 1, 2, 3 …). 단계마다 `texture`(저장소 뿌리 기준 PNG), `src`(그림 안 사각형, 너비·높이는 칸 크기의 배수),
+  `solid`(막는 칸, 그림 왼쪽 위 칸 기준), `door.cell`(문 칸, `solid` 안), `door.frames`(문 프레임 닫힘 → 열림, 없어도 된다), `door.at`(프레임을 그릴 자리,
+  그림 왼쪽 위 기준 픽셀). 형식은 파일 머리 주석에 있다.
+- 좌표는 모두 그림 기준 칸(`entityRowShift`와 무관). 그림 좌표(`src`, `frames`, `at`)는 PNG를 직접 재서 정한다.
+- 문 상자는 문 칸 한 칸 그대로다. 문 칸은 막지 않는다(걸어 들어가야 열린다). 문 칸 바로 아래 칸이 문 앞이다 — 그 칸이 걸을 수 있어야 한다.
+- 건물 그림은 캐릭터와 발 위치로 앞뒤를 가린다(발 위치 = 건물 아래 끝). 캐릭터가 건물 뒤(위쪽)로 가면 가려진다. `solid`에 넣지 않은 지붕 위쪽 줄은 지나갈 수 있다.
+- 문이 열리는 동안 문 프레임을 차례로 그린다(진행도를 프레임 수로 나눈다). 프레임이 없으면 `presentation.json` `door`의 사각형을 그린다.
+  닫혀 있을 때는 프레임을 그리지 않는다 — 건물 그림에 닫힌 문을 그려 둔다.
+- 단계 값이 건물의 단계 수보다 크면 가장 높은 단계를, 1보다 작으면 1을 쓴다. 단계가 바뀌면 맵을 다시 만들고, 그 맵에 서 있으면 다시 읽는다
+  (몸이 새로 막힌 칸에 있으면 가장 가까운 열린 칸으로 옮긴다).
+- 단계 종류(`level.kind`). 새 종류는 클래스 하나와 등록 한 줄이다:
+
+| kind | 단계 | 어디 |
+|---|---|---|
+| `fixed` | `value` 그대로 | World `FixedLevel` |
+| `house-stage` | 집 단계 + 1(게임 한 판이 없으면 1) | Host `HostBuildingLevels` |
+| `facility-level` | 성인 시설 레벨. `key`가 시설 id이고, 지금 맡은 시설이 그 id가 아니면 1 | Host `HostBuildingLevels` |
+
+- 검사(문제로 알린다, 조용히 넘기지 않는다): 없는 건물 id, 모르는 단계 종류, 단계가 없는 건물, 맵 밖 부지, 예약한 칸 밖의 `doorCell`, 서로 겹치는 부지,
+  부지 밖으로 나가는 건물, 칸 크기의 배수가 아닌 `src`, `solid` 밖의 문 칸, 저장소에 없는 그림, 가구 방(`placementSurface`)에 둔 부지(지원하지 않는다).
+  부지의 문도 4절의 문 검사(목적지, 걸어서 닿음)를 받는다.
+- 하지 않는 것: 단계마다 실내 맵 바꾸기, 재건축 규칙(비용·조건 — 기획), 층 단위 조립식 건물.
 
 ## 5. 상호작용 지점
 
@@ -230,7 +277,7 @@ dotnet run --project game/Rootborn.Host -- --world <맵 id 또는 LDtk 레벨 �
 
 - `MapContractTests`(새 맵 검사, `MapChecks`): `maps.json`의 모든 맵에 대해 문 값이 `doors` 표에 있다, 문의 목적지 맵과 도착 지점이 있다,
   도착 지점이 걸을 수 있는 칸이다, 모든 문이 그 맵의 시작 도착 지점에서 걸어서 닿는다, 상호작용 지점·NPC 자리가 걸어서 닿는 칸 옆에 있다,
-  쓰는 타일셋 PNG가 있다. 지금 맵에서 걸리는 것은 테스트 옆 `KnownMapProblems`에 (맵 id, LDtk 파일, 레벨)로 묶여 있어,
+  쓰는 타일셋 PNG가 있다, 부지와 건물 데이터가 맞다(4-1절). 지금 맵에서 걸리는 것은 테스트 옆 `KnownMapProblems`에 (맵 id, LDtk 파일, 레벨)로 묶여 있어,
   LDtk 파일이나 레벨을 바꾼 새 맵에는 적용되지 않는다.
 - `MainChainWalkTests`: 7절.
 - `--world`로 띄우면 맵 목록의 첫 도착 지점에 선다(`--spawn <이름>`으로 바꾼다). 화면에서 F12로 찍어 겹침·빈 그림·어긋난 문을 본다.

@@ -42,13 +42,13 @@ namespace Rootborn.Host.World
         /// <summary>연출 동안 걷기를 막는가(데이터. Unity 판은 막지 않았다).</summary>
         public bool BlocksInput => Transition.BlocksInput;
 
-        /// <summary>걷기를 한 프레임 돌린 직후(그림 칸을 정하기 전)에 부른다: 행동 중이면 누른 쪽을 계속 보고, 문 연출과 카메라 시간을 센다.</summary>
+        /// <summary>걷기를 한 프레임 돌린 직후(그림 칸을 정하기 전)에 부른다: 행동 중이면 누른 쪽을 계속 보고, 문 연출(진행도는 Core가 센다)과 카메라 시간을 맞춘다.</summary>
         public void AfterWalk(WorldSession session, MapEntry entry, float dt)
         {
             Action.Advance(dt);
             if (Action.Active) session.Walker.Face(Action.Facing);
             DoorArea opening = session.OpeningDoor;
-            Transition.Update(opening, opening != null && IsArea(entry, opening), dt);
+            Transition.Show(opening, opening != null && IsArea(entry, opening), session.OpeningProgress);
             _cameraDt += Math.Max(0f, dt);
         }
 
@@ -98,10 +98,14 @@ namespace Rootborn.Host.World
             return true;
         }
 
-        /// <summary>월드를 다 그린 뒤(빛을 곱한 뒤): 열리는 문 위의 사각형(맵 좌표), 이동 구역의 화면 덮개(화면 좌표).</summary>
-        public void DrawOverlays(SpriteBatch batch, Matrix view, int screenWidth, int screenHeight, int cellSize)
+        /// <summary>
+        /// 월드를 다 그린 뒤(빛을 곱한 뒤): 열리는 문 위의 사각형(맵 좌표), 이동 구역의 화면 덮개(화면 좌표).
+        /// doorFramesDrawn이면 건물 문 프레임을 이미 그렸으므로 문 사각형은 그리지 않는다.
+        /// </summary>
+        public void DrawOverlays(SpriteBatch batch, Matrix view, int screenWidth, int screenHeight, int cellSize, bool doorFramesDrawn = false)
         {
             if (Transition.Kind == WorldTransitionKind.None) return;
+            if (Transition.Kind == WorldTransitionKind.Door && doorFramesDrawn) return;
             if (_pixel == null)
             {
                 _pixel = new Texture2D(_device, 1, 1);

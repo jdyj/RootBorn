@@ -192,24 +192,36 @@ namespace Rootborn.World.Tests
         private static readonly DoorArea Door = new DoorArea("town", new AreaRect(100, 100, 32, 16), new TravelTarget("Town", "a"));
         private static readonly DoorArea Zone = new DoorArea("beach", new AreaRect(0, 0, 32, 400), new TravelTarget("Beach", "b"), 0.25f);
 
+        /// <summary>한 프레임: Core DoorWatch가 문 열림 시간을 세고(한 곳), 연출은 그 진행도를 그대로 보인다.</summary>
+        private static void Frame(WorldTransition t, DoorWatch watch, AreaRect body, bool isArea, float dt)
+        {
+            watch.Update(body, dt);
+            t.Show(watch.Opening, isArea, watch.Progress);
+        }
+
+        private static readonly AreaRect Away = new AreaRect(500, 500, 32, 32);
+
         [Test]
         public void Door_ProgressGoesFromZeroToOne_OverItsOpenSeconds_WideningAndBrightening()
         {
             var t = new WorldTransition(Real);
-            t.Update(null, false, 1f / 60f);
+            var watch = new DoorWatch(new[] { Door });
+            watch.Reset(Away);
+            Frame(t, watch, Away, false, 1f / 60f);
             Assert.That(t.Kind, Is.EqualTo(WorldTransitionKind.None));
-            t.Update(Door, false, 1f / 60f);
+            Frame(t, watch, Door.Area, false, 1f / 60f);
             Assert.That(t.Kind, Is.EqualTo(WorldTransitionKind.Door));
-            Assert.That(t.Progress, Is.EqualTo(0f), "들어선 프레임은 0(Core DoorWatch와 같은 셈)");
+            Assert.That(t.Progress, Is.EqualTo(0f), "들어선 프레임은 0(Core DoorWatch가 센다)");
             Assert.That(t.DoorWidthRatio, Is.EqualTo(0.25f).Within(1e-4f));
             Assert.That(t.DoorAlpha, Is.EqualTo(0.55f).Within(1e-4f));
             Assert.That(t.FadeAlpha, Is.EqualTo(0f), "문에는 화면 덮개가 없다");
-            for (int i = 0; i < 10; i++) t.Update(Door, false, 1f / 60f);
+            for (int i = 0; i < 10; i++) Frame(t, watch, Door.Area, false, 1f / 60f);
             float half = 10f / 60f / DoorWatch.UnityOpeningSeconds;
             Assert.That(t.Progress, Is.EqualTo(half).Within(1e-3f));
+            Assert.That(t.Progress, Is.EqualTo(watch.Progress), "따로 세지 않는다");
             Assert.That(t.DoorWidthRatio, Is.EqualTo(0.25f + 0.75f * half).Within(1e-3f));
             Assert.That(t.BlocksInput, Is.False);
-            t.Update(null, false, 1f / 60f); // 지났다(맵이 바뀌었다)
+            t.Show(null, false, 0f); // 지났다(맵이 바뀌었다)
             Assert.That(t.Kind, Is.EqualTo(WorldTransitionKind.None));
             Assert.That(t.Completed, Is.EqualTo(1));
         }
@@ -218,11 +230,13 @@ namespace Rootborn.World.Tests
         public void Zone_FadesTheScreen_ForItsOwnSeconds()
         {
             var t = new WorldTransition(Real);
-            t.Update(Zone, true, 1f / 60f);
+            var watch = new DoorWatch(new[] { Zone });
+            watch.Reset(Away);
+            Frame(t, watch, new AreaRect(0, 0, 32, 32), true, 1f / 60f);
             Assert.That(t.Kind, Is.EqualTo(WorldTransitionKind.Area));
             Assert.That(t.FadeAlpha, Is.EqualTo(0.82f), "Unity 판 덮개는 처음부터 82%");
             Assert.That(t.DoorAlpha, Is.EqualTo(0f));
-            for (int i = 0; i < 6; i++) t.Update(Zone, true, 0.02f);
+            for (int i = 0; i < 6; i++) Frame(t, watch, new AreaRect(0, 0, 32, 32), true, 0.02f);
             Assert.That(t.Progress, Is.EqualTo(0.12f / 0.25f).Within(1e-3f));
         }
 
@@ -230,10 +244,10 @@ namespace Rootborn.World.Tests
         public void ADifferentDoor_StartsOver()
         {
             var t = new WorldTransition(Real);
-            t.Update(Door, false, 0.1f);
-            t.Update(Door, false, 0.1f);
+            t.Show(Door, false, 0f);
+            t.Show(Door, false, 0.4f);
             var other = new DoorArea("house", new AreaRect(300, 100, 32, 16), new TravelTarget("House", "a"));
-            t.Update(other, false, 0.1f);
+            t.Show(other, false, 0f);
             Assert.That(t.Door, Is.SameAs(other));
             Assert.That(t.Progress, Is.EqualTo(0f));
         }
@@ -252,7 +266,7 @@ namespace Rootborn.World.Tests
                 action.Advance(1f / 60f);
                 action.ColumnOr(1);
                 PointerFacing.From(i, -i, Facing.Down);
-                t.Update(i % 40 < 20 ? Door : null, false, 1f / 60f);
+                t.Show(i % 40 < 20 ? Door : null, false, (i % 20) / 20f);
             }
             for (int i = 0; i < 100; i++) OneFrame(i); // 처음 쓸 때의 준비는 빼고 잰다
             long before = GC.GetAllocatedBytesForCurrentThread();

@@ -71,6 +71,17 @@ namespace Rootborn.World.Tests
         }
 
         [Test]
+        public void EveryLotInTheMapList_NamesABuildingInTheBuildingList()
+        {
+            // 지금 맵에는 부지가 없다(새 맵부터 쓴다). 부지가 생기면 그 건물이 buildings.json에 있어야 한다.
+            WorldMapLoader loader = Repo.Loader();
+            var missing = loader.Catalog.Maps.SelectMany(m => m.Lots.Select(l => (m, l)))
+                .Where(x => loader.Buildings.Find(x.l.Building) == null).Select(x => x.m.Id + "/" + x.l.Name + " → " + x.l.Building).ToList();
+            Assert.That(missing, Is.Empty);
+            Assert.That(loader.Buildings.Buildings.All(b => b.Levels.Count > 0), Is.True, "단계가 없는 건물");
+        }
+
+        [Test]
         public void TemporaryLinksWithoutAReason_AreRefused()
         {
             const string map = @"{ ""maps"": [ { ""id"": ""A"", ""ldtk"": ""a.ldtk"", ""level"": ""L"", ""viewCells"": 10, ""collision"": { ""rule"": ""interior-auto"" },

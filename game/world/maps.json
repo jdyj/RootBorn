@@ -17,6 +17,8 @@
   //   시작하면 가구, 기본 Prop). 지금 실내 맵의 가구 층(Police·Kitchen·Shop…)은 Unity 판 이름이라 맵마다 적는다.
   // doorField·spawnField: 문 엔티티(Door)의 목적지 칸과 도착 지점 칸. 없으면 Where·Position. 자세한 약속은 game/world/README.md.
   //   collision.openCells: 규칙이 막아도 열어 둘 칸 [x, y](Unity 씬에 구운 충돌에 없던 칸).
+  // lots: 건물 부지(새 맵부터 쓴다 — 지금 맵에는 없다). 건물 그림·칸은 buildings.json, 부지는 { name, building, doorCell [x, y],
+  //   cells [x, y, 너비, 높이], level { kind, key?, value? }, to? { map, spawn }, openSeconds? }. 좌표는 그림 기준 칸. game/world/README.md "건물 부지".
   "walker": { "bodyCells": 1, "speedCellsPerSecond": 4 },
   "maps": [
     {
