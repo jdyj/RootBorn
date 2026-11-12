@@ -20,6 +20,7 @@ namespace Rootborn.Game.Tests
         private const string CozyTemplate = "template.chef.cozy";
         private const string Interior = "skill.interior";
         private const string Cozy = "quality.cozy";
+        private const string Hygiene = "quality.hygiene";
         // 해금이 필요 없고 집에 놓는 가구(FurnitureTests와 같은 것).
         private const string FreeDesk = "growth31.assembly.desk";
         // 한 칸짜리 가구(기본 템플릿에 든 것).
@@ -34,19 +35,23 @@ namespace Rootborn.Game.Tests
         private static bool HasLayoutFile(TempSaves saves)
             => saves.Store.TryRead<FurniturePlacementLayoutSaveData>(TestWorld.Slot, SaveFileNames.WorkspaceLayout(Chef.SurfaceId, TestWorld.Player), out _);
 
-        // 아늑함을 주는 가구를 점수 높은 순으로, 아직 놓지 않은 것부터 놓는다. 일 이득이 생기거나 한도에 닿으면 멈춘다.
+        // 아늑함을 주는 가구를 놓아 보상 비율 이득을 만든다.
         private static void PlaceCozyUntilBonus(GameSession game)
+            => PlaceQualityUntil(game, Cozy, extras => extras.RewardPercentBonus > 0);
+
+        // 그 성질을 주는 가구를 점수 높은 순으로, 아직 놓지 않은 것부터 놓는다. 조건이 맞거나 한도에 닿으면 멈춘다.
+        private static void PlaceQualityUntil(GameSession game, string qualityId, System.Func<WorkExtras, bool> done)
         {
             var quality = game.Definitions.FurnitureQuality;
             var candidates = game.AvailableFurniture()
-                .Select(f => (f.StableId, Score: quality.ScoresOf(f.StableId).Where(s => s.QualityId == Cozy).Select(s => s.Score).DefaultIfEmpty(0).Max()))
+                .Select(f => (f.StableId, Score: quality.ScoresOf(f.StableId).Where(s => s.QualityId == qualityId).Select(s => s.Score).DefaultIfEmpty(0).Max()))
                 .Where(c => c.Score > 0)
                 .OrderByDescending(c => c.Score)
                 .Select(c => c.StableId)
                 .ToList();
             foreach (var id in candidates)
             {
-                if (game.WorkExtrasFor(ChefWork).RewardPercentBonus > 0) return;
+                if (done(game.WorkExtrasFor(ChefWork))) return;
                 var status = game.WorkspaceOf(ChefFacility);
                 if (status.Placed >= status.Capacity) return;
                 if (game.House.Placed.Any(p => p.Definition.StableId == id)) continue;
@@ -418,7 +423,8 @@ namespace Rootborn.Game.Tests
             var after = Counts(game);
             Assert.That((after.Allowance - before.Allowance, after.Materials - before.Materials), Is.EqualTo(RewardsAt(LevelRewardPercent(game) + reservedBonus)),
                 "보상은 예약할 때의 비율로 낸다");
-            Assert.That(game.Adult.Reputation - reputation, Is.EqualTo(ChefWorkDefinition.ReputationPerSuccess + settleExtras.ReputationBonus), "명성 이득은 정산 때 것");
+            Assert.That(game.Adult.Reputation - reputation, Is.EqualTo(ChefWorkDefinition.ReputationPerSuccess + settleExtras.ReputationBonus),
+                "아늑함만 놓아 명성 이득은 0이다 — 0이 아닌 정산 때 명성 이득은 ReserveThenAddHygieneThenSettle이 본다");
 
             // 거꾸로: 꾸민 채 예약하고 다 치운 뒤 정산해도 예약할 때의 이득으로 낸다.
             int decoratedBonus = game.WorkExtrasFor(ChefWork).RewardPercentBonus;
@@ -429,6 +435,40 @@ namespace Rootborn.Game.Tests
             Assert.That(game.SettleFacilityWork("work:reserved-decorated", 100).Kind, Is.EqualTo(AdultCareerResultKind.Applied));
             after = Counts(game);
             Assert.That((after.Allowance - before.Allowance, after.Materials - before.Materials), Is.EqualTo(RewardsAt(LevelRewardPercent(game) + decoratedBonus)));
+        }
+
+        [Test]
+        public void ReserveThenAddHygieneThenSettle_ReputationAndSkillUseSettleExtras()
+        {
+            using var saves = new TempSaves();
+            ChefSetup.Adult(saves);
+            // 준비: 위생 명성 이득에 닿을 만큼 가구를 놓을 수 있게 인테리어 기술을 가장 높은 단계까지 직접 더한다(한도·점수 배율이 는다).
+            var topTier = TestWorld.Definitions.All<SkillTier>().Where(t => t.SkillId == Interior).OrderByDescending(t => t.MinimumValue).First();
+            SaveEdits.EditSnapshot(saves.Store, s => s.Student.Skills = s.Student.Skills
+                .Where(e => e.Id != Interior)
+                .Append(new StudentLifeProgressSaveData.StatEntry { Id = Interior, Value = topTier.MinimumValue })
+                .ToArray());
+            var game = TestWorld.Start(saves.Store);
+            EnterChef(game);
+            Assert.That(game.ClearFurniture(), Is.True, "준비: 빈 일터에서 시작한다");
+            var reserveExtras = game.WorkExtrasFor(ChefWork);
+            Assert.That(reserveExtras.ReputationBonus, Is.EqualTo(0), "준비: 예약 때는 위생 명성 이득이 없다");
+            Assert.That(game.ReserveFacilityWork(ChefWork, "work:hygiene", 9).Kind, Is.EqualTo(AdultCareerResultKind.Applied));
+
+            PlaceQualityUntil(game, Hygiene, extras => extras.ReputationBonus > 0);
+            var settleExtras = game.WorkExtrasFor(ChefWork);
+            Assert.That(settleExtras.ReputationBonus, Is.GreaterThan(reserveExtras.ReputationBonus), "준비: 예약 뒤 위생 가구로 명성 이득이 생겼다");
+            int gains = settleExtras.SkillGains.Where(g => g.SkillId == Cooking).Sum(g => g.Amount);
+            Assert.That(gains, Is.GreaterThan(0));
+            int reputation = game.Adult.Reputation;
+            int cooking = game.Student.GetSkillValue(Cooking);
+
+            Assert.That(game.SettleFacilityWork("work:hygiene", 100).Kind, Is.EqualTo(AdultCareerResultKind.Applied));
+            Assert.That(game.Adult.Reputation - reputation, Is.EqualTo(ChefWorkDefinition.ReputationPerSuccess + settleExtras.ReputationBonus), "명성 이득은 정산 때 것");
+            Assert.That(game.Student.GetSkillValue(Cooking), Is.EqualTo(cooking + gains), "정산한 일도 요리 기술을 키운다");
+            var again = TestWorld.Start(saves.Store);
+            Assert.That(again.Adult.Reputation, Is.EqualTo(game.Adult.Reputation), "저장된다");
+            Assert.That(again.Student.GetSkillValue(Cooking), Is.EqualTo(cooking + gains));
         }
 
         [Test]
