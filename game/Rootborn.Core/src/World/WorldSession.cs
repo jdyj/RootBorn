@@ -136,6 +136,7 @@ namespace Rootborn.Core.World
         public bool Update(int dx, int dy, float dt)
         {
             if (Map == null) throw new InvalidOperationException("Enter로 맵에 먼저 들어간다");
+            StepAsideIfCaught();
             Walker.Step(dx, dy, dt, Map.Collision);
             DoorArea door = _doors.Update(Walker.Box, dt);
             if (door == null || !door.Destination.HasValue) return false;
@@ -143,6 +144,40 @@ namespace Rootborn.Core.World
             if (!Enter(target.MapId, target.SpawnId, door.Target)) return false;
             Travels++;
             return true;
+        }
+
+        /// <summary>
+        /// 몸 밑에 막는 칸이 생겼으면(같이 쓰는 집에서 남이 가구를 놓았다, 자기 자리에 놓았다) 가장 가까운 빈 칸의 가운데로 비켜난다.
+        /// 몸 상자가 막힌 칸과 겹치면 어느 쪽으로 걸어도 막혀 갇힌다(Walker는 막힌 칸에 들어가는 걸음을 받지 않는다). Unity 판은 물리 엔진이 겹친 몸을 밀어냈다.
+        /// 몸이 선 칸에서 한 칸씩 넓혀 가며(같은 거리면 위·왼쪽 먼저 — 결정적) 몸이 막힌 칸에 걸치지 않는 칸 가운데를 찾는다. 겹치지 않으면 아무것도 하지 않는다(할당 없음).
+        /// </summary>
+        private void StepAsideIfCaught()
+        {
+            CollisionGrid grid = Map.Collision;
+            if (!grid.AnyBlocked(Walker.Box)) return;
+            int size = grid.Grid.CellSize;
+            CellPos here = CellPos.Containing(Walker.X, Walker.Y, size);
+            float half = Walker.Box.W / 2f;
+            int reach = Math.Max(grid.Columns, grid.Rows);
+            for (int ring = 1; ring <= reach; ring++)
+            {
+                bool found = false;
+                float bestDistance = float.MaxValue, bestX = 0f, bestY = 0f;
+                for (int y = here.Y - ring; y <= here.Y + ring; y++)
+                    for (int x = here.X - ring; x <= here.X + ring; x++)
+                    {
+                        if (Math.Max(Math.Abs(x - here.X), Math.Abs(y - here.Y)) != ring || !grid.Grid.Contains(x, y)) continue;
+                        var center = CellPos.Center(new CellPos(x, y), size);
+                        if (grid.AnyBlocked(new AreaRect(center.X - half, center.Y - half, half * 2f, half * 2f))) continue;
+                        float d = (center.X - Walker.X) * (center.X - Walker.X) + (center.Y - Walker.Y) * (center.Y - Walker.Y);
+                        if (d < bestDistance - 1e-3f) { found = true; bestDistance = d; bestX = center.X; bestY = center.Y; }
+                    }
+                if (!found) continue;
+                Facing facing = Walker.Facing;
+                Walker.PlaceAt(bestX, bestY);
+                Walker.Face(facing);
+                return;
+            }
         }
     }
 }
