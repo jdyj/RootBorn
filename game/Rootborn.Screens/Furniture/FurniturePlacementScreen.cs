@@ -224,14 +224,17 @@ namespace Rootborn.Screens.Furniture
             _close = settings.Add(new UiButton { Id = CloseId, Icon = Rootborn.Screens.Day.ScreenIcons.Close })
                 .Centered(Metrics.CloseX, Metrics.CloseY, Metrics.CloseSize, Metrics.CloseSize);
             _close.Clicked += Close;
-            UiPanel frame = settings.Add(new UiPanel { Id = "furniture.selected.frame" }).Centered(Metrics.PreviewX, Metrics.PreviewY, Metrics.PreviewSize, Metrics.PreviewSize);
+            // 아래쪽 무리(미리보기·이름·크기·방향)를 테마 여백 위로 들어 올린다: 가장 아래 요소와 패널 아래 사이가 여백보다 좁으면 그만큼.
+            float bottomMargin = Math.Min(Metrics.SettingsH / 2f + Metrics.PreviewY - Metrics.PreviewSize / 2f, Metrics.SettingsH / 2f + Metrics.DirectionY - Metrics.InfoH / 2f);
+            float lift = Math.Max(0f, pad.Bottom - bottomMargin);
+            UiPanel frame = settings.Add(new UiPanel { Id = "furniture.selected.frame" }).Centered(Metrics.PreviewX, Metrics.PreviewY + lift, Metrics.PreviewSize, Metrics.PreviewSize);
             _selectedIcon = frame.Add(new UiFittedImage { Id = SelectedIconId }).Centered(0f, 0f, Metrics.PreviewIcon, Metrics.PreviewIcon);
             _name = settings.Add(new UiLabel { Id = SelectedNameId, FontSize = Metrics.NameFont, Color = Metrics.Ink })
-                .Centered(Metrics.InfoX, Metrics.NameY, Metrics.InfoW, Metrics.NameH);
+                .Centered(Metrics.InfoX, Metrics.NameY + lift, Metrics.InfoW, Metrics.NameH);
             _size = settings.Add(new UiLabel { Id = SelectedSizeId, FontSize = Metrics.InfoFont, Color = Metrics.Ink })
-                .Centered(Metrics.InfoX, Metrics.SizeY, Metrics.InfoW, Metrics.InfoH);
+                .Centered(Metrics.InfoX, Metrics.SizeY + lift, Metrics.InfoW, Metrics.InfoH);
             _direction = settings.Add(new UiLabel { Id = SelectedDirectionId, FontSize = Metrics.InfoFont, Color = Metrics.Ink })
-                .Centered(Metrics.InfoX, Metrics.DirectionY, Metrics.InfoW, Metrics.InfoH);
+                .Centered(Metrics.InfoX, Metrics.DirectionY + lift, Metrics.InfoW, Metrics.InfoH);
             _roomStatus = settings.Add(new UiTextBlock { Id = RoomStatusId, FontSize = Metrics.RoomStatusFont, Color = Metrics.Ink, Align = UiAlign.Center })
                 .Centered(Metrics.RoomStatusX, Metrics.RoomStatusY, Metrics.RoomStatusW, Metrics.RoomStatusH);
 

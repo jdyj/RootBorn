@@ -228,6 +228,23 @@ namespace Rootborn.Screens.Tests.Furniture
 
         }
 
+        /// <summary>가구를 고르면 설정 패널 아래쪽에 미리보기·이름·크기·방향이 보인다. 그 칸들이 패널의 테마 여백 안에 있다(스크린샷에서 방향 줄이 아래 테두리에 닿았다).</summary>
+        [Test]
+        public void SelectedInfo_StaysInsideTheSettingsPanelPadding()
+        {
+            using var f = new Fixture();
+            f.PickFromPalette(FreeDesk);
+            f.T.Stack.Layout(1920, 1080);
+            UiRect panel = f.T.Node("furniture.settings").Rect;
+            UiInsets pad = f.T.Services.PaddingOf(UiSkin.Panel);
+            foreach (string id in new[] { "furniture.selected.frame", FurniturePlacementScreen.SelectedNameId, FurniturePlacementScreen.SelectedSizeId, FurniturePlacementScreen.SelectedDirectionId })
+            {
+                UiRect r = f.T.Node(id).Rect;
+                Assert.That(r.Bottom, Is.LessThanOrEqualTo(panel.Bottom - pad.Bottom + 0.5f), id + " 아래 테두리(테마 여백)");
+                Assert.That(r.X, Is.GreaterThanOrEqualTo(panel.X + pad.Left - 0.5f), id + " 왼쪽");
+            }
+        }
+
         // ---------- 키보드: 캐릭터가 바라보는 칸 ----------
 
         [Test]
