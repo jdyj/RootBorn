@@ -33,7 +33,8 @@ namespace Rootborn.Screens.AdultFacility
         public static readonly float CellWidth = MathF.Floor((Works.W - CellSpacing * 2 - UiCardScroller.ScrollbarWidth - UiCardScroller.ScrollbarGap) / 3f);
         /// <summary>칸 안 글자와 칸 가장자리 사이(정보 칸·단추 칸 같게).</summary>
         public const float CellPadding = 10;
-        public const float InfoFont = 18, ButtonFont = 20, HintFont = 16;
+        /// <summary>정보 칸 글자. 18이면 이름·시간(끝나는 시각 포함)·최대 보상이 다섯 줄로 늘어 칸 아래로 잘렸다(2026-11-12 스크린샷) — 16이면 칸 안에 든다.</summary>
+        public const float InfoFont = 16, ButtonFont = 20, HintFont = 16;
         public static readonly (float X, float Y, float W, float H) Cost = (32, 450, 816, 88); // Unity는 54였다. 비용 글이 길어지는 언어를 위해 세 줄 자리를 둔다
         public const float CostFont = 18;
         public const float ActionY = 544, ActionW = 256, ActionH = 48, ActionFont = 20;

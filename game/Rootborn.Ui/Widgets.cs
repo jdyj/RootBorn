@@ -211,6 +211,20 @@ namespace Rootborn.Ui
             return _fitted;
         }
 
+        private string _tailSource, _tail;
+        private float _tailWidth, _tailSize;
+        private ITextMeasurer _tailMeasurer;
+
+        private string FittedText(float width, ITextMeasurer text)
+        {
+            if (!ReferenceEquals(_tailSource, Text) || _tailWidth != width || _tailSize != FontSize || !ReferenceEquals(_tailMeasurer, text))
+            {
+                _tailSource = Text; _tailWidth = width; _tailSize = FontSize; _tailMeasurer = text;
+                _tail = TextFit.Tail(Text, width, text, FontSize);
+            }
+            return _tail;
+        }
+
         public override void Emit(DrawList list, ITextMeasurer text)
         {
             bool active = IsActive;
@@ -223,8 +237,11 @@ namespace Rootborn.Ui
             }
             else
             {
-                list.Text(x, y, Text, FontSize, active ? UiTheme.Ink : UiTheme.InkDisabled);
-                x += text.Width(Text, FontSize);
+                // 칸보다 길면 끝 쪽만(조합 중인 글자와 입력 위치 자리를 남기고). 같은 글자·폭이면 다시 재지 않는다.
+                float room = Rect.W - PaddingX * 2f - 4f - (Composition.Length > 0 ? text.Width(Composition, FontSize) : 0f);
+                string shown = FittedText(room, text);
+                list.Text(x, y, shown, FontSize, active ? UiTheme.Ink : UiTheme.InkDisabled);
+                x += text.Width(shown, FontSize);
                 if (Composition.Length > 0)
                 {
                     float width = text.Width(Composition, FontSize);

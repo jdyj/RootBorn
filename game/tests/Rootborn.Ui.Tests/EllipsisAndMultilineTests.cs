@@ -29,6 +29,30 @@ namespace Rootborn.Ui.Tests
         }
 
         [Test]
+        public void TextField_LongText_ShowsTheEndThatFits_InsideTheField()
+        {
+            // 칸보다 긴 입력(가구 id 검색 등)은 칸 밖으로 나가지 않고 끝 쪽(치는 자리)을 말줄임 뒤에 보인다. 입력 위치도 칸 안이다.
+            var field = new UiTextField { FontSize = 20, MaxLength = 200 };
+            field.Place(0, 0, 0, 0, 200, 40);
+            field.Layout(new UiRect(0, 0, 1920, 1080));
+            field.OnTextInput("modern.interiors.shadowless.livingroom.48x48.27");
+            field.OnFocusChanged(true);
+            var list = new DrawList();
+            field.Emit(list, M);
+            DrawCommand shown = list.Commands.Single(c => c.Kind == DrawKind.Text);
+            Assert.That(shown.Text, Does.StartWith(TextFit.Ellipsis).And.EndWith("48x48.27"));
+            Assert.That(shown.Rect.X + M.Width(shown.Text, 20), Is.LessThanOrEqualTo(field.Rect.Right - field.PaddingX + 0.01f));
+            Assert.That(field.Text, Is.EqualTo("modern.interiors.shadowless.livingroom.48x48.27"), "입력값은 그대로");
+
+            field.SetText("desk");
+            list = new DrawList();
+            field.Emit(list, M);
+            Assert.That(list.Commands.Single(c => c.Kind == DrawKind.Text).Text, Is.EqualTo("desk"), "들어가는 글자는 그대로");
+            Assert.That(TextFit.Tail("abcdefgh", 40, M, 20), Is.EqualTo(TextFit.Ellipsis + "fgh"));
+            Assert.That(TextFit.Tail("abc", 40, M, 20), Is.EqualTo("abc"));
+        }
+
+        [Test]
         public void Fit_KeepsTextThatFits()
         {
             Assert.That(TextFit.Ellipsize("abcd", 40, M, 20), Is.EqualTo("abcd"));

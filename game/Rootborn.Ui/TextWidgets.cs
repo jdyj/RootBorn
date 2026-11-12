@@ -75,6 +75,25 @@ namespace Rootborn.Ui
             }
             return best;
         }
+
+        /// <summary>폭에 들어가지 않으면 앞을 잘라 말줄임 + 끝 쪽(입력 칸에서 치는 자리)을 남긴다.</summary>
+        public static string Tail(string text, float width, ITextMeasurer measurer, float fontSize)
+        {
+            if (string.IsNullOrEmpty(text)) return string.Empty;
+            if (measurer.Width(text, fontSize) <= width) return text;
+            if (measurer.Width(Ellipsis, fontSize) > width) return string.Empty;
+            string best = Ellipsis;
+            int start = text.Length;
+            while (start > 0)
+            {
+                int next = start - (char.IsLowSurrogate(text[start - 1]) && start >= 2 ? 2 : 1);
+                string candidate = Ellipsis + text.Substring(next);
+                if (measurer.Width(candidate, fontSize) > width) break;
+                best = candidate;
+                start = next;
+            }
+            return best;
+        }
     }
 
     /// <summary>한 줄 글자의 말줄임 결과를 글자·폭·크기가 바뀔 때만 다시 계산한다.</summary>
