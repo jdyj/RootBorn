@@ -113,7 +113,7 @@ namespace Rootborn.Screens
             }
 
             /// <summary>
-            /// Esc로 닫지 않는다(고르기를 끝내야 하는 모달, 시작 화면). 이유를 적는다 — 단축키 안내와 시험이 읽는다.
+            /// Esc로 닫지 않는다(고르기를 끝내야 하는 모달, 시작 화면). 이유를 적는다(화면에 보이지 않는 개발용 글 — 시험·보고가 읽는다).
             /// 기본은 Esc가 맨 위의 패널·모달을 닫는다.
             /// </summary>
             public Registration KeepsOpenOnEscape(string reason)

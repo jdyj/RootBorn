@@ -76,11 +76,16 @@ namespace Rootborn.Screens
         public const string WorkspaceTemplates = "workspace-template-select";
 
         // Esc로 닫지 않는 화면의 이유(2026-11-13 임시로 정함 — Esc는 맨 위의 패널·모달을 닫고, 닫을 것이 없으면 설정을 연다).
-        // 지금 Esc가 아무것도 하지 않던 화면 중 고르기를 끝내야 하는 것만 그대로 둔다(닫으면 진행이 꼬일 수 있다).
-        private const string EscapeChoose = "하루 이벤트: 선택지(나중에·지나가기 포함)를 골라 끝낸다.";
-        private const string EscapeLocation = "장소: 방문과 활동 예약이 열 때 정해진다. 닫기 단추로만 닫는다(Esc로 닫으면 하루 이벤트 흐름이 꼬일 수 있다).";
-        private const string EscapeDayResult = "하루 결과: 다음 날 시작 단추가 다음 날을 연다. 닫기만 하면 하루가 넘어가지 않는다.";
-        private const string EscapeStart = "시작 화면: 월드가 없어 설정이 없고, 돌아가기·취소는 화면의 단추로 한다.";
+        // 지금 Esc가 아무것도 하지 않던 화면 중 고르기를 끝내야 하는 것만 그대로 둔다(닫으면 진행이 꼬일 수 있다). 화면에 보이지 않는
+        // 개발용 글이라 영어로 둔다(시험·보고가 읽는다).
+        // 하루 이벤트: 선택지(나중에·지나가기 포함)를 골라 끝낸다.
+        private const string EscapeChoose = "daily event: finish it by picking a choice (later/skip included)";
+        // 장소: 방문과 활동 예약이 열 때 정해진다. 닫기 단추로만 닫는다(Esc로 닫으면 하루 이벤트 흐름이 꼬일 수 있다).
+        private const string EscapeLocation = "location: the visit is set when it opens; close it with its close button";
+        // 하루 결과: 다음 날 시작 단추가 다음 날을 연다. 닫기만 하면 하루가 넘어가지 않는다.
+        private const string EscapeDayResult = "day result: the next-day button starts the next day";
+        // 시작 화면: 월드가 없어 설정이 없고, 돌아가기·취소는 화면의 단추로 한다.
+        private const string EscapeStart = "start screen: no world and no settings; back/cancel are buttons";
 
         public static void Register(ScreenRegistry r)
         {
