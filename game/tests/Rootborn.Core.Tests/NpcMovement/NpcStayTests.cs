@@ -4,25 +4,14 @@ using NUnit.Framework;
 using Rootborn.Core.Dialogue;
 using Rootborn.Core.NpcMovement;
 using Rootborn.Core.World;
+using static Rootborn.Core.Tests.NpcMovement.NpcTestMaps;
 
 namespace Rootborn.Core.Tests.NpcMovement
 {
     public sealed class NpcStayTests
     {
-        private const int Cell = 32;
         private const double SecondsPerMinute = 1.0;
         private const double CellsPerMinute = 2.5 * SecondsPerMinute; // 초당 2.5칸
-
-        /// <summary>'#'는 막힌 칸.</summary>
-        private static CollisionGrid Grid(params string[] rows)
-        {
-            int cols = rows[0].Length;
-            var blocked = new bool[cols * rows.Length];
-            for (int y = 0; y < rows.Length; y++)
-                for (int x = 0; x < cols; x++)
-                    blocked[y * cols + x] = rows[y][x] == '#';
-            return new CollisionGrid(new MapGrid(cols, rows.Length, Cell), blocked);
-        }
 
         /// <summary>11x11, 자리 (5,5) 둘레에 기둥 몇 개.</summary>
         private static CollisionGrid Yard() => Grid(
@@ -50,16 +39,6 @@ namespace Rootborn.Core.Tests.NpcMovement
         {
             object state = null;
             return stay.PoseAt(in context, minutes, ref state);
-        }
-
-        private static void AssertSame(NpcPose expected, NpcPose actual, string message)
-        {
-            Assert.That(actual.Present, Is.EqualTo(expected.Present), message);
-            Assert.That(actual.MapId, Is.EqualTo(expected.MapId), message);
-            Assert.That(actual.X, Is.EqualTo(expected.X), message);
-            Assert.That(actual.Y, Is.EqualTo(expected.Y), message);
-            Assert.That(actual.Facing, Is.EqualTo(expected.Facing), message);
-            Assert.That(actual.Moving, Is.EqualTo(expected.Moving), message);
         }
 
         [Test]

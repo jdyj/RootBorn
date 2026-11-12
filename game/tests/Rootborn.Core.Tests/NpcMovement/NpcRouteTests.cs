@@ -2,42 +2,12 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using Rootborn.Core.NpcMovement;
 using Rootborn.Core.World;
+using static Rootborn.Core.Tests.NpcMovement.NpcTestMaps;
 
 namespace Rootborn.Core.Tests.NpcMovement
 {
     public sealed class NpcRouteTests
     {
-        private const int Cell = 32;
-
-        private sealed class Maps : IWorldMapSource
-        {
-            public readonly Dictionary<string, WorldMap> All = new Dictionary<string, WorldMap>();
-            public int Loads;
-            public WorldMap Load(string mapId) { Loads++; return All.TryGetValue(mapId, out var map) ? map : null; }
-        }
-
-        /// <summary>'#'는 막힌 칸.</summary>
-        private static CollisionGrid Grid(params string[] rows)
-        {
-            int cols = rows[0].Length;
-            var blocked = new bool[cols * rows.Length];
-            for (int y = 0; y < rows.Length; y++)
-                for (int x = 0; x < cols; x++)
-                    blocked[y * cols + x] = rows[y][x] == '#';
-            return new CollisionGrid(new MapGrid(cols, rows.Length, Cell), blocked);
-        }
-
-        private static WorldMap Map(string id, CollisionGrid grid, IReadOnlyList<DoorArea> doors = null, IDictionary<string, (float X, float Y)> spawns = null) =>
-            new WorldMap(id, grid, doors ?? new DoorArea[0], spawns ?? new Dictionary<string, (float X, float Y)>());
-
-        private static NpcSpot Spot(string mapId, int cx, int cy)
-        {
-            var c = CellPos.Center(new CellPos(cx, cy), Cell);
-            return new NpcSpot(mapId, c.X, c.Y);
-        }
-
-        private static (float X, float Y) Center(int cx, int cy) => CellPos.Center(new CellPos(cx, cy), Cell);
-
         /// <summary>A: 오른쪽 끝(4,1) 칸 위에 문 → B의 도착 지점 (1,1).</summary>
         private static Maps TwoMaps()
         {
