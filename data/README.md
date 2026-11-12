@@ -12,6 +12,13 @@
   — 태그 `unity-playable-20261111`에 있다. 그래서 엔티티의 `asset` 필드(옛 Unity 경로)는 이제 없는 파일을 가리킨다(아래 "엔티티의 모양").
 - 문구는 `data/localization/<언어>.json`(옛 문구 표)과 `game/localization/<언어>.json`(MonoGame 판에서 더한 문구) 두 곳이다.
   게임이 두 폴더를 합쳐 읽고, 같은 키는 `game/localization`이 이긴다. 새 문구는 `game/localization`에 넣는다.
+- 변환기를 다시 돌리는 단계는 없다. 고친 JSON이 그대로 다음 실행의 데이터다(빌드·변환 없이 시작할 때 읽는다).
+- 수치(활동 시간 `timeCostMinutes`, 체력·집중 비용 등)를 바꿀 때는 균형 문서 `docs/superpowers/specs/2026-11-12-time-balance.md`의 원칙과 표를 함께 본다.
+  균형 검사(`game/tests/Rootborn.Game.Tests/DayBalanceTests`)의 목표·가정은 `game/tests/Rootborn.Game.Tests/day-balance.json`(게임은 읽지 않는다).
+  수치를 바꾸는 것은 기획 결정이라 사용자가 정한다.
+- data 폴더 옆의 `game/economy.json`(통화 아이템)과 `game/time.json`(하루 시작·취침 시각·밤 체력 감소)도 규칙이다. 손으로 고치고, 게임이 읽는 값만 둔다.
+- 같이 하기의 데이터 지문(`game/Rootborn.Data/DataFingerprint`)은 등록부·엔티티 파일·`game/economy.json`·`game/time.json`을 셈한다. 이 중 한 글자만
+  바꿔도 바꾸기 전 배포와는 같은 방에 들어가지 못한다(문구·좌표표는 셈하지 않는다).
 
 ## 폴더와 파일
 

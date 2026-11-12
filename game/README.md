@@ -46,6 +46,12 @@ dotnet run --project game/Rootborn.Host -- --save-root <세이브 폴더>
 dotnet run --project game/Rootborn.Host -- --save-root <세이브 폴더> --slot slot-0
 ```
 
+테스트 프로젝트는 모두 `game/tests/<이름>`에 있고 `game/Rootborn.sln`에 들어 있다(Core 테스트도 `game/tests/Rootborn.Core.Tests` — 옛 `Tools/Rootborn.Core.Tests`가 아니다).
+평소에는 고친 프로젝트만 돌린다: `dotnet test game/tests/<이름> --filter "FullyQualifiedName~<클래스>"`. 전체와 Host 전체는 원격 Linux 장치에서
+`bash Scripts/remote-test/run.sh [<커밋>]`(커밋된 것만 간다, `Scripts/remote-test/README.md`), 정적 검사는 `bash Scripts/ci/run-all.sh --checks-only`.
+손으로만 도는 테스트(`[Explicit]`, 평소 실행에서 건너뜀): Host `ThemeConversionWriter`(테마 파일을 다시 쓴다), Simulation `ReplayFromEnvironment`(`ROOTBORN_SIM_REPLAY`),
+Server `ServerLoadMeasureTests`(부하 측정)·`DeployedServerSharingTests`(배포 폴더가 있어야 한다 — `Tools/publish/verify.sh --server`가 돌린다).
+
 인자와 환경 변수(인자가 먼저다):
 
 | 인자 | 환경 변수 | 없을 때 |
@@ -158,6 +164,12 @@ dotnet run --project game/Rootborn.Server -- --save-root <세이브 폴더> --sl
 방의 세이브: `<세이브 폴더>/<방 슬롯>/`에 방의 시계·방 설정·요청 장부·공유 조각(`room-piece-<조각>.json`), `guests/<플레이어>/`에 손님마다 세이브.
 받은 손님 저장은 옛 세이브에 겹친 것으로 게임 한 판을 시작해 보는 손상 슬롯 검사와 같은 규칙(깨진 파일, 더 새 형식 버전, 다른 플레이어의 진행)과 이름·크기 한도로 검사하고,
 걸리면 쓰지 않는다(옛 세이브를 지킨다). 저장된 방 설정에 모르는 조각이 있으면(더 새 버전이 만든 방) 세이브 오류(4)로 끝난다.
+
+배포 확인(`Tools/publish/README.md`): `bash Tools/publish/publish.sh --server linux-x64`(또는 `win-x64`)로 서버 배포 폴더를 만들고
+`bash Tools/publish/verify.sh --server linux-x64`로 저장소 밖 복사본에서 듣기 → `stop` → 저장 → 이어서 열기와 같이 쓰는 집(`DeployedServerSharingTests`)을 본다.
+CI `server-publish` job이 같은 두 줄을 돌린다. 배포 목록(`Tools/publish/content-server.txt`, 클라이언트는 `content.txt`)이 시작에 필요한 파일을 다 고르는지는
+개발 폴더에서 `game/tests/Rootborn.Server.Tests/PublishListStartupTests`가 본다(목록이 고르는 데이터·설정·맵만 저장소 밖에 복사해 정의 읽기·서버 켜고 끄기·집 판정 칸을 해 본다).
+서버가 새 파일을 읽게 되면 배포 목록과 이 테스트에 함께 더한다. 균형 검사의 메모(`game/tests/Rootborn.Game.Tests/day-balance.json`)는 배포에 넣지 않는다.
 
 ## 화면 더하기
 

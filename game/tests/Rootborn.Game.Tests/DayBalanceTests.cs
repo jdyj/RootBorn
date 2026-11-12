@@ -12,7 +12,7 @@ namespace Rootborn.Game.Tests
     /// <summary>
     /// 하루의 균형(docs/superpowers/specs/2026-11-12-time-balance.md): 실제 data/와 game/time.json으로 흔한 하루(수업 있는 평일, 학교 밖 위주,
     /// 알바 위주, 진로 연습 위주, 주말)를 욕심쟁이 플레이어로 돌려 하루 큰 활동 수가 목표 범위 안인지, 시간이 체력·집중보다 먼저(또는 비슷하게)
-    /// 막는지 본다. 목표 범위와 가정(활동 사이 걷는 시간, 미니게임을 하는 실제 시간)은 game/time.json의 "balance" 한 곳이다.
+    /// 막는지 본다. 목표 범위와 가정(활동 사이 걷는 시간, 미니게임을 하는 실제 시간)은 이 폴더의 day-balance.json 한 곳이다(게임은 읽지 않고 배포·데이터 지문에도 들어가지 않는다).
     /// 활동 시간 값(data/의 timeCostMinutes)을 바꿔 범위를 벗어나면 이 검사가 깨진다. 자동 테스트다(화면 없음, GameSession 명령, 시계는 손으로 돌림).
     /// 큰 활동 = 시간이 드는 활동(0분짜리 소개·대화 선택지는 세지 않는다). 하루 이벤트는 그날 한 번 나오는 일이라 넣지 않는다.
     /// 성인 시설 일은 학생 하루가 아니라 넣지 않는다(체력·집중을 쓰지 않아 시간만 막는다 — 표는 설계 문서).
@@ -64,9 +64,9 @@ namespace Rootborn.Game.Tests
         {
             var b = Target.Value;
             TestContext.Out.WriteLine(day.Line);
-            Assert.That(day.Actions, Is.InRange(b.Min, b.Max), "하루 큰 활동 수(game/time.json balance.bigActivitiesPerDay): " + day.Line);
+            Assert.That(day.Actions, Is.InRange(b.Min, b.Max), "하루 큰 활동 수(day-balance.json bigActivitiesPerDay): " + day.Line);
             Assert.That(day.TimeStopped || day.StoppedAt >= b.BodyMayStopFrom, Is.True,
-                "체력·집중이 시간보다 너무 일찍 막았다(balance.bodyMayStopFrom 전): " + day.Line);
+                "체력·집중이 시간보다 너무 일찍 막았다(day-balance.json bodyMayStopFrom 전): " + day.Line);
         }
 
         // 하루: 앞 목록을 먼저 본다(위주로 하는 것). 목록 안에서는 돌아가며 고른다(같은 것만 되풀이하지 않는다). 걷는 시간을 먼저 보낸다. 취침 시각이 되면 멈춘다. 아무것도 안 되면 멈춘다.
@@ -185,9 +185,9 @@ namespace Rootborn.Game.Tests
 
         private static Balance ReadBalance()
         {
-            var path = Path.Combine(TestWorld.RepoRoot, "game", "time.json");
+            var path = Path.Combine(TestWorld.RepoRoot, "game", "tests", "Rootborn.Game.Tests", "day-balance.json");
             using var document = JsonDocument.Parse(File.ReadAllBytes(path));
-            var b = document.RootElement.GetProperty("balance");
+            var b = document.RootElement;
             var range = b.GetProperty("bigActivitiesPerDay");
             var stop = b.GetProperty("bodyMayStopFrom").GetString().Split(':');
             return new Balance

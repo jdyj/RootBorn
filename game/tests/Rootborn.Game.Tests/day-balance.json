@@ -1,0 +1,7 @@
+{
+  "about": "게임은 읽지 않는다. 균형 검사(DayBalanceTests.cs)의 목표와 가정이다. 배포에 넣지 않고 데이터 지문에도 들어가지 않는다(게임 규칙은 game/time.json). 활동 시간 값은 data/의 timeCostMinutes, 정한 원칙과 표는 docs/superpowers/specs/2026-11-12-time-balance.md",
+  "bigActivitiesPerDay": { "min": 4, "max": 6 },
+  "bodyMayStopFrom": "19:00",
+  "travelMinutesPerActivity": 30,
+  "minigamePlayShareOfTimeLimit": 0.5
+}

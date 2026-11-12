@@ -40,20 +40,25 @@ bash Scripts/ci/run-all.sh --skip-host     # dotnet 테스트에서 창을 띄�
 
 ## 워크플로(`.github/workflows/ci.yml`)
 
-GitHub 기록(`gh run view`)을 읽어 확인한 값이다(main 43022156721, 2026-11-11).
+GitHub 기록(`gh run view`, 읽기만)을 읽어 확인한 값이다(main 43120463204·43137365566·43144463346, 2026-11-11~12 UTC).
 
-| job | 하는 일 | 마지막 결과 | 시간 | 막는가 |
+| job | 하는 일 | 마지막 결과(43144463346) | 시간(최근 세 번) | 막는가 |
 |---|---|---|---|---|
-| `static-checks` | 자체 시험 + 검사 6개 | 통과 | 약 20초 | 막는다 |
-| `dotnet-tests` | `game/tests`의 Host 테스트를 뺀 나머지(Core, Server, Simulation 포함) | 통과(Core 970, Data 256, Game 520, Screens 393, Server 40, Simulation 36 …) | 약 1.5분 | 막는다 |
-| `server-publish` | `Tools/publish/publish.sh --server linux-x64` 뒤 `verify.sh --server linux-x64` | 연속 두 번 통과(43022156721, 43027519152) | 35~50초 | 막는다 |
-| `host-tests` (묶음 4개 matrix) | `game/tests/Rootborn.Host.Tests`를 `xvfb-run` + 소프트웨어 GL로, 묶음마다 따로 | 나누기 전 한 job: 171건 중 169 통과, 성능 시험 2건 실패 | 나누기 전 테스트 단계 28~29분 | **막지 않는다**(`continue-on-error`), 묶음마다 시간 제한 30분 |
+| `static-checks` | 자체 시험 + 검사 6개(아래 표 — `check-meta-files`는 Unity와 함께 지웠고 `check-host-test-shards`를 더했다) | 통과(Core 파일 161개, 엔티티 id 387개 파일, 2개 언어 같은 키 1,360개, Host 클래스 50개가 묶음 4개에) | 10~15초 | 막는다 |
+| `dotnet-tests` | `game/tests`의 Host 테스트를 뺀 나머지 프로젝트(Core 테스트도 `game/tests` 안 — Server, Simulation 포함) | 통과(Core 1,036, Data 284, Game 572, Net 76, Screens 449, Server 75, Simulation 43, Ui 123, World 94. 건너뜀 0) | 약 2분 | 막는다 |
+| `server-publish` | `Tools/publish/publish.sh --server linux-x64` 뒤 `verify.sh --server linux-x64` | 통과 | 30초~1분 | 막는다 |
+| `host-tests` (묶음 4개 matrix) | `game/tests/Rootborn.Host.Tests`를 `xvfb-run` + 소프트웨어 GL로, 묶음마다 따로 | 통과: rest 191, main-chain 13, play 10, soak 2(합 216 — `[Explicit]` 1건은 돌지 않는다) | 묶음별 job: rest 5~9분, play 10~18분, main-chain 17~18분, soak 8~20분 | **막지 않는다**(`continue-on-error`), 묶음마다 시간 제한 30분 |
+
+- `server-publish` 실패 이력: 43075465810·43082127476·43100860484·43106750437(11-11)은 서버 배포에 `game/time.json`이 빠져 서버가 시작하지 못했다(종료 코드 3) — `8dccb159c`가 목록에 더해 고쳤다. 43137365566(11-12)은 맵 데이터(`.ldtkl`)를 서버 배포에 넣은 뒤 `verify.sh`의 "서버 폴더에 그림·글꼴·맵이 없다" 검사가 그것을 막았다 — `2ca1e5f14`가 검사를 고쳐 43144463346에서 통과했다. 테스트 코드 문제는 없었다.
+- 43075465810은 Host가 한 job이던 마지막 실행으로 45분에 취소됐다. 그 뒤로 묶음 4개로 나눴다.
 
 - `dotnet-tests`는 한 프로젝트가 실패해도 나머지를 끝까지 돌리고 실패를 모아 알린다. 새 테스트 프로젝트는 `game/tests/<이름>/<이름>.csproj`에 두면 저절로 돈다(글롭). `Tools/` 아래 테스트 프로젝트는 워크플로와 `run-all.sh`에 한 줄씩 더한다.
 - 서버 테스트는 UDP를 루프백(`127.0.0.1`, 포트 0)에서만 열고 별도 프로세스를 띄운다. 러너에서 문제 없었다.
 - `host-tests`는 러너에 `fonts-nanum`을 깔고 `ROOTBORN_FONT`로 준다(깔기 전 실행은 한글 글꼴을 못 찾아 125건이 실패했다). 통과한 테스트도 시간과 함께 로그에 남기고(`verbosity=normal`) trx를 아티팩트 `host-test-results`로 올린다(14일).
-  실패 2건(`OBJECTIVE_JOURNAL_PERF_200Rows_OpenAndScroll_FrameTime`, `SCREENS_003_Performance_1500CellGrid_OpenAndScroll`)은 소프트웨어 렌더링 러너가 프레임 시간 중앙값 16.7ms 기준을 못 맞춘 것이다. 기준은 다른 세션(play-soak)이 바꾸는 중이라 이 쪽에서 고치지 않는다.
-  `continue-on-error`를 떼는 조건: (1) 위 두 시험이 러너에서 통과한다(기준이 바뀌었거나 러너에서 건너뛴다), (2) 그 뒤 main 실행에서 `host-tests`가 연속 두 번 통과한다, (3) 실행 시간이 시간 제한(45분)에 한참 못 미친다.
+  나누기 전(11-11) 실패 2건(`OBJECTIVE_JOURNAL_PERF_200Rows_OpenAndScroll_FrameTime`, `SCREENS_003_Performance_1500CellGrid_OpenAndScroll`)은 소프트웨어 렌더링 러너가 프레임 시간 중앙값 16.7ms 기준을 못 맞춘 것이었다. 지금은 프레임 시간을 참고로만 적고 판정하지 않아(로그 "참고 — 판정 안 함", 판정은 할당·그리기 명령 수) 러너에서 통과한다.
+  `continue-on-error`를 떼는 조건: (1) 위 두 시험이 러너에서 통과한다(기준이 바뀌었거나 러너에서 건너뛴다), (2) 그 뒤 main 실행에서 `host-tests`가 연속 두 번 통과한다, (3) 실행 시간이 시간 제한(묶음마다 30분)에 한참 못 미친다.
+  2026-11-12 판단: (1) 채워짐(기준이 바뀌었다) — 두 시험이 든 rest 묶음이 43120463204·43137365566·43144463346에서 모두 통과(건너뜀 없음). (2) 채워짐 — 43082127476부터 main 여섯 번 연속 네 묶음 모두 통과.
+  (3) **아직** — 가장 긴 묶음이 43137365566에서 20분 25초(soak, 제한의 68%)였고 같은 묶음이 실행마다 8~20분으로 흔들린다. 떼려면 묶음을 더 고르게 나누거나(soak·main-chain·play가 길다) 제한을 올린 뒤 다시 본다.
 - `concurrency`: 같은 PR의 낡은 실행만 취소하고, main 푸시는 취소하지 않는다(연달아 푸시해도 커밋마다 결과가 남는다).
 - Host는 원격 Linux 장치(Xvfb, 소프트웨어 GL)에서는 전체가 약 4분에 통과한다. 러너(2 코어쯤)에서는 테스트 단계만 28~29분이었다. 느린 이유는 소프트웨어 그리기와 코어 수로 보인다.
 - apt 미러의 DNS가 안 되면 apt가 20분쯤 재시도하다 실패했다(main 43043641815, 43052911168 — 테스트는 하나도 돌지 않았다). 그래서 한 번에 5분까지만 기다리고 세 번까지 다시 한다.

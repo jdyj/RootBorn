@@ -11,6 +11,7 @@ namespace Rootborn.Core.Careers
         public string WorkId;
         public string MinigameId;
         public int Day;
+        /// <summary>세이브 필드(이름·형 그대로). 예약한 활동의 큰 활동 몫(TimePointCost)을 적어 둔다 — 어디서도 다시 읽지 않는다(세는 것은 정의의 몫으로 한다).</summary>
         public int ReservedTimePoints;
         public int Seed;
         public int FacilityLevel;

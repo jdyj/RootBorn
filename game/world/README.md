@@ -176,6 +176,22 @@ LDtk 엔티티가 아니라 **`interactions.json`**에 맵 id별로 적는다(LD
 자리가 있는 항목은 `이름` (x, y)로 적는다. 이 목록과 데이터가 어긋나면 `TemporaryPointsTests.TheReadmeTemporaryList_MatchesTheTemporaryMarksInTheData`가 실패한다.
 마을 임시 지점은 북쪽 광장(칸 32~52열, 0~11행)에 두 줄 이상 간격으로 둔다(칸 (c, r)의 가운데 = ((c+0.5)×32, (r+0.5)×32)).
 
+### 새 맵을 그릴 사람을 위한 한 장 요약 (2026-11-12 데이터 기준)
+
+임시 표시는 모두 35개다: `interactions.json` 상호작용 지점 31개, `lights.json` 빛 지점 1개, `maps.json` 연결 3개(문 1, 도착 지점 1, 이동 구역 1).
+전부 **LDtk 마을 그림에 Unity 판의 북쪽 구역(학교 입구, 가게·식당 등 장소, 성인 시설, 알바 자리)이 없어서** 생겼다. 새 맵에 아래 자리를 그리면
+그 항목의 `temporary`·`reason`을 지우고 자리를 새 맵 좌표로 옮긴다(목록 표의 같은 줄도 지운다 — 어긋나면 테스트가 알려 준다).
+
+| 새 맵에 있어야 할 것 | 맵 | 지금 임시로 둔 것 | 개수 |
+|---|---|---|---|
+| 마을 ↔ 학교 출입구(마을 쪽 문과 학교 앞 도착 지점, 학교 쪽 출구) | Town, School | 문 `north`, 도착 지점 `town-school-entry`, School 아래 가장자리 이동 구역 `town` | 3 |
+| 장소 6곳의 입구(식당, 의원, 디자인 스튜디오, 훈련장, 도서관, 가게) — 같은 자리에 장소 활동·장소 방문 둘 | Town | `location-activity`·`location-visit` 쌍 | 12 |
+| 성인 시설 4곳의 문(요리, 응급, 인테리어, 군인) | Town | `career-facility` | 4 |
+| 진로 연습 4곳(Unity 판에도 자리가 없었다 — 어디에 둘지는 맵 그리는 사람이 정한다) | Town | `career-practice` | 4 |
+| 알바 자리 9곳(가게 알바 + 도우미 8곳) | Town | `part-time-work` | 9 |
+| 탐색 1곳, 발견 1곳(골목 상자, 시계탑 안내문) | Town | `exploration`, `discovery` | 2 |
+| 밤에 학교 앞을 비추는 가로등 | Town | 빛 지점 `town-night-guide` | 1 |
+
 | 파일 | 맵 | 항목 | 이유 |
 |---|---|---|---|
 | maps.json | Town | 문 `north` → School/school-entry | LDtk 마을 그림 밖 북쪽 구역(학교 입구가 있던 곳)이 LDtk에 없다 |

@@ -66,6 +66,34 @@ namespace Rootborn.Data.Tests
         }
 
         [Test]
+        public void RealTimeFile_HoldsOnlyTheRulesTheGameReads()
+        {
+            // 지문은 game/time.json 파일 전체를 셈한다. 게임이 읽지 않는 값(균형 검사의 목표·가정 같은 메모)이 여기 있으면
+            // 그 메모만 고쳐도 규칙이 같은 두 배포가 서로 거절한다. 균형 메모는 game/tests/Rootborn.Game.Tests/day-balance.json 이다.
+            var path = Path.Combine(RepoPaths.Root, "game", "time.json");
+            using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllBytes(path));
+            var keys = document.RootElement.EnumerateObject().Select(p => p.Name).Where(n => n != "about").ToArray();
+            Assert.That(keys, Is.EquivalentTo(new[] { "dayStart", "bedtime", "nightEnergyLossPerHour", "lateSleepRecoveryLossPerHour" }),
+                "game/time.json 에는 TimeSettings 가 읽는 규칙만 둔다");
+        }
+
+        [Test]
+        public void BalanceNotes_DoNotChangeIt_RuleValuesDo()
+        {
+            string data = SmallData();
+            string before = DataFingerprint.Compute(data);
+            string notes = Path.Combine(_root, "game", "tests", "Rootborn.Game.Tests", "day-balance.json");
+            Directory.CreateDirectory(Path.GetDirectoryName(notes));
+            File.WriteAllText(notes, "{\"bigActivitiesPerDay\":{\"min\":4,\"max\":6}}\n");
+            Assert.That(DataFingerprint.Compute(data), Is.EqualTo(before), "균형 메모를 더함");
+            File.WriteAllText(notes, "{\"bigActivitiesPerDay\":{\"min\":3,\"max\":7}}\n");
+            Assert.That(DataFingerprint.Compute(data), Is.EqualTo(before), "균형 메모를 바꿈");
+
+            File.WriteAllText(Path.Combine(_root, "game", "time.json"), "{\"dayStart\":\"07:00\",\"bedtime\":\"23:00\"}\n");
+            Assert.That(DataFingerprint.Compute(data), Is.Not.EqualTo(before), "규칙 값(bedtime)을 바꿈");
+        }
+
+        [Test]
         public void MissingTimeFile_IsADifferentFingerprint()
         {
             string data = SmallData();

@@ -215,6 +215,7 @@ namespace Rootborn.Core.Careers
         public string FacilityId { get; }
         public Minigame Minigame { get; }
         public int MinimumFacilityLevel { get; }
+        /// <summary>오늘 한 큰 활동 수에 더하는 몫(옛 이름 시간 포인트 비용, 데이터 timePointCost, 1 이상). 막는 데는 쓰지 않는다 — 시간은 <see cref="TimeCostMinutes"/>.</summary>
         public int TimePointCost { get; }
 
         /// <summary>일이 하루 시계를 움직이는 분. 학생 활동의 시간 비용과 같다.</summary>

@@ -70,7 +70,8 @@ LDtk 는 가구 방 맵만이 아니라 전부 들어간다(5MB) — 새 맵이 
   | data 옆 `game/time.json`(시간 규칙, 없으면 빠진다) | `game/world`·LDtk 맵(같이 쓰는 집의 칸 — 방이 판정하므로 손님 쪽 맵이 달라도 규칙이 갈리지 않는다) |
   | | `game/themes`·`game/localization`·그림(서버가 읽지 않는다) |
 
-  `game/time.json`은 파일 전체를 셈한다 — 게임이 읽지 않는 `balance` 묶음(균형 검사의 목표)을 고쳐도 지문이 바뀐다.
+  `game/time.json`은 파일 전체를 셈하므로 게임이 읽는 규칙만 둔다. 균형 검사의 목표·가정은 `game/tests/Rootborn.Game.Tests/day-balance.json`에 있고
+  배포에 넣지 않으며 지문에도 들어가지 않는다(`DataFingerprintScopeTests`가 지킨다).
 
   줄바꿈(CRLF/LF)과 맨 앞 UTF-8 BOM은 맞춰서 넣는다 — Windows 에서 만든 배포와 Linux 에서 만든 배포가 같은 지문이다.
   규칙 데이터를 한 글자만 바꿔도 지문이 달라져 "데이터 버전이 다르다"로 거절된다(같은 커밋에서 만든 두 폴더끼리만 들어간다).

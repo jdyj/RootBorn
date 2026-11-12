@@ -31,7 +31,7 @@ namespace Rootborn.Core.StudentLife
     }
 
     /// <summary>
-    /// 한 학생의 오늘 일과(칸들)와 지난 일기. 칸 수는 달력의 시간 포인트를 따른다.
+    /// 한 학생의 오늘 일과(칸들)와 지난 일기. 칸 수는 달력의 그날 칸 수(LifeCalendar.GetBudget — 옛 이름 하루 시간 포인트)를 따른다.
     /// 날이 바뀌면 오늘 칸을 일기로 옮긴다. 같은 영수증 키로는 한 칸만 채운다. 다른 학생·지난 날로는 바꿀 수 없다.
     /// </summary>
     public sealed class DailyPlanProgress

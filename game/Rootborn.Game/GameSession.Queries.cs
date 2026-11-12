@@ -168,7 +168,10 @@ namespace Rootborn.Game
         /// </summary>
         public string GrowthStageId() => WearableRules.SelectStage(_definitions.All<GrowthStageRule>(), Student.CurrentDay, Adult.IsAdult);
 
-        /// <summary>오늘 할 수 있는 시간 포인트와 쓴 것.</summary>
+        /// <summary>
+        /// 옛 이름(시간 포인트)의 조회: (그날 칸 수 − 오늘 한 큰 활동 수, 그날 칸 수). 한도가 아니고 화면에 보이지 않는다 —
+        /// 시뮬레이션 기록(StateSnapshot의 time-points 줄)이 읽는다(Core StudentLifeProgress.TimeBudget).
+        /// </summary>
         public (int Remaining, int Budget) TimePoints => (Student.TimePointsRemaining, Student.DailyTimePointBudget);
     }
 }

@@ -3,8 +3,8 @@ using System;
 namespace Rootborn.Core.StudentLife
 {
     /// <summary>
-    /// 요일별 하루 시간 포인트. 1일째가 주의 첫날이고 기본 주말은 6·7번째 날이다.
-    /// 흐르는 시간(2026-11-12)부터 시간 포인트는 활동 한도가 아니다. 하루의 칸 수는 일과 계획판의 칸 수(DailyPlanSchedule)로만 쓴다.
+    /// 요일별 하루 칸 수(옛 이름: 하루 시간 포인트 — 이름의 "Budget"도 그 자리다). 1일째가 주의 첫날이고 기본 주말은 6·7번째 날이다.
+    /// 흐르는 시간(2026-11-12)부터 활동 한도가 아니다. 일과 계획판의 칸 수(DailyPlanProgress)로만 쓴다.
     /// </summary>
     public sealed class LifeCalendar
     {
@@ -25,7 +25,10 @@ namespace Rootborn.Core.StudentLife
         public int GetBudget(int day) => IsWeekend(day) ? _weekendBudget : _weekdayBudget;
     }
 
-    /// <summary>활동이 시간 포인트를 얼마나 쓰고, 어느 요일에 되고, 하루 한 번인지.</summary>
+    /// <summary>
+    /// 활동이 어느 요일에 되고, 하루 한 번인지, 오늘 한 큰 활동 수에 몇으로 세는지(<see cref="TimePointCost"/> — 옛 이름 시간 포인트 비용,
+    /// 데이터 timePointCost. 0이면 큰 활동으로 세지 않는다. 막는 데는 쓰지 않는다).
+    /// </summary>
     public sealed class ActivityTimePolicy
     {
         private readonly int _allowedDaysMask;

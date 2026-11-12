@@ -104,7 +104,7 @@
 
 - **활동 하나의 길이**: 그 정의의 `timeCostMinutes`(`data/` — 2절 표의 파일). 이제 `data/`가 원본이다(변환기를 다시 돌리지 않는다).
 - **원칙 전체**(티어 2·2.5·3시간, 수업 4시간): 1절 원칙대로 다시 계산해 2절 표와 함께 고친다. 표를 만든 계산은 1절이 전부다.
-- **목표 범위와 가정**: `game/time.json`의 `"balance"`(게임은 읽지 않는다, 검사만 읽는다):
+- **목표 범위와 가정**: `game/tests/Rootborn.Game.Tests/day-balance.json`(게임은 읽지 않는다, 검사만 읽는다. 배포와 데이터 지문에 들어가지 않으므로 고쳐도 같이 하기가 갈리지 않는다 — 2026-11-12에 `game/time.json`의 `"balance"`에서 옮겼다):
   - `bigActivitiesPerDay` `{ "min": 4, "max": 6 }` — 하루 큰 활동 수 범위
   - `bodyMayStopFrom` `"19:00"` — 체력·집중이 하루를 막아도 되는 가장 이른 때(그 전에 막히면 "시간이 먼저 막는다"가 깨진 것)
   - `travelMinutesPerActivity` `30` — 활동마다 걷는 시간 가정

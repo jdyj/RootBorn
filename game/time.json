@@ -1,14 +1,7 @@
 {
-  "about": "흐르는 시간의 수치(설계 docs/superpowers/specs/2026-11-12-flowing-time-design.md). 하루 길이는 data/time의 TimeDefinition. 시각은 \"HH:MM\". 읽는 곳: game/Rootborn.Data/TimeSettings.cs",
+  "about": "흐르는 시간의 수치(설계 docs/superpowers/specs/2026-11-12-flowing-time-design.md). 하루 길이는 data/time의 TimeDefinition. 시각은 \"HH:MM\". 읽는 곳: game/Rootborn.Data/TimeSettings.cs. 이 파일은 데이터 지문에 통째로 들어가므로 게임이 읽는 규칙만 둔다(균형 검사의 목표·가정은 game/tests/Rootborn.Game.Tests/day-balance.json).",
   "dayStart": "07:00",
   "bedtime": "22:00",
   "nightEnergyLossPerHour": 1,
-  "lateSleepRecoveryLossPerHour": 2,
-  "balance": {
-    "about": "게임은 읽지 않는다. 균형 검사(game/tests/Rootborn.Game.Tests/DayBalanceTests.cs)의 목표와 가정이다. 활동 시간 값은 data/의 timeCostMinutes, 정한 원칙과 표는 docs/superpowers/specs/2026-11-12-time-balance.md",
-    "bigActivitiesPerDay": { "min": 4, "max": 6 },
-    "bodyMayStopFrom": "19:00",
-    "travelMinutesPerActivity": 30,
-    "minigamePlayShareOfTimeLimit": 0.5
-  }
+  "lateSleepRecoveryLossPerHour": 2
 }
