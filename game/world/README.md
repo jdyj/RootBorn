@@ -51,6 +51,7 @@
 - **칸 크기**: `Collision` IntGrid 층이 있으면 그 격자 크기, 없으면 타일이 가장 많은 타일 층의 격자 크기다.
   레벨 픽셀 크기는 칸 크기로 나누어떨어져야 한다(아니면 문제로 알린다). 칸 크기가 다른 타일 층은 충돌 판정에서 빠진다.
 - **걷는 몸**: 1칸 크기 상자, 초당 4칸(`maps.json`의 `walker`). 칸 단위라 칸 크기가 다른 맵에서도 같다.
+- **NPC 걷는 빠르기**: 초당 2.5칸(`maps.json`의 `npcWalker.speedCellsPerSecond`, `WorldCatalog.NpcWalker`). 이 값이 없으면 맵 목록 읽기를 거절한다.
 - **카메라·문 연출**: 카메라는 캐릭터를 부드럽게 따라가고(맵 경계 안), 자동문(문 엔티티)에 들어서면 문 위에 넓어지는 사각형,
   이동 구역(`maps.json` `areas`)에 들어서면 화면 덮개를 보인다. 수치는 `presentation.json`(맵마다 다르지 않다). 문 사각형은 문 상자 가운데 기준이라
   새 문 그림에서도 문 상자를 문 그림 가운데에 두면 맞는다.
@@ -117,6 +118,11 @@ LDtk 엔티티가 아니라 **`interactions.json`**에 맵 id별로 적는다(LD
   지점은 걸을 수 있는 칸이거나 그 옆 칸에 둔다(검사가 잡는다). 지점 자체는 길을 막지 않는다.
 - NPC는 일정(data/npcs)이 정한 장소의 자리에 선다. 같은 장소에 NPC가 여럿이면 data/registry.json의 NPC 순서대로 1번째, 2번째 자리.
   자리가 모자라면 그 NPC는 그 맵에 서지 않는다.
+- **NPC 자리 약속**(NPC 이동, `MapAnchors`): 장소 id 하나의 자리는 **한 맵에만** 적는다. 같은 장소가 여러 맵에 있으면 `maps.json`의 맵 순서로
+  처음 나오는 맵의 자리만 쓴다(그 맵의 자리가 모자라도 다음 맵에서 찾지 않는다). 시간대가 바뀌면 NPC는 앞 자리에서 다음 자리까지
+  문을 지나 걸어가므로, 일과표에서 이웃한 두 시간대의 자리 사이에 걸어서 가는 길이 있어야 하고, 자리는 걸을 수 있는 칸에 둔다(막힌 칸이면
+  그 자리 둘레를 어슬렁거리지 못하고 서 있는다). 자리 둘레 3칸 안을 어슬렁거린다(일과표 줄의 `stay`, data/npcs/NpcWanderStay.json).
+  NPC 자리는 데이터 지문에 들어간다(방 안 모두가 같은 자리를 셈한다). `NpcRouteContractTests`가 확인한다.
 - `kind`는 그대로 이벤트로 나가는 문자열이고, 화면 등록 표(`Rootborn.Screens/ScreenCatalog.cs`)가 종류로 화면을 연다. 지금 종류:
 
 | kind | 무엇 | 우선순위(Unity 판) | 지금 여는 화면(2026-11-11 메인 체인 Host 시나리오로 확인) |
@@ -204,6 +210,19 @@ LDtk 엔티티가 아니라 **`interactions.json`**에 맵 id별로 적는다(LD
 | interactions.json | Town | 알바 9곳 `part-time-work` — 가게 알바 `work.shift.corner-store` (1456, 304)와 알바 8곳(7행 2칸 간격): `work.workshop-helper` (1104, 240), `work.restaurant-helper` (1168, 240), `work.studio-helper` (1232, 240), `work.supply-helper` (1296, 240), `work.training-helper` (1360, 240), `work.clinic-helper` (1424, 240), `work.fitness-helper` (1488, 240), `work.errand-helper` (1552, 240) | Unity 판 알바 자리(Town.unity `PartTimeWorkInteractor`)가 북쪽 구역에 있었다 |
 | interactions.json | Town | 발견 1곳 `discovery`: `discovery.clocktower-notice` (1360, 304) — 9행 도서관과 가게 알바 사이 | Unity 판 발견 지점(`TownDiscoveryPoint`)이 북쪽 구역에 있었다 |
 | lights.json | Town | 빛 지점 `town-night-guide` (1072, 176) | Unity 판 유일한 빛은 씬 원점(마을 모서리)에 남아 거의 보이지 않았다. Unity 판 가로등 그림 자리(학교 앞 도착 지점에서 (-3, -1)유닛)를 임시 학교 앞 도착 지점에 맞춰 옮겼다 |
+
+### 마을 NPC 자리(임시)
+
+`interactions.json` Town의 `npcAnchors`도 새 맵 전까지의 임시 자리다(자리 목록에는 `temporary` 칸을 둘 수 없어 JSON 주석으로 적었다 —
+위 검사가 보는 임시 표시에는 들지 않는다). Unity 판 마을의 NPC 자리는 LDtk 마을 그림 밖 북쪽 구역에 있었다. 일과표의 마을 장소마다
+북쪽 광장 안, 다른 임시 지점과 2칸 이상 떨어진 칸에 두었다. 처음 정한 칸이 모두 열려 있어 옮긴 것은 없다(2026-11-12).
+
+| 장소 id | 자리 [x, y] | 칸 [열, 행] | 누가 언제(일과표) |
+|---|---|---|---|
+| location.library | [1040, 368] | [32, 11] | 사서: 오후, 그 밖의 때(대체 장소) |
+| location.corner-store | [1264, 368] | [39, 11] | 가게 주인: 오후, 그 밖의 때 / 일터 관리자: 저녁 |
+| location.workshop | [1040, 240] | [32, 7] | 일터 관리자: 오후, 그 밖의 때 |
+| location.town-square | [1680, 240], [1680, 304] | [52, 7], [52, 9] | 선생님: 오후 / 사서·가게 주인: 저녁(둘이 겹쳐 자리 둘) |
 
 ## 9. 새 맵을 넣은 뒤 돌려 볼 것
 

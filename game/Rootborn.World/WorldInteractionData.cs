@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using Rootborn.Core.Interaction;
+using Rootborn.Core.NpcMovement;
 using Rootborn.Core.World;
 
 namespace Rootborn.World
@@ -83,6 +84,33 @@ namespace Rootborn.World
                 data._maps[map.Name] = m;
             }
             return data;
+        }
+    }
+
+    /// <summary>
+    /// 장소 id의 NPC 자리(interactions.json npcAnchors, 레벨 픽셀 그대로). 맵 목록 순서로 찾아 그 장소의 자리가 처음 나오는 맵의 자리를 쓴다
+    /// — 그 맵의 자리가 모자라면 다음 맵에서 찾지 않는다. 표는 만들 때 한 번 짓는다.
+    /// </summary>
+    public sealed class MapAnchors : INpcAnchors
+    {
+        private readonly Dictionary<string, (string MapId, List<(float X, float Y)> Spots)> _byLocation =
+            new Dictionary<string, (string, List<(float, float)>)>(StringComparer.Ordinal);
+
+        public MapAnchors(InteractionData data, IEnumerable<string> mapIds)
+        {
+            if (data == null) throw new ArgumentNullException(nameof(data));
+            if (mapIds == null) throw new ArgumentNullException(nameof(mapIds));
+            foreach (string mapId in mapIds)
+                foreach (var location in data.Map(mapId).NpcAnchors)
+                    if (!_byLocation.ContainsKey(location.Key)) _byLocation[location.Key] = (mapId, location.Value);
+        }
+
+        public bool TryGet(string locationId, int slot, out NpcSpot spot)
+        {
+            spot = default;
+            if (locationId == null || slot < 0 || !_byLocation.TryGetValue(locationId, out var found) || slot >= found.Spots.Count) return false;
+            spot = new NpcSpot(found.MapId, found.Spots[slot].X, found.Spots[slot].Y);
+            return true;
         }
     }
 

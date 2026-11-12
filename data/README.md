@@ -17,7 +17,8 @@
   균형 검사(`game/tests/Rootborn.Game.Tests/DayBalanceTests`)의 목표·가정은 `game/tests/Rootborn.Game.Tests/day-balance.json`(게임은 읽지 않는다).
   수치를 바꾸는 것은 기획 결정이라 사용자가 정한다.
 - data 폴더 옆의 `game/economy.json`(통화 아이템)과 `game/time.json`(하루 시작·취침 시각·밤 체력 감소)도 규칙이다. 손으로 고치고, 게임이 읽는 값만 둔다.
-- 같이 하기의 데이터 지문(`game/Rootborn.Data/DataFingerprint`)은 등록부·엔티티 파일·`game/economy.json`·`game/time.json`을 셈한다. 이 중 한 글자만
+- 같이 하기의 데이터 지문(`game/Rootborn.Data/DataFingerprint`)은 등록부·엔티티 파일·`game/economy.json`·`game/time.json`과
+  맵 데이터 `game/world/maps.json`·`game/world/interactions.json`(NPC 걷는 빠르기·자리)을 셈한다. 이 중 한 글자만
   바꿔도 바꾸기 전 배포와는 같은 방에 들어가지 못한다(문구·좌표표는 셈하지 않는다).
 
 ## 폴더와 파일

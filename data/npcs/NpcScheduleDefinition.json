@@ -30,7 +30,11 @@
             "ref": "Rule_Time_Morning",
             "type": "TimeSlotScheduleRule"
           }
-        ]
+        ],
+        "stay": {
+          "ref": "Stay_Wander_Default",
+          "type": "NpcWanderStay"
+        }
       },
       {
         "location": {
@@ -50,7 +54,11 @@
             "ref": "Rule_Time_AfternoonEvening",
             "type": "TimeSlotScheduleRule"
           }
-        ]
+        ],
+        "stay": {
+          "ref": "Stay_Wander_Default",
+          "type": "NpcWanderStay"
+        }
       }
     ]
   },
@@ -85,7 +93,11 @@
             "ref": "Rule_Time_Afternoon",
             "type": "TimeSlotScheduleRule"
           }
-        ]
+        ],
+        "stay": {
+          "ref": "Stay_Wander_Default",
+          "type": "NpcWanderStay"
+        }
       },
       {
         "location": {
@@ -105,7 +117,11 @@
             "ref": "Rule_Time_Evening",
             "type": "TimeSlotScheduleRule"
           }
-        ]
+        ],
+        "stay": {
+          "ref": "Stay_Wander_Default",
+          "type": "NpcWanderStay"
+        }
       }
     ]
   },
@@ -137,7 +153,11 @@
             "ref": "Rule_Time_Afternoon",
             "type": "TimeSlotScheduleRule"
           }
-        ]
+        ],
+        "stay": {
+          "ref": "Stay_Wander_Default",
+          "type": "NpcWanderStay"
+        }
       },
       {
         "location": {
@@ -154,7 +174,11 @@
             "ref": "Rule_Time_Evening",
             "type": "TimeSlotScheduleRule"
           }
-        ]
+        ],
+        "stay": {
+          "ref": "Stay_Wander_Default",
+          "type": "NpcWanderStay"
+        }
       }
     ]
   },
@@ -189,7 +213,11 @@
             "ref": "Rule_Time_Morning",
             "type": "TimeSlotScheduleRule"
           }
-        ]
+        ],
+        "stay": {
+          "ref": "Stay_Wander_Default",
+          "type": "NpcWanderStay"
+        }
       },
       {
         "location": {
@@ -209,7 +237,11 @@
             "ref": "Rule_Time_Afternoon",
             "type": "TimeSlotScheduleRule"
           }
-        ]
+        ],
+        "stay": {
+          "ref": "Stay_Wander_Default",
+          "type": "NpcWanderStay"
+        }
       }
     ]
   },
@@ -244,7 +276,11 @@
             "ref": "Rule_Time_Afternoon",
             "type": "TimeSlotScheduleRule"
           }
-        ]
+        ],
+        "stay": {
+          "ref": "Stay_Wander_Default",
+          "type": "NpcWanderStay"
+        }
       },
       {
         "location": {
@@ -264,7 +300,11 @@
             "ref": "Rule_Time_Evening",
             "type": "TimeSlotScheduleRule"
           }
-        ]
+        ],
+        "stay": {
+          "ref": "Stay_Wander_Default",
+          "type": "NpcWanderStay"
+        }
       }
     ]
   }

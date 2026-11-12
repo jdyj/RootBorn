@@ -109,6 +109,9 @@
     "Schedule_Shopkeeper",
     "Schedule_WorkManager"
   ],
+  "npcStayBehaviors": [
+    "Stay_Wander_Default"
+  ],
   "dialogues": [
     "Dialogue_FirstNpc",
     "Dialogue_CareerMentor",
