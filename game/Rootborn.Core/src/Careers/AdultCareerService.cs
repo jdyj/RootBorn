@@ -25,6 +25,9 @@ namespace Rootborn.Core.Careers
     /// </summary>
     public sealed class AdultCareerService
     {
+        /// <summary>보상 비율의 위 한도(<see cref="FacilityWork.TryBuildRewards"/>가 받는 최대값).</summary>
+        private const int MaximumRewardPercent = 10000;
+
         private readonly Dictionary<string, Facility> _facilities = new Dictionary<string, Facility>(StringComparer.Ordinal);
         private bool _executing;
 
@@ -53,19 +56,19 @@ namespace Rootborn.Core.Careers
         }
 
         /// <summary>점수는 믿을 수 있는 끝난 미니게임 판에서 온 값이어야 한다. 여기서는 화면·클라이언트가 보낸 점수를 검증하지 않는다.</summary>
-        public AdultCareerResult TryCompleteWork(FacilityWork work, StudentLifeProgress student, AdultCareerProgress adult, ICareerInventory inventory, string requestId, int score, bool autoSkip)
+        public AdultCareerResult TryCompleteWork(FacilityWork work, StudentLifeProgress student, AdultCareerProgress adult, ICareerInventory inventory, string requestId, int score, bool autoSkip, WorkExtras extras = default)
         {
             if (_executing || !SameIdentity(student, adult) || inventory == null || string.IsNullOrEmpty(requestId)) return Result(AdultCareerResultKind.InvalidRequest);
             if (adult.HasAppliedRequest(requestId)) return Result(AdultCareerResultKind.DuplicateRequest);
             ForfeitWorkLeftFromEarlierDays(student, adult);
-            var check = CheckCompleteWork(work, student, adult, inventory, score, autoSkip, out var rewards);
+            var check = CheckCompleteWork(work, student, adult, inventory, score, autoSkip, extras.RewardPercentBonus, out var rewards);
             if (check != AdultCareerResultKind.Applied) return Result(check);
             int effectiveScore = autoSkip ? 100 : score;
             return Exchange(inventory, null, rewards, AdultCareerResultKind.InsufficientCapacity, () =>
             {
                 if (!student.TrySpendTimePoints(work.TimePointCost)) throw new InvalidOperationException("Prevalidated facility work budget changed during settlement.");
                 student.Spend(work.TimeCostMinutes, 0, 0, 0);
-                adult.CompleteWork(work, requestId, effectiveScore >= work.MinimumSuccessScore);
+                ApplyCompletion(work, student, adult, requestId, effectiveScore >= work.MinimumSuccessScore, extras);
                 student.RecordActivityCompleted(work.Id);
             });
         }
@@ -88,7 +91,7 @@ namespace Rootborn.Core.Careers
         /// 미니게임으로 할 일을 예약한다. 시계는 건너뛰지 않고 끝나는 시각만 정한다 — 정산·포기 때 미니게임 동안 흐른 시간을 뺀 나머지만 쓴다
         /// (흐르는 시간 설계 3.2절).
         /// </summary>
-        public AdultCareerResult TryReserveWork(FacilityWork work, StudentLifeProgress student, AdultCareerProgress adult, string requestId, int seed)
+        public AdultCareerResult TryReserveWork(FacilityWork work, StudentLifeProgress student, AdultCareerProgress adult, string requestId, int seed, WorkExtras extras = default)
         {
             if (_executing || !SameIdentity(student, adult) || string.IsNullOrEmpty(requestId)) return Result(AdultCareerResultKind.InvalidRequest);
             if (adult.HasAppliedRequest(requestId)) return Result(AdultCareerResultKind.DuplicateRequest);
@@ -97,12 +100,15 @@ namespace Rootborn.Core.Careers
             if (check != AdultCareerResultKind.Applied) return Result(check);
             if (!student.TrySpendTimePoints(work.TimePointCost)) return Result(AdultCareerResultKind.InsufficientTime);
             student.ReserveActivityTime(work.TimeCostMinutes);
-            adult.ReserveWork(work, requestId, student.CurrentDay, seed, level.RewardPercent);
+            adult.ReserveWork(work, requestId, student.CurrentDay, seed, RewardPercentWithBonus(level.RewardPercent, extras.RewardPercentBonus));
             return Result(AdultCareerResultKind.Applied);
         }
 
-        /// <summary>예약한 일을 끝낸 판의 점수로 정산한다. 보상 비율은 예약할 때의 레벨 것을 쓴다.</summary>
-        public AdultCareerResult TrySettleReservedWork(FacilityWork work, StudentLifeProgress student, AdultCareerProgress adult, ICareerInventory inventory, string requestId, int score)
+        /// <summary>
+        /// 예약한 일을 끝낸 판의 점수로 정산한다. 보상 비율은 예약할 때 정한 것(레벨 + 그때의 공간 이득)을 쓰고,
+        /// 여기서 받은 이득은 명성 보너스와 기술 성장에만 쓴다.
+        /// </summary>
+        public AdultCareerResult TrySettleReservedWork(FacilityWork work, StudentLifeProgress student, AdultCareerProgress adult, ICareerInventory inventory, string requestId, int score, WorkExtras extras = default)
         {
             if (_executing || !SameIdentity(student, adult) || inventory == null || string.IsNullOrEmpty(requestId) || score < 0 || score > 100) return Result(AdultCareerResultKind.InvalidRequest);
             if (adult.HasAppliedRequest(requestId)) return Result(AdultCareerResultKind.DuplicateRequest);
@@ -116,7 +122,7 @@ namespace Rootborn.Core.Careers
             if (!inventory.CanExchange(null, rewards)) return Result(AdultCareerResultKind.InsufficientCapacity);
             return Exchange(inventory, null, rewards, AdultCareerResultKind.InsufficientCapacity, () =>
             {
-                adult.CompleteWork(work, requestId, score >= work.MinimumSuccessScore);
+                ApplyCompletion(work, student, adult, requestId, score >= work.MinimumSuccessScore, extras);
                 student.RecordActivityCompleted(work.Id);
                 student.FinishReservedActivityTime();
             });
@@ -178,14 +184,14 @@ namespace Rootborn.Core.Careers
             }
 
             if (inventory == null) return AdultCareerResultKind.InvalidRequest;
-            return CheckCompleteWork(work, student, adult, inventory, 100, false, out _);
+            return CheckCompleteWork(work, student, adult, inventory, 100, false, 0, out _);
         }
 
         /// <summary>이 일을 자동 완료할 수 있는지(Unity CanAutoSkip: 자동 완료 조건 + 만점 보상이 가방에 들어가는지).</summary>
         public AdultCareerResultKind CanAutoSkip(FacilityWork work, StudentLifeProgress student, AdultCareerProgress adult, ICareerInventory inventory)
         {
             if (_executing || !SameIdentity(student, adult) || inventory == null) return AdultCareerResultKind.InvalidRequest;
-            return CheckCompleteWork(work, student, adult, inventory, 100, true, out _);
+            return CheckCompleteWork(work, student, adult, inventory, 100, true, 0, out _);
         }
 
         /// <summary>지금 시설을 한 단계 올릴 수 있는지(Unity CanUpgrade). 월드 상태는 보지 않는다(올릴 때 깃발을 켜기만 한다).</summary>
@@ -200,7 +206,7 @@ namespace Rootborn.Core.Careers
             => adult.PendingWork != null && adult.PendingWork.Day >= student.CurrentDay;
 
         private AdultCareerResultKind CheckCompleteWork(FacilityWork work, StudentLifeProgress student, AdultCareerProgress adult, ICareerInventory inventory, int score, bool autoSkip,
-            out IReadOnlyList<ItemAmount<string>> rewards)
+            int rewardPercentBonus, out IReadOnlyList<ItemAmount<string>> rewards)
         {
             rewards = null;
             if (HasPendingWorkFromToday(student, adult) || student.HasPendingMinigame) return AdultCareerResultKind.RequirementFailed;
@@ -212,7 +218,7 @@ namespace Rootborn.Core.Careers
             if (!student.CanSpendTimePoints(work.TimePointCost)) return AdultCareerResultKind.InsufficientTime;
             int effectiveScore = autoSkip ? 100 : score;
             var level = facility.GetLevel(adult.FacilityLevel);
-            if (level == null || !work.TryBuildRewards(effectiveScore, level.RewardPercent, out var built)) return AdultCareerResultKind.InvalidDefinition;
+            if (level == null || !work.TryBuildRewards(effectiveScore, RewardPercentWithBonus(level.RewardPercent, rewardPercentBonus), out var built)) return AdultCareerResultKind.InvalidDefinition;
             if (!inventory.CanExchange(null, built)) return AdultCareerResultKind.InsufficientCapacity;
             rewards = built;
             return AdultCareerResultKind.Applied;
@@ -245,6 +251,26 @@ namespace Rootborn.Core.Careers
             costs = level.BuildCosts();
             if (!inventory.CanExchange(costs, null)) return AdultCareerResultKind.InsufficientResources;
             return AdultCareerResultKind.Applied;
+        }
+
+        /// <summary>
+        /// 레벨 보상 비율에 공간 이득을 더하고 위 한도(10000 = 최대 보상의 100배)로 자른다. 음수 이득은 0으로 본다.
+        /// 이득이 없거나 레벨 비율이 이미 올바르지 않으면 레벨 비율을 그대로 둔다(보상 만들기가 거절하게).
+        /// </summary>
+        private static int RewardPercentWithBonus(int levelRewardPercent, int bonus)
+        {
+            if (bonus <= 0 || levelRewardPercent < 0 || levelRewardPercent > MaximumRewardPercent) return levelRewardPercent;
+            return (int)Math.Min(MaximumRewardPercent, (long)levelRewardPercent + bonus);
+        }
+
+        /// <summary>인벤토리 교환의 commit 안에서 부른다: 보상이 안 들어가면 명성 보너스도 기술도 오르지 않는다. 성공일 때만 이득을 준다.</summary>
+        private static void ApplyCompletion(FacilityWork work, StudentLifeProgress student, AdultCareerProgress adult, string requestId, bool success, WorkExtras extras)
+        {
+            adult.CompleteWork(work, requestId, success, success ? extras.ReputationBonus : 0);
+            if (!success) return;
+            var gains = extras.SkillGains;
+            for (int i = 0; i < gains.Count; i++)
+                if (gains[i].Amount > 0) student.AddSkill(gains[i].SkillId, gains[i].Amount);
         }
 
         private AdultCareerResult Exchange(ICareerInventory inventory, IReadOnlyList<ItemAmount<string>> costs, IReadOnlyList<ItemAmount<string>> rewards, AdultCareerResultKind failure, Action commit)

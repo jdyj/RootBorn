@@ -498,6 +498,110 @@ namespace Rootborn.Core.Tests
             Assert.That(f.Transition("t").Kind, Is.EqualTo(AdultCareerResultKind.InvalidDefinition));
         }
 
+        // --- 공간 이득(WorkExtras): 보상 비율·명성 보너스·기술 성장 ---
+
+        private static WorkExtras Extras(int rewardPercentBonus, int reputationBonus = 0, int skillAmount = 0)
+            => new WorkExtras(rewardPercentBonus, reputationBonus, skillAmount > 0 ? new[] { new SkillGain("skill.test", skillAmount) } : null);
+
+        [Test]
+        public void CompleteWork_WithRewardBonus_PaysMore()
+        {
+            var f = new Fixture(maximumReward: 30); f.Transition("transition");
+            var result = f.Service.TryCompleteWork(f.FacilityWork, f.Student, f.Progress, f.Inventory, "job", 100, false, Extras(50));
+            Assert.That(result.Kind, Is.EqualTo(AdultCareerResultKind.Applied));
+            Assert.That(f.Inventory.CountOf(Fixture.Coin), Is.EqualTo(45), "30 × 100 × (100% + 50%) / 10000");
+        }
+
+        [Test]
+        public void CompleteWork_RewardPercentIsCappedAt10000()
+        {
+            var f = new Fixture(maximumReward: 30); f.Transition("transition");
+            var result = f.Service.TryCompleteWork(f.FacilityWork, f.Student, f.Progress, f.Inventory, "job", 100, false, Extras(20000));
+            Assert.That(result.Kind, Is.EqualTo(AdultCareerResultKind.Applied), "합이 한도를 넘어도 일은 실패하지 않고 한도로 자른다");
+            Assert.That(f.Inventory.CountOf(Fixture.Coin), Is.EqualTo(30 * 100), "비율 10000 = 최대 보상의 100배");
+        }
+
+        [Test]
+        public void CompleteWork_Success_AddsReputationBonusAndSkill()
+        {
+            var f = new Fixture(); f.Transition("transition");
+            var result = f.Service.TryCompleteWork(f.FacilityWork, f.Student, f.Progress, f.Inventory, "job", 100, false, Extras(0, 3, 2));
+            Assert.That(result.Kind, Is.EqualTo(AdultCareerResultKind.Applied));
+            Assert.That(f.Progress.Reputation, Is.EqualTo(f.FacilityWork.ReputationPerSuccess + 3));
+            Assert.That(f.Student.GetSkillValue("skill.test"), Is.EqualTo(2));
+        }
+
+        [Test]
+        public void CompleteWork_BelowSuccessScore_NoBonusNoSkill()
+        {
+            var f = new Fixture(minimumSuccessScore: 50); f.Transition("transition");
+            var result = f.Service.TryCompleteWork(f.FacilityWork, f.Student, f.Progress, f.Inventory, "weak", 10, false, Extras(50, 3, 2));
+            Assert.That(result.Kind, Is.EqualTo(AdultCareerResultKind.Applied));
+            Assert.That(f.Inventory.CountOf(Fixture.Coin), Is.Zero);
+            Assert.That(f.Progress.Reputation, Is.Zero);
+            Assert.That(f.Student.GetSkillValue("skill.test"), Is.Zero);
+        }
+
+        [Test]
+        public void CompleteWork_FullInventory_NoBonusNoSkill()
+        {
+            var f = new Fixture(); f.Transition("transition");
+            for (int i = 0; i < Fixture.MaxSlots; i++) f.Slots.Add("full-" + i, 1);
+            var result = f.Service.TryCompleteWork(f.FacilityWork, f.Student, f.Progress, f.Inventory, "job", 100, false, Extras(50, 3, 2));
+            Assert.That(result.Kind, Is.EqualTo(AdultCareerResultKind.InsufficientCapacity));
+            Assert.That(f.Progress.Reputation, Is.Zero);
+            Assert.That(f.Student.GetSkillValue("skill.test"), Is.Zero);
+            Assert.That(f.Progress.HasAppliedRequest("job"), Is.False);
+        }
+
+        [Test]
+        public void ReserveThenSettle_UsesBonusFromReservation()
+        {
+            var f = new Fixture(); f.Transition("transition");
+            Assert.That(f.Service.TryReserveWork(f.FacilityWork, f.Student, f.Progress, "attempt-1", 123, Extras(50)).Applied, Is.True);
+            Assert.That(f.Progress.PendingWork.RewardPercent, Is.EqualTo(150));
+            var result = f.Service.TrySettleReservedWork(f.FacilityWork, f.Student, f.Progress, f.Inventory, "attempt-1", 100, Extras(0, 3, 2));
+            Assert.That(result.Kind, Is.EqualTo(AdultCareerResultKind.Applied));
+            Assert.That(f.Inventory.CountOf(Fixture.Coin), Is.EqualTo(30), "20 × 100 × 150% / 10000 — 예약 때의 비율");
+            Assert.That(f.Progress.Reputation, Is.EqualTo(f.FacilityWork.ReputationPerSuccess + 3));
+            Assert.That(f.Student.GetSkillValue("skill.test"), Is.EqualTo(2));
+        }
+
+        [Test]
+        public void Reserve_RewardPercentIsCappedAt10000()
+        {
+            var f = new Fixture(); f.Transition("transition");
+            Assert.That(f.Service.TryReserveWork(f.FacilityWork, f.Student, f.Progress, "attempt-1", 123, Extras(int.MaxValue)).Applied, Is.True);
+            Assert.That(f.Progress.PendingWork.RewardPercent, Is.EqualTo(10000));
+        }
+
+        [Test]
+        public void DuplicateRequest_DoesNotAddSkillTwice()
+        {
+            var f = new Fixture(); f.Transition("transition");
+            var extras = Extras(0, 3, 2);
+            Assert.That(f.Service.TryCompleteWork(f.FacilityWork, f.Student, f.Progress, f.Inventory, "job", 100, false, extras).Applied, Is.True);
+            Assert.That(f.Service.TryCompleteWork(f.FacilityWork, f.Student, f.Progress, f.Inventory, "job", 100, false, extras).Kind, Is.EqualTo(AdultCareerResultKind.DuplicateRequest));
+            Assert.That(f.Student.GetSkillValue("skill.test"), Is.EqualTo(2));
+            Assert.That(f.Progress.Reputation, Is.EqualTo(f.FacilityWork.ReputationPerSuccess + 3));
+
+            f.Progress = AdultCareerProgress.FromSaveData(f.Progress.ToSaveData());
+            f.Student = StudentLifeProgress.FromSaveData(f.Student.ToSaveData()); f.Student.ConfigureCalendar(new LifeCalendar(2, 3));
+            Assert.That(f.Service.TryCompleteWork(f.FacilityWork, f.Student, f.Progress, f.Inventory, "job", 100, false, extras).Kind, Is.EqualTo(AdultCareerResultKind.DuplicateRequest));
+            Assert.That(f.Student.GetSkillValue("skill.test"), Is.EqualTo(2), "저장·다시 읽기 뒤에도 한 번만");
+            Assert.That(f.Progress.Reputation, Is.EqualTo(f.FacilityWork.ReputationPerSuccess + 3));
+        }
+
+        [Test]
+        public void DefaultExtras_SameAsBefore()
+        {
+            var f = new Fixture(); f.Transition("transition");
+            Assert.That(f.Service.TryCompleteWork(f.FacilityWork, f.Student, f.Progress, f.Inventory, "job", 100, false, default).Applied, Is.True);
+            Assert.That(f.Inventory.CountOf(Fixture.Coin), Is.EqualTo(20));
+            Assert.That(f.Progress.Reputation, Is.EqualTo(f.FacilityWork.ReputationPerSuccess));
+            Assert.That(f.Student.GetSkillIds(), Is.Empty);
+        }
+
         private sealed class AlwaysTransition : IFacilityTransitionRequirement
         {
             public string Coverage => null;
@@ -541,7 +645,7 @@ namespace Rootborn.Core.Tests
             public StudentLifeProgress Student;
             public CareerCandidateProgress Candidates;
 
-            public Fixture(bool earned = true, IFacilityTransitionRequirement extraTransitionRule = null, int timeCostMinutes = 60, bool withMinigame = true, int minimumSuccessScore = 1)
+            public Fixture(bool earned = true, IFacilityTransitionRequirement extraTransitionRule = null, int timeCostMinutes = 60, bool withMinigame = true, int minimumSuccessScore = 1, int maximumReward = 20)
             {
                 Inventory = new ItemSlotsCareerInventory<ItemSlot<string>>(Slots);
                 var candidate = new CareerCandidate("candidate.fixture", null, "fixture", null, null, null, null, null, null, null, revealedHintThreshold: 1, deepeningHintThreshold: 2, readyHintThreshold: 3);
@@ -550,7 +654,7 @@ namespace Rootborn.Core.Tests
                 Student.ConfigureCalendar(new LifeCalendar(2, 3));
                 if (earned) Student.UnlockCareerHint("career.fixture");
                 var game = withMinigame ? new Minigame("minigame.fixture", null, new IChallenge[] { new ChoiceChallenge("c", new[] { 0 }, new[] { "p" }, new[] { "a", "b" }) }, null) : null;
-                FacilityWork = new FacilityWork("work.fixture", null, "facility.fixture", game, new[] { new ItemAmount<string>(Coin, 20) },
+                FacilityWork = new FacilityWork("work.fixture", null, "facility.fixture", game, new[] { new ItemAmount<string>(Coin, maximumReward) },
                     new IAutoSkipRequirement[] { new MasteryAutoSkipRequirement(), new SuccessCountAutoSkipRequirement(2), new FacilityEquipmentAutoSkipRequirement(2, Equipment) },
                     timeCostMinutes: timeCostMinutes, maximumMastery: 2, masteryPerSuccess: 1, minimumSuccessScore: minimumSuccessScore);
                 var rules = new List<IFacilityTransitionRequirement> { new CareerHintTransitionRequirement(), new CandidateReadyTransitionRequirement() };

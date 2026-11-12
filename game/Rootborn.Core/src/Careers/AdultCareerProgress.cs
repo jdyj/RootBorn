@@ -107,8 +107,11 @@ namespace Rootborn.Core.Careers
             _pendingWork = null;
         }
 
-        /// <summary>성공이면 숙련(최대치까지)·성공 횟수·평판을 올린다. 성공이 아니어도 요청은 쓴 것으로 남는다.</summary>
-        internal void CompleteWork(FacilityWork work, string request, bool success)
+        /// <summary>
+        /// 성공이면 숙련(최대치까지)·성공 횟수·평판(일의 몫 + 공간 이득 <paramref name="reputationBonus"/>, 음수는 0)을 올린다.
+        /// 성공이 아니어도 요청은 쓴 것으로 남는다.
+        /// </summary>
+        internal void CompleteWork(FacilityWork work, string request, bool success, int reputationBonus = 0)
         {
             if (success)
             {
@@ -119,7 +122,7 @@ namespace Rootborn.Core.Careers
                 }
                 record.Mastery = (int)Math.Min(work.MaximumMastery, (long)record.Mastery + work.MasteryPerSuccess);
                 record.SuccessfulCompletions = (int)Math.Min(int.MaxValue, (long)record.SuccessfulCompletions + 1);
-                Reputation = (int)Math.Min(int.MaxValue, (long)Reputation + work.ReputationPerSuccess);
+                Reputation = (int)Math.Min(int.MaxValue, (long)Reputation + work.ReputationPerSuccess + Math.Max(0, reputationBonus));
             }
             _requests.Add(request);
             if (_pendingWork != null && _pendingWork.RequestId == request) _pendingWork = null;
