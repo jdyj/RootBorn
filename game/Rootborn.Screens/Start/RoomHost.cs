@@ -65,6 +65,9 @@ namespace Rootborn.Screens.Start
 
         /// <summary>그 슬롯의 방 상태 파일을 읽을 수 없다(덮어쓰지 않는다).</summary>
         public const string RoomSaveUnreadable = "room save unreadable";
+
+        /// <summary>그 슬롯을 다른 곳(데디케이티드 서버, 다른 방)이 열어 두었다.</summary>
+        public const string SlotInUse = "slot in use";
     }
 
     /// <summary>방 열기 창을 여는 값: 시작 화면이 쓰는 것, 미리 적어 둘 듣는 주소(--host), 미리 고를 슬롯(--slot).</summary>
