@@ -15,7 +15,7 @@ namespace Rootborn.Host.Net
     /// <see cref="Update"/>로 자기 몸·겉모습을 넘기고 같은 맵의 남을 받는다. 끊기면 <see cref="Lost"/>로 이유 코드를 알린다.
     /// 시간은 Host가 넘긴 값(프레임 dt를 더한 것)만 쓴다. 혼자 하기에서는 이 객체가 없다(프레임마다 도는 Net 코드 없음).
     /// </summary>
-    public sealed class RoomConnection : IRoomJoin, IDisposable
+    public sealed class RoomConnection : IRoomJoin, Rootborn.Game.IRoomNames, IDisposable
     {
         private static readonly IReadOnlyList<RemotePlayerView> Nobody = Array.Empty<RemotePlayerView>();
 
@@ -23,6 +23,7 @@ namespace Rootborn.Host.Net
         private RoomVersions? _versions;
         private readonly SessionClientSettings _settings;
         private readonly Func<string, string> _identityForSlot;
+        private readonly Func<string, string> _nameForSlot;
         private readonly Func<StartEntry, bool> _enter;
         private SessionClient _client;
         private RoomGuestLink _link;
@@ -35,8 +36,11 @@ namespace Rootborn.Host.Net
         /// <param name="versions">이 프로그램의 버전(서버와 맞춰 본다). 처음 들어갈 때 한 번 부른다(데이터 지문은 모든 data/ 파일을 읽는다).</param>
         /// <param name="identityForSlot">슬롯 id → 방에서의 신원(<see cref="GuestProgress.RoomIdentity"/>).</param>
         /// <param name="enter">방이 받아들였을 때 그 슬롯으로 게임을 시작한다. 시작하지 못하면 false(그러면 방에서 나간다).</param>
-        public RoomConnection(Func<RoomVersions> versions, SessionClientSettings settings, Func<string, string> identityForSlot, Func<StartEntry, bool> enter)
+        /// <param name="nameForSlot">슬롯 id → 방에서 보일 이름(<see cref="GuestProgress.RoomName"/>). 없으면 이름 없이 들어간다.</param>
+        public RoomConnection(Func<RoomVersions> versions, SessionClientSettings settings, Func<string, string> identityForSlot, Func<StartEntry, bool> enter,
+            Func<string, string> nameForSlot = null)
         {
+            _nameForSlot = nameForSlot;
             _versionsSource = versions ?? throw new ArgumentNullException(nameof(versions));
             _settings = settings ?? new SessionClientSettings();
             _identityForSlot = identityForSlot ?? throw new ArgumentNullException(nameof(identityForSlot));
@@ -82,6 +86,11 @@ namespace Rootborn.Host.Net
             return _time;
         }
 
+        /// <summary>
+        /// 방에 있는 그 참가자의 이름(게임 한 판의 방의 시계가 준 id — <see cref="CreateRoomTime"/>). 들어가 있지 않거나 모르면 빈 문자열.
+        /// </summary>
+        public string NameOf(string participantId) => _time?.NameOf(participantId) ?? string.Empty;
+
         public void Begin(string address, string slotId)
         {
             Close();
@@ -124,7 +133,7 @@ namespace Rootborn.Host.Net
             _slotId = slotId;
             PlayerId = _identityForSlot(slotId);
             _versions ??= _versionsSource();
-            _client = RoomClient.Create(transport, _versions.Value, PlayerId, string.Empty, _settings);
+            _client = RoomClient.Create(transport, _versions.Value, PlayerId, string.Empty, _settings, _nameForSlot?.Invoke(slotId));
             if (!_uploads.TryGetValue(PlayerId, out var uploads)) _uploads[PlayerId] = uploads = new GuestUploads();
             _link = new RoomGuestLink(_client, _settings.MaxMessageBytes, uploads);
             Console.WriteLine("[방] " + where + "에 접속하는 중(신원 " + PlayerId + ", " + _versions.Value + ")");

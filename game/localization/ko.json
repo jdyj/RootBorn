@@ -252,6 +252,7 @@
   "ui.room.share-separator": ", ",
   "ui.settings.room-joined": "방에 들어와 있어요",
   "ui.room.joined-notice": "방에 들어왔어요 · {0}",
+  "ui.room.guest-name": "손님",
   "ui.hud.room-balance": " · 방 지갑 {0}",
   "ui.room.wallet-waiting": "방의 허락을 기다리는 중이에요...",
   "ui.room.wallet-refused": "방 지갑의 돈이 모자라요. 다른 사람이 먼저 썼을 수 있어요.",

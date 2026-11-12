@@ -252,6 +252,7 @@
   "ui.room.share-separator": ", ",
   "ui.settings.room-joined": "You are in a room",
   "ui.room.joined-notice": "You joined the room · {0}",
+  "ui.room.guest-name": "Guest",
   "ui.hud.room-balance": " · Room wallet {0}",
   "ui.room.wallet-waiting": "Waiting for the room to approve...",
   "ui.room.wallet-refused": "Not enough money in the room wallet. Someone may have spent it first.",

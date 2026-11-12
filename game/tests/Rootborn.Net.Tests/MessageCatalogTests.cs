@@ -80,7 +80,7 @@ namespace Rootborn.Net.Tests
         {
             var catalog = Catalog();
             Assert.That(catalog.Decode(new byte[] { 0xFF, 0xFF, 1 }, out _), Is.EqualTo(DecodeOutcome.UnknownKind));
-            Assert.That(catalog.Decode(new byte[] { 1, 0, 2, 0, 0, 0, 0 }, out _), Is.EqualTo(DecodeOutcome.TooNewVersion));
+            Assert.That(catalog.Decode(new byte[] { 1, 0, 3, 0, 0, 0, 0 }, out _), Is.EqualTo(DecodeOutcome.TooNewVersion)); // Hello는 형식 버전 2까지 안다
             Assert.That(catalog.Decode(new byte[] { 1, 0 }, out _), Is.EqualTo(DecodeOutcome.Malformed));
             Assert.That(catalog.Decode(null, out _), Is.EqualTo(DecodeOutcome.Malformed));
             Assert.That(catalog.Decode(new byte[4097], out _), Is.EqualTo(DecodeOutcome.TooLarge));

@@ -28,10 +28,10 @@ namespace Rootborn.Net.Tests
         public SessionServer Server { get; }
         public double Now { get; private set; }
 
-        public SessionClient Join(string playerId, string look = "child|", SessionClientSettings settings = null)
+        public SessionClient Join(string playerId, string look = "child|", SessionClientSettings settings = null, string name = null)
         {
             var transport = Network.Connect();
-            var client = new SessionClient(transport, playerId, look, settings ?? new SessionClientSettings());
+            var client = new SessionClient(transport, playerId, look, settings ?? new SessionClientSettings(), name);
             _clients.Add(client);
             _transports[client] = transport;
             return client;

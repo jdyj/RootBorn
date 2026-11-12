@@ -1,7 +1,10 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using Rootborn.Core.Time;
 using Rootborn.Core.StudentLife;
+using Rootborn.Game;
 using Rootborn.Screens.Day;
 using Rootborn.Ui;
 
@@ -96,6 +99,50 @@ namespace Rootborn.Screens.Tests
             Assert.That(next.Text, Is.EqualTo(shared.Text.Get("day-result.next-day")));
             shared.Click(DayResultScreen.NextDayId);
             Assert.That(shared.Session.Student.CurrentDay, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void Together_AwakePeople_AreShownByName_AndNamelessAsTheGuestWord()
+        {
+            var clock = new RoomClock(TestSession.Definitions.TimeRules);
+            clock.Join("me");
+            clock.Join("slot-f85f0535da6d0a64");
+            clock.Join("slot-0000000000000002");
+            var names = new FixedRoomNames { ["slot-f85f0535da6d0a64"] = "민지" };
+            using var shared = new DayScreensFixture(room: clock, playerId: "me", names: names);
+            Assert.That(shared.Interact("House", DayResultScreen.InteractionKind, "house.day-end"), Is.True);
+            var screen = (DayResultScreen)shared.Stack.Find(ScreenCatalog.DayResult);
+            Assert.That(screen.Model.AwakeOthers, Is.EquivalentTo(new[] { "slot-f85f0535da6d0a64", "slot-0000000000000002" }), "신원은 id 그대로");
+            string sleeping = screen.Body.Sections.Single(s => s.StartsWith(shared.Text.Get("day-result.sleeping-awake-others").Split('{')[0], StringComparison.Ordinal));
+            Assert.That(sleeping, Does.Contain("민지"));
+            Assert.That(sleeping, Does.Contain(shared.Text.Get("ui.room.guest-name")), "이름이 없으면 기본 말");
+            Assert.That(sleeping, Does.Not.Contain("slot-"), "내부 id를 보이지 않는다");
+        }
+
+        [Test]
+        public void Together_LongNames_StayInsideTheBody()
+        {
+            var clock = new RoomClock(TestSession.Definitions.TimeRules);
+            clock.Join("me");
+            var names = new FixedRoomNames();
+            for (int i = 0; i < 3; i++)
+            {
+                clock.Join("p" + i);
+                names["p" + i] = new string((char)('가' + i), Rootborn.Screens.Start.CharacterCreatorModel.MaxNameLength);
+            }
+
+            using var shared = new DayScreensFixture(room: clock, playerId: "me", names: names);
+            Assert.That(shared.Interact("House", DayResultScreen.InteractionKind, "house.day-end"), Is.True);
+            var screen = (DayResultScreen)shared.Stack.Find(ScreenCatalog.DayResult);
+            string body = string.Join(" ", screen.Body.Sections);
+            foreach (string name in names.Values) Assert.That(body, Does.Contain(name), "이름을 화면이 자르지 않는다");
+            // 하루 결과 본문은 여러 줄 글자(줄바꿈)라 긴 이름도 패널 폭 안에서 줄을 바꾼다 — 그리기가 예외 없이 끝나는지 본다.
+            shared.Stack.Emit(new DrawList(), shared.Measurer);
+        }
+
+        private sealed class FixedRoomNames : Dictionary<string, string>, IRoomNames
+        {
+            public string NameOf(string participantId) => TryGetValue(participantId, out var name) ? name : string.Empty;
         }
 
         [Test]

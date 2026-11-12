@@ -22,6 +22,10 @@ namespace Rootborn.Net.Session
         public ushort NetId { get; }
         public int JoinIndex { get; }
         public string Look { get; internal set; } = string.Empty;
+
+        /// <summary>들어올 때 보낸 이름(다듬은 것, 화면 표시용 — 신원이 아니다). 비면 이름 없음.</summary>
+        public string Name { get; internal set; } = string.Empty;
+
         public bool HasPose { get; internal set; }
         public PoseSample LastPose { get; internal set; }
         internal PeerId Peer { get; set; }
@@ -61,7 +65,7 @@ namespace Rootborn.Net.Session
         private readonly List<PeerId> _peerScratch = new List<PeerId>(8);
         private readonly FlowingClock _flow;
         private ushort _nextNetId = 1;
-        private double _now, _lastFlowAt = double.NaN, _nextSyncAt;
+        private double _now, _lastFlowAt = double.NaN, _nextSyncAt, _lastUpdateAt = double.NaN;
         private bool _disposed;
 
         /// <param name="store">방의 시계를 읽고 쓸 저장소. 없으면 저장하지 않는다.</param>
@@ -124,6 +128,7 @@ namespace Rootborn.Net.Session
         {
             if (_disposed) return;
             _now = now;
+            ForgiveStall(now);
             _transport.Update(now);
             while (_transport.TryReceive(out var e))
             {
@@ -157,6 +162,17 @@ namespace Rootborn.Net.Session
                 if (connection.Player != null && now - connection.LastSent >= _settings.HeartbeatSeconds)
                     Send(peer, new HeartbeatMessage(), Delivery.Unreliable);
             }
+        }
+
+        // 서버가 오래 멈췄다 돌아왔으면(Update 사이가 MaxClockStepSeconds보다 길다 — 내 PC 방에서 게임 루프가 멈춤) 넘친 시간은 상대가 조용했던 시간으로
+        // 세지 않는다. 시계 흐르기(FlowClock)와 같은 상한이다. 루프가 도는 동안 조용한 상대는 지금처럼 끊긴다.
+        private void ForgiveStall(double now)
+        {
+            double gap = double.IsNaN(_lastUpdateAt) ? 0d : now - _lastUpdateAt;
+            _lastUpdateAt = now;
+            if (gap <= _settings.MaxClockStepSeconds) return;
+            double stalled = gap - _settings.MaxClockStepSeconds;
+            foreach (var connection in _connections.Values) connection.LastHeard += stalled;
         }
 
         public void Dispose()
@@ -219,7 +235,7 @@ namespace Rootborn.Net.Session
 
             int joinIndex = known.JoinIndex >= 0 && !IndexTaken(known.JoinIndex) ? known.JoinIndex : FreeIndex();
             _known[hello.PlayerId] = (known.NetId, joinIndex);
-            var player = new ServerPlayer(hello.PlayerId, known.NetId, joinIndex) { Look = hello.Look ?? string.Empty, Peer = peer };
+            var player = new ServerPlayer(hello.PlayerId, known.NetId, joinIndex) { Look = hello.Look ?? string.Empty, Name = PlayerName.Clean(hello.Name), Peer = peer };
             _connections[peer].Player = player;
             _players[player.PlayerId] = player;
 
@@ -327,7 +343,7 @@ namespace Rootborn.Net.Session
 
         private PlayerJoinedMessage Joined(ServerPlayer player)
         {
-            var message = new PlayerJoinedMessage { NetId = player.NetId, PlayerId = player.PlayerId, Look = player.Look, HasPose = player.HasPose };
+            var message = new PlayerJoinedMessage { NetId = player.NetId, PlayerId = player.PlayerId, Look = player.Look, Name = player.Name, HasPose = player.HasPose };
             if (player.HasPose)
             {
                 var p = player.LastPose;

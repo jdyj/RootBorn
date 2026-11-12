@@ -10,6 +10,9 @@ namespace Rootborn.Net.Messages
     {
         public string PlayerId;
         public string Look;
+
+        /// <summary>화면에 보일 이름(캐릭터 이름, <see cref="PlayerName"/>). 신원이 아니다. 비면 이름 없음(형식 버전 2부터).</summary>
+        public string Name = string.Empty;
     }
 
     /// <summary>서버 → 클라이언트: 들어왔다. NetId는 이 서버가 그 신원에 붙인 번호(다시 들어와도 같다). 도착 위치는 Core SpawnSpread(칸 단위).</summary>
@@ -33,6 +36,10 @@ namespace Rootborn.Net.Messages
         public ushort NetId;
         public string PlayerId;
         public string Look;
+
+        /// <summary>그 사람이 들어올 때 보낸 이름(서버가 다듬은 것). 비면 이름 없음(형식 버전 2부터).</summary>
+        public string Name = string.Empty;
+
         public bool HasPose;
         public PoseMessage Pose = new PoseMessage();
     }
@@ -116,10 +123,10 @@ namespace Rootborn.Net.Messages
 
         public static void Register(MessageCatalog c)
         {
-            c.Add<HelloMessage>(1, 1, WriteHello, ReadHello);
+            c.Add<HelloMessage>(1, 2, WriteHello, ReadHello); // 2: 이름
             c.Add<WelcomeMessage>(2, 1, WriteWelcome, ReadWelcome);
             c.Add<FarewellMessage>(3, 1, (w, m) => w.WriteString(m.Reason), ReadFarewell);
-            c.Add<PlayerJoinedMessage>(4, 1, WriteJoined, ReadJoined);
+            c.Add<PlayerJoinedMessage>(4, 2, WriteJoined, ReadJoined); // 2: 이름(몸 앞)
             c.Add<PlayerLeftMessage>(5, 1, (w, m) => w.WriteUInt16(m.NetId), ReadLeft);
             c.Add<PoseMessage>(6, 1, WritePose, ReadPose);
             c.Add<LookMessage>(7, 1, WriteLook, ReadLook);
@@ -150,12 +157,22 @@ namespace Rootborn.Net.Messages
         {
             w.WriteString(m.PlayerId);
             w.WriteString(m.Look);
+            w.WriteString(PlayerName.Clean(m.Name));
         }
 
         private static bool ReadHello(NetReader r, int version, out HelloMessage m)
         {
             m = new HelloMessage();
-            return r.TryReadString(MaxPlayerIdBytes, out m.PlayerId) && r.TryReadString(MaxLookBytes, out m.Look);
+            if (!r.TryReadString(MaxPlayerIdBytes, out m.PlayerId) || !r.TryReadString(MaxLookBytes, out m.Look)) return false;
+            return version < 2 || ReadName(r, out m.Name);
+        }
+
+        // 받은 이름은 보낸 쪽이 다듬었어도 다시 다듬는다(고친 프로그램이 줄바꿈·긴 이름을 보내도 화면이 깨지지 않게).
+        private static bool ReadName(NetReader r, out string name)
+        {
+            if (!r.TryReadString(PlayerName.MaxBytes, out string raw)) { name = string.Empty; return false; }
+            name = PlayerName.Clean(raw);
+            return true;
         }
 
         private static void WriteWelcome(NetWriter w, WelcomeMessage m)
@@ -183,6 +200,7 @@ namespace Rootborn.Net.Messages
             w.WriteUInt16(m.NetId);
             w.WriteString(m.PlayerId);
             w.WriteString(m.Look);
+            w.WriteString(PlayerName.Clean(m.Name));
             w.WriteBool(m.HasPose);
             if (m.HasPose) WritePoseBody(w, m.Pose);
         }
@@ -191,6 +209,7 @@ namespace Rootborn.Net.Messages
         {
             m = new PlayerJoinedMessage();
             if (!r.TryReadUInt16(out m.NetId) || !r.TryReadString(MaxPlayerIdBytes, out m.PlayerId) || !r.TryReadString(MaxLookBytes, out m.Look)) return false;
+            if (version >= 2 && !ReadName(r, out m.Name)) return false;
             if (!r.TryReadBool(out m.HasPose)) return false;
             if (!m.HasPose) return true;
             m.Pose.NetId = m.NetId;

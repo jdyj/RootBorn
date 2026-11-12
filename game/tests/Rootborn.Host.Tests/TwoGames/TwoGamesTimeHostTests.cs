@@ -14,14 +14,14 @@ namespace Rootborn.Host.Tests.TwoGames
     public sealed partial class TwoGamesHostTests
     {
         /// <summary>
-        /// 방장이 잠자리에서 E로 자면 "자는 중"과 깨어 있는 손님이 보이고 다음 날 단추가 꺼져 있다. 손님도 잠자리에서 E로 자면 곧바로 둘 다 다음 날 07:00 —
+        /// 방장이 잠자리에서 E로 자면 "자는 중"과 깨어 있는 손님(캐릭터 이름으로)이 보이고 다음 날 단추가 꺼져 있다. 손님도 잠자리에서 E로 자면 곧바로 둘 다 다음 날 07:00 —
         /// 둘 다 단추를 눌러 2일째를 연다. 준비: 이야기가 있는 슬롯 파일(양쪽).
         /// </summary>
         [Test]
         public void TWO_GAMES_005_HostSleeps_SeesTheGuestAwake_GuestSleepsToo_BothWakeAtSevenNextDay()
         {
             WriteStory(_hostSaves, "slot-1", "방장", 101);
-            WriteStory(_guestSaves, "slot-1", "손님", 202);
+            WriteStory(_guestSaves, "slot-1", "새벽", 202); // 기본 말("손님")과 다른 이름이라야 이름이 보이는지 가린다
             _host = LaunchHost();
             HostOpensFromStartMenu(null);
             _guest = StartGuest();
@@ -32,6 +32,10 @@ namespace Rootborn.Host.Tests.TwoGames
             DayResultScreen result = _host.GoToBed();
             Assert.That(_guest.Until(() => result.Model.Sleeping && result.Model.AwakeOthers.SequenceEqual(new[] { guestId }) && clock.IsAsleep(me)), Is.True,
                 "자는 중 — 손님은 깨어 있다(방이 내 잠을 셌다)");
+            string sleeping = result.Body.Sections[0];
+            Assert.That(sleeping, Does.Contain("새벽"), "깨어 있는 사람은 캐릭터 이름으로 보인다");
+            Assert.That(sleeping, Does.Not.Contain(guestId), "방의 신원 id를 보이지 않는다");
+            Assert.That(_host.Game.Hosting.Room.Server.Players.Single(p => p.PlayerId == guestId).Name, Is.EqualTo("새벽"), "방이 받은 이름");
             var next = (UiButton)_host.Node(DayResultScreen.NextDayId);
             Assert.That(next.Enabled, Is.False, "자면 07:00까지 깨어날 수 없다");
             Assert.That(_guest.Query("awake-others"), Is.Empty, "손님 쪽: 깨어 있는 다른 사람 없음(손님 자신은 세지 않는다)");

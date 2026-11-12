@@ -22,6 +22,10 @@ namespace Rootborn.Net.Session
         public string PlayerId { get; internal set; }
         public ushort NetId { get; internal set; }
         public string Look { get; internal set; }
+
+        /// <summary>그 사람이 보낸 이름(다듬은 것). 비면 이름 없음 — 화면이 기본 말을 쓴다.</summary>
+        public string Name { get; internal set; } = string.Empty;
+
         public string MapId { get; internal set; }
         public float X { get; internal set; }
         public float Y { get; internal set; }
@@ -102,6 +106,7 @@ namespace Rootborn.Net.Session
         private readonly Dictionary<ushort, Remote> _remotes = new Dictionary<ushort, Remote>(8);
         private readonly List<RemotePlayerView> _viewBuffer = new List<RemotePlayerView>(8);
         private readonly string _playerId;
+        private readonly string _name;
         private PeerId _server = Server;
         private string _look;
         private bool _connected;
@@ -116,9 +121,11 @@ namespace Rootborn.Net.Session
         private double _nextPoseAt;
         private double _lastHeard;
         private double _lastSent;
+        private double _lastUpdateAt = double.NaN;
         private bool _disposed;
 
-        public SessionClient(ITransport transport, string playerId, string look, SessionClientSettings settings)
+        /// <param name="name">화면에 보일 이름(캐릭터 이름). 신원이 아니다. 보내기 전에 다듬는다(<see cref="PlayerName.Clean"/>). 없으면 이름 없음.</param>
+        public SessionClient(ITransport transport, string playerId, string look, SessionClientSettings settings, string name = null)
         {
             _transport = transport ?? throw new ArgumentNullException(nameof(transport));
             _settings = settings ?? new SessionClientSettings();
@@ -126,6 +133,7 @@ namespace Rootborn.Net.Session
             _catalog = RootbornMessages.CreateCatalog(_settings.MaxMessageBytes);
             _playerId = playerId ?? string.Empty;
             _look = look ?? string.Empty;
+            _name = PlayerName.Clean(name);
             _handlers = new MessageHandlers<double>()
                 .On<HeartbeatMessage>((now, m) => { })
                 .On<WelcomeMessage>(OnWelcome)
@@ -214,6 +222,16 @@ namespace Rootborn.Net.Session
             return false;
         }
 
+        /// <summary>그 신원의 사람(자기 포함)이 보낸 이름. 비어 있을 수 있다(이름 없음). 그 신원을 모르면 false.</summary>
+        public bool TryGetPlayerName(string playerId, out string name)
+        {
+            if (Status == ClientStatus.Joined && string.Equals(playerId, _playerId, StringComparison.Ordinal)) { name = _name; return true; }
+            foreach (var remote in _remotes.Values)
+                if (string.Equals(remote.PlayerId, playerId, StringComparison.Ordinal)) { name = remote.Name; return true; }
+            name = null;
+            return false;
+        }
+
         /// <summary>그 맵에 있는 남(자기 제외)을 지금 시각으로 메워서. 돌려준 목록은 다음 부를 때 다시 쓴다.</summary>
         public IReadOnlyList<RemotePlayerView> PlayersOn(string mapId, double now)
         {
@@ -239,6 +257,10 @@ namespace Rootborn.Net.Session
         {
             if (_disposed) return;
             Now = now;
+            // 이 프로그램의 루프가 오래 멈췄다 돌아왔으면 멈춘 시간은 서버가 조용했던 시간이 아니다(서버의 틱도 같이 밀렸을 수 있다 — 같은 프로세스 방).
+            double gap = double.IsNaN(_lastUpdateAt) ? 0d : now - _lastUpdateAt;
+            if (gap > _settings.MaxUpdateGapSeconds) _lastHeard += gap - _settings.MaxUpdateGapSeconds;
+            _lastUpdateAt = now;
             _transport.Update(now);
             while (_transport.TryReceive(out var e))
             {
@@ -248,7 +270,7 @@ namespace Rootborn.Net.Session
                         _connected = true;
                         _server = e.Peer;
                         _lastHeard = now;
-                        Send(new HelloMessage { PlayerId = _playerId, Look = _look }, Delivery.ReliableOrdered, now);
+                        Send(new HelloMessage { PlayerId = _playerId, Look = _look, Name = _name }, Delivery.ReliableOrdered, now);
                         break;
                     case TransportEventKind.Disconnected:
                         OnDisconnected(e.Data);
@@ -328,7 +350,7 @@ namespace Rootborn.Net.Session
         private void OnJoined(double now, PlayerJoinedMessage m)
         {
             if (m.NetId == NetId) return;
-            var remote = new Remote(m.PlayerId, m.NetId, m.Look, _settings.InterpolationDelaySeconds);
+            var remote = new Remote(m.PlayerId, m.NetId, m.Look, m.Name, _settings.InterpolationDelaySeconds);
             _remotes[m.NetId] = remote;
             if (m.HasPose) remote.Poses.Add(m.Pose.ToSample(), now);
         }
@@ -375,15 +397,17 @@ namespace Rootborn.Net.Session
 
         private sealed class Remote
         {
-            public Remote(string playerId, ushort netId, string look, double delay)
+            public Remote(string playerId, ushort netId, string look, string name, double delay)
             {
                 PlayerId = playerId;
                 Look = look ?? string.Empty;
+                Name = name ?? string.Empty;
                 Poses = new PoseBuffer(delay);
-                View = new RemotePlayerView { PlayerId = playerId, NetId = netId };
+                View = new RemotePlayerView { PlayerId = playerId, NetId = netId, Name = Name };
             }
 
             public string PlayerId { get; }
+            public string Name { get; }
             public string Look { get; set; }
             public PoseBuffer Poses { get; }
             public RemotePlayerView View { get; }

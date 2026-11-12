@@ -49,6 +49,14 @@ namespace Rootborn.Game
                 if (!p.Asleep && !string.Equals(p.ParticipantId, PlayerId, StringComparison.Ordinal)) into.Add(p.ParticipantId);
         }
 
+        private IRoomNames _roomNames;
+
+        /// <summary>
+        /// 방에 있는 그 참가자(<see cref="RoomAwakeOthers"/>가 준 id)의 이름(화면 표시용). 혼자이거나 모르거나 이름이 없으면 빈 문자열 —
+        /// 화면이 현지화된 기본 말을 쓴다. 신원 판단에는 쓰지 않는다.
+        /// </summary>
+        public string RoomNameOf(string participantId) => _roomNames?.NameOf(participantId) ?? string.Empty;
+
         /// <summary>자는 중: 잠들어 하루를 끝냈고 방이 아직 다음 날이 아니다(같이 하는 방에서 다른 사람이 깨어 있다). 자면 07:00까지 깨어날 수 없다.</summary>
         public bool IsSleepingInRoom => Student.DayState == StudentDayState.ResultReady && Student.LastNight.HasSlept && !CanStartNextDay;
 

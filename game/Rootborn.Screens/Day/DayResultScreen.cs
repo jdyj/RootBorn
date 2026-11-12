@@ -89,6 +89,14 @@ namespace Rootborn.Screens.Day
             Close();
         }
 
+        private string PeopleText(IReadOnlyList<string> names)
+        {
+            string separator = T("ui.hud.room-separator"), text = string.Empty;
+            for (int i = 0; i < names.Count; i++)
+                text += (i > 0 ? separator : string.Empty) + (string.IsNullOrEmpty(names[i]) ? T("ui.room.guest-name") : names[i]);
+            return text;
+        }
+
         private void Render()
         {
             GameSession session = Services.Session;
@@ -99,7 +107,8 @@ namespace Rootborn.Screens.Day
             _next.Enabled = Model.CanStartNextDay;
             var sections = new List<string>(17);
             // 자는 중 화면(흐르는 시간 설계 3.3절): 방에 아직 깨어 있는 사람. 모두 잠들거나 07:00이 되면 다음 날 단추가 켜진다.
-            if (Model.Sleeping && Model.AwakeOthers.Count > 0) sections.Add(F("day-result.sleeping-awake-others", string.Join(T("ui.hud.room-separator"), Model.AwakeOthers)));
+            // 사람은 이름으로 보인다(방의 신원 id가 아니다). 이름이 없으면 기본 말.
+            if (Model.Sleeping && Model.AwakeOthers.Count > 0) sections.Add(F("day-result.sleeping-awake-others", PeopleText(Model.AwakeOtherNames)));
             sections.AddRange(new[]
             {
                 text.List("activities", Model.Summary.CompletedActivityIds, "empty-activities"),

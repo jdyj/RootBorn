@@ -61,7 +61,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [soak, play, main-chain, rest]
+        shard: [soak, play, two-games, main-chain, rest]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4

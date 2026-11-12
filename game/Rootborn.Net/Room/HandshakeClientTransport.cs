@@ -98,10 +98,11 @@ namespace Rootborn.Net.Room
     /// <summary>방에 들어가는 클라이언트를 만든다: 접속 확인 관문 위에 세션 클라이언트.</summary>
     public static class RoomClient
     {
-        public static SessionClient Create(ITransport transport, RoomVersions versions, string playerId, string look, SessionClientSettings settings)
+        /// <param name="name">화면에 보일 이름(캐릭터 이름, 신원이 아니다). 없으면 이름 없음.</param>
+        public static SessionClient Create(ITransport transport, RoomVersions versions, string playerId, string look, SessionClientSettings settings, string name = null)
         {
             settings ??= new SessionClientSettings();
-            return new SessionClient(new HandshakeClientTransport(transport, versions, settings.MaxMessageBytes), playerId, look, settings);
+            return new SessionClient(new HandshakeClientTransport(transport, versions, settings.MaxMessageBytes), playerId, look, settings, name);
         }
     }
 }

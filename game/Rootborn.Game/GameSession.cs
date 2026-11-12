@@ -103,7 +103,7 @@ namespace Rootborn.Game
         /// newEventKey는 퀘스트 이벤트 키를 만든다(기본: 행동 이름 + 새 GUID, Unity 판과 같음).
         /// </summary>
         public static GameSession Start(GameDefinitions definitions, GameStartSettings settings, ISaveStore store, string saveSlot, string playerId,
-            Func<string, string> newEventKey = null, Rootborn.Core.Time.IRoomTime room = null, RoomShares shares = null)
+            Func<string, string> newEventKey = null, Rootborn.Core.Time.IRoomTime room = null, RoomShares shares = null, IRoomNames names = null)
         {
             if (string.IsNullOrEmpty(saveSlot)) throw new ArgumentException("세이브 슬롯이 비어 있다", nameof(saveSlot));
             var session = new GameSession(definitions, settings, store, newEventKey, shares);
@@ -111,6 +111,7 @@ namespace Rootborn.Game
             session.PlayerId = string.IsNullOrEmpty(playerId) ? SaveFileNames.DefaultPlayerId : playerId;
             session.Load();
             session.UseRoom(room);
+            session._roomNames = names;
             session.AfterStartInRoom();
             return session;
         }

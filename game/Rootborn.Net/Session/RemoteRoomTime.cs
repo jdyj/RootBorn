@@ -87,6 +87,17 @@ namespace Rootborn.Net.Session
             }
         }
 
+        /// <summary>
+        /// 방에 있는 그 참가자의 이름(화면 표시용). <see cref="CopyPresent"/>가 준 참가자 id로 묻는다 — 자기 자신은 이 시계를 끼운 게임 한 판의 신원이다.
+        /// 모르거나 이름이 없으면 빈 문자열(화면이 기본 말을 쓴다).
+        /// </summary>
+        public string NameOf(string participantId)
+        {
+            if (string.IsNullOrEmpty(participantId)) return string.Empty;
+            if (IsMe(participantId) && _client.TryGetPlayerId(_client.NetId, out var roomId)) participantId = roomId;
+            return _client.TryGetPlayerName(participantId, out var name) ? name ?? string.Empty : string.Empty;
+        }
+
         public void Dispose()
         {
             if (_disposed) return;

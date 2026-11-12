@@ -326,13 +326,16 @@ namespace Rootborn.Host
         /// 방 접속을 만든다. 버전은 서버(Rootborn.Server)와 같은 셈법(RoomVersions.ForProgram + Rootborn.Data.DataFingerprint),
         /// 신원은 슬롯 정보에서(GuestProgress.RoomIdentity), 방이 받아들이면 시작 화면에서 슬롯을 고른 것과 같게 그 슬롯으로 들어간다.
         /// </summary>
+        private SaveSlotMetadata SlotMetadata(string slot) => new FileSaveStore(_options.SaveRoot).TryRead(slot, SaveFileNames.Metadata, out SaveSlotMetadata m) ? m : null;
+
         private RoomConnection CreateRoom()
         {
             var room = new RoomConnection(
                 () => Rootborn.Net.Room.RoomVersions.ForProgram(typeof(GameSession).Assembly, Rootborn.Data.DataFingerprint.Compute(Path.Combine(_options.RepoRoot, "data"))),
                 new Rootborn.Net.Session.SessionClientSettings(),
-                slot => GuestProgress.RoomIdentity(slot, new FileSaveStore(_options.SaveRoot).TryRead(slot, SaveFileNames.Metadata, out SaveSlotMetadata m) ? m : null),
-                EnterSlot);
+                slot => GuestProgress.RoomIdentity(slot, SlotMetadata(slot)),
+                EnterSlot,
+                slot => GuestProgress.RoomName(slot, SlotMetadata(slot)));
             room.PhaseChanged += () => Screens?.NotifyChanged(Rootborn.Screens.Start.RoomJoinText.Topic);
             room.PhaseChanged += () => Screens?.NotifyChanged(RoomHostText.Topic); // 내 PC에서 연 방도 이 접속으로 들어간다
             room.Lost += ReturnToStartMenu;
@@ -509,14 +512,14 @@ namespace Rootborn.Host
             {
                 // 손님 저장을 받지 않는 사람(내 PC에서 방을 연 나, 손님 저장을 받지 않는 옛 방): 진행은 이 PC의 슬롯에 남지만 시간은 방의 것이다.
                 var shared = Room.CreateRoomTime(definitions.TimeRules, GuestProgress.SavePlayerId);
-                var local = GameSession.Start(definitions, settings, GuestProgress.LocalStoreFor(_options.SaveRoot), _options.SaveSlot, GuestProgress.SavePlayerId, room: shared, shares: link.Shares);
+                var local = GameSession.Start(definitions, settings, GuestProgress.LocalStoreFor(_options.SaveRoot), _options.SaveSlot, GuestProgress.SavePlayerId, room: shared, shares: link.Shares, names: Room);
                 shared.Changed += () => local.SyncWithRoom();
                 return local;
             }
 
             var time = Room.CreateRoomTime(definitions.TimeRules);
             var session = GameSession.Start(definitions, settings, GuestProgress.RoomStoreFor(link), Rootborn.Net.Room.RoomGuestLink.Slot, Room.PlayerId,
-                room: time, shares: link.Shares);
+                room: time, shares: link.Shares, names: Room);
             time.Changed += () => session.SyncWithRoom();
             return session;
         }

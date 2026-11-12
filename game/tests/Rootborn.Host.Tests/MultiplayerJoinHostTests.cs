@@ -257,6 +257,7 @@ namespace Rootborn.Host.Tests
             Assert.That(player.Game.World.SlotStart.NewGame, Is.False, "고른 이야기로 이어서 시작한다");
             string expected = GuestProgress.RoomIdentity("slot-1", new FileSaveStore(_saves).TryRead("slot-1", SaveFileNames.Metadata, out SaveSlotMetadata m) ? m : null);
             Assert.That(UntilReal(() => room.Read(s => s.Players.Any(p => p.PlayerId == expected)), 3), Is.True, "신원은 그 슬롯의 인물에 고정된 id");
+            Assert.That(room.Read(s => s.Players.Single(p => p.PlayerId == expected).Name), Is.EqualTo("별"), "캐릭터 이름을 함께 보낸다(화면 표시용)");
         }
 
         /// <summary>손님 저장을 받는 방(데디케이티드 서버와 같은 손님 세이브 폴더)을 띄운다.</summary>
@@ -476,6 +477,17 @@ namespace Rootborn.Host.Tests
             Assert.That(GuestProgress.RoomIdentity("slot-0", a), Is.EqualTo(GuestProgress.RoomIdentity("slot-0", a)));
             Assert.That(GuestProgress.RoomIdentity("slot-0", a), Is.Not.EqualTo(GuestProgress.RoomIdentity("slot-0", b)));
             Assert.That(GuestProgress.RoomIdentity("slot-0", a), Is.Not.EqualTo(SaveFileNames.DefaultPlayerId), "모든 슬롯이 같은 local-player면 두 PC가 서로를 밀어낸다");
+        }
+
+        [Test]
+        public void RoomName_IsTheCharacterName_NamelessSlotsSendNoName_AndTheLimitMatchesTheCreator()
+        {
+            Assert.That(Rootborn.Net.Messages.PlayerName.MaxTextElements, Is.EqualTo(CharacterCreatorModel.MaxNameLength), "보내는 이름 한도 = 캐릭터 만들기 한도");
+            Assert.That(GuestProgress.RoomName("slot-0", new SaveSlotMetadata { SlotId = "slot-0", DisplayName = " 별 " }), Is.EqualTo("별"));
+            Assert.That(GuestProgress.RoomName("slot-0", new SaveSlotMetadata { SlotId = "slot-0", DisplayName = "slot-0" }), Is.Empty,
+                "이름 없이 만든 슬롯은 DisplayName이 슬롯 id다 — 이름 없음으로 보낸다");
+            Assert.That(GuestProgress.RoomName("slot-0", new SaveSlotMetadata { SlotId = "slot-0", DisplayName = "줄" + (char)10 + "바꿈" }), Is.EqualTo("줄바꿈"));
+            Assert.That(GuestProgress.RoomName("slot-0", null), Is.Empty);
         }
     }
 }

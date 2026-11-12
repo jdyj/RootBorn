@@ -23,7 +23,10 @@ namespace Rootborn.Net.Session
         /// </summary>
         public double ClockSyncSeconds { get; set; } = 5.0;
 
-        /// <summary>서버 틱 한 번에 시계에 넘기는 실제 초의 상한. 서버가 멈췄다 돌아와도(밀린 틱을 버림) 시계가 한꺼번에 뛰지 않게.</summary>
+        /// <summary>
+        /// 서버 틱 한 번에 넘기는 실제 초의 상한. 서버가 멈췄다 돌아와도(밀린 틱을 버림) 시계가 한꺼번에 뛰지 않게.
+        /// 시간 초과도 같다: Update 사이가 이보다 길면 서버가 멈춘 것이라 넘친 만큼은 상대가 조용했던 시간으로 세지 않는다.
+        /// </summary>
         public double MaxClockStepSeconds { get; set; } = 1.0;
 
         internal void Validate()
@@ -48,8 +51,15 @@ namespace Rootborn.Net.Session
 
         public int MaxMessageBytes { get; set; } = 4096;
 
+        /// <summary>
+        /// Update 사이가 이보다 길면 이 프로그램의 루프가 멈춘 것으로 보고(창 끌기, 디버거, 느린 디스크) 넘친 만큼은 서버가 조용했던 시간으로
+        /// 세지 않는다 — 멈춘 뒤 첫 Update에서 받은 것을 처리하기도 전에 스스로 시간 초과로 끊지 않게. 서버의 MaxClockStepSeconds와 같은 생각.
+        /// </summary>
+        public double MaxUpdateGapSeconds { get; set; } = 1.0;
+
         internal void Validate()
         {
+            if (MaxUpdateGapSeconds <= 0) throw new ArgumentException("멈춤으로 보는 갱신 간격은 양수여야 한다");
             if (PoseSendsPerSecond <= 0 || HeartbeatSeconds <= 0 || TimeoutSeconds <= 0) throw new ArgumentException("횟수·간격·시간 초과는 양수여야 한다");
             if (InterpolationDelaySeconds < 0) throw new ArgumentException("사이 메우기 지연은 음수일 수 없다");
             if (MaxMessageBytes < 256) throw new ArgumentException("최대 메시지 크기가 너무 작다");

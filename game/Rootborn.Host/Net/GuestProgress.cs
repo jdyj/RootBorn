@@ -1,3 +1,4 @@
+using System;
 using Rootborn.Core.Save;
 using Rootborn.Data.Save;
 using Rootborn.Net.Room;
@@ -44,6 +45,17 @@ namespace Rootborn.Host.Net
             int a = SaveSlotMetadata.StableHash(metadata.CreatedAtUtcTicks.ToString(System.Globalization.CultureInfo.InvariantCulture), metadata.WorldSeed);
             int b = SaveSlotMetadata.StableHash(slotId ?? string.Empty, metadata.TileSeed);
             return "slot-" + ((uint)a).ToString("x8") + ((uint)b).ToString("x8");
+        }
+
+        /// <summary>
+        /// 방에서 보일 이름: 캐릭터 만들기에서 정한 이름(슬롯 정보의 DisplayName). 이름 없이 만든 슬롯은 DisplayName이 슬롯 id라
+        /// (SaveSlots.CreateMetadata·FillMissing) 그때는 빈 이름을 보낸다 — 받는 쪽이 현지화된 기본 말을 쓴다. 신원이 아니다.
+        /// </summary>
+        public static string RoomName(string slotId, SaveSlotMetadata metadata)
+        {
+            if (metadata == null || string.IsNullOrWhiteSpace(metadata.DisplayName)) return string.Empty;
+            if (string.Equals(metadata.DisplayName, slotId, StringComparison.Ordinal) || string.Equals(metadata.DisplayName, metadata.SlotId, StringComparison.Ordinal)) return string.Empty;
+            return Rootborn.Net.Messages.PlayerName.Clean(metadata.DisplayName);
         }
     }
 }

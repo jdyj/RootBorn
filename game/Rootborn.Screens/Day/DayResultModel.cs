@@ -106,6 +106,9 @@ namespace Rootborn.Screens.Day
         /// <summary>자는 중일 때 방에 아직 깨어 있는 다른 사람의 신원(GameSession.RoomAwakeOthers). 아니면 비어 있다.</summary>
         public IReadOnlyList<string> AwakeOthers { get; private set; } = Array.Empty<string>();
 
+        /// <summary><see cref="AwakeOthers"/>와 같은 순서의 이름(GameSession.RoomNameOf). 이름이 없으면 빈 문자열 — 화면이 기본 말을 쓴다.</summary>
+        public IReadOnlyList<string> AwakeOtherNames { get; private set; } = Array.Empty<string>();
+
         /// <summary>
         /// result는 방금 끝낸 날의 결과(GameSession.EndDay). 이미 끝난 날을 다시 보는 경우(Ended=false)는 Unity 판처럼
         /// 앞 날의 기록으로 요약을 만들고 마일스톤·캠페인 변화는 비운다.
@@ -152,6 +155,9 @@ namespace Rootborn.Screens.Day
                 var awake = new List<string>(4);
                 session.RoomAwakeOthers(awake);
                 model.AwakeOthers = awake;
+                var names = new List<string>(awake.Count);
+                foreach (string id in awake) names.Add(session.RoomNameOf(id));
+                model.AwakeOtherNames = names;
             }
 
             if (model.CareerInterestId.Length > 0 && session.Definitions.TryGet<CareerInterest>(model.CareerInterestId, out CareerInterest interest))
