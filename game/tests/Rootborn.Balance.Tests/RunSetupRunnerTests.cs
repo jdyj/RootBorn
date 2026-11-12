@@ -88,17 +88,36 @@ namespace Rootborn.Balance.Tests
             Assert.That(NeverRun.Value.Days.Count(d => d.EndedAtMinutes > bedtime), Is.GreaterThan(0), "취침 시각 뒤에 끝난 날이 없으면 이 검사는 빈 통과다: " + Lines(NeverRun.Value));
         }
 
-        // P1: 자는 밤에 지치면 그 자리에서 자고, 다음 날은 회복해 다시 일한다.
+        // P1: 이틀에 하루 밤새는 판. 실제로 돌려 보니(2026-11-13) 지치는 날이 없다 — 밤샌 다음 날 체력 3으로 시작해 22:00까지만 일하고 자므로
+        // (밤 1시간마다 체력 1은 22:00 뒤에만 준다) 0에 닿지 않는다. 그 사실을 고정한다: 밤샌 날은 자지 않고, 다음 날은 지친 채 시작하지 않는다.
         [Test]
-        public void StayUpEvery2_ExhaustedOnASleepingNight_SleepsThere_AndTheNextDayWorks()
+        public void StayUpEvery2_StaysUpOnEvenDays_NeverGetsExhausted_AndTheNextDayWorks()
         {
             const int Days = 8;
             var run = Run("facility-work-only", s => s.Sleep = "stay-up-every 2", Days);
             TestContext.Out.WriteLine(Lines(run));
-            int dayEnd = Rules.DayEndMinutes;
             Assert.That(run.Days.Count, Is.EqualTo(Days));
             for (int i = 0; i < run.Days.Count; i++)
-                if ((i + 1) % 2 == 0) Assert.That(run.Days[i].Slept, Is.False, (i + 1) + "째 날은 밤새는 날이다");
+            {
+                var day = run.Days[i];
+                bool awake = (i + 1) % 2 == 0;
+                Assert.That(day.Slept, Is.EqualTo(!awake), day.Day + "일째: " + (awake ? "밤새는 날" : "자는 날"));
+                Assert.That(day.Exhausted, Is.False, day.Day + "일째 체력 " + day.EnergyAtEnd + " " + day.Stop);
+                if (i > 0 && run.Days[i - 1].Slept == false)
+                    Assert.That(day.Actions, Is.GreaterThan(0), day.Day + "일째: 밤샌 다음 날도 일한다");
+            }
+        }
+
+        // Review Focus 2: 자는 규칙인데 잘 때 전에 지친다 — 06:00까지 일하면 다음 날 회복이 줄어 그 다음 밤 06:00 전에 지친다. 그 자리에서 잔다.
+        [Test]
+        public void FinishBy0600_GetsExhaustedBeforeItsHour_SleepsThere_AndTheNextDayWorks()
+        {
+            const int Days = 8;
+            var run = Run("facility-work-only", s => s.Sleep = "finish-by 06:00", Days);
+            TestContext.Out.WriteLine(Lines(run));
+            int dayEnd = Rules.DayEndMinutes;
+            Assert.That(run.Days.Count, Is.EqualTo(Days));
+            Assert.That(run.Days.All(d => d.Slept), Is.True, "자는 규칙이다");
 
             var tired = Enumerable.Range(0, run.Days.Count).Where(i => run.Days[i].Stop == StopReasons.Exhausted).ToList();
             Assert.That(tired, Is.Not.Empty, "자는 밤에 지쳐서 잔 날이 없다. 날마다 체력·멈춘 이유: " + string.Join(", ", run.Days.Select(d => d.Day + "일 " + d.EnergyAtEnd + " " + d.Stop)));
