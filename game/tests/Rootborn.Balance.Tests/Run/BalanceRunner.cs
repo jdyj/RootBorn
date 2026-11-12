@@ -49,12 +49,19 @@ namespace Rootborn.Balance.Tests
         }
 
         public static RunResult Run(StrategySpec strategy, object target, ScoreTier tier, BalanceConfig config, int days)
-            => Run(strategy, target, tier, config, days, strategy.Do.Select(BalanceActions.Get).ToList());
+            => Run(strategy, target, tier, config, days, strategy.Do.Select(BalanceActions.Get).ToList(), RunStarts.Get(strategy.Start));
 
         /// <summary>행동 목록을 직접 받는다(시험용 가짜 행동을 넣을 때). strategy.Do는 보지 않는다.</summary>
         public static RunResult Run(StrategySpec strategy, object target, ScoreTier tier, BalanceConfig config, int days, IReadOnlyList<IBalanceAction> actions)
+            => Run(strategy, target, tier, config, days, actions, RunStarts.Get(strategy.Start));
+
+        /// <summary>시작 상태를 직접 받는다(시험용 시작 상태를 넣을 때). strategy.Start는 보지 않는다.</summary>
+        public static RunResult Run(StrategySpec strategy, object target, ScoreTier tier, BalanceConfig config, int days, IRunStart start)
+            => Run(strategy, target, tier, config, days, strategy.Do.Select(BalanceActions.Get).ToList(), start);
+
+        private static RunResult Run(StrategySpec strategy, object target, ScoreTier tier, BalanceConfig config, int days, IReadOnlyList<IBalanceAction> actions, IRunStart start)
         {
-            var game = RunStarts.Get(strategy.Start).Start(new MemorySaveStore(), target);
+            var game = start.Start(new MemorySaveStore(), target);
             var fits = SleepRules.Get(config.Sleep);
             var assumptions = DayAssumptions.Current;
             int bedtime = game.TimeRules.BedtimeMinutes;
@@ -97,7 +104,7 @@ namespace Rootborn.Balance.Tests
                     Weekend = game.Student.Calendar.IsWeekend(game.Student.CurrentDay),
                     EndedAtMinutes = game.Student.TimeMinutes,
                 };
-                PlayDay(game, actions, context, fits, bedtime, record, name, ref request);
+                PlayDay(game, actions, context, fits, bedtime, record, name, ref request, () => earned);
 
                 record.FacilityLevel = game.Adult.IsAdult ? game.Adult.FacilityLevel : 0;
                 record.EnergyAtEnd = game.Student.Energy;
@@ -120,7 +127,7 @@ namespace Rootborn.Balance.Tests
         }
 
         private static void PlayDay(GameSession game, IReadOnlyList<IBalanceAction> actions, RunContext context, Func<int, int, int, bool> fits, int bedtime,
-            DayRecord record, string name, ref int request)
+            DayRecord record, string name, ref int request, Func<int> earnedSoFar)
         {
             var skipped = new bool[actions.Count]; // 이 날 거절된 행동 종류는 다시 보지 않는다
             int travel = context.Assumptions.TravelMinutes;
@@ -155,10 +162,13 @@ namespace Rootborn.Balance.Tests
                     record.TravelRealSeconds += travel * game.TimeRules.RealSecondsPerGameDay / (24 * 60);
                 }
 
+                int earnedBefore = earnedSoFar();
                 var outcome = step.Do(game, name + ":" + record.Day + ":" + request++ + ":" + step.Id);
                 if (game.Student.CurrentDay != record.Day) throw new InvalidOperationException(name + ": " + record.Day + "일째 행동이 날을 넘겼다(07:00)");
                 if (outcome.Done)
                 {
+                    // 미니게임을 한 행동이 번 것만(지갑 누적의 앞뒤 차). 자동 넘기기·올리기는 미니게임 초가 0이라 들어가지 않는다.
+                    if (outcome.MinigameRealSeconds > 0) record.MinigameEarned += earnedSoFar() - earnedBefore;
                     string id = outcome.Id ?? step.Id;
                     record.Actions++;
                     record.ActionCounts[id] = (record.ActionCounts.TryGetValue(id, out int c) ? c : 0) + 1;

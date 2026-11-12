@@ -27,14 +27,18 @@ namespace Rootborn.Balance.Tests
         }
     }
 
-    /// <summary>지금 할 수 있는 시설 일 중 최소 레벨이 가장 높은 것(같으면 id 순 첫째)을 미니게임으로 한다.</summary>
+    /// <summary>
+    /// 지금 할 수 있는 시설 일 중 최소 레벨이 가장 높은 것(같으면 id 순 첫째)을 미니게임으로 한다.
+    /// 할 수 있는 일이 없고 가방이 차서 못 하는 일만 있으면 그것을 계획으로 내어, 명령의 거절로 하루가 "가방 참"으로 끝나게 한다.
+    /// </summary>
     internal sealed class BestFacilityWorkAction : IBalanceAction
     {
         public string Kind => "best-facility-work";
 
         public PlannedStep Plan(GameSession game, RunContext context)
         {
-            var work = FacilityWorks.Highest(game, w => w.CanWork);
+            var work = FacilityWorks.Highest(game, w => w.CanWork)
+                ?? FacilityWorks.Highest(game, w => w.Direct == AdultCareerResultKind.InsufficientCapacity);
             if (work == null) return null;
             return new PlannedStep { Id = work.Id, Minutes = work.TimeCostMinutes, Walks = true, Do = (g, request) => FacilityWorks.Play(g, work, request, context.Score) };
         }

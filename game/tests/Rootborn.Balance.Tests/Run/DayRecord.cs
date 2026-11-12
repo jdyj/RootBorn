@@ -8,9 +8,10 @@ namespace Rootborn.Balance.Tests
         public int Day;
         public bool Weekend;
         public int WalletAtEnd, Earned, Spent;                                   // 통화
+        public int MinigameEarned;                                               // Earned 중 미니게임을 한 행동이 번 것(자동 넘기기·올리기·잠은 빼고)
         public int Actions;
         public SortedDictionary<string, int> ActionCounts = new SortedDictionary<string, int>();  // 행동 id(일·알바 id, 올리기는 종류 이름) → 횟수
-        public SortedDictionary<string, int> OtherItems = new SortedDictionary<string, int>();    // 통화가 아닌 아이템 id → 그날 끝 개수
+        public SortedDictionary<string, int> OtherItems = new SortedDictionary<string, int>();    // 통화가 아닌 아이템 id → 그날 끝에 가진 개수(그날 얻은 수가 아니다)
         public int WorkMinutes, TravelMinutes;                                   // 게임 분
         public float TravelRealSeconds, MinigameRealSeconds;                     // 걷기·미니게임에 쓴 실제 초
         public int EndedAtMinutes;                                               // 그날 마지막 행동이 끝난 시각

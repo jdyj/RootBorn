@@ -12,7 +12,8 @@
     { "id": "rotate-part-time-work", "each": "none", "start": "new-game", "scored": false, "do": ["any-part-time-work"] },
     { "id": "facility-work-only", "each": "facility", "start": "adult", "scored": true, "do": ["best-facility-work"] },
     { "id": "facility-work-upgrade", "each": "facility", "start": "adult", "scored": true, "do": ["upgrade-facility", "best-facility-work"] },
-    { "id": "facility-autoskip-upgrade", "each": "facility", "start": "adult", "scored": true, "do": ["upgrade-facility", "auto-skip-facility-work", "best-facility-work"] }
+    { "id": "facility-autoskip-upgrade", "each": "facility", "start": "adult", "scored": true, "do": ["upgrade-facility", "auto-skip-facility-work", "best-facility-work"],
+      "note": "넘길 수 있는 일이 있으면 그것만 하므로 올린 뒤 새 레벨 일의 숙련을 쌓지 않는다(직접 하는 전략보다 적게 벌 수 있다)." }
   ],
   "bands": []
 }

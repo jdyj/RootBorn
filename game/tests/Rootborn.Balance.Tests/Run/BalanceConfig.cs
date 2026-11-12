@@ -13,10 +13,10 @@ namespace Rootborn.Balance.Tests
         public int Score;
     }
 
-    /// <summary>전략 하나: 대상 종류(each), 시작 상태(start), 점수 단계와 곱하는지(scored), 차례대로 시도할 행동 종류(do).</summary>
+    /// <summary>전략 하나: 대상 종류(each), 시작 상태(start), 점수 단계와 곱하는지(scored), 차례대로 시도할 행동 종류(do), 보고에 붙일 설명 한 줄(note, 없으면 null).</summary>
     internal sealed class StrategySpec
     {
-        public string Id, Each, Start;
+        public string Id, Each, Start, Note;
         public bool Scored;
         public string[] Do;
     }
@@ -31,6 +31,7 @@ namespace Rootborn.Balance.Tests
         public string Sleep;
         public IReadOnlyList<ScoreTier> Tiers;
         public IReadOnlyList<StrategySpec> Strategies;
+        public int BandCount;   // "bands"의 항목 수. 범위 검사는 아직 없어(2단계) 비어 있어야 한다
 
         public static string FilePath => Path.Combine(TestWorld.RepoRoot, "game", "tests", "Rootborn.Balance.Tests", "money-balance.json");
 
@@ -53,6 +54,7 @@ namespace Rootborn.Balance.Tests
                     Start = s.GetProperty("start").GetString(),
                     Scored = s.GetProperty("scored").GetBoolean(),
                     Do = steps.ToArray(),
+                    Note = s.TryGetProperty("note", out var note) ? note.GetString() : null,
                 });
             }
 
@@ -62,6 +64,7 @@ namespace Rootborn.Balance.Tests
                 Sleep = root.GetProperty("sleep").GetString(),
                 Tiers = tiers,
                 Strategies = strategies,
+                BandCount = root.TryGetProperty("bands", out var bands) ? bands.GetArrayLength() : 0,
             };
         }
 
@@ -74,6 +77,7 @@ namespace Rootborn.Balance.Tests
             foreach (var tier in Tiers)
                 if (tier.Score < 0 || tier.Score > 100) throw new InvalidOperationException("점수 단계는 0~100이다: " + tier.Id + " " + tier.Score);
             if (Strategies == null) throw new InvalidOperationException("전략이 없다");
+            if (BandCount > 0) throw new InvalidOperationException("범위 검사는 아직 없다(2단계). bands는 비워 둔다: 항목 " + BandCount + "개");
 
             var ids = new HashSet<string>(StringComparer.Ordinal);
             foreach (var s in Strategies)
