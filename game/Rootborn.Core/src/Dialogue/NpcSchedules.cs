@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Core.NpcMovement;
 using Rootborn.Core.StudentLife;
 
 namespace Rootborn.Core.Dialogue
@@ -52,8 +53,9 @@ namespace Rootborn.Core.Dialogue
     {
         private readonly INpcScheduleRule[] _rules;
 
-        public NpcScheduleEntry(string locationId, DialogueDefinition dialogue, string dialogueKey, string interactionHintKey, string eventNoticeKey, int priority, INpcScheduleRule[] rules)
+        public NpcScheduleEntry(string locationId, DialogueDefinition dialogue, string dialogueKey, string interactionHintKey, string eventNoticeKey, int priority, INpcScheduleRule[] rules, INpcStayBehavior stay = null)
         {
+            Stay = stay ?? NpcStandStay.Instance;
             LocationId = locationId ?? string.Empty;
             Dialogue = dialogue;
             DialogueKey = dialogueKey ?? string.Empty;
@@ -70,6 +72,9 @@ namespace Rootborn.Core.Dialogue
         public string EventNoticeKey { get; }
         public int Priority { get; }
         public IReadOnlyList<INpcScheduleRule> Rules => _rules;
+
+        /// <summary>그 장소에 머무는 동안 어떻게 있는가. 정하지 않으면 서 있기.</summary>
+        public INpcStayBehavior Stay { get; }
 
         public bool IsMatch(in NpcScheduleContext context)
         {
