@@ -72,41 +72,11 @@ namespace Rootborn.Core.World
             catch (Exception e) { LastProblem = "맵 " + Map.Id + "을 다시 읽지 못했다: " + e.Message; return false; }
             if (map == null) { LastProblem = "맵이 없다: " + Map.Id; return false; }
             Map = map;
-            if (map.Collision.AnyBlocked(Walker.Box))
-            {
-                CellPos from = CellPos.Containing(Walker.X, Walker.Y, map.Grid.CellSize);
-                if (NearestOpen(map.Collision, from, out CellPos open))
-                {
-                    Facing facing = Walker.Facing;
-                    Walker.PlaceAt(CellPos.Center(open, map.Grid.CellSize));
-                    Walker.Face(facing);
-                }
-            }
+            StepAsideIfCaught(); // 건물이 커져 몸 밑이 막혔으면 가장 가까운 빈 칸으로(가구에 갇혔을 때와 같은 규칙)
             _doors = new DoorWatch(map.Doors, DoorWatch.UnityOpeningSeconds, DoorWatch.UnityContactSkinCells * map.Grid.CellSize);
             _doors.Reset(Walker.Box);
             LastProblem = null;
             return true;
-        }
-
-        /// <summary>막힌 칸도 지나며(맵 안에서) 상하좌우로 넓혀 찾은 가장 가까운 열린 칸.</summary>
-        private static bool NearestOpen(CollisionGrid grid, CellPos from, out CellPos open)
-        {
-            from = new CellPos(Math.Max(0, Math.Min(grid.Columns - 1, from.X)), Math.Max(0, Math.Min(grid.Rows - 1, from.Y)));
-            var seen = new HashSet<CellPos> { from };
-            var queue = new Queue<CellPos>();
-            queue.Enqueue(from);
-            while (queue.Count > 0)
-            {
-                CellPos c = queue.Dequeue();
-                if (grid.Grid.Contains(c.X, c.Y) && !grid.IsBlocked(c)) { open = c; return true; }
-                for (int i = 0; i < 4; i++)
-                {
-                    var next = new CellPos(c.X + (i == 0 ? 1 : i == 1 ? -1 : 0), c.Y + (i == 2 ? 1 : i == 3 ? -1 : 0));
-                    if (grid.Grid.Contains(next.X, next.Y) && seen.Add(next)) queue.Enqueue(next);
-                }
-            }
-            open = from;
-            return false;
         }
 
         /// <summary>
