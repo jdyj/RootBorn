@@ -149,10 +149,12 @@ namespace Rootborn.Balance.Tests
                 Assert.That(row.Summary.IncomePerDay, Is.EqualTo(shorter.IncomePerDay), name);
                 Assert.That(row.Summary.Level2Day, Is.EqualTo(shorter.Level2Day), name);
                 Assert.That(row.Summary.Level3Day, Is.EqualTo(shorter.Level3Day), name);
-                Assert.That(row.Summary.ExhaustedDays, Is.EqualTo(shorter.ExhaustedDays), name);
+                Assert.That(row.Summary.ExhaustionSeenDays, Is.EqualTo(shorter.ExhaustionSeenDays), name);
                 Assert.That(row.Summary.NightsAwake, Is.EqualTo(shorter.NightsAwake), name);
+                Assert.That(row.Summary.ZeroActionDays, Is.EqualTo(shorter.ZeroActionDays), name);
+                Assert.That(row.Summary.NetIncomePerDay, Is.EqualTo(shorter.NetIncomePerDay), name);
             }
-            Assert.That(Rows.Value[picks[0] * SmallCheckpoints.Length + k].Summary.ExhaustedDays, Is.GreaterThan(0), "자지 않는 판에 지친 날이 없으면 이 비교는 약하다");
+            Assert.That(Rows.Value[picks[0] * SmallCheckpoints.Length + k].Summary.ExhaustionSeenDays, Is.GreaterThan(0), "자지 않는 판에 지친 날이 없으면 이 비교는 약하다");
         }
 
         [Test]
@@ -231,24 +233,119 @@ namespace Rootborn.Balance.Tests
             Assert.That(File.ReadAllLines(Path.Combine(_temp, SweepReport.CsvFile))[1], Does.Contain("시험: 행동이 날을 넘겼다"));
         }
 
+        // ---- S3·S8: 손으로 값을 넣은 줄(실제 판의 줄을 복사해 요약만 바꾼다) ----
+
+        private static SweepRow With(SweepRow r, float income)
+            => new SweepRow { StrategyId = r.StrategyId, TargetId = r.TargetId, Setup = r.Setup, Checkpoint = r.Checkpoint, IsBaseline = r.IsBaseline, Summary = new RunSummary { IncomePerDay = income, NetIncomePerDay = income } };
+
+        private static bool OthersBaseline(BalanceConfig config, RunSetup s)
+        {
+            var b = config.BaselineSetup;
+            return s.Score == b.Score && s.PartTime == b.PartTime && s.TravelMinutes == b.TravelMinutes && s.MinigameShare == b.MinigameShare;
+        }
+
+        private static string[] WriteReport(BalanceConfig config, IReadOnlyList<SweepRow> rows, string temp)
+        {
+            SweepReport.Write(temp, config, rows);
+            return File.ReadAllLines(Path.Combine(temp, SweepReport.ReportFile));
+        }
+
+        private static List<string> SleepTable(string[] lines, string heading)
+        {
+            int section = Array.IndexOf(lines, SweepReport.SleepHeading);
+            int at = Array.FindIndex(lines, section, l => l == heading);
+            Assert.That(at, Is.GreaterThan(section), "표 제목이 없다: " + heading);
+            return lines.Skip(at + 1).SkipWhile(l => !l.StartsWith("|")).TakeWhile(l => l.StartsWith("|")).Skip(2).ToList();
+        }
+
+        [Test]
+        public void Report_BoldsEveryRowEqualToTheBest_AndCountsThem()
+        {
+            var config = Small.Value;
+            var strategy = config.Strategies.First(s => s.Scored).Id;
+            var tied = new[] { config.BaselineSetup.Sleep, "never" };
+            var rows = Rows.Value.Select(r => r.StrategyId == strategy && OthersBaseline(config, r.Setup) && r.Checkpoint == SmallDays
+                ? With(r, tied.Contains(r.Setup.Sleep) ? 500f : 100f) : r).ToList();
+            var body = SleepTable(WriteReport(config, rows, _temp), "### " + strategy);
+            Assert.That(body.Count(l => l.StartsWith("| **")), Is.EqualTo(2), "같은 값인 줄은 모두 굵게");
+            var lines = File.ReadAllLines(Path.Combine(_temp, SweepReport.ReportFile));
+            int heading = Array.IndexOf(lines, "### " + strategy, Array.IndexOf(lines, SweepReport.SleepHeading));
+            Assert.That(lines.Skip(heading).Take(body.Count + 12).Any(l => l.Contains(SweepReport.TiedLine + " 2")), Is.True, "표 아래에 같은 값 줄 수");
+        }
+
+        [Test]
+        public void Report_HasTheBestSleepRulePerStrategyAndTravel()
+        {
+            var config = Small.Value;
+            var lines = WriteReport(config, Rows.Value, _temp);
+            int at = Array.IndexOf(lines, SweepReport.BestPerTravelHeading);
+            Assert.That(at, Is.GreaterThan(Array.IndexOf(lines, SweepReport.SleepHeading)), "자는 때 절 안에 있다");
+            var body = lines.Skip(at + 1).SkipWhile(l => !l.StartsWith("|")).TakeWhile(l => l.StartsWith("|")).Skip(2).ToList();
+            Assert.That(body.Count, Is.EqualTo(config.Strategies.Count * config.Axes.TravelMinutes.Length), "줄 = 전략 × 걷는 분");
+        }
+
+        [Test]
+        public void Report_ListsTargetsWhoseBestDiffers_AndGivesPerTargetTablesWhenTargetsDiffer()
+        {
+            var config = Small.Value;
+            var strategy = config.Strategies.First(s => s.Scored);
+            var targets = RunTargets.All(strategy.Each, TestWorld.Definitions).Select(RunTargets.IdOf).ToList();
+            Assert.That(targets.Count, Is.GreaterThan(1));
+            string odd = targets[1];
+            // 둘째 대상만 never가 아주 크다 → 평균 1등은 never. 나머지 대상의 1등은 기준(22:00)이라 평균과 다르다.
+            var rows = Rows.Value.Select(r =>
+            {
+                if (r.StrategyId != strategy.Id || !OthersBaseline(config, r.Setup) || r.Checkpoint != SmallDays) return r;
+                float v = r.Setup.Sleep == config.BaselineSetup.Sleep ? 100f : r.Setup.Sleep == "never" ? (r.TargetId == odd ? 1000f : 0f) : 50f;
+                return With(r, v);
+            }).ToList();
+            var lines = WriteReport(config, rows, _temp);
+            Assert.That(lines.Any(l => l.Contains(SweepReport.DifferentBestLine) && l.Contains(targets[0]) && l.Contains(config.BaselineSetup.Sleep)), Is.True, "다른 1등인 대상");
+            Assert.That(lines.Any(l => l.Contains(SweepReport.DifferentBestLine) && l.Contains(odd + " ")), Is.False, "평균과 같은 1등인 대상은 적지 않는다");
+            Assert.That(SleepTable(lines, "#### " + strategy.Id + " / " + targets[0]).Count, Is.EqualTo(config.Axes.Sleep.Length), "대상끼리 다르면 대상별 표");
+        }
+
+        [Test]
+        public void Report_GroupsCombosWithTheSameResult_AndNamesTheAxesThatDiffer()
+        {
+            var config = Small.Value;
+            var rows = Rows.Value.ToList();
+            int a = rows.FindIndex(r => r.Checkpoint == SmallDays && r.Setup.TravelMinutes == config.BaselineSetup.TravelMinutes && r.StrategyId == config.Strategies[0].Id);
+            int b = rows.FindIndex(r => r.Checkpoint == SmallDays && r.Setup.TravelMinutes != config.BaselineSetup.TravelMinutes && r.StrategyId == rows[a].StrategyId
+                && r.TargetId == rows[a].TargetId && r.Setup.Sleep == rows[a].Setup.Sleep);
+            rows[a] = With(rows[a], 99999f);
+            rows[b] = With(rows[b], 99999f);
+            var lines = WriteReport(config, rows, _temp);
+            int top = Array.FindIndex(lines, l => l.StartsWith("### " + SweepReport.TopHeadingPrefix));
+            var first = lines.Skip(top + 1).SkipWhile(l => !l.StartsWith("|")).Skip(2).First();
+            Assert.That(first, Does.Contain("99999.0"));
+            Assert.That(first, Does.Contain("| 2 |"), "같은 결과 2판");
+            Assert.That(first, Does.Contain("걷는 분"), "달라진 축");
+        }
+
         [Test]
         public void SummaryCountsExhaustedDaysAndNightsAwake()
         {
             var run = new RunResult { StrategyId = "t", TargetId = "" };
-            run.Days.Add(new DayRecord { Day = 1, Slept = true, SleptAtMinutes = 1300, EnergyAtEnd = 10, Earned = 100 });
-            run.Days.Add(new DayRecord { Day = 2, Slept = false, Exhausted = true, EnergyAtEnd = 0, Earned = 50 });
-            run.Days.Add(new DayRecord { Day = 3, Slept = true, SleptAtMinutes = 900, Exhausted = true, EnergyAtEnd = 2 });
-            run.Days.Add(new DayRecord { Day = 4, Slept = true, SleptAtMinutes = 1320, EnergyAtEnd = 8, Earned = 30 });
+            run.Days.Add(new DayRecord { Day = 1, Slept = true, SleptAtMinutes = 1300, EnergyAtEnd = 10, Earned = 100, Spent = 40, Actions = 3, Stop = StopReasons.Bedtime });
+            run.Days.Add(new DayRecord { Day = 2, Slept = false, Exhausted = true, EnergyAtEnd = 0, Earned = 50, Actions = 2, Stop = StopReasons.DayRanOut });
+            run.Days.Add(new DayRecord { Day = 3, Slept = true, SleptAtMinutes = 900, Exhausted = true, EnergyAtEnd = 2, Actions = 0, Stop = StopReasons.Exhausted });
+            run.Days.Add(new DayRecord { Day = 4, Slept = true, SleptAtMinutes = 1320, EnergyAtEnd = 8, Earned = 30, Actions = 1, Stop = StopReasons.Exhausted });
 
             var all = RunSummary.From(run);
-            Assert.That(all.ExhaustedDays, Is.EqualTo(2));
+            Assert.That(all.ExhaustionSeenDays, Is.EqualTo(2), "지침을 본 날");
+            Assert.That(all.StoppedExhaustedDays, Is.EqualTo(2), "지쳐서 멈춘 날(Stop == exhausted)");
+            Assert.That(all.ZeroActionDays, Is.EqualTo(1), "행동 0인 날");
             Assert.That(all.NightsAwake, Is.EqualTo(1));
             Assert.That(all.AverageEnergyAtEnd, Is.EqualTo(5f).Within(0.001f));
             Assert.That(all.AverageSleptAtMinutes, Is.EqualTo((1300f + 900f + 1320f) / 3).Within(0.01f));
-            Assert.That(all.IncomePerDay, Is.EqualTo(180f / 4).Within(0.001f));
+            Assert.That(all.IncomePerDay, Is.EqualTo(180f / 4).Within(0.001f), "번 돈 합 ÷ 날 수(쓴 돈은 빼지 않는다)");
+            Assert.That(all.NetIncomePerDay, Is.EqualTo(140f / 4).Within(0.001f), "(번 돈 − 쓴 돈) ÷ 날 수");
 
             var two = RunSummary.From(run, 2);
-            Assert.That(two.ExhaustedDays, Is.EqualTo(1));
+            Assert.That(two.ExhaustionSeenDays, Is.EqualTo(1));
+            Assert.That(two.StoppedExhaustedDays, Is.EqualTo(0));
+            Assert.That(two.ZeroActionDays, Is.EqualTo(0));
             Assert.That(two.NightsAwake, Is.EqualTo(1));
             Assert.That(two.AverageEnergyAtEnd, Is.EqualTo(5f).Within(0.001f));
             Assert.That(two.AverageSleptAtMinutes, Is.EqualTo(1300f).Within(0.01f));

@@ -213,6 +213,49 @@ namespace Rootborn.Balance.Tests
             foreach (var id in after) Assert.That(levels[id], Is.EqualTo(2), "레벨 2에 닿은 뒤에는 레벨 2 일만 한다: " + id);
         }
 
+        // S1: 넘겨 잇는 밤에는 07:00을 넘겨 끝나는 일도 시작한다. 그 보수는 시작한 날에, 다음 날은 넘긴 분만큼 늦게 시작한다(CarryFactsTests의 사실).
+        [Test]
+        public void NeverCarry_StartsWorkThatEndsAfterDayEnd_PaysItOnTheStartDay_AndTheNextDayStartsLate()
+        {
+            var plain = Run("facility-work-only", s => s.Sleep = "never", 2);
+            var carry = Run("facility-work-only", s => s.Sleep = "never carry", 2);
+            TestContext.Out.WriteLine(Lines(plain) + " | " + Lines(carry));
+            var first = carry.Days[0];
+            Assert.That(carry.Days.Count, Is.EqualTo(2));
+            Assert.That(first.Actions, Is.EqualTo(plain.Days[0].Actions + 1), "넘겨 잇기로 일 하나를 더 시작한다");
+            Assert.That(first.EndedAtMinutes, Is.GreaterThan(Rules.DayEndMinutes), "그 일은 07:00 뒤에 끝난다");
+            Assert.That(first.Earned, Is.GreaterThan(plain.Days[0].Earned), "그 보수는 시작한 날의 줄에");
+            Assert.That(carry.Days[1].StartedAtMinutes, Is.EqualTo(Rules.DayStartMinutes + first.EndedAtMinutes - Rules.DayEndMinutes), "다음 날은 넘긴 분만큼 늦게");
+            Assert.That(carry.Days[1].Day, Is.EqualTo(first.Day + 1));
+        }
+
+        // S6: 행동이 계획 길이보다 오래 걸려 잠 규칙의 끝을 넘기면 판을 멈춘다(예측이 짧았다).
+        [Test]
+        public void AnActionThatOverrunsItsPlan_PastTheRuleEnd_StopsTheRun()
+        {
+            var config = Config.Value;
+            var setup = RunSetup.Baseline(config);
+            var actions = new IBalanceAction[] { new OverrunningAction() };
+            var error = Assert.Throws<InvalidOperationException>(() =>
+                BalanceRunner.Run(config.Strategies.Single(s => s.Id == "facility-work-only"), FirstFacility, setup, config, 1, actions));
+            Assert.That(error.Message, Does.Contain("계획"));
+        }
+
+        // 계획은 10분이라 하고 22:00을 넘겨 끝난다.
+        private sealed class OverrunningAction : IBalanceAction
+        {
+            public string Kind => "test-overrun";
+            public PlannedStep Plan(GameSession game, RunContext context)
+            {
+                int toBed = game.TimeRules.BedtimeMinutes - game.Student.TimeMinutes;
+                return new PlannedStep
+                {
+                    Id = Kind, Minutes = 10, Walks = false,
+                    Do = (g, request) => { g.AdvanceTime(DayAssumptions.RealSeconds(g.TimeRules, toBed + 30) + 0.001f, false); return new StepOutcome { Done = true }; },
+                };
+            }
+        }
+
         private const float FullShare = 1.0f;
 
         private static Rootborn.Core.Time.TimeRules Rules => TestWorld.Definitions.TimeRules;

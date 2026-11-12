@@ -67,10 +67,63 @@ namespace Rootborn.Balance.Tests
             Assert.That(rule.MayStart(Moment(Rules.DayEndMinutes - 209, 30, 180, runDay: 3)), Is.False);
         }
 
+        // S1: 넘겨 잇기 — 자지 않는 밤에는 07:00 전에 시작하기만 하면 된다(시계 조각 1분을 남긴다). 끝 제한이 없다.
+        [Test]
+        public void NeverCarry_StartsBeforeDayEnd_EvenWhenItEndsAfter()
+        {
+            var rule = SleepRules.Parse("never carry", Rules);
+            int end = Rules.DayEndMinutes;
+            Assert.That(rule.Id, Is.EqualTo("never carry"));
+            Assert.That(rule.SleepsTonight(1), Is.False);
+            Assert.That(rule.MayStart(Moment(end - 32, 30, 180)), Is.True, "걷고 나면 07:00 2분 전 — 시작한다(끝은 07:00 뒤)");
+            Assert.That(rule.MayStart(Moment(end - 31, 30, 180)), Is.False, "걷고 나면 07:00 1분 전 — 걷기가 1분 더 걸리면 걷다가 날이 넘어간다");
+            Assert.That(rule.LatestEnd(1, end), Is.Null, "넘겨 잇는 밤에는 끝 제한이 없다");
+            Assert.That(SleepRules.Parse("never", Rules).LatestEnd(1, end), Is.EqualTo(end));
+        }
+
+        [Test]
+        public void StayUpEvery2Carry_CarriesOnlyOnItsAwakeNights()
+        {
+            var rule = SleepRules.Parse("stay-up-every 2 carry", Rules);
+            int end = Rules.DayEndMinutes;
+            Assert.That(rule.MayStart(Moment(end - 32, 30, 180, runDay: 2)), Is.True, "밤새는 날");
+            Assert.That(rule.MayStart(Moment(At(18, 31), 30, 180, runDay: 1)), Is.False, "자는 날은 그대로 22:00까지");
+            Assert.That(rule.LatestEnd(1, end), Is.EqualTo(Rules.BedtimeMinutes));
+            Assert.That(rule.LatestEnd(2, end), Is.Null);
+        }
+
+        // S2: 가끔 밤새고 다른 밤은 그 시각까지 끝내고 잔다.
+        [Test]
+        public void StayUpEvery2Until0100_SleepsBy0100OnOtherNights()
+        {
+            var rule = SleepRules.Parse("stay-up-every 2 until 01:00", Rules);
+            Assert.That(rule.SleepsTonight(1), Is.True);
+            Assert.That(rule.SleepsTonight(2), Is.False);
+            Assert.That(rule.MayStart(Moment(At(21, 30), 30, 180, runDay: 1)), Is.True, "21:30 + 210분 = 25:00 ≤ 01:00(25:00)");
+            Assert.That(rule.MayStart(Moment(At(21, 31), 30, 180, runDay: 1)), Is.False);
+            Assert.That(rule.LatestEnd(1, Rules.DayEndMinutes), Is.EqualTo(At(25)));
+            Assert.That(rule.LatestEnd(2, Rules.DayEndMinutes), Is.EqualTo(Rules.DayEndMinutes));
+
+            var both = SleepRules.Parse("stay-up-every 2 until 01:00 carry", Rules);
+            Assert.That(both.MayStart(Moment(Rules.DayEndMinutes - 32, 30, 180, runDay: 2)), Is.True);
+            Assert.That(both.MayStart(Moment(At(21, 31), 30, 180, runDay: 1)), Is.False);
+        }
+
+        // S6: 행동 뒤 검사에 쓰는 끝 — start-before는 끝 제한이 없다.
+        [Test]
+        public void LatestEnd_IsTheRuleTimeOnSleepingNights_AndNoneForStartBefore()
+        {
+            int end = Rules.DayEndMinutes;
+            Assert.That(SleepRules.Parse("finish-by 02:00", Rules).LatestEnd(1, end), Is.EqualTo(At(26)));
+            Assert.That(SleepRules.Parse("start-before 22:00", Rules).LatestEnd(1, end), Is.Null);
+            Assert.That(SleepRules.Parse("stay-up-every 3", Rules).LatestEnd(3, end), Is.EqualTo(end));
+        }
+
         [Test]
         public void UnknownOrMalformedRuleSaysItsText()
         {
-            foreach (var bad in new[] { "nope", "finish-by 25:99", "stay-up-every 0", "finish-by", "never 3", "start-before 7" })
+            foreach (var bad in new[] { "nope", "finish-by 25:99", "stay-up-every 0", "finish-by", "never 3", "start-before 7",
+                "stay-up-every 2 carry until 01:00", "stay-up-every 2 until", "stay-up-every 2 until 25:00", "never carry carry", "carry", "stay-up-every 2 later 01:00" })
             {
                 Assert.That(SleepRules.Knows(bad), Is.False, bad);
                 var e = Assert.Throws<ArgumentException>(() => SleepRules.Parse(bad, Rules), bad);
