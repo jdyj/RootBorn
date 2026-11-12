@@ -83,5 +83,39 @@ namespace Rootborn.Game.Tests
             session.AdvanceTime(SecondsPerMinute * 0.5f, false);
             Assert.That(session.DayMinutesExact - (minute + 1), Is.InRange(0.45, 0.55));
         }
+
+        /// <summary>
+        /// NPC 자리는 (데이터, 날, 그날의 분)의 함수라, 같은 방의 두 사람이 같은 (날, 분)을 가지면 같은 자리를 계산한다(설계 4절).
+        /// 한 사람은 방이 한참 흐른 뒤에 들어오고, 그 사이 다른 사람은 프레임 간격이 다르게(잘게) 시간을 받는다 — 개인 진행·들어온 때·프레임 간격이 정수 분에 들어가지 않는다.
+        /// </summary>
+        [Test]
+        public void 같은_방의_두_사람은_같은_분에_있다()
+        {
+            using var saves = new TempSaves();
+            var clock = new RoomClock(Rules, 1, -1);
+            clock.Join("player-a");
+            var a = GameSession.Start(TestWorld.Definitions, TestWorld.Settings, saves.Store, "slot-npc-room-a", "player-a", room: clock);
+            for (int i = 0; i < 37; i++)
+            {
+                clock.Advance(1);
+                for (int k = 0; k < 3; k++) a.AdvanceTime(SecondsPerMinute / 3f, false);
+            }
+            Assert.That(a.PerformOutsideSchoolActivity(LibraryStudy, "outside:npc-room:a").Kind, Is.EqualTo(LifeActivityResultKind.Applied),
+                "앞서 들어온 사람만 활동을 했다(개인 진행이 다르다)");
+
+            clock.Join("player-b");
+            var b = GameSession.Start(TestWorld.Definitions, TestWorld.Settings, saves.Store, "slot-npc-room-b", "player-b", room: clock);
+            for (int step = 0; step < 50; step++)
+            {
+                if (step % 5 == 0) clock.Advance(1);
+                a.AdvanceTime(SecondsPerMinute * 0.07f, false);
+                b.AdvanceTime(SecondsPerMinute * 0.3f, true); // 들어간 사람은 메뉴를 연 채, 프레임 간격도 다르다(분이 바뀌기 전에 1분어치를 넘게 받는다)
+                Assert.That((int)Math.Floor(a.DayMinutesExact), Is.EqualTo(clock.Minutes), step + "번째: 앞서 들어온 사람");
+                Assert.That((int)Math.Floor(b.DayMinutesExact), Is.EqualTo(clock.Minutes), step + "번째: 늦게 들어온 사람");
+                Assert.That(b.Student.CurrentDay, Is.EqualTo(a.Student.CurrentDay));
+                Assert.That(a.Student.CurrentDay, Is.EqualTo(clock.Day));
+                Assert.That(Math.Abs(a.DayMinutesExact - b.DayMinutesExact), Is.LessThan(1d), step + "번째: 분 아래 조각의 차이만");
+            }
+        }
     }
 }

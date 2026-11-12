@@ -110,6 +110,9 @@
 | NET-001 | 없음 | Unity ArgsParser(-mode/-port/-joinIp)는 옮기지 않았다. MonoGame Host는 다른 인자(`HostOptions`, game/README.md)이고 네트워크 실행 모드가 없다 |
 | NET-002 | 없음 | 전용 서버·네트워크 동기화가 MonoGame 판에 없다. 규칙 일부만 Core SteamSessionRulesTests·SessionCapacityTests |
 | HEIR-001 | 없음 | HeirGenerator는 Unity(`Assets/Scripts/Game/Heir`)에만 있고 Core로 옮기지 않았다 |
+| NPC-001 | Core NpcDayPlanTests(경계_시각에_출발한다, 걸리는_시간은_칸_수를_속도로_나눈_것이다, 이동_중_어느_시각에도_정확히_한_맵에_있다), World NpcRouteContractTests.일과표의_이웃한_시간대_자리_사이에_길이_있다, Simulation NpcWalkingTests.선생님이_정오에_학교를_떠나_마을_광장에_도착한다, Host NpcWalkHostTests.선생님이_학교에서_나와_마을을_걸어간다 | 일과표대로 걸어 도착. Unity 판에는 없던 시나리오(NPC 이동, 2026-11-12) |
+| NPC-002 | World NpcStageTests.떠난_NPC의_후보는_꺼진다, Core NpcDayPlanTests.자리가_없는_시간대에는_어느_맵에도_없다, Host NpcWalkHostTests.NPC가_떠난_자리에서는_상호작용이_없다 | 자리에 없으면 만날 수 없다. 걸어가는 NPC에게는 말을 건다: Host NpcWalkHostTests.걸어가는_NPC에게_다가가_말을_건다 |
+| NPC-003 | Core NpcStayTests.이어_간_것과_처음부터_계산한_것이_같다, Core NpcDayPlanTests.시각이_한꺼번에_뛰어도_맞는_자리다, World NpcStageTests.맵에_들어온_때가_달라도_같은_시각에는_같은_자리다, Simulation NpcWalkingTests.이어_해도_같은_시각에는_같은_자리다, Game NpcTimeTests.같은_방의_두_사람은_같은_분에_있다, Host TwoGamesHostTests.TWO_GAMES_NPC_001_같이_하는_두_화면에서_NPC가_같은_자리에_있다 | 같은 시각이면 같은 자리 — 이어 하기·같이 하기. 같이 하기는 두 프로세스·루프백, 같은 맵끼리 2칸 안(분 아래 조각) |
 
 ## 3. 옮기다 찾은 필요한 변경 — 2026-11-11 처리함
 

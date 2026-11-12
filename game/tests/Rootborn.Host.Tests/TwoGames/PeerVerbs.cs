@@ -242,6 +242,14 @@ namespace Rootborn.Host.Tests.TwoGames
             ["day-result-sleeping"] = (p, a) => p.Screens.Find(ScreenCatalog.DayResult) is DayResultScreen d && p.Screens.IsOpen(ScreenCatalog.DayResult) && d.Model.Sleeping,
             ["missing-images"] = (p, a) => string.Join(",", p.Game.Renderer.MissingImages),
             ["collision-violations"] = (p, a) => p.CollisionViolations,
+            // 모든 NPC의 마지막 Tick 자리(NPC 순서): "id=맵,x,y" 또는 "id=-"(어느 맵에도 없음), ';'로 잇는다. 방장 쪽도 같은 함수로 읽어 견준다.
+            ["npc-poses"] = (p, a) =>
+            {
+                var parts = new List<string>();
+                foreach (string id in p.Game.World.Content.Npcs.Order)
+                    parts.Add(p.Game.World.Npcs.TryPose(id, out Rootborn.Core.NpcMovement.NpcPose pose) ? id + "=" + pose.MapId + "," + F(pose.X) + "," + F(pose.Y) : id + "=-");
+                return string.Join(";", parts);
+            },
         };
 
         public static string Ask(PlayerDriver player, string name, string[] args)

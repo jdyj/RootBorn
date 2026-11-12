@@ -215,6 +215,113 @@ namespace Rootborn.World.Tests
             Assert.That(wrong, Is.Empty, string.Join("\n", wrong.Take(20)));
         }
 
+        /// <summary>
+        /// 성능 측정(설계 8절): NPC 60명(실제 일과표 다섯을 id만 달리해 열두 벌씩 메모리에서 만든 것)으로 계획 만들기와 Tick 10,000번을 잰다.
+        /// 기준: Tick 한 번 평균 0.05ms 아래, 걸음이 넘어가지 않는 Tick에서 할당 0. 잰 값은 테스트 출력에 남긴다(벽시계는 기계마다 흔들린다 — 기준은 넉넉하다).
+        /// </summary>
+        [Test]
+        public void 성능_NPC_60명의_계획과_Tick()
+        {
+            const int Copies = 12, Ticks = 10000;
+            WorldMapLoader loader = Repo.Loader();
+            IReadOnlyList<NpcSchedule> real = Repo.Definitions.All<NpcSchedule>();
+            var schedules = new List<NpcSchedule>(real.Count * Copies);
+            var ids = new List<string>(real.Count * Copies);
+            for (int k = 0; k < Copies; k++)
+                foreach (NpcSchedule s in real)
+                {
+                    NpcDefinition n = s.Npc;
+                    string id = n.Id + "#" + k;
+                    var npc = new NpcDefinition(id, n.DisplayNameKey, n.IntroductionKey, n.HomeLocationId, n.Roles.ToArray(), n.DefaultDialogue,
+                        n.DefaultDialogueConditions.ToArray(), n.StageDialogues.ToArray(), n.Quests.ToArray());
+                    schedules.Add(new NpcSchedule(s.Id + "#" + k, npc, s.FallbackLocationId, s.Entries.ToArray()));
+                    ids.Add(id);
+                }
+            Assert.That(ids.Count, Is.EqualTo(60));
+            InteractionData data = Interactions;
+            var anchors = new CrowdedAnchors(new MapAnchors(data, loader.Catalog.Maps.Select(m => m.Id)));
+            var world = new NpcWorld(ids, new NpcScheduleLookupCache(schedules), anchors, loader, loader.Catalog.NpcWalker, Repo.Definitions.TimeRules);
+            var stage = new NpcStage(world, data);
+            stage.EnterMap("Town", data.Map("Town"), loader.LoadMap("Town").World.Doors);
+
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            stage.Tick(1, 900);
+            double coldMs = watch.Elapsed.TotalMilliseconds; // 첫 계획: 맵 격자 읽기와 JIT 포함
+            int present = 0;
+            foreach (string id in ids) if (stage.TryPose(id, out NpcPose _)) present++;
+            Assert.That(present, Is.EqualTo(60), "이 시험의 전제: 60명 모두 어느 맵엔가 있다");
+
+            watch.Restart();
+            stage.Tick(2, 900);
+            double nextDayMs = watch.Elapsed.TotalMilliseconds; // 날이 바뀐 Prepare(격자는 기억)
+
+            // 가구를 놓은 순간: ForgetMap 직후 한 프레임에 60명 계획을 다시 만든다.
+            var rebuilds = new List<double>(5);
+            for (int r = 0; r < 5; r++)
+            {
+                stage.ForgetMap("House");
+                watch.Restart();
+                stage.Tick(2, 900);
+                rebuilds.Add(watch.Elapsed.TotalMilliseconds);
+            }
+            rebuilds.Sort();
+
+            var moving = new bool[ids.Count];
+            for (int i = 0; i < ids.Count; i++) moving[i] = stage.TryPose(ids[i], out NpcPose p) && p.Moving;
+            long quietBytes = 0, allBytes = 0;
+            int quiet = 0, walking = 0;
+            double tickMs = 0;
+            const double FrameMinutes = 1.0 / 60.0 * 1440.0 / 600.0; // 60프레임/초, 하루 실제 600초일 때 한 프레임의 게임 분(측정용 간격)
+            for (int k = 1; k <= Ticks; k++)
+            {
+                double t = 900 + k * FrameMinutes;
+                long before = GC.GetAllocatedBytesForCurrentThread();
+                long started = System.Diagnostics.Stopwatch.GetTimestamp();
+                stage.Tick(2, t);
+                tickMs += (System.Diagnostics.Stopwatch.GetTimestamp() - started) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
+                long used = GC.GetAllocatedBytesForCurrentThread() - before;
+                allBytes += used;
+                bool stepChanged = false;
+                for (int i = 0; i < ids.Count; i++)
+                {
+                    bool now = stage.TryPose(ids[i], out NpcPose p) && p.Moving;
+                    if (now) walking++;
+                    if (now != moving[i]) stepChanged = true;
+                    moving[i] = now;
+                }
+                if (stepChanged) continue;
+                quiet++;
+                quietBytes += used;
+            }
+            double meanMs = tickMs / Ticks;
+            TestContext.WriteLine("[NPC 60명] 첫 계획(격자 읽기·JIT 포함) " + coldMs.ToString("0.0") + "ms, 다음 날 계획 " + nextDayMs.ToString("0.0")
+                + "ms, 가구를 놓은 뒤 다시 만들기(ForgetMap 직후 한 Tick) 가장 짧은 " + rebuilds[0].ToString("0.00") + "ms / 가운데 " + rebuilds[2].ToString("0.00")
+                + "ms / 가장 긴 " + rebuilds[4].ToString("0.00") + "ms");
+            TestContext.WriteLine("[NPC 60명] Tick " + Ticks + "번(게임 " + (Ticks * FrameMinutes).ToString("0") + "분) 합 " + tickMs.ToString("0.0") + "ms, 평균 "
+                + (meanMs * 1000).ToString("0.0") + "µs, 걷는 NPC 평균 " + (walking / (double)Ticks).ToString("0.0") + "명, 걸음이 넘어가지 않은 Tick " + quiet
+                + "번의 할당 " + quietBytes + "바이트, 전체 할당 " + allBytes + "바이트(새 머무름이 시작될 때 — 시간대가 바뀌어 자리에 닿은 NPC의 어슬렁 칸 목록)");
+            Assert.That(walking, Is.GreaterThan(Ticks), "이 시험의 전제: 재는 동안 걷는 NPC가 있다");
+            Assert.That(quiet, Is.GreaterThan(Ticks / 2), "이 시험의 전제: 걸음이 넘어가지 않는 Tick이 대부분이다");
+            Assert.That(quietBytes, Is.EqualTo(0), quiet + "번 Tick에 새로 잡은 바이트");
+            Assert.That(meanMs, Is.LessThan(0.05), "Tick 한 번 평균(ms)");
+        }
+
+        /// <summary>장소의 자리보다 NPC가 많으면 남는 NPC는 그 장소의 마지막 자리를 같이 쓴다(측정용 — 몸끼리 막지 않는다).</summary>
+        private sealed class CrowdedAnchors : INpcAnchors
+        {
+            private readonly INpcAnchors _inner;
+
+            public CrowdedAnchors(INpcAnchors inner) { _inner = inner; }
+
+            public bool TryGet(string locationId, int slot, out NpcSpot spot)
+            {
+                for (int s = slot; s >= 0; s--)
+                    if (_inner.TryGet(locationId, s, out spot)) return true;
+                spot = default;
+                return false;
+            }
+        }
+
         /// <summary>한 맵만 바꿔 주는 맵 원본(나머지는 맵 읽개).</summary>
         private sealed class OneMapSource : IWorldMapSource
         {
