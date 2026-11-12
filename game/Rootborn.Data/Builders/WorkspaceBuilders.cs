@@ -107,7 +107,7 @@ namespace Rootborn.Data.Builders
 
     /// <summary>
     /// 전부 읽은 뒤 한 번 만드는 일터 표(통화·시간 규칙과 같은 자리): 가구 성질 표와 일 연결 표.
-    /// 표의 문제와, 템플릿이 모르는 가구를 쓰거나 일터와 템플릿이 서로 맞지 않는 것은 읽기 오류다.
+    /// 표의 문제(모르는 가구, 가구가 없는 분류)와, 템플릿이 모르는 가구를 쓰거나 일터와 템플릿이 서로 맞지 않는 것, 일터끼리 면·시설이 겹치는 것은 읽기 오류다.
     /// </summary>
     internal static class WorkspaceTables
     {
@@ -125,6 +125,22 @@ namespace Rootborn.Data.Builders
                 foreach (var id in template.FurnitureIds)
                     if (!furnitureIds.Contains(id))
                         errors.Add(new LoadError("missing-ref", "WorkspaceTemplate", template.Id, "", $"모르는 가구 '{id}'를 쓴다"));
+
+            // 일터끼리 면이나 시설이 겹치면 처음 것만 쓰인다. 조용히 지지 않게 뒤의 것을 오류로 낸다(집의 면은 맵 데이터에서 오므로 여기서 보지 않는다).
+            var bySurface = new Dictionary<string, string>(StringComparer.Ordinal);
+            var byFacility = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (var workspace in definitions.All<Workspace>())
+            {
+                if (bySurface.TryGetValue(workspace.SurfaceId, out var surfaceOwner))
+                    errors.Add(new LoadError("invalid-field", "WorkspaceDefinition", workspace.Id, "",
+                        $"면 '{workspace.SurfaceId}'는 이미 일터 '{surfaceOwner}'의 것이다"));
+                else bySurface[workspace.SurfaceId] = workspace.Id;
+
+                if (byFacility.TryGetValue(workspace.FacilityId, out var facilityOwner))
+                    errors.Add(new LoadError("invalid-field", "WorkspaceDefinition", workspace.Id, "",
+                        $"시설 '{workspace.FacilityId}'에는 이미 일터 '{facilityOwner}'가 있다"));
+                else byFacility[workspace.FacilityId] = workspace.Id;
+            }
 
             foreach (var workspace in definitions.All<Workspace>())
             {

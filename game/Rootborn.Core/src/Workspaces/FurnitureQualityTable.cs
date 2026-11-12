@@ -69,13 +69,17 @@ namespace Rootborn.Core.Workspaces
 
             // 가구 id → 성질 id → 점수. 분류 규칙을 먼저 넣고 가구 규칙이 덮어쓴다(더하지 않는다).
             var merged = new Dictionary<string, Dictionary<string, int>>(StringComparer.Ordinal);
+            // 맞는 가구가 하나도 없는 분류 규칙은 문제다(분류 이름 오타가 조용히 효과를 없애지 않게). 비교는 대소문자를 가린다.
             foreach (var rule in categoryRules)
             {
+                bool matched = false;
                 foreach (var f in furnitureById.Values)
                 {
                     if (!string.Equals(f.Category, rule.Category, StringComparison.Ordinal)) continue;
                     Slot(merged, f.StableId)[rule.QualityId] = rule.Score;
+                    matched = true;
                 }
+                if (!matched) _problems.Add("가구 성질 규칙 " + rule.Id + "이 가구가 없는 분류를 가리킨다: " + rule.Category);
             }
             foreach (var rule in furnitureRules) Slot(merged, rule.FurnitureId)[rule.QualityId] = rule.Score;
 

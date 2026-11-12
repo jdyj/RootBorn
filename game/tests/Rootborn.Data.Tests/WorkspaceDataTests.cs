@@ -122,6 +122,62 @@ namespace Rootborn.Data.Tests
         }
 
         [Test]
+        public void QualityRule_CategoryWithoutFurniture_IsLoadError()
+        {
+            using var dir = new TempDir();
+            dir.Write("data/a/SpaceQualityDefinition.json", @"[{ ""type"": ""SpaceQualityDefinition"", ""id"": ""quality.x"", ""displayNameKey"": ""quality.x.name"", ""iconKey"": """" }]");
+            dir.Write("data/a/FurnitureQualityRule.json", @"[{ ""type"": ""FurnitureQualityRule"", ""id"": ""quality-rule.x"",
+                ""category"": ""NoSuchCategory"", ""quality"": { ""ref"": ""quality.x"", ""type"": ""SpaceQualityDefinition"" }, ""score"": 2 }]");
+
+            var result = Load(dir);
+
+            Assert.That(result.Errors.Any(e => e.Type == "FurnitureQualityRule" && e.Message.Contains("NoSuchCategory")), Is.True, string.Join("\n", result.Errors));
+            Assert.That(result.Ok, Is.False);
+        }
+
+        [Test]
+        public void TwoWorkspacesOnTheSameSurface_IsLoadError()
+        {
+            using var dir = new TempDir();
+            var a = Workspace("workspace.a", "[6, 10, 14]", facility: "facility.a", surface: "surface.same");
+            var b = Workspace("workspace.b", "[6, 10, 14]", facility: "facility.b", surface: "surface.same");
+            dir.Write("data/a/WorkspaceDefinition.json", a.TrimEnd(']') + "," + b.TrimStart('['));
+            var result = Load(dir);
+
+            Assert.That(result.Errors.Any(e => e.Kind == "invalid-field" && e.Type == "WorkspaceDefinition" && e.Id == "workspace.b" && e.Message.Contains("surface.same")),
+                Is.True, string.Join("\n", result.Errors));
+            Assert.That(result.Errors.Any(e => e.Kind == "invalid-field" && e.Id == "workspace.a"), Is.False, "처음 것은 오류가 아니다");
+        }
+
+        [Test]
+        public void TwoWorkspacesForTheSameFacility_IsLoadError()
+        {
+            using var dir = new TempDir();
+            var a = Workspace("workspace.a", "[6, 10, 14]", facility: "facility.same", surface: "surface.a");
+            var b = Workspace("workspace.b", "[6, 10, 14]", facility: "facility.same", surface: "surface.b");
+            dir.Write("data/a/WorkspaceDefinition.json", a.TrimEnd(']') + "," + b.TrimStart('['));
+            var result = Load(dir);
+
+            Assert.That(result.Errors.Any(e => e.Kind == "invalid-field" && e.Type == "WorkspaceDefinition" && e.Id == "workspace.b" && e.Message.Contains("facility.same")),
+                Is.True, string.Join("\n", result.Errors));
+            Assert.That(result.Errors.Any(e => e.Kind == "invalid-field" && e.Id == "workspace.a"), Is.False, "처음 것은 오류가 아니다");
+        }
+
+        [Test]
+        public void DefinitionsBuiltWithoutWorkspaceTables_HaveEmptyTables()
+        {
+            using var dir = new TempDir();
+            var errors = new System.Collections.Generic.List<LoadError>();
+            var definitions = new GameDefinitions(new System.Collections.Generic.List<GameDefinitions.Entry>(), EntityTable.ReadDirectory(dir.Path, errors));
+
+            Assert.That(definitions.FurnitureQuality, Is.Not.Null);
+            Assert.That(definitions.FurnitureQuality.ScoresOf("anything"), Is.Empty);
+            Assert.That(definitions.FurnitureQuality.Problems, Is.Empty);
+            Assert.That(definitions.WorkLinks, Is.Not.Null);
+            Assert.That(definitions.WorkLinks.ExtrasFor("work.x", SpaceScores.Empty).SkillGains, Is.Empty);
+        }
+
+        [Test]
         public void Template_UnknownFurniture_IsLoadError()
         {
             using var dir = new TempDir();
@@ -273,9 +329,10 @@ namespace Rootborn.Data.Tests
             @"{ ""type"": ""WorkspaceTemplate"", ""id"": """ + id + @""", ""workspace"": { ""ref"": """ + workspace + @""", ""type"": ""WorkspaceDefinition"" },
                 ""displayNameKey"": """ + id + @".name"", ""costItems"": " + costItems + @", ""costCounts"": " + costCounts + @", ""placements"": [ " + placements + " ] }";
 
-        private static string Workspace(string id, string capacities, string rules = "[]", string defaultTemplate = null) =>
+        private static string Workspace(string id, string capacities, string rules = "[]", string defaultTemplate = null,
+            string facility = "facility.x", string surface = null) =>
             @"[{ ""type"": ""WorkspaceDefinition"", ""id"": """ + id + @""",
-            ""facility"": { ""ref"": ""facility.x"", ""type"": ""FacilityDefinition"" }, ""surfaceId"": """ + id + @""", ""acceptsSurfaceIds"": [ ""house"" ],
+            ""facility"": { ""ref"": """ + facility + @""", ""type"": ""FacilityDefinition"" }, ""surfaceId"": """ + (surface ?? id) + @""", ""acceptsSurfaceIds"": [ ""house"" ],
             ""capacityByLevel"": " + capacities + @", ""repeatPercent"": 70, ""rules"": " + rules + @", ""defaultTemplate"": "
             + (defaultTemplate == null ? "null" : @"{ ""ref"": """ + defaultTemplate + @""", ""type"": ""WorkspaceTemplate"" }") + " }]";
     }

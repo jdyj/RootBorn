@@ -101,6 +101,19 @@ namespace Rootborn.Core.Tests
         }
 
         [Test]
+        public void RuleForCategoryWithoutFurniture_IsReportedAsProblem()
+        {
+            // 분류 비교는 대소문자를 가린다: "kitchen" 규칙은 "Kitchen" 가구에 맞지 않고, 맞는 가구가 하나도 없으면 문제다.
+            var table = new FurnitureQualityTable(
+                new[] { CategoryRule("kitchen", "cozy", 3), CategoryRule("Kitchen", "tidy", 1) },
+                new[] { Furniture("a", "Kitchen") });
+
+            Assert.That(table.Problems.Count, Is.EqualTo(1));
+            Assert.That(table.Problems[0], Does.Contain("kitchen"));
+            Assert.That(table.ScoresOf("a").Count, Is.EqualTo(1), "맞는 분류 규칙은 그대로 들어간다");
+        }
+
+        [Test]
         public void RuleWithBothCategoryAndFurniture_IsInvalid()
         {
             var both = new FurnitureQualityRule("r", "Kitchen", "a", "cozy", 3);
