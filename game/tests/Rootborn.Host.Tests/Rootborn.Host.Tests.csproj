@@ -4,6 +4,8 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>disable</Nullable>
     <IsPackable>false</IsPackable>
+    <!-- 진입점은 TwoGames/PeerProgram(두 게임 테스트가 이 어셈블리를 두 번째 게임으로 띄운다). 테스트 SDK가 만드는 빈 진입점 대신. -->
+    <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../Rootborn.Host/Rootborn.Host.csproj" />

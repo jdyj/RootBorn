@@ -6,8 +6,10 @@
 
 # 시뮬레이션의 긴 플레이·무거운 화면 검사(메모리·할당 측정, 여러 날을 실제 창에서)
 soak: LongPlayHostTests HeavyScreensHostTests
-# 시뮬레이션의 정책 플레이(실제 창에서 하루 이상을 정책으로 플레이)
-play: HostPlayTests DriverDoorReproTests
+# 시뮬레이션의 정책 플레이(실제 창에서 하루 이상을 정책으로 플레이)와 같이 하기를 게임 둘로(두 프로세스 — TwoGamesHostTests 9건,
+# 원격 Linux·소프트웨어 GL에서 약 100초, 2026-11-12). 두 게임 테스트는 따로 묶는 것이 맞지만 묶음을 더하려면 ci.yml matrix도 같이 바꿔야 해서
+# 그때까지 가장 짧은 이 묶음에 둔다.
+play: HostPlayTests DriverDoorReproTests TwoGamesHostTests
 # 메인 체인을 실행부터 끝까지 실제 입력으로(MAIN_E2E)
 main-chain: MainChainHostTests NewGameJourneyTests
 # 나머지 전부(화면, 월드, 시작 화면, 멀티플레이 들어가기, 옵션 …)

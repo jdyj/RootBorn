@@ -370,12 +370,15 @@ namespace Rootborn.Host.Tests
             host.PressKey(TestKey.E);
             host.WaitForScreen(ScreenCatalog.DayResult);
             var result = (Rootborn.Screens.Day.DayResultScreen)host.Screens.Find(ScreenCatalog.DayResult);
-            Assert.That(Run(() => result.Model.Sleeping && result.Model.AwakeOthers.Count == 1), Is.True, "자는 중 — 손님은 아직 깨어 있다");
+            // "자는 중"은 내 게임이 잠든 순간 참이고 "손님은 깨어 있다"는 잠들기 전부터 참이다. 방이 내 잠 요청을 받아 세는 것은 그 뒤의 방 틱이라
+            // 셈까지 조건에 넣어 기다린다(예전에는 바로 다음 줄에서 단정해 원격에서 한 번 "방이 내 잠을 셌다"로 실패했다).
+            string me = host.Game.Room.PlayerId;
+            Assert.That(Run(() => result.Model.Sleeping && result.Model.AwakeOthers.Count == 1 && host.Game.Hosting.Room.Server.Clock.IsAsleep(me)), Is.True,
+                "자는 중 — 손님은 아직 깨어 있다, 방이 내 잠을 셌다");
             Assert.That(result.Model.AwakeOthers[0], Is.EqualTo("friend"));
             var next = (UiButton)host.Node(Rootborn.Screens.Day.DayResultScreen.NextDayId);
             Assert.That(next.Enabled, Is.False, "자면 07:00까지 깨어날 수 없다");
             Assert.That(next.Text, Is.EqualTo(host.Game.Text.Get("day-result.sleeping")));
-            Assert.That(host.Game.Hosting.Room.Server.Clock.IsAsleep(host.Game.Room.PlayerId), Is.True, "방이 내 잠을 셌다");
             host.ScreenshotScreen(ScreenCatalog.DayResult, "hostmode-09-host-sleeping");
 
             // 손님도 잔다(명령) → 모두 잠들었으니 곧바로 다음 날 07:00.
@@ -388,6 +391,9 @@ namespace Rootborn.Host.Tests
             host.WaitForScreenClosed(ScreenCatalog.DayResult);
             Assert.That(hostGame.Student.CurrentDay, Is.EqualTo(2));
             Assert.That(((UiLabel)host.Node(Rootborn.Screens.Hud.ClockHudScreen.LabelId)).Text, Does.StartWith("2일  07:"));
+            // 손님은 방의 다음 날을 UDP로 따로 받는다 — 방장 쪽 단추가 켜진 것으로 손님도 받았다고 보지 않고 기다린다
+            // (원격 Linux에서 손님이 아직 받지 못해 StartNextDay가 false로 한 번 더 실패했다).
+            Assert.That(Run(() => guest.CanStartNextDay), Is.True, "손님도 방의 다음 날을 받았다");
             Assert.That(guest.StartNextDay(), Is.True);
 
             // 활동 하나(준비: 명령 직접 호출) — 시계를 건너뛰지 않고 하는 중.

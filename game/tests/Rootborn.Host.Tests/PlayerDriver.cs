@@ -104,7 +104,19 @@ namespace Rootborn.Host.Tests
             _stepper = new FrameStepper(Game);
         }
 
-        public void Frames(int count = 1) => _stepper.Step(count);
+        /// <summary>
+        /// 프레임 하나를 돌릴 때마다 부른다(그 프레임 뒤). 두 게임 테스트가 다른 프로세스의 게임을 한 프레임씩 같이 돌리는 데 쓴다(TwoGames/PeerGame).
+        /// </summary>
+        public Action AfterFrame;
+
+        public void Frames(int count = 1)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                _stepper.Step(1);
+                AfterFrame?.Invoke();
+            }
+        }
 
         // SDL2 스캔코드와 키코드
         private static (int scancode, int sym) Codes(TestKey key)
@@ -174,6 +186,12 @@ namespace Rootborn.Host.Tests
             UiRect rect = Node(id).Rect;
             MovePointer(rect.CenterX, rect.CenterY);
         }
+
+        /// <summary>
+        /// 포인터 단추 상태만 바꾸고 프레임은 돌리지 않는다. 다음 프레임에 게임이 읽는다 — 두 게임이 같은 프레임에 누르게 할 때 쓴다
+        /// (이쪽을 바꿔 두고 다른 게임의 누름이 두 게임을 한 프레임씩 같이 돌린다).
+        /// </summary>
+        public void SetPointerDown(bool down) => _pointer.Down = down;
 
         public void PressPointer() { _pointer.Down = true; Frames(2); }
         public void ReleasePointer() { _pointer.Down = false; Frames(2); }
