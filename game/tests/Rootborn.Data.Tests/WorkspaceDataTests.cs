@@ -169,8 +169,114 @@ namespace Rootborn.Data.Tests
             Assert.That(SaveShapeCoverage.ShapeFor(Names.WorkspaceLayout(ChefWorkspace, Names.DefaultPlayerId)), Is.EqualTo(typeof(FurniturePlacementLayoutSaveData)));
         }
 
-        private static string Workspace(string id, string capacities) => @"[{ ""type"": ""WorkspaceDefinition"", ""id"": """ + id + @""",
+        [Test]
+        public void EmptyTemplate_IsLoadError()
+        {
+            using var good = new TempDir();
+            good.Write("data/a/WorkspaceTemplate.json", "[" + Template("template.x", "workspace.x", "[]", "[]", Placement(0)) + "]");
+            var control = Load(good);
+            Assert.That(control.Errors.Any(e => e.Kind == "constructor" && e.Type == "WorkspaceTemplate"), Is.False, "가구 하나면 템플릿 자체는 올바르다");
+
+            using var bad = new TempDir();
+            bad.Write("data/a/WorkspaceTemplate.json", "[" + Template("template.x", "workspace.x", "[]", "[]", "") + "]");
+            var result = Load(bad);
+
+            AssertError(result, "constructor", "WorkspaceTemplate", "template.x");
+            Assert.That(result.Definitions.TryGet<WorkspaceTemplate>("template.x", out _), Is.False, "가구 없는 템플릿은 정의에 오르지 않는다");
+        }
+
+        [TestCase("[ null ]")]
+        [TestCase(@"[ { ""ref"": ""decoration.nope"", ""type"": ""SkillTierCapacityRule"" } ]")]
+        public void WorkspaceWithNullOrUnbuiltRule_IsLoadError(string rules)
+        {
+            using var dir = new TempDir();
+            dir.Write("data/a/WorkspaceDefinition.json", Workspace("workspace.x", "[6, 10, 14]", rules));
+            var result = Load(dir);
+
+            AssertError(result, "constructor", "WorkspaceDefinition", "workspace.x");
+            Assert.That(result.Definitions.TryGet<Workspace>("workspace.x", out _), Is.False);
+        }
+
+        [TestCase("[ null ]")]
+        [TestCase(@"[ { ""ref"": ""workspace-bonus.nope"", ""type"": ""QualityRewardPercentBonus"" } ]")]
+        public void BindingWithNullOrUnbuiltBonus_IsLoadError(string bonuses)
+        {
+            using var dir = new TempDir();
+            dir.Write("data/a/WorkBonusBinding.json", @"[{ ""type"": ""WorkBonusBinding"", ""id"": ""work-bonus.x"",
+                ""work"": { ""ref"": ""work.x"", ""type"": ""FacilityWorkDefinition"" }, ""bonuses"": " + bonuses + " }]");
+            var result = Load(dir);
+
+            AssertError(result, "constructor", "WorkBonusBinding", "work-bonus.x");
+        }
+
+        [TestCase("SkillTierDefinition", @"""minimumValue"": 10, ""displayNameKey"": ""tier.x.name""")]
+        [TestCase("WorkSkillGrowth", @"""work"": { ""ref"": ""work.x"", ""type"": ""FacilityWorkDefinition"" }, ""amount"": 1")]
+        [TestCase("PlacementSkillGrowth", @"""surfaceId"": ""house"", ""amount"": 1, ""dailyLimit"": 3")]
+        public void EmptySkill_IsLoadError(string type, string fields)
+        {
+            using var dir = new TempDir();
+            dir.Write("data/a/" + type + ".json", @"[{ ""type"": """ + type + @""", ""id"": ""x.1"", ""skill"": null, " + fields + " }]");
+            var result = Load(dir);
+
+            AssertError(result, "constructor", type, "x.1");
+        }
+
+        [TestCase(@"[ { ""ref"": ""item.x"", ""type"": ""ItemDefinition"" } ]", "[ 0 ]", 0, "constructor")]
+        [TestCase("[]", "[]", 7, "enum-range")]
+        public void InvalidTemplate_IsLoadError(string costItems, string costCounts, int direction, string kind)
+        {
+            using var dir = new TempDir();
+            dir.Write("data/a/WorkspaceTemplate.json", "[" + Template("template.x", "workspace.x", costItems, costCounts, Placement(direction)) + "]");
+            var result = Load(dir);
+
+            AssertError(result, kind, "WorkspaceTemplate", "template.x");
+            Assert.That(result.Ok, Is.False);
+        }
+
+        [Test]
+        public void WorkspaceFacilityPointingAtAnotherType_IsWrongRefType()
+        {
+            using var dir = new TempDir();
+            dir.Write("data/a/SpaceQualityDefinition.json", @"[{ ""type"": ""SpaceQualityDefinition"", ""id"": ""quality.x"", ""displayNameKey"": ""quality.x.name"", ""iconKey"": """" }]");
+            dir.Write("data/a/WorkspaceDefinition.json", Workspace("workspace.x", "[6, 10, 14]", "[]")
+                .Replace(@"{ ""ref"": ""facility.x"", ""type"": ""FacilityDefinition"" }", @"{ ""ref"": ""quality.x"", ""type"": ""SpaceQualityDefinition"" }"));
+            var result = Load(dir);
+
+            AssertError(result, "wrong-ref-type", "WorkspaceDefinition", "workspace.x");
+        }
+
+        [Test]
+        public void DefaultTemplateOfAnotherWorkspace_IsLoadError()
+        {
+            using var dir = new TempDir();
+            var a = Workspace("workspace.a", "[6, 10, 14]", "[]", "template.b");
+            var b = Workspace("workspace.b", "[6, 10, 14]", "[]");
+            dir.Write("data/a/WorkspaceDefinition.json", a.TrimEnd(']') + "," + b.TrimStart('['));
+            dir.Write("data/a/WorkspaceTemplate.json", "[" + Template("template.b", "workspace.b", "[]", "[]", Placement(0)) + "]");
+            var result = Load(dir);
+
+            AssertError(result, "wrong-ref-type", "WorkspaceDefinition", "workspace.a");
+            Assert.That(result.Errors.Any(e => e.Type == "WorkspaceDefinition" && e.Id == "workspace.b" && e.Kind == "wrong-ref-type"), Is.False, "자기 템플릿은 괜찮다");
+        }
+
+        private static LoadResult Load(TempDir dir) => GameDataLoader.Load(Path.Combine(dir.Path, "data"), RootbornBuilders.Register);
+
+        private static void AssertError(LoadResult result, string kind, string type, string id)
+        {
+            Assert.That(result.Errors.Any(e => e.Kind == kind && e.Type == type && e.Id == id), Is.True,
+                $"{kind} {type}/{id} 오류가 없다:\n" + string.Join("\n", result.Errors));
+        }
+
+        private static string Placement(int direction) => @"{ ""furniture"": ""furniture.x"", ""cell"": { ""x"": 1, ""y"": 1 }, ""direction"": " + direction + " }";
+
+        private static string Template(string id, string workspace, string costItems, string costCounts, string placements) =>
+            @"{ ""type"": ""WorkspaceTemplate"", ""id"": """ + id + @""", ""workspace"": { ""ref"": """ + workspace + @""", ""type"": ""WorkspaceDefinition"" },
+                ""displayNameKey"": """ + id + @".name"", ""costItems"": " + costItems + @", ""costCounts"": " + costCounts + @", ""placements"": [ " + placements + " ] }";
+
+        private static string Workspace(string id, string capacities, string rules = "[]", string defaultTemplate = null) =>
+            @"[{ ""type"": ""WorkspaceDefinition"", ""id"": """ + id + @""",
             ""facility"": { ""ref"": ""facility.x"", ""type"": ""FacilityDefinition"" }, ""surfaceId"": """ + id + @""", ""acceptsSurfaceIds"": [ ""house"" ],
-            ""capacityByLevel"": " + capacities + @", ""repeatPercent"": 70, ""rules"": [], ""defaultTemplate"": null }]";
+            ""capacityByLevel"": " + capacities + @", ""repeatPercent"": 70, ""rules"": " + rules + @", ""defaultTemplate"": "
+            + (defaultTemplate == null ? "null" : @"{ ""ref"": """ + defaultTemplate + @""", ""type"": ""WorkspaceTemplate"" }") + " }]";
     }
 }

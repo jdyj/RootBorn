@@ -66,6 +66,8 @@ namespace Rootborn.Data.Builders
                     BuilderHelpers.StrictItemAmounts(n, "costItems", "costCounts"), Placements(n));
                 if (!template.IsValid)
                     throw new InvalidOperationException("템플릿이 올바르지 않다(일터가 있고, 값은 1 이상, 가구 줄마다 가구 id와 방향)");
+                // 가구 없는 템플릿은 적용하면 일터 가구를 모두 치우기만 한다(값을 내도 아무것도 깔리지 않는다).
+                if (template.Placements.Count == 0) throw new InvalidOperationException("템플릿에 가구가 없다(placements가 비었다)");
                 return template;
             });
         }
