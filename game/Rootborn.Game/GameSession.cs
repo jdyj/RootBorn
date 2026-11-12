@@ -159,6 +159,7 @@ namespace Rootborn.Game
         /// <summary>
         /// 슬롯을 읽는다. 읽기 문제는 하나에서 멈추지 않고 모두 모아 끝에 <see cref="SaveSlotDamagedException"/>으로 알린다(StartReads).
         /// 이 플레이어의 영역 파일은 있는데 스냅샷이 없으면(옛 Unity 영역 파일도 없으면) 손상으로 본다. 새 게임으로 남은 파일을 덮지 않기 위해서다.
+        /// 이 판이 쓴 스냅샷은 있는데 함께 쓰는 영역 파일이 없어도 손상으로 본다. 그 영역만 처음부터 시작하면 받은 보상을 다시 받을 수 있다.
         /// </summary>
         private void Load()
         {
@@ -217,6 +218,23 @@ namespace Rootborn.Game
 
             LoadOptionalDomains(store);
             LoadRoomOutbox(store);
+
+            // 이 판이 쓴 스냅샷(지갑이 든 것, 버전 3부터)은 아래 영역 파일과 늘 한 묶음으로 쓰였다. 스냅샷만 있고 하나가 없으면 그 영역이
+            // 처음부터 시작해 받은 보상을 다시 받을 수 있으므로 빠진 파일로 알린다. Unity 판 스냅샷(지갑 없음)은 이 파일들 없이도 이어 간다.
+            // 여기에 파일을 더할 때는 "그 파일을 늘 쓰기 시작한 뒤의 세이브"를 가릴 근거(스냅샷 버전 등)를 함께 둔다 — 아니면 옛 세이브가 안 열린다.
+            if (hasSnapshot && snapshot.Wallet != null)
+            {
+                store.Require(SaveFileNames.PlayerQuestLog(PlayerId));
+                store.Require(SaveFileNames.Milestone(PlayerId));
+                store.Require(SaveFileNames.CareerInterest(PlayerId));
+                store.Require(SaveFileNames.LocationState(PlayerId));
+                if (_campaign != null) store.Require(SaveFileNames.Campaign(PlayerId));
+                store.Require(SaveFileNames.Exploration(PlayerId));
+                store.Require(SaveFileNames.DiscoveryClues(PlayerId));
+                store.Require(SaveFileNames.ClueInterpretations(PlayerId));
+                store.Require(SaveFileNames.Encyclopedia(PlayerId));
+                store.Require(SaveFileNames.DailyEvent(PlayerId));
+            }
 
             store.ThrowIfDamaged(hasSnapshot ? null : snapshotName, SlotSharedFiles(), PreSnapshotFiles());
         }

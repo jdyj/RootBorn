@@ -8,9 +8,10 @@ using NUnit.Framework;
 namespace Rootborn.Game.Tests
 {
     /// <summary>
-    /// 세이브 견고성 2(마): 파일 하나가 없을 때. 스냅샷 말고 영역 파일이 없으면 "그 영역의 세이브 없음"이라 거절하지 않고
-    /// 그 영역만 처음 상태로 시작하며, 다음 명령이 그 파일을 새로 쓴다. 스냅샷 파일만 없으면 슬롯이 손상된 것으로 보고 시작을 거절한다
-    /// (새 게임으로 남은 파일을 덮지 않는다, SlotDamageTests). 자동 테스트다.
+    /// 세이브 견고성 2(마): 파일 하나가 없을 때. 스냅샷과 영역 파일은 명령마다 한 묶음으로 쓰이므로 하나만 없으면 슬롯이 손상된 것이다:
+    /// 빠진 파일을 알리고 시작을 거절하며 아무것도 쓰지 않는다(새 게임으로 남은 파일을 덮지 않는다, SlotDamageTests).
+    /// 전에는 영역 파일이 없으면 그 영역만 처음 상태로 시작했다 — 퀘스트·마일스톤·캠페인·탐색·하루 이벤트의 "받음" 기록이 사라져
+    /// 받은 보상을 다시 받을 수 있었다. Unity 판 스냅샷(지갑 없음)만 있는 옛 슬롯은 영역 파일 없이도 이어 간다(OlderSlotTests 등). 자동 테스트다.
     /// </summary>
     public sealed class DeletedSaveFileTests
     {
@@ -37,33 +38,42 @@ namespace Rootborn.Game.Tests
         {
             foreach (var area in Areas)
                 yield return new TestCaseData(SlotCheckpoints.FileNames(Checkpoint).Single(f => f.StartsWith(area.Prefix, StringComparison.Ordinal)), area.Prefix)
-                    .SetName("Deleting_" + area.Prefix + "_ResetsOnlyThatArea");
+                    .SetName("Deleting_" + area.Prefix + "_RefusesToStart");
         }
 
         private static string Dump(object area) => JsonSerializer.Serialize(area, Json);
 
         [TestCaseSource(nameof(AreaFiles))]
-        public void DeletingAnAreaFile_StartsWithThatAreaFresh_AndKeepsTheRest(string file, string prefix)
+        public void DeletingAnAreaFile_RefusesToStart_NamesIt_AndKeepsTheRest(string file, string prefix)
+        {
+            using var saves = SlotCheckpoints.Restore(Checkpoint);
+            File.Delete(Path.Combine(saves.Path, SlotCheckpoints.Slot, file));
+            var others = SlotCheckpoints.Read(saves);
+
+            for (int attempt = 0; attempt < 2; attempt++)
+            {
+                var error = Assert.Throws<SaveSlotDamagedException>(() => TestWorld.Start(saves.Store, SlotCheckpoints.Slot).VisitLocation("location.town-square"), prefix);
+                Assert.That(error.Problems.Single().FileName, Is.EqualTo(file), "빠진 영역 파일을 알린다");
+                Assert.That(error.Problems.Single().Kind, Is.EqualTo(SaveSlotProblemKind.Missing));
+            }
+
+            Assert.That(SlotCheckpoints.Same(others, SlotCheckpoints.Read(saves)), Is.True, "거절한 시작은 아무것도 쓰지 않는다(빠진 파일을 새로 쓰지 않는다)");
+        }
+
+        [TestCaseSource(nameof(AreaFiles))]
+        public void PuttingTheAreaFileBack_ContinuesAsBefore(string file, string prefix)
         {
             using var saves = SlotCheckpoints.Restore(Checkpoint);
             var original = TestWorld.Start(saves.Store, SlotCheckpoints.Slot);
-            using var empty = new TempSaves();
-            var fresh = TestWorld.Start(empty.Store, SlotCheckpoints.Slot);
-            File.Delete(Path.Combine(saves.Path, SlotCheckpoints.Slot, file));
+            string path = Path.Combine(saves.Path, SlotCheckpoints.Slot, file);
+            byte[] kept = File.ReadAllBytes(path);
+            File.Delete(path);
+            Assert.Throws<SaveSlotDamagedException>(() => TestWorld.Start(saves.Store, SlotCheckpoints.Slot));
+            File.WriteAllBytes(path, kept);
 
             var game = TestWorld.Start(saves.Store, SlotCheckpoints.Slot);
 
-            foreach (var area in Areas)
-            {
-                var expected = area.Prefix == prefix ? fresh : original;
-                Assert.That(Dump(area.Area(game)), Is.EqualTo(Dump(area.Area(expected))), area.Prefix);
-            }
-
-            Assert.That(game.Student.CurrentDay, Is.EqualTo(original.Student.CurrentDay), "학생 진행은 스냅샷에서 그대로");
-            Assert.That(Dump(game.QuestChains.ToSaveData()), Is.EqualTo(Dump(original.QuestChains.ToSaveData())), "체인도 스냅샷에서 그대로");
-
-            game.VisitLocation("location.town-square");
-            Assert.That(File.Exists(Path.Combine(saves.Path, SlotCheckpoints.Slot, file)), Is.True, "다음 명령이 그 파일을 새로 쓴다");
+            foreach (var area in Areas) Assert.That(Dump(area.Area(game)), Is.EqualTo(Dump(area.Area(original))), area.Prefix);
         }
 
         [TestCase("first-command")]
