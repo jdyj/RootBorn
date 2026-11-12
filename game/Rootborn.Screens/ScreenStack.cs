@@ -124,6 +124,12 @@ namespace Rootborn.Screens
         public bool Has(string id) => _registry.Has(id);
 
         /// <summary>
+        /// 지금 그 화면을 열 수 있는 곳이다: 등록 때 정한 맵 성질(OnlyWhereMapHas)이 지금 맵에 있다. 여는 키와 HUD 단추가 같이 본다.
+        /// </summary>
+        public bool IsAvailable(string id) =>
+            _registry.TryGet(id, out ScreenEntry entry) && (entry.RequiredMapFeature == null || HasMapFeature(entry.RequiredMapFeature));
+
+        /// <summary>
         /// 캐릭터가 걷지 못한다: MovementBlocked이거나, Shift를 누른 채 포커스를 받는 화면이 떠 있다(Shift+방향 키는 버튼 사이를 옮긴다).
         /// </summary>
         public bool MovementBlockedWhile(bool shiftHeld) => MovementBlocked || (shiftHeld && FocusScreen != null);
@@ -418,6 +424,8 @@ namespace Rootborn.Screens
         /// </summary>
         private bool KeyBindingOpen(string screenId)
         {
+            if (!IsOpen(screenId) && !IsAvailable(screenId)) return false; // 이 맵에서는 열지 않는 화면(HUD 단추도 숨는다)
+            if (FocusScreen != null && FocusScreen.Id == screenId) return true; // 맨 위에 떠 있는 그 화면을 같은 키로 닫는다(막는 화면이어도)
             if (!ScreenBlocksMovement) return true;
             if (!_registry.TryGet(screenId, out ScreenEntry entry) || !entry.KeyWorksOnStartScreens) return false;
             for (int i = 0; i < _open.Count; i++)

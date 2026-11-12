@@ -51,6 +51,10 @@ namespace Rootborn.Host.Input
         public bool LocationLog;
         /// <summary>F1: 단축키 안내.</summary>
         public bool Help;
+        /// <summary>화면을 여는 글자 키(KeyGuideNames.ScreenOpeners의 순서대로 한 비트씩)가 이번 프레임에 눌렸다.</summary>
+        public uint Openers;
+
+        public bool Opener(int index) => (Openers & (1u << index)) != 0;
 
         /// <summary>누르고 있는 방향 키로 정한 걷기 방향(-1, 0, 1). 반대 방향을 함께 누르면 0.</summary>
         public int MoveX => (HeldRight ? 1 : 0) - (HeldLeft ? 1 : 0);
@@ -94,6 +98,8 @@ namespace Rootborn.Host.Input
                 ZoomInHeld = AnyDown(now, KeyGuideNames.ZoomInKeys),
                 ZoomOutHeld = AnyDown(now, KeyGuideNames.ZoomOutKeys),
             };
+            for (int i = 0; i < KeyGuideNames.ScreenOpeners.Length; i++)
+                if (Pressed(now, KeyGuideNames.ScreenOpeners[i].Device)) frame.Openers |= 1u << i;
             _previous = now;
             return frame;
         }
@@ -133,6 +139,27 @@ namespace Rootborn.Host.Input
             (ScreenKey.AltRight, new[] { Keys.D }),
             (ScreenKey.Help, new[] { Keys.F1 }),
             (ScreenKey.LocationLog, new[] { Keys.L }),
+            (ScreenKey.Encyclopedia, new[] { Keys.B }),
+            (ScreenKey.Wardrobe, new[] { Keys.O }),
+            (ScreenKey.WorldLog, new[] { Keys.T }),
+            (ScreenKey.Careers, new[] { Keys.J }),
+            (ScreenKey.Dream, new[] { Keys.H }),
+            (ScreenKey.Placement, new[] { Keys.P }),
+        };
+
+        /// <summary>
+        /// HUD 단추로만 열리던 화면의 키(2026-11-13 임시 배정 — 사용자 확인 전): B 도감, O 옷장, T 마을 기록, J 진로 후보, H 장래희망, P 가구 배치.
+        /// 추천은 마을 기록 R, 가구 배치 F였지만 R은 미니게임 조각 돌리기, F는 가구 배치의 집 전체 보기라 T·P로 바꿨다(WASD는 걷기).
+        /// Read가 이 표대로 KeyFrame.Openers를 채우고 HostGame이 같은 순서로 화면 쌓기에 넘긴다. 위 ScreenKeys에도 같은 줄(안내 이름).
+        /// </summary>
+        public static readonly (ScreenKey Key, Keys Device)[] ScreenOpeners =
+        {
+            (ScreenKey.Encyclopedia, Keys.B),
+            (ScreenKey.Wardrobe, Keys.O),
+            (ScreenKey.WorldLog, Keys.T),
+            (ScreenKey.Careers, Keys.J),
+            (ScreenKey.Dream, Keys.H),
+            (ScreenKey.Placement, Keys.P),
         };
 
         /// <summary>걷기: 방향 키나 WASD를 누르고 있는 동안(Read의 Held*).</summary>

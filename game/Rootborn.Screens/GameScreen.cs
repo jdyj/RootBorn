@@ -13,9 +13,11 @@ namespace Rootborn.Screens
     /// 화면 쌓기가 받는 키(장치 키가 아니라 Host가 옮겨 준 값). Interact는 Unity 상호작용 키(E·Space·Ctrl) 묶음이다.
     /// Space·Rotate(R)·AltLeft(A)·AltRight(D)는 미니게임 키(Unity MinigamePanel). Space는 같은 프레임의 Interact보다 먼저 온다.
     /// LocationLog(L)는 장소 기록(Unity 판에는 키가 없었다 — 사용자 결정 2026-11-12).
-    /// Help는 단축키 안내(F1).
+    /// Help는 단축키 안내(F1). Encyclopedia·Wardrobe·WorldLog·Careers·Dream·Placement는 HUD 단추로만 열리던 화면의 키(2026-11-13 임시 배정 —
+    /// 장치 키는 Host Input/Devices.cs). 새 값은 끝에 더한다.
     /// </summary>
-    public enum ScreenKey { Up, Down, Left, Right, Tab, Enter, Escape, Inventory, Status, Interact, Space, Rotate, AltLeft, AltRight, LocationLog, Help }
+    public enum ScreenKey { Up, Down, Left, Right, Tab, Enter, Escape, Inventory, Status, Interact, Space, Rotate, AltLeft, AltRight, LocationLog, Help,
+        Encyclopedia, Wardrobe, WorldLog, Careers, Dream, Placement }
 
     /// <summary>
     /// "무엇이 바뀌었다" 알림의 이름. 게임 진행 쪽 이름은 GameSession.Changed가 알리는 GameChangeTopics 그대로이고,

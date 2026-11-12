@@ -254,10 +254,21 @@ namespace Rootborn.Screens.Tests
                 var list = new DrawList();
                 node.Emit(list, measurer);
                 UiRect container = ContainerOf(node, screen.Root).Rect;
-                foreach (DrawCommand text in list.Commands.Where(c => c.Kind == DrawKind.Text))
+                // 요소가 스스로 자른(PushClip) 글은 잘린 안쪽만 보인다(스크롤 목록의 반쯤 보이는 줄) — 보이는 부분만 본다.
+                var clips = new Stack<UiRect>();
+                foreach (DrawCommand text in list.Commands)
                 {
+                    if (text.Kind == DrawKind.PushClip) { clips.Push(clips.Count == 0 ? text.Rect : Intersect(clips.Peek(), text.Rect)); continue; }
+                    if (text.Kind == DrawKind.PopClip) { if (clips.Count > 0) clips.Pop(); continue; }
+                    if (text.Kind != DrawKind.Text) continue;
                     float left = text.Rect.X, top = text.Rect.Y;
                     float right = left + measurer.Width(text.Text, text.FontSize), bottom = top + measurer.LineHeight(text.FontSize);
+                    if (clips.Count > 0)
+                    {
+                        UiRect c = clips.Peek();
+                        left = Math.Max(left, c.X); top = Math.Max(top, c.Y); right = Math.Min(right, c.Right); bottom = Math.Min(bottom, c.Bottom);
+                        if (right <= left || bottom <= top) continue;
+                    }
                     const float slack = 0.5f;
                     if (left < container.X - slack || right > container.Right + slack || top < container.Y - slack || bottom > container.Bottom + slack)
                     {
@@ -294,6 +305,12 @@ namespace Rootborn.Screens.Tests
                 if (ReferenceEquals(p, root)) return root;
             }
             return root;
+        }
+
+        private static UiRect Intersect(UiRect a, UiRect b)
+        {
+            float x = Math.Max(a.X, b.X), y = Math.Max(a.Y, b.Y);
+            return new UiRect(x, y, Math.Max(0f, Math.Min(a.Right, b.Right) - x), Math.Max(0f, Math.Min(a.Bottom, b.Bottom) - y));
         }
 
         private static bool Overlaps(UiRect a, UiRect b)

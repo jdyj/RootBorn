@@ -49,7 +49,8 @@ namespace Rootborn.Screens.Tests.Furniture
 
             // 화면 쌓기가 받는 모든 키를 Shift와 함께·없이 여러 번 눌러도 칸에 놓이지 않는다(칸은 포인터로만 고른다).
             foreach (ScreenKey key in Enum.GetValues(typeof(ScreenKey)).Cast<ScreenKey>().Where(k => k != ScreenKey.Escape && k != ScreenKey.Inventory
-                         && k != ScreenKey.Status && k != ScreenKey.Tab && k != ScreenKey.LocationLog && k != ScreenKey.Help))
+                         && k != ScreenKey.Status && k != ScreenKey.Tab && k != ScreenKey.LocationLog && k != ScreenKey.Help
+                         && !t.Stack.Registry.TryGetByKey(k, out _))) // 다른 화면을 여는 키는 뺀다(가구 배치를 닫는다)
                 for (int i = 0; i < 3; i++)
                 {
                     t.Stack.Key(key, false);

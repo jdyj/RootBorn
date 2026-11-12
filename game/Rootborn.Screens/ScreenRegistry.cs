@@ -31,6 +31,10 @@ namespace Rootborn.Screens
         /// Esc로 닫지 않는 까닭(고르기를 끝내야 하는 화면). null이면 Esc가 이 화면을 닫는다(패널·모달). Esc 규칙은 ScreenStack.Key.
         /// </summary>
         public string EscapeKeepsOpenReason { get; internal set; }
+        /// <summary>
+        /// 이 성질(MapFeatures)이 있는 맵에서만 연다(여는 키와 HUD 단추가 같이 본다 — ScreenStack.IsAvailable). null이면 어느 맵에서나.
+        /// </summary>
+        public string RequiredMapFeature { get; internal set; }
         /// <summary>월드의 상호작용이 여는 화면이다(OpenedByInteraction). 떠 있는 동안 상호작용 안내를 숨긴다.</summary>
         public bool OpenedByInteraction { get; internal set; }
     }
@@ -120,6 +124,14 @@ namespace Rootborn.Screens
             {
                 if (string.IsNullOrWhiteSpace(reason)) throw new ArgumentException("Esc로 닫지 않는 이유가 비었다", nameof(reason));
                 _owner._screens[_id].EscapeKeepsOpenReason = reason;
+                return this;
+            }
+
+            /// <summary>지금 맵에 이 성질(MapFeatures)이 있을 때만 연다(키와 HUD 단추가 같이 본다). 맵 id가 아니라 성질을 본다.</summary>
+            public Registration OnlyWhereMapHas(string mapFeature)
+            {
+                if (string.IsNullOrEmpty(mapFeature)) throw new ArgumentException("맵 성질이 비었다", nameof(mapFeature));
+                _owner._screens[_id].RequiredMapFeature = mapFeature;
                 return this;
             }
 

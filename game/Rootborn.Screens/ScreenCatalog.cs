@@ -101,8 +101,8 @@ namespace Rootborn.Screens
             r.Add(Dialogue, ScreenLayer.Modal, blocksMovement: false, s => new DialogueScreen(s)).OpenedByInteraction("npc").GuidesKeys(DialogueScreen.KeyGuideRows);
             r.Add(DailyEvent, ScreenLayer.Modal, blocksMovement: true, s => new DailyEventScreen(s)).KeepsOpenOnEscape(EscapeChoose);
             // 진로 묶음: 장래희망·진로 후보는 HUD 버튼(화면 id)이 열고, 탐색 선택은 탐색 지점 상호작용 종류로 열린다. 셋 다 Unity 판에서 이동을 막는다.
-            r.Add(CareerInterest, ScreenLayer.Modal, blocksMovement: true, s => new CareerInterestScreen(s));
-            r.Add(CareerCandidates, ScreenLayer.Modal, blocksMovement: true, s => new CareerCandidateScreen(s));
+            r.Add(CareerInterest, ScreenLayer.Modal, blocksMovement: true, s => new CareerInterestScreen(s)).OpenedBy(ScreenKey.Dream);
+            r.Add(CareerCandidates, ScreenLayer.Modal, blocksMovement: true, s => new CareerCandidateScreen(s)).OpenedBy(ScreenKey.Careers);
             r.Add(Exploration, ScreenLayer.Modal, blocksMovement: true, s => new ExplorationScreen(s)).OpenedByInteraction("exploration");
             // 하루 이벤트는 장소 지점 상호작용 뒤에 연다(Unity DailyEventRuntimeInstaller).
             r.AddListener(s => new DailyEventTrigger(s, DailyEvent, "location-activity"));
@@ -127,11 +127,13 @@ namespace Rootborn.Screens
             r.Add(HostRoom, ScreenLayer.Modal, blocksMovement: true, s => new HostRoomScreen(s)).WithoutWorld().KeepsOpenOnEscape(EscapeStart);
             r.Add(RoomSharesNotice, ScreenLayer.Notice, blocksMovement: false, s => new RoomSharesNoticeScreen(s));
             // 가구 배치: 집 HUD 버튼(가구 배치 켬/끔)이 연다. 이동을 막지 않는다(Unity 판 패널은 입력을 잠그지 않았다).
-            r.Add(FurniturePlacement, ScreenLayer.Panel, blocksMovement: false, s => new FurniturePlacementScreen(s));
+            r.Add(FurniturePlacement, ScreenLayer.Panel, blocksMovement: false, s => new FurniturePlacementScreen(s))
+                .OpenedBy(ScreenKey.Placement).OnlyWhereMapHas(MapFeatures.FurniturePlacement);
             r.Add(WorkspaceTemplates, ScreenLayer.Modal, blocksMovement: true, s => new Rootborn.Screens.Workspaces.WorkspaceTemplateScreen(s));
-            r.Add(Encyclopedia, ScreenLayer.Panel, blocksMovement: true, s => new EncyclopediaScreen(s));
-            r.Add(Wardrobe, ScreenLayer.Panel, blocksMovement: true, s => new WardrobeScreen(s));
-            r.Add(WorldStateLog, ScreenLayer.Panel, blocksMovement: true, s => new WorldStateLogScreen(s));
+            // HUD 단추로만 열리던 화면의 키(2026-11-13 임시 배정, 장치 키는 Host Input/Devices.cs KeyGuideNames.ScreenOpeners).
+            r.Add(Encyclopedia, ScreenLayer.Panel, blocksMovement: true, s => new EncyclopediaScreen(s)).OpenedBy(ScreenKey.Encyclopedia);
+            r.Add(Wardrobe, ScreenLayer.Panel, blocksMovement: true, s => new WardrobeScreen(s)).OpenedBy(ScreenKey.Wardrobe);
+            r.Add(WorldStateLog, ScreenLayer.Panel, blocksMovement: true, s => new WorldStateLogScreen(s)).OpenedBy(ScreenKey.WorldLog);
             r.Add(LocationStateLog, ScreenLayer.Panel, blocksMovement: false, s => new LocationStateLogScreen(s)).OpenedBy(ScreenKey.LocationLog);
             r.Add(Facility, ScreenLayer.Modal, blocksMovement: true, s => new FacilityScreen(s)).OpenedByInteraction(FacilityScreen.InteractionKind);
             r.Add(StayedUpNotice, ScreenLayer.Notice, blocksMovement: false, s => new StayedUpNoticeScreen(s));

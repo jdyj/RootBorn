@@ -764,6 +764,8 @@ namespace Rootborn.Host
             if (keys.Status) s.Key(ScreenKey.Status, keys.Shift);
             if (keys.LocationLog) s.Key(ScreenKey.LocationLog, keys.Shift);
             if (keys.Help) s.Key(ScreenKey.Help, keys.Shift);
+            for (int i = 0; i < KeyGuideNames.ScreenOpeners.Length; i++)
+                if (keys.Opener(i)) s.Key(KeyGuideNames.ScreenOpeners[i].Key, keys.Shift);
             // 미니게임 키는 상호작용 키보다 먼저 넘긴다(Space는 두 묶음에 다 든다).
             if (keys.Space) s.Key(ScreenKey.Space, keys.Shift);
             if (keys.Rotate) s.Key(ScreenKey.Rotate, keys.Shift);

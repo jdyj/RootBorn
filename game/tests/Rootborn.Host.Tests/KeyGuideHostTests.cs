@@ -63,7 +63,37 @@ namespace Rootborn.Host.Tests
                 case Keys.R: return TestKey.R;
                 case Keys.A: return TestKey.A;
                 case Keys.D: return TestKey.D;
+                case Keys.B: return TestKey.B;
+                case Keys.O: return TestKey.O;
+                case Keys.T: return TestKey.T;
+                case Keys.J: return TestKey.J;
+                case Keys.H: return TestKey.H;
+                case Keys.P: return TestKey.P;
                 default: throw new ArgumentOutOfRangeException(nameof(key), key, "PlayerDriver에 이 키를 더한다");
+            }
+        }
+
+        /// <summary>
+        /// HUD 단추로만 열리던 화면 여섯(2026-11-13 임시 배정): 게임 중 그 키를 눌러 열고 같은 키로 닫는다. 가구 배치는 집(놓는 면이 있는 맵)에서.
+        /// 키는 이름표(KeyGuideNames.ScreenOpeners)에서 읽고, 화면 등록의 배정과 같은지 본다.
+        /// </summary>
+        [Test]
+        public void KEY_GUIDE_004_HudOnlyScreens_OpenAndCloseWithTheirKeys()
+        {
+            using PlayerDriver player = Launch(inGame: true);
+            Assert.That(player.Screens.HasMapFeature(MapFeatures.FurniturePlacement), Is.True, "준비: 새 게임은 집에서 시작한다(가구를 놓는 면)");
+            string[] expected = { ScreenCatalog.Encyclopedia, ScreenCatalog.Wardrobe, ScreenCatalog.WorldStateLog, ScreenCatalog.CareerCandidates, ScreenCatalog.CareerInterest, ScreenCatalog.FurniturePlacement };
+            Assert.That(KeyGuideNames.ScreenOpeners.Length, Is.EqualTo(expected.Length));
+            for (int i = 0; i < KeyGuideNames.ScreenOpeners.Length; i++)
+            {
+                (ScreenKey screenKey, Keys device) = KeyGuideNames.ScreenOpeners[i];
+                Assert.That(player.Screens.Registry.TryGetByKey(screenKey, out string screen), Is.True, screenKey + " 배정");
+                Assert.That(screen, Is.EqualTo(expected[i]));
+                TestKey key = ToTestKey(device);
+                player.OpenScreenWithKey(key, screen);
+                player.Frames(2);
+                TestContext.WriteLine("스크린샷: " + player.ScreenshotScreen(screen, "key-guide-04-" + screen));
+                player.CloseScreenWithKey(key, screen);
             }
         }
 
