@@ -36,6 +36,17 @@ run_remote() {
   local extra_args=()
   if [ $SERVER -eq 1 ]; then
     extra_args+=(--server)
+    # 같이 쓰는 것 확인(verify.sh run_sharing_check)의 손님 테스트를 이 PC 에서 빌드해 보낸다(원격에는 저장소가 없다). 어셈블리는 플랫폼과 무관하다.
+    local test_out; test_out="$(mktemp -d)/sharing-test"
+    if ( cd "$REPO" && MSBUILDDISABLENODEREUSE=1 DOTNET_CLI_USE_MSBUILD_SERVER=0 dotnet build game/tests/Rootborn.Server.Tests -c Release -o "$(native_path "$test_out")" \
+           -nologo -v quiet -nodeReuse:false -p:UseSharedCompilation=false ) > "$out/sharing-test.build.log" 2>&1 \
+       && [ -f "$test_out/Rootborn.Server.Tests.dll" ]; then
+      remote "mkdir -p $dep_q/sharing-test" && tar -C "$test_out" -cf - . | remote "tar -xf - -C $dep_q/sharing-test" \
+        || echo "  같이 쓰는 것 확인 테스트를 보내지 못했다 — 원격에서 건너뛴다" >&2
+    else
+      echo "  같이 쓰는 것 확인 테스트를 빌드하지 못했다($(native_path "$out/sharing-test.build.log")) — 원격에서 건너뛴다" >&2
+    fi
+    rm -rf "$(dirname "$test_out")"
   elif [ -f "$SERVER_SRC/Rootborn.Server" ]; then
     remote "mkdir -p $dep_q/server" && tar -C "$SERVER_SRC" -cf - . | remote "tar -xf - -C $dep_q/server" \
       || { echo "서버 배포 폴더를 보내지 못했다" >&2; remote "rm -rf $dep_q"; return 2; }
@@ -79,12 +90,17 @@ fi
 # 임시 폴더와 홈(글꼴 캐시 등)을 실행 폴더 안에 둔다 — 원격 작업 폴더 밖에 쓰지 않는다.
 export TMPDIR="$DEP/tmp" HOME="$DEP/home" XDG_CACHE_HOME="$DEP/home/.cache" XDG_CONFIG_HOME="$DEP/home/.config" XDG_DATA_HOME="$DEP/home/.local/share"
 export VERIFY_KEEP=1 VERIFY_SERVER_SRC="$DEP/server" VERIFY_BIND="$BIND" VERIFY_FRAMES="$FRAMES" VERIFY_TIMEOUT="$LIMIT"
+if [ -f "$DEP/sharing-test/Rootborn.Server.Tests.dll" ] && [ -x "${ROOTBORN_TEST_DOTNET:-}" ]; then
+  # 원격 테스트가 준비한 dotnet(env.sh). 첫 실행 기록·NuGet 은 실행 폴더 안의 HOME 에 쓴다.
+  export VERIFY_SHARING_TEST_DLL="$DEP/sharing-test/Rootborn.Server.Tests.dll" VERIFY_DOTNET="$ROOTBORN_TEST_DOTNET"
+  export DOTNET_ROOT="$(dirname "$ROOTBORN_TEST_DOTNET")" DOTNET_CLI_HOME="$DEP/home" DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1 DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
+fi
 bash "$DEP/verify.sh" --copied "$DEP/pkg" "$@" "$RID"
 REMOTE
   status=${PIPESTATUS[0]}
 
   echo "== 원격 결과 가져오기: $(native_path "$out")"
-  remote "tar -C $dep_q/tmp --exclude='./tmp.*/game' --exclude='./tmp.*/server' -cf - ." | tar -xf - -C "$out" \
+  remote "tar -C $dep_q/tmp --exclude='./tmp.*/game' --exclude='./tmp.*/server' --exclude='./tmp.*/share-server' -cf - ." | tar -xf - -C "$out" \
     || echo "  결과를 가져오지 못했다" >&2
   remote "rm -rf $dep_q" || echo "  원격 폴더를 지우지 못했다: ~/$dep" >&2
   remote "test ! -e $dep_q" && echo "  원격 실행 폴더를 지웠다: ~/$dep"

@@ -147,7 +147,8 @@ for rid in "${PLATFORMS[@]}"; do
   echo "== $rid -> $dest"
   case "$dest" in "$REPO"/output/publish/*|"$OUT_ROOT"/*) ;; *) echo "출력 폴더가 이상하다: $dest" >&2; exit 2 ;; esac
   rm -rf "$dest"
-  dotnet publish "$PROJECT" -c Release -r "$rid" --self-contained -o "$dest" -nologo -v quiet
+  # 빌드 노드·컴파일러 서버를 남기지 않는다(끝난 뒤에도 dotnet.exe 가 남아 메모리를 먹는다).
+  dotnet publish "$PROJECT" -c Release -r "$rid" --self-contained -o "$dest" -nologo -v quiet -nodeReuse:false -p:UseSharedCompilation=false
   # 파일마다 cp 를 띄우면 Windows 에서 몹시 느리다 — tar 한 번으로 같은 상대 경로에 푼다.
   printf '%s\n' "${!FILES[@]}" | LC_ALL=C sort | tar -cf - -T - | tar -xf - -C "$dest"
   echo "   복사한 게임 파일 ${#FILES[@]}개"

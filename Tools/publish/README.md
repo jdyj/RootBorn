@@ -20,14 +20,22 @@ Git Bash(또는 Linux/macOS bash)에서 돈다. dotnet 은 `~/.dotnet` 또는 PA
 테스트·문서(`*.md`, `*.Tests.dll`, NUnit·테스트 호스트)는 들어가지 않는다(`verify.sh`가 본다). 우리 어셈블리의 `.pdb`(클라이언트 8개 520KB)는 오류 위치를 남기려고 둔다.
 Unity 전용 파일(`.meta .unity .asset .prefab .cs`)은 어떤 줄로도 복사되지 않는다.
 
-2026-11-11 이 PC(Windows 11, dotnet 8.0.422, 빌드 캐시 있음)에서 잰 값:
+2026-11-12 이 PC(Windows 11, dotnet 8.0.422, 빌드 캐시 있음)에서 잰 값(흐르는 시간·Unity 삭제·Core 옮기기·집 공유가 들어간 뒤):
 
-| 플랫폼 | 걸린 시간 | 크기 | 파일 수 |
+| 폴더 | 만드는 데 | 크기 | 파일 수 |
 |---|---|---|---|
-| win-x64 | 36초 | 99MB | 3,620개(실행 파일·런타임 204개 78MB + 게임 파일 3,416개 — `Assets` 17MB, `data` 5.4MB) |
-| linux-x64 | 21초 | 100MB | 3,620개(같은 게임 파일 + ELF 실행 파일, SDL2·OpenAL `.so` 포함) |
+| win-x64(클라이언트) | 35초 | 100MB | 3,628개(실행 파일·런타임 207개 + 게임 파일 3,421개 — `Assets` 17MB 1,631개, `data` 5.4MB 1,780개, `game` 101KB 10개) |
+| linux-x64(클라이언트) | 25초 | 101MB | 3,628개(같은 게임 파일 + ELF 실행 파일, SDL2·OpenAL `.so` 포함) |
+| server-win-x64 | 7초 | 80MB | 431개(실행 파일·런타임 198개 + 게임 파일 233개 — `data` 2.7MB 203개, `game` 49KB 6개, LDtk 맵 5MB 24개) |
+| server-linux-x64 | 7초 | 79MB | 431개(같은 게임 파일) |
 
-목록 만들기는 그중 20초쯤이다. Windows 에서는 프로세스 하나 띄우는 데 수십 ms가 들므로 스크립트가 파일마다 grep·cp 를 띄우지 않게 했다.
+목록 만들기는 그중 13초쯤이다. Windows 에서는 프로세스 하나 띄우는 데 수십 ms가 들므로 스크립트가 파일마다 grep·cp 를 띄우지 않게 했다.
+`dotnet publish` 는 `-nodeReuse:false -p:UseSharedCompilation=false` 로 돈다(끝난 뒤 빌드 노드가 남아 메모리를 먹지 않게).
+
+**목록이 시작에 필요한 파일을 다 고르는지는 개발 폴더에서 테스트로 본다**(`game/tests/Rootborn.Server.Tests/PublishListStartupTests`): 두 목록이 고르는 파일 가운데
+그림·글꼴을 뺀 것(데이터·설정·맵)만 저장소 밖에 복사하고, 그 폴더를 루트로 정의 읽기·새 게임·문구·모든 맵·상호작용·조명·연출·테마 설정(클라이언트),
+정의 읽기·서버 켜고 끄기·같이 쓰는 집의 판정 칸(서버)을 해 본다. 2026-11-12 에 `game/time.json`(클라이언트·서버)과 맵 데이터(서버)가 빠져
+배포가 깨졌는데 개발 폴더에서는 드러나지 않았다 — 그 줄을 지운 목록으로는 이 테스트가 실패한다. 게임이 새 파일을 읽게 되면 그 읽기를 이 테스트에도 더한다.
 
 **Linux 폴더를 Windows 에서 만들었으면** NTFS 가 실행 권한을 남기지 않는다. Linux 로 옮긴 뒤 `chmod +x Rootborn.Host` 한다(`verify.sh --remote`는 보낸 뒤 스스로 준다).
 
@@ -36,18 +44,18 @@ Unity 전용 파일(`.meta .unity .asset .prefab .cs`)은 어떤 줄로도 복�
 `publish.sh --server [플랫폼]`은 `game/Rootborn.Server`를 자체 포함으로 게시하고 `content-server.txt`의 파일을 같은 상대 경로로 복사한다.
 출력은 `output/publish/server-<플랫폼>/`. 클라이언트와 같은 방식(목록 파일)이다. 목록 문법은 `content.txt`와 같다.
 
-서버가 실제로 읽는 것(코드에서 확인: `ServerOptions`, `GameDataLoader`, `EconomySettings`, `DataFingerprint`)만 넣는다.
+서버가 실제로 읽는 것(코드에서 확인: `ServerOptions`, `GameDataLoader`, `EconomySettings`, `TimeSettings`, `DataFingerprint`, `HouseGrids`)만 넣는다.
 
 | 파일 | 왜 |
 |---|---|
 | `data/**/*.json`(좌표표 `data/atlases`, 보고서 `export-report.json`, 문구 `data/localization` 제외) | 정의(등록부·엔티티 파일)를 읽는다 |
 | `game/economy.json` | 통화 아이템 설정. 데이터 폴더 옆의 `game/economy.json`을 읽는다(없으면 통화 없음) |
+| `game/time.json` | 시간 규칙(하루 시작·취침·밤 체력 감소). 없으면 정의 읽기가 실패해 시작하지 않는다 |
+| `game/world/*.json`, `Assets/LDtk/**/*.ldtk`·`.ldtkl` | 같이 쓰는 집(`--share house`)의 판정 칸을 가구 방 맵에서 만든다(`HouseGrids`). 없으면 집 공유 방의 가구 놓기·옮기기가 모두 거절된다. 타일셋 PNG 는 읽지 않아 넣지 않는다 |
 
-그림·글꼴·테마·맵(LDtk)·문구·월드 지점(`game/world`)은 넣지 않는다 — 서버는 읽지 않는다(`verify.sh --server`가 PNG·글꼴·LDtk가 들어갔는지 본다).
-서버가 새 파일을 읽게 되면 `content-server.txt`에 한 줄 더한다.
-
-2026-11-12 이 PC에서 잰 값(dotnet 8.0.422, 지문 범위를 고친 뒤): linux-x64 75MB / 400개(실행 파일·런타임 196개 + 게임 파일 204개, data 2.8MB).
-클라이언트 linux-x64 는 101MB / 3,625개(`Assets` 17MB, `data` 5.4MB, `game` 77KB).
+그림·글꼴·테마·문구는 넣지 않는다 — 서버는 읽지 않는다(`verify.sh --server`가 PNG·글꼴이 들어갔는지, 맵 목록과 `.ldtk`가 있는지 본다).
+LDtk 는 가구 방 맵만이 아니라 전부 들어간다(5MB) — 새 맵이 가구 방이 되어도 목록을 고치지 않게.
+서버가 새 파일을 읽게 되면 `content-server.txt`에 한 줄 더하고 `PublishListStartupTests`의 서버 쪽 읽기에도 더한다.
 
 - **실행**: 실행 파일 위치에서 위로 올라가며 `data/registry.json`을 찾아 루트를 정하므로 배포 폴더에서 `--root` 없이 돈다.
   `--save-root`, `--slot`, `--bind`, `--port`는 기본값이 없어 반드시 준다(`Rootborn.Server --help`). 끝내기는 콘솔 `stop`, Ctrl+C, 종료 신호.
@@ -59,12 +67,16 @@ Unity 전용 파일(`.meta .unity .asset .prefab .cs`)은 어떤 줄로도 복�
   | `data/registry.json`(등록부) | `data/atlases/**`(그림 좌표표 — 클라이언트는 쓰는 그림 몫만 갖는다) |
   | `data` 아래 맨 위가 배열인 `.json`(엔티티 파일, 정의 로더와 같은 기준) | `data/export-report.json`(변환기 기록, 게임이 읽지 않는다) |
   | data 옆 `game/economy.json`(통화 설정, 없으면 빠진다) | `data/localization/**`(문구 — 언어가 다른 두 사람도 같이 해야 한다) |
-  | | `game/world`·`game/themes`·`game/localization`·그림·맵(서버가 읽지 않는다) |
+  | data 옆 `game/time.json`(시간 규칙, 없으면 빠진다) | `game/world`·LDtk 맵(같이 쓰는 집의 칸 — 방이 판정하므로 손님 쪽 맵이 달라도 규칙이 갈리지 않는다) |
+  | | `game/themes`·`game/localization`·그림(서버가 읽지 않는다) |
+
+  `game/time.json`은 파일 전체를 셈한다 — 게임이 읽지 않는 `balance` 묶음(균형 검사의 목표)을 고쳐도 지문이 바뀐다.
 
   줄바꿈(CRLF/LF)과 맨 앞 UTF-8 BOM은 맞춰서 넣는다 — Windows 에서 만든 배포와 Linux 에서 만든 배포가 같은 지문이다.
   규칙 데이터를 한 글자만 바꿔도 지문이 달라져 "데이터 버전이 다르다"로 거절된다(같은 커밋에서 만든 두 폴더끼리만 들어간다).
-- **버전**: 서버 로그의 `game 1.0.0+<커밋 해시>`는 .NET SDK가 git 저장소에서 빌드할 때 정보 버전에 붙이는 해시다. git이 없는 곳에서 빌드한 배포는 해시 없이 `1.0.0`이 된다.
-  게임 버전을 `Directory.Build.props`로 정하는 세션(`mp-join-screen`)이 합쳐진 뒤에도 배포 빌드가 그 값을 깨지 않는지 확인할 일이다.
+- **버전**: 서버 로그의 `game 1.0.0+<커밋 해시>`는 저장소 루트 `Directory.Build.props`가 정보 버전에 붙이는 커밋이다(git 없이 빌드하면 `-p:ROOTBORN_COMMIT=<커밋>`,
+  그것도 없으면 `unknown-commit`). 방은 이 버전과 데이터 지문이 같아야 받는다 — **같은 커밋에서 만든 클라이언트·서버끼리만 들어간다**(커밋하지 않은 수정은 해시에 드러나지 않는다).
+  배포 빌드에서도 이 값이 깨지지 않는다는 실제 확인은 `verify.sh`의 들어가기(2026-11-12 win-x64·linux-x64 통과)다.
 
 ## 목록(`content.txt`) 고치기
 
@@ -88,7 +100,7 @@ Unity 전용 파일(`.meta .unity .asset .prefab .cs`)은 어떤 줄로도 복�
 
 ## 글꼴
 
-배포 폴더에는 글꼴 파일이 들어가지 않는다(저장소에도 TTF/OTF/TTC 가 없다). 배포용 한글 글꼴은 사용자 결정 대기다.
+배포 폴더에는 글꼴 파일이 들어가지 않는다(저장소에도 TTF/OTF/TTC 가 없다 — 2026-11-12 네 배포 폴더 모두 0개). 배포용 한글 글꼴은 사용자 결정 대기다.
 지금은 Host 가 운영체제 글꼴을 찾는다(`HostOptions.FindSystemKoreanFont`, 순서: `malgun.ttf` → `NanumGothic.ttf` → Noto CJK …).
 Windows 에서는 맑은 고딕(`C:\Windows\Fonts\malgun.ttf`, Windows 와 함께 깔리는 Microsoft 글꼴 — 게임과 함께 배포할 수 없다)을 쓴다.
 못 찾으면 `--font <TTF>` 또는 `ROOTBORN_FONT` 를 요구하며 종료 코드 2로 멈춘다(예: 한글 글꼴이 없는 Linux, GitHub ubuntu 러너).
@@ -116,12 +128,18 @@ Tools/publish/verify.sh --server --bind <IP>    # 서버가 들을 주소를 바
    읽지 못한 파일이 표준 오류에 나오는지 본다.
 
 세이브는 임시 폴더에만 쓴다(사용자 세이브 폴더를 건드리지 않는다). 스크린샷이 제대로 그려졌는지(그림, 한글 글자)는
-스크립트가 판단하지 않는다 — `VERIFY_KEEP=1` 로 남겨 직접 연다. 2026-11-12 win-x64: 17번 실행 모두 통과, 약 4분(맵 9개).
+스크립트가 판단하지 않는다 — `VERIFY_KEEP=1` 로 남겨 직접 연다. 2026-11-12 win-x64(흐르는 시간·집 공유 뒤): 화면 18개(맵 10개) + 들어가기 모두 통과, 2분 29초.
 
 서버 확인(`--server`)은 같은 1·2번 뒤 이렇게 한다:
 임시 세이브 폴더·슬롯과 `--port 0`(빈 포트)으로 실행 → 로그에 `듣는 중:` → 로그의 데이터 폴더가 복사본 안인지 → 콘솔에 `stop`을 넣어 종료 코드 0과 `저장하고 닫음` →
 같은 세이브로 다시 켜서 `방을 이어서 엶` → 다시 `stop` → 인자 없이 켜면 종료 코드 2와 도움말. 표준 오류는 비어 있어야 한다.
-`--root`·`ROOTBORN_*` 환경 변수 없이 돈다. 2026-11-12 win-x64: 통과 34초. 잘못된 `--bind`로는 실패 13건으로 잡힌다.
+`--root`·`ROOTBORN_*` 환경 변수 없이 돈다.
+마지막으로 **같이 쓰는 것**(`sharing`): 복사본 서버를 `--share wallet,house,town`으로 띄우고, 손님 테스트(`Rootborn.Server.Tests`의 `DeployedServerSharingTests`,
+`[Explicit]`, 복사본 경로를 `ROOTBORN_DEPLOYED_SERVER`로 받는다)가 루프백 UDP로 들어가 가구 놓기가 방의 허락을 받는지(배포 폴더의 맵 데이터로 판정),
+알바로 번 돈이 방 지갑(방이 보낸 잔액)이 되는지, 손님 진행이 서버의 `guests/<플레이어>/`에 저장되는지, 서버를 껐다 켜고 다시 들어오면 집·지갑·손님 진행이 이어지는지 본다.
+손님 쪽 게임 한 판은 배포 폴더의 data 로 만들고 명령은 `GameSession` 직접 호출이다(화면·입력 근거 아님 — 배포 클라이언트는 화면 입력 없이 가구를 놓을 수 없다).
+테스트 어셈블리는 저장소에서 Release 로 빌드한다(`--remote`는 이 PC 에서 빌드해 보내고 원격 `env.sh`의 dotnet 으로 돌린다). 어셈블리가 없으면 건너뛰고 끝에 알린다.
+2026-11-12 win-x64: 통과 36초(sharing 3초). 맵을 뺀 복사본으로는 sharing 이 실패한다.
 Linux(SIGTERM 포함)는 아래 "Linux 에서 확인". GitHub Actions의 `server-publish` job도 ubuntu 에서 실행까지 한다(아직 GitHub 미확인).
 
 클라이언트 확인(인자 없는 `verify.sh <플랫폼>`)은 같은 플랫폼의 서버 배포 폴더(`server-<플랫폼>`, 또는 `VERIFY_SERVER_SRC`)가 있으면
@@ -142,11 +160,15 @@ Linux(SIGTERM 포함)는 아래 "Linux 에서 확인". GitHub Actions의 `server
    임시 폴더·홈(글꼴·셰이더 캐시)도 그 실행 폴더 안에 둔다 — 원격 작업 폴더 밖에 쓰지 않고 sudo 를 쓰지 않는다.
 4. 스크린샷·로그를 `output/publish-verify/<실행 id>/`로 가져오고, 원격 실행 폴더·띄운 프로세스·화면을 지운다.
 
-2026-11-12 Strix Halo(Ubuntu, 원격 `env.sh`의 글꼴 Noto Sans CJK): 서버 통과 45초(새 방 → stop → 이어서 엶 → SIGTERM 으로 저장하고 닫음 → 인자 없음 종료 코드 2),
-클라이언트 통과 2분(화면 19개 + 들어가기, 서버 로그 `들어옴:`, 지문 `65bc37d92f8fbaeb` 일치). strace 로 본 복사본 밖 열기는 실행 폴더 안 셰이더 캐시, `/var/lib/dbus/machine-id`뿐이었다.
+2026-11-12 Strix Halo(Ubuntu, 원격 `env.sh`의 글꼴 Noto Sans CJK, 흐르는 시간·집 공유가 들어간 뒤): 서버 통과 34초(새 방 → stop → 이어서 엶 → SIGTERM 으로 저장하고 닫음 →
+인자 없음 종료 코드 2 → 같이 쓰는 것 통과), 클라이언트 통과 1분 52초(화면 18개 + 들어가기, 서버 로그 `들어옴:`). strace 로 본 복사본 밖 열기는 실행 폴더 안 셰이더 캐시,
+`/var/lib/dbus/machine-id`뿐이었다.
 
 호스트 테스트를 출력 폴더를 루트로 삼아 돌릴 수도 있다(테스트가 `HostOptions.Resolve` 로 루트를 얻으므로 환경 변수가 먹는다).
+실행 인자로 띄울 수 없는 화면(가구 배치 팔레트, 캐릭터 만들기)은 이렇게 배포 복사본의 그림으로 찍어 본다(장치 이벤트 주입, 스크린샷은 복사본의 `output/host-screens-evidence/`).
 
 ```
-ROOTBORN_REPO_ROOT=<출력 폴더 복사본> dotnet test game/tests/Rootborn.Host.Tests
+ROOTBORN_REPO_ROOT=<출력 폴더 복사본> dotnet test game/tests/Rootborn.Host.Tests --filter "FullyQualifiedName~FURNITURE_001|FullyQualifiedName~START_PLAY_001"
 ```
+
+2026-11-12 win-x64 복사본으로 두 테스트 통과, 팔레트(가구 1,500개, 75쪽)·캐릭터 만들기·새 게임의 집(07:00)을 직접 열어 봤다 — 빠진 그림 없음.

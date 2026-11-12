@@ -27,6 +27,9 @@
 #   듣는 주소는 --bind(또는 VERIFY_BIND)로 받는다. 기본 127.0.0.1 은 이 시험용이다: 같은 기계 안에서만 닿고, 방화벽 창이 뜨지 않고,
 #   밖에 열리지 않아 안전하다. 실제 서버를 여는 값(LAN 주소 등)을 이 스크립트에 적지 않는다.
 #   Linux 에서는 종료 신호(SIGTERM)로 끝내도 저장하고 닫는지 한 번 더 본다(sigterm). Windows 에는 같은 신호가 없어 건너뛴다.
+#   같이 쓰는 것(sharing): 복사본 서버를 --share wallet,house,town 으로 띄우고 손님 테스트(Rootborn.Server.Tests 의
+#   DeployedServerSharingTests)가 루프백 UDP 로 들어가 가구 놓기 허락(맵 데이터), 방 지갑, 손님 진행의 guests/ 저장과 재시작 뒤 이어짐을 본다.
+#   테스트 어셈블리는 저장소에서 빌드한다(원격은 보낸 쪽이 빌드해 보낸다). 둘 다 안 되면 건너뛰고 알린다.
 #
 # 들어가기(클라이언트 확인에서, 같은 플랫폼의 서버 배포 폴더가 있을 때)
 #   새 게임 뒤 그 서버 배포 폴더를 빈 포트로 띄우고, 클라이언트를 --slot slot-1 --join <BIND>:<포트> 로 띄운다.
@@ -54,6 +57,8 @@
 #   VERIFY_MAPS     띄울 맵 id(공백으로 나눔). 없으면 복사본의 game/world/maps.json 에서 읽는다
 #   ROOTBORN_FONT   한글 글꼴(운영체제에서 못 찾는 곳에서만. 배포용 글꼴은 아직 정하지 않았다)
 #   VERIFY_SERVER_SRC  들어가기 확인에 쓸 서버 배포 폴더(기본: <PUBLISH_OUT>/server-<플랫폼>)
+#   VERIFY_SHARING_TEST_DLL  같이 쓰는 것 확인에 쓸 Rootborn.Server.Tests.dll(없으면 저장소에서 빌드한다)
+#   VERIFY_DOTNET   그 테스트를 돌릴 dotnet(기본: PATH 의 dotnet)
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -133,9 +138,12 @@ unity_only="$(find "$SRC" -type f \( -name '*.meta' -o -name '*.unity' -o -name 
 not_shipped="$(find "$SRC" -type f \( -iname '*.md' -o -iname '*.Tests.dll' -o -iname 'nunit*' -o -iname 'Microsoft.TestPlatform*' -o -iname 'testhost*' \) | head -5)"
 [ -z "$not_shipped" ] || fail "테스트·문서 파일이 들어 있다: $(echo "$not_shipped" | tr '\n' ' ')"
 if [ $SERVER -eq 1 ]; then
-  # 서버는 그림·글꼴·테마·맵을 읽지 않는다. 들어 있으면 목록이 새고 있는 것이다.
-  extra="$(find "$SRC" -type f \( -iname '*.png' -o -iname '*.ttf' -o -iname '*.otf' -o -iname '*.ldtk' -o -iname '*.ldtkl' \) | head -5)"
-  [ -z "$extra" ] || fail "서버 폴더에 그림·글꼴·맵 파일이 들어 있다: $(echo "$extra" | tr '\n' ' ')"
+  # 서버는 그림·글꼴·테마를 읽지 않는다. 들어 있으면 목록이 새고 있는 것이다.
+  extra="$(find "$SRC" -type f \( -iname '*.png' -o -iname '*.ttf' -o -iname '*.otf' -o -iname '*.ttc' \) | head -5)"
+  [ -z "$extra" ] || fail "서버 폴더에 그림·글꼴 파일이 들어 있다: $(echo "$extra" | tr '\n' ' ')"
+  # 같이 쓰는 집의 판정 칸은 맵 목록과 LDtk(그림 없이)에서 만든다(HouseGrids). 빠지면 집 공유 방의 가구 놓기가 모두 거절된다.
+  [ -f "$SRC/game/world/maps.json" ] || fail "서버 폴더에 game/world/maps.json 이 없다(같이 쓰는 집을 판정할 수 없다)"
+  [ -n "$(find "$SRC" -type f -iname '*.ldtk' | head -1)" ] || fail "서버 폴더에 LDtk 맵(.ldtk)이 없다(같이 쓰는 집을 판정할 수 없다)"
 fi
 fi
 
@@ -362,6 +370,43 @@ run_server_checks() {
   echo "-- no-args: 종료 코드 $rc"
   [ $rc -eq 2 ] || fail "no-args: 인자 없이 켜면 종료 코드 2 여야 한다(실제 $rc)"
   grep -qF -- "--port" "$help_out" || fail "no-args: 도움말에 --port 가 없다"
+  run_sharing_check
+}
+
+# ---- 3d. 같이 쓰는 것: 배포한 서버를 돈·집·마을을 같이 쓰는 방으로 열고 손님 하나로 들어가 본다 ----
+# 손님은 테스트(game/tests/Rootborn.Server.Tests 의 DeployedServerSharingTests, [Explicit])다 — 배포 클라이언트는 화면 입력 없이 가구를 놓을 수 없어서다.
+# 가구 놓기가 방의 허락을 받는지(배포 폴더의 맵 데이터로 판정), 방 지갑, 손님 진행이 서버의 guests/ 에 남고 껐다 켜면 이어지는지를 본다.
+# 테스트 어셈블리: VERIFY_SHARING_TEST_DLL(원격은 보낸 쪽이 빌드해 준다) 또는 저장소에서 빌드한다. 둘 다 없으면 건너뛰고 알린다.
+run_sharing_check() {
+  local dll="${VERIFY_SHARING_TEST_DLL:-}" dotnet="${VERIFY_DOTNET:-dotnet}" log="$WORK/logs/sharing-test.log" rc
+  echo "-- sharing: 배포한 서버 --share wallet,house,town ← 손님(DeployedServerSharingTests)"
+  if [ -z "$dll" ] && [ -z "$COPIED" ] && command -v "$dotnet" >/dev/null 2>&1; then
+    dll="$(build_sharing_test "$WORK/sharing-test")" || { fail "sharing: 테스트를 빌드하지 못했다(로그: $(native_path "$WORK/sharing-test.build.log"))"; return; }
+  fi
+  if [ -z "$dll" ] || [ ! -f "$dll" ]; then
+    echo "   건너뜀: 테스트 어셈블리가 없다(VERIFY_SHARING_TEST_DLL, 또는 저장소와 dotnet 이 있는 곳에서 돌린다)"
+    SHARING_SKIPPED=1
+    return
+  fi
+  cp -r "$GAME" "$WORK/share-server"
+  ROOTBORN_DEPLOYED_SERVER="$(native_path "$WORK/share-server")" "$dotnet" test "$(native_path "$dll")" --filter "FullyQualifiedName~DeployedServerSharingTests" \
+    > "$log" 2>&1
+  rc=$?
+  if [ $rc -eq 0 ] && grep -qE "(통과|Passed)[!]? +- " "$log"; then
+    echo "   통과: $(grep -m1 -E '(통과|Passed)[!]? +- ' "$log" | sed 's/^ *//')"
+  else
+    fail "sharing: 테스트 실패(종료 코드 $rc, 로그 $(native_path "$log"))"
+    grep -E "실패 |Failed |오류 메시지|Error Message" -A4 "$log" | head -30 | sed 's/^/     /'
+  fi
+}
+
+# build_sharing_test <출력 폴더> : 저장소의 Rootborn.Server.Tests 를 빌드해 그 dll 경로를 찍는다(실패하면 1).
+build_sharing_test() {
+  local out="$1"
+  ( cd "$REPO" && MSBUILDDISABLENODEREUSE=1 DOTNET_CLI_USE_MSBUILD_SERVER=0 dotnet build game/tests/Rootborn.Server.Tests -c Release -o "$(native_path "$out")" \
+      -nologo -v quiet -nodeReuse:false -p:UseSharedCompilation=false ) > "$out.build.log" 2>&1 || return 1
+  [ -f "$out/Rootborn.Server.Tests.dll" ] || return 1
+  printf '%s' "$out/Rootborn.Server.Tests.dll"
 }
 
 # ---- 3c. 들어가기: 배포한 서버에 배포한 클라이언트가 들어가는가(버전·데이터 지문이 맞는가) ----
@@ -389,6 +434,7 @@ if [ $SERVER -eq 1 ]; then run_server_checks; else run_client_checks; fi
 # ---- 요약 ----
 echo
 [ -z "${JOIN_SKIPPED:-}" ] || echo "(들어가기 확인은 서버 배포 폴더가 없어 건너뛰었다)"
+[ -z "${SHARING_SKIPPED:-}" ] || echo "(같이 쓰는 것 확인은 테스트 어셈블리가 없어 건너뛰었다)"
 if [ ${#failures[@]} -eq 0 ]; then
   echo "===== 통과: 배포 폴더 $SRC"
   if [ "${VERIFY_KEEP:-0}" = "1" ]; then echo "임시 폴더(스크린샷·로그): $(native_path "$WORK")"; else rm -rf "$WORK"; fi
