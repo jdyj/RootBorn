@@ -127,6 +127,50 @@ namespace Rootborn.Server.Tests
             Assert.That(again.Log.Any(l => l.Contains("방 설정은 방을 만들 때만")), Is.True);
         }
 
+        // ---------- 서버가 꺼진 자리 ----------
+
+        [Test]
+        public void ServerDiedAfterTheGuestSaveButBeforeTheRoomFiles_TheRequestIsAppliedWhenTheGuestComesBack_Once()
+        {
+            string ledger = Path.Combine(_root, "saves", "room-a", SaveFileNames.RoomRequestLedger);
+            string wallet = Path.Combine(_root, "saves", "room-a", SaveFileNames.RoomPiece(RoomWallet.PieceName));
+            string ledgerBefore, walletBefore;
+            using (var rig = NewRoom(RoomWallet.PieceName))
+            {
+                var a = Join(rig, "a");
+                ledgerBefore = File.Exists(ledger) ? File.ReadAllText(ledger) : null;
+                walletBefore = File.ReadAllText(wallet);
+                Shift(a, "a:w1");
+                rig.Run(0.5);
+                Assert.That(RoomBalance(rig), Is.EqualTo(5));
+                rig.Room.Shutdown();
+            }
+
+            // 꺼진 자리 만들기: 손님 세이브(요청이 든 것)는 쓰였고, 방의 지갑·장부는 그 전 그대로(조각을 쓰기 전에 꺼짐).
+            if (ledgerBefore == null) File.Delete(ledger);
+            else File.WriteAllText(ledger, ledgerBefore);
+            File.WriteAllText(wallet, walletBefore);
+
+            using (var rig = NewRoom(RoomWallet.PieceName))
+            {
+                Assert.That(RoomBalance(rig), Is.EqualTo(0), "준비: 방은 요청을 모른다");
+                var a = Join(rig, "a");
+                rig.Run(0.5);
+                Assert.That(RoomBalance(rig), Is.EqualTo(5), "다시 들어오면 그 사람 세이브에 든 요청을 반영한다");
+                Assert.That(rig.Log.Any(l => l.Contains("지난번에 반영하지 못한 요청 1개")), Is.True);
+                Assert.That(((RoomWalletClient)a.Game.Wallet).RoomBalance, Is.EqualTo(5));
+                rig.Room.Shutdown();
+            }
+
+            using (var rig = NewRoom(RoomWallet.PieceName))
+            {
+                Join(rig, "a");
+                rig.Run(0.5);
+                Assert.That(RoomBalance(rig), Is.EqualTo(5), "같은 요청이 든 세이브로 다시 들어와도 한 번만");
+                Assert.That(rig.Log.Any(l => l.Contains("반영하지 못한 요청")), Is.False);
+            }
+        }
+
         // ---------- 돈 ----------
 
         [Test]

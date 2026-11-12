@@ -19,9 +19,11 @@ namespace Rootborn.Net.Room
     {
         private readonly LoopbackNetwork _local;
         private readonly RoomLoop _loop;
+        private readonly RoomSlotLock _lock;
 
-        private HostedRoom(IPAddress bind, int port, LoopbackNetwork local, RoomServer server, RoomServerSettings settings, IRoomClock clock)
+        private HostedRoom(IPAddress bind, int port, LoopbackNetwork local, RoomServer server, RoomServerSettings settings, IRoomClock clock, RoomSlotLock slotLock)
         {
+            _lock = slotLock;
             BindAddress = bind;
             Port = port;
             _local = local;
@@ -37,6 +39,8 @@ namespace Rootborn.Net.Room
         /// <param name="clock">방의 틱을 세는 시계(Host가 넘긴다).</param>
         /// <exception cref="InvalidOperationException">듣지 못했다(포트를 쓰는 중 등).</exception>
         /// <exception cref="System.Net.Sockets.SocketException">듣지 못했다.</exception>
+        /// <exception cref="RoomSlotLockedException">그 슬롯을 다른 곳(데디케이티드 서버, 다른 방)이 열어 두었다(파일 저장소일 때 — <see cref="RoomSlotLock"/>).
+        /// InvalidOperationException이다.</exception>
         /// <param name="guests">손님 세이브를 갖는 곳(방을 연 사람의 슬롯 폴더 안 guests/ — 데디케이티드 서버와 같은 자리·같은 검사). 없으면 손님 진행은 손님 PC에 남는다.</param>
         /// <param name="pieces">공유 조각 종류 등록 표(같이 쓰는 집의 판정 칸을 넣은 것). 없으면 Core 기본.</param>
         /// <param name="ownerPlayerId">방을 연 사람의 신원. 그 사람의 진행은 이 슬롯 그 자체다(손님 세이브로 받지 않는다).</param>
@@ -49,7 +53,22 @@ namespace Rootborn.Net.Room
             if (clock == null) throw new ArgumentNullException(nameof(clock));
             settings ??= new RoomServerSettings();
             settings.Validate();
-            UdpTransport udp = UdpTransport.Listen(bind, port, RoomProtocol.ConnectionKey);
+            // 파일 저장소면 슬롯을 잠근다: 같은 슬롯을 데디케이티드 서버나 다른 방이 열어 두었으면 듣기 전에 실패한다.
+            var slotLock = store is Rootborn.Data.Save.FileSaveStore files && !string.IsNullOrWhiteSpace(saveSlot)
+                ? RoomSlotLock.Acquire(files.RootDirectory, saveSlot, "내 PC의 방")
+                : null;
+            if (slotLock != null && slotLock.PreviousOwnerCrashed) log?.Invoke("지난번에 끝내지 못하고 꺼진 방의 잠금을 넘어감: " + slotLock.PreviousOwner);
+            UdpTransport udp;
+            try
+            {
+                udp = UdpTransport.Listen(bind, port, RoomProtocol.ConnectionKey);
+            }
+            catch
+            {
+                slotLock?.Dispose();
+                throw;
+            }
+
             var local = new LoopbackNetwork();
             var merged = new MergedServerTransport(local.Listen(), udp);
             RoomServer server;
@@ -60,11 +79,12 @@ namespace Rootborn.Net.Room
             catch
             {
                 merged.Dispose();
+                slotLock?.Dispose();
                 throw;
             }
 
             log?.Invoke("내 PC에서 방을 엶: 듣는 중 " + bind + ":" + udp.LocalPort.ToString(CultureInfo.InvariantCulture));
-            return new HostedRoom(bind, udp.LocalPort, local, server, settings, clock);
+            return new HostedRoom(bind, udp.LocalPort, local, server, settings, clock, slotLock);
         }
 
         /// <summary>방(서버 쪽 논리). 데디케이티드 서버와 같은 코드다.</summary>
@@ -108,7 +128,14 @@ namespace Rootborn.Net.Room
         {
             if (!IsOpen) return;
             // 같은 프로세스 안 끝으로 보낸 작별은 그 클라이언트가 다음에 Update할 때 닿는다(지연 0). UDP는 닫을 때 끊는다고 보낸다.
-            Server.Shutdown();
+            try
+            {
+                Server.Shutdown();
+            }
+            finally
+            {
+                _lock?.Dispose(); // 저장한 뒤에 푼다
+            }
         }
 
         public void Dispose() => Shutdown();

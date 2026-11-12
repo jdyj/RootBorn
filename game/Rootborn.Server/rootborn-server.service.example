@@ -1,0 +1,21 @@
+# Rootborn 데디케이티드 서버 — systemd 사용자 서비스 예시(관리자 권한 없이).
+# ~/.config/systemd/user/rootborn-server.service 로 복사하고 <...> 를 자기 값으로 바꾼다. 안내: game/Rootborn.Server/README.md 11절.
+# 끌 때 systemd 가 보내는 종료 신호(SIGTERM)를 받으면 서버가 방을 저장하고 끝낸다.
+
+[Unit]
+Description=Rootborn dedicated server (one room)
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=<서버 폴더>
+ExecStart=<서버 폴더>/Rootborn.Server --save-root <세이브 폴더> --slot <슬롯 이름> --bind <이 기계의 LAN 주소> --port <포트> --log <로그 파일>
+# 콘솔이 없다(입력이 닫혀 있어도 서버는 끝나지 않는다).
+StandardInput=null
+Restart=on-failure
+RestartSec=10
+# 종료 신호 뒤 저장하고 끝낼 시간
+TimeoutStopSec=30
+
+[Install]
+WantedBy=default.target

@@ -21,7 +21,8 @@
 # 서버(--server)
 #   1·2 는 같다(content-server.txt 목록 대조, 저장소 밖 임시 폴더로 복사). 3 이 다르다:
 #   3. 임시 세이브 폴더·슬롯, 빈 포트(--port 0)로 실행 → 로그에 "듣는 중:" → 데이터를 복사본의 data 에서 읽었는지 →
-#      콘솔에 stop 을 넣어 끝내고 종료 코드 0 과 "저장하고 닫음" → 같은 세이브로 다시 켜서 "방을 이어서 엶" → 다시 stop.
+#      콘솔에 status·save 를 한 번씩 넣어 답이 나오는지 → stop 을 넣어 끝내고 종료 코드 0 과 "저장하고 닫음" →
+#      같은 세이브로 다시 켜서 "방을 이어서 엶" → 다시 status·save·stop.
 #      인자 없이 켜면 종료 코드 2 와 도움말.
 #      --root·ROOTBORN_REPO_ROOT·ROOTBORN_DATA_DIR 없이 돈다(실행 파일 위치에서 data/registry.json 을 찾는다). 표준 오류는 비어야 한다.
 #   듣는 주소는 --bind(또는 VERIFY_BIND)로 받는다. 기본 127.0.0.1 은 이 시험용이다: 같은 기계 안에서만 닿고, 방화벽 창이 뜨지 않고,
@@ -258,9 +259,11 @@ run_client_checks() {
 }
 
 # ---- 3b. 서버: 듣기 → stop → 저장하고 닫기 → 이어서 열기 ----
-SERVER_ENV_CLEAR=(-u ROOTBORN_REPO_ROOT -u ROOTBORN_DATA_DIR -u ROOTBORN_SAVE_ROOT -u ROOTBORN_SAVE_SLOT -u ROOTBORN_SERVER_BIND -u ROOTBORN_SERVER_PORT -u ROOTBORN_MAX_PLAYERS)
+SERVER_ENV_CLEAR=(-u ROOTBORN_REPO_ROOT -u ROOTBORN_DATA_DIR -u ROOTBORN_SAVE_ROOT -u ROOTBORN_SAVE_SLOT -u ROOTBORN_SERVER_BIND -u ROOTBORN_SERVER_PORT -u ROOTBORN_MAX_PLAYERS
+  -u ROOTBORN_SERVER_LOG -u ROOTBORN_SERVER_LOG_MAX_MB -u ROOTBORN_SERVER_LOG_FILES -u ROOTBORN_AUTOSAVE_SECONDS)
 
-# 콘솔에 stop 을 넣으려고 stdin 을 파이프로 잇는다: 앞쪽 묶음이 stopfile 이 생길 때까지 기다렸다가 "stop" 을 쓴다.
+# 콘솔에 명령을 넣으려고 stdin 을 파이프로 잇는다: 앞쪽 묶음이 서버가 명령을 받는다고 찍으면 "status" 와 "save" 를 한 번씩 쓰고,
+# stopfile 이 생길 때까지 기다렸다가 "stop" 을 쓴다.
 # (서버는 stdin 이 닫혀도 끝나지 않는다 — 서비스로 도는 경우를 위해서. 그래서 stopfile 로 끝낸다.)
 # start_server <이름> <서버 폴더> <슬롯> : 백그라운드로 띄우고 "듣는 중:" 을 기다린다. SERVER_PORT 에 들은 포트를 둔다.
 start_server() {
@@ -273,6 +276,9 @@ start_server() {
   (
     cd "$WORK" || exit 99
     {
+      until grep -q "콘솔 명령을 받는다" "$out" 2>/dev/null || [ -f "$stopfile" ]; do sleep 0.2; done
+      echo status
+      echo save
       while [ ! -f "$stopfile" ]; do sleep 0.2; done
       echo stop
     } 2>/dev/null | (
@@ -291,6 +297,18 @@ start_server() {
   else
     fail "$name: 로그에 '듣는 중:' 이 없다(듣기 시작하지 못했다)"
   fi
+}
+
+# console_checks <이름> : 앞쪽 묶음이 넣은 status·save 의 답을 본다(콘솔 명령 — 안내서 game/Rootborn.Server/README.md).
+console_checks() {
+  local name="$1" out="$WORK/logs/$1.out" waited=0
+  until grep -qF "저장함(save 명령)" "$out" 2>/dev/null; do
+    sleep 0.3; waited=$((waited + 1))
+    if [ $waited -gt $((LIMIT * 3)) ]; then break; fi
+  done
+  grep -qF "가동 시간: " "$out" || fail "$name: status 명령의 답(가동 시간)이 없다"
+  grep -qF "마지막 저장: " "$out" || fail "$name: status 명령의 답(마지막 저장)이 없다"
+  grep -qF "저장함(save 명령)" "$out" || fail "$name: save 명령의 답이 없다"
 }
 
 # stop_server <이름> : 콘솔에 stop 을 넣고 끝나기를 기다린다. 종료 코드 0, "저장하고 닫음", 빈 표준 오류를 본다.
@@ -320,6 +338,7 @@ run_server() {
   if ! tr '\\' '/' < "$out" | grep -iqF "데이터 읽는 중: $(native_path "$GAME")/data"; then
     fail "$name: 데이터를 복사본의 data 에서 읽지 않았다(로그: $(grep -m1 '데이터 읽는 중' "$out"))"
   fi
+  console_checks "$name"
   stop_server "$name"
 }
 

@@ -237,6 +237,20 @@ namespace Rootborn.Net.Room
             KeepDayCopies(_session.Clock.Day);
         }
 
+        /// <summary>
+        /// 지금 방 상태(방의 시계, 공유 조각)를 저장한다(서버의 save 명령·주기 저장). 손님 세이브는 받을 때마다 이미 쓴다.
+        /// 닫은 방이면 아무것도 하지 않는다. 쓰지 못하면 저장소의 예외(IOException·UnauthorizedAccessException)가 그대로 나온다.
+        /// </summary>
+        public void Save()
+        {
+            if (_shutDown) return;
+            RoomClockSaveFiles.Save(_store, _saveSlot, _session.Clock);
+            _pieces.Save(_store, _saveSlot);
+        }
+
+        /// <summary>지금 방의 날·시각("N일째 HH:MM") — 로그와 서버의 status 명령이 쓴다.</summary>
+        public string DayAndTime => DayText();
+
         /// <summary>방 상태를 저장하고 모두를 끊고 전송을 닫는다. 두 번 불러도 된다.</summary>
         public void Shutdown()
         {
@@ -275,8 +289,19 @@ namespace Rootborn.Net.Room
 
             foreach (var piece in _pieces.Pieces) SendState(player, piece);
             if (!guest) return;
+            // 그 사람의 세이브에 든 요청: 이미 답한 것은 답을 다시 주고, 장부에 없는 것은 지금 반영한다. 받아 쓴 저장에 든 요청이므로 반영했어야 했던 것이다 —
+            // 손님 세이브를 쓴 뒤 조각을 쓰기 전에 서버가 꺼지면 이렇게 남는다(장부가 같은 요청 id를 한 번만 반영하므로 두 번 들어가지 않는다).
+            List<RoomRequestSaveData> unanswered = null;
             foreach (var request in _guests.PendingRequests(player.PlayerId))
-                if (request != null && _pieces.TryAnswer(player.PlayerId, request.RequestId, out var answer)) _session.Send(player, AnswerMessage(answer));
+            {
+                if (request == null) continue;
+                if (_pieces.TryAnswer(player.PlayerId, request.RequestId, out var answer)) _session.Send(player, AnswerMessage(answer));
+                else (unanswered ??= new List<RoomRequestSaveData>(2)).Add(request);
+            }
+
+            if (unanswered == null) return;
+            Log($"지난번에 반영하지 못한 요청 {unanswered.Count}개를 반영: {player.PlayerId}");
+            ApplyAndAnswer(player, unanswered);
         }
 
         private void OnSaveChunk(ServerPlayer player, SaveChunkMessage chunk)
@@ -351,6 +376,7 @@ namespace Rootborn.Net.Room
             {
                 if (_store is ISaveSlotDayCopies copies) copies.KeepDayCopy(_saveSlot, day, _settings.DayCopiesToKeep);
                 _guests?.KeepDayCopies(day, _settings.DayCopiesToKeep);
+                Log($"사본 남김: {day}일째 (최근 {_settings.DayCopiesToKeep}개를 둔다)");
             }
             catch (Exception e) when (e is System.IO.IOException || e is UnauthorizedAccessException)
             {

@@ -48,6 +48,48 @@ namespace Rootborn.Server.Tests
         }
 
         [Test]
+        public void LogAndAutosave_HaveSafeDefaults_AndReadArgumentsBeforeEnvironment()
+        {
+            var o = ServerOptions.Resolve(Full(), Env());
+            Assert.That(o.LogFile, Is.Null, "로그 파일 기본 경로를 지어내지 않는다 — 표준 출력만");
+            Assert.That(o.LogMaxBytes, Is.EqualTo(ServerOptions.DefaultLogMaxBytes));
+            Assert.That(o.LogFiles, Is.EqualTo(ServerOptions.DefaultLogFiles));
+            Assert.That(o.AutosaveSeconds, Is.EqualTo(ServerOptions.DefaultAutosaveSeconds));
+
+            string file = Path.Combine(_root, "server.log");
+            o = ServerOptions.Resolve(Full("--log", file, "--log-max-mb", "2", "--log-files", "0", "--autosave-seconds", "0"), Env(new Dictionary<string, string>
+            {
+                [ServerOptions.LogVariable] = "ignored.log", [ServerOptions.AutosaveVariable] = "30",
+            }));
+            Assert.That(o.LogFile, Is.EqualTo(file));
+            Assert.That(o.LogMaxBytes, Is.EqualTo(2L * 1024 * 1024));
+            Assert.That(o.LogFiles, Is.EqualTo(0));
+            Assert.That(o.AutosaveSeconds, Is.EqualTo(0), "0이면 끈다");
+
+            o = ServerOptions.Resolve(Full(), Env(new Dictionary<string, string> { [ServerOptions.LogVariable] = file, [ServerOptions.AutosaveVariable] = "2.5" }));
+            Assert.That(o.LogFile, Is.EqualTo(file));
+            Assert.That(o.AutosaveSeconds, Is.EqualTo(2.5));
+        }
+
+        [TestCase("--autosave-seconds", "-1")]
+        [TestCase("--autosave-seconds", "soon")]
+        [TestCase("--log-max-mb", "0")]
+        [TestCase("--log-max-mb", "big")]
+        [TestCase("--log-files", "-1")]
+        public void BadLogOrAutosaveValues_AreArgumentErrors(string name, string value)
+        {
+            var e = Assert.Throws<ServerOptionsException>(() => ServerOptions.Resolve(Full(name, value), Env()));
+            StringAssert.Contains(name, e.Message);
+        }
+
+        [Test]
+        public void Help_MentionsTheNewArguments_TheConsoleCommands_AndTheExitCodes()
+        {
+            foreach (var word in new[] { "--log ", "--log-max-mb", "--log-files", "--autosave-seconds", "status", "6 슬롯이 이미 열려 있음", "7 세이브" })
+                StringAssert.Contains(word, ServerOptions.HelpText);
+        }
+
+        [Test]
         public void Share_DefaultsToTimeOnly_ReadsNamesFromArgumentOrEnvironment_AndRefusesUnknownOnes()
         {
             Assert.That(ServerOptions.Resolve(Full(), Env()).SharedPieces, Is.Empty, "기본은 시간만");
