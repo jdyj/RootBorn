@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 using Rootborn.Core.Minigames;
+using Rootborn.Core.Time;
 
 namespace Rootborn.Game.Tests
 {
@@ -22,8 +23,17 @@ namespace Rootborn.Game.Tests
         public static void Walk(GameSession game, int minutes)
         {
             if (minutes <= 0) return;
-            game.AdvanceTime(minutes * game.TimeRules.RealSecondsPerGameDay / (24 * 60) + 0.001f, false);
+            game.AdvanceTime(RealSeconds(game.TimeRules, minutes) + 0.001f, false);
         }
+
+        /// <summary>게임 분 → 실제 초(하루 길이 game.TimeRules.RealSecondsPerGameDay). 걷기·날 넘김·걷기 실제 초 기록이 같은 식을 쓴다.</summary>
+        public static float RealSeconds(TimeRules rules, int gameMinutes) => gameMinutes * rules.RealSecondsPerGameDay / (24 * 60);
+
+        /// <summary>
+        /// 실제 초 → 게임 분, 올림. 시계(Core FlowingClock)는 1분이 안 되는 조각을 다음 부름에 넘기므로 그 초가 실제로 보내는 분은 이 값 이하다.
+        /// </summary>
+        public static int GameMinutesUp(TimeRules rules, float realSeconds)
+            => (int)Math.Ceiling(realSeconds / (rules.RealSecondsPerGameDay / (double)TimeRules.MinutesPerDay) - 1e-9);
 
         /// <summary>미니게임을 하는 실제 초: 제한 시간 합의 일정 몫(day-balance.json의 몫).</summary>
         public static float MinigameSeconds(Minigame minigame) => MinigameSeconds(minigame, Current.MinigameShare);

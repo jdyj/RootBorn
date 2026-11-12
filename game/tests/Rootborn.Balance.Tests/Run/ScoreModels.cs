@@ -4,7 +4,10 @@ using System.Globalization;
 
 namespace Rootborn.Balance.Tests
 {
-    /// <summary>시설 일 미니게임을 끝낸 점수(0~100)를 차례마다 낸다. 판마다 새 인스턴스다(부른 차례를 센다).</summary>
+    /// <summary>
+    /// 시설 일 미니게임을 끝낸 점수(0~100)를 차례마다 낸다. 판마다 새 인스턴스다(부른 차례를 센다).
+    /// 차례는 정산을 시도할 때마다 넘어간다 — 정산이 거절돼도 넘어간다(성공 모델도 같다).
+    /// </summary>
     internal interface IScoreModel
     {
         string Id { get; }

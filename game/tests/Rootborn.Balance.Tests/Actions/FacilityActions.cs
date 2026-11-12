@@ -39,7 +39,7 @@ namespace Rootborn.Balance.Tests
         {
             var work = FacilityWorks.Highest(game, w => w.CanWork)?.Work
                 ?? FacilityWorks.Highest(game, w => w.Direct == AdultCareerResultKind.InsufficientCapacity)?.Work;
-            return work == null ? null : FacilityWorks.PlanPlay(work, context);
+            return work == null ? null : FacilityWorks.PlanPlay(game, work, context);
         }
     }
 
@@ -56,7 +56,7 @@ namespace Rootborn.Balance.Tests
         public PlannedStep Plan(GameSession game, RunContext context)
         {
             var work = FacilityWorks.Highest(game, w => w.CanWork && w.Work.MinimumFacilityLevel == _level)?.Work;
-            return work == null ? null : FacilityWorks.PlanPlay(work, context);
+            return work == null ? null : FacilityWorks.PlanPlay(game, work, context);
         }
     }
 
@@ -108,9 +108,15 @@ namespace Rootborn.Balance.Tests
             return best;
         }
 
-        /// <summary>그 일을 미니게임으로 하는 계획. 점수는 정산할 때 그 판의 점수 모델에서 하나 얻는다.</summary>
-        public static PlannedStep PlanPlay(FacilityWork work, RunContext context)
-            => new PlannedStep { Id = work.Id, Minutes = work.TimeCostMinutes, Walks = true, Do = (g, request) => Play(g, work, request, context) };
+        /// <summary>그 일을 미니게임으로 하는 계획(길이는 미니게임이 더 길면 그 길이). 점수는 정산할 때 그 판의 점수 모델에서 하나 얻는다.</summary>
+        public static PlannedStep PlanPlay(GameSession game, FacilityWork work, RunContext context)
+            => new PlannedStep
+            {
+                Id = work.Id,
+                Minutes = ActionLength.WithMinigame(game, work.TimeCostMinutes, work.Minigame, context.MinigameShare),
+                Walks = true,
+                Do = (g, request) => Play(g, work, request, context),
+            };
 
         /// <summary>
         /// 그 일을 자동으로 넘기는 계획. 점수 모델은 쓰지 않는다(차례도 넘기지 않는다) — 자동 넘기기는 게임이 점수를 따로 정하므로
@@ -131,7 +137,10 @@ namespace Rootborn.Balance.Tests
 
         private const int AutoSkipScoreArgument = 100;
 
-        /// <summary>예약 → 미니게임 시간 → 점수 모델의 점수로 정산. 정산이 거절되면 예약을 포기해 남기지 않는다. 미니게임 없는 일은 바로 한다.</summary>
+        /// <summary>
+        /// 예약 → 미니게임 시간 → 점수 모델의 점수로 정산. 정산이 거절되면 예약을 포기해 남기지 않는다. 미니게임 없는 일은 바로 한다.
+        /// 점수 모델의 차례는 정산을 시도할 때마다 넘어간다(거절돼도).
+        /// </summary>
         public static StepOutcome Play(GameSession game, FacilityWork work, string request, RunContext context)
         {
             if (work.Minigame == null)

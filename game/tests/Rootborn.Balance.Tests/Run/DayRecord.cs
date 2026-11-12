@@ -14,6 +14,7 @@ namespace Rootborn.Balance.Tests
         public SortedDictionary<string, int> OtherItems = new SortedDictionary<string, int>();    // 통화가 아닌 아이템 id → 그날 끝에 가진 개수(그날 얻은 수가 아니다)
         public int WorkMinutes, TravelMinutes;                                   // 게임 분
         public float TravelRealSeconds, MinigameRealSeconds;                     // 걷기·미니게임에 쓴 실제 초
+        public int StartedAtMinutes;                                             // 그날 첫 행동 전 시각(그날 0시부터 센 분)
         public int EndedAtMinutes;                                               // 그날 마지막 행동이 끝난 시각
         public int FacilityLevel;
         public bool Upgraded;
@@ -21,7 +22,8 @@ namespace Rootborn.Balance.Tests
         public int EnergyAtEnd, FocusAtEnd;                                      // 밤(잠·날 넘김) 전의 값
         public bool Slept;                                                       // 그 밤에 잤는가
         public int SleptAtMinutes = -1;                                          // 잔 시각(그날 0시부터 센 분). 안 잤으면 -1
-        public bool Exhausted;                                                   // 그날 지침(game.IsExhausted)을 한 번이라도 봤는가
+        public bool Exhausted;                                                   // 그날 지침(game.IsExhausted)을 한 번이라도 봤는가. 밤을 기다리는 동안 지치면 다음 날에 센다
+        // 자지 않는 밤: Earned·Spent에는 다음 날을 시작할 때의 지갑 변화도 들어간다(날 넘김이 한 부름 안에서 다음 날을 연다).
         public string Stop;                                                      // StopReasons의 값
     }
 

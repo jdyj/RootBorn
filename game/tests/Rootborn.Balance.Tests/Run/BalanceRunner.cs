@@ -16,6 +16,8 @@ namespace Rootborn.Balance.Tests
     {
         private const int MaxStepsPerDay = 200;
         private const int MaxRollOverTries = 8;
+        // 날이 다 갔을 때 날만 넘기는 초. 0이면 시계의 남은 조각에 더하지 않아 분이 생기지 않고, AdvanceTime은 날이 다 간 것을 보고 날만 넘긴다.
+        private const float RollOverOnlySeconds = 0f;
 
         /// <summary>1단계 보고: 전략 × 대상(id 순) × 점수 단계(Scored일 때만, 아니면 기준 가정 한 번). 점수 단계는 기준 가정에서 점수만 "fixed N"으로 바꾼다. 순서는 설정 순서.</summary>
         public static IEnumerable<RunResult> RunAll(BalanceConfig config, int days)
@@ -94,6 +96,7 @@ namespace Rootborn.Balance.Tests
                 {
                     Day = game.Student.CurrentDay,
                     Weekend = game.Student.Calendar.IsWeekend(game.Student.CurrentDay),
+                    StartedAtMinutes = game.Student.TimeMinutes,
                     EndedAtMinutes = game.Student.TimeMinutes,
                 };
                 PlayDay(game, actions, context, rule, runDay, sleeps, setup.TravelMinutes, record, name, ref request, () => earned);
@@ -118,6 +121,7 @@ namespace Rootborn.Balance.Tests
                 else
                 {
                     // 자지 않는 밤: 날이 넘어갈 때까지 시계를 돌린다(혼자인 방은 AdvanceTime이 회복 없이 마감하고 다음 날을 연다).
+                    // 다음 날을 여는 것까지 한 부름이라, 그때의 지갑 변화(있다면)는 자는 판과 달리 이 밤의 날에 들어간다.
                     RollOverAwake(game, record.Day, name);
                     Close(game, record, earned, spent, ref earnedBefore, ref spentBefore);
                     run.Days.Add(record);
@@ -136,15 +140,21 @@ namespace Rootborn.Balance.Tests
             spentBefore = spent;
         }
 
-        // 남은 분만큼의 실제 초를 보내 날을 넘긴다. 몇 번 보내도 넘어가지 않으면 판 이름·날을 말하며 실패한다.
+        // 남은 분만큼의 실제 초를 보내 날을 넘긴다. 날이 이미 다 갔으면(마지막 행동이 날 넘김 시각에 딱 끝남) 분을 보내지 않고
+        // 날만 넘긴다 — 1분을 보내면 새 날이 07:01에 시작한다. 몇 번 보내도 넘어가지 않으면 판 이름·날을 말하며 실패한다.
         private static void RollOverAwake(GameSession game, int day, string name)
         {
             var rules = game.TimeRules;
             for (int tries = 0; game.Student.CurrentDay == day; tries++)
             {
                 if (tries >= MaxRollOverTries) throw new InvalidOperationException(name + ": " + day + "일째가 자지 않은 채로 넘어가지 않는다(시각 " + game.Student.TimeMinutes + ")");
+                if (game.Student.HasDayRunOut)
+                {
+                    game.AdvanceTime(RollOverOnlySeconds, false);
+                    continue;
+                }
                 int left = Math.Max(1, rules.DayEndMinutes - game.Student.TimeMinutes);
-                game.AdvanceTime(left * rules.RealSecondsPerGameDay / (24 * 60) + 0.001f, false);
+                game.AdvanceTime(DayAssumptions.RealSeconds(rules, left) + 0.001f, false);
             }
             if (game.Student.DayState != StudentDayState.InProgress)
                 throw new InvalidOperationException(name + ": " + day + "일째를 자지 않고 넘긴 뒤 다음 날이 진행 중이 아니다(" + game.Student.DayState + ")");
@@ -160,6 +170,7 @@ namespace Rootborn.Balance.Tests
                 if (guard >= MaxStepsPerDay) throw new InvalidOperationException(name + ": " + record.Day + "일째가 " + MaxStepsPerDay + "번을 넘겨 끝나지 않는다");
 
                 // 지치면 아무것도 시작하지 못한다(자야 풀린다): 자는 밤이면 그 자리에서 자고, 아니면 날이 넘어가기를 기다린다.
+                // 날 넘김을 기다리는 동안(자지 않는 밤) 지친 것은 그 날이 아니라 다음 날의 첫 검사에서 보여 다음 날의 지친 날로 센다.
                 if (game.IsExhausted)
                 {
                     record.Exhausted = true;
@@ -195,8 +206,15 @@ namespace Rootborn.Balance.Tests
                 {
                     DayAssumptions.Walk(game, travel);
                     record.TravelMinutes += travel;
-                    record.TravelRealSeconds += travel * game.TimeRules.RealSecondsPerGameDay / (24 * 60);
+                    record.TravelRealSeconds += DayAssumptions.RealSeconds(game.TimeRules, travel);
                     if (game.Student.CurrentDay != record.Day) throw new InvalidOperationException(name + ": " + record.Day + "일째 걷기가 날을 넘겼다");
+
+                    // 시계의 남은 조각 때문에 걷기가 1분 더 걸릴 수 있다: 걸은 뒤 다시 보고, 규칙 끝을 넘으면 하지 않는다(걷기는 남는다).
+                    if (!context.FitsNow(game, step.Minutes))
+                    {
+                        skipped[chosen] = true;
+                        continue;
+                    }
                 }
 
                 int earnedBefore = earnedSoFar();
