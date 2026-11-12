@@ -86,13 +86,22 @@ namespace Rootborn.Screens.Tests.Workspaces
             Assert.That(screen.Model.Rows[screen.SelectedIndex].Check, Is.EqualTo(WorkspaceResultKind.InsufficientResources), "Core 판단");
             Assert.That(Text(w.Node(WorkspaceTemplateScreen.StatusId)), Is.EqualTo(w.Text.Get(WorkspaceTemplateModel.ReasonKey(WorkspaceResultKind.InsufficientResources))));
             Assert.That(w.Node(WorkspaceTemplateScreen.ApplyId(WorkspaceFixture.CozyTemplate)).IsActive, Is.False, "못 하면 적용 단추를 누를 수 없다");
-            int placed = w.Session.House.Placed.Count;
-            Assert.That(w.Session.House.Placed.Count, Is.EqualTo(placed), "아무것도 바뀌지 않는다");
+            // 꺼진 단추를 포인터로 눌러 본다: 아무것도 바뀌지 않는다.
+            string[] before = w.Session.House.Placed.Select(p => p.InstanceId).ToArray();
+            int allowance = w.Session.Inventory.CountOf(w.Session.Item(WorkspaceFixture.Allowance));
+            UiRect apply = w.Node(WorkspaceTemplateScreen.ApplyId(WorkspaceFixture.CozyTemplate)).Rect;
+            w.Stack.Pointer(apply.CenterX, apply.CenterY, false, 0);
+            w.Stack.Pointer(apply.CenterX, apply.CenterY, true, 0);
+            w.Stack.Pointer(apply.CenterX, apply.CenterY, false, 0);
+            Assert.That(screen.LastResult, Is.Null, "명령을 부르지 않았다");
+            Assert.That(w.Session.House.Placed.Select(p => p.InstanceId), Is.EqualTo(before), "배치 그대로");
+            Assert.That(w.Session.Inventory.CountOf(w.Session.Item(WorkspaceFixture.Allowance)), Is.EqualTo(allowance), "용돈 그대로");
+            Assert.That(w.Stack.IsOpen(ScreenCatalog.WorkspaceTemplates), Is.True);
 
             // 값이 없는 템플릿은 돈이 없어도 깔 수 있다(다른 줄을 고르면 그 줄의 판단).
             int basic = screen.Model.IndexOf(WorkspaceFixture.BasicTemplate);
             ClickRow(w, basic);
-            Assert.That(Text(w.Node(WorkspaceTemplateScreen.CostId)), Is.EqualTo(w.Text.Format("ui.workspace.template.cost", w.Text.Get("ui.workspace.template.free"))));
+            Assert.That(Text(w.Node(WorkspaceTemplateScreen.CostId)), Is.EqualTo(w.Text.Format("ui.workspace.template.cost", w.Text.Get("facility.no-cost"))));
             Assert.That(w.Node(WorkspaceTemplateScreen.ApplyId(WorkspaceFixture.BasicTemplate)).IsActive, Is.True);
         }
 

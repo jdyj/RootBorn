@@ -165,25 +165,12 @@ namespace Rootborn.Screens.Workspaces
             WorkspaceTemplateRow row = Selected;
             _apply.Id = row == null ? ApplyBaseId : ApplyId(row.Id);
             _name.Text = row == null ? string.Empty : Shown(row.NameKey);
-            _cost.Text = row == null ? string.Empty : F("ui.workspace.template.cost", Costs(row.Costs));
+            _cost.Text = row == null ? string.Empty : F("ui.workspace.template.cost", ItemAmountsText(row.Costs));
             _apply.Enabled = row != null && row.CanApply && !_waitingForRoom;
             string key = _statusKey;
             if (key == null)
                 key = row == null ? "ui.workspace.template.empty" : row.CanApply ? "ui.workspace.template.ready" : WorkspaceTemplateModel.ReasonKey(row.Check);
             _status.Text = T(key);
-        }
-
-        private string Costs(IReadOnlyList<ItemAmount<string>> amounts)
-        {
-            if (amounts == null || amounts.Count == 0) return T("ui.workspace.template.free");
-            var parts = new List<string>(amounts.Count);
-            foreach (ItemAmount<string> amount in amounts)
-            {
-                ItemDefinition item = Services.Session?.Item(amount.Item);
-                string key = item == null ? amount.Item : string.IsNullOrEmpty(item.DisplayKey) ? item.Id : item.DisplayKey;
-                parts.Add(F("ui.workspace.template.cost-item", Shown(key), amount.Count));
-            }
-            return string.Join(T("ui.workspace.template.cost-separator"), parts);
         }
 
         private void Apply()

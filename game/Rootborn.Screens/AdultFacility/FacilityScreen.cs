@@ -206,18 +206,7 @@ namespace Rootborn.Screens.AdultFacility
             return text;
         }
 
-        private string Costs(ItemAmount<string>[] amounts)
-        {
-            if (amounts.Length == 0) return T("facility.no-cost");
-            var parts = new List<string>(amounts.Length);
-            foreach (ItemAmount<string> amount in amounts)
-            {
-                ItemDefinition item = Services.Session?.Item(amount.Item);
-                string key = item == null ? amount.Item : string.IsNullOrEmpty(item.DisplayKey) ? item.Id : item.DisplayKey;
-                parts.Add(F("facility.cost-item", Name(key), amount.Count));
-            }
-            return string.Join(T("facility.cost-separator"), parts);
-        }
+        private string Costs(ItemAmount<string>[] amounts) => ItemAmountsText(amounts);
 
         /// <summary>데이터가 넘긴 이름 키. 문구표에 있으면 그 문구, 없으면 키 글자 그대로(빠진 키로 세지 않는다).</summary>
         private string Name(string key) => Shown(key);

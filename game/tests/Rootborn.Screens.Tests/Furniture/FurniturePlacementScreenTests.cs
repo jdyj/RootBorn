@@ -531,6 +531,90 @@ namespace Rootborn.Screens.Tests.Furniture
             Assert.That(w.Node(FurniturePlacementScreen.TemplatesId).IsActive, Is.False, "남의 일터는 템플릿 단추가 꺼진다");
             Assert.That(w.Node(FurniturePlacementScreen.SlotId(0)).IsActive, Is.False, "남의 일터는 카드가 꺼진다");
             Assert.That(Text(w.Node(FurniturePlacementScreen.WorkspaceReasonId)), Is.EqualTo(w.Text.Get("ui.workspace.not-owner")));
+            Assert.That(w.Node(FurniturePlacementScreen.CapacityId).Visible, Is.False, "남의 일터 한도는 모르므로 가구 수를 보이지 않는다");
+            foreach (string tool in new[] { FurniturePlacementScreen.DeleteId, FurniturePlacementScreen.RotateId, FurniturePlacementScreen.MoveId })
+                Assert.That(w.Node(tool).IsActive, Is.False, "남의 일터는 도구 단추가 꺼진다: " + tool);
+        }
+
+        /// <summary>그 칸 위에 UI가 없는 첫 바닥 칸(시험용 보기는 화면 일부를 패널이 덮는다)에서 그 가구를 놓을 수 있는 칸.</summary>
+        private static GridPoint OpenFreeCell(Workspaces.WorkspaceFixture w, string furnitureId)
+        {
+            FurnitureDefinition furniture = w.Definitions.Get<FurnitureDefinition>(furnitureId);
+            foreach (GridPoint cell in w.Room.FloorCells)
+            {
+                (float x, float y) = w.View.Center(cell);
+                if (w.Stack.Tree.HitTest(x, y) == null && w.Session.House.CanPlace(furniture, cell, FurniturePlacementDirection.North)) return cell;
+            }
+            throw new InvalidOperationException("패널 밖 빈 칸이 없다");
+        }
+
+        private static bool DrawsPlacementPreview(FurniturePlacementScreen screen)
+        {
+            var list = new DrawList();
+            screen.EmitWorldOverlay(list);
+            return list.Commands.Any(c => c.Kind == DrawKind.Image
+                || c.Kind == DrawKind.Fill && (c.Color.Equals(FurniturePlacementScreen.Metrics.ValidCell) || c.Color.Equals(FurniturePlacementScreen.Metrics.ValidFootprint)));
+        }
+
+        [Test]
+        public void Placement_LastPieceReachesCapacity_ThenNoPreviewAndNoPlacing_ButMovingStillWorks()
+        {
+            using var w = new Workspaces.WorkspaceFixture();
+            string desk = Workspaces.WorkspaceFixture.FreeDesk;
+            while (w.Session.ActiveWorkspaceStatus.Placed < w.Session.ActiveWorkspaceStatus.Capacity - 1) // 준비: 하나 남을 때까지(GameSession 명령)
+                Assert.That(w.Session.PlaceFurniture(desk, w.FreeCell(desk), FurniturePlacementDirection.North), Is.True);
+            w.Emit();
+            w.PickFromPalette(desk);
+            w.ClickCell(OpenFreeCell(w, desk));
+            Assert.That(w.Placement.LastAction, Is.EqualTo("placed"), "마지막 하나를 놓았다");
+            Assert.That(w.Session.CanAddToActiveWorkspace(), Is.EqualTo(Rootborn.Core.Workspaces.WorkspaceResultKind.OverCapacity));
+
+            int placed = w.Session.House.Placed.Count;
+            GridPoint empty = OpenFreeCell(w, desk);
+            (float x, float y) = w.View.Center(empty);
+            w.Stack.Pointer(x, y, false, 0);
+            w.Placement.WorldPointer(x, y, false, false);
+            Assert.That(w.Placement.Active, Is.Null, "한도에 닿으면 팔레트에서 고른 가구를 푼다");
+            Assert.That(w.Placement.HoverValid, Is.False);
+            Assert.That(DrawsPlacementPreview(w.Placement), Is.False, "유령 그림과 초록 칸이 그려지지 않는다");
+            w.ClickCell(empty);
+            Assert.That(w.Session.House.Placed.Count, Is.EqualTo(placed), "빈 칸을 눌러도 놓이지 않는다(고른 가구가 없어 놓기를 시도하지 않는다)");
+
+            // 한도에 닿은 자기 일터에서도 놓인 가구는 옮길 수 있다.
+            PlacedFurniture target = w.Session.House.Placed.First(p =>
+            {
+                (float px, float py) = w.View.Center(p.Anchor);
+                return w.Stack.Tree.HitTest(px, py) == null;
+            });
+            w.ClickCell(target.Anchor);
+            w.Click(FurniturePlacementScreen.MoveId);
+            w.ClickCell(OpenFreeCell(w, target.Definition.StableId));
+            Assert.That(w.Placement.LastAction, Is.EqualTo("moved"), "옮기기는 한도와 무관하다");
+            Assert.That(w.Session.House.Placed.Count, Is.EqualTo(placed));
+        }
+
+        [Test]
+        public void Placement_PickedInTheHouse_ThenSomeoneElsesWorkspace_DropsThePick()
+        {
+            using var w = new Workspaces.WorkspaceFixture(adult: false, open: false);
+            w.Session.EnterPlacementSurface(w.Room.Grid, "house");
+            w.Stack.EnterMap("House", new[] { MapFeatures.FurniturePlacement });
+            w.Click("hud.button.placement");
+            w.Placement.Attach(new FurnitureArt(TestData.DataDirectory), w.View);
+            w.Emit();
+            w.PickFromPalette(Workspaces.WorkspaceFixture.FreeDesk);
+            Assert.That(w.Placement.Active, Is.Not.Null, "준비: 집에서 가구를 골랐다");
+
+            // Host가 하는 일: 남의 일터 면에 들어가 맵을 넘긴다(배치 화면은 열린 채).
+            w.Session.EnterPlacementSurface(w.Room.Grid, w.Definitions.Get<Rootborn.Core.Workspaces.Workspace>(Workspaces.WorkspaceFixture.ChefWorkspace).SurfaceId);
+            w.Stack.EnterMap("Workspace", new[] { MapFeatures.FurniturePlacement });
+            w.Emit();
+            Assert.That(w.Session.OwnsActiveWorkspace, Is.False);
+            Assert.That(w.Placement.Active, Is.Null, "남의 일터에서는 고른 가구를 푼다");
+            Assert.That(DrawsPlacementPreview(w.Placement), Is.False);
+            int placed = w.Session.House.Placed.Count;
+            w.ClickCell(OpenFreeCell(w, Workspaces.WorkspaceFixture.FreeDesk));
+            Assert.That(w.Session.House.Placed.Count, Is.EqualTo(placed));
         }
 
         [Test]

@@ -187,6 +187,23 @@ namespace Rootborn.Screens
             return id ?? string.Empty;
         }
 
+        /// <summary>
+        /// 아이템 값 문구(성인 시설의 비용·보상, 일터 템플릿의 값이 같이 쓴다): 아이템마다 "이름 × 수"(facility.cost-item)를
+        /// 구분자(facility.cost-separator)로 잇고, 없으면 facility.no-cost. 이름은 아이템 표시 키 → id 순(문구표에 없으면 그 글 그대로).
+        /// </summary>
+        protected string ItemAmountsText(System.Collections.Generic.IReadOnlyList<Rootborn.Core.Inventory.ItemAmount<string>> amounts)
+        {
+            if (amounts == null || amounts.Count == 0) return T("facility.no-cost");
+            var parts = new System.Collections.Generic.List<string>(amounts.Count);
+            foreach (Rootborn.Core.Inventory.ItemAmount<string> amount in amounts)
+            {
+                Rootborn.Core.Inventory.ItemDefinition item = Services.Session?.Item(amount.Item);
+                string key = item == null ? amount.Item : string.IsNullOrEmpty(item.DisplayKey) ? item.Id : item.DisplayKey;
+                parts.Add(F("facility.cost-item", Shown(key), amount.Count));
+            }
+            return string.Join(T("facility.cost-separator"), parts);
+        }
+
         protected void Close() => Services.Screens?.Close(this);
     }
 }

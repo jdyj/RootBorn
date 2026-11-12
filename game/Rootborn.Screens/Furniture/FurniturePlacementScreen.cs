@@ -281,10 +281,22 @@ namespace Rootborn.Screens.Furniture
             WorkspaceResultKind add = _workspace == null ? WorkspaceResultKind.Applied : session.CanAddToActiveWorkspace();
             _cardsEnabled = add == WorkspaceResultKind.Applied;
             _workspaceReasonKey = _cardsEnabled ? null : AddReasonKeys.TryGetValue(add, out string key) ? key : null;
+            bool owned = _workspace == null || _workspace.Owned;
             if (_workspace != null)
             {
                 foreach ((string qualityId, UiLabel score) in _qualities) score.Text = _workspace.Scores.Get(qualityId).ToString(CultureInfo.InvariantCulture);
                 _templates.Enabled = _workspace.Owned;
+            }
+            _capacity.Visible = owned; // 남의 일터 한도는 모른다(GameSession이 0을 준다)
+            _delete.Enabled = _rotate.Enabled = _move.Enabled = owned; // 남의 일터는 옮기기·치우기도 안 된다
+            // 새로 놓을 수 없으면 팔레트에서 고른 것을 푼다(유령·초록 칸을 보이지 않는다). 자기 일터에서 집어 든 가구는 한도와 무관하게 옮길 수 있어 남긴다.
+            if (!owned) { Carrying = false; SelectedInstanceId = null; }
+            if (!_cardsEnabled && !Carrying && Active != null)
+            {
+                Active = null;
+                _hasHover = false;
+                _validDirty = true;
+                RefreshSelected();
             }
             ApplyWorkspaceTexts();
             for (int i = 0; i < Metrics.PageSize; i++) _slots[i].Enabled = _cardsEnabled;
@@ -590,6 +602,8 @@ namespace Rootborn.Screens.Furniture
             _ghostHeld = true;
             _ghostHeldCell = cell;
             _hasHover = false;
+            // 한도에 닿은 일터에서 옮기기를 마쳤으면 집어 들었던 가구를 놓기용으로 남기지 않는다(RefreshWorkspace와 같은 규칙).
+            if (!_cardsEnabled && !Carrying && Active != null) { Active = null; RefreshSelected(); }
         }
 
         // ---------- 월드 위 그리기 ----------
