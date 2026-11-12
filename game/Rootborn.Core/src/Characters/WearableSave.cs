@@ -16,11 +16,15 @@ namespace Rootborn.Core.Characters
     /// <see cref="legacyImported"/> records that the old wardrobe and creator choices were moved in, so that happens once.
     /// </summary>
     [Serializable]
-    public sealed class WearableSaveData
+    public sealed class WearableSaveData : Rootborn.Core.Save.IVersionedSave
     {
         public const int CurrentVersion = 1;
 
         public int version = CurrentVersion;
+
+        // 파일의 필드 이름은 Unity 판 그대로 소문자 version이다. 저장소의 버전 검사(더 새 파일 거절)는 이 인터페이스로 받는다.
+        int Rootborn.Core.Save.IVersionedSave.Version { get => version; set => version = value; }
+        int Rootborn.Core.Save.IVersionedSave.KnownVersion => CurrentVersion;
         public bool legacyImported;
         public WearableSaveEntry[] entries = Array.Empty<WearableSaveEntry>();
 
