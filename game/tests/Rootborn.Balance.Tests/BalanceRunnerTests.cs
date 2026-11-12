@@ -33,16 +33,52 @@ namespace Rootborn.Balance.Tests
                 Assert.That(run.Days.Count, Is.EqualTo(ShortDays), Name(run));
                 long net = run.Days.Sum(d => (long)d.Earned - d.Spent);
                 Assert.That(net, Is.EqualTo(run.Days[run.Days.Count - 1].WalletAtEnd - run.StartWallet), "번 것 − 쓴 것 = 지갑 변화: " + Name(run));
+                foreach (var d in run.Days)
+                    Assert.That(d.MinigameEarned, Is.InRange(0, d.Earned), "미니게임으로 번 것은 0 이상, 그날 번 것 이하: " + Name(run) + " " + d.Day + "일째");
             }
+            foreach (var run in ShortRuns.Value.Where(r => r.StrategyId == "one-part-time-work"))
+                Assert.That(run.Days.Sum(d => (long)d.MinigameEarned), Is.GreaterThan(0), "알바(미니게임) 판의 미니게임 수입이 0이다: " + Name(run));
         }
 
+        // 시작 지갑이 0이 아닌 판(Review Focus 2): 실제 판은 모두 지갑 0에서 시작하므로 시험용 시작 상태로 만든다.
         [Test]
         public void StartingMoneyIsNotCountedAsEarned()
         {
-            foreach (var run in ShortRuns.Value)
+            var config = Config.Value;
+            var strategy = config.Strategies.Single(s => s.Id == "one-part-time-work");
+            var work = RunTargets.All("part-time-work", TestWorld.Definitions)[0];
+            var run = BalanceRunner.Run(strategy, work, null, config, 3, new WalletStart(WalletStart.Balance));
+            TestContext.Out.WriteLine(Name(run) + " | 시작 지갑 " + run.StartWallet + " | " + string.Join(" / ", run.Days.Select(Line)));
+
+            Assert.That(run.StartWallet, Is.EqualTo(WalletStart.Balance));
+            var first = run.Days[0];
+            Assert.That(first.Earned, Is.GreaterThan(0), "첫날 번다");
+            Assert.That(first.Earned, Is.EqualTo(first.WalletAtEnd - run.StartWallet + first.Spent), "첫날 번 것에 시작 지갑이 들어갔다");
+            long net = run.Days.Sum(d => (long)d.Earned - d.Spent);
+            Assert.That(net, Is.EqualTo(run.Days[run.Days.Count - 1].WalletAtEnd - run.StartWallet), "번 것 − 쓴 것 = 지갑 변화");
+        }
+
+        // 새 게임을 저장한 뒤 세이브의 지갑을 고쳐 다시 읽는다 — 확인 대상이 아니라 시작 상태를 만드는 준비 단계다.
+        private sealed class WalletStart : IRunStart
+        {
+            public const int Balance = 777;
+            private readonly int _balance;
+            public WalletStart(int balance) { _balance = balance; }
+            public string Kind => "test-wallet";
+
+            public GameSession Start(Rootborn.Core.Save.ISaveStore store, object target)
             {
-                var first = run.Days[0];
-                Assert.That(first.Earned, Is.EqualTo(first.WalletAtEnd - run.StartWallet + first.Spent), "첫날 번 것에 시작 지갑이 들어갔다: " + Name(run));
+                var first = TestWorld.Start(store);
+                var facility = first.Definitions.All<Facility>().First();
+                Assert.That(first.VisitFacility(facility.Id), Is.True, "첫 저장(시설 방문)");
+                var name = Rootborn.Core.Save.SaveFileNames.AdultCareerSnapshot(TestWorld.Player);
+                Assert.That(store.TryRead<AdultCareerSnapshotSaveData>(TestWorld.Slot, name, out var snapshot), Is.True, "스냅샷이 있다");
+                snapshot.Wallet ??= new Rootborn.Core.Inventory.WalletSaveData { Version = Rootborn.Core.Inventory.WalletSaveData.KnownVersion };
+                snapshot.Wallet.Balance = _balance;
+                store.Write(TestWorld.Slot, name, snapshot);
+                var game = TestWorld.Start(store);
+                Assert.That(game.Wallet.Balance, Is.EqualTo(_balance), "고친 지갑으로 다시 읽혔다");
+                return game;
             }
         }
 
@@ -78,6 +114,7 @@ namespace Rootborn.Balance.Tests
         {
             Assert.That(Config.Value.Sleep, Is.EqualTo("finish-by-bedtime"));
             int bedtime = TestWorld.Start(new MemorySaveStore()).TimeRules.BedtimeMinutes;
+            Assert.That(ShortRuns.Value.SelectMany(r => r.Days).Count(d => d.Stop == StopReasons.Bedtime), Is.GreaterThanOrEqualTo(1), "취침으로 멈춘 날이 하나도 없으면 이 검사는 빈 통과다");
             foreach (var run in ShortRuns.Value)
                 foreach (var day in run.Days.Where(d => d.Stop == StopReasons.Bedtime))
                     Assert.That(day.EndedAtMinutes, Is.LessThanOrEqualTo(bedtime), Name(run) + " " + day.Day + "일째");
@@ -114,6 +151,8 @@ namespace Rootborn.Balance.Tests
                 TestContext.Out.WriteLine(Name(run) + " | " + string.Join(" / ", run.Days.Select(Line)));
                 Assert.That(run.Days.Any(d => d.AutoSkips > 0), Is.True,
                     "30일 안에 자동 넘기기가 한 번도 없었다: " + Name(run) + " | 마지막 날 " + Line(run.Days[run.Days.Count - 1]));
+                Assert.That(run.Days.Any(d => d.AutoSkips > 0 && d.MinigameEarned < d.Earned), Is.True,
+                    "자동 넘기기 수입이 미니게임 수입에 들어갔다: " + Name(run));
             }
         }
 

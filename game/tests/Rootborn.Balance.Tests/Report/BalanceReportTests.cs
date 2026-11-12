@@ -102,6 +102,76 @@ namespace Rootborn.Balance.Tests
         }
 
         [Test]
+        public void CsvColumnsSayWhatTheyHold()
+        {
+            BalanceReport.Write(_temp, Config.Value, ShortDays, ShortRuns.Value);
+            var days = Lines(Path.Combine(_temp, BalanceReport.DaysFile))[0].Split(',');
+            Assert.That(days, Does.Contain("minigame_earned"));
+            Assert.That(days, Does.Contain("other_items_held"));
+            Assert.That(days, Does.Not.Contain("other_items"));
+            var summary = Lines(Path.Combine(_temp, BalanceReport.SummaryFile))[0].Split(',');
+            Assert.That(summary, Does.Contain("payback_days").And.Contain("payback_gaps").And.Contain("recover_days"));
+            Assert.That(File.ReadAllText(Path.Combine(_temp, BalanceReport.ReportFile)), Does.Contain("other_items_held"), "범례에 그날 끝 개수라고 적는다");
+        }
+
+        // 이틀 연속 올린 판: 두 칸이 나란히, 셀 수 없는 것은 "구간 없음"으로.
+        [Test]
+        public void UpgradeColumnsShowRecoverDaysAndWhyPaybackIsMissing()
+        {
+            var strategy = Spec("s-up");
+            var run = Hand(strategy, "x", Day(1, 100), Day(2, 100, spent: 50, upgraded: true), Day(3, 100, spent: 50, upgraded: true), Day(4, 300));
+            BalanceReport.Write(_temp, With(strategy), 4, new[] { run });
+
+            var text = File.ReadAllText(Path.Combine(_temp, BalanceReport.ReportFile));
+            var table = Table(text, strategy.Id);
+            Assert.That(Cell(table, "x", BalanceReport.RecoverColumn), Is.EqualTo("1·1"));
+            Assert.That(Cell(table, "x", BalanceReport.PaybackColumn), Is.EqualTo(BalanceReport.NoSpanLabel + "·" + BalanceReport.NoSpanLabel));
+            Assert.That(text, Does.Contain(BalanceReport.NoSpanLabel + "`").And.Contain(BalanceReport.NoGainLabel + "`"), "범례에 두 글자를 적는다");
+        }
+
+        [Test]
+        public void RatioLineSaysAllEqual_AndIsLeftOutForASingleTarget()
+        {
+            var equal = Spec("s-equal");
+            var single = Spec("s-single");
+            var runs = new[]
+            {
+                Hand(equal, "a", Day(1, 50)), Hand(equal, "b", Day(1, 50)),
+                Hand(single, "only", Day(1, 70)),
+            };
+            BalanceReport.Write(_temp, With(equal, single), 1, runs);
+            var text = File.ReadAllText(Path.Combine(_temp, BalanceReport.ReportFile));
+            Assert.That(Section(text, equal.Id), Does.Contain("모두 같음 (50.0)").And.Not.Contain("÷"));
+            Assert.That(Section(text, single.Id), Does.Not.Contain("하루 수입 가장").And.Not.Contain("모두 같음"));
+        }
+
+        [Test]
+        public void StrategyNoteIsPrintedUnderItsDescription()
+        {
+            var noted = Spec("s-noted");
+            noted.Note = "설명 한 줄이다.";
+            BalanceReport.Write(_temp, With(noted), 1, new[] { Hand(noted, "a", Day(1, 10)) });
+            Assert.That(Section(File.ReadAllText(Path.Combine(_temp, BalanceReport.ReportFile)), noted.Id), Does.Contain("설명 한 줄이다."));
+        }
+
+        // 표의 모든 줄에서 값이 없는 칸은 뺀다(대상 종류와 무관하게).
+        [Test]
+        public void ColumnsWithNoValueInAnyRowAreLeftOut()
+        {
+            var config = Config.Value;
+            BalanceReport.Write(_temp, config, ShortDays, ShortRuns.Value);
+            var text = File.ReadAllText(Path.Combine(_temp, BalanceReport.ReportFile));
+            foreach (var strategy in config.Strategies)
+            {
+                var table = Table(text, strategy.Id);
+                for (int c = 2; c < table[0].Length; c++)
+                    Assert.That(table.Skip(2).Any(row => row[c] != "-"), Is.True, strategy.Id + ": 값이 하나도 없는 칸이 남았다: " + table[0][c]);
+            }
+            Assert.That(Table(text, "one-part-time-work")[0].Any(h => h.Contains("레벨")), Is.False, "알바 표에 레벨 칸이 없다");
+            Assert.That(text, Does.Contain(BalanceReport.DroppedColumnsLine), "뺀 칸을 적는다");
+        }
+
+        [Test]
         public void BadDaysVariableFailsAndNamesIt()
         {
             var before = Environment.GetEnvironmentVariable(BalanceReport.DaysVariable);
@@ -142,6 +212,45 @@ namespace Rootborn.Balance.Tests
                 Environment.SetEnvironmentVariable(BalanceReport.DaysVariable, days);
                 Environment.SetEnvironmentVariable(BalanceReport.OutVariable, output);
             }
+        }
+
+        // ---- 손으로 만든 판 ----
+
+        private static StrategySpec Spec(string id)
+            => new StrategySpec { Id = id, Each = "facility", Start = "adult", Scored = false, Do = new[] { "best-facility-work" } };
+
+        private static BalanceConfig With(params StrategySpec[] strategies)
+            => new BalanceConfig { Days = 1, Sleep = Config.Value.Sleep, Tiers = Config.Value.Tiers, Strategies = strategies };
+
+        private static DayRecord Day(int day, int earned, int spent = 0, bool upgraded = false)
+            => new DayRecord { Day = day, Earned = earned, MinigameEarned = earned, Spent = spent, Upgraded = upgraded, Actions = 1, Stop = StopReasons.Bedtime };
+
+        private static RunResult Hand(StrategySpec strategy, string target, params DayRecord[] days)
+        {
+            var run = new RunResult { StrategyId = strategy.Id, TargetId = target, TierId = "", StartDay = 1 };
+            run.Days.AddRange(days);
+            return run;
+        }
+
+        // 그 전략 제목부터 다음 전략 제목 앞까지.
+        private static string Section(string text, string strategyId)
+        {
+            int at = text.IndexOf("\n## " + strategyId + "\n", StringComparison.Ordinal);
+            Assert.That(at, Is.GreaterThanOrEqualTo(0), "전략 제목이 없다: " + strategyId);
+            int next = text.IndexOf("\n## ", at + 1, StringComparison.Ordinal);
+            return next < 0 ? text.Substring(at) : text.Substring(at, next - at);
+        }
+
+        // 그 전략 표의 칸들(머리 줄, 구분 줄, 줄들).
+        private static List<string[]> Table(string text, string strategyId)
+            => Section(text, strategyId).Split('\n').Where(l => l.StartsWith("|"))
+                .Select(l => l.Trim('|').Split(" | ").Select(c => c.Trim()).ToArray()).ToList();
+
+        private static string Cell(List<string[]> table, string target, string column)
+        {
+            int c = Array.IndexOf(table[0], column);
+            Assert.That(c, Is.GreaterThanOrEqualTo(0), "칸이 없다: " + column + " | " + string.Join(", ", table[0]));
+            return table.Skip(2).Single(row => row[0] == target)[c];
         }
 
         // "\n"으로만 끊는다. 끝의 빈 조각은 줄이 아니다.

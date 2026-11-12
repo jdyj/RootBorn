@@ -26,6 +26,24 @@ namespace Rootborn.Balance.Tests
             AssertFails(config, "sleep-nope", withStrategy: false); // 잠은 전략이 아니라 설정 전체의 값이다
         }
 
+        [Test]
+        public void BandsAreNotCheckedYet_SoANonEmptyListFails()
+        {
+            var config = Config(_ => { });
+            config.BandCount = 1;
+            var error = Assert.Throws<InvalidOperationException>(() => config.Validate());
+            Assert.That(error.Message, Does.Contain("bands"));
+            Assert.That(BalanceConfig.Read().BandCount, Is.Zero, "올린 설정의 bands는 비어 있다");
+        }
+
+        [Test]
+        public void StrategyNoteIsOptional()
+        {
+            var config = BalanceConfig.Read();
+            Assert.That(config.Strategies.Any(s => !string.IsNullOrEmpty(s.Note)), Is.True, "설명 한 줄(note)을 가진 전략이 있다");
+            Assert.That(config.Strategies.Any(s => s.Note == null), Is.True, "note가 없는 전략은 null이다");
+        }
+
         private static void AssertFails(BalanceConfig config, string name, bool withStrategy)
         {
             var error = Assert.Throws<InvalidOperationException>(() => config.Validate());
