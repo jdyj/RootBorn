@@ -75,9 +75,11 @@ namespace Rootborn.Game
             foreach (var work in facility.Works)
             {
                 if (work == null) continue;
+                // 명령(CompleteFacilityWork)과 같은 공간 이득을 넘겨, 이득 때문에 는 보상이 안 들어가면 조회도 같은 이유로 거절한다.
+                var extras = WorkExtrasFor(work.Id);
                 works.Add(new FacilityWorkAvailability(work,
-                    _adultService.CanWork(work, Student, Adult, inventory),
-                    _adultService.CanAutoSkip(work, Student, Adult, inventory)));
+                    _adultService.CanWork(work, Student, Adult, inventory, extras),
+                    _adultService.CanAutoSkip(work, Student, Adult, inventory, extras)));
             }
 
             _definitions.TryGet<CareerPractice>(facility.PracticeId, out var practice);

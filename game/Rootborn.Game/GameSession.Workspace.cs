@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using Rootborn.Core.Careers;
 using Rootborn.Core.Placement;
 using Rootborn.Core.Save;
@@ -172,7 +171,7 @@ namespace Rootborn.Game
 
         /// <summary>
         /// 지금 열린 일터에 템플릿을 돈 내고 깐다. 놓인 가구를 모두 바꾸고(물건이 든 상자는 남는다) 같은 요청은 한 번만 된다.
-        /// 적용되면 배치(적용 안에서)·진행·가방을 저장한다. 돈을 같이 쓰는 방이면 다른 돈 쓰는 명령처럼 방의 허락을 기다린다.
+        /// 적용되면 배치·진행·가방을 한 저장 묶음으로 쓴다. 돈을 같이 쓰는 방이면 다른 돈 쓰는 명령처럼 방의 허락을 기다린다.
         /// </summary>
         public WorkspaceResultKind ApplyTemplate(string templateId, string requestId)
         {
@@ -227,19 +226,17 @@ namespace Rootborn.Game
             if (topic == GameChangeTopics.Furniture || topic == GameChangeTopics.Workspace) _workspaceScores.Clear();
         }
 
+        // 일터 배치의 commit은 파일을 바로 쓰지 않고 표시만 세운다. 바뀐 배치는 명령 끝의 Save() 묶음이 가방·일터 진행과 함께 쓴다
+        // (템플릿의 돈·적용 기록과 배치가 따로 저장되지 않게). 그래서 일터를 바꾸는 명령은 모두 끝에 Save()를 부른다.
+        // 묶음 쓰기가 실패해도 돌던 세션의 메모리는 되돌리지 않는다(다른 명령의 저장 실패와 같다). 디스크는 셋이 함께 바뀌거나 그대로다.
         private bool CommitWorkspaceLayout(FurniturePlacementSaveData[] records)
         {
             if (ActiveWorkspace == null) return false;
-            try
-            {
-                WorkspaceSaveFiles.SaveLayout(_store, SaveSlot, ActiveWorkspace.SurfaceId, PlayerId, records);
-                return true;
-            }
-            catch (IOException) { return false; }
-            catch (UnauthorizedAccessException) { return false; }
+            _houseLayoutDirty = true;
+            return true;
         }
 
-        // 저장 묶음 안에서: 상자 내용물이 바뀐 일터 배치를 같은 묶음으로 쓴다.
+        // 저장 묶음 안에서: 바뀐 일터 배치(가구 놓기·옮기기·치우기·템플릿, 상자 내용물)를 같은 묶음으로 쓴다.
         private void SaveWorkspaceLayout(ISaveStore batch)
             => WorkspaceSaveFiles.SaveLayout(batch, SaveSlot, ActiveWorkspace.SurfaceId, PlayerId, House.BuildSaveRecords());
 

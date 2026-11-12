@@ -380,6 +380,26 @@ namespace Rootborn.Core.Tests
         }
 
         [Test]
+        public void CanWorkAndCanAutoSkip_CountTheSpaceBonus_LikeTheCommand()
+        {
+            // 만점 보상: 레벨 비율 100%면 동전 20, 이득 +50%면 30. 이득 없는 20만 들어가게 채운다.
+            var f = new Fixture(withMinigame: false); f.Transition("transition");
+            f.Seed(2, 2, 2);
+            for (int i = 0; i < Fixture.MaxSlots - 2; i++) f.Slots.Add("full-" + i, 1);
+            f.Slots.Add(Fixture.Equipment);
+            f.Slots.Add(Fixture.Coin, 999 - 20);
+            var bonus = new WorkExtras(50, 0, null);
+            Assert.That(f.Service.CanWork(f.FacilityWork, f.Student, f.Progress, f.Inventory), Is.EqualTo(AdultCareerResultKind.Applied), "준비: 이득 없는 보상은 들어간다");
+            Assert.That(f.Service.CanAutoSkip(f.FacilityWork, f.Student, f.Progress, f.Inventory), Is.EqualTo(AdultCareerResultKind.Applied));
+
+            Assert.That(f.Service.CanWork(f.FacilityWork, f.Student, f.Progress, f.Inventory, bonus), Is.EqualTo(AdultCareerResultKind.InsufficientCapacity));
+            Assert.That(f.Service.CanAutoSkip(f.FacilityWork, f.Student, f.Progress, f.Inventory, bonus), Is.EqualTo(AdultCareerResultKind.InsufficientCapacity));
+            Assert.That(f.Service.TryCompleteWork(f.FacilityWork, f.Student, f.Progress, f.Inventory, "job", 100, false, bonus).Kind, Is.EqualTo(AdultCareerResultKind.InsufficientCapacity), "명령도 같은 이유");
+            Assert.That(f.Service.TryCompleteWork(f.FacilityWork, f.Student, f.Progress, f.Inventory, "skip", 100, true, bonus).Kind, Is.EqualTo(AdultCareerResultKind.InsufficientCapacity));
+            Assert.That(f.Inventory.CountOf(Fixture.Coin), Is.EqualTo(999 - 20), "가방 그대로");
+        }
+
+        [Test]
         public void CanWork_IgnoresAReservationLeftFromAnEarlierDay_LikeTheCommand()
         {
             var f = new Fixture(); f.Transition("transition"); f.Reserve("attempt-1");

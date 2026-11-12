@@ -184,6 +184,21 @@ namespace Rootborn.Data.Tests
         }
 
         [Test]
+        public void FurnitureCategories_DoNotDifferOnlyInCase()
+        {
+            // 분류는 Ordinal로 견준다(성질 규칙, 팔레트 정렬). chair/Chair처럼 대소문자만 다르면 같은 뜻의 가구가 둘로 갈린다.
+            var clashes = _result.Definitions.All<FurnitureDefinition>()
+                .Select(f => f.Category)
+                .Where(c => !string.IsNullOrEmpty(c))
+                .Distinct(System.StringComparer.Ordinal)
+                .GroupBy(c => c, System.StringComparer.OrdinalIgnoreCase)
+                .Where(g => g.Count() > 1)
+                .Select(g => string.Join("/", g))
+                .ToArray();
+            Assert.That(clashes, Is.Empty, "대소문자만 다른 가구 분류: " + string.Join(", ", clashes));
+        }
+
+        [Test]
         public void AnActivity_CarriesItsCostsAndEffects()
         {
             var activity = _result.Definitions.Get<LifeActivity>("practice.chef");

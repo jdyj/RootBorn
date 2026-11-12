@@ -302,7 +302,7 @@
     "asset": "Assets/Data/Interiors/Furniture/Furniture_Chair_Black.asset",
     "stableId": "chair.black",
     "displayName": "Black Chair",
-    "category": "chair",
+    "category": "Chair",
     "allowedSurfaceIds": [
       "house",
       "test-surface",
@@ -336,7 +336,7 @@
     "asset": "Assets/Data/Interiors/Furniture/Furniture_Quest_Reward_Chair.asset",
     "stableId": "chair.quest-reward",
     "displayName": "Quest Reward Chair",
-    "category": "chair",
+    "category": "Chair",
     "allowedSurfaceIds": [
       "house",
       "test-surface",
@@ -481,7 +481,7 @@
     "asset": "Assets/Data/Interiors/Furniture/Furniture_Desk_Basic.asset",
     "stableId": "desk.basic",
     "displayName": "Basic Desk",
-    "category": "desk",
+    "category": "Desk",
     "allowedSurfaceIds": [
       "house",
       "test-surface",
@@ -515,7 +515,7 @@
     "asset": "Assets/Data/Interiors/Furniture/Furniture_Desk_Large.asset",
     "stableId": "desk.large",
     "displayName": "Large Desk",
-    "category": "desk",
+    "category": "Desk",
     "allowedSurfaceIds": [
       "house",
       "test-surface",
@@ -63246,7 +63246,7 @@
     "stableId": "story.study-desk",
     "displayName": "나의 조립 책상",
     "displayNameKey": "dream.furniture.study-desk.name",
-    "category": "desk",
+    "category": "Desk",
     "allowedSurfaceIds": [
       "house"
     ],

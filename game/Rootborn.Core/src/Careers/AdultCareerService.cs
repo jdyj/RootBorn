@@ -172,8 +172,9 @@ namespace Rootborn.Core.Careers
 
         /// <summary>
         /// 이 일을 직접 할 수 있는지(Unity CanWork). 미니게임이 있는 일은 예약(TryReserveWork)의 판정, 없는 일은 바로 하기(TryCompleteWork, 만점 보상 기준)의 판정이다.
+        /// extras는 명령에 넘길 것과 같은 공간 이득이다 — 바로 하는 일은 이득을 얹은 만점 보상이 가방에 들어가는지 본다(미니게임 일은 가방을 보지 않는다).
         /// </summary>
-        public AdultCareerResultKind CanWork(FacilityWork work, StudentLifeProgress student, AdultCareerProgress adult, ICareerInventory inventory)
+        public AdultCareerResultKind CanWork(FacilityWork work, StudentLifeProgress student, AdultCareerProgress adult, ICareerInventory inventory, WorkExtras extras = default)
         {
             if (_executing || !SameIdentity(student, adult)) return AdultCareerResultKind.InvalidRequest;
             if (work != null && work.Minigame != null)
@@ -184,14 +185,17 @@ namespace Rootborn.Core.Careers
             }
 
             if (inventory == null) return AdultCareerResultKind.InvalidRequest;
-            return CheckCompleteWork(work, student, adult, inventory, 100, false, 0, out _);
+            return CheckCompleteWork(work, student, adult, inventory, 100, false, extras.RewardPercentBonus, out _);
         }
 
-        /// <summary>이 일을 자동 완료할 수 있는지(Unity CanAutoSkip: 자동 완료 조건 + 만점 보상이 가방에 들어가는지).</summary>
-        public AdultCareerResultKind CanAutoSkip(FacilityWork work, StudentLifeProgress student, AdultCareerProgress adult, ICareerInventory inventory)
+        /// <summary>
+        /// 이 일을 자동 완료할 수 있는지(Unity CanAutoSkip: 자동 완료 조건 + 만점 보상이 가방에 들어가는지).
+        /// extras는 명령에 넘길 것과 같은 공간 이득이다(이득을 얹은 만점 보상으로 가방을 본다).
+        /// </summary>
+        public AdultCareerResultKind CanAutoSkip(FacilityWork work, StudentLifeProgress student, AdultCareerProgress adult, ICareerInventory inventory, WorkExtras extras = default)
         {
             if (_executing || !SameIdentity(student, adult) || inventory == null) return AdultCareerResultKind.InvalidRequest;
-            return CheckCompleteWork(work, student, adult, inventory, 100, true, 0, out _);
+            return CheckCompleteWork(work, student, adult, inventory, 100, true, extras.RewardPercentBonus, out _);
         }
 
         /// <summary>지금 시설을 한 단계 올릴 수 있는지(Unity CanUpgrade). 월드 상태는 보지 않는다(올릴 때 깃발을 켜기만 한다).</summary>

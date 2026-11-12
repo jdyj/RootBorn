@@ -129,11 +129,14 @@ namespace Rootborn.Game
         // 남의 일터는 바꾸지 못한다.
         private bool MayChangeOpenLayout() => ActiveWorkspace == null || OwnsActiveWorkspace;
 
-        // 옮기기·치우기는 배치 기록만 바꾸고 그 기록은 House가 바로 쓴다(CommitHouseLayout·CommitWorkspaceLayout). 여기서는 알리기만 한다.
+        // 옮기기·치우기는 배치 기록만 바꾼다. 집은 그 기록을 House가 바로 쓰므로(CommitHouseLayout) 알리기만 한다.
+        // 일터는 commit이 표시만 세우므로(CommitWorkspaceLayout) 저장 묶음으로 쓰고 알린다.
         private bool FurnitureChanged(bool changed)
         {
-            if (changed) Notify(null, GameChangeTopics.Furniture, ActiveWorkspace != null ? GameChangeTopics.Workspace : null);
-            return changed;
+            if (!changed) return false;
+            if (ActiveWorkspace != null) SaveAndNotify(null, GameChangeTopics.Furniture, GameChangeTopics.Workspace);
+            else Notify(null, GameChangeTopics.Furniture, null);
+            return true;
         }
 
         private bool CommitHouseLayout(FurniturePlacementSaveData[] records)

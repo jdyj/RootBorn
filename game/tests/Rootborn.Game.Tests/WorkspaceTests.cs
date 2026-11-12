@@ -214,6 +214,41 @@ namespace Rootborn.Game.Tests
         }
 
         [Test]
+        public void NotOwner_CannotMoveRemoveOrClear_AndTheLayoutStays()
+        {
+            // 남의 일터에 저장된 배치가 있다(예: 그 시설에서 일하던 슬롯을 학생으로 되돌린 것과 같은 상태 — 파일을 직접 써서 준비한다).
+            using var saves = new TempSaves();
+            var student = TestWorld.Start(saves.Store);
+            student.VisitLocation("location.town-square"); // 첫 저장
+            var grid = WorkspaceRoom.GridFor(student.Definitions, ChefWorkspace);
+            var records = new[]
+            {
+                new FurniturePlacementSaveData { FurnitureId = Plant, SurfaceId = Chef.SurfaceId, AnchorX = grid.Spawn.X + 1, AnchorY = grid.Spawn.Y + 1, Direction = FurniturePlacementDirection.North },
+                new FurniturePlacementSaveData { FurnitureId = Plant, SurfaceId = Chef.SurfaceId, AnchorX = grid.Spawn.X + 3, AnchorY = grid.Spawn.Y + 1, Direction = FurniturePlacementDirection.North },
+            };
+            WorkspaceSaveFiles.SaveLayout(saves.Store, TestWorld.Slot, Chef.SurfaceId, TestWorld.Player, records);
+            byte[] fileBefore = System.IO.File.ReadAllBytes(System.IO.Path.Combine(saves.Path, TestWorld.Slot, SaveFileNames.WorkspaceLayout(Chef.SurfaceId, TestWorld.Player)));
+
+            student = TestWorld.Start(saves.Store);
+            EnterChef(student);
+            Assert.That(student.OwnsActiveWorkspace, Is.False);
+            var placed = student.House.Placed.Select(p => (p.Definition.StableId, p.Anchor)).ToArray();
+            Assert.That(placed.Length, Is.EqualTo(2), "준비: 남의 일터에 놓인 가구가 보인다");
+            var first = student.House.Placed[0];
+            Assert.That(WorkspaceRoom.TryFreeAnchor(student, Plant, out var free), Is.True);
+
+            Assert.That(student.MoveFurniture(first.InstanceId, free, FurniturePlacementDirection.North), Is.False, "옮기기 거절");
+            Assert.That(student.RemoveFurniture(first.InstanceId), Is.False, "치우기 거절");
+            Assert.That(student.ClearFurniture(), Is.False, "다 치우기 거절");
+            Assert.That(student.House.Placed.Select(p => (p.Definition.StableId, p.Anchor)), Is.EqualTo(placed), "배치 그대로");
+            Assert.That(System.IO.File.ReadAllBytes(System.IO.Path.Combine(saves.Path, TestWorld.Slot, SaveFileNames.WorkspaceLayout(Chef.SurfaceId, TestWorld.Player))), Is.EqualTo(fileBefore),
+                "배치 파일도 그대로");
+            var again = TestWorld.Start(saves.Store);
+            EnterChef(again);
+            Assert.That(again.House.Placed.Select(p => (p.Definition.StableId, p.Anchor)), Is.EqualTo(placed));
+        }
+
+        [Test]
         public void AtCapacity_PlaceRefused_MoveAndRemoveAllowed()
         {
             using var saves = new TempSaves();
@@ -658,6 +693,139 @@ namespace Rootborn.Game.Tests
             Assert.That(cleared.ClearFurniture(), Is.True);
             Assert.That(cleared.CompleteFacilityWork(ChefWork, "work:overflow", 100, autoSkip: false).Kind, Is.EqualTo(AdultCareerResultKind.Applied));
             Assert.That(Counts(cleared), Is.EqualTo((before.Allowance + plain.Allowance, before.Materials + plain.Materials)));
+        }
+
+        // ---------- 시설 조회도 공간 이득을 본다(설계 2026-11-13 4절) ----------
+
+        // 요리사 2단계 성인, 첫 일 숙련·성공을 채워 자동 넘기기 조건을 맞춘다(AdultAutoCompleteTests와 같은 준비). 일터에 아늑한 가구를 놓아 이득을 만든다.
+        private static (int Allowance, int Materials) PrepareBonusOverflow(TempSaves saves, out int bonus)
+        {
+            TestWorld.Start(saves.Store).TalkTo("npc.first-guide"); // 첫 저장
+            SaveEdits.EditSnapshot(saves.Store, s =>
+            {
+                SaveEdits.MakeChefCandidateReady(s);
+                s.Adult.FacilityId = ChefFacility;
+                s.Adult.FacilityLevel = 2;
+                s.Adult.Works = new[] { new FacilityWorkProgressSaveData { WorkId = ChefWork, Mastery = 100, SuccessfulCompletions = 5 } };
+            });
+            var decorating = TestWorld.Start(saves.Store);
+            EnterChef(decorating);
+            PlaceCozyUntilBonus(decorating);
+            bonus = decorating.WorkExtrasFor(ChefWork).RewardPercentBonus;
+            int levelPercent = LevelRewardPercent(decorating);
+            var plain = RewardsAt(levelPercent);
+            var bonused = RewardsAt(levelPercent + bonus);
+            Assert.That(bonus, Is.GreaterThan(0), "준비: 꾸며서 이득이 생겼다");
+            Assert.That(bonused.Allowance + bonused.Materials, Is.GreaterThan(plain.Allowance + plain.Materials), "준비: 이득이 보상 수를 늘린다");
+            FillSoOnlyThePlainRewardFits(saves, plain);
+            return plain;
+        }
+
+        // 이득 없는 보상이 꼭 들어갈 만큼만 남긴다(BonusOverflowsInventory_CommandRefusesAndChangesNothing와 같은 방법).
+        private static void FillSoOnlyThePlainRewardFits(TempSaves saves, (int Allowance, int Materials) plain)
+        {
+            var stone = TestWorld.Definitions.Get<Rootborn.Core.Inventory.ItemDefinition>("Stone");
+            var materials = TestWorld.Definitions.Get<Rootborn.Core.Inventory.ItemDefinition>(Materials);
+            SaveEdits.EditSnapshot(saves.Store, s =>
+            {
+                s.Wallet = new Rootborn.Core.Inventory.WalletSaveData { Version = Rootborn.Core.Inventory.WalletSaveData.KnownVersion, Balance = Rootborn.Core.Inventory.PersonalWallet.MaxBalance - plain.Allowance };
+                s.Inventory ??= new Rootborn.Core.Inventory.PlayerInventorySaveData();
+                s.Inventory.Items = new[]
+                {
+                    new Rootborn.Core.Inventory.PlayerInventoryItemSaveData { ItemId = "Stone", Count = stone.MaxStack * (Rootborn.Core.Inventory.ItemInventory.MaxSlots - 1) },
+                    new Rootborn.Core.Inventory.PlayerInventoryItemSaveData { ItemId = Materials, Count = materials.MaxStack - plain.Materials },
+                };
+            });
+        }
+
+        [Test]
+        public void FacilityStatus_AutoSkip_CountsTheSpaceBonus_LikeTheCommand()
+        {
+            using var saves = new TempSaves();
+            PrepareBonusOverflow(saves, out _);
+            var game = TestWorld.Start(saves.Store);
+            Assert.That(game.WorkExtrasFor(ChefWork).RewardPercentBonus, Is.GreaterThan(0), "준비: 저장된 배치의 이득");
+            var before = Counts(game);
+            var adult = game.Adult.ToSaveData();
+            int timePoints = game.Student.TimePointsRemaining;
+
+            var status = game.FacilityStatus(ChefFacility).Works.Single(w => w.Work.Id == ChefWork);
+            Assert.That(status.AutoSkip, Is.EqualTo(AdultCareerResultKind.InsufficientCapacity), "이득을 얹은 보상이 안 들어가니 단추를 끈다");
+            Assert.That(game.CompleteFacilityWork(ChefWork, "auto:overflow", 100, autoSkip: true).Kind, Is.EqualTo(status.AutoSkip), "명령도 같은 이유");
+            Assert.That(Counts(game), Is.EqualTo(before), "가방 그대로");
+            Assert.That(game.Student.TimePointsRemaining, Is.EqualTo(timePoints));
+            Assert.That(game.Adult.GetSuccessfulCompletions(ChefWorkDefinition), Is.EqualTo(adult.Works.Single(w => w.WorkId == ChefWork).SuccessfulCompletions), "진행 그대로");
+            Assert.That(game.Adult.Reputation, Is.EqualTo(adult.Reputation));
+
+            // 다 치우면 이득이 없어 보상이 들어간다: 조회와 명령이 함께 된다.
+            var cleared = TestWorld.Start(saves.Store);
+            EnterChef(cleared);
+            Assert.That(cleared.ClearFurniture(), Is.True);
+            Assert.That(cleared.FacilityStatus(ChefFacility).Works.Single(w => w.Work.Id == ChefWork).AutoSkip, Is.EqualTo(AdultCareerResultKind.Applied));
+            Assert.That(cleared.CompleteFacilityWork(ChefWork, "auto:overflow", 100, autoSkip: true).Kind, Is.EqualTo(AdultCareerResultKind.Applied));
+        }
+
+        [Test]
+        public void MinigameWork_RewardNoLongerFitsAtSettle_IsRefused_AndTheReservationStays()
+        {
+            // 지금 동작을 고정한다(규칙은 바꾸지 않는다): 미니게임 일은 예약 때 이득을 얹은 비율을 적어 두고 정산 때 가방을 본다.
+            // 판을 끝냈는데 보상이 안 들어가면 정산이 거절되고 아무것도 바뀌지 않으며 예약은 남는다 — 가방을 비우면 같은 요청으로 다시 정산된다.
+            using var saves = new TempSaves();
+            var plain = PrepareBonusOverflow(saves, out int bonus);
+            var game = TestWorld.Start(saves.Store);
+            var direct = game.FacilityStatus(ChefFacility).Works.Single(w => w.Work.Id == ChefWork).Direct;
+            Assert.That(direct, Is.EqualTo(AdultCareerResultKind.Applied), "미니게임 일의 예약은 가방을 보지 않는다(지금 동작)");
+            Assert.That(game.ReserveFacilityWork(ChefWork, "work:overflow", 4).Kind, Is.EqualTo(AdultCareerResultKind.Applied));
+            var before = Counts(game);
+            int reputation = game.Adult.Reputation;
+            int successes = game.Adult.GetSuccessfulCompletions(ChefWorkDefinition);
+
+            Assert.That(game.SettleFacilityWork("work:overflow", 100).Kind, Is.EqualTo(AdultCareerResultKind.InsufficientCapacity));
+            Assert.That(Counts(game), Is.EqualTo(before), "가방 그대로");
+            Assert.That(game.Adult.Reputation, Is.EqualTo(reputation));
+            Assert.That(game.Adult.GetSuccessfulCompletions(ChefWorkDefinition), Is.EqualTo(successes));
+            Assert.That(game.Adult.PendingWork?.RequestId, Is.EqualTo("work:overflow"), "예약은 남는다");
+            var reloaded = TestWorld.Start(saves.Store);
+            Assert.That(reloaded.Adult.PendingWork?.RequestId, Is.EqualTo("work:overflow"), "다시 읽어도 예약이 남는다");
+
+            // 가방을 비우면 같은 요청으로 정산되고, 보상은 예약 때의 비율(레벨 + 그때의 이득)이다.
+            SaveEdits.EditSnapshot(saves.Store, s =>
+            {
+                s.Inventory.Items = System.Array.Empty<Rootborn.Core.Inventory.PlayerInventoryItemSaveData>();
+                s.Wallet = new Rootborn.Core.Inventory.WalletSaveData { Version = Rootborn.Core.Inventory.WalletSaveData.KnownVersion, Balance = 0 };
+            });
+            var freed = TestWorld.Start(saves.Store);
+            var freedBefore = Counts(freed);
+            Assert.That(freed.SettleFacilityWork("work:overflow", 100).Kind, Is.EqualTo(AdultCareerResultKind.Applied));
+            var paid = (Counts(freed).Allowance - freedBefore.Allowance, Counts(freed).Materials - freedBefore.Materials);
+            Assert.That(paid.Item2, Is.EqualTo(RewardsAt(LevelRewardPercent(freed) + bonus).Materials));
+            Assert.That(freed.SettleFacilityWork("work:overflow", 100).Kind, Is.EqualTo(AdultCareerResultKind.DuplicateRequest), "한 번만");
+        }
+
+        [Test]
+        public void ProgressFileDeleted_SlotOpens_LayoutStays_AndTheDefaultTemplateIsNotSeededAgain()
+        {
+            // 지금 동작을 고정한다(결정 대기 21번의 추천, 설계 2026-11-13 6절): 일터 진행 파일만 없는 슬롯은 손상으로 알리지 않고 연다.
+            // 배치 파일이 있으면 기본 템플릿을 다시 깔지 않는다 — 꾸민 배치든 다 치운 빈 배치든.
+            using var saves = new TempSaves();
+            var game = ChefSetup.Adult(saves);
+            EnterChef(game);
+            Assert.That(game.PlaceFurniture(FreeDesk, WorkspaceRoom.FreeAnchor(game, FreeDesk), FurniturePlacementDirection.North), Is.True);
+            var decorated = game.House.Placed.Select(p => (p.Definition.StableId, p.Anchor)).ToArray();
+            Assert.That(decorated.Length, Is.EqualTo(BasicTemplate.Placements.Count + 1), "준비: 기본 템플릿 + 책상");
+
+            saves.Store.Delete(TestWorld.Slot, SaveFileNames.WorkspaceProgress(TestWorld.Player));
+            GameSession opened = null;
+            Assert.DoesNotThrow(() => opened = TestWorld.Start(saves.Store), "진행 파일만 없는 슬롯이 열린다");
+            EnterChef(opened);
+            Assert.That(opened.House.Placed.Select(p => (p.Definition.StableId, p.Anchor)), Is.EqualTo(decorated), "놓인 배치는 그대로, 다시 깔지 않는다");
+
+            Assert.That(opened.ClearFurniture(), Is.True);
+            saves.Store.Delete(TestWorld.Slot, SaveFileNames.WorkspaceProgress(TestWorld.Player));
+            var empty = TestWorld.Start(saves.Store);
+            EnterChef(empty);
+            Assert.That(empty.House.Placed, Is.Empty, "다 치운 빈 배치도 그대로");
+            Assert.That(TestWorld.Start(saves.Store).WorkspaceOf(ChefFacility).Placed, Is.EqualTo(0), "다시 읽어도 빈 채");
         }
 
         [Test]
