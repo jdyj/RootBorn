@@ -19,7 +19,7 @@
 | `game/tests/Rootborn.Data.Tests` | 정의 로더, 실제 `data/` 전체 읽기(`RealDataTests`), 세이브 저장소, 옛 세이브 고정 파일 | 자동 테스트 |
 | `game/tests/Rootborn.World.Tests` | 맵 만들기, 새 맵 검사(`MapContractTests`), 메인 체인 지점까지 칸 단위 걷기(`MainChainWalkTests`) | 자동 테스트(화면 근거 아님) |
 | `game/tests/Rootborn.Game.Tests` | `GameSession` 명령만으로 흐름(메인 체인, 성인기, 보상 한 번, 이어 하기). 실제 `data/`, 임시 폴더 저장소 | 자동 테스트(화면 근거 아님) |
-| `game/tests/Rootborn.Balance.Tests` | 수치 균형: 전략대로 `GameSession` 명령으로 여러 날 돌려 수입을 잰다(빠른 검사 + 손으로 도는 전체 보고 `output/balance/`). 가정을 넣은 계산 | 자동 테스트(실제 플레이 아님) |
+| `game/tests/Rootborn.Balance.Tests` | 수치 균형: 전략대로 `GameSession` 명령으로 여러 날 돌려 수입을 잰다(빠른 검사 + 손으로 도는 전체 보고 `output/balance/`, 모든 경우 훑기 `output/balance/sweep/`). 가정을 넣은 계산 | 자동 테스트(실제 플레이 아님) |
 | `game/tests/Rootborn.Ui.Tests` | 배치, 포인터 판정, 포커스, 부품 | 자동 테스트 |
 | `game/tests/Rootborn.Screens.Tests` | 창 없이 화면을 눌러 보기, 화면 쌓기, 모든 언어의 문구 키 | 자동 테스트(화면 근거 아님) |
 | `game/tests/Rootborn.Host.Tests` | 실제 창과 게임 루프를 한 프레임씩 돌리며 `PlayerDriver`로 키·포인터를 넣고 스크린샷 | 장치 이벤트 주입(OS 입력 계층 미확인) |

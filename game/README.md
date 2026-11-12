@@ -53,6 +53,7 @@ dotnet run --project game/Rootborn.Host -- --save-root <세이브 폴더> --slot
 손으로만 도는 테스트(`[Explicit]`, 평소 실행에서 건너뜀): Host `ThemeConversionWriter`(테마 파일을 다시 쓴다), Simulation `ReplayFromEnvironment`(`ROOTBORN_SIM_REPLAY`),
 Server `ServerLoadMeasureTests`(부하 측정)·`DeployedServerSharingTests`(배포 폴더가 있어야 한다 — `Tools/publish/verify.sh --server`가 돌린다).
 Balance `WriteFullReport`(전체 균형 보고): `dotnet test game/tests/Rootborn.Balance.Tests --filter "FullyQualifiedName~WriteFullReport"`, 원격은 `bash Scripts/remote-test/run.sh HEAD -- game/tests/Rootborn.Balance.Tests --filter "FullyQualifiedName~WriteFullReport"`(결과의 `output/balance/`로 받는다).
+Balance `WriteSweepReport`(모든 경우 훑기 — `money-balance.json` `axes`의 곱을 병렬로 `axes.days`일씩, `output/balance/sweep/`에 `sweep.csv`·`sweep-report.md`, 끝까지 돌지 못한 판이 있으면 파일을 쓴 뒤 실패): 원격 `bash Scripts/remote-test/run.sh HEAD -- game/tests/Rootborn.Balance.Tests --filter "FullyQualifiedName~WriteSweepReport"`(Strix Halo에서 몇 분, 결과의 `output/balance/sweep/`로 받는다).
 
 인자와 환경 변수(인자가 먼저다):
 
