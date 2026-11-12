@@ -1,5 +1,6 @@
 using System.Linq;
 using NUnit.Framework;
+using Rootborn.Core.Careers;
 using Rootborn.Core.Placement;
 using Rootborn.Core.Save;
 using Rootborn.Core.StudentLife;
@@ -332,6 +333,189 @@ namespace Rootborn.Game.Tests
             Assert.That(shares.Outbox.Requests.Any(r => r.Piece == Rootborn.Core.Room.RoomHouse.PieceName), Is.False);
             Assert.That(game.ClearFurniture(), Is.True);
             Assert.That(game.House.Placed, Is.Empty);
+        }
+
+        // ---------- 일 명령이 공간 이득을 받는다 ----------
+
+        private const string Cooking = "skill.cooking";
+        private const string Allowance = "item.allowance";
+        private const string Materials = "item.facility-materials";
+
+        private static FacilityWork ChefWorkDefinition => TestWorld.Definitions.Get<FacilityWork>(ChefWork);
+
+        private static int LevelRewardPercent(GameSession game) => game.Definitions.Get<Facility>(ChefFacility).GetLevel(game.Adult.FacilityLevel).RewardPercent;
+
+        private static (int Allowance, int Materials) Counts(GameSession game)
+            => (game.Inventory.CountOf(game.Item(Allowance)), game.Inventory.CountOf(game.Item(Materials)));
+
+        // 그 비율로 만점 보상을 만들었을 때 받을 수(아이템별).
+        private static (int Allowance, int Materials) RewardsAt(int percent)
+        {
+            Assert.That(ChefWorkDefinition.TryBuildRewards(100, percent, out var rewards), Is.True);
+            return (rewards.Where(r => r.Item == Allowance).Sum(r => r.Count), rewards.Where(r => r.Item == Materials).Sum(r => r.Count));
+        }
+
+        // 만점으로 바로 하고 받은 수를 돌려준다.
+        private static (int Allowance, int Materials) CompleteAndCount(GameSession game, string requestId)
+        {
+            var before = Counts(game);
+            Assert.That(game.CompleteFacilityWork(ChefWork, requestId, 100, autoSkip: false).Kind, Is.EqualTo(AdultCareerResultKind.Applied), requestId);
+            var after = Counts(game);
+            return (after.Allowance - before.Allowance, after.Materials - before.Materials);
+        }
+
+        [Test]
+        public void CompleteWork_PaysMoreInDecoratedWorkspace()
+        {
+            using var saves = new TempSaves();
+            var game = ChefSetup.Adult(saves);
+            EnterChef(game);
+            var plain = CompleteAndCount(game, "work:plain");
+
+            PlaceCozyUntilBonus(game);
+            Assert.That(game.WorkExtrasFor(ChefWork).RewardPercentBonus, Is.GreaterThan(0), "준비: 꾸며서 이득이 생겼다");
+            var decorated = CompleteAndCount(game, "work:decorated");
+
+            Assert.That(decorated.Allowance + decorated.Materials, Is.GreaterThan(plain.Allowance + plain.Materials), "같은 점수라도 꾸민 뒤가 많다");
+            Assert.That(decorated.Allowance, Is.GreaterThanOrEqualTo(plain.Allowance));
+            Assert.That(decorated.Materials, Is.GreaterThanOrEqualTo(plain.Materials));
+            Assert.That(decorated, Is.EqualTo(RewardsAt(LevelRewardPercent(game) + game.WorkExtrasFor(ChefWork).RewardPercentBonus)));
+        }
+
+        [Test]
+        public void CompleteWork_GrowsCookingSkill()
+        {
+            using var saves = new TempSaves();
+            var game = ChefSetup.Adult(saves);
+            var gains = game.WorkExtrasFor(ChefWork).SkillGains.Where(g => g.SkillId == Cooking).Sum(g => g.Amount);
+            Assert.That(gains, Is.GreaterThan(0), "준비: 요리 일은 요리 기술을 키운다");
+            int before = game.Student.GetSkillValue(Cooking);
+
+            Assert.That(game.CompleteFacilityWork(ChefWork, "work:fail", 0, autoSkip: false).Kind, Is.EqualTo(AdultCareerResultKind.Applied));
+            Assert.That(game.Student.GetSkillValue(Cooking), Is.EqualTo(before), "실패한 일은 기술을 키우지 않는다");
+
+            CompleteAndCount(game, "work:pass");
+            Assert.That(game.Student.GetSkillValue(Cooking), Is.EqualTo(before + gains));
+            Assert.That(TestWorld.Start(saves.Store).Student.GetSkillValue(Cooking), Is.EqualTo(before + gains), "저장된다");
+        }
+
+        [Test]
+        public void ReserveThenDecorateThenSettle_RewardUsesReservation()
+        {
+            using var saves = new TempSaves();
+            var game = ChefSetup.Adult(saves);
+            EnterChef(game);
+            int reservedBonus = game.WorkExtrasFor(ChefWork).RewardPercentBonus;
+            Assert.That(game.ReserveFacilityWork(ChefWork, "work:reserved", 5).Kind, Is.EqualTo(AdultCareerResultKind.Applied));
+
+            PlaceCozyUntilBonus(game);
+            var settleExtras = game.WorkExtrasFor(ChefWork);
+            Assert.That(settleExtras.RewardPercentBonus, Is.GreaterThan(reservedBonus), "준비: 예약 뒤에 꾸며 이득이 늘었다");
+            var before = Counts(game);
+            int reputation = game.Adult.Reputation;
+
+            Assert.That(game.SettleFacilityWork("work:reserved", 100).Kind, Is.EqualTo(AdultCareerResultKind.Applied));
+            var after = Counts(game);
+            Assert.That((after.Allowance - before.Allowance, after.Materials - before.Materials), Is.EqualTo(RewardsAt(LevelRewardPercent(game) + reservedBonus)),
+                "보상은 예약할 때의 비율로 낸다");
+            Assert.That(game.Adult.Reputation - reputation, Is.EqualTo(ChefWorkDefinition.ReputationPerSuccess + settleExtras.ReputationBonus), "명성 이득은 정산 때 것");
+
+            // 거꾸로: 꾸민 채 예약하고 다 치운 뒤 정산해도 예약할 때의 이득으로 낸다.
+            int decoratedBonus = game.WorkExtrasFor(ChefWork).RewardPercentBonus;
+            Assert.That(game.ReserveFacilityWork(ChefWork, "work:reserved-decorated", 6).Kind, Is.EqualTo(AdultCareerResultKind.Applied));
+            Assert.That(game.ClearFurniture(), Is.True);
+            Assert.That(game.WorkExtrasFor(ChefWork).RewardPercentBonus, Is.LessThan(decoratedBonus), "준비: 치워서 이득이 줄었다");
+            before = Counts(game);
+            Assert.That(game.SettleFacilityWork("work:reserved-decorated", 100).Kind, Is.EqualTo(AdultCareerResultKind.Applied));
+            after = Counts(game);
+            Assert.That((after.Allowance - before.Allowance, after.Materials - before.Materials), Is.EqualTo(RewardsAt(LevelRewardPercent(game) + decoratedBonus)));
+        }
+
+        [Test]
+        public void UndecoratedWorkspace_NeverPaysLessThanBefore()
+        {
+            using var saves = new TempSaves();
+            var game = ChefSetup.Adult(saves);
+            EnterChef(game);
+            Assert.That(game.ClearFurniture(), Is.True);
+            Assert.That(game.House.Placed, Is.Empty);
+
+            Assert.That(CompleteAndCount(game, "work:empty"), Is.EqualTo(RewardsAt(LevelRewardPercent(game))), "다 치워도 레벨 비율만의 보상은 그대로");
+        }
+
+        [Test]
+        public void RewardOnce_StillHolds()
+        {
+            using var saves = new TempSaves();
+            var game = ChefSetup.Adult(saves);
+            EnterChef(game);
+            PlaceCozyUntilBonus(game);
+            CompleteAndCount(game, "work:once");
+            var paid = Counts(game);
+            int skill = game.Student.GetSkillValue(Cooking);
+            int reputation = game.Adult.Reputation;
+
+            Assert.That(game.CompleteFacilityWork(ChefWork, "work:once", 100, autoSkip: false).Kind, Is.EqualTo(AdultCareerResultKind.DuplicateRequest));
+            var again = TestWorld.Start(saves.Store);
+            Assert.That(again.CompleteFacilityWork(ChefWork, "work:once", 100, autoSkip: false).Kind, Is.EqualTo(AdultCareerResultKind.DuplicateRequest));
+            foreach (var session in new[] { game, again })
+            {
+                Assert.That(Counts(session), Is.EqualTo(paid), "보상은 한 번만");
+                Assert.That(session.Student.GetSkillValue(Cooking), Is.EqualTo(skill), "기술은 한 번만");
+                Assert.That(session.Adult.Reputation, Is.EqualTo(reputation), "명성은 한 번만");
+            }
+        }
+
+        [Test]
+        public void BonusOverflowsInventory_CommandRefusesAndChangesNothing()
+        {
+            using var saves = new TempSaves();
+            var decorating = ChefSetup.Adult(saves);
+            EnterChef(decorating);
+            PlaceCozyUntilBonus(decorating);
+            int levelPercent = LevelRewardPercent(decorating);
+            var plain = RewardsAt(levelPercent);
+            var bonused = RewardsAt(levelPercent + decorating.WorkExtrasFor(ChefWork).RewardPercentBonus);
+            Assert.That(bonused.Allowance + bonused.Materials, Is.GreaterThan(plain.Allowance + plain.Materials), "준비: 이득이 보상 수를 늘린다");
+
+            // 준비: 이득 없는 보상이 꼭 들어갈 만큼만 남긴다. 돈(allowance)은 지갑으로 가므로 지갑을 상한 바로 아래로 채우고,
+            // 재료는 한 칸만 남기고 돌로 채운 뒤 그 칸을 이득 없는 재료 수만큼만 비운다.
+            var stone = TestWorld.Definitions.Get<Rootborn.Core.Inventory.ItemDefinition>("Stone");
+            var materials = TestWorld.Definitions.Get<Rootborn.Core.Inventory.ItemDefinition>(Materials);
+            int walletBalance = Rootborn.Core.Inventory.PersonalWallet.MaxBalance - plain.Allowance;
+            SaveEdits.EditSnapshot(saves.Store, s =>
+            {
+                s.Wallet = new Rootborn.Core.Inventory.WalletSaveData { Version = Rootborn.Core.Inventory.WalletSaveData.KnownVersion, Balance = walletBalance };
+                s.Inventory ??= new Rootborn.Core.Inventory.PlayerInventorySaveData();
+                s.Inventory.Items = new[]
+                {
+                    new Rootborn.Core.Inventory.PlayerInventoryItemSaveData { ItemId = "Stone", Count = stone.MaxStack * (Rootborn.Core.Inventory.ItemInventory.MaxSlots - 1) },
+                    new Rootborn.Core.Inventory.PlayerInventoryItemSaveData { ItemId = Materials, Count = materials.MaxStack - plain.Materials },
+                };
+            });
+
+            var game = TestWorld.Start(saves.Store);
+            Assert.That(game.WorkExtrasFor(ChefWork).RewardPercentBonus, Is.GreaterThan(0), "준비: 저장된 배치의 이득");
+            var before = Counts(game);
+            Assert.That(before, Is.EqualTo((walletBalance, materials.MaxStack - plain.Materials)), "준비: 지갑과 가방을 고친 대로 읽었다");
+            var student = game.Student.ToSaveData();
+            int reputation = game.Adult.Reputation;
+            int cooking = game.Student.GetSkillValue(Cooking);
+
+            Assert.That(game.CompleteFacilityWork(ChefWork, "work:overflow", 100, autoSkip: false).Kind, Is.EqualTo(AdultCareerResultKind.InsufficientCapacity));
+            Assert.That(Counts(game), Is.EqualTo(before));
+            Assert.That(game.Student.GetSkillValue(Cooking), Is.EqualTo(cooking));
+            Assert.That(game.Student.TimeMinutes, Is.EqualTo(student.TimeMinutes));
+            Assert.That(game.Student.TimePointsSpentToday, Is.EqualTo(student.TimePointsSpentToday));
+            Assert.That(game.Adult.Reputation, Is.EqualTo(reputation));
+            Assert.That(game.Adult.GetSuccessfulCompletions(ChefWorkDefinition), Is.EqualTo(0));
+
+            // 다 치우면 이득 없는 보상은 꼭 들어간다: 거절은 이득 때문이었고, 거절된 요청은 쓴 것으로 남지 않았다.
+            var cleared = TestWorld.Start(saves.Store);
+            EnterChef(cleared);
+            Assert.That(cleared.ClearFurniture(), Is.True);
+            Assert.That(cleared.CompleteFacilityWork(ChefWork, "work:overflow", 100, autoSkip: false).Kind, Is.EqualTo(AdultCareerResultKind.Applied));
+            Assert.That(Counts(cleared), Is.EqualTo((before.Allowance + plain.Allowance, before.Materials + plain.Materials)));
         }
 
         [Test]

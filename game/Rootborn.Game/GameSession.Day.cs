@@ -127,17 +127,21 @@ namespace Rootborn.Game
             }, r => r.Applied);
         }
 
+        // 시설 일 명령은 일터의 공간 이득(WorkExtrasFor)을 넘긴다. 자기 시설의 일이 아니거나 일터가 없으면 이득이 없다(default).
+        // 예약은 그때의 보상 비율을 적어 두고, 정산은 그 비율로 보상을 내되 명성 이득·기술 성장은 정산 때의 이득을 쓴다.
+
+        /// <summary>미니게임으로 할 일을 예약한다. 보상 비율은 지금 일터의 이득을 더해 정한다.</summary>
         public AdultCareerResult ReserveFacilityWork(string workId, string requestId, int seed)
         {
             _definitions.TryGet<FacilityWork>(workId, out var work);
             return Shared(() =>
             {
-                var result = _adultService.TryReserveWork(work, Student, Adult, requestId, seed);
+                var result = _adultService.TryReserveWork(work, Student, Adult, requestId, seed, WorkExtrasFor(workId));
                 return Saved(result, result.Applied, CareerTopics);
             }, r => r.Applied);
         }
 
-        /// <summary>예약한 일을 끝낸 판의 점수(0~100)로 정산한다.</summary>
+        /// <summary>예약한 일을 끝낸 판의 점수(0~100)로 정산한다. 명성 이득·기술 성장은 지금 일터의 이득(예약에 적힌 일 기준)을 쓴다.</summary>
         public AdultCareerResult SettleFacilityWork(string requestId, int score)
         {
             var pending = Adult.PendingWork;
@@ -145,7 +149,7 @@ namespace Rootborn.Game
             if (pending != null) _definitions.TryGet(pending.WorkId, out work);
             return Shared(() =>
             {
-                var result = _adultService.TrySettleReservedWork(work, Student, Adult, CareerInventory, requestId, score);
+                var result = _adultService.TrySettleReservedWork(work, Student, Adult, CareerInventory, requestId, score, WorkExtrasFor(pending?.WorkId));
                 return Saved(result, result.Applied, CareerTopics);
             }, r => r.Applied);
         }
@@ -156,13 +160,13 @@ namespace Rootborn.Game
             return Saved(result, result.Applied, CareerTopics);
         }
 
-        /// <summary>미니게임 없이 바로 하는 일, 또는 자동 완료(autoSkip).</summary>
+        /// <summary>미니게임 없이 바로 하는 일, 또는 자동 완료(autoSkip). 둘 다 지금 일터의 이득을 받는다.</summary>
         public AdultCareerResult CompleteFacilityWork(string workId, string requestId, int score, bool autoSkip)
         {
             _definitions.TryGet<FacilityWork>(workId, out var work);
             return Shared(() =>
             {
-                var result = _adultService.TryCompleteWork(work, Student, Adult, CareerInventory, requestId, score, autoSkip);
+                var result = _adultService.TryCompleteWork(work, Student, Adult, CareerInventory, requestId, score, autoSkip, WorkExtrasFor(workId));
                 return Saved(result, result.Applied, CareerTopics);
             }, r => r.Applied);
         }
