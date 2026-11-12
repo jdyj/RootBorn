@@ -13,6 +13,19 @@ namespace Rootborn.Ui
         public bool Contains(float px, float py) => px >= X && py >= Y && px < X + W && py < Y + H;
 
         public UiRect Inset(float amount) => new UiRect(X + amount, Y + amount, MathF.Max(0, W - amount * 2), MathF.Max(0, H - amount * 2));
+
+        public UiRect Inset(UiInsets insets) =>
+            new UiRect(X + insets.Left, Y + insets.Top, MathF.Max(0, W - insets.Horizontal), MathF.Max(0, H - insets.Vertical));
+    }
+
+    /// <summary>
+    /// 변마다의 안쪽 여백(논리 크기). 패널의 글자 자리 여백은 테마가 정한다(스킨의 padding, 없으면 테두리 두께) — 화면은
+    /// ScreenServices.PaddingOf(스킨)으로 받는다. 테두리 두께를 화면 코드에 적지 않는다.
+    /// </summary>
+    public readonly record struct UiInsets(float Left, float Top, float Right, float Bottom)
+    {
+        public float Horizontal => Left + Right;
+        public float Vertical => Top + Bottom;
     }
 
     /// <summary>화면 픽셀의 사각형.</summary>

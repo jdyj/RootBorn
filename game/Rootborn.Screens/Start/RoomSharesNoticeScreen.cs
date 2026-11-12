@@ -34,7 +34,7 @@ namespace Rootborn.Screens.Start
         internal static class Metrics
         {
             public const float BoxW = 900f, BoxH = 262f, Bottom = 340f;
-            public const float TextX = 32f, TextY = 36f, Font = 20f; // 위 여백 14는 테두리 위에 글자가 걸렸다(2026-11-12)
+            public const float Font = 20f; // 글자 자리는 상자 − 테마 여백(PanelArea). 위 여백을 숫자로 두면 테두리 위에 글자가 걸렸다(2026-11-12)
             public const float LineH = 124f; // 같이 쓰는 것 줄(세 줄까지), 그 아래 진행 줄
         }
 
@@ -60,9 +60,10 @@ namespace Rootborn.Screens.Start
             var box = root.Add(new UiPanel { Id = BoxId, Skin = UiSkin.Panel, Interactive = false });
             box.Place(0.5f, 1f, -Metrics.BoxW / 2f, -Metrics.Bottom - Metrics.BoxH, Metrics.BoxW, Metrics.BoxH);
             _message = box.Add(new UiTextBlock { Id = MessageId, FontSize = Metrics.Font, Color = UiTheme.Ink, Align = UiAlign.Center });
-            _message.Place(0f, 0f, Metrics.TextX, Metrics.TextY, Metrics.BoxW - Metrics.TextX * 2f, Metrics.LineH);
+            var area = new PanelArea(Metrics.BoxW, Metrics.BoxH, Services.PaddingOf(UiSkin.Panel));
+            _message.Place(0f, 0f, area.Left, area.Top, area.InnerWidth, Metrics.LineH);
             _progress = box.Add(new UiTextBlock { Id = ProgressId, FontSize = Metrics.Font, Color = UiTheme.Ink, Align = UiAlign.Center });
-            _progress.Place(0f, 0f, Metrics.TextX, Metrics.TextY + Metrics.LineH, Metrics.BoxW - Metrics.TextX * 2f, Metrics.BoxH - Metrics.TextY * 2f - Metrics.LineH);
+            _progress.Place(0f, 0f, area.Left, area.Top + Metrics.LineH, area.InnerWidth, area.InnerHeight - Metrics.LineH);
             return root;
         }
 

@@ -71,7 +71,7 @@ namespace Rootborn.Screens.Minigames
             var root = new UiPanel { Id = PanelId, Skin = UiSkin.Panel };
             root.Centered(0f, 0f, Metrics.Width, Metrics.Height);
             _title = root.Add(new UiLabel { Id = TitleId, FontSize = Metrics.TitleFont, Color = Metrics.Ink, Align = UiAlign.Center })
-                .Centered(0f, Metrics.TitleY, Metrics.TitleW, Metrics.TitleH);
+                .Centered(0f, Math.Min(Metrics.TitleY, new PanelArea(Metrics.Width, Metrics.Height, Services.PaddingOf(UiSkin.Panel)).CenterYFromTop(Metrics.TitleH)), Metrics.TitleW, Metrics.TitleH);
             _instruction = root.Add(new UiTextBlock { Id = InstructionId, FontSize = Metrics.InstructionFont, Color = Metrics.Ink, Align = UiAlign.Center })
                 .Centered(0f, Metrics.InstructionY, Metrics.InstructionW, Metrics.InstructionH);
             _status = root.Add(new UiLabel { Id = StatusId, FontSize = Metrics.StatusFont, Color = Metrics.Ink, Align = UiAlign.Center })

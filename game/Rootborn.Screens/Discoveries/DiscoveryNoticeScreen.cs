@@ -72,10 +72,10 @@ namespace Rootborn.Screens.Discoveries
         internal static class Metrics
         {
             public const float BoxW = 720f, BoxH = 196f, Bottom = 48f;
-            public const float TextX = 32f, TextW = 656f;
-            public const float NameY = 20f, NameH = 40f, NameFont = 26f;
-            public const float MessageY = 64f, MessageH = 32f, MessageFont = 20f;
-            public const float FirstChangeY = 102f, ChangeStep = 30f, ChangeH = 28f, ChangeFont = 18f;
+            // 글자 자리는 상자 − 테마 여백(PanelArea). 아래 값은 그 안쪽 위에서부터의 자리다.
+            public const float NameY = 0f, NameH = 40f, NameFont = 26f;
+            public const float MessageY = 40f, MessageH = 32f, MessageFont = 20f;
+            public const float FirstChangeY = 74f, ChangeStep = 28f, ChangeH = 28f, ChangeFont = 18f;
             public const float ShowSeconds = 4f;
             public static readonly UiColor Ink = new UiColor(48, 71, 83);
             public static readonly UiColor ChangeInk = UnityLayout.Color(0.18f, 0.45f, 0.30f);
@@ -105,13 +105,14 @@ namespace Rootborn.Screens.Discoveries
             var box = root.Add(new UiPanel { Id = BoxId, Skin = UiSkin.Panel, Interactive = false });
             box.Place(0.5f, 1f, -Metrics.BoxW / 2f, -Metrics.Bottom - Metrics.BoxH, Metrics.BoxW, Metrics.BoxH);
             _name = box.Add(new UiLabel { Id = NameId, FontSize = Metrics.NameFont, Color = Metrics.Ink });
-            _name.Place(0f, 0f, Metrics.TextX, Metrics.NameY, Metrics.TextW, Metrics.NameH);
+            var area = new PanelArea(Metrics.BoxW, Metrics.BoxH, Services.PaddingOf(UiSkin.Panel));
+            _name.Place(0f, 0f, area.Left, area.Top + Metrics.NameY, area.InnerWidth, Metrics.NameH);
             _message = box.Add(new UiLabel { Id = MessageId, FontSize = Metrics.MessageFont, Color = Metrics.Ink });
-            _message.Place(0f, 0f, Metrics.TextX, Metrics.MessageY, Metrics.TextW, Metrics.MessageH);
+            _message.Place(0f, 0f, area.Left, area.Top + Metrics.MessageY, area.InnerWidth, Metrics.MessageH);
             for (int i = 0; i < MaxChanges; i++)
             {
                 _changes[i] = box.Add(new UiLabel { Id = ChangeId(i), FontSize = Metrics.ChangeFont, Color = Metrics.ChangeInk, Visible = false });
-                _changes[i].Place(0f, 0f, Metrics.TextX, Metrics.FirstChangeY + i * Metrics.ChangeStep, Metrics.TextW, Metrics.ChangeH);
+                _changes[i].Place(0f, 0f, area.Left, area.Top + Metrics.FirstChangeY + i * Metrics.ChangeStep, area.InnerWidth, Metrics.ChangeH);
             }
             return root;
         }

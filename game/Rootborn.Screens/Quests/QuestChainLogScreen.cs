@@ -104,9 +104,11 @@ namespace Rootborn.Screens.Quests
         internal static class Metrics
         {
             public const float Width = 760f, Height = 420f;
-            public const float FilterX = -350f, CareerY = 170f, StateY = 135f, FilterW = 180f, FilterH = 28f, FilterFont = 15f;
-            // Unity 상세는 폭 320이라 패널(반폭 380) 밖으로 110 나갔다. 패널 안쪽 16을 남기도록 줄였다(달라진 동작).
-            public const float DetailX = 170f, DetailY = 150f, DetailW = 194f, DetailH = 260f, DetailFont = 14f;
+            // 거르기 두 줄: 안쪽(테마 여백 — PanelArea) 왼쪽 위에서 아래로 StateGap 간격.
+            public const float StateGap = 35f, FilterW = 180f, FilterH = 28f, FilterFont = 15f;
+            // 상세: 가운데 기준 x=DetailX에서 안쪽 오른쪽 끝까지, 안쪽 위에서 DetailGap 아래부터 단추 줄 위 DetailBottomGap까지.
+            // Unity 상세는 폭 320이라 패널(반폭 380) 밖으로 110 나갔다. 안쪽 영역 안으로 줄였다(달라진 동작).
+            public const float DetailX = 170f, DetailGap = 20f, DetailBottomGap = 8f, DetailFont = 14f;
             public const float CardX = -120f, CardTopY = 130f, CardStep = 40f, CardW = 260f, CardH = 36f, CardFont = 14f;
             public const float ButtonY = -160f, AcceptX = 70f, TrackX = 190f, ClaimX = 310f, ButtonW = 105f, ButtonH = 38f, ButtonFont = 14f;
             public static readonly UiColor Ink = UnityLayout.Color(.25f, .18f, .12f);
@@ -135,9 +137,15 @@ namespace Rootborn.Screens.Quests
         {
             var root = new UiPanel { Id = PanelId, Skin = UiSkin.Panel };
             root.Centered(0f, 0f, Metrics.Width, Metrics.Height);
-            _career = TopLeft(root, new UiLabel { Id = CareerId, FontSize = Metrics.FilterFont, Color = Metrics.Ink }, Metrics.FilterX, Metrics.CareerY, Metrics.FilterW, Metrics.FilterH);
-            _state = TopLeft(root, new UiLabel { Id = StateId, FontSize = Metrics.FilterFont, Color = Metrics.Ink }, Metrics.FilterX, Metrics.StateY, Metrics.FilterW, Metrics.FilterH);
-            _detail = TopLeft(root, new UiTextBlock { Id = DetailId, FontSize = Metrics.DetailFont, Color = Metrics.Ink, LineSpacing = 2 }, Metrics.DetailX, Metrics.DetailY, Metrics.DetailW, Metrics.DetailH);
+            var area = new PanelArea(Metrics.Width, Metrics.Height, Services.PaddingOf(UiSkin.Panel));
+            _career = root.Add(new UiLabel { Id = CareerId, FontSize = Metrics.FilterFont, Color = Metrics.Ink });
+            _career.Place(0f, 0f, area.Left, area.Top, Metrics.FilterW, Metrics.FilterH);
+            _state = root.Add(new UiLabel { Id = StateId, FontSize = Metrics.FilterFont, Color = Metrics.Ink });
+            _state.Place(0f, 0f, area.Left, area.Top + Metrics.StateGap, Metrics.FilterW, Metrics.FilterH);
+            float detailX = Metrics.Width / 2f + Metrics.DetailX, detailY = area.Top + Metrics.DetailGap;
+            float buttonsTop = Metrics.Height / 2f - Metrics.ButtonY - Metrics.ButtonH / 2f;
+            _detail = root.Add(new UiTextBlock { Id = DetailId, FontSize = Metrics.DetailFont, Color = Metrics.Ink, LineSpacing = 2 });
+            _detail.Place(0f, 0f, detailX, detailY, area.Right - detailX, buttonsTop - Metrics.DetailBottomGap - detailY);
             for (int i = 0; i < _cards.Length; i++)
             {
                 int index = i;
@@ -150,8 +158,6 @@ namespace Rootborn.Screens.Quests
             _claim = Button(root, ClaimId, Metrics.ClaimX, Claim);
             return root;
         }
-
-        private static T TopLeft<T>(UiNode parent, T node, float x, float y, float w, float h) where T : UiNode => parent.Add(node).Centered(x + w / 2f, y - h / 2f, w, h);
 
         private UiButton Button(UiNode root, string id, float x, Action click)
         {

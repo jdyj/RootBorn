@@ -116,7 +116,7 @@ namespace Rootborn.Screens.AdultFacility
             }), FacilityLayout.Works);
             _works.DrawCell = PaintCell;
             _works.CellClicked += PressCell;
-            _cost = At(root.Add(new UiTextBlock { Id = CostId, FontSize = FacilityLayout.CostFont, Color = FacilityLayout.Ink }), FacilityLayout.Cost);
+            _cost = At(root.Add(new UiTextBlock { Id = CostId, FontSize = FacilityLayout.CostFont, Color = FacilityLayout.Ink, FitHeight = true }), FacilityLayout.Cost); // 긴 비용 글(다른 언어)은 줄여서, 그래도 길면 말줄임으로 칸 안에
             _transition = Action(root, TransitionId, FacilityLayout.TransitionX);
             _transition.Clicked += ChooseRoute;
             _practice = Action(root, PracticeId, FacilityLayout.PracticeX);

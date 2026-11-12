@@ -65,11 +65,11 @@ namespace Rootborn.Screens.Records
         internal static class Metrics
         {
             public const float PanelW = 380f, PanelH = 420f;
-            public const float TitleY = 176f, TitleW = 320f, TitleH = 28f, TitleFont = 20f;
-            public const float EmptyY = 126f, EmptyW = 320f, EmptyH = 28f, EmptyFont = 16f;
-            /// <summary>카드 목록: 패널 위에서 66 아래, 폭 320, 높이 310.</summary>
-            public const float ListTop = 66f, ListW = 320f, ListH = 310f;
-            public const float CardW = 320f, CardH = 56f, CardGap = 8f;
+            // 패널 안 여백은 테마(PanelArea). 제목은 안쪽 위, 빈 목록 안내는 그 아래, 카드 목록은 ListGap부터 안쪽 아래까지(안쪽 폭).
+            public const float TitleH = 28f, TitleFont = 20f;
+            public const float EmptyGap = 22f, EmptyH = 28f, EmptyFont = 16f;
+            public const float ListGap = 18f;
+            public const float CardH = 56f, CardGap = 8f;
             public const float TextInset = 12f;
             public const float CardTitleTop = 5f, CardTitleH = 24f, CardTitleFont = 16f;
             public const float CardDetailTop = 30f, CardDetailH = 22f, CardDetailFont = 14f;
@@ -96,15 +96,17 @@ namespace Rootborn.Screens.Records
             var panel = root.Add(new UiPanel { Id = PanelId, Skin = UiSkin.Panel });
             panel.Centered(0f, 0f, Metrics.PanelW, Metrics.PanelH);
             _title = panel.Add(new UiLabel { Id = TitleId, FontSize = Metrics.TitleFont, Align = UiAlign.Center, Color = Metrics.Ink });
-            _title.Centered(0f, Metrics.TitleY, Metrics.TitleW, Metrics.TitleH);
+            var area = new PanelArea(Metrics.PanelW, Metrics.PanelH, Services.PaddingOf(UiSkin.Panel));
+            _title.Place(0f, 0f, area.Left, area.Top, area.InnerWidth, Metrics.TitleH);
             _empty = panel.Add(new UiLabel { Id = EmptyId, FontSize = Metrics.EmptyFont, Align = UiAlign.Center, Color = Metrics.Ink });
-            _empty.Centered(0f, Metrics.EmptyY, Metrics.EmptyW, Metrics.EmptyH);
+            _empty.Place(0f, 0f, area.Left, area.Top + Metrics.TitleH + Metrics.EmptyGap, area.InnerWidth, Metrics.EmptyH);
+            float listTop = area.Top + Metrics.TitleH + Metrics.ListGap;
             _grid = panel.Add(new UiCardGrid
             {
-                Id = ListId, Padding = 0f, DrawBackground = false, CellWidth = Metrics.CardW - UiCardScroller.ScrollbarWidth - UiCardScroller.ScrollbarGap,
+                Id = ListId, Padding = 0f, DrawBackground = false, CellWidth = area.InnerWidth - UiCardScroller.ScrollbarWidth - UiCardScroller.ScrollbarGap,
                 CellHeight = Metrics.CardH, Spacing = Metrics.CardGap, StepsPerNotch = 0.5f,
             });
-            _grid.Place(0.5f, 0f, -Metrics.ListW / 2f, Metrics.ListTop, Metrics.ListW, Metrics.ListH);
+            _grid.Place(0f, 0f, area.Left, listTop, area.InnerWidth, area.Bottom - listTop);
             _grid.DrawCell = DrawCard;
             return root;
         }

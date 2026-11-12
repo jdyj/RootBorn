@@ -32,16 +32,19 @@ namespace Rootborn.Screens.Career
     /// </summary>
     public sealed class CareerCandidateScreen : CareerScreenBase
     {
-        /// <summary>배치 — Unity CareerCandidatePanel.BuildIfNeeded 수치(가운데 기준, y는 위로). 새 디자인에서는 여기만 고친다.</summary>
+        /// <summary>
+        /// 배치(패널 왼쪽 위 기준). 패널 안 여백은 테마에서 온다(PanelArea) — 아래 값은 안쪽 영역 안의 크기와 간격이다. 새 디자인에서는 여기만 고친다.
+        /// 위: 제목(가운데), 그 아래 후보 개수. 왼쪽: 목록, 오른쪽: 상세. 아래 오른쪽: 닫기.
+        /// </summary>
         internal static class Metrics
         {
             public const float Width = 900f, Height = 560f;
-            public const float TitleY = 238f, TitleW = 760f, TitleH = 38f, TitleFont = 26f;
-            public const float CountX = -285f, CountY = 208f, CountW = 250f, CountH = 30f, CountFont = 18f;
-            public const float ListX = -285f, ListY = -6f, ListW = 250f, ListH = 360f;
+            public const float TitleH = 38f, TitleFont = 26f;
+            public const float CountH = 30f, CountFont = 18f, CountGap = 4f;
+            public const float ListW = 250f, ListGap = 12f;
             public const float RowW = 250f, RowH = 52f, RowSpacing = 8f, RowFont = 16f;
-            public const float DetailsX = 165f, DetailsY = 10f, DetailsW = 470f, DetailsH = 420f, DetailsFont = 18f;
-            public const float CloseX = 370f, CloseY = -238f, CloseW = 120f, CloseH = 52f, CloseFont = 16f;
+            public const float DetailsGap = 40f, DetailsFont = 18f;
+            public const float CloseW = 120f, CloseH = 52f, CloseFont = 16f, CloseGap = 12f;
             public static readonly UiColor Ink = UnityLayout.Color(0.25f, 0.18f, 0.12f);
         }
 
@@ -69,22 +72,28 @@ namespace Rootborn.Screens.Career
         {
             var root = new UiPanel { Id = PanelId, Skin = UiSkin.Panel };
             root.Centered(0f, 0f, Metrics.Width, Metrics.Height);
+            var area = new PanelArea(Metrics.Width, Metrics.Height, Services.PaddingOf(UiSkin.Panel));
             _title = root.Add(new UiLabel { Id = TitleId, FontSize = Metrics.TitleFont, Color = Metrics.Ink, Align = UiAlign.Center });
-            _title.Centered(0f, Metrics.TitleY, Metrics.TitleW, Metrics.TitleH);
+            _title.Place(0f, 0f, area.Left, area.Top, area.InnerWidth, Metrics.TitleH);
+            float countY = area.Top + Metrics.TitleH + Metrics.CountGap;
             _count = root.Add(new UiLabel { Id = CountId, FontSize = Metrics.CountFont, Color = Metrics.Ink });
-            _count.Centered(Metrics.CountX, Metrics.CountY, Metrics.CountW, Metrics.CountH);
+            _count.Place(0f, 0f, area.Left, countY, Metrics.ListW, Metrics.CountH);
+            float closeY = area.Bottom - Metrics.CloseH;
+            float listY = countY + Metrics.CountH + Metrics.ListGap;
+            float listW = Metrics.ListW + UiCardScroller.ScrollbarWidth + UiCardScroller.ScrollbarGap;
             // 한 줄에 한 칸인 격자: 칸 하나가 목록 버튼 하나다. 스크롤 막대 자리를 더해 폭을 잡는다.
             _list = root.Add(new UiCardGrid
             {
                 Id = ListId, CellWidth = Metrics.RowW, CellHeight = Metrics.RowH, Spacing = Metrics.RowSpacing, Padding = 0f, DrawBackground = false,
             });
-            _list.Centered(Metrics.ListX, Metrics.ListY, Metrics.ListW + UiCardScroller.ScrollbarWidth + UiCardScroller.ScrollbarGap, Metrics.ListH);
+            _list.Place(0f, 0f, area.Left, listY, listW, closeY - Metrics.CloseGap - listY);
             _list.DrawCell = PaintRow;
             _list.CellClicked += ShowDetails;
+            float detailsX = area.Left + listW + Metrics.DetailsGap;
             _details = root.Add(new UiScrollText { Id = DetailsId, FontSize = Metrics.DetailsFont, Color = Metrics.Ink, PaddingX = 0f, PaddingTop = 0f, PaddingBottom = 16f });
-            _details.Centered(Metrics.DetailsX, Metrics.DetailsY, Metrics.DetailsW, Metrics.DetailsH);
+            _details.Place(0f, 0f, detailsX, countY, area.Right - detailsX, closeY - Metrics.CloseGap - countY);
             _close = root.Add(new UiButton { Id = CloseId, FontSize = Metrics.CloseFont });
-            _close.Centered(Metrics.CloseX, Metrics.CloseY, Metrics.CloseW, Metrics.CloseH);
+            _close.Place(0f, 0f, area.Right - Metrics.CloseW, closeY, Metrics.CloseW, Metrics.CloseH);
             _close.Clicked += Close;
             return root;
         }

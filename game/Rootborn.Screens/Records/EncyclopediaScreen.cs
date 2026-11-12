@@ -72,20 +72,19 @@ namespace Rootborn.Screens.Records
             public const float PanelW = 1280f, PanelH = 800f;
             // 패널 왼쪽 위 기준
             public const float IconX = 48f, IconY = 20f, IconSize = 64f;
-            public const float TitleX = 136f, TitleY = 28f, TitleW = 1000f, TitleH = 48f, TitleFont = 32f;
+            public const float TitleX = 136f, TitleW = 1000f, TitleH = 48f, TitleFont = 32f; // 위는 테마 여백(PanelArea.Top)
             public const float CloseX = 1200f, CloseY = 28f, CloseSize = 48f;
             // 가운데 기준 (x, y위로 +) 과 크기
             public const float CategoryX = -442f, CategoryY = -48f, CategoryW = 300f, CategoryH = 632f;
             public const float RowsX = -52f, RowsY = -48f, RowsW = 432f, RowsH = 632f;
             public const float DetailX = 388f, DetailY = -48f, DetailW = 400f, DetailH = 632f;
-            // 분류 패널 안
-            public const float CategoryButtonX = 32f, CategoryButtonY = 32f, CategoryButtonW = 236f, CategoryButtonH = 48f, CategoryStep = 64f, CategoryFont = 22f;
+            // 분류 패널 안(왼쪽 위·폭은 테마 여백 안쪽)
+            public const float CategoryButtonH = 48f, CategoryStep = 64f, CategoryFont = 22f;
             public const float MarkerW = 8f;
-            // 항목 목록
-            public const float RowListPadding = 32f, RowHeight = 56f, RowFont = 22f;
-            // 설명 패널 안
-            public const float DetailTitleX = 32f, DetailTitleY = 32f, DetailTitleW = 336f, DetailTitleH = 56f, DetailTitleFont = 26f;
-            public const float DetailBodyX = 32f, DetailBodyY = 96f, DetailBodyW = 336f, DetailBodyH = 488f, DetailBodyFont = 20f;
+            // 항목 목록(안쪽 여백은 테마)
+            public const float RowHeight = 56f, RowFont = 22f;
+            // 설명 패널 안(테마 여백 안쪽): 제목, 그 아래 본문
+            public const float DetailTitleH = 56f, DetailTitleFont = 26f, DetailBodyGap = 8f, DetailBodyFont = 20f;
             /// <summary>닫기 기호(언어와 무관).</summary>
             public const string Icon = "icon:encyclopedia";
             public static readonly UiColor Ink = UnityLayout.Color(48f / 255f, 71f / 255f, 83f / 255f);
@@ -104,6 +103,7 @@ namespace Rootborn.Screens.Records
         private UiScrollList _list;
         private UiBox _marker;
         private UiNode _categoryPanel;
+        private PanelArea _categoryArea;
         private readonly List<UiMultilineButton> _categoryButtons = new List<UiMultilineButton>();
         private EncyclopediaRow[] _rows = Array.Empty<EncyclopediaRow>();
 
@@ -134,7 +134,8 @@ namespace Rootborn.Screens.Records
 
             panel.Add(new UiImage { Id = "encyclopedia.icon", Image = Metrics.Icon }).Place(0f, 0f, Metrics.IconX, Metrics.IconY, Metrics.IconSize, Metrics.IconSize);
             _title = panel.Add(new UiLabel { Id = TitleId, FontSize = Metrics.TitleFont, Align = UiAlign.Center, Color = Metrics.Ink });
-            _title.Place(0f, 0f, Metrics.TitleX, Metrics.TitleY, Metrics.TitleW, Metrics.TitleH);
+            UiInsets pad = Services.PaddingOf(UiSkin.Panel);
+            _title.Place(0f, 0f, Metrics.TitleX, pad.Top, Metrics.TitleW, Metrics.TitleH);
             var close = panel.Add(new UiButton { Id = CloseId, Icon = Rootborn.Screens.Day.ScreenIcons.Close });
             close.Place(0f, 0f, Metrics.CloseX, Metrics.CloseY, Metrics.CloseSize, Metrics.CloseSize);
             close.Clicked += Close;
@@ -142,21 +143,22 @@ namespace Rootborn.Screens.Records
             _categoryPanel = panel.Add(new UiPanel { Id = "encyclopedia.categories", Skin = UiSkin.Panel });
             _categoryPanel.Centered(Metrics.CategoryX, Metrics.CategoryY, Metrics.CategoryW, Metrics.CategoryH);
             _marker = _categoryPanel.Add(new UiBox { Id = "encyclopedia.category.marker", Color = UiTheme.Accent });
+            _categoryArea = new PanelArea(Metrics.CategoryW, Metrics.CategoryH, pad);
             for (int i = 0; i < Model.Categories.Count; i++)
             {
                 int index = i;
                 var button = _categoryPanel.Add(new UiMultilineButton { Id = CategoryId(i), FontSize = Metrics.CategoryFont });
-                button.Place(0f, 0f, Metrics.CategoryButtonX, Metrics.CategoryButtonY + i * Metrics.CategoryStep, Metrics.CategoryButtonW, Metrics.CategoryButtonH);
+                button.Place(0f, 0f, _categoryArea.Left, _categoryArea.Top + i * Metrics.CategoryStep, _categoryArea.InnerWidth, Metrics.CategoryButtonH);
                 button.Clicked += () => SelectCategory(Model.Categories[index].Id);
                 _categoryButtons.Add(button);
             }
             // 분류가 더 늘어도 마지막 버튼 다음 id는 숨겨진 빈 자리로 둔다(시험이 "그 다음 칸은 없다"를 본다).
             var spare = _categoryPanel.Add(new UiMultilineButton { Id = CategoryId(Model.Categories.Count), Visible = false });
-            spare.Place(0f, 0f, Metrics.CategoryButtonX, Metrics.CategoryButtonY + Model.Categories.Count * Metrics.CategoryStep, Metrics.CategoryButtonW, Metrics.CategoryButtonH);
+            spare.Place(0f, 0f, _categoryArea.Left, _categoryArea.Top + Model.Categories.Count * Metrics.CategoryStep, _categoryArea.InnerWidth, Metrics.CategoryButtonH);
 
             _list = panel.Add(new UiScrollList
             {
-                Id = ListId, Padding = Metrics.RowListPadding, RowHeight = Metrics.RowHeight, FontSize = Metrics.RowFont, Skin = UiSkin.Panel,
+                Id = ListId, Padding = MathF.Max(MathF.Max(pad.Left, pad.Right), MathF.Max(pad.Top, pad.Bottom)), RowHeight = Metrics.RowHeight, FontSize = Metrics.RowFont, Skin = UiSkin.Panel,
             });
             _list.Centered(Metrics.RowsX, Metrics.RowsY, Metrics.RowsW, Metrics.RowsH);
             _list.RowText = RowText;
@@ -165,9 +167,11 @@ namespace Rootborn.Screens.Records
             var detail = panel.Add(new UiPanel { Id = "encyclopedia.detail", Skin = UiSkin.Panel });
             detail.Centered(Metrics.DetailX, Metrics.DetailY, Metrics.DetailW, Metrics.DetailH);
             _detailTitle = detail.Add(new UiTextBlock { Id = DetailTitleId, FontSize = Metrics.DetailTitleFont, Color = Metrics.Ink });
-            _detailTitle.Place(0f, 0f, Metrics.DetailTitleX, Metrics.DetailTitleY, Metrics.DetailTitleW, Metrics.DetailTitleH);
+            var detailArea = new PanelArea(Metrics.DetailW, Metrics.DetailH, pad);
+            _detailTitle.Place(0f, 0f, detailArea.Left, detailArea.Top, detailArea.InnerWidth, Metrics.DetailTitleH);
             _detailBody = detail.Add(new UiTextBlock { Id = DetailBodyId, FontSize = Metrics.DetailBodyFont, Color = Metrics.Ink });
-            _detailBody.Place(0f, 0f, Metrics.DetailBodyX, Metrics.DetailBodyY, Metrics.DetailBodyW, Metrics.DetailBodyH);
+            float bodyY = detailArea.Top + Metrics.DetailTitleH + Metrics.DetailBodyGap;
+            _detailBody.Place(0f, 0f, detailArea.Left, bodyY, detailArea.InnerWidth, detailArea.Bottom - bodyY);
             return root;
         }
 
@@ -206,7 +210,7 @@ namespace Rootborn.Screens.Records
             for (int i = 0; i < Model.Categories.Count; i++) if (Model.Categories[i].Id == categoryId) selected = i;
             _marker.Visible = selected >= 0;
             if (selected >= 0)
-                _marker.Place(0f, 0f, Metrics.CategoryButtonX - Metrics.MarkerW - 4f, Metrics.CategoryButtonY + selected * Metrics.CategoryStep, Metrics.MarkerW, Metrics.CategoryButtonH);
+                _marker.Place(0f, 0f, _categoryArea.Left - Metrics.MarkerW - 4f, _categoryArea.Top + selected * Metrics.CategoryStep, Metrics.MarkerW, Metrics.CategoryButtonH);
             RefreshRows(keepEntry: false);
             if (_categoryPanel.Rect.W > 0f) _marker.Layout(_categoryPanel.Rect);
         }

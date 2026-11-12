@@ -89,12 +89,12 @@ namespace Rootborn.Screens.Records
         /// <summary>배치 — 새 디자인에서는 여기만 고친다. 가운데 기준(y는 위로 +)이거나 패널 위 기준.</summary>
         internal static class Metrics
         {
-            public const float PanelW = 1040f, PanelMinH = 420f, PanelChrome = 120f;
+            // 패널 높이 = 테마 여백(위·아래, PanelArea) + 제목 + TitleGap + 줄들. PanelMinH보다 작아지지 않는다.
+            public const float PanelW = 1040f, PanelMinH = 420f, TitleGap = 16f;
             public const float CardW = 170f, CardH = 230f, CardGap = 16f;
             public const float RowTitleH = 32f, RowTitleW = 400f, RowTitleFont = 20f, RowGap = 20f;
-            /// <summary>카드들이 놓이는 곳의 가운데에서 아래로 내린 거리.</summary>
-            public const float CardsOffsetY = -24f;
-            public const float TitleFont = 28f, TitleW = 400f, TitleH = 44f, TitleCenterFromTop = 36f;
+            /// <summary>제목: 안쪽 위(테마 여백), 가운데 맞춤.</summary>
+            public const float TitleFont = 28f, TitleW = 400f, TitleH = 44f;
             public const float CloseSize = 48f, CloseFromRight = 40f, CloseFromTop = 36f;
             public const float PreviewW = 128f, PreviewH = 180f, PreviewLift = 16f;
             public const float LabelFont = 18f, LabelW = 162f, LabelH = 36f, LabelDrop = -94f;
@@ -110,6 +110,7 @@ namespace Rootborn.Screens.Records
         public static string RowTitleId(int index) => "wardrobe.row." + index;
 
         private UiPanel _panel;
+        private UiInsets _pad;
         private UiLabel _title;
         private readonly List<CardNode> _cards = new List<CardNode>();
         private readonly List<UiLabel> _rowTitles = new List<UiLabel>();
@@ -137,7 +138,8 @@ namespace Rootborn.Screens.Records
             _panel = root.Add(new UiPanel { Id = PanelId, Skin = UiSkin.Panel });
             _panel.Centered(0f, 0f, Metrics.PanelW, Metrics.PanelMinH);
             _title = _panel.Add(new UiLabel { Id = TitleId, FontSize = Metrics.TitleFont, Align = UiAlign.Center, Color = Metrics.Ink });
-            _title.Place(0.5f, 0f, -Metrics.TitleW / 2f, Metrics.TitleCenterFromTop - Metrics.TitleH / 2f, Metrics.TitleW, Metrics.TitleH);
+            _pad = Services.PaddingOf(UiSkin.Panel);
+            _title.Place(0.5f, 0f, -Metrics.TitleW / 2f, _pad.Top, Metrics.TitleW, Metrics.TitleH);
             var close = _panel.Add(new UiButton { Id = CloseId, Icon = Rootborn.Screens.Day.ScreenIcons.Close });
             close.Place(1f, 0f, -Metrics.CloseFromRight - Metrics.CloseSize / 2f, Metrics.CloseFromTop - Metrics.CloseSize / 2f, Metrics.CloseSize, Metrics.CloseSize);
             close.Clicked += Close;
@@ -172,9 +174,10 @@ namespace Rootborn.Screens.Records
             Sections = WardrobeModel.From(Services.Session, Services.Names, Services.Wardrobe);
             int rows = Sections.Count;
             float rowHeight = Metrics.CardH + Metrics.RowTitleH + Metrics.RowGap;
-            float height = Math.Max(Metrics.PanelMinH, Metrics.PanelChrome + rows * rowHeight);
+            float rowsTop = _pad.Top + Metrics.TitleH + Metrics.TitleGap; // 패널 위에서
+            float height = Math.Max(Metrics.PanelMinH, rowsTop + Math.Max(0f, rows * rowHeight - Metrics.RowGap) + _pad.Bottom);
             _panel.Centered(0f, 0f, Metrics.PanelW, height);
-            float top = rows * rowHeight / 2f;
+            float top = height / 2f - rowsTop; // 줄들의 위(가운데 기준 y)
             int used = 0;
             for (int row = 0; row < rows; row++)
             {
@@ -185,7 +188,7 @@ namespace Rootborn.Screens.Records
                 UiLabel title = _rowTitles[row];
                 title.Visible = true;
                 title.Text = Shown(section.TitleKey);
-                title.Centered(0f, rowCenter + Metrics.CardH / 2f + Metrics.RowTitleH / 2f + Metrics.CardsOffsetY, Metrics.RowTitleW, Metrics.RowTitleH);
+                title.Centered(0f, rowCenter + Metrics.CardH / 2f + Metrics.RowTitleH / 2f, Metrics.RowTitleW, Metrics.RowTitleH);
                 int count = section.Cards.Count;
                 float start = -(count * Metrics.CardW + Math.Max(0, count - 1) * Metrics.CardGap) / 2f;
                 for (int i = 0; i < count; i++)
@@ -194,7 +197,7 @@ namespace Rootborn.Screens.Records
                     CardNode card = _cards[used++];
                     card.Visible = true;
                     card.Fill(section.Cards[i], this);
-                    card.Centered(start + i * (Metrics.CardW + Metrics.CardGap) + Metrics.CardW / 2f, rowCenter + Metrics.CardsOffsetY, Metrics.CardW, Metrics.CardH);
+                    card.Centered(start + i * (Metrics.CardW + Metrics.CardGap) + Metrics.CardW / 2f, rowCenter, Metrics.CardW, Metrics.CardH);
                 }
             }
             for (int i = used; i < _cards.Count; i++) _cards[i].Visible = false;

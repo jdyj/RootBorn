@@ -195,7 +195,10 @@ CI `server-publish` job이 같은 두 줄을 돌린다. 배포 목록(`Tools/pub
 4. 테스트: `Rootborn.Screens.Tests`에서 화면을 눌러 보고 `TextKeys`가 두 언어에 다 있는지, `Rootborn.Host.Tests`에서 `PlayerDriver`로
    열고(`OpenScreenWithKey`·`WaitForScreen`) 누르고(`PressButton`) 찍는다(`ScreenshotScreen`). 새 화면은 `ScreenOverlapTests`(HUD와 겹치지 않는지)와
    `EnglishScreensTests`(영어로 넘치지 않는지)가 등록 표에서 저절로 읽는다. 상호작용이나 예약이 있어야 열리는 화면이면 `ScreenOverlapTests.Openers`에 여는 법을 한 줄 더한다.
-5. 화면끼리: 패널·모달이 덮는 HUD 요소는 화면 쌓기가 숨긴다(`ScreenStack`이 배치할 때마다 겉면 `UiSurfaces`로 정한다). HUD끼리는 배치 수치로 피한다.
+5. 패널 안 여백은 숫자로 적지 않는다: `Services.PaddingOf(UiSkin.Panel)`(테마의 스킨 여백)과 `PanelArea`(패널 크기 − 여백)로 자리를 잡는다.
+   `TestThemeScreensTests`가 시험용 테마와 도시형 몰딩으로 모든 화면을 그려 글자가 패널 안쪽 영역에 있는지 본다(단추·칸·글자 칸 제외 — 그 시험의 `BorderCheckExemptSkins`).
+   Esc는 맨 위 패널·모달을 닫는다. 고르기를 끝내야 하는 화면은 등록에 `.KeepsOpenOnEscape(이유)`, 특정 맵에서만 여는 화면은 `.OnlyWhereMapHas(성질)`(HUD 단추와 키가 같이 본다).
+6. 화면끼리: 패널·모달이 덮는 HUD 요소는 화면 쌓기가 숨긴다(`ScreenStack`이 배치할 때마다 겉면 `UiSurfaces`로 정한다). HUD끼리는 배치 수치로 피한다.
    한 묶음으로 읽히는 HUD는 `CoveredAsOne`을 켠다(체력·집중). 연 화면을 끄는 HUD 단추(가구 배치 켬/끔)는 덮이지 않게 둔다.
 
 ## 새 UI 그림을 넣는 법
@@ -205,7 +208,7 @@ CI `server-publish` job이 같은 두 줄을 돌린다. 배포 목록(`Tools/pub
 3. `theme.json`의 그림 파일, 칸(`rect`), 9조각 테두리(`border`)를 고친다. 형식과 필요한 스킨 5개·아이콘 18개는 `game/themes/README.md`.
 4. `--ui-theme <새 이름>`(또는 폴더 경로)으로 띄워 본다. 빠진 것이 있으면 시작할 때 목록이 나온다.
 5. 검사 테스트: `dotnet test game/tests/Rootborn.Host.Tests --filter "FullyQualifiedName~TestThemeScreensTests|FullyQualifiedName~UiSkinDataTests"`
-   (테두리·크기가 다른 시험용 테마로 등록된 모든 화면을 그려 예외·빠진 아이콘·패널 밖 글자를 본다. 보고서는 `output/host-theme-evidence/theme-report.md`).
+   (테두리·크기가 다른 시험용 테마와 도시형 몰딩으로 등록된 모든 화면을 그려 예외·빠진 아이콘·패널 밖 글자·테두리에 닿는 글자를 본다. 보고서는 `output/host-theme-evidence/<테마>/theme-report.md`).
 
 ## 한 곳에만 두는 것
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Rootborn.Core.Dialogue;
 using Rootborn.Game;
+using Rootborn.Screens.KeyGuide;
 using Rootborn.Ui;
 
 namespace Rootborn.Screens.Dialogue
@@ -62,7 +63,7 @@ namespace Rootborn.Screens.Dialogue
         {
             public const float Width = 760f;
             public const float BottomMargin = 36f;
-            public const float Inset = 42f;
+            // 대화창 안 여백은 테마의 대화창 스킨 여백(ScreenServices.PaddingOf(dialogue)). 높이는 여백 + 대사 + 간격 + 선택지.
             public const float SectionGap = 24f;
             public const float MinLineHeight = 84f;
             /// <summary>대사 오른쪽에 닫기 버튼과 띄울 자리.</summary>
@@ -134,6 +135,14 @@ namespace Rootborn.Screens.Dialogue
             if (topic == ChangeTopics.Language) Rebuild();
         }
 
+        /// <summary>단축키 안내 줄(등록 때 GuidesKeys로 넘긴다): 상호작용 키나 Enter(포커스가 없을 때)가 첫 선택지를 고른다(OnKey와 같은 키).</summary>
+        public static IReadOnlyList<KeyGuideRow> KeyGuideRows(KeyGuideKeys keys)
+        {
+            var chords = new List<KeyChord>(keys.For(ScreenKey.Interact));
+            chords.AddRange(keys.For(ScreenKey.Enter));
+            return new[] { new KeyGuideRow(KeyGuideGroups.Interact, "ui.keys.dialogue.first-choice", chords) };
+        }
+
         protected internal override bool OnKey(ScreenKey key, bool shift)
         {
             bool choiceKey = key == ScreenKey.Interact || (key == ScreenKey.Enter && Services.Screens?.Tree.Focused == null);
@@ -189,13 +198,14 @@ namespace Rootborn.Screens.Dialogue
         /// <summary>대사 높이가 정해지면 패널 높이와 줄·버튼 자리를 다시 정한다(Unity RefreshContentLayout).</summary>
         internal void Arrange(float lineHeight)
         {
-            float height = Metrics.Inset * 2f + ChoicesHeight + Metrics.SectionGap + lineHeight;
+            UiInsets pad = Services.PaddingOf(UiSkin.Dialogue);
+            float height = pad.Vertical + ChoicesHeight + Metrics.SectionGap + lineHeight;
             _root.LineHeight = lineHeight;
             _root.Place(0.5f, 1f, -Metrics.Width / 2f, -Metrics.BottomMargin - height, Metrics.Width, height);
-            _lines.Place(0f, 0f, Metrics.Inset, Metrics.Inset, Metrics.Width - Metrics.Inset - Metrics.LineRightReserve, lineHeight);
-            float top = Metrics.Inset + lineHeight + Metrics.SectionGap;
+            _lines.Place(0f, 0f, pad.Left, pad.Top, Metrics.Width - pad.Left - Metrics.LineRightReserve, lineHeight);
+            float top = pad.Top + lineHeight + Metrics.SectionGap;
             for (int i = 0; i < _choiceButtons.Count; i++)
-                _choiceButtons[i].Place(0f, 0f, Metrics.Inset, top + i * Metrics.ChoiceStep, Metrics.Width - Metrics.Inset * 2f, Metrics.ChoiceHeight);
+                _choiceButtons[i].Place(0f, 0f, pad.Left, top + i * Metrics.ChoiceStep, Metrics.Width - pad.Horizontal, Metrics.ChoiceHeight);
             if (_root.Parent != null && _root.Parent.Rect.W > 0) _root.Layout(_root.Parent.Rect);
         }
 

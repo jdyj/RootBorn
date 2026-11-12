@@ -43,7 +43,9 @@ namespace Rootborn.Screens.Tests.Career
             Assert.That(panel, Is.EqualTo(new UiRect(960 - 450, 540 - 280, 900, 560)));
             UiRect list = List(t).Rect, details = Details(t).Rect, close = t.Node(CareerCandidateScreen.CloseId).Rect;
             Assert.That(list.Right, Is.LessThanOrEqualTo(details.X), "목록이 왼쪽, 상세가 오른쪽");
-            Assert.That(details.W, Is.EqualTo(470f));
+            UiInsets pad = t.Services.PaddingOf(UiSkin.Panel);
+            Assert.That(details.W, Is.GreaterThan(300f), "상세는 목록 오른쪽 남은 폭을 쓴다");
+            Assert.That(details.Right, Is.EqualTo(panel.Right - pad.Right).Within(0.01f), "상세의 오른쪽은 테마 여백 안쪽 끝");
             foreach (UiRect r in new[] { list, details, close })
                 Assert.That(r.X >= panel.X && r.Right <= panel.Right && r.Y >= panel.Y && r.Bottom <= panel.Bottom, Is.True);
             Assert.That(List(t).Columns, Is.EqualTo(1), "목록은 한 줄에 한 칸");

@@ -13,7 +13,8 @@ namespace Rootborn.Screens.Day
     public static class LocationLayout
     {
         public const float Width = 1120, Height = 800;
-        public static readonly (float X, float Y, float W, float H) Title = (0, 340, 880, 48);
+        /// <summary>제목(W, H). 자리는 안쪽 위(테마 여백 — PanelArea), 가운데 맞춤.</summary>
+        public const float TitleW = 880, TitleH = 48;
         public const float TitleFont = 32;
         public static readonly (float X, float Y, float W, float H) Description = (0, 272, 944, 64);
         public const float DescriptionFont = 22;
@@ -22,12 +23,11 @@ namespace Rootborn.Screens.Day
         public static readonly (float X, float Y, float W, float H) State = (0, 154, 944, 64);
         public const float StateFont = 20;
         public static readonly (float X, float Y, float W, float H) HintFrame = (-318, -56, 340, 336);
-        public static readonly (float X, float Y, float W, float H) Hints = (0, 0, 268, 272);
+        // 도움말·활동 틀 안의 글자 자리는 틀 − 테마 여백(PanelArea).
         public const float HintsFont = 20;
         public static readonly (float X, float Y, float W, float H) ActivityFrame = (176, -56, 568, 336);
         /// <summary>활동 목록 보이는 영역(Unity 504x272). 오른쪽에 스크롤 막대 자리(14)를 더했다.</summary>
-        public static readonly (float X, float Y, float W, float H) Activities = (7, 0, 504 + 14, 272);
-        public const float RowWidth = 504, RowHeight = 76, RowPitch = 92, RowFont = 20, RowSubFont = 18, RowReasonFont = 16;
+        public const float RowHeight = 76, RowPitch = 92, RowFont = 20, RowSubFont = 18, RowReasonFont = 16;
         /// <summary>줄 글자의 좌우 안쪽 여백. 긴 글자(다른 언어)는 이 안에서 말줄임한다.</summary>
         public const float RowTextInset = 12;
         public static readonly (float X, float Y, float W, float H) Result = (0, -296, 976, 112);
@@ -65,19 +65,26 @@ namespace Rootborn.Screens.Day
         {
             var root = new UiPanel { Id = RootId, Skin = UiSkin.Panel };
             root.Centered(0f, 0f, LocationLayout.Width, LocationLayout.Height);
-            _title = At(root.Add(new UiLabel { Id = TitleId, FontSize = LocationLayout.TitleFont, Align = UiAlign.Center }), LocationLayout.Title);
+            UiInsets pad = Services.PaddingOf(UiSkin.Panel);
+            var area = new PanelArea(LocationLayout.Width, LocationLayout.Height, pad);
+            _title = root.Add(new UiLabel { Id = TitleId, FontSize = LocationLayout.TitleFont, Align = UiAlign.Center });
+            _title.Centered(0f, area.CenterYFromTop(LocationLayout.TitleH), LocationLayout.TitleW, LocationLayout.TitleH);
             _description = At(root.Add(new UiTextBlock { Id = DescriptionId, FontSize = LocationLayout.DescriptionFont, Align = UiAlign.Center }), LocationLayout.Description);
             _timeBudget = At(root.Add(new UiLabel { Id = TimeBudgetId, FontSize = LocationLayout.TimeBudgetFont, Align = UiAlign.Center }), LocationLayout.TimeBudget);
             _state = At(root.Add(new UiTextBlock { Id = StateId, FontSize = LocationLayout.StateFont, Align = UiAlign.Center, Visible = false }), LocationLayout.State);
             UiPanel hintFrame = At(root.Add(new UiPanel { Skin = UiSkin.Panel, Interactive = false }), LocationLayout.HintFrame);
-            _hints = At(hintFrame.Add(new UiTextBlock { Id = HintsId, FontSize = LocationLayout.HintsFont }), LocationLayout.Hints);
+            var hintArea = new PanelArea(LocationLayout.HintFrame.W, LocationLayout.HintFrame.H, pad);
+            _hints = hintFrame.Add(new UiTextBlock { Id = HintsId, FontSize = LocationLayout.HintsFont });
+            _hints.Place(0f, 0f, hintArea.Left, hintArea.Top, hintArea.InnerWidth, hintArea.InnerHeight);
+            var activityArea = new PanelArea(LocationLayout.ActivityFrame.W, LocationLayout.ActivityFrame.H, pad);
             UiPanel activityFrame = At(root.Add(new UiPanel { Skin = UiSkin.Panel, Interactive = false }), LocationLayout.ActivityFrame);
-            _rows = At(activityFrame.Add(new UiCardGrid
+            _rows = activityFrame.Add(new UiCardGrid
             {
                 Id = RowsId, Padding = 0, DrawBackground = false,
-                CellWidth = LocationLayout.RowWidth, CellHeight = LocationLayout.RowHeight, Spacing = LocationLayout.RowPitch - LocationLayout.RowHeight,
+                CellWidth = activityArea.InnerWidth - UiCardScroller.ScrollbarWidth - UiCardScroller.ScrollbarGap, CellHeight = LocationLayout.RowHeight, Spacing = LocationLayout.RowPitch - LocationLayout.RowHeight,
                 StepsPerNotch = 32f / LocationLayout.RowPitch, // Unity scrollSensitivity 32
-            }), LocationLayout.Activities);
+            });
+            _rows.Place(0f, 0f, activityArea.Left, activityArea.Top, activityArea.InnerWidth, activityArea.InnerHeight);
             _rows.DrawCell = DrawRow;
             _rows.CellClicked += Press;
             _result = At(root.Add(new UiTextBlock { Id = ResultId, FontSize = LocationLayout.ResultFont }), LocationLayout.Result);

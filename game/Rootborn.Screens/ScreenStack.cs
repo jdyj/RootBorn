@@ -19,7 +19,7 @@ namespace Rootborn.Screens
     /// 그리기를 맡으므로 위층 화면이 포인터를 먼저 받는다. 모달이 떠 있으면 그 아래 층은 포인터를 받지 않는다.
     /// 큰 패널은 한 번에 하나(Unity ModernUiPanelInputRouter의 배타 규칙), 모달·알림은 위로 쌓인다.
     /// 이동을 막는지는 화면마다 등록할 때 정하고(Unity UiGameplayInputLock 대신), Host는 MovementBlocked로 묻는다.
-    /// 키 처리 순서: 글자 칸 포커스 → 열린 화면이 가져가는 키(위에서부터) → 키 배정 표 → 맨 위 화면 안에서 포커스 이동.
+    /// 키 처리 순서: 글자 칸 포커스 → 열린 화면이 가져가는 키(위에서부터) → Esc는 맨 위 패널·모달 닫기 → 키 배정 표 → 맨 위 화면 안에서 포커스 이동.
     /// 이동을 막지 않는 화면이 맨 위면 방향 키만으로는 가져가지 않는다(캐릭터가 걷는다). 그런 화면에서 포커스 이동은 Shift+방향 키,
     /// 실행은 Enter다. Tab은 목표 수첩을 여는 키라 포커스 이동에 쓰지 않는다(설계 3.1절, 2026-11-12).
     /// Host는 월드에서 일어난 일(맵 들어감, 앞의 상호작용 대상, 상호작용)을 EnterMap·SetInteractionTarget·Interaction으로 넘긴다.
@@ -122,6 +122,12 @@ namespace Rootborn.Screens
 
         /// <summary>등록 표에 그 화면이 있다(아직 옮기지 않은 화면을 여는 버튼은 이것으로 본다).</summary>
         public bool Has(string id) => _registry.Has(id);
+
+        /// <summary>
+        /// 지금 그 화면을 열 수 있는 곳이다: 등록 때 정한 맵 성질(OnlyWhereMapHas)이 지금 맵에 있다. 여는 키와 HUD 단추가 같이 본다.
+        /// </summary>
+        public bool IsAvailable(string id) =>
+            _registry.TryGet(id, out ScreenEntry entry) && (entry.RequiredMapFeature == null || HasMapFeature(entry.RequiredMapFeature));
 
         /// <summary>
         /// 캐릭터가 걷지 못한다: MovementBlocked이거나, Shift를 누른 채 포커스를 받는 화면이 떠 있다(Shift+방향 키는 버튼 사이를 옮긴다).
@@ -368,6 +374,20 @@ namespace Rootborn.Screens
             foreach (GameScreen screen in ReverseSnapshot())
                 if (screen.IsOpen && screen.OnKey(key, shift)) return true;
 
+            // Esc: 맨 위의 패널·모달을 닫는다. 닫지 않는 화면(KeepsOpenOnEscape — 고르기를 끝내야 하는 것)이 맨 위면 아무것도 닫지 않는다
+            // (포커스만 놓는다). 닫을 화면이 없으면 아래 키 배정이 설정을 연다(2026-11-13 임시로 정함).
+            if (key == ScreenKey.Escape && FocusScreen is GameScreen top)
+            {
+                if (_registry.TryGet(top.Id, out ScreenEntry topEntry) && topEntry.EscapeKeepsOpenReason == null)
+                {
+                    Close(top);
+                    return true;
+                }
+                if (Tree.Focused == null) return false;
+                Tree.SetFocus(null);
+                return true;
+            }
+
             if (_registry.TryGetByKey(key, out string bound) && KeyBindingOpen(bound))
             {
                 Toggle(bound);
@@ -404,6 +424,8 @@ namespace Rootborn.Screens
         /// </summary>
         private bool KeyBindingOpen(string screenId)
         {
+            if (!IsOpen(screenId) && !IsAvailable(screenId)) return false; // 이 맵에서는 열지 않는 화면(HUD 단추도 숨는다)
+            if (FocusScreen != null && FocusScreen.Id == screenId) return true; // 맨 위에 떠 있는 그 화면을 같은 키로 닫는다(막는 화면이어도)
             if (!ScreenBlocksMovement) return true;
             if (!_registry.TryGet(screenId, out ScreenEntry entry) || !entry.KeyWorksOnStartScreens) return false;
             for (int i = 0; i < _open.Count; i++)

@@ -31,7 +31,8 @@ namespace Rootborn.Screens.Furniture
             public const int Columns = 5;
 
             public const float PaletteX = -740f, PaletteY = 0f, PaletteW = 430f, PaletteH = 860f;
-            public const float TitleX = -52f, TitleY = 386f, TitleW = 270f, TitleH = 42f, TitleFont = 24f;
+            /// <summary>제목: 팔레트 안쪽(테마 여백 — PanelArea) 왼쪽 위.</summary>
+            public const float TitleW = 270f, TitleH = 42f, TitleFont = 24f;
             public const float SearchX = 0f, SearchY = 296f, SearchW = 368f, SearchH = 64f, SearchFont = 18f;
             public const int SearchMaxLength = 100;
             public const float SlotX0 = -144f, SlotY0 = 168f, SlotPitchX = 72f, SlotPitchY = 88f, SlotSize = 64f, SlotIcon = 48f;
@@ -40,7 +41,8 @@ namespace Rootborn.Screens.Furniture
 
             /// <summary>Unity 판은 SettingsY 0이었다. 위쪽 체력·집중 HUD와 맞닿아 한 덩어리로 보여 16 내렸다(겹침 검사의 최소 틈 8).</summary>
             public const float SettingsX = 760f, SettingsY = -16f, SettingsW = 360f, SettingsH = 720f;
-            public const float SettingsTitleX = -34f, SettingsTitleY = 310f, SettingsTitleW = 230f, SettingsTitleH = 40f;
+            /// <summary>설정 패널 제목: 안쪽(테마 여백) 왼쪽 위.</summary>
+            public const float SettingsTitleW = 230f, SettingsTitleH = 40f;
             public const float CloseX = 150f, CloseY = 310f, CloseSize = 44f;
             public const float PreviewX = -82f, PreviewY = -288f, PreviewSize = 116f, PreviewIcon = 82f;
             public const float InfoX = 72f, InfoW = 170f;
@@ -49,9 +51,11 @@ namespace Rootborn.Screens.Furniture
             /// <summary>같이 쓰는 집: 방의 허락을 기다리는 중·거절 줄(설정 패널 위쪽, 여러 줄로 줄바꿈).</summary>
             public const float RoomStatusX = 0f, RoomStatusY = 200f, RoomStatusW = 300f, RoomStatusH = 120f, RoomStatusFont = 16f;
 
-            public const float ToolbarX = 0f, ToolbarY = 430f, ToolbarW = 760f, ToolbarH = 86f;
+            /// <summary>위 도구 줄: 단추 자리는 ToolbarX + DeleteX·RotateX(가운데 기준), 줄 패널은 단추 폭 + 테마 여백으로 줄인다(ToolRow).</summary>
+            public const float ToolbarX = 0f, ToolbarY = 430f, ToolbarH = 86f;
             public const float DeleteX = 60f, RotateX = 245f, ToolButtonW = 150f, ToolButtonH = 70f, ToolFont = 18f;
-            public const float BottomX = 0f, BottomY = -490f, BottomW = 1760f, BottomH = 86f;
+            /// <summary>아래 도구 줄: 단추 자리는 BottomX + MoveX, 줄 패널은 단추 폭 + 테마 여백(ToolRow).</summary>
+            public const float BottomX = 0f, BottomY = -490f, BottomH = 86f;
             /// <summary>Unity 글자 13 → 규약의 최소 14.</summary>
             public const float MoveX = -320f, MoveW = 64f, MoveH = 40f, MoveFont = 14f;
 
@@ -92,6 +96,7 @@ namespace Rootborn.Screens.Furniture
         public const string DeleteId = "furniture.delete";
         public const string RotateId = "furniture.rotate";
         public const string MoveId = "furniture.move";
+        public const string ToolbarId = "furniture.toolbar", BottomBarId = "furniture.bottom";
         public const string RoomStatusId = "furniture.room-status";
         public static string SlotId(int slot) => "furniture.slot." + slot;
         public const string WorkspaceRowId = "workspace-row";
@@ -188,8 +193,10 @@ namespace Rootborn.Screens.Furniture
             var root = new UiNode { Id = RootId };
 
             UiPanel palette = root.Add(new UiPanel { Id = PaletteId }).Centered(Metrics.PaletteX, Metrics.PaletteY, Metrics.PaletteW, Metrics.PaletteH);
-            _title = palette.Add(new UiLabel { Id = "furniture.title", FontSize = Metrics.TitleFont, Color = Metrics.Ink })
-                .Centered(Metrics.TitleX, Metrics.TitleY, Metrics.TitleW, Metrics.TitleH);
+            UiInsets pad = Services.PaddingOf(UiSkin.Panel);
+            var paletteArea = new PanelArea(Metrics.PaletteW, Metrics.PaletteH, pad);
+            _title = palette.Add(new UiLabel { Id = "furniture.title", FontSize = Metrics.TitleFont, Color = Metrics.Ink });
+            _title.Place(0f, 0f, paletteArea.Left, paletteArea.Top, Metrics.TitleW, Metrics.TitleH);
             _search = palette.Add(new UiTextField { Id = SearchId, FontSize = Metrics.SearchFont, MaxLength = Metrics.SearchMaxLength })
                 .Centered(Metrics.SearchX, Metrics.SearchY, Metrics.SearchW, Metrics.SearchH);
             _search.TextChanged += OnSearchChanged;
@@ -211,31 +218,42 @@ namespace Rootborn.Screens.Furniture
                 .Centered(Metrics.PageTextX, Metrics.PageTextY, Metrics.PageTextW, Metrics.PageTextH);
 
             UiPanel settings = root.Add(new UiPanel { Id = "furniture.settings" }).Centered(Metrics.SettingsX, Metrics.SettingsY, Metrics.SettingsW, Metrics.SettingsH);
-            _settingsTitle = settings.Add(new UiLabel { Id = "furniture.settings.title", FontSize = Metrics.TitleFont, Color = Metrics.Ink })
-                .Centered(Metrics.SettingsTitleX, Metrics.SettingsTitleY, Metrics.SettingsTitleW, Metrics.SettingsTitleH);
+            var settingsArea = new PanelArea(Metrics.SettingsW, Metrics.SettingsH, pad);
+            _settingsTitle = settings.Add(new UiLabel { Id = "furniture.settings.title", FontSize = Metrics.TitleFont, Color = Metrics.Ink });
+            _settingsTitle.Place(0f, 0f, settingsArea.Left, settingsArea.Top, Metrics.SettingsTitleW, Metrics.SettingsTitleH);
             _close = settings.Add(new UiButton { Id = CloseId, Icon = Rootborn.Screens.Day.ScreenIcons.Close })
                 .Centered(Metrics.CloseX, Metrics.CloseY, Metrics.CloseSize, Metrics.CloseSize);
             _close.Clicked += Close;
-            UiPanel frame = settings.Add(new UiPanel { Id = "furniture.selected.frame" }).Centered(Metrics.PreviewX, Metrics.PreviewY, Metrics.PreviewSize, Metrics.PreviewSize);
+            // 아래쪽 무리(미리보기·이름·크기·방향)를 테마 여백 위로 들어 올린다: 가장 아래 요소와 패널 아래 사이가 여백보다 좁으면 그만큼.
+            float bottomMargin = Math.Min(Metrics.SettingsH / 2f + Metrics.PreviewY - Metrics.PreviewSize / 2f, Metrics.SettingsH / 2f + Metrics.DirectionY - Metrics.InfoH / 2f);
+            float lift = Math.Max(0f, pad.Bottom - bottomMargin);
+            UiPanel frame = settings.Add(new UiPanel { Id = "furniture.selected.frame" }).Centered(Metrics.PreviewX, Metrics.PreviewY + lift, Metrics.PreviewSize, Metrics.PreviewSize);
             _selectedIcon = frame.Add(new UiFittedImage { Id = SelectedIconId }).Centered(0f, 0f, Metrics.PreviewIcon, Metrics.PreviewIcon);
             _name = settings.Add(new UiLabel { Id = SelectedNameId, FontSize = Metrics.NameFont, Color = Metrics.Ink })
-                .Centered(Metrics.InfoX, Metrics.NameY, Metrics.InfoW, Metrics.NameH);
+                .Centered(Metrics.InfoX, Metrics.NameY + lift, Metrics.InfoW, Metrics.NameH);
             _size = settings.Add(new UiLabel { Id = SelectedSizeId, FontSize = Metrics.InfoFont, Color = Metrics.Ink })
-                .Centered(Metrics.InfoX, Metrics.SizeY, Metrics.InfoW, Metrics.InfoH);
+                .Centered(Metrics.InfoX, Metrics.SizeY + lift, Metrics.InfoW, Metrics.InfoH);
             _direction = settings.Add(new UiLabel { Id = SelectedDirectionId, FontSize = Metrics.InfoFont, Color = Metrics.Ink })
-                .Centered(Metrics.InfoX, Metrics.DirectionY, Metrics.InfoW, Metrics.InfoH);
+                .Centered(Metrics.InfoX, Metrics.DirectionY + lift, Metrics.InfoW, Metrics.InfoH);
             _roomStatus = settings.Add(new UiTextBlock { Id = RoomStatusId, FontSize = Metrics.RoomStatusFont, Color = Metrics.Ink, Align = UiAlign.Center })
                 .Centered(Metrics.RoomStatusX, Metrics.RoomStatusY, Metrics.RoomStatusW, Metrics.RoomStatusH);
 
-            UiPanel toolbar = root.Add(new UiPanel { Id = "furniture.toolbar" }).Centered(Metrics.ToolbarX, Metrics.ToolbarY, Metrics.ToolbarW, Metrics.ToolbarH);
-            _delete = toolbar.Add(new UiButton { Id = DeleteId, FontSize = Metrics.ToolFont }).Centered(Metrics.DeleteX, 0f, Metrics.ToolButtonW, Metrics.ToolButtonH);
+            UiPanel toolbar = root.Add(new UiPanel { Id = ToolbarId });
+            _delete = toolbar.Add(new UiButton { Id = DeleteId, FontSize = Metrics.ToolFont });
             _delete.Clicked += DeleteSelected;
-            _rotate = toolbar.Add(new UiButton { Id = RotateId, FontSize = Metrics.ToolFont }).Centered(Metrics.RotateX, 0f, Metrics.ToolButtonW, Metrics.ToolButtonH);
+            _rotate = toolbar.Add(new UiButton { Id = RotateId, FontSize = Metrics.ToolFont });
             _rotate.Clicked += Rotate;
+            new ToolRow(toolbar, Metrics.ToolbarY, Metrics.ToolbarH, pad)
+                .Add(_delete, Metrics.ToolbarX + Metrics.DeleteX, Metrics.ToolButtonW, Metrics.ToolButtonH)
+                .Add(_rotate, Metrics.ToolbarX + Metrics.RotateX, Metrics.ToolButtonW, Metrics.ToolButtonH)
+                .Fit();
 
-            UiPanel bottom = root.Add(new UiPanel { Id = "furniture.bottom" }).Centered(Metrics.BottomX, Metrics.BottomY, Metrics.BottomW, Metrics.BottomH);
-            _move = bottom.Add(new UiButton { Id = MoveId, FontSize = Metrics.MoveFont }).Centered(Metrics.MoveX, 0f, Metrics.MoveW, Metrics.MoveH);
+            UiPanel bottom = root.Add(new UiPanel { Id = BottomBarId });
+            _move = bottom.Add(new UiButton { Id = MoveId, FontSize = Metrics.MoveFont });
             _move.Clicked += PickUpSelected;
+            new ToolRow(bottom, Metrics.BottomY, Metrics.BottomH, pad)
+                .Add(_move, Metrics.BottomX + Metrics.MoveX, Metrics.MoveW, Metrics.MoveH)
+                .Fit();
 
             BuildWorkspaceRow(root);
             ApplyTexts();
@@ -551,6 +569,25 @@ namespace Rootborn.Screens.Furniture
                 if (_ghostHeld && !_ghostHeldCell.Equals(cell)) _ghostHeld = false;
             }
             if (pressed) Press(cell);
+        }
+
+        /// <summary>
+        /// 키보드: 상호작용 키(E·Space·Ctrl)가 캐릭터가 바라보는 칸을 포인터로 누른 것과 같게 한다(놓기·고르기·옮기기 — 같은 Press).
+        /// 그 칸에서 할 일이 없으면(고른 가구도 든 가구도 없고 놓인 가구도 없다) 가져가지 않는다 — 월드 상호작용(문·NPC)으로 간다.
+        /// 칸 커서를 따로 두지 않는다(이 화면은 걸으면서 쓴다 — 방향 키는 캐릭터).
+        /// </summary>
+        protected internal override bool OnKey(ScreenKey key, bool shift)
+        {
+            if (key != ScreenKey.Interact || _view == null || _view.Room == null || !_view.TryFacingCell(out GridPoint cell)) return false;
+            HouseFurnitureLayout house = Services.Session?.House;
+            if (house == null) return false;
+            bool somethingThere = house.TryFindAt(cell, out _);
+            if (!somethingThere && Active == null && !(Carrying && SelectedInstanceId != null)) return false;
+            _hover = cell;
+            _hasHover = true;
+            _hoverValid = Active != null && CanPlace(Active, cell);
+            Press(cell);
+            return true;
         }
 
         private bool CanPlace(FurnitureDefinition f, GridPoint anchor)

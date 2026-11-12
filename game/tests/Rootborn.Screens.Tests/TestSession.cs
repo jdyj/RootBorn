@@ -42,7 +42,7 @@ namespace Rootborn.Screens.Tests
             Text = TestData.Text(language);
             ScreenRegistry registry = ScreenCatalog.Create();
             extra?.Invoke(registry);
-            Services = new ScreenServices(Text, Session) { Names = DisplayNames.Load(TestData.DataDirectory) };
+            Services = new ScreenServices(Text, Session) { Names = DisplayNames.Load(TestData.DataDirectory), SkinPadding = TestSkinPadding };
             Stack = new ScreenStack(registry, Services);
             Stack.Layout(1920, 1080);
         }
@@ -55,6 +55,13 @@ namespace Rootborn.Screens.Tests
         public string SavesDirectory => _saves;
         public GameText Text { get; }
         public ScreenServices Services { get; }
+
+        /// <summary>
+        /// 시험용 스킨 여백: 변마다 다른 값(테마가 정하는 값이 화면의 숫자가 아니라 이것에서 오는지 보이게). 실제 테마와 무관하다.
+        /// </summary>
+        public static UiInsets TestSkinPadding(string skin) => skin == UiSkin.Button || skin == UiSkin.Slot || skin == UiSkin.Field
+            ? new UiInsets(6, 5, 7, 4)
+            : new UiInsets(30, 26, 34, 22);
         public ScreenStack Stack { get; }
 
         public T Screen<T>(string id) where T : GameScreen => (T)Stack.Find(id);

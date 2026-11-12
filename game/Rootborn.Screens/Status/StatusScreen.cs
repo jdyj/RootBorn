@@ -43,15 +43,15 @@ namespace Rootborn.Screens.Status
         public static class Layout
         {
             public const float Width = 560f, Height = 540f;
-            public const float PadX = 32f;
-            public const float TitleY = 32f, TitleH = 44f, TitleFont = 30f, TitleRightReserve = 160f;
-            public const float DayPointsY = 88f, DayPointsH = 28f, DayPointsFont = 20f;
-            public const float CloseRight = 80f, CloseY = 28f, CloseSize = 48f, CloseIconSize = 32f;
-            public const float CardTop = 140f, CardPitch = 108f, CardH = 96f;
+            // 패널 안 여백은 테마(ScreenServices.PaddingOf(panel))에서 온다. 아래 값은 그 안쪽 영역 기준의 간격이다.
+            public const float TitleH = 44f, TitleFont = 30f, TitleCloseGap = 16f;
+            public const float DayPointsGap = 12f, DayPointsH = 28f, DayPointsFont = 20f;
+            public const float CloseSize = 48f, CloseIconSize = 32f;
+            public const float CardsGap = 16f, CardPitch = 108f, CardH = 96f;
             public const float CardIconX = 20f, CardIconY = 24f, CardIconSize = 48f;
-            public const float CardLabelX = 92f, CardLabelY = 24f, CardLabelRightReserve = 316f, CardRowH = 48f, CardLabelFont = 26f;
-            public const float CardValueFromRight = 216f, CardValueW = 132f, CardValueFont = 36f;
-            public const float HintFromBottom = 56f, HintH = 28f, HintFont = 18f;
+            public const float CardLabelX = 92f, CardLabelY = 24f, CardLabelRightReserve = 252f, CardRowH = 48f, CardLabelFont = 26f;
+            public const float CardValueRight = 20f, CardValueW = 132f, CardValueFont = 36f;
+            public const float HintH = 28f, HintFont = 18f;
         }
 
         public const string RootId = "status", TitleId = "status.title", DayPointsId = "status.day-points", CloseId = "status.close", HintId = "status.close-hint";
@@ -83,32 +83,36 @@ namespace Rootborn.Screens.Status
         {
             var root = new UiPanel { Id = RootId, Skin = UiSkin.Panel };
             root.Centered(0f, 0f, Layout.Width, Layout.Height);
-            float inner = Layout.Width - Layout.PadX * 2f;
+            UiInsets pad = Services.PaddingOf(UiSkin.Panel);
+            float inner = Layout.Width - pad.Horizontal;
+            float closeX = Layout.Width - pad.Right - Layout.CloseSize;
 
             _title = root.Add(new UiLabel { Id = TitleId, FontSize = Layout.TitleFont, Color = Ink });
-            _title.Place(0f, 0f, Layout.PadX, Layout.TitleY, Layout.Width - Layout.TitleRightReserve, Layout.TitleH);
+            _title.Place(0f, 0f, pad.Left, pad.Top, closeX - Layout.TitleCloseGap - pad.Left, Layout.TitleH);
+            float dayY = pad.Top + Layout.TitleH + Layout.DayPointsGap;
             _dayPoints = root.Add(new UiLabel { Id = DayPointsId, FontSize = Layout.DayPointsFont, Color = Ink });
-            _dayPoints.Place(0f, 0f, Layout.PadX, Layout.DayPointsY, inner, Layout.DayPointsH);
+            _dayPoints.Place(0f, 0f, pad.Left, dayY, inner, Layout.DayPointsH);
 
             var close = root.Add(new UiButton { Id = CloseId, Skin = UiSkin.Slot });
-            close.Place(0f, 0f, Layout.Width - Layout.CloseRight, Layout.CloseY, Layout.CloseSize, Layout.CloseSize);
+            close.Place(0f, 0f, closeX, pad.Top, Layout.CloseSize, Layout.CloseSize);
             close.Clicked += Close;
             float inset = (Layout.CloseSize - Layout.CloseIconSize) / 2f;
             close.Add(new UiImage { Image = "icon:close" }).Place(0f, 0f, inset, inset, Layout.CloseIconSize, Layout.CloseIconSize);
 
+            float cardTop = dayY + Layout.DayPointsH + Layout.CardsGap;
             for (int i = 0; i < Cards.Length; i++)
             {
                 var card = root.Add(new UiPanel { Id = CardId(i), Skin = UiSkin.Slot });
-                card.Place(0f, 0f, Layout.PadX, Layout.CardTop + i * Layout.CardPitch, inner, Layout.CardH);
+                card.Place(0f, 0f, pad.Left, cardTop + i * Layout.CardPitch, inner, Layout.CardH);
                 card.Add(new UiImage { Image = Cards[i].Icon }).Place(0f, 0f, Layout.CardIconX, Layout.CardIconY, Layout.CardIconSize, Layout.CardIconSize);
                 _labels[i] = card.Add(new UiLabel { Id = LabelId(i), FontSize = Layout.CardLabelFont, Color = Ink });
-                _labels[i].Place(0f, 0f, Layout.CardLabelX, Layout.CardLabelY, Layout.Width - Layout.CardLabelRightReserve, Layout.CardRowH);
+                _labels[i].Place(0f, 0f, Layout.CardLabelX, Layout.CardLabelY, inner - Layout.CardLabelRightReserve, Layout.CardRowH);
                 _values[i] = card.Add(new UiLabel { Id = ValueId(i), FontSize = Layout.CardValueFont, Color = Ink, Align = UiAlign.Right });
-                _values[i].Place(0f, 0f, Layout.Width - Layout.CardValueFromRight, Layout.CardLabelY, Layout.CardValueW, Layout.CardRowH);
+                _values[i].Place(0f, 0f, inner - Layout.CardValueRight - Layout.CardValueW, Layout.CardLabelY, Layout.CardValueW, Layout.CardRowH);
             }
 
             _hint = root.Add(new UiLabel { Id = HintId, FontSize = Layout.HintFont, Color = Ink, Align = UiAlign.Right });
-            _hint.Place(0f, 0f, Layout.PadX, Layout.Height - Layout.HintFromBottom, inner, Layout.HintH);
+            _hint.Place(0f, 0f, pad.Left, Layout.Height - pad.Bottom - Layout.HintH, inner, Layout.HintH);
             return root;
         }
 
