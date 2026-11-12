@@ -74,6 +74,27 @@ namespace Rootborn.Core.StudentLife
             if (clock < 21 * 60) return Evening;
             return Night;
         }
+
+        /// <summary>
+        /// 그날의 분 축 [dayStartMinutes, dayEndMinutes)에서 시간대가 시작하는 때를 순서대로 into에 채운다(먼저 비운다).
+        /// 경계를 따로 적지 않고 <see cref="FromMinutes"/>가 바뀌는 분을 찾는다 — 그래서 두 곳의 경계가 어긋날 수 없다.
+        /// 하루 시작 07:00이면 (420, 오전), (720, 오후), (1020, 저녁), (1260, 밤). 자정 뒤 새벽도 밤이라 새 시간대가 아니다.
+        /// </summary>
+        public static void SlotStarts(int dayStartMinutes, int dayEndMinutes, List<(int Minutes, string SlotId)> into)
+        {
+            if (into == null) throw new ArgumentNullException(nameof(into));
+            into.Clear();
+            int dayStartClock = dayStartMinutes % MinutesPerDay;
+            if (dayStartClock < 0) dayStartClock += MinutesPerDay;
+            string last = null;
+            for (int m = dayStartMinutes; m < dayEndMinutes; m++)
+            {
+                string slot = FromMinutes(m, dayStartClock);
+                if (string.Equals(slot, last, StringComparison.Ordinal)) continue;
+                into.Add((m, slot));
+                last = slot;
+            }
+        }
     }
 
     public interface ILocationStateCondition

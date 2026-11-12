@@ -18,6 +18,8 @@
   // doorField·spawnField: 문 엔티티(Door)의 목적지 칸과 도착 지점 칸. 없으면 Where·Position. 자세한 약속은 game/world/README.md.
   //   collision.openCells: 규칙이 막아도 열어 둘 칸 [x, y](Unity 씬에 구운 충돌에 없던 칸).
   "walker": { "bodyCells": 1, "speedCellsPerSecond": 4 },
+  // npcWalker: 마을 NPC가 걷는 빠르기(실제 초당 칸). 플레이어보다 느리게 둔다. 데이터 지문에 들어간다(방 안 모두가 NPC 자리를 같이 셈한다).
+  "npcWalker": { "speedCellsPerSecond": 2.5 },
   "maps": [
     {
       "id": "Town",

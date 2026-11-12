@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Rootborn.Core.Dialogue;
 using Rootborn.Core.Interaction;
 using Rootborn.Core.Minigames;
-using Rootborn.Core.StudentLife;
+using Rootborn.Core.Placement;
 using Rootborn.Core.World;
 using Rootborn.Screens.Furniture;
 using Rootborn.Ui;
@@ -12,36 +12,39 @@ using Rootborn.World;
 namespace Rootborn.Simulation.Headless
 {
     /// <summary>
-    /// 창 없는 월드: Host WorldScreen의 그리지 않는 부분과 같다(걷기·문은 Core WorldSession, NPC 자리는 일정과 학생 시각, 상호작용 후보,
-    /// 가구 방이면 가구가 막는 칸을 더한 걷는 맵). 그림·카메라·낮밤 색은 없다.
-    /// Host WorldScreen과 RoomAwareMaps를 옮겨 적은 것이라 둘이 바뀌면 같이 고친다(필요한 변경: 이 부분을 Rootborn.World로 빼면 중복이 없어진다).
+    /// 창 없는 월드: Host WorldScreen의 그리지 않는 부분과 같다(걷기·문은 Core WorldSession, NPC 자리는 Host와 같은 NpcStage가 일정과 그날의 분으로,
+    /// 상호작용 후보, 가구 방이면 가구가 막는 칸을 더한 걷는 맵). 그림·카메라·낮밤 색은 없다.
+    /// RoomAwareMaps를 옮겨 적은 HeadlessRooms가 있어 Host와 바뀌면 같이 고친다.
     /// </summary>
     public sealed class HeadlessWorld
     {
         public readonly WorldSession Session;
         public readonly InteractionTargets Interactions;
         public readonly HeadlessRooms Rooms;
+        /// <summary>걷는 NPC(Host와 같은 공장으로 만든다). 테스트 드라이버는 TryPose로 NPC를 찾아간다.</summary>
+        public readonly NpcStage Npcs;
+        /// <summary>NPC 순서(data/registry.json npcs).</summary>
+        public readonly IReadOnlyList<string> NpcIds;
         private readonly PlayAtlas _atlas;
-        private readonly NpcScheduleLookupCache _schedules;
-        private readonly NpcScheduleAccess _access;
-        private readonly NpcArt _npcArt;
         private readonly Func<int> _day;
-        private readonly Func<float> _hour;
-        private string _placedMap, _placedSlot;
-        private int _placedDay;
+        private readonly Func<double> _dayMinutes;
+        private string _enteredMap;
+        private readonly HouseFurnitureBlocking _houseBlocking;
 
-        public HeadlessWorld(PlayAtlas atlas, IWorldArrivals arrivals, string startMap, string spawn, Func<int> day, Func<float> hour)
+        /// <param name="dayMinutes">그날의 분(하루 시작~하루 끝 축, GameSession.DayMinutesExact).</param>
+        public HeadlessWorld(PlayAtlas atlas, IWorldArrivals arrivals, string startMap, string spawn, Func<int> day, Func<double> dayMinutes)
         {
             _atlas = atlas;
-            _day = day;
-            _hour = hour;
+            _day = day ?? throw new ArgumentNullException(nameof(day));
+            _dayMinutes = dayMinutes ?? throw new ArgumentNullException(nameof(dayMinutes));
             Rooms = new HeadlessRooms(atlas.Maps, atlas.Interactions);
             Session = new WorldSession(Rooms, atlas.Maps.Catalog.Walker) { Arrivals = arrivals };
             if (!Session.Enter(startMap, spawn)) throw new InvalidOperationException(Session.LastProblem);
             Interactions = new InteractionTargets(atlas.Interactions.RadiusCells);
-            _schedules = new NpcScheduleLookupCache(atlas.Definitions.All<NpcSchedule>());
-            _access = new NpcScheduleAccess(_schedules);
-            _npcArt = NpcArt.Load(atlas.RepoRoot);
+            NpcIds = NpcArt.Load(atlas.RepoRoot).Order;
+            Npcs = NpcStage.Create(new NpcScheduleLookupCache(atlas.Definitions.All<NpcSchedule>()), NpcIds, atlas.Interactions,
+                atlas.Maps.Catalog, Rooms, atlas.Definitions.TimeRules);
+            _houseBlocking = new HouseFurnitureBlocking(Rooms.RoomOf, atlas.Interactions.PlacementMaps(atlas.Maps.Catalog), FurnitureBlockingChanged);
             Refresh();
         }
 
@@ -54,30 +57,32 @@ namespace Rootborn.Simulation.Headless
             Refresh();
         }
 
+        /// <summary>게임 한 판을 이을 때: 집 배치를 아직 모르면 집 밖에서 읽어 두고 가구 방의 걷는 격자에 가구를 넣는다(Host WorldScreen과 같은 코드).</summary>
+        public void AttachHouseFurniture(Rootborn.Game.GameSession session) => _houseBlocking.Attach(session, Session.Map.Id);
+
+        /// <summary>가구가 바뀌었을 때: 플레이어가 어느 맵에 있든 가구 방에 막힌 칸을 맞춘다(Host WorldScreen과 같은 코드).</summary>
+        public void ApplyHouseFurniture(Rootborn.Game.GameSession session) => _houseBlocking.Apply(session);
+
+        private void FurnitureBlockingChanged(string mapId)
+        {
+            Npcs.ForgetMap(mapId);
+            Refresh(); // 옛 계획의 자리를 다음 프레임까지 두지 않는다
+        }
+
+        /// <summary>맵이 바뀌면(또는 놓인 상자가 바뀌면) 후보 목록을 한 번 만들고(NPC + 놓인 상자), 프레임마다 NPC 자리와 대상을 고친다(새 객체를 만들지 않는다).</summary>
         private void Refresh()
         {
             string map = Session.Map.Id;
-            int day = _day();
-            string slot = LocationStateTimeSlots.FromMinutes((int)(_hour() * 60f));
-            if (map == _placedMap && slot == _placedSlot && day == _placedDay) { Interactions.Update(Session.Walker.X, Session.Walker.Y); return; }
-            Place(map, day, slot);
-        }
-
-        /// <summary>
-        /// 맵·날·시간대가 바뀌었을 때만. 따로 둔 까닭: 아래 지역 함수가 day·slot을 잡으면 그 메서드에 들어올 때마다 잡는 객체가 생긴다
-        /// (Host WorldScreen.RefreshInteractions가 같은 모양으로 프레임마다 약 40바이트를 잡는다 — 보고함).
-        /// </summary>
-        private void Place(string map, int day, string slot)
-        {
-            _placedMap = map; _placedSlot = slot; _placedDay = day;
-            MapInteractions here = HereData;
-            string LocationOf(string npcId) => _schedules.TryGetByNpcId(npcId, out NpcSchedule s) ? _access.ResolveLocationId(s.Id, day, slot, null) : string.Empty;
-            List<PlacedNpc> npcs = NpcPlacement.Place(_npcArt.Order, LocationOf, here);
-            Interactions.MapId = map;
-            Interactions.RadiusPixels = _atlas.Interactions.RadiusCells * Session.Map.Grid.CellSize;
-            List<InteractionCandidate> candidates = NpcPlacement.Candidates(_atlas.Interactions, here, npcs, Session.Map.Doors);
-            candidates.AddRange(_storage);
-            Interactions.SetCandidates(candidates);
+            if (map != _enteredMap)
+            {
+                _enteredMap = map;
+                Interactions.MapId = map;
+                Interactions.RadiusPixels = _atlas.Interactions.RadiusCells * Session.Map.Grid.CellSize;
+                List<InteractionCandidate> candidates = Npcs.EnterMap(map, HereData, Session.Map.Doors);
+                candidates.AddRange(_storage);
+                Interactions.SetCandidates(candidates);
+            }
+            Npcs.Tick(_day(), _dayMinutes());
             Interactions.Update(Session.Walker.X, Session.Walker.Y);
         }
 
@@ -103,7 +108,7 @@ namespace Rootborn.Simulation.Headless
                     _storage.Add(new InteractionCandidate(Rootborn.Screens.Storage.StorageScreen.InteractionKind, p.InstanceId,
                         cx / p.OccupiedCells.Count, cy / p.OccupiedCells.Count, PlacedStoragePriority, true));
                 }
-            if (before > 0 || _storage.Count > 0) { _placedMap = null; Refresh(); }
+            if (before > 0 || _storage.Count > 0) { _enteredMap = null; Refresh(); } // Host WorldScreen.RefreshCandidatesNow와 같다
         }
     }
 

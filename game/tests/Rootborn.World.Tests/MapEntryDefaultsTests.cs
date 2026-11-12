@@ -6,7 +6,7 @@ namespace Rootborn.World.Tests
     /// <summary>자동 테스트: 새 맵은 지금 맵의 어긋남을 맞추는 값 없이 기본값으로 읽힌다.</summary>
     public sealed class MapEntryDefaultsTests
     {
-        private const string Minimal = @"{ ""maps"": [ {
+        private const string Minimal = @"{ ""npcWalker"": { ""speedCellsPerSecond"": 2.5 }, ""maps"": [ {
             ""id"": ""NewRoom"", ""ldtk"": ""maps/new.ldtk"", ""level"": ""Room"", ""viewCells"": 12,
             ""collision"": { ""rule"": ""interior-auto"" }, ""doors"": {}, ""spawns"": { ""room-entry"": [ 48, 48 ] } } ] }";
 

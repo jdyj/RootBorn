@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Rootborn.Core.World
 {
-    /// <summary>칸 단위 최단 경로(상하좌우). 테스트 드라이버가 어디로 걸을지 정할 때 쓴다.</summary>
+    /// <summary>칸 단위 최단 경로(상하좌우). 테스트 드라이버와 NPC 길 찾기가 어디로 걸을지 정할 때 쓴다.</summary>
     public static class GridPath
     {
         private static readonly CellPos[] Steps = { new CellPos(1, 0), new CellPos(-1, 0), new CellPos(0, 1), new CellPos(0, -1) };

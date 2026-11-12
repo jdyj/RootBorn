@@ -45,6 +45,21 @@ namespace Rootborn.Core.Tests
         }
 
         [Test]
+        public void MinuteFraction_은_다음_분까지_흐른_비율이다()
+        {
+            var clock = new FlowingClock(1440f); // 게임 1분 = 실제 1초
+            Assert.That(clock.MinuteFraction, Is.EqualTo(0d));
+            Assert.That(clock.Advance(0.25f, false), Is.EqualTo(0));
+            Assert.That(clock.MinuteFraction, Is.EqualTo(0.25).Within(1e-3));
+            Assert.That(clock.Advance(1.0f, false), Is.EqualTo(1));
+            Assert.That(clock.MinuteFraction, Is.EqualTo(0.25).Within(1e-3), "1분을 넘긴 나머지");
+            clock.Advance(0.5f, true); // 멈춤: 그대로
+            Assert.That(clock.MinuteFraction, Is.EqualTo(0.25).Within(1e-3));
+            clock.Advance(0.7499f, false);
+            Assert.That(clock.MinuteFraction, Is.LessThan(1d), "1 미만");
+        }
+
+        [Test]
         public void TimeRules_DayRunsFromSevenToSevenNextMorning()
         {
             var rules = Rules();

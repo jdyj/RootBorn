@@ -66,8 +66,8 @@ Balance `WriteFullReport`(전체 균형 보고): `dotnet test game/tests/Rootbor
 | `--sample` | | UI 견본 화면 |
 | `--world <맵>` | | 월드 화면. 맵 id(Unity 씬 이름) 또는 LDtk 레벨 이름(예: Shop, Town, House) |
 | `--spawn <도착 지점>` | | 맵 목록에서 그 맵의 첫 도착 지점 |
-| `--maps <맵 목록>` | `ROOTBORN_WORLD_MAPS` | `<저장소>/game/world/maps.json` |
-| `--interactions <파일>` | | `<저장소>/game/world/interactions.json` |
+| `--maps <맵 목록>` | `ROOTBORN_WORLD_MAPS` | `<저장소>/game/world/maps.json`. 개발용: 다른 파일로 바꿔도 데이터 지문(같이 하기에서 맞춰 보는 값)에는 들지 않는다 — 지문은 저장소의 `game/world/maps.json`·`interactions.json`을 센다 |
+| `--interactions <파일>` | | `<저장소>/game/world/interactions.json`. 개발용: `--maps`와 같이 데이터 지문에는 저장소의 파일이 든다 |
 | `--hour <시각>` | | 8. `--world`일 때만(슬롯은 저장된 학생 시각에서 이어진다) |
 | `--time-scale <배속>` | | 1. 하루 길이는 data/time의 TimeDefinition(600초). `--world`면 시험 화면의 시계, 슬롯이면 학생의 흐르는 시계에 곱한다(0이면 시계가 서 있다) |
 | `--save-root <세이브 폴더>` | `ROOTBORN_SAVE_ROOT` | 없음. `--slot`을 쓰면 반드시 준다. `--slot`·`--world`·`--sample` 없이 주면 슬롯 선택 화면부터 시작한다 |
@@ -91,7 +91,8 @@ Balance `WriteFullReport`(전체 균형 보고): `dotnet test game/tests/Rootbor
 세이브 폴더 배치: `<세이브 폴더>/<슬롯>/`에 영역마다 JSON 파일 하나. 한 명령의 저장은 묶음 하나로 `<슬롯>/.save-batch/`에 다 쓴 뒤 바꿔 넣는다(도중에 꺼지면 다음에 읽을 때 마저 넣거나 버려서 전부 옛것 또는 전부 새것). 다음 날을 시작할 때 `<슬롯>/backups/<날 번호>/`에 슬롯 파일 사본을 남긴다(`--day-copies`, 맨 위 칸 파일만, `.`으로 시작하는 임시 파일 빼고. 임시 폴더에 다 복사한 뒤 이름을 바꿔 넣어 반쯤 찬 사본은 남지 않는다).
 되살리는 명령은 없다: 사본 폴더의 파일을 슬롯 폴더(같은 슬롯이든 다른 이름의 슬롯이든)에 복사해 넣고 그 슬롯으로 이어 한다. 슬롯 폴더를 다른 이름으로 복사해도 같다 — 세이브 안의 슬롯 이름이 옛 이름이어도 지금 슬롯으로 읽고 저장한다(Game `CopiedSlotTests`).
 캐릭터는 슬롯의 옷 선택(`wearables-local-player.json`, 없으면 칸 기본값)으로 성장 단계 몸에 옷·머리를 겹쳐 그린다.
-낮밤은 맵 목록의 `dayNight`가 켜진 맵(마을)에만 입힌다. 슬롯으로 시작하면 낮밤·NPC 자리는 학생 날·시각(`GameSession.StudentDay`·`StudentHour`)을, 캐릭터 몸은 `GrowthStageId()`를 따른다. `interactions.json`에서 `placementSurface`가 있는 맵(집)에 들어가면 그 맵에서 방 칸을 만들어 `GameSession.EnterHouse`를 부른다. NPC는 일정(data/npcs)과 시간대로 `interactions.json`의 장소 자리에 선다.
+낮밤은 맵 목록의 `dayNight`가 켜진 맵(마을)에만 입힌다. 슬롯으로 시작하면 낮밤은 학생 날·시각(`GameSession.StudentDay`·`StudentHour`)을, NPC 자리는 분 아래까지 든 시각(`GameSession.DayMinutesExact`)을, 캐릭터 몸은 `GrowthStageId()`를 따른다. `interactions.json`에서 `placementSurface`가 있는 맵(집)에 들어가면 그 맵에서 방 칸을 만들어 `GameSession.EnterHouse`를 부른다. NPC는 일정(data/npcs)의 일과표를 따라 걸어서 옮기고, 머무는 곳(`interactions.json`의 장소 자리)에서 서 있거나 어슬렁거린다. 자리는 (데이터, 날, 그날의 분)에서 계산하고 저장하지 않는다.
+NPC 이동(설계 `docs/superpowers/specs/2026-11-12-npc-movement-design.md`): NPC 자리는 프레임마다 쌓아 가지 않고 **(데이터, 날, 그날의 분)으로 계산한다**(Core `NpcWorld` — 시간대가 바뀌면 앞 자리에서 다음 자리까지 문을 지나 초당 2.5칸으로 걷고, 자리에서는 둘레 3칸 안을 2~6초 쉬며 어슬렁거린다). 그래서 활동으로 시간이 건너뛰거나 자고 일어나도 그 시각의 자리에 있고, **NPC 자리는 저장하지 않는다**(세이브 모양 그대로). 하루 계획과 길은 날이 바뀔 때·가구가 바뀐 맵(`NpcStage.ForgetMap`)에서만 만들고, 프레임마다 `NpcStage.Tick`이 모든 NPC의 자리를 계산하고(시각의 함수라 싸다 — NPC 60명에 Tick 평균 10.9µs) 지금 맵의 NPC만 그리고 상호작용 후보를 켠다(걸음이 넘어가지 않는 프레임에서는 새 객체 없음, 새 머무름이 시작될 때 NPC 한 명에 약 4.4KB). 집의 가구는 플레이어가 어느 맵에 있든 집의 걷는 격자에 든다(`Rootborn.Screens` `HouseFurnitureBlocking` — 게임 한 판을 잇는 순간 집 배치를 읽어 두고(`GameSession.PrepareHouse`, 체인에는 집에 들어설 때, 그리고 이 판에서 집에 들어간 적이 있으면 다음 날 시작 때 알린다), 가구 알림마다 막힌 칸이 바뀐 가구 방만 NPC 계획을 다시 만들고 그 프레임에 자리를 다시 낸다). 걷는 NPC에게도 말을 걸 수 있고, 혼자 하기에서는 대화가 시계를 멈추므로 NPC도 선다. 같이 하기에서는 방의 (날, 분)에서 각자 계산하고 NPC용 메시지는 없다(대화 중에도 걷는다). 맵 쪽 약속은 `game/world/README.md` 5절.
 흐르는 시간(설계 `docs/superpowers/specs/2026-11-12-flowing-time-design.md`): 하루 시작·취침 시각·밤 체력 감소·늦잠 회복 감소는 `game/time.json`(하루 길이는 data/time), 시계는 `GameSession.AdvanceTime(지난 초, 메뉴 열림)`으로 가고 `Sleep()`으로 잔다(규칙은 Core `TimeRules`·`StudentLifeProgress.Clock`, 화면·Host 연결은 다음 단계).
 슬롯으로 시작하면 같은 정의로 `GameSession`도 시작하고, 월드 위에 화면 쌓기를 올린다(`--world`도 화면 쌓기는 올린다).
 E·Space·Ctrl(Unity 판과 같은 상호작용 키)을 누르면 앞의 대상과 상호작용한 이벤트가 나오고(`[상호작용] 맵:종류/id`), 그 종류에 등록된 화면이 열린다.

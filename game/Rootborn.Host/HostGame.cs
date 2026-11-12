@@ -481,7 +481,7 @@ namespace Rootborn.Host
                 // (GameSession.RoomShownMinutes)을 따른다: 혼자 하기에서는 흐르는 시계 그 자체라 NPC 자리·장소 상태와 같은 시각이다.
                 // 같이 하는 방은 아직 때의 대표 시각(흐르는 시간 4단계에서 방의 시계도 흐르는 시각이 된다).
                 if (Session.TimeRules != null) World.DayStartMinutes = Session.TimeRules.DayStartMinutes;
-                World.FollowStudentTime(() => Session.StudentDay, () => Session.StudentHour, () => RoomLightHour(Session));
+                World.FollowStudentTime(() => Session.StudentDay, () => Session.StudentHour, () => RoomLightHour(Session), () => Session.DayMinutesExact);
                 DayBaseline.For(Session); // 하루 결과의 퀘스트·물건 변화 기준점(Unity: 마을 씬을 불러올 때)
                 SyncSession();
             }
@@ -586,6 +586,8 @@ namespace Rootborn.Host
             if (session != null)
                 session.Changed += topic => { if (topic == ChangeTopics.Furniture || topic == ChangeTopics.World) RefreshFurniture(); };
             SyncHouse();
+            // 집 밖에서 시작해도(이어 하기, 방에 들어감) 집에 들어서기 전에 집의 걷는 격자에 가구를 넣는다 — NPC 자리가 들어온 때에 기대지 않게.
+            World.AttachHouseFurniture(session);
         }
 
         /// <summary>맵이 바뀌었을 때만: 가구 방이면 EnterHouse(들어올 때마다 저장된 배치를 다시 읽는다). 맵 크기는 맵에서 읽는다.</summary>
@@ -601,16 +603,15 @@ namespace Rootborn.Host
             RefreshFurniture();
         }
 
-        /// <summary>놓인 가구로 월드 그림과 캐릭터 충돌을 맞춘다(바뀔 때만 부른다).</summary>
+        /// <summary>
+        /// 놓인 가구로 캐릭터·NPC 충돌과 월드 그림을 맞춘다(바뀔 때만 부른다). 충돌은 플레이어가 어느 맵에 있든 가구 방에 넣고(막힌 칸이 바뀌었으면
+        /// NPC가 그 방의 길을 다시 만든다), 그림은 지금 맵이 가구 방일 때만.
+        /// </summary>
         private void RefreshFurniture()
         {
-            FurnitureRoom room = World.Room;
             var house = Session?.House;
-            if (room != null && house != null)
-            {
-                room.SetFurnitureBlocking(house.BlockingCells);
-                World.SetPlacedFurniture(house.Placed, Session.IsStorage);
-            }
+            World.ApplyHouseFurniture(Session);
+            if (World.Room != null && house != null) World.SetPlacedFurniture(house.Placed, Session.IsStorage);
             else World.SetPlacedFurniture(null);
         }
 

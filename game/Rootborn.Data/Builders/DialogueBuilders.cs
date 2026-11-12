@@ -1,10 +1,11 @@
 using System.Collections.Generic;
 using Rootborn.Core.Dialogue;
+using Rootborn.Core.NpcMovement;
 using Rootborn.Core.Quests;
 
 namespace Rootborn.Data.Builders
 {
-    /// <summary>대화, 대화 선택지·조건, NPC와 역할, NPC 일정과 일정 규칙.</summary>
+    /// <summary>대화, 대화 선택지·조건, NPC와 역할, NPC 일정과 일정 규칙, 일정 줄의 머무는 행동.</summary>
     internal static class DialogueBuilders
     {
         public static void Register(DefinitionBuilders b)
@@ -40,12 +41,15 @@ namespace Rootborn.Data.Builders
                     entries.Add(new NpcScheduleEntry(
                         entry.RefId("location"), c.One<DialogueDefinition>(entry, "dialogue"), entry.Str("dialogueKey"),
                         entry.Str("interactionHintKey"), entry.Str("eventNoticeKey"), entry.Int("priority"),
-                        c.All<INpcScheduleRule>(entry, "rules").ToArray()));
+                        c.All<INpcScheduleRule>(entry, "rules").ToArray(),
+                        // stay가 없는 줄은 서 있기(NpcScheduleEntry가 null을 서 있기로 받는다). 같은 ref는 같은 객체 하나라 머무름이 이어진다.
+                        entry.Has("stay") ? c.One<INpcStayBehavior>(entry, "stay") : null));
                 }
 
                 return new NpcSchedule(n.Id, c.One<NpcDefinition>(n, "npc"), n.RefId("fallbackLocation"), entries.ToArray());
             });
             b.Add("TimeSlotScheduleRule", (n, c) => new TimeSlotScheduleRule(n.RefIds("timeSlots")));
+            b.Add("NpcWanderStay", (n, c) => new NpcWanderStay(n.Float("radiusCells"), n.Float("pauseMinSeconds"), n.Float("pauseMaxSeconds")));
         }
     }
 }

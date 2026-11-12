@@ -9,7 +9,8 @@ using NUnit.Framework;
 namespace Rootborn.Data.Tests
 {
     /// <summary>
-    /// 지문이 셈하는 범위: 규칙에 쓰이는 데이터만(등록부, 엔티티 파일, data 옆의 game/economy.json).
+    /// 지문이 셈하는 범위: 규칙에 쓰이는 데이터만(등록부, 엔티티 파일, data 옆의 game/economy.json·game/time.json·
+    /// game/world/maps.json·game/world/interactions.json).
     /// 그림 좌표표(data/atlases), 변환 보고서, 문구(data/localization)는 셈하지 않는다 — 배포마다 들어가는 몫이 다르고,
     /// 문구가 달라도(언어가 다른 두 사람) 같은 방에 들어갈 수 있어야 한다.
     /// 클라이언트 배포(Tools/publish/content.txt)와 서버 배포(content-server.txt)의 data/ 줄로 모은 폴더가 같은 지문을 내야 한다.
@@ -110,6 +111,49 @@ namespace Rootborn.Data.Tests
         }
 
         [Test]
+        public void 맵_데이터가_바뀌면_지문이_바뀐다()
+        {
+            // NPC가 서는 자리(interactions.json npcAnchors)와 걷는 빠르기(maps.json npcWalker)는 방 안 모두에게 같아야 하는 규칙이다.
+            string data = SmallData();
+            string world = Path.Combine(_root, "game", "world");
+            Directory.CreateDirectory(world);
+            foreach (string name in new[] { "maps.json", "interactions.json", "lights.json", "presentation.json" })
+                File.Copy(Path.Combine(RepoPaths.Root, "game", "world", name), Path.Combine(world, name));
+            string interactions = Path.Combine(world, "interactions.json");
+            string text = File.ReadAllText(interactions);
+            const string home = "\"location.home\": [ [ 624, 432 ] ]";
+            Assert.That(text, Does.Contain(home), "이 시험의 전제: 집의 NPC 자리");
+
+            string before = DataFingerprint.Compute(data);
+            File.WriteAllText(interactions, text.Replace(home, "\"location.home\": [ [ 656, 432 ] ]"));
+            string afterAnchor = DataFingerprint.Compute(data);
+            Assert.That(afterAnchor, Is.Not.EqualTo(before), "game/world/interactions.json의 좌표 하나");
+
+            string maps = Path.Combine(world, "maps.json");
+            File.WriteAllText(maps, File.ReadAllText(maps).Replace("\"speedCellsPerSecond\": 2.5", "\"speedCellsPerSecond\": 3"));
+            string afterMaps = DataFingerprint.Compute(data);
+            Assert.That(afterMaps, Is.Not.EqualTo(afterAnchor), "game/world/maps.json(NPC 걷는 빠르기)");
+
+            File.WriteAllText(Path.Combine(world, "lights.json"), "{}\n");
+            File.WriteAllText(Path.Combine(world, "presentation.json"), "{}\n");
+            Assert.That(DataFingerprint.Compute(data), Is.EqualTo(afterMaps), "빛·연출(lights.json, presentation.json)은 규칙이 아니다");
+
+            File.Delete(interactions);
+            Assert.That(DataFingerprint.Compute(data), Is.Not.EqualTo(afterMaps), "상호작용 파일이 없는 판은 규칙이 다르다");
+        }
+
+        [Test]
+        public void BothPublishLists_CarryTheMapRules()
+        {
+            foreach (string list in new[] { "content.txt", "content-server.txt" })
+            {
+                string folder = CopyPublished(list, "world-" + list);
+                Assert.That(File.Exists(Path.Combine(folder, "game", "world", "maps.json")), Is.True, list + "에 game/world/maps.json");
+                Assert.That(File.Exists(Path.Combine(folder, "game", "world", "interactions.json")), Is.True, list + "에 game/world/interactions.json");
+            }
+        }
+
+        [Test]
         public void AtlasesReportAndText_DoNotChangeIt()
         {
             string data = SmallData();
@@ -164,7 +208,7 @@ namespace Rootborn.Data.Tests
         }
 
         /// <summary>
-        /// 배포 목록의 평범한 줄과 `!` 줄 가운데 data/·game/*.json 에 해당하는 것만 적용해 그 파일들을 복사한다.
+        /// 배포 목록의 평범한 줄과 `!` 줄 가운데 data/·game/*.json·game/world/*.json 에 해당하는 것만 적용해 그 파일들을 복사한다.
         /// `@refs` 가 따라오게 하는 좌표표는 그림 몫이라 더하지 않는다 — 클라이언트 쪽이 좌표표를 가장 적게 갖는 경우다.
         /// </summary>
         private string CopyPublished(string listName, string name)
@@ -178,6 +222,7 @@ namespace Rootborn.Data.Tests
 
             var candidates = Directory.GetFiles(Path.Combine(repo, "data"), "*.json", SearchOption.AllDirectories)
                 .Concat(Directory.GetFiles(Path.Combine(repo, "game"), "*.json", SearchOption.TopDirectoryOnly))
+                .Concat(Directory.GetFiles(Path.Combine(repo, "game", "world"), "*.json", SearchOption.TopDirectoryOnly))
                 .Select(p => Path.GetRelativePath(repo, p).Replace('\\', '/'))
                 .ToList();
 

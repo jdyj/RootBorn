@@ -1,0 +1,9 @@
+[
+  {
+    "type": "NpcWanderStay",
+    "id": "Stay_Wander_Default",
+    "radiusCells": 3,
+    "pauseMinSeconds": 2,
+    "pauseMaxSeconds": 6
+  }
+]

@@ -49,6 +49,28 @@ namespace Rootborn.Game
         /// </summary>
         public void EnterHouse(IPlacementGrid grid, string surfaceId)
         {
+            LoadHouse(grid, surfaceId);
+            _houseEntered = true;
+            if (ReplayPlacedFurniture()) SaveAndNotify(AnnounceTopics, GameChangeTopics.Furniture);
+        }
+
+        /// <summary>
+        /// 집 밖에서 집 배치를 읽어 둔다(아직 <see cref="House"/>가 없을 때만): 집 맵의 걷는 격자에 가구가 막는 칸을 넣으려고(NPC 자리는 플레이어가
+        /// 어느 맵에 있든 같아야 한다). <see cref="EnterHouse"/>와 같은 배치를 읽지만 체인 단계에 놓인 가구를 다시 알리지 않는다 — 그것은 집에 들어설 때 한다.
+        /// 같이 쓰는 집이면 방이 알린 배치이고, 그 뒤 방의 집이 바뀌면 다른 맵에 있어도 따라간다. 알림: 읽었으면 <see cref="GameChangeTopics.Furniture"/>.
+        /// </summary>
+        public void PrepareHouse(IPlacementGrid grid, string surfaceId)
+        {
+            if (House != null) return;
+            LoadHouse(grid, surfaceId);
+            Notify(null, GameChangeTopics.Furniture);
+        }
+
+        // 이 판(메모리)에서 집에 들어선 적이 있는가. 저장하지 않는다. 다음 날 시작의 다시 알리기는 이때만 한다(PrepareHouse가 읽어 둔 배치로는 달라지지 않는다).
+        private bool _houseEntered;
+
+        private void LoadHouse(IPlacementGrid grid, string surfaceId)
+        {
             if (grid == null) throw new ArgumentNullException(nameof(grid));
             _houseGrid = grid;
             HouseFurnitureLayout layout;
@@ -60,7 +82,6 @@ namespace Rootborn.Game
             }
 
             UseHouseLayout(layout);
-            if (ReplayPlacedFurniture()) SaveAndNotify(AnnounceTopics, GameChangeTopics.Furniture);
         }
 
         /// <summary>배치 목록에 보이는 가구(해금이 필요 없거나 해금한 것, 얻은 가구가 먼저).</summary>
@@ -132,7 +153,7 @@ namespace Rootborn.Game
         private void AnnouncePlacement(FurnitureDefinition furniture)
             => Announce(FurnitureQuestEvents.Placed(furniture, House.SurfaceId, _newEventKey(FurnitureQuestEvents.Action)), true);
 
-        // Unity AnnouncePlacedFurniture: 일찍 놓은 가구도 그 단계가 시작된 뒤 방에 들어오거나 새 날이 시작되면 센다.
+        // Unity AnnouncePlacedFurniture: 일찍 놓은 가구도 그 단계가 시작된 뒤 방에 들어오거나 (이 판에서 집에 들어간 적이 있으면) 새 날이 시작되면 센다.
         private bool ReplayPlacedFurniture()
         {
             if (House == null || !FurnitureQuestEvents.AnyCurrentStepWantsFurniture(QuestChains, _chains)) return false;

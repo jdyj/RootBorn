@@ -73,7 +73,7 @@ namespace Rootborn.World.Tests
         [Test]
         public void TemporaryLinksWithoutAReason_AreRefused()
         {
-            const string map = @"{ ""maps"": [ { ""id"": ""A"", ""ldtk"": ""a.ldtk"", ""level"": ""L"", ""viewCells"": 10, ""collision"": { ""rule"": ""interior-auto"" },
+            const string map = @"{ ""npcWalker"": { ""speedCellsPerSecond"": 2.5 }, ""maps"": [ { ""id"": ""A"", ""ldtk"": ""a.ldtk"", ""level"": ""L"", ""viewCells"": 10, ""collision"": { ""rule"": ""interior-auto"" },
                 ""doors"": { ""out"": { ""map"": ""B"", ""spawn"": ""b"", ""temporary"": true } }, ""spawns"": { ""a"": [ 16, 16 ] } } ] }";
             Assert.Throws<InvalidDataException>(() => WorldCatalog.Parse(map));
             WorldCatalog ok = WorldCatalog.Parse(map.Replace(@"""temporary"": true", @"""temporary"": true, ""reason"": ""새 맵 전까지"""));
