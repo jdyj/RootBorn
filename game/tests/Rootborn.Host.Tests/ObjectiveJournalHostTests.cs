@@ -75,8 +75,7 @@ namespace Rootborn.Host.Tests
         public void OBJECTIVE_JOURNAL_001_TalkToMom_Tab_PickCategoryAndRow_Track_WalkWhileOpen_HudShowsIt()
         {
             using PlayerDriver player = Start();
-            NpcOnMap mom = player.Game.World.Npcs.Single(n => n.NpcId == "npc.first-guide");
-            player.WalkNear(mom.Pose.X, mom.Pose.Y + 32f, 20f);
+            player.WalkToNpc("npc.first-guide"); // 엄마는 집 안을 걸어 다닌다
             player.PressKey(TestKey.E);
             player.WaitForScreen(ScreenCatalog.Dialogue);
             player.PressButton(Rootborn.Screens.Dialogue.DialogueScreen.CloseId);

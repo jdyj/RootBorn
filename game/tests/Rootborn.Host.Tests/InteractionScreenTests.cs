@@ -39,7 +39,7 @@ namespace Rootborn.Host.Tests
         [Test, Order(1)]
         public void INTERACT_PLAY_001_FirstGuideStandsAtHomeAndNothingIsTargetedFromTheDoor()
         {
-            Assert.That(Screen.Npcs.Select(n => n.NpcId), Is.EqualTo(new[] { "npc.first-guide" }));
+            Assert.That(Enumerable.Range(0, Screen.Npcs.Count).Select(i => Screen.Npcs[i].NpcId), Is.EqualTo(new[] { "npc.first-guide" }));
             Assert.That(Screen.Interactions.Target == null || !Screen.Interactions.Target.Acts, Is.True, "도착 지점에서는 상호작용할 것이 없다");
             _player.PressKey(TestKey.E);
             Assert.That(Screen.InteractionLog, Is.Empty);
@@ -48,8 +48,8 @@ namespace Rootborn.Host.Tests
         [Test, Order(2)]
         public void INTERACT_PLAY_002_WalkingUpToTheNpcTargetsItAndEFiresItsEvent()
         {
-            NpcOnMap guide = Screen.Npcs.Single();
-            _player.WalkNear(guide.Pose.X, guide.Pose.Y + 32f, 20f); // NPC 바로 아래 칸
+            Assert.That(Screen.Npcs.Count, Is.EqualTo(1));
+            _player.WalkToNpc(Screen.Npcs[0].NpcId); // 안내인은 집 안을 걸어 다닌다
             InteractionCandidate target = Screen.Interactions.Target;
             Assert.That(target, Is.Not.Null);
             Assert.That((target.Kind, target.Id), Is.EqualTo(("npc", "npc.first-guide")));

@@ -481,7 +481,7 @@ namespace Rootborn.Host
                 // (GameSession.RoomShownMinutes)을 따른다: 혼자 하기에서는 흐르는 시계 그 자체라 NPC 자리·장소 상태와 같은 시각이다.
                 // 같이 하는 방은 아직 때의 대표 시각(흐르는 시간 4단계에서 방의 시계도 흐르는 시각이 된다).
                 if (Session.TimeRules != null) World.DayStartMinutes = Session.TimeRules.DayStartMinutes;
-                World.FollowStudentTime(() => Session.StudentDay, () => Session.StudentHour, () => RoomLightHour(Session));
+                World.FollowStudentTime(() => Session.StudentDay, () => Session.StudentHour, () => RoomLightHour(Session), () => Session.DayMinutesExact);
                 DayBaseline.For(Session); // 하루 결과의 퀘스트·물건 변화 기준점(Unity: 마을 씬을 불러올 때)
                 SyncSession();
             }
@@ -608,7 +608,7 @@ namespace Rootborn.Host
             var house = Session?.House;
             if (room != null && house != null)
             {
-                room.SetFurnitureBlocking(house.BlockingCells);
+                World.SetFurnitureBlocking(house.BlockingCells); // 막힌 칸이 바뀌었으면 NPC가 이 방의 길을 다시 만든다
                 World.SetPlacedFurniture(house.Placed, Session.IsStorage);
             }
             else World.SetPlacedFurniture(null);
