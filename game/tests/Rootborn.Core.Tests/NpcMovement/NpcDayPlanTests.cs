@@ -39,7 +39,9 @@ namespace Rootborn.Core.Tests.NpcMovement
 
         /// <summary>
         /// A: 가운데 줄 22칸 복도, 오른쪽 끝(21,1) 칸에 B로 가는 문. B: 3x2 방, 도착 지점 (1,1).
+        /// B의 바닥 칸 (3,2)에 A로 돌아가는 문, A의 도착 지점 fromB는 (20,1).
         /// 오전 자리 A(1,1) → 오후 자리 B(2,1)은 A에서 19칸 + B에서 1칸 = 20칸.
+        /// door가 false면 A에서 B로 가는 문이 없다(B에서 A로 가는 문은 있다).
         /// </summary>
         private static Maps TwoMaps(bool door = true)
         {
@@ -50,12 +52,15 @@ namespace Rootborn.Core.Tests.NpcMovement
             maps.All["A"] = Map("A", Grid(
                 "######################",
                 "......................",
-                "######################"), doors);
+                "######################"), doors,
+                new Dictionary<string, (float X, float Y)> { ["fromB"] = Center(20, 1) });
             maps.All["B"] = Map("B", Grid(
                 "#####",
                 "#...#",
                 "#...#",
-                "#####"), spawns: new Dictionary<string, (float X, float Y)> { ["fromA"] = Center(1, 1) });
+                "#####"),
+                new[] { new DoorArea("a", new AreaRect(3 * Cell, 2 * Cell, Cell, Cell), new TravelTarget("A", "fromB")) },
+                new Dictionary<string, (float X, float Y)> { ["fromA"] = Center(1, 1) });
             return maps;
         }
 
@@ -206,7 +211,75 @@ namespace Rootborn.Core.Tests.NpcMovement
             AssertSame(end, world.PoseOf(0, 5000), "하루 뒤는 끝으로");
             AssertSame(start, world.PoseOf(0, double.NaN), "NaN은 처음으로");
             AssertSame(end, world.PoseOf(0, double.PositiveInfinity), "무한대는 끝으로");
-            Assert.That(end.Present && end.MapId == "B" && !end.Moving, Is.True, "B에서 A로 돌아가는 문이 없어 하루 끝에도 B에 서 있다");
+            AssertAt(end, Spot("A", 1, 1), false, "하루 끝(밤)은 집 자리");
+        }
+
+        [Test]
+        public void 어슬렁_중간에서_출발해_다른_맵으로_돌아온다()
+        {
+            NpcWorld world = OneNpc(new NpcWanderStay(3f, 2f, 6f));
+            NpcPose before = world.PoseOf(0, 1019.95);
+            NpcPose atBoundary = world.PoseOf(0, 1020);
+            NpcPose after = world.PoseOf(0, 1020.05);
+            Assert.That(before.MapId, Is.EqualTo("B"));
+            Assert.That(atBoundary.MapId, Is.EqualTo("B"));
+            // 칸 가운데를 곧게 잇는 걸음이라 칸 사이의 자리는 한 축으로만 칸 가운데에서 벗어난다. 0.05분에 걷는 0.125칸을 더해 둔다.
+            float limit = Cell / 2f + 0.125f * Cell + 1e-3f;
+            Assert.That(Math.Abs(atBoundary.X - before.X), Is.LessThanOrEqualTo(limit), "1020분 앞에서 X가 반 칸 넘게 튀지 않는다");
+            Assert.That(Math.Abs(atBoundary.Y - before.Y), Is.LessThanOrEqualTo(limit), "1020분 앞에서 Y가 반 칸 넘게 튀지 않는다");
+            Assert.That(after.Moving, Is.True, "저녁 자리로 걷기 시작");
+            if (after.MapId == atBoundary.MapId)
+            {
+                // 문 옆에서 출발하면 0.05분 안에 문을 지나 A에 있을 수 있다 — 맵이 다르면 좌표를 견줄 수 없다.
+                Assert.That(Math.Abs(after.X - atBoundary.X), Is.LessThanOrEqualTo(limit), "1020분 뒤에서 X");
+                Assert.That(Math.Abs(after.Y - atBoundary.Y), Is.LessThanOrEqualTo(limit), "1020분 뒤에서 Y");
+            }
+            else
+            {
+                Assert.That(after.MapId, Is.EqualTo("A"));
+                Assert.That(Math.Abs(after.X - Center(20, 1).X), Is.LessThanOrEqualTo(limit), "문을 지나면 A의 도착 지점 근처(X)");
+                Assert.That(Math.Abs(after.Y - Center(20, 1).Y), Is.LessThanOrEqualTo(limit), "문을 지나면 A의 도착 지점 근처(Y)");
+            }
+
+            AssertAt(world.PoseOf(0, 1100), Spot("A", 10, 1), false, "B에서 문을 지나 A의 저녁 자리에 도착");
+            AssertAt(world.PoseOf(0, 1300), Spot("A", 1, 1), false, "밤은 집 자리");
+        }
+
+        [Test]
+        public void 자리가_칸_가운데가_아니어도_하루_내내_한_맵에_있다()
+        {
+            var anchors = new Anchors();
+            anchors.All[LocMorning] = new[] { new NpcSpot("A", 1 * Cell + 5, Cell + 2) };
+            anchors.All[LocAfternoon] = new[] { new NpcSpot("B", 2 * Cell + 29, Cell + 11) };
+            anchors.All[LocEvening] = new[] { new NpcSpot("A", 10 * Cell + 3, Cell + 7) };
+            anchors.All[LocHome] = new[] { new NpcSpot("A", 1 * Cell + 30, Cell + 1) };
+            NpcWorld world = OneNpc(new NpcWanderStay(3f, 2f, 6f), anchors);
+
+            string map = null;
+            int changes = 0;
+            for (int i = 0; ; i++)
+            {
+                double t = 420 + i * 0.05;
+                if (t > 1860) break;
+                NpcPose pose = world.PoseOf(0, t);
+                Assert.That(pose.Present, Is.True, t.ToString());
+                Assert.That(pose.MapId, Is.EqualTo("A").Or.EqualTo("B"), t.ToString());
+                Assert.That(float.IsNaN(pose.X) || float.IsNaN(pose.Y), Is.False, t.ToString());
+                if (map != null && pose.MapId != map) changes++;
+                map = pose.MapId;
+            }
+            Assert.That(changes, Is.EqualTo(2), "A → B(오후) → A(저녁)");
+            Assert.That(map, Is.EqualTo("A"));
+        }
+
+        [Test]
+        public void 시각이_뒤로_갔다가_앞으로_와도_같은_자리다()
+        {
+            var wander = new NpcWanderStay(3f, 2f, 6f);
+            NpcWorld world = OneNpc(wander);
+            world.PoseOf(0, 900);
+            world.PoseOf(0, 800);
+            AssertSame(OneNpc(wander).PoseOf(0, 900), world.PoseOf(0, 900), "900 → 800 → 900");
         }
 
         [Test]
