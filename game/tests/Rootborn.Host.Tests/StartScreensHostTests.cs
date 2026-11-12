@@ -159,6 +159,35 @@ namespace Rootborn.Host.Tests
         }
 
         [Test]
+        public void START_PLAY_004_AnUnreadableStory_IsShownAsUnreadable_AndOnlyDeletedAfterAsking()
+        {
+            // 슬롯 정보가 깨졌거나 더 새 프로그램이 쓴 슬롯: 빈 슬롯으로 보이지 않고, 새 이야기로 덮이지 않는다. 지우려면 확인 창을 거친다.
+            string dir = Path.Combine(_saves, "slot-1");
+            Directory.CreateDirectory(dir);
+            File.WriteAllText(Path.Combine(dir, SaveFileNames.Metadata), "{ \"Version\": 999, \"SlotId\": \"slot-1\" }");
+            File.WriteAllText(Path.Combine(dir, SaveFileNames.WorldProgress), "{}");
+            using PlayerDriver player = Launch(1920, 1080);
+            Assert.That(player.Node(SaveSlotScreen.NewGameId(1)).Visible, Is.False);
+            Assert.That(player.Node(SaveSlotScreen.ContinueId(1)).Visible, Is.False);
+            Assert.That(player.Node(SaveSlotScreen.NewGameId(0)).IsActive, Is.True, "다른 슬롯은 그대로 빈 슬롯");
+            player.ScreenshotScreen(ScreenCatalog.SaveSlotSelect, "start-10-unreadable-slot");
+
+            player.PressButton(SaveSlotScreen.DeleteId(1));
+            player.WaitForScreen(ScreenCatalog.DeleteSlot);
+            player.ScreenshotScreen(ScreenCatalog.DeleteSlot, "start-11-unreadable-delete-confirm");
+            player.PressKey(TestKey.Enter); // 포커스는 취소에 있다
+            player.WaitForScreenClosed(ScreenCatalog.DeleteSlot);
+            Assert.That(File.Exists(Path.Combine(dir, SaveFileNames.WorldProgress)), Is.True, "취소는 지우지 않는다");
+
+            player.PressButton(SaveSlotScreen.DeleteId(1));
+            player.WaitForScreen(ScreenCatalog.DeleteSlot);
+            player.PressButton(DeleteSlotScreen.ConfirmId);
+            player.WaitForScreenClosed(ScreenCatalog.DeleteSlot);
+            Assert.That(Directory.Exists(dir), Is.False);
+            Assert.That(player.Node(SaveSlotScreen.NewGameId(1)).IsActive, Is.True);
+        }
+
+        [Test]
         public void START_PLAY_003_NoArgumentsWithoutASaveFolder_IsRefusedWithAHint()
         {
             HostOptions options = HostOptions.Resolve(Array.Empty<string>(), name => name == HostOptions.SaveRootVariable ? null : Environment.GetEnvironmentVariable(name));
