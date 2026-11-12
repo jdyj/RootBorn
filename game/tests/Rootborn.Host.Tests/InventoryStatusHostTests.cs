@@ -50,7 +50,7 @@ namespace Rootborn.Host.Tests
         }
 
         [Test]
-        public void BAG_STATUS_001_I_OpensBag_WalkWithItOpen_TypeHangulInSearch_C_SwapsToStatus_Esc_SwapsToSettings()
+        public void BAG_STATUS_001_I_OpensBag_WalkWithItOpen_TypeHangulInSearch_C_SwapsToStatus_Esc_Closes_ThenOpensSettings()
         {
             using PlayerDriver player = Start();
             var inventory = player.Game.Session.Inventory;
@@ -139,10 +139,11 @@ namespace Rootborn.Host.Tests
             player.Frames(2);
             player.ScreenshotScreen(ScreenCatalog.Status, "status-01-open");
 
-            // Esc → 설정이 열리고 상태가 닫힌다.
-            player.PressKey(TestKey.Escape);
-            player.WaitForScreen(ScreenCatalog.Settings);
-            Assert.That(player.Screens.IsOpen(ScreenCatalog.Status), Is.False);
+            // Esc → 상태가 닫히기만 한다(2026-11-13 Esc 규칙: 맨 위 화면을 닫고, 닫을 화면이 없을 때만 설정).
+            player.CloseScreenWithKey(TestKey.Escape, ScreenCatalog.Status);
+            Assert.That(player.Screens.IsOpen(ScreenCatalog.Settings), Is.False);
+            // 한 번 더 Esc → 닫을 화면이 없으므로 설정이 열린다.
+            player.OpenScreenWithKey(TestKey.Escape, ScreenCatalog.Settings);
             player.Screenshot("status-02-esc-settings");
 
             Assert.That(player.CollisionViolations, Is.EqualTo(0));
