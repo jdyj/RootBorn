@@ -29,6 +29,7 @@ namespace Rootborn.Balance.Tests
             Assert.That(ShortRuns.Value, Is.Not.Empty);
             foreach (var run in ShortRuns.Value)
             {
+                TestContext.Out.WriteLine(Name(run) + " | 시작 " + run.StartDay + "일째 지갑 " + run.StartWallet + " | " + string.Join(" / ", run.Days.Select(Line)));
                 Assert.That(run.Days.Count, Is.EqualTo(ShortDays), Name(run));
                 long net = run.Days.Sum(d => (long)d.Earned - d.Spent);
                 Assert.That(net, Is.EqualTo(run.Days[run.Days.Count - 1].WalletAtEnd - run.StartWallet), "번 것 − 쓴 것 = 지갑 변화: " + Name(run));
@@ -91,6 +92,7 @@ namespace Rootborn.Balance.Tests
             foreach (var facility in RunTargets.All("facility", TestWorld.Definitions))
             {
                 var run = BalanceRunner.Run(strategy, facility, max, config, config.Days);
+                TestContext.Out.WriteLine(Name(run) + " | " + string.Join(" / ", run.Days.Select(Line)));
                 var upgraded = run.Days.Where(d => d.Upgraded).ToList();
                 Assert.That(upgraded, Is.Not.Empty, "30일 안에 올리지 못했다: " + Name(run) + " | 마지막 날 " + Line(run.Days[run.Days.Count - 1]));
                 foreach (var day in upgraded) Assert.That(day.Spent, Is.GreaterThan(0), "올린 날 쓴 것이 기록되지 않았다: " + Name(run) + " " + day.Day + "일째");
@@ -109,6 +111,7 @@ namespace Rootborn.Balance.Tests
             foreach (var facility in RunTargets.All("facility", TestWorld.Definitions))
             {
                 var run = BalanceRunner.Run(strategy, facility, max, config, config.Days);
+                TestContext.Out.WriteLine(Name(run) + " | " + string.Join(" / ", run.Days.Select(Line)));
                 Assert.That(run.Days.Any(d => d.AutoSkips > 0), Is.True,
                     "30일 안에 자동 넘기기가 한 번도 없었다: " + Name(run) + " | 마지막 날 " + Line(run.Days[run.Days.Count - 1]));
             }
