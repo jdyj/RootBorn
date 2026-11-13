@@ -47,7 +47,7 @@ namespace Rootborn.Balance.Tests
             var config = Config.Value;
             var strategy = config.Strategies.Single(s => s.Id == "one-part-time-work");
             var work = RunTargets.All("part-time-work", TestWorld.Definitions)[0];
-            var run = BalanceRunner.Run(strategy, work, null, config, 3, new WalletStart(WalletStart.Balance));
+            var run = BalanceRunner.Run(strategy, work, RunSetup.Baseline(config), config, 3, new WalletStart(WalletStart.Balance));
             TestContext.Out.WriteLine(Name(run) + " | 시작 지갑 " + run.StartWallet + " | " + string.Join(" / ", run.Days.Select(Line)));
 
             Assert.That(run.StartWallet, Is.EqualTo(WalletStart.Balance));
@@ -88,9 +88,9 @@ namespace Rootborn.Balance.Tests
             var config = Config.Value;
             var facility = (Facility)RunTargets.All("facility", TestWorld.Definitions)[0];
             var strategy = config.Strategies.First(s => s.Each == "facility");
-            var tier = config.Tiers[0];
-            var a = BalanceRunner.Run(strategy, facility, tier, config, 3);
-            var b = BalanceRunner.Run(strategy, facility, tier, config, 3);
+            var setup = Scored(config, config.Tiers[0]);
+            var a = BalanceRunner.Run(strategy, facility, setup, config, 3);
+            var b = BalanceRunner.Run(strategy, facility, setup, config, 3);
             Assert.That(Lines(b), Is.EqualTo(Lines(a)));
         }
 
@@ -102,8 +102,8 @@ namespace Rootborn.Balance.Tests
             Assert.That(facilities, Is.Not.Empty);
             foreach (var facility in facilities)
             {
-                long low = Earned(runs.Single(r => r.TargetId == facility && r.TierId == "low"));
-                long max = Earned(runs.Single(r => r.TargetId == facility && r.TierId == "max"));
+                long low = Earned(runs.Single(r => r.TargetId == facility && r.Setup.Score == Scored(Config.Value, "low").Score));
+                long max = Earned(runs.Single(r => r.TargetId == facility && r.Setup.Score == Scored(Config.Value, "max").Score));
                 Assert.That(low, Is.GreaterThan(0), "낮은 점수 판도 번다: " + facility);
                 Assert.That(low, Is.LessThan(max), "낮은 점수 판이 만점 판보다 적게 번다: " + facility);
             }
@@ -112,7 +112,7 @@ namespace Rootborn.Balance.Tests
         [Test]
         public void NothingStartsThatWouldEndAfterBedtime()
         {
-            Assert.That(Config.Value.Sleep, Is.EqualTo("finish-by-bedtime"));
+            Assert.That(Config.Value.BaselineSetup.Sleep, Is.EqualTo("finish-by 22:00"));
             int bedtime = TestWorld.Start(new MemorySaveStore()).TimeRules.BedtimeMinutes;
             Assert.That(ShortRuns.Value.SelectMany(r => r.Days).Count(d => d.Stop == StopReasons.Bedtime), Is.GreaterThanOrEqualTo(1), "취침으로 멈춘 날이 하나도 없으면 이 검사는 빈 통과다");
             foreach (var run in ShortRuns.Value)
@@ -125,7 +125,7 @@ namespace Rootborn.Balance.Tests
         {
             var config = Config.Value;
             var strategy = config.Strategies.Single(s => s.Id == "facility-work-upgrade");
-            var max = config.Tiers.Single(t => t.Id == "max");
+            var max = Scored(config, "max");
             foreach (var facility in RunTargets.All("facility", TestWorld.Definitions))
             {
                 var run = BalanceRunner.Run(strategy, facility, max, config, config.Days);
@@ -144,7 +144,7 @@ namespace Rootborn.Balance.Tests
         {
             var config = Config.Value;
             var strategy = config.Strategies.Single(s => s.Id == "facility-autoskip-upgrade");
-            var max = config.Tiers.Single(t => t.Id == "max");
+            var max = Scored(config, "max");
             foreach (var facility in RunTargets.All("facility", TestWorld.Definitions))
             {
                 var run = BalanceRunner.Run(strategy, facility, max, config, config.Days);
@@ -162,7 +162,7 @@ namespace Rootborn.Balance.Tests
             var config = Config.Value;
             var strategy = new StrategySpec { Id = "fake-bag-full", Each = "none", Start = "new-game", Scored = false, Do = new[] { BagFullAction.KindName } };
             RunResult run = null;
-            Assert.That(() => run = BalanceRunner.Run(strategy, null, null, config, 2, new IBalanceAction[] { new BagFullAction() }), Throws.Nothing);
+            Assert.That(() => run = BalanceRunner.Run(strategy, null, RunSetup.Baseline(config), config, 2, new IBalanceAction[] { new BagFullAction() }), Throws.Nothing);
             Assert.That(run.Days.Count, Is.EqualTo(2), "다음 날로 넘어간다");
             foreach (var day in run.Days)
             {
@@ -195,7 +195,12 @@ namespace Rootborn.Balance.Tests
 
         private static long Earned(RunResult run) => run.Days.Sum(d => (long)d.Earned);
 
-        private static string Name(RunResult run) => run.StrategyId + "/" + run.TargetId + "/" + run.TierId;
+        // 1단계 점수 단계 하나를 기준 가정에 넣은 것(RunAll이 도는 것과 같다).
+        private static RunSetup Scored(BalanceConfig config, string tierId) => Scored(config, config.Tiers.Single(t => t.Id == tierId));
+
+        private static RunSetup Scored(BalanceConfig config, ScoreTier tier) => BalanceRunner.TierSetup(config, tier);
+
+        private static string Name(RunResult run) => run.StrategyId + "/" + run.TargetId + "/" + run.Setup.Id;
 
         private static List<string> Lines(RunResult run) => run.Days.Select(Line).ToList();
 

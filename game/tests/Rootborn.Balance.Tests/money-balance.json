@@ -1,19 +1,41 @@
 {
-  "about": "게임은 읽지 않는다. 균형 시뮬레이터(game/tests/Rootborn.Balance.Tests)의 전략과 가정이다. 배포와 데이터 지문에 들어가지 않는다. 걷기·미니게임 가정은 game/tests/Rootborn.Game.Tests/day-balance.json. 설계 docs/superpowers/specs/2026-11-12-balance-simulator-design.md",
+  "about": "게임은 읽지 않는다. 균형 시뮬레이터(game/tests/Rootborn.Balance.Tests)의 전략과 가정이다. 배포와 데이터 지문에 들어가지 않는다. 걷기·미니게임 몫의 기준 값은 game/tests/Rootborn.Game.Tests/day-balance.json(axes의 목록에 그 값이 들어 있어야 한다). baseline·scoreTiers·days는 1단계 보고(report.md), axes는 2단계 훑기. 설계 docs/superpowers/specs/2026-11-12-balance-simulator-design.md 13절",
   "days": 30,
-  "sleep": "finish-by-bedtime",
+  "baseline": { "sleep": "finish-by 22:00", "score": "fixed 80", "partTime": "always" },
   "scoreTiers": [
     { "id": "low", "score": 60 },
     { "id": "mid", "score": 80 },
     { "id": "max", "score": 100 }
   ],
+  "axes": {
+    "days": 100,
+    "checkpoints": [7, 30, 100],
+    "failScore": 50,
+    "passScore": 80,
+    "sleep": ["finish-by 20:00", "finish-by 21:00", "finish-by 22:00", "finish-by 23:00", "finish-by 00:00", "finish-by 01:00", "finish-by 02:00", "finish-by 03:00", "finish-by 04:00", "finish-by 05:00", "finish-by 06:00",
+      "start-before 22:00", "start-before 00:00", "start-before 02:00", "never", "stay-up-every 2", "stay-up-every 3", "stay-up-every 7",
+      "never carry", "stay-up-every 2 carry", "stay-up-every 3 carry", "stay-up-every 7 carry",
+      "stay-up-every 2 until 01:00", "stay-up-every 3 until 01:00", "stay-up-every 7 until 01:00", "stay-up-every 2 until 01:00 carry"],
+    "score": ["fixed 50", "fixed 60", "fixed 70", "fixed 80", "fixed 90", "fixed 100", "fail-every 2", "fail-every 4"],
+    "partTime": ["always", "fail-every 2", "fail-every 4"],
+    "travelMinutes": [0, 15, 30, 60],
+    "minigameShare": [0.25, 0.5, 1.0]
+  },
   "strategies": [
     { "id": "one-part-time-work", "each": "part-time-work", "start": "new-game", "scored": false, "do": ["part-time-work"] },
     { "id": "rotate-part-time-work", "each": "none", "start": "new-game", "scored": false, "do": ["any-part-time-work"] },
     { "id": "facility-work-only", "each": "facility", "start": "adult", "scored": true, "do": ["best-facility-work"] },
     { "id": "facility-work-upgrade", "each": "facility", "start": "adult", "scored": true, "do": ["upgrade-facility", "best-facility-work"] },
     { "id": "facility-autoskip-upgrade", "each": "facility", "start": "adult", "scored": true, "do": ["upgrade-facility", "auto-skip-facility-work", "best-facility-work"],
-      "note": "넘길 수 있는 일이 있으면 그것만 하므로 올린 뒤 새 레벨 일의 숙련을 쌓지 않는다(직접 하는 전략보다 적게 벌 수 있다)." }
+      "note": "넘길 수 있는 일이 있으면 그것만 하므로 올린 뒤 새 레벨 일의 숙련을 쌓지 않는다(직접 하는 전략보다 적게 벌 수 있다)." },
+    { "id": "facility-level1-work-upgrade", "each": "facility", "start": "adult", "scored": true, "do": ["upgrade-facility", "facility-work-level 1"],
+      "note": "시설은 올리되 레벨 1 일만 한다." },
+    { "id": "facility-level2-work-upgrade", "each": "facility", "start": "adult", "scored": true, "do": ["upgrade-facility", "facility-work-level 2", "best-facility-work"],
+      "note": "시설은 올리고, 레벨 2 일이 열리면 그 일만 한다(그 전에는 할 수 있는 가장 높은 일로 올릴 돈을 번다)." },
+    { "id": "facility-level3-work-upgrade", "each": "facility", "start": "adult", "scored": true, "do": ["upgrade-facility", "facility-work-level 3", "best-facility-work"],
+      "note": "시설은 올리고, 레벨 3 일이 열리면 그 일만 한다(그 전에는 할 수 있는 가장 높은 일로 올릴 돈을 번다)." },
+    { "id": "facility-master-then-autoskip", "each": "facility", "start": "adult", "scored": true, "do": ["upgrade-facility", "auto-skip-best-facility-work", "best-facility-work"],
+      "note": "올린 뒤 가장 높은 일을 직접 해 숙련을 채우고, 그 일이 넘길 수 있게 되면 넘긴다." }
   ],
   "bands": []
 }

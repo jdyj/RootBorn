@@ -45,23 +45,39 @@ namespace Rootborn.Balance.Tests
         {
             Directory.CreateDirectory(directory);
             var summaries = new List<RunSummary>(runs.Count);
-            foreach (var run in runs) summaries.Add(RunSummary.From(run));
-            File.WriteAllText(Path.Combine(directory, DaysFile), DaysCsv(runs), Utf8);
-            File.WriteAllText(Path.Combine(directory, SummaryFile), SummaryCsv(runs, summaries), Utf8);
-            File.WriteAllText(Path.Combine(directory, ReportFile), ReportMarkdown(config, days, runs, summaries), Utf8);
+            var tiers = new List<string>(runs.Count);
+            foreach (var run in runs)
+            {
+                summaries.Add(RunSummary.From(run));
+                tiers.Add(TierOf(config, run));
+            }
+            File.WriteAllText(Path.Combine(directory, DaysFile), DaysCsv(runs, tiers), Utf8);
+            File.WriteAllText(Path.Combine(directory, SummaryFile), SummaryCsv(runs, tiers, summaries), Utf8);
+            File.WriteAllText(Path.Combine(directory, ReportFile), ReportMarkdown(config, days, runs, tiers, summaries), Utf8);
+        }
+
+        /// <summary>
+        /// 판의 점수 단계 이름(1단계 보고의 칸): 점수를 쓰는 전략(scored)이면 그 판의 점수 모델이 "fixed N"인 단계의 id, 아니면 "".
+        /// </summary>
+        public static string TierOf(BalanceConfig config, RunResult run)
+        {
+            var strategy = config.Strategies.FirstOrDefault(s => s.Id == run.StrategyId);
+            if (strategy == null || !strategy.Scored || run.Setup == null) return "";
+            var tier = config.Tiers.FirstOrDefault(t => ScoreModels.Fixed(t.Score) == run.Setup.Score);
+            return tier?.Id ?? run.Setup.Score;
         }
 
         // ---- days.csv ----
 
-        private static string DaysCsv(IReadOnlyList<RunResult> runs)
+        private static string DaysCsv(IReadOnlyList<RunResult> runs, List<string> tiers)
         {
             var b = new StringBuilder();
             Row(b, "strategy", "target", "tier", "day", "weekend", "wallet_at_end", "earned", "minigame_earned", "spent", "actions", "action_counts", "other_items_held",
                 "work_minutes", "travel_minutes", "travel_real_seconds", "minigame_real_seconds", "ended_at_minutes",
                 "facility_level", "upgraded", "auto_skips", "energy_at_end", "focus_at_end", "stop");
-            foreach (var run in runs)
-                foreach (var d in run.Days)
-                    Row(b, run.StrategyId, run.TargetId, run.TierId, I(d.Day), B(d.Weekend), I(d.WalletAtEnd), I(d.Earned), I(d.MinigameEarned), I(d.Spent), I(d.Actions),
+            for (int i = 0; i < runs.Count; i++)
+                foreach (var d in runs[i].Days)
+                    Row(b, runs[i].StrategyId, runs[i].TargetId, tiers[i], I(d.Day), B(d.Weekend), I(d.WalletAtEnd), I(d.Earned), I(d.MinigameEarned), I(d.Spent), I(d.Actions),
                         Counts(d.ActionCounts), Counts(d.OtherItems), I(d.WorkMinutes), I(d.TravelMinutes), F(d.TravelRealSeconds), F(d.MinigameRealSeconds),
                         I(d.EndedAtMinutes), I(d.FacilityLevel), B(d.Upgraded), I(d.AutoSkips), I(d.EnergyAtEnd), I(d.FocusAtEnd), d.Stop ?? "");
             return b.ToString();
@@ -69,7 +85,7 @@ namespace Rootborn.Balance.Tests
 
         // ---- summary.csv ----
 
-        private static string SummaryCsv(IReadOnlyList<RunResult> runs, List<RunSummary> summaries)
+        private static string SummaryCsv(IReadOnlyList<RunResult> runs, List<string> tiers, List<RunSummary> summaries)
         {
             var b = new StringBuilder();
             Row(b, "strategy", "target", "tier", "start_day", "start_weekend", "start_wallet", "days",
@@ -79,7 +95,7 @@ namespace Rootborn.Balance.Tests
             {
                 var run = runs[i];
                 var s = summaries[i];
-                Row(b, run.StrategyId, run.TargetId, run.TierId, I(run.StartDay), B(run.StartWeekend), I(run.StartWallet), I(run.Days.Count),
+                Row(b, run.StrategyId, run.TargetId, tiers[i], I(run.StartDay), B(run.StartWeekend), I(run.StartWallet), I(run.Days.Count),
                     F(s.IncomePerDay), F(s.IncomePerGameHour), F(s.IncomePerRealMinuteWithTravel), F(s.IncomePerRealMinuteMinigameOnly),
                     I(s.FinalWallet), I(s.Level2Day), I(s.Level3Day), string.Join(";", s.PaybackDays.Select(I)),
                     string.Join(";", s.PaybackGaps.Select(g => g ?? "")), string.Join(";", s.RecoverDays.Select(I)),
@@ -90,7 +106,7 @@ namespace Rootborn.Balance.Tests
 
         // ---- report.md ----
 
-        private static string ReportMarkdown(BalanceConfig config, int days, IReadOnlyList<RunResult> runs, List<RunSummary> summaries)
+        private static string ReportMarkdown(BalanceConfig config, int days, IReadOnlyList<RunResult> runs, List<string> runTiers, List<RunSummary> summaries)
         {
             var a = DayAssumptions.Current;
             var b = new StringBuilder();
@@ -99,7 +115,7 @@ namespace Rootborn.Balance.Tests
                 .Append(", 점수 단계 ").Append(string.Join("·", config.Tiers.Select(t => t.Id + " " + I(t.Score))))
                 .Append(", 걷기 활동마다 ").Append(I(a.TravelMinutes)).Append("분")
                 .Append(", 미니게임은 제한 시간의 ").Append(F(a.MinigameShare)).Append("만큼")
-                .Append(", 자는 방식 ").Append(config.Sleep).Append(".\n\n");
+                .Append(", 자는 방식 ").Append(config.BaselineSetup.Sleep).Append(".\n\n");
             b.Append(NotPlayLine).Append("\n\n");
             b.Append("- 하루 수입은 지갑이 늘어난 합 ÷ 날 수(시작 지갑은 뺀다).\n")
                 .Append("- 실제 분당(걷기 포함)은 판 전체 수입 ÷ 걷기와 미니게임에 쓴 실제 분. 실제 분당(미니게임만)은 미니게임을 한 행동이 번 것만 ÷ 미니게임에 쓴 실제 분(자동 넘기기·잠의 수입은 뺀다).\n")
@@ -121,7 +137,7 @@ namespace Rootborn.Balance.Tests
                 var targets = new List<string>();
                 foreach (int i in index)
                 {
-                    if (!tiers.Contains(runs[i].TierId)) tiers.Add(runs[i].TierId);
+                    if (!tiers.Contains(runTiers[i])) tiers.Add(runTiers[i]);
                     if (!targets.Contains(runs[i].TargetId)) targets.Add(runs[i].TargetId);
                 }
 
@@ -151,7 +167,7 @@ namespace Rootborn.Balance.Tests
                     var cells = new List<string> { target == "" ? "(한 판)" : target, "" };
                     foreach (var tier in tiers)
                     {
-                        int at = index.FirstOrDefault(i => runs[i].TargetId == target && runs[i].TierId == tier, -1);
+                        int at = index.FirstOrDefault(i => runs[i].TargetId == target && runTiers[i] == tier, -1);
                         if (at < 0) { cells.AddRange(Enumerable.Repeat("-", perTier)); continue; }
                         var run = runs[at];
                         var s = summaries[at];
@@ -187,7 +203,7 @@ namespace Rootborn.Balance.Tests
                     int hi = -1, lo = -1, count = 0;
                     foreach (int i in index)
                     {
-                        if (runs[i].TierId != tier) continue;
+                        if (runTiers[i] != tier) continue;
                         count++;
                         if (hi < 0 || summaries[i].IncomePerDay > summaries[hi].IncomePerDay) hi = i;
                         if (lo < 0 || summaries[i].IncomePerDay < summaries[lo].IncomePerDay) lo = i;
@@ -214,7 +230,7 @@ namespace Rootborn.Balance.Tests
 
         private static string Name(RunResult run) => run.TargetId == "" ? "(한 판)" : run.TargetId;
 
-        private static void MdRow(StringBuilder b, List<string> cells)
+        internal static void MdRow(StringBuilder b, List<string> cells)
         {
             b.Append('|');
             foreach (var c in cells) b.Append(' ').Append(c.Replace("|", "\\|")).Append(" |");
@@ -223,7 +239,7 @@ namespace Rootborn.Balance.Tests
 
         // ---- 칸 쓰기 ----
 
-        private static void Row(StringBuilder b, params string[] cells)
+        internal static void Row(StringBuilder b, params string[] cells)
         {
             for (int i = 0; i < cells.Length; i++)
             {
@@ -236,13 +252,13 @@ namespace Rootborn.Balance.Tests
         }
 
         private static string Counts(SortedDictionary<string, int> counts) => string.Join(";", counts.Select(p => p.Key + "×" + I(p.Value)));
-        private static string I(int value) => value.ToString(Inv);
-        private static string I(int? value) => value.HasValue ? value.Value.ToString(Inv) : "";
-        private static string F(float value) => value.ToString("0.###", Inv);
-        private static string F(float? value) => value.HasValue ? F(value.Value) : "";
-        private static string F1(float value) => value.ToString("0.0", Inv);
-        private static string F1(float? value) => value.HasValue ? F1(value.Value) : "-";
-        private static string Dash(int? value) => value.HasValue ? value.Value.ToString(Inv) : "-";
+        internal static string I(int value) => value.ToString(Inv);
+        internal static string I(int? value) => value.HasValue ? value.Value.ToString(Inv) : "";
+        internal static string F(float value) => value.ToString("0.###", Inv);
+        internal static string F(float? value) => value.HasValue ? F(value.Value) : "";
+        internal static string F1(float value) => value.ToString("0.0", Inv);
+        internal static string F1(float? value) => value.HasValue ? F1(value.Value) : "-";
+        internal static string Dash(int? value) => value.HasValue ? value.Value.ToString(Inv) : "-";
         private static string B(bool value) => value ? "true" : "false";
     }
 }
