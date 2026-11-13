@@ -85,7 +85,7 @@ class WallStyleTests(unittest.TestCase):
             seen.setdefault(pixels(draw_tile(STYLE, key, w, BAKERY_FLOOR)), []).append(w)
         self.assertGreaterEqual(len(seen), len(wall_styles()) - 1, seen.values())
 
-    def test_every_style_names_a_default_top_and_a_docstring(self):
+    def test_every_style_has_a_default_top_that_can_be_picked(self):
         for w in wall_styles():
             with self.subTest(wall=w):
                 self.assertIn(wall_top(w), wall_tops())
@@ -298,12 +298,31 @@ class ConceptTests(unittest.TestCase):
         self.assertEqual({f for f in ids("### 바닥", r"\| `(floor\.[a-z-]+)` \|")}, set(room_floors()))
 
     def test_styles_boards_draw_without_a_korean_font(self):
+        """글꼴이 없는 길은 프로세스 안에서 돈다(다른 프로세스에는 가로채기가 닿지 않는다): 끝 코드 0, 그림이 생기고, 알림 한 줄."""
+        import contextlib
+        import io
         from unittest import mock
+        from PIL import ImageFont
+        import kit as kit_main
         from pixelkit import boards
-        with mock.patch.object(boards, "find_korean_font", return_value=None):
-            with tempfile.TemporaryDirectory() as d:
-                code, out, err = StylesCommandTests.run_kit(None, "--out", d, "--scale", "1")
-                self.assertEqual(code, 0, out + err)
+
+        def run(font_result):
+            out, err = (io.TextIOWrapper(io.BytesIO(), encoding="utf-8") for _ in range(2))
+            with tempfile.TemporaryDirectory() as d, contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+                with mock.patch.object(boards, "find_korean_font", return_value=font_result):
+                    code = kit_main.main(["room", "styles", "--out", d, "--scale", "1"])
+                made = sorted(p.name for p in Path(d).iterdir())
+            err.flush()
+            return code, made, err.buffer.getvalue().decode("utf-8")
+
+        code, made, err = run(None)
+        self.assertEqual(code, 0, err)
+        self.assertIn("styles-walls.png", made)
+        self.assertIn("styles-floors.png", made)
+        self.assertEqual(len([l for l in err.splitlines() if "한글 글꼴을 못 찾아" in l]), 1, err)
+        code, _, err = run(ImageFont.load_default(size=14))
+        self.assertEqual(code, 0, err)
+        self.assertNotIn("한글 글꼴을 못 찾아", err)                # 가로채기를 바꾸면 결과가 달라진다 — 테스트가 이 길을 실제로 돈다
 
 
 if __name__ == "__main__":

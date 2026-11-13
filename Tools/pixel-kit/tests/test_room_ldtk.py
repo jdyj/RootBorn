@@ -558,6 +558,20 @@ class RepaintTests(RoomBase):
         self.assertEqual(len(_layer(doc, "Furniture")["entityInstances"]), 1)
         self.assertIn("room-art-mismatch", self.codes())
 
+    def test_check_reports_a_misspelled_slots_value_that_repaint_refuses(self):
+        """자리 표의 top·wall·floor 오타: repaint가 거절하는 값을 check도 문제로 알린다(같은 검사를 쓴다)."""
+        table_path = self.out() / "tiles.slots.json"
+        good = json.loads(table_path.read_text("utf-8"))
+        self.assertNotIn("room-slots-value", self.codes())
+        for key, bad in (("top", "wall.top.no-such"), ("wall", "no-such-wall"), ("floor", "floor.no-such")):
+            with self.subTest(key=key):
+                table_path.write_text(json.dumps({**good, key: bad}), encoding="utf-8")
+                self.assertIn("room-slots-value", self.codes())
+                with self.assertRaises((RoomError, RecipeError)):
+                    repaint_room(self.ldtk_path, dry_run=True, kit=KIT)
+        table_path.write_text(json.dumps(good), encoding="utf-8")
+        self.assertNotIn("room-slots-value", self.codes())
+
     def test_repaint_makes_wall_and_ground_tiles_follow_collision(self):
         written = repaint_room(self.ldtk_path)
         self.assertIn(f"{RID}.ldtk", written)

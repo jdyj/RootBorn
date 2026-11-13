@@ -65,5 +65,28 @@ class BoardTests(unittest.TestCase):
         self.assertLess(img.width, 400)
 
 
+class FontEnvTests(unittest.TestCase):
+    def test_a_font_file_that_cannot_be_opened_is_announced_not_skipped_silently(self):
+        import contextlib
+        import io
+        import os
+        from unittest import mock
+        from pixelkit import boards
+        err = io.StringIO()
+        boards._load_font.cache_clear()
+        try:
+            with mock.patch.dict(os.environ, {boards.FONT_ENV: "no/such/font.ttf"}), contextlib.redirect_stderr(err):
+                boards.find_korean_font(16)
+            self.assertIn(boards.FONT_ENV, err.getvalue())
+            self.assertIn("no/such/font.ttf", err.getvalue())
+            err2 = io.StringIO()
+            with mock.patch.dict(os.environ, {}, clear=False), contextlib.redirect_stderr(err2):
+                os.environ.pop(boards.FONT_ENV, None)
+                boards.find_korean_font(15)
+            self.assertEqual(err2.getvalue(), "")                 # 값을 주지 않았으면 알릴 것이 없다
+        finally:
+            boards._load_font.cache_clear()
+
+
 if __name__ == "__main__":
     unittest.main()

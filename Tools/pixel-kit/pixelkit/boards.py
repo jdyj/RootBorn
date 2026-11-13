@@ -6,6 +6,7 @@
 PNG에는 시각 같은 메타데이터를 넣지 않아 같은 입력이 같은 바이트가 된다.
 """
 import os
+import sys
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import List, Optional
@@ -68,6 +69,8 @@ def _load_font(env_path: str, size: int):
         try:
             return ImageFont.truetype(name, size)
         except OSError:
+            if name == env_path:                              # 값을 줬는데 못 쓰면 조용히 넘기지 않는다
+                print(f"알림 {FONT_ENV}={env_path!r}: 글꼴 파일을 열 수 없어 시스템 글꼴 이름 후보로 넘어간다", file=sys.stderr)
             continue
     return None
 

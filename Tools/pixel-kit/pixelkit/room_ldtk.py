@@ -494,7 +494,7 @@ def _art_mismatch(grid, plan: RoomTiles, slots, layers) -> List[Problem]:
                     f"Wall·Ground 타일이 Collision과 어긋난 칸 {len(bad)}개(첫 칸 ({x}, {y})) — room repaint로 맞춘다", x, y)]
 
 
-def check_room(ldtk_path) -> List[Problem]:
+def check_room(ldtk_path, kit: Optional[Kit] = None) -> List[Problem]:
     """LDtk 방 파일을 쓰지 않고 검사한다. 필요한 층이 없으면 room-not-a-room 하나. 아니면 room-ldtk-incomplete(편집기 꼴이 아닌
     예전 파일 — 막는 문제), 평면 검사(check_grid —
     도착 지점은 maps.json의 첫 도착 지점, 문은 Door 엔티티), room-door-unregistered(알림), room-art-mismatch.
@@ -509,8 +509,19 @@ def check_room(ldtk_path) -> List[Problem]:
     problems = _incomplete(path, doc) + check_grid(grid, spawn, doors, values["face_height"]) + door_problems(doors, doors_table)
     if any(p.code == "room-unknown-char" for p in problems):
         return problems                            # 칸 값을 믿을 수 없으니 그림은 견주지 않는다
+    try:
+        _check_values(values, kit if kit is not None else _default_kit())
+    except (RoomError, RecipeError) as e:                      # repaint가 거절할 값은 check도 알린다(같은 검사)
+        return problems + [Problem("room-slots-value", f"{path.parent / SLOTS_NAME}: {e}")]
     slots, _, _ = _read_sheet(path.parent)
     return problems + _art_mismatch(grid, _plan(path, grid, values), slots, layers)
+
+
+def _check_values(values: dict, kit: Kit) -> dict:
+    """자리 표의 wall·floor·top을 받을 수 있는지 본다(repaint와 check가 함께 쓴다). 안 되면 RoomError·RecipeError. 바닥 명세를 돌려준다."""
+    wall_top(values["wall"])                                  # 모르는 벽 모양은 RecipeError
+    check_top(values.get("top"))
+    return floor_spec(kit, values["floor"])
 
 
 def _plan(path: Path, grid, values: dict) -> RoomTiles:
@@ -563,7 +574,7 @@ def repaint_room(ldtk_path, dry_run: bool = False, kit: Optional[Kit] = None) ->
         raise RoomBuildError(blocking)
 
     kit = kit if kit is not None else _default_kit()
-    floor = floor_spec(kit, values["floor"])
+    floor = _check_values(values, kit)
     plan = _plan(path, grid, values)
     wanted, tiles = _draw_all(kit, plan, values["wall"], floor, values.get("top"))
     out = path.parent

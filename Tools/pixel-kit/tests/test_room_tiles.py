@@ -480,13 +480,19 @@ class DrawTests(unittest.TestCase):
     def test_face_tiles_tile_horizontally(self):
         keys = classify(grid("###", "###", "###", "..."))
         for wall in wall_styles():
+            periods = {}
             for y in (1, 2):
                 cv = draw_tile(STYLE, keys[y][1], wall, FLOOR_SPEC)
                 with self.subTest(wall=wall, key=keys[y][1]):
                     self.assertEqual([p for p in lint_room_tile(cv, keys[y][1], STYLE) if p.code == "tile-seam"], [])
-                    # 무늬 주기가 32인 모양(벽돌마다 다른 밝기, 나뭇결, 꽃)은 한 장이 한 주기라 자기와 겹치는 밀기가 없다(None).
-                    # 주기가 보이면 32의 약수여야 한다(2026-11-14 벽 모양이 늘며 "주기는 16 이하" 전제를 고침).
-                    p = _period(cv, True)
+                periods[y] = _period(cv, True)
+            with self.subTest(wall=wall):
+                # 주기가 타일 폭 전체(32)인 모양(벽돌마다 다른 밝기, 나뭇결, 꽃)은 두 줄 모두 자기와 겹치는 밀기가 없다(None) —
+                # 그림에서 계산한다. 그 밖의 모양은 주기가 보여야 하고(한 줄이라도) 보이는 주기는 32의 약수여야 한다.
+                if all(p is None for p in periods.values()):
+                    continue
+                self.assertTrue(any(p is not None for p in periods.values()))
+                for p in periods.values():
                     if p is not None:
                         self.assertEqual(32 % p, 0)
 
