@@ -27,6 +27,12 @@ class StyleTests(unittest.TestCase):
             self.style.color("nope.zero.9")
         self.assertIn("nope.zero.9", str(cm.exception))
 
+    def test_brighter_step_is_next_step_of_same_ramp(self):
+        c = self.style.color
+        self.assertEqual(self.style.brighter(c("bread.1")), c("bread.2"))
+        self.assertIsNone(self.style.brighter(c("bread.3")))           # 가장 밝은 단계
+        self.assertIsNone(self.style.brighter(self.style.outline))     # 팔레트 단계가 아님
+
     def test_every_palette_value_is_hex(self):
         raw = json.loads(STYLE_PATH.read_text(encoding="utf-8"))
         for key, ramp in raw["palette"].items():

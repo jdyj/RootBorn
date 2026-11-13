@@ -1,0 +1,26 @@
+[
+  {"id": "bakery.shelf", "kind": "furniture", "part": "furniture.shelf", "cells": [2, 1], "art_cells": [2, 3],
+   "tiers": [
+     ["bread.loaf", "bread.loaf", "bread.loaf", "bread.loaf"],
+     ["bread.baguette", "bread.baguette", "bread.baguette"],
+     ["bread.croissant", "bread.croissant", "bread.croissant", "bread.croissant"],
+     ["bread.bun", "bread.roll", "bread.pretzel", "bread.bun"]
+   ],
+   "states": {"empty": {"tiers": [[], [], [], []]}}},
+  {"id": "bakery.counter", "kind": "furniture", "part": "furniture.counter", "cells": [3, 1], "art_cells": [3, 2],
+   "top": [{"part": "prop.register", "x": 6}, {"part": "prop.basket", "x": 70}]},
+  {"id": "bakery.glass-case", "kind": "furniture", "part": "furniture.glass-case", "cells": [2, 1], "art_cells": [2, 2],
+   "rows": [
+     ["bread.cake", "bread.cake", "bread.cake", "bread.cake", "bread.cake"],
+     ["bread.donut", "bread.donut", "bread.donut", "bread.donut", "bread.donut"]
+   ],
+   "states": {"empty": {"rows": [[], []]}}},
+  {"id": "bakery.trolley", "kind": "furniture", "part": "furniture.trolley", "cells": [1, 1], "art_cells": [1, 3],
+   "rows": [
+     ["bread.loaf", "bread.loaf"],
+     ["bread.croissant", "bread.croissant"],
+     ["bread.roll", "bread.bun"],
+     ["bread.baguette"]
+   ],
+   "states": {"empty": {"rows": [[], [], [], []]}}}
+]

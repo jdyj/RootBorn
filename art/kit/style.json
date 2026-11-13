@@ -17,7 +17,7 @@
     "yellow": ["#f0d060", "#f4d45c"],
     "terracotta": ["#944c34", "#c46c4c"],
     "metal": ["#5c6470", "#8c949c", "#aab2ba"],
-    "metal.dark": ["#3c3430", "#545c64"],
+    "metal.dark": ["#3c3430", "#545c64", "#767e8a"],
     "glass.top": ["#5c98b8", "#8cc0d8"],
     "glass.front": ["#8cc0d8", "#c4e4f0"],
     "glass.streak": ["#e8f4f8"],

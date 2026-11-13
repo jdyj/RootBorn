@@ -28,3 +28,4 @@ def get_maker(name: str) -> Callable:
 
 # 만드는 부품 모듈은 여기서 가져와 @register가 돌게 한다(모듈 하나에 한 줄).
 from . import tiles  # noqa: E402,F401
+from . import furniture  # noqa: E402,F401

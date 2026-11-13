@@ -1,6 +1,6 @@
 """화풍 파일(art/kit/style.json) 읽기. 색은 팔레트 키(`재질.단계`)로만 얻는다."""
 import json
-from typing import Dict, FrozenSet, Tuple
+from typing import Dict, FrozenSet, Optional, Tuple
 
 RGBA = Tuple[int, int, int, int]
 
@@ -17,15 +17,24 @@ class Style:
         self.shadow: Dict[str, float] = dict(raw["shadow"])
         self.max_colors: Dict[str, int] = dict(raw["max_colors"])
         self._colors: Dict[str, RGBA] = {}
-        for name, ramp in raw["palette"].items():
-            for i, h in enumerate(ramp):
-                self._colors[f"{name}.{i}"] = _hex(h)
+        self._brighter: Dict[RGBA, RGBA] = {}
+        for name in sorted(raw["palette"]):
+            ramp = [_hex(h) for h in raw["palette"][name]]
+            for i, c in enumerate(ramp):
+                self._colors[f"{name}.{i}"] = c
+                # 같은 색이 여러 줄에 있으면 이름순으로 처음 나온 줄의 다음 단계(결정적).
+                if i + 1 < len(ramp) and c not in self._brighter:
+                    self._brighter[c] = ramp[i + 1]
         self.palette: FrozenSet[RGBA] = frozenset(set(self._colors.values()) | {self.outline})
 
     @staticmethod
     def load(path: str) -> "Style":
         with open(path, "r", encoding="utf-8") as f:
             return Style(json.load(f))
+
+    def brighter(self, rgba: RGBA) -> Optional[RGBA]:
+        """같은 줄(ramp)의 한 단계 밝은 색. 가장 밝은 단계거나 팔레트 단계가 아니면 None."""
+        return self._brighter.get(tuple(rgba))
 
     def color(self, key: str) -> RGBA:
         try:
