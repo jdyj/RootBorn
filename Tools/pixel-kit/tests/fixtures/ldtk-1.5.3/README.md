@@ -14,8 +14,16 @@
 
 ## `editor-keys.json`
 
-- 저장소의 편집기 저장 파일(`Assets/LDtk/House/house.ldtk`, `Assets/LDtk/Town/town.ldtk`와 그 `.ldtkl`,
+- 저장소의 편집기 저장 파일(옛 집 맵 — 지금은 이 폴더의 `house.ldtk`, `Assets/LDtk/Town/town.ldtk`와 그 `.ldtkl`,
   `Assets/LDtk/Interiors/interiors.ldtk`와 그 `.ldtkl` — 모두 `jsonVersion` 1.5.3, `appBuildId` 473703)에서
   정의 종류마다 **모든 사례에 늘 있는 키**(교집합)를 뽑은 표다. 스키마의 `required`보다 넓다(편집기는 선택 키도 늘 쓴다).
 - 그 맵들은 새로 그릴 예정이라 테스트가 맵 파일을 직접 읽지 않고 이 표를 읽는다. 표를 다시 뽑을 일이 생기면 같은 규칙
   (종류별 교집합)으로 뽑고 이 README의 출처를 고친다.
+
+## `house.ldtk`
+
+- 2026-11-14까지 게임의 집 맵이던 `Assets/LDtk/House/house.ldtk`(LDtk 1.5.3, `appBuildId` 473703이 저장)를 바이트 그대로 옮긴 것이다.
+  게임의 집이 키트 방(`art/world/rooms/house/`)으로 바뀌며 원래 자리에서 지웠다. **편집기가 저장한 견본**으로만 쓴다:
+  스키마 검사가 진짜 편집기 파일에서 오탐하지 않는지(`test_ldtk_editor_shape.py`), 방 모양이 아닌 편집기 맵을 `room build --force`가
+  덮지 않는지(`test_room_ldtk.py`). 타일셋 PNG 경로(`relPath`)는 옛 자리 기준이라 이 폴더에서는 풀리지 않는다 — 그림은 읽지 않는다.
+  고치지 않는다.

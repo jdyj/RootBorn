@@ -1,5 +1,5 @@
 {
- "source": "Assets/LDtk/House/house.ldtk, Assets/LDtk/Town/town.ldtk(+.ldtkl), Assets/LDtk/Interiors/interiors.ldtk(+.ldtkl) — LDtk 1.5.3(appBuildId 473703)이 저장한 파일",
+ "source": "Assets/LDtk/House/house.ldtk(지금은 Tools/pixel-kit/tests/fixtures/ldtk-1.5.3/house.ldtk), Assets/LDtk/Town/town.ldtk(+.ldtkl), Assets/LDtk/Interiors/interiors.ldtk(+.ldtkl) — LDtk 1.5.3(appBuildId 473703)이 저장한 파일",
  "rule": "정의 종류마다 모든 사례에 늘 있는 키(교집합)",
  "kinds": {
   "defs": [

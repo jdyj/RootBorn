@@ -343,7 +343,7 @@ class RefusalTests(RoomBase):
         self.assertEqual(self.snapshot("t.other"), before)
 
     def test_force_refuses_an_ldtk_of_the_same_name_that_is_not_a_room(self):
-        game_map = ROOT / "Assets/LDtk/House/house.ldtk"
+        game_map = HERE / "fixtures" / "ldtk-1.5.3" / "house.ldtk"   # 옛 집 맵(편집기 저장 견본)
         folder = self.root / "Assets/LDtk/House"
         folder.mkdir(parents=True)
         shutil.copyfile(game_map, folder / "house.ldtk")

@@ -241,8 +241,10 @@ class WallDoorAndBuildTests(unittest.TestCase):
 
 
 class HousePlanTests(unittest.TestCase):
-    """새 집 평면(art/kit/rooms/house.json). 지금 집(Assets/LDtk/House/house.ldtk, game/world/maps.json·interactions.json의 House)과
-    같은 크기·칸 좌표라야 옛 세이브의 가구 칸과 상호작용 지점의 픽셀 좌표가 그대로 쓰인다. 좌표를 적는 곳은 이 시험뿐이다."""
+    """새 집 평면(art/kit/rooms/house.json). 옛 집(2026-11-14까지의 Assets/LDtk/House/house.ldtk, 지금 견본은
+    tests/fixtures/ldtk-1.5.3/house.ldtk)과 같은 크기·칸 좌표라야 옛 세이브의 가구 칸과 상호작용 지점(game/world/interactions.json의
+    House)의 픽셀 좌표가 그대로 쓰인다. 좌표를 손으로 적는 곳은 이 시험뿐이다 — 게임 쪽 World HouseMapTests·MapContractTests는
+    같은 약속(고정 지점이 바닥이고 Build 0)을 게임 데이터에서 읽어 본다. 평면만 고치고 방을 다시 만들기 전에 잡으려고 남긴다."""
 
     TODAYS_POINTS = {                       # 지금 집의 픽셀 좌표 // 32
         "house-entry (464,496)": (14, 15),

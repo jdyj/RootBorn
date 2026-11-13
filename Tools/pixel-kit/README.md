@@ -418,11 +418,11 @@ if/switch로 종류를 닫지 않는다.
 - 맵 id = 방 id에서 점·하이픈을 지우고 낱말 첫 글자를 대문자로(`test.two-rooms` → `TestTwoRooms`).
 - 칸 → 층: 벽(1)은 `Wall` 층 타일(띠·정면이 아닌 자리는 투명), 바닥(2)은 `Ground` 층 타일, 띠 옆으로 바닥이 비치는 벽 칸은 `Ground` 층에도 바닥 타일, 밖(0)은 타일 없음(`room_tiles.plan_tiles`). 같은 격자가 `Collision`의 `intGridCsv`(행 우선, 왼쪽 위부터)다. 그림과 충돌이 한 격자에서 나온다. 벽 칸에 `Ground` 타일이 있어도 `Wall` 타일이 함께 있으므로 `interior-auto`가 막고, 칠한 `Collision` 1이 언제나 막는다(`game/world/README.md` 3절).
 - 이미 있는 방 파일(넷 중 하나라도)이 있으면 `--force` 없이는 거절(끝 코드 2). `--force`는 같은 평면이면 같은 바이트를 쓴다. `--dry-run`은 쓸 파일만 찍는다.
-- **`--force`여도 남의 파일은 덮지 않는다**(끝 코드 2, 아무것도 쓰지 않음): 있는 `maps.json`이 맵 하나이고 그 `ldtk`가 이 방의 `<id>.ldtk`가 아니거나(예: `--out game/world` — 게임 전체의 맵 목록), 있는 `<id>.ldtk`가 방 모양(`Collision`·`Wall`·`Ground` 층)이 아니거나(예: `--out Assets/LDtk/House`에 방 id `house`), `tiles.png`·`tiles.slots.json` 중 하나만 있으면 거절한다. 자기 방을 `--force`로 다시 만드는 것은 된다.
+- **`--force`여도 남의 파일은 덮지 않는다**(끝 코드 2, 아무것도 쓰지 않음): 있는 `maps.json`이 맵 하나이고 그 `ldtk`가 이 방의 `<id>.ldtk`가 아니거나(예: `--out game/world` — 게임 전체의 맵 목록), 있는 `<id>.ldtk`가 방 모양(`Collision`·`Wall`·`Ground` 층)이 아니거나(예: 방 모양이 아닌 편집기 맵 `house.ldtk`가 있는 폴더에 방 id `house` — 시험은 옛 집 맵 견본 `tests/fixtures/ldtk-1.5.3/house.ldtk`로 본다), `tiles.png`·`tiles.slots.json` 중 하나만 있으면 거절한다. 자기 방을 `--force`로 다시 만드는 것은 된다.
 - **`--force`는 평면에서 통째로 다시 만든다.** LDtk에서 손으로 고친 것(다시 칠한 `Collision` 칸, 놓은 가구, 고친 문)은 지워진다(덮을 때 한 줄 알림을 찍는다). LDtk에서 손을 댄 뒤에는 `--force`가 아니라 `room repaint`를 쓴다.
 - 평면에 문 글자가 있으면 알림 `room-door-unregistered`를 찍는다(쓰기는 막지 않는다): 만든 `maps.json`의 `doors`가 비어 있어 게임에서 그 문은 열리지 않는다. `doors`에 그 `Where` 값(소문자, `-`는 공백)의 목적지 맵·도착 지점을 손으로 적는다.
 - 쓰기는 모든 파일을 임시 파일에 먼저 쓴 뒤 바꿔친다. 같은 입력이면 같은 바이트, LF.
-- `.ldtk`는 LDtk 1.5.3 편집기가 저장하는 꼴 그대로 쓴다: 머리말(`app: LDtk`), 키와 키 순서, 기본값을 편집기가 저장한 파일(`Assets/LDtk/House/house.ldtk`)에서
+- `.ldtk`는 LDtk 1.5.3 편집기가 저장하는 꼴 그대로 쓴다: 머리말(`app: LDtk`), 키와 키 순서, 기본값을 편집기가 저장한 파일(옛 집 맵의 견본 `tests/fixtures/ldtk-1.5.3/house.ldtk` — 2026-11-14까지 게임의 집 맵이던 `Assets/LDtk/House/house.ldtk`를 바이트 그대로 옮긴 것)에서
   가져왔다(`ldtk_common.py`의 편집기 꼴 함수). 빠지면 안 되는 키는 공식 스키마의 `required`로 테스트가 지킨다(`tests/test_ldtk_editor_shape.py`,
   스키마와 출처는 `tests/fixtures/ldtk-1.5.3/README.md`). 이 도구가 만든 방이라는 표시는 머리말이 아니라 층 정의의 `doc` 문자열과 방 모양이다
   (편집기는 저장할 때 머리말을 자기 것으로 바꾼다). 문의 `Where` 값은 `__value`와 편집기가 읽는 `realEditorValues`에 함께 둔다.
@@ -460,7 +460,7 @@ if/switch로 종류를 닫지 않는다.
 
 테스트 고정 파일 둘: `tests/fixtures/room-editor-saved/`는 **사용자가 LDtk 1.5.3 편집기에서 `Collision`을 칠해 저장한 실제 방**(2026-11-14)이다 —
 편집기가 저장한 뒤 그때의 `repaint`가 32px 윗면으로 `Wall`·`Ground`를 다시 쓴 파일이라 들여쓰기·줄바꿈은 이 도구의 것이고 `cachedPixelData` 같은 값은 편집기의 것이다.
-자리 표에만 고정 파일용으로 `"band": 16`을 적어 넣었다. `tests/fixtures/room-saved-by-editor.ldtk`는 `house.ldtk`의 꼴(탭 들여쓰기·키 순서)을 흉내 낸 것이다.
+자리 표에만 고정 파일용으로 `"band": 16`을 적어 넣었다. `tests/fixtures/room-saved-by-editor.ldtk`는 옛 집 맵 견본 `tests/fixtures/ldtk-1.5.3/house.ldtk`의 꼴(탭 들여쓰기·키 순서)을 흉내 낸 것이다.
 
 ### 게임에서 보기와 처음 확인할 것
 

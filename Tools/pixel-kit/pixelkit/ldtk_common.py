@@ -3,7 +3,7 @@
 게임의 maps.json은 // 주석과 끝 쉼표가 있어 일반 JSON 읽기로는 못 읽는다. walker·npcWalker는 거기서 옮겨 온다.
 
 아래 "편집기 꼴" 함수들은 LDtk 1.5.3 편집기가 저장하는 꼴의 완전한 객체(키 순서까지 편집기와 같다)를 만든다.
-기본값은 저장소의 편집기 저장 파일(Assets/LDtk/House/house.ldtk 등)에서 가져왔고, 빠지면 안 되는 키는 공식 스키마
+기본값은 편집기 저장 파일(옛 집 맵의 견본 Tools/pixel-kit/tests/fixtures/ldtk-1.5.3/house.ldtk 등)에서 가져왔고, 빠지면 안 되는 키는 공식 스키마
 (Tools/pixel-kit/tests/fixtures/ldtk-1.5.3/JSON_SCHEMA.json)의 required로 테스트가 지킨다(tests/test_ldtk_editor_shape.py).
 게임 읽기 코드(game/Rootborn.World/Ldtk/LdtkFile.cs)가 읽는 값은 부르는 쪽이 넘긴다.
 """
@@ -95,7 +95,7 @@ PROJECT_KEYS = ("__header__", "iid", "jsonVersion", "appBuildId", "nextUid", "id
 
 
 def smart_color(hex_color: str) -> str:
-    """편집기가 레벨 __smartColor로 쓰는 색: 바탕색을 흰색 쪽으로 45% 옮긴 것(house.ldtk #696A79 → #ADADB5와 같다).
+    """편집기가 레벨 __smartColor로 쓰는 색: 바탕색을 흰색 쪽으로 45% 옮긴 것(옛 집 맵 견본 house.ldtk #696A79 → #ADADB5와 같다).
     편집기가 열 때 다시 계산하는 값이라 맞지 않아도 열기를 막지는 않는다."""
     rgb = [int(hex_color[i:i + 2], 16) for i in (1, 3, 5)]
     return "#" + "".join(f"{int(c + 0.45 * (255 - c) + 0.5):02X}" for c in rgb)

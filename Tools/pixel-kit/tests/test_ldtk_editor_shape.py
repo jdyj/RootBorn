@@ -33,9 +33,10 @@ class CheckerTests(unittest.TestCase):
         self.assertEqual(ldtk_schema.all_problems(self.doc()), [])
 
     def test_files_really_saved_by_the_editor_pass_without_false_alarms(self):
-        """흉내 낸 파일이 아니라 편집기가 저장한 파일(사용자가 칠하고 저장한 방, 저장소의 집 맵)에도 검사기가 오탐하지 않는다."""
-        real = (Path(__file__).resolve().parent / "fixtures" / "room-editor-saved" / "test.two-rooms.ldtk",
-                ROOT / "Assets" / "LDtk" / "House" / "house.ldtk")
+        """흉내 낸 파일이 아니라 편집기가 저장한 파일(사용자가 칠하고 저장한 방, 옛 집 맵의 견본)에도 검사기가 오탐하지 않는다."""
+        fixtures = Path(__file__).resolve().parent / "fixtures"
+        real = (fixtures / "room-editor-saved" / "test.two-rooms.ldtk",
+                fixtures / "ldtk-1.5.3" / "house.ldtk")
         for path in real:
             self.assertTrue(path.is_file(), f"{path} 가 없다 — 이 검사를 조용히 건너뛰지 않는다")
             self.assertEqual(ldtk_schema.all_problems(json.loads(path.read_text("utf-8"))), [], str(path))
