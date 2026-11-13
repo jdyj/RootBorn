@@ -331,15 +331,47 @@ def _room_problems(problems) -> int:
     return code
 
 
+FORCE_NOTE = ("알림 --force: 평면에서 통째로 다시 만든다 — LDtk에서 손으로 고친 것(다시 칠한 칸, 놓은 가구)은 지워진다. "
+              "손으로 고친 뒤에는 room repaint <ldtk 경로>로 그림만 맞춘다")
+
+
+def _room_ldtk_action(action: str, target: Path, args, kit: Kit) -> int:
+    """room check <ldtk 경로> | room repaint <ldtk 경로> [--dry-run]."""
+    from . import room_ldtk
+    from .room_plan import is_warning
+    if action == "check":
+        problems = room_ldtk.check_room(target)
+        code = _room_problems(problems)
+        if not problems:
+            print(f"{target.name}: 문제 없음")
+        return code
+    written = room_ldtk.repaint_room(target, dry_run=args.dry_run, kit=kit)
+    _room_problems(p for p in room_ldtk.check_room(target) if is_warning(p))      # 얇은 벽, 표에 없는 문
+    for name in written:
+        print(("쓸 파일: " if args.dry_run else "저장: ") + (target.parent / name).as_posix())
+    if args.dry_run:
+        print("--dry-run: 아무것도 쓰지 않았다")
+    elif not written:
+        print("바꿀 것 없음")
+    return 0
+
+
 def cmd_room(args, kit: Kit) -> int:
-    """room build <id> [--force] [--dry-run] [--out 폴더]: 평면에서 LDtk 방을 쓴다. room check <id>: 평면만 검사한다."""
+    """room build <id> [--force] [--dry-run] [--out 폴더]: 평면에서 LDtk 방을 쓴다. room check <id>: 평면만 검사한다.
+    room check <ldtk 경로>: LDtk 방을 검사한다. room repaint <ldtk 경로> [--dry-run]: 칠한 Collision에 벽 그림을 맞춘다."""
     from . import room_ldtk, room_plan
     from .room_tiles import wall_styles
-    if len(args.ids) != 2 or args.ids[0] not in ("build", "check"):
-        raise UsageError("사용법: room build <방 id> [--force] [--dry-run] [--out 폴더] | room check <방 id>")
+    usage = ("사용법: room build <방 id> [--force] [--dry-run] [--out 폴더] | room check <방 id 또는 .ldtk 경로> | "
+             "room repaint <.ldtk 경로> [--dry-run]")
+    if len(args.ids) != 2 or args.ids[0] not in ("build", "check", "repaint"):
+        raise UsageError(usage)
     action, rid = args.ids
     rooms_dir = Path(args.kit) / "rooms"
     try:
+        if action == "repaint" or (action == "check" and rid.endswith(".ldtk")):
+            if not rid.endswith(".ldtk"):
+                raise UsageError("room repaint에는 .ldtk 파일 경로를 준다\n" + usage)
+            return _room_ldtk_action(action, Path(rid), args, kit)
         if action == "check":
             room = room_plan.load_room(rooms_dir / f"{rid}.json")
             if room.wall not in wall_styles():
@@ -355,6 +387,9 @@ def cmd_room(args, kit: Kit) -> int:
         room = room_plan.load_room(rooms_dir / f"{rid}.json")
         _room_problems(p for p in room_plan.check_grid(room.grid, room.spawn, room.doors, room.face_height)
                        if room_plan.is_warning(p))
+        _room_problems(room_ldtk.door_problems(room.doors, {}))          # build가 쓰는 maps.json의 doors는 비어 있다
+        if args.force and room_ldtk.existing_room_files(args.repo, rid, args.out):
+            print(FORCE_NOTE)
         written = room_ldtk.build_room(args.repo, rid, out_dir=args.out, force=args.force, dry_run=args.dry_run,
                                        kit=kit, rooms_dir=rooms_dir)
     except room_ldtk.RoomBuildError as e:

@@ -14,7 +14,7 @@ from .lint import Problem
 from .room_tiles import FLOOR, OUT, WALL, classify
 
 CHARS = {"#": WALL, ".": FLOOR, " ": OUT}
-WARNING_CODES = frozenset({"room-wall-thin"})     # 알림이다: 찍되 쓰기를 막지 않고 끝 코드도 0
+WARNING_CODES = frozenset({"room-wall-thin", "room-door-unregistered"})     # 알림이다: 찍되 쓰기를 막지 않고 끝 코드도 0
 _ID = re.compile(r"[A-Za-z0-9._-]+")
 
 
