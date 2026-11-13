@@ -178,6 +178,9 @@ def _check_furniture(recipe: dict, defs_text: str, fid: str) -> None:
     s, e = _find_entity(defs_text, fid)
     ent = json.loads(defs_text[s:e])
     parts = ent.get("tileParts") or []
+    tile = parts[0].get("tile") if parts and isinstance(parts[0], dict) else None
+    if not isinstance(tile, dict):
+        raise ExportError("export-unsupported-furniture", f"{fid}: tileParts[0]에 tile이 없다(정의 모양이 예상과 다르다)")
     if len(parts) != 1 or parts[0].get("localCell") != {"x": 0, "y": 0}:
         raise ExportError("export-unsupported-furniture", f"{fid}: tileParts가 하나(localCell 0,0)가 아니다")
     cells = recipe.get("cells")
@@ -188,7 +191,10 @@ def _check_furniture(recipe: dict, defs_text: str, fid: str) -> None:
         raise ExportError("export-unsupported-furniture",
                           f"art_cells {art}가 점유 칸 {cells}보다 넓어 pivot이 어긋난다(가로 칸 수가 같아야 한다)")
     want = {(i, 0) for i in range(cells[0])}
-    have = {(c["x"], c["y"]) for c in ent.get("footprintCells") or []}
+    foot = ent.get("footprintCells") or []
+    if not all(isinstance(c, dict) and "x" in c and "y" in c for c in foot):
+        raise ExportError("export-unsupported-furniture", f"{fid}: footprintCells 항목에 x·y가 없다(정의 모양이 예상과 다르다)")
+    have = {(c["x"], c["y"]) for c in foot}
     if want != have:
         raise ExportError("export-footprint-mismatch",
                           f"명세 cells {cells}와 {fid}의 footprintCells {sorted(have)}가 다르다")
@@ -209,6 +215,12 @@ def export_furniture(recipe: dict, kit: Kit, repo_root) -> ExportPlan:
     if not (isinstance(art, list) and len(art) == 2):
         plan.problems.append(_problem(rid, "export-unsupported-furniture", "art_cells [w, h]가 있어야 한다"))
         return plan
+    # 시트와 좌표표는 칸 크기가 모두 같다고 가정한다. 다른 상태 그림이 있으면 잘리므로 쓰지 않는다.
+    base = (cells[0].w, cells[0].h)
+    for cv, label in zip(cells[1:], names[1:]):
+        if (cv.w, cv.h) != base:
+            plan.problems.append(_problem(label, "export-state-size-mismatch",
+                                          f"상태 그림 {cv.w}x{cv.h}가 기본 그림 {base[0]}x{base[1]}와 다르다(한 시트의 칸은 크기가 같아야 한다)"))
     png_path = f"{PROPS_ROOT}/{rid.split('.')[0]}/{rid}.png"
     target = (recipe.get("game") or {}).get("replaces")
     if target is not None:

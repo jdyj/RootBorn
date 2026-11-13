@@ -150,6 +150,25 @@ def build_level(root: Path, out: Path) -> Tuple[bytes, bytes]:
     return _dump(ldtk), _dump(maps)
 
 
+def _check_overwritable(out: Path) -> None:
+    """덮어쓸 파일이 이미 있으면 이 도구가 쓴 것인지 본다. 아니면 거절한다(게임의 실제 맵 목록을 지키려는 것)."""
+    maps_file, ldtk_file = out / MAPS_NAME, out / LDTK_NAME
+    if maps_file.exists():
+        try:
+            ids = [m.get("id") for m in _loads_with_comments(maps_file.read_text(encoding="utf-8"))["maps"]]
+        except (OSError, ValueError, KeyError, TypeError, AttributeError):
+            ids = None
+        if ids != [MAP_ID]:
+            raise TestLevelError(f"{maps_file}가 이 도구가 쓴 시험 맵 목록(맵이 {MAP_ID} 하나)이 아니라 덮어쓰지 않는다")
+    if ldtk_file.exists():
+        try:
+            app = json.loads(ldtk_file.read_text(encoding="utf-8"))["__header__"]["app"]
+        except (OSError, ValueError, KeyError, TypeError):
+            app = None
+        if app != "pixel-kit":
+            raise TestLevelError(f"{ldtk_file}가 이 도구가 만든 파일이 아니라 덮어쓰지 않는다")
+
+
 def write_test_level(repo_root, out_dir=None) -> List[str]:
     """시험용 레벨을 쓴다. 바뀐 파일(뿌리 기준 경로)을 돌려주고, 같은 내용이면 쓰지 않는다."""
     root = Path(repo_root).resolve()
@@ -159,6 +178,7 @@ def write_test_level(repo_root, out_dir=None) -> List[str]:
     except ValueError:
         raise TestLevelError(f"출력 폴더 {out}가 저장소 {root} 밖이다(maps.json의 ldtk는 저장소 뿌리 기준 경로라야 한다)") from None
     ldtk, maps = build_level(root, out)
+    _check_overwritable(out)
     written = []
     for name, data in ((LDTK_NAME, ldtk), (MAPS_NAME, maps)):
         path = out / name

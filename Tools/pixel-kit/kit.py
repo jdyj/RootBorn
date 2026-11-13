@@ -27,7 +27,7 @@ def main(argv=None) -> int:
     p.add_argument("--scale", type=int, default=None, help="보기용 확대 배율(render 6, sheet·scene 4, parts 8)")
     p.add_argument("--repo", default=str(REPO_ROOT), help="export가 쓸 저장소 뿌리(기본: 이 도구가 든 저장소)")
     p.add_argument("--dry-run", action="store_true", help="export: 쓸 파일과 바꿀 가구를 찍기만 한다")
-    args = p.parse_args(argv)
+    args = p.parse_intermixed_args(argv)  # 옵션을 id 앞에 써도 된다
     if args.out is None and args.command != "test-level":   # test-level은 None을 "저장소의 기본 자리"로 읽는다
         args.out = str(REPO_ROOT / "output" / "pixel-kit")
     return cli.run(args)

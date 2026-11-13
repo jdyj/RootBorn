@@ -127,6 +127,27 @@ class ExportFurnitureTests(Base):
         plan, _ = self.run_export(r)
         self.assertEqual([p.code for p in plan.problems], ["export-unsupported-furniture"])
 
+    def test_state_with_different_canvas_size_is_a_problem_and_writes_nothing(self):
+        r = copy.deepcopy(self.recipe)
+        r["states"]["empty"] = dict(r["states"]["empty"], art_cells=[3, 3])
+        snap = self.snapshot()
+        plan, written = self.run_export(r)
+        self.assertIn("export-state-size-mismatch", [p.code for p in plan.problems])
+        self.assertEqual((written, self.snapshot()), ([], snap))
+
+    def test_definition_without_tile_or_footprint_xy_is_a_problem_not_a_traceback(self):
+        snap = self.snapshot()
+        for mutate in (lambda d: d["tileParts"][0].pop("tile"),
+                       lambda d: d["footprintCells"][0].pop("x"),
+                       lambda d: d["footprintCells"][1].pop("y")):
+            data = json.loads(self.defs.read_text("utf-8"))
+            mutate(data[1])
+            self.defs.write_text(json.dumps(data, indent=2), encoding="utf-8")
+            plan, _ = self.run_export()
+            self.assertEqual([p.code for p in plan.problems], ["export-unsupported-furniture"])
+        self.assertEqual(sorted(k for k in self.snapshot() if k != export.FURNITURE_DEFS),
+                         sorted(k for k in snap if k != export.FURNITURE_DEFS))
+
     def test_lint_problem_blocks_every_file_of_the_run(self):
         good = copy.deepcopy(self.recipe)
         bad = copy.deepcopy(self.recipe)
@@ -299,6 +320,11 @@ class ExportCliTests(unittest.TestCase):
         self.assertEqual(code, 0, out + err)
         self.assertIn("바꿀 것 없음", out)
         self.assertEqual({f: (self.root / f).stat().st_mtime_ns for f in self.files()}, snap)
+
+    def test_options_may_come_before_the_ids(self):
+        code, out, err = cli_run(self.root, self.kit, ["--dry-run", "test.shelf"])
+        self.assertEqual(code, 0, out + err)
+        self.assertIn("art/props/test/test.shelf.png", out)
 
     def test_other_kinds_are_not_yet_supported(self):
         code, _, err = cli_run(self.root, self.kit, ["bakery.scene.interior"])

@@ -298,6 +298,35 @@ class TestLevelTests(LevelBase):
             with self.assertRaises(ldtk_test_level.TestLevelError):
                 self.write(Path(other))
 
+    def test_refuses_to_overwrite_a_real_maps_json(self):
+        self.export_all()
+        out = self.root / "game/world"
+        real = (out / "maps.json").read_bytes()
+        with self.assertRaises(ldtk_test_level.TestLevelError):
+            self.write(out)
+        self.assertEqual((out / "maps.json").read_bytes(), real)
+        self.assertFalse((out / "pixel-kit-test.ldtk").exists())
+        (out / "maps.json").write_text('{ "maps": [ {"id": "Other"} ], "npcWalker": {"speedCellsPerSecond": 1} }', "utf-8")
+        with self.assertRaises(ldtk_test_level.TestLevelError):
+            self.write(out)
+
+    def test_refuses_to_overwrite_an_ldtk_this_tool_did_not_make(self):
+        self.export_all()
+        out = self.root / "art/world/test"
+        out.mkdir(parents=True)
+        (out / "pixel-kit-test.ldtk").write_text('{"defs": {}}', "utf-8")
+        with self.assertRaises(ldtk_test_level.TestLevelError):
+            self.write(out)
+        self.assertEqual((out / "pixel-kit-test.ldtk").read_text("utf-8"), '{"defs": {}}')
+
+    def test_rewriting_its_own_files_still_works(self):
+        self.export_all()
+        out, _ = self.write()
+        _, written = self.write(out)
+        self.assertEqual(written, [])
+        self.export([self.recipe("bakery.menu-board", "test.z-board")], "prop", "test")
+        self.assertTrue(self.write(out)[1])
+
     def test_walker_settings_are_required_in_the_source_maps(self):
         self.export_all()
         (self.root / "game/world/maps.json").write_text('{ "maps": [] }', encoding="utf-8")

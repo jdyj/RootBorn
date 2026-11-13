@@ -172,8 +172,8 @@ if/switch로 종류를 닫지 않는다.
 - 좌표표: `data/atlases/art/props/<세트>/<명세 id>.png.atlas.json`. `pixelsPerUnit` 32, `origin` `"top-left"`, `width`·`height`는 PNG에서 잰 값. 칸 이름은 `<명세 id>`(기본)와 `<명세 id>@<상태>`. `pivot`은 점유 칸 줄의 왼쪽 아래 칸 가운데(`x = 0.5/art_w`, `y = (art_h-0.5)/art_h`). 키 순서·숫자 모양은 늘 같다.
 - `replaces`는 그 가구 항목의 `tileParts[0].tile`의 `sprite`와 `name` **두 문자열만** 새 PNG 경로와 기본 칸 이름으로 바꾼다. 파일의 나머지 바이트(줄바꿈, BOM, 끝 줄바꿈)는 그대로이고, 바꾼 뒤 JSON을 다시 읽어 그 두 값 밖이 같은지 확인한다. 하나라도 다르면 아무것도 쓰지 않는다.
 - 이 작업이 지원하는 가구: `tileParts`가 하나이고 `localCell`이 (0,0), 명세 `cells`가 `[w, 1]`이고 가구 `footprintCells`가 가로 한 줄 w칸과 같을 때.
-- 문제 코드: `export-unknown-furniture`(정의에 없는 id), `export-unsupported-furniture`(위 조건 밖), `export-footprint-mismatch`(칸 수가 다름), `export-replace-failed`(치환 검증 실패), `export-duplicate-target`(한 번에 준 명세 둘이 같은 가구를 가리킴), `export-unreadable-definitions`(정의 파일을 못 읽거나 UTF-8·JSON이 아님). `replaces`가 있는 명세는 `art_cells` 가로 칸 수가 `cells[0]`과 같아야 한다(다르면 `export-unsupported-furniture`, pivot이 어긋난다). 그림의 검사·만드는 부품 문제도 그대로 문제다. 문제가 하나라도 있으면(여러 id를 한 번에 줬어도) 전부 안 쓴다. 끝 코드 1.
-- 쓰기는 같은 폴더의 `<이름>.tmp`에 먼저 다 쓴 뒤 PNG, 좌표표, 가구 정의 순서로 바꿔친다. 중간에 실패하면 임시 파일을 지우고, 바꿔치기 도중이면 이미 바뀐 파일을 알리며 끝 코드 2.
+- 문제 코드: `export-unknown-furniture`(정의에 없는 id), `export-unsupported-furniture`(위 조건 밖), `export-footprint-mismatch`(칸 수가 다름), `export-replace-failed`(치환 검증 실패), `export-duplicate-target`(한 번에 준 명세 둘이 같은 가구를 가리킴), `export-unreadable-definitions`(정의 파일을 못 읽거나 UTF-8·JSON이 아님), `export-state-size-mismatch`(상태 그림 크기가 기본 그림과 다름 — 한 시트의 칸은 크기가 같아야 해서 쓰지 않는다). 가구 정의의 `tileParts[0].tile`이나 `footprintCells`의 `x`·`y`가 없으면 `export-unsupported-furniture`다. `replaces`가 있는 명세는 `art_cells` 가로 칸 수가 `cells[0]`과 같아야 한다(다르면 `export-unsupported-furniture`, pivot이 어긋난다). 그림의 검사·만드는 부품 문제도 그대로 문제다. 문제가 하나라도 있으면(여러 id를 한 번에 줬어도) 전부 안 쓴다. 끝 코드 1.
+- 쓰기는 같은 폴더의 `<이름>.tmp`에 먼저 다 쓴 뒤 PNG, 좌표표, 가구 정의 순서로 바꿔친다. 중간에 실패하면 임시 파일을 지우고, 바꿔치기 도중이면 이미 바뀐 파일을 알리며 끝 코드 2. 바꿔치기 도중 쓰기가 실패하면(`ExportWriteError`) PNG와 좌표표가 어긋날 수 있다. 같은 명령을 다시 돌리면 고쳐진다.
 - 같은 내용이면 쓰지 않고 "바꿀 것 없음"이라고 한다(수정 시각도 그대로). `--dry-run`은 쓸 파일과 바꿀 가구만 찍는다.
 - `--repo`의 기본은 이 도구가 든 저장소의 뿌리다. 테스트는 임시 폴더의 가짜 저장소만 쓴다.
 - 장면 id를 주면 아직 없다는 오류(끝 코드 2). 타일·건물·소품은 아래 묶음 시트다.
@@ -197,6 +197,7 @@ if/switch로 종류를 닫지 않는다.
 - 레벨 크기는 내용에서 계산한다(항상 32의 배수). 도착 지점 `front` 하나: 첫 그림의 발 아래 둘째 줄.
 - 충돌은 `collider-layers`에 빈 층 목록: 어떤 층의 타일도 막지 않아 레벨 전체가 열린다.
 - `relPath`는 `.ldtk` 폴더 기준 상대 경로(슬래시)이고 `pxWid`·`pxHei`는 PNG에서 잰 값이다. `maps.json`은 `game/world/maps.json`의 `walker`·`npcWalker`를 옮기고 맵 하나만 둔다(`ldtk`는 저장소 뿌리 기준).
+- `--out`에 이미 있는 `maps.json`이 이 도구가 쓴 것(맵이 `PixelKitTest` 하나)이 아니거나 `.ldtk`가 이 도구가 만든 것(헤더 `app: pixel-kit`)이 아니면 덮어쓰지 않고 끝 코드 2(예: `--out game/world`는 거절된다).
 - 같은 내용이면 쓰지 않는다. 시트가 없거나 `npcWalker`가 원본에 없으면 끝 코드 2.
 
 ## 같이 바뀌는 색
