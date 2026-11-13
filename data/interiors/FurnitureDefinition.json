@@ -315,8 +315,8 @@
           "y": 0
         },
         "tile": {
-          "sprite": "Assets/Data/Interiors/TileSets/ModernOfficeChairSamples/Sprites/BlackChair_00.png",
-          "name": "BlackChair_00"
+          "sprite": "art/props/home/home.chair.png",
+          "name": "home.chair"
         }
       }
     ],
@@ -349,8 +349,8 @@
           "y": 0
         },
         "tile": {
-          "sprite": "Assets/Data/Interiors/TileSets/ModernOfficeChairSamples/Sprites/BlackChair_00.png",
-          "name": "BlackChair_00"
+          "sprite": "art/props/home/home.chair-reward.png",
+          "name": "home.chair-reward"
         }
       }
     ],
@@ -575,8 +575,8 @@
           "y": 0
         },
         "tile": {
-          "sprite": "Assets/Art/CareerFurniture/Growth31/Growth31_assembly_desk_2x1.png",
-          "name": "Growth31_assembly_desk_2x1"
+          "sprite": "art/props/home/home.desk.png",
+          "name": "home.desk"
         }
       }
     ],
@@ -62868,8 +62868,8 @@
           "y": 0
         },
         "tile": {
-          "sprite": "Assets/Art/SchoolPixels/Furniture48/Chair/School_chair_north_1x1.png",
-          "name": "School_chair_north_1x1"
+          "sprite": "art/props/school/school.chair-north.png",
+          "name": "school.chair-north"
         }
       }
     ],
@@ -62901,8 +62901,8 @@
           "y": 0
         },
         "tile": {
-          "sprite": "Assets/Art/SchoolPixels/Furniture48/Chair/School_chair_south_1x1.png",
-          "name": "School_chair_south_1x1"
+          "sprite": "art/props/school/school.chair-south.png",
+          "name": "school.chair-south"
         }
       }
     ],
@@ -62934,8 +62934,8 @@
           "y": 0
         },
         "tile": {
-          "sprite": "Assets/Art/SchoolPixels/Furniture48/Desk/School_desk_2x1.png",
-          "name": "School_desk_2x1"
+          "sprite": "art/props/school/school.desk.png",
+          "name": "school.desk"
         }
       }
     ],
@@ -62971,8 +62971,8 @@
           "y": 0
         },
         "tile": {
-          "sprite": "Assets/Art/SchoolPixels/Furniture48/Desk/School_desk_with_open_book_2x1.png",
-          "name": "School_desk_with_open_book_2x1"
+          "sprite": "art/props/school/school.desk-open-book.png",
+          "name": "school.desk-open-book"
         }
       }
     ],
@@ -63148,8 +63148,8 @@
           "y": 0
         },
         "tile": {
-          "sprite": "Assets/Art/SchoolPixels/Furniture48/Desk/School_teacher_desk_2x1.png",
-          "name": "School_teacher_desk_2x1"
+          "sprite": "art/props/school/school.teacher-desk.png",
+          "name": "school.teacher-desk"
         }
       }
     ],
@@ -63257,8 +63257,8 @@
           "y": 0
         },
         "tile": {
-          "sprite": "Assets/Art/CareerFurniture/Growth31/Growth31_assembly_desk_2x1.png",
-          "name": "Growth31_assembly_desk_2x1"
+          "sprite": "art/props/home/home.study-desk.png",
+          "name": "home.study-desk"
         }
       }
     ],

@@ -1,0 +1,129 @@
+{
+  "image": "art/props/home/home.chair.png",
+  "width": 384,
+  "height": 64,
+  "pixelsPerUnit": 32,
+  "origin": "top-left",
+  "sprites": {
+    "home.chair": {
+      "x": 0,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    },
+    "home.chair@back": {
+      "x": 32,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    },
+    "home.chair@front": {
+      "x": 64,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    },
+    "home.chair@north": {
+      "x": 96,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    },
+    "home.chair@north-back": {
+      "x": 128,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    },
+    "home.chair@north-front": {
+      "x": 160,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    },
+    "home.chair@west": {
+      "x": 192,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    },
+    "home.chair@west-back": {
+      "x": 224,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    },
+    "home.chair@west-front": {
+      "x": 256,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    },
+    "home.chair@east": {
+      "x": 288,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    },
+    "home.chair@east-back": {
+      "x": 320,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    },
+    "home.chair@east-front": {
+      "x": 352,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    }
+  }
+}

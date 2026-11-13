@@ -1,0 +1,129 @@
+{
+  "image": "art/props/home/home.chair-reward.png",
+  "width": 384,
+  "height": 64,
+  "pixelsPerUnit": 32,
+  "origin": "top-left",
+  "sprites": {
+    "home.chair-reward": {
+      "x": 0,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    },
+    "home.chair-reward@back": {
+      "x": 32,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    },
+    "home.chair-reward@front": {
+      "x": 64,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    },
+    "home.chair-reward@north": {
+      "x": 96,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    },
+    "home.chair-reward@north-back": {
+      "x": 128,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    },
+    "home.chair-reward@north-front": {
+      "x": 160,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    },
+    "home.chair-reward@west": {
+      "x": 192,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    },
+    "home.chair-reward@west-back": {
+      "x": 224,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    },
+    "home.chair-reward@west-front": {
+      "x": 256,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    },
+    "home.chair-reward@east": {
+      "x": 288,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    },
+    "home.chair-reward@east-back": {
+      "x": 320,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    },
+    "home.chair-reward@east-front": {
+      "x": 352,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    }
+  }
+}

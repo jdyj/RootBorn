@@ -1,0 +1,39 @@
+{
+  "image": "art/props/school/school.chair-south.png",
+  "width": 96,
+  "height": 64,
+  "pixelsPerUnit": 32,
+  "origin": "top-left",
+  "sprites": {
+    "school.chair-south": {
+      "x": 0,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    },
+    "school.chair-south@back": {
+      "x": 32,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    },
+    "school.chair-south@front": {
+      "x": 64,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "image": "art/props/home/home.desk.png",
+  "width": 64,
+  "height": 64,
+  "pixelsPerUnit": 32,
+  "origin": "top-left",
+  "sprites": {
+    "home.desk": {
+      "x": 0,
+      "y": 0,
+      "w": 64,
+      "h": 64,
+      "pivot": {
+        "x": 0.25,
+        "y": 0.75
+      }
+    }
+  }
+}
