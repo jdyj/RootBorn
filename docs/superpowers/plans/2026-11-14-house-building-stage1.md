@@ -372,10 +372,10 @@
 
 다음 계획(`2026-11-14-house-building-stage1b.md`)은 아래 이름을 그대로 쓴다. 바꾸면 그 계획을 먼저 고친다.
 
-- `Rootborn.Core.Building.RoomTilePlan.Build(RoomGrid, int faceHeight, int band)`, `CellTiles.Parts`의 `TilePart.Owner`(꾸밈 주인 바닥 칸 = 칸 + Owner), `RoomCells`.
-- `RoomFinishDefinition`(`Slot`, `Cost` 칸당, `UnlockToken`), `RoomFinishSlots`, 해금은 `FurnitureUnlockProgress`의 `unlock.finish.*` 토큰.
-- `MapEntry.Build`(`MapBuildSettings`: `FrameId`, `DefaultWall`, `DefaultFloor`, `BandColors` …), `LoadedMap.Tiles`.
-- `RoomTileCompositor.Compose(plan, wallAt, floorAt, sheetForBand, bandColorsId)` — 다음 계획은 `wallAt`·`floorAt`을 `GameSession`의 꾸밈 조회로, 띠 색을 집의 고른 색으로 넘긴다. `WorldScreen.RefreshComposedTiles(mapId)`를 새 알림 주제(`GameChangeTopics`에 하나)에서 부른다.
+- `Rootborn.Core.Building.RoomTilePlan.Build(RoomGrid, int faceHeight, int band, IReadOnlyCollection<CellPos> wallDoors)`(벽 문 칸은 `Collision`이 벽인 칸의 `Door`), `CellTiles.Parts`의 `TilePart`(`Source` 출처 종류 이름(`TileSources`): `band`·`face`·`narrow`·`floor`·`sill`·`door`, `HasOwner`, 꾸밈 주인 바닥 칸 = 칸 + `Owner`), `RoomCells`(작업 7).
+- `RoomFinishDefinition`(`Id`, `Slot`, `NameKey`, `Sheet`, `Art`, `Cost` 칸당, `UnlockToken`), `RoomFinishSlots`(`wall`·`floor`), World `RoomFinishArt`(조각·공용 조각·띠 색을 좌표표에서 푼다). 정의는 `data/building/RoomFinishDefinition.json`. 해금은 `FurnitureUnlockProgress`의 `unlock.finish.*` 토큰이 되도록 정의에 자리만 있고 게임은 아직 쓰지 않는다.
+- `MapEntry.Build`(`MapBuildSettings`: `FrameLayer`, `FrameId`, `FaceHeight`, `Band`, `BandColors`, `DefaultWall`, `DefaultFloor`, `ReplacesLayers` — 모두 필수), `LoadedMap.Tiles`(칸마다 출처표, 맵을 읽을 때 한 번 `TilePlanOf`).
+- `RoomTileCompositor.Compose(plan, wallAt, floorAt, sheetForBand, bandColorsId)` → `ComposedRoom`, 맵 한 장 분은 `ComposedMapTiles.Compose(map, compositor, finish)`(지금 `wallAt`·`floorAt`을 기본 꾸밈 `_ => wall`, `_ => floor`로 부른다 — 다음 계획은 `Func<CellPos, RoomFinishDefinition>` 둘을 받는 오버로드를 더하고 빈 칸은 기본 꾸밈으로). 두 함수는 주인 칸(`cell + Owner`, face는 `(dx, dy + level)`)으로 불린다. `sheetForBand`는 벽 꾸밈의 `Sheet`, `bandColorsId`는 맵의 `build.bandColors`. 다음 계획은 꾸밈 조회를 `GameSession`에서, 띠 색을 집의 고른 색으로 넘긴다. `WorldScreen.RefreshComposedTiles(mapId)`를 새 알림 주제(`GameChangeTopics`에 하나)에서 부른다. 구조(`Collision`)가 바뀌면 `LoadedMap.Tiles`도 다시 만들어야 한다(`RefreshComposedTiles`는 꾸밈만 다시 조합한다).
 - `HouseFurnitureLayout.Stored`, `TryPlaceStored`, `GameSession.PlaceStoredFurniture` — 같이 쓰는 집에서는 지금 false다(다음 계획 B7이 방 요청으로 연다).
-- 가구 배치 화면의 분류 줄(`furniture.category.*`) — 다음 계획이 `furniture.category.finish`(꾸미기)를 더한다.
+- 가구 배치 화면의 분류 줄(`ui.furniture.category.*`, 지금 `furniture`·`stored`) — 다음 계획이 `ui.furniture.category.finish`(꾸미기)를 더한다.
 - 다음 계획의 작업(결정 대기 문서의 값으로): B1 Core 꾸밈 상태(바닥 칸마다 (벽지, 바닥), 방 채우기의 문간 규칙, 미리 보기·바뀌는 칸만 센 비용), B2 `GameSession` 명령·조회 + `house-build.json`(`HouseBuildSaveData` v1: `FrameId`, 맨 위 `Band`(결정 8), `Finishes`; `Save()` 묶음, `Require`에 넣지 않음, `SaveShapeCoverage`, 새 날짜 고정 폴더, 하위·상위 테스트) + HOUSE-001(비용 다섯 경우), B3 꾸미기 분류 화면 + Host 입력으로 벽지 바꾸기, B4 가게 진열과 해금, B5 인테리어 기술(`PlacementSkillGrowth`와 같은 하루 한도를 같이 씀, 결정 10), B6 새 게임 처음 배치(결정 6 — 새 게임에만), B7 같이 하기(`house-build` 조각, 서버 판정, 지문에 짓는 집 LDtk, 같이 쓰는 집의 보관 꺼내기) + HOUSE-004.
