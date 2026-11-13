@@ -1,132 +1,452 @@
 {
  "__header__": {
   "fileType": "LDtk Project JSON",
-  "app": "pixel-kit",
-  "doc": "픽셀 키트 시험용 레벨(kit.py test-level이 쓴다). 손으로 고치지 않는다"
+  "app": "LDtk",
+  "doc": "https://ldtk.io/json",
+  "schema": "https://ldtk.io/files/JSON_SCHEMA.json",
+  "appAuthor": "Sebastien 'deepnight' Benard",
+  "appVersion": "1.5.3",
+  "url": "https://ldtk.io"
  },
+ "iid": "23f9418f-a34e-5925-84ed-fbf54e83338b",
+ "jsonVersion": "1.5.3",
+ "appBuildId": 473703,
+ "nextUid": 8,
+ "identifierStyle": "Capitalize",
+ "toc": [],
+ "worldLayout": "Free",
+ "worldGridWidth": 256,
+ "worldGridHeight": 256,
+ "defaultLevelWidth": 480,
+ "defaultLevelHeight": 320,
+ "defaultPivotX": 0,
+ "defaultPivotY": 0,
+ "defaultGridSize": 32,
+ "defaultEntityWidth": 32,
+ "defaultEntityHeight": 32,
+ "bgColor": "#40465B",
+ "defaultLevelBgColor": "#40465B",
+ "minifyJson": false,
+ "externalLevels": false,
+ "exportTiled": false,
+ "simplifiedExport": false,
+ "imageExportMode": "None",
+ "exportLevelBg": true,
+ "pngFilePattern": null,
+ "backupOnSave": false,
+ "backupLimit": 10,
+ "backupRelPath": null,
+ "levelNamePattern": "Level_%idx",
+ "tutorialDesc": null,
+ "customCommands": [],
+ "flags": [],
  "defs": {
-  "tilesets": [
-   {
-    "uid": 1,
-    "identifier": "tiles_bakery",
-    "relPath": "../../tiles/bakery.png",
-    "pxWid": 512,
-    "pxHei": 64,
-    "tileGridSize": 32
-   },
-   {
-    "uid": 2,
-    "identifier": "world_bakery",
-    "relPath": "../bakery.png",
-    "pxWid": 512,
-    "pxHei": 192,
-    "tileGridSize": 32
-   }
-  ],
   "layers": [
    {
+    "doc": "픽셀 키트 시험용 맵(kit.py test-level이 쓴다). 손으로 고치지 않는다 — 다시 쓰면 덮인다. 내보낸 건물·소품 그림(태그 art).",
+    "uiColor": null,
+    "guideGridWid": 0,
+    "guideGridHei": 0,
+    "displayOpacity": 1,
+    "inactiveOpacity": 1,
+    "hideInList": false,
+    "hideFieldsWhenInactive": false,
+    "canSelectWhenInactive": true,
+    "renderInWorldView": true,
+    "pxOffsetX": 0,
+    "pxOffsetY": 0,
+    "parallaxFactorX": 0,
+    "parallaxFactorY": 0,
+    "parallaxScaling": true,
+    "requiredTags": [],
+    "excludedTags": [],
+    "autoTilesKilledByOtherLayerUid": null,
+    "useAsyncRender": false,
+    "intGridValues": [],
+    "intGridValuesGroups": [],
+    "autoRuleGroups": [],
+    "autoSourceLayerDefUid": null,
+    "tilesetDefUid": null,
+    "tilePivotX": 0,
+    "tilePivotY": 0,
+    "biomeFieldUid": null,
+    "__type": "Entities",
     "identifier": "Art",
     "type": "Entities",
+    "uid": 3,
+    "gridSize": 32,
     "uiFilterTags": [
      "art"
     ]
    },
    {
+    "doc": "픽셀 키트 시험용 맵(kit.py test-level이 쓴다). 손으로 고치지 않는다 — 다시 쓰면 덮인다. 바닥 타일.",
+    "uiColor": null,
+    "guideGridWid": 0,
+    "guideGridHei": 0,
+    "displayOpacity": 1,
+    "inactiveOpacity": 1,
+    "hideInList": false,
+    "hideFieldsWhenInactive": false,
+    "canSelectWhenInactive": true,
+    "renderInWorldView": true,
+    "pxOffsetX": 0,
+    "pxOffsetY": 0,
+    "parallaxFactorX": 0,
+    "parallaxFactorY": 0,
+    "parallaxScaling": true,
+    "requiredTags": [],
+    "excludedTags": [],
+    "autoTilesKilledByOtherLayerUid": null,
+    "useAsyncRender": false,
+    "intGridValues": [],
+    "intGridValuesGroups": [],
+    "autoRuleGroups": [],
+    "autoSourceLayerDefUid": null,
+    "tilesetDefUid": 1,
+    "tilePivotX": 0,
+    "tilePivotY": 0,
+    "biomeFieldUid": null,
+    "__type": "Tiles",
     "identifier": "Ground",
-    "type": "Tiles"
+    "type": "Tiles",
+    "uid": 4,
+    "gridSize": 32,
+    "uiFilterTags": []
    }
-  ]
+  ],
+  "entities": [
+   {
+    "identifier": "bakery.exterior.flat",
+    "uid": 5,
+    "tags": [],
+    "exportToToc": false,
+    "allowOutOfBounds": false,
+    "doc": null,
+    "width": 160,
+    "height": 192,
+    "resizableX": false,
+    "resizableY": false,
+    "minWidth": null,
+    "maxWidth": null,
+    "minHeight": null,
+    "maxHeight": null,
+    "keepAspectRatio": false,
+    "tileOpacity": 1,
+    "fillOpacity": 0.08,
+    "lineOpacity": 0,
+    "hollow": false,
+    "color": "#94D9B3",
+    "renderMode": "Tile",
+    "showName": false,
+    "tilesetId": 2,
+    "tileRenderMode": "FitInside",
+    "tileRect": {
+     "tilesetUid": 2,
+     "x": 0,
+     "y": 0,
+     "w": 160,
+     "h": 192
+    },
+    "uiTileRect": null,
+    "nineSliceBorders": [],
+    "maxCount": 0,
+    "limitScope": "PerLevel",
+    "limitBehavior": "MoveLastOne",
+    "pivotX": 0.5,
+    "pivotY": 1,
+    "fieldDefs": []
+   },
+   {
+    "identifier": "bakery.exterior.pitched",
+    "uid": 6,
+    "tags": [],
+    "exportToToc": false,
+    "allowOutOfBounds": false,
+    "doc": null,
+    "width": 160,
+    "height": 192,
+    "resizableX": false,
+    "resizableY": false,
+    "minWidth": null,
+    "maxWidth": null,
+    "minHeight": null,
+    "maxHeight": null,
+    "keepAspectRatio": false,
+    "tileOpacity": 1,
+    "fillOpacity": 0.08,
+    "lineOpacity": 0,
+    "hollow": false,
+    "color": "#94D9B3",
+    "renderMode": "Tile",
+    "showName": false,
+    "tilesetId": 2,
+    "tileRenderMode": "FitInside",
+    "tileRect": {
+     "tilesetUid": 2,
+     "x": 160,
+     "y": 0,
+     "w": 160,
+     "h": 192
+    },
+    "uiTileRect": null,
+    "nineSliceBorders": [],
+    "maxCount": 0,
+    "limitScope": "PerLevel",
+    "limitBehavior": "MoveLastOne",
+    "pivotX": 0.5,
+    "pivotY": 1,
+    "fieldDefs": []
+   },
+   {
+    "identifier": "bakery.a-board",
+    "uid": 7,
+    "tags": [],
+    "exportToToc": false,
+    "allowOutOfBounds": false,
+    "doc": null,
+    "width": 32,
+    "height": 32,
+    "resizableX": false,
+    "resizableY": false,
+    "minWidth": null,
+    "maxWidth": null,
+    "minHeight": null,
+    "maxHeight": null,
+    "keepAspectRatio": false,
+    "tileOpacity": 1,
+    "fillOpacity": 0.08,
+    "lineOpacity": 0,
+    "hollow": false,
+    "color": "#94D9B3",
+    "renderMode": "Tile",
+    "showName": false,
+    "tilesetId": 2,
+    "tileRenderMode": "FitInside",
+    "tileRect": {
+     "tilesetUid": 2,
+     "x": 320,
+     "y": 0,
+     "w": 32,
+     "h": 32
+    },
+    "uiTileRect": null,
+    "nineSliceBorders": [],
+    "maxCount": 0,
+    "limitScope": "PerLevel",
+    "limitBehavior": "MoveLastOne",
+    "pivotX": 0.5,
+    "pivotY": 1,
+    "fieldDefs": []
+   }
+  ],
+  "tilesets": [
+   {
+    "__cWid": 16,
+    "__cHei": 2,
+    "identifier": "tiles_bakery",
+    "uid": 1,
+    "relPath": "../../tiles/bakery.png",
+    "embedAtlas": null,
+    "pxWid": 512,
+    "pxHei": 64,
+    "tileGridSize": 32,
+    "spacing": 0,
+    "padding": 0,
+    "tags": [],
+    "tagsSourceEnumUid": null,
+    "enumTags": [],
+    "customData": [],
+    "savedSelections": [],
+    "cachedPixelData": null
+   },
+   {
+    "__cWid": 16,
+    "__cHei": 6,
+    "identifier": "world_bakery",
+    "uid": 2,
+    "relPath": "../bakery.png",
+    "embedAtlas": null,
+    "pxWid": 512,
+    "pxHei": 192,
+    "tileGridSize": 32,
+    "spacing": 0,
+    "padding": 0,
+    "tags": [],
+    "tagsSourceEnumUid": null,
+    "enumTags": [],
+    "customData": [],
+    "savedSelections": [],
+    "cachedPixelData": null
+   }
+  ],
+  "enums": [],
+  "externalEnums": [],
+  "levelFields": []
  },
  "levels": [
   {
    "identifier": "PixelKitTest",
+   "iid": "eeabda37-2043-5927-8b23-052429fa0e8a",
+   "uid": 0,
+   "worldX": 0,
+   "worldY": 0,
+   "worldDepth": 0,
    "pxWid": 480,
    "pxHei": 320,
+   "__bgColor": "#40465B",
+   "bgColor": null,
+   "useAutoIdentifier": false,
+   "bgRelPath": null,
+   "bgPos": null,
+   "bgPivotX": 0.5,
+   "bgPivotY": 0.5,
+   "__smartColor": "#9699A5",
+   "__bgPos": null,
+   "externalRelPath": null,
+   "fieldInstances": [],
    "layerInstances": [
     {
      "__identifier": "Art",
      "__type": "Entities",
-     "__gridSize": 32,
      "__cWid": 15,
      "__cHei": 10,
+     "__gridSize": 32,
+     "__opacity": 1,
      "__pxTotalOffsetX": 0,
      "__pxTotalOffsetY": 0,
-     "__opacity": 1,
+     "__tilesetDefUid": null,
+     "__tilesetRelPath": null,
+     "iid": "8535f793-4851-5b71-bb68-db16ad0c7b81",
+     "levelId": 0,
+     "layerDefUid": 3,
+     "pxOffsetX": 0,
+     "pxOffsetY": 0,
      "visible": true,
+     "optionalRules": [],
+     "intGridCsv": [],
+     "autoLayerTiles": [],
+     "seed": 0,
+     "overrideTilesetUid": null,
+     "gridTiles": [],
      "entityInstances": [
       {
        "__identifier": "bakery.exterior.flat",
-       "px": [
-        112,
-        224
+       "__grid": [
+        3,
+        7
        ],
-       "width": 160,
-       "height": 192,
        "__pivot": [
         0.5,
         1
        ],
+       "__tags": [],
        "__tile": {
         "tilesetUid": 2,
         "x": 0,
         "y": 0,
         "w": 160,
         "h": 192
-       }
+       },
+       "__smartColor": "#94D9B3",
+       "iid": "e7ffcba0-7c2a-5777-98f4-c8d41d9cb7cf",
+       "width": 160,
+       "height": 192,
+       "defUid": 5,
+       "px": [
+        112,
+        224
+       ],
+       "fieldInstances": [],
+       "__worldX": 112,
+       "__worldY": 224
       },
       {
        "__identifier": "bakery.exterior.pitched",
-       "px": [
-        304,
-        224
+       "__grid": [
+        9,
+        7
        ],
-       "width": 160,
-       "height": 192,
        "__pivot": [
         0.5,
         1
        ],
+       "__tags": [],
        "__tile": {
         "tilesetUid": 2,
         "x": 160,
         "y": 0,
         "w": 160,
         "h": 192
-       }
+       },
+       "__smartColor": "#94D9B3",
+       "iid": "e8641443-4d5a-5f1c-9312-9ca0c7981fc8",
+       "width": 160,
+       "height": 192,
+       "defUid": 6,
+       "px": [
+        304,
+        224
+       ],
+       "fieldInstances": [],
+       "__worldX": 304,
+       "__worldY": 224
       },
       {
        "__identifier": "bakery.a-board",
-       "px": [
-        432,
-        224
+       "__grid": [
+        13,
+        7
        ],
-       "width": 32,
-       "height": 32,
        "__pivot": [
         0.5,
         1
        ],
+       "__tags": [],
        "__tile": {
         "tilesetUid": 2,
         "x": 320,
         "y": 0,
         "w": 32,
         "h": 32
-       }
+       },
+       "__smartColor": "#94D9B3",
+       "iid": "9b0cffeb-e265-5cbe-a769-75b0984b656b",
+       "width": 32,
+       "height": 32,
+       "defUid": 7,
+       "px": [
+        432,
+        224
+       ],
+       "fieldInstances": [],
+       "__worldX": 432,
+       "__worldY": 224
       }
      ]
     },
     {
      "__identifier": "Ground",
      "__type": "Tiles",
-     "__gridSize": 32,
      "__cWid": 15,
      "__cHei": 10,
+     "__gridSize": 32,
+     "__opacity": 1,
      "__pxTotalOffsetX": 0,
      "__pxTotalOffsetY": 0,
-     "__opacity": 1,
-     "visible": true,
      "__tilesetDefUid": 1,
+     "__tilesetRelPath": "../../tiles/bakery.png",
+     "iid": "5b993169-6edf-559f-a2c2-e709ad114011",
+     "levelId": 0,
+     "layerDefUid": 4,
+     "pxOffsetX": 0,
+     "pxOffsetY": 0,
+     "visible": true,
+     "optionalRules": [],
+     "intGridCsv": [],
+     "autoLayerTiles": [],
+     "seed": 0,
+     "overrideTilesetUid": null,
      "gridTiles": [
       {
        "px": [
@@ -138,6 +458,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        0
+       ],
        "a": 1
       },
       {
@@ -150,6 +474,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        1
+       ],
        "a": 1
       },
       {
@@ -162,6 +490,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        2
+       ],
        "a": 1
       },
       {
@@ -174,6 +506,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        3
+       ],
        "a": 1
       },
       {
@@ -186,6 +522,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        4
+       ],
        "a": 1
       },
       {
@@ -198,6 +538,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        5
+       ],
        "a": 1
       },
       {
@@ -210,6 +554,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        6
+       ],
        "a": 1
       },
       {
@@ -222,6 +570,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        7
+       ],
        "a": 1
       },
       {
@@ -234,6 +586,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        8
+       ],
        "a": 1
       },
       {
@@ -246,6 +602,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        9
+       ],
        "a": 1
       },
       {
@@ -258,6 +618,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        10
+       ],
        "a": 1
       },
       {
@@ -270,6 +634,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        11
+       ],
        "a": 1
       },
       {
@@ -282,6 +650,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        12
+       ],
        "a": 1
       },
       {
@@ -294,6 +666,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        13
+       ],
        "a": 1
       },
       {
@@ -306,6 +682,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        14
+       ],
        "a": 1
       },
       {
@@ -318,6 +698,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        15
+       ],
        "a": 1
       },
       {
@@ -330,6 +714,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        16
+       ],
        "a": 1
       },
       {
@@ -342,6 +730,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        17
+       ],
        "a": 1
       },
       {
@@ -354,6 +746,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        18
+       ],
        "a": 1
       },
       {
@@ -366,6 +762,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        19
+       ],
        "a": 1
       },
       {
@@ -378,6 +778,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        20
+       ],
        "a": 1
       },
       {
@@ -390,6 +794,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        21
+       ],
        "a": 1
       },
       {
@@ -402,6 +810,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        22
+       ],
        "a": 1
       },
       {
@@ -414,6 +826,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        23
+       ],
        "a": 1
       },
       {
@@ -426,6 +842,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        24
+       ],
        "a": 1
       },
       {
@@ -438,6 +858,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        25
+       ],
        "a": 1
       },
       {
@@ -450,6 +874,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        26
+       ],
        "a": 1
       },
       {
@@ -462,6 +890,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        27
+       ],
        "a": 1
       },
       {
@@ -474,6 +906,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        28
+       ],
        "a": 1
       },
       {
@@ -486,6 +922,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        29
+       ],
        "a": 1
       },
       {
@@ -498,6 +938,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        30
+       ],
        "a": 1
       },
       {
@@ -510,6 +954,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        31
+       ],
        "a": 1
       },
       {
@@ -522,6 +970,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        32
+       ],
        "a": 1
       },
       {
@@ -534,6 +986,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        33
+       ],
        "a": 1
       },
       {
@@ -546,6 +1002,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        34
+       ],
        "a": 1
       },
       {
@@ -558,6 +1018,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        35
+       ],
        "a": 1
       },
       {
@@ -570,6 +1034,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        36
+       ],
        "a": 1
       },
       {
@@ -582,6 +1050,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        37
+       ],
        "a": 1
       },
       {
@@ -594,6 +1066,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        38
+       ],
        "a": 1
       },
       {
@@ -606,6 +1082,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        39
+       ],
        "a": 1
       },
       {
@@ -618,6 +1098,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        40
+       ],
        "a": 1
       },
       {
@@ -630,6 +1114,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        41
+       ],
        "a": 1
       },
       {
@@ -642,6 +1130,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        42
+       ],
        "a": 1
       },
       {
@@ -654,6 +1146,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        43
+       ],
        "a": 1
       },
       {
@@ -666,6 +1162,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        44
+       ],
        "a": 1
       },
       {
@@ -678,6 +1178,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        45
+       ],
        "a": 1
       },
       {
@@ -690,6 +1194,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        46
+       ],
        "a": 1
       },
       {
@@ -702,6 +1210,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        47
+       ],
        "a": 1
       },
       {
@@ -714,6 +1226,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        48
+       ],
        "a": 1
       },
       {
@@ -726,6 +1242,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        49
+       ],
        "a": 1
       },
       {
@@ -738,6 +1258,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        50
+       ],
        "a": 1
       },
       {
@@ -750,6 +1274,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        51
+       ],
        "a": 1
       },
       {
@@ -762,6 +1290,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        52
+       ],
        "a": 1
       },
       {
@@ -774,6 +1306,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        53
+       ],
        "a": 1
       },
       {
@@ -786,6 +1322,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        54
+       ],
        "a": 1
       },
       {
@@ -798,6 +1338,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        55
+       ],
        "a": 1
       },
       {
@@ -810,6 +1354,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        56
+       ],
        "a": 1
       },
       {
@@ -822,6 +1370,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        57
+       ],
        "a": 1
       },
       {
@@ -834,6 +1386,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        58
+       ],
        "a": 1
       },
       {
@@ -846,6 +1402,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        59
+       ],
        "a": 1
       },
       {
@@ -858,6 +1418,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        60
+       ],
        "a": 1
       },
       {
@@ -870,6 +1434,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        61
+       ],
        "a": 1
       },
       {
@@ -882,6 +1450,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        62
+       ],
        "a": 1
       },
       {
@@ -894,6 +1466,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        63
+       ],
        "a": 1
       },
       {
@@ -906,6 +1482,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        64
+       ],
        "a": 1
       },
       {
@@ -918,6 +1498,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        65
+       ],
        "a": 1
       },
       {
@@ -930,6 +1514,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        66
+       ],
        "a": 1
       },
       {
@@ -942,6 +1530,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        67
+       ],
        "a": 1
       },
       {
@@ -954,6 +1546,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        68
+       ],
        "a": 1
       },
       {
@@ -966,6 +1562,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        69
+       ],
        "a": 1
       },
       {
@@ -978,6 +1578,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        70
+       ],
        "a": 1
       },
       {
@@ -990,6 +1594,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        71
+       ],
        "a": 1
       },
       {
@@ -1002,6 +1610,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        72
+       ],
        "a": 1
       },
       {
@@ -1014,6 +1626,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        73
+       ],
        "a": 1
       },
       {
@@ -1026,6 +1642,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        74
+       ],
        "a": 1
       },
       {
@@ -1038,6 +1658,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        75
+       ],
        "a": 1
       },
       {
@@ -1050,6 +1674,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        76
+       ],
        "a": 1
       },
       {
@@ -1062,6 +1690,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        77
+       ],
        "a": 1
       },
       {
@@ -1074,6 +1706,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        78
+       ],
        "a": 1
       },
       {
@@ -1086,6 +1722,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        79
+       ],
        "a": 1
       },
       {
@@ -1098,6 +1738,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        80
+       ],
        "a": 1
       },
       {
@@ -1110,6 +1754,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        81
+       ],
        "a": 1
       },
       {
@@ -1122,6 +1770,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        82
+       ],
        "a": 1
       },
       {
@@ -1134,6 +1786,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        83
+       ],
        "a": 1
       },
       {
@@ -1146,6 +1802,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        84
+       ],
        "a": 1
       },
       {
@@ -1158,6 +1818,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        85
+       ],
        "a": 1
       },
       {
@@ -1170,6 +1834,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        86
+       ],
        "a": 1
       },
       {
@@ -1182,6 +1850,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        87
+       ],
        "a": 1
       },
       {
@@ -1194,6 +1866,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        88
+       ],
        "a": 1
       },
       {
@@ -1206,6 +1882,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        89
+       ],
        "a": 1
       },
       {
@@ -1218,6 +1898,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        90
+       ],
        "a": 1
       },
       {
@@ -1230,6 +1914,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        91
+       ],
        "a": 1
       },
       {
@@ -1242,6 +1930,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        92
+       ],
        "a": 1
       },
       {
@@ -1254,6 +1946,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        93
+       ],
        "a": 1
       },
       {
@@ -1266,6 +1962,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        94
+       ],
        "a": 1
       },
       {
@@ -1278,6 +1978,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        95
+       ],
        "a": 1
       },
       {
@@ -1290,6 +1994,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        96
+       ],
        "a": 1
       },
       {
@@ -1302,6 +2010,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        97
+       ],
        "a": 1
       },
       {
@@ -1314,6 +2026,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        98
+       ],
        "a": 1
       },
       {
@@ -1326,6 +2042,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        99
+       ],
        "a": 1
       },
       {
@@ -1338,6 +2058,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        100
+       ],
        "a": 1
       },
       {
@@ -1350,6 +2074,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        101
+       ],
        "a": 1
       },
       {
@@ -1362,6 +2090,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        102
+       ],
        "a": 1
       },
       {
@@ -1374,6 +2106,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        103
+       ],
        "a": 1
       },
       {
@@ -1386,6 +2122,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        104
+       ],
        "a": 1
       },
       {
@@ -1398,6 +2138,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        105
+       ],
        "a": 1
       },
       {
@@ -1410,6 +2154,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        106
+       ],
        "a": 1
       },
       {
@@ -1422,6 +2170,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        107
+       ],
        "a": 1
       },
       {
@@ -1434,6 +2186,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        108
+       ],
        "a": 1
       },
       {
@@ -1446,6 +2202,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        109
+       ],
        "a": 1
       },
       {
@@ -1458,6 +2218,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        110
+       ],
        "a": 1
       },
       {
@@ -1470,6 +2234,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        111
+       ],
        "a": 1
       },
       {
@@ -1482,6 +2250,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        112
+       ],
        "a": 1
       },
       {
@@ -1494,6 +2266,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        113
+       ],
        "a": 1
       },
       {
@@ -1506,6 +2282,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        114
+       ],
        "a": 1
       },
       {
@@ -1518,6 +2298,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        115
+       ],
        "a": 1
       },
       {
@@ -1530,6 +2314,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        116
+       ],
        "a": 1
       },
       {
@@ -1542,6 +2330,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        117
+       ],
        "a": 1
       },
       {
@@ -1554,6 +2346,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        118
+       ],
        "a": 1
       },
       {
@@ -1566,6 +2362,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        119
+       ],
        "a": 1
       },
       {
@@ -1578,6 +2378,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        120
+       ],
        "a": 1
       },
       {
@@ -1590,6 +2394,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        121
+       ],
        "a": 1
       },
       {
@@ -1602,6 +2410,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        122
+       ],
        "a": 1
       },
       {
@@ -1614,6 +2426,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        123
+       ],
        "a": 1
       },
       {
@@ -1626,6 +2442,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        124
+       ],
        "a": 1
       },
       {
@@ -1638,6 +2458,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        125
+       ],
        "a": 1
       },
       {
@@ -1650,6 +2474,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        126
+       ],
        "a": 1
       },
       {
@@ -1662,6 +2490,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        127
+       ],
        "a": 1
       },
       {
@@ -1674,6 +2506,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        128
+       ],
        "a": 1
       },
       {
@@ -1686,6 +2522,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        129
+       ],
        "a": 1
       },
       {
@@ -1698,6 +2538,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        130
+       ],
        "a": 1
       },
       {
@@ -1710,6 +2554,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        131
+       ],
        "a": 1
       },
       {
@@ -1722,6 +2570,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        132
+       ],
        "a": 1
       },
       {
@@ -1734,6 +2586,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        133
+       ],
        "a": 1
       },
       {
@@ -1746,6 +2602,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        134
+       ],
        "a": 1
       },
       {
@@ -1758,6 +2618,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        135
+       ],
        "a": 1
       },
       {
@@ -1770,6 +2634,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        136
+       ],
        "a": 1
       },
       {
@@ -1782,6 +2650,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        137
+       ],
        "a": 1
       },
       {
@@ -1794,6 +2666,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        138
+       ],
        "a": 1
       },
       {
@@ -1806,6 +2682,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        139
+       ],
        "a": 1
       },
       {
@@ -1818,6 +2698,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        140
+       ],
        "a": 1
       },
       {
@@ -1830,6 +2714,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        141
+       ],
        "a": 1
       },
       {
@@ -1842,6 +2730,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        142
+       ],
        "a": 1
       },
       {
@@ -1854,6 +2746,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        143
+       ],
        "a": 1
       },
       {
@@ -1866,6 +2762,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        144
+       ],
        "a": 1
       },
       {
@@ -1878,6 +2778,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        145
+       ],
        "a": 1
       },
       {
@@ -1890,6 +2794,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        146
+       ],
        "a": 1
       },
       {
@@ -1902,6 +2810,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        147
+       ],
        "a": 1
       },
       {
@@ -1914,6 +2826,10 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        148
+       ],
        "a": 1
       },
       {
@@ -1926,11 +2842,19 @@
         0
        ],
        "f": 0,
+       "t": 0,
+       "d": [
+        149
+       ],
        "a": 1
       }
-     ]
+     ],
+     "entityInstances": []
     }
-   ]
+   ],
+   "__neighbours": []
   }
- ]
+ ],
+ "worlds": [],
+ "dummyWorldIid": "1dbe40e1-f8c9-52f0-9449-97613d6b2e30"
 }
