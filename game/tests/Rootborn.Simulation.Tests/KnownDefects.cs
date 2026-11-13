@@ -29,6 +29,14 @@ namespace Rootborn.Simulation.Tests
                 Cause = "데이터(LocationActivityDefinition의 비용 0 + ActivityTimePolicy oncePerDay 0) — 의도인지 기획 결정 대기. 재현 FreeRepeatableActivityReproTests.SIM004",
                 Matches = _ => false, // 판을 실패시키지 않는다(정책은 같은 행동을 보이는 변화 없이 되풀이하면 그날 후보에서 뺀다)
             },
+            new Defect
+            {
+                Id = "SIM-005",
+                What = "대화가 떠 있는 채 걸어가 알바를 시작하면 미니게임이 대화 위에 뜨고, 그 미니게임 동안 혼자 하기의 시계가 서 있다(설계: 미니게임 중에는 흐른다)",
+                Seed = "이것저것 유형 씨앗 1, 7일 판 4일째 964분(화면 쌓임 dialogue > minigame)",
+                Cause = "대화는 이동을 막지 않는 모달이고 ScreenStack.PausesClock은 떠 있는 화면 중 하나라도 멈추면 멈춘다. 재현 MinigameUnderDialogueReproTests.SIM005",
+                Matches = _ => false, // 판을 실패시키지 않는다(미니게임에서 보이는 것이 움직이면 변화로 본다)
+            },
         };
 
         public static Defect Matches(PlayFailure failure)

@@ -88,7 +88,7 @@ namespace Rootborn.Simulation
         public int Money = -1;
 
         /// <summary>
-        /// 사람이 보는 것의 지문: 떠 있는 화면, 맵·칸, 날·시각, 할 수 있는 것의 이름들. 같은 행동 뒤에 이것이 그대로면 "아무 일도 없었다"고 본다
+        /// 사람이 보는 것의 지문: 떠 있는 화면, 맵·칸, 날·시각, HUD의 돈, 할 수 있는 것의 이름들, 미니게임에서 보이는 것. 같은 행동 뒤에 이것이 그대로면 "아무 일도 없었다"고 본다
         /// (보이지 않는 기록이 늘어도 — 예: 활동 기록 — 화면이 같으면 같다).
         /// </summary>
         public string Fingerprint()
@@ -97,6 +97,13 @@ namespace Rootborn.Simulation
             foreach (string s in OpenScreens) sb.Append(s).Append('|');
             sb.Append(MapId).Append('@').Append(CellX).Append(',').Append(CellY).Append('#').Append(Day).Append(':').Append(Minutes).Append('$').Append(Money).Append('/');
             foreach (PlayAction a in Actions) sb.Append(a.Key).Append(';');
+            if (Minigame != null)
+            {
+                // 미니게임에서 보이는 것: 도전 번호·끝남·진행 줄·안내, 요소의 자리·글자(움직이는 과녁·장애물). 시계가 서 있어도 판은 움직인다.
+                sb.Append("!mg").Append(Minigame.Challenge).Append(Minigame.Complete ? 'c' : 'o').Append(Minigame.Status).Append('~').Append(Minigame.Feedback);
+                foreach (SightElement e in Minigame.Elements)
+                    sb.Append('[').Append(e.Id).Append(e.Visible ? '+' : '-').Append((int)e.Rect.X).Append(',').Append((int)e.Rect.Y).Append(e.Text).Append(']');
+            }
             return sb.ToString();
         }
 

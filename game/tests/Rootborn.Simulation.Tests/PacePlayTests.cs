@@ -51,6 +51,27 @@ namespace Rootborn.Simulation.Tests
             Assert.That(File.ReadAllText(Path.Combine(r.OutputDir, "report.md")), Does.Contain("| 1 |"), "1일째 줄");
         }
 
+        /// <summary>
+        /// 보고서 풀이의 근거(흐르는 시간 설계 2절): 혼자 하기에서 화면 없이 서 있으면 시계가 하루 = 실제 600초(data/time TimeDefinition)로 흐른다
+        /// — 실제 25초에 게임 60분. 활동은 걸리는 분만큼 시계를 건너뛰고(SIM-004 재현과 시간이 드는 활동), 메뉴가 열리면 멈춘다(PlayRunner 불변식).
+        /// </summary>
+        [Test]
+        public void StandingStillInTheWorld_TheClockRunsAtTheDataDayLength()
+        {
+            PlayAtlas atlas = FastPlayTests.Atlas;
+            using var body = new Rootborn.Simulation.Headless.HeadlessBody(atlas);
+            var runner = new PlayRunner(body, PlayPolicyCatalog.Default().Create(PlayPolicyCatalog.MainChain, atlas), 1, new PlaySettings { MaxSteps = 3 }, atlas, "pace-clock");
+            runner.Run();
+            for (int i = 0; i < 5 && body.Screens.FocusScreen != null; i++) body.PressKey(Rootborn.Screens.ScreenKey.Escape);
+            Assume.That(body.Screens.FocusScreen, Is.Null, "화면을 다 닫았다");
+            var day = body.Session.TimeRules;
+            int before = body.Session.StudentTimeMinutes;
+            body.Wait(1500); // 실제 25초
+            double expected = 25.0 * Rootborn.Core.Time.TimeRules.MinutesPerDay / day.RealSecondsPerGameDay;
+            TestContext.WriteLine("하루 실제 " + day.RealSecondsPerGameDay + "초, 25초 동안 게임 " + (body.Session.StudentTimeMinutes - before) + "분(기대 " + expected + ")");
+            Assert.That(body.Session.StudentTimeMinutes - before, Is.EqualTo(expected).Within(1.0));
+        }
+
         [Test]
         public void DaysSetting_DefaultsToSeven_AndRejectsBadValuesByName()
         {

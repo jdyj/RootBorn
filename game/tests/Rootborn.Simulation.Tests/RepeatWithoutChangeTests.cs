@@ -66,6 +66,25 @@ namespace Rootborn.Simulation.Tests
             Assert.That(m.RepeatsWithoutChange, Is.EqualTo(1), "다른 행동부터 다시 센다");
         }
 
+        /// <summary>
+        /// 미니게임 화면에서 보이는 것(진행 줄, 움직이는 과녁·장애물)이 바뀌면 바뀐 것이다 — 시계가 멈춰 있어도(SIM-005: 대화가 열린 채 시작한
+        /// 미니게임). 2026-11-13 이것저것 유형 7일 판이 4일째 기다리기 30번에서 막힘으로 잘못 잡혔다.
+        /// </summary>
+        [Test]
+        public void AMovingMinigame_IsAVisibleChange_EvenWhenTheClockStands()
+        {
+            var m = new PlayMemory { BanAfter = 3 };
+            for (int i = 0; i < 6; i++)
+            {
+                PlayView v = View(1, "minigame", "wait");
+                v.Minigame = new MinigameSight { Status = "1/3" };
+                v.Minigame.Elements.Add(new SightElement { Id = "obstacle", Visible = true, Rect = new Rootborn.Ui.UiRect(100 + i * 7, 50, 10, 10) });
+                m.See(v);
+                m.Note(v, new PlayAction { Key = "wait:10", Category = "wait" });
+            }
+            Assert.That(m.RepeatsWithoutChange, Is.EqualTo(0));
+        }
+
         private static PlayResult OffSchoolToDayFour(int banAfter, string name)
         {
             PlayAtlas atlas = FastPlayTests.Atlas;
