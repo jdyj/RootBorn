@@ -1,0 +1,30 @@
+{
+  "cell": 32,
+  "width_cells": 16,
+  "slots": {
+    "bakery.tile.sidewalk": {
+      "x": 0,
+      "y": 0,
+      "w": 32,
+      "h": 32
+    },
+    "bakery.tile.grass": {
+      "x": 32,
+      "y": 0,
+      "w": 32,
+      "h": 32
+    },
+    "bakery.tile.floor": {
+      "x": 64,
+      "y": 0,
+      "w": 32,
+      "h": 32
+    },
+    "bakery.tile.wall": {
+      "x": 96,
+      "y": 0,
+      "w": 32,
+      "h": 64
+    }
+  }
+}

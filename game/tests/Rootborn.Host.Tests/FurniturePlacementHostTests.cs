@@ -55,12 +55,12 @@ namespace Rootborn.Host.Tests
             return player;
         }
 
-        private static FurniturePlacementScreen Placement(PlayerDriver p) => (FurniturePlacementScreen)p.Screens.Find(ScreenCatalog.FurniturePlacement);
+        internal static FurniturePlacementScreen Placement(PlayerDriver p) => (FurniturePlacementScreen)p.Screens.Find(ScreenCatalog.FurniturePlacement);
 
-        private static HostPlacementView View(PlayerDriver p) => new HostPlacementView(p.Game.World, () => p.Game.Fit.Scale);
+        internal static HostPlacementView View(PlayerDriver p) => new HostPlacementView(p.Game.World, () => p.Game.Fit.Scale);
 
         /// <summary>화면에 보이고 UI가 덮지 않은 칸 중 조건에 맞는 것(맵 위 줄부터). 어디를 누를지 정하는 데만 쓴다.</summary>
-        private static GridPoint FindCell(PlayerDriver p, Func<GridPoint, bool> want, string what)
+        internal static GridPoint FindCell(PlayerDriver p, Func<GridPoint, bool> want, string what)
         {
             HostPlacementView view = View(p);
             foreach (GridPoint cell in p.Game.World.Room.FloorCells)
@@ -79,7 +79,7 @@ namespace Rootborn.Host.Tests
             return (r.CenterX, r.CenterY);
         }
 
-        private static bool Near(GridPoint a, GridPoint b, int distance) => Math.Abs(a.X - b.X) <= distance && Math.Abs(a.Y - b.Y) <= distance;
+        internal static bool Near(GridPoint a, GridPoint b, int distance) => Math.Abs(a.X - b.X) <= distance && Math.Abs(a.Y - b.Y) <= distance;
 
         /// <summary>
         /// 키보드로 놓기: P 키로 가구 배치를 열고(가구 고르기는 검색 칸에 글자 + 칸 누르기), 놓을 칸 아래까지 걸어가 위를 보고 E를 누르면

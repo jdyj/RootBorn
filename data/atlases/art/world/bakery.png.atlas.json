@@ -1,0 +1,39 @@
+{
+  "image": "art/world/bakery.png",
+  "width": 512,
+  "height": 192,
+  "pixelsPerUnit": 32,
+  "origin": "top-left",
+  "sprites": {
+    "bakery.exterior.flat": {
+      "x": 0,
+      "y": 0,
+      "w": 160,
+      "h": 192,
+      "pivot": {
+        "x": 0.5,
+        "y": 1.0
+      }
+    },
+    "bakery.exterior.pitched": {
+      "x": 160,
+      "y": 0,
+      "w": 160,
+      "h": 192,
+      "pivot": {
+        "x": 0.5,
+        "y": 1.0
+      }
+    },
+    "bakery.a-board": {
+      "x": 320,
+      "y": 0,
+      "w": 32,
+      "h": 32,
+      "pivot": {
+        "x": 0.5,
+        "y": 1.0
+      }
+    }
+  }
+}

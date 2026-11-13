@@ -1,0 +1,28 @@
+{
+ "walker": {
+  "bodyCells": 1,
+  "speedCellsPerSecond": 4
+ },
+ "npcWalker": {
+  "speedCellsPerSecond": 2.5
+ },
+ "maps": [
+  {
+   "id": "PixelKitTest",
+   "ldtk": "art/world/test/pixel-kit-test.ldtk",
+   "level": "PixelKitTest",
+   "viewCells": 10,
+   "collision": {
+    "rule": "collider-layers",
+    "layers": []
+   },
+   "doors": {},
+   "spawns": {
+    "front": [
+     112,
+     272
+    ]
+   }
+  }
+ ]
+}

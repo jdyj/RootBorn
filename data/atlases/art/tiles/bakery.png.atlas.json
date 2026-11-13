@@ -1,0 +1,49 @@
+{
+  "image": "art/tiles/bakery.png",
+  "width": 512,
+  "height": 64,
+  "pixelsPerUnit": 32,
+  "origin": "top-left",
+  "sprites": {
+    "bakery.tile.sidewalk": {
+      "x": 0,
+      "y": 0,
+      "w": 32,
+      "h": 32,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "bakery.tile.grass": {
+      "x": 32,
+      "y": 0,
+      "w": 32,
+      "h": 32,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "bakery.tile.floor": {
+      "x": 64,
+      "y": 0,
+      "w": 32,
+      "h": 32,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "bakery.tile.wall": {
+      "x": 96,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  }
+}
