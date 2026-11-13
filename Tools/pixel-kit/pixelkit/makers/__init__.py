@@ -24,3 +24,7 @@ def get_maker(name: str) -> Callable:
         return _MAKERS[name]
     except KeyError:
         raise RecipeError(f"{name}: 등록되지 않은 만드는 부품. 있는 것: {', '.join(sorted(_MAKERS))}") from None
+
+
+# 만드는 부품 모듈은 여기서 가져와 @register가 돌게 한다(모듈 하나에 한 줄).
+from . import tiles  # noqa: E402,F401

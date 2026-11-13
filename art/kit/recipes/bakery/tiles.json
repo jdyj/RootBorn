@@ -1,0 +1,8 @@
+[
+  {"id": "bakery.tile.floor", "kind": "tile", "part": "tile.floor-checker", "art_cells": [1, 1],
+   "colors": ["floor.tile.warm", "floor.tile.warm"]},
+  {"id": "bakery.tile.wall", "kind": "tile", "part": "tile.wall-interior", "art_cells": [1, 2],
+   "paper": "wall.cream", "cap": "wall.cap", "wood": "wood.warm"},
+  {"id": "bakery.tile.sidewalk", "kind": "tile", "part": "tile.paver", "art_cells": [1, 1],
+   "colors": ["paver"]}
+]

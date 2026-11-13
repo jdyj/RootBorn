@@ -22,6 +22,7 @@
     "glass.front": ["#8cc0d8", "#c4e4f0"],
     "glass.streak": ["#e8f4f8"],
     "wall.cream": ["#d8c498", "#e8d8b4", "#f4e8cc"],
+    "wall.cap": ["#c8b890", "#e4d6b0"],
     "floor.tile.light": ["#beb8aa", "#d0c8b8", "#e0dccc"],
     "floor.tile.warm": ["#c4a078", "#d89870", "#f0e0c0"],
     "paver": ["#706860", "#8c8478", "#aca498"],
