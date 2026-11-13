@@ -57,6 +57,8 @@ namespace Rootborn.Game
             // 열려 있던 일터의 점수는 놓인 가구로 냈다. 닫힌 뒤에는 파일 기록(되살리지 못한 기록 포함)으로 다시 낸다.
             _workspaceScores.Clear();
             if (ReplayPlacedFurniture()) SaveAndNotify(AnnounceTopics, GameChangeTopics.Furniture);
+            // 옛 가구를 옮기거나 보관했으면 알림이 한 번 열리도록 가구 알림을 낸다(저장하지 않는다 — 읽기만으로 파일을 쓰지 않는다).
+            else if (!_relocationNoticeTaken && _houseRelocation != null && (_houseRelocation.Moved > 0 || _houseRelocation.Stored > 0)) Notify(null, GameChangeTopics.Furniture);
         }
 
         /// <summary>

@@ -131,6 +131,26 @@ namespace Rootborn.Game.Tests
         }
 
         [Test]
+        public void EnteringTheHouse_AnnouncesFurnitureWhenPiecesWereMoved_ForTheNotice_AndNotWhenNothingMoved()
+        {
+            using var saves = new TempSaves();
+            WriteLayout(saves, OldLayout());
+            var game = TestWorld.Start(saves.Store);
+            int announced = 0;
+            game.Changed += t => { if (t == GameChangeTopics.Furniture) announced++; };
+            game.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
+            Assert.That(announced, Is.GreaterThan(0), "알림 화면이 열리도록 가구 알림이 온다");
+            Assert.That(game.TryTakeHouseRelocationNotice(out _, out _), Is.True);
+
+            using var empty = new TempSaves();
+            var plain = TestWorld.Start(empty.Store);
+            int none = 0;
+            plain.Changed += t => { if (t == GameChangeTopics.Furniture) none++; };
+            plain.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
+            Assert.That(none, Is.Zero, "옮긴 것도 보관한 것도 없으면 알리지 않는다");
+        }
+
+        [Test]
         public void ReadingDoesNotWriteTheLayoutFile()
         {
             using var saves = new TempSaves();
