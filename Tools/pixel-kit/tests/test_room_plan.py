@@ -8,6 +8,7 @@ from pixelkit.room_plan import RoomError, check_grid, is_warning, load_room
 
 ROOT = Path(__file__).resolve().parents[3]
 REAL_PLAN = ROOT / "art" / "kit" / "rooms" / "test.two-rooms.json"
+HOUSE_PLAN = ROOT / "art" / "kit" / "rooms" / "house.json"
 
 GOOD = [
     "########",
@@ -237,6 +238,33 @@ class WallDoorAndBuildTests(unittest.TestCase):
         room = load_room(REAL_PLAN)
         self.assertEqual((room.wall_doors, room.build), ({}, None))
         self.assertEqual(check_grid(room.grid, room.spawn, room.doors, room.face_height), [])
+
+
+class HousePlanTests(unittest.TestCase):
+    """새 집 평면(art/kit/rooms/house.json). 지금 집(Assets/LDtk/House/house.ldtk, game/world/maps.json·interactions.json의 House)과
+    같은 크기·칸 좌표라야 옛 세이브의 가구 칸과 상호작용 지점의 픽셀 좌표가 그대로 쓰인다. 좌표를 적는 곳은 이 시험뿐이다."""
+
+    TODAYS_POINTS = {                       # 지금 집의 픽셀 좌표 // 32
+        "house-entry (464,496)": (14, 15),
+        "daily-plan-board (560,368)": (17, 11),
+        "day-end (720,496)": (22, 15),
+        "npc location.home (624,432)": (19, 13),
+        "inside the front door": (14, 16),
+    }
+
+    def test_house_plan_is_clean_and_keeps_todays_points(self):
+        room = load_room(HOUSE_PLAN)
+        self.assertEqual(room.id, "house")
+        self.assertEqual(check_grid(room.grid, room.spawn, room.doors, room.face_height, room.wall_doors, room.build), [])
+        self.assertEqual((len(room.grid[0]), len(room.grid)), (28, 18))
+        self.assertEqual(room.spawn, (14, 15))
+        self.assertEqual(room.doors, {})
+        self.assertEqual(room.wall_doors, {(14, 17): "town"})
+        for name, (x, y) in self.TODAYS_POINTS.items():
+            with self.subTest(name):
+                self.assertEqual(room.grid[y][x], ".", "바닥이라야 한다")
+                self.assertEqual(room.build[y][x], "0", "고정 칸이라야 한다")
+        self.assertEqual(room.grid[17][14], "#")
 
 
 if __name__ == "__main__":

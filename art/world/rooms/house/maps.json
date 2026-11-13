@@ -1,0 +1,30 @@
+{
+ "walker": {
+  "bodyCells": 1,
+  "speedCellsPerSecond": 4
+ },
+ "npcWalker": {
+  "speedCellsPerSecond": 2.5
+ },
+ "maps": [
+  {
+   "id": "House",
+   "ldtk": "art/world/rooms/house/house.ldtk",
+   "level": "House",
+   "viewCells": 13,
+   "collision": {
+    "rule": "interior-auto"
+   },
+   "doors": {},
+   "spawns": {
+    "house-entry": [
+     464,
+     496
+    ]
+   },
+   "build": {
+    "frameLayer": "Build"
+   }
+  }
+ ]
+}

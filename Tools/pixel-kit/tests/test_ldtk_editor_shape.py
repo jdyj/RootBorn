@@ -128,6 +128,14 @@ class RoomShapeTests(RoomBase):
         repaint_room(path, kit=KIT)
         self.assertEqual(ldtk_schema.all_problems(json.loads(path.read_text("utf-8"))), [])
 
+    def test_rooms_committed_in_the_repo_have_every_required_and_editor_key(self):
+        """저장소의 키트 방(art/world/rooms/*/<id>.ldtk) — 새 집 house는 반드시 든다."""
+        found = sorted((ROOT / "art" / "world" / "rooms").glob("*/*.ldtk"))
+        self.assertIn(ROOT / "art" / "world" / "rooms" / "house" / "house.ldtk", found)
+        for path in found:
+            with self.subTest(path.parent.name):
+                self.assertEqual(ldtk_schema.all_problems(json.loads(path.read_text("utf-8"))), [], str(path))
+
     def test_room_with_a_build_layer_and_a_wall_door_has_every_required_and_editor_key(self):
         self.small_plan("t.house", DOOR_PLAN, wallDoors={"W": "town"}, build=DOOR_BUILD)
         self.build("t.house")

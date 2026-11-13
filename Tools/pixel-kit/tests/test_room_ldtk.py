@@ -1168,5 +1168,45 @@ class BuildLayerTests(RoomBase):
         self.assertEqual(codes_after(lambda b: b.update(__cWid=7)), ["room-build-ragged"])
 
 
+class HouseRoomTests(unittest.TestCase):
+    """저장소에 커밋한 새 집 방(art/world/rooms/house/)이 평면(art/kit/rooms/house.json)에서 만든 그대로이고 집의 약속을 지키는지.
+    좌표 자체는 test_room_plan.HousePlanTests가 본다 — 여기서는 평면과 만든 파일이 서로 맞는지만."""
+
+    OUT = ROOT / "art" / "world" / "rooms" / "house"
+
+    def setUp(self):
+        self.room = load_room(REAL_KIT / "rooms" / "house.json")
+        self.ldtk = json.loads((self.OUT / "house.ldtk").read_text("utf-8"))
+        self.maps = json.loads((self.OUT / "maps.json").read_text("utf-8"))
+        self.layers = RoomBase.layers(self.ldtk)
+
+    def test_committed_files_are_what_the_plan_builds(self):
+        self.assertEqual(build_room(ROOT, "house", kit=KIT, force=True, dry_run=True), [],
+                         "평면을 고쳤으면 room build house --force로 다시 만든다")
+
+    def test_map_entry_is_house_with_the_same_spawn_name_and_build_frame(self):
+        (entry,) = self.maps["maps"]
+        self.assertEqual((entry["id"], entry["level"]), ("House", "House"))
+        self.assertEqual(entry["ldtk"], "art/world/rooms/house/house.ldtk")
+        sx, sy = self.room.spawn
+        self.assertEqual(entry["spawns"], {"house-entry": [sx * 32 + 16, sy * 32 + 16]})
+        self.assertEqual(entry["collision"], {"rule": "interior-auto"})
+        self.assertEqual(entry["build"], {"frameLayer": "Build"})
+
+    def test_layers_follow_the_plan_collision_build_and_the_wall_door(self):
+        level = self.ldtk["levels"][0]
+        self.assertEqual((level["pxWid"], level["pxHei"]), (len(self.room.grid[0]) * 32, len(self.room.grid) * 32))
+        self.assertEqual(self.layers["Collision"]["intGridCsv"], [v for row in cells(self.room.grid) for v in row])
+        self.assertEqual(self.layers["Build"]["intGridCsv"], [int(c) for row in self.room.build for c in row])
+        doors = [(e["px"], e["width"], e["height"], [f["__value"] for f in e["fieldInstances"]])
+                 for e in self.layers["Door"]["entityInstances"]]
+        self.assertEqual(doors, [([x * 32, y * 32], 32, 32, [where]) for (x, y), where in self.room.wall_doors.items()])
+
+    def test_check_has_no_blocking_problem(self):
+        problems = check_room(self.OUT / "house.ldtk", kit=KIT)
+        self.assertEqual([p for p in problems if not is_warning(p)], [])
+        self.assertNotIn("room-wall-thin", [p.code for p in problems])
+
+
 if __name__ == "__main__":
     unittest.main()
