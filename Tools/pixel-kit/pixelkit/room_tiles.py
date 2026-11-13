@@ -439,7 +439,7 @@ class _BrickWall(_Wall):
     """벽돌(16x8 엇갈림) + 나무 걸레받이. 벽돌마다 밝기는 TONES 표(정면 두 칸 8줄 × 줄마다 벽돌 둘): 0 보통, 1 밝은 벽돌."""
     bricks = ""          # 벽돌 줄(0 줄눈·밑 그늘 쪽 … 3 밝은 벽돌)
     wood = "wood.school"
-    narrow_base = 25
+    narrow_base = 24     # 걸레받이는 벽돌 단 경계(줄눈 y=23) 바로 아래에서 시작한다 — 위에 한 줄짜리 부스러기 단이 남지 않게
     TONES = ((0, 1), (0, 0), (0, 0), (1, 0), (0, 0), (0, 0), (0, 1), (0, 0))
 
     def colors(self, style):
@@ -471,7 +471,7 @@ class _BrickWall(_Wall):
             _ceiling(cv, shade)
         if k == 1:
             w = _ramp(style, self.wood, 5)
-            _skirting(cv, style, 25, w[3], w[1], w[0])
+            _skirting(cv, style, self.narrow_base, w[3], w[1], w[0])
         return cv
 
 
