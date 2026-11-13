@@ -34,8 +34,8 @@ Python 3.11 + Pillow. 다른 패키지는 쓰지 않는다.
 |---|---|
 | 화풍(팔레트, 외곽선 색, 그림자 세기, 색 수 한도, 칸 크기) | `art/kit/style.json` |
 | 점 부품(빵, 소품) | `art/kit/parts/*.json` |
-| 조립 명세(빵집) | `art/kit/recipes/bakery/*.json` |
-| 만드는 부품(코드) | `Tools/pixel-kit/pixelkit/makers/{tiles,furniture,building}.py` |
+| 조립 명세(세트마다 폴더: 빵집, 학교, 부엌, 집) | `art/kit/recipes/<세트>/*.json` |
+| 만드는 부품(코드) | `Tools/pixel-kit/pixelkit/makers/{tiles,furniture,building,seating}.py` |
 | 장면·그림자 | `Tools/pixel-kit/pixelkit/{scene,shadow}.py` |
 | 검사 | `Tools/pixel-kit/pixelkit/lint.py` |
 | 테스트 | `Tools/pixel-kit/tests/` |
@@ -110,6 +110,8 @@ if/switch로 종류를 닫지 않는다.
 | `furniture.glass-case` | `rows`: 줄마다 부품 id 목록, 1~3줄 | `frame` 줄(3, 기본 `metal`: 틀과 받침) |
 | `furniture.trolley` | `rows`: 줄마다 부품 id 목록, 1~4줄 | `frame` 줄(3, 기본 `metal`: 윗면·기둥·살), `inside` 줄(3, 기본 `metal.dark`: 안쪽과 바퀴) |
 | `furniture.counter` | `art_cells` `[2~4, 2]` | `material` 줄(5, 기본 `wood.warm`), `top`: `{part, x}` 목록(윗면에 놓는 물건, x는 px), `tray`: `{x, w, items}`(윗면 쟁반). 앞판 수는 폭에서(앞면 폭 / 23 반올림: 2칸 3장, 3칸 4장, 4칸 5장), 판 폭은 모두 같고 남는 열은 양 끝에 반씩 |
+| `furniture.chair` | `art_cells` `[1, 2]` | `facing`(`south` 기본 · `north` · `west` · `east`), `layer`(`all` 기본 · `back` · `front`, 아래 "앉기를 위한 층"), `material` 줄(5, 기본 `wood.warm`), `cushion` 줄(3: 0 오른쪽 끝, 1 앞 불룩한 줄, 2 윗면. 없으면 방석 없는 나무 의자). 치수는 캐릭터에서: 좌판 윗면 바닥에서 14px, 등받이 꼭대기 28px(북쪽 25px), 폭 20px. `east`는 `west`를 뒤집은 자리에 왼쪽이 밝게 다시 칠한다. `_layout`: `floor`(바닥 줄의 y), `seat`(좌판 윗면 사각형), `back_top`, `sit_point`(엉덩이가 올 점), `shared_from` |
+| `furniture.desk` | `art_cells` `[2, 2]`(`south`) 또는 `[1, 2]`(`west`·`east`, 책상의 끝) | `facing`(`south` 기본 · `west` · `east`), `material` 줄(5), `top` 줄(2 이상: 마지막 단계가 윗면, 그 앞이 나뭇결. 없으면 `material`의 4·3), `drawers`(`right` 기본 · `left` · `none` · `both`: 앉은 사람 기준. 남쪽은 화면 오른쪽이 오른쪽, 옆모습은 가까운 끝에 서랍장이 오면 옆판, 아니면 다리 둘), `top_items`: `{part, x}` 목록(윗면 뒤쪽 절반에 선다, 밖이면 `slot-clipped`). 윗면 앞 모서리는 바닥에서 25px(좌판 + 11). 서랍이 없는 쪽 앞면은 다리와 그 사이 뚫린 무릎 자리(투명). `_layout`: `floor`, `top`(윗면 사각형), `kneehole`(외곽선 뒤에도 투명한 사각형, 옆모습 옆판이면 null), `work_height` |
 | `prop.menu-board`, `prop.a-board` | 없음(고정 그림, 글자 없음) | |
 | `prop.rug` | `size`: `[w, h]`px, `colors`: `[몸 줄(단계 0 테두리, 1 바탕), 바느질 줄]`, `stitch_step`: 바느질 줄의 단계 | |
 | `building.shop` | `pixels`(높이는 192 이상: 지붕 104 + 벽 82 + 외곽선), `roof`: `{type, items}`, `wall`: `{material}`(벽 줄), `door`: `{at_x, color, step}`(문 줄, 계단 줄), `window`: `{at_x, width, slots}`(slots는 창살 양쪽 `[[부품 id], [부품 id]]`), `awning`: `{colors}`(줄 2개), `sign`: `{at_x, icons}`(부품 id 목록, 글자 없음) | `roof.items`: `{part, at: [x, y]}` 목록, `lamp`: `{at_x, part}`(벽등. `part` 기본 `prop.wall-lamp`. `lamp`를 적지 않으면 벽등도 둘레 빛도 없다), `trim` 줄(4, 기본 `trim`: 창틀·처마 밑 띠·간판 판), `plinth` 줄(2, 기본 `plinth`: 벽·창 받침), `frame` 줄(5, 기본 `wood.warm`: 문틀·창틀·간판 틀·받침 줄) |
@@ -128,6 +130,19 @@ if/switch로 종류를 닫지 않는다.
 선반·진열대의 물건 높이 안내(점 부품 크기): 키 큰 진열대(높이 3칸) 4층은 층마다 물건 높이 11px까지 들어가고(3층은 맨 위 16, 나머지 둘 17, 2층 28, 1층 62 — 안쪽 높이 68px을 층 수로 나눈 층 높이에서 6줄을 뺀 값),
 낮은 진열대(높이 2칸, 안쪽 36px)는 2층이면 12px, 1층이면 30px까지.
 넘으면 `slot-clipped`다. 한 층에는 물건이 폭에 촘촘히 놓이는데, 너무 작으면 층이 비어 보인다.
+
+## 앉기를 위한 층
+
+의자는 앉은 사람의 앞뒤로 나눠 그릴 수 있다(`layer`). 게임에서 이 층을 쓰는 코드는 아직 없다(앉기는 나중 작업).
+
+- `back` = 앉은 사람 **뒤에** 그릴 조각, `front` = 앉은 사람 **앞에** 그릴 조각, `all` = 둘을 합친 그림(기본).
+  `back` → 앉은 사람 → `front` 순서로 같은 자리에 그린다. 앉은 사람 없이 `back` 위에 `front`를 겹치면 `all`과 바이트가 같다.
+- 나누는 기준은 "앉은 사람의 몸이 그 조각보다 뒤에 있는가": `south`의 `front`는 좌판 앞 테두리와 앞다리, `north`의 `front`는
+  등받이 전체(좌판은 등받이에 가려져 안 보이므로 보이는 것 전부), `west`·`east`의 `front`는 우리 쪽 옆 테두리와 가까운 다리 둘.
+- 좌판 밑(다리 줄, `_layout.shared_from`부터 아래)은 앉은 사람과 겹치지 않으므로 **두 층이 함께 갖는다.** 그래서 층마다
+  혼자서도 바닥에 선 그림이고 검사(아래 가운데)를 통과한다. 상태로는 `back`·`front`(남쪽), `<방향>-back`·`<방향>-front`.
+- 렌더러가 조각마다 외곽선을 다시 치므로, 앞 조각이 뒤 조각과 맞닿는 곳은 외곽선 색 줄(이음 줄: 좌판 앞 테두리 위)이어야
+  겹친 그림이 `all`과 같다. 새 방향·모양을 그릴 때도 이것을 지킨다(테스트 `test_seating.py`가 바이트로 본다).
 
 ## 장면 더하기
 
