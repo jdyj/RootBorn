@@ -1910,5 +1910,15 @@
   "data.urban31.bench.name": "마을 벤치",
   "data.urban31.bin.name": "재활용함",
   "data.urban31.lamp.name": "마을 가로등",
-  "data.urban31.planter.name": "마을 화단"
+  "data.urban31.planter.name": "마을 화단",
+  "finish.wall.paper.name": "줄무늬 벽지 벽",
+  "finish.wall.wallpaper-sprig.name": "연녹 잔무늬 벽지",
+  "finish.wall.paint-two-tone.name": "위아래 투톤 벽",
+  "finish.wall.panel-plank.name": "짙은 가로 판자벽",
+  "finish.wall.paint-mint.name": "민트 칠 벽",
+  "finish.floor.plank.name": "꿀색 마루",
+  "finish.floor.checker-soft.name": "조용한 체크 바닥",
+  "finish.floor.carpet.name": "청회색 카펫",
+  "finish.floor.tatami.name": "돗자리 바닥",
+  "finish.floor.carpet-diamond.name": "장밋빛 마름모 카펫"
 }

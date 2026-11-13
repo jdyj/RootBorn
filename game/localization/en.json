@@ -1910,5 +1910,15 @@
   "data.urban31.bench.name": "Town bench",
   "data.urban31.bin.name": "Recycling bin",
   "data.urban31.lamp.name": "Town street lamp",
-  "data.urban31.planter.name": "Town flower bed"
+  "data.urban31.planter.name": "Town flower bed",
+  "finish.wall.paper.name": "Striped wallpaper",
+  "finish.wall.wallpaper-sprig.name": "Green sprig wallpaper",
+  "finish.wall.paint-two-tone.name": "Two-tone paint",
+  "finish.wall.panel-plank.name": "Dark plank panelling",
+  "finish.wall.paint-mint.name": "Mint paint",
+  "finish.floor.plank.name": "Honey plank floor",
+  "finish.floor.checker-soft.name": "Soft checker floor",
+  "finish.floor.carpet.name": "Blue-gray carpet",
+  "finish.floor.tatami.name": "Tatami mat",
+  "finish.floor.carpet-diamond.name": "Rose diamond carpet"
 }
