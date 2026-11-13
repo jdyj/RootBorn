@@ -1,0 +1,228 @@
+[
+  { "id": "book.row-short.a", "anchor": "bottom-center",
+    "rows": [
+      "cca...fffd.....",
+      "cbaccafeed..ffd",
+      "cyacbafffdigfed",
+      "cbacbafeedhgfed",
+      "cbacbafeedhgfed",
+      "cbacbafeedhgfed",
+      "cyacbafffdhgfed",
+      "cbacbafeedhgfed",
+      "cbacbafeedhgfed"
+    ],
+    "keys": { "a": "book.teal.0", "b": "book.teal.1", "c": "book.teal.2", "d": "book.red.0", "e": "book.red.1", "f": "book.red.2", "g": "book.ochre.0", "h": "book.ochre.1", "i": "book.ochre.2", "y": "yellow.0" } },
+
+  { "id": "book.row-short.b", "anchor": "bottom-center",
+    "rows": [
+      "...lllj...cca..",
+      "ffdlkkj...cbaca",
+      "fedlyyjlljccaba",
+      "fedlkkjlkjcbaba",
+      "fedlkkjlkjcbaba",
+      "fedlkkjlkjcbaba",
+      "fedlyyjlkjccaba",
+      "fedlkkjlkjcbaba",
+      "fedlkkjlkjcbaba"
+    ],
+    "keys": { "a": "book.teal.0", "b": "book.teal.1", "c": "book.teal.2", "d": "book.red.0", "e": "book.red.1", "f": "book.red.2", "j": "book.blue.0", "k": "book.blue.1", "l": "book.blue.2", "y": "yellow.0" } },
+
+  { "id": "book.row-short.c", "anchor": "bottom-center",
+    "rows": [
+      "iig......iiig..",
+      "ihglljlljihhg..",
+      "iyglkjlkjihhgca",
+      "ihglkjlljihhgba",
+      "ihglkjlkjihhgba",
+      "ihglkjlkjihhgba",
+      "iyglkjlljihhgba",
+      "ihglkjlkjihhgba",
+      "ihglkjlkjihhgba"
+    ],
+    "keys": { "a": "book.teal.0", "b": "book.teal.1", "c": "book.teal.2", "g": "book.ochre.0", "h": "book.ochre.1", "i": "book.ochre.2", "j": "book.blue.0", "k": "book.blue.1", "l": "book.blue.2", "y": "yellow.0" } },
+
+  { "id": "book.row-short.d", "anchor": "bottom-center",
+    "rows": [
+      "lllj......fd...",
+      "lkkj...ffdedcca",
+      "lkkjccafededcba",
+      "lkkjcbafydedcba",
+      "lkkjccafededcba",
+      "lkkjcbafededcba",
+      "lkkjccafydedcba",
+      "lkkjcbafededcba",
+      "lkkjcbafededcba"
+    ],
+    "keys": { "a": "book.teal.0", "b": "book.teal.1", "c": "book.teal.2", "d": "book.red.0", "e": "book.red.1", "f": "book.red.2", "j": "book.blue.0", "k": "book.blue.1", "l": "book.blue.2", "y": "yellow.0" } },
+
+  { "id": "book.row-tall.a", "anchor": "bottom-center",
+    "rows": [
+      "cca.......iig..",
+      "cbaccca...ihg..",
+      "cyacbbaffdiyg..",
+      "cbacbbafedihgfd",
+      "cbacbbaffdihged",
+      "cbacbbafedihged",
+      "cbacbbafedihged",
+      "cbacbbafedihged",
+      "cbacbbafedihged",
+      "cbacbbafedihged",
+      "cbacbbafedihged",
+      "cyacbbaffdiyged",
+      "cbacbbafedihged",
+      "cbacbbafedihged"
+    ],
+    "keys": { "a": "book.teal.0", "b": "book.teal.1", "c": "book.teal.2", "d": "book.red.0", "e": "book.red.1", "f": "book.red.2", "g": "book.ochre.0", "h": "book.ochre.1", "i": "book.ochre.2", "y": "yellow.0" } },
+
+  { "id": "book.row-tall.b", "anchor": "bottom-center",
+    "rows": [
+      "....llj...ccca..",
+      "fffdlkj...cbba..",
+      "feedlkj...cyyaca",
+      "fyydlkjlljcbbaba",
+      "feedlkjlkjcbbaba",
+      "feedlkjlljcbbaba",
+      "feedlkjlkjcbbaba",
+      "feedlkjlkjcbbaba",
+      "feedlkjlkjcbbaba",
+      "feedlkjlkjcbbaba",
+      "feedlkjlkjcbbaba",
+      "fyydlkjlljcyyaba",
+      "feedlkjlkjcbbaba",
+      "feedlkjlkjcbbaba"
+    ],
+    "keys": { "a": "book.teal.0", "b": "book.teal.1", "c": "book.teal.2", "d": "book.red.0", "e": "book.red.1", "f": "book.red.2", "j": "book.blue.0", "k": "book.blue.1", "l": "book.blue.2", "y": "yellow.0" } },
+
+  { "id": "book.row-tall.c", "anchor": "bottom-center",
+    "rows": [
+      "...lllj...cca..",
+      "...lkkjiigcba..",
+      "iiglyyjihgcba..",
+      "ihglkkjiigcbalj",
+      "ihglkkjihgcbakj",
+      "ihglkkjihgcbakj",
+      "ihglkkjihgcbakj",
+      "ihglkkjihgcbakj",
+      "ihglkkjihgcbakj",
+      "ihglkkjihgcbakj",
+      "ihglkkjihgcbakj",
+      "ihglyyjiigcbakj",
+      "ihglkkjihgcbakj",
+      "ihglkkjihgcbakj"
+    ],
+    "keys": { "a": "book.teal.0", "b": "book.teal.1", "c": "book.teal.2", "g": "book.ochre.0", "h": "book.ochre.1", "i": "book.ochre.2", "j": "book.blue.0", "k": "book.blue.1", "l": "book.blue.2", "y": "yellow.0" } },
+
+  { "id": "book.row-tall.d", "anchor": "bottom-center",
+    "rows": [
+      "llj.......fd...",
+      "lkj...fffded...",
+      "lljccafeeded...",
+      "lkjcbafyydedcca",
+      "lkjcbafeededcba",
+      "lkjcbafeededcca",
+      "lkjcbafeededcba",
+      "lkjcbafeededcba",
+      "lkjcbafeededcba",
+      "lkjcbafeededcba",
+      "lkjcbafeededcba",
+      "lljcbafyydedcca",
+      "lkjcbafeededcba",
+      "lkjcbafeededcba"
+    ],
+    "keys": { "a": "book.teal.0", "b": "book.teal.1", "c": "book.teal.2", "d": "book.red.0", "e": "book.red.1", "f": "book.red.2", "j": "book.blue.0", "k": "book.blue.1", "l": "book.blue.2", "y": "yellow.0" } },
+
+  { "id": "book.stack", "anchor": "bottom-center",
+    "rows": [
+      "..iiiiiiiiiii",
+      "..hyhhhhhhhyh",
+      "..ggggggggggg",
+      "ccccccccccccc",
+      "bybbbbbbbbbyb",
+      "aaaaaaaaaaaaa",
+      ".ffffffffffff",
+      ".eyeeeeeeeeye",
+      ".dddddddddddd"
+    ],
+    "keys": { "a": "book.teal.0", "b": "book.teal.1", "c": "book.teal.2", "d": "book.red.0", "e": "book.red.1", "f": "book.red.2", "g": "book.ochre.0", "h": "book.ochre.1", "i": "book.ochre.2", "y": "yellow.0" } },
+
+  { "id": "book.stack-small", "anchor": "bottom-center",
+    "rows": [
+      ".llllllllll.",
+      ".kykkkkkkyk.",
+      ".jjjjjjjjjj.",
+      "ffffffffffff",
+      "eyeeeeeeeeye",
+      "dddddddddddd"
+    ],
+    "keys": { "d": "book.red.0", "e": "book.red.1", "f": "book.red.2", "j": "book.blue.0", "k": "book.blue.1", "l": "book.blue.2", "y": "yellow.0" } },
+
+  { "id": "book.binders", "anchor": "bottom-center",
+    "rows": [
+      "lllljllllj.....llllj",
+      "lkkkjlkkkjoooomlkkkj",
+      "lqqpjlqqpjonnnmlqqpj",
+      "lqqpjlqqpjoqqpmlqqpj",
+      "lqqpjlqqpjoqqpmlqqpj",
+      "lqqpjlqqpjoqqpmlqqpj",
+      "lkkkjlkkkjoqqpmlkkkj",
+      "lkkkjlkkkjonnnmlkkkj",
+      "lkkkjlkkkjonnnmlkkkj",
+      "lkkkjlkkkjonnnmlkkkj",
+      "lkjkjlkjkjonmnmlkjkj",
+      "lkjkjlkjkjonmnmlkjkj",
+      "lkkkjlkkkjonnnmlkkkj",
+      "lkkkjlkkkjonnnmlkkkj"
+    ],
+    "keys": { "j": "book.blue.0", "k": "book.blue.1", "l": "book.blue.2", "m": "metal.0", "n": "metal.1", "o": "metal.2", "p": "book.page.0", "q": "book.page.1" } },
+
+  { "id": "book.binders-b", "anchor": "bottom-center",
+    "rows": [
+      ".....ccccacccca.....",
+      "oooomcbbbacbbbaoooom",
+      "onnnmcqqpacqqpaonnnm",
+      "oqqpmcqqpacqqpaoqqpm",
+      "oqqpmcqqpacqqpaoqqpm",
+      "oqqpmcqqpacqqpaoqqpm",
+      "oqqpmcbbbacbbbaoqqpm",
+      "onnnmcbbbacbbbaonnnm",
+      "onnnmcbbbacbbbaonnnm",
+      "onnnmcbbbacbbbaonnnm",
+      "onmnmcbabacbabaonmnm",
+      "onmnmcbabacbabaonmnm",
+      "onnnmcbbbacbbbaonnnm",
+      "onnnmcbbbacbbbaonnnm"
+    ],
+    "keys": { "a": "book.teal.0", "b": "book.teal.1", "c": "book.teal.2", "m": "metal.0", "n": "metal.1", "o": "metal.2", "p": "book.page.0", "q": "book.page.1" } },
+
+  { "id": "book.box", "anchor": "bottom-center",
+    "rows": [
+      "uuuuuuuuuuuuuuuuuuut",
+      "ttttttttttttttttttts",
+      "ssssssssssssssssssss",
+      "utttttttttttttttttts",
+      "utttttttrrrrttttttts",
+      "utttttttttttttttttts",
+      "utttttttttttttttttts",
+      "utttttttttttttttttts",
+      "uttqqqqqqqqqqqqqttts",
+      "uttqqqqqqqqqqqqqttts",
+      "uttpppppppppppppttts",
+      "utttttttttttttttttts",
+      "srrrrrrrrrrrrrrrrrrr"
+    ],
+    "keys": { "p": "book.page.0", "q": "book.page.1", "r": "box.kraft.0", "s": "box.kraft.1", "t": "box.kraft.2", "u": "box.kraft.3" } },
+
+  { "id": "book.box-small", "anchor": "bottom-center",
+    "rows": [
+      "uuuuuuuuuuuuuuut",
+      "ttttttttttttttts",
+      "ssssssssssssssss",
+      "utttttttttttttts",
+      "utttttrrrrttttts",
+      "uttqqqqqqqqqttts",
+      "uttpppppppppttts",
+      "utttttttttttttts",
+      "srrrrrrrrrrrrrrr"
+    ],
+    "keys": { "p": "book.page.0", "q": "book.page.1", "r": "box.kraft.0", "s": "box.kraft.1", "t": "box.kraft.2", "u": "box.kraft.3" } }
+]

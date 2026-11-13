@@ -1,0 +1,54 @@
+[
+  { "id": "kitchen.cutting-board", "anchor": "bottom-center",
+    "rows": [
+      ".....rRr.....gGg.....",
+      "....rRRRr...gGhGg....",
+      ".WWWrRCRrWWgGGGGgWWW.",
+      "WWWWWWWWWWWWWWWWWWWWW",
+      "WWWWWWWWWWWWWWWWWWW.W",
+      "eEEEEEEEEEEEEEEEEEEEe"
+    ],
+    "keys": { "W": "wood.top.1", "E": "wood.warm.2", "e": "wood.warm.1",
+              "R": "red.1", "r": "red.0", "C": "cream.1",
+              "G": "leaf.1", "g": "leaf.0", "h": "leaf.2" } },
+
+  { "id": "kitchen.pot", "anchor": "bottom-center",
+    "rows": [
+      "......mm.......",
+      ".....mOOm......",
+      "..mmmmmmmmmmm..",
+      ".mOOOOOOOOnnnm.",
+      "mmmmmmmmmmmmmmm",
+      "nRCRRRRRRRRRRrn",
+      "nRCRRRRRRRRRrrn",
+      ".RRRRRRRRRRRrr.",
+      ".RRRRRRRRRRRrr.",
+      "..rrrrrrrrrrr.."
+    ],
+    "keys": { "m": "metal.0", "n": "metal.1", "O": "metal.2",
+              "R": "red.1", "r": "red.0", "C": "cream.1" } },
+
+  { "id": "kitchen.bowl", "anchor": "bottom-center",
+    "rows": [
+      "..gGhGGg...",
+      ".gGRRGhGg..",
+      "WWWWWWWWWWw",
+      ".WWWWWWWWw.",
+      ".kkkkkkkkk.",
+      "..wwwwwww..",
+      "...ccccc..."
+    ],
+    "keys": { "g": "leaf.0", "G": "leaf.1", "h": "leaf.2", "R": "red.1",
+              "W": "ceramic.2", "w": "ceramic.1", "c": "ceramic.0", "k": "book.blue.1" } },
+
+  { "id": "kitchen.plates", "anchor": "bottom-center",
+    "rows": [
+      ".WWWWWWWWW.",
+      "cwwwwwwwwwc",
+      ".WWWWWWWWW.",
+      "cwwwwwwwwwc",
+      ".WWWWWWWWW.",
+      "..ccccccc.."
+    ],
+    "keys": { "W": "ceramic.2", "w": "ceramic.1", "c": "ceramic.0" } }
+]

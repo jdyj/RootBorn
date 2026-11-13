@@ -1,0 +1,7 @@
+[
+  {"id": "kitchen.counter-front", "kind": "furniture", "part": "furniture.counter", "cells": [2, 1], "art_cells": [2, 2],
+   "game": {"replaces": "comfy31.kitchen.counter.front"},
+   "material": "counter.kitchen",
+   "top": [{"part": "kitchen.cutting-board", "x": 2}, {"part": "kitchen.pot", "x": 28},
+           {"part": "kitchen.bowl", "x": 47}]}
+]

@@ -1,0 +1,13 @@
+[
+  {"id": "school.scene.preview", "kind": "scene", "size": [6, 5],
+   "fill": [
+     {"tile": "bakery.tile.wall", "rect": [0, 0, 6, 2], "wall": true},
+     {"tile": "bakery.tile.floor", "rect": [0, 2, 6, 3]}
+   ],
+   "hang": [{"part": "prop.clock", "at": [150, 14]}],
+   "place": [
+     {"id": "school.bookcase", "cell": [0, 2], "dx": 6},
+     {"id": "school.archive-bookshelf", "cell": [2, 2], "dx": 14},
+     {"part": "prop.plant", "cell": [5, 3], "dx": 2}
+   ]}
+]

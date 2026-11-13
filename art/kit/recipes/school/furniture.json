@@ -1,0 +1,19 @@
+[
+  {"id": "school.bookcase", "kind": "furniture", "part": "furniture.shelf", "cells": [2, 1], "art_cells": [2, 3],
+   "game": {"replaces": "school.bookcase"},
+   "material": "wood.school", "back": "shelf.back.navy", "tray": "wood.school",
+   "tiers": [
+     ["book.row-short.a", "book.row-short.b", "book.row-short.c"],
+     ["book.row-short.d", "book.stack", "book.row-short.a"],
+     ["book.row-short.c", "book.row-short.d", "book.row-short.b"],
+     ["book.box-small", "book.stack-small", "book.box-small"]
+   ]},
+  {"id": "school.archive-bookshelf", "kind": "furniture", "part": "furniture.shelf", "cells": [2, 1], "art_cells": [2, 3],
+   "game": {"replaces": "school.archive30.archive.bookshelf"},
+   "material": "wood.archive", "back": "wood.archive.back", "tray": "wood.archive",
+   "tiers": [
+     ["book.binders", "book.binders-b"],
+     ["book.row-tall.a", "book.row-tall.b", "book.row-tall.c"],
+     ["book.row-tall.d", "book.stack", "book.box"]
+   ]}
+]

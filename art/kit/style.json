@@ -37,6 +37,18 @@
     "glass.window": ["#6296b5", "#91bed7", "#c7e2f2"],
     "stone": ["#706863", "#9b9488", "#d0c7bd"],
     "board.green": ["#273a2f", "#374e40"],
-    "white": ["#f8f4ec"]
+    "white": ["#f8f4ec"],
+    "wood.school": ["#5a3c29", "#765236", "#946a46", "#b0835a", "#c99e72"],
+    "wood.archive": ["#3e2420", "#57302a", "#723f30", "#8d5536", "#a86b42"],
+    "wood.archive.back": ["#2b1b1f", "#3c2427"],
+    "shelf.back.navy": ["#30344a", "#414860"],
+    "book.teal": ["#2d5658", "#3d6f6e", "#5b958c"],
+    "book.red": ["#6b2e32", "#8c3d3d", "#ad5a4e"],
+    "book.ochre": ["#86622f", "#ad8743", "#cdab60"],
+    "book.blue": ["#323f66", "#455686", "#6676a4"],
+    "book.page": ["#ddd2b8", "#efe6d0"],
+    "box.kraft": ["#80603f", "#a07a52", "#bf9a6c", "#d6b88a"],
+    "ceramic": ["#b9bcc6", "#dcdee3", "#f3f4f5"],
+    "counter.kitchen": ["#5c3d2a", "#7a5238", "#94694a", "#c2a582", "#e8dbbd"]
   }
 }
