@@ -1,6 +1,6 @@
 ---
 name: pixel-kit
-description: "ROOTBORN 건물 외관·타일·가구·방 그림을 손으로 칠하지 않고 부품과 조립 명세(데이터)로 그리고, 렌더러가 외곽선·그늘·그림자를 규칙으로 입힌다. '건물 만들어 줘', '외관 만들어 줘', '약국 외관', '타일 만들어 줘', '가구 만들어 줘', '방 만들어 줘', '장면', '빵집 진열대에 케이크 추가', '픽셀 키트', 'pixel-kit' 요청에 사용. UI 스킨, 캐릭터, 애니메이션은 아니다. 게임에 넣는 export는 아직 없다."
+description: "ROOTBORN 건물 외관·타일·가구·방 그림을 손으로 칠하지 않고 부품과 조립 명세(데이터)로 그리고, 렌더러가 외곽선·그늘·그림자를 규칙으로 입힌다. '건물 만들어 줘', '외관 만들어 줘', '약국 외관', '타일 만들어 줘', '가구 만들어 줘', '방 만들어 줘', '장면', '빵집 진열대에 케이크 추가', '픽셀 키트', 'pixel-kit' 요청에 사용. UI 스킨, 캐릭터, 애니메이션은 아니다. 게임에 넣는 export(가구·타일·건물·소품)와 시험용 맵 test-level이 있다."
 ---
 
 # 픽셀 키트로 그림 그리기
@@ -10,7 +10,7 @@ description: "ROOTBORN 건물 외관·타일·가구·방 그림을 손으로 �
 ## 쓰지 않을 때
 
 - UI 테두리·테마 스킨: `ui-nine-slice-skin`. 캐릭터, 애니메이션: 이 도구가 아니다.
-- 게임에 넣기: `export`는 없다(2단계). 지금 만든 그림은 `output/pixel-kit/`의 견본일 뿐이라 "게임에서 보인다"고 쓰지 않는다.
+- `output/pixel-kit/`의 견본판은 도구가 낸 그림일 뿐이다. "게임에서 보인다"는 `export` 뒤 게임 스크린샷을 직접 열어 본 것에만 쓴다.
 
 ## 하지 않는다
 
@@ -20,6 +20,9 @@ description: "ROOTBORN 건물 외관·타일·가구·방 그림을 손으로 �
 - `style.json`의 같은 색 짝을 하나만 바꾸기(README "같이 바뀌는 색").
 - `output/`의 것을 커밋하기. LimeZu 그림 조각을 키트에 복사하기.
 - 새 가구 정의·차지 칸 같은 기획을 묻지 않고 정하기. 간판에 글자 그리기.
+- `export`로 가구 정의를 더하거나 `footprintCells`를 바꾸기. 가구 정의 파일(`data/interiors/FurnitureDefinition.json`)을 통째로 다시 쓰기(그림 참조 두 문자열만 바뀐다).
+- 묶음 시트(`art/tiles`, `art/world`)의 자리를 손으로 옮기거나 다시 배치하기. 이미 놓인 그림의 자리가 바뀌면 맵이 깨진다(`export`는 덧붙이기만 한다).
+- 사용자가 승인하지 않은 그림을 `export`하거나 main에 넣기.
 
 ## 명령
 
@@ -31,6 +34,8 @@ python Tools/pixel-kit/kit.py render pharmacy.shelf pharmacy.shelf@empty   # 명
 python Tools/pixel-kit/kit.py lint pharmacy.shelf        # 검사만(id 없이 부르면 전부)
 python Tools/pixel-kit/kit.py sheet pharmacy             # 세트(명세 id의 첫 마디) 전체를 한 장에
 python Tools/pixel-kit/kit.py scene pharmacy.scene.interior
+python Tools/pixel-kit/kit.py export school.bookcase --dry-run   # 게임에 넣기 전 미리 보기(아래 "게임에 넣기")
+python Tools/pixel-kit/kit.py test-level                 # 묶음 시트로 시험용 맵 쓰기
 ```
 
 ## 순서
@@ -41,6 +46,21 @@ python Tools/pixel-kit/kit.py scene pharmacy.scene.interior
 4. **`render` → `lint` → PNG를 직접 열기 → 고치기**를 되풀이한다. 열어서 볼 것: 물건이 층에 비해 너무 작아 층이 비어 보이지 않는가(진열대 물건은 폭 6~8, 높이는 4층 선반이면 8~11px 정도가 읽힌다(층 수가 다르면 README의 선반 높이 안내를 본다). 층 안쪽 높이보다 크면 `slot-clipped`), 그것이 무엇인지 그림만으로 읽히는가(약병 세 색뿐인 진열대는 "병 몇 개"로 읽혔다. 라벨, 십자 같은 단서를 더한다). 검사 문제는 그림을 고쳐서 푼다.
 5. **장면에 놓아 연다.** 가구는 방 장면, 건물은 거리 장면. 주변과 어울리는지, 겹침·잘림이 없는지 PNG를 본다.
 6. **사용자에게 보인다.** 판 경로(`D:\…`처럼 드라이브 문자부터 전체 경로)와 스스로 찾은 약점을 같이 적는다. 사용자가 고칠 곳을 말하면 명세를 고쳐 다시 4번부터.
+
+### 게임에 넣기
+
+사용자가 승인한 그림만 넣는다. 형식·문제 코드는 README "내보내기"·"묶음 시트"·"시험용 맵".
+
+1. `export <id…> --dry-run`으로 쓸 파일과 바꿀 가구를 본다. 문제 코드가 나오면 그림이나 명세를 고쳐서 푼다.
+2. 괜찮으면 `--dry-run` 없이 `export`. 가구는 명세의 `game.replaces`가 있을 때만 그 정의의 `sprite`·`name` 두 값이 바뀐다. 타일·건물·소품은 묶음 시트에 덧붙는다.
+3. `git diff`로 바뀐 것이 PNG, 좌표표, 자리 표, 그 두 값뿐인지 본다.
+4. `dotnet test game/tests/Rootborn.Data.Tests`로 데이터가 읽히는지 본다.
+5. 게임에서 놓아 보고 스크린샷을 직접 연다(스킬 `host-play-test`). 가구는 장치 이벤트 주입, 맵 위 건물·타일은 `test-level`의 시험 맵을 `--maps`로 준다.
+
+### 의자·책상을 그릴 때
+
+앉을 수 있는 가구다. 부품은 `furniture.chair`(방향 4개, 층 `all`·`back`·`front`)와 `furniture.desk`. 치수는 캐릭터(프레임 32x59)에서 나오므로 장면에 캐릭터를 합성해 좌판 높이와 등받이를 눈으로 본다. 키와 층 규칙은 README "앉기를 위한 층", 게임에 필요한 것은 `docs/superpowers/specs/2026-11-13-sitting-notes.md`.
+지금 게임은 가구의 방향과 무관하게 기본(남향) 그림만 그리고 앉기 기능도 없다. 방향·층 칸은 그림 파일에만 있다.
 
 ### 새 세트를 시작할 때
 

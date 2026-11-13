@@ -17,8 +17,7 @@ Python 3.11 + Pillow. 다른 패키지는 쓰지 않는다.
 | `python Tools/pixel-kit/kit.py sheet <세트>` | 세트(명세 id의 첫 마디, 예: `bakery`)의 모든 명세를 번호와 함께 한 장에. 검사에 걸린 것은 표시된다 | `sheet/<세트>.png` |
 | `python Tools/pixel-kit/kit.py scene <장면 id…>` | 방·거리 미리 보기 | `scene/<id>.png`, `scene/<id>_x4.png` |
 | `python Tools/pixel-kit/kit.py parts` | 점 부품 목록 판(명세를 쓸 때 다시 쓸 부품을 고른다) | `parts.png` |
-| `python Tools/pixel-kit/kit.py export <가구 id…> [--dry-run] [--repo 뿌리]` | 가구 그림을 게임이 읽는 PNG + 좌표표로 내고, `game.replaces`가 있으면 가구 정의의 그림 참조를 바꾼다(아래 "내보내기"). 가구만 된다 | 저장소 뿌리의 `art/props/`, `data/atlases/` |
-
+| `python Tools/pixel-kit/kit.py export <가구 id…> [--dry-run] [--repo 뿌리]` | 가구 그림을 게임이 읽는 PNG + 좌표표로 내고, `game.replaces`가 있으면 가구 정의의 그림 참조를 바꾼다(아래 "내보내기") | 저장소 뿌리의 `art/props/`, `data/atlases/` |
 | `python Tools/pixel-kit/kit.py export <타일·건물·소품 id…> [--dry-run] [--repo 뿌리]` | 타일은 `art/tiles/<세트>.png`, 건물·바깥 소품은 `art/world/<세트>.png` 묶음 시트에 덧붙이고 자리 표·좌표표를 쓴다(아래 "묶음 시트") | 저장소 뿌리의 `art/tiles/`, `art/world/`, `data/atlases/` |
 | `python Tools/pixel-kit/kit.py test-level [--out 폴더] [--repo 뿌리]` | 지금 시트들로 시험용 맵을 쓴다(아래 "시험용 맵") | `<뿌리>/art/world/test/pixel-kit-test.ldtk`, `maps.json` |
 
@@ -133,12 +132,13 @@ if/switch로 종류를 닫지 않는다.
 
 ## 앉기를 위한 층
 
-의자는 앉은 사람의 앞뒤로 나눠 그릴 수 있다(`layer`). 게임에서 이 층을 쓰는 코드는 아직 없다(앉기는 나중 작업).
+의자는 앉은 사람의 앞뒤로 나눠 그릴 수 있다(`layer`). 게임에서 이 층을 쓰는 코드는 아직 없다(앉기는 나중 작업). 게임은 지금 가구의 방향과 무관하게 기본(남향) 그림만 그린다. 층·방향 칸은 PNG와 좌표표에만 있다. 게임에 필요한 것은 `docs/superpowers/specs/2026-11-13-sitting-notes.md`.
 
 - `back` = 앉은 사람 **뒤에** 그릴 조각, `front` = 앉은 사람 **앞에** 그릴 조각, `all` = 둘을 합친 그림(기본).
   `back` → 앉은 사람 → `front` 순서로 같은 자리에 그린다. 앉은 사람 없이 `back` 위에 `front`를 겹치면 `all`과 바이트가 같다.
 - 나누는 기준은 "앉은 사람의 몸이 그 조각보다 뒤에 있는가": `south`의 `front`는 좌판 앞 테두리와 앞다리, `north`의 `front`는
   등받이 전체(좌판은 등받이에 가려져 안 보이므로 보이는 것 전부), `west`·`east`의 `front`는 우리 쪽 옆 테두리와 가까운 다리 둘.
+- `_layout.size`는 방향 공통 상자(폭 20, 높이 27)다. 북향은 그림 위 3줄이 비므로 등받이 높이는 `size`가 아니라 `floor - back_top`으로 읽는다.
 - 좌판 밑(다리 줄, `_layout.shared_from`부터 아래)은 앉은 사람과 겹치지 않으므로 **두 층이 함께 갖는다.** 그래서 층마다
   혼자서도 바닥에 선 그림이고 검사(아래 가운데)를 통과한다. 상태로는 `back`·`front`(남쪽), `<방향>-back`·`<방향>-front`.
 - 렌더러가 조각마다 외곽선을 다시 치므로, 앞 조각이 뒤 조각과 맞닿는 곳은 외곽선 색 줄(이음 줄: 좌판 앞 테두리 위)이어야
@@ -253,6 +253,8 @@ python -m unittest discover -s Tools/pixel-kit/tests -t Tools/pixel-kit -v
 
 ## 깨면 안 되는 화풍 규칙
 
+- **유리와 금속은 사선 반사 줄.** 평평한 색 면으로 두지 않고 `glass.streak`처럼 같은 줄의 밝은 단계로 비스듬한 줄을 긋는다(진열창, 유리 진열대).
+- **색 한도는 몸통만 센다.** 칸에 넣은 부품의 색은 세지 않고 부품 한도(10)로 따로 본다. 몸통은 부품을 투명하게 두고 다시 그린 그림(유령 렌더)에서 센다.
 - **정면만.** 건물의 옆면(옆벽, 지붕 옆 비탈, 차양 옆면)을 그리지 않는다. 입체감은 정면에 얹은 것과 지붕 면적으로 낸다.
 - **팔레트 키만.** 부품·명세·코드에 hex 색을 적지 않는다. 색은 `style.json`에만 있고 `재질.단계`로 부른다.
   그늘은 색을 곱하지 않고 같은 줄의 다른 단계다(장면에 깔리는 그림자만 예외).
