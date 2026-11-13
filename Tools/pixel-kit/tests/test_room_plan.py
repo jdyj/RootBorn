@@ -142,5 +142,102 @@ class CheckGridTests(unittest.TestCase):
         self.assertEqual(codes(check_grid(grid, (1, 4), {}, 2)), ["room-unknown-char"])
 
 
+BUILD_OK = ["00000000", "00000000", "00000000", "01111110", "01001110", "01111110", "00000000"]
+
+
+class WallDoorAndBuildTests(unittest.TestCase):
+    def setUp(self):
+        t = tempfile.TemporaryDirectory()
+        self.addCleanup(t.cleanup)
+        self.dir = Path(t.name)
+
+    def load(self, plan, **extra):
+        doc = {"id": "r.x", "wall": "paper", "floor": "bakery.tile.floor", "spawn": [2, 3], "plan": plan}
+        doc.update(extra)
+        path = self.dir / "r.x.json"
+        path.write_text(json.dumps(doc), encoding="utf-8")
+        return load_room(path)
+
+    def test_wall_door_cell_stays_wall_and_is_listed(self):
+        plan = list(GOOD)
+        plan[6] = "###W####"
+        room = self.load(plan, wallDoors={"W": "town"})
+        self.assertEqual(room.wall_doors, {(3, 6): "town"})
+        self.assertEqual(room.grid[6], "########")
+        self.assertEqual(room.doors, {})
+        self.assertEqual(check_grid(room.grid, room.spawn, room.doors, room.face_height, room.wall_doors, room.build), [])
+
+    def test_wall_door_on_bottom_edge_is_not_open_edge(self):
+        got = check_grid(GOOD, (2, 4), {}, 2, {(3, 6): "town"})
+        self.assertEqual(codes(got), [])
+
+    def test_wall_door_without_reachable_floor_is_problem(self):
+        got = check_grid(GOOD, (2, 4), {}, 2, {(3, 1): "town"})          # 둘레가 벽뿐인 칸
+        self.assertEqual(codes(got), ["room-door-no-floor"])
+        pocket = ["#########", "#########", "#########", "#...#.#.#", "#########"]
+        got = check_grid(pocket, (1, 3), {}, 2, {(5, 4): "town"})        # 안쪽 바닥은 있지만 도착 지점에서 닿지 못한다
+        self.assertIn("room-door-no-floor", codes(got))
+
+    def test_bad_wall_door_letters_and_values_are_room_errors(self):
+        plan = list(GOOD)
+        plan[6] = "###W####"
+        for extra in ({"wallDoors": {"#": "town"}}, {"wallDoors": {"WW": "town"}}, {"wallDoors": {"W": ""}},
+                      {"wallDoors": {"X": "town"}}, {"wallDoors": {"W": "town"}, "doors": {"W": "town"}}):
+            with self.subTest(extra=extra), self.assertRaises(RoomError):
+                self.load(plan, **extra)
+
+    def test_build_rows_are_read_and_must_match_plan(self):
+        self.assertEqual(self.load(GOOD, build=BUILD_OK).build, BUILD_OK)
+        self.assertEqual(check_grid(GOOD, (2, 4), {}, 2, None, BUILD_OK), [])
+        for build in (BUILD_OK[:-1], BUILD_OK + ["00000000"], BUILD_OK[:3] + ["0111111"] + BUILD_OK[4:]):
+            with self.subTest(rows=len(build)):
+                self.assertEqual(codes(check_grid(GOOD, (2, 4), {}, 2, None, build)), ["room-build-ragged"])
+
+    def test_build_unknown_char(self):
+        build = list(BUILD_OK)
+        build[4] = "01x11110"
+        got = check_grid(GOOD, (2, 4), {}, 2, None, build)
+        self.assertEqual(codes(got), ["room-build-char"])
+        self.assertEqual((got[0].x, got[0].y), (2, 4))
+
+    def test_build_marks_spawn_or_door_buildable_is_problem(self):
+        def with_one(x, y, base=BUILD_OK):
+            build = [list(r) for r in base]
+            build[y][x] = "1"
+            return ["".join(r) for r in build]
+        floor_door = list(GOOD)
+        floor_door[4] = "#..D...#"
+        floor_door = [r.replace("D", ".") for r in floor_door]
+        doors = {(3, 4): "town"}
+        self.assertEqual(check_grid(floor_door, (2, 4), doors, 2, None, BUILD_OK), [])
+        for cell, what in (((2, 4), "도착 지점"), ((3, 4), "문 칸")):
+            with self.subTest(what=what):
+                got = check_grid(floor_door, (2, 4), doors, 2, None, with_one(*cell))
+                self.assertEqual(codes(got), ["room-build-fixed"])
+                self.assertEqual((got[0].x, got[0].y), cell)
+        wall_doors = {(3, 6): "town"}
+        door_base = list(BUILD_OK)
+        door_base[5] = "01101110"                                                                 # 벽 문 안쪽 바닥 (3,5)은 고정
+        self.assertEqual(check_grid(GOOD, (2, 4), {}, 2, wall_doors, door_base), [])
+        for cell, what in (((3, 5), "벽 문 안쪽 바닥"), ((3, 6), "벽 문 칸")):
+            with self.subTest(what=what):
+                got = check_grid(GOOD, (2, 4), {}, 2, wall_doors, with_one(*cell, base=door_base))
+                self.assertEqual(codes(got), ["room-build-fixed"])
+                self.assertEqual((got[0].x, got[0].y), cell)
+        self.assertEqual(check_grid(GOOD, (2, 4), {}, 2, wall_doors, with_one(4, 4, base=door_base)), [])   # 다른 바닥 칸은 이미 1
+        self.assertEqual(check_grid(GOOD, (2, 4), {}, 2, None, with_one(0, 0)), [])              # 벽 칸은 1이어도 된다
+
+    def test_build_marks_outside_cell_buildable_is_problem(self):
+        plan = ["########", "########", "########", "#......#", "#......#", "#......#", "########", "        "]
+        build = ["00000000"] * 7 + ["01000000"]
+        self.assertEqual(codes(check_grid(plan, (2, 4), {}, 2, None, build)), ["room-build-fixed"])
+        self.assertEqual(check_grid(plan, (2, 4), {}, 2, None, ["00000000"] * 8), [])
+
+    def test_old_plan_without_new_keys_reads_as_before(self):
+        room = load_room(REAL_PLAN)
+        self.assertEqual((room.wall_doors, room.build), ({}, None))
+        self.assertEqual(check_grid(room.grid, room.spawn, room.doors, room.face_height), [])
+
+
 if __name__ == "__main__":
     unittest.main()

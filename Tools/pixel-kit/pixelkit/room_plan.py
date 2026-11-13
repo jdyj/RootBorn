@@ -1,12 +1,14 @@
 """방 만들기 — 글자 평면(art/kit/rooms/<id>.json) 읽기와 검사.
 
 평면 글자: `#` 벽, `.` 바닥, 빈칸 밖. `doors`에 적은 글자는 바닥 + 문(그 칸에 Door 엔티티가 놓인다).
+`wallDoors`에 적은 글자는 벽 + 문(바깥 벽 칸에 다는 현관 문 — 그 칸은 벽으로 남고 Door 엔티티가 놓인다).
+`build`는 평면과 같은 크기의 `0`·`1` 줄(`1` 지을 수 있음, `0` 고정) — 있으면 LDtk에 `Build` 층이 생긴다.
 검사(check_grid)는 쓰기 전에 문제를 알린다. 쓰기는 room_ldtk가 맡는다.
 """
 import json
 import re
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
@@ -32,6 +34,8 @@ class Room:
     doors: Dict[Tuple[int, int], str]      # 칸 (x, y) → 목적지 값(Door 엔티티의 Where)
     face_height: int = 2
     top: Optional[str] = None              # 띠 색 줄(없으면 벽 모양의 기본)
+    wall_doors: Dict[Tuple[int, int], str] = field(default_factory=dict)    # 벽 칸 (x, y) → 목적지 값. 그 칸은 grid에서 벽('#')이다
+    build: Optional[List[str]] = None      # 지을 수 있는 칸 줄('1' 지을 수 있음, '0' 고정). 없으면 Build 층을 만들지 않는다
 
 
 def load_room(path) -> Room:
@@ -63,13 +67,21 @@ def load_room(path) -> Room:
     raw_doors = need("doors", lambda v: isinstance(v, dict), "글자 → 목적지 값 표") if "doors" in doc else {}
     face_height = need("face_height", lambda v: is_int(v) and v >= 1, "1 이상의 정수") if "face_height" in doc else 2
     top = need("top", lambda v: isinstance(v, str) and v, "띠 색 줄 이름") if "top" in doc else None
+    raw_wall_doors = need("wallDoors", lambda v: isinstance(v, dict), "글자 → 목적지 값 표") if "wallDoors" in doc else {}
+    build = need("build", lambda v: isinstance(v, list) and v and all(isinstance(r, str) for r in v), "0·1 글자 줄의 배열") if "build" in doc else None
 
     for letter, dest in raw_doors.items():
         if len(letter) != 1 or letter in CHARS:
             raise RoomError(f"{path}: 문 글자 {letter!r}는 '#', '.', 빈칸이 아닌 한 글자여야 한다")
         if not isinstance(dest, str) or not dest:
             raise RoomError(f"{path}: 문 {letter!r}의 목적지 값은 비어 있지 않은 글자여야 한다")
+    for letter, dest in raw_wall_doors.items():
+        if len(letter) != 1 or letter in CHARS or letter in raw_doors:
+            raise RoomError(f"{path}: 벽 문 글자 {letter!r}는 '#', '.', 빈칸이나 doors의 글자가 아닌 한 글자여야 한다")
+        if not isinstance(dest, str) or not dest:
+            raise RoomError(f"{path}: 벽 문 {letter!r}의 목적지 값은 비어 있지 않은 글자여야 한다")
     doors: Dict[Tuple[int, int], str] = {}
+    wall_doors: Dict[Tuple[int, int], str] = {}
     lines = []
     for y, row in enumerate(plan):
         chars = []
@@ -77,12 +89,16 @@ def load_room(path) -> Room:
             if ch in raw_doors:
                 doors[(x, y)] = raw_doors[ch]
                 ch = "."
+            elif ch in raw_wall_doors:
+                wall_doors[(x, y)] = raw_wall_doors[ch]
+                ch = "#"
             chars.append(ch)
         lines.append("".join(chars))
-    missing = sorted(set(raw_doors) - {ch for row in plan for ch in row})
+    used = {ch for row in plan for ch in row}
+    missing = sorted((set(raw_doors) | set(raw_wall_doors)) - used)
     if missing:
         raise RoomError(f"{path}: 평면에 없는 문 글자 {missing}")
-    return Room(rid, wall, floor, lines, (spawn[0], spawn[1]), doors, face_height, top)
+    return Room(rid, wall, floor, lines, (spawn[0], spawn[1]), doors, face_height, top, wall_doors, build)
 
 
 def cells(grid: Sequence) -> List[List[int]]:
@@ -95,8 +111,11 @@ def _is_thin(key) -> bool:
     return len(parts) == 3 and parts[0] == "face" and "t" in parts[2]
 
 
-def check_grid(grid: Sequence, spawn: Tuple[int, int], doors: Dict[Tuple[int, int], str], face_height: int) -> List[Problem]:
-    """평면(글자 줄 또는 값 격자)을 검사한다. 쓰지 않는다. room-wall-thin만 알림(WARNING_CODES)이다."""
+def check_grid(grid: Sequence, spawn: Tuple[int, int], doors: Dict[Tuple[int, int], str], face_height: int,
+               wall_doors: Optional[Dict[Tuple[int, int], str]] = None, build: Optional[Sequence[str]] = None) -> List[Problem]:
+    """평면(글자 줄 또는 값 격자)을 검사한다. 쓰지 않는다. room-wall-thin만 알림(WARNING_CODES)이다.
+    wall_doors는 벽 칸에 다는 문(칸 → 목적지), build는 평면과 같은 크기의 '0'·'1' 줄(없으면 그 검사는 하지 않는다)."""
+    wall_doors = wall_doors or {}
     problems: List[Problem] = []
     widths = {len(row) for row in grid}
     if len(widths) > 1:
@@ -122,7 +141,11 @@ def check_grid(grid: Sequence, spawn: Tuple[int, int], doors: Dict[Tuple[int, in
     for (x, y), dest in sorted(doors.items()):
         if at(x, y) != FLOOR:
             problems.append(Problem("room-door-in-wall", f"문 ({x}, {y}){dest!r}이 바닥이 아닌 칸에 있다", x, y))
+    for (x, y), dest in sorted(wall_doors.items()):
+        if at(x, y) != WALL:
+            problems.append(Problem("room-door-in-wall", f"벽 문 ({x}, {y}){dest!r}이 벽 칸이 아닌 곳에 있다", x, y))
     sx, sy = spawn
+    seen = set()
     if at(sx, sy) != FLOOR:
         problems.append(Problem("room-spawn-in-wall", f"도착 지점 ({sx}, {sy})이 바닥이 아닌 칸에 있다", sx, sy))
     else:
@@ -151,6 +174,13 @@ def check_grid(grid: Sequence, spawn: Tuple[int, int], doors: Dict[Tuple[int, in
             problems.append(Problem("room-unreachable-floor",
                                     f"도착 지점 ({sx}, {sy})에서 걸어 닿지 못하는 바닥 {len(part)}칸(첫 칸 ({start[0]}, {start[1]}))",
                                     start[0], start[1]))
+    if at(sx, sy) == FLOOR:
+        for (x, y), dest in sorted(wall_doors.items()):
+            if at(x, y) == WALL and not any((x + dx, y + dy) in seen for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
+                problems.append(Problem("room-door-no-floor",
+                                        f"벽 문 ({x}, {y}){dest!r} 둘레에 도착 지점 ({sx}, {sy})에서 걸어 닿는 바닥 칸이 없다", x, y))
+    if build is not None:
+        problems += _check_build(build, g, spawn, doors, wall_doors, at)
     # 얇은 벽: 위가 윗면이 아닌 정면(열쇠에 t 표시)이 가로로 이어진 줄
     keys = classify(g, face_height)
     for y, row in enumerate(keys):
@@ -164,6 +194,38 @@ def check_grid(grid: Sequence, spawn: Tuple[int, int], doors: Dict[Tuple[int, in
                                         f"벽 ({x}..{end}, {y})이 얇아 윗면 없이 정면만 남는다(정면 {face_height}칸 + 윗면 1칸이 필요)", x, y))
                 x = end
             x += 1
+    return problems
+
+
+def _check_build(build: Sequence[str], g, spawn, doors, wall_doors, at) -> List[Problem]:
+    """Build 줄(평면과 같은 크기의 '0'·'1')을 검사한다: 크기, 글자, 고정이어야 할 칸(밖, 도착 지점, 문, 벽 문과 그 둘레 바닥)."""
+    h, w = len(g), (len(g[0]) if g else 0)
+    if len(build) != h or any(not isinstance(r, str) or len(r) != w for r in build):
+        return [Problem("room-build-ragged", f"build 줄이 평면({w}칸 x {h}줄)과 크기가 다르다: " + ", ".join(
+            f"{y}번째 {len(r)}칸" for y, r in enumerate(build)) + f" (모두 {len(build)}줄)")]
+    problems: List[Problem] = []
+    for y, row in enumerate(build):
+        for x, ch in enumerate(row):
+            if ch not in "01":
+                problems.append(Problem("room-build-char", f"build의 모르는 글자 {ch!r} (({x}, {y})) — 0과 1만 쓴다", x, y))
+    if problems:
+        return problems
+    fixed = {}
+    for y in range(h):
+        for x in range(w):
+            if g[y][x] == OUT:
+                fixed[(x, y)] = "밖 칸"
+    fixed[tuple(spawn)] = "도착 지점"
+    for cell in doors:
+        fixed[cell] = "문 칸"
+    for (x, y) in wall_doors:
+        fixed[(x, y)] = "벽 문 칸"
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            if at(x + dx, y + dy) == FLOOR:
+                fixed.setdefault((x + dx, y + dy), "벽 문에 닿은 바닥 칸")
+    for (x, y), what in sorted(fixed.items(), key=lambda kv: (kv[0][1], kv[0][0])):
+        if 0 <= y < h and 0 <= x < w and build[y][x] == "1":
+            problems.append(Problem("room-build-fixed", f"{what} ({x}, {y})이 지을 수 있음(1)이다 — 고정(0)이어야 한다", x, y))
     return problems
 
 

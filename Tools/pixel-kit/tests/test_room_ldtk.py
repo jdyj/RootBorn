@@ -467,6 +467,21 @@ class CliTests(CliBase):
         self.assertIn("--dry-run", out)
         self.assertEqual(self.snapshot(), before)
 
+    def test_check_and_build_take_wall_doors_and_build_rows(self):
+        doc = {"id": "t.house", **BASE, "spawn": [2, 4], "plan": DOOR_PLAN, "wallDoors": {"W": "town"}, "build": DOOR_BUILD}
+        (self.kit_dir / "rooms" / "t.house.json").write_text(json.dumps(doc), encoding="utf-8")
+        code, out, _ = self.run_kit("check", "t.house")
+        self.assertEqual((code, out.strip()), (0, "t.house: 문제 없음"))
+        code, out, err = self.run_kit("build", "t.house")
+        self.assertEqual(code, 0, err)
+        self.assertIn("room-door-unregistered", out)             # 벽 문도 doors 표 알림을 탄다
+        self.assertTrue((self.out("t.house") / "t.house.ldtk").is_file())
+        doc["build"] = DOOR_BUILD[:-1]
+        (self.kit_dir / "rooms" / "t.house.json").write_text(json.dumps(doc), encoding="utf-8")
+        code, out, _ = self.run_kit("check", "t.house")
+        self.assertEqual(code, 1)
+        self.assertIn("room-build-ragged", out)
+
     def test_build_with_a_problem_writes_nothing_and_exits_1(self):
         self.put("t.bad", ["#####", "#.#.#", "#####"], spawn=(1, 1))
         code, out, _ = self.run_kit("build", "t.bad")
@@ -984,6 +999,173 @@ class RealGameMapsAreNotRoomsTests(unittest.TestCase):
                 repaint_room(path, dry_run=True, kit=KIT)
             self.assertEqual([p.code for p in e.exception.problems], ["room-not-a-room"], str(path))
             self.assertEqual(path.read_bytes(), before, str(path))
+
+
+
+# ---------------------------------------------------------------- Build 층과 바깥 벽 문
+
+DOOR_PLAN = ["########", "########", "########", "#......#", "#......#", "#......#", "###W####"]
+DOOR_BUILD = ["00000000", "00000000", "00000000", "01111110", "01011110", "01101110", "00000000"]
+
+
+def reachable_floor(grid, spawn):
+    """도착 칸에서 걸어 닿는 바닥 칸 집합(grid는 값 격자, 칸 (x, y))."""
+    seen, todo = {spawn}, [spawn]
+    while todo:
+        x, y = todo.pop()
+        for n in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+            if n not in seen and 0 <= n[1] < len(grid) and 0 <= n[0] < len(grid[0]) and grid[n[1]][n[0]] == FLOOR:
+                seen.add(n)
+                todo.append(n)
+    return seen
+
+
+def add_build_and_wall_door(doc, spawn):
+    """편집기가 저장한 방의 문서(JSON)에 Build 층(정의·인스턴스)과 바깥 벽 문(Door 엔티티)을 더한다. (문 칸, 지을 수 있는 칸)을 돌려준다.
+    문 칸은 도착 칸에서 닿는 바닥에 붙은 벽 칸, 지을 수 있는 칸은 도착 칸·문 둘레가 아닌 닿는 바닥 한 칸."""
+    from pixelkit import ldtk_common as ldtk
+    from pixelkit.room_ldtk import LAYER_UIDS
+    level = doc["levels"][0]
+    layers = {li["__identifier"]: li for li in level["layerInstances"]}
+    col = layers["Collision"]
+    w, h = col["__cWid"], col["__cHei"]
+    grid = [col["intGridCsv"][y * w:(y + 1) * w] for y in range(h)]
+    reach = reachable_floor(grid, spawn)
+    door = next((x, y) for y in range(h) for x in range(w) if grid[y][x] == WALL
+                and any(n in reach for n in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1))))
+    around = {door, spawn, (door[0] + 1, door[1]), (door[0] - 1, door[1]), (door[0], door[1] + 1), (door[0], door[1] - 1)}
+    free = next(c for c in sorted(reach) if c not in around)
+    build_def = ldtk.layer_def("IntGrid", "Build", LAYER_UIDS["Build"], 32, opacity=0.25,
+                               int_grid_values=[ldtk.int_grid_value(1, "buildable", "#6FB36A")])
+    doc["defs"]["layers"].insert(1, build_def)
+    csv = [1 if (x, y) == free else 0 for y in range(h) for x in range(w)]
+    level["layerInstances"].insert(1, ldtk.layer_instance(build_def, "00000000-0000-5000-8000-0000000000b1", col["levelId"],
+                                                          (w, h), int_grid=csv))
+    door_def = next(e for e in doc["defs"]["entities"] if e["identifier"] == "Door")
+    ent = ldtk.entity_instance(door_def, "00000000-0000-5000-8000-0000000000d1", (door[0] * 32, door[1] * 32), 32,
+                               fields=[ldtk.field_instance_string(door_def["fieldDefs"][0], "town")])
+    layers["Door"]["entityInstances"].append(ent)
+    return door, free
+
+
+class BuildLayerTests(RoomBase):
+    def door_room(self, rid="t.house", **extra):
+        self.small_plan(rid, DOOR_PLAN, wallDoors={"W": "town"}, build=DOOR_BUILD, **extra)
+        self.build(rid)
+        return self.read(rid)
+
+    def test_build_layer_written_after_collision_with_plan_values(self):
+        ldtk, _, _ = self.door_room()
+        self.assertEqual([li["__identifier"] for li in ldtk["levels"][0]["layerInstances"]],
+                         ["Collision", "Build", "Door", "Furniture", "Wall", "Ground"])
+        build = self.layers(ldtk)["Build"]
+        self.assertEqual(build["__type"], "IntGrid")
+        self.assertEqual((build["__cWid"], build["__cHei"], build["__gridSize"]), (8, 7, 32))
+        self.assertEqual(build["intGridCsv"], [int(c) for row in DOOR_BUILD for c in row])
+        d = next(d for d in ldtk["defs"]["layers"] if d["identifier"] == "Build")
+        self.assertEqual((d["uid"], d["displayOpacity"]), (7, 0.25))
+        self.assertEqual([(v["value"], v["identifier"]) for v in d["intGridValues"]], [(1, "buildable")])
+        self.assertGreater(ldtk["nextUid"], 7)
+
+    def test_no_build_key_no_build_layer(self):
+        self.real_plan()
+        self.build()
+        ldtk, maps, _ = self.read()
+        self.assertNotIn("Build", self.layers(ldtk))
+        self.assertNotIn("Build", [d["identifier"] for d in ldtk["defs"]["layers"]])
+        self.assertNotIn("build", maps["maps"][0])
+
+    def test_wall_door_entity_at_wall_cell(self):
+        ldtk, maps, _ = self.door_room()
+        layers = self.layers(ldtk)
+        self.assertEqual(layers["Collision"]["intGridCsv"][6 * 8 + 3], WALL)
+        (door,) = layers["Door"]["entityInstances"]
+        self.assertEqual(door["px"], [3 * 32, 6 * 32])
+        self.assertEqual((door["width"], door["height"]), (32, 32))
+        self.assertEqual([(f["__identifier"], f["__value"]) for f in door["fieldInstances"]], [("Where", "town")])
+        self.assertEqual(check_loader_fields(ldtk, maps), [])
+
+    def test_floor_door_and_wall_door_can_share_a_room(self):
+        plan = list(DOOR_PLAN)
+        plan[4] = "#..D...#"
+        self.small_plan("t.both", plan, doors={"D": "shop"}, wallDoors={"W": "town"})
+        self.build("t.both")
+        ldtk, _, _ = self.read("t.both")
+        got = sorted((e["px"][0] // 32, e["px"][1] // 32, e["fieldInstances"][0]["__value"])
+                     for e in self.layers(ldtk)["Door"]["entityInstances"])
+        self.assertEqual(got, [(3, 4, "shop"), (3, 6, "town")])
+
+    def test_maps_json_has_build_frame_layer(self):
+        _, maps, _ = self.door_room()
+        self.assertEqual(maps["maps"][0]["build"], {"frameLayer": "Build"})
+
+    def test_built_room_is_clean_and_same_bytes_twice(self):
+        self.door_room()
+        first = self.snapshot("t.house")
+        self.assertEqual([p.code for p in check_room(self.out("t.house") / "t.house.ldtk") if not is_warning(p)], [])
+        self.build("t.house", force=True)
+        self.assertEqual(self.snapshot("t.house"), first)
+
+    def test_a_bad_build_plan_writes_nothing(self):
+        bad = list(DOOR_BUILD)
+        bad[4] = "01111110"                                  # 도착 지점이 지을 수 있음
+        self.small_plan("t.bad", DOOR_PLAN, wallDoors={"W": "town"}, build=bad)
+        with self.assertRaises(RoomBuildError) as e:
+            self.build("t.bad")
+        self.assertEqual([p.code for p in e.exception.problems], ["room-build-fixed"])
+        self.assertFalse(self.out("t.bad").exists())
+
+    def test_repaint_keeps_build_layer(self):
+        self.door_room()
+        path = self.out("t.house") / "t.house.ldtk"
+        doc = json.loads(path.read_text("utf-8"))
+        self.layers(doc)["Collision"]["intGridCsv"][3 * 8 + 5] = WALL      # 바닥 한 칸을 벽으로 칠한다(Build의 1은 그대로 둔다)
+        path.write_text(json.dumps(doc), "utf-8")
+        self.assertIn("t.house.ldtk", repaint_room(path, kit=KIT))
+        after = json.loads(path.read_text("utf-8"))
+        for name in ("Build", "Door", "Collision"):
+            self.assertEqual(self.layers(after)[name], self.layers(doc)[name], name)
+        self.assertEqual([d for d in after["defs"]["layers"] if d["identifier"] == "Build"],
+                         [d for d in doc["defs"]["layers"] if d["identifier"] == "Build"])
+        self.assertEqual([p.code for p in check_room(path)], ["room-door-unregistered"])     # Where "town"는 doors 표에 없다(알림)
+
+    def test_repaint_keeps_build_layer_and_wall_door_in_an_editor_saved_room(self):
+        folder = self.out()
+        shutil.copytree(EDITOR_SAVED, folder)
+        path = folder / f"{RID}.ldtk"
+        doc = json.loads(path.read_text("utf-8"))
+        maps = json.loads((folder / "maps.json").read_text("utf-8"))
+        sx, sy = next(iter(maps["maps"][0]["spawns"].values()))
+        add_build_and_wall_door(doc, (sx // 32, sy // 32))
+        path.write_text(json.dumps(doc), "utf-8")
+        def codes():
+            return [p.code for p in check_room(path) if p.code != "room-wall-thin"]      # 칠한 방의 얇은 벽 알림은 이 시험과 무관하다
+        self.assertEqual(codes(), ["room-door-unregistered", "room-art-mismatch"])
+        repaint_room(path, kit=KIT)
+        after = json.loads(path.read_text("utf-8"))
+        for name in ("Build", "Door", "Collision", "Furniture"):
+            self.assertEqual(self.layers(after)[name], self.layers(doc)[name], name)
+        self.assertEqual(after["defs"]["layers"], doc["defs"]["layers"])
+        self.assertEqual(codes(), ["room-door-unregistered"])      # Where "town"는 doors 표에 없다(알림)
+
+    def test_check_room_build_layer_problems(self):
+        plan = DOOR_PLAN + ["        "]                    # 맨 아래에 밖 칸 한 줄
+        self.small_plan("t.out", plan, wallDoors={"W": "town"}, build=DOOR_BUILD + ["00000000"])
+        self.build("t.out")
+        path = self.out("t.out") / "t.out.ldtk"
+        good = json.loads(path.read_text("utf-8"))
+
+        def codes_after(edit):
+            doc = copy.deepcopy(good)
+            edit(self.layers(doc)["Build"])
+            path.write_text(json.dumps(doc), "utf-8")
+            return [p.code for p in check_room(path) if not is_warning(p)]
+        self.assertEqual(codes_after(lambda b: None), [])
+        self.assertEqual(codes_after(lambda b: b["intGridCsv"].__setitem__(7 * 8 + 0, 1)), ["room-build-fixed"])       # 밖 칸
+        self.assertEqual(codes_after(lambda b: b["intGridCsv"].__setitem__(4 * 8 + 2, 1)), ["room-build-fixed"])       # 도착 지점
+        self.assertEqual(codes_after(lambda b: b["intGridCsv"].__setitem__(3 * 8 + 1, 2)), ["room-build-char"])        # 0·1이 아닌 값
+        self.assertEqual(codes_after(lambda b: b["intGridCsv"].append(0)), ["room-build-ragged"])
+        self.assertEqual(codes_after(lambda b: b.update(__cWid=7)), ["room-build-ragged"])
 
 
 if __name__ == "__main__":

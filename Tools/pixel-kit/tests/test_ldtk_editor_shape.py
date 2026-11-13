@@ -15,7 +15,8 @@ from pixelkit import ldtk_common, ldtk_test_level
 from pixelkit.room_ldtk import RoomBuildError, check_room, repaint_room
 from tests import ldtk_schema
 from tests.test_ldtk_test_level import LevelBase
-from tests.test_room_ldtk import FIXTURE, KIT, RID, ROOT, RoomBase
+from tests.test_room_ldtk import (DOOR_BUILD, DOOR_PLAN, EDITOR_SAVED, FIXTURE, KIT, RID, ROOT, RoomBase,
+                                  add_build_and_wall_door)
 
 EDITOR_HEADER = {"fileType": "LDtk Project JSON", "app": "LDtk", "doc": "https://ldtk.io/json",
                  "schema": "https://ldtk.io/files/JSON_SCHEMA.json", "appAuthor": "Sebastien 'deepnight' Benard",
@@ -124,6 +125,24 @@ class RoomShapeTests(RoomBase):
         self.build()
         path = self.out() / f"{RID}.ldtk"
         shutil.copyfile(FIXTURE, path)
+        repaint_room(path, kit=KIT)
+        self.assertEqual(ldtk_schema.all_problems(json.loads(path.read_text("utf-8"))), [])
+
+    def test_room_with_a_build_layer_and_a_wall_door_has_every_required_and_editor_key(self):
+        self.small_plan("t.house", DOOR_PLAN, wallDoors={"W": "town"}, build=DOOR_BUILD)
+        self.build("t.house")
+        doc = json.loads((self.out("t.house") / "t.house.ldtk").read_text("utf-8"))
+        self.assertEqual(ldtk_schema.all_problems(doc), [])
+        build_def = next(d for d in doc["defs"]["layers"] if d["identifier"] == "Build")
+        self.assertEqual([(v["tile"], v["groupUid"]) for v in build_def["intGridValues"]], [(None, 0)])
+
+    def test_repaint_of_an_editor_saved_room_with_a_build_layer_and_a_wall_door_stays_complete(self):
+        shutil.copytree(EDITOR_SAVED, self.out())
+        path = self.out() / f"{RID}.ldtk"
+        doc = json.loads(path.read_text("utf-8"))
+        add_build_and_wall_door(doc, (3, 4))
+        self.assertEqual(ldtk_schema.all_problems(doc), [])
+        path.write_text(json.dumps(doc), "utf-8")
         repaint_room(path, kit=KIT)
         self.assertEqual(ldtk_schema.all_problems(json.loads(path.read_text("utf-8"))), [])
 

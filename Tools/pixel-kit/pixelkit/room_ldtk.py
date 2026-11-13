@@ -4,7 +4,8 @@ LDtk에서 다시 칠한 Collision에 벽 그림을 맞추기(`room repaint`), L
 결과(기본 `art/world/rooms/<id>/`): `<id>.ldtk`, `tiles.png`(쓰인 타일만 모은 시트, 덧붙이기만), `tiles.slots.json`
 (자리 표 + 그 시트를 그린 벽 모양 `wall`·바닥 `floor`·`face_height`·윗면 띠 두께 `band`·띠 색 `top`(평면에 적었을 때만)
 — repaint가 여기서 읽는다), `maps.json`.
-LDtk 층(위에서 아래): Collision(IntGrid 32, 1 벽 / 2 바닥, 편집기에서 반투명), Door(Entities), Furniture(Entities, 태그 ysort, 비어 있음),
+LDtk 층(위에서 아래): Collision(IntGrid 32, 1 벽 / 2 바닥, 편집기에서 반투명), Build(IntGrid 32, 1 지을 수 있음 / 0 고정 — 평면에 build가 있을 때만),
+Door(Entities — 바닥 칸의 문과 벽 칸의 문(wallDoors)), Furniture(Entities, 태그 ysort, 비어 있음),
 Wall(Tiles — 벽 칸마다, 띠·정면이 아닌 자리는 투명), Ground(Tiles — 바닥 칸마다 + 띠 옆으로 바닥이 비치는 벽 칸마다).
 LDtk 파일은 편집기(1.5.3)가 저장하는 꼴 그대로 쓴다(ldtk_common의 편집기 꼴 함수 — 공식 스키마의 필수 필드를 테스트가 지킨다).
 게임 읽기 코드(game/Rootborn.World/Ldtk/LdtkFile.cs, WorldCatalog.cs)가 읽는 값은 그 위에 얹는다.
@@ -32,16 +33,18 @@ DEFAULT_ROOT = "art/world/rooms"           # 저장소 뿌리 기준. 방마다 
 DEFAULT_ROOMS_DIR = "art/kit/rooms"
 TILES_NAME, SLOTS_NAME, MAPS_NAME = "tiles.png", "tiles.slots.json", "maps.json"
 MAX_VIEW_CELLS = 13                        # 화면에 보일 높이(칸). 레벨이 더 낮으면 레벨 높이
-LAYER_ORDER = ("Collision", "Door", "Furniture", "Wall", "Ground")      # 파일 안 순서: 위 층이 먼저
+LAYER_ORDER = ("Collision", "Build", "Door", "Furniture", "Wall", "Ground")      # 파일 안 순서: 위 층이 먼저(Build는 평면에 build가 있을 때만)
 INT_VALUES = ((WALL, "wall", "#8a6f5a"), (FLOOR, "floor", "#c9b99a"))   # Collision 값 약속(game/world/README.md 3절)
+BUILD_VALUE = (1, "buildable", "#6fb36a")                                # Build 값 약속: 1 지을 수 있음, 0(IntGrid의 빈 칸) 고정
 # uid는 LDtk에서 정의·레벨이 한 번호 공간을 쓴다(겹치지 않게). 타일셋 1은 게임이 읽는 __tilesetDefUid라 예전 값 그대로 둔다.
 TILESET_UID, LEVEL_UID, DOOR_DEF_UID, WHERE_FIELD_UID, NEXT_UID = 1, 0, 20, 21, 22
-LAYER_UIDS = {"Collision": 2, "Door": 3, "Furniture": 4, "Wall": 5, "Ground": 6}
+LAYER_UIDS = {"Collision": 2, "Door": 3, "Furniture": 4, "Wall": 5, "Ground": 6, "Build": 7}
 BG_COLOR = "#40465B"                       # 레벨 바탕(__bgColor) = 프로젝트 defaultLevelBgColor
 ROOM_LAYERS = (("Collision", "IntGrid"), ("Wall", "Tiles"), ("Ground", "Tiles"))   # 이 도구가 만든 방이라는 표시(머리말로 판별하지 않는다)
 ART_LAYERS = ("Wall", "Ground")                                                   # repaint가 다시 쓰는 층(RoomTiles의 wall·ground)
 ROOM_VALUES = ("wall", "floor", "face_height", "band", "top")                     # 자리 표에 남기는 방 값(top은 있을 때만)
 SHEET_VALUES = ("wall", "floor", "band")                                          # 시트의 그림을 정하는 값 — 다르면 한 시트에 섞지 않는다
+BUILD_OPACITY = 0.25                       # Build 색 칸도 그림을 덮지 않게(Collision보다 더 옅게 — 둘이 겹쳐 보인다)
 COLLISION_OPACITY = 0.35                   # 편집기에서 Collision 색 칸이 벽·바닥 그림을 덮지 않고 비쳐 보이게(게임은 이 값을 읽지 않는다)
 _NAMESPACE = uuid.UUID("5d9b2a0e-6a3c-4a53-9d5e-2b0b6a6f3c11")      # iid를 결정적으로 만든다
 
@@ -203,8 +206,11 @@ def _layer_defs() -> Dict[str, dict]:
         "Collision": ldtk.layer_def("IntGrid", "Collision", LAYER_UIDS["Collision"], CELL, int_grid_values=[
             ldtk.int_grid_value(v, name, color) for v, name, color in INT_VALUES], opacity=COLLISION_OPACITY,
             doc=f"{mark} 1 벽(막음) / 2 바닥(걸음) / 0 밖. 다시 칠한 뒤 kit.py room repaint로 Wall·Ground 그림을 맞춘다."),
+        "Build": ldtk.layer_def("IntGrid", "Build", LAYER_UIDS["Build"], CELL, int_grid_values=[
+            ldtk.int_grid_value(*BUILD_VALUE)], opacity=BUILD_OPACITY,
+            doc=f"{mark} 1 지을 수 있음 / 0 고정(칠하지 않은 칸). 밖 칸·도착 지점·문과 그 앞 바닥은 고정이어야 한다."),
         "Door": ldtk.layer_def("Entities", "Door", LAYER_UIDS["Door"], CELL,
-                               doc=f"{mark} 문. Where 값을 maps.json의 doors 표에 적어야 게임에서 열린다."),
+                               doc=f"{mark} 문(바닥 칸이거나 벽 칸). Where 값을 maps.json의 doors 표에 적어야 게임에서 열린다."),
         "Furniture": ldtk.layer_def("Entities", "Furniture", LAYER_UIDS["Furniture"], CELL, tags=["ysort"],
                                     doc=f"{mark} 가구(태그 ysort — 캐릭터와 발 위치로 앞뒤를 가린다)."),
         "Wall": ldtk.layer_def("Tiles", "Wall", LAYER_UIDS["Wall"], CELL, tileset_uid=TILESET_UID,
@@ -231,7 +237,7 @@ def _ldtk(room: Room, grid: List[List[int]], tiles: RoomTiles, slots: Dict[str, 
 
     doors = [ldtk.entity_instance(door_def, _iid(room.id, "door", x, y), (x * CELL, y * CELL), CELL,
                                   fields=[ldtk.field_instance_string(where_def, dest)])
-             for (x, y), dest in sorted(room.doors.items(), key=lambda kv: (kv[0][1], kv[0][0]))]
+             for (x, y), dest in sorted({**room.doors, **room.wall_doors}.items(), key=lambda kv: (kv[0][1], kv[0][0]))]
     instances = {
         "Collision": layer("Collision", int_grid=[v for row in grid for v in row]),
         "Door": layer("Door", entities=doors),
@@ -239,20 +245,25 @@ def _ldtk(room: Room, grid: List[List[int]], tiles: RoomTiles, slots: Dict[str, 
         "Wall": layer("Wall", tileset=tileset, grid_tiles=_grid_tiles(tiles.wall, slots)),
         "Ground": layer("Ground", tileset=tileset, grid_tiles=_grid_tiles(tiles.ground, slots)),
     }
+    if room.build is not None:
+        instances["Build"] = layer("Build", int_grid=[int(c) for row in room.build for c in row])
+    order = [n for n in LAYER_ORDER if n in instances]
     return ldtk.project(
         _iid(room.id, "project"), _iid(room.id, "dummy-world"), next_uid=NEXT_UID, grid=CELL,
         level_size=(cols * CELL, rows * CELL), bg_color=BG_COLOR, level_bg_color=BG_COLOR,
-        defs=ldtk.definitions([defs[n] for n in LAYER_ORDER], [door_def], [tileset]),
+        defs=ldtk.definitions([defs[n] for n in order], [door_def], [tileset]),
         levels=[ldtk.level(level_name, _iid(room.id, "level"), LEVEL_UID, cols * CELL, rows * CELL, BG_COLOR,
-                           [instances[n] for n in LAYER_ORDER])])
+                           [instances[n] for n in order])])
 
 
 def _maps(room: Room, root: Path, ldtk_rel: str, level_name: str, rows: int) -> dict:
     sx, sy = room.spawn
-    return {**walkers(root, RoomError), "maps": [{
-        "id": level_name, "ldtk": ldtk_rel, "level": level_name, "viewCells": min(rows, MAX_VIEW_CELLS),
-        "collision": {"rule": "interior-auto"}, "doors": {},
-        "spawns": {spawn_name(level_name): [sx * CELL + CELL // 2, sy * CELL + CELL // 2]}}]}
+    entry = {"id": level_name, "ldtk": ldtk_rel, "level": level_name, "viewCells": min(rows, MAX_VIEW_CELLS),
+             "collision": {"rule": "interior-auto"}, "doors": {},
+             "spawns": {spawn_name(level_name): [sx * CELL + CELL // 2, sy * CELL + CELL // 2]}}
+    if room.build is not None:
+        entry["build"] = {"frameLayer": "Build"}             # 지을 수 있는 집이라는 성질(game/world/README.md)
+    return {**walkers(root, RoomError), "maps": [entry]}
 
 
 # ---------------------------------------------------------------- build
@@ -282,7 +293,8 @@ def build_room(repo_root, room_id: str, out_dir=None, force: bool = False, dry_r
     except ValueError:
         raise RoomError(f"출력 폴더 {out}가 저장소 {root} 밖이다(maps.json의 ldtk는 저장소 뿌리 기준 경로라야 한다)") from None
 
-    blocking = [p for p in check_grid(room.grid, room.spawn, room.doors, room.face_height) if not is_warning(p)]
+    blocking = [p for p in check_grid(room.grid, room.spawn, room.doors, room.face_height, room.wall_doors, room.build)
+                if not is_warning(p)]
     if blocking:
         raise RoomBuildError(blocking)
     kit = kit if kit is not None else load_kit(str(root / "art" / "kit"))
@@ -411,7 +423,9 @@ def _room_shape(path: Path, doc):
     w, h, csv = col.get("__cWid"), col.get("__cHei"), col.get("intGridCsv")
     if type(w) is not int or type(h) is not int or w < 1 or h < 1 or not isinstance(csv, list) or len(csv) != w * h:
         return _not_a_room(path, "Collision의 __cWid×__cHei와 intGridCsv 길이가 맞지 않는다")
-    bad = [n for n, _ in ROOM_LAYERS if layers[n].get("__gridSize") != CELL]
+    if "Build" in layers and layers["Build"].get("__type") != "IntGrid":
+        return _not_a_room(path, "Build 층이 IntGrid가 아니다")
+    bad = [n for n in [n for n, _ in ROOM_LAYERS] + (["Build"] if "Build" in layers else []) if layers[n].get("__gridSize") != CELL]
     if bad:
         return _not_a_room(path, f"칸 크기가 {CELL}이 아닌 층: {', '.join(bad)}")
     bad = [n for n in ART_LAYERS if (layers[n].get("__cWid"), layers[n].get("__cHei")) != (w, h)]
@@ -461,6 +475,23 @@ def _room_context(path: Path, level: dict, layers: dict):
     return values, (sx // CELL, sy // CELL), doors, entry.get("doors") or {}
 
 
+def _grid_problems(layers: dict, grid, spawn, doors: Dict[Tuple[int, int], str], face_height: int) -> List[Problem]:
+    """LDtk 방의 칸 검사(check_grid) + Build 층 검사. Door 엔티티가 벽 칸에 있으면 바깥 벽 문으로 본다(바닥 칸의 문은 그대로 문)."""
+    h, w = len(grid), len(grid[0])
+    wall_doors = {c: v for c, v in doors.items() if 0 <= c[1] < h and 0 <= c[0] < w and grid[c[1]][c[0]] == WALL}
+    floor_doors = {c: v for c, v in doors.items() if c not in wall_doors}
+    build = None
+    layer = layers.get("Build")
+    if layer is not None:
+        csv = layer.get("intGridCsv")
+        if (layer.get("__cWid"), layer.get("__cHei")) != (w, h) or not isinstance(csv, list) or len(csv) != w * h:
+            return check_grid(grid, spawn, floor_doors, face_height, wall_doors) + [Problem(
+                "room-build-ragged", f"Build의 크기({layer.get('__cWid')}x{layer.get('__cHei')}칸, 값 "
+                                     f"{len(csv) if isinstance(csv, list) else '?'}개)가 Collision({w}x{h}칸)과 다르다")]
+        build = ["".join(str(v) if type(v) is int and v in (0, 1) else "x" for v in csv[y * w:(y + 1) * w]) for y in range(h)]
+    return check_grid(grid, spawn, floor_doors, face_height, wall_doors, build)
+
+
 def _art_mismatch(grid, plan: RoomTiles, slots, layers) -> List[Problem]:
     """칸마다 Wall·Ground에 와야 할 타일(plan_tiles의 열쇠가 있으면 그 자리 하나, 없으면 타일 없음)과 실제 타일을 견준다.
     벽 칸의 Ground 타일은 띠 옆으로 바닥이 비치는 칸에만 와야 한다."""
@@ -506,7 +537,7 @@ def check_room(ldtk_path, kit: Optional[Kit] = None) -> List[Problem]:
         return shape
     level, layers, grid = shape
     values, spawn, doors, doors_table = _room_context(path, level, layers)
-    problems = _incomplete(path, doc) + check_grid(grid, spawn, doors, values["face_height"]) + door_problems(doors, doors_table)
+    problems = _incomplete(path, doc) + _grid_problems(layers, grid, spawn, doors, values["face_height"]) + door_problems(doors, doors_table)
     if any(p.code == "room-unknown-char" for p in problems):
         return problems                            # 칸 값을 믿을 수 없으니 그림은 견주지 않는다
     try:
@@ -548,7 +579,7 @@ def _default_kit() -> Kit:
 def repaint_room(ldtk_path, dry_run: bool = False, kit: Optional[Kit] = None) -> List[str]:
     """Collision 층을 읽어 Wall·Ground 층의 gridTiles와 tiles.png·tiles.slots.json만 다시 쓴다.
 
-    문서의 나머지(다른 층, 엔티티, 필드, 모르는 키, 키 순서)는 읽은 그대로 다시 쓴다(들여쓰기는 이 도구의 것이 된다).
+    문서의 나머지(Build 층을 포함한 다른 층, 엔티티, 필드, 모르는 키, 키 순서)는 읽은 그대로 다시 쓴다(들여쓰기는 이 도구의 것이 된다).
     타일셋 정의는 pxWid·pxHei(있으면 __cWid·__cHei도)만 시트에 맞춘다. 벽 모양·바닥·face_height·band·top은 같은 폴더의 자리 표에서 읽는다(build가 남긴다).
     band가 없는 옛 자리 표(윗면 32px 시절)는 RoomError — 옛 두께로 조용히 그리지 않는다. top이 없는 표는 벽 모양의 기본 띠 색이다
     (top은 2026-11-14에 생겼다 — 그 전에 만들어 LDtk에서 칠한 방이 그대로 다시 그려진다).
@@ -569,7 +600,7 @@ def repaint_room(ldtk_path, dry_run: bool = False, kit: Optional[Kit] = None) ->
     if tileset is None or tileset.get("relPath") != TILES_NAME or layers["Ground"].get("__tilesetDefUid") != uid:
         raise RoomBuildError(_not_a_room(path, f"Wall·Ground 층이 같은 타일셋 {TILES_NAME}을 쓰지 않는다"))
     values, spawn, doors, _ = _room_context(path, level, layers)
-    blocking = [p for p in check_grid(grid, spawn, doors, values["face_height"]) if not is_warning(p)]
+    blocking = [p for p in _grid_problems(layers, grid, spawn, doors, values["face_height"]) if not is_warning(p)]
     if blocking:
         raise RoomBuildError(blocking)
 

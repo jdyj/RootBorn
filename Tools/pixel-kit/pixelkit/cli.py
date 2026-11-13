@@ -453,15 +453,16 @@ def cmd_room(args, kit: Kit) -> int:
                 raise UsageError(f"{rid}: 등록되지 않은 벽 모양 {room.wall}. 있는 것: {', '.join(wall_styles())}")
             room_ldtk.floor_spec(kit, room.floor)                              # 없으면 RoomError(받는 바닥 목록)
             check_top(room.top)                                                # 없으면 RecipeError(고를 수 있는 띠 색 목록)
-            problems = room_plan.check_grid(room.grid, room.spawn, room.doors, room.face_height)
+            problems = room_plan.check_grid(room.grid, room.spawn, room.doors, room.face_height, room.wall_doors, room.build)
             code = _room_problems(problems)
             if not problems:
                 print(f"{rid}: 문제 없음")
             return code
         room = room_plan.load_room(rooms_dir / f"{rid}.json")
-        _room_problems(p for p in room_plan.check_grid(room.grid, room.spawn, room.doors, room.face_height)
+        _room_problems(p for p in room_plan.check_grid(room.grid, room.spawn, room.doors, room.face_height,
+                                                       room.wall_doors, room.build)
                        if room_plan.is_warning(p))
-        _room_problems(room_ldtk.door_problems(room.doors, {}))          # build가 쓰는 maps.json의 doors는 비어 있다
+        _room_problems(room_ldtk.door_problems({**room.doors, **room.wall_doors}, {}))          # build가 쓰는 maps.json의 doors는 비어 있다
         overwrote = args.force and not args.dry_run and room_ldtk.existing_room_files(args.repo, rid, args.out)
         written = room_ldtk.build_room(args.repo, rid, out_dir=args.out, force=args.force, dry_run=args.dry_run,
                                        kit=kit, rooms_dir=rooms_dir)
