@@ -271,6 +271,18 @@ def _args(root: Path, dry_run=False):
                               repo=str(root), check=False, dry_run=dry_run, force=False, list=False)
 
 
+class CommittedSheetTests(unittest.TestCase):
+    def test_the_committed_sheet_is_what_the_real_definitions_export_now(self):
+        """저장소의 실제 data/building 정의로 내면 저장소의 시트·좌표표와 바이트까지 같다(--dry-run이 쓸 것 없음). 손으로 고치지 않았다는 증거."""
+        plan = room_export.plan_finishes(ROOT, KIT)
+        self.assertGreaterEqual(len(plan.files), 2)
+        for rel, data in plan.files.items():
+            self.assertEqual((ROOT / rel).read_bytes(), data, f"{rel}가 지금 정의·규칙과 다르다 — python Tools/pixel-kit/kit.py room export-finishes")
+        defs = room_export.read_definitions(ROOT)
+        self.assertEqual(len(defs), 10)
+        self.assertEqual(sum(1 for d in defs if d["slot"] == "wall"), 5)
+
+
 class SheetRecomposesTheKitTilesTests(unittest.TestCase):
     """내보낸 시트의 조각 + 출처표 = 키트가 지금 그리는 그림(픽셀까지)."""
 

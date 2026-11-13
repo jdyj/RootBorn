@@ -1,0 +1,182 @@
+[
+  {
+    "type": "RoomFinishDefinition",
+    "id": "finish.wall.paper",
+    "slot": "wall",
+    "nameKey": "finish.wall.paper.name",
+    "sheet": "art/world/finishes/finishes.png",
+    "art": "paper",
+    "costItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      }
+    ],
+    "costCounts": [
+      2
+    ],
+    "unlockToken": ""
+  },
+  {
+    "type": "RoomFinishDefinition",
+    "id": "finish.wall.wallpaper-sprig",
+    "slot": "wall",
+    "nameKey": "finish.wall.wallpaper-sprig.name",
+    "sheet": "art/world/finishes/finishes.png",
+    "art": "wallpaper-sprig",
+    "costItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      }
+    ],
+    "costCounts": [
+      2
+    ],
+    "unlockToken": ""
+  },
+  {
+    "type": "RoomFinishDefinition",
+    "id": "finish.wall.paint-two-tone",
+    "slot": "wall",
+    "nameKey": "finish.wall.paint-two-tone.name",
+    "sheet": "art/world/finishes/finishes.png",
+    "art": "paint-two-tone",
+    "costItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      }
+    ],
+    "costCounts": [
+      2
+    ],
+    "unlockToken": ""
+  },
+  {
+    "type": "RoomFinishDefinition",
+    "id": "finish.wall.panel-plank",
+    "slot": "wall",
+    "nameKey": "finish.wall.panel-plank.name",
+    "sheet": "art/world/finishes/finishes.png",
+    "art": "panel-plank",
+    "costItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      }
+    ],
+    "costCounts": [
+      2
+    ],
+    "unlockToken": "unlock.finish.panel-plank"
+  },
+  {
+    "type": "RoomFinishDefinition",
+    "id": "finish.wall.paint-mint",
+    "slot": "wall",
+    "nameKey": "finish.wall.paint-mint.name",
+    "sheet": "art/world/finishes/finishes.png",
+    "art": "paint-mint",
+    "costItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      }
+    ],
+    "costCounts": [
+      2
+    ],
+    "unlockToken": "unlock.finish.paint-mint"
+  },
+  {
+    "type": "RoomFinishDefinition",
+    "id": "finish.floor.plank",
+    "slot": "floor",
+    "nameKey": "finish.floor.plank.name",
+    "sheet": "art/world/finishes/finishes.png",
+    "art": "floor.plank",
+    "costItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      }
+    ],
+    "costCounts": [
+      1
+    ],
+    "unlockToken": ""
+  },
+  {
+    "type": "RoomFinishDefinition",
+    "id": "finish.floor.checker-soft",
+    "slot": "floor",
+    "nameKey": "finish.floor.checker-soft.name",
+    "sheet": "art/world/finishes/finishes.png",
+    "art": "floor.checker-soft",
+    "costItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      }
+    ],
+    "costCounts": [
+      1
+    ],
+    "unlockToken": ""
+  },
+  {
+    "type": "RoomFinishDefinition",
+    "id": "finish.floor.carpet",
+    "slot": "floor",
+    "nameKey": "finish.floor.carpet.name",
+    "sheet": "art/world/finishes/finishes.png",
+    "art": "floor.carpet",
+    "costItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      }
+    ],
+    "costCounts": [
+      1
+    ],
+    "unlockToken": ""
+  },
+  {
+    "type": "RoomFinishDefinition",
+    "id": "finish.floor.tatami",
+    "slot": "floor",
+    "nameKey": "finish.floor.tatami.name",
+    "sheet": "art/world/finishes/finishes.png",
+    "art": "floor.tatami",
+    "costItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      }
+    ],
+    "costCounts": [
+      1
+    ],
+    "unlockToken": "unlock.finish.floor.tatami"
+  },
+  {
+    "type": "RoomFinishDefinition",
+    "id": "finish.floor.carpet-diamond",
+    "slot": "floor",
+    "nameKey": "finish.floor.carpet-diamond.name",
+    "sheet": "art/world/finishes/finishes.png",
+    "art": "floor.carpet-diamond",
+    "costItems": [
+      {
+        "ref": "item.allowance",
+        "type": "ItemDefinition"
+      }
+    ],
+    "costCounts": [
+      1
+    ],
+    "unlockToken": "unlock.finish.floor.carpet-diamond"
+  }
+]

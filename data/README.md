@@ -208,6 +208,22 @@
 - 일터 ↔ 템플릿, 일·기술·시설은 서로 id로 가리킨다(가리키는 것이 표에 있는지는 읽을 때 본다). 등록부 목록은 없다(파일 순서대로).
 - 표 두 개(가구 성질 표, 일 연결 표)는 모두 읽은 뒤 한 번 만든다: `definitions.FurnitureQuality`, `definitions.WorkLinks`.
 
+## 집 짓기 `building/`
+
+플레이어가 집의 벽지·바닥을 꾸미는 기능의 데이터. 지금은 꾸밈(벽지·바닥 종류) 하나뿐이다. 등록부 목록은 없다(파일 순서대로).
+**값(넣은 10종, 처음부터 열린 6종, 칸당 비용 벽 2·바닥 1)은 전부 시험용이고 사용자가 정하지 않았다** — 결정 대기 문서
+`docs/superpowers/specs/2026-11-14-house-building-open-decisions.md` 1·7·9번.
+
+| type | 무엇 | 필드 |
+|---|---|---|
+| `RoomFinishDefinition` | 꾸밈 하나: 어느 자리(`slot`)에 무슨 그림(`art`)을 쓰는가, 칸당 비용, 해금 | `slot`(`wall` 벽지·`floor` 바닥 — 닫힌 목록이 아니다), `nameKey`, `sheet`(조각 시트 PNG, 저장소 뿌리 기준), `art`(조각 묶음 이름 = 키트의 벽 모양 이름 또는 바닥 명세 id), `costItems`(ref들), `costCounts`(칸당), `unlockToken`(빈 글이면 처음부터) |
+
+- id는 `finish.wall.<art>`, `finish.floor.<art에서 floor. 뺀 것>`. 해금은 가구와 같은 진행(`FurnitureUnlockProgress`)에 `unlock.finish.*` 토큰으로 든다.
+- 그림은 `sheet`의 좌표표(`data/atlases/<sheet>.atlas.json`)가 푼다: 조각 이름 `<art>/<조각>`, 문지방·문짝 `common/<조각>`, 띠 칠 `bands`.
+  조각 시트와 좌표표는 **손으로 고치지 않고** `python Tools/pixel-kit/kit.py room export-finishes`가 이 파일을 읽어 낸다
+  (`Tools/pixel-kit/README.md` "방 만들기 — 꾸밈 조각 시트"). 꾸밈을 더하거나 빼면 그 명령을 다시 돌려 시트와 좌표표를 함께 커밋한다.
+- 코드는 꾸밈 id를 모른다. Core `RoomFinishDefinition`, World `RoomFinishArt`가 정의와 좌표표를 푼다.
+
 ## 그림 좌표표
 
 `data/atlases/<PNG 경로>.atlas.json` 하나가 PNG 하나다. 좌표는 **PNG 왼쪽 위 기준 픽셀**이다.

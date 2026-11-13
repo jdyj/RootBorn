@@ -34,6 +34,9 @@ put art/world/rooms/house/house.ldtk '{"defs":{"tilesets":[{"relPath": "tiles.pn
 put art/world/rooms/house/tiles.png png
 put art/world/rooms/test.two-rooms/test.two-rooms.ldtk '{"defs":{"tilesets":[{"relPath": "tiles.png"}]}}'
 put art/world/rooms/test.two-rooms/tiles.png png
+# 꾸밈(벽지·바닥) 조각 시트: 정의의 sheet 경로가 그림을 가리키면 시트와 좌표표가 따라온다(data/building).
+put data/building/RoomFinishDefinition.json '[{"type":"RoomFinishDefinition","id":"finish.wall.paper","sheet":"art/world/finishes/finishes.png","art":"paper"}]'
+put art/world/finishes/finishes.png png; put data/atlases/art/world/finishes/finishes.png.atlas.json '{}'
 list
 has   "art/ 그림이 데이터가 가리키면 목록에 있다" art/props/x/y.png
 has   "art/ 그림의 좌표표도 따라온다" data/atlases/art/props/x/y.png.atlas.json
@@ -46,4 +49,7 @@ has   "키트로 만든 집 맵이 있다" art/world/rooms/house/house.ldtk
 has   "집 맵의 타일셋 PNG도 따라온다" art/world/rooms/house/tiles.png
 lacks "키트 시험 방은 없다" art/world/rooms/test.two-rooms/test.two-rooms.ldtk
 lacks "키트 시험 방의 타일셋도 없다" art/world/rooms/test.two-rooms/tiles.png
+has   "꾸밈 정의가 가리키는 조각 시트가 있다" art/world/finishes/finishes.png
+has   "꾸밈 조각 시트의 좌표표도 따라온다" data/atlases/art/world/finishes/finishes.png.atlas.json
+has   "꾸밈 정의 파일이 있다" data/building/RoomFinishDefinition.json
 finish
