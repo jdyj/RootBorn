@@ -52,6 +52,7 @@ dotnet run --project game/Rootborn.Host -- --save-root <세이브 폴더> --slot
 `bash Scripts/remote-test/run.sh [<커밋>]`(커밋된 것만 간다, `Scripts/remote-test/README.md`), 정적 검사는 `bash Scripts/ci/run-all.sh --checks-only`.
 손으로만 도는 테스트(`[Explicit]`, 평소 실행에서 건너뜀): Host `ThemeConversionWriter`(테마 파일을 다시 쓴다), Simulation `ReplayFromEnvironment`(`ROOTBORN_SIM_REPLAY`),
 Server `ServerLoadMeasureTests`(부하 측정)·`DeployedServerSharingTests`(배포 폴더가 있어야 한다 — `Tools/publish/verify.sh --server`가 돌린다).
+Simulation `WritePaceReports`(플레이 시간·지루한 구간 보고 — 두 정책 × 메인 체인 끝까지·`ROOTBORN_PACE_DAYS`일, `output/simulation/pace/<판 이름>/`에 `report.md`·`timeline.csv`·`novelty.csv`): `dotnet test game/tests/Rootborn.Simulation.Tests --filter "FullyQualifiedName~WritePaceReports"`. 숫자는 자동 테스트(실제 플레이 아님)이고 사람 쪽 시간(읽기·고르기·미니게임 몫)은 가정이다(`Pace/PaceAssumptions.cs`).
 Balance `WriteFullReport`(전체 균형 보고): `dotnet test game/tests/Rootborn.Balance.Tests --filter "FullyQualifiedName~WriteFullReport"`, 원격은 `bash Scripts/remote-test/run.sh HEAD -- game/tests/Rootborn.Balance.Tests --filter "FullyQualifiedName~WriteFullReport"`(결과의 `output/balance/`로 받는다).
 Balance `WriteSweepReport`(모든 경우 훑기 — `money-balance.json` `axes`의 곱을 병렬로 `axes.days`일씩, `output/balance/sweep/`에 `sweep.csv`·`sweep-report.md`, 끝까지 돌지 못한 판이 있으면 파일을 쓴 뒤 실패): 원격 `bash Scripts/remote-test/run.sh HEAD -- game/tests/Rootborn.Balance.Tests --filter "FullyQualifiedName~WriteSweepReport"`(Strix Halo에서 몇 분, 결과의 `output/balance/sweep/`로 받는다).
 
@@ -84,6 +85,7 @@ Balance `WriteSweepReport`(모든 경우 훑기 — `money-balance.json` `axes`�
 | `--host <IP 주소:포트>` | `ROOTBORN_HOST_ROOM` | 없음(주소 기본값이 없다). 내 PC에서 방을 연다. 이 PC에서 들을 IPv4 주소와 포트(0이면 운영체제가 빈 포트를 준다). `--save-root`가 필요하다. 시작 화면에서 방 열기 창을 그 주소로 열고, `--slot`도 주면 그 슬롯으로 바로 방을 열고 들어가 월드를 띄운다. `--join`·`--world`·`--sample`과 함께 줄 수 없다 |
 | `--max-players <정원>` | `ROOTBORN_MAX_PLAYERS` | 4(방 설정 기본값). 1~8. `--host`와 함께만 준다(환경 변수는 `--host`가 없으면 쓰지 않는다 — 서버와 같은 이름). 방을 처음 만들 때만 쓰고 방 설정 파일에 남는다(이미 있는 방은 저장된 정원) |
 | `--share <조각,...>` | `ROOTBORN_ROOM_SHARE` | 없음(방 열기 창에서 고른다). 서버의 `--share`와 같은 이름·규칙(`Rootborn.Net/Room/RoomShareArgument`): `wallet`(돈), `house`(집과 가구), `town`(마을 상태)을 쉼표로, `none`이면 시간만. 방 열기 창에 처음 켜 둘 것이고 `--slot`과 함께면 그대로 연다. `--host`와 함께만 준다. 방을 처음 만들 때만 쓴다 |
+| (Simulation 테스트) | `ROOTBORN_PACE_DAYS` | 7. 속도 보고(`WritePaceReports`)의 N일 판 날 수이자 메인 체인 끝까지 판의 날 상한. 1 이상의 정수가 아니면 변수 이름과 값을 말하며 실패한다 |
 | (Balance 테스트) | `ROOTBORN_BALANCE_OUT` | `<저장소>/output/balance`. 균형 보고 파일 셋을 쓸 폴더 |
 | (Balance 테스트) | `ROOTBORN_BALANCE_DAYS` | `money-balance.json`의 `days`(30). 전체 보고의 날 수. 1 이상의 정수가 아니면 변수 이름과 값을 말하며 실패한다 |
 
