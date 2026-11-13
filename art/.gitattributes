@@ -1,0 +1,5 @@
+# 픽셀 키트가 쓰는 글 파일(자리 표, 시험 맵)은 "같은 내용이면 쓰지 않는다"를 바이트로 견준다.
+# 체크아웃 줄바꿈(core.autocrlf)에 흔들리지 않게 LF로 고정한다. art/kit/**/*.json도 여기 걸리지만 도구는 읽기만 한다.
+*.json text eol=lf
+*.ldtk text eol=lf
+*.png binary

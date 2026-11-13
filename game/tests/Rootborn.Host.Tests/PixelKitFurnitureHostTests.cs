@@ -84,7 +84,8 @@ namespace Rootborn.Host.Tests
                 player.PressKey(TestKey.Backspace, screen.Palette.Query.Length);
                 player.TypeText(id);
                 Assert.That(screen.Palette.Query, Is.EqualTo(id));
-                int slot = Enumerable.Range(0, 20).First(i => screen.Palette.At(i)?.StableId == id);
+                int slot = Enumerable.Range(0, 20).Where(i => screen.Palette.At(i)?.StableId == id).DefaultIfEmpty(-1).First();
+                Assert.That(slot, Is.Not.EqualTo(-1), id + ": 검색 결과 첫 쪽(20칸)에 없다");
                 player.Frames(2);
                 player.Screenshot($"pixel-kit-furniture-{shot++:D2}-{name}-palette");
                 player.PressButton(FurniturePlacementScreen.SlotId(slot));
