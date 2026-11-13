@@ -27,14 +27,14 @@ description: "ROOTBORN 실내 방·집 구조를 칸마다 벽/바닥/밖만 정
 
 사용자가 벽 8가지·바닥 9가지 견본을 보고 "오 좋아 이거 말고도 다른것도 계속 만들어줘 유저가 자유롭게 만들 수 있도록"이라고 했다(2026-11-14). 그래서 벽 모양 14가지, 정식 바닥 14가지(세트 `floor`), 띠 색 5가지가 도구에 있다(표는 README "방 만들기 — 벽 모양·띠 색·바닥").
 
-1. **`python Tools/pixel-kit/kit.py room styles`**로 견본판 두 장을 뽑는다(`output/pixel-kit/room/styles-walls_x2.png`, `styles-floors_x2.png`). 직접 열어 본 뒤 그 경로(`D:\…` 전체 경로)를 사용자에게 주고 **사용자가 고르게 한다**. 이름만 필요하면 `room styles --list`.
+1. **`python Tools/pixel-kit/kit.py room styles --list`**로 종류마다 한글 이름과 컨셉(생김·느낌·어울리는 곳·약점)을 읽고, 사용자의 요청에 맞는 후보를 추린다. 이어 **`room styles`**로 견본판 두 장을 뽑는다(`output/pixel-kit/room/styles-walls_x2.png`, `styles-floors_x2.png` — 이름표에 id·한글 이름·컨셉이 같이 찍힌다. 한글 글꼴을 못 찾으면 id만 찍히고 알림이 나온다: `ROOTBORN_FONT`로 글꼴 파일을 준다). 직접 열어 본 뒤 그 경로(`D:\…` 전체 경로)를 사용자에게 주고 **사용자가 고르게 한다**.
 2. 평면에 적는다: `"wall": "<벽 모양>"`, `"floor": "<바닥 명세 id>"`, 띠 색을 바꾸려면 `"top": "<띠 색 줄>"`(적지 않으면 벽 모양의 기본). 모르는 이름은 `room check <방 id>`가 아는 이름 목록과 함께 끝 코드 2로 알린다.
 3. 이미 만든 방의 벽·바닥·띠 색을 바꾸려면 시트가 섞이지 않게 그 방 폴더의 `tiles.png`·`tiles.slots.json`을 지우고 `room build --force`(LDtk에서 칠한 것이 있으면 사라진다 — 사용자에게 먼저 묻는다). `--force`만으로는 거절된다.
 4. `top`이 없는 옛 자리 표(2026-11-14 전에 만든 방)는 그 벽 모양의 기본 띠 색으로 다시 그려진다 — 거절하지 않고 표에 `top`을 더하지도 않는다.
 
 지금 없는 것(있는 것처럼 말하지 않는다): 한 맵 안에서 방마다 다른 벽·바닥(지금은 맵 하나에 벽 한 종류·바닥 한 종류), 사용자가 직접 그린 PNG를 벽·바닥 타일로 넣는 것(다음 작업), 게임 안에서 플레이어가 벽·바닥을 고르는 것(게임 기능 — 설계 전).
 
-**새 벽 모양·바닥을 더할 때**(도구 일): 실패 테스트 먼저 → 벽은 `room_tiles.py`에 `_Wall` 클래스 하나 + `@wall_style("이름")`, 바닥은 무늬가 새로우면 `makers/tiles.py`에 `@register("tile.floor-이름")` 하나 + `art/kit/recipes/floor/tiles.json`에 명세 한 덩어리, 색은 `style.json`에 뜻이 보이는 새 줄(있는 줄은 바꾸지 않고, 방 재료 줄은 다른 줄과 hex를 나누지 않는다). LimeZu Room Builder 시트는 종류·명도·무늬 밀도만 보고 **픽셀을 베끼지 않는다**. 화풍은 면 음영(넓은 면 + 한 단계 어두운 면 + 돌출부 밑 짙은 줄 하나), 그라데이션·디더링·글자·옆으로 기운 면 없음. `room styles`와 캐릭터·가구를 올린 방 예시를 **직접 열어 보고**(띠와 정면이 만나는 곳, 이음매, 시끄러운 무늬, 벽과 바닥이 구별되는지, 1배 크기) `kit.py lint` 0과 도구 테스트를 통과시킨다. `paper`와 `bakery.tile.floor`의 타일은 바이트까지 그대로여야 한다(이미 칠한 방이 있다).
+**새 벽 모양·바닥을 더할 때**(도구 일): 실패 테스트 먼저 → 벽은 `room_tiles.py`에 `_Wall` 클래스 하나 + `@wall_style("이름", label=…, concept=…)`, 바닥은 무늬가 새로우면 `makers/tiles.py`에 `@register("tile.floor-이름")` 하나 + `art/kit/recipes/floor/tiles.json`에 명세 한 덩어리(`label`·`concept` 포함), 띠 색은 `room_tiles.TOPS`에 이름·컨셉과 함께. **`label`(한글 이름)과 `concept`(한 줄)은 반드시 쓴다**(비면 테스트가 실패한다) — 그림을 직접 본 뒤에 있는 그대로 쓰고, 약점이 있으면 한 구절 적는다. 이름(id)은 `모양-특징`꼴로 뜻이 드러나게(`wallpaper-sprig`, `panel-pine`, `floor.stone-slab`), 색은 `style.json`에 뜻이 보이는 새 줄(있는 줄은 바꾸지 않고, 방 재료 줄은 다른 줄과 hex를 나누지 않는다). LimeZu Room Builder 시트는 종류·명도·무늬 밀도만 보고 **픽셀을 베끼지 않는다**. 화풍은 면 음영(넓은 면 + 한 단계 어두운 면 + 돌출부 밑 짙은 줄 하나), 그라데이션·디더링·글자·옆으로 기운 면 없음. `room styles`와 캐릭터·가구를 올린 방 예시를 **직접 열어 보고**(띠와 정면이 만나는 곳, 이음매, 시끄러운 무늬, 벽과 바닥이 구별되는지, 1배 크기) `kit.py lint` 0과 도구 테스트를 통과시킨다. `paper`와 `bakery.tile.floor`의 타일은 바이트까지 그대로여야 한다(이미 칠한 방이 있다).
 
 ## 얇은 벽
 

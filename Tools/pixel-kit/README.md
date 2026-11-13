@@ -24,8 +24,8 @@ Python 3.11 + Pillow. 다른 패키지는 쓰지 않는다.
 | `python Tools/pixel-kit/kit.py room check <방 id>` | 평면만 검사한다(쓰지 않는다) | — |
 | `python Tools/pixel-kit/kit.py room repaint <.ldtk 경로> [--dry-run]` | LDtk에서 다시 칠한 `Collision`에 맞춰 `Wall`·`Ground` 타일과 시트만 다시 쓴다(아래 "방 만들기 — LDtk에서 칠한 뒤") | 그 `.ldtk`가 든 폴더 |
 | `python Tools/pixel-kit/kit.py room check <.ldtk 경로>` | LDtk 방을 검사한다(쓰지 않는다): 그림과 `Collision`이 어긋난 칸, 평면 검사, 표에 없는 문 | — |
-| `python Tools/pixel-kit/kit.py room styles [--out 폴더] [--scale N]` | 등록된 벽 모양 전부(윗면 띠 + 정면 2칸 + 바닥 한 줄 + 문간 + 방 안에서 끝나는 세로 벽), 띠 색 전부(`paper` 상자 방), 방 바닥으로 받는 명세 전부(4x3칸)를 이름표와 함께 견본판 두 장으로. 사용자가 이것을 보고 고른다 | `<--out, 기본 output/pixel-kit/room>/styles-walls.png`, `styles-floors.png`(1:1)와 `_x2`(기본 배율 2) |
-| `python Tools/pixel-kit/kit.py room styles --list` | 그리지 않고 벽 모양(기본 띠 색, 한 줄 설명)·띠 색·바닥 이름만 찍는다 | — |
+| `python Tools/pixel-kit/kit.py room styles [--out 폴더] [--scale N]` | 등록된 벽 모양 전부(윗면 띠 + 정면 2칸 + 바닥 한 줄 + 문간 + 방 안에서 끝나는 세로 벽), 띠 색 전부(`paper` 상자 방), 방 바닥으로 받는 명세 전부(4x3칸)를 이름표(id, 한글 이름, 컨셉 한 줄)와 함께 견본판 두 장으로. 한글 이름·컨셉은 한글 글꼴(`ROOTBORN_FONT` 또는 시스템 글꼴)이 있을 때만 그려지고, 못 찾으면 id만 그리고 알림 한 줄(실패하지 않는다). 사용자가 이것을 보고 고른다 | `<--out, 기본 output/pixel-kit/room>/styles-walls.png`, `styles-floors.png`(1:1)와 `_x2`(기본 배율 2) |
+| `python Tools/pixel-kit/kit.py room styles --list` | 그리지 않고 벽 모양·띠 색·바닥을 종류마다 `이름(id) — 한글 이름 — 컨셉`으로 글만 찍는다(벽은 기본 띠 색도). 고르기 전에 컨셉을 읽는 데 쓴다 | — |
 
 공통 인자: `--kit 폴더`(기본 `art/kit`), `--out 폴더`(기본 `output/pixel-kit`), `--scale N`(보기용 확대 배율,
 정수·최근접. 기본 render 6, sheet·scene 4, parts 8).
@@ -288,75 +288,87 @@ if/switch로 종류를 닫지 않는다.
 
 2026-11-14 사용자 요청("오 좋아 이거 말고도 다른것도 계속 만들어줘 유저가 자유롭게 만들 수 있도록")으로 견본 W3~W8·F2~F9를 정식으로 옮기고
 더 그렸다. 지금은 **맵(방 평면) 하나에 벽 한 종류·바닥 한 종류·띠 색 하나**다. 고를 때는 `room styles`로 견본판을 뽑아 본다
-(`room styles --list`는 이름만).
+(`room styles --list`는 글로 이름·컨셉).
 
 ### 벽 모양 (평면의 `wall`)
 
-| 이름 | 생김 | 기본 띠 색 | 어울리는 곳 |
+한글 이름과 컨셉은 코드의 등록 값(`@wall_style(이름, label=…, concept=…)`)이 원본이고 `room styles --list`와 견본판에 같은 문구가 찍힌다.
+표는 읽기 쉽게 옮긴 것이다(문구가 조금 달라도 이름 집합은 테스트가 맞춘다).
+
+| 이름(id) | 한글 이름 | 컨셉 | 기본 띠 색 |
 |---|---|---|---|
-| `paper` | 크림 줄무늬 벽지 + 나무 징두리 판 + 걸레받이 | `wall.top.cream` | 집(본보기 방) |
-| `plaster` | 단색 회반죽 + 아래 한 단계 + 낮은 걸레받이 | `wall.plaster.top` | 어디든 |
-| `sprig` | 연녹색 잔무늬(작은 마름모) 벽지 + 흰 걸레받이 | `wall.top.brown` | 집 — 가장 무난 |
-| `two-tone` | 위 크림 / 아래 짙은 청회색 칠(벽 높이 4할) + 흰 허리 몰딩·걸레받이 | `wall.top.brown` | 거실·복도 |
-| `floral` | 연분홍 바탕에 드문드문 잔꽃(꽃잎 넷 + 노란 꽃술) + 나무 걸레받이 | `wall.top.brown` | 침실·아이 방 |
-| `pastel` | 민트 단색 + 흰 허리 몰딩 + 아래 판(타일마다 긴 몰딩 테 하나) + 흰 걸레받이 | `wall.top.light` | 아이 방 |
-| `study` | 짙은 녹색(같은 계열 가는 세로줄) + 높고 밝은 걸레받이 | `wall.top.slate` | 서재 — 가구가 잘 도드라진다 |
-| `plank` | 가로 판자벽(겹쳐 댄 긴 판) + 짙은 걸레받이 | `wall.top.brown` | 오두막·창고. 나무 바닥과 깔면 갈색 일색 — 돌·타일 바닥과 |
-| `pine` | 밝은 소나무 세로 판(벽 전체, 판 8px) + 같은 나무 걸레받이 | `wall.top.brown` | 오두막·부엌·가게 |
-| `tile-white` | 흰 벽 타일(16x8 엇갈림) + 청록 띠 + 타일 걸레받이 | `wall.top.light` | 부엌·욕실 |
-| `tile-blue` | 하늘색 정사각 타일(16px, 위·왼쪽 빛 모서리) + 짙은 타일 한 줄 | `wall.top.light` | 욕실 |
-| `brick-cream` | 크림 벽돌(16x8, 밝은 벽돌 몇 장) + 짙은 나무 걸레받이 | `wall.top.brown` | 가게·부엌 — 벽돌 중 조용한 쪽 |
-| `brick-red` | 붉은 벽돌(짙은 줄눈, 밝은 벽돌 몇 장만) + 짙은 나무 걸레받이 | `wall.top.slate` | 가게 뒤·창고 |
-| `concrete` | 노출 콘크리트(거푸집 판 32x16 이음 + 폼타이 구멍) + 아래 때 탄 띠 | `wall.top.slate` | 가게 뒤·창고·작업실 |
+| `paper` | 줄무늬 벽지 벽 | 크림색 세로줄 벽지 아래 갈색 나무 징두리 판. 포근하고 무난한 집 벽(본보기 방). 판 때문에 벽 아래가 묵직하다 | `wall.top.cream` |
+| `plaster` | 회반죽 벽 | 연한 회백색 단색 면에 낮은 갈색 걸레받이. 가장 조용해서 어디든 어울리지만 무늬가 없어 밋밋하다 | `wall.plaster.top` |
+| `wallpaper-sprig` | 연녹 잔무늬 벽지 | 연녹색 바탕에 작은 마름모 잔무늬, 아래는 흰 걸레받이. 부드럽고 무난한 집 벽. 1배에서는 무늬가 점으로 보인다 | `wall.top.brown` |
+| `wallpaper-floral` | 분홍 꽃무늬 벽지 | 연분홍 바탕에 드문드문 작은 꽃(꽃잎 넷 + 노란 꽃술), 아래는 갈색 걸레받이. 아기자기한 침실·아이 방. 1배에서는 꽃이 점으로 보인다 | `wall.top.brown` |
+| `paint-mint` | 민트 칠 벽 | 민트색 단색에 흰 허리 몰딩, 아래 판에 긴 테 하나. 산뜻한 아이 방. 몰딩 테는 1배에서 가는 줄로 보인다 | `wall.top.light` |
+| `paint-green` | 짙은 녹색 칠 벽 | 짙은 녹색 벽(같은 계열 가는 세로줄)에 높고 밝은 걸레받이. 차분하고 가구가 도드라진다. 서재·사무실 | `wall.top.slate` |
+| `paint-two-tone` | 위아래 투톤 벽 | 위는 크림, 아래는 청회색 칠(벽 높이 4할)에 흰 허리 몰딩. 깔끔한 거실·복도 | `wall.top.brown` |
+| `panel-pine` | 소나무 세로 판벽 | 밝은 소나무 세로 판(벽 전체, 판 8px)을 벽 전체에, 같은 나무 걸레받이. 따뜻한 오두막·부엌·가게 | `wall.top.brown` |
+| `panel-plank` | 짙은 가로 판자벽 | 짙은 갈색 가로 판자를 겹쳐 댄 벽. 오두막·창고 느낌. 나무 바닥과 깔면 갈색 일색이 된다 — 돌·타일 바닥과 | `wall.top.brown` |
+| `tile-white` | 흰 타일 벽 | 흰 벽 타일(16x8 엇갈림 쌓기)에 청록 띠와 타일 걸레받이. 깨끗한 부엌·욕실 | `wall.top.light` |
+| `tile-blue` | 하늘색 타일 벽 | 하늘색 정사각 타일(16px), 아래에 짙은 타일 한 줄. 시원한 욕실. 아래 짙은 줄은 옅어서 잘 안 보인다 | `wall.top.light` |
+| `brick-cream` | 크림 벽돌 벽 | 크림색 벽돌(16x8)에 밝은 벽돌 몇 장, 짙은 나무 걸레받이. 벽돌 중 가장 조용하다. 가게·부엌 | `wall.top.brown` |
+| `brick-red` | 붉은 벽돌 벽 | 붉은 벽돌에 짙은 줄눈, 밝은 벽돌 몇 장. 묵직하고 개성이 강하다. 가게 뒤·창고 | `wall.top.slate` |
+| `concrete` | 콘크리트 벽 | 회색 노출 콘크리트에 거푸집 이음(32x16)과 폼타이 구멍. 차갑고 투박한 작업실·창고. 아래 때 탄 띠가 약하다 | `wall.top.slate` |
 
 타일 한 장의 색은 띠·외곽선을 합쳐 12 이하다(검사가 지킨다). 정면 무늬의 가로 주기는 32의 약수이거나 한 장(32)이다.
 
 ### 띠 색 (평면의 `top`, 선택)
 
-`wall.top.cream`(황토), `wall.top.brown`(갈색), `wall.top.slate`(짙은 남색 회색), `wall.top.light`(밝은 회색), 그리고 벽 모양의 기본 줄
-(`wall.plaster.top`). 적지 않으면 그 벽 모양의 기본이다. 띠 픽셀만 바뀐다(정면·바닥·열쇠는 같다). 짙은 색은 벽이 또렷하지만 바깥 어둠과
-붙어 보인다 — 사용자는 아직 고르지 않았다(지금 기본은 위 표).
+고를 수 있는 줄은 아래 다섯이다. 적지 않으면 그 벽 모양의 기본이다(위 벽 표의 마지막 열). 띠 픽셀만 바뀐다(정면·바닥·열쇠는 같다).
+짙은 색은 벽이 또렷하지만 바깥 어둠과 붙어 보인다 — 사용자는 아직 고르지 않았다(지금 기본은 위 표). 원본은 `room_tiles.TOPS`.
+
+| 이름(id) | 한글 이름 | 컨셉 |
+|---|---|---|
+| `wall.top.cream` | 황토 띠 | 따뜻한 황토색 윗면. 크림 벽지 벽과 한 덩어리로 포근하고, 바깥 어둠과는 또렷이 구별된다 |
+| `wall.top.brown` | 갈색 띠 | 차분한 갈색 윗면. 나무·벽지 벽에 두루 어울려 가장 무난하다 |
+| `wall.top.slate` | 짙은 남회색 띠 | 벽이 또렷해지고 방 안이 도드라진다. 바깥 어둠과는 붙어 보인다 |
+| `wall.top.light` | 밝은 회색 띠 | 밝고 가벼운 윗면. 타일·파스텔 벽에 어울리고 벽이 가벼워 보인다 |
+| `wall.plaster.top` | 회백색 띠 | 회반죽 벽의 기본 윗면. 연한 회갈색이라 가장 조용하고, 다른 벽에도 고를 수 있다(다른 줄과 이름 꼴이 다른 것은 plaster의 기본색으로 먼저 생겨서다) |
 
 - 평면의 `top`은 자리 표(`tiles.slots.json`)에 방 값 `top`으로 남고 `repaint`가 읽는다. **`top`이 없는 자리 표는 그 벽 모양의 기본색으로 본다**
   (top은 2026-11-14에 생겼다 — 그 전에 만들어 LDtk에서 칠한 방도 그대로 다시 그려지고 표에 `top`을 더하지 않는다. `band`가 없는 옛 방 거절과 다르다).
 - 시트가 다른 띠 색으로 그려져 있으면(표의 `top`, 없으면 기본) `--force`도 거절한다 — 한 시트에 두 색이 섞이지 않게.
-- 띠 색을 더하려면 `style.json`에 `wall.top.<이름>` 3단계 줄(어두운 것부터: 0 안쪽 그늘 / 1 면 / 2 안쪽 빛)과 `room_tiles.TOPS`에 한 줄.
+- 띠 색을 더하려면 `style.json`에 `wall.top.<이름>` 3단계 줄(어두운 것부터: 0 안쪽 그늘 / 1 면 / 2 안쪽 빛)과 `room_tiles.TOPS`에 한 줄(한글 이름·컨셉 포함).
 
 ### 바닥 (평면의 `floor`)
 
 키트의 한 칸(32x32) 타일 명세면 무엇이든 받는다(`room styles --list`가 받는 것 전부를 찍는다). 정식 방 바닥은 세트 `floor`
-(`art/kit/recipes/floor/tiles.json`)다. 캐릭터·가구가 위에서 잘 보이게 조용히 그렸다.
+(`art/kit/recipes/floor/tiles.json`)다. 캐릭터·가구가 위에서 잘 보이게 조용히 그렸다. 한글 이름·컨셉은 명세의 `label`·`concept` 필드(비어 있지 않은
+문자열)가 원본이다.
 
-| 명세 id | 생김 |
-|---|---|
-| `floor.checker-soft` | 16px 체크, 두 칸 색이 가까운 조용한 체크(크림·모래) |
-| `floor.plank` | 꿀색 가로 판자 8px, 끝 이음은 판 둘에 하나 |
-| `floor.plank-vertical` | 밝은 참나무 세로 판자 8px |
-| `floor.plank-wide` | 회갈색 넓은 판 16px, 끝 이음 없음 |
-| `floor.herringbone` | 호두색 헤링본(판 16x8) |
-| `floor.basket` | 밤색 바구니 짜임 쪽매(16px 칸마다 판 둘, 가로·세로 엇갈림) |
-| `floor.slab` | 돌 판 32px, 옅은 결 둘 |
-| `floor.concrete` | 콘크리트 판 32px, 옅은 얼룩·잔 점 |
-| `floor.brick` | 벽돌 바닥(16x8 엇갈림, 옅은 줄눈) — 가게 뒤·창고 |
-| `floor.mosaic` | 하늘빛 작은 모자이크(알 7px), 짙은 알이 대각선으로 고르게 — 욕실 |
-| `floor.linoleum` | 연녹회색 리놀륨 + 잔 점 — 부엌·가게 |
-| `floor.carpet` | 남색 단색 카펫 + 아주 옅은 점 |
-| `floor.carpet-diamond` | 장밋빛 카펫 + 옅은 마름모 격자(테두리 없음) |
-| `floor.tatami` | 정사각 돗자리 16px, 결 엇갈림, 테 한 줄 |
+| 명세 id | 한글 이름 | 컨셉 |
+|---|---|---|
+| `floor.checker-soft` | 조용한 체크 바닥 | 크림·모래색이 비슷한 옅은 체크(16px). 가구와 캐릭터가 잘 보이는 무난한 바닥. 어느 방이든 |
+| `floor.plank` | 꿀색 마루 | 꿀색 가로 판자(8px) 마루. 따뜻한 거실·침실. 판 끝 이음 표시가 곳곳에 보인다 |
+| `floor.plank-vertical` | 밝은 세로 마루 | 밝은 참나무색 세로 판자(8px). 산뜻하고 가벼운 방·카페·가게 |
+| `floor.plank-wide` | 넓은 회갈색 마루 | 회갈색 넓은 판자(16px)에 끝 이음이 없어 조용하다. 차분한 거실·사무실. 돌판처럼 읽힐 수 있다 |
+| `floor.herringbone` | 헤링본 마루 | 호두색 헤링본 쪽매(판 16x8). 클래식하고 고급스럽다. 넓게 깔면 무늬가 많아 보인다 |
+| `floor.parquet-basket` | 바구니 짜임 마루 | 밤색 바구니 짜임 쪽매(16px 칸마다 판 둘, 가로·세로 엇갈림). 클래식한 서재·응접실. 넓게 깔면 무늬가 복잡하다 |
+| `floor.stone-slab` | 돌판 바닥 | 베이지 회색 돌판을 크게(32px) 깐 바닥. 조용하고 서늘하다. 현관·가게·복도 |
+| `floor.concrete` | 콘크리트 바닥 | 회색 콘크리트 판(32px)에 옅은 얼룩과 잔 점. 투박하고 단단하다. 작업실·창고 |
+| `floor.brick` | 벽돌 바닥 | 붉은 벽돌을 엇갈려(16x8) 깐 바닥. 투박하고 따뜻하다. 가게 뒤·창고·주방 |
+| `floor.mosaic` | 하늘빛 모자이크 바닥 | 하늘빛 작은 타일(알 7px) 모자이크, 짙은 알이 대각선으로 고르게. 깨끗하고 시원하다. 욕실. 알이 작아 바쁘게 보인다 |
+| `floor.linoleum` | 연녹회색 리놀륨 바닥 | 연녹회색 단색에 잔 점. 가장 조용한 바닥 중 하나. 부엌·가게 |
+| `floor.carpet` | 남색 카펫 | 남색 단색 카펫에 아주 옅은 점. 차분하고 포근하다. 침실·서재 |
+| `floor.carpet-diamond` | 장밋빛 마름모 카펫 | 장밋빛 카펫에 옅은 마름모 격자(테두리 없음). 아늑한 침실·아이 방 |
+| `floor.tatami` | 돗자리 바닥 | 연두 황토빛 정사각 돗자리(16px, 결 엇갈림, 테 한 줄). 일본식 방 느낌. 넓게 깔면 무늬가 많아 보인다 |
 
-`bakery.tile.floor`(진한 체크, 본보기 방)·`bakery.tile.sidewalk`·`bakery.tile.grass`도 한 칸 타일이라 받는다.
+`bakery.tile.floor`(진한 체크, 본보기 방)·`bakery.tile.sidewalk`·`bakery.tile.grass`도 한 칸 타일이라 받는다(한글 이름·컨셉은 아직 없다 — `--list`에 빈 칸).
 
 ### 새 벽 모양·바닥을 더하는 법
 
-- **벽 모양**: `room_tiles.py`에 `_Wall`을 이어받은 클래스 하나 + `@wall_style("이름")` 한 줄. 값: `cap`(기본 띠 색 줄), `band`(띠 두께, 기본 16),
+- **벽 모양**: `room_tiles.py`에 `_Wall`을 이어받은 클래스 하나 + `@wall_style("이름", label="한글 이름", concept="컨셉 한 줄")` 한 줄. 값: `cap`(기본 띠 색 줄), `band`(띠 두께, 기본 16),
   `face(style, k, ceiling) -> Canvas`(32x32, 끝·위 외곽선 없이 — `k == 1`이 바닥 바로 위 타일, `ceiling`이면 맨 위 2줄만 천장 밑 그늘),
   좁은 정면(세로 벽 남쪽 끝)의 색 `narrow(style) -> (천장 밑 그늘, 면, 아래 면 윗줄, 아래 면)`과 아래 면이 시작하는 줄 `narrow_base`
-  (`_Wall`의 기본은 `paper`·`wood` 줄에서 고른다). 클래스 설명 첫 줄이 `--list`에 찍힌다. 걸레받이·허리 몰딩·천장 밑 그늘은 도우미
+  (`_Wall`의 기본은 `paper`·`wood` 줄에서 고른다). `label`·`concept`은 비워 둘 수 없고(테스트가 지킨다) 견본판과 `--list`에 찍히므로, 그림을 직접 본 뒤 생김·느낌·어울리는 곳·약점을 한 줄로 쓴다. 걸레받이·허리 몰딩·천장 밑 그늘은 도우미
   `_skirting`·`_rail`·`_ceiling`, 두 칸을 잇는 세로 주기 64 무늬는 `_wall_y`. 등록하면 테스트가 모든 열쇠를 그려 검사하고
   다른 모양과 그림이 다른지 본다(`tests/test_room_styles.py`).
 - **바닥**: 무늬가 새로우면 `makers/tiles.py`에 `@register("tile.floor-이름")` 함수 하나(위 "만드는 부품이 읽는 키" 표에 한 줄),
   색만 다르면 부품은 그대로. 그리고 `art/kit/recipes/floor/tiles.json`에 명세 한 덩어리
-  `{"id": "floor.<이름>", "kind": "tile", "part": …, "art_cells": [1, 1], "colors": [...]}`.
+  `{"id": "floor.<이름>", "kind": "tile", "part": …, "art_cells": [1, 1], "colors": [...], "label": "한글 이름", "concept": "컨셉 한 줄"}`
+  (`label`·`concept`은 정식 방 바닥 `floor.*`에서 비워 둘 수 없다 — 테스트가 지킨다).
 - **팔레트**: 필요한 줄을 `style.json`에 뜻이 보이는 이름으로 덧붙인다(어두운 것부터). 있는 줄은 바꾸지 않는다. 방 재료 줄(`wall.`·`floor.`·`brick.`)은
   다른 줄과 hex를 나누지 않는다 — 같은 hex가 두 줄에 있으면 `floor:shade`가 어두워지는 줄이 이름순 첫 줄로 바뀔 수 있다(테스트가 지킨다).
 - 그림은 LimeZu Room Builder 시트(`Assets/moderninteriors-win/1_Interiors/32x32/Room_Bulder_subfiles_32x32/`)에서 종류·명도·무늬 밀도만 보고
