@@ -499,7 +499,8 @@ def _layer(doc, name):
 
 
 class RepaintTests(RoomBase):
-    """편집기가 저장한 모양을 흉내 낸 고정 파일(키 순서·머리말·모르는 키·Furniture 엔티티, Collision을 다시 칠함)."""
+    """편집기가 저장한 모양을 흉내 낸 고정 파일(LDtk 1.5.3 house.ldtk의 키·키 순서·머리말·탭 들여쓰기, Furniture 엔티티와
+    그 정의, 작은 옛 시트, Collision 두 칸을 다시 칠함). 진짜 편집기가 저장한 것은 아니다 — 편집기에서 열고 저장한 파일로 바꿀 수 있으면 바꾼다."""
 
     def setUp(self):
         super().setUp()
@@ -517,7 +518,7 @@ class RepaintTests(RoomBase):
     def test_fixture_looks_saved_by_the_editor_and_is_out_of_sync(self):
         doc = self.doc()
         self.assertEqual(doc["__header__"]["app"], "LDtk")
-        self.assertNotEqual(list(doc), list(json.loads((HERE.parents[2] / "art/world/rooms" / RID / f"{RID}.ldtk").read_text("utf-8"))))
+        self.assertIn(b"\n\t\"", FIXTURE.read_bytes())          # 편집기처럼 탭 들여쓰기(이 도구는 공백 1칸)
         self.assertEqual(len(_layer(doc, "Furniture")["entityInstances"]), 1)
         self.assertIn("room-art-mismatch", self.codes())
 

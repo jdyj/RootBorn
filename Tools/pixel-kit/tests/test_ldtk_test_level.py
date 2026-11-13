@@ -83,7 +83,7 @@ def check_loader_fields(ldtk: dict, maps: dict) -> list:
                 need(li, "__opacity", is_num, lw, p)
             if "visible" in li:
                 need(li, "visible", lambda v: isinstance(v, bool), lw, p)
-            if "__tilesetDefUid" in li and li["__tilesetDefUid"] not in uids:
+            if li.get("__tilesetDefUid") is not None and li["__tilesetDefUid"] not in uids:     # null은 타일셋 없음(LdtkFile.cs도 숫자일 때만 읽는다)
                 p.append(f"{lw}: __tilesetDefUid가 타일셋에 없다")
             for t in li.get("gridTiles") or []:
                 need(t, "px", lambda v: pair(v, is_int), f"{lw} tile", p)

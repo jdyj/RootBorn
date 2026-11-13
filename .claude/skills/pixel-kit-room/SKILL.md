@@ -36,7 +36,7 @@ description: "ROOTBORN 실내 방·집 구조를 칸마다 벽/바닥/밖만 정
 
 ## 아직 확인하지 못한 것
 
-**실제 LDtk 편집기에서 한 번도 열어 보지 않았다.** 도구 테스트는 편집기가 저장한 모양을 흉내 낸 고정 파일(`Tools/pixel-kit/tests/fixtures/room-saved-by-editor.ldtk`)로만 했다. 모르는 것: (1) 만든 `.ldtk`가 편집기에서 열리는가, (2) 편집기가 저장한 진짜 파일을 `repaint`가 받는가, (3) `repaint`가 다시 쓴 파일을 편집기가 다시 여는가. 사용자가 처음 해 볼 때 함께 확인하고, 확인되면 이 절을 지운다. 그 전에는 "편집기에서 된다"고 쓰지 않는다. 확인 순서 초안은 이 스킬이 아니라 사용자와 정한다(시험 방 `art/world/rooms/test.two-rooms/test.two-rooms.ldtk`로, 끝나면 `git checkout -- art/world/rooms/test.two-rooms`).
+**편집기에서 처음 열었을 때 실패했다(2026-11-14).** 사용자가 LDtk로 `room build`의 파일을 열자 `Cannot read properties of null (reading 'externalLevels') (TypeError)`가 났다 — 도구가 게임이 읽는 키만 쓰고 편집기가 기대하는 키를 많이 빠뜨렸다. 공식 스키마(1.5.3, `Tools/pixel-kit/tests/fixtures/ldtk-1.5.3/`)의 필수 키와 편집기 저장 파일에 늘 있는 키를 모두 채우고 테스트(`tests/test_ldtk_editor_shape.py`)로 고정했다. 그 전에 만든 방 파일은 `room check`가 `room-ldtk-incomplete`로 알리고 `repaint`가 거절한다 — `room build <id> --force`로 다시 만든다. **편집기에서 실제로 열리는지는 다시 확인 대기다.** 도구 테스트는 편집기가 저장한 모양을 흉내 낸 고정 파일(`Tools/pixel-kit/tests/fixtures/room-saved-by-editor.ldtk`)로만 했다. 모르는 것: (1) 다시 만든 `.ldtk`가 편집기에서 열리는가, (2) 편집기가 저장한 진짜 파일을 `repaint`가 받는가, (3) `repaint`가 다시 쓴 파일을 편집기가 다시 여는가. 사용자가 처음 해 볼 때 함께 확인하고, 확인되면 이 절을 지운다. 그 전에는 "편집기에서 된다"고 쓰지 않는다. 확인 순서 초안은 이 스킬이 아니라 사용자와 정한다(시험 방 `art/world/rooms/test.two-rooms/test.two-rooms.ldtk`로, 끝나면 `git checkout -- art/world/rooms/test.two-rooms`).
 
 ## 보고
 

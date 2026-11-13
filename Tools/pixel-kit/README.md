@@ -204,7 +204,8 @@ if/switch로 종류를 닫지 않는다.
 - 레벨 크기는 내용에서 계산한다(항상 32의 배수). 도착 지점 `front` 하나: 첫 그림의 발 아래 둘째 줄.
 - 충돌은 `collider-layers`에 빈 층 목록: 어떤 층의 타일도 막지 않아 레벨 전체가 열린다.
 - `relPath`는 `.ldtk` 폴더 기준 상대 경로(슬래시)이고 `pxWid`·`pxHei`는 PNG에서 잰 값이다. `maps.json`은 `game/world/maps.json`의 `walker`·`npcWalker`를 옮기고 맵 하나만 둔다(`ldtk`는 저장소 뿌리 기준).
-- `--out`에 이미 있는 `maps.json`이 이 도구가 쓴 것(맵이 `PixelKitTest` 하나)이 아니거나 `.ldtk`가 이 도구가 만든 것(헤더 `app: pixel-kit`)이 아니면 덮어쓰지 않고 끝 코드 2(예: `--out game/world`는 거절된다).
+- `--out`에 이미 있는 `maps.json`이 이 도구가 쓴 것(맵이 `PixelKitTest` 하나)이 아니거나 `.ldtk`가 이 도구가 만든 모양(레벨 `PixelKitTest` 하나, 층 `Art`·`Ground`)이 아니면 덮어쓰지 않고 끝 코드 2(예: `--out game/world`는 거절된다). 머리말로는 판별하지 않는다(편집기 꼴로 `app: LDtk`를 쓰고, 편집기도 저장할 때 자기 것으로 바꾼다).
+- `.ldtk`는 `room build`와 같이 LDtk 1.5.3 편집기 꼴로 쓴다(아래 "방 만들기 — 평면에서 LDtk로"). 그림 엔티티마다 같은 이름의 엔티티 정의를 두고 그 정의의 `tileRect`가 그 자리다(편집기는 엔티티의 `__tile`을 정의에서 다시 계산한다). 이름이 같은데 그림이 다른 자리가 두 시트에 있으면 끝 코드 2. 엔티티 이름(`bakery.exterior.flat` 같은 자리 이름)에는 점·하이픈이 들어 있어 편집기의 이름 규칙에 맞지 않을 수 있다(열기를 막는지는 확인 대기).
 - 같은 내용이면 쓰지 않는다. 시트가 없거나 `npcWalker`가 원본에 없으면 끝 코드 2.
 
 ## 방 만들기 — 벽 타일
@@ -271,7 +272,12 @@ if/switch로 종류를 닫지 않는다.
 - **`--force`는 평면에서 통째로 다시 만든다.** LDtk에서 손으로 고친 것(다시 칠한 `Collision` 칸, 놓은 가구, 고친 문)은 지워진다(덮을 때 한 줄 알림을 찍는다). LDtk에서 손을 댄 뒤에는 `--force`가 아니라 `room repaint`를 쓴다.
 - 평면에 문 글자가 있으면 알림 `room-door-unregistered`를 찍는다(쓰기는 막지 않는다): 만든 `maps.json`의 `doors`가 비어 있어 게임에서 그 문은 열리지 않는다. `doors`에 그 `Where` 값(소문자, `-`는 공백)의 목적지 맵·도착 지점을 손으로 적는다.
 - 쓰기는 모든 파일을 임시 파일에 먼저 쓴 뒤 바꿔친다. 같은 입력이면 같은 바이트, LF.
-- LDtk 편집기에서 열어 본 것은 아니다(편집기가 읽는 값은 LDtk 1.5.3 모양을 따라 적었지만 사용자가 열어 확인해야 한다).
+- `.ldtk`는 LDtk 1.5.3 편집기가 저장하는 꼴 그대로 쓴다: 머리말(`app: LDtk`), 키와 키 순서, 기본값을 편집기가 저장한 파일(`Assets/LDtk/House/house.ldtk`)에서
+  가져왔다(`ldtk_common.py`의 편집기 꼴 함수). 빠지면 안 되는 키는 공식 스키마의 `required`로 테스트가 지킨다(`tests/test_ldtk_editor_shape.py`,
+  스키마와 출처는 `tests/fixtures/ldtk-1.5.3/README.md`). 이 도구가 만든 방이라는 표시는 머리말이 아니라 층 정의의 `doc` 문자열과 방 모양이다
+  (편집기는 저장할 때 머리말을 자기 것으로 바꾼다). 문의 `Where` 값은 `__value`와 편집기가 읽는 `realEditorValues`에 함께 둔다.
+- 2026-11-14 전에 이 도구가 쓴 `.ldtk`는 게임이 읽는 키만 있어 편집기에서 열리지 않았다(아래 "아직 확인하지 못한 것"). 그런 파일은
+  `room check <.ldtk>`가 `room-ldtk-incomplete`로 알리고 `room repaint`가 거절한다(끝 코드 1, 채워 쓰지 않는다) — 평면에서 `room build <id> --force`로 다시 만든다.
 
 ## 방 만들기 — LDtk에서 칠한 뒤 (`room repaint`, `room check <.ldtk>`)
 
@@ -289,23 +295,27 @@ if/switch로 종류를 닫지 않는다.
   문은 `Door` 엔티티(`maps.json`의 `doorEntity`·`doorField`, 기본 `Door`·`Where`)에서 읽는다.
 - **거절(아무것도 쓰지 않는다)**: 레벨이 하나가 아니거나 `Collision`(IntGrid)·`Wall`(Tiles)·`Ground`(Tiles) 층이 없거나 종류가 다르거나
   칸 크기가 32가 아니거나 `Wall`·`Ground` 층이나 레벨(`pxWid`·`pxHei`)의 크기가 `Collision`과 다르거나 `Wall`·`Ground`가 `tiles.png` 타일셋을 쓰지 않으면 `room-not-a-room`(끝 코드 1). 머리말로는 판별하지 않는다.
+  편집기 꼴이 아닌 예전 파일(편집기가 늘 쓰는 최상위 키가 빠졌다)이면 `room-ldtk-incomplete`(끝 코드 1).
   칠한 칸에 막는 문제(닿지 못하는 바닥, 열린 가장자리, 모르는 값, 벽 안의 도착 지점·문)가 있으면 그 문제(끝 코드 1).
   자리 표에 `wall`·`floor`·`face_height`가 없거나(자리 표에 방 값이 없는 옛 방) `maps.json`이 없으면 끝 코드 2 — `room build --force`로 다시 만든다.
 - 두 번 부르면 두 번째는 "바꿀 것 없음". `--dry-run`은 쓸 파일만 찍는다. 쓴 뒤에 알림(얇은 벽, 표에 없는 문)을 찍는다.
 
-`room check <.ldtk 경로>`는 쓰지 않고 본다: `room-not-a-room`, 평면 검사와 같은 코드(위 절), `room-door-unregistered`(**알림**: `Door`
+`room check <.ldtk 경로>`는 쓰지 않고 본다: `room-not-a-room`, `room-ldtk-incomplete`, 평면 검사와 같은 코드(위 절), `room-door-unregistered`(**알림**: `Door`
 엔티티의 `Where`가 `maps.json`의 `doors`에 없다 — 게임에서 그 문이 열리지 않는다), `room-art-mismatch`(`Wall`·`Ground` 타일이 `Collision`과
 어긋난 칸 수와 첫 칸 — 그 칸의 값과 다른 층에 타일이 있거나, 와야 할 열쇠의 자리가 아니다. `room repaint`로 맞춘다).
 
-편집기가 저장한 모양은 테스트 고정 파일 `tests/fixtures/room-saved-by-editor.ldtk`로 흉내 낸다(이 PC에서 편집기를 열어 본 것은 아니다 —
-실제 편집기에서 칠하고 저장한 파일로 되는지는 사용자가 확인한다).
+편집기가 저장한 모양은 테스트 고정 파일 `tests/fixtures/room-saved-by-editor.ldtk`로 흉내 낸다(`house.ldtk`의 꼴에 맞춰 만든 것이고 진짜 편집기가
+저장한 파일은 아니다 — 실제 편집기에서 칠하고 저장한 파일로 되는지는 사용자가 확인한다).
 
 ### 게임에서 보기와 처음 확인할 것
 
 - 게임에서 본다: `dotnet run --project game/Rootborn.Host -- --world <맵 id> --maps art/world/rooms/<방 id>/maps.json --size 1920x1080`(인자 표는 `game/README.md`). 도착 지점은 `maps.json`의 첫 것이다.
 - LDtk 편집기에서 레벨을 따로 저장(`externalLevels`)하게 하면 `repaint`가 `room-not-a-room`으로 거절한다(`.ldtk`만 다룬다).
 - 문 글자(`doors`)가 있는 방은 `maps.json`의 `doors` 표를 손으로 채우기 전에는 게임에서 그 문이 열리지 않는다(알림 `room-door-unregistered`).
-- **아직 확인하지 못한 것**: 실제 LDtk 편집기에서 만든 파일이 열리는지, 편집기가 저장한 진짜 파일을 `repaint`가 받는지, `repaint`가 다시 쓴 파일을 편집기가 다시 여는지. 사용자가 처음 해 볼 때 확인한다.
+- **아직 확인하지 못한 것**: 2026-11-14 사용자가 편집기(LDtk)로 `room build`의 파일을 처음 열었을 때 `Cannot read properties of null
+  (reading 'externalLevels') (TypeError)`로 실패했다 — 게임이 읽는 키만 쓰고 편집기가 기대하는 키를 많이 빠뜨렸다. 공식 스키마(1.5.3)의 필수 키와
+  편집기 저장 파일에 늘 있는 키를 모두 채우고 테스트로 고정했다(`room build`, `test-level`, `repaint`가 쓴 파일). **편집기에서 실제로 열리는지는
+  다시 확인 대기다.** 그 밖에 편집기가 저장한 진짜 파일을 `repaint`가 받는지, `repaint`가 다시 쓴 파일을 편집기가 다시 여는지도 사용자가 확인한다.
 - 벽 모양은 지금 `paper`·`plaster` 둘이고 바닥은 키트의 타일 명세 id뿐이다(고르는 중인 견본은 아직 도구에 없다). 걸어서 지나는 벽에 박힌 문과 벽의 옆으로 기운 면은 없다.
 - 절차는 스킬 `pixel-kit-room`.
 
