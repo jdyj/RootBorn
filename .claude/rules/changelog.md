@@ -1,5 +1,11 @@
 # 규칙 변경 이력
 
+## 2026-11-14 — 집 짓기 1단계 (가): 같은 규칙이 두 언어에 있을 때, 시험 표 하나를 양쪽이 읽는다
+- 요청: "추천대로 진행해"(설계서 `docs/superpowers/specs/2026-11-14-house-building-design.md`를 보고)
+- 배경: 게임의 집이 픽셀 키트 방으로 바뀌고(`art/world/rooms/house/`), 게임이 그 집의 벽·바닥을 칸마다 조합해 그린다. 벽 그림을 고르는 규칙이 키트(Python)와 게임(C# `Rootborn.Core.Building`) 두 곳에 있게 됐다. 키트 테스트는 CI가 돌지 않았다.
+- 변경: `testing-discipline.md` "어디에 무엇을" 표에 키트 도구 테스트(Python)와 시험 표 한 줄(근거 종류 "자동 테스트"). `engine-migration.md` 스킬 목록의 `pixel-kit-room` 설명. `Scripts/ci`·`.github/workflows/ci.yml`에 키트 테스트 job이 더해졌다(작업 6, GitHub에서 도는 것은 확인하지 못했다). 문서: `game/world/README.md` 6절 "짓는 집(`build`)", `data/README.md` "집 짓기 `building/`", `Tools/pixel-kit/README.md` "집 맵과 꾸밈을 고치는 순서", 스킬 `pixel-kit-room`(두 사본).
+- 일반화: 같은 규칙이 두 언어에 있어야 하면 한쪽이 내보낸 시험 표 하나를 양쪽 테스트가 읽고, 두 쪽 모두 CI가 돈다 — 한쪽만 고치면 다른 쪽이 깨진다. 출처가 다른 두 경로(조합한 그림과 구운 그림)가 픽셀 단위로 같다는 테스트는 특정 색에 기대는 테스트가 아니다(그림이 바뀌어도 경로가 같으면 통과한다). 고칠 때의 순서(규칙 → 시험 표 다시 만들기 → 다른 언어 → 두 쪽 테스트)는 도구 README와 스킬에 적는다.
+
 ## 2026-11-14 — 방 벽을 얇게(윗면 16px 띠), LDtk 편집기에서 확인된 것을 스킬에
 - 요청: "벽이 너무 두꺼운데 좀 얇은걸로 안될까? 32x32인데 16x32 뭐 이런식으로 얇게", 견본 셋을 보고 "A로 가보자", "이거 다 skill로 작성하는것도 잊지마". 그 전에 사용자가 LDtk 편집기에서 `room build`의 파일을 열다 오류 화면(`Cannot read properties of null (reading 'externalLevels')`)을 보냈다.
 - 배경: 방 만들기의 벽 윗면은 칸을 꽉 채운 32x32 판이었다. 편집기에서 처음 열 때는 파일에 편집기가 기대하는 필드가 모자라 실패했는데, 도구는 편집기 저장 파일을 흉내 낸 고정 파일로만 테스트했었다. 필드를 채운 뒤 사용자가 편집기에서 열고 `Collision`을 칠해 저장했고 `repaint`가 그 파일을 받았다.

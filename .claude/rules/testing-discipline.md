@@ -20,6 +20,7 @@
 | `game/tests/Rootborn.World.Tests` | 맵 만들기, 새 맵 검사(`MapContractTests`), 메인 체인 지점까지 칸 단위 걷기(`MainChainWalkTests`) | 자동 테스트(화면 근거 아님) |
 | `game/tests/Rootborn.Game.Tests` | `GameSession` 명령만으로 흐름(메인 체인, 성인기, 보상 한 번, 이어 하기). 실제 `data/`, 임시 폴더 저장소 | 자동 테스트(화면 근거 아님) |
 | `game/tests/Rootborn.Balance.Tests` | 수치 균형: 전략대로 `GameSession` 명령으로 여러 날 돌려 수입을 잰다(빠른 검사 + 손으로 도는 전체 보고 `output/balance/`, 모든 경우 훑기 `output/balance/sweep/`). 가정을 넣은 계산 | 자동 테스트(실제 플레이 아님) |
+| `Tools/pixel-kit/tests` (Python) | 픽셀 키트: 부품·명세·방 평면·LDtk 쓰기·벽 그림 고르기, 시험 표 `tests/fixtures/room-vectors.json`(키트가 내고 Core `Rootborn.Core.Building` 테스트도 읽는다), 조각 시트. `python -m unittest discover -s Tools/pixel-kit/tests -t Tools/pixel-kit`, CI job `pixel-kit-tests` | 자동 테스트(그림 모양을 사람이 직접 보는 일은 따로) |
 | `game/tests/Rootborn.Ui.Tests` | 배치, 포인터 판정, 포커스, 부품 | 자동 테스트 |
 | `game/tests/Rootborn.Screens.Tests` | 창 없이 화면을 눌러 보기, 화면 쌓기, 모든 언어의 문구 키 | 자동 테스트(화면 근거 아님) |
 | `game/tests/Rootborn.Host.Tests` | 실제 창과 게임 루프를 한 프레임씩 돌리며 `PlayerDriver`로 키·포인터를 넣고 스크린샷 | 장치 이벤트 주입(OS 입력 계층 미확인) |
@@ -42,7 +43,7 @@ bash Scripts/ci/run-all.sh                 # 자체 시험 + 검사 + dotnet 테
 - 평소에는 고친 프로젝트의 테스트만 돌리고, 커밋·합치기 전에는 전부 돌린다.
 - 전체 실행(특히 Host)은 원격 Linux 장치에서 돌릴 수 있다: `bash Scripts/remote-test/run.sh [<커밋>]`(`Scripts/remote-test/README.md`). 커밋된 것만 가고, 접속 값은 환경 변수로 받는다. 이 PC의 메모리가 모자라거나 세션 여럿이 동시에 돌 때는 이쪽을 쓴다. 원격 실행은 연결이 끊겨도 끝까지 돈다 — 이 PC 쪽이 꺼졌으면 다시 시작하지 말고 `run.sh --resume`으로 이어 받는다(`--status`로 도는 실행을 본다). 근거 종류는 같다(장치 이벤트 주입, OS 입력 계층 미확인).
 - **통과 줄만 보지 말고 프로젝트별 건수가 줄지 않았는지 본다.** 왜: 건수가 줄었으면 테스트가 빠진 것이고, 통과 줄은 그것을 알려 주지 않는다.
-- CI(`.github/workflows/ci.yml`)는 정적 검사와 Host를 뺀 dotnet 테스트로 막는다. Host 테스트는 아직 `continue-on-error`다.
+- CI(`.github/workflows/ci.yml`)는 정적 검사, 키트 도구 테스트(Python, job `pixel-kit-tests` — GitHub에서 도는 것은 아직 확인하지 못했다), Host를 뺀 dotnet 테스트로 막는다. Host 테스트는 아직 `continue-on-error`다.
 
 ## 시나리오 id
 
