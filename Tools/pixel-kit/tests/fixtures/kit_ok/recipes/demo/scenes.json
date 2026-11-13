@@ -1,0 +1,21 @@
+[
+ {
+  "id": "demo.scene.room",
+  "kind": "scene",
+  "size": [
+   2,
+   1
+  ],
+  "fill": [
+   {
+    "tile": "demo.tile.a",
+    "rect": [
+     0,
+     0,
+     2,
+     1
+    ]
+   }
+  ]
+ }
+]

@@ -1,0 +1,42 @@
+{
+ "cell": 32,
+ "outline": "#3a384e",
+ "shadow": {
+  "under": 0.56,
+  "front": 0.72,
+  "edge": 0.82,
+  "wall": 0.8
+ },
+ "max_colors": {
+  "furniture": 24,
+  "tile": 2,
+  "building": 40,
+  "part": 10
+ },
+ "palette": {
+  "paver": [
+   "#706860",
+   "#8c8478",
+   "#aca498"
+  ],
+  "brick": [
+   "#5c2c24",
+   "#8c4434",
+   "#b05840",
+   "#c46c4c"
+  ],
+  "bread": [
+   "#a06424",
+   "#cf8c3c",
+   "#ecb866",
+   "#f8dc9c"
+  ],
+  "wood.warm": [
+   "#7a4e2c",
+   "#9c6a3c",
+   "#bd8a52",
+   "#dcae74",
+   "#f0cf9c"
+  ]
+ }
+}
