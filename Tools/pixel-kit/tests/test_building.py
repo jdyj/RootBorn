@@ -145,6 +145,22 @@ class BuildingTests(unittest.TestCase):
                 self.assertLess(lay["sign"][1], lay["roof_bottom"])       # 간판이 처마 위로 솟는다
                 self.assertGreater(lay["sign"][1] + lay["sign"][3], lay["roof_bottom"])
 
+    def test_door_step_is_drawn_in_the_ramp_the_recipe_names(self):
+        """계단 색은 명세의 door.step 줄(윗면 단계 2, 앞면 단계 1). 승인한 판은 따뜻한 회색 돌이었다."""
+        for rid in EXTERIORS:
+            with self.subTest(rid):
+                step = RECIPES[rid]["door"]["step"]
+                cv, spec = render_with_spec(RECIPES[rid], ctx())
+                lay = spec["_layout"]
+                ox, oy = offset(cv, lay)
+                dx, dy, dw, dh = lay["door"]
+                base = dy + dh
+                self.assertEqual(cv.get(ox + dx - 2, oy + base - 2), STYLE.color(f"{step}.2"))
+                self.assertEqual(cv.get(ox + dx - 2, oy + base + 1), STYLE.color(f"{step}.1"))
+        door = dict(RECIPES["bakery.exterior.flat"]["door"], step="no.such.ramp")
+        with self.assertRaises(RecipeError):
+            render(with_values("bakery.exterior.flat", door=door), ctx())
+
     def test_building_render_is_deterministic(self):
         for rid in EXTERIORS:
             with self.subTest(rid):
@@ -172,6 +188,22 @@ class RoofItemShadowTests(unittest.TestCase):
                     xs = [x for x in range(alone.w) if alone.get(x, y)[3]]
                     self.assertTrue(xs, (name, y))
                     self.assertNotEqual(roof.get(max(xs) + 1, y), plain, (name, y, max(xs) + 1))
+
+    def test_roof_item_shadow_is_two_steps_darker_than_the_roof_under_it(self):
+        """한 단계 그늘은 평지붕의 줄눈과 같은 색이라 천창 그림자가 묻혔다. 그림자는 그 자리 지붕의 두 단계 아래."""
+        spec = {"id": "t.item"}
+        P = _Pal(spec, ctx(), "roof.teal", "brick", "roof.slate")
+        plain, want = STYLE.color("roof.teal.2"), STYLE.color("roof.teal.0")
+        for name, it in sorted(ROOF_ITEMS.items()):
+            with self.subTest(name):
+                alone = Canvas(it.w + 8, it.h + 8)
+                it.draw(alone, P, 4, 4)
+                roof = Canvas(it.w + 8, it.h + 8)
+                roof.rect(0, 0, roof.w, roof.h, plain)
+                it.draw(roof, P, 4, 4)
+                y = 4 + it.front[0] + it.front[1] - 1                # 앞면 맨 아랫줄
+                x = max(x for x in range(alone.w) if alone.get(x, y)[3]) + 1
+                self.assertEqual(roof.get(x, y), want)
 
 
     def test_every_roof_item_shadow_is_a_short_band(self):

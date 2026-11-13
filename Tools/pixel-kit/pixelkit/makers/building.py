@@ -22,6 +22,7 @@ LAMP_DROP = 30        # 벽 윗줄에서 벽등까지(차양 밑 그늘보다 �
 FRONT_EDGE = 16       # 지붕 맨 아랫줄 위로 몇 줄: 평지붕 앞 난간 윗줄이자 간판 윗줄(간판이 처마 위로 솟는 만큼)
 AWNING_SLOPE, AWNING_VALANCE = 12, 6
 SHADE_SIDE, SHADE_BELOW = 3, 2   # 지붕 위 물건 그림자: 오른쪽 변 3열, 아랫변 2줄의 짧은 띠(사용자: 굴뚝 그림자가 너무 크다)
+SHADE_STEPS = 2                  # 그림자는 그 자리 지붕의 두 단계 아래(한 단계는 평지붕 줄눈과 같은 색이라 묻혔다)
 
 
 def _rnd(k: int, salt: int, n: int) -> int:
@@ -75,10 +76,11 @@ def _bevel(cv: Canvas, x: int, y: int, w: int, h: int, lit, dark) -> None:
 class _Pal:
     """한 건물이 쓰는 색 줄과 '그 자리 재질의 어두운 단계' 그늘."""
 
-    def __init__(self, spec: dict, ctx, roof: str, wall: str, door: str):
+    def __init__(self, spec: dict, ctx, roof: str, wall: str, door: str, step: str = "stone"):
         self.roof = _ramp(spec, ctx, roof, 5)
         self.wall = _ramp(spec, ctx, wall, 4)
         self.door = _ramp(spec, ctx, door, 4)
+        self.step = _ramp(spec, ctx, step, 3)
         self.trim = _ramp(spec, ctx, "trim", 4)
         self.wood = _ramp(spec, ctx, "wood.warm", 5)
         self.glass = _ramp(spec, ctx, "glass.window", 3)
@@ -87,7 +89,7 @@ class _Pal:
         self.bread = _ramp(spec, ctx, "bread", 4)
         self.yellow = _col(spec, ctx, "yellow.1")
         self._where = _steps([self.roof, self.wall, self.door, self.trim, self.wood, self.glass,
-                              self.plinth, self.metal, self.bread])
+                              self.plinth, self.metal, self.bread, self.step])
         self._wall_only = _steps([self.wall])
 
     def down(self, cv: Canvas, x: int, y: int, w: int, h: int, n: int = 1) -> None:
@@ -128,8 +130,8 @@ def _box(cv: Canvas, P: _Pal, x: int, y: int, w: int, top_h: int, front_h: int, 
     차지하는 자리는 (w + SHADE_SIDE) x (top_h + front_h + SHADE_BELOW).
     top = (밝은, 몸, 어두운), front = (밝은, 몸, 어두운, 윗면 밑 짙은)."""
     hh = top_h + front_h
-    P.down(cv, x + w, y + 3, SHADE_SIDE, hh - 3)           # 오른쪽 띠
-    P.down(cv, x + 3, y + hh, w + SHADE_SIDE - 3, SHADE_BELOW)   # 아랫변 띠
+    P.down(cv, x + w, y + 3, SHADE_SIDE, hh - 3, SHADE_STEPS)           # 오른쪽 띠
+    P.down(cv, x + 3, y + hh, w + SHADE_SIDE - 3, SHADE_BELOW, SHADE_STEPS)   # 아랫변 띠
     cv.rect(x, y, w, top_h, top[1])
     _bevel(cv, x, y, w, top_h, top[0], top[2])
     cv.rect(x, y + top_h, w, front_h, front[1])
@@ -193,9 +195,9 @@ def dormer(cv: Canvas, P: _Pal, x: int, y: int) -> None:
     """박공 지붕창: 세모 박공(지붕 끝 두 줄) + 벽 + 창 + 창턱. 처마가 양옆으로 3px 나온다."""
     s, t, wd, g = P.roof, P.trim, P.wood, P.glass
     dx, dy, dw, half = x + 3, y + 2, 40, 20
-    P.down(cv, dx + dw + 3, dy + 12, SHADE_SIDE, 5)        # 오른쪽 띠: 처마 줄은 처마 끝 바로 옆부터
-    P.down(cv, dx + dw, dy + 17, SHADE_SIDE, 21)           # 벽 줄은 벽이 끝나는 열 바로 옆부터(붙은 그림자)
-    P.down(cv, dx + 3, dy + 38, dw, SHADE_BELOW)           # 아랫변 띠
+    P.down(cv, dx + dw + 3, dy + 12, SHADE_SIDE, 5, SHADE_STEPS)   # 오른쪽 띠: 처마 줄은 처마 끝 바로 옆부터
+    P.down(cv, dx + dw, dy + 17, SHADE_SIDE, 21, SHADE_STEPS)      # 벽 줄은 벽이 끝나는 열 바로 옆부터(붙은 그림자)
+    P.down(cv, dx + 3, dy + 38, dw, SHADE_BELOW, SHADE_STEPS)      # 아랫변 띠
     for j in range(half):                                  # 세모 박공
         xl, xr = dx + half - 1 - j, dx + half + j
         cv.rect(xl, dy + j * 14 // half, xr - xl + 1, 14 - j * 14 // half, t[2])
@@ -413,7 +415,7 @@ def _facade(cv: Canvas, spec: dict, ctx, P: _Pal, w: int, rh: int, v: dict, loca
     P.down(cv, fx + 6, fy + 8, fw - 15, 4, 2)              # 문틀이 문에 드리운 깊은 그늘(위·왼쪽)
     P.down(cv, fx + 6, fy + 12, fw - 15, 3, 1)
     P.down(cv, fx + 6, fy + 15, 4, fh - 15, 1)
-    st = P.metal                                           # 회색 돌 계단(색 한도 안에서 이미 쓰는 회색 줄): 윗면 밝게, 앞면 어둡게
+    st = P.step                                            # 돌 계단(명세 door.step 줄): 윗면 밝게, 앞면 어둡게
     cv.rect(fx - 4, base - 3, fw + 8, 3, st[2])
     cv.rect(fx - 4, base, fw + 8, 4, st[1])
     cv.hline(fx - 4, base + 3, fw + 8, st[0])
@@ -526,8 +528,8 @@ def _values(spec: dict, ctx) -> dict:
     get = lambda k: spec.get(k) if isinstance(spec.get(k), dict) else {}   # noqa: E731
     wall, door, win, aw, sign, lamp = (get(k) for k in ("wall", "door", "window", "awning", "sign", "lamp"))
     _need(spec, isinstance(wall.get("material"), str), "wall는 {material: 팔레트 줄}이어야 한다")
-    _need(spec, _int(door.get("at_x")) and isinstance(door.get("color"), str),
-          "door는 {at_x: px, color: 팔레트 줄}이어야 한다")
+    _need(spec, _int(door.get("at_x")) and isinstance(door.get("color"), str) and isinstance(door.get("step"), str),
+          "door는 {at_x: px, color: 팔레트 줄, step: 계단 팔레트 줄}이어야 한다")
     slots = win.get("slots")
     _need(spec, _int(win.get("at_x")) and _int(win.get("width")) and isinstance(slots, list) and len(slots) == 2
           and all(isinstance(s, list) and all(isinstance(i, str) for i in s) for s in slots),
@@ -542,7 +544,7 @@ def _values(spec: dict, ctx) -> dict:
     _need(spec, _int(sign.get("at_x")) and isinstance(icons, list) and icons and all(isinstance(i, str) for i in icons),
           "sign은 {at_x: px, icons: [부품 id]}이어야 한다")
     _need(spec, _int(lamp.get("at_x")), "lamp는 {at_x: px}이어야 한다")
-    return {"wall": wall["material"], "door": door["color"], "door_x": door["at_x"],
+    return {"wall": wall["material"], "door": door["color"], "step": door["step"], "door_x": door["at_x"],
             "window_x": win["at_x"], "window_w": win["width"], "slots": slots,
             "awning": [_ramp(spec, ctx, c, 2) for c in colors],
             "sign_x": sign["at_x"], "icons": [(i, _part(spec, ctx, i)) for i in icons], "lamp_x": lamp["at_x"]}
@@ -584,7 +586,7 @@ def shop(spec: dict, ctx) -> Canvas:
     w, h = px[0] - 2, ROOF_H + WALL_H
     _need(spec, h <= px[1] - 2, f"pixels 높이 {px[1]}에 지붕 {ROOF_H} + 벽 {WALL_H}과 외곽선이 들어가지 않는다")
     roof_fn = ROOFS[kind]
-    P = _Pal(spec, ctx, roof_fn.palette, v["wall"], v["door"])
+    P = _Pal(spec, ctx, roof_fn.palette, v["wall"], v["door"], v["step"])
     cv = Canvas(w, h)
     local = _local(ctx)
     spec["_layout"] = {"size": [w, h], "roof_bottom": ROOF_H - 1}
