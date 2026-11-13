@@ -9,7 +9,7 @@
 
 ## 1. 파일 두는 곳
 
-- LDtk 프로젝트(`.ldtk`)와 따로 저장한 레벨(`.ldtkl`)은 저장소 안 아무 곳에나 둔다. 지금 맵은 `Assets/LDtk/` 아래에 있다.
+- LDtk 프로젝트(`.ldtk`)와 따로 저장한 레벨(`.ldtkl`)은 저장소 안 아무 곳에나 둔다. 지금 맵은 `Assets/LDtk/` 아래에 있고, 집(`House`)만 픽셀 키트가 만든 `art/world/rooms/house/`에 있다(6절).
 - 타일셋 PNG는 LDtk 프로젝트에서 상대 경로(`relPath`)로 가리킨다. **그 PNG가 저장소 안에 있어야 그려진다.** 없으면 그 층은 그리지 않고
   문제로 알린다(검사 테스트가 잡는다). PNG는 그대로 읽는다(변환 단계 없음).
 - 맵 하나를 더하려면 `maps.json`의 `maps`에 한 덩어리를 더한다. 맵 크기는 적지 않는다(레벨에서 읽는다).
@@ -41,7 +41,7 @@
 | `areas` | LDtk에 없는 이동 구역 목록(3절) | 없음 |
 | `dayNight` | 시각에 따라 화면 색을 바꾸는가(바깥 맵) | `false` |
 | `entityRowShift` | 문 엔티티와 칠한 Collision 층을 그림보다 몇 줄 아래로 읽을지 | 0 |
-| `build` | 짓는 집이라는 맵 성질(맵 id가 아니라 이 값으로 고른다). 값은 모두 필수: `frameLayer`(지을 수 있는 칸 IntGrid 층), `frameId`(테두리의 판 이름), `faceHeight`(벽 정면 칸 수), `band`(벽 윗면 띠 px), `bandColors`(조각 시트 좌표표 `bands`의 띠 색 줄), `defaultWall`·`defaultFloor`(기본 꾸밈 id, `data/building`), `replacesLayers`(게임이 대신 그리는 타일 층). 게임은 `Collision` 격자와 벽 칸 위 문으로 칸마다 출처표를 내고(Core `RoomTilePlan`) 기본 꾸밈 조각으로 벽·바닥을 조합해 `replacesLayers` 대신 그린다(`RoomTileCompositor.cs`). 조합이 안 되면(조각·꾸밈 없음, 좌표표 깨짐, 4,096칸 초과) 문제를 알리고 그 층을 그대로 그린다. 키트 방은 `room build`가 이 값을 쓰고 이 파일의 값과 같아야 한다(키트 시험 `HouseRoomTests`) | 짓는 집 아님 |
+| `build` | 짓는 집이라는 맵 성질(맵 id가 아니라 이 값으로 고른다). 필드 전체와 약속은 6절 "짓는 집(`build`)". 값은 모두 필수다 | 짓는 집 아님 |
 | `cameraBounds` | 카메라가 비출 맵 안의 부분 `[x, y, 너비, 높이]`(레벨 픽셀, 그림 기준, 줄 밀기 없음). 카메라는 이 사각형 밖을 비추지 않는다(`CameraFrame.cs`). 지금은 이 값을 쓰는 맵이 없다 | 맵 전체 |
 
 `entityRowShift`는 Unity 판에서 가져온 지금 맵의 어긋남(문이 그림보다 한 줄 아래)을 재현하는 값이다. **새 맵에는 적지 않는다.**
@@ -89,7 +89,7 @@
 
 ### 키트로 만든 방
 
-픽셀 키트(`Tools/pixel-kit`, 스킬 `pixel-kit-room`)가 만든 실내 방(`art/world/rooms/<방 id>/`)은 이 약속을 그대로 쓴다. `collision.rule`은 `interior-auto`, 층 이름은 `Wall`·`Ground`·`Collision`·`Door`·`Furniture`이고 `Collision` 값은 1 벽, 2 바닥, 0 밖이다. 그림과 충돌이 같은 격자에서 나오므로 구조는 `Collision`을 고쳐 바꾸고(`room repaint`) `Wall`·`Ground`를 손으로 칠하지 않는다. 벽 윗면은 칸 안의 얇은 띠라 벽 타일에 투명한 자리가 있고, 그 자리로 바닥이 비쳐야 하는 **벽 칸에도 `Ground` 타일이 있다**. 그래도 그 칸에는 `Wall` 타일이 함께 있어 `interior-auto`가 막고, 칠한 `Collision` 1이 언제나 막는다(벽 칸은 바닥처럼 보이는 자리까지 통째로 막힌다). 도착 지점은 `<맵 id 소문자>-entry`이고 `doors` 표는 비어 있어 손으로 채운다. 게임에는 `--maps <방 폴더>/maps.json`으로 준다.
+픽셀 키트(`Tools/pixel-kit`, 스킬 `pixel-kit-room`)가 만든 실내 방(`art/world/rooms/<방 id>/`)은 이 약속을 그대로 쓴다. `collision.rule`은 `interior-auto`, 층 이름은 `Wall`·`Ground`·`Collision`·`Door`·`Furniture`이고 `Collision` 값은 1 벽, 2 바닥, 0 밖이다. 그림과 충돌이 같은 격자에서 나오므로 구조는 `Collision`을 고쳐 바꾸고(`room repaint`) `Wall`·`Ground`를 손으로 칠하지 않는다. 벽 윗면은 칸 안의 얇은 띠라 벽 타일에 투명한 자리가 있고, 그 자리로 바닥이 비쳐야 하는 **벽 칸에도 `Ground` 타일이 있다**. 그래도 그 칸에는 `Wall` 타일이 함께 있어 `interior-auto`가 막고, 칠한 `Collision` 1이 언제나 막는다(벽 칸은 바닥처럼 보이는 자리까지 통째로 막힌다). 평면에 `wallDoors`가 있으면 바깥 벽 칸에 32x32 `Door` 엔티티가 놓인다(벽 칸의 문, 6절). 평면에 `build`가 있으면 `Build` 층이 더해진다(6절). 도착 지점은 `<맵 id 소문자>-entry`이고 `doors` 표는 비어 있어 손으로 채운다. 게임에는 `--maps <방 폴더>/maps.json`으로 준다.
 
 ## 4. 문과 이동
 
@@ -213,12 +213,43 @@ LDtk 엔티티가 아니라 **`interactions.json`**에 맵 id별로 적는다(LD
 
 ## 6. 집
 
-- 집 맵의 크기는 자유다(지금 28×18칸). 코드는 집 크기를 맵 파일에서 읽는다(`HouseSizeTests`가 크기가 다른 집으로 확인한다).
-- 가구를 놓을 수 있는 칸: 지금 정한 방식(`game/tests/Rootborn.Game.Tests/HouseRoom.cs`, Host 연결은 아직 전)은
-  **맵 안의 모든 칸이 바닥, 막힌 칸은 고정 칸, 도착 지점이 있는 칸은 들어오는 칸(문 앞)**이다. 그래서 벽·고정 가구는 충돌로 막아 두면 된다.
-  가구 그림은 `ysort` 태그 층의 엔티티로 그린다.
-- 집 단계: 세이브의 집 상태(`HouseStage`, 0부터)와 단계마다 따로 저장하는 가구 배치가 있다. 단계마다 다른 집 맵으로 바꾸는 표는 아직 없다
-  (지금 `maps.json`의 집은 하나). 새 집 그림이 단계별로 오면 그때 맵 목록에 단계 → 맵을 더한다.
+- 집 맵은 `art/world/rooms/house/house.ldtk`(레벨 `House`, 28x18칸)다. 픽셀 키트 방이라 평면 `art/kit/rooms/house.json`에서 `python Tools/pixel-kit/kit.py room build house`로 만들고, 고치는 절차는 스킬 `pixel-kit-room`과 `Tools/pixel-kit/README.md`에 있다. 맵 목록 `game/world/maps.json`의 `House` 항목은 `build`가 있고 `collision.rule`은 `interior-auto`다.
+- 집 맵의 크기는 자유다. 코드는 집 크기를 맵 파일에서 읽는다(`HouseSizeTests`가 크기가 다른 집으로 확인한다).
+- 가구를 놓을 수 있는 칸(`Rootborn.Screens`의 `FurnitureRoom`): **맵 안의 모든 칸이 바닥, 막힌 칸은 고정 칸, 도착 지점이 있는 칸은 들어오는 칸(문 앞)**이다. 그래서 벽은 `Collision`으로 막아 두면 된다. 가구 그림은 `ysort` 태그 층의 엔티티로 그린다. `Build` 층은 가구 놓기 판정에 쓰이지 않는다(아래).
+- 옛 집(2026-11-14 전의 LDtk 집)에서 새 집으로 바뀌면서 벽이 된 자리의 옛 가구는 집에 들어설 때 가까운 놓을 수 있는 칸으로 옮겨지고, 못 놓은 것은 보관된다(가구 배치 화면(P)의 "보관" 분류에서 다시 놓는다). 세이브 모양은 그대로이고 기록은 사라지지 않는다. 같이 쓰는 집에서는 보관한 가구를 아직 꺼낼 수 없다.
+- 집 단계: 세이브의 집 상태(`HouseStage`, 0부터)와 단계마다 따로 저장하는 가구 배치가 있다. 단계마다 다른 집 맵으로 바꾸는 표는 아직 없다(지금 `maps.json`의 집은 하나). 집 단계가 오르면 테두리를 넓히는 것이 설계의 방향이다(설계서 6.2절) — 칸 좌표가 그대로이게 **오른쪽·아래로만** 키운다(옛 세이브의 가구 자리와 `interactions.json` 좌표가 칸 좌표라서). 이 약속을 코드가 막지는 않는다. 집 단계로 테두리가 넓어지는 기능은 아직 없다.
+
+### 짓는 집(`build`)
+
+맵 항목에 `build`가 있으면 그 맵은 "짓는 집"이다(맵 id가 아니라 이 값을 본다). 값은 모두 필수이고, 빠지거나 형이 틀리면 맵 목록 읽기(`WorldCatalog`)가 거절한다. 기본값으로 메우지 않는다.
+
+```jsonc
+"build": { "frameLayer": "Build", "frameId": "house.v2", "faceHeight": 2, "band": 16, "bandColors": "wall.top.cream",
+           "defaultWall": "finish.wall.paper", "defaultFloor": "finish.floor.plank", "replacesLayers": [ "Wall", "Ground" ] }
+```
+
+| 필드 | 뜻 |
+|---|---|
+| `frameLayer` | 지을 수 있는 칸을 칠한 IntGrid 층 이름(`Build`) |
+| `frameId` | 테두리의 판 이름. 맵을 새로 그려 테두리가 바뀌면 올린다. 같은 값이 키트 평면의 `frameId`, 방 폴더 `maps.json`의 `build`에도 있고 같아야 한다(키트 시험 `HouseRoomTests`) |
+| `faceHeight` | 벽 정면 칸 수(2) |
+| `band` | 벽 윗면 띠 두께(px, 16) |
+| `bandColors` | 조각 시트 좌표표 `bands`의 띠 색 줄 이름. 지금은 이 값 하나로 그린다(플레이어가 고르는 것은 아직 없다) |
+| `defaultWall`·`defaultFloor` | 기본 꾸밈 id(`data/building`의 `RoomFinishDefinition`, 각각 `wall`·`floor` 자리여야 한다) |
+| `replacesLayers` | 게임이 대신 그리는 LDtk 타일 층(`Wall`, `Ground`) |
+
+- **`Build` 층**(IntGrid, 맵과 같은 크기, 값 0 또는 1): 1은 지을 수 있는 칸, 0은 고정이다. 도착 지점, 상호작용 지점, NPC 자리, 문 앞 칸은 **바닥이고 `Build` 0**이어야 한다. 새 맵 검사(`MapChecks`, `MapContractTests`)가 모든 짓는 집에 대해 게임 데이터(`maps.json`·`interactions.json`)를 읽어 본다. 지금 `Build`는 이 검사에만 쓰이고 걷기와 가구 놓기에는 영향이 없다.
+- **벽 칸의 문**: 바깥 벽 칸(`Collision` 1)에 놓인 `Door` 엔티티는 벽 문이다. 몸이 문 상자에 닿으면 열린다. 집의 현관이 이것이다(칸 (14, 17), 안쪽 바닥 (14, 16)). 그림은 문지방(띠가 끊긴 나무판)이고, 바닥 바로 위의 정면 칸에 있는 벽 문은 문짝 조각이 더해진다. 벽 문의 상하좌우 중 도착 지점에서 걸어 닿는 바닥이 있어야 한다.
+- **조합해 그리기**: 짓는 집은 `Collision` 격자와 벽 문으로 칸마다 **픽셀 출처표**를 내고(Core `Rootborn.Core.Building.RoomTilePlan`, 맵을 읽을 때 한 번), 기본 꾸밈의 조각 시트로 벽·바닥을 조합해 `replacesLayers`의 LDtk 층 대신 그린다(`RoomTileCompositor.cs`, 한 장 텍스처로 붙인다). LDtk의 `Wall`·`Ground` 층은 그대로 두고 그리지 않는다 — 지우지 않는다. 조합이 안 되면(조각·꾸밈·좌표표 없음, 좌표표 깨짐, 4,096칸 초과) 문제를 알리고 그 LDtk 층을 그대로 그린다. `MapChecks`는 바꿔 그릴 층이 레벨의 타일 층으로 있고 `ysort` 층이 아닌지, 띠 색 줄과 두께가 좌표표와 맞는지도 본다.
+- 지금은 맵의 기본 꾸밈만 그린다(화면은 키트가 구운 그림과 같다). 플레이어가 꾸밈을 고르는 것(규칙, 세이브, 비용, 화면, 같이 하기)은 아직 없다.
+
+### 새 집(짓는 집)을 그릴 때 지킬 것
+
+- 키트 방으로 그린다: 평면에 `wallDoors`, `build`, `frameId`를 적고 `room build`. LDtk에서 `Collision`·`Build`를 칠한 뒤에는 `room repaint` → `room check`(`Tools/pixel-kit/README.md`). `Wall`·`Ground`는 손으로 칠하지 않는다.
+- `maps.json`의 짓는 집 항목은 방 폴더 `maps.json`의 `build`와 같은 값으로 둔다. `frameId`를 올릴 때는 평면, 방 폴더, 맵 목록 셋을 함께 고친다.
+- 크기, 도착 지점, 고정 지점의 칸을 바꾸면 옛 세이브의 가구 자리와 `interactions.json` 좌표가 걸린다. 스킬 `save-compat-change`를 먼저 따르고 사용자에게 묻는다.
+- 집 단계가 올라 테두리를 넓힐 때는 왼쪽·위 테두리를 옮기지 않고 칸 좌표가 같게 오른쪽·아래로만 키운다.
+- 바깥 벽은 16px 띠라서 맵 가장자리에 화면 바탕색 띠가 보인다(결정 대기 문서 `docs/superpowers/specs/2026-11-14-house-building-open-decisions.md`).
 
 ### 일터 면
 

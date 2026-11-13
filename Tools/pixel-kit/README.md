@@ -47,7 +47,9 @@ Python 3.11 + Pillow. 다른 패키지는 쓰지 않는다.
 | 검사 | `Tools/pixel-kit/pixelkit/lint.py` |
 | 방 벽·바닥 타일(둘레 칸으로 고르기) | `Tools/pixel-kit/pixelkit/room_tiles.py` |
 | 방 평면 읽기·검사 / LDtk 방 쓰기 | `Tools/pixel-kit/pixelkit/room_plan.py` / `room_ldtk.py`(공용 도우미 `ldtk_common.py`) |
-| 방 평면 파일 | `art/kit/rooms/<id>.json` |
+| 방 평면 파일 | `art/kit/rooms/<id>.json` (게임의 집은 `house.json`) |
+| 키트가 만든 방 | `art/world/rooms/<id>/` (게임의 집은 `house/`, 시험 방은 `test.two-rooms/`) |
+| 픽셀 출처표 / 시험 표 / 꾸밈 조각 시트 | `pixelkit/room_tiles.py`의 `plan_sources` / `tests/fixtures/room-vectors.json`(`room_vectors.py`) / `art/world/finishes/`(`room_export.py`) |
 | 방 바닥 명세(세트 `floor`) | `art/kit/recipes/floor/tiles.json` |
 | 테스트 | `Tools/pixel-kit/tests/` |
 
@@ -280,7 +282,7 @@ if/switch로 종류를 닫지 않는다.
   한 칸에 바닥 쪽과 밖 쪽이 함께 남으면 밖 쪽을 띠로 채운다(바닥이 방 밖으로 새지 않게).
 - **벽 칸의 문**(2026-11-14, 검토 지적 "현관이 다른 벽과 똑같아 어디로 나가는지 알 수 없다"): 문 칸은 여전히 벽(`Collision` 1)이고 그림만 바뀐다.
   윗면 칸이고 위·오른쪽·왼쪽(이 순서) 중 바닥이 붙어 있으면 그 칸의 띠 대신 문지방(`sill:…`, 나무 줄 `wood.school` — 바닥 쪽 가장자리 한 줄 빛,
-  바깥 쪽 가장자리 외곽선, 가운데 판 이음)을 깐다. 그 칸의 띠는 이웃 칸의 띠 계산에서 빠지므로 이웃 띠의 끝이 외곽선으로 닫힌다(문설주).
+  바깥 쪽 가장자리 외곽선, 가운데 판 이음)을 깐다. 바닥 쪽 가장자리는 띠 범위 `[a, b)` 안에서 `n`이면 맨 위 줄, `e`면 오른쪽 끝 열, `w`면 왼쪽 끝 열이다. 그 칸의 띠는 이웃 칸의 띠 계산에서 빠지므로 이웃 띠의 끝이 외곽선으로 닫힌다(문설주).
   바닥 바로 위 정면 칸이면 `door:face:1…`(문틀·문짝). 바닥이 붙지 않은 문 칸(`room-door-no-floor`)과 위가 막힌 정면 칸은 문 없이 그린다.
   바뀌는 것은 문 칸과 그 둘레 칸의 `Wall` 열쇠뿐이다(문이 없는 방은 그대로). 약점: 정면 문은 아래 타일 한 장(32px)에만 박혀 2칸 높이 벽에서 작아 보인다.
 - 벽 칸 밑 `Ground`의 그림자는 그 칸의 실제 이웃으로 정한다(위가 정면이면 그 정면이 덮는 열 중 이 칸에서 바닥이 비치는 열에만 — 대개 `floor`).
@@ -505,7 +507,7 @@ if/switch로 종류를 닫지 않는다.
   (`room_tiles._plan`)에서 나온다 — 고르기 규칙은 한 곳이고, 열쇠는 출처를 버린 값, 출처표는 출처를 든 값이다. `plan_room`은 둘을 한 번에.
 - `python Tools/pixel-kit/kit.py room vectors`: 시험 표를 지금 규칙으로 다시 쓴다(`room_vectors.build_vectors()`, 사례는 `room_vectors.py`
   안의 글 — 방 평면 파일이 바뀌어도 흔들리지 않게). `room vectors --check`: 쓰지 않고 견주기만, 다르면 끝 코드 1. **손으로 고치지 않는다.**
-- 규칙(`room_tiles.py`의 고르기·출처표)을 고치면 시험 표를 다시 만들어 함께 커밋한다. 안 하면 `test_room_vectors`
+- 규칙(`room_tiles.py`의 고르기·출처표)을 고치면 시험 표를 다시 만들어 함께 커밋한다. 열쇠가 일부러 바뀌었으면 `test_room_vectors.py`의 `PLAN_TILES_BEFORE`(바꾸기 전 커밋의 열쇠 해시 표)도 고친다. 안 하면 `test_room_vectors`
   (`test_vectors_file_is_up_to_date`)가, 시험 표만 바뀌면 C# 쪽 시험이 깨진다. CI가 둘 다 돈다(`Scripts/ci/README.md`).
 - 증명: `test_room_vectors`의 참조 조합기(`compose_cell`)가 출처표 + 조각으로 칸을 다시 만든 그림이, 같은 칸의 `draw_tile(Wall 열쇠)`를
   `draw_tile(Ground 열쇠)` 위에 얹은 그림과 **픽셀까지 같다** — 시험 표의 모든 사례 × 모든 벽 모양. 두 방의 바닥을 다르게 주면 세로 벽 띠 칸의
@@ -524,7 +526,9 @@ if/switch로 종류를 닫지 않는다.
 - `doors`: 벽 칸의 문 칸 (x, y)들(키트 `plan_tiles`의 `wall_doors`, LDtk에서는 벽 칸에 놓인 `Door`). 없으면 `[]`. 문 칸의 그림(문지방·문짝)은
   격자만으로 정해지지 않아서 사례마다 적는다.
 - `cells`: 밖이 아닌 칸만, 줄 순서(y, 다음 x). `kind`는 `classify`의 값(정면 열쇠는 좁은 정면 옆에서 끝 표시를 떼기 **전**), `wall`·`ground`는
-  `plan_tiles`의 열쇠(없으면 `null`) — 사람이 읽고 Python 쪽만 견준다. 게임은 `parts`만 쓴다.
+  `plan_tiles`의 열쇠(없으면 `null`) — 사람이 읽고 Python 쪽만 견준다. 게임은 `parts`만 쓴다. `kind`는 떼기 전 분류라서 `face` 부분의 `piece`와 같은 글이 아닐 수 있다 —
+  게임은 `kind`로 `piece`를 끌어내지 않고, `piece`를 조각 시트를 찾는 불투명한 열쇠로만 쓴다.
+- 모든 사례가 `faceHeight` 2, `band` 16이다(`room_vectors.py`의 `FACE_HEIGHT`·`BAND`). 시험 표는 다른 값을 지키지 않는다. 다른 값을 쓸 때는 사례를 더한다.
 - `parts`: 아래 "출처 종류". 값이 없는 필드(`shade`·`piece`·`own`)는 적지 않는다(`own`이 없으면 주인이 없는 부분 — C#에서는 `(0, 0)`으로 읽어도 된다).
 - 줄 나눔: 머리 값은 한 줄에 하나, 사례는 머리 한 줄 + 칸 하나가 한 줄(규칙을 고쳤을 때 바뀐 칸이 diff에서 한 줄). 키 순서는 위 그대로, `ensure_ascii=False`,
   LF, 끝 줄바꿈. 같은 코드면 같은 바이트다.
@@ -538,7 +542,7 @@ if/switch로 종류를 닫지 않는다.
   왼쪽에서 오른쪽으로 `x0,y0,x1,y1`로 적고 `+`로 잇는다. 예: `"8,0,9,32+23,0,24,32"`(두 열), `"0,16,32,17+0,17,1,31+0,31,32,32"`(ㄷ자 테).
 - 한 칸의 부분들은 **겹치지 않는다**. 합집합은 그 칸의 최종 그림(Wall 타일을 Ground 타일 위에 얹은 것)의 불투명 픽셀 전부이고, 어느 부분도
   덮지 않은 픽셀은 **투명**이다(비어 있음은 적지 않는다). 그래서 칠하는 순서는 상관없다.
-- 부분 순서: `src`, 그다음 `shade` 또는 `piece`, 그다음 `own`(없는 것 먼저, 있으면 dx 다음 dy 수 순), 그다음 `px`. 글은 코드 값 순(C# `string.CompareOrdinal`).
+- 부분 순서: `src`, 그다음 `shade` 또는 `piece`, 그다음 `own`(없는 것 먼저, 있으면 dx 다음 dy 수 순), 그다음 `px`. 글은 코드 값 순(C# `string.CompareOrdinal`). `src` 글의 순서는 `band`, `door`, `face`, `floor`, `narrow`, `sill`이다.
 
 ### 출처 종류 (`src`)
 
@@ -642,6 +646,36 @@ if/switch로 종류를 닫지 않는다.
   바뀔 것이 없으면 쓰지 않는다. 쓸 때는 다른 export처럼 임시 파일에 먼저 쓴 뒤 바꿔친다.
 - 증명: 내보낸 PNG·좌표표에서 조각을 다시 잘라 참조 조합기(`test_room_vectors.compose_cell`)에 넣어도 시험 표의 모든 사례·칸이
   `draw_tile(Wall 열쇠)`를 `draw_tile(Ground 열쇠)` 위에 얹은 그림과 픽셀까지 같다(벽 꾸밈 5종 전부, 두 방 사이 세로 벽의 두 바닥, 바닥 꾸밈 5종).
+
+## 방 만들기 — 집 맵과 꾸밈을 고치는 순서
+
+게임의 집은 키트 방이다(`art/kit/rooms/house.json` → `art/world/rooms/house/`, 게임 맵 목록 `game/world/maps.json`의 `House`). 아래는 세 가지 일의 순서다. 스킬 `pixel-kit-room`이 같은 순서를 적는다.
+
+### 집 맵을 고칠 때
+
+크기, 도착 지점, 고정 지점(일과 판, 하루 끝, NPC 자리, 현관)의 칸을 바꾸는 일이면 먼저 스킬 `save-compat-change`를 따르고 사용자에게 묻는다(옛 세이브의 가구 자리와 `game/world/interactions.json` 좌표가 칸 좌표다). 그 밖에 벽·바닥 칸이나 `Build` 값만 고치는 일은 아래 순서다.
+
+1. **평면을 고치고 `room build`로 다시 만들 때**: `art/kit/rooms/house.json`을 고친다 → `python Tools/pixel-kit/kit.py room check house` → `room build house --force --dry-run`으로 쓸 파일 보기 → `room build house --force`. **`--force`는 LDtk에서 손으로 고친 것(칠한 `Collision`·`Build`, 놓은 가구, 고친 문)을 지운다.** 지워도 되는지 `git diff`·사용자에게 먼저 본다.
+   `room check house`에 알림 `room-door-unregistered (14, 17)` 하나가 나오는 것은 정상이다(방 폴더 `maps.json`의 `doors`는 비어 있고, 문 목적지는 게임 `game/world/maps.json`의 `House` 항목이 가진다). 끝 코드는 0이다.
+2. **LDtk에서 `Collision`·`Build`를 칠했을 때**: 편집기에서 저장하고 닫는다 → `room check <.ldtk>` → `room repaint <.ldtk> --dry-run` → `room repaint <.ldtk>` → `room check <.ldtk>`. `Wall`·`Ground`는 손으로 칠하지 않는다.
+3. 평면의 `frameId`를 올렸으면 방 폴더 `maps.json`(`room build`가 쓴다)과 `game/world/maps.json`의 `House` `build`를 같은 값으로 맞춘다. 같은지는 키트 시험 `test_room_ldtk.HouseRoomTests`가 본다.
+4. 테스트: 키트 테스트 전체(`python -m unittest discover -s Tools/pixel-kit/tests -t Tools/pixel-kit`), World `HouseMapTests`·`MapContractTests`, Host `HouseMapHostTests`·`HouseTilesHostTests`(`dotnet test game/tests/Rootborn.Host.Tests --filter "House"`). 게임 화면을 스크린샷으로 직접 열어 본다(빈 칸, 겹친 그림, 막힌 현관).
+5. **확인 못 한 것**: `Build` 층과 벽 문이 든 새 집 파일을 LDtk 편집기에서 연 것은 아직 아무도 확인하지 않았다(스키마 검사 테스트만 있다). 편집기에서 확인된 것은 `Collision`을 칠한 방뿐이다(스킬 `pixel-kit-room` "편집기에서 확인된 것").
+
+### 벽 그림 규칙을 고칠 때
+
+벽 그림을 고르는 규칙은 Python(`pixelkit/room_tiles.py`)과 C#(`game/Rootborn.Core/src/Building/`의 `RoomTilePlan` 등) 두 곳에 있고 시험 표 `room-vectors.json`이 둘을 묶는다. **한쪽만 고치지 않는다.**
+
+1. Python 실패 테스트를 먼저 쓴다(`test_room_tiles`, `test_room_vectors`).
+2. `room_tiles.py`를 고친다.
+3. `python Tools/pixel-kit/kit.py room vectors`로 시험 표를 다시 만든다(손으로 고치지 않는다). 열쇠가 일부러 바뀌었으면 `test_room_vectors.py`의 `PLAN_TILES_BEFORE`도 고친다.
+4. C# `Rootborn.Core.Building`을 같이 고친다. `dotnet test game/tests/Rootborn.Core.Tests --filter "FullyQualifiedName~Building"`이 시험 표를 읽어 모든 칸의 출처가 같은지 본다(파일은 빌드할 때 `Fixtures/room-vectors.json`으로 복사된다).
+5. 키트의 방 그림과 조각 시트가 달라졌을 수 있다: 만든 방(`art/world/rooms/*`)을 다시 만들 일인지 `room check`로 보고, `room export-finishes --dry-run`으로 조각 시트가 바뀌는지 본다. 바뀌면 `room export-finishes`와 함께 커밋한다.
+6. 두 쪽 테스트: 키트 테스트 전체, Core, World(`RoomFinishArtTests`, 집이 키트 그림과 픽셀까지 같은 `HouseMapTests`의 조합 시험), Host `HouseTilesHostTests`. CI(`pixel-kit-tests` job과 dotnet 테스트)가 둘 다 돌지만 GitHub에서 실제로 돈 것은 아직 확인하지 못했다.
+
+### 꾸밈을 더할 때
+
+`data/README.md` "집 짓기 `building/`"의 순서를 따른다: 키트에 벽 모양·바닥이 있는지 → `data/building/RoomFinishDefinition.json`에 줄 → `room export-finishes`(`--dry-run` 먼저) → 문구 두 언어 → 테스트. 코드는 고치지 않는다.
 
 ## 같이 바뀌는 색
 

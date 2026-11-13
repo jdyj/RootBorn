@@ -223,6 +223,17 @@
   조각 시트와 좌표표는 **손으로 고치지 않고** `python Tools/pixel-kit/kit.py room export-finishes`가 이 파일을 읽어 낸다
   (`Tools/pixel-kit/README.md` "방 만들기 — 꾸밈 조각 시트"). 꾸밈을 더하거나 빼면 그 명령을 다시 돌려 시트와 좌표표를 함께 커밋한다.
 - 코드는 꾸밈 id를 모른다. Core `RoomFinishDefinition`, World `RoomFinishArt`가 정의와 좌표표를 푼다.
+- 집 맵의 기본 꾸밈은 맵 목록(`game/world/maps.json`)의 `build.defaultWall`·`defaultFloor`가 id로 가리킨다(`game/world/README.md` 6절). 게임은 지금 이 기본 꾸밈으로만 집을 그린다 — 플레이어가 꾸밈을 고르는 것, 비용 지급, 꾸밈 세이브는 아직 없다(그래서 `costItems`·`costCounts`·`unlockToken`은 읽히기만 하고 쓰이지 않는다).
+
+**꾸밈을 더하는 법** (코드는 고치지 않는다):
+
+1. 꾸밈이 쓸 벽 모양(`slot` wall) 또는 바닥(`slot` floor)이 키트에 있는지 본다(`python Tools/pixel-kit/kit.py room styles --list`). 없으면 먼저 키트에 더한다(스킬 `pixel-kit-room`). 벽 모양의 띠 두께는 16이어야 한다.
+2. `RoomFinishDefinition.json`에 덩어리를 더한다. id는 `finish.wall.<art>` / `finish.floor.<art에서 floor. 뺀 것>`, `nameKey`는 `<id>.name`, `sheet`는 같은 조각 시트, `art`는 키트의 벽 모양 이름 또는 바닥 명세 id. 처음부터 열 것이면 `unlockToken`을 빈 글로 둔다.
+3. `python Tools/pixel-kit/kit.py room export-finishes --dry-run`으로 바뀔 파일을 보고, `--dry-run` 없이 돌려 시트 PNG와 좌표표(`data/atlases/art/world/finishes/finishes.png.atlas.json`)를 다시 낸다. 조각은 이름 순으로 다시 놓이므로 자리가 밀리지만 게임은 좌표표로 찾는다. 시트·좌표표는 손으로 고치지 않고 정의와 함께 커밋한다(`CommittedSheetTests`가 저장소의 시트가 지금 정의로 낸 것과 같은지 본다).
+4. 이름 문구를 `game/localization/ko.json`과 `en.json`에 둘 다 넣는다(`<nameKey>`).
+5. `dotnet test game/tests/Rootborn.Data.Tests`, `game/tests/Rootborn.World.Tests`(`RoomFinishArtTests`, `HouseMapTests`)와 키트 테스트를 돌린다.
+
+수치와 목록은 시험용이다: 넣은 10종, 처음부터 열린 6종·잠긴 4종(잠긴 것은 얻는 길이 아직 없다), 칸당 비용(벽 2, 바닥 1)은 사용자가 정하지 않았다. 결정 대기 문서 `docs/superpowers/specs/2026-11-14-house-building-open-decisions.md` 1·7·9번. 값을 고칠 때는 `[BALANCE]`로 나눠 커밋한다.
 
 ## 그림 좌표표
 
