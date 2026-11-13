@@ -13,7 +13,9 @@ ROOT = Path(__file__).resolve().parents[3]
 STYLE = Style.load(str(ROOT / "art" / "kit" / "style.json"))
 PARTS = load_parts(str(ROOT / "art" / "kit" / "parts"), STYLE)
 RECIPES = load_recipes(str(ROOT / "art" / "kit" / "recipes" / "bakery"))
-EXTERIORS = ("bakery.exterior.flat", "bakery.exterior.pitched")
+ALL_RECIPES = load_recipes(str(ROOT / "art" / "kit" / "recipes"))
+# 옆면 금지는 건물 명세 전부에 적용한다(2단계 건물이 늘어도 자동으로 걸린다).
+EXTERIORS = tuple(rid for rid, r in ALL_RECIPES.items() if r.get("part") == "building.shop")
 
 
 def ctx():
@@ -240,8 +242,19 @@ class RoofItemShadowTests(unittest.TestCase):
 class NoSideFaceTests(unittest.TestCase):
     """옆면 금지(사용자: 절대 하지 마)를 그린 그림의 픽셀로 본다."""
 
+    def test_real_exteriors_have_no_side_face_problem(self):
+        for rid in EXTERIORS:
+            with self.subTest(rid):
+                c = ctx()
+                cv, spec = render_with_spec(ALL_RECIPES[rid], c)
+                ps = lint_sprite(cv, spec, c, layout=spec["_layout"])
+                self.assertEqual([p for p in ps if p.code == "side-face"], [])
+
+    def test_every_building_recipe_is_covered(self):
+        self.assertGreaterEqual(len(EXTERIORS), 2)
+
     def render(self, rid, recipe=None):
-        cv, spec = render_with_spec(recipe or RECIPES[rid], ctx())
+        cv, spec = render_with_spec(recipe or ALL_RECIPES[rid], ctx())
         lay = spec["_layout"]
         ox, oy = offset(cv, lay)
         return cv, lay, ox, oy

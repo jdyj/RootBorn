@@ -97,8 +97,11 @@ def _label(rid: str, state: Optional[str]) -> str:
 def draw_and_check(kit: Kit, recipe: dict, state: Optional[str]) -> Tuple[Canvas, List[Problem]]:
     ctx = kit.ctx()
     cv, spec = render_with_spec(recipe, ctx, state)
-    checker = lint_tile if spec.get("kind") == "tile" else lint_sprite
-    return cv, list(ctx.problems) + checker(cv, spec, ctx)
+    if spec.get("kind") == "tile":
+        found = lint_tile(cv, spec, ctx)
+    else:
+        found = lint_sprite(cv, spec, ctx, layout=spec.get("_layout"))
+    return cv, list(ctx.problems) + found
 
 
 def _print_problems(label: str, problems: List[Problem]) -> None:

@@ -167,6 +167,45 @@ def stripes(period, vertical=True):
 TILE = {"id": "tile", "kind": "tile"}
 
 
+class SideFaceLintTests(unittest.TestCase):
+    """지붕 줄은 그린 너비 전체가 불투명해야 한다(옆면 금지)."""
+    LAYOUT = {"size": [40, 30], "roof_bottom": 5}
+    REC = {"id": "b", "kind": "building"}
+
+    def building(self):
+        cv = Canvas(64, 64)
+        ox, oy = (64 - 42) // 2 + 1, 64 - 32 + 1
+        cv.rect(ox, oy, 40, 30, A)
+        cv.outline(OL)
+        return cv, ox, oy
+
+    def side(self, cv, layout):
+        return [p for p in lint_sprite(cv, self.REC, CTX, layout=layout) if p.code == "side-face"]
+
+    def test_full_roof_is_clean(self):
+        cv, _, _ = self.building()
+        self.assertEqual(self.side(cv, self.LAYOUT), [])
+
+    def test_cut_away_roof_corner_is_one_problem(self):
+        cv, ox, oy = self.building()
+        cv.px(ox, oy + 2, (0, 0, 0, 0))
+        cv.px(ox, oy + 3, (0, 0, 0, 0))
+        ps = self.side(cv, self.LAYOUT)
+        self.assertEqual(len(ps), 1)
+        self.assertEqual((ps[0].x, ps[0].y), (ox, oy + 2))
+
+    def test_skipped_without_layout(self):
+        cv, ox, oy = self.building()
+        cv.px(ox, oy + 2, (0, 0, 0, 0))
+        self.assertEqual(self.side(cv, None), [])
+
+    def test_only_for_buildings(self):
+        cv, ox, oy = self.building()
+        cv.px(ox, oy + 2, (0, 0, 0, 0))
+        rec = {"id": "f", "kind": "furniture"}
+        self.assertEqual([p for p in lint_sprite(cv, rec, CTX, layout=self.LAYOUT) if p.code == "side-face"], [])
+
+
 class TileLintTests(unittest.TestCase):
     def test_seam_broken_10px_period(self):
         self.assertEqual(codes(lint_tile(stripes(10), TILE, CTX)), ["tile-seam"])

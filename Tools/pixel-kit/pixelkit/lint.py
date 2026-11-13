@@ -55,8 +55,20 @@ def _cells(cv, ctx) -> List[Problem]:
     return []
 
 
-def lint_sprite(cv: Canvas, recipe: dict, ctx, allow: FrozenSet[str] = frozenset()) -> List[Problem]:
-    """외곽선이 입혀진 그림(건물·가구·소품·점 부품). 점 부품은 kind가 "part"."""
+def _side_face(cv: Canvas, layout: dict) -> List[Problem]:
+    """건물 지붕 줄(0..roof_bottom)이 그린 너비 전체에 걸쳐 불투명한지 본다. 잘린 모서리는 옆면(비탈)을 그린 것이다.
+    layout은 만드는 부품이 적은 spec["_layout"](size, roof_bottom). 그림은 사방 1px 외곽선 여유로 아래 가운데에 붙는다."""
+    w, h = layout["size"]
+    ox, oy = (cv.w - (w + 2)) // 2 + 1, cv.h - (h + 2) + 1
+    return _group("side-face", "지붕 줄이 전체 너비로 차 있지 않다(옆면 금지)", [
+        (x, y) for y in range(oy, oy + layout["roof_bottom"] + 1)
+        for x in range(ox, ox + w) if not cv.get(x, y)[3]])
+
+
+def lint_sprite(cv: Canvas, recipe: dict, ctx, allow: FrozenSet[str] = frozenset(),
+                layout: Optional[dict] = None) -> List[Problem]:
+    """외곽선이 입혀진 그림(건물·가구·소품·점 부품). 점 부품은 kind가 "part".
+    layout은 건물의 spec["_layout"]. 없으면 side-face 검사는 건너뛴다."""
     ol = ctx.style.outline
     is_part = recipe.get("kind") == "part"
     open_hits = []
@@ -85,6 +97,8 @@ def lint_sprite(cv: Canvas, recipe: dict, ctx, allow: FrozenSet[str] = frozenset
             x0, _, x1, y1 = bb
             if y1 != cv.h or abs(x0 - (cv.w - x1)) > 1:
                 out.append(Problem("not-bottom-center", f"아래 가운데가 아니다(bbox {bb})"))
+    if recipe.get("kind") == "building" and layout is not None:
+        out += _side_face(cv, layout)
     return [p for p in out if p.code not in allow]
 
 
