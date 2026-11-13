@@ -2,7 +2,7 @@
   "cell": 32,
   "outline": "#3a384e",
   "shadow": { "under": 0.56, "front": 0.72, "edge": 0.82, "wall": 0.8 },
-  "max_colors": { "furniture": 24, "tile": 12, "building": 32, "part": 10 },
+  "max_colors": { "furniture": 24, "tile": 12, "building": 40, "part": 10 },
   "palette": {
     "wood.warm": ["#7a4e2c", "#9c6a3c", "#bd8a52", "#dcae74", "#f0cf9c"],
     "wood.top": ["#bc9470", "#d4b088"],
@@ -30,7 +30,6 @@
     "plinth": ["#8c6048", "#bc9470", "#d4b088"],
     "roof.teal": ["#2a4a46", "#36605a", "#44746c", "#74a498", "#98c4b4"],
     "roof.slate": ["#1e3840", "#2c5058", "#4c7880", "#7cacb0", "#a8d0cc"],
-    "door.teal": ["#305c58", "#487c74", "#64a094"],
     "awning.red": ["#9c3a30", "#c8483c"],
     "awning.cream": ["#c4ac80", "#ecdcb4"],
     "trim": ["#a08860", "#c4ac80", "#ecdcb4", "#fff8ec"],

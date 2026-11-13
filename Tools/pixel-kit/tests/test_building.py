@@ -2,7 +2,9 @@ import copy
 import unittest
 from pathlib import Path
 
+from pixelkit.canvas import Canvas
 from pixelkit.lint import lint_sprite
+from pixelkit.makers.building import ROOF_ITEMS, _Pal
 from pixelkit.parts import load_parts
 from pixelkit.recipes import Ctx, RecipeError, load_recipes, render, render_with_spec
 from pixelkit.style import Style
@@ -149,6 +151,68 @@ class BuildingTests(unittest.TestCase):
                 a = render(RECIPES[rid], ctx())
                 b = render(RECIPES[rid], ctx())
                 self.assertEqual(a.to_image().tobytes(), b.to_image().tobytes())
+
+
+class RoofItemShadowTests(unittest.TestCase):
+    def test_every_roof_item_shadow_starts_right_where_its_front_face_ends(self):
+        """물건 하나를 맨 지붕(한 색)에 그리고, 앞면의 줄마다 물체 바로 오른쪽 칸이 어두워졌는지 본다(떨어진 그림자 금지)."""
+        spec = {"id": "t.item"}
+        c = ctx()
+        P = _Pal(spec, c, "roof.teal", "brick", "roof.slate")
+        plain = STYLE.color("roof.teal.2")
+        for name, it in sorted(ROOF_ITEMS.items()):
+            with self.subTest(name):
+                alone = Canvas(it.w + 8, it.h + 8)                  # 투명 위: 물체만 남는다(그림자는 색 줄에만 든다)
+                it.draw(alone, P, 4, 4)
+                roof = Canvas(it.w + 8, it.h + 8)
+                roof.rect(0, 0, roof.w, roof.h, plain)
+                it.draw(roof, P, 4, 4)
+                y0, n = it.front
+                for y in range(4 + y0, 4 + y0 + n):
+                    xs = [x for x in range(alone.w) if alone.get(x, y)[3]]
+                    self.assertTrue(xs, (name, y))
+                    self.assertNotEqual(roof.get(max(xs) + 1, y), plain, (name, y, max(xs) + 1))
+
+
+class NoSideFaceTests(unittest.TestCase):
+    """옆면 금지(사용자: 절대 하지 마)를 그린 그림의 픽셀로 본다."""
+
+    def render(self, rid, recipe=None):
+        cv, spec = render_with_spec(recipe or RECIPES[rid], ctx())
+        lay = spec["_layout"]
+        ox, oy = offset(cv, lay)
+        return cv, lay, ox, oy
+
+    def test_roof_rows_are_opaque_across_the_full_width(self):
+        for rid in EXTERIORS:
+            with self.subTest(rid):
+                cv, lay, ox, oy = self.render(rid)
+                w = lay["size"][0]
+                holes = [(x, y) for y in range(oy, oy + lay["roof_bottom"] + 1)
+                         for x in range(ox, ox + w) if not cv.get(x, y)[3]]
+                self.assertEqual(holes, [])
+
+    def test_wall_rows_above_the_step_are_symmetric(self):
+        for rid in EXTERIORS:
+            with self.subTest(rid):
+                cv, lay, ox, oy = self.render(rid)
+                dx, dy, dw, dh = lay["door"]
+                for y in range(oy + lay["roof_bottom"] + 1, oy + dy + dh - 3):
+                    xs = [x for x in range(cv.w) if cv.get(x, y)[3]]
+                    self.assertLessEqual(abs(min(xs) - (cv.w - 1 - max(xs))), 1, y)
+
+    def test_awning_slope_has_no_side_triangle(self):
+        names = [f"awning.red.{i}" for i in range(2)] + [f"awning.cream.{i}" for i in range(2)] + ["trim.3"]
+        awning = {STYLE.color(k) for k in names}
+        for rid in EXTERIORS:
+            with self.subTest(rid):
+                cv, lay, ox, oy = self.render(rid)
+                ax, ay, aw, ah = lay["awning"]
+                ends = set()
+                for y in range(oy + ay + 4, oy + ay + 12):          # 비탈 줄(처마 밑 띠 아래부터)
+                    xs = [x for x in range(cv.w) if cv.get(x, y) in awning]
+                    ends.add((min(xs), max(xs)))
+                self.assertEqual(ends, {(ax + ox, ax + ox + aw - 1)})
 
 
 class ABoardTests(unittest.TestCase):

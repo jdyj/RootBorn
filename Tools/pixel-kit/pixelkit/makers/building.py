@@ -18,7 +18,8 @@ WALL_BODY = 76        # 벽 윗줄 ~ 벽이 땅에 닿는 줄
 OUT = 6               # 진열창이 벽보다 앞으로(화면 아래로) 나온 만큼
 DOOR_W = 44
 SIGN_W, SIGN_H = 48, 22
-LAMP_DROP = 26        # 벽 윗줄에서 벽등까지(차양과 4px 넘게 떨어지게)
+LAMP_DROP = 30        # 벽 윗줄에서 벽등까지(차양 밑 그늘보다 아래, 문 머리 높이)
+FRONT_EDGE = 16       # 지붕 맨 아랫줄 위로 몇 줄: 평지붕 앞 난간 윗줄이자 간판 윗줄(간판이 처마 위로 솟는 만큼)
 AWNING_SLOPE, AWNING_VALANCE = 12, 6
 
 
@@ -78,7 +79,7 @@ class _Pal:
         self.wall = _ramp(spec, ctx, wall, 4)
         self.door = _ramp(spec, ctx, door, 4)
         self.trim = _ramp(spec, ctx, "trim", 4)
-        self.wood = _ramp(spec, ctx, "wood.warm", 4)
+        self.wood = _ramp(spec, ctx, "wood.warm", 5)
         self.glass = _ramp(spec, ctx, "glass.window", 3)
         self.plinth = _ramp(spec, ctx, "plinth", 2)
         self.metal = _ramp(spec, ctx, "metal", 3)
@@ -105,17 +106,18 @@ class _Pal:
 class RoofItem:
     w: int                                                # 차지하는 폭·높이(자기 그림자 포함)
     h: int
+    front: Tuple[int, int]                                # 앞면 줄(차지하는 자리 윗줄에서 몇 줄 아래, 줄 수). 그림자 검사가 읽는다
     draw: Callable[[Canvas, _Pal, int, int], None]        # (그림, 색, 차지하는 자리의 왼쪽 위 x, y)
 
 
 ROOF_ITEMS: Dict[str, RoofItem] = {}
 
 
-def roof_item(name: str, w: int, h: int):
+def roof_item(name: str, w: int, h: int, front: Tuple[int, int]):
     def deco(fn):
         if name in ROOF_ITEMS:
             raise RecipeError(f"{name}: 지붕 위 물건 이름이 겹친다")
-        ROOF_ITEMS[name] = RoofItem(w, h, fn)
+        ROOF_ITEMS[name] = RoofItem(w, h, front, fn)
         return fn
     return deco
 
@@ -143,7 +145,7 @@ def _wall_front(P: _Pal):
     return (P.wall[3], P.wall[2], P.wall[1], P.wall[0])
 
 
-@roof_item("roof.stair-house", 46, 35)
+@roof_item("roof.stair-house", 46, 35, (12, 20))
 def stair_house(cv: Canvas, P: _Pal, x: int, y: int) -> None:
     """옥탑(계단실): 윗면 + 벽돌 앞면 + 문."""
     _box(cv, P, x, y, 34, 12, 20, _trim_top(P), _wall_front(P), 12)
@@ -153,7 +155,7 @@ def stair_house(cv: Canvas, P: _Pal, x: int, y: int) -> None:
     cv.px(x + 20, y + 25, P.yellow)
 
 
-@roof_item("roof.ac-unit", 26, 21)
+@roof_item("roof.ac-unit", 26, 21, (9, 9))
 def ac_unit(cv: Canvas, P: _Pal, x: int, y: int) -> None:
     """실외기: 금속 윗면의 팬 + 앞면 살."""
     m = P.metal
@@ -164,7 +166,7 @@ def ac_unit(cv: Canvas, P: _Pal, x: int, y: int) -> None:
         cv.vline(xx, y + 12, 5, m[0])
 
 
-@roof_item("roof.skylight", 43, 31)
+@roof_item("roof.skylight", 43, 31, (22, 6))
 def skylight(cv: Canvas, P: _Pal, x: int, y: int) -> None:
     """솟은 천창: 금속 틀 윗면의 유리 + 앞면."""
     m, g = P.metal, P.glass
@@ -175,7 +177,7 @@ def skylight(cv: Canvas, P: _Pal, x: int, y: int) -> None:
     cv.hline(x + 3, y + 10, 32, m[2])
 
 
-@roof_item("roof.chimney", 26, 33)
+@roof_item("roof.chimney", 26, 33, (8, 22))
 def chimney(cv: Canvas, P: _Pal, x: int, y: int) -> None:
     """굴뚝: 윗면의 구멍 + 벽돌 앞면(줄눈)."""
     _box(cv, P, x, y, 16, 8, 22, _trim_top(P), _wall_front(P), 10)
@@ -184,12 +186,13 @@ def chimney(cv: Canvas, P: _Pal, x: int, y: int) -> None:
         cv.hline(x + 1, yy, 14, P.wall[1])
 
 
-@roof_item("roof.dormer", 55, 43)
+@roof_item("roof.dormer", 55, 43, (16, 22))
 def dormer(cv: Canvas, P: _Pal, x: int, y: int) -> None:
     """박공 지붕창: 세모 박공(지붕 끝 두 줄) + 벽 + 창 + 창턱. 처마가 양옆으로 3px 나온다."""
     s, t, wd, g = P.roof, P.trim, P.wood, P.glass
     dx, dy, dw, half, sh = x + 3, y + 2, 40, 20, 12
-    P.down(cv, dx + dw + 3, dy + 12, sh - 3, 26)           # 오른쪽 띠(처마 끝 바로 옆부터)
+    P.down(cv, dx + dw + 2, dy + 12, sh - 2, 2)            # 오른쪽 띠: 처마 줄은 처마 끝 바로 옆부터
+    P.down(cv, dx + dw, dy + 14, sh, 24)                   # 벽 줄은 벽이 끝나는 열 바로 옆부터(붙은 그림자)
     P.down(cv, dx + 3, dy + 38, dw + sh - 3, 3)            # 아랫변 띠
     for j in range(half):                                  # 세모 박공
         xl, xr = dx + half - 1 - j, dx + half + j
@@ -244,7 +247,7 @@ def roof_flat(cv: Canvas, spec: dict, ctx, w: int, rh: int) -> None:
     t = _ramp(spec, ctx, "roof.teal", 5)
     side, back, in_h = 8, 7, 9
     fx, fy = side, back + in_h
-    fw, fh = w - 2 * side, rh - 16 - fy
+    fw, fh = w - 2 * side, rh - FRONT_EDGE - fy
     ty = fy + fh                                           # 앞 난간 윗줄
     cv.rect(0, 0, w, rh, t[3])
     cv.rect(fx, back, fw, in_h, t[1])                      # 뒤 난간 안쪽 벽(우리 쪽을 보는 면)
@@ -385,7 +388,8 @@ def _facade(cv: Canvas, spec: dict, ctx, P: _Pal, w: int, rh: int, v: dict, loca
     fw, fh = DOOR_W, base - fy
     cv.rect(fx, fy, fw, fh, wd[1])                         # 두꺼운 문틀
     _bevel(cv, fx, fy, fw, fh, wd[3], wd[0])
-    cv.rect(fx, fy, fw, 3, wd[3])                          # 문틀 윗면(색 한도 때문에 wood.warm.4는 쓰지 않는다)
+    cv.rect(fx, fy, fw, 3, wd[3])
+    cv.hline(fx, fy, fw, wd[4])
     cv.rect(fx + 6, fy + 8, fw - 12, fh - 8, b[0])         # 파인 자리
     cv.rect(fx + fw - 9, fy + 8, 3, fh - 8, wd[2])         # 오른쪽 안벽은 빛
     ix, iy, iw = fx + 9, fy + 12, fw - 20
@@ -407,9 +411,10 @@ def _facade(cv: Canvas, spec: dict, ctx, P: _Pal, w: int, rh: int, v: dict, loca
     P.down(cv, fx + 6, fy + 8, fw - 15, 4, 2)              # 문틀이 문에 드리운 깊은 그늘(위·왼쪽)
     P.down(cv, fx + 6, fy + 12, fw - 15, 3, 1)
     P.down(cv, fx + 6, fy + 15, 4, fh - 15, 1)
-    cv.rect(fx - 4, base - 3, fw + 8, 3, t[2])             # 계단
-    cv.rect(fx - 4, base, fw + 8, 4, t[1])
-    cv.hline(fx - 4, base + 3, fw + 8, t[0])
+    st = P.metal                                           # 회색 돌 계단(색 한도 안에서 이미 쓰는 회색 줄): 윗면 밝게, 앞면 어둡게
+    cv.rect(fx - 4, base - 3, fw + 8, 3, st[2])
+    cv.rect(fx - 4, base, fw + 8, 4, st[1])
+    cv.hline(fx - 4, base + 3, fw + 8, st[0])
     lay["door"] = [fx, fy, fw, fh]
 
     # --- 벽등 ---
@@ -444,7 +449,7 @@ def _facade(cv: Canvas, spec: dict, ctx, P: _Pal, w: int, rh: int, v: dict, loca
     _glass_streaks(cv, P, gx, gy, gw, gh)
     shelf = gy + gh
     cv.rect(gx, shelf - 6, gw, 6, wd[2])                   # 진열 판
-    cv.rect(gx, shelf - 6, gw, 2, wd[3])
+    cv.rect(gx, shelf - 6, gw, 2, wd[4])
     half = gw // 2
     mx = gx + half - 1                                     # 창살 [mx, mx + 2)
     pile(cv, v["slots"][0], gx + 1, mx - 1, shelf - 4, local, top=gy + 4)
@@ -484,7 +489,7 @@ def _facade(cv: Canvas, spec: dict, ctx, P: _Pal, w: int, rh: int, v: dict, loca
     lay["awning"] = [ax0, ay, ax1 - ax0 + 1, slope + val + 1]
 
     # --- 간판: 처마 위로 솟는다 ---
-    sx, sy0 = v["sign_x"], rh - 16
+    sx, sy0 = v["sign_x"], rh - FRONT_EDGE
     P.down(cv, sx + SIGN_W, sy0 + 3, 3, SIGN_H - 3)       # 오른쪽 변과 아랫변에 붙은 그림자
     P.down(cv, sx + 3, sy0 + SIGN_H, SIGN_W, 3)
     cv.rect(sx, sy0, SIGN_W, SIGN_H, wd[1])
