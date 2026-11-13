@@ -39,7 +39,8 @@ namespace Rootborn.Game
         {
             var layout = new HouseFurnitureLayout(new HousePlacementModel(grid), surfaceId, _ => false);
             _roomHouse.CopySurface(surfaceId, _houseRecords, _houseIds);
-            layout.Restore(_houseRecords, _definitions.All<FurnitureDefinition>(), _houseIds);
+            // 방(RoomHouseRules.Layout)과 같은 Core 코드로 옮겨 본다 — 같은 기록이면 같은 자리다.
+            _houseRelocation = layout.RestoreRelocating(_houseRecords, _definitions.All<FurnitureDefinition>(), _houseIds);
             return layout;
         }
 
@@ -111,7 +112,7 @@ namespace Rootborn.Game
             records.RemoveAt(index);
             ids.RemoveAt(index);
             var others = new HouseFurnitureLayout(new HousePlacementModel(_houseGrid), House.SurfaceId, _ => false);
-            others.Restore(records, _definitions.All<FurnitureDefinition>(), ids);
+            others.RestoreRelocating(records, _definitions.All<FurnitureDefinition>(), ids); // 방의 판정과 같게 옮겨 본다
             return others.CanPlace(moving.Definition, anchor, direction);
         }
 

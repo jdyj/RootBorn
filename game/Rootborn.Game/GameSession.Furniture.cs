@@ -83,11 +83,57 @@ namespace Rootborn.Game
             if (_roomHouse != null) layout = SharedHouseLayout(grid, surfaceId); // 같이 쓰는 집: 방이 알린 배치(GameSession.SharedHouse)
             else
             {
+                // 집 맵이 바뀌어 못 놓는 옛 기록은 가까운 자리로 옮기고 나머지는 보관한다(설계 7.3절). 읽기만으로 파일을 쓰지 않는다.
                 layout = new HouseFurnitureLayout(new HousePlacementModel(grid), surfaceId, CommitHouseLayout);
-                layout.Restore(FurnitureSaveFiles.LoadHouseLayout(_store, SaveSlot, HouseStage), _definitions.All<FurnitureDefinition>());
+                _houseRelocation = layout.RestoreRelocating(FurnitureSaveFiles.LoadHouseLayout(_store, SaveSlot, HouseStage), _definitions.All<FurnitureDefinition>());
             }
 
             UseHouseLayout(layout);
+        }
+
+        // 마지막으로 집을 열 때 옮긴 수·보관한 수(메모리만). 알림은 이 판에서 한 번만(_relocationNoticeTaken).
+        private HouseFurnitureRelocation _houseRelocation;
+        private bool _relocationNoticeTaken;
+
+        /// <summary>
+        /// 집을 열 때 놓지 못해 보관한 가구(기록 순서, <see cref="HouseFurnitureLayout.Stored"/>). 집이 열려 있지 않거나 일터면 빈 목록.
+        /// 같이 쓰는 집이면 방의 기록 중 보관한 것이다(꺼내기는 아직 안 된다 — <see cref="PlaceStoredFurniture"/>).
+        /// </summary>
+        public IReadOnlyList<StoredFurniture> StoredFurniture()
+            => House != null && ActiveWorkspace == null ? House.Stored : (IReadOnlyList<StoredFurniture>)Array.Empty<StoredFurniture>();
+
+        /// <summary>보관한 가구(<see cref="Rootborn.Core.Placement.StoredFurniture.Index"/>)를 그 자리·방향에 놓을 수 있는가. 혼자 하는 집에서만.</summary>
+        public bool CanPlaceStoredFurniture(int index, GridPoint anchor, FurniturePlacementDirection direction)
+            => MayPlaceStored() && House.CanPlaceStored(index, anchor, direction);
+
+        /// <summary>
+        /// 보관한 가구를 그 자리·방향에 다시 놓는다(상자는 내용물째). 배치 파일에 한 번 저장되고 Furniture를 알린다. 맞지 않거나 저장이 실패하면 아무것도 바뀌지 않는다.
+        /// 같은 index를 다시 부르면 false다(이미 놓았다). 같이 쓰는 집·일터에서는 false(같이 쓰는 집은 다음 계획에서 방 요청으로 연다).
+        /// 가구 배치 퀘스트 이벤트는 내지 않는다(새로 놓은 가구가 아니다).
+        /// </summary>
+        public bool PlaceStoredFurniture(int index, GridPoint anchor, FurniturePlacementDirection direction)
+        {
+            if (!MayPlaceStored() || !House.TryPlaceStored(index, anchor, direction)) return false;
+            Notify(null, GameChangeTopics.Furniture, null);
+            return true;
+        }
+
+        private bool MayPlaceStored() => House != null && ActiveWorkspace == null && _roomHouse == null;
+
+        /// <summary>
+        /// 집에 들어선 뒤 이 판에서 처음 한 번: 집을 열며 옮긴 가구 수와 보관한 가구 수. 둘 다 0이거나, 이미 받았거나, 집이 열려 있지 않으면 false.
+        /// 메모리만이고 저장하지 않는다 — 옮긴 자리는 플레이어가 무엇을 바꿀 때 파일에 쓰이므로, 그 전에 끝낸 판은 다음 실행에서 다시 알린다.
+        /// </summary>
+        public bool TryTakeHouseRelocationNotice(out int moved, out int stored)
+        {
+            moved = 0;
+            stored = 0;
+            if (_relocationNoticeTaken || !_houseEntered || House == null || ActiveWorkspace != null || _houseRelocation == null) return false;
+            if (_houseRelocation.Moved == 0 && _houseRelocation.Stored == 0) return false;
+            moved = _houseRelocation.Moved;
+            stored = _houseRelocation.Stored;
+            _relocationNoticeTaken = true;
+            return true;
         }
 
         /// <summary>배치 목록에 보이는 가구(해금이 필요 없거나 해금한 것, 얻은 가구가 먼저).</summary>

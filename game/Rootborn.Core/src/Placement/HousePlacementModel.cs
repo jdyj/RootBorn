@@ -18,6 +18,9 @@ namespace Rootborn.Core.Placement
 
         /// <summary>문 앞처럼 늘 지나갈 수 있어야 하는 칸.</summary>
         IReadOnlyList<GridPoint> Approaches { get; }
+
+        /// <summary>바닥 칸 전부(고정 칸도 든다). 못 놓은 가구의 가까운 자리를 찾을 때 훑는다. 순서는 뜻이 없다.</summary>
+        IReadOnlyCollection<GridPoint> FloorCells { get; }
     }
 
     /// <summary>칸 목록을 복사해 두는 격자. 만든 뒤 원본 목록이 바뀌어도 판정은 그대로다.</summary>
@@ -37,6 +40,7 @@ namespace Rootborn.Core.Placement
 
         public GridPoint Spawn { get; }
         public IReadOnlyList<GridPoint> Approaches => _approaches;
+        public IReadOnlyCollection<GridPoint> FloorCells => _floor;
         public bool HasFloor(GridPoint cell) => _floor.Contains(cell);
         public bool IsFixed(GridPoint cell) => _fixed.Contains(cell);
     }
@@ -56,6 +60,9 @@ namespace Rootborn.Core.Placement
         }
 
         public GridPoint Spawn => _grid.Spawn;
+
+        /// <summary>방의 바닥 칸 전부(<see cref="IPlacementGrid.FloorCells"/>).</summary>
+        public IReadOnlyCollection<GridPoint> FloorCells => _grid.FloorCells;
 
         /// <summary>모든 칸이 바닥이고 고정 칸·출발 칸·문 앞이 아니어야 한다. 빈 목록은 안 된다.</summary>
         public bool CanOccupy(IReadOnlyList<GridPoint> cells)

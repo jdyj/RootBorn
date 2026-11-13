@@ -53,6 +53,46 @@ namespace Rootborn.Core.Placement
     }
 
     /// <summary>
+    /// 보관한 가구 하나: 정의가 있는데 칸이 막혀(집 맵이 바뀌어 벽이 된 칸 등) 놓지 못했고 가까운 자리도 없던 기록. 기록은 원래 기준 칸 그대로 저장된다.
+    /// <see cref="HouseFurnitureLayout.TryPlaceStored"/>로 새 자리에 다시 놓는다.
+    /// </summary>
+    public sealed class StoredFurniture
+    {
+        internal StoredFurniture(int index, FurnitureDefinition definition, FurniturePlacementSaveData record)
+        {
+            Index = index;
+            Definition = definition;
+            Record = record;
+        }
+
+        /// <summary>읽은 기록 목록 안의 자리(<see cref="HouseFurnitureLayout.RestoreRelocating"/>에 넘긴 순서). 다시 읽을 때까지 바뀌지 않는다.</summary>
+        public int Index { get; }
+
+        public FurnitureDefinition Definition { get; }
+
+        /// <summary>기록에 저장된 방향.</summary>
+        public FurniturePlacementDirection Direction => Record.Direction;
+
+        /// <summary>상자이고 물건이 들었다. 다시 놓으면 내용물째 간다.</summary>
+        public bool HoldsItems => FurnitureStorageSaveData.HoldsItems(Record.Storage);
+
+        internal FurniturePlacementSaveData Record { get; }
+    }
+
+    /// <summary>옮기며 다시 채운 결과: 가까운 자리로 옮긴 가구 수와 보관한 가구 수.</summary>
+    public sealed class HouseFurnitureRelocation
+    {
+        internal HouseFurnitureRelocation(int moved, int stored)
+        {
+            Moved = moved;
+            Stored = stored;
+        }
+
+        public int Moved { get; }
+        public int Stored { get; }
+    }
+
+    /// <summary>
     /// 집 한 단계의 가구 배치(원본 AuthoredHouseFurnitureSession에서 타일맵을 뺀 것).
     /// 바꾸기는 먼저 바뀐 뒤의 기록 전체를 commit에 넘기고, commit이 성공해야만 상태를 바꾼다.
     /// 되살리지 못한 기록은 버리지 않고 함께 저장한다. 화면은 <see cref="Placed"/>와 <see cref="BlockingCells"/>로 그린다.
@@ -63,6 +103,7 @@ namespace Rootborn.Core.Placement
         private readonly Func<FurniturePlacementSaveData[], bool> _commit;
         private readonly List<PlacedFurniture> _placed = new List<PlacedFurniture>();
         private readonly List<FurniturePlacementSaveData> _unresolved = new List<FurniturePlacementSaveData>();
+        private readonly List<StoredFurniture> _stored = new List<StoredFurniture>();
         private readonly string[] _acceptedSurfaceIds;
         private int _nextInstanceNumber;
 
@@ -86,6 +127,12 @@ namespace Rootborn.Core.Placement
         public IReadOnlyList<PlacedFurniture> Placed => _placed;
         public int UnresolvedCount => _unresolved.Count;
 
+        /// <summary>
+        /// 못 놓은 기록 중 정의가 있고 칸이 막혀(<see cref="FurnitureReplayFailure.Blocked"/>·<see cref="FurnitureReplayFailure.DuplicateFootprint"/>) 못 놓은 것(기록 순서).
+        /// 데이터에 없는 가구, 다른 면, 방향이 잘못된 기록은 들지 않는다(그것들도 버리지 않고 함께 저장한다).
+        /// </summary>
+        public IReadOnlyList<StoredFurniture> Stored => _stored;
+
         /// <summary>이동을 막는 가구가 차지한 칸. 화면의 충돌 칸이 된다.</summary>
         public IReadOnlyCollection<GridPoint> BlockingCells
         {
@@ -102,11 +149,80 @@ namespace Rootborn.Core.Placement
         /// <param name="instanceIds">기록마다(같은 순서) 쓸 인스턴스 id(같이 쓰는 집: 방이 준 id). 없으면 여기서 만든다.</param>
         public void Restore(IReadOnlyList<FurniturePlacementSaveData> records, IEnumerable<FurnitureDefinition> catalog, IReadOnlyList<string> instanceIds = null)
         {
+            CheckIds(records, instanceIds);
+            Apply(FurnitureReplay.Plan(_model, SurfaceId, records, catalog, _acceptedSurfaceIds), instanceIds);
+        }
+
+        /// <summary>
+        /// <see cref="Restore"/>와 같되, 칸이 막혀 못 놓은 기록은 가까운 자리로 옮겨 놓는다(<see cref="FurnitureReplay.PlanRelocating"/>, 집 맵을 바꾼 뒤의 옛 가구).
+        /// 그래도 못 놓은 것은 <see cref="Stored"/>에 든다. 저장하지 않는다 — 옮긴 자리는 다음에 무엇을 바꿀 때 함께 저장되고, 그 전에는 읽을 때마다 같은 자리가 나온다.
+        /// </summary>
+        public HouseFurnitureRelocation RestoreRelocating(IReadOnlyList<FurniturePlacementSaveData> records, IEnumerable<FurnitureDefinition> catalog, IReadOnlyList<string> instanceIds = null)
+        {
+            CheckIds(records, instanceIds);
+            var plan = FurnitureReplay.PlanRelocating(_model, SurfaceId, records, catalog, _acceptedSurfaceIds);
+            Apply(plan, instanceIds);
+            int moved = 0;
+            for (int i = 0; i < plan.Accepted.Count; i++) if (plan.Accepted[i].Moved) moved++;
+            return new HouseFurnitureRelocation(moved, _stored.Count);
+        }
+
+        /// <summary>보관한 가구(<see cref="StoredFurniture.Index"/>)를 그 자리·방향에 놓을 수 있는가(놓인 가구 위에 하나 더 놓기와 같은 판정).</summary>
+        public bool CanPlaceStored(int index, GridPoint anchor, FurniturePlacementDirection direction)
+        {
+            var stored = FindStored(index);
+            return stored != null && Fits(stored.Definition, anchor, direction, _placed);
+        }
+
+        /// <summary>
+        /// 보관한 가구를 새 자리·방향에 놓는다: 그 기록(상태·그림 이름·상자 내용물 그대로)을 못 놓은 목록에서 빼 놓인 가구 끝에 넣고 전체를 한 번 저장한다.
+        /// 맞지 않거나 저장이 실패하면 아무것도 바꾸지 않는다. 이미 놓은 index면 false다. <see cref="PlacementCommitted"/>는 내지 않는다(새 가구가 아니다).
+        /// </summary>
+        public bool TryPlaceStored(int index, GridPoint anchor, FurniturePlacementDirection direction)
+        {
+            var stored = FindStored(index);
+            if (stored == null || !Fits(stored.Definition, anchor, direction, _placed)) return false;
+            var record = stored.Record.Clone();
+            record.AnchorX = anchor.X;
+            record.AnchorY = anchor.Y;
+            record.Direction = direction;
+
+            var next = new List<FurniturePlacementSaveData>(_placed.Count + _unresolved.Count);
+            for (int i = 0; i < _placed.Count; i++) next.Add(_placed[i].Record);
+            next.Add(record);
+            for (int i = 0; i < _unresolved.Count; i++) if (!ReferenceEquals(_unresolved[i], stored.Record)) next.Add(_unresolved[i]);
+            if (!Commit(next)) return false;
+
+            _unresolved.Remove(stored.Record);
+            _stored.Remove(stored);
+            _placed.Add(new PlacedFurniture(NextInstanceId(stored.Definition.StableId), stored.Definition, record));
+            return true;
+        }
+
+        private StoredFurniture FindStored(int index)
+        {
+            for (int i = 0; i < _stored.Count; i++) if (_stored[i].Index == index) return _stored[i];
+            return null;
+        }
+
+        private static void CheckIds(IReadOnlyList<FurniturePlacementSaveData> records, IReadOnlyList<string> instanceIds)
+        {
             if (instanceIds != null && (records == null || instanceIds.Count != records.Count)) throw new ArgumentException("인스턴스 id는 기록마다 하나다", nameof(instanceIds));
-            var plan = FurnitureReplay.Plan(_model, SurfaceId, records, catalog, _acceptedSurfaceIds);
+        }
+
+        private void Apply(FurnitureReplayPlan plan, IReadOnlyList<string> instanceIds)
+        {
             _placed.Clear();
             _unresolved.Clear();
-            for (int i = 0; i < plan.Unresolved.Count; i++) _unresolved.Add(plan.Unresolved[i].Record);
+            _stored.Clear();
+            for (int i = 0; i < plan.Unresolved.Count; i++)
+            {
+                var entry = plan.Unresolved[i];
+                _unresolved.Add(entry.Record);
+                if (entry.Definition != null && (entry.Reason == FurnitureReplayFailure.Blocked || entry.Reason == FurnitureReplayFailure.DuplicateFootprint))
+                    _stored.Add(new StoredFurniture(entry.SourceIndex, entry.Definition, entry.Record));
+            }
+
             for (int i = 0; i < plan.Accepted.Count; i++)
             {
                 var entry = plan.Accepted[i];

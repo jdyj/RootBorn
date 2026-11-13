@@ -50,8 +50,12 @@ namespace Rootborn.Core.Room
         /// <summary>그 아이템의 쌓기 수(모르는 아이템이면 0).</summary>
         public int MaxStackOf(string itemId) => itemId != null && _maxStack.TryGetValue(itemId, out int max) ? max : 0;
 
-        /// <summary>그 면의 배치를 records로 다시 채운 판(저장하지 않는다). 칸을 모르는 면이면 null.</summary>
-        internal HouseFurnitureLayout Layout(string surfaceId, IReadOnlyList<FurniturePlacementSaveData> records)
+        /// <summary>
+        /// 그 면의 배치를 records로 다시 채운 판(저장하지 않는다). 칸을 모르는 면이면 null.
+        /// 칸이 막혀 못 놓는 기록은 가까운 자리로 옮겨 본다(<see cref="HouseFurnitureLayout.RestoreRelocating"/>) — 손님 쪽 게임 한 판과 같은 Core 코드라 같은 자리다.
+        /// 방의 기록은 바꾸지 않는다.
+        /// </summary>
+        public HouseFurnitureLayout Layout(string surfaceId, IReadOnlyList<FurniturePlacementSaveData> records)
         {
             if (!_models.TryGetValue(surfaceId ?? string.Empty, out var model))
             {
@@ -62,7 +66,7 @@ namespace Rootborn.Core.Room
             }
 
             var layout = new HouseFurnitureLayout(model, surfaceId);
-            layout.Restore(records, _all);
+            layout.RestoreRelocating(records, _all);
             return layout;
         }
     }

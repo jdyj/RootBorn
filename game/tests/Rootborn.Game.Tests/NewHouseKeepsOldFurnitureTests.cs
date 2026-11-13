@@ -10,9 +10,8 @@ namespace Rootborn.Game.Tests
 {
     /// <summary>
     /// 집 맵이 키트 방(벽이 두꺼운 새 집)으로 바뀌어도 옛 세이브의 가구 기록은 사라지지 않는다(자동 테스트, GameSession 명령).
-    /// 새 집에서 벽이 된 칸의 기록과 데이터에 없는 가구 기록은 놓이지 않은 채(HouseFurnitureLayout의 못 놓은 기록) 들고 있다가,
-    /// 플레이어가 무엇을 바꿔 배치 파일이 다시 써질 때 그대로 다시 쓰인다. 읽기만으로는 파일을 쓰지 않는다.
-    /// 가까운 자리로 옮기기와 보관 목록은 다음 작업(설계서 7.3절, 1-2)이다.
+    /// 새 집에서 벽이 된 칸의 기록은 가까운 자리로 옮겨 놓이고(HouseMoveTests가 자세히 본다), 데이터에 없는 가구 기록은 놓이지 않은 채
+    /// (HouseFurnitureLayout의 못 놓은 기록) 들고 있다가, 플레이어가 무엇을 바꿔 배치 파일이 다시 써질 때 그대로 다시 쓰인다. 읽기만으로는 파일을 쓰지 않는다.
     /// </summary>
     public sealed class NewHouseKeepsOldFurnitureTests
     {
@@ -46,22 +45,26 @@ namespace Rootborn.Game.Tests
 
             var game = TestWorld.Start(saves.Store);
             game.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
-            Assert.That(game.House.Placed.Select(p => (p.Definition.StableId, p.Anchor)), Is.EqualTo(new[] { (FreeDesk, free) }), "놓을 수 있는 기록만 놓인다");
-            Assert.That(game.House.UnresolvedCount, Is.EqualTo(2), "벽이 된 칸의 기록과 데이터에 없는 가구는 못 놓은 기록으로 든다");
+            Assert.That(game.House.Placed.Count, Is.EqualTo(2));
+            Assert.That(game.House.Placed[0].Anchor, Is.EqualTo(free), "놓을 수 있는 기록은 제자리");
+            GridPoint moved = game.House.Placed[1].Anchor;
+            Assert.That(moved, Is.Not.EqualTo(new GridPoint(wall.X, wall.Y)), "벽이 된 칸의 책상은 가까운 자리로 옮겨졌다");
+            Assert.That(game.House.UnresolvedCount, Is.EqualTo(1), "데이터에 없는 가구는 못 놓은 기록으로 든다");
             Assert.That(File.ReadAllBytes(file), Is.EqualTo(written), "들어가 읽기만 해서는 배치 파일을 쓰지 않는다");
 
             // 플레이어가 하나 더 놓으면 파일이 다시 써진다 — 못 놓은 기록도 그대로 남는다.
             GridPoint second = HouseRoom.FirstFreeAnchor(game, FreeDesk);
             Assert.That(game.PlaceFurniture(FreeDesk, second, FurniturePlacementDirection.North), Is.True);
             Assert.That(saves.Store.TryRead<FurniturePlacementLayoutSaveData>(TestWorld.Slot, SaveFileNames.HouseFurnitureLayout(0), out var after), Is.True);
-            Assert.That(after.Items.Select(i => (i.FurnitureId, i.AnchorX, i.AnchorY)), Is.SupersetOf(old.Items.Select(i => (i.FurnitureId, i.AnchorX, i.AnchorY))),
-                "옛 기록 셋이 모두 파일에 남는다");
+            Assert.That(after.Items.Select(i => (i.FurnitureId, i.AnchorX, i.AnchorY)),
+                Is.SupersetOf(new[] { (FreeDesk, free.X, free.Y), (FreeDesk, moved.X, moved.Y), ("old.no-such-furniture", free.X + 1, free.Y) }),
+                "옛 기록 셋이 모두 파일에 남는다(벽 칸의 책상은 옮긴 자리로)");
             Assert.That(after.Items.Length, Is.EqualTo(4));
 
             var again = TestWorld.Start(saves.Store);
             again.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
-            Assert.That(again.House.Placed.Count, Is.EqualTo(2));
-            Assert.That(again.House.UnresolvedCount, Is.EqualTo(2), "다음 판에서도 못 놓은 기록을 들고 있다");
+            Assert.That(again.House.Placed.Count, Is.EqualTo(3));
+            Assert.That(again.House.UnresolvedCount, Is.EqualTo(1), "다음 판에서도 못 놓은 기록을 들고 있다");
         }
     }
 }
