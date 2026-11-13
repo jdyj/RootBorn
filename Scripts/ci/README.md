@@ -6,14 +6,16 @@ MonoGame 판(`game/` — Core 규칙 `game/Rootborn.Core/src` 포함, `Tools/`)�
 
 ```bash
 export PATH="$HOME/.dotnet:$PATH" DOTNET_ROOT="$HOME/.dotnet"
-bash Scripts/ci/run-all.sh                 # 자체 시험 + 검사 6개 + dotnet 테스트 전부 (Host 테스트는 실제 창을 띄운다)
-bash Scripts/ci/run-all.sh --checks-only   # 검사 스크립트만 (몇 초)
+bash Scripts/ci/run-all.sh                 # 자체 시험 + 검사 6개 + 픽셀 키트 도구 테스트·lint + dotnet 테스트 전부 (Host 테스트는 실제 창을 띄운다)
+bash Scripts/ci/run-all.sh --checks-only   # 검사 스크립트만 (몇 초). 픽셀 키트 테스트와 dotnet 테스트는 돌지 않는다
 bash Scripts/ci/run-all.sh --skip-host     # dotnet 테스트에서 창을 띄우는 Host 테스트를 뺀다
 ```
 
 Host 테스트가 든 `dotnet test`(`run-all.sh`의 sln 실행, CI의 Host 묶음)에는 멈춤 감시가 붙는다: 한 테스트가 `ROOTBORN_TEST_HANG_MINUTES`분(기본 10) 동안 끝나지 않으면 testhost를 죽이고 돌던 테스트 이름을 blame `Sequence_*.xml`(결과 폴더 아래)에 남긴다. 덤프는 만들지 않는다. 한 테스트가 정말 그보다 길면 환경 변수를 올린다.
 
-끝에 통과/실패 요약을 내고, 실패가 하나라도 있으면 종료 코드 1이다. 필요한 것: bash, git, `python3`(검사가 C# 주석·문자열을 가를 때), dotnet 8.
+끝에 통과/실패 요약을 내고, 실패가 하나라도 있으면 종료 코드 1이다. 필요한 것: bash, git, `python3`(검사가 C# 주석·문자열을 가를 때, 그리고 전체 실행의 픽셀 키트 테스트 — Pillow 필요), dotnet 8.
+
+전체 실행(`--checks-only`가 아닐 때)은 dotnet 테스트 앞에서 픽셀 키트 도구 테스트(`python -m unittest discover -s Tools/pixel-kit/tests -t Tools/pixel-kit`, 이 PC 약 2분)와 `kit.py lint`를 돈다. 방 고르기 규칙이 키트(Python)와 게임(C#) 두 곳에 있고 시험 표 `Tools/pixel-kit/tests/fixtures/room-vectors.json`이 둘을 묶는다 — 키트 규칙만 고치고 `python Tools/pixel-kit/kit.py room vectors`로 시험 표를 다시 만들지 않으면 키트 테스트가, 시험 표만 바뀌면 C# 테스트가 깨진다.
 
 ## 검사 목록
 
@@ -46,6 +48,7 @@ GitHub 기록(`gh run view`, 읽기만)을 읽어 확인한 값이다(main 43120
 
 | job | 하는 일 | 마지막 결과(43144463346) | 시간(최근 세 번) | 막는가 |
 |---|---|---|---|---|
+| `pixel-kit-tests` | Python 3.11 + Pillow(키트를 만든 PC와 같은 12.0.0으로 고정)로 픽셀 키트 도구 테스트 전체와 `kit.py lint`(2026-11-14 더함) | 아직 돈 적이 없다(푸시하지 않았다) | 이 PC 약 2분 | 막는다 |
 | `static-checks` | 자체 시험 + 검사 6개(아래 표 — `check-meta-files`는 Unity와 함께 지웠고 `check-host-test-shards`를 더했다) | 통과(Core 파일 161개, 엔티티 id 387개 파일, 2개 언어 같은 키 1,360개, Host 클래스 50개가 묶음 4개에) | 10~15초 | 막는다 |
 | `dotnet-tests` | `game/tests`의 Host 테스트를 뺀 나머지 프로젝트(Core 테스트도 `game/tests` 안 — Server, Simulation, Balance 포함) | 통과(Core 1,036, Data 284, Game 572, Net 76, Screens 449, Server 75, Simulation 43, Ui 123, World 94. 건너뜀 0). Balance는 이 실행 뒤에 생겨 이 실행의 숫자가 아니다 — 원격 실행(`Scripts/remote-test`) 기준 통과 94, `[Explicit]` 2건(전체 보고, 모든 경우 훑기 `output/balance/sweep/`) 건너뜀. CI에서는 아직 돈 적이 없다 | 약 2분 | 막는다 |
 | `server-publish` | `Tools/publish/publish.sh --server linux-x64` 뒤 `verify.sh --server linux-x64` | 통과 | 30초~1분 | 막는다 |

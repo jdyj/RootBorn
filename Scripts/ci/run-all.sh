@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 로컬에서 CI와 같은 검사를 한 번에 돌린다.
-#   bash Scripts/ci/run-all.sh                 검사 스크립트 + dotnet 테스트 전부 (Host 테스트는 실제 창을 띄운다)
+#   bash Scripts/ci/run-all.sh                 검사 스크립트 + 픽셀 키트 도구 테스트 + dotnet 테스트 전부 (Host 테스트는 실제 창을 띄운다)
 #   bash Scripts/ci/run-all.sh --checks-only   검사 스크립트만 (몇 초)
 #   bash Scripts/ci/run-all.sh --skip-host     dotnet 테스트에서 Host 테스트(창)를 뺀다
 # 하나가 실패해도 끝까지 돌리고, 마지막에 요약과 종료 코드(실패가 있으면 1)를 낸다.
@@ -44,6 +44,12 @@ fi
 for c in "${CHECKS[@]}"; do
   run_step "check-$c" bash "$CI_DIR/check-$c.sh"
 done
+
+# 픽셀 키트 도구 테스트(Python + Pillow, 약 2분). 시험 표 room-vectors.json이 키트 규칙과 같은지도 여기서 본다.
+if [ "$checks_only" -eq 0 ]; then
+  run_step "pixel-kit 도구 테스트" "$PY" -m unittest discover -s Tools/pixel-kit/tests -t Tools/pixel-kit
+  run_step "pixel-kit lint" "$PY" Tools/pixel-kit/kit.py lint
+fi
 
 if [ "$checks_only" -eq 0 ]; then
   if ! command -v dotnet >/dev/null 2>&1; then
