@@ -199,6 +199,15 @@ class AllFurnitureTests(unittest.TestCase):
                     self.assertEqual(lint_sprite(cv, r, c), [])
                     self.assertEqual(c.problems, [])
 
+    def test_menu_board_is_lint_clean_and_has_chalk_but_no_letters_of_its_own(self):
+        r = RECIPES["bakery.menu-board"]
+        c = ctx()
+        cv = render(r, c)
+        self.assertEqual((cv.w, cv.h), (32, 32))
+        self.assertEqual(lint_sprite(cv, r, c), [])
+        self.assertIn(STYLE.color("white.0"), cv.colors())
+        self.assertIn(STYLE.color("board.green.1"), cv.colors())
+
     def test_recipes_table(self):
         expect = {
             "bakery.shelf": ("furniture.shelf", [2, 1], [2, 3], True),

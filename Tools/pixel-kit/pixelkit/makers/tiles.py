@@ -76,6 +76,22 @@ def wall_interior(spec: dict, ctx) -> Canvas:
     return cv
 
 
+@register("tile.grass")
+def grass(spec: dict, ctx) -> Canvas:
+    """풀밭. 바탕 한 색에 짧은 풀잎(밝은 끝 + 짙은 밑동)을 칸 좌표 해시로 흩는다. 주기 16."""
+    cv = Canvas(32, 32)
+    (prefix,) = _prefixes(spec, 1)
+    dark, base, light = _ramp(spec, ctx, prefix, (0, 1, 2))
+    cv.rect(0, 0, 32, 32, base)
+    for k in range(6):                                   # 16px 안의 풀잎 여섯, 네 번 되풀이
+        bx, by = _hash(k, 1, 15), 1 + _hash(2, k, 13)
+        for ox in (0, 16):
+            for oy in (0, 16):
+                cv.px(ox + bx, oy + by, light)
+                cv.px(ox + bx, oy + by + 1, dark)
+    return cv
+
+
 @register("tile.paver")
 def paver(spec: dict, ctx) -> Canvas:
     """16px 판석 넷. 빛 모서리·줄눈·잔 점. 주기 16."""

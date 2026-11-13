@@ -10,7 +10,8 @@ STYLE = Style.load(str(ROOT / "art" / "kit" / "style.json"))
 RECIPES = load_recipes(str(ROOT / "art" / "kit" / "recipes" / "bakery"))
 CTX = Ctx(STYLE, {})
 
-SIZES = {"bakery.tile.floor": (32, 32), "bakery.tile.wall": (32, 64), "bakery.tile.sidewalk": (32, 32)}
+SIZES = {"bakery.tile.floor": (32, 32), "bakery.tile.wall": (32, 64), "bakery.tile.sidewalk": (32, 32),
+         "bakery.tile.grass": (32, 32)}
 
 
 class TileTests(unittest.TestCase):

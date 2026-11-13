@@ -23,5 +23,6 @@
      ["bread.roll", "bread.bun"],
      ["bread.baguette"]
    ],
-   "states": {"empty": {"rows": [[], [], [], []]}}}
+   "states": {"empty": {"rows": [[], [], [], []]}}},
+  {"id": "bakery.menu-board", "kind": "prop", "part": "prop.menu-board", "art_cells": [1, 1]}
 ]

@@ -360,3 +360,28 @@ def trolley(spec: dict, ctx) -> Canvas:
     spec["_layout"] = {"size": [cv.w, cv.h], "inner": [iy0, iy1], "rows": rows}
     _merge(spec, ctx, local)
     return cv
+
+
+# ---------- 메뉴판 ----------
+
+MENU_CHALK = ((6, 4, 9), (9, 4, 12), (12, 4, 7), (6, 18, 6), (9, 19, 5), (12, 16, 7))   # (y, x, 길이)
+
+
+@register("prop.menu-board")
+def menu_board(spec: dict, ctx) -> Canvas:
+    """벽에 거는 칠판 메뉴판. 나무 틀(위·왼쪽 밝게, 아래·오른쪽 어둡게) 안에 분필 줄. 글자는 쓰지 않는다(다국어)."""
+    wood = [_col(spec, ctx, f"wood.warm.{i}") for i in range(5)]
+    board = [_col(spec, ctx, f"board.green.{i}") for i in range(2)]
+    chalk = _col(spec, ctx, "white.0")
+    w, h = 30, 20
+    cv = Canvas(w, h)
+    cv.rect(0, 0, w, h, wood[2])                              # 틀
+    cv.hline(0, 0, w, wood[3])
+    cv.vline(0, 0, h, wood[3])
+    cv.hline(0, h - 1, w, wood[0])
+    cv.vline(w - 1, 0, h, wood[0])
+    cv.rect(2, 2, w - 4, h - 4, board[1])                     # 칠판
+    cv.hline(2, 2, w - 4, board[0])                           # 틀 밑 짙은 줄
+    for y, x, n in MENU_CHALK:
+        cv.hline(x, y, n, chalk)
+    return cv
