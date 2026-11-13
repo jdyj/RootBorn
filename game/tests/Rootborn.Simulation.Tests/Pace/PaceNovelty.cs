@@ -56,7 +56,14 @@ namespace Rootborn.Simulation.Pace
     {
         public const string FirstScreen = "처음 연 화면", FirstMap = "처음 들어간 맵", FirstTarget = "처음 상호작용한 대상", FirstMinigame = "처음 한 미니게임 종류",
             FirstActivity = "처음 한 활동", FirstItem = "처음 가진 아이템", ChainStep = "체인 단계 넘어감", QuestDone = "퀘스트 끝", CareerHint = "진로 힌트",
-            ChainEnd = "체인 끝", CampaignDay = "캠페인 날", CandidateOpened = "진로 후보 열림", Adult = "성인이 됨", FacilityLevel = "시설 레벨";
+            FurnitureUnlock = "가구 풀림", ChainEnd = "체인 끝", CampaignDay = "캠페인 날", CandidateOpened = "진로 후보 열림", Adult = "성인이 됨", FacilityLevel = "시설 레벨";
+
+        /// <summary>설계 3.3절에 있지만 넣지 못한 종류와 까닭(보고서가 적는다).</summary>
+        public static readonly IReadOnlyList<(string Kind, string Why)> NotIncluded = new[]
+        {
+            ("처음 본 대사", "대화 줄의 id를 지금 관찰·GameSession 조회로 얻지 못했다. 대화 화면의 글은 \"새로 나온 글자 수\"로만 센다"),
+            ("특성·기술이 단계에 닿음", "특성(HeirTrait)·기술(SkillDefinition) 데이터에 단계(문턱) 값이 없다"),
+        };
 
         private readonly List<Func<IPaceNoveltyKind>> _make = new List<Func<IPaceNoveltyKind>>();
 
@@ -73,6 +80,7 @@ namespace Rootborn.Simulation.Pace
             r.Add(() => new Seen(ChainStep, false, ChainSteps));
             r.Add(() => new Seen(QuestDone, false, QuestsDone));
             r.Add(() => new Seen(CareerHint, false, p => p.Session?.Student.GetCareerHintIds() ?? Array.Empty<string>()));
+            r.Add(() => new Seen(FurnitureUnlock, false, p => (IEnumerable<string>)p.Session?.FurnitureUnlocks?.UnlockTokens ?? Array.Empty<string>()));
             // 지점(설계 3.4절): 데이터에서 저절로 — 각 체인의 끝, 캠페인의 각 날, 성인이 됨, 시설 레벨마다, 진로 후보가 열림.
             r.Add(() => new Seen(ChainEnd, true, ChainsDone));
             r.Add(() => new Seen(CampaignDay, true, p => p.Session?.Campaign == null ? Array.Empty<string>() : new[] { p.Session.Campaign.CurrentDayNumber.ToString(CultureInfo.InvariantCulture) + "일째" }));
