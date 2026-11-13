@@ -11,8 +11,14 @@ namespace Rootborn.Simulation.Pace
     public sealed class PaceCompareEntry
     {
         public string Type = string.Empty;
+        /// <summary>열 이름(없으면 Type).</summary>
+        public string Label;
         public PaceRunInfo Info;
         public IReadOnlyList<PaceStep> Steps;
+        /// <summary>날마다 번 돈(먼 층·균형 시뮬레이터가 지갑 변화로 센 것). 없으면 null — 그 줄을 쓰지 않는다.</summary>
+        public IReadOnlyList<int> DailyIncome;
+
+        public string Column => string.IsNullOrEmpty(Label) ? Type : Label;
     }
 
     /// <summary>
@@ -21,18 +27,28 @@ namespace Rootborn.Simulation.Pace
     /// </summary>
     public static class PaceCompare
     {
-        public static void Write(string dir, string name, IReadOnlyList<PaceCompareEntry> entries, double secondsPerFrame)
+        /// <param name="header">맨 위 근거 줄들(없으면 가까운 층의 줄과 기준 가정). 먼 층·전후 비교가 자기 근거를 적는다.</param>
+        public static void Write(string dir, string name, IReadOnlyList<PaceCompareEntry> entries, double secondsPerFrame, IReadOnlyList<string> header = null, string title = "플레이어 유형 비교 ")
         {
             Directory.CreateDirectory(dir);
+            File.WriteAllText(Path.Combine(dir, "report.md"), Markdown(name, entries, secondsPerFrame, header, title));
+        }
+
+        public static string Markdown(string name, IReadOnlyList<PaceCompareEntry> entries, double secondsPerFrame, IReadOnlyList<string> header = null, string title = "플레이어 유형 비교 ")
+        {
             var analyses = entries.Select(e => new PaceAnalysis(e.Steps, secondsPerFrame, PaceAssumptions.Baseline)).ToList();
             var fast = entries.Select(e => new PaceAnalysis(e.Steps, secondsPerFrame, PaceAssumptions.Fastest)).ToList();
             var slow = entries.Select(e => new PaceAnalysis(e.Steps, secondsPerFrame, PaceAssumptions.Slowest)).ToList();
             var md = new StringBuilder(8192);
-            md.AppendLine("# 플레이어 유형 비교 " + name);
+            md.AppendLine("# " + title + name);
             md.AppendLine();
-            md.AppendLine(PaceReport.EvidenceLine);
-            md.AppendLine();
-            md.AppendLine("기준 가정: " + PaceAssumptions.Baseline.Label + ". 유형마다 자세한 보고서는 같은 폴더 위의 `pace/" + name + "-<유형>/report.md`.");
+            if (header == null)
+            {
+                md.AppendLine(PaceReport.EvidenceLine);
+                md.AppendLine();
+                md.AppendLine("기준 가정: " + PaceAssumptions.Baseline.Label + ". 유형마다 자세한 보고서는 같은 폴더 위의 `pace/" + name + "-<유형>/report.md`.");
+            }
+            else foreach (string line in header) md.AppendLine(line);
             md.AppendLine();
 
             md.AppendLine("## 한눈에");
@@ -57,6 +73,8 @@ namespace Rootborn.Simulation.Pace
                 return empty.Count == 0 ? "없음" : empty.Count + "일(처음 " + empty[0] + "일째)";
             }));
             Row(md, "할 것 없음의 몫", analyses.Select(a => Percent(a.TotalSeconds <= 0 ? 0 : Get(a.ByCategory, PaceCategories.NothingToDo) / a.TotalSeconds)));
+            if (entries.Any(e => e.DailyIncome != null))
+                Row(md, "하루 평균 수입", entries.Select(e => e.DailyIncome == null || e.DailyIncome.Count == 0 ? "-" : (e.DailyIncome.Average()).ToString("0.0", CultureInfo.InvariantCulture)));
             md.AppendLine();
 
             md.AppendLine("## 하루 평균 시간 쓰임 (기준, 분)");
@@ -81,7 +99,7 @@ namespace Rootborn.Simulation.Pace
             else
             {
                 md.Append("| 지점 | 종류 |");
-                foreach (var e in entries) md.Append(' ').Append(PlayerTypeCatalog.Label(e.Type)).Append(" |");
+                foreach (var e in entries) md.Append(' ').Append(e.Column).Append(" |");
                 md.AppendLine();
                 md.Append("|---|---|");
                 foreach (var _ in entries) md.Append("---|");
@@ -109,20 +127,28 @@ namespace Rootborn.Simulation.Pace
                     return rank < runs.Count ? "`" + runs[rank].Key.Replace("|", "\\|") + "` ×" + runs[rank].Count + "(" + runs[rank].Day + "일째)" : "-";
                 }));
             md.AppendLine();
+            md.AppendLine("## 날마다 새로운 것");
+            md.AppendLine();
+            Header(md, entries);
+            var days = entries.SelectMany(e => e.Steps.Select(st => st.Day)).Where(d => d >= 1).Distinct().OrderBy(d => d).ToList();
+            foreach (int day in days)
+                Row(md, day + "일째", entries.Select(e => e.Steps.Any(st => st.Day == day) ? e.Steps.Where(st => st.Day == day).Sum(st => st.Novelties.Count).ToString(CultureInfo.InvariantCulture) : "-"));
+            md.AppendLine();
+
             md.AppendLine("## 판");
             md.AppendLine();
             foreach (var e in entries)
             {
-                md.AppendLine("- " + PlayerTypeCatalog.Label(e.Type) + " (`" + e.Type + "`): " + e.Info.End + (e.Info.WallSeconds >= 0 ? ", 벽시계 " + e.Info.WallSeconds.ToString("0.0", CultureInfo.InvariantCulture) + "초" : ""));
+                md.AppendLine("- " + e.Column + " (`" + e.Type + "`): " + e.Info.End + (e.Info.WallSeconds >= 0 ? ", 벽시계 " + e.Info.WallSeconds.ToString("0.0", CultureInfo.InvariantCulture) + "초" : ""));
                 foreach (string n in e.Info.Notes) md.AppendLine("  - " + n);
             }
-            File.WriteAllText(Path.Combine(dir, "report.md"), md.ToString());
+            return md.ToString();
         }
 
         private static void Header(StringBuilder md, IReadOnlyList<PaceCompareEntry> entries)
         {
             md.Append("| 항목 |");
-            foreach (var e in entries) md.Append(' ').Append(PlayerTypeCatalog.Label(e.Type)).Append(" |");
+            foreach (var e in entries) md.Append(' ').Append(e.Column).Append(" |");
             md.AppendLine();
             md.Append("|---|");
             foreach (var _ in entries) md.Append("---|");

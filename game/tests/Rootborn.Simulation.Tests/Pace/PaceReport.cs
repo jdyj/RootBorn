@@ -19,6 +19,8 @@ namespace Rootborn.Simulation.Pace
         /// <summary>이 판을 돌리는 데 든 벽시계 시간(초, 재지 않았으면 음수) — 하루를 프레임 단위로 도는 비용.</summary>
         public double WallSeconds = -1;
         public readonly List<string> Notes = new List<string>();
+        /// <summary>보고서 맨 위의 근거 줄(없으면 가까운 층의 줄 <see cref="PaceReport.EvidenceLine"/>).</summary>
+        public string Evidence;
     }
 
     /// <summary>
@@ -53,7 +55,7 @@ namespace Rootborn.Simulation.Pace
             var md = new StringBuilder(8192);
             md.AppendLine("# 속도 보고 " + info.Name);
             md.AppendLine();
-            md.AppendLine(EvidenceLine);
+            md.AppendLine(info.Evidence ?? EvidenceLine);
             md.AppendLine();
             double game = steps.Sum(s => s.GameSeconds(spf));
             md.AppendLine("## 판");
