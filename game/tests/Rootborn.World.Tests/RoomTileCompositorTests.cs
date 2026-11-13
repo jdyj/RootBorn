@@ -272,6 +272,242 @@ namespace Rootborn.World.Tests
             Assert.That(Compositor(sheet).Compose(Plan(Enumerable.Range(0, 64).Select(_ => new string('.', 64)).ToArray()), _ => WallA, _ => FloorA, Sheet, BandId).TooLarge, Is.False);
         }
 
+        // ---------- 칸마다 꾸밈이 다를 때: 벽지·바닥의 주인은 그 픽셀이 바라보는 바닥 칸 ----------
+
+        /// <summary>
+        /// 방마다 다른 꾸밈: 바닥 칸(상하좌우로 이어진 바닥 = 한 방)에서만 그 방의 꾸밈을 돌려준다. 벽 칸·밖 칸으로 부르면 null을 돌려주고 기록한다 —
+        /// 조합기가 주인 칸(이 칸 + Owner) 대신 이 칸으로 부르면 드러난다(주인은 늘 바닥 칸이다).
+        /// </summary>
+        private sealed class RoomFinishes
+        {
+            public readonly Dictionary<CellPos, int> Room = new Dictionary<CellPos, int>();
+            public readonly List<RoomFinishDefinition> Walls = new List<RoomFinishDefinition>(), Floors = new List<RoomFinishDefinition>();
+            public readonly List<string> Misuse = new List<string>();
+
+            public RoomFinishes(RoomGrid grid)
+            {
+                for (int y = 0; y < grid.Rows; y++)
+                    for (int x = 0; x < grid.Columns; x++)
+                    {
+                        if (grid.At(x, y) != RoomCells.Floor || Room.ContainsKey(new CellPos(x, y))) continue;
+                        int r = Walls.Count;
+                        Walls.Add(Finish("finish.wall.r" + r, RoomFinishSlots.Wall, "w" + r));
+                        Floors.Add(Finish("finish.floor.r" + r, RoomFinishSlots.Floor, "f" + r));
+                        var stack = new Stack<CellPos>();
+                        stack.Push(new CellPos(x, y));
+                        Room[new CellPos(x, y)] = r;
+                        while (stack.Count > 0)
+                        {
+                            CellPos c = stack.Pop();
+                            foreach (var n in new[] { new CellPos(c.X + 1, c.Y), new CellPos(c.X - 1, c.Y), new CellPos(c.X, c.Y + 1), new CellPos(c.X, c.Y - 1) })
+                                if (n.X >= 0 && n.Y >= 0 && n.X < grid.Columns && n.Y < grid.Rows && grid.At(n.X, n.Y) == RoomCells.Floor && !Room.ContainsKey(n))
+                                {
+                                    Room[n] = r;
+                                    stack.Push(n);
+                                }
+                        }
+                    }
+            }
+
+            public RoomFinishDefinition Wall(CellPos c)
+            {
+                if (Room.TryGetValue(c, out int r)) return Walls[r];
+                Misuse.Add("벽 꾸밈을 바닥이 아닌 칸 " + c + "으로 불렀다");
+                return null;
+            }
+
+            public RoomFinishDefinition Floor(CellPos c)
+            {
+                if (Room.TryGetValue(c, out int r)) return Floors[r];
+                Misuse.Add("바닥 꾸밈을 바닥이 아닌 칸 " + c + "으로 불렀다");
+                return null;
+            }
+        }
+
+        /// <summary>칸마다 부분마다 그 픽셀이 주인(ownerOf가 주는 칸)의 꾸밈 조각 같은 자리에서 왔는지 본다. 다른 픽셀을 모아 돌려준다(처음 몇 개).</summary>
+        private static List<string> WrongPixels(RoomTilePlan plan, ComposedRoom room, TestSheet sheet, RoomFinishes f, Func<CellTiles, TilePart, CellPos> ownerOf)
+        {
+            var wrong = new List<string>();
+            foreach (CellTiles cell in plan.Cells)
+                foreach (TilePart part in cell.Parts)
+                {
+                    CellPos owner = ownerOf(cell, part);
+                    foreach (PixelRect r in part.Rects)
+                        for (int y = r.Y0; y < r.Y1; y++)
+                            for (int x = r.X0; x < r.X1; x++)
+                            {
+                                uint want;
+                                if (part.Source == TileSources.Band) want = Band["odfl".IndexOf(part.Shade[0])];
+                                else if (part.Source == TileSources.Face || part.Source == TileSources.Narrow) want = sheet.Value(f.Walls[f.Room[owner]].Art + "/" + part.Piece, x, y);
+                                else if (part.Source == TileSources.Floor)
+                                {
+                                    var range = ShadeRange(part.Shade);
+                                    bool shade = range.HasValue && y < 2 && x >= range.Value.Lo && x < range.Value.Hi;
+                                    want = sheet.Value(f.Floors[f.Room[owner]].Art + (shade ? "/floor:shade" : "/floor"), x, y);
+                                }
+                                else want = sheet.Value(RoomFinishArt.Common + "/" + part.Piece, x, y);
+                                uint got = At(room, cell.Cell, x, y);
+                                if (got != want && wrong.Count < 12) wrong.Add($"{cell.Cell} {part.Source} {part.Shade ?? part.Piece} 주인 {owner} ({x}, {y})");
+                            }
+                }
+            return wrong;
+        }
+
+        private static CellPos CoreOwner(CellTiles cell, TilePart part) => new CellPos(cell.Cell.X + part.Owner.X, cell.Cell.Y + part.Owner.Y);
+
+        private static RoomGrid GridOf(string[] rows)
+        {
+            int columns = rows.Max(r => r.Length);
+            var cells = new int[columns * rows.Length];
+            for (int y = 0; y < rows.Length; y++)
+                for (int x = 0; x < rows[y].Length; x++)
+                    cells[y * columns + x] = rows[y][x] == '#' ? RoomCells.Wall : rows[y][x] == '.' ? RoomCells.Floor : RoomCells.Out;
+            return new RoomGrid(columns, rows.Length, cells);
+        }
+
+        /// <summary>가로 벽 하나(윗면 + 정면 2칸)를 사이에 둔 북쪽 방과 남쪽 방.</summary>
+        private static readonly string[] NorthSouth =
+        {
+            "#######",
+            "#######",
+            "#######",
+            "#.....#",
+            "#.....#",
+            "#######",
+            "#######",
+            "#######",
+            "#.....#",
+            "#.....#",
+            "#######",
+        };
+
+        [Test]
+        public void HorizontalWallBetweenTwoRooms_ItsFaceIsTheSouthRoomsWallpaper()
+        {
+            RoomGrid grid = GridOf(NorthSouth);
+            RoomTilePlan plan = RoomTilePlan.Build(grid, 2, 16, null);
+            var f = new RoomFinishes(grid);
+            Assert.That(f.Walls.Count, Is.EqualTo(2), "전제: 방 둘");
+            int north = f.Room[new CellPos(1, 3)], south = f.Room[new CellPos(1, 8)];
+            TestSheet sheet = MakeSheet(plan, f.Walls, f.Floors);
+            ComposedRoom room = Compositor(sheet).Compose(plan, f.Wall, f.Floor, Sheet, BandId);
+            Assert.That(f.Misuse, Is.Empty, "꾸밈은 주인 바닥 칸으로만 부른다:\n" + string.Join("\n", f.Misuse.Distinct().Take(10)));
+            Assert.That(room.Problems, Is.Empty, string.Join("\n", room.Problems));
+
+            // 사이 벽(줄 5~7)의 정면은 정면이 바라보는 앞(남쪽) 방의 벽지: 주인이 남쪽 방이고, 픽셀이 남쪽 방 벽지 조각에서 왔으며 북쪽 방 것이 아니다.
+            int faces = 0;
+            foreach (CellTiles cell in plan.Cells.Where(c => c.Cell.Y >= 5 && c.Cell.Y <= 7))
+                foreach (TilePart part in cell.Parts.Where(p => p.Source == TileSources.Face))
+                {
+                    CellPos owner = CoreOwner(cell, part);
+                    Assert.That(f.Room.TryGetValue(owner, out int r) ? r : -1, Is.EqualTo(south), cell.Cell + " 정면의 주인 " + owner);
+                    PixelRect px = part.Rects[0];
+                    uint got = At(room, cell.Cell, px.X0, px.Y0);
+                    Assert.That(got, Is.EqualTo(sheet.Value(f.Walls[south].Art + "/" + part.Piece, px.X0, px.Y0)), cell.Cell + " 남쪽 방 벽지");
+                    Assert.That(got, Is.Not.EqualTo(sheet.Value(f.Walls[north].Art + "/" + part.Piece, px.X0, px.Y0)), cell.Cell + " 북쪽 방 벽지가 아니다");
+                    faces++;
+                }
+            Assert.That(faces, Is.GreaterThan(0), "사이 벽의 정면을 본다");
+            Assert.That(WrongPixels(plan, room, sheet, f, CoreOwner), Is.Empty, "모든 픽셀이 주인의 꾸밈에서");
+        }
+
+        /// <summary>픽셀 키트 시험 표의 사례 하나(격자, 문, 칸마다 부분과 Python이 정한 주인 own).</summary>
+        private sealed class VectorCase
+        {
+            public string Id;
+            public string[] Rows;
+            public int FaceHeight, Band;
+            public List<CellPos> Doors = new List<CellPos>();
+            /// <summary>(x, y, src, 값, px) → Python own(없으면 null).</summary>
+            public Dictionary<string, CellPos?> Own = new Dictionary<string, CellPos?>(StringComparer.Ordinal);
+            public int Parts;
+            public override string ToString() => Id;
+        }
+
+        private static string PartKey(CellPos cell, string src, string value, string px) => cell.X + "," + cell.Y + "|" + src + "|" + value + "|" + px;
+
+        private static List<VectorCase> VectorCases()
+        {
+            string path = Path.Combine(Repo.Root, "Tools", "pixel-kit", "tests", "fixtures", "room-vectors.json");
+            using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path));
+            var cases = new List<VectorCase>();
+            foreach (var c in doc.RootElement.GetProperty("cases").EnumerateArray())
+            {
+                var v = new VectorCase
+                {
+                    Id = c.GetProperty("id").GetString(),
+                    Rows = c.GetProperty("grid").EnumerateArray().Select(r => r.GetString()).ToArray(),
+                    FaceHeight = c.GetProperty("faceHeight").GetInt32(),
+                    Band = c.GetProperty("band").GetInt32(),
+                };
+                foreach (var d in c.GetProperty("doors").EnumerateArray()) v.Doors.Add(new CellPos(d[0].GetInt32(), d[1].GetInt32()));
+                foreach (var cell in c.GetProperty("cells").EnumerateArray())
+                {
+                    var at = new CellPos(cell.GetProperty("x").GetInt32(), cell.GetProperty("y").GetInt32());
+                    foreach (var p in cell.GetProperty("parts").EnumerateArray())
+                    {
+                        string value = p.TryGetProperty("shade", out var s) ? s.GetString() : p.GetProperty("piece").GetString();
+                        CellPos? own = p.TryGetProperty("own", out var o) ? new CellPos(o[0].GetInt32(), o[1].GetInt32()) : (CellPos?)null;
+                        v.Own[PartKey(at, p.GetProperty("src").GetString(), value, p.GetProperty("px").GetString())] = own;
+                        v.Parts++;
+                    }
+                }
+                cases.Add(v);
+            }
+            return cases;
+        }
+
+        [Test]
+        public void EveryVectorCase_EachRoomsOwnFinishes_EveryPixelFollowsThePythonOwner()
+        {
+            // 시험 표의 모든 사례(세로 벽 남쪽 끝의 좁은 정면 tee·wall-end, 두 방 사이 세로 벽, 문지방 …)에 방마다 다른 벽지·바닥을 주고 조합한다.
+            // 기대 픽셀은 Python 규칙(시험 표의 own)으로 고른 주인 방의 조각에서 — Core 출처표의 주인이 그와 같다는 것도 본다.
+            List<VectorCase> cases = VectorCases();
+            Assert.That(cases.Count, Is.GreaterThan(10));
+            int narrowParts = 0, threeRoomNarrowCells = 0, twoRoomFaceCells = 0;
+            foreach (VectorCase v in cases)
+            {
+                RoomGrid grid = GridOf(v.Rows);
+                RoomTilePlan plan = RoomTilePlan.Build(grid, v.FaceHeight, v.Band, v.Doors);
+                var f = new RoomFinishes(grid);
+                int parts = 0;
+                var pythonOwner = new Dictionary<TilePart, CellPos>();
+                foreach (CellTiles cell in plan.Cells)
+                    foreach (TilePart part in cell.Parts)
+                    {
+                        parts++;
+                        string key = PartKey(cell.Cell, part.Source, part.Shade ?? part.Piece, part.Pixels);
+                        Assert.That(v.Own.TryGetValue(key, out CellPos? own), Is.True, v.Id + " 시험 표에 없는 부분 " + key);
+                        Assert.That(part.HasOwner, Is.EqualTo(own.HasValue), v.Id + " " + key);
+                        if (own.HasValue)
+                        {
+                            Assert.That(part.Owner, Is.EqualTo(own.Value), v.Id + " Core 주인 = Python own " + key);
+                            pythonOwner[part] = new CellPos(cell.Cell.X + own.Value.X, cell.Cell.Y + own.Value.Y);
+                        }
+                    }
+                Assert.That(parts, Is.EqualTo(v.Parts), v.Id + " 부분 수");
+
+                TestSheet sheet = MakeSheet(plan, f.Walls, f.Floors);
+                ComposedRoom room = Compositor(sheet).Compose(plan, f.Wall, f.Floor, Sheet, BandId);
+                Assert.That(f.Misuse, Is.Empty, v.Id + ": 꾸밈은 주인 바닥 칸으로만 부른다:\n" + string.Join("\n", f.Misuse.Distinct().Take(10)));
+                Assert.That(room.Problems, Is.Empty, v.Id + ":\n" + string.Join("\n", room.Problems));
+                List<string> wrong = WrongPixels(plan, room, sheet, f, (cell, part) => part.HasOwner ? pythonOwner[part] : cell.Cell);
+                Assert.That(wrong, Is.Empty, v.Id + ": 주인(Python own)의 꾸밈이 아닌 픽셀:\n" + string.Join("\n", wrong));
+
+                foreach (CellTiles cell in plan.Cells)
+                {
+                    var narrow = cell.Parts.Where(p => p.Source == TileSources.Narrow).ToList();
+                    narrowParts += narrow.Count;
+                    var sideRooms = cell.Parts.Where(p => p.Source == TileSources.Floor).Select(p => f.Room[pythonOwner[p]]).ToList();
+                    if (narrow.Any(n => sideRooms.Count == 2 && sideRooms.Distinct().Count() == 2 && !sideRooms.Contains(f.Room[pythonOwner[n]]))) threeRoomNarrowCells++;
+                    if (cell.Parts.Where(p => p.Source == TileSources.Face).Select(p => f.Room[pythonOwner[p]]).Distinct().Count() == 2) twoRoomFaceCells++;
+                }
+            }
+            Assert.That(narrowParts, Is.GreaterThan(0), "좁은 정면을 본다");
+            Assert.That(threeRoomNarrowCells, Is.GreaterThan(0), "좁은 정면은 앞 방, 양옆 비침은 왼쪽·오른쪽 방 — 세 방의 꾸밈이 한 칸에 든 칸을 본다(tee)");
+            Assert.That(twoRoomFaceCells, Is.GreaterThan(0), "세로 벽이 가로 벽 정면을 지나는 칸: 양옆 늘인 정면이 각각 다른 방의 벽지");
+        }
+
         // ---------- 짓는 집을 그릴 때: 조합이 안 되면 LDtk 층으로 ----------
 
         private static (LoadedMap Map, RoomFinishDefinition Wall, RoomFinishDefinition Floor) House()
