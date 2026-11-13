@@ -298,6 +298,15 @@ if/switch로 종류를 닫지 않는다.
 편집기가 저장한 모양은 테스트 고정 파일 `tests/fixtures/room-saved-by-editor.ldtk`로 흉내 낸다(이 PC에서 편집기를 열어 본 것은 아니다 —
 실제 편집기에서 칠하고 저장한 파일로 되는지는 사용자가 확인한다).
 
+### 게임에서 보기와 처음 확인할 것
+
+- 게임에서 본다: `dotnet run --project game/Rootborn.Host -- --world <맵 id> --maps art/world/rooms/<방 id>/maps.json --size 1920x1080`(인자 표는 `game/README.md`). 도착 지점은 `maps.json`의 첫 것이다.
+- LDtk 편집기에서 레벨을 따로 저장(`externalLevels`)하게 하면 `repaint`가 `room-not-a-room`으로 거절한다(`.ldtk`만 다룬다).
+- 문 글자(`doors`)가 있는 방은 `maps.json`의 `doors` 표를 손으로 채우기 전에는 게임에서 그 문이 열리지 않는다(알림 `room-door-unregistered`).
+- **아직 확인하지 못한 것**: 실제 LDtk 편집기에서 만든 파일이 열리는지, 편집기가 저장한 진짜 파일을 `repaint`가 받는지, `repaint`가 다시 쓴 파일을 편집기가 다시 여는지. 사용자가 처음 해 볼 때 확인한다.
+- 벽 모양은 지금 `paper`·`plaster` 둘이고 바닥은 키트의 타일 명세 id뿐이다(고르는 중인 견본은 아직 도구에 없다). 걸어서 지나는 벽에 박힌 문과 벽의 옆으로 기운 면은 없다.
+- 절차는 스킬 `pixel-kit-room`.
+
 ## 같이 바뀌는 색
 
 `style.json`에는 일부러 **같은 hex를 갖게 한 줄 세 쌍**이 있다(색 수를 줄이려고 합친 것이고, 색 한도 때문은 아니다). 하나를 바꿀 때는 짝도 같은 값으로 바꾼다

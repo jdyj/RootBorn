@@ -86,6 +86,10 @@
 격자 크기가 맵 칸과 다르면 쓰지 않고 문제로 알린다. 규칙만으로 안 맞는 칸은 이 층으로 고친다(`openCells`보다 이쪽을 쓴다).
 `collision.openCells: [[x, y], ...]`는 지금 학교 맵을 Unity 판 충돌에 맞추려고 둔 값이다.
 
+### 키트로 만든 방
+
+픽셀 키트(`Tools/pixel-kit`, 스킬 `pixel-kit-room`)가 만든 실내 방(`art/world/rooms/<방 id>/`)은 이 약속을 그대로 쓴다. `collision.rule`은 `interior-auto`, 층 이름은 `Wall`·`Ground`·`Collision`·`Door`·`Furniture`이고 `Collision` 값은 1 벽, 2 바닥, 0 밖이다. 그림과 충돌이 같은 격자에서 나오므로 구조는 `Collision`을 고쳐 바꾸고(`room repaint`) `Wall`·`Ground`를 손으로 칠하지 않는다. 도착 지점은 `<맵 id 소문자>-entry`이고 `doors` 표는 비어 있어 손으로 채운다. 게임에는 `--maps <방 폴더>/maps.json`으로 준다.
+
 ## 4. 문과 이동
 
 - **문 엔티티**: 이름 `Door`(또는 `doorEntity`). 필드 `Where`(또는 `doorField`)에 목적지 값을 적는다. 값은 앞뒤 공백을 지우고 소문자로,
