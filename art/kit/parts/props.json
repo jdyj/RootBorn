@@ -14,7 +14,8 @@
       ".nNNNNNNNNNn."
     ],
     "keys": { "H": "bread.3", "L": "bread.2", "D": "bread.0",
-              "N": "wood.warm.2", "n": "wood.warm.0", "O": "wood.warm.3" } },
+              "N": "wood.warm.2", "n": "wood.warm.0", "O": "wood.warm.3" },
+    "allow": ["orphan-pixel"] },
 
   { "id": "prop.plant", "anchor": "bottom-center",
     "rows": [
@@ -33,7 +34,8 @@
       "..tTTTTt..",
       "...tttt..."
     ],
-    "keys": { "G": "leaf.1", "g": "leaf.0", "h": "leaf.2", "T": "terracotta.1", "t": "terracotta.0" } },
+    "keys": { "G": "leaf.1", "g": "leaf.0", "h": "leaf.2", "T": "terracotta.1", "t": "terracotta.0" },
+    "allow": ["orphan-pixel"] },
 
   { "id": "prop.wall-lamp", "anchor": "bottom-center",
     "rows": [
@@ -64,7 +66,8 @@
       "mmmmmmmmmmmmmm"
     ],
     "keys": { "m": "metal.0", "S": "metal.1", "M": "metal.2", "B": "glass.front.0", "b": "glass.front.1",
-              "W": "cream.2", "R": "red.0", "Y": "yellow.1" } },
+              "W": "cream.2", "R": "red.0", "Y": "yellow.1" },
+    "allow": ["orphan-pixel"] },
 
   { "id": "prop.clock", "anchor": "bottom-center",
     "rows": [
@@ -78,5 +81,6 @@
       ".nWWKWWn.",
       "..nnnnn.."
     ],
-    "keys": { "n": "wood.warm.0", "W": "cream.2", "K": "choco.0" } }
+    "keys": { "n": "wood.warm.0", "W": "cream.2", "K": "choco.0" },
+    "allow": ["orphan-pixel"] }
 ]

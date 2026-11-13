@@ -10,7 +10,8 @@
       ".CCCCCCCCD.",
       "..DDDDDDD.."
     ],
-    "keys": { "H": "bread.3", "L": "bread.2", "C": "bread.1", "D": "bread.0" } },
+    "keys": { "H": "bread.3", "L": "bread.2", "C": "bread.1", "D": "bread.0" },
+    "allow": ["orphan-pixel"] },
 
   { "id": "bread.baguette", "anchor": "bottom-center",
     "rows": [
@@ -20,7 +21,8 @@
       ".CCCCCCCCCCCD.",
       "..DDDDDDDDDD.."
     ],
-    "keys": { "H": "bread.3", "L": "bread.2", "C": "bread.1", "D": "bread.0" } },
+    "keys": { "H": "bread.3", "L": "bread.2", "C": "bread.1", "D": "bread.0" },
+    "allow": ["orphan-pixel"] },
 
   { "id": "bread.croissant", "anchor": "bottom-center",
     "rows": [
@@ -31,7 +33,8 @@
       "LLCD....DCCD",
       "CD........DC"
     ],
-    "keys": { "H": "bread.3", "L": "bread.2", "C": "bread.1", "D": "bread.0" } },
+    "keys": { "H": "bread.3", "L": "bread.2", "C": "bread.1", "D": "bread.0" },
+    "allow": ["orphan-pixel"] },
 
   { "id": "bread.donut", "anchor": "bottom-center",
     "rows": [
@@ -44,7 +47,8 @@
       "..DDDDD.."
     ],
     "keys": { "P": "icing.pink.0", "Q": "icing.pink.1", "W": "cream.2", "Y": "yellow.1",
-              "K": "choco.0", "C": "bread.1", "D": "bread.0" } },
+              "K": "choco.0", "C": "bread.1", "D": "bread.0" },
+    "allow": ["orphan-pixel"] },
 
   { "id": "bread.muffin", "anchor": "bottom-center",
     "rows": [
@@ -56,7 +60,8 @@
       ".EeEeEe.",
       "..eEeE.."
     ],
-    "keys": { "K": "choco.0", "k": "choco.1", "W": "cream.2", "E": "paper.1", "e": "paper.0" } },
+    "keys": { "K": "choco.0", "k": "choco.1", "W": "cream.2", "E": "paper.1", "e": "paper.0" },
+    "allow": ["orphan-pixel"] },
 
   { "id": "bread.cake", "anchor": "bottom-center",
     "rows": [
@@ -70,7 +75,8 @@
       "CCCCCCCCD"
     ],
     "keys": { "R": "red.1", "W": "cream.2", "P": "icing.pink.0", "Q": "icing.pink.1",
-              "E": "paper.1", "e": "paper.0", "C": "bread.1", "D": "bread.0" } },
+              "E": "paper.1", "e": "paper.0", "C": "bread.1", "D": "bread.0" },
+    "allow": ["orphan-pixel"] },
 
   { "id": "bread.sandwich", "anchor": "bottom-center",
     "rows": [
@@ -82,7 +88,8 @@
       ".CCCCCCCD."
     ],
     "keys": { "H": "bread.3", "L": "bread.2", "C": "bread.1", "D": "bread.0",
-              "G": "leaf.1", "h": "leaf.2", "R": "red.1", "W": "cream.2", "Y": "yellow.1" } },
+              "G": "leaf.1", "h": "leaf.2", "R": "red.1", "W": "cream.2", "Y": "yellow.1" },
+    "allow": ["orphan-pixel"] },
 
   { "id": "bread.pretzel", "anchor": "bottom-center",
     "rows": [
@@ -107,7 +114,8 @@
       ".CCCCCCCD.",
       "..DDDDDD.."
     ],
-    "keys": { "H": "bread.3", "L": "bread.2", "C": "bread.1", "D": "bread.0", "W": "cream.2" } },
+    "keys": { "H": "bread.3", "L": "bread.2", "C": "bread.1", "D": "bread.0", "W": "cream.2" },
+    "allow": ["orphan-pixel"] },
 
   { "id": "bread.toast", "anchor": "bottom-center",
     "rows": [
@@ -122,7 +130,8 @@
       ".DCEEEECD.",
       ".DDDDDDDD."
     ],
-    "keys": { "L": "bread.2", "C": "bread.1", "D": "bread.0", "E": "cream.1", "F": "cream.0" } },
+    "keys": { "L": "bread.2", "C": "bread.1", "D": "bread.0", "E": "cream.1", "F": "cream.0" },
+    "allow": ["orphan-pixel"] },
 
   { "id": "bread.roll", "anchor": "bottom-center",
     "rows": [
@@ -134,7 +143,8 @@
       ".CCCCCCCCC.",
       "..DDDDDDD.."
     ],
-    "keys": { "H": "bread.3", "L": "bread.2", "C": "bread.1", "D": "bread.0" } },
+    "keys": { "H": "bread.3", "L": "bread.2", "C": "bread.1", "D": "bread.0" },
+    "allow": ["orphan-pixel"] },
 
   { "id": "bread.pie", "anchor": "bottom-center",
     "rows": [
@@ -146,5 +156,6 @@
       "..mmmmmmmm.."
     ],
     "keys": { "H": "bread.3", "L": "bread.2", "C": "bread.1", "R": "red.0",
-              "M": "metal.2", "m": "metal.0" } }
+              "M": "metal.2", "m": "metal.0" },
+    "allow": ["orphan-pixel"] }
 ]

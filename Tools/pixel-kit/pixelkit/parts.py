@@ -6,7 +6,7 @@
 """
 import json
 from pathlib import Path
-from typing import Dict
+from typing import Dict, FrozenSet
 
 from .canvas import Canvas
 from .style import Style
@@ -70,4 +70,15 @@ def load_parts(directory: str, style: Style) -> Dict[str, Canvas]:
                 raise PartError(f"{path.name}: {pid}: id가 겹친다({origin[pid]}에도 있다)")
             out[pid] = cv
             origin[pid] = path.name
+    return out
+
+
+def load_part_allowances(directory: str) -> Dict[str, FrozenSet[str]]:
+    """부품 id → 검사에서 풀어 줄 코드 집합(부품 JSON의 "allow"). 없으면 빈 집합.
+    의도한 외톨이 점(손잡이, 씨앗)만 이렇게 푼다."""
+    out: Dict[str, FrozenSet[str]] = {}
+    for path in sorted(Path(directory).glob("*.json")):
+        data = json.loads(path.read_text(encoding="utf-8"))
+        for part in data:
+            out[part["id"]] = frozenset(part.get("allow", []))
     return out
