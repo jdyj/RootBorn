@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Core.Building;
 using Rootborn.Core.World;
+using Rootborn.Data;
 using Rootborn.World.Ldtk;
 
 namespace Rootborn.World
@@ -50,7 +52,9 @@ namespace Rootborn.World
     /// </summary>
     public static class MapChecks
     {
-        public static List<MapCheckProblem> Check(WorldMapLoader loader, InteractionData interactions)
+        /// <param name="definitions">있으면 짓는 집의 기본 꾸밈이 데이터에 있는 벽·바닥 꾸밈인지 본다.</param>
+        /// <param name="art">정의와 함께 있으면 띠 색 줄과 띠 두께가 기본 벽 꾸밈 시트의 좌표표와 맞는지 본다.</param>
+        public static List<MapCheckProblem> Check(WorldMapLoader loader, InteractionData interactions, GameDefinitions definitions = null, RoomFinishArt art = null)
         {
             if (loader == null) throw new ArgumentNullException(nameof(loader));
             var problems = new List<MapCheckProblem>();
@@ -60,6 +64,7 @@ namespace Rootborn.World
                 try { loaded = loader.LoadMap(entry.Id); }
                 catch (Exception e) { problems.Add(new MapCheckProblem(entry.Id, "맵을 읽지 못했다: " + e.Message)); continue; }
                 CheckMap(loader, loaded, interactions?.Map(entry.Id) ?? MapInteractions.Empty, problems);
+                if (entry.Build != null) CheckBuildArt(loaded, definitions, art, problems);
             }
             if (interactions != null)
                 foreach (string mapId in interactions.MapIds)
@@ -171,6 +176,55 @@ namespace Rootborn.World
                     }
                 foreach (CellPos c in front) Fixed("문 앞 '" + door.Target + "'", c);
             }
+        }
+
+        /// <summary>
+        /// 짓는 집의 조합 그리기: 바꿔 그릴 층이 레벨의 타일 층으로 있고(앞뒤를 가리는 ysort 층은 안 된다 — 조합 칸은 캐릭터 아래에 깐다),
+        /// 출처표가 만들어졌다. 정의가 있으면 기본 벽·바닥 꾸밈이 그 자리의 꾸밈으로 있고, 그림(좌표표)도 있으면 띠 색 줄이 기본 벽 꾸밈 시트에 있고
+        /// 시트의 띠 두께가 build.band와 같다(조각이 그 두께로 그려졌다).
+        /// </summary>
+        private static void CheckBuildArt(LoadedMap loaded, GameDefinitions definitions, RoomFinishArt art, List<MapCheckProblem> problems)
+        {
+            string id = loaded.Entry.Id;
+            MapBuildSettings build = loaded.Entry.Build;
+            foreach (string name in build.ReplacesLayers)
+            {
+                LdtkLayer layer = loaded.Level?.Layer(name);
+                if (layer == null || layer.Type != "Tiles") problems.Add(new MapCheckProblem(id, "짓는 집: 바꿔 그릴 층 " + name + "이 레벨의 타일 층으로 없다"));
+                else if (layer.Tags.Contains(MapPicture.DepthSortTag)) problems.Add(new MapCheckProblem(id, "짓는 집: 바꿔 그릴 층 " + name + "이 앞뒤를 가리는 층(" + MapPicture.DepthSortTag + ")이다"));
+            }
+            if (loaded.Tiles == null) problems.Add(new MapCheckProblem(id, "짓는 집: 칸마다 그릴 출처표를 만들지 못했다(LDtk 층을 그린다)"));
+            if (definitions == null) return;
+            RoomFinishDefinition wall = Finish(definitions, build.DefaultWall, RoomFinishSlots.Wall, "기본 벽 꾸밈", id, problems);
+            Finish(definitions, build.DefaultFloor, RoomFinishSlots.Floor, "기본 바닥 꾸밈", id, problems);
+            if (art == null || wall == null) return;
+            try
+            {
+                if (!art.TryBand(wall.Sheet, build.BandColors, out _))
+                    problems.Add(new MapCheckProblem(id, "짓는 집: 띠 색 줄 " + build.BandColors + "이 시트 " + wall.Sheet + "의 좌표표에 없다"));
+                int band = art.BandOf(wall.Sheet);
+                if (band != build.Band)
+                    problems.Add(new MapCheckProblem(id, "짓는 집: 띠 두께 " + build.Band + "px가 시트 " + wall.Sheet + "의 좌표표 band " + band + "px와 다르다"));
+            }
+            catch (System.IO.InvalidDataException e)
+            {
+                problems.Add(new MapCheckProblem(id, "짓는 집: 시트 " + wall.Sheet + "의 좌표표를 읽지 못했다: " + e.Message));
+            }
+        }
+
+        private static RoomFinishDefinition Finish(GameDefinitions definitions, string finishId, string slot, string what, string mapId, List<MapCheckProblem> problems)
+        {
+            if (!definitions.TryGet(finishId ?? string.Empty, out RoomFinishDefinition finish))
+            {
+                problems.Add(new MapCheckProblem(mapId, "짓는 집: " + what + " " + finishId + "이 데이터에 없다"));
+                return null;
+            }
+            if (finish.Slot != slot)
+            {
+                problems.Add(new MapCheckProblem(mapId, "짓는 집: " + what + " " + finishId + "은 " + finish.Slot + " 자리 꾸밈이다(" + slot + "여야 한다)"));
+                return null;
+            }
+            return finish;
         }
 
         private static readonly (int Dx, int Dy)[] Around = { (0, 0), (1, 0), (-1, 0), (0, 1), (0, -1) };

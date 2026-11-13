@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Rootborn.Core.Building;
 using Rootborn.Core.Characters;
 using Rootborn.Core.Dialogue;
 using Rootborn.Core.Interaction;
@@ -127,6 +128,9 @@ namespace Rootborn.Host.World
             _schedules = new NpcScheduleLookupCache(Content.Definitions.All<NpcSchedule>());
             _repoRoot = options.RepoRoot;
             FurnitureArt = new FurnitureArt(Path.Combine(options.RepoRoot, "data"));
+            _composedSheets = new ComposedRoomTextures(device, options.RepoRoot);
+            _compositor = new RoomTileCompositor(_composedSheets.Sheet, new RoomFinishArt(Path.Combine(options.RepoRoot, "data")));
+            _finishOf = id => Content.Definitions.TryGet(id ?? string.Empty, out RoomFinishDefinition d) ? d : null;
             Rooms = new RoomAwareMaps(Maps, _interactionData);
             _stage = NpcStage.Create(_schedules, _npcArt.Order, _interactionData, Maps.Catalog, Rooms, Content.Definitions.TimeRules);
             _houseBlocking = new HouseFurnitureBlocking(Rooms.RoomOf, _interactionData.PlacementMaps(Maps.Catalog), FurnitureBlockingChanged);
@@ -284,6 +288,8 @@ namespace Rootborn.Host.World
 
         private Texture2D Load(string path)
         {
+            // 실행 중에 만든 텍스처(조합한 벽·바닥, 열쇠 ComposedMapTiles.TexturePrefix + 맵 id)를 먼저 찾는다. 그림 캐시의 손질 대상이 아니다.
+            if (_runtime.Count > 0 && _runtime.TryGetValue(path, out Texture2D made)) return made;
             if (!_textures.TryGetValue(path, out CachedTexture cached))
             {
                 cached = new CachedTexture();
@@ -434,7 +440,7 @@ namespace Rootborn.Host.World
             _device.Clear(_background);
             _tint = lit ? Color.White : ambient;
             batch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointClamp, null, null, null, view);
-            foreach (SpriteDraw s in map.Picture.Under) DrawSprite(batch, s);
+            DrawUnder(batch, map);
             List<SpriteDraw> sorted = SortedWithFurniture(map);
             PickDoorFrame(map, sorted);
             // 플레이어와 NPC를 발 위치(몸 가운데 Y)로 정렬해 가구 사이에 끼운다.
@@ -465,6 +471,111 @@ namespace Rootborn.Host.World
             }
             Feel.DrawOverlays(batch, view, screenWidth, screenHeight, grid.CellSize, DoorFrameShown >= 0);
             if (_trimPending) TrimTextures();
+        }
+
+        // ---------- 짓는 집: 벽·바닥을 칸마다 조합해 그린다 ----------
+
+        private readonly ComposedRoomTextures _composedSheets;
+        private readonly RoomTileCompositor _compositor;
+        private readonly Func<string, RoomFinishDefinition> _finishOf;
+        /// <summary>실행 중에 만든 텍스처(조합한 벽·바닥). Load가 파일보다 먼저 찾는다.</summary>
+        private readonly Dictionary<string, Texture2D> _runtime = new Dictionary<string, Texture2D>(StringComparer.Ordinal);
+        private ComposedMapTiles _composed;
+        private LoadedMap _composedFrom;
+        private Texture2D _composedTexture;
+
+        /// <summary>조합한 횟수(맵에 처음 들어선 그리기마다, 다시 만들라고 했을 때마다 하나 — 시험·진단용).</summary>
+        public int ComposeCount { get; private set; }
+        /// <summary>지금 들고 있는 조합 텍스처의 GPU 메모리(가로 × 세로 × 4바이트, 없으면 0 — 시험·진단용).</summary>
+        public long ComposedTextureBytes { get; private set; }
+        /// <summary>마지막 조합(꾸밈 찾기 + 조합 + 텍스처 올리기)에 걸린 시간(ms, 진단용). 출처표는 맵을 읽을 때 이미 만들었다.</summary>
+        public double LastComposeMilliseconds { get; private set; }
+        /// <summary>지금 맵의 조합 결과(짓는 집이 아니면 null — 시험·진단용).</summary>
+        public ComposedMapTiles ComposedTiles => _composed;
+        /// <summary>지금 들고 있는 조합 텍스처(없으면 null — 시험·진단용).</summary>
+        public Texture2D ComposedTexture => _composedTexture;
+        /// <summary>마지막으로 그린 화면에서 캐릭터 아래 층(Under + 조합 칸)으로 그린 그림 수(진단용).</summary>
+        public int UnderSpritesDrawn { get; private set; }
+
+        /// <summary>그 맵의 조합을 버린다 — 그 맵을 다음에 그릴 때 다시 만든다(꾸밈·구조가 바뀌었을 때 부른다). 다른 맵이면 아무것도 하지 않는다.</summary>
+        public void RefreshComposedTiles(string mapId)
+        {
+            if (_composed != null && string.Equals(_composed.MapId, mapId, StringComparison.OrdinalIgnoreCase)) ReleaseComposed();
+        }
+
+        /// <summary>
+        /// 캐릭터 아래 층: 짓는 집이면 Under[0..ReplacedAt) → 조합한 칸 → 나머지. 조합이 안 됐으면 LDtk 층을 건너뛰지 않은 Under(드문 길).
+        /// 짓는 집이 아니면 Under 그대로. 조합은 그 맵에 처음 들어선 그리기에서 한 번 하고, 다른 맵으로 가면 버린다. 새 객체를 만들지 않는다(조합할 때만 만든다).
+        /// </summary>
+        private void DrawUnder(SpriteBatch batch, LoadedMap map)
+        {
+            IReadOnlyList<SpriteDraw> under = map.Picture.Under, cells = null;
+            int at = -1;
+            if (map.Tiles != null)
+            {
+                ComposedMapTiles composed = ComposedFor(map);
+                if (composed.Ok) { cells = composed.Draws; at = map.Picture.ReplacedAt; }
+                else under = composed.FallbackUnder;
+            }
+            else if (_composed != null) ReleaseComposed();
+            int drawn = 0;
+            for (int i = 0; i < under.Count; i++)
+            {
+                if (i == at) drawn += DrawAll(batch, cells);
+                DrawSprite(batch, under[i]);
+                drawn++;
+            }
+            if (at >= under.Count) drawn += DrawAll(batch, cells);
+            UnderSpritesDrawn = drawn;
+        }
+
+        private int DrawAll(SpriteBatch batch, IReadOnlyList<SpriteDraw> draws)
+        {
+            for (int i = 0; i < draws.Count; i++) DrawSprite(batch, draws[i]);
+            return draws.Count;
+        }
+
+        private ComposedMapTiles ComposedFor(LoadedMap map)
+        {
+            if (_composed != null && ReferenceEquals(_composedFrom, map)) return _composed;
+            ReleaseComposed();
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            ComposedMapTiles composed = ComposedMapTiles.Compose(map, _compositor, _finishOf);
+            if (composed.Ok)
+            {
+                _composedTexture = ComposedRoomTextures.Upload(_device, composed.Room);
+                if (_composedTexture != null)
+                {
+                    _runtime[composed.TextureKey] = _composedTexture;
+                    ComposedTextureBytes = (long)_composedTexture.Width * _composedTexture.Height * 4;
+                }
+            }
+            watch.Stop();
+            _composed = composed;
+            _composedFrom = map;
+            ComposeCount++;
+            LastComposeMilliseconds = watch.Elapsed.TotalMilliseconds;
+            string id = map.Entry.Id;
+            if (composed.Ok)
+                Console.WriteLine("[월드] " + id + ": 벽·바닥 조합 " + composed.Room.Cells.Count + "칸(서로 다른 그림 " + composed.Room.UniqueTiles + "), 텍스처 "
+                    + composed.Room.Width + "x" + composed.Room.Height + " " + (ComposedTextureBytes / 1048576.0).ToString("0.00") + "MB, "
+                    + LastComposeMilliseconds.ToString("0.0") + "ms");
+            else
+            {
+                foreach (string problem in composed.Problems) Console.Error.WriteLine("[월드] " + id + ": 조합: " + problem);
+                Console.Error.WriteLine("[월드] " + id + ": 벽·바닥을 조합하지 못해 LDtk 층(" + string.Join(", ", map.Entry.Build.ReplacesLayers) + ")으로 그린다");
+            }
+            return composed;
+        }
+
+        private void ReleaseComposed()
+        {
+            if (_composed != null) _runtime.Remove(_composed.TextureKey);
+            _composedTexture?.Dispose();
+            _composedTexture = null;
+            _composed = null;
+            _composedFrom = null;
+            ComposedTextureBytes = 0;
         }
 
         private readonly List<(float sortY, int npc)> _actors = new List<(float sortY, int npc)>(8);
@@ -739,6 +850,8 @@ namespace Rootborn.Host.World
 
         public void Dispose()
         {
+            ReleaseComposed();
+            _composedSheets.Dispose();
             foreach (CachedTexture cached in _textures.Values) cached.Texture.Dispose();
             _textures.Clear();
             CachedTextureBytes = 0;

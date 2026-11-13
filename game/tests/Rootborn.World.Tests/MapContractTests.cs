@@ -18,7 +18,8 @@ namespace Rootborn.World.Tests
         public void EveryMap_KeepsTheMapContract_ExceptTheKnownProblemsOfTodaysMaps()
         {
             WorldMapLoader loader = Repo.Loader();
-            List<MapCheckProblem> found = MapChecks.Check(loader, Interactions);
+            // 정의와 조각 시트 좌표표를 넘겨 짓는 집의 기본 꾸밈·띠 색 줄·띠 두께까지 본다.
+            List<MapCheckProblem> found = MapChecks.Check(loader, Interactions, Repo.Definitions, new RoomFinishArt(Path.Combine(Repo.Root, "data")));
 
             var unexpected = found.Where(p => !KnownMapProblems.Covers(loader.Catalog, p)).Select(p => p.ToString()).ToList();
             Assert.That(unexpected, Is.Empty, "새로 걸린 것(맵을 고치거나, 지금 맵의 문제라면 KnownMapProblems에 이유와 함께 적는다):\n" + string.Join("\n", unexpected));
@@ -124,11 +125,26 @@ namespace Rootborn.World.Tests
         {
             const string map = @"{ ""npcWalker"": { ""speedCellsPerSecond"": 2.5 }, ""maps"": [ { ""id"": ""A"", ""ldtk"": ""a.ldtk"", ""level"": ""L"", ""viewCells"": 10, ""collision"": { ""rule"": ""interior-auto"" },
                 ""doors"": {}, ""spawns"": { ""a"": [ 16, 16 ] }, ""build"": BUILD } ] }";
-            Assert.That(WorldCatalog.Parse(map.Replace("BUILD", @"{ ""frameLayer"": ""Build"", ""frameId"": ""a.v1"" }")).Find("A").Build.FrameId, Is.EqualTo("a.v1"));
+            var full = new (string Key, string Value)[]
+            {
+                ("frameLayer", @"""Build"""), ("frameId", @"""a.v1"""), ("faceHeight", "2"), ("band", "16"), ("bandColors", @"""wall.top.cream"""),
+                ("defaultWall", @"""finish.wall.paper"""), ("defaultFloor", @"""finish.floor.plank"""), ("replacesLayers", @"[ ""Wall"", ""Ground"" ]"),
+            };
+            string Build(string skip = null, string key = null, string value = null) =>
+                "{ " + string.Join(", ", full.Where(f => f.Key != skip).Select(f => @"""" + f.Key + @""": " + (f.Key == key ? value : f.Value))) + " }";
+
+            MapBuildSettings read = WorldCatalog.Parse(map.Replace("BUILD", Build())).Find("A").Build;
+            Assert.That((read.FrameLayer, read.FrameId, read.FaceHeight, read.Band, read.BandColors, read.DefaultWall, read.DefaultFloor),
+                Is.EqualTo(("Build", "a.v1", 2, 16, "wall.top.cream", "finish.wall.paper", "finish.floor.plank")));
+            Assert.That(read.ReplacesLayers, Is.EqualTo(new[] { "Wall", "Ground" }));
             Assert.That(WorldCatalog.Parse(map.Replace(@", ""build"": BUILD", "")).Find("A").Build, Is.Null, "build가 없으면 짓는 집이 아니다");
-            Assert.Throws<InvalidDataException>(() => WorldCatalog.Parse(map.Replace("BUILD", @"{ ""frameLayer"": ""Build"" }")));
-            Assert.Throws<InvalidDataException>(() => WorldCatalog.Parse(map.Replace("BUILD", @"{ ""frameId"": ""a.v1"" }")));
-            Assert.Throws<InvalidDataException>(() => WorldCatalog.Parse(map.Replace("BUILD", @"{ ""frameLayer"": "" "", ""frameId"": ""a.v1"" }")));
+            foreach (var (key, _) in full)
+                Assert.Throws<InvalidDataException>(() => WorldCatalog.Parse(map.Replace("BUILD", Build(skip: key))), key + "가 빠지면 거절(기본값으로 메우지 않는다)");
+            Assert.Throws<InvalidDataException>(() => WorldCatalog.Parse(map.Replace("BUILD", Build(key: "frameLayer", value: @""" """))));
+            Assert.Throws<InvalidDataException>(() => WorldCatalog.Parse(map.Replace("BUILD", Build(key: "band", value: @"""16"""))), "수는 수로");
+            Assert.Throws<InvalidDataException>(() => WorldCatalog.Parse(map.Replace("BUILD", Build(key: "faceHeight", value: "1.5"))));
+            Assert.Throws<InvalidDataException>(() => WorldCatalog.Parse(map.Replace("BUILD", Build(key: "replacesLayers", value: "[ ]"))), "바꿔 그릴 층이 없다");
+            Assert.Throws<InvalidDataException>(() => WorldCatalog.Parse(map.Replace("BUILD", Build(key: "replacesLayers", value: @"[ ""Wall"", "" "" ]"))));
             Assert.Throws<InvalidDataException>(() => WorldCatalog.Parse(map.Replace("BUILD", @"true")));
         }
 

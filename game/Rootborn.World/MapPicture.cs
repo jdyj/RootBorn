@@ -34,7 +34,14 @@ namespace Rootborn.World
         public readonly List<string> Problems = new List<string>();
         public readonly HashSet<string> Textures = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        public static MapPicture From(LdtkLevel level)
+        /// <summary>
+        /// 건너뛴 타일 층(<c>skipTileLayers</c>)의 첫 타일이 <see cref="Under"/>에 들어갔을 자리. 그리는 쪽이 Under[0..ReplacedAt) → 대신 그리는 그림 →
+        /// 나머지 순으로 그린다(짓는 집의 조합한 벽·바닥 — ComposedMapTiles). 건너뛴 층이 없거나 그 층에 타일이 없으면 -1.
+        /// </summary>
+        public int ReplacedAt { get; private set; } = -1;
+
+        /// <param name="skipTileLayers">타일을 그리지 않을 층 이름(그 층의 엔티티는 그대로). null이면 모두 그린다.</param>
+        public static MapPicture From(LdtkLevel level, IReadOnlyCollection<string> skipTileLayers = null)
         {
             var picture = new MapPicture();
             var sorted = new List<(SpriteDraw draw, int order)>();
@@ -42,7 +49,11 @@ namespace Rootborn.World
             {
                 if (!layer.Visible) continue;
                 bool depth = layer.Tags.Contains(DepthSortTag);
-                if (layer.Tiles.Count > 0)
+                if (layer.Tiles.Count > 0 && skipTileLayers != null && Contains(skipTileLayers, layer.Name))
+                {
+                    if (picture.ReplacedAt < 0) picture.ReplacedAt = picture.Under.Count;
+                }
+                else if (layer.Tiles.Count > 0)
                 {
                     if (layer.TilesetMissing || layer.TilesetPath == null)
                     {
@@ -75,6 +86,12 @@ namespace Rootborn.World
             sorted.Sort((a, b) => a.draw.SortY != b.draw.SortY ? a.draw.SortY.CompareTo(b.draw.SortY) : a.order.CompareTo(b.order));
             foreach (var s in sorted) picture.Sorted.Add(s.draw);
             return picture;
+        }
+
+        private static bool Contains(IReadOnlyCollection<string> names, string name)
+        {
+            foreach (string n in names) if (string.Equals(n, name, StringComparison.Ordinal)) return true;
+            return false;
         }
 
         /// <summary>앞뒤를 가리는 그림 하나를 정렬을 지키며 끼운다(같은 발 위치면 이미 있는 것 뒤 — 원본 순서). 넣은 자리를 돌려준다.</summary>

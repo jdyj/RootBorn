@@ -41,6 +41,7 @@
 | `areas` | LDtk에 없는 이동 구역 목록(3절) | 없음 |
 | `dayNight` | 시각에 따라 화면 색을 바꾸는가(바깥 맵) | `false` |
 | `entityRowShift` | 문 엔티티와 칠한 Collision 층을 그림보다 몇 줄 아래로 읽을지 | 0 |
+| `build` | 짓는 집이라는 맵 성질(맵 id가 아니라 이 값으로 고른다). 값은 모두 필수: `frameLayer`(지을 수 있는 칸 IntGrid 층), `frameId`(테두리의 판 이름), `faceHeight`(벽 정면 칸 수), `band`(벽 윗면 띠 px), `bandColors`(조각 시트 좌표표 `bands`의 띠 색 줄), `defaultWall`·`defaultFloor`(기본 꾸밈 id, `data/building`), `replacesLayers`(게임이 대신 그리는 타일 층). 게임은 `Collision` 격자와 벽 칸 위 문으로 칸마다 출처표를 내고(Core `RoomTilePlan`) 기본 꾸밈 조각으로 벽·바닥을 조합해 `replacesLayers` 대신 그린다(`RoomTileCompositor.cs`). 조합이 안 되면(조각·꾸밈 없음, 좌표표 깨짐, 4,096칸 초과) 문제를 알리고 그 층을 그대로 그린다. 키트 방은 `room build`가 이 값을 쓰고 이 파일의 값과 같아야 한다(키트 시험 `HouseRoomTests`) | 짓는 집 아님 |
 | `cameraBounds` | 카메라가 비출 맵 안의 부분 `[x, y, 너비, 높이]`(레벨 픽셀, 그림 기준, 줄 밀기 없음). 카메라는 이 사각형 밖을 비추지 않는다(`CameraFrame.cs`). 지금은 이 값을 쓰는 맵이 없다 | 맵 전체 |
 
 `entityRowShift`는 Unity 판에서 가져온 지금 맵의 어긋남(문이 그림보다 한 줄 아래)을 재현하는 값이다. **새 맵에는 적지 않는다.**

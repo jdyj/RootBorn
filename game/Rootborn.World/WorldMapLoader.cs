@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Rootborn.Core.Building;
 using Rootborn.Core.World;
 using Rootborn.World.Ldtk;
 
@@ -20,6 +21,12 @@ namespace Rootborn.World
         public readonly List<BuildingDoorArt> DoorArt = new List<BuildingDoorArt>();
         /// <summary>만들 때 읽은 부지 단계(맵 목록의 부지 순서). 지금 단계와 다르면 다시 만든다(WorldMapLoader.IsStale).</summary>
         public int[] LotLevels = Array.Empty<int>();
+        /// <summary>
+        /// 짓는 집(맵 항목의 build)만: 칸마다 픽셀 출처표(Core). 격자는 Collision IntGrid 값 그대로(0 밖, 1 벽, 2 바닥), 벽 칸 위의 문 엔티티가 벽 문,
+        /// 정면 높이·띠 두께는 build 값. 맵을 읽을 때 한 번 만든다. 만들지 못했으면(층이 없음, 값이 틀림) null이고 문제가 Problems에 있다 —
+        /// 그때는 Picture가 build.replacesLayers를 건너뛰지 않는다(LDtk 층을 그대로 그린다).
+        /// </summary>
+        public RoomTilePlan Tiles;
 
         /// <summary>그 문의 문 프레임(없으면 null). 매 프레임 불러도 새 객체를 만들지 않는다.</summary>
         public BuildingDoorArt DoorArtFor(DoorArea door)
@@ -132,7 +139,8 @@ namespace Rootborn.World
             CollisionInput input = CollisionInputOf(entry, level, doors, map.Problems);
             ICollisionRule rule = CollisionRules.Create(entry.CollisionRule, entry.CollisionOptions);
             CollisionGrid collision = Open(CollisionBaker.Bake(input, rule), entry.OpenCells);
-            map.Picture = MapPicture.From(level);
+            if (entry.Build != null) map.Tiles = TilePlanOf(entry, level, map.Problems);
+            map.Picture = MapPicture.From(level, map.Tiles != null ? entry.Build.ReplacesLayers : null);
             map.Problems.AddRange(map.Picture.Problems);
             if (entry.Lots.Count > 0)
                 collision = PlaceLots(map, collision, doors, repoRoot, buildings ?? BuildingCatalog.Empty, levels ?? BuildingLevelKinds.WithFixed());
@@ -270,6 +278,42 @@ namespace Rootborn.World
                 exits.Add(door.Area);
             }
             return new CollisionInput(grid, layers, exits, painted);
+        }
+
+        /// <summary>
+        /// 짓는 집의 출처표: Collision IntGrid 값이 격자(Core RoomGrid — 0·1·2 밖의 값은 거절), 문 엔티티 중 Collision이 벽인 칸에 놓인 것이 벽 문
+        /// (엔티티 자리 px ÷ 칸 — 키트 room_ldtk._wall_doors와 같은 규칙). 만들 수 없으면 문제를 남기고 null.
+        /// </summary>
+        private static RoomTilePlan TilePlanOf(MapEntry entry, LdtkLevel level, List<string> problems)
+        {
+            const string what = "짓는 집 출처표: ";
+            LdtkLayer layer = level.Layer(PaintedCollision.LayerName);
+            if (layer == null || layer.Type != "IntGrid" || layer.IntGrid == null)
+            {
+                problems.Add(what + PaintedCollision.LayerName + " IntGrid 층이 없어 벽·바닥을 조합하지 않는다(LDtk 층을 그린다)");
+                return null;
+            }
+            if (layer.GridSize != RoomTilePlan.CellSize || layer.IntGrid.Length != layer.Columns * layer.Rows)
+            {
+                problems.Add(what + PaintedCollision.LayerName + " 층 격자(" + layer.GridSize + "px, " + layer.Columns + "x" + layer.Rows + ")가 조합 칸 " + RoomTilePlan.CellSize + "px와 맞지 않는다");
+                return null;
+            }
+            var doors = new List<CellPos>();
+            int cell = layer.GridSize;
+            foreach (LdtkEntity e in level.Entities(entry.DoorEntity))
+            {
+                int x = (int)Math.Floor(e.X / (double)cell), y = (int)Math.Floor(e.Y / (double)cell);
+                if (x >= 0 && y >= 0 && x < layer.Columns && y < layer.Rows && layer.IntGrid[y * layer.Columns + x] == RoomCells.Wall) doors.Add(new CellPos(x, y));
+            }
+            try
+            {
+                return RoomTilePlan.Build(new RoomGrid(layer.Columns, layer.Rows, layer.IntGrid), entry.Build.FaceHeight, entry.Build.Band, doors);
+            }
+            catch (ArgumentException e)
+            {
+                problems.Add(what + e.Message);
+                return null;
+            }
         }
 
         /// <summary>맵 목록의 openCells를 연다(Unity 씬의 구운 충돌에 없던 칸).</summary>

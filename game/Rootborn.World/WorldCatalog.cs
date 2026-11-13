@@ -206,12 +206,39 @@ namespace Rootborn.World
             return lot;
         }
 
-        /// <summary>짓는 집의 값. frameLayer·frameId가 비면 분명한 오류(기본값으로 메우지 않는다).</summary>
+        /// <summary>짓는 집의 값. 하나라도 빠지거나 비면 분명한 오류(기본값으로 메우지 않는다). 수는 정수, 바꿔 그릴 층은 빈 이름 없는 목록 하나 이상.</summary>
         private static MapBuildSettings ParseBuild(JsonElement b, string mapId, string sourceName)
         {
             string where = sourceName + " " + mapId + " build";
             if (b.ValueKind != JsonValueKind.Object) throw new InvalidDataException(where + ": 객체여야 한다");
-            return new MapBuildSettings { FrameLayer = Required(b, "frameLayer", where), FrameId = Required(b, "frameId", where) };
+            var settings = new MapBuildSettings
+            {
+                FrameLayer = Required(b, "frameLayer", where),
+                FrameId = Required(b, "frameId", where),
+                FaceHeight = RequiredInt(b, "faceHeight", where),
+                Band = RequiredInt(b, "band", where),
+                BandColors = Required(b, "bandColors", where),
+                DefaultWall = Required(b, "defaultWall", where),
+                DefaultFloor = Required(b, "defaultFloor", where),
+            };
+            if (!b.TryGetProperty("replacesLayers", out JsonElement layers) || layers.ValueKind != JsonValueKind.Array || layers.GetArrayLength() == 0)
+                throw new InvalidDataException(where + ": 'replacesLayers' 값이 없다(바꿔 그릴 층 이름 목록)");
+            var names = new List<string>(layers.GetArrayLength());
+            foreach (JsonElement l in layers.EnumerateArray())
+            {
+                if (l.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(l.GetString()))
+                    throw new InvalidDataException(where + ": 'replacesLayers'에 빈 층 이름이 있다");
+                names.Add(l.GetString());
+            }
+            settings.ReplacesLayers = names;
+            return settings;
+        }
+
+        private static int RequiredInt(JsonElement e, string name, string source)
+        {
+            if (!e.TryGetProperty(name, out JsonElement v) || v.ValueKind != JsonValueKind.Number || !v.TryGetInt32(out int value))
+                throw new InvalidDataException(source + ": '" + name + "' 값이 없다(정수)");
+            return value;
         }
 
         private static NpcWalkSettings NpcWalkerOf(JsonElement root, string sourceName)
