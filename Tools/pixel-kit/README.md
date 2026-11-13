@@ -22,6 +22,7 @@ Python 3.11 + Pillow. 다른 패키지는 쓰지 않는다.
 정수·최근접. 기본 render 6, sheet·scene 4, parts 8).
 
 끝 코드: 0 깨끗, 1 검사 문제, 2 사용·데이터 오류(없는 id, 못 읽는 키트, 저장 거절).
+`render`와 `lint`는 문제가 있으면 1이다. `scene`과 `sheet`는 문제를 찍거나 빨간 테두리를 그려도 항상 0이다(사용·데이터 오류와 저장 거절만 2) — 끝 코드로 거르려면 `lint`를 쓴다.
 
 ## 파일이 있는 곳
 
@@ -109,7 +110,13 @@ if/switch로 종류를 닫지 않는다.
 `roof.items[].part`(등록된 지붕 위 물건, 그림자 띠까지 차지하는 w×h px): `roof.stair-house` 37×34, `roof.ac-unit` 23×20,
 `roof.skylight` 41×30, `roof.chimney` 19×32, `roof.dormer` 49×42. `at`은 그 사각형의 왼쪽 위다. 지붕 안(`roof_area`)에 들어가고 서로 겹치지 않아야 한다(`roof-overlap`).
 
-선반·진열대의 물건 높이 안내(점 부품 크기): 4층 선반은 층마다 물건 높이 11px까지 들어가고(3층 약 15, 2층 약 28),
+고정으로 읽는 것(명세 키가 아니라 코드에 박혀 있다 — 2단계 전에 키로 올린다):
+
+- `building.shop`은 점 부품 `prop.wall-lamp`가 있어야 하고, 팔레트 줄 `trim`(4단계), `wood.warm`(5), `glass.window`(3), `plinth`(2), `metal`(3), `bread`(4)와 색 `yellow.1`을 읽는다. 지붕 줄(`roof.teal`·`roof.slate` 5단계), 벽·문·계단 줄, 차양 줄은 명세나 지붕 종류에서 온다.
+- 가구: `furniture.shelf`는 `wood.warm`(5), `wood.back`(2), `cream.2`. `furniture.counter`는 `wood.warm`(5), `cream.2`, `wall.cream.0`. `furniture.glass-case`는 `metal`(3), `glass.front.0·1`, `glass.streak.0`. `furniture.trolley`는 `metal`(3), `metal.dark`(3). `prop.menu-board`는 `wood.warm`(5), `board.green`(2), `white.0`. `prop.a-board`는 `wood.warm`(4), `board.green`(2), `white.0`. 반사 줄은 `glass.streak.0`.
+- `prop.rug`의 `size`는 w ≥ 12, h ≥ 7px이다(테두리 2px 둘레 + 바느질 자리).
+
+선반·진열대의 물건 높이 안내(점 부품 크기): 4층 선반은 층마다 물건 높이 11px까지 들어가고(3층은 맨 위 16, 나머지 둘 17, 2층 28, 1층 62 — 안쪽 높이 68px을 층 수로 나눈 층 높이에서 6줄을 뺀 값),
 넘으면 `slot-clipped`다. 한 층에는 물건이 폭에 촘촘히 놓이는데, 너무 작으면 층이 비어 보인다.
 
 ## 장면 더하기
