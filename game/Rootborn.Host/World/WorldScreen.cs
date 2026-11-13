@@ -504,7 +504,7 @@ namespace Rootborn.Host.World
         }
 
         /// <summary>
-        /// 캐릭터 아래 층: 짓는 집이면 Under[0..ReplacedAt) → 조합한 칸 → 나머지. 조합이 안 됐으면 LDtk 층을 건너뛰지 않은 Under(드문 길).
+        /// 캐릭터 아래 층: 짓는 집이면 Under[0..InsertAt) → 조합한 칸 → 나머지(바꿔 그릴 층이 비었거나 숨겨졌거나 없어도 조합한 칸은 그린다). 조합이 안 됐으면 LDtk 층을 건너뛰지 않은 Under(드문 길).
         /// 짓는 집이 아니면 Under 그대로. 조합은 그 맵에 처음 들어선 그리기에서 한 번 하고, 다른 맵으로 가면 버린다. 새 객체를 만들지 않는다(조합할 때만 만든다).
         /// </summary>
         private void DrawUnder(SpriteBatch batch, LoadedMap map)
@@ -514,7 +514,7 @@ namespace Rootborn.Host.World
             if (map.Tiles != null)
             {
                 ComposedMapTiles composed = ComposedFor(map);
-                if (composed.Ok) { cells = composed.Draws; at = map.Picture.ReplacedAt; }
+                if (composed.Ok) { cells = composed.Draws; at = composed.InsertAt; } // 0..under.Count — 조합이 됐으면 늘 그린다
                 else under = composed.FallbackUnder;
             }
             else if (_composed != null) ReleaseComposed();
@@ -525,7 +525,7 @@ namespace Rootborn.Host.World
                 DrawSprite(batch, under[i]);
                 drawn++;
             }
-            if (at >= under.Count) drawn += DrawAll(batch, cells);
+            if (cells != null && at >= under.Count) drawn += DrawAll(batch, cells);
             UnderSpritesDrawn = drawn;
         }
 

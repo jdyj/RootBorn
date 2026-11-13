@@ -35,8 +35,9 @@ namespace Rootborn.World
         public readonly HashSet<string> Textures = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
-        /// 건너뛴 타일 층(<c>skipTileLayers</c>)의 첫 타일이 <see cref="Under"/>에 들어갔을 자리. 그리는 쪽이 Under[0..ReplacedAt) → 대신 그리는 그림 →
-        /// 나머지 순으로 그린다(짓는 집의 조합한 벽·바닥 — ComposedMapTiles). 건너뛴 층이 없거나 그 층에 타일이 없으면 -1.
+        /// 건너뛴 타일 층(<c>skipTileLayers</c>) 중 그리기 순서상 가장 아래 층이 <see cref="Under"/>에 들어갔을 자리. 그리는 쪽이 Under[0..ReplacedAt) →
+        /// 대신 그리는 그림 → 나머지 순으로 그린다(짓는 집의 조합한 벽·바닥 — ComposedMapTiles). 그 층이 비었거나 숨겨져 있어도 자리는 정해진다
+        /// (게임이 그 층을 대신 그리므로 편집기에서 비우거나 숨겨도 된다). 건너뛸 층이 레벨에 하나도 없으면 -1.
         /// </summary>
         public int ReplacedAt { get; private set; } = -1;
 
@@ -47,13 +48,11 @@ namespace Rootborn.World
             var sorted = new List<(SpriteDraw draw, int order)>();
             foreach (LdtkLayer layer in level.Layers)
             {
+                bool skip = skipTileLayers != null && Contains(skipTileLayers, layer.Name);
+                if (skip && picture.ReplacedAt < 0) picture.ReplacedAt = picture.Under.Count;
                 if (!layer.Visible) continue;
                 bool depth = layer.Tags.Contains(DepthSortTag);
-                if (layer.Tiles.Count > 0 && skipTileLayers != null && Contains(skipTileLayers, layer.Name))
-                {
-                    if (picture.ReplacedAt < 0) picture.ReplacedAt = picture.Under.Count;
-                }
-                else if (layer.Tiles.Count > 0)
+                if (!skip && layer.Tiles.Count > 0)
                 {
                     if (layer.TilesetMissing || layer.TilesetPath == null)
                     {

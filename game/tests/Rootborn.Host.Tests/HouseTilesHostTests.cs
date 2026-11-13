@@ -238,5 +238,51 @@ namespace Rootborn.Host.Tests
             Assert.That(world.ComposeCount, Is.EqualTo(1), "실패한 조합을 프레임마다 다시 하지 않는다");
             Assert.That(player.Game.Renderer.MissingImages, Is.Empty);
         }
+
+        [Test]
+        public void HOUSE_TILES_004_EmptiedReplacedLayers_TheComposedWallsAndFloorsAreStillDrawn()
+        {
+            // 편집기에서 게임이 대신 그리는 두 층(Wall·Ground)을 비운 집(임시 폴더의 LDtk 사본, 맵 목록 사본이 가리킨다)으로 들어간다.
+            // 조합은 되고, 조합한 칸이 모두 그려진다(그 층의 타일이 없어도 자리가 있다). 색은 보지 않는다 — 그린 그림 수와 스크린샷.
+            string catalogPath = Path.Combine(_root, WorldCatalog.DefaultRelativePath);
+            MapEntry entry = WorldCatalog.Load(catalogPath).Maps.Single(m => m.Build != null);
+            string source = Path.Combine(_root, entry.Ldtk);
+            foreach (string file in Directory.GetFiles(Path.GetDirectoryName(source)))
+                if (!file.EndsWith(".ldtk", StringComparison.OrdinalIgnoreCase)) File.Copy(file, Path.Combine(_temp, Path.GetFileName(file)));
+            System.Text.Json.Nodes.JsonNode ldtk = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(source));
+            int emptied = 0;
+            foreach (System.Text.Json.Nodes.JsonNode level in ldtk["levels"].AsArray())
+                foreach (System.Text.Json.Nodes.JsonNode layer in level["layerInstances"].AsArray())
+                    if (entry.Build.ReplacesLayers.Contains((string)layer["__identifier"]))
+                    {
+                        layer["gridTiles"] = new System.Text.Json.Nodes.JsonArray();
+                        layer["autoLayerTiles"] = new System.Text.Json.Nodes.JsonArray();
+                        emptied++;
+                    }
+            Assert.That(emptied, Is.EqualTo(entry.Build.ReplacesLayers.Count), "전제: 바꿔 그릴 층 전부를 비웠다");
+            string copy = Path.Combine(_temp, Path.GetFileName(source)).Replace('\\', '/');
+            File.WriteAllText(copy, ldtk.ToJsonString());
+            string text = File.ReadAllText(catalogPath);
+            string maps = Path.Combine(_temp, "maps.json");
+            string pointed = text.Replace("\"ldtk\": \"" + entry.Ldtk + "\"", "\"ldtk\": \"" + copy + "\"");
+            Assert.That(pointed, Is.Not.EqualTo(text));
+            File.WriteAllText(maps, pointed);
+
+            using PlayerDriver player = Start(maps);
+            player.Frames(10);
+            WorldScreen world = player.Game.World;
+            LoadedMap map = world.Current;
+            Assert.That(map.Entry.Ldtk, Is.EqualTo(copy));
+            Assert.That(map.Level.Layers.Where(l => entry.Build.ReplacesLayers.Contains(l.Name)).Sum(l => l.Tiles.Count), Is.EqualTo(0));
+            ComposedMapTiles composed = world.ComposedTiles;
+            Assert.That(composed.Ok, Is.True, string.Join("\n", composed.Problems));
+            Assert.That(world.ComposedTextureBytes, Is.GreaterThan(0));
+            Assert.That(world.UnderSpritesDrawn, Is.EqualTo(map.Picture.Under.Count + composed.Room.Cells.Count), "조합한 칸이 모두 그려진다");
+            (long draws, long sprites) = DrawCost(player);
+            TestContext.Progress.WriteLine($"HOUSE_TILES_004 비운 층: 캐릭터 아래 그림 {world.UnderSpritesDrawn}장(조합 칸 {composed.Room.Cells.Count}), 월드 한 장 그리기 호출 {draws}, 그림 {sprites}");
+            Assert.That(sprites, Is.GreaterThanOrEqualTo(composed.Room.Cells.Count));
+            player.Screenshot("house-tiles-40-replaced-layers-emptied");
+            Assert.That(player.Game.Renderer.MissingImages, Is.Empty);
+        }
     }
 }

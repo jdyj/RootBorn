@@ -342,6 +342,11 @@ namespace Rootborn.World
         public IReadOnlyList<string> Problems { get; private set; }
         /// <summary>Ok일 때 칸마다 한 장(텍스처 TextureKey, 맵 픽셀 자리). 아니면 비어 있다.</summary>
         public IReadOnlyList<SpriteDraw> Draws { get; private set; }
+        /// <summary>
+        /// Ok일 때 Picture.Under에서 Draws를 끼울 자리(0..Under.Count, Under.Count면 맨 뒤): 바꿔 그릴 층의 자리(<see cref="MapPicture.ReplacedAt"/>).
+        /// 바꿔 그릴 층이 레벨에 없으면 0(맨 아래).
+        /// </summary>
+        public int InsertAt { get; private set; }
         /// <summary>Ok가 아닐 때 그릴 Under 전체(MapPicture.From(level) — 드문 길이라 그때만 만든다). Ok면 null.</summary>
         public IReadOnlyList<SpriteDraw> FallbackUnder { get; private set; }
 
@@ -376,6 +381,9 @@ namespace Rootborn.World
                     draws[i] = new SpriteDraw(result.TextureKey, sx, sy, size, size, x, y, size, size, 0, 1f, y + size / 2f);
                 }
                 result.Draws = draws;
+                // 바꿔 그릴 층이 레벨에 하나도 없으면(맵 검사가 문제로 알린다) 맨 아래에 그린다 — 조합은 됐는데 그릴 자리가 없어 빈 화면이 되지 않게.
+                int at = map.Picture?.ReplacedAt ?? -1, count = map.Picture?.Under.Count ?? 0;
+                result.InsertAt = at < 0 ? 0 : Math.Min(at, count);
             }
             else
             {
