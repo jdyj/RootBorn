@@ -16,12 +16,23 @@ description: "ROOTBORN 실내 방·집 구조를 칸마다 벽/바닥/밖만 정
 
 ## 순서
 
-1. **평면을 쓴다**(`art/kit/rooms/<방 id>.json`, 본보기 `test.two-rooms.json`). 글자 줄 `plan`(`#` 벽, `.` 바닥, 빈칸 밖), `wall`(벽 모양: 지금 `paper`·`plaster`), `floor`(키트의 32x32 타일 명세 id — `kind: tile`이고 32x32로 그려지는 명세면 받는다. 본보기 평면은 `bakery.tile.floor`), `spawn`([x, y] 칸). 방 사이는 벽 줄을 끊은 문간(바닥 칸)으로 잇는다. 벽 두께는 한 칸이고 가로 벽은 3칸 이상 두꺼워야 윗면이 보인다(`room-wall-thin` 알림). 문 글자(`doors`)는 써도 되지만 아래 "하지 않는다"의 문 표를 본다.
+1. **평면을 쓴다**(`art/kit/rooms/<방 id>.json`, 본보기 `test.two-rooms.json`). 글자 줄 `plan`(`#` 벽, `.` 바닥, 빈칸 밖), `wall`(벽 모양: 지금 `paper`·`plaster`), `floor`(키트의 32x32 타일 명세 id — `kind: tile`이고 32x32로 그려지는 명세면 받는다. 본보기 평면은 `bakery.tile.floor`), `spawn`([x, y] 칸). 방 사이는 벽 줄을 끊은 문간(바닥 칸)으로 잇는다. 벽 칸은 한 칸(32px)이고, 윗면은 그 칸 안에 **16px 띠**로 그려진다(얇은 벽이 기본 — 아래 "얇은 벽"). 가로 벽이 서 보이려면 3칸(윗면 1 + 정면 2)이어야 하고 더 얇으면 정면만 남는다(`room-wall-thin` 알림). 세로 벽은 1칸이면 된다. 문 글자(`doors`)는 써도 되지만 아래 "하지 않는다"의 문 표를 본다.
 2. **`python Tools/pixel-kit/kit.py room check <방 id>`**로 평면부터 검사한다(쓰지 않는다). 문제(열린 가장자리, 닿지 못하는 바닥, 벽 안의 도착 지점)는 평면을 고쳐서 푼다.
 3. **`room build <방 id>`**(`--dry-run`으로 쓸 파일 먼저). 결과는 `art/world/rooms/<방 id>/`의 `<방 id>.ldtk`, `tiles.png`, `tiles.slots.json`, `maps.json`. 맵 id는 방 id를 PascalCase로(`test.two-rooms` → `TestTwoRooms`), 도착 지점은 `<맵 id 소문자>-entry`.
 4. **게임에서 본다**: `dotnet run --project game/Rootborn.Host -- --world <맵 id> --maps art/world/rooms/<방 id>/maps.json --size 1920x1080`. 벽에 막히는지, 문간을 지나는지 걷고, F12 스크린샷을 **직접 열어** 겹친 그림·잘린 타일·빈 칸을 본다(스킬 `host-play-test`로 장치 이벤트 주입도 된다).
-5. **LDtk에서 고친 뒤**: 편집기에서 `Collision` 층만 칠한다(1 벽, 2 바닥). 저장한 뒤(편집기에 파일이 열린 채로 `repaint`하면 편집기가 나중에 저장할 때 옛 벽 그림으로 덮는다 — 편집기에서 저장하고 닫은 뒤, 또는 `repaint` 뒤 편집기에서 다시 불러온 뒤 쓴다) `room check <.ldtk 경로>`(어긋난 칸 수가 나온다) → `room repaint <.ldtk 경로>`(`--dry-run` 먼저)로 벽·바닥 그림을 칠한 칸에 맞춘다. `repaint`는 `Wall`·`Ground` 타일과 시트만 바꾸고 `Collision`·`Door`·`Furniture`와 엔티티는 그대로 둔다. 다시 `room check`, 4번.
+5. **LDtk에서 고친 뒤**: 편집기에서 `Collision` 층만 칠한다(1 벽, 2 바닥). `Collision` 층은 반투명(`displayOpacity` 0.35)으로 만들어 두어 벽·바닥 그림 위에 칠한 칸이 비쳐 보이게 했다. 저장한 뒤(편집기에 파일이 열린 채로 `repaint`하면 편집기가 나중에 저장할 때 옛 벽 그림으로 덮는다 — 편집기에서 저장하고 닫은 뒤, 또는 `repaint` 뒤 편집기에서 다시 불러온 뒤 쓴다) `room check <.ldtk 경로>`(어긋난 칸 수가 나온다) → `room repaint <.ldtk 경로>`(`--dry-run` 먼저)로 벽·바닥 그림을 칠한 칸에 맞춘다. `repaint`는 `Wall`·`Ground` 타일과 시트만 바꾸고 `Collision`·`Door`·`Furniture`와 엔티티는 그대로 둔다. 다시 `room check`, 4번.
 6. **가구는 사람이 `Furniture` 층에 놓는다**(태그 `ysort`, 비어 있게 만들어진다). 도구는 가구를 놓지도 지우지도 않는다.
+
+## 얇은 벽
+
+사용자가 꽉 찬 32px 윗면을 보고 "벽이 너무 두꺼운데 … 얇게"라고 했고, 견본 셋 중 A를 골랐다(2026-11-14 "A로 가보자"). 그래서 지금 도구의 벽은 이렇다(규칙 전부는 README "방 만들기 — 벽 타일", 설계서 4.2절):
+
+- 윗면 칸에는 16px 띠만 그린다. 바깥 벽은 방 쪽에 붙고, 양쪽이 방인 세로 벽은 가운데, 정면 위 가로 윗면은 정면 쪽(아래)에 붙는다. 세로 벽 남쪽 끝 정면도 띠 폭으로 좁다.
+- 띠 옆 남는 자리는 벽 타일에서 투명하다: 바닥 쪽이면 그 칸 `Ground` 층에 바닥 타일이 깔려 비치고(벽 칸에도 `Ground` 타일이 있을 수 있다), 맵 밖 쪽이면 비어 있다. 정면 쪽이면 정면이 옆으로 늘어난다.
+- **충돌은 칸 단위 그대로다.** 벽 칸은 통째로 막히므로 띠 옆 8px, 가로 띠 위 16px는 바닥처럼 보여도 들어가지 못한다. 그림을 보고 "여기 걸을 수 있겠다"고 판단하지 않는다 — 걷는 칸은 `Collision`이 정한다.
+- 띠 두께(`band`)와 띠 색은 벽 모양의 값이다(`room_tiles.py`의 `@wall_style` 클래스). 방의 `tiles.slots.json`에 `band`가 남는다.
+- 얇은 벽 전(윗면 32px)에 만든 방은 자리 표에 `band`가 없다. `repaint`·`room check <.ldtk>`가 거절한다(끝 코드 2) — LDtk에서 칠한 것을 지키려면 그 자리 표에 `"band": 16`을 적고 `repaint`, 평면에서 다시 만들어도 되면 `room build <id> --force`.
+- 알려진 약점: 세로 벽이 정면 위로 이어지는 두꺼운 벽 덩어리(예: 3x4)에는 한 단 꺾인 자국이 남는다.
 
 ## 하지 않는다
 
@@ -31,12 +42,15 @@ description: "ROOTBORN 실내 방·집 구조를 칸마다 벽/바닥/밖만 정
 - 벽의 옆으로 기운 면 그리기, 걸어서 지나는 "벽에 박힌 문" 만들기. 이번 도구에 없다(방 사이는 문간).
 - 평면에 문 글자를 쓰고 끝내기. `Door` 엔티티는 놓이지만 만들어진 `maps.json`의 `doors` 표가 비어 있어 손으로 목적지를 채우기 전에는 게임에서 그 문이 열리지 않는다(알림 `room-door-unregistered`).
 - LDtk 편집기에서 레벨을 따로 저장(`externalLevels`)하게 하기. `repaint`가 거절한다.
-- 벽·바닥 종류나 벽 윗면 색을 묻지 않고 정하기. 지금 고르는 중이다(견본 W1~W8, F1~F9). 고른 것이 도구에 들어오기 전에는 벽은 `paper`·`plaster`뿐이고, 바닥은 키트의 32x32 타일 명세 id(`kind: tile`) 중에서 고른다(본보기는 `bakery.tile.floor`).
+- 벽·바닥 종류나 벽 윗면(띠) 색을 묻지 않고 정하기. 지금 고르는 중이다(견본 W1~W8, F1~F9, 띠 색은 지금 색 그대로 — 사용자 답 대기). 고른 것이 도구에 들어오기 전에는 벽은 `paper`·`plaster`뿐이고, 바닥은 키트의 32x32 타일 명세 id(`kind: tile`) 중에서 고른다(본보기는 `bakery.tile.floor`).
+- 가로 윗면 바로 위 16px 틈(바닥 쪽일 때 바닥처럼 보이지만 못 들어감)을 없애려고 띠 규칙을 바꾸기. 사용자 답 대기다.
 - 검사를 끄거나 `--force`로 문제를 덮기. 도구 코드를 이 스킬 안에서 고치기(도구는 별도 일이다).
 
-## 아직 확인하지 못한 것
+## 편집기에서 확인된 것과 아직 모르는 것
 
-**편집기에서 처음 열었을 때 실패했다(2026-11-14).** 사용자가 LDtk로 `room build`의 파일을 열자 `Cannot read properties of null (reading 'externalLevels') (TypeError)`가 났다 — 도구가 게임이 읽는 키만 쓰고 편집기가 기대하는 키를 많이 빠뜨렸다. 공식 스키마(1.5.3, `Tools/pixel-kit/tests/fixtures/ldtk-1.5.3/`)의 필수 키와 편집기 저장 파일에 늘 있는 키를 모두 채우고 테스트(`tests/test_ldtk_editor_shape.py`)로 고정했다. 그 전에 만든 방 파일은 `room check`가 `room-ldtk-incomplete`로 알리고 `repaint`가 거절한다 — `room build <id> --force`로 다시 만든다. **편집기에서 실제로 열리는지는 다시 확인 대기다.** 도구 테스트는 편집기가 저장한 모양을 흉내 낸 고정 파일(`Tools/pixel-kit/tests/fixtures/room-saved-by-editor.ldtk`)로만 했다. 모르는 것: (1) 다시 만든 `.ldtk`가 편집기에서 열리는가, (2) 편집기가 저장한 진짜 파일을 `repaint`가 받는가, (3) `repaint`가 다시 쓴 파일을 편집기가 다시 여는가. 사용자가 처음 해 볼 때 함께 확인하고, 확인되면 이 절을 지운다. 그 전에는 "편집기에서 된다"고 쓰지 않는다. 확인 순서 초안은 이 스킬이 아니라 사용자와 정한다(시험 방 `art/world/rooms/test.two-rooms/test.two-rooms.ldtk`로, 끝나면 `git checkout -- art/world/rooms/test.two-rooms`).
+**확인된 것(2026-11-14, 사용자)**: 처음에는 LDtk가 `room build`의 파일을 `Cannot read properties of null (reading 'externalLevels') (TypeError)`로 열지 못했다 — 도구가 게임이 읽는 키만 써서다. 공식 스키마(1.5.3, `Tools/pixel-kit/tests/fixtures/ldtk-1.5.3/`)의 필수 키와 편집기 저장 파일에 늘 있는 키를 채운 뒤(`tests/test_ldtk_editor_shape.py`) **편집기에서 열렸고, `Collision`을 칠해 저장한 파일을 `repaint`가 받아 벽 그림을 맞췄다.** 그 파일이 테스트 고정 파일 `Tools/pixel-kit/tests/fixtures/room-editor-saved/`다. 그 전에 만든 방 파일은 `room check`가 `room-ldtk-incomplete`로 알리고 `repaint`가 거절한다 — `room build <id> --force`로 다시 만든다.
+
+**아직 모르는 것(사용자 답 대기)**: (1) `repaint`가 다시 쓴 파일을 편집기가 다시 여는가, (2) `Collision` 층이 편집기에서 반투명으로 보이는가, (3) 얇은 벽(투명한 자리가 있는 벽 타일)이 편집기에서 어떻게 보이는가. 확인되면 이 줄에서 지운다. 그 전에는 이것들을 "편집기에서 된다"고 쓰지 않는다. 시험 방(`art/world/rooms/test.two-rooms/test.two-rooms.ldtk`)으로 해 보고 끝나면 `git checkout -- art/world/rooms/test.two-rooms`.
 
 ## 보고
 

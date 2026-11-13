@@ -88,7 +88,7 @@
 
 ### 키트로 만든 방
 
-픽셀 키트(`Tools/pixel-kit`, 스킬 `pixel-kit-room`)가 만든 실내 방(`art/world/rooms/<방 id>/`)은 이 약속을 그대로 쓴다. `collision.rule`은 `interior-auto`, 층 이름은 `Wall`·`Ground`·`Collision`·`Door`·`Furniture`이고 `Collision` 값은 1 벽, 2 바닥, 0 밖이다. 그림과 충돌이 같은 격자에서 나오므로 구조는 `Collision`을 고쳐 바꾸고(`room repaint`) `Wall`·`Ground`를 손으로 칠하지 않는다. 도착 지점은 `<맵 id 소문자>-entry`이고 `doors` 표는 비어 있어 손으로 채운다. 게임에는 `--maps <방 폴더>/maps.json`으로 준다.
+픽셀 키트(`Tools/pixel-kit`, 스킬 `pixel-kit-room`)가 만든 실내 방(`art/world/rooms/<방 id>/`)은 이 약속을 그대로 쓴다. `collision.rule`은 `interior-auto`, 층 이름은 `Wall`·`Ground`·`Collision`·`Door`·`Furniture`이고 `Collision` 값은 1 벽, 2 바닥, 0 밖이다. 그림과 충돌이 같은 격자에서 나오므로 구조는 `Collision`을 고쳐 바꾸고(`room repaint`) `Wall`·`Ground`를 손으로 칠하지 않는다. 벽 윗면은 칸 안의 얇은 띠라 벽 타일에 투명한 자리가 있고, 그 자리로 바닥이 비쳐야 하는 **벽 칸에도 `Ground` 타일이 있다**. 그래도 그 칸에는 `Wall` 타일이 함께 있어 `interior-auto`가 막고, 칠한 `Collision` 1이 언제나 막는다(벽 칸은 바닥처럼 보이는 자리까지 통째로 막힌다). 도착 지점은 `<맵 id 소문자>-entry`이고 `doors` 표는 비어 있어 손으로 채운다. 게임에는 `--maps <방 폴더>/maps.json`으로 준다.
 
 ## 4. 문과 이동
 

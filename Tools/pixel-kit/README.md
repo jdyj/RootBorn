@@ -214,29 +214,60 @@ if/switch로 종류를 닫지 않는다.
 둘레 칸을 보고 32x32 타일을 고르고 그린다. 설계는 `docs/superpowers/specs/2026-11-13-room-builder-design.md` 4.2절.
 평면 파일 읽기와 LDtk 쓰기는 다음 절이다.
 
-- `classify(grid, face_height=2)` → 칸마다 타일 열쇠(아래 표) 또는 `None`(밖).
+**벽 윗면은 얇은 띠다**(사용자 결정 2026-11-14, 견본 A). 타일 격자와 충돌은 32px 칸 그대로이고, 윗면 칸에는 두께 `band`(기본 16px)의
+띠만 그린다. 띠·정면이 아닌 자리는 벽 타일에서 **투명**하다 — 바닥 쪽이면 같은 칸의 `Ground` 층에 바닥 타일이 깔려 비치고,
+맵 밖 쪽이면 아무것도 없다(게임은 투명 픽셀을 섞어 그린다). 바닥을 벽 타일에 굽지 않으므로 벽 타일 열쇠는 바닥 종류와 무관하다.
+
+- `classify(grid, face_height=2)` → 칸의 종류: `floor`, `floor:shade`, 정면 열쇠(아래 표의 `face:…`), 윗면 `cap`, 밖 `None`. 평면 검사가 쓴다.
+- `plan_tiles(grid, face_height=2, band=16)` → `RoomTiles(wall, ground)`: 칸마다 `Wall` 층 열쇠(벽 칸)와 `Ground` 층 열쇠(바닥 칸,
+  그리고 띠 옆으로 바닥이 비치는 벽 칸) 또는 `None`. 둘레 칸뿐 아니라 이웃 칸의 띠 자리까지 계산해 열쇠에 담는다.
+- `tile_layout(key)` → 띠·좁은 정면 열쇠를 읽은 것(`band` 칸 안 띠 픽셀, `padded` 칠할 때 보는 이웃 칸 픽셀까지, `fills` 늘인 정면,
+  `narrow` 좁은 정면 범위). 바닥·꽉 찬 정면 열쇠는 `None`, 틀린 열쇠는 `RecipeError`.
 - `draw_tile(style, key, wall, floor_spec)` → 32x32 한 장. `wall`은 벽 모양 이름, `floor_spec`은 키트의 바닥 타일 명세
   (예: `bakery.tile.floor`, 32x32 — 바닥은 그 명세를 그대로 그린다). 모르는 벽 모양·열쇠는 `RecipeError`(있는 모양을 적는다).
+  열쇠 하나만 보고 그린다 — 이웃 타일을 몰라도 칸 경계에서 띠의 선이 이어진다.
 - `lint_room_tile(canvas, key, style)` → 문제 목록: `room-tile-size`(32x32가 아님), `off-palette`, `too-many-colors`(타일 한도 12),
-  `tile-transparent`, 정면·바닥 열쇠는 가로 이음매 `tile-seam`(가로로만 이어 붙이므로 세로는 보지 않는다).
-- 벽 모양은 `@wall_style("이름")`을 붙인 클래스 하나로 더한다: `cap`(윗면 팔레트 줄, 단계 0 안쪽 그늘 / 1 면 / 2 안쪽 빛)과
+  바닥·꽉 찬 정면은 `tile-transparent`(투명 픽셀)와 가로 이음매 `tile-seam`(가로로만 이어 붙이므로 세로는 보지 않는다).
+  띠·좁은 정면 타일은 열쇠가 정한 자리로 본다: `tile-transparent`(띠·정면 자리에 투명 픽셀), `room-tile-leftover`(남는 자리에
+  칠한 픽셀 — 바닥을 구웠다), `room-tile-empty`(완전히 투명), `tile-seam`(띠가 칸 경계를 넘어 이어지는 변에 외곽선이 그어졌다).
+- 벽 모양은 `@wall_style("이름")`을 붙인 클래스 하나로 더한다: `cap`(윗면 띠의 팔레트 줄, 단계 0 안쪽 그늘 / 1 면 / 2 안쪽 빛 —
+  **띠 색을 바꾸는 곳은 여기 한 곳**), `band`(띠 두께 px, 4 이상 32 미만), `paper`·`wood`(정면 벽지·나무 팔레트 줄 — 좁은 정면도 이 줄로),
   `face(style, k, ceiling) -> Canvas`(32x32, 끝·위 외곽선 없이. `k == 1`이 바닥 바로 위 타일, `ceiling`이면 천장 밑 그늘 2줄).
-  `wall_styles()`가 이름 목록. 지금 `paper`(줄무늬 벽지 `wall.cream` + 징두리 판 `wood.archive` + 걸레받이, 윗면 `wall.top.cream`),
-  `plaster`(회반죽 `wall.plaster` + 낮은 걸레받이 `wood.school`, 윗면 `wall.plaster.top`).
+  `wall_styles()`가 이름 목록, `wall_band(이름)`이 띠 두께. 지금 `paper`(줄무늬 벽지 `wall.cream` + 징두리 판 `wood.archive` + 걸레받이,
+  윗면 `wall.top.cream`, 띠 16), `plaster`(회반죽 `wall.plaster` + 낮은 걸레받이 `wood.school`, 윗면 `wall.plaster.top`, 띠 16).
+  띠 색은 아직 사용자가 고르지 않았다(지금 색 그대로).
 
-| 열쇠 | 뜻 |
-|---|---|
-| `floor` | 바닥 |
-| `floor:shade` | 바로 위 칸이 정면인 바닥. 맨 위 2줄이 그 팔레트 줄의 가장 어두운 단계(벽 밑 그림자) |
-| `face:<k>` | 정면. 아래로 `face_height`칸 안에 바닥이 나오고 그 사이가 모두 벽인 벽 칸. `k`는 바닥에서 위로 몇 번째(1이 바닥 바로 위) |
-| `face:<k>:<표시>` | 표시는 `l` `r` `c` `t` 중 붙는 것만 이 순서로. `l`/`r` 왼쪽/오른쪽 끝(그쪽 이웃이 같은 높이 정면도 윗면도 아님 → 그 변 열이 외곽선), `c` 위 칸이 윗면(천장 밑 그늘), `t` 위 칸이 벽이 아님(얇은 벽·맵 가장자리 → 맨 윗줄이 외곽선). 예: `face:2:c`, `face:2:lc`, `face:1:lrt` |
-| `cap:<mask>` | 윗면(정면이 아닌 벽 칸). `mask`는 둘레 8칸 중 윗면인 칸의 비트 합: 북 1, 동 2, 남 4, 서 8, 북동 16, 남동 32, 남서 64, 북서 128. 대각 비트는 양옆 두 변이 모두 윗면일 때만 남겨 47가지 |
+| 열쇠 | 층 | 뜻 |
+|---|---|---|
+| `floor` | Ground | 바닥 |
+| `floor:shade` | Ground | 바로 위 칸이 꽉 찬 정면인 바닥. 맨 위 2줄이 그 팔레트 줄의 가장 어두운 단계(벽 밑 그림자) |
+| `floor:shade:<x0>-<x1>` | Ground | 그림자를 x `[x0, x1)`에만(좁은 정면 밑). 칸 전체(`0-32`)는 `floor:shade`로 쓴다 |
+| `face:<k>` | Wall | 꽉 찬 정면. 아래로 `face_height`칸 안에 바닥이 나오고 그 사이가 모두 벽인 벽 칸. `k`는 바닥에서 위로 몇 번째(1이 바닥 바로 위) |
+| `face:<k>:<표시>` | Wall | 표시는 `l` `r` `c` `t` 중 붙는 것만 이 순서로. `l`/`r` 왼쪽/오른쪽 끝(그쪽 이웃이 같은 높이 정면도 윗면도 아님 → 그 변 열이 외곽선), `c` 위 칸이 윗면(천장 밑 그늘), `t` 위 칸이 벽이 아님(얇은 벽·맵 가장자리 → 맨 윗줄이 외곽선). 예: `face:2:c`, `face:2:lc`, `face:1:lrt` |
+| `face:<k>:lr[c]@<x0>-<x1>[;<늘인 정면>…]` | Wall | 좁은 정면: 세로 벽 남쪽 끝의 정면(양쪽 끝이고 위로 정면을 따라가면 윗면이 나온다)을 그 윗면 띠의 가로 범위 `[x0, x1)`로. 무늬 없는 면(위 칸 벽지 한 면, 아래 칸 벽지 + 나무 두 면), 양옆 열과 아래 칸 맨 아랫줄이 외곽선. 나머지는 투명(옆이 다른 높이 정면이면 그 정면을 늘인다) |
+| `cap:<띠>[;<늘인 정면>…]` | Wall | 윗면(정면이 아닌 벽 칸). `<띠>`는 띠 픽셀을 사각형으로 적은 것 — 칸 둘레 2px(`PAD`)까지의 이웃 칸 띠 중 칠을 정하는 픽셀만 담는다(그래서 그림이 같으면 열쇠가 같다) |
 
-- 윗면 그림: 둘레 3x3 칸의 윗면을 픽셀 지도로 펴고, 윗면이 아닌 픽셀에 8방향으로 닿는 픽셀은 외곽선, 그 안쪽 한 줄은
-  북쪽(먼 쪽) 가장자리만 빛, 나머지 가장자리는 그늘. 그래서 모서리·T자·끝에서 이웃 타일의 선이 이어진다.
-- 정면 옆이 윗면이면 그 변의 외곽선은 윗면이 친다(정면은 `l`/`r`을 받지 않는다) — 선이 두 겹이 되지 않는다.
-- 세로 벽은 윗면만이고 그 남쪽 끝 `face_height`칸이 정면이다. 가로 벽이 `face_height + 1`칸보다 얇으면 윗면 없이 정면만 남는다(`t`).
+- 사각형 글: `x0,y0,x1,y1`(끝 제외)을 `+`로 잇는다. 좌표는 칸 왼쪽 위 기준이고 띠는 `-2..34`, 늘인 정면은 `0..32`. **정규형만 받는다**:
+  같은 가로 구간들이 이어지는 줄을 한 사각형 띠로 묶고 위에서 아래, 왼쪽에서 오른쪽 순서. 같은 픽셀을 다르게 적은 열쇠, 0이 앞에 붙은 수,
+  칠을 바꾸지 않는 이웃 픽셀을 적은 열쇠, 칸 안에 띠가 없는 열쇠, 띠·정면이 겹치는 열쇠는 `RecipeError`.
+- 늘인 정면: `;<정면 열쇠>@<사각형 글>`. 정면 열쇠는 끝 표시 없이(`face:2:c`, `face:1`, `face:1:t`), 열쇠 순서로 한 번씩. 그 픽셀은 그 정면 타일의 같은 자리 픽셀이다.
+  예: 방 둘 사이 세로 벽이 가로 벽 정면을 지나는 칸 `cap:8,-2,24,34;face:2:c@0,0,8,32+24,0,32,32`.
+- 띠 자리(견본 A의 규칙, 설계서 4.2절): 가로 자리는 양옆이 방 쪽(바닥·정면)이면 가운데(`band` 16이면 8~24), 한쪽만 방이면 그쪽에 붙고,
+  아니면 위아래로 이어진 윗면에서 받는다. 세로 자리는 아래가 정면이면 아래, 위만 바닥이면 위, 아니면 옆으로 이어진 윗면에서 받는다.
+  한쪽만 방인 칸이 양쪽이 방인 벽에 이어지면 그 벽의 자리를 따른다. 띠 = 가운데 사각형 + 이웃 윗면 쪽 팔, 두 칸이 나누는 변의 팔 범위는
+  "양쪽 방"으로 정해진 쪽 것.
+- 남는 자리: 바닥 쪽 → 투명 + 그 칸 `Ground`에 바닥 타일, 밖 쪽 → 투명(`Ground` 없음), 정면 쪽 → 그 정면을 옆으로 늘인다, 둘레가 모두 윗면 → 띠로 채운다.
+  한 칸에 바닥 쪽과 밖 쪽이 함께 남으면 밖 쪽을 띠로 채운다(바닥이 방 밖으로 새지 않게).
+- 벽 칸 밑 `Ground`의 그림자는 그 칸의 실제 이웃으로 정한다(위가 정면이면 그 정면이 덮는 열 중 이 칸에서 바닥이 비치는 열에만 — 대개 `floor`).
+- 띠 그림: 띠가 아닌 픽셀에 8방향으로 닿는 띠 픽셀은 외곽선, 그 안쪽 한 줄은 북쪽(먼 쪽) 가장자리만 빛, 나머지 가장자리는 그늘.
+  이웃 칸의 띠까지 보고 칠하므로 모서리·T자·끝·십자에서 선이 끊기거나 두 겹이 되지 않는다.
+- 정면 옆이 윗면이면 그 변의 외곽선은 윗면 쪽(띠 가장자리)이 친다(정면은 `l`/`r`을 받지 않는다) — 선이 두 겹이 되지 않는다.
+- 세로 벽은 윗면만이고 그 남쪽 끝 `face_height`칸이 정면(좁은 정면)이다. 가로 벽이 `face_height + 1`칸보다 얇으면 윗면 없이 정면만 남는다(`t`).
 - 문간은 벽 줄의 바닥 칸이다. 따로 그리는 것은 없고 양옆 정면이 `l`/`r` 끝이 된다.
+- 충돌은 칸 단위다: 벽 칸은 띠 옆의 8px, 가로 띠 위의 16px처럼 바닥으로 보이는 자리까지 통째로 막힌다. 가로 벽이 서 보이려면
+  3칸(윗면 1 + 정면 2), 세로 벽은 1칸이다.
+- 알려진 약점: 세로 벽이 정면 위 윗면으로 이어지는 두꺼운 덩어리(예: 3x4)에는 한 단 꺾인 자국이 남는다(정면 위 띠가 정면 너비를 덮어야 해서).
+  가로 윗면 바로 위가 바닥 쪽이면 바닥처럼 보이는 16px가 남는다(사용자 답 대기라 그대로).
 
 ## 방 만들기 — 평면에서 LDtk로
 
@@ -261,12 +292,12 @@ if/switch로 종류를 닫지 않는다.
 
 | 파일 | 내용 |
 |---|---|
-| `<id>.ldtk` | 레벨 `<맵 id>`(32px 칸). 층은 위에서 아래: `Collision`(IntGrid, 1 `wall` / 2 `floor` / 0 밖), `Door`(Entities, 엔티티 정의 `Door` + 문자열 필드 `Where`), `Furniture`(Entities, 층 정의 태그 `ysort`, 비어 있음), `Wall`(Tiles), `Ground`(Tiles). 타일셋 하나(`tiles.png`, 32). 타일 인스턴스는 `px`, `src`, `f`, `t`(시트의 타일 번호, 행 우선 16칸), `d`(칸 번호), `a` |
-| `tiles.png`, `tiles.slots.json` | 쓰인 타일만 모은 시트와 열쇠 → 자리 표(`room_tiles`의 열쇠). **덧붙이기만**: 한 줄 16칸 폭 고정, 새 열쇠는 마지막 번호 다음부터. 이미 있는 타일의 자리(`t`, `src`)는 시트가 커져도 바뀌지 않는다. 자리 표에는 그 시트를 그린 `wall`·`floor`·`face_height`도 적는다(`repaint`가 여기서 읽는다 — LDtk 편집기는 이 파일을 건드리지 않는다). 시트가 다른 `wall`·`floor`로 그려져 있으면 `--force`도 거절한다(한 시트에 두 모양이 섞이지 않게) |
+| `<id>.ldtk` | 레벨 `<맵 id>`(32px 칸). 층은 위에서 아래: `Collision`(IntGrid, 1 `wall` / 2 `floor` / 0 밖, 층 정의 `displayOpacity` 0.35 — LDtk 편집기에서 색 칸이 벽·바닥 그림을 덮지 않고 비쳐 보인다. 게임은 이 값을 읽지 않는다), `Door`(Entities, 엔티티 정의 `Door` + 문자열 필드 `Where`), `Furniture`(Entities, 층 정의 태그 `ysort`, 비어 있음), `Wall`(Tiles, 벽 칸마다), `Ground`(Tiles, 바닥 칸마다 + 띠 옆으로 바닥이 비치는 벽 칸마다). 타일셋 하나(`tiles.png`, 32). 타일 인스턴스는 `px`, `src`, `f`, `t`(시트의 타일 번호, 행 우선 16칸), `d`(칸 번호), `a` |
+| `tiles.png`, `tiles.slots.json` | 쓰인 타일만 모은 시트와 열쇠 → 자리 표(`room_tiles`의 열쇠). **덧붙이기만**: 한 줄 16칸 폭 고정, 새 열쇠는 마지막 번호 다음부터. 이미 있는 타일의 자리(`t`, `src`)는 시트가 커져도 바뀌지 않는다. 자리 표에는 그 시트를 그린 `wall`·`floor`·`face_height`·`band`(윗면 띠 두께, 벽 모양의 값)도 적는다(`repaint`가 여기서 읽는다 — LDtk 편집기는 이 파일을 건드리지 않는다). 시트가 다른 `wall`·`floor`·`band`로 그려져 있으면 `--force`도 거절한다(한 시트에 두 모양이 섞이지 않게). `band`가 없는 옛 표(윗면 32px 시절)에는 덧붙인다 — 옛 윗면 열쇠 `cap:<수>`는 다시 나오지 않아 쓰이지 않고 남는다(깨끗한 시트를 원하면 `tiles.png`·`tiles.slots.json`을 지우고 만든다) |
 | `maps.json` | 이 맵 하나. `collision.rule`은 `interior-auto`, `spawns`는 도착 지점 하나 `<맵 id 소문자>-entry`(예: `testtworooms-entry`, 맵 사이에서 이름이 겹치지 않게)에 도착 칸 가운데 픽셀, `viewCells`는 레벨 높이(칸)와 13 중 작은 것, `doors`는 비어 있다(문의 목적지 표는 손으로 채운다). `walker`·`npcWalker`는 `game/world/maps.json`에서 옮긴다. 게임에는 `--maps`로 준다 |
 
 - 맵 id = 방 id에서 점·하이픈을 지우고 낱말 첫 글자를 대문자로(`test.two-rooms` → `TestTwoRooms`).
-- 칸 → 층: 벽(1)은 `Wall` 층 타일, 바닥(2)은 `Ground` 층 타일, 밖(0)은 타일 없음. 같은 격자가 `Collision`의 `intGridCsv`(행 우선, 왼쪽 위부터)다. 그림과 충돌이 한 격자에서 나온다.
+- 칸 → 층: 벽(1)은 `Wall` 층 타일(띠·정면이 아닌 자리는 투명), 바닥(2)은 `Ground` 층 타일, 띠 옆으로 바닥이 비치는 벽 칸은 `Ground` 층에도 바닥 타일, 밖(0)은 타일 없음(`room_tiles.plan_tiles`). 같은 격자가 `Collision`의 `intGridCsv`(행 우선, 왼쪽 위부터)다. 그림과 충돌이 한 격자에서 나온다. 벽 칸에 `Ground` 타일이 있어도 `Wall` 타일이 함께 있으므로 `interior-auto`가 막고, 칠한 `Collision` 1이 언제나 막는다(`game/world/README.md` 3절).
 - 이미 있는 방 파일(넷 중 하나라도)이 있으면 `--force` 없이는 거절(끝 코드 2). `--force`는 같은 평면이면 같은 바이트를 쓴다. `--dry-run`은 쓸 파일만 찍는다.
 - **`--force`여도 남의 파일은 덮지 않는다**(끝 코드 2, 아무것도 쓰지 않음): 있는 `maps.json`이 맵 하나이고 그 `ldtk`가 이 방의 `<id>.ldtk`가 아니거나(예: `--out game/world` — 게임 전체의 맵 목록), 있는 `<id>.ldtk`가 방 모양(`Collision`·`Wall`·`Ground` 층)이 아니거나(예: `--out Assets/LDtk/House`에 방 id `house`), `tiles.png`·`tiles.slots.json` 중 하나만 있으면 거절한다. 자기 방을 `--force`로 다시 만드는 것은 된다.
 - **`--force`는 평면에서 통째로 다시 만든다.** LDtk에서 손으로 고친 것(다시 칠한 `Collision` 칸, 놓은 가구, 고친 문)은 지워진다(덮을 때 한 줄 알림을 찍는다). LDtk에서 손을 댄 뒤에는 `--force`가 아니라 `room repaint`를 쓴다.
@@ -276,7 +307,7 @@ if/switch로 종류를 닫지 않는다.
   가져왔다(`ldtk_common.py`의 편집기 꼴 함수). 빠지면 안 되는 키는 공식 스키마의 `required`로 테스트가 지킨다(`tests/test_ldtk_editor_shape.py`,
   스키마와 출처는 `tests/fixtures/ldtk-1.5.3/README.md`). 이 도구가 만든 방이라는 표시는 머리말이 아니라 층 정의의 `doc` 문자열과 방 모양이다
   (편집기는 저장할 때 머리말을 자기 것으로 바꾼다). 문의 `Where` 값은 `__value`와 편집기가 읽는 `realEditorValues`에 함께 둔다.
-- 2026-11-14 전에 이 도구가 쓴 `.ldtk`는 게임이 읽는 키만 있어 편집기에서 열리지 않았다(아래 "아직 확인하지 못한 것"). 그런 파일은
+- 2026-11-14 전에 이 도구가 쓴 `.ldtk`는 게임이 읽는 키만 있어 편집기에서 열리지 않았다(아래 "편집기에서 확인된 것"). 그런 파일은
   `room check <.ldtk>`가 `room-ldtk-incomplete`로 알리고 `room repaint`가 거절한다(끝 코드 1, 채워 쓰지 않는다) — 평면에서 `room build <id> --force`로 다시 만든다.
 
 ## 방 만들기 — LDtk에서 칠한 뒤 (`room repaint`, `room check <.ldtk>`)
@@ -285,37 +316,40 @@ if/switch로 종류를 닫지 않는다.
 `room repaint <그 .ldtk 경로>`를 부르면 벽 그림이 칠한 칸을 따른다.
 **편집기에 파일이 열린 채로 `repaint`하지 않는다** — 편집기가 나중에 저장할 때 옛 벽 그림으로 덮는다. 편집기에서 저장하고 닫은 뒤 부르거나, 부른 뒤 편집기에서 파일을 다시 불러온다.
 
-- **바꾸는 것**: 레벨의 `Wall`·`Ground` 층 인스턴스의 `gridTiles`(칠한 칸에서 `room_tiles.classify`로 다시 고른다), 타일셋 정의의
+- **바꾸는 것**: 레벨의 `Wall`·`Ground` 층 인스턴스의 `gridTiles`(칠한 칸에서 `room_tiles.plan_tiles`로 다시 고른다), 타일셋 정의의
   `pxWid`·`pxHei`와 편집기가 저장한 문서에 있으면 `__cWid`·`__cHei`(시트가 커졌을 때), `tiles.png`·`tiles.slots.json`(새 열쇠만 덧붙인다 — 이미 있는 타일의 자리 `t`·`src`는 그대로).
 - **그대로 두는 것**: 그 밖의 전부 — 머리말(편집기가 쓴 `app: LDtk` 등), 모르는 키, 키 순서, 다른 층(`Collision`, `Door`, `Furniture`)과
   엔티티·필드, 층 인스턴스의 다른 키(`autoLayerTiles`, `seed` …), 타일셋의 다른 키, `maps.json`. JSON 값으로 그대로 다시 쓴다
   (들여쓰기·줄바꿈만 이 도구의 모양이 된다). 타일 목록이 순서만 다르면 바뀐 것으로 치지 않는다.
 - 레벨 크기는 `Collision`의 `__cWid`·`__cHei`를 따른다(편집기에서 레벨을 키워도 된다).
-- 벽 모양·바닥·`face_height`는 같은 폴더의 `tiles.slots.json`에서, 도착 지점은 `maps.json`(레벨 이름이 같은 맵의 첫 도착 지점)에서,
+- 벽 모양·바닥·`face_height`·`band`는 같은 폴더의 `tiles.slots.json`에서, 도착 지점은 `maps.json`(레벨 이름이 같은 맵의 첫 도착 지점)에서,
   문은 `Door` 엔티티(`maps.json`의 `doorEntity`·`doorField`, 기본 `Door`·`Where`)에서 읽는다.
 - **거절(아무것도 쓰지 않는다)**: 레벨이 하나가 아니거나 `Collision`(IntGrid)·`Wall`(Tiles)·`Ground`(Tiles) 층이 없거나 종류가 다르거나
   칸 크기가 32가 아니거나 `Wall`·`Ground` 층이나 레벨(`pxWid`·`pxHei`)의 크기가 `Collision`과 다르거나 `Wall`·`Ground`가 `tiles.png` 타일셋을 쓰지 않으면 `room-not-a-room`(끝 코드 1). 머리말로는 판별하지 않는다.
   편집기 꼴이 아닌 예전 파일(편집기가 늘 쓰는 최상위 키가 빠졌다)이면 `room-ldtk-incomplete`(끝 코드 1).
   칠한 칸에 막는 문제(닿지 못하는 바닥, 열린 가장자리, 모르는 값, 벽 안의 도착 지점·문)가 있으면 그 문제(끝 코드 1).
   자리 표에 `wall`·`floor`·`face_height`가 없거나(자리 표에 방 값이 없는 옛 방) `maps.json`이 없으면 끝 코드 2 — `room build --force`로 다시 만든다.
+  자리 표에 `band`가 없으면(윗면이 32px이던 때 만든 방) 끝 코드 2로 거절한다 — 옛 두께로 조용히 그리지 않는다. LDtk에서 칠한 것을 지키려면
+  자리 표에 `"band": 16`을 적고 다시 `repaint`한다(옛 윗면 타일은 시트에 남지만 쓰이지 않는다). 평면에서 다시 만들어도 되면 `room build <id> --force`(칠한 것은 사라진다). `room check <.ldtk>`도 같은 이유로 끝 코드 2.
 - 두 번 부르면 두 번째는 "바꿀 것 없음". `--dry-run`은 쓸 파일만 찍는다. 쓴 뒤에 알림(얇은 벽, 표에 없는 문)을 찍는다.
 
 `room check <.ldtk 경로>`는 쓰지 않고 본다: `room-not-a-room`, `room-ldtk-incomplete`, 평면 검사와 같은 코드(위 절), `room-door-unregistered`(**알림**: `Door`
 엔티티의 `Where`가 `maps.json`의 `doors`에 없다 — 게임에서 그 문이 열리지 않는다), `room-art-mismatch`(`Wall`·`Ground` 타일이 `Collision`과
-어긋난 칸 수와 첫 칸 — 그 칸의 값과 다른 층에 타일이 있거나, 와야 할 열쇠의 자리가 아니다. `room repaint`로 맞춘다).
+어긋난 칸 수와 첫 칸 — 칸마다 `plan_tiles`가 내는 `Wall`·`Ground` 열쇠의 자리와 실제 타일을 견준다: 와야 할 타일이 없거나, 다른 자리이거나, 오면 안 되는 층에 타일이 있다. 벽 칸의 `Ground` 타일은 띠 옆으로 바닥이 비치는 칸에서만 맞다. `room repaint`로 맞춘다).
 
-편집기가 저장한 모양은 테스트 고정 파일 `tests/fixtures/room-saved-by-editor.ldtk`로 흉내 낸다(`house.ldtk`의 꼴에 맞춰 만든 것이고 진짜 편집기가
-저장한 파일은 아니다 — 실제 편집기에서 칠하고 저장한 파일로 되는지는 사용자가 확인한다).
+테스트 고정 파일 둘: `tests/fixtures/room-editor-saved/`는 **사용자가 LDtk 1.5.3 편집기에서 `Collision`을 칠해 저장한 실제 방**(2026-11-14)이다 —
+편집기가 저장한 뒤 그때의 `repaint`가 32px 윗면으로 `Wall`·`Ground`를 다시 쓴 파일이라 들여쓰기·줄바꿈은 이 도구의 것이고 `cachedPixelData` 같은 값은 편집기의 것이다.
+자리 표에만 고정 파일용으로 `"band": 16`을 적어 넣었다. `tests/fixtures/room-saved-by-editor.ldtk`는 `house.ldtk`의 꼴(탭 들여쓰기·키 순서)을 흉내 낸 것이다.
 
 ### 게임에서 보기와 처음 확인할 것
 
 - 게임에서 본다: `dotnet run --project game/Rootborn.Host -- --world <맵 id> --maps art/world/rooms/<방 id>/maps.json --size 1920x1080`(인자 표는 `game/README.md`). 도착 지점은 `maps.json`의 첫 것이다.
 - LDtk 편집기에서 레벨을 따로 저장(`externalLevels`)하게 하면 `repaint`가 `room-not-a-room`으로 거절한다(`.ldtk`만 다룬다).
 - 문 글자(`doors`)가 있는 방은 `maps.json`의 `doors` 표를 손으로 채우기 전에는 게임에서 그 문이 열리지 않는다(알림 `room-door-unregistered`).
-- **아직 확인하지 못한 것**: 2026-11-14 사용자가 편집기(LDtk)로 `room build`의 파일을 처음 열었을 때 `Cannot read properties of null
-  (reading 'externalLevels') (TypeError)`로 실패했다 — 게임이 읽는 키만 쓰고 편집기가 기대하는 키를 많이 빠뜨렸다. 공식 스키마(1.5.3)의 필수 키와
-  편집기 저장 파일에 늘 있는 키를 모두 채우고 테스트로 고정했다(`room build`, `test-level`, `repaint`가 쓴 파일). **편집기에서 실제로 열리는지는
-  다시 확인 대기다.** 그 밖에 편집기가 저장한 진짜 파일을 `repaint`가 받는지, `repaint`가 다시 쓴 파일을 편집기가 다시 여는지도 사용자가 확인한다.
+- **편집기에서 확인된 것**(2026-11-14, 사용자): 처음에는 `Cannot read properties of null (reading 'externalLevels') (TypeError)`로 열리지 않았다 —
+  게임이 읽는 키만 쓰고 편집기가 기대하는 키를 많이 빠뜨렸다. 공식 스키마(1.5.3)의 필수 키와 편집기 저장 파일에 늘 있는 키를 채운 뒤
+  **편집기에서 열렸고, `Collision`을 칠해 저장한 파일을 `repaint`가 받아 벽 그림을 맞췄다.** **아직 확인 못 한 것**: `repaint`가 다시 쓴 파일을
+  편집기가 다시 여는지, `Collision` 층이 반투명(`displayOpacity` 0.35)으로 보이는지, 얇은 벽(투명한 벽 타일)이 편집기에서 어떻게 보이는지 — 사용자 답 대기.
 - 벽 모양은 지금 `paper`·`plaster` 둘이고 바닥은 키트의 타일 명세 id뿐이다(고르는 중인 견본은 아직 도구에 없다). 걸어서 지나는 벽에 박힌 문과 벽의 옆으로 기운 면은 없다.
 - 절차는 스킬 `pixel-kit-room`.
 
@@ -351,7 +385,9 @@ if/switch로 종류를 닫지 않는다.
 | `overflow` | 내용이 캔버스 가장자리에 닿았다(외곽선이 들어갈 자리가 없다) |
 | `not-bottom-center` | 그림이 캔버스의 아래 가운데에 있지 않다 |
 | `tile-seam` | 타일 무늬의 주기가 타일 크기에 나누어떨어지지 않아 이음매에서 잘린다 |
-| `tile-transparent` | 타일에 투명한 픽셀이 있다(첫 픽셀 위치와 개수). 타일은 art_cells만큼 무늬로 빈틈없이 채운다 |
+| `tile-transparent` | 타일에 투명한 픽셀이 있다(첫 픽셀 위치와 개수). 타일은 art_cells만큼 무늬로 빈틈없이 채운다. 방의 띠·좁은 정면 타일은 띠·정면 자리에 투명 픽셀이 있을 때 |
+| `room-tile-leftover` | 방의 띠·좁은 정면 타일의 남는 자리(투명해야 한다 — 바닥은 `Ground` 층이 비친다)에 칠한 픽셀이 있다 |
+| `room-tile-empty` | 방의 벽 타일이 완전히 투명하다 |
 | `slot-overlap` | 칸에 넣은 물건이 서로 너무 겹친다(좁은 쪽 폭의 1/3 넘게) |
 | `slot-clipped` | 칸에 넣은 물건이 칸·판·계산대보다 크다 |
 | `roof-overlap` | 지붕 위 물건끼리 겹치거나 난간·지붕 끝에 걸치거나 간판과 겹친다 |
