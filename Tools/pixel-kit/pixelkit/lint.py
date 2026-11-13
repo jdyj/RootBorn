@@ -128,7 +128,16 @@ def _seam(cv: Canvas) -> List[Problem]:
     return [Problem("tile-seam", ", ".join(bad))] if bad else []
 
 
+def _transparent(cv: Canvas) -> List[Problem]:
+    """타일은 칸을 빈틈없이 채운다. 투명 픽셀이 있으면 그림당 하나(첫 픽셀 위치와 전체 개수)."""
+    hits = [(x, y) for y in range(cv.h) for x in range(cv.w) if not cv.get(x, y)[3]]
+    if not hits:
+        return []
+    x, y = hits[0]
+    return [Problem("tile-transparent", f"타일에 투명한 픽셀 {len(hits)}개", x, y)]
+
+
 def lint_tile(cv: Canvas, recipe: dict, ctx, allow: FrozenSet[str] = frozenset()) -> List[Problem]:
-    """타일: 외곽선이 없고 한 점 얼룩이 있으므로 외곽선·외톨이 검사는 하지 않는다."""
-    out = _palette_and_count(cv, recipe, ctx) + _cells(cv, ctx) + _seam(cv)
+    """타일: 외곽선이 없고 한 점 얼룩이 있으므로 외곽선·외톨이 검사는 하지 않는다. 투명 칸은 막는다."""
+    out = _palette_and_count(cv, recipe, ctx) + _cells(cv, ctx) + _seam(cv) + _transparent(cv)
     return [p for p in out if p.code not in allow]

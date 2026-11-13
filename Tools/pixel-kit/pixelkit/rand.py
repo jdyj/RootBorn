@@ -5,9 +5,10 @@
 """
 
 
-def rnd(k: int, salt: int, n: int) -> int:
-    """씨앗 k, 소금 salt에서 0..n-1(n이 1 미만이면 0). 정수 곱·xor·밀기로 고르게 섞는다."""
-    v = (k * 2654435761 + salt * 40503 + 12345) & 0xFFFFFFFF
+def rnd(k: int, salt: int, n: int, seed: int = 0) -> int:
+    """씨앗 k, 소금 salt에서 0..n-1(n이 1 미만이면 0). 정수 곱·xor·밀기로 고르게 섞는다.
+    seed는 명세의 "seed"(그림 전체의 변주). 0이면 seed가 없던 때와 같은 값이다."""
+    v = (k * 2654435761 + salt * 40503 + seed * 2246822519 + 12345) & 0xFFFFFFFF
     v ^= v >> 13
     v = (v * 2246822519) & 0xFFFFFFFF
     v ^= v >> 16

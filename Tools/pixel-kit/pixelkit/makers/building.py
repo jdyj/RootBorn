@@ -11,7 +11,7 @@ from typing import Callable, Dict, List, Tuple
 from ..canvas import Canvas
 from ..rand import rnd
 from . import RecipeError, register
-from .furniture import _col, _local, _merge, _part, _report, _rid, pile
+from .common import col, local, merge, part, pile, ramp, report, rid
 
 ROOF_H = 104          # 지붕 줄 수(그림 높이 186의 절반 넘게)
 WALL_H = 82           # 벽 윗줄부터 그림 맨 아랫줄까지(앞으로 나온 창 받침 포함)
@@ -24,18 +24,6 @@ FRONT_EDGE = 16       # 지붕 맨 아랫줄 위로 몇 줄: 평지붕 앞 난�
 AWNING_SLOPE, AWNING_VALANCE = 12, 6
 SHADE_SIDE, SHADE_BELOW = 3, 2   # 지붕 위 물건 그림자: 오른쪽 변 3열, 아랫변 2줄의 짧은 띠(사용자: 굴뚝 그림자가 너무 크다)
 SHADE_STEPS = 2                  # 그림자는 그 자리 지붕의 두 단계 아래(한 단계는 평지붕 줄눈과 같은 색이라 묻혔다)
-
-
-def _ramp(spec: dict, ctx, prefix: str, need: int) -> list:
-    out = []
-    while True:
-        try:
-            out.append(ctx.style.color(f"{prefix}.{len(out)}"))
-        except KeyError:
-            break
-    if len(out) < need:
-        raise RecipeError(f"{_rid(spec)}: 팔레트 줄 {prefix}는 단계가 {need}개 이상이어야 한다(지금 {len(out)}개)")
-    return out
 
 
 def _steps(ramps) -> dict:
@@ -69,17 +57,17 @@ class _Pal:
     """한 건물이 쓰는 색 줄과 '그 자리 재질의 어두운 단계' 그늘."""
 
     def __init__(self, spec: dict, ctx, roof: str, wall: str, door: str, step: str = "stone"):
-        self.roof = _ramp(spec, ctx, roof, 5)
-        self.wall = _ramp(spec, ctx, wall, 4)
-        self.door = _ramp(spec, ctx, door, 4)
-        self.step = _ramp(spec, ctx, step, 3)
-        self.trim = _ramp(spec, ctx, "trim", 4)
-        self.wood = _ramp(spec, ctx, "wood.warm", 5)
-        self.glass = _ramp(spec, ctx, "glass.window", 3)
-        self.plinth = _ramp(spec, ctx, "plinth", 2)
-        self.metal = _ramp(spec, ctx, "metal", 3)
-        self.bread = _ramp(spec, ctx, "bread", 4)
-        self.yellow = _col(spec, ctx, "yellow.1")
+        self.roof = ramp(spec, ctx, roof, 5)
+        self.wall = ramp(spec, ctx, wall, 4)
+        self.door = ramp(spec, ctx, door, 4)
+        self.step = ramp(spec, ctx, step, 3)
+        self.trim = ramp(spec, ctx, "trim", 4)
+        self.wood = ramp(spec, ctx, "wood.warm", 5)
+        self.glass = ramp(spec, ctx, "glass.window", 3)
+        self.plinth = ramp(spec, ctx, "plinth", 2)
+        self.metal = ramp(spec, ctx, "metal", 3)
+        self.bread = ramp(spec, ctx, "bread", 4)
+        self.yellow = col(spec, ctx, "yellow.1")
         self._where = _steps([self.roof, self.wall, self.door, self.trim, self.wood, self.glass,
                               self.plinth, self.metal, self.bread, self.step])
         self._wall_only = _steps([self.wall])
@@ -240,7 +228,7 @@ def roof(name: str, palette: str):
 @roof("flat", "roof.teal")
 def roof_flat(cv: Canvas, spec: dict, ctx, w: int, rh: int) -> None:
     """평지붕: 갓돌(난간 윗면), 뒤 난간의 안쪽 벽, 뒤가 어둡고 앞이 밝은 바닥, 네 모서리 기둥, 앞 난간 윗면 + 앞면."""
-    t = _ramp(spec, ctx, "roof.teal", 5)
+    t = ramp(spec, ctx, "roof.teal", 5)
     side, back, in_h = 8, 7, 9
     fx, fy = side, back + in_h
     fw, fh = w - 2 * side, rh - FRONT_EDGE - fy
@@ -251,8 +239,9 @@ def roof_flat(cv: Canvas, spec: dict, ctx, w: int, rh: int) -> None:
     for x in range(fx + 15, fx + fw, 16):
         cv.vline(x, back + 2, in_h - 2, t[0])
     stains = set()
+    sd = spec.get("seed", 0)
     for k in range(7):                                     # 바닥 얼룩(짧은 줄)
-        sx, sy, n = 8 + rnd(k, 1, fw - 26), 10 + rnd(k, 2, fh - 18), 5 + rnd(k, 3, 6)
+        sx, sy, n = 8 + rnd(k, 1, fw - 26, sd), 10 + rnd(k, 2, fh - 18, sd), 5 + rnd(k, 3, 6, sd)
         stains.update((sx + i, sy) for i in range(n))
     for j in range(fh):                                    # 바닥: 띠 두 개(뒤 어둡게, 앞 밝게) + 줄눈 + 난간 그림자
         band = 1 if j < fh * 2 // 5 else 2
@@ -295,7 +284,7 @@ ROW_HEIGHTS = (5, 6, 6, 7, 7, 8, 8, 9, 9)                 # 앞 비탈 기와 �
 @roof("pitched", "roof.slate")
 def roof_pitched(cv: Canvas, spec: dict, ctx, w: int, rh: int) -> None:
     """기와지붕: 어두운 좁은 뒤 비탈, 솟은 용마루와 그 그늘, 겹쳐 얹힌 기와(아래로 갈수록 크다), 박공널, 처마."""
-    s = _ramp(spec, ctx, "roof.slate", 5)
+    s = ramp(spec, ctx, "roof.slate", 5)
     where = _steps([s])
     ridge_y, ridge_h = 23, 6
     for y in range(ridge_y):                               # 뒤 비탈(넘어가는 면)
@@ -346,7 +335,7 @@ def roof_pitched(cv: Canvas, spec: dict, ctx, w: int, rh: int) -> None:
 
 # ---------- 정면 ----------
 
-def _facade(cv: Canvas, spec: dict, ctx, P: _Pal, w: int, rh: int, v: dict, local) -> dict:
+def _facade(cv: Canvas, spec: dict, ctx, P: _Pal, w: int, rh: int, v: dict, lc) -> dict:
     lay = {}
     b, t, wd, pl, g, d = P.wall, P.trim, P.wood, P.plinth, P.glass, P.door
     wt = rh
@@ -356,8 +345,9 @@ def _facade(cv: Canvas, spec: dict, ctx, P: _Pal, w: int, rh: int, v: dict, loca
     lay["wall"] = [left, right]
 
     cv.rect(left, wt, ww, base - wt, b[2])                 # 넓은 색 면
+    sd = spec.get("seed", 0)
     for k in range(26):                                    # 벽돌은 낱장 몇 장만
-        bx, by = left + 10 + rnd(k, 5, ww - 28), wt + 8 + rnd(k, 8, (base - wt - 22) // 5) * 5
+        bx, by = left + 10 + rnd(k, 5, ww - 28, sd), wt + 8 + rnd(k, 8, (base - wt - 22) // 5, sd) * 5
         c = b[3] if k % 3 else b[1]
         cv.rect(bx, by, 9, 4, c)
         _shift(cv, bx, by + 3, 9, 1, _steps([b]), 1)
@@ -414,7 +404,7 @@ def _facade(cv: Canvas, spec: dict, ctx, P: _Pal, w: int, rh: int, v: dict, loca
     lay["door"] = [fx, fy, fw, fh]
 
     # --- 벽등 ---
-    lamp = _part(spec, ctx, "prop.wall-lamp")
+    lamp = part(spec, ctx, "prop.wall-lamp")
     lx, ly = v["lamp_x"], wt + LAMP_DROP
     P.glow(cv, lx + lamp.w // 2, ly + lamp.h // 2, 52)
     cv.paste(lamp, lx, ly)
@@ -448,8 +438,8 @@ def _facade(cv: Canvas, spec: dict, ctx, P: _Pal, w: int, rh: int, v: dict, loca
     cv.rect(gx, shelf - 6, gw, 2, wd[4])
     half = gw // 2
     mx = gx + half - 1                                     # 창살 [mx, mx + 2)
-    pile(cv, v["slots"][0], gx + 1, mx - 1, shelf - 4, local, top=gy + 4)
-    pile(cv, v["slots"][1], mx + 2, gx + gw - 2, shelf - 4, local, top=gy + 4)
+    pile(cv, v["slots"][0], gx + 1, mx - 1, shelf - 4, lc, top=gy + 4)
+    pile(cv, v["slots"][1], mx + 2, gx + gw - 2, shelf - 4, lc, top=gy + 4)
     P.down(cv, gx, gy, gw, 3)                              # 들어간 유리: 위·왼쪽 안쪽 그늘
     P.down(cv, gx, gy + 3, 2, gh - 3)
     cv.rect(mx, gy, 2, gh, wd[1])
@@ -499,7 +489,7 @@ def _facade(cv: Canvas, spec: dict, ctx, P: _Pal, w: int, rh: int, v: dict, loca
         cx = ix0 + iw0 * (2 * k + 1) // (2 * len(icons))
         px0, py0 = cx - p.w // 2, iy0 + ih0 // 2 - p.h // 2
         if px0 < ix0 + 1 or px0 + p.w > ix0 + iw0 - 1 or py0 < iy0 + 1 or py0 + p.h > iy0 + ih0:
-            _report(local.problems, "slot-clipped", f"간판 아이콘이 판보다 크다({pid} {p.w}x{p.h})")
+            report(lc.problems, "slot-clipped", f"간판 아이콘이 판보다 크다({pid} {p.w}x{p.h})")
         cv.paste(p, px0, py0)
     lay["sign"] = [sx, sy0, SIGN_W, SIGN_H]
     return lay
@@ -513,7 +503,7 @@ def _int(v) -> bool:
 
 def _need(spec: dict, ok: bool, what: str) -> None:
     if not ok:
-        raise RecipeError(f"{_rid(spec)}: {what}")
+        raise RecipeError(f"{rid(spec)}: {what}")
 
 
 def _values(spec: dict, ctx) -> dict:
@@ -528,7 +518,7 @@ def _values(spec: dict, ctx) -> dict:
           "window는 {at_x, width(px), slots: [[부품 id], [부품 id]]}이어야 한다(창살 양쪽)")
     for s in slots:
         for i in s:
-            _part(spec, ctx, i)
+            part(spec, ctx, i)
     colors = aw.get("colors")
     _need(spec, isinstance(colors, list) and len(colors) == 2 and all(isinstance(c, str) for c in colors),
           "awning은 {colors: [팔레트 줄 2개]}이어야 한다")
@@ -538,8 +528,8 @@ def _values(spec: dict, ctx) -> dict:
     _need(spec, _int(lamp.get("at_x")), "lamp는 {at_x: px}이어야 한다")
     return {"wall": wall["material"], "door": door["color"], "step": door["step"], "door_x": door["at_x"],
             "window_x": win["at_x"], "window_w": win["width"], "slots": slots,
-            "awning": [_ramp(spec, ctx, c, 2) for c in colors],
-            "sign_x": sign["at_x"], "icons": [(i, _part(spec, ctx, i)) for i in icons], "lamp_x": lamp["at_x"]}
+            "awning": [ramp(spec, ctx, c, 2) for c in colors],
+            "sign_x": sign["at_x"], "icons": [(i, part(spec, ctx, i)) for i in icons], "lamp_x": lamp["at_x"]}
 
 
 def _roof_spec(spec: dict) -> Tuple[str, List[Tuple[str, int, int]]]:
@@ -547,7 +537,7 @@ def _roof_spec(spec: dict) -> Tuple[str, List[Tuple[str, int, int]]]:
     _need(spec, isinstance(r, dict), "roof는 {type, items}이어야 한다")
     kind = r.get("type")
     if kind not in ROOFS:
-        raise RecipeError(f"{_rid(spec)}: 없는 지붕 종류 {kind}. 있는 것: {', '.join(sorted(ROOFS))}")
+        raise RecipeError(f"{rid(spec)}: 없는 지붕 종류 {kind}. 있는 것: {', '.join(sorted(ROOFS))}")
     items = r.get("items", [])
     _need(spec, isinstance(items, list), "roof.items는 [{part, at: [px x, y]}] 목록이어야 한다")
     out = []
@@ -555,7 +545,7 @@ def _roof_spec(spec: dict) -> Tuple[str, List[Tuple[str, int, int]]]:
         _need(spec, isinstance(it, dict) and isinstance(it.get("at"), list) and len(it["at"]) == 2
               and all(_int(n) for n in it["at"]), f"roof.items의 줄마다 {{part, at: [px x, y]}}: {it}")
         if it.get("part") not in ROOF_ITEMS:
-            raise RecipeError(f"{_rid(spec)}: 없는 지붕 위 물건 {it.get('part')}. 있는 것: {', '.join(sorted(ROOF_ITEMS))}")
+            raise RecipeError(f"{rid(spec)}: 없는 지붕 위 물건 {it.get('part')}. 있는 것: {', '.join(sorted(ROOF_ITEMS))}")
         out.append((it["part"], it["at"][0], it["at"][1]))
     return kind, out
 
@@ -580,7 +570,7 @@ def shop(spec: dict, ctx) -> Canvas:
     roof_fn = ROOFS[kind]
     P = _Pal(spec, ctx, roof_fn.palette, v["wall"], v["door"], v["step"])
     cv = Canvas(w, h)
-    local = _local(ctx)
+    lc = local(ctx)
     spec["_layout"] = {"size": [w, h], "roof_bottom": ROOF_H - 1}
     roof_fn(cv, spec, ctx, w, ROOF_H)
     area = spec["_layout"]["roof_area"]
@@ -589,14 +579,14 @@ def shop(spec: dict, ctx) -> Canvas:
         it = ROOF_ITEMS[pid]
         rect = [x, y, it.w, it.h]
         if not _inside(rect, area):
-            _report(local.problems, "roof-overlap", f"지붕 위 물건이 난간·지붕 끝에 걸친다({pid} {rect}, 놓을 곳 {area})")
+            report(lc.problems, "roof-overlap", f"지붕 위 물건이 난간·지붕 끝에 걸친다({pid} {rect}, 놓을 곳 {area})")
         for other in rects:
             if _overlaps(rect, other):
-                _report(local.problems, "roof-overlap", f"지붕 위 물건끼리 겹친다({pid} {rect} · {other})")
+                report(lc.problems, "roof-overlap", f"지붕 위 물건끼리 겹친다({pid} {rect} · {other})")
         rects.append(rect)
     for (pid, x, y), rect in sorted(zip(items, rects), key=lambda z: (z[1][1], z[1][0])):   # 뒤에서 앞으로
         ROOF_ITEMS[pid].draw(cv, P, x, y)
     spec["_layout"]["roof_items"] = rects
-    spec["_layout"].update(_facade(cv, spec, ctx, P, w, ROOF_H, v, local))
-    _merge(spec, ctx, local)
+    spec["_layout"].update(_facade(cv, spec, ctx, P, w, ROOF_H, v, lc))
+    merge(spec, ctx, lc)
     return cv

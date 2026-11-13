@@ -4,7 +4,7 @@ from pathlib import Path
 
 from pixelkit.canvas import Canvas
 from pixelkit.lint import lint_sprite
-from pixelkit.makers.furniture import pile
+from pixelkit.makers.common import pile
 from pixelkit.parts import load_parts
 from pixelkit.recipes import Ctx, RecipeError, load_recipes, render, render_with_spec
 from pixelkit.style import Style
@@ -278,7 +278,7 @@ class AllFurnitureTests(unittest.TestCase):
 
     def test_streaks_change_glass_and_items_rows(self):
         # 사선 반사 줄은 유리 안의 물건 위로도 지나간다: 같은 물건을 반사 줄 없이 놓은 것과 다르다.
-        from pixelkit.makers.furniture import streaks
+        from pixelkit.makers.common import streaks
         c = ctx()
         cv = Canvas(30, 20)
         cv.rect(0, 0, 30, 20, STYLE.color("glass.front.1"))

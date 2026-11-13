@@ -8,6 +8,7 @@ from typing import Dict, Optional, Tuple
 
 from .canvas import Canvas
 from .makers import RecipeError, get_maker, register  # noqa: F401  (다른 모듈이 여기서 가져다 쓴다)
+from .makers.common import target_size
 from .style import Style
 
 
@@ -48,30 +49,6 @@ def load_recipes(directory: str) -> Dict[str, dict]:
     return out
 
 
-def _is_int_pair(v, minimum: int = 1) -> bool:
-    return (isinstance(v, list) and len(v) == 2
-            and all(isinstance(n, int) and not isinstance(n, bool) and n >= minimum for n in v))
-
-
-def _target_size(spec: dict, cell: int) -> Tuple[int, int]:
-    rid = spec.get("id", "?")
-    has_cells = "art_cells" in spec
-    has_px = "pixels" in spec
-    if has_cells == has_px:
-        raise RecipeError(f"{rid}: art_cells와 pixels 중 정확히 하나를 적어야 한다")
-    if has_cells:
-        if not _is_int_pair(spec["art_cells"]):
-            raise RecipeError(f"{rid}: art_cells는 양의 정수 [w, h]여야 한다")
-        w, h = spec["art_cells"]
-        return w * cell, h * cell
-    if not _is_int_pair(spec["pixels"]):
-        raise RecipeError(f"{rid}: pixels는 양의 정수 [w, h]여야 한다")
-    w, h = spec["pixels"]
-    if w % cell or h % cell:
-        raise RecipeError(f"{rid}: pixels {w}x{h}는 {cell}의 배수여야 한다")
-    return w, h
-
-
 def render_with_spec(recipe: dict, ctx: Ctx, state: Optional[str] = None) -> Tuple[Canvas, dict]:
     """그린 캔버스와, 만드는 부품이 받아 쓴 명세 사본(상태 적용됨)을 돌려준다."""
     rid = recipe.get("id", "?")
@@ -82,7 +59,7 @@ def render_with_spec(recipe: dict, ctx: Ctx, state: Optional[str] = None) -> Tup
             raise RecipeError(f"{rid}: 없는 상태 {state}. 있는 것: {', '.join(sorted(states)) or '(없음)'}")
         spec.update(copy.deepcopy(states[state]))
     cell = ctx.style.cell
-    tw, th = _target_size(spec, cell)
+    tw, th = target_size(spec, cell)
     part = spec.get("part")
     try:
         maker = get_maker(part)
