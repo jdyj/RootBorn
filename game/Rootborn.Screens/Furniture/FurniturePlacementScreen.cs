@@ -105,6 +105,8 @@ namespace Rootborn.Screens.Furniture
         public const string MoveId = "furniture.move";
         public const string ToolbarId = "furniture.toolbar", BottomBarId = "furniture.bottom";
         public const string RoomStatusId = "furniture.room-status";
+        /// <summary>물건이 든 상자를 고른 줄 아래에 보이는 안내의 문구 키(놓으면 다시 꺼낼 수 있다).</summary>
+        public const string HoldsItemsNoteKey = "ui.furniture.stored.holds-hint";
         public const string CategoryFurnitureId = "furniture.category.furniture", CategoryStoredId = "furniture.category.stored";
         public const string FurnitureGroupId = "furniture.group.furniture", StoredGroupId = "furniture.group.stored";
         public const string StoredListId = "furniture.stored.list", StoredEmptyId = "furniture.stored.empty", StoredReasonId = "furniture.stored.reason";
@@ -374,6 +376,10 @@ namespace Rootborn.Screens.Furniture
             _wasDown = true; // 버튼을 눌러 연 그 누름이 월드 클릭이 되지 않게
             _hasHover = false;
             _ghostHeld = false;
+            // 열 때마다 같은 상태에서 시작한다: 가구 분류, 보관 줄을 고른 것은 없다. 닫았다 여는 사이 집을 다시 읽으면 기록 자리 번호가 다시
+            // 매겨지므로 옛 번호를 들고 있으면 안 보이는 다른 가구를 놓게 된다. 팔레트에서 고른 가구는 남는다.
+            StoredShown = false;
+            if (_storedIndex >= 0) { _storedIndex = -1; Active = null; }
             _overlayVisible = Active != null;
             _validDirty = true;
             ReloadFurniture();
@@ -451,7 +457,7 @@ namespace Rootborn.Screens.Furniture
             _categoryFurniture.Text = T("ui.furniture.category.furniture");
             _categoryStored.Text = T("ui.furniture.category.stored");
             _storedEmpty.Text = T("ui.furniture.stored.empty");
-            _storedReason.Text = _stored.ReasonKey == null ? string.Empty : T(_stored.ReasonKey);
+            ApplyStoredNote();
             _settingsTitle.Text = T("ui.furniture.title");
             _roomStatus.Text = _roomStatusKey == null ? string.Empty : T(_roomStatusKey);
             _search.Placeholder = T("ui.furniture.search.placeholder");
@@ -539,6 +545,7 @@ namespace Rootborn.Screens.Furniture
             _overlayVisible = Active != null;
             _validDirty = true;
             _hasHover = false;
+            ApplyStoredNote();
             ApplyCategoryView();
             RefreshSelected();
         }
@@ -559,16 +566,33 @@ namespace Rootborn.Screens.Furniture
             _storedList.RowCount = _stored.Rows.Count;
             _storedList.Visible = !_stored.IsEmpty;
             _storedEmpty.Visible = _stored.IsEmpty;
-            _storedReason.Visible = !_stored.IsEmpty && _stored.ReasonKey != null;
-            _storedReason.Text = _stored.ReasonKey == null ? string.Empty : T(_stored.ReasonKey);
             int row = _storedIndex < 0 ? -1 : _stored.RowOf(_storedIndex);
-            if (_storedIndex >= 0 && row < 0)
+            // 줄이 없어졌거나(놓았다) 그 번호가 다른 가구를 가리키게 됐으면(기록 자리가 다시 매겨졌다) 고른 것을 푼다.
+            if (_storedIndex >= 0 && (row < 0 || !ReferenceEquals(_stored.Rows[row].Definition, Active)))
             {
+                row = -1;
                 _storedIndex = -1;
                 if (!Carrying) { Active = null; _hasHover = false; _validDirty = true; RefreshSelected(); }
             }
             _storedList.SelectedIndex = row;
+            ApplyStoredNote();
             ApplyCategoryView();
+        }
+
+        /// <summary>
+        /// 보관 목록 아래 안내 한 줄: 고를 수 없는 까닭(같이 쓰는 집)이 먼저, 아니면 고른 줄이 물건이 든 상자일 때 "놓으면 다시 꺼낼 수 있다".
+        /// 문구는 키로만 고른다.
+        /// </summary>
+        private void ApplyStoredNote()
+        {
+            string key = _stored.ReasonKey;
+            if (key == null && _storedIndex >= 0)
+            {
+                int picked = _stored.RowOf(_storedIndex);
+                if (picked >= 0 && _stored.Rows[picked].HoldsItems) key = HoldsItemsNoteKey;
+            }
+            _storedReason.Text = key == null ? string.Empty : T(key);
+            _storedReason.Visible = !_stored.IsEmpty && key != null;
         }
 
         // 보이는 줄만 묻는다(UiScrollList). 물건이 든 상자는 그렇다고 덧붙인다.
@@ -593,6 +617,7 @@ namespace Rootborn.Screens.Furniture
             _overlayVisible = true;
             _validDirty = true;
             _hasHover = false;
+            ApplyStoredNote();
             RefreshSelected();
         }
 
