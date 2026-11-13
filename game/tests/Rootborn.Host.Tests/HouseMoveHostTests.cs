@@ -132,7 +132,7 @@ namespace Rootborn.Host.Tests
                 Assert.That(storedAtStart, Is.GreaterThanOrEqualTo(2), "둘 이상 보관됐다");
                 Assert.That(placedAtStart + storedAtStart, Is.EqualTo(records.Count), "하나도 잃지 않았다");
                 var message = (UiTextBlock)player.Node(HouseMovedNoticeScreen.MessageId);
-                Assert.That(Enumerable.Range(0, placedAtStart + 1).Any(moved => message.Text == player.Game.Text.Format(HouseMovedNoticeScreen.MessageKey, moved, storedAtStart)), Is.True,
+                Assert.That(Enumerable.Range(0, placedAtStart + 1).Any(moved => message.Text == player.Game.Text.Format(HouseMovedNoticeScreen.KeyFor(moved, storedAtStart), moved, storedAtStart)), Is.True,
                     "알림 글: 옮긴 수와 보관한 수(" + storedAtStart + ")");
                 TestContext.Out.WriteLine("알림: " + message.Text);
                 Assert.That(player.Screens.MovementBlocked, Is.False, "알림은 걷기를 막지 않는다");

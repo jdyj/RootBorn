@@ -20,7 +20,12 @@ namespace Rootborn.Screens.Furniture
             public static readonly UiColor Ink = new UiColor(48, 71, 83);
         }
 
+        /// <summary>둘 다 있을 때의 문구 키. 한쪽이 0이면 그 수를 말하지 않는 문구(<see cref="MovedOnlyKey"/>, <see cref="StoredOnlyKey"/>)를 쓴다.</summary>
         public const string MessageKey = "ui.notice.house-moved";
+        public const string MovedOnlyKey = "ui.notice.house-moved.only-moved", StoredOnlyKey = "ui.notice.house-moved.only-stored";
+
+        /// <summary>옮긴 수와 보관한 수에 맞는 문구 키. 둘 다 0이면 알림이 뜨지 않으므로 호출하지 않는다.</summary>
+        public static string KeyFor(int moved, int stored) => stored == 0 ? MovedOnlyKey : moved == 0 ? StoredOnlyKey : MessageKey;
         /// <summary>알림이 떠 있는 초.</summary>
         public const float ShowSeconds = Metrics.ShowSeconds;
         public const string RootId = "house-moved-notice", BoxId = "house-moved-notice.box", MessageId = "house-moved-notice.message";
@@ -58,7 +63,7 @@ namespace Rootborn.Screens.Furniture
             if (topic == ChangeTopics.Language) ApplyText();
         }
 
-        private void ApplyText() => _message.Text = F(MessageKey, _moved, _stored);
+        private void ApplyText() => _message.Text = F(KeyFor(_moved, _stored), _moved, _stored);
 
         protected internal override bool OnTick(float seconds)
         {

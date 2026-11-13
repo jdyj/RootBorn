@@ -79,5 +79,59 @@ namespace Rootborn.Screens.Tests.Furniture
             EnterHouse(t);
             Assert.That(t.Stack.IsOpen(ScreenCatalog.HouseMovedNotice), Is.False);
         }
+
+        // ---------- 검토 지적 3: 경우별 문구 ----------
+
+        [TestCase(5, 0, HouseMovedNoticeScreen.MovedOnlyKey)]
+        [TestCase(0, 4, HouseMovedNoticeScreen.StoredOnlyKey)]
+        [TestCase(3, 4, HouseMovedNoticeScreen.MessageKey)]
+        public void TheNotice_PicksTheKeyByWhichCountsAreNonZero(int moved, int stored, string key)
+        {
+            using var t = new TestSession(saves: _saves);
+            Assert.That(HouseMovedNoticeScreen.KeyFor(moved, stored), Is.EqualTo(key));
+            t.Stack.Open(ScreenCatalog.HouseMovedNotice, null, (moved, stored));
+            string text = ((UiTextBlock)t.Node(HouseMovedNoticeScreen.MessageId)).Text;
+            Assert.That(text, Is.EqualTo(t.Text.Format(key, moved, stored)));
+            Assert.That(text.Contains("0개") || text.Contains(" 0 "), Is.False, "0개를 말하지 않는다");
+        }
+
+        [Test]
+        public void AllThreeKeys_ExistInEveryLanguage()
+        {
+            foreach (var table in LongText.MergedTables())
+                foreach (string key in new[] { HouseMovedNoticeScreen.MessageKey, HouseMovedNoticeScreen.MovedOnlyKey, HouseMovedNoticeScreen.StoredOnlyKey })
+                    Assert.That(table.Value.ContainsKey(key), Is.True, table.Key + ": " + key);
+        }
+
+        [Test]
+        public void TheNotice_WithTwiceAsLongText_StaysInsideItsBox([ValueSource(nameof(Languages))] string language, [Values(0, 1, 2)] int which)
+        {
+            using var t = new TestSession(language, saves: _saves);
+            var (moved, stored) = which == 0 ? (5, 0) : which == 1 ? (0, 4) : (3, 4);
+            t.Stack.Open(ScreenCatalog.HouseMovedNotice, null, (moved, stored));
+            var message = (UiTextBlock)t.Node(HouseMovedNoticeScreen.MessageId);
+            message.Text = message.Text + message.Text;
+            var measurer = new WideMeasurer();
+            for (int i = 0; i < 2; i++)
+            {
+                t.Stack.Layout(1920, 1080);
+                t.Stack.Emit(new DrawList(), measurer);
+            }
+            t.Stack.Layout(1920, 1080);
+            var list = new DrawList();
+            t.Stack.Emit(list, measurer);
+            UiRect box = t.Node(HouseMovedNoticeScreen.BoxId).Rect;
+            var texts = list.Commands.Where(c => c.Kind == DrawKind.Text).ToList();
+            Assert.That(texts, Is.Not.Empty);
+            foreach (DrawCommand c in texts)
+            {
+                Assert.That(c.Rect.X, Is.GreaterThanOrEqualTo(box.X - 0.5f));
+                Assert.That(c.Rect.X + measurer.Width(c.Text, c.FontSize), Is.LessThanOrEqualTo(box.Right + 0.5f), language + " 가로");
+                Assert.That(c.Rect.Y, Is.GreaterThanOrEqualTo(box.Y - 0.5f));
+                Assert.That(c.Rect.Y + measurer.LineHeight(c.FontSize), Is.LessThanOrEqualTo(box.Bottom + 0.5f), language + " 세로");
+            }
+        }
+
+        private static System.Collections.Generic.IEnumerable<string> Languages() => LongText.MergedTables().Keys.OrderBy(k => k);
     }
 }
