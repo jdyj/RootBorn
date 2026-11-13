@@ -16,8 +16,8 @@ from pixelkit.cli import load_kit
 from pixelkit.lint import lint_tile
 from pixelkit.makers import RecipeError
 from pixelkit.recipes import Ctx, render
-from pixelkit.room_tiles import (classify, draw_tile, lint_room_tile, plan_tiles, tile_layout, wall_styles, wall_top,
-                                 wall_tops)
+from pixelkit.room_tiles import (classify, draw_tile, lint_room_tile, plan_tiles, tile_layout, top_concept, top_label,
+                                 wall_concept, wall_label, wall_styles, wall_top, wall_tops)
 from tests.test_room_tiles import BOX, END, MID, SAMPLE, SHAPES, grid
 
 HERE = Path(__file__).resolve().parent
@@ -27,8 +27,8 @@ STYLE = KIT.style
 BAKERY_FLOOR = KIT.recipes["bakery.tile.floor"]
 
 # 견본에서 정식으로 옮긴 것(W3~W8, 벽돌은 크림·붉은 둘)과 새로 더한 것. 이름은 README 표와 같다.
-SAMPLE_WALLS = ("sprig", "plank", "tile-white", "brick-cream", "brick-red", "pastel", "study")
-SAMPLE_FLOORS = ("floor.checker-soft", "floor.plank", "floor.herringbone", "floor.slab", "floor.mosaic",
+SAMPLE_WALLS = ("wallpaper-sprig", "panel-plank", "tile-white", "brick-cream", "brick-red", "paint-mint", "paint-green")
+SAMPLE_FLOORS = ("floor.checker-soft", "floor.plank", "floor.herringbone", "floor.stone-slab", "floor.mosaic",
                  "floor.carpet", "floor.tatami", "floor.concrete")
 
 
@@ -103,7 +103,7 @@ class TopTests(unittest.TestCase):
 
     def test_top_changes_only_the_band(self):
         layout = tile_layout(self.STRETCH)
-        for wall in ("paper", "sprig", "brick-cream"):
+        for wall in ("paper", "wallpaper-sprig", "brick-cream"):
             base = draw_tile(STYLE, self.STRETCH, wall, BAKERY_FLOOR)
             for top in wall_tops():
                 if top == wall_top(wall):
@@ -231,6 +231,79 @@ class StylesCommandTests(unittest.TestCase):
     def test_styles_takes_no_room_id(self):
         code, _, err = self.run_kit("test.two-rooms")
         self.assertEqual(code, 2)
+
+
+class ConceptTests(unittest.TestCase):
+    """종류마다 한글 이름(label)과 컨셉 한 줄(concept)이 있다 — 새 종류를 더하면서 빼먹으면 실패한다.
+    문구에는 기대지 않는다(비어 있지 않음, 종류끼리 서로 다름)."""
+
+    def assert_filled_and_distinct(self, pairs):
+        for name, (label, concept) in pairs.items():
+            with self.subTest(name=name):
+                for v in (label, concept):
+                    self.assertIsInstance(v, str)
+                    self.assertTrue(v.strip(), name)
+        labels = [l for l, _ in pairs.values()]
+        concepts = [c for _, c in pairs.values()]
+        self.assertEqual(len(set(labels)), len(labels), "한글 이름이 겹친다")
+        self.assertEqual(len(set(concepts)), len(concepts), "컨셉이 겹친다")
+
+    def test_every_wall_style_has_label_and_concept(self):
+        self.assert_filled_and_distinct({w: (wall_label(w), wall_concept(w)) for w in wall_styles()})
+
+    def test_every_top_has_label_and_concept(self):
+        self.assert_filled_and_distinct({t: (top_label(t), top_concept(t)) for t in wall_tops()})
+
+    def test_every_floor_spec_has_label_and_concept(self):
+        self.assert_filled_and_distinct({f: (KIT.recipes[f].get("label"), KIT.recipes[f].get("concept"))
+                                         for f in room_floors()})
+
+    def test_unknown_name_is_recipe_error(self):
+        for fn in (wall_label, wall_concept, top_label, top_concept):
+            with self.subTest(fn=fn.__name__), self.assertRaises(RecipeError):
+                fn("no.such.name")
+
+    def test_recipe_label_and_concept_must_be_strings(self):
+        from pixelkit.recipes import load_recipes
+        for bad in ({"label": 3}, {"concept": ["a"]}, {"label": ""}):
+            with self.subTest(bad=bad), tempfile.TemporaryDirectory() as d:
+                (Path(d) / "a.json").write_text(json.dumps([{"id": "x.y", "kind": "tile", **bad}]), encoding="utf-8")
+                with self.assertRaises(RecipeError):
+                    load_recipes(d)
+
+    def test_list_prints_label_and_concept_of_every_kind(self):
+        code, out, err = StylesCommandTests.run_kit(None, "--list")
+        self.assertEqual(code, 0, err)
+        for w in wall_styles():
+            self.assertIn(wall_label(w), out)
+            self.assertIn(wall_concept(w), out)
+        for t in wall_tops():
+            self.assertIn(top_label(t), out)
+            self.assertIn(top_concept(t), out)
+        for f in room_floors():
+            self.assertIn(KIT.recipes[f]["label"], out)
+            self.assertIn(KIT.recipes[f]["concept"], out)
+
+    def test_readme_tables_list_exactly_the_registered_ids(self):
+        import re
+        text = (ROOT / "Tools" / "pixel-kit" / "README.md").read_text("utf-8")
+
+        def ids(heading, pattern):
+            body = text.split(heading, 1)[1].split(chr(10) + "###", 1)[0].split(chr(10) + "## ", 1)[0]
+            return {m.group(1) for line in body.splitlines() if line.startswith("| `")
+                    for m in [re.match(pattern, line)] if m}
+
+        self.assertEqual(ids("### 벽 모양", r"\| `([a-z-]+)` \|"), set(wall_styles()))
+        self.assertEqual(ids("### 띠 색", r"\| `(wall\.[a-z.]+)` \|"), set(wall_tops()))
+        self.assertEqual({f for f in ids("### 바닥", r"\| `(floor\.[a-z-]+)` \|")}, set(room_floors()))
+
+    def test_styles_boards_draw_without_a_korean_font(self):
+        from unittest import mock
+        from pixelkit import boards
+        with mock.patch.object(boards, "find_korean_font", return_value=None):
+            with tempfile.TemporaryDirectory() as d:
+                code, out, err = StylesCommandTests.run_kit(None, "--out", d, "--scale", "1")
+                self.assertEqual(code, 0, out + err)
 
 
 if __name__ == "__main__":

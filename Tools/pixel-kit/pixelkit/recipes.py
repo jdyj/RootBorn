@@ -50,6 +50,9 @@ def load_recipes(directory: str) -> Dict[str, dict]:
                 raise RecipeError(f"{name}: id가 없는 명세")
             if rid in out:
                 raise RecipeError(f"{rid}: id가 겹친다({origin[rid]}와 {name})")
+            for key in ("label", "concept"):         # 사람이 읽는 이름과 컨셉 한 줄(견본판·목록에 찍힌다). 적었다면 문자열.
+                if key in r and (not isinstance(r[key], str) or not r[key].strip()):
+                    raise RecipeError(f"{name}: {rid}의 {key}는 비어 있지 않은 문자열이어야 한다(지금 {r[key]!r})")
             out[rid] = r
             origin[rid] = name
     return out

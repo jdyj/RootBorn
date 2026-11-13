@@ -115,20 +115,31 @@ def _check_face_height(face_height) -> None:
 # ---------------------------------------------------------------- 벽 모양 등록
 
 _WALLS: Dict[str, object] = {}
+_WALL_NOTES: Dict[str, Tuple[str, str]] = {}      # 벽 모양 → (한글 이름, 컨셉 한 줄)
 
 
-def wall_style(name: str):
-    """벽 모양 클래스를 name으로 등록한다. 클래스(대개 _Wall을 이어받는다)는
+def _text(value, what: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise RecipeError(f"{what}: 비어 있지 않은 문자열이어야 한다(지금 {value!r})")
+    return value
+
+
+def wall_style(name: str, label: str, concept: str):
+    """벽 모양 클래스를 name으로 등록한다. label(한글 이름, 짧게)과 concept(한 줄: 생김 + 느낌 + 어울리는 곳 + 약점)는
+    견본판과 room styles --list에 찍히므로 그림을 직접 본 뒤에 쓴다. 클래스(대개 _Wall을 이어받는다)는
     - cap: 윗면 띠의 기본 팔레트 줄(단계 0 안쪽 어두운 줄 / 1 면 / 2 안쪽 밝은 줄). 방마다 top 값으로 바꿀 수 있다(TOPS).
     - band: 윗면 띠 두께(px). 방의 자리 표에 남는다.
     - narrow(style) -> (천장 밑 그늘, 면, 아래 면 윗줄, 아래 면), narrow_base: 좁은 정면(세로 벽 남쪽 끝)의 색과 아래 면이
       시작하는 줄. _Wall의 기본은 paper·wood 줄에서 고른다.
-    - face(style, k, ceiling) -> Canvas(32x32, 끝·위 선 없이). k == 1이 바닥 바로 위 타일. ceiling이면 맨 위 2줄만 다르다.
-    - 클래스 설명 첫 줄은 room styles --list가 찍는다."""
+    - face(style, k, ceiling) -> Canvas(32x32, 끝·위 선 없이). k == 1이 바닥 바로 위 타일. ceiling이면 맨 위 2줄만 다르다."""
+    _text(label, f"{name}: label")
+    _text(concept, f"{name}: concept")
+
     def deco(cls):
         if name in _WALLS:
             raise RecipeError(f"{name}: 벽 모양 이름이 겹친다")
         _WALLS[name] = cls()
+        _WALL_NOTES[name] = (label, concept)
         return cls
     return deco
 
@@ -154,18 +165,50 @@ def wall_top(wall: str) -> str:
     return _look(wall).cap
 
 
-def wall_about(wall: str) -> str:
-    """벽 모양 클래스 설명의 첫 줄(room styles --list)."""
-    return ((type(_look(wall)).__doc__ or "").strip().splitlines() or [""])[0]
+def wall_label(wall: str) -> str:
+    """벽 모양의 한글 이름. 모르는 벽 모양은 RecipeError."""
+    _look(wall)
+    return _WALL_NOTES[wall][0]
 
 
-# 방 값 top으로 고를 수 있는 띠 색 줄(팔레트에 3단계 줄이 있어야 한다). 벽 모양의 기본 줄도 고를 수 있다.
-# 띠 색을 더하려면 style.json에 `wall.top.<이름>` 3단계 줄(어두운 것부터)과 여기 한 줄.
-TOPS = ("wall.top.cream", "wall.top.brown", "wall.top.slate", "wall.top.light")
+def wall_concept(wall: str) -> str:
+    """벽 모양의 컨셉 한 줄. 모르는 벽 모양은 RecipeError."""
+    _look(wall)
+    return _WALL_NOTES[wall][1]
+
+
+# 방 값 top으로 고를 수 있는 띠 색 줄 → (한글 이름, 컨셉 한 줄). 팔레트에 3단계 줄이 있어야 한다.
+# 띠 색을 더하려면 style.json에 `wall.top.<이름>` 3단계 줄(어두운 것부터)과 여기 한 줄. `wall.plaster.top`은 plaster 벽의 기본색이다.
+TOPS: Dict[str, Tuple[str, str]] = {
+    "wall.top.cream": ("황토 띠", "따뜻한 황토색 윗면. 크림 벽지 벽과 한 덩어리로 포근하고, 바깥 어둠과는 또렷이 구별된다."),
+    "wall.top.brown": ("갈색 띠", "차분한 갈색 윗면. 나무·벽지 벽에 두루 어울려 가장 무난하다."),
+    "wall.top.slate": ("짙은 남회색 띠", "벽이 또렷해지고 방 안이 도드라진다. 바깥 어둠과는 붙어 보인다."),
+    "wall.top.light": ("밝은 회색 띠", "밝고 가벼운 윗면. 타일·파스텔 벽에 어울리고 벽이 가벼워 보인다."),
+    "wall.plaster.top": ("회백색 띠", "회반죽 벽의 기본 윗면. 연한 회갈색이라 가장 조용하고, 다른 벽에도 고를 수 있다."),
+}
 
 
 def wall_tops() -> List[str]:
     return sorted(set(TOPS) | {look.cap for look in _WALLS.values()})
+
+
+def top_label(top: str) -> str:
+    """띠 색 줄의 한글 이름. 고를 수 있는 줄이 아니면 RecipeError."""
+    check_top(top)
+    return _top_note(top)[0]
+
+
+def top_concept(top: str) -> str:
+    """띠 색 줄의 컨셉 한 줄. 고를 수 있는 줄이 아니면 RecipeError."""
+    check_top(top)
+    return _top_note(top)[1]
+
+
+def _top_note(top: str) -> Tuple[str, str]:
+    try:
+        return TOPS[top]
+    except KeyError:
+        raise RecipeError(f"{top}: 띠 색 설명(TOPS)이 없다") from None
 
 
 def check_top(top: Optional[str]) -> None:
@@ -226,7 +269,9 @@ def _wall_y(k: int, y: int) -> int:
     return ((2 - k) * CELL + y) % (2 * CELL)
 
 
-@wall_style("paper")
+@wall_style("paper",
+            label="줄무늬 벽지 벽",
+            concept="크림색 세로줄 벽지 아래 갈색 나무 징두리 판. 포근하고 무난한 집 벽(본보기 방). 판 때문에 벽 아래가 묵직하다.")
 class PaperWall(_Wall):
     """줄무늬 벽지 + 나무 징두리 판 + 걸레받이."""
     cap = "wall.top.cream"
@@ -261,7 +306,9 @@ class PaperWall(_Wall):
         return cv
 
 
-@wall_style("plaster")
+@wall_style("plaster",
+            label="회반죽 벽",
+            concept="연한 회백색 단색 면에 낮은 갈색 걸레받이. 가장 조용해서 어디든 어울리지만 무늬가 없어 밋밋하다.")
 class PlasterWall(_Wall):
     """단색 회반죽 + 아래 한 단계 + 낮은 걸레받이."""
     cap = "wall.plaster.top"
@@ -289,7 +336,9 @@ class PlasterWall(_Wall):
 # 2026-11-14 사용자 요청 "다른것도 계속 만들어줘 유저가 자유롭게 만들 수 있도록"으로 더한 모양들. 견본(W3~W8)을 옮기고 약점을
 # 고친 것 + 새로 그린 것. 무늬 주기는 가로 32의 약수(옆 타일과 이어진다), 세로는 32의 약수이거나 _wall_y로 두 칸을 잇는다.
 
-@wall_style("sprig")
+@wall_style("wallpaper-sprig",
+            label="연녹 잔무늬 벽지",
+            concept="연녹색 바탕에 작은 마름모 잔무늬, 아래는 흰 걸레받이. 부드럽고 무난한 집 벽. 1배에서는 무늬가 점으로 보인다.")
 class SprigWall(_Wall):
     """연녹색 잔무늬 벽지 + 흰 걸레받이. 가장 무난한 집 벽."""
     cap = "wall.top.brown"
@@ -322,7 +371,9 @@ class SprigWall(_Wall):
         return cv
 
 
-@wall_style("plank")
+@wall_style("panel-plank",
+            label="짙은 가로 판자벽",
+            concept="짙은 갈색 가로 판자를 겹쳐 댄 벽. 오두막·창고 느낌. 나무 바닥과 깔면 갈색 일색이 된다.")
 class PlankWall(_Wall):
     """가로 판자벽(겹쳐 댄 긴 판) + 짙은 걸레받이. 나무 바닥과 깔면 갈색 일색 — 돌·타일 바닥과 짝짓는다."""
     cap = "wall.top.brown"
@@ -351,7 +402,9 @@ class PlankWall(_Wall):
         return cv
 
 
-@wall_style("tile-white")
+@wall_style("tile-white",
+            label="흰 타일 벽",
+            concept="흰 벽 타일(엇갈림 쌓기)에 청록 띠와 타일 걸레받이. 깨끗한 부엌·욕실.")
 class WhiteTileWall(_Wall):
     """흰 벽 타일(16x8 엇갈림) + 청록 띠 + 타일 걸레받이. 부엌·욕실."""
     cap = "wall.top.light"
@@ -422,7 +475,9 @@ class _BrickWall(_Wall):
         return cv
 
 
-@wall_style("brick-cream")
+@wall_style("brick-cream",
+            label="크림 벽돌 벽",
+            concept="크림색 벽돌에 밝은 벽돌 몇 장, 짙은 나무 걸레받이. 벽돌 중 가장 조용하다. 가게·부엌.")
 class CreamBrickWall(_BrickWall):
     """크림 벽돌 + 짙은 나무 걸레받이. 벽돌 중 가장 조용하다(가게·부엌)."""
     cap = "wall.top.brown"
@@ -432,7 +487,9 @@ class CreamBrickWall(_BrickWall):
         return b[0], b[1], b[2], b[3], b[2], b[1]
 
 
-@wall_style("brick-red")
+@wall_style("brick-red",
+            label="붉은 벽돌 벽",
+            concept="붉은 벽돌에 짙은 줄눈, 밝은 벽돌 몇 장. 묵직하고 개성이 강하다. 가게 뒤·창고.")
 class RedBrickWall(_BrickWall):
     """붉은 벽돌(짙은 줄눈, 밝은 벽돌 몇 장만) + 짙은 나무 걸레받이. 가게 뒤·창고."""
     cap = "wall.top.slate"
@@ -443,7 +500,9 @@ class RedBrickWall(_BrickWall):
         return b[1], b[1], b[2], b[3], b[2], b[1]
 
 
-@wall_style("pastel")
+@wall_style("paint-mint",
+            label="민트 칠 벽",
+            concept="민트색 단색에 흰 허리 몰딩, 아래 판에 긴 테 하나. 산뜻한 아이 방. 몰딩 테는 1배에서 가는 줄로 보인다.")
 class PastelWall(_Wall):
     """민트 단색 + 흰 허리 몰딩 + 아래 판(긴 몰딩 테 하나) + 흰 걸레받이. 아이 방."""
     cap = "wall.top.light"
@@ -472,7 +531,9 @@ class PastelWall(_Wall):
         return cv
 
 
-@wall_style("study")
+@wall_style("paint-green",
+            label="짙은 녹색 칠 벽",
+            concept="짙은 녹색 벽에 높고 밝은 걸레받이. 차분하고 가구가 도드라진다. 서재·사무실.")
 class StudyWall(_Wall):
     """짙은 녹색 벽(같은 계열 가는 세로줄) + 높고 밝은 걸레받이. 서재 — 가구가 잘 도드라진다."""
     cap = "wall.top.slate"
@@ -498,7 +559,9 @@ class StudyWall(_Wall):
         return cv
 
 
-@wall_style("two-tone")
+@wall_style("paint-two-tone",
+            label="위아래 투톤 벽",
+            concept="위는 크림, 아래는 청회색 칠에 흰 허리 몰딩. 깔끔한 거실·복도.")
 class TwoToneWall(_Wall):
     """투톤: 위 크림 / 아래 짙은 청회색 칠 + 흰 허리 몰딩·걸레받이. 거실·복도."""
     cap = "wall.top.brown"
@@ -523,7 +586,9 @@ class TwoToneWall(_Wall):
         return cv
 
 
-@wall_style("floral")
+@wall_style("wallpaper-floral",
+            label="분홍 꽃무늬 벽지",
+            concept="연분홍 바탕에 드문드문 작은 꽃, 아래는 갈색 걸레받이. 아기자기한 침실·아이 방. 1배에서는 꽃이 점으로 보인다.")
 class FloralWall(_Wall):
     """연분홍 잔꽃 벽지(꽃잎 넷 + 노란 꽃술, 드문드문) + 나무 걸레받이. 침실·아이 방."""
     cap = "wall.top.brown"
@@ -552,7 +617,9 @@ class FloralWall(_Wall):
         return cv
 
 
-@wall_style("pine")
+@wall_style("panel-pine",
+            label="소나무 세로 판벽",
+            concept="밝은 소나무 세로 판을 벽 전체에, 같은 나무 걸레받이. 따뜻한 오두막·부엌·가게.")
 class PineWall(_Wall):
     """밝은 소나무 세로 판(벽 전체, 판 8px) + 같은 나무 걸레받이. 오두막·부엌·가게."""
     cap = "wall.top.brown"
@@ -579,7 +646,9 @@ class PineWall(_Wall):
         return cv
 
 
-@wall_style("tile-blue")
+@wall_style("tile-blue",
+            label="하늘색 타일 벽",
+            concept="하늘색 정사각 타일, 아래에 짙은 타일 한 줄. 시원한 욕실. 아래 짙은 줄은 옅어서 잘 안 보인다.")
 class BlueTileWall(_Wall):
     """하늘색 정사각 타일(16px, 위·왼쪽 빛 모서리) + 짙은 타일 한 줄 걸레받이. 욕실."""
     cap = "wall.top.light"
@@ -613,7 +682,9 @@ class BlueTileWall(_Wall):
         return cv
 
 
-@wall_style("concrete")
+@wall_style("concrete",
+            label="콘크리트 벽",
+            concept="회색 노출 콘크리트에 거푸집 이음과 작은 구멍 자국. 차갑고 투박한 작업실·창고. 아래 때 탄 띠가 약하다.")
 class ConcreteWall(_Wall):
     """노출 콘크리트(거푸집 판 32x16 이음 + 폼타이 구멍) + 아래 때 탄 띠. 가게 뒤·창고."""
     cap = "wall.top.slate"

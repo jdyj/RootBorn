@@ -388,31 +388,39 @@ def _room_piece(kit: Kit, plan: List[str], wall: str, floor: dict, top: Optional
 def _room_styles(args, kit: Kit) -> int:
     """room styles [--list] [--out 폴더] [--scale N]: 등록된 벽 모양·띠 색·바닥을 견본판 두 장으로(또는 글로만)."""
     from .room_ldtk import floor_ids
-    from .room_tiles import wall_about, wall_styles, wall_top, wall_tops
+    from .room_tiles import top_concept, top_label, wall_concept, wall_label, wall_styles, wall_top, wall_tops
     floors = floor_ids(kit)
     if args.list:
-        print(f"벽 모양 {len(wall_styles())}개 (평면의 wall):")
+        print(f"벽 모양 {len(wall_styles())}개 (평면의 wall) — 이름(id) — 한글 이름 — 컨셉 [기본 띠 색]:")
         for name in wall_styles():
-            print(f"  {name:<12} 기본 띠 {wall_top(name):<16} {wall_about(name)}")
-        print(f"띠 색 {len(wall_tops())}개 (평면의 top, 적지 않으면 벽 모양의 기본):")
+            print(f"  {name} — {wall_label(name)} — {wall_concept(name)} [기본 띠 {wall_top(name)}]")
+        print(f"띠 색 {len(wall_tops())}개 (평면의 top, 적지 않으면 벽 모양의 기본) — 이름(id) — 한글 이름 — 컨셉:")
         for name in wall_tops():
-            print(f"  {name}")
-        print(f"바닥 {len(floors)}개 (평면의 floor, 키트의 한 칸 타일 명세):")
+            print(f"  {name} — {top_label(name)} — {top_concept(name)}")
+        print(f"바닥 {len(floors)}개 (평면의 floor, 키트의 한 칸 타일 명세) — 이름(id) — 한글 이름 — 컨셉:")
         for rid in floors:
-            print(f"  {rid:<22} {kit.recipes[rid].get('part', '')}")
+            r = kit.recipes[rid]
+            print(f"  {rid} — {r.get('label', '')} — {r.get('concept', '')}")
         return 0
     scale = _scale(args, "styles")
     out = Path(args.out) if args.out is not None else Path(args.repo) / "output" / "pixel-kit" / "room"
     base_floor = kit.recipes[STYLE_WALL_FLOOR if STYLE_WALL_FLOOR in floors else floors[0]]       # 벽 조각 밑 바닥(조용한 것)
     try:
-        walls = [boards.Entry(f"{name} (top {wall_top(name)})", _room_piece(kit, STYLE_WALL_PIECE, name, base_floor))
+        walls = [boards.Entry(f"{name} (top {wall_top(name)})", _room_piece(kit, STYLE_WALL_PIECE, name, base_floor),
+                              title=wall_label(name), note=wall_concept(name))
                  for name in wall_styles()]
-        walls += [boards.Entry(f"paper + top {top}", _room_piece(kit, STYLE_TOP_PIECE, "paper", base_floor, top))
+        walls += [boards.Entry(f"paper + top {top}", _room_piece(kit, STYLE_TOP_PIECE, "paper", base_floor, top),
+                               title=top_label(top), note=top_concept(top))
                   for top in wall_tops()]
         fw, fh = STYLE_FLOOR_CELLS
-        flist = [boards.Entry(rid, _room_piece(kit, ["." * fw] * fh, "paper", kit.recipes[rid])) for rid in floors]
+        flist = [boards.Entry(rid, _room_piece(kit, ["." * fw] * fh, "paper", kit.recipes[rid]),
+                              title=kit.recipes[rid].get("label", ""), note=kit.recipes[rid].get("concept", ""))
+                 for rid in floors]
     except RecipeError as e:
         raise UsageError(str(e)) from None
+    if boards.find_korean_font(boards.TITLE_SIZE) is None:
+        print(f"한글 글꼴을 못 찾아 한글 이름·컨셉은 그리지 않았다(id만). 글꼴 파일을 {boards.FONT_ENV}로 주면 그려진다 — "
+              "글이 필요하면 room styles --list", file=sys.stderr)
     saver = Saver()
     for name, entries in (("styles-walls", walls), ("styles-floors", flist)):
         saver.save(boards.board_image(entries, 1), out / f"{name}.png")

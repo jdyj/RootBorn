@@ -42,6 +42,28 @@ class BoardTests(unittest.TestCase):
         img = board_image([Entry("1 " + "x" * 80, _cv(32, 32), False)], 1)
         self.assertGreater(img.width, 200)
 
+    def test_title_and_note_need_a_korean_font_and_are_skipped_without_one(self):
+        from unittest import mock
+        from PIL import ImageFont
+        from pixelkit import boards
+        plain = [Entry("1 a", _cv(32, 32))]
+        noted = [Entry("1 a", _cv(32, 32), title="이름", note="한 줄 설명 " * 8)]
+        with mock.patch.object(boards, "find_korean_font", return_value=None):
+            self.assertEqual(board_image(noted, 2).tobytes(), board_image(plain, 2).tobytes())
+        with mock.patch.object(boards, "find_korean_font", side_effect=lambda size: ImageFont.load_default(size=size)):
+            with_font = board_image(noted, 2)
+            self.assertGreater(with_font.height, board_image(plain, 2).height)
+            self.assertEqual(with_font.tobytes(), board_image(noted, 2).tobytes())
+
+    def test_a_note_wraps_to_the_cell_instead_of_widening_it(self):
+        from unittest import mock
+        from PIL import ImageFont
+        from pixelkit import boards
+        note = "긴 설명 " * 40
+        with mock.patch.object(boards, "find_korean_font", side_effect=lambda size: ImageFont.load_default(size=size)):
+            img = board_image([Entry("1 a", _cv(32, 32), title="이름", note=note)], 2)
+        self.assertLess(img.width, 400)
+
 
 if __name__ == "__main__":
     unittest.main()
