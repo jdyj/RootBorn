@@ -128,19 +128,20 @@ class ExportFurnitureTests(Base):
 
     def test_lint_problem_blocks_every_file_of_the_run(self):
         good = copy.deepcopy(self.recipe)
-        bad = copy.deepcopy(self.kit.recipes["bakery.counter"])
-        bad["id"] = "test.counter"
-        bad["art_cells"] = [1, 1]            # 너무 작아 만드는 부품이 거절한다
+        bad = copy.deepcopy(self.recipe)
+        bad["id"] = "test.shelf2"
+        bad["game"] = {"replaces": "test.shelf"}
+        strict = load_kit(str(REAL_KIT))
+        strict.style.max_colors["furniture"] = 2        # 색 수 한도를 넘겨 lint 문제를 낸다
         snap = self.snapshot()
-        from pixelkit.recipes import RecipeError
-        try:
-            plans = [export.export_furniture(good, self.kit, self.root),
-                     export.export_furniture(bad, self.kit, self.root)]
-        except RecipeError:
-            self.assertEqual(self.snapshot(), snap)   # 그리기 단계에서 막혀 아무것도 안 쓴다
-            return
+        plans = [export.export_furniture(good, self.kit, self.root),
+                 export.export_furniture(bad, strict, self.root)]
+        self.assertEqual(plans[0].problems, [])
+        self.assertTrue(plans[0].files)
+        self.assertIn("too-many-colors", [p.code for p in plans[1].problems])
         plan = export.merge_plans(plans)
         self.assertTrue(plan.problems)
+        self.assertEqual(plan.files, {})
         self.assertEqual((export.apply(plan, self.root), self.snapshot()), ([], snap))
 
     def test_without_replaces_definitions_are_untouched(self):
@@ -151,6 +152,25 @@ class ExportFurnitureTests(Base):
         self.assertNotIn(export.FURNITURE_DEFS, written)
         self.assertEqual(self.snapshot()[export.FURNITURE_DEFS], before)
         self.assertEqual(len(written), 2)
+
+    def test_failed_verification_writes_nothing(self):
+        # tileParts[0]에 tile 밖의 "name"이 먼저 있으면 잘못된 값이 바뀌므로 검증이 막아야 한다.
+        data = json.loads(self.defs.read_text("utf-8"))
+        part = data[1]["tileParts"][0]
+        data[1]["tileParts"][0] = {"name": "label", **part}
+        self.defs.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        snap = self.snapshot()
+        plan, written = self.run_export()
+        self.assertEqual([p.code for p in plan.problems], ["export-replace-failed"])
+        self.assertEqual((written, self.snapshot()), ([], snap))
+
+    def test_definitions_not_utf8_is_a_clear_problem(self):
+        self.defs.write_bytes(bytes([0x5b, 0xff, 0xfe, 0x5d]))
+        snap = self.snapshot()
+        plan, written = self.run_export()
+        self.assertEqual([p.code for p in plan.problems], ["export-unreadable-definitions"])
+        self.assertIn(export.FURNITURE_DEFS, plan.problems[0].message)
+        self.assertEqual((written, self.snapshot()), ([], snap))
 
     def test_lf_file_and_bom_are_preserved(self):
         self.defs.write_bytes(b"\xef\xbb\xbf" + defs_text("\n").encode("utf-8").rstrip(b"\n"))

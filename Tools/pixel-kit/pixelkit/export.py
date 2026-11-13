@@ -193,6 +193,9 @@ def export_furniture(recipe: dict, kit: Kit, repo_root) -> ExportPlan:
             plan.defs_after = _substitute(raw, plan.replace)
         except OSError:
             plan.problems.append(_problem(rid, "export-unknown-furniture", f"{FURNITURE_DEFS}를 못 읽었다"))
+        except UnicodeDecodeError:
+            plan.problems.append(_problem(rid, "export-unreadable-definitions",
+                                          f"{FURNITURE_DEFS}가 UTF-8이 아니라 못 읽었다"))
         except ExportError as e:
             plan.problems.append(_problem(rid, e.code, str(e)))
     if plan.problems:
