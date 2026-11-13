@@ -1,6 +1,9 @@
 {
   "cell": 32,
   "width_cells": 16,
+  "wall": "paper",
+  "floor": "bakery.tile.floor",
+  "face_height": 2,
   "slots": {
     "cap:6": {
       "x": 0,
