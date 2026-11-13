@@ -58,15 +58,47 @@ class SpriteLintTests(unittest.TestCase):
         ps = lint_sprite(cv, REC, CTX, allow=frozenset({"orphan-pixel"}))
         self.assertEqual(codes(ps), ["too-many-colors"])
 
-    def test_orphan_pixel(self):
+    def test_orphan_lone_pixel_detached_from_shape(self):
         cv = good_sprite()
-        cv.px(15, 27, C)
-        self.assertEqual(codes(lint_sprite(cv, REC, CTX)), ["orphan-pixel"])
+        cv.px(22, 28, A)  # 모양에서 떨어진 한 점(바깥 외곽선이 없는 투명 이웃)
+        ps = lint_sprite(cv, REC, CTX)
+        self.assertIn("orphan-pixel", codes(ps))
+
+    def test_detail_dot_inside_shape_is_fine(self):
+        self.assertEqual(lint_sprite(self._with_dot(), REC, CTX), [])
+
+    def _with_dot(self):
+        cv = good_sprite()
+        cv.px(15, 27, C)  # 채운 모양 안의 한 점 무늬
+        return cv
+
+    def test_island_ringed_by_outline_is_orphan(self):
+        cv = good_sprite()
+        for x in (10, 21):  # 좌우 대칭으로 둔 한 점 섬 둘
+            cv.px(x, 28, A)
+        cv.outline(OL)  # 섬 둘레에 외곽선 고리
+        for x in (10, 21):
+            cv.px(x, 28, A)
+        ps = lint_sprite(cv, REC, CTX)
+        self.assertEqual(codes(ps), ["orphan-pixel"])
+        self.assertEqual((ps[0].x, ps[0].y), (10, 28))
+
+    def test_one_problem_per_code_with_count(self):
+        cv = good_sprite()
+        for x in (15, 16, 17):
+            cv.px(x, 24, (0, 0, 0, 0))
+        ps = lint_sprite(cv, REC, CTX)
+        self.assertEqual(len(ps), 1)
+        self.assertEqual(ps[0].code, "outline-open")
+        self.assertEqual((ps[0].x, ps[0].y), (15, 25))
+        self.assertIn("외 2칸", ps[0].message)
 
     def test_allow_skips_code(self):
         cv = good_sprite()
-        cv.px(15, 27, C)
-        self.assertEqual(lint_sprite(cv, REC, CTX, allow=frozenset({"orphan-pixel"})), [])
+        cv.px(22, 28, A)
+        cv.outline(OL)
+        self.assertNotEqual(lint_sprite(cv, REC, CTX), [])
+        self.assertEqual(lint_sprite(cv, REC, CTX, allow=frozenset({"orphan-pixel", "not-bottom-center"})), [])
 
     def test_not_cell_multiple(self):
         cv = Canvas(30, 32)
