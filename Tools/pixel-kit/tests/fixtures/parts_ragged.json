@@ -1,0 +1,5 @@
+[
+  { "id": "test.ragged", "anchor": "bottom-center",
+    "rows": [ "A", "AAA", "AA" ],
+    "keys": { "A": "bread.1" } }
+]
