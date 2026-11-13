@@ -21,6 +21,7 @@ SIGN_W, SIGN_H = 48, 22
 LAMP_DROP = 30        # 벽 윗줄에서 벽등까지(차양 밑 그늘보다 아래, 문 머리 높이)
 FRONT_EDGE = 16       # 지붕 맨 아랫줄 위로 몇 줄: 평지붕 앞 난간 윗줄이자 간판 윗줄(간판이 처마 위로 솟는 만큼)
 AWNING_SLOPE, AWNING_VALANCE = 12, 6
+SHADE_SIDE, SHADE_BELOW = 3, 2   # 지붕 위 물건 그림자: 오른쪽 변 3열, 아랫변 2줄의 짧은 띠(사용자: 굴뚝 그림자가 너무 크다)
 
 
 def _rnd(k: int, salt: int, n: int) -> int:
@@ -122,12 +123,13 @@ def roof_item(name: str, w: int, h: int, front: Tuple[int, int]):
     return deco
 
 
-def _box(cv: Canvas, P: _Pal, x: int, y: int, w: int, top_h: int, front_h: int, top, front, sh: int) -> None:
-    """높이가 있는 상자: 윗면 + 앞면, 그림자는 오른쪽 변과 아랫변에 붙은 띠(물체가 끝나는 곳에서 시작).
+def _box(cv: Canvas, P: _Pal, x: int, y: int, w: int, top_h: int, front_h: int, top, front) -> None:
+    """높이가 있는 상자: 윗면 + 앞면, 그림자는 오른쪽 변과 아랫변에 붙은 짧은 띠(물체가 끝나는 곳에서 시작).
+    차지하는 자리는 (w + SHADE_SIDE) x (top_h + front_h + SHADE_BELOW).
     top = (밝은, 몸, 어두운), front = (밝은, 몸, 어두운, 윗면 밑 짙은)."""
     hh = top_h + front_h
-    P.down(cv, x + w, y + 3, sh, hh - 3)                   # 오른쪽 띠: 높이만큼 넓다
-    P.down(cv, x + 3, y + hh, w + sh - 3, 3)               # 아랫변 띠
+    P.down(cv, x + w, y + 3, SHADE_SIDE, hh - 3)           # 오른쪽 띠
+    P.down(cv, x + 3, y + hh, w + SHADE_SIDE - 3, SHADE_BELOW)   # 아랫변 띠
     cv.rect(x, y, w, top_h, top[1])
     _bevel(cv, x, y, w, top_h, top[0], top[2])
     cv.rect(x, y + top_h, w, front_h, front[1])
@@ -145,55 +147,55 @@ def _wall_front(P: _Pal):
     return (P.wall[3], P.wall[2], P.wall[1], P.wall[0])
 
 
-@roof_item("roof.stair-house", 46, 35, (12, 20))
+@roof_item("roof.stair-house", 37, 34, (12, 20))
 def stair_house(cv: Canvas, P: _Pal, x: int, y: int) -> None:
     """옥탑(계단실): 윗면 + 벽돌 앞면 + 문."""
-    _box(cv, P, x, y, 34, 12, 20, _trim_top(P), _wall_front(P), 12)
+    _box(cv, P, x, y, 34, 12, 20, _trim_top(P), _wall_front(P))
     d = P.door
     cv.rect(x + 12, y + 18, 11, 14, d[2])
     _bevel(cv, x + 12, y + 18, 11, 14, d[3], d[1])
     cv.px(x + 20, y + 25, P.yellow)
 
 
-@roof_item("roof.ac-unit", 26, 21, (9, 9))
+@roof_item("roof.ac-unit", 23, 20, (9, 9))
 def ac_unit(cv: Canvas, P: _Pal, x: int, y: int) -> None:
     """실외기: 금속 윗면의 팬 + 앞면 살."""
     m = P.metal
-    _box(cv, P, x, y, 20, 9, 9, (m[2], m[2], m[1]), (m[2], m[1], m[0], m[0]), 6)
+    _box(cv, P, x, y, 20, 9, 9, (m[2], m[2], m[1]), (m[2], m[1], m[0], m[0]))
     cv.rect(x + 5, y + 2, 10, 5, m[1])
     cv.rect(x + 7, y + 3, 6, 3, m[0])
     for xx in range(x + 3, x + 18, 3):
         cv.vline(xx, y + 12, 5, m[0])
 
 
-@roof_item("roof.skylight", 43, 31, (22, 6))
+@roof_item("roof.skylight", 41, 30, (22, 6))
 def skylight(cv: Canvas, P: _Pal, x: int, y: int) -> None:
     """솟은 천창: 금속 틀 윗면의 유리 + 앞면."""
     m, g = P.metal, P.glass
-    _box(cv, P, x, y, 38, 22, 6, (P.trim[3], m[2], m[0]), (m[1], m[1], m[0], m[0]), 5)
+    _box(cv, P, x, y, 38, 22, 6, (P.trim[3], m[2], m[0]), (m[1], m[1], m[0], m[0]))
     cv.rect(x + 3, y + 3, 32, 16, g[1])
     _glass_streaks(cv, P, x + 3, y + 3, 32, 16)
     cv.vline(x + 18, y + 3, 16, m[2])
     cv.hline(x + 3, y + 10, 32, m[2])
 
 
-@roof_item("roof.chimney", 26, 33, (8, 22))
+@roof_item("roof.chimney", 19, 32, (8, 22))
 def chimney(cv: Canvas, P: _Pal, x: int, y: int) -> None:
     """굴뚝: 윗면의 구멍 + 벽돌 앞면(줄눈)."""
-    _box(cv, P, x, y, 16, 8, 22, _trim_top(P), _wall_front(P), 10)
+    _box(cv, P, x, y, 16, 8, 22, _trim_top(P), _wall_front(P))
     cv.rect(x + 3, y + 2, 10, 4, P.wall[0])
     for yy in range(y + 13, y + 30, 5):
         cv.hline(x + 1, yy, 14, P.wall[1])
 
 
-@roof_item("roof.dormer", 55, 43, (16, 22))
+@roof_item("roof.dormer", 49, 42, (16, 22))
 def dormer(cv: Canvas, P: _Pal, x: int, y: int) -> None:
     """박공 지붕창: 세모 박공(지붕 끝 두 줄) + 벽 + 창 + 창턱. 처마가 양옆으로 3px 나온다."""
     s, t, wd, g = P.roof, P.trim, P.wood, P.glass
-    dx, dy, dw, half, sh = x + 3, y + 2, 40, 20, 12
-    P.down(cv, dx + dw + 2, dy + 12, sh - 2, 2)            # 오른쪽 띠: 처마 줄은 처마 끝 바로 옆부터
-    P.down(cv, dx + dw, dy + 14, sh, 24)                   # 벽 줄은 벽이 끝나는 열 바로 옆부터(붙은 그림자)
-    P.down(cv, dx + 3, dy + 38, dw + sh - 3, 3)            # 아랫변 띠
+    dx, dy, dw, half = x + 3, y + 2, 40, 20
+    P.down(cv, dx + dw + 3, dy + 12, SHADE_SIDE, 5)        # 오른쪽 띠: 처마 줄은 처마 끝 바로 옆부터
+    P.down(cv, dx + dw, dy + 17, SHADE_SIDE, 21)           # 벽 줄은 벽이 끝나는 열 바로 옆부터(붙은 그림자)
+    P.down(cv, dx + 3, dy + 38, dw, SHADE_BELOW)           # 아랫변 띠
     for j in range(half):                                  # 세모 박공
         xl, xr = dx + half - 1 - j, dx + half + j
         cv.rect(xl, dy + j * 14 // half, xr - xl + 1, 14 - j * 14 // half, t[2])

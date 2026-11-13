@@ -174,6 +174,37 @@ class RoofItemShadowTests(unittest.TestCase):
                     self.assertNotEqual(roof.get(max(xs) + 1, y), plain, (name, y, max(xs) + 1))
 
 
+    def test_every_roof_item_shadow_is_a_short_band(self):
+        """사용자(2026-11-13): "굴뚝 그림자가 … 너무 큰거같아". 오른쪽 띠는 앞면 줄마다 4열 이하, 아래 띠는 2줄 이하."""
+        spec = {"id": "t.item"}
+        P = _Pal(spec, ctx(), "roof.teal", "brick", "roof.slate")
+        plain = STYLE.color("roof.teal.2")
+        for name, it in sorted(ROOF_ITEMS.items()):
+            with self.subTest(name):
+                alone = Canvas(it.w + 8, it.h + 8)
+                it.draw(alone, P, 4, 4)
+                roof = Canvas(it.w + 8, it.h + 8)
+                roof.rect(0, 0, roof.w, roof.h, plain)
+                it.draw(roof, P, 4, 4)
+                dark = lambda x, y: not alone.get(x, y)[3] and roof.get(x, y) != plain   # noqa: E731
+                y0, n = it.front
+                for y in range(4 + y0, 4 + y0 + n):
+                    x = max(x for x in range(alone.w) if alone.get(x, y)[3]) + 1
+                    run = 0
+                    while dark(x + run, y):
+                        run += 1
+                    self.assertLessEqual(run, 4, (name, y))
+                bottom = 4 + y0 + n - 1                             # 앞면 맨 아랫줄
+                for x in range(alone.w):
+                    ys = [y for y in range(alone.h) if alone.get(x, y)[3]]
+                    if not ys or max(ys) < bottom:                  # 밑변까지 오지 않는 열(내민 처마)은 오른쪽 띠가 맡는다
+                        continue
+                    run = 0
+                    while dark(x, max(ys) + 1 + run):
+                        run += 1
+                    self.assertLessEqual(run, 2, (name, x))
+
+
 class NoSideFaceTests(unittest.TestCase):
     """옆면 금지(사용자: 절대 하지 마)를 그린 그림의 픽셀로 본다."""
 
