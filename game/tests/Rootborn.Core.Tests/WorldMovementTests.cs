@@ -287,6 +287,24 @@ namespace Rootborn.Core.Tests
         }
 
         [Test]
+        public void WORLD_ARRIVE_002_AWallDoorTouchedOnlyAtACornerCountsAsReachable()
+        {
+            // 지금 동작을 고정한다: 걸어서 닿는 칸이 출구 상자와 모서리(대각선)로만 맞닿아도 닿는다(MapReach.Touches의 1px 여유).
+            // 실제 문 판정(DoorWatch, 0.02칸 여유)도 같아서 바깥 벽 문은 안쪽 바닥과 그 양옆 바닥 칸에서 열린다(약 2칸 폭).
+            CollisionGrid grid = Grid(
+                "#....",
+                "#####");
+            var cornerDoor = DoorArea.FromEntity(0, 32, 32, 32, "town", Cell, new TravelTarget("Town", "a"));   // 칸 (0,1), 상하좌우는 모두 벽
+            Assert.That(ArrivalRules.Check(grid, new[] { cornerDoor }, CellPos.Center(new CellPos(3, 0), Cell)), Is.Empty,
+                "바닥 (1,0)이 문 칸 (0,1)과 대각선으로만 붙어도 닿는다");
+            CollisionGrid sealedCorner = Grid(
+                "##...",
+                "#####");
+            Assert.That(ArrivalRules.Check(sealedCorner, new[] { cornerDoor }, CellPos.Center(new CellPos(3, 0), Cell)),
+                Has.Some.Contains("걸어갈 수 없다"), "대각선 칸도 벽이면 닿지 않는다");
+        }
+
+        [Test]
         public void WORLD_CAMERA_001_CameraFollowsButNeverShowsOutsideAndCentersSmallMaps()
         {
             Assert.That(WorldCamera.Offset(focus: 500, mapSize: 2000, viewSize: 400), Is.EqualTo(300f), "가운데에 둔다");
