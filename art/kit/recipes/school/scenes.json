@@ -9,5 +9,21 @@
      {"id": "school.bookcase", "cell": [0, 2], "dx": 6},
      {"id": "school.archive-bookshelf", "cell": [2, 2], "dx": 14},
      {"part": "prop.plant", "cell": [5, 3], "dx": 2}
+   ]},
+  {"id": "school.scene.classroom", "kind": "scene", "size": [10, 6],
+   "fill": [
+     {"tile": "bakery.tile.wall", "rect": [0, 0, 10, 2], "wall": true},
+     {"tile": "bakery.tile.floor", "rect": [0, 2, 10, 4]}
+   ],
+   "hang": [{"part": "prop.clock", "at": [150, 14]}],
+   "place": [
+     {"id": "school.bookcase", "cell": [0, 2], "dx": 4},
+     {"id": "school.archive-bookshelf", "cell": [8, 2], "dx": -4},
+     {"id": "school.chair-south", "cell": [4, 2], "dx": 16, "dy": -2},
+     {"id": "school.teacher-desk", "cell": [4, 3], "dy": -10},
+     {"id": "school.desk", "cell": [1, 4], "dx": 8},
+     {"id": "school.desk-open-book", "cell": [6, 4], "dx": -8},
+     {"id": "school.chair-north", "cell": [2, 5], "dx": -8, "dy": -10},
+     {"id": "school.chair-north", "cell": [6, 5], "dx": 8, "dy": -10}
    ]}
 ]

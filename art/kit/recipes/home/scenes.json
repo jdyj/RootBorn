@@ -1,0 +1,15 @@
+[
+  {"id": "home.scene.study", "kind": "scene", "size": [7, 5],
+   "fill": [
+     {"tile": "bakery.tile.wall", "rect": [0, 0, 7, 2], "wall": true},
+     {"tile": "bakery.tile.floor", "rect": [0, 2, 7, 3]}
+   ],
+   "hang": [{"part": "prop.clock", "at": [182, 14]}],
+   "place": [
+     {"id": "home.study-desk", "cell": [1, 2], "dx": -16},
+     {"id": "home.chair", "state": "north", "cell": [1, 3], "dx": 8, "dy": -12},
+     {"id": "home.chair", "cell": [4, 2], "dx": 4},
+     {"id": "home.chair", "state": "west", "cell": [5, 3], "dx": 8},
+     {"part": "prop.plant", "cell": [6, 2], "dx": 8}
+   ]}
+]

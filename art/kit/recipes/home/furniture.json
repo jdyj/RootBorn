@@ -1,0 +1,28 @@
+[
+  {"id": "home.chair", "kind": "furniture", "part": "furniture.chair", "cells": [1, 1], "art_cells": [1, 2],
+   "game": {"replaces": "chair.black"},
+   "material": "wood.warm", "cushion": "cushion.navy",
+   "states": {
+     "back": {"layer": "back"}, "front": {"layer": "front"},
+     "north": {"facing": "north"}, "north-back": {"facing": "north", "layer": "back"}, "north-front": {"facing": "north", "layer": "front"},
+     "west": {"facing": "west"}, "west-back": {"facing": "west", "layer": "back"}, "west-front": {"facing": "west", "layer": "front"},
+     "east": {"facing": "east"}, "east-back": {"facing": "east", "layer": "back"}, "east-front": {"facing": "east", "layer": "front"}
+   }},
+  {"id": "home.chair-reward", "kind": "furniture", "part": "furniture.chair", "cells": [1, 1], "art_cells": [1, 2],
+   "game": {"replaces": "chair.quest-reward"},
+   "material": "wood.warm", "cushion": "cushion.wine",
+   "states": {
+     "back": {"layer": "back"}, "front": {"layer": "front"},
+     "north": {"facing": "north"}, "north-back": {"facing": "north", "layer": "back"}, "north-front": {"facing": "north", "layer": "front"},
+     "west": {"facing": "west"}, "west-back": {"facing": "west", "layer": "back"}, "west-front": {"facing": "west", "layer": "front"},
+     "east": {"facing": "east"}, "east-back": {"facing": "east", "layer": "back"}, "east-front": {"facing": "east", "layer": "front"}
+   }},
+  {"id": "home.desk", "kind": "furniture", "part": "furniture.desk", "cells": [2, 1], "art_cells": [2, 2],
+   "game": {"replaces": "growth31.assembly.desk"},
+   "material": "wood.warm", "drawers": "right",
+   "top_items": [{"part": "desk.paper", "x": 8}, {"part": "desk.paper", "x": 20}, {"part": "desk.pencil-cup", "x": 46}]},
+  {"id": "home.study-desk", "kind": "furniture", "part": "furniture.desk", "cells": [2, 1], "art_cells": [2, 2],
+   "game": {"replaces": "story.study-desk"},
+   "material": "wood.archive", "drawers": "left",
+   "top_items": [{"part": "desk.lamp", "x": 4}, {"part": "book.stack", "x": 42}]}
+]

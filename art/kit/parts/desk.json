@@ -1,0 +1,56 @@
+[
+  { "id": "desk.paper", "anchor": "bottom-center",
+    "rows": [
+      ".PPPPPPPPP",
+      "PPllllPPPP",
+      "PPPPPPPPPP",
+      "PPlllllPPP",
+      "PPPPPPPPPp",
+      "pppppppppp"
+    ],
+    "keys": { "P": "cream.2", "p": "cream.0", "l": "metal.1" } },
+
+  { "id": "desk.pencil-cup", "anchor": "bottom-center",
+    "rows": [
+      "..t.t..",
+      "..Y.R..",
+      ".gY.Rr.",
+      ".gYrR..",
+      "bBBBBBb",
+      "bBBBBBb",
+      "bBBBBBb",
+      "bBBBBBb",
+      ".bbbbb."
+    ],
+    "keys": { "t": "choco.0", "Y": "yellow.0", "R": "red.1", "r": "red.0", "g": "leaf.1",
+              "B": "book.blue.2", "b": "book.blue.1" } },
+
+  { "id": "desk.lamp", "anchor": "bottom-center",
+    "rows": [
+      "...gGGGg...",
+      "..gGGhGGg..",
+      ".gGGGGGGGg.",
+      "ggggggggggg",
+      "...yyyyy...",
+      ".....m.....",
+      ".....m.....",
+      ".....m.....",
+      ".....m.....",
+      ".....m.....",
+      "....mMm....",
+      "..mmmmmmm..",
+      ".MMMMMMMMM."
+    ],
+    "keys": { "g": "leaf.0", "G": "leaf.1", "h": "leaf.2", "y": "yellow.1", "m": "metal.0", "M": "metal.1" } },
+
+  { "id": "desk.book-open", "anchor": "bottom-center",
+    "rows": [
+      ".PPPPPP.PPPPPP.",
+      "PPllllPdPllllPP",
+      "PPPPPPPdPPPPPPP",
+      "PPlllPPdPPlllPP",
+      "PPPPPPPdPPPPPPP",
+      "cCCCCCCcCCCCCCc"
+    ],
+    "keys": { "P": "book.page.1", "l": "book.page.0", "d": "book.page.0", "C": "book.red.1", "c": "book.red.0" } }
+]

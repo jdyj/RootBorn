@@ -49,6 +49,8 @@
     "book.page": ["#ddd2b8", "#efe6d0"],
     "box.kraft": ["#80603f", "#a07a52", "#bf9a6c", "#d6b88a"],
     "ceramic": ["#b9bcc6", "#dcdee3", "#f3f4f5"],
-    "counter.kitchen": ["#5c3d2a", "#7a5238", "#94694a", "#c2a582", "#e8dbbd"]
+    "counter.kitchen": ["#5c3d2a", "#7a5238", "#94694a", "#c2a582", "#e8dbbd"],
+    "cushion.navy": ["#2c3350", "#3e4a70", "#56668f"],
+    "cushion.wine": ["#6b2a36", "#8f3c48", "#b0596a"]
   }
 }

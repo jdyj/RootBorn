@@ -291,5 +291,84 @@ class DeskDrawingTests(unittest.TestCase):
             draw(spec(DESK, top_items=[{"part": "book.stack"}]))
 
 
+class RealSeatingRecipesTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.recipes = load_recipes(str(KIT / "recipes"))
+        cls.kit = Kit(STYLE, PARTS, {}, cls.recipes)
+
+    def test_table(self):
+        layer_states = {f"{f}-{l}" for f in ("north", "west", "east") for l in ("back", "front")}
+        chair_states = {"north", "west", "east", "back", "front"} | layer_states
+        expect = {
+            "home.chair": ("furniture.chair", [1, 1], [1, 2], chair_states, "chair.black"),
+            "home.chair-reward": ("furniture.chair", [1, 1], [1, 2], chair_states, "chair.quest-reward"),
+            "school.chair-south": ("furniture.chair", [1, 1], [1, 2], {"back", "front"}, "school.chair.south"),
+            "school.chair-north": ("furniture.chair", [1, 1], [1, 2], {"back", "front"}, "school.chair.north"),
+            "home.desk": ("furniture.desk", [2, 1], [2, 2], set(), "growth31.assembly.desk"),
+            "home.study-desk": ("furniture.desk", [2, 1], [2, 2], set(), "story.study-desk"),
+            "school.desk": ("furniture.desk", [2, 1], [2, 2], set(), "school.desk"),
+            "school.desk-open-book": ("furniture.desk", [2, 1], [2, 2], set(), "school.desk.with.open.book"),
+            "school.teacher-desk": ("furniture.desk", [2, 1], [2, 2], set(), "school.teacher.desk"),
+        }
+        for rid, (part, cells, art, states, replaces) in expect.items():
+            with self.subTest(rid):
+                r = self.recipes[rid]
+                self.assertEqual((r["part"], r["kind"], r["cells"], r["art_cells"]), (part, "furniture", cells, art))
+                self.assertEqual(set(r.get("states") or {}), states)
+                self.assertEqual(r["game"]["replaces"], replaces)
+
+    def test_layer_states_are_the_facing_with_a_layer(self):
+        for rid in ("home.chair", "home.chair-reward"):
+            st = self.recipes[rid]["states"]
+            for f in ("north", "west", "east"):
+                self.assertEqual(st[f], {"facing": f})
+                for l in ("back", "front"):
+                    self.assertEqual(st[f"{f}-{l}"], {"facing": f, "layer": l})
+            for l in ("back", "front"):
+                self.assertEqual(st[l], {"layer": l})
+        self.assertEqual(self.recipes["school.chair-north"]["facing"], "north")
+        self.assertEqual(self.recipes["school.chair-south"].get("facing", "south"), "south")
+        self.assertNotIn("cushion", self.recipes["school.chair-south"])
+        self.assertNotIn("cushion", self.recipes["school.chair-north"])
+
+    def test_reward_chair_differs_only_in_cushion(self):
+        a, b = dict(self.recipes["home.chair"]), dict(self.recipes["home.chair-reward"])
+        for k in ("id", "cushion", "game"):
+            a.pop(k), b.pop(k)
+        self.assertEqual(a, b)
+        self.assertNotEqual(self.recipes["home.chair"]["cushion"], self.recipes["home.chair-reward"]["cushion"])
+
+    def test_every_seating_picture_is_lint_clean(self):
+        for rid, r in sorted(self.recipes.items()):
+            if r.get("part") not in ("furniture.chair", "furniture.desk"):
+                continue
+            for st in [None] + sorted(r.get("states") or {}):
+                with self.subTest(rid=rid, state=st):
+                    _, problems = draw_and_check(self.kit, r, st)
+                    self.assertEqual([(p.code, p.message) for p in problems], [])
+
+    def test_the_two_home_desks_are_different_pictures(self):
+        a = render_with_spec(self.recipes["home.desk"], ctx())[0]
+        b = render_with_spec(self.recipes["home.study-desk"], ctx())[0]
+        self.assertNotEqual(a.to_image().tobytes(), b.to_image().tobytes())
+
+    def test_preview_scenes_build_and_hold_the_listed_things(self):
+        for sid, need in (("home.scene.study", ("home.study-desk", "home.chair")),
+                          ("school.scene.classroom", ("school.desk", "school.chair-north", "school.teacher-desk",
+                                                      "school.bookcase", "school.archive-bookshelf"))):
+            with self.subTest(sid):
+                s = self.recipes[sid]
+                cv = build_scene(s, self.recipes, ctx())
+                self.assertEqual((cv.w, cv.h), (s["size"][0] * 32, s["size"][1] * 32))
+                names = [p.get("id") for p in s["place"]]
+                for n in need:
+                    self.assertIn(n, names)
+        study = [(p.get("id"), p.get("state")) for p in self.recipes["home.scene.study"]["place"]]
+        for state in ("north", None):
+            self.assertIn(("home.chair", state), study)
+        self.assertTrue(any(i == "home.chair" and s in ("west", "east") for i, s in study))
+
+
 if __name__ == "__main__":
     unittest.main()

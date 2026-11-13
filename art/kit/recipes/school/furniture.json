@@ -15,5 +15,24 @@
      ["book.binders", "book.binders-b"],
      ["book.row-tall.a", "book.row-tall.b", "book.row-tall.c"],
      ["book.row-tall.d", "book.stack", "book.box"]
-   ]}
+   ]},
+  {"id": "school.chair-south", "kind": "furniture", "part": "furniture.chair", "cells": [1, 1], "art_cells": [1, 2],
+   "game": {"replaces": "school.chair.south"},
+   "material": "wood.school",
+   "states": {"back": {"layer": "back"}, "front": {"layer": "front"}}},
+  {"id": "school.chair-north", "kind": "furniture", "part": "furniture.chair", "cells": [1, 1], "art_cells": [1, 2],
+   "game": {"replaces": "school.chair.north"},
+   "material": "wood.school", "facing": "north",
+   "states": {"back": {"layer": "back"}, "front": {"layer": "front"}}},
+  {"id": "school.desk", "kind": "furniture", "part": "furniture.desk", "cells": [2, 1], "art_cells": [2, 2],
+   "game": {"replaces": "school.desk"},
+   "material": "wood.school", "drawers": "none"},
+  {"id": "school.desk-open-book", "kind": "furniture", "part": "furniture.desk", "cells": [2, 1], "art_cells": [2, 2],
+   "game": {"replaces": "school.desk.with.open.book"},
+   "material": "wood.school", "drawers": "none",
+   "top_items": [{"part": "desk.book-open", "x": 23}, {"part": "desk.pencil-cup", "x": 46}]},
+  {"id": "school.teacher-desk", "kind": "furniture", "part": "furniture.desk", "cells": [2, 1], "art_cells": [2, 2],
+   "game": {"replaces": "school.teacher.desk"},
+   "material": "wood.school", "drawers": "both",
+   "top_items": [{"part": "book.stack", "x": 5}, {"part": "desk.paper", "x": 26}, {"part": "desk.pencil-cup", "x": 50}]}
 ]
