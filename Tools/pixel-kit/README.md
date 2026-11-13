@@ -79,10 +79,38 @@ if/switch로 종류를 닫지 않는다.
 ```
 
 - `kind`: `building` · `furniture` · `prop` · `tile` · `scene`. 색 수 한도와 검사 종류가 이것으로 정해진다.
-- `part`: 만드는 부품 이름. 나머지 키는 그 부품이 읽는 값이다(부품 함수의 설명 참고).
+- `part`: 만드는 부품 이름. 나머지 키는 그 부품이 읽는 값이다(아래 표).
+- 팔레트 키는 `art/kit/style.json`의 `palette`에 있는 줄 이름 + `.단계`(예: `wood.warm.3`)다. 단계 0이 가장 어둡고 번호가 클수록 밝다. 없는 단계가 필요하면 그 줄에 어두운 것부터 순서대로 더한다.
+- `cells`(차지 칸)와 `site`(건물 터)는 기획 값이고 그림에는 쓰이지 않는다.
 - 크기는 `art_cells: [w, h]`(칸) 또는 `pixels: [w, h]`(32의 배수) 중 하나. 그림은 그 캔버스의 아래 가운데.
 - `states`: 이름 → 덮어쓸 값. 같은 가구의 다른 모습(빈 진열대, 다른 빵)은 새 명세가 아니라 상태로 둔다.
   `render id@상태`, 장면에서는 `"state": "이름"`.
+
+## 만드는 부품이 읽는 키
+
+코드(`pixelkit/makers/`)와 `art/kit/recipes/bakery/`에서 뽑았다. 크기(`art_cells` 또는 `pixels`)는 모든 명세에 있다.
+"줄"은 팔레트 줄 이름(접두사), "부품 id"는 `parts` 판에 있는 점 부품이다. 가구는 폭이 부품에 고정이고 명세 크기는 캔버스일 뿐이다.
+
+| 부품 | 필수 | 선택 |
+|---|---|---|
+| `tile.floor-checker` | `colors`: 줄 2개(밝은 칸, 어두운 칸. 줄마다 단계 0~3) | |
+| `tile.wall-interior` | `paper`(벽지 줄, 단계 0~2), `cap`(벽 윗면 줄, 0~1), `wood`(징두리·몰딩 줄, 0~4) | |
+| `tile.grass` | `colors`: 줄 1개(단계 0~3) | |
+| `tile.paver` | `colors`: 줄 1개(단계 0~2) | |
+| `furniture.shelf` | `tiers`: 층마다 부품 id 목록, 1~4층(안쪽 높이를 층 수로 나눈다) | `states`로 층 내용을 바꾼다 |
+| `furniture.glass-case` | `rows`: 줄마다 부품 id 목록, 1~3줄 | |
+| `furniture.trolley` | `rows`: 줄마다 부품 id 목록, 1~4줄 | |
+| `furniture.counter` | | `top`: `{part, x}` 목록(윗면에 놓는 물건, x는 px), `tray`: `{x, w, items}`(윗면 쟁반) |
+| `prop.menu-board`, `prop.a-board` | 없음(고정 그림, 글자 없음) | |
+| `prop.rug` | `size`: `[w, h]`px, `colors`: `[몸 줄(단계 0 테두리, 1 바탕), 바느질 줄]`, `stitch_step`: 바느질 줄의 단계 | |
+| `building.shop` | `pixels`(높이는 192 이상: 지붕 104 + 벽 82 + 외곽선), `roof`: `{type, items}`, `wall`: `{material}`(벽 줄), `door`: `{at_x, color, step}`(문 줄, 계단 줄), `window`: `{at_x, width, slots}`(slots는 창살 양쪽 `[[부품 id], [부품 id]]`), `awning`: `{colors}`(줄 2개), `sign`: `{at_x, icons}`(부품 id 목록, 글자 없음), `lamp`: `{at_x}` | `roof.items`: `{part, at: [x, y]}` 목록 |
+
+`roof.type`(등록된 지붕): `flat`(평지붕, 줄 `roof.teal`), `pitched`(기와지붕, 줄 `roof.slate`).
+`roof.items[].part`(등록된 지붕 위 물건, 그림자 띠까지 차지하는 w×h px): `roof.stair-house` 37×34, `roof.ac-unit` 23×20,
+`roof.skylight` 41×30, `roof.chimney` 19×32, `roof.dormer` 49×42. `at`은 그 사각형의 왼쪽 위다. 지붕 안(`roof_area`)에 들어가고 서로 겹치지 않아야 한다(`roof-overlap`).
+
+선반·진열대의 물건 높이 안내(점 부품 크기): 4층 선반은 층마다 물건 높이 11px까지 들어가고(3층 약 15, 2층 약 28),
+넘으면 `slot-clipped`다. 한 층에는 물건이 폭에 촘촘히 놓이는데, 너무 작으면 층이 비어 보인다.
 
 ## 장면 더하기
 

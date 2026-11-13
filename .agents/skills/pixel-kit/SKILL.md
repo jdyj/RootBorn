@@ -21,14 +21,30 @@ description: "ROOTBORN 건물 외관·타일·가구·방 그림을 손으로 �
 - `output/`의 것을 커밋하기. LimeZu 그림 조각을 키트에 복사하기.
 - 새 가구 정의·차지 칸 같은 기획을 묻지 않고 정하기. 간판에 글자 그리기.
 
+## 명령
+
+저장소 루트에서 돌린다. 모든 명령에 `--kit 폴더`(기본 `art/kit`), `--out 폴더`(기본 `output/pixel-kit`)를 줄 수 있다.
+
+```bash
+python Tools/pixel-kit/kit.py parts                      # 점 부품 판
+python Tools/pixel-kit/kit.py render pharmacy.shelf pharmacy.shelf@empty   # 명세와 상태(id@상태), 렌더 + 검사
+python Tools/pixel-kit/kit.py lint pharmacy.shelf        # 검사만(id 없이 부르면 전부)
+python Tools/pixel-kit/kit.py sheet pharmacy             # 세트(명세 id의 첫 마디) 전체를 한 장에
+python Tools/pixel-kit/kit.py scene pharmacy.scene.interior
+```
+
 ## 순서
 
-1. **요청을 명세 종류로 옮긴다**(`building`·`furniture`·`prop`·`tile`·`scene`). 장소 id, 가구 id, 차지 칸처럼 게임과 이어지는 값은 `data/`에서 읽는다. 지어내지 않는다.
-2. **있는 부품을 본다.** `python Tools/pixel-kit/kit.py parts` 판을 열어 다시 쓸 부품을 고른다. 기존 명세(`art/kit/recipes/bakery/`)를 본보기로 삼는다.
-3. **명세를 쓴다**(`art/kit/recipes/<세트>/*.json`). 점 부품이 모자라면 `art/kit/parts/`에 더한다. 만드는 부품(`Tools/pixel-kit/pixelkit/makers/`)은 기존 것으로 표현할 수 없을 때만 새로 만든다: 함수 하나 + `@register` 한 줄 + 실패하는 테스트 먼저.
-4. **`render` → `lint` → PNG를 직접 열기 → 고치기**를 되풀이한다. 한 가지 세트는 `sheet <세트>`로 한 장에 모아 본다. 색 수 초과, 외곽선 열림 같은 검사 문제는 그림을 고쳐서 푼다.
-5. **장면에 놓아 연다.** 가구는 방 장면, 건물은 거리 장면(`scene <id>`). 주변과 어울리는지, 겹침·잘림이 없는지 PNG를 본다.
+1. **요청을 명세 종류로 옮긴다**(`building`·`furniture`·`prop`·`tile`·`scene`). 장소 id, 가구 id, 차지 칸처럼 게임과 이어지는 값은 `data/`에서 읽는다. 지어내지 않는다. `data/`에 맞는 엔티티가 없으면 그림 id만 `<세트>.<이름>`으로 짓고, 차지 칸과 게임 id는 "미정 — 사용자에게 확인"으로 보고한다.
+2. **있는 부품을 본다.** `parts` 판을 열어 다시 쓸 부품을 고른다. 시작은 `art/kit/recipes/bakery/`에서 같은 종류의 명세 하나를 열어 보는 것이다. 만드는 부품이 읽는 키는 README "만드는 부품이 읽는 키" 표에 있다.
+3. **명세를 쓴다**(`art/kit/recipes/<세트>/*.json`). 팔레트 키는 `art/kit/style.json`의 `palette` 줄 + `.단계`이고 단계 0이 가장 어둡다. 없는 단계는 그 줄에 어두운 것부터 순서대로 더한다. 점 부품이 모자라면 `art/kit/parts/`에 더한다. 만드는 부품은 기존 것으로 표현할 수 없을 때만 새로 만든다: 함수 하나 + `@register` 한 줄 + 실패하는 테스트 먼저.
+4. **`render` → `lint` → PNG를 직접 열기 → 고치기**를 되풀이한다. 열어서 볼 것: 물건이 층에 비해 너무 작아 층이 비어 보이지 않는가(진열대 물건은 폭 6~8, 높이 8~12px 정도가 읽힌다. 층 안쪽 높이보다 크면 `slot-clipped`), 그것이 무엇인지 그림만으로 읽히는가(약병 세 색뿐인 진열대는 "병 몇 개"로 읽혔다. 라벨, 십자 같은 단서를 더한다). 검사 문제는 그림을 고쳐서 푼다.
+5. **장면에 놓아 연다.** 가구는 방 장면, 건물은 거리 장면. 주변과 어울리는지, 겹침·잘림이 없는지 PNG를 본다.
 6. **사용자에게 보인다.** 판 경로(`D:\…`처럼 드라이브 문자부터 전체 경로)와 스스로 찾은 약점을 같이 적는다. 사용자가 고칠 곳을 말하면 명세를 고쳐 다시 4번부터.
+
+### 새 세트를 시작할 때
+
+최소 파일: 새 점 부품이 필요하면 `art/kit/parts/<이름>.json`, 명세 `art/kit/recipes/<세트>/*.json`, 필요하면 장면 한 개. 첫 장면은 `bakery.tile.*` 타일을 그대로 가져다 쓴다. 크기 감은 README 표 아래 "물건 높이 안내"를 본다.
 
 ## 화풍 규칙과 이유 (모두 사용자가 고친 것)
 
@@ -47,6 +63,6 @@ description: "ROOTBORN 건물 외관·타일·가구·방 그림을 손으로 �
 
 - 음식·식물 같은 유기적 모양은 네모 모양보다 여러 번 고쳐야 한다.
 - 색 수 한도는 복사된 부품의 색까지 센다. 평지붕 빵집 외관은 40/40이라 여유가 없다.
-- `tile-seam` 검사는 주기가 16 이하인 무늬만 잡는다. 타일은 이음매를 눈으로도 본다.
+- `tile-seam` 검사는 무늬 주기가 타일 한 변의 절반 이하(32px 타일이면 16)일 때만 보고, 그 주기가 타일 크기를 나누어떨어지지 않을 때만 문제로 낸다. 타일은 이음매를 눈으로도 본다.
 - 화풍 기준판은 사용자가 승인하면 `art/kit/anchor.png`가 된다. 없으면 없다고 말하고, 그동안은 `kit.py sheet bakery`의 결과를 기준으로 비교한다.
 - 근거 종류는 `.claude/rules/core-logic-and-play-evidence.md`. 이 도구의 결과는 "직접 본 화면(견본)"이다.
