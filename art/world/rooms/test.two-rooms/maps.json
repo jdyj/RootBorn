@@ -1,0 +1,27 @@
+{
+ "walker": {
+  "bodyCells": 1,
+  "speedCellsPerSecond": 4
+ },
+ "npcWalker": {
+  "speedCellsPerSecond": 2.5
+ },
+ "maps": [
+  {
+   "id": "TestTwoRooms",
+   "ldtk": "art/world/rooms/test.two-rooms/test.two-rooms.ldtk",
+   "level": "TestTwoRooms",
+   "viewCells": 13,
+   "collision": {
+    "rule": "interior-auto"
+   },
+   "doors": {},
+   "spawns": {
+    "spawn": [
+     112,
+     144
+    ]
+   }
+  }
+ ]
+}
