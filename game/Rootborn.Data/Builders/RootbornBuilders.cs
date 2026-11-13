@@ -34,6 +34,7 @@ namespace Rootborn.Data.Builders
             GatheringBuilders.Register(b);
             WorldBuilders.Register(b);
             WorkspaceBuilders.Register(b);
+            BuildingBuilders.Register(b);
 
             NotRules.Register(b);
             NotPortedYet.Register(b);
