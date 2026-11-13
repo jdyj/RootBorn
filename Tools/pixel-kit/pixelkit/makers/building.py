@@ -11,7 +11,7 @@ from typing import Callable, Dict, List, Tuple
 from ..canvas import Canvas
 from ..rand import rnd
 from . import RecipeError, register
-from .common import col, local, merge, part, pile, ramp, report, rid
+from .common import col, local, merge, part, pile, ramp, ramp_of, report, rid, seed
 
 ROOF_H = 104          # 지붕 줄 수(그림 높이 186의 절반 넘게)
 WALL_H = 82           # 벽 윗줄부터 그림 맨 아랫줄까지(앞으로 나온 창 받침 포함)
@@ -20,6 +20,7 @@ OUT = 6               # 진열창이 벽보다 앞으로(화면 아래로) 나�
 DOOR_W = 44
 SIGN_W, SIGN_H = 48, 22
 LAMP_DROP = 30        # 벽 윗줄에서 벽등까지(차양 밑 그늘보다 아래, 문 머리 높이)
+LAMP_PART = "prop.wall-lamp"   # 명세 lamp.part의 기본값
 FRONT_EDGE = 16       # 지붕 맨 아랫줄 위로 몇 줄: 평지붕 앞 난간 윗줄이자 간판 윗줄(간판이 처마 위로 솟는 만큼)
 AWNING_SLOPE, AWNING_VALANCE = 12, 6
 SHADE_SIDE, SHADE_BELOW = 3, 2   # 지붕 위 물건 그림자: 오른쪽 변 3열, 아랫변 2줄의 짧은 띠(사용자: 굴뚝 그림자가 너무 크다)
@@ -61,10 +62,10 @@ class _Pal:
         self.wall = ramp(spec, ctx, wall, 4)
         self.door = ramp(spec, ctx, door, 4)
         self.step = ramp(spec, ctx, step, 3)
-        self.trim = ramp(spec, ctx, "trim", 4)
-        self.wood = ramp(spec, ctx, "wood.warm", 5)
+        self.trim = ramp_of(spec, ctx, "trim", "trim", 4)            # 창틀·처마 밑 띠·간판 판
+        self.wood = ramp_of(spec, ctx, "frame", "wood.warm", 5)      # 문틀·창틀·간판 틀·받침 줄
         self.glass = ramp(spec, ctx, "glass.window", 3)
-        self.plinth = ramp(spec, ctx, "plinth", 2)
+        self.plinth = ramp_of(spec, ctx, "plinth", "plinth", 2)      # 벽·창 받침
         self.metal = ramp(spec, ctx, "metal", 3)
         self.bread = ramp(spec, ctx, "bread", 4)
         self.yellow = col(spec, ctx, "yellow.1")
@@ -239,7 +240,7 @@ def roof_flat(cv: Canvas, spec: dict, ctx, w: int, rh: int) -> None:
     for x in range(fx + 15, fx + fw, 16):
         cv.vline(x, back + 2, in_h - 2, t[0])
     stains = set()
-    sd = spec.get("seed", 0)
+    sd = seed(spec)
     for k in range(7):                                     # 바닥 얼룩(짧은 줄)
         sx, sy, n = 8 + rnd(k, 1, fw - 26, sd), 10 + rnd(k, 2, fh - 18, sd), 5 + rnd(k, 3, 6, sd)
         stains.update((sx + i, sy) for i in range(n))
@@ -345,7 +346,7 @@ def _facade(cv: Canvas, spec: dict, ctx, P: _Pal, w: int, rh: int, v: dict, lc) 
     lay["wall"] = [left, right]
 
     cv.rect(left, wt, ww, base - wt, b[2])                 # 넓은 색 면
-    sd = spec.get("seed", 0)
+    sd = seed(spec)
     for k in range(26):                                    # 벽돌은 낱장 몇 장만
         bx, by = left + 10 + rnd(k, 5, ww - 28, sd), wt + 8 + rnd(k, 8, (base - wt - 22) // 5, sd) * 5
         c = b[3] if k % 3 else b[1]
@@ -403,12 +404,13 @@ def _facade(cv: Canvas, spec: dict, ctx, P: _Pal, w: int, rh: int, v: dict, lc) 
     cv.hline(fx - 4, base + 3, fw + 8, st[0])
     lay["door"] = [fx, fy, fw, fh]
 
-    # --- 벽등 ---
-    lamp = part(spec, ctx, "prop.wall-lamp")
-    lx, ly = v["lamp_x"], wt + LAMP_DROP
-    P.glow(cv, lx + lamp.w // 2, ly + lamp.h // 2, 52)
-    cv.paste(lamp, lx, ly)
-    lay["lamp"] = [lx, ly, lamp.w, lamp.h]
+    # --- 벽등(선택): 명세에 lamp가 없으면 벽등도 둘레 빛도 없다 ---
+    if v["lamp"] is not None:
+        lx, lamp = v["lamp"]
+        ly = wt + LAMP_DROP
+        P.glow(cv, lx + lamp.w // 2, ly + lamp.h // 2, 52)
+        cv.paste(lamp, lx, ly)
+        lay["lamp"] = [lx, ly, lamp.w, lamp.h]
 
     # --- 앞으로 꺾여 나온 진열창 ---
     bx, bw = v["window_x"], v["window_w"]
@@ -508,7 +510,7 @@ def _need(spec: dict, ok: bool, what: str) -> None:
 
 def _values(spec: dict, ctx) -> dict:
     get = lambda k: spec.get(k) if isinstance(spec.get(k), dict) else {}   # noqa: E731
-    wall, door, win, aw, sign, lamp = (get(k) for k in ("wall", "door", "window", "awning", "sign", "lamp"))
+    wall, door, win, aw, sign = (get(k) for k in ("wall", "door", "window", "awning", "sign"))
     _need(spec, isinstance(wall.get("material"), str), "wall는 {material: 팔레트 줄}이어야 한다")
     _need(spec, _int(door.get("at_x")) and isinstance(door.get("color"), str) and isinstance(door.get("step"), str),
           "door는 {at_x: px, color: 팔레트 줄, step: 계단 팔레트 줄}이어야 한다")
@@ -525,11 +527,15 @@ def _values(spec: dict, ctx) -> dict:
     icons = sign.get("icons")
     _need(spec, _int(sign.get("at_x")) and isinstance(icons, list) and icons and all(isinstance(i, str) for i in icons),
           "sign은 {at_x: px, icons: [부품 id]}이어야 한다")
-    _need(spec, _int(lamp.get("at_x")), "lamp는 {at_x: px}이어야 한다")
+    lamp = spec.get("lamp")
+    if lamp is not None:
+        _need(spec, isinstance(lamp, dict) and _int(lamp.get("at_x")) and isinstance(lamp.get("part", LAMP_PART), str),
+              f"lamp는 {{at_x: px, part: 부품 id(기본 {LAMP_PART})}}이어야 한다(벽등이 없으면 lamp를 적지 않는다)")
+        lamp = (lamp["at_x"], part(spec, ctx, lamp.get("part", LAMP_PART)))
     return {"wall": wall["material"], "door": door["color"], "step": door["step"], "door_x": door["at_x"],
             "window_x": win["at_x"], "window_w": win["width"], "slots": slots,
             "awning": [ramp(spec, ctx, c, 2) for c in colors],
-            "sign_x": sign["at_x"], "icons": [(i, part(spec, ctx, i)) for i in icons], "lamp_x": lamp["at_x"]}
+            "sign_x": sign["at_x"], "icons": [(i, part(spec, ctx, i)) for i in icons], "lamp": lamp}
 
 
 def _roof_spec(spec: dict) -> Tuple[str, List[Tuple[str, int, int]]]:

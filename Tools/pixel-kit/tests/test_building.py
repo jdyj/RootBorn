@@ -291,6 +291,78 @@ class NoSideFaceTests(unittest.TestCase):
                 self.assertEqual(ends, {(ax + ox, ax + ox + aw - 1)})
 
 
+def ramp_colors(prefix):
+    return {STYLE.color(k) for k in STYLE._colors if k.rpartition(".")[0] == prefix}
+
+
+def only_in(prefix):
+    """그 줄에만 있는 색(다른 줄과 hex가 같은 색은 뺀다 — 같이 바뀌는 색)."""
+    others = {STYLE.color(k) for k in STYLE._colors if k.rpartition(".")[0] != prefix}
+    return ramp_colors(prefix) - others
+
+
+class ShopPaletteTests(unittest.TestCase):
+    def test_trim_plinth_and_frame_come_from_the_recipe(self):
+        for key, old, new in (("trim", "trim", "grass"), ("plinth", "plinth", "choco"), ("frame", "wood.warm", "roof.teal")):
+            with self.subTest(key):
+                self.assertTrue(only_in(old))
+                cv = render(with_values("bakery.exterior.pitched", **{key: new}), ctx())
+                self.assertEqual(cv.colors() & only_in(old), set())
+                self.assertTrue(cv.colors() & ramp_colors(new))
+
+    def test_defaults_written_out_give_the_same_bytes(self):
+        for rid in EXTERIORS:
+            with self.subTest(rid):
+                r = with_values(rid, trim="trim", plinth="plinth", frame="wood.warm")
+                r["lamp"] = dict(RECIPES[rid]["lamp"], part="prop.wall-lamp")
+                a = render(RECIPES[rid], ctx()).to_image().tobytes()
+                self.assertEqual(a, render(r, ctx()).to_image().tobytes())
+
+    def test_short_ramp_raises_with_id_ramp_and_steps(self):
+        for key, ramp, need in (("trim", "plinth", 4), ("plinth", "white", 2), ("frame", "trim", 5)):
+            with self.subTest(key), self.assertRaises(RecipeError) as e:
+                render(with_values("bakery.exterior.flat", **{key: ramp}), ctx())
+            msg = str(e.exception)
+            self.assertTrue(msg.startswith("bakery.exterior.flat:"), msg)
+            self.assertIn(ramp, msg)
+            self.assertIn(str(need), msg)
+
+
+class ShopLampTests(unittest.TestCase):
+    def test_no_lamp_key_draws_no_lamp_and_no_glow(self):
+        lamp_colors = PARTS["prop.wall-lamp"].colors() - {STYLE.outline}
+        for rid in EXTERIORS:
+            with self.subTest(rid):
+                r = with_values(rid)
+                del r["lamp"]
+                c = ctx()
+                bare, spec = render_with_spec(r, c)
+                lit, lit_spec = render_with_spec(RECIPES[rid], ctx())
+                self.assertNotIn("lamp", spec["_layout"])
+                self.assertEqual(lint_sprite(bare, r, c, layout=spec["_layout"]), [])
+                self.assertEqual(c.problems, [])
+                ox, oy = offset(bare, spec["_layout"])
+                lx, ly, lw, lh = lit_spec["_layout"]["lamp"]
+                region = {bare.get(ox + x, oy + y) for y in range(ly, ly + lh) for x in range(lx, lx + lw)}
+                self.assertEqual(region & lamp_colors, set())
+                cx, cy = lx + lw // 2, ly + lh // 2                 # 다른 곳은 벽등과 그 둘레 빛 말고 그대로
+                diff = [(x - ox, y - oy) for y in range(bare.h) for x in range(bare.w) if bare.get(x, y) != lit.get(x, y)]
+                self.assertTrue(diff)
+                self.assertTrue(all(abs(x - cx) <= 9 and abs(y - cy) <= 8 for x, y in diff), diff[:5])
+
+    def test_lamp_part_comes_from_the_recipe(self):
+        r = with_values("bakery.exterior.flat")
+        r["lamp"] = {"at_x": r["lamp"]["at_x"], "part": "prop.clock"}
+        _, spec = render_with_spec(r, ctx())
+        self.assertEqual(spec["_layout"]["lamp"][2:], [PARTS["prop.clock"].w, PARTS["prop.clock"].h])
+
+    def test_bad_lamp_raises(self):
+        for bad in ({"part": "prop.wall-lamp"}, {"at_x": 20, "part": "nope.part"}, {"at_x": 20, "part": 3}, "x"):
+            with self.subTest(bad=bad), self.assertRaises(RecipeError) as e:
+                render(with_values("bakery.exterior.flat", lamp=bad), ctx())
+            self.assertTrue(str(e.exception).startswith("bakery.exterior.flat:"))
+
+
 class ABoardTests(unittest.TestCase):
     def test_a_board_is_lint_clean(self):
         c = ctx()

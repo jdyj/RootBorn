@@ -46,7 +46,8 @@ def merge(spec: dict, ctx, local) -> None:
 
 
 
-def ramp(spec: dict, ctx, prefix: str, need: int) -> list:
+def ramp(spec: dict, ctx, prefix: str, need: int, key: str = "") -> list:
+    """팔레트 줄 prefix의 단계 0, 1, …(어두운 것부터). need개보다 적으면 RecipeError(key는 그 줄을 준 명세 키)."""
     out = []
     while True:
         try:
@@ -54,8 +55,36 @@ def ramp(spec: dict, ctx, prefix: str, need: int) -> list:
         except KeyError:
             break
     if len(out) < need:
-        raise RecipeError(f"{rid(spec)}: 팔레트 줄 {prefix}는 단계가 {need}개 이상이어야 한다(지금 {len(out)}개)")
+        what = f"{key}의 " if key else ""
+        raise RecipeError(f"{rid(spec)}: {what}팔레트 줄 {prefix}는 단계가 {need}개 이상이어야 한다(지금 {len(out)}개)")
     return out
+
+
+def ramp_of(spec: dict, ctx, key: str, default: str, need: int) -> list:
+    """명세 키 key가 고른 팔레트 줄(키가 없으면 default)의 단계 목록. 줄 이름이 아니거나 단계가 모자라면 RecipeError."""
+    name = spec.get(key, default)
+    if not isinstance(name, str):
+        raise RecipeError(f"{rid(spec)}: {key}는 팔레트 줄 이름이어야 한다(지금 {name!r})")
+    return ramp(spec, ctx, name, need, key)
+
+
+def seed(spec: dict) -> int:
+    """명세의 seed(그림 전체의 변주, 기본 0). 정수가 아니면 RecipeError."""
+    v = spec.get("seed", 0)
+    if not isinstance(v, int) or isinstance(v, bool):
+        raise RecipeError(f"{rid(spec)}: seed는 정수여야 한다(지금 {v!r})")
+    return v
+
+
+def art_cells_in(spec: dict, cols: Tuple[int, int], rows: Tuple[int, int]) -> Tuple[int, int]:
+    """art_cells [w, h]가 받는 범위 안인지 보고 돌려준다. 그림 크기를 칸 수에서 얻는 만드는 부품이 쓴다."""
+    def span(r):
+        return f"{r[0]}~{r[1]}" if r[0] != r[1] else str(r[0])
+    v = spec.get("art_cells")
+    if not (is_int_pair(v) and cols[0] <= v[0] <= cols[1] and rows[0] <= v[1] <= rows[1]):
+        raise RecipeError(f"{rid(spec)}: {spec.get('part')}는 art_cells [{span(cols)}, {span(rows)}]로 크기를 적는다"
+                          f"(지금 {v if v is not None else 'art_cells 없음'})")
+    return v[0], v[1]
 
 
 

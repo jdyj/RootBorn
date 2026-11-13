@@ -65,8 +65,9 @@ if/switch로 종류를 닫지 않는다.
    새 모듈이면 `makers/__init__.py` 끝에 `from . import 모듈` 한 줄.
 3. 함수는 `(spec, ctx) -> Canvas`. 외곽선 전 그림을 크기 자유로 돌려준다(렌더러가 외곽선을 입히고 칸 배수 캔버스의
    아래 가운데에 붙인다). 색은 `ctx.style.color("재질.단계")`로만 얻고 명세의 값(줄 이름, 크기)을 읽는다.
-   잘못된 값은 `RecipeError(f"{spec['id']}: …")`.
-4. 칸 안에 물건을 늘어놓을 때는 `furniture.pile()`을 쓴다(겹침·잘림 문제를 알린다).
+   잘못된 값은 `RecipeError(f"{spec['id']}: …")`. 바꿀 수 있는 재질은 `common.ramp_of(spec, ctx, 키, 기본 줄, 필요한 단계 수)`로
+   명세 키에서 읽고, 크기를 칸 수에서 얻으면 `common.art_cells_in(spec, 폭 범위, 높이 범위)`로 범위를 확인한다.
+4. 칸 안에 물건을 늘어놓을 때는 `common.pile()`을 쓴다(겹침·잘림 문제를 알린다).
    지붕 종류는 `@roof(...)`, 지붕 위 물건은 `@roof_item(...)` 표에 등록한다(`building.py`).
 
 ## 조립 명세 더하기
@@ -84,14 +85,16 @@ if/switch로 종류를 닫지 않는다.
 - 팔레트 키는 `art/kit/style.json`의 `palette`에 있는 줄 이름 + `.단계`(예: `wood.warm.3`)다. 단계 0이 가장 어둡고 번호가 클수록 밝다. 없는 단계가 필요하면 그 줄에 어두운 것부터 순서대로 더한다.
 - `cells`(차지 칸)와 `site`(건물 터)는 기획 값이고 그림에는 쓰이지 않는다.
 - 크기는 `art_cells: [w, h]`(칸) 또는 `pixels: [w, h]`(32의 배수) 중 하나. 그림은 그 캔버스의 아래 가운데.
-- `seed`(정수, 기본 0): 명세 하나의 변주. 흩어지는 자리(벽돌 낱장, 얼룩, 풀잎, 잔 점)가 바뀌고, 0이면 지금 그림과 같다. 같은 seed는 같은 바이트.
+- `seed`(정수, 기본 0): 명세 하나의 변주. 흩어지는 자리(벽돌 낱장, 얼룩, 풀잎, 잔 점)가 바뀌고, 0이면 지금 그림과 같다. 같은 seed는 같은 바이트. 정수가 아니면 `RecipeError`.
 - `states`: 이름 → 덮어쓸 값. 같은 가구의 다른 모습(빈 진열대, 다른 빵)은 새 명세가 아니라 상태로 둔다.
   `render id@상태`, 장면에서는 `"state": "이름"`.
 
 ## 만드는 부품이 읽는 키
 
 코드(`pixelkit/makers/`)와 `art/kit/recipes/bakery/`에서 뽑았다. 크기(`art_cells` 또는 `pixels`)는 모든 명세에 있다.
-"줄"은 팔레트 줄 이름(접두사), "부품 id"는 `parts` 판에 있는 점 부품이다. 가구는 폭이 부품에 고정이고 명세 크기는 캔버스일 뿐이다.
+"줄"은 팔레트 줄 이름(접두사), "부품 id"는 `parts` 판에 있는 점 부품이다. 줄 키의 값은 줄 이름 하나(예: `"material": "wood.warm"`)이고,
+그 줄의 단계가 괄호 안 수보다 적으면 `RecipeError`(명세 id, 키, 줄, 필요한 단계 수). 줄 키를 적지 않으면 기본값이고 기본값이면 1단계 그림과 바이트까지 같다.
+진열대·계산대는 그림 폭이 `art_cells` 폭 × 32 - 2이고(`pixels`로는 적지 않는다), 범위 밖 `art_cells`는 `RecipeError`(받는 범위를 적는다). 유리 진열대·수레는 폭이 부품에 고정이고 명세 크기는 캔버스일 뿐이다.
 
 | 부품 | 필수 | 선택 |
 |---|---|---|
@@ -99,25 +102,27 @@ if/switch로 종류를 닫지 않는다.
 | `tile.wall-interior` | `paper`(벽지 줄, 단계 0~2), `cap`(벽 윗면 줄, 0~1), `wood`(징두리·몰딩 줄, 0~4) | |
 | `tile.grass` | `colors`: 줄 1개(단계 0~3) | |
 | `tile.paver` | `colors`: 줄 1개(단계 0~2) | |
-| `furniture.shelf` | `tiers`: 층마다 부품 id 목록, 1~4층(안쪽 높이를 층 수로 나눈다) | `states`로 층 내용을 바꾼다 |
-| `furniture.glass-case` | `rows`: 줄마다 부품 id 목록, 1~3줄 | |
-| `furniture.trolley` | `rows`: 줄마다 부품 id 목록, 1~4줄 | |
-| `furniture.counter` | | `top`: `{part, x}` 목록(윗면에 놓는 물건, x는 px), `tray`: `{x, w, items}`(윗면 쟁반) |
+| `furniture.shelf` | `art_cells` `[1~3, 2~3]`(높이 3칸은 키 큰 진열대, 2칸은 낮은 진열대), `tiers`: 층마다 부품 id 목록(안쪽 높이를 층 수로 나눈다. 3칸 높이 1~4층, 2칸 높이 1~2층 — 층 높이 17px 이상) | `material` 줄(5, 기본 `wood.warm`: 윗면·기둥·선반 판·밑판·발), `back` 줄(2, 기본 `wood.back`: 0 판 밑 짙은 줄, 1 뒤판), `tray` 줄(3, 기본 `cream`: 단계 2가 쟁반). `states`로 층 내용을 바꾼다 |
+| `furniture.glass-case` | `rows`: 줄마다 부품 id 목록, 1~3줄 | `frame` 줄(3, 기본 `metal`: 틀과 받침) |
+| `furniture.trolley` | `rows`: 줄마다 부품 id 목록, 1~4줄 | `frame` 줄(3, 기본 `metal`: 윗면·기둥·살), `inside` 줄(3, 기본 `metal.dark`: 안쪽과 바퀴) |
+| `furniture.counter` | `art_cells` `[2~4, 2]` | `material` 줄(5, 기본 `wood.warm`), `top`: `{part, x}` 목록(윗면에 놓는 물건, x는 px), `tray`: `{x, w, items}`(윗면 쟁반). 앞판 수는 폭에서(앞면 폭 / 23 반올림: 2칸 3장, 3칸 4장, 4칸 5장), 판 폭은 모두 같고 남는 열은 양 끝에 반씩 |
 | `prop.menu-board`, `prop.a-board` | 없음(고정 그림, 글자 없음) | |
 | `prop.rug` | `size`: `[w, h]`px, `colors`: `[몸 줄(단계 0 테두리, 1 바탕), 바느질 줄]`, `stitch_step`: 바느질 줄의 단계 | |
-| `building.shop` | `pixels`(높이는 192 이상: 지붕 104 + 벽 82 + 외곽선), `roof`: `{type, items}`, `wall`: `{material}`(벽 줄), `door`: `{at_x, color, step}`(문 줄, 계단 줄), `window`: `{at_x, width, slots}`(slots는 창살 양쪽 `[[부품 id], [부품 id]]`), `awning`: `{colors}`(줄 2개), `sign`: `{at_x, icons}`(부품 id 목록, 글자 없음), `lamp`: `{at_x}` | `roof.items`: `{part, at: [x, y]}` 목록 |
+| `building.shop` | `pixels`(높이는 192 이상: 지붕 104 + 벽 82 + 외곽선), `roof`: `{type, items}`, `wall`: `{material}`(벽 줄), `door`: `{at_x, color, step}`(문 줄, 계단 줄), `window`: `{at_x, width, slots}`(slots는 창살 양쪽 `[[부품 id], [부품 id]]`), `awning`: `{colors}`(줄 2개), `sign`: `{at_x, icons}`(부품 id 목록, 글자 없음) | `roof.items`: `{part, at: [x, y]}` 목록, `lamp`: `{at_x, part}`(벽등. `part` 기본 `prop.wall-lamp`. `lamp`를 적지 않으면 벽등도 둘레 빛도 없다), `trim` 줄(4, 기본 `trim`: 창틀·처마 밑 띠·간판 판), `plinth` 줄(2, 기본 `plinth`: 벽·창 받침), `frame` 줄(5, 기본 `wood.warm`: 문틀·창틀·간판 틀·받침 줄) |
 
 `roof.type`(등록된 지붕): `flat`(평지붕, 줄 `roof.teal`), `pitched`(기와지붕, 줄 `roof.slate`).
 `roof.items[].part`(등록된 지붕 위 물건, 그림자 띠까지 차지하는 w×h px): `roof.stair-house` 37×34, `roof.ac-unit` 23×20,
 `roof.skylight` 41×30, `roof.chimney` 19×32, `roof.dormer` 49×42. `at`은 그 사각형의 왼쪽 위다. 지붕 안(`roof_area`)에 들어가고 서로 겹치지 않아야 한다(`roof-overlap`).
 
-고정으로 읽는 것(명세 키가 아니라 코드에 박혀 있다 — 2단계 전에 키로 올린다):
+아직 고정으로 읽는 것(명세 키가 아니라 코드에 박혀 있다):
 
-- `building.shop`은 점 부품 `prop.wall-lamp`가 있어야 하고, 팔레트 줄 `trim`(4단계), `wood.warm`(5), `glass.window`(3), `plinth`(2), `metal`(3), `bread`(4)와 색 `yellow.1`을 읽는다. 지붕 줄(`roof.teal`·`roof.slate` 5단계), 벽·문·계단 줄, 차양 줄은 명세나 지붕 종류에서 온다.
-- 가구: `furniture.shelf`는 `wood.warm`(5), `wood.back`(2), `cream.2`. `furniture.counter`는 `wood.warm`(5), `cream.2`, `wall.cream.0`. `furniture.glass-case`는 `metal`(3), `glass.front.0·1`, `glass.streak.0`. `furniture.trolley`는 `metal`(3), `metal.dark`(3). `prop.menu-board`는 `wood.warm`(5), `board.green`(2), `white.0`. `prop.a-board`는 `wood.warm`(4), `board.green`(2), `white.0`. 반사 줄은 `glass.streak.0`.
+- `building.shop`: 팔레트 줄 `glass.window`(3단계), `metal`(3, 지붕 위 물건), `bread`(4)와 색 `yellow.1`. 지붕 줄(`roof.teal`·`roof.slate` 5단계)은 지붕 종류에서 온다.
+- 가구: `furniture.counter`의 쟁반 `cream.2`·`wall.cream.0`. `furniture.glass-case`의 `glass.front.0·1`, `glass.streak.0`. `prop.menu-board`는 `wood.warm`(5), `board.green`(2), `white.0`. `prop.a-board`는 `wood.warm`(4), `board.green`(2), `white.0`. 반사 줄은 `glass.streak.0`.
+- 지금 팔레트에서 `metal`은 3단계라 진열대·계산대의 `material`(5단계)로는 쓸 수 없다(`RecipeError`). 금속 진열대가 필요하면 `style.json`에 5단계 줄을 더한다.
 - `prop.rug`의 `size`는 w ≥ 12, h ≥ 7px이다(테두리 2px 둘레 + 바느질 자리).
 
-선반·진열대의 물건 높이 안내(점 부품 크기): 4층 선반은 층마다 물건 높이 11px까지 들어가고(3층은 맨 위 16, 나머지 둘 17, 2층 28, 1층 62 — 안쪽 높이 68px을 층 수로 나눈 층 높이에서 6줄을 뺀 값),
+선반·진열대의 물건 높이 안내(점 부품 크기): 키 큰 진열대(높이 3칸) 4층은 층마다 물건 높이 11px까지 들어가고(3층은 맨 위 16, 나머지 둘 17, 2층 28, 1층 62 — 안쪽 높이 68px을 층 수로 나눈 층 높이에서 6줄을 뺀 값),
+낮은 진열대(높이 2칸, 안쪽 36px)는 2층이면 12px, 1층이면 30px까지.
 넘으면 `slot-clipped`다. 한 층에는 물건이 폭에 촘촘히 놓이는데, 너무 작으면 층이 비어 보인다.
 
 ## 장면 더하기

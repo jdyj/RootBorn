@@ -8,7 +8,7 @@ from typing import Dict, Optional, Tuple
 
 from .canvas import Canvas
 from .makers import RecipeError, get_maker, register  # noqa: F401  (다른 모듈이 여기서 가져다 쓴다)
-from .makers.common import target_size
+from .makers.common import seed, target_size
 from .style import Style
 
 
@@ -58,6 +58,7 @@ def render_with_spec(recipe: dict, ctx: Ctx, state: Optional[str] = None) -> Tup
         if state not in states:
             raise RecipeError(f"{rid}: 없는 상태 {state}. 있는 것: {', '.join(sorted(states)) or '(없음)'}")
         spec.update(copy.deepcopy(states[state]))
+    seed(spec)                       # 정수가 아니면 여기서 RecipeError(변주를 쓰지 않는 부품도 같다)
     cell = ctx.style.cell
     tw, th = target_size(spec, cell)
     part = spec.get("part")

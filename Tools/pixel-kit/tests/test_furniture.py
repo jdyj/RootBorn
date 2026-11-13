@@ -292,5 +292,204 @@ class AllFurnitureTests(unittest.TestCase):
         self.assertLessEqual(cv.colors(), set(before) | {STYLE.color("glass.streak.0")})
 
 
+# ---------- 2단계: 팔레트 줄과 크기를 명세에서 ----------
+
+def ramp_colors(prefix):
+    return {STYLE.color(k) for k in STYLE._colors if k.rpartition(".")[0] == prefix}
+
+
+def sized(rid, art_cells, **kw):
+    r = with_values(rid, art_cells=art_cells, **kw)
+    r.pop("states", None)
+    return r
+
+
+def assert_no_leftover_band(test, cv, n, material="wood.warm"):
+    """그린 선반의 안쪽 가운데 열: 윗면 밑 외곽선부터 밑판까지 모든 줄이 뒤판·짙은 줄·쟁반·선반 판·외곽선 중 하나,
+    선반 판 외곽선이 층 수만큼, 마지막 판 바로 밑이 밑판 윗줄(재질 단계 2)."""
+    inside = {STYLE.color(k) for k in ("wood.back.0", "wood.back.1", "cream.2",
+                                       f"{material}.3", f"{material}.4")}
+    x = cv.w // 2
+    col = [cv.get(x, y) for y in range(cv.h)]
+    y = next(i for i, c in enumerate(col) if c[3] and c != STYLE.outline)
+    y = col.index(STYLE.outline, y) + 1
+    boards = 0
+    while col[y] in inside or col[y] == STYLE.outline:
+        boards += col[y] == STYLE.outline
+        y += 1
+    test.assertEqual(boards, n)
+    test.assertEqual(col[y - 1], STYLE.outline)
+    test.assertEqual(col[y], STYLE.color(f"{material}.2"))
+
+
+class ShelfSizeTests(unittest.TestCase):
+    def test_width_comes_from_art_cells(self):
+        for cells, w in (([1, 3], 30), ([2, 3], 62), ([3, 3], 94)):
+            with self.subTest(cells=cells):
+                c = ctx()
+                r = sized("bakery.shelf", cells, tiers=[["bread.loaf"], [], ["bread.bun"], []])
+                cv, spec = render_with_spec(r, c)
+                self.assertEqual(spec["_layout"]["size"][0], w)
+                self.assertEqual((cv.w, cv.h), (cells[0] * 32, cells[1] * 32))
+                self.assertEqual(lint_sprite(cv, r, c), [])
+                self.assertEqual(c.problems, [])
+
+    def test_every_size_and_tier_count_has_no_leftover_band(self):
+        for cells, most in (([1, 3], 4), ([3, 3], 4), ([2, 2], 2), ([1, 2], 2), ([3, 2], 2)):
+            for n in range(1, most + 1):
+                with self.subTest(cells=cells, n=n):
+                    c = ctx()
+                    r = sized("bakery.shelf", cells, tiers=[[]] * n)
+                    cv, spec = render_with_spec(r, c)
+                    lay = spec["_layout"]
+                    self.assertEqual(lay["tiers"][0][0], lay["inner"][0])
+                    self.assertEqual(lay["tiers"][-1][1], lay["inner"][1])
+                    assert_no_leftover_band(self, cv, n)
+                    self.assertEqual(lint_sprite(cv, r, c), [])
+
+    def test_low_shelf_is_shorter_and_holds_a_loaf_on_both_tiers(self):
+        c = ctx()
+        r = sized("bakery.shelf", [2, 2], tiers=[["bread.loaf"] * 3, ["bread.bun", "bread.roll"]])
+        cv, spec = render_with_spec(r, c)
+        self.assertEqual((cv.w, cv.h), (64, 64))
+        self.assertLess(spec["_layout"]["size"][1], 62)
+        self.assertEqual(c.problems, [])
+        self.assertEqual(lint_sprite(cv, r, c), [])
+
+    def test_low_shelf_refuses_more_tiers_than_fit(self):
+        with self.assertRaises(RecipeError) as e:
+            render(sized("bakery.shelf", [2, 2], tiers=[[]] * 3), ctx())
+        self.assertTrue(str(e.exception).startswith("bakery.shelf:"))
+        self.assertIn("1~2", str(e.exception))
+
+    def test_art_cells_out_of_range_names_the_range(self):
+        for cells in ([4, 3], [2, 1], [2, 4]):
+            with self.subTest(cells=cells), self.assertRaises(RecipeError) as e:
+                render(sized("bakery.shelf", cells), ctx())
+            self.assertTrue(str(e.exception).startswith("bakery.shelf:"))
+            self.assertIn("1~3", str(e.exception))
+            self.assertIn("2~3", str(e.exception))
+
+    def test_pixels_instead_of_art_cells_is_refused(self):
+        r = with_values("bakery.shelf", pixels=[64, 96])
+        del r["art_cells"]
+        with self.assertRaises(RecipeError) as e:
+            render(r, ctx())
+        self.assertIn("art_cells", str(e.exception))
+
+
+def counter_without_items(cells, **kw):
+    r = sized("bakery.counter", cells, top=[], **kw)
+    r.pop("tray", None)
+    return r
+
+
+class CounterSizeTests(unittest.TestCase):
+    def test_width_and_panels_come_from_art_cells(self):
+        for cells, w, n in (([2, 2], 62, 3), ([3, 2], 94, 4), ([4, 2], 126, 5)):
+            with self.subTest(cells=cells):
+                c = ctx()
+                r = counter_without_items(cells)
+                cv, spec = render_with_spec(r, c)
+                lay = spec["_layout"]
+                self.assertEqual(lay["size"][0], w)
+                self.assertEqual(len(lay["panels"]), n)
+                self.assertEqual(len({pw for _, pw in lay["panels"]}), 1)      # 판 폭이 모두 같다
+                self.assertEqual(lint_sprite(cv, r, c), [])
+                self.assertEqual(c.problems, [])
+
+    def test_panel_dividers_are_evenly_spaced_in_the_painted_front(self):
+        for cells in ([2, 2], [3, 2], [4, 2]):
+            with self.subTest(cells=cells):
+                cv, spec = render_with_spec(counter_without_items(cells), ctx())
+                lay = spec["_layout"]
+                ox = (cv.w - (lay["size"][0] + 2)) // 2 + 1
+                oy = cv.h - (lay["size"][1] + 2) + 1
+                y = oy + lay["front"][0] + 10                                 # 판 가운데 줄
+                xs = [x - ox for x in range(ox + 1, ox + lay["size"][0] - 1) if cv.get(x, y) == STYLE.outline]
+                self.assertEqual(len(xs), len(lay["panels"]) - 1)
+                steps = {b - a for a, b in zip(xs, xs[1:])}
+                self.assertLessEqual(len(steps), 1)
+                left = xs[0] - 1 if xs else None
+                right = lay["size"][0] - 2 - xs[-1] if xs else None
+                self.assertLessEqual(abs(left - right), 1)                     # 양 끝 판도 같은 폭(가운데 맞춤)
+
+    def test_todays_counter_keeps_four_panels_of_19px(self):
+        _, spec = render_with_spec(RECIPES["bakery.counter"], ctx())
+        self.assertEqual(spec["_layout"]["panels"], [[3, 19], [26, 19], [49, 19], [72, 19]])
+
+    def test_art_cells_out_of_range_names_the_range(self):
+        for cells in ([1, 2], [5, 2], [3, 3]):
+            with self.subTest(cells=cells), self.assertRaises(RecipeError) as e:
+                render(counter_without_items(cells), ctx())
+            self.assertTrue(str(e.exception).startswith("bakery.counter:"))
+            self.assertIn("2~4", str(e.exception))
+
+
+class FurniturePaletteTests(unittest.TestCase):
+    def test_shelf_in_another_material_has_no_warm_wood(self):
+        c = ctx()
+        r = with_values("bakery.shelf", material="roof.slate", tiers=[[], [], [], []])
+        cv = render(r, c)
+        self.assertEqual(cv.colors() & ramp_colors("wood.warm"), set())
+        self.assertTrue(cv.colors() & ramp_colors("roof.slate"))
+        self.assertEqual(lint_sprite(cv, r, c), [])
+
+    def test_shelf_back_and_tray_come_from_the_recipe(self):
+        cv = render(with_values("bakery.shelf", back="metal.dark", tray="wall.cream", tiers=[[], []]), ctx())
+        old = {STYLE.color(k) for k in ("wood.back.0", "wood.back.1", "cream.2")}   # 지금 읽는 단계(wood.back.2는 wood.warm.0과 같은 색)
+        self.assertEqual(cv.colors() & old, set())
+        self.assertIn(STYLE.color("wall.cream.2"), cv.colors())
+
+    def test_counter_in_another_material_has_no_warm_wood(self):
+        c = ctx()
+        r = counter_without_items([3, 2], material="roof.teal")
+        cv = render(r, c)
+        self.assertEqual(cv.colors() & ramp_colors("wood.warm"), set())
+        self.assertEqual(lint_sprite(cv, r, c), [])
+
+    def test_glass_case_and_trolley_frames_come_from_the_recipe(self):
+        metal = ramp_colors("metal") | ramp_colors("metal.dark")
+        for rid, kw in (("bakery.glass-case", {"frame": "stone"}),
+                        ("bakery.trolley", {"frame": "stone", "inside": "brick"})):
+            with self.subTest(rid):
+                c = ctx()
+                r = with_values(rid, **kw)
+                cv = render(r, c, "empty")
+                self.assertEqual(cv.colors() & metal, set())
+                self.assertTrue(cv.colors() & ramp_colors("stone"))
+                self.assertEqual(lint_sprite(cv, r, c), [])
+
+    def test_defaults_written_out_give_the_same_bytes(self):
+        written = {"bakery.shelf": {"material": "wood.warm", "back": "wood.back", "tray": "cream"},
+                   "bakery.counter": {"material": "wood.warm"},
+                   "bakery.glass-case": {"frame": "metal"},
+                   "bakery.trolley": {"frame": "metal", "inside": "metal.dark"}}
+        for rid, kw in written.items():
+            with self.subTest(rid):
+                a = render(RECIPES[rid], ctx()).to_image().tobytes()
+                b = render(with_values(rid, **kw), ctx()).to_image().tobytes()
+                self.assertEqual(a, b)
+
+    def test_short_ramp_raises_with_id_ramp_and_steps(self):
+        cases = (("bakery.shelf", "material", "metal", 5), ("bakery.shelf", "back", "white", 2),
+                 ("bakery.shelf", "tray", "red", 3), ("bakery.counter", "material", "trim", 5),
+                 ("bakery.glass-case", "frame", "red", 3), ("bakery.trolley", "frame", "red", 3),
+                 ("bakery.trolley", "inside", "board.green", 3))
+        for rid, key, ramp, need in cases:
+            with self.subTest(rid=rid, key=key), self.assertRaises(RecipeError) as e:
+                render(with_values(rid, **{key: ramp}), ctx())
+            msg = str(e.exception)
+            self.assertTrue(msg.startswith(f"{rid}:"), msg)
+            self.assertIn(ramp, msg)
+            self.assertIn(str(need), msg)
+
+    def test_ramp_key_must_be_a_name(self):
+        for bad in (5, ["wood.warm"], None):
+            with self.subTest(bad=bad), self.assertRaises(RecipeError) as e:
+                render(with_values("bakery.shelf", material=bad), ctx())
+            self.assertTrue(str(e.exception).startswith("bakery.shelf:"))
+
+
 if __name__ == "__main__":
     unittest.main()

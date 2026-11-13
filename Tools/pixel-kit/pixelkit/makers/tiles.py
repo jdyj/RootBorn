@@ -2,7 +2,7 @@
 from ..canvas import Canvas
 from ..rand import rnd
 from . import RecipeError, register
-from .common import ramp_steps, target_size
+from .common import ramp_steps, seed, target_size
 
 
 def _prefixes(spec: dict, n: int):
@@ -37,7 +37,7 @@ def _fill(cv: Canvas, spec: dict, ctx) -> Canvas:
 def floor_checker(spec: dict, ctx) -> Canvas:
     """16px 체크. colors는 [밝은 칸 줄, 어두운 칸 줄], 줄마다 단계 0 줄눈 / 1 잔 점 / 2 바탕 / 3 빛 모서리.
     두 칸 모두 위·왼쪽은 빛 모서리, 아래·오른쪽은 줄눈. 잔 점은 칸마다 다른 자리(타일 주기 32)."""
-    sd = spec.get("seed", 0)
+    sd = seed(spec)
     cv = Canvas(32, 32)
     ramps = [ramp_steps(spec, ctx, p, range(4)) for p in _prefixes(spec, 2)]
     for ty in range(2):
@@ -92,7 +92,7 @@ GRASS_PATCHES = 5    # 32px 안의 짙은 얼룩 수
 def grass(spec: dict, ctx) -> Canvas:
     """풀밭. 줄 단계 0 짙은 밑동 / 1 얼룩 / 2 바탕 / 3 밝은 잎끝. 짙은 얼룩, V자 풀포기, 낱 풀잎을
     32px 전체에 흩는다(16px로 되풀이하면 칸 격자가 보인다). 가장자리를 넘는 것은 맞은편으로 감아 이음매가 없다."""
-    sd = spec.get("seed", 0)
+    sd = seed(spec)
     cv = Canvas(32, 32)
     (prefix,) = _prefixes(spec, 1)
     dark, patch, base, light = ramp_steps(spec, ctx, prefix, range(4))
@@ -126,7 +126,7 @@ PAVER_DOT_SALT = (4, 7)
 @register("tile.paver")
 def paver(spec: dict, ctx) -> Canvas:
     """16px 판석 넷. 빛 모서리·줄눈·잔 점. 주기 16."""
-    sd = spec.get("seed", 0)
+    sd = seed(spec)
     cv = Canvas(32, 32)
     (prefix,) = _prefixes(spec, 1)
     dark, base, light = ramp_steps(spec, ctx, prefix, (0, 1, 2))

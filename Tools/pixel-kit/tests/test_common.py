@@ -53,6 +53,16 @@ class SeedTests(unittest.TestCase):
         self.assertNotEqual(a, b)
         self.assertEqual(b, c)
 
+    def test_seed_that_is_not_an_int_raises_recipe_error_with_the_id(self):
+        from pixelkit.recipes import RecipeError
+        for rid in ("bakery.exterior.flat", "bakery.tile.grass", "bakery.shelf"):
+            for bad in ("1", 1.5, True, None):
+                with self.subTest(rid=rid, bad=bad), self.assertRaises(RecipeError) as e:
+                    spec = copy.deepcopy(RECIPES[rid])
+                    spec["seed"] = bad
+                    render(spec, ctx())
+                self.assertTrue(str(e.exception).startswith(f"{rid}:"), str(e.exception))
+
 
 class TileSizeTests(unittest.TestCase):
     def test_floor_checker_fills_art_cells(self):

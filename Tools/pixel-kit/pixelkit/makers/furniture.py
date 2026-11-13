@@ -9,7 +9,7 @@ from typing import List
 
 from ..canvas import Canvas
 from . import RecipeError, register
-from .common import col, local, merge, part, pile, report, rid, streaks
+from .common import art_cells_in, col, local, merge, part, pile, ramp_of, report, rid, streaks
 
 
 # ---------- 공통 ----------
@@ -38,21 +38,32 @@ def _rows(spec: dict, ctx, name: str, lo: int, hi: int) -> List[List[str]]:
 
 # ---------- 진열대 ----------
 
-SHELF_W = 62
+SHELF_CELLS = ((1, 3), (2, 3))   # 받는 art_cells [폭, 높이] 범위. 2칸 높이는 낮은 진열대, 3칸은 키 큰 진열대
 SHELF_TOP = 9              # 윗면 줄 수(그 밑에 외곽선 한 줄)
-SHELF_INNER = (10, 78)     # 층들이 나눠 쓰는 안쪽 [y0, y1)
+SHELF_INNER_TOP = 10       # 층들이 나눠 쓰는 안쪽의 윗줄(윗면 + 외곽선 밑)
+SHELF_HEADROOM = 10        # 캔버스 위쪽에 남기는 빈 줄(외곽선 제외). 키 큰 진열대(3칸)는 그림 84줄 + 외곽선 2 = 96 - 10
+SHELF_BASE = 6             # 안쪽 밑에서 그림 끝까지: 밑판 4줄 + 발 2줄
+SHELF_MIN_TIER = 17        # 층 하나의 최소 높이(키 큰 진열대 4층의 층 높이. 물건 11px까지)
 SHELF_POST = 4             # 양옆 기둥 폭(안쪽 칸 나눔 선은 그 안쪽)
+
+
+def shelf_inner(cells_h: int, cell: int = 32):
+    """art_cells 높이 → 안쪽 [y0, y1). 3칸이면 (10, 78), 2칸이면 (10, 46)."""
+    return SHELF_INNER_TOP, cells_h * cell - 2 - SHELF_HEADROOM - SHELF_BASE
 
 
 @register("furniture.shelf")
 def shelf(spec: dict, ctx) -> Canvas:
-    """벽에 붙는 나무 진열대. 층 높이는 안쪽 높이를 층 수로 나눠 남김없이 쓴다."""
-    tiers = _rows(spec, ctx, "tiers", 1, 4)
-    wood = [col(spec, ctx, f"wood.warm.{i}") for i in range(5)]
-    back = [col(spec, ctx, f"wood.back.{i}") for i in range(2)]   # 0: 판 밑 짙은 줄, 1: 뒤판
-    tray = col(spec, ctx, "cream.2")
+    """벽에 붙는 진열대. 폭은 art_cells 폭 × 32 - 2, 안쪽 높이는 art_cells 높이에서.
+    층 높이는 안쪽 높이를 층 수로 나눠 남김없이 쓰고, 층 수는 층 높이가 SHELF_MIN_TIER 이상인 만큼까지."""
+    cw, ch = art_cells_in(spec, *SHELF_CELLS)
+    w = cw * ctx.style.cell - 2
+    iy0, iy1 = shelf_inner(ch, ctx.style.cell)
+    tiers = _rows(spec, ctx, "tiers", 1, min(4, (iy1 - iy0) // SHELF_MIN_TIER))
+    wood = ramp_of(spec, ctx, "material", "wood.warm", 5)       # 0 발 … 4 윗면
+    back = ramp_of(spec, ctx, "back", "wood.back", 2)           # 0: 판 밑 짙은 줄, 1: 뒤판
+    tray = ramp_of(spec, ctx, "tray", "cream", 3)[2]
     ol = ctx.style.outline
-    w, (iy0, iy1) = SHELF_W, SHELF_INNER
     ix0, ix1 = SHELF_POST + 1, w - SHELF_POST - 2          # 안쪽 칸(기둥 안쪽 칸 나눔 선 사이)
     cv = Canvas(w, iy1 + 6)
     lc = local(ctx)
@@ -91,7 +102,10 @@ def shelf(spec: dict, ctx) -> Canvas:
 
 # ---------- 계산대 ----------
 
-COUNTER_W = 94
+COUNTER_CELLS = ((2, 4), (2, 2))   # 받는 art_cells [폭, 높이] 범위
+COUNTER_PANEL = 23         # 앞판 한 칸의 목표 폭(판 19 + 둘레 4). 판 수 = 앞면 폭 / 이 값(반올림), 판 폭은 모두 같다
+COUNTER_GRAIN = ((8, 10, 28), (48, 15, 32), (20, 20, 24), (60, 25, 22))   # 윗면 나뭇결 (x, y, 길이): 폭 94 기준, 폭에 비례
+COUNTER_GRAIN_W = 94
 COUNTER_FACE = (6, 30)     # 윗면 [y0, y1). 위 6줄은 윗면에 놓인 물건이 솟을 자리
 COUNTER_ITEM_BASE = 22     # 윗면에 놓인 물건의 마지막 줄
 COUNTER_TRAY = (15, 25)    # 윗면 쟁반 [y0, y1)
@@ -123,33 +137,43 @@ def _top_items(spec: dict, ctx):
 
 @register("furniture.counter")
 def counter(spec: dict, ctx) -> Canvas:
-    """나무 계산대. 윗면이 높이의 절반쯤, 앞면은 판 넷을 외곽선 색 선으로 나눈다."""
+    """계산대. 윗면이 높이의 절반쯤, 앞면은 같은 폭의 판들을 외곽선 색 선으로 나눈다(3칸 폭이면 넷).
+    폭은 art_cells 폭 × 32 - 2."""
+    cw, _ = art_cells_in(spec, *COUNTER_CELLS)
+    w = cw * ctx.style.cell - 2
     items = _top_items(spec, ctx)
     tray = _tray(spec, ctx)
-    wood = [col(spec, ctx, f"wood.warm.{i}") for i in range(5)]
+    wood = ramp_of(spec, ctx, "material", "wood.warm", 5)
     ol = ctx.style.outline
-    w = COUNTER_W
     f0, f1 = COUNTER_FACE
     cv = Canvas(w, 58)
     lc = local(ctx)
 
     cv.rect(0, f0, w, f1 - f0, wood[4])                       # 넓고 밝은 윗면
-    for gx, gy, gl in ((8, 10, 28), (48, 15, 32), (20, 20, 24), (60, 25, 22)):
-        cv.hline(gx, gy, gl, wood[3])                         # 나뭇결
+    for gx, gy, gl in COUNTER_GRAIN:
+        cv.hline(gx * w // COUNTER_GRAIN_W, gy, gl * w // COUNTER_GRAIN_W, wood[3])   # 나뭇결
     cv.rect(0, f1, w, 2, wood[3])                             # 윗판 앞 모서리
     cv.hline(0, f1 + 2, w, wood[2])
     cv.hline(0, f1 + 3, w, ol)
     fy0, fy1 = f1 + 4, 56                                     # 앞면 [fy0, fy1)
     cv.rect(1, fy0, w - 2, fy1 - fy0, wood[2])                # 앞면: 윗면보다 어둡게, 윗판보다 1px 들어감
     cv.rect(1, fy0, w - 2, 2, wood[1])                        # 윗판 밑 짙은 줄
-    for k in range(4):
-        px = 3 + k * 23
-        cv.rect(px, fy0 + 4, 19, 14, wood[3])                 # 판: 위·왼쪽 밝게, 아래·오른쪽 어둡게
-        cv.hline(px, fy0 + 4, 19, wood[4])
-        cv.hline(px, fy0 + 17, 19, wood[1])
-        cv.vline(px + 18, fy0 + 4, 14, wood[1])
+    span = w - 2                                              # 앞면 폭 [1, w - 1)
+    n = max(1, round(span / COUNTER_PANEL))
+    pitch = span // n
+    x0 = 1 + (span - n * pitch) // 2                           # 나누고 남은 열은 양 끝에 반씩
+    pw = pitch - 4
+    panels = []
+    for k in range(n):
+        sx = x0 + k * pitch                                   # 칸 [sx, sx + pitch): 나눔 선, 1px, 판, 2px
+        px = sx + 2
+        cv.rect(px, fy0 + 4, pw, 14, wood[3])                 # 판: 위·왼쪽 밝게, 아래·오른쪽 어둡게
+        cv.hline(px, fy0 + 4, pw, wood[4])
+        cv.hline(px, fy0 + 17, pw, wood[1])
+        cv.vline(px + pw - 1, fy0 + 4, 14, wood[1])
         if k:
-            cv.vline(px - 2, fy0 + 2, fy1 - fy0 - 2, ol)      # 칸 나눔
+            cv.vline(sx, fy0 + 2, fy1 - fy0 - 2, ol)          # 칸 나눔
+        panels.append([px, pw])
     cv.rect(1, fy1, w - 2, 2, wood[0])                        # 걸레받이
 
     if tray is not None:
@@ -171,7 +195,8 @@ def counter(spec: dict, ctx) -> Canvas:
         if y < 0 or x < 0 or x + p.w > w:
             report(lc.problems, "slot-clipped", f"윗면 물건이 계산대 밖으로 나간다({pid} x={x})")
         cv.paste(p, x, y)
-    spec["_layout"] = {"size": [cv.w, cv.h], "top_face": [f0, f1], "body": [f0, cv.h]}
+    spec["_layout"] = {"size": [cv.w, cv.h], "top_face": [f0, f1], "body": [f0, cv.h], "front": [fy0, fy1],
+                       "panels": panels}
     merge(spec, ctx, lc)
     return cv
 
@@ -186,7 +211,7 @@ CASE_INNER = (19, 42)      # 앞 유리 안 줄들이 나눠 쓰는 [y0, y1)
 def glass_case(spec: dict, ctx) -> Canvas:
     """금속 틀의 유리 진열대. 유리 윗면 + 앞 유리 안에 줄마다 유리 선반, 유리 위로 사선 반사 줄."""
     rows_v = _rows(spec, ctx, "rows", 1, 3)
-    metal = [col(spec, ctx, f"metal.{i}") for i in range(3)]
+    metal = ramp_of(spec, ctx, "frame", "metal", 3)
     gdark, glight = col(spec, ctx, "glass.front.0"), col(spec, ctx, "glass.front.1")
     shine = col(spec, ctx, "glass.streak.0")
     ol = ctx.style.outline
@@ -233,10 +258,10 @@ TROLLEY_POST = 3
 
 @register("furniture.trolley")
 def trolley(spec: dict, ctx) -> Canvas:
-    """금속 빵 수레. 안쪽은 metal.dark의 밝은 단계(빵이 묻히지 않게), 기둥에 반사 줄, 바퀴."""
+    """빵 수레(기본 금속). 안쪽은 inside 줄의 밝은 단계(빵이 묻히지 않게), 기둥에 반사 줄, 바퀴."""
     rows_v = _rows(spec, ctx, "rows", 1, 4)
-    metal = [col(spec, ctx, f"metal.{i}") for i in range(3)]
-    dark = [col(spec, ctx, f"metal.dark.{i}") for i in range(3)]
+    metal = ramp_of(spec, ctx, "frame", "metal", 3)
+    dark = ramp_of(spec, ctx, "inside", "metal.dark", 3)
     ol = ctx.style.outline
     w, (iy0, iy1), post = TROLLEY_W, TROLLEY_INNER, TROLLEY_POST
     cv = Canvas(w, iy1 + 7)
