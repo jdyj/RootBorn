@@ -101,7 +101,9 @@
       "level": "House",
       "viewCells": 10,
       "collision": { "rule": "interior-auto" },
-      "build": { "frameLayer": "Build", "frameId": "house.v2" },
+      // build 값은 키트가 쓴 방 폴더 maps.json의 build와 같아야 한다(test_room_ldtk.HouseRoomTests). 기본 꾸밈 = 키트가 이 방을 구운 벽 모양·바닥.
+      "build": { "frameLayer": "Build", "frameId": "house.v2", "faceHeight": 2, "band": 16, "bandColors": "wall.top.cream",
+                 "defaultWall": "finish.wall.paper", "defaultFloor": "finish.floor.plank", "replacesLayers": [ "Wall", "Ground" ] },
       "doorField": "Where",
       "spawnField": "Position",
       "doors": {

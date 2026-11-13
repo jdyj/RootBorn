@@ -24,7 +24,16 @@
    },
    "build": {
     "frameLayer": "Build",
-    "frameId": "house.v2"
+    "frameId": "house.v2",
+    "faceHeight": 2,
+    "band": 16,
+    "bandColors": "wall.top.cream",
+    "defaultWall": "finish.wall.paper",
+    "defaultFloor": "finish.floor.plank",
+    "replacesLayers": [
+     "Wall",
+     "Ground"
+    ]
    }
   }
  ]

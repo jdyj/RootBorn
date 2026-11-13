@@ -29,6 +29,8 @@ KIT = load_kit(str(REAL_KIT))
 
 SMALL = ["########", "########", "########", "#......#", "#......#", "#......#", "########"]
 BASE = {"wall": "paper", "floor": "bakery.tile.floor"}
+BUILD_FLOOR = "floor.plank"
+FINISH_DEFS = "data/building/RoomFinishDefinition.json"
 
 
 class RoomBase(unittest.TestCase):
@@ -39,6 +41,9 @@ class RoomBase(unittest.TestCase):
         (self.root / "game/world").mkdir(parents=True)
         (self.root / "game/world/maps.json").write_text(MAPS_WITH_COMMENTS, encoding="utf-8")
         (self.root / "art/kit/rooms").mkdir(parents=True)
+        # 짓는 집(build)의 maps.json은 기본 꾸밈 id를 꾸밈 정의(data/building)에서 찾는다 — 저장소의 정의를 그대로 둔다
+        (self.root / FINISH_DEFS).parent.mkdir(parents=True)
+        shutil.copyfile(ROOT / FINISH_DEFS, self.root / FINISH_DEFS)
 
     def plan_file(self, doc):
         (self.root / "art/kit/rooms" / f"{doc['id']}.json").write_text(json.dumps(doc), encoding="utf-8")
@@ -50,7 +55,9 @@ class RoomBase(unittest.TestCase):
         return self.plan_file(doc)
 
     def small_plan(self, rid, plan=SMALL, spawn=(2, 4), **extra):
-        return self.plan_file({"id": rid, **BASE, "spawn": list(spawn), "plan": plan, **extra})
+        # 짓는 집은 바닥에 꾸밈 정의가 있어야 한다(BASE의 빵집 바닥에는 없다) — build가 있으면 기본 바닥 꾸밈이 있는 바닥으로
+        floor = {"floor": BUILD_FLOOR} if "build" in extra else {}
+        return self.plan_file({"id": rid, **BASE, **floor, "spawn": list(spawn), "plan": plan, **extra})
 
     def build(self, rid="test.two-rooms", **kw):
         return build_room(self.root, rid, kit=KIT, **kw)
@@ -469,8 +476,8 @@ class CliTests(CliBase):
         self.assertEqual(self.snapshot(), before)
 
     def test_check_and_build_take_wall_doors_and_build_rows(self):
-        doc = {"id": "t.house", **BASE, "spawn": [2, 4], "plan": DOOR_PLAN, "wallDoors": {"W": "town"}, "build": DOOR_BUILD,
-               "frameId": "t.house.v1"}
+        doc = {"id": "t.house", **BASE, "floor": BUILD_FLOOR, "spawn": [2, 4], "plan": DOOR_PLAN, "wallDoors": {"W": "town"},
+               "build": DOOR_BUILD, "frameId": "t.house.v1"}
         (self.kit_dir / "rooms" / "t.house.json").write_text(json.dumps(doc), encoding="utf-8")
         code, out, _ = self.run_kit("check", "t.house")
         self.assertEqual((code, out.strip()), (0, "t.house: 문제 없음"))
@@ -1131,8 +1138,32 @@ class BuildLayerTests(RoomBase):
         self.assertTrue(self.wall_key_at("t.move", (3, 6)).startswith("cap:"))
 
     def test_maps_json_has_build_frame_layer_and_frame_id(self):
+        """build는 게임(WorldCatalog.ParseBuild)이 필수로 읽는 값 전부: 테두리, 벽 정면 높이·띠 두께·띠 색, 기본 꾸밈 id(벽 모양·바닥이 같은 꾸밈 정의), 바꿔 그릴 층."""
         _, maps, _ = self.door_room()
-        self.assertEqual(maps["maps"][0]["build"], {"frameLayer": "Build", "frameId": "t.house.v1"})
+        defs = json.loads((self.root / FINISH_DEFS).read_text("utf-8"))
+        wall = next(d["id"] for d in defs if d["slot"] == "wall" and d["art"] == BASE["wall"])
+        floor = next(d["id"] for d in defs if d["slot"] == "floor" and d["art"] == BUILD_FLOOR)
+        self.assertEqual(maps["maps"][0]["build"], {
+            "frameLayer": "Build", "frameId": "t.house.v1", "faceHeight": 2, "band": 16, "bandColors": "wall.top.cream",
+            "defaultWall": wall, "defaultFloor": floor, "replacesLayers": ["Wall", "Ground"]})
+        self.assertEqual(list(maps["maps"][0]["build"]), ["frameLayer", "frameId", "faceHeight", "band", "bandColors",
+                                                          "defaultWall", "defaultFloor", "replacesLayers"])
+
+    def test_build_room_whose_wall_or_floor_has_no_finish_writes_nothing(self):
+        self.small_plan("t.nofinish", DOOR_PLAN, wallDoors={"W": "town"}, build=DOOR_BUILD, frameId="t.nofinish.v1",
+                        floor="bakery.tile.floor")
+        with self.assertRaises(RoomBuildError) as e:
+            self.build("t.nofinish")
+        self.assertEqual([p.code for p in e.exception.problems], ["room-build-no-finish"])
+        self.assertIn("bakery.tile.floor", e.exception.problems[0].message)
+        self.assertFalse(self.out("t.nofinish").exists())
+
+    def test_a_room_without_build_needs_no_finish(self):
+        (self.root / FINISH_DEFS).unlink()                  # 짓는 집이 아니면 꾸밈 정의를 읽지 않는다
+        self.real_plan()
+        self.build()
+        _, maps, _ = self.read()
+        self.assertNotIn("build", maps["maps"][0])
 
     def test_build_rows_without_frame_id_write_nothing(self):
         self.small_plan("t.noframe", DOOR_PLAN, wallDoors={"W": "town"}, build=DOOR_BUILD)
@@ -1239,7 +1270,8 @@ class HouseRoomTests(unittest.TestCase):
         sx, sy = self.room.spawn
         self.assertEqual(entry["spawns"], {"house-entry": [sx * 32 + 16, sy * 32 + 16]})
         self.assertEqual(entry["collision"], {"rule": "interior-auto"})
-        self.assertEqual(entry["build"], {"frameLayer": "Build", "frameId": self.room.frame_id})
+        self.assertEqual((entry["build"]["frameLayer"], entry["build"]["frameId"]), ("Build", self.room.frame_id))
+        self.assertEqual((entry["build"]["faceHeight"], entry["build"]["bandColors"]), (self.room.face_height, self.room.top))
 
     def test_game_map_list_uses_the_frame_id_of_the_plan_that_made_its_ldtk(self):
         """게임 맵 목록(game/world/maps.json)의 짓는 집마다 build.frameId가 그 LDtk를 만든 평면의 frameId와 같다.
@@ -1256,6 +1288,19 @@ class HouseRoomTests(unittest.TestCase):
                 room = plans.get(entry["ldtk"])
                 self.assertIsNotNone(room, f"{entry['ldtk']}를 만든 평면이 art/kit/rooms에 없다")
                 self.assertEqual(entry["build"]["frameId"], room.frame_id)
+
+    def test_game_map_list_build_is_the_room_folder_build(self):
+        """게임 맵 목록의 짓는 집마다 build 전체(테두리, 정면 높이, 띠 두께·색, 기본 꾸밈, 바꿔 그릴 층)가 키트가 쓴 방 폴더 maps.json의 build와 같다.
+        게임은 이 값으로 벽·바닥을 조합해 그리고(기본 꾸밈 = 키트가 구운 벽 모양·바닥), 방 폴더 maps.json을 --maps로 주어도 같은 값을 읽는다.
+        한쪽만 고치면 여기서 깨진다(키트를 고쳤으면 room build <id> --force, 게임 맵 목록도 같은 값으로)."""
+        game = loads_with_comments((ROOT / "game" / "world" / "maps.json").read_text("utf-8"))
+        built = [m for m in game["maps"] if "build" in m]
+        self.assertTrue(built)
+        for entry in built:
+            with self.subTest(map=entry["id"]):
+                folder = (ROOT / entry["ldtk"]).parent
+                (room_entry,) = [m for m in json.loads((folder / "maps.json").read_text("utf-8"))["maps"] if m["id"] == entry["id"]]
+                self.assertEqual(entry["build"], room_entry["build"])
 
     def test_layers_follow_the_plan_collision_build_and_the_wall_door(self):
         level = self.ldtk["levels"][0]

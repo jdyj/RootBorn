@@ -256,13 +256,38 @@ def _ldtk(room: Room, grid: List[List[int]], tiles: RoomTiles, slots: Dict[str, 
                            [instances[n] for n in order])])
 
 
+def build_entry(room: Room, root: Path) -> dict:
+    """짓는 집의 maps.json build 값(game/Rootborn.World/WorldCatalog.ParseBuild가 전부 필수로 읽는다 — game/world/README.md):
+    테두리(frameLayer·frameId), 벽 정면 높이·윗면 띠 두께·띠 색 줄, 기본 꾸밈 id(이 방을 구운 벽 모양·바닥과 같은 그림의 꾸밈 정의 —
+    data/building/RoomFinishDefinition.json에서 slot·art로 찾고, 여럿이면 파일의 첫 것), 게임이 조합해 대신 그리는 층(ART_LAYERS).
+    기본 꾸밈이 없으면 RoomBuildError(room-build-no-finish) — 게임이 조합한 그림이 구운 그림과 달라지므로 쓰지 않는다."""
+    from .room_export import RoomExportError, read_definitions    # room_export가 이 모듈을 읽는다(순환을 피해 여기서)
+    try:
+        defs = read_definitions(root)
+    except RoomExportError as e:
+        raise RoomBuildError([Problem("room-build-no-finish", f"짓는 집의 기본 꾸밈을 찾을 꾸밈 정의를 못 읽었다: {e}")]) from None
+
+    def finish(slot: str, art: str) -> Optional[str]:
+        return next((d["id"] for d in defs if d["slot"] == slot and d["art"] == art), None)
+
+    wall, floor = finish("wall", room.wall), finish("floor", room.floor)
+    missing = [f"{slot} {art!r}" for slot, art, got in (("wall", room.wall, wall), ("floor", room.floor, floor)) if got is None]
+    if missing:
+        raise RoomBuildError([Problem("room-build-no-finish",
+                                      f"짓는 집의 {', '.join(missing)}에 맞는 꾸밈 정의가 data/building/RoomFinishDefinition.json에 없다 — "
+                                      f"게임은 기본 꾸밈으로 벽·바닥을 조합해 그리므로 이 방을 구운 그림의 꾸밈이 있어야 한다")])
+    return {"frameLayer": "Build", "frameId": room.frame_id, "faceHeight": room.face_height, "band": wall_band(room.wall),
+            "bandColors": effective_top({"wall": room.wall, "top": room.top}),
+            "defaultWall": wall, "defaultFloor": floor, "replacesLayers": list(ART_LAYERS)}
+
+
 def _maps(room: Room, root: Path, ldtk_rel: str, level_name: str, rows: int) -> dict:
     sx, sy = room.spawn
     entry = {"id": level_name, "ldtk": ldtk_rel, "level": level_name, "viewCells": min(rows, MAX_VIEW_CELLS),
              "collision": {"rule": "interior-auto"}, "doors": {},
              "spawns": {spawn_name(level_name): [sx * CELL + CELL // 2, sy * CELL + CELL // 2]}}
     if room.build is not None:
-        entry["build"] = {"frameLayer": "Build", "frameId": room.frame_id}     # 지을 수 있는 집이라는 성질(game/world/README.md)
+        entry["build"] = build_entry(room, root)     # 지을 수 있는 집이라는 성질(game/world/README.md)
     return {**walkers(root, RoomError), "maps": [entry]}
 
 
