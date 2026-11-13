@@ -25,7 +25,7 @@ def _build(part: dict, style: Style, where: str) -> Canvas:
     rows = part.get("rows")
     keys = part.get("keys")
     if not isinstance(rows, list) or not rows or not all(isinstance(r, str) for r in rows):
-        raise PartError(f"{where}: {pid}: rows는 글자열 배열이어야 한다")
+        raise PartError(f"{where}: {pid}: rows는 문자열 배열이어야 한다")
     if not isinstance(keys, dict):
         raise PartError(f"{where}: {pid}: keys가 없다")
     colors = {}
@@ -89,6 +89,6 @@ def load_part_allowances(directory: str) -> Dict[str, FrozenSet[str]]:
                 raise PartError(f"{path.name}: id가 있는 부품 객체가 아니다")
             allow = part.get("allow", [])
             if not isinstance(allow, list) or not all(isinstance(c, str) for c in allow):
-                raise PartError(f"{path.name}: {part['id']}: allow는 코드 글자열 배열이어야 한다")
+                raise PartError(f"{path.name}: {part['id']}: allow는 코드 문자열 배열이어야 한다")
             out[part["id"]] = frozenset(allow)
     return out

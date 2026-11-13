@@ -67,6 +67,13 @@ class SceneTests(unittest.TestCase):
             build_scene(s, RECIPES, ctx())
         self.assertTrue(str(e.exception).startswith("t.scene"))
 
+    def test_fill_wall_must_be_a_bool(self):
+        s = floor_scene(2, 2)
+        s["fill"] = [{"tile": "bakery.tile.floor", "rect": [0, 0, 2, 2], "wall": "yes"}]
+        with self.assertRaises(RecipeError) as e:
+            build_scene(s, RECIPES, ctx())
+        self.assertTrue(str(e.exception).startswith("t.scene"))
+
     def test_wall_line_gets_two_darker_rows(self):
         s = floor_scene(2, 4)
         s["fill"] = [{"tile": "bakery.tile.wall", "rect": [0, 0, 2, 2], "wall": True},

@@ -8,8 +8,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
 
-from PIL import Image
-
 from . import boards
 from .canvas import Canvas
 from .lint import Problem, lint_sprite, lint_tile
@@ -166,11 +164,15 @@ def _lint_targets(args, kit: Kit):
     for arg in args.ids:
         rid, state = _split(arg)
         if rid in kit.parts and rid not in kit.recipes:
+            if state is not None:
+                print(f"{arg}: 건너뜀 — 점 부품에는 상태가 없다", file=sys.stderr)
+                continue
             yield rid, None, None
             continue
         recipe = _recipe(kit, rid)
         if recipe.get("kind") == SCENE_KIND:
-            continue  # 장면은 검사할 것이 없다
+            print(f"{arg}: 건너뜀 — 장면은 검사 대상이 아니다 — scene 명령으로 본다", file=sys.stderr)
+            continue
         for st in _pictures(recipe, state, state is not None):
             yield _label(rid, st), recipe, st
 

@@ -249,7 +249,7 @@ def counter(spec: dict, ctx) -> Canvas:
 
     if tray is not None:
         tx, tw = tray["x"], tray["w"]
-        if tx < 0 or tx + tw > w:
+        if tx < 1 or tx + tw + 1 > w:     # 쟁반 테두리가 한 칸 밖에 그려진다
             _report(local.problems, "slot-clipped", f"쟁반이 계산대 밖으로 나간다(x={tx}, w={tw})")
         ty0, ty1 = COUNTER_TRAY                                # 쟁반: 흰 판, 아래·오른쪽 가장자리 한 단계 어둡게
         cv.rect(tx, ty0, tw, ty1 - ty0, _col(spec, ctx, "cream.2"))

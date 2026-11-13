@@ -45,6 +45,17 @@ def codes(problems):
     return [p.code for p in problems]
 
 
+class TrayEdgeTests(unittest.TestCase):
+    def test_tray_whose_border_would_leave_the_counter_is_reported(self):
+        for x, w in ((0, 30), (64, 30)):                     # 왼쪽 테두리가 x=-1, 오른쪽 테두리가 x=94
+            with self.subTest(x=x):
+                c = ctx()
+                r = with_values("bakery.counter")
+                r["tray"] = {"x": x, "w": w, "items": r["tray"]["items"]}
+                render(r, c)
+                self.assertIn("slot-clipped", codes(c.problems))
+
+
 class PileTests(unittest.TestCase):
     def test_empty_list_draws_nothing(self):
         cv = Canvas(60, 20)

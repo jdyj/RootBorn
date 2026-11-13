@@ -104,6 +104,8 @@ def _fill(cv: Canvas, scene: dict, recipes: Dict[str, dict], ctx: Ctx) -> None:
             t = render(tile, ctx)
         except RecipeError as e:
             raise RecipeError(f"{_sid(scene)}: {e}") from None
+        if not isinstance(f.get("wall", False), bool):
+            raise RecipeError(f"{_sid(scene)}: fill의 wall은 true/false여야 한다: {f}")
         x, y, w, h = (v * cell for v in f["rect"])
         if w <= 0 or h <= 0 or w % t.w or h % t.h:
             raise RecipeError(f"{_sid(scene)}: {tid}({t.w}x{t.h}px)가 rect {f['rect']}에 나누어떨어지지 않는다")

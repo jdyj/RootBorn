@@ -67,6 +67,14 @@ class CliTests(unittest.TestCase):
         self.assertRegex(out, r"demo\.tile\.a: too-many-colors ")
         self.assertRegex(out, r"demo\.tile\.a@warm: too-many-colors ")
 
+    def test_lint_says_why_a_scene_or_a_part_with_state_is_skipped(self):
+        code, out, err = run("lint", "demo.scene.room", "demo.dot@warm", "--kit", OK, "--out", self.out)
+        self.assertEqual(code, 0, out + err)
+        self.assertIn("demo.scene.room", err)
+        self.assertIn("장면은 검사 대상이 아니다 — scene 명령으로 본다", err)
+        self.assertIn("demo.dot@warm", err)
+        self.assertIn("점 부품에는 상태가 없다", err)
+
     def test_unknown_id_is_exit_2_and_lists_known_ids(self):
         for cmd in ("lint", "render", "scene"):
             code, _, err = run(cmd, "nope.id", "--kit", OK, "--out", self.out)
