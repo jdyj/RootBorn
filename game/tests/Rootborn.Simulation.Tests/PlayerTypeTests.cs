@@ -58,6 +58,17 @@ namespace Rootborn.Simulation.Tests
                 Assert.That(p.Choose(World(145, A, B), m, new Random(seed)).Key, Is.EqualTo(B.Item1), "씨앗 " + seed);
         }
 
+        /// <summary>해 봤는데 돈이 안 늘은 일은 문 너머(다른 맵의 일)보다 뒤다(2026-11-13 7일 판: 집의 계획판만 오가다 07:07에 잤다).</summary>
+        [Test]
+        public void Money_LeavesWorkThatPaidNothing_ForTheDoor()
+        {
+            var p = new MoneyPolicy();
+            var m = new PlayMemory();
+            PlayView v = World(100, A);
+            m.Note(v, p.Credit(v, v.Find(A.Item1)));
+            Assert.That(p.Choose(World(100, A), m, new Random(1)).Key, Is.EqualTo("door:x"));
+        }
+
         /// <summary>이것저것 해 보는 사람: 해 본 적 없는 일을 먼저(해 본 횟수에 끝이 없다 — 20번에서 멈추지 않는다).</summary>
         [Test]
         public void Explorer_PrefersWhatItHasNotTried_WithoutACap()

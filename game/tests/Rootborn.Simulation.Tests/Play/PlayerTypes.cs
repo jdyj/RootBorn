@@ -106,7 +106,12 @@ namespace Rootborn.Simulation
         {
             int tried = memory.Tried(a.Key);
             bool work = a.Category == "interaction" || (a.Category == "row" || a.Category == "card") && view.TopScreen != null;
-            if (work) return tried == 0 ? 5 : 3 + Gain(a.Key) / (double)tried - 0.01 * tried;
+            if (work)
+            {
+                if (tried == 0) return 5;
+                double average = Gain(a.Key) / (double)tried;
+                return average > 0 ? 3 + average - 0.01 * tried : 1 - 0.1 * tried; // 해 봤는데 돈이 안 늘었으면 문 너머(다른 맵의 일)보다 뒤
+            }
             if (a.Category == "door") return 2 - 0.05 * tried;
             if (view.TopScreen != null && Pick.IsClose(a)) return 1;
             if (a.Category == "key") return -5;
