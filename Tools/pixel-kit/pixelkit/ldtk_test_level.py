@@ -7,33 +7,21 @@
 """
 import json
 import os
-import re
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+
+from .ldtk_common import SOURCE_MAPS, dump as _dump, loads_with_comments as _loads_with_comments, walkers
 
 CELL = 32
 LDTK_NAME = "pixel-kit-test.ldtk"
 MAPS_NAME = "maps.json"
 MAP_ID = "PixelKitTest"
 DEFAULT_OUT = "art/world/test"            # 저장소 뿌리 기준
-SOURCE_MAPS = "game/world/maps.json"      # walker·npcWalker를 옮겨 올 곳(저장소 뿌리 기준)
 MAX_VIEW_CELLS = 13                       # 화면에 보일 높이(칸). 레벨이 더 낮으면 레벨 높이
 TILES_DIR, WORLD_DIR = "art/tiles", "art/world"
 
-_JSON_TOKENS = re.compile(r'"(?:[^"\\]|\\.)*"|//[^\n]*|/\*.*?\*/', re.S)
-_TRAILING_COMMA = re.compile(r'"(?:[^"\\]|\\.)*"|,(?=\s*[}\]])', re.S)
-
-
 class TestLevelError(Exception):
     __test__ = False    # unittest가 테스트 클래스로 모으지 않게
-
-
-def _loads_with_comments(text: str):
-    """게임의 maps.json처럼 // 주석과 끝 쉼표가 있는 JSON을 읽는다(문자열 안은 건드리지 않는다)."""
-    text = text.lstrip("﻿")
-    text = _JSON_TOKENS.sub(lambda m: m.group(0) if m.group(0).startswith('"') else "", text)
-    text = _TRAILING_COMMA.sub(lambda m: m.group(0) if m.group(0).startswith('"') else "", text)
-    return json.loads(text)
 
 
 def _read_slots(root: Path, folder: str) -> List[Tuple[str, Dict[str, dict]]]:
@@ -60,22 +48,7 @@ def _png_size(path: Path) -> Tuple[int, int]:
 
 
 def _walkers(root: Path) -> dict:
-    try:
-        src = _loads_with_comments((root / SOURCE_MAPS).read_text(encoding="utf-8"))
-    except (OSError, ValueError) as e:
-        raise TestLevelError(f"{SOURCE_MAPS}를 못 읽었다({e})") from None
-    npc = src.get("npcWalker")
-    if not isinstance(npc, dict) or "speedCellsPerSecond" not in npc:
-        raise TestLevelError(f"{SOURCE_MAPS}에 npcWalker.speedCellsPerSecond가 없다(게임이 이 값 없이는 맵 목록을 거절한다)")
-    out = {}
-    if "walker" in src:
-        out["walker"] = src["walker"]
-    out["npcWalker"] = npc
-    return out
-
-
-def _dump(doc) -> bytes:
-    return (json.dumps(doc, ensure_ascii=False, indent=1) + "\n").encode("utf-8")
+    return walkers(root, TestLevelError)
 
 
 def build_level(root: Path, out: Path) -> Tuple[bytes, bytes]:

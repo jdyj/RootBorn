@@ -319,7 +319,65 @@ def cmd_test_level(args, kit: Kit) -> int:
     return 0
 
 
+def _room_problems(problems) -> int:
+    """문제를 찍고 끝 코드를 돌려준다(알림만 있으면 0)."""
+    from .room_plan import is_warning
+    code = 0
+    for p in problems:
+        where = f" ({p.x}, {p.y})" if p.x is not None and p.y is not None else ""
+        warn = is_warning(p)
+        print(f"{'알림 ' if warn else ''}{p.code}{where} {p.message}")
+        code = code or (0 if warn else 1)
+    return code
+
+
+def cmd_room(args, kit: Kit) -> int:
+    """room build <id> [--force] [--dry-run] [--out 폴더]: 평면에서 LDtk 방을 쓴다. room check <id>: 평면만 검사한다."""
+    from . import room_ldtk, room_plan
+    from .room_tiles import wall_styles
+    if len(args.ids) != 2 or args.ids[0] not in ("build", "check"):
+        raise UsageError("사용법: room build <방 id> [--force] [--dry-run] [--out 폴더] | room check <방 id>")
+    action, rid = args.ids
+    rooms_dir = Path(args.kit) / "rooms"
+    try:
+        if action == "check":
+            room = room_plan.load_room(rooms_dir / f"{rid}.json")
+            if room.wall not in wall_styles():
+                raise UsageError(f"{rid}: 등록되지 않은 벽 모양 {room.wall}. 있는 것: {', '.join(wall_styles())}")
+            floor = kit.recipes.get(room.floor)
+            if floor is None or floor.get("kind") != "tile":
+                raise UsageError(f"{rid}: 바닥 {room.floor!r}: 키트에 그런 타일 명세가 없다")
+            problems = room_plan.check_grid(room.grid, room.spawn, room.doors, room.face_height)
+            code = _room_problems(problems)
+            if not problems:
+                print(f"{rid}: 문제 없음")
+            return code
+        room = room_plan.load_room(rooms_dir / f"{rid}.json")
+        _room_problems(p for p in room_plan.check_grid(room.grid, room.spawn, room.doors, room.face_height)
+                       if room_plan.is_warning(p))
+        written = room_ldtk.build_room(args.repo, rid, out_dir=args.out, force=args.force, dry_run=args.dry_run,
+                                       kit=kit, rooms_dir=rooms_dir)
+    except room_ldtk.RoomBuildError as e:
+        _room_problems(e.problems)
+        return 1
+    except room_plan.RoomError as e:
+        raise UsageError(str(e)) from None
+    except RecipeError as e:
+        raise UsageError(str(e)) from None
+    except OSError as e:
+        print(f"못 썼다: {e}", file=sys.stderr)
+        return 2
+    for rel in written:
+        print(("쓸 파일: " if args.dry_run else "저장: ") + rel)
+    if args.dry_run:
+        print("--dry-run: 아무것도 쓰지 않았다")
+    elif not written:
+        print("바꿀 것 없음")
+    return 0
+
+
 COMMANDS: Dict[str, Callable] = {
+    "room": cmd_room,
     "test-level": cmd_test_level,
     "render": cmd_render,
     "lint": cmd_lint,

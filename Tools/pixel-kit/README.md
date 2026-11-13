@@ -20,6 +20,8 @@ Python 3.11 + Pillow. 다른 패키지는 쓰지 않는다.
 | `python Tools/pixel-kit/kit.py export <가구 id…> [--dry-run] [--repo 뿌리]` | 가구 그림을 게임이 읽는 PNG + 좌표표로 내고, `game.replaces`가 있으면 가구 정의의 그림 참조를 바꾼다(아래 "내보내기") | 저장소 뿌리의 `art/props/`, `data/atlases/` |
 | `python Tools/pixel-kit/kit.py export <타일·건물·소품 id…> [--dry-run] [--repo 뿌리]` | 타일은 `art/tiles/<세트>.png`, 건물·바깥 소품은 `art/world/<세트>.png` 묶음 시트에 덧붙이고 자리 표·좌표표를 쓴다(아래 "묶음 시트") | 저장소 뿌리의 `art/tiles/`, `art/world/`, `data/atlases/` |
 | `python Tools/pixel-kit/kit.py test-level [--out 폴더] [--repo 뿌리]` | 지금 시트들로 시험용 맵을 쓴다(아래 "시험용 맵") | `<뿌리>/art/world/test/pixel-kit-test.ldtk`, `maps.json` |
+| `python Tools/pixel-kit/kit.py room build <방 id> [--force] [--dry-run] [--out 폴더] [--repo 뿌리]` | 평면 `art/kit/rooms/<id>.json`에서 게임이 읽는 LDtk 방·타일 시트·맵 목록을 쓴다(아래 "방 만들기 — 평면에서 LDtk로") | `<뿌리>/art/world/rooms/<id>/` |
+| `python Tools/pixel-kit/kit.py room check <방 id>` | 평면만 검사한다(쓰지 않는다) | — |
 
 공통 인자: `--kit 폴더`(기본 `art/kit`), `--out 폴더`(기본 `output/pixel-kit`), `--scale N`(보기용 확대 배율,
 정수·최근접. 기본 render 6, sheet·scene 4, parts 8).
@@ -38,6 +40,8 @@ Python 3.11 + Pillow. 다른 패키지는 쓰지 않는다.
 | 장면·그림자 | `Tools/pixel-kit/pixelkit/{scene,shadow}.py` |
 | 검사 | `Tools/pixel-kit/pixelkit/lint.py` |
 | 방 벽·바닥 타일(둘레 칸으로 고르기) | `Tools/pixel-kit/pixelkit/room_tiles.py` |
+| 방 평면 읽기·검사 / LDtk 방 쓰기 | `Tools/pixel-kit/pixelkit/room_plan.py` / `room_ldtk.py`(공용 도우미 `ldtk_common.py`) |
+| 방 평면 파일 | `art/kit/rooms/<id>.json` |
 | 테스트 | `Tools/pixel-kit/tests/` |
 
 ## 점 부품 더하기
@@ -205,7 +209,7 @@ if/switch로 종류를 닫지 않는다.
 
 `pixelkit/room_tiles.py`. 칸마다 벽/바닥/밖만 정한 격자(`grid[y][x]`, 값 `OUT, WALL, FLOOR = 0, 1, 2`, 격자 밖은 `OUT`)에서
 둘레 칸을 보고 32x32 타일을 고르고 그린다. 설계는 `docs/superpowers/specs/2026-11-13-room-builder-design.md` 4.2절.
-(평면 파일 읽기와 LDtk 쓰기는 다음 작업이다.)
+평면 파일 읽기와 LDtk 쓰기는 다음 절이다.
 
 - `classify(grid, face_height=2)` → 칸마다 타일 열쇠(아래 표) 또는 `None`(밖).
 - `draw_tile(style, key, wall, floor_spec)` → 32x32 한 장. `wall`은 벽 모양 이름, `floor_spec`은 키트의 바닥 타일 명세
@@ -230,6 +234,39 @@ if/switch로 종류를 닫지 않는다.
 - 정면 옆이 윗면이면 그 변의 외곽선은 윗면이 친다(정면은 `l`/`r`을 받지 않는다) — 선이 두 겹이 되지 않는다.
 - 세로 벽은 윗면만이고 그 남쪽 끝 `face_height`칸이 정면이다. 가로 벽이 `face_height + 1`칸보다 얇으면 윗면 없이 정면만 남는다(`t`).
 - 문간은 벽 줄의 바닥 칸이다. 따로 그리는 것은 없고 양옆 정면이 `l`/`r` 끝이 된다.
+
+## 방 만들기 — 평면에서 LDtk로
+
+`pixelkit/room_plan.py`(평면 읽기·검사)와 `pixelkit/room_ldtk.py`(쓰기). 설계는 같은 설계서 4.1·4.3·4.4절.
+
+평면 파일 `art/kit/rooms/<id>.json`(파일 이름 = `id`):
+
+```json
+{"id": "test.two-rooms", "wall": "paper", "floor": "bakery.tile.floor", "spawn": [3, 4],
+ "plan": ["####…", "#..D…"], "doors": {"D": "town"}, "face_height": 2}
+```
+
+- `plan`: 글자 줄. `#` 벽, `.` 바닥, 빈칸 밖. 줄 길이가 다르거나 모르는 글자가 있으면 문제다(조용히 채우지 않는다). `doors`(선택)에 적은 글자는 바닥 + 문이다 — 그 칸에 `Door` 엔티티가 놓이고 필드 `Where`에 값이 들어간다. `face_height`(선택, 기본 2). `spawn`은 칸 [x, y].
+- `wall`은 벽 모양 이름, `floor`는 키트의 32x32 바닥 타일 명세 id(지금 나무 바닥 명세는 없어 `bakery.tile.floor`).
+
+`room check <id>`가 보는 것(코드): `room-ragged-plan`, `room-unknown-char`, `room-open-edge`(바닥이 맵 가장자리나 밖 칸에 닿음),
+`room-unreachable-floor`(도착 지점에서 걸어 닿지 못하는 바닥, 덩어리마다 하나), `room-spawn-in-wall`, `room-door-in-wall`,
+`room-wall-thin`(**알림**: 정면 `face_height`칸 + 윗면 1칸보다 얇은 가로 벽. 찍기만 하고 끝 코드는 0이며 쓰기를 막지 않는다).
+알림이 아닌 문제가 있으면 끝 코드 1이고 `build`는 아무것도 쓰지 않는다. 평면에 쓰인 벽 모양·바닥 명세가 키트에 없으면 끝 코드 2.
+
+`room build <id>`는 `art/world/rooms/<id>/`(`--out`으로 바꿀 수 있다, 저장소 안이어야 한다)에 넷을 쓴다:
+
+| 파일 | 내용 |
+|---|---|
+| `<id>.ldtk` | 레벨 `<맵 id>`(32px 칸). 층은 위에서 아래: `Collision`(IntGrid, 1 `wall` / 2 `floor` / 0 밖), `Door`(Entities, 엔티티 정의 `Door` + 문자열 필드 `Where`), `Furniture`(Entities, 층 정의 태그 `ysort`, 비어 있음), `Wall`(Tiles), `Ground`(Tiles). 타일셋 하나(`tiles.png`, 32). 타일 인스턴스는 `px`, `src`, `f`, `t`(시트의 타일 번호, 행 우선 16칸), `d`(칸 번호), `a` |
+| `tiles.png`, `tiles.slots.json` | 쓰인 타일만 모은 시트와 열쇠 → 자리 표(`room_tiles`의 열쇠). **덧붙이기만**: 한 줄 16칸 폭 고정, 새 열쇠는 마지막 번호 다음부터. 이미 있는 타일의 자리(`t`, `src`)는 시트가 커져도 바뀌지 않는다 |
+| `maps.json` | 이 맵 하나. `collision.rule`은 `interior-auto`, `spawns.spawn`은 도착 칸 가운데 픽셀, `viewCells`는 레벨 높이(칸)와 13 중 작은 것, `doors`는 비어 있다(문의 목적지 표는 손으로 채운다). `walker`·`npcWalker`는 `game/world/maps.json`에서 옮긴다. 게임에는 `--maps`로 준다 |
+
+- 맵 id = 방 id에서 점·하이픈을 지우고 낱말 첫 글자를 대문자로(`test.two-rooms` → `TestTwoRooms`).
+- 칸 → 층: 벽(1)은 `Wall` 층 타일, 바닥(2)은 `Ground` 층 타일, 밖(0)은 타일 없음. 같은 격자가 `Collision`의 `intGridCsv`(행 우선, 왼쪽 위부터)다. 그림과 충돌이 한 격자에서 나온다.
+- 이미 있는 방 파일(넷 중 하나라도)이 있으면 `--force` 없이는 거절(끝 코드 2). `--force`는 같은 평면이면 같은 바이트를 쓴다. `--dry-run`은 쓸 파일만 찍는다.
+- 쓰기는 모든 파일을 임시 파일에 먼저 쓴 뒤 바꿔친다. 같은 입력이면 같은 바이트, LF.
+- LDtk 편집기에서 열어 본 것은 아니다(편집기가 읽는 값은 LDtk 1.5.3 모양을 따라 적었지만 사용자가 열어 확인해야 한다).
 
 ## 같이 바뀌는 색
 
