@@ -26,12 +26,18 @@ namespace Rootborn.Simulation
         private readonly NpcScheduleLookupCache _schedules;
         private readonly NpcScheduleAccess _access;
 
-        private PlayAtlas(string repoRoot)
+        /// <summary>덮어쓰기 폴더(시뮬레이션 테스트용, 없으면 null)와 그것이 바꾼 필드.</summary>
+        public readonly string OverlayDirectory;
+        public readonly IReadOnlyList<OverlayChange> OverlayChanges;
+
+        private PlayAtlas(string repoRoot, string overlayDirectory)
         {
             RepoRoot = repoRoot;
-            LoadResult loaded = GameDataLoader.Load(Path.Combine(repoRoot, "data"), RootbornBuilders.Register);
+            OverlayDirectory = overlayDirectory;
+            LoadResult loaded = GameDataLoader.Load(Path.Combine(repoRoot, "data"), RootbornBuilders.Register, overlayDirectory);
             loaded.ThrowIfFailed();
             Definitions = loaded.Definitions;
+            OverlayChanges = loaded.OverlayChanges;
             Maps = new WorldMapLoader(repoRoot, WorldCatalog.Load(Path.Combine(repoRoot, WorldCatalog.DefaultRelativePath)));
             Interactions = InteractionData.Load(Path.Combine(repoRoot, InteractionData.DefaultRelativePath));
             foreach (MapEntry entry in Maps.Catalog.Maps)
@@ -45,12 +51,17 @@ namespace Rootborn.Simulation
             _access = new NpcScheduleAccess(_schedules);
         }
 
-        public static PlayAtlas Load(string repoRoot)
+        public static PlayAtlas Load(string repoRoot) => Load(repoRoot, null);
+
+        /// <summary>덮어쓰기 폴더로 바꾼 정의(data/ 위에 덮는다 — GameDataLoader). 폴더마다 한 번만 읽는다.</summary>
+        public static PlayAtlas Load(string repoRoot, string overlayDirectory)
         {
-            string key = Path.GetFullPath(repoRoot);
+            string root = Path.GetFullPath(repoRoot);
+            string overlay = string.IsNullOrEmpty(overlayDirectory) ? null : Path.GetFullPath(overlayDirectory);
+            string key = overlay == null ? root : root + "|" + overlay;
             lock (Cache)
             {
-                if (!Cache.TryGetValue(key, out PlayAtlas atlas)) Cache[key] = atlas = new PlayAtlas(key);
+                if (!Cache.TryGetValue(key, out PlayAtlas atlas)) Cache[key] = atlas = new PlayAtlas(root, overlay);
                 return atlas;
             }
         }

@@ -56,6 +56,34 @@ namespace Rootborn.Simulation.Tests
             Assert.That(Run(kind, probe), Is.Empty);
         }
 
+        /// <summary>
+        /// 캠페인 날은 캠페인 데이터에 있는 날만 지점이다(날 번호는 데이터의 날이 다 지나도 날마다 오른다 — 2026-11-13 먼 층 100일 판에서 101일째까지
+        /// 날마다 "새로운 것"이 되어 빈 날이 가려졌다).
+        /// </summary>
+        [Test]
+        public void CampaignDays_CountOnlyTheDaysTheCampaignDataHas()
+        {
+            PlayAtlas atlas = FastPlayTests.Atlas;
+            string root = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "rootborn-campaign-" + System.Guid.NewGuid().ToString("N"));
+            try
+            {
+                var s = Rootborn.Game.GameSession.Start(atlas.Definitions, Rootborn.Game.GameStartSettings.FromDefinitions(atlas.Definitions), new Rootborn.Data.Save.FileSaveStore(root), "slot-0", null);
+                IPaceNoveltyKind kind = Kind(PaceNoveltyCatalog.CampaignDay);
+                var probe = new PaceProbe { Session = s, Definitions = atlas.Definitions };
+                Assume.That(s.Campaign, Is.Not.Null);
+                var campaign = atlas.Definitions.Get<Rootborn.Core.StudentLife.Campaign>(s.Campaign.ActiveCampaignId);
+                int last = campaign.Days.Max(d => d.DayNumber);
+                int found = 0;
+                for (int day = 1; day <= last + 5; day++)
+                {
+                    s.Campaign.SetCurrentDayNumber(day);
+                    found += Run(kind, probe).Count;
+                }
+                Assert.That(found, Is.EqualTo(campaign.Days.Select(d => d.DayNumber).Distinct().Count()), "데이터의 날 수만큼");
+            }
+            finally { if (System.IO.Directory.Exists(root)) System.IO.Directory.Delete(root, true); }
+        }
+
         [Test]
         public void Catalog_GivesFreshKinds_WithUniqueNames_AndSessionKindsIgnoreNoSession()
         {

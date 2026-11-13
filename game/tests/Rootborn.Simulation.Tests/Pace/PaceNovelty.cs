@@ -83,7 +83,7 @@ namespace Rootborn.Simulation.Pace
             r.Add(() => new Seen(FurnitureUnlock, false, p => (IEnumerable<string>)p.Session?.FurnitureUnlocks?.UnlockTokens ?? Array.Empty<string>()));
             // 지점(설계 3.4절): 데이터에서 저절로 — 각 체인의 끝, 캠페인의 각 날, 성인이 됨, 시설 레벨마다, 진로 후보가 열림.
             r.Add(() => new Seen(ChainEnd, true, ChainsDone));
-            r.Add(() => new Seen(CampaignDay, true, p => p.Session?.Campaign == null ? Array.Empty<string>() : new[] { p.Session.Campaign.CurrentDayNumber.ToString(CultureInfo.InvariantCulture) + "일째" }));
+            r.Add(() => new Seen(CampaignDay, true, CampaignDays));
             r.Add(() => new Seen(CandidateOpened, true, Candidates));
             r.Add(() => new Seen(Adult, true, p => p.Session?.Adult != null && p.Session.Adult.IsAdult ? new[] { p.Session.Adult.FacilityId } : Array.Empty<string>()));
             r.Add(() => new Seen(FacilityLevel, true, p => p.Session?.Adult != null && p.Session.Adult.IsAdult
@@ -138,6 +138,16 @@ namespace Rootborn.Simulation.Pace
             if (p.Session == null) yield break;
             foreach (QuestProgressSaveData q in p.Session.QuestLog.ToSaveData().Quests)
                 if (q.State == QuestStage.Completed || q.State == QuestStage.RewardClaimed) yield return q.QuestId;
+        }
+
+        /// <summary>캠페인의 지금 날 — 캠페인 데이터에 그 날 번호가 있을 때만(날 번호는 데이터의 날이 다 지나도 오른다).</summary>
+        private static IEnumerable<string> CampaignDays(PaceProbe p)
+        {
+            var progress = p.Session?.Campaign;
+            if (progress == null || p.Definitions == null || !p.Definitions.TryGet<Campaign>(progress.ActiveCampaignId ?? string.Empty, out Campaign campaign)) yield break;
+            bool inData = false;
+            foreach (var d in campaign.Days) if (d != null && d.DayNumber == progress.CurrentDayNumber) inData = true; // GetDayByNumber는 없는 날에 마지막 날을 준다
+            if (inData) yield return progress.CurrentDayNumber.ToString(CultureInfo.InvariantCulture) + "일째";
         }
 
         private static IEnumerable<string> Candidates(PaceProbe p)

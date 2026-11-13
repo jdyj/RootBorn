@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Globalization;
 using System.Linq;
 using Rootborn.Core.Interaction;
@@ -75,6 +76,8 @@ namespace Rootborn.Simulation.Pace
                 By = by ?? string.Empty,
                 Map = view.MapId ?? string.Empty,
                 Top = top,
+                InteractionKind = action.Kind == PlayActionKind.WalkInteract || action.Kind == PlayActionKind.Door ? action.InteractionKind : null,
+                Subject = action.Kind == PlayActionKind.WalkInteract || action.Kind == PlayActionKind.Door ? action.Subject : null,
                 NewChars = _text.Count(VisibleText()),
                 Choices = _classifier.Choices(top, action, category),
             };
@@ -196,6 +199,8 @@ namespace Rootborn.Simulation.Pace
         /// <summary>N일 판의 날 수(손으로 도는 보고). 없으면 7(설계 9절 4번).</summary>
         public const string DaysVariable = "ROOTBORN_PACE_DAYS";
         public const int DefaultDays = 7;
+        /// <summary>데이터 덮어쓰기 폴더(Game 테스트 TestWorld.OverlayVariable와 같은 이름). 손으로 도는 비교 보고가 전후 비교로 바뀐다.</summary>
+        public const string OverlayVariable = "ROOTBORN_DATA_OVERLAY";
 
         public static int ParseDays(string value)
         {
@@ -204,9 +209,10 @@ namespace Rootborn.Simulation.Pace
             throw new ArgumentException(DaysVariable + "는 1 이상의 정수여야 한다: '" + value + "'");
         }
 
-        public static PacePlayResult Run(string policy, int seed, PlaySettings settings, string name)
+        /// <param name="overlay">데이터 덮어쓰기 폴더(없으면 data/ 그대로).</param>
+        public static PacePlayResult Run(string policy, int seed, PlaySettings settings, string name, string overlay = null)
         {
-            PlayAtlas atlas = PlayAtlas.Load(PlayAtlas.FindRepoRoot());
+            PlayAtlas atlas = PlayAtlas.Load(PlayAtlas.FindRepoRoot(), overlay);
             using var body = new HeadlessBody(atlas);
             IPlayPolicy made = PlayerTypeCatalog.Has(policy) ? PlayerTypeCatalog.Create(policy, atlas) : PlayPolicyCatalog.Default().Create(policy, atlas);
             var runner = new PlayRunner(body, made, seed, settings, atlas, name);
@@ -224,6 +230,7 @@ namespace Rootborn.Simulation.Pace
                 + (settings.StopWhenChainCompleted == null ? string.Empty : ", 멈추는 체인 `" + settings.StopWhenChainCompleted + "`"));
             info.Notes.Add("체인 위치: " + (play.LastChainStep ?? "(없음)") + ", 끝낸 체인 단계 " + play.ChainStepsCompleted + ", 끝낸 퀘스트 " + play.QuestsCompleted);
             info.Notes.Add("한 판 기록(행동·불변식): output/simulation/" + name + "/");
+            if (atlas.OverlayChanges.Count > 0) info.Notes.Add("덮어쓴 데이터로 돈 판: " + string.Join("; ", atlas.OverlayChanges));
             string dir = PaceReport.Directory(atlas.RepoRoot, name);
             List<PaceStep> steps = recorder.Steps.ToList();
             PaceReport.Write(dir, info, steps, HeadlessBody.FrameSeconds);
@@ -235,18 +242,39 @@ namespace Rootborn.Simulation.Pace
         public static string Compare(string name, PlaySettings settings, int seed) => Compare(name, settings, seed, out _);
 
         /// <param name="failures">알려진 결함이 아닌 불변식 실패(유형 이름과 무엇).</param>
-        public static string Compare(string name, PlaySettings settings, int seed, out List<string> failures)
+        public static string Compare(string name, PlaySettings settings, int seed, out List<string> failures) => Compare(name, settings, seed, null, out failures, out _);
+
+        /// <summary>
+        /// 유형 넷을 돌려 비교 보고서(&lt;이름&gt;/report.md)와 잰 값 파일(&lt;이름&gt;/pace-measured.json — 먼 층이 읽는다)을 쓴다.
+        /// </summary>
+        public static string Compare(string name, PlaySettings settings, int seed, string overlay, out List<string> failures, out List<PaceCompareEntry> entries)
         {
             failures = new List<string>();
-            var entries = new List<PaceCompareEntry>();
+            entries = new List<PaceCompareEntry>();
             foreach (string type in PlayerTypeCatalog.Names)
             {
-                PacePlayResult r = Run(type, seed, settings, name + "-" + type);
+                PacePlayResult r = Run(type, seed, settings, name + "-" + type, overlay);
                 if (r.Play.Failure != null && Rootborn.Simulation.Tests.KnownDefects.Matches(r.Play.Failure) == null) failures.Add(type + ": " + FirstLine(r.Play.Failure.What));
-                entries.Add(new PaceCompareEntry { Type = type, Info = r.Info, Steps = r.Steps });
+                entries.Add(new PaceCompareEntry { Type = type, Label = PlayerTypeCatalog.Label(type), Info = r.Info, Steps = r.Steps });
             }
             string dir = PaceReport.Directory(PlayAtlas.FindRepoRoot(), name);
             PaceCompare.Write(dir, name, entries, HeadlessBody.FrameSeconds);
+            PaceMeasured.FromRuns(entries.Select(e => (e.Info.Name, e.Steps)), HeadlessBody.FrameSeconds).Write(Path.Combine(dir, PaceMeasured.FileName));
+            return dir;
+        }
+
+        /// <summary>
+        /// 덮어쓰기 전후 비교(가까운 층): 같은 설정·씨앗으로 유형 넷을 data/ 그대로와 덮어쓴 것 둘 다 돌려 &lt;이름&gt;/report.md 하나에 전·후·차이로 쓴다.
+        /// 유형마다 보고서는 &lt;이름&gt;-before-&lt;유형&gt;, &lt;이름&gt;-after-&lt;유형&gt;.
+        /// </summary>
+        public static string CompareOverlay(string name, PlaySettings settings, int seed, string overlay, out List<string> failures)
+        {
+            Compare(name + "-before", settings, seed, null, out List<string> f1, out List<PaceCompareEntry> before);
+            Compare(name + "-after", settings, seed, overlay, out List<string> f2, out List<PaceCompareEntry> after);
+            failures = f1.Concat(f2).ToList();
+            var changes = PlayAtlas.Load(PlayAtlas.FindRepoRoot(), overlay).OverlayChanges.Select(c => c.ToString()).ToList();
+            string dir = PaceReport.Directory(PlayAtlas.FindRepoRoot(), name);
+            PaceDiff.Write(dir, name, changes, before, after, HeadlessBody.FrameSeconds, new[] { PaceReport.EvidenceLine, "가까운 층: 플레이어 유형 넷, 날 " + settings.Days + ", 씨앗 " + seed + "." });
             return dir;
         }
 

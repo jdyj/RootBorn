@@ -18,6 +18,8 @@ namespace Rootborn.Simulation.Pace
         /// <summary>행동 이름(PlayAction.Key)과 고른 쪽(정책 이름, start, day-end …).</summary>
         public string Key = string.Empty, By = string.Empty;
         public string Map = string.Empty, Top;
+        /// <summary>걷기·상호작용 걸음이면 그 상호작용 종류와 대상 id(가까운 층의 잰 값을 먼 층에 넘길 때 쓴다), 아니면 null.</summary>
+        public string InteractionKind, Subject;
         public int NewChars, Choices;
         /// <summary>미니게임 걸음이면 그 판의 도전 번호(한 판에서 0부터), 아니면 -1.</summary>
         public int Challenge = -1;

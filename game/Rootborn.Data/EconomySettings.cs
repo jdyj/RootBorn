@@ -22,15 +22,17 @@ namespace Rootborn.Data
             return Path.Combine(parent ?? string.Empty, "game", FileName);
         }
 
-        public static ItemDefinition ReadCurrency(string dataDirectory, GameDefinitions definitions, List<LoadError> errors)
+        /// <param name="overlayDirectory">덮어쓰기 폴더(시뮬레이션 테스트용). 맨 위의 economy.json이 필드 단위로 덮는다(DataOverlay.ReadSettings).</param>
+        public static ItemDefinition ReadCurrency(string dataDirectory, GameDefinitions definitions, List<LoadError> errors, string overlayDirectory = null, List<OverlayChange> changes = null)
         {
             var path = PathFor(dataDirectory);
-            if (!File.Exists(path)) return null;
+            var bytes = DataOverlay.ReadSettings(path, overlayDirectory, FileName, changes ?? new List<OverlayChange>(), errors);
+            if (bytes == null) return null;
 
             string id;
             try
             {
-                using var document = JsonDocument.Parse(File.ReadAllBytes(path));
+                using var document = JsonDocument.Parse(bytes);
                 id = document.RootElement.ValueKind == JsonValueKind.Object
                      && document.RootElement.TryGetProperty("currencyItem", out var value) && value.ValueKind == JsonValueKind.String
                     ? value.GetString()

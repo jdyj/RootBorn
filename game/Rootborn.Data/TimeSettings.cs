@@ -25,11 +25,13 @@ namespace Rootborn.Data
             return Path.Combine(parent ?? string.Empty, "game", FileName);
         }
 
-        public static TimeRules Read(string dataDirectory, GameDefinitions definitions, List<LoadError> errors)
+        /// <param name="overlayDirectory">덮어쓰기 폴더(시뮬레이션 테스트용). 맨 위의 time.json이 필드 단위로 덮는다(DataOverlay.ReadSettings).</param>
+        public static TimeRules Read(string dataDirectory, GameDefinitions definitions, List<LoadError> errors, string overlayDirectory = null, List<OverlayChange> changes = null)
         {
             var path = PathFor(dataDirectory);
             var day = definitions.All<DayClock>().FirstOrDefault();
-            if (!File.Exists(path))
+            var bytes = DataOverlay.ReadSettings(path, overlayDirectory, FileName, changes ?? new List<OverlayChange>(), errors);
+            if (bytes == null)
             {
                 if (day != null) errors.Add(new LoadError("missing-file", Source, "", path, "흐르는 시간의 수치 파일이 없다(하루 시작·취침 시각·밤 체력 감소·늦잠 회복 감소)"));
                 return null;
@@ -43,7 +45,7 @@ namespace Rootborn.Data
 
             try
             {
-                using var document = JsonDocument.Parse(File.ReadAllBytes(path));
+                using var document = JsonDocument.Parse(bytes);
                 var root = document.RootElement;
                 if (root.ValueKind != JsonValueKind.Object)
                 {

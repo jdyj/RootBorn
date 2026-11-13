@@ -86,6 +86,7 @@ namespace Rootborn.Balance.Tests
                 else spent -= delta;
             };
 
+            setup.Observer?.Started(game);
             // 다음 날을 시작할 때 생긴 변화도 빠지지 않게 누적 값에서 그날 몫을 뺀다.
             int request = 0, earnedBefore = 0, spentBefore = 0;
             for (int d = 0; d < days; d++)
@@ -99,7 +100,8 @@ namespace Rootborn.Balance.Tests
                     StartedAtMinutes = game.Student.TimeMinutes,
                     EndedAtMinutes = game.Student.TimeMinutes,
                 };
-                PlayDay(game, actions, context, rule, runDay, sleeps, setup.TravelMinutes, record, name, ref request, () => earned);
+                PlayDay(game, actions, context, rule, runDay, sleeps, setup, record, name, ref request, () => earned);
+                int nightDay = game.Student.CurrentDay, nightMinutes = game.Student.TimeMinutes;
 
                 record.FacilityLevel = game.Adult.IsAdult ? game.Adult.FacilityLevel : 0;
                 record.EnergyAtEnd = game.Student.Energy;
@@ -117,6 +119,7 @@ namespace Rootborn.Balance.Tests
                     Close(game, record, earned, spent, ref earnedBefore, ref spentBefore);
                     run.Days.Add(record);
                     if (!game.StartNextDay()) throw new InvalidOperationException(name + ": " + record.Day + "일째 다음 날을 시작하지 못했다");
+                    setup.Observer?.Night(game, true, nightDay, nightMinutes);
                 }
                 else
                 {
@@ -127,6 +130,7 @@ namespace Rootborn.Balance.Tests
                     RollOverAwake(game, record.Day, name);
                     Close(game, record, earned, spent, ref earnedBefore, ref spentBefore);
                     run.Days.Add(record);
+                    setup.Observer?.Night(game, false, nightDay, nightMinutes);
                 }
             }
             return run;
@@ -162,7 +166,7 @@ namespace Rootborn.Balance.Tests
                 throw new InvalidOperationException(name + ": " + day + "일째를 자지 않고 넘긴 뒤 다음 날이 진행 중이 아니다(" + game.Student.DayState + ")");
         }
 
-        private static void PlayDay(GameSession game, IReadOnlyList<IBalanceAction> actions, RunContext context, ISleepRule rule, int runDay, bool sleeps, int travel,
+        private static void PlayDay(GameSession game, IReadOnlyList<IBalanceAction> actions, RunContext context, ISleepRule rule, int runDay, bool sleeps, RunSetup setup,
             DayRecord record, string name, ref int request, Func<int> earnedSoFar)
         {
             var skipped = new bool[actions.Count]; // 이 날 거절된 행동 종류는 다시 보지 않는다
@@ -191,7 +195,7 @@ namespace Rootborn.Balance.Tests
                     anyPlan = true;
                     var moment = new SleepMoment
                     {
-                        RunDay = runDay, NowMinutes = game.Student.TimeMinutes, WalkMinutes = plan.Walks ? travel : 0, ActionMinutes = plan.Minutes, MinigameMinutes = plan.MinigameMinutes, DayEndMinutes = dayEnd,
+                        RunDay = runDay, NowMinutes = game.Student.TimeMinutes, WalkMinutes = plan.Walks ? setup.TravelFor(plan) : 0, ActionMinutes = plan.Minutes, MinigameMinutes = plan.MinigameMinutes, DayEndMinutes = dayEnd,
                     };
                     if (!rule.MayStart(moment)) continue;
                     step = plan;
@@ -206,7 +210,9 @@ namespace Rootborn.Balance.Tests
 
                 if (step.Walks)
                 {
+                    int travel = setup.TravelFor(step);
                     DayAssumptions.Walk(game, travel);
+                    setup.Observer?.Walked(game, step, travel);
                     record.TravelMinutes += travel;
                     record.TravelRealSeconds += DayAssumptions.RealSeconds(game.TimeRules, travel);
                     if (game.Student.CurrentDay != record.Day) throw new InvalidOperationException(name + ": " + record.Day + "일째 걷기가 날을 넘겼다");
@@ -220,9 +226,11 @@ namespace Rootborn.Balance.Tests
                 }
 
                 int earnedBefore = earnedSoFar();
+                int actDay = game.Student.CurrentDay, actMinutes = game.Student.TimeMinutes;
                 // 요청 id는 그 판(세션) 안에서만 겹치지 않으면 된다. 게임은 쓴 요청 id를 모두 세이브에 남기고 저장할 때마다 다시 쓰므로
                 // 짧게 둔다(판 이름을 넣으면 100일 판에서 저장이 무거워진다).
                 var outcome = step.Do(game, record.Day + ":" + request++);
+                setup.Observer?.Acted(game, step, outcome, actDay, actMinutes);
                 // 날 넘김: 넘겨 잇는 밤이면 게임이 하는 대로 둔다(미니게임 도중에 07:00이 되면 게임이 날을 넘기고 정산을 거절한다 — CarryFactsTests).
                 // 그 행동은 시작한 날의 줄에 적고 그날을 끝낸다. 아니면 판을 멈춘다.
                 bool rolledOver = game.Student.CurrentDay != record.Day;

@@ -20,7 +20,7 @@ namespace Rootborn.Data
 
             var errors = new List<LoadError>();
             var table = EntityTable.ReadDirectory(dataDirectory, errors);
-            IReadOnlyList<OverlayChange> overlayChanges = Array.Empty<OverlayChange>();
+            var overlayChanges = new List<OverlayChange>();
             if (!string.IsNullOrEmpty(overlayDirectory)) overlayChanges = DataOverlay.Apply(table, overlayDirectory, errors);
             var context = new BuildContext(table, builders, errors);
             var unclassified = new SortedSet<string>(StringComparer.Ordinal);
@@ -44,8 +44,8 @@ namespace Rootborn.Data
             }
 
             var definitions = new GameDefinitions(entries, table);
-            definitions.Currency = EconomySettings.ReadCurrency(dataDirectory, definitions, errors);
-            definitions.TimeRules = TimeSettings.Read(dataDirectory, definitions, errors);
+            definitions.Currency = EconomySettings.ReadCurrency(dataDirectory, definitions, errors, overlayDirectory, overlayChanges);
+            definitions.TimeRules = TimeSettings.Read(dataDirectory, definitions, errors, overlayDirectory, overlayChanges);
             Builders.WorkspaceTables.Build(definitions, errors);
             return new LoadResult(definitions, errors, unclassified.ToArray(), builders, overlayChanges);
         }

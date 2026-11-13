@@ -65,7 +65,9 @@ namespace Rootborn.Data
                 foreach (var path in Directory.GetFiles(overlayRoot, "*.json", SearchOption.AllDirectories))
                 {
                     byte[] bytes = Normalize(File.ReadAllBytes(path));
-                    if (StartsWithArray(bytes)) files.Add(("overlay:" + Path.GetRelativePath(overlayRoot, path).Replace('\\', '/'), bytes));
+                    string relative = Path.GetRelativePath(overlayRoot, path).Replace('\\', '/');
+                    // 엔티티 배열 파일과 맨 위의 규칙 설정 덮어쓰기(economy.json·time.json — DataOverlay.ReadSettings).
+                    if (StartsWithArray(bytes) || Array.IndexOf(DataOverlay.SettingsFiles, relative) >= 0) files.Add(("overlay:" + relative, bytes));
                 }
             }
 

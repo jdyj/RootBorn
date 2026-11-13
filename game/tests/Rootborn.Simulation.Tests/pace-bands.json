@@ -1,0 +1,4 @@
+{
+  "about": "게임은 읽지 않는다. 속도 보고서(가까운 층 output/simulation/pace/compare-*, 먼 층 far-*)의 범위 검사. 처음에는 비어 있어 아무것도 막지 않는다 — 값은 사용자가 정한다. 쓰는 법은 game/tests/Rootborn.Simulation.Tests/Pace/README.md. 읽는 곳: Pace/PaceBands.cs",
+  "bands": []
+}

@@ -30,7 +30,7 @@ namespace Rootborn.Simulation.Tests
                 steps.Add(s);
                 steps.Add(new PaceStep { Index = steps.Count, Day = d, Minutes = 500, Category = PaceCategories.NothingToDo, Frames = 300, Key = "idle:600" });
             }
-            return new PaceCompareEntry { Type = type, Info = new PaceRunInfo { Name = type, Policy = type, DaysCompleted = days, End = "끝" }, Steps = steps };
+            return new PaceCompareEntry { Type = type, Label = PlayerTypeCatalog.Label(type), Info = new PaceRunInfo { Name = type, Policy = type, DaysCompleted = days, End = "끝" }, Steps = steps };
         }
 
         [Test]
@@ -61,15 +61,33 @@ namespace Rootborn.Simulation.Tests
             TestContext.WriteLine(dir);
         }
 
-        /// <summary>손으로만: 유형 넷을 ROOTBORN_PACE_DAYS일(기본 7) 돌려 compare-&lt;N&gt;days/report.md. 알려진 결함이 아닌 실패가 있으면 보고서를 쓴 뒤 실패한다.</summary>
+        /// <summary>
+        /// 손으로만: 유형 넷을 ROOTBORN_PACE_DAYS일(기본 7) 돌려 compare-&lt;N&gt;days/report.md를 쓰고, 잰 값 파일을 먼 층이 읽는 자리
+        /// (output/simulation/pace/measured/pace-measured.json)에도 둔다. ROOTBORN_DATA_OVERLAY가 있으면 덮어쓰기 전후 비교(compare-&lt;N&gt;days-overlay/report.md)를 쓴다.
+        /// 범위 파일(pace-bands.json)의 범위 밖과 알려진 결함이 아닌 실패가 있으면 보고서를 쓴 뒤 실패한다.
+        /// </summary>
         [Test, Explicit("손으로만: 플레이어 유형 넷을 N일 돌려 output/simulation/pace/compare-<N>days 에 비교 보고서를 쓴다"), Category("PaceReport")]
         public void WriteCompareReport()
         {
             int days = PacePlay.ParseDays(Environment.GetEnvironmentVariable(PacePlay.DaysVariable));
             var settings = new PlaySettings { Days = days, StepsPerDay = 5000, WindDownSteps = 120, MaxSteps = 5000 * days };
-            string dir = PacePlay.Compare("compare-" + days + "days", settings, 1, out List<string> failures);
-            TestContext.WriteLine(dir);
+            string root = PlayAtlas.FindRepoRoot();
+            string overlay = Environment.GetEnvironmentVariable(PacePlay.OverlayVariable);
+            List<string> failures;
+            if (!string.IsNullOrWhiteSpace(overlay))
+            {
+                string diff = PacePlay.CompareOverlay("compare-" + days + "days-overlay", settings, 1, overlay, out failures);
+                TestContext.WriteLine(diff);
+                Assert.That(failures, Is.Empty);
+                return;
+            }
+            string dir = PacePlay.Compare("compare-" + days + "days", settings, 1, null, out failures, out List<PaceCompareEntry> entries);
+            string measured = PaceMeasured.DefaultPath(root);
+            Directory.CreateDirectory(Path.GetDirectoryName(measured));
+            File.Copy(Path.Combine(dir, PaceMeasured.FileName), measured, true);
+            TestContext.WriteLine(dir + " / 잰 값: " + measured);
             Assert.That(failures, Is.Empty);
+            Assert.That(PaceBands.Check(PaceBands.Read(PaceBands.FilePath(root)), PaceBands.Near, entries, Rootborn.Simulation.Headless.HeadlessBody.FrameSeconds), Is.Empty, "범위 밖");
         }
     }
 }

@@ -32,13 +32,67 @@ namespace Rootborn.Data
     /// 데이터 덮어쓰기: data/와 같은 모양의 작은 폴더(엔티티 배열 JSON)로 data/를 고치지 않고 수치를 바꿔 읽는다. 시뮬레이션 테스트용이고 게임 실행은 쓰지 않는다.
     /// 단위는 엔티티(type + id)다. 덮어쓰기 엔티티에 적힌 최상위 필드(type·id 제외)만 같은 엔티티의 원본을 대신하고, 안 적은 필드는 원본 그대로다.
     /// 배열·객체 필드는 안쪽을 합치지 않고 통째로 바꾼다. 원본에 없는 (type, id)는 오류다 — 새 엔티티 추가는 지원하지 않고 오타가 조용히 무시되지 않게 한다.
-    /// registry.json과 economy·time 같은 규칙 설정 파일은 덮지 않는다(registry.json이 덮어쓰기 폴더에 있으면 오류).
+    /// registry.json은 덮지 않는다(덮어쓰기 폴더에 있으면 오류). 규칙 설정 파일(game/economy.json, game/time.json)은 덮어쓰기 폴더 맨 위의
+    /// 같은 이름 파일로 최상위 필드 단위로 덮는다(<see cref="ReadSettings"/> — 바뀐 필드는 type "settings", id 파일 이름).
     /// </summary>
     internal static class DataOverlay
     {
         public const string UnknownEntityKind = "overlay-unknown";
         public const string UnsupportedKind = "overlay-unsupported";
         public const string FolderKind = "overlay-folder";
+
+        /// <summary>규칙 설정 파일 덮어쓰기의 바뀐 목록에 쓰는 type(id는 파일 이름).</summary>
+        public const string SettingsType = "settings";
+
+        /// <summary>덮어쓰기 폴더 맨 위에 둘 수 있는 규칙 설정 파일 이름(game/의 같은 이름 파일을 덮는다).</summary>
+        public static readonly string[] SettingsFiles = { EconomySettings.FileName, TimeSettings.FileName };
+
+        /// <summary>
+        /// 규칙 설정 파일(originalPath)을 읽는다. 덮어쓰기 폴더 맨 위에 같은 이름(fileName) 파일이 있으면 최상위 필드 단위로 덮은 JSON을 돌려주고
+        /// 바뀐 필드를 changes에 더한다. 덮어쓰기가 없으면 원본 그대로. 원본이 없으면 null(덮어쓰기만 있으면 오류). 덮어쓰기 맨 위가 객체가 아니면 오류.
+        /// </summary>
+        public static byte[] ReadSettings(string originalPath, string overlayDirectory, string fileName, List<OverlayChange> changes, List<LoadError> errors)
+        {
+            string overlayPath = string.IsNullOrEmpty(overlayDirectory) ? null : Path.Combine(overlayDirectory, fileName);
+            bool hasOverlay = overlayPath != null && File.Exists(overlayPath);
+            if (!File.Exists(originalPath))
+            {
+                if (hasOverlay) errors.Add(new LoadError(UnsupportedKind, SettingsType, fileName, overlayPath, "덮을 원본 설정 파일이 없다: " + originalPath));
+                return null;
+            }
+            byte[] original = File.ReadAllBytes(originalPath);
+            if (!hasOverlay) return original;
+            JsonObject result;
+            JsonDocument overlay;
+            try
+            {
+                result = JsonNode.Parse(original) as JsonObject;
+                overlay = JsonDocument.Parse(File.ReadAllBytes(overlayPath));
+            }
+            catch (JsonException e)
+            {
+                errors.Add(new LoadError("parse", SettingsType, fileName, overlayPath, e.Message));
+                return original;
+            }
+            using (overlay)
+            {
+                if (result == null || overlay.RootElement.ValueKind != JsonValueKind.Object)
+                {
+                    errors.Add(new LoadError(UnsupportedKind, SettingsType, fileName, overlayPath, "설정 덮어쓰기의 맨 위가 객체가 아니다"));
+                    return original;
+                }
+                foreach (var property in overlay.RootElement.EnumerateObject())
+                {
+                    var after = JsonNode.Parse(property.Value.GetRawText());
+                    string afterText = Compact(after);
+                    string beforeText = result.TryGetPropertyValue(property.Name, out var before) ? Compact(before) : null;
+                    if (beforeText == afterText) continue;
+                    result[property.Name] = after;
+                    changes.Add(new OverlayChange(SettingsType, fileName, property.Name, beforeText, afterText));
+                }
+            }
+            return System.Text.Encoding.UTF8.GetBytes(result.ToJsonString());
+        }
 
         /// <summary>table(원본) 위에 overlayDirectory를 덮고 바뀐 목록을 돌려준다. 오류는 errors에 모은다.</summary>
         public static List<OverlayChange> Apply(EntityTable table, string overlayDirectory, List<LoadError> errors)
