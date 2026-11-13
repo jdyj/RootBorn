@@ -59,11 +59,11 @@ description: "ROOTBORN 실내 방·집 구조를 칸마다 벽/바닥/밖만 정
 - 가로 윗면 바로 위 16px 틈(바닥 쪽일 때 바닥처럼 보이지만 못 들어감)을 없애려고 띠 규칙을 바꾸기. 사용자 답 대기다.
 - 검사를 끄거나 `--force`로 문제를 덮기. 도구 코드를 이 스킬 안에서 고치기(도구는 별도 일이다).
 
-## 편집기에서 확인된 것과 아직 확인 못 한 것
+## 편집기에서 확인된 것
 
 **확인된 것(2026-11-14, 사용자가 LDtk 1.5.3 편집기로)**: 처음에는 LDtk가 `room build`의 파일을 `Cannot read properties of null (reading 'externalLevels') (TypeError)`로 열지 못했다 — 도구가 게임이 읽는 키만 써서다. 공식 스키마(1.5.3, `Tools/pixel-kit/tests/fixtures/ldtk-1.5.3/`)의 필수 키와 편집기 저장 파일에 늘 있는 키를 채운 뒤(`tests/test_ldtk_editor_shape.py`) (가) 도구가 쓴 파일이 **편집기에서 열렸고**, (나) 편집기에서 `Collision`을 칠해 저장한 파일을 **`repaint`가 받아 벽 그림을 맞췄다** — 32px 윗면 때 한 번, 얇은 벽(16px 띠)으로 바뀐 뒤에도 한 번(어긋난 칸 26개 → `repaint` 뒤 문제 없음). (다) `repaint`가 다시 쓴 파일을 편집기가 **다시 열었다** — 32px 윗면 때의 파일로 확인했다. **2026-11-14 사용자가 확인: 얇은 벽으로 `repaint`가 다시 쓴 파일을 편집기가 다시 열고 얇은 띠로 보인다.** 편집기에서 `Collision` 층이 불투명하면 벽·바닥 그림을 가려 색 칸만 보인다 — 그 층의 눈 아이콘을 끄면 그림이 보인다(그래서 반투명으로 바꿨다). 32px 윗면 때 저장한 파일이 테스트 고정 파일 `Tools/pixel-kit/tests/fixtures/room-editor-saved/`다. 그 전에 만든 방 파일은 `room check`가 `room-ldtk-incomplete`로 알리고 `repaint`가 거절한다 — `room build <id> --force`로 다시 만든다.
 
-**아직 확인 못 한 것(사용자 답 대기)**: 반투명 `Collision` 층 아래로 그림이 비치는가. 확인되면 이 줄에서 지운다. 그 전에는 이것들을 "편집기에서 된다"고 쓰지 않는다. 시험 방(`art/world/rooms/test.two-rooms/test.two-rooms.ldtk`)으로 해 보고 끝나면 `git checkout -- art/world/rooms/test.two-rooms`.
+**2026-11-14 사용자가 더 확인한 것**: 반투명 `Collision` 층을 켠 채로도 색 칸 아래로 벽·바닥 그림이 비친다(눈 아이콘을 끄지 않아도 된다). 이로써 편집기 쪽에서 확인이 필요하던 것은 모두 확인됐다. 시험 방(`art/world/rooms/test.two-rooms/test.two-rooms.ldtk`)으로 해 보고 끝나면 `git checkout -- art/world/rooms/test.two-rooms`.
 
 벽을 얇게 보이게 하려면 **한 칸 두께**로 칠한다. 두 칸 이상 두께로 칠하면 안쪽이 띠로 채워져 넓은 덩어리로 보인다(사용자가 2칸 폭 벽을 칠했을 때 그렇게 나왔다. 알려진 약점).
 
