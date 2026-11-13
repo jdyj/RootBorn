@@ -388,10 +388,11 @@ def cmd_room(args, kit: Kit) -> int:
         _room_problems(p for p in room_plan.check_grid(room.grid, room.spawn, room.doors, room.face_height)
                        if room_plan.is_warning(p))
         _room_problems(room_ldtk.door_problems(room.doors, {}))          # build가 쓰는 maps.json의 doors는 비어 있다
-        if args.force and room_ldtk.existing_room_files(args.repo, rid, args.out):
-            print(FORCE_NOTE)
+        overwrote = args.force and not args.dry_run and room_ldtk.existing_room_files(args.repo, rid, args.out)
         written = room_ldtk.build_room(args.repo, rid, out_dir=args.out, force=args.force, dry_run=args.dry_run,
                                        kit=kit, rooms_dir=rooms_dir)
+        if overwrote:
+            print(FORCE_NOTE)                          # 빌드가 거절되면 찍지 않는다(덮어쓴 것이 없다)
     except room_ldtk.RoomBuildError as e:
         _room_problems(e.problems)
         return 1

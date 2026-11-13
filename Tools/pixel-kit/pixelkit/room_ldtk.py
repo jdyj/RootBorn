@@ -93,7 +93,7 @@ def _allocate(old_slots: dict, wanted: List[str]) -> Dict[str, dict]:
 
 def _read_sheet(out: Path):
     """(자리 표, 그림, 방 값). 둘 다 없으면 ({}, None, {}). 하나만 있거나 못 읽거나 이 도구의 시트가 아니면 RoomError.
-    방 값은 자리 표의 wall·floor·face_height 중 있는 것(작업 2가 쓴 표에는 없다)."""
+    방 값은 자리 표의 wall·floor·face_height 중 있는 것(방 값을 남기기 전에 만든 옛 표에는 없다)."""
     table_file, png_file = out / SLOTS_NAME, out / TILES_NAME
     if not table_file.exists() and not png_file.exists():
         return {}, None, {}
@@ -254,6 +254,7 @@ def build_room(repo_root, room_id: str, out_dir=None, force: bool = False, dry_r
     """평면 `<rooms_dir>/<room_id>.json`에서 방을 쓴다. 쓴(dry_run이면 쓸) 파일의 저장소 뿌리 기준 경로를 돌려준다.
 
     평면이나 그림에 문제가 있으면 RoomBuildError, 읽을 수 없거나 덮어쓰게 되면(force 없이) 저장소 밖이면 RoomError.
+    force여도 있는 파일이 이 방의 것이 아니면(게임의 maps.json, 다른 방, 방이 아닌 같은 이름 .ldtk) RoomError.
     kit이 없으면 저장소의 art/kit을 읽는다. 알림(room-wall-thin)은 막지 않는다(알리는 것은 명령이 check_grid로 한다)."""
     root = Path(repo_root).resolve()
     rooms = Path(rooms_dir) if rooms_dir is not None else root / DEFAULT_ROOMS_DIR
@@ -290,16 +291,41 @@ def build_room(repo_root, room_id: str, out_dir=None, force: bool = False, dry_r
     existing = [n for n in names.values() if (out / n).exists()]
     if existing and not force:
         raise RoomError(f"{out}에 이미 {', '.join(existing)}가 있다(덮어쓰려면 --force)")
+    ldtk_rel = (out / names["ldtk"]).relative_to(root).as_posix()
+    _check_overwritable(out, names["ldtk"], ldtk_rel)
     png, table, slots, height = _sheet(out, wanted, tiles, {"wall": room.wall, "floor": room.floor, "face_height": room.face_height})
 
     level_name = map_id(room.id)
-    ldtk_rel = (out / names["ldtk"]).relative_to(root).as_posix()
     ldtk = dump(_ldtk(room, grid, keys, slots, height, level_name))
     maps = dump(_maps(room, root, ldtk_rel, level_name, len(grid)))
     files = [(out / names["ldtk"], ldtk), (out / TILES_NAME, png), (out / SLOTS_NAME, table), (out / MAPS_NAME, maps)]
     if dry_run:
         return [p.relative_to(root).as_posix() for p, data in files if not _same(p, data)]
     return write_all(root, files)
+
+
+def _check_overwritable(out: Path, ldtk_name: str, ldtk_rel: str) -> None:
+    """이미 있는 파일이 이 방의 것인지 본다. 아니면 --force여도 RoomError(게임의 맵 목록·다른 맵을 지키려는 것).
+
+    maps.json은 맵이 하나이고 그 ldtk가 이 방의 <id>.ldtk라야 하고, <id>.ldtk는 방 모양(Collision·Wall·Ground 층)이라야 한다.
+    tiles.png와 자리 표가 함께 있는지는 _read_sheet가 본다."""
+    maps_file, ldtk_file = out / MAPS_NAME, out / ldtk_name
+    if maps_file.exists():
+        try:
+            maps = loads_with_comments(maps_file.read_text(encoding="utf-8"))["maps"]
+            ok = isinstance(maps, list) and len(maps) == 1 and maps[0].get("ldtk") == ldtk_rel
+        except (OSError, ValueError, KeyError, TypeError, AttributeError):
+            ok = False
+        if not ok:
+            raise RoomError(f"{maps_file}가 이 방의 맵 목록(맵 하나, ldtk {ldtk_rel})이 아니라 --force여도 덮어쓰지 않는다 — "
+                            f"--out을 이 방만의 폴더로 준다")
+    if ldtk_file.exists():
+        try:
+            shape = _room_shape(ldtk_file, _read_ldtk(ldtk_file))
+        except RoomError:
+            shape = []
+        if isinstance(shape, list):
+            raise RoomError(f"{ldtk_file}가 room build가 만든 방(Collision·Wall·Ground 층)이 아니라 --force여도 덮어쓰지 않는다")
 
 
 def _same(path: Path, data: bytes) -> bool:
@@ -352,6 +378,11 @@ def _room_shape(path: Path, doc):
     bad = [n for n, _ in ROOM_LAYERS if layers[n].get("__gridSize") != CELL]
     if bad:
         return _not_a_room(path, f"칸 크기가 {CELL}이 아닌 층: {', '.join(bad)}")
+    bad = [n for n in ART_LAYERS if (layers[n].get("__cWid"), layers[n].get("__cHei")) != (w, h)]
+    if bad:
+        return _not_a_room(path, f"Collision({w}x{h}칸)과 크기가 다른 층: {', '.join(bad)}")
+    if (level.get("pxWid"), level.get("pxHei")) != (w * CELL, h * CELL):
+        return _not_a_room(path, f"레벨 크기 {level.get('pxWid')}x{level.get('pxHei')}px가 Collision({w}x{h}칸)과 다르다")
     grid = [list(csv[y * w:(y + 1) * w]) for y in range(h)]
     return level, layers, grid
 
@@ -455,7 +486,7 @@ def repaint_room(ldtk_path, dry_run: bool = False, kit: Optional[Kit] = None) ->
     """Collision 층을 읽어 Wall·Ground 층의 gridTiles와 tiles.png·tiles.slots.json만 다시 쓴다.
 
     문서의 나머지(다른 층, 엔티티, 필드, 모르는 키, 키 순서)는 읽은 그대로 다시 쓴다(들여쓰기는 이 도구의 것이 된다).
-    타일셋 정의는 pxWid·pxHei만 시트에 맞춘다. 벽 모양·바닥·face_height는 같은 폴더의 자리 표에서 읽는다(build가 남긴다).
+    타일셋 정의는 pxWid·pxHei(있으면 __cWid·__cHei도)만 시트에 맞춘다. 벽 모양·바닥·face_height는 같은 폴더의 자리 표에서 읽는다(build가 남긴다).
     필요한 층이 없거나(room-not-a-room) 칠한 칸에 막는 문제가 있으면 RoomBuildError — 아무것도 쓰지 않는다.
     쓴(dry_run이면 쓸) 파일 이름(LDtk 파일이 든 폴더 기준)을 돌려준다. 바꿀 것이 없으면 빈 목록."""
     path = Path(ldtk_path).resolve()
@@ -497,7 +528,9 @@ def repaint_room(ldtk_path, dry_run: bool = False, kit: Optional[Kit] = None) ->
         if not _same_tiles(layers[name].get("gridTiles"), new):
             layers[name]["gridTiles"] = new          # 있는 키의 값만 바꾼다(키 자리는 그대로)
             changed = True
-    for k, v in (("pxWid", CELL * SHEET_WIDTH_CELLS), ("pxHei", height)):
+    size = [("pxWid", CELL * SHEET_WIDTH_CELLS), ("pxHei", height)]
+    size += [(k, v // CELL) for k, v in (("__cWid", CELL * SHEET_WIDTH_CELLS), ("__cHei", height)) if k in tileset]
+    for k, v in size:                                    # __cWid·__cHei는 편집기가 저장한 문서에만 있다
         if tileset.get(k) != v:
             tileset[k] = v
             changed = True

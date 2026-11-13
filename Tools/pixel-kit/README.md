@@ -249,7 +249,7 @@ if/switch로 종류를 닫지 않는다.
 ```
 
 - `plan`: 글자 줄. `#` 벽, `.` 바닥, 빈칸 밖. 줄 길이가 다르거나 모르는 글자가 있으면 문제다(조용히 채우지 않는다). `doors`(선택)에 적은 글자는 바닥 + 문이다 — 그 칸에 `Door` 엔티티가 놓이고 필드 `Where`에 값이 들어간다. `face_height`(선택, 기본 2). `spawn`은 칸 [x, y].
-- `wall`은 벽 모양 이름, `floor`는 키트의 32x32 바닥 타일 명세 id(지금 나무 바닥 명세는 없어 `bakery.tile.floor`).
+- `wall`은 벽 모양 이름, `floor`는 키트의 32x32 타일 명세 id(`kind: tile`이고 32x32로 그려지는 명세면 받는다. 나무 바닥 명세는 아직 없어 본보기는 `bakery.tile.floor`).
 
 `room check <id>`가 보는 것(코드): `room-ragged-plan`, `room-unknown-char`, `room-open-edge`(바닥이 맵 가장자리나 밖 칸에 닿음),
 `room-unreachable-floor`(도착 지점에서 걸어 닿지 못하는 바닥, 덩어리마다 하나), `room-spawn-in-wall`, `room-door-in-wall`,
@@ -267,6 +267,7 @@ if/switch로 종류를 닫지 않는다.
 - 맵 id = 방 id에서 점·하이픈을 지우고 낱말 첫 글자를 대문자로(`test.two-rooms` → `TestTwoRooms`).
 - 칸 → 층: 벽(1)은 `Wall` 층 타일, 바닥(2)은 `Ground` 층 타일, 밖(0)은 타일 없음. 같은 격자가 `Collision`의 `intGridCsv`(행 우선, 왼쪽 위부터)다. 그림과 충돌이 한 격자에서 나온다.
 - 이미 있는 방 파일(넷 중 하나라도)이 있으면 `--force` 없이는 거절(끝 코드 2). `--force`는 같은 평면이면 같은 바이트를 쓴다. `--dry-run`은 쓸 파일만 찍는다.
+- **`--force`여도 남의 파일은 덮지 않는다**(끝 코드 2, 아무것도 쓰지 않음): 있는 `maps.json`이 맵 하나이고 그 `ldtk`가 이 방의 `<id>.ldtk`가 아니거나(예: `--out game/world` — 게임 전체의 맵 목록), 있는 `<id>.ldtk`가 방 모양(`Collision`·`Wall`·`Ground` 층)이 아니거나(예: `--out Assets/LDtk/House`에 방 id `house`), `tiles.png`·`tiles.slots.json` 중 하나만 있으면 거절한다. 자기 방을 `--force`로 다시 만드는 것은 된다.
 - **`--force`는 평면에서 통째로 다시 만든다.** LDtk에서 손으로 고친 것(다시 칠한 `Collision` 칸, 놓은 가구, 고친 문)은 지워진다(덮을 때 한 줄 알림을 찍는다). LDtk에서 손을 댄 뒤에는 `--force`가 아니라 `room repaint`를 쓴다.
 - 평면에 문 글자가 있으면 알림 `room-door-unregistered`를 찍는다(쓰기는 막지 않는다): 만든 `maps.json`의 `doors`가 비어 있어 게임에서 그 문은 열리지 않는다. `doors`에 그 `Where` 값(소문자, `-`는 공백)의 목적지 맵·도착 지점을 손으로 적는다.
 - 쓰기는 모든 파일을 임시 파일에 먼저 쓴 뒤 바꿔친다. 같은 입력이면 같은 바이트, LF.
@@ -276,9 +277,10 @@ if/switch로 종류를 닫지 않는다.
 
 `room build`로 만든 방을 LDtk 편집기에서 열어 `Collision` 층(1 벽, 2 바닥, 0 밖)을 다시 칠하고 저장한 뒤
 `room repaint <그 .ldtk 경로>`를 부르면 벽 그림이 칠한 칸을 따른다.
+**편집기에 파일이 열린 채로 `repaint`하지 않는다** — 편집기가 나중에 저장할 때 옛 벽 그림으로 덮는다. 편집기에서 저장하고 닫은 뒤 부르거나, 부른 뒤 편집기에서 파일을 다시 불러온다.
 
 - **바꾸는 것**: 레벨의 `Wall`·`Ground` 층 인스턴스의 `gridTiles`(칠한 칸에서 `room_tiles.classify`로 다시 고른다), 타일셋 정의의
-  `pxWid`·`pxHei`(시트가 커졌을 때), `tiles.png`·`tiles.slots.json`(새 열쇠만 덧붙인다 — 이미 있는 타일의 자리 `t`·`src`는 그대로).
+  `pxWid`·`pxHei`와 편집기가 저장한 문서에 있으면 `__cWid`·`__cHei`(시트가 커졌을 때), `tiles.png`·`tiles.slots.json`(새 열쇠만 덧붙인다 — 이미 있는 타일의 자리 `t`·`src`는 그대로).
 - **그대로 두는 것**: 그 밖의 전부 — 머리말(편집기가 쓴 `app: LDtk` 등), 모르는 키, 키 순서, 다른 층(`Collision`, `Door`, `Furniture`)과
   엔티티·필드, 층 인스턴스의 다른 키(`autoLayerTiles`, `seed` …), 타일셋의 다른 키, `maps.json`. JSON 값으로 그대로 다시 쓴다
   (들여쓰기·줄바꿈만 이 도구의 모양이 된다). 타일 목록이 순서만 다르면 바뀐 것으로 치지 않는다.
@@ -286,9 +288,9 @@ if/switch로 종류를 닫지 않는다.
 - 벽 모양·바닥·`face_height`는 같은 폴더의 `tiles.slots.json`에서, 도착 지점은 `maps.json`(레벨 이름이 같은 맵의 첫 도착 지점)에서,
   문은 `Door` 엔티티(`maps.json`의 `doorEntity`·`doorField`, 기본 `Door`·`Where`)에서 읽는다.
 - **거절(아무것도 쓰지 않는다)**: 레벨이 하나가 아니거나 `Collision`(IntGrid)·`Wall`(Tiles)·`Ground`(Tiles) 층이 없거나 종류가 다르거나
-  칸 크기가 32가 아니거나 `Wall`·`Ground`가 `tiles.png` 타일셋을 쓰지 않으면 `room-not-a-room`(끝 코드 1). 머리말로는 판별하지 않는다.
+  칸 크기가 32가 아니거나 `Wall`·`Ground` 층이나 레벨(`pxWid`·`pxHei`)의 크기가 `Collision`과 다르거나 `Wall`·`Ground`가 `tiles.png` 타일셋을 쓰지 않으면 `room-not-a-room`(끝 코드 1). 머리말로는 판별하지 않는다.
   칠한 칸에 막는 문제(닿지 못하는 바닥, 열린 가장자리, 모르는 값, 벽 안의 도착 지점·문)가 있으면 그 문제(끝 코드 1).
-  자리 표에 `wall`·`floor`·`face_height`가 없거나(작업 2 때 만든 방) `maps.json`이 없으면 끝 코드 2 — `room build --force`로 다시 만든다.
+  자리 표에 `wall`·`floor`·`face_height`가 없거나(자리 표에 방 값이 없는 옛 방) `maps.json`이 없으면 끝 코드 2 — `room build --force`로 다시 만든다.
 - 두 번 부르면 두 번째는 "바꿀 것 없음". `--dry-run`은 쓸 파일만 찍는다. 쓴 뒤에 알림(얇은 벽, 표에 없는 문)을 찍는다.
 
 `room check <.ldtk 경로>`는 쓰지 않고 본다: `room-not-a-room`, 평면 검사와 같은 코드(위 절), `room-door-unregistered`(**알림**: `Door`

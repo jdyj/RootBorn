@@ -287,6 +287,54 @@ class RefusalTests(RoomBase):
             with self.assertRaises(RoomError):
                 self.build(out_dir=other)
 
+    def test_force_refuses_an_out_dir_holding_the_game_map_list(self):
+        self.real_plan()
+        maps = self.root / "game/world/maps.json"
+        before = maps.read_bytes()
+        with self.assertRaises(RoomError) as e:
+            self.build(out_dir=self.root / "game/world", force=True)
+        self.assertIn("maps.json", str(e.exception))
+        self.assertEqual(maps.read_bytes(), before)
+        self.assertEqual(sorted(p.name for p in (self.root / "game/world").iterdir()), ["maps.json"])
+
+    def test_force_refuses_another_rooms_folder(self):
+        self.small_plan("t.other")
+        self.build("t.other")
+        self.real_plan()
+        before = self.snapshot("t.other")
+        with self.assertRaises(RoomError):
+            self.build(out_dir=self.out("t.other"), force=True)
+        self.assertEqual(self.snapshot("t.other"), before)
+
+    def test_force_refuses_an_ldtk_of_the_same_name_that_is_not_a_room(self):
+        game_map = ROOT / "Assets/LDtk/House/house.ldtk"
+        folder = self.root / "Assets/LDtk/House"
+        folder.mkdir(parents=True)
+        shutil.copyfile(game_map, folder / "house.ldtk")
+        self.small_plan("house")
+        with self.assertRaises(RoomError) as e:
+            self.build("house", out_dir=folder, force=True)
+        self.assertIn("house.ldtk", str(e.exception))
+        self.assertEqual((folder / "house.ldtk").read_bytes(), game_map.read_bytes())
+        self.assertEqual(sorted(p.name for p in folder.iterdir()), ["house.ldtk"])
+
+    def test_force_refuses_a_tile_sheet_without_its_slots_table(self):
+        self.real_plan()
+        self.out().mkdir(parents=True)
+        Image.new("RGBA", (512, 32)).save(self.out() / "tiles.png")
+        before = self.snapshot()
+        with self.assertRaises(RoomError):
+            self.build(force=True)
+        self.assertEqual(self.snapshot(), before)
+
+    def test_force_rebuilds_its_own_room_in_an_explicit_out_dir(self):
+        self.real_plan()
+        folder = self.root / "rooms-elsewhere"
+        self.build(out_dir=folder)
+        before = {p.name: p.read_bytes() for p in folder.iterdir()}
+        self.assertEqual(self.build(out_dir=folder, force=True), [])
+        self.assertEqual({p.name: p.read_bytes() for p in folder.iterdir()}, before)
+
     def test_missing_walker_source_is_an_error_and_writes_nothing(self):
         self.real_plan()
         (self.root / "game/world/maps.json").write_text('{"maps": []}', encoding="utf-8")
@@ -413,6 +461,15 @@ class CliTests(CliBase):
         warn = [line for line in out.splitlines() if line.startswith("알림") and "--force" in line]
         self.assertEqual(len(warn), 1, out)
         self.assertIn("room repaint", warn[0])
+        # 쓰지 않으면(--dry-run) 알리지 않는다
+        code, out, _ = self.run_kit("build", "test.two-rooms", "--force", "--dry-run")
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("room repaint", out)
+
+    def test_force_note_is_not_printed_when_the_build_is_refused(self):
+        code, out, err = self.run_kit("build", "test.two-rooms", "--force", "--out", str(self.root / "game/world"))
+        self.assertEqual(code, 2, out + err)
+        self.assertNotIn("room repaint", out)
 
 
 FIXTURE = HERE / "fixtures" / "room-saved-by-editor.ldtk"
@@ -427,7 +484,9 @@ def _strip_art(doc):
             if li["__identifier"] in ("Wall", "Ground"):
                 li["gridTiles"] = None
     for ts in doc["defs"]["tilesets"]:
-        ts["pxWid"] = ts["pxHei"] = None
+        for k in ("pxWid", "pxHei", "__cWid", "__cHei"):
+            if k in ts:
+                ts[k] = None
     return doc
 
 
@@ -512,7 +571,28 @@ class RepaintTests(RoomBase):
                 self.assertEqual(new.crop(box).tobytes(), old.crop(box).tobytes(), k)
             ts = self.doc()["defs"]["tilesets"][0]
             self.assertEqual((ts["pxWid"], ts["pxHei"]), new.size)
+            self.assertEqual((ts["__cWid"], ts["__cHei"]), (new.width // 32, new.height // 32))
         self.assertEqual((table["wall"], table["floor"], table["face_height"]), ("paper", "bakery.tile.floor", 2))
+
+    def test_tileset_cell_count_follows_a_sheet_that_grows(self):
+        # 타일 종류가 적은 평면으로 시트를 한 줄(32px)만 만든 뒤, 편집기에서 칠한 큰 방을 repaint해 시트를 키운다
+        for p in self.out().iterdir():
+            p.unlink()
+        self.small_plan(RID)
+        self.build()
+        with Image.open(self.out() / "tiles.png") as im:
+            old_h = im.height
+        doc = json.loads(FIXTURE.read_text("utf-8"))
+        ts = doc["defs"]["tilesets"][0]
+        ts["pxHei"], ts["__cHei"] = old_h, old_h // 32                 # 편집기가 그 작은 시트로 저장한 모양
+        self.ldtk_path.write_text(json.dumps(doc, indent="	"), encoding="utf-8")
+        repaint_room(self.ldtk_path)
+        with Image.open(self.out() / "tiles.png") as im:
+            new_w, new_h = im.size
+        self.assertGreater(new_h, old_h)
+        ts = self.doc()["defs"]["tilesets"][0]
+        self.assertEqual((ts["pxWid"], ts["pxHei"], ts["__cWid"], ts["__cHei"]), (new_w, new_h, new_w // 32, new_h // 32))
+        self.assertNotIn("room-art-mismatch", self.codes())
 
     def test_second_repaint_has_nothing_to_change(self):
         repaint_room(self.ldtk_path)
@@ -571,6 +651,30 @@ class RepaintTests(RoomBase):
         _layer(doc, "Wall")["__type"] = "IntGrid"                        # 이름은 있어도 종류가 다르다
         self.ldtk_path.write_text(json.dumps(doc), encoding="utf-8")
         self.assertEqual([p.code for p in check_room(self.ldtk_path)], ["room-not-a-room"])
+
+    def test_layers_whose_size_differs_from_collision_are_refused(self):
+        def wall_wider(doc):
+            _layer(doc, "Wall")["__cWid"] += 1
+
+        def ground_taller(doc):
+            _layer(doc, "Ground")["__cHei"] += 1
+
+        def level_wider(doc):
+            _level(doc)["pxWid"] += 32
+
+        def level_taller(doc):
+            _level(doc)["pxHei"] -= 32
+
+        for change in (wall_wider, ground_taller, level_wider, level_taller):
+            doc = json.loads(FIXTURE.read_text("utf-8"))
+            change(doc)
+            self.ldtk_path.write_text(json.dumps(doc), encoding="utf-8")
+            before = self.snapshot()
+            self.assertEqual([p.code for p in check_room(self.ldtk_path)], ["room-not-a-room"], change.__name__)
+            with self.assertRaises(RoomBuildError) as e:
+                repaint_room(self.ldtk_path, dry_run=True)
+            self.assertEqual([p.code for p in e.exception.problems], ["room-not-a-room"], change.__name__)
+            self.assertEqual(self.snapshot(), before, change.__name__)
 
     def test_a_painted_problem_refuses_and_writes_nothing(self):
         doc = self.doc()
@@ -649,6 +753,22 @@ class RepaintCliTests(CliBase):
         self.assertIn("room-not-a-room", out)
         self.assertEqual(self.run_kit("repaint", str(path.with_name("nope.ldtk")))[0], 2)
         self.assertEqual(self.run_kit("repaint")[0], 2)
+
+
+class RealGameMapsAreNotRoomsTests(unittest.TestCase):
+    """저장소의 실제 게임 맵·시험 맵을 repaint가 방으로 잘못 알고 고치지 않는다(읽기만, dry-run)."""
+
+    def test_repaint_refuses_every_real_game_map(self):
+        groups = {"Assets/LDtk/**/*.ldtk": sorted(ROOT.glob("Assets/LDtk/**/*.ldtk")),
+                  "art/world/test/*.ldtk": sorted(ROOT.glob("art/world/test/*.ldtk"))}
+        for pattern, paths in groups.items():
+            self.assertTrue(paths, f"{pattern}에 맞는 파일이 없다(저장소를 못 찾았거나 맵이 옮겨졌다)")
+        for path in (p for paths in groups.values() for p in paths):
+            before = path.read_bytes()
+            with self.assertRaises(RoomBuildError, msg=str(path)) as e:
+                repaint_room(path, dry_run=True, kit=KIT)
+            self.assertEqual([p.code for p in e.exception.problems], ["room-not-a-room"], str(path))
+            self.assertEqual(path.read_bytes(), before, str(path))
 
 
 if __name__ == "__main__":
