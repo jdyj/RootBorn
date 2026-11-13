@@ -6,6 +6,7 @@ from pathlib import Path
 from pixelkit.canvas import Canvas
 from pixelkit.recipes import (Ctx, RecipeError, get_maker, load_recipes, register,
                               render, render_with_spec)
+from pixelkit.parts import load_parts
 from pixelkit.style import Style
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -25,6 +26,15 @@ def _box(spec, ctx):
 def _huge(spec, ctx):
     cv = Canvas(40, 70)
     cv.rect(0, 0, 40, 70, ctx.style.color("bread.1"))
+    return cv
+
+
+@register("test.loaf-top")
+def _loaf_top(spec, ctx):
+    cv = Canvas(20, 30)
+    cv.rect(0, 4, 20, 26, ctx.style.color("bread.1"))
+    loaf = ctx.part("bread.loaf")
+    cv.paste(loaf, 2, 0)  # 그림 윗가장자리에 붙인다
     return cv
 
 
@@ -106,6 +116,14 @@ class RecipeTests(unittest.TestCase):
         self.assertNotIn("_layout", r)
         self.assertIn("_layout", spec)
         self.assertIsInstance(cv, Canvas)
+
+    def test_pre_outlined_part_at_top_edge_gets_one_pixel_outline(self):
+        parts = load_parts(str(ROOT / "art" / "kit" / "parts"), STYLE)
+        cv = render(recipe(part="test.loaf-top"), Ctx(STYLE, parts))
+        for y in range(cv.h - 1):
+            for x in range(cv.w - 1):
+                block = [cv.get(x + i, y + j) for i in (0, 1) for j in (0, 1)]
+                self.assertFalse(all(c == STYLE.outline for c in block), f"{x},{y} 외곽선이 두껍다")
 
     def test_oversize_clips_without_error(self):
         cv = render(recipe(part="test.huge"), ctx())

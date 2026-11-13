@@ -62,13 +62,14 @@ class Canvas:
                     self.px(xx, yy, (int(r * k), int(g * k), int(b * k), a))
 
     def outline(self, rgba: RGBA) -> "Canvas":
-        """투명이고 4방향 이웃 중 불투명이 있는 칸을 모아 한꺼번에 칠한다(대각선은 채우지 않는다)."""
+        """투명이고 4방향 이웃 중 외곽선색이 아닌 불투명이 있는 칸을 모아 한꺼번에 칠한다(대각선은 채우지 않는다).
+        이미 외곽선색인 칸 옆에는 두 번째 고리를 만들지 않는다(미리 외곽선을 입힌 부품을 붙여도 1px)."""
         todo = []
         for y in range(self.h):
             for x in range(self.w):
                 if self.get(x, y)[3]:
                     continue
-                if any(self.get(x + dx, y + dy)[3] for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
+                if any(self.get(x + dx, y + dy)[3] and self.get(x + dx, y + dy) != rgba for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
                     todo.append((x, y))
         for x, y in todo:
             self.px(x, y, rgba)
