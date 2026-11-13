@@ -1,0 +1,34 @@
+[
+  {"id": "bakery.scene.interior", "kind": "scene", "size": [9, 5],
+   "fill": [
+     {"tile": "bakery.tile.wall", "rect": [0, 0, 9, 2], "wall": true},
+     {"tile": "bakery.tile.floor", "rect": [0, 2, 9, 3]}
+   ],
+   "hang": [
+     {"part": "prop.clock", "at": [176, 14]},
+     {"id": "bakery.menu-board", "at": [210, 12]}
+   ],
+   "place": [
+     {"id": "bakery.shelf", "cell": [0, 2], "dx": 4},
+     {"id": "bakery.shelf", "state": "sweets", "cell": [2, 2], "dx": 8},
+     {"id": "bakery.trolley", "cell": [4, 2], "dx": 12},
+     {"id": "bakery.glass-case", "cell": [6, 2]},
+     {"id": "bakery.counter", "cell": [5, 4], "dy": -3},
+     {"part": "prop.basket", "cell": [3, 4], "dx": 8, "dy": -8},
+     {"part": "prop.plant", "cell": [8, 3], "dx": 8},
+     {"part": "prop.plant", "cell": [0, 4], "dx": 6, "dy": -4},
+     {"id": "bakery.rug", "cell": [1, 4], "dy": -6, "flat": true}
+   ]},
+  {"id": "bakery.scene.street", "kind": "scene", "size": [7, 8],
+   "fill": [
+     {"tile": "bakery.tile.grass", "rect": [0, 0, 7, 6]},
+     {"tile": "bakery.tile.sidewalk", "rect": [0, 6, 7, 2]}
+   ],
+   "hang": [],
+   "place": [
+     {"id": "bakery.exterior.flat", "cell": [1, 6], "dy": -11},
+     {"part": "prop.plant", "cell": [0, 6], "dx": 14, "dy": -10},
+     {"part": "prop.plant", "cell": [6, 6], "dx": 6, "dy": -10},
+     {"id": "bakery.a-board", "cell": [2, 7], "dx": 30, "dy": -10}
+   ]}
+]

@@ -1,0 +1,150 @@
+[
+  { "id": "bread.loaf", "anchor": "bottom-center",
+    "rows": [
+      "...LHHHL...",
+      "..LHHLLLC..",
+      ".LHLDLLDLC.",
+      "LHLLLDDLLCC",
+      "LLLDLLLDLCC",
+      "LLLLLLLLCCD",
+      ".CCCCCCCCD.",
+      "..DDDDDDD.."
+    ],
+    "keys": { "H": "bread.3", "L": "bread.2", "C": "bread.1", "D": "bread.0" } },
+
+  { "id": "bread.baguette", "anchor": "bottom-center",
+    "rows": [
+      "..LHLLHLLHLL..",
+      ".LHDLLDLLDLLC.",
+      "LLLDLLDLLDLLCC",
+      ".CCCCCCCCCCCD.",
+      "..DDDDDDDDDD.."
+    ],
+    "keys": { "H": "bread.3", "L": "bread.2", "C": "bread.1", "D": "bread.0" } },
+
+  { "id": "bread.croissant", "anchor": "bottom-center",
+    "rows": [
+      "....LHHL....",
+      "..LLHLDLLL..",
+      ".LHLDLLDLLC.",
+      "LHLDLCCLDLCC",
+      "LLCD....DCCD",
+      "CD........DC"
+    ],
+    "keys": { "H": "bread.3", "L": "bread.2", "C": "bread.1", "D": "bread.0" } },
+
+  { "id": "bread.donut", "anchor": "bottom-center",
+    "rows": [
+      "..PQQQP..",
+      ".PQWPPYP.",
+      "PQPPPPPWP",
+      "PPPKKKPPP",
+      "CYPPPPPPC",
+      ".CCCCCCC.",
+      "..DDDDD.."
+    ],
+    "keys": { "P": "icing.pink.0", "Q": "icing.pink.1", "W": "cream.2", "Y": "yellow.1",
+              "K": "choco.0", "C": "bread.1", "D": "bread.0" } },
+
+  { "id": "bread.muffin", "anchor": "bottom-center",
+    "rows": [
+      "..KkkK..",
+      ".KkWkKK.",
+      "KkKKKWKK",
+      "KWKKKKKK",
+      ".EeEeEe.",
+      ".EeEeEe.",
+      "..eEeE.."
+    ],
+    "keys": { "K": "choco.0", "k": "choco.1", "W": "cream.2", "E": "paper.1", "e": "paper.0" } },
+
+  { "id": "bread.cake", "anchor": "bottom-center",
+    "rows": [
+      "...R.....",
+      "..RRW....",
+      "WWWWWWWWW",
+      "QPPPPPPPP",
+      "EEEEEEEEe",
+      "QPPPPPPPP",
+      "EEEEEEEEe",
+      "CCCCCCCCD"
+    ],
+    "keys": { "R": "red.1", "W": "cream.2", "P": "icing.pink.0", "Q": "icing.pink.1",
+              "E": "paper.1", "e": "paper.0", "C": "bread.1", "D": "bread.0" } },
+
+  { "id": "bread.sandwich", "anchor": "bottom-center",
+    "rows": [
+      ".LLLLLLLL.",
+      "LHHHHHHHHL",
+      "GhGGRGGhGR",
+      "WWYYWWYYWW",
+      "LLLLLLLLLC",
+      ".CCCCCCCD."
+    ],
+    "keys": { "H": "bread.3", "L": "bread.2", "C": "bread.1", "D": "bread.0",
+              "G": "leaf.1", "h": "leaf.2", "R": "red.1", "W": "cream.2", "Y": "yellow.1" } },
+
+  { "id": "bread.pretzel", "anchor": "bottom-center",
+    "rows": [
+      ".HLL..LLH.",
+      "HW.CLLC.WC",
+      "L...LC...C",
+      "L..LCCL..C",
+      "LC.L..L.CC",
+      ".LLC..CLC.",
+      "..LW..CC..",
+      "...CCCD..."
+    ],
+    "keys": { "H": "bread.3", "L": "bread.2", "C": "bread.1", "D": "bread.0", "W": "cream.2" } },
+
+  { "id": "bread.bun", "anchor": "bottom-center",
+    "rows": [
+      "...HHHH...",
+      ".LHHLLHLL.",
+      "LHWLLWLLWC",
+      "LLCLWCLWCC",
+      "LWLLCLLCCC",
+      ".CCCCCCCD.",
+      "..DDDDDD.."
+    ],
+    "keys": { "H": "bread.3", "L": "bread.2", "C": "bread.1", "D": "bread.0", "W": "cream.2" } },
+
+  { "id": "bread.toast", "anchor": "bottom-center",
+    "rows": [
+      "..DCCCCD..",
+      ".DCLLLLCD.",
+      "DCEEEEEECD",
+      "DCEEFEEECD",
+      ".DCEEEECD.",
+      ".DCEEEFCD.",
+      ".DCEEEECD.",
+      ".DCFEEECD.",
+      ".DCEEEECD.",
+      ".DDDDDDDD."
+    ],
+    "keys": { "L": "bread.2", "C": "bread.1", "D": "bread.0", "E": "cream.1", "F": "cream.0" } },
+
+  { "id": "bread.roll", "anchor": "bottom-center",
+    "rows": [
+      "....LHL....",
+      ".LH.HHH.HL.",
+      "LHHDHLLDHHL",
+      "LHLDLLLDLLC",
+      "LLLDLLLDLCC",
+      ".CCCCCCCCC.",
+      "..DDDDDDD.."
+    ],
+    "keys": { "H": "bread.3", "L": "bread.2", "C": "bread.1", "D": "bread.0" } },
+
+  { "id": "bread.pie", "anchor": "bottom-center",
+    "rows": [
+      ".HLHLHLHLHL.",
+      "HLRLRLRLRLLC",
+      "LRLRLRLRLRCC",
+      "HLLLLLLLLLCC",
+      ".mMMMMMMMMm.",
+      "..mmmmmmmm.."
+    ],
+    "keys": { "H": "bread.3", "L": "bread.2", "C": "bread.1", "R": "red.0",
+              "M": "metal.2", "m": "metal.0" } }
+]

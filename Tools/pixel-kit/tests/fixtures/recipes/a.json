@@ -1,0 +1,2 @@
+[{"id": "t.box", "kind": "prop", "part": "test.box", "art_cells": [1, 2], "color": "bread.1",
+  "states": {"empty": {"color": "bread.2"}}}]

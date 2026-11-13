@@ -1,0 +1,25 @@
+[
+  {"id": "bakery.exterior.flat", "kind": "building", "part": "building.shop", "site": [5, 3], "pixels": [160, 192],
+   "roof": {"type": "flat", "items": [
+     {"part": "roof.skylight", "at": [21, 34]},
+     {"part": "roof.stair-house", "at": [95, 24]},
+     {"part": "roof.ac-unit", "at": [68, 62]}
+   ]},
+   "wall": {"material": "brick"},
+   "door": {"at_x": 17, "color": "roof.teal", "step": "stone"},
+   "window": {"at_x": 79, "width": 68, "slots": [["bread.loaf", "bread.muffin"], ["bread.donut", "bread.cake"]]},
+   "awning": {"colors": ["awning.red", "awning.cream"]},
+   "sign": {"at_x": 15, "icons": ["bread.pretzel", "bread.croissant", "bread.bun"]},
+   "lamp": {"at_x": 63}},
+  {"id": "bakery.exterior.pitched", "kind": "building", "part": "building.shop", "site": [5, 3], "pixels": [160, 192],
+   "roof": {"type": "pitched", "items": [
+     {"part": "roof.dormer", "at": [22, 39]},
+     {"part": "roof.chimney", "at": [109, 5]}
+   ]},
+   "wall": {"material": "brick"},
+   "door": {"at_x": 17, "color": "roof.slate", "step": "stone"},
+   "window": {"at_x": 79, "width": 68, "slots": [["bread.loaf", "bread.muffin"], ["bread.donut", "bread.cake"]]},
+   "awning": {"colors": ["awning.red", "awning.cream"]},
+   "sign": {"at_x": 15, "icons": ["bread.pretzel", "bread.croissant", "bread.bun"]},
+   "lamp": {"at_x": 63}}
+]

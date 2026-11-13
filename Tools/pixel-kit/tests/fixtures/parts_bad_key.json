@@ -1,0 +1,5 @@
+[
+  { "id": "test.bad", "anchor": "bottom-center",
+    "rows": [ ".AB.", "ABBA" ],
+    "keys": { "A": "bread.1", "B": "nope.zero.9" } }
+]

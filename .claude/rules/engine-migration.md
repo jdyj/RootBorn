@@ -44,7 +44,7 @@
 
 사용자 지시(2026-11-11): 진행하면서 스킬로 만들 수 있는 것은 스킬로 만들어 Claude와 Codex 양쪽에 저장한다. 같은 내용을 `.claude/skills/<이름>/SKILL.md`와 `.agents/skills/<이름>/SKILL.md`에 둔다. 절차가 바뀌면 양쪽을 함께 고치고, 그 절차가 더 쓰이지 않게 되면 양쪽에서 지운다.
 
-지금 있는 것: `parallel-claude-session`(세션 나눠 맡기고 합치기), `host-play-test`(MonoGame 판 화면 테스트), `ui-nine-slice-skin`(UI 그림을 재서 9조각 테마 스킨으로), `save-compat-change`(세이브에 닿는 것을 고칠 때 하위호환·상위호환), `balance-sim-run`(수치 균형 시뮬레이터를 고치고 원격에서 돌려 표를 견주기).
+지금 있는 것: `parallel-claude-session`(세션 나눠 맡기고 합치기), `host-play-test`(MonoGame 판 화면 테스트), `ui-nine-slice-skin`(UI 그림을 재서 9조각 테마 스킨으로), `save-compat-change`(세이브에 닿는 것을 고칠 때 하위호환·상위호환), `balance-sim-run`(수치 균형 시뮬레이터를 고치고 원격에서 돌려 표를 견주기), `pixel-kit`(건물·타일·가구 그림을 부품과 규칙으로 그리기).
 
 ## 그림은 갈아 끼울 수 있게
 

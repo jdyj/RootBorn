@@ -1,0 +1,21 @@
+[
+ {
+  "id": "demo.tile.a",
+  "kind": "tile",
+  "part": "tile.paver",
+  "art_cells": [
+   1,
+   1
+  ],
+  "colors": [
+   "paver"
+  ],
+  "states": {
+   "warm": {
+    "colors": [
+     "brick"
+    ]
+   }
+  }
+ }
+]
