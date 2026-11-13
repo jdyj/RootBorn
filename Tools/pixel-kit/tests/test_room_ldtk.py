@@ -14,6 +14,7 @@ from pathlib import Path
 from PIL import Image
 
 from pixelkit.cli import load_kit
+from pixelkit.ldtk_common import loads_with_comments
 from pixelkit.makers import RecipeError
 from pixelkit.room_ldtk import RoomBuildError, build_room, check_room, map_id, repaint_room
 from pixelkit.room_plan import RoomError, cells, is_warning, load_room
@@ -468,7 +469,8 @@ class CliTests(CliBase):
         self.assertEqual(self.snapshot(), before)
 
     def test_check_and_build_take_wall_doors_and_build_rows(self):
-        doc = {"id": "t.house", **BASE, "spawn": [2, 4], "plan": DOOR_PLAN, "wallDoors": {"W": "town"}, "build": DOOR_BUILD}
+        doc = {"id": "t.house", **BASE, "spawn": [2, 4], "plan": DOOR_PLAN, "wallDoors": {"W": "town"}, "build": DOOR_BUILD,
+               "frameId": "t.house.v1"}
         (self.kit_dir / "rooms" / "t.house.json").write_text(json.dumps(doc), encoding="utf-8")
         code, out, _ = self.run_kit("check", "t.house")
         self.assertEqual((code, out.strip()), (0, "t.house: 문제 없음"))
@@ -1050,6 +1052,7 @@ def add_build_and_wall_door(doc, spawn):
 
 class BuildLayerTests(RoomBase):
     def door_room(self, rid="t.house", **extra):
+        extra.setdefault("frameId", f"{rid}.v1")
         self.small_plan(rid, DOOR_PLAN, wallDoors={"W": "town"}, build=DOOR_BUILD, **extra)
         self.build(rid)
         return self.read(rid)
@@ -1095,9 +1098,22 @@ class BuildLayerTests(RoomBase):
                      for e in self.layers(ldtk)["Door"]["entityInstances"])
         self.assertEqual(got, [(3, 4, "shop"), (3, 6, "town")])
 
-    def test_maps_json_has_build_frame_layer(self):
+    def test_maps_json_has_build_frame_layer_and_frame_id(self):
         _, maps, _ = self.door_room()
-        self.assertEqual(maps["maps"][0]["build"], {"frameLayer": "Build"})
+        self.assertEqual(maps["maps"][0]["build"], {"frameLayer": "Build", "frameId": "t.house.v1"})
+
+    def test_build_rows_without_frame_id_write_nothing(self):
+        self.small_plan("t.noframe", DOOR_PLAN, wallDoors={"W": "town"}, build=DOOR_BUILD)
+        with self.assertRaises(RoomBuildError) as e:
+            self.build("t.noframe")
+        self.assertEqual([p.code for p in e.exception.problems], ["room-build-no-frame-id"])
+        self.assertFalse(self.out("t.noframe").exists())
+
+    def test_frame_id_without_build_rows_writes_nothing(self):
+        self.small_plan("t.frameonly", DOOR_PLAN, wallDoors={"W": "town"}, frameId="t.v1")
+        with self.assertRaises(RoomBuildError) as e:
+            self.build("t.frameonly")
+        self.assertEqual([p.code for p in e.exception.problems], ["room-frame-id-without-build"])
 
     def test_built_room_is_clean_and_same_bytes_twice(self):
         self.door_room()
@@ -1109,7 +1125,7 @@ class BuildLayerTests(RoomBase):
     def test_a_bad_build_plan_writes_nothing(self):
         bad = list(DOOR_BUILD)
         bad[4] = "01111110"                                  # 도착 지점이 지을 수 있음
-        self.small_plan("t.bad", DOOR_PLAN, wallDoors={"W": "town"}, build=bad)
+        self.small_plan("t.bad", DOOR_PLAN, wallDoors={"W": "town"}, build=bad, frameId="t.bad.v1")
         with self.assertRaises(RoomBuildError) as e:
             self.build("t.bad")
         self.assertEqual([p.code for p in e.exception.problems], ["room-build-fixed"])
@@ -1150,7 +1166,7 @@ class BuildLayerTests(RoomBase):
 
     def test_check_room_build_layer_problems(self):
         plan = DOOR_PLAN + ["        "]                    # 맨 아래에 밖 칸 한 줄
-        self.small_plan("t.out", plan, wallDoors={"W": "town"}, build=DOOR_BUILD + ["00000000"])
+        self.small_plan("t.out", plan, wallDoors={"W": "town"}, build=DOOR_BUILD + ["00000000"], frameId="t.out.v1")
         self.build("t.out")
         path = self.out("t.out") / "t.out.ldtk"
         good = json.loads(path.read_text("utf-8"))
@@ -1191,7 +1207,23 @@ class HouseRoomTests(unittest.TestCase):
         sx, sy = self.room.spawn
         self.assertEqual(entry["spawns"], {"house-entry": [sx * 32 + 16, sy * 32 + 16]})
         self.assertEqual(entry["collision"], {"rule": "interior-auto"})
-        self.assertEqual(entry["build"], {"frameLayer": "Build"})
+        self.assertEqual(entry["build"], {"frameLayer": "Build", "frameId": self.room.frame_id})
+
+    def test_game_map_list_uses_the_frame_id_of_the_plan_that_made_its_ldtk(self):
+        """게임 맵 목록(game/world/maps.json)의 짓는 집마다 build.frameId가 그 LDtk를 만든 평면의 frameId와 같다.
+        맵을 다시 그려 판 이름을 올리면 평면과 게임 맵 목록을 함께 고친다(한쪽만 고치면 여기서 깨진다)."""
+        game = loads_with_comments((ROOT / "game" / "world" / "maps.json").read_text("utf-8"))
+        built = [m for m in game["maps"] if "build" in m]
+        self.assertTrue(built, "게임 맵 목록에 짓는 집(build)이 없다")
+        plans = {}
+        for path in sorted((REAL_KIT / "rooms").glob("*.json")):
+            room = load_room(path)
+            plans[f"art/world/rooms/{room.id}/{room.id}.ldtk"] = room
+        for entry in built:
+            with self.subTest(map=entry["id"]):
+                room = plans.get(entry["ldtk"])
+                self.assertIsNotNone(room, f"{entry['ldtk']}를 만든 평면이 art/kit/rooms에 없다")
+                self.assertEqual(entry["build"]["frameId"], room.frame_id)
 
     def test_layers_follow_the_plan_collision_build_and_the_wall_door(self):
         level = self.ldtk["levels"][0]

@@ -453,7 +453,7 @@ def cmd_room(args, kit: Kit) -> int:
                 raise UsageError(f"{rid}: 등록되지 않은 벽 모양 {room.wall}. 있는 것: {', '.join(wall_styles())}")
             room_ldtk.floor_spec(kit, room.floor)                              # 없으면 RoomError(받는 바닥 목록)
             check_top(room.top)                                                # 없으면 RecipeError(고를 수 있는 띠 색 목록)
-            problems = room_plan.check_grid(room.grid, room.spawn, room.doors, room.face_height, room.wall_doors, room.build)
+            problems = room_plan.plan_problems(room)
             code = _room_problems(problems)
             if not problems:
                 print(f"{rid}: 문제 없음")

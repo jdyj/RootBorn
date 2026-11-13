@@ -4,6 +4,7 @@
  "floor": "floor.plank",
  "top": "wall.top.cream",
  "face_height": 2,
+ "frameId": "house.v2",
  "spawn": [
   14,
   15

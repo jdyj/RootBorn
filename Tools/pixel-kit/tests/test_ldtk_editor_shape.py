@@ -138,7 +138,7 @@ class RoomShapeTests(RoomBase):
                 self.assertEqual(ldtk_schema.all_problems(json.loads(path.read_text("utf-8"))), [], str(path))
 
     def test_room_with_a_build_layer_and_a_wall_door_has_every_required_and_editor_key(self):
-        self.small_plan("t.house", DOOR_PLAN, wallDoors={"W": "town"}, build=DOOR_BUILD)
+        self.small_plan("t.house", DOOR_PLAN, wallDoors={"W": "town"}, build=DOOR_BUILD, frameId="t.house.v1")
         self.build("t.house")
         doc = json.loads((self.out("t.house") / "t.house.ldtk").read_text("utf-8"))
         self.assertEqual(ldtk_schema.all_problems(doc), [])

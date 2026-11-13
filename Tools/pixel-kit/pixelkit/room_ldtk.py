@@ -26,7 +26,7 @@ from . import ldtk_common as ldtk
 from .ldtk_common import dump, loads_with_comments, walkers, write_all
 from .lint import Problem
 from .makers import RecipeError
-from .room_plan import Room, RoomError, cells, check_grid, is_warning, load_room
+from .room_plan import Room, RoomError, cells, check_grid, is_warning, load_room, plan_problems
 from .room_tiles import FLOOR, WALL, RoomTiles, check_top, draw_tile, lint_room_tile, plan_tiles, wall_band, wall_top
 
 DEFAULT_ROOT = "art/world/rooms"           # 저장소 뿌리 기준. 방마다 <id> 폴더
@@ -262,7 +262,7 @@ def _maps(room: Room, root: Path, ldtk_rel: str, level_name: str, rows: int) -> 
              "collision": {"rule": "interior-auto"}, "doors": {},
              "spawns": {spawn_name(level_name): [sx * CELL + CELL // 2, sy * CELL + CELL // 2]}}
     if room.build is not None:
-        entry["build"] = {"frameLayer": "Build"}             # 지을 수 있는 집이라는 성질(game/world/README.md)
+        entry["build"] = {"frameLayer": "Build", "frameId": room.frame_id}     # 지을 수 있는 집이라는 성질(game/world/README.md)
     return {**walkers(root, RoomError), "maps": [entry]}
 
 
@@ -293,8 +293,7 @@ def build_room(repo_root, room_id: str, out_dir=None, force: bool = False, dry_r
     except ValueError:
         raise RoomError(f"출력 폴더 {out}가 저장소 {root} 밖이다(maps.json의 ldtk는 저장소 뿌리 기준 경로라야 한다)") from None
 
-    blocking = [p for p in check_grid(room.grid, room.spawn, room.doors, room.face_height, room.wall_doors, room.build)
-                if not is_warning(p)]
+    blocking = [p for p in plan_problems(room) if not is_warning(p)]
     if blocking:
         raise RoomBuildError(blocking)
     kit = kit if kit is not None else load_kit(str(root / "art" / "kit"))

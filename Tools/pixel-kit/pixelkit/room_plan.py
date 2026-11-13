@@ -3,6 +3,7 @@
 평면 글자: `#` 벽, `.` 바닥, 빈칸 밖. `doors`에 적은 글자는 바닥 + 문(그 칸에 Door 엔티티가 놓인다).
 `wallDoors`에 적은 글자는 벽 + 문(바깥 벽 칸에 다는 현관 문 — 그 칸은 벽으로 남고 Door 엔티티가 놓인다).
 `build`는 평면과 같은 크기의 `0`·`1` 줄(`1` 지을 수 있음, `0` 고정) — 있으면 LDtk에 `Build` 층이 생긴다.
+`frameId`는 `build`가 있는 평면에 필수인 테두리의 판 이름(맵을 다시 그리면 올리는 값) — 방 폴더 maps.json의 `build`에 쓴다.
 검사(check_grid)는 쓰기 전에 문제를 알린다. 쓰기는 room_ldtk가 맡는다.
 """
 import json
@@ -36,6 +37,7 @@ class Room:
     top: Optional[str] = None              # 띠 색 줄(없으면 벽 모양의 기본)
     wall_doors: Dict[Tuple[int, int], str] = field(default_factory=dict)    # 벽 칸 (x, y) → 목적지 값. 그 칸은 grid에서 벽('#')이다
     build: Optional[List[str]] = None      # 지을 수 있는 칸 줄('1' 지을 수 있음, '0' 고정). 없으면 Build 층을 만들지 않는다
+    frame_id: Optional[str] = None         # 테두리의 판 이름(build가 있을 때 필수 — plan_problems). 게임 maps.json의 build.frameId
 
 
 def load_room(path) -> Room:
@@ -69,6 +71,7 @@ def load_room(path) -> Room:
     top = need("top", lambda v: isinstance(v, str) and v, "띠 색 줄 이름") if "top" in doc else None
     raw_wall_doors = need("wallDoors", lambda v: isinstance(v, dict), "글자 → 목적지 값 표") if "wallDoors" in doc else {}
     build = need("build", lambda v: isinstance(v, list) and v and all(isinstance(r, str) for r in v), "0·1 글자 줄의 배열") if "build" in doc else None
+    frame_id = need("frameId", lambda v: isinstance(v, str) and v.strip() != "", "비어 있지 않은 판 이름 글") if "frameId" in doc else None
 
     for letter, dest in raw_doors.items():
         if len(letter) != 1 or letter in CHARS:
@@ -98,7 +101,7 @@ def load_room(path) -> Room:
     missing = sorted((set(raw_doors) | set(raw_wall_doors)) - used)
     if missing:
         raise RoomError(f"{path}: 평면에 없는 문 글자 {missing}")
-    return Room(rid, wall, floor, lines, (spawn[0], spawn[1]), doors, face_height, top, wall_doors, build)
+    return Room(rid, wall, floor, lines, (spawn[0], spawn[1]), doors, face_height, top, wall_doors, build, frame_id)
 
 
 def cells(grid: Sequence) -> List[List[int]]:
@@ -226,6 +229,19 @@ def _check_build(build: Sequence[str], g, spawn, doors, wall_doors, at) -> List[
     for (x, y), what in sorted(fixed.items(), key=lambda kv: (kv[0][1], kv[0][0])):
         if 0 <= y < h and 0 <= x < w and build[y][x] == "1":
             problems.append(Problem("room-build-fixed", f"{what} ({x}, {y})이 지을 수 있음(1)이다 — 고정(0)이어야 한다", x, y))
+    return problems
+
+
+def plan_problems(room: Room) -> List[Problem]:
+    """평면 하나의 검사: check_grid + frameId 약속(build가 있으면 frameId가 있어야 하고, build가 없으면 frameId를 쓰지 않는다).
+    게임은 맵 항목의 build에 frameId를 요구하고 기본값으로 메우지 않는다(game/Rootborn.World/WorldCatalog.cs ParseBuild)."""
+    problems = check_grid(room.grid, room.spawn, room.doors, room.face_height, room.wall_doors, room.build)
+    if room.build is not None and room.frame_id is None:
+        problems.append(Problem("room-build-no-frame-id",
+                                "build가 있는 평면에 frameId(테두리의 판 이름, 예: \"<id>.v1\")가 없다 — 게임이 그 방의 maps.json을 거절한다"))
+    if room.build is None and room.frame_id is not None:
+        problems.append(Problem("room-frame-id-without-build",
+                                f"frameId {room.frame_id!r}는 build가 있는 평면에만 쓴다(지을 수 있는 칸이 없는 방에는 판 이름이 없다)"))
     return problems
 
 

@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from pixelkit.room_plan import RoomError, check_grid, is_warning, load_room
+from pixelkit.room_plan import RoomError, check_grid, is_warning, load_room, plan_problems
 
 ROOT = Path(__file__).resolve().parents[3]
 REAL_PLAN = ROOT / "art" / "kit" / "rooms" / "test.two-rooms.json"
@@ -238,6 +238,50 @@ class WallDoorAndBuildTests(unittest.TestCase):
         room = load_room(REAL_PLAN)
         self.assertEqual((room.wall_doors, room.build), ({}, None))
         self.assertEqual(check_grid(room.grid, room.spawn, room.doors, room.face_height), [])
+
+
+class FrameIdTests(unittest.TestCase):
+    """평면의 frameId(테두리의 판 이름): build가 있으면 필수, 없으면 쓰지 않는다. 게임(WorldCatalog.ParseBuild)이 맵 항목의
+    build에 frameId를 요구하므로 키트가 만든 방 폴더 maps.json도 그 값을 가져야 게임에서 열린다."""
+
+    def setUp(self):
+        t = tempfile.TemporaryDirectory()
+        self.addCleanup(t.cleanup)
+        self.dir = Path(t.name)
+
+    def load(self, **extra):
+        doc = {"id": "r.x", "wall": "paper", "floor": "bakery.tile.floor", "spawn": [2, 4], "plan": GOOD}
+        doc.update(extra)
+        path = self.dir / "r.x.json"
+        path.write_text(json.dumps(doc), encoding="utf-8")
+        return load_room(path)
+
+    def test_frame_id_is_read(self):
+        self.assertEqual(self.load(build=BUILD_OK, frameId="r.v1").frame_id, "r.v1")
+        self.assertIsNone(self.load().frame_id)
+
+    def test_frame_id_must_be_a_non_empty_string(self):
+        for bad in ("", 3, None, ["r.v1"]):
+            with self.subTest(bad=bad), self.assertRaises(RoomError):
+                self.load(build=BUILD_OK, frameId=bad)
+
+    def test_build_without_frame_id_is_a_blocking_problem(self):
+        got = plan_problems(self.load(build=BUILD_OK))
+        self.assertEqual(codes(got), ["room-build-no-frame-id"])
+        self.assertFalse(is_warning(got[0]))
+        self.assertEqual(plan_problems(self.load(build=BUILD_OK, frameId="r.v1")), [])
+
+    def test_frame_id_without_build_is_a_blocking_problem(self):
+        got = plan_problems(self.load(frameId="r.v1"))
+        self.assertEqual(codes(got), ["room-frame-id-without-build"])
+        self.assertFalse(is_warning(got[0]))
+        self.assertEqual(plan_problems(self.load()), [])
+
+    def test_house_plan_has_a_frame_id(self):
+        room = load_room(HOUSE_PLAN)
+        self.assertIsNotNone(room.build)
+        self.assertTrue(room.frame_id)
+        self.assertEqual(plan_problems(room), [])
 
 
 class HousePlanTests(unittest.TestCase):

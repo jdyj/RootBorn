@@ -385,18 +385,20 @@ if/switch로 종류를 닫지 않는다.
  "plan": ["####…", "#..D…"], "doors": {"D": "town"}, "face_height": 2}
 ```
 
-바깥 벽에 현관 문을 달고 지을 수 있는 칸을 정하는 평면(집 짓기용)은 키 둘을 더한다 — 둘 다 선택이고, 없는 평면은 지금과 똑같이 읽힌다:
+바깥 벽에 현관 문을 달고 지을 수 있는 칸을 정하는 평면(집 짓기용)은 키 셋을 더한다 — 모두 선택이고(`frameId`는 `build`와 함께만), 없는 평면은 지금과 똑같이 읽힌다:
 
 ```json
 {"id": "house.main", "wall": "paper", "floor": "bakery.tile.floor", "spawn": [3, 4],
  "plan": ["########", "########", "########", "#......#", "#......#", "#......#", "###W####"],
  "wallDoors": {"W": "town"},
- "build": ["00000000", "00000000", "00000000", "01111110", "01011110", "01101110", "00000000"]}
+ "build": ["00000000", "00000000", "00000000", "01111110", "01011110", "01101110", "00000000"],
+ "frameId": "house.main.v1"}
 ```
 
 - `plan`: 글자 줄. `#` 벽, `.` 바닥, 빈칸 밖. 줄 길이가 다르거나 모르는 글자가 있으면 문제다(조용히 채우지 않는다). `doors`(선택)에 적은 글자는 바닥 + 문이다 — 그 칸에 `Door` 엔티티가 놓이고 필드 `Where`에 값이 들어간다. `face_height`(선택, 기본 2). `spawn`은 칸 [x, y].
 - `wallDoors`(선택): `{글자: Where 값}`. 그 글자 칸은 **벽(`#`)으로 남고** 그 칸 `(x*32, y*32)`에 32x32 `Door` 엔티티가 놓인다 — 바깥 벽에 다는 현관 문이다(`doors`의 글자는 바닥이 되므로 맨 아랫줄에 두면 `room-open-edge`에 걸린다). 글자는 `doors`의 글자와 겹치지 않는다. 그 문의 상하좌우 넷 중 도착 지점에서 걸어 닿는 바닥이 있어야 한다.
-- `build`(선택): 평면과 같은 크기의 `0`·`1` 줄. `1` 지을 수 있음, `0` 고정. 있으면 LDtk에 `Build` 층이 생기고 `maps.json`의 맵 항목에 `"build": {"frameLayer": "Build"}`가 든다. 밖 칸, 도착 지점 칸, 문 칸, 벽 문과 그 둘레 바닥 칸은 `0`이어야 한다. 벽·그 밖의 바닥 칸은 자유.
+- `build`(선택): 평면과 같은 크기의 `0`·`1` 줄. `1` 지을 수 있음, `0` 고정. 있으면 LDtk에 `Build` 층이 생기고 `maps.json`의 맵 항목에 `"build": {"frameLayer": "Build", "frameId": <frameId>}`가 든다. 밖 칸, 도착 지점 칸, 문 칸, 벽 문과 그 둘레 바닥 칸은 `0`이어야 한다. 벽·그 밖의 바닥 칸은 자유.
+- `frameId`(`build`가 있으면 필수, 없으면 쓰지 않는다): 테두리의 판 이름(글). 맵을 다시 그려 테두리가 바뀌면 올리는 값이고 `maps.json`의 `build.frameId`에 그대로 든다 — 게임(`WorldCatalog`)은 이 값이 없는 `build`를 거절하고 기본값으로 메우지 않는다. 게임 맵 목록(`game/world/maps.json`)의 짓는 집 항목도 같은 값이어야 한다(`test_room_ldtk.HouseRoomTests`가 본다 — 하나를 올리면 둘 다 고친다).
 - `wall`은 벽 모양 이름, `floor`는 키트의 한 칸 타일 명세 id(`kind: tile`이고 `art_cells` `[1, 1]`), `top`(선택)은 띠 색 줄 이름(위 절).
   모르는 이름은 아는 이름 목록과 함께 끝 코드 2. 본보기 평면은 `paper` + `bakery.tile.floor`, `top` 없음.
 
@@ -404,6 +406,7 @@ if/switch로 종류를 닫지 않는다.
 `room-unreachable-floor`(도착 지점에서 걸어 닿지 못하는 바닥, 덩어리마다 하나), `room-spawn-in-wall`, `room-door-in-wall`,
 `room-door-no-floor`(벽 문 둘레에 도착 지점에서 닿는 바닥이 없음), `room-build-ragged`(`build` 줄 수·길이가 평면과 다름),
 `room-build-char`(`build`에 `0`·`1`이 아닌 글자), `room-build-fixed`(고정이어야 할 칸이 `1`),
+`room-build-no-frame-id`(`build`가 있는데 `frameId`가 없음), `room-frame-id-without-build`(`build` 없이 `frameId`만 있음),
 `room-wall-thin`(**알림**: 정면 `face_height`칸 + 윗면 1칸보다 얇은 가로 벽. 찍기만 하고 끝 코드는 0이며 쓰기를 막지 않는다).
 알림이 아닌 문제가 있으면 끝 코드 1이고 `build`는 아무것도 쓰지 않는다. 평면에 쓰인 벽 모양·바닥 명세가 키트에 없으면 끝 코드 2.
 
@@ -413,7 +416,7 @@ if/switch로 종류를 닫지 않는다.
 |---|---|
 | `<id>.ldtk` | 레벨 `<맵 id>`(32px 칸). 층은 위에서 아래: `Collision`(IntGrid, 1 `wall` / 2 `floor` / 0 밖, 층 정의 `displayOpacity` 0.35 — LDtk 편집기에서 색 칸이 벽·바닥 그림을 덮지 않고 비쳐 보인다. 게임은 이 값을 읽지 않는다), `Build`(IntGrid, 평면에 `build`가 있을 때만 `Collision` 바로 다음, 1 `buildable` / 0 고정(칠하지 않은 칸), `displayOpacity` 0.25, 32px), `Door`(Entities, 엔티티 정의 `Door` + 문자열 필드 `Where` — 바닥 칸의 문과 벽 칸의 문(`wallDoors`) 모두), `Furniture`(Entities, 층 정의 태그 `ysort`, 비어 있음), `Wall`(Tiles, 벽 칸마다), `Ground`(Tiles, 바닥 칸마다 + 띠 옆으로 바닥이 비치는 벽 칸마다). 타일셋 하나(`tiles.png`, 32). 타일 인스턴스는 `px`, `src`, `f`, `t`(시트의 타일 번호, 행 우선 16칸), `d`(칸 번호), `a` |
 | `tiles.png`, `tiles.slots.json` | 쓰인 타일만 모은 시트와 열쇠 → 자리 표(`room_tiles`의 열쇠). **덧붙이기만**: 한 줄 16칸 폭 고정, 새 열쇠는 마지막 번호 다음부터. 이미 있는 타일의 자리(`t`, `src`)는 시트가 커져도 바뀌지 않는다. 자리 표에는 그 시트를 그린 `wall`·`floor`·`face_height`·`band`(윗면 띠 두께, 벽 모양의 값)와 평면에 적었을 때만 `top`(띠 색)도 적는다(`repaint`가 여기서 읽는다 — LDtk 편집기는 이 파일을 건드리지 않는다). 시트가 다른 `wall`·`floor`·`band`·띠 색으로 그려져 있으면 `--force`도 거절한다(한 시트에 두 모양이 섞이지 않게). `band`가 없는 옛 표(윗면 32px 시절)에는 덧붙인다 — 옛 윗면 열쇠 `cap:<수>`는 다시 나오지 않아 쓰이지 않고 남는다(깨끗한 시트를 원하면 `tiles.png`·`tiles.slots.json`을 지우고 만든다) |
-| `maps.json` | 이 맵 하나. `collision.rule`은 `interior-auto`, `spawns`는 도착 지점 하나 `<맵 id 소문자>-entry`(예: `testtworooms-entry`, 맵 사이에서 이름이 겹치지 않게)에 도착 칸 가운데 픽셀, `viewCells`는 레벨 높이(칸)와 13 중 작은 것, `build`는 평면에 `build`가 있을 때만 `{"frameLayer": "Build"}`, `doors`는 비어 있다(문의 목적지 표는 손으로 채운다). `walker`·`npcWalker`는 `game/world/maps.json`에서 옮긴다. 게임에는 `--maps`로 준다 |
+| `maps.json` | 이 맵 하나. `collision.rule`은 `interior-auto`, `spawns`는 도착 지점 하나 `<맵 id 소문자>-entry`(예: `testtworooms-entry`, 맵 사이에서 이름이 겹치지 않게)에 도착 칸 가운데 픽셀, `viewCells`는 레벨 높이(칸)와 13 중 작은 것, `build`는 평면에 `build`가 있을 때만 `{"frameLayer": "Build", "frameId": <평면의 frameId>}`, `doors`는 비어 있다(문의 목적지 표는 손으로 채운다). `walker`·`npcWalker`는 `game/world/maps.json`에서 옮긴다. 게임에는 `--maps`로 준다 |
 
 - 맵 id = 방 id에서 점·하이픈을 지우고 낱말 첫 글자를 대문자로(`test.two-rooms` → `TestTwoRooms`).
 - 칸 → 층: 벽(1)은 `Wall` 층 타일(띠·정면이 아닌 자리는 투명), 바닥(2)은 `Ground` 층 타일, 띠 옆으로 바닥이 비치는 벽 칸은 `Ground` 층에도 바닥 타일, 밖(0)은 타일 없음(`room_tiles.plan_tiles`). 같은 격자가 `Collision`의 `intGridCsv`(행 우선, 왼쪽 위부터)다. 그림과 충돌이 한 격자에서 나온다. 벽 칸에 `Ground` 타일이 있어도 `Wall` 타일이 함께 있으므로 `interior-auto`가 막고, 칠한 `Collision` 1이 언제나 막는다(`game/world/README.md` 3절).
@@ -518,6 +521,8 @@ if/switch로 종류를 닫지 않는다.
 | `room-build-ragged` | 방의 `build` 줄 수·길이(LDtk에서는 `Build` 층 크기·값 개수)가 평면(`Collision`)과 다르다 |
 | `room-build-char` | 방의 `build`에 `0`·`1`이 아닌 글자(LDtk에서는 값)가 있다 |
 | `room-build-fixed` | 밖 칸, 도착 지점, 문 칸, 벽 문과 그 둘레 바닥 칸이 지을 수 있음(`1`)이다 |
+| `room-build-no-frame-id` | 방 평면에 `build`가 있는데 `frameId`(테두리의 판 이름)가 없다 — 게임이 그 방의 `maps.json`을 거절한다 |
+| `room-frame-id-without-build` | 방 평면에 `build` 없이 `frameId`만 있다 |
 | `slot-overlap` | 칸에 넣은 물건이 서로 너무 겹친다(좁은 쪽 폭의 1/3 넘게) |
 | `slot-clipped` | 칸에 넣은 물건이 칸·판·계산대보다 크다 |
 | `roof-overlap` | 지붕 위 물건끼리 겹치거나 난간·지붕 끝에 걸치거나 간판과 겹친다 |
