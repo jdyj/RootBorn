@@ -275,6 +275,7 @@ namespace Rootborn.Simulation
             PlayAtlas atlas = _atlas;
             PlayAction a;
             if ((a = _minigame.Choose(view, random)) != null) return a;
+            if (view.HasTracked) _fruitless = 0;
             if (!view.HasTracked && view.InWorld && (a = TrackSomething(view, memory)) != null) return a;
             if (view.HasTracked && view.TrackedObjectivesDone && (a = DayEndRoutine.Choose(view, atlas)) != null) return a;
 
@@ -302,6 +303,8 @@ namespace Rootborn.Simulation
             if (atlas != null && view.InWorld)
                 foreach (PlayAction hinted in HintedKindsElsewhere(view, atlas))
                     return hinted;
+            // 추적할 것이 없으면 마을 일(장소·알바·연습·탐색·시설·NPC)을 한다. 추적 중이면 안 해 본 것.
+            if (!view.HasTracked && (a = _untracked.Choose(view, memory, random)) != null) return a;
             return Pick.Best(view.Actions, x => -memory.Tried(x.Key) - (x.Category == "key" ? 5 : 0), random);
         }
 
@@ -323,8 +326,24 @@ namespace Rootborn.Simulation
             }
         }
 
-        private int _journalRow, _exploreUntil = -1, _steps;
+        private int _journalRow, _exploreUntil = -1, _steps, _fruitless, _retryDay = int.MinValue;
         private bool _pressedTrack;
+
+        /// <summary>수첩을 이만큼 훑어도 추적이 안 생기면 그날은 다시 열지 않는다(다음 날 다시 본다).</summary>
+        public const int FruitlessPassesPerDay = 2;
+
+        /// <summary>추적할 것이 없을 때 하는 일: 학교 밖 정책과 같은 마을 일에 NPC 대화를 더한 것(대화로 새 체인을 받을 수 있다).</summary>
+        private readonly PreferKindsPolicy _untracked = new PreferKindsPolicy(PlayPolicyCatalog.MainChain, UntrackedKinds);
+
+        public static readonly string[] UntrackedKinds = Concat(PlayPolicyCatalog.OffSchoolKinds, "npc");
+
+        private static string[] Concat(string[] a, string b)
+        {
+            var all = new string[a.Length + 1];
+            a.CopyTo(all, 0);
+            all[a.Length] = b;
+            return all;
+        }
 
         /// <summary>
         /// 추적할 것을 고른다: Tab → 퀘스트 분류 → 줄 하나 → 추적. 추적해도 목표가 생기지 않으면(아직 받지 않은 체인) 다음 줄. 줄을 다 해 봤으면
@@ -333,6 +352,7 @@ namespace Rootborn.Simulation
         private PlayAction TrackSomething(PlayView view, PlayMemory memory)
         {
             _steps++;
+            if (view.Day < _retryDay) return null;
             if (_steps < _exploreUntil) return null;
             if (_pressedTrack) { _pressedTrack = false; _journalRow++; memory.Flags.Remove("journal.quests"); memory.Flags.Remove("journal.row"); }
             if (!view.OpenScreens.Contains(ScreenCatalog.ObjectiveJournal)) return view.Find("key:" + ScreenKey.Tab);
@@ -344,6 +364,7 @@ namespace Rootborn.Simulation
                 if (r == null)
                 {
                     _journalRow = 0; _exploreUntil = _steps + 25;
+                    if (++_fruitless >= FruitlessPassesPerDay) { _fruitless = 0; _retryDay = view.Day + 1; } // 그날은 다시 열지 않는다
                     memory.Flags.Remove("journal.quests"); memory.Flags.Remove("journal.row");
                     return DayEndRoutine.Close(view);
                 }
