@@ -47,6 +47,8 @@ def _kinds(grid, face_height: int):
     for y, row in enumerate(grid):
         line = []
         for x, v in enumerate(row):
+            if v not in (OUT, WALL, FLOOR) or isinstance(v, bool):
+                raise RecipeError(f"격자 ({x}, {y})의 값 {v!r}은 0(밖)·1(벽)·2(바닥)이 아니다")
             if v == FLOOR:
                 line.append(("floor",))
             elif v == WALL:
@@ -212,9 +214,14 @@ class PlasterWall:
 
 # ---------------------------------------------------------------- 그리기
 
+def _ascii_number(text: str) -> bool:
+    """0-9만으로 된 수인가(isdigit은 '²'를 통과시켜 int()가 ValueError를 낸다)."""
+    return text.isascii() and text.isdecimal()
+
+
 def _parse_face(key: str):
     parts = key.split(":")
-    if len(parts) not in (2, 3) or not parts[1].isdigit() or int(parts[1]) < 1:
+    if len(parts) not in (2, 3) or not _ascii_number(parts[1]) or int(parts[1]) < 1:
         return None
     flags = parts[2] if len(parts) == 3 else ""
     if len(parts) == 3 and not flags:
@@ -289,7 +296,7 @@ def draw_tile(style: Style, key: str, wall: str, floor_spec: dict) -> Canvas:
         return _floor(style, floor_spec, True)
     if isinstance(key, str) and key.startswith("cap:"):
         v = key[4:]
-        if v.isdigit() and int(v) < 256 and normalize_mask(int(v)) == int(v):
+        if _ascii_number(v) and int(v) < 256 and normalize_mask(int(v)) == int(v):
             return _cap(style, look, int(v))
     elif isinstance(key, str) and key.startswith("face:"):
         parsed = _parse_face(key)

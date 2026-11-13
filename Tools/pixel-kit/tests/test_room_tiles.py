@@ -104,6 +104,18 @@ class ClassifyTests(unittest.TestCase):
         self.assertEqual(keys[3], ["floor:shade"] * 3)
         self.assertEqual(keys[4], ["floor"] * 3)
 
+    def test_face_right_under_cap_marks_ceiling_shade(self):
+        keys = classify(grid("###", "###", "###", "..."))
+        self.assertEqual(level(keys[1][1]), 2)
+        self.assertIn("c", keys[1][1].split(":")[2])          # 윗면 바로 아래 정면 → 천장 밑 그늘 표시
+        self.assertEqual(level(keys[2][1]), 1)
+        self.assertNotIn("c", "".join(keys[2][1].split(":")[2:]))   # 아래 정면 타일은 윗면 밑이 아니다
+
+    def test_grid_values_other_than_out_wall_floor_are_errors(self):
+        for bad in (3, -1, 9):
+            with self.subTest(bad=bad), self.assertRaises(RecipeError):
+                classify([[WALL, bad], [FLOOR, FLOOR]])
+
     def test_out_cells_have_no_tile(self):
         keys = classify(grid(" # ", " . ", "   "))
         self.assertIsNone(keys[0][0])
@@ -232,6 +244,17 @@ class DrawTests(unittest.TestCase):
         self.assertTrue(changed)
         self.assertLessEqual(max(changed), 1)
 
+    def test_ceiling_shade_differs_only_at_the_top_rows(self):
+        plain = draw_tile(STYLE, "face:2", "paper", FLOOR_SPEC)
+        shade = draw_tile(STYLE, "face:2:c", "paper", FLOOR_SPEC)
+        changed = {y for y in range(32) for x in range(32) if plain.get(x, y) != shade.get(x, y)}
+        self.assertTrue(changed)
+        self.assertLessEqual(max(changed), 3)        # 맨 위 몇 줄만 다르고 아래는 같다
+        for wall in wall_styles():
+            a = draw_tile(STYLE, "face:2", wall, FLOOR_SPEC)
+            b = draw_tile(STYLE, "face:2:c", wall, FLOOR_SPEC)
+            self.assertTrue(all(a.get(x, y) == b.get(x, y) for y in range(4, 32) for x in range(32)), wall)
+
     def test_lint_catches_transparent_and_off_palette(self):
         from pixelkit.canvas import Canvas
         cv = Canvas(32, 32)
@@ -248,7 +271,7 @@ class DrawTests(unittest.TestCase):
             self.assertIn(name, str(e.exception))
 
     def test_unknown_key_is_recipe_error(self):
-        for key in ("roof", "face:x", "cap:999", "face:0"):
+        for key in ("roof", "face:x", "cap:999", "face:0", "face:²", "face:٢", "cap:²"):
             with self.subTest(key=key), self.assertRaises(RecipeError):
                 draw_tile(STYLE, key, "paper", FLOOR_SPEC)
 
