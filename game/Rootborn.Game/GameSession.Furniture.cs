@@ -98,7 +98,8 @@ namespace Rootborn.Game
         private bool _relocationNoticeTaken;
 
         /// <summary>
-        /// 집을 열 때 놓지 못해 보관한 가구(기록 순서, <see cref="HouseFurnitureLayout.Stored"/>). 집이 열려 있지 않거나 일터면 빈 목록.
+        /// 집 배치를 읽어 둔 뒤(<see cref="EnterHouse"/>나 <see cref="PrepareHouse"/>, 집을 나온 뒤에도)에 놓지 못해 보관한 가구(기록 순서, <see cref="HouseFurnitureLayout.Stored"/>).
+        /// 집 배치를 아직 읽지 않았거나 일터가 열려 있으면 빈 목록. 집 밖(마을)에서 불러도 된다.
         /// 같이 쓰는 집이면 방의 기록 중 보관한 것이다(꺼내기는 아직 안 된다 — <see cref="PlaceStoredFurniture"/>).
         /// </summary>
         public IReadOnlyList<StoredFurniture> StoredFurniture()
