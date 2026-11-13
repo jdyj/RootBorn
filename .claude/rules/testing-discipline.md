@@ -64,7 +64,7 @@ bash Scripts/ci/run-all.sh                 # 자체 시험 + 검사 + dotnet 테
 | NPC-001 | NPC가 일과표대로 다음 자리까지 걸어 도착 | Core `NpcDayPlanTests`, World `NpcRouteContractTests`, Simulation `NpcWalkingTests`, Host `NpcWalkHostTests` |
 | NPC-002 | 자리에 없는 NPC는 만날 수 없다(걷는 중에는 말을 건다) | World `NpcStageTests`, Core `NpcDayPlanTests`, Host `NpcWalkHostTests` |
 | NPC-003 | 같은 시각이면 같은 자리 — 이어 하기·같이 하기 | Core `NpcStayTests`·`NpcDayPlanTests`, World `NpcStageTests`, Simulation `NpcWalkingTests`, Game `NpcTimeTests`, Host `TwoGamesHostTests.TWO_GAMES_NPC_001` |
-| HOUSE-002 | 집 맵 교체 뒤 옛 가구가 옮겨지거나 보관되고 사라지지 않음 | Core `FurnitureRelocationTests`, Game `HouseMoveTests`, Host `HouseMoveHostTests`(보관 분류·알림 화면과 함께 다음 작업) |
+| HOUSE-002 | 집 맵 교체 뒤 옛 가구가 옮겨지거나 보관되고 사라지지 않음 | Core `FurnitureRelocationTests`, Game `HouseMoveTests`, Screens `StoredFurnitureScreenTests`·`HouseMovedNoticeTests`, Host `HouseMoveHostTests` |
 
 - 지금 대응이 없는 id(KNOW-001·002, TOOL-001, NET-001·002, HEIR-001, STATUS-001의 일부)는 게임이 그 영역을 쓰지 않거나 MonoGame 판에 아직 없다. 이유는 `SCENARIOS.md` 2절. 그 영역을 옮기거나 만들 때 테스트를 더하고 이 표에 올린다.
 - 새 메카닉(활동, 선택지, 진로, 관계, 알바, 퀘스트 종류)을 더하면 시나리오 테스트를 하나 이상 더한다. 새 보상 지급 경로는 원칙 2의 다섯 경우를 더한다.
