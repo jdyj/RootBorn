@@ -1,0 +1,98 @@
+using System.Linq;
+using NUnit.Framework;
+using Rootborn.Simulation.Headless;
+
+namespace Rootborn.Simulation.Tests
+{
+    /// <summary>
+    /// 자동 테스트: 같은 행동을 연달아 했는데 보이는 것(관찰)이 그대로면 그 행동을 그날 정책의 후보에서 뺀다. 빼지 않으면(설정 0) 달리는 쪽이
+    /// 그것을 막힘으로 잡는다. 2026-11-13 속도 보고: 학교 밖 정책이 4일째 장소 화면의 같은 줄을 4,947번 눌렀다(PolicyEscape 재현 판).
+    /// </summary>
+    public sealed class RepeatWithoutChangeTests
+    {
+        private static PlayView View(int day, string top, params string[] keys)
+        {
+            var v = new PlayView { InWorld = true, Day = day, Minutes = 600, MapId = "m", TopScreen = top };
+            if (top != null) v.OpenScreens.Add(top);
+            foreach (string k in keys) v.Actions.Add(new PlayAction { Key = k, Category = "row" });
+            return v;
+        }
+
+        [Test]
+        public void TheSameActionWithNoVisibleChange_IsBannedForTheDay_AfterThreeTimes()
+        {
+            var m = new PlayMemory { BanAfter = 3 };
+            for (int i = 0; i < 3; i++)
+            {
+                PlayView v = View(1, "s", "row:a", "row:b");
+                m.See(v);
+                Assert.That(m.Banned("row:a"), Is.False, "아직 " + i + "번");
+                m.Note(v, v.Find("row:a"));
+            }
+            m.See(View(1, "s", "row:a", "row:b"));
+            Assert.That(m.RepeatsWithoutChange, Is.EqualTo(3));
+            Assert.That(m.Banned("row:a"), Is.True);
+            Assert.That(m.Banned("row:b"), Is.False);
+            m.See(View(2, "s", "row:a", "row:b"));
+            Assert.That(m.Banned("row:a"), Is.False, "다음 날에는 다시 해 본다");
+        }
+
+        [Test]
+        public void AVisibleChange_ResetsTheCount()
+        {
+            var m = new PlayMemory { BanAfter = 3 };
+            PlayView v = View(1, "s", "row:a");
+            m.See(v); m.Note(v, v.Find("row:a"));
+            m.See(v); m.Note(v, v.Find("row:a"));
+            PlayView changed = View(1, "s", "row:a", "row:new");
+            m.See(changed); m.Note(changed, changed.Find("row:a"));
+            Assert.That(m.RepeatsWithoutChange, Is.EqualTo(0), "할 수 있는 것이 바뀌었다");
+            m.See(changed);
+            Assert.That(m.RepeatsWithoutChange, Is.EqualTo(1));
+            Assert.That(m.Banned("row:a"), Is.False);
+        }
+
+        [Test]
+        public void ADifferentActionInBetween_ResetsTheCount_AndZeroTurnsBanningOff()
+        {
+            var m = new PlayMemory { BanAfter = 0 };
+            PlayView v = View(1, "s", "row:a", "row:b");
+            for (int i = 0; i < 10; i++) { m.See(v); m.Note(v, v.Find("row:a")); }
+            m.See(v);
+            Assert.That(m.RepeatsWithoutChange, Is.EqualTo(10));
+            Assert.That(m.Banned("row:a"), Is.False, "0이면 빼지 않는다");
+            m.Note(v, v.Find("row:b"));
+            m.See(v);
+            Assert.That(m.RepeatsWithoutChange, Is.EqualTo(1), "다른 행동부터 다시 센다");
+        }
+
+        private static PlayResult OffSchoolToDayFour(int banAfter, string name)
+        {
+            PlayAtlas atlas = FastPlayTests.Atlas;
+            using var body = new HeadlessBody(atlas);
+            var settings = new PlaySettings { Days = 4, StepsPerDay = 5000, WindDownSteps = 120, MaxSteps = 1400, BanRepeatsWithoutChange = banAfter, SameActionStall = 30 };
+            return new PlayRunner(body, PlayPolicyCatalog.Default().Create(PlayPolicyCatalog.OffSchool, atlas), 1, settings, atlas, name).Run();
+        }
+
+        /// <summary>빼지 않으면 달리는 쪽이 "같은 행동을 관찰 변화 없이" 막힘으로 잡는다(400걸음 판정은 활동 기록 수가 늘어 못 잡았다).</summary>
+        [Test]
+        public void WithoutBanning_TheRunnerCatchesTheRepeat()
+        {
+            PlayResult r = OffSchoolToDayFour(0, "repeat-no-ban");
+            Assert.That(r.Failure, Is.Not.Null);
+            Assert.That(r.Failure.What, Does.Contain("같은 행동"));
+        }
+
+        [Test]
+        public void WithBanning_TheOffSchoolPolicyMovesOn()
+        {
+            PlayResult r = OffSchoolToDayFour(3, "repeat-ban");
+            KnownDefects.AssertNoNewFailure(r);
+            int longest = 0, run = 0;
+            string last = null;
+            foreach (PlayStep s in r.Steps.Where(x => !x.Key.StartsWith("wait", System.StringComparison.Ordinal))) { run = s.Key == last ? run + 1 : 1; last = s.Key; if (run > longest) longest = run; }
+            Assert.That(longest, Is.LessThan(30), "연달아 같은 행동이 30번 미만(미니게임 기다리기 빼고 — 시계가 흘러 관찰이 바뀐다)");
+            Assert.That(r.Steps.Last().Day, Is.GreaterThanOrEqualTo(4), "4일째까지 갔다");
+        }
+    }
+}

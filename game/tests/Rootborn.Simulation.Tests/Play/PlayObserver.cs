@@ -59,12 +59,19 @@ namespace Rootborn.Simulation
                 view.Minutes = session.StudentTimeMinutes;
                 ReadTracked(session, view, body);
             }
-            if (body.InWorld) view.MapId = body.Walk.Map.Id;
+            if (body.InWorld)
+            {
+                view.MapId = body.Walk.Map.Id;
+                int size = body.Walk.Map.Grid.CellSize;
+                CellPos cell = CellPos.Containing(body.Walk.Walker.X, body.Walk.Walker.Y, size);
+                view.CellX = cell.X; view.CellY = cell.Y;
+            }
             // 시각과 시간 경고는 HUD 시계가 보이는 것(사람이 보는 것)에서 읽는다.
             if (stack.Find(ScreenCatalog.HudClock) is Rootborn.Screens.Hud.ClockHudScreen clock && clock.IsOpen && clock.Model.HasSession)
             {
                 view.ClockMinutes = clock.Model.Hour * 60 + clock.Model.Minute;
                 view.Alert = clock.Model.Alert;
+                view.Money = clock.Model.Allowance; // HUD 시계 줄에 보이는 돈(없으면 음수)
             }
             ReadMinigame(body, stack, view);
 

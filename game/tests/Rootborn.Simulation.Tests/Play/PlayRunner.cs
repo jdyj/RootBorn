@@ -29,6 +29,10 @@ namespace Rootborn.Simulation
         public int EmptyObservations = 3;
         /// <summary>상태가 전혀 안 바뀐 걸음이 이만큼 이어지면 막힘(할 수 있는 것이 있어도).</summary>
         public int StallSteps = 400;
+        /// <summary>같은 행동을 연달아 이만큼 했는데 보이는 것이 그대로면 그날 정책의 후보에서 뺀다(PlayMemory.BanAfter). 0이면 빼지 않는다.</summary>
+        public int BanRepeatsWithoutChange = 3;
+        /// <summary>같은 행동을 보이는 변화 없이 이만큼 되풀이하면 막힘(빼기가 꺼져 있거나 듣지 않을 때 잡는다).</summary>
+        public int SameActionStall = 30;
         /// <summary>정책이 끝까지 가야 하는 체인(그 체인이 끝나면 멈춘다). 없으면 날 수로만 멈춘다.</summary>
         public string StopWhenChainCompleted;
 
@@ -115,6 +119,7 @@ namespace Rootborn.Simulation
             _random = new Random(seed);
             _pace = pace;
             _result = new PlayResult { Name = name, Policy = policy.Name, Seed = seed };
+            _memory.BanAfter = _settings.BanRepeatsWithoutChange;
             foreach (GameScreen open in _body.Screens.OpenScreens) _result.ScreensOpened.Add(open.Id); // 달리기 전부터 떠 있던 화면(슬롯 선택)
             _body.ScreenOpened += id => _result.ScreensOpened.Add(id);
             _body.Interacted += e => _result.InteractionKinds.Add(e.Kind);
@@ -190,6 +195,9 @@ namespace Rootborn.Simulation
             {
                 PlayView view = _observer.Observe(_body);
                 CheckView(view, step);
+                _memory.See(view);
+                if (_memory.RepeatsWithoutChange >= _settings.SameActionStall)
+                    Fail("막힘: 같은 행동을 보이는 변화 없이 " + _memory.RepeatsWithoutChange + "번 되풀이했다(" + (_result.Steps.Count > 0 ? _result.Steps[_result.Steps.Count - 1].Key : "?") + ")", view);
                 if (view.Day != _day && _body.Session != null)
                 {
                     _result.Notes.Add(view.Day + "일째 시작(걸음 " + step + ", " + view.Minutes + "분)");
@@ -253,7 +261,7 @@ namespace Rootborn.Simulation
 
         private (PlayAction, string) Decide(PlayView view, int step)
         {
-            if (_policy is ReplayPolicy) return (_policy.Choose(view, _memory, _random), _policy.Name);
+            if (_policy is ReplayPolicy) return (_policy.Choose(view, _memory, _random), _policy.Name); // 재생은 기록 그대로(뺀 행동 없음)
             PlayAction a = StartRoutine.Choose(view, _memory);
             if (a != null) return (a, "start");
             if (_pace && view.InWorld && _policy is IStaysUp)
@@ -264,7 +272,7 @@ namespace Rootborn.Simulation
                     a = view.TopScreen != null || view.MovementBlocked ? DayEndRoutine.Close(view) : view.Idle(IdleFrames);
                     if (a != null) return (a, "stay-up");
                 }
-                return (_policy.Choose(view, _memory, _random), _policy.Name);
+                return (PolicyChoose(view), _policy.Name);
             }
             // 하루 마감(잠): 오늘 걸음을 다 썼거나, HUD가 잘 시간이 지났다·지쳤다고 보이거나, 한동안 해 봐도 아무것도 바뀌지 않으면(할 것이 없다)
             // 집으로 걸어가 잔다(흐르는 시간 5단계).
@@ -274,12 +282,19 @@ namespace Rootborn.Simulation
                     : NothingWorks ? "할 것이 없다 — " + NothingWorksSteps + "걸음 동안 바뀐 것 없음" : "걸음 " + view.StepsToday) + ")");
                 if (_windDownFrom < 0) _windDownFrom = step;
                 bool playing = view.OpenScreens.Contains(ScreenCatalog.Minigame) && step - _windDownFrom < _settings.WindDownSteps / 2;
-                if (playing) return (_policy.Choose(view, _memory, _random), _policy.Name); // 하던 미니게임은 마저 한다(닫으면 포기로 정산된다)
+                if (playing) return (PolicyChoose(view), _policy.Name); // 하던 미니게임은 마저 한다(닫으면 포기로 정산된다)
                 if (step - _windDownFrom > _settings.WindDownSteps) Fail("하루를 넘기지 못함: 하루 마감 순서로 " + _settings.WindDownSteps + "걸음 안에 다음 날이 오지 않았다", view);
                 a = DayEndRoutine.Choose(view, _atlas);
                 if (a != null) return (a, "day-end");
             }
-            return (_policy.Choose(view, _memory, _random), _policy.Name);
+            return (PolicyChoose(view), _policy.Name);
+        }
+
+        /// <summary>정책이 고른다. 오늘 보이는 변화 없이 되풀이해 뺀 행동은 후보에서 지운다(PlayMemory.RemoveBanned).</summary>
+        private PlayAction PolicyChoose(PlayView view)
+        {
+            _memory.RemoveBanned(view);
+            return _policy.Choose(view, _memory, _random);
         }
 
         private void Do(PlayAction action, PlayView view)

@@ -33,6 +33,48 @@ namespace Rootborn.Simulation
             if (view.TrackedStep != _step) { _step = view.TrackedStep; _triedThisStep.Clear(); }
             _tried[action.Key] = Tried(action.Key) + 1;
             _triedThisStep[action.Key] = TriedThisStep(action.Key) + 1;
+            if (action.Key != _lastKey) _repeats = 0;
+            _lastKey = action.Key;
+            _lastView = view.Fingerprint();
+            _waiting = true;
+        }
+
+        // ---------- 같은 행동을 했는데 보이는 것이 그대로 ----------
+
+        /// <summary>같은 행동을 연달아 이만큼 했는데 관찰이 그대로면 그날 정책의 후보에서 뺀다. 0이면 빼지 않는다.</summary>
+        public int BanAfter = 3;
+
+        private readonly HashSet<string> _banned = new HashSet<string>(StringComparer.Ordinal);
+        private string _lastKey, _lastView;
+        private bool _waiting;
+        private int _repeats, _day = int.MinValue;
+
+        /// <summary>마지막 행동을 연달아 몇 번 했는데 관찰이 그대로였나(달리는 쪽이 막힘으로 본다).</summary>
+        public int RepeatsWithoutChange => _repeats;
+
+        /// <summary>
+        /// 걸음 앞의 관찰을 본다: 앞 걸음의 행동 뒤에 보이는 것(<see cref="PlayView.Fingerprint"/>)이 그 행동 앞과 같으면 "변화 없이 되풀이"를 센다.
+        /// 날이 바뀌면 뺀 행동을 다시 넣는다.
+        /// </summary>
+        public void See(PlayView view)
+        {
+            if (view.Day != _day) { _day = view.Day; _banned.Clear(); }
+            if (!_waiting) return;
+            _waiting = false;
+            if (view.Fingerprint() == _lastView) _repeats++;
+            else _repeats = 0;
+            if (BanAfter > 0 && _repeats >= BanAfter && _lastKey != null) _banned.Add(_lastKey);
+        }
+
+        /// <summary>오늘 정책의 후보에서 뺀 행동이다.</summary>
+        public bool Banned(string key) => key != null && _banned.Contains(key);
+
+        /// <summary>뺀 행동이 있으면 관찰에서 지운다(모두 빠지면 그날 뺀 것을 되돌린다 — 아무것도 못 하는 것보다 낫다).</summary>
+        public void RemoveBanned(PlayView view)
+        {
+            if (_banned.Count == 0) return;
+            if (!view.Actions.Exists(a => !_banned.Contains(a.Key))) { _banned.Clear(); return; }
+            view.Actions.RemoveAll(a => _banned.Contains(a.Key));
         }
 
         /// <summary>그 단계 안에서 고른 추적 행동(목표 줄을 누른 뒤 추적 단추처럼 순서가 있는 일)을 기억한다.</summary>

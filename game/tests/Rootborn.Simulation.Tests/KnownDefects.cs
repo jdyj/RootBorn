@@ -21,6 +21,14 @@ namespace Rootborn.Simulation.Tests
             // 판을 실패시키지 않는 결함(한계 값으로 받아 둔 것)도 보고를 위해 여기에 적는다. Matches가 false면 판 실패를 덮지 않는다.
             // 고친 것: SIM-001 ScreenStack 매 프레임 할당(FoundDefectRegressionTests), SIM-002 PlayerDriver 긴 문(DriverDoorReproTests),
             // SIM-003 Host WorldScreen 가만히 선 프레임의 클로저·열거자 할당(Host WorldFrameCostHostTests.WORLD_FRAME_001).
+            new Defect
+            {
+                Id = "SIM-004",
+                What = "비용 0·하루 한 번 제한 없는 장소 활동(시간 정책 free-interaction)을 시간·체력 없이 몇 번이고 다시 할 수 있고, 할 때마다 활동 기록이 늘고 결과(진로 진행 +1)가 다시 붙는다",
+                Seed = "학교 밖 정책 씨앗 1, 4일째 장소 화면 첫 줄(2026-11-13 속도 보고에서 4,947번)",
+                Cause = "데이터(LocationActivityDefinition의 비용 0 + ActivityTimePolicy oncePerDay 0) — 의도인지 기획 결정 대기. 재현 FreeRepeatableActivityReproTests.SIM004",
+                Matches = _ => false, // 판을 실패시키지 않는다(정책은 같은 행동을 보이는 변화 없이 되풀이하면 그날 후보에서 뺀다)
+            },
         };
 
         public static Defect Matches(PlayFailure failure)
