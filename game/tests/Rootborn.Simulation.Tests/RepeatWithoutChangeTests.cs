@@ -67,6 +67,43 @@ namespace Rootborn.Simulation.Tests
         }
 
         /// <summary>
+        /// 둘이 번갈아 되돌리는 되풀이(걸어가 대화 열기 → 닫기 → 다시)도 같다: 같은 관찰에서 같은 행동이 지난번과 같은 관찰로 이어지기를 세 번 되풀이하면(처음 한 번 + 세 번) 그날 뺀다.
+        /// 2026-11-13 이야기 유형 7일 판 4일째: NPC에게 걸어가기 2,466번과 대화 닫기 2,272번이 번갈았다(보이는 것이 둘 사이를 오갈 뿐).
+        /// </summary>
+        [Test]
+        public void ATwoStepCycleThatChangesNothing_IsBannedToo()
+        {
+            var m = new PlayMemory { BanAfter = 3 };
+            for (int i = 0; i < 4; i++)
+            {
+                PlayView world = View(1, null, "walk:npc/a", "door:x");
+                m.See(world);
+                Assert.That(m.Banned("walk:npc/a"), Is.False, "아직 " + i + "번");
+                m.Note(world, world.Find("walk:npc/a"));
+                PlayView talk = View(1, "dialogue", "button:dialogue/close");
+                m.See(talk);
+                m.Note(talk, talk.Find("button:dialogue/close"));
+            }
+            m.See(View(1, null, "walk:npc/a", "door:x"));
+            Assert.That(m.Banned("walk:npc/a"), Is.True);
+        }
+
+        /// <summary>같은 일을 되풀이해도 보이는 것(시각·돈)이 달라지면 빼지 않는다(알바를 날마다 되풀이하는 것은 막힘이 아니다).</summary>
+        [Test]
+        public void RepeatingWorkThatMovesTheClock_IsNotBanned()
+        {
+            var m = new PlayMemory { BanAfter = 3 };
+            for (int i = 0; i < 6; i++)
+            {
+                PlayView world = View(1, null, "walk:work/a");
+                world.Minutes = 600 + i * 60;
+                m.See(world);
+                m.Note(world, world.Find("walk:work/a"));
+            }
+            Assert.That(m.Banned("walk:work/a"), Is.False);
+        }
+
+        /// <summary>
         /// 미니게임 화면에서 보이는 것(진행 줄, 움직이는 과녁·장애물)이 바뀌면 바뀐 것이다 — 시계가 멈춰 있어도(SIM-005: 대화가 열린 채 시작한
         /// 미니게임). 2026-11-13 이것저것 유형 7일 판이 4일째 기다리기 30번에서 막힘으로 잘못 잡혔다.
         /// </summary>

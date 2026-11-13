@@ -33,7 +33,6 @@ namespace Rootborn.Simulation
             if (view.TrackedStep != _step) { _step = view.TrackedStep; _triedThisStep.Clear(); }
             _tried[action.Key] = Tried(action.Key) + 1;
             _triedThisStep[action.Key] = TriedThisStep(action.Key) + 1;
-            if (action.Key != _lastKey) _repeats = 0;
             _lastKey = action.Key;
             _lastView = view.Fingerprint();
             _waiting = true;
@@ -45,25 +44,32 @@ namespace Rootborn.Simulation
         public int BanAfter = 3;
 
         private readonly HashSet<string> _banned = new HashSet<string>(StringComparer.Ordinal);
+        /// <summary>행동마다 지난번의 (앞 관찰, 뒤 관찰)과 같은 결과가 이어진 횟수.</summary>
+        private readonly Dictionary<string, (string Before, string After, int Count)> _outcomes = new Dictionary<string, (string, string, int)>(StringComparer.Ordinal);
         private string _lastKey, _lastView;
         private bool _waiting;
         private int _repeats, _day = int.MinValue;
 
-        /// <summary>마지막 행동을 연달아 몇 번 했는데 관찰이 그대로였나(달리는 쪽이 막힘으로 본다).</summary>
+        /// <summary>마지막 행동이 아무것도 바꾸지 않은 되풀이를 몇 번째 했나(달리는 쪽이 막힘으로 본다).</summary>
         public int RepeatsWithoutChange => _repeats;
 
         /// <summary>
-        /// 걸음 앞의 관찰을 본다: 앞 걸음의 행동 뒤에 보이는 것(<see cref="PlayView.Fingerprint"/>)이 그 행동 앞과 같으면 "변화 없이 되풀이"를 센다.
-        /// 날이 바뀌면 뺀 행동을 다시 넣는다.
+        /// 걸음 앞의 관찰을 본다. 앞 걸음의 행동이 아무것도 바꾸지 않은 되풀이인지 센다(<see cref="PlayView.Fingerprint"/> — 사람이 보는 것):
+        /// 행동 뒤가 행동 앞과 같거나(연달아 눌러도 그대로), 지난번 그 행동과 같은 관찰에서 같은 관찰로 이어졌으면(대화 열기 → 닫기 → 다시처럼
+        /// 둘이 번갈아 되돌린다) 하나 더. 다른 결과가 나오면 처음부터. 날이 바뀌면 뺀 행동과 센 것을 비운다.
         /// </summary>
         public void See(PlayView view)
         {
-            if (view.Day != _day) { _day = view.Day; _banned.Clear(); }
+            if (view.Day != _day) { _day = view.Day; _banned.Clear(); _outcomes.Clear(); }
             if (!_waiting) return;
             _waiting = false;
-            if (view.Fingerprint() == _lastView) _repeats++;
-            else _repeats = 0;
-            if (BanAfter > 0 && _repeats >= BanAfter && _lastKey != null) _banned.Add(_lastKey);
+            string after = view.Fingerprint();
+            int count;
+            if (_outcomes.TryGetValue(_lastKey, out var last) && last.Before == _lastView && last.After == after) count = last.Count + 1;
+            else count = after == _lastView ? 1 : 0;
+            _outcomes[_lastKey] = (_lastView, after, count);
+            _repeats = count;
+            if (BanAfter > 0 && count >= BanAfter) _banned.Add(_lastKey);
         }
 
         /// <summary>오늘 정책의 후보에서 뺀 행동이다.</summary>
