@@ -33,7 +33,8 @@ class Style:
             return Style(json.load(f))
 
     def brighter(self, rgba: RGBA) -> Optional[RGBA]:
-        """같은 줄(ramp)의 한 단계 밝은 색. 가장 밝은 단계거나 팔레트 단계가 아니면 None."""
+        """같은 줄(ramp)의 한 단계 밝은 색. 가장 밝은 단계거나 팔레트 단계가 아니면 None.
+        같은 hex가 여러 줄에 있으면 줄 이름순으로 먼저 나온 줄(그 줄에서 가장 밝지 않은 첫 자리)의 다음 단계다."""
         return self._brighter.get(tuple(rgba))
 
     def color(self, key: str) -> RGBA:

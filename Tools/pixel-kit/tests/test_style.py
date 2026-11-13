@@ -46,7 +46,7 @@ class StyleTests(unittest.TestCase):
 
     def test_shadow_and_max_colors(self):
         self.assertEqual(set(self.style.shadow), {"under", "front", "edge", "wall"})
-        self.assertEqual(self.style.max_colors["furniture"], 16)
+        self.assertEqual(self.style.max_colors["furniture"], 24)
 
     def test_ramp_counts(self):
         raw = json.loads(STYLE_PATH.read_text(encoding="utf-8"))["palette"]

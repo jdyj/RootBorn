@@ -49,14 +49,14 @@ class PileTests(unittest.TestCase):
     def test_empty_list_draws_nothing(self):
         cv = Canvas(60, 20)
         c = ctx()
-        pile(cv, [], 2, 57, 18, c)
+        pile(cv, [], 2, 57, 18, c, 0)
         self.assertIsNone(cv.bbox())
         self.assertEqual(c.problems, [])
 
     def test_items_stand_on_base_row_inside_span(self):
         cv = Canvas(60, 20)
         c = ctx()
-        pile(cv, ["bread.loaf"] * 3, 2, 57, 18, c)
+        pile(cv, ["bread.loaf"] * 3, 2, 57, 18, c, 0)
         x0, y0, x1, y1 = cv.bbox()
         self.assertEqual(y1, 19)            # 바닥 줄 18이 마지막 줄
         self.assertGreaterEqual(x0, 2)
@@ -66,8 +66,12 @@ class PileTests(unittest.TestCase):
     def test_overlap_beyond_third_reports_once(self):
         cv = Canvas(60, 20)
         c = ctx()
-        pile(cv, ["bread.loaf"] * 9, 2, 57, 18, c)
+        pile(cv, ["bread.loaf"] * 9, 2, 57, 18, c, 0)
         self.assertEqual(codes(c.problems), ["slot-overlap"])
+
+    def test_top_is_required(self):
+        with self.assertRaises(TypeError):
+            pile(Canvas(60, 20), ["bread.loaf"], 2, 57, 18, ctx())
 
     def test_tall_item_reports_slot_clipped_with_top(self):
         cv = Canvas(60, 20)
@@ -88,6 +92,27 @@ class ShelfTests(unittest.TestCase):
                 for a, b in zip(tiers, tiers[1:]):
                     self.assertEqual(a[1], b[0])                       # 층 사이에 틈이 없다
                 self.assertLessEqual(max(heights(tiers)) - min(heights(tiers)), 1)
+
+    def test_painted_shelf_has_no_leftover_band(self):
+        # 그린 그림에서 확인한다: 윗면 밑 외곽선 줄부터 밑판까지 안쪽 가운데 열의 모든 줄이
+        # 뒤판·짙은 줄·쟁반·선반 판·외곽선 중 하나이고, 선반 판 외곽선 줄이 층 수만큼, 마지막 판 바로 밑이 밑판이다.
+        inside = {STYLE.color(k) for k in ("wood.back.0", "wood.back.1", "cream.2", "wood.warm.3", "wood.warm.4")}
+        for n in (1, 2, 3, 4):
+            with self.subTest(n=n):
+                cv, _ = make_shelf([[]] * n)
+                x = cv.w // 2
+                col = [cv.get(x, y) for y in range(cv.h)]
+                y = next(i for i, c in enumerate(col) if c[3] and c != STYLE.outline)   # 윗면 첫 줄
+                top_ol = col.index(STYLE.outline, y)                                     # 윗면 밑 외곽선
+                y = top_ol + 1
+                boards = 0
+                while col[y] in inside or col[y] == STYLE.outline:
+                    if col[y] == STYLE.outline:
+                        boards += 1
+                    y += 1
+                self.assertEqual(boards, n)
+                self.assertEqual(col[y - 1], STYLE.outline)                  # 마지막 판 외곽선 바로 밑이
+                self.assertEqual(col[y], STYLE.color("wood.warm.2"))         # 밑판 윗줄
 
     def test_empty_tiers_and_empty_state_render_without_items_or_errors(self):
         c = ctx()
@@ -132,7 +157,37 @@ class ShelfTests(unittest.TestCase):
                 make_shelf(bad)
 
 
+FRAME_RAMPS = ("wood.", "metal", "glass.", "cream.")
+
+
+def bread_only_colors():
+    """빵 부품에만 나오고 가구 틀 재질(나무·금속·유리·쟁반 크림)에는 없는 색."""
+    frame = {STYLE.color(k) for k in STYLE._colors if k.startswith(FRAME_RAMPS)}
+    breads = set()
+    for pid, cv in PARTS.items():
+        if pid.startswith("bread."):
+            breads |= cv.colors()
+    return breads - frame - {STYLE.outline}
+
+
 class AllFurnitureTests(unittest.TestCase):
+    def test_empty_states_have_no_bread_colors(self):
+        only = bread_only_colors()
+        self.assertTrue(only)
+        for rid in ("bakery.shelf", "bakery.glass-case", "bakery.trolley"):
+            with self.subTest(rid):
+                cv = render(RECIPES[rid], ctx(), "empty")
+                self.assertEqual(cv.colors() & only, set())
+
+    def test_slot_problems_are_one_per_code_per_picture(self):
+        c = ctx()
+        render(with_values("bakery.shelf", tiers=[["bread.loaf"] * 9, [], [], []]), c)
+        render(with_values("bakery.glass-case", rows=[["bread.cake"] * 12, []]), c)
+        self.assertEqual(codes(c.problems), ["slot-overlap", "slot-overlap"])
+        self.assertTrue(c.problems[0].message.startswith("bakery.shelf:"))
+        self.assertTrue(c.problems[1].message.startswith("bakery.glass-case:"))
+
+
     def test_every_bakery_furniture_recipe_is_cell_sized_and_lint_clean(self):
         for rid in FURNITURE:
             r = RECIPES[rid]

@@ -5,7 +5,7 @@
 칸에 넣는 물건(점 부품)은 pile()이 바닥 줄에 촘촘히 놓는다. 층·면의 자리는 spec["_layout"]에 적는다
 (테스트가 읽는다, 그리기에는 쓰지 않는다). 좌표는 이 그림(외곽선 전) 기준이다.
 """
-from typing import List, Optional
+from typing import List
 
 from ..canvas import Canvas
 from ..lint import Problem
@@ -68,18 +68,19 @@ def _local(ctx):
 
 
 def _merge(spec: dict, ctx, local) -> None:
+    """local은 이 그림 하나의 문제(코드마다 이미 하나)다. 다른 그림의 같은 코드와 합치지 않고 그대로 붙인다."""
     for p in local.problems:
-        _report(ctx.problems, p.code, f"{_rid(spec)}: {p.message}")
+        ctx.problems.append(Problem(p.code, f"{_rid(spec)}: {p.message}", p.x, p.y))
 
 
 # ---------- 칸 채우기 ----------
 
-def pile(cv: Canvas, items: List[str], x0: int, x1: int, base_y: int, ctx, top: Optional[int] = None) -> None:
+def pile(cv: Canvas, items: List[str], x0: int, x1: int, base_y: int, ctx, top: int) -> None:
     """부품을 x0..x1 안에 바닥 줄 base_y(부품의 마지막 줄)로 촘촘히 놓는다.
 
     맞닿은 물건은 외곽선 한 줄을 같이 쓴다(1px 겹침). 자리가 남으면 틈을 MAX_GAP까지 벌리고 가운데로 모은다.
     자리가 모자라면 겹침을 이음마다 고르게 나눈다. 겹침이 이웃한 두 물건 중 좁은 쪽 폭의 1/3을 넘으면 slot-overlap,
-    물건 윗줄이 top보다 위로 나가거나 물건이 x0..x1을 벗어나면 slot-clipped를 ctx.problems에 (코드마다 한 번) 남긴다.
+    top은 칸의 윗줄(필수: 높이 검사를 빼먹지 않게). 물건 윗줄이 top보다 위로 나가거나 물건이 x0..x1을 벗어나면 slot-clipped를 ctx.problems에 (코드마다 한 번) 남긴다.
     """
     if not items:
         return
@@ -107,14 +108,15 @@ def pile(cv: Canvas, items: List[str], x0: int, x1: int, base_y: int, ctx, top: 
                 _report(ctx.problems, "slot-overlap",
                         f"칸 안 물건이 너무 겹친다({-gaps[i - 1]}px, 폭의 1/3까지 — {items[i - 1]}·{items[i]})")
         y = base_y - p.h + 1
-        if (top is not None and y < top) or x < x0 or x + p.w - 1 > x1:
+        if y < top or x < x0 or x + p.w - 1 > x1:
             _report(ctx.problems, "slot-clipped", f"물건이 칸보다 크다({items[i]} {p.w}x{p.h})")
         cv.paste(p, x, y)
 
 
 def streaks(cv: Canvas, x: int, y: int, w: int, h: int, ctx, period: int = 22) -> None:
     """유리·금속의 사선 반사 줄(/ 방향). 줄이 지나는 칸은 같은 줄(ramp)의 한 단계 밝은 색이 이미 그림에 있으면
-    그 색, 없으면 glass.streak 색이 된다. 외곽선은 건드리지 않는다. 유리 안의 물건 위로도 지나간다."""
+    그 색, 없으면 glass.streak 색이 된다. 외곽선은 건드리지 않는다. 유리 안의 물건 위로도 지나간다.
+    "이미 그림에 있는" 색은 부르는 순간의 그림 기준이다(반사 줄이 새 색을 늘리는 것은 glass.streak 하나뿐)."""
     shine = ctx.style.color("glass.streak.0")
     ol = ctx.style.outline
     present = cv.colors()
@@ -142,7 +144,7 @@ def shelf(spec: dict, ctx) -> Canvas:
     """벽에 붙는 나무 진열대. 층 높이는 안쪽 높이를 층 수로 나눠 남김없이 쓴다."""
     tiers = _rows(spec, ctx, "tiers", 1, 4)
     wood = [_col(spec, ctx, f"wood.warm.{i}") for i in range(5)]
-    back = [_col(spec, ctx, f"wood.back.{i}") for i in range(2)]
+    back = [_col(spec, ctx, f"wood.back.{i}") for i in range(2)]   # 0: 판 밑 짙은 줄, 1: 뒤판
     tray = _col(spec, ctx, "cream.2")
     ol = ctx.style.outline
     w, (iy0, iy1) = SHELF_W, SHELF_INNER
@@ -187,6 +189,21 @@ def shelf(spec: dict, ctx) -> Canvas:
 COUNTER_W = 94
 COUNTER_FACE = (6, 30)     # 윗면 [y0, y1). 위 6줄은 윗면에 놓인 물건이 솟을 자리
 COUNTER_ITEM_BASE = 22     # 윗면에 놓인 물건의 마지막 줄
+COUNTER_TRAY = (15, 25)    # 윗면 쟁반 [y0, y1)
+
+
+def _tray(spec: dict, ctx):
+    """윗면의 빵 쟁반(선택): {"x", "w", "items"}. 위에서 본 흰 쟁반에 물건을 한 줄로 촘촘히."""
+    t = spec.get("tray")
+    if t is None:
+        return None
+    ok = (isinstance(t, dict) and all(isinstance(t.get(k), int) and not isinstance(t.get(k), bool) for k in ("x", "w"))
+          and isinstance(t.get("items"), list) and all(isinstance(i, str) for i in t["items"]))
+    if not ok:
+        raise RecipeError(f"{_rid(spec)}: tray는 {{x, w(정수 px), items(부품 id 목록)}}이어야 한다")
+    for i in t["items"]:
+        _part(spec, ctx, i)
+    return t
 
 
 def _top_items(spec: dict, ctx):
@@ -203,6 +220,7 @@ def _top_items(spec: dict, ctx):
 def counter(spec: dict, ctx) -> Canvas:
     """나무 계산대. 윗면이 높이의 절반쯤, 앞면은 판 넷을 외곽선 색 선으로 나눈다."""
     items = _top_items(spec, ctx)
+    tray = _tray(spec, ctx)
     wood = [_col(spec, ctx, f"wood.warm.{i}") for i in range(5)]
     ol = ctx.style.outline
     w = COUNTER_W
@@ -229,6 +247,20 @@ def counter(spec: dict, ctx) -> Canvas:
             cv.vline(px - 2, fy0 + 2, fy1 - fy0 - 2, ol)      # 칸 나눔
     cv.rect(1, fy1, w - 2, 2, wood[0])                        # 걸레받이
 
+    if tray is not None:
+        tx, tw = tray["x"], tray["w"]
+        if tx < 0 or tx + tw > w:
+            _report(local.problems, "slot-clipped", f"쟁반이 계산대 밖으로 나간다(x={tx}, w={tw})")
+        ty0, ty1 = COUNTER_TRAY                                # 쟁반: 흰 판, 아래·오른쪽 가장자리 한 단계 어둡게
+        cv.rect(tx, ty0, tw, ty1 - ty0, _col(spec, ctx, "cream.2"))
+        edge = _col(spec, ctx, "wall.cream.0")
+        cv.hline(tx, ty1 - 1, tw, edge)
+        cv.vline(tx + tw - 1, ty0, ty1 - ty0, edge)
+        for yy in (ty0 - 1, ty1):                              # 쟁반 테두리: 외곽선 색
+            cv.hline(tx - 1, yy, tw + 2, ol)
+        for xx in (tx - 1, tx + tw):
+            cv.vline(xx, ty0, ty1 - ty0, ol)
+        pile(cv, tray["items"], tx + 2, tx + tw - 3, ty1 - 2, local, 0)
     for p, pid, x in items:
         y = COUNTER_ITEM_BASE - p.h + 1
         if y < 0 or x < 0 or x + p.w > w:
