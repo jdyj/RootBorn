@@ -2,8 +2,9 @@
 LDtk에서 다시 칠한 Collision에 벽 그림을 맞추기(`room repaint`), LDtk 방 검사(`room check <ldtk 경로>`).
 
 결과(기본 `art/world/rooms/<id>/`): `<id>.ldtk`, `tiles.png`(쓰인 타일만 모은 시트, 덧붙이기만), `tiles.slots.json`
-(자리 표 + 그 시트를 그린 벽 모양 `wall`·바닥 `floor`·`face_height` — repaint가 여기서 읽는다), `maps.json`.
-LDtk 층(위에서 아래): Collision(IntGrid 32, 1 벽 / 2 바닥), Door(Entities), Furniture(Entities, 태그 ysort, 비어 있음), Wall(Tiles), Ground(Tiles).
+(자리 표 + 그 시트를 그린 벽 모양 `wall`·바닥 `floor`·`face_height`·윗면 띠 두께 `band` — repaint가 여기서 읽는다), `maps.json`.
+LDtk 층(위에서 아래): Collision(IntGrid 32, 1 벽 / 2 바닥, 편집기에서 반투명), Door(Entities), Furniture(Entities, 태그 ysort, 비어 있음),
+Wall(Tiles — 벽 칸마다, 띠·정면이 아닌 자리는 투명), Ground(Tiles — 바닥 칸마다 + 띠 옆으로 바닥이 비치는 벽 칸마다).
 LDtk 파일은 편집기(1.5.3)가 저장하는 꼴 그대로 쓴다(ldtk_common의 편집기 꼴 함수 — 공식 스키마의 필수 필드를 테스트가 지킨다).
 게임 읽기 코드(game/Rootborn.World/Ldtk/LdtkFile.cs, WorldCatalog.cs)가 읽는 값은 그 위에 얹는다.
 문제가 하나라도 있으면 아무것도 쓰지 않는다. 쓸 때는 모든 파일을 임시 파일에 먼저 쓴 뒤 바꿔친다(ldtk_common.write_all).
@@ -22,8 +23,9 @@ from .export import CELL, SHEET_WIDTH_CELLS, _json_bytes
 from . import ldtk_common as ldtk
 from .ldtk_common import dump, loads_with_comments, walkers, write_all
 from .lint import Problem
+from .makers import RecipeError
 from .room_plan import Room, RoomError, cells, check_grid, is_warning, load_room
-from .room_tiles import FLOOR, OUT, WALL, classify, draw_tile, lint_room_tile
+from .room_tiles import FLOOR, WALL, RoomTiles, draw_tile, lint_room_tile, plan_tiles, wall_band
 
 DEFAULT_ROOT = "art/world/rooms"           # 저장소 뿌리 기준. 방마다 <id> 폴더
 DEFAULT_ROOMS_DIR = "art/kit/rooms"
@@ -36,8 +38,10 @@ TILESET_UID, LEVEL_UID, DOOR_DEF_UID, WHERE_FIELD_UID, NEXT_UID = 1, 0, 20, 21, 
 LAYER_UIDS = {"Collision": 2, "Door": 3, "Furniture": 4, "Wall": 5, "Ground": 6}
 BG_COLOR = "#40465B"                       # 레벨 바탕(__bgColor) = 프로젝트 defaultLevelBgColor
 ROOM_LAYERS = (("Collision", "IntGrid"), ("Wall", "Tiles"), ("Ground", "Tiles"))   # 이 도구가 만든 방이라는 표시(머리말로 판별하지 않는다)
-ART_LAYERS = {"Wall": WALL, "Ground": FLOOR}                                      # repaint가 다시 쓰는 층 → 그 층에 타일이 놓이는 칸 값
-ROOM_VALUES = ("wall", "floor", "face_height")                                    # 자리 표에 남기는 방 값
+ART_LAYERS = ("Wall", "Ground")                                                   # repaint가 다시 쓰는 층(RoomTiles의 wall·ground)
+ROOM_VALUES = ("wall", "floor", "face_height", "band")                            # 자리 표에 남기는 방 값
+SHEET_VALUES = ("wall", "floor", "band")                                          # 시트의 그림을 정하는 값 — 다르면 한 시트에 섞지 않는다
+COLLISION_OPACITY = 0.35                   # 편집기에서 Collision 색 칸이 벽·바닥 그림을 덮지 않고 비쳐 보이게(게임은 이 값을 읽지 않는다)
 _NAMESPACE = uuid.UUID("5d9b2a0e-6a3c-4a53-9d5e-2b0b6a6f3c11")      # iid를 결정적으로 만든다
 
 
@@ -97,7 +101,7 @@ def _allocate(old_slots: dict, wanted: List[str]) -> Dict[str, dict]:
 
 def _read_sheet(out: Path):
     """(자리 표, 그림, 방 값). 둘 다 없으면 ({}, None, {}). 하나만 있거나 못 읽거나 이 도구의 시트가 아니면 RoomError.
-    방 값은 자리 표의 wall·floor·face_height 중 있는 것(방 값을 남기기 전에 만든 옛 표에는 없다)."""
+    방 값은 자리 표의 wall·floor·face_height·band 중 있는 것(그 값을 남기기 전에 만든 옛 표에는 없다)."""
     table_file, png_file = out / SLOTS_NAME, out / TILES_NAME
     if not table_file.exists() and not png_file.exists():
         return {}, None, {}
@@ -124,10 +128,11 @@ def _read_sheet(out: Path):
 
 def _sheet(out: Path, wanted: List[str], tiles: Dict[str, object], room_values: dict) -> Tuple[bytes, bytes, Dict[str, dict], int]:
     """(PNG, 자리 표, 자리, 시트 높이). 이미 있는 시트는 자리를 지키고 지금 쓰는 타일만 다시 그린다.
-    room_values(wall·floor·face_height)는 자리 표에 남긴다. 시트가 다른 벽 모양·바닥으로 그려져 있으면 RoomError
-    (지금 쓰지 않는 옛 타일은 다시 그리지 않으므로 한 시트에 두 모양이 섞인다)."""
+    room_values(wall·floor·face_height·band)는 자리 표에 남긴다. 시트가 다른 벽 모양·바닥·띠 두께로 그려져 있으면 RoomError
+    (지금 쓰지 않는 옛 타일은 다시 그리지 않으므로 한 시트에 두 모양이 섞인다). band가 없는 옛 표(윗면 32px 시절)에는
+    덧붙인다 — 옛 윗면 열쇠(cap:<수>)는 새 규칙이 다시 내지 않으므로 같은 열쇠가 다른 그림이 되지 않는다."""
     old_slots, old_img, old_values = _read_sheet(out)
-    for k in ("wall", "floor"):
+    for k in SHEET_VALUES:
         if k in old_values and old_values[k] != room_values[k]:
             raise RoomError(f"{out / SLOTS_NAME}의 시트는 {k} {old_values[k]!r}로 그렸다(지금 {room_values[k]!r}). "
                             f"한 시트에 두 모양이 섞이지 않게 그 폴더의 tiles.png·tiles.slots.json을 지우고 다시 만든다")
@@ -155,15 +160,15 @@ def _sheet(out: Path, wanted: List[str], tiles: Dict[str, object], room_values: 
 
 # ---------------------------------------------------------------- LDtk
 
-def _grid_tiles(grid: List[List[int]], keys: List[List[Optional[str]]], slots: Dict[str, dict], want: int) -> List[dict]:
-    """값이 want인 칸마다 타일 인스턴스 하나(행 우선). d는 격자(Collision) 폭 기준 칸 번호."""
-    cols = len(grid[0]) if grid else 0
+def _grid_tiles(keys: List[List[Optional[str]]], slots: Dict[str, dict]) -> List[dict]:
+    """열쇠가 있는 칸마다 타일 인스턴스 하나(행 우선). d는 격자(Collision) 폭 기준 칸 번호."""
+    cols = len(keys[0]) if keys else 0
     out = []
-    for y, row in enumerate(grid):
-        for x, v in enumerate(row):
-            if v != want:
+    for y, row in enumerate(keys):
+        for x, key in enumerate(row):
+            if key is None:
                 continue
-            s = slots[keys[y][x]]
+            s = slots[key]
             out.append({"px": [x * CELL, y * CELL], "src": [s["x"], s["y"]], "f": 0,
                         "t": _slot_index(s), "d": [y * cols + x], "a": 1})
     return out
@@ -174,7 +179,7 @@ def _layer_defs() -> Dict[str, dict]:
     mark = "픽셀 키트 room build가 평면에서 만든 방."
     return {
         "Collision": ldtk.layer_def("IntGrid", "Collision", LAYER_UIDS["Collision"], CELL, int_grid_values=[
-            ldtk.int_grid_value(v, name, color) for v, name, color in INT_VALUES],
+            ldtk.int_grid_value(v, name, color) for v, name, color in INT_VALUES], opacity=COLLISION_OPACITY,
             doc=f"{mark} 1 벽(막음) / 2 바닥(걸음) / 0 밖. 다시 칠한 뒤 kit.py room repaint로 Wall·Ground 그림을 맞춘다."),
         "Door": ldtk.layer_def("Entities", "Door", LAYER_UIDS["Door"], CELL,
                                doc=f"{mark} 문. Where 값을 maps.json의 doors 표에 적어야 게임에서 열린다."),
@@ -191,7 +196,7 @@ def _door_def() -> dict:
     return ldtk.entity_def("Door", DOOR_DEF_UID, CELL, CELL, color="#BE4A2F", fields=[ldtk.field_def_string("Where", WHERE_FIELD_UID)])
 
 
-def _ldtk(room: Room, grid: List[List[int]], keys: List[List[Optional[str]]], slots: Dict[str, dict],
+def _ldtk(room: Room, grid: List[List[int]], tiles: RoomTiles, slots: Dict[str, dict],
           sheet_height: int, level_name: str) -> dict:
     cols, rows = len(grid[0]), len(grid)
     defs = _layer_defs()
@@ -209,8 +214,8 @@ def _ldtk(room: Room, grid: List[List[int]], keys: List[List[Optional[str]]], sl
         "Collision": layer("Collision", int_grid=[v for row in grid for v in row]),
         "Door": layer("Door", entities=doors),
         "Furniture": layer("Furniture"),
-        "Wall": layer("Wall", tileset=tileset, grid_tiles=_grid_tiles(grid, keys, slots, WALL)),
-        "Ground": layer("Ground", tileset=tileset, grid_tiles=_grid_tiles(grid, keys, slots, FLOOR)),
+        "Wall": layer("Wall", tileset=tileset, grid_tiles=_grid_tiles(tiles.wall, slots)),
+        "Ground": layer("Ground", tileset=tileset, grid_tiles=_grid_tiles(tiles.ground, slots)),
     }
     return ldtk.project(
         _iid(room.id, "project"), _iid(room.id, "dummy-world"), next_uid=NEXT_UID, grid=CELL,
@@ -264,16 +269,9 @@ def build_room(repo_root, room_id: str, out_dir=None, force: bool = False, dry_r
         raise RoomError(f"바닥 {room.floor!r}: 키트에 그런 타일 명세가 없다")
 
     grid = cells(room.grid)
-    keys = classify(grid, room.face_height)
-    wanted: List[str] = []
-    for row in keys:
-        for k in row:
-            if k is not None and k not in wanted:
-                wanted.append(k)
-    tiles = {k: draw_tile(kit.style, k, room.wall, floor_spec) for k in wanted}      # 모르는 벽 모양은 RecipeError
-    found = [Problem(p.code, f"{k}: {p.message}", p.x, p.y) for k, cv in tiles.items() for p in lint_room_tile(cv, k, kit.style)]
-    if found:
-        raise RoomBuildError(found)
+    band = wall_band(room.wall)                                                      # 모르는 벽 모양은 RecipeError
+    plan = plan_tiles(grid, room.face_height, band)
+    wanted, tiles = _draw_all(kit, plan, room.wall, floor_spec)
 
     names = {"ldtk": f"{room.id}.ldtk", "png": TILES_NAME, "slots": SLOTS_NAME, "maps": MAPS_NAME}
     existing = [n for n in names.values() if (out / n).exists()]
@@ -281,15 +279,31 @@ def build_room(repo_root, room_id: str, out_dir=None, force: bool = False, dry_r
         raise RoomError(f"{out}에 이미 {', '.join(existing)}가 있다(덮어쓰려면 --force)")
     ldtk_rel = (out / names["ldtk"]).relative_to(root).as_posix()
     _check_overwritable(out, names["ldtk"], ldtk_rel)
-    png, table, slots, height = _sheet(out, wanted, tiles, {"wall": room.wall, "floor": room.floor, "face_height": room.face_height})
+    png, table, slots, height = _sheet(out, wanted, tiles, {"wall": room.wall, "floor": room.floor,
+                                                            "face_height": room.face_height, "band": band})
 
     level_name = map_id(room.id)
-    ldtk = dump(_ldtk(room, grid, keys, slots, height, level_name))
+    ldtk = dump(_ldtk(room, grid, plan, slots, height, level_name))
     maps = dump(_maps(room, root, ldtk_rel, level_name, len(grid)))
     files = [(out / names["ldtk"], ldtk), (out / TILES_NAME, png), (out / SLOTS_NAME, table), (out / MAPS_NAME, maps)]
     if dry_run:
         return [p.relative_to(root).as_posix() for p, data in files if not _same(p, data)]
     return write_all(root, files)
+
+
+def _draw_all(kit: Kit, plan: RoomTiles, wall: str, floor_spec: dict) -> Tuple[List[str], Dict[str, object]]:
+    """(쓰인 열쇠 — 행 우선, 칸마다 Wall 다음 Ground, 그린 타일). 검사에 걸린 타일이 있으면 RoomBuildError."""
+    wanted: List[str] = []
+    for wall_row, ground_row in zip(plan.wall, plan.ground):
+        for pair in zip(wall_row, ground_row):
+            for k in pair:
+                if k is not None and k not in wanted:
+                    wanted.append(k)
+    tiles = {k: draw_tile(kit.style, k, wall, floor_spec) for k in wanted}           # 모르는 벽 모양은 RecipeError
+    found = [Problem(p.code, f"{k}: {p.message}", p.x, p.y) for k, cv in tiles.items() for p in lint_room_tile(cv, k, kit.style)]
+    if found:
+        raise RoomBuildError(found)
+    return wanted, tiles
 
 
 def _check_overwritable(out: Path, ldtk_name: str, ldtk_rel: str) -> None:
@@ -389,10 +403,14 @@ def _room_context(path: Path, level: dict, layers: dict):
     """같은 폴더의 자리 표와 maps.json에서: (방 값, 도착 칸, 문 칸 → Where, doors 표). 못 읽으면 RoomError."""
     out = path.parent
     _, _, values = _read_sheet(out)
-    missing = [k for k in ROOM_VALUES if k not in values]
+    missing = [k for k in ROOM_VALUES if k != "band" and k not in values]
     if missing:
         raise RoomError(f"{out / SLOTS_NAME}에 {', '.join(missing)}가 없다(벽 모양을 모른다). "
                         f"평면에서 room build --force로 다시 만든 뒤 LDtk에서 칠한다")
+    if "band" not in values:
+        raise RoomError(f"{out / SLOTS_NAME}에 band(윗면 띠 두께)가 없다 — 윗면이 칸을 꽉 채우던(32px) 때 만든 방이라 "
+                        f"옛 두께로는 다시 그리지 않는다. LDtk에서 칠한 것을 지키려면 그 자리 표에 \"band\": 16을 적고 다시 repaint한다"
+                        f"(옛 윗면 타일은 시트에 남지만 쓰이지 않는다). 평면에서 다시 만들어도 되면 room build <id> --force(LDtk에서 칠한 것은 사라진다)")
     if type(values["face_height"]) is not int or values["face_height"] < 1:
         raise RoomError(f"{out / SLOTS_NAME}: face_height {values['face_height']!r}가 1 이상의 정수가 아니다")
     try:
@@ -419,8 +437,9 @@ def _room_context(path: Path, level: dict, layers: dict):
     return values, (sx // CELL, sy // CELL), doors, entry.get("doors") or {}
 
 
-def _art_mismatch(grid, keys, slots, layers) -> List[Problem]:
-    """칸마다 Wall·Ground에 와야 할 타일(값 1 → Wall에 그 열쇠의 자리 하나, 2 → Ground에 하나, 0 → 없음)과 견준다."""
+def _art_mismatch(grid, plan: RoomTiles, slots, layers) -> List[Problem]:
+    """칸마다 Wall·Ground에 와야 할 타일(plan_tiles의 열쇠가 있으면 그 자리 하나, 없으면 타일 없음)과 실제 타일을 견준다.
+    벽 칸의 Ground 타일은 띠 옆으로 바닥이 비치는 칸에만 와야 한다."""
     placed = {name: {} for name in ART_LAYERS}
     for name in ART_LAYERS:
         for t in layers[name].get("gridTiles") or []:
@@ -429,14 +448,16 @@ def _art_mismatch(grid, keys, slots, layers) -> List[Problem]:
                 placed[name].setdefault(cell, []).append(list(t["src"]))
             except (KeyError, TypeError, ValueError, IndexError):
                 continue
+    expected = {"Wall": plan.wall, "Ground": plan.ground}
     bad = []
     for y, row in enumerate(grid):
-        for x, v in enumerate(row):
+        for x in range(len(row)):
             ok = True
-            for name, want in ART_LAYERS.items():
+            for name in ART_LAYERS:
                 got = placed[name].get((x, y), [])
-                if v == want:
-                    s = slots.get(keys[y][x])
+                key = expected[name][y][x]
+                if key is not None:
+                    s = slots.get(key)
                     ok = ok and s is not None and got == [[s["x"], s["y"]]]
                 else:
                     ok = ok and not got
@@ -465,7 +486,14 @@ def check_room(ldtk_path) -> List[Problem]:
     if any(p.code == "room-unknown-char" for p in problems):
         return problems                            # 칸 값을 믿을 수 없으니 그림은 견주지 않는다
     slots, _, _ = _read_sheet(path.parent)
-    return problems + _art_mismatch(grid, classify(grid, values["face_height"]), slots, layers)
+    return problems + _art_mismatch(grid, _plan(path, grid, values), slots, layers)
+
+
+def _plan(path: Path, grid, values: dict) -> RoomTiles:
+    try:
+        return plan_tiles(grid, values["face_height"], values["band"])
+    except RecipeError as e:                                  # 자리 표의 band가 받을 수 없는 값
+        raise RoomError(f"{path.parent / SLOTS_NAME}: {e}") from None
 
 
 def _same_tiles(old, new) -> bool:
@@ -486,7 +514,8 @@ def repaint_room(ldtk_path, dry_run: bool = False, kit: Optional[Kit] = None) ->
     """Collision 층을 읽어 Wall·Ground 층의 gridTiles와 tiles.png·tiles.slots.json만 다시 쓴다.
 
     문서의 나머지(다른 층, 엔티티, 필드, 모르는 키, 키 순서)는 읽은 그대로 다시 쓴다(들여쓰기는 이 도구의 것이 된다).
-    타일셋 정의는 pxWid·pxHei(있으면 __cWid·__cHei도)만 시트에 맞춘다. 벽 모양·바닥·face_height는 같은 폴더의 자리 표에서 읽는다(build가 남긴다).
+    타일셋 정의는 pxWid·pxHei(있으면 __cWid·__cHei도)만 시트에 맞춘다. 벽 모양·바닥·face_height·band는 같은 폴더의 자리 표에서 읽는다(build가 남긴다).
+    band가 없는 옛 자리 표(윗면 32px 시절)는 RoomError — 옛 두께로 조용히 그리지 않는다.
     필요한 층이 없거나(room-not-a-room) 편집기 꼴이 아닌 예전 파일이거나(room-ldtk-incomplete) 칠한 칸에 막는 문제가 있으면
     RoomBuildError — 아무것도 쓰지 않는다.
     쓴(dry_run이면 쓸) 파일 이름(LDtk 파일이 든 폴더 기준)을 돌려준다. 바꿀 것이 없으면 빈 목록."""
@@ -512,22 +541,14 @@ def repaint_room(ldtk_path, dry_run: bool = False, kit: Optional[Kit] = None) ->
     floor_spec = kit.recipes.get(values["floor"])
     if floor_spec is None or floor_spec.get("kind") != "tile":
         raise RoomError(f"바닥 {values['floor']!r}: 키트에 그런 타일 명세가 없다")
-    keys = classify(grid, values["face_height"])
-    wanted: List[str] = []
-    for row in keys:
-        for k in row:
-            if k is not None and k not in wanted:
-                wanted.append(k)
-    tiles = {k: draw_tile(kit.style, k, values["wall"], floor_spec) for k in wanted}      # 모르는 벽 모양은 RecipeError
-    found = [Problem(p.code, f"{k}: {p.message}", p.x, p.y) for k, cv in tiles.items() for p in lint_room_tile(cv, k, kit.style)]
-    if found:
-        raise RoomBuildError(found)
+    plan = _plan(path, grid, values)
+    wanted, tiles = _draw_all(kit, plan, values["wall"], floor_spec)
     out = path.parent
     png, table, slots, height = _sheet(out, wanted, tiles, values)
 
     changed = False
-    for name, want in ART_LAYERS.items():
-        new = _grid_tiles(grid, keys, slots, want)
+    for name, keys in (("Wall", plan.wall), ("Ground", plan.ground)):
+        new = _grid_tiles(keys, slots)
         if not _same_tiles(layers[name].get("gridTiles"), new):
             layers[name]["gridTiles"] = new          # 있는 키의 값만 바꾼다(키 자리는 그대로)
             changed = True

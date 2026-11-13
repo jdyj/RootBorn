@@ -17,7 +17,7 @@ from pixelkit.cli import load_kit
 from pixelkit.makers import RecipeError
 from pixelkit.room_ldtk import RoomBuildError, build_room, check_room, map_id, repaint_room
 from pixelkit.room_plan import RoomError, cells, is_warning, load_room
-from pixelkit.room_tiles import FLOOR, OUT, WALL, classify
+from pixelkit.room_tiles import FLOOR, OUT, WALL, plan_tiles, tile_layout
 from tests.test_ldtk_test_level import MAPS_WITH_COMMENTS, check_loader_fields
 
 HERE = Path(__file__).resolve().parent
@@ -120,16 +120,21 @@ class BuildTests(RoomBase):
         self.assertEqual(ldtk["defs"]["tilesets"][0]["relPath"], "tiles.png")
         self.assertEqual(ldtk["defs"]["tilesets"][0]["tileGridSize"], 32)
 
-    def test_tile_layers_have_one_tile_per_wall_and_floor_cell(self):
+    def test_tile_layers_follow_the_plan_wall_cells_and_floor_showing_cells(self):
+        """Wall 층: 벽 칸마다 하나. Ground 층: 바닥 칸마다 하나 + 띠 옆으로 바닥이 비치는 벽 칸마다 하나(얇은 벽)."""
         self.real_plan()
         self.build()
         ldtk, _, slots = self.read()
         grid = self.grid()
-        keys = classify(grid)
+        tiles_plan = plan_tiles(grid, 2, slots["band"])
         layers = self.layers(ldtk)
-        for name, want in (("Wall", WALL), ("Ground", FLOOR)):
+        walls = {(x, y) for y, row in enumerate(grid) for x, v in enumerate(row) if v == WALL}
+        floors = {(x, y) for y, row in enumerate(grid) for x, v in enumerate(row) if v == FLOOR}
+        showing = {(x, y) for x, y in walls if tiles_plan.ground[y][x] is not None}
+        self.assertTrue(showing, "세로 벽 양옆처럼 바닥이 비치는 벽 칸이 있다")
+        self.assertLess(len(showing), len(walls), "바깥 벽 바깥쪽은 바닥이 비치지 않는다")
+        for name, keys, cell_set in (("Wall", tiles_plan.wall, walls), ("Ground", tiles_plan.ground, floors | showing)):
             tiles = layers[name]["gridTiles"]
-            cell_set = {(x, y) for y, row in enumerate(grid) for x, v in enumerate(row) if v == want}
             self.assertEqual(len(tiles), len(cell_set), name)
             self.assertEqual({(t["px"][0] // 32, t["px"][1] // 32) for t in tiles}, cell_set, name)
             for t in tiles:
@@ -150,12 +155,13 @@ class BuildTests(RoomBase):
         self.assertEqual(layers["Collision"]["intGridCsv"][:4], [0, 0, 0, 0])
         grid = self.grid("t.out")
         self.assertGreater(sum(row.count(OUT) for row in grid), 0)
-        for name in ("Wall", "Ground"):
+        planned = plan_tiles(grid)
+        for name, keys in (("Wall", planned.wall), ("Ground", planned.ground)):
             self.assertTrue(all(t["px"][0] >= 4 * 32 for t in layers[name]["gridTiles"]))
-            self.assertEqual(len(layers[name]["gridTiles"]),
-                             sum(row.count(WALL if name == "Wall" else FLOOR) for row in grid))
+            self.assertEqual(len(layers[name]["gridTiles"]), sum(k is not None for row in keys for k in row))
 
-    def test_slots_are_in_the_png_and_nothing_is_transparent(self):
+    def test_slots_are_in_the_png_and_only_wall_leftovers_are_transparent(self):
+        """바닥·꽉 찬 정면 타일은 불투명, 띠·좁은 정면 타일은 띠·정면 자리만 불투명하고 나머지는 투명(완전히 투명한 타일은 없다)."""
         self.real_plan()
         self.build()
         _, _, slots = self.read()
@@ -166,7 +172,15 @@ class BuildTests(RoomBase):
             for key, s in slots["slots"].items():
                 self.assertEqual((s["w"], s["h"]), (32, 32))
                 tile = im.crop((s["x"], s["y"], s["x"] + 32, s["y"] + 32)).convert("RGBA")
-                self.assertTrue(all(p[3] == 255 for p in tile.getdata()), key)
+                alpha = [tile.getpixel((x, y))[3] for y in range(32) for x in range(32)]
+                layout = tile_layout(key)
+                if layout is None:
+                    self.assertTrue(all(a == 255 for a in alpha), key)
+                else:
+                    self.assertTrue(any(alpha), key)
+                    self.assertEqual({(x, y) for y in range(32) for x in range(32) if alpha[y * 32 + x]},
+                                     set(layout.band) | {p for f in layout.fills.values() for p in f}
+                                     | ({(x, y) for y in range(32) for x in range(*layout.narrow)} if layout.narrow else set()), key)
         self.assertEqual(len({(s["x"], s["y"]) for s in slots["slots"].values()}), len(slots["slots"]))
 
     def test_maps_json_registers_the_room(self):
@@ -190,7 +204,29 @@ class BuildTests(RoomBase):
         self.real_plan(face_height=2)
         self.build()
         _, _, slots = self.read()
-        self.assertEqual((slots["wall"], slots["floor"], slots["face_height"]), ("paper", "bakery.tile.floor", 2))
+        self.assertEqual((slots["wall"], slots["floor"], slots["face_height"], slots["band"]), ("paper", "bakery.tile.floor", 2, 16))
+
+    def test_collision_layer_is_see_through_in_the_editor(self):
+        """LDtk 편집기에서 Collision 색 칸이 벽·바닥 그림을 덮지 않게 반투명으로 둔다(다른 층은 불투명)."""
+        self.real_plan()
+        self.build()
+        ldtk, _, _ = self.read()
+        opacity = {d["identifier"]: d["displayOpacity"] for d in ldtk["defs"]["layers"]}
+        self.assertGreaterEqual(opacity["Collision"], 0.3)
+        self.assertLessEqual(opacity["Collision"], 0.4)
+        self.assertEqual({k: v for k, v in opacity.items() if k != "Collision"}, {"Door": 1, "Furniture": 1, "Wall": 1, "Ground": 1})
+
+    def test_force_refuses_a_sheet_drawn_with_another_band_and_writes_nothing(self):
+        self.real_plan()
+        self.build()
+        table = json.loads((self.out() / "tiles.slots.json").read_text("utf-8"))
+        table["band"] = 12
+        (self.out() / "tiles.slots.json").write_text(json.dumps(table), encoding="utf-8")
+        before = self.snapshot()
+        with self.assertRaises(RoomError) as e:
+            self.build(force=True)
+        self.assertIn("band", str(e.exception))
+        self.assertEqual(self.snapshot(), before)
 
     def test_force_refuses_a_sheet_drawn_with_another_wall_and_writes_nothing(self):
         self.real_plan()
@@ -530,12 +566,12 @@ class RepaintTests(RoomBase):
         col = _layer(doc, "Collision")
         w, h = col["__cWid"], col["__cHei"]
         grid = [col["intGridCsv"][y * w:(y + 1) * w] for y in range(h)]
-        keys = classify(grid)
+        planned = plan_tiles(grid)
         slots = json.loads((self.out() / "tiles.slots.json").read_text("utf-8"))["slots"]
-        for name, want in (("Wall", WALL), ("Ground", FLOOR)):
+        for name, keys in (("Wall", planned.wall), ("Ground", planned.ground)):
             tiles = _layer(doc, name)["gridTiles"]
             self.assertEqual({(t["px"][0] // 32, t["px"][1] // 32) for t in tiles},
-                             {(x, y) for y in range(h) for x in range(w) if grid[y][x] == want}, name)
+                             {(x, y) for y in range(h) for x in range(w) if keys[y][x] is not None}, name)
             for t in tiles:
                 x, y = t["px"][0] // 32, t["px"][1] // 32
                 s = slots[keys[y][x]]
@@ -573,7 +609,7 @@ class RepaintTests(RoomBase):
             ts = self.doc()["defs"]["tilesets"][0]
             self.assertEqual((ts["pxWid"], ts["pxHei"]), new.size)
             self.assertEqual((ts["__cWid"], ts["__cHei"]), (new.width // 32, new.height // 32))
-        self.assertEqual((table["wall"], table["floor"], table["face_height"]), ("paper", "bakery.tile.floor", 2))
+        self.assertEqual((table["wall"], table["floor"], table["face_height"], table["band"]), ("paper", "bakery.tile.floor", 2, 16))
 
     def test_tileset_cell_count_follows_a_sheet_that_grows(self):
         # 타일 종류가 적은 평면으로 시트를 한 줄(32px)만 만든 뒤, 편집기에서 칠한 큰 방을 repaint해 시트를 키운다
@@ -699,6 +735,65 @@ class RepaintTests(RoomBase):
         with self.assertRaises(RoomError):
             repaint_room(self.ldtk_path)
         self.assertEqual(self.snapshot(), before)
+
+    def test_old_room_without_band_is_refused_with_guidance_and_not_drawn_32px(self):
+        """윗면이 32px이던 때 만든 방(자리 표에 band가 없다)을 조용히 옛 두께로 그리지 않는다."""
+        table = json.loads((self.out() / "tiles.slots.json").read_text("utf-8"))
+        del table["band"]
+        (self.out() / "tiles.slots.json").write_text(json.dumps(table), encoding="utf-8")
+        before = self.snapshot()
+        for call in (lambda: repaint_room(self.ldtk_path), lambda: repaint_room(self.ldtk_path, dry_run=True),
+                     lambda: check_room(self.ldtk_path)):
+            with self.assertRaises(RoomError) as e:
+                call()
+            self.assertIn("band", str(e.exception))
+            self.assertIn("room build", str(e.exception))
+        self.assertEqual(self.snapshot(), before)
+
+
+EDITOR_SAVED = HERE / "fixtures" / "room-editor-saved"
+
+
+class EditorSavedRoomTests(RoomBase):
+    """사용자가 LDtk 1.5.3 편집기에서 Collision을 칠해 저장한 실제 방(2026-11-14). 편집기가 저장한 뒤 그때의 repaint가
+    32px 윗면으로 Wall·Ground를 다시 쓴 파일이다(들여쓰기·줄바꿈은 repaint의 것, cachedPixelData 같은 값은 편집기의 것).
+    자리 표에만 고정 파일용으로 band 16을 적어 넣었다(옛 시트라 band가 없었다). 시트(tiles.png)는 그때의 것 그대로 — 옛 윗면 타일이 들어 있다."""
+
+    def setUp(self):
+        super().setUp()
+        self.folder = self.out()
+        shutil.copytree(EDITOR_SAVED, self.folder)
+        self.ldtk_path = self.folder / f"{RID}.ldtk"
+
+    def codes(self):
+        return [p.code for p in check_room(self.ldtk_path)]
+
+    def test_fixture_is_the_editor_saved_room(self):
+        doc = json.loads(self.ldtk_path.read_text("utf-8"))
+        self.assertEqual(doc["__header__"]["app"], "LDtk")
+        self.assertIsNotNone(doc["defs"]["tilesets"][0]["cachedPixelData"])          # 편집기만 채우는 값
+        col = _layer(doc, "Collision")
+        self.assertNotEqual(col["intGridCsv"], [v for row in cells(REAL_PLAN["plan"]) for v in row])   # 평면과 다르게 칠했다
+        self.assertIn("room-art-mismatch", self.codes())              # 그림은 옛 두꺼운 벽이라 새 규칙과 어긋난다
+
+    def test_repaint_draws_the_painted_room_with_thin_walls(self):
+        before = json.loads(self.ldtk_path.read_text("utf-8"))
+        written = repaint_room(self.ldtk_path, kit=KIT)
+        self.assertIn(f"{RID}.ldtk", written)
+        self.assertNotIn("room-art-mismatch", self.codes())
+        doc = json.loads(self.ldtk_path.read_text("utf-8"))
+        self.assertEqual(_layer(doc, "Collision"), _layer(before, "Collision"))
+        self.assertEqual(json.dumps(_strip_art(doc), ensure_ascii=False), json.dumps(_strip_art(before), ensure_ascii=False))
+        col = _layer(doc, "Collision")
+        w, h = col["__cWid"], col["__cHei"]
+        planned = plan_tiles([col["intGridCsv"][y * w:(y + 1) * w] for y in range(h)], 2, 16)
+        slots = json.loads((self.folder / "tiles.slots.json").read_text("utf-8"))["slots"]
+        for name, keys in (("Wall", planned.wall), ("Ground", planned.ground)):
+            got = {(t["px"][0] // 32, t["px"][1] // 32): tuple(t["src"]) for t in _layer(doc, name)["gridTiles"]}
+            want = {(x, y): (slots[k]["x"], slots[k]["y"]) for y, row in enumerate(keys) for x, k in enumerate(row) if k}
+            self.assertEqual(got, want, name)
+        self.assertTrue(any(k and k.startswith("cap:") for row in planned.wall for k in row))
+        self.assertEqual(repaint_room(self.ldtk_path, kit=KIT), [])                   # 두 번째는 바꿀 것 없음
 
 
 class CheckRoomTests(RoomBase):
