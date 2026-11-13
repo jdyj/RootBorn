@@ -50,6 +50,13 @@ namespace Rootborn.Data
             return registryKey != null && _registry.TryGetValue(registryKey, out var ids) ? ids : Array.Empty<string>();
         }
 
+        /// <summary>같은 (type, id)의 노드를 바꿔 넣는다. 순서와 표 안 자리는 그대로다(덮어쓰기용).</summary>
+        internal void Replace(EntityNode original, EntityNode replacement)
+        {
+            _byKey[(original.Type, original.Id)] = replacement;
+            _ordered[_ordered.IndexOf(original)] = replacement;
+        }
+
         public static EntityTable ReadDirectory(string dataDirectory, List<LoadError> errors)
         {
             if (dataDirectory == null) throw new ArgumentNullException(nameof(dataDirectory));

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Rootborn.Core.Save;
 using Rootborn.Data;
@@ -11,13 +12,90 @@ namespace Rootborn.Game.Tests
     internal static class TestWorld
     {
         private static readonly Lazy<string> _root = new Lazy<string>(FindRoot);
-        private static readonly Lazy<GameDefinitions> _definitions = new Lazy<GameDefinitions>(LoadDefinitions);
-        private static readonly Lazy<GameStartSettings> _settings = new Lazy<GameStartSettings>(() => GameStartSettings.FromDefinitions(Definitions));
+        private static readonly object _gate = new object();
+        private static string _overlayOverride;
+        private static Loaded _loaded;
+
+        /// <summary>데이터 덮어쓰기 폴더를 주는 환경 변수(시뮬레이션 테스트 전용, 게임 실행에는 쓰지 않는다). 없으면 data/ 그대로다.</summary>
+        public const string OverlayVariable = "ROOTBORN_DATA_OVERLAY";
+
+        private sealed class Loaded
+        {
+            public GameDefinitions Definitions;
+            public GameStartSettings Settings;
+            public IReadOnlyList<OverlayChange> Changes;
+        }
 
         public static string RepoRoot => _root.Value;
         public static string DataDirectory => Path.Combine(_root.Value, "data");
-        public static GameDefinitions Definitions => _definitions.Value;
-        public static GameStartSettings Settings => _settings.Value;
+        public static GameDefinitions Definitions => Current.Definitions;
+        public static GameStartSettings Settings => Current.Settings;
+
+        /// <summary>지금 쓰는 덮어쓰기 폴더. <see cref="UseOverlay"/>로 정한 값, 없으면 환경 변수, 둘 다 없으면 null.</summary>
+        public static string OverlayDirectory
+        {
+            get
+            {
+                lock (_gate)
+                {
+                    if (_overlayOverride != null) return _overlayOverride.Length == 0 ? null : _overlayOverride;
+                }
+                var value = Environment.GetEnvironmentVariable(OverlayVariable);
+                return string.IsNullOrWhiteSpace(value) ? null : value;
+            }
+        }
+
+        /// <summary>덮어쓰기로 바뀐 필드 목록(없으면 빈 목록). 보고서가 "덮어쓴 데이터로 돈 숫자"라고 적는 근거다.</summary>
+        public static IReadOnlyList<OverlayChange> OverlayChanges => Current.Changes;
+
+        /// <summary>테스트 전용: 이 폴더로 덮어쓴 정의로 바꾼다(빈 문자열이면 덮어쓰기 없음). Dispose하면 이전 상태로 돌아간다. 병렬로 도는 테스트가 없을 때만 쓴다.</summary>
+        public static IDisposable UseOverlay(string overlayDirectory)
+        {
+            lock (_gate)
+            {
+                var previous = _overlayOverride;
+                _overlayOverride = overlayDirectory ?? "";
+                _loaded = null;
+                return new Restore(previous);
+            }
+        }
+
+        private sealed class Restore : IDisposable
+        {
+            private readonly string _previous;
+            public Restore(string previous) { _previous = previous; }
+            public void Dispose()
+            {
+                lock (_gate) { _overrideReset(_previous); }
+            }
+        }
+
+        private static void _overrideReset(string previous)
+        {
+            _overlayOverride = previous;
+            _loaded = null;
+        }
+
+        private static Loaded Current
+        {
+            get
+            {
+                lock (_gate)
+                {
+                    if (_loaded != null) return _loaded;
+                }
+                var overlay = OverlayDirectory;
+                var result = GameDataLoader.Load(DataDirectory, RootbornBuilders.Register, overlay);
+                result.ThrowIfFailed();
+                var loaded = new Loaded
+                {
+                    Definitions = result.Definitions,
+                    Settings = GameStartSettings.FromDefinitions(result.Definitions),
+                    Changes = result.OverlayChanges,
+                };
+                lock (_gate) { return _loaded ??= loaded; }
+            }
+        }
         public static string FixtureSaves => Path.Combine(AppContext.BaseDirectory, "Fixtures", "saves");
 
         public const string Slot = "slot-test";
@@ -25,13 +103,6 @@ namespace Rootborn.Game.Tests
 
         public static GameSession Start(ISaveStore store, string slot = Slot, string player = Player)
             => GameSession.Start(Definitions, Settings, store, slot, player);
-
-        private static GameDefinitions LoadDefinitions()
-        {
-            var result = GameDataLoader.Load(DataDirectory, RootbornBuilders.Register);
-            result.ThrowIfFailed();
-            return result.Definitions;
-        }
 
         private static string FindRoot()
         {
