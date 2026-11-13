@@ -118,11 +118,15 @@ def _period(cv: Canvas, horizontal: bool) -> Optional[int]:
     return None
 
 
-def _seam(cv: Canvas) -> List[Problem]:
+SEAM_AXES = ((True, "가로"), (False, "세로"))
+
+
+def _seam(cv: Canvas, axes=SEAM_AXES) -> List[Problem]:
     """축마다 그림이 자기 자신을 p칸 민 것과 겹친 곳이 모두 같아지는 가장 작은 p(무늬 주기, 크기의 절반까지)를 찾는다.
-    p가 있는데 그 축의 길이가 p로 나누어떨어지지 않으면 이음매에서 무늬가 잘리므로 tile-seam 하나를 낸다(주기가 없으면 통과)."""
+    p가 있는데 그 축의 길이가 p로 나누어떨어지지 않으면 이음매에서 무늬가 잘리므로 tile-seam 하나를 낸다(주기가 없으면 통과).
+    axes는 볼 축(기본 둘 다). 방 벽의 정면처럼 한 방향으로만 이어 붙이는 타일은 가로만 본다."""
     bad = []
-    for horizontal, name in ((True, "가로"), (False, "세로")):
+    for horizontal, name in axes:
         p = _period(cv, horizontal)
         n = cv.w if horizontal else cv.h
         if p is not None and n % p:

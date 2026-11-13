@@ -18,6 +18,7 @@ class Style:
         self.max_colors: Dict[str, int] = dict(raw["max_colors"])
         self._colors: Dict[str, RGBA] = {}
         self._brighter: Dict[RGBA, RGBA] = {}
+        self._darker: Dict[RGBA, RGBA] = {}
         for name in sorted(raw["palette"]):
             ramp = [_hex(h) for h in raw["palette"][name]]
             for i, c in enumerate(ramp):
@@ -25,6 +26,8 @@ class Style:
                 # 같은 색이 여러 줄에 있으면 이름순으로 처음 나온 줄의 다음 단계(결정적).
                 if i + 1 < len(ramp) and c not in self._brighter:
                     self._brighter[c] = ramp[i + 1]
+                if i > 0 and c not in self._darker:
+                    self._darker[c] = ramp[i - 1]
         self.palette: FrozenSet[RGBA] = frozenset(set(self._colors.values()) | {self.outline})
 
     @staticmethod
@@ -36,6 +39,11 @@ class Style:
         """같은 줄(ramp)의 한 단계 밝은 색. 가장 밝은 단계거나 팔레트 단계가 아니면 None.
         같은 hex가 여러 줄에 있으면 줄 이름순으로 먼저 나온 줄(그 줄에서 가장 밝지 않은 첫 자리)의 다음 단계다."""
         return self._brighter.get(tuple(rgba))
+
+    def darker(self, rgba: RGBA) -> Optional[RGBA]:
+        """같은 줄의 한 단계 어두운 색. 가장 어두운 단계거나 팔레트 단계가 아니면 None. 같은 hex가 여러 줄에 있으면
+        brighter와 같은 규칙(줄 이름순으로 그 색이 단계 0이 아닌 첫 줄)."""
+        return self._darker.get(tuple(rgba))
 
     def color(self, key: str) -> RGBA:
         try:

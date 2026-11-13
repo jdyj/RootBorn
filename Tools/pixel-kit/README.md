@@ -37,6 +37,7 @@ Python 3.11 + Pillow. 다른 패키지는 쓰지 않는다.
 | 만드는 부품(코드) | `Tools/pixel-kit/pixelkit/makers/{tiles,furniture,building,seating}.py` |
 | 장면·그림자 | `Tools/pixel-kit/pixelkit/{scene,shadow}.py` |
 | 검사 | `Tools/pixel-kit/pixelkit/lint.py` |
+| 방 벽·바닥 타일(둘레 칸으로 고르기) | `Tools/pixel-kit/pixelkit/room_tiles.py` |
 | 테스트 | `Tools/pixel-kit/tests/` |
 
 ## 점 부품 더하기
@@ -199,6 +200,36 @@ if/switch로 종류를 닫지 않는다.
 - `relPath`는 `.ldtk` 폴더 기준 상대 경로(슬래시)이고 `pxWid`·`pxHei`는 PNG에서 잰 값이다. `maps.json`은 `game/world/maps.json`의 `walker`·`npcWalker`를 옮기고 맵 하나만 둔다(`ldtk`는 저장소 뿌리 기준).
 - `--out`에 이미 있는 `maps.json`이 이 도구가 쓴 것(맵이 `PixelKitTest` 하나)이 아니거나 `.ldtk`가 이 도구가 만든 것(헤더 `app: pixel-kit`)이 아니면 덮어쓰지 않고 끝 코드 2(예: `--out game/world`는 거절된다).
 - 같은 내용이면 쓰지 않는다. 시트가 없거나 `npcWalker`가 원본에 없으면 끝 코드 2.
+
+## 방 만들기 — 벽 타일
+
+`pixelkit/room_tiles.py`. 칸마다 벽/바닥/밖만 정한 격자(`grid[y][x]`, 값 `OUT, WALL, FLOOR = 0, 1, 2`, 격자 밖은 `OUT`)에서
+둘레 칸을 보고 32x32 타일을 고르고 그린다. 설계는 `docs/superpowers/specs/2026-11-13-room-builder-design.md` 4.2절.
+(평면 파일 읽기와 LDtk 쓰기는 다음 작업이다.)
+
+- `classify(grid, face_height=2)` → 칸마다 타일 열쇠(아래 표) 또는 `None`(밖).
+- `draw_tile(style, key, wall, floor_spec)` → 32x32 한 장. `wall`은 벽 모양 이름, `floor_spec`은 키트의 바닥 타일 명세
+  (예: `bakery.tile.floor`, 32x32 — 바닥은 그 명세를 그대로 그린다). 모르는 벽 모양·열쇠는 `RecipeError`(있는 모양을 적는다).
+- `lint_room_tile(canvas, key, style)` → 문제 목록: `room-tile-size`(32x32가 아님), `off-palette`, `too-many-colors`(타일 한도 12),
+  `tile-transparent`, 정면·바닥 열쇠는 가로 이음매 `tile-seam`(가로로만 이어 붙이므로 세로는 보지 않는다).
+- 벽 모양은 `@wall_style("이름")`을 붙인 클래스 하나로 더한다: `cap`(윗면 팔레트 줄, 단계 0 안쪽 그늘 / 1 면 / 2 안쪽 빛)과
+  `face(style, k, ceiling) -> Canvas`(32x32, 끝·위 외곽선 없이. `k == 1`이 바닥 바로 위 타일, `ceiling`이면 천장 밑 그늘 2줄).
+  `wall_styles()`가 이름 목록. 지금 `paper`(줄무늬 벽지 `wall.cream` + 징두리 판 `wood.archive` + 걸레받이, 윗면 `wall.top.cream`),
+  `plaster`(회반죽 `wall.plaster` + 낮은 걸레받이 `wood.school`, 윗면 `wall.plaster.top`).
+
+| 열쇠 | 뜻 |
+|---|---|
+| `floor` | 바닥 |
+| `floor:shade` | 바로 위 칸이 정면인 바닥. 맨 위 2줄이 그 팔레트 줄의 가장 어두운 단계(벽 밑 그림자) |
+| `face:<k>` | 정면. 아래로 `face_height`칸 안에 바닥이 나오고 그 사이가 모두 벽인 벽 칸. `k`는 바닥에서 위로 몇 번째(1이 바닥 바로 위) |
+| `face:<k>:<표시>` | 표시는 `l` `r` `c` `t` 중 붙는 것만 이 순서로. `l`/`r` 왼쪽/오른쪽 끝(그쪽 이웃이 같은 높이 정면도 윗면도 아님 → 그 변 열이 외곽선), `c` 위 칸이 윗면(천장 밑 그늘), `t` 위 칸이 벽이 아님(얇은 벽·맵 가장자리 → 맨 윗줄이 외곽선). 예: `face:2:c`, `face:2:lc`, `face:1:lrt` |
+| `cap:<mask>` | 윗면(정면이 아닌 벽 칸). `mask`는 둘레 8칸 중 윗면인 칸의 비트 합: 북 1, 동 2, 남 4, 서 8, 북동 16, 남동 32, 남서 64, 북서 128. 대각 비트는 양옆 두 변이 모두 윗면일 때만 남겨 47가지 |
+
+- 윗면 그림: 둘레 3x3 칸의 윗면을 픽셀 지도로 펴고, 윗면이 아닌 픽셀에 8방향으로 닿는 픽셀은 외곽선, 그 안쪽 한 줄은
+  북쪽(먼 쪽) 가장자리만 빛, 나머지 가장자리는 그늘. 그래서 모서리·T자·끝에서 이웃 타일의 선이 이어진다.
+- 정면 옆이 윗면이면 그 변의 외곽선은 윗면이 친다(정면은 `l`/`r`을 받지 않는다) — 선이 두 겹이 되지 않는다.
+- 세로 벽은 윗면만이고 그 남쪽 끝 `face_height`칸이 정면이다. 가로 벽이 `face_height + 1`칸보다 얇으면 윗면 없이 정면만 남는다(`t`).
+- 문간은 벽 줄의 바닥 칸이다. 따로 그리는 것은 없고 양옆 정면이 `l`/`r` 끝이 된다.
 
 ## 같이 바뀌는 색
 

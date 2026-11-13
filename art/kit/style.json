@@ -51,6 +51,9 @@
     "ceramic": ["#b9bcc6", "#dcdee3", "#f3f4f5"],
     "counter.kitchen": ["#5c3d2a", "#7a5238", "#94694a", "#c2a582", "#e8dbbd"],
     "cushion.navy": ["#2c3350", "#3e4a70", "#56668f"],
-    "cushion.wine": ["#6b2a36", "#8f3c48", "#b0596a"]
+    "cushion.wine": ["#6b2a36", "#8f3c48", "#b0596a"],
+    "wall.top.cream": ["#9e8766", "#cdb890", "#e3d3b1"],
+    "wall.plaster": ["#b9b1b3", "#d2ccca", "#e8e3dd"],
+    "wall.plaster.top": ["#918789", "#c2b9b8", "#ddd7d3"]
   }
 }
