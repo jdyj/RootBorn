@@ -63,6 +63,8 @@ namespace Rootborn.Simulation.Pace
             md.AppendLine();
             md.AppendLine("1일째부터 걸음이 있는 날의 평균(슬롯 선택·캐릭터 만들기는 뺀다).");
             md.AppendLine();
+            md.AppendLine(PaceReport.DayLengthNote);
+            md.AppendLine();
             Header(md, entries);
             foreach (string c in PaceCategories.All)
                 Row(md, PaceCategories.Label(c), analyses.Select(a => (DayAverage(a, c) / 60.0).ToString("0.0", CultureInfo.InvariantCulture)));

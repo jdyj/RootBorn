@@ -29,6 +29,12 @@ namespace Rootborn.Simulation.Pace
     {
         public const string EvidenceLine = "> 자동 테스트(실제 플레이 아님), 사람 쪽 시간은 가정이다. 게임이 돈 시간만 실제로 돈 값(창 없는 몸의 프레임 수 ÷ 초당 60프레임)이다.";
 
+        /// <summary>하루의 실제 길이 풀이(흐르는 시간 설계 2절 — 코드와 Simulation StandingStillInTheWorld 테스트로 확인).</summary>
+        public const string DayLengthNote = "하루의 실제 길이: 혼자 하기에서 시계는 화면 없이 걷거나 서 있는 동안과 미니게임 동안 하루 = 실제 600초(data/time)로 흐르고, "
+            + "패널·모달·대화가 열려 있으면 멈추며, 활동은 걸리는 분만큼 시계를 건너뛴다(실제 시간을 쓰지 않는다). 그래서 \"게임 시계가 간 분\"은 거의 하루 1,440분이어도 "
+            + "실제 시간은 흐른 시간 + 사람이 화면에서 쓰는 시간이고, 활동을 많이 할수록 짧다. 아무것도 안 하고 서 있으면 07:00~22:00이 실제 6분 15초, 하루가 10분. "
+            + "대화가 떠 있는 채 시작한 미니게임 동안은 시계가 서 있다(SIM-005).";
+
         public static string Directory(string repoRoot, string name) => Path.Combine(repoRoot, "output", "simulation", "pace", name);
 
         public static void Write(string dir, PaceRunInfo info, IReadOnlyList<PaceStep> steps, double secondsPerFrame)
@@ -117,7 +123,7 @@ namespace Rootborn.Simulation.Pace
             md.AppendLine(" " + Min(b.TotalSeconds) + " | " + (b.TotalSeconds <= 0 ? 0 : (b.ByCategory.TryGetValue(PaceCategories.NothingToDo, out double idle) ? idle : 0) / b.TotalSeconds * 100).ToString("0", CultureInfo.InvariantCulture)
                 + "% | " + steps.Sum(s => s.Novelties.Count) + " | " + steps.Sum(s => s.GameMinutes) + " |");
             md.AppendLine();
-            md.AppendLine("게임 시계가 간 분에는 혼자 하기의 활동이 건너뛴 분이 든다(활동은 실제 시간을 쓰지 않고 시계를 건너뛴다).");
+            md.AppendLine(DayLengthNote);
             md.AppendLine();
 
             md.AppendLine("## 가장 긴 지루한 구간 (새로운 것 사이 간격, 기준)");
