@@ -1,0 +1,19 @@
+{
+  "image": "art/props/school/school.archive-bookshelf.png",
+  "width": 64,
+  "height": 96,
+  "pixelsPerUnit": 32,
+  "origin": "top-left",
+  "sprites": {
+    "school.archive-bookshelf": {
+      "x": 0,
+      "y": 0,
+      "w": 64,
+      "h": 96,
+      "pivot": {
+        "x": 0.25,
+        "y": 0.8333333333333334
+      }
+    }
+  }
+}

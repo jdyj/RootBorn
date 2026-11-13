@@ -382,8 +382,8 @@
           "y": 0
         },
         "tile": {
-          "sprite": "Assets/Art/CareerFurniture/Comfy31/Comfy31_kitchen_counter_front_2x1.png",
-          "name": "Comfy31_kitchen_counter_front_2x1"
+          "sprite": "art/props/kitchen/kitchen.counter-front.png",
+          "name": "kitchen.counter-front"
         }
       }
     ],
@@ -62617,8 +62617,8 @@
           "y": 0
         },
         "tile": {
-          "sprite": "Assets/Art/SchoolPixels/Archive30/Archive30_archive_bookshelf_2x1.png",
-          "name": "Archive30_archive_bookshelf_2x1"
+          "sprite": "art/props/school/school.archive-bookshelf.png",
+          "name": "school.archive-bookshelf"
         }
       }
     ],
@@ -62831,8 +62831,8 @@
           "y": 0
         },
         "tile": {
-          "sprite": "Assets/Art/SchoolPixels/Furniture48/Storage/School_bookcase_2x1.png",
-          "name": "School_bookcase_2x1"
+          "sprite": "art/props/school/school.bookcase.png",
+          "name": "school.bookcase"
         }
       }
     ],
