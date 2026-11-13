@@ -157,6 +157,11 @@ namespace Rootborn.World
             return new ComposedRoom(width, height, pixels, placed, tiles.Count, job.Problems, false);
         }
 
+        /// <summary>깨진 좌표표를 읽을 때 RoomFinishArt가 던지는 예외들(조합과 맵 검사가 같은 범위를 문제 한 줄로 바꾼다).</summary>
+        internal static bool IsAtlasReadError(Exception e) =>
+            e is InvalidDataException || e is System.Text.Json.JsonException || e is KeyNotFoundException
+            || e is InvalidOperationException || e is FormatException || e is IOException;
+
         private PieceImage SheetImage(string path)
         {
             if (!_sheets.TryGetValue(path, out PieceImage image)) _sheets[path] = image = _sheet(path);
@@ -190,10 +195,14 @@ namespace Rootborn.World
 
             private static CellPos Owner(TilePart part, CellPos cell) => new CellPos(cell.X + part.Owner.X, cell.Y + part.Owner.Y);
 
-            /// <summary>이 부분이 쓰는 꾸밈 id(주인 없는 종류·모르는 종류는 빈 글). 같은 칸 그림인지 가리는 열쇠에 든다.</summary>
+            /// <summary>
+            /// 이 부분이 쓰는 꾸밈 id(꾸밈이 필요 없는 종류·모르는 종류는 빈 글). 같은 칸 그림인지 가리는 열쇠에 든다.
+            /// 꾸밈이 필요한 종류인데 주인이 없으면(Core는 내지 않는다 — 종류 표가 어긋난 경우) 문제로 알리고 따로 묶는다(칠하지 않는다).
+            /// </summary>
             public string FinishId(TilePart part, CellPos cell)
             {
-                if (!part.HasOwner || !Painters.TryGetValue(part.Source, out var p) || p.Slot == null) return string.Empty;
+                if (!Painters.TryGetValue(part.Source, out var p) || p.Slot == null) return string.Empty;
+                if (!part.HasOwner) { NoOwner(part, p.Slot, cell); return "!"; }
                 RoomFinishDefinition f = p.Slot == RoomFinishSlots.Floor ? _floorAt(Owner(part, cell)) : _wallAt(Owner(part, cell));
                 return f?.Id ?? "?";
             }
@@ -201,8 +210,12 @@ namespace Rootborn.World
             public void Paint(TilePart part, CellPos cell, uint[] tile)
             {
                 if (!Painters.TryGetValue(part.Source, out var p)) { Problem("모르는 출처 종류 " + part.Source + " — 그 픽셀은 투명"); return; }
+                if (p.Slot != null && !part.HasOwner) { NoOwner(part, p.Slot, cell); return; }
                 p.Paint(this, part, Owner(part, cell), tile);
             }
+
+            private void NoOwner(TilePart part, string slot, CellPos cell) =>
+                Problem($"칸 {cell}의 {part.Source} 부분은 {slot} 꾸밈이 필요한데 주인 칸이 없다 — 그 픽셀은 투명");
 
             public void PaintBand(TilePart part, uint[] tile)
             {
@@ -270,8 +283,7 @@ namespace Rootborn.World
             private bool Guard(Func<bool> read)
             {
                 try { return read(); }
-                catch (Exception e) when (e is InvalidDataException || e is System.Text.Json.JsonException || e is KeyNotFoundException
-                                          || e is InvalidOperationException || e is FormatException || e is IOException)
+                catch (Exception e) when (IsAtlasReadError(e))
                 {
                     Problem("조각 시트 좌표표를 읽지 못했다: " + e.Message);
                     return false;

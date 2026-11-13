@@ -106,5 +106,58 @@ namespace Rootborn.World.Tests
             Assert.That(tiles.InsertAt, Is.EqualTo(0), "그릴 자리가 없으면 캐릭터 아래 층의 맨 아래에 그린다(빈 화면이 되지 않는다)");
             Assert.That(tiles.Draws.Count, Is.EqualTo(map.Tiles.Cells.Count));
         }
+
+        [Test]
+        public void AnotherTileLayerBetweenTheReplacedLayers_IsAMapProblem()
+        {
+            // Wall 층을 본뜬 타일 층 하나를 Wall과 Ground 사이에 끼운다(타일 하나). 조합 칸은 한 번에 그려지므로 그 층은 벽 아래로 들어가지 못한다.
+            var (loader, entry) = HouseWith(l =>
+            {
+                JsonNode wall = Layer(l, "Wall");
+                JsonNode between = wall.DeepClone();
+                between["__identifier"] = "Decor";
+                JsonArray one = new JsonArray(wall["gridTiles"].AsArray()[0].DeepClone());
+                between["gridTiles"] = one;
+                l.Insert(l.IndexOf(wall) + 1, between); // layerInstances는 위 층 먼저 — Wall 다음 = Wall 바로 아래
+            });
+            LoadedMap map = loader.LoadMap(entry.Id);
+            int ground = map.Level.Layers.FindIndex(x => x.Name == "Ground"), decor = map.Level.Layers.FindIndex(x => x.Name == "Decor"),
+                wallAt = map.Level.Layers.FindIndex(x => x.Name == "Wall");
+            Assert.That(ground < decor && decor < wallAt, Is.True, "전제: 그리기 순서 Ground → Decor → Wall");
+            Assert.That(Checked(loader, entry), Has.Some.Contains("Decor").And.Some.StartsWith("짓는 집: 바꿔 그릴 층 사이"));
+        }
+
+        [Test]
+        public void AHiddenOrEmptyLayerBetweenTheReplacedLayers_IsNotAProblem()
+        {
+            var (loader, entry) = HouseWith(l =>
+            {
+                JsonNode wall = Layer(l, "Wall");
+                JsonNode hidden = wall.DeepClone();
+                hidden["__identifier"] = "Hidden";
+                hidden["visible"] = false;
+                JsonNode empty = wall.DeepClone();
+                empty["__identifier"] = "Empty";
+                empty["gridTiles"] = new JsonArray();
+                l.Insert(l.IndexOf(wall) + 1, hidden);
+                l.Insert(l.IndexOf(wall) + 1, empty);
+            });
+            Assert.That(Checked(loader, entry), Is.Empty, "그려지지 않는 층은 앞뒤를 바꾸지 않는다");
+        }
+
+        [Test]
+        public void ABrokenAtlas_IsAMapProblemLine_NotAnException()
+        {
+            // 기본 벽 꾸밈 시트의 좌표표 사본을 JSON이 아닌 글로 → 맵 검사는 던지지 않고 문제 한 줄을 낸다.
+            var (loader, entry) = HouseWith(_ => { });
+            RoomFinishDefinition wall = Repo.Definitions.Get<RoomFinishDefinition>(entry.Build.DefaultWall);
+            string data = Path.Combine(_dir, "data");
+            string atlas = Path.Combine(data, "atlases", wall.Sheet + ".atlas.json");
+            Directory.CreateDirectory(Path.GetDirectoryName(atlas));
+            File.WriteAllText(atlas, "{ \"image\": ");
+            List<string> found = null;
+            Assert.DoesNotThrow(() => found = Checked(loader, entry, new RoomFinishArt(data)));
+            Assert.That(found, Has.Some.StartsWith("짓는 집: 시트 " + wall.Sheet + "의 좌표표를 읽지 못했다"));
+        }
     }
 }

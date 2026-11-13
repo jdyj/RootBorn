@@ -193,6 +193,7 @@ namespace Rootborn.World
                 if (layer == null || layer.Type != "Tiles") problems.Add(new MapCheckProblem(id, "짓는 집: 바꿔 그릴 층 " + name + "이 레벨의 타일 층으로 없다"));
                 else if (layer.Tags.Contains(MapPicture.DepthSortTag)) problems.Add(new MapCheckProblem(id, "짓는 집: 바꿔 그릴 층 " + name + "이 앞뒤를 가리는 층(" + MapPicture.DepthSortTag + ")이다"));
             }
+            CheckBetweenReplaced(loaded, problems);
             if (loaded.Tiles == null) problems.Add(new MapCheckProblem(id, "짓는 집: 칸마다 그릴 출처표를 만들지 못했다(LDtk 층을 그린다)"));
             if (definitions == null) return;
             RoomFinishDefinition wall = Finish(definitions, build.DefaultWall, RoomFinishSlots.Wall, "기본 벽 꾸밈", id, problems);
@@ -206,10 +207,41 @@ namespace Rootborn.World
                 if (band != build.Band)
                     problems.Add(new MapCheckProblem(id, "짓는 집: 띠 두께 " + build.Band + "px가 시트 " + wall.Sheet + "의 좌표표 band " + band + "px와 다르다"));
             }
-            catch (System.IO.InvalidDataException e)
+            catch (Exception e) when (RoomTileCompositor.IsAtlasReadError(e))
             {
                 problems.Add(new MapCheckProblem(id, "짓는 집: 시트 " + wall.Sheet + "의 좌표표를 읽지 못했다: " + e.Message));
             }
+        }
+
+        /// <summary>
+        /// 바꿔 그릴 층들 사이(그리기 순서)에 그려지는 다른 층이 없다: 조합한 벽·바닥은 가장 아래 바꿔 그릴 층 자리에 한 번에 그려지므로,
+        /// 사이에 낀 층(보이는 타일, art 태그 층의 그림 엔티티)은 원래 벽 아래였어도 벽 위로 올라간다. 앞뒤를 가리는(ysort) 층은 원래 캐릭터와 함께 그려져 상관없다.
+        /// </summary>
+        private static void CheckBetweenReplaced(LoadedMap loaded, List<MapCheckProblem> problems)
+        {
+            List<LdtkLayer> layers = loaded.Level?.Layers;
+            if (layers == null) return;
+            IReadOnlyList<string> replaced = loaded.Entry.Build.ReplacesLayers;
+            int first = -1, last = -1;
+            for (int i = 0; i < layers.Count; i++)
+                if (Named(replaced, layers[i].Name)) { if (first < 0) first = i; last = i; }
+            for (int i = first + 1; i < last; i++)
+            {
+                LdtkLayer layer = layers[i];
+                if (Named(replaced, layer.Name) || !layer.Visible || layer.Tags.Contains(MapPicture.DepthSortTag)) continue;
+                bool drawn = layer.Tiles.Count > 0;
+                if (!drawn && layer.Tags.Contains(MapPicture.ArtTag))
+                    foreach (LdtkEntity e in layer.Entities) if (e.HasTile) { drawn = true; break; }
+                if (drawn)
+                    problems.Add(new MapCheckProblem(loaded.Entry.Id, "짓는 집: 바꿔 그릴 층 사이에 그려지는 층 " + layer.Name
+                        + "이 있다(조합한 벽·바닥은 한 번에 그려져 이 층이 그 위로 올라간다 — 바꿔 그릴 층 위나 아래로 옮긴다)"));
+            }
+        }
+
+        private static bool Named(IReadOnlyList<string> names, string name)
+        {
+            foreach (string n in names) if (string.Equals(n, name, StringComparison.Ordinal)) return true;
+            return false;
         }
 
         private static RoomFinishDefinition Finish(GameDefinitions definitions, string finishId, string slot, string what, string mapId, List<MapCheckProblem> problems)

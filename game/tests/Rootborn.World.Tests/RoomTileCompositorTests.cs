@@ -508,6 +508,29 @@ namespace Rootborn.World.Tests
             Assert.That(twoRoomFaceCells, Is.GreaterThan(0), "세로 벽이 가로 벽 정면을 지나는 칸: 양옆 늘인 정면이 각각 다른 방의 벽지");
         }
 
+        [Test]
+        public void AFinishPartWithoutAnOwner_IsAProblem_NotPaintedWithThisCellsFinish()
+        {
+            // Core는 꾸밈이 필요한 종류(face·narrow·floor)를 주인 없이 내지 않는다(TilePart가 막는다). 손으로 만든 출처표(리플렉션 — 종류 표가
+            // 어긋난 경우를 흉내)에서 정면 부분 하나를 주인 없는 것으로 바꾸면, 조합은 문제를 알리고(조합 실패 → LDtk 층 길) 그 픽셀은 이 칸의 꾸밈으로 칠하지 않는다.
+            RoomTilePlan plan = Plan(TwoRooms);
+            TestSheet sheet = MakeSheet(plan, new[] { WallA, WallB }, new[] { FloorA, FloorB });
+            CellTiles cell = plan.Cells.First(c => c.Parts.Any(p => p.Source == TileSources.Face));
+            TilePart face = cell.Parts.First(p => p.Source == TileSources.Face);
+            const System.Reflection.BindingFlags Any = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public;
+            object kind = Activator.CreateInstance(typeof(TileSourceKind), Any, null, new object[] { TileSources.Face, TileSourceKind.PieceField, false }, null);
+            var orphan = (TilePart)Activator.CreateInstance(typeof(TilePart), Any, null, new object[] { kind, face.Piece, false, new CellPos(0, 0), face.Rects }, null);
+            Assert.That((orphan.Source, orphan.HasOwner), Is.EqualTo((TileSources.Face, false)));
+            var parts = cell.Parts.Select(p => ReferenceEquals(p, face) ? orphan : p).ToList();
+            typeof(CellTiles).GetField("<Parts>k__BackingField", Any).SetValue(cell, (IReadOnlyList<TilePart>)parts);
+            Assert.That(plan.Cells.First(c => c.Cell.Equals(cell.Cell)).Parts, Has.Member(orphan), "전제: 출처표의 그 칸이 바뀌었다");
+
+            ComposedRoom room = Compositor(sheet).Compose(plan, _ => WallA, _ => FloorA, Sheet, BandId);
+            Assert.That(room.Problems, Has.Some.Contains("주인"), string.Join("\n", room.Problems));
+            PixelRect r = face.Rects[0];
+            Assert.That(At(room, cell.Cell, r.X0, r.Y0) >> 24, Is.EqualTo(0u), "주인 없는 꾸밈 부분은 투명(이 칸의 꾸밈으로 칠하지 않는다)");
+        }
+
         // ---------- 짓는 집을 그릴 때: 조합이 안 되면 LDtk 층으로 ----------
 
         private static (LoadedMap Map, RoomFinishDefinition Wall, RoomFinishDefinition Floor) House()
