@@ -78,7 +78,17 @@ def load_part_allowances(directory: str) -> Dict[str, FrozenSet[str]]:
     의도한 외톨이 점(손잡이, 씨앗)만 이렇게 푼다."""
     out: Dict[str, FrozenSet[str]] = {}
     for path in sorted(Path(directory).glob("*.json")):
-        data = json.loads(path.read_text(encoding="utf-8"))
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as e:
+            raise PartError(f"{path.name}: JSON 읽기 실패: {e}") from None
+        if not isinstance(data, list):
+            raise PartError(f"{path.name}: 파일은 부품 배열이어야 한다")
         for part in data:
-            out[part["id"]] = frozenset(part.get("allow", []))
+            if not isinstance(part, dict) or not isinstance(part.get("id"), str):
+                raise PartError(f"{path.name}: id가 있는 부품 객체가 아니다")
+            allow = part.get("allow", [])
+            if not isinstance(allow, list) or not all(isinstance(c, str) for c in allow):
+                raise PartError(f"{path.name}: {part['id']}: allow는 코드 글자열 배열이어야 한다")
+            out[part["id"]] = frozenset(allow)
     return out

@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from pixelkit.parts import PartError, load_parts
+from pixelkit.parts import PartError, load_part_allowances, load_parts
 from pixelkit.style import Style
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -133,6 +133,25 @@ class FixtureTests(unittest.TestCase):
                 load_parts(str(d), self.style)
         self.assertIn("test.nokey", str(cm.exception))
         self.assertIn("Z", str(cm.exception))
+
+
+class AllowanceTests(unittest.TestCase):
+    def test_maps_allow_and_defaults_to_empty(self):
+        a = {"id": "t.a", "rows": ["A"], "keys": {"A": "bread.1"}, "allow": ["orphan-pixel"]}
+        b = {"id": "t.b", "rows": ["A"], "keys": {"A": "bread.1"}}
+        with _TempDir() as d:
+            (d / "x.json").write_text(json.dumps([a, b]), encoding="utf-8")
+            got = load_part_allowances(str(d))
+        self.assertEqual(got["t.a"], frozenset({"orphan-pixel"}))
+        self.assertEqual(got["t.b"], frozenset())
+
+    def test_malformed_entries_raise_part_error_naming_file(self):
+        for bad in (["oops"], [{"rows": ["A"]}], {"id": "x"}):
+            with _TempDir() as d:
+                (d / "bad.json").write_text(json.dumps(bad), encoding="utf-8")
+                with self.assertRaises(PartError) as cm:
+                    load_part_allowances(str(d))
+            self.assertIn("bad.json", str(cm.exception))
 
 
 if __name__ == "__main__":

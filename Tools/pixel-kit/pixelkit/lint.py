@@ -88,40 +88,30 @@ def lint_sprite(cv: Canvas, recipe: dict, ctx, allow: FrozenSet[str] = frozenset
     return [p for p in out if p.code not in allow]
 
 
-def _runs(line: list) -> list:
-    runs = []
-    for c in line:
-        if runs and runs[-1][0] == c:
-            runs[-1][1] += 1
+def _period(cv: Canvas, horizontal: bool) -> Optional[int]:
+    """그 축으로 그림이 자기 자신과 겹치는 부분이 같아지는 가장 작은 밀기 p(1..크기/2). 없으면 None.
+    p가 절반을 넘으면 겹치는 부분이 너무 좁아 아무 그림이나 우연히 같아지므로(한두 점 얼룩) 주기로 치지 않는다."""
+    n = cv.w if horizontal else cv.h
+    for p in range(1, n // 2 + 1):
+        if horizontal:
+            same = all(cv.get(x, y) == cv.get(x + p, y) for y in range(cv.h) for x in range(n - p))
         else:
-            runs.append([c, 1])
-    return runs
-
-
-def _line_broken(line: list) -> bool:
-    """한 줄을 이어 붙일 때 이음매에서 무늬 주기가 끊기는가.
-    이음매를 건너는 같은 색 덩어리(양 끝 합)가 안쪽 덩어리 중 가장 긴 것보다 길거나,
-    이음매가 색 경계인데 끝 덩어리가 안쪽 덩어리 중 가장 짧은 것보다 짧으면 끊긴 것."""
-    runs = _runs(line)
-    if len(runs) <= 2:
-        return False
-    inner = [n for _, n in runs[1:-1]]
-    if runs[0][0] == runs[-1][0]:
-        return runs[0][1] + runs[-1][1] > max(inner)
-    return runs[0][1] < min(inner) or runs[-1][1] < min(inner)
+            same = all(cv.get(x, y) == cv.get(x, y + p) for x in range(cv.w) for y in range(n - p))
+        if same:
+            return p
+    return None
 
 
 def _seam(cv: Canvas) -> List[Problem]:
-    """줄(가로·세로)마다 같은 색 덩어리 길이를 재어, 이음매를 건너는 덩어리가 안쪽 덩어리보다 길거나 이음매 쪽 끝 덩어리가 안쪽 최소보다 짧으면 그 줄은 끊긴 것이다.
-    끊긴 줄이 절반을 넘으면 tile-seam 하나를 낸다(문턱은 _line_broken과 이 함수의 `* 2`)."""
-    out = []
-    rows = [[cv.get(x, y) for x in range(cv.w)] for y in range(cv.h)]
-    cols = [[cv.get(x, y) for y in range(cv.h)] for x in range(cv.w)]
-    if sum(_line_broken(r) for r in rows) * 2 > cv.h:
-        out.append(Problem("tile-seam", "가로로 깔면 이음매에서 무늬 주기가 끊긴다"))
-    if sum(_line_broken(c) for c in cols) * 2 > cv.w:
-        out.append(Problem("tile-seam", "세로로 깔면 이음매에서 무늬 주기가 끊긴다"))
-    return out
+    """축마다 그림이 자기 자신을 p칸 민 것과 겹친 곳이 모두 같아지는 가장 작은 p(무늬 주기, 크기의 절반까지)를 찾는다.
+    p가 있는데 그 축의 길이가 p로 나누어떨어지지 않으면 이음매에서 무늬가 잘리므로 tile-seam 하나를 낸다(주기가 없으면 통과)."""
+    bad = []
+    for horizontal, name in ((True, "가로"), (False, "세로")):
+        p = _period(cv, horizontal)
+        n = cv.w if horizontal else cv.h
+        if p is not None and n % p:
+            bad.append(f"{name} 무늬 주기 {p}px이 {n}px에 나누어떨어지지 않는다")
+    return [Problem("tile-seam", ", ".join(bad))] if bad else []
 
 
 def lint_tile(cv: Canvas, recipe: dict, ctx, allow: FrozenSet[str] = frozenset()) -> List[Problem]:

@@ -18,6 +18,14 @@ CTX = Ctx(STYLE, {})
 REC = {"id": "t", "kind": "furniture"}
 
 
+def _has(key):
+    try:
+        STYLE.color(key)
+        return True
+    except KeyError:
+        return False
+
+
 def good_sprite():
     """32x32, 안쪽 6x6 상자에 외곽선, 아래 가운데."""
     cv = Canvas(32, 32)
@@ -51,7 +59,8 @@ class SpriteLintTests(unittest.TestCase):
 
     def test_too_many_colors(self):
         cv = Canvas(32, 32)
-        keys = [k for k in STYLE._colors][:30]
+        keys = sorted({k for k in (f"{n}.{i}" for n in ('bread','wood.warm','leaf','red','yellow','cream','choco','paper','metal','terracotta') for i in range(4))
+                       if _has(k)})[:30]
         for i, k in enumerate(keys):
             cv.px(13 + i % 6, 26 + i // 6, STYLE.color(k))
         cv.outline(OL)
@@ -63,6 +72,14 @@ class SpriteLintTests(unittest.TestCase):
         cv.px(22, 28, A)  # 모양에서 떨어진 한 점(바깥 외곽선이 없는 투명 이웃)
         ps = lint_sprite(cv, REC, CTX)
         self.assertIn("orphan-pixel", codes(ps))
+        # 외톨이 하나만 따로 보려면 모양과 같은 줄에 대칭으로 한 점씩 둔다(위치가 bbox를 바꾸지 않게).
+        cv = good_sprite()
+        cv.px(8, 28, A)
+        cv.px(23, 28, A)
+        ps = [p for p in lint_sprite(cv, REC, CTX) if p.code == "orphan-pixel"]
+        self.assertEqual(len(ps), 1)
+        self.assertEqual((ps[0].x, ps[0].y), (8, 28))
+        self.assertIn("외 1칸", ps[0].message)
 
     def test_detail_dot_inside_shape_is_fine(self):
         self.assertEqual(lint_sprite(self._with_dot(), REC, CTX), [])
@@ -77,8 +94,6 @@ class SpriteLintTests(unittest.TestCase):
         for x in (10, 21):  # 좌우 대칭으로 둔 한 점 섬 둘
             cv.px(x, 28, A)
         cv.outline(OL)  # 섬 둘레에 외곽선 고리
-        for x in (10, 21):
-            cv.px(x, 28, A)
         ps = lint_sprite(cv, REC, CTX)
         self.assertEqual(codes(ps), ["orphan-pixel"])
         self.assertEqual((ps[0].x, ps[0].y), (10, 28))
@@ -99,6 +114,11 @@ class SpriteLintTests(unittest.TestCase):
         cv.outline(OL)
         self.assertNotEqual(lint_sprite(cv, REC, CTX), [])
         self.assertEqual(lint_sprite(cv, REC, CTX, allow=frozenset({"orphan-pixel", "not-bottom-center"})), [])
+
+    def test_overflow_on_bottom_row(self):
+        cv = good_sprite()
+        cv.rect(13, 31, 6, 1, A)  # 맨 아래 줄에 외곽선 아닌 색
+        self.assertIn("overflow", codes(lint_sprite(cv, REC, CTX)))
 
     def test_not_cell_multiple(self):
         cv = Canvas(30, 32)
@@ -166,6 +186,30 @@ class TileLintTests(unittest.TestCase):
         cv.rect(0, 0, 32, 32, A)
         cv.px(5, 5, B)
         cv.px(20, 9, B)
+        self.assertEqual(lint_tile(cv, TILE, CTX), [])
+
+    def test_dense_scattered_speckles_ok(self):
+        cv = Canvas(32, 32)
+        cv.rect(0, 0, 32, 32, A)
+        for y in range(32):
+            cv.px((y * 11 + (y * y) % 7) % 32, y, B)  # 줄마다 한 점, 가로로 흩어 둔 얼룩
+        self.assertEqual(lint_tile(cv, TILE, CTX), [])
+
+    def test_broken_on_both_axes_is_one_problem(self):
+        cv = Canvas(32, 32)
+        for y in range(32):
+            for x in range(32):
+                cv.px(x, y, A if (x % 10 < 5) == (y % 10 < 5) else B)
+        ps = lint_tile(cv, TILE, CTX)
+        self.assertEqual([p.code for p in ps], ["tile-seam"])
+        self.assertIn("가로", ps[0].message)
+        self.assertIn("세로", ps[0].message)
+
+    def test_period_dividing_tile_size_on_tall_tile_ok(self):
+        cv = Canvas(32, 64)
+        for y in range(64):
+            for x in range(32):
+                cv.px(x, y, A if (y % 16) < 8 else B)
         self.assertEqual(lint_tile(cv, TILE, CTX), [])
 
     def test_tile_off_palette_and_cells(self):
