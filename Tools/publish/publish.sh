@@ -75,7 +75,7 @@ remove_glob() {
   return 0
 }
 
-# 배포에 들어가는 JSON(앞 줄들이 모은 것) 가운데 글롭에 맞는 것 안의 "Assets/...png" 문자열을 더한다.
+# 배포에 들어가는 JSON(앞 줄들이 모은 것) 가운데 글롭에 맞는 것 안의 "Assets/...png"·"art/...png" 문자열을 더한다.
 # 앞에서 뺀 JSON(예: data/atlases)은 보지 않는다 — 그러지 않으면 좌표표가 가리키는 그림이 쓰이든 말든 전부 따라온다.
 add_refs() {
   local pattern="$1" j p
@@ -89,7 +89,9 @@ add_refs() {
   fi
   while IFS= read -r p; do
     if [ -n "$p" ]; then add_file "$p"; fi
-  done < <(printf '%s\0' "${jsons[@]}" | xargs -0 grep -ohE 'Assets/[^"]+\.png' | LC_ALL=C sort -u)
+  # Assets/….png 는 어디에 적혀 있든(예: "repo:Assets/…") 집는다. art/….png 는 문자열의 맨 앞(선택적으로 "repo:" 뒤)일 때만 집는다
+  # — "start/x.png" 같은 낱말 끝의 art/ 를 잘못 집지 않으려고.
+  done < <(printf '%s\0' "${jsons[@]}" | xargs -0 grep -ohE 'Assets/[^"]+\.png|"(repo:)?art/[^"]+\.png' | sed -E 's/^"(repo:)?//' | LC_ALL=C sort -u)
 }
 
 add_ldtk() {      # .ldtk 하나: 파일, 레벨 파일, 타일셋 PNG
