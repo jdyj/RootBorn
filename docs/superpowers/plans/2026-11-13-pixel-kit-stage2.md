@@ -239,6 +239,66 @@ def test_without_replaces_definitions_are_untouched(): ...
 
 ---
 
+## 덧붙임 (2026-11-13) — 의자와 책상, 앉기를 염두에
+
+사용자(작업 9의 스크린샷을 보고): **"의자랑 책상이 좀 많이 이상한데? 실제로 앉을수도 있게 할 예정이라 잘 만들어줘"**
+
+**게임 쪽 사실(같은 날 조사):**
+- 캐릭터 프레임은 32x59px(몸 시트에 따라 32x53)이고 확대 없이 그린다. 맵 칸은 32px이라 폭 1칸, 키 약 1.84칸. 발은 프레임 아랫변 가운데 = 몸 상자(1칸)의 아랫변. 방향 4개(아래·위·왼쪽·오른쪽). 앉는 자세 프레임은 없다.
+- 앞뒤: 놓인 가구는 그림 조각(`tileParts`)마다 그 칸 가운데 Y, 캐릭터는 몸 상자 가운데 Y로 정렬하고 같으면 캐릭터가 앞이다. 조각이 둘이면 따로 정렬된다(한 칸 아래에 둔 조각은 위 칸에 선 캐릭터 위로 그려진다).
+- 가구에는 방향(북·동·남·서)이 있고 세이브에 저장되며 배치 화면에 돌리기 단추가 있다. **그러나 그림은 방향에 따라 바뀌지 않는다**(차지 칸만 돈다). 지금 데이터는 방향이 다른 의자를 서로 다른 가구로 둔다(`school.chair.north`, `school.chair.south`).
+- 같은 칸에 설 수 있는 의자(`blocksMovement` 0)는 `chair.black`, `chair.quest-reward`뿐이고 둘이 같은 그림을 쓴다. 학교 의자 둘은 막는 가구다.
+- 앉기 설계·코드는 없다. 놓인 가구가 상호작용 대상이 되는 선례는 상자(`FurnitureStorageDefinition` 표 + 후보 종류 `"storage"`) 하나다.
+- 스크린샷의 나무 의자·작은 책상·컴퓨터는 놓은 가구가 아니라 집 맵(LDtk `Furniture` 층, `ysort`)에 그려진 엔티티다: `Assets/Art/HousePixels/Comfy31/House31_{chair_south,chair_west,desk_south,desk_west,computer,plant,sofa_south}_1x1.png`(48x96, 32x64 상자에 줄여 그림). 파란 제도 책상은 놓은 가구 `growth31.assembly.desk`다.
+
+**이 덧붙임이 하는 것 / 하지 않는 것:** 앉기에 맞게 그린 의자·책상 그림과, 앉기를 구현할 때 쓸 조각(앞에 올 층)을 낸다. 앉는 동작(상호작용, 앉은 자세 프레임, 방향에 따라 그림 고르기)은 게임 기능이라 하지 않는다 — 필요한 게임 작업을 문서로 남긴다. 집 맵에 그려진 의자·책상을 바꾸는 일(LDtk 수정)은 작업 12의 결과를 사용자가 본 뒤에 정한다.
+
+### Task 11: 의자와 책상 만드는 부품, 집·학교 의자와 책상 명세
+
+**Files:** Create `pixelkit/makers/seating.py`(의자·책상), `tests/test_seating.py`, `art/kit/recipes/home/furniture.json`, `art/kit/recipes/home/scenes.json`; Modify `makers/__init__.py`(가져오기 한 줄), `art/kit/recipes/school/furniture.json`, `art/kit/style.json`(필요한 줄), README(만드는 부품 표)
+
+**Interfaces — Produces:**
+- `furniture.chair` — 값: `facing` (`"south"` 기본 | `"north"` | `"west"` | `"east"`), `layer` (`"all"` 기본 | `"back"` | `"front"`), `material`(나무 줄, 5단계), `cushion`(방석 줄, 3단계. 없으면 방석 없는 나무 의자), `art_cells [1, 2]` 고정.
+  - `south`: 의자가 우리를 본다(앉은 사람도 우리를 본다). 등받이가 뒤, 좌판이 앞.
+  - `north`: 등받이 뒷면이 우리 쪽. 앉은 사람의 등과 허리를 등받이가 가린다.
+  - `west`/`east`: 옆모습. 등받이가 오른쪽/왼쪽에 서고 좌판 옆면이 보인다. `east`는 `west`를 뒤집은 모양이되 빛 규칙(왼쪽 밝게)은 다시 입힌다.
+  - **층:** `back` = 앉은 사람 뒤에 그려질 조각, `front` = 앉은 사람 앞에 그려질 조각, `all` = 둘을 합친 그림. `back` 위에 `front`를 같은 자리에 겹치면 `all`과 바이트가 같아야 한다. 나눔의 기준은 "앉은 사람의 몸이 그 조각보다 뒤에 있는가": `south`의 `front`는 좌판 앞 가장자리와 앞다리만, `north`의 `front`는 등받이 전체와 가까운 쪽 다리, `west`/`east`의 `front`는 우리 쪽 옆 테두리와 가까운 쪽 다리.
+  - **치수는 캐릭터에서 얻는다**(32x59 프레임, 발이 칸 아랫변): 좌판 윗면이 바닥에서 13~15px, 등받이 꼭대기가 바닥에서 34~38px, 의자 폭 20~22px. `_layout`에 `seat`(좌판 윗면 사각형), `back_top`, `sit_point`(앉은 사람의 엉덩이가 올 점 = 좌판 윗면 가운데)를 적는다.
+- `furniture.desk` — 값: `facing` (`"south"` 기본 | `"west"` | `"east"`), `material`, `top`(윗면 줄. 없으면 `material`의 밝은 단계), `drawers` (`"right"` 기본 | `"left"` | `"none"` | `"both"`), `top_items [{part, x}]`(계산대의 `top`과 같은 방식), `art_cells [2, 2]`(south) 또는 `[1, 2]`(west/east, 책상 옆면).
+  - `south`: 넓은 윗면 + 앞면. **무릎 자리가 뚫려 있다** — 서랍이 없는 쪽 앞면은 다리와 그 사이 빈 곳(투명, 바닥이 보인다). 의자를 그 앞 칸에 `north`로 놓으면 책상을 향해 앉은 모습이 된다.
+  - `_layout`에 `top`(윗면 사각형), `kneehole`(빈 곳 사각형), `work_height`(윗면 앞 모서리의 바닥에서 높이 — 좌판 윗면보다 10~13px 높다).
+- 등록은 `makers/__init__.py`에 가져오기 한 줄. 공용 도우미는 `makers/common.py`에서 가져온다.
+
+**명세**(의자는 `cells [1,1]`, 책상은 `cells [2,1]`. `game.replaces`는 작업 12에서 쓰이지만 여기서 적어 둔다):
+
+| 명세 id | 만드는 부품 | 바꿀 가구 |
+|---|---|---|
+| `home.chair` (기본 south, 상태 `north`·`west`·`east`와 방향마다 `…-back`·`…-front`, south는 `back`·`front`) | chair, 나무 + 남색 방석 | `chair.black` |
+| `home.chair-reward` (같은 모양, 방석 색만 다름, 같은 상태) | chair | `chair.quest-reward` |
+| `school.chair-south`, `school.chair-north` (방석 없는 나무 의자, 각각 그 방향이 기본, 층 상태) | chair | `school.chair.south`, `school.chair.north` |
+| `home.desk` (south, 서랍 오른쪽, 윗면에 종이·연필꽂이) | desk | `growth31.assembly.desk` |
+| `home.study-desk` (south, 윗면에 책·스탠드) | desk | `story.study-desk` |
+| `school.desk`, `school.desk-open-book`, `school.teacher-desk` | desk | `school.desk`, `school.desk.with.open.book`, `school.teacher.desk` |
+
+`growth31.assembly.desk`와 `story.study-desk`는 지금 같은 그림을 쓴다. 새 그림은 둘을 구별한다(작성자 판단: 이름이 다르다 — 하나는 조립용 작업 책상, 하나는 공부 책상).
+
+- [ ] **Step 1: 실패 테스트(구조)** — 의자: 방향 4 × 층 3이 모두 그려지고 `lint_sprite` 통과(몸통 색 ≤ 16); 캔버스 32x64; `back` 위에 `front`를 겹친 그림 == `all`(방향마다, 바이트); `south`의 `front`는 좌판 윗면 줄보다 위에 점이 없다; `north`의 `front`는 등받이 꼭대기 줄에 점이 있다; `_layout["seat"]`의 윗변이 바닥에서 13~15px, `back_top`이 34~38px, 폭 20~22px; `east`는 `west`를 좌우로 뒤집은 실루엣과 같다(색은 다를 수 있다). 책상: 캔버스 64x64(south); `kneehole` 사각형 안이 전부 투명; `work_height` − 의자 좌판 높이가 10~13px; `drawers: "both"`면 `kneehole`이 가운데, `"none"`이면 다리만. 모르는 `facing`·`layer`·`drawers` → `RecipeError`(알려진 값 목록 포함). 실제 명세 전부 `kit.py lint` 통과.
+- [ ] **Step 2:** 실행 → 실패 확인 → 구현 → 통과. 빵집·학교·주방의 기존 그림은 바이트 불변(변경 전에 모든 명세·장면을 임시 폴더에 그려 두고 끝에 비교).
+- [ ] **Step 3(그림): 캐릭터와 맞춰 보기** — 버릴 스크립트(`output/pixel-kit/`, 커밋하지 않음)로 게임의 캐릭터 프레임(`data/characters/GrowingCharacterSheetDefinition.json`이 가리키는 몸·머리·옷 시트에서 아래·위·왼쪽 방향의 서 있는 칸을 겹쳐 한 장으로)을 만들어, ① 의자 옆에 선 모습 ② 의자 칸에 앉은 것처럼 놓은 모습(캐릭터를 좌판 높이만큼 올리고 `back` → 캐릭터 → `front` 순서로 겹침. 다리는 그대로 두되 어색함을 적는다) ③ 책상 앞 의자(`north`)에 앉아 책상을 보는 모습을 4배로 내 **직접 열어 본다.** 볼 것: 의자가 캐릭터에 비해 너무 크거나 작지 않은가, 좌판에 엉덩이가 닿는가, 등받이가 머리를 가리지 않는가, 책상 윗면이 가슴 아래에 오는가, 무릎 자리에 다리가 들어가는가, 방향마다 같은 의자로 보이는가. 어긋나면 치수 상수를 고치고, 테스트의 범위도 근거와 함께 그 값으로 옮긴다(범위를 넓혀 통과시키지 않는다).
+- [ ] **Step 4:** 미리 보기 장면 `home.scene.study`(책상 + 그 앞 의자 north + 의자 south + 옆모습 의자, 빵집 타일 임시 사용)와 `school.scene.classroom`(학생 책상 줄 + 의자 + 교탁 + 책장 둘). 직접 열어 본다.
+- [ ] **Step 5:** README 만드는 부품 표와 "앉기를 위한 층" 절(층의 뜻. 게임에서 쓰는 코드는 아직 없다는 것). 커밋 둘: `[CHORE] 픽셀 키트 의자·책상 만드는 부품 — 방향 넷, 앉은 사람 앞뒤 층`, `[ASSET] 픽셀 키트 집·학교 의자와 책상`.
+
+### Task 12: 의자와 책상을 게임에 (여기서 멈춘다)
+
+**Files:** Modify `data/interiors/FurnitureDefinition.json`(위 표의 가구 9개의 두 값씩, 도구로), `game/tests/Rootborn.Host.Tests/PixelKitFurnitureHostTests.cs`; Create `art/props/home/*.png`, `art/props/school/*.png`, 좌표표, `docs/superpowers/specs/2026-11-13-sitting-notes.md`
+
+- [ ] **Step 1:** 바꿀 가구 9개의 `footprintCells`·`tileParts`·좌표표를 다시 확인한다. `chair.black`·`chair.quest-reward`의 지금 pivot은 (0.5, 0.5)이고 새 좌표표는 (0.5, 0.75)가 된다(그림이 칸 아랫변에 선다) — 달라지는 것을 보고서에 적는다. `desk.basic`·`desk.large`(그림이 없는 가구)는 건드리지 않는다.
+- [ ] **Step 2:** `export --dry-run` → 확인 → `export`. 가구 정의는 18줄(9 × 2)만 바뀐다. `PixelKitFurnitureHostTests`의 견줌 가구(`growth31.assembly.desk`, 옛 그림이라 골랐던 것)를 옛 그림으로 남는 다른 가구로 바꾸고, 의자·책상의 경우를 더한다: 책상을 놓고 그 앞 칸에 의자를 놓는다; 막지 않는 의자의 **칸에 캐릭터가 걸어 들어가 선** 스크린샷; 의자의 위 칸·아래 칸에 선 스크린샷(앞뒤 가림).
+- [ ] **Step 3:** `dotnet test game/tests/Rootborn.Data.Tests`, `Rootborn.World.Tests`를 하나씩. 바뀐 가구 id를 쓰는 Game·Screens 테스트가 그림에 기대는지 확인한다(기대면 안 된다 — 기대는 것이 있으면 보고). Host는 필터로. 스크린샷을 직접 연다.
+- [ ] **Step 4: 앉기 메모** — `docs/superpowers/specs/2026-11-13-sitting-notes.md`: 그림이 준비한 것(방향별 칸 이름, `-back`/`-front` 층 칸, `sit_point`·치수), 게임에 필요한 작업(의자인지 알려 주는 데이터 표와 상호작용 종류 — 상자 방식 선례; 방향에 따라 그림 칸 고르기; 앉은 자세 프레임 또는 다리를 가리는 방식; 층을 캐릭터 앞에 그리는 방법 — 조각 둘을 따로 정렬하는 지금 규칙으로 되는지; 막는 의자(학교)의 `blocksMovement`를 바꿀지는 기획), 정해야 할 것. 설계가 아니라 메모다(결정하지 않는다).
+- [ ] **Step 5:** 커밋 둘: `[ASSET] 의자·책상 9종의 그림을 픽셀 키트 그림으로 — id·규칙·세이브 그대로`, `[TEST][DOCS] 의자·책상을 놓고 서 보는 Host 테스트, 앉기 메모`.
+- [ ] **Step 6: 사용자에게 보인다(여기서 멈춘다).** 스크린샷, 근거 종류, 집 맵에 그려진 의자·책상(House31_*)은 아직 옛 그림이고 바꾸려면 LDtk를 고쳐야 한다는 것, 앉기에 필요한 게임 작업.
+
 ## 이 계획이 하지 않는 것
 
 새 가구 정의 더하기(기획), 상태(`@empty` 등)를 게임이 쓰게 하기, 시설 겉모습을 게임이 그리게 하기, 실제 맵에 새 타일·건물 놓기(맵을 새로 그릴 때), 타일·외벽 세트(설계서 10절 3단계) 이후 단계, 어제 문서(`2026-11-12-art-production-design.md`) 정리(저장소에 없는 사용자의 미커밋 파일이다).
