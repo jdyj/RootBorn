@@ -1,0 +1,2 @@
+# room-vectors.json은 도구(kit.py room vectors)가 쓰고 테스트가 바이트로 견준다. 체크아웃 줄바꿈(core.autocrlf)에 흔들리지 않게 LF로 고정한다.
+room-vectors.json text eol=lf

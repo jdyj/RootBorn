@@ -428,16 +428,32 @@ def _room_styles(args, kit: Kit) -> int:
     return _finish(saver, 0)
 
 
+def vectors_command(check: bool, path: Optional[Path] = None) -> int:
+    """room vectors [--check]: 시험 표 room-vectors.json을 지금 규칙으로 다시 쓴다. --check면 쓰지 않고 다르면 1."""
+    from . import room_vectors
+    path = path or room_vectors.VECTORS_PATH
+    if check:
+        if room_vectors.check_vectors(path):
+            print(f"{path.name}: 지금 규칙과 같다")
+            return 0
+        print(f"{path.name}: 지금 규칙과 다르다 — python Tools/pixel-kit/kit.py room vectors로 다시 만든다", file=sys.stderr)
+        return 1
+    print(("저장: " if room_vectors.write_vectors(path) else "바꿀 것 없음: ") + str(path))
+    return 0
+
+
 def cmd_room(args, kit: Kit) -> int:
     """room build <id> [--force] [--dry-run] [--out 폴더]: 평면에서 LDtk 방을 쓴다. room check <id>: 평면만 검사한다.
     room check <ldtk 경로>: LDtk 방을 검사한다. room repaint <ldtk 경로> [--dry-run]: 칠한 Collision에 벽 그림을 맞춘다.
-    room styles [--list] [--out 폴더]: 벽 모양·띠 색·바닥 견본판."""
+    room styles [--list] [--out 폴더]: 벽 모양·띠 색·바닥 견본판. room vectors [--check]: 게임과 나누는 시험 표."""
     from . import room_ldtk, room_plan
     from .room_tiles import check_top, wall_styles
     usage = ("사용법: room build <방 id> [--force] [--dry-run] [--out 폴더] | room check <방 id 또는 .ldtk 경로> | "
-             "room repaint <.ldtk 경로> [--dry-run] | room styles [--list] [--out 폴더] [--scale N]")
+             "room repaint <.ldtk 경로> [--dry-run] | room styles [--list] [--out 폴더] [--scale N] | room vectors [--check]")
     if args.ids == ["styles"]:
         return _room_styles(args, kit)
+    if args.ids == ["vectors"]:
+        return vectors_command(getattr(args, "check", False))
     if len(args.ids) != 2 or args.ids[0] not in ("build", "check", "repaint"):
         raise UsageError(usage)
     action, rid = args.ids

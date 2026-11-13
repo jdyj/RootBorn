@@ -26,6 +26,7 @@ def main(argv=None) -> int:
                    help="내보낼 폴더(기본: 저장소의 output/pixel-kit. test-level은 --repo의 art/world/test, room build는 art/world/rooms/<id>)")
     p.add_argument("--scale", type=int, default=None, help="보기용 확대 배율(render 6, sheet·scene 4, parts 8)")
     p.add_argument("--repo", default=str(REPO_ROOT), help="export가 쓸 저장소 뿌리(기본: 이 도구가 든 저장소)")
+    p.add_argument("--check", action="store_true", help="room vectors: 시험 표를 쓰지 않고 지금 규칙과 같은지만 본다(다르면 끝 코드 1)")
     p.add_argument("--dry-run", action="store_true", help="export·room build·room repaint: 쓸 파일을 찍기만 한다")
     p.add_argument("--force", action="store_true", help="room build: 이미 있는 방 파일을 평면에서 통째로 다시 쓴다(LDtk에서 손으로 고친 것은 지워진다 — 그때는 room repaint. 시트는 덧붙이기만)")
     p.add_argument("--list", action="store_true", help="room styles: 그리지 않고 벽 모양·띠 색·바닥 이름만 찍는다")

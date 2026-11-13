@@ -1045,13 +1045,57 @@ class RoomTiles:
     ground: List[List[Optional[str]]]
 
 
-def plan_tiles(grid: List[List[int]], face_height: int = 2, band: int = 16, wall_doors=None) -> RoomTiles:
-    """격자 → 칸마다 Wall·Ground 타일 열쇠. band는 윗면 띠 두께(px).
+@dataclass(frozen=True)
+class SourcePart:
+    """칸 안 픽셀 출처표의 한 부분(README "방 만들기 — 시험 표"). px는 _encode(픽셀, 0, 32)의 정규형 글(칸 안 좌표, 끝 제외).
 
-    wall_doors는 벽 칸의 문 칸 (x, y)들(평면의 wallDoors 칸, LDtk에서는 벽 칸에 놓인 Door). 윗면 칸이고 위·오른쪽·왼쪽(이 순서) 중
-    바닥이 있으면 그 칸의 띠 대신 문지방(sill:<쪽>:<a>-<b>, 띠가 지나던 범위 그대로 칸 끝에서 끝까지)을 내고, 그 칸의 띠는 이웃 칸의
-    띠 계산에서 빠진다 — 그래서 이웃 띠의 끝이 외곽선으로 닫힌다. 바닥 바로 위 정면 칸이면 door:<정면 열쇠>. 바닥이 붙지 않은
-    문 칸(평면 검사의 room-door-no-floor)과 그 밖의 칸(위가 막힌 정면 등)은 문 없이 그린다. 없거나 비면 문이 없던 때와 같다."""
+    src는 SOURCES의 이름이다. band: shade(o/d/f/l, 띠 칠). face·narrow: piece(벽지 조각 이름) + own. floor: shade(그 칸의
+    Ground 열쇠) + own. sill·door: piece(벽지와 무관한 나무 조각). own은 그 픽셀의 꾸밈 주인 바닥 칸의 상대 위치(dx, dy),
+    주인이 없는 부분(band, sill, door)은 None."""
+    src: str
+    shade: Optional[str]
+    piece: Optional[str]
+    own: Optional[Tuple[int, int]]
+    px: str
+
+
+# 출처 종류 → (값을 담는 필드 shade 또는 piece, 주인 own이 있는가). 게임은 조합할 때 이름 → 처리 표로 고른다.
+SOURCES: Dict[str, Tuple[str, bool]] = {
+    "band": ("shade", False),       # 띠 칠 o 외곽선 / d 그늘 / f 면 / l 빛
+    "face": ("piece", True),        # 꽉 찬 정면 조각 face:<k>[:<lrct>](늘인 정면은 l·r 없는 꼴), 주인 = 그 정면 칸 + (0, k)
+    "narrow": ("piece", True),      # 좁은 정면 조각 face:<k>:lr[c]@<x0>-<x1>
+    "floor": ("shade", True),       # 바닥: shade는 그 칸의 Ground 열쇠(floor, floor:shade, floor:shade:<x0>-<x1>)
+    "sill": ("piece", False),       # 문지방 조각 sill:<n|e|w>:<a>-<b>
+    "door": ("piece", False),       # 정면 문짝 조각 door(DOOR_RECT 자리)
+}
+
+
+def _source(src: str, value: str, own, pixels) -> SourcePart:
+    which, owned = SOURCES[src]
+    if owned != (own is not None):
+        raise RecipeError(f"{src}: 주인(own)이 {'있어야' if owned else '없어야'} 한다")
+    return SourcePart(src, value if which == "shade" else None, value if which == "piece" else None,
+                      own, _encode(pixels, 0, CELL))
+
+
+@dataclass(frozen=True)
+class _Plan:
+    """plan_tiles와 plan_sources가 함께 쓰는 중간 결과(_plan). 칸 안 픽셀 분류(cells)와 그 픽셀이 어느 이웃에서 왔는지(origin)가
+    한 계산에서 나온다 — 열쇠는 출처를 버린 값으로, 출처표는 출처를 든 값으로 만든다."""
+    keys: List[List[Optional[str]]]                     # classify 값(좁은 정면 옆 정면은 끝 표시를 뗀 것)
+    cells: Dict[Tuple[int, int], list]                  # 윗면·좁은 정면 칸의 픽셀 종류(줄 순서 1024개)
+    origin: Dict[Tuple[int, int], list]                 # 같은 자리의 출처 이웃 방향 (dx, dy) 또는 None
+    narrow: Dict[Tuple[int, int], Tuple[int, int]]      # 좁은 정면 칸 → 열 범위 [x0, x1)
+    sills: Dict[Tuple[int, int], str]                   # 문지방 칸 → 열쇠
+    towards: Dict[Tuple[int, int], Tuple[int, int]]     # 문지방 칸 → 바닥이 있는 쪽 (dx, dy)
+    door_faces: FrozenSet[Tuple[int, int]]              # 문을 박은 정면 칸
+    bands: Dict[Tuple[int, int], Tuple[FrozenSet, FrozenSet]]   # 띠 칸 → (칸 안 띠, 이웃 칸 띠까지)
+    wall: List[List[Optional[str]]]
+    ground: List[List[Optional[str]]]
+
+
+def _plan(grid, face_height: int, band: int, wall_doors) -> _Plan:
+    """plan_tiles의 계산 전부. 고르기 규칙은 여기 한 곳에 있다."""
     doors = frozenset(wall_doors or ())
     if type(band) is not int or not MIN_BAND <= band < CELL:
         raise RecipeError(f"띠 두께 band는 {MIN_BAND} 이상 {CELL} 미만의 정수여야 한다(지금 {band!r})")
@@ -1070,8 +1114,8 @@ def plan_tiles(grid: List[List[int]], face_height: int = 2, band: int = 16, wall
     caps = [(x, y) for y in range(h) for x in range(len(keys[y])) if keys[y][x] == CAP]
     rects, X = _band_layout(kind, caps, band)
 
-    door_faces = {(x, y) for x, y in doors if 0 <= y < h and 0 <= x < len(keys[y]) and keys[y][x]
-                  and _parse_face(keys[y][x]) is not None and _parse_face(keys[y][x])[0] == 1}
+    door_faces = frozenset((x, y) for x, y in doors if 0 <= y < h and 0 <= x < len(keys[y]) and keys[y][x]
+                           and _parse_face(keys[y][x]) is not None and _parse_face(keys[y][x])[0] == 1)
     narrow: Dict[Tuple[int, int], Tuple[int, int]] = {}
     for y in range(h):
         for x, k in enumerate(keys[y]):
@@ -1102,14 +1146,17 @@ def plan_tiles(grid: List[List[int]], face_height: int = 2, band: int = 16, wall
             return _strip_lr(keys[ny][nx])
         return "V"
 
-    # 칸마다 픽셀 종류: "B" 띠, "N" 좁은 정면, "F" 비침(바닥 쪽), "V" 비어 있음(밖 쪽), 정면 열쇠(늘인 정면).
+    # 칸마다 픽셀 종류: "B" 띠, "N" 좁은 정면, "S" 문지방, "F" 비침(바닥 쪽), "V" 비어 있음(밖 쪽), 정면 열쇠(늘인 정면).
+    # origin: "F"·늘인 정면 픽셀이 온 이웃 칸의 방향 (dx, dy). 다른 픽셀은 None.
     cells: Dict[Tuple[int, int], list] = {}
+    origin: Dict[Tuple[int, int], list] = {}
     for x, y in caps:
         rs, core = rects[x, y]
         # 둘레 8칸: 윗면이면 None, 아니면 그쪽에서 오는 픽셀 종류
         around = {(dx, dy): (None if kind(x + dx, y + dy) == "cap" else side(x + dx, y + dy))
                   for dy in (-1, 0, 1) for dx in (-1, 0, 1) if dx or dy}
         cls = [None] * (CELL * CELL)
+        org = [None] * (CELL * CELL)
         for a, b, c, d in rs:
             for py in range(b, d):
                 cls[py * CELL + a:py * CELL + c] = ["B"] * (c - a)
@@ -1124,41 +1171,55 @@ def plan_tiles(grid: List[List[int]], face_height: int = 2, band: int = 16, wall
                     cands = ((hx, 0), (0, hy))
                 elif py < core[1] or py >= core[3]:
                     cands = ((0, hy), (hx, 0))
-                res = "B"                       # 둘레가 모두 윗면(두꺼운 덩어리 안쪽)이면 띠로 메운다
+                res, src = "B", None             # 둘레가 모두 윗면(두꺼운 덩어리 안쪽)이면 띠로 메운다
                 for n in cands + ((hx, hy),):
                     if around[n] is not None:
-                        res = around[n]
+                        res, src = around[n], n
                         break
                 cls[py * CELL + px] = res
+                org[py * CELL + px] = src
         if "F" in cls and "V" in cls:            # 바닥이 비치는 칸의 밖 쪽 자리는 띠로 메운다(바닥이 방 밖으로 새지 않게)
-            cls = ["B" if c == "V" else c for c in cls]
+            for i, c in enumerate(cls):
+                if c == "V":
+                    cls[i], org[i] = "B", None
         cells[x, y] = cls
+        origin[x, y] = org
     # 윗면 칸의 문: 띠가 지나던 범위를 칸 끝에서 끝까지 문지방("S")으로. 남은 띠 자리는 비침(바닥이 비치는 칸이면 바닥, 아니면 빈 칸).
     # 띠 지도(band_map)를 만들기 전이라 이웃 칸의 띠는 이 칸에서 끝나고 끝이 외곽선으로 닫힌다.
     sills: Dict[Tuple[int, int], str] = {}
+    towards_of: Dict[Tuple[int, int], Tuple[int, int]] = {}
     for x, y in sorted(doors):
         if (x, y) not in cells:
             continue
-        towards = next((s for s, dx, dy in (("n", 0, -1), ("e", 1, 0), ("w", -1, 0)) if kind(x + dx, y + dy) == "floor"), None)
+        towards = next(((s, dx, dy) for s, dx, dy in (("n", 0, -1), ("e", 1, 0), ("w", -1, 0))
+                        if kind(x + dx, y + dy) == "floor"), None)
         if towards is None:
             continue
         core = rects[x, y][1]
-        a, b = (core[1], core[3]) if towards == "n" else (core[0], core[2])
+        a, b = (core[1], core[3]) if towards[0] == "n" else (core[0], core[2])
         cls = cells[x, y]
         rest = "F" if "F" in cls else "V"
         for i, c in enumerate(cls):
             px, py = i % CELL, i // CELL
-            if a <= (py if towards == "n" else px) < b:
+            if a <= (py if towards[0] == "n" else px) < b:
                 cls[i] = "S"
             elif c == "B":
                 cls[i] = rest
-        sills[x, y] = f"sill:{towards}:{a}-{b}"
+        sills[x, y] = f"sill:{towards[0]}:{a}-{b}"
+        towards_of[x, y] = towards[1:]
     for (x, y), (x0, x1) in narrow.items():
-        cls = []
+        cls, org = [], []
         for py in range(CELL):
             for px in range(CELL):
-                cls.append("N" if x0 <= px < x1 else side(x - 1 if px < x0 else x + 1, y))
+                if x0 <= px < x1:
+                    cls.append("N")
+                    org.append(None)
+                else:
+                    dx = -1 if px < x0 else 1
+                    cls.append(side(x + dx, y))
+                    org.append((dx, 0))
         cells[x, y] = cls
+        origin[x, y] = org
 
     pw, ph = w * CELL, h * CELL
     band_map = bytearray(pw * ph)
@@ -1188,6 +1249,7 @@ def plan_tiles(grid: List[List[int]], face_height: int = 2, band: int = 16, wall
 
     wall: List[List[Optional[str]]] = [[None] * len(r) for r in keys]
     ground: List[List[Optional[str]]] = [[None] * len(r) for r in keys]
+    bands: Dict[Tuple[int, int], Tuple[set, set]] = {}
     for y in range(h):
         for x, k in enumerate(keys[y]):
             if k is None:
@@ -1224,6 +1286,7 @@ def plan_tiles(grid: List[List[int]], face_height: int = 2, band: int = 16, wall
                             pad.add((px, py))
                 pad &= _forced(_shades(_rim(inside), inside | pad))
                 wall[y][x] = f"cap:{_encode(inside | pad, -PAD, CELL + PAD)}{tail}"
+                bands[x, y] = (frozenset(inside), frozenset(inside | pad))
             if "F" in cls:
                 # 벽 칸 밑 바닥: 위 칸 정면의 그림자는 이 칸에서 바닥이 비치는 맨 위 두 줄의 열에만 의미가 있다
                 shown = {i % CELL for i in range(2 * CELL) if cls[i] == "F"}
@@ -1231,7 +1294,93 @@ def plan_tiles(grid: List[List[int]], face_height: int = 2, band: int = 16, wall
                 if kind(x, y - 1) == "face":
                     key = shade_key(shown & face_cols(x, y - 1))
                 ground[y][x] = key
-    return RoomTiles(wall, ground)
+    return _Plan(keys, cells, origin, narrow, sills, towards_of, door_faces, bands, wall, ground)
+
+
+def plan_tiles(grid: List[List[int]], face_height: int = 2, band: int = 16, wall_doors=None) -> RoomTiles:
+    """격자 → 칸마다 Wall·Ground 타일 열쇠. band는 윗면 띠 두께(px).
+
+    wall_doors는 벽 칸의 문 칸 (x, y)들(평면의 wallDoors 칸, LDtk에서는 벽 칸에 놓인 Door). 윗면 칸이고 위·오른쪽·왼쪽(이 순서) 중
+    바닥이 있으면 그 칸의 띠 대신 문지방(sill:<쪽>:<a>-<b>, 띠가 지나던 범위 그대로 칸 끝에서 끝까지)을 내고, 그 칸의 띠는 이웃 칸의
+    띠 계산에서 빠진다 — 그래서 이웃 띠의 끝이 외곽선으로 닫힌다. 바닥 바로 위 정면 칸이면 door:<정면 열쇠>. 바닥이 붙지 않은
+    문 칸(평면 검사의 room-door-no-floor)과 그 밖의 칸(위가 막힌 정면 등)은 문 없이 그린다. 없거나 비면 문이 없던 때와 같다."""
+    p = _plan(grid, face_height, band, wall_doors)
+    return RoomTiles(p.wall, p.ground)
+
+
+def _face_level(face_key: str) -> int:
+    return int(face_key.split(":")[1].split("@")[0])
+
+
+def plan_sources(grid: List[List[int]], face_height: int = 2, band: int = 16,
+                 wall_doors=None) -> List[List[Optional[List[SourcePart]]]]:
+    """격자 → 칸마다 픽셀 출처표(밖 칸은 None). plan_tiles와 같은 계산(_Plan)에서 나온다.
+
+    출처표는 그 칸의 최종 그림(Wall 타일을 Ground 타일 위에 얹은 것)의 불투명 픽셀을 빈틈없이, 겹치지 않게 덮는다 — 덮지 않은
+    픽셀은 투명이다. 벽 모양·바닥 종류와 무관하다(그림은 조각이 맡는다). 꼴과 뜻은 README "방 만들기 — 시험 표"."""
+    return plan_room(grid, face_height, band, wall_doors)[1]
+
+
+def plan_room(grid: List[List[int]], face_height: int = 2, band: int = 16, wall_doors=None):
+    """plan_tiles와 plan_sources를 한 계산으로: (RoomTiles, 출처표)."""
+    p = _plan(grid, face_height, band, wall_doors)
+    sources = [[None if k is None else _cell_sources(p, x, y, k) for x, k in enumerate(row)] for y, row in enumerate(p.keys)]
+    return RoomTiles(p.wall, p.ground), sources
+
+
+_FULL = frozenset((i % CELL, i // CELL) for i in range(CELL * CELL))
+
+
+def _cell_sources(p: _Plan, x: int, y: int, k: str) -> List[SourcePart]:
+    if k.startswith("floor"):
+        return [_source("floor", p.ground[y][x], (0, 0), _FULL)]
+    if (x, y) not in p.cells:                              # 꽉 찬 정면(문을 박은 정면이면 문짝 자리만 문)
+        door = set()
+        if (x, y) in p.door_faces:
+            x0, y0, x1, y1 = DOOR_RECT
+            door = {(dx, dy) for dy in range(y0, y1) for dx in range(x0, x1)}
+        parts = [_source("face", k, (0, _face_level(k)), _FULL - door)]
+        if door:
+            parts.append(_source("door", "door", None, door))
+        return _ordered(parts)
+    cls, org = p.cells[x, y], p.origin[x, y]
+    ground = p.ground[y][x]
+    is_sill = (x, y) in p.sills
+    # Ground가 깔린 칸에서 벽 그림이 덮지 않는데 이웃 바닥(F)에서 오지 않은 픽셀(문지방 칸의 남은 띠·늘인 정면 자리, 좁은 정면
+    # 옆의 빈 자리)의 주인: 문지방 칸은 문지방이 바라보는 바닥, 좁은 정면 칸은 바닥이 있는 옆 칸.
+    fallback = p.towards.get((x, y))
+    if fallback is None and (x, y) in p.narrow:
+        fallback = next((o for c, o in zip(cls, org) if c == "F"), None)
+    shades = _shades(*p.bands[x, y]) if (x, y) in p.bands else {}
+    groups: Dict[Tuple[str, str, Optional[Tuple[int, int]]], set] = {}
+    for i, c in enumerate(cls):
+        xy = (i % CELL, i // CELL)
+        if c == "B" and not is_sill:
+            key = ("band", shades[xy], None)
+        elif c == "S":
+            key = ("sill", p.sills[x, y], None)
+        elif c == "N":
+            a, b = p.narrow[x, y]
+            key = ("narrow", f"{p.keys[y][x]}@{a}-{b}", (0, _face_level(p.keys[y][x])))
+        elif c.startswith("face:") and not is_sill:
+            dx, dy = org[i]
+            key = ("face", c, (dx, dy + _face_level(c)))
+        elif ground is not None:                            # 비침
+            key = ("floor", ground, org[i] if c == "F" and org[i] is not None else fallback)
+        else:
+            continue                                        # "V"이고 Ground가 없다 — 투명, 적지 않는다
+        groups.setdefault(key, set()).add(xy)
+    return _ordered([_source(src, value, own, px) for (src, value, own), px in groups.items()])
+
+
+def part_order(part: SourcePart):
+    """부분 순서: src, shade 또는 piece, own(없으면 먼저, 있으면 dx 다음 dy 수 순), px. 글은 코드 값 순(C# string.CompareOrdinal)."""
+    own = (0, 0, 0) if part.own is None else (1,) + tuple(part.own)
+    return (part.src, part.shade or part.piece or "", own, part.px)
+
+
+def _ordered(parts: List[SourcePart]) -> List[SourcePart]:
+    return sorted(parts, key=part_order)
 
 
 # ---------------------------------------------------------------- 그리기
@@ -1265,6 +1414,7 @@ def _narrow_face(style: Style, look, cv: Canvas, k: int, flags: str, x0: int, x1
             cv.px(x, y, style.outline if edge else color)
 
 
+DOOR_RECT = (6, 4, 26, CELL - 1)    # 정면 문이 칠하는 자리 x0, y0, x1, y1(끝 제외). 밖은 정면 그대로(맨 아랫줄 외곽선 포함)
 SILL_WOOD = "wood.school"     # 문지방·문짝 나무 줄(0 짙은 결 … 4 밝은). 마루보다 한두 단계 어두운 단계(0..3)를 쓴다
 
 
@@ -1303,7 +1453,7 @@ def _door_face(style: Style, cv: Canvas) -> None:
     """정면(바닥 바로 위 타일)에 박은 문: 바깥 외곽선 + 문틀 2px + 문짝(판 둘, 위·왼쪽 그늘·아래·오른쪽 빛) + 손잡이.
     맨 아랫줄(바닥과 만나는 외곽선)은 정면의 것을 그대로 둔다. 옆으로 기운 면은 그리지 않는다."""
     w = _ramp(style, SILL_WOOD, 5)
-    x0, x1, y0 = 6, 26, 4                       # 문 바깥 [x0, x1) × [y0, 31)
+    x0, y0, x1, _ = DOOR_RECT                   # 문 바깥 [x0, x1) × [y0, 31)
     for y in range(y0, CELL - 1):
         for x in range(x0, x1):
             if x in (x0, x1 - 1) or y == y0:
