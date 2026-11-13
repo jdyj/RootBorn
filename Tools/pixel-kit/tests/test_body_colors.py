@@ -5,9 +5,9 @@ from pathlib import Path
 from pixelkit.canvas import Canvas
 from pixelkit.lint import lint_sprite
 from pixelkit.makers import register
-from pixelkit.makers import common
 from pixelkit.parts import load_parts
-from pixelkit.recipes import Ctx, load_recipes, render_with_spec
+from pixelkit.cli import Kit, draw_and_check
+from pixelkit.recipes import Ctx, ghost_ctx, load_recipes
 from pixelkit.style import Style
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -47,68 +47,65 @@ def _maker(spec, ctx):
     return cv
 
 
-@register("test.bodycolors-local")
-def _maker_local(spec, ctx):
-    cv = Canvas(30, 30)
-    cv.rect(0, 0, 30, 10, BODY[0])
-    inner = common.local(ctx)
-    cv.paste(common.part(spec, inner, "p0"), 0, 24)
-    common.merge(spec, ctx, inner)
-    return cv
-
-
 def recipe(**kw):
     r = {"id": "t.body", "kind": "furniture", "part": "test.bodycolors", "pixels": [32, 32]}
     r.update(kw)
     return r
 
 
-def draw(r, parts=None):
-    ctx = Ctx(STYLE, FAKE if parts is None else parts, [])
-    cv, spec = render_with_spec(r, ctx)
-    return ctx, cv, spec
+def body_problems(r, parts=None):
+    """cli와 같은 길(그리고 몸통을 유령 그림으로 세어) 검사한 too-many-colors 문제들."""
+    kit = Kit(STYLE, FAKE if parts is None else parts, {}, {})
+    cv, problems = draw_and_check(kit, r, None)
+    return cv, [p for p in problems if p.code == "too-many-colors"]
 
 
 class BodyColorTests(unittest.TestCase):
     def test_pasted_parts_do_not_count(self):
-        ctx, cv, spec = draw(recipe(use=sorted(FAKE)))
-        self.assertGreater(len({c for c in cv.colors() if c != STYLE.outline}), 8)
-        ps = [p for p in lint_sprite(cv, spec, ctx, allow=frozenset({"orphan-pixel", "outline-open"}))
-              if p.code == "too-many-colors"]
+        cv, ps = body_problems(recipe(use=sorted(FAKE)))
+        self.assertGreater(len({c for c in cv.colors() if c != STYLE.outline}), 16)
         self.assertEqual(ps, [])
 
-    def test_used_parts_recorded(self):
-        ctx, _, _ = draw(recipe(use=["p0", "p2"]))
-        self.assertEqual(ctx.used_parts, {"p0", "p2"})
+    def test_body_over_limit_reports_count(self):
+        _, ps = body_problems(recipe(body=palette_colors(17, skip=30)))
+        self.assertEqual(len(ps), 1)
+        self.assertIn("17", ps[0].message)
 
-    def test_used_parts_survive_local_ctx(self):
-        ctx, _, _ = draw(recipe(part="test.bodycolors-local"))
-        self.assertEqual(ctx.used_parts, {"p0"})
+    def test_body_colors_also_in_a_part_still_count(self):
+        """몸통의 17색이 모두 붙인 부품에도 있어도 몸통은 17색이다(부품 색을 빼는 규칙이 틀렸던 경우)."""
+        cs = palette_colors(17, skip=30)
+        parts = dict(FAKE, all17=dot_part(cs))
+        _, ps = body_problems(recipe(body=cs, use=["all17"]), parts)
+        self.assertEqual(len(ps), 1)
+        self.assertIn("17", ps[0].message)
 
-    def test_two_pictures_do_not_leak(self):
-        a, _, _ = draw(recipe(use=["p0"]))
-        b, _, _ = draw(recipe())
-        self.assertEqual(a.used_parts, {"p0"})
-        self.assertEqual(b.used_parts, set())
+    def test_part_size_logic_survives_ghost(self):
+        """부품을 투명하게 바꿔도 크기는 같다."""
+        g = ghost_ctx(Ctx(STYLE, FAKE, []))
+        for k, v in FAKE.items():
+            self.assertEqual((g.parts[k].w, g.parts[k].h), (v.w, v.h))
+            self.assertEqual(g.parts[k].colors(), set())
 
-    def test_body_over_limit_reports_body_count(self):
-        limit = STYLE.max_colors["furniture"]
-        body = palette_colors(limit + 1, skip=30)
-        ctx, cv, spec = draw(recipe(body=body, use=["p0"]))
-        ps = [p for p in lint_sprite(cv, spec, ctx, allow=frozenset({"orphan-pixel", "outline-open"}))
+    def test_same_picture_twice_gives_same_result(self):
+        kit = Kit(STYLE, FAKE, {}, {})
+        r = recipe(use=["p0", "p1"])
+        cv1, p1 = draw_and_check(kit, r, None)
+        cv2, p2 = draw_and_check(kit, r, None)
+        self.assertEqual(cv1.to_image().tobytes(), cv2.to_image().tobytes())
+        self.assertEqual([(p.code, p.message) for p in p1], [(p.code, p.message) for p in p2])
+
+    def test_ghost_problems_are_discarded(self):
+        ctx = Ctx(STYLE, FAKE, [])
+        ghost_ctx(ctx).problems.append("x")
+        self.assertEqual(ctx.problems, [])
+
+    def test_lint_without_body_counts_the_picture_itself(self):
+        cv = Canvas(32, 32)
+        for i, c in enumerate(palette_colors(17, skip=30)):
+            cv.rect(2, i, 28, 1, c)
+        ps = [p for p in lint_sprite(cv, {"id": "t", "kind": "furniture"}, Ctx(STYLE, {}, []))
               if p.code == "too-many-colors"]
         self.assertEqual(len(ps), 1)
-        self.assertIn(f"{limit + 1}개", ps[0].message)
-        self.assertIn("부품", ps[0].message)
-
-    def test_no_parts_counts_like_before(self):
-        limit = STYLE.max_colors["furniture"]
-        body = palette_colors(limit + 1, skip=30)
-        ctx, cv, spec = draw(recipe(body=body))
-        ps = [p for p in lint_sprite(cv, spec, ctx, allow=frozenset({"orphan-pixel", "outline-open"}))
-              if p.code == "too-many-colors"]
-        self.assertEqual(len(ps), 1)
-        self.assertIn(f"{limit + 1}개", ps[0].message)
 
     def test_limits_are_original_values(self):
         self.assertEqual(STYLE.max_colors["furniture"], 16)
@@ -117,16 +114,14 @@ class BodyColorTests(unittest.TestCase):
 
 class RealPicturesTests(unittest.TestCase):
     def test_every_real_picture_within_body_limit(self):
-        recipes = load_recipes(str(KIT / "recipes"))
-        for rid, r in sorted(recipes.items()):
+        kit = Kit(STYLE, PARTS, {}, load_recipes(str(KIT / "recipes")))
+        for rid, r in sorted(kit.recipes.items()):
             if r.get("kind") in ("scene", "tile"):
                 continue
             for st in [None] + sorted(r.get("states") or {}):
                 with self.subTest(rid=rid, state=st):
-                    ctx = Ctx(STYLE, PARTS, [])
-                    cv, spec = render_with_spec(r, ctx, st)
-                    ps = [p for p in lint_sprite(cv, spec, ctx, layout=spec.get("_layout"))
-                          if p.code == "too-many-colors"]
+                    _, problems = draw_and_check(kit, r, st)
+                    ps = [p for p in problems if p.code == "too-many-colors"]
                     self.assertEqual(ps, [], [p.message for p in ps])
 
 

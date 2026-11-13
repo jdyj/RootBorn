@@ -6,7 +6,7 @@ from pixelkit.canvas import Canvas
 from pixelkit.lint import lint_sprite
 from pixelkit.makers.building import ROOF_ITEMS, _Pal
 from pixelkit.parts import load_parts
-from pixelkit.recipes import Ctx, RecipeError, load_recipes, render, render_with_spec
+from pixelkit.recipes import Ctx, RecipeError, ghost_ctx, load_recipes, render, render_with_spec
 from pixelkit.style import Style
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -142,7 +142,8 @@ class BuildingTests(unittest.TestCase):
                 c = ctx()
                 cv = render(RECIPES[rid], c)
                 self.assertEqual((cv.w, cv.h), (160, 192))
-                self.assertEqual(lint_sprite(cv, RECIPES[rid], c), [])
+                body = render(RECIPES[rid], ghost_ctx(c))
+                self.assertEqual(lint_sprite(cv, RECIPES[rid], c, body=body), [])
                 self.assertEqual(c.problems, [])
 
     def test_roof_is_at_least_half_the_picture_height(self):
@@ -429,7 +430,8 @@ class ShopLampTests(unittest.TestCase):
                 bare, spec = render_with_spec(r, c)
                 lit, lit_spec = render_with_spec(RECIPES[rid], ctx())
                 self.assertNotIn("lamp", spec["_layout"])
-                self.assertEqual(lint_sprite(bare, r, c, layout=spec["_layout"]), [])
+                body = render(r, ghost_ctx(c))
+                self.assertEqual(lint_sprite(bare, r, c, layout=spec["_layout"], body=body), [])
                 self.assertEqual(c.problems, [])
                 ox, oy = offset(bare, spec["_layout"])
                 lx, ly, lw, lh = lit_spec["_layout"]["lamp"]

@@ -12,7 +12,7 @@ from . import boards
 from .canvas import Canvas
 from .lint import Problem, lint_sprite, lint_tile
 from .parts import PartError, load_part_allowances, load_parts
-from .recipes import Ctx, RecipeError, load_recipes, render_with_spec
+from .recipes import Ctx, RecipeError, ghost_ctx, load_recipes, render_with_spec
 from .scene import SCENE_KIND, build_scene
 from .style import Style
 
@@ -98,7 +98,8 @@ def draw_and_check(kit: Kit, recipe: dict, state: Optional[str]) -> Tuple[Canvas
     if spec.get("kind") == "tile":
         found = lint_tile(cv, spec, ctx)
     else:
-        found = lint_sprite(cv, spec, ctx, layout=spec.get("_layout"))
+        body, _ = render_with_spec(recipe, ghost_ctx(ctx), state)   # 부품 없이 그린 몸통(색 수 검사용)
+        found = lint_sprite(cv, spec, ctx, layout=spec.get("_layout"), body=body)
     return cv, list(ctx.problems) + found
 
 

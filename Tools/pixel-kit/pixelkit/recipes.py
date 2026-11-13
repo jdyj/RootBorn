@@ -17,16 +17,18 @@ class Ctx:
     style: Style
     parts: Dict[str, Canvas]
     problems: list = field(default_factory=list)
-    # 이 그림이 붙인 점 부품 id. 색 수 검사가 몸통만 세려고 쓴다. 부품은 여기서만 꺼내므로 여기서 적는다.
-    used_parts: set = field(default_factory=set)
 
     def part(self, id: str) -> Canvas:
         try:
-            cv = self.parts[id]
-            self.used_parts.add(id)
-            return cv
+            return self.parts[id]
         except KeyError:
             raise RecipeError(f"{id}: 점 부품이 없다") from None
+
+
+def ghost_ctx(ctx: Ctx) -> Ctx:
+    """점 부품을 같은 크기의 투명한 캔버스로 바꾼 ctx. 색 수 검사의 "몸통"(부품 없이 그린 그림)을 그릴 때 쓴다.
+    문제 목록은 새것이다: 유령 그림이 낸 문제는 버려지므로 진짜 그림의 문제와 섞이지 않는다."""
+    return Ctx(ctx.style, {k: Canvas(v.w, v.h) for k, v in ctx.parts.items()}, [])
 
 
 def load_recipes(directory: str) -> Dict[str, dict]:

@@ -6,7 +6,7 @@ from pixelkit.canvas import Canvas
 from pixelkit.lint import lint_sprite
 from pixelkit.makers.common import pile
 from pixelkit.parts import load_parts
-from pixelkit.recipes import Ctx, RecipeError, load_recipes, render, render_with_spec
+from pixelkit.recipes import Ctx, RecipeError, ghost_ctx, load_recipes, render, render_with_spec
 from pixelkit.style import Style
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -207,7 +207,8 @@ class AllFurnitureTests(unittest.TestCase):
                     c = ctx()
                     cv = render(r, c, state)
                     self.assertEqual((cv.w, cv.h), (r["art_cells"][0] * 32, r["art_cells"][1] * 32))
-                    self.assertEqual(lint_sprite(cv, r, c), [])
+                    body = render(r, ghost_ctx(c), state)
+                    self.assertEqual(lint_sprite(cv, r, c, body=body), [])
                     self.assertEqual(c.problems, [])
 
     def test_menu_board_is_lint_clean_and_has_chalk_but_no_letters_of_its_own(self):

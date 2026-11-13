@@ -38,20 +38,14 @@ def _opaque(cv: Canvas):
                 yield x, y, c
 
 
-def _palette_and_count(cv, recipe, ctx) -> List[Problem]:
+def _palette_and_count(cv, recipe, ctx, body=None) -> List[Problem]:
     style = ctx.style
     out = _group("off-palette", "팔레트 밖 색", [(x, y) for x, y, c in _opaque(cv) if c not in style.palette])
-    # 몸통의 색 = 그림의 색 - 외곽선 - 붙인 점 부품들의 색(부품은 따로 검사된다).
-    # 몸통과 부품이 같은 색을 함께 쓰면 그 색은 세지 않는다(단순한 규칙).
-    used = {c for c in cv.colors() if c != style.outline}
-    from_parts = set()
-    for pid in getattr(ctx, "used_parts", ()):
-        from_parts |= {c for c in ctx.parts[pid].colors() if c != style.outline}
-    body = used - from_parts
+    # 색 수는 몸통만 센다: body는 점 부품을 투명하게 두고 그린 같은 그림(없으면 그림 자신).
+    used = {c for c in (body if body is not None else cv).colors() if c != style.outline}
     limit = _limit(style, recipe.get("kind", "furniture"))
-    if len(body) > limit:
-        out.append(Problem("too-many-colors",
-                           f"몸통 색 {len(body)}개(최대 {limit}, 외곽선 제외, 붙인 부품의 색 {len(used & from_parts)}개는 뺌)"))
+    if len(used) > limit:
+        out.append(Problem("too-many-colors", f"몸통 색 {len(used)}개(최대 {limit}, 외곽선 제외, 붙인 부품은 세지 않음)"))
     return out
 
 
@@ -73,9 +67,10 @@ def _side_face(cv: Canvas, layout: dict) -> List[Problem]:
 
 
 def lint_sprite(cv: Canvas, recipe: dict, ctx, allow: FrozenSet[str] = frozenset(),
-                layout: Optional[dict] = None) -> List[Problem]:
+                layout: Optional[dict] = None, body: Optional[Canvas] = None) -> List[Problem]:
     """외곽선이 입혀진 그림(건물·가구·소품·점 부품). 점 부품은 kind가 "part".
-    layout은 건물의 spec["_layout"]. 없으면 side-face 검사는 건너뛴다."""
+    layout은 건물의 spec["_layout"]. 없으면 side-face 검사는 건너뛴다.
+    body는 부품을 투명하게 두고 그린 같은 그림(`recipes.ghost_ctx`). 있으면 색 수를 그 그림에서 센다."""
     ol = ctx.style.outline
     is_part = recipe.get("kind") == "part"
     open_hits = []
@@ -89,7 +84,7 @@ def lint_sprite(cv: Canvas, recipe: dict, ctx, allow: FrozenSet[str] = frozenset
                 open_hits.append((x, y))
                 break
     out: List[Problem] = _group("outline-open", "외곽선이 끊겼다", open_hits)
-    out += _palette_and_count(cv, recipe, ctx)
+    out += _palette_and_count(cv, recipe, ctx, body)
     # 외톨이: 이웃 8칸에 외곽선 아닌 불투명 칸이 하나도 없는 한 점 섬.
     # 모양 안의 한 점 무늬(씨앗, 손잡이)는 이웃이 있으므로 걸리지 않는다.
     out += _group("orphan-pixel", "떨어진 외톨이 점", [
