@@ -2,7 +2,7 @@ namespace Rootborn.Data
 {
     /// <summary>
     /// 데이터 읽기·만들기 중에 모은 오류 하나. 처음 하나에서 멈추지 않고 모은다.
-    /// Kind: parse, duplicate, missing-field, wrong-type, missing-ref, wrong-ref-type, cycle, unknown-type, enum-range, constructor.
+    /// Kind: parse, duplicate, missing-field, wrong-type, missing-ref, wrong-ref-type, cycle, unknown-type, enum-range, constructor, overlay-unknown, overlay-unsupported, overlay-folder.
     /// </summary>
     public sealed class LoadError
     {

@@ -7,7 +7,11 @@ namespace Rootborn.Data
     /// <summary>data/ 를 읽어 등록된 종류의 엔티티를 빠짐없이 만든다. 오류는 모아서 LoadResult에 담는다.</summary>
     public static class GameDataLoader
     {
-        public static LoadResult Load(string dataDirectory, Action<DefinitionBuilders> register)
+        /// <summary>
+        /// overlayDirectory가 있으면 읽은 data/ 위에 그 폴더를 덮는다(<see cref="DataOverlay"/>, 시뮬레이션 테스트용). 없으면 지금과 같다.
+        /// 덮어쓴 필드 목록은 <see cref="LoadResult.OverlayChanges"/>.
+        /// </summary>
+        public static LoadResult Load(string dataDirectory, Action<DefinitionBuilders> register, string overlayDirectory = null)
         {
             if (register == null) throw new ArgumentNullException(nameof(register));
 
@@ -16,6 +20,8 @@ namespace Rootborn.Data
 
             var errors = new List<LoadError>();
             var table = EntityTable.ReadDirectory(dataDirectory, errors);
+            IReadOnlyList<OverlayChange> overlayChanges = Array.Empty<OverlayChange>();
+            if (!string.IsNullOrEmpty(overlayDirectory)) overlayChanges = DataOverlay.Apply(table, overlayDirectory, errors);
             var context = new BuildContext(table, builders, errors);
             var unclassified = new SortedSet<string>(StringComparer.Ordinal);
             var entries = new List<GameDefinitions.Entry>();
@@ -41,18 +47,19 @@ namespace Rootborn.Data
             definitions.Currency = EconomySettings.ReadCurrency(dataDirectory, definitions, errors);
             definitions.TimeRules = TimeSettings.Read(dataDirectory, definitions, errors);
             Builders.WorkspaceTables.Build(definitions, errors);
-            return new LoadResult(definitions, errors, unclassified.ToArray(), builders);
+            return new LoadResult(definitions, errors, unclassified.ToArray(), builders, overlayChanges);
         }
     }
 
     public sealed class LoadResult
     {
-        internal LoadResult(GameDefinitions definitions, IReadOnlyList<LoadError> errors, IReadOnlyList<string> unclassifiedTypes, DefinitionBuilders builders)
+        internal LoadResult(GameDefinitions definitions, IReadOnlyList<LoadError> errors, IReadOnlyList<string> unclassifiedTypes, DefinitionBuilders builders, IReadOnlyList<OverlayChange> overlayChanges)
         {
             Definitions = definitions;
             Errors = errors;
             UnclassifiedTypes = unclassifiedTypes;
             Builders = builders;
+            OverlayChanges = overlayChanges;
         }
 
         public GameDefinitions Definitions { get; }
@@ -63,6 +70,9 @@ namespace Rootborn.Data
 
         /// <summary>등록 내용(분류 집계·보고용).</summary>
         public DefinitionBuilders Builders { get; }
+
+        /// <summary>덮어쓰기로 바뀐 필드(type, id, 필드, 전→후). 덮어쓰기를 안 썼으면 비어 있다. 이 정의로 돈 숫자는 덮어쓴 데이터로 돈 것이다.</summary>
+        public IReadOnlyList<OverlayChange> OverlayChanges { get; }
 
         public bool Ok => Errors.Count == 0 && UnclassifiedTypes.Count == 0;
 
