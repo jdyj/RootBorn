@@ -27,6 +27,7 @@ Python 3.11 + Pillow. 다른 패키지는 쓰지 않는다.
 | `python Tools/pixel-kit/kit.py room styles [--out 폴더] [--scale N]` | 등록된 벽 모양 전부(윗면 띠 + 정면 2칸 + 바닥 한 줄 + 문간 + 방 안에서 끝나는 세로 벽), 띠 색 전부(`paper` 상자 방), 방 바닥으로 받는 명세 전부(4x3칸)를 이름표(id, 한글 이름, 컨셉 한 줄)와 함께 견본판 두 장으로. 한글 이름·컨셉은 한글 글꼴이 있을 때만 그려진다: 환경 변수 `ROOTBORN_FONT`의 파일이 먼저이고(값을 줬는데 못 열면 알림 한 줄 뒤 넘어간다), 없으면 시스템 글꼴 이름 후보(`malgun.ttf` 등)에서 찾는다(보기용 도구라 글꼴 이름 후보를 코드에 둔 예외). 못 찾으면 id만 그리고 알림 한 줄(실패하지 않는다). 사용자가 이것을 보고 고른다 | `<--out, 기본 output/pixel-kit/room>/styles-walls.png`, `styles-floors.png`(1:1)와 `_x2`(기본 배율 2) |
 | `python Tools/pixel-kit/kit.py room styles --list` | 그리지 않고 벽 모양·띠 색·바닥을 종류마다 `이름(id) — 한글 이름 — 컨셉`으로 글만 찍는다(벽은 기본 띠 색도). 고르기 전에 컨셉을 읽는 데 쓴다 | — |
 | `python Tools/pixel-kit/kit.py room vectors [--check]` | 게임(C#)과 나누는 시험 표 `Tools/pixel-kit/tests/fixtures/room-vectors.json`을 지금 규칙으로 다시 쓴다. `--check`면 쓰지 않고 다르면 끝 코드 1(아래 "방 만들기 — 시험 표") | `Tools/pixel-kit/tests/fixtures/room-vectors.json` |
+| `python Tools/pixel-kit/kit.py room export-finishes [--dry-run]` | 꾸밈 정의(`data/building/RoomFinishDefinition.json`)의 벽지·바닥을 게임용 조각 시트 PNG와 좌표표로 낸다(아래 "방 만들기 — 꾸밈 조각 시트"). 같은 입력은 같은 바이트, 문제가 있으면 아무것도 쓰지 않는다 | `art/world/finishes/finishes.png`, `data/atlases/art/world/finishes/finishes.png.atlas.json` |
 
 공통 인자: `--kit 폴더`(기본 `art/kit`), `--out 폴더`(기본 `output/pixel-kit`), `--scale N`(보기용 확대 배율,
 정수·최근접. 기본 render 6, sheet·scene 4, parts 8, room styles 2).
@@ -618,6 +619,29 @@ if/switch로 종류를 닫지 않는다.
 ```
 
 세로 벽이 가로 벽 정면을 지나는 칸(새 집 (13, 1)): 띠 옆 8px는 양옆 정면 `face:2:c`를 늘인 것이고, 주인은 각 정면의 아래 2칸 바닥 `[-1, 2]`·`[1, 2]`.
+
+## 방 만들기 — 꾸밈 조각 시트 (`room export-finishes`)
+
+플레이어가 고른 벽지·바닥으로 집을 다시 그릴 때 게임(Host)이 칸마다 붙이는 **조각 그림**을 낸다(픽셀 출처표는 위 "방 만들기 — 시험 표").
+입력은 `data/building/RoomFinishDefinition.json`의 `sheet`·`slot`·`art`(어느 꾸밈을 낼지)뿐이고 조각은 `draw_tile`이 그린다 — 새로 그리지 않는다.
+`python Tools/pixel-kit/kit.py room export-finishes [--dry-run]`. 모듈 `pixelkit/room_export.py`, 테스트 `tests/test_room_export.py`.
+
+- 한 시트(`sheet`) 안의 조각은 이름 순으로 **한 줄 16칸**(512px 폭), 칸은 32x32. 자리는 좌표표가 정하고 코드는 모른다 — 꾸밈을 더하면 이름 순서에 따라
+  자리가 밀릴 수 있으므로 게임은 반드시 좌표표로 찾는다.
+- 조각(이름은 출처표의 글과 글자 그대로 같다 — `test_room_export`와 World `RoomFinishArtTests`가 시험 표의 모든 조각 이름으로 확인한다):
+  - 벽(`slot` wall) 꾸밈마다 36장 `<art>/…`: 꽉 찬 정면 24(`face:<k>[:<표시>]`, k 1·2 × 끝 없음·`l`·`r`·`lr` × 위 없음·`c`·`t`),
+    좁은 정면 12(`face:<k>:lr[c]@<x0>-<x1>`, k 1·2 × 범위 `0-16`·`8-24`·`16-32` × `c` 없음·있음).
+  - 바닥(`slot` floor) 꾸밈마다 2장 `<art>/floor`, `<art>/floor:shade`(맨 위 2줄이 그림자).
+  - 꾸밈과 무관한 10장 `common/…`: 문지방 `sill:<n|e|w>:<a>-<b>` 9(바닥이 있는 쪽 3 × 범위 3 — 시험 표에 나오지 않는 것도 평면에 따라 나온다),
+    문짝 `door`(정면 문 타일의 `DOOR_RECT` 자리만, 나머지는 투명). 나무 줄 `wood.school`이라 벽지와 무관하다.
+  - 띠 칠은 그림이 아니라 색 값이다: 좌표표의 `bands`에 띠 색 줄(`wall.top.*`, `wall.plaster.top`) 5개 × `o` 외곽선·`d`·`f`·`l`(`#RRGGBB`).
+- 좌표표 꼴: 가구와 같은 `image`·`width`·`height`·`pixelsPerUnit` 32·`origin` `top-left`·`sprites`(이름 → `x`·`y`·`w`·`h`)에
+  `band`(시트가 받는 띠 두께 16)와 `bands`를 더했다.
+- 띠 두께가 16이 아닌 벽 모양은 거절한다(`room-finish-band`). 그 밖의 거절: `room-finish-defs`(정의 파일을 못 읽음), `room-finish-slot`·`-art`·`-sheet`·`-id`
+  (모르는 slot·벽 모양·바닥, 빈 값), `room-finish-duplicate`(같은 id 두 번). 거절되면 아무것도 쓰지 않고 끝 코드 1. 같은 입력은 같은 바이트이고
+  바뀔 것이 없으면 쓰지 않는다. 쓸 때는 다른 export처럼 임시 파일에 먼저 쓴 뒤 바꿔친다.
+- 증명: 내보낸 PNG·좌표표에서 조각을 다시 잘라 참조 조합기(`test_room_vectors.compose_cell`)에 넣어도 시험 표의 모든 사례·칸이
+  `draw_tile(Wall 열쇠)`를 `draw_tile(Ground 열쇠)` 위에 얹은 그림과 픽셀까지 같다(벽 꾸밈 5종 전부, 두 방 사이 세로 벽의 두 바닥, 바닥 꾸밈 5종).
 
 ## 같이 바뀌는 색
 

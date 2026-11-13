@@ -442,18 +442,42 @@ def vectors_command(check: bool, path: Optional[Path] = None) -> int:
     return 0
 
 
+def export_finishes_command(args, kit: Kit) -> int:
+    """room export-finishes [--dry-run]: 꾸밈 정의(data/building)의 벽지·바닥을 게임용 조각 시트와 좌표표로 내보낸다."""
+    from . import room_export
+    try:
+        written = room_export.export_finishes(args.repo, kit, dry_run=args.dry_run)
+    except room_export.RoomExportError as e:
+        print(str(e))
+        return 1
+    except OSError as e:
+        print(f"못 썼다: {e}", file=sys.stderr)
+        return 2
+    for rel in written:
+        print(("쓸 파일: " if args.dry_run else "저장: ") + rel)
+    if args.dry_run:
+        print("--dry-run: 아무것도 쓰지 않았다")
+    elif not written:
+        print("바꿀 것 없음")
+    return 0
+
+
 def cmd_room(args, kit: Kit) -> int:
     """room build <id> [--force] [--dry-run] [--out 폴더]: 평면에서 LDtk 방을 쓴다. room check <id>: 평면만 검사한다.
     room check <ldtk 경로>: LDtk 방을 검사한다. room repaint <ldtk 경로> [--dry-run]: 칠한 Collision에 벽 그림을 맞춘다.
-    room styles [--list] [--out 폴더]: 벽 모양·띠 색·바닥 견본판. room vectors [--check]: 게임과 나누는 시험 표."""
+    room styles [--list] [--out 폴더]: 벽 모양·띠 색·바닥 견본판. room vectors [--check]: 게임과 나누는 시험 표.
+    room export-finishes [--dry-run]: 꾸밈(벽지·바닥) 조각 시트와 좌표표."""
     from . import room_ldtk, room_plan
     from .room_tiles import check_top, wall_styles
     usage = ("사용법: room build <방 id> [--force] [--dry-run] [--out 폴더] | room check <방 id 또는 .ldtk 경로> | "
-             "room repaint <.ldtk 경로> [--dry-run] | room styles [--list] [--out 폴더] [--scale N] | room vectors [--check]")
+             "room repaint <.ldtk 경로> [--dry-run] | room styles [--list] [--out 폴더] [--scale N] | room vectors [--check] | "
+             "room export-finishes [--dry-run]")
     if args.ids == ["styles"]:
         return _room_styles(args, kit)
     if args.ids == ["vectors"]:
         return vectors_command(getattr(args, "check", False))
+    if args.ids == ["export-finishes"]:
+        return export_finishes_command(args, kit)
     if len(args.ids) != 2 or args.ids[0] not in ("build", "check", "repaint"):
         raise UsageError(usage)
     action, rid = args.ids
