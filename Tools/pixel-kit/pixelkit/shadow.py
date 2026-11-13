@@ -51,8 +51,8 @@ def under_shadow(scene: Canvas, sprite: Canvas, x: int, y: int, style: Style, ro
 
 
 def hung_shadow(scene: Canvas, sprite: Canvas, x: int, y: int, style: Style) -> None:
-    """벽에 걸린 것의 그림자: 열마다 그 열의 가장 아래 칸 바로 밑 2줄 shadow.wall."""
+    """벽에 걸린 것의 그림자: 열마다 그 열의 가장 아래 칸 바로 밑 2줄 shadow.hung(벽 밑 줄보다 짙다)."""
     for i in range(sprite.w):
         low = _lowest(sprite, i)
         if low is not None:
-            scene.darken(x + i, y + low + 1, 1, 2, style.shadow["wall"])
+            scene.darken(x + i, y + low + 1, 1, 2, style.shadow["hung"])

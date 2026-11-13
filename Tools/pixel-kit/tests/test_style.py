@@ -45,7 +45,7 @@ class StyleTests(unittest.TestCase):
         self.assertIn(self.style.color("wood.warm.4"), self.style.palette)
 
     def test_shadow_and_max_colors(self):
-        self.assertEqual(set(self.style.shadow), {"under", "front", "edge", "wall"})
+        self.assertEqual(set(self.style.shadow), {"under", "front", "edge", "wall", "hung"})
         self.assertEqual(self.style.max_colors["furniture"], 24)
 
     def test_ramp_counts(self):

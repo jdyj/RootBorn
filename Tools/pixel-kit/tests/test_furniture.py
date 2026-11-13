@@ -227,6 +227,20 @@ class AllFurnitureTests(unittest.TestCase):
             b = render(RECIPES[rid], ctx()).to_image().tobytes()
             self.assertEqual(a, b)
 
+    def test_rug_is_the_size_the_recipe_names_lint_clean_in_its_ramp_with_stitches(self):
+        r = RECIPES["bakery.rug"]
+        c = ctx()
+        cv, spec = render_with_spec(r, c)
+        self.assertEqual(lint_sprite(cv, r, c), [])
+        x0, y0, x1, y1 = cv.bbox()
+        self.assertEqual((x1 - x0, y1 - y0), (r["size"][0] + 2, r["size"][1] + 2))   # 외곽선 1px씩
+        body = [STYLE.color(f"{r['colors'][0]}.{i}") for i in range(2)]
+        stitch = STYLE.color(f"{r['colors'][1]}.{r['stitch_step']}")
+        self.assertEqual(cv.colors() - {STYLE.outline}, set(body) | {stitch})
+        bad = dict(r, size=[2, 2])
+        with self.assertRaises(RecipeError):
+            render(bad, ctx())
+
     def test_counter_top_face_is_at_least_40_percent_of_body_height(self):
         _, spec = render_with_spec(RECIPES["bakery.counter"], ctx())
         t0, t1 = spec["_layout"]["top_face"]

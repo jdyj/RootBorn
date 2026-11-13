@@ -6,7 +6,13 @@
      ["bread.croissant", "bread.croissant", "bread.croissant", "bread.croissant"],
      ["bread.bun", "bread.roll", "bread.pretzel", "bread.bun"]
    ],
-   "states": {"empty": {"tiers": [[], [], [], []]}}},
+   "states": {"empty": {"tiers": [[], [], [], []]},
+              "sweets": {"tiers": [
+                ["bread.baguette", "bread.baguette", "bread.baguette"],
+                ["bread.sandwich", "bread.sandwich", "bread.sandwich", "bread.muffin"],
+                ["bread.cake", "bread.donut", "bread.cake", "bread.donut"],
+                ["bread.muffin", "bread.pretzel", "bread.muffin", "bread.pie"]
+              ]}}},
   {"id": "bakery.counter", "kind": "furniture", "part": "furniture.counter", "cells": [3, 1], "art_cells": [3, 2],
    "top": [{"part": "prop.register", "x": 3}, {"part": "bread.cake", "x": 62}, {"part": "prop.basket", "x": 77}],
    "tray": {"x": 22, "w": 36, "items": ["bread.muffin", "bread.pretzel", "bread.croissant"]}},
@@ -21,9 +27,11 @@
      ["bread.loaf", "bread.loaf"],
      ["bread.croissant", "bread.croissant"],
      ["bread.roll", "bread.bun"],
-     ["bread.baguette"]
+     ["bread.muffin", "bread.donut"]
    ],
    "states": {"empty": {"rows": [[], [], [], []]}}},
   {"id": "bakery.menu-board", "kind": "prop", "part": "prop.menu-board", "art_cells": [1, 1]},
-  {"id": "bakery.a-board", "kind": "prop", "part": "prop.a-board", "art_cells": [1, 1]}
+  {"id": "bakery.a-board", "kind": "prop", "part": "prop.a-board", "art_cells": [1, 1]},
+  {"id": "bakery.rug", "kind": "prop", "part": "prop.rug", "art_cells": [2, 1], "size": [46, 18],
+   "colors": ["awning.red", "yellow"], "stitch_step": 1}
 ]

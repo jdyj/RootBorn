@@ -4,12 +4,13 @@
   size  [칸 w, 칸 h]
   fill  [{tile, rect: [칸 x, y, w, h], wall?}]   rect를 타일로 채운다. wall이 참이면 그 아랫변(벽과 바닥이 만나는 줄)에
                                                  shadow.wall 2줄.
-  place [{id | part, state?, cell: [x, y], dx?, dy?}]   바닥에 선 것. cell은 그림 캔버스의 왼쪽 아래 칸,
-                                                 dx·dy는 정수 px 미세 이동.
+  place [{id | part, state?, cell: [x, y], dx?, dy?, flat?}]   바닥에 선 것. cell은 그림 캔버스의 왼쪽 아래 칸,
+                                                 dx·dy는 정수 px 미세 이동. flat이 참이면 바닥에 깔린 것(깔개):
+                                                 그림자가 없고 선 것보다 먼저 그린다.
   hang  [{id | part, state?, at: [px x, y]}]     벽에 걸린 것. at은 그림의 보이는 왼쪽 위 칸(외곽선 포함)이 갈 자리.
 
-그리는 순서: 타일 → 벽 밑 줄 그림자 → 걸린 것(hung_shadow 먼저) → 선 것을 아랫줄이 작은 것부터(뒤에서 앞으로),
-하나마다 under_shadow를 장면에 깐 뒤 붙인다.
+그리는 순서: 타일 → 벽 밑 줄 그림자 → 걸린 것(hung_shadow 먼저) → 깔린 것(명세 순서, 그림자 없음) →
+선 것을 아랫줄이 작은 것부터(뒤에서 앞으로), 하나마다 under_shadow를 장면에 깐 뒤 붙인다.
 """
 from dataclasses import dataclass
 from typing import Dict, List
@@ -28,6 +29,7 @@ class Item:
     x: int             # 그림 캔버스의 왼쪽 위(장면 좌표)
     y: int
     hung: bool
+    flat: bool = False
 
 
 def _sid(scene: dict) -> str:
@@ -64,7 +66,7 @@ def _sprite(scene: dict, entry, recipes: Dict[str, dict], ctx: Ctx, where: str):
 
 
 def scene_items(scene: dict, recipes: Dict[str, dict], ctx: Ctx) -> List[Item]:
-    """걸린 것(명세 순서) 다음에 선 것(아랫줄이 작은 것부터, 같으면 명세 순서). 그리는 순서 그대로다."""
+    """걸린 것(명세 순서), 깔린 것(명세 순서), 선 것(아랫줄이 작은 것부터, 같으면 명세 순서). 그리는 순서 그대로다."""
     cell = ctx.style.cell
     hung: List[Item] = []
     for entry in scene.get("hang", []):
@@ -74,16 +76,21 @@ def scene_items(scene: dict, recipes: Dict[str, dict], ctx: Ctx) -> List[Item]:
             raise RecipeError(f"{_sid(scene)}: {name}의 at은 정수 [x, y](px)여야 한다")
         box = spr.bbox() or (0, 0, 0, 0)
         hung.append(Item(name, spr, at[0] - box[0], at[1] - box[1], True))
+    flat: List[Item] = []
     standing: List[Item] = []
     for entry in scene.get("place", []):
         spr, name = _sprite(scene, entry, recipes, ctx, "place")
         c, dx, dy = entry.get("cell"), entry.get("dx", 0), entry.get("dy", 0)
         if not _ints(c, 2) or not _ints([dx, dy], 2):
             raise RecipeError(f"{_sid(scene)}: {name}의 cell은 정수 [x, y](칸), dx·dy는 정수 px여야 한다")
+        is_flat = entry.get("flat", False)
+        if not isinstance(is_flat, bool):
+            raise RecipeError(f"{_sid(scene)}: {name}의 flat은 true/false여야 한다")
         # cell = 그림 캔버스의 왼쪽 아래 칸
-        standing.append(Item(name, spr, c[0] * cell + dx, (c[1] + 1) * cell - spr.h + dy, False))
+        it = Item(name, spr, c[0] * cell + dx, (c[1] + 1) * cell - spr.h + dy, False, is_flat)
+        (flat if is_flat else standing).append(it)
     standing.sort(key=lambda it: it.y + it.sprite.h)
-    return hung + standing
+    return hung + flat + standing
 
 
 def _fill(cv: Canvas, scene: dict, recipes: Dict[str, dict], ctx: Ctx) -> None:
@@ -118,7 +125,7 @@ def build_scene(recipe: dict, recipes: Dict[str, dict], ctx: Ctx) -> Canvas:
     for it in scene_items(recipe, recipes, ctx):
         if it.hung:
             hung_shadow(cv, it.sprite, it.x, it.y, ctx.style)
-        else:
+        elif not it.flat:
             under_shadow(cv, it.sprite, it.x, it.y, ctx.style)
         cv.paste(it.sprite, it.x, it.y)
     return cv

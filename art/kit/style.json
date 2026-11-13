@@ -1,7 +1,7 @@
 {
   "cell": 32,
   "outline": "#3a384e",
-  "shadow": { "under": 0.56, "front": 0.72, "edge": 0.82, "wall": 0.8 },
+  "shadow": { "under": 0.56, "front": 0.72, "edge": 0.82, "wall": 0.7, "hung": 0.6 },
   "max_colors": { "furniture": 24, "tile": 12, "building": 40, "part": 10 },
   "palette": {
     "wood.warm": ["#7a4e2c", "#9c6a3c", "#bd8a52", "#dcae74", "#f0cf9c"],

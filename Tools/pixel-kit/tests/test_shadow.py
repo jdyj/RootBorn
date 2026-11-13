@@ -111,6 +111,17 @@ class HungShadowTests(unittest.TestCase):
         self.assertNotEqual(scene.get(4, 8), FLOOR)
         self.assertEqual(scene.get(4, 10), FLOOR)
 
+    def test_uses_its_own_strength_not_the_wall_line_one(self):
+        """벽 밑 줄(shadow.wall)과 따로 shadow.hung. 같은 값이면 시계·메뉴판 그림자가 크림 벽에 묻혔다."""
+        self.assertLess(style.shadow["hung"], style.shadow["wall"])
+        spr = Canvas(4, 2)
+        spr.rect(0, 0, 4, 2, BODY)
+        scene = flat(10, 10, FLOOR)
+        hung_shadow(scene, spr, 2, 2, style)
+        want = flat(1, 1, FLOOR)
+        want.darken(0, 0, 1, 1, style.shadow["hung"])
+        self.assertEqual(scene.get(3, 4), want.get(0, 0))
+
     def test_empty_sprite_does_not_raise(self):
         scene = flat(10, 10, FLOOR)
         hung_shadow(scene, Canvas(4, 4), 0, 0, style)

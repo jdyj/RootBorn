@@ -387,6 +387,37 @@ def menu_board(spec: dict, ctx) -> Canvas:
     return cv
 
 
+# ---------- 깔개 ----------
+
+RUG_BORDER = 2       # 테두리 폭(px)
+RUG_STITCH = (2, 2)  # 가운데 바느질 줄: (땀 길이, 땀 사이)
+
+
+@register("prop.rug")
+def rug(spec: dict, ctx) -> Canvas:
+    """바닥에 깔린 깔개. size [w, h](px, 외곽선 전), colors [몸 줄, 바느질 줄], stitch_step(바느질 줄의 단계).
+    몸 줄의 단계 0은 테두리, 1은 바탕. 가운데 가로줄에 바느질 땀. 장면에서는 flat으로 놓는다(그림자 없음)."""
+    size, colors, step = spec.get("size"), spec.get("colors"), spec.get("stitch_step")
+    ok = (isinstance(size, list) and len(size) == 2 and all(isinstance(n, int) and not isinstance(n, bool) for n in size)
+          and size[0] >= 4 * RUG_BORDER + 4 and size[1] >= 2 * RUG_BORDER + 3
+          and isinstance(colors, list) and len(colors) == 2 and all(isinstance(c, str) for c in colors)
+          and isinstance(step, int) and not isinstance(step, bool))
+    if not ok:
+        raise RecipeError(f"{_rid(spec)}: 깔개는 size [w, h](w ≥ {4 * RUG_BORDER + 4}, h ≥ {2 * RUG_BORDER + 3}), "
+                          "colors [몸 줄, 바느질 줄], stitch_step(정수)이 필요하다")
+    w, h = size
+    edge, body = (_col(spec, ctx, f"{colors[0]}.{i}") for i in range(2))
+    stitch = _col(spec, ctx, f"{colors[1]}.{step}")
+    cv = Canvas(w, h)
+    cv.rect(0, 0, w, h, edge)
+    cv.rect(RUG_BORDER, RUG_BORDER, w - 2 * RUG_BORDER, h - 2 * RUG_BORDER, body)
+    run, space = RUG_STITCH
+    y = h // 2
+    for x in range(2 * RUG_BORDER + 1, w - 2 * RUG_BORDER - run + 1, run + space):
+        cv.hline(x, y, run, stitch)
+    return cv
+
+
 # ---------- 입간판 ----------
 
 A_BOARD_CHALK = ((6, 4, 7), (9, 4, 8), (12, 4, 5), (12, 10, 2))   # (y, x, 길이)

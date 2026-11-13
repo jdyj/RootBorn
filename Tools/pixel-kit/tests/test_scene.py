@@ -123,6 +123,27 @@ class SceneTests(unittest.TestCase):
         bottom = 10 + (y1 - y0)                                  # 시계 바로 밑 줄
         self.assertLess(sum(scene.get(mid, bottom)[:3]), sum(plain.get(mid, bottom)[:3]))
 
+    def test_flat_thing_gets_no_shadow_and_lies_under_standing_things(self):
+        """바닥에 깔린 것(깔개)은 그림자가 없고, 위에 선 것보다 먼저 그린다(JSON 순서·아랫줄과 무관)."""
+        rug = render(RECIPES["bakery.rug"], ctx())
+        x0, y0, x1, y1 = rug.bbox()
+        s = floor_scene(4, 4, [{"id": "bakery.rug", "cell": [0, 3], "flat": True}])
+        scene = build_scene(s, RECIPES, ctx())
+        plain = build_scene(floor_scene(4, 4), RECIPES, ctx())
+        top = 4 * 32 - rug.h
+        for y in range(top + y1, 4 * 32):                       # 깔개 밑은 바닥 그대로
+            for x in range(x0, x1):
+                self.assertEqual(scene.get(x, y), plain.get(x, y), (x, y))
+        plant = PARTS["prop.plant"]
+        place = [{"part": "prop.plant", "cell": [0, 2], "dx": 10, "dy": 20},
+                 {"id": "bakery.rug", "cell": [0, 3], "flat": True}]
+        scene = build_scene(floor_scene(4, 4, place), RECIPES, ctx())
+        px0, py0 = 10, 3 * 32 - plant.h + 20
+        for x, y in opaque(plant):
+            self.assertEqual(scene.get(px0 + x, py0 + y), plant.get(x, y))
+        with self.assertRaises(RecipeError):
+            build_scene(floor_scene(4, 4, [{"id": "bakery.rug", "cell": [0, 3], "flat": "yes"}]), RECIPES, ctx())
+
     def test_scene_render_is_deterministic(self):
         for sid in ("bakery.scene.interior", "bakery.scene.street"):
             with self.subTest(sid):

@@ -10,13 +10,14 @@
    ],
    "place": [
      {"id": "bakery.shelf", "cell": [0, 2], "dx": 4},
-     {"id": "bakery.shelf", "cell": [2, 2], "dx": 8},
+     {"id": "bakery.shelf", "state": "sweets", "cell": [2, 2], "dx": 8},
      {"id": "bakery.trolley", "cell": [4, 2], "dx": 12},
      {"id": "bakery.glass-case", "cell": [6, 2]},
      {"id": "bakery.counter", "cell": [5, 4], "dy": -3},
      {"part": "prop.basket", "cell": [3, 4], "dx": 8, "dy": -8},
-     {"part": "prop.plant", "cell": [8, 3], "dx": 14},
-     {"part": "prop.plant", "cell": [0, 4], "dx": 6, "dy": -4}
+     {"part": "prop.plant", "cell": [8, 3], "dx": 8},
+     {"part": "prop.plant", "cell": [0, 4], "dx": 6, "dy": -4},
+     {"id": "bakery.rug", "cell": [1, 4], "dy": -6, "flat": true}
    ]},
   {"id": "bakery.scene.street", "kind": "scene", "size": [7, 8],
    "fill": [
