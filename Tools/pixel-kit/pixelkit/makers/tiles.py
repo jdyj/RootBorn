@@ -1,5 +1,6 @@
 """타일: 실내 바닥, 실내 벽, 보도. 외곽선 없이 칸 배수 크기로 그리고, 무늬 주기는 32의 약수만 쓴다."""
 from ..canvas import Canvas
+from ..rand import rnd
 from . import RecipeError, register
 
 
@@ -29,15 +30,6 @@ def _key(spec: dict, name: str) -> str:
     return v
 
 
-def _mix(k: int, salt: int, n: int) -> int:
-    """씨앗 k, 소금 salt에서 0..n-1. _hash보다 고르게 퍼진다(흩뿌리기용)."""
-    v = (k * 2654435761 + salt * 40503 + 12345) & 0xFFFFFFFF
-    v ^= v >> 13
-    v = (v * 2246822519) & 0xFFFFFFFF
-    v ^= v >> 16
-    return v % max(1, n)
-
-
 @register("tile.floor-checker")
 def floor_checker(spec: dict, ctx) -> Canvas:
     """16px 체크. colors는 [밝은 칸 줄, 어두운 칸 줄], 줄마다 단계 0 줄눈 / 1 잔 점 / 2 바탕 / 3 빛 모서리.
@@ -55,7 +47,7 @@ def floor_checker(spec: dict, ctx) -> Canvas:
             cv.vline(ox + 15, oy, 16, joint)
             for k in range(2):                           # 잔 점 둘: 칸마다 다른 자리
                 n = (ty * 2 + tx) * 2 + k
-                cv.px(ox + 2 + _mix(n, 1, 12), oy + 2 + _mix(n, 2, 12), speck)
+                cv.px(ox + 2 + rnd(n, 1, 12), oy + 2 + rnd(n, 2, 12), speck)
     return cv
 
 
@@ -105,18 +97,18 @@ def grass(spec: dict, ctx) -> Canvas:
         cv.px(x % 32, y % 32, c)
 
     for k in range(GRASS_PATCHES):                        # 짙은 얼룩: 가로로 긴 낮은 덩어리
-        x, y, n = _mix(k, 11, 32), _mix(k, 12, 32), 3 + _mix(k, 13, 3)
+        x, y, n = rnd(k, 11, 32), rnd(k, 12, 32), 3 + rnd(k, 13, 3)
         for i in range(n):
             put(x + i, y, patch)
         for i in range(1, n - 1):
             put(x + i, y + 1, patch)
     for k in range(GRASS_TUFTS):                          # 풀포기: 밑동 하나 + 양옆 위로 잎끝
-        x, y = _mix(k, 21, 32), _mix(k, 22, 32)
+        x, y = rnd(k, 21, 32), rnd(k, 22, 32)
         put(x, y + 1, dark)
         put(x - 1, y, light)
         put(x + 1, y, light)
     for k in range(GRASS_BLADES):                         # 낱 풀잎: 잎끝 + 밑동
-        x, y = _mix(k, 31, 32), _mix(k, 32, 32)
+        x, y = rnd(k, 31, 32), rnd(k, 32, 32)
         put(x, y, light)
         put(x, y + 1, dark)
     return cv

@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from typing import Callable, Dict, List, Tuple
 
 from ..canvas import Canvas
+from ..rand import rnd
 from . import RecipeError, register
 from .furniture import _col, _local, _merge, _part, _report, _rid, pile
 
@@ -23,15 +24,6 @@ FRONT_EDGE = 16       # 지붕 맨 아랫줄 위로 몇 줄: 평지붕 앞 난�
 AWNING_SLOPE, AWNING_VALANCE = 12, 6
 SHADE_SIDE, SHADE_BELOW = 3, 2   # 지붕 위 물건 그림자: 오른쪽 변 3열, 아랫변 2줄의 짧은 띠(사용자: 굴뚝 그림자가 너무 크다)
 SHADE_STEPS = 2                  # 그림자는 그 자리 지붕의 두 단계 아래(한 단계는 평지붕 줄눈과 같은 색이라 묻혔다)
-
-
-def _rnd(k: int, salt: int, n: int) -> int:
-    """결정적인 작은 난수(씨앗 k, 소금 salt) → 0..n-1."""
-    v = (k * 2654435761 + salt * 40503 + 12345) & 0xFFFFFFFF
-    v ^= v >> 13
-    v = (v * 2246822519) & 0xFFFFFFFF
-    v ^= v >> 16
-    return v % max(1, n)
 
 
 def _ramp(spec: dict, ctx, prefix: str, need: int) -> list:
@@ -260,7 +252,7 @@ def roof_flat(cv: Canvas, spec: dict, ctx, w: int, rh: int) -> None:
         cv.vline(x, back + 2, in_h - 2, t[0])
     stains = set()
     for k in range(7):                                     # 바닥 얼룩(짧은 줄)
-        sx, sy, n = 8 + _rnd(k, 1, fw - 26), 10 + _rnd(k, 2, fh - 18), 5 + _rnd(k, 3, 6)
+        sx, sy, n = 8 + rnd(k, 1, fw - 26), 10 + rnd(k, 2, fh - 18), 5 + rnd(k, 3, 6)
         stains.update((sx + i, sy) for i in range(n))
     for j in range(fh):                                    # 바닥: 띠 두 개(뒤 어둡게, 앞 밝게) + 줄눈 + 난간 그림자
         band = 1 if j < fh * 2 // 5 else 2
@@ -365,7 +357,7 @@ def _facade(cv: Canvas, spec: dict, ctx, P: _Pal, w: int, rh: int, v: dict, loca
 
     cv.rect(left, wt, ww, base - wt, b[2])                 # 넓은 색 면
     for k in range(26):                                    # 벽돌은 낱장 몇 장만
-        bx, by = left + 10 + _rnd(k, 5, ww - 28), wt + 8 + _rnd(k, 8, (base - wt - 22) // 5) * 5
+        bx, by = left + 10 + rnd(k, 5, ww - 28), wt + 8 + rnd(k, 8, (base - wt - 22) // 5) * 5
         c = b[3] if k % 3 else b[1]
         cv.rect(bx, by, 9, 4, c)
         _shift(cv, bx, by + 3, 9, 1, _steps([b]), 1)
