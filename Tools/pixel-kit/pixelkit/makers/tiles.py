@@ -29,22 +29,33 @@ def _key(spec: dict, name: str) -> str:
     return v
 
 
+def _mix(k: int, salt: int, n: int) -> int:
+    """씨앗 k, 소금 salt에서 0..n-1. _hash보다 고르게 퍼진다(흩뿌리기용)."""
+    v = (k * 2654435761 + salt * 40503 + 12345) & 0xFFFFFFFF
+    v ^= v >> 13
+    v = (v * 2246822519) & 0xFFFFFFFF
+    v ^= v >> 16
+    return v % max(1, n)
+
+
 @register("tile.floor-checker")
 def floor_checker(spec: dict, ctx) -> Canvas:
-    """16px 체크 두 색. 칸마다 빛 모서리·줄눈·잔 점. 주기 16."""
+    """16px 체크. colors는 [밝은 칸 줄, 어두운 칸 줄], 줄마다 단계 0 줄눈 / 1 잔 점 / 2 바탕 / 3 빛 모서리.
+    두 칸 모두 위·왼쪽은 빛 모서리, 아래·오른쪽은 줄눈. 잔 점은 칸마다 다른 자리(타일 주기 32)."""
     cv = Canvas(32, 32)
-    pa, pb = _prefixes(spec, 2)
-    a = _ramp(spec, ctx, pa, (1, 2))   # 밝은 칸: 줄눈, 바탕
-    b = _ramp(spec, ctx, pb, (0, 1))   # 어두운 칸: 줄눈, 바탕
+    ramps = [_ramp(spec, ctx, p, range(4)) for p in _prefixes(spec, 2)]
     for ty in range(2):
         for tx in range(2):
-            joint, base = a if (tx + ty) % 2 == 0 else b
+            joint, speck, base, edge = ramps[(tx + ty) % 2]
             ox, oy = tx * 16, ty * 16
             cv.rect(ox, oy, 16, 16, base)
+            cv.hline(ox, oy, 15, edge)
+            cv.vline(ox, oy, 15, edge)
             cv.hline(ox, oy + 15, 16, joint)
             cv.vline(ox + 15, oy, 16, joint)
-            # 잔 점: 칸마다 같은 자리(체크 한 쌍이 같은 칸 종류끼리 이어진다)
-            cv.px(ox + 3 + _hash(tx % 2, ty % 2, 9), oy + 3 + _hash(ty % 2, tx % 2 + 1, 9), joint)
+            for k in range(2):                           # 잔 점 둘: 칸마다 다른 자리
+                n = (ty * 2 + tx) * 2 + k
+                cv.px(ox + 2 + _mix(n, 1, 12), oy + 2 + _mix(n, 2, 12), speck)
     return cv
 
 
@@ -76,19 +87,38 @@ def wall_interior(spec: dict, ctx) -> Canvas:
     return cv
 
 
+GRASS_TUFTS = 14     # 32px 안의 풀포기(V자) 수
+GRASS_BLADES = 18    # 32px 안의 낱 풀잎 수
+GRASS_PATCHES = 5    # 32px 안의 짙은 얼룩 수
+
+
 @register("tile.grass")
 def grass(spec: dict, ctx) -> Canvas:
-    """풀밭. 바탕 한 색에 짧은 풀잎(밝은 끝 + 짙은 밑동)을 칸 좌표 해시로 흩는다. 주기 16."""
+    """풀밭. 줄 단계 0 짙은 밑동 / 1 얼룩 / 2 바탕 / 3 밝은 잎끝. 짙은 얼룩, V자 풀포기, 낱 풀잎을
+    32px 전체에 흩는다(16px로 되풀이하면 칸 격자가 보인다). 가장자리를 넘는 것은 맞은편으로 감아 이음매가 없다."""
     cv = Canvas(32, 32)
     (prefix,) = _prefixes(spec, 1)
-    dark, base, light = _ramp(spec, ctx, prefix, (0, 1, 2))
+    dark, patch, base, light = _ramp(spec, ctx, prefix, range(4))
     cv.rect(0, 0, 32, 32, base)
-    for k in range(6):                                   # 16px 안의 풀잎 여섯, 네 번 되풀이
-        bx, by = _hash(k, 1, 15), 1 + _hash(2, k, 13)
-        for ox in (0, 16):
-            for oy in (0, 16):
-                cv.px(ox + bx, oy + by, light)
-                cv.px(ox + bx, oy + by + 1, dark)
+
+    def put(x: int, y: int, c) -> None:
+        cv.px(x % 32, y % 32, c)
+
+    for k in range(GRASS_PATCHES):                        # 짙은 얼룩: 가로로 긴 낮은 덩어리
+        x, y, n = _mix(k, 11, 32), _mix(k, 12, 32), 3 + _mix(k, 13, 3)
+        for i in range(n):
+            put(x + i, y, patch)
+        for i in range(1, n - 1):
+            put(x + i, y + 1, patch)
+    for k in range(GRASS_TUFTS):                          # 풀포기: 밑동 하나 + 양옆 위로 잎끝
+        x, y = _mix(k, 21, 32), _mix(k, 22, 32)
+        put(x, y + 1, dark)
+        put(x - 1, y, light)
+        put(x + 1, y, light)
+    for k in range(GRASS_BLADES):                         # 낱 풀잎: 잎끝 + 밑동
+        x, y = _mix(k, 31, 32), _mix(k, 32, 32)
+        put(x, y, light)
+        put(x, y + 1, dark)
     return cv
 
 
