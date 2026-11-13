@@ -247,12 +247,56 @@ def cmd_parts(args, kit: Kit) -> int:
     return _finish(saver, 0)
 
 
+def cmd_export(args, kit: Kit) -> int:
+    from . import export   # export가 cli를 부르므로 늦게 가져온다
+    if not args.ids:
+        raise UsageError("export에는 id가 하나 이상 필요하다")
+    root = Path(args.repo)
+    plans = []
+    for rid in args.ids:
+        recipe = _recipe(kit, rid)
+        kind = recipe.get("kind")
+        if kind != "furniture":
+            raise UsageError(f"{rid}: {kind} 내보내기는 아직 없다(지금은 가구만)")
+        try:
+            plans.append(export.export_furniture(recipe, kit, root))
+        except RecipeError as e:
+            raise UsageError(str(e)) from None
+    plan = export.merge_plans(plans)
+    if plan.problems:
+        for p in plan.problems:
+            where = f" ({p.x}, {p.y})" if p.x is not None and p.y is not None else ""
+            print(f"{p.code}{where} {p.message}")
+        return 1
+    pending = export.pending_writes(plan, root)
+    for rid, sprite, name in plan.replace:
+        print(f"가구 정의 {rid}: sprite → {sprite}, name → {name}")
+    if not plan.replace:
+        print("가구 정의: 바꿀 것 없음")
+    if args.dry_run:
+        for rel in plan.files:
+            print(f"쓸 파일: {rel}" + ("" if rel in pending else " (같은 내용)"))
+        print("--dry-run: 아무것도 쓰지 않았다")
+        return 0
+    if not pending:
+        print("바꿀 것 없음")
+        return 0
+    try:
+        for rel in export.apply(plan, root):
+            print(f"저장: {rel}")
+    except OSError as e:
+        print(f"못 썼다: {e}", file=sys.stderr)
+        return 2
+    return 0
+
+
 COMMANDS: Dict[str, Callable] = {
     "render": cmd_render,
     "lint": cmd_lint,
     "sheet": cmd_sheet,
     "scene": cmd_scene,
     "parts": cmd_parts,
+    "export": cmd_export,
 }
 
 

@@ -17,6 +17,7 @@ Python 3.11 + Pillow. 다른 패키지는 쓰지 않는다.
 | `python Tools/pixel-kit/kit.py sheet <세트>` | 세트(명세 id의 첫 마디, 예: `bakery`)의 모든 명세를 번호와 함께 한 장에. 검사에 걸린 것은 표시된다 | `sheet/<세트>.png` |
 | `python Tools/pixel-kit/kit.py scene <장면 id…>` | 방·거리 미리 보기 | `scene/<id>.png`, `scene/<id>_x4.png` |
 | `python Tools/pixel-kit/kit.py parts` | 점 부품 목록 판(명세를 쓸 때 다시 쓸 부품을 고른다) | `parts.png` |
+| `python Tools/pixel-kit/kit.py export <가구 id…> [--dry-run] [--repo 뿌리]` | 가구 그림을 게임이 읽는 PNG + 좌표표로 내고, `game.replaces`가 있으면 가구 정의의 그림 참조를 바꾼다(아래 "내보내기"). 가구만 된다 | 저장소 뿌리의 `art/props/`, `data/atlases/` |
 
 공통 인자: `--kit 폴더`(기본 `art/kit`), `--out 폴더`(기본 `output/pixel-kit`), `--scale N`(보기용 확대 배율,
 정수·최근접. 기본 render 6, sheet·scene 4, parts 8).
@@ -140,6 +141,23 @@ if/switch로 종류를 닫지 않는다.
 - `place`: 바닥에 선 것. `cell`은 그림 캔버스의 왼쪽 아래 칸, `dx`·`dy`는 px 미세 이동. 아랫줄이 위인 것부터 그린다.
   `flat: true`는 바닥에 깔린 것(깔개): 그림자 없이 선 것보다 먼저 그린다.
 - 장면은 견본 PNG일 뿐 게임에 들어가지 않는다. 물건끼리 겹치거나 장면 가장자리에 붙지 않게 둔다(테스트가 본다).
+
+## 내보내기 (export, 가구)
+
+명세에 `game` 덩어리를 두면 가구 정의의 그림 참조까지 바꾼다. 없으면 그림과 좌표표만 내고 가구 정의는 건드리지 않는다.
+
+```json
+"game": {"replaces": "school.bookcase"}
+```
+
+- PNG: `art/props/<세트>/<명세 id>.png`(세트 = id의 첫 마디). 기본 그림과 모든 상태를 **왼쪽부터 가로로** 붙인 한 장이고 상태 순서는 기본, 그다음 명세 `states`에 적힌 순서. 칸마다 `art_cells * 32`px.
+- 좌표표: `data/atlases/art/props/<세트>/<명세 id>.png.atlas.json`. `pixelsPerUnit` 32, `origin` `"top-left"`, `width`·`height`는 PNG에서 잰 값. 칸 이름은 `<명세 id>`(기본)와 `<명세 id>@<상태>`. `pivot`은 점유 칸 줄의 왼쪽 아래 칸 가운데(`x = 0.5/art_w`, `y = (art_h-0.5)/art_h`). 키 순서·숫자 모양은 늘 같다.
+- `replaces`는 그 가구 항목의 `tileParts[0].tile`의 `sprite`와 `name` **두 문자열만** 새 PNG 경로와 기본 칸 이름으로 바꾼다. 파일의 나머지 바이트(줄바꿈, BOM, 끝 줄바꿈)는 그대로이고, 바꾼 뒤 JSON을 다시 읽어 그 두 값 밖이 같은지 확인한다. 하나라도 다르면 아무것도 쓰지 않는다.
+- 이 작업이 지원하는 가구: `tileParts`가 하나이고 `localCell`이 (0,0), 명세 `cells`가 `[w, 1]`이고 가구 `footprintCells`가 가로 한 줄 w칸과 같을 때.
+- 문제 코드: `export-unknown-furniture`(정의에 없는 id), `export-unsupported-furniture`(위 조건 밖), `export-footprint-mismatch`(칸 수가 다름), `export-replace-failed`(치환 검증 실패). 그림의 검사·만드는 부품 문제도 그대로 문제다. 문제가 하나라도 있으면(여러 id를 한 번에 줬어도) 전부 안 쓴다. 끝 코드 1.
+- 같은 내용이면 쓰지 않고 "바꿀 것 없음"이라고 한다(수정 시각도 그대로). `--dry-run`은 쓸 파일과 바꿀 가구만 찍는다.
+- `--repo`의 기본은 이 도구가 든 저장소의 뿌리다. 테스트는 임시 폴더의 가짜 저장소만 쓴다.
+- 장면·타일·건물 id를 주면 아직 없다는 오류(끝 코드 2).
 
 ## 같이 바뀌는 색
 

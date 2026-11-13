@@ -1,0 +1,253 @@
+"""내보내기: 그림을 PNG + 좌표표로 내고, 가구 정의의 그림 참조(sprite·name 두 문자열)만 바꾼다.
+
+계획(ExportPlan)을 먼저 만들고(쓰지 않는다), apply가 문제가 없을 때만 쓴다.
+게임 쪽 모양은 data/README.md "그림 좌표표"와 data/interiors/FurnitureDefinition.json이다.
+"""
+import io
+import json
+import re
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
+from PIL import Image
+
+from .cli import Kit, draw_and_check
+from .lint import Problem
+
+FURNITURE_DEFS = "data/interiors/FurnitureDefinition.json"   # 저장소 뿌리 기준
+ATLAS_ROOT = "data/atlases"
+PROPS_ROOT = "art/props"
+PIXELS_PER_UNIT = 32
+
+
+class ExportError(Exception):
+    def __init__(self, code: str, message: str):
+        super().__init__(message)
+        self.code = code
+
+
+@dataclass
+class ExportPlan:
+    files: Dict[str, bytes] = field(default_factory=dict)               # 뿌리 기준 경로 → 내용
+    replace: List[Tuple[str, str, str]] = field(default_factory=list)   # (가구 id, 새 sprite, 새 name)
+    problems: List[Problem] = field(default_factory=list)
+    defs_before: Optional[bytes] = None    # 가구 정의 파일의 지금 내용(replace가 있을 때)
+    defs_after: Optional[bytes] = None     # replace를 적용한 내용
+
+
+def _problem(rid: str, code: str, message: str) -> Problem:
+    return Problem(code, f"{rid}: {message}")
+
+
+# --- 그림과 좌표표 ---------------------------------------------------------------
+
+def _states_in_order(recipe: dict) -> List[Optional[str]]:
+    return [None] + list((recipe.get("states") or {}).keys())
+
+
+def _sheet_png(cells: list) -> bytes:
+    """칸 그림들을 왼쪽부터 가로로 붙인 한 장."""
+    w, h = cells[0].w, cells[0].h
+    img = Image.new("RGBA", (w * len(cells), h), (0, 0, 0, 0))
+    for i, cv in enumerate(cells):
+        img.paste(cv.to_image(), (i * w, 0))
+    buf = io.BytesIO()
+    img.save(buf, format="PNG", optimize=False)
+    return buf.getvalue()
+
+
+def _atlas_json(image_path: str, png: bytes, names: List[str], art_cells: list) -> bytes:
+    with Image.open(io.BytesIO(png)) as im:
+        width, height = im.size
+    cw = width // len(names)
+    aw, ah = art_cells
+    pivot = {"x": 0.5 / aw, "y": (ah - 0.5) / ah}   # 점유 칸 줄의 왼쪽 아래 칸 가운데
+    sprites = {n: {"x": i * cw, "y": 0, "w": cw, "h": height, "pivot": dict(pivot)} for i, n in enumerate(names)}
+    doc = {"image": image_path, "width": width, "height": height, "pixelsPerUnit": PIXELS_PER_UNIT,
+           "origin": "top-left", "sprites": sprites}
+    return (json.dumps(doc, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+
+
+# --- 가구 정의 한 항목의 두 문자열 바꾸기 ------------------------------------------------
+
+def _strip_bom(text: str) -> str:
+    return text[1:] if text.startswith("﻿") else text
+
+
+def _top_level_spans(text: str):
+    """최상위 배열의 원소 객체마다 (시작, 끝) 글자 위치. 문자열 안의 괄호는 세지 않는다."""
+    depth, in_str, esc, start = 0, False, False, -1
+    for i, ch in enumerate(text):
+        if in_str:
+            if esc:
+                esc = False
+            elif ch == "\\":
+                esc = True
+            elif ch == '"':
+                in_str = False
+            continue
+        if ch == '"':
+            in_str = True
+        elif ch in "{[":
+            depth += 1
+            if ch == "{" and depth == 2:
+                start = i
+        elif ch in "}]":
+            if ch == "}" and depth == 2:
+                yield start, i + 1
+            depth -= 1
+
+
+def _find_entity(text: str, furniture_id: str) -> Tuple[int, int]:
+    needle = json.dumps(furniture_id, ensure_ascii=False)
+    for s, e in _top_level_spans(text):
+        chunk = text[s:e]
+        if needle not in chunk:
+            continue
+        try:
+            obj = json.loads(chunk)
+        except json.JSONDecodeError:
+            continue
+        if obj.get("type") == "FurnitureDefinition" and obj.get("id") == furniture_id:
+            return s, e
+    raise ExportError("export-unknown-furniture", f"가구 정의에 {furniture_id}가 없다")
+
+
+_STR = r'"((?:[^"\\]|\\.)*)"'
+
+
+def _substitute(raw: bytes, replacements: List[Tuple[str, str, str]]) -> bytes:
+    """항목마다 tileParts[0].tile의 sprite·name 두 값만 바꾼다. 바뀐 결과는 다시 읽어 검증한다."""
+    text = raw.decode("utf-8")
+    expected = json.loads(_strip_bom(text))
+    out = text
+    for fid, sprite, name in replacements:
+        s, e = _find_entity(out, fid)
+        chunk = out[s:e]
+        tp = chunk.find('"tileParts"')
+        if tp < 0:
+            raise ExportError("export-unsupported-furniture", f"{fid}: tileParts가 없다")
+        ms = re.compile(r'"sprite"\s*:\s*' + _STR).search(chunk, tp)
+        mn = re.compile(r'"name"\s*:\s*' + _STR).search(chunk, tp)
+        if not ms or not mn:
+            raise ExportError("export-unsupported-furniture", f"{fid}: tile의 sprite·name을 찾지 못했다")
+        # 뒤쪽 값부터 바꿔 앞쪽 위치가 밀리지 않게 한다.
+        for m, new in sorted(((ms, sprite), (mn, name)), key=lambda t: -t[0].start()):
+            chunk = chunk[:m.start(1)] + json.dumps(new, ensure_ascii=False)[1:-1] + chunk[m.end(1):]
+        out = out[:s] + chunk + out[e:]
+        for ent in expected:
+            if ent.get("type") == "FurnitureDefinition" and ent.get("id") == fid:
+                ent["tileParts"][0]["tile"]["sprite"] = sprite
+                ent["tileParts"][0]["tile"]["name"] = name
+    try:
+        got = json.loads(_strip_bom(out))
+    except json.JSONDecodeError as e:
+        raise ExportError("export-replace-failed", f"치환 뒤 JSON이 깨졌다: {e}") from None
+    if got != expected:
+        raise ExportError("export-replace-failed", "치환 결과가 기대와 다르다(두 문자열 밖이 바뀌었다)")
+    return out.encode("utf-8")
+
+
+# --- 계획 ----------------------------------------------------------------------------
+
+def _check_furniture(recipe: dict, defs_text: str, fid: str) -> None:
+    s, e = _find_entity(defs_text, fid)
+    ent = json.loads(defs_text[s:e])
+    parts = ent.get("tileParts") or []
+    if len(parts) != 1 or parts[0].get("localCell") != {"x": 0, "y": 0}:
+        raise ExportError("export-unsupported-furniture", f"{fid}: tileParts가 하나(localCell 0,0)가 아니다")
+    cells = recipe.get("cells")
+    if not (isinstance(cells, list) and len(cells) == 2 and cells[1] == 1):
+        raise ExportError("export-unsupported-furniture", "한 줄 점유(cells [w, 1])만 바꿀 수 있다")
+    want = {(i, 0) for i in range(cells[0])}
+    have = {(c["x"], c["y"]) for c in ent.get("footprintCells") or []}
+    if want != have:
+        raise ExportError("export-footprint-mismatch",
+                          f"명세 cells {cells}와 {fid}의 footprintCells {sorted(have)}가 다르다")
+
+
+def export_furniture(recipe: dict, kit: Kit, repo_root) -> ExportPlan:
+    root = Path(repo_root)
+    rid = recipe["id"]
+    plan = ExportPlan()
+    cells, names = [], []
+    for st in _states_in_order(recipe):
+        cv, found = draw_and_check(kit, recipe, st)
+        label = rid if st is None else f"{rid}@{st}"
+        plan.problems += [Problem(p.code, f"{label}: {p.message}", p.x, p.y) for p in found]
+        cells.append(cv)
+        names.append(label)
+    art = recipe.get("art_cells")
+    if not (isinstance(art, list) and len(art) == 2):
+        plan.problems.append(_problem(rid, "export-unsupported-furniture", "art_cells [w, h]가 있어야 한다"))
+        return plan
+    png_path = f"{PROPS_ROOT}/{rid.split('.')[0]}/{rid}.png"
+    target = (recipe.get("game") or {}).get("replaces")
+    if target is not None:
+        try:
+            raw = (root / FURNITURE_DEFS).read_bytes()
+            _check_furniture(recipe, raw.decode("utf-8"), target)
+            plan.replace.append((target, png_path, rid))
+            plan.defs_before = raw
+            plan.defs_after = _substitute(raw, plan.replace)
+        except OSError:
+            plan.problems.append(_problem(rid, "export-unknown-furniture", f"{FURNITURE_DEFS}를 못 읽었다"))
+        except ExportError as e:
+            plan.problems.append(_problem(rid, e.code, str(e)))
+    if plan.problems:
+        return plan
+    png = _sheet_png(cells)
+    plan.files[png_path] = png
+    plan.files[f"{ATLAS_ROOT}/{png_path}.atlas.json"] = _atlas_json(png_path, png, names, art)
+    return plan
+
+
+def merge_plans(plans: List[ExportPlan]) -> ExportPlan:
+    """여러 계획을 하나로. 문제 하나가 전체를 막는다. 가구 정의는 원본에서 한 번에 다시 치환한다."""
+    out = ExportPlan()
+    for p in plans:
+        out.files.update(p.files)
+        out.replace += p.replace
+        out.problems += p.problems
+        if p.defs_before is not None:
+            out.defs_before = p.defs_before
+    if out.replace and not out.problems:
+        try:
+            out.defs_after = _substitute(out.defs_before, out.replace)
+        except ExportError as e:
+            out.problems.append(Problem(e.code, str(e)))
+    if out.problems:
+        out.files.clear()
+        out.defs_after = None
+    return out
+
+
+def _differs(path: Path, content: bytes) -> bool:
+    try:
+        return path.read_bytes() != content
+    except OSError:
+        return True
+
+
+def pending_writes(plan: ExportPlan, repo_root) -> List[str]:
+    """실제로 바뀔 파일(뿌리 기준 경로). 같은 내용이면 뺀다. 가구 정의가 있으면 맨 끝."""
+    root = Path(repo_root)
+    out = [rel for rel, data in plan.files.items() if _differs(root / rel, data)]
+    if plan.defs_after is not None and plan.defs_after != plan.defs_before:
+        out.append(FURNITURE_DEFS)
+    return out
+
+
+def apply(plan: ExportPlan, repo_root) -> List[str]:
+    """문제가 있으면 아무것도 쓰지 않는다. 쓴 파일 목록을 돌려준다. 가구 정의는 맨 마지막에 쓴다."""
+    if plan.problems:
+        return []
+    root = Path(repo_root)
+    written = pending_writes(plan, repo_root)
+    for rel in written:
+        data = plan.defs_after if rel == FURNITURE_DEFS else plan.files[rel]
+        path = root / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data)
+    return written
