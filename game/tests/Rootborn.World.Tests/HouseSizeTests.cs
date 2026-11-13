@@ -10,7 +10,7 @@ namespace Rootborn.World.Tests
 {
     /// <summary>
     /// 집은 커질 수 있다(사용자 결정 2026-11-11). 맵 크기·카메라 범위·충돌·가구 범위는 모두 읽어 온 맵에서 얻는다.
-    /// 실제 house.ldtk(28x18)와 오른쪽·아래로 늘린 사본으로 같은 코드를 돌린다. 자동 테스트.
+    /// 실제 집 맵(맵 목록의 House가 가리키는 LDtk, 28x18)과 오른쪽·아래로 늘린 사본으로 같은 코드를 돌린다. 자동 테스트.
     /// </summary>
     public sealed class HouseSizeTests
     {
@@ -30,10 +30,16 @@ namespace Rootborn.World.Tests
             try { Directory.Delete(_dir, true); } catch (IOException) { }
         }
 
-        /// <summary>레벨을 오른쪽·아래로 늘린 house.ldtk 사본. 늘린 칸은 바닥이고, 원래 바깥벽은 그대로 남는다(벽 너머는 막힘으로 칠한다).</summary>
+        /// <summary>맵 목록의 집 LDtk(저장소 뿌리 기준 경로를 맵 목록에서 얻는다).</summary>
+        private static string HouseLdtk() => Path.Combine(Repo.Root, Repo.Loader().Catalog.Find("House").Ldtk);
+
+        /// <summary>
+        /// 레벨을 오른쪽·아래로 늘린 집 LDtk 사본. 늘린 칸은 칠한 Collision에서 바닥(2)이고 맨 끝 줄·열은 벽(1), 다른 IntGrid 층(Build)은 0(고정).
+        /// 원래 바깥벽은 그대로 남는다.
+        /// </summary>
         private string BiggerHouse()
         {
-            string source = Path.Combine(Repo.Root, "Assets/LDtk/House/house.ldtk");
+            string source = HouseLdtk();
             JsonNode root = JsonNode.Parse(File.ReadAllText(source));
             // 타일셋 경로는 원래 폴더 기준이라 사본 옆에서도 풀리도록 절대 경로로 바꾼다.
             foreach (JsonNode ts in root["defs"]["tilesets"].AsArray())
@@ -54,7 +60,8 @@ namespace Rootborn.World.Tests
                 var grown = new JsonArray();
                 for (int y = 0; y < rows; y++)
                     for (int x = 0; x < cols; x++)
-                        grown.Add(x < oldCols && y < oldRows ? (int)csv[y * oldCols + x] : (x == cols - 1 || y == rows - 1 ? 1 : 0));
+                        grown.Add(x < oldCols && y < oldRows ? (int)csv[y * oldCols + x]
+                            : (string)li["__identifier"] != "Collision" ? 0 : x == cols - 1 || y == rows - 1 ? 1 : 2);
                 li["intGridCsv"] = grown;
             }
             string path = Path.Combine(_dir, "house.ldtk");
@@ -71,7 +78,7 @@ namespace Rootborn.World.Tests
         [Test]
         public void TwoHouseSizes_RunThroughTheSameMapCodeWithSizesTakenFromTheFile()
         {
-            LoadedMap normal = Build(Path.Combine(Repo.Root, "Assets/LDtk/House/house.ldtk"));
+            LoadedMap normal = Build(HouseLdtk());
             LoadedMap bigger = Build(BiggerHouse());
 
             Assert.That((normal.World.Grid.Columns, normal.World.Grid.Rows), Is.EqualTo((28, 18)), "게임의 집 크기(사용자 결정)");
@@ -103,32 +110,13 @@ namespace Rootborn.World.Tests
         }
 
         [Test]
-        public void House_MatchesTheUnitySceneLayout()
-        {
-            // Assets/Scenes/House.unity: 바닥 380칸(48px 그림), 벽 74 + 징두리 50, 문짝 3, 고정 가구 14, 충돌 133칸, 출구 HouseExit.
-            LoadedMap house = Repo.Loader().LoadMap("House");
-            LdtkLevel level = house.Level;
-            Assert.That(level.Layer("Floor").Entities.Count, Is.EqualTo(380));
-            Assert.That(level.Layer("Wall").Tiles.Count, Is.EqualTo(74));
-            Assert.That(level.Layer("Wainscot").Tiles.Count, Is.EqualTo(50));
-            Assert.That(level.Layer("WallSprites").Entities.Count, Is.EqualTo(3));
-            Assert.That(level.Layer("Furniture").Entities.Count, Is.EqualTo(14));
-            Assert.That(house.World.Collision.BlockedCells().Count(), Is.EqualTo(133));
-            DoorArea exit = house.World.Doors.Single();
-            Assert.That(exit.Destination, Is.EqualTo(new TravelTarget("Town", "town-home-entry")));
-            Assert.That(exit.Area.CenterX, Is.EqualTo(464.5f).Within(0.6f), "Unity HouseExit x 0.5 → (0.5+14)*32");
-            // 가구는 발 위치로 정렬되고(캐릭터와 앞뒤), 바닥·벽은 캐릭터 아래.
-            Assert.That(house.Picture.Sorted.Count, Is.EqualTo(14));
-            Assert.That(house.Picture.Sorted.Select(s => s.SortY), Is.Ordered);
-            // Unity FixedProp_7_7: 정렬값 10000 - 7.5*48 → 칸 가운데 y 7.5 유닛 = LDtk (9-7.5)*32 = 48
-            Assert.That(house.Picture.Sorted.Any(s => s.SortY == 48f && s.X == (7 + 14) * 32), Is.True);
-        }
-
-        [Test]
         public void ActorIndex_PutsTheCharacterInFrontOfFurnitureAboveItAndBehindFurnitureBelow()
         {
-            LoadedMap house = Repo.Loader().LoadMap("House");
-            MapPicture picture = house.Picture;
+            // 키트로 만든 집에는 앞뒤를 가리는 그림이 없다(가구는 가구 배치가 얹는다). 정렬값 다섯을 넣은 그림으로 같은 규칙을 본다.
+            var picture = new MapPicture();
+            foreach (float sortY in new[] { 400f, 48f, 240f, 112f, 496f })
+                picture.AddSorted(new SpriteDraw(null, 0, 0, 32, 32, 0, sortY - 16, 32, 32, 0, 1f, sortY));
+            Assert.That(picture.Sorted.Select(s => s.SortY), Is.Ordered);
             float middle = picture.Sorted[picture.Sorted.Count / 2].SortY;
             int index = picture.ActorIndex(middle);
             for (int i = 0; i < index; i++) Assert.That(picture.Sorted[i].SortY, Is.LessThanOrEqualTo(middle), "캐릭터보다 먼저 그림(뒤)");

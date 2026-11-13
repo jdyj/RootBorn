@@ -95,11 +95,13 @@
         "reason": "임시 연결: interiors.ldtk School_1에는 문 엔티티가 없고 Unity 판 학교 출구(마을 북쪽 구역으로)도 LDtk에 없다. 아래 가장자리로 나가면 마을 학교 앞. 새 맵에서 지운다" } ]
     },
     {
+      // 집은 키트 방(art/kit/rooms/house.json → kit.py room build house). build가 있어 짓는 집이다(맵 성질 — game/world/README.md).
       "id": "House",
-      "ldtk": "Assets/LDtk/House/house.ldtk",
-      "level": "Level_0",
+      "ldtk": "art/world/rooms/house/house.ldtk",
+      "level": "House",
       "viewCells": 10,
-      "collision": { "rule": "collider-layers", "layers": [] },
+      "collision": { "rule": "interior-auto" },
+      "build": { "frameLayer": "Build", "frameId": "house.v2" },
       "doorField": "Where",
       "spawnField": "Position",
       "doors": {

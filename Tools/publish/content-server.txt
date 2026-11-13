@@ -22,3 +22,5 @@ game/time.json
 game/world/*.json
 Assets/LDtk/**/*.ldtk
 Assets/LDtk/**/*.ldtkl
+# 집: 픽셀 키트가 만든 방(game/world/maps.json의 House). 시험 방은 싣지 않는다.
+art/world/rooms/house/*.ldtk

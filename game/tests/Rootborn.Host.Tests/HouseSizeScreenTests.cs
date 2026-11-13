@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json.Nodes;
 using NUnit.Framework;
 using Rootborn.Core.World;
@@ -7,13 +9,13 @@ using Rootborn.Core.World;
 namespace Rootborn.Host.Tests
 {
     /// <summary>
-    /// 집은 커질 수 있다. 실제 house.ldtk(28x18)와 오른쪽·아래로 늘린 사본(맵 목록 --maps로 바꿔 끼움)을 같은 Host 코드로 띄워,
-    /// 오른쪽 방 끝까지 걸어간 뒤 카메라가 그 맵의 크기에서 정한 범위 끝에 멈추는지 본다. 장치 이벤트 주입, OS 입력 계층 미확인.
+    /// 집은 커질 수 있다. 실제 집 맵(맵 목록의 House가 가리키는 LDtk, 28x18)과 오른쪽·아래로 늘린 사본(맵 목록 --maps로 바꿔 끼움)을
+    /// 같은 Host 코드로 띄워, 오른쪽 방 끝까지 걸어간 뒤 카메라가 그 맵의 크기에서 정한 범위 끝에 멈추는지 본다. 장치 이벤트 주입, OS 입력 계층 미확인.
     /// </summary>
     [TestFixture, SingleThreaded, NonParallelizable]
     public sealed class HouseSizeScreenTests
     {
-        private const int Width = 1280, Height = 720, ExtraColumns = 6, ExtraRows = 4;
+        private const int Width = 1280, Height = 720, ExtraColumns = 6, ExtraRows = 4, OriginalColumns = 28;
         private string _dir;
 
         [SetUp]
@@ -29,10 +31,10 @@ namespace Rootborn.Host.Tests
             try { Directory.Delete(_dir, true); } catch (IOException) { }
         }
 
-        /// <summary>집 맵만 바꾼 맵 목록. bigger면 레벨을 늘린 house.ldtk 사본을 가리킨다.</summary>
+        /// <summary>집 맵만 바꾼 맵 목록. bigger면 레벨을 늘린 집 LDtk 사본(늘린 칸은 IntGrid 0 — 칠한 Collision에서 밖)을 가리킨다.</summary>
         private string Catalog(string repo, bool bigger)
         {
-            string house = Path.Combine(repo, "Assets/LDtk/House/house.ldtk");
+            string house = Path.Combine(repo, Rootborn.World.WorldCatalog.Load(Path.Combine(repo, Rootborn.World.WorldCatalog.DefaultRelativePath)).Find("House").Ldtk);
             if (bigger)
             {
                 JsonNode root = JsonNode.Parse(File.ReadAllText(house));
@@ -66,6 +68,15 @@ namespace Rootborn.Host.Tests
             return path;
         }
 
+        /// <summary>원래 너비 안에서 도착 지점(지금 칸)이 걸어서 닿는 가장 오른쪽 바닥 칸(칠한 Collision 2). 같으면 위쪽.</summary>
+        private static CellPos RightmostFloor(PlayerDriver player, int columns)
+        {
+            var layer = player.Game.World.Current.Level.Layer("Collision");
+            HashSet<CellPos> reached = MapReach.From(player.World.Map.Collision, player.PlayerCell);
+            return reached.Where(c => c.X >= 0 && c.Y >= 0 && c.X < columns && c.X < layer.Columns && c.Y < layer.Rows && layer.IntGrid[c.Y * layer.Columns + c.X] == 2)
+                .OrderByDescending(c => c.X).ThenBy(c => c.Y).First();
+        }
+
         [TestCase(false, 28, 18)]
         [TestCase(true, 28 + ExtraColumns, 18 + ExtraRows)]
         public void WORLD_PLAY_006_SameHostCodeRunsHousesOfDifferentSizes(bool bigger, int columns, int rows)
@@ -79,7 +90,7 @@ namespace Rootborn.Host.Tests
             MapGrid grid = world.Map.Grid;
             Assert.That((grid.Columns, grid.Rows), Is.EqualTo((columns, rows)), "맵 크기는 파일에서 읽는다");
 
-            player.WalkTo(new CellPos(26, 9)); // 오른쪽 방의 오른쪽 끝(원래 바깥벽 바로 안)
+            player.WalkTo(RightmostFloor(player, OriginalColumns)); // 오른쪽 방의 오른쪽 끝(원래 바깥벽 바로 안)
             player.Frames(2);
             int zoom = player.Game.World.Zoom;
             float viewW = Width / (float)zoom, viewH = Height / (float)zoom;

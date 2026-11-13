@@ -32,6 +32,8 @@ game/themes/*/
 
 # --- 맵: LDtk 프로젝트와 타일셋 ---
 @ldtk Assets/LDtk/*/*.ldtk
+# 집: 픽셀 키트가 만든 방(game/world/maps.json의 House). 키트의 시험 방(art/world/rooms/test.*)·시험 맵(art/world/test)은 싣지 않는다.
+@ldtk art/world/rooms/house/house.ldtk
 
 # --- 그림: 데이터가 가리키는 PNG 전부(가구·캐릭터·NPC·아이템·UI·미니게임·시설) ---
 @refs data/**/*.json

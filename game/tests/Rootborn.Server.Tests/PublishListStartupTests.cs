@@ -137,12 +137,15 @@ namespace Rootborn.Server.Tests
             Assert.That(load.Ok, Is.False);
         }
 
-        [Test]
-        public void ServerList_WithoutTheMaps_CannotJudgeTheHouse()
+        // 실내 맵(Assets/LDtk)과 키트로 만든 집 맵(art/world/rooms/house) 줄을 하나씩 뺀다.
+        [TestCase("Assets/LDtk/**/*.ldtk", "Assets/LDtk")]
+        [TestCase("art/world/rooms/house/*.ldtk", "art/world/rooms/house")]
+        public void ServerList_WithoutTheMaps_CannotJudgeTheHouse(string line, string folder)
         {
             string target = Path.Combine(_root, "no-maps");
-            PublishListCopy.Copy(Repo, "content-server.txt", target, list => list.Replace("\nAssets/LDtk/**/*.ldtk\n", "\n# (뺌)\n"));
-            Assert.That(Directory.Exists(Path.Combine(target, "Assets", "LDtk")) && Directory.GetFiles(Path.Combine(target, "Assets", "LDtk"), "*.ldtk", SearchOption.AllDirectories).Length > 0,
+            PublishListCopy.Copy(Repo, "content-server.txt", target, list => list.Replace("\n" + line + "\n", "\n# (뺌)\n"));
+            string dir = Path.Combine(target, folder);
+            Assert.That(Directory.Exists(dir) && Directory.GetFiles(dir, "*.ldtk", SearchOption.AllDirectories).Length > 0,
                 Is.False, "이 시험의 전제: 줄을 뺐다");
             var log = new ConcurrentQueue<string>();
             Assert.That(HouseGrids.Load(target, log.Enqueue), Is.Empty);

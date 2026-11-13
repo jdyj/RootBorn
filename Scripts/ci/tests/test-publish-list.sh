@@ -29,6 +29,11 @@ put Assets/Old/b.png png; put data/atlases/Assets/Old/b.png.atlas.json '{}'
 put art/props/x/unused.png png
 put art/kit/src/tool.png png
 put art/world/test/t.png png
+# 키트가 만든 집 방(배포 목록이 이름으로 싣는다)과 시험 방(싣지 않는다).
+put art/world/rooms/house/house.ldtk '{"defs":{"tilesets":[{"relPath": "tiles.png"}]}}'
+put art/world/rooms/house/tiles.png png
+put art/world/rooms/test.two-rooms/test.two-rooms.ldtk '{"defs":{"tilesets":[{"relPath": "tiles.png"}]}}'
+put art/world/rooms/test.two-rooms/tiles.png png
 list
 has   "art/ 그림이 데이터가 가리키면 목록에 있다" art/props/x/y.png
 has   "art/ 그림의 좌표표도 따라온다" data/atlases/art/props/x/y.png.atlas.json
@@ -37,4 +42,8 @@ has   "Assets/ 그림의 좌표표도 따라온다" data/atlases/Assets/Old/b.pn
 lacks "데이터가 가리키지 않는 art/ 그림은 없다" art/props/x/unused.png
 lacks "art/kit 도구 원본은 없다" art/kit/src/tool.png
 lacks "art/world/test 시험 맵은 없다" art/world/test/t.png
+has   "키트로 만든 집 맵이 있다" art/world/rooms/house/house.ldtk
+has   "집 맵의 타일셋 PNG도 따라온다" art/world/rooms/house/tiles.png
+lacks "키트 시험 방은 없다" art/world/rooms/test.two-rooms/test.two-rooms.ldtk
+lacks "키트 시험 방의 타일셋도 없다" art/world/rooms/test.two-rooms/tiles.png
 finish
