@@ -1098,6 +1098,38 @@ class BuildLayerTests(RoomBase):
                      for e in self.layers(ldtk)["Door"]["entityInstances"])
         self.assertEqual(got, [(3, 4, "shop"), (3, 6, "town")])
 
+    def wall_key_at(self, rid, cell):
+        """방 폴더의 Wall 층에서 그 칸에 놓인 타일의 열쇠(자리 표를 거꾸로 읽는다)."""
+        ldtk, _, slots = self.read(rid)
+        by_src = {(s["x"], s["y"]): k for k, s in slots["slots"].items()}
+        got = [by_src[tuple(t["src"])] for t in self.layers(ldtk)["Wall"]["gridTiles"]
+               if (t["px"][0] // 32, t["px"][1] // 32) == cell]
+        return got[0] if got else None
+
+    def test_wall_door_cell_is_drawn_as_a_door_and_stays_a_wall(self):
+        ldtk, _, _ = self.door_room()
+        self.assertEqual(self.layers(ldtk)["Collision"]["intGridCsv"][6 * 8 + 3], WALL)     # 충돌은 그대로 벽
+        door, beside = self.wall_key_at("t.house", (3, 6)), self.wall_key_at("t.house", (5, 6))
+        self.assertTrue(door.startswith("sill:"), door)                                    # 문 칸은 문지방 열쇠
+        self.assertTrue(beside.startswith("cap:"), beside)
+        self.assertEqual(plan_tiles(self.grid("t.house"), wall_doors={(3, 6)}).wall[6][3], door)
+
+    def test_check_catches_a_moved_wall_door_and_repaint_follows_it(self):
+        self.small_plan("t.move", DOOR_PLAN, wallDoors={"W": "town"})
+        self.build("t.move")
+        path = self.out("t.move") / "t.move.ldtk"
+        self.assertEqual([p.code for p in check_room(path)], ["room-door-unregistered"])
+        doc = json.loads(path.read_text("utf-8"))
+        (ent,) = self.layers(doc)["Door"]["entityInstances"]
+        ent["px"] = [5 * 32, 6 * 32]                                     # 편집기에서 문을 옆 벽 칸으로 옮겼다
+        ent["__grid"] = [5, 6]
+        path.write_text(json.dumps(doc), "utf-8")
+        self.assertEqual([p.code for p in check_room(path)], ["room-door-unregistered", "room-art-mismatch"])
+        repaint_room(path, kit=KIT)
+        self.assertEqual([p.code for p in check_room(path)], ["room-door-unregistered"])
+        self.assertTrue(self.wall_key_at("t.move", (5, 6)).startswith("sill:"))
+        self.assertTrue(self.wall_key_at("t.move", (3, 6)).startswith("cap:"))
+
     def test_maps_json_has_build_frame_layer_and_frame_id(self):
         _, maps, _ = self.door_room()
         self.assertEqual(maps["maps"][0]["build"], {"frameLayer": "Build", "frameId": "t.house.v1"})

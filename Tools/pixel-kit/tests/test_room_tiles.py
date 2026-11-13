@@ -692,5 +692,138 @@ class DrawTests(unittest.TestCase):
             wall_band("no-such-wall")
 
 
+# ---------------------------------------------------------------- 벽 칸의 문(wallDoors)
+
+# 네 방향 벽에 문이 하나씩 든 방: 북쪽 정면 (4,2), 서쪽 (0,4), 동쪽 (8,4), 남쪽 (4,6).
+DOORS4 = grid(
+    "#########",
+    "#########",
+    "#########",
+    "#.......#",
+    "#.......#",
+    "#.......#",
+    "#########",
+)
+DOOR_CELLS = {"north": (4, 2), "west": (0, 4), "east": (8, 4), "south": (4, 6)}
+
+
+def band_colors(wall="paper", top=None):
+    """띠를 칠하는 팔레트 줄의 색(외곽선 제외) — 그 줄 이름은 벽 모양에서 읽는다(색값을 적지 않는다)."""
+    from pixelkit.room_tiles import wall_top
+    name = top or wall_top(wall)
+    return {STYLE.color(f"{name}.{i}") for i in range(3)}
+
+
+class WallDoorTests(unittest.TestCase):
+    """벽 칸의 문은 그 칸을 문으로 알아볼 수 있게 그린다. 칸은 여전히 벽(충돌)이고 바뀌는 것은 그 칸과 이웃의 그림뿐."""
+
+    def setUp(self):
+        self.plain = plan_tiles(DOORS4)
+        self.doors = plan_tiles(DOORS4, wall_doors=set(DOOR_CELLS.values()))
+
+    def tile(self, plan, cell, wall="paper"):
+        x, y = cell
+        return draw_tile(STYLE, plan.wall[y][x], wall, FLOOR_SPEC)
+
+    def test_door_cell_tile_differs_from_the_same_cell_without_a_door(self):
+        for name, (x, y) in DOOR_CELLS.items():
+            with self.subTest(name):
+                self.assertNotEqual(self.doors.wall[y][x], self.plain.wall[y][x])
+                self.assertNotEqual(self.tile(self.doors, (x, y)).to_image().tobytes(),
+                                    self.tile(self.plain, (x, y)).to_image().tobytes())
+
+    def test_no_wall_doors_changes_nothing(self):
+        for g in (SAMPLE, SHAPES, BOX, MID, END, DOORS4):
+            with self.subTest(g=len(g)):
+                self.assertEqual(plan_tiles(g, wall_doors=set()), plan_tiles(g))
+                self.assertEqual(plan_tiles(g, wall_doors=None), plan_tiles(g))
+
+    def test_only_the_door_cell_and_its_neighbours_change(self):
+        near = {(x + dx, y + dy) for x, y in DOOR_CELLS.values() for dy in (-1, 0, 1) for dx in (-1, 0, 1)}
+        for layer in ("wall", "ground"):
+            a, b = getattr(self.plain, layer), getattr(self.doors, layer)
+            changed = {(x, y) for y in range(len(a)) for x in range(len(a[y])) if a[y][x] != b[y][x]}
+            with self.subTest(layer):
+                self.assertLessEqual(changed, near)
+
+    def test_south_door_breaks_the_band_across_the_whole_cell(self):
+        for wall in wall_styles():
+            cv = self.tile(self.doors, DOOR_CELLS["south"], wall)
+            colors = band_colors(wall)
+            with self.subTest(wall=wall):
+                for x in range(32):
+                    self.assertFalse(any(cv.get(x, y) in colors for y in range(32)), f"x={x}")
+                # 띠가 있던 자리에 문지방이 깔린다(투명하지 않다). 그 밖은 띠 없는 같은 칸처럼 투명
+                plain = self.tile(self.plain, DOOR_CELLS["south"], wall)
+                self.assertEqual(opaque(cv), opaque(plain))
+
+    def test_band_ends_beside_a_south_door_close_with_an_outline(self):
+        ol = STYLE.outline
+        x, y = DOOR_CELLS["south"]
+        for wall in ("paper", "plaster"):
+            for dx, col in ((-1, 31), (1, 0)):
+                with self.subTest(wall=wall, side=dx):
+                    door = self.tile(self.doors, (x + dx, y), wall)
+                    plain = self.tile(self.plain, (x + dx, y), wall)
+                    rows = [py for py in range(32) if door.get(col, py)[3]]
+                    self.assertTrue(rows)
+                    self.assertTrue(all(door.get(col, py) == ol for py in rows))        # 띠 끝이 외곽선으로 닫힌다
+                    self.assertFalse(all(plain.get(col, py) == ol for py in rows))      # 문이 없으면 띠가 이어진다
+
+    def test_side_doors_break_the_vertical_band_and_close_its_ends(self):
+        ol = STYLE.outline
+        for name in ("west", "east"):
+            x, y = DOOR_CELLS[name]
+            cv = self.tile(self.doors, (x, y))
+            colors = band_colors()
+            with self.subTest(name):
+                self.assertFalse(any(cv.get(px, py) in colors for py in range(32) for px in range(32)))
+                for dy, row in ((-1, 31), (1, 0)):
+                    n = self.tile(self.doors, (x, y + dy))
+                    cols = [px for px in range(32) if n.get(px, row)[3]]
+                    self.assertTrue(cols)
+                    self.assertTrue(all(n.get(px, row) == ol for px in cols))
+
+    def test_north_door_is_a_full_face_with_a_door(self):
+        x, y = DOOR_CELLS["north"]
+        key = self.doors.wall[y][x]
+        self.assertIsNone(tile_layout(key))                    # 꽉 찬 정면처럼 칸 전체가 불투명
+        cv = self.tile(self.doors, (x, y))
+        self.assertEqual(len(opaque(cv)), 32 * 32)
+
+    def test_every_direction_draws_and_passes_lint_for_every_wall_style(self):
+        keys = sorted({self.doors.wall[y + dy][x + dx] for x, y in DOOR_CELLS.values()
+                       for dy in (-1, 0, 1) for dx in (-1, 0, 1)
+                       if 0 <= y + dy < len(DOORS4) and 0 <= x + dx < 9 and self.doors.wall[y + dy][x + dx]})
+        for wall in wall_styles():
+            for key in keys:
+                with self.subTest(wall=wall, key=key):
+                    cv = draw_tile(STYLE, key, wall, FLOOR_SPEC)
+                    self.assertEqual(lint_room_tile(cv, key, STYLE), [])
+
+    def test_door_keys_read_back_and_same_shape_same_key(self):
+        self.assertEqual(plan_tiles(DOORS4, wall_doors=set(DOOR_CELLS.values())), self.doors)
+        for x, y in DOOR_CELLS.values():
+            key = self.doors.wall[y][x]
+            with self.subTest(key=key):
+                tile_layout(key)
+        # 남쪽 벽에 떨어져 있는 문 둘은 같은 모양이라 같은 열쇠
+        wide = grid("###########", "###########", "###########", "#.........#", "#.........#", "###########")
+        p = plan_tiles(wide, wall_doors={(3, 5), (7, 5)})
+        self.assertEqual(p.wall[5][3], p.wall[5][7])
+
+    def test_bad_door_keys_are_refused(self):
+        sill = self.doors.wall[6][4]
+        door = self.doors.wall[2][4]
+        for key in (sill + "x", sill.replace(":n:", ":q:"), sill.replace(":0-", ":00-"), sill.replace("-16", "-33"),
+                    sill.replace("0-16", "16-0"), sill.replace("0-16", "0-2"), door.replace("face:1", "face:2"),
+                    door + "@0-8", "door:", "door:cap"):
+            with self.subTest(key=key), self.assertRaises(RecipeError):
+                draw_tile(STYLE, key, "paper", FLOOR_SPEC)
+
+    def test_a_door_cell_without_floor_beside_it_is_drawn_as_a_plain_wall(self):
+        p = plan_tiles(DOORS4, wall_doors={(4, 0)})            # 둘레가 벽뿐인 윗면(평면 검사가 room-door-no-floor로 막는다)
+        self.assertEqual(p, self.plain)
+
 if __name__ == "__main__":
     unittest.main()

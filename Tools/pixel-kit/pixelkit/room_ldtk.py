@@ -6,7 +6,7 @@ LDtk에서 다시 칠한 Collision에 벽 그림을 맞추기(`room repaint`), L
 — repaint가 여기서 읽는다), `maps.json`.
 LDtk 층(위에서 아래): Collision(IntGrid 32, 1 벽 / 2 바닥, 편집기에서 반투명), Build(IntGrid 32, 1 지을 수 있음 / 0 고정 — 평면에 build가 있을 때만),
 Door(Entities — 바닥 칸의 문과 벽 칸의 문(wallDoors)), Furniture(Entities, 태그 ysort, 비어 있음),
-Wall(Tiles — 벽 칸마다, 띠·정면이 아닌 자리는 투명), Ground(Tiles — 바닥 칸마다 + 띠 옆으로 바닥이 비치는 벽 칸마다).
+Wall(Tiles — 벽 칸마다, 띠·정면이 아닌 자리는 투명, 벽 칸의 문은 문지방·문 그림), Ground(Tiles — 바닥 칸마다 + 띠 옆으로 바닥이 비치는 벽 칸마다).
 LDtk 파일은 편집기(1.5.3)가 저장하는 꼴 그대로 쓴다(ldtk_common의 편집기 꼴 함수 — 공식 스키마의 필수 필드를 테스트가 지킨다).
 게임 읽기 코드(game/Rootborn.World/Ldtk/LdtkFile.cs, WorldCatalog.cs)가 읽는 값은 그 위에 얹는다.
 문제가 하나라도 있으면 아무것도 쓰지 않는다. 쓸 때는 모든 파일을 임시 파일에 먼저 쓴 뒤 바꿔친다(ldtk_common.write_all).
@@ -302,7 +302,7 @@ def build_room(repo_root, room_id: str, out_dir=None, force: bool = False, dry_r
     grid = cells(room.grid)
     band = wall_band(room.wall)                                                      # 모르는 벽 모양은 RecipeError
     check_top(room.top)                                                              # 모르는 띠 색은 RecipeError
-    plan = plan_tiles(grid, room.face_height, band)
+    plan = plan_tiles(grid, room.face_height, band, room.wall_doors)                 # 벽 칸의 문은 문으로 그린다
     wanted, tiles = _draw_all(kit, plan, room.wall, floor, room.top)
 
     names = {"ldtk": f"{room.id}.ldtk", "png": TILES_NAME, "slots": SLOTS_NAME, "maps": MAPS_NAME}
@@ -474,10 +474,16 @@ def _room_context(path: Path, level: dict, layers: dict):
     return values, (sx // CELL, sy // CELL), doors, entry.get("doors") or {}
 
 
+def _wall_doors(grid, doors: Dict[Tuple[int, int], str]) -> Dict[Tuple[int, int], str]:
+    """Door 엔티티 중 Collision이 벽인 칸에 놓인 것(바깥 벽 문). 칸 검사와 그림(plan_tiles의 wall_doors)이 함께 쓴다."""
+    h, w = len(grid), len(grid[0])
+    return {c: v for c, v in doors.items() if 0 <= c[1] < h and 0 <= c[0] < w and grid[c[1]][c[0]] == WALL}
+
+
 def _grid_problems(layers: dict, grid, spawn, doors: Dict[Tuple[int, int], str], face_height: int) -> List[Problem]:
     """LDtk 방의 칸 검사(check_grid) + Build 층 검사. Door 엔티티가 벽 칸에 있으면 바깥 벽 문으로 본다(바닥 칸의 문은 그대로 문)."""
     h, w = len(grid), len(grid[0])
-    wall_doors = {c: v for c, v in doors.items() if 0 <= c[1] < h and 0 <= c[0] < w and grid[c[1]][c[0]] == WALL}
+    wall_doors = _wall_doors(grid, doors)
     floor_doors = {c: v for c, v in doors.items() if c not in wall_doors}
     build = None
     layer = layers.get("Build")
@@ -544,7 +550,7 @@ def check_room(ldtk_path, kit: Optional[Kit] = None) -> List[Problem]:
     except (RoomError, RecipeError) as e:                      # repaint가 거절할 값은 check도 알린다(같은 검사)
         return problems + [Problem("room-slots-value", f"{path.parent / SLOTS_NAME}: {e}")]
     slots, _, _ = _read_sheet(path.parent)
-    return problems + _art_mismatch(grid, _plan(path, grid, values), slots, layers)
+    return problems + _art_mismatch(grid, _plan(path, grid, values, _wall_doors(grid, doors)), slots, layers)
 
 
 def _check_values(values: dict, kit: Kit) -> dict:
@@ -554,9 +560,11 @@ def _check_values(values: dict, kit: Kit) -> dict:
     return floor_spec(kit, values["floor"])
 
 
-def _plan(path: Path, grid, values: dict) -> RoomTiles:
+def _plan(path: Path, grid, values: dict, wall_doors) -> RoomTiles:
+    """칸마다 와야 할 타일 열쇠. wall_doors(벽 칸의 Door 칸)는 문으로 그린다 — 편집기에서 문을 옮기면 check가 어긋남을 알리고
+    repaint가 그림을 문을 따라 옮긴다."""
     try:
-        return plan_tiles(grid, values["face_height"], values["band"])
+        return plan_tiles(grid, values["face_height"], values["band"], wall_doors)
     except RecipeError as e:                                  # 자리 표의 band가 받을 수 없는 값
         raise RoomError(f"{path.parent / SLOTS_NAME}: {e}") from None
 
@@ -605,7 +613,7 @@ def repaint_room(ldtk_path, dry_run: bool = False, kit: Optional[Kit] = None) ->
 
     kit = kit if kit is not None else _default_kit()
     floor = _check_values(values, kit)
-    plan = _plan(path, grid, values)
+    plan = _plan(path, grid, values, _wall_doors(grid, doors))
     wanted, tiles = _draw_all(kit, plan, values["wall"], floor, values.get("top"))
     out = path.parent
     png, table, slots, height = _sheet(out, wanted, tiles, values)
