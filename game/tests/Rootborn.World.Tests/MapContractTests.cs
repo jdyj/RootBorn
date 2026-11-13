@@ -68,6 +68,68 @@ namespace Rootborn.World.Tests
             Assert.That(found, Has.Some.StartsWith(entry.Id + ": 문 '").And.Contains("의 목적지 맵 NoSuchMap이 맵 목록에 없다"));
             Assert.That(found, Has.Some.EqualTo(entry.Id + ": 상호작용 location-visit/far-away이 걸어서 닿는 칸 옆에 없다"));
             Assert.That(found, Has.Some.EqualTo("NoSuchMapEither: 상호작용 파일의 맵이 맵 목록에 없다"));
+
+            CatchesTheBrokenPromisesOfAHouseYouBuildIn();
+        }
+
+        /// <summary>Checks_CatchEachBrokenPromise의 짓는 집 사례.</summary>
+        private static void CatchesTheBrokenPromisesOfAHouseYouBuildIn()
+        {
+            // 짓는 집(build 성질이 있는 맵)의 LDtk 사본에서 도착 지점 칸을 Build 1로, 벽 칸 하나를 Build 3으로 고친다 → 문제가 나온다.
+            WorldCatalog catalog = WorldCatalog.Parse(File.ReadAllText(Path.Combine(Repo.Root, WorldCatalog.DefaultRelativePath)));
+            MapEntry entry = catalog.Maps.First(m => m.Build != null);
+            Rootborn.Core.World.WorldMap map = new WorldMapLoader(Repo.Root, catalog).LoadMap(entry.Id).World;
+            int size = map.Grid.CellSize;
+            string startSpawn = MapChecks.StartSpawn(entry);
+            map.TryGetSpawn(startSpawn, out var point);
+            var spawn = Rootborn.Core.World.CellPos.Containing(point.X, point.Y, size);
+            var wall = map.Collision.BlockedCells().First(c => map.Grid.Contains(c.X, c.Y));
+
+            string dir = Path.Combine(Path.GetTempPath(), "rootborn-build-check-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string source = Path.Combine(Repo.Root, entry.Ldtk);
+                System.Text.Json.Nodes.JsonNode root = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(source));
+                foreach (System.Text.Json.Nodes.JsonNode ts in root["defs"]["tilesets"].AsArray())
+                    if (ts["relPath"] != null) ts["relPath"] = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(source), (string)ts["relPath"])).Replace('\\', '/');
+                foreach (System.Text.Json.Nodes.JsonNode level in root["levels"].AsArray())
+                    foreach (System.Text.Json.Nodes.JsonNode li in level["layerInstances"].AsArray())
+                        if ((string)li["__identifier"] == entry.Build.FrameLayer)
+                        {
+                            int cols = (int)li["__cWid"];
+                            li["intGridCsv"][spawn.Y * cols + spawn.X] = 1;
+                            li["intGridCsv"][wall.Y * cols + wall.X] = 3;
+                        }
+                string copy = Path.Combine(dir, Path.GetFileName(source));
+                File.WriteAllText(copy, root.ToJsonString());
+                entry.Ldtk = copy;
+
+                List<string> found = MapChecks.Check(new WorldMapLoader(Repo.Root, catalog), Interactions).Select(p => p.ToString()).ToList();
+                Assert.That(found, Has.Some.EqualTo(entry.Id + ": 짓는 집: 도착 지점 " + startSpawn + " " + spawn + "이 Build 1이다"));
+                Assert.That(found, Has.Some.EqualTo(entry.Id + ": 짓는 집: Build 값은 0·1이어야 한다 " + wall));
+
+                entry.Build.FrameLayer = "NoSuchLayer";
+                found = MapChecks.Check(new WorldMapLoader(Repo.Root, catalog), Interactions).Select(p => p.ToString()).ToList();
+                Assert.That(found, Has.Some.EqualTo(entry.Id + ": 짓는 집: Build 층 NoSuchLayer이 없다"));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        [Test]
+        public void ABuildEntryWithoutItsLayerOrFrameId_IsRefused()
+        {
+            const string map = @"{ ""npcWalker"": { ""speedCellsPerSecond"": 2.5 }, ""maps"": [ { ""id"": ""A"", ""ldtk"": ""a.ldtk"", ""level"": ""L"", ""viewCells"": 10, ""collision"": { ""rule"": ""interior-auto"" },
+                ""doors"": {}, ""spawns"": { ""a"": [ 16, 16 ] }, ""build"": BUILD } ] }";
+            Assert.That(WorldCatalog.Parse(map.Replace("BUILD", @"{ ""frameLayer"": ""Build"", ""frameId"": ""a.v1"" }")).Find("A").Build.FrameId, Is.EqualTo("a.v1"));
+            Assert.That(WorldCatalog.Parse(map.Replace(@", ""build"": BUILD", "")).Find("A").Build, Is.Null, "build가 없으면 짓는 집이 아니다");
+            Assert.Throws<InvalidDataException>(() => WorldCatalog.Parse(map.Replace("BUILD", @"{ ""frameLayer"": ""Build"" }")));
+            Assert.Throws<InvalidDataException>(() => WorldCatalog.Parse(map.Replace("BUILD", @"{ ""frameId"": ""a.v1"" }")));
+            Assert.Throws<InvalidDataException>(() => WorldCatalog.Parse(map.Replace("BUILD", @"{ ""frameLayer"": "" "", ""frameId"": ""a.v1"" }")));
+            Assert.Throws<InvalidDataException>(() => WorldCatalog.Parse(map.Replace("BUILD", @"true")));
         }
 
         [Test]
