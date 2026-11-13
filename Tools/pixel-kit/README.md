@@ -24,11 +24,11 @@ Python 3.11 + Pillow. 다른 패키지는 쓰지 않는다.
 | `python Tools/pixel-kit/kit.py room check <방 id>` | 평면만 검사한다(쓰지 않는다) | — |
 | `python Tools/pixel-kit/kit.py room repaint <.ldtk 경로> [--dry-run]` | LDtk에서 다시 칠한 `Collision`에 맞춰 `Wall`·`Ground` 타일과 시트만 다시 쓴다(아래 "방 만들기 — LDtk에서 칠한 뒤") | 그 `.ldtk`가 든 폴더 |
 | `python Tools/pixel-kit/kit.py room check <.ldtk 경로>` | LDtk 방을 검사한다(쓰지 않는다): 그림과 `Collision`이 어긋난 칸, 평면 검사, 표에 없는 문 | — |
-| `python Tools/pixel-kit/kit.py room styles [--out 폴더] [--scale N]` | 등록된 벽 모양 전부(윗면 띠 + 정면 2칸 + 바닥 한 줄 + 문간 + 방 안에서 끝나는 세로 벽), 띠 색 전부(`paper` 상자 방), 방 바닥으로 받는 명세 전부(4x3칸)를 이름표(id, 한글 이름, 컨셉 한 줄)와 함께 견본판 두 장으로. 한글 이름·컨셉은 한글 글꼴(`ROOTBORN_FONT` 또는 시스템 글꼴)이 있을 때만 그려지고, 못 찾으면 id만 그리고 알림 한 줄(실패하지 않는다). 사용자가 이것을 보고 고른다 | `<--out, 기본 output/pixel-kit/room>/styles-walls.png`, `styles-floors.png`(1:1)와 `_x2`(기본 배율 2) |
+| `python Tools/pixel-kit/kit.py room styles [--out 폴더] [--scale N]` | 등록된 벽 모양 전부(윗면 띠 + 정면 2칸 + 바닥 한 줄 + 문간 + 방 안에서 끝나는 세로 벽), 띠 색 전부(`paper` 상자 방), 방 바닥으로 받는 명세 전부(4x3칸)를 이름표(id, 한글 이름, 컨셉 한 줄)와 함께 견본판 두 장으로. 한글 이름·컨셉은 한글 글꼴이 있을 때만 그려진다: 환경 변수 `ROOTBORN_FONT`의 파일이 먼저이고(값을 줬는데 못 열면 알림 한 줄 뒤 넘어간다), 없으면 시스템 글꼴 이름 후보(`malgun.ttf` 등)에서 찾는다(보기용 도구라 글꼴 이름 후보를 코드에 둔 예외). 못 찾으면 id만 그리고 알림 한 줄(실패하지 않는다). 사용자가 이것을 보고 고른다 | `<--out, 기본 output/pixel-kit/room>/styles-walls.png`, `styles-floors.png`(1:1)와 `_x2`(기본 배율 2) |
 | `python Tools/pixel-kit/kit.py room styles --list` | 그리지 않고 벽 모양·띠 색·바닥을 종류마다 `이름(id) — 한글 이름 — 컨셉`으로 글만 찍는다(벽은 기본 띠 색도). 고르기 전에 컨셉을 읽는 데 쓴다 | — |
 
 공통 인자: `--kit 폴더`(기본 `art/kit`), `--out 폴더`(기본 `output/pixel-kit`), `--scale N`(보기용 확대 배율,
-정수·최근접. 기본 render 6, sheet·scene 4, parts 8).
+정수·최근접. 기본 render 6, sheet·scene 4, parts 8, room styles 2).
 
 끝 코드: 0 깨끗, 1 검사 문제, 2 사용·데이터 오류(없는 id, 못 읽는 키트, 저장 거절).
 `render`와 `lint`는 문제가 있으면 1이다. `scene`과 `sheet`는 문제를 찍거나 빨간 테두리를 그려도 항상 0이다(사용·데이터 오류와 저장 거절만 2) — 끝 코드로 거르려면 `lint`를 쓴다.
@@ -299,9 +299,9 @@ if/switch로 종류를 닫지 않는다.
 |---|---|---|---|
 | `paper` | 줄무늬 벽지 벽 | 크림색 세로줄 벽지 아래 갈색 나무 징두리 판. 포근하고 무난한 집 벽(본보기 방). 판 때문에 벽 아래가 묵직하다 | `wall.top.cream` |
 | `plaster` | 회반죽 벽 | 연한 회백색 단색 면에 낮은 갈색 걸레받이. 가장 조용해서 어디든 어울리지만 무늬가 없어 밋밋하다 | `wall.plaster.top` |
-| `wallpaper-sprig` | 연녹 잔무늬 벽지 | 연녹색 바탕에 작은 마름모 잔무늬, 아래는 흰 걸레받이. 부드럽고 무난한 집 벽. 1배에서는 무늬가 점으로 보인다 | `wall.top.brown` |
+| `wallpaper-sprig` | 연녹 잔무늬 벽지 | 연녹색 바탕에 작은 분홍 십자 잔무늬, 아래는 밝은 크림 걸레받이. 부드럽고 무난한 집 벽. 1배에서는 무늬가 점으로 보인다 | `wall.top.brown` |
 | `wallpaper-floral` | 분홍 꽃무늬 벽지 | 연분홍 바탕에 드문드문 작은 꽃(꽃잎 넷 + 노란 꽃술), 아래는 갈색 걸레받이. 아기자기한 침실·아이 방. 1배에서는 꽃이 점으로 보인다 | `wall.top.brown` |
-| `paint-mint` | 민트 칠 벽 | 민트색 단색에 흰 허리 몰딩, 아래 판에 긴 테 하나. 산뜻한 아이 방. 몰딩 테는 1배에서 가는 줄로 보인다 | `wall.top.light` |
+| `paint-mint` | 민트 칠 벽 | 민트색 단색에 흰 허리 몰딩, 아래 판에 짧은 테(32px마다)가 되풀이. 산뜻한 아이 방. 테는 1배에서 가는 줄로 보인다 | `wall.top.light` |
 | `paint-green` | 짙은 녹색 칠 벽 | 짙은 녹색 벽(같은 계열 가는 세로줄)에 높고 밝은 걸레받이. 차분하고 가구가 도드라진다. 서재·사무실 | `wall.top.slate` |
 | `paint-two-tone` | 위아래 투톤 벽 | 위는 크림, 아래는 청회색 칠(벽 높이 4할)에 흰 허리 몰딩. 깔끔한 거실·복도 | `wall.top.brown` |
 | `panel-pine` | 소나무 세로 판벽 | 밝은 소나무 세로 판(벽 전체, 판 8px)을 벽 전체에, 같은 나무 걸레받이. 따뜻한 오두막·부엌·가게 | `wall.top.brown` |
@@ -351,11 +351,11 @@ if/switch로 종류를 닫지 않는다.
 | `floor.brick` | 벽돌 바닥 | 붉은 벽돌을 엇갈려(16x8) 깐 바닥. 투박하고 따뜻하다. 가게 뒤·창고·주방 |
 | `floor.mosaic` | 하늘빛 모자이크 바닥 | 하늘빛 작은 타일(알 7px) 모자이크, 짙은 알이 대각선으로 고르게. 깨끗하고 시원하다. 욕실. 알이 작아 바쁘게 보인다 |
 | `floor.linoleum` | 연녹회색 리놀륨 바닥 | 연녹회색 단색에 잔 점. 가장 조용한 바닥 중 하나. 부엌·가게 |
-| `floor.carpet` | 남색 카펫 | 남색 단색 카펫에 아주 옅은 점. 차분하고 포근하다. 침실·서재 |
+| `floor.carpet` | 청회색 카펫 | 청회색 단색 카펫에 아주 옅은 점. 차분하고 포근하다. 침실·서재 |
 | `floor.carpet-diamond` | 장밋빛 마름모 카펫 | 장밋빛 카펫에 옅은 마름모 격자(테두리 없음). 아늑한 침실·아이 방 |
 | `floor.tatami` | 돗자리 바닥 | 연두 황토빛 정사각 돗자리(16px, 결 엇갈림, 테 한 줄). 일본식 방 느낌. 넓게 깔면 무늬가 많아 보인다 |
 
-`bakery.tile.floor`(진한 체크, 본보기 방)·`bakery.tile.sidewalk`·`bakery.tile.grass`도 한 칸 타일이라 받는다(한글 이름·컨셉은 아직 없다 — `--list`에 빈 칸).
+`bakery.tile.floor`(진한 체크, 본보기 방)·`bakery.tile.sidewalk`·`bakery.tile.grass`도 한 칸 타일이라 받는다(한글 이름·컨셉이 있다 — `--list`에 나온다).
 
 ### 새 벽 모양·바닥을 더하는 법
 
@@ -437,9 +437,10 @@ if/switch로 종류를 닫지 않는다.
   자리 표에 `wall`·`floor`·`face_height`가 없거나(자리 표에 방 값이 없는 옛 방) `maps.json`이 없으면 끝 코드 2 — `room build --force`로 다시 만든다.
   자리 표에 `band`가 없으면(윗면이 32px이던 때 만든 방) 끝 코드 2로 거절한다 — 옛 두께로 조용히 그리지 않는다. LDtk에서 칠한 것을 지키려면
   자리 표에 `"band": 16`을 적고 다시 `repaint`한다(옛 윗면 타일은 시트에 남지만 쓰이지 않는다). 평면에서 다시 만들어도 되면 `room build <id> --force`(칠한 것은 사라진다). `room check <.ldtk>`도 같은 이유로 끝 코드 2.
+- 방 폴더에 커밋하지 않은 변경이 있으면 사용자가 LDtk 편집기에서 칠한 것일 수 있다 — `git checkout`으로 되돌리거나 `room build --force`로 덮기 전에 사용자에게 묻는다.
 - 두 번 부르면 두 번째는 "바꿀 것 없음". `--dry-run`은 쓸 파일만 찍는다. 쓴 뒤에 알림(얇은 벽, 표에 없는 문)을 찍는다.
 
-`room check <.ldtk 경로>`는 쓰지 않고 본다: `room-not-a-room`, `room-ldtk-incomplete`, 평면 검사와 같은 코드(위 절), `room-door-unregistered`(**알림**: `Door`
+`room check <.ldtk 경로>`는 쓰지 않고 본다: `room-not-a-room`, `room-ldtk-incomplete`, `room-slots-value`(자리 표의 `wall`·`floor`·`top` 값을 받을 수 없다 — `repaint`가 거절하는 값을 같은 검사로 미리 알린다), 평면 검사와 같은 코드(위 절), `room-door-unregistered`(**알림**: `Door`
 엔티티의 `Where`가 `maps.json`의 `doors`에 없다 — 게임에서 그 문이 열리지 않는다), `room-art-mismatch`(`Wall`·`Ground` 타일이 `Collision`과
 어긋난 칸 수와 첫 칸 — 칸마다 `plan_tiles`가 내는 `Wall`·`Ground` 열쇠의 자리와 실제 타일을 견준다: 와야 할 타일이 없거나, 다른 자리이거나, 오면 안 되는 층에 타일이 있다. 벽 칸의 `Ground` 타일은 띠 옆으로 바닥이 비치는 칸에서만 맞다. `room repaint`로 맞춘다).
 

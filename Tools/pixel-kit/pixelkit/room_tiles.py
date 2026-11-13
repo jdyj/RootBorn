@@ -338,7 +338,7 @@ class PlasterWall(_Wall):
 
 @wall_style("wallpaper-sprig",
             label="연녹 잔무늬 벽지",
-            concept="연녹색 바탕에 작은 마름모 잔무늬, 아래는 흰 걸레받이. 부드럽고 무난한 집 벽. 1배에서는 무늬가 점으로 보인다.")
+            concept="연녹색 바탕에 작은 분홍 십자 잔무늬, 아래는 밝은 크림 걸레받이. 부드럽고 무난한 집 벽. 1배에서는 무늬가 점으로 보인다.")
 class SprigWall(_Wall):
     """연녹색 잔무늬 벽지 + 흰 걸레받이. 가장 무난한 집 벽."""
     cap = "wall.top.brown"
@@ -502,7 +502,7 @@ class RedBrickWall(_BrickWall):
 
 @wall_style("paint-mint",
             label="민트 칠 벽",
-            concept="민트색 단색에 흰 허리 몰딩, 아래 판에 긴 테 하나. 산뜻한 아이 방. 몰딩 테는 1배에서 가는 줄로 보인다.")
+            concept="민트색 단색에 흰 허리 몰딩, 아래 판에 짧은 테(32px마다)가 되풀이. 산뜻한 아이 방. 테는 1배에서 가는 줄로 보인다.")
 class PastelWall(_Wall):
     """민트 단색 + 흰 허리 몰딩 + 아래 판(긴 몰딩 테 하나) + 흰 걸레받이. 아이 방."""
     cap = "wall.top.light"
@@ -533,7 +533,7 @@ class PastelWall(_Wall):
 
 @wall_style("paint-green",
             label="짙은 녹색 칠 벽",
-            concept="짙은 녹색 벽에 높고 밝은 걸레받이. 차분하고 가구가 도드라진다. 서재·사무실.")
+            concept="짙은 녹색 벽에 가는 세로 홈, 높고 밝은 걸레받이. 차분하고 가구가 도드라진다. 서재·사무실.")
 class StudyWall(_Wall):
     """짙은 녹색 벽(같은 계열 가는 세로줄) + 높고 밝은 걸레받이. 서재 — 가구가 잘 도드라진다."""
     cap = "wall.top.slate"

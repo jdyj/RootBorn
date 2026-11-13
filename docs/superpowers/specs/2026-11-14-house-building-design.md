@@ -84,7 +84,7 @@
 
 ### 4.3 게임이 벽 그림을 어떻게 까는가
 
-지금 타일 고르기 규칙은 Python에만 있다(`Tools/pixel-kit/pixelkit/room_tiles.py`: `classify`, `_band_layout`, `plan_tiles`, 1206줄 중 고르기는 약 450줄). C#에는 자동 타일 규칙이 없다. 게임은 LDtk에 구워진 타일을 그대로 그린다(`MapPicture.From`, 맵을 읽을 때 한 번).
+지금 타일 고르기 규칙은 Python에만 있다(`Tools/pixel-kit/pixelkit/room_tiles.py`: `classify`, `_band_layout`, `plan_tiles` — 고르기는 약 450줄). C#에는 자동 타일 규칙이 없다. 게임은 LDtk에 구워진 타일을 그대로 그린다(`MapPicture.From`, 맵을 읽을 때 한 번).
 
 **열쇠 종류를 세었다**(이 설계서를 쓰며 저장소의 `plan_tiles`를 돌려 셈, 자동 계산):
 
