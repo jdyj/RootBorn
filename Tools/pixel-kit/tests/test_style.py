@@ -55,6 +55,16 @@ class StyleTests(unittest.TestCase):
         self.assertEqual(len(raw["white"]), 1)
         self.assertEqual(len(raw["bread"]), 4)
 
+    def test_paired_colors_stay_equal(self):
+        """외관이 색 한도에 꽉 차서 합쳐 둔 세 쌍. 하나만 바꾸면 too-many-colors가 난다."""
+        pairs = (("red.0", "awning.red.0"), ("red.1", "awning.red.1"),
+                 ("paper.1", "trim.2"), ("bread.3", "wood.warm.4"))
+        for a, b in pairs:
+            with self.subTest(pair=(a, b)):
+                self.assertEqual(self.style.color(a), self.style.color(b),
+                                 f"{a}와 {b}는 같은 값이어야 한다. 바꾸기 전에 Tools/pixel-kit/README.md의 "
+                                 "'같이 바뀌는 색'을 읽는다")
+
 
 if __name__ == "__main__":
     unittest.main()
