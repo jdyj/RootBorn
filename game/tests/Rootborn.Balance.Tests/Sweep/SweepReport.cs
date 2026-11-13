@@ -121,6 +121,7 @@ namespace Rootborn.Balance.Tests
 
             var b = new StringBuilder();
             b.Append("# 수치 균형 시뮬레이터 — 모든 경우 훑기\n\n");
+            BalanceReport.AppendOverlay(b);
 
             // 실패한 판(맨 위): 판마다 한 번(그 판의 첫 실패 줄).
             var failed = new List<SweepRow>();

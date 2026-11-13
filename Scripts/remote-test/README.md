@@ -111,3 +111,18 @@ bash Scripts/remote-test/two-machines.sh --check                           # 원
 
 근거의 종류: 두 기계(Windows ↔ Linux), 실제 LAN, 장치 이벤트 주입(OS 입력 계층 미확인). 원격 게임의 그리기는 소프트웨어 GL이다. 사람이 직접 한 플레이와 인터넷을 거치는 접속은 미확인이다.
 재기의 왕복 지연·바이트는 이 PC 게임의 연결(LiteNetLib `NetManager`)을 테스트가 리플렉션으로 찾아 통계를 켜고 읽은 값이다(`TwoGames/NetProbe.cs` — 게임 코드에 재는 입구는 없다).
+
+## 수치를 덮어써서 돌리기 (시뮬레이션 테스트 전용)
+
+`data/`를 고치지 않고 수치를 바꿔 균형·시뮬레이션 테스트를 돌릴 수 있다. 환경 변수 `ROOTBORN_DATA_OVERLAY`에 덮어쓰기 폴더를 준다(없으면 지금과 똑같이 돈다). 게임 실행(Host)과 서버는 이 값을 읽지 않는다.
+
+- 폴더 모양은 `data/`와 같다(같은 상대 경로의 엔티티 배열 JSON). 바꿀 엔티티의 `type`, `id`와 **바꿀 최상위 필드만** 적는다. 적지 않은 필드는 원본 그대로이고, 배열·객체 필드는 통째로 바뀐다. 원본에 없는 `type`+`id`, 없는 폴더, `registry.json`은 오류다.
+- 예: `/tmp/overlay/studentlife/PartTimeWorkDefinition.json`
+  ```json
+  [{ "type": "PartTimeWorkDefinition", "id": "work.clinic-helper", "timeCostMinutes": 90 }]
+  ```
+  ```bash
+  ROOTBORN_DATA_OVERLAY=/tmp/overlay dotnet test game/tests/Rootborn.Balance.Tests
+  ```
+- 균형 보고서(`report.md`, `sweep-report.md`)는 덮어썼으면 맨 위에 바뀐 필드(`type/id.필드: 전 -> 후`)를 적는다. 이 숫자는 덮어쓴 데이터로 돈 것이다.
+- `game/economy.json`·`game/time.json`은 덮지 못한다. 원격 실행(`run.sh`)이 이 환경 변수를 원격으로 넘기는지는 확인하지 않았다.

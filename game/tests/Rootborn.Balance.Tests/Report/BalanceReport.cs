@@ -16,6 +16,7 @@ namespace Rootborn.Balance.Tests
     {
         public const string OutVariable = "ROOTBORN_BALANCE_OUT", DaysVariable = "ROOTBORN_BALANCE_DAYS";
         public const string DaysFile = "days.csv", SummaryFile = "summary.csv", ReportFile = "report.md";
+        public const string OverlayLine = "덮어쓴 데이터로 돈 숫자다(data/는 그대로, 덮어쓰기 폴더가 바꾼 필드):";
         public const string NotPlayLine = "가정을 넣은 계산이다. 실제 플레이가 아니다.";
         public const string RecoverColumn = "쓴 값만큼 버는 날", PaybackColumn = "늘어난 수입으로 되찾는 날";
         public const string NoSpanLabel = "구간 없음", NoGainLabel = "늘지 않음";
@@ -54,6 +55,18 @@ namespace Rootborn.Balance.Tests
             File.WriteAllText(Path.Combine(directory, DaysFile), DaysCsv(runs, tiers), Utf8);
             File.WriteAllText(Path.Combine(directory, SummaryFile), SummaryCsv(runs, tiers, summaries), Utf8);
             File.WriteAllText(Path.Combine(directory, ReportFile), ReportMarkdown(config, days, runs, tiers, summaries), Utf8);
+        }
+
+        /// <summary>데이터 덮어쓰기(ROOTBORN_DATA_OVERLAY)로 돈 판이면 맨 위에 그렇다고 적고 바뀐 필드를 나열한다. 덮어쓰기가 없으면 아무것도 적지 않는다(보고서 바이트가 그대로다).</summary>
+        internal static void AppendOverlay(StringBuilder b)
+        {
+            var changes = TestWorld.OverlayChanges;
+            if (changes.Count == 0) return;
+            b.Append(OverlayLine).Append("\n\n");
+            foreach (var c in changes)
+                b.Append("- `").Append(c.Type).Append('/').Append(c.Id).Append('.').Append(c.Field).Append("`: ")
+                    .Append(c.Before ?? "(없음)").Append(" -> ").Append(c.After).Append('\n');
+            b.Append('\n');
         }
 
         /// <summary>
@@ -111,6 +124,7 @@ namespace Rootborn.Balance.Tests
             var a = DayAssumptions.Current;
             var b = new StringBuilder();
             b.Append("# 수치 균형 시뮬레이터 보고\n\n");
+            AppendOverlay(b);
             b.Append("가정: 날 수 ").Append(I(days))
                 .Append(", 점수 단계 ").Append(string.Join("·", config.Tiers.Select(t => t.Id + " " + I(t.Score))))
                 .Append(", 걷기 활동마다 ").Append(I(a.TravelMinutes)).Append("분")
