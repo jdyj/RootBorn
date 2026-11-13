@@ -38,12 +38,15 @@ namespace Rootborn.Game.Tests
             {
                 lock (_gate)
                 {
-                    if (_overlayOverride != null) return _overlayOverride.Length == 0 ? null : _overlayOverride;
+                    if (_overlayOverride != null) return _overlayOverride.Length == 0 ? null : FromRepoRoot(_overlayOverride);
                 }
                 var value = Environment.GetEnvironmentVariable(OverlayVariable);
-                return string.IsNullOrWhiteSpace(value) ? null : value;
+                return string.IsNullOrWhiteSpace(value) ? null : FromRepoRoot(value);
             }
         }
+
+        /// <summary>상대 경로는 저장소 뿌리 기준이다(테스트의 현재 폴더는 출력 폴더라 기댈 수 없고, 원격 실행은 커밋된 폴더를 상대 경로로만 가리킬 수 있다).</summary>
+        private static string FromRepoRoot(string path) => Path.GetFullPath(path, RepoRoot);
 
         /// <summary>덮어쓰기로 바뀐 필드 목록(없으면 빈 목록). 보고서가 "덮어쓴 데이터로 돈 숫자"라고 적는 근거다.</summary>
         public static IReadOnlyList<OverlayChange> OverlayChanges => Current.Changes;

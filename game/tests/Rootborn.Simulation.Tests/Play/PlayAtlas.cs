@@ -57,7 +57,7 @@ namespace Rootborn.Simulation
         public static PlayAtlas Load(string repoRoot, string overlayDirectory)
         {
             string root = Path.GetFullPath(repoRoot);
-            string overlay = string.IsNullOrEmpty(overlayDirectory) ? null : Path.GetFullPath(overlayDirectory);
+            string overlay = string.IsNullOrEmpty(overlayDirectory) ? null : Path.GetFullPath(overlayDirectory, root); // 상대 경로는 저장소 뿌리 기준(TestWorld와 같다)
             string key = overlay == null ? root : root + "|" + overlay;
             lock (Cache)
             {

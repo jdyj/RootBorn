@@ -125,4 +125,9 @@ bash Scripts/remote-test/two-machines.sh --check                           # 원
   ROOTBORN_DATA_OVERLAY=/tmp/overlay dotnet test game/tests/Rootborn.Balance.Tests
   ```
 - 균형 보고서(`report.md`, `sweep-report.md`)는 덮어썼으면 맨 위에 바뀐 필드(`type/id.필드: 전 -> 후`)를 적는다. 이 숫자는 덮어쓴 데이터로 돈 것이다.
-- `game/economy.json`·`game/time.json`은 덮지 못한다. 원격 실행(`run.sh`)이 이 환경 변수를 원격으로 넘기는지는 확인하지 않았다.
+- 맨 위의 `economy.json`·`time.json`은 `game/`의 같은 이름 파일을 필드 단위로 덮는다.
+- 원격 실행: `run.sh`는 이 PC의 환경 변수를 원격으로 옮기지 않는다. 덮어쓰기 폴더를 커밋하고(자리 `game/tests/Rootborn.Balance.Tests/overlays/<이름>/`) `dotnet test`의 `-e`로 저장소 뿌리 기준 상대 경로를 준다(상대 경로는 저장소 뿌리에서 찾는다).
+  ```bash
+  bash Scripts/remote-test/run.sh HEAD -- game/tests/Rootborn.Balance.Tests --filter "FullyQualifiedName~WriteFullReport" -e ROOTBORN_DATA_OVERLAY=game/tests/Rootborn.Balance.Tests/overlays/<이름>
+  ```
+  돌리는 순서는 스킬 `balance-sim-run`.

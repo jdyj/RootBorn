@@ -56,5 +56,28 @@ namespace Rootborn.Balance.Tests
                 try { Directory.Delete(temp, true); } catch (IOException) { }
             }
         }
+
+        [Test]
+        public void RelativeOverlayPath_IsReadFromTheRepoRoot()
+        {
+            // 원격 실행은 커밋된 덮어쓰기 폴더를 상대 경로로 가리킨다. 테스트의 현재 폴더(출력 폴더)가 아니라 저장소 뿌리에서 찾아야 한다.
+            string relative = Path.Combine("output", "test-overlay-" + Guid.NewGuid().ToString("N"));
+            string full = Path.Combine(TestWorld.RepoRoot, relative);
+            try
+            {
+                Directory.CreateDirectory(Path.Combine(full, "studentlife"));
+                File.WriteAllText(Path.Combine(full, "studentlife", "PartTimeWorkDefinition.json"),
+                    @"[{""type"":""PartTimeWorkDefinition"",""id"":""" + Work + @""",""rewardCounts"":""0a000000""}]");
+                using (TestWorld.UseOverlay(relative))
+                {
+                    Assert.That(TestWorld.OverlayDirectory, Is.EqualTo(Path.GetFullPath(full)));
+                    Assert.That(TestWorld.OverlayChanges.Single().Field, Is.EqualTo("rewardCounts"));
+                }
+            }
+            finally
+            {
+                try { Directory.Delete(full, true); } catch (IOException) { }
+            }
+        }
     }
 }
