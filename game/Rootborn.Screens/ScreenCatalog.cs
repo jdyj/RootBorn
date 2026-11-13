@@ -66,6 +66,8 @@ namespace Rootborn.Screens
         /// <summary>발견 알림(알림 층). 발견 지점 상호작용으로 열려 GameSession.Discover를 부르고 결과를 보인다. 이동을 막지 않는다.</summary>
         public const string DiscoveryNotice = "discovery-notice";
         public const string StayedUpNotice = "stayed-up-notice";
+        /// <summary>집 옮김 알림(알림 층). 옛 세이브로 새 집에 처음 들어서면 옮긴·보관한 가구 수를 한 번 알린다. 이동을 막지 않는다.</summary>
+        public const string HouseMovedNotice = "house-moved-notice";
         /// <summary>단축키 안내(F1, 설정의 단축키 단추, 시작 화면에서도 F1). 읽는 모달이라 이동을 막는다. 줄은 이 등록 표의 키 배정에서 만든다.</summary>
         public const string KeyGuide = "key-guide";
         /// <summary>상호작용 실패 안내(알림 층, Unity PlayerInteractionRouter의 실패 이유 2.5초). 일터·연습 지점의 명령이 거절되면 연다.</summary>
@@ -138,6 +140,8 @@ namespace Rootborn.Screens
             r.Add(Facility, ScreenLayer.Modal, blocksMovement: true, s => new FacilityScreen(s)).OpenedByInteraction(FacilityScreen.InteractionKind);
             r.Add(StayedUpNotice, ScreenLayer.Notice, blocksMovement: false, s => new StayedUpNoticeScreen(s));
             r.AddListener(s => new StayedUpTrigger(s, StayedUpNotice));
+            r.Add(HouseMovedNotice, ScreenLayer.Notice, blocksMovement: false, s => new HouseMovedNoticeScreen(s));
+            r.AddListener(s => new HouseMovedTrigger(s, HouseMovedNotice));
             r.Add(DiscoveryNotice, ScreenLayer.Notice, blocksMovement: false, s => new DiscoveryNoticeScreen(s)).OpenedByInteraction(DiscoveryNoticeScreen.InteractionKind);
             r.Add(InteractionRefusal, ScreenLayer.Notice, blocksMovement: false, s => new InteractionRefusalNoticeScreen(s));
             r.Add(KeyGuide, ScreenLayer.Modal, blocksMovement: true, s => new KeyGuideScreen(s)).OpenedBy(ScreenKey.Help).KeyWorksOnStartScreens();

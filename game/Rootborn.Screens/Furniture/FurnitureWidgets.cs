@@ -28,4 +28,52 @@ namespace Rootborn.Screens.Furniture
             return false;
         }
     }
+
+    /// <summary>
+    /// 분류 단추(가구 / 보관): 고른 분류는 밝게 그리고 안쪽에 테두리를 두른다(ui-standards: 고른 것 표시). 글자가 단추보다 길면 말줄임으로 줄인다
+    /// (글자나 단추 크기가 바뀔 때만 다시 줄인다). 그림은 스킨 이름만 쓴다.
+    /// </summary>
+    public sealed class FurnitureCategoryButton : UiNode
+    {
+        public string Text;
+        public float FontSize = 20f;
+        public bool Selected;
+        public string Skin = UiSkin.Button;
+        /// <summary>단추 안쪽 여백(글자 좌우).</summary>
+        public float TextInset = 10f;
+
+        private string _fitFor, _fitted;
+        private float _fitWidth, _fitSize;
+
+        public FurnitureCategoryButton() { Interactive = true; Focusable = true; }
+
+        public override bool IsSurface => true;
+
+        public override void Emit(DrawList list, ITextMeasurer text)
+        {
+            UiColor tint = !IsActive ? UiTheme.ButtonDisabled : Selected ? UiTheme.ButtonHovered : Pressed ? UiTheme.ButtonPressed : Hovered ? UiTheme.ButtonHovered : UiTheme.ButtonNormal;
+            list.Panel(Rect, Skin, tint);
+            string shown = Fit(text);
+            if (shown.Length > 0)
+            {
+                float x = Rect.X + (Rect.W - text.Width(shown, FontSize)) / 2f;
+                float y = Rect.Y + (Rect.H - text.LineHeight(FontSize)) / 2f + (Pressed ? UiTheme.PressedOffset : 0f);
+                list.Text(x, y, shown, FontSize, IsActive ? UiTheme.Ink : UiTheme.InkDisabled, Skin);
+            }
+            if (Selected) list.Outline(Rect.Inset(6f), UiTheme.FocusOutline, UiTheme.Ink);
+            if (FocusRing) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);
+        }
+
+        private string Fit(ITextMeasurer text)
+        {
+            if (string.IsNullOrEmpty(Text)) return string.Empty;
+            float width = Rect.W - TextInset * 2f;
+            if (_fitFor == Text && _fitWidth == width && _fitSize == FontSize) return _fitted;
+            _fitFor = Text; _fitWidth = width; _fitSize = FontSize;
+            if (text.Width(Text, FontSize) <= width) return _fitted = Text;
+            int length = Text.Length;
+            while (length > 0 && text.Width(Text.Substring(0, length) + "…", FontSize) > width) length--;
+            return _fitted = Text.Substring(0, length) + "…";
+        }
+    }
 }
