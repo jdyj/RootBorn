@@ -281,6 +281,9 @@ namespace Rootborn.Core.Tests
             Assert.That(ArrivalRules.Check(grid, new[] { exit }, CellPos.Center(new CellPos(0, 2), Cell)), Has.Some.Contains("막힌"));
             Assert.That(ArrivalRules.Check(grid, new[] { exit }, CellPos.Center(new CellPos(1, 1), Cell)), Has.Some.Contains("0.9"));
             Assert.That(ArrivalRules.Check(grid, new[] { exit, unreachable }, CellPos.Center(new CellPos(1, 2), Cell)), Has.Some.Contains("shop"));
+            // 바깥 벽 칸의 문(키트 방의 현관): 문 칸은 막혔지만 안쪽 바닥에서 몸이 닿으면 열린다(DoorWatch·MapReach.Touches와 같은 기준).
+            var wallDoor = DoorArea.FromEntity(32, 96, 32, 32, "town", Cell, new TravelTarget("Town", "a"));
+            Assert.That(ArrivalRules.Check(grid, new[] { wallDoor }, CellPos.Center(new CellPos(1, 0), Cell)), Is.Empty, "막힌 벽 칸의 문도 맞닿은 바닥까지 걸어가면 닿는다");
         }
 
         [Test]

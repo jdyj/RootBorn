@@ -52,17 +52,14 @@ namespace Rootborn.Core.World
             int size = grid.Grid.CellSize;
             CellPos cell = CellPos.Containing(spawn.X, spawn.Y, size);
             if (grid.IsBlocked(cell)) { problems.Add("도착 지점 " + cell + "이 막힌 칸이다"); return problems; }
-            var reachable = new HashSet<CellPos> { cell };
-            GridPath.Find(grid, cell, c => { reachable.Add(c); return false; });
+            HashSet<CellPos> reachable = MapReach.From(grid, cell);
             foreach (DoorArea exit in exits)
             {
                 if (!exit.Destination.HasValue) continue;
                 if (exit.Area.DistanceTo(spawn.X, spawn.Y) / size < MinCellsFromExit)
                     problems.Add("도착 지점이 출구 '" + exit.Target + "' 상자에서 " + MinCellsFromExit + "칸 안이다");
-                bool reached = false;
-                foreach (CellPos c in CollisionInput.CellsUnder(exit.Area, size))
-                    if (reachable.Contains(c)) { reached = true; break; }
-                if (!reached) problems.Add("도착 지점에서 출구 '" + exit.Target + "'까지 걸어갈 수 없다");
+                // 걸어서 닿는 칸이 출구 상자에 겹치거나 맞닿으면 닿는다(맵 검사·문 판정과 같은 기준 — 바깥 벽 칸의 문은 칸이 막혀 있다).
+                if (!MapReach.Touches(reachable, exit.Area, size)) problems.Add("도착 지점에서 출구 '" + exit.Target + "'까지 걸어갈 수 없다");
             }
             return problems;
         }

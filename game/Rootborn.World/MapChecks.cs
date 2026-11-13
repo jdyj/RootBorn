@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Rootborn.Core.World;
+using Rootborn.World.Ldtk;
 
 namespace Rootborn.World
 {
@@ -44,6 +45,7 @@ namespace Rootborn.World
     /// - 그림: 가리키는 타일셋 PNG가 저장소에 있다(맵을 읽으며 모은 문제).
     /// - 부지: 건물 목록에 있는 건물, 아는 단계 종류, 맵 안·서로 겹치지 않는 부지, 부지 안에 드는 건물, 칸 크기의 배수인 그림, 막는 칸 안의 문 칸.
     ///   가구 방에는 부지를 두지 않는다. 부지의 문도 위의 문 검사를 받는다.
+    /// - 짓는 집(build 성질이 있는 맵)만: Build 층이 있고 맵과 같은 크기, 값은 0·1. 도착 지점·상호작용·NPC 자리·문 앞 칸은 바닥이고 Build 0.
     /// "걸어서 닿는다"는 Core GridPath(칸 단위 상하좌우)로 판정한다. 문은 그 상자에 들어가거나 맞닿은 열린 칸까지 가면 닿은 것이다.
     /// </summary>
     public static class MapChecks
@@ -110,7 +112,68 @@ namespace Rootborn.World
                 for (int i = 0; i < anchors.Value.Count; i++)
                     if (!NextTo(reached, anchors.Value[i].X, anchors.Value[i].Y, size))
                         problems.Add(new MapCheckProblem(id, "NPC 자리 " + anchors.Key + "#" + i + "이 걸어서 닿는 칸 옆에 없다"));
+
+            if (loaded.Entry.Build != null) CheckBuild(loaded, things, reached, problems);
         }
+
+        /// <summary>
+        /// 짓는 집(맵 항목의 build)만: Build 층이 있고 맵과 같은 크기이며 값은 0·1이다. 도착 지점·상호작용·NPC 자리가 든 칸과 문 앞
+        /// (문 상자 칸과 그 상하좌우 중 걸어서 닿는 바닥 칸)은 바닥이고 Build 0(고정 — 지어서 막을 수 없다)이다.
+        /// </summary>
+        private static void CheckBuild(LoadedMap loaded, MapInteractions things, HashSet<CellPos> reached, List<MapCheckProblem> problems)
+        {
+            WorldMap map = loaded.World;
+            string id = map.Id, layerName = loaded.Entry.Build.FrameLayer;
+            MapGrid grid = map.Grid;
+            int size = grid.CellSize;
+            LdtkLayer layer = loaded.Level?.Layer(layerName);
+            if (layer == null || layer.Type != "IntGrid") { problems.Add(new MapCheckProblem(id, "짓는 집: Build 층 " + layerName + "이 없다")); return; }
+            if (layer.IntGrid == null || layer.GridSize != size || layer.IntGrid.Length != grid.Count)
+            {
+                problems.Add(new MapCheckProblem(id, "짓는 집: Build 층 크기가 맵과 다르다"));
+                return;
+            }
+            int shift = loaded.Entry.EntityRowShift; // 칠한 Collision 층과 같은 줄 밀기
+            int Value(CellPos c)
+            {
+                int y = c.Y - shift;
+                return grid.Contains(c.X, c.Y) && y >= 0 && y < grid.Rows ? layer.IntGrid[grid.Index(c.X, y)] : 0;
+            }
+            for (int y = 0; y < grid.Rows; y++)
+                for (int x = 0; x < grid.Columns; x++)
+                {
+                    int v = Value(new CellPos(x, y));
+                    if (v != 0 && v != 1) problems.Add(new MapCheckProblem(id, "짓는 집: Build 값은 0·1이어야 한다 " + new CellPos(x, y)));
+                }
+
+            void Fixed(string what, CellPos c)
+            {
+                if (map.Collision.IsBlocked(c)) problems.Add(new MapCheckProblem(id, "짓는 집: " + what + " " + c + "이 바닥이 아니다"));
+                else if (Value(c) == 1) problems.Add(new MapCheckProblem(id, "짓는 집: " + what + " " + c + "이 Build 1이다"));
+            }
+            foreach (string spawn in map.SpawnIds)
+            {
+                map.TryGetSpawn(spawn, out var point);
+                Fixed("도착 지점 " + spawn, CellPos.Containing(point.X, point.Y, size));
+            }
+            foreach (InteractionThing t in things.Things) Fixed("상호작용 " + t.Kind + "/" + t.Id, CellPos.Containing(t.X, t.Y, size));
+            foreach (var anchors in things.NpcAnchors)
+                for (int i = 0; i < anchors.Value.Count; i++)
+                    Fixed("NPC 자리 " + anchors.Key + "#" + i, CellPos.Containing(anchors.Value[i].X, anchors.Value[i].Y, size));
+            foreach (DoorArea door in map.Doors)
+            {
+                var front = new HashSet<CellPos>();
+                foreach (CellPos c in CollisionInput.CellsUnder(door.Area, size))
+                    foreach (var (dx, dy) in Around)
+                    {
+                        var n = new CellPos(c.X + dx, c.Y + dy);
+                        if (grid.Contains(n.X, n.Y) && reached.Contains(n)) front.Add(n);
+                    }
+                foreach (CellPos c in front) Fixed("문 앞 '" + door.Target + "'", c);
+            }
+        }
+
+        private static readonly (int Dx, int Dy)[] Around = { (0, 0), (1, 0), (-1, 0), (0, 1), (0, -1) };
 
         /// <summary>맵의 시작 도착 지점: 맵 목록에 처음 적힌 도착 지점(--world로 띄울 때 서는 곳). 없으면 null.</summary>
         public static string StartSpawn(MapEntry entry)

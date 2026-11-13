@@ -52,6 +52,8 @@ namespace Rootborn.World
         public readonly List<TemporaryLink> Temporary = new List<TemporaryLink>();
         /// <summary>건물 부지(lots). 건물 그림·칸은 건물 목록(buildings.json)에 있고, 맵을 만들 때 지금 단계의 건물을 얹는다.</summary>
         public readonly List<LotEntry> Lots = new List<LotEntry>();
+        /// <summary>짓는 집의 값(maps.json "build"). 없으면 null — 짓는 집이 아니다.</summary>
+        public MapBuildSettings Build;
     }
 
     /// <summary>
@@ -177,6 +179,7 @@ namespace Rootborn.World
                 }
                 if (m.TryGetProperty("lots", out JsonElement lots))
                     foreach (JsonElement l in lots.EnumerateArray()) entry.Lots.Add(ParseLot(l, sourceName));
+                if (m.TryGetProperty("build", out JsonElement build)) entry.Build = ParseBuild(build, entry.Id, sourceName);
                 catalog.Maps.Add(entry);
             }
             return catalog;
@@ -201,6 +204,14 @@ namespace Rootborn.World
             };
             if (l.TryGetProperty("to", out JsonElement to)) lot.To = new TravelTarget(Required(to, "map", sourceName), Required(to, "spawn", sourceName));
             return lot;
+        }
+
+        /// <summary>짓는 집의 값. frameLayer·frameId가 비면 분명한 오류(기본값으로 메우지 않는다).</summary>
+        private static MapBuildSettings ParseBuild(JsonElement b, string mapId, string sourceName)
+        {
+            string where = sourceName + " " + mapId + " build";
+            if (b.ValueKind != JsonValueKind.Object) throw new InvalidDataException(where + ": 객체여야 한다");
+            return new MapBuildSettings { FrameLayer = Required(b, "frameLayer", where), FrameId = Required(b, "frameId", where) };
         }
 
         private static NpcWalkSettings NpcWalkerOf(JsonElement root, string sourceName)
