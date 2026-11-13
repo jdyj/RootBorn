@@ -17,5 +17,15 @@
     <!-- 실제 data/를 읽는 도우미와 하루 균형 가정은 Game 테스트와 같은 사본을 쓴다. -->
     <Compile Include="../Rootborn.Game.Tests/TestWorld.cs" Link="Shared/TestWorld.cs" />
     <Compile Include="../Rootborn.Game.Tests/DayAssumptions.cs" Link="Shared/DayAssumptions.cs" />
+    <!-- 속도 기록·분석·보고(먼 층)는 Simulation 테스트(가까운 층)와 같은 사본을 쓴다. 화면·창 없는 몸에 닿는 것(기록기·분류)은 들이지 않는다. -->
+    <Compile Include="../Rootborn.Simulation.Tests/Pace/PaceStep.cs" Link="Shared/Pace/PaceStep.cs" />
+    <Compile Include="../Rootborn.Simulation.Tests/Pace/PaceAssumptions.cs" Link="Shared/Pace/PaceAssumptions.cs" />
+    <Compile Include="../Rootborn.Simulation.Tests/Pace/PaceAnalysis.cs" Link="Shared/Pace/PaceAnalysis.cs" />
+    <Compile Include="../Rootborn.Simulation.Tests/Pace/PaceNovelty.cs" Link="Shared/Pace/PaceNovelty.cs" />
+    <Compile Include="../Rootborn.Simulation.Tests/Pace/PaceReport.cs" Link="Shared/Pace/PaceReport.cs" />
+    <Compile Include="../Rootborn.Simulation.Tests/Pace/PaceCompare.cs" Link="Shared/Pace/PaceCompare.cs" />
+    <Compile Include="../Rootborn.Simulation.Tests/Pace/PaceDiff.cs" Link="Shared/Pace/PaceDiff.cs" />
+    <Compile Include="../Rootborn.Simulation.Tests/Pace/PaceBands.cs" Link="Shared/Pace/PaceBands.cs" />
+    <Compile Include="../Rootborn.Simulation.Tests/Pace/PaceMeasured.cs" Link="Shared/Pace/PaceMeasured.cs" />
   </ItemGroup>
 </Project>

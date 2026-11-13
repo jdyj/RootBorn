@@ -40,6 +40,10 @@ namespace Rootborn.Balance.Tests
         public int Minutes;                                // 게임 분(미니게임이 더 길면 그 길이, ActionLength). 취침 판정에 쓴다
         public int MinigameMinutes;                        // 그 행동에서 미니게임을 하는 분(올림, ActionLength). 없으면 0 — 넘겨 잇는 밤의 판정에 쓴다
         public bool Walks;                                 // 시작 전에 걷는 시간을 보내는가(올리기는 false)
+        public string InteractionKind;                     // 그 일을 하는 월드 상호작용 종류(가까운 층의 잰 걷기·화면 값과 맞춘다). 없으면 null
+
+        /// <summary>game/world/interactions.json의 상호작용 종류(엔티티 id가 아니다): 알바 지점, 진로 시설, 잠자리(하루 마감).</summary>
+        public const string PartTimeKind = "part-time-work", FacilityKind = "career-facility", SleepKind = "student-day-end";
         public Func<GameSession, string, StepOutcome> Do;  // (game, 요청 id)
     }
 

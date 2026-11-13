@@ -18,6 +18,7 @@ namespace Rootborn.Balance.Tests
                 Id = Kind,
                 Minutes = 0,
                 Walks = false,
+                InteractionKind = PlannedStep.FacilityKind,
                 Do = (g, request) =>
                 {
                     var result = g.UpgradeFacility(request);
@@ -116,6 +117,7 @@ namespace Rootborn.Balance.Tests
                 Minutes = ActionLength.WithMinigame(game, work.TimeCostMinutes, work.Minigame, context.MinigameShare),
                 MinigameMinutes = ActionLength.MinigameMinutes(game, work.Minigame, context.MinigameShare),
                 Walks = true,
+                InteractionKind = PlannedStep.FacilityKind,
                 Do = (g, request) => Play(g, work, request, context),
             };
 
@@ -129,6 +131,7 @@ namespace Rootborn.Balance.Tests
                 Id = work.Id,
                 Minutes = work.TimeCostMinutes,
                 Walks = true,
+                InteractionKind = PlannedStep.FacilityKind,
                 Do = (g, request) =>
                 {
                     var result = g.CompleteFacilityWork(work.Id, request, AutoSkipScoreArgument, autoSkip: true);
