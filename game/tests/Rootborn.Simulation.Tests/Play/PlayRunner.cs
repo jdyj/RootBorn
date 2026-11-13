@@ -125,6 +125,9 @@ namespace Rootborn.Simulation
         /// <summary>한 걸음을 한 뒤(불변식 검사 전). 실제 창 층이 스크린샷을 찍는 데 쓴다.</summary>
         public event Action<int, PlayAction> AfterStep;
 
+        /// <summary>고른 행동을 몸이 하기 바로 앞(걸음 번호, 그 걸음의 관찰, 행동, 고른 쪽). 속도 기록이 걸음 앞 상태를 읽는 데 쓴다.</summary>
+        public event Action<int, PlayView, PlayAction, string> BeforeAct;
+
         /// <summary>끝까지 돈다. 불변식이 깨지면 PlayFailure를 Result.Failure에 두고 돌려준다(던지지 않는다).</summary>
         public PlayResult Run()
         {
@@ -204,6 +207,7 @@ namespace Rootborn.Simulation
                     PlayAction hold = view.Hold(IdleFrames);
                     _result.Steps.Add(new PlayStep(step, view.Day, view.Minutes, view.MapId, view.TopScreen, "room-wait", hold.Key));
                     TimeBefore waited = TimeBefore.Of(_body.Session, _body.Frames);
+                    BeforeAct?.Invoke(step, view, hold, "room-wait");
                     Do(hold, view);
                     AfterStep?.Invoke(step, hold);
                     CheckAfter(view, step);
@@ -226,6 +230,7 @@ namespace Rootborn.Simulation
                 _result.Steps.Add(new PlayStep(step, view.Day, view.Minutes, view.MapId, view.TopScreen, by, action.Key));
                 if (view.InWorld) _result.Maps.Add(view.MapId);
                 TimeBefore before = TimeBefore.Of(_body.Session, _body.Frames);
+                BeforeAct?.Invoke(step, view, action, by);
                 Do(action, view);
                 AfterStep?.Invoke(step, action);
                 CheckAfter(view, step);
