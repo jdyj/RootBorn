@@ -17,10 +17,14 @@ class Ctx:
     style: Style
     parts: Dict[str, Canvas]
     problems: list = field(default_factory=list)
+    # 이 그림이 붙인 점 부품 id. 색 수 검사가 몸통만 세려고 쓴다. 부품은 여기서만 꺼내므로 여기서 적는다.
+    used_parts: set = field(default_factory=set)
 
     def part(self, id: str) -> Canvas:
         try:
-            return self.parts[id]
+            cv = self.parts[id]
+            self.used_parts.add(id)
+            return cv
         except KeyError:
             raise RecipeError(f"{id}: 점 부품이 없다") from None
 

@@ -36,7 +36,7 @@ def part(spec: dict, ctx, pid: str) -> Canvas:
 
 def local(ctx):
     """그림 하나 동안 문제를 모을 ctx. 끝나면 _merge로 원래 ctx에 코드마다 하나씩 넘긴다."""
-    return type(ctx)(ctx.style, ctx.parts, [])
+    return type(ctx)(ctx.style, ctx.parts, [], ctx.used_parts)   # 쓴 부품은 그림 하나의 것이라 같은 집합을 나눠 쓴다
 
 
 def merge(spec: dict, ctx, local) -> None:

@@ -41,10 +41,17 @@ def _opaque(cv: Canvas):
 def _palette_and_count(cv, recipe, ctx) -> List[Problem]:
     style = ctx.style
     out = _group("off-palette", "팔레트 밖 색", [(x, y) for x, y, c in _opaque(cv) if c not in style.palette])
+    # 몸통의 색 = 그림의 색 - 외곽선 - 붙인 점 부품들의 색(부품은 따로 검사된다).
+    # 몸통과 부품이 같은 색을 함께 쓰면 그 색은 세지 않는다(단순한 규칙).
     used = {c for c in cv.colors() if c != style.outline}
+    from_parts = set()
+    for pid in getattr(ctx, "used_parts", ()):
+        from_parts |= {c for c in ctx.parts[pid].colors() if c != style.outline}
+    body = used - from_parts
     limit = _limit(style, recipe.get("kind", "furniture"))
-    if len(used) > limit:
-        out.append(Problem("too-many-colors", f"색 {len(used)}개(최대 {limit}, 외곽선 제외)"))
+    if len(body) > limit:
+        out.append(Problem("too-many-colors",
+                           f"몸통 색 {len(body)}개(최대 {limit}, 외곽선 제외, 붙인 부품의 색 {len(used & from_parts)}개는 뺌)"))
     return out
 
 
