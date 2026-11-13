@@ -29,7 +29,13 @@ namespace Rootborn.Data
         private const string TimeRelative = "../game/" + TimeSettings.FileName;
         private static readonly string[] WorldRuleFiles = { "maps.json", "interactions.json" };
 
-        public static string Compute(string dataDirectory)
+        public static string Compute(string dataDirectory) => Compute(dataDirectory, null);
+
+        /// <summary>
+        /// 덮어쓰기 폴더(<see cref="DataOverlay"/>)가 있으면 그 엔티티 파일도 "overlay:" 이름으로 셈에 넣어 원본과 다른 지문이 되게 한다.
+        /// 덮어쓰기가 없으면(null·빈 값) <see cref="Compute(string)"/>과 같다. 덮어쓰기 폴더의 모든 .json 중 맨 위가 배열인 것만 셈한다.
+        /// </summary>
+        public static string Compute(string dataDirectory, string overlayDirectory)
         {
             if (!Directory.Exists(dataDirectory)) throw new DirectoryNotFoundException("데이터 폴더가 없다: " + dataDirectory);
             string root = Path.GetFullPath(dataDirectory);
@@ -50,6 +56,17 @@ namespace Rootborn.Data
             {
                 string path = Path.Combine(world, name);
                 if (File.Exists(path)) files.Add(("../game/world/" + name, Normalize(File.ReadAllBytes(path))));
+            }
+
+            if (!string.IsNullOrEmpty(overlayDirectory))
+            {
+                if (!Directory.Exists(overlayDirectory)) throw new DirectoryNotFoundException("덮어쓰기 폴더가 없다: " + overlayDirectory);
+                string overlayRoot = Path.GetFullPath(overlayDirectory);
+                foreach (var path in Directory.GetFiles(overlayRoot, "*.json", SearchOption.AllDirectories))
+                {
+                    byte[] bytes = Normalize(File.ReadAllBytes(path));
+                    if (StartsWithArray(bytes)) files.Add(("overlay:" + Path.GetRelativePath(overlayRoot, path).Replace('\\', '/'), bytes));
+                }
             }
 
             using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
