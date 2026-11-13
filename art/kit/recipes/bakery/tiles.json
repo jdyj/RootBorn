@@ -1,10 +1,13 @@
 [
   {"id": "bakery.tile.floor", "kind": "tile", "part": "tile.floor-checker", "art_cells": [1, 1],
-   "colors": ["floor.tile.light", "floor.tile.warm"]},
+   "colors": ["floor.tile.light", "floor.tile.warm"],
+   "label": "빵집 체크 바닥", "concept": "크림과 살구색의 또렷한 체크. 밝고 경쾌한 가게·부엌. 밝기 차가 커서 넓은 방에서는 눈이 피곤하다."},
   {"id": "bakery.tile.wall", "kind": "tile", "part": "tile.wall-interior", "art_cells": [1, 2],
    "paper": "wall.cream", "cap": "wall.cap", "wood": "wood.warm"},
   {"id": "bakery.tile.sidewalk", "kind": "tile", "part": "tile.paver", "art_cells": [1, 1],
-   "colors": ["paver"]},
+   "colors": ["paver"],
+   "label": "보도 블록", "concept": "회색 정사각 보도 블록. 바깥 길용이라 실내 바닥으로는 차갑다."},
   {"id": "bakery.tile.grass", "kind": "tile", "part": "tile.grass", "art_cells": [1, 1],
-   "colors": ["grass"]}
+   "colors": ["grass"],
+   "label": "잔디", "concept": "초록 잔디에 잔 풀 무늬. 바깥 땅용이고 실내에는 쓰지 않는다."}
 ]

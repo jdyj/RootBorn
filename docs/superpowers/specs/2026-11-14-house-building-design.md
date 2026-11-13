@@ -181,10 +181,10 @@
 
 ```json
 [
-  { "type": "RoomFinishDefinition", "id": "finish.wall.sprig", "slot": "wall",
-    "nameKey": "finish.wall.sprig.name", "art": "finish.wall.sprig",
+  { "type": "RoomFinishDefinition", "id": "finish.wall.wallpaper-sprig", "slot": "wall",
+    "nameKey": "finish.wall.wallpaper-sprig.name", "art": "finish.wall.wallpaper-sprig",
     "cost": [ { "ref": "item.allowance", "type": "ItemDefinition", "count": 2 } ],
-    "unlockToken": "", "kit": "sprig" },
+    "unlockToken": "", "kit": "wallpaper-sprig" },
   { "type": "RoomFinishDefinition", "id": "finish.floor.plank", "slot": "floor",
     "nameKey": "finish.floor.plank.name", "art": "finish.floor.plank",
     "cost": [ { "ref": "item.allowance", "type": "ItemDefinition", "count": 1 } ],
@@ -198,7 +198,7 @@
 - `kit`은 키트의 벽 모양·바닥 명세 id(키트가 조각 시트를 다시 만들 때 쓰는 출처 기록). 게임 규칙은 읽지 않는다.
 - `cost`는 **칸당**(1단계 시험용 값: 벽지 2, 바닥 1). 단위(칸당/방당)와 값은 14.3절.
 - 해금: 가구와 같은 `unlockToken`(빈 값 = 처음부터 쓸 수 있음). 해금은 지금 가구처럼 퀘스트 보상·가게 구매로 열린다. 인테리어 기술이나 집 단계로 여는 조건 전략은 지금 데이터에 범용 기술 문턱 조건이 보이지 않아(`data/` 조건 종류는 탐색·단서·장소 쪽뿐) **확인 필요** — 14.3절.
-- 처음 몇 종(시험용): 벽 `paper`·`sprig`·`two-tone`·`plank`, 바닥 `floor.plank`·`floor.checker-soft`·`floor.carpet`·`floor.tatami`. 키트의 벽 14·바닥 14 중 무엇을 게임에 넣을지는 콘텐츠라 14.3절.
+- 처음 몇 종(시험용): 벽 `paper`·`wallpaper-sprig`·`paint-two-tone`·`panel-plank`, 바닥 `floor.plank`·`floor.checker-soft`·`floor.carpet`·`floor.tatami`. 키트의 벽 14·바닥 14 중 무엇을 게임에 넣을지는 콘텐츠라 14.3절.
 
 ### 6.2 짓는 집 맵의 값
 
