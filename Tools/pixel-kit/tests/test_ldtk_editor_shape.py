@@ -15,7 +15,7 @@ from pixelkit import ldtk_common, ldtk_test_level
 from pixelkit.room_ldtk import RoomBuildError, check_room, repaint_room
 from tests import ldtk_schema
 from tests.test_ldtk_test_level import LevelBase
-from tests.test_room_ldtk import FIXTURE, KIT, RID, RoomBase
+from tests.test_room_ldtk import FIXTURE, KIT, RID, ROOT, RoomBase
 
 EDITOR_HEADER = {"fileType": "LDtk Project JSON", "app": "LDtk", "doc": "https://ldtk.io/json",
                  "schema": "https://ldtk.io/files/JSON_SCHEMA.json", "appAuthor": "Sebastien 'deepnight' Benard",
@@ -28,8 +28,16 @@ class CheckerTests(unittest.TestCase):
     def doc(self):
         return json.loads(FIXTURE.read_text("utf-8"))
 
-    def test_fixture_saved_by_the_editor_passes(self):
+    def test_imitation_of_an_editor_file_passes(self):
         self.assertEqual(ldtk_schema.all_problems(self.doc()), [])
+
+    def test_files_really_saved_by_the_editor_pass_without_false_alarms(self):
+        """흉내 낸 파일이 아니라 편집기가 저장한 파일(사용자가 칠하고 저장한 방, 저장소의 집 맵)에도 검사기가 오탐하지 않는다."""
+        real = (Path(__file__).resolve().parent / "fixtures" / "room-editor-saved" / "test.two-rooms.ldtk",
+                ROOT / "Assets" / "LDtk" / "House" / "house.ldtk")
+        for path in real:
+            self.assertTrue(path.is_file(), f"{path} 가 없다 — 이 검사를 조용히 건너뛰지 않는다")
+            self.assertEqual(ldtk_schema.all_problems(json.loads(path.read_text("utf-8"))), [], str(path))
 
     def test_missing_required_keys_are_found_at_every_depth(self):
         for path in (("worlds",), ("defs", "layers", 0, "intGridValuesGroups"), ("levels", 0, "__neighbours"),

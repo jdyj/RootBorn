@@ -5,7 +5,9 @@
 ## `JSON_SCHEMA.json`
 
 - 출처: LDtk 공식 JSON 스키마 <https://ldtk.io/files/JSON_SCHEMA.json> (2026-11-14 받음, 파일 안 `"version": "1.5.3"`).
-  SHA-256 `2aa84b0db6e5ef1b530b1f557c5802da1aa8bc62d10184d358c346734fb84893`. 받은 바이트 그대로다(고치지 않는다).
+  SHA-256 `b96ca8a106d12c5bf8aa42da223a4ceb02e93dcfbb0d1b49fbbaeb9959264bda` — **저장소에 든 바이트(줄바꿈 LF) 기준**이다
+  (`git show HEAD:Tools/pixel-kit/tests/fixtures/ldtk-1.5.3/JSON_SCHEMA.json | sha256sum`). Windows 작업 사본은 줄바꿈이 CRLF로 바뀌어
+  해시가 다르다(`2aa84b0d…`). 내용은 고치지 않았다.
 - 라이선스: LDtk(<https://github.com/deepnight/ldtk>)는 MIT 라이선스다. 저작권 Sébastien Bénard(deepnight).
   스키마는 LDtk가 만들어 배포하는 파일이고 이 저장소에서는 테스트 기준으로만 쓴다.
 - 쓰는 법: 정의마다 `required`에 든 키가 빠짐없이 있고 형(`type`, `oneOf`, `enum`, null 허용)이 맞는지 재귀로 본다.

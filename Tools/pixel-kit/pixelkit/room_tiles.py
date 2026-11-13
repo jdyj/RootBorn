@@ -576,10 +576,6 @@ def plan_tiles(grid: List[List[int]], face_height: int = 2, band: int = 16) -> R
                     cands = ((hx, 0), (0, hy))
                 elif py < core[1] or py >= core[3]:
                     cands = ((0, hy), (hx, 0))
-                else:
-                    dxe = px + 1 if hx < 0 else CELL - px
-                    dye = py + 1 if hy < 0 else CELL - py
-                    cands = ((hx, 0), (0, hy)) if (dxe, (x + hx, y)) <= (dye, (x, y + hy)) else ((0, hy), (hx, 0))
                 res = "B"                       # 둘레가 모두 윗면(두꺼운 덩어리 안쪽)이면 띠로 메운다
                 for n in cands + ((hx, hy),):
                     if around[n] is not None:
