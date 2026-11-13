@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
 
+from PIL import Image
+
 from . import boards
 from .canvas import Canvas
 from .lint import Problem, lint_sprite, lint_tile
@@ -16,7 +18,7 @@ from .recipes import Ctx, RecipeError, ghost_ctx, load_recipes, render_with_spec
 from .scene import SCENE_KIND, build_scene
 from .style import Style
 
-DEFAULT_SCALE = {"render": 6, "sheet": 4, "scene": 4, "parts": 8}
+DEFAULT_SCALE = {"render": 6, "sheet": 4, "scene": 4, "parts": 8, "styles": 2}
 
 
 class UsageError(Exception):
@@ -356,13 +358,78 @@ def _room_ldtk_action(action: str, target: Path, args, kit: Kit) -> int:
     return 0
 
 
+# room styles 견본판의 조각. 벽: 윗면 띠(정면 위) + 정면 2칸 + 바닥 한 줄, 문간(6열), 방 안에서 끝나는 세로 벽(3열 —
+# 좁은 정면, 정면을 지나는 늘인 정면). 바닥: 4x3칸.
+STYLE_WALL_PIECE = ["######.##", "######.##", "######.##", "...#.....", "...#.....", "........."]
+STYLE_TOP_PIECE = ["#######", "#######", "#######", "#..#..#", "#..#..#", "#.....#", "#######"]
+STYLE_FLOOR_CELLS = (4, 3)
+STYLE_WALL_FLOOR = "floor.checker-soft"
+
+
+def _room_piece(kit: Kit, plan: List[str], wall: str, floor: dict, top: Optional[str] = None) -> Canvas:
+    """평면 조각을 Ground 위에 Wall을 얹어 한 장으로(밖은 투명)."""
+    from .room_plan import cells
+    from .room_tiles import CELL, draw_tile, plan_tiles
+    tiles = plan_tiles(cells(plan))
+    cache: Dict[str, Canvas] = {}
+    h, w = len(plan), len(plan[0])
+    img = Image.new("RGBA", (w * CELL, h * CELL), (0, 0, 0, 0))
+    for layer in (tiles.ground, tiles.wall):
+        for y, row in enumerate(layer):
+            for x, key in enumerate(row):
+                if key is None:
+                    continue
+                if key not in cache:
+                    cache[key] = draw_tile(kit.style, key, wall, floor, top)
+                img.alpha_composite(cache[key].to_image().convert("RGBA"), (x * CELL, y * CELL))
+    return Canvas.from_image(img)
+
+
+def _room_styles(args, kit: Kit) -> int:
+    """room styles [--list] [--out 폴더] [--scale N]: 등록된 벽 모양·띠 색·바닥을 견본판 두 장으로(또는 글로만)."""
+    from .room_ldtk import floor_ids
+    from .room_tiles import wall_about, wall_styles, wall_top, wall_tops
+    floors = floor_ids(kit)
+    if args.list:
+        print(f"벽 모양 {len(wall_styles())}개 (평면의 wall):")
+        for name in wall_styles():
+            print(f"  {name:<12} 기본 띠 {wall_top(name):<16} {wall_about(name)}")
+        print(f"띠 색 {len(wall_tops())}개 (평면의 top, 적지 않으면 벽 모양의 기본):")
+        for name in wall_tops():
+            print(f"  {name}")
+        print(f"바닥 {len(floors)}개 (평면의 floor, 키트의 한 칸 타일 명세):")
+        for rid in floors:
+            print(f"  {rid:<22} {kit.recipes[rid].get('part', '')}")
+        return 0
+    scale = _scale(args, "styles")
+    out = Path(args.out) if args.out is not None else Path(args.repo) / "output" / "pixel-kit" / "room"
+    base_floor = kit.recipes[STYLE_WALL_FLOOR if STYLE_WALL_FLOOR in floors else floors[0]]       # 벽 조각 밑 바닥(조용한 것)
+    try:
+        walls = [boards.Entry(f"{name} (top {wall_top(name)})", _room_piece(kit, STYLE_WALL_PIECE, name, base_floor))
+                 for name in wall_styles()]
+        walls += [boards.Entry(f"paper + top {top}", _room_piece(kit, STYLE_TOP_PIECE, "paper", base_floor, top))
+                  for top in wall_tops()]
+        fw, fh = STYLE_FLOOR_CELLS
+        flist = [boards.Entry(rid, _room_piece(kit, ["." * fw] * fh, "paper", kit.recipes[rid])) for rid in floors]
+    except RecipeError as e:
+        raise UsageError(str(e)) from None
+    saver = Saver()
+    for name, entries in (("styles-walls", walls), ("styles-floors", flist)):
+        saver.save(boards.board_image(entries, 1), out / f"{name}.png")
+        saver.save(boards.board_image(entries, scale), out / f"{name}_x{scale}.png")
+    return _finish(saver, 0)
+
+
 def cmd_room(args, kit: Kit) -> int:
     """room build <id> [--force] [--dry-run] [--out 폴더]: 평면에서 LDtk 방을 쓴다. room check <id>: 평면만 검사한다.
-    room check <ldtk 경로>: LDtk 방을 검사한다. room repaint <ldtk 경로> [--dry-run]: 칠한 Collision에 벽 그림을 맞춘다."""
+    room check <ldtk 경로>: LDtk 방을 검사한다. room repaint <ldtk 경로> [--dry-run]: 칠한 Collision에 벽 그림을 맞춘다.
+    room styles [--list] [--out 폴더]: 벽 모양·띠 색·바닥 견본판."""
     from . import room_ldtk, room_plan
-    from .room_tiles import wall_styles
+    from .room_tiles import check_top, wall_styles
     usage = ("사용법: room build <방 id> [--force] [--dry-run] [--out 폴더] | room check <방 id 또는 .ldtk 경로> | "
-             "room repaint <.ldtk 경로> [--dry-run]")
+             "room repaint <.ldtk 경로> [--dry-run] | room styles [--list] [--out 폴더] [--scale N]")
+    if args.ids == ["styles"]:
+        return _room_styles(args, kit)
     if len(args.ids) != 2 or args.ids[0] not in ("build", "check", "repaint"):
         raise UsageError(usage)
     action, rid = args.ids
@@ -376,9 +443,8 @@ def cmd_room(args, kit: Kit) -> int:
             room = room_plan.load_room(rooms_dir / f"{rid}.json")
             if room.wall not in wall_styles():
                 raise UsageError(f"{rid}: 등록되지 않은 벽 모양 {room.wall}. 있는 것: {', '.join(wall_styles())}")
-            floor = kit.recipes.get(room.floor)
-            if floor is None or floor.get("kind") != "tile":
-                raise UsageError(f"{rid}: 바닥 {room.floor!r}: 키트에 그런 타일 명세가 없다")
+            room_ldtk.floor_spec(kit, room.floor)                              # 없으면 RoomError(받는 바닥 목록)
+            check_top(room.top)                                                # 없으면 RecipeError(고를 수 있는 띠 색 목록)
             problems = room_plan.check_grid(room.grid, room.spawn, room.doors, room.face_height)
             code = _room_problems(problems)
             if not problems:

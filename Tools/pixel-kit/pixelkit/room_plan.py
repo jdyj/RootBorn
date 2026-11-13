@@ -8,7 +8,7 @@ import re
 from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 from .lint import Problem
 from .room_tiles import FLOOR, OUT, WALL, classify
@@ -31,6 +31,7 @@ class Room:
     spawn: Tuple[int, int]                 # 칸 (x, y)
     doors: Dict[Tuple[int, int], str]      # 칸 (x, y) → 목적지 값(Door 엔티티의 Where)
     face_height: int = 2
+    top: Optional[str] = None              # 띠 색 줄(없으면 벽 모양의 기본)
 
 
 def load_room(path) -> Room:
@@ -61,6 +62,7 @@ def load_room(path) -> Room:
     spawn = need("spawn", lambda v: isinstance(v, list) and len(v) == 2 and all(is_int(c) for c in v), "[x, y] 칸")
     raw_doors = need("doors", lambda v: isinstance(v, dict), "글자 → 목적지 값 표") if "doors" in doc else {}
     face_height = need("face_height", lambda v: is_int(v) and v >= 1, "1 이상의 정수") if "face_height" in doc else 2
+    top = need("top", lambda v: isinstance(v, str) and v, "띠 색 줄 이름") if "top" in doc else None
 
     for letter, dest in raw_doors.items():
         if len(letter) != 1 or letter in CHARS:
@@ -80,7 +82,7 @@ def load_room(path) -> Room:
     missing = sorted(set(raw_doors) - {ch for row in plan for ch in row})
     if missing:
         raise RoomError(f"{path}: 평면에 없는 문 글자 {missing}")
-    return Room(rid, wall, floor, lines, (spawn[0], spawn[1]), doors, face_height)
+    return Room(rid, wall, floor, lines, (spawn[0], spawn[1]), doors, face_height, top)
 
 
 def cells(grid: Sequence) -> List[List[int]]:

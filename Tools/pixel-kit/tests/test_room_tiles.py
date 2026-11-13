@@ -484,9 +484,11 @@ class DrawTests(unittest.TestCase):
                 cv = draw_tile(STYLE, keys[y][1], wall, FLOOR_SPEC)
                 with self.subTest(wall=wall, key=keys[y][1]):
                     self.assertEqual([p for p in lint_room_tile(cv, keys[y][1], STYLE) if p.code == "tile-seam"], [])
+                    # 무늬 주기가 32인 모양(벽돌마다 다른 밝기, 나뭇결, 꽃)은 한 장이 한 주기라 자기와 겹치는 밀기가 없다(None).
+                    # 주기가 보이면 32의 약수여야 한다(2026-11-14 벽 모양이 늘며 "주기는 16 이하" 전제를 고침).
                     p = _period(cv, True)
-                    self.assertIsNotNone(p)
-                    self.assertEqual(32 % p, 0)
+                    if p is not None:
+                        self.assertEqual(32 % p, 0)
 
     def test_floor_shade_differs_only_at_the_top(self):
         plain = draw_tile(STYLE, "floor", "paper", FLOOR_SPEC)

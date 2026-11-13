@@ -118,11 +118,13 @@ _WALLS: Dict[str, object] = {}
 
 
 def wall_style(name: str):
-    """벽 모양 클래스를 name으로 등록한다. 클래스는
-    - cap: 윗면 띠의 팔레트 줄(단계 0 안쪽 어두운 줄 / 1 면 / 2 안쪽 밝은 줄). 띠 색을 바꾸는 곳은 여기 한 곳이다.
+    """벽 모양 클래스를 name으로 등록한다. 클래스(대개 _Wall을 이어받는다)는
+    - cap: 윗면 띠의 기본 팔레트 줄(단계 0 안쪽 어두운 줄 / 1 면 / 2 안쪽 밝은 줄). 방마다 top 값으로 바꿀 수 있다(TOPS).
     - band: 윗면 띠 두께(px). 방의 자리 표에 남는다.
-    - paper·wood: 정면 벽지·나무의 팔레트 줄(좁은 정면도 이 줄로 그린다).
-    - face(style, k, ceiling) -> Canvas(32x32, 끝·위 선 없이). k == 1이 바닥 바로 위 타일."""
+    - narrow(style) -> (천장 밑 그늘, 면, 아래 면 윗줄, 아래 면), narrow_base: 좁은 정면(세로 벽 남쪽 끝)의 색과 아래 면이
+      시작하는 줄. _Wall의 기본은 paper·wood 줄에서 고른다.
+    - face(style, k, ceiling) -> Canvas(32x32, 끝·위 선 없이). k == 1이 바닥 바로 위 타일. ceiling이면 맨 위 2줄만 다르다.
+    - 클래스 설명 첫 줄은 room styles --list가 찍는다."""
     def deco(cls):
         if name in _WALLS:
             raise RecipeError(f"{name}: 벽 모양 이름이 겹친다")
@@ -147,6 +149,31 @@ def wall_band(wall: str) -> int:
     return _look(wall).band
 
 
+def wall_top(wall: str) -> str:
+    """벽 모양의 기본 띠 색 줄. 모르는 벽 모양은 RecipeError."""
+    return _look(wall).cap
+
+
+def wall_about(wall: str) -> str:
+    """벽 모양 클래스 설명의 첫 줄(room styles --list)."""
+    return ((type(_look(wall)).__doc__ or "").strip().splitlines() or [""])[0]
+
+
+# 방 값 top으로 고를 수 있는 띠 색 줄(팔레트에 3단계 줄이 있어야 한다). 벽 모양의 기본 줄도 고를 수 있다.
+# 띠 색을 더하려면 style.json에 `wall.top.<이름>` 3단계 줄(어두운 것부터)과 여기 한 줄.
+TOPS = ("wall.top.cream", "wall.top.brown", "wall.top.slate", "wall.top.light")
+
+
+def wall_tops() -> List[str]:
+    return sorted(set(TOPS) | {look.cap for look in _WALLS.values()})
+
+
+def check_top(top: Optional[str]) -> None:
+    """top(띠 색 줄 이름 또는 None)이 고를 수 있는 것인지. 아니면 RecipeError(아는 이름 목록)."""
+    if top is not None and top not in wall_tops():
+        raise RecipeError(f"{top!r}: 고를 수 있는 띠 색 줄이 아니다. 있는 것: {', '.join(wall_tops())}")
+
+
 def _ramp(style: Style, prefix: str, n: int) -> list:
     try:
         return [style.color(f"{prefix}.{i}") for i in range(n)]
@@ -162,8 +189,45 @@ BASEBOARD = (25, 31)   # 걸레받이 [25, 31), 31은 바닥과 만나는 외곽
 NARROW_WOOD = 19       # 좁은 정면 아래 타일: 이 줄이 나무 윗면 빛, 그 아래가 나무 면(무늬 없음)
 
 
+class _Wall:
+    """벽 모양의 공통 값. 좁은 정면은 paper(0 천장 밑 그늘, 2 면)·wood(4 윗줄 빛, 2 면) 줄에서 고른다 —
+    다른 줄을 쓰는 모양은 narrow를 고쳐 쓴다."""
+    band = 16
+    narrow_base = NARROW_WOOD
+
+    def narrow(self, style: Style):
+        p = _ramp(style, self.paper, 3)
+        w = _ramp(style, self.wood, 5)
+        return p[0], p[2], w[4], w[2]
+
+
+def _ceiling(cv: Canvas, color) -> None:
+    """천장 밑 그늘: 맨 위 2줄(위 칸이 윗면일 때)."""
+    cv.rect(0, 0, CELL, 2, color)
+
+
+def _skirting(cv: Canvas, style: Style, top: int, light, face, low) -> None:
+    """걸레받이: top 줄이 윗면 빛, 그 아래 면, 30줄이 밑 그늘, 31줄이 바닥과 만나는 외곽선."""
+    cv.hline(0, top, CELL, light)
+    cv.rect(0, top + 1, CELL, 30 - top - 1, face)
+    cv.hline(0, 30, CELL, low)
+    cv.hline(0, CELL - 1, CELL, style.outline)
+
+
+def _rail(cv: Canvas, y: int, light, face, under) -> None:
+    """허리 몰딩: 빛 한 줄, 면 한 줄, 바로 밑 짙은 줄 하나(튀어나온 것 밑 그늘)."""
+    cv.hline(0, y, CELL, light)
+    cv.hline(0, y + 1, CELL, face)
+    cv.hline(0, y + 2, CELL, under)
+
+
+def _wall_y(k: int, y: int) -> int:
+    """정면 두 칸을 이어 본 세로 자리(위 타일 0..31, 아래 타일 32..63) — 주기가 64인 무늬가 칸 경계에서 이어지게."""
+    return ((2 - k) * CELL + y) % (2 * CELL)
+
+
 @wall_style("paper")
-class PaperWall:
+class PaperWall(_Wall):
     """줄무늬 벽지 + 나무 징두리 판 + 걸레받이."""
     cap = "wall.top.cream"
     band = 16
@@ -198,7 +262,7 @@ class PaperWall:
 
 
 @wall_style("plaster")
-class PlasterWall:
+class PlasterWall(_Wall):
     """단색 회반죽 + 아래 한 단계 + 낮은 걸레받이."""
     cap = "wall.plaster.top"
     band = 16
@@ -219,6 +283,366 @@ class PlasterWall:
         cv.rect(0, 24, CELL, 6, w[2])
         cv.hline(0, 30, CELL, w[1])
         cv.hline(0, CELL - 1, CELL, style.outline)
+        return cv
+
+
+# 2026-11-14 사용자 요청 "다른것도 계속 만들어줘 유저가 자유롭게 만들 수 있도록"으로 더한 모양들. 견본(W3~W8)을 옮기고 약점을
+# 고친 것 + 새로 그린 것. 무늬 주기는 가로 32의 약수(옆 타일과 이어진다), 세로는 32의 약수이거나 _wall_y로 두 칸을 잇는다.
+
+@wall_style("sprig")
+class SprigWall(_Wall):
+    """연녹색 잔무늬 벽지 + 흰 걸레받이. 가장 무난한 집 벽."""
+    cap = "wall.top.brown"
+    paper = "wall.sage"
+    narrow_base = 24
+
+    def narrow(self, style):
+        p, t = _ramp(style, self.paper, 3), _ramp(style, "trim", 4)
+        return p[0], p[2], t[3], t[2]
+
+    def face(self, style, k, ceiling):
+        p = _ramp(style, self.paper, 3)
+        dot = style.color("wall.sage.dot.0")
+        cv = Canvas(CELL, CELL)
+        cv.rect(0, 0, CELL, CELL, p[2])
+        for y in range(CELL):
+            for x in range(CELL):
+                for cx, cy in ((4, 4), (12, 12)):         # 반 칸 어긋난 마름모(주기 16)
+                    dx, dy = (x - cx) % 16, (y - cy) % 16
+                    dx, dy = min(dx, 16 - dx), min(dy, 16 - dy)
+                    if dx + dy == 1:
+                        cv.px(x, y, p[1])
+                    elif dx == 0 and dy == 0:
+                        cv.px(x, y, dot)
+        if ceiling:
+            _ceiling(cv, p[0])
+        if k == 1:
+            t = _ramp(style, "trim", 4)
+            _skirting(cv, style, 24, t[3], t[2], t[1])
+        return cv
+
+
+@wall_style("plank")
+class PlankWall(_Wall):
+    """가로 판자벽(겹쳐 댄 긴 판) + 짙은 걸레받이. 나무 바닥과 깔면 갈색 일색 — 돌·타일 바닥과 짝짓는다."""
+    cap = "wall.top.brown"
+    paper = wood = "wall.plank"
+    narrow_base = 24
+
+    def narrow(self, style):
+        w = _ramp(style, self.wood, 5)
+        return w[1], w[2], w[4], w[1]
+
+    def face(self, style, k, ceiling):
+        w = _ramp(style, self.wood, 5)
+        cv = Canvas(CELL, CELL)
+        for y in range(CELL):
+            g = _wall_y(k, y)
+            r, inside = g // 8, g % 8
+            cv.hline(0, y, CELL, {0: w[3], 7: w[0]}.get(inside, w[2]))
+            if inside in (2, 4):                           # 결: 판마다 짧은 선 둘(자리는 판 번호로)
+                gx = (r * 11 + (3 if inside == 2 else 19)) % CELL
+                for i in range(5):
+                    cv.px((gx + i) % CELL, y, w[1])
+        if ceiling:
+            _ceiling(cv, w[1])
+        if k == 1:
+            _skirting(cv, style, 24, w[4], w[1], w[0])
+        return cv
+
+
+@wall_style("tile-white")
+class WhiteTileWall(_Wall):
+    """흰 벽 타일(16x8 엇갈림) + 청록 띠 + 타일 걸레받이. 부엌·욕실."""
+    cap = "wall.top.light"
+    paper = "ceramic"
+    narrow_base = 26
+
+    def narrow(self, style):
+        c = _ramp(style, self.paper, 3)
+        return c[0], c[2], c[1], c[0]
+
+    def face(self, style, k, ceiling):
+        c = _ramp(style, self.paper, 3)
+        teal = _ramp(style, "book.teal", 3)
+        cv = Canvas(CELL, CELL)
+        for y in range(CELL):
+            off = 8 if (y // 8) % 2 else 0
+            for x in range(CELL):
+                cv.px(x, y, c[1] if (y % 8 == 7 or (x + off) % 16 == 15) else c[2])
+        if ceiling:
+            _ceiling(cv, c[0])
+        if k == 1:
+            cv.rect(0, 10, CELL, 3, teal[2])
+            cv.hline(0, 13, CELL, teal[1])
+            cv.rect(0, 26, CELL, 5, c[0])
+            for x in (7, 23):
+                cv.vline(x, 26, 5, c[1])
+            cv.hline(0, CELL - 1, CELL, style.outline)
+        return cv
+
+
+class _BrickWall(_Wall):
+    """벽돌(16x8 엇갈림) + 나무 걸레받이. 벽돌마다 밝기는 TONES 표(정면 두 칸 8줄 × 줄마다 벽돌 둘): 0 보통, 1 밝은 벽돌."""
+    bricks = ""          # 벽돌 줄(0 줄눈·밑 그늘 쪽 … 3 밝은 벽돌)
+    wood = "wood.school"
+    narrow_base = 25
+    TONES = ((0, 1), (0, 0), (0, 0), (1, 0), (0, 0), (0, 0), (0, 1), (0, 0))
+
+    def colors(self, style):
+        """(줄눈, 벽돌 밑줄, 면, 밝은 벽돌 면, 밝은 벽돌 밑줄, 천장 밑 그늘)."""
+        raise NotImplementedError
+
+    def narrow(self, style):
+        _, _, face, _, _, shade = self.colors(style)
+        w = _ramp(style, self.wood, 5)
+        return shade, face, w[3], w[1]
+
+    def face(self, style, k, ceiling):
+        mortar, low, face, lface, llow, shade = self.colors(style)
+        cv = Canvas(CELL, CELL)
+        for y in range(CELL):
+            g = _wall_y(k, y)
+            r, inside = g // 8, g % 8
+            off = 8 if r % 2 else 0
+            for x in range(CELL):
+                light = self.TONES[r % 8][((x + off) // 16) % 2]
+                if inside == 7 or (x + off) % 16 == 15:
+                    c = mortar
+                elif inside == 6:
+                    c = llow if light else low
+                else:
+                    c = lface if light else face
+                cv.px(x, y, c)
+        if ceiling:
+            _ceiling(cv, shade)
+        if k == 1:
+            w = _ramp(style, self.wood, 5)
+            _skirting(cv, style, 25, w[3], w[1], w[0])
+        return cv
+
+
+@wall_style("brick-cream")
+class CreamBrickWall(_BrickWall):
+    """크림 벽돌 + 짙은 나무 걸레받이. 벽돌 중 가장 조용하다(가게·부엌)."""
+    cap = "wall.top.brown"
+
+    def colors(self, style):
+        b = _ramp(style, "brick.cream", 4)
+        return b[0], b[1], b[2], b[3], b[2], b[1]
+
+
+@wall_style("brick-red")
+class RedBrickWall(_BrickWall):
+    """붉은 벽돌(짙은 줄눈, 밝은 벽돌 몇 장만) + 짙은 나무 걸레받이. 가게 뒤·창고."""
+    cap = "wall.top.slate"
+    wood = "wood.archive"
+
+    def colors(self, style):
+        b = _ramp(style, "brick", 4)
+        return b[1], b[1], b[2], b[3], b[2], b[1]
+
+
+@wall_style("pastel")
+class PastelWall(_Wall):
+    """민트 단색 + 흰 허리 몰딩 + 아래 판(긴 몰딩 테 하나) + 흰 걸레받이. 아이 방."""
+    cap = "wall.top.light"
+    paper = "wall.mint"
+    narrow_base = 25
+
+    def narrow(self, style):
+        p, t = _ramp(style, self.paper, 3), _ramp(style, "trim", 4)
+        return p[0], p[2], t[3], t[2]
+
+    def face(self, style, k, ceiling):
+        p = _ramp(style, self.paper, 3)
+        cv = Canvas(CELL, CELL)
+        cv.rect(0, 0, CELL, CELL, p[2])
+        if ceiling:
+            _ceiling(cv, p[0])
+        if k == 1:
+            t = _ramp(style, "trim", 4)
+            cv.rect(0, 11, CELL, 14, p[1])                # 아래 판: 한 단계 어두운 면
+            _rail(cv, 9, t[3], t[2], p[0])
+            cv.hline(3, 14, 26, t[3])                     # 몰딩 테(타일마다 하나, 폭 26): 위·왼쪽 빛, 아래·오른쪽 그늘
+            cv.vline(3, 14, 8, t[3])
+            cv.hline(3, 21, 26, p[0])
+            cv.vline(28, 14, 8, p[0])
+            _skirting(cv, style, 25, t[3], t[2], t[1])
+        return cv
+
+
+@wall_style("study")
+class StudyWall(_Wall):
+    """짙은 녹색 벽(같은 계열 가는 세로줄) + 높고 밝은 걸레받이. 서재 — 가구가 잘 도드라진다."""
+    cap = "wall.top.slate"
+    paper = "wall.green"
+    narrow_base = 23
+
+    def narrow(self, style):
+        p, t = _ramp(style, self.paper, 3), _ramp(style, "trim", 4)
+        return p[0], p[2], t[3], t[2]
+
+    def face(self, style, k, ceiling):
+        p = _ramp(style, self.paper, 3)
+        cv = Canvas(CELL, CELL)
+        cv.rect(0, 0, CELL, CELL, p[2])
+        for x in range(3, CELL, 8):
+            cv.vline(x, 0, CELL, p[1])
+        if ceiling:
+            _ceiling(cv, p[0])
+        if k == 1:
+            t = _ramp(style, "trim", 4)
+            cv.hline(0, 22, CELL, p[0])
+            _skirting(cv, style, 23, t[3], t[2], t[1])
+        return cv
+
+
+@wall_style("two-tone")
+class TwoToneWall(_Wall):
+    """투톤: 위 크림 / 아래 짙은 청회색 칠 + 흰 허리 몰딩·걸레받이. 거실·복도."""
+    cap = "wall.top.brown"
+    paper = "wall.cream"
+    narrow_base = 6
+
+    def narrow(self, style):
+        p, d, t = _ramp(style, self.paper, 3), _ramp(style, "wall.denim", 3), _ramp(style, "trim", 4)
+        return p[0], p[2], t[3], d[2]
+
+    def face(self, style, k, ceiling):
+        p = _ramp(style, self.paper, 3)
+        cv = Canvas(CELL, CELL)
+        cv.rect(0, 0, CELL, CELL, p[2])
+        if ceiling:
+            _ceiling(cv, p[0])
+        if k == 1:
+            d, t = _ramp(style, "wall.denim", 3), _ramp(style, "trim", 4)
+            cv.rect(0, 6, CELL, 19, d[2])                 # 아래 칠(벽 높이의 4할쯤)
+            _rail(cv, 4, t[3], t[2], d[0])
+            _skirting(cv, style, 25, t[3], t[2], t[1])
+        return cv
+
+
+@wall_style("floral")
+class FloralWall(_Wall):
+    """연분홍 잔꽃 벽지(꽃잎 넷 + 노란 꽃술, 드문드문) + 나무 걸레받이. 침실·아이 방."""
+    cap = "wall.top.brown"
+    paper = "wall.rose"
+    wood = "wood.school"
+    narrow_base = 24
+
+    def narrow(self, style):
+        p, w = _ramp(style, self.paper, 3), _ramp(style, self.wood, 5)
+        return p[0], p[2], w[3], w[1]
+
+    def face(self, style, k, ceiling):
+        p = _ramp(style, self.paper, 3)
+        petal, heart = _ramp(style, "wall.rose.flower", 2)
+        cv = Canvas(CELL, CELL)
+        cv.rect(0, 0, CELL, CELL, p[2])
+        for cx, cy in ((7, 5), (23, 13), (7, 21), (23, 29)):   # 32x16마다 둘, 엇갈려(가로 32·세로 16 주기)
+            cv.px(cx, cy, heart)
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                cv.px((cx + dx) % CELL, (cy + dy) % CELL, petal)
+        if ceiling:
+            _ceiling(cv, p[0])
+        if k == 1:
+            w = _ramp(style, self.wood, 5)
+            _skirting(cv, style, 24, w[3], w[1], w[0])
+        return cv
+
+
+@wall_style("pine")
+class PineWall(_Wall):
+    """밝은 소나무 세로 판(벽 전체, 판 8px) + 같은 나무 걸레받이. 오두막·부엌·가게."""
+    cap = "wall.top.brown"
+    wood = "wall.pine"
+    narrow_base = 25
+
+    def narrow(self, style):
+        w = _ramp(style, self.wood, 4)
+        return w[1], w[2], w[3], w[1]
+
+    def face(self, style, k, ceiling):
+        w = _ramp(style, self.wood, 4)
+        cv = Canvas(CELL, CELL)
+        for x in range(CELL):
+            cv.vline(x, 0, CELL, {0: w[0], 1: w[3]}.get(x % 8, w[2]))
+        for b in range(4):                                 # 결: 판마다 짧은 세로 선 둘(세로 32 주기)
+            for i in range(5):
+                cv.px(b * 8 + 4, (b * 11 + 5 + i) % CELL, w[1])
+                cv.px(b * 8 + 6, (b * 11 + 21 + i) % CELL, w[1])
+        if ceiling:
+            _ceiling(cv, w[1])
+        if k == 1:
+            _skirting(cv, style, 25, w[3], w[1], w[0])
+        return cv
+
+
+@wall_style("tile-blue")
+class BlueTileWall(_Wall):
+    """하늘색 정사각 타일(16px, 위·왼쪽 빛 모서리) + 짙은 타일 한 줄 걸레받이. 욕실."""
+    cap = "wall.top.light"
+    paper = "wall.tile.blue"
+    narrow_base = 24
+
+    def narrow(self, style):
+        b = _ramp(style, self.paper, 4)
+        return b[1], b[2], b[2], b[1]
+
+    def face(self, style, k, ceiling):
+        b = _ramp(style, self.paper, 4)
+        cv = Canvas(CELL, CELL)
+        for y in range(CELL):
+            for x in range(CELL):
+                if x % 16 == 15 or y % 16 == 15:
+                    c = b[1]
+                elif x % 16 == 0 or y % 16 == 0:
+                    c = b[3]
+                else:
+                    c = b[2]
+                cv.px(x, y, c)
+        if ceiling:
+            _ceiling(cv, b[1])
+        if k == 1:
+            cv.rect(0, 24, CELL, 7, b[1])                 # 짙은 타일 한 줄(8px, 줄눈은 한 단계 더 짙게)
+            cv.hline(0, 24, CELL, b[2])
+            for x in (7, 23):
+                cv.vline(x, 25, 6, b[0])
+            cv.hline(0, CELL - 1, CELL, style.outline)
+        return cv
+
+
+@wall_style("concrete")
+class ConcreteWall(_Wall):
+    """노출 콘크리트(거푸집 판 32x16 이음 + 폼타이 구멍) + 아래 때 탄 띠. 가게 뒤·창고."""
+    cap = "wall.top.slate"
+    paper = "wall.concrete"
+    narrow_base = 27
+
+    def narrow(self, style):
+        c = _ramp(style, self.paper, 4)
+        return c[1], c[2], c[1], c[1]
+
+    def face(self, style, k, ceiling):
+        c = _ramp(style, self.paper, 4)
+        cv = Canvas(CELL, CELL)
+        cv.rect(0, 0, CELL, CELL, c[2])
+        for y0 in (0, 16):
+            cv.hline(0, y0 + 15, CELL, c[1])              # 판 이음(가로)
+            cv.hline(0, y0, CELL, c[3])                   # 판 윗변 빛
+            for x in (7, 24):                             # 폼타이 구멍: 짙은 점 둘 + 밑 빛
+                cv.px(x, y0 + 7, c[0])
+                cv.px(x + 1, y0 + 7, c[0])
+                cv.px(x, y0 + 8, c[3])
+                cv.px(x + 1, y0 + 8, c[3])
+        cv.vline(31, 0, CELL, c[1])                       # 판 이음(세로, 32마다)
+        if ceiling:
+            _ceiling(cv, c[1])
+        if k == 1:
+            cv.rect(0, 27, CELL, 4, c[1])                 # 아래 때 탄 띠
+            cv.hline(0, 27, CELL, c[0])
+            cv.hline(0, CELL - 1, CELL, style.outline)
         return cv
 
 
@@ -671,27 +1095,27 @@ def _face_tile(style: Style, look, k: int, flags: str) -> Canvas:
 
 
 def _narrow_face(style: Style, look, cv: Canvas, k: int, flags: str, x0: int, x1: int) -> None:
-    """좁은 정면(세로 벽 남쪽 끝, 띠 폭): 무늬 없는 단순한 면. 위 타일은 벽지 한 면, 아래 타일은 벽지 + 나무 두 면.
-    양옆 열과 아래 타일의 맨 아랫줄은 외곽선."""
-    p = _ramp(style, look.paper, 3)
-    w = _ramp(style, look.wood, 5)
+    """좁은 정면(세로 벽 남쪽 끝, 띠 폭): 무늬 없는 단순한 면. 위 타일은 벽 면 하나, 아래 타일은 벽 면 + 아래 면(나무·걸레받이 쪽)
+    둘(아래 면은 벽 모양의 narrow_base 줄부터). 양옆 열과 아래 타일의 맨 아랫줄은 외곽선."""
+    shade, face, base_top, base = look.narrow(style)
     for y in range(CELL):
-        color = p[2]
-        if k == 1 and y == NARROW_WOOD:
-            color = w[4]
-        elif k == 1 and y > NARROW_WOOD:
-            color = w[2]
+        color = face
+        if k == 1 and y == look.narrow_base:
+            color = base_top
+        elif k == 1 and y > look.narrow_base:
+            color = base
         if "c" in flags and y < 2:
-            color = p[0]
+            color = shade
         for x in range(x0, x1):
             edge = x in (x0, x1 - 1) or (k == 1 and y == CELL - 1)
             cv.px(x, y, style.outline if edge else color)
 
 
-def _draw_band(style: Style, look, cv: Canvas, layout: TileLayout) -> None:
+def _draw_band(style: Style, top: str, cv: Canvas, layout: TileLayout) -> None:
     """띠의 픽셀 중 띠가 아닌 픽셀에 8방향으로 닿는 것은 외곽선, 그 안쪽 한 줄은 면 음영(먼 쪽(북쪽) 가장자리만 빛,
-    나머지 가장자리는 그늘). 이웃 칸의 띠(padded)까지 보고 칠하므로 칸 경계에서 선이 끊기거나 두 겹이 되지 않는다."""
-    dark, face, light = _ramp(style, look.cap, 3)
+    나머지 가장자리는 그늘). 이웃 칸의 띠(padded)까지 보고 칠하므로 칸 경계에서 선이 끊기거나 두 겹이 되지 않는다.
+    top은 띠 색 줄(단계 0 안쪽 그늘 / 1 면 / 2 안쪽 빛)."""
+    dark, face, light = _ramp(style, top, 3)
     colors = {"o": style.outline, "d": dark, "f": face, "l": light}
     for (px, py), shade in _shades(layout.band, layout.padded).items():
         cv.px(px, py, colors[shade])
@@ -716,9 +1140,11 @@ def _floor(style: Style, floor_spec: dict, shade: Optional[Tuple[int, int]]) -> 
     return cv
 
 
-def draw_tile(style: Style, key: str, wall: str, floor_spec: dict) -> Canvas:
-    """열쇠 하나 → 32x32 타일. wall은 등록된 벽 모양 이름, floor_spec은 키트의 바닥 타일 명세(32x32)."""
+def draw_tile(style: Style, key: str, wall: str, floor_spec: dict, top: Optional[str] = None) -> Canvas:
+    """열쇠 하나 → 32x32 타일. wall은 등록된 벽 모양 이름, floor_spec은 키트의 바닥 타일 명세(32x32),
+    top은 띠 색 줄(None이면 벽 모양의 기본 — wall_tops()의 것만 받는다). 띠 색은 윗면 띠 픽셀만 바꾼다."""
     look = _look(wall)
+    check_top(top)
     if isinstance(key, str) and key.startswith("floor"):
         return _floor(style, floor_spec, _parse_floor(key))
     layout = tile_layout(key)
@@ -732,7 +1158,7 @@ def draw_tile(style: Style, key: str, wall: str, floor_spec: dict) -> Canvas:
             cv.px(x, y, src.get(x, y))
     if layout.narrow is not None:
         _narrow_face(style, look, cv, layout.narrow_face[0], layout.narrow_face[1], *layout.narrow)
-    _draw_band(style, look, cv, layout)
+    _draw_band(style, top or look.cap, cv, layout)
     return cv
 
 

@@ -851,6 +851,111 @@ class RepaintCliTests(CliBase):
         self.assertEqual(self.run_kit("repaint")[0], 2)
 
 
+class TopValueTests(RoomBase):
+    """띠 색 top: 평면의 선택 값 → 자리 표의 방 값 → repaint가 읽는다. top이 없는 옛 자리 표는 그 벽 모양의 기본색이다
+    (band가 없는 옛 방 거절과 다르다 — 사용자가 LDtk에서 칠한 방이 그런 표다)."""
+
+    def table(self, rid="test.two-rooms"):
+        return json.loads((self.out(rid) / "tiles.slots.json").read_text("utf-8"))
+
+    def test_plan_without_top_writes_no_top(self):
+        self.real_plan()
+        self.build()
+        self.assertNotIn("top", self.table())
+        self.assertIsNone(load_room(self.root / "art/kit/rooms/test.two-rooms.json").top)
+
+    def test_plan_top_is_kept_in_the_table_and_changes_only_band_tiles(self):
+        self.small_plan("t.plain")
+        self.small_plan("t.slate", top="wall.top.slate")
+        self.build("t.plain")
+        self.build("t.slate")
+        self.assertEqual(self.table("t.slate")["top"], "wall.top.slate")
+        plain, slate = self.table("t.plain")["slots"], self.table("t.slate")["slots"]
+        self.assertEqual(plain.keys(), slate.keys())                     # 열쇠는 띠 색과 무관하다
+        with Image.open(self.out("t.plain") / "tiles.png") as a, Image.open(self.out("t.slate") / "tiles.png") as b:
+            a, b = a.convert("RGBA"), b.convert("RGBA")
+            for key, s in plain.items():
+                box = (s["x"], s["y"], s["x"] + 32, s["y"] + 32)
+                same = a.crop(box).tobytes() == b.crop(box).tobytes()
+                self.assertEqual(same, not key.startswith("cap:"), key)
+
+    def test_repaint_reads_top_from_the_table(self):
+        self.small_plan("t.slate", top="wall.top.slate")
+        self.build("t.slate")
+        path = self.out("t.slate") / "t.slate.ldtk"
+        self.assertEqual(repaint_room(path, kit=KIT), [])                 # 표의 top으로 그리면 같은 그림
+        table = self.table("t.slate")
+        table["top"] = "wall.top.brown"
+        (self.out("t.slate") / "tiles.slots.json").write_text(json.dumps(table), encoding="utf-8")
+        with self.assertRaises(RoomError):                                 # 시트는 slate로 그렸다 — 섞지 않는다
+            build_room(self.root, "t.slate", kit=KIT, force=True)
+
+    def test_old_table_without_top_is_the_default_colour_and_stays_without_top(self):
+        self.real_plan()
+        self.build()
+        path = self.out() / "test.two-rooms.ldtk"
+        before = self.snapshot()
+        self.assertEqual(repaint_room(path, kit=KIT, dry_run=True), [])
+        self.assertEqual(repaint_room(path, kit=KIT), [])
+        self.assertEqual(self.snapshot(), before)
+        self.assertEqual(check_room(path), [])
+
+    def test_explicit_default_top_over_a_sheet_without_top_is_the_same_picture(self):
+        self.real_plan()
+        self.build()
+        before_png = (self.out() / "tiles.png").read_bytes()
+        self.real_plan(top="wall.top.cream")                             # paper의 기본 띠 줄
+        self.build(force=True)
+        self.assertEqual((self.out() / "tiles.png").read_bytes(), before_png)
+        self.assertEqual(self.table()["top"], "wall.top.cream")
+
+    def test_other_top_over_a_sheet_without_top_is_refused(self):
+        self.real_plan()
+        self.build()
+        before = self.snapshot()
+        self.real_plan(top="wall.top.slate")
+        with self.assertRaises(RoomError) as e:
+            self.build(force=True)
+        self.assertIn("top", str(e.exception))
+        self.assertEqual(self.snapshot(), before)
+
+    def test_unknown_or_bad_top_is_refused(self):
+        self.real_plan(top="wood.warm")
+        with self.assertRaises(RecipeError) as e:
+            self.build()
+        self.assertIn("wall.top.slate", str(e.exception))
+        self.real_plan(top=3)
+        with self.assertRaises(RoomError):
+            self.build()
+        self.assertFalse((self.root / "art/world").exists())
+
+    def test_table_with_an_unknown_top_is_refused_on_repaint(self):
+        self.real_plan()
+        self.build()
+        table = self.table()
+        table["top"] = "no.such.row"
+        (self.out() / "tiles.slots.json").write_text(json.dumps(table), encoding="utf-8")
+        before = self.snapshot()
+        with self.assertRaises((RoomError, RecipeError)):
+            repaint_room(self.out() / "test.two-rooms.ldtk", kit=KIT)
+        self.assertEqual(self.snapshot(), before)
+
+
+class UnknownNamesCliTests(CliBase):
+    def test_check_lists_known_walls_floors_and_tops(self):
+        from pixelkit.room_tiles import wall_styles, wall_tops
+        cases = (("wall", "no-such-wall", wall_styles()), ("floor", "no.such.floor", ["floor.plank", "bakery.tile.floor"]),
+                 ("top", "no.such.top", wall_tops()))
+        for key, bad, known in cases:
+            doc = {"id": "t.names", **BASE, "spawn": [2, 4], "plan": SMALL, key: bad}
+            (self.kit_dir / "rooms" / "t.names.json").write_text(json.dumps(doc), encoding="utf-8")
+            code, out, err = self.run_kit("check", "t.names")
+            with self.subTest(key=key):
+                self.assertEqual(code, 2, out + err)
+                for name in known:
+                    self.assertIn(name, err)
+
+
 class RealGameMapsAreNotRoomsTests(unittest.TestCase):
     """저장소의 실제 게임 맵·시험 맵을 repaint가 방으로 잘못 알고 고치지 않는다(읽기만, dry-run)."""
 

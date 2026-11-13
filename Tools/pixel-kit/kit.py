@@ -28,6 +28,7 @@ def main(argv=None) -> int:
     p.add_argument("--repo", default=str(REPO_ROOT), help="export가 쓸 저장소 뿌리(기본: 이 도구가 든 저장소)")
     p.add_argument("--dry-run", action="store_true", help="export·room build·room repaint: 쓸 파일을 찍기만 한다")
     p.add_argument("--force", action="store_true", help="room build: 이미 있는 방 파일을 평면에서 통째로 다시 쓴다(LDtk에서 손으로 고친 것은 지워진다 — 그때는 room repaint. 시트는 덧붙이기만)")
+    p.add_argument("--list", action="store_true", help="room styles: 그리지 않고 벽 모양·띠 색·바닥 이름만 찍는다")
     args = p.parse_intermixed_args(argv)  # 옵션을 id 앞에 써도 된다
     if args.out is None and args.command not in ("test-level", "room"):   # 이 둘은 None을 "저장소의 기본 자리"로 읽는다
         args.out = str(REPO_ROOT / "output" / "pixel-kit")
