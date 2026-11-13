@@ -20,9 +20,14 @@
    ]},
   {"id": "bakery.scene.street", "kind": "scene", "size": [7, 8],
    "fill": [
-     {"tile": "bakery.tile.sidewalk", "rect": [0, 0, 7, 6]},
-     {"tile": "bakery.tile.grass", "rect": [0, 6, 7, 2]}
+     {"tile": "bakery.tile.grass", "rect": [0, 0, 7, 6]},
+     {"tile": "bakery.tile.sidewalk", "rect": [0, 6, 7, 2]}
    ],
    "hang": [],
-   "place": []}
+   "place": [
+     {"id": "bakery.exterior.flat", "cell": [1, 6], "dy": -11},
+     {"part": "prop.plant", "cell": [0, 6], "dx": 14, "dy": -10},
+     {"part": "prop.plant", "cell": [6, 6], "dx": 6, "dy": -10},
+     {"id": "bakery.a-board", "cell": [2, 7], "dx": 30, "dy": -10}
+   ]}
 ]

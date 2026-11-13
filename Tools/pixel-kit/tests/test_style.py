@@ -51,7 +51,7 @@ class StyleTests(unittest.TestCase):
     def test_ramp_counts(self):
         raw = json.loads(STYLE_PATH.read_text(encoding="utf-8"))["palette"]
         self.assertEqual(len(raw["wood.warm"]), 5)
-        self.assertEqual(len(raw["roof.slate"]), 4)
+        self.assertEqual(len(raw["roof.slate"]), 5)
         self.assertEqual(len(raw["white"]), 1)
         self.assertEqual(len(raw["bread"]), 4)
 

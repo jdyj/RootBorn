@@ -385,3 +385,32 @@ def menu_board(spec: dict, ctx) -> Canvas:
     for y, x, n in MENU_CHALK:
         cv.hline(x, y, n, chalk)
     return cv
+
+
+# ---------- 입간판 ----------
+
+A_BOARD_CHALK = ((6, 4, 7), (9, 4, 8), (12, 4, 5), (12, 10, 2))   # (y, x, 길이)
+
+
+@register("prop.a-board")
+def a_board(spec: dict, ctx) -> Canvas:
+    """가게 앞에 세우는 칠판 입간판. 나무 틀 + 분필 줄(글자 없음) + 두 다리."""
+    wood = [_col(spec, ctx, f"wood.warm.{i}") for i in range(4)]
+    board = [_col(spec, ctx, f"board.green.{i}") for i in range(2)]
+    chalk = _col(spec, ctx, "white.0")
+    w = 16
+    cv = Canvas(w, 23)
+    cv.rect(6, 0, 4, 1, wood[0])                              # 손잡이
+    cv.rect(0, 1, w, 17, wood[2])                             # 틀: 위·왼쪽 밝게, 아래·오른쪽 어둡게
+    cv.hline(0, 1, w, wood[3])
+    cv.vline(0, 1, 17, wood[3])
+    cv.hline(0, 17, w, wood[1])
+    cv.vline(w - 1, 1, 17, wood[1])
+    cv.rect(2, 3, w - 4, 13, board[1])                        # 칠판
+    cv.hline(2, 3, w - 4, board[0])                           # 틀 밑 짙은 줄
+    for y, x, n in A_BOARD_CHALK:
+        cv.hline(x, y, n, chalk)
+    for x in (1, w - 3):                                      # 다리
+        cv.rect(x, 18, 2, 5, wood[1])
+        cv.vline(x, 18, 5, wood[2])
+    return cv

@@ -24,5 +24,6 @@
      ["bread.baguette"]
    ],
    "states": {"empty": {"rows": [[], [], [], []]}}},
-  {"id": "bakery.menu-board", "kind": "prop", "part": "prop.menu-board", "art_cells": [1, 1]}
+  {"id": "bakery.menu-board", "kind": "prop", "part": "prop.menu-board", "art_cells": [1, 1]},
+  {"id": "bakery.a-board", "kind": "prop", "part": "prop.a-board", "art_cells": [1, 1]}
 ]
