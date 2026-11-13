@@ -208,7 +208,8 @@ namespace Rootborn.Simulation.Pace
         {
             PlayAtlas atlas = PlayAtlas.Load(PlayAtlas.FindRepoRoot());
             using var body = new HeadlessBody(atlas);
-            var runner = new PlayRunner(body, PlayPolicyCatalog.Default().Create(policy, atlas), seed, settings, atlas, name);
+            IPlayPolicy made = PlayerTypeCatalog.Has(policy) ? PlayerTypeCatalog.Create(policy, atlas) : PlayPolicyCatalog.Default().Create(policy, atlas);
+            var runner = new PlayRunner(body, made, seed, settings, atlas, name);
             var recorder = new PaceRecorder(body, runner, atlas);
             var watch = Stopwatch.StartNew();
             PlayResult play = runner.Run();
@@ -228,6 +229,31 @@ namespace Rootborn.Simulation.Pace
             PaceReport.Write(dir, info, steps, HeadlessBody.FrameSeconds);
             PlayRecord.Write(play, atlas.RepoRoot, settings, ScreenCatalog.Create().Screens.Select(s => s.Id), atlas);
             return new PacePlayResult { Play = play, Steps = steps, FramesBeforeFirstStep = recorder.FramesBeforeFirstStep, Info = info, OutputDir = dir };
+        }
+
+        /// <summary>플레이어 유형 넷을 같은 설정으로 돌려 유형마다 보고서(&lt;이름&gt;-&lt;유형&gt;)와 비교 보고서(&lt;이름&gt;/report.md)를 쓴다.</summary>
+        public static string Compare(string name, PlaySettings settings, int seed) => Compare(name, settings, seed, out _);
+
+        /// <param name="failures">알려진 결함이 아닌 불변식 실패(유형 이름과 무엇).</param>
+        public static string Compare(string name, PlaySettings settings, int seed, out List<string> failures)
+        {
+            failures = new List<string>();
+            var entries = new List<PaceCompareEntry>();
+            foreach (string type in PlayerTypeCatalog.Names)
+            {
+                PacePlayResult r = Run(type, seed, settings, name + "-" + type);
+                if (r.Play.Failure != null && Rootborn.Simulation.Tests.KnownDefects.Matches(r.Play.Failure) == null) failures.Add(type + ": " + FirstLine(r.Play.Failure.What));
+                entries.Add(new PaceCompareEntry { Type = type, Info = r.Info, Steps = r.Steps });
+            }
+            string dir = PaceReport.Directory(PlayAtlas.FindRepoRoot(), name);
+            PaceCompare.Write(dir, name, entries, HeadlessBody.FrameSeconds);
+            return dir;
+        }
+
+        private static string FirstLine(string s)
+        {
+            int nl = s.IndexOf('\n');
+            return nl < 0 ? s : s.Substring(0, nl);
         }
 
         private static string End(PlayResult play, PlaySettings settings)

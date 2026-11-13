@@ -31,6 +31,16 @@ namespace Rootborn.Simulation
             }
         }
 
+        /// <summary>
+        /// 잠자리(하루 마감 지점)는 고르지 않는다 — 자는 때는 달리는 쪽의 하루 마감 순서(잘 시간·지침·할 것 없음)가 정한다.
+        /// 이야기만 따라가는 사람은 빼지 않는다(목표를 다 채우면 스스로 하루를 마감한다).
+        /// </summary>
+        public static PlayView LeaveSleepToBedtime(PlayView view)
+        {
+            view.Actions.RemoveAll(a => a.InteractionKind == Rootborn.Screens.Day.DayResultScreen.InteractionKind);
+            return view;
+        }
+
         public static bool Has(string name) => Types.Exists(t => t.Name == name);
 
         public static string Label(string name) => Types.Find(t => t.Name == name).Label ?? name;
@@ -57,6 +67,7 @@ namespace Rootborn.Simulation
 
         public PlayAction Choose(PlayView view, PlayMemory memory, Random random)
         {
+            PlayerTypeCatalog.LeaveSleepToBedtime(view);
             Observe(view);
             PlayAction a = _minigame.Choose(view, random) ?? Pick.Best(view.Actions, x => Score(view, memory, x), random);
             return Remember(a);
@@ -110,7 +121,7 @@ namespace Rootborn.Simulation
 
         public string Name => PlayerTypeCatalog.Explorer;
 
-        public PlayAction Choose(PlayView view, PlayMemory memory, Random random) => _minigame.Choose(view, random) ?? Pick.Best(view.Actions, a =>
+        public PlayAction Choose(PlayView view, PlayMemory memory, Random random) => _minigame.Choose(view, random) ?? Pick.Best(PlayerTypeCatalog.LeaveSleepToBedtime(view).Actions, a =>
         {
             double tried = 3.0 * memory.Tried(a.Key);
             if (a.Category == "interaction") return 10 - tried;
@@ -141,6 +152,7 @@ namespace Rootborn.Simulation
 
         public PlayAction Choose(PlayView view, PlayMemory memory, Random random)
         {
+            PlayerTypeCatalog.LeaveSleepToBedtime(view);
             PlayAction a = _minigame.Choose(view, random);
             if (a != null) return a;
             if (view.TopScreen != null && !view.OpenScreens.Contains(ScreenCatalog.ObjectiveJournal))
