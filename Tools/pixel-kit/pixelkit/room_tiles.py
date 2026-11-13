@@ -1040,6 +1040,16 @@ def plan_tiles(grid: List[List[int]], face_height: int = 2, band: int = 16) -> R
                     yy -= 1
                 if kind(x, yy) == "cap":
                     narrow[x, y] = X[x, yy]
+    # 좁은 정면 칸의 옆 자리는 옆 정면을 늘여 그린다(아래 cells). 그러면 옆 정면은 이 칸 안으로 이어지고 끝은 좁은 정면의
+    # 옆변(외곽선)이 된다 — 윗면 옆처럼 그 쪽 끝 표시를 떼어, 정면 칸 자기 변에 외곽선이 한 번 더(일찍) 그어지지 않게 한다.
+    for (x, y) in narrow:
+        for dx, flag in ((-1, "r"), (1, "l")):
+            nk = keys[y][x + dx] if 0 <= x + dx < len(keys[y]) else None
+            if nk and nk.startswith("face:") and (x + dx, y) not in narrow:
+                parts = nk.split(":")
+                if len(parts) == 3 and flag in parts[2]:
+                    rest = parts[2].replace(flag, "")
+                    keys[y][x + dx] = f"face:{parts[1]}" + (f":{rest}" if rest else "")
 
     def side(nx, ny):
         k = kind(nx, ny)
@@ -1094,13 +1104,24 @@ def plan_tiles(grid: List[List[int]], face_height: int = 2, band: int = 16) -> R
             if c == "B":
                 band_map[(y * CELL + i // CELL) * pw + x * CELL + i % CELL] = 1
 
+    def face_cols(x, y):
+        """정면 칸의 맨 아랫줄에서 정면 그림인 열 — 그 밑 바닥의 그늘은 이 열에만. 좁은 정면 칸은 좁은 폭과 옆으로 늘인 정면."""
+        if (x, y) not in narrow:
+            return set(range(CELL))
+        a, b = narrow[x, y]
+        bottom = cells[x, y][(CELL - 1) * CELL:]
+        return set(range(a, b)) | {px for px, c in enumerate(bottom) if c.startswith("face:")}
+
+    def shade_key(cols):
+        if not cols:
+            return "floor"
+        lo, hi = min(cols), max(cols) + 1        # 사이에 빠진 열은 이 칸의 벽 그림에 덮인 자리다(바닥이 보이지 않는다)
+        return "floor:shade" if (lo, hi) == (0, CELL) else f"floor:shade:{lo}-{hi}"
+
     def floor_key(x, y):
         if kind(x, y - 1) != "face":
             return "floor"
-        if (x, y - 1) in narrow:
-            a, b = narrow[x, y - 1]
-            return f"floor:shade:{a}-{b}"
-        return "floor:shade"
+        return shade_key(face_cols(x, y - 1))
 
     wall: List[List[Optional[str]]] = [[None] * len(r) for r in keys]
     ground: List[List[Optional[str]]] = [[None] * len(r) for r in keys]
@@ -1141,12 +1162,9 @@ def plan_tiles(grid: List[List[int]], face_height: int = 2, band: int = 16) -> R
             if "F" in cls:
                 # 벽 칸 밑 바닥: 위 칸 정면의 그림자는 이 칸에서 바닥이 비치는 맨 위 두 줄의 열에만 의미가 있다
                 shown = {i % CELL for i in range(2 * CELL) if cls[i] == "F"}
-                key = floor_key(x, y)
-                if key != "floor":
-                    a, b = narrow.get((x, y - 1), (0, CELL))
-                    cols = sorted(shown & set(range(a, b)))
-                    key = "floor" if not cols else ("floor:shade" if (cols[0], cols[-1] + 1) == (0, CELL)
-                                                     else f"floor:shade:{cols[0]}-{cols[-1] + 1}")
+                key = "floor"
+                if kind(x, y - 1) == "face":
+                    key = shade_key(shown & face_cols(x, y - 1))
                 ground[y][x] = key
     return RoomTiles(wall, ground)
 

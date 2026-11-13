@@ -392,6 +392,145 @@ class BandTests(unittest.TestCase):
                 self.assertTrue(all(cv.get(x, 16) == ol and cv.get(x, 31) == ol for x in range(32)))
 
 
+# 가로 벽(3줄, 1..3열)의 정면이 세로 벽(4열)과 만난다. 세로 벽은 정면 줄보다 한 칸 남쪽까지 내려와 그 끝에 좁은 정면
+# (4, 7)·(4, 8)이 생기고, 가로 벽 아래 줄 정면 (3, 7)은 오른쪽 이웃 (4, 7)의 왼쪽 자리로 늘여 그려진다. 세로 벽이 정면 줄
+# 위로도 이어지는 T자(새 집 평면 (12, 12)~(13, 13) 둘레와 같은 배치).
+TJOIN = grid(
+    "#########",
+    "#########",
+    "#########",
+    "#...#...#",
+    "#...#...#",
+    "#####...#",
+    "#####...#",
+    "#####...#",
+    "#...#...#",
+    "#.......#",
+    "#.......#",
+    "#########",
+)
+# 세로 벽이 정면 줄 위로 이어지지 않는 ㄱ자, 가로 벽이 세로 벽 양쪽에 있는 십자.
+LJOIN = grid(
+    "#########",
+    "#########",
+    "#########",
+    "#.......#",
+    "#.......#",
+    "#####...#",
+    "#####...#",
+    "#####...#",
+    "#...#...#",
+    "#.......#",
+    "#.......#",
+    "#########",
+)
+CROSS = grid(
+    "#########",
+    "#########",
+    "#########",
+    "#...#...#",
+    "#...#...#",
+    "#########",
+    "#########",
+    "#########",
+    "#...#...#",
+    "#.......#",
+    "#.......#",
+    "#########",
+)
+
+
+def mirror(g):
+    return [list(reversed(row)) for row in g]
+
+
+def compose(g, wall="paper", face_height=2):
+    """방 전체 그림(Ground 먼저, Wall 위 — 게임 순서). 칸 32px."""
+    tiles = plan_tiles(g, face_height, wall_band(wall))
+    h, w = len(g), len(g[0])
+    out = Canvas(w * 32, h * 32)
+    for layer in (tiles.ground, tiles.wall):
+        for y, row in enumerate(layer):
+            for x, key in enumerate(row):
+                if key is None:
+                    continue
+                cv = draw_tile(STYLE, key, wall, FLOOR_SPEC)
+                for py in range(32):
+                    for px in range(32):
+                        c = cv.get(px, py)
+                        if c[3]:
+                            out.px(x * 32 + px, y * 32 + py, c)
+    return tiles, out
+
+
+class FaceMeetsVerticalWallTests(unittest.TestCase):
+    """가로 벽 정면이 세로 벽(좁은 정면)과 만나는 끝: 정면은 세로 벽 칸 안으로 늘여 그려지므로 끝 외곽선과 밑 그림자도
+    늘인 자리의 끝(좁은 정면의 옆변)까지 가야 한다. 정면 칸 자기 변(칸 경계)에서 일찍 끝나면 안 된다."""
+
+    def outline_columns(self, cv, x0, x1, y0, y1):
+        ol = STYLE.outline
+        return {x for x in range(x0, x1) if all(cv.get(x, y) == ol for y in range(y0, y1))}
+
+    def check(self, g, face_cell, narrow_cell):
+        (fx, fy), (nx, ny) = face_cell, narrow_cell
+        for wall in wall_styles():
+            tiles, cv = compose(g, wall)
+            layout = tile_layout(tiles.wall[ny][nx])
+            with self.subTest(wall=wall):
+                self.assertIsNotNone(layout.narrow, tiles.wall[ny][nx])
+                a, b = layout.narrow
+                lo, hi = min(fx, nx) * 32, (max(fx, nx) + 1) * 32
+                # 정면 줄(그 칸 높이 전체)에서 위아래로 꽉 찬 외곽선 열은 좁은 정면의 두 옆변뿐이다
+                self.assertEqual(self.outline_columns(cv, lo, hi, fy * 32, fy * 32 + 32),
+                                 {nx * 32 + a, nx * 32 + b - 1}, tiles.wall[fy][fx])
+
+    def test_face_end_outline_is_at_the_narrow_face_not_at_the_cell_edge(self):
+        self.check(TJOIN, (3, 7), (4, 7))
+
+    def test_mirrored(self):
+        self.check(mirror(TJOIN), (5, 7), (4, 7))
+
+    def test_l_join_and_cross(self):
+        self.check(LJOIN, (3, 7), (4, 7))
+        self.check(mirror(LJOIN), (5, 7), (4, 7))
+        self.check(CROSS, (3, 7), (4, 7))
+        self.check(CROSS, (5, 7), (4, 7))
+
+    def test_face_neighbour_of_a_narrow_face_has_no_end_mark_toward_it(self):
+        self.assertNotIn("r", plan_tiles(TJOIN).wall[7][3].split(":")[-1])
+        self.assertNotIn("l", plan_tiles(mirror(TJOIN)).wall[7][5].split(":")[-1])
+
+    def test_floor_shade_runs_under_every_face_pixel(self):
+        """바닥이 보이는 맨 위 두 줄은 바로 위 픽셀이 정면이면(그 칸의 맨 아랫줄이 정면 그림이면) 그늘, 아니면 그늘이 없다."""
+        plain = draw_tile(STYLE, "floor", "paper", FLOOR_SPEC)
+        full = draw_tile(STYLE, "floor:shade", "paper", FLOOR_SPEC)
+        # 바닥 그림에서 이미 가장 어두운 색인 열(나무 이음 등)은 그늘이 있어도 같아 보인다 — 그 열은 보지 않는다
+        visible = {px for px in range(32) if any(plain.get(px, py) != full.get(px, py) for py in (0, 1))}
+        self.assertGreater(len(visible), 16)
+        for name, g in (("T", TJOIN), ("T mirror", mirror(TJOIN)), ("L", LJOIN), ("cross", CROSS),
+                        ("sample", SAMPLE), ("shapes", SHAPES), ("end", END)):
+            tiles = plan_tiles(g)
+            for y, row in enumerate(tiles.ground):
+                for x, key in enumerate(row):
+                    if key is None or y == 0:
+                        continue
+                    above = tiles.wall[y - 1][x]
+                    face_cols = set()
+                    if above is not None and above.startswith("face:"):
+                        lay = tile_layout(above)
+                        face_cols = set(range(32)) if lay is None else {px for px, py in drawn(lay) if py == 31}
+                    wall_here = tiles.wall[y][x]
+                    lay_here = tile_layout(wall_here) if wall_here else None
+                    covered = drawn(lay_here) if lay_here else (rect(0, 0, 32, 32) if wall_here else frozenset())
+                    floor_cv = draw_tile(STYLE, key, "paper", FLOOR_SPEC)
+                    for px in range(32):
+                        if (px, 0) in covered or px not in visible:
+                            continue
+                        shaded = any(floor_cv.get(px, py) != plain.get(px, py) for py in (0, 1))
+                        with self.subTest(grid=name, cell=(x, y), col=px, key=key, above=above):
+                            self.assertEqual(shaded, px in face_cols)
+
+
 class KeyTests(unittest.TestCase):
     def test_every_planned_key_reads_back(self):
         for key in wall_keys(SAMPLE, SHAPES, BOX, MID, END) + wall_keys(MID, END, band=12):
