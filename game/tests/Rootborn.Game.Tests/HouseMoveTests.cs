@@ -83,11 +83,82 @@ namespace Rootborn.Game.Tests
         private static IEnumerable<(string, GridPoint, FurniturePlacementDirection)> Placement(GameSession game)
             => game.House.Placed.Select(p => (p.Definition.StableId, p.Anchor, p.Direction));
 
-        /// <summary>옛 빌드의 집: 옛 maps.json의 House는 충돌 규칙 collider-layers에 층이 비어 있어(커밋 17f854976 전) 28x18 모든 칸이 열린 바닥이었다. 도착 지점은 같다.</summary>
+        /// <summary>
+        /// 옛 빌드의 집(2026-11-14 이전 House 맵). 옛 빌드는 충돌 규칙과 상관없이 LDtk의 칠한 Collision 층(값 1)을 덮어 막힌 칸을 정했고,
+        /// 가구 방(FurnitureRoom)이 그 칸을 고정 칸으로 만들었다 — 옛 집에서 133칸은 가구를 놓을 수 없었다. 그 칸 표를 고정 파일
+        /// (Fixtures/old-house/furniture-fixed-cells.txt)에서 읽는다. 좌표는 이 테스트의 HouseRoom과 같은 규칙(맵 칸 그대로)이다.
+        /// 실제 옛 빌드 실행 파일로 연 것이 아니라 옛 빌드의 복원(Restore)과 이 격자로 흉내 낸 자동 테스트다.
+        /// </summary>
         private static PlacementGrid OldBuildHouseGrid()
         {
             var now = HouseRoom.Grid;
-            return new PlacementGrid(now.FloorCells, null, now.Spawn, now.Approaches);
+            var fixedCells = new List<GridPoint>();
+            int y = 0;
+            foreach (var raw in File.ReadAllLines(Path.Combine(System.AppContext.BaseDirectory, "Fixtures", "old-house", "furniture-fixed-cells.txt")))
+            {
+                var line = raw.Trim();
+                if (line.Length == 0 || line.StartsWith("//")) continue;
+                for (int x = 0; x < line.Length; x++)
+                    if (line[x] == '#') fixedCells.Add(new GridPoint(x, y));
+                y++;
+            }
+
+            Assert.That(y, Is.EqualTo(18), "고정 파일은 옛 집 맵과 같은 줄 수");
+            return new PlacementGrid(now.FloorCells, fixedCells, now.Spawn, now.Approaches);
+        }
+
+        private static HouseFurnitureLayout OldBuildRestore(IReadOnlyList<FurniturePlacementSaveData> records)
+        {
+            var oldBuild = new HouseFurnitureLayout(new HousePlacementModel(OldBuildHouseGrid()), HouseRoom.SurfaceId);
+            oldBuild.Restore(records, TestWorld.Definitions.All<FurnitureDefinition>());
+            return oldBuild;
+        }
+
+        // 새 집에서 걸을 수 있지만(고정 칸이 아님) 옛 집에서는 막혀 있던 칸이 하나 이상 있다(그 수는 고정하지 않는다 — 맵이 바뀌면 달라진다).
+        private static bool OldHouseBlocksSomeNewFloor()
+        {
+            var old = OldBuildHouseGrid();
+            return HouseRoom.Grid.FloorCells.Any(c => !HouseRoom.Grid.IsFixed(c) && old.IsFixed(c));
+        }
+
+        private static bool OldBuildAllows(FurnitureDefinition definition, GridPoint at)
+        {
+            var empty = new HouseFurnitureLayout(new HousePlacementModel(OldBuildHouseGrid()), HouseRoom.SurfaceId);
+            return empty.CanPlace(definition, at, FurniturePlacementDirection.North);
+        }
+
+        // 한 칸 기록을 새 집이 읽으면 어디에 놓이는가(옮긴 자리). 보관되면 null.
+        private static GridPoint? LandingOf(string furnitureId, GridPoint recordAt)
+        {
+            var layout = new HouseFurnitureLayout(new HousePlacementModel(HouseRoom.Grid), HouseRoom.SurfaceId);
+            layout.RestoreRelocating(new[] { Record(furnitureId, recordAt) }, TestWorld.Definitions.All<FurnitureDefinition>());
+            return layout.Placed.Count == 1 ? layout.Placed[0].Anchor : (GridPoint?)null;
+        }
+
+        // 새 집의 벽 칸 중, 그 가구를 옮기면 옛 집에서 놓을 수 있는(oldAllows) 칸 / 막힌(!oldAllows) 칸에 떨어지는 첫 칸. 없으면 분명히 실패한다.
+        private static GridPoint WallThatMovesOnto(string furnitureId, bool oldAllows)
+        {
+            var definition = TestWorld.Definitions.Get<FurnitureDefinition>(furnitureId);
+            Assert.That(OldHouseBlocksSomeNewFloor(), Is.True, "전제: 옛 집에서 막혔던 칸이 새 집 바닥에 있다");
+            foreach (var wall in InnerWallCells())
+            {
+                var landing = LandingOf(furnitureId, wall);
+                if (landing != null && OldBuildAllows(definition, landing.Value) == oldAllows) return wall;
+            }
+
+            Assert.Fail(furnitureId + "를 옮기면 옛 집에서 " + (oldAllows ? "놓을 수 있는" : "막힌") + " 칸에 떨어지는 벽 칸이 없다 — 테스트 준비를 다시 짠다");
+            return default;
+        }
+
+        // 새 집에서도 옛 집에서도 놓을 수 있는 첫 자리.
+        private static GridPoint FreeInBoth(GameSession game, string furnitureId)
+        {
+            var definition = TestWorld.Definitions.Get<FurnitureDefinition>(furnitureId);
+            for (int skip = 0; ; skip++)
+            {
+                var at = HouseRoom.FirstFreeAnchor(game, furnitureId, skip);
+                if (OldBuildAllows(definition, at)) return at;
+            }
         }
 
         [Test]
@@ -186,12 +257,7 @@ namespace Rootborn.Game.Tests
                 (FreeDesk, HouseRoom.SurfaceId, extra.X, extra.Y, FurniturePlacementDirection.North, string.Empty, string.Empty, "<none>"),
             }), "옮긴 것은 새 자리, 모르는 것은 원래 자리, 아무것도 빠지지 않는다");
 
-            // 상위호환: 옛 빌드(옮기기가 없는 Restore, 모든 칸이 바닥인 옛 집)가 같은 파일을 읽으면 가구가 모두 놓인다(새 벽 칸은 옛 집에서 바닥).
-            var oldBuild = new HouseFurnitureLayout(new HousePlacementModel(OldBuildHouseGrid()), HouseRoom.SurfaceId);
-            oldBuild.Restore(file.Items, TestWorld.Definitions.All<FurnitureDefinition>());
-            Assert.That(oldBuild.Placed.Select(p => (p.Definition.StableId, p.Anchor, p.Direction)), Is.EquivalentTo(Placement(game)));
-            Assert.That(oldBuild.UnresolvedCount, Is.EqualTo(1), "데이터에 없는 가구는 옛 빌드도 그대로 들고 있다");
-            Assert.That(oldBuild.BuildSaveRecords().Select(Whole), Is.EquivalentTo(file.Items.Select(Whole)), "옛 빌드가 다시 써도 기록이 그대로");
+            // 상위호환(옛 빌드가 이 파일을 읽는가)은 실제 옛 집 격자로 따로 본다: UpwardCompat_* 두 테스트.
 
             // 옛 빌드가 다녀간 뒤(그 집에서 책상을 옛 벽 자리로 되돌려 저장) 새 빌드로 돌아오면 다시 옮긴다.
             var back = file.Items.Select(i => i.Clone()).ToArray();
@@ -200,6 +266,65 @@ namespace Rootborn.Game.Tests
             WriteLayout(saves, back);
             var again = EnterHouse(saves);
             Assert.That(Placement(again).Single(p => p.Item1 == FreeDesk && p.Item3 == FurniturePlacementDirection.East).Item2, Is.EqualTo(desk), "같은 규칙으로 같은 자리");
+        }
+
+        [Test]
+        public void UpwardCompat_PieceMovedOntoACellTheOldHouseAlsoAllows_StaysAtTheSamePlaceInTheOldBuild()
+        {
+            using var saves = new TempSaves();
+            var wall = WallThatMovesOnto(FreeDesk, oldAllows: true);
+            WriteLayout(saves, new[] { Record(FreeDesk, wall, FurniturePlacementDirection.East) });
+            var game = EnterHouse(saves);
+            var desk = game.House.Placed.Single();
+
+            // 플레이어가 책상을 하나 더 놓아(새 집과 옛 집 모두 놓을 수 있는 자리) 배치 파일이 옮긴 자리로 다시 써진다.
+            var extra = FreeInBoth(game, FreeDesk);
+            Assert.That(game.PlaceFurniture(FreeDesk, extra, FurniturePlacementDirection.North), Is.True);
+            Assert.That(saves.Store.TryRead<FurniturePlacementLayoutSaveData>(TestWorld.Slot, SaveFileNames.HouseFurnitureLayout(0), out var file), Is.True);
+
+            // 옛 빌드(옮기기가 없는 Restore + 실제 옛 집 격자): 같은 자리에 놓이고, 다시 써도 기록이 그대로.
+            var oldBuild = OldBuildRestore(file.Items);
+            Assert.That(oldBuild.Placed.Select(p => (p.Definition.StableId, p.Anchor, p.Direction)), Is.EquivalentTo(Placement(game)));
+            Assert.That(oldBuild.Placed.Any(p => p.Anchor.Equals(desk.Anchor) && p.Direction == FurniturePlacementDirection.East), Is.True);
+            Assert.That(oldBuild.UnresolvedCount, Is.Zero);
+            Assert.That(oldBuild.BuildSaveRecords().Select(Whole), Is.EquivalentTo(file.Items.Select(Whole)));
+        }
+
+        [Test]
+        public void UpwardCompat_PieceMovedOntoACellTheOldHouseBlocks_IsOnlyKeptByTheOldBuild_AndComesBackInTheNewOne()
+        {
+            using var saves = new TempSaves();
+            var wall = WallThatMovesOnto(ChestFurniture, oldAllows: false);
+            var chest = Record(ChestFurniture, wall, FurniturePlacementDirection.South);
+            chest.Storage = new FurnitureStorageSaveData
+            {
+                Items = new[] { new PlayerInventoryItemSaveData { ItemId = "Wood", Count = 5 }, new PlayerInventoryItemSaveData { ItemId = "item.gone-from-data", Count = 2 } },
+                Requests = new[] { "old-request" },
+            };
+            WriteLayout(saves, new[] { chest });
+            var game = EnterHouse(saves);
+            var placedChest = game.House.Placed.Single();
+            Assert.That(placedChest.Anchor, Is.Not.EqualTo(wall), "벽 칸에서 옮겨졌다");
+            TestContext.Out.WriteLine($"벽 칸 ({wall.X},{wall.Y}) → 옮긴 자리 ({placedChest.Anchor.X},{placedChest.Anchor.Y})(옛 집에서 막힌 칸)");
+
+            var extra = FreeInBoth(game, FreeDesk);
+            Assert.That(game.PlaceFurniture(FreeDesk, extra, FurniturePlacementDirection.North), Is.True);
+            Assert.That(saves.Store.TryRead<FurniturePlacementLayoutSaveData>(TestWorld.Slot, SaveFileNames.HouseFurnitureLayout(0), out var file), Is.True);
+            var written = file.Items.Single(i => i.FurnitureId == ChestFurniture);
+            Assert.That((written.AnchorX, written.AnchorY), Is.EqualTo((placedChest.Anchor.X, placedChest.Anchor.Y)), "파일에는 옮긴 자리");
+
+            // 옛 빌드: 상자 자리가 옛 집에서 막힌 칸이라 못 놓은 기록으로 들고만 있다(화면에 안 보임). 책상은 놓인다.
+            var oldBuild = OldBuildRestore(file.Items);
+            Assert.That(oldBuild.Placed.Select(p => p.Definition.StableId), Is.EqualTo(new[] { FreeDesk }), "옛 빌드는 상자를 놓지 못한다");
+            Assert.That(oldBuild.UnresolvedCount, Is.EqualTo(1));
+            Assert.That(oldBuild.BuildSaveRecords().Select(Whole), Is.EquivalentTo(file.Items.Select(Whole)),
+                "옛 빌드가 다시 써도 방향·상태·상자 내용물(모르는 아이템·요청 포함)이 그대로 — 잃지 않는다");
+
+            // 새 빌드로 돌아오면 같은 자리에 다시 놓이고 내용물을 꺼낼 수 있다.
+            var back = EnterHouse(saves);
+            var again = back.House.Placed.Single(p => p.Definition.StableId == ChestFurniture);
+            Assert.That((again.Anchor, again.Direction), Is.EqualTo((placedChest.Anchor, FurniturePlacementDirection.South)));
+            Assert.That(back.StorageAt(again.InstanceId).CountOf(back.Item("Wood")), Is.EqualTo(5));
         }
 
         [Test]
