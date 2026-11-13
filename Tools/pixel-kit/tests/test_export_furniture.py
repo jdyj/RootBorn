@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 from PIL import Image
@@ -172,6 +173,80 @@ class ExportFurnitureTests(Base):
         self.assertIn(export.FURNITURE_DEFS, plan.problems[0].message)
         self.assertEqual((written, self.snapshot()), ([], snap))
 
+    # --- 고침 1차 ---
+    def tmp_files(self):
+        return sorted(p.relative_to(self.root).as_posix() for p in self.root.rglob("*.tmp"))
+
+    def test_staging_failure_of_definitions_leaves_every_target_untouched(self):
+        before = self.defs.read_bytes()
+        plan = export.export_furniture(self.recipe, self.kit, self.root)
+        real = export._write_staged
+
+        def failing(path, data):
+            if Path(path).name.startswith("FurnitureDefinition"):
+                raise OSError("디스크가 가득 찼다")
+            real(path, data)
+        with mock.patch.object(export, "_write_staged", failing):
+            with self.assertRaises(OSError):
+                export.apply(plan, self.root)
+        self.assertEqual(self.defs.read_bytes(), before)
+        for sub in ("art", "data/atlases"):      # 빈 폴더는 남아도 파일은 없어야 한다
+            self.assertEqual([p for p in (self.root / sub).rglob("*") if p.is_file()], [])
+        self.assertEqual(self.tmp_files(), [])
+
+    def test_replace_failure_of_definitions_names_what_was_replaced(self):
+        before = self.defs.read_bytes()
+        plan = export.export_furniture(self.recipe, self.kit, self.root)
+        real = os.replace
+
+        def failing(src, dst):
+            if Path(dst).name.startswith("FurnitureDefinition"):
+                raise OSError("잠겨 있다")
+            real(src, dst)
+        with mock.patch.object(export, "_replace", failing):
+            with self.assertRaises(export.ExportWriteError) as cm:
+                export.apply(plan, self.root)
+        self.assertEqual(self.defs.read_bytes(), before)
+        self.assertEqual(cm.exception.replaced,
+                         ["art/props/test/test.shelf.png", "data/atlases/art/props/test/test.shelf.png.atlas.json"])
+        self.assertIn("art/props/test/test.shelf.png", str(cm.exception))
+        self.assertEqual(self.tmp_files(), [])
+
+    def test_two_recipes_with_the_same_target_are_refused(self):
+        other = copy.deepcopy(self.recipe)
+        other["id"] = "test.shelf2"
+        plans = [export.export_furniture(self.recipe, self.kit, self.root),
+                 export.export_furniture(other, self.kit, self.root)]
+        snap = self.snapshot()
+        plan = export.merge_plans(plans)
+        self.assertEqual([p.code for p in plan.problems], ["export-duplicate-target"])
+        self.assertIn("test.shelf", plan.problems[0].message)
+        self.assertIn("test.shelf2", plan.problems[0].message)
+        self.assertEqual((export.apply(plan, self.root), self.snapshot()), ([], snap))
+
+    def test_wider_art_than_footprint_is_unsupported_with_replaces(self):
+        self.recipe["art_cells"] = [3, 3]
+        plan, written = self.run_export()
+        self.assertEqual([p.code for p in plan.problems], ["export-unsupported-furniture"])
+        self.assertIn("art_cells", plan.problems[0].message)
+        self.assertEqual(written, [])
+
+    def test_unreadable_definitions_file_is_reported_as_such(self):
+        self.defs.unlink()
+        self.defs.mkdir()
+        plan, written = self.run_export()
+        self.assertEqual([p.code for p in plan.problems], ["export-unreadable-definitions"])
+        self.assertEqual(written, [])
+
+    def test_malformed_definitions_elsewhere_is_a_problem_not_a_traceback(self):
+        text = self.defs.read_text("utf-8").rstrip()
+        self.defs.write_text(text[:-1] + ", oops ]", encoding="utf-8")
+        snap = self.snapshot()
+        plan, written = self.run_export()
+        self.assertEqual([p.code for p in plan.problems], ["export-unreadable-definitions"])
+        self.assertIn(export.FURNITURE_DEFS, plan.problems[0].message)
+        self.assertEqual((written, self.snapshot()), ([], snap))
+
     def test_lf_file_and_bom_are_preserved(self):
         self.defs.write_bytes(b"\xef\xbb\xbf" + defs_text("\n").encode("utf-8").rstrip(b"\n"))
         self.run_export()
@@ -229,6 +304,38 @@ class ExportCliTests(unittest.TestCase):
         code, _, err = cli_run(self.root, self.kit, ["bakery.exterior.flat"])
         self.assertEqual(code, 2)
         self.assertIn("아직 없다", err)
+
+    def test_output_prints_replacement_only_when_it_will_change_and_no_change_once(self):
+        code, out, _ = cli_run(self.root, self.kit, ["test.shelf", "--dry-run"])
+        self.assertIn("가구 정의 test.shelf", out)
+        self.assertEqual(out.count("바꿀 것 없음"), 0)
+        code, out, _ = cli_run(self.root, self.kit, ["test.shelf"])
+        self.assertIn("가구 정의 test.shelf", out)
+        for extra in ([], ["--dry-run"]):
+            code, out, _ = cli_run(self.root, self.kit, ["test.shelf", *extra])
+            self.assertEqual(code, 0)
+            self.assertNotIn("가구 정의 test.shelf", out)
+            self.assertEqual(out.count("바꿀 것 없음"), 1, out)
+
+    def test_write_failure_midway_exits_2_and_names_replaced_files(self):
+        import argparse
+        import contextlib
+        import io
+        from pixelkit import cli
+        args = argparse.Namespace(command="export", ids=["test.shelf"], kit=str(self.kit), out=str(self.root),
+                                  scale=None, repo=str(self.root), dry_run=False)
+        real = os.replace
+
+        def failing(src, dst):
+            if Path(dst).name.startswith("FurnitureDefinition"):
+                raise OSError("잠겨 있다")
+            real(src, dst)
+        err = io.StringIO()
+        with mock.patch.object(export, "_replace", failing), contextlib.redirect_stderr(err),                 contextlib.redirect_stdout(io.StringIO()):
+            code = cli.run(args)
+        self.assertEqual(code, 2)
+        self.assertIn("art/props/test/test.shelf.png", err.getvalue())
+        self.assertEqual(sorted(self.root.rglob("*.tmp")), [])
 
     def test_problem_exits_1_and_writes_nothing(self):
         data = json.loads((self.kit / "recipes/test/furniture.json").read_text("utf-8"))

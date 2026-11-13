@@ -5,6 +5,7 @@
 """
 import io
 import json
+import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -19,6 +20,15 @@ FURNITURE_DEFS = "data/interiors/FurnitureDefinition.json"   # 저장소 뿌리 
 ATLAS_ROOT = "data/atlases"
 PROPS_ROOT = "art/props"
 PIXELS_PER_UNIT = 32
+
+
+class ExportWriteError(OSError):
+    """쓰기가 도중에 실패했다. replaced는 그때까지 이미 제자리에 바뀐 파일(뿌리 기준 경로)."""
+
+    def __init__(self, message: str, replaced: List[str]):
+        done = ", ".join(replaced) if replaced else "(없음)"
+        super().__init__(f"{message} — 이미 바뀐 파일: {done}")
+        self.replaced = replaced
 
 
 class ExportError(Exception):
@@ -120,7 +130,10 @@ _STR = r'"((?:[^"\\]|\\.)*)"'
 def _substitute(raw: bytes, replacements: List[Tuple[str, str, str]]) -> bytes:
     """항목마다 tileParts[0].tile의 sprite·name 두 값만 바꾼다. 바뀐 결과는 다시 읽어 검증한다."""
     text = raw.decode("utf-8")
-    expected = json.loads(_strip_bom(text))
+    try:
+        expected = json.loads(_strip_bom(text))
+    except json.JSONDecodeError as e:
+        raise ExportError("export-unreadable-definitions", f"{FURNITURE_DEFS}를 JSON으로 못 읽었다: {e}") from None
     out = text
     for fid, sprite, name in replacements:
         s, e = _find_entity(out, fid)
@@ -160,6 +173,10 @@ def _check_furniture(recipe: dict, defs_text: str, fid: str) -> None:
     cells = recipe.get("cells")
     if not (isinstance(cells, list) and len(cells) == 2 and cells[1] == 1):
         raise ExportError("export-unsupported-furniture", "한 줄 점유(cells [w, 1])만 바꿀 수 있다")
+    art = recipe.get("art_cells")
+    if art[0] != cells[0]:
+        raise ExportError("export-unsupported-furniture",
+                          f"art_cells {art}가 점유 칸 {cells}보다 넓어 pivot이 어긋난다(가로 칸 수가 같아야 한다)")
     want = {(i, 0) for i in range(cells[0])}
     have = {(c["x"], c["y"]) for c in ent.get("footprintCells") or []}
     if want != have:
@@ -192,7 +209,7 @@ def export_furniture(recipe: dict, kit: Kit, repo_root) -> ExportPlan:
             plan.defs_before = raw
             plan.defs_after = _substitute(raw, plan.replace)
         except OSError:
-            plan.problems.append(_problem(rid, "export-unknown-furniture", f"{FURNITURE_DEFS}를 못 읽었다"))
+            plan.problems.append(_problem(rid, "export-unreadable-definitions", f"{FURNITURE_DEFS}를 못 읽었다"))
         except UnicodeDecodeError:
             plan.problems.append(_problem(rid, "export-unreadable-definitions",
                                           f"{FURNITURE_DEFS}가 UTF-8이 아니라 못 읽었다"))
@@ -215,6 +232,12 @@ def merge_plans(plans: List[ExportPlan]) -> ExportPlan:
         out.problems += p.problems
         if p.defs_before is not None:
             out.defs_before = p.defs_before
+    seen: Dict[str, str] = {}
+    for fid, _sprite, name in out.replace:
+        if fid in seen:
+            out.problems.append(Problem("export-duplicate-target",
+                                        f"{seen[fid]}와 {name}가 같은 가구 {fid}를 바꾸려 한다"))
+        seen.setdefault(fid, name)
     if out.replace and not out.problems:
         try:
             out.defs_after = _substitute(out.defs_before, out.replace)
@@ -242,15 +265,50 @@ def pending_writes(plan: ExportPlan, repo_root) -> List[str]:
     return out
 
 
+def _write_staged(path: Path, data: bytes) -> None:
+    path.write_bytes(data)
+
+
+def _replace(src: Path, dst: Path) -> None:
+    os.replace(src, dst)
+
+
+def _remove_quietly(paths) -> None:
+    for p in paths:
+        try:
+            p.unlink()
+        except OSError:
+            pass
+
+
 def apply(plan: ExportPlan, repo_root) -> List[str]:
-    """문제가 있으면 아무것도 쓰지 않는다. 쓴 파일 목록을 돌려준다. 가구 정의는 맨 마지막에 쓴다."""
+    """문제가 있으면 아무것도 쓰지 않는다. 쓴 파일 목록을 돌려준다.
+
+    모든 파일을 먼저 같은 폴더의 `<이름>.tmp`에 쓰고, 다 됐을 때만 PNG, 좌표표, 가구 정의 순서로 바꿔친다.
+    스테이징이 실패하면 임시 파일을 지우고 대상은 그대로 둔다. 바꿔치기가 도중에 실패하면
+    남은 임시 파일을 지우고 이미 바뀐 파일을 ExportWriteError에 담아 알린다."""
     if plan.problems:
         return []
     root = Path(repo_root)
-    written = pending_writes(plan, repo_root)
-    for rel in written:
-        data = plan.defs_after if rel == FURNITURE_DEFS else plan.files[rel]
-        path = root / rel
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(data)
-    return written
+    todo = pending_writes(plan, repo_root)
+    staged: List[Tuple[str, Path, Path]] = []
+    try:
+        for rel in todo:
+            data = plan.defs_after if rel == FURNITURE_DEFS else plan.files[rel]
+            dst = root / rel
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            tmp = dst.with_name(dst.name + ".tmp")
+            staged.append((rel, tmp, dst))    # 쓰다 실패해도 지워지도록 먼저 올린다
+            _write_staged(tmp, data)
+    except OSError:
+        _remove_quietly(t for _, t, _ in staged)
+        raise
+    done: List[str] = []
+    for rel, tmp, dst in staged:
+        try:
+            _replace(tmp, dst)
+        except OSError as e:
+            _remove_quietly(t for _, t, _ in staged if t.exists())
+            raise ExportWriteError(f"{rel}를 못 바꿨다({e})", done) from None
+        done.append(rel)
+    return done

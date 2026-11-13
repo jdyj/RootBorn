@@ -269,13 +269,14 @@ def cmd_export(args, kit: Kit) -> int:
             print(f"{p.code}{where} {p.message}")
         return 1
     pending = export.pending_writes(plan, root)
-    for rid, sprite, name in plan.replace:
-        print(f"가구 정의 {rid}: sprite → {sprite}, name → {name}")
-    if not plan.replace:
-        print("가구 정의: 바꿀 것 없음")
+    if export.FURNITURE_DEFS in pending:
+        for rid, sprite, name in plan.replace:
+            print(f"가구 정의 {rid}: sprite → {sprite}, name → {name}")
     if args.dry_run:
         for rel in plan.files:
             print(f"쓸 파일: {rel}" + ("" if rel in pending else " (같은 내용)"))
+        if not pending:
+            print("바꿀 것 없음")
         print("--dry-run: 아무것도 쓰지 않았다")
         return 0
     if not pending:
