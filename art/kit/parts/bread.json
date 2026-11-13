@@ -86,24 +86,24 @@
 
   { "id": "bread.pretzel", "anchor": "bottom-center",
     "rows": [
-      ".CC...CC.",
-      "CLLC.CLLC",
-      "CL.LCL.LC",
-      ".CL.L.LC.",
-      "..CLCLC..",
-      ".CL.C.LC.",
-      ".CLLCLLC.",
-      "..CC.CC.."
+      ".HLL..LLH.",
+      "HW.CLLC.WC",
+      "L...LC...C",
+      "L..LCCL..C",
+      "LC.L..L.CC",
+      ".LLC..CLC.",
+      "..LW..CC..",
+      "...CCCD..."
     ],
-    "keys": { "L": "bread.2", "C": "bread.1" } },
+    "keys": { "H": "bread.3", "L": "bread.2", "C": "bread.1", "D": "bread.0", "W": "cream.2" } },
 
   { "id": "bread.bun", "anchor": "bottom-center",
     "rows": [
       "...HHHH...",
-      ".LHWHHWLL.",
-      "LHHLLLWLLC",
-      "LLWLLLLLCC",
-      "LLLLLLLCCC",
+      ".LHHLLHLL.",
+      "LHWLLWLLWC",
+      "LLCLWCLWCC",
+      "LWLLCLLCCC",
       ".CCCCCCCD.",
       "..DDDDDD.."
     ],
