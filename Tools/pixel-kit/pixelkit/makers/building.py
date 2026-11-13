@@ -564,6 +564,52 @@ def _inside(a, area) -> bool:
     return area[0] <= a[0] and area[1] <= a[1] and a[0] + a[2] <= area[0] + area[2] and a[1] + a[3] <= area[1] + area[3]
 
 
+def _extents(v: dict, rh: int) -> Dict[str, Tuple[list, list]]:
+    """정면 요소가 차지하는 사각형 [x, y, w, h]: 이름 → (_layout에 적히는 사각형, 그림자까지 포함해 실제로 칠하는 사각형).
+    그리는 코드(_facade)의 식과 같은 값이어야 한다(테스트가 _layout과 맞춰 본다)."""
+    wt = rh
+    base = wt + WALL_BODY
+    fx, fy = v["door_x"], wt + 9
+    door = [fx, fy, DOOR_W, base - fy]
+    bx, bw = v["window_x"], v["window_w"]
+    by0, bb = wt + 14, base + OUT
+    window = [bx - 5, by0 - OUT, bw + 10, bb - by0 + OUT]
+    # 몸통이 벽에 드리운 그림자(오른쪽 볼 바깥 5열, 윗줄 by0-2부터)까지: 위는 볼 윗끝, 아래는 몸통 밑줄
+    window_full = [bx - 5, by0 - OUT, bw + 15, bb - by0 + OUT]
+    sx, sy0 = v["sign_x"], rh - FRONT_EDGE
+    sign = [sx, sy0, SIGN_W, SIGN_H]
+    sign_full = [sx, sy0, SIGN_W + 3, SIGN_H + 3]          # 오른쪽 변과 아랫변 그림자 3px
+    out = {"문틀": (door, door), "창": (window, window_full), "간판": (sign, sign_full)}
+    if v["lamp"] is not None:
+        lx, lamp = v["lamp"]
+        rect = [lx, wt + LAMP_DROP, lamp.w, lamp.h]
+        out["벽등"] = (rect, rect)
+    return out
+
+
+def _outside(rect, wall, size) -> int:
+    """사각형이 벽의 가로 범위(wall = [왼쪽 열, 오른쪽 열])와 캔버스 세로 범위 밖으로 가장 많이 나간 px(안이면 0)."""
+    x, y, w, h = rect
+    return max(0, wall[0] - x, x + w - (wall[1] + 1), -y, y + h - size[1])
+
+
+def _check_facade(ext: dict, wall, size, lc) -> None:
+    out = [f"{n}이 벽 밖으로 {_outside(r, wall, size)}px 나간다" for n, (r, _) in ext.items() if _outside(r, wall, size)]
+    if out:
+        report(lc.problems, "facade-out", "; ".join(out))
+    hit = []
+    names = [n for n in ("문틀", "창", "벽등") if n in ext]
+    for i, a in enumerate(names):
+        for b in names[i + 1:]:
+            if _overlaps(ext[a][1], ext[b][1]):
+                hit.append(f"{a}과 {b}이 겹친다")
+    for n in ("문틀", "창"):          # 간판은 처마 위로 솟으므로 문·창과는 사각형이 닿는지만 본다
+        if _overlaps(ext["간판"][0], ext[n][1]):
+            hit.append(f"간판과 {n}이 겹친다")
+    if hit:
+        report(lc.problems, "facade-overlap", "; ".join(hit))
+
+
 @register("building.shop")
 def shop(spec: dict, ctx) -> Canvas:
     """가게 건물. 그림 폭은 pixels 폭 - 2(외곽선 자리), 높이는 지붕 ROOF_H + 벽 WALL_H."""
@@ -578,6 +624,8 @@ def shop(spec: dict, ctx) -> Canvas:
     cv = Canvas(w, h)
     lc = local(ctx)
     spec["_layout"] = {"size": [w, h], "roof_bottom": ROOF_H - 1}
+    ext = _extents(v, ROOF_H)
+    _check_facade(ext, [3, w - 4], (w, h), lc)             # 그리기 전에 보고 문제는 내되 그림은 그대로 그린다
     roof_fn(cv, spec, ctx, w, ROOF_H)
     area = spec["_layout"]["roof_area"]
     rects = []
@@ -589,6 +637,8 @@ def shop(spec: dict, ctx) -> Canvas:
         for other in rects:
             if _overlaps(rect, other):
                 report(lc.problems, "roof-overlap", f"지붕 위 물건끼리 겹친다({pid} {rect} · {other})")
+        if _overlaps(rect, ext["간판"][1]):
+            report(lc.problems, "roof-overlap", f"지붕 위 물건이 간판과 겹친다({pid} {rect} · 간판 {ext['간판'][1]})")
         rects.append(rect)
     for (pid, x, y), rect in sorted(zip(items, rects), key=lambda z: (z[1][1], z[1][0])):   # 뒤에서 앞으로
         ROOF_ITEMS[pid].draw(cv, P, x, y)

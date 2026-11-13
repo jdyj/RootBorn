@@ -45,6 +45,96 @@ def gap(a, b):
     return max(bx0 - ax1, ax0 - bx1, by0 - ay1, ay0 - by1)
 
 
+def sub(rid, key, **kw):
+    d = copy.deepcopy(RECIPES[rid][key])
+    d.update(kw)
+    return with_values(rid, **{key: d})
+
+
+def problems_of(spec, code):
+    c = ctx()
+    render(spec, c)
+    return [p for p in c.problems if p.code == code]
+
+
+class FacadeLayoutTests(unittest.TestCase):
+    FLAT, PITCHED = "bakery.exterior.flat", "bakery.exterior.pitched"
+
+    def test_real_bakery_recipes_have_no_facade_problems(self):
+        for rid in EXTERIORS:
+            with self.subTest(rid):
+                c = ctx()
+                render(RECIPES[rid], c)
+                self.assertEqual([p.code for p in c.problems if p.code.startswith("facade-")], [])
+
+    def test_the_five_reproduced_cases_each_report_a_problem(self):
+        cases = {
+            "narrow canvas": (with_values(self.FLAT, pixels=[128, 192]), "facade-out", "창"),
+            "door on window": (sub(self.FLAT, "door", at_x=85), "facade-overlap", "문틀"),
+            "sign off right": (sub(self.FLAT, "sign", at_x=140), "facade-out", "간판"),
+            "lamp on door": (sub(self.FLAT, "lamp", at_x=20), "facade-overlap", "벽등"),
+            "door off left": (sub(self.FLAT, "door", at_x=-30), "facade-out", "문틀"),
+        }
+        for name, (spec, code, who) in cases.items():
+            with self.subTest(name):
+                hits = problems_of(spec, code)
+                self.assertEqual(len(hits), 1)
+                self.assertTrue(hits[0].message.startswith(spec["id"]), hits[0].message)
+                self.assertIn(who, hits[0].message)
+                self.assertIsNone(hits[0].x)
+
+    def test_out_message_says_how_far_and_names_every_offender(self):
+        spec = sub(self.FLAT, "door", at_x=-30)
+        spec["sign"] = dict(spec["sign"], at_x=140)
+        hits = problems_of(spec, "facade-out")
+        self.assertEqual(len(hits), 1)
+        m = hits[0].message
+        self.assertIn("문틀", m)
+        self.assertIn("간판", m)
+        self.assertEqual(m.count("33px"), 2)   # 문틀 왼쪽 끝 -30 ↔ 벽 3, 간판 오른쪽 끝 188 ↔ 벽 155
+
+    def test_overlap_message_names_each_pair(self):
+        spec = sub(self.FLAT, "door", at_x=85)
+        spec["lamp"] = dict(spec["lamp"], at_x=90)
+        m = problems_of(spec, "facade-overlap")[0].message
+        self.assertIn("문틀과 창", m)
+        self.assertIn("문틀과 벽등", m)
+
+    def test_no_lamp_means_no_lamp_checks(self):
+        spec = copy.deepcopy(RECIPES[self.FLAT])
+        del spec["lamp"]
+        c = ctx()
+        render(spec, c)
+        self.assertEqual(c.problems, [])
+        spec["door"]["at_x"] = 60
+        self.assertTrue(problems_of(spec, "facade-out") == [] or "벽등" not in problems_of(spec, "facade-out")[0].message)
+
+    def test_checks_use_the_rectangles_the_drawing_reports(self):
+        from pixelkit.makers.building import ROOF_H, _extents, _values
+        for rid in EXTERIORS:
+            with self.subTest(rid):
+                _, spec = render_with_spec(RECIPES[rid], ctx())
+                lay = spec["_layout"]
+                ext = _extents(_values(spec, ctx()), ROOF_H)
+                self.assertEqual(ext["문틀"][0], lay["door"])
+                self.assertEqual(ext["창"][0], lay["window"])
+                self.assertEqual(ext["간판"][0], lay["sign"])
+                self.assertEqual(ext["벽등"][0], lay["lamp"])
+
+    def test_drawing_still_happens_when_a_problem_is_reported(self):
+        c = ctx()
+        cv = render(sub(self.FLAT, "door", at_x=85), c)
+        self.assertEqual((cv.w, cv.h), (160, 192))
+        self.assertTrue(c.problems)
+
+    def test_roof_item_under_the_sign_reports_roof_overlap(self):
+        roof = {"type": "pitched", "items": [{"part": "roof.chimney", "at": [20, 60]}]}
+        hits = problems_of(with_values(self.PITCHED, roof=roof), "roof-overlap")
+        self.assertEqual(len(hits), 1)
+        self.assertIn("간판", hits[0].message)
+        self.assertTrue(hits[0].message.startswith(self.PITCHED))
+
+
 class BuildingTests(unittest.TestCase):
     def test_both_bakery_exteriors_are_160x192_and_lint_clean(self):
         for rid in EXTERIORS:
