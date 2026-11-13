@@ -24,6 +24,8 @@ Python 3.11 + Pillow. 다른 패키지는 쓰지 않는다.
 | `python Tools/pixel-kit/kit.py room check <방 id>` | 평면만 검사한다(쓰지 않는다) | — |
 | `python Tools/pixel-kit/kit.py room repaint <.ldtk 경로> [--dry-run]` | LDtk에서 다시 칠한 `Collision`에 맞춰 `Wall`·`Ground` 타일과 시트만 다시 쓴다(아래 "방 만들기 — LDtk에서 칠한 뒤") | 그 `.ldtk`가 든 폴더 |
 | `python Tools/pixel-kit/kit.py room check <.ldtk 경로>` | LDtk 방을 검사한다(쓰지 않는다): 그림과 `Collision`이 어긋난 칸, 평면 검사, 표에 없는 문 | — |
+| `python Tools/pixel-kit/kit.py room styles [--out 폴더] [--scale N]` | 등록된 벽 모양 전부(윗면 띠 + 정면 2칸 + 바닥 한 줄 + 문간 + 방 안에서 끝나는 세로 벽), 띠 색 전부(`paper` 상자 방), 방 바닥으로 받는 명세 전부(4x3칸)를 이름표와 함께 견본판 두 장으로. 사용자가 이것을 보고 고른다 | `<--out, 기본 output/pixel-kit/room>/styles-walls.png`, `styles-floors.png`(1:1)와 `_x2`(기본 배율 2) |
+| `python Tools/pixel-kit/kit.py room styles --list` | 그리지 않고 벽 모양(기본 띠 색, 한 줄 설명)·띠 색·바닥 이름만 찍는다 | — |
 
 공통 인자: `--kit 폴더`(기본 `art/kit`), `--out 폴더`(기본 `output/pixel-kit`), `--scale N`(보기용 확대 배율,
 정수·최근접. 기본 render 6, sheet·scene 4, parts 8).
@@ -44,6 +46,7 @@ Python 3.11 + Pillow. 다른 패키지는 쓰지 않는다.
 | 방 벽·바닥 타일(둘레 칸으로 고르기) | `Tools/pixel-kit/pixelkit/room_tiles.py` |
 | 방 평면 읽기·검사 / LDtk 방 쓰기 | `Tools/pixel-kit/pixelkit/room_plan.py` / `room_ldtk.py`(공용 도우미 `ldtk_common.py`) |
 | 방 평면 파일 | `art/kit/rooms/<id>.json` |
+| 방 바닥 명세(세트 `floor`) | `art/kit/recipes/floor/tiles.json` |
 | 테스트 | `Tools/pixel-kit/tests/` |
 
 ## 점 부품 더하기
@@ -112,6 +115,20 @@ if/switch로 종류를 닫지 않는다.
 | `tile.wall-interior` | `paper`(벽지 줄, 단계 0~2), `cap`(벽 윗면 줄, 0~1), `wood`(징두리·몰딩 줄, 0~4) | |
 | `tile.grass` | `colors`: 줄 1개(단계 0~3) | |
 | `tile.paver` | `colors`: 줄 1개(단계 0~2) | |
+| `tile.floor-plank` | `colors`: 줄 1개(0 이음 / 1 결 / 2 바탕 / 3 빛 모서리) | `board`(판 폭 `8` 기본 · `16` — 16은 끝 이음 없는 긴 판), `vertical`(`false` 기본 · `true`: 가로 판을 돌린 세로 판) |
+| `tile.floor-herringbone` | `colors`: 줄 1개(0 이음 / 2 세로 판 / 3 가로 판, 판 16x8) | |
+| `tile.floor-basket` | `colors`: 줄 1개(0 이음 / 2 세로 판 / 3 가로 판, 16px 칸마다 판 둘) | |
+| `tile.floor-slab` | `colors`: 줄 1개(0 줄눈 / 1 결 / 2 바탕 / 3 빛, 32px 판 하나) | |
+| `tile.floor-concrete` | `colors`: 줄 1개(0 줄눈 / 1 잔 점 / 2 바탕 / 3 얼룩) | |
+| `tile.floor-brick` | `colors`: 줄 1개(1 줄눈 / 2 벽돌 / 3 밝은 벽돌 몇 장, 16x8 엇갈림) | `seed`(밝은 벽돌 자리) |
+| `tile.floor-mosaic` | `colors`: 줄 1개(1 줄눈 / 2 짙은 알 / 3 밝은 알, 알 7px) | |
+| `tile.floor-linoleum` | `colors`: 줄 1개(1 잔 점 / 2 바탕) | `seed`(잔 점 자리) |
+| `tile.floor-carpet` | `colors`: 줄 1개(1 점 / 2 바탕) | |
+| `tile.floor-carpet-diamond` | `colors`: 줄 1개(1 마름모 선·점 / 2 바탕, 주기 16) | |
+| `tile.floor-tatami` | `colors`: 줄 2개(몸: 2 바탕 / 3 결, 테: 1이 아래·오른쪽 테) | |
+
+방 바닥 부품(`tile.floor-*`)의 줄 단계 0은 대개 벽 밑 그림자 자리다 — 방의 `floor:shade`가 색마다 그 줄의 가장 어두운 단계로 옮기므로,
+바탕보다 어두운 단계 0이 있어야 정면 밑 그림자가 보인다.
 | `furniture.shelf` | `art_cells` `[1~3, 2~3]`(높이 3칸은 키 큰 진열대, 2칸은 낮은 진열대), `tiers`: 층마다 부품 id 목록(안쪽 높이를 층 수로 나눈다. 3칸 높이 1~4층, 2칸 높이 1~2층 — 층 높이 17px 이상) | `material` 줄(5, 기본 `wood.warm`: 윗면·기둥·선반 판·밑판·발), `back` 줄(2, 기본 `wood.back`: 0 판 밑 짙은 줄, 1 뒤판), `tray` 줄(3, 기본 `cream`: 단계 2가 쟁반). `states`로 층 내용을 바꾼다 |
 | `furniture.glass-case` | `rows`: 줄마다 부품 id 목록, 1~3줄 | `frame` 줄(3, 기본 `metal`: 틀과 받침) |
 | `furniture.trolley` | `rows`: 줄마다 부품 id 목록, 1~4줄 | `frame` 줄(3, 기본 `metal`: 윗면·기둥·살), `inside` 줄(3, 기본 `metal.dark`: 안쪽과 바퀴) |
@@ -230,12 +247,9 @@ if/switch로 종류를 닫지 않는다.
   바닥·꽉 찬 정면은 `tile-transparent`(투명 픽셀)와 가로 이음매 `tile-seam`(가로로만 이어 붙이므로 세로는 보지 않는다).
   띠·좁은 정면 타일은 열쇠가 정한 자리로 본다: `tile-transparent`(띠·정면 자리에 투명 픽셀), `room-tile-leftover`(남는 자리에
   칠한 픽셀 — 바닥을 구웠다), `room-tile-empty`(완전히 투명), `tile-seam`(띠가 칸 경계를 넘어 이어지는 변에 외곽선이 그어졌다).
-- 벽 모양은 `@wall_style("이름")`을 붙인 클래스 하나로 더한다: `cap`(윗면 띠의 팔레트 줄, 단계 0 안쪽 그늘 / 1 면 / 2 안쪽 빛 —
-  **띠 색을 바꾸는 곳은 여기 한 곳**), `band`(띠 두께 px, 4 이상 32 미만), `paper`·`wood`(정면 벽지·나무 팔레트 줄 — 좁은 정면도 이 줄로),
-  `face(style, k, ceiling) -> Canvas`(32x32, 끝·위 외곽선 없이. `k == 1`이 바닥 바로 위 타일, `ceiling`이면 천장 밑 그늘 2줄).
-  `wall_styles()`가 이름 목록, `wall_band(이름)`이 띠 두께. 지금 `paper`(줄무늬 벽지 `wall.cream` + 징두리 판 `wood.archive` + 걸레받이,
-  윗면 `wall.top.cream`, 띠 16), `plaster`(회반죽 `wall.plaster` + 낮은 걸레받이 `wood.school`, 윗면 `wall.plaster.top`, 띠 16).
-  띠 색은 아직 사용자가 고르지 않았다(지금 색 그대로).
+- `draw_tile(style, key, wall, floor_spec, top=None)`의 `top`은 띠 색 줄(아래 "띠 색"). 띠 픽셀만 바뀌고 정면·바닥은 그대로다.
+- 벽 모양·띠 색·바닥 목록과 더하는 법은 아래 "방 만들기 — 벽 모양·띠 색·바닥". `wall_styles()`가 이름 목록, `wall_band(이름)`이 띠 두께,
+  `wall_top(이름)`이 기본 띠 색, `wall_tops()`가 고를 수 있는 띠 색.
 
 | 열쇠 | 층 | 뜻 |
 |---|---|---|
@@ -270,6 +284,84 @@ if/switch로 종류를 닫지 않는다.
   가로 윗면 바로 위가 바닥 쪽이면 바닥처럼 보이는 16px가 남는다(사용자 답 대기라 그대로).
 - 알려진 약점: 띠 자리는 칸 둘레만이 아니라 이어진 윗면을 따라 방 전체에서 정해져서, 두꺼운 벽 덩어리에서는 좌우 거울 대칭이 아닐 수 있다. 벽은 한 칸 두께로 칠해야 얇게 보인다(두 칸 이상이면 안쪽이 띠로 채워져 넓은 덩어리가 된다).
 
+## 방 만들기 — 벽 모양·띠 색·바닥
+
+2026-11-14 사용자 요청("오 좋아 이거 말고도 다른것도 계속 만들어줘 유저가 자유롭게 만들 수 있도록")으로 견본 W3~W8·F2~F9를 정식으로 옮기고
+더 그렸다. 지금은 **맵(방 평면) 하나에 벽 한 종류·바닥 한 종류·띠 색 하나**다. 고를 때는 `room styles`로 견본판을 뽑아 본다
+(`room styles --list`는 이름만).
+
+### 벽 모양 (평면의 `wall`)
+
+| 이름 | 생김 | 기본 띠 색 | 어울리는 곳 |
+|---|---|---|---|
+| `paper` | 크림 줄무늬 벽지 + 나무 징두리 판 + 걸레받이 | `wall.top.cream` | 집(본보기 방) |
+| `plaster` | 단색 회반죽 + 아래 한 단계 + 낮은 걸레받이 | `wall.plaster.top` | 어디든 |
+| `sprig` | 연녹색 잔무늬(작은 마름모) 벽지 + 흰 걸레받이 | `wall.top.brown` | 집 — 가장 무난 |
+| `two-tone` | 위 크림 / 아래 짙은 청회색 칠(벽 높이 4할) + 흰 허리 몰딩·걸레받이 | `wall.top.brown` | 거실·복도 |
+| `floral` | 연분홍 바탕에 드문드문 잔꽃(꽃잎 넷 + 노란 꽃술) + 나무 걸레받이 | `wall.top.brown` | 침실·아이 방 |
+| `pastel` | 민트 단색 + 흰 허리 몰딩 + 아래 판(타일마다 긴 몰딩 테 하나) + 흰 걸레받이 | `wall.top.light` | 아이 방 |
+| `study` | 짙은 녹색(같은 계열 가는 세로줄) + 높고 밝은 걸레받이 | `wall.top.slate` | 서재 — 가구가 잘 도드라진다 |
+| `plank` | 가로 판자벽(겹쳐 댄 긴 판) + 짙은 걸레받이 | `wall.top.brown` | 오두막·창고. 나무 바닥과 깔면 갈색 일색 — 돌·타일 바닥과 |
+| `pine` | 밝은 소나무 세로 판(벽 전체, 판 8px) + 같은 나무 걸레받이 | `wall.top.brown` | 오두막·부엌·가게 |
+| `tile-white` | 흰 벽 타일(16x8 엇갈림) + 청록 띠 + 타일 걸레받이 | `wall.top.light` | 부엌·욕실 |
+| `tile-blue` | 하늘색 정사각 타일(16px, 위·왼쪽 빛 모서리) + 짙은 타일 한 줄 | `wall.top.light` | 욕실 |
+| `brick-cream` | 크림 벽돌(16x8, 밝은 벽돌 몇 장) + 짙은 나무 걸레받이 | `wall.top.brown` | 가게·부엌 — 벽돌 중 조용한 쪽 |
+| `brick-red` | 붉은 벽돌(짙은 줄눈, 밝은 벽돌 몇 장만) + 짙은 나무 걸레받이 | `wall.top.slate` | 가게 뒤·창고 |
+| `concrete` | 노출 콘크리트(거푸집 판 32x16 이음 + 폼타이 구멍) + 아래 때 탄 띠 | `wall.top.slate` | 가게 뒤·창고·작업실 |
+
+타일 한 장의 색은 띠·외곽선을 합쳐 12 이하다(검사가 지킨다). 정면 무늬의 가로 주기는 32의 약수이거나 한 장(32)이다.
+
+### 띠 색 (평면의 `top`, 선택)
+
+`wall.top.cream`(황토), `wall.top.brown`(갈색), `wall.top.slate`(짙은 남색 회색), `wall.top.light`(밝은 회색), 그리고 벽 모양의 기본 줄
+(`wall.plaster.top`). 적지 않으면 그 벽 모양의 기본이다. 띠 픽셀만 바뀐다(정면·바닥·열쇠는 같다). 짙은 색은 벽이 또렷하지만 바깥 어둠과
+붙어 보인다 — 사용자는 아직 고르지 않았다(지금 기본은 위 표).
+
+- 평면의 `top`은 자리 표(`tiles.slots.json`)에 방 값 `top`으로 남고 `repaint`가 읽는다. **`top`이 없는 자리 표는 그 벽 모양의 기본색으로 본다**
+  (top은 2026-11-14에 생겼다 — 그 전에 만들어 LDtk에서 칠한 방도 그대로 다시 그려지고 표에 `top`을 더하지 않는다. `band`가 없는 옛 방 거절과 다르다).
+- 시트가 다른 띠 색으로 그려져 있으면(표의 `top`, 없으면 기본) `--force`도 거절한다 — 한 시트에 두 색이 섞이지 않게.
+- 띠 색을 더하려면 `style.json`에 `wall.top.<이름>` 3단계 줄(어두운 것부터: 0 안쪽 그늘 / 1 면 / 2 안쪽 빛)과 `room_tiles.TOPS`에 한 줄.
+
+### 바닥 (평면의 `floor`)
+
+키트의 한 칸(32x32) 타일 명세면 무엇이든 받는다(`room styles --list`가 받는 것 전부를 찍는다). 정식 방 바닥은 세트 `floor`
+(`art/kit/recipes/floor/tiles.json`)다. 캐릭터·가구가 위에서 잘 보이게 조용히 그렸다.
+
+| 명세 id | 생김 |
+|---|---|
+| `floor.checker-soft` | 16px 체크, 두 칸 색이 가까운 조용한 체크(크림·모래) |
+| `floor.plank` | 꿀색 가로 판자 8px, 끝 이음은 판 둘에 하나 |
+| `floor.plank-vertical` | 밝은 참나무 세로 판자 8px |
+| `floor.plank-wide` | 회갈색 넓은 판 16px, 끝 이음 없음 |
+| `floor.herringbone` | 호두색 헤링본(판 16x8) |
+| `floor.basket` | 밤색 바구니 짜임 쪽매(16px 칸마다 판 둘, 가로·세로 엇갈림) |
+| `floor.slab` | 돌 판 32px, 옅은 결 둘 |
+| `floor.concrete` | 콘크리트 판 32px, 옅은 얼룩·잔 점 |
+| `floor.brick` | 벽돌 바닥(16x8 엇갈림, 옅은 줄눈) — 가게 뒤·창고 |
+| `floor.mosaic` | 하늘빛 작은 모자이크(알 7px), 짙은 알이 대각선으로 고르게 — 욕실 |
+| `floor.linoleum` | 연녹회색 리놀륨 + 잔 점 — 부엌·가게 |
+| `floor.carpet` | 남색 단색 카펫 + 아주 옅은 점 |
+| `floor.carpet-diamond` | 장밋빛 카펫 + 옅은 마름모 격자(테두리 없음) |
+| `floor.tatami` | 정사각 돗자리 16px, 결 엇갈림, 테 한 줄 |
+
+`bakery.tile.floor`(진한 체크, 본보기 방)·`bakery.tile.sidewalk`·`bakery.tile.grass`도 한 칸 타일이라 받는다.
+
+### 새 벽 모양·바닥을 더하는 법
+
+- **벽 모양**: `room_tiles.py`에 `_Wall`을 이어받은 클래스 하나 + `@wall_style("이름")` 한 줄. 값: `cap`(기본 띠 색 줄), `band`(띠 두께, 기본 16),
+  `face(style, k, ceiling) -> Canvas`(32x32, 끝·위 외곽선 없이 — `k == 1`이 바닥 바로 위 타일, `ceiling`이면 맨 위 2줄만 천장 밑 그늘),
+  좁은 정면(세로 벽 남쪽 끝)의 색 `narrow(style) -> (천장 밑 그늘, 면, 아래 면 윗줄, 아래 면)`과 아래 면이 시작하는 줄 `narrow_base`
+  (`_Wall`의 기본은 `paper`·`wood` 줄에서 고른다). 클래스 설명 첫 줄이 `--list`에 찍힌다. 걸레받이·허리 몰딩·천장 밑 그늘은 도우미
+  `_skirting`·`_rail`·`_ceiling`, 두 칸을 잇는 세로 주기 64 무늬는 `_wall_y`. 등록하면 테스트가 모든 열쇠를 그려 검사하고
+  다른 모양과 그림이 다른지 본다(`tests/test_room_styles.py`).
+- **바닥**: 무늬가 새로우면 `makers/tiles.py`에 `@register("tile.floor-이름")` 함수 하나(위 "만드는 부품이 읽는 키" 표에 한 줄),
+  색만 다르면 부품은 그대로. 그리고 `art/kit/recipes/floor/tiles.json`에 명세 한 덩어리
+  `{"id": "floor.<이름>", "kind": "tile", "part": …, "art_cells": [1, 1], "colors": [...]}`.
+- **팔레트**: 필요한 줄을 `style.json`에 뜻이 보이는 이름으로 덧붙인다(어두운 것부터). 있는 줄은 바꾸지 않는다. 방 재료 줄(`wall.`·`floor.`·`brick.`)은
+  다른 줄과 hex를 나누지 않는다 — 같은 hex가 두 줄에 있으면 `floor:shade`가 어두워지는 줄이 이름순 첫 줄로 바뀔 수 있다(테스트가 지킨다).
+- 그림은 LimeZu Room Builder 시트(`Assets/moderninteriors-win/1_Interiors/32x32/Room_Bulder_subfiles_32x32/`)에서 종류·명도·무늬 밀도만 보고
+  픽셀을 베끼지 않는다. `room styles`와 방 예시를 직접 열어 보고, `kit.py lint`(0)와 테스트를 통과시킨다.
+
 ## 방 만들기 — 평면에서 LDtk로
 
 `pixelkit/room_plan.py`(평면 읽기·검사)와 `pixelkit/room_ldtk.py`(쓰기). 설계는 같은 설계서 4.1·4.3·4.4절.
@@ -282,7 +374,8 @@ if/switch로 종류를 닫지 않는다.
 ```
 
 - `plan`: 글자 줄. `#` 벽, `.` 바닥, 빈칸 밖. 줄 길이가 다르거나 모르는 글자가 있으면 문제다(조용히 채우지 않는다). `doors`(선택)에 적은 글자는 바닥 + 문이다 — 그 칸에 `Door` 엔티티가 놓이고 필드 `Where`에 값이 들어간다. `face_height`(선택, 기본 2). `spawn`은 칸 [x, y].
-- `wall`은 벽 모양 이름, `floor`는 키트의 32x32 타일 명세 id(`kind: tile`이고 32x32로 그려지는 명세면 받는다. 나무 바닥 명세는 아직 없어 본보기는 `bakery.tile.floor`).
+- `wall`은 벽 모양 이름, `floor`는 키트의 한 칸 타일 명세 id(`kind: tile`이고 `art_cells` `[1, 1]`), `top`(선택)은 띠 색 줄 이름(위 절).
+  모르는 이름은 아는 이름 목록과 함께 끝 코드 2. 본보기 평면은 `paper` + `bakery.tile.floor`, `top` 없음.
 
 `room check <id>`가 보는 것(코드): `room-ragged-plan`, `room-unknown-char`, `room-open-edge`(바닥이 맵 가장자리나 밖 칸에 닿음),
 `room-unreachable-floor`(도착 지점에서 걸어 닿지 못하는 바닥, 덩어리마다 하나), `room-spawn-in-wall`, `room-door-in-wall`,
@@ -294,7 +387,7 @@ if/switch로 종류를 닫지 않는다.
 | 파일 | 내용 |
 |---|---|
 | `<id>.ldtk` | 레벨 `<맵 id>`(32px 칸). 층은 위에서 아래: `Collision`(IntGrid, 1 `wall` / 2 `floor` / 0 밖, 층 정의 `displayOpacity` 0.35 — LDtk 편집기에서 색 칸이 벽·바닥 그림을 덮지 않고 비쳐 보인다. 게임은 이 값을 읽지 않는다), `Door`(Entities, 엔티티 정의 `Door` + 문자열 필드 `Where`), `Furniture`(Entities, 층 정의 태그 `ysort`, 비어 있음), `Wall`(Tiles, 벽 칸마다), `Ground`(Tiles, 바닥 칸마다 + 띠 옆으로 바닥이 비치는 벽 칸마다). 타일셋 하나(`tiles.png`, 32). 타일 인스턴스는 `px`, `src`, `f`, `t`(시트의 타일 번호, 행 우선 16칸), `d`(칸 번호), `a` |
-| `tiles.png`, `tiles.slots.json` | 쓰인 타일만 모은 시트와 열쇠 → 자리 표(`room_tiles`의 열쇠). **덧붙이기만**: 한 줄 16칸 폭 고정, 새 열쇠는 마지막 번호 다음부터. 이미 있는 타일의 자리(`t`, `src`)는 시트가 커져도 바뀌지 않는다. 자리 표에는 그 시트를 그린 `wall`·`floor`·`face_height`·`band`(윗면 띠 두께, 벽 모양의 값)도 적는다(`repaint`가 여기서 읽는다 — LDtk 편집기는 이 파일을 건드리지 않는다). 시트가 다른 `wall`·`floor`·`band`로 그려져 있으면 `--force`도 거절한다(한 시트에 두 모양이 섞이지 않게). `band`가 없는 옛 표(윗면 32px 시절)에는 덧붙인다 — 옛 윗면 열쇠 `cap:<수>`는 다시 나오지 않아 쓰이지 않고 남는다(깨끗한 시트를 원하면 `tiles.png`·`tiles.slots.json`을 지우고 만든다) |
+| `tiles.png`, `tiles.slots.json` | 쓰인 타일만 모은 시트와 열쇠 → 자리 표(`room_tiles`의 열쇠). **덧붙이기만**: 한 줄 16칸 폭 고정, 새 열쇠는 마지막 번호 다음부터. 이미 있는 타일의 자리(`t`, `src`)는 시트가 커져도 바뀌지 않는다. 자리 표에는 그 시트를 그린 `wall`·`floor`·`face_height`·`band`(윗면 띠 두께, 벽 모양의 값)와 평면에 적었을 때만 `top`(띠 색)도 적는다(`repaint`가 여기서 읽는다 — LDtk 편집기는 이 파일을 건드리지 않는다). 시트가 다른 `wall`·`floor`·`band`·띠 색으로 그려져 있으면 `--force`도 거절한다(한 시트에 두 모양이 섞이지 않게). `band`가 없는 옛 표(윗면 32px 시절)에는 덧붙인다 — 옛 윗면 열쇠 `cap:<수>`는 다시 나오지 않아 쓰이지 않고 남는다(깨끗한 시트를 원하면 `tiles.png`·`tiles.slots.json`을 지우고 만든다) |
 | `maps.json` | 이 맵 하나. `collision.rule`은 `interior-auto`, `spawns`는 도착 지점 하나 `<맵 id 소문자>-entry`(예: `testtworooms-entry`, 맵 사이에서 이름이 겹치지 않게)에 도착 칸 가운데 픽셀, `viewCells`는 레벨 높이(칸)와 13 중 작은 것, `doors`는 비어 있다(문의 목적지 표는 손으로 채운다). `walker`·`npcWalker`는 `game/world/maps.json`에서 옮긴다. 게임에는 `--maps`로 준다 |
 
 - 맵 id = 방 id에서 점·하이픈을 지우고 낱말 첫 글자를 대문자로(`test.two-rooms` → `TestTwoRooms`).
@@ -323,7 +416,7 @@ if/switch로 종류를 닫지 않는다.
   엔티티·필드, 층 인스턴스의 다른 키(`autoLayerTiles`, `seed` …), 타일셋의 다른 키, `maps.json`. JSON 값으로 그대로 다시 쓴다
   (들여쓰기·줄바꿈만 이 도구의 모양이 된다). 타일 목록이 순서만 다르면 바뀐 것으로 치지 않는다.
 - 레벨 크기는 `Collision`의 `__cWid`·`__cHei`를 따른다(편집기에서 레벨을 키워도 된다).
-- 벽 모양·바닥·`face_height`·`band`는 같은 폴더의 `tiles.slots.json`에서, 도착 지점은 `maps.json`(레벨 이름이 같은 맵의 첫 도착 지점)에서,
+- 벽 모양·바닥·`face_height`·`band`·`top`(없으면 벽 모양의 기본 띠 색)은 같은 폴더의 `tiles.slots.json`에서, 도착 지점은 `maps.json`(레벨 이름이 같은 맵의 첫 도착 지점)에서,
   문은 `Door` 엔티티(`maps.json`의 `doorEntity`·`doorField`, 기본 `Door`·`Where`)에서 읽는다.
 - **거절(아무것도 쓰지 않는다)**: 레벨이 하나가 아니거나 `Collision`(IntGrid)·`Wall`(Tiles)·`Ground`(Tiles) 층이 없거나 종류가 다르거나
   칸 크기가 32가 아니거나 `Wall`·`Ground` 층이나 레벨(`pxWid`·`pxHei`)의 크기가 `Collision`과 다르거나 `Wall`·`Ground`가 `tiles.png` 타일셋을 쓰지 않으면 `room-not-a-room`(끝 코드 1). 머리말로는 판별하지 않는다.
@@ -350,11 +443,13 @@ if/switch로 종류를 닫지 않는다.
 - **편집기에서 확인된 것**(2026-11-14, 사용자가 LDtk 1.5.3으로): 처음에는 `Cannot read properties of null (reading 'externalLevels') (TypeError)`로 열리지 않았다 —
   게임이 읽는 키만 쓰고 편집기가 기대하는 키를 많이 빠뜨렸다. 공식 스키마(1.5.3)의 필수 키와 편집기 저장 파일에 늘 있는 키를 채운 뒤
   (가) 도구가 쓴 파일이 **편집기에서 열렸고**, (나) 편집기에서 `Collision`을 칠해 저장한 파일을 **`repaint`가 받아 벽 그림을 맞췄다**(32px 윗면 때 한 번,
-  얇은 벽(16px 띠)으로 바뀐 뒤에도 한 번 — 어긋난 칸 26개가 `repaint` 뒤 문제 없음), (다) `repaint`가 다시 쓴 파일을 편집기가 **다시 열었다**(32px 윗면 때의 파일로 확인).
+  얇은 벽(16px 띠)으로 바뀐 뒤에도 한 번 — 어긋난 칸 26개가 `repaint` 뒤 문제 없음), (다) `repaint`가 다시 쓴 파일을 편집기가 **다시 열었다** — 32px 윗면 때의 파일로,
+  그리고 **얇은 벽으로 `repaint`가 다시 쓴 파일도 다시 열려 얇은 띠로 보였다**(2026-11-14 사용자 확인).
   편집기에서 `Collision` 층이 불투명하면 벽·바닥 그림을 가려 색 칸만 보인다 — 눈 아이콘을 끄면 그림이 보인다(그래서 반투명으로 바꿨다).
-  **아직 확인 못 한 것**: 얇은 벽으로 `repaint`가 다시 쓴 파일을 편집기가 다시 여는지, 반투명(`displayOpacity` 0.35) `Collision` 층과 얇은 벽이 편집기 화면에서
-  어떻게 보이는지(색 칸 아래로 그림이 비치는지) — 사용자 답 대기.
-- 벽 모양은 지금 `paper`·`plaster` 둘이고 바닥은 키트의 타일 명세 id뿐이다(고르는 중인 견본은 아직 도구에 없다). 걸어서 지나는 벽에 박힌 문과 벽의 옆으로 기운 면은 없다.
+  **아직 확인 못 한 것**: 반투명(`displayOpacity` 0.35) `Collision` 층 아래로 그림이 비치는지 — 사용자 답 대기.
+- 벽 모양·띠 색·바닥은 위 "방 만들기 — 벽 모양·띠 색·바닥". 아직 없는 것: 한 맵 안에서 방마다 다른 벽·바닥(지금은 맵 하나에 한 종류씩),
+  사용자가 직접 그린 PNG를 벽·바닥 타일로 넣기(다음 작업), 게임 안에서 플레이어가 벽·바닥을 고르기(게임 기능 — 설계 전).
+  걸어서 지나는 벽에 박힌 문과 벽의 옆으로 기운 면은 없다.
 - 절차는 스킬 `pixel-kit-room`.
 
 ## 같이 바뀌는 색
