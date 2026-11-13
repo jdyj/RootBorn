@@ -36,7 +36,7 @@ description: "ROOTBORN 수치 균형 시뮬레이터(game/tests/Rootborn.Balance
    ```bash
    bash Scripts/remote-test/run.sh HEAD -- game/tests/Rootborn.Balance.Tests
    ```
-   통과 줄만 보지 말고 건수를 본다(2026-11-13 main: 전체 99, 그중 Explicit 3건은 건너뜀).
+   통과 줄만 보지 말고 건수가 줄지 않았는지 본다(2026-11-13: 전체 103, 그중 손으로만 도는 보고 3건은 건너뜀).
 3. **보고를 돌린다.** 오래 걸리니 시작만 하고 나중에 받는다.
    ```bash
    bash Scripts/remote-test/run.sh --no-wait HEAD -- game/tests/Rootborn.Balance.Tests --filter "FullyQualifiedName~WriteSweepReport|FullyQualifiedName~WriteFullReport"
