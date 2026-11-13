@@ -33,6 +33,54 @@ namespace Rootborn.Simulation
             if (view.TrackedStep != _step) { _step = view.TrackedStep; _triedThisStep.Clear(); }
             _tried[action.Key] = Tried(action.Key) + 1;
             _triedThisStep[action.Key] = TriedThisStep(action.Key) + 1;
+            _lastKey = action.Key;
+            _lastView = view.Fingerprint();
+            _waiting = true;
+        }
+
+        // ---------- 같은 행동을 했는데 보이는 것이 그대로 ----------
+
+        /// <summary>같은 행동을 연달아 이만큼 했는데 관찰이 그대로면 그날 정책의 후보에서 뺀다. 0이면 빼지 않는다.</summary>
+        public int BanAfter = 3;
+
+        private readonly HashSet<string> _banned = new HashSet<string>(StringComparer.Ordinal);
+        /// <summary>행동마다 지난번의 (앞 관찰, 뒤 관찰)과 같은 결과가 이어진 횟수.</summary>
+        private readonly Dictionary<string, (string Before, string After, int Count)> _outcomes = new Dictionary<string, (string, string, int)>(StringComparer.Ordinal);
+        private string _lastKey, _lastView;
+        private bool _waiting;
+        private int _repeats, _day = int.MinValue;
+
+        /// <summary>마지막 행동이 아무것도 바꾸지 않은 되풀이를 몇 번째 했나(달리는 쪽이 막힘으로 본다).</summary>
+        public int RepeatsWithoutChange => _repeats;
+
+        /// <summary>
+        /// 걸음 앞의 관찰을 본다. 앞 걸음의 행동이 아무것도 바꾸지 않은 되풀이인지 센다(<see cref="PlayView.Fingerprint"/> — 사람이 보는 것):
+        /// 행동 뒤가 행동 앞과 같거나(연달아 눌러도 그대로), 지난번 그 행동과 같은 관찰에서 같은 관찰로 이어졌으면(대화 열기 → 닫기 → 다시처럼
+        /// 둘이 번갈아 되돌린다) 하나 더. 다른 결과가 나오면 처음부터. 날이 바뀌면 뺀 행동과 센 것을 비운다.
+        /// </summary>
+        public void See(PlayView view)
+        {
+            if (view.Day != _day) { _day = view.Day; _banned.Clear(); _outcomes.Clear(); }
+            if (!_waiting) return;
+            _waiting = false;
+            string after = view.Fingerprint();
+            int count;
+            if (_outcomes.TryGetValue(_lastKey, out var last) && last.Before == _lastView && last.After == after) count = last.Count + 1;
+            else count = after == _lastView ? 1 : 0;
+            _outcomes[_lastKey] = (_lastView, after, count);
+            _repeats = count;
+            if (BanAfter > 0 && count >= BanAfter) _banned.Add(_lastKey);
+        }
+
+        /// <summary>오늘 정책의 후보에서 뺀 행동이다.</summary>
+        public bool Banned(string key) => key != null && _banned.Contains(key);
+
+        /// <summary>뺀 행동이 있으면 관찰에서 지운다(모두 빠지면 그날 뺀 것을 되돌린다 — 아무것도 못 하는 것보다 낫다).</summary>
+        public void RemoveBanned(PlayView view)
+        {
+            if (_banned.Count == 0) return;
+            if (!view.Actions.Exists(a => !_banned.Contains(a.Key))) { _banned.Clear(); return; }
+            view.Actions.RemoveAll(a => _banned.Contains(a.Key));
         }
 
         /// <summary>그 단계 안에서 고른 추적 행동(목표 줄을 누른 뒤 추적 단추처럼 순서가 있는 일)을 기억한다.</summary>
@@ -233,6 +281,7 @@ namespace Rootborn.Simulation
             PlayAtlas atlas = _atlas;
             PlayAction a;
             if ((a = _minigame.Choose(view, random)) != null) return a;
+            if (view.HasTracked) _fruitless = 0;
             if (!view.HasTracked && view.InWorld && (a = TrackSomething(view, memory)) != null) return a;
             if (view.HasTracked && view.TrackedObjectivesDone && (a = DayEndRoutine.Choose(view, atlas)) != null) return a;
 
@@ -260,6 +309,8 @@ namespace Rootborn.Simulation
             if (atlas != null && view.InWorld)
                 foreach (PlayAction hinted in HintedKindsElsewhere(view, atlas))
                     return hinted;
+            // 추적할 것이 없으면 마을 일(장소·알바·연습·탐색·시설·NPC)을 한다. 추적 중이면 안 해 본 것.
+            if (!view.HasTracked && (a = _untracked.Choose(view, memory, random)) != null) return a;
             return Pick.Best(view.Actions, x => -memory.Tried(x.Key) - (x.Category == "key" ? 5 : 0), random);
         }
 
@@ -281,8 +332,24 @@ namespace Rootborn.Simulation
             }
         }
 
-        private int _journalRow, _exploreUntil = -1, _steps;
+        private int _journalRow, _exploreUntil = -1, _steps, _fruitless, _retryDay = int.MinValue;
         private bool _pressedTrack;
+
+        /// <summary>수첩을 이만큼 훑어도 추적이 안 생기면 그날은 다시 열지 않는다(다음 날 다시 본다).</summary>
+        public const int FruitlessPassesPerDay = 2;
+
+        /// <summary>추적할 것이 없을 때 하는 일: 학교 밖 정책과 같은 마을 일에 NPC 대화를 더한 것(대화로 새 체인을 받을 수 있다).</summary>
+        private readonly PreferKindsPolicy _untracked = new PreferKindsPolicy(PlayPolicyCatalog.MainChain, UntrackedKinds);
+
+        public static readonly string[] UntrackedKinds = Concat(PlayPolicyCatalog.OffSchoolKinds, "npc");
+
+        private static string[] Concat(string[] a, string b)
+        {
+            var all = new string[a.Length + 1];
+            a.CopyTo(all, 0);
+            all[a.Length] = b;
+            return all;
+        }
 
         /// <summary>
         /// 추적할 것을 고른다: Tab → 퀘스트 분류 → 줄 하나 → 추적. 추적해도 목표가 생기지 않으면(아직 받지 않은 체인) 다음 줄. 줄을 다 해 봤으면
@@ -291,6 +358,7 @@ namespace Rootborn.Simulation
         private PlayAction TrackSomething(PlayView view, PlayMemory memory)
         {
             _steps++;
+            if (view.Day < _retryDay) return null;
             if (_steps < _exploreUntil) return null;
             if (_pressedTrack) { _pressedTrack = false; _journalRow++; memory.Flags.Remove("journal.quests"); memory.Flags.Remove("journal.row"); }
             if (!view.OpenScreens.Contains(ScreenCatalog.ObjectiveJournal)) return view.Find("key:" + ScreenKey.Tab);
@@ -302,6 +370,7 @@ namespace Rootborn.Simulation
                 if (r == null)
                 {
                     _journalRow = 0; _exploreUntil = _steps + 25;
+                    if (++_fruitless >= FruitlessPassesPerDay) { _fruitless = 0; _retryDay = view.Day + 1; } // 그날은 다시 열지 않는다
                     memory.Flags.Remove("journal.quests"); memory.Flags.Remove("journal.row");
                     return DayEndRoutine.Close(view);
                 }
