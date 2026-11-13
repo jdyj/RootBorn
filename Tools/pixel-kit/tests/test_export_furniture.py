@@ -301,7 +301,7 @@ class ExportCliTests(unittest.TestCase):
         self.assertEqual({f: (self.root / f).stat().st_mtime_ns for f in self.files()}, snap)
 
     def test_other_kinds_are_not_yet_supported(self):
-        code, _, err = cli_run(self.root, self.kit, ["bakery.exterior.flat"])
+        code, _, err = cli_run(self.root, self.kit, ["bakery.scene.interior"])
         self.assertEqual(code, 2)
         self.assertIn("아직 없다", err)
 

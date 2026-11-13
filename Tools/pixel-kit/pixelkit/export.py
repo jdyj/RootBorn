@@ -20,6 +20,16 @@ FURNITURE_DEFS = "data/interiors/FurnitureDefinition.json"   # 저장소 뿌리 
 ATLAS_ROOT = "data/atlases"
 PROPS_ROOT = "art/props"
 PIXELS_PER_UNIT = 32
+CELL = 32
+SHEET_WIDTH_CELLS = 16                  # 묶음 시트 폭은 16칸(512px) 고정
+TILE_PIVOT = {"x": 0.5, "y": 0.5}       # 타일은 칸 가운데
+FOOT_PIVOT = {"x": 0.5, "y": 1.0}       # 건물·바깥 소품은 발 위치(아래 가운데)
+# 종류 → (시트 폴더, 기준점). 새 종류는 여기 한 줄이다(if/switch로 닫지 않는다).
+SHEET_KINDS = {
+    "tile": ("art/tiles", TILE_PIVOT),
+    "building": ("art/world", FOOT_PIVOT),
+    "prop": ("art/world", FOOT_PIVOT),
+}
 
 
 class ExportWriteError(OSError):
@@ -220,6 +230,128 @@ def export_furniture(recipe: dict, kit: Kit, repo_root) -> ExportPlan:
     png = _sheet_png(cells)
     plan.files[png_path] = png
     plan.files[f"{ATLAS_ROOT}/{png_path}.atlas.json"] = _atlas_json(png_path, png, names, art)
+    return plan
+
+
+# --- 묶음 시트(타일, 건물·바깥 소품): 덧붙이기만 한다 ----------------------------------------
+
+def _json_bytes(doc) -> bytes:
+    return (json.dumps(doc, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+
+
+def sheet_path(kind: str, set_name: str) -> str:
+    """종류와 세트 이름으로 시트 PNG 경로(뿌리 기준). 건물·소품은 같은 시트를 쓴다."""
+    return f"{SHEET_KINDS[kind][0]}/{set_name}.png"
+
+
+def _read_existing_sheet(root: Path, png_path: str, plan: ExportPlan):
+    """(자리 표, 그림). 둘 다 없으면 ({}, None). 하나만 있거나 어긋나면 문제를 적고 (None, None)."""
+    table_file, png_file = root / (png_path + ".slots.json"), root / png_path
+    has_table, has_png = table_file.exists(), png_file.exists()
+    if not has_table and not has_png:
+        return {}, None
+    if has_table != has_png:
+        plan.problems.append(_problem(png_path, "export-sheet-inconsistent",
+                                      "자리 표와 PNG 중 하나만 있다(덧붙이기만 하는 시트라 어느 쪽도 믿고 고칠 수 없다)"))
+        return None, None
+    try:
+        doc = json.loads(table_file.read_text(encoding="utf-8"))
+        slots = doc["slots"]
+        for k, v in slots.items():
+            if not all(type(v[f]) is int for f in "xywh"):
+                raise ValueError(f"{k}의 x·y·w·h가 정수가 아니다")
+        if (doc["cell"], doc["width_cells"]) != (CELL, SHEET_WIDTH_CELLS):
+            raise ValueError("cell·width_cells가 지금 약속(32, 16)과 다르다")
+        slots = {k: {f: v[f] for f in "xywh"} for k, v in slots.items()}
+    except (OSError, ValueError, KeyError, TypeError, AttributeError) as e:
+        plan.problems.append(_problem(png_path, "export-slots-unreadable", f"{png_path}.slots.json를 못 읽었다({e})"))
+        return None, None
+    try:
+        with Image.open(png_file) as im:
+            img = im.convert("RGBA")
+    except (OSError, ValueError) as e:
+        plan.problems.append(_problem(png_path, "export-sheet-inconsistent", f"{png_path}를 못 읽었다({e})"))
+        return None, None
+    bad = [k for k, v in slots.items()
+           if v["x"] < 0 or v["y"] < 0 or v["x"] + v["w"] > img.width or v["y"] + v["h"] > img.height]
+    if img.width != CELL * SHEET_WIDTH_CELLS or bad:
+        plan.problems.append(_problem(png_path, "export-sheet-inconsistent",
+                                      f"PNG 크기 {img.size}가 자리 표와 맞지 않는다" + (f"(밖: {', '.join(bad)})" if bad else "")))
+        return None, None
+    return slots, img
+
+
+def _sheet_atlas_json(png_path: str, size, slots: dict, pivot: dict) -> bytes:
+    sprites = {n: {"x": s["x"], "y": s["y"], "w": s["w"], "h": s["h"], "pivot": dict(pivot)} for n, s in slots.items()}
+    return _json_bytes({"image": png_path, "width": size[0], "height": size[1], "pixelsPerUnit": PIXELS_PER_UNIT,
+                        "origin": "top-left", "sprites": sprites})
+
+
+def export_sheet(recipes: List[dict], kind: str, set_name: str, kit: Kit, repo_root) -> ExportPlan:
+    """같은 시트로 가는 명세들(각자 기본 그림만)을 시트에 넣는다.
+
+    이미 자리가 있는 id는 그 자리에 다시 그리고(크기가 달라졌으면 export-slot-size-changed), 시트의 나머지 픽셀은
+    그대로 둔다. 새 id는 마지막으로 쓴 줄 뒤에 주어진 순서대로 왼쪽부터 놓고, 폭이 모자라면 다음 줄로 간다."""
+    root = Path(repo_root)
+    plan = ExportPlan()
+    if kind not in SHEET_KINDS:
+        plan.problems.append(Problem("export-kind-mismatch", f"{kind}는 묶음 시트로 내는 종류가 아니다"))
+        return plan
+    png_path = sheet_path(kind, set_name)
+    folder, pivot = SHEET_KINDS[kind]
+    drawn: Dict[str, object] = {}
+    for recipe in recipes:
+        rid = recipe["id"]
+        if rid in drawn:
+            continue
+        if SHEET_KINDS.get(recipe.get("kind"), (None,))[0] != folder:
+            plan.problems.append(_problem(rid, "export-kind-mismatch",
+                                          f"{recipe.get('kind')}는 {folder} 시트에 들어가지 않는다"))
+            continue
+        cv, found = draw_and_check(kit, recipe, None)
+        plan.problems += [Problem(p.code, f"{rid}: {p.message}", p.x, p.y) for p in found]
+        if cv.w > CELL * SHEET_WIDTH_CELLS:
+            plan.problems.append(_problem(rid, "export-too-wide",
+                                          f"그림 폭 {cv.w}px가 시트 폭 {CELL * SHEET_WIDTH_CELLS}px보다 넓다"))
+            continue
+        drawn[rid] = cv
+    old_slots, old_img = _read_existing_sheet(root, png_path, plan)
+    if old_slots is None:
+        return plan
+    for rid, cv in drawn.items():
+        s = old_slots.get(rid)
+        if s is not None and (s["w"], s["h"]) != (cv.w, cv.h):
+            plan.problems.append(_problem(rid, "export-slot-size-changed",
+                                          f"자리 {s['w']}x{s['h']}인데 그림이 {cv.w}x{cv.h}가 됐다"
+                                          "(맵에 놓인 그림이 깨지므로 덮어쓰지 않는다)"))
+    if plan.problems:
+        return plan
+    slots = {k: dict(v) for k, v in old_slots.items()}
+    x, y, row_h = 0, max((s["y"] + s["h"] for s in slots.values()), default=0), 0
+    for rid, cv in drawn.items():
+        if rid in slots:
+            continue
+        if x + cv.w > CELL * SHEET_WIDTH_CELLS:
+            x, y, row_h = 0, y + row_h, 0
+        slots[rid] = {"x": x, "y": y, "w": cv.w, "h": cv.h}
+        x += cv.w
+        row_h = max(row_h, cv.h)
+    height = max([old_img.height if old_img else 0] + [s["y"] + s["h"] for s in slots.values()])
+    img = Image.new("RGBA", (CELL * SHEET_WIDTH_CELLS, height), (0, 0, 0, 0))
+    if old_img is not None:
+        img.paste(old_img, (0, 0))
+    for rid, cv in drawn.items():
+        s = slots[rid]
+        img.paste(cv.to_image().convert("RGBA"), (s["x"], s["y"]))   # 마스크 없이: 투명 픽셀도 그대로 덮는다
+    if old_img is not None and old_img.size == img.size and old_img.tobytes() == img.tobytes():
+        png = (root / png_path).read_bytes()          # 그림이 같으면 있는 바이트를 그대로 둔다
+    else:
+        buf = io.BytesIO()
+        img.save(buf, format="PNG", optimize=False)
+        png = buf.getvalue()
+    plan.files[png_path] = png
+    plan.files[png_path + ".slots.json"] = _json_bytes({"cell": CELL, "width_cells": SHEET_WIDTH_CELLS, "slots": slots})
+    plan.files[f"{ATLAS_ROOT}/{png_path}.atlas.json"] = _sheet_atlas_json(png_path, img.size, slots, pivot)
     return plan
 
 

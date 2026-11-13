@@ -19,6 +19,9 @@ Python 3.11 + Pillow. 다른 패키지는 쓰지 않는다.
 | `python Tools/pixel-kit/kit.py parts` | 점 부품 목록 판(명세를 쓸 때 다시 쓸 부품을 고른다) | `parts.png` |
 | `python Tools/pixel-kit/kit.py export <가구 id…> [--dry-run] [--repo 뿌리]` | 가구 그림을 게임이 읽는 PNG + 좌표표로 내고, `game.replaces`가 있으면 가구 정의의 그림 참조를 바꾼다(아래 "내보내기"). 가구만 된다 | 저장소 뿌리의 `art/props/`, `data/atlases/` |
 
+| `python Tools/pixel-kit/kit.py export <타일·건물·소품 id…> [--dry-run] [--repo 뿌리]` | 타일은 `art/tiles/<세트>.png`, 건물·바깥 소품은 `art/world/<세트>.png` 묶음 시트에 덧붙이고 자리 표·좌표표를 쓴다(아래 "묶음 시트") | 저장소 뿌리의 `art/tiles/`, `art/world/`, `data/atlases/` |
+| `python Tools/pixel-kit/kit.py test-level [--out 폴더] [--repo 뿌리]` | 지금 시트들로 시험용 맵을 쓴다(아래 "시험용 맵") | `<뿌리>/art/world/test/pixel-kit-test.ldtk`, `maps.json` |
+
 공통 인자: `--kit 폴더`(기본 `art/kit`), `--out 폴더`(기본 `output/pixel-kit`), `--scale N`(보기용 확대 배율,
 정수·최근접. 기본 render 6, sheet·scene 4, parts 8).
 
@@ -158,7 +161,28 @@ if/switch로 종류를 닫지 않는다.
 - 쓰기는 같은 폴더의 `<이름>.tmp`에 먼저 다 쓴 뒤 PNG, 좌표표, 가구 정의 순서로 바꿔친다. 중간에 실패하면 임시 파일을 지우고, 바꿔치기 도중이면 이미 바뀐 파일을 알리며 끝 코드 2.
 - 같은 내용이면 쓰지 않고 "바꿀 것 없음"이라고 한다(수정 시각도 그대로). `--dry-run`은 쓸 파일과 바꿀 가구만 찍는다.
 - `--repo`의 기본은 이 도구가 든 저장소의 뿌리다. 테스트는 임시 폴더의 가짜 저장소만 쓴다.
-- 장면·타일·건물 id를 주면 아직 없다는 오류(끝 코드 2).
+- 장면 id를 주면 아직 없다는 오류(끝 코드 2). 타일·건물·소품은 아래 묶음 시트다.
+
+## 묶음 시트 (export, 타일·건물·바깥 소품)
+
+- 세트 = 명세 id의 첫 마디. 타일(`kind: tile`)은 `art/tiles/<세트>.png`, 건물·바깥 소품(`building`, `prop`)은 한 시트 `art/world/<세트>.png`에 같이 든다(새 종류는 `export.SHEET_KINDS` 한 줄). 한 번에 여러 id를 주면 시트별로 묶어 처리한다. 각 명세의 **기본 그림만** 낸다(상태는 아직 안 낸다).
+- 시트는 32px 격자, **폭 16칸(512px) 고정**, 높이는 필요한 만큼(32의 배수). 폭이 넘는 그림은 `export-too-wide`.
+- 자리 표 `<시트>.slots.json`: `{"cell": 32, "width_cells": 16, "slots": {"<명세 id>": {"x", "y", "w", "h"}}}`(px). 32x64 실내 벽은 자리 하나(h 64).
+- **덧붙이기만 한다.** 이미 자리가 있는 id는 그 자리에 다시 그리고, 시트의 나머지 픽셀은 그대로 둔다. 크기가 달라졌으면 `export-slot-size-changed`이고 아무것도 쓰지 않는다(맵에 놓인 그림이 깨진다). 새 id는 **마지막으로 쓴 줄 뒤**에 명령줄 인자 순서대로 왼쪽부터 놓고, 폭이 모자라면 다음 줄로 간다(줄 높이는 그 줄에서 가장 큰 그림). 빈 틈을 메우지 않는다.
+- 좌표표 `data/atlases/<시트 경로>.atlas.json`: `pixelsPerUnit` 32, 칸 이름은 명세 id(자리 표에 있는 것 전부), `pivot`은 타일 `{0.5, 0.5}`, 건물·소품 `{0.5, 1.0}`(발 위치). `width`·`height`는 PNG에서 잰 값.
+- 쓰기는 가구와 같다(임시 파일에 다 쓴 뒤 바꿔치기, 같은 내용이면 쓰지 않는다, 문제가 하나라도 있으면 전부 안 쓴다, `--dry-run`).
+- 문제 코드: `export-too-wide`, `export-slot-size-changed`, `export-kind-mismatch`(명세 종류가 그 시트에 안 맞음), `export-slots-unreadable`(자리 표가 JSON·모양이 아님), `export-sheet-inconsistent`(PNG와 자리 표 중 하나만 있거나 서로 안 맞음). 그림의 검사 문제도 그대로 문제다.
+
+## 시험용 맵 (test-level)
+
+`kit.py test-level`은 `--repo`의 `art/tiles/*.slots.json`, `art/world/*.slots.json`을 읽어 `--out`(기본 `<뿌리>/art/world/test`, 저장소 안이어야 한다)에
+`pixel-kit-test.ldtk`(레벨 `PixelKitTest`)와 `maps.json`을 쓴다. 게임에서는 `--maps <그 maps.json>`으로 본다(`game/world/README.md`).
+
+- 층 `Ground`(타일): 첫 타일 시트(파일 이름순)의 32x32 자리 중 맨 처음 것으로 레벨 전체를 깐다. 층 `Art`(엔티티, 층 정의 태그 `art`): 건물·소품 자리를 하나씩, 왼쪽에서 오른쪽으로 한 칸 틈을 두고 같은 땅 줄에 **발(아래 가운데) 기준**으로 놓는다.
+- 레벨 크기는 내용에서 계산한다(항상 32의 배수). 도착 지점 `front` 하나: 첫 그림의 발 아래 둘째 줄.
+- 충돌은 `collider-layers`에 빈 층 목록: 어떤 층의 타일도 막지 않아 레벨 전체가 열린다.
+- `relPath`는 `.ldtk` 폴더 기준 상대 경로(슬래시)이고 `pxWid`·`pxHei`는 PNG에서 잰 값이다. `maps.json`은 `game/world/maps.json`의 `walker`·`npcWalker`를 옮기고 맵 하나만 둔다(`ldtk`는 저장소 뿌리 기준).
+- 같은 내용이면 쓰지 않는다. 시트가 없거나 `npcWalker`가 원본에 없으면 끝 코드 2.
 
 ## 같이 바뀌는 색
 

@@ -253,13 +253,22 @@ def cmd_export(args, kit: Kit) -> int:
         raise UsageError("export에는 id가 하나 이상 필요하다")
     root = Path(args.repo)
     plans = []
+    groups: Dict[str, List[dict]] = {}     # 시트 PNG 경로 → 명세들(인자 순서). 건물과 소품은 같은 시트다
     for rid in args.ids:
         recipe = _recipe(kit, rid)
         kind = recipe.get("kind")
-        if kind != "furniture":
-            raise UsageError(f"{rid}: {kind} 내보내기는 아직 없다(지금은 가구만)")
+        if kind == "furniture":
+            try:
+                plans.append(export.export_furniture(recipe, kit, root))
+            except RecipeError as e:
+                raise UsageError(str(e)) from None
+        elif kind in export.SHEET_KINDS:
+            groups.setdefault(export.sheet_path(kind, rid.split(".")[0]), []).append(recipe)
+        else:
+            raise UsageError(f"{rid}: {kind} 내보내기는 아직 없다(가구, 타일, 건물, 소품만)")
+    for recipes in groups.values():
         try:
-            plans.append(export.export_furniture(recipe, kit, root))
+            plans.append(export.export_sheet(recipes, recipes[0]["kind"], recipes[0]["id"].split(".")[0], kit, root))
         except RecipeError as e:
             raise UsageError(str(e)) from None
     plan = export.merge_plans(plans)
@@ -291,7 +300,27 @@ def cmd_export(args, kit: Kit) -> int:
     return 0
 
 
+def cmd_test_level(args, kit: Kit) -> int:
+    """지금 시트로 시험용 맵(pixel-kit-test.ldtk + maps.json)을 쓴다. --out의 기본은 저장소의 art/world/test."""
+    from . import ldtk_test_level
+    if args.ids:
+        raise UsageError("test-level에는 인자가 없다")
+    try:
+        written = ldtk_test_level.write_test_level(args.repo, args.out)
+    except ldtk_test_level.TestLevelError as e:
+        raise UsageError(str(e)) from None
+    except OSError as e:
+        print(f"못 썼다: {e}", file=sys.stderr)
+        return 2
+    for rel in written:
+        print(f"저장: {rel}")
+    if not written:
+        print("바꿀 것 없음")
+    return 0
+
+
 COMMANDS: Dict[str, Callable] = {
+    "test-level": cmd_test_level,
     "render": cmd_render,
     "lint": cmd_lint,
     "sheet": cmd_sheet,
