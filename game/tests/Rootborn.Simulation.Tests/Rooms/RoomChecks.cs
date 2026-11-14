@@ -116,6 +116,7 @@ namespace Rootborn.Simulation.Rooms
             var chests = shares.Find<RoomChestsClient>();
             if (chests != null) chests.Answered += (request, applied) => ChestAnswered(seat, session, request, applied);
             BuildStarted(seat, session);
+            ScanWallet(seat, session);
             var house = shares.Find<RoomHouseClient>();
             if (house != null) house.Answered += (request, applied) => { Result.Count("집 요청"); if (!applied) Result.Count("먼저 온 것만 됨: 집"); };
             var wallet = shares.Find<RoomWalletClient>();
@@ -161,8 +162,10 @@ namespace Rootborn.Simulation.Rooms
         public void Pump(RoomSeat seat, double now)
         {
             GameSession s = seat.Session;
-            if (s != null && seat.Connected && s.SharesHouseBuild) { PumpBuild(seat, now, s); return; }
-            PumpChests(seat, now);
+            ScanWallet(seat, s);
+            if (s != null && seat.Connected && s.SharesHouseBuild) PumpBuild(seat, now, s);
+            else PumpChests(seat, now);
+            ScanWallet(seat, seat.Session);
         }
 
         private void PumpChests(RoomSeat seat, double now)
@@ -244,6 +247,7 @@ namespace Rootborn.Simulation.Rooms
             GameSession s = seat.Session;
             if (s == null) return;
             Result.Count("걸음");
+            ScanWallet(seat, s);
             if (st.Expected != null && s != st.ExpectedFrom && seat.Playing && !s.WaitingForRoom) CompareAfterRejoin(seat, st, s);
             if (st.StepSession == s && st.Busy && s.StudentDay == st.Day && s.ActivityEndsAtMinutes > st.EndsAt && st.EndsAt > s.StudentTimeMinutes)
                 Fail("하는 중인 사람이 다른 활동을 시작했다: " + seat + " 끝나는 시각 " + st.EndsAt + " → " + s.ActivityEndsAtMinutes + "(지금 " + s.StudentTimeMinutes + "분)");
@@ -287,6 +291,7 @@ namespace Rootborn.Simulation.Rooms
             CheckHouse();
             CheckChests();
             CheckBuild();
+            CheckWalletBook();
         }
 
         private void CheckHouse()

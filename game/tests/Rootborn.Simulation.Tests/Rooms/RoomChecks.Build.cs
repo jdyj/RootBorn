@@ -33,6 +33,9 @@ namespace Rootborn.Simulation.Rooms
             public bool Paid, Released, Gone, Applied, Unknown;
             public string LastUse = string.Empty;
             public int Cost;
+            // 돈 낸 것: 각자 쓰는 지갑에서 실제로 줄어든 돈(PaidMeasured면 받기 한 번 동안 잰 값, 아니면 요청의 비용), 같이 쓰는 지갑이었나.
+            public int PaidAmount;
+            public bool PaidMeasured, SharedWallet, RestartedUse;
 
             public bool IsBand => Kind == RoomHouseBuild.Band;
             public override string ToString() => Seat?.PlayerId + " " + Kind + " " + FinishId + (IsBand ? string.Empty : " " + Tool + "@" + X + "," + Y + " x" + Amount)
@@ -42,7 +45,8 @@ namespace Rootborn.Simulation.Rooms
         private readonly Dictionary<string, BuildHold> _build = new Dictionary<string, BuildHold>(StringComparer.Ordinal);
         private readonly HashSet<string> _serverBuildHolds = new HashSet<string>(StringComparer.Ordinal);
         private readonly Dictionary<RoomSeat, int> _buildPaid = new Dictionary<RoomSeat, int>();
-        private readonly Dictionary<RoomSeat, int> _buildApplied = new Dictionary<RoomSeat, int>();
+        private readonly List<BuildHold> _newlyPaid = new List<BuildHold>(2);
+        private readonly SharedWalletBook _book = new SharedWalletBook();
         private int _buildRevision = -1;
         private string _buildSignature;
         private HouseFinishes _buildPrev;
@@ -134,7 +138,7 @@ namespace Rootborn.Simulation.Rooms
                 RoomRequestSaveData r = requests[i];
                 if (r.Piece != RoomHouseBuild.PieceName) continue;
                 if (r.Kind == RoomHouseBuild.Finish || r.Kind == RoomHouseBuild.Band) RegisterHold(seat, s, r);
-                else if (r.Kind == RoomHouseBuild.Use && r.Ids != null && r.Ids.Length == 1) NoteUse(seat, s, r);
+                else if (r.Kind == RoomHouseBuild.Use && r.Ids != null && r.Ids.Length == 1) NoteUse(seat, s, r, i + 1 < requests.Count ? requests[i + 1] : null);
                 else if (r.Kind == RoomHouseBuild.Release && r.Ids != null && r.Ids.Length == 1) NoteRelease(seat, s, r);
             }
         }
@@ -150,7 +154,9 @@ namespace Rootborn.Simulation.Rooms
             return h;
         }
 
-        private void NoteUse(RoomSeat seat, GameSession s, RoomRequestSaveData r)
+        // next: 보낼 목록에서 이 쓰기 바로 뒤의 요청. 같이 쓰는 지갑이면 돈을 내는 바꾸기가 꾸밈 쓰기 다음에 방 지갑 쓰기(Ids[0] = 방 지갑 잡기 id)를 적는다
+        // (Game PayForHold의 커밋 → RoomWalletClient.TryExchange가 커밋 뒤에 쓰기를 더함).
+        private void NoteUse(RoomSeat seat, GameSession s, RoomRequestSaveData r, RoomRequestSaveData next)
         {
             BuildHold h = HoldOf(seat, r);
             if (h.Released) Fail("풀어 버린 꾸밈 잡기에 쓰기가 적혔다: " + h);
@@ -158,9 +164,25 @@ namespace Rootborn.Simulation.Rooms
             {
                 h.Paid = true;
                 h.LastUse = r.RequestId;
+                h.PaidAmount = h.Cost; // 각자 쓰는 지갑이면 받기 한 번 동안 잰 값으로 바꾼다(PumpBuild)
+                h.SharedWallet = s.SharesWallet;
                 Add(_buildPaid, seat, h.Cost);
+                _newlyPaid.Add(h);
                 Result.Count("꾸밈 돈 냄(쓰기를 적음)");
-                if (h.Created != null && h.Created != s) Result.Count("떠도는 잡기 정리: 다시 켠 판이 쓰기를 적음");
+                bool restarted = h.Created != null && h.Created != s;
+                if (restarted) Result.Count("떠도는 잡기 정리: 다시 켠 판이 쓰기를 적음");
+                if (h.SharedWallet)
+                {
+                    if (next != null && next.Piece == RoomWallet.PieceName && next.Kind == RoomWallet.Use && next.Ids != null && next.Ids.Length == 1)
+                    {
+                        string fail = _book.LinkDecoration(seat.PlayerId, h.Id, next.Ids[0]);
+                        if (fail != null) Fail(fail);
+                        Result.Count("꾸밈 돈: 방 지갑 쓰기와 이음");
+                    }
+                    else if (restarted) { h.RestartedUse = true; Result.Count("꾸밈 돈: 다시 켠 판의 쓰기라 방 지갑 쓰기가 없다(돈은 지난 판이 냈다)"); }
+                    else if (h.Cost == 0) Result.Count("꾸밈 돈: 비용 0인 꾸밈(방 지갑 쓰기 없음 — 적용될 때 다시 계산한 비용도 0이어야 한다)");
+                    else Fail("같이 쓰는 지갑인데 꾸밈 쓰기와 같은 바꾸기에 방 지갑 쓰기가 없다(돈 없이 꾸밈): " + h + " 다음 요청 " + (next == null ? "(없음)" : next.Piece + "/" + next.Kind));
+                }
             }
             else if (h.LastUse != r.RequestId)
             {
@@ -190,14 +212,49 @@ namespace Rootborn.Simulation.Rooms
         private void PumpBuild(RoomSeat seat, double now, GameSession s)
         {
             ScanBuild(seat, s);
-            int paidBefore = PaidOf(seat), balanceBefore = s.Wallet.Balance, day = s.StudentDay;
+            _newlyPaid.Clear();
+            int balanceBefore = s.Wallet.Balance, day = s.StudentDay;
             PumpChests(seat, now);
             if (seat.Session != s) return;
             ScanBuild(seat, s);
             if (s.SharesWallet || !seat.Connected || s.StudentDay != day) return;
-            int paid = PaidOf(seat) - paidBefore, spent = balanceBefore - s.Wallet.Balance;
-            if (spent != paid) Fail("꾸밈으로 나간 돈이 돈 낸 잡기의 비용과 다르다: " + seat + " 지갑 " + balanceBefore + " → " + s.Wallet.Balance + "(줄어든 " + spent + "), 새로 돈 낸 잡기 비용 " + paid);
-            if (paid > 0) Result.Count("꾸밈 돈 보존: 지갑 줄어듦 = 비용");
+            int spent = balanceBefore - s.Wallet.Balance, requested = 0;
+            foreach (BuildHold h in _newlyPaid) requested += h.Cost;
+            if (_newlyPaid.Count == 0)
+            {
+                if (spent != 0) Fail("돈 낸 꾸밈 잡기가 없는데 받기 한 번 동안 각자 쓰는 지갑이 바뀌었다: " + seat + " 지갑 " + balanceBefore + " → " + s.Wallet.Balance);
+                return;
+            }
+            // 받기 한 번 동안 실제로 줄어든 돈이 그 잡기가 낸 돈이다. 방이 쓰기를 적용할 때(Landed) 방의 기록에서 다시 계산한 비용과 견준다.
+            if (_newlyPaid.Count == 1)
+            {
+                BuildHold h = _newlyPaid[0];
+                Add(_buildPaid, seat, spent - h.PaidAmount);
+                h.PaidAmount = spent;
+                h.PaidMeasured = true;
+            }
+            else if (spent != requested)
+                Fail("한 번의 받기에 꾸밈 잡기 여럿이 돈을 냈는데 줄어든 돈이 요청의 비용 합과 다르다: " + seat + " 줄어든 " + spent + ", 비용 합 " + requested);
+            Result.Count("꾸밈 돈: 각자 쓰는 지갑에서 줄어든 돈을 잼");
+        }
+
+        /// <summary>같이 쓰는 지갑이면 보낼 목록의 지갑 요청을 장부에 옮긴다(방이 반영했는지는 조용할 때 방의 답 장부로 가린다).</summary>
+        private void ScanWallet(RoomSeat seat, GameSession s)
+        {
+            if (s == null || !s.SharesWallet) return;
+            var requests = s.Shares.Outbox.Requests;
+            for (int i = 0; i < requests.Count; i++) if (requests[i].Piece == RoomWallet.PieceName) _book.See(seat.PlayerId, requests[i]);
+        }
+
+        /// <summary>조용할 때: 방 지갑의 잔액 = 기준 + 넣기 + 풀기 − 잡기(꾸밈은 방의 기록에서 다시 계산한 비용). 이 방에 방 지갑이 없으면 하지 않는다.</summary>
+        private void CheckWalletBook()
+        {
+            RoomWallet wallet = Wallet();
+            if (wallet == null) return;
+            RoomRequestLedger ledger = _play.Server.Pieces.Ledger;
+            string fail = _book.Check(wallet.Balance, (string p, string id, out RoomAnswer a) => ledger.TryGet(p, id, out a), wallet.Balance >= PersonalWallet.MaxBalance);
+            if (fail != null) Fail(fail);
+            Result.Count("방 지갑 잔액 = 넣기 − 잡기 + 풀기(꾸밈은 방의 기록으로 다시 계산)");
         }
 
         // ---------- 방 쪽 ----------
@@ -242,29 +299,58 @@ namespace Rootborn.Simulation.Rooms
             foreach (string id in now) _serverBuildHolds.Add(id);
         }
 
-        // 돈을 낸 잡기가 방에서 지워졌다(쓰기 적용): 낸 칸 수와 방이 실제로 바꾼 칸 수가 같고, 방의 기록에 그 꾸밈이 있다.
+        // 돈을 낸 잡기가 방에서 지워졌다(쓰기 적용): 낸 칸 수와 방이 실제로 바꾼 칸 수가 같고, 방의 기록에 그 꾸밈이 있고,
+        // 낸 돈(각자 지갑에서 잰 감소 / 같이 쓰는 지갑이 잡은 돈) = 방의 기록에서 다시 계산한 비용(정의의 칸당 값 × 방의 앞 기록에서 실제로 바뀌는 칸 수, 띠는 바뀌면 한 번).
+        // 같은 판에서 잡기 여럿이 지워지면 before에 차례로 적용해 다음 것의 앞 기록으로 쓴다.
         private void Landed(BuildHold h, HouseFinishes before, HouseFinishes after)
         {
             h.Applied = true;
-            Add(_buildApplied, h.Seat, h.Cost);
             Result.Count("꾸밈 쓰기가 방에 적용됨(돈 낸 것)");
-            if (h.Unknown || before == null || after == null) return;
-            var def = FinishOf(h.FinishId);
-            if (def == null) return;
-            if (h.IsBand)
+            var def = h.Unknown || before == null || after == null ? null : FinishOf(h.FinishId);
+            int recomputed = -1;
+            if (def != null && h.IsBand)
             {
                 if (after.BandColors != def.Art) Fail("돈 낸 띠 꾸밈이 방의 기록에 없다: " + h + " — 보이는 띠 " + after.BandColors + ", 꾸밈의 그림 " + def.Art);
-                return;
+                var band = before.PreviewBand(h.FinishId, _ => true, _ => true);
+                recomputed = Money(HouseFinishes.CostFor(def, before.BandColors != def.Art ? 1 : 0));
+                before.Apply(band);
             }
-            var preview = before.Preview(h.FinishId, h.Tool, new CellPos(h.X, h.Y), _ => true, _ => true);
-            if (preview.ChangedCells.Count != h.Amount)
-                Fail("돈 낸 칸 수와 방이 바꾼 칸 수가 다르다: " + h + " — 낸 칸 " + h.Amount + ", 방이 바꾼 칸 " + preview.ChangedCells.Count);
-            bool wall = string.Equals(def.Slot, RoomFinishSlots.Wall, StringComparison.Ordinal);
-            foreach (CellPos c in preview.ChangedCells)
+            else if (def != null)
             {
-                string seen = wall ? after.WallAt(c) : after.FloorAt(c);
-                if (seen != h.FinishId) Fail("돈 낸 꾸밈이 방의 기록에 없다: " + h + " 칸 " + c.X + "," + c.Y + " 보이는 것 " + seen);
+                var preview = before.Preview(h.FinishId, h.Tool, new CellPos(h.X, h.Y), _ => true, _ => true);
+                if (preview.ChangedCells.Count != h.Amount)
+                    Fail("돈 낸 칸 수와 방이 바꾼 칸 수가 다르다: " + h + " — 낸 칸 " + h.Amount + ", 방이 바꾼 칸 " + preview.ChangedCells.Count);
+                bool wall = string.Equals(def.Slot, RoomFinishSlots.Wall, StringComparison.Ordinal);
+                foreach (CellPos c in preview.ChangedCells)
+                {
+                    string seen = wall ? after.WallAt(c) : after.FloorAt(c);
+                    if (seen != h.FinishId) Fail("돈 낸 꾸밈이 방의 기록에 없다: " + h + " 칸 " + c.X + "," + c.Y + " 보이는 것 " + seen);
+                }
+                recomputed = Money(HouseFinishes.CostFor(def, preview.ChangedCells.Count));
+                before.Apply(preview);
             }
+            if (recomputed < 0) Result.Count("꾸밈 돈: 방의 기록으로 비용을 다시 계산하지 못함(관찰 틈)");
+            if (h.SharedWallet)
+            {
+                if (!_book.IsLinked(h.Seat.PlayerId, h.Id))
+                {
+                    // 방 지갑 쓰기가 없는 적용: 다시 켠 판의 쓰기(돈은 지난 판이 냈다 — 잇지 못한다)이거나, 방의 기록으로도 비용이 0이어야 한다. 아니면 돈 없이 꾸민 것(덜 청구).
+                    if (h.RestartedUse || recomputed < 0) { Result.Count("꾸밈 돈: 방 지갑 쓰기와 잇지 못한 적용(다시 켠 판·관찰 틈)"); return; }
+                    if (recomputed > 0) Fail(_book.DecorationLanded(h.Seat.PlayerId, h.Id, recomputed));
+                    else Result.Count("꾸밈 돈 보존: 비용 0인 꾸밈은 방 지갑을 쓰지 않았다");
+                    return;
+                }
+                string fail = _book.DecorationLanded(h.Seat.PlayerId, h.Id, recomputed);
+                if (fail != null) Fail(fail);
+                if (recomputed >= 0) Result.Count("꾸밈 돈 보존: 방 지갑이 잡은 돈 = 방의 기록으로 다시 계산한 비용");
+            }
+            else if (h.PaidMeasured && recomputed >= 0)
+            {
+                if (h.PaidAmount != recomputed)
+                    Fail("꾸밈으로 각자 쓰는 지갑에서 나간 돈과 방이 바꾼 것의 비용이 다르다: " + h + " — 지갑에서 줄어든 돈 " + h.PaidAmount + ", 방의 기록에서 다시 계산한 비용 " + recomputed);
+                Result.Count("꾸밈 돈 보존: 지갑 줄어듦 = 방의 기록으로 다시 계산한 비용");
+            }
+            else if (!h.PaidMeasured) Result.Count("꾸밈 돈: 각자 쓰는 지갑에서 잴 수 없던 지불(끊김·날 바뀜 — 남의 걸음 검사가 본다)");
         }
 
         private void CountConcurrentBuilds()
@@ -299,6 +385,17 @@ namespace Rootborn.Simulation.Rooms
 
         private int BuildHeld => BuildPiece?.HeldCount ?? 0;
 
+        /// <summary>방에 꾸밈 잡기가 없고 어느 자리의 저장에도 돈 낸 꾸밈 표시가 없다(끝난 뒤 가만히 기다리기를 일찍 끝낼 수 있다).</summary>
+        public bool BuildAtRest
+        {
+            get
+            {
+                if (BuildHeld > 0) return false;
+                foreach (RoomSeat seat in _play.Seats) if (PaidMarks(seat) > 0) return false;
+                return true;
+            }
+        }
+
         private void BuildAfterRestart() => _buildRevision = -1;
 
         // ---------- 조용할 때 ----------
@@ -316,9 +413,11 @@ namespace Rootborn.Simulation.Rooms
                 _build.Remove(id);
                 Result.Count("꾸밈 요청이 방에 닿기 전에 사라짐(끊김 — 돈은 내지 않았다)");
             }
-            foreach (RoomSeat seat in _play.Seats)
-                if (PaidOf(seat) != (_buildApplied.TryGetValue(seat, out int a) ? a : 0))
-                    Fail("자리가 꾸밈으로 낸 돈과 방에 적용된 돈이 다르다: " + seat + " 낸 " + PaidOf(seat) + ", 적용된 " + a);
+            // 방에 잡기가 없으면 돈 낸 잡기는 모두 방에 적용됐어야 한다(낸 돈이 꾸밈 없이 남지 않는다). (전의 "낸 돈 = 적용된 돈"은 같은 비용을 양쪽에 쌓아 늘 같았다 —
+            // 돈의 양은 Landed가 방의 기록으로 다시 계산해 지갑의 실제 감소와 견준다.)
+            if (piece.HeldCount == 0)
+                foreach (BuildHold h in _build.Values)
+                    if (h.Paid && !h.Gone) Fail("방에 꾸밈 잡기가 없는데 돈 낸 잡기가 방에 적용되지 않았다: " + h);
             HouseBuildSaveData data = piece.ToSaveData();
             foreach (RoomSeat seat in _play.Seats)
             {
@@ -390,6 +489,7 @@ namespace Rootborn.Simulation.Rooms
             if (piece.HeldCount > 0) Fail("끝난 뒤 모두 다시 들어와 가만히 있었는데 방에 꾸밈 잡기가 남았다(영영 막힌 칸): " + string.Join("; ", _build.Values.Where(h => !h.Gone)));
             foreach (BuildHold h in _build.Values.Where(h => !h.Gone && (h.Paid || _serverBuildHolds.Contains(h.Id)))) Fail("끝난 뒤에도 장부의 꾸밈 잡기가 끝나지 않았다: " + h);
             CheckBuild();
+            if (Quiet) CheckWalletBook();
             foreach (RoomSeat seat in _play.Seats)
             {
                 CheckOwnBuildFile(seat);
