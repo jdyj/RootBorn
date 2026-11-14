@@ -316,6 +316,45 @@ namespace Rootborn.Game.Tests
         }
 
         [Test]
+        public void LeavingTheHouse_NotInHouse_ReenteringKeepsFinishes()
+        {
+            // 짓는 집을 나가면(Host가 다른 맵에 들어설 때 LeaveHouseBuild) 꾸밀 수 없다. 집 배치(House)는 남아 있어도. 기록은 버리지 않는다 —
+            // 다시 들어오면(같은 프레임) 꾸밈이 그대로이고, 저장 → 새 GameSession에서도 그대로다.
+            using var saves = new TempSaves();
+            var game = InHouse(saves.Store);
+            var floor = FreeNonDefault(RoomFinishSlots.Floor);
+            SetMoney(game, MoneyFor(floor, TopLeftRoomFill) * 2);
+            Assert.That(game.ApplyHouseFinish(floor.Id, HouseFinishTools.Room, TopLeftRoom), Is.True);
+            byte[] written = File.ReadAllBytes(BuildPath(saves));
+            int money = Money(game);
+
+            var topics = new List<string>();
+            game.Changed += topics.Add;
+            game.LeaveHouseBuild();
+            Assert.That(game.House, Is.Not.Null, "전제: 집 배치는 남아 있다(가구 방을 떠나도 배치를 버리지 않는다)");
+            Assert.That(game.HouseBuildOpen, Is.False, "집을 나가면 꾸밀 수 없다");
+            Assert.That(topics, Does.Contain(GameChangeTopics.HouseBuild), "떠남도 알린다(꾸미기 화면이 닫히게)");
+            var other = TestWorld.Definitions.All<RoomFinishDefinition>().First(f => f.Slot == RoomFinishSlots.Floor && f.UnlockToken.Length == 0 && f.Id != floor.Id && f.Id != Frame.DefaultFloor);
+            Assert.That(game.PreviewHouseFinish(other.Id, HouseFinishTools.Room, TopLeftRoom).ReasonKey, Is.EqualTo(HouseFinishReasons.NotInHouse));
+            Assert.That(game.ApplyHouseFinish(other.Id, HouseFinishTools.Room, TopLeftRoom), Is.False);
+            Assert.That(Money(game), Is.EqualTo(money), "돈 그대로");
+            Assert.That(File.ReadAllBytes(BuildPath(saves)), Is.EqualTo(written), "떠남은 파일을 쓰지 않는다");
+            Assert.That(game.HouseFloorAt(TopLeftRoom), Is.EqualTo(floor.Id), "기록은 들고 있다");
+            topics.Clear();
+            game.LeaveHouseBuild();
+            Assert.That(topics, Is.Empty, "이미 떠났으면 알리지 않는다");
+
+            game.EnterHouseBuild(Frame); // 같은 프레임으로 다시 들어온다
+            Assert.That(game.HouseBuildOpen, Is.True);
+            Assert.That(topics, Does.Contain(GameChangeTopics.HouseBuild));
+            Assert.That(game.HouseFloorAt(TopLeftRoom), Is.EqualTo(floor.Id), "다시 들어와도 꾸밈이 그대로");
+            Assert.That(game.PreviewHouseFinish(floor.Id, HouseFinishTools.Room, TopLeftRoom).ReasonKey, Is.EqualTo(HouseFinishReasons.NothingToChange));
+
+            var again = InHouse(saves.Store);
+            Assert.That(again.HouseFloorAt(TopLeftRoom), Is.EqualTo(floor.Id), "저장 → 새 판에서도 그대로");
+        }
+
+        [Test]
         public void WithoutAttach_SaveKeepsLoadedRecords()
         {
             using var saves = new TempSaves();

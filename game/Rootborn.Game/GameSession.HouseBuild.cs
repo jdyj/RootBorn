@@ -32,17 +32,41 @@ namespace Rootborn.Game
             batch.Write(SaveSlot, SaveFileNames.HouseBuild, _houseFinishes.ToSaveData());
         }
 
-        /// <summary>짓는 집에 들어선다(Host가 부른다). 같은 프레임이면 다시 붙이지 않는다. 저장하지 않는다. 알림: <see cref="GameChangeTopics.HouseBuild"/>.</summary>
+        /// <summary>
+        /// 짓는 집에 들어선다(Host가 부른다). 같은 프레임이면 다시 붙이지 않는다(떠나 있었으면 다시 연다). 저장하지 않는다.
+        /// 알림: <see cref="GameChangeTopics.HouseBuild"/>(붙였거나 다시 열었을 때만).
+        /// </summary>
         public void EnterHouseBuild(HouseBuildFrame frame)
         {
             if (frame == null) throw new ArgumentNullException(nameof(frame));
-            if (ReferenceEquals(_houseFinishes.Frame, frame)) return;
+            if (ReferenceEquals(_houseFinishes.Frame, frame))
+            {
+                if (_inHouseBuild) return;
+                _inHouseBuild = true;
+                Notify(null, GameChangeTopics.HouseBuild);
+                return;
+            }
             _houseFinishes.Attach(frame, FindFinish);
+            _inHouseBuild = true;
             Notify(null, GameChangeTopics.HouseBuild);
         }
 
-        /// <summary>꾸밀 수 있는 집이 열려 있다: 프레임이 붙었고, 집 배치가 있고, 일터가 아니다.</summary>
-        public bool HouseBuildOpen => _houseFinishes.Attached && House != null && ActiveWorkspace == null;
+        /// <summary>
+        /// 짓는 집이 아닌 맵에 들어섰다(Host가 부른다): 꾸미기를 닫는다. 프레임과 기록은 그대로 들고 있다(버리지도 쓰지도 않는다) —
+        /// 다시 들어오면 꾸밈이 그대로다. 이미 떠났으면 아무것도 하지 않는다. 알림: <see cref="GameChangeTopics.HouseBuild"/>.
+        /// </summary>
+        public void LeaveHouseBuild()
+        {
+            if (!_inHouseBuild) return;
+            _inHouseBuild = false;
+            Notify(null, GameChangeTopics.HouseBuild);
+        }
+
+        // 짓는 집 맵에 서 있다(EnterHouseBuild ~ LeaveHouseBuild). 집 배치(House)는 가구 방을 떠나도 남으므로 따로 든다.
+        private bool _inHouseBuild;
+
+        /// <summary>꾸밀 수 있는 집이 열려 있다: 짓는 집 맵에 있고(프레임이 붙었고), 집 배치가 있고, 일터가 아니다.</summary>
+        public bool HouseBuildOpen => _inHouseBuild && _houseFinishes.Attached && House != null && ActiveWorkspace == null;
 
         /// <summary>그 바닥 칸의 보이는 벽지 id(기록이 없으면 프레임 기본, 붙지 않았으면 빈 글).</summary>
         public string HouseWallAt(CellPos floorCell) => _houseFinishes.WallAt(floorCell);
