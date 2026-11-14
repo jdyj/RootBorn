@@ -224,6 +224,42 @@ namespace Rootborn.Host.Tests.TwoGames
         private string Text(string key) => _host.Game.Text.Get(key);
         private string HostReason => ((UiTextBlock)_host.Node(FurniturePlacementScreen.FinishReasonId)).Text;
 
+        /// <summary>방(방장 프로세스 안)의 요청 장부에 지금 있는 답 id. 뒤에 <see cref="FinishAnswersSince"/>로 그 뒤에 생긴 답만 본다.</summary>
+        private HashSet<string> LedgerIds()
+            => new HashSet<string>(_host.Game.Hosting.Room.Server.Pieces.Ledger.ToSaveData().Records.Select(r => r.RequestId), StringComparer.Ordinal);
+
+        /// <summary>
+        /// <paramref name="before"/> 뒤에 방이 답한 꾸밈 답을 답한 순서대로: (누구 "방장"/"손님", 결과). 한 사람의 꾸밈 한 번은 잡기 답 + 쓰기 답 둘이다
+        /// (쓰기는 돈을 낸 뒤 방이 꾸밈을 칠한 답). 장부는 답의 종류를 남기지 않으므로 사람마다 첫 답이 잡기, 둘째가 쓰기다.
+        /// </summary>
+        private List<(string Who, string Outcome)> FinishAnswersSince(HashSet<string> before)
+        {
+            string hostPlayer = _host.Game.Room.PlayerId, guestPlayer = GuestId;
+            return _host.Game.Hosting.Room.Server.Pieces.Ledger.ToSaveData().Records
+                .Where(r => !before.Contains(r.RequestId) && r.Piece == RoomHouseBuild.PieceName)
+                .Select(r => (r.PlayerId == hostPlayer ? "방장" : r.PlayerId == guestPlayer ? "손님" : r.PlayerId, r.Outcome)).ToList();
+        }
+
+        /// <summary>
+        /// 같은 방을 둘이 차례로 칠한 끝(TWO_GAMES_011의 "차례로 적용" 갈래, TWO_GAMES_012): 거절 없음, 방 전부·두 화면이 나중 쪽 꾸밈 하나, 각자 자기 비용을 정확히 한 번씩,
+        /// 이유 줄에 거절 문구 없음, 그리고 끝 상태만으로는 "먼저 낸 쪽이 돈만 내고 칠해지지 않음"과 같아 보이므로 방이 두 번 칠했음을 장부의 답 순서로 본다 —
+        /// 먼저 쪽의 잡기·쓰기 적용이 둘 다 끝난 뒤에 나중 쪽의 잡기·쓰기 적용이 있고, 끝 꾸밈은 나중 쪽의 것이다.
+        /// </summary>
+        private void AssertAppliedInTurn(List<(string Who, string Outcome)> answers, IReadOnlyList<CellPos> room, string won, string hostFinish, string guestFinish,
+            int hostPaid, int hostCost, int guestPaid, int guestCost, string hostRefusal, string guestRefusal, string hostReason, string guestReason)
+        {
+            Assert.That((hostRefusal, guestRefusal), Is.EqualTo((string.Empty, string.Empty)), "둘 다 거절 없음");
+            Assert.That(won, Is.EqualTo(hostFinish).Or.EqualTo(guestFinish), "그 방은 나중에 적용된 쪽의 꾸밈 하나");
+            Assert.That(room.All(c => _host.Game.Session.HouseFloorAt(c) == won && GuestFloor(c) == won), Is.True, "그 방 전부가 한 꾸밈이고 두 화면이 같다");
+            Assert.That(hostPaid, Is.EqualTo(hostCost), "방장 돈: 자기 적용 한 번만큼 정확히");
+            Assert.That(guestPaid, Is.EqualTo(guestCost), "손님 돈: 자기 적용 한 번만큼 정확히");
+            Assert.That(hostReason, Is.Not.EqualTo(Text(HouseFinishReasons.RoomRefused)), "방장 이유 줄에 거절 문구 없음");
+            Assert.That(guestReason, Is.Not.EqualTo(Text(HouseFinishReasons.RoomRefused)), "손님 이유 줄에 거절 문구 없음");
+            string later = won == hostFinish ? "방장" : "손님", earlier = won == hostFinish ? "손님" : "방장";
+            Assert.That(answers, Is.EqualTo(new[] { (earlier, RoomOutcomes.Applied), (earlier, RoomOutcomes.Applied), (later, RoomOutcomes.Applied), (later, RoomOutcomes.Applied) }),
+                "방이 먼저 쪽의 꾸밈을 칠한(쓰기 적용) 뒤에 나중 쪽을 잡고 칠했다 — 먼저 낸 쪽도 칠해진 뒤 덮였다");
+        }
+
         /// <summary>손님: P(가구 배치 카메라의 집 전체 보기 — 들어간 직후 알림도 닫힌다)로 찍고 닫는다. 스크린샷 경로.</summary>
         private string GuestWholeHouse(string name)
         {
@@ -384,7 +420,7 @@ namespace Rootborn.Host.Tests.TwoGames
             int hostCells = _host.AimFinish(RoomFinishSlots.Floor, Carpet, HouseFinishTools.Room, aim);
             Assert.That((guestCells, hostCells), Is.EqualTo((room.Count, room.Count)), "둘 다 그 방 전부를 바꾸려 한다");
             // 방(이 프로세스의 방장 게임 안)의 요청 장부: 누르기 전에 있던 답을 기억해 두고, 뒤에 이 누름이 낳은 꾸밈 답(잡기·쓰기)만 본다.
-            var ledgerBefore = new HashSet<string>(_host.Game.Hosting.Room.Server.Pieces.Ledger.ToSaveData().Records.Select(r => r.RequestId), StringComparer.Ordinal);
+            var ledgerBefore = LedgerIds();
             _host.SetPointerDown(true);
             _guest.Call("pointer-down"); // 손님의 누름 두 프레임이 방장 게임도 한 프레임씩 돌린다 — 둘 다 같은 프레임에 누른 것을 읽는다
             _host.SetPointerDown(false);
@@ -408,10 +444,7 @@ namespace Rootborn.Host.Tests.TwoGames
             // (각자 자기 것 한 번씩 내고 나중 것이 덮는다 — 2026-11-14 원격 Linux에서 본 갈래). 어느 쪽이 될지는 방의 벽시계 틱과 UDP 도착에 따른다.
             string branch = hostRefused && guestRefused ? "둘 다 거절" : hostRefused ? "손님만 적용(방장 거절)" : guestRefused ? "방장만 적용(손님 거절)" : "차례로 둘 다 적용";
             // 이 누름이 낳은 꾸밈 답을 방이 답한 순서대로: (누구, 결과). 한 사람의 꾸밈 한 번은 잡기 답 + 쓰기 답 둘이다(쓰기는 돈을 낸 뒤 방이 꾸밈을 칠한 답).
-            string hostPlayer = _host.Game.Room.PlayerId, guestPlayer = GuestId;
-            var answers = _host.Game.Hosting.Room.Server.Pieces.Ledger.ToSaveData().Records
-                .Where(r => !ledgerBefore.Contains(r.RequestId) && r.Piece == RoomHouseBuild.PieceName)
-                .Select(r => (Who: r.PlayerId == hostPlayer ? "방장" : r.PlayerId == guestPlayer ? "손님" : r.PlayerId, r.Outcome)).ToList();
+            var answers = FinishAnswersSince(ledgerBefore);
             TestContext.WriteLine("[같은 프레임] 갈래: " + branch + ", 끝 꾸밈 " + won + ", 돈 방장 " + hostBefore + "→" + hostAfter + ", 손님 " + guestBefore + "→" + guestAfter
                 + ", 거절: 방장 '" + hostRefusal + "' 손님 '" + guestRefusal + "', 이유 줄: 방장 '" + hostReasonText + "' 손님 '" + guestReasonText + "'"
                 + ", 방의 꾸밈 답(순서): " + string.Join(" ", answers.Select(a => a.Who + ":" + a.Outcome)));
@@ -434,16 +467,8 @@ namespace Rootborn.Host.Tests.TwoGames
             {
                 // 차례로 적용: 앞 것이 방 전부를 칠한 뒤 나중 것이 판정됐다. 나중 것의 비용은 그때 방에서 바뀌는 칸 수 × 칸당 값인데, 앞 꾸밈과 다른 꾸밈이라
                 // 방 전부가 바뀌므로 요청이 보낸 수(room.Count)와 같다. 그래서 둘 다 자기 꾸밈 값을 정확히 한 번씩 냈다.
-                Assert.That(won, Is.EqualTo(Carpet).Or.EqualTo(Checker), "그 방은 나중에 적용된 쪽의 꾸밈 하나");
-                Assert.That(hostAfter, Is.EqualTo(hostBefore - CostOf(Carpet, room.Count)), "방장 돈: 자기 적용 한 번만큼 정확히");
-                Assert.That(guestAfter, Is.EqualTo(guestBefore - CostOf(Checker, room.Count)), "손님 돈: 자기 적용 한 번만큼 정확히");
-                Assert.That(hostReasonText, Is.Not.EqualTo(Text(HouseFinishReasons.RoomRefused)), "방장 이유 줄에 거절 문구 없음");
-                Assert.That(guestReasonText, Is.Not.EqualTo(Text(HouseFinishReasons.RoomRefused)), "손님 이유 줄에 거절 문구 없음");
-                // 끝 상태만으로는 "먼저 낸 쪽이 돈만 내고 칠해지지 않음"과 같아 보인다. 방이 두 번 칠했음을 장부의 답 순서로 본다:
-                // 먼저 칠한 쪽의 잡기·쓰기 적용이 둘 다 끝난 뒤에 나중 쪽의 잡기·쓰기 적용이 있고, 끝 꾸밈은 나중 쪽의 것이다.
-                string later = won == Carpet ? "방장" : "손님", earlier = won == Carpet ? "손님" : "방장";
-                Assert.That(answers, Is.EqualTo(new[] { (earlier, RoomOutcomes.Applied), (earlier, RoomOutcomes.Applied), (later, RoomOutcomes.Applied), (later, RoomOutcomes.Applied) }),
-                    "방이 먼저 쪽의 꾸밈을 칠한(쓰기 적용) 뒤에 나중 쪽을 잡고 칠했다 — 먼저 낸 쪽도 칠해진 뒤 덮였다");
+                AssertAppliedInTurn(answers, room, won, Carpet, Checker, hostBefore - hostAfter, CostOf(Carpet, room.Count), guestBefore - guestAfter, CostOf(Checker, room.Count),
+                    hostRefusal, guestRefusal, hostReasonText, guestReasonText);
             }
 
             _host.MovePointer(-50, -50);
@@ -494,6 +519,66 @@ namespace Rootborn.Host.Tests.TwoGames
             _host.Frames(2);
             TestContext.WriteLine("스크린샷: " + _host.Screenshot("two-games-05-host-reopened-whole-house"));
             _host.ClosePlacement();
+            Assert.That(_host.Game.Renderer.MissingImages, Is.Empty);
+            Assert.That(_guest.Query("missing-images"), Is.Empty);
+        }
+
+        /// <summary>
+        /// HOUSE-004 두 게임 창, 차례로 칠하기(순서를 정한 TWO_GAMES_011의 "차례로 적용" 갈래): 방장이 화면에서 왼쪽 위 방 바닥을 카펫으로 바꾸고, 적용이 끝나
+        /// 두 화면에 카펫이 보인 뒤 손님이 화면에서 같은 방을 체크 바닥으로 바꾼다. 거절 없이 둘 다 적용되고 방은 체크 하나(두 화면 같음), 방장은 카펫 값·손님은 체크 값을
+        /// 정확히 한 번씩(손님 값은 그때 방에서 바뀌는 칸 수 × 칸당 값), 방의 장부에는 방장 적용 둘 뒤 손님 적용 둘. 단언은 011과 같은 도우미(<see cref="AssertAppliedInTurn"/>).
+        /// 준비(실제 플레이 아님): 이야기가 있는 슬롯 파일(양쪽), 돈 주기(가방 명령). 꾸미는 조작은 두 게임의 화면 입력. 스크린샷: two-games-06-(host|guest)-overwritten.png.
+        /// </summary>
+        [Test]
+        public void TWO_GAMES_012_SameRoomOneAfterAnother_SecondOverwrites_EachPaysOnce()
+        {
+            OpenSharedHouseRoom();
+            var session = _host.Game.Session;
+            var (room, aim, middle) = TopLeftRoom(_host.Game.World.Current);
+            string money = FinishDef(Carpet).Cost[0].Item;
+            Assert.That(session.HouseFloorAt(middle), Is.Not.EqualTo(Carpet).And.Not.EqualTo(Checker), "전제: 둘 다 바뀌는 칸이 있다");
+
+            // 준비(실제 플레이 아님): 둘 다 자기 바닥 값을 받는다.
+            session.Inventory.Add(session.Item(money), CostOf(Carpet, room.Count));
+            _guest.Call("give-item", money, CostOf(Checker, room.Count).ToString(CultureInfo.InvariantCulture));
+            int hostBefore = session.Wallet.Balance, guestBefore = _guest.QueryInt("wallet");
+            var ledgerBefore = LedgerIds();
+
+            // 1) 방장이 화면에서 카펫으로 칠하고, 두 화면에 카펫이 보일 때까지 기다린다.
+            var first = _host.Decorate(RoomFinishSlots.Floor, Carpet, HouseFinishTools.Room, aim);
+            TestContext.WriteLine("[방장 꾸밈] 바뀔 칸 " + first.Cells + ", 누름 " + first.Action);
+            Assert.That((first.Cells, first.Action), Is.EqualTo((room.Count, "waiting")), "방장: 방 전부, 방의 허락을 기다린다");
+            Assert.That(Until(_host, () => !session.WaitingForRoom && room.All(c => session.HouseFloorAt(c) == Carpet), 900), Is.True, "방장 화면에 카펫: " + session.HouseFloorAt(middle));
+            Assert.That(_guest.Until(() => room.All(c => GuestFloor(c) == Carpet), 300), Is.True, "손님 화면에도 카펫: " + GuestFloor(middle));
+            Assert.That(HostReason, Is.Not.EqualTo(Text(RoomMoneyText.WaitingKey)), "방장 기다림 문구가 사라졌다");
+            Assert.That(session.Wallet.Balance, Is.EqualTo(hostBefore - CostOf(Carpet, room.Count)), "방장이 카펫 값을 냈다");
+
+            // 2) 그다음 손님이 화면에서 같은 방을 체크로 칠한다.
+            string[] d = _guest.Call("decorate", RoomFinishSlots.Floor, Checker, HouseFinishTools.Room, PeerVerbs.CellsText(aim)).Split('|');
+            int guestChanged = int.Parse(d[0], CultureInfo.InvariantCulture);
+            TestContext.WriteLine("[손님 꾸밈] 바뀔 칸 " + guestChanged + ", 누름 " + d[1]);
+            Assert.That(d[1], Is.EqualTo("waiting"), "손님: 방의 허락을 기다린다");
+            Assert.That(_guest.Until(() => _guest.Query("waiting-for-room") == "False" && room.All(c => session.HouseFloorAt(c) == Checker && GuestFloor(c) == Checker), 900), Is.True,
+                "두 화면에 체크: 방장 " + session.HouseFloorAt(middle) + ", 손님 " + GuestFloor(middle));
+            _guest.Until(() => false, 30); // 늦게 오는 상태·돈이 없는지
+
+            string won = session.HouseFloorAt(middle);
+            int hostAfter = session.Wallet.Balance, guestAfter = _guest.QueryInt("wallet");
+            string hostRefusal = session.LastHouseFinishRefusal ?? string.Empty, guestRefusal = _guest.Query("finish-refusal") ?? string.Empty;
+            string hostReasonText = HostReason, guestReasonText = _guest.Query("text", FurniturePlacementScreen.FinishReasonId);
+            var answers = FinishAnswersSince(ledgerBefore);
+            TestContext.WriteLine("[차례로] 끝 꾸밈 " + won + ", 돈 방장 " + hostBefore + "→" + hostAfter + ", 손님 " + guestBefore + "→" + guestAfter
+                + ", 손님 바뀔 칸 " + guestChanged + ", 방의 꾸밈 답(순서): " + string.Join(" ", answers.Select(a => a.Who + ":" + a.Outcome)));
+            Assert.That(won, Is.EqualTo(Checker), "나중에 칠한 손님의 꾸밈이 덮었다");
+            AssertAppliedInTurn(answers, room, won, Carpet, Checker, hostBefore - hostAfter, CostOf(Carpet, first.Cells), guestBefore - guestAfter, CostOf(Checker, guestChanged),
+                hostRefusal, guestRefusal, hostReasonText, guestReasonText);
+            Assert.That(guestChanged, Is.EqualTo(room.Count), "손님 값의 칸 수: 카펫인 방 전부가 체크로 바뀐다");
+
+            _host.MovePointer(-50, -50);
+            _guest.Call("move-pointer", "-50", "-50");
+            _host.Frames(2);
+            TestContext.WriteLine("스크린샷: " + _host.ScreenshotScreen(ScreenCatalog.FurniturePlacement, "two-games-06-host-overwritten"));
+            TestContext.WriteLine("스크린샷(손님): " + _guest.ScreenshotScreen(ScreenCatalog.FurniturePlacement, "two-games-06-guest-overwritten"));
             Assert.That(_host.Game.Renderer.MissingImages, Is.Empty);
             Assert.That(_guest.Query("missing-images"), Is.Empty);
         }
