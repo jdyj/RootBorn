@@ -90,6 +90,10 @@ namespace Rootborn.Simulation.Tests
             Assert.That(result.Counts.Keys.Count(k => k.StartsWith("끊김", StringComparison.Ordinal)), Is.GreaterThan(0), "끊김을 넣었다");
             Assert.That(result.CountOf("나감(쉰 날)"), Is.EqualTo(1), "한 사람이 하루 나갔다");
             Assert.That(result.CountOf("다시 들어와 비교: 쉰 날"), Is.EqualTo(1), "쉰 날 뒤 다시 들어와 진행을 비교했다");
+            if (seed != 901) return; // 지킴 검사는 곧은 씨앗에만(보조 씨앗은 불변식만)
+            Guard(result, WalletBalance, "방 지갑 잔액을 알려진 지출과 견줬다");
+            Guard(result, ForwardAfterDay, "쉰 날 뒤 날이 바뀐 길에서 퀘스트·체인을 앞으로만 견줬다");
+            Guard(result, ForwardAfterPending, "걸린 요청이 있던 다시 들어옴에서 퀘스트·체인을 앞으로만 견줬다");
         }
 
         /// <summary>
@@ -200,6 +204,8 @@ namespace Rootborn.Simulation.Tests
             Assert.That(result.CountOf("꾸밈 쓰기가 방에 적용됨(돈 낸 것)"), Is.GreaterThan(0), "돈을 내고 꾸밈이 방에 적용됐다(지킴 검사 — 0이면 이 시드는 꾸밈을 지나지 않았다)");
             Assert.That(result.CountOf("꾸밈 비추기 비교"), Is.GreaterThan(0), "모두가 보는 꾸밈을 방의 기록과 견줬다");
             Assert.That(result.CountOf("끝난 뒤 가만히: 꾸밈 잡기 0, 돈 낸 표시 0"), Is.EqualTo(1), "끝난 뒤 모두 다시 들어와 가만히 있을 때 잡기·표시가 0이었다");
+            if (seed % 100 != 1) return; // 지킴 검사는 곧은 씨앗에만
+            GuardMoney(result, pieces.Contains(RoomWallet.PieceName));
         }
 
         /// <summary>한 줄 요약: 요청·잡힘·거절·쓰기·풀기·끊김 종류·동시 요청.</summary>
@@ -257,6 +263,9 @@ namespace Rootborn.Simulation.Tests
             Assert.That(result.CountOf("끊김: 꾸밈 잡기 허락 뒤(돈 내기 전)"), Is.GreaterThan(0), "방이 칸을 잡아 준 뒤 돈을 내기 전에 끊겼다 — 0이면 이 씨앗은 그 경우를 지나지 않았다");
             Assert.That(result.CountOf("끊김: 꾸밈 돈 낸 뒤 쓰기가 방에 닿기 전"), Is.GreaterThan(0), "돈을 낸 직후(쓰기가 방에 닿기 전)에 끊겼다 — 0이면 이 씨앗은 그 경우를 지나지 않았다");
             Assert.That(result.CountOf("다시 들어옴: 풀리지 않은 꾸밈 잡기가 있었다(돈 내기 전)") + result.CountOf("다시 들어옴: 풀리지 않은 꾸밈 잡기가 있었다(돈 낸 것)"), Is.GreaterThan(0), "끊긴 뒤 다시 들어왔을 때 풀리지 않은 잡기가 있었다");
+            GuardMoney(result, sharedWallet);
+            Guard(result, ForwardAfterPending, "꾸밈 요청이 걸린 채 끊겼다 다시 들어와 퀘스트·체인을 앞으로만 견줬다");
+            if (CuratedSkillGrowth.Contains(seed)) Guard(result, SkillGrown, "걸린 꾸밈 요청으로 인테리어 기술이 자란 것을 허용량과 견줬다");
         }
 
         /// <summary>부딪히는 꾸미기: 꾸미는 사람 넷이 같은 집·같은 돈을 쓰며 같은 탭·같은 카드·같은 칸을 노린다(지연이 있어 요청이 겹친다). 먼저 온 잡기만 되고 나머지는 거절된다.</summary>
@@ -277,6 +286,7 @@ namespace Rootborn.Simulation.Tests
             TestContext.WriteLine(BuildLine(result));
             Assert.That(result.CountOf("꾸밈 잡기 요청"), Is.GreaterThanOrEqualTo(4), "꾸미려 했다");
             Assert.That(result.CountOf("꾸밈 동시 요청: 두 사람 이상이 한꺼번에 잡기를 가짐"), Is.GreaterThan(0), "두 사람 이상이 같은 방을 동시에 꾸미려 했다");
+            GuardMoney(result, sharedWallet: true);
             Assert.That(result.CountOf("꾸밈 쓰기가 방에 적용됨(돈 낸 것)"), Is.GreaterThan(0), "먼저 온 잡기는 돈을 내고 적용됐다");
             Assert.That(result.CountOf("끝난 뒤 가만히: 꾸밈 잡기 0, 돈 낸 표시 0"), Is.EqualTo(1));
         }
@@ -291,6 +301,32 @@ namespace Rootborn.Simulation.Tests
             Assert.That(result.ServerDays, Is.GreaterThan(settings.Days), "방이 날을 넘기며 플레이했다");
             Assert.That(result.Restarts, Is.GreaterThanOrEqualTo(settings.Days), "날마다 서버를 끄고 켰다");
             foreach (PlayResult p in result.Players) Assert.That(p.DaysCompleted, Is.GreaterThanOrEqualTo(settings.Days), p.Name + " 날을 넘겼다");
+            if (seed % 100 == 1 && pieces.Contains(RoomWallet.PieceName)) Guard(result, WalletBalance, "방 지갑 잔액을 알려진 지출과 견줬다(곧은 씨앗)");
+        }
+
+        // ---------- 지킴 검사: 새 불변식이 그 시드에서 실제로 견준 횟수가 0이면 실패(검사가 조용히 비지 않게). 보조 씨앗에는 걸지 않는다. ----------
+
+        public const string SharedWalletMoney = "꾸밈 돈 보존: 방 지갑이 잡은 돈 = 방의 기록으로 다시 계산한 비용";
+        public const string OwnWalletMoney = "꾸밈 돈 보존: 지갑 줄어듦 = 방의 기록으로 다시 계산한 비용";
+        public const string WalletBalance = "방 지갑 잔액 = 넣기 − 잡기 + 풀기(꾸밈은 방의 기록으로 다시 계산)";
+        public const string ForwardAfterDay = "다시 들어와 비교: 날이 바뀌어 진행은 앞으로만";
+        public const string ForwardAfterPending = "다시 들어와 비교: 걸린 요청이 있어 진행은 앞으로만";
+        public const string SkillGrown = "다시 들어와 비교: 걸린 요청으로 기술이 실제로 자람(허용량과 견줌)";
+
+        /// <summary>걸린 꾸밈 요청으로 기술이 실제로 자라는 곧은 씨앗(지난 것을 세어 골랐다 — 바뀌면 다른 씨앗을 고른다).</summary>
+        public static readonly int[] CuratedSkillGrowth = { 951, 968 };
+
+        private static void Guard(RoomPlayResult r, string count, string what)
+            => Assert.That(r.CountOf(count), Is.GreaterThan(0), what + " — 0이면 이 씨앗은 그 검사를 지나지 않았다(" + count + ")");
+
+        private static void GuardMoney(RoomPlayResult r, bool sharedWallet)
+        {
+            if (sharedWallet)
+            {
+                Guard(r, SharedWalletMoney, "같이 쓰는 지갑에서 꾸밈 돈을 방의 기록으로 다시 계산한 비용과 견줬다");
+                Guard(r, WalletBalance, "방 지갑 잔액을 알려진 지출과 견줬다");
+            }
+            else Guard(r, OwnWalletMoney, "각자 쓰는 지갑에서 꾸밈 돈을 방의 기록으로 다시 계산한 비용과 견줬다");
         }
     }
 }
