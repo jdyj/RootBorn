@@ -1,5 +1,7 @@
 # 집 짓기와 꾸미기 1단계 (나) — 방마다 벽지·바닥 고르기 Implementation Plan
 
+> **구현 끝(2026-11-14, 브랜치 room-builder). 다음 계획 1c를 쓴 뒤 이 파일을 지운다 — 1c가 기대는 약속은 맨 끝 절.**
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 플레이어가 가구 배치 화면(P)의 "꾸미기" 분류에서 벽지·바닥(과 벽 윗면 띠 색)을 고르고, 방 채우기·칸 붓으로 돈을 내고 바꾼다. 바뀐 것은 세이브에 남고 게임이 바로 다시 그린다. 곁가지: 잠긴 꾸밈의 가게 진열, 인테리어 기술, 새 게임의 처음 배치 가구, 앞 계획이 미룬 작은 것들.
@@ -12,7 +14,7 @@
 
 **계획을 둘로 나눈다.** 이 파일은 혼자 하는 집에서 꾸미기가 끝까지 되는 것(규칙·세이브·비용·다시 그리기·화면)과 곁가지다. 1-8 같이 하기는 `docs/superpowers/plans/2026-11-14-house-building-stage1c.md`(이 계획이 합쳐진 뒤 쓴다)로 넘긴다. 이유 한 줄: 같이 하기는 Net·Server·방 조각·지갑 잡기까지 닿아 작업이 5개 넘게 늘고, 혼자 하기의 규칙과 세이브가 굳기 전에 방 쪽 판정을 만들면 두 번 고친다. 다음 계획이 기댈 약속은 맨 끝 "다음 계획(1c)이 기대는 것".
 
-## 출발점 — 앞 계획(`…-stage1.md`)에서 받는 것
+## 출발점 — 앞 계획(`…-stage1.md`, 끝나서 지웠다)에서 받는 것
 
 앞 계획 맨 끝 "다음 계획이 기대는 것"을 그대로 쓴다(이름을 바꾸지 않는다): `RoomTilePlan.Build(RoomGrid, faceHeight, band, wallDoors)`, `CellTiles.Parts`의 `TilePart`(`Source`·`Shade`·`Piece`·`Owner`·`HasOwner`·`Rects`), `RoomCells`, `RoomFinishDefinition`(`Id`·`Slot`·`NameKey`·`Sheet`·`Art`·`Cost` 칸당·`UnlockToken`·`IsValid`), `RoomFinishSlots`, World `RoomFinishArt`(`TryPiece`·`TryCommon`·`TryBand`·`BandOf`), `MapEntry.Build`(`MapBuildSettings` 8필드), `LoadedMap.Tiles`, `RoomTileCompositor.Compose(plan, wallAt, floorAt, sheetForBand, bandColorsId)`, `ComposedMapTiles.Compose(map, compositor, finish)`(`Ok`·`Draws`·`InsertAt`·`FallbackUnder`·`TextureKey`), `WorldScreen.RefreshComposedTiles(mapId)`(지금 부르는 곳은 Host 테스트 하나뿐), `HouseFurnitureLayout.Stored`·`TryPlaceStored`, `GameSession.StoredFurniture()`·`PlaceStoredFurniture`(같이 쓰는 집에서 false), 분류 줄 `furniture.category.furniture`·`furniture.category.stored`.
 
@@ -342,7 +344,7 @@
 
 모델: 낮음. 멈춤 없음.
 
-**Files:** Modify `game/README.md`(맵 목록 `build`의 쓰임에 "꾸밈 세이브는 `house-build.json`", 키 표는 그대로), `game/world/README.md` 6절(띠 색은 데이터의 band 꾸밈, `bandColors`는 기본값, 모든 꾸밈이 출처표의 조각을 가져야 한다는 검사), `data/README.md` "집 짓기 `building/`"(slot `band`, 판매 필드, `HouseStarterLayout`, 값은 시험용), `.claude/skills/pixel-kit-room/SKILL.md`와 `.agents/skills/pixel-kit-room/SKILL.md`(바이트 같게: "꾸밈을 더하는 순서" — 정의 한 줄 → `room export-finishes` → 문구 ko·en → 띠 색이면 slot band와 좌표표 `bands` → World `MapContractTests`·Data `RoomFinishDefinitionTests` → 게임 스크린샷), `.claude/rules/changelog.md`(항목 하나: 시나리오 표에 HOUSE-001, SKILL-001·TOWN-001 줄 고침 — 일반화 "지불은 바뀌는 것만 세어 상태로 한 번만, 받음 기록이 필요 없게"), 설계서 12.1절 표(1-6·1-7 끝, 1-8은 `…-stage1c.md`)·12.1.1절(이 계획에서 달라진 것: 방 채우기 규칙 다듬음, 벽지는 정면 주인 칸만, 띠 색은 band 꾸밈, 같이 하기 요청은 칸 목록 대신 (도구, 가리킨 칸))·15절(풀린 것·남은 것), 결정 대기 문서(이 계획이 끝난 사실로 고친다), **`docs/superpowers/plans/2026-11-14-house-building-stage1.md`를 지운다**(이 계획 머리말이 "다음 계획이 기대는 것"을 옮겨 받았다) — 그 경로를 가리키는 곳(`git grep -n "house-building-stage1.md" -- docs .claude .agents game data Tools`)을 이 계획 또는 설계서로 바꾼다(`.superpowers/sdd/…`의 작업 기록은 고치지 않는다).
+**Files:** Modify `game/README.md`(맵 목록 `build`의 쓰임에 "꾸밈 세이브는 `house-build.json`", 키 표는 그대로), `game/world/README.md` 6절(띠 색은 데이터의 band 꾸밈, `bandColors`는 기본값, 모든 꾸밈이 출처표의 조각을 가져야 한다는 검사), `data/README.md` "집 짓기 `building/`"(slot `band`, 판매 필드, `HouseStarterLayout`, 값은 시험용), `.claude/skills/pixel-kit-room/SKILL.md`와 `.agents/skills/pixel-kit-room/SKILL.md`(바이트 같게: "꾸밈을 더하는 순서" — 정의 한 줄 → `room export-finishes` → 문구 ko·en → 띠 색이면 slot band와 좌표표 `bands` → World `MapContractTests`·Data `RoomFinishDefinitionTests` → 게임 스크린샷), `.claude/rules/changelog.md`(항목 하나: 시나리오 표에 HOUSE-001, SKILL-001·TOWN-001 줄 고침 — 일반화 "지불은 바뀌는 것만 세어 상태로 한 번만, 받음 기록이 필요 없게"), 설계서 12.1절 표(1-6·1-7 끝, 1-8은 `…-stage1c.md`)·12.1.1절(이 계획에서 달라진 것: 방 채우기 규칙 다듬음, 벽지는 정면 주인 칸만, 띠 색은 band 꾸밈, 같이 하기 요청은 칸 목록 대신 (도구, 가리킨 칸))·15절(풀린 것·남은 것), 결정 대기 문서(이 계획이 끝난 사실로 고친다), **끝난 앞 계획 `…-stage1.md`를 지운다**(이 계획 머리말이 "다음 계획이 기대는 것"을 옮겨 받았다) — 그 경로를 가리키던 곳을 이 계획 또는 설계서로 바꾼다(`.superpowers/sdd/…`의 작업 기록은 고치지 않는다).
 - [ ] **Step 1:** 쓴다. 새 스킬은 만들지 않는다.
 - [ ] **Step 2:** 문서에 적은 명령 중 읽기만 하는 것(`--check`, `--dry-run`)을 실제로 돌린다. `cmp .claude/skills/pixel-kit-room/SKILL.md .agents/skills/pixel-kit-room/SKILL.md`.
 - [ ] **Step 3:** 도구 테스트 전부, `run-all.sh --checks-only`, 위 `git grep`이 0건(작업 기록 제외). 커밋 `[DOCS] 집 꾸미기 1단계(나) — 꾸밈 세이브·띠 색·가게·처음 배치, 끝난 계획 정리`.
@@ -351,11 +353,13 @@
 
 ## 다음 계획(1c, 같이 하기)이 기대는 것
 
-`docs/superpowers/plans/2026-11-14-house-building-stage1c.md`는 아래 이름을 그대로 쓴다. 바꾸면 그 계획을 먼저 고친다.
+`docs/superpowers/plans/2026-11-14-house-building-stage1c.md`(아직 쓰지 않았다)는 아래 이름을 그대로 쓴다. 바꾸면 그 계획을 먼저 고친다. 아래는 **구현이 끝난 지금 코드의 이름**이다(2026-11-14).
 
-- Core 판정은 엔진·파일 없이 방(서버)에서도 돈다: `HouseFinishes`(`Load`·`Attach(HouseBuildFrame, find)`·`Preview(finishId, tool, pointer, unlocks, canPay)`·`PreviewBand`·`Apply`·`ToSaveData`·`Version`), `RoomFill`, `HouseBuildFrame`, `HouseFinishTools`, `HouseFinishReasons`(`SharedHouse`는 1c가 쓰지 않게 된다), `HouseBuildSaveData`(같은 모양을 방 조각 `SaveFileNames.RoomPiece("house-build")`에도 쓴다).
+- Core 판정은 엔진·파일 없이 방(서버)에서도 돈다: `HouseFinishes`(`Load(HouseBuildSaveData)`·`Attach(HouseBuildFrame, find)`·`Preview(finishId, tool, pointer, unlocks, canPay)`·`PreviewBand(finishId, unlocks, canPay)`·`Apply(preview)`(띠 미리 보기도 이것이 받는다)·`ToSaveData()`·`Version`), 정적 `HouseFinishes.IsUnlocked(finish, unlocks)`(해금 판단 하나), `RoomFill`, `HouseBuildFrame`, `HouseFinishTools`, `HouseFinishReasons`(`SharedHouse`는 1c가 쓰지 않게 된다), `HouseFinishPreview`(바뀌는 칸 `ChangedCells`와 밝힐 칸 `HighlightCells`가 다르다 — 벽지는 정면 벽 칸을 밝힌다), `HouseBuildSaveData`(같은 모양을 방 조각 `SaveFileNames.RoomPiece("house-build")`에도 쓴다).
+- **띠 색의 이름**: `HouseFinishes.Band`는 **기록 그대로의 꾸밈 id**(빈 글이면 프레임 기본, 데이터에 없는 id도 그대로)이고, 보이는 띠 색 줄 이름은 `HouseFinishes.BandColors`다(그 꾸밈의 `Art`, 아니면 프레임 기본 `HouseBuildFrame.DefaultBand`). 그림 쪽 조회 `IHouseFinishLookup.BandColors`가 이 줄 이름을 받는다.
 - **요청은 칸 목록이 아니라 (꾸밈 id, 도구, 가리킨 칸)**: 방이 같은 `RoomFill`·출처표로 같은 칸을 다시 낸다(결정적). 설계서 8.1절의 "칸 목록 글"과 다르다 — 요청이 작고, 손님이 보낸 칸을 믿지 않는다. 띠 색은 (띠 꾸밈 id).
-- 비용 다섯 경우와 "바뀌는 칸 0 → 비용 0"이 상태로 한 번만을 만든다(동시 요청은 뒤 요청이 바뀐 상태로 다시 판정되어 0이 된다).
-- `GameSession.PreviewHouseFinish`·`ApplyHouseFinish`·`PreviewHouseBand`·`ApplyHouseBand`의 같이 쓰는 집 갈래(지금 `SharedHouse` 이유로 거절)를 방 요청으로 바꾼다 — 돈 공유 켬은 `Shared(…)`, 끔은 상자의 잡기 → 쓰기/풀기(`RoomChests`의 `Use`·`Release` 틀).
-- Host는 `IHouseFinishLookup` 어댑터만 바꾸면 된다(방이 알린 꾸밈), 알림 주제 `GameChangeTopics.HouseBuild`.
-- 1c가 받을 남은 일: 조각 `house-build`(`house`를 따름 — `RoomPieceCatalog.Follow`), 서버의 짓는 집 프레임(`game/Rootborn.Server/HouseGrids.cs`가 LDtk에서), 데이터 지문(`game/Rootborn.Data/DataFingerprint.cs`)에 `build`가 있는 맵의 LDtk, 같이 쓰는 집의 보관 꺼내기(결정 16, `GameSession.PlaceStoredFurniture`가 지금 false), 같이 쓰는 집에서 옮긴 가구 자리를 방 기록에 굳히기(앞 계획 작업 4 걱정), 처음 배치는 같이 쓰는 집에 주지 않음(작업 10), HOUSE-004, Host 두 창(`TwoGamesHostTests`).
+- 비용 다섯 경우와 "바뀌는 칸 0 → 비용 0"이 상태로 한 번만을 만든다(동시 요청은 뒤 요청이 바뀐 상태로 다시 판정되어 0이 된다). 받음 기록은 따로 두지 않는다.
+- `GameSession.PreviewHouseFinish`·`ApplyHouseFinish`·`PreviewHouseBand`·`ApplyHouseBand`의 같이 쓰는 집 갈래(지금 `SharedHouse` 이유로 거절)를 방 요청으로 바꾼다 — 돈 공유 켬은 `Shared(…)`, 끔은 상자의 잡기 → 쓰기/풀기(`RoomChests`의 `Use`·`Release` 틀). **같이 쓰는 집에서는 지금 그림 조회가 프레임 기본이다**(`GameSession.HouseWallAt`·`HouseFloorAt`·`HouseBandColors`가 `_roomHouse != null`이면 `HouseBuildFrame`의 기본 꾸밈을 낸다 — 손님이 자기 세이브 꾸밈으로 주인 집을 그리지 않게). 1c가 방이 알린 꾸밈으로 바꾸면 이 갈래를 지운다.
+- 가게 구매(`GameSession.PurchaseFinish`, Core `RoomFinishPurchase.Try`)는 해금만 바꾸고 `FurnitureUnlockProgress`에 든다 — 같이 쓰는 집과 무관하게 개인 진행이다.
+- 그림 쪽: 조합기는 `IHouseFinishLookup`(World, `WallAt`·`FloorAt`·`BandColors`)만 안다. Host는 그 어댑터(`HostGame`의 `SessionHouseFinishes`)만 바꾸면 된다(방이 알린 꾸밈), 알림 주제 `GameChangeTopics.HouseBuild`(`"house-build"`).
+- 1c가 받을 남은 일: 조각 `house-build`(`house`를 따름 — `RoomPieceCatalog.Follow`), 서버의 짓는 집 프레임(`game/Rootborn.Server/HouseGrids.cs`가 LDtk에서), 데이터 지문(`game/Rootborn.Data/DataFingerprint.cs`)에 `build`가 있는 맵의 LDtk, 같이 쓰는 집의 보관 꺼내기(결정 16, `GameSession.PlaceStoredFurniture`가 지금 false — `MayPlaceStored`가 `_roomHouse == null`을 요구한다), 같이 쓰는 집에서 옮긴 가구 자리를 방 기록에 굳히기(앞 계획 작업 4 걱정), HOUSE-004, Host 두 창(`TwoGamesHostTests`). **처음 배치 가구(`HouseStarterLayout`)는 이미 같이 쓰는 집에 주지 않는다**(`GameSession.WantsHouseStarter`가 `_roomHouse == null`을 요구 — 1c가 할 일이 아니다).

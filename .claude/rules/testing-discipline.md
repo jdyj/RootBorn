@@ -41,6 +41,7 @@ bash Scripts/ci/run-all.sh                 # 자체 시험 + 검사 + dotnet 테
 ```
 
 - 평소에는 고친 프로젝트의 테스트만 돌리고, 커밋·합치기 전에는 전부 돌린다.
+- **새 게임의 모습이나 여러 프로젝트가 쓰는 것(처음 배치 가구, 새 세이브 파일, 공유 정의, 화면 구성)을 바꾼 작업은 고친 프로젝트만이 아니라 Screens·Simulation·Server 테스트도 돌린다.** 왜: 2026-11-14 새 게임에 처음 배치 가구를 넣은 작업이 Game·Core·Data만 돌려, Screens 11건·Host 3건·Server 1건·Simulation 1건의 실패가 뒤 작업에서야 드러났다(새 게임은 빈 집이라는 전제가 여러 프로젝트의 테스트에 있었다).
 - 전체 실행(특히 Host)은 원격 Linux 장치에서 돌릴 수 있다: `bash Scripts/remote-test/run.sh [<커밋>]`(`Scripts/remote-test/README.md`). 커밋된 것만 가고, 접속 값은 환경 변수로 받는다. 이 PC의 메모리가 모자라거나 세션 여럿이 동시에 돌 때는 이쪽을 쓴다. 원격 실행은 연결이 끊겨도 끝까지 돈다 — 이 PC 쪽이 꺼졌으면 다시 시작하지 말고 `run.sh --resume`으로 이어 받는다(`--status`로 도는 실행을 본다). 근거 종류는 같다(장치 이벤트 주입, OS 입력 계층 미확인).
 - **통과 줄만 보지 말고 프로젝트별 건수가 줄지 않았는지 본다.** 왜: 건수가 줄었으면 테스트가 빠진 것이고, 통과 줄은 그것을 알려 주지 않는다.
 - CI(`.github/workflows/ci.yml`)는 정적 검사, 키트 도구 테스트(Python, job `pixel-kit-tests` — GitHub에서 도는 것은 아직 확인하지 못했다), Host를 뺀 dotnet 테스트로 막는다. Host 테스트는 아직 `continue-on-error`다.
@@ -65,7 +66,7 @@ bash Scripts/ci/run-all.sh                 # 자체 시험 + 검사 + dotnet 테
 | NPC-001 | NPC가 일과표대로 다음 자리까지 걸어 도착 | Core `NpcDayPlanTests`, World `NpcRouteContractTests`, Simulation `NpcWalkingTests`, Host `NpcWalkHostTests` |
 | NPC-002 | 자리에 없는 NPC는 만날 수 없다(걷는 중에는 말을 건다) | World `NpcStageTests`, Core `NpcDayPlanTests`, Host `NpcWalkHostTests` |
 | NPC-003 | 같은 시각이면 같은 자리 — 이어 하기·같이 하기 | Core `NpcStayTests`·`NpcDayPlanTests`, World `NpcStageTests`, Simulation `NpcWalkingTests`, Game `NpcTimeTests`, Host `TwoGamesHostTests.TWO_GAMES_NPC_001` |
-| HOUSE-001 | 방 꾸밈을 돈을 내고 바꾸고 같은 요청은 한 번만, 바뀐 꾸밈으로 집을 다시 그림 | Core `HouseFinishesTests`, Game `HouseFinishTests`, World `RoomTileCompositorTests`(Lookup·PreviewLookup), Screens `FinishPaletteScreenTests`, Host `HouseFinishHostTests` |
+| HOUSE-001 | 방 꾸밈을 돈을 내고 바꾸고 같은 요청은 한 번만, 바뀐 꾸밈으로 집을 다시 그림 | Core `HouseFinishesTests`·`RoomFillTests`, Game `HouseFinishTests`·`HouseBuildCompatTests`(세이브 하위·상위호환), World `RoomTileCompositorTests`(Lookup·PreviewLookup), Screens `FinishPaletteScreenTests`, Host `HouseFinishHostTests` |
 | HOUSE-002 | 집 맵 교체 뒤 옛 가구가 옮겨지거나 보관되고 사라지지 않음 | Core `FurnitureRelocationTests`, Game `HouseMoveTests`, Screens `StoredFurnitureScreenTests`·`HouseMovedNoticeTests`, Host `HouseMoveHostTests` |
 
 - 지금 대응이 없는 id(KNOW-001·002, TOOL-001, NET-001·002, HEIR-001, STATUS-001의 일부)는 게임이 그 영역을 쓰지 않거나 MonoGame 판에 아직 없다. 이유는 `SCENARIOS.md` 2절. 그 영역을 옮기거나 만들 때 테스트를 더하고 이 표에 올린다.

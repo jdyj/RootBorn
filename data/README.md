@@ -223,13 +223,14 @@
   조각 시트와 좌표표는 **손으로 고치지 않고** `python Tools/pixel-kit/kit.py room export-finishes`가 이 파일을 읽어 낸다
   (`Tools/pixel-kit/README.md` "방 만들기 — 꾸밈 조각 시트"). 꾸밈을 더하거나 빼면 그 명령을 다시 돌려 시트와 좌표표를 함께 커밋한다.
 - 코드는 꾸밈 id를 모른다. Core `RoomFinishDefinition`, World `RoomFinishArt`가 정의와 좌표표를 푼다.
-- 집 맵의 기본 꾸밈은 맵 목록(`game/world/maps.json`)의 `build.defaultWall`·`defaultFloor`가 id로 가리킨다(`game/world/README.md` 6절). 게임은 지금 이 기본 꾸밈으로만 집을 그린다 — 플레이어가 꾸밈을 고르는 것, 비용 지급, 꾸밈 세이브는 아직 없다(그래서 `costItems`·`costCounts`·`unlockToken`은 읽히기만 하고 쓰이지 않는다).
+- 집 맵의 기본 꾸밈은 맵 목록(`game/world/maps.json`)의 `build.defaultWall`·`defaultFloor`가 id로 가리킨다(`game/world/README.md` 6절). 플레이어는 가구 배치 화면(P)의 꾸미기 분류에서 칸마다 벽지·바닥을 고르고(벽지는 벽 정면의 주인 바닥 칸만 센다), 바뀌는 칸 수만큼 `costItems`·`costCounts`를 낸다(바뀌는 것이 없으면 0). 고른 것은 세이브 파일 `house-build.json`에 칸별로 남고, 기본 꾸밈은 칸에 기록이 없을 때만 보인다. `band` 꾸밈은 집 하나에 하나(`HouseBuildSaveData.Band`). 잠긴 꾸밈(`unlockToken`)은 판매 필드가 있으면 `purchaseLocationId` 장소의 가게 살 목록에 나오고, 사면 가구와 같은 해금 진행에 토큰이 든다.
 
 **꾸밈을 더하는 법** (코드는 고치지 않는다):
 
 1. 꾸밈이 쓸 벽 모양(`slot` wall) 또는 바닥(`slot` floor)이 키트에 있는지 본다(`python Tools/pixel-kit/kit.py room styles --list`). 없으면 먼저 키트에 더한다(스킬 `pixel-kit-room`). 벽 모양의 띠 두께는 16이어야 한다.
 2. `RoomFinishDefinition.json`에 덩어리를 더한다. id는 `finish.wall.<art>` / `finish.floor.<art에서 floor. 뺀 것>`, `nameKey`는 `<id>.name`, `sheet`는 같은 조각 시트, `art`는 키트의 벽 모양 이름 또는 바닥 명세 id. 처음부터 열 것이면 `unlockToken`을 빈 글로 둔다. 잠근 꾸밈은 가게에서 팔려면 `priceItem`·`price`·`purchaseLocationId`를 더한다(없으면 그 토큰을 얻을 다른 길이 있어야 한다).
 3. `python Tools/pixel-kit/kit.py room export-finishes --dry-run`으로 바뀔 파일을 보고, `--dry-run` 없이 돌려 시트 PNG와 좌표표(`data/atlases/art/world/finishes/finishes.png.atlas.json`)를 다시 낸다. 조각은 이름 순으로 다시 놓이므로 자리가 밀리지만 게임은 좌표표로 찾는다. 시트·좌표표는 손으로 고치지 않고 정의와 함께 커밋한다(`CommittedSheetTests`가 저장소의 시트가 지금 정의로 낸 것과 같은지 본다).
+   **알려진 고장(2026-11-14 확인, 문서 담당이 고치지 못함)**: 키트 `room export-finishes`는 `band` 자리를 모른다(`room-finish-slot … 모르는 slot 'band'`) — 지금 데이터로는 끝까지 돌지 않고 키트 테스트 `CommittedSheetTests.test_the_committed_sheet_is_what_the_real_definitions_export_now`도 실패한다. 고쳐지면 이 문장을 지운다.
 4. 이름 문구를 `game/localization/ko.json`과 `en.json`에 둘 다 넣는다(`<nameKey>`).
 5. `dotnet test game/tests/Rootborn.Data.Tests`, `game/tests/Rootborn.World.Tests`(`RoomFinishArtTests`, `HouseMapTests`)와 키트 테스트를 돌린다.
 
@@ -237,7 +238,7 @@
 모르는 가구, 한 면에 처음 배치 둘은 읽기 오류다. 실제 새 집에서 놓이는지는 Game `HouseStarterTests.StarterFitsTheRealHouse`가 본다(막힌 칸이면 옛 가구처럼 가까운 자리로 옮긴다).
 옛 세이브, 다른 플레이어가 논 슬롯, 같이 쓰는 집에는 주지 않는다(세이브 모양은 그대로 — 집 배치 파일 자체가 받음 기록이다). **목록과 자리(책상·의자·책장, 왼쪽 위 방)는 시험용** — 결정 대기 29번.
 
-수치와 목록은 시험용이다: 넣은 10종, 처음부터 열린 6종·잠긴 4종(잠긴 것은 얻는 길이 아직 없다), 칸당 비용(벽 2, 바닥 1)은 사용자가 정하지 않았다. 결정 대기 문서 `docs/superpowers/specs/2026-11-14-house-building-open-decisions.md` 1·7·9번. 값을 고칠 때는 `[BALANCE]`로 나눠 커밋한다.
+수치와 목록은 시험용이다: 벽지·바닥 10종과 띠 색 5종(`band`, 무료), 처음부터 열린 벽지·바닥 6종·잠긴 4종(잠긴 4종은 동네 가게 `location.corner-store`에서 값 15 용돈으로 산다), 칸당 비용(벽 2, 바닥 1), 처음 배치 가구는 사용자가 정하지 않았다. 결정 대기 문서 `docs/superpowers/specs/2026-11-14-house-building-open-decisions.md` 1·7·9·26·28·29번. 값을 고칠 때는 `[BALANCE]`로 나눠 커밋한다.
 
 ## 그림 좌표표
 

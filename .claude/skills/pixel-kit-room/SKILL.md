@@ -67,6 +67,15 @@ description: "ROOTBORN 실내 방·집 구조를 칸마다 벽/바닥/밖만 정
 
 - **벽 그림 규칙은 두 언어에 있다**(Python `pixelkit/room_tiles.py`, C# `game/Rootborn.Core/src/Building/`). 시험 표 `Tools/pixel-kit/tests/fixtures/room-vectors.json`이 둘을 묶는다. 한쪽만 고치지 않는다: Python을 고친다 → `room vectors`로 시험 표를 다시 만든다(`--check`는 쓰지 않고 견주기만) → C#을 같이 고친다 → 두 쪽 테스트. 자세한 순서는 README "방 만들기 — 집 맵과 꾸밈을 고치는 순서".
 - **게임용 조각 시트**: `room export-finishes`(`--dry-run` 먼저)가 꾸밈 정의(`data/building/RoomFinishDefinition.json`)로 `art/world/finishes/`의 시트 PNG와 좌표표를 낸다. 손으로 고치지 않는다. 꾸밈을 더하는 순서는 `data/README.md` "집 짓기 `building/`".
+- **꾸밈을 더하는 순서**(플레이어가 방마다 고르는 벽지·바닥·띠 색. 코드는 고치지 않는다):
+  1. `data/building/RoomFinishDefinition.json`에 정의 한 덩어리(`slot` `wall`·`floor`·`band`, `art`, `costItems`·`costCounts`, `unlockToken`).
+  2. `room export-finishes --dry-run`으로 바뀔 파일을 보고 `--dry-run` 없이 돌려 시트와 좌표표를 다시 낸다(정의와 함께 커밋).
+  3. 이름 문구 `<nameKey>`를 `game/localization/ko.json`·`en.json` 둘 다에.
+  2의 주의: **알려진 고장(2026-11-14 확인, 문서 담당이 고치지 못함)**: 키트 `room export-finishes`는 `band` 자리를 모른다(`room-finish-slot … 모르는 slot 'band'`) — 지금 데이터로는 끝까지 돌지 않고 키트 테스트 `CommittedSheetTests.test_the_committed_sheet_is_what_the_real_definitions_export_now`도 실패한다. 고쳐지면 이 문장을 지운다.
+  4. 띠 색이면 `slot`을 `band`로 두고 `art`는 좌표표 `bands`의 줄 이름이어야 한다.
+  5. 가게에서 팔 잠긴 꾸밈이면 판매 필드 `priceItem`(아이템 ref)·`price`·`purchaseLocationId`(장소 id)를 정의에 더한다(`game/Rootborn.Data/Builders/BuildingBuilders.cs`; 판매 필드는 잠긴 꾸밈에만, 셋과 `unlockToken`이 다 있어야 판다 — 사면 해금 토큰을 얻는다).
+  6. 확인: World `MapContractTests`(모든 꾸밈이 출처표가 쓰는 조각을 갖는지), Data `RoomFinishDefinitionTests`, 게임의 꾸미기 화면 스크린샷을 직접 연다.
+- **벽 그림 규칙을 고쳤을 때 `art/world/rooms/test.two-rooms/`는 사용자가 칠한 파일일 수 있다**(커밋하지 않은 변경이 있으면 특히). 다시 만들기(`room build --force`)나 `repaint`로 맞추기 전에 사용자에게 묻는다 — 규칙을 고친 쪽의 시험은 그 파일 없이 시험 표로 돈다.
 - 게임은 짓는 집의 벽·바닥을 칸마다 출처표대로 조각을 붙여 그린다. 조합이 키트가 구운 그림과 픽셀까지 같다는 것은 자동 테스트(World `HouseMapTests`)가 본다 — 화면에 잘 보인다는 근거는 아니다.
 
 ## 하지 않는다
