@@ -52,9 +52,11 @@ namespace Rootborn.Game.Tests
                 Wallet.Load(saves.Store, RoomSlot);
             }
 
+            /// <summary>그 신원으로 들어온다. 방 접속(Net RoomGuestLink)처럼 조각 묶음에 방이 아는 신원을 적는다.</summary>
             public RoomShares Join(string playerId)
             {
                 var shares = new RoomShares(Pieces.Settings, RoomPieceCatalog.CreateDefault(), () => playerId + "-r" + (++_ids));
+                shares.RoomPlayerId = playerId;
                 foreach (var piece in Pieces.Pieces) shares.Receive(piece.State());
                 _players.Add((playerId, shares));
                 return shares;
@@ -75,6 +77,17 @@ namespace Rootborn.Game.Tests
                     foreach (var p in _players) p.Shares.Receive(piece.State());
             }
 
+            /// <summary>그 사람의 보낼 요청을 다른 방 조각 묶음(같은 방을 다른 규칙으로 다시 켠 것)이 반영하고 답·바뀐 상태를 그 사람에게 준다.</summary>
+            public void DeliverVia(RoomPieceSet pieces, RoomShares from)
+            {
+                var (player, _) = _players.First(p => p.Shares == from);
+                var answers = new List<RoomAnswer>();
+                var changed = new List<IRoomPiece>();
+                pieces.Apply(player, from.Outbox.Requests.Select(r => r.Copy()).ToList(), 1, answers, changed);
+                foreach (var a in answers) from.Receive(a);
+                foreach (var piece in changed) from.Receive(piece.State());
+            }
+
             /// <summary>방은 요청을 반영했지만 그 사람에게 가는 답과 상태가 사라졌다(보낸 뒤 끊김). 다른 사람은 상태를 받는다.</summary>
             public void DeliverAndLoseTheAnswers(RoomShares from)
             {
@@ -88,9 +101,11 @@ namespace Rootborn.Game.Tests
             }
         }
 
-        private static GameSession Start(TempSaves saves, RoomShares shares, string slot, string player)
+        private static GameSession Start(TempSaves saves, RoomShares shares, string slot, string player) => Start(saves.Store, shares, slot, player);
+
+        private static GameSession Start(ISaveStore store, RoomShares shares, string slot, string player)
         {
-            var game = GameSession.Start(TestWorld.Definitions, TestWorld.Settings, saves.Store, slot, player, shares: shares);
+            var game = GameSession.Start(TestWorld.Definitions, TestWorld.Settings, store, slot, player, shares: shares);
             game.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
             game.EnterHouseBuild(HouseRoom.Frame);
             return game;
@@ -637,6 +652,100 @@ namespace Rootborn.Game.Tests
             Assert.That(a.HouseFloorAt(TopLeftRoom), Is.EqualTo(floor.Id));
             Assert.That(room.Build.HeldCount, Is.Zero);
             Assert.That(Money(a), Is.EqualTo(money - cost));
+        }
+
+        [Test]
+        public void UseRefusedForever_RepeatedSaves_DoNotGrowTheRoomLedger_AStateChangeSendsItAgainAndItApplies()
+        {
+            var floor = PaidFloor();
+            int cost = PerCell(floor) * TopLeftRoomFill;
+            using var saves = new TempSaves();
+            var room = new FakeRoom(saves, 0, RoomHouse.PieceName);
+            var aShares = room.Join("a");
+            var bShares = room.Join("b");
+            var a = Start(saves, aShares, "slot-a", "a");
+            var b = Start(saves, bShares, "slot-b", "b");
+            Give(a, cost);
+            Assert.That(a.ApplyHouseFinish(floor.Id, HouseFinishTools.Room, TopLeftRoom), Is.False);
+            room.Deliver(aShares); // 잡힘 → 냈다
+            Assert.That(Money(a), Is.Zero);
+
+            // 같은 방이 규칙(틀) 없이 다시 켜졌다 → 쓰기를 영영 적용할 수 없다.
+            room.Pieces.Save(saves.Store, RoomSlot);
+            var broken = new RoomPieceSet(room.Pieces.Settings, RoomPieceCatalog.CreateDefault());
+            broken.Load(saves.Store, RoomSlot);
+            room.DeliverVia(broken, aShares); // 거절 → 이 판의 첫 거절이라 새 id로 한 번
+            room.DeliverVia(broken, aShares); // 그 새 id도 거절
+            int ledger = broken.Ledger.Count;
+            for (int i = 0; i < 10; i++)
+            {
+                a.VisitLocation("location.town-square"); // 저장(보낼 목록이 다시 간다)
+                room.DeliverVia(broken, aShares);
+            }
+
+            Assert.That(broken.Ledger.Count, Is.EqualTo(ledger), "방 상태가 그대로면 저장을 되풀이해도 방 장부가 늘지 않는다");
+            Assert.That(HouseBuildRequests(aShares, RoomHouseBuild.Use), Is.EqualTo(1), "쓰기는 보낼 목록에 남는다(돈을 낸 표시)");
+            Assert.That(HouseBuildRequests(aShares, RoomHouseBuild.Release), Is.Zero, "풀지 않는다");
+            Assert.That(saves.Store.TryRead<RoomOutboxSaveData>("slot-a", SaveFileNames.RoomOutbox("a"), out var outbox)
+                && outbox.Requests.Any(r => r.Piece == RoomHouseBuild.PieceName && r.Kind == RoomHouseBuild.Use), Is.True, "디스크에도");
+            Assert.That(broken.TryGet(RoomHouseBuild.PieceName, out var brokenPiece) && ((RoomHouseBuild)brokenPiece).HeldCount == 1, Is.True, "잡기는 남는다");
+
+            // 규칙을 가진 방으로 다시 켰다(장부 그대로 — 같은 id는 같은 거절). 방의 상태가 바뀌면(b가 띠를 잡는다) 새 id로 다시 보내 적용된다.
+            broken.Save(saves.Store, RoomSlot);
+            room.Pieces.Load(saves.Store, RoomSlot);
+            room.Deliver(aShares);
+            Assert.That(a.HouseFloorAt(TopLeftRoom), Is.EqualTo(HouseRoom.Frame.DefaultFloor), "같은 id는 장부가 같은 거절을 준다");
+            Assert.That(b.ApplyHouseBand(OtherBand().Id), Is.False);
+            room.Deliver(bShares); // 방 상태가 바뀐다(a도 받는다)
+            room.Deliver(aShares);
+            room.Deliver(aShares);
+            Assert.That(a.HouseFloorAt(TopLeftRoom), Is.EqualTo(floor.Id), "다시 보낸 쓰기가 적용됐다");
+            Assert.That(Money(a), Is.Zero, "돈은 처음 한 번만");
+            Assert.That(HouseBuildRequests(aShares, RoomHouseBuild.Use), Is.Zero);
+        }
+
+        [Test]
+        public void HostPath_SessionIdDiffersFromTheRoomIdentity_PaidRestartSendsTheUse_HeldOnlyRestartReleases()
+        {
+            // 내 PC에서 방을 연 사람(Host StartSession의 손님 저장을 받지 않는 길): 게임 한 판은 기본 플레이어 id로, 방은 접속의 신원으로 요청·잡기를 적는다.
+            // "내 잡기"는 방이 아는 신원(RoomShares.RoomPlayerId)으로 가린다.
+            var floor = PaidFloor();
+            int cost = PerCell(floor) * TopLeftRoomFill;
+            using var saves = new TempSaves();
+            var room = new FakeRoom(saves, cost * 2 + 5, RoomWallet.PieceName, RoomHouse.PieceName);
+            string self = SaveFileNames.DefaultPlayerId;
+            var hostShares = room.Join("host-room-id");
+            Assert.That(hostShares.RoomPlayerId, Is.Not.EqualTo(self), "전제: 두 id가 다르다");
+            var host = Start(saves, hostShares, "slot-host", self);
+
+            // 잡기만 하고(방 지갑 허락을 기다리는 중) 끔 → 다시 켬: 떠도는 내 잡기로 푼다.
+            Assert.That(host.ApplyHouseFinish(floor.Id, HouseFinishTools.Room, TopLeftRoom), Is.False);
+            room.Deliver(hostShares);
+            Assert.That(room.Build.HeldCount, Is.EqualTo(1));
+            room.Leave(hostShares);
+            var s2 = room.Join("host-room-id");
+            var host2 = Start(saves, s2, "slot-host", self);
+            Assert.That(HouseBuildRequests(s2, RoomHouseBuild.Release), Is.EqualTo(1), "방이 아는 신원으로 내 잡기를 찾아 푼다");
+            room.Deliver(s2);
+            room.Deliver(s2);
+            Assert.That(room.Build.HeldCount, Is.Zero);
+            Assert.That(room.Wallet.Balance, Is.EqualTo(cost * 2 + 5));
+
+            // 잡기 → 돈 냄 → 끔 → 다시 켬: 쓰기가 다시 가고 풀지 않는다.
+            Assert.That(host2.ApplyHouseFinish(floor.Id, HouseFinishTools.Room, TopLeftRoom), Is.False);
+            room.Deliver(s2);
+            room.Deliver(s2);
+            Assert.That(host2.LastRoomCommandApplied, Is.True);
+            room.Leave(s2);
+            var s3 = room.Join("host-room-id");
+            var host3 = Start(saves, s3, "slot-host", self);
+            Assert.That(HouseBuildRequests(s3, RoomHouseBuild.Release), Is.Zero);
+            Assert.That(HouseBuildRequests(s3, RoomHouseBuild.Use), Is.EqualTo(1));
+            room.Deliver(s3);
+            room.Deliver(s3);
+            Assert.That(host3.HouseFloorAt(TopLeftRoom), Is.EqualTo(floor.Id));
+            Assert.That(room.Wallet.Balance, Is.EqualTo(cost + 5), "한 번");
+            Assert.That(room.Build.HeldCount, Is.Zero);
         }
     }
 }

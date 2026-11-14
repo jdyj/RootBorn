@@ -30,6 +30,11 @@ namespace Rootborn.Game
         // 이 판에서 쓰기나 풀기를 보낸 잡기 id(답이 상태보다 먼저 와 낡은 상태에 잡기가 남아 보여도 다시 풀지 않게). 메모리만.
         private readonly HashSet<string> _finishSettled = new HashSet<string>(StringComparer.Ordinal);
         private readonly List<string> _holdScratch = new List<string>(4);
+        // 비추기에 마지막으로 읽은 방의 기록(같은 기록이면 다시 읽지 않는다 — 읽으면 판이 올라 화면이 미리 보기를 다시 낸다).
+        private HouseBuildSaveData _sharedLoaded;
+
+        // 방이 아는 내 신원(방이 잡기에 붙이는 주인 id). 내 PC에서 방을 연 사람은 게임 한 판의 id(기본 플레이어 id)와 다르다 — 방 접속이 적어 준다.
+        private string RoomSelf => Shares?.RoomPlayerId ?? PlayerId;
 
         /// <summary>집과 함께 꾸밈도 같이 쓰는 방이다(보이는 꾸밈과 꾸미기가 방의 것).</summary>
         public bool SharesHouseBuild => _roomBuild != null;
@@ -46,7 +51,14 @@ namespace Rootborn.Game
         private void UseSharedHouseBuild(RoomShares shares)
         {
             _roomBuild = shares?.Find<RoomHouseBuildClient>();
-            if (_roomBuild != null) _sharedFinishes.Load(_roomBuild.Data);
+            LoadSharedFinishes();
+        }
+
+        private void LoadSharedFinishes()
+        {
+            if (_roomBuild == null || ReferenceEquals(_sharedLoaded, _roomBuild.Data)) return;
+            _sharedLoaded = _roomBuild.Data;
+            _sharedFinishes.Load(_sharedLoaded);
         }
 
         // 시작한 뒤 한 번: 기다리던 꾸밈 요청을 보낼 목록에서 되찾고, 답을 듣고(붙기 전에 온 답은 이때 온다), 떠도는 내 잡기를 푼다. 저장할 것이 생겼으면 true.
@@ -54,11 +66,11 @@ namespace Rootborn.Game
         {
             if (_roomBuild == null) return false;
             foreach (var r in Shares.Outbox.Requests)
-                if (IsBuildHoldRequest(r))
-                {
-                    _finishWaiting = r.RequestId;
-                    break;
-                }
+            {
+                if (_finishWaiting == null && IsBuildHoldRequest(r)) _finishWaiting = r.RequestId;
+                // 디스크의 쓰기·풀기(끄기 전에 보냈다): 그 잡기는 이미 다뤘다 — 답이 상태보다 먼저 와 낡은 상태에 잡기가 남아 보여도 풀지 않는다.
+                if (IsBuildSettleRequest(r)) _finishSettled.Add(r.Ids[0]);
+            }
 
             _roomBuild.Answered += OnFinishAnswered;
             return ReleaseStrayHolds();
@@ -67,7 +79,7 @@ namespace Rootborn.Game
         // 방의 꾸밈 상태가 바뀌었다(남이 바꿨거나 내 쓰기가 적용됐다): 비추기를 다시 읽고, 떠도는 내 잡기를 풀고, 알린다.
         private void FollowRoomHouseBuild()
         {
-            _sharedFinishes.Load(_roomBuild.Data);
+            LoadSharedFinishes();
             if (ReleaseStrayHolds()) Save();
             Notify(null, GameChangeTopics.HouseBuild);
         }
@@ -105,9 +117,8 @@ namespace Rootborn.Game
             var cost = finish == null ? null : HouseFinishes.CostFor(finish, band ? 1 : request.Amount);
             _finishPaying.Add(hold);
             bool done = Shared(() => PayForHold(hold, surface, cost, !band), d => d, () => ReleaseHold(hold));
-            if (done) return;                          // 냈다 — PayForHold가 저장하고 알렸다
-            if (_finishPaying.Contains(hold)) return;  // 방 지갑의 허락을 기다린다(Shared가 저장하고 알렸다)
-            LastRoomCommandApplied = false;            // 낼 수 없어 풀었다(ReleaseHold가 저장하고 알렸다)
+            if (done) return; // 냈다 — PayForHold가 저장하고 알렸다
+            // 아니면 방 지갑의 허락을 기다리거나(Shared가 저장하고 알렸다) 낼 수 없어 풀었다(ReleaseHold가 저장하고 알렸다).
         }
 
         // 돈을 낸다: 비용을 빼는 바꾸기 커밋 안에서 쓰기를 적는다(메모리만, 던지지 않는다). 칸 꾸밈이면 요청한 사람의 인테리어가 하루 한도 안에서 자란다.
@@ -128,6 +139,7 @@ namespace Rootborn.Game
         {
             _finishPaying.Remove(hold);
             if (_finishSettled.Add(hold)) _roomBuild.AddRelease(hold);
+            LastRoomCommandApplied = false; // 알리기 전에(화면이 결과 문구를 고른다)
             SaveAndNotify(SharedFinishTopics);
         }
 
@@ -136,7 +148,9 @@ namespace Rootborn.Game
         private bool ReleaseStrayHolds()
         {
             if (_roomBuild == null || !_roomBuild.Known) return false;
-            _roomBuild.CopyHoldsOf(PlayerId, _holdScratch);
+            _roomBuild.CopyHoldsOf(RoomSelf, _holdScratch);
+            // 방의 상태에서 사라진 잡기는 잊는다(다시 나타나지 않는다).
+            if (_finishSettled.Count > 0) _finishSettled.RemoveWhere(id => !_holdScratch.Contains(id) && !HasOutgoingFor(id));
             bool any = false;
             foreach (var hold in _holdScratch)
             {
@@ -161,6 +175,9 @@ namespace Rootborn.Game
 
             return false;
         }
+
+        private static bool IsBuildSettleRequest(RoomRequestSaveData r)
+            => r.Piece == RoomHouseBuild.PieceName && (r.Kind == RoomHouseBuild.Use || r.Kind == RoomHouseBuild.Release) && r.Ids != null && r.Ids.Length == 1;
 
         private static bool IsBuildHoldRequest(RoomRequestSaveData r)
             => r.Piece == RoomHouseBuild.PieceName && (r.Kind == RoomHouseBuild.Finish || r.Kind == RoomHouseBuild.Band);
