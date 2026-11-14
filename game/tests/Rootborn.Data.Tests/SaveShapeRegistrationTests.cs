@@ -66,6 +66,7 @@ namespace Rootborn.Data.Tests
             Names.Wearables(DefaultPlayer),
             Names.WorkspaceProgress(DefaultPlayer),
             Names.WorkspaceLayout("workspace.chef", DefaultPlayer),
+            Names.HouseBuild,
         };
 
         [TestCaseSource(nameof(DefaultPlayerFiles))]

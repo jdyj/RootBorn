@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using NUnit.Framework;
+using Rootborn.Core.Building;
 using Rootborn.Core.Careers;
 using Rootborn.Core.Placement;
 using Rootborn.Core.Workspaces;
@@ -23,7 +24,10 @@ namespace Rootborn.Game.Tests
         /// <summary>요리사 일터 면에 들어간다(처음이면 기본 템플릿이 깔리고 일터 배치 파일이 생긴다).</summary>
         public static void EnterChefWorkspace(GameSession game) => game.EnterPlacementSurface(WorkspaceRoom.GridFor(game.Definitions, ChefWorkspace), ChefSurface);
 
-        public static readonly string[] Names = { "first-command", "day-3", "furniture-placed", "adult-chosen", "workspace-entered" };
+        public static readonly string[] Names = { "first-command", "day-3", "furniture-placed", "house-finished", "adult-chosen", "workspace-entered" };
+
+        /// <summary>지금 프로그램이 쓰는 파일을 가장 많이 든 지점(새 날짜 고정 폴더로 내보내는 것).</summary>
+        public const string Latest = "house-finished";
 
         private static readonly Dictionary<string, Lazy<SortedDictionary<string, byte[]>>> Built = Names.ToDictionary(
             n => n, n => new Lazy<SortedDictionary<string, byte[]>>(() => Build(n)));
@@ -95,6 +99,22 @@ namespace Rootborn.Game.Tests
                     game.PerformLocationActivity("opening.clue.archive-door", "location-activity:archive-door:day3");
                     game.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
                     Assert.That(game.PlaceFurniture(FreeDesk, HouseRoom.FirstFreeAnchor(game, FreeDesk), FurniturePlacementDirection.North), Is.True);
+                    break;
+                }
+                case "house-finished":
+                {
+                    // furniture-placed 다음: 짓는 집에 들어서(Host가 하는 EnterHouseBuild) 왼쪽 위 방 바닥 꾸밈 하나를 바꾼다(house-build.json이 생긴다).
+                    GameSession game = TestWorld.Start(saves.Store, Slot);
+                    game = MainChainTests.PlayToMyDream(game, () => game, new List<string>());
+                    game.PerformLocationActivity("opening.clue.archive-door", "location-activity:archive-door:day3");
+                    game.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
+                    Assert.That(game.PlaceFurniture(FreeDesk, HouseRoom.FirstFreeAnchor(game, FreeDesk), FurniturePlacementDirection.North), Is.True);
+                    game.EnterHouseBuild(HouseRoom.Frame);
+                    var floor = TestWorld.Definitions.All<RoomFinishDefinition>()
+                        .First(f => f.Slot == RoomFinishSlots.Floor && f.UnlockToken.Length == 0 && f.Id != HouseRoom.Frame.DefaultFloor);
+                    var preview = game.PreviewHouseFinish(floor.Id, HouseFinishTools.Room, HouseRoom.TopLeftRoom);
+                    foreach (var cost in preview.Cost) game.Inventory.Add(game.Item(cost.Item), cost.Count);
+                    Assert.That(game.ApplyHouseFinish(floor.Id, HouseFinishTools.Room, HouseRoom.TopLeftRoom), Is.True);
                     break;
                 }
                 case "adult-chosen":

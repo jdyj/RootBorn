@@ -40,6 +40,7 @@ namespace Rootborn.Game.Tests
 
         [TestCase("day-3")]
         [TestCase("furniture-placed")]
+        [TestCase("house-finished")]
         [TestCase("adult-chosen")]
         [TestCase("workspace-entered")]
         public void ASlotFromANewerProgram_Starts_Plays_AndKeepsWhatThisProgramDoesNotKnow(string checkpoint)

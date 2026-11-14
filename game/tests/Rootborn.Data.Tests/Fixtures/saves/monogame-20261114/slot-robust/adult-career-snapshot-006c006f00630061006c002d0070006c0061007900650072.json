@@ -1,0 +1,328 @@
+{
+  "Version": 3,
+  "Adult": {
+    "Version": 1,
+    "SaveSlot": "slot-robust",
+    "PlayerId": "local-player",
+    "FacilityId": "",
+    "FacilityLevel": 0,
+    "Reputation": 0,
+    "Works": [],
+    "AppliedRequestIds": [],
+    "EndingIds": [],
+    "PendingWork": null
+  },
+  "Student": {
+    "SaveSlot": "slot-robust",
+    "PlayerId": "local-player",
+    "Energy": 12,
+    "Focus": 9,
+    "Stress": 1,
+    "TimeMinutes": 540,
+    "CurrentDay": 3,
+    "TimePointsSpentToday": 1,
+    "DailyTimePolicyIds": [],
+    "DayState": "InProgress",
+    "LastSettledDay": 2,
+    "NextDayEntryPointId": "home-entry",
+    "LastActivityId": "opening.clue.archive-door",
+    "TutorialStageId": "tutorial.day2",
+    "NextObjectiveId": "goal.talk-to-guide-day2",
+    "NextGuideText": "ui.tutorial.next_goal_hint",
+    "DailyPlan": {
+      "Version": 2,
+      "SaveSlot": "slot-robust",
+      "PlayerId": "local-player",
+      "CurrentDay": 3,
+      "SelectedRouteId": "",
+      "CompletedRouteId": "",
+      "MatchedActivityId": "",
+      "AppliedCompletionKeys": [],
+      "LastNextHintKey": "",
+      "Slots": [
+        {
+          "SlotIndex": 0,
+          "PeriodKey": "daily-plan.period.after-school",
+          "RouteId": "",
+          "Completed": false,
+          "MatchedActivityId": "",
+          "MatchedActivityKind": 0,
+          "CompletionRequestKey": "",
+          "NextHintKey": "",
+          "ResultLogs": []
+        },
+        {
+          "SlotIndex": 1,
+          "PeriodKey": "daily-plan.period.evening",
+          "RouteId": "",
+          "Completed": false,
+          "MatchedActivityId": "",
+          "MatchedActivityKind": 0,
+          "CompletionRequestKey": "",
+          "NextHintKey": "",
+          "ResultLogs": []
+        }
+      ],
+      "Diary": [
+        {
+          "DayNumber": 1,
+          "Slots": [
+            {
+              "SlotIndex": 0,
+              "PeriodKey": "daily-plan.period.after-school",
+              "RouteId": "daily.library.self-study",
+              "Completed": false,
+              "MatchedActivityId": "",
+              "MatchedActivityKind": 0,
+              "CompletionRequestKey": "",
+              "NextHintKey": "objective.daily.library.next",
+              "ResultLogs": []
+            },
+            {
+              "SlotIndex": 1,
+              "PeriodKey": "daily-plan.period.evening",
+              "RouteId": "",
+              "Completed": false,
+              "MatchedActivityId": "",
+              "MatchedActivityKind": 0,
+              "CompletionRequestKey": "",
+              "NextHintKey": "",
+              "ResultLogs": []
+            }
+          ],
+          "CompletionKeys": []
+        },
+        {
+          "DayNumber": 2,
+          "Slots": [
+            {
+              "SlotIndex": 0,
+              "PeriodKey": "daily-plan.period.after-school",
+              "RouteId": "",
+              "Completed": false,
+              "MatchedActivityId": "",
+              "MatchedActivityKind": 0,
+              "CompletionRequestKey": "",
+              "NextHintKey": "",
+              "ResultLogs": []
+            },
+            {
+              "SlotIndex": 1,
+              "PeriodKey": "daily-plan.period.evening",
+              "RouteId": "",
+              "Completed": false,
+              "MatchedActivityId": "",
+              "MatchedActivityKind": 0,
+              "CompletionRequestKey": "",
+              "NextHintKey": "",
+              "ResultLogs": []
+            }
+          ],
+          "CompletionKeys": []
+        }
+      ]
+    },
+    "PendingMinigame": null,
+    "CareerCandidates": {
+      "SaveSlot": "slot-robust",
+      "PlayerId": "local-player",
+      "Candidates": [],
+      "AppliedSourceRequestIds": [],
+      "ClaimedRewardIds": [],
+      "TodayHintResultLines": []
+    },
+    "Traits": [
+      {
+        "Id": "trait.responsibility",
+        "Value": 2
+      },
+      {
+        "Id": "trait.observation",
+        "Value": 1
+      }
+    ],
+    "Skills": [
+      {
+        "Id": "skill.interior",
+        "Value": 1
+      }
+    ],
+    "Relationships": [],
+    "StudentConditionStatuses": [],
+    "CareerHintIds": [],
+    "AppliedRequestIds": [
+      "npc-meet:npc.first-guide",
+      "npc-meet:npc.teacher",
+      "location-visit:location.restaurant",
+      "location-visit:location.medical-clinic",
+      "location-visit:location.design-studio",
+      "location-visit:location.training-ground",
+      "work:corner-store:day2",
+      "location-activity:archive-door:day3"
+    ],
+    "ActivityLogIds": [
+      "npc.first-guide",
+      "npc.teacher",
+      "location.restaurant",
+      "location.medical-clinic",
+      "location.design-studio",
+      "location.training-ground",
+      "work.shift.corner-store",
+      "opening.clue.archive-door"
+    ],
+    "TodayActivityIds": [
+      "opening.clue.archive-door"
+    ],
+    "TodayResultLogIds": [
+      "location-activity:opening.clue.archive-door:+trait.observation=1"
+    ],
+    "PreviousDayActivityIds": [
+      "location.restaurant",
+      "location.medical-clinic",
+      "location.design-studio",
+      "location.training-ground",
+      "work.shift.corner-store"
+    ],
+    "PreviousDayResultLogIds": [
+      "location:location.restaurant:visited",
+      "location:location.medical-clinic:visited",
+      "location:location.design-studio:visited",
+      "location:location.training-ground:visited",
+      "part-time-work:work.shift.corner-store:+Wood=3",
+      "part-time-work:work.shift.corner-store:+item.allowance=5",
+      "part-time-work:work.shift.corner-store:+trait.responsibility=2"
+    ]
+  },
+  "Inventory": {
+    "Items": [
+      {
+        "ItemId": "Wood",
+        "Count": 3
+      }
+    ],
+    "EquippedToolItemId": ""
+  },
+  "World": {
+    "Version": 0,
+    "SaveSlot": "slot-robust",
+    "PlayerId": "local-player",
+    "Records": [],
+    "TodayWorldChangeFlagIds": []
+  },
+  "QuestChains": {
+    "Version": 0,
+    "Chains": [
+      {
+        "SaveSlot": "slot-robust",
+        "PlayerId": "local-player",
+        "ChainId": "questchain.test.career-interest.library",
+        "ChainState": "Available",
+        "IsTracked": false,
+        "CurrentStepId": "step.questchain.test.library.start",
+        "CompletedStepIds": [],
+        "ObjectiveProgressValues": [
+          0,
+          0
+        ],
+        "ProcessedEventKeys": [],
+        "RewardClaimedIds": [],
+        "BlockedReasonId": "",
+        "LastEvaluatedConditionSummary": "",
+        "TransitionHistory": [],
+        "RelatedCareerInterestId": "interest.learning",
+        "TodayQuestChainSummary": "",
+        "AcceptedDayIndex": -1,
+        "CompletedDayIndex": -1,
+        "FailedDayIndex": -1,
+        "ExpiredDayIndex": -1
+      },
+      {
+        "SaveSlot": "slot-robust",
+        "PlayerId": "local-player",
+        "ChainId": "questchain.test.career-interest.blocked-library-access",
+        "ChainState": "Available",
+        "IsTracked": false,
+        "CurrentStepId": "step.questchain.test.blocked.library.access",
+        "CompletedStepIds": [],
+        "ObjectiveProgressValues": [
+          0
+        ],
+        "ProcessedEventKeys": [],
+        "RewardClaimedIds": [],
+        "BlockedReasonId": "",
+        "LastEvaluatedConditionSummary": "",
+        "TransitionHistory": [],
+        "RelatedCareerInterestId": "interest.learning",
+        "TodayQuestChainSummary": "",
+        "AcceptedDayIndex": -1,
+        "CompletedDayIndex": -1,
+        "FailedDayIndex": -1,
+        "ExpiredDayIndex": -1
+      },
+      {
+        "SaveSlot": "slot-robust",
+        "PlayerId": "local-player",
+        "ChainId": "main-story.school-opening",
+        "ChainState": "Completed",
+        "IsTracked": false,
+        "CurrentStepId": "mainquest.MyOwnSpace",
+        "CompletedStepIds": [
+          "mainquest.BackToSchool",
+          "mainquest.AfterSchoolTour",
+          "mainquest.FirstPartTimeJob",
+          "mainquest.MyDream",
+          "mainquest.MyOwnSpace"
+        ],
+        "ObjectiveProgressValues": [
+          1
+        ],
+        "ProcessedEventKeys": [
+          "npc-talk:56513854f120430dbdece2ce50c33c61",
+          "daily-plan-selected:4924c17c9e5e45399814c6825e220c48",
+          "npc-talk:7f279e946a8f42e5bd4d486c2bd93990",
+          "day-started:be17855bf7754236b218979d4106780a",
+          "location-visit:880c7dcdc08241c4bf987d432d7df0ab",
+          "location-visit:31f3420eaa874da3b03f49272aca6dc6",
+          "location-visit:66858cf885394646a56b38d9ba6cf069",
+          "location-visit:1f19aeac4f7f4aefa9dac54b09ee1387",
+          "work:corner-store:day2",
+          "day-started:d664e17005eb42bca8875f9c3660474c",
+          "location-activity:archive-door:day3",
+          "furniture-placed:b6d602c0f6cf4fdc800cd5530442948d"
+        ],
+        "RewardClaimedIds": [
+          "step:mainquest.BackToSchool",
+          "step:mainquest.AfterSchoolTour",
+          "step:mainquest.FirstPartTimeJob",
+          "step:mainquest.MyDream",
+          "step:mainquest.MyOwnSpace"
+        ],
+        "BlockedReasonId": "",
+        "LastEvaluatedConditionSummary": "",
+        "TransitionHistory": [
+          "mainquest.BackToSchool->mainquest.AfterSchoolTour",
+          "mainquest.AfterSchoolTour->mainquest.FirstPartTimeJob",
+          "mainquest.FirstPartTimeJob->mainquest.MyDream",
+          "mainquest.MyDream->mainquest.MyOwnSpace",
+          "mainquest.MyOwnSpace->completed"
+        ],
+        "RelatedCareerInterestId": "",
+        "TodayQuestChainSummary": "opening.quest.MyOwnSpace.name",
+        "AcceptedDayIndex": 1,
+        "CompletedDayIndex": 3,
+        "FailedDayIndex": -1,
+        "ExpiredDayIndex": -1
+      }
+    ]
+  },
+  "FurnitureUnlocks": {
+    "Version": 0,
+    "SaveSlot": "slot-robust",
+    "PlayerId": "local-player",
+    "UnlockTokens": []
+  },
+  "Wallet": {
+    "Version": 1,
+    "Balance": 5
+  }
+}

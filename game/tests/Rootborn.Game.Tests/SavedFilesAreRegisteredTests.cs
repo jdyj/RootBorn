@@ -39,6 +39,7 @@ namespace Rootborn.Game.Tests
             Assert.That(all, Does.Contain(SaveFileNames.PlayerQuestLog(TestWorld.Player)));
             Assert.That(all, Does.Contain(SaveFileNames.HouseFurnitureLayout(0)), "가구를 놓은 지점이 있어야 배치 파일도 본다");
             Assert.That(all, Does.Contain(SaveFileNames.WorkspaceProgress(TestWorld.Player)));
+            Assert.That(all, Does.Contain(SaveFileNames.HouseBuild), "꾸밈을 바꾼 지점이 있어야 꾸밈 파일도 본다");
             Assert.That(all, Does.Contain(SaveFileNames.WorkspaceLayout(SlotCheckpoints.ChefSurface, TestWorld.Player)), "일터에 들어간 지점이 있어야 일터 배치 파일도 본다");
         }
 
@@ -59,10 +60,10 @@ namespace Rootborn.Game.Tests
             using var saves = new TempSaves();
             var catalog = WorldTravelData.From(TestWorld.Definitions);
             var slot = new WorldSlot(saves.Store, SlotCheckpoints.Slot, catalog);
-            WorldSlotStart start = slot.Begin(new DateTime(2026, 11, 12, 0, 0, 0, DateTimeKind.Utc).Ticks);
+            WorldSlotStart start = slot.Begin(new DateTime(2026, 11, 14, 0, 0, 0, DateTimeKind.Utc).Ticks);
             Assert.That(start.Ok, Is.True, start.Problem);
             Assert.That(slot.Record(start.Entry.SceneName, start.Entry.SpawnId, string.Empty), Is.True, slot.LastProblem);
-            SlotCheckpoints.WriteAll(saves, SlotCheckpoints.Files("furniture-placed"));
+            SlotCheckpoints.WriteAll(saves, SlotCheckpoints.Files(SlotCheckpoints.Latest));
 
             Directory.CreateDirectory(slotFolder);
             foreach (var pair in SlotCheckpoints.Read(saves)) File.WriteAllBytes(Path.Combine(slotFolder, pair.Key), pair.Value);

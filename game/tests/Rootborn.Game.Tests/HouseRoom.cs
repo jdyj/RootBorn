@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Core.Building;
 using Rootborn.Core.Minigames;
 using Rootborn.Core.Placement;
 using Rootborn.Core.World;
@@ -19,6 +20,22 @@ namespace Rootborn.Game.Tests
         private static readonly Lazy<PlacementGrid> _grid = new Lazy<PlacementGrid>(Build);
 
         public static PlacementGrid Grid => _grid.Value;
+
+        private static readonly Lazy<HouseBuildFrame> _frame = new Lazy<HouseBuildFrame>(BuildFrame);
+
+        /// <summary>짓는 집의 틀(Host가 집에 들어설 때 EnterHouseBuild로 넘기는 것과 같은 값). 맵의 build와 World 로더의 출처표에서 만든다.</summary>
+        public static HouseBuildFrame Frame => _frame.Value;
+
+        /// <summary>새 집 왼쪽 위 방 안의 바닥 칸(Core RoomFillTests와 같은 평면 좌표).</summary>
+        public static readonly CellPos TopLeftRoom = new CellPos(3, 4);
+
+        private static HouseBuildFrame BuildFrame()
+        {
+            var map = WorldMapLoader.FromRepo(TestWorld.RepoRoot).LoadMap(MapId);
+            var build = map.Entry.Build ?? throw new InvalidOperationException("집 맵은 짓는 집이어야 한다");
+            if (map.Tiles == null) throw new InvalidOperationException("짓는 집은 출처표가 있어야 한다");
+            return new HouseBuildFrame(build.FrameId, map.Tiles, build.DefaultWall, build.DefaultFloor, build.BandColors);
+        }
 
         /// <summary>그 가구를 놓을 수 있는 첫 칸(열 순서). skip개 만큼 건너뛴다. 없으면 예외.</summary>
         public static GridPoint FirstFreeAnchor(GameSession game, string furnitureId, int skip = 0)

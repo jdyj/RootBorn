@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json.Nodes;
 using NUnit.Framework;
+using Rootborn.Core.Building;
 using Rootborn.Core.Careers;
 using Rootborn.Core.Inventory;
 using Rootborn.Core.Quests;
@@ -65,6 +66,31 @@ namespace Rootborn.Data.Tests
             Assert.That((int)wallet["Balance"], Is.EqualTo(9));
             Assert.That((int)wallet["Debt"], Is.EqualTo(7));
             Assert.That((int)wallet["Version"], Is.EqualTo(99));
+        }
+
+        [Test]
+        public void HouseBuild_FromANewerProgram_KeepsTopLevelWallFieldsThroughCoreReadAndRewrite()
+        {
+            // 2단계(안쪽 벽)는 더한 벽·지운 벽을 맨 위 필드로 둔다(설계서 7.1절) — 목록 기록 안이면 이 프로그램이 다시 쓸 때 사라진다.
+            // 이 프로그램(Core HouseFinishes)이 읽고 꾸밈 기록을 다시 써도 맨 위의 모르는 필드와 높은 버전이 남는다.
+            _dir.Write(Path.Combine(Slot, "house-build.json"),
+                "{\"Version\":7,\"FrameId\":\"frame.house\",\"Band\":\"\"," +
+                "\"Finishes\":[{\"X\":3,\"Y\":4,\"Wall\":\"\",\"Floor\":\"finish.floor.a\"}]," +
+                "\"WallsAdded\":[{\"X\":5,\"Y\":6}],\"WallsRemoved\":[{\"X\":7,\"Y\":8},{\"X\":9,\"Y\":10}]}");
+
+            Assert.That(_store.TryRead<HouseBuildSaveData>(Slot, "house-build.json", out var read), Is.True, "더 높은 버전도 읽는다");
+            var finishes = new Rootborn.Core.Building.HouseFinishes();
+            finishes.Load(read);
+
+            _store.Write(Slot, "house-build.json", finishes.ToSaveData());
+
+            var json = FileJson("house-build.json");
+            Assert.That((int)json["Version"], Is.EqualTo(7), "형식 버전을 낮춰 쓰지 않는다");
+            Assert.That(json["WallsAdded"].AsArray().Count, Is.EqualTo(1), "더한 벽");
+            Assert.That((int)json["WallsAdded"][0]["X"], Is.EqualTo(5));
+            Assert.That(json["WallsRemoved"].AsArray().Count, Is.EqualTo(2), "지운 벽");
+            Assert.That((string)json["Finishes"][0]["Floor"], Is.EqualTo("finish.floor.a"), "아는 기록은 그대로");
+            Assert.That((string)json["FrameId"], Is.EqualTo("frame.house"));
         }
 
         [Test]

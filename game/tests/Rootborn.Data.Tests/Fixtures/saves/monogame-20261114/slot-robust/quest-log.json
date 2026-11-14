@@ -1,0 +1,73 @@
+{
+  "Version": 1,
+  "Quests": [
+    {
+      "QuestId": "quest.gatherWood",
+      "State": 0,
+      "StateName": "NotStarted",
+      "ObjectiveCounts": [
+        0
+      ],
+      "ProcessedEventKeys": []
+    },
+    {
+      "QuestId": "quest.career.chef",
+      "State": 0,
+      "StateName": "NotStarted",
+      "ObjectiveCounts": [
+        0
+      ],
+      "ProcessedEventKeys": []
+    },
+    {
+      "QuestId": "quest.career.interior",
+      "State": 0,
+      "StateName": "NotStarted",
+      "ObjectiveCounts": [
+        0
+      ],
+      "ProcessedEventKeys": []
+    },
+    {
+      "QuestId": "quest.career.soldier",
+      "State": 0,
+      "StateName": "NotStarted",
+      "ObjectiveCounts": [
+        0
+      ],
+      "ProcessedEventKeys": []
+    },
+    {
+      "QuestId": "quest.career.emergency-care",
+      "State": 0,
+      "StateName": "NotStarted",
+      "ObjectiveCounts": [
+        0
+      ],
+      "ProcessedEventKeys": []
+    },
+    {
+      "QuestId": "quest.tile-placement.interior",
+      "State": 0,
+      "StateName": "NotStarted",
+      "ObjectiveCounts": [
+        0
+      ],
+      "ProcessedEventKeys": []
+    },
+    {
+      "QuestId": "Quest_DiscoveryClue_LibraryFollowUp",
+      "State": 0,
+      "StateName": "NotStarted",
+      "ObjectiveCounts": [],
+      "ProcessedEventKeys": []
+    },
+    {
+      "QuestId": "quest.discovery.play-followup",
+      "State": 0,
+      "StateName": "NotStarted",
+      "ObjectiveCounts": [],
+      "ProcessedEventKeys": []
+    }
+  ]
+}
