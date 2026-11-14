@@ -1948,5 +1948,5 @@
   "ui.house-build.reason.nothing-to-change": "이미 이 꾸밈이에요",
   "ui.house-build.reason.not-enough-money": "돈이 모자라요",
   "ui.house-build.reason.not-in-house": "집에서만 꾸밀 수 있어요",
-  "ui.house-build.reason.shared-house": "같이 쓰는 집에서는 아직 꾸밀 수 없어요"
+  "ui.house-build.reason.room-refused": "방이 받아 주지 않았어요. 그 사이 다른 사람이 먼저 바꿨을 수 있어요"
 }

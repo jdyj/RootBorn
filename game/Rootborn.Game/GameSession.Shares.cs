@@ -32,7 +32,7 @@ namespace Rootborn.Game
         public bool SharesWallet => _roomWallet != null;
 
         /// <summary>돈을 쓰는 명령이나 같이 쓰는 집의 가구 요청이 방의 허락을 기다린다(화면은 그 명령의 버튼을 잠깐 막는다).</summary>
-        public bool WaitingForRoom => _waiting.Count > 0 || _houseWaiting != null || _storageWaiting != null;
+        public bool WaitingForRoom => _waiting.Count > 0 || _houseWaiting != null || _storageWaiting != null || _finishWaiting != null;
 
         /// <summary>마지막으로 방이 거절한 명령이 있었다(돈이 모자람). 다음 명령에서 지운다.</summary>
         public bool LastRoomRefusal { get; private set; }
@@ -78,6 +78,7 @@ namespace Rootborn.Game
                 changed |= FollowRoomTownFlags();
                 ListenToSharedHouse();
                 ListenToSharedChests();
+                changed |= ListenToSharedHouseBuild();
             }
 
             if (changed) Save();
@@ -170,6 +171,12 @@ namespace Rootborn.Game
             if (_roomTown != null && piece == _roomTown.Name)
             {
                 if (FollowRoomTownFlags()) SaveAndNotify(null, GameChangeTopics.World);
+                return;
+            }
+
+            if (_roomBuild != null && piece == _roomBuild.Name)
+            {
+                FollowRoomHouseBuild();
                 return;
             }
 

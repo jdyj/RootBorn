@@ -349,7 +349,7 @@ namespace Rootborn.Core.Room
 
         /// <summary>
         /// 내 꾸밈·띠 잡기 요청의 답(그 요청, 허락됐는지). 듣는 쪽이 붙기 전에 온 답은 갖고 있다가 처음 붙을 때 넘긴다(<see cref="RoomChestsClient.Answered"/>와 같다).
-        /// 쓰기·풀기의 답은 여기로 오지 않는다(<see cref="Changed"/>만).
+        /// 쓰기·풀기의 답은 여기로 오지 않는다(<see cref="Changed"/>만). 쓰기가 거절되면 이 조각이 새 id로 쓰기를 다시 적는다(<see cref="Receive(RoomRequestSaveData, RoomAnswer)"/>).
         /// </summary>
         public event Action<RoomRequestSaveData, bool> Answered
         {
@@ -419,6 +419,11 @@ namespace Rootborn.Core.Room
         {
             if (request.Kind != RoomHouseBuild.Finish && request.Kind != RoomHouseBuild.Band)
             {
+                // 쓰기 = 돈을 이미 냈다. 방이 적용하지 못해 잡은 채로 거절했으면(RoomHouseBuild 요약) 새 id로 다시 적어 둔다 — 장부가 옛 id에 거절을
+                // 기억한다. 저장하지 않는다(다음 저장과 함께 간다). 그래서 보낼 목록에는 늘 그 잡기의 쓰기가 남아, 게임 한 판이 이 잡기를 "떠도는 잡기"로
+                // 보고 풀지 않는다(풀면 낸 돈만 사라진다). Invalid(잡기가 없거나 남의 것)는 다시 보내지 않는다.
+                if (request.Kind == RoomHouseBuild.Use && answer.Outcome == RoomOutcomes.Refused && request.Ids != null && request.Ids.Length == 1)
+                    AddUse(request.Ids[0]);
                 Changed?.Invoke();
                 return;
             }

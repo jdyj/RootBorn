@@ -12,7 +12,7 @@ namespace Rootborn.Game
     /// 짓는 집의 꾸밈(방마다 벽지·바닥). 규칙(대상 칸, 바뀌는 칸, 비용, 거절 이유)은 Core <see cref="HouseFinishes"/>가 정한다. 여기서는 잇고 저장한다.
     /// 기록은 슬롯 공용 파일 house-build.json(<see cref="SaveFileNames.HouseBuild"/>)이고, 시작할 때 읽고 꾸밈이 바뀐 저장 묶음에서만 쓴다
     /// (읽기·붙이기만으로 쓰지 않는다). 프레임(출처표)은 Host가 짓는 집에 들어설 때 <see cref="EnterHouseBuild"/>로 넘긴다.
-    /// 같이 쓰는 집은 아직 꾸밀 수 없고(이유 <see cref="HouseFinishReasons.SharedHouse"/>) 보이는 꾸밈도 프레임 기본이다(꾸밈 공유는 다음 계획).
+    /// 같이 쓰는 집이면 조회·미리 보기는 방이 알린 꾸밈(비추기)으로, 적용은 방 요청으로 간다(GameSession.SharedHouseBuild). 자기 기록은 그동안 들고만 있다.
     /// </summary>
     public sealed partial class GameSession
     {
@@ -40,14 +40,16 @@ namespace Rootborn.Game
         public void EnterHouseBuild(HouseBuildFrame frame)
         {
             if (frame == null) throw new ArgumentNullException(nameof(frame));
-            if (ReferenceEquals(_houseFinishes.Frame, frame))
+            // 같이 쓰는 집은 비추기에 붙인다 — 자기 기록(_houseFinishes)은 붙이지도 더럽히지도 않는다.
+            var finishes = VisibleFinishes;
+            if (ReferenceEquals(finishes.Frame, frame))
             {
                 if (_inHouseBuild) return;
                 _inHouseBuild = true;
                 Notify(null, GameChangeTopics.HouseBuild);
                 return;
             }
-            _houseFinishes.Attach(frame, FindFinish);
+            finishes.Attach(frame, FindFinish);
             _inHouseBuild = true;
             Notify(null, GameChangeTopics.HouseBuild);
         }
@@ -67,26 +69,19 @@ namespace Rootborn.Game
         private bool _inHouseBuild;
 
         /// <summary>꾸밀 수 있는 집이 열려 있다: 짓는 집 맵에 있고(프레임이 붙었고), 집 배치가 있고, 일터가 아니다.</summary>
-        public bool HouseBuildOpen => _inHouseBuild && _houseFinishes.Attached && House != null && ActiveWorkspace == null;
+        public bool HouseBuildOpen => _inHouseBuild && VisibleFinishes.Attached && House != null && ActiveWorkspace == null;
 
-        // 같이 쓰는 집(방의 집)은 손님의 자기 꾸밈으로 그리지 않는다 — 꾸밈 공유가 생길 때까지 프레임 기본이다.
-        // 자기 기록은 그대로 들고 있다(버리지도 쓰지도 않는다). 혼자 하는 집(공유 없는 판)에서는 자기 꾸밈이 그대로 보인다.
-        private bool ShowsOwnFinishes => _roomHouse == null;
+        /// <summary>그 바닥 칸의 보이는 벽지 id(기록이 없으면 프레임 기본, 붙지 않았으면 빈 글). 같이 쓰는 집은 방이 알린 꾸밈.</summary>
+        public string HouseWallAt(CellPos floorCell) => VisibleFinishes.WallAt(floorCell);
 
-        /// <summary>그 바닥 칸의 보이는 벽지 id(기록이 없으면 프레임 기본, 붙지 않았으면 빈 글). 같이 쓰는 집은 프레임 기본.</summary>
-        public string HouseWallAt(CellPos floorCell)
-            => ShowsOwnFinishes ? _houseFinishes.WallAt(floorCell) : _houseFinishes.Frame?.DefaultWall ?? string.Empty;
+        /// <summary>그 바닥 칸의 보이는 바닥 id. 같이 쓰는 집은 방이 알린 꾸밈.</summary>
+        public string HouseFloorAt(CellPos floorCell) => VisibleFinishes.FloorAt(floorCell);
 
-        /// <summary>그 바닥 칸의 보이는 바닥 id. 같이 쓰는 집은 프레임 기본.</summary>
-        public string HouseFloorAt(CellPos floorCell)
-            => ShowsOwnFinishes ? _houseFinishes.FloorAt(floorCell) : _houseFinishes.Frame?.DefaultFloor ?? string.Empty;
+        /// <summary>보이는 띠 색 줄 이름(고른 띠 꾸밈의 그림, 기록이 비거나 데이터에 없으면 프레임 기본). 같이 쓰는 집은 방이 알린 꾸밈.</summary>
+        public string HouseBandColors() => VisibleFinishes.BandColors;
 
-        /// <summary>보이는 띠 색 줄 이름(고른 띠 꾸밈의 그림, 기록이 비거나 데이터에 없으면 프레임 기본). 같이 쓰는 집은 프레임 기본.</summary>
-        public string HouseBandColors()
-            => ShowsOwnFinishes ? _houseFinishes.BandColors : _houseFinishes.Frame?.DefaultBand ?? string.Empty;
-
-        /// <summary>꾸밈 상태가 바뀔 때마다 오른다(화면이 미리 보기를 다시 낼지 본다).</summary>
-        public int HouseBuildVersion => _houseFinishes.Version;
+        /// <summary>보이는 꾸밈 상태가 바뀔 때마다 오른다(화면이 미리 보기를 다시 낼지 본다). 같이 쓰는 집은 방의 상태가 올 때.</summary>
+        public int HouseBuildVersion => VisibleFinishes.Version;
 
         /// <summary>그 자리(<see cref="RoomFinishSlots"/>)의 꾸밈, 데이터 순서, 잠긴 것 포함.</summary>
         public IReadOnlyList<RoomFinishDefinition> HouseFinishOptions(string slot)
@@ -127,12 +122,11 @@ namespace Rootborn.Game
             }, r => r == FurniturePurchaseResult.Purchased);
         }
 
-        /// <summary>꾸밈 한 번의 미리 보기(바꾸지 않는다). 집이 아니면 <see cref="HouseFinishReasons.NotInHouse"/>, 같이 쓰는 집이면 <see cref="HouseFinishReasons.SharedHouse"/>.</summary>
+        /// <summary>꾸밈 한 번의 미리 보기(바꾸지 않는다). 집이 아니면 <see cref="HouseFinishReasons.NotInHouse"/>. 같이 쓰는 집은 방이 알린 꾸밈 위에서 같은 판정(자기 해금, 자기 돈).</summary>
         public HouseFinishPreview PreviewHouseFinish(string finishId, string tool, CellPos pointer)
         {
             if (!HouseBuildOpen) return HouseFinishPreview.Refused(finishId, SlotOf(finishId), tool, HouseFinishReasons.NotInHouse);
-            if (_roomHouse != null) return HouseFinishPreview.Refused(finishId, SlotOf(finishId), tool, HouseFinishReasons.SharedHouse);
-            return _houseFinishes.Preview(finishId, tool, pointer, FurnitureUnlocks, CanPayFinish);
+            return VisibleFinishes.Preview(finishId, tool, pointer, FurnitureUnlocks, CanPayFinish);
         }
 
         /// <summary>
@@ -140,16 +134,18 @@ namespace Rootborn.Game
         /// 안 되면 false이고 아무것도 바뀌지 않는다. 같은 요청을 다시 하면 바뀌는 칸이 없어 false(돈이 들지 않는다). 비용이 빈 꾸밈도 같은 길이다.
         /// 알림: <see cref="GameChangeTopics.HouseBuild"/>, <see cref="GameChangeTopics.Inventory"/>.
         /// </summary>
-        /// <remarks>적용되면 가구 놓기와 같은 하루 한도로 인테리어 기술이 자란다(<see cref="GrowByPlacing"/>, 자랐으면 Workspace·Student도 알린다).</remarks>
+        /// <remarks>적용되면 가구 놓기와 같은 하루 한도로 인테리어 기술이 자란다(<see cref="GrowByPlacing"/>, 자랐으면 Workspace·Student도 알린다).
+        /// 같이 쓰는 집이면 방에 칸 잡기를 요청만 하고 false다(지금 바뀐 것이 없다 — 가구 요청과 같다). 잡히면 그때 돈을 낸다(GameSession.SharedHouseBuild).</remarks>
         public bool ApplyHouseFinish(string finishId, string tool, CellPos pointer)
-            => Shared(() => CommitFinish(PreviewHouseFinish(finishId, tool, pointer), true), done => done);
+            => InSharedHouse
+                ? RequestSharedFinish(finishId, tool, pointer)
+                : Shared(() => CommitFinish(PreviewHouseFinish(finishId, tool, pointer), true), done => done);
 
-        /// <summary>띠 색 한 번의 미리 보기(바꾸지 않는다). 거절 이유는 <see cref="PreviewHouseFinish"/>와 같다(집 밖, 같이 쓰는 집).</summary>
+        /// <summary>띠 색 한 번의 미리 보기(바꾸지 않는다). 거절 이유는 <see cref="PreviewHouseFinish"/>와 같다(집 밖).</summary>
         public HouseFinishPreview PreviewHouseBand(string finishId)
         {
             if (!HouseBuildOpen) return HouseFinishPreview.Refused(finishId, SlotOf(finishId), string.Empty, HouseFinishReasons.NotInHouse);
-            if (_roomHouse != null) return HouseFinishPreview.Refused(finishId, SlotOf(finishId), string.Empty, HouseFinishReasons.SharedHouse);
-            return _houseFinishes.PreviewBand(finishId, FurnitureUnlocks, CanPayFinish);
+            return VisibleFinishes.PreviewBand(finishId, FurnitureUnlocks, CanPayFinish);
         }
 
         /// <summary>
@@ -157,7 +153,7 @@ namespace Rootborn.Game
         /// 안 되면 false·무변경. 알림: <see cref="GameChangeTopics.HouseBuild"/>, <see cref="GameChangeTopics.Inventory"/>.
         /// </summary>
         public bool ApplyHouseBand(string finishId)
-            => Shared(() => CommitFinish(PreviewHouseBand(finishId), false), done => done);
+            => InSharedHouse ? RequestSharedBand(finishId) : Shared(() => CommitFinish(PreviewHouseBand(finishId), false), done => done);
 
         // 미리 보기 하나를 돈 빼기와 함께 한 바꾸기로 적용하고 한 저장 묶음으로 쓴다(칸 꾸밈·띠 색이 같이 쓴다).
         // grows: 적용이 실제로 된 뒤에만 꾸미며 배우기를 센다(칸 꾸밈만 — 띠 색은 칸이 바뀌지 않는다). 기술도 같은 저장 묶음에 든다.

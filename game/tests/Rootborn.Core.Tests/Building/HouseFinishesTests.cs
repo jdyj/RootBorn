@@ -361,7 +361,7 @@ namespace Rootborn.Core.Tests.Building
             Assert.That(f.FloorAt(LeftMiddle), Is.EqualTo(FloorPlain));
             Assert.That(a.SameAs(Preview(f, FloorOak, HouseFinishTools.Room, LeftMiddle)), Is.False);        // 판이 바뀌었다
             Assert.That(f.Apply(null), Is.False);
-            Assert.That(f.Apply(HouseFinishPreview.Refused(FloorOak, RoomFinishSlots.Floor, HouseFinishTools.Room, HouseFinishReasons.SharedHouse)), Is.False);
+            Assert.That(f.Apply(HouseFinishPreview.Refused(FloorOak, RoomFinishSlots.Floor, HouseFinishTools.Room, HouseFinishReasons.RoomRefused)), Is.False);
         }
 
         [Test]

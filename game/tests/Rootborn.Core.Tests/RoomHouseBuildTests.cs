@@ -625,6 +625,29 @@ namespace Rootborn.Core.Tests
         }
 
         [Test]
+        public void Client_UseRefused_SendsTheUseAgainWithANewId_InvalidOrAppliedDoNot()
+        {
+            // 쓰기 = 돈을 냈다. 방이 적용하지 못해 잡은 채 거절하면 쓰기를 새 id로 다시 적어 둔다(풀면 낸 돈만 사라진다).
+            var shares = Shares();
+            var client = shares.Find<RoomHouseBuildClient>();
+            client.AddUse("h1");
+            var first = shares.Outbox.Requests.Single();
+            shares.Receive(new RoomAnswer(RoomHouseBuild.PieceName, first.RequestId, RoomOutcomes.Refused, 0));
+            var again = shares.Outbox.Requests.Single();
+            Assert.That((again.Kind, again.Ids.Single()), Is.EqualTo((RoomHouseBuild.Use, "h1")));
+            Assert.That(again.RequestId, Is.Not.EqualTo(first.RequestId), "장부가 옛 id에 거절을 기억하므로 새 id");
+
+            shares.Receive(new RoomAnswer(RoomHouseBuild.PieceName, again.RequestId, RoomOutcomes.Invalid, 0));
+            Assert.That(shares.Outbox.Requests, Is.Empty, "잡기가 없거나 남의 것(Invalid)이면 다시 보내지 않는다");
+            client.AddUse("h2");
+            shares.Receive(new RoomAnswer(RoomHouseBuild.PieceName, shares.Outbox.Requests.Single().RequestId, RoomOutcomes.Applied, 0));
+            Assert.That(shares.Outbox.Requests, Is.Empty);
+            client.AddRelease("h3");
+            shares.Receive(new RoomAnswer(RoomHouseBuild.PieceName, shares.Outbox.Requests.Single().RequestId, RoomOutcomes.Refused, 0));
+            Assert.That(shares.Outbox.Requests, Is.Empty, "풀기는 다시 보내지 않는다");
+        }
+
+        [Test]
         public void Client_RequestsWithTheSeparator_Throw()
         {
             var client = Shares().Find<RoomHouseBuildClient>();

@@ -27,7 +27,12 @@ namespace Rootborn.Game
         /// <summary>집과 가구를 같이 쓰는 방이다(집의 배치가 방의 것).</summary>
         public bool SharesHouse => _roomHouse != null;
 
-        private void UseSharedHouse(RoomShares shares) => _roomHouse = shares?.Find<RoomHouseClient>();
+        // 집을 같이 쓰면 꾸밈 조각(house-build)도 따라 켜진다(RoomPieceCatalog의 Follow) — 꾸밈도 방의 것이다(GameSession.SharedHouseBuild).
+        private void UseSharedHouse(RoomShares shares)
+        {
+            _roomHouse = shares?.Find<RoomHouseClient>();
+            UseSharedHouseBuild(shares);
+        }
 
         private void ListenToSharedHouse()
         {

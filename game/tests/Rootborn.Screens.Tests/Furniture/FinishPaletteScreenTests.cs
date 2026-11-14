@@ -623,29 +623,6 @@ namespace Rootborn.Screens.Tests.Furniture
             Assert.That(f.T.Session.HouseFloorAt(a), Is.EqualTo(floor.Id));
         }
 
-        [Test]
-        public void SharedHouse_ShowsReason()
-        {
-            var rules = new Rootborn.Core.Room.RoomHouseRules(TestSession.Definitions.All<Rootborn.Core.Placement.FurnitureDefinition>(),
-                s => s == "house" ? new FurnitureRoom(House.World).Grid : null);
-            var pieces = new Rootborn.Core.Room.RoomPieceSet(new Rootborn.Core.Room.RoomShareSettings(new[] { Rootborn.Core.Room.RoomHouse.PieceName }),
-                Rootborn.Core.Room.RoomPieceCatalog.CreateDefault(rules));
-            var shares = new Rootborn.Core.Room.RoomShares(pieces.Settings, Rootborn.Core.Room.RoomPieceCatalog.CreateDefault(), () => "guest-r1");
-            foreach (var p in pieces.Pieces) shares.Receive(p.State());
-            using var f = new Fixture(shares: shares);
-            Assert.That(f.T.Session.SharesHouse, Is.True, "준비: 같이 쓰는 집");
-            f.Decorate();
-            f.T.Click(FurniturePlacementScreen.FinishTabFloorId);
-            RoomFinishDefinition floor = FreeNonDefault(f, RoomFinishSlots.Floor);
-            f.PickCard(floor.Id);
-            var (_, a, _) = f.FirstRoom();
-            f.Hover(a);
-            Assert.That(f.Text(FurniturePlacementScreen.FinishReasonId), Is.EqualTo(f.T.Text.Get(HouseFinishReasons.SharedHouse)));
-            Assert.That(f.View.Shown.Where(p => p != null), Is.Empty);
-            f.ClickCell(a);
-            Assert.That(f.T.Session.HouseFloorAt(a), Is.EqualTo(f.Frame.DefaultFloor), "바뀌지 않는다");
-        }
-
         /// <summary>
         /// 돈만 같이 쓰는 방(집은 각자): 미리 보기는 방 지갑으로 판단하고(붉지 않다), 누르면 방의 허락을 기다린다는 문구가 이유 줄에 보이며
         /// 기다리는 동안 다시 눌러도 요청이 겹치지 않는다. 허락이 오면 문구가 사라지고 꾸밈이 바뀐다. 방 쪽은 Core RoomPieceSet을 테스트가 손으로 돌린다.
@@ -787,26 +764,6 @@ namespace Rootborn.Screens.Tests.Furniture
             Assert.That(BandList(f).IsActive, Is.False, "다른 탭으로 가면 띠 목록이 숨는다");
             Assert.That(Visible(f), Is.GreaterThan(0));
             Assert.That(f.T.Node(FurniturePlacementScreen.FinishToolRoomId).IsActive, Is.True);
-        }
-
-        [Test]
-        public void BandTab_SharedHouse_ShowsReason_NothingChanges()
-        {
-            var rules = new Rootborn.Core.Room.RoomHouseRules(TestSession.Definitions.All<Rootborn.Core.Placement.FurnitureDefinition>(),
-                s => s == "house" ? new FurnitureRoom(House.World).Grid : null);
-            var pieces = new Rootborn.Core.Room.RoomPieceSet(new Rootborn.Core.Room.RoomShareSettings(new[] { Rootborn.Core.Room.RoomHouse.PieceName }),
-                Rootborn.Core.Room.RoomPieceCatalog.CreateDefault(rules));
-            var shares = new Rootborn.Core.Room.RoomShares(pieces.Settings, Rootborn.Core.Room.RoomPieceCatalog.CreateDefault(), () => "guest-r1");
-            foreach (var p in pieces.Pieces) shares.Receive(p.State());
-            using var f = new Fixture(shares: shares);
-            f.Decorate();
-            f.T.Click(FurniturePlacementScreen.FinishTabBandId);
-            var bands = f.T.Session.HouseFinishOptions(RoomFinishSlots.Band);
-            int other = bands.ToList().FindIndex(b => b.Art != f.T.Session.HouseBandColors());
-            ClickBandRow(f, other);
-            Assert.That(f.Screen.FinishLastAction, Is.EqualTo("refused"));
-            Assert.That(f.T.Session.HouseBandColors(), Is.EqualTo(f.Frame.DefaultBand));
-            Assert.That(f.Text(FurniturePlacementScreen.FinishReasonId), Is.EqualTo(f.T.Text.Get(HouseFinishReasons.SharedHouse)));
         }
 
         private static IEnumerable<string> Languages() => LongText.MergedTables().Keys.OrderBy(k => k);
