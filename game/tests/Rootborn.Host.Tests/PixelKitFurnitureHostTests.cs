@@ -59,6 +59,9 @@ namespace Rootborn.Host.Tests
             _saves = Path.Combine(Path.GetTempPath(), "rootborn-pixel-kit-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_saves);
             _root = HostOptions.Resolve(new[] { "--sample" }).RepoRoot;
+            // 준비: 이 시험들은 빈 집에 키트 가구를 놓아 세고 찍는다 — 새 게임의 처음 배치 가구(작업 10)를 받지 않게 빈 배치 파일을 둔다
+            // (처음 가구를 모두 치운 집과 같다). 임시 폴더의 슬롯에만 쓴다.
+            FurnitureSaveFiles.SaveHouseLayout(new Rootborn.Data.Save.FileSaveStore(_saves), "slot-1", 0, Array.Empty<FurniturePlacementSaveData>());
         }
 
         [TearDown]
