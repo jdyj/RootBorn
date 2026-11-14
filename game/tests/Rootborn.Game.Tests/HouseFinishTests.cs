@@ -125,8 +125,13 @@ namespace Rootborn.Game.Tests
             var floor = FreeNonDefault(RoomFinishSlots.Floor);
             int cost = MoneyFor(floor, TopLeftRoomFill);
             game.VisitLocation("location.town-square"); // 슬롯 파일이 있게(첫 저장)
+            // 돈을 방 하나 값보다 1 적게 맞춘다(새 게임 시작 돈에 기대지 않는다).
+            int start = Money(game);
+            if (start > cost - 1) Assert.That(game.Inventory.Remove(game.Item(Allowance), start - (cost - 1)), Is.True);
+            else if (start < cost - 1) game.Inventory.Add(game.Item(Allowance), cost - 1 - start);
             int money = Money(game);
-            Assume.That(money, Is.LessThan(cost), "전제: 새 게임의 돈은 방 하나 값보다 적다");
+            Assert.That(money, Is.EqualTo(cost - 1));
+            game.VisitLocation("location.town-square"); // 맞춘 돈을 저장한 상태에서 비교
             var before = SlotFiles(saves);
             int changes = 0;
             game.Changed += _ => changes++;
@@ -235,6 +240,39 @@ namespace Rootborn.Game.Tests
         }
 
         [Test]
+        public void ApplyRefusedInsideTheExchange_MoneyFinishesAndFilesUnchanged()
+        {
+            using var saves = new TempSaves();
+            var game = InHouse(saves.Store);
+            var floor = FreeNonDefault(RoomFinishSlots.Floor);
+            SetMoney(game, MoneyFor(floor, TopLeftRoomFill) * 2);
+            game.VisitLocation("location.town-square"); // 슬롯 파일이 있게
+            int money = Money(game);
+            var before = SlotFiles(saves);
+            var topics = new List<string>();
+            game.Changed += topics.Add;
+
+            // 시험용 이음매: 바꾸기 커밋 안, 꾸밈 적용 바로 앞에서 프레임을 다시 붙여 미리 보기를 낡게 한다 → Apply가 거절한다.
+            var sameValues = new HouseBuildFrame(Frame.FrameId, Frame.Tiles, Frame.DefaultWall, Frame.DefaultFloor, Frame.DefaultBand);
+            game.HouseFinishCommitting = () => game.EnterHouseBuild(sameValues);
+            int versionBefore = game.HouseBuildVersion;
+
+            Assert.That(game.ApplyHouseFinish(floor.Id, HouseFinishTools.Room, TopLeftRoom), Is.False);
+            Assert.That(game.HouseBuildVersion, Is.GreaterThan(versionBefore), "전제: 이음매가 실제로 상태를 바꿨다");
+            Assert.That(Money(game), Is.EqualTo(money), "돈이 되돌려졌다");
+            Assert.That(game.HouseFloorAt(TopLeftRoom), Is.EqualTo(Frame.DefaultFloor), "꾸밈 그대로");
+            Assert.That(topics, Does.Not.Contain(GameChangeTopics.Inventory), "명령의 알림 없음(다시 붙이기의 HouseBuild 알림만)");
+            game.Changed -= topics.Add;
+            AssertSameFiles(before, SlotFiles(saves), "파일 그대로");
+            Assert.That(File.Exists(BuildPath(saves)), Is.False);
+
+            // 이음매를 치우면 같은 요청이 된다(거절이 남은 것을 망가뜨리지 않았다).
+            game.HouseFinishCommitting = null;
+            Assert.That(game.ApplyHouseFinish(floor.Id, HouseFinishTools.Room, TopLeftRoom), Is.True);
+            Assert.That(Money(game), Is.EqualTo(money - MoneyFor(floor, TopLeftRoomFill)));
+        }
+
+        [Test]
         public void SharedHouse_RefusedWithReason()
         {
             using var saves = new TempSaves();
@@ -284,7 +322,7 @@ namespace Rootborn.Game.Tests
             var unknown = new HouseFinishCellSaveData { X = 99, Y = 99, Wall = "finish.gone-from-data", Floor = "" };
             saves.Store.Write(TestWorld.Slot, SaveFileNames.HouseBuild, new HouseBuildSaveData
             {
-                Version = HouseBuildSaveData.KnownVersion, FrameId = "house.v1", Band = "",
+                Version = HouseBuildSaveData.KnownVersion, FrameId = Frame.FrameId, Band = "",
                 Finishes = new[] { new HouseFinishCellSaveData { X = TopLeftRoom.X, Y = TopLeftRoom.Y, Floor = FreeNonDefault(RoomFinishSlots.Floor).Id }, unknown },
             });
             byte[] written = File.ReadAllBytes(BuildPath(saves));
@@ -305,6 +343,7 @@ namespace Rootborn.Game.Tests
             var game = InHouse(saves.Store);
             var floors = TestWorld.Definitions.All<RoomFinishDefinition>().Where(f => f.Slot == RoomFinishSlots.Floor).Select(f => f.Id);
             Assert.That(game.HouseFinishOptions(RoomFinishSlots.Floor).Select(f => f.Id), Is.EqualTo(floors), "데이터 순서, 잠긴 것 포함");
+            Assert.That(game.HouseFinishOptions(RoomFinishSlots.Floor), Is.Not.InstanceOf<List<RoomFinishDefinition>>(), "기억한 목록을 고칠 수 없다");
             Assert.That(game.HouseBandColors(), Is.EqualTo(Frame.DefaultBand));
             int version = game.HouseBuildVersion;
             game.EnterHouseBuild(Frame);

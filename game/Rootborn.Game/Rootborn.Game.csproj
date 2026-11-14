@@ -9,4 +9,8 @@
     <ProjectReference Include="../Rootborn.Core/Rootborn.Core.csproj" />
     <ProjectReference Include="../Rootborn.Data/Rootborn.Data.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- 시험용 이음매(internal)를 Game 테스트만 본다. -->
+    <InternalsVisibleTo Include="Rootborn.Game.Tests" />
+  </ItemGroup>
 </Project>

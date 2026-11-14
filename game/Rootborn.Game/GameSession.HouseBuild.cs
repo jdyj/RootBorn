@@ -65,13 +65,14 @@ namespace Rootborn.Game
             var list = new List<RoomFinishDefinition>();
             foreach (var finish in _definitions.All<RoomFinishDefinition>())
                 if (string.Equals(finish.Slot, key, StringComparison.Ordinal)) list.Add(finish);
-            _finishOptions[key] = list;
-            return list;
+            var readOnly = list.AsReadOnly(); // 부르는 쪽이 형 변환으로 기억한 목록을 고치지 못하게
+            _finishOptions[key] = readOnly;
+            return readOnly;
         }
 
         /// <summary>그 꾸밈을 쓸 수 있다(해금 토큰이 없거나 얻었다).</summary>
         public bool IsFinishUnlocked(RoomFinishDefinition finish)
-            => finish != null && (finish.UnlockToken.Length == 0 || (FurnitureUnlocks != null && FurnitureUnlocks.IsUnlocked(finish.UnlockToken)));
+            => HouseFinishes.IsUnlocked(finish, FurnitureUnlocks);
 
         /// <summary>꾸밈 한 번의 미리 보기(바꾸지 않는다). 집이 아니면 <see cref="HouseFinishReasons.NotInHouse"/>, 같이 쓰는 집이면 <see cref="HouseFinishReasons.SharedHouse"/>.</summary>
         public HouseFinishPreview PreviewHouseFinish(string finishId, string tool, CellPos pointer)
@@ -91,15 +92,29 @@ namespace Rootborn.Game
             {
                 var preview = PreviewHouseFinish(finishId, tool, pointer);
                 if (!preview.CanApply || !TryGrants(preview.Cost, out var costs)) return false;
-                bool applied = false;
-                bool exchanged = Inventory.TryExchange(costs, null, () =>
+                bool done;
+                try
                 {
-                    applied = _houseFinishes.Apply(preview);
-                    if (applied) _houseBuildDirty = true;
-                });
-                bool done = exchanged && applied;
+                    // 적용이 거절되면 커밋 안에서 던져 바꾸기가 돈을 되돌리게 한다(ItemInventory의 WalletRefused와 같은 꼴). 돈만 빠지는 길이 없다.
+                    done = Inventory.TryExchange(costs, null, () =>
+                    {
+                        HouseFinishCommitting?.Invoke();
+                        if (!_houseFinishes.Apply(preview)) throw new FinishRefused();
+                        _houseBuildDirty = true;
+                    });
+                }
+                catch (FinishRefused)
+                {
+                    done = false;
+                }
                 return Saved(done, done, null, GameChangeTopics.HouseBuild, GameChangeTopics.Inventory);
             }, done => done);
+
+        /// <summary>시험용 이음매: 꾸밈 바꾸기 커밋 안, 적용 바로 앞에서 부른다(Game 테스트가 적용 거절을 일부러 만든다). 게임은 쓰지 않는다.</summary>
+        internal Action HouseFinishCommitting;
+
+        // 바꾸기 커밋 안에서 꾸밈 적용이 거절됐다(바꾸기가 되돌리고 ApplyHouseFinish가 받아 false로 바꾼다. 밖으로 나가지 않는다).
+        private sealed class FinishRefused : Exception { }
 
         private RoomFinishDefinition FindFinish(string id)
             => !string.IsNullOrEmpty(id) && _definitions.TryGet<RoomFinishDefinition>(id, out var finish) ? finish : null;

@@ -67,6 +67,22 @@ namespace Rootborn.Core.Tests.Building
             FurnitureUnlockProgress unlocks = null, Func<IReadOnlyList<ItemAmount<string>>, bool> canPay = null) =>
             f.Preview(finish, tool, at, unlocks ?? NoUnlocks, canPay ?? Pay);
 
+        [Test]
+        public void IsUnlocked_NoTokenOrEarnedToken_AndPreviewAgrees()
+        {
+            var unlocks = new FurnitureUnlockProgress("slot", "player");
+            Assert.That(HouseFinishes.IsUnlocked(Find(FloorOak), unlocks), Is.True, "토큰 없음");
+            Assert.That(HouseFinishes.IsUnlocked(Find(FloorOak), null), Is.True, "토큰 없음은 해금 기록 없이도");
+            Assert.That(HouseFinishes.IsUnlocked(Find(FloorLocked), unlocks), Is.False);
+            Assert.That(HouseFinishes.IsUnlocked(Find(FloorLocked), null), Is.False);
+            Assert.That(HouseFinishes.IsUnlocked(null, unlocks), Is.False);
+            var f = Attached();
+            Assert.That(Preview(f, FloorLocked, HouseFinishTools.Room, LeftMiddle, unlocks).ReasonKey, Is.EqualTo(HouseFinishReasons.Locked));
+            unlocks.TryUnlock(Token);
+            Assert.That(HouseFinishes.IsUnlocked(Find(FloorLocked), unlocks), Is.True);
+            Assert.That(Preview(f, FloorLocked, HouseFinishTools.Room, LeftMiddle, unlocks).ReasonKey, Is.Null, "같은 판단으로 미리 보기도 열린다");
+        }
+
         private static (string, int)[] CostOf(HouseFinishPreview p) => p.Cost.Select(c => (c.Item, c.Count)).ToArray();
 
         /// <summary>출처표의 face·narrow 부분 주인 칸 전부(테스트가 따로 센다).</summary>

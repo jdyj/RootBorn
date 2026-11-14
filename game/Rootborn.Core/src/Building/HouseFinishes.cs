@@ -169,6 +169,10 @@ namespace Rootborn.Core.Building
             Version++;
         }
 
+        /// <summary>그 꾸밈을 쓸 수 있는가: 해금 토큰이 비었거나 얻었다. 미리 보기의 잠김 판단과 화면의 잠김 표시가 이 하나를 쓴다. 꾸밈이 null이면 false.</summary>
+        public static bool IsUnlocked(RoomFinishDefinition finish, FurnitureUnlockProgress unlocks)
+            => finish != null && (finish.UnlockToken.Length == 0 || (unlocks != null && unlocks.IsUnlocked(finish.UnlockToken)));
+
         public string WallAt(CellPos floorCell) => Visible(RoomFinishSlots.Wall, floorCell);
         public string FloorAt(CellPos floorCell) => Visible(RoomFinishSlots.Floor, floorCell);
 
@@ -205,7 +209,7 @@ namespace Rootborn.Core.Building
             var cost = CostFor(def, changed.Count);
 
             string reason = null;
-            if (def.UnlockToken.Length > 0 && (unlocks == null || !unlocks.IsUnlocked(def.UnlockToken)))
+            if (!IsUnlocked(def, unlocks))
                 reason = HouseFinishReasons.Locked;
             else if (changed.Count == 0)
                 reason = HouseFinishReasons.NothingToChange;
