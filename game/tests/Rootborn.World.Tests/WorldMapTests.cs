@@ -99,6 +99,9 @@ namespace Rootborn.World.Tests
             using JsonDocument doc = JsonDocument.Parse(File.ReadAllText(path));
             var set = new HashSet<(int, int)>();
             foreach (JsonElement c in doc.RootElement.GetProperty("maps").GetProperty(mapId).EnumerateArray()) set.Add((c[0].GetInt32(), c[1].GetInt32()));
+            // Unity 판 뒤에 소품을 놓으며 칠해 막은 칸(픽스처 addedSinceUnity). Unity 굽기 결과는 그대로 두고 더한다.
+            if (doc.RootElement.TryGetProperty("addedSinceUnity", out JsonElement added) && added.TryGetProperty(mapId, out JsonElement cells))
+                foreach (JsonElement c in cells.EnumerateArray()) set.Add((c[0].GetInt32(), c[1].GetInt32()));
             return set;
         }
 
