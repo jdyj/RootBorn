@@ -15,7 +15,7 @@ namespace Rootborn.Core.Building
         public int Version;
         /// <summary>이 기록을 쓴 집 틀(맵 build.frameId). 틀이 바뀌어도 칸 좌표가 같으면 기록이 그대로 든다.</summary>
         public string FrameId = "";
-        /// <summary>띠 색 줄 이름. 빈 글이면 프레임 기본.</summary>
+        /// <summary>띠 꾸밈의 id(slot band인 RoomFinishDefinition — 좌표표의 줄 이름이 아니다). 빈 글이면 프레임 기본. 데이터에 없는 id는 기본으로 보이고 기록은 남는다.</summary>
         public string Band = "";
         public HouseFinishCellSaveData[] Finishes = Array.Empty<HouseFinishCellSaveData>();
 
