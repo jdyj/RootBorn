@@ -99,6 +99,8 @@ namespace Rootborn.Host.Tests
                     && f.GetFootprintCells(FurniturePlacementDirection.North).Count == 1 && f.GetTileParts(FurniturePlacementDirection.North).Count == 1);
                 rug = rugDefinition.StableId;
                 rugRoom = room.FloorCells.Count(c => session.House.CanPlace(rugDefinition, c, FurniturePlacementDirection.North));
+                // 새 게임의 집에는 처음 배치 가구가 있다(작업 10). 이어 할 집은 옛 배치 파일만 읽어 그 가구가 없다 — 그것이 차지한 칸만큼 깔개가 더 들어간다.
+                rugRoom += session.House.Placed.Sum(p => p.Definition.GetFootprintCells(p.Direction).Count);
                 var map = first.World.Map;
                 for (int y = 1; y < map.Grid.Rows - 1; y++)
                     for (int x = 1; x < map.Grid.Columns - 1; x++)
@@ -223,6 +225,76 @@ namespace Rootborn.Host.Tests
             Assert.That(empty.IsActive, Is.True);
             Assert.That(empty.Text, Is.EqualTo(player.Game.Text.Get("ui.furniture.stored.empty")));
             player.Screenshot("house-move-20-stored-empty");
+        }
+
+        /// <summary>
+        /// 실제 옛 세이브처럼: 옛 모양 배치 파일(Version 없음, TileName 있음 — 고정 폴더 editor-20261105의 꼴)에 두 칸짜리 책상·책장 다섯이
+        /// 한 칸은 새 집 바닥, 한 칸은 새 벽에 걸쳐 있다 → 이어 하기 → 다섯 모두 옮겨지고 "옮김만" 알림, 보관 없음.
+        /// 준비 단계: 새 이야기를 입력으로 시작해 슬롯을 만들고(그 집의 칸을 잰다), 끈 뒤 배치 파일을 손으로 쓴다(임시 폴더의 슬롯).
+        /// 스크린샷: output/house-building/stage1b/house-move-03-{언어}-notice.png, -whole-house.png.
+        /// </summary>
+        [TestCase("ko")]
+        [TestCase("en")]
+        public void HOUSE_MOVE_003_RealisticOldSave_MultiCellDesksOnWalls(string language)
+        {
+            string[] pieces = { "school.desk", "school.bookcase", "growth31.assembly.desk", "school.bookcase", "school.desk" };
+            var anchors = new List<GridPoint>();
+            using (PlayerDriver first = Open())
+            {
+                NewGame(first);
+                var session = first.Game.Session;
+                var room = first.Game.World.Room;
+                foreach (string id in pieces)
+                    Assert.That(session.AvailableFurniture().Any(f => f.StableId == id && f.GetFootprintCells(FurniturePlacementDirection.North).Count == 2), Is.True, "준비: 쓸 수 있는 두 칸 가구 " + id);
+                // 걷는 칸 a, 그 오른쪽 칸이 벽(막힌 집 안 칸)인 자리 — 두 칸 가구(기준 칸 + 오른쪽 칸)가 새 벽에 걸친다. 서로 겹치지 않게 떨어진 다섯 자리.
+                var map = first.World.Map;
+                for (int y = 1; y < map.Grid.Rows - 1 && anchors.Count < pieces.Length; y++)
+                    for (int x = 1; x < map.Grid.Columns - 2 && anchors.Count < pieces.Length; x++)
+                    {
+                        GridPoint a = room.ToPlacement(new Rootborn.Core.World.CellPos(x, y));
+                        if (map.Collision.IsBlocked(new Rootborn.Core.World.CellPos(x, y)) || !map.Collision.IsBlocked(new Rootborn.Core.World.CellPos(x + 1, y))) continue;
+                        if (anchors.Any(o => Math.Abs(o.X - a.X) < 3 && Math.Abs(o.Y - a.Y) < 2)) continue;
+                        // 그 자리에 정말 못 놓는다(Core 판단)는 것만 — 처음 배치 가구가 차지한 칸 때문이 아니라 벽 때문에.
+                        FurnitureDefinition piece = session.Definitions.Get<FurnitureDefinition>(pieces[anchors.Count]);
+                        if (session.House.CanPlace(piece, a, FurniturePlacementDirection.North)) continue;
+                        if (piece.GetFootprintCells(FurniturePlacementDirection.North).Any(c => session.House.TryFindAt(new GridPoint(a.X + c.X, a.Y + c.Y), out _))) continue;
+                        anchors.Add(a);
+                    }
+            }
+            Assert.That(anchors.Count, Is.EqualTo(pieces.Length), "준비: 새 벽에 걸치는 자리 다섯");
+            string slot = Directory.GetDirectories(_saves).Select(Path.GetFileName).Single();
+            var items = new System.Text.StringBuilder();
+            for (int i = 0; i < pieces.Length; i++)
+                items.Append(i == 0 ? "" : ",\n").Append("        { \"FurnitureId\": \"").Append(pieces[i]).Append("\", \"SurfaceId\": \"house\", \"AnchorX\": ")
+                    .Append(anchors[i].X).Append(", \"AnchorY\": ").Append(anchors[i].Y).Append(", \"Direction\": 0, \"StateJson\": \"\", \"TileName\": \"\" }");
+            File.WriteAllText(Path.Combine(_saves, slot, SaveFileNames.HouseFurnitureLayout(0)), "{\n    \"Items\": [\n" + items + "\n    ]\n}\n");
+
+            string evidence = Path.Combine(_root, "output", "house-building", "stage1b");
+            HostOptions options = HostOptions.Resolve(new[] { "--save-root", _saves, "--size", "1920x1080", "--evidence", evidence, "--lang", language });
+            options.TestMode = true;
+            using var player = new PlayerDriver(options);
+            player.Frames(3);
+            Continue(player);
+            var game = player.Game.Session;
+            Assert.That(player.World.Map.Id, Is.EqualTo("House"));
+            Assert.That(game.House.Placed.Count, Is.EqualTo(pieces.Length), "다섯 모두 새 집에 놓였다");
+            Assert.That(game.StoredFurniture(), Is.Empty, "보관 없음");
+            Assert.That(game.House.Placed.Select(p => p.Definition.StableId).OrderBy(s => s), Is.EqualTo(pieces.OrderBy(s => s)), "같은 가구들");
+            Assert.That(game.House.Placed.Select(p => p.Anchor).Intersect(anchors).Count(), Is.LessThan(pieces.Length), "벽에 걸친 자리에서 옮겨졌다");
+            Assert.That(player.Screens.IsOpen(ScreenCatalog.HouseMovedNotice), Is.True, "집에 들어서면 알림");
+            var message = (UiTextBlock)player.Node(HouseMovedNoticeScreen.MessageId);
+            Assert.That(message.Text, Is.EqualTo(player.Game.Text.Format(HouseMovedNoticeScreen.MovedOnlyKey, pieces.Length, 0)), "옮김만 알림");
+            TestContext.Out.WriteLine("알림: " + message.Text);
+            player.Screenshot($"house-move-03-{language}-notice");
+            player.Frames(60 * 6);
+            Assert.That(player.Screens.IsOpen(ScreenCatalog.HouseMovedNotice), Is.False);
+
+            player.OpenScreenWithKey(TestKey.P, ScreenCatalog.FurniturePlacement);
+            player.MovePointer(-50, -50);
+            player.Frames(3);
+            player.Screenshot($"house-move-03-{language}-whole-house");
+            Assert.That(player.Game.Renderer.MissingImages, Is.Empty, "가구 그림을 다 찾았다");
+            player.CloseScreenWithKey(TestKey.Escape, ScreenCatalog.FurniturePlacement);
         }
 
         private static bool Visible(PlayerDriver p, GridPoint cell)
