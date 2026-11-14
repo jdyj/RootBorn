@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using Rootborn.Core.Building;
 using Rootborn.Core.Minigames;
 using Rootborn.Core.Placement;
 using Rootborn.Core.Save;
@@ -21,15 +22,25 @@ namespace Rootborn.Core.Room
 
         private readonly FurnitureStorageCatalog _storage;
         private readonly Dictionary<string, int> _maxStack = new Dictionary<string, int>(StringComparer.Ordinal);
+        private readonly Func<string, HouseBuildFrame> _buildFrameFor;
+        private readonly Dictionary<string, HouseBuildFrame> _frames = new Dictionary<string, HouseBuildFrame>(StringComparer.Ordinal);
+        private readonly Dictionary<string, RoomFinishDefinition> _finishes = new Dictionary<string, RoomFinishDefinition>(StringComparer.Ordinal);
 
         /// <param name="gridFor">면 id → 방 칸. 모르는 면이면 null.</param>
         /// <param name="storage">어느 가구가 상자이고 몇 칸인가(같이 쓰는 상자). 없으면 상자가 없다.</param>
         /// <param name="items">아이템 정의(같이 쓰는 상자의 쌓기 수). 없는 아이템은 상자에 넣지 못한다.</param>
+        /// <param name="buildFrameFor">면 id → 짓는 집의 틀(같이 쓰는 집의 꾸밈, <see cref="RoomHouseBuild"/>). 모르는 면이면 null. 없으면 꾸밈 요청을 거절한다.</param>
+        /// <param name="finishes">꾸밈 정의(벽지·바닥·띠). 없는 꾸밈은 받지 않는다.</param>
         public RoomHouseRules(IEnumerable<FurnitureDefinition> furniture, Func<string, IPlacementGrid> gridFor,
-            FurnitureStorageCatalog storage = null, IEnumerable<Rootborn.Core.Inventory.ItemDefinition> items = null)
+            FurnitureStorageCatalog storage = null, IEnumerable<Rootborn.Core.Inventory.ItemDefinition> items = null,
+            Func<string, HouseBuildFrame> buildFrameFor = null, IEnumerable<RoomFinishDefinition> finishes = null)
         {
             _gridFor = gridFor ?? throw new ArgumentNullException(nameof(gridFor));
             _storage = storage ?? FurnitureStorageCatalog.Empty;
+            _buildFrameFor = buildFrameFor;
+            if (finishes != null)
+                foreach (var finish in finishes)
+                    if (finish != null && finish.Id.Length > 0 && !_finishes.ContainsKey(finish.Id)) _finishes.Add(finish.Id, finish);
             if (items != null)
                 foreach (var item in items)
                     if (item != null && !string.IsNullOrEmpty(item.Id) && !_maxStack.ContainsKey(item.Id)) _maxStack.Add(item.Id, item.MaxStack);
@@ -46,6 +57,19 @@ namespace Rootborn.Core.Room
 
         /// <summary>그 가구의 상자 칸 수(상자가 아니면 0).</summary>
         public int StorageSlotsOf(string furnitureId) => _storage.SlotsOf(furnitureId);
+
+        /// <summary>그 면의 짓는 집 틀(면마다 처음 물을 때 한 번 만든다). 모르는 면이거나 틀을 받지 않았으면 null.</summary>
+        public HouseBuildFrame BuildFrameFor(string surfaceId)
+        {
+            if (_buildFrameFor == null || string.IsNullOrEmpty(surfaceId)) return null;
+            if (_frames.TryGetValue(surfaceId, out var frame)) return frame;
+            frame = _buildFrameFor(surfaceId);
+            if (frame != null) _frames[surfaceId] = frame;
+            return frame;
+        }
+
+        /// <summary>그 꾸밈 정의(없으면 null).</summary>
+        public RoomFinishDefinition FindFinish(string id) => id != null && _finishes.TryGetValue(id, out var finish) ? finish : null;
 
         /// <summary>그 아이템의 쌓기 수(모르는 아이템이면 0).</summary>
         public int MaxStackOf(string itemId) => itemId != null && _maxStack.TryGetValue(itemId, out int max) ? max : 0;

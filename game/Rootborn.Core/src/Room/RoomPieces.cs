@@ -52,7 +52,7 @@ namespace Rootborn.Core.Room
         private readonly Dictionary<string, Entry> _followers = new Dictionary<string, Entry>(4, StringComparer.Ordinal);
         private readonly List<KeyValuePair<string, string>> _followerOrder = new List<KeyValuePair<string, string>>(4);
 
-        /// <summary>이 게임의 조각들: 돈(방 지갑), 집과 가구(같이 쓰는 집), 마을 상태(월드 상태 깃발).</summary>
+        /// <summary>이 게임의 조각들: 돈(방 지갑), 집과 가구(같이 쓰는 집), 마을 상태(월드 상태 깃발). 집을 따라 상자와 꾸밈(벽지·바닥·띠)이 켜진다.</summary>
         /// <param name="houseRules">같이 쓰는 집의 배치 판정(방 쪽만 필요 — 가구 정의와 집 맵의 칸). 없으면 방은 가구 놓기·옮기기를 거절한다.</param>
         public static RoomPieceCatalog CreateDefault(RoomHouseRules houseRules = null)
         {
@@ -60,7 +60,8 @@ namespace Rootborn.Core.Room
                 .Add(RoomWallet.PieceName, () => new RoomWallet(), outbox => new RoomWalletClient(outbox))
                 .Add(RoomHouse.PieceName, () => new RoomHouse(houseRules), outbox => new RoomHouseClient(outbox))
                 .Add(RoomWorldFlags.PieceName, () => new RoomWorldFlags(), outbox => new RoomWorldFlagsClient(outbox))
-                .Follow(RoomChests.PieceName, RoomHouse.PieceName, () => new RoomChests(houseRules), outbox => new RoomChestsClient(outbox));
+                .Follow(RoomChests.PieceName, RoomHouse.PieceName, () => new RoomChests(houseRules), outbox => new RoomChestsClient(outbox))
+                .Follow(RoomHouseBuild.PieceName, RoomHouse.PieceName, () => new RoomHouseBuild(houseRules), outbox => new RoomHouseBuildClient(outbox));
         }
 
         /// <summary>

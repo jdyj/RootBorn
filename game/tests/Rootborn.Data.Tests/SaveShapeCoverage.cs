@@ -68,6 +68,9 @@ namespace Rootborn.Data.Tests
             ("workspace-layout-*.json", typeof(FurniturePlacementLayoutSaveData)),
             // 짓는 집의 꾸밈 기록(바닥 칸마다 벽지·바닥). MonoGame 판이 더한 파일(2026-11-14).
             ("house-build.json", typeof(Rootborn.Core.Building.HouseBuildSaveData)),
+            // 같이 쓰는 집의 꾸밈(집을 같이 쓰는 방에서 따라 켜진다): 꾸밈 기록(혼자 하는 집과 같은 모양)과 잡아 둔 꾸밈 요청. MonoGame 판이 더한 파일(2026-11-14).
+            ("room-piece-house-build.json", typeof(Rootborn.Core.Building.HouseBuildSaveData)),
+            ("room-piece-house-build-holds.json", typeof(Rootborn.Core.Room.RoomHouseBuildHoldsSaveData)),
         };
 
         /// <summary>

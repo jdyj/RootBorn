@@ -62,6 +62,12 @@ namespace Rootborn.Core.Save
         public static string RoomPiece(string pieceName) => "room-piece-" + Sanitize(pieceName) + ".json";
 
         /// <summary>
+        /// 같이 쓰는 집의 꾸밈 조각(Core Room RoomHouseBuild)이 잡아 둔 꾸밈 요청(Core Room RoomHouseBuildHoldsSaveData). 꾸밈 기록은 <c>RoomPiece("house-build")</c>에 있다.
+        /// 방을 가진 쪽만 쓴다. MonoGame 판이 더한 파일이다(2026-11-14).
+        /// </summary>
+        public const string RoomHouseBuildHolds = "room-piece-house-build-holds.json";
+
+        /// <summary>
         /// 같이 하는 방에 있는 플레이어가 방에 보냈고 아직 답을 받지 않은 요청(Core Room RoomOutbox). 그 플레이어의 저장과 함께 방으로 가고,
         /// 방은 저장을 받을 때 이 파일의 요청을 반영한다(저장과 요청이 한 번에). 혼자 하는 판은 쓰지 않는다.
         /// </summary>

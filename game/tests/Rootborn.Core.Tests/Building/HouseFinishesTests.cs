@@ -143,12 +143,64 @@ namespace Rootborn.Core.Tests.Building
             Assert.That(p.ChangedCells, Is.EquivalentTo(new[] { new CellPos(1, 2), new CellPos(2, 2), new CellPos(3, 2), Doorway }));
             Assert.That(CostOf(p), Is.EqualTo(new[] { (Coin, 8), (Wood, 4) }));   // 정의 순서, 칸당 × 4
 
-            // 정면이 없는 바닥 칸을 붓으로 칠하면 바뀌는 칸이 없다
+        }
+
+        [Test]
+        public void Wallpaper_BrushOnACellWithoutAFace_NoTarget()
+        {
+            // 정면이 없는 바닥 칸을 붓으로 칠하면 벽지를 바를 곳이 없다 — "이미 이 꾸밈"이 아니라 대상 없음(앞 계획 검토 Minor 2)
+            var f = Attached();
             var none = Preview(f, WallBlue, HouseFinishTools.Brush, new CellPos(2, 4));
-            Assert.That(none.ReasonKey, Is.EqualTo(HouseFinishReasons.NothingToChange));
-            Assert.That(none.Cells, Is.EqualTo(new[] { new CellPos(2, 4) }));
+            Assert.That(none.ReasonKey, Is.EqualTo(HouseFinishReasons.NoTarget));
+            Assert.That(none.Cells, Is.EqualTo(new[] { new CellPos(2, 4) }), "덮는 칸은 채운다");
             Assert.That(none.ChangedCells, Is.Empty);
             Assert.That(none.Cost, Is.Empty);
+            Assert.That(f.Apply(none), Is.False);
+            // 잠긴 벽지여도 바를 곳이 없으면 대상 없음이 먼저(대상 없음은 늘 잠김보다 먼저다)
+            Assert.That(Preview(f, WallBlue, HouseFinishTools.Brush, new CellPos(2, 4), canPay: CannotPay).ReasonKey, Is.EqualTo(HouseFinishReasons.NoTarget));
+            // 정면 주인 칸을 칠하면 그대로 바뀐다
+            Assert.That(Preview(f, WallBlue, HouseFinishTools.Brush, new CellPos(2, 2)).CanApply, Is.True);
+            // 이미 그 벽지인 주인 칸은 여전히 "이미 이 꾸밈"
+            Assert.That(Preview(f, WallPlain, HouseFinishTools.Brush, new CellPos(2, 2)).ReasonKey, Is.EqualTo(HouseFinishReasons.NothingToChange));
+        }
+
+        [Test]
+        public void Preview_WithAnUnlockPredicate_SameAsWithProgress()
+        {
+            var f = Attached();
+            var withProgress = Preview(f, FloorLocked, HouseFinishTools.Room, LeftMiddle);
+            var locked = f.Preview(FloorLocked, HouseFinishTools.Room, LeftMiddle, d => false, Pay);
+            Assert.That(locked.ReasonKey, Is.EqualTo(HouseFinishReasons.Locked));
+            Assert.That(locked.ReasonKey, Is.EqualTo(withProgress.ReasonKey));
+            Assert.That(locked.Cells, Is.EqualTo(withProgress.Cells));
+            Assert.That(locked.ChangedCells, Is.EqualTo(withProgress.ChangedCells));
+            Assert.That(CostOf(locked), Is.EqualTo(CostOf(withProgress)));
+
+            RoomFinishDefinition asked = null;
+            var trusted = f.Preview(FloorLocked, HouseFinishTools.Room, LeftMiddle, d => { asked = d; return true; }, Pay);
+            Assert.That(trusted.CanApply, Is.True, trusted.ReasonKey);
+            Assert.That(asked, Is.SameAs(Find(FloorLocked)), "판단에는 꾸밈 정의가 간다");
+
+            Assert.That(f.PreviewBand(BandLocked, d => false, Pay).ReasonKey, Is.EqualTo(f.PreviewBand(BandLocked, NoUnlocks, Pay).ReasonKey));
+            Assert.That(f.PreviewBand(BandLocked, d => true, Pay).CanApply, Is.True);
+            Assert.That(f.PreviewBand(BandBrown, d => true, Pay).Cost, Is.EqualTo(f.PreviewBand(BandBrown, NoUnlocks, Pay).Cost));
+        }
+
+        [Test]
+        public void CostFor_IsPerCell_AndBandOnce()
+        {
+            Assert.That(HouseFinishes.CostFor(Find(WallBlue), 4).Select(c => (c.Item, c.Count)), Is.EqualTo(new[] { (Coin, 8), (Wood, 4) }));
+            Assert.That(HouseFinishes.CostFor(Find(FloorOak), 1).Select(c => (c.Item, c.Count)), Is.EqualTo(new[] { (Coin, 3) }));
+            Assert.That(HouseFinishes.CostFor(Find(WallBlue), 0), Is.Empty);
+            Assert.That(HouseFinishes.CostFor(Find(BandBrown), 1).Select(c => (c.Item, c.Count)), Is.EqualTo(new[] { (Coin, 4) }));
+            Assert.That(HouseFinishes.CostFor(Find(BandBrown), 3).Select(c => (c.Item, c.Count)), Is.EqualTo(new[] { (Coin, 4) }), "띠는 칸 수와 무관하게 한 번");
+            Assert.That(HouseFinishes.CostFor(Find(BandBrown), 0), Is.Empty);
+            Assert.That(HouseFinishes.CostFor(Find(BandCream), 1), Is.Empty, "값이 없는 꾸밈");
+
+            // 미리 보기의 비용과 같은 셈
+            var f = Attached();
+            var p = Preview(f, WallBlue, HouseFinishTools.Room, LeftMiddle);
+            Assert.That(CostOf(p), Is.EqualTo(HouseFinishes.CostFor(Find(WallBlue), p.ChangedCells.Count).Select(c => (c.Item, c.Count))));
         }
 
         /// <summary>출처표에서 그 주인 칸들의 face·narrow 부분이 있는 칸(테스트가 따로 센다).</summary>

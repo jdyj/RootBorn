@@ -804,7 +804,7 @@ namespace Rootborn.World.Tests
             finishes.Attach(frame, Defined);
             RoomFinishDefinition other = OtherFree(RoomFinishSlots.Floor, floor.Id);
             IReadOnlyList<CellPos> room = TopLeftRoom(map);
-            HouseFinishPreview preview = finishes.Preview(other.Id, HouseFinishTools.Room, room[0], null, _ => true);
+            HouseFinishPreview preview = finishes.Preview(other.Id, HouseFinishTools.Room, room[0], (Rootborn.Core.Placement.FurnitureUnlockProgress)null, _ => true);
             Assert.That(preview.CanApply, Is.True, preview.ReasonKey);
 
             var inner = new TableLookup { Band = "band.inner" };
@@ -821,7 +821,7 @@ namespace Rootborn.World.Tests
 
             // 벽지 미리 보기는 벽지만 덮는다.
             RoomFinishDefinition otherWall = OtherFree(RoomFinishSlots.Wall, wall.Id);
-            HouseFinishPreview wallPreview = finishes.Preview(otherWall.Id, HouseFinishTools.Room, room[0], null, _ => true);
+            HouseFinishPreview wallPreview = finishes.Preview(otherWall.Id, HouseFinishTools.Room, room[0], (Rootborn.Core.Placement.FurnitureUnlockProgress)null, _ => true);
             var wallLookup = new HouseFinishPreviewLookup(inner, wallPreview);
             foreach (CellPos c in wallPreview.ChangedCells) Assert.That((wallLookup.WallAt(c), wallLookup.FloorAt(c)), Is.EqualTo((otherWall.Id, inner.FloorAt(c))));
 

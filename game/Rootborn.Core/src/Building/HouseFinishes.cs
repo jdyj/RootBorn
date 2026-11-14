@@ -206,6 +206,14 @@ namespace Rootborn.Core.Building
 
         public HouseFinishPreview Preview(string finishId, string tool, CellPos pointer, FurnitureUnlockProgress unlocks,
             Func<IReadOnlyList<ItemAmount<string>>, bool> canPay)
+            => Preview(finishId, tool, pointer, f => IsUnlocked(f, unlocks), canPay);
+
+        /// <summary>
+        /// 해금 판단을 받는 미리 보기. 같이 쓰는 집의 방은 해금을 요청한 사람에게 맡긴다(<c>_ =&gt; true</c> — 가구 놓기와 같다).
+        /// 이유 순서: 붙지 않음 → 정의 없음 → 대상 없음(벽지는 덮는 칸에 정면 주인 칸이 없을 때도) → 잠김 → 바뀌는 칸 0 → 돈.
+        /// </summary>
+        public HouseFinishPreview Preview(string finishId, string tool, CellPos pointer, Func<RoomFinishDefinition, bool> isUnlocked,
+            Func<IReadOnlyList<ItemAmount<string>>, bool> canPay)
         {
             if (!Attached)
                 return HouseFinishPreview.Refused(finishId, string.Empty, tool, HouseFinishReasons.NotInHouse);
@@ -228,16 +236,20 @@ namespace Rootborn.Core.Building
 
             bool wallSlot = string.Equals(slot, RoomFinishSlots.Wall, StringComparison.Ordinal);
             var changed = new List<CellPos>(cells.Count);
+            int owners = 0;
             foreach (var c in cells)
             {
                 if (wallSlot && !_faceOwners.Contains(c)) continue;
+                owners++;
                 if (!string.Equals(Visible(slot, c), def.Id, StringComparison.Ordinal))
                     changed.Add(c);
             }
             var cost = CostFor(def, changed.Count);
 
             string reason = null;
-            if (!IsUnlocked(def, unlocks))
+            if (owners == 0)
+                reason = HouseFinishReasons.NoTarget; // 벽지를 바를 정면이 없다("이미 이 꾸밈"이 아니다)
+            else if (isUnlocked == null || !isUnlocked(def))
                 reason = HouseFinishReasons.Locked;
             else if (changed.Count == 0)
                 reason = HouseFinishReasons.NothingToChange;
@@ -253,6 +265,10 @@ namespace Rootborn.Core.Building
         /// 비용은 정의의 Cost 한 번(바뀌는 것이 없으면 빈 목록).
         /// </summary>
         public HouseFinishPreview PreviewBand(string finishId, FurnitureUnlockProgress unlocks, Func<IReadOnlyList<ItemAmount<string>>, bool> canPay)
+            => PreviewBand(finishId, f => IsUnlocked(f, unlocks), canPay);
+
+        /// <summary>해금 판단을 받는 띠 미리 보기(<see cref="Preview(string, string, CellPos, Func{RoomFinishDefinition, bool}, Func{IReadOnlyList{ItemAmount{string}}, bool})"/>와 같은 뜻).</summary>
+        public HouseFinishPreview PreviewBand(string finishId, Func<RoomFinishDefinition, bool> isUnlocked, Func<IReadOnlyList<ItemAmount<string>>, bool> canPay)
         {
             if (!Attached)
                 return HouseFinishPreview.Refused(finishId, RoomFinishSlots.Band, string.Empty, HouseFinishReasons.NotInHouse);
@@ -261,9 +277,9 @@ namespace Rootborn.Core.Building
                 return Make(finishId, def?.Slot, string.Empty, false, default, null, null, null, HouseFinishReasons.UnknownFinish);
 
             bool same = string.Equals(def.Art, BandColors, StringComparison.Ordinal);
-            IReadOnlyList<ItemAmount<string>> cost = same ? Array.Empty<ItemAmount<string>>() : def.Cost;
+            var cost = CostFor(def, same ? 0 : 1);
             string reason = null;
-            if (!IsUnlocked(def, unlocks)) reason = HouseFinishReasons.Locked;
+            if (isUnlocked == null || !isUnlocked(def)) reason = HouseFinishReasons.Locked;
             else if (same) reason = HouseFinishReasons.NothingToChange;
             else if (canPay == null || !canPay(cost)) reason = HouseFinishReasons.NotEnoughMoney;
             return Make(def.Id, def.Slot, string.Empty, false, default, null, null, cost, reason);
@@ -394,12 +410,18 @@ namespace Rootborn.Core.Building
 
         private static CellPos OwnerOf(CellPos cell, TilePart part) => new CellPos(cell.X + part.Owner.X, cell.Y + part.Owner.Y);
 
-        private static IReadOnlyList<ItemAmount<string>> CostFor(RoomFinishDefinition def, int cells)
+        /// <summary>
+        /// 꾸밈 한 번의 비용: 벽지·바닥은 칸당 비용 × 바뀌는 칸 수(아이템별로 합친 것, 정의 순서), 띠는 바뀌면(changedCells &gt; 0) 정의의 비용 한 번.
+        /// 바뀌는 것이 없으면 빈 목록. 미리 보기와 같이 쓰는 집의 지불이 이 하나를 쓴다.
+        /// </summary>
+        public static IReadOnlyList<ItemAmount<string>> CostFor(RoomFinishDefinition finish, int changedCells)
         {
-            if (cells == 0 || def.Cost.Count == 0) return Array.Empty<ItemAmount<string>>();
-            var items = new List<string>(def.Cost.Count);
-            var counts = new List<int>(def.Cost.Count);
-            foreach (var amount in def.Cost)
+            if (finish == null) throw new ArgumentNullException(nameof(finish));
+            int cells = IsBandSlot(finish.Slot) ? Math.Min(changedCells, 1) : changedCells;
+            if (cells <= 0 || finish.Cost.Count == 0) return Array.Empty<ItemAmount<string>>();
+            var items = new List<string>(finish.Cost.Count);
+            var counts = new List<int>(finish.Cost.Count);
+            foreach (var amount in finish.Cost)
             {
                 int i = items.IndexOf(amount.Item);
                 if (i < 0)
