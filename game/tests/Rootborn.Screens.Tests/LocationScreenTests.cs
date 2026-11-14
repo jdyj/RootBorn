@@ -217,14 +217,14 @@ namespace Rootborn.Screens.Tests
         }
 
         [Test]
-        public void FinishNameKeys_ExistInBothLanguages()
+        public void FinishNameKeys_ExistInEveryLanguage()
         {
-            foreach (var f in _f.Session.FinishesForSaleAt(Store))
-                foreach (var lang in new[] { "ko", "en" })
-                {
-                    using var fixture = new DayScreensFixture(lang);
-                    Assert.That(fixture.Text.Get(f.NameKey), Is.Not.EqualTo(f.NameKey), lang + ": " + f.NameKey);
-                }
+            // 언어 목록을 적지 않고 문구 폴더(game/localization·data/localization)에서 읽는다(localization.md).
+            var finishes = _f.Session.FinishesForSaleAt(Store);
+            Assert.That(finishes, Is.Not.Empty, "준비: 가게의 꾸밈 판매");
+            foreach (var table in LongText.MergedTables())
+                foreach (var f in finishes)
+                    Assert.That(table.Value.ContainsKey(f.NameKey), Is.True, table.Key + ": " + f.NameKey);
         }
 
         [Test]
