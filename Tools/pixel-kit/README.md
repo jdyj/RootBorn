@@ -144,6 +144,9 @@ if/switch로 종류를 닫지 않는다.
 | `prop.menu-board`, `prop.a-board` | 없음(고정 그림, 글자 없음) | |
 | `furniture.prop` | `body`: 점 부품 id(그 부품을 그대로 세운 가구 — 화분·휴지통·상자처럼 규칙보다 손 모양이 나은 것) | `items`: `{part, x, y}` 목록(몸 그림 좌표의 왼쪽 위에 얹는다. y가 음수면 몸 위로 솟는다. 몸 폭 밖·몸 밑이면 `slot-clipped`). 몸통 색 수는 0으로 세고 부품마다 부품 한도(10)를 받는다 |
 | `prop.rug` | `size`: `[w, h]`px, `colors`: `[몸 줄(단계 0 테두리, 1 바탕), 바느질 줄]`, `stitch_step`: 바느질 줄의 단계 | |
+| `furniture.bed` | `art_cells` `[1~2, 3]`(바닥 두 칸 깊이 + 머리판이 위 칸으로 솟는다) | `frame` 줄(3, 기본 `metal`: 머리판 틀·앞 난간·바퀴), `linen` 줄(3, 기본 `ceramic`: 0 그늘 / 1 시트·머리판 판 / 2 베개·접힌 단), `blanket` 줄(4, 기본 `wall.tile.blue`). 위에서 내려다본 침대. `_layout.floor_cells`는 2 |
+| `prop.screen` | `art_cells` `[1~3, 2]` | `frame` 줄(3, 기본 `metal`), `fabric` 줄(3, 기본 `wall.mint`: 0 주름 그늘 / 1 천 / 2 빛). 바퀴 달린 칸막이 커튼(정면), 천 폭 수는 그림 폭 / 10(반올림) |
+| `prop.stack` | `stack`: 점 부품 id 목록(아래부터, 하나 이상) | 없음. 부품마다 가운데 맞춰 쌓는다(맞닿는 외곽선 한 줄씩을 걷어 붙인다). 화분 + 잎, 링거대처럼 점 부품으로 끝나는 소품 |
 | `building.shop` | `pixels`(높이는 192 이상: 지붕 104 + 벽 82 + 외곽선), `roof`: `{type, items}`, `wall`: `{material}`(벽 줄), `door`: `{at_x, color, step}`(문 줄, 계단 줄), `window`: `{at_x, width, slots}`(slots는 창살 양쪽 `[[부품 id], [부품 id]]`), `awning`: `{colors}`(줄 2개), `sign`: `{at_x, icons}`(부품 id 목록, 글자 없음) | `roof.items`: `{part, at: [x, y]}` 목록, `lamp`: `{at_x, part}`(벽등. `part` 기본 `prop.wall-lamp`. `lamp`를 적지 않으면 벽등도 둘레 빛도 없다), `trim` 줄(4, 기본 `trim`: 창틀·처마 밑 띠·간판 판), `plinth` 줄(2, 기본 `plinth`: 벽·창 받침), `frame` 줄(5, 기본 `wood.warm`: 문틀·창틀·간판 틀·받침 줄) |
 
 `roof.type`(등록된 지붕): `flat`(평지붕, 줄 `roof.teal`), `pitched`(기와지붕, 줄 `roof.slate`).

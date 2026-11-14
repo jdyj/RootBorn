@@ -1,0 +1,48 @@
+{
+  "cell": 32,
+  "width_cells": 16,
+  "slots": {
+    "hospital.reception": {
+      "x": 0,
+      "y": 0,
+      "w": 96,
+      "h": 64
+    },
+    "hospital.medicine-cabinet": {
+      "x": 96,
+      "y": 0,
+      "w": 64,
+      "h": 96
+    },
+    "hospital.waiting-chair": {
+      "x": 160,
+      "y": 0,
+      "w": 32,
+      "h": 64
+    },
+    "hospital.bed": {
+      "x": 192,
+      "y": 0,
+      "w": 32,
+      "h": 96
+    },
+    "hospital.screen": {
+      "x": 224,
+      "y": 0,
+      "w": 32,
+      "h": 64
+    },
+    "hospital.plant": {
+      "x": 256,
+      "y": 0,
+      "w": 32,
+      "h": 64
+    },
+    "hospital.iv-stand": {
+      "x": 288,
+      "y": 0,
+      "w": 32,
+      "h": 64
+    }
+  }
+}
