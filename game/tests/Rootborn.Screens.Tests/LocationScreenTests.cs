@@ -1,6 +1,8 @@
+using System;
 using System.Linq;
 using NUnit.Framework;
 using Rootborn.Core.Building;
+using Rootborn.Core.Inventory;
 using Rootborn.Core.Placement;
 using Rootborn.Core.StudentLife;
 using Rootborn.Screens.Day;
@@ -144,11 +146,24 @@ namespace Rootborn.Screens.Tests
             LocationScreen screen = Open(Store);
             int index = screen.Model.Rows.ToList().FindIndex(r => r.Kind == LocationRowKind.Offer && !r.Affordable && !r.Owned);
             if (index < 0) Assert.Ignore("새 게임 용돈으로 살 수 없는 물건이 없다");
-            FurnitureDefinition offer = _f.Session.Definitions.Get<FurnitureDefinition>(screen.Model.Rows[index].Id);
-            int money = _f.Session.Inventory.CountOf(offer.PriceItem);
+            // 줄의 종류(가구 판매 / 꾸밈 판매)로 정의를 찾는다 — 처음 못 사는 줄이 꾸밈이어도 같은 기대를 본다(화면도 정의의 종류로 고른다).
+            string id = screen.Model.Rows[index].Id;
+            (Func<bool> unlocked, ItemDefinition price) = OfferOf(id);
+            Assert.That(unlocked(), Is.False, "준비: 아직 갖지 않았다");
+            int money = _f.Session.Inventory.CountOf(price);
+            ScrollIntoView(screen, index); // 꾸밈 줄은 목록 아래쪽이다
             PressRow(screen, index);
-            Assert.That(_f.Session.FurnitureUnlocks.IsUnlocked(offer.UnlockToken), Is.False);
-            Assert.That(_f.Session.Inventory.CountOf(offer.PriceItem), Is.EqualTo(money));
+            Assert.That(unlocked(), Is.False, "못 산다: " + id);
+            Assert.That(_f.Session.Inventory.CountOf(price), Is.EqualTo(money), "돈이 그대로");
+        }
+
+        // 판매 줄 id → (갖게 됐는가, 값 아이템). 가구 정의면 가구 해금 토큰, 꾸밈 정의면 꾸밈 해금.
+        private (Func<bool> Unlocked, ItemDefinition Price) OfferOf(string id)
+        {
+            if (_f.Session.Definitions.TryGet<FurnitureDefinition>(id, out FurnitureDefinition furniture))
+                return (() => _f.Session.FurnitureUnlocks.IsUnlocked(furniture.UnlockToken), furniture.PriceItem);
+            RoomFinishDefinition finish = _f.Session.Definitions.Get<RoomFinishDefinition>(id);
+            return (() => _f.Session.IsFinishUnlocked(finish), _f.Session.Definitions.Get<ItemDefinition>(finish.PriceItemId));
         }
 
         private void ScrollIntoView(LocationScreen screen, int index)
