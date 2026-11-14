@@ -96,8 +96,12 @@ def _check(defn: dict, kit: Kit) -> None:
     elif slot == "floor":
         if art not in floor_ids(kit):
             raise RoomExportError("room-finish-art", f"{defn['id']}: 바닥 {art!r}가 키트의 한 칸 타일 명세에 없다. 있는 것: {', '.join(floor_ids(kit))}")
+    elif slot == "band":                                   # 띠 색 꾸밈은 조각을 굽지 않는다 — 좌표표 bands의 줄 이름을 가리킬 뿐
+        rows = sorted(_bands(kit))
+        if art not in rows:
+            raise RoomExportError("room-finish-art", f"{defn['id']}: 띠 색 {art!r}가 좌표표 bands에 없다. 있는 것: {', '.join(rows)}")
     else:
-        raise RoomExportError("room-finish-slot", f"{defn['id']}: 모르는 slot {slot!r}(wall·floor)")
+        raise RoomExportError("room-finish-slot", f"{defn['id']}: 모르는 slot {slot!r}(wall·floor·band)")
     sheet = defn["sheet"]
     if not sheet.endswith(".png"):
         raise RoomExportError("room-finish-sheet", f"{defn['id']}: sheet {sheet!r}는 .png 경로여야 한다")
@@ -173,7 +177,9 @@ def plan_finishes(repo_root, kit: Kit) -> ExportPlan:
         pieces = _common_pieces(kit)
         done = set()
         for d in group:
-            if d["art"] not in done:                       # 같은 그림을 두 꾸밈이 써도 조각은 한 벌
+            if d["slot"] == "band":                        # 띠 꾸밈은 좌표표의 bands 표로 이미 들어 있다
+                continue
+            if d["art"] not in done:                     # 같은 그림을 두 꾸밈이 써도 조각은 한 벌
                 done.add(d["art"])
                 pieces.update(_pieces_of(d, kit))
         png, atlas = _sheet(pieces, kit, sheet)

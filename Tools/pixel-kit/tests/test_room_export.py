@@ -220,6 +220,28 @@ class ExportRulesTests(unittest.TestCase):
             self.assertEqual(cm.exception.code.replace("-floor", ""), code.replace("-floor", ""), code)
             self.assertFalse((root / SHEET).exists(), code)
 
+    def test_band_finishes_bake_no_pieces_and_leave_the_sheet_unchanged(self):
+        """띠 꾸밈(slot band)은 좌표표 bands의 줄을 가리킬 뿐이다 — 섞여도 시트·좌표표가 바이트까지 같다."""
+        plain, mixed = self.repo(), self.repo(TEN + [finish(f"finish.band.{i}", "band", top) for i, top in enumerate(sorted(wall_tops()))])
+        room_export.export_finishes(plain, KIT)
+        room_export.export_finishes(mixed, KIT)
+        self.assertEqual((plain / SHEET).read_bytes(), (mixed / SHEET).read_bytes())
+        self.assertEqual((plain / ATLAS).read_bytes(), (mixed / ATLAS).read_bytes())
+
+    def test_a_band_finish_must_name_a_row_of_the_bands_table(self):
+        root = self.repo(TEN + [finish("finish.band.x", "band", "wall.top.no-such")])
+        with self.assertRaises(room_export.RoomExportError) as cm:
+            room_export.export_finishes(root, KIT)
+        self.assertEqual(cm.exception.code, "room-finish-art")
+        self.assertIn(sorted(wall_tops())[0], str(cm.exception), "있는 줄 이름을 보여 준다")
+        self.assertFalse((root / SHEET).exists())
+
+    def test_a_band_finish_sheet_must_be_a_png(self):
+        root = self.repo([finish("finish.band.x", "band", sorted(wall_tops())[0], sheet="art/world/finishes/finishes.txt")])
+        with self.assertRaises(room_export.RoomExportError) as cm:
+            room_export.export_finishes(root, KIT)
+        self.assertEqual(cm.exception.code, "room-finish-sheet")
+
     def test_a_wall_art_used_as_floor_is_rejected(self):
         root = self.repo([finish("finish.floor.paper", "floor", "paper")])
         with self.assertRaises(room_export.RoomExportError):
@@ -279,8 +301,8 @@ class CommittedSheetTests(unittest.TestCase):
         for rel, data in plan.files.items():
             self.assertEqual((ROOT / rel).read_bytes(), data, f"{rel}가 지금 정의·규칙과 다르다 — python Tools/pixel-kit/kit.py room export-finishes")
         defs = room_export.read_definitions(ROOT)
-        self.assertEqual(len(defs), 10)
-        self.assertEqual(sum(1 for d in defs if d["slot"] == "wall"), 5)
+        self.assertEqual(len(defs), 15)
+        self.assertEqual([sum(1 for d in defs if d["slot"] == s) for s in ("wall", "floor", "band")], [5, 5, 5])
 
 
 class SheetRecomposesTheKitTilesTests(unittest.TestCase):
