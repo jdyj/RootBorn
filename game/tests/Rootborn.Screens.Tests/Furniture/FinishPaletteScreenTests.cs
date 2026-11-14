@@ -711,7 +711,7 @@ namespace Rootborn.Screens.Tests.Furniture
             public Rootborn.Core.Room.RoomShares Join(string player)
             {
                 var shares = new Rootborn.Core.Room.RoomShares(_pieces.Settings, Rootborn.Core.Room.RoomPieceCatalog.CreateDefault(), () => player + "-r" + (++_ids));
-                shares.RoomPlayerId = player;
+                shares.NoteRoomPlayerId(player);
                 foreach (var piece in _pieces.Pieces) shares.Receive(piece.State());
                 _players.Add((player, shares));
                 return shares;

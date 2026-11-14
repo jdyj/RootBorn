@@ -355,6 +355,24 @@ namespace Rootborn.Core.Tests
             Assert.That(wallet.WasAsked("buy-full"), Is.False, "가방이 차서 안 되는 명령은 방에 묻지 않는다");
         }
 
+        /// <summary>방이 아는 신원은 한 번만 적힌다: 처음 적힌 값이 남고 다른 값으로 다시 적으면 무시한다(그 신원으로 "내 잡기"를 가려 풀기 때문).</summary>
+        [Test]
+        public void ROOMSHARES_002_TheRoomPlayerId_IsNotedOnce_ALaterDifferentValueIsIgnored()
+        {
+            var shares = new RoomShares(new RoomShareSettings(new[] { "wallet" }), RoomPieceCatalog.CreateDefault());
+            Assert.That(shares.RoomPlayerId, Is.Null, "처음에는 모른다");
+            Assert.That(shares.NoteRoomPlayerId(null), Is.False);
+            Assert.That(shares.NoteRoomPlayerId(""), Is.False, "빈 값은 적지 않는다");
+            Assert.That(shares.RoomPlayerId, Is.Null);
+
+            Assert.That(shares.NoteRoomPlayerId("slot-a"), Is.True);
+            Assert.That(shares.RoomPlayerId, Is.EqualTo("slot-a"));
+            Assert.That(shares.NoteRoomPlayerId("slot-a"), Is.True, "같은 값은 그대로");
+            Assert.That(shares.NoteRoomPlayerId("slot-b"), Is.False, "다른 값은 무시한다");
+            Assert.That(shares.RoomPlayerId, Is.EqualTo("slot-a"), "처음 적힌 값이 남는다");
+            Assert.That(typeof(RoomShares).GetProperty(nameof(RoomShares.RoomPlayerId)).SetMethod?.IsPublic ?? false, Is.False, "밖에서 바로 바꿀 수 없다");
+        }
+
         [Test]
         public void ROOMSHARES_001_AnswersThatCameBeforeTheOutboxWasRead_AreMatchedLater()
         {

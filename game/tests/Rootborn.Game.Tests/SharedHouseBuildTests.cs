@@ -56,7 +56,7 @@ namespace Rootborn.Game.Tests
             public RoomShares Join(string playerId)
             {
                 var shares = new RoomShares(Pieces.Settings, RoomPieceCatalog.CreateDefault(), () => playerId + "-r" + (++_ids));
-                shares.RoomPlayerId = playerId;
+                shares.NoteRoomPlayerId(playerId);
                 foreach (var piece in Pieces.Pieces) shares.Receive(piece.State());
                 _players.Add((playerId, shares));
                 return shares;

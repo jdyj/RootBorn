@@ -99,7 +99,7 @@ namespace Rootborn.Game.Tests
             public RoomShares Join(string playerId, RoomPieceCatalog playerCatalog)
             {
                 var shares = new RoomShares(Pieces.Settings, playerCatalog, () => Guid.NewGuid().ToString("N"));
-                shares.RoomPlayerId = playerId;
+                shares.NoteRoomPlayerId(playerId);
                 foreach (var piece in Pieces.Pieces) shares.Receive(piece.State());
                 _players.Add((playerId, shares));
                 return shares;
@@ -109,7 +109,7 @@ namespace Rootborn.Game.Tests
             public RoomShares JoinWithout(string playerId, RoomPieceCatalog playerCatalog, string laterPiece)
             {
                 var shares = new RoomShares(Pieces.Settings, playerCatalog, () => Guid.NewGuid().ToString("N"));
-                shares.RoomPlayerId = playerId;
+                shares.NoteRoomPlayerId(playerId);
                 foreach (var piece in Pieces.Pieces)
                     if (piece.Name != laterPiece) shares.Receive(piece.State());
                 _players.Add((playerId, shares));

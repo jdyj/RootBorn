@@ -209,7 +209,7 @@ namespace Rootborn.Net.Room
         private void NoteSelf()
         {
             if (Shares == null || Shares.RoomPlayerId != null) return;
-            if (_client.TryGetPlayerId(_client.NetId, out var self) && !string.IsNullOrEmpty(self)) Shares.RoomPlayerId = self;
+            if (_client.TryGetPlayerId(_client.NetId, out var self) && !string.IsNullOrEmpty(self)) Shares.NoteRoomPlayerId(self);
         }
 
         // 나눠 온 조각 상태(같이 쓰는 집의 가구 목록 등). 방은 한 상태의 조각을 이어서 보낸다.

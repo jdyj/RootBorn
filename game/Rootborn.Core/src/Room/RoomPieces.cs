@@ -244,9 +244,20 @@ namespace Rootborn.Core.Room
 
         /// <summary>
         /// 방이 아는 이 사람의 신원(방이 요청·잡기에 붙이는 주인 id — 접속의 신원). 방 접속이 적는다. 게임 한 판의 플레이어 id와 다를 수 있다
-        /// (내 PC에서 방을 연 사람은 자기 세이브의 기본 id로 돌고 방에서는 접속의 신원이다). 모르면 null.
+        /// (내 PC에서 방을 연 사람은 자기 세이브의 기본 id로 돌고 방에서는 접속의 신원이다). 모르면 null. 한 번만 적힌다(<see cref="NoteRoomPlayerId"/>).
         /// </summary>
-        public string RoomPlayerId { get; set; }
+        public string RoomPlayerId { get; private set; }
+
+        /// <summary>
+        /// 방이 아는 신원을 적는다(방 접속이 부른다). 처음 한 번만 적히고, 이미 적힌 뒤 다른 값이면 무시한다 — 게임 한 판이 이 신원으로 "내 잡기"를 가려
+        /// 풀므로 도중에 바뀌면 남의 잡기를 풀 수 있다. 빈 값은 적지 않는다. 적혀 있는 값이 이 값이면 true.
+        /// </summary>
+        public bool NoteRoomPlayerId(string playerId)
+        {
+            if (string.IsNullOrEmpty(playerId)) return false;
+            if (RoomPlayerId == null) RoomPlayerId = playerId;
+            return string.Equals(RoomPlayerId, playerId, StringComparison.Ordinal);
+        }
         public IReadOnlyList<IRoomPieceClient> Pieces => _pieces;
 
         /// <summary>조각이 바뀌었다(조각 이름). 받은 상태·답을 넘긴 뒤 부른다.</summary>
