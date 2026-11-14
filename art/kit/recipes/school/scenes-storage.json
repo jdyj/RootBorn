@@ -1,0 +1,20 @@
+[
+  {"id": "school.scene.storage", "kind": "scene", "size": [12, 6],
+   "fill": [
+     {"tile": "bakery.tile.wall", "rect": [0, 0, 12, 2], "wall": true},
+     {"tile": "bakery.tile.floor", "rect": [0, 2, 12, 4]}
+   ],
+   "hang": [{"part": "prop.clock", "at": [214, 14]}],
+   "place": [
+     {"id": "school.locker-steel", "cell": [0, 2], "dx": 4},
+     {"id": "school.bookcase", "cell": [2, 2], "dx": 8},
+     {"id": "school.cubby-lockers", "cell": [4, 2], "dx": 12},
+     {"id": "home.photo-board", "cell": [7, 2], "dx": 4},
+     {"id": "school.archive-bookshelf", "cell": [9, 2], "dx": 4},
+     {"id": "school.desk", "cell": [2, 4], "dx": 8},
+     {"id": "school.chair-north", "cell": [3, 5], "dx": -8, "dy": -10},
+     {"id": "home.first-aid-kit", "cell": [6, 4], "dx": 8},
+     {"id": "home.training-tire", "cell": [8, 4], "dx": 8},
+     {"part": "prop.plant", "cell": [11, 4], "dx": -2}
+   ]}
+]

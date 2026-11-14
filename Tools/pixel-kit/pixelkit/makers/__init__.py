@@ -31,3 +31,5 @@ from . import tiles  # noqa: E402,F401
 from . import furniture  # noqa: E402,F401
 from . import building  # noqa: E402,F401
 from . import seating  # noqa: E402,F401
+from . import storage  # noqa: E402,F401
+from . import objects  # noqa: E402,F401

@@ -1,0 +1,8 @@
+[
+  {"id": "school.locker-steel", "kind": "furniture", "part": "furniture.locker", "cells": [2, 1], "art_cells": [2, 3],
+   "game": {"replaces": "comfy31.school.lockers"},
+   "material": "locker.steel"},
+  {"id": "school.cubby-lockers", "kind": "furniture", "part": "furniture.cubby", "cells": [2, 1], "art_cells": [2, 2],
+   "game": {"replaces": "school.lockers"},
+   "material": "wood.school", "grid": [3, 2]}
+]
