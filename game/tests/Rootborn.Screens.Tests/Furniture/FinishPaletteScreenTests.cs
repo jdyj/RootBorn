@@ -180,6 +180,95 @@ namespace Rootborn.Screens.Tests.Furniture
         private static int PerCell(RoomFinishDefinition d) => d.Cost.Where(c => c.Item == Allowance).Sum(c => c.Count);
 
         [Test]
+        public void Decorate_TitleIsDecorate_InfoStartsUnderTheTitle_FurnitureToolbarsHidden()
+        {
+            using var f = new Fixture();
+            var title = (UiLabel)f.T.Node("furniture.settings.title");
+            Assert.That(title.Text, Is.EqualTo(f.T.Text.Get("ui.furniture.title")));
+            Assert.That(f.T.Node(FurniturePlacementScreen.ToolbarId).IsActive && f.T.Node(FurniturePlacementScreen.BottomBarId).IsActive, Is.True);
+
+            f.Decorate();
+            f.T.Emit();
+            Assert.That(title.Text, Is.EqualTo(f.T.Text.Get("ui.furniture.category.finish")), "꾸미기면 오른쪽 패널 제목도 꾸미기");
+            UiRect name = f.T.Node(FurniturePlacementScreen.FinishNameId).Rect;
+            Assert.That(name.Y, Is.GreaterThanOrEqualTo(title.Rect.Bottom), "이름은 제목 아래");
+            Assert.That(name.Y - title.Rect.Bottom, Is.LessThanOrEqualTo(FurniturePlacementScreen.Metrics.FinishInfoGap + 0.5f), "제목 바로 아래부터");
+            string[] lines = { FurniturePlacementScreen.FinishNameId, FurniturePlacementScreen.FinishPriceId, FurniturePlacementScreen.FinishCellsId,
+                FurniturePlacementScreen.FinishCostId, FurniturePlacementScreen.FinishMoneyId, FurniturePlacementScreen.FinishReasonId };
+            for (int i = 1; i < lines.Length; i++)
+                Assert.That(f.T.Node(lines[i]).Rect.Y, Is.GreaterThanOrEqualTo(f.T.Node(lines[i - 1]).Rect.Bottom), lines[i] + "는 앞 줄 아래");
+            Assert.That(f.T.Node(FurniturePlacementScreen.ToolbarId).IsActive, Is.False, "가구 단추(삭제·회전)는 숨는다");
+            Assert.That(f.T.Node(FurniturePlacementScreen.BottomBarId).IsActive, Is.False, "가구 단추(이동)는 숨는다");
+            Assert.That(f.T.Node(FurniturePlacementScreen.RoomStatusId).IsActive, Is.False, "같이 쓰는 집의 가구 요청 줄도 숨는다");
+
+            f.T.Click(FurniturePlacementScreen.CategoryStoredId);
+            Assert.That(title.Text, Is.EqualTo(f.T.Text.Get("ui.furniture.title")));
+            Assert.That(f.T.Node(FurniturePlacementScreen.ToolbarId).IsActive && f.T.Node(FurniturePlacementScreen.BottomBarId).IsActive, Is.True, "돌아가면 다시 보인다");
+            f.T.Click(FurniturePlacementScreen.CategoryFurnitureId);
+            Assert.That(f.T.Node(FurniturePlacementScreen.ToolbarId).IsActive && f.T.Node(FurniturePlacementScreen.BottomBarId).IsActive, Is.True);
+        }
+
+        [Test]
+        public void HiddenToolbars_UncoverTheHud_AndCoverItAgainOnTheWayBack()
+        {
+            // 가구 단추 줄이 숨으면 그 밑의 HUD(시계)가 덮이지 않고, 돌아가면 그 자리에서 다시 덮인다(분류를 바꾼 그 누름에서 — 다음 크기 바꿈을 기다리지 않는다).
+            using var f = new Fixture();
+            List<UiNode> Covered() => Walk(f.T.Stack.Tree.Root).Where(n => n.Covered).ToList();
+            var before = Covered();
+            UiRect toolbar = f.T.Node(FurniturePlacementScreen.ToolbarId).Rect;
+            var underToolbar = before.Where(n => n.Rect.X < toolbar.Right && toolbar.X < n.Rect.Right && n.Rect.Y < toolbar.Bottom && toolbar.Y < n.Rect.Bottom).ToList();
+            Assume.That(underToolbar, Is.Not.Empty, "가구 단추 줄 밑에 덮인 HUD가 있다");
+
+            f.Decorate();
+            Assert.That(underToolbar.Any(n => n.Covered), Is.False, "꾸미기: 단추 줄이 숨었으니 그 밑 HUD는 덮이지 않는다");
+            f.T.Click(FurniturePlacementScreen.CategoryFurnitureId);
+            Assert.That(Covered(), Is.EquivalentTo(before), "가구 분류로 돌아가면 다시 덮인다");
+        }
+
+        [Test]
+        public void LockedCard_HasADarkShade_AndStillClicks()
+        {
+            using var f = new Fixture();
+            f.Decorate();
+            f.T.Emit();
+            RoomFinishDefinition locked = Locked(f, RoomFinishSlots.Wall), free = FreeNonDefault(f, RoomFinishSlots.Wall);
+            int lockedCard = Enumerable.Range(0, 20).First(i => f.Screen.Finishes.At(i)?.Definition == locked);
+            int freeCard = Enumerable.Range(0, 20).First(i => f.Screen.Finishes.At(i)?.Definition == free);
+            UiNode shade = f.T.Node(FurniturePlacementScreen.FinishCardId(lockedCard) + ".lock");
+            Assert.That(shade.IsVisibleInTree(), Is.True, "잠긴 카드는 어둡게 덮는다");
+            Assert.That(f.T.Node(FurniturePlacementScreen.FinishCardId(freeCard) + ".lock").IsVisibleInTree(), Is.False);
+            var list = new DrawList();
+            shade.Emit(list, new TestMeasurer());
+            Assert.That(list.Commands.Single().Color, Is.EqualTo(FurniturePlacementScreen.Metrics.FinishLockedShade));
+            Assert.That(shade.Rect, Is.EqualTo(f.T.Node(FurniturePlacementScreen.FinishCardId(lockedCard)).Rect), "카드 전체를 덮는다");
+            f.PickCard(locked.Id); // 덮개 위를 눌러도 카드가 눌린다(TestSession.Click이 맨 위 요소를 본다)
+            Assert.That(f.Screen.PickedFinish, Is.SameAs(locked));
+        }
+
+        [Test]
+        public void CardPieces_AreWholeMultiplesOfThePiece_AndFitTheCard()
+        {
+            using var f = new Fixture();
+            f.Decorate();
+            f.T.Emit();
+            const float piece = FurniturePlacementScreen.Metrics.FinishPieceSource;
+            UiRect card = f.T.Node(FurniturePlacementScreen.FinishCardId(0)).Rect;
+            foreach (string id in new[] { ".icon", ".icon2" })
+            {
+                UiRect r = ((UiFittedImage)f.T.Node(FurniturePlacementScreen.FinishCardId(0) + id)).FittedRect;
+                Assert.That(r.W % piece, Is.EqualTo(0f), "벽 조각은 정수 배율 " + id);
+                Assert.That(r.W, Is.GreaterThanOrEqualTo(piece), "조각 원래 크기 이상");
+                Assert.That(r.X >= card.X && r.Right <= card.Right && r.Y >= card.Y && r.Bottom <= card.Bottom, Is.True, "카드 안 " + id);
+            }
+            f.T.Click(FurniturePlacementScreen.FinishTabFloorId);
+            f.T.Emit();
+            UiRect floor = ((UiFittedImage)f.T.Node(FurniturePlacementScreen.FinishCardId(0) + ".icon")).FittedRect;
+            Assert.That(floor.W % piece, Is.EqualTo(0f));
+            Assert.That(floor.W, Is.GreaterThanOrEqualTo(piece * 2), "바닥 조각은 두 배 이상");
+            Assert.That(floor.X >= card.X && floor.Right <= card.Right && floor.Y >= card.Y && floor.Bottom <= card.Bottom, Is.True);
+        }
+
+        [Test]
         public void Categories_ToggleTheirOwnNodes()
         {
             using var f = new Fixture();
@@ -245,10 +334,10 @@ namespace Rootborn.Screens.Tests.Furniture
                 Assert.That(((UiFittedImage)f.T.Node(FurniturePlacementScreen.FinishCardId(i) + ".icon")).Image, Is.EqualTo(d.Sheet + "#" + d.Art + "/" + RoomFinishPieces.Floor));
                 Assert.That(f.T.Node(FurniturePlacementScreen.FinishCardId(i) + ".icon2").IsActive, Is.False, "바닥 카드는 그림 하나");
             }
-            Assert.That(f.Screen.Root.Find(FurniturePlacementScreen.FinishCardId(FurniturePlacementScreen.Metrics.PageSize)), Is.Null, "카드는 한 쪽만큼만 만든다");
+            Assert.That(f.Screen.Root.Find(FurniturePlacementScreen.FinishCardId(FurniturePlacementScreen.Metrics.FinishPageSize)), Is.Null, "카드는 한 쪽만큼만 만든다");
         }
 
-        private static int Visible(Fixture f) => Enumerable.Range(0, FurniturePlacementScreen.Metrics.PageSize).Count(i => f.T.Node(FurniturePlacementScreen.FinishCardId(i)).IsActive);
+        private static int Visible(Fixture f) => Enumerable.Range(0, FurniturePlacementScreen.Metrics.FinishPageSize).Count(i => f.T.Node(FurniturePlacementScreen.FinishCardId(i)).IsActive);
 
         [Test]
         public void LockedCard_IsDimmed_AndPickingShowsLockedText()

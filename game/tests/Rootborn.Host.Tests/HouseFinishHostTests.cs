@@ -336,6 +336,8 @@ namespace Rootborn.Host.Tests
                 FurniturePlacementScreen screen = Placement(player);
                 player.PressButton(FurniturePlacementScreen.CategoryFinishId);
                 Assert.That(screen.FinishShown, Is.True);
+                Assert.That(player.Node(FurniturePlacementScreen.ToolbarId).IsActive || player.Node(FurniturePlacementScreen.BottomBarId).IsActive, Is.False,
+                    "꾸미기에서는 가구 단추가 숨는다");
                 player.PressButton(FurniturePlacementScreen.FinishTabFloorId);
                 PickCard(player, carpet.Id);
                 Shot("palette-floor");
@@ -395,6 +397,7 @@ namespace Rootborn.Host.Tests
                     ?? map.Tiles.Cells.FirstOrDefault(c => c.Parts.Any(p => p.Source == TileSources.Band) && c.Parts.Any(p => p.HasOwner && p.Source == TileSources.Narrow)
                         && OnScreen(player, c.Cell, out _, out _))
                     ?? bandCells.FirstOrDefault();
+                Assert.That(between, Is.Not.Null, "전제: 화면에 보이는 두 방 사이 띠 칸이 있다");
                 if (between != null)
                 {
                     player.PressButton(FurniturePlacementScreen.FinishTabFloorId);
@@ -414,7 +417,9 @@ namespace Rootborn.Host.Tests
                     player.Frames(1);
                     Assert.That(world.PreviewTextureBytes, Is.EqualTo(0), "UI 위로 가면 미리 보기를 지운다");
                 }
-                else TestContext.Progress.WriteLine("HOUSE_BUILD_010 띠 칸: 화면에 보이는 두 방 사이 띠 칸이 없다");
+                player.PressButton(FurniturePlacementScreen.CategoryFurnitureId); // 가구 분류로 돌아가면 가구 단추가 다시 보인다
+                Assert.That(player.Node(FurniturePlacementScreen.ToolbarId).IsActive && player.Node(FurniturePlacementScreen.BottomBarId).IsActive, Is.True);
+                Shot("back-to-furniture");
 
                 Assert.That(player.Game.Renderer.MissingImages, Is.Empty, "카드 그림이 모두 풀린다");
                 Assert.That(player.CollisionViolations, Is.EqualTo(0));

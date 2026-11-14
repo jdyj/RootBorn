@@ -48,15 +48,17 @@ namespace Rootborn.Screens.Furniture
 
             /// <summary>
             /// 꾸미기 분류(작성자 추천, 결정 대기 27번): 자리 탭 줄(벽지 / 바닥 — 셋째 자리가 생겨도 들어가는 폭), 도구 줄(방 채우기 / 칸 붓),
-            /// 카드 격자(가구 칸과 같은 칸 크기·간격, 첫 줄만 도구 줄 아래로), 벽 카드의 두 조각(위·아래) 크기와 간격.
+            /// 카드 격자(4열 x 4줄, 칸 80 — 조각 그림을 정수 배율로 크게 보이려고 가구 칸보다 크다), 벽 카드의 두 조각(위·아래, 조각 원래 크기 1배),
+            /// 바닥 카드의 조각 하나(2배). FinishPieceSource는 조각 시트의 조각 한 변(px)이다 — 시트가 바뀌면 여기만 고친다.
             /// </summary>
             public const float FinishTabY = 248f, FinishTabW = 120f, FinishTabH = 52f, FinishTabPitch = 128f, FinishTabFont = 18f;
             public const float FinishToolY = 184f, FinishToolW = 176f, FinishToolH = 52f, FinishToolPitch = 184f, FinishToolFont = 18f;
-            public const float FinishCardY0 = 108f, FinishPiece = 26f, FinishPieceOffset = 13f;
-            /// <summary>오른쪽 패널의 꾸밈 정보(가운데 기준 y): 이름, 칸당 값·바뀌는 칸·비용·가진 돈(한 줄씩), 이유(여러 줄). 줄은 칸 높이에 맞춰 줄인다.</summary>
-            public const float FinishInfoW = 290f, FinishNameY = 96f, FinishNameH = 64f, FinishNameFont = 20f;
-            public const float FinishLineH = 36f, FinishLineFont = 16f, FinishPriceY = 44f, FinishCellsY = 4f, FinishCostY = -36f, FinishMoneyY = -76f;
-            public const float FinishReasonY = -156f, FinishReasonH = 104f;
+            public const int FinishPageSize = 16, FinishColumns = 4;
+            public const float FinishCardX0 = -132f, FinishCardY0 = 104f, FinishCardPitchX = 88f, FinishCardPitchY = 92f, FinishCardSize = 80f;
+            public const float FinishPieceSource = 32f, FinishWallPiece = 32f, FinishFloorPiece = 64f;
+            /// <summary>오른쪽 패널의 꾸밈 정보: 제목 바로 아래(FinishInfoGap)부터 이름, 칸당 값·바뀌는 칸·비용·가진 돈(한 줄씩), 이유(여러 줄)를 위에서 아래로. 줄은 칸 높이에 맞춰 줄인다.</summary>
+            public const float FinishInfoW = 290f, FinishInfoGap = 12f, FinishLineGap = 4f, FinishNameH = 56f, FinishNameFont = 20f;
+            public const float FinishLineH = 36f, FinishLineFont = 16f, FinishReasonH = 104f;
 
             public const float PageButtonX = 112f, PageButtonY = -248f, PageButtonW = 128f, PageButtonH = 48f, PageButtonFont = 18f;
             public const float PageTextX = 0f, PageTextY = -324f, PageTextW = 368f, PageTextH = 64f, PageTextFont = 18f;
@@ -103,6 +105,8 @@ namespace Rootborn.Screens.Furniture
             public static readonly UiColor InvalidFootprint = UnityLayout.Color(1f, 0.2f, 0.12f, 0.42f);
             /// <summary>꾸미기: 적용할 수 있는 미리 보기의 바뀔 칸(ValidFootprint보다 옅게 — 월드에 그린 미리 보기 그림이 비쳐 보이게). 안 되면 InvalidFootprint.</summary>
             public static readonly UiColor FinishValidCell = UnityLayout.Color(0.15f, 0.95f, 0.95f, 0.16f);
+            /// <summary>꾸미기: 잠긴 카드를 덮는 칠(테마에 자물쇠 아이콘 키가 없어 새 아이콘 없이 어둡게 덮는다).</summary>
+            public static readonly UiColor FinishLockedShade = UnityLayout.Color(0.08f, 0.07f, 0.1f, 0.55f);
             public static readonly UiColor Ink = UnityLayout.Color(0.16f, 0.12f, 0.08f);
         }
 
@@ -172,7 +176,7 @@ namespace Rootborn.Screens.Furniture
         private UiLabel _title, _settingsTitle, _name, _size, _direction;
         private UiNode _furnitureGroup, _storedGroup;
         private FurnitureCategoryButton _categoryFurniture, _categoryStored, _categoryFinish;
-        private UiNode _selectedFrame;
+        private UiNode _selectedFrame, _toolbar, _bottomBar;
         private readonly FinishPalette _finish;
         private string _category = Categories.Furniture;
         private UiScrollList _storedList;
@@ -344,9 +348,10 @@ namespace Rootborn.Screens.Furniture
             _roomStatus = settings.Add(new UiTextBlock { Id = RoomStatusId, FontSize = Metrics.RoomStatusFont, Color = Metrics.Ink, Align = UiAlign.Center })
                 .Centered(Metrics.RoomStatusX, Metrics.RoomStatusY, Metrics.RoomStatusW, Metrics.RoomStatusH);
             // 꾸미기 분류: 팔레트 안 묶음과 오른쪽 패널의 꾸밈 정보.
-            _finish.Build(palette, settings);
+            _finish.Build(palette, settings, pad);
 
             UiPanel toolbar = root.Add(new UiPanel { Id = ToolbarId });
+            _toolbar = toolbar;
             _delete = toolbar.Add(new UiButton { Id = DeleteId, FontSize = Metrics.ToolFont });
             _delete.Clicked += DeleteSelected;
             _rotate = toolbar.Add(new UiButton { Id = RotateId, FontSize = Metrics.ToolFont });
@@ -357,6 +362,7 @@ namespace Rootborn.Screens.Furniture
                 .Fit();
 
             UiPanel bottom = root.Add(new UiPanel { Id = BottomBarId });
+            _bottomBar = bottom;
             _move = bottom.Add(new UiButton { Id = MoveId, FontSize = Metrics.MoveFont });
             _move.Clicked += PickUpSelected;
             new ToolRow(bottom, Metrics.BottomY, Metrics.BottomH, pad)
@@ -525,7 +531,7 @@ namespace Rootborn.Screens.Furniture
             _categoryFinish.Text = T("ui.furniture.category.finish");
             _storedEmpty.Text = T("ui.furniture.stored.empty");
             ApplyStoredNote();
-            _settingsTitle.Text = T("ui.furniture.title");
+            ApplySettingsTitle();
             _roomStatus.Text = _roomStatusKey == null ? string.Empty : T(_roomStatusKey);
             _search.Placeholder = T("ui.furniture.search.placeholder");
             _previous.Text = T("ui.furniture.page.previous");
@@ -622,7 +628,12 @@ namespace Rootborn.Screens.Furniture
             ApplyStoredNote();
             ApplyCategoryView();
             RefreshSelected();
+            // 가구 단추 줄이 켜지고 꺼졌다: 덮이는 HUD(시계 등)를 지금 다시 정한다(화면 쌓기는 크기가 바뀌거나 화면이 열고 닫힐 때만 정한다).
+            Services.Screens?.Relayout();
         }
+
+        // 오른쪽 패널 제목: 꾸미기면 "꾸미기", 아니면 "가구 배치".
+        private void ApplySettingsTitle() => _settingsTitle.Text = T(FinishShown ? "ui.furniture.category.finish" : "ui.furniture.title");
 
         private void ApplyCategoryView()
         {
@@ -633,6 +644,9 @@ namespace Rootborn.Screens.Furniture
             _categoryFinish.Selected = FinishShown;
             // 오른쪽 패널: 꾸미기면 가구 정보를 숨기고 꾸밈 정보를 켠다.
             _selectedFrame.Visible = _name.Visible = _size.Visible = _direction.Visible = !FinishShown;
+            // 가구용 단추(삭제·회전·이동)와 같이 쓰는 집의 가구 요청 줄은 꾸미기와 무관하다 — 꾸미기에서는 숨긴다.
+            _toolbar.Visible = _bottomBar.Visible = _roomStatus.Visible = !FinishShown;
+            ApplySettingsTitle();
             _finish.Show(FinishShown);
         }
 

@@ -26,13 +26,14 @@ namespace Rootborn.Screens.Furniture
         private readonly Func<string, string> _t;
         private readonly Func<string, object[], string> _f;
         private readonly Func<string, string> _itemName;
-        private readonly FinishPaletteModel _model = new FinishPaletteModel(M.PageSize);
+        private readonly FinishPaletteModel _model = new FinishPaletteModel(M.FinishPageSize);
 
         private UiNode _group, _info;
         private FurnitureCategoryButton _tabWall, _tabFloor, _toolRoom, _toolBrush;
-        private readonly UiSlot[] _cards = new UiSlot[M.PageSize];
-        private readonly UiFittedImage[] _upper = new UiFittedImage[M.PageSize];
-        private readonly UiFittedImage[] _lower = new UiFittedImage[M.PageSize];
+        private readonly UiSlot[] _cards = new UiSlot[M.FinishPageSize];
+        private readonly UiFittedImage[] _upper = new UiFittedImage[M.FinishPageSize];
+        private readonly UiFittedImage[] _lower = new UiFittedImage[M.FinishPageSize];
+        private readonly UiBox[] _shades = new UiBox[M.FinishPageSize];
         private UiButton _previous, _next;
         private UiTextBlock _pageText;
         private UiTextBlock _name, _price, _cells, _cost, _money, _reason;
@@ -76,7 +77,8 @@ namespace Rootborn.Screens.Furniture
 
         // ---------- 노드 ----------
 
-        public void Build(UiNode palette, UiNode settings)
+        /// <param name="pad">패널 스킨의 테마 여백(꾸밈 정보를 오른쪽 패널 제목 바로 아래부터 놓는다).</param>
+        public void Build(UiNode palette, UiNode settings, UiInsets pad)
         {
             _group = palette.Add(new UiNode { Id = S.FinishGroupId, Visible = false }).Centered(0f, 0f, M.PaletteW, M.PaletteH);
             _tabWall = Tab(S.FinishTabWallId, 0, 2, () => SetSlot(RoomFinishSlots.Wall));
@@ -88,13 +90,15 @@ namespace Rootborn.Screens.Furniture
                 .Centered(M.FinishToolPitch / 2f, M.FinishToolY, M.FinishToolW, M.FinishToolH);
             _toolBrush.Clicked += () => SetTool(HouseFinishTools.Brush);
 
-            for (int i = 0; i < M.PageSize; i++)
+            for (int i = 0; i < M.FinishPageSize; i++)
             {
                 int card = i;
-                float x = M.SlotX0 + (i % M.Columns) * M.SlotPitchX, y = M.FinishCardY0 - (i / M.Columns) * M.SlotPitchY;
-                _cards[i] = _group.Add(new UiSlot { Id = S.FinishCardId(i) }).Centered(x, y, M.SlotSize, M.SlotSize);
-                _upper[i] = _cards[i].Add(new UiFittedImage { Id = S.FinishCardId(i) + ".icon" }).Centered(0f, M.FinishPieceOffset, M.FinishPiece, M.FinishPiece);
-                _lower[i] = _cards[i].Add(new UiFittedImage { Id = S.FinishCardId(i) + ".icon2" }).Centered(0f, -M.FinishPieceOffset, M.FinishPiece, M.FinishPiece);
+                float x = M.FinishCardX0 + (i % M.FinishColumns) * M.FinishCardPitchX, y = M.FinishCardY0 - (i / M.FinishColumns) * M.FinishCardPitchY;
+                _cards[i] = _group.Add(new UiSlot { Id = S.FinishCardId(i) }).Centered(x, y, M.FinishCardSize, M.FinishCardSize);
+                _upper[i] = _cards[i].Add(new UiFittedImage { Id = S.FinishCardId(i) + ".icon" }).Centered(0f, M.FinishWallPiece / 2f, M.FinishWallPiece, M.FinishWallPiece);
+                _lower[i] = _cards[i].Add(new UiFittedImage { Id = S.FinishCardId(i) + ".icon2" }).Centered(0f, -M.FinishWallPiece / 2f, M.FinishWallPiece, M.FinishWallPiece);
+                // 잠긴 카드 덮개(그림 위, 포인터를 받지 않는다 — 누름은 카드로 간다)
+                _shades[i] = _cards[i].Add(new UiBox { Id = S.FinishCardId(i) + ".lock", Color = M.FinishLockedShade, Visible = false }).Centered(0f, 0f, M.FinishCardSize, M.FinishCardSize);
                 _cards[i].Clicked += () => Pick(_model.At(card));
             }
             _previous = _group.Add(new UiButton { Id = S.FinishPreviousId, FontSize = M.PageButtonFont })
@@ -107,12 +111,14 @@ namespace Rootborn.Screens.Furniture
                 .Centered(M.PageTextX, M.PageTextY, M.PageTextW, M.PageTextH);
 
             _info = settings.Add(new UiNode { Id = S.FinishInfoId, Visible = false }).Centered(0f, 0f, M.SettingsW, M.SettingsH);
-            _name = Line(S.FinishNameId, M.FinishNameY, M.FinishNameH, M.FinishNameFont);
-            _price = Line(S.FinishPriceId, M.FinishPriceY, M.FinishLineH, M.FinishLineFont);
-            _cells = Line(S.FinishCellsId, M.FinishCellsY, M.FinishLineH, M.FinishLineFont);
-            _cost = Line(S.FinishCostId, M.FinishCostY, M.FinishLineH, M.FinishLineFont);
-            _money = Line(S.FinishMoneyId, M.FinishMoneyY, M.FinishLineH, M.FinishLineFont);
-            _reason = Line(S.FinishReasonId, M.FinishReasonY, M.FinishReasonH, M.FinishLineFont);
+            var area = new PanelArea(M.SettingsW, M.SettingsH, pad);
+            float top = M.SettingsTitleH + M.FinishInfoGap;
+            _name = Line(S.FinishNameId, area, ref top, M.FinishNameH, M.FinishNameFont);
+            _price = Line(S.FinishPriceId, area, ref top, M.FinishLineH, M.FinishLineFont);
+            _cells = Line(S.FinishCellsId, area, ref top, M.FinishLineH, M.FinishLineFont);
+            _cost = Line(S.FinishCostId, area, ref top, M.FinishLineH, M.FinishLineFont);
+            _money = Line(S.FinishMoneyId, area, ref top, M.FinishLineH, M.FinishLineFont);
+            _reason = Line(S.FinishReasonId, area, ref top, M.FinishReasonH, M.FinishLineFont);
         }
 
         private FurnitureCategoryButton Tab(string id, int index, int count, Action click)
@@ -123,9 +129,14 @@ namespace Rootborn.Screens.Furniture
             return tab;
         }
 
-        private UiTextBlock Line(string id, float y, float h, float font) =>
-            _info.Add(new UiTextBlock { Id = id, FontSize = font, Color = M.Ink, Align = UiAlign.Center, FitHeight = true })
-                .Centered(0f, y, M.FinishInfoW, h);
+        // 위에서 아래로 한 줄씩: top은 패널 안쪽 위에서 잰 다음 줄의 위.
+        private UiTextBlock Line(string id, PanelArea area, ref float top, float h, float font)
+        {
+            var line = _info.Add(new UiTextBlock { Id = id, FontSize = font, Color = M.Ink, Align = UiAlign.Center, FitHeight = true })
+                .Centered(0f, area.CenterYFromTop(h, top), M.FinishInfoW, h);
+            top += h + M.FinishLineGap;
+            return line;
+        }
 
         // ---------- 켜고 끄기, 알림 ----------
 
@@ -177,26 +188,27 @@ namespace Rootborn.Screens.Furniture
         private void RefreshPage()
         {
             bool wall = string.Equals(_model.Slot, RoomFinishSlots.Wall, StringComparison.Ordinal);
-            for (int i = 0; i < M.PageSize; i++)
+            for (int i = 0; i < M.FinishPageSize; i++)
             {
                 FinishCard card = _model.At(i);
                 _cards[i].Visible = card != null;
                 if (card == null) continue;
                 _cards[i].Dimmed = !card.Unlocked;
+                _shades[i].Visible = !card.Unlocked;
                 _cards[i].Selected = ReferenceEquals(card.Definition, Picked);
                 UiColor tint = card.Unlocked ? UiTheme.White : UiTheme.ButtonDisabled; // 잠긴 카드는 못 쓰는 칸과 같은 칠
                 if (card.LowerImage != null)
                 {
-                    _upper[i].Centered(0f, M.FinishPieceOffset, M.FinishPiece, M.FinishPiece);
-                    _upper[i].Show(card.UpperImage, 0, 0);
-                    _lower[i].Show(card.LowerImage, 0, 0);
+                    _upper[i].Centered(0f, M.FinishWallPiece / 2f, M.FinishWallPiece, M.FinishWallPiece);
+                    _upper[i].Show(card.UpperImage, M.FinishPieceSource, M.FinishPieceSource);
+                    _lower[i].Show(card.LowerImage, M.FinishPieceSource, M.FinishPieceSource);
                     _lower[i].Visible = true;
                     _lower[i].Tint = tint;
                 }
                 else
                 {
-                    _upper[i].Centered(0f, 0f, M.SlotIcon, M.SlotIcon);
-                    _upper[i].Show(card.UpperImage, 0, 0);
+                    _upper[i].Centered(0f, 0f, M.FinishFloorPiece, M.FinishFloorPiece);
+                    _upper[i].Show(card.UpperImage, M.FinishPieceSource, M.FinishPieceSource);
                     _lower[i].Clear();
                     _lower[i].Visible = false;
                 }
