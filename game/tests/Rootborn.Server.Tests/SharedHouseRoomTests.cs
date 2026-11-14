@@ -96,6 +96,9 @@ namespace Rootborn.Server.Tests
             throw new InvalidOperationException("빈 칸이 없다");
         }
 
+        private static string[] Lines(Guest g)
+            => g.Game.House.Placed.Select(p => p.Definition.StableId + "@" + p.Anchor.X + "," + p.Anchor.Y + ":" + p.Direction).ToArray();
+
         private static RoomHouse RoomHouseOf(RoomRig rig) => rig.Room.Pieces.TryGet(RoomHouse.PieceName, out var h) ? (RoomHouse)h : null;
 
         [Test]
@@ -155,9 +158,13 @@ namespace Rootborn.Server.Tests
             var a = Join(rig, "a");
             var b = Join(rig, "b");
             string chair = Chair(a);
-            Assert.That(a.Game.PlaceFurniture(chair, Free(a, chair), FurniturePlacementDirection.North), Is.True, "곧바로 놓인다(자기 집)");
+            // b는 자기 집이 있는 새 플레이어라 처음 배치 가구를 받는다(GameSession.HouseStarter). 보는 것은 a의 놓기가 b의 집을 바꾸지 않는가다.
+            string[] bBefore = Lines(b);
+            var anchor = Free(a, chair);
+            Assert.That(a.Game.PlaceFurniture(chair, anchor, FurniturePlacementDirection.North), Is.True, "곧바로 놓인다(자기 집)");
             rig.Run(0.5);
-            Assert.That(b.Game.House.Placed, Is.Empty);
+            Assert.That(Lines(b), Is.EqualTo(bBefore), "a의 가구가 b의 집에 오지 않는다");
+            Assert.That(b.Game.House.Placed.Any(p => p.Anchor.Equals(anchor) && p.Definition.StableId == chair), Is.False);
             Assert.That(RoomHouseOf(rig), Is.Null);
             Assert.That(File.Exists(Path.Combine(GuestSaveFolder.FolderFor(Saves, "room-a"), "a", SaveFileNames.HouseFurnitureLayout(a.Game.HouseStage))), Is.True,
                 "a의 집은 a의 손님 세이브에");
