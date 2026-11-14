@@ -193,6 +193,63 @@ namespace Rootborn.Host.Tests
             player.Screenshot($"pixel-kit-chairs-{shot:D2}-all-placed");
         }
 
+        /// <summary>2026-11-15 키트 그림으로 바꾼 가구(테스트 데이터) 첫 묶음: 책상·서랍장·강의대·사물함·타이어.
+        /// desk.basic·desk.large는 전에 그림이 없어 게임에서 빈칸이었다.</summary>
+        private static readonly (string Id, string Shot)[] RedrawnFirst =
+        {
+            ("desk.basic", "desk-basic"),
+            ("desk.large", "desk-large"),
+            ("school.drawer.cabinet", "drawer-cabinet"),
+            ("school.lectern", "lectern"),
+            ("comfy31.school.lockers", "locker-steel"),
+            ("school.lockers", "cubby-lockers"),
+            ("activity31.training.tire", "training-tire"),
+        };
+
+        /// <summary>둘째 묶음: 부엌·집 소품. story.photo-board는 잠긴 가구라 새 슬롯에서 못 놓아 뺐다.</summary>
+        private static readonly (string Id, string Shot)[] RedrawnSecond =
+        {
+            ("comfy31.kitchen.sink.front", "kitchen-sink"),
+            ("studentlife.toy.kitchen", "toy-kitchen"),
+            ("studentlife.snack.delivery.crate", "snack-crate"),
+            ("school.potted.plant", "potted-plant"),
+            ("school.waste.basket", "waste-basket"),
+            ("growth31.first.aid.play.set", "first-aid-kit"),
+        };
+
+        [Test]
+        public void PIXEL_KIT_003_RedrawnDesksCabinetsLockers_PlacedWithPSearchAndE() => PlaceAll("redrawn-1", RedrawnFirst);
+
+        [Test]
+        public void PIXEL_KIT_004_RedrawnKitchenAndHomeProps_PlacedWithPSearchAndE() => PlaceAll("redrawn-2", RedrawnSecond);
+
+        /// <summary>목록의 가구를 하나씩 P 화면 검색 → 팔레트 칸 → 걸어가 E로 놓고 찍는다. 빠진 그림이 없어야 한다.</summary>
+        private void PlaceAll(string evidence, (string Id, string Shot)[] list)
+        {
+            using PlayerDriver player = Start(evidence);
+            var session = player.Game.Session;
+            FurnitureRoom room = player.Game.World.Room;
+            var house = session.House;
+            player.OpenScreenWithKey(TestKey.P, ScreenCatalog.FurniturePlacement);
+            FurniturePlacementScreen screen = FurniturePlacementHostTests.Placement(player);
+            var used = new List<GridPoint>();
+            int shot = 1;
+            foreach ((string id, string name) in list)
+            {
+                FurnitureDefinition definition = session.Definitions.Get<FurnitureDefinition>(id);
+                Pick(player, screen, definition);
+                GridPoint target = FindCell(player, definition, used, Cells(definition, default), new[] { 1, -1 }, id + " 놓을 칸");
+                PlaceFacingUp(player, screen, definition, target);
+                used.AddRange(Cells(definition, target));
+                player.Screenshot($"pixel-kit-{evidence}-{shot++:D2}-{name}");
+            }
+            player.WalkTo(room.ToMap(room.Grid.Spawn));
+            player.Frames(2);
+            Assert.That(house.Placed.Count, Is.EqualTo(list.Length));
+            Assert.That(player.Game.Renderer.MissingImages, Is.Empty, "빠진 그림이 없다");
+            player.Screenshot($"pixel-kit-{evidence}-{shot:D2}-all-placed");
+        }
+
         /// <summary>검색 칸을 비우고 id를 친다 → 검색 결과의 그 칸을 누른다.</summary>
         private static void Pick(PlayerDriver player, FurniturePlacementScreen screen, FurnitureDefinition definition)
         {
