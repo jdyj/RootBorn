@@ -1,0 +1,29 @@
+[
+  {"id": "hospital.reception", "kind": "prop", "part": "furniture.counter", "cells": [3, 1], "art_cells": [3, 2],
+   "label": "병원 접수대", "concept": "나무 접수대 위에 모니터와 서류판",
+   "material": "counter.kitchen",
+   "top": [{"part": "care.monitor", "x": 8}, {"part": "care.clipboard", "x": 40},
+           {"part": "desk.paper", "x": 58}, {"part": "desk.pencil-cup", "x": 76}]},
+  {"id": "hospital.medicine-cabinet", "kind": "prop", "part": "furniture.shelf", "cells": [2, 1], "art_cells": [2, 3],
+   "label": "약품장", "concept": "흰 에나멜 선반에 약병과 십자 상자",
+   "material": "enamel", "back": "wall.mint", "tray": "ceramic",
+   "tiers": [
+     ["med.box-cross", "med.box-cross", "med.box-teal", "med.box-cross"],
+     ["med.bottle-amber", "med.bottle-blue", "med.bottle-amber", "med.jar", "med.bottle-blue", "med.bottle-amber"],
+     ["med.jar", "med.box-teal", "med.jar", "med.box-cross"],
+     ["med.bottle-blue", "med.bottle-amber", "med.bottle-blue", "med.bottle-amber", "med.jar", "med.bottle-blue"]
+   ]},
+  {"id": "hospital.waiting-chair", "kind": "prop", "part": "furniture.chair", "cells": [1, 1], "art_cells": [1, 2],
+   "label": "대기 의자", "concept": "흰 틀에 민트 방석",
+   "material": "enamel", "cushion": "wall.mint"},
+  {"id": "hospital.bed", "kind": "prop", "part": "furniture.bed", "cells": [1, 2], "art_cells": [1, 3],
+   "label": "병원 침대", "concept": "금속 머리판, 흰 시트, 하늘색 이불, 바퀴"},
+  {"id": "hospital.screen", "kind": "prop", "part": "prop.screen", "cells": [1, 1], "art_cells": [1, 2],
+   "label": "칸막이 커튼", "concept": "바퀴 달린 금속 틀에 민트 천"},
+  {"id": "hospital.plant", "kind": "prop", "part": "prop.stack", "cells": [1, 1], "art_cells": [1, 2],
+   "label": "큰 화분", "concept": "흰 화분에 둥근 잎 덤불",
+   "stack": ["care.pot", "care.foliage"]},
+  {"id": "hospital.iv-stand", "kind": "prop", "part": "prop.stack", "cells": [1, 1], "art_cells": [1, 2],
+   "label": "링거대", "concept": "바퀴 달린 금속 기둥에 수액 주머니",
+   "stack": ["care.iv-stand"]}
+]

@@ -84,6 +84,7 @@
     "floor.chestnut": ["#6b4733", "#865a41", "#9a6b4e", "#ac7d5e"],
     "floor.carpet.rose": ["#8c6670", "#a17b84", "#ad8790"],
     "floor.lino": ["#8fa39c", "#a7bab3", "#b5c7c0"],
-    "floor.brick": ["#6e4a3e", "#8a5d4d", "#9e6c5a", "#ae7c68"]
+    "floor.brick": ["#6e4a3e", "#8a5d4d", "#9e6c5a", "#ae7c68"],
+    "enamel": ["#8a8f9e", "#a9aebb", "#c4c8d2", "#dcdfe6", "#eef0f4"]
   }
 }

@@ -1,0 +1,20 @@
+[
+  {"id": "hospital.scene.ward", "kind": "scene", "size": [12, 7],
+   "fill": [
+     {"tile": "bakery.tile.wall", "rect": [0, 0, 12, 2], "wall": true},
+     {"tile": "floor.mosaic", "rect": [0, 2, 12, 5]}
+   ],
+   "hang": [{"part": "prop.clock", "at": [220, 14]}],
+   "place": [
+     {"id": "hospital.medicine-cabinet", "cell": [0, 2], "dx": 4},
+     {"id": "hospital.plant", "cell": [2, 2], "dx": 4},
+     {"id": "hospital.waiting-chair", "cell": [3, 2], "dx": 4},
+     {"id": "hospital.waiting-chair", "cell": [4, 2], "dx": 4},
+     {"id": "hospital.waiting-chair", "cell": [5, 2], "dx": 4},
+     {"id": "hospital.bed", "cell": [7, 3]},
+     {"id": "hospital.screen", "cell": [8, 2]},
+     {"id": "hospital.bed", "cell": [9, 3]},
+     {"id": "hospital.iv-stand", "cell": [10, 3], "dx": -6},
+     {"id": "hospital.reception", "cell": [2, 5], "dx": 4}
+   ]}
+]
