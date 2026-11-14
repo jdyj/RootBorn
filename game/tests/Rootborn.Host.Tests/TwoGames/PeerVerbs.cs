@@ -66,6 +66,13 @@ namespace Rootborn.Host.Tests.TwoGames
             Register("aim-stack", a => { var r = P.StorageCell(a[0], a[1] == "put"); P.MovePointer(r.CenterX, r.CenterY); return string.Empty; });
             Register("close-chest", a => { P.CloseChest(); return string.Empty; });
             Register("go-to-bed", a => { P.GoToBed(); return string.Empty; });
+            // 꾸미기: decorate <탭> <꾸밈 id> <도구> <맵 칸 "x,y;x,y…"> → "바뀔 칸 수|누름이 한 일|누른 직후의 이유 줄". aim-finish는 누르지 않고 바뀔 칸 수만.
+            Register("decorate", a => { var d = P.Decorate(a[0], a[1], a[2], Cells(a[3])); return d.Cells.ToString(CultureInfo.InvariantCulture) + "|" + d.Action + "|" + d.Reason; });
+            Register("aim-finish", a => P.AimFinish(a[0], a[1], a[2], Cells(a[3])).ToString(CultureInfo.InvariantCulture));
+            Register("decorate-band", a => P.DecorateBand(a[0]));
+            Register("close-placement", a => { P.ClosePlacement(); return string.Empty; });
+            // 준비 단계(실제 플레이 아님): 가방에 아이템을 넣는다(돈 주기). 부모가 보고에 준비라고 적는다.
+            Register("give-item", a => { P.Game.Session.Inventory.Add(P.Game.Session.Item(a[0]), Int(a, 1)); return P.Game.Session.Inventory.CountOf(P.Game.Session.Item(a[0])).ToString(CultureInfo.InvariantCulture); });
             Register("dismiss-popups", a => { P.DismissPopups(); return string.Empty; });
             Register("screenshot", a => P.Screenshot(a[0]));
             Register("screenshot-screen", a => P.ScreenshotScreen(a[0], a[1]));
@@ -172,6 +179,15 @@ namespace Rootborn.Host.Tests.TwoGames
         private static int Int(string[] a, int i) => int.Parse(a[i], CultureInfo.InvariantCulture);
         private static float Float(string[] a, int i) => float.Parse(a[i], CultureInfo.InvariantCulture);
         private static TestKey Key(string[] a, int i) => (TestKey)Enum.Parse(typeof(TestKey), a[i]);
+
+        /// <summary>"x,y;x,y…" → 맵 칸 목록(<see cref="CellsText"/>의 반대).</summary>
+        private static List<Rootborn.Core.World.CellPos> Cells(string text)
+            => text.Split(';', StringSplitOptions.RemoveEmptyEntries).Select(s => s.Split(','))
+                .Select(xy => new Rootborn.Core.World.CellPos(int.Parse(xy[0], CultureInfo.InvariantCulture), int.Parse(xy[1], CultureInfo.InvariantCulture))).ToList();
+
+        /// <summary>맵 칸 목록 → 동사 칸 글("x,y;x,y…").</summary>
+        public static string CellsText(IEnumerable<Rootborn.Core.World.CellPos> cells)
+            => string.Join(";", cells.Select(c => c.X.ToString(CultureInfo.InvariantCulture) + "," + c.Y.ToString(CultureInfo.InvariantCulture)));
     }
 
     /// <summary>
@@ -220,6 +236,13 @@ namespace Rootborn.Host.Tests.TwoGames
             },
             ["furniture-drawn"] =(p, a) => p.Game.World?.FurnitureDrawCount ?? 0,
             ["shares-house"] = (p, a) => p.Game.Session.SharesHouse,
+            // 꾸밈(보이는 것 — 같이 쓰는 집은 방이 알린 꾸밈). 칸은 맵 칸 x y.
+            ["house-floor-at"] = (p, a) => p.Game.Session.HouseFloorAt(new Rootborn.Core.World.CellPos(int.Parse(a[0], CultureInfo.InvariantCulture), int.Parse(a[1], CultureInfo.InvariantCulture))),
+            ["house-wall-at"] = (p, a) => p.Game.Session.HouseWallAt(new Rootborn.Core.World.CellPos(int.Parse(a[0], CultureInfo.InvariantCulture), int.Parse(a[1], CultureInfo.InvariantCulture))),
+            ["house-band"] = (p, a) => p.Game.Session.HouseBandColors(),
+            ["finish-refusal"] = (p, a) => p.Game.Session.LastHouseFinishRefusal ?? string.Empty,
+            ["compose-count"] = (p, a) => p.Game.World?.ComposeCount ?? -1,
+            ["finish-last-action"] = (p, a) => (p.Screens.Find(ScreenCatalog.FurniturePlacement) as Rootborn.Screens.Furniture.FurniturePlacementScreen)?.FinishLastAction ?? string.Empty,
             ["shares-wallet"] = (p, a) => p.Game.Session.SharesWallet,
             ["waiting-for-room"] = (p, a) => p.Game.Session.WaitingForRoom,
             ["chest"] = (p, a) =>

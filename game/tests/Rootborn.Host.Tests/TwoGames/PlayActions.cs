@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Rootborn.Core.Building;
 using Rootborn.Core.Interaction;
 using Rootborn.Core.Minigames;
 using Rootborn.Core.Placement;
@@ -244,6 +245,131 @@ namespace Rootborn.Host.Tests.TwoGames
         {
             p.PressButton(StorageScreen.CloseId);
             p.WaitForScreenClosed(ScreenCatalog.Storage);
+        }
+
+        // ---------- 꾸미기(가구 배치 화면의 꾸미기 분류) ----------
+
+        /// <summary>탭 이름(꾸밈 자리) → 탭 단추 id.</summary>
+        private static readonly Dictionary<string, string> FinishTabs = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            { RoomFinishSlots.Wall, FurniturePlacementScreen.FinishTabWallId },
+            { RoomFinishSlots.Floor, FurniturePlacementScreen.FinishTabFloorId },
+            { RoomFinishSlots.Band, FurniturePlacementScreen.FinishTabBandId },
+        };
+
+        /// <summary>도구 이름 → 도구 단추 id.</summary>
+        private static readonly Dictionary<string, string> FinishTools = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            { HouseFinishTools.Room, FurniturePlacementScreen.FinishToolRoomId },
+            { HouseFinishTools.Brush, FurniturePlacementScreen.FinishToolBrushId },
+        };
+
+        private static FurniturePlacementScreen Placement(PlayerDriver p) => (FurniturePlacementScreen)p.Screens.Find(ScreenCatalog.FurniturePlacement);
+
+        /// <summary>집 HUD 버튼으로 가구 배치를 켜고(이미 켜져 있으면 그대로) 꾸미기 분류 → 그 탭을 누른다.</summary>
+        public static FurniturePlacementScreen OpenFinishTab(this PlayerDriver p, string tab)
+        {
+            Check(FinishTabs.TryGetValue(tab, out string tabId), "모르는 꾸밈 탭: " + tab);
+            if (!p.Screens.IsOpen(ScreenCatalog.FurniturePlacement))
+            {
+                p.PressButton("hud.button.placement");
+                p.WaitForScreen(ScreenCatalog.FurniturePlacement);
+            }
+            FurniturePlacementScreen screen = Placement(p);
+            p.PressButton(FurniturePlacementScreen.CategoryFinishId);
+            Check(screen.FinishShown, "꾸미기 분류가 열리지 않았다");
+            p.PressButton(tabId);
+            Check(screen.Finishes.Slot == tab, "탭이 " + screen.Finishes.Slot);
+            return screen;
+        }
+
+        /// <summary>가구 배치 화면을 HUD 버튼으로 닫고 포인터를 화면 밖으로 뺀다.</summary>
+        public static void ClosePlacement(this PlayerDriver p)
+        {
+            if (!p.Screens.IsOpen(ScreenCatalog.FurniturePlacement)) return;
+            p.PressButton("hud.button.placement");
+            p.WaitForScreenClosed(ScreenCatalog.FurniturePlacement);
+            p.MovePointer(-50, -50);
+            p.Frames(2);
+        }
+
+        /// <summary>
+        /// 꾸미기: 탭 → 도구 → 그 꾸밈의 카드(쪽을 넘겨 찾는다) → 주어진 맵 칸 중 화면에 보이고 UI가 덮지 않은 첫 칸에 포인터를 올리고,
+        /// 미리 보기가 적용할 수 있게 될 때까지 기다린다(같이 쓰는 집은 방의 첫 꾸밈 상태가 오기 전 RoomTooOld). 누르지 않는다.
+        /// 바뀔 칸 수(미리 보기의 ChangedCells)를 돌려준다. 게임 상태는 어디를 가리킬지·언제 누를지 고르는 데에만 읽는다.
+        /// </summary>
+        public static int AimFinish(this PlayerDriver p, string tab, string finishId, string tool, IEnumerable<CellPos> mapCells)
+        {
+            FurniturePlacementScreen screen = p.OpenFinishTab(tab);
+            Check(FinishTools.TryGetValue(tool, out string toolId), "모르는 꾸밈 도구: " + tool);
+            p.PressButton(toolId);
+            int card = -1;
+            for (int page = 0; page < 20 && card < 0; page++)
+            {
+                card = Enumerable.Range(0, FurniturePlacementScreen.Metrics.FinishPageSize).FirstOrDefault(i => screen.Finishes.At(i)?.Definition.Id == finishId, -1);
+                if (card < 0)
+                {
+                    Check(screen.Finishes.HasNext, "카드에서 " + finishId + "를 찾지 못했다");
+                    p.PressButton(FurniturePlacementScreen.FinishNextId);
+                }
+            }
+            p.PressButton(FurniturePlacementScreen.FinishCardId(card));
+            Check(screen.PickedFinish?.Id == finishId, "고른 꾸밈이 " + screen.PickedFinish?.Id);
+
+            var view = new HostPlacementView(p.Game.World, () => p.Game.Fit.Scale);
+            FurnitureRoom room = p.Game.World.Room;
+            float w = p.Game.Fit.LogicalWidth, h = p.Game.Fit.LogicalHeight;
+            UiRect? at = null;
+            foreach (CellPos c in mapCells)
+            {
+                UiRect r = view.CellRect(room.ToPlacement(c));
+                if (r.X < 0 || r.Y < 0 || r.Right > w || r.Bottom > h || p.Game.Ui.HitTest(r.CenterX, r.CenterY) != null) continue;
+                at = r;
+                break;
+            }
+            Check(at.HasValue, "가리킬 칸이 화면에 없다");
+            p.MovePointer(at.Value.CenterX, at.Value.CenterY);
+            p.Frames(1);
+            for (int i = 0; i < 900 && screen.FinishPreview?.CanApply != true; i++) p.Frames(1);
+            Check(screen.FinishPreview?.CanApply == true, finishId + " 미리 보기가 적용할 수 없다: " + screen.FinishPreview?.ReasonKey);
+            return screen.FinishPreview.ChangedCells.Count;
+        }
+
+        /// <summary>
+        /// <see cref="AimFinish"/> 뒤 포인터를 눌렀다 뗀다. (바뀔 칸 수, 누름이 한 일(applied/waiting/refused), 누른 직후의 이유 줄 글)을 돌려준다.
+        /// 같이 쓰는 집이면 방의 허락을 기다린다("waiting") — 끝나기를 기다리는 것은 부른 쪽이 한다. Changed: 누르기 전 미리 보기의 바뀔 칸(맵 칸).
+        /// </summary>
+        public static (int Cells, string Action, string Reason, IReadOnlyList<CellPos> Changed) Decorate(this PlayerDriver p, string tab, string finishId, string tool, IEnumerable<CellPos> mapCells)
+        {
+            int cells = p.AimFinish(tab, finishId, tool, mapCells);
+            FurniturePlacementScreen screen = Placement(p);
+            IReadOnlyList<CellPos> changed = screen.FinishPreview.ChangedCells;
+            // 누른 그 프레임 뒤에 읽는다(내 PC의 방은 같은 프로세스라 다음 프레임이면 답할 수 있다).
+            p.SetPointerDown(true);
+            p.Frames(1);
+            string action = screen.FinishLastAction;
+            string reason = ((UiTextBlock)p.Node(FurniturePlacementScreen.FinishReasonId)).Text;
+            p.Frames(1);
+            p.ReleasePointer();
+            Check(action == "waiting" || action == "applied", finishId + " 누름이 " + action + " (이유: " + reason + ")");
+            return (cells, action, reason, changed);
+        }
+
+        /// <summary>띠 색 탭 → 그 띠 꾸밈의 줄을 누른다(무료라 미리 보기 없이). 누름이 한 일(applied/waiting/refused)을 돌려준다.</summary>
+        public static string DecorateBand(this PlayerDriver p, string finishId)
+        {
+            FurniturePlacementScreen screen = p.OpenFinishTab(RoomFinishSlots.Band);
+            var session = p.Game.Session;
+            int row = session.HouseFinishOptions(RoomFinishSlots.Band).ToList().FindIndex(b => b.Id == finishId);
+            Check(row >= 0, "띠 줄에 " + finishId + "가 없다");
+            // 같이 쓰는 집: 방의 첫 꾸밈 상태가 오기 전에는 누르지 않는다(RoomTooOld).
+            for (int i = 0; i < 900 && !session.PreviewHouseBand(finishId).CanApply; i++) p.Frames(1);
+            Check(session.PreviewHouseBand(finishId).CanApply, finishId + " 띠 색을 바꿀 수 없다: " + session.PreviewHouseBand(finishId).ReasonKey);
+            var list = (UiScrollList)p.Node(FurniturePlacementScreen.FinishBandListId);
+            Check(list.TryGetRowRect(row, out UiRect r), "띠 줄이 보이지 않는다");
+            Check(p.Game.Ui.HitTest(r.CenterX, r.CenterY) == list, "띠 줄이 가려졌다");
+            p.ClickAt(r.CenterX, r.CenterY);
+            return screen.FinishLastAction;
         }
 
         // ---------- 잠 ----------
