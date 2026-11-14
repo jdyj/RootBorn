@@ -168,6 +168,7 @@ namespace Rootborn.Core.Room
     public sealed class RoomOutbox
     {
         private readonly List<RoomRequestSaveData> _requests = new List<RoomRequestSaveData>(8);
+        private readonly HashSet<string> _deferred = new HashSet<string>(StringComparer.Ordinal);
         private readonly Func<string> _newId;
 
         /// <param name="newId">새 요청 id(겹치지 않는 값). 없으면 GUID.</param>
@@ -189,12 +190,25 @@ namespace Rootborn.Core.Room
 
         public bool Contains(string requestId) => Find(requestId) >= 0;
 
+        /// <summary>
+        /// 목록에 둔 채 방 접속이 따로 보내지 않게 한다(<see cref="IsDeferred"/>). 세이브에는 그대로 든다 — 다시 켠 판은 이 표시가 없어 한 번 다시 보낸다.
+        /// 지금은 영영 거절되는 꾸밈 쓰기가 같은 id로 되풀이해 오가지 않게 쓴다(<see cref="RoomHouseBuildClient"/>). 목록에 없는 id면 아무것도 하지 않는다.
+        /// </summary>
+        public void Defer(string requestId)
+        {
+            if (Find(requestId) >= 0) _deferred.Add(requestId);
+        }
+
+        /// <summary>방 접속이 따로 보내지 않을 요청이다(목록·세이브에는 있다).</summary>
+        public bool IsDeferred(string requestId) => requestId != null && _deferred.Contains(requestId);
+
         /// <summary>답을 받았다: 그 요청을 지운다. 없던 요청이면 false.</summary>
         public bool Answered(string requestId)
         {
             int index = Find(requestId);
             if (index < 0) return false;
             _requests.RemoveAt(index);
+            _deferred.Remove(requestId);
             return true;
         }
 
@@ -208,6 +222,7 @@ namespace Rootborn.Core.Room
         public void LoadFromSaveData(RoomOutboxSaveData data)
         {
             _requests.Clear();
+            _deferred.Clear();
             if (data?.Requests == null) return;
             foreach (var r in data.Requests)
                 if (r != null && !string.IsNullOrEmpty(r.RequestId) && Find(r.RequestId) < 0) _requests.Add(r.Copy());

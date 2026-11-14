@@ -241,6 +241,12 @@ namespace Rootborn.Core.Room
 
         public RoomShareSettings Settings { get; }
         public RoomOutbox Outbox { get; }
+
+        /// <summary>
+        /// 방이 아는 이 사람의 신원(방이 요청·잡기에 붙이는 주인 id — 접속의 신원). 방 접속이 적는다. 게임 한 판의 플레이어 id와 다를 수 있다
+        /// (내 PC에서 방을 연 사람은 자기 세이브의 기본 id로 돌고 방에서는 접속의 신원이다). 모르면 null.
+        /// </summary>
+        public string RoomPlayerId { get; set; }
         public IReadOnlyList<IRoomPieceClient> Pieces => _pieces;
 
         /// <summary>조각이 바뀌었다(조각 이름). 받은 상태·답을 넘긴 뒤 부른다.</summary>

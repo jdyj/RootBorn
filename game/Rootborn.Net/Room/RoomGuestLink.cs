@@ -138,7 +138,7 @@ namespace Rootborn.Net.Room
 
             _toSend.Clear();
             for (int i = 0; i < requests.Count; i++)
-                if (!_sent.Contains(requests[i].RequestId)) _toSend.Add(requests[i]);
+                if (!_sent.Contains(requests[i].RequestId) && !Shares.Outbox.IsDeferred(requests[i].RequestId)) _toSend.Add(requests[i]);
             if (_toSend.Count == 0) return 0;
             if (_sent.Count > requests.Count * 2) Forget(requests);
             int sent = 0;
@@ -175,6 +175,7 @@ namespace Rootborn.Net.Room
             TakesGuestSaves = m.GuestSaves;
             Settings = new RoomShareSettings(m.SharedPieces);
             Shares = new RoomShares(Settings, _catalog, _newRequestId);
+            NoteSelf();
         }
 
         private void OnChunk(SaveChunkMessage chunk)
@@ -198,13 +199,25 @@ namespace Rootborn.Net.Room
             UploadRefused?.Invoke(LastRefusal);
         }
 
-        private void OnState(RoomPieceStateMessage m) => Shares?.Receive(new RoomPieceState(m.Piece, m.Amount, m.Ids));
+        private void OnState(RoomPieceStateMessage m)
+        {
+            NoteSelf();
+            Shares?.Receive(new RoomPieceState(m.Piece, m.Amount, m.Ids));
+        }
+
+        // 방이 아는 이 접속의 신원을 조각 묶음에 적는다(방이 요청·잡기에 붙이는 주인 id — 게임 한 판의 플레이어 id와 다를 수 있다).
+        private void NoteSelf()
+        {
+            if (Shares == null || Shares.RoomPlayerId != null) return;
+            if (_client.TryGetPlayerId(_client.NetId, out var self) && !string.IsNullOrEmpty(self)) Shares.RoomPlayerId = self;
+        }
 
         // 나눠 온 조각 상태(같이 쓰는 집의 가구 목록 등). 방은 한 상태의 조각을 이어서 보낸다.
         private void OnStateChunk(RoomPieceStateChunkMessage m)
         {
             var chunk = new SaveChunkMessage { TransferId = m.TransferId, Index = m.Index, Count = m.Count, Bytes = m.Bytes };
             if (!_stateChunks.Add(chunk, out _, out var payload)) return;
+            NoteSelf();
             if (RoomPieceStates.TryDecode(payload, out var state)) Shares?.Receive(state);
         }
 

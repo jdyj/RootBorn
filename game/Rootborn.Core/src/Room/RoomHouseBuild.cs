@@ -329,6 +329,9 @@ namespace Rootborn.Core.Room
         private readonly RoomOutbox _outbox;
         private readonly List<KeyValuePair<string, string>> _holds = new List<KeyValuePair<string, string>>(4);
         private string[] _lines = Array.Empty<string>();
+        // 이 판에서 쓰기가 거절된 잡기 → 그때의 방 상태 판(_linesVersion). 같은 판이면 같은 id로, 상태가 바뀌었으면 새 id로 다시 적는다. 메모리만.
+        private readonly Dictionary<string, int> _refusedUses = new Dictionary<string, int>(StringComparer.Ordinal);
+        private int _linesVersion;
         private Action<RoomRequestSaveData, bool> _answered;
         private readonly List<KeyValuePair<RoomRequestSaveData, bool>> _unheard = new List<KeyValuePair<RoomRequestSaveData, bool>>(2);
 
@@ -404,6 +407,7 @@ namespace Rootborn.Core.Room
             Known = true;
             if (!first && SameLines(state.Ids)) return;
             _lines = (string[])state.Ids.Clone();
+            _linesVersion++;
             var holds = new List<KeyValuePair<string, string>>(4);
             if (RoomHouseBuildLines.TryDecode(state.Ids, out var data, holds))
             {
@@ -412,6 +416,7 @@ namespace Rootborn.Core.Room
                 _holds.AddRange(holds);
             }
 
+            if (_refusedUses.Count > 0) ResendRefusedUses();
             Changed?.Invoke();
         }
 
@@ -419,11 +424,27 @@ namespace Rootborn.Core.Room
         {
             if (request.Kind != RoomHouseBuild.Finish && request.Kind != RoomHouseBuild.Band)
             {
-                // 쓰기 = 돈을 이미 냈다. 방이 적용하지 못해 잡은 채로 거절했으면(RoomHouseBuild 요약) 새 id로 다시 적어 둔다 — 장부가 옛 id에 거절을
-                // 기억한다. 저장하지 않는다(다음 저장과 함께 간다). 그래서 보낼 목록에는 늘 그 잡기의 쓰기가 남아, 게임 한 판이 이 잡기를 "떠도는 잡기"로
-                // 보고 풀지 않는다(풀면 낸 돈만 사라진다). Invalid(잡기가 없거나 남의 것)는 다시 보내지 않는다.
-                if (request.Kind == RoomHouseBuild.Use && answer.Outcome == RoomOutcomes.Refused && request.Ids != null && request.Ids.Length == 1)
-                    AddUse(request.Ids[0]);
+                // 쓰기 = 돈을 이미 냈다. 방이 적용하지 못해 잡은 채로 거절했으면(RoomHouseBuild 요약) 쓰기를 보낼 목록에 다시 적어 둔다 — 그래서 목록에는
+                // 늘 그 잡기의 쓰기가 남아, 게임 한 판이 이 잡기를 "떠도는 잡기"로 보고 풀지 않는다(풀면 낸 돈만 사라진다). 저장하지 않는다(다음 저장과 함께).
+                // 방 장부에 줄이 쌓이지 않게: 이 판의 첫 거절이거나 그 뒤로 방의 상태가 바뀌었으면 새 id(방이 다시 판정한다), 아니면 같은 id(장부가 같은
+                // 거절을 다시 준다 — 새 줄 없음). 방의 상태가 바뀌면 그때 새 id로 바꿔 둔다(ResendRefusedUses). Invalid(잡기가 없거나 남의 것)는 다시 적지 않는다.
+                if (request.Kind == RoomHouseBuild.Use && request.Ids != null && request.Ids.Length == 1)
+                {
+                    string hold = request.Ids[0];
+                    if (answer.Outcome == RoomOutcomes.Refused)
+                    {
+                        if (_refusedUses.TryGetValue(hold, out int seen) && seen == _linesVersion)
+                        {
+                            // 같은 id: 목록·세이브에는 남기고 방 접속이 따로 다시 보내지는 않는다(되풀이해 오가지 않게).
+                            _outbox.Add(request.Copy());
+                            _outbox.Defer(request.RequestId);
+                        }
+                        else AddUse(hold);
+                        _refusedUses[hold] = _linesVersion;
+                    }
+                    else _refusedUses.Remove(hold);
+                }
+
                 Changed?.Invoke();
                 return;
             }
@@ -431,6 +452,38 @@ namespace Rootborn.Core.Room
             bool applied = answer.Outcome == RoomOutcomes.Applied;
             if (_answered == null) _unheard.Add(new KeyValuePair<RoomRequestSaveData, bool>(request, applied));
             else _answered(request, applied);
+        }
+
+        // 방의 상태가 바뀌었다: 거절된 쓰기를 새 id로 바꿔 둔다(다음 저장과 함께 가서 방이 다시 판정한다). 잡기가 상태에서 사라졌으면 잊는다.
+        private void ResendRefusedUses()
+        {
+            foreach (var hold in new List<string>(_refusedUses.Keys))
+            {
+                if (!HoldKnown(hold))
+                {
+                    _refusedUses.Remove(hold);
+                    continue;
+                }
+
+                string pending = null;
+                foreach (var r in _outbox.Requests)
+                    if (r.Piece == RoomHouseBuild.PieceName && r.Kind == RoomHouseBuild.Use && r.Ids != null && r.Ids.Length == 1 && r.Ids[0] == hold)
+                    {
+                        pending = r.RequestId;
+                        break;
+                    }
+
+                if (pending == null) continue;
+                _outbox.Answered(pending);
+                AddUse(hold);
+                _refusedUses[hold] = _linesVersion;
+            }
+        }
+
+        private bool HoldKnown(string hold)
+        {
+            foreach (var pair in _holds) if (pair.Key == hold) return true;
+            return false;
         }
 
         private bool SameLines(string[] ids)

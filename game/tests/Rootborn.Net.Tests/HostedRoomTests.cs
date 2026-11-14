@@ -267,6 +267,26 @@ namespace Rootborn.Net.Tests
         }
 
         [Test]
+        public void RoomWithoutGuestSaves_SharesKnowTheRoomIdentity_DeferredRequestsAreNotSent()
+        {
+            // 내 PC에서 방을 연 사람의 게임 한 판은 기본 플레이어 id로 돈다 — "내 잡기"를 가리려면 방이 아는 접속의 신원이 조각 묶음에 있어야 한다.
+            var clock = new TestClock();
+            using HostedRoom room = HostedRoom.Open(IPAddress.Loopback, 0, new RoomServerSettings { SharedPieces = new[] { "wallet" } }, Versions,
+                new MemorySaveStore(), "slot-0", clock, null);
+            var (me, mine) = Linked(Me(room));
+            using (me)
+            {
+                Assert.That(Pump(room, clock, () => mine.Ready && WalletOf(mine)?.Known == true, me), Is.True);
+                Assert.That(mine.Shares.RoomPlayerId, Is.EqualTo("me"), "방이 요청에 붙이는 신원");
+
+                mine.Shares.Outbox.Add(new RoomRequestSaveData { Piece = "wallet", RequestId = "me-later", Kind = RoomWallet.Deposit, Amount = 5 });
+                mine.Shares.Outbox.Defer("me-later");
+                Assert.That(mine.FlushRequests(), Is.EqualTo(0), "미룬 요청은 보내지 않는다(목록에는 있다)");
+                Assert.That(mine.Shares.Outbox.Requests.Count, Is.EqualTo(1));
+            }
+        }
+
+        [Test]
         public void RoomWithoutGuestSaves_TwoHoldsAtOnce_OnlyTheFirstIsGranted()
         {
             var clock = new TestClock();

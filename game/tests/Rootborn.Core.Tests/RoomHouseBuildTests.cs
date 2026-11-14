@@ -648,6 +648,53 @@ namespace Rootborn.Core.Tests
         }
 
         [Test]
+        public void Client_UseRefusedAgain_KeepsTheSameId_UntilTheStateChanges_ANewSessionSendsANewIdOnce()
+        {
+            // 영영 거절되는 쓰기가 저장마다 방 장부에 새 줄을 쌓지 않게: 같은 판·같은 방 상태면 같은 id로 다시 적는다(장부가 같은 답을 준다).
+            // 쓰기는 보낼 목록에서 빠지지 않는다(돈을 냈다는 표시 — 게임 한 판의 떠도는 잡기 규칙이 풀지 않게).
+            var shares = Shares();
+            var client = shares.Find<RoomHouseBuildClient>();
+            var piece = Piece();
+            Finish(piece, "ana", "h1", FloorOak, HouseFinishTools.Brush, new CellPos(1, 2), 1);
+            shares.Receive(piece.State());
+            client.AddUse("h1");
+            string UseId() => shares.Outbox.Requests.Single(r => r.Kind == RoomHouseBuild.Use && r.Ids.Single() == "h1").RequestId;
+            void Refuse() => shares.Receive(new RoomAnswer(RoomHouseBuild.PieceName, UseId(), RoomOutcomes.Refused, 0));
+
+            string first = UseId();
+            Refuse();
+            string second = UseId();
+            Assert.That(second, Is.Not.EqualTo(first), "이 판의 첫 거절: 새 id로 한 번(방이 다시 판정한다)");
+            for (int i = 0; i < 5; i++) Refuse();
+            Assert.That(UseId(), Is.EqualTo(second), "방 상태가 그대로면 같은 id — 방 장부가 늘지 않는다");
+            Assert.That(shares.Outbox.Requests.Count, Is.EqualTo(1));
+            Assert.That(shares.Outbox.IsDeferred(second), Is.True, "같은 id는 목록·세이브에 두되 방 접속이 따로 다시 보내지 않는다");
+            Assert.That(shares.Outbox.ToSaveData().Requests.Single().RequestId, Is.EqualTo(second), "세이브에는 든다(돈을 낸 표시)");
+
+            shares.Receive(piece.State());
+            Assert.That(UseId(), Is.EqualTo(second), "같은 상태가 다시 와도 그대로");
+            Finish(piece, "bo", "h2", FloorOak, HouseFinishTools.Brush, new CellPos(6, 3), 1); // 방의 상태가 바뀌었다
+            shares.Receive(piece.State());
+            string third = UseId();
+            Assert.That(third, Is.Not.EqualTo(second), "방 상태가 바뀌면 새 id로 다시");
+            Assert.That(shares.Outbox.IsDeferred(third), Is.False, "새 id는 보낸다");
+            Refuse();
+            Assert.That(UseId(), Is.EqualTo(third));
+
+            // 새 판: 보낼 목록을 읽은 뒤 첫 거절에 새 id로 한 번.
+            var next = Shares();
+            next.LoadOutbox(shares.Outbox.ToSaveData());
+            var nextClient = next.Find<RoomHouseBuildClient>();
+            next.Receive(piece.State());
+            next.Receive(new RoomAnswer(RoomHouseBuild.PieceName, third, RoomOutcomes.Refused, 0));
+            string fourth = next.Outbox.Requests.Single().RequestId;
+            Assert.That(fourth, Is.Not.EqualTo(third));
+            next.Receive(new RoomAnswer(RoomHouseBuild.PieceName, fourth, RoomOutcomes.Refused, 0));
+            Assert.That(next.Outbox.Requests.Single().RequestId, Is.EqualTo(fourth));
+            Assert.That(nextClient.Known, Is.True);
+        }
+
+        [Test]
         public void Client_RequestsWithTheSeparator_Throw()
         {
             var client = Shares().Find<RoomHouseBuildClient>();
