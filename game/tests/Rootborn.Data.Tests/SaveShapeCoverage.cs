@@ -66,6 +66,8 @@ namespace Rootborn.Data.Tests
             // 일터 진행(쓴 템플릿 요청, 기본 템플릿을 깐 일터, 오늘 꾸미며 배운 횟수)과 일터 면의 배치(집 배치와 같은 모양). MonoGame 판이 더한 파일.
             ("workspace-progress-*.json", typeof(Rootborn.Core.Workspaces.WorkspaceProgressSaveData)),
             ("workspace-layout-*.json", typeof(FurniturePlacementLayoutSaveData)),
+            // 짓는 집의 꾸밈 기록(바닥 칸마다 벽지·바닥). MonoGame 판이 더한 파일(2026-11-14).
+            ("house-build.json", typeof(Rootborn.Core.Building.HouseBuildSaveData)),
         };
 
         /// <summary>

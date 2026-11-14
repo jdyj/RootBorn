@@ -116,6 +116,9 @@ namespace Rootborn.Core.Save
         /// <summary>집 상태(Unity HouseStatePersistence): 지금 집 단계 번호. 슬롯마다 하나.</summary>
         public const string HouseState = "house-state.json";
 
+        /// <summary>짓는 집의 꾸밈 기록(Core Building HouseBuildSaveData): 바닥 칸마다 벽지·바닥. 슬롯마다 하나. MonoGame 판이 더한 파일이다.</summary>
+        public const string HouseBuild = "house-build.json";
+
         /// <summary>집 단계가 생기기 전의 배치 파일. 0단계 파일이 없을 때만 읽는다.</summary>
         public const string HouseFurnitureLayoutBeforeStages = "house-furniture-layout.json";
 

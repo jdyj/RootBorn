@@ -195,6 +195,8 @@ namespace Rootborn.Game
             QuestChains = LoadChains(store, hasSnapshot ? snapshot.QuestChains : null);
             LoadFurniture(store, hasSnapshot ? snapshot : null);
             LoadWorkspaces(store);
+            // 짓는 집의 꾸밈(house-build.json). 없으면 빈 기록(프레임 기본). 옛 슬롯에는 없으므로 아래 Require에 넣지 않는다.
+            LoadHouseBuild(store);
 
             QuestLog = new QuestLog(_definitions.All<QuestDefinition>());
             if (store.TryRead<QuestLogSaveData>(SaveSlot, SaveFileNames.PlayerQuestLog(PlayerId), out var questLog)) QuestLog.LoadFromSaveData(questLog);
@@ -244,7 +246,7 @@ namespace Rootborn.Game
         private string[] SlotSharedFiles() => new[]
         {
             SaveFileNames.WorldStateShared, SaveFileNames.ObjectiveJournalTracking, SaveFileNames.HouseState,
-            SaveFileNames.HouseFurnitureLayoutBeforeStages, SaveFileNames.HouseFurnitureLayout(HouseStage),
+            SaveFileNames.HouseFurnitureLayoutBeforeStages, SaveFileNames.HouseFurnitureLayout(HouseStage), SaveFileNames.HouseBuild,
         };
 
         // 이 판(Save)은 쓰지 않고 스냅샷 전 Unity 판만 쓰던 영역 파일. 이것이 있으면 스냅샷 없이 이어 가는 옛 슬롯이다.
@@ -341,10 +343,12 @@ namespace Rootborn.Game
                 SaveClock(store);
                 SaveWorkspaces(store);
                 SaveHouseLayoutIfDirty(store);
+                SaveHouseBuildIfDirty(store);
                 store.Commit();
             }
 
             _houseLayoutDirty = false;
+            _houseBuildDirty = false;
         }
 
         // ---------- 퀘스트 이벤트 ----------
