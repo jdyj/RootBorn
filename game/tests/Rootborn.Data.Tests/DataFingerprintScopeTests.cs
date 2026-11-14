@@ -10,7 +10,7 @@ namespace Rootborn.Data.Tests
 {
     /// <summary>
     /// 지문이 셈하는 범위: 규칙에 쓰이는 데이터만(등록부, 엔티티 파일, data 옆의 game/economy.json·game/time.json·
-    /// game/world/maps.json·game/world/interactions.json).
+    /// game/world/maps.json·game/world/interactions.json, maps.json에서 build가 있는 맵(짓는 집)의 LDtk).
     /// 그림 좌표표(data/atlases), 변환 보고서, 문구(data/localization)는 셈하지 않는다 — 배포마다 들어가는 몫이 다르고,
     /// 문구가 달라도(언어가 다른 두 사람) 같은 방에 들어갈 수 있어야 한다.
     /// 클라이언트 배포(Tools/publish/content.txt)와 서버 배포(content-server.txt)의 data/ 줄로 모은 폴더가 같은 지문을 내야 한다.
@@ -154,6 +154,125 @@ namespace Rootborn.Data.Tests
         }
 
         [Test]
+        public void BuildMapLdtk_IsCounted_OtherLdtkAndPictures_AreNot()
+        {
+            // 짓는 집(maps.json에서 build가 있는 맵)의 LDtk는 방 칸·출처표·닫힌 칸을 정하므로 같이 하는 모두에게 같아야 한다. 그 밖의 LDtk와 그림은 아니다.
+            string data = SmallData();
+            string world = Path.Combine(_root, "game", "world");
+            Directory.CreateDirectory(world);
+            string maps = Path.Combine(world, "maps.json");
+            File.Copy(Path.Combine(RepoPaths.Root, "game", "world", "maps.json"), maps);
+            var (buildLdtk, otherLdtk) = LdtkPathsOf(maps);
+            string house = CopyRepoFile(buildLdtk);
+            string other = CopyRepoFile(otherLdtk);
+            string picture = Path.Combine(Path.GetDirectoryName(house), "tiles.png");
+            File.WriteAllBytes(picture, new byte[] { 1, 2, 3 });
+            string slots = Path.Combine(Path.GetDirectoryName(house), "tiles.slots.json");
+            File.WriteAllText(slots, "{}\n");
+
+            string before = DataFingerprint.Compute(data);
+            File.AppendAllText(other, " ");
+            File.WriteAllBytes(picture, new byte[] { 9, 9 });
+            File.WriteAllText(slots, "{\"x\":1}\n");
+            Assert.That(DataFingerprint.Compute(data), Is.EqualTo(before), "짓는 집이 아닌 맵의 LDtk, 타일 그림, 조각 시트·좌표표는 셈하지 않는다");
+
+            File.AppendAllText(house, " ");
+            string afterHouse = DataFingerprint.Compute(data);
+            Assert.That(afterHouse, Is.Not.EqualTo(before), "집 LDtk 한 바이트");
+
+            File.Delete(house);
+            Assert.That(DataFingerprint.Compute(data), Is.Not.EqualTo(afterHouse), "파일이 없으면 넣지 않는다(예외 없이 다른 지문)");
+        }
+
+        [Test]
+        public void BuildMapLdtk_LineEndingsAndBom_DoNotChangeIt_AndTwoCopiesAgree()
+        {
+            // Windows 체크아웃(CRLF·BOM)과 Linux 체크아웃(LF)이 같은 지문을 낸다 — 다른 데이터 파일과 같은 방식(바이트를 맞춰 읽는다).
+            string data = SmallData();
+            string world = Path.Combine(_root, "game", "world");
+            Directory.CreateDirectory(world);
+            string maps = Path.Combine(world, "maps.json");
+            File.Copy(Path.Combine(RepoPaths.Root, "game", "world", "maps.json"), maps);
+            string house = CopyRepoFile(LdtkPathsOf(maps).Build);
+            string lf = File.ReadAllText(house).Replace("\r\n", "\n");
+            File.WriteAllText(house, lf, new UTF8Encoding(false));
+            string lfPrint = DataFingerprint.Compute(data);
+            File.WriteAllText(house, lf.Replace("\n", "\r\n"), new UTF8Encoding(true));
+            Assert.That(DataFingerprint.Compute(data), Is.EqualTo(lfPrint), "CRLF·BOM");
+
+            // 같은 데이터를 다른 폴더에 복사한 두 판이 같은 지문을 낸다.
+            string copy = Path.Combine(_root, "second");
+            CopyTree(_root, copy, new[] { "data", "game", "art" });
+            Assert.That(DataFingerprint.Compute(Path.Combine(copy, "data")), Is.EqualTo(DataFingerprint.Compute(data)));
+        }
+
+        [Test]
+        public void BuildMapLdtk_NamedInMapsJson_IsReadWithCommentsAndRelativeToTheRepoRoot()
+        {
+            // maps.json는 주석을 허용하는 JSON이다. build가 있는 항목의 ldtk만 센다.
+            string data = SmallData();
+            string world = Path.Combine(_root, "game", "world");
+            Directory.CreateDirectory(world);
+            File.WriteAllText(Path.Combine(world, "maps.json"),
+                "{ // 주석\n \"maps\": [ { \"id\": \"A\", \"ldtk\": \"x/a.ldtk\", \"build\": { \"frameId\": \"f\" }, },\n { \"id\": \"B\", \"ldtk\": \"x/b.ldtk\" } ] }\n");
+            Directory.CreateDirectory(Path.Combine(_root, "x"));
+            File.WriteAllText(Path.Combine(_root, "x", "a.ldtk"), "{}");
+            File.WriteAllText(Path.Combine(_root, "x", "b.ldtk"), "{}");
+            string before = DataFingerprint.Compute(data);
+            File.WriteAllText(Path.Combine(_root, "x", "b.ldtk"), "{\"b\":1}");
+            Assert.That(DataFingerprint.Compute(data), Is.EqualTo(before), "build가 없는 맵");
+            File.WriteAllText(Path.Combine(_root, "x", "a.ldtk"), "{\"a\":1}");
+            Assert.That(DataFingerprint.Compute(data), Is.Not.EqualTo(before), "build가 있는 맵");
+        }
+
+        [Test]
+        public void BothPublishLists_CarryTheBuildMapLdtk()
+        {
+            foreach (string list in new[] { "content.txt", "content-server.txt" })
+            {
+                string folder = CopyPublished(list, "build-" + list);
+                string ldtk = LdtkPathsOf(Path.Combine(folder, "game", "world", "maps.json")).Build;
+                Assert.That(File.Exists(Path.Combine(folder, ldtk.Replace('/', Path.DirectorySeparatorChar))), Is.True, list + "에 짓는 집의 LDtk " + ldtk);
+            }
+        }
+
+        private static (string Build, string Other) LdtkPathsOf(string mapsJson)
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(mapsJson),
+                new System.Text.Json.JsonDocumentOptions { AllowTrailingCommas = true, CommentHandling = System.Text.Json.JsonCommentHandling.Skip });
+            string build = null, other = null;
+            foreach (var m in doc.RootElement.GetProperty("maps").EnumerateArray())
+            {
+                string path = m.GetProperty("ldtk").GetString();
+                if (m.TryGetProperty("build", out _)) build ??= path;
+                else other ??= path;
+            }
+
+            Assert.That(build, Is.Not.Null, "이 시험의 전제: 짓는 집 맵이 있다");
+            Assert.That(other, Is.Not.Null.And.Not.EqualTo(build), "이 시험의 전제: 짓는 집이 아닌 맵이 있다");
+            return (build, other);
+        }
+
+        private string CopyRepoFile(string relative)
+        {
+            string to = Path.Combine(_root, relative.Replace('/', Path.DirectorySeparatorChar));
+            Directory.CreateDirectory(Path.GetDirectoryName(to));
+            File.Copy(Path.Combine(RepoPaths.Root, relative.Replace('/', Path.DirectorySeparatorChar)), to, true);
+            return to;
+        }
+
+        private static void CopyTree(string from, string to, string[] top)
+        {
+            foreach (string name in top)
+                foreach (string file in Directory.GetFiles(Path.Combine(from, name), "*", SearchOption.AllDirectories))
+                {
+                    string dest = Path.Combine(to, Path.GetRelativePath(from, file));
+                    Directory.CreateDirectory(Path.GetDirectoryName(dest));
+                    File.Copy(file, dest, true);
+                }
+        }
+
+        [Test]
         public void AtlasesReportAndText_DoNotChangeIt()
         {
             string data = SmallData();
@@ -209,7 +328,7 @@ namespace Rootborn.Data.Tests
 
         /// <summary>
         /// 배포 목록의 평범한 줄과 `!` 줄 가운데 data/·game/*.json·game/world/*.json 에 해당하는 것만 적용해 그 파일들을 복사한다.
-        /// `@refs` 가 따라오게 하는 좌표표는 그림 몫이라 더하지 않는다 — 클라이언트 쪽이 좌표표를 가장 적게 갖는 경우다.
+        /// `@refs` 가 따라오게 하는 좌표표는 그림 몫이라 더하지 않는다. 짓는 집의 LDtk(art/world/rooms)는 지문이 읽으므로 더한다 — 클라이언트 쪽이 좌표표를 가장 적게 갖는 경우다.
         /// </summary>
         private string CopyPublished(string listName, string name)
         {
@@ -217,12 +336,15 @@ namespace Rootborn.Data.Tests
             string repo = RepoPaths.Root;
             var lines = File.ReadAllLines(Path.Combine(repo, "Tools", "publish", listName))
                 .Select(l => l.Trim())
+                // "@ldtk <글롭>" 줄은 그 LDtk 파일을 가져온다 — 짓는 집의 LDtk를 지문이 읽으므로 그것만 따라 복사한다(타일셋 PNG는 그림 몫이라 더하지 않는다).
+                .Select(l => l.StartsWith("@ldtk ", StringComparison.Ordinal) ? l.Substring("@ldtk ".Length).Trim() : l)
                 .Where(l => l.Length > 0 && !l.StartsWith("#", StringComparison.Ordinal) && !l.StartsWith("@", StringComparison.Ordinal))
                 .ToList();
 
             var candidates = Directory.GetFiles(Path.Combine(repo, "data"), "*.json", SearchOption.AllDirectories)
                 .Concat(Directory.GetFiles(Path.Combine(repo, "game"), "*.json", SearchOption.TopDirectoryOnly))
                 .Concat(Directory.GetFiles(Path.Combine(repo, "game", "world"), "*.json", SearchOption.TopDirectoryOnly))
+                .Concat(Directory.GetFiles(Path.Combine(repo, "art", "world", "rooms"), "*.ldtk", SearchOption.AllDirectories))
                 .Select(p => Path.GetRelativePath(repo, p).Replace('\\', '/'))
                 .ToList();
 

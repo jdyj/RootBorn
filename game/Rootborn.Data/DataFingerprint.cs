@@ -18,6 +18,8 @@ namespace Rootborn.Data
     ///   - data 폴더 옆의 game/time.json (하루 시작, 취침, 밤 체력 감소 — TimeSettings). 없으면 넣지 않는다(시간 규칙이 다른 판)
     ///   - data 폴더 옆의 game/world/maps.json·game/world/interactions.json (맵 칸·문, NPC 걷는 빠르기, NPC 자리 — NPC가 어디에 서는지를
     ///     방 안 모두가 같이 셈한다). 없으면 넣지 않는다. 빛·연출(lights.json, presentation.json)은 규칙이 아니라 셈하지 않는다
+    ///   - maps.json에서 build가 있는 맵(짓는 집)의 LDtk(이름 "../" + ldtk 경로): 방 칸과 벽 출처표가 거기서 나온다. 파일이 없으면 넣지 않는다.
+    ///     build가 없는 맵의 LDtk, 타일셋·조각 시트 PNG, 좌표표는 셈하지 않는다(그림 몫)
     /// 셈하지 않는 것 — 맨 위가 객체인 그 밖의 data .json: 그림 좌표표(data/atlases), 변환 보고서(export-report.json),
     /// 문구(data/localization). 배포마다 들어가는 몫이 다르고, 문구가 달라도(언어가 다른 두 사람) 같이 할 수 있어야 한다.
     /// 줄바꿈(CRLF/LF)과 맨 앞 UTF-8 BOM은 맞춰서 넣는다 — Windows와 Linux에서 만든 체크아웃·배포가 같은 데이터로 보이게.
@@ -58,6 +60,14 @@ namespace Rootborn.Data
                 if (File.Exists(path)) files.Add(("../game/world/" + name, Normalize(File.ReadAllBytes(path))));
             }
 
+            // 짓는 집(maps.json에서 build가 있는 맵)의 LDtk: 방 칸·닫힌 칸·벽 출처표가 거기서 나와 같이 하는 모두에게 같아야 한다.
+            string repoRoot = Path.GetFullPath(Path.Combine(root, ".."));
+            foreach (string ldtk in BuildMapLdtkPaths(Path.Combine(world, "maps.json")))
+            {
+                string path = Path.GetFullPath(Path.Combine(repoRoot, ldtk));
+                if (File.Exists(path)) files.Add(("../" + ldtk, Normalize(File.ReadAllBytes(path))));
+            }
+
             if (!string.IsNullOrEmpty(overlayDirectory))
             {
                 if (!Directory.Exists(overlayDirectory)) throw new DirectoryNotFoundException("덮어쓰기 폴더가 없다: " + overlayDirectory);
@@ -81,6 +91,33 @@ namespace Rootborn.Data
             }
 
             return Convert.ToHexString(hash.GetHashAndReset()).Substring(0, 16).ToLowerInvariant();
+        }
+
+        /// <summary>maps.json(주석·끝 쉼표를 허용하는 JSON)에서 build가 있는 항목의 ldtk 경로(저장소 뿌리 기준, '/'로 맞춤). 읽을 수 없으면 없다 — maps.json 바이트는 이미 셈에 들어간다.</summary>
+        private static IEnumerable<string> BuildMapLdtkPaths(string mapsJson)
+        {
+            var paths = new SortedSet<string>(StringComparer.Ordinal);
+            if (!File.Exists(mapsJson)) return paths;
+            try
+            {
+                using var doc = System.Text.Json.JsonDocument.Parse(Normalize(File.ReadAllBytes(mapsJson)), // 맨 앞 BOM을 떼야 읽는다(Windows 체크아웃)
+                    
+                    new System.Text.Json.JsonDocumentOptions { AllowTrailingCommas = true, CommentHandling = System.Text.Json.JsonCommentHandling.Skip });
+                if (doc.RootElement.ValueKind != System.Text.Json.JsonValueKind.Object || !doc.RootElement.TryGetProperty("maps", out var maps)
+                    || maps.ValueKind != System.Text.Json.JsonValueKind.Array) return paths;
+                foreach (var map in maps.EnumerateArray())
+                {
+                    if (map.ValueKind != System.Text.Json.JsonValueKind.Object || !map.TryGetProperty("build", out var build)
+                        || build.ValueKind != System.Text.Json.JsonValueKind.Object) continue;
+                    if (map.TryGetProperty("ldtk", out var ldtk) && ldtk.ValueKind == System.Text.Json.JsonValueKind.String && !string.IsNullOrEmpty(ldtk.GetString()))
+                        paths.Add(ldtk.GetString().Replace('\\', '/'));
+                }
+            }
+            catch (System.Text.Json.JsonException)
+            {
+            }
+
+            return paths;
         }
 
         private static bool StartsWithArray(byte[] bytes)
