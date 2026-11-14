@@ -158,7 +158,7 @@ namespace Rootborn.World
         }
 
         /// <summary>깨진 좌표표를 읽을 때 RoomFinishArt가 던지는 예외들(조합과 맵 검사가 같은 범위를 문제 한 줄로 바꾼다).</summary>
-        internal static bool IsAtlasReadError(Exception e) =>
+        public static bool IsAtlasReadError(Exception e) =>
             e is InvalidDataException || e is System.Text.Json.JsonException || e is KeyNotFoundException
             || e is InvalidOperationException || e is FormatException || e is IOException;
 

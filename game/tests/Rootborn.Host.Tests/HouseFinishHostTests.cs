@@ -202,6 +202,7 @@ namespace Rootborn.Host.Tests
                 ApplyAsSetup(session, carpet.Id, middle); // 준비 단계(실제 플레이 아님)
                 player.Frames(1);
                 Assert.That(world.ComposeCount, Is.EqualTo(before + 1), "꾸밈 알림 다음 그리기에서 한 번 다시 조합");
+                TestContext.Progress.WriteLine($"HOUSE_BUILD_001 꾸밈 뒤 다시 조합(조합 + SetData) {world.LastComposeMilliseconds:0.00}ms, 텍스처 {world.ComposedTextureBytes}바이트");
                 player.Frames(30);
                 Assert.That(world.ComposeCount, Is.EqualTo(before + 1), "그 뒤로는 다시 조합하지 않는다");
                 AssertDrawnWith(player, room, carpet, "적용 뒤");
@@ -242,6 +243,26 @@ namespace Rootborn.Host.Tests
                 again.Screenshot($"house-finish-{shot++:D2}-after-continue");
                 Assert.That(again.Game.Renderer.MissingImages, Is.Empty);
             }
+        }
+
+        [Test]
+        public void HOUSE_BUILD_002_FirstEntryUnder5ms_AndTextureCounted()
+        {
+            using PlayerDriver player = Open();
+            NewGame(player);
+            player.Frames(2);
+            WorldScreen world = player.Game.World;
+            TestContext.Progress.WriteLine($"HOUSE_BUILD_002 첫 입장 조합(꾸밈 찾기 + 조합 + 텍스처 올리기) {world.LastComposeMilliseconds:0.00}ms, "
+                + $"조합 텍스처 {world.ComposedTextureBytes}바이트({world.ComposedTextureBytes / 1048576.0:0.00}MB), 파일 그림 캐시 {world.CachedTextureBytes / 1048576.0:0.0}MB");
+            Assert.That(world.ComposeCount, Is.EqualTo(1));
+            Assert.That(world.LastComposeMilliseconds, Is.LessThan(50), "느슨한 지킴이(목표 5ms — 시트는 시작할 때 미리 읽었다)");
+            Assert.That(world.ComposedTextureBytes, Is.GreaterThan(0));
+            Assert.That(world.BudgetedTextureBytes, Is.EqualTo(world.CachedTextureBytes + world.ComposedTextureBytes + world.PreviewTextureBytes),
+                "그림 캐시 한도 계산에 조합·미리 보기 텍스처가 든다");
+            world.TextureBudgetBytes = world.CachedTextureBytes; // 파일 그림만으로는 한도 안
+            Assert.That(world.OverTextureBudget, Is.True, "조합 텍스처까지 세면 한도를 넘는다");
+            world.TextureBudgetBytes = WorldScreen.DefaultTextureBudgetBytes;
+            Assert.That(world.OverTextureBudget, Is.False);
         }
 
         [Test]

@@ -43,14 +43,31 @@ namespace Rootborn.World
         {
             sprite = default;
             if (finish == null || string.IsNullOrEmpty(piece)) return false;
-            return Find(finish.Sheet, finish.Art + "/" + piece, out sprite);
+            return Cached(finish.Sheet, finish.Art, piece, out sprite);
         }
 
         /// <summary>꾸밈과 무관한 조각(문지방, 문짝). 시트는 꾸밈의 <see cref="RoomFinishDefinition.Sheet"/>.</summary>
         public bool TryCommon(string sheet, string piece, out FinishPiece sprite)
         {
             sprite = default;
-            return !string.IsNullOrEmpty(piece) && Find(sheet, Common + "/" + piece, out sprite);
+            return !string.IsNullOrEmpty(piece) && Cached(sheet, Common, piece, out sprite);
+        }
+
+        // (시트, 그림 키, 조각) → 찾은 결과. 조각 이름(그림 키 + "/" + 조각)은 처음 한 번만 이어 붙인다 — 조합은 칸·부분마다 묻는다.
+        private readonly Dictionary<(string Sheet, string Art, string Piece), (bool Found, FinishPiece Sprite)> _found =
+            new Dictionary<(string, string, string), (bool, FinishPiece)>();
+
+        private bool Cached(string sheet, string art, string piece, out FinishPiece sprite)
+        {
+            var key = (sheet ?? string.Empty, art ?? string.Empty, piece);
+            if (_found.TryGetValue(key, out var hit))
+            {
+                sprite = hit.Sprite;
+                return hit.Found;
+            }
+            bool found = Find(sheet, key.Item2 + "/" + piece, out sprite); // 깨진 좌표표는 여기서 던지고 기억하지 않는다(Table과 같다)
+            _found[key] = (found, sprite);
+            return found;
         }
 
         /// <summary>띠 색 줄(예: wall.top.cream)의 네 색.</summary>

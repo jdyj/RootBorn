@@ -129,8 +129,10 @@ namespace Rootborn.Host.World
             _repoRoot = options.RepoRoot;
             FurnitureArt = new FurnitureArt(Path.Combine(options.RepoRoot, "data"));
             _composedSheets = new ComposedRoomTextures(device, options.RepoRoot);
-            _compositor = new RoomTileCompositor(_composedSheets.Sheet, new RoomFinishArt(Path.Combine(options.RepoRoot, "data")));
+            var finishArt = new RoomFinishArt(Path.Combine(options.RepoRoot, "data"));
+            _compositor = new RoomTileCompositor(_composedSheets.Sheet, finishArt);
             _finishOf = id => Content.Definitions.TryGet(id ?? string.Empty, out RoomFinishDefinition d) ? d : null;
+            PreloadFinishSheets(finishArt);
             Rooms = new RoomAwareMaps(Maps, _interactionData);
             _stage = NpcStage.Create(_schedules, _npcArt.Order, _interactionData, Maps.Catalog, Rooms, Content.Definitions.TimeRules);
             _houseBlocking = new HouseFurnitureBlocking(Rooms.RoomOf, _interactionData.PlacementMaps(Maps.Catalog), FurnitureBlockingChanged);
@@ -321,8 +323,14 @@ namespace Rootborn.Host.World
         /// <summary>그림 캐시에 든 PNG 수(맵·캐릭터·NPC·가구 그림).</summary>
         public int CachedTextureCount => _textures.Count;
 
-        /// <summary>그림 캐시가 잡은 GPU 메모리 추정(가로 × 세로 × 4바이트의 합).</summary>
+        /// <summary>그림 캐시(파일에서 읽은 PNG)가 잡은 GPU 메모리 추정(가로 × 세로 × 4바이트의 합).</summary>
         public long CachedTextureBytes { get; private set; }
+
+        /// <summary>한도와 견주는 GPU 메모리: 그림 캐시 + 조합 텍스처 + 미리 보기 텍스처. 조합 텍스처는 풀지 않지만(지금 맵이 쓴다) 한도 계산에는 든다.</summary>
+        public long BudgetedTextureBytes => CachedTextureBytes + ComposedTextureBytes + PreviewTextureBytes;
+
+        /// <summary>한도를 넘었다(다음 맵에 들어갈 때 이번 맵이 쓰지 않는 그림을 푼다).</summary>
+        public bool OverTextureBudget => BudgetedTextureBytes > TextureBudgetBytes;
 
         private int _mapTurn;
         private string _drawnMap;
@@ -333,12 +341,12 @@ namespace Rootborn.Host.World
         private void TrimTextures()
         {
             _trimPending = false;
-            if (CachedTextureBytes <= TextureBudgetBytes) return;
+            if (!OverTextureBudget) return;
             _trimOrder.Clear();
             foreach (KeyValuePair<string, CachedTexture> pair in _textures)
                 if (pair.Value.LastUsed < _mapTurn) _trimOrder.Add((pair.Value.LastUsed, pair.Key));
             _trimOrder.Sort((a, b) => a.lastUsed != b.lastUsed ? a.lastUsed.CompareTo(b.lastUsed) : string.CompareOrdinal(a.path, b.path));
-            for (int i = 0; i < _trimOrder.Count && CachedTextureBytes > TextureBudgetBytes; i++)
+            for (int i = 0; i < _trimOrder.Count && OverTextureBudget; i++)
             {
                 CachedTexture cached = _textures[_trimOrder[i].path];
                 _textures.Remove(_trimOrder[i].path);
@@ -509,6 +517,22 @@ namespace Rootborn.Host.World
         public Texture2D ComposedTexture => _composedTexture;
         /// <summary>마지막으로 그린 화면에서 캐릭터 아래 층(Under + 조합 칸)으로 그린 그림 수(진단용).</summary>
         public int UnderSpritesDrawn { get; private set; }
+
+        /// <summary>
+        /// 시작할 때 데이터의 모든 꾸밈 시트(서로 다른 RoomFinishDefinition.Sheet)의 픽셀과 좌표표를 미리 읽는다 — 짓는 집에 처음 들어설 때
+        /// PNG·JSON 읽기가 그 프레임에 몰리지 않게(앞 계획 측정: 첫 입장 23.8ms, 결정 22). 없는 시트·깨진 좌표표는 여기서 알리지 않는다(조합이 문제로 알린다).
+        /// </summary>
+        private void PreloadFinishSheets(RoomFinishArt art)
+        {
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            foreach (RoomFinishDefinition finish in Content.Definitions.All<RoomFinishDefinition>())
+            {
+                if (string.IsNullOrEmpty(finish.Sheet) || !seen.Add(finish.Sheet)) continue;
+                _composedSheets.Sheet(finish.Sheet);
+                try { art.BandOf(finish.Sheet); }
+                catch (Exception e) when (RoomTileCompositor.IsAtlasReadError(e)) { }
+            }
+        }
 
         /// <summary>
         /// 그 맵의 조합이 낡았다 — 그 맵을 다음에 그릴 때 집 전체를 다시 조합한다(꾸밈·구조가 바뀌었을 때 부른다). 텍스처는 들고 있다가 묶음 크기가 같으면
