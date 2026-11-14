@@ -192,12 +192,14 @@ namespace Rootborn.Screens.Furniture
             topic == ChangeTopics.HouseBuild || topic == ChangeTopics.Inventory || topic == ChangeTopics.Furniture || topic == ChangeTopics.Career
             || topic == ChangeTopics.Map || topic == ChangeTopics.Workspace || topic == GameChangeTopics.Room || topic == ChangeTopics.All;
 
-        // 기다리던 누름이 끝났다(방이 답했다): 거절이면 거절 문구, 허락받아 됐거나 다시 한 적용이 되지 않았으면(미리 보기가 이유를 보인다) 지운다.
+        // 기다리던 누름이 끝났다(방이 답했다): 방이 꾸밈 칸 잡기를 거절했으면 그 이유(GameSession), 방 지갑이 거절했으면 거절 문구,
+        // 허락받아 됐거나 다시 한 적용이 되지 않았으면(미리 보기가 이유를 보인다) 지운다.
         private void FinishWaitedPress()
         {
             var session = Session;
             if (!ReferenceEquals(_roomKey, RoomMoneyText.WaitingKey) || session == null || session.WaitingForRoom || !session.LastRoomCommandApplied.HasValue) return;
-            _roomKey = session.LastRoomCommandApplied == false && session.LastRoomRefusal ? RoomMoneyText.RefusedKey : null;
+            _roomKey = session.LastRoomCommandApplied != false ? null
+                : session.LastHouseFinishRefusal ?? (session.LastRoomRefusal ? RoomMoneyText.RefusedKey : null);
             ApplyInfo();
         }
 

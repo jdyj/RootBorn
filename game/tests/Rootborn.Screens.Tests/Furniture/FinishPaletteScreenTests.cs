@@ -690,6 +690,209 @@ namespace Rootborn.Screens.Tests.Furniture
             KnownMissingKeys.AssertOnlyKnownMissing(f.T.Text, new[] { RoomMoneyText.WaitingKey, RoomMoneyText.RefusedKey });
         }
 
+        // ---------- 같이 쓰는 집(방이 꾸밈도 같이 쓴다) ----------
+
+        /// <summary>시험용 방(서버가 할 일을 테스트가 손으로): 집과 꾸밈 조각을 같이 쓰고, 요청을 한 번 반영해 답을 먼저, 바뀐 상태를 모두에게 보낸다.</summary>
+        private sealed class HouseRoomFake
+        {
+            private readonly Rootborn.Core.Room.RoomPieceSet _pieces;
+            private readonly List<(string Player, Rootborn.Core.Room.RoomShares Shares)> _players = new List<(string, Rootborn.Core.Room.RoomShares)>();
+            private int _ids;
+
+            public HouseRoomFake()
+            {
+                var rules = new Rootborn.Core.Room.RoomHouseRules(TestSession.Definitions.All<Rootborn.Core.Placement.FurnitureDefinition>(),
+                    s => s == "house" ? new FurnitureRoom(House.World).Grid : null,
+                    buildFrameFor: s => s == "house" ? Frame() : null, finishes: TestSession.Definitions.All<RoomFinishDefinition>());
+                _pieces = new Rootborn.Core.Room.RoomPieceSet(new Rootborn.Core.Room.RoomShareSettings(new[] { Rootborn.Core.Room.RoomHouse.PieceName }),
+                    Rootborn.Core.Room.RoomPieceCatalog.CreateDefault(rules));
+            }
+
+            public Rootborn.Core.Room.RoomShares Join(string player)
+            {
+                var shares = new Rootborn.Core.Room.RoomShares(_pieces.Settings, Rootborn.Core.Room.RoomPieceCatalog.CreateDefault(), () => player + "-r" + (++_ids));
+                shares.RoomPlayerId = player;
+                foreach (var piece in _pieces.Pieces) shares.Receive(piece.State());
+                _players.Add((player, shares));
+                return shares;
+            }
+
+            public void Deliver(Rootborn.Core.Room.RoomShares from)
+            {
+                string player = _players.First(p => p.Shares == from).Player;
+                var answers = new List<Rootborn.Core.Room.RoomAnswer>();
+                var changed = new List<Rootborn.Core.Room.IRoomPiece>();
+                _pieces.Apply(player, from.Outbox.Requests.Select(r => r.Copy()).ToList(), 1, answers, changed);
+                foreach (var a in answers) from.Receive(a);
+                foreach (var piece in changed)
+                    foreach (var p in _players) p.Shares.Receive(piece.State());
+            }
+        }
+
+        // 같은 방의 다른 사람(게임 한 판만, 화면 없음 — 준비 단계: 그 사람의 꾸밈 명령과 방 전달).
+        private sealed class Friend : IDisposable
+        {
+            private readonly string _saves = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "rootborn-screens-" + Guid.NewGuid().ToString("N"));
+            public readonly Rootborn.Core.Room.RoomShares Shares;
+            public readonly Rootborn.Game.GameSession Session;
+
+            public Friend(HouseRoomFake room)
+            {
+                Shares = room.Join("friend");
+                System.IO.Directory.CreateDirectory(_saves);
+                var d = TestSession.Definitions;
+                Session = Rootborn.Game.GameSession.Start(d, Rootborn.Game.GameStartSettings.FromDefinitions(d), new Rootborn.Data.Save.FileSaveStore(_saves), "slot-friend", "friend", shares: Shares);
+                Session.EnterHouse(new FurnitureRoom(House.World).Grid, "house");
+                Session.EnterHouseBuild(Frame());
+                Session.Inventory.Add(Session.Item(Allowance), 100000);
+            }
+
+            public void Dispose()
+            {
+                try { System.IO.Directory.Delete(_saves, true); } catch (System.IO.IOException) { }
+            }
+        }
+
+        private static int FinishRequests(Rootborn.Core.Room.RoomShares shares) =>
+            shares.Outbox.Requests.Count(r => r.Piece == Rootborn.Core.Room.RoomHouseBuild.PieceName && r.Kind == Rootborn.Core.Room.RoomHouseBuild.Finish);
+
+        private static string ReasonText(Fixture f) => f.Text(FurniturePlacementScreen.FinishReasonId);
+
+        [Test]
+        public void SharedHouse_PickAndClick_WaitsForTheRoom_ThenShowsTheNewFinish()
+        {
+            var room = new HouseRoomFake();
+            var shares = room.Join("guest");
+            using var f = new Fixture(shares: shares);
+            Assert.That(f.T.Session.SharesHouseBuild, Is.True, "준비: 같이 쓰는 집");
+            f.Decorate();
+            f.T.Click(FurniturePlacementScreen.FinishTabFloorId);
+            RoomFinishDefinition floor = FreeNonDefault(f, RoomFinishSlots.Floor);
+            f.PickCard(floor.Id);
+            var (_, a, _) = f.FirstRoom();
+            f.GiveMoney(100000);
+            int money = f.Money;
+
+            f.Hover(a);
+            Assert.That(f.Screen.FinishPreview.CanApply, Is.True, f.Screen.FinishPreview.ReasonKey);
+            int cells = f.Screen.FinishPreview.ChangedCells.Count;
+            f.ClickCell(a);
+            Assert.That(f.Screen.FinishLastAction, Is.EqualTo("waiting"));
+            Assert.That(ReasonText(f), Is.EqualTo(f.T.Text.Get(RoomMoneyText.WaitingKey)), "방의 허락을 기다린다");
+            Assert.That(f.T.Session.HouseFloorAt(a), Is.EqualTo(f.Frame.DefaultFloor), "허락 전에는 바뀌지 않는다");
+
+            room.Deliver(shares); // 칸을 잡는다 → 낸다
+            room.Deliver(shares); // 쓰기
+            Assert.That(f.T.Session.WaitingForRoom, Is.False);
+            Assert.That(f.T.Session.HouseFloorAt(a), Is.EqualTo(floor.Id), "방이 알린 꾸밈으로 바뀐다");
+            Assert.That(f.Money, Is.EqualTo(money - PerCell(floor) * cells));
+            f.Hover(a);
+            Assert.That(ReasonText(f), Is.EqualTo(f.T.Text.Get(HouseFinishReasons.NothingToChange)), "기다림 문구가 사라지고 지금 미리 보기의 이유");
+            f.ClickCell(a);
+            Assert.That(f.Screen.FinishLastAction, Is.EqualTo("refused"));
+            Assert.That(FinishRequests(shares), Is.Zero, "다시 눌러도 요청이 가지 않는다(바뀌는 칸이 없다)");
+        }
+
+        [Test]
+        public void BandTab_SharedHouse_WaitsThenApplies()
+        {
+            var room = new HouseRoomFake();
+            var shares = room.Join("guest");
+            using var f = new Fixture(shares: shares);
+            f.Decorate();
+            f.T.Click(FurniturePlacementScreen.FinishTabBandId);
+            var bands = f.T.Session.HouseFinishOptions(RoomFinishSlots.Band);
+            int other = bands.ToList().FindIndex(b => b.Art != f.T.Session.HouseBandColors() && b.UnlockToken.Length == 0);
+            Assert.That(other, Is.GreaterThanOrEqualTo(0));
+
+            ClickBandRow(f, other);
+            Assert.That(f.Screen.FinishLastAction, Is.EqualTo("waiting"));
+            Assert.That(ReasonText(f), Is.EqualTo(f.T.Text.Get(RoomMoneyText.WaitingKey)));
+            Assert.That(f.T.Session.HouseBandColors(), Is.Not.EqualTo(bands[other].Art), "허락 전에는 바뀌지 않는다");
+
+            room.Deliver(shares);
+            room.Deliver(shares);
+            Assert.That(f.T.Session.HouseBandColors(), Is.EqualTo(bands[other].Art));
+            Assert.That(BandList(f).SelectedIndex, Is.EqualTo(other), "방이 알린 색 줄이 지금 색으로 보인다");
+            Assert.That(ReasonText(f), Is.Empty, "기다림 문구가 사라진다");
+        }
+
+        [Test]
+        public void SharedHouse_RoomRefuses_ShowsTheRoomRefusedReason()
+        {
+            var room = new HouseRoomFake();
+            var shares = room.Join("guest");
+            using var f = new Fixture(shares: shares);
+            using var friend = new Friend(room);
+            f.Decorate();
+            f.T.Click(FurniturePlacementScreen.FinishTabFloorId);
+            RoomFinishDefinition floor = FreeNonDefault(f, RoomFinishSlots.Floor);
+            f.PickCard(floor.Id);
+            var (_, a, _) = f.FirstRoom();
+            f.GiveMoney(100000);
+            int money = f.Money;
+
+            f.ClickCell(a);
+            Assert.That(f.Screen.FinishLastAction, Is.EqualTo("waiting"));
+            Assert.That(friend.Session.ApplyHouseFinish(floor.Id, HouseFinishTools.Room, a), Is.False);
+            room.Deliver(friend.Shares); // 다른 사람이 먼저 칸을 잡는다
+            room.Deliver(shares);        // 내 요청은 잡힌 칸이라 거절
+
+            Assert.That(f.T.Session.WaitingForRoom, Is.False);
+            Assert.That(ReasonText(f), Is.EqualTo(f.T.Text.Get(HouseFinishReasons.RoomRefused)), "방이 거절한 이유를 보인다");
+            Assert.That(f.Money, Is.EqualTo(money), "거절되면 돈이 나가지 않는다");
+            f.ClickCell(a); // 다시 누르면 지난 거절 문구를 지우고 새로 묻는다
+            Assert.That(ReasonText(f), Is.Not.EqualTo(f.T.Text.Get(HouseFinishReasons.RoomRefused)));
+        }
+
+        [Test]
+        public void SharedHouse_SomeoneElsesChange_RefreshesThePreview()
+        {
+            var room = new HouseRoomFake();
+            var shares = room.Join("guest");
+            using var f = new Fixture(shares: shares);
+            using var friend = new Friend(room);
+            f.Decorate();
+            f.T.Click(FurniturePlacementScreen.FinishTabFloorId);
+            RoomFinishDefinition floor = FreeNonDefault(f, RoomFinishSlots.Floor);
+            f.PickCard(floor.Id);
+            var (_, a, _) = f.FirstRoom();
+            f.GiveMoney(100000);
+
+            f.Hover(a);
+            int cells = f.Screen.FinishPreview.ChangedCells.Count;
+            int queries = f.Screen.FinishPreviewQueries, shown = f.View.Shown.Count;
+            Assert.That(cells, Is.GreaterThan(1));
+
+            Assert.That(friend.Session.ApplyHouseFinish(floor.Id, HouseFinishTools.Brush, a), Is.False);
+            room.Deliver(friend.Shares); // 잡기 → 낸다
+            room.Deliver(friend.Shares); // 쓰기: 방이 알려 내 쪽에도 온다
+            f.Hover(a); // 포인터는 그대로 — 남이 바꿨으니 한 번 다시 묻는다
+            Assert.That(f.Screen.FinishPreviewQueries, Is.EqualTo(queries + 1), "남이 꾸미면 내 미리 보기를 다시 낸다");
+            Assert.That(f.Screen.FinishPreview.ChangedCells.Count, Is.EqualTo(cells - 1), "남이 바꾼 칸은 더 바뀌지 않는다");
+            Assert.That(f.View.Shown.Count, Is.EqualTo(shown + 1), "월드에 새 미리 보기가 간다");
+        }
+
+        [Test]
+        public void SharedHouse_WhileWaiting_ClicksAskNothingMore()
+        {
+            var room = new HouseRoomFake();
+            var shares = room.Join("guest");
+            using var f = new Fixture(shares: shares);
+            f.Decorate();
+            f.T.Click(FurniturePlacementScreen.FinishTabFloorId);
+            RoomFinishDefinition floor = FreeNonDefault(f, RoomFinishSlots.Floor);
+            f.PickCard(floor.Id);
+            var (_, a, b) = f.FirstRoom();
+            f.GiveMoney(100000);
+
+            f.ClickCell(a);
+            f.ClickCell(b);
+            f.ClickCell(a);
+            Assert.That(FinishRequests(shares), Is.EqualTo(1), "기다리는 동안 다시 눌러도 꾸밈 요청은 하나");
+            Assert.That(ReasonText(f), Is.EqualTo(f.T.Text.Get(RoomMoneyText.WaitingKey)));
+        }
+
         // ---------- 띠 색 탭 ----------
 
         private static UiScrollList BandList(Fixture f) => (UiScrollList)f.T.Node(FurniturePlacementScreen.FinishBandListId);
