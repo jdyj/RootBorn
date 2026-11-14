@@ -548,6 +548,13 @@ namespace Rootborn.Host.Tests
             Assert.That(screen.FinishPreview?.ReasonKey, Is.EqualTo(HouseFinishReasons.Locked));
             Assert.That(world.PreviewTextureBytes, Is.EqualTo(0), "거절된 미리 보기는 월드 그림을 덮지 않는다");
             player.Screenshot("house-decorate-20-english-locked");
+
+            // 셋째 탭(띠 색)의 영어 글이 탭 폭에 들어가는지 직접 본다.
+            player.PressButton(FurniturePlacementScreen.FinishTabBandId);
+            Assert.That(screen.Finishes.Slot, Is.EqualTo(RoomFinishSlots.Band));
+            player.MovePointer(960, 20);
+            player.Frames(2);
+            player.Screenshot("house-decorate-33-band-tab-en");
             Assert.That(player.Game.Renderer.MissingImages, Is.Empty);
         }
 
