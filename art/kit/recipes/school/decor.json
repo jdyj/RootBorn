@@ -1,0 +1,8 @@
+[
+  {"id": "school.potted-plant", "kind": "furniture", "part": "furniture.prop", "cells": [1, 1], "art_cells": [1, 1],
+   "game": {"replaces": "school.potted.plant"},
+   "body": "decor.potted-plant"},
+  {"id": "school.waste-basket", "kind": "furniture", "part": "furniture.prop", "cells": [1, 1], "art_cells": [1, 1],
+   "game": {"replaces": "school.waste.basket"},
+   "body": "decor.waste-basket"}
+]

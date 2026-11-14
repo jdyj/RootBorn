@@ -516,3 +516,35 @@ def _top_items_key(spec: dict, ctx, key: str):
     if not ok:
         raise RecipeError(f"{rid(spec)}: {key}는 {{part, x(정수 px)}} 목록이어야 한다")
     return [(part(spec, ctx, t["part"]), t["part"], t["x"]) for t in v]
+
+# ---------- 점 부품 가구 ----------
+
+@register("furniture.prop")
+def prop_furniture(spec: dict, ctx) -> Canvas:
+    """점 부품 하나(body)를 그대로 세운 가구(화분, 휴지통, 상자처럼 규칙보다 손 모양이 나은 것).
+    items: {part, x, y} 목록(선택) — 몸 그림 좌표(외곽선 전)의 왼쪽 위에 얹는다. y가 음수면 몸 위로 솟는다.
+    몸 폭 밖이나 몸 밑으로 나가면 slot-clipped. 색 한도는 부품 한도(10)를 부품마다 따로 받는다."""
+    body_id = spec.get("body")
+    if not isinstance(body_id, str) or not body_id:
+        raise RecipeError(f"{rid(spec)}: body는 점 부품 id여야 한다")
+    body = part(spec, ctx, body_id)
+    raw = spec.get("items", [])
+    ok = isinstance(raw, list) and all(
+        isinstance(t, dict) and isinstance(t.get("part"), str)
+        and all(isinstance(t.get(k), int) and not isinstance(t.get(k), bool) for k in ("x", "y")) for t in raw)
+    if not ok:
+        raise RecipeError(f"{rid(spec)}: items는 {{part, x, y(정수 px)}} 목록이어야 한다")
+    items = [(part(spec, ctx, t["part"]), t["part"], t["x"], t["y"]) for t in raw]
+    bw, bh = body.w - 2, body.h - 2                       # 부품은 사방 1px 외곽선 자리를 갖고 온다
+    lc = local(ctx)
+    for p, pid, x, y in items:
+        if x < 0 or x + p.w - 2 > bw or y + p.h - 2 > bh:
+            report(lc.problems, "slot-clipped", f"얹은 부품이 몸 밖으로 나간다({pid} x={x}, y={y})")
+    off = -min([0] + [y for _, _, _, y in items])
+    cv = Canvas(bw, bh + off)
+    cv.paste(body, -1, off - 1)
+    for p, _, x, y in items:
+        cv.paste(p, x - 1, y + off - 1)
+    spec["_layout"] = {"size": [bw, bh], "raised": off}
+    merge(spec, ctx, lc)
+    return cv

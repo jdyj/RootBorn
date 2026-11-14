@@ -142,6 +142,7 @@ if/switch로 종류를 닫지 않는다.
 | `furniture.drawers` | `art_cells` `[1~3, 2]` | 낮은 서랍장. 한 칸 폭마다 서랍 한 줄기. `rows`(줄기마다 서랍 2~5, 기본 3), `material` 줄(5, 기본 `wood.warm`), `handle` 줄(3, 기본 `metal`: 4x2 손잡이). `_layout`: `top_face`, `front`, `drawers`(서랍 사각형 목록) |
 | `furniture.lectern` | `art_cells` `[1, 2]` | 강의대(서서 쓰는 받침대): 받침판 앞 모서리는 바닥에서 38px(책상 25보다 높다), 가운데 기둥, 받침. `material` 줄(5), `top_items`: `{part, x}` 목록(받침판 뒤쪽, 밖이면 `slot-clipped`). `_layout`: `board`, `board_height`, `post`, `base` |
 | `prop.menu-board`, `prop.a-board` | 없음(고정 그림, 글자 없음) | |
+| `furniture.prop` | `body`: 점 부품 id(그 부품을 그대로 세운 가구 — 화분·휴지통·상자처럼 규칙보다 손 모양이 나은 것) | `items`: `{part, x, y}` 목록(몸 그림 좌표의 왼쪽 위에 얹는다. y가 음수면 몸 위로 솟는다. 몸 폭 밖·몸 밑이면 `slot-clipped`). 몸통 색 수는 0으로 세고 부품마다 부품 한도(10)를 받는다 |
 | `prop.rug` | `size`: `[w, h]`px, `colors`: `[몸 줄(단계 0 테두리, 1 바탕), 바느질 줄]`, `stitch_step`: 바느질 줄의 단계 | |
 | `building.shop` | `pixels`(높이는 192 이상: 지붕 104 + 벽 82 + 외곽선), `roof`: `{type, items}`, `wall`: `{material}`(벽 줄), `door`: `{at_x, color, step}`(문 줄, 계단 줄), `window`: `{at_x, width, slots}`(slots는 창살 양쪽 `[[부품 id], [부품 id]]`), `awning`: `{colors}`(줄 2개), `sign`: `{at_x, icons}`(부품 id 목록, 글자 없음) | `roof.items`: `{part, at: [x, y]}` 목록, `lamp`: `{at_x, part}`(벽등. `part` 기본 `prop.wall-lamp`. `lamp`를 적지 않으면 벽등도 둘레 빛도 없다), `trim` 줄(4, 기본 `trim`: 창틀·처마 밑 띠·간판 판), `plinth` 줄(2, 기본 `plinth`: 벽·창 받침), `frame` 줄(5, 기본 `wood.warm`: 문틀·창틀·간판 틀·받침 줄) |
 

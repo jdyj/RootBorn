@@ -419,8 +419,8 @@
           "y": 0
         },
         "tile": {
-          "sprite": "Assets/Art/CareerFurniture/Comfy31/Comfy31_kitchen_sink_front_2x1.png",
-          "name": "Comfy31_kitchen_sink_front_2x1"
+          "sprite": "art/props/kitchen/kitchen.sink-front.png",
+          "name": "kitchen.sink-front"
         }
       }
     ],
@@ -63115,8 +63115,8 @@
           "y": 0
         },
         "tile": {
-          "sprite": "Assets/Art/SchoolPixels/Furniture48/Plant/School_potted_plant_1x1.png",
-          "name": "School_potted_plant_1x1"
+          "sprite": "art/props/school/school.potted-plant.png",
+          "name": "school.potted-plant"
         }
       }
     ],
@@ -63185,8 +63185,8 @@
           "y": 0
         },
         "tile": {
-          "sprite": "Assets/Art/SchoolPixels/Furniture48/Decor/School_waste_basket_1x1.png",
-          "name": "School_waste_basket_1x1"
+          "sprite": "art/props/school/school.waste-basket.png",
+          "name": "school.waste-basket"
         }
       }
     ],
@@ -63300,8 +63300,8 @@
           "y": 0
         },
         "tile": {
-          "sprite": "Assets/Art/StudentLifePixels/Furniture48/StudentLife_snack_delivery_crate_1x1.png",
-          "name": "StudentLife_snack_delivery_crate_1x1"
+          "sprite": "art/props/home/home.snack-crate.png",
+          "name": "home.snack-crate"
         }
       }
     ],
@@ -63333,8 +63333,8 @@
           "y": 0
         },
         "tile": {
-          "sprite": "Assets/Art/StudentLifePixels/Furniture48/StudentLife_toy_kitchen_2x1.png",
-          "name": "StudentLife_toy_kitchen_2x1"
+          "sprite": "art/props/home/home.toy-kitchen.png",
+          "name": "home.toy-kitchen"
         }
       }
     ],
