@@ -60,7 +60,7 @@ bash Scripts/ci/run-all.sh                 # 자체 시험 + 검사 + dotnet 테
 | STATUS-002 | 하루 시계의 날·시각이 결정적 | Core `DayClockTests` |
 | WORKSPACE-001 | 일터를 꾸미면 시설 일의 보상이 늘고, 꾸미지 않아도 손해가 없다 | Game `WorkspaceTests`, Host `WorkspaceHostTests` |
 | WORKSPACE-002 | 일터 템플릿은 미리 확인하고 한 번만 적용, 안 되면 무변경 | Game `WorkspaceTests`, Screens `WorkspaceTemplateScreenTests` |
-| SKILL-001 | 가구를 놓으면 인테리어 기술이, 요리 일을 하면 요리 기술이 자란다(하루 한도) | Game `WorkspaceTests` |
+| SKILL-001 | 가구를 놓거나 방을 꾸미면 인테리어 기술이(같은 하루 한도), 요리 일을 하면 요리 기술이 자란다(하루 한도) | Game `WorkspaceTests`, `HouseFinishTests` |
 | MAIN_E2E_000~011 | 메인 체인을 실행부터 끝까지 실제 입력으로(이어 하기 포함) | Host `MainChainHostTests`, 화면 없이는 Game `MainChainTests`·`MainChainEndTests` |
 | NPC-001 | NPC가 일과표대로 다음 자리까지 걸어 도착 | Core `NpcDayPlanTests`, World `NpcRouteContractTests`, Simulation `NpcWalkingTests`, Host `NpcWalkHostTests` |
 | NPC-002 | 자리에 없는 NPC는 만날 수 없다(걷는 중에는 말을 건다) | World `NpcStageTests`, Core `NpcDayPlanTests`, Host `NpcWalkHostTests` |

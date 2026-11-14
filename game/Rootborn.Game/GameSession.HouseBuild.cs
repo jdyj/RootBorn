@@ -140,8 +140,9 @@ namespace Rootborn.Game
         /// 안 되면 false이고 아무것도 바뀌지 않는다. 같은 요청을 다시 하면 바뀌는 칸이 없어 false(돈이 들지 않는다). 비용이 빈 꾸밈도 같은 길이다.
         /// 알림: <see cref="GameChangeTopics.HouseBuild"/>, <see cref="GameChangeTopics.Inventory"/>.
         /// </summary>
+        /// <remarks>적용되면 가구 놓기와 같은 하루 한도로 인테리어 기술이 자란다(<see cref="GrowByPlacing"/>, 자랐으면 Workspace·Student도 알린다).</remarks>
         public bool ApplyHouseFinish(string finishId, string tool, CellPos pointer)
-            => Shared(() => CommitFinish(PreviewHouseFinish(finishId, tool, pointer)), done => done);
+            => Shared(() => CommitFinish(PreviewHouseFinish(finishId, tool, pointer), true), done => done);
 
         /// <summary>띠 색 한 번의 미리 보기(바꾸지 않는다). 거절 이유는 <see cref="PreviewHouseFinish"/>와 같다(집 밖, 같이 쓰는 집).</summary>
         public HouseFinishPreview PreviewHouseBand(string finishId)
@@ -156,10 +157,11 @@ namespace Rootborn.Game
         /// 안 되면 false·무변경. 알림: <see cref="GameChangeTopics.HouseBuild"/>, <see cref="GameChangeTopics.Inventory"/>.
         /// </summary>
         public bool ApplyHouseBand(string finishId)
-            => Shared(() => CommitFinish(PreviewHouseBand(finishId)), done => done);
+            => Shared(() => CommitFinish(PreviewHouseBand(finishId), false), done => done);
 
         // 미리 보기 하나를 돈 빼기와 함께 한 바꾸기로 적용하고 한 저장 묶음으로 쓴다(칸 꾸밈·띠 색이 같이 쓴다).
-        private bool CommitFinish(HouseFinishPreview preview)
+        // grows: 적용이 실제로 된 뒤에만 꾸미며 배우기를 센다(칸 꾸밈만 — 띠 색은 칸이 바뀌지 않는다). 기술도 같은 저장 묶음에 든다.
+        private bool CommitFinish(HouseFinishPreview preview, bool grows)
         {
             if (!preview.CanApply || !TryGrants(preview.Cost, out var costs)) return false;
             bool done;
@@ -177,7 +179,9 @@ namespace Rootborn.Game
             {
                 done = false;
             }
-            return Saved(done, done, null, GameChangeTopics.HouseBuild, GameChangeTopics.Inventory);
+            bool grown = done && grows && GrowByPlacing(House.SurfaceId);
+            return Saved(done, done, grown ? new[] { GameChangeTopics.Student } : null, GameChangeTopics.HouseBuild, GameChangeTopics.Inventory,
+                grown ? GameChangeTopics.Workspace : null);
         }
 
         /// <summary>시험용 이음매: 꾸밈 바꾸기 커밋 안, 적용 바로 앞에서 부른다(Game 테스트가 적용 거절을 일부러 만든다). 게임은 쓰지 않는다.</summary>

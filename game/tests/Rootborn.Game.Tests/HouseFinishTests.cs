@@ -533,6 +533,108 @@ namespace Rootborn.Game.Tests
             Assert.That(game.HouseBandColors(), Is.EqualTo(band.Art), "기록은 들고 있다");
         }
 
+        // ---------- 꾸미며 배우기(SKILL-001): 칸 꾸밈은 가구 놓기와 같은 하루 한도로 인테리어를 올린다 ----------
+
+        private const string FreeDesk = "growth31.assembly.desk";
+
+        private static Rootborn.Core.Workspaces.PlacementSkillGrowth HouseGrowth()
+            => TestWorld.Definitions.All<Rootborn.Core.Workspaces.PlacementSkillGrowth>().First(g => g.SurfaceId == HouseRoom.SurfaceId);
+
+        // 왼쪽 위 방 안의 서로 다른 바닥 칸(붓 한 번에 한 칸).
+        private static CellPos RoomCell(int i) => new CellPos(TopLeftRoom.X + i, TopLeftRoom.Y);
+
+        private static bool BrushFloor(GameSession game, int i)
+            => game.ApplyHouseFinish(FreeNonDefault(RoomFinishSlots.Floor).Id, HouseFinishTools.Brush, RoomCell(i));
+
+        [Test]
+        public void Finish_GrowsInterior()
+        {
+            using var saves = new TempSaves();
+            var game = InHouse(saves.Store);
+            var rule = HouseGrowth();
+            SetMoney(game, 10_000);
+            int before = game.Student.GetSkillValue(rule.SkillId);
+            var topics = new List<string>();
+            game.Changed += topics.Add;
+
+            Assert.That(BrushFloor(game, 0), Is.True);
+            Assert.That(game.Student.GetSkillValue(rule.SkillId), Is.EqualTo(before + rule.Amount), "꾸미면 인테리어가 오른다");
+            Assert.That(topics, Does.Contain(GameChangeTopics.Workspace).And.Contain(GameChangeTopics.Student));
+            Assert.That(TestWorld.Start(saves.Store).Student.GetSkillValue(rule.SkillId), Is.EqualTo(before + rule.Amount), "같은 저장 묶음으로 저장된다");
+        }
+
+        [Test]
+        public void FurnitureAndFinish_ShareTheDailyLimit()
+        {
+            using var saves = new TempSaves();
+            var game = InHouse(saves.Store);
+            var rule = HouseGrowth();
+            Assert.That(rule.DailyLimit, Is.EqualTo(3), "전제: 데이터의 하루 한도 3(가구 둘 + 꾸밈 둘 = 4번 중 3번만)");
+            SetMoney(game, 10_000);
+            int before = game.Student.GetSkillValue(rule.SkillId);
+
+            for (int i = 0; i < 2; i++)
+                Assert.That(game.PlaceFurniture(FreeDesk, HouseRoom.FirstFreeAnchor(game, FreeDesk), Rootborn.Core.Placement.FurniturePlacementDirection.North), Is.True);
+            Assert.That(BrushFloor(game, 0), Is.True);
+            Assert.That(BrushFloor(game, 1), Is.True);
+
+            Assert.That(game.Student.GetSkillValue(rule.SkillId), Is.EqualTo(before + rule.Amount * rule.DailyLimit), "같은 하루 셈");
+        }
+
+        [Test]
+        public void NothingToChange_DoesNotGrow()
+        {
+            using var saves = new TempSaves();
+            var game = InHouse(saves.Store);
+            var rule = HouseGrowth();
+            SetMoney(game, 10_000);
+            int before = game.Student.GetSkillValue(rule.SkillId);
+
+            Assert.That(game.ApplyHouseFinish(Frame.DefaultFloor, HouseFinishTools.Room, TopLeftRoom), Is.False, "바뀌는 칸이 없다");
+            Assert.That(BrushFloor(game, 0), Is.True);
+            Assert.That(BrushFloor(game, 0), Is.False, "같은 칸 같은 꾸밈은 바뀌지 않는다");
+            Assert.That(game.Student.GetSkillValue(rule.SkillId), Is.EqualTo(before + rule.Amount), "실제로 바뀐 한 번만");
+
+            // 커밋 안에서 적용이 거절돼 되돌려진 경우도 자라지 않는다.
+            var sameValues = new HouseBuildFrame(Frame.FrameId, Frame.Tiles, Frame.DefaultWall, Frame.DefaultFloor, Frame.DefaultBand);
+            game.HouseFinishCommitting = () => game.EnterHouseBuild(sameValues);
+            Assert.That(BrushFloor(game, 1), Is.False);
+            game.HouseFinishCommitting = null;
+            Assert.That(game.Student.GetSkillValue(rule.SkillId), Is.EqualTo(before + rule.Amount), "되돌려진 꾸밈은 세지 않는다");
+        }
+
+        [Test]
+        public void Band_DoesNotGrow()
+        {
+            using var saves = new TempSaves();
+            var game = InHouse(saves.Store);
+            var rule = HouseGrowth();
+            int before = game.Student.GetSkillValue(rule.SkillId);
+            var topics = new List<string>();
+            game.Changed += topics.Add;
+
+            Assert.That(game.ApplyHouseBand(OtherBand().Id), Is.True);
+            Assert.That(game.Student.GetSkillValue(rule.SkillId), Is.EqualTo(before), "띠 색은 칸을 바꾸지 않아 자라지 않는다");
+            Assert.That(topics, Does.Not.Contain(GameChangeTopics.Workspace));
+        }
+
+        [Test]
+        public void NextDay_GrowsAgain()
+        {
+            using var saves = new TempSaves();
+            var game = InHouse(saves.Store);
+            var rule = HouseGrowth();
+            SetMoney(game, 10_000);
+            int before = game.Student.GetSkillValue(rule.SkillId);
+            for (int i = 0; i < rule.DailyLimit + 1; i++) Assert.That(BrushFloor(game, i), Is.True);
+            Assert.That(game.Student.GetSkillValue(rule.SkillId), Is.EqualTo(before + rule.Amount * rule.DailyLimit), "하루 한도까지만");
+
+            Assert.That(game.EndDay().Ended, Is.True);
+            Assert.That(game.StartNextDay(), Is.True);
+            Assert.That(BrushFloor(game, rule.DailyLimit + 1), Is.True);
+            Assert.That(game.Student.GetSkillValue(rule.SkillId), Is.EqualTo(before + rule.Amount * (rule.DailyLimit + 1)), "다음 날 다시 센다");
+        }
+
         /// <summary>FileSaveStore를 감싸고 묶음 커밋에서 던지는 저장소(묶음을 버리므로 파일은 옛것 그대로).</summary>
         private sealed class FailingCommitStore : IBatchSaveStore
         {
