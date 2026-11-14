@@ -1,0 +1,13 @@
+[
+  {"id": "home.photo-board", "kind": "furniture", "part": "furniture.photo-board", "cells": [1, 1], "art_cells": [1, 2],
+   "game": {"replaces": "story.photo-board"},
+   "frame": "wood.school", "cork": "box.kraft",
+   "photos": [["glass.window.2", "leaf.1"], ["glass.window.1", "paver.1"],
+              ["yellow.1", "brick.2"], ["glass.window.1", "leaf.1"]]},
+  {"id": "home.training-tire", "kind": "furniture", "part": "furniture.tire", "cells": [1, 1], "art_cells": [1, 1],
+   "game": {"replaces": "activity31.training.tire"},
+   "rubber": "metal.dark"},
+  {"id": "home.first-aid-kit", "kind": "furniture", "part": "furniture.first-aid-kit", "cells": [1, 1], "art_cells": [1, 1],
+   "game": {"replaces": "growth31.first.aid.play.set"},
+   "case": "ceramic", "cross": "red"}
+]

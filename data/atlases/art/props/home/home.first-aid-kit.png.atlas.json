@@ -1,0 +1,19 @@
+{
+  "image": "art/props/home/home.first-aid-kit.png",
+  "width": 32,
+  "height": 32,
+  "pixelsPerUnit": 32,
+  "origin": "top-left",
+  "sprites": {
+    "home.first-aid-kit": {
+      "x": 0,
+      "y": 0,
+      "w": 32,
+      "h": 32,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  }
+}

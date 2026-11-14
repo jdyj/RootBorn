@@ -116,8 +116,8 @@
           "y": 0
         },
         "tile": {
-          "sprite": "Assets/Art/CareerFurniture/Activity31/Activity31_training_tire_1x1.png",
-          "name": "Activity31_training_tire_1x1"
+          "sprite": "art/props/home/home.training-tire.png",
+          "name": "home.training-tire"
         }
       }
     ],
@@ -456,8 +456,8 @@
           "y": 0
         },
         "tile": {
-          "sprite": "Assets/Art/CareerFurniture/Comfy31/Comfy31_school_lockers_2x1.png",
-          "name": "Comfy31_school_lockers_2x1"
+          "sprite": "art/props/school/school.locker-steel.png",
+          "name": "school.locker-steel"
         }
       }
     ],
@@ -612,8 +612,8 @@
           "y": 0
         },
         "tile": {
-          "sprite": "Assets/Art/CareerFurniture/Growth31/Growth31_first_aid_play_set_1x1.png",
-          "name": "Growth31_first_aid_play_set_1x1"
+          "sprite": "art/props/home/home.first-aid-kit.png",
+          "name": "home.first-aid-kit"
         }
       }
     ],
@@ -63078,8 +63078,8 @@
           "y": 0
         },
         "tile": {
-          "sprite": "Assets/Art/SchoolPixels/Furniture48/Storage/School_lockers_2x1.png",
-          "name": "School_lockers_2x1"
+          "sprite": "art/props/school/school.cubby-lockers.png",
+          "name": "school.cubby-lockers"
         }
       }
     ],
@@ -63218,8 +63218,8 @@
           "y": 0
         },
         "tile": {
-          "sprite": "Assets/Art/HousePixels/Story31/story_town_photo.png",
-          "name": "story_town_photo"
+          "sprite": "art/props/home/home.photo-board.png",
+          "name": "home.photo-board"
         }
       }
     ],

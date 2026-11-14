@@ -39,6 +39,7 @@
     "board.green": ["#273a2f", "#374e40"],
     "white": ["#f8f4ec"],
     "wood.school": ["#5a3c29", "#765236", "#946a46", "#b0835a", "#c99e72"],
+    "locker.steel": ["#3e4d5f", "#516378", "#657a91", "#8095ac", "#a2b4c6"],
     "wood.archive": ["#3e2420", "#57302a", "#723f30", "#8d5536", "#a86b42"],
     "wood.archive.back": ["#2b1b1f", "#3c2427"],
     "shelf.back.navy": ["#30344a", "#414860"],

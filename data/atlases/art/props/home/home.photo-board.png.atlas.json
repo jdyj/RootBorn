@@ -1,0 +1,19 @@
+{
+  "image": "art/props/home/home.photo-board.png",
+  "width": 32,
+  "height": 64,
+  "pixelsPerUnit": 32,
+  "origin": "top-left",
+  "sprites": {
+    "home.photo-board": {
+      "x": 0,
+      "y": 0,
+      "w": 32,
+      "h": 64,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      }
+    }
+  }
+}
