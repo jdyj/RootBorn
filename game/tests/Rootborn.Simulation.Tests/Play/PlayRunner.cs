@@ -313,6 +313,9 @@ namespace Rootborn.Simulation
                         if (_body.WalkNear(action.X, action.Y, cell * 1.25f))
                         {
                             var target = _body.Target;
+                            // 다가선 자리에서 E 대상이 다른 것(옆을 거니는 NPC가 더 가깝다)이면 사람처럼 그 지점의 칸까지 한 걸음 더 들어간다.
+                            if ((target == null || target.Kind != action.InteractionKind || target.Id != action.Subject) && _body.WalkNear(action.X, action.Y, cell * 0.5f))
+                                target = _body.Target;
                             if (target == null || target.Kind != action.InteractionKind || target.Id != action.Subject)
                                 _result.Notes.Add("다가간 자리의 E 대상이 다르다: " + action.Key + " → " + (target == null ? "(없음)" : target.Kind + "/" + target.Id) + " (" + view.MapId + ")");
                             _body.Interact();
