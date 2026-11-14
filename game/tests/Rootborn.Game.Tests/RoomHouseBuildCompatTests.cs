@@ -885,6 +885,36 @@ namespace Rootborn.Game.Tests
         }
 
         /// <summary>
+        /// 실제 서버 순서: 게임 한 판이 시작한 뒤에 방의 꾸밈 상태가 온다. 그 전에 저장해도 돈 낸 표시는 지워지지 않고 풀기·쓰기를 보내지 않는다
+        /// (방의 잡기를 아직 모른다). 상태가 오면 그 잡기의 쓰기를 다시 보내고 꾸밈이 되며 돈은 한 번만이다.
+        /// </summary>
+        [Test]
+        public void PaidRecord_TheRoomStateComesAfterTheStart_TheRecordStaysUntilThen_ThenTheUseGoesOnce()
+        {
+            using var saves = new TempSaves();
+            CopyRoomFixture(saves, PaidFixture);
+            var guests = Guests(saves);
+            var rules = Rules();
+            string hold = ThroughAnOlderBuild(saves, guests, rules);
+
+            var back = new Room(saves.Store, RoomSlot, Current(rules));
+            var shares = back.JoinWithout(Guest, Current(), RoomHouseBuild.PieceName);
+            var game = Play(guests, shares);
+            Assert.That(game.SharesHouseBuild, Is.True, "준비: 같이 쓰는 집");
+            game.VisitLocation("location.town-square"); // 방의 꾸밈 상태가 오기 전의 저장
+            Assert.That(PaidHolds(guests), Is.EqualTo(new[] { hold }), "방의 상태를 모르는 동안 표시를 지우지 않는다");
+            Assert.That(HouseBuildRequests(shares), Is.Zero, "모르는 동안 풀기도 쓰기도 보내지 않는다");
+
+            back.SendState(shares, RoomHouseBuild.PieceName);
+            Assert.That(HouseBuildRequests(shares, RoomHouseBuild.Release), Is.Zero, "표시가 있으니 풀지 않는다");
+            Assert.That(shares.Outbox.Requests.Single(r => r.Piece == RoomHouseBuild.PieceName).Kind, Is.EqualTo(RoomHouseBuild.Use), "쓰기를 다시 보낸다");
+            back.DeliverAll(shares);
+            Assert.That(game.HouseFloorAt(TopLeftRoom), Is.EqualTo(PaidFloor().Id), "돈을 낸 꾸밈이 된다");
+            Assert.That(back.Build.HeldCount, Is.Zero);
+            Assert.That(Money(game), Is.EqualTo(7), "돈은 한 번만");
+        }
+
+        /// <summary>
         /// 더 새 방이 꾸밈 상태 줄의 모양을 바꿔 해독하지 못하면 "아직 모름"이다: 저장해도 돈 낸 표시를 지우지 않고 그 잡기를 풀지 않는다
         /// (빈 잡기 목록으로 보면 표시가 지워지고, 그 뒤 잡기가 풀려 낸 돈이 사라진다). 해독되는 상태가 오면 쓰기를 다시 보내 정상으로 돌아간다.
         /// </summary>
