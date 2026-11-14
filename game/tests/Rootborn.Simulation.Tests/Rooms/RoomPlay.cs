@@ -136,6 +136,7 @@ namespace Rootborn.Simulation.Rooms
                 seat.Body = new HeadlessBody(atlas, Path.Combine(_root, "player-" + seat.PlayerId), seat);
                 seat.Runner = new PlayRunner(seat.Body, policy, _settings.Seed * 1000 + i, playSettings, atlas, RoomRecord.PlayerName(_settings.Name, seat.PlayerId), saved: seat);
                 seat.SessionStarted += Checks.Started;
+                seat.Runner.AfterStep += (step, action) => Checks.AfterAction(seat, action);
                 seat.UploadRefused += (s, reason) => { Result.Count("저장 거절: " + reason); _refused ??= s + " 저장 거절(" + reason + ")"; };
                 Seats.Add(seat);
             }
@@ -149,6 +150,8 @@ namespace Rootborn.Simulation.Rooms
         public RoomPlayResult Result { get; }
         public readonly List<RoomSeat> Seats = new List<RoomSeat>();
         public RoomServer Server => _server;
+        /// <summary>방이 쓰는 같이 쓰는 집의 규칙(틀과 꾸밈 정의) — 불변식이 방의 기록을 비추기로 만들 때 쓴다.</summary>
+        public RoomHouseRules HouseRules { get; private set; }
         public GuestSaveFolder Guests { get; private set; }
         public RoomChecks Checks { get; }
         public double Now => _clock.Now;
@@ -160,7 +163,8 @@ namespace Rootborn.Simulation.Rooms
             _network = new LoopbackNetwork(_settings.Seed) { LatencySeconds = _settings.LatencySeconds, JitterSeconds = _settings.JitterSeconds, LossRate = _settings.LossRate };
             string saves = Path.Combine(_root, "server");
             Guests = new GuestSaveFolder(GuestSaveFolder.FolderFor(saves, RoomSlot), GameSession.SaveCheck(definitions, GameStartSettings.FromDefinitions(definitions)));
-            var pieces = RoomPieceCatalog.CreateDefault(HouseGrids.Rules(definitions, Atlas.RepoRoot, null));
+            HouseRules = HouseGrids.Rules(definitions, Atlas.RepoRoot, null);
+            var pieces = RoomPieceCatalog.CreateDefault(HouseRules);
             var roomSettings = new RoomServerSettings { MaxPlayers = Math.Max(_settings.Players, 1), SharedPieces = _settings.SharedPieces };
             _server = new RoomServer(_network.Listen(), roomSettings, Versions, new FileSaveStore(saves), RoomSlot, line => Result.Notes.Add("[방] " + line),
                 Program.RoomTimeRules(definitions), Guests, pieces);
@@ -216,8 +220,38 @@ namespace Rootborn.Simulation.Rooms
             catch (PlayFailure f) { Result.Failure = f; }
             foreach (RoomSeat seat in Seats) Result.Players.Add(seat.Runner.Finish());
             Result.ServerDays = _server.Clock.Day;
+            // 같이 쓰는 집이면 끝낸 뒤 모두 다시 들어와 가만히 있게 하고 방에 남은 꾸밈 잡기·돈 낸 표시가 없는지 본다(기록·재생에 넣지 않는다 — 끝 상태는 위에서 이미 잡았다).
+            if (_replay == null && !Failed && Checks.TracksBuild)
+                try { SettleAtEnd(); }
+                catch (PlayFailure f) { Result.Failure = f; }
             return Result;
         }
+
+        /// <summary>끊겼던 자리를 다시 들여보내고(걸음 한 번 — 시작 화면의 이어 하기), 아무도 걷지 않는 채로 방이 가라앉기를 기다린 뒤 끝난 방의 꾸밈 검사를 한다.</summary>
+        private void SettleAtEnd()
+        {
+            for (int round = 0; round < 600 && Seats.Any(s => !s.Playing); round++)
+            {
+                foreach (RoomSeat seat in Seats)
+                {
+                    if (seat.Away) { seat.Away = false; seat.Connect(_network); }
+                    if (seat.Playing) continue;
+                    seat.Body.ReturnToStartIfLost();
+                    if (!seat.Ready || seat.Body.Session != null) continue;
+                    seat.Runner.Resume();
+                    seat.Runner.Step();
+                }
+                IdleFrame();
+            }
+            if (Seats.Any(s => !s.Playing)) Fail("끝난 뒤 다시 들어오지 못한 자리: " + string.Join(", ", Seats.Where(s => !s.Playing)));
+            // 가만히 서서 걸린 것이 끝나기를 기다린다(1시간 저장이 한 번 지나가 돈 낸 표시를 정리하게 게임 시계로 1시간 이상).
+            for (int i = 0; i < SettleFrames; i++) IdleFrame();
+            for (int i = 0; i < 1200 && !(Checks.Quiet && Checks.Settled); i++) IdleFrame();
+            Checks.BuildFinal();
+        }
+
+        /// <summary>끝난 뒤 가만히 있는 프레임 수(게임 시계로 약 1시간 반: 10초 = 게임 24분).</summary>
+        public const int SettleFrames = 2400;
 
         private bool Failed => Result.Failure != null || Seats.Any(s => s.Runner.Result.Failure != null);
 

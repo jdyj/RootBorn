@@ -86,6 +86,7 @@ namespace Rootborn.Simulation.Headless
             _featuresMap = null;
             _furnitureDirty = true;
             HouseEntered = null;
+            HouseFrame = null;
             OpenStart();
             ScreenOpened?.Invoke(ScreenCatalog.SaveSlotSelect);
             return true;
@@ -118,6 +119,9 @@ namespace Rootborn.Simulation.Headless
         public string SaveRoot { get; }
         public string SlotId { get; private set; }
         public (IPlacementGrid Grid, string Surface)? HouseEntered { get; private set; }
+
+        /// <summary>마지막으로 들어선 짓는 집의 꾸밈 틀(이 판이 붙인 것과 같은 객체). 짓는 집에 들어선 적이 없으면 null.</summary>
+        public Rootborn.Core.Building.HouseBuildFrame HouseFrame { get; private set; }
 
         public event Action<string> ScreenOpened;
         public event Action<InteractionEvent> Interacted;
@@ -196,8 +200,20 @@ namespace Rootborn.Simulation.Headless
                 HouseEntered = (room.Grid, surface);
             }
             if (room == null) Screens.Close(ScreenCatalog.FurniturePlacement);
+            SyncHouseBuild(map);
             _furnitureDirty = true; // 맵이 바뀌었다: 놓인 상자 후보를 이 맵 기준으로 다시(가구 방 밖이면 비운다 — Host RefreshFurniture는 맵이 바뀔 때마다 SetPlacedFurniture)
             RefreshFurniture();
+        }
+
+        private readonly Dictionary<string, Rootborn.Core.Building.HouseBuildFrame> _buildFrames = new Dictionary<string, Rootborn.Core.Building.HouseBuildFrame>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>Host HostGame.SyncHouseBuild와 같다: 짓는 집(맵 성질 build)에 들어서면 꾸밈 틀을 붙이고, 아닌 맵이면 꾸미기를 닫는다. 틀은 맵마다 한 번만 만든다.</summary>
+        private void SyncHouseBuild(string mapId)
+        {
+            if (!_buildFrames.TryGetValue(mapId, out Rootborn.Core.Building.HouseBuildFrame frame))
+                _buildFrames[mapId] = frame = HouseBuildFrames.From(_atlas.Maps.LoadMap(mapId));
+            if (frame != null) { Session.EnterHouseBuild(frame); HouseFrame = frame; }
+            else Session.LeaveHouseBuild();
         }
 
         private bool _furnitureDirty = true;

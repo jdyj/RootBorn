@@ -162,6 +162,12 @@ namespace Rootborn.Simulation
         /// <summary>끝났다(날 수를 넘겼거나, 걸음 상한, 실패).</summary>
         public bool Done => _done;
 
+        /// <summary>
+        /// 끝난 뒤 한 걸음만 더 걷게 한다(같이 하는 방이 판이 끝난 뒤 끊겼던 자리를 다시 들여보낼 때). 실패한 판은 되살리지 않는다.
+        /// 걸음을 한 번 하면 날 수를 넘겼으므로 다시 끝난다.
+        /// </summary>
+        public void Resume() { if (_result.Failure == null) _done = false; }
+
         /// <summary>바깥(같이 하는 방의 불변식)이 찾은 실패를 이 판의 실패로 남기고 멈춘다.</summary>
         public void FailFromOutside(string what, string report)
         {

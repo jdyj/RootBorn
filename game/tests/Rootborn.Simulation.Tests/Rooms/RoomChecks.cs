@@ -22,7 +22,7 @@ namespace Rootborn.Simulation.Rooms
     /// - 저장: 서버를 끄고 켜면 방의 시계·조각이 같고, 다시 들어온 사람의 진행이 적어 둔 것과 같다(끊김·쉰 날 뒤에도).
     /// - 걸린 요청·저장이 오래 끝나지 않으면 막힘.
     /// </summary>
-    public sealed class RoomChecks
+    public sealed partial class RoomChecks
     {
         public const string SeverAfterRequest = "요청 직후", SeverBeforeAnswer = "허락 직전", SeverMidSave = "저장 도중", SeverAnyTime = "아무 때";
 
@@ -46,7 +46,7 @@ namespace Rootborn.Simulation.Rooms
             public GameSession StepSession;
             public bool Busy;
             public int EndsAt, Day;
-            public int OwnBalance = -1;
+            public int OwnBalance = -1, OwnPaid;
             public GameSession BalanceSession;
             public long LastPersonal = -1;
             public GameSession PersonalSession;
@@ -56,7 +56,7 @@ namespace Rootborn.Simulation.Rooms
             public string ExpectedWhy;
             public GameSession ExpectedFrom;
             public StudentDayState ExpectedState;
-            public bool Pending;
+            public bool Pending, PendingHouse;
             public readonly Dictionary<string, int> ChestBagSince = new Dictionary<string, int>(StringComparer.Ordinal);
             // 받기 한 번 안의 상자 답
             public readonly Dictionary<string, int> Window = new Dictionary<string, int>(StringComparer.Ordinal);
@@ -115,6 +115,7 @@ namespace Rootborn.Simulation.Rooms
             }
             var chests = shares.Find<RoomChestsClient>();
             if (chests != null) chests.Answered += (request, applied) => ChestAnswered(seat, session, request, applied);
+            BuildStarted(seat, session);
             var house = shares.Find<RoomHouseClient>();
             if (house != null) house.Answered += (request, applied) => { Result.Count("집 요청"); if (!applied) Result.Count("먼저 온 것만 됨: 집"); };
             var wallet = shares.Find<RoomWalletClient>();
@@ -160,6 +161,13 @@ namespace Rootborn.Simulation.Rooms
         public void Pump(RoomSeat seat, double now)
         {
             GameSession s = seat.Session;
+            if (s != null && seat.Connected && s.SharesHouseBuild) { PumpBuild(seat, now, s); return; }
+            PumpChests(seat, now);
+        }
+
+        private void PumpChests(RoomSeat seat, double now)
+        {
+            GameSession s = seat.Session;
             bool watch = s != null && seat.Connected && s.WaitingForStorage;
             if (!watch) { seat.Pump(now); return; }
             var st = Of(seat);
@@ -200,6 +208,7 @@ namespace Rootborn.Simulation.Rooms
             }
             _lastServerAbs = abs;
             _lastServerDay = clock.Day;
+            BuildServerStep();
             _recent[_recentAt] = abs;
             _recentAt = (_recentAt + 1) % _recent.Length;
             if (_recentCount < _recent.Length) _recentCount++;
@@ -223,8 +232,10 @@ namespace Rootborn.Simulation.Rooms
             st.Busy = s.IsBusy;
             st.EndsAt = s.ActivityEndsAtMinutes;
             st.Day = s.StudentDay;
-            if (!s.SharesWallet && st.BalanceSession == s && st.OwnBalance >= 0 && s.Wallet.Balance != st.OwnBalance)
-                Fail("각자 쓰는 지갑이 남의 걸음 동안 바뀌었다: " + seat + " " + st.OwnBalance + " → " + s.Wallet.Balance);
+            // 같이 쓰는 집의 꾸밈은 방이 칸을 잡아 준 뒤(남의 걸음 동안 답이 온다) 내 돈을 낸다 — 그동안 돈 낸 잡기의 비용만큼은 줄 수 있다(장부가 받기마다 그 값을 본다).
+            int expected = st.OwnBalance - (PaidOf(seat) - st.OwnPaid);
+            if (!s.SharesWallet && st.BalanceSession == s && st.OwnBalance >= 0 && s.Wallet.Balance != expected)
+                Fail("각자 쓰는 지갑이 남의 걸음 동안 바뀌었다: " + seat + " " + st.OwnBalance + " → " + s.Wallet.Balance + (expected != st.OwnBalance ? "(돈 낸 꾸밈 잡기의 비용을 빼면 " + expected + "이어야 한다)" : string.Empty));
         }
 
         public void AfterStep(RoomSeat seat)
@@ -240,6 +251,7 @@ namespace Rootborn.Simulation.Rooms
             // 실시간 화면(미니게임)이 떠 있으면 남이 걷는 동안에도 끝나고 정산된다(사람도 그동안 계속 플레이한다) — 그때는 다음 걸음에 보지 않는다.
             bool realTime = seat.Body.Screens.Find(Rootborn.Screens.ScreenCatalog.Minigame) != null;
             st.OwnBalance = realTime ? -1 : s.Wallet.Balance;
+            st.OwnPaid = PaidOf(seat);
             st.BalanceSession = s;
             RoomWide();
         }
@@ -274,6 +286,7 @@ namespace Rootborn.Simulation.Rooms
             if (!quiet) return;
             CheckHouse();
             CheckChests();
+            CheckBuild();
         }
 
         private void CheckHouse()
@@ -338,17 +351,17 @@ namespace Rootborn.Simulation.Rooms
         // ---------- 걸린 것 ----------
 
         private long _stableFrames;
-        private (int, int, int, int) _lastSignature;
+        private (int, int, int, int, int) _lastSignature;
 
-        private (int, int, int, int) Signature()
+        private (int, int, int, int, int) Signature()
         {
             var pieces = _play.Server.Pieces;
             int Rev(string name) => pieces.TryGet(name, out var p) ? p.Revision : -1;
-            return (Wallet()?.Balance ?? -1, Rev(RoomWallet.PieceName), Rev(RoomHouse.PieceName), Rev(RoomChests.PieceName));
+            return (Wallet()?.Balance ?? -1, Rev(RoomWallet.PieceName), Rev(RoomHouse.PieceName), Rev(RoomChests.PieceName), Rev(RoomHouseBuild.PieceName));
         }
 
         /// <summary>걸린 것이 없고 방의 조각이 알림이 닿을 만큼 오래 그대로다(모두가 같은 것을 봐야 한다).</summary>
-        private bool Settled => _stableFrames >= _recent.Length;
+        public bool Settled => _stableFrames >= _recent.Length;
 
         private RoomWallet Wallet() => _play.Server.Pieces.TryGet(RoomWallet.PieceName, out var p) ? (RoomWallet)p : null;
 
@@ -359,6 +372,7 @@ namespace Rootborn.Simulation.Rooms
             {
                 if (Wallet() is RoomWallet w && w.HeldTotal > 0) return false;
                 if (_play.Server.Pieces.TryGet(RoomChests.PieceName, out var c) && ((RoomChests)c).HeldCount > 0) return false;
+                if (BuildHeld > 0) return false;
                 foreach (RoomSeat seat in _play.Seats)
                 {
                     if (seat.Uploads.Count > 0) return false;
@@ -374,6 +388,7 @@ namespace Rootborn.Simulation.Rooms
             var parts = new List<string>();
             if (Wallet() is RoomWallet w && w.HeldTotal > 0) parts.Add("지갑 잡기 " + w.HeldTotal);
             if (_play.Server.Pieces.TryGet(RoomChests.PieceName, out var c) && ((RoomChests)c).HeldCount > 0) parts.Add("상자 잡기 " + ((RoomChests)c).HeldCount);
+            if (BuildHeld > 0) parts.Add("꾸밈 잡기 " + BuildHeld + " [" + string.Join("; ", _build.Values.Where(h => !h.Gone)) + "]");
             foreach (RoomSeat seat in _play.Seats)
             {
                 if (seat.Uploads.Count > 0) parts.Add(seat.PlayerId + " 보낼 저장 " + seat.Uploads.Count);
@@ -392,7 +407,8 @@ namespace Rootborn.Simulation.Rooms
             if (s.WaitingForRoom || s.Shares.Outbox.Requests.Count > 0)
             {
                 bool held = Wallet() is RoomWallet w && w.HeldTotal > 0
-                    || _play.Server.Pieces.TryGet(RoomChests.PieceName, out var c) && ((RoomChests)c).HeldCount > 0;
+                    || _play.Server.Pieces.TryGet(RoomChests.PieceName, out var c) && ((RoomChests)c).HeldCount > 0
+                    || OwnBuildHold(seat);
                 return held ? SeverBeforeAnswer : SeverAfterRequest;
             }
             return seat.Uploads.Count > 0 ? SeverMidSave : SeverAnyTime;
@@ -415,7 +431,9 @@ namespace Rootborn.Simulation.Rooms
             // 방에 보낸 요청이 걸려 있으면(가구 놓기, 지갑 잡기 등) 다시 들어온 뒤 그 답으로 진행이 나아갈 수 있다(가구를 놓아 목표를 채움) —
             // 그때는 퀘스트·체인 줄을 같음으로 보지 않는다(받은 보상이 사라지지 않는지는 자리의 PlayRunner가 계속 본다).
             st.Pending = s.Shares != null && s.Shares.Outbox.Requests.Count > 0;
-            st.Expected = StateSnapshot.Of(s).Where(l => !Volatile(l) && !(st.Pending && Progress(l))).ToList();
+            // 가구 놓기·꾸밈 요청이 걸려 있으면 다시 들어온 뒤 그 답으로 인테리어 기술이 자란다(적용되면 하루 한도 안에서 자란다) — 그때는 기술 줄을 같음으로 보지 않는다.
+            st.PendingHouse = s.Shares != null && s.Shares.Outbox.Requests.Any(r => r.Piece == RoomHouse.PieceName || r.Piece == RoomHouseBuild.PieceName);
+            st.Expected = StateSnapshot.Of(s).Where(l => !Volatile(l)).ToList(); // 퀘스트·체인 줄을 뺄지는 다시 들어온 뒤에 정한다
             st.ExpectedBag = Bag(s);
             st.ExpectedWhy = why;
             st.ExpectedFrom = s;
@@ -428,14 +446,18 @@ namespace Rootborn.Simulation.Rooms
         {
             Note(seat.PlayerId + " 끊김(" + kind + ") " + Describe(seat.Session) + " 보낼 저장 " + seat.Uploads.Count + " 방 " + Busy());
             Remember(seat, "끊김(" + kind + ")");
+            BuildSevered(seat, kind);
         }
 
         public void Leaving(RoomSeat seat) => Remember(seat, "쉰 날");
 
         private void CompareAfterRejoin(RoomSeat seat, SeatState st, GameSession s)
         {
-            List<string> now = StateSnapshot.Of(s).Where(l => !Volatile(l) && !(st.Pending && Progress(l))).ToList();
-            var diff = StateSnapshot.Diff(st.Expected, now);
+            // 나가 있는 동안 날이 바뀌면 "그 날 이상" 같은 시간 조건이 풀려 퀘스트·체인이 나아간다(받은 보상이 사라지지 않는지는 PlayRunner가 계속 본다). 보낼 요청이 걸려 있었을 때도 같다.
+            bool progressMoves = st.Pending || s.StudentDay > st.Day, skillMoves = st.PendingHouse;
+            bool Skip(string l) => (progressMoves && Progress(l)) || (skillMoves && l.StartsWith("skill ", StringComparison.Ordinal));
+            List<string> now = StateSnapshot.Of(s).Where(l => !Volatile(l) && !Skip(l)).ToList();
+            var diff = StateSnapshot.Diff(st.Expected.Where(l => !Skip(l)).ToList(), now);
             Dictionary<string, int> bag = Bag(s);
             foreach (string item in bag.Keys.Union(st.ExpectedBag.Keys).Union(st.ChestBagSince.Keys))
             {
@@ -460,6 +482,7 @@ namespace Rootborn.Simulation.Rooms
         public void BeforeRestart()
         {
             foreach (RoomSeat seat in _play.Seats) if (!seat.Away) Remember(seat, "서버 다시 켜기");
+            BuildBeforeRestart();
             _serverBefore = ServerLines();
             _clockBefore = (_play.Server.Clock.Day, _play.Server.Clock.Minutes);
         }
@@ -471,6 +494,7 @@ namespace Rootborn.Simulation.Rooms
                 Fail("서버를 다시 켠 뒤 방의 시계가 다르다: " + _clockBefore.Day + "일 " + _clockBefore.Minutes + "분 → " + clock.Day + "일 " + clock.Minutes + "분");
             var diff = StateSnapshot.Diff(_serverBefore, ServerLines());
             if (diff.Count > 0) Fail("서버를 다시 켠 뒤 방의 조각이 다르다:\n" + string.Join("\n", diff));
+            BuildAfterRestart();
             _lastServerAbs = -1;
             _lastServerDay = -1;
             _recentCount = 0;

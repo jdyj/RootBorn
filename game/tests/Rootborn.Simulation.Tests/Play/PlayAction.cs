@@ -48,6 +48,8 @@ namespace Rootborn.Simulation
         public ScreenKey ScreenKey;
         public int Frames;
         public string Text;
+        /// <summary>화면에서 어둡게 보이는 것(잠긴 카드처럼 눌러도 쓸 수 없는 것). 사람은 어둡게 보이는 카드를 피한다.</summary>
+        public bool Dimmed;
 
         public override string ToString() => Key;
     }
@@ -86,6 +88,8 @@ namespace Rootborn.Simulation
         public int CellX, CellY;
         /// <summary>HUD가 보이는 돈(없으면 -1).</summary>
         public int Money = -1;
+        /// <summary>같이 쓰는 방의 답(칸 잡기·돈 잡기)을 기다리는 중이다(화면이 "기다리는 중"으로 보인다 — 그동안은 다시 누르지 않는다).</summary>
+        public bool WaitingForRoom;
 
         /// <summary>
         /// 사람이 보는 것의 지문: 떠 있는 화면, 맵·칸, 날·시각, HUD의 돈, 할 수 있는 것의 이름들, 미니게임에서 보이는 것. 같은 행동 뒤에 이것이 그대로면 "아무 일도 없었다"고 본다

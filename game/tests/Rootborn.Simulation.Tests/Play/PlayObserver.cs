@@ -57,6 +57,7 @@ namespace Rootborn.Simulation
             {
                 view.Day = session.StudentDay;
                 view.Minutes = session.StudentTimeMinutes;
+                view.WaitingForRoom = session.WaitingForRoom;
                 ReadTracked(session, view, body);
             }
             if (body.InWorld)
@@ -92,8 +93,40 @@ namespace Rootborn.Simulation
                 GameScreen screen = open[i];
                 Walk(body, stack, screen, screen.Root, view);
             }
-            if (body.Room != null && body.PlacementView != null && stack.Find(ScreenCatalog.FurniturePlacement) is FurniturePlacementScreen placement && placement.IsOpen && placement.Active != null)
-                AddPlacementCells(body, stack, placement, view);
+            if (body.Room == null || body.PlacementView == null || !(stack.Find(ScreenCatalog.FurniturePlacement) is FurniturePlacementScreen placement) || !placement.IsOpen) return;
+            if (placement.FinishShown) { if (placement.PickedFinish != null) AddFinishCells(body, stack, placement, view); }
+            else if (body.Room != null && placement.Active != null) AddPlacementCells(body, stack, placement, view);
+        }
+
+        /// <summary>
+        /// 꾸미기 분류에서 꾸밈 하나를 고른 뒤 누를 바닥 칸(사람이 화면의 방 바닥을 누른다): 화면에 들어오고 위층이 덮지 않은 칸 앞쪽 몇 개.
+        /// 어느 칸이 바뀌는지는 화면이 미리 보기로 알려 준다 — 여기서는 판정하지 않는다(안 바뀌는 칸을 눌러도 되고 그것이 거절 경로다).
+        /// </summary>
+        private void AddFinishCells(IPlayBody body, ScreenStack stack, FurniturePlacementScreen placement, PlayView view)
+        {
+            // 사람은 화면에서 밝게 표시되는(대상이 있는) 칸을 누른다: 대상이 있는 칸 앞쪽 몇 개와, 대상이 없는 칸 한두 개(거절 경로).
+            GameSession session = body.Session;
+            int good = 0, other = 0;
+            foreach (GridPoint cell in body.Room.FloorCells)
+            {
+                if (good >= 12 && other >= 2) break;
+                UiRect r = body.PlacementView.CellRect(cell);
+                if (r.X < 0 || r.Y < 0 || r.Right > body.Width || r.Bottom > body.Height) continue;
+                if (stack.Tree.HitTest(r.CenterX, r.CenterY) != null) continue;
+                bool target = session != null && session.PreviewHouseFinish(placement.PickedFinish.Id, Rootborn.Core.Building.HouseFinishTools.Brush, body.Room.ToMap(cell)).HasTarget;
+                if (target ? good >= 12 : other >= 2) continue;
+                if (target) good++; else other++;
+                view.Actions.Add(new PlayAction
+                {
+                    Kind = PlayActionKind.Click,
+                    Key = "fcell:" + cell.X.ToString(CultureInfo.InvariantCulture) + "," + cell.Y.ToString(CultureInfo.InvariantCulture),
+                    Category = target ? "finish-cell" : "finish-cell-blocked",
+                    Screen = placement.Id,
+                    Subject = placement.PickedFinish.Id,
+                    X = r.CenterX,
+                    Y = r.CenterY,
+                });
+            }
         }
 
         private void Walk(IPlayBody body, ScreenStack stack, GameScreen screen, UiNode node, PlayView view)
@@ -127,6 +160,7 @@ namespace Rootborn.Simulation
                 Y = y,
                 Text = category == "text" ? TypedName : null,
                 Subject = ScreenSubjects.Resolve(screen, element, index),
+                Dimmed = ScreenSubjects.IsDimmed(screen, element),
             };
             view.Actions.Add(action);
         }
@@ -454,6 +488,14 @@ namespace Rootborn.Simulation
         }
 
         public static void Register(Type screen, Read read) => Readers.Add((screen, read));
+
+        /// <summary>어둡게 보이는 요소(잠긴 꾸밈 카드): 화면의 카드 모양에서 읽는다(사람이 보는 것).</summary>
+        public static bool IsDimmed(GameScreen screen, string element)
+        {
+            const string prefix = "furniture.finish.card.";
+            if (!(screen is FurniturePlacementScreen placement) || element == null || !element.StartsWith(prefix, StringComparison.Ordinal)) return false;
+            return int.TryParse(element.Substring(prefix.Length), NumberStyles.Integer, CultureInfo.InvariantCulture, out int slot) && placement.Finishes.At(slot) is FinishCard card && !card.Unlocked;
+        }
 
         public static string Resolve(GameScreen screen, string element, int index)
         {
