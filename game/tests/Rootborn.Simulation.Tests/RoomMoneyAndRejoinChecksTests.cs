@@ -7,7 +7,8 @@ namespace Rootborn.Simulation.Tests
 {
     /// <summary>
     /// 자동 테스트: 같이 하는 방의 불변식 도우미가 어긋남을 실제로 잡는지 — 손으로 만든 어긋난 기록을 넣으면 실패한다.
-    /// 같이 쓰는 지갑의 돈 장부(SharedWalletBook): 이중 청구·덜 청구·까닭 없는 감소.
+    /// (가) 같이 쓰는 지갑의 돈 장부(SharedWalletBook): 이중 청구·덜 청구·까닭 없는 감소. (나) 다시 들어온 뒤 진행 견주기(RejoinProgress): 퀘스트·체인은 앞으로만,
+    /// 기술은 걸린 요청만큼만.
     /// </summary>
     [TestFixture]
     public sealed class RoomMoneyAndRejoinChecksTests
@@ -99,6 +100,48 @@ namespace Rootborn.Simulation.Tests
             book.See(P, Wallet("dep-lost", RoomWallet.Deposit, 50)); // 보내기 전에 끊겨 사라짐(방의 답 없음)
             Assert.That(book.Check(100, ledger.TryGet, false), Is.Null);
             Assert.That(book.Unanswered, Is.EqualTo(1));
+        }
+
+        // ---------- 다시 들어온 뒤 ----------
+
+        private static List<string> Compare(string before, string after, bool move, Dictionary<string, int> skills = null)
+            => RejoinProgress.Compare(new[] { before }, new[] { after }, move, skills ?? new Dictionary<string, int>());
+
+        [Test]
+        public void Rejoin_QuestMovesForward_OnlyWhenAllowed()
+        {
+            Assert.That(Compare("quest q1 Active [1]", "quest q1 Active [2]", true), Is.Empty);
+            Assert.That(Compare("quest q1 Active [1]", "quest q1 Completed [1]", true), Is.Empty);
+            Assert.That(Compare("quest q1 Active [1]", "quest q1 Active [2]", false), Is.Not.Empty, "날이 바뀌지 않았고 걸린 요청도 없으면 같아야 한다");
+        }
+
+        [Test]
+        public void Rejoin_QuestGoesBackOrDisappears_Fails()
+        {
+            Assert.That(Compare("quest q1 Completed [1]", "quest q1 Active [1]", true), Is.Not.Empty, "단계가 뒤로");
+            Assert.That(Compare("quest q1 Active [2]", "quest q1 Active [1]", true), Is.Not.Empty, "목표 수가 줄었다");
+            Assert.That(RejoinProgress.Compare(new[] { "quest q1 Active [1]" }, new string[0], true, null), Is.Not.Empty, "사라졌다");
+        }
+
+        [Test]
+        public void Rejoin_ChainReopenedOrLosesSteps_Fails_ButAdvancing_Passes()
+        {
+            const string done = "chain c1 Completed step= tracked=False done=[a,b] progress=[] rewards=[r]";
+            Assert.That(Compare(done, "chain c1 Active step=b tracked=True done=[a] progress=[0] rewards=[r]", true), Is.Not.Empty, "끝난 체인이 다시 열렸다");
+            Assert.That(Compare("chain c1 Active step=b tracked=True done=[a] progress=[0] rewards=[]", "chain c1 Active step=a tracked=True done=[] progress=[0] rewards=[]", true), Is.Not.Empty, "끝낸 걸음이 사라졌다");
+            Assert.That(Compare("chain c1 Active step=b tracked=True done=[a] progress=[2] rewards=[]", "chain c1 Active step=b tracked=True done=[a] progress=[1] rewards=[]", true), Is.Not.Empty, "진행 수가 줄었다");
+            Assert.That(Compare("chain c1 Active step=b tracked=True done=[a] progress=[0] rewards=[]", "chain c1 Active step=c tracked=False done=[a,b] progress=[0] rewards=[]", true), Is.Empty, "걸음을 하나 끝냈다");
+        }
+
+        [Test]
+        public void Rejoin_SkillGrowsWithinThePendingRequests_Passes_DoubleOrOtherGrowth_Fails()
+        {
+            var allow = new Dictionary<string, int> { ["interior"] = 1 };
+            Assert.That(Compare("skill interior=3", "skill interior=4", false, allow), Is.Empty, "걸린 요청 한 번분");
+            Assert.That(Compare("skill interior=3", "skill interior=5", false, allow), Is.Not.Empty, "두 번 자랐다");
+            Assert.That(Compare("skill cooking=3", "skill cooking=4", false, allow), Is.Not.Empty, "엉뚱한 기술이 자랐다");
+            Assert.That(Compare("skill interior=3", "skill interior=2", false, allow), Is.Not.Empty, "줄었다");
+            Assert.That(Compare("skill interior=3", "skill interior=4", false), Is.Not.Empty, "걸린 요청이 없으면 같아야 한다");
         }
     }
 }

@@ -6,6 +6,7 @@ using Rootborn.Core.Placement;
 using Rootborn.Core.Room;
 using Rootborn.Core.StudentLife;
 using Rootborn.Core.Time;
+using Rootborn.Core.Workspaces;
 using Rootborn.Game;
 using Rootborn.Net.Session;
 
@@ -56,7 +57,10 @@ namespace Rootborn.Simulation.Rooms
             public string ExpectedWhy;
             public GameSession ExpectedFrom;
             public StudentDayState ExpectedState;
-            public bool Pending, PendingHouse;
+            public bool Pending;
+            public int ExpectedDay;
+            // 나갈 때 걸려 있던 가구·꾸밈 요청의 성장 규칙(요청마다 하나) — 다시 들어온 뒤 그 답으로 자라도 되는 기술과 양.
+            public readonly List<PlacementSkillGrowth> PendingGrowth = new List<PlacementSkillGrowth>();
             public readonly Dictionary<string, int> ChestBagSince = new Dictionary<string, int>(StringComparer.Ordinal);
             // 받기 한 번 안의 상자 답
             public readonly Dictionary<string, int> Window = new Dictionary<string, int>(StringComparer.Ordinal);
@@ -426,7 +430,13 @@ namespace Rootborn.Simulation.Rooms
             || line.StartsWith("time-points=", StringComparison.Ordinal) || line.StartsWith("today=", StringComparison.Ordinal)
             || line.StartsWith("item ", StringComparison.Ordinal) || StateSnapshot.IsFurniture(line);
 
-        private static bool Progress(string line) => line.StartsWith("quest ", StringComparison.Ordinal) || line.StartsWith("chain ", StringComparison.Ordinal);
+        private PlacementSkillGrowth GrowthFor(string surface)
+        {
+            if (string.IsNullOrEmpty(surface)) return null;
+            foreach (PlacementSkillGrowth rule in _play.Atlas.Definitions.All<PlacementSkillGrowth>())
+                if (rule != null && rule.SurfaceId == surface) return rule;
+            return null;
+        }
 
         private void Remember(RoomSeat seat, string why)
         {
@@ -434,16 +444,24 @@ namespace Rootborn.Simulation.Rooms
             if (s == null) return;
             var st = Of(seat);
             // 방에 보낸 요청이 걸려 있으면(가구 놓기, 지갑 잡기 등) 다시 들어온 뒤 그 답으로 진행이 나아갈 수 있다(가구를 놓아 목표를 채움) —
-            // 그때는 퀘스트·체인 줄을 같음으로 보지 않는다(받은 보상이 사라지지 않는지는 자리의 PlayRunner가 계속 본다).
+            // 그때는 퀘스트·체인이 앞으로 나아가는 것만 허용한다(RejoinProgress).
             st.Pending = s.Shares != null && s.Shares.Outbox.Requests.Count > 0;
-            // 가구 놓기·꾸밈 요청이 걸려 있으면 다시 들어온 뒤 그 답으로 인테리어 기술이 자란다(적용되면 하루 한도 안에서 자란다) — 그때는 기술 줄을 같음으로 보지 않는다.
-            st.PendingHouse = s.Shares != null && s.Shares.Outbox.Requests.Any(r => r.Piece == RoomHouse.PieceName || r.Piece == RoomHouseBuild.PieceName);
-            st.Expected = StateSnapshot.Of(s).Where(l => !Volatile(l)).ToList(); // 퀘스트·체인 줄을 뺄지는 다시 들어온 뒤에 정한다
+            // 가구 놓기·칸 꾸밈 요청이 걸려 있으면 다시 들어온 뒤 그 답으로 인테리어 기술이 자랄 수 있다(적용되면 하루 한도 안에서 한 번분) — 요청마다 그 면의 성장 규칙을 적어 둔다.
+            st.PendingGrowth.Clear();
+            if (s.Shares != null)
+                foreach (var r in s.Shares.Outbox.Requests)
+                {
+                    string surface = r.Piece == RoomHouse.PieceName ? s.House?.SurfaceId
+                        : r.Piece == RoomHouseBuild.PieceName && r.Kind == RoomHouseBuild.Finish && r.Ids != null && r.Ids.Length > 0 ? r.Ids[0] : null;
+                    PlacementSkillGrowth rule = GrowthFor(surface);
+                    if (rule != null) st.PendingGrowth.Add(rule);
+                }
+            st.Expected = StateSnapshot.Of(s).Where(l => !Volatile(l)).ToList();
+            st.ExpectedDay = s.StudentDay;
             st.ExpectedBag = Bag(s);
             st.ExpectedWhy = why;
             st.ExpectedFrom = s;
             st.ChestBagSince.Clear();
-            st.Day = s.StudentDay;
             st.ExpectedState = s.Student.DayState;
         }
 
@@ -458,11 +476,23 @@ namespace Rootborn.Simulation.Rooms
 
         private void CompareAfterRejoin(RoomSeat seat, SeatState st, GameSession s)
         {
-            // 나가 있는 동안 날이 바뀌면 "그 날 이상" 같은 시간 조건이 풀려 퀘스트·체인이 나아간다(받은 보상이 사라지지 않는지는 PlayRunner가 계속 본다). 보낼 요청이 걸려 있었을 때도 같다.
-            bool progressMoves = st.Pending || s.StudentDay > st.Day, skillMoves = st.PendingHouse;
-            bool Skip(string l) => (progressMoves && Progress(l)) || (skillMoves && l.StartsWith("skill ", StringComparison.Ordinal));
-            List<string> now = StateSnapshot.Of(s).Where(l => !Volatile(l) && !Skip(l)).ToList();
-            var diff = StateSnapshot.Diff(st.Expected.Where(l => !Skip(l)).ToList(), now);
+            // 퀘스트·체인: 나가 있는 동안 날이 실제로 바뀌었으면("그 날 이상" 같은 시간 조건이 풀린다) 또는 방에 보낸 요청이 걸려 있었으면(그 답으로 목표가 찬다)
+            // 앞으로 나아가는 것만 허용한다 — 사라짐·뒤로 감·끝난 것이 다시 열림은 실패. 아니면 같아야 한다.
+            // 기술: 걸려 있던 가구·칸 꾸밈 요청의 성장 규칙만큼(요청 수 × 한 번분, 하루 한도 × 지난 날 수 이내) 그 기술만 자랄 수 있다. 다른 기술은 같아야 한다.
+            bool dayMoved = s.StudentDay > st.ExpectedDay;
+            bool progressMoves = st.Pending || dayMoved;
+            var allowance = new Dictionary<string, int>(StringComparer.Ordinal);
+            foreach (var group in st.PendingGrowth.GroupBy(r => r.SkillId))
+            {
+                PlacementSkillGrowth rule = group.First();
+                int days = Math.Max(0, s.StudentDay - st.ExpectedDay) + 1;
+                allowance[group.Key] = Math.Min(group.Count(), rule.DailyLimit * days) * rule.Amount;
+            }
+            List<string> live = StateSnapshot.Of(s).Where(l => !Volatile(l)).ToList();
+            var diff = StateSnapshot.Diff(st.Expected.Where(l => !RejoinProgress.Handles(l)).ToList(), live.Where(l => !RejoinProgress.Handles(l)).ToList());
+            diff.AddRange(RejoinProgress.Compare(st.Expected, live, progressMoves, allowance));
+            if (progressMoves) Result.Count(dayMoved ? "다시 들어와 비교: 날이 바뀌어 진행은 앞으로만" : "다시 들어와 비교: 걸린 요청이 있어 진행은 앞으로만");
+            if (allowance.Count > 0) Result.Count("다시 들어와 비교: 걸린 가구·꾸밈 요청만큼 기술 성장 허용");
             Dictionary<string, int> bag = Bag(s);
             foreach (string item in bag.Keys.Union(st.ExpectedBag.Keys).Union(st.ChestBagSince.Keys))
             {
@@ -470,9 +500,9 @@ namespace Rootborn.Simulation.Rooms
                 int have = bag.TryGetValue(item, out int h) ? h : 0;
                 if (expected != have) diff.Add("가방 " + item + ": 나가기 전(+상자 답) " + expected + ", 다시 들어온 뒤 " + have);
             }
-            if (s.StudentDay < st.Day) diff.Add("날이 거꾸로: " + st.Day + " → " + s.StudentDay);
+            if (s.StudentDay < st.ExpectedDay) diff.Add("날이 거꾸로: " + st.ExpectedDay + " → " + s.StudentDay);
             // 잤는데(하루 결과) 다시 들어오니 그날 낮이면 잠이 사라진 것이다(같은 날이면). 쉰 날 뒤는 다음 날이라 보지 않는다.
-            if (s.StudentDay == st.Day && st.ExpectedState != StudentDayState.InProgress && s.Student.DayState == StudentDayState.InProgress)
+            if (s.StudentDay == st.ExpectedDay && st.ExpectedState != StudentDayState.InProgress && s.Student.DayState == StudentDayState.InProgress)
                 diff.Add("하루 상태: 나가기 전 " + st.ExpectedState + ", 다시 들어온 뒤 " + s.Student.DayState + "(" + s.StudentDay + "일)");
             if (s.StudentDay != _play.Server.Clock.Day && s.Student.DayState == StudentDayState.InProgress)
                 diff.Add("다시 들어온 날 " + s.StudentDay + "이 방의 날 " + _play.Server.Clock.Day + "과 다르다");
