@@ -21,6 +21,8 @@ namespace Rootborn.Game
         private RoomWalletClient _roomWallet;
         private RoomWorldFlagsClient _roomTown;
         private readonly Dictionary<string, Func<bool>> _waiting = new Dictionary<string, Func<bool>>(StringComparer.Ordinal);
+        // 기다리는 범위 → 끝내 안 됐을 때 할 일(Shared의 notApplied). 메모리만.
+        private readonly Dictionary<string, Action> _waitingNotApplied = new Dictionary<string, Action>(StringComparer.Ordinal);
         private readonly List<string> _townScratch = new List<string>(8);
 
         /// <summary>같이 하는 방의 조각 묶음. 혼자 하기는 null.</summary>
@@ -85,15 +87,33 @@ namespace Rootborn.Game
         /// 돈을 쓸 수 있는 명령을 감싼다. 방 지갑이 아니면 그대로 한다. 방 지갑이면 범위 하나로 돌리고, 지갑이 잡기를 적었으면
         /// (다른 확인은 다 지났고 돈만 남았다) 그 명령을 기다리는 목록에 두고 저장한다(잡기 요청이 세이브와 함께 방으로 간다).
         /// </summary>
-        private T Shared<T>(Func<T> run, Func<T, bool> applied)
+        /// <param name="notApplied">
+        /// 그 명령이 끝내 되지 않았을 때 한 번 부른다(없으면 아무것도 하지 않는다): 바로 안 됐고 방 지갑에 묻지도 않았을 때(개인 지갑이면 바로 안 됐을 때),
+        /// 방 지갑이 거절했을 때(<see cref="OnRefused"/>), 허락받고 다시 한 명령이 되지 않았을 때(<see cref="OnGranted"/>). 꺼졌다 켜져 다시 할 명령이
+        /// 없는 허락에는 부르지 않는다(메모리에만 있다 — 그 경우의 정리는 명령마다 따로 한다. 예: 꾸밈 잡기의 떠도는 잡기 풀기).
+        /// </param>
+        private T Shared<T>(Func<T> run, Func<T, bool> applied, Action notApplied = null)
         {
-            if (_roomWallet == null) return run();
+            if (_roomWallet == null)
+            {
+                T own = run();
+                if (!applied(own)) notApplied?.Invoke();
+                return own;
+            }
+
             LastRoomRefusal = false;
             LastRoomCommandApplied = null;
             string scope = Shares.Outbox.NewId();
             T result = InScope(scope, run);
-            if (applied(result) || !_roomWallet.WasAsked(scope)) return result;
+            if (applied(result)) return result;
+            if (!_roomWallet.WasAsked(scope))
+            {
+                notApplied?.Invoke();
+                return result;
+            }
+
             _waiting[scope] = () => applied(InScope(scope, run));
+            if (notApplied != null) _waitingNotApplied[scope] = notApplied;
             Save();
             Notify(SharedMoneyTopics);
             return result;
@@ -120,6 +140,8 @@ namespace Rootborn.Game
             // 다시 하는 명령이 알리는 동안 이미 기다림이 끝나 있게 먼저 뺀다. 결과는 명령 뒤에 정해지므로 한 번 더 알린다(화면이 결과 문구를 고른다).
             _waiting.TryGetValue(scope, out var again);
             _waiting.Remove(scope);
+            _waitingNotApplied.TryGetValue(scope, out var notApplied);
+            _waitingNotApplied.Remove(scope);
             bool done = again != null && again();
             LastRoomCommandApplied = done;
             if (done)
@@ -128,14 +150,18 @@ namespace Rootborn.Game
                 return;
             }
             _roomWallet.ReleaseGrant(scope);
+            notApplied?.Invoke();
             SaveAndNotify(SharedMoneyTopics);
         }
 
         private void OnRefused(string scope)
         {
             _waiting.Remove(scope);
+            _waitingNotApplied.TryGetValue(scope, out var notApplied);
+            _waitingNotApplied.Remove(scope);
             LastRoomRefusal = true;
             LastRoomCommandApplied = false;
+            notApplied?.Invoke();
             SaveAndNotify(SharedMoneyTopics);
         }
 
