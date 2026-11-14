@@ -45,6 +45,8 @@ namespace Rootborn.Core.Building
         public const string NotInHouse = "ui.house-build.reason.not-in-house";
         /// <summary>같이 쓰는 집에서 방이 꾸밈 잡기를 거절했다(그 사이 다른 사람이 먼저 바꿨거나 잡았다). 미리 보기 이유가 아니라 마지막 요청의 결과다.</summary>
         public const string RoomRefused = "ui.house-build.reason.room-refused";
+        /// <summary>같이 쓰는 집 안에 있지만 방이 꾸밈을 알리지 않는다(꾸밈 조각이 없는 옛 방, 또는 아직 해독한 꾸밈 상태가 없다). 미리 보기 이유다.</summary>
+        public const string RoomTooOld = "ui.house-build.reason.room-too-old";
     }
 
     /// <summary>

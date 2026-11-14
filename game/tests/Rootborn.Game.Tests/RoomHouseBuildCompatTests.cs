@@ -862,6 +862,40 @@ namespace Rootborn.Game.Tests
             Assert.That(Money(backGame), Is.EqualTo(7), "한 번만");
         }
 
+        /// <summary>
+        /// 꾸밈 조각이 없는 옛 방(집 조각만 같이 쓴다)에 지금 프로그램으로 들어가 집 안에 서 있으면, 꾸미기 미리 보기는 "집 밖"이 아니라
+        /// "이 방에서는 아직 꾸밀 수 없다"는 이유를 낸다. 요청을 보내지 않고 돈도 그대로다.
+        /// playerKnowsTheBuildPiece: true면 지금의 플레이어 쪽(꾸밈 조각은 있지만 방이 그 상태를 알리지 않는다), false면 플레이어 쪽에도 꾸밈 조각이 없다.
+        /// </summary>
+        [TestCase(true)]
+        [TestCase(false)]
+        public void OlderRoomWithoutTheBuildPiece_InsideTheHouse_ThePreviewSaysTheRoomCannotDecorateYet(bool playerKnowsTheBuildPiece)
+        {
+            using var saves = new TempSaves();
+            var guests = Guests(saves);
+            var rules = Rules();
+            var old = Room.Create(saves.Store, RoomSlot, Older(rules), 0, RoomHouse.PieceName);
+            Assert.That(old.Build, Is.Null, "전제: 옛 방에는 꾸밈 조각이 없다");
+            var shares = old.Join(Guest, playerKnowsTheBuildPiece ? Current() : Older());
+            var game = Play(guests, shares);
+            Assert.That(game.House, Is.Not.Null, "준비: 집 안에 있다");
+            var floor = PaidFloor();
+            Give(game, PerCell(floor) * TopLeftRoomFill);
+            int money = Money(game);
+
+            var preview = game.PreviewHouseFinish(floor.Id, HouseFinishTools.Room, TopLeftRoom);
+            Assert.That(preview.CanApply, Is.False);
+            Assert.That(preview.ReasonKey, Is.EqualTo(HouseFinishReasons.RoomTooOld), "집 안에 있는데 '집에서만'이라고 하지 않는다");
+            var band = TestWorld.Definitions.All<RoomFinishDefinition>().First(f => f.Slot == RoomFinishSlots.Band && f.UnlockToken.Length == 0);
+            Assert.That(game.PreviewHouseBand(band.Id).ReasonKey, Is.EqualTo(HouseFinishReasons.RoomTooOld));
+            Assert.That(game.ApplyHouseFinish(floor.Id, HouseFinishTools.Room, TopLeftRoom), Is.False);
+            Assert.That(HouseBuildRequests(shares), Is.Zero, "요청을 보내지 않는다");
+            Assert.That(Money(game), Is.EqualTo(money), "돈 그대로");
+
+            game.LeaveHouseBuild();
+            Assert.That(game.PreviewHouseFinish(floor.Id, HouseFinishTools.Room, TopLeftRoom).ReasonKey, Is.EqualTo(HouseFinishReasons.NotInHouse), "집을 떠나면 '집 밖'");
+        }
+
         // 11-14b 방을 옛 빌드(옛 방 + 옛 플레이어 쪽)로 한 번 연다: 보낼 목록의 쓰기 줄이 지워지고 돈 낸 표시만 남는다. 그 잡기 id를 돌려준다.
         private static string ThroughAnOlderBuild(TempSaves saves, FileSaveStore guests, RoomHouseRules rules)
         {

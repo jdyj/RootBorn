@@ -1947,5 +1947,6 @@
   "ui.house-build.reason.nothing-to-change": "It already has this finish",
   "ui.house-build.reason.not-enough-money": "Not enough money",
   "ui.house-build.reason.not-in-house": "You can decorate only at home",
-  "ui.house-build.reason.room-refused": "The room did not accept it. Someone may have changed it first."
+  "ui.house-build.reason.room-refused": "The room did not accept it. Someone may have changed it first.",
+  "ui.house-build.reason.room-too-old": "You cannot decorate in this room yet"
 }

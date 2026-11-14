@@ -122,12 +122,17 @@ namespace Rootborn.Game
             }, r => r == FurniturePurchaseResult.Purchased);
         }
 
-        /// <summary>꾸밈 한 번의 미리 보기(바꾸지 않는다). 집이 아니면 <see cref="HouseFinishReasons.NotInHouse"/>. 같이 쓰는 집은 방이 알린 꾸밈 위에서 같은 판정(자기 해금, 자기 돈).</summary>
+        /// <summary>꾸밈 한 번의 미리 보기(바꾸지 않는다). 집이 아니면 <see cref="HouseFinishReasons.NotInHouse"/>, 같이 쓰는 집인데 방이 꾸밈을 알리지 않으면 <see cref="HouseFinishReasons.RoomTooOld"/>. 같이 쓰는 집은 방이 알린 꾸밈 위에서 같은 판정(자기 해금, 자기 돈).</summary>
         public HouseFinishPreview PreviewHouseFinish(string finishId, string tool, CellPos pointer)
         {
             if (!HouseBuildOpen) return HouseFinishPreview.Refused(finishId, SlotOf(finishId), tool, HouseFinishReasons.NotInHouse);
+            if (RoomCannotDecorate) return HouseFinishPreview.Refused(finishId, SlotOf(finishId), tool, HouseFinishReasons.RoomTooOld);
             return VisibleFinishes.Preview(finishId, tool, pointer, FurnitureUnlocks, CanPayFinish);
         }
+
+        // 같이 쓰는 집 안인데 방이 꾸밈을 알리지 않는다: 꾸밈 조각이 없는 옛 방(플레이어 쪽에 조각이 없거나 방이 그 상태를 보내지 않는다),
+        // 또는 아직 해독한 꾸밈 상태가 없다(더 새 방). 꾸미기 요청을 보내지 않는다 — 옛 방은 Invalid로 답하고, 모르는 상태 위의 미리 보기는 믿을 수 없다.
+        private bool RoomCannotDecorate => InSharedHouse && (_roomBuild == null || !_roomBuild.Known);
 
         /// <summary>
         /// 꾸밈을 적용한다: 미리 보기를 새로 내고, 적용할 수 있으면 돈 빼기와 꾸밈 바꾸기를 한 바꾸기로 하고(메모리만) 한 저장 묶음으로 쓴다.
@@ -145,6 +150,7 @@ namespace Rootborn.Game
         public HouseFinishPreview PreviewHouseBand(string finishId)
         {
             if (!HouseBuildOpen) return HouseFinishPreview.Refused(finishId, SlotOf(finishId), string.Empty, HouseFinishReasons.NotInHouse);
+            if (RoomCannotDecorate) return HouseFinishPreview.Refused(finishId, SlotOf(finishId), string.Empty, HouseFinishReasons.RoomTooOld);
             return VisibleFinishes.PreviewBand(finishId, FurnitureUnlocks, CanPayFinish);
         }
 

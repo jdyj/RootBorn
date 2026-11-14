@@ -758,6 +758,34 @@ namespace Rootborn.Screens.Tests.Furniture
 
         private static string ReasonText(Fixture f) => f.Text(FurniturePlacementScreen.FinishReasonId);
 
+        /// <summary>꾸밈 조각이 없는 옛 방(집 조각만)의 같이 쓰는 집 안: 미리 보기 이유는 "이 방에서는 아직 꾸밀 수 없다"이고 그 문구가 모든 언어에 있다. 요청은 가지 않는다.</summary>
+        [Test]
+        public void SharedHouse_OlderRoomWithoutTheBuildPiece_ShowsTheRoomTooOldReason()
+        {
+            var old = new Rootborn.Core.Room.RoomPieceSet(new Rootborn.Core.Room.RoomShareSettings(new[] { Rootborn.Core.Room.RoomHouse.PieceName }),
+                new Rootborn.Core.Room.RoomPieceCatalog().Add(Rootborn.Core.Room.RoomHouse.PieceName, () => new Rootborn.Core.Room.RoomHouse(),
+                    o => new Rootborn.Core.Room.RoomHouseClient(o)));
+            int ids = 0;
+            var shares = new Rootborn.Core.Room.RoomShares(old.Settings, Rootborn.Core.Room.RoomPieceCatalog.CreateDefault(), () => "guest-r" + (++ids));
+            shares.NoteRoomPlayerId("guest");
+            foreach (var piece in old.Pieces) shares.Receive(piece.State());
+            using var f = new Fixture(shares: shares);
+            f.Decorate();
+            f.T.Click(FurniturePlacementScreen.FinishTabFloorId);
+            RoomFinishDefinition floor = FreeNonDefault(f, RoomFinishSlots.Floor);
+            f.PickCard(floor.Id);
+            var (_, a, _) = f.FirstRoom();
+            f.GiveMoney(100000);
+
+            f.Hover(a);
+            Assert.That(f.Screen.FinishPreview.ReasonKey, Is.EqualTo(HouseFinishReasons.RoomTooOld));
+            Assert.That(ReasonText(f), Is.EqualTo(f.T.Text.Get(HouseFinishReasons.RoomTooOld)));
+            Assert.That(ReasonText(f), Is.Not.EqualTo(f.T.Text.Get(HouseFinishReasons.NotInHouse)), "집 안에 있는데 '집에서만'이라고 하지 않는다");
+            f.ClickCell(a);
+            Assert.That(FinishRequests(shares), Is.Zero, "요청이 가지 않는다");
+            KnownMissingKeys.AssertOnlyKnownMissing(f.T.Text, new[] { HouseFinishReasons.RoomTooOld });
+        }
+
         [Test]
         public void SharedHouse_PickAndClick_WaitsForTheRoom_ThenShowsTheNewFinish()
         {
