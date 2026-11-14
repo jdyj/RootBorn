@@ -195,8 +195,16 @@ namespace Rootborn.Game
 
         private string SlotOf(string finishId) => FindFinish(finishId)?.Slot ?? string.Empty;
 
+        // 방 지갑은 범위 밖의 돈 쓰기를 늘 거절한다. 미리 보기(화면이 범위 밖에서 묻는다)는 확인용 범위(허락받거나 물은 적이 없는 고정 id) 안에서 보아
+        // 잔액으로 판단한다 — 확인은 요청을 적지 않는다(일터 템플릿 CanApplyTemplate과 같은 꼴). 적용 명령 안(Shared 범위)이면 그 범위로 본다.
         private bool CanPayFinish(IReadOnlyList<ItemAmount<string>> cost)
-            => TryGrants(cost, out var costs) && Inventory.CanExchange(costs, null);
+        {
+            if (!TryGrants(cost, out var costs)) return false;
+            bool Check() => Inventory.CanExchange(costs, null);
+            return _roomWallet == null || _walletScopeOpen ? Check() : InScope(FinishCheckRequestId, Check);
+        }
+
+        private const string FinishCheckRequestId = "house-finish-check";
 
         // 비용(아이템 id) → 가방 바꾸기 항목. 데이터에 없는 아이템이 있으면 낼 수 없다.
         private bool TryGrants(IReadOnlyList<ItemAmount<string>> cost, out InventoryGrant[] grants)
