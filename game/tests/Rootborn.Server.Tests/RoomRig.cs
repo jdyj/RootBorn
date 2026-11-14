@@ -17,16 +17,19 @@ namespace Rootborn.Server.Tests
         private readonly Dictionary<SessionClient, LoopbackTransport> _lines = new Dictionary<SessionClient, LoopbackTransport>();
 
         public RoomRig(ISaveStore store, string slot = "room-a", int maxPlayers = 4, RoomServerSettings settings = null, TimeRules timeRules = null,
-            IGuestSaves guests = null, Rootborn.Core.Room.RoomPieceCatalog pieces = null, string owner = null)
+            IGuestSaves guests = null, Rootborn.Core.Room.RoomPieceCatalog pieces = null, string owner = null, RoomVersions? versions = null)
         {
+            ServerVersions = versions ?? Versions;
             Network = new LoopbackNetwork(1);
             Clock = new ManualRoomClock();
             Settings = settings ?? new RoomServerSettings { MaxPlayers = maxPlayers };
             Log = new List<string>();
-            Room = new RoomServer(Network.Listen(), Settings, Versions, store, slot, Log.Add, timeRules, guests, pieces, owner);
+            Room = new RoomServer(Network.Listen(), Settings, ServerVersions, store, slot, Log.Add, timeRules, guests, pieces, owner);
             Loop = new RoomLoop(Room, Clock, Settings.TickSeconds);
         }
 
+        /// <summary>이 방이 받아들이는 버전(기본은 <see cref="Versions"/>).</summary>
+        public RoomVersions ServerVersions { get; }
         public LoopbackNetwork Network { get; }
         public ManualRoomClock Clock { get; }
         public RoomServerSettings Settings { get; }
@@ -37,7 +40,7 @@ namespace Rootborn.Server.Tests
         public SessionClient Join(string playerId, RoomVersions? versions = null, string look = "child|")
         {
             var line = Network.Connect();
-            var client = RoomClient.Create(line, versions ?? Versions, playerId, look, new SessionClientSettings());
+            var client = RoomClient.Create(line, versions ?? ServerVersions, playerId, look, new SessionClientSettings());
             _clients.Add(client);
             _lines[client] = line;
             return client;

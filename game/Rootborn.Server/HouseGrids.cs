@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Rootborn.Core.Building;
 using Rootborn.Core.Minigames;
 using Rootborn.Core.Placement;
 using Rootborn.Core.Room;
@@ -15,6 +16,7 @@ namespace Rootborn.Server
     /// 플레이어 쪽 화면(Rootborn.Screens FurnitureRoom)이 GameSession.EnterHouse에 넘기는 칸과 같아야 한다 — 맵 안의 칸은 바닥, 막힌 칸은 고정 칸,
     /// 도착 지점 칸(id 순)은 들어오는 칸과 문 앞, 가구 칸의 y는 위로 커진다(맵 칸 y를 뒤집는다). 같은지는 HouseGridsTests가 본다.
     /// 맵은 처음 물을 때 읽는다(집을 같이 쓰지 않는 방은 읽지 않는다). 읽지 못하면 로그를 남기고 그 면을 모른다 — 방은 가구 놓기를 거절한다.
+    /// 짓는 집의 틀(<see cref="LoadFrames"/>)과 꾸밈 정의도 같이 넘긴다 — 방이 같은 Core 규칙(HouseFinishes)으로 꾸밈 요청을 다시 판정한다.
     /// </summary>
     public static class HouseGrids
     {
@@ -23,11 +25,46 @@ namespace Rootborn.Server
         {
             if (definitions == null) throw new ArgumentNullException(nameof(definitions));
             Dictionary<string, IPlacementGrid> grids = null;
+            Dictionary<string, HouseBuildFrame> frames = null;
             return new RoomHouseRules(definitions.All<FurnitureDefinition>(), surface =>
             {
                 grids ??= Load(repoRoot, log);
                 return surface != null && grids.TryGetValue(surface, out var grid) ? grid : null;
-            }, new FurnitureStorageCatalog(definitions.All<FurnitureStorageDefinition>()), definitions.All<Rootborn.Core.Inventory.ItemDefinition>());
+            }, new FurnitureStorageCatalog(definitions.All<FurnitureStorageDefinition>()), definitions.All<Rootborn.Core.Inventory.ItemDefinition>(),
+            surface =>
+            {
+                frames ??= LoadFrames(repoRoot, log);
+                return surface != null && frames.TryGetValue(surface, out var frame) ? frame : null;
+            }, definitions.All<RoomFinishDefinition>());
+        }
+
+        /// <summary>
+        /// 저장소의 맵 목록에서 면 id → 짓는 집의 틀(맵 성질 build가 있는 가구 방의 LDtk에서 — 플레이어 쪽 Host가 집에 들어설 때 붙이는 틀과 같다).
+        /// 면은 <see cref="Load"/>와 같은 목록이다. 읽지 못하면 빈 표와 로그 한 줄 — 방은 집 꾸밈 요청을 거절한다.
+        /// </summary>
+        public static Dictionary<string, HouseBuildFrame> LoadFrames(string repoRoot, Action<string> log)
+        {
+            var frames = new Dictionary<string, HouseBuildFrame>(StringComparer.Ordinal);
+            try
+            {
+                var interactions = InteractionData.Load(Path.Combine(repoRoot, InteractionData.DefaultRelativePath));
+                var maps = WorldMapLoader.FromRepo(repoRoot);
+                foreach (string mapId in interactions.MapIds)
+                {
+                    string surface = interactions.Map(mapId).PlacementSurface;
+                    if (string.IsNullOrEmpty(surface) || frames.ContainsKey(surface)) continue;
+                    HouseBuildFrame frame = HouseBuildFrames.From(maps.LoadMap(mapId));
+                    if (frame != null) frames[surface] = frame;
+                }
+            }
+            catch (Exception e) when (e is IOException || e is InvalidOperationException || e is UnauthorizedAccessException || e is System.Text.Json.JsonException
+                                      || e is ArgumentException || e is FormatException)
+            {
+                log?.Invoke("집 맵을 읽지 못했다 — 같이 쓰는 집을 꾸밀 수 없다: " + e.Message);
+                frames.Clear();
+            }
+
+            return frames;
         }
 
         /// <summary>저장소(맵 목록·상호작용 데이터·LDtk)에서 면 id → 방 칸. 읽지 못하면 빈 표와 로그 한 줄.</summary>

@@ -17,6 +17,7 @@ namespace Rootborn.Host.World
         private readonly WorldMapLoader _maps;
         private readonly InteractionData _interactions;
         private readonly Dictionary<string, FurnitureRoom> _rooms = new Dictionary<string, FurnitureRoom>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, Rootborn.Core.Building.HouseBuildFrame> _frames = new Dictionary<string, Rootborn.Core.Building.HouseBuildFrame>(StringComparer.OrdinalIgnoreCase);
 
         public RoomAwareMaps(WorldMapLoader maps, InteractionData interactions)
         {
@@ -47,6 +48,25 @@ namespace Rootborn.Host.World
             if (string.IsNullOrEmpty(surfaceId)) return null;
             foreach (string mapId in _interactions.MapIds)
                 if (_interactions.Map(mapId).PlacementSurface == surfaceId) return RoomOf(mapId)?.Grid;
+            return null;
+        }
+
+        /// <summary>
+        /// 그 면 id(placementSurface)의 맵이 짓는 집(맵 성질 build)이면 그 틀, 아니면 null. 내 PC에서 연 방이 같이 쓰는 집의 꾸밈을 판정할 때 쓴다
+        /// (Core RoomHouseRules). 맵마다 한 번 만들어 기억한다 — 같은 맵이면 같은 인스턴스.
+        /// </summary>
+        public Rootborn.Core.Building.HouseBuildFrame FrameForSurface(string surfaceId)
+        {
+            if (string.IsNullOrEmpty(surfaceId)) return null;
+            foreach (string mapId in _interactions.MapIds)
+            {
+                if (_interactions.Map(mapId).PlacementSurface != surfaceId) continue;
+                LoadedMap loaded = _maps.LoadMap(mapId);
+                if (!_frames.TryGetValue(loaded.Entry.Id, out var frame))
+                    _frames[loaded.Entry.Id] = frame = Rootborn.World.HouseBuildFrames.From(loaded);
+                return frame;
+            }
+
             return null;
         }
     }

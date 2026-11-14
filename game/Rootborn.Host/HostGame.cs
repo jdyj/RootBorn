@@ -324,7 +324,10 @@ namespace Rootborn.Host
                     return Rootborn.Core.Room.RoomPieceCatalog.CreateDefault(new Rootborn.Core.Room.RoomHouseRules(
                         definitions.All<Rootborn.Core.Placement.FurnitureDefinition>(), surface => World?.Rooms.GridForSurface(surface),
                         new Rootborn.Core.Placement.FurnitureStorageCatalog(definitions.All<Rootborn.Core.Placement.FurnitureStorageDefinition>()),
-                        definitions.All<Rootborn.Core.Inventory.ItemDefinition>()));
+                        definitions.All<Rootborn.Core.Inventory.ItemDefinition>(),
+                        // 같이 쓰는 집의 꾸밈: 짓는 집(맵 성질 build)의 틀은 이 PC의 맵에서, 꾸밈 정의는 같은 데이터에서.
+                        buildFrameFor: surface => World?.Rooms.FrameForSurface(surface),
+                        finishes: definitions.All<Rootborn.Core.Building.RoomFinishDefinition>()));
                 });
             hosting.DefaultSharedPieces = _options.SharedPieces; // --share: 방 열기 창에 처음 켜 둘 것
             hosting.Changed += () => Screens?.NotifyChanged(RoomHostText.Topic);
