@@ -262,7 +262,7 @@ namespace Rootborn.Simulation.Rooms
         {
             var st = Of(seat);
             GameSession s = seat.Session;
-            if (s == null) return;
+            if (s == null) { _acting = null; return; } // 걸음이 끝났다 — 판이 없어도 걷는 자리를 비운다(다음 받기의 걸음 사이 검사가 느슨해지지 않게)
             Result.Count("걸음");
             ScanWallet(seat, s);
             CloseWallet(seat, SharedWalletBook.WindowStep, 0, "걸음");

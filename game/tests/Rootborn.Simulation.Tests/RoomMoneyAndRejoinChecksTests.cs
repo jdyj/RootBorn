@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using Rootborn.Core.Room;
 using Rootborn.Simulation.Rooms;
@@ -140,6 +141,68 @@ namespace Rootborn.Simulation.Tests
             Assert.That(book.CloseWindow(P, SharedWalletBook.WindowStep, 0, "걸음"), Does.Contain("잡기가 2개"), "걸음 동안 받기가 돌아도 걸음 하나의 잡기는 하나");
             book.See(P, Wallet("s-3", RoomWallet.Hold, 10));
             Assert.That(book.CloseWindow(P, SharedWalletBook.WindowBetween, 0, null), Does.Contain("까닭 없는 지출"));
+        }
+
+        // ---------- 걸음의 지출 짝짓기(PairStepSpends — 시뮬레이션이 그대로 부르는 함수; 시드에서는 아직 지나지 않는다) ----------
+
+        private static readonly SharedWalletBook.WalletUse[] NoUses = new SharedWalletBook.WalletUse[0];
+
+        private static (Dictionary<string, int> Prices, Rootborn.Core.Placement.FurnitureDefinition Furniture, Rootborn.Core.Building.RoomFinishDefinition Wallpaper) RealPrices()
+        {
+            var defs = FastPlayTests.Atlas.Definitions;
+            var furniture = defs.All<Rootborn.Core.Placement.FurnitureDefinition>().First(f => f.IsForSale);
+            var wallpaper = defs.All<Rootborn.Core.Building.RoomFinishDefinition>().First(f => f.IsForSale && f.Slot == Rootborn.Core.Building.RoomFinishSlots.Wall);
+            return (SharedWalletBook.PricesByToken(defs.All<Rootborn.Core.Placement.FurnitureDefinition>(), defs.All<Rootborn.Core.Building.RoomFinishDefinition>()), furniture, wallpaper);
+        }
+
+        private static SharedWalletBook.WalletUse StepUse(int amount) => new SharedWalletBook.WalletUse("걸음: 걸음", amount);
+
+        [Test]
+        public void StepSpend_BuyingFurnitureAtItsDefinedPrice_HasNoProblem()
+        {
+            var (prices, furniture, _) = RealPrices();
+            Assert.That(SharedWalletBook.PairStepSpends(new[] { StepUse(furniture.Price) }, new[] { furniture.UnlockToken }, prices, "location"), Is.Empty);
+        }
+
+        [Test]
+        public void StepSpend_PayingMoreOrLessThanTheDefinedPrice_Fails()
+        {
+            var (prices, furniture, _) = RealPrices();
+            Assert.That(SharedWalletBook.PairStepSpends(new[] { StepUse(furniture.Price + 1) }, new[] { furniture.UnlockToken }, prices, "location"), Has.Some.Contains("정의의 값과 다르다"), "더 냈다");
+            Assert.That(SharedWalletBook.PairStepSpends(new[] { StepUse(furniture.Price - 1) }, new[] { furniture.UnlockToken }, prices, "location"), Has.Some.Contains("정의의 값과 다르다"), "덜 냈다");
+        }
+
+        [Test]
+        public void StepSpend_WalletDropsWithoutAnUnlock_Fails()
+        {
+            var (prices, _, _) = RealPrices();
+            Assert.That(SharedWalletBook.PairStepSpends(new[] { StepUse(30) }, new string[0], prices, "location"), Has.Some.Contains("짝짓지 못했다"));
+        }
+
+        [Test]
+        public void StepSpend_TwoUnlocksForOneWrite_Fails()
+        {
+            var (prices, furniture, wallpaper) = RealPrices();
+            List<string> problems = SharedWalletBook.PairStepSpends(new[] { StepUse(furniture.Price + wallpaper.Price) }, new[] { furniture.UnlockToken, wallpaper.UnlockToken }, prices, "location");
+            Assert.That(problems, Has.Some.Contains("사기 하나에 방 지갑 쓰기 하나"));
+        }
+
+        [Test]
+        public void StepSpend_BuyingALockedWallpaper_GoesTheSameWay()
+        {
+            var (prices, _, wallpaper) = RealPrices();
+            Assert.That(SharedWalletBook.PairStepSpends(new[] { StepUse(wallpaper.Price) }, new[] { wallpaper.UnlockToken }, prices, "location"), Is.Empty);
+            Assert.That(SharedWalletBook.PairStepSpends(new[] { StepUse(wallpaper.Price * 2) }, new[] { wallpaper.UnlockToken }, prices, "location"), Has.Some.Contains("정의의 값과 다르다"));
+        }
+
+        [Test]
+        public void StepSpend_FromAKindThatCannotBePairedByValue_FailsNamingTheKind()
+        {
+            var (prices, _, _) = RealPrices();
+            List<string> problems = SharedWalletBook.PairStepSpends(new[] { StepUse(50) }, new string[0], prices, "adult-facility");
+            Assert.That(problems, Has.Some.Contains("행동 종류 adult-facility"));
+            Assert.That(SharedWalletBook.PairStepSpends(new[] { new SharedWalletBook.WalletUse("꾸밈 허락", 30) }, new string[0], prices, "furniture-placement"), Is.Empty, "꾸밈 허락의 쓰기는 방의 기록으로 따로 견준다");
+            Assert.That(SharedWalletBook.PairStepSpends(NoUses, new string[0], prices, "-"), Is.Empty);
         }
 
         // ---------- 다시 들어온 뒤 ----------

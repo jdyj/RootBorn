@@ -100,6 +100,9 @@ namespace Rootborn.Simulation.Rooms
             return fail;
         }
 
+        /// <summary>마지막 Check가 잔액을 실제로 견줬다(기준만 잡은 호출이면 false).</summary>
+        public bool LastCompared { get; private set; }
+
         /// <summary>마지막 CloseWindow가 까닭을 붙인 잡기 수.</summary>
         public int LastClosed { get; private set; }
 
@@ -242,7 +245,8 @@ namespace Rootborn.Simulation.Rooms
             }
 
             long expected = _base + _deposits + _releasesOther - _holdsOther - decorations;
-            if (_base < 0 || atCap)
+            LastCompared = !(_base < 0 || atCap);
+            if (!LastCompared)
             {
                 // 기준: 지금 잔액이 지금까지 센 것을 모두 반영한 값이다.
                 _base = balance - (_deposits + _releasesOther - _holdsOther - decorations);
@@ -252,6 +256,65 @@ namespace Rootborn.Simulation.Rooms
                 fail ??= "방 지갑의 잔액이 알려진 지출과 맞지 않는다: 잔액 " + balance + ", 셈 " + expected + " (기준 " + _base + " + 넣기 " + _deposits + " + 꾸밈 아닌 풀기 " + _releasesOther
                     + " − 꾸밈 아닌 잡기 " + _holdsOther + " − 꾸밈 " + decorations + ")";
             return fail;
+        }
+
+        // ---------- 걸음의 지출을 값과 짝짓기(순수 함수 — 시뮬레이션과 단위 테스트가 같은 코드를 부른다) ----------
+
+        /// <summary>방 지갑 쓰기 하나(받기 하나에서 새로 적힌 것): 범위(잡기 id)의 까닭과 쓴 돈.</summary>
+        public readonly struct WalletUse
+        {
+            public WalletUse(string reason, int amount) { Reason = reason; Amount = amount; }
+            public string Reason { get; }
+            public int Amount { get; }
+        }
+
+        /// <summary>파는 가구·꾸밈의 해금 표 → 값(정의의 Price). 같은 표를 둘이 쓰고 값이 다르면 -1(짝짓지 않는다).</summary>
+        public static Dictionary<string, int> PricesByToken(IEnumerable<Rootborn.Core.Placement.FurnitureDefinition> furniture, IEnumerable<Rootborn.Core.Building.RoomFinishDefinition> finishes)
+        {
+            var map = new Dictionary<string, int>(StringComparer.Ordinal);
+            void Put(string token, int price) => map[token] = map.TryGetValue(token, out int known) && known != price ? -1 : price;
+            if (furniture != null) foreach (var f in furniture) if (f != null && f.IsForSale) Put(f.UnlockToken, f.Price);
+            if (finishes != null) foreach (var f in finishes) if (f != null && f.IsForSale) Put(f.UnlockToken, f.Price);
+            return map;
+        }
+
+        /// <summary>
+        /// 받기 하나 동안 걸음의 행동으로 잡은 방 지갑 돈이 쓰였을 때 그 까닭과 값을 맞춘다. 문제가 없으면 빈 목록.
+        /// - 걸음 까닭이 아닌 쓰기(꾸밈 허락 등)는 보지 않는다(꾸밈은 방의 기록으로 따로 견준다).
+        /// - 같은 받기에 새로 생긴 파는 가구·꾸밈의 해금이 없으면 짝이 없는 지출이다(시설 고르기·일·시설 올리기·탐색 선택·일터 템플릿처럼
+        ///   값을 해금으로 짝지을 수 없는 종류도 여기서 실패한다 — 그 종류의 짝짓기를 더할 때까지 받아들이지 않는다). 글에 행동 종류를 적는다.
+        /// - 해금 수와 쓰기 수가 다르면 실패(사기 하나에 쓰기 하나). 쓴 돈 합 ≠ 해금한 것의 값 합이면 실패(더 냄·덜 냄). 값을 모르는 해금 표(-1)는 짝짓지 못한 것으로 실패.
+        /// 지금 시뮬레이션의 같이 쓰는 지갑 방에서는 걸음의 방 지갑 지출이 지나지 않는다(가게에서 사는 걸음이 없다) — 이 판정은 단위 테스트(RoomMoneyAndRejoinChecksTests)가 본다.
+        /// </summary>
+        public static List<string> PairStepSpends(IReadOnlyList<WalletUse> uses, IEnumerable<string> newTokens, IReadOnlyDictionary<string, int> priceByToken, string actionKind)
+        {
+            var problems = new List<string>();
+            int spent = 0, count = 0;
+            foreach (WalletUse u in uses)
+            {
+                if (u.Reason == null || !u.Reason.StartsWith(WindowStep, StringComparison.Ordinal)) continue;
+                spent += u.Amount;
+                count++;
+            }
+            if (count == 0) return problems;
+            int price = 0, bought = 0;
+            var unknown = new List<string>();
+            foreach (string token in newTokens)
+            {
+                if (priceByToken == null || !priceByToken.TryGetValue(token, out int p)) continue; // 파는 것이 아닌 해금(보상 등)은 사기가 아니다
+                if (p < 0) { unknown.Add(token); continue; }
+                price += p;
+                bought++;
+            }
+            if (unknown.Count > 0) problems.Add("값을 정할 수 없는 해금(같은 표에 값이 둘): " + string.Join(", ", unknown));
+            if (bought == 0)
+            {
+                problems.Add("방 지갑에서 쓴 돈의 까닭을 짝짓지 못했다(가구·꾸밈 사기가 아니다 — 값을 데이터로 짝지을 수 없는 종류): 행동 종류 " + (actionKind ?? "-") + ", 쓴 돈 " + spent + "(쓰기 " + count + ")");
+                return problems;
+            }
+            if (bought != count) problems.Add("사기 하나에 방 지갑 쓰기 하나여야 한다: 해금 " + bought + ", 쓰기 " + count + "(행동 종류 " + (actionKind ?? "-") + ")");
+            if (price != spent) problems.Add("가구·꾸밈을 사며 방 지갑에서 쓴 돈이 정의의 값과 다르다: 쓴 돈 " + spent + ", 해금한 것의 값 " + price + "(행동 종류 " + (actionKind ?? "-") + ")");
+            return problems;
         }
 
         public delegate bool TryAnswer(string player, string requestId, out RoomAnswer answer);

@@ -270,8 +270,9 @@ namespace Rootborn.Simulation.Rooms
         // 받기 하나 앞의 방 지갑 쓰기 id와 해금 표(같이 쓰는 지갑일 때만).
         private PurchaseWindow OpenPurchaseWindow(GameSession s)
         {
-            if (s == null || !s.SharesWallet || s.FurnitureUnlocks == null) return null;
-            var w = new PurchaseWindow { Uses = new HashSet<string>(StringComparer.Ordinal), Tokens = new HashSet<string>(s.FurnitureUnlocks.UnlockTokens, StringComparer.Ordinal) };
+            // 해금 표가 없어도 짝짓기를 건너뛰지 않는다(빈 표 — 그러면 걸음의 지출은 짝이 없어 실패한다).
+            if (s == null || !s.SharesWallet) return null;
+            var w = new PurchaseWindow { Uses = new HashSet<string>(StringComparer.Ordinal), Tokens = new HashSet<string>(s.FurnitureUnlocks?.UnlockTokens ?? (IEnumerable<string>)Array.Empty<string>(), StringComparer.Ordinal) };
             foreach (var r in s.Shares.Outbox.Requests) if (r.Piece == RoomWallet.PieceName && r.Kind == RoomWallet.Use) w.Uses.Add(r.RequestId);
             return w;
         }
@@ -281,12 +282,7 @@ namespace Rootborn.Simulation.Rooms
         // 파는 가구·꾸밈의 해금 표 → 값(정의). 같은 표를 둘이 쓰면 값이 다를 때 짝짓지 않는다(-1).
         private Dictionary<string, int> PriceByToken()
         {
-            if (_priceByToken != null) return _priceByToken;
-            var map = new Dictionary<string, int>(StringComparer.Ordinal);
-            void Put(string token, int price) => map[token] = map.TryGetValue(token, out int known) && known != price ? -1 : price;
-            foreach (var f in _play.Atlas.Definitions.All<Rootborn.Core.Placement.FurnitureDefinition>()) if (f != null && f.IsForSale) Put(f.UnlockToken, f.Price);
-            foreach (var f in _play.Atlas.Definitions.All<RoomFinishDefinition>()) if (f != null && f.IsForSale) Put(f.UnlockToken, f.Price);
-            return _priceByToken = map;
+            return _priceByToken ??= SharedWalletBook.PricesByToken(_play.Atlas.Definitions.All<Rootborn.Core.Placement.FurnitureDefinition>(), _play.Atlas.Definitions.All<RoomFinishDefinition>());
         }
 
         /// <summary>
@@ -295,35 +291,22 @@ namespace Rootborn.Simulation.Rooms
         /// </summary>
         private void PairPurchases(RoomSeat seat, GameSession s, PurchaseWindow before)
         {
-            if (before == null || s.FurnitureUnlocks == null) return;
-            int spent = 0, uses = 0;
+            // 판정은 순수 함수 SharedWalletBook.PairStepSpends가 한다(단위 테스트가 같은 함수를 본다). 시드에서는 걸음의 방 지갑 지출이 아직 지나지 않는다.
+            if (before == null) return;
+            var uses = new List<SharedWalletBook.WalletUse>(2);
             foreach (var r in s.Shares.Outbox.Requests)
             {
                 if (r.Piece != RoomWallet.PieceName || r.Kind != RoomWallet.Use || before.Uses.Contains(r.RequestId) || r.Ids == null || r.Ids.Length != 1) continue;
-                string reason = _book.ReasonOf(seat.PlayerId, r.Ids[0]);
-                if (reason == null || !reason.StartsWith("걸음", StringComparison.Ordinal)) continue;
-                spent += r.Amount;
-                uses++;
+                uses.Add(new SharedWalletBook.WalletUse(_book.ReasonOf(seat.PlayerId, r.Ids[0]), r.Amount));
             }
-            if (uses == 0) return;
-            int price = 0;
-            bool bought = false;
-            foreach (string token in s.FurnitureUnlocks.UnlockTokens)
-            {
-                if (before.Tokens.Contains(token) || !PriceByToken().TryGetValue(token, out int p) || p < 0) continue;
-                price += p;
-                bought = true;
-            }
-            if (!bought)
-            {
-                // 지금 아는 걸음의 지출은 가구·꾸밈 사기뿐이다(시뮬레이션의 같이 쓰는 지갑 방에서 다른 지출은 지나지 않는다). 시설·일·탐색·일터 템플릿처럼
-                // 값을 해금으로 짝지을 수 없는 지출이 나타나면 그 종류의 짝짓기를 더할 때까지 실패한다(짝이 없는 지출을 받아들이지 않는다).
-                string screen = _lastActionScreen.TryGetValue(seat, out string sc) ? sc : "-";
-                Fail("방 지갑에서 쓴 돈의 까닭을 짝짓지 못했다(가구·꾸밈 사기가 아니다): " + seat + " 쓴 돈 " + spent + "(쓰기 " + uses + "), 마지막 행동의 화면 " + screen);
-                return;
-            }
-            if (price != spent) Fail("가구·꾸밈을 사며 방 지갑에서 쓴 돈이 정의의 값과 다르다: " + seat + " 쓴 돈 " + spent + "(쓰기 " + uses + "), 새로 해금한 것의 값 " + price);
-            Result.Count("방 지갑 지출: 가구·꾸밈 사기 — 쓴 돈 = 정의의 값");
+            if (uses.Count == 0) return;
+            var tokens = new List<string>();
+            if (s.FurnitureUnlocks != null) foreach (string token in s.FurnitureUnlocks.UnlockTokens) if (!before.Tokens.Contains(token)) tokens.Add(token);
+            string kind = _lastActionScreen.TryGetValue(seat, out string sc) ? sc : "-";
+            List<string> problems = SharedWalletBook.PairStepSpends(uses, tokens, PriceByToken(), kind);
+            if (problems.Count > 0) { Fail(seat + ": " + string.Join("; ", problems)); return; }
+            foreach (var u in uses)
+                if (u.Reason != null && u.Reason.StartsWith(SharedWalletBook.WindowStep, StringComparison.Ordinal)) { Result.Count("방 지갑 지출: 가구·꾸밈 사기 — 쓴 돈 = 정의의 값"); break; }
         }
 
         /// <summary>조용할 때: 방 지갑의 잔액 = 기준 + 넣기 + 풀기 − 잡기(꾸밈은 방의 기록에서 다시 계산한 비용). 이 방에 방 지갑이 없으면 하지 않는다.</summary>
@@ -334,7 +317,7 @@ namespace Rootborn.Simulation.Rooms
             RoomRequestLedger ledger = _play.Server.Pieces.Ledger;
             string fail = _book.Check(wallet.Balance, (string p, string id, out RoomAnswer a) => ledger.TryGet(p, id, out a), wallet.Balance >= PersonalWallet.MaxBalance);
             if (fail != null) Fail(fail);
-            Result.Count("방 지갑 잔액 = 넣기 − 잡기 + 풀기(꾸밈은 방의 기록으로 다시 계산)");
+            if (_book.LastCompared) Result.Count("방 지갑 잔액 = 넣기 − 잡기 + 풀기(꾸밈은 방의 기록으로 다시 계산)"); // 기준만 잡은 호출은 세지 않는다(지킴 검사가 "견줬다"를 보게)
         }
 
         // ---------- 방 쪽 ----------
