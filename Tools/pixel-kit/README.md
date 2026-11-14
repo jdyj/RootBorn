@@ -656,7 +656,7 @@ if/switch로 종류를 닫지 않는다.
 크기, 도착 지점, 고정 지점(일과 판, 하루 끝, NPC 자리, 현관)의 칸을 바꾸는 일이면 먼저 스킬 `save-compat-change`를 따르고 사용자에게 묻는다(옛 세이브의 가구 자리와 `game/world/interactions.json` 좌표가 칸 좌표다). 그 밖에 벽·바닥 칸이나 `Build` 값만 고치는 일은 아래 순서다.
 
 1. **평면을 고치고 `room build`로 다시 만들 때**: `art/kit/rooms/house.json`을 고친다 → `python Tools/pixel-kit/kit.py room check house` → `room build house --force --dry-run`으로 쓸 파일 보기 → `room build house --force`. **`--force`는 LDtk에서 손으로 고친 것(칠한 `Collision`·`Build`, 놓은 가구, 고친 문)을 지운다.** 지워도 되는지 `git diff`·사용자에게 먼저 본다.
-   `room check house`에 알림 `room-door-unregistered (14, 17)` 하나가 나오는 것은 정상이다(방 폴더 `maps.json`의 `doors`는 비어 있고, 문 목적지는 게임 `game/world/maps.json`의 `House` 항목이 가진다). 끝 코드는 0이다.
+   `room check art/world/rooms/house/house.ldtk`(와 `room build house --dry-run`)에 알림 `room-door-unregistered (14, 17)` 하나가 나오는 것은 정상이다(평면 검사 `room check house`는 "문제 없음"이다)(방 폴더 `maps.json`의 `doors`는 비어 있고, 문 목적지는 게임 `game/world/maps.json`의 `House` 항목이 가진다). 끝 코드는 0이다.
 2. **LDtk에서 `Collision`·`Build`를 칠했을 때**: 편집기에서 저장하고 닫는다 → `room check <.ldtk>` → `room repaint <.ldtk> --dry-run` → `room repaint <.ldtk>` → `room check <.ldtk>`. `Wall`·`Ground`는 손으로 칠하지 않는다.
 3. 평면의 `frameId`를 올렸으면 방 폴더 `maps.json`(`room build`가 쓴다)과 `game/world/maps.json`의 `House` `build`를 같은 값으로 맞춘다. 같은지는 키트 시험 `test_room_ldtk.HouseRoomTests`가 본다.
 4. 테스트: 키트 테스트 전체(`python -m unittest discover -s Tools/pixel-kit/tests -t Tools/pixel-kit`), World `HouseMapTests`·`MapContractTests`, Host `HouseMapHostTests`·`HouseTilesHostTests`(`dotnet test game/tests/Rootborn.Host.Tests --filter "House"`). 게임 화면을 스크린샷으로 직접 열어 본다(빈 칸, 겹친 그림, 막힌 현관).

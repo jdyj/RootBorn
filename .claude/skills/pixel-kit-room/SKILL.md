@@ -57,7 +57,7 @@ description: "ROOTBORN 실내 방·집 구조를 칸마다 벽/바닥/밖만 정
 - **벽·바닥 칸이나 `Build` 값만 바꾼다**: 아래 순서.
 
 1. 평면 `art/kit/rooms/house.json`을 고친다 → `python Tools/pixel-kit/kit.py room check house`.
-   `room check house`에 알림 `room-door-unregistered (14, 17)` 하나가 나오는 것은 정상이다(문 목적지는 게임 `game/world/maps.json`의 `House` 항목이 가진다).
+   `room check art/world/rooms/house/house.ldtk`(와 `room build house --dry-run`)에 알림 `room-door-unregistered (14, 17)` 하나가 나오는 것은 정상이다(문 목적지는 게임 `game/world/maps.json`의 `House` 항목이 가진다).
 2. `room build house --force --dry-run`으로 쓸 파일을 보고 `room build house --force`. **LDtk에서 손으로 고친 것(칠한 `Collision`·`Build`, 놓은 가구, 고친 문)은 지워진다.** 손 고친 것이 있으면 `--force` 대신 `repaint`(위 5번).
 3. 평면의 `frameId`를 올렸으면 방 폴더 `maps.json`과 `game/world/maps.json`의 `House` `build`도 같은 값으로 맞춘다(키트 시험 `HouseRoomTests`가 견준다).
 4. 테스트와 화면: 도구 테스트 전체, World `HouseMapTests`·`MapContractTests`, Host `HouseMapHostTests`·`HouseTilesHostTests`. 게임 화면 스크린샷을 **직접 열어** 본다(스킬 `host-play-test`).
