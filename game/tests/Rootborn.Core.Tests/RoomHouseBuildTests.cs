@@ -725,6 +725,30 @@ namespace Rootborn.Core.Tests
         }
 
         [Test]
+        public void Client_AUseStillWaitingForItsAnswer_IsNotReplacedWhenTheStateChanges_SoItsLateAnswerIsNotStranded()
+        {
+            // 방 상태가 바뀌면 거절된 쓰기를 새 id로 바꿔 두는데, 그것은 같은 id로 미뤄 둔 것만이다. 이미 새 id로 보내 답을 기다리는 쓰기를 바꾸면
+            // 그 답이 늦게 와서 보낼 목록에서 찾지 못하고 먼저 온 답(RoomShares의 _early)에 남는다.
+            var shares = Shares();
+            var client = shares.Find<RoomHouseBuildClient>();
+            var piece = Piece();
+            Finish(piece, "ana", "h1", FloorOak, HouseFinishTools.Brush, new CellPos(1, 2), 1);
+            shares.Receive(piece.State());
+            client.AddUse("h1");
+            string UseId() => shares.Outbox.Requests.Single(r => r.Kind == RoomHouseBuild.Use && r.Ids.Single() == "h1").RequestId;
+            shares.Receive(new RoomAnswer(RoomHouseBuild.PieceName, UseId(), RoomOutcomes.Refused, 0));
+            string waiting = UseId();
+            Assert.That(shares.Outbox.IsDeferred(waiting), Is.False, "전제: 첫 거절 뒤의 새 id는 보내 답을 기다린다");
+
+            Finish(piece, "bo", "h2", FloorOak, HouseFinishTools.Brush, new CellPos(6, 3), 1); // 답이 오기 전에 방의 상태가 바뀌었다
+            shares.Receive(piece.State());
+            Assert.That(UseId(), Is.EqualTo(waiting), "답을 기다리는 쓰기는 그대로 둔다");
+
+            shares.Receive(new RoomAnswer(RoomHouseBuild.PieceName, waiting, RoomOutcomes.Applied, 0));
+            Assert.That(shares.Outbox.Requests, Is.Empty, "늦게 온 답이 그 쓰기를 끝낸다");
+        }
+
+        [Test]
         public void Client_RequestsWithTheSeparator_Throw()
         {
             var client = Shares().Find<RoomHouseBuildClient>();

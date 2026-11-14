@@ -480,7 +480,8 @@ namespace Rootborn.Core.Room
                         break;
                     }
 
-                if (pending == null) continue;
+                // 미뤄 둔 것(같은 id로 다시 적은 거절)만 바꾼다. 보내 답을 기다리는 쓰기를 바꾸면 그 답이 늦게 와 보낼 목록에서 찾지 못한다(먼저 온 답에 남는다).
+                if (pending == null || !_outbox.IsDeferred(pending)) continue;
                 _outbox.Answered(pending);
                 AddUse(hold);
                 _refusedUses[hold] = _linesVersion;
