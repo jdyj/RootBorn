@@ -121,6 +121,39 @@ namespace Rootborn.World.Tests
         }
 
         [Test]
+        public void Checks_CatchFinishMissingAPiece()
+        {
+            // 조각 시트 좌표표의 사본에서 한 벽 꾸밈의 정면 조각 하나(짓는 집의 출처표가 쓰는 것)를 지운다 → 그 꾸밈에 조각이 없다고 알린다.
+            WorldMapLoader loader = Repo.Loader();
+            MapEntry entry = loader.Catalog.Maps.First(m => m.Build != null);
+            Rootborn.Core.Building.RoomTilePlan plan = loader.LoadMap(entry.Id).Tiles;
+            string piece = plan.Cells.SelectMany(c => c.Parts).First(p => p.Source == Rootborn.Core.Building.TileSources.Face).Piece;
+            var wall = Repo.Definitions.All<Rootborn.Core.Building.RoomFinishDefinition>().First(f => f.Slot == Rootborn.Core.Building.RoomFinishSlots.Wall);
+
+            string data = Path.Combine(Path.GetTempPath(), "rootborn-finish-check-" + Guid.NewGuid().ToString("N"));
+            try
+            {
+                string source = Path.Combine(Repo.Root, "data", "atlases", wall.Sheet + ".atlas.json");
+                string copy = Path.Combine(data, "atlases", wall.Sheet + ".atlas.json");
+                Directory.CreateDirectory(Path.GetDirectoryName(copy));
+                System.Text.Json.Nodes.JsonNode atlas = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(source));
+                Assert.That(atlas["sprites"].AsObject().Remove(wall.Art + "/" + piece), Is.True, wall.Art + "/" + piece);
+                File.WriteAllText(copy, atlas.ToJsonString());
+
+                List<string> found = MapChecks.Check(loader, Interactions, Repo.Definitions, new RoomFinishArt(data)).Select(p => p.ToString()).ToList();
+                Assert.That(found, Has.Some.EqualTo(entry.Id + ": 짓는 집: 꾸밈 " + wall.Id + "에 출처표가 쓰는 조각 " + piece + "이 없다"));
+
+                // 고치지 않은 좌표표에서는 나오지 않는다
+                List<string> clean = MapChecks.Check(loader, Interactions, Repo.Definitions, new RoomFinishArt(Path.Combine(Repo.Root, "data"))).Select(p => p.ToString()).ToList();
+                Assert.That(clean, Has.None.Contains("출처표가 쓰는 조각"));
+            }
+            finally
+            {
+                try { Directory.Delete(data, true); } catch (IOException) { }
+            }
+        }
+
+        [Test]
         public void ABuildEntryWithoutItsLayerOrFrameId_IsRefused()
         {
             const string map = @"{ ""npcWalker"": { ""speedCellsPerSecond"": 2.5 }, ""maps"": [ { ""id"": ""A"", ""ldtk"": ""a.ldtk"", ""level"": ""L"", ""viewCells"": 10, ""collision"": { ""rule"": ""interior-auto"" },

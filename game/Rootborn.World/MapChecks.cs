@@ -206,10 +206,38 @@ namespace Rootborn.World
                 int band = art.BandOf(wall.Sheet);
                 if (band != build.Band)
                     problems.Add(new MapCheckProblem(id, "짓는 집: 띠 두께 " + build.Band + "px가 시트 " + wall.Sheet + "의 좌표표 band " + band + "px와 다르다"));
+                if (loaded.Tiles != null) CheckFinishPieces(id, loaded.Tiles, definitions, art, problems);
             }
             catch (Exception e) when (RoomTileCompositor.IsAtlasReadError(e))
             {
                 problems.Add(new MapCheckProblem(id, "짓는 집: 시트 " + wall.Sheet + "의 좌표표를 읽지 못했다: " + e.Message));
+            }
+        }
+
+        /// <summary>
+        /// 이 맵의 출처표가 쓰는 조각을 고를 수 있는 모든 꾸밈이 갖고 있다: 벽 자리 꾸밈마다 정면·좁은 정면 조각 이름 전부, 바닥 자리 꾸밈마다
+        /// floor(와 그림자를 쓰면 floor:shade). 플레이어가 어느 꾸밈을 고르든 조합이 빈 픽셀로 무너지지 않게(예: 정면 높이 3인 맵은 face:3 조각을
+        /// 부르는데 시트에는 face:1·face:2뿐이다). 맵마다 (꾸밈, 조각) 하나에 문제 하나.
+        /// </summary>
+        private static void CheckFinishPieces(string id, RoomTilePlan plan, GameDefinitions definitions, RoomFinishArt art, List<MapCheckProblem> problems)
+        {
+            var wallPieces = new SortedSet<string>(StringComparer.Ordinal);
+            var floorPieces = new SortedSet<string>(StringComparer.Ordinal);
+            foreach (CellTiles cell in plan.Cells)
+                foreach (TilePart part in cell.Parts)
+                {
+                    if (part.Source == TileSources.Face || part.Source == TileSources.Narrow) wallPieces.Add(part.Piece);
+                    else if (part.Source == TileSources.Floor)
+                        floorPieces.Add(part.Shade.StartsWith(RoomTileCompositor.ShadePiece, StringComparison.Ordinal) ? RoomTileCompositor.ShadePiece : RoomTileCompositor.FloorPiece);
+                }
+            if (floorPieces.Count > 0) floorPieces.Add(RoomTileCompositor.FloorPiece); // 그림자 범위 밖 픽셀은 floor 조각에서 온다
+            foreach (RoomFinishDefinition finish in definitions.All<RoomFinishDefinition>())
+            {
+                SortedSet<string> wanted = finish.Slot == RoomFinishSlots.Wall ? wallPieces : finish.Slot == RoomFinishSlots.Floor ? floorPieces : null;
+                if (wanted == null) continue;
+                foreach (string piece in wanted)
+                    if (!art.TryPiece(finish, piece, out _))
+                        problems.Add(new MapCheckProblem(id, "짓는 집: 꾸밈 " + finish.Id + "에 출처표가 쓰는 조각 " + piece + "이 없다"));
             }
         }
 

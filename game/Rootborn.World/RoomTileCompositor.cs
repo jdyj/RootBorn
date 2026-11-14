@@ -78,7 +78,7 @@ namespace Rootborn.World
         public const int MaxProblems = 40;
 
         private const int Size = RoomTilePlan.CellSize;
-        private const string FloorPiece = "floor", ShadePiece = "floor:shade", ShadeKeyPrefix = "floor:shade:";
+        internal const string FloorPiece = "floor", ShadePiece = "floor:shade", ShadeKeyPrefix = "floor:shade:";
         private const string BandShades = "odfl";
 
         private readonly Func<string, PieceImage> _sheet;
