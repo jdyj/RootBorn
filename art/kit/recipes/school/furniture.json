@@ -34,5 +34,11 @@
   {"id": "school.teacher-desk", "kind": "furniture", "part": "furniture.desk", "cells": [2, 1], "art_cells": [2, 2],
    "game": {"replaces": "school.teacher.desk"},
    "material": "wood.school", "drawers": "both",
-   "top_items": [{"part": "book.stack", "x": 5}, {"part": "desk.paper", "x": 26}, {"part": "desk.pencil-cup", "x": 50}]}
+   "top_items": [{"part": "book.stack", "x": 5}, {"part": "desk.paper", "x": 26}, {"part": "desk.pencil-cup", "x": 50}]},
+  {"id": "school.drawer-cabinet", "kind": "furniture", "part": "furniture.drawers", "cells": [2, 1], "art_cells": [2, 2],
+   "game": {"replaces": "school.drawer.cabinet"},
+   "material": "wood.school", "rows": 3},
+  {"id": "school.lectern", "kind": "furniture", "part": "furniture.lectern", "cells": [1, 1], "art_cells": [1, 2],
+   "game": {"replaces": "school.lectern"},
+   "material": "wood.school", "top_items": [{"part": "desk.book-open", "x": 6}]}
 ]

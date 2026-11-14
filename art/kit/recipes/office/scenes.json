@@ -1,0 +1,16 @@
+[
+  {"id": "office.scene.room", "kind": "scene", "size": [10, 5],
+   "fill": [
+     {"tile": "bakery.tile.wall", "rect": [0, 0, 10, 2], "wall": true},
+     {"tile": "bakery.tile.floor", "rect": [0, 2, 10, 3]}
+   ],
+   "hang": [{"part": "prop.clock", "at": [150, 14]}],
+   "place": [
+     {"id": "school.bookcase", "cell": [0, 2], "dx": 4},
+     {"id": "office.desk-basic", "cell": [3, 2], "dx": -4},
+     {"id": "home.chair", "state": "north", "cell": [3, 3], "dx": -4, "dy": -12},
+     {"id": "office.desk-large", "cell": [5, 2]},
+     {"id": "home.chair", "state": "north", "cell": [5, 3], "dx": 8, "dy": -12},
+     {"id": "school.drawer-cabinet", "cell": [7, 2], "dx": 20}
+   ]}
+]

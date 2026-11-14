@@ -1,0 +1,8 @@
+[
+  {"id": "office.desk-basic", "kind": "furniture", "part": "furniture.desk", "cells": [1, 1], "art_cells": [1, 2],
+   "game": {"replaces": "desk.basic"},
+   "material": "wood.warm", "drawers": "none"},
+  {"id": "office.desk-large", "kind": "furniture", "part": "furniture.desk", "cells": [2, 1], "art_cells": [2, 2],
+   "game": {"replaces": "desk.large"},
+   "material": "wood.warm", "drawers": "right"}
+]

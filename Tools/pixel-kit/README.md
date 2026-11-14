@@ -41,7 +41,7 @@ Python 3.11 + Pillow. 다른 패키지는 쓰지 않는다.
 |---|---|
 | 화풍(팔레트, 외곽선 색, 그림자 세기, 색 수 한도, 칸 크기) | `art/kit/style.json` |
 | 점 부품(빵, 소품) | `art/kit/parts/*.json` |
-| 조립 명세(세트마다 폴더: 빵집, 학교, 부엌, 집) | `art/kit/recipes/<세트>/*.json` |
+| 조립 명세(세트마다 폴더: 빵집, 학교, 부엌, 집, 사무) | `art/kit/recipes/<세트>/*.json` |
 | 만드는 부품(코드) | `Tools/pixel-kit/pixelkit/makers/{tiles,furniture,building,seating}.py` |
 | 장면·그림자 | `Tools/pixel-kit/pixelkit/{scene,shadow}.py` |
 | 검사 | `Tools/pixel-kit/pixelkit/lint.py` |
@@ -138,7 +138,9 @@ if/switch로 종류를 닫지 않는다.
 | `furniture.trolley` | `rows`: 줄마다 부품 id 목록, 1~4줄 | `frame` 줄(3, 기본 `metal`: 윗면·기둥·살), `inside` 줄(3, 기본 `metal.dark`: 안쪽과 바퀴) |
 | `furniture.counter` | `art_cells` `[2~4, 2]` | `material` 줄(5, 기본 `wood.warm`), `top`: `{part, x}` 목록(윗면에 놓는 물건, x는 px), `tray`: `{x, w, items}`(윗면 쟁반). 앞판 수는 폭에서(앞면 폭 / 23 반올림: 2칸 3장, 3칸 4장, 4칸 5장), 판 폭은 모두 같고 남는 열은 양 끝에 반씩 |
 | `furniture.chair` | `art_cells` `[1, 2]` | `facing`(`south` 기본 · `north` · `west` · `east`), `layer`(`all` 기본 · `back` · `front`, 아래 "앉기를 위한 층"), `material` 줄(5, 기본 `wood.warm`), `cushion` 줄(3: 0 오른쪽 끝, 1 앞 불룩한 줄, 2 윗면. 없으면 방석 없는 나무 의자). 치수는 캐릭터에서: 좌판 윗면 바닥에서 14px, 등받이 꼭대기 28px(북쪽 25px), 폭 20px. `east`는 `west`를 뒤집은 자리에 왼쪽이 밝게 다시 칠한다. `_layout`: `floor`(바닥 줄의 y), `seat`(좌판 윗면 사각형), `back_top`, `sit_point`(엉덩이가 올 점), `shared_from` |
-| `furniture.desk` | `art_cells` `[2, 2]`(`south`) 또는 `[1, 2]`(`west`·`east`, 책상의 끝) | `facing`(`south` 기본 · `west` · `east`), `material` 줄(5), `top` 줄(2 이상: 마지막 단계가 윗면, 그 앞이 나뭇결. 없으면 `material`의 4·3), `drawers`(`right` 기본 · `left` · `none` · `both`: 앉은 사람 기준. 남쪽은 화면 오른쪽이 오른쪽, 옆모습은 가까운 끝에 서랍장이 오면 옆판, 아니면 다리 둘), `top_items`: `{part, x}` 목록(윗면 뒤쪽 절반에 선다, 밖이면 `slot-clipped`). 윗면 앞 모서리는 바닥에서 25px(좌판 + 11). 서랍이 없는 쪽 앞면은 다리와 그 사이 뚫린 무릎 자리(투명). `_layout`: `floor`, `top`(윗면 사각형), `kneehole`(외곽선 뒤에도 투명한 사각형, 옆모습 옆판이면 null), `work_height` |
+| `furniture.desk` | `art_cells` `[1~2, 2]`(`south`. 한 칸 폭은 `drawers` `none`만 — 서랍장을 넣으면 무릎 자리가 없다) 또는 `[1, 2]`(`west`·`east`, 책상의 끝) | `facing`(`south` 기본 · `west` · `east`), `material` 줄(5), `top` 줄(2 이상: 마지막 단계가 윗면, 그 앞이 나뭇결. 없으면 `material`의 4·3), `drawers`(`right` 기본 · `left` · `none` · `both`: 앉은 사람 기준. 남쪽은 화면 오른쪽이 오른쪽, 옆모습은 가까운 끝에 서랍장이 오면 옆판, 아니면 다리 둘), `top_items`: `{part, x}` 목록(윗면 뒤쪽 절반에 선다, 밖이면 `slot-clipped`). 윗면 앞 모서리는 바닥에서 25px(좌판 + 11). 서랍이 없는 쪽 앞면은 다리와 그 사이 뚫린 무릎 자리(투명). `_layout`: `floor`, `top`(윗면 사각형), `kneehole`(외곽선 뒤에도 투명한 사각형, 옆모습 옆판이면 null), `work_height` |
+| `furniture.drawers` | `art_cells` `[1~3, 2]` | 낮은 서랍장. 한 칸 폭마다 서랍 한 줄기. `rows`(줄기마다 서랍 2~5, 기본 3), `material` 줄(5, 기본 `wood.warm`), `handle` 줄(3, 기본 `metal`: 4x2 손잡이). `_layout`: `top_face`, `front`, `drawers`(서랍 사각형 목록) |
+| `furniture.lectern` | `art_cells` `[1, 2]` | 강의대(서서 쓰는 받침대): 받침판 앞 모서리는 바닥에서 38px(책상 25보다 높다), 가운데 기둥, 받침. `material` 줄(5), `top_items`: `{part, x}` 목록(받침판 뒤쪽, 밖이면 `slot-clipped`). `_layout`: `board`, `board_height`, `post`, `base` |
 | `prop.menu-board`, `prop.a-board` | 없음(고정 그림, 글자 없음) | |
 | `prop.rug` | `size`: `[w, h]`px, `colors`: `[몸 줄(단계 0 테두리, 1 바탕), 바느질 줄]`, `stitch_step`: 바느질 줄의 단계 | |
 | `building.shop` | `pixels`(높이는 192 이상: 지붕 104 + 벽 82 + 외곽선), `roof`: `{type, items}`, `wall`: `{material}`(벽 줄), `door`: `{at_x, color, step}`(문 줄, 계단 줄), `window`: `{at_x, width, slots}`(slots는 창살 양쪽 `[[부품 id], [부품 id]]`), `awning`: `{colors}`(줄 2개), `sign`: `{at_x, icons}`(부품 id 목록, 글자 없음) | `roof.items`: `{part, at: [x, y]}` 목록, `lamp`: `{at_x, part}`(벽등. `part` 기본 `prop.wall-lamp`. `lamp`를 적지 않으면 벽등도 둘레 빛도 없다), `trim` 줄(4, 기본 `trim`: 창틀·처마 밑 띠·간판 판), `plinth` 줄(2, 기본 `plinth`: 벽·창 받침), `frame` 줄(5, 기본 `wood.warm`: 문틀·창틀·간판 틀·받침 줄) |
@@ -199,7 +201,8 @@ if/switch로 종류를 닫지 않는다.
 - PNG: `art/props/<세트>/<명세 id>.png`(세트 = id의 첫 마디). 기본 그림과 모든 상태를 **왼쪽부터 가로로** 붙인 한 장이고 상태 순서는 기본, 그다음 명세 `states`에 적힌 순서. 칸마다 `art_cells * 32`px.
 - 좌표표: `data/atlases/art/props/<세트>/<명세 id>.png.atlas.json`. `pixelsPerUnit` 32, `origin` `"top-left"`, `width`·`height`는 PNG에서 잰 값. 칸 이름은 `<명세 id>`(기본)와 `<명세 id>@<상태>`. `pivot`은 점유 칸 줄의 왼쪽 아래 칸 가운데(`x = 0.5/art_w`, `y = (art_h-0.5)/art_h`). 키 순서·숫자 모양은 늘 같다.
 - `replaces`는 그 가구 항목의 `tileParts[0].tile`의 `sprite`와 `name` **두 문자열만** 새 PNG 경로와 기본 칸 이름으로 바꾼다. 파일의 나머지 바이트(줄바꿈, BOM, 끝 줄바꿈)는 그대로이고, 바꾼 뒤 JSON을 다시 읽어 그 두 값 밖이 같은지 확인한다. 하나라도 다르면 아무것도 쓰지 않는다.
-- 이 작업이 지원하는 가구: `tileParts`가 하나이고 `localCell`이 (0,0), 명세 `cells`가 `[w, 1]`이고 가구 `footprintCells`가 가로 한 줄 w칸과 같을 때.
+- 첫 칸의 `tile`이 변환기가 풀지 못한 참조(`{"unresolved": …, "fileID": …}`, 그림이 없는 가구)면 그 두 키를 `sprite`·`name` 두 키로 바꾼다(들여쓰기·줄바꿈은 그대로).
+- 이 작업이 지원하는 가구: `tileParts`가 하나이고(뒤에 더 있으면 모두 풀지 못한 참조일 때만 — 게임이 그 칸을 건너뛰므로 그대로 둔다) `localCell`이 (0,0), 명세 `cells`가 `[w, 1]`이고 가구 `footprintCells`가 가로 한 줄 w칸과 같을 때.
 - 문제 코드: `export-unknown-furniture`(정의에 없는 id), `export-unsupported-furniture`(위 조건 밖), `export-footprint-mismatch`(칸 수가 다름), `export-replace-failed`(치환 검증 실패), `export-duplicate-target`(한 번에 준 명세 둘이 같은 가구를 가리킴), `export-unreadable-definitions`(정의 파일을 못 읽거나 UTF-8·JSON이 아님), `export-state-size-mismatch`(상태 그림 크기가 기본 그림과 다름 — 한 시트의 칸은 크기가 같아야 해서 쓰지 않는다). 가구 정의의 `tileParts[0].tile`이나 `footprintCells`의 `x`·`y`가 없으면 `export-unsupported-furniture`다. `replaces`가 있는 명세는 `art_cells` 가로 칸 수가 `cells[0]`과 같아야 한다(다르면 `export-unsupported-furniture`, pivot이 어긋난다). 그림의 검사·만드는 부품 문제도 그대로 문제다. 문제가 하나라도 있으면(여러 id를 한 번에 줬어도) 전부 안 쓴다. 끝 코드 1.
 - 쓰기는 같은 폴더의 `<이름>.tmp`에 먼저 다 쓴 뒤 PNG, 좌표표, 가구 정의 순서로 바꿔친다. 중간에 실패하면 임시 파일을 지우고, 바꿔치기 도중이면 이미 바뀐 파일을 알리며 끝 코드 2. 바꿔치기 도중 쓰기가 실패하면(`ExportWriteError`) PNG와 좌표표가 어긋날 수 있다. 같은 명령을 다시 돌리면 고쳐진다.
 - 같은 내용이면 쓰지 않고 "바꿀 것 없음"이라고 한다(수정 시각도 그대로). `--dry-run`은 쓸 파일과 바꿀 가구만 찍는다.

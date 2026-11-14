@@ -1,4 +1,4 @@
-"""가구: 진열대·계산대·유리 진열대·빵 수레.
+"""가구: 진열대·계산대·유리 진열대·빵 수레·서랍장·강의대.
 
 설계서 6.6절의 면 나누기를 따른다: 넓고 밝은 윗면 / 한 단계 어두운 앞면 / 튀어나온 것(윗판, 선반 판) 바로 밑에
 짙은 줄 하나. 그늘은 색을 곱하지 않고 팔레트의 다른 단계다. 안쪽 칸 나눔은 외곽선 색 선이다.
@@ -126,13 +126,7 @@ def _tray(spec: dict, ctx):
 
 
 def _top_items(spec: dict, ctx):
-    v = spec.get("top", [])
-    ok = isinstance(v, list) and all(
-        isinstance(t, dict) and isinstance(t.get("part"), str)
-        and isinstance(t.get("x"), int) and not isinstance(t.get("x"), bool) for t in v)
-    if not ok:
-        raise RecipeError(f"{rid(spec)}: top은 {{part, x(정수 px)}} 목록이어야 한다")
-    return [(part(spec, ctx, t["part"]), t["part"], t["x"]) for t in v]
+    return _top_items_key(spec, ctx, "top")
 
 
 @register("furniture.counter")
@@ -375,3 +369,150 @@ def a_board(spec: dict, ctx) -> Canvas:
         cv.rect(x, 18, 2, 5, wood[1])
         cv.vline(x, 18, 5, wood[2])
     return cv
+
+
+# ---------- 서랍장 ----------
+
+DRAWERS_CELLS = ((1, 3), (2, 2))   # 받는 art_cells [폭, 높이] 범위
+DRAWERS_ROWS = (2, 5)      # 줄기마다 서랍 수 범위
+DRAWERS_H = 44             # 그린 그림 높이: 윗면 8 + 윗판 모서리 4 + 앞면 30 + 걸레받이 2. 허리 높이쯤
+DRAWERS_TOP = 8            # 윗면 줄 수(벽에 붙은 낮은 가구라 계산대보다 얕다)
+DRAWERS_GRAIN = ((4, 2, 18), (30, 4, 22), (12, 6, 14))   # 윗면 나뭇결 (x, y, 길이): 폭 62 기준, 폭에 비례
+DRAWERS_GRAIN_W = 62
+
+
+@register("furniture.drawers")
+def drawers(spec: dict, ctx) -> Canvas:
+    """벽에 붙는 낮은 서랍장. 폭은 art_cells 폭 × 32 - 2, 한 칸 폭마다 서랍 한 줄기(외곽선 색 선으로 나눈다).
+    rows(2~5, 기본 3): 줄기마다 서랍 수. material 나무 줄(5), handle 손잡이 줄(3, 기본 metal)."""
+    cw, _ = art_cells_in(spec, *DRAWERS_CELLS)
+    rows = spec.get("rows", 3)
+    if not (isinstance(rows, int) and not isinstance(rows, bool) and DRAWERS_ROWS[0] <= rows <= DRAWERS_ROWS[1]):
+        raise RecipeError(f"{rid(spec)}: rows는 {DRAWERS_ROWS[0]}~{DRAWERS_ROWS[1]} 정수여야 한다(지금 {rows!r})")
+    w = cw * ctx.style.cell - 2
+    wood = ramp_of(spec, ctx, "material", "wood.warm", 5)
+    handle = ramp_of(spec, ctx, "handle", "metal", 3)
+    ol = ctx.style.outline
+    cv = Canvas(w, DRAWERS_H)
+
+    cv.rect(0, 0, w, DRAWERS_TOP, wood[4])                    # 넓고 밝은 윗면
+    for gx, gy, gl in DRAWERS_GRAIN:
+        cv.hline(gx * w // DRAWERS_GRAIN_W, gy, max(4, gl * w // DRAWERS_GRAIN_W), wood[3])
+    t = DRAWERS_TOP
+    cv.rect(0, t, w, 2, wood[3])                              # 윗판 앞 모서리
+    cv.hline(0, t + 2, w, wood[2])
+    cv.vline(w - 1, t, 3, wood[1])
+    cv.hline(0, t + 3, w, ol)
+    fy0, fy1 = t + 4, DRAWERS_H - 2                           # 앞면 [fy0, fy1)
+    cv.rect(1, fy0, w - 2, fy1 - fy0, wood[2])                # 앞면: 윗판보다 1px 들어감
+    cv.hline(1, fy0, w - 2, wood[1])                          # 윗판 밑 짙은 줄
+    span = w - 2
+    pitch = span // cw
+    x0 = 1 + (span - cw * pitch) // 2
+    dy0, dy1 = fy0 + 2, fy1 - 1                               # 서랍들이 나눠 쓰는 [dy0, dy1)
+    gap = 1
+    dh = (dy1 - dy0 - (rows - 1) * gap) // rows
+    ystart = dy0 + (dy1 - dy0 - (rows * dh + (rows - 1) * gap)) // 2
+    boxes = []
+    for k in range(cw):
+        sx = x0 + k * pitch                                   # 줄기 [sx, sx + pitch)
+        if k:
+            cv.vline(sx, fy0 + 1, fy1 - fy0 - 1, ol)          # 줄기 나눔
+        px, pw = sx + 2, pitch - 4
+        y = ystart
+        for r in range(rows):
+            cv.rect(px, y, pw, dh, wood[3])                   # 서랍: 위 밝게, 아래·오른쪽 어둡게
+            cv.hline(px, y, pw, wood[4])
+            cv.hline(px, y + dh - 1, pw, wood[1])
+            cv.vline(px + pw - 1, y, dh, wood[1])
+            hx, hy = px + pw // 2 - 2, y + (dh - 2) // 2      # 손잡이 4x2: 위 밝게, 아래 어둡게
+            cv.hline(hx, hy, 4, handle[2])
+            cv.hline(hx, hy + 1, 4, handle[0])
+            if r < rows - 1:
+                cv.hline(sx + 1, y + dh, pitch - 2, ol)       # 서랍 사이
+            boxes.append([px, y, pw, dh])
+            y += dh + gap
+    cv.rect(1, fy1, w - 2, 2, wood[0])                        # 걸레받이
+    spec["_layout"] = {"size": [w, DRAWERS_H], "top_face": [0, DRAWERS_TOP], "front": [fy0, fy1], "drawers": boxes}
+    return cv
+
+
+# ---------- 강의대 ----------
+
+LECTERN_W = 30             # 그린 그림 폭(한 칸)
+LECTERN_H = 56             # 그린 그림 높이(위쪽은 받침판에 놓는 물건 자리)
+LECTERN_FLOOR = LECTERN_H + 1
+LECTERN_BOARD_H = 38       # 받침판 앞 모서리 줄의 높이. 서서 쓰는 높이(책상 윗면 25보다 높다, 캐릭터 가슴 아래)
+LECTERN_BOARD_ROWS = 7     # 위에서 비스듬히 보이는 받침판 윗면 줄 수
+LECTERN_POST = (7, 16)     # 기둥 [x, 폭]
+LECTERN_BASE = (3, 24)     # 받침 [x, 폭]
+LECTERN_BASE_ROWS = 3
+LECTERN_ITEM_H = 42        # 받침판에 놓인 물건의 마지막 줄 높이(받침판 뒤쪽 절반)
+
+
+def _ly(h: int) -> int:
+    return LECTERN_FLOOR - h
+
+
+@register("furniture.lectern")
+def lectern(spec: dict, ctx) -> Canvas:
+    """강의대(서서 쓰는 받침대). 넓은 받침판 + 가운데 기둥(들어간 판) + 받침. 폭 한 칸.
+    material 나무 줄(5), top_items 받침판 물건 {part, x}."""
+    art_cells_in(spec, (1, 1), (2, 2))
+    wood = ramp_of(spec, ctx, "material", "wood.warm", 5)
+    items = _top_items_key(spec, ctx, "top_items")
+    ol = ctx.style.outline
+    W = LECTERN_W
+    cv = Canvas(W, LECTERN_H)
+    lc = local(ctx)
+
+    by = _ly(LECTERN_BOARD_H + LECTERN_BOARD_ROWS)            # 받침판 윗면
+    cv.rect(0, by, W, LECTERN_BOARD_ROWS, wood[4])
+    cv.hline(4, by + 2, 12, wood[3])                          # 나뭇결
+    cv.hline(14, by + 4, 10, wood[3])
+    cv.rect(0, _ly(LECTERN_BOARD_H), W, 1, wood[3])           # 앞 모서리(책이 미끄러지지 않는 턱)
+    cv.hline(0, _ly(LECTERN_BOARD_H - 1), W, wood[2])
+    cv.vline(W - 1, _ly(LECTERN_BOARD_H), 2, wood[1])
+    cv.hline(0, _ly(LECTERN_BOARD_H - 2), W, ol)
+
+    px, pw = LECTERN_POST                                     # 기둥: 받침판 밑부터 받침 위까지
+    top_y, bot_y = _ly(LECTERN_BOARD_H - 3), _ly(LECTERN_BASE_ROWS + 2)
+    ph = bot_y - top_y + 1
+    cv.rect(px, top_y, pw, ph, wood[2])
+    cv.vline(px, top_y, ph, wood[3])
+    cv.vline(px + pw - 1, top_y, ph, wood[1])
+    cv.hline(px, top_y, pw, wood[1])                          # 받침판 밑 짙은 줄
+    ix0, ix1, iy0, iy1 = px + 3, px + pw - 4, top_y + 4, bot_y - 3   # 들어간 판: 위·왼쪽 그늘, 아래·오른쪽 빛
+    cv.rect(ix0, iy0, ix1 - ix0 + 1, iy1 - iy0 + 1, wood[2])
+    cv.hline(ix0, iy0, ix1 - ix0 + 1, wood[1])
+    cv.vline(ix0, iy0, iy1 - iy0 + 1, wood[1])
+    cv.hline(ix0, iy1, ix1 - ix0 + 1, wood[3])
+    cv.vline(ix1, iy0 + 1, iy1 - iy0, wood[3])
+
+    bx, bw = LECTERN_BASE                                     # 받침: 위 밝게, 앞 한 단계, 밑 가장 어둡게
+    base_y = _ly(LECTERN_BASE_ROWS + 1)
+    cv.hline(bx, base_y, bw, wood[3])
+    cv.hline(bx, base_y + 1, bw, wood[2])
+    cv.hline(bx, base_y + 2, bw, wood[0])
+    cv.vline(bx + bw - 1, base_y, 2, wood[1])
+
+    base = _ly(LECTERN_ITEM_H)
+    for pc, pid, x in items:
+        y = base - pc.h + 1
+        if y < 0 or x < 0 or x + pc.w > W:
+            report(lc.problems, "slot-clipped", f"받침판 물건이 강의대 밖으로 나간다({pid} x={x})")
+        cv.paste(pc, x, y)
+    spec["_layout"] = {"size": [W, LECTERN_H], "floor": LECTERN_FLOOR, "board": [0, by, W, LECTERN_BOARD_ROWS],
+                       "board_height": LECTERN_BOARD_H, "post": [px, pw], "base": [bx, bw]}
+    merge(spec, ctx, lc)
+    return cv
+
+
+def _top_items_key(spec: dict, ctx, key: str):
+    v = spec.get(key, [])
+    ok = isinstance(v, list) and all(
+        isinstance(t, dict) and isinstance(t.get("part"), str)
+        and isinstance(t.get("x"), int) and not isinstance(t.get("x"), bool) for t in v)
+    if not ok:
+        raise RecipeError(f"{rid(spec)}: {key}는 {{part, x(정수 px)}} 목록이어야 한다")
+    return [(part(spec, ctx, t["part"]), t["part"], t["x"]) for t in v]

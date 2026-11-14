@@ -494,8 +494,8 @@
           "y": 0
         },
         "tile": {
-          "unresolved": "f4458d27aa801ac47bb5f5ebc0ff95f9",
-          "fileID": "21300000"
+          "sprite": "art/props/office/office.desk-basic.png",
+          "name": "office.desk-basic"
         }
       }
     ],
@@ -528,8 +528,8 @@
           "y": 0
         },
         "tile": {
-          "unresolved": "f4458d27aa801ac47bb5f5ebc0ff95f9",
-          "fileID": "21300000"
+          "sprite": "art/props/office/office.desk-large.png",
+          "name": "office.desk-large"
         }
       },
       {
@@ -63008,8 +63008,8 @@
           "y": 0
         },
         "tile": {
-          "sprite": "Assets/Art/SchoolPixels/Furniture48/Storage/School_drawer_cabinet_2x1.png",
-          "name": "School_drawer_cabinet_2x1"
+          "sprite": "art/props/school/school.drawer-cabinet.png",
+          "name": "school.drawer-cabinet"
         }
       }
     ],
@@ -63045,8 +63045,8 @@
           "y": 0
         },
         "tile": {
-          "sprite": "Assets/Art/SchoolPixels/Furniture48/Desk/School_lectern_1x1.png",
-          "name": "School_lectern_1x1"
+          "sprite": "art/props/school/school.lectern.png",
+          "name": "school.lectern"
         }
       }
     ],

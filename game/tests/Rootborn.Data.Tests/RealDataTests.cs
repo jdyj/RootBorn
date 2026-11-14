@@ -177,9 +177,12 @@ namespace Rootborn.Data.Tests
             Assert.That(desk.AllowsSurface("house"), Is.True);
             Assert.That(desk.PlacementPreference, Is.EqualTo(FurniturePlacementPreference.NearWall));
 
-            // 그림 참조를 풀지 못한 책상은 Unity처럼 그림 칸 없이 차지 칸만 갖는다.
-            var basic = _result.Definitions.Get<FurnitureDefinition>("desk.basic");
-            Assert.That(basic.TileParts, Is.Empty);
+            // 그림 참조를 풀지 못한 칸은 Unity처럼 건너뛴다: 큰 책상의 둘째 칸은 풀지 못한 참조로 남아 있고(KnownDataGaps),
+            // 첫 칸은 픽셀 키트 그림 하나(두 칸 폭)를 갖는다.
+            var large = _result.Definitions.Get<FurnitureDefinition>("desk.large");
+            Assert.That(large.TileParts.Count, Is.EqualTo(1));
+            Assert.That(large.TileParts[0].Sprite, Is.EqualTo("art/props/office/office.desk-large.png"));
+            Assert.That(large.FootprintCells.Count, Is.EqualTo(2));
             Assert.That(_result.Definitions.All<FurnitureDefinition>().Count, Is.EqualTo(1503));
         }
 

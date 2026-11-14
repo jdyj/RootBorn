@@ -418,21 +418,25 @@ def _desk_side(p: _Paint, d: _Desk, sides) -> dict:
     return out
 
 
-DESK_VIEWS: Dict[str, Tuple[Callable, Tuple[int, int], int, bool]] = {   # 방향 → (그리는 함수, art_cells, 폭, 뒤집기)
-    "south": (_desk_south, (2, 2), 62, False),
-    "west": (_desk_side, (1, 2), 30, False),
-    "east": (_desk_side, (1, 2), 30, True),
+DESK_VIEWS: Dict[str, Tuple[Callable, Tuple[int, int], int, bool]] = {   # 방향 → (그리는 함수, art_cells 폭 범위, 높이, 뒤집기)
+    "south": (_desk_south, (1, 2), 2, False),    # 한 칸 폭은 다리만(서랍장을 넣으면 무릎 자리가 없다)
+    "west": (_desk_side, (1, 1), 2, False),
+    "east": (_desk_side, (1, 1), 2, True),
 }
 
 
 @register("furniture.desk")
 def desk(spec: dict, ctx) -> Canvas:
-    """책상. facing(south 두 칸 폭 | west·east 옆면 한 칸 폭), material 나무 줄(5), top 윗면 줄(2 이상, 선택),
+    """책상. facing(south 한·두 칸 폭 | west·east 옆면 한 칸 폭), material 나무 줄(5), top 윗면 줄(2 이상, 선택),
     drawers 서랍 쪽, top_items 윗면 물건 {part, x}."""
     facing = _choice(spec, "facing", DESK_VIEWS, "south")
-    draw, cells, width, mirror = DESK_VIEWS[facing]
-    art_cells_in(spec, (cells[0], cells[0]), (cells[1], cells[1]))
-    sides = DRAWER_SIDES[_choice(spec, "drawers", DRAWER_SIDES, "right")]
+    draw, cols, rows, mirror = DESK_VIEWS[facing]
+    cw, _ = art_cells_in(spec, cols, (rows, rows))
+    width = cw * ctx.style.cell - 2
+    drawer_side = _choice(spec, "drawers", DRAWER_SIDES, "right")
+    sides = DRAWER_SIDES[drawer_side]
+    if facing == "south" and cw == 1 and drawer_side != "none":
+        raise RecipeError(f"{rid(spec)}: 한 칸 폭 책상은 drawers \"none\"만 된다(서랍장을 넣으면 무릎 자리가 없다)")
     wood = ramp_of(spec, ctx, "material", "wood.warm", 5)
     top = ramp_of(spec, ctx, "top", "", 2)[-2:] if "top" in spec else [wood[3], wood[4]]
     items = _top_items(spec, ctx)

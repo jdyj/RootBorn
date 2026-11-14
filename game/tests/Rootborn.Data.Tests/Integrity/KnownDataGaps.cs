@@ -10,7 +10,7 @@ namespace Rootborn.Data.Tests.Integrity
     {
         // 마지막 변환(변환기와 보고서는 Unity 지우기 4단계에서 지웠다, 태그 unity-playable-20261111) unresolved 12건: Unity 에셋이 가리키던 GUID의 파일이 저장소에 없다(guidNotFound).
         private const string DeskTileGone =
-            "Unity 판에서도 이 책상 그림 타일 에셋이 저장소에 없었다. 가구 만들기 함수는 그 칸을 건너뛰어 그림 칸 없이 차지 칸만 갖는다(RealDataTests.Furniture_CarriesItsFootprintAndSale)";
+            "Unity 판에서도 이 책상 그림 타일 에셋이 저장소에 없었다. 가구 만들기 함수는 그 칸을 건너뛴다. 첫 칸은 픽셀 키트 그림(두 칸 폭 한 장)으로 바뀌어 이 칸은 그려지지 않는다(RealDataTests.Furniture_CarriesItsFootprintAndSale)";
 
         private const string OfficeTileGone =
             "실내 생성 타일셋(InteriorTileSetDefinition, 규칙이 아님 — 게임이 읽지 않는다)의 가구 타일 에셋이 Unity 판에서도 저장소에 없었다";
@@ -23,8 +23,6 @@ namespace Rootborn.Data.Tests.Integrity
 
         public static readonly IReadOnlyList<KnownGap> All = new List<KnownGap>
         {
-            new KnownGap("unresolved", "data/interiors/FurnitureDefinition.json FurnitureDefinition/desk.basic tileParts[0].tile", DeskTileGone),
-            new KnownGap("unresolved", "data/interiors/FurnitureDefinition.json FurnitureDefinition/desk.large tileParts[0].tile", DeskTileGone),
             new KnownGap("unresolved", "data/interiors/FurnitureDefinition.json FurnitureDefinition/desk.large tileParts[1].tile", DeskTileGone),
             new KnownGap("unresolved", "data/interiors/InteriorTileSetDefinition.json InteriorTileSetDefinition/TileSetDefinition_NewPaletteOffice deskNorth", OfficeTileGone),
             new KnownGap("unresolved", "data/interiors/InteriorTileSetDefinition.json InteriorTileSetDefinition/TileSetDefinition_NewPaletteOffice deskEast", OfficeTileGone),

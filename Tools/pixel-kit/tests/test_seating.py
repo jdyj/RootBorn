@@ -290,6 +290,27 @@ class DeskDrawingTests(unittest.TestCase):
         with self.assertRaises(RecipeError):
             draw(spec(DESK, top_items=[{"part": "book.stack"}]))
 
+    def test_one_cell_south_desk_has_legs_only_and_an_open_kneehole(self):
+        cv, lay, problems = draw(spec(DESK, art_cells=[1, 2], cells=[1, 1], drawers="none"))
+        self.assertEqual((cv.w, cv.h), (32, 64))
+        self.assertEqual([(p.code, p.message) for p in problems], [])
+        self.assertEqual(lay["size"][0], 30)
+        ox, oy = origin(cv, lay)
+        kx, ky, kw, kh = lay["kneehole"]
+        self.assertGreaterEqual(kw, 14)
+        self.assertEqual(ky + kh, lay["size"][1])
+        for y in range(oy + ky, oy + ky + kh):
+            for x in range(ox + kx, ox + kx + kw):
+                self.assertEqual(cv.get(x, y)[3], 0, (x, y))
+
+    def test_one_cell_south_desk_with_drawers_raises(self):
+        # 서랍장(22px)을 넣으면 무릎 자리가 남지 않는다.
+        for drawers in ("right", "left", "both"):
+            with self.subTest(drawers=drawers):
+                with self.assertRaises(RecipeError) as e:
+                    draw(spec(DESK, art_cells=[1, 2], drawers=drawers))
+                self.assertIn("none", str(e.exception))
+
 
 class RealSeatingRecipesTests(unittest.TestCase):
     @classmethod

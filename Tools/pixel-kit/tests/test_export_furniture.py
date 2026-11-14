@@ -127,6 +127,46 @@ class ExportFurnitureTests(Base):
         plan, _ = self.run_export(r)
         self.assertEqual([p.code for p in plan.problems], ["export-unsupported-furniture"])
 
+    def _make_unresolved(self, extra_unresolved=0):
+        """test.shelf의 그림 칸을 변환기가 풀지 못한 참조({unresolved, fileID})로 바꾼다(desk.basic·desk.large 모양)."""
+        data = json.loads(self.defs.read_text("utf-8"))
+        gone = {"unresolved": "f4458d27aa801ac47bb5f5ebc0ff95f9", "fileID": "21300000"}
+        data[1]["tileParts"] = [{"localCell": {"x": i, "y": 0}, "tile": dict(gone)} for i in range(1 + extra_unresolved)]
+        self.defs.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        return data
+
+    def test_unresolved_tile_becomes_sprite_and_name(self):
+        before_data = self._make_unresolved()
+        plan, written = self.run_export()
+        self.assertEqual(plan.problems, [])
+        parsed = json.loads(self.defs.read_text("utf-8"))
+        self.assertEqual(parsed[1]["tileParts"][0]["tile"],
+                         {"sprite": "art/props/test/test.shelf.png", "name": "test.shelf"})
+        self.assertEqual(parsed[0], before_data[0])
+        self.assertEqual(parsed[2], before_data[2])
+        rest = {k: v for k, v in parsed[1].items() if k != "tileParts"}
+        self.assertEqual(rest, {k: v for k, v in before_data[1].items() if k != "tileParts"})
+        # 다시 돌리면 바꿀 것이 없다(이제 sprite·name 모양이다).
+        _, again = self.run_export()
+        self.assertEqual(again, [])
+
+    def test_extra_unresolved_parts_are_kept_and_do_not_block(self):
+        # 게임은 풀지 못한 칸을 건너뛴다(PlacementBuilders). 첫 칸만 그림을 받고 나머지 풀지 못한 칸은 그대로 둔다.
+        before_data = self._make_unresolved(extra_unresolved=1)
+        plan, _ = self.run_export()
+        self.assertEqual(plan.problems, [])
+        parsed = json.loads(self.defs.read_text("utf-8"))
+        self.assertEqual(parsed[1]["tileParts"][0]["tile"],
+                         {"sprite": "art/props/test/test.shelf.png", "name": "test.shelf"})
+        self.assertEqual(parsed[1]["tileParts"][1], before_data[1]["tileParts"][1])
+
+    def test_extra_resolved_part_is_still_unsupported(self):
+        data = self._make_unresolved(extra_unresolved=1)
+        data[1]["tileParts"][1]["tile"] = {"sprite": "Old/b.png", "name": "b"}
+        self.defs.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        plan, _ = self.run_export()
+        self.assertEqual([p.code for p in plan.problems], ["export-unsupported-furniture"])
+
     def test_state_with_different_canvas_size_is_a_problem_and_writes_nothing(self):
         r = copy.deepcopy(self.recipe)
         r["states"]["empty"] = dict(r["states"]["empty"], art_cells=[3, 3])

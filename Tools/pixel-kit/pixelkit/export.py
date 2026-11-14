@@ -151,18 +151,26 @@ def _substitute(raw: bytes, replacements: List[Tuple[str, str, str]]) -> bytes:
         tp = chunk.find('"tileParts"')
         if tp < 0:
             raise ExportError("export-unsupported-furniture", f"{fid}: tileParts가 없다")
-        ms = re.compile(r'"sprite"\s*:\s*' + _STR).search(chunk, tp)
-        mn = re.compile(r'"name"\s*:\s*' + _STR).search(chunk, tp)
-        if not ms or not mn:
-            raise ExportError("export-unsupported-furniture", f"{fid}: tile의 sprite·name을 찾지 못했다")
-        # 뒤쪽 값부터 바꿔 앞쪽 위치가 밀리지 않게 한다.
-        for m, new in sorted(((ms, sprite), (mn, name)), key=lambda t: -t[0].start()):
-            chunk = chunk[:m.start(1)] + json.dumps(new, ensure_ascii=False)[1:-1] + chunk[m.end(1):]
+        # 변환기가 풀지 못한 첫 칸({"unresolved": guid, "fileID": n})은 그 두 키를 sprite·name 두 키로 바꾼다.
+        mu = re.compile(r'"tile"\s*:\s*\{(\s*)"unresolved"\s*:\s*' + _STR + r'(\s*,\s*)"fileID"\s*:\s*' + _STR
+                        + r'(\s*)\}').search(chunk, tp)
+        mt = re.compile(r'"tile"\s*:\s*\{').search(chunk, tp)
+        if mu and mt and mu.start() == mt.start():
+            body = (f'{mu.group(1)}"sprite": {json.dumps(sprite, ensure_ascii=False)}'
+                    f'{mu.group(3)}"name": {json.dumps(name, ensure_ascii=False)}{mu.group(5)}')
+            chunk = chunk[:mu.start(1)] + body + chunk[mu.end(5):]
+        else:
+            ms = re.compile(r'"sprite"\s*:\s*' + _STR).search(chunk, tp)
+            mn = re.compile(r'"name"\s*:\s*' + _STR).search(chunk, tp)
+            if not ms or not mn:
+                raise ExportError("export-unsupported-furniture", f"{fid}: tile의 sprite·name을 찾지 못했다")
+            # 뒤쪽 값부터 바꿔 앞쪽 위치가 밀리지 않게 한다.
+            for m, new in sorted(((ms, sprite), (mn, name)), key=lambda t: -t[0].start()):
+                chunk = chunk[:m.start(1)] + json.dumps(new, ensure_ascii=False)[1:-1] + chunk[m.end(1):]
         out = out[:s] + chunk + out[e:]
         for ent in expected:
             if ent.get("type") == "FurnitureDefinition" and ent.get("id") == fid:
-                ent["tileParts"][0]["tile"]["sprite"] = sprite
-                ent["tileParts"][0]["tile"]["name"] = name
+                ent["tileParts"][0]["tile"] = {"sprite": sprite, "name": name}
     try:
         got = json.loads(_strip_bom(out))
     except json.JSONDecodeError as e:
@@ -181,8 +189,11 @@ def _check_furniture(recipe: dict, defs_text: str, fid: str) -> None:
     tile = parts[0].get("tile") if parts and isinstance(parts[0], dict) else None
     if not isinstance(tile, dict):
         raise ExportError("export-unsupported-furniture", f"{fid}: tileParts[0]에 tile이 없다(정의 모양이 예상과 다르다)")
-    if len(parts) != 1 or parts[0].get("localCell") != {"x": 0, "y": 0}:
-        raise ExportError("export-unsupported-furniture", f"{fid}: tileParts가 하나(localCell 0,0)가 아니다")
+    # 첫 칸 뒤의 칸은 풀지 못한 참조일 때만 둔다(게임이 그 칸을 건너뛴다 — PlacementBuilders). 그림이 있는 칸이면 겹쳐 그려진다.
+    extra_ok = all(isinstance(p, dict) and isinstance(p.get("tile"), dict) and "unresolved" in p["tile"] for p in parts[1:])
+    if not parts or not extra_ok or parts[0].get("localCell") != {"x": 0, "y": 0}:
+        raise ExportError("export-unsupported-furniture",
+                          f"{fid}: tileParts가 하나(localCell 0,0)가 아니다(뒤의 칸은 풀지 못한 참조만 허용)")
     cells = recipe.get("cells")
     if not (isinstance(cells, list) and len(cells) == 2 and cells[1] == 1):
         raise ExportError("export-unsupported-furniture", "한 줄 점유(cells [w, 1])만 바꿀 수 있다")

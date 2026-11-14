@@ -25,5 +25,19 @@
      {"id": "school.desk-open-book", "cell": [6, 4], "dx": -8},
      {"id": "school.chair-north", "cell": [2, 5], "dx": -8, "dy": -10},
      {"id": "school.chair-north", "cell": [6, 5], "dx": 8, "dy": -10}
+   ]},
+  {"id": "school.scene.front", "kind": "scene", "size": [9, 5],
+   "fill": [
+     {"tile": "bakery.tile.wall", "rect": [0, 0, 9, 2], "wall": true},
+     {"tile": "bakery.tile.floor", "rect": [0, 2, 9, 3]}
+   ],
+   "hang": [{"part": "prop.clock", "at": [214, 14]}],
+   "place": [
+     {"id": "school.archive-bookshelf", "cell": [0, 2], "dx": 4},
+     {"id": "school.drawer-cabinet", "cell": [2, 2], "dx": 8},
+     {"id": "school.teacher-desk", "cell": [5, 2], "dx": -6},
+     {"id": "school.chair-south", "cell": [5, 2], "dx": 10, "dy": -14},
+     {"id": "school.lectern", "cell": [7, 3], "dx": 6},
+     {"id": "school.chair-north", "cell": [3, 4], "dx": 0, "dy": -2}
    ]}
 ]
