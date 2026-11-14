@@ -205,5 +205,29 @@ namespace Rootborn.Game.Tests
             next.EnterHouse(HouseRoom.HostGrid, HouseRoom.SurfaceId);
             Assert.That(next.QuestChains.GetCurrentStep(chain).Id, Is.EqualTo("mainquest.MyOwnSpace"), "다시 읽어도");
         }
+
+        [Test]
+        public void StarterFurniture_IsNotAcceptedByAnyFurnitureGoal()
+        {
+            // 지킴(데이터): 처음 배치 가구는 어느 "가구 놓기" 목표의 받는 목록에도 없다. 집에 들어설 때 놓인 가구가 다시 알려지므로(ReplayPlacedFurniture),
+            // 겹치면 목표가 저절로 찬다 — 집 꾸미기(Objective_DecorateHouse)는 3개를 요구하고 처음 배치도 3개다. 받는 목록은 데이터에서 읽는다.
+            var goals = TestWorld.Definitions.All<Rootborn.Core.Quests.FurniturePlacedQuestObjective>().ToList();
+            Assert.That(goals, Is.Not.Empty, "전제: 데이터에 가구 놓기 목표가 있다");
+            var starters = TestWorld.Definitions.All<HouseStarterLayout>().ToList();
+            Assert.That(starters, Is.Not.Empty, "전제: 데이터에 처음 배치가 있다");
+
+            var overlaps = new List<string>();
+            foreach (var starter in starters)
+                foreach (var goal in goals)
+                {
+                    // 목표가 다른 면만 센다면 이 처음 배치의 알림으로는 차지 않는다(빈 면 = 면을 가리지 않음).
+                    if (!string.IsNullOrEmpty(goal.RequiredSurfaceId) && goal.RequiredSurfaceId != starter.SurfaceId) continue;
+                    foreach (var p in starter.Placements)
+                        if (goal.AcceptedFurnitureIds.Contains(p.FurnitureId))
+                            overlaps.Add(starter.Id + " " + p.FurnitureId + " ∈ " + goal.DisplayKey);
+                }
+
+            Assert.That(overlaps, Is.Empty, "처음 배치 가구가 가구 놓기 목표를 저절로 채울 수 있다");
+        }
     }
 }
