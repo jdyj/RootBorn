@@ -148,12 +148,22 @@ namespace Rootborn.Screens.Furniture
         {
             if (!Shown) return;
             if (topic == ChangeTopics.Language) { ApplyTexts(); return; }
-            // 꾸밈·돈·해금·맵이 바뀌면 들고 있는 미리 보기가 낡았다. 다음 포인터 프레임(또는 누름)에서 한 번 다시 묻는다.
+            // 미리 보기 결과를 바꿀 수 있는 알림만 낡음으로 본다(다음 포인터 프레임 또는 누름에서 한 번 다시 묻는다). 시간·학생·퀘스트 같은
+            // 무관한 알림은 보지 않는다 — 흐르는 시간은 게임 1분마다 알린다.
+            if (!AffectsPreview(topic)) return;
             _stale = true;
             if (topic == ChangeTopics.All || topic == ChangeTopics.Furniture || topic == ChangeTopics.Career || topic == ChangeTopics.HouseBuild || topic == ChangeTopics.Map)
                 RefreshCards();
             if (topic == ChangeTopics.Inventory || topic == ChangeTopics.All) ApplyInfo();
         }
+
+        /// <summary>
+        /// 미리 보기 결과(대상·바뀌는 칸·비용·이유)에 닿는 알림: 꾸밈(HouseBuild), 돈(Inventory), 해금(Furniture·Career), 맵·일터(집이 열렸는가),
+        /// 같이 하는 방(같이 쓰는 집인가), 모름(All).
+        /// </summary>
+        private static bool AffectsPreview(string topic) =>
+            topic == ChangeTopics.HouseBuild || topic == ChangeTopics.Inventory || topic == ChangeTopics.Furniture || topic == ChangeTopics.Career
+            || topic == ChangeTopics.Map || topic == ChangeTopics.Workspace || topic == GameChangeTopics.Room || topic == ChangeTopics.All;
 
         private void RefreshCards()
         {

@@ -327,6 +327,48 @@ namespace Rootborn.Screens.Tests.Furniture
         }
 
         [Test]
+        public void UnrelatedNotices_SameCell_DoNotAskAgain()
+        {
+            // 미리 보기 결과와 무관한 알림(흐르는 시간은 게임 1분마다 time을 알린다)은 같은 칸에서 다시 묻게 하지 않는다.
+            using var f = new Fixture();
+            f.Decorate();
+            f.T.Click(FurniturePlacementScreen.FinishTabFloorId);
+            RoomFinishDefinition floor = FreeNonDefault(f, RoomFinishSlots.Floor);
+            var (room, a, _) = f.FirstRoom();
+            f.GiveMoney(PerCell(floor) * room.Count);
+            f.PickCard(floor.Id);
+            f.Hover(a);
+            int queries = f.Screen.FinishPreviewQueries;
+            foreach (string topic in new[] { Rootborn.Game.GameChangeTopics.Time, ChangeTopics.Student, ChangeTopics.Quests, ChangeTopics.Day,
+                         ChangeTopics.Dialogue, ChangeTopics.Objectives, ChangeTopics.Display })
+                f.T.Stack.NotifyChanged(topic);
+            f.Hover(a);
+            Assert.That(f.Screen.FinishPreviewQueries, Is.EqualTo(queries), "무관한 알림 뒤 같은 칸이면 다시 묻지 않는다");
+        }
+
+        [Test]
+        public void NoTarget_NoHighlight_NothingOnTheWorld()
+        {
+            using var f = new Fixture();
+            f.Decorate();
+            f.T.Click(FurniturePlacementScreen.FinishTabFloorId);
+            RoomFinishDefinition floor = FreeNonDefault(f, RoomFinishSlots.Floor);
+            f.GiveMoney(PerCell(floor) * 200);
+            f.PickCard(floor.Id);
+            // 바닥도 벽 정면·좁은 부분도 아닌 칸(벽 윗면 띠만 있는 칸, 또는 밖).
+            CellPos none = f.Frame.Tiles.Cells.Where(c => f.Frame.Tiles.Grid.At(c.Cell.X, c.Cell.Y) == RoomCells.Wall
+                    && !c.Parts.Any(p => p.HasOwner && (p.Source == TileSources.Face || p.Source == TileSources.Narrow)))
+                .Select(c => c.Cell).First();
+            f.Hover(none);
+            Assert.That(f.Screen.FinishPreview.ReasonKey, Is.EqualTo(HouseFinishReasons.NoTarget));
+            Assert.That(f.Text(FurniturePlacementScreen.FinishReasonId), Is.EqualTo(f.T.Text.Get(HouseFinishReasons.NoTarget)));
+            var list = new DrawList();
+            f.Screen.EmitWorldOverlay(list);
+            Assert.That(list.Commands.Count(c => c.Kind == DrawKind.Fill), Is.EqualTo(0), "대상이 없으면 밝히지 않는다");
+            Assert.That(f.View.Shown.Where(p => p != null), Is.Empty, "월드에 넘기지 않는다");
+        }
+
+        [Test]
         public void MoneyNotice_WhileHovering_AsksAgainOnce()
         {
             // 돈이 GameSession 명령으로 바뀌면(알림) 같은 칸에 있어도 다음 포인터 프레임에 한 번 다시 묻는다.
