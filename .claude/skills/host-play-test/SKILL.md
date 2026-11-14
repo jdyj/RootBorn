@@ -61,6 +61,14 @@ C:\Users\jdyj\.dotnet\dotnet.exe run --project game/Rootborn.Host -- --sample --
 - 무엇이 할당하는지 찾을 때: 런타임 이벤트(`EventListener`로 `Microsoft-Windows-DotNETRuntime`의 GC 키워드, `GCAllocationTick`의 `TypeName`)로 형식을 보고, 게임 구성 요소의 Update·Draw 사이 할당 차이로 단계(갱신 / 그리기)를 가른다. 지역 함수·람다가 지역 변수를 잡으면 그 메서드에 들어갈 때마다 객체가 생기고, `IReadOnlyList`를 `foreach`하면 열거자가 상자에 담긴다.
 - 월드 그림 캐시는 한도(`WorldScreen.TextureBudgetBytes`, 기본 256MB)를 넘으면 맵에 들어간 뒤 그 맵이 쓰지 않는 그림부터 푼다(`WorldFrameCostHostTests`).
 
+## 집에서 시작하는 테스트가 걸려 넘어지는 곳 (2026-11-14에 실제로 깨졌던 것)
+
+- **새 게임의 집은 비어 있지 않다.** 새 게임에는 처음 배치 가구(`data/building/HouseStarterLayout.json`)가 놓여 있다. 가구 수를 세거나 `Placed.Single()`로 고르는 테스트는 (가) 그 테스트가 처음 가구와 무관한 것을 보면 준비 단계에서 빈 배치 파일을 둔다(Host `SetUp`의 본보기: `StorageChestHostTests`, `PixelKitFurnitureHostTests`; Game·Screens는 `HouseRoom.EmptyHouse`), (나) 새 게임의 실제 모습을 보는 것이면 처음 배치 수를 **데이터에서 읽어** 정확한 수로 단언한다(`MAIN_CHAIN_000`). `>=`나 범위로 느슨하게 하지 않는다.
+- **현관문은 벽 칸에 있다.** 문 바로 앞 칸에 서기만 해도 몸이 문에 닿아 열리는 연출이 시작된다. 문 연출의 시간을 재는 테스트는 "그 칸에 선 몸은 문에 닿지 않고 이웃 칸은 닿는 칸"에서 출발해 처음부터 센다(`FEEL_DOOR_001`).
+- **상호작용은 가까운 대상이 먼저다.** NPC는 자기 자리 둘레를 거닌다. 지점(하루 마감, 계획판) 옆 칸에서 E를 누르면 더 가까운 NPC와 대화가 열릴 수 있다. 지점을 누르는 테스트·시뮬레이션은 E 대상이 그 지점인지 본 뒤 누르고, 아니면 지점의 칸까지 들어간다(`PlayRunner`).
+- **시험용 집 칸은 실제 집과 같다.** Game 테스트의 `HouseRoom.Grid`는 Screens `FurnitureRoom`의 변환과 같은 칸이다(가구 칸 y = 17 − 맵 y; 같다는 것은 Screens 테스트가 고정한다). 맵 칸을 가구 칸으로 그대로 쓰지 않는다.
+- **이 PC에서 Host를 필터로만 돌렸으면 합치기 전에 원격에서 전체를 돌린다.** 새 게임의 모습·맵·화면 구성을 바꾼 작업은 필터 밖 Host 테스트를 깨뜨릴 수 있다(2026-11-14: 원격 전체 실행에서 5건이 드러났다). `bash Scripts/remote-test/run.sh --no-wait <커밋>` 뒤 `--resume`.
+
 ## 스크린샷
 
 - 그려진 화면 버퍼에서 저장한다. 위치는 `output/` 아래(git 밖).

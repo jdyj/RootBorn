@@ -63,6 +63,13 @@ description: "ROOTBORN 실내 방·집 구조를 칸마다 벽/바닥/밖만 정
 4. 테스트와 화면: 도구 테스트 전체, World `HouseMapTests`·`MapContractTests`, Host `HouseMapHostTests`·`HouseTilesHostTests`. 게임 화면 스크린샷을 **직접 열어** 본다(스킬 `host-play-test`).
 5. 벽 그림을 고르는 규칙을 고쳐야 하면 아래 "게임 쪽과 나누는 것"으로 간다.
 
+## 새 게임의 처음 가구와 집 안 지점을 고칠 때
+
+- **처음 배치 가구**: `data/building/HouseStarterLayout.json`(가구 id, 가구 칸 `(x, 17 − 맵 y)`, 방향). 목록과 자리는 시험용이다(결정 대기 29번). 고친 뒤 Game `HouseStarterTests`(`StarterFitsTheRealHouse` — 실제 집에 놓이는가, `StarterFurniture_IsNotAcceptedByAnyFurnitureGoal` — 메인 체인의 가구 목표가 세는 가구와 겹치지 않는가)를 돌린다. 겹치면 "집 꾸미기" 목표가 저절로 끝난다.
+- 새 게임의 모습이 바뀌므로 Game만 돌리지 않는다: Screens·Simulation·Server 전부와 원격 전체 Host(`.claude/rules/testing-discipline.md` "명령", 스킬 `host-play-test` "집에서 시작하는 테스트가 걸려 넘어지는 곳").
+- **집 안 지점**(하루 마감, 계획판, NPC 자리)은 `game/world/interactions.json`의 `at`(픽셀 — 칸 가운데, 칸 × 32 + 16)이고 NPC 자리는 NPC 데이터에 있다(`git grep -n "first-guide" data game/world`). 지금 자리는 임시 값이고, NPC가 거니는 범위(자리에서 3칸)가 하루 마감·계획판을 덮는다(결정 대기 54번). 옮길 때는 id를 바꾸지 않고 칸만 옮기고, 처음 배치 가구·문·걷는 길과 겹치지 않게 한 뒤 World `MapContractTests`·`MainChainWalkTests`·`NpcRouteContractTests`와 Host `HouseMap`·`MainChainHost`를 돌린다.
+- **`data/building/`을 고치면 키트 도구 테스트도 돌린다**(`python -m unittest discover -s Tools/pixel-kit/tests -t Tools/pixel-kit`). 왜: 키트의 `export-finishes`가 같은 정의 파일을 읽는다 — 2026-11-14 띠 꾸밈을 데이터에 더한 작업이 도구 테스트를 돌리지 않아 키트가 `band` 자리를 모르는 채로 넘어갔다.
+
 ## 게임 쪽과 나누는 것
 
 - **벽 그림 규칙은 두 언어에 있다**(Python `pixelkit/room_tiles.py`, C# `game/Rootborn.Core/src/Building/`). 시험 표 `Tools/pixel-kit/tests/fixtures/room-vectors.json`이 둘을 묶는다. 한쪽만 고치지 않는다: Python을 고친다 → `room vectors`로 시험 표를 다시 만든다(`--check`는 쓰지 않고 견주기만) → C#을 같이 고친다 → 두 쪽 테스트. 자세한 순서는 README "방 만들기 — 집 맵과 꾸밈을 고치는 순서".

@@ -41,7 +41,7 @@ bash Scripts/ci/run-all.sh                 # 자체 시험 + 검사 + dotnet 테
 ```
 
 - 평소에는 고친 프로젝트의 테스트만 돌리고, 커밋·합치기 전에는 전부 돌린다.
-- **새 게임의 모습이나 여러 프로젝트가 쓰는 것(처음 배치 가구, 새 세이브 파일, 공유 정의, 화면 구성)을 바꾼 작업은 고친 프로젝트만이 아니라 Screens·Simulation·Server 테스트도 돌린다.** 왜: 2026-11-14 새 게임에 처음 배치 가구를 넣은 작업이 Game·Core·Data만 돌려, Screens 11건·Host 3건·Server 1건·Simulation 1건의 실패가 뒤 작업에서야 드러났다(새 게임은 빈 집이라는 전제가 여러 프로젝트의 테스트에 있었다).
+- **새 게임의 모습이나 여러 프로젝트가 쓰는 것(처음 배치 가구, 새 세이브 파일, 공유 정의, 화면 구성)을 바꾼 작업은 고친 프로젝트만이 아니라 Screens·Simulation·Server 테스트도 돌리고, `data/building/`처럼 키트 도구가 함께 읽는 데이터를 고쳤으면 도구 테스트(Python)도 돌린다. 이 PC에서 Host를 필터로만 돌렸으면 합치기 전에 원격에서 전체를 돌린다.** 왜: 2026-11-14 새 게임에 처음 배치 가구를 넣은 작업이 Game·Core·Data만 돌려, Screens 11건·Host 3건·Server 1건·Simulation 1건의 실패가 뒤 작업에서야 드러났다(새 게임은 빈 집이라는 전제가 여러 프로젝트의 테스트에 있었다).
 - 전체 실행(특히 Host)은 원격 Linux 장치에서 돌릴 수 있다: `bash Scripts/remote-test/run.sh [<커밋>]`(`Scripts/remote-test/README.md`). 커밋된 것만 가고, 접속 값은 환경 변수로 받는다. 이 PC의 메모리가 모자라거나 세션 여럿이 동시에 돌 때는 이쪽을 쓴다. 원격 실행은 연결이 끊겨도 끝까지 돈다 — 이 PC 쪽이 꺼졌으면 다시 시작하지 말고 `run.sh --resume`으로 이어 받는다(`--status`로 도는 실행을 본다). 근거 종류는 같다(장치 이벤트 주입, OS 입력 계층 미확인).
 - **통과 줄만 보지 말고 프로젝트별 건수가 줄지 않았는지 본다.** 왜: 건수가 줄었으면 테스트가 빠진 것이고, 통과 줄은 그것을 알려 주지 않는다.
 - CI(`.github/workflows/ci.yml`)는 정적 검사, 키트 도구 테스트(Python, job `pixel-kit-tests` — GitHub에서 도는 것은 아직 확인하지 못했다), Host를 뺀 dotnet 테스트로 막는다. Host 테스트는 아직 `continue-on-error`다.
