@@ -66,6 +66,7 @@ namespace Rootborn.Simulation.Rooms
             sb.AppendLine("- 방의 시계 끝 " + r.ServerDays + "일째, 서버 다시 켜기 " + r.Restarts + "번, 차례 " + r.Rounds + ", 프레임 " + r.Frames + ", 방의 일 " + r.Events.Count);
             PlayFailure f = r.FirstFailure;
             sb.AppendLine("- 결과: " + (f == null ? "통과" : "실패 — " + f.What.Split('\n')[0]));
+            if (r.CountOf("꾸밈 잡기 요청") > 0 || r.CountOf("꾸밈 잡기 답") > 0) sb.AppendLine("- " + BuildLine(r));
             sb.AppendLine();
             sb.AppendLine("## 센 것");
             foreach (var pair in r.Counts) sb.AppendLine("- " + pair.Key + ": " + pair.Value);
@@ -93,6 +94,17 @@ namespace Rootborn.Simulation.Rooms
             }
             return sb.ToString();
         }
+
+        /// <summary>꾸밈 한 줄 요약(같이 쓰는 집): 요청·잡힘·거절·쓰기·풀기·끊김 종류·동시 요청·돈 보존 견준 횟수.</summary>
+        public static string BuildLine(RoomPlayResult r)
+            => "꾸밈 — 요청 " + r.CountOf("꾸밈 잡기 요청") + ", 잡힘 " + r.CountOf("꾸밈 잡힘") + ", 거절 " + r.CountOf("먼저 온 것만 됨: 꾸밈") + ", 돈 냄 " + r.CountOf("꾸밈 돈 냄(쓰기를 적음)")
+                + ", 쓰기 적용 " + r.CountOf("꾸밈 쓰기가 방에 적용됨(돈 낸 것)") + ", 풀기 적용 " + r.CountOf("꾸밈 풀기가 방에 적용됨")
+                + ", 끊김[요청 직후 " + r.CountOf("끊김: 꾸밈 잡기 요청 직후") + ", 허락 뒤 " + r.CountOf("끊김: 꾸밈 잡기 허락 뒤(돈 내기 전)") + ", 돈 낸 뒤 " + r.CountOf("끊김: 꾸밈 돈 낸 뒤 쓰기가 방에 닿기 전") + "]"
+                + ", 다시 들어옴[돈 내기 전 " + r.CountOf("다시 들어옴: 풀리지 않은 꾸밈 잡기가 있었다(돈 내기 전)") + ", 돈 낸 것 " + r.CountOf("다시 들어옴: 풀리지 않은 꾸밈 잡기가 있었다(돈 낸 것)") + "]"
+                + ", 동시 요청 " + r.CountOf("꾸밈 동시 요청: 두 사람 이상이 한꺼번에 잡기를 가짐") + ", 떠도는 잡기 정리[쓰기 " + r.CountOf("떠도는 잡기 정리: 다시 켠 판이 쓰기를 적음")
+                + ", 풀기 " + r.CountOf("떠도는 잡기 정리: 다시 켠 판이 풀기를 적음") + "], 쓰기 다시 보냄 " + r.CountOf("꾸밈 쓰기 다시 보냄(돈 낸 표시로 또는 거절 뒤)")
+                + ", 돈 보존[각자 지갑 " + r.CountOf("꾸밈 돈 보존: 지갑 줄어듦 = 방의 기록으로 다시 계산한 비용") + ", 같이 쓰는 지갑 " + r.CountOf("꾸밈 돈 보존: 방 지갑이 잡은 돈 = 방의 기록으로 다시 계산한 비용")
+                + ", 방 지갑 잔액 " + r.CountOf("방 지갑 잔액 = 넣기 − 잡기 + 풀기(꾸밈은 방의 기록으로 다시 계산)") + "]";
 
         /// <summary>기록 폴더의 방 설정과 일 기록, 자리마다의 행동을 읽어 같은 판을 다시 돈다(같은 몸 종류 — 창 없는 몸).</summary>
         public static RoomPlayResult Replay(PlayAtlas atlas, string dir, string newName)

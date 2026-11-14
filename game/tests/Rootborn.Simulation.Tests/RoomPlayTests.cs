@@ -203,14 +203,7 @@ namespace Rootborn.Simulation.Tests
         }
 
         /// <summary>한 줄 요약: 요청·잡힘·거절·쓰기·풀기·끊김 종류·동시 요청.</summary>
-        public static string BuildLine(RoomPlayResult r)
-            => "꾸밈 — 요청 " + r.CountOf("꾸밈 잡기 요청") + ", 잡힘 " + r.CountOf("꾸밈 잡힘") + ", 거절 " + r.CountOf("먼저 온 것만 됨: 꾸밈") + ", 돈 냄 " + r.CountOf("꾸밈 돈 냄(쓰기를 적음)")
-                + ", 쓰기 적용 " + r.CountOf("꾸밈 쓰기가 방에 적용됨(돈 낸 것)") + ", 풀기 적용 " + r.CountOf("꾸밈 풀기가 방에 적용됨")
-                + ", 끊김[요청 직후 " + r.CountOf("끊김: 꾸밈 잡기 요청 직후") + ", 허락 뒤 " + r.CountOf("끊김: 꾸밈 잡기 허락 뒤(돈 내기 전)") + ", 돈 낸 뒤 " + r.CountOf("끊김: 꾸밈 돈 낸 뒤 쓰기가 방에 닿기 전") + "]"
-                + ", 다시 들어옴[돈 내기 전 " + r.CountOf("다시 들어옴: 풀리지 않은 꾸밈 잡기가 있었다(돈 내기 전)") + ", 돈 낸 것 " + r.CountOf("다시 들어옴: 풀리지 않은 꾸밈 잡기가 있었다(돈 낸 것)") + "]"
-                + ", 동시 요청 " + r.CountOf("꾸밈 동시 요청: 두 사람 이상이 한꺼번에 잡기를 가짐") + ", 떠도는 잡기 정리[쓰기 " + r.CountOf("떠도는 잡기 정리: 다시 켠 판이 쓰기를 적음")
-                + ", 풀기 " + r.CountOf("떠도는 잡기 정리: 다시 켠 판이 풀기를 적음") + "], 쓰기 다시 보냄 " + r.CountOf("꾸밈 쓰기 다시 보냄(돈 낸 표시로 또는 거절 뒤)")
-                + ", 돈 보존(지갑 줄어듦=비용) " + r.CountOf("꾸밈 돈 보존: 지갑 줄어듦 = 비용");
+        public static string BuildLine(RoomPlayResult r) => RoomRecord.BuildLine(r);
 
         /// <summary>끊김·지연·순서 바뀜·손실·쉰 날 + 꾸미는 사람. 잡기 허락 뒤 끊김, 돈 낸 직후 끊김, 다시 들어옴에서도 돈과 꾸밈이 어긋나지 않는다.</summary>
         public static RoomPlaySettings BuildFaults(int seed, bool sharedWallet) => new RoomPlaySettings

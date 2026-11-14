@@ -223,7 +223,11 @@ namespace Rootborn.Simulation.Rooms
             // 같이 쓰는 집이면 끝낸 뒤 모두 다시 들어와 가만히 있게 하고 방에 남은 꾸밈 잡기·돈 낸 표시가 없는지 본다(기록·재생에 넣지 않는다 — 끝 상태는 위에서 이미 잡았다).
             if (_replay == null && !Failed && Checks.TracksBuild)
                 try { SettleAtEnd(); }
-                catch (PlayFailure f) { Result.Failure = f; }
+                catch (PlayFailure f)
+                {
+                    Result.Failure = f;
+                    Result.Notes.Add("끝난 뒤 가만히 단계의 실패다 — 이 단계는 기록·재생에 넣지 않으므로 같은 씨앗으로 다시 돌려 재현한다(ROOTBORN_SIM_ROOM_REPLAY로는 되살아나지 않는다)");
+                }
             return Result;
         }
 
@@ -245,7 +249,12 @@ namespace Rootborn.Simulation.Rooms
             }
             if (Seats.Any(s => !s.Playing)) Fail("끝난 뒤 다시 들어오지 못한 자리: " + string.Join(", ", Seats.Where(s => !s.Playing)));
             // 가만히 서서 걸린 것이 끝나기를 기다린다(1시간 저장이 한 번 지나가 돈 낸 표시를 정리하게 게임 시계로 1시간 이상).
-            for (int i = 0; i < SettleFrames; i++) IdleFrame();
+            // 걸린 것이 없고 방에 꾸밈 잡기·저장에 돈 낸 표시가 모두 없어지면 더 기다리지 않는다(이때 끝 검사가 보는 것이 이미 다 0이다 — 걸린 답이 없으니 다시 생기지 않는다).
+            for (int i = 0; i < SettleFrames; i++)
+            {
+                IdleFrame();
+                if (i % 60 == 59 && Checks.Quiet && Checks.Settled && Checks.BuildAtRest) break;
+            }
             for (int i = 0; i < 1200 && !(Checks.Quiet && Checks.Settled); i++) IdleFrame();
             Checks.BuildFinal();
         }
