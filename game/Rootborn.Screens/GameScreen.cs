@@ -41,6 +41,8 @@ namespace Rootborn.Screens
         public const string Storage = GameChangeTopics.Storage;
         /// <summary>일터(놓인 가구·템플릿·공간 점수). 일터 변화는 Furniture와 함께 온다.</summary>
         public const string Workspace = GameChangeTopics.Workspace;
+        /// <summary>짓는 집의 꾸밈(방마다 벽지·바닥).</summary>
+        public const string HouseBuild = GameChangeTopics.HouseBuild;
         public const string Language = "language";
         /// <summary>표시 모드(창 / 전체 화면)가 바뀌었다(DisplayModeSetting.Changed).</summary>
         public const string Display = "display";

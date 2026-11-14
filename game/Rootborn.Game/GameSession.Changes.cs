@@ -33,6 +33,8 @@ namespace Rootborn.Game
         public const string Storage = "storage";
         /// <summary>일터(놓인 가구 수·한도·공간 점수·템플릿 적용·꾸미며 배운 기술).</summary>
         public const string Workspace = "workspace";
+        /// <summary>짓는 집의 꾸밈(방마다 벽지·바닥, 프레임 붙이기).</summary>
+        public const string HouseBuild = "house-build";
     }
 
     /// <summary>변경 알림. 적용된 명령이 저장을 마친 뒤에 주제마다 한 번 알린다. 적용되지 않은 명령은 알리지 않는다.</summary>
