@@ -230,7 +230,7 @@
 1. 꾸밈이 쓸 벽 모양(`slot` wall) 또는 바닥(`slot` floor)이 키트에 있는지 본다(`python Tools/pixel-kit/kit.py room styles --list`). 없으면 먼저 키트에 더한다(스킬 `pixel-kit-room`). 벽 모양의 띠 두께는 16이어야 한다.
 2. `RoomFinishDefinition.json`에 덩어리를 더한다. id는 `finish.wall.<art>` / `finish.floor.<art에서 floor. 뺀 것>`, `nameKey`는 `<id>.name`, `sheet`는 같은 조각 시트, `art`는 키트의 벽 모양 이름 또는 바닥 명세 id. 처음부터 열 것이면 `unlockToken`을 빈 글로 둔다. 잠근 꾸밈은 가게에서 팔려면 `priceItem`·`price`·`purchaseLocationId`를 더한다(없으면 그 토큰을 얻을 다른 길이 있어야 한다).
 3. `python Tools/pixel-kit/kit.py room export-finishes --dry-run`으로 바뀔 파일을 보고, `--dry-run` 없이 돌려 시트 PNG와 좌표표(`data/atlases/art/world/finishes/finishes.png.atlas.json`)를 다시 낸다. 조각은 이름 순으로 다시 놓이므로 자리가 밀리지만 게임은 좌표표로 찾는다. 시트·좌표표는 손으로 고치지 않고 정의와 함께 커밋한다(`CommittedSheetTests`가 저장소의 시트가 지금 정의로 낸 것과 같은지 본다).
-   **알려진 고장(2026-11-14 확인, 문서 담당이 고치지 못함)**: 키트 `room export-finishes`는 `band` 자리를 모른다(`room-finish-slot … 모르는 slot 'band'`) — 지금 데이터로는 끝까지 돌지 않고 키트 테스트 `CommittedSheetTests.test_the_committed_sheet_is_what_the_real_definitions_export_now`도 실패한다. 고쳐지면 이 문장을 지운다.
+   띠 꾸밈(`slot` `band`)은 조각을 굽지 않고 `art`가 좌표표 `bands` 줄에 있는지만 검사한다 — 띠 꾸밈만 더했으면 시트·좌표표는 그대로이고 `--dry-run`이 "아무것도 쓰지 않았다"를 낸다.
 4. 이름 문구를 `game/localization/ko.json`과 `en.json`에 둘 다 넣는다(`<nameKey>`).
 5. `dotnet test game/tests/Rootborn.Data.Tests`, `game/tests/Rootborn.World.Tests`(`RoomFinishArtTests`, `HouseMapTests`)와 키트 테스트를 돌린다.
 

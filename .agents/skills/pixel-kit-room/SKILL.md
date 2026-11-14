@@ -71,7 +71,7 @@ description: "ROOTBORN 실내 방·집 구조를 칸마다 벽/바닥/밖만 정
   1. `data/building/RoomFinishDefinition.json`에 정의 한 덩어리(`slot` `wall`·`floor`·`band`, `art`, `costItems`·`costCounts`, `unlockToken`).
   2. `room export-finishes --dry-run`으로 바뀔 파일을 보고 `--dry-run` 없이 돌려 시트와 좌표표를 다시 낸다(정의와 함께 커밋).
   3. 이름 문구 `<nameKey>`를 `game/localization/ko.json`·`en.json` 둘 다에.
-  2의 주의: **알려진 고장(2026-11-14 확인, 문서 담당이 고치지 못함)**: 키트 `room export-finishes`는 `band` 자리를 모른다(`room-finish-slot … 모르는 slot 'band'`) — 지금 데이터로는 끝까지 돌지 않고 키트 테스트 `CommittedSheetTests.test_the_committed_sheet_is_what_the_real_definitions_export_now`도 실패한다. 고쳐지면 이 문장을 지운다.
+  2의 주의: 띠 꾸밈(`slot` `band`)은 조각을 굽지 않고 `art`가 좌표표 `bands` 줄에 있는지만 검사한다 — 띠 꾸밈만 더했으면 `--dry-run`이 "아무것도 쓰지 않았다"를 내야 한다(시트·좌표표가 그대로).
   4. 띠 색이면 `slot`을 `band`로 두고 `art`는 좌표표 `bands`의 줄 이름이어야 한다.
   5. 가게에서 팔 잠긴 꾸밈이면 판매 필드 `priceItem`(아이템 ref)·`price`·`purchaseLocationId`(장소 id)를 정의에 더한다(`game/Rootborn.Data/Builders/BuildingBuilders.cs`; 판매 필드는 잠긴 꾸밈에만, 셋과 `unlockToken`이 다 있어야 판다 — 사면 해금 토큰을 얻는다).
   6. 확인: World `MapContractTests`(모든 꾸밈이 출처표가 쓰는 조각을 갖는지), Data `RoomFinishDefinitionTests`, 게임의 꾸미기 화면 스크린샷을 직접 연다.

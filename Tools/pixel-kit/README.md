@@ -642,10 +642,11 @@ if/switch로 종류를 닫지 않는다.
   - 꾸밈과 무관한 10장 `common/…`: 문지방 `sill:<n|e|w>:<a>-<b>` 9(바닥이 있는 쪽 3 × 범위 3 — 시험 표에 나오지 않는 것도 평면에 따라 나온다),
     문짝 `door`(정면 문 타일의 `DOOR_RECT` 자리만, 나머지는 투명). 나무 줄 `wood.school`이라 벽지와 무관하다.
   - 띠 칠은 그림이 아니라 색 값이다: 좌표표의 `bands`에 띠 색 줄(`wall.top.*`, `wall.plaster.top`) 5개 × `o` 외곽선·`d`·`f`·`l`(`#RRGGBB`).
+  - 띠 색 꾸밈(`slot` band)은 조각을 굽지 않는다: `art`가 그 시트 좌표표 `bands`의 줄 이름인지만 검사하고(아니면 `room-finish-art`, 있는 줄 이름을 보인다) 시트·좌표표는 띠 꾸밈이 없을 때와 바이트까지 같다.
 - 좌표표 꼴: 가구와 같은 `image`·`width`·`height`·`pixelsPerUnit` 32·`origin` `top-left`·`sprites`(이름 → `x`·`y`·`w`·`h`)에
   `band`(시트가 받는 띠 두께 16)와 `bands`를 더했다.
 - 띠 두께가 16이 아닌 벽 모양은 거절한다(`room-finish-band`). 그 밖의 거절: `room-finish-defs`(정의 파일을 못 읽음), `room-finish-slot`·`-art`·`-sheet`·`-id`
-  (모르는 slot·벽 모양·바닥, 빈 값), `room-finish-duplicate`(같은 id 두 번). 거절되면 아무것도 쓰지 않고 끝 코드 1. 같은 입력은 같은 바이트이고
+  (wall·floor·band 밖의 slot, 없는 벽 모양·바닥·띠 색 줄, 빈 값), `room-finish-duplicate`(같은 id 두 번). 거절되면 아무것도 쓰지 않고 끝 코드 1. 같은 입력은 같은 바이트이고
   바뀔 것이 없으면 쓰지 않는다. 쓸 때는 다른 export처럼 임시 파일에 먼저 쓴 뒤 바꿔친다.
 - 증명: 내보낸 PNG·좌표표에서 조각을 다시 잘라 참조 조합기(`test_room_vectors.compose_cell`)에 넣어도 시험 표의 모든 사례·칸이
   `draw_tile(Wall 열쇠)`를 `draw_tile(Ground 열쇠)` 위에 얹은 그림과 픽셀까지 같다(벽 꾸밈 5종 전부, 두 방 사이 세로 벽의 두 바닥, 바닥 꾸밈 5종).
