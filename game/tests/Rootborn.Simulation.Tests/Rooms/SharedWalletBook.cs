@@ -49,6 +49,82 @@ namespace Rootborn.Simulation.Rooms
 
         private static string Key(string player, string id) => player + "\n" + id;
 
+        // ---------- 잡기마다 까닭 ----------
+        // 방 지갑 잡기(돈을 쓰려는 것)는 처음 보인 때로 까닭을 정한다: 받기 안(방의 답을 처리함) = 꾸밈 허락에 돈을 내는 것뿐이라 그 받기의 꾸밈 허락 수 이내,
+        // 판 시작(붙기 전에 온 답) = 꾸밈 허락, 걸음 안 = 그 걸음의 행동 하나에 잡기 하나, 걸음 사이(실시간 화면이 정산) = 실시간 화면이 떠 있을 때만.
+        // 꾸밈 허락으로 생긴 잡기는 쓰일 때 꾸밈 쓰기에 이어져야 한다(LinkDecoration) — 아니면 꾸밈 하나에 잡기가 둘(따로 적은 이중 청구)이거나 까닭 없는 지출이다.
+
+        public const string WindowPump = "받기", WindowStart = "판 시작", WindowStep = "걸음", WindowBetween = "걸음 사이";
+
+        private readonly Dictionary<string, List<string>> _fresh = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+        private readonly Dictionary<string, string> _holdReason = new Dictionary<string, string>(StringComparer.Ordinal);
+        private readonly HashSet<string> _mustBeDecoration = new HashSet<string>(StringComparer.Ordinal);
+        private readonly HashSet<string> _usedScopes = new HashSet<string>(StringComparer.Ordinal);
+
+        /// <summary>까닭마다 방 지갑 잡기 수(넓이 — 보고에 쓴다).</summary>
+        public readonly SortedDictionary<string, int> Reasons = new SortedDictionary<string, int>(StringComparer.Ordinal);
+
+        /// <summary>
+        /// 그 자리의 한 구간(받기·판 시작·걸음·걸음 사이)에 처음 보인 방 지갑 잡기에 까닭을 붙인다. 실패면 그 글.
+        /// </summary>
+        /// <param name="decorationGrants">받기 구간: 그 받기에서 허락받은 꾸밈 잡기 수.</param>
+        /// <param name="reason">걸음 구간: 그 걸음의 행동. 걸음 사이: 실시간 화면이 떠 있었으면 그 이름, 아니면 null.</param>
+        public string CloseWindow(string player, string window, int decorationGrants, string reason)
+        {
+            LastClosed = 0;
+            if (!_fresh.TryGetValue(player, out List<string> fresh) || fresh.Count == 0) return null;
+            LastClosed = fresh.Count;
+            string fail = null;
+            switch (window)
+            {
+                case WindowPump:
+                    if (fresh.Count > decorationGrants)
+                        fail = "방의 답을 받는 동안 꾸밈 허락(" + decorationGrants + ")보다 많은 방 지갑 잡기(" + fresh.Count + ")가 적혔다(까닭 없는 지출·이중 청구): " + player + " " + Ids(fresh);
+                    foreach (string k in fresh) { _mustBeDecoration.Add(k); Note(k, "꾸밈 허락"); }
+                    break;
+                case WindowStart:
+                    foreach (string k in fresh) { _mustBeDecoration.Add(k); Note(k, "꾸밈 허락(판 시작)"); }
+                    break;
+                case WindowStep:
+                    int inStep = (_stepHolds.TryGetValue(player, out int already) ? already : 0) + fresh.Count;
+                    _stepHolds[player] = inStep;
+                    if (inStep > 1) fail = "걸음 하나(" + reason + ")에 방 지갑 잡기가 " + inStep + "개 적혔다(행동 하나에 잡기 하나): " + player + " " + Ids(fresh);
+                    foreach (string k in fresh) Note(k, "걸음: " + reason);
+                    break;
+                default:
+                    if (reason == null) fail = "걸음도 받기도 아닌 때 실시간 화면 없이 방 지갑 잡기가 적혔다(까닭 없는 지출): " + player + " " + Ids(fresh);
+                    foreach (string k in fresh) Note(k, "걸음 사이: " + (reason ?? "까닭 없음"));
+                    break;
+            }
+            fresh.Clear();
+            return fail;
+        }
+
+        /// <summary>마지막 CloseWindow가 까닭을 붙인 잡기 수.</summary>
+        public int LastClosed { get; private set; }
+
+        private readonly Dictionary<string, int> _stepHolds = new Dictionary<string, int>(StringComparer.Ordinal);
+
+        /// <summary>그 자리의 걸음 하나가 시작됐다(걸음 안의 잡기 수를 다시 센다 — 걸음 동안 받기가 여러 번 돌아도 걸음 하나의 잡기는 하나).</summary>
+        public void BeginStep(string player) => _stepHolds[player] = 0;
+
+        private void Note(string key, string reason)
+        {
+            _holdReason[key] = reason;
+            string kind = reason.StartsWith("걸음: ", StringComparison.Ordinal) ? "걸음의 행동" : reason;
+            Reasons[kind] = (Reasons.TryGetValue(kind, out int n) ? n : 0) + 1;
+        }
+
+        /// <summary>그 방 지갑 잡기(범위)의 까닭(모르면 null).</summary>
+        public string ReasonOf(string player, string scope) => _holdReason.TryGetValue(Key(player, scope), out string r) ? r : null;
+
+        private static string Ids(List<string> keys)
+        {
+            var ids = new List<string>(keys.Count);
+            foreach (string k in keys) ids.Add(Strip(k));
+            return "[" + string.Join(", ", ids) + "]";
+        }
+
         /// <summary>자리의 보낼 목록에서 본 지갑 요청(같은 id는 마지막에 본 것).</summary>
         public void See(string player, RoomRequestSaveData r)
         {
@@ -58,6 +134,11 @@ namespace Rootborn.Simulation.Rooms
             _pending[key] = new Seen { Player = player, Request = r.Copy() };
             if (r.Kind == RoomWallet.Hold)
             {
+                if (!_seenHolds.ContainsKey(key))
+                {
+                    if (!_fresh.TryGetValue(player, out List<string> fresh)) _fresh[player] = fresh = new List<string>(2);
+                    fresh.Add(key);
+                }
                 _seenHolds[key] = r.Amount;
                 if (_decorations.TryGetValue(key, out Decoration d)) d.SeenHold = r.Amount;
             }
@@ -132,12 +213,19 @@ namespace Rootborn.Simulation.Rooms
                     case RoomWallet.Release:
                         if (d != null) d.Released += r.Amount; else _releasesOther += r.Amount;
                         break;
+                    case RoomWallet.Use:
+                        if (scope != null) _usedScopes.Add(Key(seen.Player, scope));
+                        break;
                 }
             }
             foreach (string key in _done) _pending.Remove(key);
             Unanswered = _pending.Count;
 
             string fail = null;
+            // 꾸밈 허락으로 생긴 잡기가 쓰였는데 꾸밈 쓰기에 이어지지 않았다: 꾸밈 하나에 잡기가 둘(따로 적힌 이중 청구)이거나 까닭 없는 지출이다.
+            foreach (string key in _mustBeDecoration)
+                if (_usedScopes.Contains(key) && !_decorations.ContainsKey(key))
+                    fail ??= "꾸밈 허락으로 생긴 방 지갑 잡기가 꾸밈 쓰기에 이어지지 않은 채 쓰였다(따로 적힌 이중 청구 또는 까닭 없는 지출): " + key.Replace('\n', ' ');
             long decorations = 0;
             foreach (Decoration d in _decorations.Values)
             {

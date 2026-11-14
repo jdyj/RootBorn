@@ -102,6 +102,46 @@ namespace Rootborn.Simulation.Tests
             Assert.That(book.Unanswered, Is.EqualTo(1));
         }
 
+        [Test]
+        public void SharedWallet_SecondHoldWrittenApartFromTheDecoration_Fails()
+        {
+            // 꾸밈 허락 하나를 받은 받기에서 방 지갑 잡기가 둘 적혔다(하나는 꾸밈 쓰기 바로 뒤가 아닌 곳에 따로).
+            var book = new SharedWalletBook();
+            book.See(P, Wallet("scope-1", RoomWallet.Hold, 30));
+            book.See(P, Wallet("scope-2", RoomWallet.Hold, 30));
+            Assert.That(book.CloseWindow(P, SharedWalletBook.WindowPump, 1, null), Does.Contain("꾸밈 허락(1)보다 많은 방 지갑 잡기(2)"));
+        }
+
+        [Test]
+        public void SharedWallet_DecorationBornHoldUsedWithoutTheDecorationWrite_Fails()
+        {
+            // 받기 안에서 생긴 잡기(꾸밈 허락뿐)가 쓰였는데 꾸밈 쓰기에 이어지지 않았다 — 다른 받기에 따로 적힌 두 번째 잡기.
+            var book = new SharedWalletBook();
+            var ledger = new FakeLedger();
+            Assert.That(book.Check(100, ledger.TryGet, false), Is.Null, "기준");
+            var hold = Wallet("scope-9", RoomWallet.Hold, 30);
+            book.See(P, hold);
+            Assert.That(book.CloseWindow(P, SharedWalletBook.WindowPump, 1, null), Is.Null, "허락 하나에 잡기 하나");
+            var use = Wallet("use-9", RoomWallet.Use, 30, "scope-9");
+            book.See(P, use);
+            ledger.Answer(hold, RoomOutcomes.Applied);
+            ledger.Answer(use, RoomOutcomes.Applied);
+            Assert.That(book.Check(70, ledger.TryGet, false), Does.Contain("꾸밈 쓰기에 이어지지 않은 채 쓰였다"));
+        }
+
+        [Test]
+        public void SharedWallet_TwoHoldsInOneStep_OrAHoldBetweenStepsWithoutAReason_Fails()
+        {
+            var book = new SharedWalletBook();
+            book.BeginStep(P);
+            book.See(P, Wallet("s-1", RoomWallet.Hold, 10));
+            Assert.That(book.CloseWindow(P, SharedWalletBook.WindowStep, 0, "걸음"), Is.Null, "행동 하나에 잡기 하나");
+            book.See(P, Wallet("s-2", RoomWallet.Hold, 10));
+            Assert.That(book.CloseWindow(P, SharedWalletBook.WindowStep, 0, "걸음"), Does.Contain("잡기가 2개"), "걸음 동안 받기가 돌아도 걸음 하나의 잡기는 하나");
+            book.See(P, Wallet("s-3", RoomWallet.Hold, 10));
+            Assert.That(book.CloseWindow(P, SharedWalletBook.WindowBetween, 0, null), Does.Contain("까닭 없는 지출"));
+        }
+
         // ---------- 다시 들어온 뒤 ----------
 
         private static List<string> Compare(string before, string after, bool move, Dictionary<string, int> skills = null)

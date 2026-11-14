@@ -57,7 +57,7 @@ namespace Rootborn.Simulation.Rooms
             public string ExpectedWhy;
             public GameSession ExpectedFrom;
             public StudentDayState ExpectedState;
-            public bool Pending;
+            public bool Pending, RealTime;
             public int ExpectedDay;
             // 나갈 때 걸려 있던 가구·꾸밈 요청의 성장 규칙(요청마다 하나) — 다시 들어온 뒤 그 답으로 자라도 되는 기술과 양.
             public readonly List<PlacementSkillGrowth> PendingGrowth = new List<PlacementSkillGrowth>();
@@ -121,6 +121,7 @@ namespace Rootborn.Simulation.Rooms
             if (chests != null) chests.Answered += (request, applied) => ChestAnswered(seat, session, request, applied);
             BuildStarted(seat, session);
             ScanWallet(seat, session);
+            CloseWallet(seat, SharedWalletBook.WindowStart, 0, null);
             var house = shares.Find<RoomHouseClient>();
             if (house != null) house.Answered += (request, applied) => { Result.Count("집 요청"); if (!applied) Result.Count("먼저 온 것만 됨: 집"); };
             var wallet = shares.Find<RoomWalletClient>();
@@ -166,10 +167,18 @@ namespace Rootborn.Simulation.Rooms
         public void Pump(RoomSeat seat, double now)
         {
             GameSession s = seat.Session;
+            // 받기 앞: 지난 받기 뒤에 생긴 방 지갑 잡기는 걸음 안(지금 걷는 자리)이거나 걸음 사이(실시간 화면의 정산)다.
             ScanWallet(seat, s);
+            if (seat == _acting) CloseWallet(seat, SharedWalletBook.WindowStep, 0, "걸음");
+            else CloseWallet(seat, SharedWalletBook.WindowBetween, 0, RealTimeOpen(seat) ? "실시간 화면" : null);
+            PurchaseWindow window = OpenPurchaseWindow(s);
+            _decorationGrants = 0;
             if (s != null && seat.Connected && s.SharesHouseBuild) PumpBuild(seat, now, s);
             else PumpChests(seat, now);
+            // 받기 뒤: 받기 안에서 생긴 방 지갑 잡기는 꾸밈 허락에 돈을 내는 것뿐이다(그 받기의 꾸밈 허락 수 이내).
             ScanWallet(seat, seat.Session);
+            CloseWallet(seat, SharedWalletBook.WindowPump, _decorationGrants, null);
+            if (seat.Session == s) PairPurchases(seat, s, window);
         }
 
         private void PumpChests(RoomSeat seat, double now)
@@ -235,6 +244,10 @@ namespace Rootborn.Simulation.Rooms
             var st = Of(seat);
             GameSession s = seat.Session;
             st.StepSession = s;
+            ScanWallet(seat, s);
+            CloseWallet(seat, SharedWalletBook.WindowBetween, 0, RealTimeOpen(seat) ? "실시간 화면" : null);
+            _acting = seat;
+            _book.BeginStep(seat.PlayerId);
             if (s == null) return;
             st.Busy = s.IsBusy;
             st.EndsAt = s.ActivityEndsAtMinutes;
@@ -252,12 +265,15 @@ namespace Rootborn.Simulation.Rooms
             if (s == null) return;
             Result.Count("걸음");
             ScanWallet(seat, s);
+            CloseWallet(seat, SharedWalletBook.WindowStep, 0, "걸음");
+            _acting = null;
             if (st.Expected != null && s != st.ExpectedFrom && seat.Playing && !s.WaitingForRoom) CompareAfterRejoin(seat, st, s);
             if (st.StepSession == s && st.Busy && s.StudentDay == st.Day && s.ActivityEndsAtMinutes > st.EndsAt && st.EndsAt > s.StudentTimeMinutes)
                 Fail("하는 중인 사람이 다른 활동을 시작했다: " + seat + " 끝나는 시각 " + st.EndsAt + " → " + s.ActivityEndsAtMinutes + "(지금 " + s.StudentTimeMinutes + "분)");
             if (st.StepSession == s && st.Busy) Result.Count("하는 중에 걸음");
             // 실시간 화면(미니게임)이 떠 있으면 남이 걷는 동안에도 끝나고 정산된다(사람도 그동안 계속 플레이한다) — 그때는 다음 걸음에 보지 않는다.
             bool realTime = seat.Body.Screens.Find(Rootborn.Screens.ScreenCatalog.Minigame) != null;
+            st.RealTime = realTime;
             st.OwnBalance = realTime ? -1 : s.Wallet.Balance;
             st.OwnPaid = PaidOf(seat);
             st.BalanceSession = s;
@@ -430,6 +446,8 @@ namespace Rootborn.Simulation.Rooms
             || line.StartsWith("time-points=", StringComparison.Ordinal) || line.StartsWith("today=", StringComparison.Ordinal)
             || line.StartsWith("item ", StringComparison.Ordinal) || StateSnapshot.IsFurniture(line);
 
+        private static bool PendingMayProgress(Rootborn.Core.Room.RoomRequestSaveData r) => r.Piece == RoomHouse.PieceName || r.Piece == RoomHouseBuild.PieceName;
+
         private PlacementSkillGrowth GrowthFor(string surface)
         {
             if (string.IsNullOrEmpty(surface)) return null;
@@ -443,9 +461,10 @@ namespace Rootborn.Simulation.Rooms
             GameSession s = seat.Session;
             if (s == null) return;
             var st = Of(seat);
-            // 방에 보낸 요청이 걸려 있으면(가구 놓기, 지갑 잡기 등) 다시 들어온 뒤 그 답으로 진행이 나아갈 수 있다(가구를 놓아 목표를 채움) —
-            // 그때는 퀘스트·체인이 앞으로 나아가는 것만 허용한다(RejoinProgress).
-            st.Pending = s.Shares != null && s.Shares.Outbox.Requests.Count > 0;
+            // 그 답으로 퀘스트·체인 목표가 찰 수 있는 요청(가구 놓기·꾸밈)이 걸려 있으면 다시 들어온 뒤 진행이 나아갈 수 있다 —
+            // 그때는 퀘스트·체인이 앞으로 나아가는 것만 허용한다(RejoinProgress). 지갑 잡기는 다시 켠 판이 기다리던 명령을 모르므로 허락을 풀 뿐이고(진행을 바꾸지 않는다),
+            // 넣기·쓰기·풀기와 상자 요청도 진행을 바꾸지 않아 허용을 열지 않는다.
+            st.Pending = s.Shares != null && s.Shares.Outbox.Requests.Any(PendingMayProgress);
             // 가구 놓기·칸 꾸밈 요청이 걸려 있으면 다시 들어온 뒤 그 답으로 인테리어 기술이 자랄 수 있다(적용되면 하루 한도 안에서 한 번분) — 요청마다 그 면의 성장 규칙을 적어 둔다.
             st.PendingGrowth.Clear();
             if (s.Shares != null)
@@ -485,14 +504,19 @@ namespace Rootborn.Simulation.Rooms
             foreach (var group in st.PendingGrowth.GroupBy(r => r.SkillId))
             {
                 PlacementSkillGrowth rule = group.First();
-                int days = Math.Max(0, s.StudentDay - st.ExpectedDay) + 1;
-                allowance[group.Key] = Math.Min(group.Count(), rule.DailyLimit * days) * rule.Amount;
+                // 걸린 답은 다시 들어온 뒤 바로 온다(하루 안) — 하루 한도 한 번만 적용한다.
+                allowance[group.Key] = Math.Min(group.Count(), rule.DailyLimit) * rule.Amount;
             }
             List<string> live = StateSnapshot.Of(s).Where(l => !Volatile(l)).ToList();
             var diff = StateSnapshot.Diff(st.Expected.Where(l => !RejoinProgress.Handles(l)).ToList(), live.Where(l => !RejoinProgress.Handles(l)).ToList());
             diff.AddRange(RejoinProgress.Compare(st.Expected, live, progressMoves, allowance));
             if (progressMoves) Result.Count(dayMoved ? "다시 들어와 비교: 날이 바뀌어 진행은 앞으로만" : "다시 들어와 비교: 걸린 요청이 있어 진행은 앞으로만");
+            if (progressMoves && StateSnapshot.Diff(st.Expected.Where(l => RejoinProgress.IsQuest(l) || RejoinProgress.IsChain(l)).ToList(),
+                    live.Where(l => RejoinProgress.IsQuest(l) || RejoinProgress.IsChain(l)).ToList()).Count > 0)
+                Result.Count("다시 들어와 비교: 퀘스트·체인이 실제로 나아감(앞으로만 견줌)");
             if (allowance.Count > 0) Result.Count("다시 들어와 비교: 걸린 가구·꾸밈 요청만큼 기술 성장 허용");
+            if (allowance.Count > 0 && StateSnapshot.Diff(st.Expected.Where(RejoinProgress.IsSkill).ToList(), live.Where(RejoinProgress.IsSkill).ToList()).Count > 0)
+                Result.Count("다시 들어와 비교: 걸린 요청으로 기술이 실제로 자람(허용량과 견줌)");
             Dictionary<string, int> bag = Bag(s);
             foreach (string item in bag.Keys.Union(st.ExpectedBag.Keys).Union(st.ChestBagSince.Keys))
             {
