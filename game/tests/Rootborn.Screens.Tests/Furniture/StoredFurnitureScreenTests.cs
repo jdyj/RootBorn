@@ -143,6 +143,79 @@ namespace Rootborn.Screens.Tests.Furniture
             Assert.That(inner(0), Is.Not.Empty.And.Not.EqualTo(stored[0].Definition.StableId), "화면 이름(지금 언어)");
         }
 
+        // ---------- 작업 11: 줄 그림과 방향, 줄 글자는 바뀔 때만 ----------
+
+        [Test]
+        public void StoredRows_ShowIconAndDirection()
+        {
+            using var f = new Fixture(13, chest: true);
+            f.T.Click(FurniturePlacementScreen.CategoryStoredId);
+            IReadOnlyList<StoredFurniture> stored = f.T.Session.StoredFurniture();
+            Assert.That(stored.Count, Is.GreaterThan(1), "준비: 보관된 기록이 있다");
+            var art = new FurnitureArt(TestData.DataDirectory);
+            for (int row = 0; row < stored.Count; row++)
+            {
+                StoredFurniture s = stored[row];
+                string direction = f.T.Text.Get("ui.furniture.direction." + s.Direction.ToString().ToLowerInvariant());
+                string line = f.T.Text.Format("ui.furniture.stored.row", NameShown(f, row), direction);
+                string expected = s.HoldsItems ? f.T.Text.Format("ui.furniture.stored.row-with-items", line) : line;
+                Assert.That(f.List.RowText(row), Is.EqualTo(expected), "줄 " + row + ": 이름 · 방향(+ 물건이 든 상자)");
+                Assert.That(art.TryPrimary(s.Definition, out FurnitureTilePart part, out FurnitureSprite sprite), Is.True, "준비: 대표 그림이 있다");
+                Assert.That(f.List.RowIcon(row), Is.EqualTo(FurnitureArt.ImageId(part)), "줄 그림 = 가구 대표 그림");
+                Assert.That(f.List.RowIconSource(row), Is.EqualTo(((float)sprite.W, (float)sprite.H)), "비율을 지키려고 그림 크기를 넘긴다");
+            }
+            Assert.That(stored.Any(s => s.HoldsItems), Is.True, "준비: 물건이 든 상자 줄이 있다");
+
+            DrawList list = f.T.Emit();
+            UiRect listRect = f.List.Rect;
+            List<DrawCommand> icons = list.Commands.Where(c => c.Kind == DrawKind.Image && listRect.Contains(c.Rect.CenterX, c.Rect.CenterY)).ToList();
+            Assert.That(icons.Count, Is.EqualTo(Math.Min(stored.Count, f.List.LastVisibleRow - f.List.FirstVisibleRow + 1)), "보이는 줄마다 그림 하나");
+            foreach (DrawCommand icon in icons)
+                Assert.That(icon.Rect.W <= f.List.IconSize + 0.01f && icon.Rect.H <= f.List.IconSize + 0.01f, Is.True, "그림은 그림 칸 안");
+        }
+
+        private static string NameShown(Fixture f, int row)
+        {
+            // 화면 이름 = 고르면 오른쪽 패널에 보이는 이름(같은 Name 길). 고르지 않고 줄 글의 앞부분과 견줄 값으로 쓴다.
+            FurnitureDefinition d = f.Screen.Stored.Rows[row].Definition;
+            string key = d.DisplayNameKey;
+            if (!string.IsNullOrEmpty(key) && f.T.Text.Has(key, f.T.Text.Language)) return f.T.Text.Get(key);
+            string rule = Rootborn.Screens.DataTextKeys.Name(d.StableId);
+            if (rule != null && f.T.Text.Has(rule, f.T.Text.Language)) return f.T.Text.Get(rule);
+            return string.IsNullOrEmpty(d.DisplayName) ? d.StableId : d.DisplayName;
+        }
+
+        [Test]
+        public void StoredRowText_BuiltOnceNotPerFrame()
+        {
+            using var f = new Fixture(40);
+            f.T.Click(FurniturePlacementScreen.CategoryStoredId);
+            var free = f.T.Session.House.Placed[0];
+            int before = f.Screen.StoredRowTextBuilds;
+            Assert.That(f.T.Session.RemoveFurniture(free.InstanceId), Is.True, "준비: 가구 변경 알림 한 번(목록을 다시 읽는다)");
+            for (int frame = 0; frame < 100; frame++) f.T.Emit();
+            Assert.That(f.List.RowCount, Is.GreaterThan(f.List.LastVisibleRow + 1), "준비: 목록이 한 화면보다 길다");
+            Assert.That(f.Screen.StoredRowTextBuilds - before, Is.EqualTo(f.List.RowCount),
+                "그리기 100번 동안 줄 글을 만든 횟수 = 줄 수(목록을 다시 읽을 때 한 번씩, 그리기마다 만들지 않는다)");
+        }
+
+        [Test]
+        public void LanguageSwitch_RebuildsRows()
+        {
+            using var f = new Fixture(20);
+            f.T.Click(FurniturePlacementScreen.CategoryStoredId);
+            StoredFurniture first = f.T.Session.StoredFurniture()[0];
+            string ko = f.List.RowText(0);
+            string koDirection = f.T.Text.Get("ui.furniture.direction." + first.Direction.ToString().ToLowerInvariant());
+            Assert.That(ko, Does.Contain(koDirection));
+            f.T.Text.Language = "en";
+            f.T.Emit();
+            string en = f.List.RowText(0);
+            string enDirection = f.T.Text.Get("ui.furniture.direction." + first.Direction.ToString().ToLowerInvariant());
+            Assert.That(enDirection, Is.Not.EqualTo(koDirection), "준비: 방향 문구가 언어마다 다르다");
+            Assert.That(en, Is.EqualTo(f.T.Text.Format("ui.furniture.stored.row", NameShown(f, 0), enDirection)), "언어를 바꾸면 줄 글을 다시 만든다");
+        }
+
         [Test]
         public void PickingARow_ThenAFreeFloorCell_PlacesIt_AndTheRowLeavesTheList()
         {
@@ -157,7 +230,9 @@ namespace Rootborn.Screens.Tests.Furniture
             string rowText = f.List.RowText(0);
             f.ClickRow(0);
             Assert.That(f.Screen.Active, Is.Not.Null, "고른 줄의 가구가 오른쪽에 보인다");
-            Assert.That(((UiLabel)f.T.Node(FurniturePlacementScreen.SelectedNameId)).Text, Is.EqualTo(rowText));
+            string shownName = ((UiLabel)f.T.Node(FurniturePlacementScreen.SelectedNameId)).Text;
+            Assert.That(shownName, Is.Not.Empty);
+            Assert.That(rowText, Does.StartWith(shownName), "줄 글은 그 가구 이름으로 시작한다(뒤에 방향)");
             f.ClickCell(cell);
             Assert.That(f.Screen.LastAction, Is.EqualTo("placed"));
             Assert.That(f.T.Session.House.Placed.Any(p => p.Anchor.Equals(cell)), Is.True);

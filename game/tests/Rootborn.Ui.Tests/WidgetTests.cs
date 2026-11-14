@@ -491,6 +491,42 @@ namespace Rootborn.Ui.Tests
             Assert.That(_tree.Focused, Is.SameAs(above));
         }
 
+        [Test]
+        public void RowIcon_AskedOnlyForVisibleRows()
+        {
+            Make(500);
+            int iconCalls = 0;
+            _list.RowIcon = i => { iconCalls++; return "icon:" + (i % 3); };
+            _list.IconSize = 32;
+            var list = new DrawList();
+            _tree.Emit(list, new FakeMeasurer());
+            Assert.That(iconCalls, Is.EqualTo(6), "보이는 줄만 그림을 묻는다");
+            List<DrawCommand> images = list.Commands.Where(c => c.Kind == DrawKind.Image).ToList();
+            Assert.That(images.Count, Is.EqualTo(6));
+            Assert.That(images[0].Rect.W, Is.EqualTo(32));
+            Assert.That(images[0].Rect.X, Is.EqualTo(110 + _list.TextPaddingX), "그림은 줄 왼쪽 여백 자리");
+            Assert.That(images[0].Rect.CenterY, Is.EqualTo(110 + 25), "줄 높이 가운데");
+            DrawCommand firstText = list.Commands.First(c => c.Kind == DrawKind.Text);
+            Assert.That(firstText.Rect.X, Is.GreaterThanOrEqualTo(images[0].Rect.Right), "글자는 그림 오른쪽");
+
+            // 그림 크기(비율)를 주면 칸 안에 비율을 지켜 맞춘다(세로로 긴 가구 그림이 찌그러지지 않게).
+            _list.RowIconSource = i => (16f, 32f);
+            list.Clear();
+            _tree.Emit(list, new FakeMeasurer());
+            DrawCommand tall = list.Commands.First(c => c.Kind == DrawKind.Image);
+            Assert.That((tall.Rect.W, tall.Rect.H), Is.EqualTo((16f, 32f)));
+        }
+
+        [Test]
+        public void NoRowIcon_DrawsTheRowsAsBefore()
+        {
+            Make(10);
+            var list = new DrawList();
+            _tree.Emit(list, new FakeMeasurer());
+            Assert.That(list.Commands.Any(c => c.Kind == DrawKind.Image), Is.False);
+            Assert.That(list.Commands.First(c => c.Kind == DrawKind.Text).Rect.X, Is.EqualTo(110 + _list.TextPaddingX));
+        }
+
         private sealed class CountingMeasurer : ITextMeasurer
         {
             public int Calls;

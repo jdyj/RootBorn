@@ -95,6 +95,19 @@ namespace Rootborn.Screens.Tests.Furniture
             Assert.That(text.Contains("0개") || text.Contains(" 0 "), Is.False, "0개를 말하지 않는다");
         }
 
+        /// <summary>영어 알림은 수 앞에 명사를 둔다(결정 31번): 1이어도 "1 pieces"처럼 단수·복수가 어긋나지 않는다.</summary>
+        [TestCase(1, 1)]
+        [TestCase(1, 0)]
+        [TestCase(0, 1)]
+        public void EnglishNotice_PutsTheNounBeforeTheCount_SoOneReadsRight(int moved, int stored)
+        {
+            using var t = new TestSession("en", saves: _saves);
+            t.Stack.Open(ScreenCatalog.HouseMovedNotice, null, (moved, stored));
+            string text = ((UiTextBlock)t.Node(HouseMovedNoticeScreen.MessageId)).Text;
+            Assert.That(text, Does.Not.Contain("1 pieces").And.Not.Contain("1 piece "), text);
+            Assert.That(text, Does.Contain(": 1"), "명사 뒤에 수: " + text);
+        }
+
         [Test]
         public void AllThreeKeys_ExistInEveryLanguage()
         {

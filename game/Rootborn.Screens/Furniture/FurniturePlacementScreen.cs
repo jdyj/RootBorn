@@ -43,6 +43,8 @@ namespace Rootborn.Screens.Furniture
             public const float CategoryW = 120f, CategoryH = 56f, CategoryPitch = 128f, CategoryGap = 8f, CategoryFont = 20f;
             /// <summary>보관 분류: 목록(보이는 줄만 그린다), 비었을 때 안내, 같이 쓰는 집의 이유 줄.</summary>
             public const float StoredListX = 0f, StoredListY = 20f, StoredListW = 368f, StoredListH = 460f, StoredRowH = 48f, StoredFont = 18f;
+            /// <summary>보관 줄 왼쪽의 가구 대표 그림 칸(비율을 지켜 맞춘다)과 글자까지의 틈(작성자 추천, 결정 18).</summary>
+            public const float StoredIcon = 36f, StoredIconGap = 10f;
             public const float StoredEmptyY = 20f, StoredEmptyW = 320f, StoredEmptyH = 120f, StoredEmptyFont = 18f;
             public const float StoredReasonY = -286f, StoredReasonW = 368f, StoredReasonH = 100f, StoredReasonFont = 16f;
 
@@ -186,6 +188,10 @@ namespace Rootborn.Screens.Furniture
         private UiScrollList _storedList;
         private UiTextBlock _storedEmpty, _storedReason;
         private StoredFurnitureModel _stored = StoredFurnitureModel.Build(null, f => string.Empty, shared: false);
+        // 보관 줄마다 미리 만든 글·그림 id·그림 크기(목록을 다시 읽을 때, 언어가 바뀔 때, 그림 표를 이을 때만 만든다 — 그리기는 꺼내기만 한다).
+        private string[] _storedTexts = Array.Empty<string>();
+        private string[] _storedIcons = Array.Empty<string>();
+        private (float W, float H)[] _storedIconSizes = Array.Empty<(float, float)>();
         private int _storedIndex = -1;
         private UiFittedImage _selectedIcon;
 
@@ -243,6 +249,8 @@ namespace Rootborn.Screens.Furniture
         public string FinishLastAction => _finish.LastAction;
         /// <summary>보관 목록의 표시 모델(GameSession.StoredFurniture 조회).</summary>
         public StoredFurnitureModel Stored => _stored;
+        /// <summary>보관 줄 글을 만든 횟수(시험용 — 목록을 다시 읽거나 언어가 바뀔 때만 오른다, 그리기마다 오르지 않는다).</summary>
+        public int StoredRowTextBuilds { get; private set; }
         /// <summary>보관 목록에서 고른 줄의 기록 자리(StoredFurniture.Index). 고른 것이 없으면 -1.</summary>
         public int PickedStoredIndex => _storedIndex;
         /// <summary>고른 가구(팔레트에서 고르거나 옮기려고 집은 것). 없으면 null.</summary>
@@ -273,6 +281,7 @@ namespace Rootborn.Screens.Furniture
             _view = view;
             _finish.Attach(view);
             _validDirty = true;
+            if (_storedList != null) BuildStoredRows(); // 그림 표가 생겼다: 줄 그림을 다시 찾는다
         }
 
         /// <summary>가구 이름: 이름 키 → id로 만든 규칙 키(DataTextKeys) → 데이터의 이름 → id. 지금 데이터는 이름 키가 없어 데이터의 한국어 이름이다.</summary>
@@ -321,9 +330,14 @@ namespace Rootborn.Screens.Furniture
                 .Centered(Metrics.CategoryPitch, categoryY, Metrics.CategoryW, Metrics.CategoryH);
             _categoryFinish.Clicked += () => ShowCategory(Categories.Finish);
 
-            _storedList = _storedGroup.Add(new UiScrollList { Id = StoredListId, RowHeight = Metrics.StoredRowH, FontSize = Metrics.StoredFont })
+            _storedList = _storedGroup.Add(new UiScrollList
+                {
+                    Id = StoredListId, RowHeight = Metrics.StoredRowH, FontSize = Metrics.StoredFont, IconSize = Metrics.StoredIcon, IconGap = Metrics.StoredIconGap,
+                })
                 .Centered(Metrics.StoredListX, Metrics.StoredListY, Metrics.StoredListW, Metrics.StoredListH);
             _storedList.RowText = StoredRowText;
+            _storedList.RowIcon = StoredRowIcon;
+            _storedList.RowIconSource = StoredRowIconSource;
             _storedList.RowClicked += PickStoredRow;
             _storedEmpty = _storedGroup.Add(new UiTextBlock { Id = StoredEmptyId, FontSize = Metrics.StoredEmptyFont, Color = Metrics.Ink, Align = UiAlign.Center })
                 .Centered(0f, Metrics.StoredEmptyY, Metrics.StoredEmptyW, Metrics.StoredEmptyH);
@@ -534,6 +548,7 @@ namespace Rootborn.Screens.Furniture
             _categoryStored.Text = T("ui.furniture.category.stored");
             _categoryFinish.Text = T("ui.furniture.category.finish");
             _storedEmpty.Text = T("ui.furniture.stored.empty");
+            BuildStoredRows();
             ApplyStoredNote();
             ApplySettingsTitle();
             _roomStatus.Text = _roomStatusKey == null ? string.Empty : T(_roomStatusKey);
@@ -659,6 +674,7 @@ namespace Rootborn.Screens.Furniture
         {
             var session = Services.Session;
             _stored = StoredFurnitureModel.Build(session?.StoredFurniture(), Name, session != null && session.SharesOpenLayout);
+            BuildStoredRows();
             _storedList.RowCount = _stored.Rows.Count;
             _storedList.Visible = !_stored.IsEmpty;
             _storedEmpty.Visible = _stored.IsEmpty;
@@ -691,14 +707,41 @@ namespace Rootborn.Screens.Furniture
             _storedReason.Visible = !_stored.IsEmpty && key != null;
         }
 
-        // 보이는 줄만 묻는다(UiScrollList). 물건이 든 상자는 그렇다고 덧붙인다.
-        private string StoredRowText(int row)
+        /// <summary>
+        /// 보관 줄의 글(이름 · 방향, 물건이 든 상자는 그렇다고 덧붙인다)과 대표 그림을 한 번에 만든다. 방향 이름은 오른쪽 패널의 방향 문구 키.
+        /// 목록을 다시 읽을 때·언어가 바뀔 때·그림 표를 이을 때만 부른다 — 그리기(보이는 줄만 묻는다)는 만든 것을 꺼내기만 한다.
+        /// </summary>
+        private void BuildStoredRows()
         {
-            if (row < 0 || row >= _stored.Rows.Count) return string.Empty;
-            StoredFurnitureRow r = _stored.Rows[row];
-            string name = Name(r.Definition);
-            return r.HoldsItems ? F("ui.furniture.stored.row-with-items", name) : name;
+            IReadOnlyList<StoredFurnitureRow> rows = _stored.Rows;
+            if (_storedTexts.Length != rows.Count)
+            {
+                _storedTexts = new string[rows.Count];
+                _storedIcons = new string[rows.Count];
+                _storedIconSizes = new (float, float)[rows.Count];
+            }
+            for (int i = 0; i < rows.Count; i++)
+            {
+                StoredFurnitureRow r = rows[i];
+                string line = F("ui.furniture.stored.row", Name(r.Definition), T(DirectionKey(r.Direction)));
+                _storedTexts[i] = r.HoldsItems ? F("ui.furniture.stored.row-with-items", line) : line;
+                StoredRowTextBuilds++;
+                if (_art != null && _art.TryPrimary(r.Definition, out FurnitureTilePart part, out FurnitureSprite sprite))
+                {
+                    _storedIcons[i] = FurnitureArt.ImageId(part);
+                    _storedIconSizes[i] = (sprite.W, sprite.H);
+                }
+                else
+                {
+                    _storedIcons[i] = r.Definition != null && r.Definition.TileParts.Count > 0 ? FurnitureArt.ImageId(r.Definition.TileParts[0]) : null; // 좌표표가 없으면 칸에 맞춰 늘린다
+                    _storedIconSizes[i] = (0f, 0f);
+                }
+            }
         }
+
+        private string StoredRowText(int row) => (uint)row < (uint)_storedTexts.Length ? _storedTexts[row] : string.Empty;
+        private string StoredRowIcon(int row) => (uint)row < (uint)_storedIcons.Length ? _storedIcons[row] : null;
+        private (float W, float H) StoredRowIconSource(int row) => (uint)row < (uint)_storedIconSizes.Length ? _storedIconSizes[row] : (0f, 0f);
 
         private void PickStoredRow(int row)
         {

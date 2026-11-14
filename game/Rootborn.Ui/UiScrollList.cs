@@ -25,6 +25,19 @@ namespace Rootborn.Ui
         /// <summary>줄 번호(0부터)를 받아 그 줄의 글자를 돌려준다. 보이는 줄만 물어본다.</summary>
         public Func<int, string> RowText;
 
+        /// <summary>
+        /// 줄 번호를 받아 그 줄 왼쪽에 그릴 그림 id를 돌려준다(없으면 null — 그 줄은 그림 자리만 비운다). 보이는 줄만 물어본다.
+        /// 이것이 null이면 그림 자리가 없고 글자는 지금처럼 줄 왼쪽 여백에서 시작한다.
+        /// </summary>
+        public Func<int, string> RowIcon;
+
+        /// <summary>줄 그림의 원래 크기(비율만 쓴다). null이거나 0이면 그림 칸(IconSize 정사각형)에 맞춰 늘린다.</summary>
+        public Func<int, (float W, float H)> RowIconSource;
+
+        /// <summary>줄 그림 칸의 한 변. 글자는 그림 칸 + IconGap 오른쪽에서 시작한다.</summary>
+        public float IconSize = 32;
+        public float IconGap = 10;
+
         /// <summary>줄을 클릭했거나, 고른 줄에서 실행 키를 눌렀다.</summary>
         public event Action<int> RowClicked;
 
@@ -158,6 +171,24 @@ namespace Rootborn.Ui
             if (_fit.Length < need) _fit = new FittedText[need];
         }
 
+        private void EmitIcon(DrawList list, int row, float x, float y)
+        {
+            string image = RowIcon(row);
+            if (string.IsNullOrEmpty(image)) return;
+            float w = IconSize, h = IconSize;
+            if (RowIconSource != null)
+            {
+                (float sw, float sh) = RowIconSource(row);
+                if (sw > 0 && sh > 0)
+                {
+                    float scale = MathF.Min(IconSize / sw, IconSize / sh);
+                    w = sw * scale;
+                    h = sh * scale;
+                }
+            }
+            list.Image(new UiRect(x + (IconSize - w) / 2f, y + (IconSize - h) / 2f, w, h), image, default, UiTheme.White);
+        }
+
         public override void Emit(DrawList list, ITextMeasurer text)
         {
             list.Panel(Rect, Skin, IsActive ? UiTheme.ButtonHovered : UiTheme.ButtonDisabled);
@@ -167,7 +198,7 @@ namespace Rootborn.Ui
             bool scrollable = MaxScroll > 0;
             float rowWidth = scrollable ? view.W - ScrollbarWidth - 6 : view.W;
             int first = FirstVisibleRow, last = LastVisibleRow;
-            float textX = view.X + TextPaddingX;
+            float textX = view.X + TextPaddingX + (RowIcon != null ? IconSize + IconGap : 0f);
             float textRoom = view.X + rowWidth - TextPaddingX - textX;
             EnsureFitSlots(last - first + 1);
             for (int row = first; row <= last; row++)
@@ -175,6 +206,7 @@ namespace Rootborn.Ui
                 float y = view.Y + row * RowHeight - _scroll;
                 UiColor back = row == _selected ? RowSelected : row == _hoverRow ? RowHover : (row & 1) == 1 ? RowOdd : RowEven;
                 if (back.A > 0) list.Fill(new UiRect(view.X, y, rowWidth, RowHeight), back);
+                if (RowIcon != null) EmitIcon(list, row, view.X + TextPaddingX, y + (RowHeight - IconSize) / 2f);
                 if (RowText != null)
                 {
                     // 넘치는 줄 글은 말줄임. 맞춘 결과는 줄 글·폭·크기가 바뀔 때만 다시 잰다(보이는 줄 자리마다 하나씩 들고 있다).
