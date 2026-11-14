@@ -154,6 +154,55 @@ namespace Rootborn.World.Tests
         }
 
         [Test]
+        public void Checks_CatchBandFinishWithoutItsColorsOrOnAnotherSheet()
+        {
+            // 띠 꾸밈은 조각이 아니라 좌표표 bands의 줄이다: 그 줄이 시트 좌표표에 없거나, 띠 꾸밈의 시트가 기본 벽 꾸밈의 시트가 아니면
+            // (조합기는 띠 색·공용 조각을 기본 벽 꾸밈의 시트에서 찾는다) 알린다. 띠 꾸밈은 조각 검사(출처표가 쓰는 조각)에 들지 않는다.
+            WorldMapLoader loader = Repo.Loader();
+            MapEntry entry = loader.Catalog.Maps.First(m => m.Build != null);
+            var finishes = Repo.Definitions.All<Rootborn.Core.Building.RoomFinishDefinition>();
+            var band = finishes.First(f => f.Slot == Rootborn.Core.Building.RoomFinishSlots.Band && f.Art != entry.Build.BandColors);
+            var wall = Repo.Definitions.Get<Rootborn.Core.Building.RoomFinishDefinition>(entry.Build.DefaultWall);
+
+            List<string> clean = MapChecks.Check(loader, Interactions, Repo.Definitions, new RoomFinishArt(Path.Combine(Repo.Root, "data"))).Select(p => p.ToString()).ToList();
+            Assert.That(clean, Has.None.Contains("띠 꾸밈"), "지금 데이터는 걸리지 않는다");
+            Assert.That(clean, Has.None.Contains("꾸밈 " + band.Id + "에 출처표가 쓰는 조각"), "띠 꾸밈은 조각 검사에 들지 않는다");
+
+            string data = Path.Combine(Path.GetTempPath(), "rootborn-band-check-" + Guid.NewGuid().ToString("N"));
+            try
+            {
+                // (1) 좌표표 사본에서 그 띠 꾸밈의 줄을 지운다
+                string source = Path.Combine(Repo.Root, "data", "atlases", wall.Sheet + ".atlas.json");
+                string copy = Path.Combine(data, "atlases", wall.Sheet + ".atlas.json");
+                Directory.CreateDirectory(Path.GetDirectoryName(copy));
+                System.Text.Json.Nodes.JsonNode atlas = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(source));
+                Assert.That(atlas["bands"].AsObject().Remove(band.Art), Is.True, band.Art);
+                File.WriteAllText(copy, atlas.ToJsonString());
+                List<string> found = MapChecks.Check(loader, Interactions, Repo.Definitions, new RoomFinishArt(data)).Select(p => p.ToString()).ToList();
+                Assert.That(found, Has.Some.EqualTo(entry.Id + ": 짓는 집: 띠 꾸밈 " + band.Id + "의 띠 색 줄 " + band.Art + "이 시트 " + band.Sheet + "의 좌표표에 없다"));
+
+                // (2) 띠 꾸밈의 시트를 다른 시트로 바꾼 정의(실제 꾸밈 파일의 사본)
+                string defs = Path.Combine(data, "defs");
+                Directory.CreateDirectory(Path.Combine(defs, "a"));
+                Directory.CreateDirectory(Path.Combine(defs, "building"));
+                File.WriteAllText(Path.Combine(defs, "a", "ItemDefinition.json"), @"[{ ""type"": ""ItemDefinition"", ""id"": ""item.allowance"" }]");
+                string json = File.ReadAllText(Path.Combine(Repo.Root, "data", "building", "RoomFinishDefinition.json"));
+                System.Text.Json.Nodes.JsonNode list = System.Text.Json.Nodes.JsonNode.Parse(json);
+                foreach (System.Text.Json.Nodes.JsonNode d in list.AsArray())
+                    if ((string)d["id"] == band.Id) d["sheet"] = "art/world/finishes/other.png";
+                File.WriteAllText(Path.Combine(defs, "building", "RoomFinishDefinition.json"), list.ToJsonString());
+                var moved = Rootborn.Data.GameDataLoader.Load(defs, Rootborn.Data.Builders.RootbornBuilders.Register);
+                Assert.That(moved.Errors.Where(e => e.Type == "RoomFinishDefinition"), Is.Empty, "꾸밈 사본은 읽힌다(아이템 대역은 꾸밈의 참조만 채운다)");
+                found = MapChecks.Check(loader, Interactions, moved.Definitions, new RoomFinishArt(Path.Combine(Repo.Root, "data"))).Select(p => p.ToString()).ToList();
+                Assert.That(found, Has.Some.EqualTo(entry.Id + ": 짓는 집: 띠 꾸밈 " + band.Id + "의 시트 art/world/finishes/other.png가 기본 벽 꾸밈의 시트 " + wall.Sheet + "와 다르다"));
+            }
+            finally
+            {
+                try { Directory.Delete(data, true); } catch (IOException) { }
+            }
+        }
+
+        [Test]
         public void ABuildEntryWithoutItsLayerOrFrameId_IsRefused()
         {
             const string map = @"{ ""npcWalker"": { ""speedCellsPerSecond"": 2.5 }, ""maps"": [ { ""id"": ""A"", ""ldtk"": ""a.ldtk"", ""level"": ""L"", ""viewCells"": 10, ""collision"": { ""rule"": ""interior-auto"" },

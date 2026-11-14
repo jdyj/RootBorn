@@ -80,9 +80,9 @@ namespace Rootborn.Game
         public string HouseFloorAt(CellPos floorCell)
             => ShowsOwnFinishes ? _houseFinishes.FloorAt(floorCell) : _houseFinishes.Frame?.DefaultFloor ?? string.Empty;
 
-        /// <summary>띠 색 줄 이름(기록이 비면 프레임 기본). 같이 쓰는 집은 프레임 기본.</summary>
+        /// <summary>보이는 띠 색 줄 이름(고른 띠 꾸밈의 그림, 기록이 비거나 데이터에 없으면 프레임 기본). 같이 쓰는 집은 프레임 기본.</summary>
         public string HouseBandColors()
-            => ShowsOwnFinishes ? _houseFinishes.Band : _houseFinishes.Frame?.DefaultBand ?? string.Empty;
+            => ShowsOwnFinishes ? _houseFinishes.BandColors : _houseFinishes.Frame?.DefaultBand ?? string.Empty;
 
         /// <summary>꾸밈 상태가 바뀔 때마다 오른다(화면이 미리 보기를 다시 낼지 본다).</summary>
         public int HouseBuildVersion => _houseFinishes.Version;
@@ -119,27 +119,44 @@ namespace Rootborn.Game
         /// 알림: <see cref="GameChangeTopics.HouseBuild"/>, <see cref="GameChangeTopics.Inventory"/>.
         /// </summary>
         public bool ApplyHouseFinish(string finishId, string tool, CellPos pointer)
-            => Shared(() =>
+            => Shared(() => CommitFinish(PreviewHouseFinish(finishId, tool, pointer)), done => done);
+
+        /// <summary>띠 색 한 번의 미리 보기(바꾸지 않는다). 거절 이유는 <see cref="PreviewHouseFinish"/>와 같다(집 밖, 같이 쓰는 집).</summary>
+        public HouseFinishPreview PreviewHouseBand(string finishId)
+        {
+            if (!HouseBuildOpen) return HouseFinishPreview.Refused(finishId, SlotOf(finishId), string.Empty, HouseFinishReasons.NotInHouse);
+            if (_roomHouse != null) return HouseFinishPreview.Refused(finishId, SlotOf(finishId), string.Empty, HouseFinishReasons.SharedHouse);
+            return _houseFinishes.PreviewBand(finishId, FurnitureUnlocks, CanPayFinish);
+        }
+
+        /// <summary>
+        /// 띠 색을 바꾼다: <see cref="ApplyHouseFinish"/>와 같은 길(미리 보기 → 한 바꾸기 → 한 저장 묶음). 지금 데이터는 무료라 빈 비용의 바꾸기다.
+        /// 안 되면 false·무변경. 알림: <see cref="GameChangeTopics.HouseBuild"/>, <see cref="GameChangeTopics.Inventory"/>.
+        /// </summary>
+        public bool ApplyHouseBand(string finishId)
+            => Shared(() => CommitFinish(PreviewHouseBand(finishId)), done => done);
+
+        // 미리 보기 하나를 돈 빼기와 함께 한 바꾸기로 적용하고 한 저장 묶음으로 쓴다(칸 꾸밈·띠 색이 같이 쓴다).
+        private bool CommitFinish(HouseFinishPreview preview)
+        {
+            if (!preview.CanApply || !TryGrants(preview.Cost, out var costs)) return false;
+            bool done;
+            try
             {
-                var preview = PreviewHouseFinish(finishId, tool, pointer);
-                if (!preview.CanApply || !TryGrants(preview.Cost, out var costs)) return false;
-                bool done;
-                try
+                // 적용이 거절되면 커밋 안에서 던져 바꾸기가 돈을 되돌리게 한다(ItemInventory의 WalletRefused와 같은 꼴). 돈만 빠지는 길이 없다.
+                done = Inventory.TryExchange(costs, null, () =>
                 {
-                    // 적용이 거절되면 커밋 안에서 던져 바꾸기가 돈을 되돌리게 한다(ItemInventory의 WalletRefused와 같은 꼴). 돈만 빠지는 길이 없다.
-                    done = Inventory.TryExchange(costs, null, () =>
-                    {
-                        HouseFinishCommitting?.Invoke();
-                        if (!_houseFinishes.Apply(preview)) throw new FinishRefused();
-                        _houseBuildDirty = true;
-                    });
-                }
-                catch (FinishRefused)
-                {
-                    done = false;
-                }
-                return Saved(done, done, null, GameChangeTopics.HouseBuild, GameChangeTopics.Inventory);
-            }, done => done);
+                    HouseFinishCommitting?.Invoke();
+                    if (!_houseFinishes.Apply(preview)) throw new FinishRefused();
+                    _houseBuildDirty = true;
+                });
+            }
+            catch (FinishRefused)
+            {
+                done = false;
+            }
+            return Saved(done, done, null, GameChangeTopics.HouseBuild, GameChangeTopics.Inventory);
+        }
 
         /// <summary>시험용 이음매: 꾸밈 바꾸기 커밋 안, 적용 바로 앞에서 부른다(Game 테스트가 적용 거절을 일부러 만든다). 게임은 쓰지 않는다.</summary>
         internal Action HouseFinishCommitting;

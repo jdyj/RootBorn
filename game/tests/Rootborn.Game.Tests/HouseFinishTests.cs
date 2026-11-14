@@ -431,6 +431,108 @@ namespace Rootborn.Game.Tests
             Assert.That(game.HouseBuildVersion, Is.EqualTo(version), "같은 프레임은 다시 붙이지 않는다");
         }
 
+        // ---------- 띠 색(집 하나에 하나, 무료) ----------
+
+        private static RoomFinishDefinition OtherBand()
+            => TestWorld.Definitions.All<RoomFinishDefinition>().First(f => f.Slot == RoomFinishSlots.Band && f.UnlockToken.Length == 0 && f.Art != Frame.DefaultBand);
+
+        private static RoomFinishDefinition DefaultBand()
+            => TestWorld.Definitions.All<RoomFinishDefinition>().First(f => f.Slot == RoomFinishSlots.Band && f.Art == Frame.DefaultBand);
+
+        [Test]
+        public void ApplyHouseBand_SavedAndReadBack()
+        {
+            // 무료 꾸밈의 지불 길(빈 비용의 바꾸기)을 처음 지난다: 돈은 그대로, 꾸밈과 같은 저장 묶음.
+            using var saves = new TempSaves();
+            var game = InHouse(saves.Store);
+            var band = OtherBand();
+            Assert.That(band.Cost, Is.Empty, "전제: 띠 색은 무료");
+            int money = Money(game);
+            Assert.That(game.HouseBandColors(), Is.EqualTo(Frame.DefaultBand));
+
+            var preview = game.PreviewHouseBand(band.Id);
+            Assert.That(preview.CanApply, Is.True, preview.ReasonKey);
+            Assert.That(preview.Cost, Is.Empty);
+            var topics = new List<string>();
+            game.Changed += topics.Add;
+            Assert.That(game.ApplyHouseBand(band.Id), Is.True);
+            game.Changed -= topics.Add;
+            Assert.That(game.HouseBandColors(), Is.EqualTo(band.Art), "보이는 띠 색 줄이 바뀐다");
+            Assert.That(Money(game), Is.EqualTo(money), "무료: 돈 그대로");
+            Assert.That(topics, Does.Contain(GameChangeTopics.HouseBuild));
+            Assert.That(game.HouseFloorAt(TopLeftRoom), Is.EqualTo(Frame.DefaultFloor), "칸 꾸밈은 그대로");
+
+            Assert.That(saves.Store.TryRead<HouseBuildSaveData>(TestWorld.Slot, SaveFileNames.HouseBuild, out var file), Is.True);
+            Assert.That((file.Band, file.Finishes.Length), Is.EqualTo((band.Id, 0)), "파일에 띠 꾸밈 id");
+
+            // 같은 요청은 바뀌는 것이 없어 거절(파일을 다시 쓰지 않는다)
+            byte[] written = File.ReadAllBytes(BuildPath(saves));
+            Assert.That(game.PreviewHouseBand(band.Id).ReasonKey, Is.EqualTo(HouseFinishReasons.NothingToChange));
+            Assert.That(game.ApplyHouseBand(band.Id), Is.False);
+            Assert.That(File.ReadAllBytes(BuildPath(saves)), Is.EqualTo(written));
+
+            // 새 GameSession으로 다시 읽는다
+            var next = InHouse(saves.Store);
+            Assert.That(next.HouseBandColors(), Is.EqualTo(band.Art), "저장 → 새 판에서도 그대로");
+            Assert.That(next.ApplyHouseBand(band.Id), Is.False);
+
+            // 맵 기본과 같은 그림을 고르면 기록이 빈 글로 돌아간다
+            Assert.That(next.ApplyHouseBand(DefaultBand().Id), Is.True);
+            Assert.That(next.HouseBandColors(), Is.EqualTo(Frame.DefaultBand));
+            Assert.That(saves.Store.TryRead<HouseBuildSaveData>(TestWorld.Slot, SaveFileNames.HouseBuild, out file), Is.True);
+            Assert.That(file.Band, Is.EqualTo(""));
+        }
+
+        [Test]
+        public void ApplyHouseBand_RefusedInsideTheExchange_NothingChanges()
+        {
+            // 무료여도 같은 바꾸기 커밋을 지난다: 커밋 안에서 적용이 거절되면(낡은 미리 보기) false, 띠·파일 그대로.
+            using var saves = new TempSaves();
+            var game = InHouse(saves.Store);
+            game.VisitLocation("location.town-square"); // 슬롯 파일이 있게
+            var before = SlotFiles(saves);
+            var sameValues = new HouseBuildFrame(Frame.FrameId, Frame.Tiles, Frame.DefaultWall, Frame.DefaultFloor, Frame.DefaultBand);
+            int calls = 0;
+            game.HouseFinishCommitting = () => { calls++; game.EnterHouseBuild(sameValues); };
+            Assert.That(game.ApplyHouseBand(OtherBand().Id), Is.False);
+            Assert.That(calls, Is.EqualTo(1), "바꾸기 커밋 안을 지났다");
+            Assert.That(game.HouseBandColors(), Is.EqualTo(Frame.DefaultBand));
+            AssertSameFiles(before, SlotFiles(saves), "파일 그대로");
+            game.HouseFinishCommitting = null;
+            Assert.That(game.ApplyHouseBand(OtherBand().Id), Is.True);
+        }
+
+        [Test]
+        public void HouseBand_RefusedOutsideTheHouseAndInASharedHouse()
+        {
+            using var saves = new TempSaves();
+            var band = OtherBand();
+            var plain = TestWorld.Start(saves.Store, "slot-plain");
+            plain.EnterHouseBuild(Frame); // 집 배치가 없다
+            Assert.That(plain.PreviewHouseBand(band.Id).ReasonKey, Is.EqualTo(HouseFinishReasons.NotInHouse));
+            Assert.That(plain.ApplyHouseBand(band.Id), Is.False);
+            Assert.That(File.Exists(BuildPath(saves, "slot-plain")), Is.False);
+
+            var rules = new RoomHouseRules(TestWorld.Definitions.All<Rootborn.Core.Placement.FurnitureDefinition>(), s => s == HouseRoom.SurfaceId ? HouseRoom.Grid : null);
+            var pieces = new RoomPieceSet(new RoomShareSettings(new[] { RoomHouse.PieceName }), RoomPieceCatalog.CreateDefault(rules));
+            var shares = new RoomShares(pieces.Settings, RoomPieceCatalog.CreateDefault(), () => "guest-r1");
+            foreach (var p in pieces.Pieces) shares.Receive(p.State());
+            var guest = GameSession.Start(TestWorld.Definitions, TestWorld.Settings, saves.Store, "slot-guest", "guest", shares: shares);
+            guest.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
+            guest.EnterHouseBuild(Frame);
+            Assert.That(guest.PreviewHouseBand(band.Id).ReasonKey, Is.EqualTo(HouseFinishReasons.SharedHouse));
+            Assert.That(guest.ApplyHouseBand(band.Id), Is.False);
+            Assert.That(guest.HouseBandColors(), Is.EqualTo(Frame.DefaultBand));
+            Assert.That(File.Exists(BuildPath(saves, "slot-guest")), Is.False);
+
+            var game = InHouse(saves.Store);
+            Assert.That(game.ApplyHouseBand(band.Id), Is.True);
+            game.LeaveHouseBuild();
+            Assert.That(game.PreviewHouseBand(DefaultBand().Id).ReasonKey, Is.EqualTo(HouseFinishReasons.NotInHouse), "집을 떠나면");
+            Assert.That(game.ApplyHouseBand(DefaultBand().Id), Is.False);
+            Assert.That(game.HouseBandColors(), Is.EqualTo(band.Art), "기록은 들고 있다");
+        }
+
         /// <summary>FileSaveStore를 감싸고 묶음 커밋에서 던지는 저장소(묶음을 버리므로 파일은 옛것 그대로).</summary>
         private sealed class FailingCommitStore : IBatchSaveStore
         {

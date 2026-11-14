@@ -16,7 +16,7 @@ namespace Rootborn.Data.Builders
                 var finish = new RoomFinishDefinition(n.Id, n.Str("slot"), n.Str("nameKey"), n.Str("sheet"), n.Str("art"),
                     BuilderHelpers.StrictItemAmounts(n, "costItems", "costCounts"), n.Str("unlockToken"));
                 if (!finish.IsValid)
-                    throw new InvalidOperationException("꾸밈이 올바르지 않다(id·slot·sheet·art가 있고, 비용은 아이템과 1 이상의 개수)");
+                    throw new InvalidOperationException("꾸밈이 올바르지 않다(id·slot·nameKey·sheet·art가 있고, 비용은 아이템과 1 이상의 개수)");
                 return finish;
             });
         }

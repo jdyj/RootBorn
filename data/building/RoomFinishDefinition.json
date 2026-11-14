@@ -178,5 +178,60 @@
       1
     ],
     "unlockToken": "unlock.finish.floor.carpet-diamond"
+  },
+  {
+    "type": "RoomFinishDefinition",
+    "id": "finish.band.cream",
+    "slot": "band",
+    "nameKey": "finish.band.cream.name",
+    "sheet": "art/world/finishes/finishes.png",
+    "art": "wall.top.cream",
+    "costItems": [],
+    "costCounts": [],
+    "unlockToken": ""
+  },
+  {
+    "type": "RoomFinishDefinition",
+    "id": "finish.band.brown",
+    "slot": "band",
+    "nameKey": "finish.band.brown.name",
+    "sheet": "art/world/finishes/finishes.png",
+    "art": "wall.top.brown",
+    "costItems": [],
+    "costCounts": [],
+    "unlockToken": ""
+  },
+  {
+    "type": "RoomFinishDefinition",
+    "id": "finish.band.light",
+    "slot": "band",
+    "nameKey": "finish.band.light.name",
+    "sheet": "art/world/finishes/finishes.png",
+    "art": "wall.top.light",
+    "costItems": [],
+    "costCounts": [],
+    "unlockToken": ""
+  },
+  {
+    "type": "RoomFinishDefinition",
+    "id": "finish.band.slate",
+    "slot": "band",
+    "nameKey": "finish.band.slate.name",
+    "sheet": "art/world/finishes/finishes.png",
+    "art": "wall.top.slate",
+    "costItems": [],
+    "costCounts": [],
+    "unlockToken": ""
+  },
+  {
+    "type": "RoomFinishDefinition",
+    "id": "finish.band.plaster",
+    "slot": "band",
+    "nameKey": "finish.band.plaster.name",
+    "sheet": "art/world/finishes/finishes.png",
+    "art": "wall.plaster.top",
+    "costItems": [],
+    "costCounts": [],
+    "unlockToken": ""
   }
 ]

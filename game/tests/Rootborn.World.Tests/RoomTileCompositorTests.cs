@@ -71,7 +71,7 @@ namespace Rootborn.World.Tests
             public uint Value(string name, int x, int y) => 0xFF000000u | ((uint)(Index[name] + 1) << 10) | ((uint)y << 5) | (uint)x;
         }
 
-        private TestSheet MakeSheet(RoomTilePlan plan, IEnumerable<RoomFinishDefinition> walls, IEnumerable<RoomFinishDefinition> floors, string skip = null, string atlasExtra = null)
+        private TestSheet MakeSheet(RoomTilePlan plan, IEnumerable<RoomFinishDefinition> walls, IEnumerable<RoomFinishDefinition> floors, string skip = null, string atlasExtra = null, string bandsExtra = null)
         {
             var names = new SortedSet<string>(StringComparer.Ordinal);
             foreach (CellTiles c in plan.Cells)
@@ -96,7 +96,7 @@ namespace Rootborn.World.Tests
                 json.Append(i == 0 ? "" : ",").Append($" \"{name}\": {{ \"x\": {ox}, \"y\": {oy}, \"w\": {Size}, \"h\": {Size} }}");
             }
             json.Append(atlasExtra ?? "");
-            json.Append(" }, \"bands\": { \"" + BandId + "\": { \"o\": \"#010203\", \"d\": \"#040506\", \"f\": \"#070809\", \"l\": \"#0A0B0C\" } } }");
+            json.Append(" }, \"bands\": { \"" + BandId + "\": { \"o\": \"#010203\", \"d\": \"#040506\", \"f\": \"#070809\", \"l\": \"#0A0B0C\" }" + (bandsExtra ?? "") + " } }");
             string atlas = Path.Combine(_data, "atlases", Sheet + ".atlas.json");
             Directory.CreateDirectory(Path.GetDirectoryName(atlas));
             File.WriteAllText(atlas, json.ToString());
@@ -708,6 +708,86 @@ namespace Rootborn.World.Tests
             Assert.That(wrong.Room.Pixels, Is.EqualTo(plain.Room.Pixels));
             // 조회가 null이면 지금과 같다.
             Assert.That(ComposedMapTiles.Compose(map, RepoCompositor(), Defined, null).Room.Pixels, Is.EqualTo(plain.Room.Pixels));
+        }
+
+        [Test]
+        public void Compose_BandOtherThanMapDefault_PaintsChosenBand_SillAndDoorUnchanged()
+        {
+            // 띠 색을 맵 기본이 아닌 띠 꾸밈의 줄로 바꾸면: 띠 부분의 픽셀은 고른 줄의 네 칠(o·d·f·l) 중 그 부분의 칠이고,
+            // 문지방(common/sill:*)·문짝(common/door) 픽셀은 기본 띠 조합과 같다(그 조각에는 띠 색이 구워져 있지 않다). 정면·바닥 픽셀도 같다.
+            var (map, wall, _) = House();
+            RoomFinishDefinition band = Repo.Definitions.All<RoomFinishDefinition>()
+                .First(f => f.Slot == RoomFinishSlots.Band && f.Art != map.Entry.Build.BandColors);
+            Assert.That(band.Sheet, Is.EqualTo(wall.Sheet), "전제: 띠 꾸밈은 기본 벽 꾸밈과 같은 시트");
+            var art = new RoomFinishArt(Path.Combine(Repo.Root, "data"));
+            Assert.That(art.TryBand(wall.Sheet, band.Art, out BandColors chosen), Is.True);
+            Assert.That(art.TryBand(wall.Sheet, map.Entry.Build.BandColors, out BandColors plainBand), Is.True);
+            Assert.That(chosen, Is.Not.EqualTo(plainBand), "전제: 고른 줄은 기본 줄과 칠이 다르다");
+
+            ComposedMapTiles plain = ComposedMapTiles.Compose(map, RepoCompositor(), Defined);
+            ComposedMapTiles banded = ComposedMapTiles.Compose(map, RepoCompositor(), Defined, new TableLookup { Band = band.Art });
+            Assert.That((plain.Ok, banded.Ok), Is.EqualTo((true, true)), string.Join("\n", banded.Problems));
+
+            uint Paint(BandColors c, char shade) => shade == 'o' ? c.Outline : shade == 'd' ? c.Dark : shade == 'f' ? c.Face : c.Light;
+            int bandPixels = 0, changedBand = 0, sillPixels = 0, doorPixels = 0, otherPixels = 0;
+            foreach (CellTiles cell in map.Tiles.Cells)
+            {
+                uint[] a = CellPixels(plain.Room, cell.Cell), b = CellPixels(banded.Room, cell.Cell);
+                var bandAt = new bool[Size * Size];
+                foreach (TilePart part in cell.Parts)
+                    foreach (PixelRect r in part.Rects)
+                        for (int y = r.Y0; y < r.Y1; y++)
+                            for (int x = r.X0; x < r.X1; x++)
+                            {
+                                int i = y * Size + x;
+                                if (part.Source == TileSources.Band)
+                                {
+                                    bandAt[i] = true;
+                                    Assert.That(b[i], Is.EqualTo(Paint(chosen, part.Shade[0])), $"{cell.Cell} 띠 {part.Shade} ({x}, {y}): 고른 줄의 그 칠");
+                                    if (b[i] != a[i]) changedBand++;
+                                    bandPixels++;
+                                }
+                                else if (part.Source == TileSources.Sill || part.Source == TileSources.Door)
+                                {
+                                    Assert.That(b[i], Is.EqualTo(a[i]), $"{cell.Cell} {part.Source} {part.Piece} ({x}, {y}): 띠 색과 무관");
+                                    if (part.Source == TileSources.Sill) sillPixels++; else doorPixels++;
+                                }
+                            }
+                for (int i = 0; i < bandAt.Length; i++)
+                    if (!bandAt[i])
+                    {
+                        Assert.That(b[i], Is.EqualTo(a[i]), $"{cell.Cell} ({i % Size}, {i / Size}): 띠가 아닌 픽셀은 그대로");
+                        otherPixels++;
+                    }
+            }
+            TestContext.Out.WriteLine($"띠 {bandPixels}(바뀐 것 {changedBand}), 문지방 {sillPixels}, 문짝 {doorPixels}, 그 밖 {otherPixels}");
+            Assert.That(bandPixels, Is.GreaterThan(0));
+            Assert.That(changedBand, Is.GreaterThan(0), "띠가 실제로 다른 칠이 됐다");
+            Assert.That(sillPixels, Is.GreaterThan(0), "문지방을 본다");
+            Assert.That(doorPixels + sillPixels, Is.GreaterThan(0));
+
+            // 지금 집에는 문짝(정면 위의 문)이 없다 — 시험 평면(정면 위 문 + 아래 벽 문지방)으로 문짝도 띠 색과 무관함을 본다.
+            RoomTilePlan plan = Plan(TwoRooms, BottomDoor, new CellPos(2, 2));
+            Assert.That(plan.Cells.SelectMany(c => c.Parts).Count(p => p.Source == TileSources.Door), Is.GreaterThan(0), "전제: 문짝이 있다");
+            TestSheet sheet = MakeSheet(plan, new[] { WallA }, new[] { FloorA }, bandsExtra: ", \"test.band2\": { \"o\": \"#111111\", \"d\": \"#222222\", \"f\": \"#333333\", \"l\": \"#444444\" }");
+            ComposedRoom one = Compositor(sheet).Compose(plan, _ => WallA, _ => FloorA, Sheet, BandId);
+            ComposedRoom two = Compositor(sheet).Compose(plan, _ => WallA, _ => FloorA, Sheet, "test.band2");
+            Assert.That(one.Problems.Concat(two.Problems), Is.Empty, string.Join("\n", two.Problems));
+            int doors = 0, bands = 0;
+            foreach (CellTiles cell in plan.Cells)
+            {
+                uint[] a = CellPixels(one, cell.Cell), b = CellPixels(two, cell.Cell);
+                foreach (TilePart part in cell.Parts)
+                    foreach (PixelRect r in part.Rects)
+                        for (int y = r.Y0; y < r.Y1; y++)
+                            for (int x = r.X0; x < r.X1; x++)
+                            {
+                                int i = y * Size + x;
+                                if (part.Source == TileSources.Door || part.Source == TileSources.Sill) { Assert.That(b[i], Is.EqualTo(a[i]), $"{cell.Cell} {part.Source} ({x}, {y})"); doors++; }
+                                else if (part.Source == TileSources.Band) { Assert.That(b[i], Is.Not.EqualTo(a[i]), $"{cell.Cell} 띠 ({x}, {y})"); bands++; }
+                            }
+            }
+            Assert.That((doors > 0, bands > 0), Is.EqualTo((true, true)));
         }
 
         [Test]

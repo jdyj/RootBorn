@@ -62,6 +62,7 @@ namespace Rootborn.World.Tests
             var seen = new HashSet<(string, int, int)>();
             foreach (var finish in Repo.Definitions.All<RoomFinishDefinition>())
             {
+                if (finish.Slot == RoomFinishSlots.Band) continue; // 띠 색은 조각이 아니라 bands의 줄(MapChecks가 따로 본다)
                 var names = finish.Slot == RoomFinishSlots.Wall ? WallPieceNames() : new[] { "floor", "floor:shade" };
                 foreach (string name in names)
                 {

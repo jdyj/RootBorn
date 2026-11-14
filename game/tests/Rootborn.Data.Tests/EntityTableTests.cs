@@ -89,7 +89,7 @@ namespace Rootborn.Data.Tests
             var table = EntityTable.ReadDirectory(RepoPaths.DataDirectory, errors);
 
             Assert.That(errors, Is.Empty, string.Join("\n", errors.Take(20)));
-            Assert.That(table.All.Count(), Is.EqualTo(2329)); // 2026-11-14 꾸밈(RoomFinishDefinition) 10개, 2026-11-12 상자 데이터(FurnitureStorageDefinition) 1개, 일터 데이터(data/workspaces) 30개, NPC 머무는 행동(NpcWanderStay) 1개
+            Assert.That(table.All.Count(), Is.EqualTo(2334)); // 2026-11-14 띠 색 꾸밈 5개, 꾸밈(RoomFinishDefinition) 10개, 2026-11-12 상자 데이터(FurnitureStorageDefinition) 1개, 일터 데이터(data/workspaces) 30개, NPC 머무는 행동(NpcWanderStay) 1개
         }
 
         [Test]

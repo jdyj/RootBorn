@@ -116,7 +116,7 @@ namespace Rootborn.Core.Building
     }
 
     /// <summary>
-    /// 짓는 집의 꾸밈 상태: 바닥 칸마다 벽지·바닥 기록, 미리 보기, 적용(메모리만). 꾸밈 id로 분기하지 않는다 — 정의는 <c>find</c>로 찾는다.
+    /// 짓는 집의 꾸밈 상태: 바닥 칸마다 벽지·바닥 기록과 집 하나의 띠 색 기록, 미리 보기, 적용(메모리만). 꾸밈 id로 분기하지 않는다 — 정의는 <c>find</c>로 찾는다.
     /// 기록은 읽은 것을 모두 들고 있다가(데이터에 없는 id, 지금 바닥이 아닌 칸·격자 밖 칸 포함) 그대로 다시 쓴다.
     /// </summary>
     public sealed class HouseFinishes
@@ -142,8 +142,22 @@ namespace Rootborn.Core.Building
         /// <summary>바뀔 때마다 오른다(적용, 읽기, 붙이기). 미리 보기가 낡았는지 본다.</summary>
         public int Version { get; private set; }
 
-        /// <summary>보이는 띠 색 줄 이름: 기록이 비면 프레임 기본(붙지 않았으면 빈 글).</summary>
-        public string Band => _band.Length > 0 ? _band : Frame?.DefaultBand ?? string.Empty;
+        /// <summary>고른 띠 꾸밈 id(기록 그대로 — 빈 글이면 프레임 기본, 데이터에 없는 id도 그대로 들고 있다).</summary>
+        public string Band => _band;
+
+        /// <summary>
+        /// 보이는 띠 색 줄 이름(시트 좌표표 bands의 줄): 기록의 꾸밈이 띠 자리 정의로 있으면 그 Art, 아니면(빈 글·데이터에 없는 id·다른 자리) 프레임 기본.
+        /// 붙지 않았으면 빈 글.
+        /// </summary>
+        public string BandColors
+        {
+            get
+            {
+                if (!Attached) return string.Empty;
+                var def = _band.Length > 0 ? _find(_band) : null;
+                return def != null && IsBandSlot(def.Slot) ? def.Art : Frame.DefaultBand;
+            }
+        }
 
         public void Load(HouseBuildSaveData data)
         {
@@ -233,6 +247,28 @@ namespace Rootborn.Core.Building
             return Make(def.Id, slot, tool, true, target, cells, changed, cost, reason, wallSlot ? FaceCellsOf(changed) : null);
         }
 
+        /// <summary>
+        /// 띠 색 한 번의 미리 보기(집 하나에 하나 — 칸이 없다: Cells·ChangedCells·HighlightCells는 빈 목록, 대상 없음).
+        /// 이유 순서: 붙지 않음(NotInHouse) → 정의 없음·띠 자리가 아님(UnknownFinish) → 잠김 → 보이는 띠 색 줄과 같은 그림(NothingToChange) → 돈.
+        /// 비용은 정의의 Cost 한 번(바뀌는 것이 없으면 빈 목록).
+        /// </summary>
+        public HouseFinishPreview PreviewBand(string finishId, FurnitureUnlockProgress unlocks, Func<IReadOnlyList<ItemAmount<string>>, bool> canPay)
+        {
+            if (!Attached)
+                return HouseFinishPreview.Refused(finishId, RoomFinishSlots.Band, string.Empty, HouseFinishReasons.NotInHouse);
+            var def = string.IsNullOrEmpty(finishId) ? null : _find(finishId);
+            if (def == null || !IsBandSlot(def.Slot))
+                return Make(finishId, def?.Slot, string.Empty, false, default, null, null, null, HouseFinishReasons.UnknownFinish);
+
+            bool same = string.Equals(def.Art, BandColors, StringComparison.Ordinal);
+            IReadOnlyList<ItemAmount<string>> cost = same ? Array.Empty<ItemAmount<string>>() : def.Cost;
+            string reason = null;
+            if (!IsUnlocked(def, unlocks)) reason = HouseFinishReasons.Locked;
+            else if (same) reason = HouseFinishReasons.NothingToChange;
+            else if (canPay == null || !canPay(cost)) reason = HouseFinishReasons.NotEnoughMoney;
+            return Make(def.Id, def.Slot, string.Empty, false, default, null, null, cost, reason);
+        }
+
         // 바뀌는 주인 칸들이 바라보는 정면 벽 칸(겹치지 않게, 주인 순서).
         private IReadOnlyList<CellPos> FaceCellsOf(List<CellPos> owners)
         {
@@ -246,10 +282,16 @@ namespace Rootborn.Core.Building
             return result;
         }
 
-        /// <summary>적용할 수 있고 낡지 않은 미리 보기만 적용한다(메모리만). 아니면 false·무변경. 던지지 않는다.</summary>
+        /// <summary>
+        /// 적용할 수 있고 낡지 않은 미리 보기만 적용한다(메모리만). 아니면 false·무변경. 던지지 않는다.
+        /// 띠 미리 보기(<see cref="PreviewBand"/>)는 띠 기록을 그 꾸밈 id로 바꾼다 — 그림이 프레임 기본 줄과 같으면 빈 글.
+        /// </summary>
         public bool Apply(HouseFinishPreview preview)
         {
-            if (preview == null || !Attached || !preview.CanApply || preview.StateVersion != Version || preview.ChangedCells.Count == 0)
+            if (preview == null || !Attached || !preview.CanApply || preview.StateVersion != Version)
+                return false;
+            if (IsBandSlot(preview.Slot)) return ApplyBand(preview.FinishId);
+            if (preview.ChangedCells.Count == 0)
                 return false;
             if (!IsKnownSlot(preview.Slot))
                 return false;
@@ -266,6 +308,15 @@ namespace Rootborn.Core.Building
                 else rec.Floor = value;
                 if (rec.IsEmpty) _records.Remove(c);
             }
+            Version++;
+            return true;
+        }
+
+        private bool ApplyBand(string finishId)
+        {
+            var def = string.IsNullOrEmpty(finishId) ? null : _find(finishId);
+            if (def == null || !IsBandSlot(def.Slot) || string.Equals(def.Art, BandColors, StringComparison.Ordinal)) return false;
+            _band = string.Equals(def.Art, Frame.DefaultBand, StringComparison.Ordinal) ? string.Empty : def.Id;
             Version++;
             return true;
         }
@@ -293,6 +344,8 @@ namespace Rootborn.Core.Building
             IReadOnlyList<CellPos> cells, IReadOnlyList<CellPos> changed, IReadOnlyList<ItemAmount<string>> cost, string reason,
             IReadOnlyList<CellPos> highlight = null) =>
             new HouseFinishPreview(finishId, slot, tool, hasTarget, target, cells, changed, cost, reason, Version, highlight);
+
+        private static bool IsBandSlot(string slot) => string.Equals(slot, RoomFinishSlots.Band, StringComparison.Ordinal);
 
         private static bool IsKnownSlot(string slot) =>
             string.Equals(slot, RoomFinishSlots.Wall, StringComparison.Ordinal) || string.Equals(slot, RoomFinishSlots.Floor, StringComparison.Ordinal);

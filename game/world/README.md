@@ -234,7 +234,7 @@ LDtk 엔티티가 아니라 **`interactions.json`**에 맵 id별로 적는다(LD
 | `frameId` | 테두리의 판 이름. 맵을 새로 그려 테두리가 바뀌면 올린다. 같은 값이 키트 평면의 `frameId`, 방 폴더 `maps.json`의 `build`에도 있고 같아야 한다(키트 시험 `HouseRoomTests`) |
 | `faceHeight` | 벽 정면 칸 수(2) |
 | `band` | 벽 윗면 띠 두께(px, 16) |
-| `bandColors` | 조각 시트 좌표표 `bands`의 띠 색 줄 이름. 지금은 이 값 하나로 그린다(플레이어가 고르는 것은 아직 없다) |
+| `bandColors` | 조각 시트 좌표표 `bands`의 띠 색 줄 이름. 집의 기본 띠 색이다 — 플레이어가 `band` 자리 꾸밈(`data/building`)을 고르면 그 꾸밈의 `art` 줄로 그린다(집 하나에 하나). 기본과 같은 그림을 고르면 기록은 빈 글로 돌아간다. 맵 검사가 모든 `band` 꾸밈의 줄이 기본 벽 꾸밈 시트의 `bands`에 있는지 본다 |
 | `defaultWall`·`defaultFloor` | 기본 꾸밈 id(`data/building`의 `RoomFinishDefinition`, 각각 `wall`·`floor` 자리여야 한다) |
 | `replacesLayers` | 게임이 대신 그리는 LDtk 타일 층(`Wall`, `Ground`) |
 

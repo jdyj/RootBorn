@@ -39,7 +39,17 @@ namespace Rootborn.Core.Tests.Building
             Def(FloorOak, RoomFinishSlots.Floor, null, (Coin, 3)),
             Def(FloorLocked, RoomFinishSlots.Floor, Token, (Coin, 1)),
             Def(Roof, "roof", null, (Coin, 1)),
+            BandDef(BandCream, DefaultBandArt, null),
+            BandDef(BandBrown, "band.art.brown", null, (Coin, 4)),
+            BandDef(BandLocked, "band.art.locked", Token),
         }.ToDictionary(d => d.Id);
+
+        // 띠 꾸밈: 그림(Art)은 좌표표 bands의 띠 색 줄 이름. 크림은 프레임 기본 줄과 같은 그림이다.
+        private const string BandCream = "band.cream", BandBrown = "band.brown", BandLocked = "band.locked", DefaultBandArt = "band.default";
+
+        private static RoomFinishDefinition BandDef(string id, string art, string token, params (string Item, int Count)[] cost) =>
+            new RoomFinishDefinition(id, RoomFinishSlots.Band, "name." + id, "sheet.png", art,
+                cost.Select(c => new ItemAmount<string>(c.Item, c.Count)).ToArray(), token);
 
         private static RoomFinishDefinition Def(string id, string slot, string token, params (string Item, int Count)[] cost) =>
             new RoomFinishDefinition(id, slot, "name." + id, "sheet.png", "art." + id,
@@ -49,7 +59,7 @@ namespace Rootborn.Core.Tests.Building
 
         private static RoomTilePlan TilePlan() => RoomTilePlan.Build(RoomFillTests.Grid(Plan), 2, 16, null);
 
-        private static HouseBuildFrame Frame(string id = FrameId) => new HouseBuildFrame(id, TilePlan(), WallPlain, FloorPlain, "band.default");
+        private static HouseBuildFrame Frame(string id = FrameId) => new HouseBuildFrame(id, TilePlan(), WallPlain, FloorPlain, DefaultBandArt);
 
         private static HouseFinishes Attached(HouseBuildSaveData data = null)
         {
@@ -434,6 +444,94 @@ namespace Rootborn.Core.Tests.Building
 
             var empty = new HouseFinishes().ToSaveData();
             Assert.That((empty.FrameId, empty.Band, empty.Finishes.Length), Is.EqualTo(("", "", 0)));
+        }
+
+        // ---------- 띠 색(집 하나에 하나) ----------
+
+        [Test]
+        public void Band_Preview_Apply_SecondTimeNothing()
+        {
+            var f = Attached();
+            Assert.That(f.BandColors, Is.EqualTo(DefaultBandArt), "기록이 없으면 프레임 기본 줄");
+
+            IReadOnlyList<ItemAmount<string>> asked = null;
+            var p = f.PreviewBand(BandBrown, NoUnlocks, cost => { asked = cost; return true; });
+            Assert.That(p.CanApply, Is.True, p.ReasonKey);
+            Assert.That((p.FinishId, p.Slot, p.HasTarget), Is.EqualTo((BandBrown, RoomFinishSlots.Band, false)));
+            Assert.That(p.Cells, Is.Empty);
+            Assert.That(p.ChangedCells, Is.Empty);
+            Assert.That(p.HighlightCells, Is.Empty, "띠는 칸을 밝히지 않는다");
+            Assert.That(CostOf(p), Is.EqualTo(new[] { (Coin, 4) }), "비용은 정의의 것 한 번(칸 수와 무관)");
+            Assert.That(asked, Is.SameAs(p.Cost));
+            Assert.That(f.PreviewBand(BandBrown, NoUnlocks, CannotPay).ReasonKey, Is.EqualTo(HouseFinishReasons.NotEnoughMoney));
+
+            int before = f.Version;
+            Assert.That(f.Apply(p), Is.True);
+            Assert.That(f.Version, Is.EqualTo(before + 1));
+            Assert.That(f.BandColors, Is.EqualTo("band.art.brown"));
+            Assert.That(f.ToSaveData().Band, Is.EqualTo(BandBrown), "세이브에는 꾸밈 id");
+            Assert.That(f.ToSaveData().Finishes, Is.Empty, "칸 기록은 그대로(없음)");
+
+            var again = f.PreviewBand(BandBrown, NoUnlocks, Pay);
+            Assert.That(again.ReasonKey, Is.EqualTo(HouseFinishReasons.NothingToChange));
+            Assert.That(again.Cost, Is.Empty, "바뀌는 것이 없으면 비용도 없다");
+            Assert.That(f.Apply(again), Is.False);
+            Assert.That(f.Apply(p), Is.False, "낡은 미리 보기는 적용하지 않는다");
+            Assert.That(f.Version, Is.EqualTo(before + 1));
+
+            // 다른 자리의 미리 보기와 섞이지 않는다: 띠를 바꿔도 칸의 벽지·바닥은 그대로
+            Assert.That((f.WallAt(LeftMiddle), f.FloorAt(LeftMiddle)), Is.EqualTo((WallPlain, FloorPlain)));
+        }
+
+        [Test]
+        public void Band_Reasons_InOrder()
+        {
+            Assert.That(new HouseFinishes().PreviewBand(BandBrown, NoUnlocks, Pay).ReasonKey, Is.EqualTo(HouseFinishReasons.NotInHouse));
+            var f = Attached();
+            Assert.That(f.PreviewBand("no.such", NoUnlocks, Pay).ReasonKey, Is.EqualTo(HouseFinishReasons.UnknownFinish));
+            Assert.That(f.PreviewBand(null, NoUnlocks, Pay).ReasonKey, Is.EqualTo(HouseFinishReasons.UnknownFinish));
+            Assert.That(f.PreviewBand(FloorOak, NoUnlocks, Pay).ReasonKey, Is.EqualTo(HouseFinishReasons.UnknownFinish), "띠가 아닌 꾸밈");
+            Assert.That(Preview(f, BandBrown, HouseFinishTools.Room, LeftMiddle).ReasonKey, Is.EqualTo(HouseFinishReasons.UnknownFinish), "칸 미리 보기는 띠를 받지 않는다");
+            var locked = f.PreviewBand(BandLocked, NoUnlocks, CannotPay);
+            Assert.That(locked.ReasonKey, Is.EqualTo(HouseFinishReasons.Locked), "잠김이 돈보다 먼저");
+            Assert.That(f.Apply(locked), Is.False);
+            Assert.That(f.PreviewBand(BandCream, NoUnlocks, CannotPay).ReasonKey, Is.EqualTo(HouseFinishReasons.NothingToChange), "기본과 같은 그림: 바뀌는 것 없음이 돈보다 먼저");
+            var unlocks = new FurnitureUnlockProgress("slot", "player");
+            unlocks.TryUnlock(Token);
+            Assert.That(f.PreviewBand(BandLocked, unlocks, Pay).CanApply, Is.True);
+        }
+
+        [Test]
+        public void Band_ChoosingMapDefault_ClearsField()
+        {
+            var f = Attached();
+            Assert.That(f.Apply(f.PreviewBand(BandBrown, NoUnlocks, Pay)), Is.True);
+            Assert.That(f.ToSaveData().Band, Is.EqualTo(BandBrown));
+
+            var back = f.PreviewBand(BandCream, NoUnlocks, Pay);
+            Assert.That(back.CanApply, Is.True, back.ReasonKey);
+            Assert.That(f.Apply(back), Is.True);
+            Assert.That(f.ToSaveData().Band, Is.EqualTo(""), "프레임 기본과 같은 그림을 고르면 빈 글");
+            Assert.That(f.BandColors, Is.EqualTo(DefaultBandArt));
+        }
+
+        [Test]
+        public void Band_UnknownOrOtherSlotRecord_LooksDefault_AndIsKept()
+        {
+            // 데이터에서 지운 띠 꾸밈 id, 띠가 아닌 꾸밈 id가 든 기록은 프레임 기본으로 보이고 버리지 않는다(그대로 다시 쓴다).
+            foreach (string recorded in new[] { "band.gone-from-data", FloorOak })
+            {
+                var f = Attached(new HouseBuildSaveData { Version = HouseBuildSaveData.KnownVersion, FrameId = FrameId, Band = recorded });
+                Assert.That(f.BandColors, Is.EqualTo(DefaultBandArt), recorded);
+                Assert.That(f.PreviewBand(BandCream, NoUnlocks, Pay).ReasonKey, Is.EqualTo(HouseFinishReasons.NothingToChange), recorded + ": 보이는 것은 기본");
+                Assert.That(f.Apply(f.PreviewBand(FloorOak, NoUnlocks, Pay)), Is.False);
+                Assert.That(f.ToSaveData().Band, Is.EqualTo(recorded), recorded + ": 기록 그대로");
+            }
+            var loose = new HouseFinishes();
+            loose.Load(new HouseBuildSaveData { Version = HouseBuildSaveData.KnownVersion, FrameId = FrameId, Band = BandBrown });
+            Assert.That(loose.BandColors, Is.EqualTo(""), "붙기 전에는 빈 글");
+            loose.Attach(Frame(), Find);
+            Assert.That(loose.BandColors, Is.EqualTo("band.art.brown"), "붙으면 읽은 꾸밈의 줄");
         }
     }
 }

@@ -12,6 +12,8 @@ namespace Rootborn.Core.Building
     {
         public const string Wall = "wall";
         public const string Floor = "floor";
+        /// <summary>벽 윗면 띠 색: 칸마다가 아니라 집 하나에 하나. 정의의 Art는 조각이 아니라 시트 좌표표 bands의 띠 색 줄 이름이다.</summary>
+        public const string Band = "band";
     }
 
     /// <summary>
@@ -63,7 +65,7 @@ namespace Rootborn.Core.Building
         {
             get
             {
-                if (Id.Length == 0 || Slot.Length == 0 || Sheet.Length == 0 || Art.Length == 0) return false;
+                if (Id.Length == 0 || Slot.Length == 0 || NameKey.Length == 0 || Sheet.Length == 0 || Art.Length == 0) return false;
                 foreach (var amount in _cost)
                     if (string.IsNullOrEmpty(amount.Item) || amount.Count <= 0) return false;
                 return true;

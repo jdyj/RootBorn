@@ -207,6 +207,7 @@ namespace Rootborn.World
                 if (band != build.Band)
                     problems.Add(new MapCheckProblem(id, "짓는 집: 띠 두께 " + build.Band + "px가 시트 " + wall.Sheet + "의 좌표표 band " + band + "px와 다르다"));
                 if (loaded.Tiles != null) CheckFinishPieces(id, loaded.Tiles, definitions, art, problems);
+                CheckBandFinishes(id, wall, definitions, art, problems);
             }
             catch (Exception e) when (RoomTileCompositor.IsAtlasReadError(e))
             {
@@ -238,6 +239,22 @@ namespace Rootborn.World
                 foreach (string piece in wanted)
                     if (!art.TryPiece(finish, piece, out _))
                         problems.Add(new MapCheckProblem(id, "짓는 집: 꾸밈 " + finish.Id + "에 출처표가 쓰는 조각 " + piece + "이 없다"));
+            }
+        }
+
+        /// <summary>
+        /// 띠 자리 꾸밈은 조각이 아니라 좌표표 bands의 줄이다(조각 검사에 들지 않는다): 꾸밈마다 Art가 그 시트 좌표표의 bands에 있고, 시트가 기본 벽 꾸밈의
+        /// 시트와 같다(조합기는 띠 색·공용 조각을 기본 벽 꾸밈의 시트에서 찾는다). 맵마다 꾸밈 하나에 문제 하나씩.
+        /// </summary>
+        private static void CheckBandFinishes(string id, RoomFinishDefinition wall, GameDefinitions definitions, RoomFinishArt art, List<MapCheckProblem> problems)
+        {
+            foreach (RoomFinishDefinition finish in definitions.All<RoomFinishDefinition>())
+            {
+                if (finish.Slot != RoomFinishSlots.Band) continue;
+                if (finish.Sheet != wall.Sheet)
+                    problems.Add(new MapCheckProblem(id, "짓는 집: 띠 꾸밈 " + finish.Id + "의 시트 " + finish.Sheet + "가 기본 벽 꾸밈의 시트 " + wall.Sheet + "와 다르다"));
+                else if (!art.TryBand(finish.Sheet, finish.Art, out _))
+                    problems.Add(new MapCheckProblem(id, "짓는 집: 띠 꾸밈 " + finish.Id + "의 띠 색 줄 " + finish.Art + "이 시트 " + finish.Sheet + "의 좌표표에 없다"));
             }
         }
 
