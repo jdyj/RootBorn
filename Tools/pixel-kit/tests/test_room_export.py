@@ -302,7 +302,9 @@ class SheetRecomposesTheKitTilesTests(unittest.TestCase):
         seen, compared = set(), 0
         for wall in walls:
             pieces = SheetPieces(self.root, wall, lambda cell: "floor.plank")
-            for cid, g, doors in V.ALL:
+            for cid, g, doors, fh, band in V.ALL:
+                if (fh, band) != (2, 16):
+                    continue                    # 조각 시트는 정면 1·2칸, 띠 16만 굽는다(맵 검사가 그 밖을 알린다)
                 tiles, src = V.TILES[cid], V.SOURCES[cid]
                 for y, row in enumerate(src):
                     for x, parts in enumerate(row):
@@ -321,7 +323,7 @@ class SheetRecomposesTheKitTilesTests(unittest.TestCase):
     def test_each_floor_finish_matches_draw_tile_on_a_floor_only_room(self):
         floors = [d["art"] for d in self.defs if d["slot"] == "floor"]
         self.assertGreaterEqual(len(floors), 5)
-        cid, g, doors = next(c for c in V.ALL if c[0] == "house")
+        cid, g, doors, *_ = next(c for c in V.ALL if c[0] == "house")
         tiles, src = V.TILES[cid], V.SOURCES[cid]
         for art in floors:
             spec = KIT.recipes[art]
@@ -363,6 +365,8 @@ class SheetRecomposesTheKitTilesTests(unittest.TestCase):
         vectors = json.loads((ROOT / "Tools/pixel-kit/tests/fixtures/room-vectors.json").read_text(encoding="utf-8"))
         want = set()
         for case in vectors["cases"]:
+            if (case["faceHeight"], case["band"]) != (2, 16):
+                continue                        # 조각 시트가 받는 사례만
             for cell in case["cells"]:
                 for p in cell["parts"]:
                     if p["src"] in ("face", "narrow"):

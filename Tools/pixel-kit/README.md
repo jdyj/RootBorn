@@ -261,7 +261,7 @@ if/switch로 종류를 닫지 않는다.
 |---|---|---|
 | `floor` | Ground | 바닥 |
 | `floor:shade` | Ground | 바로 위 칸이 꽉 찬 정면인 바닥. 맨 위 2줄이 그 팔레트 줄의 가장 어두운 단계(벽 밑 그림자) |
-| `floor:shade:<x0>-<x1>` | Ground | 그림자를 x `[x0, x1)`에만(좁은 정면 밑). 칸 전체(`0-32`)는 `floor:shade`로 쓴다 |
+| `floor:shade:<x0>-<x1>` | Ground | 그림자를 x `[x0, x1)`에만(좁은 정면 밑, 띠 칸 옆으로 비치는 바닥). 칸 전체(`0-32`)는 `floor:shade`로 쓴다. 벽 칸에 비치는 바닥은 바로 위 칸 맨 아랫줄이 정면 그림인 열(좁은 정면, 띠 칸 안으로 늘인 정면 — T자 자리 포함)에 그림자 |
 | `face:<k>` | Wall | 꽉 찬 정면. 아래로 `face_height`칸 안에 바닥이 나오고 그 사이가 모두 벽인 벽 칸. `k`는 바닥에서 위로 몇 번째(1이 바닥 바로 위) |
 | `face:<k>:<표시>` | Wall | 표시는 `l` `r` `c` `t` 중 붙는 것만 이 순서로. `l`/`r` 왼쪽/오른쪽 끝(그쪽 이웃이 같은 높이 정면도 윗면도 아님 → 그 변 열이 외곽선), `c` 위 칸이 윗면(천장 밑 그늘), `t` 위 칸이 벽이 아님(얇은 벽·맵 가장자리 → 맨 윗줄이 외곽선). 예: `face:2:c`, `face:2:lc`, `face:1:lrt` |
 | `face:<k>:lr[c]@<x0>-<x1>[;<늘인 정면>…]` | Wall | 좁은 정면: 세로 벽 남쪽 끝의 정면(양쪽 끝이고 위로 정면을 따라가면 윗면이 나온다)을 그 윗면 띠의 가로 범위 `[x0, x1)`로. 무늬 없는 면(위 칸 벽지 한 면, 아래 칸 벽지 + 나무 두 면), 양옆 열과 아래 칸 맨 아랫줄이 외곽선. 나머지는 투명(옆이 다른 높이 정면이면 그 정면을 늘인다) |
@@ -518,7 +518,7 @@ if/switch로 종류를 닫지 않는다.
 ```text
 { "about": "…", "version": 1, "cell": 32,
   "sources": { "<src>": { "field": "shade" | "piece", "own": true | false }, … },
-  "cases": [ { "id", "faceHeight", "band", "grid": ["#..", …], "doors": [[x, y], …],
+  "cases": [ { "id", "faceHeight", "band", "grid": ["#..", …], "doors": [[x, y], …], "sills"?: ["sill:n:0-16", …],
                "cells": [ { "x", "y", "kind", "wall", "ground", "parts": [ { "src", "shade"?, "piece"?, "own"?, "px" }, … ] }, … ] }, … ] }
 ```
 
@@ -528,7 +528,10 @@ if/switch로 종류를 닫지 않는다.
 - `cells`: 밖이 아닌 칸만, 줄 순서(y, 다음 x). `kind`는 `classify`의 값(정면 열쇠는 좁은 정면 옆에서 끝 표시를 떼기 **전**), `wall`·`ground`는
   `plan_tiles`의 열쇠(없으면 `null`) — 사람이 읽고 Python 쪽만 견준다. 게임은 `parts`만 쓴다. `kind`는 떼기 전 분류라서 `face` 부분의 `piece`와 같은 글이 아닐 수 있다 —
   게임은 `kind`로 `piece`를 끌어내지 않고, `piece`를 조각 시트를 찾는 불투명한 열쇠로만 쓴다.
-- 모든 사례가 `faceHeight` 2, `band` 16이다(`room_vectors.py`의 `FACE_HEIGHT`·`BAND`). 시험 표는 다른 값을 지키지 않는다. 다른 값을 쓸 때는 사례를 더한다.
+- 사례 대부분이 `faceHeight` 2, `band` 16이다(`room_vectors.py`의 `FACE_HEIGHT`·`BAND`). 다른 값은 사례 `face-height-1`·`face-height-3`(새 집 평면),
+  `band-8`·`band-24`(시험 방 평면)이 지킨다. 조각 시트는 정면 1·2칸, 띠 16만 굽는다 — 그 밖의 값을 쓰는 맵은 게임 맵 검사가 "출처표가 쓰는 조각이 없다"로 알린다.
+- `sills`(사례 `sills-all`에만): 그 띠 두께의 문지방 열쇠 9가지(조각 시트의 `common/sill:*`와 같다). 그중 `sill:n:8-24`·`sill:e:0-16`·`sill:w:16-32`는 띠 자리
+  규칙상 어떤 격자로도 나오지 않는다(`room_vectors.UNREACHABLE_SILLS`) — 나머지 여섯은 시험 표에 나온다(`test_every_sill_piece_is_in_the_table`).
 - `parts`: 아래 "출처 종류". 값이 없는 필드(`shade`·`piece`·`own`)는 적지 않는다(`own`이 없으면 주인이 없는 부분 — C#에서는 `(0, 0)`으로 읽어도 된다).
 - 줄 나눔: 머리 값은 한 줄에 하나, 사례는 머리 한 줄 + 칸 하나가 한 줄(규칙을 고쳤을 때 바뀐 칸이 diff에서 한 줄). 키 순서는 위 그대로, `ensure_ascii=False`,
   LF, 끝 줄바꿈. 같은 코드면 같은 바이트다.

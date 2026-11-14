@@ -507,8 +507,10 @@ class FaceMeetsVerticalWallTests(unittest.TestCase):
         # 바닥 그림에서 이미 가장 어두운 색인 열(나무 이음 등)은 그늘이 있어도 같아 보인다 — 그 열은 보지 않는다
         visible = {px for px in range(32) if any(plain.get(px, py) != full.get(px, py) for py in (0, 1))}
         self.assertGreater(len(visible), 16)
+        from pixelkit.room_vectors import FIXED, case_grid
+        house = case_grid(next(c for c in FIXED if c[0] == "house")[1])
         for name, g in (("T", TJOIN), ("T mirror", mirror(TJOIN)), ("L", LJOIN), ("cross", CROSS),
-                        ("sample", SAMPLE), ("shapes", SHAPES), ("end", END)):
+                        ("sample", SAMPLE), ("shapes", SHAPES), ("end", END), ("house", house)):
             tiles = plan_tiles(g)
             for y, row in enumerate(tiles.ground):
                 for x, key in enumerate(row):
@@ -519,6 +521,8 @@ class FaceMeetsVerticalWallTests(unittest.TestCase):
                     if above is not None and above.startswith("face:"):
                         lay = tile_layout(above)
                         face_cols = set(range(32)) if lay is None else {px for px, py in drawn(lay) if py == 31}
+                    elif above is not None and above.startswith("cap:"):        # 띠 칸 안으로 늘인 정면
+                        face_cols = {px for fill in tile_layout(above).fills.values() for px, py in fill if py == 31}
                     wall_here = tiles.wall[y][x]
                     lay_here = tile_layout(wall_here) if wall_here else None
                     covered = drawn(lay_here) if lay_here else (rect(0, 0, 32, 32) if wall_here else frozenset())
@@ -529,6 +533,35 @@ class FaceMeetsVerticalWallTests(unittest.TestCase):
                         shaded = any(floor_cv.get(px, py) != plain.get(px, py) for py in (0, 1))
                         with self.subTest(grid=name, cell=(x, y), col=px, key=key, above=above):
                             self.assertEqual(shaded, px in face_cols)
+
+    def test_shadow_continues_under_stretched_face(self):
+        """가로 벽 정면이 세로 벽 띠 칸 안으로 늘어난 자리(새 집 (13, 2)) 바로 아래 칸(13, 3)은 세로 벽 띠 칸이고 띠 양옆으로 바닥이
+        비친다. 그 비침의 맨 위 두 줄은 바로 위 픽셀이 (늘인) 정면이므로 그림자 범위에 든다 — 옆 바닥 칸의 그림자와 끊기지 않게."""
+        from pixelkit.room_tiles import _parse_floor, plan_sources
+        from pixelkit.room_vectors import FIXED, case_grid
+        _, rows, doors, *_ = next(c for c in FIXED if c[0] == "house")
+        g = case_grid(rows)
+        tiles = plan_tiles(g, 2, 16, doors)
+        above = tile_layout(tiles.wall[2][13])
+        face_bottom = {px for fill in above.fills.values() for px, py in fill if py == 31}
+        self.assertTrue(face_bottom, "위 칸에 늘인 정면이 있어야 이 시험이 뜻이 있다")
+        floors = [p for p in plan_sources(g, 2, 16, doors)[3][13] if p.src == "floor"]
+        self.assertEqual({tuple(p.own) for p in floors}, {(-1, 0), (1, 0)})
+        for p in floors:
+            shown = {px for px, py in _decode_px(p.px) if py < 2}
+            rng = _parse_floor(p.shade)
+            with self.subTest(own=p.own, key=p.shade):
+                self.assertIsNotNone(rng, "그림자가 없다")
+                self.assertTrue(shown & face_bottom)
+                self.assertTrue(all(rng[0] <= px < rng[1] for px in shown & face_bottom),
+                                f"그림자 범위 {rng}가 비침 열 {sorted(shown & face_bottom)}를 덮지 않는다")
+        # 옆 바닥 칸(12, 3)·(14, 3)도 그림자가 있으니 줄이 이어진다
+        self.assertEqual((tiles.ground[3][12], tiles.ground[3][14]), ("floor:shade", "floor:shade"))
+
+
+def _decode_px(text):
+    from pixelkit.room_tiles import CELL, _decode
+    return _decode(text, 0, CELL, "px")
 
 
 class KeyTests(unittest.TestCase):

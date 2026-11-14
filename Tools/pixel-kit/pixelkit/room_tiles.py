@@ -1242,10 +1242,17 @@ def _plan(grid, face_height: int, band: int, wall_doors) -> _Plan:
         lo, hi = min(cols), max(cols) + 1        # 사이에 빠진 열은 이 칸의 벽 그림에 덮인 자리다(바닥이 보이지 않는다)
         return "floor:shade" if (lo, hi) == (0, CELL) else f"floor:shade:{lo}-{hi}"
 
+    def face_above(x, y):
+        """바로 위 칸(x, y - 1)의 맨 아랫줄에서 정면 그림인 열 — 그 밑 바닥 맨 위 두 줄의 그림자는 이 열에만. 정면 칸이면 face_cols,
+        띠 칸이면 그 칸 안으로 늘인 정면의 열(가로 벽 정면이 세로 벽 띠 칸으로 들어온 T자 자리), 문지방 칸·그 밖은 없음."""
+        if kind(x, y - 1) == "face":
+            return face_cols(x, y - 1)
+        if (x, y - 1) in cells and (x, y - 1) not in sills:
+            return {px for px, c in enumerate(cells[x, y - 1][(CELL - 1) * CELL:]) if c.startswith("face:")}
+        return set()
+
     def floor_key(x, y):
-        if kind(x, y - 1) != "face":
-            return "floor"
-        return shade_key(face_cols(x, y - 1))
+        return shade_key(face_above(x, y))
 
     wall: List[List[Optional[str]]] = [[None] * len(r) for r in keys]
     ground: List[List[Optional[str]]] = [[None] * len(r) for r in keys]
@@ -1288,12 +1295,9 @@ def _plan(grid, face_height: int, band: int, wall_doors) -> _Plan:
                 wall[y][x] = f"cap:{_encode(inside | pad, -PAD, CELL + PAD)}{tail}"
                 bands[x, y] = (frozenset(inside), frozenset(inside | pad))
             if "F" in cls:
-                # 벽 칸 밑 바닥: 위 칸 정면의 그림자는 이 칸에서 바닥이 비치는 맨 위 두 줄의 열에만 의미가 있다
+                # 벽 칸 밑 바닥: 위 칸 정면(늘인 정면 포함)의 그림자는 이 칸에서 바닥이 비치는 맨 위 두 줄의 열에만 의미가 있다
                 shown = {i % CELL for i in range(2 * CELL) if cls[i] == "F"}
-                key = "floor"
-                if kind(x, y - 1) == "face":
-                    key = shade_key(shown & face_cols(x, y - 1))
-                ground[y][x] = key
+                ground[y][x] = shade_key(shown & face_above(x, y))
     return _Plan(keys, cells, origin, narrow, sills, towards_of, door_faces, bands, wall, ground)
 
 

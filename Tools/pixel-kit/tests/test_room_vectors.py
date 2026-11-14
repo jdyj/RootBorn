@@ -28,37 +28,45 @@ RECIPES = load_recipes(str(ROOT / "art" / "kit" / "recipes"))
 FLOOR_SPEC = RECIPES["floor.plank"]
 OTHER_FLOOR_SPEC = RECIPES["floor.carpet"]
 
-# 바꾸기 전(커밋 8a2c4edc7) plan_tiles(격자, 2, 16, 문)의 [wall, ground]를 json.dumps(ensure_ascii=False)한 SHA-256.
-# 출처표를 내도록 plan_tiles를 다시 짜도 열쇠가 하나도 바뀌지 않았다는 증거다. 규칙을 일부러 바꾸면 여기도 고친다.
+# plan_tiles(격자, 정면 높이, 띠 두께, 문)의 [wall, ground]를 json.dumps(ensure_ascii=False)한 SHA-256. 처음은 커밋 8a2c4edc7 —
+# 출처표를 내도록 plan_tiles를 다시 짜도 열쇠가 하나도 바뀌지 않았다는 증거였다. 규칙을 일부러 바꾸면 여기도 고친다.
+# 2026-11-14 늘인 정면 아래 그림자: T자 자리의 세로 벽 띠 칸·좁은 정면 칸(늘인 정면 바로 아래) 13칸의 Ground 열쇠만 바뀌었다
+# (cross·house·random-4·random-6·tee·test-two-rooms·two-rooms-wall·wall-doors-inner·wall-end). 새 사례 다섯은 처음 적은 값.
 PLAN_TILES_BEFORE = {
+    "band-24": "5dd2fccdf0148b5af69a5bed315208ff81e84b7f2f55f99d6fb480c8646602f2",
+    "band-8": "252ced47e4b525f0ab5c424a6e1b2142584ab066b1664bd0f8eb69789dc202f8",
     "block-3x3": "7e16485de902581f11b90e7cab76a964529da62d202f0dd8b19695e02b03c87a",
-    "cross": "14d53252275ae6573a3a24bdc56ad8bb8224ff1041c10194e8436885fdeb426c",
+    "cross": "13fd6d4cfba78203c70012ab2a053d351168d033a15a5fe07a54df03a72f99ba",
     "doorway": "9543c8d58dbd306464db57f5ec3fd647ec6d88687e61a2a70674844809235f34",
     "edge": "e45d66eb697fbe3335f4af61a7949b225b4f65ac5a3f09a5f00bf66a51c1416d",
+    "face-height-1": "ce6d38195368cb94904761ed98b47b94775765d0a72ebf202feba389144e41b6",
+    "face-height-3": "ff276304ddeec4a7acbc299f1440d687083b3b7d60e27f52e378e72d108b0775",
+    "house": "e2651e09a9be5983dd686bdb8d43ac4ca4bb04cb34bb394b00f43a656a794440",
     "odd-1": "10163b479656c1bf1e97eb7a89e1e4f6f86ca5eee20f2a629f8128e5b88c16e3",
     "odd-2": "ece06a2de33f3feaeb2231adfac80ebe16c54a0367929184a671b7b272df96f2",
-    "house": "12aad0608d2cad4ca75af3e0261c20f05dd800aa004d94e646b847909a390ffe",
     "random-1": "1b028c0ae916e9f614fbf9ccc7e08155321a8d6ca8927eca8ac1b0e600515890",
     "random-2": "949e00618d4216ee5fedf08b1e7443db0d0c5fd386d96e55464eabff846e263a",
     "random-3": "a2bf95608f3573b322c8dd62dc4d231da0fd4c4f6227a7caff992bc8a59c8fa1",
-    "random-4": "8d42a6d37e2ff059dc008cb44154c9ff36014abec6a551346462105b0234322e",
+    "random-4": "1ec044eb2904f783443b5198718a631c251e50cefff94bacd085bab687cad962",
     "random-5": "beb34124e37298ee37eb92617fe95f74a18f2ba55a8a74463ea6ed80fb247dd7",
-    "random-6": "85fc7908b8f1078421ad1a15a39084c7be7741077a3373c55c66f444924a49b9",
+    "random-6": "8a2fcea0a5c93a7af484ac8043d3932fce3090cf9cb4585c19bbfc09e48afe87",
     "random-7": "6c6d961ed933a57b861592977dec362266b937271cf15c047b1ba735b6d0f669",
     "random-8": "3df6b6583779e7104dc9d662c9ef541be59ba08d21dbc0c3df86cb4c2c133011",
-    "tee": "7ee5fbc9666465412f7bfec61fb9ff4e8ff8484a8175c64a9fe359e6a18ac404",
-    "test-two-rooms": "2a5f4e9fb9f13d58da88a8cfda54ae2f22879bf7a4bb80fec4e45d02089bc050",
+    "sills-all": "6e638c850fea85f1b62e0bb6fdcf6a261012eb27e51900e4d40047c062c93b4c",
+    "tee": "1aac5f09bc7cc474dfd4963621a07da15b6e487059305fbb4263ea0f5328b17c",
+    "test-two-rooms": "f5c55eab8085b4670fc7ba86d345e7bc8f520bbaca5c4aa11223a91011fcc8b1",
     "thin-wall-1": "452102571140ca78009b55b35ef7f358e4d8137e429a4051cff8f9bf83d5ea3f",
     "thin-wall-2": "d67e52c385ec4f35103fc4b595cf521b251616dbe47e9e665d968d57d148b4b7",
-    "two-rooms-wall": "3fc4949135b43a63cd33571e5836cf240f482c9511f361f4c0fe0d7e704e069f",
+    "two-rooms-wall": "432cc350b05e387fb1de70078518e2d220d9a5b8dde9e50f9ca6ab8c59f52ed6",
     "wall-doors": "4561df04590a2df33d9e2a50a2fabe7c17b005af15cdd41be724f432082ff11f",
-    "wall-doors-inner": "9da6dbd8bfede7ff7550175ec3a42a974688a85f5a3bdf3aea2b09a235707140",
-    "wall-end": "c34f7efdfeb521a1f62dec4bea82754015bcd22732285a63ff1f1298a6ef615b",
+    "wall-doors-inner": "b9c32eaa681239e3ec3089efbf7fdfe8e6faf11ff543af724b5ba6b95dc73e05",
+    "wall-end": "efff672790c12164017ef125888caf1f41451359647743edb0c7f0cb96a53ac8",
 }
 
 VECTORS = build_vectors()
-ALL = [(cid, case_grid(rows), list(doors)) for cid, rows, doors in all_cases()]
-PLANS = {cid: plan_room(g, 2, 16, doors) for cid, g, doors in ALL}
+# (id, 격자, 문 칸들, 정면 높이, 띠 두께)
+ALL = [(cid, case_grid(rows), list(doors), fh, band) for cid, rows, doors, fh, band in all_cases()]
+PLANS = {cid: plan_room(g, fh, band, doors) for cid, g, doors, fh, band in ALL}
 TILES = {cid: tiles for cid, (tiles, _) in PLANS.items()}
 SOURCES = {cid: sources for cid, (_, sources) in PLANS.items()}
 
@@ -162,7 +170,7 @@ class SourcesRebuildTheTilesTests(unittest.TestCase):
         seen, compared = set(), 0
         for wall in wall_styles():
             pieces = Pieces(wall, lambda cell: FLOOR_SPEC)
-            for cid, g, doors in ALL:
+            for cid, g, doors, fh, band in ALL:
                 tiles = TILES[cid]
                 src = SOURCES[cid]
                 for y, row in enumerate(src):
@@ -200,12 +208,12 @@ class SourcesRebuildTheTilesTests(unittest.TestCase):
 
 class SourceShapeTests(unittest.TestCase):
     def test_parts_cover_disjoint_and_owners_are_floor(self):
-        for cid, g, doors in ALL:
+        for cid, g, doors, fh, band in ALL:
             tiles = TILES[cid]
             for y, row in enumerate(SOURCES[cid]):
                 for x, parts in enumerate(row):
                     if parts is None:
-                        self.assertIsNone(classify(g)[y][x], f"{cid} ({x}, {y})")
+                        self.assertIsNone(classify(g, fh)[y][x], f"{cid} ({x}, {y})")
                         continue
                     seen = set()
                     for p in parts:
@@ -234,20 +242,20 @@ class SourceShapeTests(unittest.TestCase):
 
     def test_face_owner_is_k_cells_below(self):
         n = 0
-        for cid, g, doors in ALL:
+        for cid, g, doors, fh, band in ALL:
             for y, row in enumerate(SOURCES[cid]):
                 for x, parts in enumerate(row or ()):
                     for p in parts or ():
                         if p.src in ("face", "narrow"):
                             k = int(p.piece.split(":")[1].split("@")[0])
                             fx, fy = x + p.own[0], y + p.own[1] - k          # 그 정면 픽셀이 온 정면 칸
-                            self.assertTrue(classify(g)[fy][fx].startswith(f"face:{k}"), f"{cid} ({x}, {y}) {p}")
+                            self.assertTrue(classify(g, fh)[fy][fx].startswith(f"face:{k}"), f"{cid} ({x}, {y}) {p}")
                             if (fx, fy) == (x, y):
                                 n += 1
         self.assertGreater(n, 0)
 
     def test_band_shades_match_tile_layout(self):
-        for cid, g, doors in ALL:
+        for cid, g, doors, fh, band in ALL:
             tiles = TILES[cid]
             for y, row in enumerate(SOURCES[cid]):
                 for x, parts in enumerate(row):
@@ -262,8 +270,8 @@ class SourceShapeTests(unittest.TestCase):
     def test_kind_and_keys_in_vectors_match_classify_and_plan_tiles(self):
         doc = json.loads(VECTORS.decode("utf-8"))
         self.assertEqual([c["id"] for c in doc["cases"]], [c[0] for c in ALL])
-        for case, (cid, g, doors) in zip(doc["cases"], ALL):
-            kinds, tiles = classify(g), TILES[cid]
+        for case, (cid, g, doors, fh, band) in zip(doc["cases"], ALL):
+            kinds, tiles = classify(g, fh), TILES[cid]
             want = [(x, y) for y in range(len(g)) for x in range(len(g[y])) if kinds[y][x] is not None]
             self.assertEqual([(c["x"], c["y"]) for c in case["cells"]], want, cid)
             for c in case["cells"]:
@@ -276,8 +284,8 @@ class SourceShapeTests(unittest.TestCase):
     def test_floor_without_a_floor_neighbour_takes_the_fallback_owner_and_the_vectors_have_each_case(self):
         from pixelkit.room_tiles import _plan
         seen = set()
-        for cid, g, doors in ALL:
-            p = _plan(g, 2, 16, doors)
+        for cid, g, doors, fh, band in ALL:
+            p = _plan(g, fh, band, doors)
             for (x, y), cls in p.cells.items():
                 if p.ground[y][x] is None:
                     continue
@@ -299,6 +307,28 @@ class SourceShapeTests(unittest.TestCase):
         for want in (("sill", "n"), ("sill", "e"), ("sill", "w"), ("door", None)):
             self.assertIn(want, srcs)
 
+    def test_every_sill_piece_is_in_the_table(self):
+        """조각 시트가 굽는 문지방(common/sill:*) 9가지가 모두 시험 표 사례 머리의 문지방 열쇠 목록에 있고, 그 목록의 열쇠는 띠가 같은
+        사례들의 출처표에 나온다 — 띠 자리 규칙상 나올 수 없는 셋(room_vectors.UNREACHABLE_SILLS)만 빼고. 그 셋은 어디에도 나오지 않는다."""
+        from pixelkit import room_export
+        doc = json.loads(room_vectors.VECTORS_PATH.read_text(encoding="utf-8"))      # 게임 테스트도 읽는 파일 그대로
+        listed = [c for c in doc["cases"] if "sills" in c]
+        self.assertTrue(listed, "문지방 열쇠 목록을 적은 사례가 없다")
+        for case in listed:
+            band = case["band"]
+            used = {p["piece"] for c in doc["cases"] if c["band"] == band for cell in c["cells"]
+                    for p in cell["parts"] if p["src"] == "sill"}
+            with self.subTest(case=case["id"]):
+                if band == room_export.BAND:
+                    self.assertEqual(sorted(case["sills"]), sorted(room_export.sill_pieces()))
+                for key in case["sills"]:
+                    if key in room_vectors.UNREACHABLE_SILLS:
+                        self.assertNotIn(key, used, f"{key}가 나온다 — UNREACHABLE_SILLS에서 뺀다")
+                    else:
+                        self.assertIn(key, used, f"문지방 {key}가 시험 표 출처표에 없다")
+                self.assertEqual(used - set(case["sills"]), set(), "목록에 없는 문지방")
+        self.assertEqual(len(set(room_vectors.UNREACHABLE_SILLS) & set(room_export.sill_pieces())), 3)
+
 
 class VectorsFileTests(unittest.TestCase):
     def test_vectors_file_is_up_to_date(self):
@@ -316,8 +346,8 @@ class VectorsFileTests(unittest.TestCase):
 
     def test_plan_tiles_unchanged_on_every_case(self):
         self.assertEqual(set(PLAN_TILES_BEFORE), {c[0] for c in ALL})
-        for cid, g, doors in ALL:
-            t = plan_tiles(g, 2, 16, doors)
+        for cid, g, doors, fh, band in ALL:
+            t = plan_tiles(g, fh, band, doors)
             got = hashlib.sha256(json.dumps([t.wall, t.ground], ensure_ascii=False).encode()).hexdigest()
             self.assertEqual(got, PLAN_TILES_BEFORE[cid], cid)
 

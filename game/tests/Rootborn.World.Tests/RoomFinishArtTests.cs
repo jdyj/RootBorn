@@ -155,6 +155,10 @@ namespace Rootborn.World.Tests
             using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(Repo.Root, "Tools", "pixel-kit", "tests", "fixtures", "room-vectors.json")));
             foreach (var c in doc.RootElement.GetProperty("cases").EnumerateArray())
             {
+                // 조각 시트는 정면 1·2칸, 띠 16만 굽는다. 그 밖의 사례(face-height-3, band-8 등)는 시트에 없는 조각을 부르고, 그런 맵은
+                // 맵 검사(MapChecks "출처표가 쓰는 조각")가 알린다.
+                if (c.GetProperty("faceHeight").GetInt32() != 2 || c.GetProperty("band").GetInt32() != art.BandOf(sheet))
+                    continue;
                 var rows = c.GetProperty("grid").EnumerateArray().Select(r => r.GetString()).ToArray();
                 int columns = rows.Max(r => r.Length);
                 var cells = new int[columns * rows.Length];

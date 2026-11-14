@@ -18,10 +18,23 @@ BAND = 16
 ABOUT = "방 격자 → 칸마다 열쇠와 픽셀 출처. 만든 곳: python Tools/pixel-kit/kit.py room vectors. 손으로 고치지 않는다."
 VERSION = 1
 
-# (id, 평면 줄, 벽 칸의 문 칸들). 평면: '#' 벽, '.' 바닥, ' ' 밖.
-Case = Tuple[str, Sequence[str], Sequence[Tuple[int, int]]]
+# (id, 평면 줄, 벽 칸의 문 칸들, 정면 높이, 띠 두께). 평면: '#' 벽, '.' 바닥, ' ' 밖. 정면 높이·띠 두께를 적지 않은 사례는
+# FACE_HEIGHT·BAND(_case가 채운다).
+Case = Tuple[str, Sequence[str], Sequence[Tuple[int, int]], int, int]
 
-FIXED: List[Case] = [
+
+def _case(cid: str, rows: Sequence[str], doors: Sequence[Tuple[int, int]],
+          face_height: int = FACE_HEIGHT, band: int = BAND) -> Case:
+    return (cid, rows, doors, face_height, band)
+
+
+def sill_keys(band: int = BAND) -> List[str]:
+    """띠 두께 band의 문지방 열쇠 9가지: 바닥이 있는 쪽(n·e·w) × 띠가 칸 안에 놓이는 범위(위·왼 끝, 가운데, 아래·오른 끝).
+    띠 16에서는 조각 시트의 common/sill:*(room_export.sill_pieces)와 같은 목록이어야 한다 — 시험이 견준다. 그중 셋은 어떤 격자로도
+    나오지 않는다(UNREACHABLE_SILLS)."""
+    return [f"sill:{s}:{a}-{a + band}" for s in "new" for a in (0, (CELL - band) // 2, CELL - band)]
+
+_PLANS = [
     # 새 집(art/kit/rooms/house.json의 plan, 문 글자 D는 벽 + 문 칸) — 2026-11-14 커밋된 것의 사본
     ("house", [
         "############################",
@@ -203,6 +216,44 @@ FIXED: List[Case] = [
         " ###",
     ], [(2, 0), (0, 2)]),
 ]
+_ROWS = {cid: rows for cid, rows, _ in _PLANS}
+
+# 문지방 열쇠 전부가 나오게 짠 격자(띠 16): 왼쪽 바깥 벽(e 오른끝), 두 방 사이 세로 벽(e 가운데), 아래 바깥 벽(n 위끝), 안쪽 가로 벽의
+# 윗면(n 아래끝 — 아래가 정면), 가로 벽 정면이 붙은 세로 벽 칸(w 가운데 — 오른쪽이 정면이라 위·오른쪽에 바닥이 없다), 오른쪽 바깥 벽(w 위끝).
+SILLS_ALL = (["#########",
+              "#########",
+              "#########",
+              "#...#...#",
+              "#...#...#",
+              "#...#####",
+              "#...#####",
+              "#...#####",
+              "#...#...#",
+              "#...#...#",
+              "#########"],
+             [(4, 3), (0, 4), (6, 5), (4, 6), (8, 8), (2, 10)])
+
+# 사례 머리에 "sills"(그 띠 두께에서 있을 수 있는 문지방 열쇠 목록, 조각 시트의 common/sill:*와 같다)를 적는 사례.
+SILL_CASES = ("sills-all",)
+
+# 띠 16의 문지방 9가지 중 어떤 격자로도 나오지 않는 셋. 바닥이 있는 쪽 축의 띠 자리는 그 쪽 끝이나 가운데뿐이다(_band_layout:
+# 그 쪽이 방이면 axis가 그 쪽 끝·가운데를 주고, 이웃을 따를 때도 양쪽이 방인 가운데만 받는다. 위가 바닥인 윗면은 위끝, 아래가 정면이면
+# 아래끝). 그래서 위가 바닥인데 가운데(n 8-24), 오른쪽이 바닥인데 왼끝(e 0-16), 왼쪽이 바닥인데 오른끝(w 16-32)은 없다.
+# 조각 시트는 9가지를 다 굽는다(room_export.sill_pieces). 셋 중 하나라도 시험 표에 나오면 시험이 알린다(이 목록을 고친다).
+UNREACHABLE_SILLS = ("sill:n:8-24", "sill:e:0-16", "sill:w:16-32")
+
+FIXED: List[Case] = [_case(*c) for c in _PLANS]
+
+# 정면 높이·띠 두께가 다른 사례와 문지방 전부(무작위 사례 뒤에 둔다 — 앞 사례의 순서가 그대로이게)
+VARIANTS: List[Case] = [
+    # 정면 높이가 다른 집(새 집 평면의 사본): 정면 1칸뿐, 정면 3칸(face:3 조각 — 지금 조각 시트에는 없다)
+    _case("face-height-1", _ROWS["house"], [(14, 17)], face_height=1),
+    _case("face-height-3", _ROWS["house"], [(14, 17)], face_height=3),
+    # 띠 두께가 다른 시험 방(시험 방 평면의 사본) — 조각 시트는 띠 16만 받는다
+    _case("band-8", _ROWS["test-two-rooms"], [], band=8),
+    _case("band-24", _ROWS["test-two-rooms"], [], band=24),
+    _case("sills-all", *SILLS_ALL),
+]
 
 RANDOM_SEED = 20261114
 RANDOM_COUNT = 8
@@ -225,12 +276,12 @@ def random_cases(seed: int = RANDOM_SEED, count: int = RANDOM_COUNT) -> List[Cas
                 x0, y0 = rng.randint(1, w - 2), rng.randint(1, h - 1 - length)
                 for y in range(y0, y0 + length):
                     g[y][x0] = "#"
-        out.append((f"random-{n + 1}", ["".join(r) for r in g], []))
+        out.append(_case(f"random-{n + 1}", ["".join(r) for r in g], []))
     return out
 
 
 def all_cases() -> List[Case]:
-    return FIXED + random_cases()
+    return FIXED + random_cases() + VARIANTS
 
 
 def case_grid(rows: Sequence[str]) -> List[List[int]]:
@@ -249,10 +300,10 @@ def _part_json(part: SourcePart) -> dict:
     return out
 
 
-def _case_json(cid: str, rows: Sequence[str], doors: Sequence[Tuple[int, int]]) -> dict:
+def _case_json(cid: str, rows: Sequence[str], doors: Sequence[Tuple[int, int]], face_height: int, band: int) -> dict:
     g = case_grid(rows)
-    kinds = classify(g, FACE_HEIGHT)
-    tiles, sources = plan_room(g, FACE_HEIGHT, BAND, doors)
+    kinds = classify(g, face_height)
+    tiles, sources = plan_room(g, face_height, band, doors)
     cells_out = []
     for y, row in enumerate(sources):
         for x, parts in enumerate(row):
@@ -260,8 +311,11 @@ def _case_json(cid: str, rows: Sequence[str], doors: Sequence[Tuple[int, int]]) 
                 continue
             cells_out.append({"x": x, "y": y, "kind": kinds[y][x], "wall": tiles.wall[y][x], "ground": tiles.ground[y][x],
                               "parts": [_part_json(p) for p in parts]})
-    return {"id": cid, "faceHeight": FACE_HEIGHT, "band": BAND, "grid": list(rows),
-            "doors": [list(d) for d in sorted(doors)], "cells": cells_out}
+    out = {"id": cid, "faceHeight": face_height, "band": band, "grid": list(rows), "doors": [list(d) for d in sorted(doors)]}
+    if cid in SILL_CASES:
+        out["sills"] = sill_keys(band)
+    out["cells"] = cells_out
+    return out
 
 
 def _line(value) -> str:
@@ -276,7 +330,7 @@ def build_vectors() -> bytes:
     head = {"about": ABOUT, "version": VERSION, "cell": CELL,
             "sources": {name: {"field": field, "own": owned} for name, (field, owned) in SOURCES.items()}}
     out = ["{"] + [f" {_line(k)}: {_line(v)}," for k, v in head.items()] + [' "cases": [']
-    cases = [_case_json(cid, rows, doors) for cid, rows, doors in all_cases()]
+    cases = [_case_json(*c) for c in all_cases()]
     for n, case in enumerate(cases):
         out.append("  {" + ", ".join(f"{_line(k)}: {_line(v)}" for k, v in case.items() if k != "cells") + ', "cells": [')
         out += ["   " + _line(c) + ("," if i + 1 < len(case["cells"]) else "") for i, c in enumerate(case["cells"])]
