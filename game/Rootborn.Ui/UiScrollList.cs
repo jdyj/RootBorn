@@ -149,6 +149,15 @@ namespace Rootborn.Ui
             return true;
         }
 
+        private FittedText[] _fit = new FittedText[0];
+
+        // 보이는 줄 수만큼 맞춤 자리를 든다(목록 크기가 바뀌어 보이는 줄이 늘 때만 새로 만든다).
+        private void EnsureFitSlots(int visible)
+        {
+            int need = Math.Max(1, visible + 1);
+            if (_fit.Length < need) _fit = new FittedText[need];
+        }
+
         public override void Emit(DrawList list, ITextMeasurer text)
         {
             list.Panel(Rect, Skin, IsActive ? UiTheme.ButtonHovered : UiTheme.ButtonDisabled);
@@ -157,14 +166,21 @@ namespace Rootborn.Ui
             float lineHeight = text.LineHeight(FontSize);
             bool scrollable = MaxScroll > 0;
             float rowWidth = scrollable ? view.W - ScrollbarWidth - 6 : view.W;
-            int last = LastVisibleRow;
-            for (int row = FirstVisibleRow; row <= last; row++)
+            int first = FirstVisibleRow, last = LastVisibleRow;
+            float textX = view.X + TextPaddingX;
+            float textRoom = view.X + rowWidth - TextPaddingX - textX;
+            EnsureFitSlots(last - first + 1);
+            for (int row = first; row <= last; row++)
             {
                 float y = view.Y + row * RowHeight - _scroll;
                 UiColor back = row == _selected ? RowSelected : row == _hoverRow ? RowHover : (row & 1) == 1 ? RowOdd : RowEven;
                 if (back.A > 0) list.Fill(new UiRect(view.X, y, rowWidth, RowHeight), back);
                 if (RowText != null)
-                    list.Text(view.X + TextPaddingX, y + (RowHeight - lineHeight) / 2f, RowText(row), FontSize, UiTheme.Ink);
+                {
+                    // 넘치는 줄 글은 말줄임. 맞춘 결과는 줄 글·폭·크기가 바뀔 때만 다시 잰다(보이는 줄 자리마다 하나씩 들고 있다).
+                    string shown = _fit[row % _fit.Length].Get(RowText(row), textRoom, FontSize, text);
+                    list.Text(textX, y + (RowHeight - lineHeight) / 2f, shown, FontSize, UiTheme.Ink);
+                }
             }
             list.PopClip();
 

@@ -491,6 +491,39 @@ namespace Rootborn.Ui.Tests
             Assert.That(_tree.Focused, Is.SameAs(above));
         }
 
+        private sealed class CountingMeasurer : ITextMeasurer
+        {
+            public int Calls;
+            public float Width(string text, float fontSize) { Calls++; return (text?.Length ?? 0) * fontSize * 0.5f; }
+            public float LineHeight(float fontSize) => fontSize;
+        }
+
+        [Test]
+        public void LongRowText_IsEllipsizedToTheRowWidth_AndMeasuredOnlyWhenItChanges()
+        {
+            Make(3);
+            string longText = new string('가', 200);
+            string text = longText;
+            _list.RowText = i => i == 0 ? text : "짧은 줄";
+            var measurer = new CountingMeasurer();
+            var list = new DrawList();
+            _tree.Emit(list, measurer);
+            DrawCommand first = list.Commands.First(c => c.Kind == DrawKind.Text);
+            Assert.That(first.Text, Does.EndWith(TextFit.Ellipsis), "넘치는 줄 글은 말줄임");
+            float room = 380 - _list.TextPaddingX * 2;
+            Assert.That(new FakeMeasurer().Width(first.Text, _list.FontSize), Is.LessThanOrEqualTo(room));
+            Assert.That(list.Commands.Count(c => c.Kind == DrawKind.Text && c.Text == "짧은 줄"), Is.EqualTo(2), "들어가는 줄은 그대로");
+
+            int measured = measurer.Calls;
+            for (int frame = 0; frame < 100; frame++) { list.Clear(); _tree.Emit(list, measurer); }
+            Assert.That(measurer.Calls, Is.EqualTo(measured), "줄 글이 그대로면 다시 재지 않는다");
+
+            text = "바뀐 줄";
+            list.Clear();
+            _tree.Emit(list, measurer);
+            Assert.That(list.Commands.First(c => c.Kind == DrawKind.Text).Text, Is.EqualTo("바뀐 줄"), "줄 글이 바뀌면 다시 맞춘다");
+        }
+
         [Test]
         public void ShrinkingTheList_ClampsScrollAndSelection()
         {
