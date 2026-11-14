@@ -28,14 +28,16 @@ namespace Rootborn.Game.Tests
 
         private static string LayoutPath(TempSaves saves, string slot = TestWorld.Slot) => Path.Combine(saves.Path, slot, SaveFileNames.HouseFurnitureLayout(0));
 
-        /// <summary>새 집 맵에서 막힌(벽) 안쪽 칸들(가구 칸 좌표 — HouseRoom은 맵 칸을 그대로 쓴다).</summary>
+        /// <summary>새 집 맵에서 막힌(벽) 안쪽 칸들(가구 칸 좌표 — 실제 집 칸처럼 y를 뒤집는다: 가구 칸 = (x, 행 수 - 1 - 맵 y)). 맵의 위 줄부터.</summary>
         private static List<GridPoint> InnerWallCells()
         {
             var map = WorldMapLoader.FromRepo(TestWorld.RepoRoot).LoadMap(HouseRoom.MapId).World;
-            return map.Collision.BlockedCells()
+            var walls = map.Collision.BlockedCells()
                 .Where(c => c.X > 0 && c.Y > 0 && c.X < map.Grid.Columns - 1 && c.Y < map.Grid.Rows - 1)
-                .Select(c => new GridPoint(c.X, c.Y))
+                .Select(c => new GridPoint(c.X, map.Grid.Rows - 1 - c.Y))
                 .ToList();
+            Assert.That(walls.All(HouseRoom.Grid.IsFixed), Is.True, "전제: 실제 집 칸에서도 벽(고정 칸)");
+            return walls;
         }
 
         private static FurniturePlacementSaveData Record(string id, GridPoint at, FurniturePlacementDirection direction = FurniturePlacementDirection.North) => new FurniturePlacementSaveData
@@ -86,24 +88,26 @@ namespace Rootborn.Game.Tests
         /// <summary>
         /// 옛 빌드의 집(2026-11-14 이전 House 맵). 옛 빌드는 충돌 규칙과 상관없이 LDtk의 칠한 Collision 층(값 1)을 덮어 막힌 칸을 정했고,
         /// 가구 방(FurnitureRoom)이 그 칸을 고정 칸으로 만들었다 — 옛 집에서 133칸은 가구를 놓을 수 없었다. 그 칸 표를 고정 파일
-        /// (Fixtures/old-house/furniture-fixed-cells.txt)에서 읽는다. 좌표는 이 테스트의 HouseRoom과 같은 규칙(맵 칸 그대로)이다.
+        /// (Fixtures/old-house/furniture-fixed-cells.txt)에서 읽는다. 파일의 줄은 맵 줄(맨 위가 y=0)이고, 옛 빌드의 FurnitureRoom처럼 가구 칸으로
+        /// 바꿀 때 y를 뒤집는다(가구 칸 = (x, 줄 수 - 1 - 맵 y)) — HouseRoom.Grid와 같은 규칙.
         /// 실제 옛 빌드 실행 파일로 연 것이 아니라 옛 빌드의 복원(Restore)과 이 격자로 흉내 낸 자동 테스트다.
         /// </summary>
         private static PlacementGrid OldBuildHouseGrid()
         {
             var now = HouseRoom.Grid;
-            var fixedCells = new List<GridPoint>();
-            int y = 0;
+            var rows = new List<string>();
             foreach (var raw in File.ReadAllLines(Path.Combine(System.AppContext.BaseDirectory, "Fixtures", "old-house", "furniture-fixed-cells.txt")))
             {
                 var line = raw.Trim();
                 if (line.Length == 0 || line.StartsWith("//")) continue;
-                for (int x = 0; x < line.Length; x++)
-                    if (line[x] == '#') fixedCells.Add(new GridPoint(x, y));
-                y++;
+                rows.Add(line);
             }
 
-            Assert.That(y, Is.EqualTo(18), "고정 파일은 옛 집 맵과 같은 줄 수");
+            Assert.That(rows.Count, Is.EqualTo(18), "고정 파일은 옛 집 맵과 같은 줄 수");
+            var fixedCells = new List<GridPoint>();
+            for (int y = 0; y < rows.Count; y++)
+                for (int x = 0; x < rows[y].Length; x++)
+                    if (rows[y][x] == '#') fixedCells.Add(new GridPoint(x, rows.Count - 1 - y));
             return new PlacementGrid(now.FloorCells, fixedCells, now.Spawn, now.Approaches);
         }
 
@@ -213,12 +217,12 @@ namespace Rootborn.Game.Tests
             Assert.That(announced, Is.GreaterThan(0), "알림 화면이 열리도록 가구 알림이 온다");
             Assert.That(game.TryTakeHouseRelocationNotice(out _, out _), Is.True);
 
-            // 새 게임(처음 배치 가구가 데이터 자리 그대로 놓인다 — 실제 집 칸 HostGrid)도 옮긴 것이 없으면 알리지 않는다.
+            // 새 게임(처음 배치 가구가 데이터 자리 그대로 놓인다 — 실제 집 칸 HouseRoom.Grid)도 옮긴 것이 없으면 알리지 않는다.
             using var empty = new TempSaves();
             var plain = TestWorld.Start(empty.Store);
             int none = 0;
             plain.Changed += t => { if (t == GameChangeTopics.Furniture) none++; };
-            plain.EnterHouse(HouseRoom.HostGrid, HouseRoom.SurfaceId);
+            plain.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
             Assert.That(none, Is.Zero, "옮긴 것도 보관한 것도 없으면 알리지 않는다");
         }
 

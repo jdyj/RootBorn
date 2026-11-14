@@ -26,8 +26,11 @@ namespace Rootborn.Game.Tests
             probe.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
             GridPoint free = HouseRoom.FirstFreeAnchor(probe, FreeDesk);
             var map = WorldMapLoader.FromRepo(TestWorld.RepoRoot).LoadMap(HouseRoom.MapId).World;
-            Rootborn.Core.World.CellPos wall = map.Collision.BlockedCells()
+            Rootborn.Core.World.CellPos wallCell = map.Collision.BlockedCells()
                 .First(c => c.X > 0 && c.Y > 0 && c.X < map.Grid.Columns - 1 && c.Y < map.Grid.Rows - 1);
+            // 가구 칸 좌표로(실제 집 칸처럼 y를 뒤집는다).
+            var wall = new GridPoint(wallCell.X, map.Grid.Rows - 1 - wallCell.Y);
+            Assert.That(HouseRoom.Grid.IsFixed(wall), Is.True, "전제: 실제 집 칸에서 벽(고정 칸)");
             Assert.That(saves.Store.TryRead<FurniturePlacementLayoutSaveData>(TestWorld.Slot, SaveFileNames.HouseFurnitureLayout(0), out _), Is.False);
 
             FurniturePlacementSaveData Record(string id, int x, int y) => new FurniturePlacementSaveData
@@ -48,7 +51,7 @@ namespace Rootborn.Game.Tests
             Assert.That(game.House.Placed.Count, Is.EqualTo(2));
             Assert.That(game.House.Placed[0].Anchor, Is.EqualTo(free), "놓을 수 있는 기록은 제자리");
             GridPoint moved = game.House.Placed[1].Anchor;
-            Assert.That(moved, Is.Not.EqualTo(new GridPoint(wall.X, wall.Y)), "벽이 된 칸의 책상은 가까운 자리로 옮겨졌다");
+            Assert.That(moved, Is.Not.EqualTo(wall), "벽이 된 칸의 책상은 가까운 자리로 옮겨졌다");
             Assert.That(game.House.UnresolvedCount, Is.EqualTo(1), "데이터에 없는 가구는 못 놓은 기록으로 든다");
             Assert.That(File.ReadAllBytes(file), Is.EqualTo(written), "들어가 읽기만 해서는 배치 파일을 쓰지 않는다");
 

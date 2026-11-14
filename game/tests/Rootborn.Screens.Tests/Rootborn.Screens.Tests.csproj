@@ -13,4 +13,8 @@
     <PackageReference Include="NUnit" Version="3.14.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Game 테스트의 시험용 집 칸 변환(Core·World 형식만 쓴다). FurnitureRoom.Grid와 같은지 HouseRoomGridMatchesFurnitureRoomTests가 본다. -->
+    <Compile Include="../Rootborn.Game.Tests/HouseRoomGrid.cs" Link="Furniture/HouseRoomGrid.cs" />
+  </ItemGroup>
 </Project>

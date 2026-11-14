@@ -34,7 +34,7 @@ namespace Rootborn.Game.Tests
 
         private static RoomShares SharedHouseRoom()
         {
-            var rules = new RoomHouseRules(TestWorld.Definitions.All<FurnitureDefinition>(), s => s == HouseRoom.SurfaceId ? HouseRoom.HostGrid : null);
+            var rules = new RoomHouseRules(TestWorld.Definitions.All<FurnitureDefinition>(), s => s == HouseRoom.SurfaceId ? HouseRoom.Grid : null);
             var pieces = new RoomPieceSet(new RoomShareSettings(new[] { RoomHouse.PieceName }), RoomPieceCatalog.CreateDefault(rules));
             var shares = new RoomShares(pieces.Settings, RoomPieceCatalog.CreateDefault(), () => "guest-r1");
             foreach (var p in pieces.Pieces) shares.Receive(p.State());
@@ -45,7 +45,7 @@ namespace Rootborn.Game.Tests
         public void StarterFitsTheRealHouse()
         {
             // 데이터의 줄이 모두 실제 새 집에서 그 자리·방향에 놓인다(앞 줄을 놓은 뒤에). 데이터를 바꾸면 여기서 걸린다.
-            var layout = new HouseFurnitureLayout(new HousePlacementModel(HouseRoom.HostGrid), HouseRoom.SurfaceId);
+            var layout = new HouseFurnitureLayout(new HousePlacementModel(HouseRoom.Grid), HouseRoom.SurfaceId);
             foreach (var p in Starter.Placements)
             {
                 Assert.That(TestWorld.Definitions.TryGet<FurnitureDefinition>(p.FurnitureId, out var furniture), Is.True, "데이터에 있는 가구: " + p.FurnitureId);
@@ -59,7 +59,7 @@ namespace Rootborn.Game.Tests
         {
             using var saves = new TempSaves();
             var game = TestWorld.Start(saves.Store);
-            game.EnterHouse(HouseRoom.HostGrid, HouseRoom.SurfaceId);
+            game.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
 
             // 칸이 데이터대로다(StarterFitsTheRealHouse가 막히지 않음을 고정하므로 옮겨진 자리가 아니다).
             Assert.That(Placed(game), Is.EqualTo(StarterLines()));
@@ -72,14 +72,14 @@ namespace Rootborn.Game.Tests
         {
             using var saves = new TempSaves();
             var game = TestWorld.Start(saves.Store);
-            game.EnterHouse(HouseRoom.HostGrid, HouseRoom.SurfaceId);
+            game.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
             game.EnterHouseBuild(HouseRoom.Frame);
             Assert.That(game.House.Placed.Count, Is.EqualTo(Starter.Placements.Count));
             Assert.That(SlotFiles(saves), Is.Empty, "명령 없이 끝낸 새 게임은 아무것도 쓰지 않는다");
 
             // 다음에도 새 게임이라 같은 결과다.
             var again = TestWorld.Start(saves.Store);
-            again.EnterHouse(HouseRoom.HostGrid, HouseRoom.SurfaceId);
+            again.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
             Assert.That(Placed(again), Is.EqualTo(StarterLines()));
             Assert.That(SlotFiles(saves), Is.Empty);
         }
@@ -97,7 +97,7 @@ namespace Rootborn.Game.Tests
             byte[] written = File.ReadAllBytes(LayoutPath(saves));
 
             var next = TestWorld.Start(saves.Store);
-            next.EnterHouse(HouseRoom.HostGrid, HouseRoom.SurfaceId);
+            next.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
             Assert.That(Placed(next), Is.EqualTo(StarterLines()), "새 판에서도 같은 배치, 가구가 늘지 않는다");
             next.VisitLocation("location.town-square");
             Assert.That(File.ReadAllBytes(LayoutPath(saves)), Is.EqualTo(written), "다시 쓰지 않는다");
@@ -105,10 +105,10 @@ namespace Rootborn.Game.Tests
             // 집을 연 뒤의 첫 저장도 같다(열린 배치를 쓴다).
             using var other = new TempSaves();
             var opened = TestWorld.Start(other.Store);
-            opened.EnterHouse(HouseRoom.HostGrid, HouseRoom.SurfaceId);
+            opened.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
             opened.VisitLocation("location.town-square");
             var reopened = TestWorld.Start(other.Store);
-            reopened.EnterHouse(HouseRoom.HostGrid, HouseRoom.SurfaceId);
+            reopened.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
             Assert.That(Placed(reopened), Is.EqualTo(StarterLines()));
         }
 
@@ -118,14 +118,14 @@ namespace Rootborn.Game.Tests
             // 처음 가구를 모두 치우면(빈 배치 파일) 다음 판에도 다시 주지 않는다.
             using var saves = new TempSaves();
             var game = TestWorld.Start(saves.Store);
-            game.EnterHouse(HouseRoom.HostGrid, HouseRoom.SurfaceId);
+            game.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
             Assert.That(game.ClearFurniture(), Is.True);
             game.VisitLocation("location.town-square");
-            game.EnterHouse(HouseRoom.HostGrid, HouseRoom.SurfaceId);
+            game.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
             Assert.That(game.House.Placed, Is.Empty, "같은 판에서 다시 들어와도");
 
             var next = TestWorld.Start(saves.Store);
-            next.EnterHouse(HouseRoom.HostGrid, HouseRoom.SurfaceId);
+            next.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
             Assert.That(next.House.Placed, Is.Empty, "새 판에서도");
         }
 
@@ -139,7 +139,7 @@ namespace Rootborn.Game.Tests
             var expected = FurnitureSaveFiles.LoadHouseLayout(saves.Store, slot, 0).Select(r => r.FurnitureId).ToArray();
 
             var game = TestWorld.Start(saves.Store, slot);
-            game.EnterHouse(HouseRoom.HostGrid, HouseRoom.SurfaceId);
+            game.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
             Assert.That(game.House.Placed.Select(p => p.Definition.StableId), Is.EquivalentTo(expected), "옛 가구만 있다");
             game.VisitLocation("location.town-square");
             Assert.That(File.ReadAllBytes(LayoutPath(saves, slot)), Is.EqualTo(before), "옛 배치 파일에 처음 가구를 더하지 않는다");
@@ -155,7 +155,7 @@ namespace Rootborn.Game.Tests
 
             // 처음 플레이어가 받은 배치를 같이 보고, 두 번째 플레이어 몫으로 더 놓지 않는다.
             var second = TestWorld.Start(saves.Store, TestWorld.Slot, "player-2");
-            second.EnterHouse(HouseRoom.HostGrid, HouseRoom.SurfaceId);
+            second.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
             Assert.That(Placed(second), Is.EqualTo(StarterLines()));
             second.VisitLocation("location.town-square");
             Assert.That(File.ReadAllBytes(LayoutPath(saves)), Is.EqualTo(written));
@@ -163,7 +163,7 @@ namespace Rootborn.Game.Tests
             // 배치 파일이 없는 논 슬롯(가구를 쓰지 않던 빌드에서 논 것처럼)에도 주지 않는다 — 슬롯 공용 파일이 있다.
             File.Delete(LayoutPath(saves));
             var third = TestWorld.Start(saves.Store, TestWorld.Slot, "player-3");
-            third.EnterHouse(HouseRoom.HostGrid, HouseRoom.SurfaceId);
+            third.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
             Assert.That(third.House.Placed, Is.Empty);
             third.VisitLocation("location.town-square");
             Assert.That(File.Exists(LayoutPath(saves)), Is.False, "배치 파일을 새로 만들지 않는다");
@@ -175,7 +175,7 @@ namespace Rootborn.Game.Tests
             using var saves = new TempSaves();
             var guest = GameSession.Start(TestWorld.Definitions, TestWorld.Settings, saves.Store, "slot-guest", "guest", shares: SharedHouseRoom());
             Assert.That(guest.SharesHouse, Is.True, "전제: 같이 쓰는 집");
-            guest.EnterHouse(HouseRoom.HostGrid, HouseRoom.SurfaceId);
+            guest.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
             Assert.That(guest.House.Placed, Is.Empty, "방의 집에 처음 가구를 넣지 않는다");
             guest.VisitLocation("location.town-square");
             Assert.That(File.Exists(LayoutPath(saves, "slot-guest")), Is.False, "자기 배치 파일도 쓰지 않는다");
@@ -194,7 +194,7 @@ namespace Rootborn.Game.Tests
             Assert.That(step.Id, Is.EqualTo("mainquest.MyOwnSpace"), "전제: 가구 놓기 단계");
             Assert.That(step.Objectives.Any(o => o is Rootborn.Core.Quests.FurniturePlacedQuestObjective), Is.True, "전제: 가구를 기다린다");
 
-            game.EnterHouse(HouseRoom.HostGrid, HouseRoom.SurfaceId);
+            game.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
             Assert.That(game.House.Placed.Count, Is.EqualTo(Starter.Placements.Count), "전제: 처음 가구가 놓였다");
             Assert.That(game.QuestChains.GetCurrentStep(chain).Id, Is.EqualTo("mainquest.MyOwnSpace"), "가구 놓기 단계가 그대로");
             for (int i = 0; i < step.Objectives.Count; i++)
@@ -202,7 +202,7 @@ namespace Rootborn.Game.Tests
                     Assert.That(game.QuestChains.GetObjectiveProgress(chain, i), Is.Zero, "가구 놓기 목표가 남는다");
 
             var next = TestWorld.Start(saves.Store);
-            next.EnterHouse(HouseRoom.HostGrid, HouseRoom.SurfaceId);
+            next.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
             Assert.That(next.QuestChains.GetCurrentStep(chain).Id, Is.EqualTo("mainquest.MyOwnSpace"), "다시 읽어도");
         }
 

@@ -9,15 +9,15 @@ using Rootborn.World;
 namespace Rootborn.Game.Tests
 {
     /// <summary>
-    /// 실제 집 맵(game/world/maps.json의 House, LDtk)에서 만든 가구 방 칸. Host가 할 일을 테스트에서 흉내 낸다:
-    /// 맵 안의 칸은 바닥, 막힌 칸은 고정 칸, 도착 지점이 있는 칸은 들어오는 칸과 문 앞이다. 맵 크기는 맵 파일에서 온다.
+    /// 실제 집 맵(game/world/maps.json의 House, LDtk)에서 만든 가구 방 칸 — Host가 집에 들어설 때 넘기는 칸과 같다(<see cref="HouseRoomGrid"/>,
+    /// Screens FurnitureRoom과 같은지는 Screens 테스트가 고정한다). 가구 칸 y는 위로 커진다(가구 칸 = (x, 행 수 - 1 - 맵 y)). 맵 크기는 맵 파일에서 온다.
     /// </summary>
     internal static class HouseRoom
     {
         public const string MapId = "House";
         public const string SurfaceId = "house";
 
-        private static readonly Lazy<PlacementGrid> _grid = new Lazy<PlacementGrid>(Build);
+        private static readonly Lazy<PlacementGrid> _grid = new Lazy<PlacementGrid>(() => HouseRoomGrid.From(Map()));
 
         public static PlacementGrid Grid => _grid.Value;
 
@@ -60,42 +60,5 @@ namespace Rootborn.Game.Tests
         /// </summary>
         public static void EmptyHouse(Rootborn.Core.Save.ISaveStore store, string slot = TestWorld.Slot)
             => FurnitureSaveFiles.SaveHouseLayout(store, slot, 0, Array.Empty<FurniturePlacementSaveData>());
-
-        private static readonly Lazy<PlacementGrid> _hostGrid = new Lazy<PlacementGrid>(() => Build(true));
-
-        /// <summary>
-        /// Host가 실제로 넘기는 가구 방 칸(Screens FurnitureRoom과 같다: 가구 칸 y는 위로 커진다, 가구 칸 = (x, 행 수 - 1 - 맵 y)).
-        /// <see cref="Grid"/>는 맵 y를 그대로 쓰는 옛 시험 칸이라, 데이터에 적은 가구 칸(처음 배치)이 실제 집에 맞는지는 이것으로 본다.
-        /// </summary>
-        public static PlacementGrid HostGrid => _hostGrid.Value;
-
-        private static PlacementGrid Build() => Build(false);
-
-        private static PlacementGrid Build(bool flipY)
-        {
-            var map = Map();
-            GridPoint Cell(int x, int y) => new GridPoint(x, flipY ? map.Grid.Rows - 1 - y : y);
-            var floor = new List<GridPoint>();
-            var fixedCells = new List<GridPoint>();
-            for (int y = 0; y < map.Grid.Rows; y++)
-                for (int x = 0; x < map.Grid.Columns; x++)
-                {
-                    floor.Add(Cell(x, y));
-                    if (map.Collision.IsBlocked(x, y)) fixedCells.Add(Cell(x, y));
-                }
-
-            var spawns = new List<GridPoint>();
-            var ids = new List<string>(map.SpawnIds);
-            if (flipY) ids.Sort(StringComparer.Ordinal); // Host(FurnitureRoom)는 도착 지점 id 순서의 첫 칸이 들어오는 칸이다
-            foreach (var id in ids)
-            {
-                map.TryGetSpawn(id, out var point);
-                var cell = CellPos.Containing(point.X, point.Y, map.Grid.CellSize);
-                spawns.Add(Cell(cell.X, cell.Y));
-            }
-
-            if (spawns.Count == 0) throw new InvalidOperationException("집 맵에 도착 지점이 없다");
-            return new PlacementGrid(floor, fixedCells, spawns[0], spawns);
-        }
     }
 }
