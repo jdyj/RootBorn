@@ -71,6 +71,14 @@ namespace Rootborn.Game
         private bool RequestSharedMove(string instanceId, GridPoint anchor, FurniturePlacementDirection direction)
             => RequestHouse(CanMoveShared(instanceId, anchor, direction), () => _roomHouse.RequestMove(instanceId, anchor, direction));
 
+        // 보관한 가구 꺼내기 = 방 기록의 그 가구를 옮기기. 보관 index는 방에서 읽은 기록 목록의 자리이고 _houseIds와 같은 순서다(SharedHouseLayout이 함께 채운다).
+        // 방의 판정(그 가구를 뺀 나머지 위에 놓기)과 지금 보이는 배치의 판정(House.CanPlaceStored)은 같은 Core 코드다. 먼저 온 요청만 된다.
+        private bool RequestSharedPlaceStored(int index, GridPoint anchor, FurniturePlacementDirection direction)
+        {
+            bool known = index >= 0 && index < _houseIds.Count;
+            return RequestHouse(known && House.CanPlaceStored(index, anchor, direction), () => _roomHouse.RequestMove(_houseIds[index], anchor, direction));
+        }
+
         private bool RequestSharedRemove(string instanceId) => RequestHouse(Find(instanceId) != null, () => _roomHouse.RequestRemove(instanceId));
 
         private bool RequestSharedClear() => RequestHouse(House.Placed.Count > 0, () => _roomHouse.RequestClear(House.SurfaceId));

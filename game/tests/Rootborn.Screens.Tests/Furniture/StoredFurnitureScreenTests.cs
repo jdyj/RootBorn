@@ -309,16 +309,6 @@ namespace Rootborn.Screens.Tests.Furniture
                 Assert.That(measure.Width(c.Text, c.FontSize), Is.LessThanOrEqualTo(storedButton.Rect.W + 0.5f), "단추보다 긴 글자는 줄인다");
         }
 
-        [Test]
-        public void Model_FromASharedHouse_CannotPick_AndGivesTheReason()
-        {
-            var none = new List<StoredFurniture>();
-            StoredFurnitureModel shared = StoredFurnitureModel.Build(none, f => f.DisplayName, shared: true);
-            Assert.That((shared.CanPick, shared.ReasonKey), Is.EqualTo((false, "ui.furniture.stored.reason.shared")));
-            StoredFurnitureModel alone = StoredFurnitureModel.Build(none, f => f.DisplayName, shared: false);
-            Assert.That((alone.CanPick, alone.ReasonKey, alone.IsEmpty), Is.EqualTo((true, (string)null, true)));
-        }
-
         // ---------- 검토 지적 1: 다시 열면 고른 것을 지운다, 번호가 바뀐 줄은 놓지 않는다 ----------
 
         [Test]
@@ -392,62 +382,177 @@ namespace Rootborn.Screens.Tests.Furniture
 
         // ---------- 검토 지적 2: 같이 쓰는 집의 이유 문구 ----------
 
-        [Test]
-        public void SharedHouse_StoredTab_ShowsTheReason_AndRowsCannotBePicked()
+        // 같이 쓰는 집: 방의 기록 중 하나가 보관되어 있고(집이 가득 차 있고 저장된 방향으로는 둘 곳이 없다), 돌리면 비어 있는 칸에 맞는다.
+        private sealed class SharedStoredFixture : IDisposable
         {
-            string saves = Path.Combine(Path.GetTempPath(), "rootborn-stored-shared-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(saves);
-            try
+            private readonly string _saves;
+            private readonly Rootborn.Core.Room.RoomPieceSet _pieces;
+            private readonly Rootborn.Core.Room.RoomShares _shares;
+            public readonly TestSession T;
+            public readonly FurniturePlacementScreen Screen;
+            public readonly FurniturePlacementScreenTests.TestView View;
+            public readonly GridPoint Target;
+            public readonly FurniturePlacementDirection Take;
+            public readonly string StoredFurnitureId;
+
+            private sealed class Plan
             {
+                public FurnitureDefinition Candidate, Rug;
+                public GridPoint Anchor;
+                public FurniturePlacementDirection Take, Stay;
+                public GridPoint[] RugCells;
+            }
+
+            public SharedStoredFixture()
+            {
+                _saves = Path.Combine(Path.GetTempPath(), "rootborn-stored-shared-" + Guid.NewGuid().ToString("N"));
+                Directory.CreateDirectory(_saves);
                 var room = new FurnitureRoom(FurniturePlacementScreenTests.TestRoomMap(6, 5));
-                var rules = new Rootborn.Core.Room.RoomHouseRules(TestSession.Definitions.All<FurnitureDefinition>(), s => s == "house" ? room.Grid : null);
-                var pieces = new Rootborn.Core.Room.RoomPieceSet(new Rootborn.Core.Room.RoomShareSettings(new[] { Rootborn.Core.Room.RoomHouse.PieceName }),
+                var defs = TestSession.Definitions.All<FurnitureDefinition>();
+                var rules = new Rootborn.Core.Room.RoomHouseRules(defs, s => s == "house" ? room.Grid : null);
+                _pieces = new Rootborn.Core.Room.RoomPieceSet(new Rootborn.Core.Room.RoomShareSettings(new[] { Rootborn.Core.Room.RoomHouse.PieceName }),
                     Rootborn.Core.Room.RoomPieceCatalog.CreateDefault(rules));
-                Assert.That(pieces.TryGet(Rootborn.Core.Room.RoomHouse.PieceName, out var piece), Is.True);
-                string rug;
-                using (var probe = new TestSession()) rug = Rug(probe);
-                var store = new Rootborn.Data.Save.FileSaveStore(saves);
+                Assert.That(_pieces.TryGet(Rootborn.Core.Room.RoomHouse.PieceName, out var piece), Is.True);
+
+                var north = FurniturePlacementDirection.North;
+                var dirs = new[] { north, FurniturePlacementDirection.East, FurniturePlacementDirection.South, FurniturePlacementDirection.West };
+                var rug = defs.First(f => !f.BlocksMovement && f.AllowsSurface("house") && f.GetFootprintCells(north).Count == 1 && f.GetTileParts(north).Count == 1);
+                var empty = new HouseFurnitureLayout(new HousePlacementModel(room.Grid), "house");
+                var free = new List<GridPoint>();
+                for (int y = 0; y < 8; y++)
+                    for (int x = 0; x < 8; x++)
+                        if (empty.CanPlace(rug, new GridPoint(x, y), north)) free.Add(new GridPoint(x, y));
+                Plan plan = null;
+                foreach (var candidate in defs.Where(f => f.AllowsSurface("house") && f.GetFootprintCells(north).Count == 2))
+                {
+                    foreach (var anchor in free)
+                        foreach (var take in dirs)
+                        {
+                            if (plan != null || !empty.CanPlace(candidate, anchor, take)) continue;
+                            var cells = candidate.GetFootprintCells(take).Select(c => new GridPoint(anchor.X + c.X, anchor.Y + c.Y)).ToArray();
+                            if (!cells.All(free.Contains)) continue;
+                            var rugCells = free.Where(c => !cells.Contains(c)).ToArray();
+                            var filled = new HouseFurnitureLayout(new HousePlacementModel(room.Grid), "house");
+                            filled.RestoreRelocating(rugCells.Select(c => new FurniturePlacementSaveData { FurnitureId = rug.StableId, SurfaceId = "house", AnchorX = c.X, AnchorY = c.Y }).ToList(), defs);
+                            if (filled.Placed.Count != rugCells.Length || !filled.CanPlace(candidate, anchor, take)) continue;
+                            foreach (var stay in dirs)
+                            {
+                                if (free.Any(a => filled.CanPlace(candidate, a, stay))) continue;
+                                plan = new Plan { Candidate = candidate, Anchor = anchor, Take = take, Stay = stay, RugCells = rugCells, Rug = rug };
+                                break;
+                            }
+                        }
+                    if (plan != null) break;
+                }
+                Assert.That(plan, Is.Not.Null, "준비: 돌려 놓아야 맞는 보관 가구를 만들 수 있다");
+
+                var placed = new List<Rootborn.Core.Room.RoomHousePlacementSaveData>();
+                for (int i = 0; i < plan.RugCells.Length; i++)
+                    placed.Add(new Rootborn.Core.Room.RoomHousePlacementSaveData { InstanceId = (i + 1).ToString(), FurnitureId = plan.Rug.StableId, SurfaceId = "house", AnchorX = plan.RugCells[i].X, AnchorY = plan.RugCells[i].Y, PlacedBy = "a", Day = 1 });
+                placed.Add(new Rootborn.Core.Room.RoomHousePlacementSaveData { InstanceId = (plan.RugCells.Length + 1).ToString(), FurnitureId = plan.Candidate.StableId, SurfaceId = "house", Direction = plan.Stay, PlacedBy = "a", Day = 1 });
+                var store = new Rootborn.Data.Save.FileSaveStore(_saves);
                 store.Write("room", SaveFileNames.RoomPiece(Rootborn.Core.Room.RoomHouse.PieceName), new Rootborn.Core.Room.RoomHouseSaveData
                 {
-                    Version = Rootborn.Core.Room.RoomHouseSaveData.KnownVersion, NextNumber = 40,
-                    Placed = Enumerable.Range(0, 30).Select(i => new Rootborn.Core.Room.RoomHousePlacementSaveData
-                    {
-                        InstanceId = (i + 1).ToString(), FurnitureId = rug, SurfaceId = "house", AnchorX = 0, AnchorY = 0,
-                        Direction = FurniturePlacementDirection.North, PlacedBy = "a", Day = 1,
-                    }).ToArray(),
+                    Version = Rootborn.Core.Room.RoomHouseSaveData.KnownVersion, NextNumber = placed.Count + 1, Placed = placed.ToArray(),
                 });
                 ((Rootborn.Core.Room.RoomHouse)piece).Load(store, "room");
-                var shares = new Rootborn.Core.Room.RoomShares(pieces.Settings, Rootborn.Core.Room.RoomPieceCatalog.CreateDefault(), () => "guest-r1");
-                foreach (var p in pieces.Pieces) shares.Receive(p.State());
+                _shares = new Rootborn.Core.Room.RoomShares(_pieces.Settings, Rootborn.Core.Room.RoomPieceCatalog.CreateDefault(), () => "guest-r1");
+                foreach (var p in _pieces.Pieces) _shares.Receive(p.State());
+                Target = plan.Anchor;
+                Take = plan.Take;
+                StoredFurnitureId = plan.Candidate.StableId;
 
-                using var t = new TestSession(saves: saves, playerId: "guest", shares: shares);
-                var view = new FurniturePlacementScreenTests.TestView(room);
-                t.Session.EnterHouse(room.Grid, "house");
-                t.Stack.EnterMap("House", new[] { MapFeatures.FurniturePlacement });
-                t.Stack.OpenHud();
-                t.Click("hud.button.placement");
-                var screen = t.Screen<FurniturePlacementScreen>(ScreenCatalog.FurniturePlacement);
-                screen.Attach(new FurnitureArt(TestData.DataDirectory), view);
-                t.Emit();
-                Assert.That(t.Session.SharesOpenLayout, Is.True, "준비: 같이 쓰는 집");
-                Assert.That(t.Session.StoredFurniture().Count, Is.GreaterThan(0), "준비: 방의 기록 중 보관된 것이 있다");
-
-                t.Click(FurniturePlacementScreen.CategoryStoredId);
-                var reason = (UiTextBlock)t.Node(FurniturePlacementScreen.StoredReasonId);
-                Assert.That(reason.IsActive, Is.True, "이유 문구가 보인다");
-                Assert.That(reason.Text, Is.EqualTo(t.Text.Get(StoredFurnitureModel.SharedReasonKey)));
-                Assert.That(reason.Text, Is.Not.Empty);
-
-                var list = (UiScrollList)t.Node(FurniturePlacementScreen.StoredListId);
-                Assert.That(list.TryGetRowRect(0, out UiRect r), Is.True);
-                t.Stack.Pointer(r.CenterX, r.CenterY, false, 0);
-                t.Stack.Pointer(r.CenterX, r.CenterY, true, 0);
-                t.Stack.Pointer(r.CenterX, r.CenterY, false, 0);
-                Assert.That(screen.Active, Is.Null, "줄을 눌러도 고를 수 없다");
-                Assert.That(screen.PickedStoredIndex, Is.EqualTo(-1));
-                Assert.That(list.SelectedIndex, Is.EqualTo(-1));
+                T = new TestSession(saves: _saves, playerId: "guest", shares: _shares);
+                View = new FurniturePlacementScreenTests.TestView(room);
+                T.Session.EnterHouse(room.Grid, "house");
+                T.Stack.EnterMap("House", new[] { MapFeatures.FurniturePlacement });
+                T.Stack.OpenHud();
+                T.Click("hud.button.placement");
+                Screen = T.Screen<FurniturePlacementScreen>(ScreenCatalog.FurniturePlacement);
+                Screen.Attach(new FurnitureArt(TestData.DataDirectory), View);
+                T.Emit();
             }
-            finally { try { Directory.Delete(saves, true); } catch (IOException) { } }
+
+            public UiScrollList List => (UiScrollList)T.Node(FurniturePlacementScreen.StoredListId);
+
+            public void ClickRow(int row)
+            {
+                Assert.That(List.TryGetRowRect(row, out UiRect r), Is.True, "줄이 보인다");
+                T.Stack.Pointer(r.CenterX, r.CenterY, false, 0);
+                T.Stack.Pointer(r.CenterX, r.CenterY, true, 0);
+                T.Stack.Pointer(r.CenterX, r.CenterY, false, 0);
+            }
+
+            public void ClickCell(GridPoint cell)
+            {
+                (float x, float y) = View.Center(cell);
+                foreach (bool down in new[] { false, true, false })
+                {
+                    T.Stack.Pointer(x, y, down, 0);
+                    Screen.WorldPointer(x, y, down, T.Stack.Tree.HitTest(x, y) != null);
+                }
+            }
+
+            // 방이 그 사람의 요청을 반영하고 답과 바뀐 상태를 알린다(서버가 할 일).
+            public void DeliverToRoom()
+            {
+                var answers = new List<Rootborn.Core.Room.RoomAnswer>();
+                var changed = new List<Rootborn.Core.Room.IRoomPiece>();
+                _pieces.Apply("guest", _shares.Outbox.Requests.Select(r => r.Copy()).ToList(), 1, answers, changed);
+                foreach (var piece in changed) _shares.Receive(piece.State());
+                foreach (var a in answers) _shares.Receive(a);
+            }
+
+            public void Dispose()
+            {
+                T.Dispose();
+                try { Directory.Delete(_saves, true); } catch (IOException) { }
+            }
+        }
+
+        [Test]
+        public void Model_FromASharedHouse_CanPick()
+        {
+            using var f = new SharedStoredFixture();
+            Assert.That(f.T.Session.SharesOpenLayout, Is.True, "준비: 같이 쓰는 집");
+            var stored = f.T.Session.StoredFurniture();
+            Assert.That(stored.Count, Is.EqualTo(1), "준비: 방의 기록 중 보관된 것이 있다");
+            StoredFurnitureModel model = StoredFurnitureModel.Build(stored, d => d.DisplayName);
+            Assert.That((model.Rows.Count, model.RowOf(stored[0].Index)), Is.EqualTo((1, 0)), "같이 쓰는 집이어도 줄이 그대로 담긴다");
+        }
+
+        [Test]
+        public void SharedHouse_StoredTab_PlacingWaitsThenPlaces()
+        {
+            using var f = new SharedStoredFixture();
+            f.T.Click(FurniturePlacementScreen.CategoryStoredId);
+            Assert.That(f.List.IsActive, Is.True);
+            var reason = (UiTextBlock)f.T.Node(FurniturePlacementScreen.StoredReasonId);
+            Assert.That(reason.IsActive, Is.False, "같이 쓰는 집이라는 이유로 막는 안내가 없다");
+
+            f.ClickRow(0);
+            Assert.That(f.Screen.Active, Is.Not.Null, "줄을 고를 수 있다");
+            Assert.That(f.Screen.PickedStoredIndex, Is.GreaterThanOrEqualTo(0));
+            for (int i = 0; i < 4 && f.Screen.Direction != f.Take; i++) f.T.Click(FurniturePlacementScreen.RotateId);
+            Assert.That(f.Screen.Direction, Is.EqualTo(f.Take), "준비: 돌려서 맞는 방향으로");
+            int placedBefore = f.T.Session.House.Placed.Count;
+
+            f.ClickCell(f.Target);
+            f.T.Emit();
+            Assert.That(f.Screen.LastAction, Is.EqualTo("waiting"), "방에 물었다");
+            Assert.That(((UiTextBlock)f.T.Node(FurniturePlacementScreen.RoomStatusId)).Text, Is.EqualTo(f.T.Text.Get("ui.furniture.room-waiting")));
+            Assert.That(f.T.Session.House.Placed.Count, Is.EqualTo(placedBefore), "허락 전에는 집이 그대로다");
+            Assert.That(f.T.Session.StoredFurniture().Count, Is.EqualTo(1), "허락 전에는 보관도 그대로다");
+
+            f.DeliverToRoom();
+            f.T.Emit();
+            Assert.That(f.Screen.LastAction, Is.EqualTo("placed"));
+            Assert.That(((UiTextBlock)f.T.Node(FurniturePlacementScreen.RoomStatusId)).Text, Is.Empty);
+            Assert.That(f.T.Session.House.Placed.Count, Is.EqualTo(placedBefore + 1));
+            Assert.That(f.T.Session.House.Placed.Count(p => p.Definition.StableId == f.StoredFurnitureId && p.Anchor.Equals(f.Target)), Is.EqualTo(1));
+            Assert.That(f.T.Session.StoredFurniture(), Is.Empty, "보관에서 빠졌다");
+            Assert.That(f.Screen.Stored.IsEmpty, Is.True);
+            KnownMissingKeys.AssertOnlyKnownMissing(f.T.Text, f.T.Stack.Find(ScreenCatalog.FurniturePlacement).TextKeys);
         }
     }
 }

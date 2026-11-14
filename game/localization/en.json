@@ -292,7 +292,6 @@
   "ui.furniture.category.furniture": "Furniture",
   "ui.furniture.category.stored": "Stored",
   "ui.furniture.stored.empty": "No stored furniture",
-  "ui.furniture.stored.reason.shared": "You cannot take furniture out of storage in a shared house yet",
   "ui.furniture.stored.row": "{0} · {1}",
   "ui.furniture.stored.row-with-items": "{0} (holds items)",
   "ui.furniture.stored.holds-hint": "Place it to take the items out again",

@@ -187,7 +187,7 @@ namespace Rootborn.Screens.Furniture
         private string _category = Categories.Furniture;
         private UiScrollList _storedList;
         private UiTextBlock _storedEmpty, _storedReason;
-        private StoredFurnitureModel _stored = StoredFurnitureModel.Build(null, f => string.Empty, shared: false);
+        private StoredFurnitureModel _stored = StoredFurnitureModel.Build(null, f => string.Empty);
         // 보관 줄마다 미리 만든 글·그림 id·그림 크기(목록을 다시 읽을 때, 언어가 바뀔 때, 그림 표를 이을 때만 만든다 — 그리기는 꺼내기만 한다).
         private string[] _storedTexts = Array.Empty<string>();
         private string[] _storedIcons = Array.Empty<string>();
@@ -673,7 +673,7 @@ namespace Rootborn.Screens.Furniture
         private void RefreshStored()
         {
             var session = Services.Session;
-            _stored = StoredFurnitureModel.Build(session?.StoredFurniture(), Name, session != null && session.SharesOpenLayout);
+            _stored = StoredFurnitureModel.Build(session?.StoredFurniture(), Name);
             BuildStoredRows();
             _storedList.RowCount = _stored.Rows.Count;
             _storedList.Visible = !_stored.IsEmpty;
@@ -692,13 +692,13 @@ namespace Rootborn.Screens.Furniture
         }
 
         /// <summary>
-        /// 보관 목록 아래 안내 한 줄: 고를 수 없는 까닭(같이 쓰는 집)이 먼저, 아니면 고른 줄이 물건이 든 상자일 때 "놓으면 다시 꺼낼 수 있다".
+        /// 보관 목록 아래 안내 한 줄: 고른 줄이 물건이 든 상자일 때 "놓으면 다시 꺼낼 수 있다".
         /// 문구는 키로만 고른다.
         /// </summary>
         private void ApplyStoredNote()
         {
-            string key = _stored.ReasonKey;
-            if (key == null && _storedIndex >= 0)
+            string key = null;
+            if (_storedIndex >= 0)
             {
                 int picked = _stored.RowOf(_storedIndex);
                 if (picked >= 0 && _stored.Rows[picked].HoldsItems) key = HoldsItemsNoteKey;
@@ -745,7 +745,7 @@ namespace Rootborn.Screens.Furniture
 
         private void PickStoredRow(int row)
         {
-            if (!_stored.CanPick || row < 0 || row >= _stored.Rows.Count) { _storedList.SelectedIndex = _storedIndex < 0 ? -1 : _stored.RowOf(_storedIndex); return; }
+            if (row < 0 || row >= _stored.Rows.Count) { _storedList.SelectedIndex = _storedIndex < 0 ? -1 : _stored.RowOf(_storedIndex); return; }
             StoredFurnitureRow r = _stored.Rows[row];
             _storedIndex = r.Index;
             Active = r.Definition;
@@ -908,9 +908,10 @@ namespace Rootborn.Screens.Furniture
 
             if (_storedIndex >= 0)
             {
-                // 보관한 가구를 그 칸에 다시 놓는다: 판정과 저장은 GameSession이 한다. 성공하면 Furniture 알림이 와서 목록에서 빠진다.
+                // 보관한 가구를 그 칸에 다시 놓는다: 판정과 저장은 GameSession이 한다. 성공하면 Furniture 알림이 와서 목록에서 빠진다(같이 쓰는 집은 방이 허락한 뒤).
                 bool restored = Services.Session.PlaceStoredFurniture(_storedIndex, cell, direction);
                 LastAction = restored ? "placed" : "rejected";
+                if (!restored && AskedRoom("placed")) { _overlayVisible = false; return; } // 같이 쓰는 집: 방의 "옮기기"로 물었다
                 if (!restored) { _overlayVisible = true; return; }
                 AfterCommit(cell);
                 return;

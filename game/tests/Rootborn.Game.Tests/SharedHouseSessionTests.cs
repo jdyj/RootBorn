@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using Rootborn.Core.Inventory;
+using Rootborn.Core.Minigames;
 using Rootborn.Core.Placement;
 using Rootborn.Core.Room;
 using Rootborn.Core.Save;
@@ -21,7 +23,9 @@ namespace Rootborn.Game.Tests
 
             public FakeRoom(params string[] shared)
             {
-                var rules = new RoomHouseRules(TestWorld.Definitions.All<FurnitureDefinition>(), s => s == HouseRoom.SurfaceId ? HouseRoom.Grid : null);
+                var d = TestWorld.Definitions;
+                var rules = new RoomHouseRules(d.All<FurnitureDefinition>(), s => s == HouseRoom.SurfaceId ? HouseRoom.Grid : null,
+                    new FurnitureStorageCatalog(d.All<FurnitureStorageDefinition>()), d.All<ItemDefinition>());
                 Pieces = new RoomPieceSet(new RoomShareSettings(shared), RoomPieceCatalog.CreateDefault(rules));
             }
 
@@ -45,6 +49,8 @@ namespace Rootborn.Game.Tests
                 foreach (var piece in changed)
                     foreach (var p in _players) p.Shares.Receive(piece.State());
             }
+
+            public RoomChests Chests => Pieces.TryGet(RoomChests.PieceName, out var c) ? (RoomChests)c : null;
 
             public RoomHouse House => Pieces.TryGet(RoomHouse.PieceName, out var h) ? (RoomHouse)h : null;
         }
@@ -224,6 +230,246 @@ namespace Rootborn.Game.Tests
             Assert.That(a.PlaceFurniture(locked.StableId, anyAnchor, FurniturePlacementDirection.North), Is.False);
             Assert.That(a.WaitingForRoom, Is.False);
             Assert.That(shares.Outbox.Requests, Is.Empty, "놓는 사람이 가진 가구만 놓는다(해금은 각자)");
+        }
+    
+        // ---------- 보관한 가구 꺼내기(결정 16): 방의 "옮기기" 요청으로 ----------
+
+        private sealed class StoredPlan
+        {
+            public RoomHousePlacementSaveData[] Placements;
+            public FurnitureDefinition Stored;
+            public GridPoint Target;
+            public FurniturePlacementDirection Take;
+            public GridPoint[] TargetCells;
+            public GridPoint[] FreeCells;
+            public string StoredInstance;
+        }
+
+        private static GridPoint Plus(GridPoint a, GridPoint b) => new GridPoint(a.X + b.X, a.Y + b.Y);
+
+        // 방의 기록으로 "집이 가득 차 한 가구만 보관되고, 그 가구는 돌려 놓으면 비어 있는 칸에 맞는" 상태를 만든다:
+        // 깔개로 집의 빈 칸을 (그 가구의 자리만 빼고) 모두 채우고, 그 가구를 다른 방향으로 벽 칸에 둔다 — 자리는 있지만 저장된 방향으로는 둘 곳이 없다.
+        private static StoredPlan PlanStored(bool chest)
+        {
+            var d = TestWorld.Definitions;
+            var grid = HouseRoom.Grid;
+            var rug = d.All<FurnitureDefinition>().First(f => !f.BlocksMovement && f.AllowsSurface(HouseRoom.SurfaceId)
+                && f.GetFootprintCells(FurniturePlacementDirection.North).Count == 1 && f.GetTileParts(FurniturePlacementDirection.North).Count == 1);
+            var candidates = chest
+                ? d.All<FurnitureStorageDefinition>().Select(x => x.Furniture).Where(f => f.AllowsSurface(HouseRoom.SurfaceId)).ToList()
+                : d.All<FurnitureDefinition>().Where(f => f.AllowsSurface(HouseRoom.SurfaceId)
+                    && f.GetFootprintCells(FurniturePlacementDirection.North).Count >= 2 && f.GetFootprintCells(FurniturePlacementDirection.North).Count <= 3)
+                    .OrderBy(f => f.GetFootprintCells(FurniturePlacementDirection.North).Count).ToList();
+            var empty = new HouseFurnitureLayout(new HousePlacementModel(grid), HouseRoom.SurfaceId);
+            var free = new List<GridPoint>();
+            for (int y = 0; y < 60; y++)
+                for (int x = 0; x < 60; x++)
+                    if (empty.CanPlace(rug, new GridPoint(x, y), FurniturePlacementDirection.North)) free.Add(new GridPoint(x, y));
+            var dirs = new[] { FurniturePlacementDirection.North, FurniturePlacementDirection.East, FurniturePlacementDirection.South, FurniturePlacementDirection.West };
+            foreach (var candidate in candidates)
+                foreach (var anchor in free)
+                    foreach (var take in dirs)
+                    {
+                        if (!empty.CanPlace(candidate, anchor, take)) continue;
+                        var cells = candidate.GetFootprintCells(take).Select(c => Plus(anchor, c)).ToArray();
+                        if (!cells.All(free.Contains)) continue;
+                        var rugCells = free.Where(c => !cells.Contains(c)).ToArray();
+                        var records = rugCells.Select(c => new FurniturePlacementSaveData { FurnitureId = rug.StableId, SurfaceId = HouseRoom.SurfaceId, AnchorX = c.X, AnchorY = c.Y }).ToList();
+                        var filled = new HouseFurnitureLayout(new HousePlacementModel(grid), HouseRoom.SurfaceId);
+                        filled.RestoreRelocating(records, d.All<FurnitureDefinition>());
+                        if (filled.Placed.Count != rugCells.Length || !filled.CanPlace(candidate, anchor, take)) continue;
+                        foreach (var stay in dirs)
+                        {
+                            bool fitsAnywhere = false;
+                            foreach (var a in free) fitsAnywhere |= filled.CanPlace(candidate, a, stay);
+                            if (fitsAnywhere) continue;
+                            var placements = new List<RoomHousePlacementSaveData>();
+                            for (int i = 0; i < rugCells.Length; i++)
+                                placements.Add(new RoomHousePlacementSaveData { InstanceId = (i + 1).ToString(), FurnitureId = rug.StableId, SurfaceId = HouseRoom.SurfaceId, AnchorX = rugCells[i].X, AnchorY = rugCells[i].Y, PlacedBy = "a", Day = 1 });
+                            string instance = (rugCells.Length + 1).ToString();
+                            placements.Add(new RoomHousePlacementSaveData { InstanceId = instance, FurnitureId = candidate.StableId, SurfaceId = HouseRoom.SurfaceId, AnchorX = 0, AnchorY = 0, Direction = stay, PlacedBy = "a", Day = 1 });
+                            return new StoredPlan { Placements = placements.ToArray(), Stored = candidate, Target = anchor, Take = take, TargetCells = cells, FreeCells = rugCells, StoredInstance = instance };
+                        }
+                    }
+
+            throw new System.InvalidOperationException("보관된 가구를 돌려 놓을 수 있는 집 상태를 만들지 못했다(데이터·맵이 바뀌었나) free=" + free.Count + " candidates=" + candidates.Count + " [" + string.Join(",", candidates.Select(c => c.StableId + ":" + c.GetFootprintCells(FurniturePlacementDirection.North).Count + (c.BlocksMovement ? "b" : ""))) + "]");
+        }
+
+        // 방이 그 기록을 갖고 시작한다(저장소에 쓰고 방의 조각이 읽는다). 상자면 안에 나무 5개.
+        private static void Seed(FakeRoom room, TempSaves saves, StoredPlan plan, bool chestItems)
+        {
+            saves.Store.Write("room", SaveFileNames.RoomPiece(RoomHouse.PieceName), new RoomHouseSaveData
+            {
+                Version = RoomHouseSaveData.KnownVersion, NextNumber = plan.Placements.Length + 1, Placed = plan.Placements,
+            });
+            room.House.Load(saves.Store, "room");
+            if (!chestItems) return;
+            saves.Store.Write("room", SaveFileNames.RoomPiece(RoomChests.PieceName), new RoomChestsSaveData
+            {
+                Version = RoomChestsSaveData.KnownVersion,
+                Chests = new[] { new RoomChestSaveData { InstanceId = plan.StoredInstance, Items = new[] { new RoomChestItemSaveData { ItemId = "Wood", Count = 5 } } } },
+            });
+            room.Chests.Load(saves.Store, "room");
+        }
+
+        private static int Total(FakeRoom room) => room.House.Placed.Count;
+
+        private static List<(string, int, int, FurniturePlacementDirection)> Layout(FakeRoom room)
+            => room.House.Placed.Select(p => (p.InstanceId, p.AnchorX, p.AnchorY, p.Direction)).ToList();
+
+        [Test]
+        public void SharedHouse_StoredFurniture_PlacedThroughTheRoom_EveryoneSeesIt()
+        {
+            using var saves = new TempSaves();
+            var plan = PlanStored(chest: false);
+            var room = new FakeRoom(RoomHouse.PieceName);
+            Seed(room, saves, plan, chestItems: false);
+            var aShares = room.Join("a");
+            var bShares = room.Join("b");
+            var a = Start(saves, aShares, "slot-a", "a");
+            var b = Start(saves, bShares, "slot-b", "b");
+            int before = Total(room);
+            Assert.That(a.StoredFurniture().Count, Is.EqualTo(1), "준비: 둘 곳이 없어 보관된 가구 하나");
+            Assert.That(b.StoredFurniture().Single().Definition.StableId, Is.EqualTo(plan.Stored.StableId), "다른 사람에게도 보관으로 보인다");
+            int placedBefore = a.House.Placed.Count;
+            int index = a.StoredFurniture().Single().Index;
+            int furnitureChanges = 0;
+            b.Changed += topic => { if (topic == GameChangeTopics.Furniture) furnitureChanges++; };
+
+            Assert.That(a.CanPlaceStoredFurniture(index, plan.Target, plan.Take), Is.True, "같이 쓰는 집에서도 놓을 수 있는지 본다");
+            Assert.That(a.PlaceStoredFurniture(index, plan.Target, plan.Take), Is.False, "지금 바뀐 것은 없다 — 방에 요청만 했다");
+            Assert.That(a.WaitingForRoom, Is.True);
+            Assert.That(a.House.Placed.Count, Is.EqualTo(placedBefore), "허락 전에는 집이 그대로다");
+            Assert.That(a.StoredFurniture().Count, Is.EqualTo(1), "허락 전에는 보관도 그대로다");
+            Assert.That(aShares.Outbox.Requests.Count(r => r.Piece == RoomHouse.PieceName), Is.EqualTo(1));
+            Assert.That(a.PlaceStoredFurniture(index, plan.Target, plan.Take), Is.False);
+            Assert.That(aShares.Outbox.Requests.Count(r => r.Piece == RoomHouse.PieceName), Is.EqualTo(1), "기다리는 동안 다른 요청을 적지 않는다");
+
+            room.Deliver(aShares);
+            Assert.That(a.WaitingForRoom, Is.False);
+            Assert.That(a.LastRoomCommandApplied, Is.True);
+            Assert.That(Total(room), Is.EqualTo(before), "방의 가구 수는 그대로다 — 복사되지 않았다");
+            var placed = a.House.Placed.Single(p => p.InstanceId == plan.StoredInstance);
+            Assert.That((placed.Anchor, placed.Direction), Is.EqualTo((plan.Target, plan.Take)));
+            Assert.That(a.House.Placed.Count, Is.EqualTo(placedBefore + 1));
+            Assert.That(a.StoredFurniture(), Is.Empty, "보관에서 빠졌다");
+            Assert.That(b.House.Placed.Single(p => p.InstanceId == plan.StoredInstance).Anchor, Is.EqualTo(plan.Target), "다른 사람의 집에도 놓였다");
+            Assert.That(b.StoredFurniture(), Is.Empty);
+            Assert.That(furnitureChanges, Is.GreaterThan(0));
+            Assert.That(a.CanPlaceStoredFurniture(index, plan.Target, plan.Take), Is.False, "같은 index는 다시 놓지 못한다");
+            Assert.That(a.PlaceStoredFurniture(index, plan.Target, plan.Take), Is.False);
+            Assert.That(a.WaitingForRoom, Is.False, "이미 놓은 것은 방에 묻지 않는다");
+        }
+
+        [Test]
+        public void SharedHouse_StoredTakeOut_RefusedWhenTheSpotWasTakenFirst_ChangesNothing()
+        {
+            using var saves = new TempSaves();
+            var plan = PlanStored(chest: false);
+            var room = new FakeRoom(RoomHouse.PieceName);
+            Seed(room, saves, plan, chestItems: false);
+            var aShares = room.Join("a");
+            var bShares = room.Join("b");
+            var a = Start(saves, aShares, "slot-a", "a");
+            var b = Start(saves, bShares, "slot-b", "b");
+            int index = b.StoredFurniture().Single().Index;
+            var rug = a.House.Placed.First(p => !plan.TargetCells.Contains(p.Anchor));
+
+            Assert.That(b.PlaceStoredFurniture(index, plan.Target, plan.Take), Is.False);
+            Assert.That(a.MoveFurniture(rug.InstanceId, plan.TargetCells[0], FurniturePlacementDirection.North), Is.False);
+            room.Deliver(aShares); // 깔개가 먼저 비어 있던 칸을 차지한다
+            Assert.That(a.LastRoomCommandApplied, Is.True, "준비: 깔개 옮기기가 먼저 반영됐다");
+            var afterRug = Layout(room);
+            room.Deliver(bShares);
+
+            Assert.That(b.WaitingForRoom, Is.False);
+            Assert.That(b.LastRoomCommandApplied, Is.False, "방이 거절했다 — 자리를 먼저 쓴 사람이 있다");
+            Assert.That(Layout(room), Is.EqualTo(afterRug), "거절된 뒤 방의 배치는 그대로다");
+            Assert.That(b.StoredFurniture().Count, Is.EqualTo(1), "보관에 그대로 있다 — 사라지지 않았다");
+            Assert.That(a.StoredFurniture().Count, Is.EqualTo(1));
+            Assert.That(b.House.Placed.Any(p => p.InstanceId == plan.StoredInstance), Is.False);
+        }
+
+        [Test]
+        public void SharedHouse_StoredTakeOut_TheSameRequestTwice_PlacesItOnce()
+        {
+            using var saves = new TempSaves();
+            var plan = PlanStored(chest: false);
+            var room = new FakeRoom(RoomHouse.PieceName);
+            Seed(room, saves, plan, chestItems: false);
+            var aShares = room.Join("a");
+            var bShares = room.Join("b");
+            var a = Start(saves, aShares, "slot-a", "a");
+            var b = Start(saves, bShares, "slot-b", "b");
+            int before = Total(room);
+            int index = a.StoredFurniture().Single().Index;
+
+            // 둘이 같은 가구를 같은 자리에 꺼내 달라고 한다(남이 먼저 꺼낸 경우).
+            Assert.That(a.PlaceStoredFurniture(index, plan.Target, plan.Take), Is.False);
+            Assert.That(b.PlaceStoredFurniture(index, plan.Target, plan.Take), Is.False);
+            var again = aShares.Outbox.Requests.Select(r => r.Copy()).ToList(); // 같은 요청이 다시 가는 경우(재전송)
+            room.Deliver(aShares);
+            room.Deliver(bShares);
+            room.Pieces.Apply("a", again, 1, new List<RoomAnswer>(), new List<IRoomPiece>());
+
+            Assert.That(Total(room), Is.EqualTo(before), "몇 번 요청해도 가구는 하나다 — 복사되지 않는다");
+            Assert.That(room.House.Placed.Count(p => p.InstanceId == plan.StoredInstance), Is.EqualTo(1));
+            Assert.That(a.House.Placed.Single(p => p.InstanceId == plan.StoredInstance).Anchor, Is.EqualTo(plan.Target));
+            Assert.That(b.House.Placed.Single(p => p.InstanceId == plan.StoredInstance).Anchor, Is.EqualTo(plan.Target));
+            Assert.That(a.StoredFurniture(), Is.Empty);
+            Assert.That(b.StoredFurniture(), Is.Empty);
+        }
+
+        [Test]
+        public void SharedHouse_StoredTakeOut_RequestSentThenReconnect_NeitherDuplicatedNorLost()
+        {
+            using var saves = new TempSaves();
+            var plan = PlanStored(chest: false);
+            var room = new FakeRoom(RoomHouse.PieceName);
+            Seed(room, saves, plan, chestItems: false);
+            var a = Start(saves, room.Join("a"), "slot-a", "a");
+            int before = Total(room);
+            Assert.That(a.PlaceStoredFurniture(a.StoredFurniture().Single().Index, plan.Target, plan.Take), Is.False);
+
+            // 답을 받기 전에 끊겼다: 요청은 세이브의 보낼 목록에 남아 있고, 다시 들어와 방에 닿는다.
+            var shares2 = room.Join("a");
+            var again = Start(saves, shares2, "slot-a", "a");
+            Assert.That(again.StoredFurniture().Count, Is.EqualTo(1), "방이 아직 못 받았으니 보관 그대로다(사라지지 않았다)");
+            room.Deliver(shares2);
+            Assert.That(Total(room), Is.EqualTo(before));
+            Assert.That(room.House.Placed.Count(p => p.InstanceId == plan.StoredInstance), Is.EqualTo(1));
+            Assert.That(again.StoredFurniture(), Is.Empty);
+            Assert.That(again.House.Placed.Single(p => p.InstanceId == plan.StoredInstance).Anchor, Is.EqualTo(plan.Target));
+
+            // 한 번 더 들어와도 같다.
+            var third = Start(saves, room.Join("a"), "slot-a", "a");
+            Assert.That(third.StoredFurniture(), Is.Empty);
+            Assert.That(third.House.Placed.Count(p => p.InstanceId == plan.StoredInstance), Is.EqualTo(1));
+            Assert.That(Total(room), Is.EqualTo(before));
+        }
+
+        // 상자는 한 칸이라(돌려도 같다) 보관되려면 집이 가득 차야 하고, 그러면 칸이 나는 순간 가까운 자리로 저절로 놓여 꺼낼 일이 없다.
+        // 그래서 물건이 든 가구를 돌려 놓아야 맞는 가구로 대신 본다: 상자의 물건은 방이 인스턴스 id로 갖고 있고, 꺼내기는 인스턴스를 그대로 옮긴다.
+        [Test]
+        public void SharedHouse_StoredFurnitureHoldingItems_TakenOut_ItemsStayWithTheSameInstance()
+        {
+            using var saves = new TempSaves();
+            var plan = PlanStored(chest: false);
+            var room = new FakeRoom(RoomHouse.PieceName);
+            Seed(room, saves, plan, chestItems: true);
+            var aShares = room.Join("a");
+            var a = Start(saves, aShares, "slot-a", "a");
+            var stored = a.StoredFurniture().Single();
+            Assert.That(room.Chests.CountOf(plan.StoredInstance, "Wood"), Is.EqualTo(5), "준비: 보관된 가구에 물건이 들어 있다");
+
+            Assert.That(a.PlaceStoredFurniture(stored.Index, plan.Target, plan.Take), Is.False);
+            room.Deliver(aShares);
+
+            Assert.That(a.LastRoomCommandApplied, Is.True);
+            Assert.That(a.StoredFurniture(), Is.Empty);
+            Assert.That(room.House.Placed.Single(p => p.InstanceId == plan.StoredInstance).FurnitureId, Is.EqualTo(plan.Stored.StableId));
+            Assert.That(room.Chests.CountOf(plan.StoredInstance, "Wood"), Is.EqualTo(5), "안의 물건이 그대로다");
+            Assert.That(room.Chests.HoldsAnything(plan.StoredInstance), Is.True, "물건이 든 채로 놓였다(치울 수 없는 것 그대로)");
         }
     }
 }

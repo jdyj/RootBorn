@@ -292,7 +292,6 @@
   "ui.furniture.category.furniture": "가구",
   "ui.furniture.category.stored": "보관",
   "ui.furniture.stored.empty": "보관한 가구가 없어요",
-  "ui.furniture.stored.reason.shared": "같이 쓰는 집에서는 아직 꺼내 놓을 수 없어요",
   "ui.furniture.stored.row": "{0} · {1}",
   "ui.furniture.stored.row-with-items": "{0} (물건이 들어 있어요)",
   "ui.furniture.stored.holds-hint": "놓으면 안의 물건을 다시 꺼낼 수 있어요",
