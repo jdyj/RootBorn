@@ -74,12 +74,14 @@ namespace Rootborn.Server.Tests
 
         private string Saves => Path.Combine(_root, "saves");
 
-        private RoomRig NewRoom(string[] shared, int wallet = -1, RoomVersions? versions = null)
+        /// <param name="saves">방의 세이브 폴더(없으면 <see cref="Saves"/>). 방 둘을 띄울 때 둘째 방에 다른 폴더를 준다.</param>
+        private RoomRig NewRoom(string[] shared, int wallet = -1, RoomVersions? versions = null, string saves = null)
         {
+            saves ??= Saves;
             var settings = new RoomServerSettings { MaxPlayers = 4, SharedPieces = shared };
-            var guests = new GuestSaveFolder(GuestSaveFolder.FolderFor(Saves, RoomId), GameSession.SaveCheck(_definitions, _settings));
+            var guests = new GuestSaveFolder(GuestSaveFolder.FolderFor(saves, RoomId), GameSession.SaveCheck(_definitions, _settings));
             var pieces = RoomPieceCatalog.CreateDefault(HouseGrids.Rules(_definitions, ServerProcessTests.RepoRoot(), null));
-            var rig = new RoomRig(new FileSaveStore(Saves), RoomId, settings: settings, timeRules: Program.RoomTimeRules(_definitions), guests: guests, pieces: pieces,
+            var rig = new RoomRig(new FileSaveStore(saves), RoomId, settings: settings, timeRules: Program.RoomTimeRules(_definitions), guests: guests, pieces: pieces,
                 versions: versions);
             if (wallet >= 0)
             {
@@ -91,10 +93,11 @@ namespace Rootborn.Server.Tests
             return rig;
         }
 
-        private static Guest Join(RoomRig rig, string playerId)
+        /// <param name="uploads">방에 닿지 못한 저장(Host RoomConnection이 방마다 들고 있는 것). 없으면 새 것.</param>
+        private static Guest Join(RoomRig rig, string playerId, GuestUploads uploads = null)
         {
             var guest = new Guest { Id = playerId, Client = rig.Join(playerId) };
-            guest.Link = new RoomGuestLink(guest.Client, new SessionClientSettings().MaxMessageBytes);
+            guest.Link = new RoomGuestLink(guest.Client, new SessionClientSettings().MaxMessageBytes, uploads);
             rig.Run(0.5);
             Assert.That(guest.Link.Ready, Is.True, playerId);
             var store = new MemorySaveSlot(RoomGuestLink.Slot, guest.Link.Files.Writes);
@@ -329,6 +332,48 @@ namespace Rootborn.Server.Tests
             Assert.That(BuildOf(rig).HeldCount, Is.Zero);
             Assert.That(a2.Game.PreviewHouseFinish(floor.Id, HouseFinishTools.Room, TopLeftRoom).ReasonKey, Is.EqualTo(HouseFinishReasons.NothingToChange), "다시 돌려도 바뀔 것이 없다");
             Assert.That(Money(a2), Is.EqualTo(100), "값은 정확히 한 번만 낸다");
+        }
+
+        [Test]
+        public void PaidThenTheLineBroke_ADetourToAnotherRoomLeavesItAlone_BackInTheFirstRoomTheFinishGoesOnceAndIsPaidOnce()
+        {
+            // Host RoomConnection이 하는 일: 못 보낸 저장은 방마다 따로(GuestUploadsByRoom). 돈을 낸 저장(돈 낸 표시 + 쓰기 요청)이 방 A에 닿기 전에 끊기고
+            // 같은 사람이 방 B에 들렀다 나와도 B의 손님 세이브는 A의 것과 섞이지 않고, A로 돌아오면 표시가 살아 있어 쓰기가 다시 가고 값은 한 번만 낸다.
+            var book = new GuestUploadsByRoom();
+            using var roomA = NewRoom(new[] { RoomHouse.PieceName });
+            using var roomB = NewRoom(new[] { RoomHouse.PieceName }, saves: Path.Combine(_root, "saves-b"));
+            string paidName = SaveFileNames.RoomHouseBuildPaid("a");
+
+            var a = Join(roomA, "a", book.For("A", "a"));
+            var floor = PaidFloors().First();
+            int cost = PerCell(floor) * Changed(a, floor);
+            Give(a, cost + 100);
+            a.Game.ApplyHouseFinish(floor.Id, HouseFinishTools.Room, TopLeftRoom);
+            for (int i = 0; i < 80 && Money(a) > 100; i++) roomA.Run(roomA.Settings.TickSeconds);
+            Assert.That(Money(a), Is.EqualTo(100), "준비: 방이 칸을 잡았고 a가 값을 냈다");
+            roomA.Sever(a.Client); // 값을 낸 저장은 A에 닿지 않는다
+            roomA.Run(0.5);
+            Assert.That(book.For("A", "a").Merged().Writes.Any(p => p.Key == paidName), Is.True, "전제: 돈 낸 표시가 못 보낸 저장에 있다");
+            Assert.That(BuildOf(roomA).HeldCount, Is.EqualTo(1), "전제: A에서 그 잡기는 아직 쓰이지 않았다");
+            roomA.Quit(a.Client);
+
+            var inB = Join(roomB, "a", book.For("B", "a"));
+            Assert.That(inB.Link.Files.Writes.Select(p => p.Key), Has.No.Member(paidName), "B가 내려 준 세이브에 A의 돈 낸 표시가 없다");
+            Assert.That(book.For("B", "a").Count, Is.Zero, "B에 보낼 A의 저장이 없다");
+            Assert.That(BuildOf(roomB).HeldCount, Is.Zero);
+            roomB.Run(1.0);
+            Assert.That(inB.Game.HouseFloorAt(TopLeftRoom), Is.Not.EqualTo(floor.Id), "B의 집은 A의 꾸밈과 무관하다");
+            roomB.Quit(inB.Client);
+            roomB.Run(0.5);
+            Assert.That(book.For("A", "a").Count, Is.GreaterThan(0), "A의 못 보낸 저장은 B에 들르는 동안 그대로 남는다");
+
+            var back = Join(roomA, "a", book.For("A", "a"));
+            roomA.Run(1.5);
+            roomA.Run(0.5);
+            Assert.That(back.Game.HouseFloorAt(TopLeftRoom), Is.EqualTo(floor.Id), "돌아오면 표시가 살아 있어 쓰기가 다시 간다");
+            Assert.That(BuildOf(roomA).HeldCount, Is.Zero, "잡기가 끝났다");
+            Assert.That(Money(back), Is.EqualTo(100), "값은 정확히 한 번만 낸다");
+            Assert.That(book.For("A", "a").Count, Is.Zero, "A가 받았다");
         }
 
         [Test]

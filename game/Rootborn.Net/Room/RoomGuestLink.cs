@@ -48,6 +48,27 @@ namespace Rootborn.Net.Room
     }
 
     /// <summary>
+    /// 방마다·신원마다 아직 방이 받았다고 답하지 않은 저장(<see cref="GuestUploads"/>). 프로세스가 살아 있는 동안 접속보다 오래 산다.
+    /// 같은 방(같은 방 열쇠)에 같은 신원으로 다시 들어가면 같은 것을 주어 끊긴 동안의 진행을 이어서 보낸다. 다른 방이면 따로다 — 앞 방의 못 보낸 저장이
+    /// 새 방이 내려 준 세이브에 겹쳐지거나 새 방으로 가지 않고, 앞 방에 다시 들어갈 때까지 그 방의 것으로 남는다.
+    /// 방 열쇠는 부르는 쪽이 정한다(Host: 접속한 주소). 방이 접속 때 자기 방 기록을 알려 주지 않으므로 같은 열쇠 뒤에 다른 방 기록이 열리면 가르지 못한다.
+    /// </summary>
+    public sealed class GuestUploadsByRoom
+    {
+        private readonly Dictionary<string, Dictionary<string, GuestUploads>> _rooms = new Dictionary<string, Dictionary<string, GuestUploads>>(StringComparer.Ordinal);
+
+        /// <summary>그 방에서 그 신원의 못 보낸 저장(처음이면 빈 것을 만든다).</summary>
+        public GuestUploads For(string room, string playerId)
+        {
+            room ??= string.Empty;
+            playerId ??= string.Empty;
+            if (!_rooms.TryGetValue(room, out var players)) _rooms[room] = players = new Dictionary<string, GuestUploads>(StringComparer.Ordinal);
+            if (!players.TryGetValue(playerId, out var uploads)) players[playerId] = uploads = new GuestUploads();
+            return uploads;
+        }
+    }
+
+    /// <summary>
     /// 방에 들어간 플레이어 쪽의 손님 저장과 공유 조각(설계 3.1절·3.2절). 세션 클라이언트에 메시지 처리기를 붙인다.
     /// - 들어오면 방 설정을 받아 조각 묶음(<see cref="Shares"/>)을 만들고, 그 사람의 세이브(<see cref="Files"/>)를 받는다. 둘 다 받으면 <see cref="Ready"/>:
     ///   게임 한 판을 그 파일로 시작한다(처음 온 사람이면 빈 묶음 — 새 게임). 받은 세이브 위에는 아직 답이 없는 저장(<see cref="GuestUploads"/>)을 겹친다.

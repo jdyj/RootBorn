@@ -30,8 +30,9 @@ namespace Rootborn.Host.Net
         private RemoteRoomTime _time;
         private string _slotId;
 
-        // 신원마다 방이 아직 받았다고 답하지 않은 저장. 끊겼다 같은 인물로 다시 들어가면 이어서 보낸다(설계 3.1절).
-        private readonly Dictionary<string, GuestUploads> _uploads = new Dictionary<string, GuestUploads>(StringComparer.Ordinal);
+        // 방마다·신원마다 방이 아직 받았다고 답하지 않은 저장. 끊겼다 같은 방에 같은 인물로 다시 들어가면 이어서 보낸다(설계 3.1절).
+        // 다른 방에 들어가면 그 방의 것을 쓴다 — 앞 방의 못 보낸 저장은 새 방의 세이브에 겹쳐지지 않고 앞 방에 다시 들어갈 때까지 남는다.
+        private readonly GuestUploadsByRoom _uploads = new GuestUploadsByRoom();
 
         /// <param name="versions">이 프로그램의 버전(서버와 맞춰 본다). 처음 들어갈 때 한 번 부른다(데이터 지문은 모든 data/ 파일을 읽는다).</param>
         /// <param name="identityForSlot">슬롯 id → 방에서의 신원(<see cref="GuestProgress.RoomIdentity"/>).</param>
@@ -113,29 +114,32 @@ namespace Rootborn.Host.Net
                 return;
             }
 
-            Start(transport, slotId, host + ":" + port);
+            Start(transport, slotId, host + ":" + port, RemoteRoomKey(host, port));
         }
+
+        // 접속한 주소로 방을 가른다(방이 자기 방 기록을 알려 주지 않는다). 이름의 대소문자는 같은 곳으로 본다. 이름과 IP처럼 쓴 글이 다르면 다른 방으로 본다
+        // (그때 못 보낸 저장은 버려지지 않고 그 주소로 다시 들어갈 때까지 남는다).
+        private static string RemoteRoomKey(string host, int port) => "remote|" + host.ToLowerInvariant() + ":" + port;
 
         /// <summary>
         /// 이미 연 전송으로 방에 들어간다(내 PC에서 연 방: 같은 프로세스 안 전송 <see cref="HostedRoom.ConnectLocal"/>). 그 뒤는 <see cref="Begin"/>과 같다.
         /// </summary>
-        /// <param name="where">로그에 남길 곳(사람이 읽는 운영 로그).</param>
+        /// <param name="where">로그에 남길 곳(사람이 읽는 운영 로그). 방을 가르는 열쇠로도 쓴다: 같은 곳이면 같은 방으로 보고 못 보낸 저장을 이어서 보낸다.</param>
         public void BeginWith(ITransport transport, string slotId, string where)
         {
             if (transport == null) throw new ArgumentNullException(nameof(transport));
             Close();
             FailureCode = string.Empty;
-            Start(transport, slotId, where);
+            Start(transport, slotId, where, "local|" + where);
         }
 
-        private void Start(ITransport transport, string slotId, string where)
+        private void Start(ITransport transport, string slotId, string where, string roomKey)
         {
             _slotId = slotId;
             PlayerId = _identityForSlot(slotId);
             _versions ??= _versionsSource();
             _client = RoomClient.Create(transport, _versions.Value, PlayerId, string.Empty, _settings, _nameForSlot?.Invoke(slotId));
-            if (!_uploads.TryGetValue(PlayerId, out var uploads)) _uploads[PlayerId] = uploads = new GuestUploads();
-            _link = new RoomGuestLink(_client, _settings.MaxMessageBytes, uploads);
+            _link = new RoomGuestLink(_client, _settings.MaxMessageBytes, _uploads.For(roomKey, PlayerId));
             Console.WriteLine("[방] " + where + "에 접속하는 중(신원 " + PlayerId + ", " + _versions.Value + ")");
             SetPhase(RoomJoinPhase.Connecting);
         }
