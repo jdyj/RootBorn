@@ -63,10 +63,10 @@ namespace Rootborn.Core.Tests
         private static HouseBuildFrame Frame(string id = FrameId) =>
             new HouseBuildFrame(id, RoomTilePlan.Build(RoomFillTests.Grid(Plan), 2, 16, null), WallPlain, FloorPlain, DefaultBandArt);
 
-        private static RoomHouseRules Rules() =>
+        private static RoomHouseRules Rules(params string[] without) =>
             new RoomHouseRules(Array.Empty<FurnitureDefinition>(), _ => null,
                 buildFrameFor: s => s == Surface ? Frame() : s == Annex ? Frame("frame.other") : null,
-                finishes: Defs);
+                finishes: Defs.Where(d => !without.Contains(d.Id)));
 
         private static RoomHouseBuild Piece() => new RoomHouseBuild(Rules());
 
@@ -251,6 +251,91 @@ namespace Rootborn.Core.Tests
             // 붙은 틀과 다른 틀의 면
             Assert.That(Finish(piece, "bo", "h2", WallBlue, HouseFinishTools.Room, LeftMiddle, 4, surface: Annex), Is.EqualTo(RoomOutcomes.Refused));
             Assert.That(Band(piece, "bo", "b1", BandBrown, surface: Annex), Is.EqualTo(RoomOutcomes.Refused));
+        }
+
+        [Test]
+        public void UseWithoutAFrame_Refused_HoldKept_ThenANewUseIdWithRulesApplies()
+        {
+            // 돈은 이미 냈다: 틀을 붙일 수 없으면(규칙 없이 시작한 방) 잡은 채로 거절한다 — 잡기를 지우면 낸 돈만 사라진다(상자 조각과 같은 원칙).
+            var store = new InMemorySaveStore();
+            var house = new RoomShareSettings(new[] { RoomHouse.PieceName });
+            var withRules = new RoomPieceSet(house, RoomPieceCatalog.CreateDefault(Rules()));
+            Assert.That(ApplyIn(withRules, "ana", Req("h1", RoomHouseBuild.Finish, 10, Surface, FloorOak, HouseFinishTools.Room, "2", "3")).Outcome, Is.EqualTo(RoomOutcomes.Applied));
+            withRules.Save(store, "slot");
+
+            var noRules = new RoomPieceSet(house, RoomPieceCatalog.CreateDefault());
+            noRules.Load(store, "slot");
+            noRules.TryGet(RoomHouseBuild.PieceName, out var bare);
+            var use = Req("u1", RoomHouseBuild.Use, 0, "h1");
+            Assert.That(ApplyIn(noRules, "ana", use).Outcome, Is.EqualTo(RoomOutcomes.Refused));
+            Assert.That(((RoomHouseBuild)bare).HeldCount, Is.EqualTo(1), "잡기는 남는다");
+            Assert.That(((RoomHouseBuild)bare).ToSaveData().Finishes, Is.Empty, "꾸밈은 그대로");
+            noRules.Save(store, "slot");
+
+            var again = new RoomPieceSet(house, RoomPieceCatalog.CreateDefault(Rules()));
+            again.Load(store, "slot");
+            again.TryGet(RoomHouseBuild.PieceName, out var piece);
+            Assert.That(ApplyIn(again, "ana", use.Copy()).Outcome, Is.EqualTo(RoomOutcomes.Refused), "같은 요청 id는 장부의 답 그대로 — 다시 쓸 때는 새 id로");
+            Assert.That(((RoomHouseBuild)piece).HeldCount, Is.EqualTo(1));
+            Assert.That(ApplyIn(again, "ana", Req("u2", RoomHouseBuild.Use, 0, "h1")).Outcome, Is.EqualTo(RoomOutcomes.Applied));
+            Assert.That(((RoomHouseBuild)piece).HeldCount, Is.EqualTo(0));
+            Assert.That(((RoomHouseBuild)piece).ToSaveData().Finishes.Count(c => c.Floor == FloorOak), Is.EqualTo(10));
+        }
+
+        [Test]
+        public void UseAfterTheFinishLeftTheData_Refused_HoldKept_DataBackApplies()
+        {
+            // 다시 시작하는 사이 데이터에서 그 꾸밈이 지워졌다: 잡기에 자리(벽지·바닥)가 없어 덮을 칸을 정할 수 없다 — 잡은 채로 거절하고, 데이터가 돌아오면 쓴다.
+            var store = new InMemorySaveStore();
+            var piece = Piece();
+            Finish(piece, "ana", "h1", FloorOak, HouseFinishTools.Room, LeftMiddle, 10);
+            Band(piece, "ana", "b1", BandBrown);
+            piece.Save(store, "slot");
+
+            var gone = new RoomHouseBuild(Rules(FloorOak, BandBrown));
+            gone.Load(store, "slot");
+            Assert.That(Use(gone, "ana", "u1", "h1"), Is.EqualTo(RoomOutcomes.Refused));
+            Assert.That(Use(gone, "ana", "u2", "b1"), Is.EqualTo(RoomOutcomes.Refused));
+            Assert.That(gone.HeldCount, Is.EqualTo(2));
+            Assert.That(gone.ToSaveData().Finishes, Is.Empty);
+            Assert.That(gone.ToSaveData().Band, Is.EqualTo(""));
+            Assert.That(Release(gone, "ana", "r1", "b1"), Is.EqualTo(RoomOutcomes.Applied), "풀기는 된다(돈을 돌려받는 길은 플레이어 쪽 몫)");
+            gone.Save(store, "slot");
+
+            var back = Piece();
+            back.Load(store, "slot");
+            Assert.That(Use(back, "ana", "u3", "h1"), Is.EqualTo(RoomOutcomes.Applied));
+            Assert.That(back.ToSaveData().Finishes.Count(c => c.Floor == FloorOak), Is.EqualTo(10));
+            Assert.That(back.HeldCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void ReleaseThenUse_Invalid_NothingChanges()
+        {
+            var piece = Piece();
+            Finish(piece, "ana", "h1", FloorOak, HouseFinishTools.Room, LeftMiddle, 10);
+            Assert.That(Release(piece, "ana", "r1", "h1"), Is.EqualTo(RoomOutcomes.Applied));
+            int revision = piece.Revision;
+            Assert.That(Use(piece, "ana", "u1", "h1"), Is.EqualTo(RoomOutcomes.Invalid));
+            Assert.That(piece.Revision, Is.EqualTo(revision));
+            Assert.That(piece.ToSaveData().Finishes, Is.Empty);
+            Assert.That(piece.HeldCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void HoldOnAnotherFramesSurface_DoesNotLockTheAttachedFramesCells()
+        {
+            // 다른 틀의 면에서 잡은 것은 그 틀의 좌표다 — 붙은 틀의 칸을 막지 않는다.
+            var store = new InMemorySaveStore();
+            store.Put("slot", SaveFileNames.RoomHouseBuildHolds, new RoomHouseBuildHoldsSaveData
+            {
+                Version = RoomHouseBuildHoldsSaveData.KnownVersion,
+                Holds = new[] { new RoomHouseBuildHoldSaveData { RequestId = "a1", PlayerId = "bo", SurfaceId = Annex, Kind = RoomHouseBuild.Finish, FinishId = FloorOak, Tool = HouseFinishTools.Room, X = 2, Y = 3, Count = 10 } },
+            });
+            var piece = Piece();
+            piece.Load(store, "slot");
+            Assert.That(Finish(piece, "ana", "h1", FloorLocked, HouseFinishTools.Room, LeftMiddle, 10), Is.EqualTo(RoomOutcomes.Applied));
+            Assert.That(piece.HeldCount, Is.EqualTo(2));
         }
 
         [Test]

@@ -17,6 +17,9 @@ namespace Rootborn.Core.Room
     /// - <see cref="Use"/>(Ids[0] = 잡은 요청 id): 요청한 쪽이 돈을 냈다. 같은 꾸밈·도구·칸으로 다시 판정해 적용하고 잡기를 지운다.
     /// - <see cref="Release"/>(Ids[0] = 잡은 요청 id): 돈을 내지 못했다. 꾸밈은 그대로, 잡기만 지운다.
     /// 쓰기·풀기는 잡은 사람만 한다(아니면 Invalid). 해금은 요청한 사람의 진행이라 방은 확인하지 않는다(가구 놓기와 같다).
+    /// 쓰기를 적용할 수 없으면(틀을 붙일 수 없음 — 규칙 없이 시작한 방·다른 틀이 먼저 붙음, 또는 다시 시작하는 사이 데이터에서 그 꾸밈이 지워짐)
+    /// 잡기를 지우지 않고 Refused다: 돈은 이미 냈으므로 지우면 낸 돈만 사라진다(상자 조각과 같은 원칙 — 잡은 채로 둔다). 다시 쓰려면 새 요청 id로
+    /// 쓰기를 보낸다(같은 id는 장부가 같은 Refused를 준다). 지워진 꾸밈은 잡기에 자리(벽지·바닥)가 없어 덮을 칸을 정할 수 없으므로 기록으로 적지 않는다.
     /// 잡힌 칸은 저장하지 않는다 — 틀만으로 정해지므로(<see cref="HouseFinishPreview.Cells"/>) 읽은 뒤 처음 필요할 때 다시 낸다. 꾸밈 id로 분기하지 않는다.
     /// </summary>
     public sealed class RoomHouseBuild : IRoomPiece
@@ -97,10 +100,14 @@ namespace Rootborn.Core.Room
                         || !string.Equals(hold.PlayerId, player, StringComparison.Ordinal)) return Answer(RoomOutcomes.Invalid);
                     if (request.Kind == Use && IsKnownHold(hold))
                     {
-                        // 돈은 이미 냈다: 틀을 붙일 수 없으면(규칙 없음) 잡은 채로 둔다 — 낸 돈이 꾸밈 없이 사라지지 않게. 다시 쓰기를 보내면 된다.
+                        // 돈은 이미 냈다: 적용할 수 없으면 잡은 채로 거절한다(낸 돈이 꾸밈 없이 사라지지 않게 — 위 요약 참고).
                         if (!TryFrame(hold.SurfaceId)) return Answer(RoomOutcomes.Refused);
+                        var def = _rules.FindFinish(hold.FinishId);
+                        bool band = string.Equals(hold.Kind, Band, StringComparison.Ordinal);
+                        if (def == null || (band ? !string.Equals(def.Slot, RoomFinishSlots.Band, StringComparison.Ordinal) : !IsCellSlot(def.Slot)))
+                            return Answer(RoomOutcomes.Refused);
                         // 칸을 잡아 두었으므로 바뀌는 칸 수는 같다. 혹시 다르더라도 적용한다(돈은 이미 냈다).
-                        var preview = string.Equals(hold.Kind, Band, StringComparison.Ordinal)
+                        var preview = band
                             ? _finishes.PreviewBand(hold.FinishId, _ => true, _ => true)
                             : _finishes.Preview(hold.FinishId, hold.Tool, new CellPos(hold.X, hold.Y), _ => true, _ => true);
                         _finishes.Apply(preview);
@@ -188,6 +195,8 @@ namespace Rootborn.Core.Room
             foreach (var h in _holds.Values)
             {
                 if (!string.Equals(h.Kind, Finish, StringComparison.Ordinal)) continue;
+                // 다른 틀의 면에서 잡은 것은 그 틀의 좌표다 — 붙은 틀의 칸을 막지 않는다.
+                if (!string.Equals(_rules?.BuildFrameFor(h.SurfaceId)?.FrameId, _finishes.Frame.FrameId, StringComparison.Ordinal)) continue;
                 var def = _rules?.FindFinish(h.FinishId);
                 if (def == null || !IsCellSlot(def.Slot)) continue;
                 var preview = _finishes.Preview(h.FinishId, h.Tool, new CellPos(h.X, h.Y), _ => true, _ => true);
