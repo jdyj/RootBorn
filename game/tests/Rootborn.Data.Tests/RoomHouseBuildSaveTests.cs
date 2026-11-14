@@ -80,6 +80,37 @@ namespace Rootborn.Data.Tests
         }
 
         [Test]
+        public void PaidHolds_FileStoreRoundTrip_VersionWritten_NoReadableFrom_AMissingFileIsNoRecord()
+        {
+            // 플레이어 세이브의 돈 낸 꾸밈 잡기 파일(room-house-build-paid-<플레이어>.json).
+            using var dir = new TempDir();
+            var store = new FileSaveStore(dir.Path);
+            const string player = SaveFileNames.DefaultPlayerId;
+            string name = SaveFileNames.RoomHouseBuildPaid(player);
+            Assert.That(name, Is.EqualTo("room-house-build-paid-local-player.json"));
+
+            var paid = new RoomHouseBuildPaidHolds();
+            Assert.That(store.TryRead<RoomHouseBuildPaidSaveData>(player, name, out var missing), Is.False, "옛 세이브에는 파일이 없다");
+            paid.Load(missing);
+            Assert.That(paid.Count, Is.Zero, "파일이 없으면 돈 낸 잡기 없음");
+
+            paid.Mark("hold-2");
+            paid.Mark("hold-1");
+            store.Write(player, name, paid.ToSaveData());
+            string path = Path.Combine(dir.Path, player, name);
+            Assert.That((int)JsonNode.Parse(File.ReadAllText(path))["Version"], Is.EqualTo(RoomHouseBuildPaidSaveData.KnownVersion));
+            Assert.That(JsonNode.Parse(File.ReadAllText(path))["ReadableFrom"], Is.Null, "옛 프로그램이 읽지 못하게 막지 않는다");
+
+            Assert.That(store.TryRead<RoomHouseBuildPaidSaveData>(player, name, out var read), Is.True);
+            var again = new RoomHouseBuildPaidHolds();
+            again.Load(read);
+            Assert.That(again.ToSaveData().Holds, Is.EqualTo(new[] { "hold-2", "hold-1" }));
+            byte[] bytes = File.ReadAllBytes(path);
+            store.Write(player, name, again.ToSaveData());
+            Assert.That(File.ReadAllBytes(path), Is.EqualTo(bytes), "읽고 다시 써도 같은 바이트");
+        }
+
+        [Test]
         public void AnEmptyPiece_WritesBothFiles_WithTheKnownVersion()
         {
             using var dir = new TempDir();

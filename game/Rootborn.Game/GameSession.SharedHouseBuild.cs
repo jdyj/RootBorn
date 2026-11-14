@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Rootborn.Core.Building;
 using Rootborn.Core.Inventory;
 using Rootborn.Core.Room;
+using Rootborn.Core.Save;
 using Rootborn.Core.World;
 
 namespace Rootborn.Game
@@ -32,6 +33,24 @@ namespace Rootborn.Game
         private readonly List<string> _holdScratch = new List<string>(4);
         // 비추기에 마지막으로 읽은 방의 기록(같은 기록이면 다시 읽지 않는다 — 읽으면 판이 올라 화면이 미리 보기를 다시 낸다).
         private HouseBuildSaveData _sharedLoaded;
+        // 돈을 낸 꾸밈 잡기(room-house-build-paid-<플레이어>.json, Core RoomHouseBuildPaidHolds). 보낼 목록과 따로 둔다 — 꾸밈 조각을 모르는 옛 빌드가
+        // 보낼 목록의 쓰기 줄을 지워도 이 파일은 남아, 돌아온 새 프로그램이 그 잡기를 풀지 않고 쓰기를 다시 보낸다. 돈을 내는 바꾸기 안에서 표시하고 같은 저장 묶음에 쓴다.
+        private readonly RoomHouseBuildPaidHolds _paidHolds = new RoomHouseBuildPaidHolds();
+
+        // 같이 쓰는 집이면 돈 낸 표시를 읽는다(없으면 돈 낸 잡기 없음 — 옛 세이브의 동작). 읽기만으로 쓰지 않는다. 옛 세이브에는 없으므로 Require에 넣지 않는다.
+        private void LoadPaidHolds(ISaveStore store)
+        {
+            if (_roomBuild == null) return;
+            store.TryRead<RoomHouseBuildPaidSaveData>(SaveSlot, SaveFileNames.RoomHouseBuildPaid(PlayerId), out var data);
+            _paidHolds.Load(data);
+        }
+
+        // 저장 묶음 안: 표시가 바뀌었을 때만 쓴다(같이 쓰는 집에서 돈을 낸 적이 없는 판, 혼자 하는 판은 이 파일을 만들지 않는다).
+        private void SavePaidHoldsIfDirty(ISaveStore batch)
+        {
+            if (_roomBuild == null || !_paidHolds.Dirty) return;
+            batch.Write(SaveSlot, SaveFileNames.RoomHouseBuildPaid(PlayerId), _paidHolds.ToSaveData());
+        }
 
         // 방이 아는 내 신원(방이 잡기에 붙이는 주인 id). 내 PC에서 방을 연 사람은 게임 한 판의 id(기본 플레이어 id)와 다르다 — 방 접속이 적어 준다.
         private string RoomSelf => Shares?.RoomPlayerId ?? PlayerId;
@@ -125,7 +144,11 @@ namespace Rootborn.Game
         private bool PayForHold(string hold, string surface, IReadOnlyList<ItemAmount<string>> cost, bool grows)
         {
             if (cost == null || !TryGrants(cost, out var grants)) return false;
-            if (!Inventory.TryExchange(grants, null, () => _roomBuild.AddUse(hold))) return false;
+            if (!Inventory.TryExchange(grants, null, () =>
+                {
+                    _roomBuild.AddUse(hold);
+                    _paidHolds.Mark(hold); // 돈을 냈다는 표시도 같은 바꾸기·같은 저장 묶음에
+                })) return false;
             _finishPaying.Remove(hold);
             _finishSettled.Add(hold);
             LastRoomCommandApplied = true;
@@ -145,12 +168,15 @@ namespace Rootborn.Game
 
         // 떠도는 내 잡기: 방의 상태에 내 잡기로 있는데, 답을 기다리지도(잡기 요청이 보낼 목록에 있음) 돈을 내는 중도 아니고 쓰기·풀기도 보내지 않은 것.
         // 시간이 지나도 풀리지 않아 그 칸이 모두에게 막히므로 푼다. 돈은 내지 않았다(낸 돈과 그 쓰기는 한 저장 묶음 — 위 요약). 풀기를 적었으면 true.
+        // 방의 상태에서 사라졌고 보낼 요청도 없는 잡기의 돈 낸 표시는 지운다(다음 저장 묶음과 함께 — 이것만으로는 저장하지 않는다).
         private bool ReleaseStrayHolds()
         {
             if (_roomBuild == null || !_roomBuild.Known) return false;
             _roomBuild.CopyHoldsOf(RoomSelf, _holdScratch);
             // 방의 상태에서 사라진 잡기는 잊는다(다시 나타나지 않는다).
             if (_finishSettled.Count > 0) _finishSettled.RemoveWhere(id => !_holdScratch.Contains(id) && !HasOutgoingFor(id));
+            // 돈 낸 표시는 주인과 상관없이 방에 그 잡기가 없을 때만 지운다(방이 아는 신원이 아직 없어도 표시를 잃지 않게).
+            if (_paidHolds.Count > 0) _paidHolds.ForgetGone(_roomBuild.HasHold, HasOutgoingFor);
             bool any = false;
             foreach (var hold in _holdScratch)
             {

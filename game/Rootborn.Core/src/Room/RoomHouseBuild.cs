@@ -480,6 +480,9 @@ namespace Rootborn.Core.Room
             }
         }
 
+        /// <summary>방이 마지막으로 알린 상태에 그 잡기가 있다(누구의 것이든).</summary>
+        public bool HasHold(string holdId) => HoldKnown(holdId);
+
         private bool HoldKnown(string hold)
         {
             foreach (var pair in _holds) if (pair.Key == hold) return true;

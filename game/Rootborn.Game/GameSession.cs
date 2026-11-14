@@ -221,6 +221,7 @@ namespace Rootborn.Game
 
             LoadOptionalDomains(store);
             LoadRoomOutbox(store);
+            LoadPaidHolds(store);
             // 새 게임이면 집에 처음 배치 가구를 준다(GameSession.HouseStarter). 학생을 새로 만들었고 슬롯 공용 파일이 하나도 없을 때만.
             _houseStarterPending = !hasSnapshot && olderStudent == null && WantsHouseStarter(store.FoundAny(SlotSharedFiles()));
 
@@ -342,6 +343,7 @@ namespace Rootborn.Game
                 store.Write(SaveSlot, SaveFileNames.LocationState(PlayerId), LocationStates.ToSaveData());
                 SaveOptionalDomains(store);
                 if (Shares != null) store.Write(SaveSlot, SaveFileNames.RoomOutbox(PlayerId), Shares.Outbox.ToSaveData());
+                SavePaidHoldsIfDirty(store);
                 SaveClock(store);
                 SaveWorkspaces(store);
                 SaveHouseLayoutIfDirty(store);
@@ -353,6 +355,7 @@ namespace Rootborn.Game
             _houseStarterPending = false;
             _houseLayoutDirty = false;
             _houseBuildDirty = false;
+            _paidHolds.Saved();
         }
 
         // ---------- 퀘스트 이벤트 ----------

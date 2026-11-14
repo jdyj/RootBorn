@@ -74,6 +74,13 @@ namespace Rootborn.Core.Save
         public static string RoomOutbox(string playerId) => PerPlayer("room-outbox-", playerId);
 
         /// <summary>
+        /// 같이 쓰는 집에서 그 플레이어가 돈을 낸 꾸밈 잡기(Core Room RoomHouseBuildPaidSaveData). 플레이어의 저장과 함께 쓰고(손님이면 방으로 간다),
+        /// 보낼 목록과 따로 둔다 — 꾸밈 조각을 모르는 옛 빌드는 보낼 목록의 쓰기 줄을 지울 수 있지만 이 파일은 건드리지 않는다. 같이 쓰는 집에서 돈을 낸 적이
+        /// 있는 판만 쓴다. 혼자 하는 판은 쓰지 않는다. MonoGame 판이 더한 파일이다(2026-11-14).
+        /// </summary>
+        public static string RoomHouseBuildPaid(string playerId) => PerPlayer("room-house-build-paid-", playerId);
+
+        /// <summary>
         /// 옛 공용 시간 파일이 놓이는 슬롯 자리. 지금은 방의 시계(<see cref="RoomClock"/>)가 없는 옛 방을 읽을 때만 쓴다.
         /// 같이 쓰는 시간 파일이 놓이는 슬롯 자리(Unity SaveService.WorldTimeDirectory의 "world-time" 폴더). 파일 이름은 <see cref="WorldTime"/>.
         /// Unity 판은 세이브 폴더를 따로 준 실행(-saveRoot)에서 &lt;root&gt;/world-time/&lt;슬롯&gt;.json에 썼다.

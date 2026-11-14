@@ -62,6 +62,7 @@ namespace Rootborn.Data.Tests
             Names.RoomPiece(Rootborn.Core.Room.RoomHouse.PieceName),
             Names.RoomPiece(Rootborn.Core.Room.RoomHouseBuild.PieceName),
             Names.RoomHouseBuildHolds,
+            Names.RoomHouseBuildPaid(DefaultPlayer),
             Names.StudentClock(DefaultPlayer),
             Names.Metadata,
             Names.WorldProgress,
