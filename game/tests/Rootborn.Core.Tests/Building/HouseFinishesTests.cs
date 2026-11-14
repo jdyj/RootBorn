@@ -141,6 +141,51 @@ namespace Rootborn.Core.Tests.Building
             Assert.That(none.Cost, Is.Empty);
         }
 
+        /// <summary>출처표에서 그 주인 칸들의 face·narrow 부분이 있는 칸(테스트가 따로 센다).</summary>
+        private static HashSet<CellPos> FaceCellsOf(RoomTilePlan plan, IEnumerable<CellPos> owners)
+        {
+            var wanted = new HashSet<CellPos>(owners);
+            var set = new HashSet<CellPos>();
+            foreach (var cell in plan.Cells)
+                foreach (var part in cell.Parts)
+                    if ((part.Source == TileSources.Face || part.Source == TileSources.Narrow) && part.HasOwner
+                        && wanted.Contains(new CellPos(cell.Cell.X + part.Owner.X, cell.Cell.Y + part.Owner.Y)))
+                        set.Add(cell.Cell);
+            return set;
+        }
+
+        [Test]
+        public void Wallpaper_HighlightCells_AreTheFaceWallCellsOfTheChangedOwners()
+        {
+            var f = Attached();
+            var p = Preview(f, WallBlue, HouseFinishTools.Room, LeftMiddle);
+            var expected = FaceCellsOf(f.Frame.Tiles, p.ChangedCells);
+            Assert.That(expected, Is.Not.Empty);
+            Assert.That(p.HighlightCells, Is.EquivalentTo(expected), "벽지는 바뀌는 주인 칸이 바라보는 정면 벽 칸을 밝힌다");
+            Assert.That(p.HighlightCells, Is.Unique);
+            Assert.That(p.HighlightCells.All(c => f.Frame.Tiles.Grid.At(c.X, c.Y) == RoomCells.Wall), Is.True, "모두 벽 칸");
+            Assert.That(p.ChangedCells.Count, Is.EqualTo(4), "바뀌는 칸·비용은 그대로");
+
+            var brush = Preview(f, WallBlue, HouseFinishTools.Brush, new CellPos(2, 1));
+            Assert.That(brush.HighlightCells, Is.EquivalentTo(FaceCellsOf(f.Frame.Tiles, new[] { new CellPos(2, 2) })));
+            Assert.That(brush.HighlightCells, Does.Contain(new CellPos(2, 1)).And.Contain(new CellPos(2, 0)));
+
+            Assert.That(f.Apply(p), Is.True);
+            Assert.That(Preview(f, WallBlue, HouseFinishTools.Room, LeftMiddle).HighlightCells, Is.Empty, "바뀌는 칸이 없으면 밝힐 칸도 없다");
+        }
+
+        [Test]
+        public void Floor_HighlightCells_AreTheChangedCells_RefusedHaveNone()
+        {
+            var f = Attached();
+            var p = Preview(f, FloorOak, HouseFinishTools.Room, LeftMiddle);
+            Assert.That(p.HighlightCells, Is.EqualTo(p.ChangedCells), "바닥은 바뀌는 칸 그대로");
+            var locked = Preview(f, FloorLocked, HouseFinishTools.Room, LeftMiddle);
+            Assert.That(locked.HighlightCells, Is.EqualTo(locked.ChangedCells).And.Not.Empty, "잠겨도 바뀔 칸은 밝힌다(화면이 안 되는 색으로)");
+            Assert.That(Preview(f, WallBlue, HouseFinishTools.Room, new CellPos(0, 3)).HighlightCells, Is.Empty, "대상 없음");
+            Assert.That(HouseFinishPreview.Refused(WallBlue, RoomFinishSlots.Wall, HouseFinishTools.Room, HouseFinishReasons.NotInHouse).HighlightCells, Is.Empty);
+        }
+
         [Test]
         public void PointingAtWallFace_TargetsItsOwnerFloor()
         {

@@ -274,7 +274,7 @@ namespace Rootborn.Screens.Tests.Furniture
             Assert.That(f.View.Shown.Where(p => p != null), Is.Empty, "거절된 미리 보기는 월드에 그리지 않는다");
             var list = new DrawList();
             f.Screen.EmitWorldOverlay(list);
-            Assert.That(list.Commands.Count(c => c.Kind == DrawKind.Fill && c.Color.Equals(FurniturePlacementScreen.Metrics.InvalidFootprint)), Is.EqualTo(f.Screen.FinishPreview.ChangedCells.Count));
+            Assert.That(list.Commands.Count(c => c.Kind == DrawKind.Fill && c.Color.Equals(FurniturePlacementScreen.Metrics.InvalidFootprint)), Is.EqualTo(f.Screen.FinishPreview.HighlightCells.Count).And.GreaterThan(0), "벽지는 Core가 정한 정면 벽 칸을");
             Assert.That(f.Screen.FinishPreview.ChangedCells.Count, Is.GreaterThan(0));
             Assert.That(f.Text(FurniturePlacementScreen.FinishReasonId), Is.EqualTo(f.T.Text.Get(HouseFinishReasons.Locked)));
 
@@ -496,6 +496,26 @@ namespace Rootborn.Screens.Tests.Furniture
             Assert.That(room.Contains(preview.Target), Is.True, "벽 정면을 가리키면 그 정면 주인 방");
             f.ClickCell(face);
             Assert.That(preview.ChangedCells.All(c => f.T.Session.HouseWallAt(c) == wall.Id), Is.True);
+        }
+
+        [Test]
+        public void WallPreview_HighlightsTheWallFaces_NotTheFloorBelow()
+        {
+            using var f = new Fixture();
+            f.Decorate();
+            RoomFinishDefinition wall = FreeNonDefault(f, RoomFinishSlots.Wall);
+            f.GiveMoney(PerCell(wall) * 400);
+            f.PickCard(wall.Id);
+            f.Hover(f.FirstRoomWallFace());
+            HouseFinishPreview preview = f.Screen.FinishPreview;
+            Assert.That(preview.CanApply, Is.True, preview.ReasonKey);
+            var list = new DrawList();
+            f.Screen.EmitWorldOverlay(list);
+            var filled = list.Commands.Where(c => c.Kind == DrawKind.Fill).Select(c => c.Rect).ToList();
+            var faces = preview.HighlightCells.Select(c => f.View.CellRect(f.Room.ToPlacement(c))).ToList();
+            var owners = preview.ChangedCells.Select(c => f.View.CellRect(f.Room.ToPlacement(c))).ToList();
+            Assert.That(filled, Is.EquivalentTo(faces), "Core가 정한 밝힐 칸(정면 벽 칸)만");
+            Assert.That(filled.Intersect(owners), Is.Empty, "아래 바닥 줄(주인 칸)은 밝히지 않는다");
         }
 
         [Test]

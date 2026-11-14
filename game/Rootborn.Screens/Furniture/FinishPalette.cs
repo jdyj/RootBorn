@@ -375,7 +375,7 @@ namespace Rootborn.Screens.Furniture
             _highlight.Clear();
             if (preview != null && _view?.Room != null)
             {
-                foreach (CellPos c in preview.ChangedCells) _highlight.Add(_view.Room.ToPlacement(c));
+                foreach (CellPos c in preview.HighlightCells) _highlight.Add(_view.Room.ToPlacement(c));
                 _highlightColor = preview.CanApply ? M.FinishValidCell : M.InvalidFootprint;
             }
             ShowOnWorld(preview != null && preview.CanApply ? preview : null);

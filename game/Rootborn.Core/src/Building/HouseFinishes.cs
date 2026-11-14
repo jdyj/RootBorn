@@ -57,7 +57,7 @@ namespace Rootborn.Core.Building
 
         internal HouseFinishPreview(string finishId, string slot, string tool, bool hasTarget, CellPos target,
             IReadOnlyList<CellPos> cells, IReadOnlyList<CellPos> changedCells, IReadOnlyList<ItemAmount<string>> cost,
-            string reasonKey, int stateVersion)
+            string reasonKey, int stateVersion, IReadOnlyList<CellPos> highlightCells = null)
         {
             FinishId = finishId ?? string.Empty;
             Slot = slot ?? string.Empty;
@@ -66,6 +66,7 @@ namespace Rootborn.Core.Building
             Target = hasTarget ? target : new CellPos(0, 0);
             Cells = cells ?? NoCells;
             ChangedCells = changedCells ?? NoCells;
+            HighlightCells = highlightCells ?? ChangedCells;
             Cost = cost ?? NoCost;
             ReasonKey = reasonKey;
             StateVersion = stateVersion;
@@ -80,6 +81,11 @@ namespace Rootborn.Core.Building
         public IReadOnlyList<CellPos> Cells { get; }
         /// <summary>보이는 값이 바뀌는 칸(벽지는 정면 주인 칸만).</summary>
         public IReadOnlyList<CellPos> ChangedCells { get; }
+        /// <summary>
+        /// 화면이 밝힐 칸: 바닥은 바뀌는 칸 그대로, 벽지는 바뀌는 주인 칸이 바라보는 정면 벽 칸(출처표의 face·narrow 부분이 있는 칸, 겹치지 않게).
+        /// 미리 보기를 만들 때 한 번 정한다. 비용·바뀌는 칸 수와 무관하다.
+        /// </summary>
+        public IReadOnlyList<CellPos> HighlightCells { get; }
         /// <summary>칸당 비용 × 바뀌는 칸 수, 아이템별로 합친 것(정의 순서).</summary>
         public IReadOnlyList<ItemAmount<string>> Cost { get; }
         /// <summary>거절 이유 문구 키. null이면 적용할 수 있다.</summary>
@@ -124,6 +130,8 @@ namespace Rootborn.Core.Building
 
         private readonly Dictionary<CellPos, Record> _records = new Dictionary<CellPos, Record>();
         private readonly HashSet<CellPos> _faceOwners = new HashSet<CellPos>();
+        // 주인 바닥 칸 → 그 칸의 정면(face·narrow 부분)이 그려지는 벽 칸들(출처표 순서). 붙일 때 한 번 만든다.
+        private readonly Dictionary<CellPos, List<CellPos>> _facesOf = new Dictionary<CellPos, List<CellPos>>();
         private Func<string, RoomFinishDefinition> _find;
         private RoomFill _fill;
         private string _loadedFrameId = "";
@@ -162,10 +170,16 @@ namespace Rootborn.Core.Building
             _find = find ?? throw new ArgumentNullException(nameof(find));
             _fill = RoomFill.Build(frame.Tiles.Grid);
             _faceOwners.Clear();
+            _facesOf.Clear();
             foreach (var cell in frame.Tiles.Cells)
                 foreach (var part in cell.Parts)
                     if (IsFacePart(part))
-                        _faceOwners.Add(OwnerOf(cell.Cell, part));
+                    {
+                        var owner = OwnerOf(cell.Cell, part);
+                        _faceOwners.Add(owner);
+                        if (!_facesOf.TryGetValue(owner, out var faces)) _facesOf[owner] = faces = new List<CellPos>(4);
+                        if (!faces.Contains(cell.Cell)) faces.Add(cell.Cell);
+                    }
             Version++;
         }
 
@@ -216,7 +230,20 @@ namespace Rootborn.Core.Building
             else if (canPay == null || !canPay(cost))
                 reason = HouseFinishReasons.NotEnoughMoney;
 
-            return Make(def.Id, slot, tool, true, target, cells, changed, cost, reason);
+            return Make(def.Id, slot, tool, true, target, cells, changed, cost, reason, wallSlot ? FaceCellsOf(changed) : null);
+        }
+
+        // 바뀌는 주인 칸들이 바라보는 정면 벽 칸(겹치지 않게, 주인 순서).
+        private IReadOnlyList<CellPos> FaceCellsOf(List<CellPos> owners)
+        {
+            if (owners.Count == 0) return Array.Empty<CellPos>();
+            var seen = new HashSet<CellPos>();
+            var result = new List<CellPos>(owners.Count * 2);
+            foreach (var owner in owners)
+                if (_facesOf.TryGetValue(owner, out var faces))
+                    foreach (var c in faces)
+                        if (seen.Add(c)) result.Add(c);
+            return result;
         }
 
         /// <summary>적용할 수 있고 낡지 않은 미리 보기만 적용한다(메모리만). 아니면 false·무변경. 던지지 않는다.</summary>
@@ -263,8 +290,9 @@ namespace Rootborn.Core.Building
         }
 
         private HouseFinishPreview Make(string finishId, string slot, string tool, bool hasTarget, CellPos target,
-            IReadOnlyList<CellPos> cells, IReadOnlyList<CellPos> changed, IReadOnlyList<ItemAmount<string>> cost, string reason) =>
-            new HouseFinishPreview(finishId, slot, tool, hasTarget, target, cells, changed, cost, reason, Version);
+            IReadOnlyList<CellPos> cells, IReadOnlyList<CellPos> changed, IReadOnlyList<ItemAmount<string>> cost, string reason,
+            IReadOnlyList<CellPos> highlight = null) =>
+            new HouseFinishPreview(finishId, slot, tool, hasTarget, target, cells, changed, cost, reason, Version, highlight);
 
         private static bool IsKnownSlot(string slot) =>
             string.Equals(slot, RoomFinishSlots.Wall, StringComparison.Ordinal) || string.Equals(slot, RoomFinishSlots.Floor, StringComparison.Ordinal);
