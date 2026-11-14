@@ -11,7 +11,7 @@ namespace Rootborn.Game
     /// 짓는 집의 꾸밈(방마다 벽지·바닥). 규칙(대상 칸, 바뀌는 칸, 비용, 거절 이유)은 Core <see cref="HouseFinishes"/>가 정한다. 여기서는 잇고 저장한다.
     /// 기록은 슬롯 공용 파일 house-build.json(<see cref="SaveFileNames.HouseBuild"/>)이고, 시작할 때 읽고 꾸밈이 바뀐 저장 묶음에서만 쓴다
     /// (읽기·붙이기만으로 쓰지 않는다). 프레임(출처표)은 Host가 짓는 집에 들어설 때 <see cref="EnterHouseBuild"/>로 넘긴다.
-    /// 같이 쓰는 집은 아직 꾸밀 수 없다(이유 <see cref="HouseFinishReasons.SharedHouse"/>).
+    /// 같이 쓰는 집은 아직 꾸밀 수 없고(이유 <see cref="HouseFinishReasons.SharedHouse"/>) 보이는 꾸밈도 프레임 기본이다(꾸밈 공유는 다음 계획).
     /// </summary>
     public sealed partial class GameSession
     {
@@ -68,14 +68,21 @@ namespace Rootborn.Game
         /// <summary>꾸밀 수 있는 집이 열려 있다: 짓는 집 맵에 있고(프레임이 붙었고), 집 배치가 있고, 일터가 아니다.</summary>
         public bool HouseBuildOpen => _inHouseBuild && _houseFinishes.Attached && House != null && ActiveWorkspace == null;
 
-        /// <summary>그 바닥 칸의 보이는 벽지 id(기록이 없으면 프레임 기본, 붙지 않았으면 빈 글).</summary>
-        public string HouseWallAt(CellPos floorCell) => _houseFinishes.WallAt(floorCell);
+        // 같이 쓰는 집(방의 집)은 손님의 자기 꾸밈으로 그리지 않는다 — 꾸밈 공유가 생길 때까지 프레임 기본이다.
+        // 자기 기록은 그대로 들고 있다(버리지도 쓰지도 않는다). 혼자 하는 집(공유 없는 판)에서는 자기 꾸밈이 그대로 보인다.
+        private bool ShowsOwnFinishes => _roomHouse == null;
 
-        /// <summary>그 바닥 칸의 보이는 바닥 id.</summary>
-        public string HouseFloorAt(CellPos floorCell) => _houseFinishes.FloorAt(floorCell);
+        /// <summary>그 바닥 칸의 보이는 벽지 id(기록이 없으면 프레임 기본, 붙지 않았으면 빈 글). 같이 쓰는 집은 프레임 기본.</summary>
+        public string HouseWallAt(CellPos floorCell)
+            => ShowsOwnFinishes ? _houseFinishes.WallAt(floorCell) : _houseFinishes.Frame?.DefaultWall ?? string.Empty;
 
-        /// <summary>띠 색 줄 이름(기록이 비면 프레임 기본).</summary>
-        public string HouseBandColors() => _houseFinishes.Band;
+        /// <summary>그 바닥 칸의 보이는 바닥 id. 같이 쓰는 집은 프레임 기본.</summary>
+        public string HouseFloorAt(CellPos floorCell)
+            => ShowsOwnFinishes ? _houseFinishes.FloorAt(floorCell) : _houseFinishes.Frame?.DefaultFloor ?? string.Empty;
+
+        /// <summary>띠 색 줄 이름(기록이 비면 프레임 기본). 같이 쓰는 집은 프레임 기본.</summary>
+        public string HouseBandColors()
+            => ShowsOwnFinishes ? _houseFinishes.Band : _houseFinishes.Frame?.DefaultBand ?? string.Empty;
 
         /// <summary>꾸밈 상태가 바뀔 때마다 오른다(화면이 미리 보기를 다시 낼지 본다).</summary>
         public int HouseBuildVersion => _houseFinishes.Version;

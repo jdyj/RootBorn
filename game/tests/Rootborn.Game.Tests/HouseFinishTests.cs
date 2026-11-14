@@ -296,6 +296,48 @@ namespace Rootborn.Game.Tests
         }
 
         [Test]
+        public void SharedHouse_ShowsFrameDefaults_OwnFinishesKeptForTheSoloHouse()
+        {
+            // 같이 쓰는 집은 주인(방)의 집이다. 꾸밈 공유는 다음 계획이 만들 때까지 손님의 자기 꾸밈으로 그리지 않고 프레임 기본으로 보인다.
+            // 자기 기록은 버리지도 쓰지도 않는다 — 혼자 하는 집으로 돌아오면 그대로다.
+            using var saves = new TempSaves();
+            const string slot = "slot-guest";
+            var solo = TestWorld.Start(saves.Store, slot, "guest");
+            solo.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
+            solo.EnterHouseBuild(Frame);
+            var floor = FreeNonDefault(RoomFinishSlots.Floor);
+            var wall = FreeNonDefault(RoomFinishSlots.Wall);
+            solo.Inventory.Add(solo.Item(Allowance), MoneyFor(floor, TopLeftRoomFill) + MoneyFor(wall, TopLeftRoomFill));
+            Assert.That(solo.ApplyHouseFinish(floor.Id, HouseFinishTools.Room, TopLeftRoom), Is.True);
+            var faceCell = solo.PreviewHouseFinish(wall.Id, HouseFinishTools.Room, TopLeftRoom).ChangedCells[0]; // 벽지는 정면 주인 칸에 든다
+            Assert.That(solo.ApplyHouseFinish(wall.Id, HouseFinishTools.Room, TopLeftRoom), Is.True);
+            string ownWall = solo.HouseWallAt(faceCell);
+            Assert.That(ownWall, Is.EqualTo(wall.Id), "전제: 자기 집 벽지를 바꿨다");
+            byte[] written = File.ReadAllBytes(BuildPath(saves, slot));
+
+            var rules = new RoomHouseRules(TestWorld.Definitions.All<Rootborn.Core.Placement.FurnitureDefinition>(), s => s == HouseRoom.SurfaceId ? HouseRoom.Grid : null);
+            var pieces = new RoomPieceSet(new RoomShareSettings(new[] { RoomHouse.PieceName }), RoomPieceCatalog.CreateDefault(rules));
+            var shares = new RoomShares(pieces.Settings, RoomPieceCatalog.CreateDefault(), () => "guest-r1");
+            foreach (var p in pieces.Pieces) shares.Receive(p.State());
+            var guest = GameSession.Start(TestWorld.Definitions, TestWorld.Settings, saves.Store, slot, "guest", shares: shares);
+            guest.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
+            guest.EnterHouseBuild(Frame);
+            Assert.That(guest.SharesHouse, Is.True, "전제: 같이 쓰는 집");
+            Assert.That(guest.HouseFloorAt(TopLeftRoom), Is.EqualTo(Frame.DefaultFloor), "같이 쓰는 집은 자기 꾸밈으로 그리지 않는다");
+            Assert.That(guest.HouseWallAt(faceCell), Is.EqualTo(Frame.DefaultWall));
+            Assert.That(guest.HouseBandColors(), Is.EqualTo(Frame.DefaultBand));
+            guest.VisitLocation("location.town-square"); // 저장하는 명령
+            Assert.That(File.ReadAllBytes(BuildPath(saves, slot)), Is.EqualTo(written), "같이 쓰는 판은 자기 꾸밈 기록을 쓰지 않는다");
+
+            var back = TestWorld.Start(saves.Store, slot, "guest");
+            back.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
+            back.EnterHouseBuild(Frame);
+            Assert.That(back.HouseFloorAt(TopLeftRoom), Is.EqualTo(floor.Id), "혼자 하는 집으로 돌아오면 자기 꾸밈이 그대로");
+            Assert.That(back.HouseWallAt(faceCell), Is.EqualTo(ownWall));
+            Assert.That(File.ReadAllBytes(BuildPath(saves, slot)), Is.EqualTo(written));
+        }
+
+        [Test]
         public void NotInHouse_RefusedWithReason()
         {
             using var saves = new TempSaves();
