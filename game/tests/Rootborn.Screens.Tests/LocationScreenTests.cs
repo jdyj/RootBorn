@@ -1,5 +1,6 @@
 using System.Linq;
 using NUnit.Framework;
+using Rootborn.Core.Building;
 using Rootborn.Core.Placement;
 using Rootborn.Core.StudentLife;
 using Rootborn.Screens.Day;
@@ -129,7 +130,8 @@ namespace Rootborn.Screens.Tests
             LocationScreen screen = Open(Store);
             var offers = _f.Session.FurnitureForSaleAt(Store);
             Assert.That(offers, Is.Not.Empty);
-            Assert.That(screen.Model.Rows.Where(r => r.Kind == LocationRowKind.Offer).Select(r => r.Id), Is.EqualTo(offers.Select(o => o.StableId)));
+            Assert.That(screen.Model.Rows.Where(r => r.Kind == LocationRowKind.Offer).Select(r => r.Id),
+                Is.EqualTo(offers.Select(o => o.StableId).Concat(_f.Session.FinishesForSaleAt(Store).Select(f => f.Id))), "가구 다음에 꾸밈");
             Assert.That(screen.Model.Rows.SkipWhile(r => r.Kind == LocationRowKind.Activity).All(r => r.Kind == LocationRowKind.Offer), Is.True, "활동 다음에 물건");
             int balance = _f.Session.Inventory.CountOf(offers[0].PriceItem);
             Assert.That(((UiLabel)_f.Node(LocationScreen.TimeBudgetId)).Text, Is.EqualTo(string.Format(_f.Text.Get("life.location.time-with-balance"), string.Format(_f.Text.Get("life.time.summary"), 1, _f.Text.Get("life.weekday." + _f.Session.Student.Calendar.GetWeekdayIndex(1)), 7, 0), balance)));
@@ -147,6 +149,67 @@ namespace Rootborn.Screens.Tests
             PressRow(screen, index);
             Assert.That(_f.Session.FurnitureUnlocks.IsUnlocked(offer.UnlockToken), Is.False);
             Assert.That(_f.Session.Inventory.CountOf(offer.PriceItem), Is.EqualTo(money));
+        }
+
+        private void ScrollIntoView(LocationScreen screen, int index)
+        {
+            var list = (UiNode)_f.Node(LocationScreen.RowsId);
+            for (int guard = 0; guard < 40; guard++)
+            {
+                UiRect r = screen.RowRect(index);
+                if (r.Y >= list.Rect.Y && r.Bottom <= list.Rect.Bottom) return;
+                list.OnWheel(r.Y < list.Rect.Y ? 1 : -1);
+            }
+            Assert.Fail("줄을 보이게 굴리지 못했다: " + index);
+        }
+
+        [Test]
+        public void Store_ListsTheFourLockedFinishes_AsOfferRowsWithTheirNames()
+        {
+            if (!LocationModel.CanOpen(_f.Session, Store)) Assert.Ignore("첫날엔 가게에 못 들어간다");
+            LocationScreen screen = Open(Store);
+            var finishes = _f.Session.FinishesForSaleAt(Store);
+            Assert.That(finishes.Count, Is.EqualTo(4), "잠긴 꾸밈 넷");
+            var rows = screen.Model.Rows.Where(r => r.Kind == LocationRowKind.Offer && finishes.Any(f => f.Id == r.Id)).ToList();
+            Assert.That(rows.Select(r => r.Id), Is.EqualTo(finishes.Select(f => f.Id)));
+            Assert.That(rows.Select(r => r.NameKey), Is.EqualTo(finishes.Select(f => f.NameKey)), "이름 키는 꾸밈의 NameKey");
+            Assert.That(rows.Select(r => r.Price), Is.EqualTo(finishes.Select(f => f.Price)));
+            Assert.That(rows.Any(r => r.Owned), Is.False);
+        }
+
+        [Test]
+        public void Store_BuyingAFinishRow_ChargesUnlocksAndSaysBought()
+        {
+            if (!LocationModel.CanOpen(_f.Session, Store)) Assert.Ignore("첫날엔 가게에 못 들어간다");
+            RoomFinishDefinition finish = _f.Session.FinishesForSaleAt(Store)[0];
+            var money = _f.Session.Item(finish.PriceItemId);
+            _f.Session.Inventory.Add(money, finish.Price); // 준비: 살 돈
+            int before = _f.Session.Inventory.CountOf(money);
+            LocationScreen screen = Open(Store);
+            int index = screen.Model.Rows.ToList().FindIndex(r => r.Kind == LocationRowKind.Offer && r.Id == finish.Id);
+            Assert.That(index, Is.GreaterThanOrEqualTo(0));
+            Assert.That(screen.Model.Rows[index].Enabled, Is.True);
+            ScrollIntoView(screen, index);
+            PressRow(screen, index);
+
+            Assert.That(_f.Session.IsFinishUnlocked(finish), Is.True);
+            Assert.That(_f.Session.Inventory.CountOf(money), Is.EqualTo(before - finish.Price));
+            Assert.That(((UiTextBlock)_f.Node(LocationScreen.ResultId)).Text,
+                Is.EqualTo(string.Format(_f.Text.Get("dream.shop.bought"), _f.Text.Get(finish.NameKey))));
+            int after = screen.Model.Rows.ToList().FindIndex(r => r.Id == finish.Id);
+            Assert.That(screen.Model.Rows[after].Owned, Is.True, "산 줄은 가졌음으로 바뀐다");
+            Assert.That(screen.Model.Rows[after].Enabled, Is.False);
+        }
+
+        [Test]
+        public void FinishNameKeys_ExistInBothLanguages()
+        {
+            foreach (var f in _f.Session.FinishesForSaleAt(Store))
+                foreach (var lang in new[] { "ko", "en" })
+                {
+                    using var fixture = new DayScreensFixture(lang);
+                    Assert.That(fixture.Text.Get(f.NameKey), Is.Not.EqualTo(f.NameKey), lang + ": " + f.NameKey);
+                }
         }
 
         [Test]

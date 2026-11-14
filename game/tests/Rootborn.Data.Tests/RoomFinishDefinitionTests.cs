@@ -187,6 +187,22 @@ namespace Rootborn.Data.Tests
         }
 
         [Test]
+        public void RealData_LockedFinishesAreSold_FreeOnesAreNot()
+        {
+            // 시험용 값(결정 대기 28번): 잠긴 4종을 동네 가게에서 용돈 15에. 사용자가 정하면 데이터와 함께 고친다.
+            var result = LoadReal();
+            result.ThrowIfFailed();
+            foreach (var f in result.Definitions.All<RoomFinishDefinition>())
+            {
+                Assert.That(f.IsForSale, Is.EqualTo(f.UnlockToken.Length > 0), f.Id + ": 잠긴 꾸밈만 판다");
+                if (!f.IsForSale) continue;
+                Assert.That(result.Definitions.TryGet<ItemDefinition>(f.PriceItemId, out _), Is.True, f.Id + ": 모르는 값 아이템 " + f.PriceItemId);
+                Assert.That((f.PriceItemId, f.Price, f.PurchaseLocationId), Is.EqualTo(("item.allowance", 15, "location.corner-store")), f.Id);
+            }
+            Assert.That(result.Definitions.All<RoomFinishDefinition>().Count(f => f.IsForSale), Is.EqualTo(4));
+        }
+
+        [Test]
         public void SaleFields_AreRead()
         {
             var json = One().Replace(@"""unlockToken"": """"",

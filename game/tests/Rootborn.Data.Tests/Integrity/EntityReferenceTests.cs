@@ -81,6 +81,7 @@ namespace Rootborn.Data.Tests.Integrity
             ["QuestChainDefinition.relatedCareerInterestId"] = new[] { "CareerInterestDefinition" },
             ["RelationshipDefinition.targetId"] = new[] { "NpcDefinition" },
             ["ResourceNodeDefinition.resourceId"] = new[] { "ItemDefinition" },              // drops[].resourceId: 떨어뜨리는 아이템
+            ["RoomFinishDefinition.purchaseLocationId"] = new[] { "LocationDefinition" },
             ["TownHelpActionDefinition.locationId"] = new[] { "LocationDefinition" },
             ["TownHelpActionDefinition.npcId"] = new[] { "NpcDefinition" },
             ["WearableDefinition.autoEquipFacilityId"] = new[] { "FacilityDefinition" },

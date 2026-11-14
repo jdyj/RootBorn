@@ -69,7 +69,13 @@
     "costCounts": [
       2
     ],
-    "unlockToken": "unlock.finish.panel-plank"
+    "unlockToken": "unlock.finish.panel-plank",
+    "priceItem": {
+      "ref": "item.allowance",
+      "type": "ItemDefinition"
+    },
+    "price": 15,
+    "purchaseLocationId": "location.corner-store"
   },
   {
     "type": "RoomFinishDefinition",
@@ -87,7 +93,13 @@
     "costCounts": [
       2
     ],
-    "unlockToken": "unlock.finish.paint-mint"
+    "unlockToken": "unlock.finish.paint-mint",
+    "priceItem": {
+      "ref": "item.allowance",
+      "type": "ItemDefinition"
+    },
+    "price": 15,
+    "purchaseLocationId": "location.corner-store"
   },
   {
     "type": "RoomFinishDefinition",
@@ -159,7 +171,13 @@
     "costCounts": [
       1
     ],
-    "unlockToken": "unlock.finish.floor.tatami"
+    "unlockToken": "unlock.finish.floor.tatami",
+    "priceItem": {
+      "ref": "item.allowance",
+      "type": "ItemDefinition"
+    },
+    "price": 15,
+    "purchaseLocationId": "location.corner-store"
   },
   {
     "type": "RoomFinishDefinition",
@@ -177,7 +195,13 @@
     "costCounts": [
       1
     ],
-    "unlockToken": "unlock.finish.floor.carpet-diamond"
+    "unlockToken": "unlock.finish.floor.carpet-diamond",
+    "priceItem": {
+      "ref": "item.allowance",
+      "type": "ItemDefinition"
+    },
+    "price": 15,
+    "purchaseLocationId": "location.corner-store"
   },
   {
     "type": "RoomFinishDefinition",
