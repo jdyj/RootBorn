@@ -393,11 +393,25 @@ def merge_plans(plans: List[ExportPlan]) -> ExportPlan:
     return out
 
 
-def _differs(path: Path, content: bytes) -> bool:
+def _same_picture(a: bytes, b: bytes) -> bool:
+    """두 PNG가 풀어낸 크기와 RGBA 전체가 같다. 압축 결과는 zlib 판마다 달라 바이트로는 견주지 못한다."""
     try:
-        return path.read_bytes() != content
+        with Image.open(io.BytesIO(a)) as ia, Image.open(io.BytesIO(b)) as ib:
+            ia, ib = ia.convert("RGBA"), ib.convert("RGBA")
+            return ia.size == ib.size and ia.tobytes() == ib.tobytes()
+    except (OSError, ValueError):
+        return False
+
+
+def _differs(path: Path, content: bytes) -> bool:
+    """파일이 없거나 내용이 다르면 True. PNG는 픽셀로, 나머지는 바이트로 견준다."""
+    try:
+        have = path.read_bytes()
     except OSError:
         return True
+    if have == content:
+        return False
+    return not (path.suffix.lower() == ".png" and _same_picture(have, content))
 
 
 def pending_writes(plan: ExportPlan, repo_root) -> List[str]:

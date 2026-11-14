@@ -15,6 +15,7 @@ from unittest import mock
 from PIL import Image
 
 from pixelkit import cli, room_export
+from pixelkit.export import _same_picture as room_export_same_picture
 from pixelkit.cli import load_kit
 from pixelkit.room_tiles import CELL, DOOR_RECT, wall_tops
 from tests import test_room_vectors as V
@@ -295,11 +296,15 @@ def _args(root: Path, dry_run=False):
 
 class CommittedSheetTests(unittest.TestCase):
     def test_the_committed_sheet_is_what_the_real_definitions_export_now(self):
-        """저장소의 실제 data/building 정의로 내면 저장소의 시트·좌표표와 바이트까지 같다(--dry-run이 쓸 것 없음). 손으로 고치지 않았다는 증거."""
+        """저장소의 실제 data/building 정의로 내면 저장소의 시트·좌표표와 같다(PNG는 픽셀까지, 글 파일은 바이트까지. --dry-run이 쓸 것 없음). 손으로 고치지 않았다는 증거."""
         plan = room_export.plan_finishes(ROOT, KIT)
         self.assertGreaterEqual(len(plan.files), 2)
         for rel, data in plan.files.items():
-            self.assertEqual((ROOT / rel).read_bytes(), data, f"{rel}가 지금 정의·규칙과 다르다 — python Tools/pixel-kit/kit.py room export-finishes")
+            msg = f"{rel}가 지금 정의·규칙과 다르다 — python Tools/pixel-kit/kit.py room export-finishes"
+            if rel.endswith(".png"):                    # 압축 결과는 zlib 판마다 달라서 PNG는 풀어낸 픽셀로 견준다
+                self.assertTrue(room_export_same_picture((ROOT / rel).read_bytes(), data), msg)
+            else:
+                self.assertEqual((ROOT / rel).read_bytes(), data, msg)
         defs = room_export.read_definitions(ROOT)
         self.assertEqual(len(defs), 15)
         self.assertEqual([sum(1 for d in defs if d["slot"] == s) for s in ("wall", "floor", "band")], [5, 5, 5])
