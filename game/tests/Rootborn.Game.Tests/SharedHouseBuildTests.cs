@@ -707,6 +707,77 @@ namespace Rootborn.Game.Tests
             Assert.That(again.Student.GetSkillValue(rule.SkillId), Is.EqualTo(skill + rule.Amount), "기술도 한 번");
         }
 
+        // ---------- 돈을 낸 표시(room-house-build-paid-<플레이어>.json): 보낼 목록과 따로, 돈 빠짐과 한 묶음 ----------
+
+        private static string PaidFile(string player) => SaveFileNames.RoomHouseBuildPaid(player);
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void PaidRecord_WrittenWithThePayment_ForgottenOnTheNextSaveAfterTheUseApplies(bool moneyShared)
+        {
+            var floor = PaidFloor();
+            int cost = PerCell(floor) * TopLeftRoomFill;
+            using var saves = new TempSaves();
+            var room = moneyShared
+                ? new FakeRoom(saves, cost + 5, RoomWallet.PieceName, RoomHouse.PieceName)
+                : new FakeRoom(saves, 0, RoomHouse.PieceName);
+            var aShares = room.Join("a");
+            var a = Start(saves, aShares, "slot-a", "a");
+            if (!moneyShared) Give(a, cost + 5);
+
+            Assert.That(a.ApplyHouseFinish(floor.Id, HouseFinishTools.Room, TopLeftRoom), Is.False);
+            string hold = aShares.Outbox.Requests.Single(r => r.Piece == RoomHouseBuild.PieceName && r.Kind == RoomHouseBuild.Finish).RequestId;
+            Assert.That(SlotFiles(saves, "slot-a").ContainsKey(PaidFile("a")), Is.False, "잡기 요청만으로는 표시가 없다");
+            room.Deliver(aShares);                  // 잡힘 → (자기 지갑) 냈다
+            if (moneyShared)
+            {
+                Assert.That(SlotFiles(saves, "slot-a").ContainsKey(PaidFile("a")), Is.False, "방 지갑의 허락을 기다리는 동안에는 아직 내지 않았다");
+                room.Deliver(aShares);              // (방 지갑) 허락 → 냈다
+            }
+
+            Assert.That(a.LastRoomCommandApplied, Is.True, "전제: 냈다");
+            Assert.That(saves.Store.TryRead<RoomHouseBuildPaidSaveData>("slot-a", PaidFile("a"), out var paid), Is.True, "돈을 낸 저장 묶음에 표시가 든다");
+            Assert.That(paid.Holds, Is.EqualTo(new[] { hold }));
+
+            room.Deliver(aShares); // 쓰기의 답(적용) → 상태(잡기 없음)
+            Assert.That(a.HouseFloorAt(TopLeftRoom), Is.EqualTo(floor.Id));
+            Assert.That(room.Build.HeldCount, Is.Zero);
+            a.VisitLocation("location.town-square"); // 다음 저장
+            Assert.That(saves.Store.TryRead<RoomHouseBuildPaidSaveData>("slot-a", PaidFile("a"), out var after), Is.True);
+            Assert.That(after.Holds, Is.Empty, "적용된 잡기의 표시는 다음 저장에서 지운다(끝없이 자라지 않는다)");
+        }
+
+        [Test]
+        public void AHoldThatCouldNotBePaid_IsReleased_AndNeverMarkedPaid()
+        {
+            var floor = PaidFloor();
+            using var saves = new TempSaves();
+            var room = new FakeRoom(saves, 0, RoomHouse.PieceName);
+            var aShares = room.Join("a");
+            var a = Start(saves, aShares, "slot-a", "a");
+            Give(a, PerCell(floor) * TopLeftRoomFill);
+            Assert.That(a.ApplyHouseFinish(floor.Id, HouseFinishTools.Room, TopLeftRoom), Is.False);
+            Assert.That(a.Inventory.Remove(a.Item(Allowance), Money(a)), Is.True, "준비: 잡히기 전에 돈을 다 썼다");
+            room.Deliver(aShares); // 잡힘 → 낼 수 없어 푼다
+            Assert.That(HouseBuildRequests(aShares, RoomHouseBuild.Release), Is.EqualTo(1));
+            room.Deliver(aShares);
+            Assert.That(room.Build.HeldCount, Is.Zero);
+            a.VisitLocation("location.town-square");
+            Assert.That(SlotFiles(saves, "slot-a").ContainsKey(PaidFile("a")), Is.False, "돈을 내지 못한 잡기는 표시하지 않는다(파일도 없다)");
+        }
+
+        [Test]
+        public void SoloHouse_NeverWritesThePaidFile()
+        {
+            var floor = PaidFloor();
+            using var saves = new TempSaves();
+            var a = Solo(saves, "slot-a", TestWorld.Player);
+            Give(a, PerCell(floor) * TopLeftRoomFill);
+            Assert.That(a.ApplyHouseFinish(floor.Id, HouseFinishTools.Room, TopLeftRoom), Is.True, "혼자 하는 집은 바로 꾸민다");
+            a.VisitLocation("location.town-square");
+            Assert.That(SlotFiles(saves, "slot-a").Keys.Any(k => k.StartsWith("room-house-build-paid-")), Is.False, "혼자 하는 판은 표시 파일을 쓰지 않는다");
+        }
+
         [Test]
         public void SaveThrowsWhilePaying_DiskUnchanged_NextSessionPaysOnce()
         {
@@ -726,8 +797,10 @@ namespace Rootborn.Game.Tests
             store.FailCommits = true;
             Assert.Throws<IOException>(() => room.Deliver(aShares), "돈을 낸 Save()가 던진다");
             Assert.That(store.Failed, Is.True);
+            Assert.That(Money(a), Is.EqualTo(5), "던진 저장은 돈을 낸 그 저장이다(메모리에서는 냈다)");
             var after = SlotFiles(saves, "slot-a");
             Assert.That(after.Keys, Is.EquivalentTo(before.Keys));
+            Assert.That(after.ContainsKey(PaidFile("a")), Is.False, "디스크에 돈 낸 표시도 없다(돈 빠짐과 한 묶음)");
             foreach (var pair in before) Assert.That(after[pair.Key], Is.EqualTo(pair.Value), "디스크 그대로(스냅샷·보낼 목록): " + pair.Key);
             room.Leave(aShares);
 

@@ -234,9 +234,9 @@ namespace Rootborn.Game.Tests
         private static string RoomFolder(TempSaves saves) => Path.Combine(saves.Path, RoomSlot);
 
         /// <summary>고정 폴더의 방 슬롯(손님 폴더까지)을 이 임시 폴더로 복사한다(읽기만).</summary>
-        private static void CopyRoomFixture(TempSaves saves)
+        private static void CopyRoomFixture(TempSaves saves, string fixture = Fixture)
         {
-            string source = Path.Combine(TestWorld.FixtureSaves, Fixture, RoomSlot);
+            string source = Path.Combine(TestWorld.FixtureSaves, fixture, RoomSlot);
             Assert.That(Directory.Exists(source), Is.True, "고정 폴더가 있다: " + source);
             foreach (var path in Directory.GetFiles(source, "*", SearchOption.AllDirectories))
             {
@@ -556,7 +556,9 @@ namespace Rootborn.Game.Tests
             Assert.That(File.ReadAllBytes(holdsPath), Is.EqualTo(holdsBytes), "방의 잡기 파일은 그대로(잡기가 남는다)");
         }
 
-        [Test, Explicit("결함 재현(task-4-report): 옛 플레이어 쪽이 돈을 낸 꾸밈 쓰기 줄을 옛 방에 보내 지운 뒤 새 판으로 돌아오면 그 잡기가 떠도는 잡기로 풀려 낸 돈이 사라진다. 고치지 않았다")]
+        // 결함 재현(task-4-report): 옛 플레이어 쪽이 돈을 낸 꾸밈 쓰기 줄을 옛 방에 보내 지운 뒤 새 판으로 돌아오면 그 잡기가 떠도는 잡기로 풀려
+        // 낸 돈이 사라졌다. 돈 낸 잡기를 플레이어 세이브의 따로 된 파일(room-house-build-paid-<플레이어>.json)에 표시해 고쳤다.
+        [Test]
         public void AfterAnOlderPlayerDroppedAPaidUse_BackInTheNewProgram_TheMoneyIsNotLost()
         {
             using var saves = new TempSaves();
@@ -587,6 +589,87 @@ namespace Rootborn.Game.Tests
             back.DeliverAll(backShares);
             Assert.That(backGame.HouseFloorAt(TopLeftRoom), Is.EqualTo(floor.Id), "돈을 낸 꾸밈이 된다");
             Assert.That(Money(backGame), Is.EqualTo(money - cost), "돈은 한 번만");
+        }
+
+        /// <summary>
+        /// 상위호환: 돈을 낸 표시(room-house-build-paid-&lt;플레이어&gt;.json)는 꾸밈 조각을 모르는 옛 플레이어 쪽·옛 방을 거쳐도 바이트 그대로 남고,
+        /// 새 프로그램으로 돌아오면 쓰기를 다시 보내 꾸밈이 되고 돈·인테리어 기술은 한 번만이다. 쓰기가 적용된 뒤 다음 저장에서 표시가 지워진다.
+        /// 손님 길(방이 손님 세이브를 맡는다 — &lt;방 슬롯&gt;/guests/&lt;id&gt;/)과 방장 길(이 PC의 방 슬롯, 방이 아는 신원 ≠ 게임 한 판의 플레이어 id) 둘 다.
+        /// </summary>
+        [TestCase(false)]
+        [TestCase(true)]
+        public void APaidRecord_SurvivesAnOlderPlayerAndAnOlderRoom_BackInTheNewProgram_TheUseGoesAgainOnce(bool hostPath)
+        {
+            using var saves = new TempSaves();
+            var rules = Rules();
+            // 손님 길: 게임 한 판의 저장소는 방의 손님 폴더(슬롯 = 플레이어 id). 방장 길: 이 PC의 방 슬롯 그 자체(플레이어 id = 기본 플레이어).
+            ISaveStore playerStore = hostPath ? saves.Store : Guests(saves);
+            string slot = hostPath ? RoomSlot : Guest;
+            string player = hostPath ? SaveFileNames.DefaultPlayerId : Guest;
+            string identity = hostPath ? "host-room-id" : Guest;
+            string playerFolder = hostPath ? RoomFolder(saves) : Path.Combine(GuestsFolder(saves.Path), Guest);
+            string paidPath = Path.Combine(playerFolder, SaveFileNames.RoomHouseBuildPaid(player));
+            GameSession Begin(RoomShares shares, bool knowsHouseBuild = true)
+            {
+                var g = GameSession.Start(TestWorld.Definitions, TestWorld.Settings, playerStore, slot, player, shares: shares);
+                g.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
+                if (knowsHouseBuild) g.EnterHouseBuild(HouseRoom.Frame);
+                return g;
+            }
+
+            var room = Room.Create(saves.Store, RoomSlot, Current(rules), 0, RoomHouse.PieceName);
+            var shares = room.Join(identity, Current());
+            var game = Begin(shares);
+            Assert.That(game.PlayerId, Is.EqualTo(player));
+            if (hostPath) Assert.That(shares.RoomPlayerId, Is.Not.EqualTo(game.PlayerId), "전제: 방장 길은 두 id가 다르다");
+            var floor = PaidFloor();
+            int cost = PerCell(floor) * TopLeftRoomFill;
+            Give(game, cost);
+            int money = Money(game);
+            var growth = TestWorld.Definitions.All<Rootborn.Core.Workspaces.PlacementSkillGrowth>().First(g => g.SurfaceId == HouseRoom.SurfaceId);
+            int skill = game.Student.GetSkillValue(growth.SkillId);
+            Assert.That(File.Exists(paidPath), Is.False, "전제: 돈을 내기 전에는 표시 파일이 없다");
+            Assert.That(game.ApplyHouseFinish(floor.Id, HouseFinishTools.Room, TopLeftRoom), Is.False);
+            string hold = shares.Outbox.Requests.Single(r => r.Piece == RoomHouseBuild.PieceName && r.Kind == RoomHouseBuild.Finish).RequestId;
+            room.Deliver(shares); // 잡음 → 낸다(쓰기와 표시가 같은 저장에)
+            Assert.That(Money(game), Is.EqualTo(money - cost), "준비: 돈을 냈다");
+            Assert.That(playerStore.TryRead<RoomHouseBuildPaidSaveData>(slot, SaveFileNames.RoomHouseBuildPaid(player), out var paid), Is.True,
+                "돈을 낸 저장 묶음에 표시 파일이 든다");
+            Assert.That(paid.Holds, Is.EqualTo(new[] { hold }));
+            room.Leave(shares); // 쓰기를 보내기 전에 꺼졌다
+            byte[] paidBytes = File.ReadAllBytes(paidPath);
+
+            // 옛 빌드(옛 방 + 옛 플레이어 쪽)가 같은 방 슬롯을 연다: 쓰기 줄을 옛 방에 보내 Invalid를 받아 지우고, 저장한다.
+            var old = new Room(saves.Store, RoomSlot, Older(rules));
+            var oldShares = old.Join(identity, Older());
+            var oldGame = Begin(oldShares, knowsHouseBuild: false);
+            old.DeliverAll(oldShares);
+            oldGame.VisitLocation("location.town-square");
+            old.Pieces.Save(saves.Store, RoomSlot);
+            old.Leave(oldShares);
+            Assert.That(playerStore.TryRead<RoomOutboxSaveData>(slot, SaveFileNames.RoomOutbox(player), out var oldOutbox)
+                && oldOutbox.Requests.Any(r => r.Piece == RoomHouseBuild.PieceName), Is.False, "전제: 옛 빌드가 쓰기 줄을 지웠다");
+            Assert.That(File.ReadAllBytes(paidPath), Is.EqualTo(paidBytes), "옛 빌드는 표시 파일을 건드리지 않는다");
+
+            // 새 프로그램으로 돌아온다: 표시가 있는 잡기는 풀지 않고 쓰기를 새 id로 다시 보낸다.
+            var back = new Room(saves.Store, RoomSlot, Current(rules));
+            var backShares = back.Join(identity, Current());
+            var backGame = Begin(backShares);
+            Assert.That(HouseBuildRequests(backShares, RoomHouseBuild.Release), Is.Zero, "돈 낸 표시가 있으면 풀지 않는다");
+            var use = backShares.Outbox.Requests.Single(r => r.Piece == RoomHouseBuild.PieceName && r.Kind == RoomHouseBuild.Use);
+            Assert.That(use.Ids, Is.EqualTo(new[] { hold }));
+            Assert.That(back.Pieces.TryAnswer(identity, use.RequestId, out _), Is.False, "새 id(옛 방 장부의 Invalid와 겹치지 않는다)");
+            Assert.That(playerStore.TryRead<RoomOutboxSaveData>(slot, SaveFileNames.RoomOutbox(player), out var resent)
+                && resent.Requests.Any(r => r.RequestId == use.RequestId), Is.True, "다시 적은 쓰기가 저장됐다(손님이면 그 저장과 함께 방으로 간다)");
+            back.DeliverAll(backShares);
+            Assert.That(backGame.HouseFloorAt(TopLeftRoom), Is.EqualTo(floor.Id), "돈을 낸 꾸밈이 된다");
+            Assert.That(back.Build.HeldCount, Is.Zero);
+            Assert.That(Money(backGame), Is.EqualTo(money - cost), "돈은 한 번만");
+            Assert.That(backGame.Student.GetSkillValue(growth.SkillId), Is.EqualTo(skill + growth.Amount), "인테리어 기술도 한 번만");
+
+            backGame.VisitLocation("location.town-square"); // 다음 저장
+            Assert.That(playerStore.TryRead<RoomHouseBuildPaidSaveData>(slot, SaveFileNames.RoomHouseBuildPaid(player), out var after), Is.True);
+            Assert.That(after.Holds, Is.Empty, "쓰기가 적용된 잡기의 표시는 다음 저장에서 지운다");
         }
 
         // ---------- 고정 폴더 room-20261114 ----------
@@ -661,6 +744,104 @@ namespace Rootborn.Game.Tests
             Assert.That(room.Wallet.HeldTotal, Is.Zero);
             room.DeliverAll(shares);
             Assert.That(room.Wallet.Balance, Is.EqualTo(wallet - PerCell(OtherPaidFloor())), "다시 돌려도 더 나가지 않는다");
+        }
+
+        // ---------- 고정 폴더 room-20261114b: 돈 낸 표시가 처음 든 방 ----------
+
+        private const string PaidFixture = "room-20261114b";
+
+        /// <summary>
+        /// 지금 프로그램이 쓴 방 슬롯을 고정 폴더로 내보낸다(손으로만): 집을 같이 쓰는(돈은 각자) 방에 손님 하나(기본 플레이어)가 왼쪽 위 방 바닥을 자기 지갑으로
+        /// 꾸미려 했고, 방이 잡아 돈을 냈지만(쓰기와 돈 낸 표시가 같은 저장에) 쓰기가 방에 닿기 전에 끊긴 때.
+        /// 쓰는 법: ROOTBORN_FIXTURE_OUT=&lt;저장소&gt;/game/tests/Rootborn.Data.Tests/Fixtures/saves/room-20261114b dotnet test game/tests/Rootborn.Game.Tests --filter Name~WritePaidRecordRoomFixture
+        /// </summary>
+        [Test, Explicit("고정 파일을 새로 만들 때만 손으로 돌린다")]
+        public void WritePaidRecordRoomFixture()
+        {
+            string target = Environment.GetEnvironmentVariable("ROOTBORN_FIXTURE_OUT");
+            Assert.That(target, Is.Not.Null.And.Not.Empty, "ROOTBORN_FIXTURE_OUT에 새 폴더를 준다");
+            string roomFolder = Path.Combine(target, RoomSlot);
+            Assert.That(Directory.Exists(roomFolder), Is.False, "이미 있는 고정 폴더는 고치지 않는다: " + roomFolder);
+
+            using var saves = new TempSaves();
+            var guests = Guests(saves);
+            var room = Room.Create(saves.Store, RoomSlot, Current(Rules()), 0, RoomHouse.PieceName);
+            var shares = room.Join(Guest, Current());
+            var game = Play(guests, shares);
+            var floor = PaidFloor();
+            Give(game, PerCell(floor) * TopLeftRoomFill + 7);
+            Assert.That(game.ApplyHouseFinish(floor.Id, HouseFinishTools.Room, TopLeftRoom), Is.False);
+            room.Deliver(shares); // 잡음 → 낸다
+            Assert.That(Money(game), Is.EqualTo(7));
+            Assert.That(room.Build.HeldCount, Is.EqualTo(1));
+            Assert.That(SavedOutbox(guests).Requests.Count(r => r.Piece == RoomHouseBuild.PieceName && r.Kind == RoomHouseBuild.Use), Is.EqualTo(1));
+            Assert.That(guests.TryRead<RoomHouseBuildPaidSaveData>(Guest, SaveFileNames.RoomHouseBuildPaid(Guest), out var paid) && paid.Holds.Length == 1, Is.True);
+            room.Leave(shares);
+
+            foreach (var pair in AllFiles(RoomFolder(saves)))
+            {
+                string path = Path.Combine(roomFolder, pair.Key);
+                Directory.CreateDirectory(Path.GetDirectoryName(path));
+                File.WriteAllBytes(path, pair.Value);
+            }
+        }
+
+        [Test]
+        public void Room20261114b_Opens_ReadingWritesNothing_TheGuestComesBack_TheUseApplies_MoneyOnce_TheRecordIsForgotten()
+        {
+            using var saves = new TempSaves();
+            CopyRoomFixture(saves, PaidFixture);
+            var guests = Guests(saves);
+            var before = AllFiles(RoomFolder(saves));
+            string paidName = "guests/" + Guest + "/" + SaveFileNames.RoomHouseBuildPaid(Guest);
+            Assert.That(before.Keys, Does.Contain(paidName), "전제: 11-14b 방 고정 폴더의 손님 세이브에 돈 낸 표시가 있다");
+            var room = new Room(saves.Store, RoomSlot, Current(Rules()));
+            Assert.That(room.Build.HeldCount, Is.EqualTo(1));
+            Assert.That(Same(before, AllFiles(RoomFolder(saves))), Is.True, "읽기만으로 아무것도 쓰지 않는다");
+
+            var shares = room.Join(Guest, Current());
+            var game = Play(guests, shares);
+            Assert.That(Money(game), Is.EqualTo(7), "돈은 이미 냈다");
+            Assert.That(HouseBuildRequests(shares, RoomHouseBuild.Release), Is.Zero);
+            Assert.That(HouseBuildRequests(shares, RoomHouseBuild.Use), Is.EqualTo(1), "세이브의 쓰기가 간다");
+            room.DeliverAll(shares);
+            Assert.That(game.HouseFloorAt(TopLeftRoom), Is.EqualTo(PaidFloor().Id));
+            Assert.That(room.Build.HeldCount, Is.Zero);
+            Assert.That(Money(game), Is.EqualTo(7), "한 번만");
+            game.VisitLocation("location.town-square");
+            Assert.That(guests.TryRead<RoomHouseBuildPaidSaveData>(Guest, SaveFileNames.RoomHouseBuildPaid(Guest), out var after) && after.Holds.Length == 0, Is.True,
+                "끝난 잡기의 표시는 다음 저장에서 지운다");
+        }
+
+        [Test]
+        public void Room20261114b_ThroughAnOlderBuildFirst_TheRecordStays_BackInTheNewProgramTheUseApplies_MoneyOnce()
+        {
+            using var saves = new TempSaves();
+            CopyRoomFixture(saves, PaidFixture);
+            var guests = Guests(saves);
+            var rules = Rules();
+            string paidPath = Path.Combine(GuestsFolder(saves.Path), Guest, SaveFileNames.RoomHouseBuildPaid(Guest));
+            byte[] paidBytes = File.ReadAllBytes(paidPath);
+
+            var old = new Room(saves.Store, RoomSlot, Older(rules));
+            var oldShares = old.Join(Guest, Older());
+            var oldGame = Play(guests, oldShares, knowsHouseBuild: false);
+            Assert.That(Money(oldGame), Is.EqualTo(7), "옛 빌드에서도 열리고 돈이 그대로");
+            old.DeliverAll(oldShares); // 쓰기 줄 → 옛 방 Invalid → 지움
+            oldGame.VisitLocation("location.town-square");
+            old.Pieces.Save(saves.Store, RoomSlot);
+            old.Leave(oldShares);
+            Assert.That(SavedOutbox(guests).Requests.Any(r => r.Piece == RoomHouseBuild.PieceName), Is.False, "전제: 옛 빌드가 쓰기 줄을 지웠다");
+            Assert.That(File.ReadAllBytes(paidPath), Is.EqualTo(paidBytes), "옛 빌드는 돈 낸 표시를 건드리지 않는다");
+
+            var back = new Room(saves.Store, RoomSlot, Current(rules));
+            var backShares = back.Join(Guest, Current());
+            var backGame = Play(guests, backShares);
+            Assert.That(HouseBuildRequests(backShares, RoomHouseBuild.Release), Is.Zero);
+            back.DeliverAll(backShares);
+            Assert.That(backGame.HouseFloorAt(TopLeftRoom), Is.EqualTo(PaidFloor().Id), "돈을 낸 꾸밈이 된다");
+            Assert.That(back.Build.HeldCount, Is.Zero);
+            Assert.That(Money(backGame), Is.EqualTo(7), "한 번만");
         }
     }
 }

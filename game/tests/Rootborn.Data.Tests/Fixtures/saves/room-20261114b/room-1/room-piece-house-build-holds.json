@@ -1,0 +1,16 @@
+{
+  "Version": 1,
+  "Holds": [
+    {
+      "RequestId": "76e857eb8b384b9f8e6ca8c6c10022dd",
+      "PlayerId": "local-player",
+      "SurfaceId": "house",
+      "Kind": "finish",
+      "FinishId": "finish.floor.checker-soft",
+      "Tool": "room",
+      "X": 3,
+      "Y": 4,
+      "Count": 87
+    }
+  ]
+}

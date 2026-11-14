@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "SaveSlot": "local-player",
+  "PlayerId": "local-player",
+  "ActiveCampaignId": "campaign.school-opening-three-days",
+  "CurrentDayNumber": 1,
+  "CompletedObjectiveIds": [],
+  "SelectedRoutes": [],
+  "RewardClaimedIds": [],
+  "AppliedResultIds": [],
+  "LastProgressLogIds": []
+}

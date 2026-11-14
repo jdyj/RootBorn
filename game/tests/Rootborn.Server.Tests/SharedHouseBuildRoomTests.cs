@@ -279,6 +279,35 @@ namespace Rootborn.Server.Tests
         }
 
         [Test]
+        public void ThePaidRecord_TravelsWithTheGuestSave_IsKeptByTheRoom_AndComesBackOnRejoin()
+        {
+            // 손님 길: 돈을 낸 표시(room-house-build-paid-<id>.json)는 손님 저장과 함께 방으로 가고, 방은 손님 폴더에 그대로 두었다가 다시 들어오면 내려 준다.
+            // 방(GuestSaveFolder)은 파일 이름 모양(.json, 경로 한 칸)만 보고 모양은 모른다 — 꾸밈 조각을 모르는 옛 방도 같은 코드로 이 파일을 받고 돌려준다.
+            using var rig = NewRoom(new[] { RoomHouse.PieceName });
+            var a = Join(rig, "a");
+            var floor = PaidFloors().First();
+            Give(a, PerCell(floor) * Changed(a, floor));
+            string name = SaveFileNames.RoomHouseBuildPaid("a");
+            var guests = new FileSaveStore(GuestSaveFolder.FolderFor(Saves, RoomId));
+            a.Game.ApplyHouseFinish(floor.Id, HouseFinishTools.Room, TopLeftRoom);
+            rig.Run(1.5);
+            rig.Run(0.5);
+            Assert.That(a.Game.HouseFloorAt(TopLeftRoom), Is.EqualTo(floor.Id), "전제: 꾸밈이 끝났다");
+            Assert.That(guests.TryRead<RoomHouseBuildPaidSaveData>("a", name, out var paid), Is.True, "돈을 낸 저장과 함께 방의 손님 폴더에 왔다");
+            Assert.That(paid.Holds.Length, Is.EqualTo(1));
+
+            a.Game.VisitLocation("location.town-square"); // 다음 저장 — 끝난 잡기의 표시를 지운다
+            rig.Run(1.0);
+            Assert.That(guests.TryRead<RoomHouseBuildPaidSaveData>("a", name, out var after), Is.True);
+            Assert.That(after.Holds, Is.Empty);
+
+            rig.Quit(a.Client);
+            rig.Run(0.5);
+            var a2 = Join(rig, "a");
+            Assert.That(a2.Link.Files.Writes.Any(p => p.Key == name), Is.True, "다시 들어오면 방이 그 파일도 내려 준다");
+        }
+
+        [Test]
         public void AGuestDropsBetweenGrantAndPay_ComesBack_FinishesOnce()
         {
             using var rig = NewRoom(new[] { RoomHouse.PieceName });

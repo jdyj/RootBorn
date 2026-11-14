@@ -1,0 +1,191 @@
+{
+  "Version": 3,
+  "Adult": {
+    "Version": 1,
+    "SaveSlot": "local-player",
+    "PlayerId": "local-player",
+    "FacilityId": "",
+    "FacilityLevel": 0,
+    "Reputation": 0,
+    "Works": [],
+    "AppliedRequestIds": [],
+    "EndingIds": [],
+    "PendingWork": null
+  },
+  "Student": {
+    "SaveSlot": "local-player",
+    "PlayerId": "local-player",
+    "Energy": 12,
+    "Focus": 10,
+    "Stress": 0,
+    "TimeMinutes": 420,
+    "CurrentDay": 1,
+    "TimePointsSpentToday": 0,
+    "DailyTimePolicyIds": [],
+    "DayState": "InProgress",
+    "LastSettledDay": 0,
+    "NextDayEntryPointId": "",
+    "LastActivityId": "",
+    "TutorialStageId": "tutorial.day1",
+    "NextObjectiveId": "",
+    "NextGuideText": "ui.tutorial.town_routine_hint",
+    "DailyPlan": {
+      "Version": 2,
+      "SaveSlot": "local-player",
+      "PlayerId": "local-player",
+      "CurrentDay": 1,
+      "SelectedRouteId": "",
+      "CompletedRouteId": "",
+      "MatchedActivityId": "",
+      "AppliedCompletionKeys": [],
+      "LastNextHintKey": "",
+      "Slots": [
+        {
+          "SlotIndex": 0,
+          "PeriodKey": "daily-plan.period.after-school",
+          "RouteId": "",
+          "Completed": false,
+          "MatchedActivityId": "",
+          "MatchedActivityKind": 0,
+          "CompletionRequestKey": "",
+          "NextHintKey": "",
+          "ResultLogs": []
+        },
+        {
+          "SlotIndex": 1,
+          "PeriodKey": "daily-plan.period.evening",
+          "RouteId": "",
+          "Completed": false,
+          "MatchedActivityId": "",
+          "MatchedActivityKind": 0,
+          "CompletionRequestKey": "",
+          "NextHintKey": "",
+          "ResultLogs": []
+        }
+      ],
+      "Diary": []
+    },
+    "PendingMinigame": null,
+    "CareerCandidates": {
+      "SaveSlot": "local-player",
+      "PlayerId": "local-player",
+      "Candidates": [],
+      "AppliedSourceRequestIds": [],
+      "ClaimedRewardIds": [],
+      "TodayHintResultLines": []
+    },
+    "Traits": [],
+    "Skills": [
+      {
+        "Id": "skill.interior",
+        "Value": 1
+      }
+    ],
+    "Relationships": [],
+    "StudentConditionStatuses": [],
+    "CareerHintIds": [],
+    "AppliedRequestIds": [],
+    "ActivityLogIds": [],
+    "TodayActivityIds": [],
+    "TodayResultLogIds": [],
+    "PreviousDayActivityIds": [],
+    "PreviousDayResultLogIds": []
+  },
+  "Inventory": {
+    "Items": [],
+    "EquippedToolItemId": ""
+  },
+  "World": {
+    "Version": 0,
+    "SaveSlot": "local-player",
+    "PlayerId": "local-player",
+    "Records": [],
+    "TodayWorldChangeFlagIds": []
+  },
+  "QuestChains": {
+    "Version": 0,
+    "Chains": [
+      {
+        "SaveSlot": "local-player",
+        "PlayerId": "local-player",
+        "ChainId": "questchain.test.career-interest.library",
+        "ChainState": "Available",
+        "IsTracked": false,
+        "CurrentStepId": "step.questchain.test.library.start",
+        "CompletedStepIds": [],
+        "ObjectiveProgressValues": [
+          0,
+          0
+        ],
+        "ProcessedEventKeys": [],
+        "RewardClaimedIds": [],
+        "BlockedReasonId": "",
+        "LastEvaluatedConditionSummary": "",
+        "TransitionHistory": [],
+        "RelatedCareerInterestId": "interest.learning",
+        "TodayQuestChainSummary": "",
+        "AcceptedDayIndex": -1,
+        "CompletedDayIndex": -1,
+        "FailedDayIndex": -1,
+        "ExpiredDayIndex": -1
+      },
+      {
+        "SaveSlot": "local-player",
+        "PlayerId": "local-player",
+        "ChainId": "questchain.test.career-interest.blocked-library-access",
+        "ChainState": "Available",
+        "IsTracked": false,
+        "CurrentStepId": "step.questchain.test.blocked.library.access",
+        "CompletedStepIds": [],
+        "ObjectiveProgressValues": [
+          0
+        ],
+        "ProcessedEventKeys": [],
+        "RewardClaimedIds": [],
+        "BlockedReasonId": "",
+        "LastEvaluatedConditionSummary": "",
+        "TransitionHistory": [],
+        "RelatedCareerInterestId": "interest.learning",
+        "TodayQuestChainSummary": "",
+        "AcceptedDayIndex": -1,
+        "CompletedDayIndex": -1,
+        "FailedDayIndex": -1,
+        "ExpiredDayIndex": -1
+      },
+      {
+        "SaveSlot": "local-player",
+        "PlayerId": "local-player",
+        "ChainId": "main-story.school-opening",
+        "ChainState": "Available",
+        "IsTracked": false,
+        "CurrentStepId": "mainquest.BackToSchool",
+        "CompletedStepIds": [],
+        "ObjectiveProgressValues": [
+          0,
+          0
+        ],
+        "ProcessedEventKeys": [],
+        "RewardClaimedIds": [],
+        "BlockedReasonId": "",
+        "LastEvaluatedConditionSummary": "",
+        "TransitionHistory": [],
+        "RelatedCareerInterestId": "",
+        "TodayQuestChainSummary": "",
+        "AcceptedDayIndex": -1,
+        "CompletedDayIndex": -1,
+        "FailedDayIndex": -1,
+        "ExpiredDayIndex": -1
+      }
+    ]
+  },
+  "FurnitureUnlocks": {
+    "Version": 0,
+    "SaveSlot": "local-player",
+    "PlayerId": "local-player",
+    "UnlockTokens": []
+  },
+  "Wallet": {
+    "Version": 1,
+    "Balance": 7
+  }
+}

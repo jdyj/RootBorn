@@ -1,0 +1,32 @@
+{
+  "Version": 1,
+  "SaveSlot": "local-player",
+  "PlayerId": "local-player",
+  "Records": [
+    {
+      "MilestoneId": "milestone.first-guide-trust",
+      "Completed": false,
+      "RewardClaimed": false,
+      "Objectives": []
+    },
+    {
+      "MilestoneId": "milestone.teacher-commitment",
+      "Completed": false,
+      "RewardClaimed": false,
+      "Objectives": []
+    },
+    {
+      "MilestoneId": "milestone.teacher-support",
+      "Completed": false,
+      "RewardClaimed": false,
+      "Objectives": []
+    },
+    {
+      "MilestoneId": "milestone.village-adaptation",
+      "Completed": false,
+      "RewardClaimed": false,
+      "Objectives": []
+    }
+  ],
+  "AppliedDayResultKeys": []
+}

@@ -1,0 +1,14 @@
+{
+  "Version": 1,
+  "Requests": [
+    {
+      "Piece": "house-build",
+      "RequestId": "b9cdaa6fb0394cce90da60103c974e72",
+      "Kind": "use",
+      "Amount": 0,
+      "Ids": [
+        "76e857eb8b384b9f8e6ca8c6c10022dd"
+      ]
+    }
+  ]
+}

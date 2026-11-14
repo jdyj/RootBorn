@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Records": [
+    {
+      "PlayerId": "local-player",
+      "Piece": "house-build",
+      "RequestId": "76e857eb8b384b9f8e6ca8c6c10022dd",
+      "Outcome": "applied",
+      "Amount": 0
+    }
+  ]
+}
