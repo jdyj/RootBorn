@@ -5,6 +5,7 @@ using Rootborn.Core.Inventory;
 using Rootborn.Core.Minigames;
 using Rootborn.Core.World;
 using Rootborn.Game;
+using Rootborn.Screens.Hud;
 using Rootborn.Ui;
 using M = Rootborn.Screens.Furniture.FurniturePlacementScreen.Metrics;
 using S = Rootborn.Screens.Furniture.FurniturePlacementScreen;
@@ -37,6 +38,8 @@ namespace Rootborn.Screens.Furniture
         private string[] _bandTexts = Array.Empty<string>();
         private int _bandCurrent = -1;
         private string _bandReason;
+        // 돈을 같이 쓰는 방(가게와 같은 문구, RoomMoneyText): 누름이 방의 허락을 기다리면 기다림 키, 방이 거절했으면 거절 키. 이유 줄에서 미리 보기의 이유보다 앞선다.
+        private string _roomKey;
         private readonly UiSlot[] _cards = new UiSlot[M.FinishPageSize];
         private readonly UiFittedImage[] _upper = new UiFittedImage[M.FinishPageSize];
         private readonly UiFittedImage[] _lower = new UiFittedImage[M.FinishPageSize];
@@ -71,7 +74,7 @@ namespace Rootborn.Screens.Furniture
         public HouseFinishPreview Preview => _held;
         /// <summary>PreviewHouseFinish를 물은 횟수(시험용 — 포인터 칸이 바뀔 때만 오른다).</summary>
         public int PreviewQueries { get; private set; }
-        /// <summary>마지막 누름이 한 일(시험용): applied, refused, none.</summary>
+        /// <summary>마지막 누름이 한 일(시험용): applied, refused, waiting(돈을 같이 쓰는 방에서 방의 허락을 기다린다), none.</summary>
         public string LastAction { get; private set; } = "none";
 
         private GameSession Session => _services.Session;
@@ -171,6 +174,7 @@ namespace Rootborn.Screens.Furniture
         {
             if (!Shown) return;
             if (topic == ChangeTopics.Language) { ApplyTexts(); return; }
+            FinishWaitedPress();
             // 미리 보기 결과를 바꿀 수 있는 알림만 낡음으로 본다(다음 포인터 프레임 또는 누름에서 한 번 다시 묻는다). 시간·학생·퀘스트 같은
             // 무관한 알림은 보지 않는다 — 흐르는 시간은 게임 1분마다 알린다.
             if (!AffectsPreview(topic)) return;
@@ -187,6 +191,21 @@ namespace Rootborn.Screens.Furniture
         private static bool AffectsPreview(string topic) =>
             topic == ChangeTopics.HouseBuild || topic == ChangeTopics.Inventory || topic == ChangeTopics.Furniture || topic == ChangeTopics.Career
             || topic == ChangeTopics.Map || topic == ChangeTopics.Workspace || topic == GameChangeTopics.Room || topic == ChangeTopics.All;
+
+        // 기다리던 누름이 끝났다(방이 답했다): 거절이면 거절 문구, 허락받아 됐거나 다시 한 적용이 되지 않았으면(미리 보기가 이유를 보인다) 지운다.
+        private void FinishWaitedPress()
+        {
+            var session = Session;
+            if (!ReferenceEquals(_roomKey, RoomMoneyText.WaitingKey) || session == null || session.WaitingForRoom || !session.LastRoomCommandApplied.HasValue) return;
+            _roomKey = session.LastRoomCommandApplied == false && session.LastRoomRefusal ? RoomMoneyText.RefusedKey : null;
+            ApplyInfo();
+        }
+
+        // 기다리는 중이 아니면 지난 거절 문구를 지운다(다른 것을 고르거나 다시 누를 때).
+        private void ClearRoomRefusal()
+        {
+            if (!ReferenceEquals(_roomKey, RoomMoneyText.WaitingKey)) _roomKey = null;
+        }
 
         // 띠 색 탭: 집 하나에 하나라 카드·도구·미리 보기 없이 줄 목록.
         private bool BandTab => string.Equals(_model.Slot, RoomFinishSlots.Band, StringComparison.Ordinal);
@@ -229,10 +248,14 @@ namespace Rootborn.Screens.Furniture
         {
             var session = Session;
             if (session == null || row < 0 || row >= _bands.Count) return;
+            if (session.WaitingForRoom) { RefreshBands(); return; } // 방의 허락을 기다리는 동안은 다시 누르지 않는다(요청이 겹치지 않게)
+            ClearRoomRefusal();
             string id = _bands[row].Id;
             bool applied = session.ApplyHouseBand(id);
-            LastAction = applied ? "applied" : "refused";
-            _bandReason = applied ? null : session.PreviewHouseBand(id).ReasonKey;
+            bool waiting = !applied && session.WaitingForRoom;
+            LastAction = applied ? "applied" : waiting ? "waiting" : "refused";
+            if (waiting) _roomKey = RoomMoneyText.WaitingKey;
+            _bandReason = applied || waiting ? null : session.PreviewHouseBand(id).ReasonKey;
             RefreshBands(); // 거절이면 알림이 없다 — 누름이 옮긴 고른 줄을 지금 색으로 되돌린다
             ApplyInfo();
         }
@@ -320,9 +343,9 @@ namespace Rootborn.Screens.Furniture
             string item = picked != null && picked.Cost.Count > 0 ? picked.Cost[0].Item : null;
             _money.Text = item == null ? string.Empty : _f("ui.house-build.money", new object[] { Owned(item), _itemName(item) });
 
-            string reason = p != null ? p.ReasonKey
-                : picked != null && Session != null && !Session.IsFinishUnlocked(picked) ? HouseFinishReasons.Locked : null;
-            _reason.Text = reason == null ? string.Empty : _t(reason);
+            string reason = _roomKey ?? (p != null ? p.ReasonKey
+                : picked != null && Session != null && !Session.IsFinishUnlocked(picked) ? HouseFinishReasons.Locked : null);
+            _reason.Text = string.IsNullOrEmpty(reason) ? string.Empty : _t(reason);
         }
 
         // 띠 탭의 오른쪽 패널: 지금 색의 이름과 값(무료), 마지막 누름이 거절됐으면 그 이유. 칸·비용·가진 돈 줄은 비운다(칸이 없다).
@@ -338,7 +361,8 @@ namespace Rootborn.Screens.Furniture
                 _price.Text = _f("ui.house-build.cost", new object[] { each.Count, _itemName(each.Item) });
             }
             _cells.Text = _cost.Text = _money.Text = string.Empty;
-            _reason.Text = _bandReason == null ? string.Empty : _t(_bandReason);
+            string reason = _roomKey ?? _bandReason;
+            _reason.Text = reason == null ? string.Empty : _t(reason);
         }
 
         private int Owned(string itemId)
@@ -356,6 +380,7 @@ namespace Rootborn.Screens.Furniture
             _model.Set(slot, null, null); // 자리만 바꾸고 첫 쪽으로(카드는 바로 아래에서 읽는다)
             Picked = null;
             _bandReason = null;
+            ClearRoomRefusal();
             ResetPreview();
             RefreshCards();
         }
@@ -364,6 +389,7 @@ namespace Rootborn.Screens.Furniture
         {
             if (string.Equals(tool, _tool, StringComparison.Ordinal)) return;
             _tool = tool;
+            ClearRoomRefusal();
             ResetPreview();
             RefreshPage();
             ApplyInfo();
@@ -379,6 +405,7 @@ namespace Rootborn.Screens.Furniture
         {
             if (card == null) return;
             Picked = card.Definition;
+            ClearRoomRefusal();
             ResetPreview();
             RefreshPage();
             ApplyInfo();
@@ -433,8 +460,18 @@ namespace Rootborn.Screens.Furniture
         {
             var session = Session;
             if (Picked == null || !_hasHover || session == null || _view?.Room == null) return;
+            if (session.WaitingForRoom) return; // 방의 허락을 기다리는 동안은 다시 누르지 않는다(잡기 요청이 겹치지 않게)
+            ClearRoomRefusal();
             CellPos target = _view.Room.ToMap(_hover);
             bool applied = session.ApplyHouseFinish(Picked.Id, _tool, target);
+            if (!applied && session.WaitingForRoom)
+            {
+                // 돈을 같이 쓰는 방: 방에 돈 잡기를 요청했다. 허락이 오면 GameSession이 같은 적용을 다시 하고 알린다(그 알림에서 미리 보기를 다시 묻는다).
+                LastAction = "waiting";
+                _roomKey = RoomMoneyText.WaitingKey;
+                ApplyInfo();
+                return;
+            }
             LastAction = applied ? "applied" : "refused";
             // 적용한 그 업데이트에서 다시 묻는다(이제 바뀔 칸이 없다) — 월드에서 옛 미리 보기를 지우고, 다음 그리기에서 미리 보기를 다시 조합하지 않게.
             if (_stale || applied) Requery();

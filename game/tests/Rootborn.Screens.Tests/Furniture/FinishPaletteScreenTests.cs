@@ -6,6 +6,7 @@ using Rootborn.Core.Building;
 using Rootborn.Core.Minigames;
 using Rootborn.Core.World;
 using Rootborn.Screens.Furniture;
+using Rootborn.Screens.Hud;
 using Rootborn.Ui;
 using Rootborn.World;
 
@@ -643,6 +644,73 @@ namespace Rootborn.Screens.Tests.Furniture
             Assert.That(f.View.Shown.Where(p => p != null), Is.Empty);
             f.ClickCell(a);
             Assert.That(f.T.Session.HouseFloorAt(a), Is.EqualTo(f.Frame.DefaultFloor), "바뀌지 않는다");
+        }
+
+        /// <summary>
+        /// 돈만 같이 쓰는 방(집은 각자): 미리 보기는 방 지갑으로 판단하고(붉지 않다), 누르면 방의 허락을 기다린다는 문구가 이유 줄에 보이며
+        /// 기다리는 동안 다시 눌러도 요청이 겹치지 않는다. 허락이 오면 문구가 사라지고 꾸밈이 바뀐다. 방 쪽은 Core RoomPieceSet을 테스트가 손으로 돌린다.
+        /// </summary>
+        [Test]
+        public void MoneySharingRoom_PreviewFollowsTheRoomWallet_PressWaitsForTheRoom()
+        {
+            var probe = new Fixture();
+            RoomFinishDefinition floor = FreeNonDefault(probe, RoomFinishSlots.Floor);
+            var (room, a, b) = probe.FirstRoom();
+            probe.Dispose();
+            int cost = PerCell(floor) * room.Count;
+            Assert.That(cost, Is.GreaterThan(0), "전제: 값이 있는 꾸밈");
+
+            var pieces = new Rootborn.Core.Room.RoomPieceSet(new Rootborn.Core.Room.RoomShareSettings(new[] { Rootborn.Core.Room.RoomWallet.PieceName }),
+                Rootborn.Core.Room.RoomPieceCatalog.CreateDefault());
+            var wallet = (Rootborn.Core.Room.RoomWallet)pieces.Pieces.First(p => p.Name == Rootborn.Core.Room.RoomWallet.PieceName);
+            int ids = 0;
+            var shares = new Rootborn.Core.Room.RoomShares(pieces.Settings, Rootborn.Core.Room.RoomPieceCatalog.CreateDefault(), () => "guest-r" + (++ids));
+            void Deliver(string player)
+            {
+                var answers = new List<Rootborn.Core.Room.RoomAnswer>();
+                var changed = new List<Rootborn.Core.Room.IRoomPiece>();
+                pieces.Apply(player, shares.Outbox.Requests.Select(r => r.Copy()).ToList(), 1, answers, changed);
+                foreach (var answer in answers) shares.Receive(answer);
+                foreach (var piece in changed) shares.Receive(piece.State());
+            }
+            // 준비: 다른 사람이 방 지갑에 비용 + 3을 넣었다(요청만).
+            var friend = new Rootborn.Core.Room.RoomShares(pieces.Settings, Rootborn.Core.Room.RoomPieceCatalog.CreateDefault(), () => "friend-r1");
+            friend.Outbox.Add(new Rootborn.Core.Room.RoomRequestSaveData { Piece = Rootborn.Core.Room.RoomWallet.PieceName, RequestId = "friend-r1", Kind = Rootborn.Core.Room.RoomWallet.Deposit, Amount = cost + 3 });
+            pieces.Apply("friend", friend.Outbox.Requests.ToList(), 1, new List<Rootborn.Core.Room.RoomAnswer>(), new List<Rootborn.Core.Room.IRoomPiece>());
+            foreach (var p in pieces.Pieces) shares.Receive(p.State());
+
+            using var f = new Fixture(shares: shares);
+            Assert.That(f.T.Session.SharesWallet, Is.True, "준비: 돈을 같이 쓰는 방");
+            Assert.That(f.T.Session.SharesHouse, Is.False, "준비: 집은 자기 것");
+            Assert.That(f.Money, Is.EqualTo(cost + 3), "돈은 방 지갑");
+            f.Decorate();
+            f.T.Click(FurniturePlacementScreen.FinishTabFloorId);
+            f.PickCard(floor.Id);
+
+            f.Hover(a);
+            Assert.That(f.Screen.FinishPreview.CanApply, Is.True, f.Screen.FinishPreview.ReasonKey);
+            Assert.That(f.Text(FurniturePlacementScreen.FinishReasonId), Is.Empty, "돈이 있으면 이유가 없다");
+            Assert.That(f.View.Shown.Last(), Is.SameAs(f.Screen.FinishPreview), "월드 미리 보기가 나온다");
+
+            f.ClickCell(a);
+            Assert.That(f.Screen.FinishLastAction, Is.EqualTo("waiting"));
+            Assert.That(f.T.Session.WaitingForRoom, Is.True);
+            Assert.That(f.Text(FurniturePlacementScreen.FinishReasonId), Is.EqualTo(f.T.Text.Get(RoomMoneyText.WaitingKey)), "방의 허락을 기다린다");
+            int requests = shares.Outbox.Requests.Count;
+            f.ClickCell(b);
+            f.ClickCell(a);
+            Assert.That(shares.Outbox.Requests.Count, Is.EqualTo(requests), "기다리는 동안 다시 눌러도 요청이 겹치지 않는다");
+            Assert.That(f.T.Session.HouseFloorAt(a), Is.EqualTo(f.Frame.DefaultFloor), "허락 전에는 바뀌지 않는다");
+
+            Deliver("guest");
+            Assert.That(f.T.Session.WaitingForRoom, Is.False);
+            Assert.That(f.T.Session.LastRoomCommandApplied, Is.True);
+            Assert.That(f.T.Session.HouseFloorAt(a), Is.EqualTo(floor.Id), "허락이 오면 바뀐다");
+            f.Hover(a);
+            Assert.That(f.Text(FurniturePlacementScreen.FinishReasonId), Is.EqualTo(f.T.Text.Get(HouseFinishReasons.NothingToChange)), "기다림 문구가 사라지고 지금 미리 보기의 이유");
+            Deliver("guest");
+            Assert.That(wallet.Balance, Is.EqualTo(3), "비용만큼 한 번");
+            KnownMissingKeys.AssertOnlyKnownMissing(f.T.Text, new[] { RoomMoneyText.WaitingKey, RoomMoneyText.RefusedKey });
         }
 
         // ---------- 띠 색 탭 ----------
