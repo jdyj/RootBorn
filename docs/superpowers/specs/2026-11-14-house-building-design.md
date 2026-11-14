@@ -281,6 +281,15 @@ HouseBuildSaveData : IVersionedSave
 - 돈 공유가 꺼진 방(집만 공유): 고친 사람이 낸다. 순서는 상자와 같은 "잡기 → 쓰기/풀기"를 방 쪽 구조 조각에 둔다: 방이 그 칸들을 잡아 둔다(다른 요청이 못 건드린다) → 내 쪽이 내 지갑에서 돈을 낸다 → 쓰기(적용) 또는 풀기. 개인 쪽을 먼저 바꾸고 되돌리는 흐름은 없다. "보냈고 아직 적용 안 한 요청"은 지금처럼 개인 진행에 적어 이어 끝낸다(멀티플레이 설계 3.2절).
 - 해금은 각자다(가구와 같다). 남이 해금한 벽지를 쓴 칸도 같이 쓰는 집에서는 모두에게 보인다.
 
+### 8.3.1 구현이 설계와 달라진 것 (1-8, 2026-11-14)
+
+- **요청은 칸 목록 글이 아니라 (꾸밈 id, 도구, 가리킨 칸) + 기대한 칸 수**다(12.1.1절과 같다). 방이 같은 `RoomFill`·출처표로 칸을 다시 내고, 요청한 사람의 미리 보기 칸 수(`Amount`)와 다르면(그 사이 남이 먼저 바꿨다) 거절한다. 띠 색은 (띠 꾸밈 id)이고 `Amount`는 1이다.
+- **지불은 돈 공유 켬·끔이 한 길이다**: 칸 잡기(`finish`·`band` 요청) → 방이 잡아 준다 → 요청한 사람이 낸다(끔: 자기 지갑, 켬: 방 지갑 잡기 → 허락 → 다시 하기) → 돈을 빼는 같은 바꾸기, 같은 저장 묶음에서 쓰기(`use`) 요청과 돈 낸 표시를 적는다 / 낼 수 없으면 풀기(`release`). 8.3절은 켬일 때 방 지갑을 먼저 잡는다고 했지만 방 지갑은 꾸밈 칸을 잡은 뒤에 잡는다. 방 조각이 방 지갑을 직접 깎는 길은 없다(조각끼리 돈을 알지 않는다).
+- **잡기는 방의 상태 파일이 따로 둔다**: 꾸밈 기록은 `room-piece-house-build.json`(`HouseBuildSaveData`와 같은 모양), 잡기는 `room-piece-house-build-holds.json`(Core `RoomHouseBuildHoldsSaveData`). 잡은 사람이 나가도 잡기는 남고, 시간이 지나도 저절로 풀리지 않는다(상자와 같다).
+- **돈 낸 표시 파일이 하나 더 있다**: 플레이어 세이브의 `room-house-build-paid-<플레이어>.json`(Core `RoomHouseBuildPaidSaveData`). 꾸밈 조각을 모르는 옛 빌드·옛 방이 보낼 목록의 쓰기 줄을 `Invalid`로 답받고 지울 수 있어서, "돈을 냈다"를 보낼 목록에만 두면 옛 빌드를 거친 뒤 돈만 나간다. 다시 켠 판은 떠도는 내 잡기를 이 표시로 가려, 있으면 쓰기를 새 id로 다시 보내고 없으면 푼다. 지금은 방을 가리지 않는다(결정 대기 76번).
+- **방은 해금을 확인하지 않는다**: 요청한 사람의 판정을 믿는다(가구 놓기와 같다 — 결정 대기 56·68번). 8.3절의 "해금은 각자다"와 같은 뜻이다.
+- **데이터 지문에 집 LDtk가 든다**(8.2절 그대로, `DataFingerprint`): 집 맵을 다시 만들면 옛 판과 같이 할 수 없다.
+
 ### 8.4 직접 만든 타일은 보내지 않는다
 
 3단계의 플레이어 그림은 같이 하는 사람에게 보내지 않는다. 같이 쓰는 집의 꾸밈 요청은 데이터에 있는 꾸밈 id만 받는다. 이유: 그림을 보내려면 전송(큰 파일 나눠 보내기), 받는 쪽의 내용 검사, 저장 자리, 불쾌한 그림을 막는 길이 따로 필요하다. 나중 길: 방이 그림의 내용 해시를 받고, 없는 사람에게 방이 나눠 보내고, 받는 쪽이 3단계와 같은 검사를 한 뒤 쓴다. 못 받은 사람에게는 기본 꾸밈으로 보인다.
@@ -360,7 +369,7 @@ HouseBuildSaveData : IVersionedSave
 
 각 조각은 테스트와 함께 끝나고, 앞 조각이 합쳐진 뒤 다음을 한다. **1-1과 1-2만으로 게임에 새 집이 보인다.**
 
-**진행(2026-11-14): 1-1 ~ 1-7은 끝났다**(1-1 ~ 1-5 먼저, 1-6·1-7은 계획 `docs/superpowers/plans/2026-11-14-house-building-stage1b.md`로, 브랜치 `room-builder`). 1-8(같이 하기)은 아직 없고 다음 계획 `…-stage1c.md`가 맡는다(아직 쓰지 않았다). 지금 게임은 플레이어가 고른 꾸밈으로 짓는 집을 그리고, 같이 쓰는 집은 기본 꾸밈으로 그린다.
+**진행(2026-11-14): 1-1 ~ 1-8 모두 끝났다**(브랜치 `room-builder`; 구현 계획 문서는 끝나서 지웠고, 만든 것의 이름과 자리는 12.1.2절). 1단계가 끝난 지금 게임은 플레이어가 고른 꾸밈으로 짓는 집을 그리고, 같이 쓰는 집의 꾸밈은 방의 것이라 한 사람이 꾸미면 모두에게 보인다. 확인한 근거는 자동 테스트와 장치 이벤트 주입(OS 입력 계층 미확인)이고 사람이 직접 한 플레이는 없다.
 
 | # | 조각 | 끝났다는 것 |
 |---|---|---|
@@ -371,7 +380,7 @@ HouseBuildSaveData : IVersionedSave
 | 1-5 | **게임이 조합해 그린다**: Host 조합(출처표 + 꾸밈 → 묶음 텍스처), 집 맵의 `Wall`·`Ground` 층 대신 그리기. 꾸밈 기본값만으로 | Host 스크린샷(직접 연다): 띠·정면·좁은 정면·두 방 사이 세로 벽 칸이 바르게 |
 | 1-6 | **꾸밈 규칙·세이브·비용**: Core 꾸밈 상태(칸 → 꾸밈, 방 채우기 규칙, 미리 보기), `GameSession` 명령·조회, `house-build.json`, 비용 | Game 비용 다섯 경우, 옛 세이브(파일 없음), 상위호환(옛 모양으로 읽고 쓴 뒤 남음) |
 | 1-7 | **화면**: 가구 배치 화면에 꾸미기 분류(14.3절 답에 따라) | Screens 구성·문구 키·긴 문구, Host 실제 입력으로 벽지 바꾸고 스크린샷 |
-| 1-8 | **같이 하기**: `house-build` 조각, 서버 판정, 지문에 집 LDtk | Net 두 판, Host 두 창 |
+| 1-8 | **같이 하기**: `house-build` 조각, 서버 판정, 지문에 집 LDtk — **끝(2026-11-14)** | Net 두 판, Host 두 창(구현은 설계와 달라진 곳이 있다: 8절 아래 "구현이 설계와 달라진 것") |
 
 ### 12.1.1 계획에서 달라진 것 (1-1 ~ 1-7을 만들며)
 
@@ -387,6 +396,19 @@ HouseBuildSaveData : IVersionedSave
 - **같이 하기 요청은 칸 목록 대신 (꾸밈 id, 도구, 가리킨 칸)**으로 한다(8.1절의 "칸 목록 글"과 다르다): 방이 같은 `RoomFill`·출처표로 칸을 다시 내므로 요청이 작고 손님이 보낸 칸을 믿지 않는다. 띠 색은 (띠 꾸밈 id).
 - 비용은 바뀌는 칸만 세어 상태로 한 번만 낸다 — 받음 기록을 따로 두지 않는다(바뀌는 칸이 0이면 비용도 0이라 같은 요청 두 번째는 저절로 무료).
 - 잠긴 꾸밈은 동네 가게에서 산다(판매 필드 `priceItem`·`price`·`purchaseLocationId`, 사면 가구와 같은 해금 토큰). 새 게임의 집에만 처음 배치 가구가 놓인다(`HouseStarterLayout`, 시험용 — 같이 쓰는 집에는 주지 않는다).
+
+### 12.1.2 1단계에서 생긴 것 — 이름과 자리 (2단계가 기대는 것)
+
+구현 계획 문서는 끝나서 지웠다. 2단계(안쪽 벽)는 아래를 그대로 쓰거나 넓힌다. 2026-11-14 코드 기준이다.
+
+- **Core `Rootborn.Core.Building`**: `HouseBuildFrame`(집 틀: 틀 id, 칸 출처표, 기본 벽지·바닥·띠, `HouseFinishes.cs` 안), `HouseFinishes`(꾸밈 상태: 칸 → 꾸밈, 미리 보기 `Preview`·`PreviewBand`, 적용 `Apply`, 비용 `CostFor`), `RoomFill`(방 채우기와 문간 규칙), `HouseFinishPreview`, 거절 이유 `HouseFinishReasons`, 도구 `HouseFinishTools`, 세이브 모양 `HouseBuildSaveData`(+ 칸 기록 `HouseFinishCellSaveData`; 맨 위 새 필드로만 늘린다 — 2단계 벽은 설계 7.1절대로 `WallsAdded`·`WallsRemoved`).
+- **Core `Rootborn.Core.Room`**: 방 조각 `RoomHouseBuild`(조각 이름 `"house-build"`, `RoomPieceCatalog.Follow`로 `house`를 따른다), 요청 종류 `finish`·`band`(잡기), `use`(쓰기), `release`(풀기) — 글 상수, 2단계는 `wall-add`·`wall-remove`를 같은 조각에 더하고 잡기 → 쓰기/풀기 틀을 그대로 쓴다. 손님 쪽 `RoomHouseBuildClient`(`RequestFinish`·`RequestBand`·`AddUse`·`AddRelease`·`CopyHoldsOf`·`Data`·`Known`), 돈 낸 표시 `RoomHouseBuildPaidSaveData`·`RoomHouseBuildPaidHolds`(`StepFor`가 떠도는 잡기를 풀지 쓸지 가린다), 규칙의 입구 `RoomHouseRules.BuildFrameFor`·`FindFinish`.
+- **World**: `IHouseFinishLookup`(`WallAt`·`FloorAt`·`BandColors`, `HouseFinishLookup.cs`), `HouseFinishPreviewLookup`, `HouseBuildFrames.From`(맵 → 틀). 조합기 `RoomTileCompositor`.
+- **방 서버와 내 PC의 방이 틀을 얻는 곳**: 서버 `Rootborn.Server/HouseGrids.LoadFrames`, 내 PC의 방 `Rootborn.Host`의 `RoomAwareMaps.FrameForSurface`. 2단계에서 `HouseStructure`(테두리 + 차이)를 만들면 이 셋(`BuildFrameFor`·`LoadFrames`·`FrameForSurface`)이 출처표 대신 구조를 넘긴다.
+- **GameSession**: 명령·조회 `EnterHouseBuild(frame)`·`LeaveHouseBuild`·`HouseBuildOpen`·`HouseWallAt`·`HouseFloorAt`·`HouseBandColors`·`HouseBuildVersion`·`HouseFinishOptions`·`IsFinishUnlocked`·`FinishesForSaleAt`·`PurchaseFinish`·`PreviewHouseFinish`·`ApplyHouseFinish`·`PreviewHouseBand`·`ApplyHouseBand`(`GameSession.HouseBuild.cs`). 같이 쓰는 집은 `GameSession.SharedHouseBuild.cs`: 방의 기록을 읽은 두 번째 `HouseFinishes`(`_sharedFinishes`, 비추기), 잡기 요청 → 허락 → 돈 내기 → 쓰기(`OnFinishAnswered`·`PayForHold`), 떠도는 잡기(`ReleaseStrayHolds`), `SharesHouseBuild`, `LastHouseFinishRefusal`, `RoomCannotDecorate`(꾸밈을 모르는 방이면 이유 `RoomTooOld`).
+- **세이브 파일 이름**(`SaveFileNames`): 혼자 하는 집의 `house-build.json`, 방의 꾸밈 `room-piece-house-build.json`(`RoomPiece("house-build")`)과 방의 잡기 `room-piece-house-build-holds.json`(`RoomHouseBuildHolds`), 플레이어의 돈 낸 표시 `room-house-build-paid-<플레이어>.json`(`RoomHouseBuildPaid`). 세이브 하위·상위호환 고정 폴더는 `monogame-20261114`, `room-20261114`, `room-20261114b`(`game/tests/Rootborn.Data.Tests/Fixtures/saves/`).
+- **시나리오**: HOUSE-001(혼자 하는 집의 꾸밈), HOUSE-002(옛 가구 옮기기·보관), HOUSE-004(같이 쓰는 집의 꾸밈) — `testing-discipline.md` 표와 `game/tests/Rootborn.Game.Tests/SCENARIOS.md`. HOUSE-003(2단계)은 아직 없다.
+- **2단계가 다시 볼 것**: 옮겨 놓인 가구 자리를 방 기록에 굳히기(결정 대기 64번), 요청한 사람이 해금을 믿는 판정(68번), 돈을 냈는데 방이 끝내 적용하지 못하는 경우(69번), 돈 낸 표시가 방을 가리지 않는 것(76번).
 
 ### 12.2 2단계 — 안쪽 벽 (막지 않게 하는 것만)
 
@@ -410,7 +432,7 @@ HouseBuildSaveData : IVersionedSave
 | Python(키트) | 시험 표 다시 만들기가 같음, 조각 시트 검사(`lint_room_tile`) |
 
 - 새 시나리오 id 제안: `HOUSE-001` 방 꾸밈을 돈을 내고 바꾸고 같은 요청은 한 번만, `HOUSE-002` 집 맵 교체 뒤 옛 가구가 옮겨지거나 보관되고 사라지지 않음, `HOUSE-003`(2단계) 닿지 않는 방을 만드는 벽은 거절, `HOUSE-004` 같이 쓰는 집의 꾸밈·구조가 모두에게 같음. `testing-discipline.md` 표와 `SCENARIOS.md`에 올린다.
-- 성능: 출처표는 구조가 바뀔 때만 집 전체(504칸)를 다시 낸다. 꾸밈만 바뀌면 출처표는 그대로이고 바뀐 칸과 그 칸을 출처로 쓰는 칸(이웃 띠 칸, 위 정면 2칸)의 조합만 다시 만든다. 같은 조합은 묶음 텍스처에서 다시 쓴다. 매 프레임 하는 일은 그리기뿐이다. Python 판은 28x18 집 한 채의 고르기에 약 0.2초가 든다(무작위 집 3000채에 약 10분 — 이 PC, 한 번 잰 것); C# 판의 시간은 1-3에서 잰다(목표: 집 한 채 16ms 아래, 화면이 한 프레임 멈추지 않게). 조합 텍스처의 크기 상한과 메모리는 1-5에서 잰다(`WorldScreen`의 그림 예산 256MB 안).
+- 성능: 출처표는 구조가 바뀔 때만 집 전체(504칸)를 다시 낸다. **꾸밈이 바뀌면 지금 구현은 집 전체를 다시 조합한다**(`WorldScreen.RefreshComposedTiles`가 낡았다고 표시하고 다음 그리기에서 한 번 조합한다 — 출처표는 그대로이고 묶음 텍스처는 크기가 같으면 새로 만들지 않고 픽셀만 바꾼다). 바뀐 칸과 그 칸을 출처로 쓰는 칸만 다시 만드는 최적화는 하지 않았다. 같은 조합은 묶음 텍스처에서 다시 쓴다. 매 프레임 하는 일은 그리기뿐이다. 꾸밈이 바뀔 때의 조합 시간은 따로 재지 않았다(첫 입장 이후 조합이 2.0~2.5ms였다). 같이 쓰는 집에서는 남이 꾸밀 때마다 방의 알림으로 같은 한 번의 조합이 일어난다. Python 판은 28x18 집 한 채의 고르기에 약 0.2초가 든다(무작위 집 3000채에 약 10분 — 이 PC, 한 번 잰 것); C# 판의 시간은 1-3에서 잰다(목표: 집 한 채 16ms 아래, 화면이 한 프레임 멈추지 않게). 조합 텍스처의 크기 상한과 메모리는 1-5에서 잰다(`WorldScreen`의 그림 예산 256MB 안).
 - 근거 종류는 `core-logic-and-play-evidence.md` 대로 나눠 쓴다. 조작감(방 채우기가 편한지, 가로 벽 3줄이 답답한지)은 사용자만 확인할 수 있다.
 
 ## 14. 맡기는 것, 정한 것, 정해 주실 것
@@ -468,9 +490,10 @@ HouseBuildSaveData : IVersionedSave
 **남은 것**
 
 - 열쇠 수의 이론 상한은 세지 않았다(띠 열쇠가 1000채마다 10~20개씩 계속 는다는 것까지만 확인).
-- 개인 지갑 + 같이 쓰는 집에서 방 쪽 "칸 잡기"(8.3절)는 상자의 잡기(`RoomChests`)와 같은 틀로 된다고 보았고 코드로 만들어 보지 않았다.
+- (풀림 — 1-8) 개인 지갑 + 같이 쓰는 집의 방 쪽 "칸 잡기"는 만들었다(8.3.1절). 상자의 잡기와 같은 틀에 "돈 낸 표시" 파일이 하나 더 필요했다.
+- 옮겨 놓인 가구 자리를 방 기록에 굳히는 것은 하지 않았다(결정 대기 64번, 2단계 벽이 가구를 밀어낼 때 다시 본다).
 - 집 단계를 올리는 길이 생길 때 테두리를 "넓어지는 쪽으로만" 키우는 약속을 맵 그리는 사람이 받아들일지. 약속은 `game/world/README.md` 6절에 적었고 코드가 막지는 않는다.
-- 새 CI job `pixel-kit-tests`가 GitHub에서 실제로 도는지(푸시하지 않았다), 리눅스 러너의 Pillow 12.0.0에서 그림 바이트가 같은지.
+- (풀림) GitHub의 새 CI job `pixel-kit-tests`: 2026-11-14 푸시 `08b25fb41`의 실행에서 정적 검사·dotnet·Host 묶음 다섯·도구 테스트·서버 배포가 모두 성공했다. 리눅스 러너에서 그림 바이트가 같지 않아 비교를 픽셀로 바꿨다(그 커밋).
 - 새 집 파일(`Build` 층과 벽 문)을 LDtk 편집기에서 연 것은 **사용자가 2026-11-14에 확인했다**(오류 없이 열림, `Build` 층 보임, 방 넷). 편집기에서 저장한 뒤 `room repaint`는 이 파일로는 확인하지 못했다.
 - 실제 옛 빌드 실행 파일로 새 빌드의 세이브를 연 것(상위호환)은 해 보지 않았다. 테스트 고정 파일로만 본다.
 - 사람이 직접 한 플레이와 조작감(꾸미기 화면의 카드 크기·밝힘 색·미리 보기 포함 — 결정 대기 33~52번은 사용자가 직접 플레이해 본 뒤 고른다).
@@ -478,4 +501,9 @@ HouseBuildSaveData : IVersionedSave
 **1-6·1-7 뒤에 풀린 것과 남은 것**
 
 - 풀린 것(자동 테스트·장치 이벤트 주입, OS 입력 계층 미확인): 꾸밈 비용 다섯 경우와 세이브 하위·상위호환(Game `HouseFinishTests`·`HouseBuildCompatTests`, 고정 폴더 `monogame-20261114`), 가게 구매·해금, 꾸미기 화면(Screens `FinishPaletteScreenTests`, Host `HouseFinishHostTests`), 같이 쓰는 집은 기본 꾸밈으로 보임. 첫 입장 조합은 11.3ms(첫 실행), 두 번째부터 2.0~2.5ms.
-- 남은 것: 같이 쓰는 집에서 꾸미기와 보관한 가구 꺼내기(1-8, `…-stage1c.md`), 집 파일을 편집기에서 저장한 뒤의 `repaint`, GitHub의 CI(푸시하지 않음), 실제 옛 빌드 실행 파일로 새 세이브 열기, 사람이 직접 한 플레이.
+- 남은 것: 집 파일을 편집기에서 저장한 뒤의 `repaint`, 실제 옛 빌드 실행 파일로 새 세이브 열기, 사람이 직접 한 플레이. (같이 쓰는 집에서 꾸미기와 보관한 가구 꺼내기는 1-8에서 구현했다 — 아래.)
+
+**1-8(같이 쓰는 집의 꾸밈) 뒤에 풀린 것과 남은 것**
+
+- 풀린 것(자동 테스트, 장치 이벤트 주입 — OS 입력 계층 미확인): 한 사람이 꾸미면 모두에게 보이고 돈은 꾸민 사람이 한 번만 낸다(Game `SharedHouseBuildTests`·`HouseFinishSharedMoneyTests`, Server `SharedHouseBuildRoomTests`, Simulation `RoomPlayTests`, Host `TwoGamesHostTests.TWO_GAMES_010`·`011` — 두 프로세스·같은 기계 루프백), 세이브 하위·상위호환(Game `RoomHouseBuildCompatTests`, 고정 폴더 `room-20261114`·`room-20261114b`), 보관한 가구 꺼내기(Game `HouseMoveTests.SharedHouse_StoredTakeOut_*`).
+- 남은 것: 두 기계(Windows와 Linux)에서 꾸밈 공유와 데이터 지문이 같은지(코드로만 확인), 실제 옛 빌드 실행 파일·옛 서버로 새 방을 여는 것, 사람이 직접 한 플레이, 돈을 같이 쓰는 방의 두 창 시험, 결정 대기 55~82번.

@@ -56,7 +56,7 @@ cd <서버 폴더>
 시간(날·시각)은 항상 같이 쓰고, 가방과 개인 성장은 항상 각자다. 그 밖에 `--share`로 고른다(쉼표로):
 
 - `wallet` — 돈을 같이 쓴다
-- `house` — 집과 가구를 같이 쓴다
+- `house` — 집과 가구와 집 꾸밈(벽지·바닥·띠 색, 조각 `house-build`는 `house`를 따라 켜진다)을 같이 쓴다
 - `town` — 마을 상태를 같이 쓴다
 - `none` — 시간만
 
@@ -83,7 +83,7 @@ cd <서버 폴더>
 
 ```
 <세이브 폴더>/<슬롯>/
-  room-clock.json, room-settings.json, room-piece-*.json, ...   방의 시계·설정·같이 쓰는 것
+  room-clock.json, room-settings.json, room-piece-*.json, ...   방의 시계·설정·같이 쓰는 것(집 꾸밈은 room-piece-house-build.json과 잡기 room-piece-house-build-holds.json)
   guests/<플레이어>/                                               들어온 사람마다 그 사람의 세이브
   backups/<날>/                                                    날마다 남긴 방 파일의 사본(최근 --day-copies 개)
   guests/<플레이어>/backups/<날>/                                  손님 세이브의 날 사본
@@ -146,6 +146,7 @@ cd <서버 폴더>
 
 **버전이 다르면 못 들어온다.** 서버와 게임이 같은 커밋에서 만든 것이고 데이터가 같아야 한다. 로그의 방 열기 줄에 `game 1.0.0+<커밋>`과 `data <지문>`이 있고,
 다르면 들어오려는 쪽에 "서버와 게임 버전이 달라요" 또는 "데이터가 달라요"가 뜬다(서버 로그에는 `접속 거절 ...: game version mismatch` 등).
+데이터 지문에는 짓는 집의 LDtk 파일이 든다(`game/world/maps.json`에서 `build`가 있는 맵). 집 맵을 다시 만든 판과 옛 서버는 서로 "데이터가 달라요"로 못 들어온다.
 게임을 새로 받으면 서버도 같은 것으로 바꾼다 — 세이브 폴더는 그대로 쓰면 된다.
 
 ## 10. 서버를 옮기기

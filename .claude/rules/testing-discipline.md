@@ -40,11 +40,12 @@ bash Scripts/ci/run-all.sh --checks-only   # 정적 검사(Scripts/ci/README.md)
 bash Scripts/ci/run-all.sh                 # 자체 시험 + 검사 + dotnet 테스트 전부
 ```
 
+- **이 PC에서는 dotnet을 한 번에 하나만 돌린다(메모리). 여러 에이전트가 한 체크아웃에서 동시에 빌드하지 않는다. 쓰는 에이전트는 체크아웃당 하나다.** 왜: 2026-11-14 두 구현자를 같은 작업 폴더에 동시에 띄웠더니 한쪽의 미커밋 변경이 다른 쪽 빌드를 깨뜨렸다.
 - 평소에는 고친 프로젝트의 테스트만 돌리고, 커밋·합치기 전에는 전부 돌린다.
 - **새 게임의 모습이나 여러 프로젝트가 쓰는 것(처음 배치 가구, 새 세이브 파일, 공유 정의, 화면 구성)을 바꾼 작업은 고친 프로젝트만이 아니라 Screens·Simulation·Server 테스트도 돌리고, `data/building/`처럼 키트 도구가 함께 읽는 데이터를 고쳤으면 도구 테스트(Python)도 돌린다. 이 PC에서 Host를 필터로만 돌렸으면 합치기 전에 원격에서 전체를 돌린다.** 왜: 2026-11-14 새 게임에 처음 배치 가구를 넣은 작업이 Game·Core·Data만 돌려, Screens 11건·Host 3건·Server 1건·Simulation 1건의 실패가 뒤 작업에서야 드러났다(새 게임은 빈 집이라는 전제가 여러 프로젝트의 테스트에 있었다).
 - 전체 실행(특히 Host)은 원격 Linux 장치에서 돌릴 수 있다: `bash Scripts/remote-test/run.sh [<커밋>]`(`Scripts/remote-test/README.md`). 커밋된 것만 가고, 접속 값은 환경 변수로 받는다. 이 PC의 메모리가 모자라거나 세션 여럿이 동시에 돌 때는 이쪽을 쓴다. 원격 실행은 연결이 끊겨도 끝까지 돈다 — 이 PC 쪽이 꺼졌으면 다시 시작하지 말고 `run.sh --resume`으로 이어 받는다(`--status`로 도는 실행을 본다). 근거 종류는 같다(장치 이벤트 주입, OS 입력 계층 미확인).
 - **통과 줄만 보지 말고 프로젝트별 건수가 줄지 않았는지 본다.** 왜: 건수가 줄었으면 테스트가 빠진 것이고, 통과 줄은 그것을 알려 주지 않는다.
-- CI(`.github/workflows/ci.yml`)는 정적 검사, 키트 도구 테스트(Python, job `pixel-kit-tests` — GitHub에서 도는 것은 아직 확인하지 못했다), Host를 뺀 dotnet 테스트로 막는다. Host 테스트는 아직 `continue-on-error`다.
+- CI(`.github/workflows/ci.yml`)는 정적 검사, 키트 도구 테스트(Python, job `pixel-kit-tests` — GitHub에서 2026-11-14 푸시 `08b25fb41`의 실행으로 성공을 확인했다), Host를 뺀 dotnet 테스트로 막는다. Host 테스트는 아직 `continue-on-error`다.
 
 ## 시나리오 id
 
@@ -68,7 +69,7 @@ bash Scripts/ci/run-all.sh                 # 자체 시험 + 검사 + dotnet 테
 | NPC-003 | 같은 시각이면 같은 자리 — 이어 하기·같이 하기 | Core `NpcStayTests`·`NpcDayPlanTests`, World `NpcStageTests`, Simulation `NpcWalkingTests`, Game `NpcTimeTests`, Host `TwoGamesHostTests.TWO_GAMES_NPC_001` |
 | HOUSE-001 | 방 꾸밈을 돈을 내고 바꾸고 같은 요청은 한 번만, 바뀐 꾸밈으로 집을 다시 그림 | Core `HouseFinishesTests`·`RoomFillTests`, Game `HouseFinishTests`·`HouseBuildCompatTests`(세이브 하위·상위호환), World `RoomTileCompositorTests`(Lookup·PreviewLookup), Screens `FinishPaletteScreenTests`, Host `HouseFinishHostTests` |
 | HOUSE-002 | 집 맵 교체 뒤 옛 가구가 옮겨지거나 보관되고 사라지지 않음 | Core `FurnitureRelocationTests`, Game `HouseMoveTests`, Screens `StoredFurnitureScreenTests`·`HouseMovedNoticeTests`, Host `HouseMoveHostTests` |
-| HOUSE-004 | 같이 쓰는 집에서 한 사람이 꾸미면 모두에게 보이고 돈은 한 번만 | Core `RoomHouseBuildTests`, Game `SharedHouseBuildTests`, Server `SharedHouseBuildRoomTests`, Screens `FinishPaletteScreenTests`, Simulation `RoomPlayTests`, Host `TwoGamesHostTests.TWO_GAMES_010`·`TWO_GAMES_011` |
+| HOUSE-004 | 같이 쓰는 집에서 한 사람이 꾸미면 모두에게 보이고 돈은 한 번만 | Core `RoomHouseBuildTests`, Game `SharedHouseBuildTests`·`HouseFinishSharedMoneyTests`·`RoomHouseBuildCompatTests`(방 세이브 하위·상위호환, 고정 폴더 `room-20261114`·`room-20261114b`), Data `RoomHouseBuildSaveTests`, Server `SharedHouseBuildRoomTests`, Screens `FinishPaletteScreenTests`, Simulation `RoomPlayTests`(방 꾸밈 시드), Host `TwoGamesHostTests.TWO_GAMES_010`·`TWO_GAMES_011`(장치 이벤트 주입, OS 입력 계층 미확인) |
 
 - 지금 대응이 없는 id(KNOW-001·002, TOOL-001, NET-001·002, HEIR-001, STATUS-001의 일부)는 게임이 그 영역을 쓰지 않거나 MonoGame 판에 아직 없다. 이유는 `SCENARIOS.md` 2절. 그 영역을 옮기거나 만들 때 테스트를 더하고 이 표에 올린다.
 - 새 메카닉(활동, 선택지, 진로, 관계, 알바, 퀘스트 종류)을 더하면 시나리오 테스트를 하나 이상 더한다. 새 보상 지급 경로는 원칙 2의 다섯 경우를 더한다.

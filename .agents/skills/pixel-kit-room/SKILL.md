@@ -60,8 +60,9 @@ description: "ROOTBORN 실내 방·집 구조를 칸마다 벽/바닥/밖만 정
    `room check art/world/rooms/house/house.ldtk`(와 `room build house --dry-run`)에 알림 `room-door-unregistered (14, 17)` 하나가 나오는 것은 정상이다(문 목적지는 게임 `game/world/maps.json`의 `House` 항목이 가진다).
 2. `room build house --force --dry-run`으로 쓸 파일을 보고 `room build house --force`. **LDtk에서 손으로 고친 것(칠한 `Collision`·`Build`, 놓은 가구, 고친 문)은 지워진다.** 손 고친 것이 있으면 `--force` 대신 `repaint`(위 5번).
 3. 평면의 `frameId`를 올렸으면 방 폴더 `maps.json`과 `game/world/maps.json`의 `House` `build`도 같은 값으로 맞춘다(키트 시험 `HouseRoomTests`가 견준다).
-4. 테스트와 화면: 도구 테스트 전체, World `HouseMapTests`·`MapContractTests`, Host `HouseMapHostTests`·`HouseTilesHostTests`. 게임 화면 스크린샷을 **직접 열어** 본다(스킬 `host-play-test`).
-5. 벽 그림을 고르는 규칙을 고쳐야 하면 아래 "게임 쪽과 나누는 것"으로 간다.
+4. **집 LDtk를 다시 만들면(`room build --force`·`repaint` 포함) 데이터 지문이 바뀐다** — 같이 쓰는 방은 접속할 때 지문을 견주므로(`DataFingerprint`가 짓는 집 LDtk를 셈한다, 그림 PNG는 셈하지 않는다) 옛 판과 같이 할 수 없고 서버도 같은 판이어야 한다. 같이 하는 사람에게 알린다.
+5. 테스트와 화면: 도구 테스트 전체, World `HouseMapTests`·`MapContractTests`, Host `HouseMapHostTests`·`HouseTilesHostTests`. 게임 화면 스크린샷을 **직접 열어** 본다(스킬 `host-play-test`).
+6. 벽 그림을 고르는 규칙을 고쳐야 하면 아래 "게임 쪽과 나누는 것"으로 간다.
 
 ## 새 게임의 처음 가구와 집 안 지점을 고칠 때
 
