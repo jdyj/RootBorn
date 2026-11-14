@@ -263,6 +263,101 @@ namespace Rootborn.Game.Tests
             Assert.That(SlotCheckpoints.Same(before, SlotCheckpoints.Read(saves)), Is.True);
         }
 
+        // 고정 슬롯을 임시 폴더로 복사하면서 모든 파일의 줄 끝을 CRLF로 바꾼다(옛 Windows 빌드가 쓴 세이브). 고정 폴더는 읽기만 한다.
+        // 고정 폴더는 .gitattributes로 LF로 체크아웃되므로 진짜 CRLF 입력은 이렇게 테스트 안에서 만든다.
+        private static void CopyFixtureAsCrlf(TempSaves saves, string fixtureSlotFolder, string slot)
+        {
+            var source = Path.Combine(TestWorld.FixtureSaves, fixtureSlotFolder);
+            var target = Path.Combine(saves.Path, slot);
+            Directory.CreateDirectory(target);
+            foreach (var file in Directory.GetFiles(source))
+            {
+                string lf = File.ReadAllText(file).Replace("\r\n", "\n");
+                File.WriteAllText(Path.Combine(target, Path.GetFileName(file)), lf.Replace("\n", "\r\n"));
+            }
+        }
+
+        private static string Lf(byte[] bytes) => System.Text.Encoding.UTF8.GetString(bytes).Replace("\r\n", "\n");
+
+        private static bool HasCr(byte[] bytes) => Array.IndexOf(bytes, (byte)'\r') >= 0;
+
+        [Test]
+        public void WindowsCrlfSlot_Opens_ReadingWritesNothing_HouseKeepsEverything_SavedFilesAreLf_AndAnOlderFlowStillPlays()
+        {
+            // 옛 Windows 빌드(줄 끝 CRLF)가 쓴 11-14 슬롯을 지금 프로그램(줄 끝 LF)으로 연다. 견줄 기준은 같은 슬롯의 LF 사본으로 연 판이다.
+            const string fixture = "monogame-20261114/" + SlotCheckpoints.Slot;
+            using var plainSaves = new TempSaves();
+            plainSaves.CopyFixture(fixture, SlotCheckpoints.Slot);
+            var plain = InHouse(plainSaves.Store, SlotCheckpoints.Slot);
+
+            using var saves = new TempSaves();
+            CopyFixtureAsCrlf(saves, fixture, SlotCheckpoints.Slot);
+            var original = SlotCheckpoints.Read(saves);
+            Assert.That(original.Values.All(HasCr), Is.True, "전제: 모든 파일이 CRLF다");
+            Assert.That(original.Keys, Does.Contain(SaveFileNames.HouseBuild), "전제: 꾸밈 파일이 든 슬롯");
+            Assert.That(saves.Store.TryRead<HouseBuildSaveData>(SlotCheckpoints.Slot, SaveFileNames.HouseBuild, out var data), Is.True);
+            var recorded = data.Finishes.First(f => f.Floor.Length > 0);
+
+            // 시작: 읽기만으로는 아무 파일도 쓰지 않는다 — CRLF 바이트 그대로.
+            var game = TestWorld.Start(saves.Store, SlotCheckpoints.Slot);
+            Assert.That(SlotCheckpoints.Same(original, SlotCheckpoints.Read(saves)), Is.True, "시작(읽기)만으로 쓰지 않는다 — CRLF 그대로");
+
+            // 집 입장·짓는 집 붙이기: 파일이 다시 쓰여도 내용(값·모르는 필드·순서)은 원본과 같고, 다시 쓰인 파일에는 \r이 없다.
+            game.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
+            game.EnterHouseBuild(Frame);
+            var afterHouse = SlotCheckpoints.Read(saves);
+            Assert.That(afterHouse.Keys, Is.EquivalentTo(original.Keys), "파일을 새로 만들지도 지우지도 않는다");
+            int rewritten = 0;
+            foreach (var pair in original)
+            {
+                Assert.That(Lf(afterHouse[pair.Key]), Is.EqualTo(Lf(pair.Value)), pair.Key + ": 집에 들어가도 내용은 원본과 같다(줄 끝만 다를 수 있다)");
+                if (afterHouse[pair.Key].AsSpan().SequenceEqual(pair.Value)) continue;
+                rewritten++;
+                Assert.That(HasCr(afterHouse[pair.Key]), Is.False, pair.Key + ": 다시 쓴 파일은 LF");
+            }
+
+            TestContext.WriteLine("집 입장 뒤 다시 쓰인 파일 " + rewritten + "/" + original.Count);
+            Assert.That(game.HouseFloorAt(new CellPos(recorded.X, recorded.Y)), Is.EqualTo(recorded.Floor), "꾸밈이 그대로 보인다");
+            Assert.That(game.Wallet.Balance, Is.EqualTo(plain.Wallet.Balance), "돈이 LF 판과 같다");
+            Assert.That(game.House.Placed.Count, Is.EqualTo(plain.House.Placed.Count).And.GreaterThan(0), "가구가 LF 판과 같다");
+            Assert.That(game.Student.CurrentDay, Is.EqualTo(plain.Student.CurrentDay));
+
+            // 꾸밈 하나를 바꾸고 저장: 쓴 파일에는 \r이 없다.
+            var cell = FloorOutsideTopLeftRoom(game);
+            var floor = FreeNonDefault(RoomFinishSlots.Floor, 1);
+            int cost = floor.Cost.Where(c => c.Item == Allowance).Sum(c => c.Count);
+            GiveMoney(game, cost);
+            int moneyBefore = game.Wallet.Balance;
+            Assert.That(game.ApplyHouseFinish(floor.Id, HouseFinishTools.Brush, cell), Is.True);
+            Assert.That(game.Wallet.Balance, Is.EqualTo(moneyBefore - cost), "칸 값을 한 번 냈다");
+            var afterFinish = SlotCheckpoints.Read(saves);
+            Assert.That(afterFinish[SaveFileNames.HouseBuild].AsSpan().SequenceEqual(original[SaveFileNames.HouseBuild]), Is.False, "꾸밈 파일을 다시 썼다");
+            foreach (var pair in afterFinish.Where(p => !original.TryGetValue(p.Key, out var o) || !o.AsSpan().SequenceEqual(p.Value)))
+                Assert.That(HasCr(pair.Value), Is.False, pair.Key + ": 저장한 파일은 LF");
+            int money = game.Wallet.Balance, placed = game.House.Placed.Count;
+
+            // 새 GameSession으로 다시 읽기: 바꾼 꾸밈·원래 꾸밈·돈·가구가 그대로.
+            var again = InHouse(saves.Store, SlotCheckpoints.Slot);
+            Assert.That(again.HouseFloorAt(cell), Is.EqualTo(floor.Id), "바꾼 꾸밈이 남는다");
+            Assert.That(again.HouseFloorAt(new CellPos(recorded.X, recorded.Y)), Is.EqualTo(recorded.Floor), "원래 꾸밈도 남는다");
+            Assert.That(again.Wallet.Balance, Is.EqualTo(money));
+            Assert.That(again.House.Placed.Count, Is.EqualTo(placed));
+
+            // 옛 빌드처럼(짓는 집을 모름) 이 LF로 다시 쓰인 슬롯을 열어 하루를 보내도 꾸밈 파일은 그대로이고, 돌아오면 꾸밈이 남는다.
+            byte[] build = File.ReadAllBytes(BuildPath(saves, SlotCheckpoints.Slot));
+            var old = TestWorld.Start(saves.Store, SlotCheckpoints.Slot);
+            old.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
+            int day = old.Student.CurrentDay;
+            if (old.Student.DayState == StudentDayState.InProgress) old.VisitLocation("location.town-square");
+            if (old.Student.DayState == StudentDayState.InProgress) Assert.That(old.EndDay().Ended, Is.True);
+            Assert.That(old.StartNextDay(), Is.True);
+            Assert.That(old.Student.CurrentDay, Is.EqualTo(day + 1));
+            Assert.That(File.ReadAllBytes(BuildPath(saves, SlotCheckpoints.Slot)), Is.EqualTo(build), "꾸밈 파일을 모르는 흐름은 그 파일을 쓰지 않는다");
+            var back = InHouse(saves.Store, SlotCheckpoints.Slot);
+            Assert.That(back.HouseFloorAt(cell), Is.EqualTo(floor.Id));
+            Assert.That(back.Student.CurrentDay, Is.EqualTo(day + 1));
+        }
+
         // ---------- 상위호환 ----------
 
         [Test]
