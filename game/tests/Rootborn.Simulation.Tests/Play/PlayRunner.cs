@@ -500,12 +500,22 @@ namespace Rootborn.Simulation
             else reloaded = GameSession.Start(_atlas.Definitions, GameStartSettings.FromDefinitions(_atlas.Definitions),
                 new FileSaveStore(_body.SaveRoot), _body.SlotId, null);
             if (_body.HouseEntered.HasValue && !skipHouse) reloaded.EnterHouse(_body.HouseEntered.Value.Grid, _body.HouseEntered.Value.Surface);
+            // 집에 들어가지 않았어도 게임은 판을 이을 때 집 배치를 읽어 둔다(HouseFurnitureBlocking.Attach → GameSession.PrepareHouse) — 다시 읽은 판도 같은 길로 연다.
+            // 안 열면 다시 읽은 판에는 가구 줄이 하나도 없어, 세이브에 든 배치(새 게임의 처음 배치 포함)를 "사라졌다"로 잘못 본다.
+            else if (live.House != null && !skipHouse) ReloadHouses().Attach(reloaded, _body.Walk?.Map.Id);
             List<string> liveLines = StateSnapshot.Of(live), reloadedLines = StateSnapshot.Of(reloaded);
             if (skipHouse) { liveLines.RemoveAll(StateSnapshot.IsFurniture); reloadedLines.RemoveAll(StateSnapshot.IsFurniture); }
             List<string> diff = StateSnapshot.Diff(liveLines, reloadedLines);
             _result.Reloads++;
             if (diff.Count > 0) Fail("세이브 어긋남: 저장 뒤 새 GameSession으로 다시 읽은 상태가 다르다\n" + string.Join("\n", diff), view);
         }
+
+        private Rootborn.Screens.Furniture.HouseFurnitureBlocking _reloadHouses;
+
+        // 다시 읽은 판에 집 배치를 열어 줄 것(몸의 월드와 따로 — 몸의 걷는 격자를 건드리지 않는다). 처음 쓸 때 한 번 만든다.
+        private Rootborn.Screens.Furniture.HouseFurnitureBlocking ReloadHouses()
+            => _reloadHouses ??= new Rootborn.Screens.Furniture.HouseFurnitureBlocking(new Headless.HeadlessRooms(_atlas.Maps, _atlas.Interactions).RoomOf,
+                _atlas.Interactions.PlacementMaps(_atlas.Maps.Catalog), _ => { });
 
         private void CountProgress()
         {
