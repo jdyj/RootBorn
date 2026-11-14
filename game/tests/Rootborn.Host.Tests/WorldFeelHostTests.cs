@@ -233,14 +233,22 @@ namespace Rootborn.Host.Tests
             WorldSession session = player.World;
             DoorArea door = session.Map.Doors.First(d => d.Destination.HasValue && DoorRoutes.Normalize(d.Target) == DoorRoutes.Normalize(target));
             int size = session.Map.Grid.CellSize;
-            var doorCells = new HashSet<CellPos>(CollisionInput.CellsUnder(door.Area, size));
-            bool Next(CellPos c) => !doorCells.Contains(c) && (doorCells.Contains(new CellPos(c.X + 1, c.Y)) || doorCells.Contains(new CellPos(c.X - 1, c.Y))
-                || doorCells.Contains(new CellPos(c.X, c.Y + 1)) || doorCells.Contains(new CellPos(c.X, c.Y - 1)));
+            // 출발 칸: 그 칸에 선 몸은 문 상자에 닿지 않고(Core DoorWatch와 같은 접촉 여유), 이웃 칸에 선 몸은 닿는 칸.
+            // 바깥 벽 칸의 문(막힌 칸)은 문 칸 바로 앞에 서기만 해도 닿으므로, 그 칸에서 출발하면 연출이 걷는 동안 시작돼 처음부터 셀 수 없다.
+            float half = session.Walker.Box.W / 2f, skin = DoorWatch.UnityContactSkinCells * size;
+            bool Touches(CellPos c)
+            {
+                var center = CellPos.Center(c, size);
+                return door.Area.Overlaps(new AreaRect(center.X - half - skin, center.Y - half - skin, 2 * (half + skin), 2 * (half + skin)));
+            }
+            CellPos[] Around(CellPos c) => new[] { new CellPos(c.X + 1, c.Y), new CellPos(c.X - 1, c.Y), new CellPos(c.X, c.Y + 1), new CellPos(c.X, c.Y - 1) };
+            bool Next(CellPos c) => !Touches(c) && Around(c).Any(Touches);
             List<CellPos> path = GridPath.Find(session.Map.Collision, player.PlayerCell, Next);
-            Assert.That(path, Is.Not.Null, target + " 문 옆까지 갈 길");
+            Assert.That(path, Is.Not.Null, target + " 문 앞까지 갈 길");
             if (path.Count > 0) player.WalkTo(path[path.Count - 1]);
+            Assert.That(session.OpeningDoor, Is.Null, target + " 문 앞까지 걷는 동안 문이 열리기 시작하지 않았다(연출을 처음부터 센다)");
             CellPos at = player.PlayerCell;
-            CellPos into = doorCells.First(c => Math.Abs(c.X - at.X) + Math.Abs(c.Y - at.Y) == 1);
+            CellPos into = Around(at).First(Touches);
             TestKey key = into.X > at.X ? TestKey.Right : into.X < at.X ? TestKey.Left : into.Y > at.Y ? TestKey.Down : TestKey.Up;
 
             string from = session.Map.Id;
