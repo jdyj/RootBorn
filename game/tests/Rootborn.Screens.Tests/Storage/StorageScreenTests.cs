@@ -195,6 +195,7 @@ namespace Rootborn.Screens.Tests.Storage
                 Directory.CreateDirectory(saves);
                 try
                 {
+                    TestSession.EmptyHouse(new FileSaveStore(saves), "slot"); // 준비: 처음 배치 가구 없는 빈 집(놓은 상자 하나만 보려고)
                     var session = GameSession.Start(TestSession.Definitions, GameStartSettings.FromDefinitions(TestSession.Definitions), new FileSaveStore(saves), "slot", null);
                     var stack = new ScreenStack(ScreenCatalog.Create(), new ScreenServices(LongText.Create(language), session));
                     stack.Layout(1920, 1080);

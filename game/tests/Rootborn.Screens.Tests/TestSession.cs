@@ -34,11 +34,14 @@ namespace Rootborn.Screens.Tests
         /// <param name="text">쓸 문구 표(비면 language의 실제 문구 — 긴 문구 시험은 LongText.Create).</param>
         /// <param name="room">게임 한 판이 따를 방의 시계(비면 혼자인 방). playerId는 그 방에서의 신원(비면 기본 플레이어).</param>
         public TestSession(string language = "ko", Action<ScreenRegistry> extra = null, string saves = null, GameDefinitions definitions = null,
-            Rootborn.Core.Time.IRoomTime room = null, string playerId = null, Rootborn.Core.Room.RoomShares shares = null, GameText text = null)
+            Rootborn.Core.Time.IRoomTime room = null, string playerId = null, Rootborn.Core.Room.RoomShares shares = null, GameText text = null, bool emptyHouse = false)
         {
             _ownsSaves = saves == null;
             _saves = saves ?? Path.Combine(Path.GetTempPath(), "rootborn-screens-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_saves);
+            // 준비(emptyHouse): 이 슬롯의 집을 처음 배치 가구 없이 빈 집으로 둔다(빈 배치 파일 — Game HouseRoom.EmptyHouse와 같다).
+            // 시험용 작은 방에서 "가구가 하나도 없는 집"을 전제로 놓기·옮기기·알림을 보는 테스트가 쓴다.
+            if (emptyHouse) EmptyHouse(new FileSaveStore(_saves), "slot-test");
             Session = GameSession.Start(definitions ?? _definitions.Value, GameStartSettings.FromDefinitions(definitions ?? _definitions.Value), new FileSaveStore(_saves), "slot-test", playerId, room: room, shares: shares);
             Text = text ?? TestData.Text(language);
             ScreenRegistry registry = ScreenCatalog.Create();
@@ -47,6 +50,10 @@ namespace Rootborn.Screens.Tests
             Stack = new ScreenStack(registry, Services);
             Stack.Layout(1920, 1080);
         }
+
+        /// <summary>준비: 그 슬롯의 집을 빈 배치 파일로(새 게임의 처음 배치 가구를 받지 않는다).</summary>
+        public static void EmptyHouse(Rootborn.Core.Save.ISaveStore store, string slot) =>
+            Rootborn.Core.Placement.FurnitureSaveFiles.SaveHouseLayout(store, slot, 0, Array.Empty<Rootborn.Core.Placement.FurniturePlacementSaveData>());
 
         /// <summary>같은 세이브 폴더로 게임을 다시 불러온다(새 화면 쌓기). 폴더는 이 세션이 지운다.</summary>
         public TestSession Reopen(Action<ScreenRegistry> extra = null) => new TestSession(Text.Language, extra, _saves, Session.Definitions);

@@ -80,7 +80,7 @@ namespace Rootborn.Screens.Tests.Furniture
             /// <param name="shares">같이 하는 방의 조각 묶음(같이 쓰는 집 시험). 없으면 혼자 하기.</param>
             public Fixture(Rootborn.Core.Room.RoomShares shares = null)
             {
-                T = new TestSession(playerId: shares == null ? null : "me", shares: shares);
+                T = new TestSession(playerId: shares == null ? null : "me", shares: shares, emptyHouse: true); // 준비: 처음 배치 가구 없는 빈 집
                 View = new TestView(Room);
                 T.Session.EnterHouse(Room.Grid, "house");
                 T.Stack.EnterMap("House", new[] { MapFeatures.FurniturePlacement });

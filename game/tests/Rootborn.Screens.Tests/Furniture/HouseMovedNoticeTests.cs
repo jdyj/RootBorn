@@ -75,7 +75,7 @@ namespace Rootborn.Screens.Tests.Furniture
         [Test]
         public void NothingMovedOrStored_NoNotice()
         {
-            using var t = new TestSession(saves: _saves);
+            using var t = new TestSession(saves: _saves, emptyHouse: true); // 준비: 처음 배치 가구 없이(시험용 작은 방에는 처음 배치 자리가 없어 옮겨진다)
             EnterHouse(t);
             Assert.That(t.Stack.IsOpen(ScreenCatalog.HouseMovedNotice), Is.False);
         }
