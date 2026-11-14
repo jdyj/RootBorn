@@ -1,0 +1,16 @@
+[
+  {"id": "kitchen.scene.sink-row", "kind": "scene", "size": [10, 5],
+   "fill": [
+     {"tile": "bakery.tile.wall", "rect": [0, 0, 10, 2], "wall": true},
+     {"tile": "bakery.tile.floor", "rect": [0, 2, 10, 3]}
+   ],
+   "hang": [{"part": "prop.clock", "at": [168, 14]}],
+   "place": [
+     {"id": "kitchen.counter-front", "cell": [1, 2]},
+     {"id": "kitchen.sink-front", "cell": [3, 2]},
+     {"id": "school.potted-plant", "cell": [5, 2]},
+     {"id": "home.toy-kitchen", "cell": [6, 2], "dx": 8},
+     {"id": "home.snack-crate", "cell": [2, 3]},
+     {"id": "school.waste-basket", "cell": [4, 3]}
+   ]}
+]

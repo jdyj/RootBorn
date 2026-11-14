@@ -1,0 +1,9 @@
+[
+  {"id": "home.toy-kitchen", "kind": "furniture", "part": "furniture.prop", "cells": [2, 1], "art_cells": [2, 2],
+   "game": {"replaces": "studentlife.toy.kitchen"},
+   "body": "toy.kitchen",
+   "items": [{"part": "kitchen.pot", "x": 16, "y": 10}]},
+  {"id": "home.snack-crate", "kind": "furniture", "part": "furniture.prop", "cells": [1, 1], "art_cells": [1, 1],
+   "game": {"replaces": "studentlife.snack.delivery.crate"},
+   "body": "decor.snack-crate"}
+]
