@@ -361,12 +361,13 @@ namespace Rootborn.Host.Tests.TwoGames
 
         /// <summary>
         /// HOUSE-004 두 게임 창, 부딪힘과 이어짐: 두 사람이 같은 방(왼쪽 위)을 다른 바닥으로 같은 프레임에 누른다(둘 다 포인터를 올려 두고, 방장 누름은 바꿔만 두고
-        /// 손님의 pointer-down이 두 게임을 같이 돌린다 — TWO_GAMES_003과 같은 넣기) → 한쪽만 적용되고 다른 쪽은 이유 줄에 방의 거절 문구, 돈은 적용된 쪽만 한 번.
+        /// 손님의 pointer-down이 두 게임을 같이 돌린다 — TWO_GAMES_003과 같은 넣기). 정당한 결과는 둘이고 거절 여부로 가른다: 한쪽만 적용되고 다른 쪽은 이유 줄에
+        /// 방의 거절 문구(돈은 적용된 쪽만 한 번), 또는 둘이 차례로 적용돼 각자 자기 값을 한 번씩 내고 나중 것이 덮는다(거절 없음). 둘 다 거절이면 실패.
         /// 손님이 끄고 다시 들어와도, 방장이 방을 닫고 같은 슬롯으로 다시 열어도(방 기록 저장·복원) 그 꾸밈이 두 화면에 그대로다.
         /// 준비(실제 플레이 아님): 이야기가 있는 슬롯 파일(양쪽), 돈 주기(가방 명령). 스크린샷: output/house-building/stage1c/two-games-0N-*.png.
         /// </summary>
         [Test]
-        public void TWO_GAMES_011_SameRoomSameFrame_OnlyOneApplies_RejoinAndReopenKeepTheFinish()
+        public void TWO_GAMES_011_SameRoomSameFrame_OneAppliesOrBothInTurn_EachPaysOnce_RejoinAndReopenKeepTheFinish()
         {
             OpenSharedHouseRoom();
             var session = _host.Game.Session;
@@ -395,18 +396,37 @@ namespace Rootborn.Host.Tests.TwoGames
                 "둘의 요청이 끝나고 두 화면의 꾸밈이 같다: 방장 " + session.HouseFloorAt(middle) + ", 손님 " + GuestFloor(middle));
             _guest.Until(() => false, 30); // 늦게 오는 상태·돈이 없는지
             string won = session.HouseFloorAt(middle);
-            bool hostWon = won == Carpet;
             int hostAfter = session.Wallet.Balance, guestAfter = _guest.QueryInt("wallet");
-            TestContext.WriteLine("[같은 프레임] 적용된 꾸밈 " + won + "(" + (hostWon ? "방장" : "손님") + "), 돈 방장 " + hostBefore + "→" + hostAfter + ", 손님 " + guestBefore + "→" + guestAfter
-                + ", 거절: 방장 '" + session.LastHouseFinishRefusal + "' 손님 '" + _guest.Query("finish-refusal") + "', 이유 줄: 방장 '" + HostReason + "' 손님 '"
-                + _guest.Query("text", FurniturePlacementScreen.FinishReasonId) + "'");
-            Assert.That(room.All(c => session.HouseFloorAt(c) == won && GuestFloor(c) == won), Is.True, "그 방 전부가 한 꾸밈(섞이지 않는다)");
-            Assert.That(hostAfter, Is.EqualTo(hostWon ? hostBefore - CostOf(Carpet, room.Count) : hostBefore), "방장 돈: 적용됐을 때만 한 번");
-            Assert.That(guestAfter, Is.EqualTo(hostWon ? guestBefore : guestBefore - CostOf(Checker, room.Count)), "손님 돈: 적용됐을 때만 한 번");
-            string loserRefusal = hostWon ? _guest.Query("finish-refusal") : session.LastHouseFinishRefusal;
-            string loserReason = hostWon ? _guest.Query("text", FurniturePlacementScreen.FinishReasonId) : HostReason;
-            Assert.That(loserRefusal, Is.EqualTo(HouseFinishReasons.RoomRefused), "다른 쪽은 방이 거절했다");
-            Assert.That(loserReason, Is.EqualTo(Text(HouseFinishReasons.RoomRefused)), "거절된 쪽 이유 줄에 방의 거절 문구");
+            string hostRefusal = session.LastHouseFinishRefusal ?? string.Empty, guestRefusal = _guest.Query("finish-refusal") ?? string.Empty;
+            string hostReasonText = HostReason, guestReasonText = _guest.Query("text", FurniturePlacementScreen.FinishReasonId);
+            Assert.That(hostRefusal, Is.Empty.Or.EqualTo(HouseFinishReasons.RoomRefused), "방장의 거절은 없거나 방의 거절");
+            Assert.That(guestRefusal, Is.Empty.Or.EqualTo(HouseFinishReasons.RoomRefused), "손님의 거절은 없거나 방의 거절");
+            bool hostRefused = hostRefusal.Length > 0, guestRefused = guestRefusal.Length > 0;
+            // 갈래는 끝 바닥이 아니라 거절 여부로 가른다. 손님 요청이 방장 잡기의 짧은 창 안에 닿으면 한쪽만 적용·다른 쪽 거절, 창 뒤에 닿으면 둘이 차례로 적용된다
+            // (각자 자기 것 한 번씩 내고 나중 것이 덮는다 — 2026-11-14 원격 Linux에서 본 갈래). 어느 쪽이 될지는 방의 벽시계 틱과 UDP 도착에 따른다.
+            string branch = hostRefused && guestRefused ? "둘 다 거절" : hostRefused ? "손님만 적용(방장 거절)" : guestRefused ? "방장만 적용(손님 거절)" : "차례로 둘 다 적용";
+            TestContext.WriteLine("[같은 프레임] 갈래: " + branch + ", 끝 꾸밈 " + won + ", 돈 방장 " + hostBefore + "→" + hostAfter + ", 손님 " + guestBefore + "→" + guestAfter
+                + ", 거절: 방장 '" + hostRefusal + "' 손님 '" + guestRefusal + "', 이유 줄: 방장 '" + hostReasonText + "' 손님 '" + guestReasonText + "'");
+            Assert.That(hostRefused && guestRefused, Is.False, "둘 다 거절되면 안 된다 — 먼저 닿은 요청은 적용된다");
+            Assert.That(room.All(c => session.HouseFloorAt(c) == won && GuestFloor(c) == won), Is.True, "그 방 전부가 한 꾸밈(섞이지 않는다, 두 화면이 같다)");
+            if (hostRefused || guestRefused)
+            {
+                bool hostWon = guestRefused;
+                Assert.That(won, Is.EqualTo(hostWon ? Carpet : Checker), "그 방은 이긴(거절되지 않은) 쪽의 꾸밈");
+                Assert.That(hostAfter, Is.EqualTo(hostWon ? hostBefore - CostOf(Carpet, room.Count) : hostBefore), "방장 돈: 적용됐을 때만 정확히 한 번");
+                Assert.That(guestAfter, Is.EqualTo(hostWon ? guestBefore : guestBefore - CostOf(Checker, room.Count)), "손님 돈: 적용됐을 때만 정확히 한 번");
+                Assert.That(hostWon ? guestReasonText : hostReasonText, Is.EqualTo(Text(HouseFinishReasons.RoomRefused)), "거절된 쪽 이유 줄에 방의 거절 문구");
+            }
+            else
+            {
+                // 차례로 적용: 앞 것이 방 전부를 칠한 뒤 나중 것이 판정됐다. 나중 것의 비용은 그때 방에서 바뀌는 칸 수 × 칸당 값인데, 앞 꾸밈과 다른 꾸밈이라
+                // 방 전부가 바뀌므로 요청이 보낸 수(room.Count)와 같다. 그래서 둘 다 자기 꾸밈 값을 정확히 한 번씩 냈다.
+                Assert.That(won, Is.EqualTo(Carpet).Or.EqualTo(Checker), "그 방은 나중에 적용된 쪽의 꾸밈 하나");
+                Assert.That(hostAfter, Is.EqualTo(hostBefore - CostOf(Carpet, room.Count)), "방장 돈: 자기 적용 한 번만큼 정확히");
+                Assert.That(guestAfter, Is.EqualTo(guestBefore - CostOf(Checker, room.Count)), "손님 돈: 자기 적용 한 번만큼 정확히");
+                Assert.That(hostReasonText, Is.Not.EqualTo(Text(HouseFinishReasons.RoomRefused)), "방장 이유 줄에 거절 문구 없음");
+                Assert.That(guestReasonText, Is.Not.EqualTo(Text(HouseFinishReasons.RoomRefused)), "손님 이유 줄에 거절 문구 없음");
+            }
 
             _host.MovePointer(-50, -50);
             _guest.Call("move-pointer", "-50", "-50");
