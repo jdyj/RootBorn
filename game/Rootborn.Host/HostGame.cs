@@ -593,7 +593,15 @@ namespace Rootborn.Host
                 if (screen is FurniturePlacementScreen) World.PlacementCamera.End();
             };
             if (session != null)
-                session.Changed += topic => { if (topic == ChangeTopics.Furniture || topic == ChangeTopics.World) RefreshFurniture(); };
+            {
+                World.HouseFinishes = new SessionHouseFinishes(session);
+                session.Changed += topic =>
+                {
+                    if (topic == ChangeTopics.Furniture || topic == ChangeTopics.World) RefreshFurniture();
+                    // 꾸밈이 바뀌었다: 지금 맵이 짓는 집이면 다음 그리기에서 집 전체를 다시 조합한다(꾸밈 알림에서만 — 프레임마다 묻지 않는다).
+                    else if (topic == ChangeTopics.HouseBuild) World.RefreshComposedTiles(World.Session.Map.Id);
+                };
+            }
             SyncHouse();
             // 집 밖에서 시작해도(이어 하기, 방에 들어감) 집에 들어서기 전에 집의 걷는 격자에 가구를 넣는다 — NPC 자리가 들어온 때에 기대지 않게.
             World.AttachHouseFurniture(session);
@@ -612,7 +620,38 @@ namespace Rootborn.Host
             string surface = World.HereData.PlacementSurface;
             if (room != null && Session != null && !string.IsNullOrEmpty(surface)) Session.EnterPlacementSurface(room.Grid, surface);
             if (room == null && World.PlacementCamera.Active) Screens.Close(ScreenCatalog.FurniturePlacement);
+            SyncHouseBuild();
             RefreshFurniture();
+        }
+
+        private LoadedMap _buildFrameMap;
+        private Rootborn.Core.Building.HouseBuildFrame _buildFrame;
+
+        /// <summary>
+        /// 짓는 집(맵 성질 build)에 들어서면 꾸밈 틀을 붙이고, 아닌 맵에 들어서면 꾸미기를 닫는다(기록은 GameSession이 들고 있다).
+        /// 틀은 같은 맵이면 같은 것을 다시 넘긴다(다시 붙이지 않게). SyncHouse가 맵이 바뀔 때만 부른다.
+        /// </summary>
+        private void SyncHouseBuild()
+        {
+            if (Session == null) return;
+            LoadedMap map = World.Current;
+            if (!ReferenceEquals(map, _buildFrameMap))
+            {
+                _buildFrameMap = map;
+                _buildFrame = HouseBuildFrames.From(map);
+            }
+            if (_buildFrame != null) Session.EnterHouseBuild(_buildFrame);
+            else Session.LeaveHouseBuild();
+        }
+
+        /// <summary>월드 조합기가 칸마다 묻는 꾸밈 = 게임 한 판의 조회(규칙은 Core HouseFinishes).</summary>
+        private sealed class SessionHouseFinishes : IHouseFinishLookup
+        {
+            private readonly GameSession _session;
+            public SessionHouseFinishes(GameSession session) => _session = session;
+            public string WallAt(Rootborn.Core.World.CellPos floorCell) => _session.HouseWallAt(floorCell);
+            public string FloorAt(Rootborn.Core.World.CellPos floorCell) => _session.HouseFloorAt(floorCell);
+            public string BandColors => _session.HouseBandColors();
         }
 
         /// <summary>

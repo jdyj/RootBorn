@@ -364,6 +364,15 @@ namespace Rootborn.World
 
         /// <param name="finish">꾸밈 id → 정의(없으면 null).</param>
         public static ComposedMapTiles Compose(LoadedMap map, RoomTileCompositor compositor, Func<string, RoomFinishDefinition> finish)
+            => Compose(map, compositor, finish, null);
+
+        /// <summary>
+        /// 칸마다의 꾸밈으로 조합한다. lookup이 null이면 모든 칸이 기본 꾸밈(build.defaultWall·defaultFloor)이다.
+        /// 칸의 id가 비었거나, 정의에 없거나(지운 꾸밈), 다른 자리의 꾸밈이면 그 칸은 기본 꾸밈으로 그린다 — 문제 줄을 남기지 않는다.
+        /// 띠 색은 lookup.BandColors(비면 build.bandColors). 띠 색·공용 조각의 시트는 기본 벽 꾸밈의 시트다.
+        /// </summary>
+        /// <param name="lookup">주인 바닥 칸 → 보이는 꾸밈 id(없으면 null).</param>
+        public static ComposedMapTiles Compose(LoadedMap map, RoomTileCompositor compositor, Func<string, RoomFinishDefinition> finish, IHouseFinishLookup lookup)
         {
             if (map == null) throw new ArgumentNullException(nameof(map));
             if (compositor == null) throw new ArgumentNullException(nameof(compositor));
@@ -377,7 +386,22 @@ namespace Rootborn.World
             if (floor == null) problems.Add("기본 바닥 꾸밈 " + build.DefaultFloor + "이 정의에 없다");
             if (wall != null && floor != null)
             {
-                result.Room = compositor.Compose(map.Tiles, _ => wall, _ => floor, wall.Sheet, build.BandColors);
+                if (lookup == null) result.Room = compositor.Compose(map.Tiles, _ => wall, _ => floor, wall.Sheet, build.BandColors);
+                else
+                {
+                    var found = new Dictionary<string, RoomFinishDefinition>(StringComparer.Ordinal); // 한 번의 조합 안에서 id마다 한 번만 찾는다
+                    RoomFinishDefinition Pick(string id, string slot, RoomFinishDefinition fallback)
+                    {
+                        if (string.IsNullOrEmpty(id)) return fallback;
+                        if (!found.TryGetValue(id, out RoomFinishDefinition d)) found[id] = d = finish(id);
+                        return d != null && string.Equals(d.Slot, slot, StringComparison.Ordinal) ? d : fallback;
+                    }
+                    string band = lookup.BandColors;
+                    result.Room = compositor.Compose(map.Tiles,
+                        c => Pick(lookup.WallAt(c), RoomFinishSlots.Wall, wall),
+                        c => Pick(lookup.FloorAt(c), RoomFinishSlots.Floor, floor),
+                        wall.Sheet, string.IsNullOrEmpty(band) ? build.BandColors : band);
+                }
                 problems.AddRange(result.Room.Problems);
             }
             result.Problems = problems;

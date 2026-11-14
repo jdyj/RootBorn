@@ -98,6 +98,9 @@ namespace Rootborn.Host.World
             return true;
         }
 
+        /// <summary>꾸밈 미리 보기를 월드에(WorldScreen.ShowFinishPreview — 같은 것이면 아무것도 하지 않는다).</summary>
+        public void ShowFinishPreview(Rootborn.Core.Building.HouseFinishPreview preview) => _world.ShowFinishPreview(preview);
+
         public UiRect CellRect(GridPoint cell)
         {
             FurnitureRoom room = Room;

@@ -201,10 +201,13 @@ namespace Rootborn.Host.Tests
             player.Frames(3);
             Assert.That(world.ComposeCount, Is.EqualTo(2), "다시 들어오면 다시 만든다");
             Assert.That(world.ComposedTextureBytes, Is.GreaterThan(0));
+            Texture2D held = world.ComposedTexture;
+            long bytes = world.ComposedTextureBytes;
             world.RefreshComposedTiles(house);
-            Assert.That(world.ComposedTextureBytes, Is.EqualTo(0));
+            Assert.That(world.ComposedTextureBytes, Is.EqualTo(bytes), "다시 만들라고 해도 텍스처는 들고 있다(다음 그리기까지 그것을 그린다)");
             player.Frames(2);
             Assert.That(world.ComposeCount, Is.EqualTo(3), "다시 만들라고 하면 다음 그리기에서 만든다");
+            Assert.That(world.ComposedTexture, Is.SameAs(held), "묶음 크기가 같으면 텍스처를 다시 만들지 않고 픽셀만 바꾼다");
             player.Screenshot("house-tiles-21-back-home");
             Assert.That(player.Game.Renderer.MissingImages, Is.Empty);
         }

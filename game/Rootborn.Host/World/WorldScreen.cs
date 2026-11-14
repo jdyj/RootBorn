@@ -288,8 +288,7 @@ namespace Rootborn.Host.World
 
         private Texture2D Load(string path)
         {
-            // 실행 중에 만든 텍스처(조합한 벽·바닥, 열쇠 ComposedMapTiles.TexturePrefix + 맵 id)를 먼저 찾는다. 그림 캐시의 손질 대상이 아니다.
-            if (_runtime.Count > 0 && _runtime.TryGetValue(path, out Texture2D made)) return made;
+            // 조합한 벽·바닥(실행 중에 만든 텍스처)은 여기로 오지 않는다 — DrawUnder가 들고 있는 텍스처로 바로 그린다.
             if (!_textures.TryGetValue(path, out CachedTexture cached))
             {
                 cached = new CachedTexture();
@@ -478,14 +477,28 @@ namespace Rootborn.Host.World
         private readonly ComposedRoomTextures _composedSheets;
         private readonly RoomTileCompositor _compositor;
         private readonly Func<string, RoomFinishDefinition> _finishOf;
-        /// <summary>실행 중에 만든 텍스처(조합한 벽·바닥). Load가 파일보다 먼저 찾는다.</summary>
-        private readonly Dictionary<string, Texture2D> _runtime = new Dictionary<string, Texture2D>(StringComparer.Ordinal);
         private ComposedMapTiles _composed;
         private LoadedMap _composedFrom;
         private Texture2D _composedTexture;
+        private bool _composedDirty;
+        private HouseFinishPreview _preview;
+        private ComposedMapTiles _previewTiles;
+        private LoadedMap _previewFrom;
+        private Texture2D _previewTexture;
+        private bool _previewDirty;
+
+        /// <summary>
+        /// 칸마다 보이는 꾸밈(게임 한 판이 있으면 Host가 GameSession 조회를 넣는다). null이면 모든 칸이 맵의 기본 꾸밈이다.
+        /// 바뀌었다는 것은 Host가 꾸밈 알림에서 <see cref="RefreshComposedTiles"/>로 알린다(프레임마다 묻지 않는다).
+        /// </summary>
+        public IHouseFinishLookup HouseFinishes { get; set; }
 
         /// <summary>조합한 횟수(맵에 처음 들어선 그리기마다, 다시 만들라고 했을 때마다 하나 — 시험·진단용).</summary>
         public int ComposeCount { get; private set; }
+        /// <summary>미리 보기를 조합한 횟수(미리 보기가 바뀐 다음 그리기마다 하나 — 시험·진단용).</summary>
+        public int PreviewComposeCount { get; private set; }
+        /// <summary>지금 들고 있는 미리 보기 텍스처의 GPU 메모리(없으면 0 — 시험·진단용).</summary>
+        public long PreviewTextureBytes { get; private set; }
         /// <summary>지금 들고 있는 조합 텍스처의 GPU 메모리(가로 × 세로 × 4바이트, 없으면 0 — 시험·진단용).</summary>
         public long ComposedTextureBytes { get; private set; }
         /// <summary>마지막 조합(꾸밈 찾기 + 조합 + 텍스처 올리기)에 걸린 시간(ms, 진단용). 출처표는 맵을 읽을 때 이미 만들었다.</summary>
@@ -497,10 +510,31 @@ namespace Rootborn.Host.World
         /// <summary>마지막으로 그린 화면에서 캐릭터 아래 층(Under + 조합 칸)으로 그린 그림 수(진단용).</summary>
         public int UnderSpritesDrawn { get; private set; }
 
-        /// <summary>그 맵의 조합을 버린다 — 그 맵을 다음에 그릴 때 다시 만든다(꾸밈·구조가 바뀌었을 때 부른다). 다른 맵이면 아무것도 하지 않는다.</summary>
+        /// <summary>
+        /// 그 맵의 조합이 낡았다 — 그 맵을 다음에 그릴 때 집 전체를 다시 조합한다(꾸밈·구조가 바뀌었을 때 부른다). 텍스처는 들고 있다가 묶음 크기가 같으면
+        /// 다시 만들지 않고 픽셀만 바꾼다. 미리 보기가 있으면 그것도 다시 조합한다(안의 꾸밈이 바뀌었다). 다른 맵이면 아무것도 하지 않는다.
+        /// </summary>
         public void RefreshComposedTiles(string mapId)
         {
-            if (_composed != null && string.Equals(_composed.MapId, mapId, StringComparison.OrdinalIgnoreCase)) ReleaseComposed();
+            if (_composed == null || !string.Equals(_composed.MapId, mapId, StringComparison.OrdinalIgnoreCase)) return;
+            _composedDirty = true;
+            if (_preview != null) _previewDirty = true;
+        }
+
+        /// <summary>
+        /// 꾸밈 미리 보기를 보인다(꾸미기 화면이 미리 보기가 바뀔 때 부른다). 앞의 것과 같으면(<see cref="HouseFinishPreview.SameAs"/>) 아무것도 하지 않는다.
+        /// 바뀌면 다음 그리기에서 미리 보기 조합 하나를 만들고 그동안 그것을 그린다. null이면 미리 보기를 버리고 집 조합을 그린다.
+        /// </summary>
+        public void ShowFinishPreview(HouseFinishPreview preview)
+        {
+            if (preview == null)
+            {
+                if (_preview != null) ReleasePreview();
+                return;
+            }
+            if (_preview != null && preview.SameAs(_preview)) return;
+            _preview = preview;
+            _previewDirty = true;
         }
 
         /// <summary>
@@ -510,46 +544,53 @@ namespace Rootborn.Host.World
         private void DrawUnder(SpriteBatch batch, LoadedMap map)
         {
             IReadOnlyList<SpriteDraw> under = map.Picture.Under, cells = null;
+            Texture2D cellTexture = null;
             int at = -1;
             if (map.Tiles != null)
             {
                 ComposedMapTiles composed = ComposedFor(map);
-                if (composed.Ok) { cells = composed.Draws; at = composed.InsertAt; } // 0..under.Count — 조합이 됐으면 늘 그린다
+                // 미리 보기가 있고 조합이 됐으면 그것을, 아니면 집 조합을 그린다.
+                ComposedMapTiles preview = _preview != null ? PreviewFor(map) : null;
+                if (preview != null && preview.Ok && _previewTexture != null) { cells = preview.Draws; at = preview.InsertAt; cellTexture = _previewTexture; }
+                else if (composed.Ok) { cells = composed.Draws; at = composed.InsertAt; cellTexture = _composedTexture; } // 0..under.Count — 조합이 됐으면 늘 그린다
                 else under = composed.FallbackUnder;
             }
-            else if (_composed != null) ReleaseComposed();
+            else
+            {
+                if (_composed != null) ReleaseComposed();
+                if (_preview != null) ReleasePreview();
+            }
             int drawn = 0;
             for (int i = 0; i < under.Count; i++)
             {
-                if (i == at) drawn += DrawAll(batch, cells);
+                if (i == at) drawn += DrawAll(batch, cells, cellTexture);
                 DrawSprite(batch, under[i]);
                 drawn++;
             }
-            if (cells != null && at >= under.Count) drawn += DrawAll(batch, cells);
+            if (cells != null && at >= under.Count) drawn += DrawAll(batch, cells, cellTexture);
             UnderSpritesDrawn = drawn;
         }
 
-        private int DrawAll(SpriteBatch batch, IReadOnlyList<SpriteDraw> draws)
+        /// <summary>조합 칸: 들고 있는 텍스처로 바로 그린다(그림 캐시를 찾지 않는다).</summary>
+        private int DrawAll(SpriteBatch batch, IReadOnlyList<SpriteDraw> draws, Texture2D texture)
         {
-            for (int i = 0; i < draws.Count; i++) DrawSprite(batch, draws[i]);
+            for (int i = 0; i < draws.Count; i++) DrawSprite(batch, texture, draws[i]);
             return draws.Count;
         }
 
         private ComposedMapTiles ComposedFor(LoadedMap map)
         {
-            if (_composed != null && ReferenceEquals(_composedFrom, map)) return _composed;
-            ReleaseComposed();
-            var watch = System.Diagnostics.Stopwatch.StartNew();
-            ComposedMapTiles composed = ComposedMapTiles.Compose(map, _compositor, _finishOf);
-            if (composed.Ok)
+            if (_composed != null && ReferenceEquals(_composedFrom, map) && !_composedDirty) return _composed;
+            if (_composed != null && !ReferenceEquals(_composedFrom, map))
             {
-                _composedTexture = ComposedRoomTextures.Upload(_device, composed.Room);
-                if (_composedTexture != null)
-                {
-                    _runtime[composed.TextureKey] = _composedTexture;
-                    ComposedTextureBytes = (long)_composedTexture.Width * _composedTexture.Height * 4;
-                }
+                ReleaseComposed(); // 다른 맵: 텍스처도 버린다
+                if (_preview != null) ReleasePreview();
             }
+            _composedDirty = false;
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            ComposedMapTiles composed = ComposedMapTiles.Compose(map, _compositor, _finishOf, HouseFinishes);
+            _composedTexture = UploadInto(_composedTexture, composed);
+            ComposedTextureBytes = _composedTexture == null ? 0 : (long)_composedTexture.Width * _composedTexture.Height * 4;
             watch.Stop();
             _composed = composed;
             _composedFrom = map;
@@ -568,14 +609,51 @@ namespace Rootborn.Host.World
             return composed;
         }
 
+        /// <summary>미리 보기 조합: 미리 보기가 바뀐 뒤(또는 집 조합이 낡은 뒤) 첫 그리기에서 한 번. 안의 조회는 HouseFinishes.</summary>
+        private ComposedMapTiles PreviewFor(LoadedMap map)
+        {
+            if (_previewTiles != null && ReferenceEquals(_previewFrom, map) && !_previewDirty) return _previewTiles;
+            _previewDirty = false;
+            _previewTiles = ComposedMapTiles.Compose(map, _compositor, _finishOf, new HouseFinishPreviewLookup(HouseFinishes, _preview));
+            _previewFrom = map;
+            _previewTexture = UploadInto(_previewTexture, _previewTiles);
+            PreviewTextureBytes = _previewTexture == null ? 0 : (long)_previewTexture.Width * _previewTexture.Height * 4;
+            PreviewComposeCount++;
+            return _previewTiles;
+        }
+
+        /// <summary>조합 결과를 텍스처로: 들고 있는 텍스처와 묶음 크기가 같으면 픽셀만 바꾸고(SetData), 다르면 새로 만든다. 조합이 안 됐으면 버리고 null.</summary>
+        private Texture2D UploadInto(Texture2D texture, ComposedMapTiles composed)
+        {
+            ComposedRoom room = composed.Ok ? composed.Room : null;
+            if (room != null && texture != null && texture.Width == room.Width && texture.Height == room.Height)
+            {
+                texture.SetData(room.Pixels);
+                return texture;
+            }
+            texture?.Dispose();
+            return room == null ? null : ComposedRoomTextures.Upload(_device, room);
+        }
+
         private void ReleaseComposed()
         {
-            if (_composed != null) _runtime.Remove(_composed.TextureKey);
             _composedTexture?.Dispose();
             _composedTexture = null;
             _composed = null;
             _composedFrom = null;
+            _composedDirty = false;
             ComposedTextureBytes = 0;
+        }
+
+        private void ReleasePreview()
+        {
+            _previewTexture?.Dispose();
+            _previewTexture = null;
+            _previewTiles = null;
+            _previewFrom = null;
+            _preview = null;
+            _previewDirty = false;
+            PreviewTextureBytes = 0;
         }
 
         private readonly List<(float sortY, int npc)> _actors = new List<(float sortY, int npc)>(8);
@@ -778,9 +856,10 @@ namespace Rootborn.Host.World
             return lo;
         }
 
-        private void DrawSprite(SpriteBatch batch, SpriteDraw s)
+        private void DrawSprite(SpriteBatch batch, SpriteDraw s) => DrawSprite(batch, Load(s.Texture), s);
+
+        private void DrawSprite(SpriteBatch batch, Texture2D texture, SpriteDraw s)
         {
-            Texture2D texture = Load(s.Texture);
             var effects = SpriteEffects.None;
             if ((s.Flip & 1) != 0) effects |= SpriteEffects.FlipHorizontally;
             if ((s.Flip & 2) != 0) effects |= SpriteEffects.FlipVertically;
@@ -851,6 +930,7 @@ namespace Rootborn.Host.World
         public void Dispose()
         {
             ReleaseComposed();
+            ReleasePreview();
             _composedSheets.Dispose();
             foreach (CachedTexture cached in _textures.Values) cached.Texture.Dispose();
             _textures.Clear();

@@ -27,6 +27,11 @@ namespace Rootborn.Screens.Furniture
             cell = default;
             return false;
         }
+
+        /// <summary>
+        /// 짓는 집의 꾸밈 미리 보기를 월드에 그린다(미리 보기가 바뀔 때만 부른다). null = 지움. 기본은 아무것도 하지 않는다(월드를 그리지 않는 뷰).
+        /// </summary>
+        void ShowFinishPreview(Rootborn.Core.Building.HouseFinishPreview preview) { }
     }
 
     /// <summary>

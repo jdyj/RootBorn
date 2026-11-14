@@ -604,6 +604,158 @@ namespace Rootborn.World.Tests
             Assert.That(tiles.Problems, Has.Some.Contains(map.Entry.Build.DefaultWall));
         }
 
+        // ---------- 칸마다의 꾸밈(IHouseFinishLookup)으로 조합 ----------
+
+        /// <summary>시험용 꾸밈 조회: 칸 → id 표(없으면 빈 글 = 기본), 띠 색 줄 이름.</summary>
+        private sealed class TableLookup : IHouseFinishLookup
+        {
+            public readonly Dictionary<CellPos, string> Walls = new Dictionary<CellPos, string>(), Floors = new Dictionary<CellPos, string>();
+            public string Band = "";
+            public Func<CellPos, string> AllFloors;
+            public string WallAt(CellPos floorCell) => Walls.TryGetValue(floorCell, out string id) ? id : "";
+            public string FloorAt(CellPos floorCell) => AllFloors != null ? AllFloors(floorCell) : Floors.TryGetValue(floorCell, out string id) ? id : "";
+            public string BandColors => Band;
+        }
+
+        private static RoomTileCompositor RepoCompositor() => new RoomTileCompositor(HouseMapTests.Sheets(), new RoomFinishArt(Path.Combine(Repo.Root, "data")));
+
+        /// <summary>집의 왼쪽 위 방(행 순서로 첫 바닥 칸의 방, 문간 포함 — Core 방 채우기).</summary>
+        private static IReadOnlyList<CellPos> TopLeftRoom(LoadedMap map)
+        {
+            RoomGrid grid = map.Tiles.Grid;
+            for (int y = 0; y < grid.Rows; y++)
+                for (int x = 0; x < grid.Columns; x++)
+                    if (grid.At(x, y) == RoomCells.Floor) return RoomFill.Build(grid).RoomOf(new CellPos(x, y));
+            throw new InvalidOperationException("바닥이 없다");
+        }
+
+        /// <summary>처음부터 열린, 그 자리의 기본이 아닌 꾸밈(데이터 순서의 첫 것).</summary>
+        private static RoomFinishDefinition OtherFree(string slot, string notThis) =>
+            Repo.Definitions.All<RoomFinishDefinition>().First(f => f.Slot == slot && f.UnlockToken.Length == 0 && f.Id != notThis);
+
+        private static uint[] CellPixels(ComposedRoom room, CellPos cell)
+        {
+            var (_, sx, sy) = room.Cells.Single(c => c.Cell.Equals(cell));
+            var px = new uint[Size * Size];
+            for (int y = 0; y < Size; y++) Array.Copy(room.Pixels, (sy + y) * room.Width + sx, px, y * Size, Size);
+            return px;
+        }
+
+        [Test]
+        public void Lookup_PerCellFloor_OnlyThatRoomChanges()
+        {
+            var (map, wall, floor) = House();
+            RoomFinishDefinition other = OtherFree(RoomFinishSlots.Floor, floor.Id);
+            IReadOnlyList<CellPos> roomCells = TopLeftRoom(map);
+            var room = new HashSet<CellPos>(roomCells);
+            var lookup = new TableLookup();
+            foreach (CellPos c in roomCells) lookup.Floors[c] = other.Id;
+
+            ComposedMapTiles plain = ComposedMapTiles.Compose(map, RepoCompositor(), Defined);
+            ComposedMapTiles mixed = ComposedMapTiles.Compose(map, RepoCompositor(), Defined, lookup);
+            Assert.That((plain.Ok, mixed.Ok), Is.EqualTo((true, true)), string.Join("\n", mixed.Problems));
+
+            // 바닥 조각 자리(시트의 좌표표): 그 방의 바닥 칸에서 그림자 없는 바닥 부분은 다른 꾸밈의 floor 조각 픽셀 그대로다.
+            var art = new RoomFinishArt(Path.Combine(Repo.Root, "data"));
+            Assert.That(art.TryPiece(other, "floor", out FinishPiece piece), Is.True);
+            PieceImage sheet = HouseMapTests.Sheets()(piece.Texture);
+            int changedCells = 0, sameCells = 0, bandSides = 0, fromPiece = 0;
+            foreach (CellTiles cell in map.Tiles.Cells)
+            {
+                bool touches = cell.Parts.Any(p => p.Source == TileSources.Floor && room.Contains(new CellPos(cell.Cell.X + p.Owner.X, cell.Cell.Y + p.Owner.Y)));
+                uint[] a = CellPixels(plain.Room, cell.Cell), b = CellPixels(mixed.Room, cell.Cell);
+                if (!touches)
+                {
+                    Assert.That(b, Is.EqualTo(a), cell.Cell + ": 다른 방(그 방 바닥이 비치지 않는 칸)은 기본 조합과 픽셀이 같다");
+                    sameCells++;
+                    continue;
+                }
+                if (!a.SequenceEqual(b)) changedCells++;
+                if (!room.Contains(cell.Cell)) bandSides++;
+                foreach (TilePart part in cell.Parts.Where(p => p.Source == TileSources.Floor && p.Shade == "floor"
+                    && room.Contains(new CellPos(cell.Cell.X + p.Owner.X, cell.Cell.Y + p.Owner.Y))))
+                    foreach (PixelRect r in part.Rects)
+                        for (int y = r.Y0; y < r.Y1; y++)
+                            for (int x = r.X0; x < r.X1; x++)
+                            {
+                                Assert.That(b[y * Size + x], Is.EqualTo(sheet.Pixels[(piece.Y + y) * sheet.Width + piece.X + x]), $"{cell.Cell} ({x}, {y}) 다른 꾸밈의 floor 조각에서");
+                                fromPiece++;
+                            }
+            }
+            TestContext.Out.WriteLine($"방 {room.Count}칸: 바뀐 칸 {changedCells}, 방 밖에서 그 방 바닥이 비치는 칸 {bandSides}, 그대로인 칸 {sameCells}");
+            Assert.That(changedCells, Is.GreaterThanOrEqualTo(room.Count), "그 방의 칸은 다 바뀐다");
+            Assert.That(bandSides, Is.GreaterThan(0), "벽 칸의 띠 옆으로 비치는 그 방 바닥도 바뀐다");
+            Assert.That(sameCells, Is.GreaterThan(0));
+            Assert.That(fromPiece, Is.GreaterThan(0));
+        }
+
+        [Test]
+        public void Lookup_UnknownId_DrawsDefault_NoProblem()
+        {
+            var (map, _, _) = House();
+            ComposedMapTiles plain = ComposedMapTiles.Compose(map, RepoCompositor(), Defined);
+            var lookup = new TableLookup { AllFloors = _ => "finish.floor.no-such-finish" };
+            foreach (CellTiles c in map.Tiles.Cells) lookup.Walls[c.Cell] = c.Cell.X % 2 == 0 ? "" : "finish.wall.no-such-finish";
+            ComposedMapTiles unknown = ComposedMapTiles.Compose(map, RepoCompositor(), Defined, lookup);
+            Assert.That(unknown.Ok, Is.True);
+            Assert.That(unknown.Problems, Is.Empty, "지운 꾸밈은 기본으로 그린다 — 문제 줄 없음");
+            Assert.That(unknown.Room.Pixels, Is.EqualTo(plain.Room.Pixels));
+            // 다른 자리의 꾸밈(바닥 id를 벽으로)도 기본으로 그린다.
+            var wrongSlot = new TableLookup();
+            foreach (CellTiles c in map.Tiles.Cells) wrongSlot.Walls[c.Cell] = map.Entry.Build.DefaultFloor;
+            ComposedMapTiles wrong = ComposedMapTiles.Compose(map, RepoCompositor(), Defined, wrongSlot);
+            Assert.That((wrong.Ok, wrong.Problems.Count), Is.EqualTo((true, 0)));
+            Assert.That(wrong.Room.Pixels, Is.EqualTo(plain.Room.Pixels));
+            // 조회가 null이면 지금과 같다.
+            Assert.That(ComposedMapTiles.Compose(map, RepoCompositor(), Defined, null).Room.Pixels, Is.EqualTo(plain.Room.Pixels));
+        }
+
+        [Test]
+        public void PreviewLookup_OverridesOnlyChangedCells()
+        {
+            var (map, wall, floor) = House();
+            HouseBuildFrame frame = HouseBuildFrames.From(map);
+            Assert.That(frame, Is.Not.Null, "짓는 집은 프레임이 있다");
+            Assert.That((frame.FrameId, frame.DefaultWall, frame.DefaultFloor, frame.DefaultBand),
+                Is.EqualTo((map.Entry.Build.FrameId, map.Entry.Build.DefaultWall, map.Entry.Build.DefaultFloor, map.Entry.Build.BandColors)));
+            Assert.That(frame.Tiles, Is.SameAs(map.Tiles));
+
+            var finishes = new HouseFinishes();
+            finishes.Attach(frame, Defined);
+            RoomFinishDefinition other = OtherFree(RoomFinishSlots.Floor, floor.Id);
+            IReadOnlyList<CellPos> room = TopLeftRoom(map);
+            HouseFinishPreview preview = finishes.Preview(other.Id, HouseFinishTools.Room, room[0], null, _ => true);
+            Assert.That(preview.CanApply, Is.True, preview.ReasonKey);
+
+            var inner = new TableLookup { Band = "band.inner" };
+            var outside = map.Tiles.Cells.Select(c => c.Cell).First(c => !room.Contains(c));
+            inner.Floors[outside] = "inner.floor";
+            inner.Walls[room[0]] = "inner.wall";
+            var lookup = new HouseFinishPreviewLookup(inner, preview);
+            var changed = new HashSet<CellPos>(preview.ChangedCells);
+            Assert.That(changed.Count, Is.GreaterThan(0));
+            foreach (CellPos c in changed) Assert.That(lookup.FloorAt(c), Is.EqualTo(other.Id), c + " 바뀌는 칸은 미리 보기 꾸밈");
+            Assert.That(lookup.FloorAt(outside), Is.EqualTo("inner.floor"), "바뀌지 않는 칸은 안의 조회 그대로");
+            Assert.That(lookup.WallAt(room[0]), Is.EqualTo("inner.wall"), "다른 자리(벽지)는 안의 조회 그대로");
+            Assert.That(lookup.BandColors, Is.EqualTo("band.inner"));
+
+            // 벽지 미리 보기는 벽지만 덮는다.
+            RoomFinishDefinition otherWall = OtherFree(RoomFinishSlots.Wall, wall.Id);
+            HouseFinishPreview wallPreview = finishes.Preview(otherWall.Id, HouseFinishTools.Room, room[0], null, _ => true);
+            var wallLookup = new HouseFinishPreviewLookup(inner, wallPreview);
+            foreach (CellPos c in wallPreview.ChangedCells) Assert.That((wallLookup.WallAt(c), wallLookup.FloorAt(c)), Is.EqualTo((otherWall.Id, inner.FloorAt(c))));
+
+            // 그 조회로 조합하면 그 방이 다른 바닥이다(Lookup_PerCellFloor와 같은 그림).
+            var plainLookup = new TableLookup();
+            foreach (CellPos c in changed) plainLookup.Floors[c] = other.Id;
+            ComposedMapTiles viaPreview = ComposedMapTiles.Compose(map, RepoCompositor(), Defined, new HouseFinishPreviewLookup(new TableLookup(), preview));
+            ComposedMapTiles viaTable = ComposedMapTiles.Compose(map, RepoCompositor(), Defined, plainLookup);
+            Assert.That(viaPreview.Room.Pixels, Is.EqualTo(viaTable.Room.Pixels));
+            // 안의 조회가 없으면 기본(빈 글)이다.
+            Assert.That(new HouseFinishPreviewLookup(null, preview).FloorAt(outside), Is.EqualTo(""));
+            Assert.That(HouseBuildFrames.From(Repo.Loader().LoadMap(Repo.Loader().Catalog.Maps.First(m => m.Build == null).Id)), Is.Null, "짓는 집이 아니면 null");
+        }
+
         [Test]
         public void MoreCellsThanTheLimit_DrawsTheLdtkLayers()
         {
