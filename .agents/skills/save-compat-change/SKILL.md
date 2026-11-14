@@ -73,6 +73,8 @@ description: "ROOTBORN 세이브에 닿는 것을 고칠 때 하위호환(옛 �
    - 하위: 옛 모양의 파일(고정 파일이나 테스트가 직접 쓴 JSON)을 새 코드로 읽어 열리는지, 읽고 다시 쓴 뒤 옛 필드와 기록이 남는지.
    - 상위: 새 필드를 넣은 파일을 **그 필드를 모르는 모양**으로 읽고 다시 쓴 뒤 새 필드가 남는지(목록 기록 안이면 남지 않는다 — 자리를 옮긴다). 그리고 "옛 프로그램이 다녀간 뒤"의 파일(새 필드는 예전 값, 옛 필드는 새 값)을 새 코드가 바르게 읽는지.
 2. 고친다. **있는 고정 폴더(`game/tests/Rootborn.Data.Tests/Fixtures/saves/*`)는 고치지 않는다.** 그 폴더를 읽는 테스트가 실패하면 고칠 것은 코드다.
+   - 세이브는 운영체제와 무관하게 LF로 쓰고(`FileSaveStore`), 고정 폴더는 `.gitattributes`로 LF로 체크아웃된다. 이 줄이 들어오기 전에 만든 Windows 작업 폴더는 그 폴더가 CRLF 사본으로 남아 Game `HouseBuildCompatTests` 일부가 실패한다. 그 작업 폴더에서 고정 폴더의 작업 사본만 다시 꺼낸다(저장소·색인은 그대로, 그 폴더에 커밋하지 않은 파일이 없을 때만): `rm -rf game/tests/Rootborn.Data.Tests/Fixtures/saves && git checkout -- game/tests/Rootborn.Data.Tests/Fixtures/saves`, 확인은 `git ls-files --eol game/tests/Rootborn.Data.Tests/Fixtures/saves | grep -v w/lf`가 빈 출력. (그냥 `git checkout -- <폴더>`는 git이 바뀌지 않았다고 보는 파일을 다시 쓰지 않을 수 있어 지우고 꺼낸다.)
+   - 진짜 CRLF 세이브(옛 Windows 빌드)를 고정 파일로 담을 수는 없다(이 속성 아래서는 커밋 때 LF가 된다). CRLF 입력은 테스트가 복사하며 바꿔 만든다 — 본보기: Game `HouseBuildCompatTests.WindowsCrlfSlot_*`(슬롯 전체), Data `FileSaveStoreTests.ACrlf*`(파일 하나).
 3. 새 `GameSession`으로 다시 읽어 같은지 본다(저장 → 새 판 → 읽기).
 4. `KnownVersion`을 올렸으면 새 날짜 고정 폴더를 **더한다**:
    ```bash
