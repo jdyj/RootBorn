@@ -367,6 +367,25 @@ namespace Rootborn.Core.Building
                 return mask;
             }
 
+            /// <summary>바로 위 칸(x, y − 1)의 맨 아랫줄에서 정면 그림인 열 — 그 밑 바닥 맨 위 두 줄의 그림자는 이 열에만. 정면 칸이면
+            /// <see cref="FaceColumns"/>, 띠 칸이면 그 칸 안으로 늘인 정면의 열(가로 벽 정면이 세로 벽 띠 칸으로 들어온 T자 자리), 문지방 칸·그 밖은 없음.</summary>
+            private uint FaceAbove(int x, int y)
+            {
+                if (Tag(x, y - 1) > 0)
+                    return FaceColumns(x, y - 1);
+                if (y - 1 < 0 || x < 0 || x >= _w || y - 1 >= _h)
+                    return 0;
+                int i = (y - 1) * _w + x;
+                var cls = _cls[i];
+                if (cls == null || _sills[i] != null)
+                    return 0;
+                uint mask = 0;
+                for (int px = 0; px < C; px++)
+                    if (cls[(C - 1) * C + px] >= FaceBase)
+                        mask |= 1u << px;
+                return mask;
+            }
+
             private static string ShadeKey(uint cols)
             {
                 if (cols == 0)
@@ -383,21 +402,20 @@ namespace Rootborn.Core.Building
                 for (int i = 0; i < n; i++)
                 {
                     int x = i % _w, y = i / _w;
-                    bool faceAbove = Tag(x, y - 1) > 0;
                     if (_tags[i] == RoomTileKinds.Floor)
                     {
-                        _ground[i] = faceAbove ? ShadeKey(FaceColumns(x, y - 1)) : RoomTileKinds.FloorKey;
+                        _ground[i] = ShadeKey(FaceAbove(x, y));
                         continue;
                     }
                     var cls = _cls[i];
                     if (cls == null || Array.IndexOf(cls, FloorPx) < 0)
                         continue;
-                    // 벽 칸 밑 바닥: 위 칸 정면의 그림자는 이 칸에서 바닥이 비치는 맨 위 두 줄의 열에만 의미가 있다
+                    // 벽 칸 밑 바닥: 위 칸 정면(늘인 정면 포함)의 그림자는 이 칸에서 바닥이 비치는 맨 위 두 줄의 열에만 의미가 있다
                     uint shown = 0;
                     for (int p = 0; p < 2 * C; p++)
                         if (cls[p] == FloorPx)
                             shown |= 1u << (p % C);
-                    _ground[i] = faceAbove ? ShadeKey(shown & FaceColumns(x, y - 1)) : RoomTileKinds.FloorKey;
+                    _ground[i] = ShadeKey(shown & FaceAbove(x, y));
                 }
             }
 
