@@ -96,7 +96,7 @@
 
 | id | 대응 테스트 | 비고 |
 |---|---|---|
-| TOWN-001 | Game NewGameTests.NewGame_StartsWithTheUnityStartingValues, Host NewGameJourneyTests.JOURNEY_001_… | farm/crop 용어 노출 검사는 없음 |
+| TOWN-001 | Game NewGameTests.NewGame_StartsWithTheUnityStartingValues, Game HouseStarterTests(새 게임의 집에만 처음 배치 가구 — 옛 세이브·논 슬롯·같이 쓰는 집 제외, 두 번 주지 않음, 가구 놓기 목표를 채우지 않음), Host NewGameJourneyTests.JOURNEY_001_…, Host HouseMapHostTests.HOUSE_MAP_002_NewGameHouse_HasTheStarterFurniture | farm/crop 용어 노출 검사는 없음. 처음 배치는 시험용(결정 대기 29번) |
 | LIFE-001 | Core StudentLifeActivityTests(LIFE_STUDENT_002~006), Game SelfStudyAndClassTests, HelpAndTrustTests, ActivityStatusAndRecipeTests | 비용 거절 시 무변경: SelfStudyAndClassTests.FreePath004_… |
 | LIFE-002 | Core StudentLifeActivityTests.LIFE_STUDENT_007_…, Game RewardOnceTests.TheSameLocationActivityRequestTwice_GrowsOnce, HelpAndTrustTests(같은 요청 거절) | |
 | CAREER-001 | Core CareerPracticeTests·CareerCandidateTests, Game FreePathTests, PartTimeWorkGrowthTests.Job002_…, AdultCareerTests | |

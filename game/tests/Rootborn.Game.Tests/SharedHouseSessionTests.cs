@@ -171,8 +171,9 @@ namespace Rootborn.Game.Tests
         public void HouseShareOn_StartingAgain_RestoresTheRoomsHouse_NotTheOwnFile()
         {
             using var saves = new TempSaves();
-            // 혼자 할 때 놓은 가구가 있는 슬롯.
-            var solo = GameSession.Start(TestWorld.Definitions, TestWorld.Settings, saves.Store, "slot-a", "a");
+            // 혼자 할 때 놓은 가구가 있는 슬롯(처음 배치 가구 없이 — 놓은 의자 하나만 보려고).
+            HouseRoom.EmptyHouse(saves.Store, "slot-a");
+            var solo =GameSession.Start(TestWorld.Definitions, TestWorld.Settings, saves.Store, "slot-a", "a");
             solo.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
             string chair = FreeFurniture(solo);
             var soloAnchor = HouseRoom.FirstFreeAnchor(solo, chair);
@@ -200,6 +201,7 @@ namespace Rootborn.Game.Tests
             using var saves = new TempSaves();
             var room = new FakeRoom(RoomWallet.PieceName);
             var aShares = room.Join("a");
+            HouseRoom.EmptyHouse(saves.Store, "slot-b"); // 준비: b의 집은 처음 배치 가구 없이(a가 놓은 것이 오지 않는지 보려고)
             var a = Start(saves, aShares, "slot-a", "a");
             var b = Start(saves, room.Join("b"), "slot-b", "b");
             Assert.That(a.SharesHouse, Is.False);

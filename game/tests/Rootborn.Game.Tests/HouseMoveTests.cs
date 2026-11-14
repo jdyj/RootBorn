@@ -213,11 +213,12 @@ namespace Rootborn.Game.Tests
             Assert.That(announced, Is.GreaterThan(0), "알림 화면이 열리도록 가구 알림이 온다");
             Assert.That(game.TryTakeHouseRelocationNotice(out _, out _), Is.True);
 
+            // 새 게임(처음 배치 가구가 데이터 자리 그대로 놓인다 — 실제 집 칸 HostGrid)도 옮긴 것이 없으면 알리지 않는다.
             using var empty = new TempSaves();
             var plain = TestWorld.Start(empty.Store);
             int none = 0;
             plain.Changed += t => { if (t == GameChangeTopics.Furniture) none++; };
-            plain.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
+            plain.EnterHouse(HouseRoom.HostGrid, HouseRoom.SurfaceId);
             Assert.That(none, Is.Zero, "옮긴 것도 보관한 것도 없으면 알리지 않는다");
         }
 

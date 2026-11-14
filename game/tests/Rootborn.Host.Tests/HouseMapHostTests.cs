@@ -183,6 +183,52 @@ namespace Rootborn.Host.Tests
             Assert.That(player.Game.Renderer.MissingImages, Is.Empty);
         }
 
+        [Test]
+        public void HOUSE_MAP_002_NewGameHouse_HasTheStarterFurniture()
+        {
+            // 새 게임의 처음 배치 가구(data/building/HouseStarterLayout.json, 시험용 — 결정 대기 29번)가 새 집에 놓여 보인다.
+            // 스크린샷을 직접 연다: output/house-building/stage1b/house-starter-NN-*.png.
+            string root = HostOptions.Resolve(new[] { "--sample" }).RepoRoot;
+            HostOptions options = HostOptions.Resolve(new[]
+            {
+                "--save-root", _saves, "--size", "1920x1080", "--evidence", Path.Combine(root, "output", "house-building", "stage1b"),
+            });
+            options.TestMode = true;
+            using var player = new PlayerDriver(options);
+            player.Frames(3);
+
+            player.PressButton(SaveSlotScreen.NewGameId(0));
+            player.WaitForScreen(ScreenCatalog.CharacterCreator);
+            player.PressButton(CharacterCreatorScreen.NameFieldId);
+            player.TypeText("하늘");
+            player.PressKey(TestKey.Escape);
+            player.PressButton(CharacterCreatorScreen.ConfirmId);
+            player.Frames(3);
+            Assert.That(player.Game.World.Current.Entry.Build, Is.Not.Null, "새 게임은 짓는 집에서 시작한다");
+
+            var starter = player.Game.Session.Definitions.All<Rootborn.Core.Placement.HouseStarterLayout>().SelectMany(s => s.Placements).ToList();
+            var placed = player.Game.Session.House.Placed;
+            Assert.That(placed.Select(p => (p.Definition.StableId, p.Anchor, p.Direction)),
+                Is.EqualTo(starter.Select(p => (p.FurnitureId, p.Anchor, p.Direction))), "처음 배치가 데이터 자리 그대로 놓였다");
+            Assert.That(player.Game.Renderer.MissingImages, Is.Empty, "가구 그림을 다 찾았다");
+
+            // 처음 가구가 있는 방으로 걸어 들어가 찍는다(카메라가 플레이어를 따라간다): 첫 줄 가구의 맵 칸에서 오른쪽 두 칸, 아래 한 칸.
+            // 가구 칸 y는 위로 커진다 — 맵 칸 = (x, 행 수 - 1 - y)(Screens FurnitureRoom).
+            int rows = player.World.Map.Grid.Rows;
+            var first = starter[0].Anchor;
+            player.WalkTo(new CellPos(first.X + 2, rows - 1 - first.Y + 1));
+            player.Frames(2);
+            player.Screenshot("house-starter-01");
+
+            // 집 전체(가구 배치 P의 카메라)로 한 번 더.
+            player.OpenScreenWithKey(TestKey.P, ScreenCatalog.FurniturePlacement);
+            player.MovePointer(-50, -50);
+            player.Frames(3);
+            player.Screenshot("house-starter-02-whole-house");
+            player.CloseScreenWithKey(TestKey.Escape, ScreenCatalog.FurniturePlacement);
+            Assert.That(player.CollisionViolations, Is.EqualTo(0));
+        }
+
         private static CellPos Up(CellPos c, int n) => new CellPos(c.X, c.Y - n);
 
         private static readonly (int Dx, int Dy)[] Steps = { (1, 0), (-1, 0), (0, 1), (0, -1) };

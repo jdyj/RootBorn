@@ -78,6 +78,9 @@ namespace Rootborn.Game
                 if (_problems.Count > 0) throw new SaveSlotDamagedException(_slot, _problems.ToArray(), _found.ToArray());
             }
 
+            /// <summary>그 이름 가운데 읽힌(있는) 파일이 하나라도 있다.</summary>
+            public bool FoundAny(string[] names) => AnyFound(names);
+
             private bool AnyFound(string[] names)
             {
                 for (int i = 0; i < names.Length; i++) if (_found.Contains(names[i])) return true;

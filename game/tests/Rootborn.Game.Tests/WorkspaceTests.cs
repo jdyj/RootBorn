@@ -331,6 +331,9 @@ namespace Rootborn.Game.Tests
             Assert.That(game.ActiveWorkspace, Is.Null, "집에는 일터가 없다");
             var houseAnchor = HouseRoom.FirstFreeAnchor(game, FreeDesk);
             Assert.That(game.PlaceFurniture(FreeDesk, houseAnchor, FurniturePlacementDirection.North), Is.True);
+            // 집에는 새 게임의 처음 배치 가구도 있다(HouseStarterTests) — 놓은 책상을 포함한 집 배치 전체가 일터를 다녀와도 그대로인지 본다.
+            var housePlaced = game.House.Placed.Select(p => (p.Definition.StableId, p.Anchor)).ToArray();
+            Assert.That(housePlaced, Does.Contain((FreeDesk, houseAnchor)));
             saves.Store.TryRead<FurniturePlacementLayoutSaveData>(TestWorld.Slot, SaveFileNames.HouseFurnitureLayout(game.HouseStage), out var houseBefore);
 
             EnterChef(game);
@@ -341,7 +344,7 @@ namespace Rootborn.Game.Tests
             Assert.That(houseAfter.Items.Select(i => (i.FurnitureId, i.AnchorX, i.AnchorY)), Is.EqualTo(houseBefore.Items.Select(i => (i.FurnitureId, i.AnchorX, i.AnchorY))));
             game.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
             Assert.That(game.ActiveWorkspace, Is.Null);
-            Assert.That(game.House.Placed.Select(p => (p.Definition.StableId, p.Anchor)), Is.EqualTo(new[] { (FreeDesk, houseAnchor) }));
+            Assert.That(game.House.Placed.Select(p => (p.Definition.StableId, p.Anchor)), Is.EqualTo(housePlaced));
         }
 
         [Test]

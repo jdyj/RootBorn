@@ -83,7 +83,8 @@ namespace Rootborn.Game.Tests
             var anchor = HouseRoom.FirstFreeAnchor(game, offer.StableId);
             Assert.That(game.PlaceFurniture(offer.StableId, anchor, FurniturePlacementDirection.North), Is.False, "사지 않은 가구");
             Assert.That(game.PlaceFurniture("no.such.furniture", anchor, FurniturePlacementDirection.North), Is.False);
-            Assert.That(game.House.Placed, Is.Empty);
+            Assert.That(game.House.Placed.Count, Is.EqualTo(TestWorld.Definitions.All<HouseStarterLayout>().Sum(s => s.Placements.Count)),
+                "새 게임의 처음 배치 가구만 있다(거절된 것은 놓이지 않았다)");
             Assert.That(saves.Store.TryRead<FurniturePlacementLayoutSaveData>(TestWorld.Slot, SaveFileNames.HouseFurnitureLayout(0), out _), Is.False);
         }
 
@@ -91,6 +92,7 @@ namespace Rootborn.Game.Tests
         public void PlacedFurniture_IsSavedToTheStageFile_AndComesBackWhenEnteringAgain()
         {
             using var saves = new TempSaves();
+            HouseRoom.EmptyHouse(saves.Store);
             var game = TestWorld.Start(saves.Store);
             game.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
             var anchor = HouseRoom.FirstFreeAnchor(game, FreeDesk);
@@ -109,6 +111,7 @@ namespace Rootborn.Game.Tests
         public void MovingRemovingAndClearing_AreSaved()
         {
             using var saves = new TempSaves();
+            HouseRoom.EmptyHouse(saves.Store);
             var game = TestWorld.Start(saves.Store);
             game.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
             Assert.That(game.PlaceFurniture(FreeDesk, HouseRoom.FirstFreeAnchor(game, FreeDesk), FurniturePlacementDirection.North), Is.True);

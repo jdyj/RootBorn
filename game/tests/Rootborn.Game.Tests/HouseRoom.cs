@@ -54,24 +54,44 @@ namespace Rootborn.Game.Tests
 
         private static WorldMap Map() => WorldMapLoader.FromRepo(TestWorld.RepoRoot).LoadMap(MapId).World;
 
-        private static PlacementGrid Build()
+        /// <summary>
+        /// 준비: 이 슬롯의 집을 처음 배치 가구 없이 빈 집으로 둔다(빈 배치 파일 — 처음 가구를 모두 치운 집과 같다). 새 게임이 받는 처음 배치(HouseStarterTests)와
+        /// 상관없이 "가구가 하나도 없는 집"에서 놓기·옮기기를 보는 테스트가 시작 전에 부른다.
+        /// </summary>
+        public static void EmptyHouse(Rootborn.Core.Save.ISaveStore store, string slot = TestWorld.Slot)
+            => FurnitureSaveFiles.SaveHouseLayout(store, slot, 0, Array.Empty<FurniturePlacementSaveData>());
+
+        private static readonly Lazy<PlacementGrid> _hostGrid = new Lazy<PlacementGrid>(() => Build(true));
+
+        /// <summary>
+        /// Host가 실제로 넘기는 가구 방 칸(Screens FurnitureRoom과 같다: 가구 칸 y는 위로 커진다, 가구 칸 = (x, 행 수 - 1 - 맵 y)).
+        /// <see cref="Grid"/>는 맵 y를 그대로 쓰는 옛 시험 칸이라, 데이터에 적은 가구 칸(처음 배치)이 실제 집에 맞는지는 이것으로 본다.
+        /// </summary>
+        public static PlacementGrid HostGrid => _hostGrid.Value;
+
+        private static PlacementGrid Build() => Build(false);
+
+        private static PlacementGrid Build(bool flipY)
         {
             var map = Map();
+            GridPoint Cell(int x, int y) => new GridPoint(x, flipY ? map.Grid.Rows - 1 - y : y);
             var floor = new List<GridPoint>();
             var fixedCells = new List<GridPoint>();
             for (int y = 0; y < map.Grid.Rows; y++)
                 for (int x = 0; x < map.Grid.Columns; x++)
                 {
-                    floor.Add(new GridPoint(x, y));
-                    if (map.Collision.IsBlocked(x, y)) fixedCells.Add(new GridPoint(x, y));
+                    floor.Add(Cell(x, y));
+                    if (map.Collision.IsBlocked(x, y)) fixedCells.Add(Cell(x, y));
                 }
 
             var spawns = new List<GridPoint>();
-            foreach (var id in map.SpawnIds)
+            var ids = new List<string>(map.SpawnIds);
+            if (flipY) ids.Sort(StringComparer.Ordinal); // Host(FurnitureRoom)는 도착 지점 id 순서의 첫 칸이 들어오는 칸이다
+            foreach (var id in ids)
             {
                 map.TryGetSpawn(id, out var point);
                 var cell = CellPos.Containing(point.X, point.Y, map.Grid.CellSize);
-                spawns.Add(new GridPoint(cell.X, cell.Y));
+                spawns.Add(Cell(cell.X, cell.Y));
             }
 
             if (spawns.Count == 0) throw new InvalidOperationException("집 맵에 도착 지점이 없다");

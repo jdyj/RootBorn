@@ -87,10 +87,43 @@ namespace Rootborn.Game
             {
                 // 집 맵이 바뀌어 못 놓는 옛 기록은 가까운 자리로 옮기고 나머지는 보관한다(설계 7.3절). 읽기만으로 파일을 쓰지 않는다.
                 layout = new HouseFurnitureLayout(new HousePlacementModel(grid), surfaceId, CommitHouseLayout);
-                _houseRelocation = layout.RestoreRelocating(FurnitureSaveFiles.LoadHouseLayout(_store, SaveSlot, HouseStage), _definitions.All<FurnitureDefinition>());
+                var records = FurnitureSaveFiles.LoadHouseLayout(_store, SaveSlot, HouseStage);
+                // 새 게임이고 배치 파일이 아직 없으면 처음 배치 기록으로 연다(옛 기록과 같은 길 — 막힌 칸이면 옮긴다). 파일은 다음 저장 묶음이 쓴다.
+                if (_houseStarterPending && records.Length == 0) records = HouseStarterRecords();
+                _houseRelocation = layout.RestoreRelocating(records, _definitions.All<FurnitureDefinition>());
             }
 
             UseHouseLayout(layout);
+        }
+
+        // ---------- 새 게임의 처음 배치 가구(data/building HouseStarterLayout, 시험용 — 결정 대기 29번) ----------
+
+        // 이 판이 새 게임이고 처음 배치가 아직 집 배치 파일에 쓰이지 않았다(메모리만). 세이브 모양을 늘리지 않는다 — 파일 자체가 받음 기록이다:
+        // 파일이 생기면(저장 묶음, 가구를 놓거나 치움) 지운다. 명령 없이 끝낸 새 게임은 아무것도 쓰지 않고, 다음에도 새 게임이라 같은 결과다.
+        private bool _houseStarterPending;
+
+        // 새 게임(학생을 새로 만든 판)에서: 처음 배치가 있고, 슬롯을 다른 플레이어가 논 적이 없고(slotPlayed: 슬롯 공용 파일이 있다),
+        // 같이 쓰는 집이 아니고, 지금 단계의 배치 파일(단계 전 파일 포함)이 없으면 준다.
+        private bool WantsHouseStarter(bool slotPlayed)
+            => !slotPlayed && _roomHouse == null && _definitions.All<HouseStarterLayout>().Count > 0 && !HouseLayoutFileExists();
+
+        // 읽을 수 없는 배치 파일도 "있다"로 본다(주지 않는다 — 그 파일은 집을 열 때 지금처럼 알린다). 시작 읽기의 문제로 모으지 않는다.
+        private bool HouseLayoutFileExists()
+        {
+            try
+            {
+                return _store.TryRead<FurniturePlacementLayoutSaveData>(SaveSlot, SaveFileNames.HouseFurnitureLayout(HouseStage), out _)
+                    || (HouseStage == 0 && _store.TryRead<FurniturePlacementLayoutSaveData>(SaveSlot, SaveFileNames.HouseFurnitureLayoutBeforeStages, out _));
+            }
+            catch (IOException) { return true; }
+        }
+
+        // 처음 배치 기록 전부(데이터 순서). 면이 다른 기록은 집 배치가 버리지 않고 함께 들고 있다(다른 면의 옛 기록과 같다).
+        private FurniturePlacementSaveData[] HouseStarterRecords()
+        {
+            var records = new List<FurniturePlacementSaveData>();
+            foreach (var starter in _definitions.All<HouseStarterLayout>()) records.AddRange(starter.Records());
+            return records.ToArray();
         }
 
         // 마지막으로 집을 열 때 옮긴 수·보관한 수(메모리만). 알림은 이 판에서 한 번만(_relocationNoticeTaken).
@@ -216,6 +249,7 @@ namespace Rootborn.Game
             try
             {
                 FurnitureSaveFiles.SaveHouseLayout(_store, SaveSlot, HouseStage, records);
+                _houseStarterPending = false; // 배치 파일이 생겼다 — 처음 배치를 다시 주지 않는다
                 return true;
             }
             catch (IOException) { return false; }

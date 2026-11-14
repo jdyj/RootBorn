@@ -123,6 +123,7 @@ namespace Rootborn.Game.Tests
         public void AnOldSlotWithoutChests_StillReads()
         {
             using var saves = new TempSaves();
+            HouseRoom.EmptyHouse(saves.Store); // 준비: 처음 배치 가구 없이(놓은 가구 하나만 보려고)
             var game = TestWorld.Start(saves.Store);
             game.EnterHouse(HouseRoom.Grid, HouseRoom.SurfaceId);
             string desk = game.AvailableFurniture().First(f => !game.IsStorage(f)).StableId;

@@ -1,0 +1,33 @@
+[
+  {
+    "type": "HouseStarterLayout",
+    "id": "house-starter.default",
+    "surfaceId": "house",
+    "placements": [
+      {
+        "furniture": "school.desk",
+        "cell": {
+          "x": 2,
+          "y": 13
+        },
+        "direction": 0
+      },
+      {
+        "furniture": "school.chair.north",
+        "cell": {
+          "x": 2,
+          "y": 12
+        },
+        "direction": 0
+      },
+      {
+        "furniture": "school.bookcase",
+        "cell": {
+          "x": 9,
+          "y": 14
+        },
+        "direction": 0
+      }
+    ]
+  }
+]

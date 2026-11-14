@@ -137,5 +137,14 @@ namespace Rootborn.Game
             if (_roomHouse != null) return;
             FurnitureSaveFiles.SaveHouseLayout(batch, SaveSlot, HouseStage, House.BuildSaveRecords());
         }
+
+        // 저장 묶음 안에서: 새 게임의 처음 배치가 아직 파일에 없으면 쓴다 — 집 배치가 열려 있으면 그 기록(옮긴 자리 포함), 아니면 데이터의 기록.
+        // 묶음이 커밋된 뒤 Save()가 표시를 지운다(GameSession.Furniture의 _houseStarterPending).
+        private void SaveHouseStarterIfPending(Rootborn.Core.Save.ISaveStore batch)
+        {
+            if (!_houseStarterPending) return;
+            var records = House != null && ActiveWorkspace == null && _roomHouse == null ? House.BuildSaveRecords() : HouseStarterRecords();
+            FurnitureSaveFiles.SaveHouseLayout(batch, SaveSlot, HouseStage, records);
+        }
     }
 }

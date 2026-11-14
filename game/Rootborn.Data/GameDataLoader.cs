@@ -47,6 +47,7 @@ namespace Rootborn.Data
             definitions.Currency = EconomySettings.ReadCurrency(dataDirectory, definitions, errors, overlayDirectory, overlayChanges);
             definitions.TimeRules = TimeSettings.Read(dataDirectory, definitions, errors, overlayDirectory, overlayChanges);
             Builders.WorkspaceTables.Build(definitions, errors);
+            Builders.BuildingTables.Check(definitions, errors);
             return new LoadResult(definitions, errors, unclassified.ToArray(), builders, overlayChanges);
         }
     }

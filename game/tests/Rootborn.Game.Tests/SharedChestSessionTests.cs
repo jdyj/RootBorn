@@ -181,6 +181,7 @@ namespace Rootborn.Game.Tests
             var room = new FakeRoom(RoomWallet.PieceName);
             var shares = room.Join("a");
             Assert.That(room.Chests, Is.Null, "집을 각자 쓰는 방에는 같이 쓰는 상자가 없다");
+            HouseRoom.EmptyHouse(saves.Store, "slot-a"); // 준비: 처음 배치 가구 없이(놓은 상자 하나만 보려고)
             var a = Start(saves, shares, "slot-a", "a");
             a.PlaceFurniture(ChestFurniture, HouseRoom.FirstFreeAnchor(a, ChestFurniture), FurniturePlacementDirection.North);
             string chest = a.House.Placed.Single().InstanceId;

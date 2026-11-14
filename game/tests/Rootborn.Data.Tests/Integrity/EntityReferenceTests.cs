@@ -110,6 +110,7 @@ namespace Rootborn.Data.Tests.Integrity
             ["WorkspaceDefinition.surfaceId"] = Array.Empty<string>(),                 // 일터의 놓는 면 이름
             ["WorkspaceDefinition.acceptsSurfaceIds"] = Array.Empty<string>(),         // 일터가 받는 가구의 면 이름
             ["PlacementSkillGrowth.surfaceId"] = Array.Empty<string>(),                // 놓으면 기술이 자라는 면 이름
+            ["HouseStarterLayout.surfaceId"] = Array.Empty<string>(),                  // 처음 배치 가구를 놓는 면 이름
         };
 
         [Test]

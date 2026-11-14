@@ -194,7 +194,9 @@ namespace Rootborn.Host.Tests
                 p.Continue(0);
                 Assert.That(p.ChainState, Is.EqualTo(QuestChainState.Completed), "다시 띄워도 완료");
                 Assert.That(p.Session.House.Placed.Select(f => f.Definition.StableId), Does.Contain(FreeDesk));
-                Assert.That(p.Player.Game.World.FurnitureDrawCount, Is.EqualTo(1), "놓은 책상을 그린다");
+                // 새 게임의 처음 배치 가구(HouseStarterLayout)도 있다 — 놓은 책상을 포함해 놓인 가구를 모두 그린다.
+                Assert.That(p.Player.Game.World.FurnitureDrawCount, Is.EqualTo(p.Session.House.Placed.Count), "놓은 책상을 포함해 놓인 가구를 그린다");
+                Assert.That(p.Session.House.Placed.Count, Is.GreaterThan(1), "전제: 처음 배치 가구와 놓은 책상");
                 p.Shot("main-chain-15-complete-after-restart");
             }
 

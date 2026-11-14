@@ -210,7 +210,7 @@
 
 ## 집 짓기 `building/`
 
-플레이어가 집의 벽지·바닥을 꾸미는 기능의 데이터. 지금은 꾸밈(벽지·바닥 종류) 하나뿐이다. 등록부 목록은 없다(파일 순서대로).
+플레이어가 집의 벽지·바닥을 꾸미는 기능의 데이터: 꾸밈(벽지·바닥 종류)과 새 게임의 처음 배치 가구. 등록부 목록은 없다(파일 순서대로).
 **값(넣은 10종, 처음부터 열린 6종, 칸당 비용 벽 2·바닥 1)은 전부 시험용이고 사용자가 정하지 않았다** — 결정 대기 문서
 `docs/superpowers/specs/2026-11-14-house-building-open-decisions.md` 1·7·9번.
 
@@ -232,6 +232,10 @@
 3. `python Tools/pixel-kit/kit.py room export-finishes --dry-run`으로 바뀔 파일을 보고, `--dry-run` 없이 돌려 시트 PNG와 좌표표(`data/atlases/art/world/finishes/finishes.png.atlas.json`)를 다시 낸다. 조각은 이름 순으로 다시 놓이므로 자리가 밀리지만 게임은 좌표표로 찾는다. 시트·좌표표는 손으로 고치지 않고 정의와 함께 커밋한다(`CommittedSheetTests`가 저장소의 시트가 지금 정의로 낸 것과 같은지 본다).
 4. 이름 문구를 `game/localization/ko.json`과 `en.json`에 둘 다 넣는다(`<nameKey>`).
 5. `dotnet test game/tests/Rootborn.Data.Tests`, `game/tests/Rootborn.World.Tests`(`RoomFinishArtTests`, `HouseMapTests`)와 키트 테스트를 돌린다.
+
+**처음 배치 가구** `HouseStarterLayout.json`(`HouseStarterLayout`): 새 게임의 집에만 처음 한 번 놓이는 가구. 필드 `surfaceId`(놓는 면 — 집은 `house`), `placements`(일터 템플릿과 같은 꼴: `furniture`(가구 stableId), `cell`(가구 칸, y는 위로 커진다 — 가구 칸 = (맵 x, 맵 행 수 - 1 - 맵 y)), `direction`).
+모르는 가구, 한 면에 처음 배치 둘은 읽기 오류다. 실제 새 집에서 놓이는지는 Game `HouseStarterTests.StarterFitsTheRealHouse`가 본다(막힌 칸이면 옛 가구처럼 가까운 자리로 옮긴다).
+옛 세이브, 다른 플레이어가 논 슬롯, 같이 쓰는 집에는 주지 않는다(세이브 모양은 그대로 — 집 배치 파일 자체가 받음 기록이다). **목록과 자리(책상·의자·책장, 왼쪽 위 방)는 시험용** — 결정 대기 29번.
 
 수치와 목록은 시험용이다: 넣은 10종, 처음부터 열린 6종·잠긴 4종(잠긴 것은 얻는 길이 아직 없다), 칸당 비용(벽 2, 바닥 1)은 사용자가 정하지 않았다. 결정 대기 문서 `docs/superpowers/specs/2026-11-14-house-building-open-decisions.md` 1·7·9번. 값을 고칠 때는 `[BALANCE]`로 나눠 커밋한다.
 

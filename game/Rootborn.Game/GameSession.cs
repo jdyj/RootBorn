@@ -221,6 +221,8 @@ namespace Rootborn.Game
 
             LoadOptionalDomains(store);
             LoadRoomOutbox(store);
+            // 새 게임이면 집에 처음 배치 가구를 준다(GameSession.HouseStarter). 학생을 새로 만들었고 슬롯 공용 파일이 하나도 없을 때만.
+            _houseStarterPending = !hasSnapshot && olderStudent == null && WantsHouseStarter(store.FoundAny(SlotSharedFiles()));
 
             // 이 판이 쓴 스냅샷(지갑이 든 것, 버전 3부터)은 아래 영역 파일과 늘 한 묶음으로 쓰였다. 스냅샷만 있고 하나가 없으면 그 영역이
             // 처음부터 시작해 받은 보상을 다시 받을 수 있으므로 빠진 파일로 알린다. Unity 판 스냅샷(지갑 없음)은 이 파일들 없이도 이어 간다.
@@ -343,10 +345,12 @@ namespace Rootborn.Game
                 SaveClock(store);
                 SaveWorkspaces(store);
                 SaveHouseLayoutIfDirty(store);
+                SaveHouseStarterIfPending(store);
                 SaveHouseBuildIfDirty(store);
                 store.Commit();
             }
 
+            _houseStarterPending = false;
             _houseLayoutDirty = false;
             _houseBuildDirty = false;
         }

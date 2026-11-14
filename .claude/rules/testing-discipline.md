@@ -51,7 +51,7 @@ bash Scripts/ci/run-all.sh                 # 자체 시험 + 검사 + dotnet 테
 
 | id | 시나리오 | 대응 |
 |---|---|---|
-| TOWN-001 | 새 게임이 마을 생활로 시작 | Game `NewGameTests`, Host `NewGameJourneyTests` |
+| TOWN-001 | 새 게임이 마을 생활로 시작(새 게임의 집에만 처음 배치 가구) | Game `NewGameTests`·`HouseStarterTests`, Host `NewGameJourneyTests`·`HouseMapHostTests` |
 | LIFE-001 | 활동 실행 → 비용 확인 → 결과가 한꺼번에 반영, 비용이 모자라면 무변경 | Core `StudentLifeActivityTests`, Game `SelfStudyAndClassTests` 등 |
 | LIFE-002 | 같은 활동 요청을 다시 해도 한 번만 반영 | Core `StudentLifeActivityTests`, Game `RewardOnceTests` |
 | CAREER-001 | 활동·선택이 쌓여 진로 힌트·연습이 열림, 학교 밖 길로도 | Core `CareerPracticeTests`·`CareerCandidateTests`, Game `FreePathTests`·`AdultCareerTests` |
