@@ -100,6 +100,8 @@ namespace Rootborn.Ui
     {
         public string Skin = UiSkin.Slot;
         public bool Selected;
+        /// <summary>흐리게(못 쓰는 칸과 같은 칠) 그리되 누를 수는 있다 — 잠긴 것을 골라 까닭을 보는 칸.</summary>
+        public bool Dimmed;
 
         /// <summary>고른 칸 표시는 테두리 그림(논리 좌표로 15~18) 안쪽에 그린다.</summary>
         private const float SelectedInset = 21;
@@ -110,7 +112,7 @@ namespace Rootborn.Ui
 
         public override void Emit(DrawList list, ITextMeasurer text)
         {
-            UiColor tint = !IsActive ? UiTheme.ButtonDisabled : Pressed ? UiTheme.ButtonPressed : Hovered ? UiTheme.ButtonHovered : UiTheme.ButtonNormal;
+            UiColor tint = !IsActive || Dimmed ? UiTheme.ButtonDisabled : Pressed ? UiTheme.ButtonPressed : Hovered ? UiTheme.ButtonHovered : UiTheme.ButtonNormal;
             list.Panel(Rect, Skin, tint);
             if (Selected) list.Outline(Rect.Inset(SelectedInset), UiTheme.FocusOutline, UiTheme.InkOnDark);
             if (FocusRing) list.Outline(Rect, UiTheme.FocusOutline, UiTheme.Accent);

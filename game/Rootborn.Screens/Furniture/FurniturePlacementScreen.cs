@@ -36,12 +36,27 @@ namespace Rootborn.Screens.Furniture
             public const float SearchX = 0f, SearchY = 248f, SearchW = 368f, SearchH = 64f, SearchFont = 18f;
             public const int SearchMaxLength = 100;
             public const float SlotX0 = -144f, SlotY0 = 120f, SlotPitchX = 72f, SlotPitchY = 88f, SlotSize = 64f, SlotIcon = 48f;
-            /// <summary>분류 줄(가구 / 보관): 제목 바로 아래(팔레트 안쪽 위 + 제목 높이 + CategoryGap), 단추 둘을 가운데에 나란히. 가구 분류의 검색·칸은 이 줄 아래로 내렸다.</summary>
-            public const float CategoryW = 150f, CategoryH = 56f, CategoryPitch = 164f, CategoryGap = 8f, CategoryFont = 20f;
+            /// <summary>
+            /// 분류 줄(가구 / 보관 / 꾸미기): 제목 바로 아래(팔레트 안쪽 위 + 제목 높이 + CategoryGap), 단추 셋을 가운데에 나란히(팔레트 안쪽 368px에 맞춤).
+            /// 가구 분류의 검색·칸은 이 줄 아래로 내렸다.
+            /// </summary>
+            public const float CategoryW = 120f, CategoryH = 56f, CategoryPitch = 128f, CategoryGap = 8f, CategoryFont = 20f;
             /// <summary>보관 분류: 목록(보이는 줄만 그린다), 비었을 때 안내, 같이 쓰는 집의 이유 줄.</summary>
             public const float StoredListX = 0f, StoredListY = 20f, StoredListW = 368f, StoredListH = 460f, StoredRowH = 48f, StoredFont = 18f;
             public const float StoredEmptyY = 20f, StoredEmptyW = 320f, StoredEmptyH = 120f, StoredEmptyFont = 18f;
             public const float StoredReasonY = -286f, StoredReasonW = 368f, StoredReasonH = 100f, StoredReasonFont = 16f;
+
+            /// <summary>
+            /// 꾸미기 분류(작성자 추천, 결정 대기 27번): 자리 탭 줄(벽지 / 바닥 — 셋째 자리가 생겨도 들어가는 폭), 도구 줄(방 채우기 / 칸 붓),
+            /// 카드 격자(가구 칸과 같은 칸 크기·간격, 첫 줄만 도구 줄 아래로), 벽 카드의 두 조각(위·아래) 크기와 간격.
+            /// </summary>
+            public const float FinishTabY = 248f, FinishTabW = 120f, FinishTabH = 52f, FinishTabPitch = 128f, FinishTabFont = 18f;
+            public const float FinishToolY = 184f, FinishToolW = 176f, FinishToolH = 52f, FinishToolPitch = 184f, FinishToolFont = 18f;
+            public const float FinishCardY0 = 108f, FinishPiece = 26f, FinishPieceOffset = 13f;
+            /// <summary>오른쪽 패널의 꾸밈 정보(가운데 기준 y): 이름, 칸당 값·바뀌는 칸·비용·가진 돈(한 줄씩), 이유(여러 줄). 줄은 칸 높이에 맞춰 줄인다.</summary>
+            public const float FinishInfoW = 290f, FinishNameY = 96f, FinishNameH = 64f, FinishNameFont = 20f;
+            public const float FinishLineH = 36f, FinishLineFont = 16f, FinishPriceY = 44f, FinishCellsY = 4f, FinishCostY = -36f, FinishMoneyY = -76f;
+            public const float FinishReasonY = -156f, FinishReasonH = 104f;
 
             public const float PageButtonX = 112f, PageButtonY = -248f, PageButtonW = 128f, PageButtonH = 48f, PageButtonFont = 18f;
             public const float PageTextX = 0f, PageTextY = -324f, PageTextW = 368f, PageTextH = 64f, PageTextFont = 18f;
@@ -86,6 +101,8 @@ namespace Rootborn.Screens.Furniture
             public static readonly UiColor InvalidGhost = UnityLayout.Color(1f, 0.25f, 0.2f, 0.48f);
             public static readonly UiColor ValidFootprint = UnityLayout.Color(0.15f, 0.95f, 0.95f, 0.44f);
             public static readonly UiColor InvalidFootprint = UnityLayout.Color(1f, 0.2f, 0.12f, 0.42f);
+            /// <summary>꾸미기: 적용할 수 있는 미리 보기의 바뀔 칸(ValidFootprint보다 옅게 — 월드에 그린 미리 보기 그림이 비쳐 보이게). 안 되면 InvalidFootprint.</summary>
+            public static readonly UiColor FinishValidCell = UnityLayout.Color(0.15f, 0.95f, 0.95f, 0.16f);
             public static readonly UiColor Ink = UnityLayout.Color(0.16f, 0.12f, 0.08f);
         }
 
@@ -109,6 +126,22 @@ namespace Rootborn.Screens.Furniture
         public const string HoldsItemsNoteKey = "ui.furniture.stored.holds-hint";
         public const string CategoryFurnitureId = "furniture.category.furniture", CategoryStoredId = "furniture.category.stored";
         public const string FurnitureGroupId = "furniture.group.furniture", StoredGroupId = "furniture.group.stored";
+        public const string CategoryFinishId = "furniture.category.finish", FinishGroupId = "furniture.group.finish", FinishInfoId = "furniture.finish.info";
+        public const string FinishTabWallId = "furniture.finish.tab.wall", FinishTabFloorId = "furniture.finish.tab.floor";
+        public const string FinishToolRoomId = "furniture.finish.tool.room", FinishToolBrushId = "furniture.finish.tool.brush";
+        public const string FinishPreviousId = "furniture.finish.page.previous", FinishNextId = "furniture.finish.page.next", FinishPageTextId = "furniture.finish.page.text";
+        public const string FinishNameId = "furniture.finish.info.name", FinishPriceId = "furniture.finish.info.price", FinishCellsId = "furniture.finish.info.cells";
+        public const string FinishCostId = "furniture.finish.info.cost", FinishMoneyId = "furniture.finish.info.money", FinishReasonId = "furniture.finish.info.reason";
+        /// <summary>꾸밈 카드(그림은 이 id + ".icon"(위 또는 하나뿐), ".icon2"(아래, 벽 카드만)).</summary>
+        public static string FinishCardId(int card) => "furniture.finish.card." + card;
+
+        /// <summary>분류 이름(글 상수 — 닫힌 종류가 아니다).</summary>
+        public static class Categories
+        {
+            public const string Furniture = "furniture";
+            public const string Stored = "stored";
+            public const string Finish = "finish";
+        }
         public const string StoredListId = "furniture.stored.list", StoredEmptyId = "furniture.stored.empty", StoredReasonId = "furniture.stored.reason";
         public static string SlotId(int slot) => "furniture.slot." + slot;
         public const string WorkspaceRowId = "workspace-row";
@@ -138,7 +171,10 @@ namespace Rootborn.Screens.Furniture
         private string _roomStatusKey;
         private UiLabel _title, _settingsTitle, _name, _size, _direction;
         private UiNode _furnitureGroup, _storedGroup;
-        private FurnitureCategoryButton _categoryFurniture, _categoryStored;
+        private FurnitureCategoryButton _categoryFurniture, _categoryStored, _categoryFinish;
+        private UiNode _selectedFrame;
+        private readonly FinishPalette _finish;
+        private string _category = Categories.Furniture;
         private UiScrollList _storedList;
         private UiTextBlock _storedEmpty, _storedReason;
         private StoredFurnitureModel _stored = StoredFurnitureModel.Build(null, f => string.Empty, shared: false);
@@ -171,11 +207,32 @@ namespace Rootborn.Screens.Furniture
         public FurniturePlacementScreen(ScreenServices services) : base(services)
         {
             _model = new FurniturePaletteModel(Metrics.PageSize, Name);
+            _finish = new FinishPalette(services, T, (key, args) => F(key, args), ItemName);
+        }
+
+        /// <summary>아이템 이름(돈의 이름): 이름 키 → 규칙 키 → id.</summary>
+        private string ItemName(string itemId)
+        {
+            if (string.IsNullOrEmpty(itemId)) return string.Empty;
+            return Services.Definitions != null && Services.Definitions.TryGet(itemId, out Rootborn.Core.Inventory.ItemDefinition item)
+                ? NameOf(item.DisplayKey, itemId) : itemId;
         }
 
         public FurniturePaletteModel Palette => _model;
-        /// <summary>"보관" 분류가 열려 있는가(아니면 "가구" 분류).</summary>
-        public bool StoredShown { get; private set; }
+        /// <summary>"보관" 분류가 열려 있는가.</summary>
+        public bool StoredShown => _category == Categories.Stored;
+        /// <summary>"꾸미기" 분류가 열려 있는가.</summary>
+        public bool FinishShown => _category == Categories.Finish;
+        /// <summary>꾸미기 분류의 표시 모델(지금 자리의 카드).</summary>
+        public FinishPaletteModel Finishes => _finish.Model;
+        /// <summary>꾸미기 분류에서 고른 꾸밈. 없으면 null.</summary>
+        public Rootborn.Core.Building.RoomFinishDefinition PickedFinish => _finish.Picked;
+        /// <summary>꾸미기 분류가 들고 있는 미리 보기(시험용 조회). 없으면 null.</summary>
+        public Rootborn.Core.Building.HouseFinishPreview FinishPreview => _finish.Preview;
+        /// <summary>꾸미기 분류가 PreviewHouseFinish를 물은 횟수(시험용 — 포인터 칸이 바뀔 때만 오른다).</summary>
+        public int FinishPreviewQueries => _finish.PreviewQueries;
+        /// <summary>꾸미기 분류의 마지막 누름(시험용): applied, refused, none.</summary>
+        public string FinishLastAction => _finish.LastAction;
         /// <summary>보관 목록의 표시 모델(GameSession.StoredFurniture 조회).</summary>
         public StoredFurnitureModel Stored => _stored;
         /// <summary>보관 목록에서 고른 줄의 기록 자리(StoredFurniture.Index). 고른 것이 없으면 -1.</summary>
@@ -206,6 +263,7 @@ namespace Rootborn.Screens.Furniture
         {
             _art = art;
             _view = view;
+            _finish.Attach(view);
             _validDirty = true;
         }
 
@@ -246,11 +304,14 @@ namespace Rootborn.Screens.Furniture
             // 분류 단추는 묶음들 뒤에 둔다: 열 때 첫 포커스가 팔레트 첫 칸에 가게(포커스 순서 = 노드 순서).
             float categoryY = paletteArea.CenterYFromTop(Metrics.CategoryH, Metrics.TitleH + Metrics.CategoryGap);
             _categoryFurniture = palette.Add(new FurnitureCategoryButton { Id = CategoryFurnitureId, FontSize = Metrics.CategoryFont })
-                .Centered(-Metrics.CategoryPitch / 2f, categoryY, Metrics.CategoryW, Metrics.CategoryH);
-            _categoryFurniture.Clicked += () => ShowCategory(false);
+                .Centered(-Metrics.CategoryPitch, categoryY, Metrics.CategoryW, Metrics.CategoryH);
+            _categoryFurniture.Clicked += () => ShowCategory(Categories.Furniture);
             _categoryStored = palette.Add(new FurnitureCategoryButton { Id = CategoryStoredId, FontSize = Metrics.CategoryFont })
-                .Centered(Metrics.CategoryPitch / 2f, categoryY, Metrics.CategoryW, Metrics.CategoryH);
-            _categoryStored.Clicked += () => ShowCategory(true);
+                .Centered(0f, categoryY, Metrics.CategoryW, Metrics.CategoryH);
+            _categoryStored.Clicked += () => ShowCategory(Categories.Stored);
+            _categoryFinish = palette.Add(new FurnitureCategoryButton { Id = CategoryFinishId, FontSize = Metrics.CategoryFont })
+                .Centered(Metrics.CategoryPitch, categoryY, Metrics.CategoryW, Metrics.CategoryH);
+            _categoryFinish.Clicked += () => ShowCategory(Categories.Finish);
 
             _storedList = _storedGroup.Add(new UiScrollList { Id = StoredListId, RowHeight = Metrics.StoredRowH, FontSize = Metrics.StoredFont })
                 .Centered(Metrics.StoredListX, Metrics.StoredListY, Metrics.StoredListW, Metrics.StoredListH);
@@ -272,6 +333,7 @@ namespace Rootborn.Screens.Furniture
             float bottomMargin = Math.Min(Metrics.SettingsH / 2f + Metrics.PreviewY - Metrics.PreviewSize / 2f, Metrics.SettingsH / 2f + Metrics.DirectionY - Metrics.InfoH / 2f);
             float lift = Math.Max(0f, pad.Bottom - bottomMargin);
             UiPanel frame = settings.Add(new UiPanel { Id = "furniture.selected.frame" }).Centered(Metrics.PreviewX, Metrics.PreviewY + lift, Metrics.PreviewSize, Metrics.PreviewSize);
+            _selectedFrame = frame;
             _selectedIcon = frame.Add(new UiFittedImage { Id = SelectedIconId }).Centered(0f, 0f, Metrics.PreviewIcon, Metrics.PreviewIcon);
             _name = settings.Add(new UiLabel { Id = SelectedNameId, FontSize = Metrics.NameFont, Color = Metrics.Ink })
                 .Centered(Metrics.InfoX, Metrics.NameY + lift, Metrics.InfoW, Metrics.NameH);
@@ -281,6 +343,8 @@ namespace Rootborn.Screens.Furniture
                 .Centered(Metrics.InfoX, Metrics.DirectionY + lift, Metrics.InfoW, Metrics.InfoH);
             _roomStatus = settings.Add(new UiTextBlock { Id = RoomStatusId, FontSize = Metrics.RoomStatusFont, Color = Metrics.Ink, Align = UiAlign.Center })
                 .Centered(Metrics.RoomStatusX, Metrics.RoomStatusY, Metrics.RoomStatusW, Metrics.RoomStatusH);
+            // 꾸미기 분류: 팔레트 안 묶음과 오른쪽 패널의 꾸밈 정보.
+            _finish.Build(palette, settings);
 
             UiPanel toolbar = root.Add(new UiPanel { Id = ToolbarId });
             _delete = toolbar.Add(new UiButton { Id = DeleteId, FontSize = Metrics.ToolFont });
@@ -378,7 +442,7 @@ namespace Rootborn.Screens.Furniture
             _ghostHeld = false;
             // 열 때마다 같은 상태에서 시작한다: 가구 분류, 보관 줄을 고른 것은 없다. 닫았다 여는 사이 집을 다시 읽으면 기록 자리 번호가 다시
             // 매겨지므로 옛 번호를 들고 있으면 안 보이는 다른 가구를 놓게 된다. 팔레트에서 고른 가구는 남는다.
-            StoredShown = false;
+            _category = Categories.Furniture;
             if (_storedIndex >= 0) { _storedIndex = -1; Active = null; }
             _overlayVisible = Active != null;
             _validDirty = true;
@@ -393,11 +457,13 @@ namespace Rootborn.Screens.Furniture
             SelectedInstanceId = null;
             Carrying = false;
             _hasHover = false;
+            _finish.Closed();
             if (Services.Screens?.Tree.Focused == _search) Services.Screens.Tree.SetFocus(null);
         }
 
         protected internal override void OnChanged(string topic)
         {
+            _finish.OnChanged(topic);
             if (topic == ChangeTopics.Language) { ApplyTexts(); return; }
             if (topic == ChangeTopics.All) ReloadFurniture();
             if (topic == ChangeTopics.Furniture || topic == ChangeTopics.Workspace || topic == ChangeTopics.Map || topic == ChangeTopics.All) RefreshStored();
@@ -456,6 +522,7 @@ namespace Rootborn.Screens.Furniture
             _title.Text = T("ui.furniture.title");
             _categoryFurniture.Text = T("ui.furniture.category.furniture");
             _categoryStored.Text = T("ui.furniture.category.stored");
+            _categoryFinish.Text = T("ui.furniture.category.finish");
             _storedEmpty.Text = T("ui.furniture.stored.empty");
             ApplyStoredNote();
             _settingsTitle.Text = T("ui.furniture.title");
@@ -536,11 +603,18 @@ namespace Rootborn.Screens.Furniture
 
         // ---------- 보관 분류 ----------
 
-        /// <summary>분류를 바꾼다(가구 / 보관). 집어 든 가구가 없으면 고른 가구를 놓고 간다(다른 분류의 미리보기가 남지 않게).</summary>
-        public void ShowCategory(bool stored)
+        /// <summary>분류를 바꾼다(가구 / 보관) — <see cref="ShowCategory(string)"/>와 같다.</summary>
+        public void ShowCategory(bool stored) => ShowCategory(stored ? Categories.Stored : Categories.Furniture);
+
+        /// <summary>
+        /// 분류를 바꾼다(<see cref="Categories"/>). 가구·보관 사이에서는 집어 든 가구가 없으면 고른 가구를 놓고 간다(다른 분류의 미리보기가 남지 않게).
+        /// 꾸미기로 가면 고른 가구·집어 든 가구를 모두 놓는다(꾸미기는 가구를 다루지 않는다). 꾸미기를 떠나면 고른 꾸밈과 미리 보기를 버린다.
+        /// </summary>
+        public void ShowCategory(string category)
         {
-            if (StoredShown == stored) return;
-            StoredShown = stored;
+            if (category == null || _category == category) return;
+            _category = category;
+            if (FinishShown) { Carrying = false; SelectedInstanceId = null; }
             if (!Carrying) { Active = null; _storedIndex = -1; _storedList.SelectedIndex = -1; }
             _overlayVisible = Active != null;
             _validDirty = true;
@@ -552,10 +626,14 @@ namespace Rootborn.Screens.Furniture
 
         private void ApplyCategoryView()
         {
-            _furnitureGroup.Visible = !StoredShown;
+            _furnitureGroup.Visible = _category == Categories.Furniture;
             _storedGroup.Visible = StoredShown;
-            _categoryFurniture.Selected = !StoredShown;
+            _categoryFurniture.Selected = _category == Categories.Furniture;
             _categoryStored.Selected = StoredShown;
+            _categoryFinish.Selected = FinishShown;
+            // 오른쪽 패널: 꾸미기면 가구 정보를 숨기고 꾸밈 정보를 켠다.
+            _selectedFrame.Visible = _name.Visible = _size.Visible = _direction.Visible = !FinishShown;
+            _finish.Show(FinishShown);
         }
 
         /// <summary>보관 목록을 GameSession 조회로 다시 읽는다(열 때, 가구·일터·맵이 바뀔 때). 고른 줄이 없어졌으면(놓았다) 고른 것을 푼다.</summary>
@@ -699,6 +777,7 @@ namespace Rootborn.Screens.Furniture
         {
             bool pressed = down && !_wasDown;
             _wasDown = down;
+            if (FinishShown) { _finish.WorldPointer(x, y, pressed, overUi); return; }
             if (overUi || _view == null || _view.Room == null || !_view.TryCellAt(x, y, out GridPoint cell))
             {
                 _hasHover = false;
@@ -721,6 +800,7 @@ namespace Rootborn.Screens.Furniture
         /// </summary>
         protected internal override bool OnKey(ScreenKey key, bool shift)
         {
+            if (FinishShown) return key == ScreenKey.Interact && _finish.OnInteract();
             if (key != ScreenKey.Interact || _view == null || _view.Room == null || !_view.TryFacingCell(out GridPoint cell)) return false;
             HouseFurnitureLayout house = Services.Session?.House;
             if (house == null) return false;
@@ -829,6 +909,7 @@ namespace Rootborn.Screens.Furniture
         public void EmitWorldOverlay(DrawList list)
         {
             if (!IsOpen) return;
+            if (FinishShown) { _finish.EmitWorldOverlay(list); return; }
             FurnitureRoom room = _view?.Room;
             if (room == null || Active == null || Services.Session?.House == null) return;
             if (_validDirty) RecomputeValidCells();

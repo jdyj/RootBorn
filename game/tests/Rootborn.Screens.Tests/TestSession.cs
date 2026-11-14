@@ -31,15 +31,16 @@ namespace Rootborn.Screens.Tests
 
         /// <param name="saves">이어 할 세이브 폴더(Reopen). 비면 새 임시 폴더를 만들고 Dispose에서 지운다.</param>
         /// <param name="definitions">쓸 정의(비면 실제 data/).</param>
+        /// <param name="text">쓸 문구 표(비면 language의 실제 문구 — 긴 문구 시험은 LongText.Create).</param>
         /// <param name="room">게임 한 판이 따를 방의 시계(비면 혼자인 방). playerId는 그 방에서의 신원(비면 기본 플레이어).</param>
         public TestSession(string language = "ko", Action<ScreenRegistry> extra = null, string saves = null, GameDefinitions definitions = null,
-            Rootborn.Core.Time.IRoomTime room = null, string playerId = null, Rootborn.Core.Room.RoomShares shares = null)
+            Rootborn.Core.Time.IRoomTime room = null, string playerId = null, Rootborn.Core.Room.RoomShares shares = null, GameText text = null)
         {
             _ownsSaves = saves == null;
             _saves = saves ?? Path.Combine(Path.GetTempPath(), "rootborn-screens-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_saves);
             Session = GameSession.Start(definitions ?? _definitions.Value, GameStartSettings.FromDefinitions(definitions ?? _definitions.Value), new FileSaveStore(_saves), "slot-test", playerId, room: room, shares: shares);
-            Text = TestData.Text(language);
+            Text = text ?? TestData.Text(language);
             ScreenRegistry registry = ScreenCatalog.Create();
             extra?.Invoke(registry);
             Services = new ScreenServices(Text, Session) { Names = DisplayNames.Load(TestData.DataDirectory), SkinPadding = TestSkinPadding };

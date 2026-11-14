@@ -83,6 +83,27 @@ namespace Rootborn.Ui.Tests
         }
     }
 
+    public sealed class DimmedSlotTests
+    {
+        [Test]
+        public void DimmedSlot_LooksDisabled_ButStillClicks()
+        {
+            var tree = new UiTree();
+            var slot = new UiSlot { Id = "card", Dimmed = true };
+            int clicks = 0;
+            slot.Clicked += () => clicks++;
+            tree.Root.Add(slot).Place(0, 0, 100, 100, 64, 64);
+            tree.Layout(1920, 1080);
+            var list = new DrawList();
+            tree.Emit(list, new FakeMeasurer());
+            Assert.That(list.Commands.First(c => c.Kind == DrawKind.Panel).Color, Is.EqualTo(UiTheme.ButtonDisabled), "못 쓰는 칸과 같은 칠");
+            tree.UpdatePointer(130, 130, false);
+            tree.UpdatePointer(130, 130, true);
+            tree.UpdatePointer(130, 130, false);
+            Assert.That(clicks, Is.EqualTo(1), "흐려도 누를 수 있다(잠긴 것을 골라 까닭을 본다)");
+        }
+    }
+
     public sealed class ButtonTests
     {
         private static (UiTree tree, UiButton button, DrawList list) Make()
