@@ -558,6 +558,58 @@ namespace Rootborn.Host.Tests
             Assert.That(player.Game.Renderer.MissingImages, Is.Empty);
         }
 
+        /// <summary>
+        /// 동네 가게의 살 목록에 가구 줄 다음 꾸밈 줄(잠긴 꾸밈 넷)이 보이는지 실제 창으로 찍는다: 새 이야기 → 집 문을 걸어 지나 마을 →
+        /// 가게 지점까지 걸어 E → 장소 화면 → 목록을 휠로 굴려 꾸밈 줄이 보이게 → 스크린샷(output/house-building/stage1b/shop-finishes-01.png).
+        /// 준비 단계 없음(돈은 주지 않는다 — 새 게임 용돈 그대로라 줄은 못 사는 상태로 보인다).
+        /// </summary>
+        [Test]
+        public void HOUSE_SHOP_001_CornerStore_ListsFurnitureThenFinishOffers()
+        {
+            const string Shop = "location.corner-store";
+            using PlayerDriver player = Open(null);
+            NewGame(player);
+            Rootborn.Host.Tests.TwoGames.PlayActions.GoTo(player, "Town");
+            Rootborn.Host.Tests.TwoGames.PlayActions.WalkToThing(player, Rootborn.Screens.Day.LocationScreen.InteractionKind, Shop);
+            player.PressKey(TestKey.E);
+            player.WaitForScreen(ScreenCatalog.Location);
+            var location = (Rootborn.Screens.Day.LocationScreen)player.Screens.Find(ScreenCatalog.Location);
+            GameSession session = player.Game.Session;
+            var finishes = session.FinishesForSaleAt(Shop);
+            Assert.That(finishes.Count, Is.EqualTo(4), "잠긴 꾸밈 넷");
+            var rows = location.Model.Rows.ToList();
+            var offerIds = rows.Where(r => r.Kind == Rootborn.Screens.Day.LocationRowKind.Offer).Select(r => r.Id).ToList();
+            Assert.That(offerIds, Is.EqualTo(session.FurnitureForSaleAt(Shop).Select(f => f.StableId).Concat(finishes.Select(f => f.Id))), "가구 다음에 꾸밈");
+            foreach (RoomFinishDefinition f in finishes) Assert.That(f.Price, Is.EqualTo(15), "시험용 값 15: " + f.Id);
+
+            // 마지막 가구 줄이 목록 맨 위에 오게 끌어 올린다(누른 채 끌기 — 끌기는 줄을 누르지 않는다). 그 아래로 꾸밈 줄이 이어진다.
+            var grid = (Rootborn.Ui.UiCardGrid)player.Node(Rootborn.Screens.Day.LocationScreen.RowsId);
+            int firstFinish = rows.FindIndex(r => r.Id == finishes[0].Id);
+            float lift = grid.CellRect(firstFinish - 1).Y - grid.View.Y;
+            int before = session.Inventory.CountOf(session.Item("item.allowance"));
+            player.MovePointer(grid.View.CenterX, grid.View.Bottom - 20);
+            player.PressPointer();
+            player.DragPointerBy(0, -lift, 16);
+            player.ReleasePointer();
+            player.Frames(2);
+            Assert.That(session.Inventory.CountOf(session.Item("item.allowance")), Is.EqualTo(before), "끌기는 사지 않는다");
+            Assert.That(grid.CellRect(firstFinish - 1).Y, Is.EqualTo(grid.View.Y).Within(3f), "마지막 가구 줄이 맨 위");
+            Assert.That(grid.CellRect(firstFinish).Bottom, Is.LessThanOrEqualTo(grid.View.Bottom + 0.5f), "첫 꾸밈 줄이 보인다");
+            player.MovePointer(-50, -50);
+            player.Frames(2);
+            player.Screenshot("shop-finishes-01");
+            // 목록 끝까지(나머지 꾸밈 줄): 휠로 굴린다.
+            int last = rows.Count - 1;
+            player.MovePointer(grid.View.CenterX, grid.View.CenterY);
+            for (int guard = 0; guard < 20 && grid.CellRect(last).Bottom > grid.View.Bottom + 0.5f; guard++) player.Wheel(-1);
+            Assert.That(grid.CellRect(last).Bottom, Is.LessThanOrEqualTo(grid.View.Bottom + 0.5f), "마지막 꾸밈 줄이 보인다");
+            player.MovePointer(-50, -50);
+            player.Frames(2);
+            player.Screenshot("shop-finishes-02-end");
+            Assert.That(player.Game.Renderer.MissingImages, Is.Empty);
+            Rootborn.Screens.Tests.KnownMissingKeys.AssertOnlyKnownMissing(player.Game.Text, location.TextKeys);
+        }
+
         [Test]
         public void HOUSE_BUILD_002_FirstEntryUnder5ms_AndTextureCounted()
         {
