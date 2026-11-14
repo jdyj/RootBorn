@@ -13,8 +13,10 @@ namespace Rootborn.Game
     /// - 보이는 꾸밈·미리 보기는 방이 알린 기록을 읽은 두 번째 <see cref="HouseFinishes"/>(비추기)로 낸다. 판정은 혼자 하는 집과 같은 Core 코드(자기 해금, 자기 돈).
     /// - 적용은 "칸 잡기 → 돈 내기 → 쓰기/풀기"다: 여기서는 잡기 요청만 적고 저장한다(<see cref="WaitingForRoom"/>). 방이 잡아 주면 그때 돈을 내는 바꾸기 안에서
     ///   쓰기를 적고(돈을 같이 쓰면 같은 명령을 <see cref="Shared{T}"/>로 — 방 지갑 잡기 → 허락 → 다시 하기), 못 내면 풀기를 적는다. 개인 쪽을 먼저 바꾸고 되돌리는 흐름은 없다.
-    /// - 돈 내기와 쓰기 요청은 한 저장 묶음(스냅샷·보낼 목록)에 든다: 디스크에서 "돈을 냈다" ⇔ "그 잡기의 쓰기가 보낼 목록에 있다(또는 방이 이미 받았다)".
-    ///   그래서 다시 켠 판에서 내 잡기 가운데 답을 기다리지도(잡기 요청이 보낼 목록에 있음) 쓰기·풀기를 보내지도 않은 것은 돈을 내지 않은 것이다 — 풀어도 잃는 것이 없다
+    /// - 돈 내기, 쓰기 요청, 돈을 낸 표시(<see cref="RoomHouseBuildPaidHolds"/>, room-house-build-paid-&lt;플레이어&gt;.json)는 한 저장 묶음에 든다.
+    ///   디스크에서 "돈을 냈다" ⇔ "표시가 있다(방이 그 잡기를 끝낼 때까지)". 보낼 목록의 쓰기만으로는 모자라다 — 꾸밈 조각을 모르는 옛 빌드가 그 줄을 옛 방에 보내
+    ///   Invalid를 받아 지울 수 있다. 그래서 다시 켠 판에서 내 잡기 가운데 답을 기다리지도(잡기 요청이 보낼 목록에 있음) 쓰기·풀기를 보내지도 않은 것은,
+    ///   표시가 있으면 쓰기를 새 id로 다시 적고(돈은 다시 내지 않는다), 없으면 돈을 내지 않은 것이라 푼다 — 풀어도 잃는 것이 없다
     ///   (상자 <see cref="GameSession.OnStorageAnswered"/>와 같은 틀: 잡기 요청은 답을 처리한 저장 전까지 보낼 목록에 남아 장부가 같은 답을 다시 준다).
     /// - 자기 house-build.json은 같이 쓰는 집에서 읽은 대로 들고만 있고 쓰지 않는다(같은 슬롯을 혼자 하면 자기 꾸밈 그대로).
     /// 해금은 요청한 사람의 진행이라 방은 확인하지 않는다(가구 놓기와 같다). 꾸밈 id로 분기하지 않는다.
@@ -167,8 +169,9 @@ namespace Rootborn.Game
         }
 
         // 떠도는 내 잡기: 방의 상태에 내 잡기로 있는데, 답을 기다리지도(잡기 요청이 보낼 목록에 있음) 돈을 내는 중도 아니고 쓰기·풀기도 보내지 않은 것.
-        // 시간이 지나도 풀리지 않아 그 칸이 모두에게 막히므로 푼다. 돈은 내지 않았다(낸 돈과 그 쓰기는 한 저장 묶음 — 위 요약). 풀기를 적었으면 true.
-        // 방의 상태에서 사라졌고 보낼 요청도 없는 잡기의 돈 낸 표시는 지운다(다음 저장 묶음과 함께 — 이것만으로는 저장하지 않는다).
+        // 판정은 Core RoomHouseBuildPaidHolds.StepFor: 돈을 낸 표시가 있으면 쓰기를 새 id로 다시 적고(돈은 다시 내지 않는다 — 옛 빌드가 보낼 목록의
+        // 쓰기 줄을 지웠다), 없으면 푼다(시간이 지나도 풀리지 않아 그 칸이 모두에게 막힌다 — 돈은 내지 않았다). 요청을 적었으면 true(저장해 보낸다).
+        // 방의 상태에서 사라졌고 보낼 요청도 없는 잡기의 표시는 지운다(다음 저장 묶음과 함께 — 이것만으로는 저장하지 않는다).
         private bool ReleaseStrayHolds()
         {
             if (_roomBuild == null || !_roomBuild.Known) return false;
@@ -180,9 +183,12 @@ namespace Rootborn.Game
             bool any = false;
             foreach (var hold in _holdScratch)
             {
-                if (hold == _finishWaiting || _finishPaying.Contains(hold) || _finishSettled.Contains(hold) || HasOutgoingFor(hold)) continue;
+                var step = RoomHouseBuildPaidHolds.StepFor(hold == _finishWaiting, _finishPaying.Contains(hold), _finishSettled.Contains(hold),
+                    HasOutgoingFor(hold), _paidHolds.Contains(hold));
+                if (step == RoomHoldStep.Leave) continue;
                 _finishSettled.Add(hold);
-                _roomBuild.AddRelease(hold);
+                if (step == RoomHoldStep.SendUse) _roomBuild.AddUse(hold);
+                else _roomBuild.AddRelease(hold);
                 any = true;
             }
 
