@@ -654,6 +654,96 @@ namespace Rootborn.Game.Tests
             Assert.That(Money(a), Is.EqualTo(money - cost));
         }
 
+        // ---------- 돈을 낸 뒤의 틈(검토 경우 4·5·11): 디스크에서 "돈을 냈다" ⇔ "그 잡기의 쓰기가 보낼 목록에" ----------
+
+        private static Rootborn.Core.Workspaces.PlacementSkillGrowth HouseGrowth()
+            => TestWorld.Definitions.All<Rootborn.Core.Workspaces.PlacementSkillGrowth>().First(g => g.SurfaceId == HouseRoom.SurfaceId);
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void PaidThenOff_RestartSendsTheUse_NoRelease_MoneyAndGrowthOnce(bool moneyShared)
+        {
+            var floor = PaidFloor();
+            int cost = PerCell(floor) * TopLeftRoomFill;
+            using var saves = new TempSaves();
+            var room = moneyShared
+                ? new FakeRoom(saves, cost + 5, RoomWallet.PieceName, RoomHouse.PieceName)
+                : new FakeRoom(saves, 0, RoomHouse.PieceName);
+            var aShares = room.Join("a");
+            var a = Start(saves, aShares, "slot-a", "a");
+            if (!moneyShared) Give(a, cost + 5);
+            var rule = HouseGrowth();
+            int skill = a.Student.GetSkillValue(rule.SkillId);
+
+            Assert.That(a.ApplyHouseFinish(floor.Id, HouseFinishTools.Room, TopLeftRoom), Is.False);
+            room.Deliver(aShares);                  // 잡힘 → (자기 지갑) 냈다
+            if (moneyShared) room.Deliver(aShares); // (방 지갑) 허락 → 냈다
+            Assert.That(a.LastRoomCommandApplied, Is.True, "전제: 돈을 낸 Save()까지 갔다");
+            Assert.That(HouseBuildRequests(aShares, RoomHouseBuild.Use), Is.EqualTo(1));
+            room.Leave(aShares); // 쓰기가 방에 닿기 전에 꺼졌다
+
+            var againShares = room.Join("a");
+            var again = Start(saves, againShares, "slot-a", "a");
+            Assert.That(HouseBuildRequests(againShares, RoomHouseBuild.Release), Is.Zero, "돈을 낸 잡기는 떠도는 잡기가 아니다");
+            Assert.That(HouseBuildRequests(againShares, RoomHouseBuild.Use), Is.EqualTo(1), "쓰기가 다시 간다");
+            Assert.That(HouseBuildRequests(againShares, RoomHouseBuild.Finish), Is.Zero, "잡기 요청은 다시 가지 않는다(다시 낼 길이 없다)");
+
+            room.Deliver(againShares); // 쓰기의 답이 상태보다 먼저 온다(서버 순서)
+            Assert.That(HouseBuildRequests(againShares, RoomHouseBuild.Release), Is.Zero, "낡은 상태에 잡기가 남아 보여도 풀지 않는다");
+            room.Deliver(againShares);
+            Assert.That(again.HouseFloorAt(TopLeftRoom), Is.EqualTo(floor.Id));
+            Assert.That(room.Build.HeldCount, Is.Zero);
+            if (moneyShared)
+            {
+                Assert.That(room.Wallet.Balance, Is.EqualTo(5), "방 지갑에서 한 번");
+                Assert.That(room.Wallet.HeldTotal, Is.Zero);
+            }
+            else
+            {
+                Assert.That(Money(again), Is.EqualTo(5), "자기 지갑에서 한 번");
+                Assert.That(TestWorld.Start(saves.Store, "slot-a", "a").Inventory.CountOf(again.Item(Allowance)), Is.EqualTo(5), "저장된 돈도 한 번");
+            }
+
+            Assert.That(again.Student.GetSkillValue(rule.SkillId), Is.EqualTo(skill + rule.Amount), "기술도 한 번");
+        }
+
+        [Test]
+        public void SaveThrowsWhilePaying_DiskUnchanged_NextSessionPaysOnce()
+        {
+            var floor = PaidFloor();
+            int cost = PerCell(floor) * TopLeftRoomFill;
+            using var saves = new TempSaves();
+            var room = new FakeRoom(saves, 0, RoomHouse.PieceName);
+            var aShares = room.Join("a");
+            var store = new SwitchableFailStore(saves.Store);
+            var a = Start(store, aShares, "slot-a", "a");
+            Give(a, cost + 5);
+            var rule = HouseGrowth();
+            int skill = a.Student.GetSkillValue(rule.SkillId);
+            Assert.That(a.ApplyHouseFinish(floor.Id, HouseFinishTools.Room, TopLeftRoom), Is.False);
+            var before = SlotFiles(saves, "slot-a");
+
+            store.FailCommits = true;
+            Assert.Throws<IOException>(() => room.Deliver(aShares), "돈을 낸 Save()가 던진다");
+            Assert.That(store.Failed, Is.True);
+            var after = SlotFiles(saves, "slot-a");
+            Assert.That(after.Keys, Is.EquivalentTo(before.Keys));
+            foreach (var pair in before) Assert.That(after[pair.Key], Is.EqualTo(pair.Value), "디스크 그대로(스냅샷·보낼 목록): " + pair.Key);
+            room.Leave(aShares);
+
+            var againShares = room.Join("a");
+            var again = Start(saves, againShares, "slot-a", "a");
+            Assert.That(again.WaitingForRoom, Is.True, "디스크의 잡기 요청을 기다린다");
+            room.Deliver(againShares); // 장부가 같은 답(잡음) → 이번에 낸다
+            room.Deliver(againShares);
+            room.Deliver(againShares);
+            Assert.That(Money(again), Is.EqualTo(5), "한 번만");
+            Assert.That(TestWorld.Start(saves.Store, "slot-a", "a").Inventory.CountOf(again.Item(Allowance)), Is.EqualTo(5));
+            Assert.That(again.HouseFloorAt(TopLeftRoom), Is.EqualTo(floor.Id));
+            Assert.That(again.Student.GetSkillValue(rule.SkillId), Is.EqualTo(skill + rule.Amount), "기술도 한 번");
+            Assert.That(room.Build.HeldCount, Is.Zero);
+        }
+
         [Test]
         public void UseRefusedForever_RepeatedSaves_DoNotGrowTheRoomLedger_AStateChangeSendsItAgainAndItApplies()
         {
@@ -746,6 +836,48 @@ namespace Rootborn.Game.Tests
             Assert.That(host3.HouseFloorAt(TopLeftRoom), Is.EqualTo(floor.Id));
             Assert.That(room.Wallet.Balance, Is.EqualTo(cost + 5), "한 번");
             Assert.That(room.Build.HeldCount, Is.Zero);
+        }
+
+        private static Dictionary<string, byte[]> SlotFiles(TempSaves saves, string slot)
+        {
+            var dir = Path.Combine(saves.Path, slot);
+            return Directory.Exists(dir) ? Directory.GetFiles(dir).ToDictionary(Path.GetFileName, File.ReadAllBytes) : new Dictionary<string, byte[]>();
+        }
+
+        /// <summary>FileSaveStore를 감싸고, 켜면 묶음 커밋에서 던지는 저장소(묶음을 버리므로 파일은 옛것 그대로).</summary>
+        private sealed class SwitchableFailStore : IBatchSaveStore
+        {
+            private readonly FileSaveStore _inner;
+            public SwitchableFailStore(FileSaveStore inner) => _inner = inner;
+            public bool FailCommits { get; set; }
+            public bool Failed { get; private set; }
+
+            public bool TryRead<T>(string saveSlot, string fileName, out T data) where T : class, new() => _inner.TryRead(saveSlot, fileName, out data);
+            public void Write<T>(string saveSlot, string fileName, T data) where T : class => _inner.Write(saveSlot, fileName, data);
+            public void Delete(string saveSlot, string fileName) => _inner.Delete(saveSlot, fileName);
+            public ISaveBatch BeginBatch(string saveSlot) => new Batch(this, _inner.BeginBatch(saveSlot));
+
+            private sealed class Batch : ISaveBatch
+            {
+                private readonly SwitchableFailStore _owner;
+                private readonly ISaveBatch _inner;
+                public Batch(SwitchableFailStore owner, ISaveBatch inner) { _owner = owner; _inner = inner; }
+                public bool TryRead<T>(string saveSlot, string fileName, out T data) where T : class, new() => _inner.TryRead(saveSlot, fileName, out data);
+                public void Write<T>(string saveSlot, string fileName, T data) where T : class => _inner.Write(saveSlot, fileName, data);
+                public void Delete(string saveSlot, string fileName) => _inner.Delete(saveSlot, fileName);
+                public void Commit()
+                {
+                    if (_owner.FailCommits)
+                    {
+                        _owner.Failed = true;
+                        throw new IOException("시험: 묶음 커밋 실패");
+                    }
+
+                    _inner.Commit();
+                }
+
+                public void Dispose() => _inner.Dispose();
+            }
         }
     }
 }
