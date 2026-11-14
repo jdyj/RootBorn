@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Rootborn.Core.Building;
+using Rootborn.Core.Inventory;
 using Rootborn.Core.Placement;
 using Rootborn.Core.StudentLife;
 using Rootborn.Game;
@@ -11,6 +13,7 @@ namespace Rootborn.Screens.Day
     /// <summary>
     /// 장소 화면 목록의 한 줄: 장소 활동 또는 가게 물건(Unity LocationIdentityPanel.BindButtons — 활동 다음 물건).
     /// 활동: 이름 키, 시간 비용, 못 하는 이유(Core StudentActivityRefusal), 요구 조건. 물건: 이름(키 또는 그대로 쓰는 이름), 값, 가졌는지, 살 돈이 있는지.
+    /// 물건은 가구와 잠긴 꾸밈(벽지·바닥) 둘 다다 — 어느 쪽인지는 줄 id가 가리키는 정의의 종류로 안다.
     /// </summary>
     public readonly struct LocationRow
     {
@@ -116,6 +119,19 @@ namespace Rootborn.Screens.Day
                     StudentActivityRefusalReason.None, true, offer.Price, owned, affordable));
             }
 
+            // 잠긴 꾸밈(벽지·바닥)도 같은 물건 줄로, 가구 다음에. 가졌는지는 Core HouseFinishes.IsUnlocked(꾸미기 화면의 잠김과 같은 판단).
+            IReadOnlyList<RoomFinishDefinition> finishes = string.IsNullOrEmpty(locationId) ? Array.Empty<RoomFinishDefinition>() : session.FinishesForSaleAt(locationId);
+            ItemDefinition balanceItem = offers.Count > 0 ? offers[0].PriceItem : null;
+            foreach (RoomFinishDefinition finish in finishes)
+            {
+                ItemDefinition priceItem = session.Definitions.TryGet<ItemDefinition>(finish.PriceItemId, out ItemDefinition found) ? found : null;
+                balanceItem ??= priceItem;
+                bool owned = session.IsFinishUnlocked(finish);
+                bool affordable = priceItem != null && session.Inventory.CountOf(priceItem) >= finish.Price;
+                rows.Add(new LocationRow(LocationRowKind.Offer, finish.Id, finish.NameKey, null, null,
+                    StudentActivityRefusalReason.None, true, finish.Price, owned, affordable));
+            }
+
             LocationStateSummaryModel state = session.LastLocationState;
             bool showsState = identity != null && location != null && state.LocationId == location.Id && state.PrimaryState != null
                 && !state.IsHidden && !string.IsNullOrEmpty(state.DisplayName);
@@ -131,7 +147,7 @@ namespace Rootborn.Screens.Day
                 StateNameKey = showsState ? state.DisplayName : string.Empty,
                 StateDescriptionKey = showsState ? state.Description ?? string.Empty : string.Empty,
                 Rows = rows,
-                OfferBalance = offers.Count > 0 && offers[0].PriceItem != null ? session.Inventory.CountOf(offers[0].PriceItem) : -1,
+                OfferBalance = balanceItem != null ? session.Inventory.CountOf(balanceItem) : -1,
             };
         }
     }

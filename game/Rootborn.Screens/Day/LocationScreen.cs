@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using Rootborn.Core.Building;
 using Rootborn.Core.Placement;
 using Rootborn.Core.StudentLife;
 using Rootborn.Ui;
@@ -171,7 +172,11 @@ namespace Rootborn.Screens.Day
 
         private void Purchase(LocationRow row)
         {
-            FurniturePurchaseResult result = Services.Session.PurchaseFurniture(row.Id);
+            // 줄이 꾸밈 정의면 꾸밈 사기, 아니면 가구 사기(정의의 종류로 고른다 — id로 분기하지 않는다).
+            var session = Services.Session;
+            FurniturePurchaseResult result = session.Definitions.TryGet<RoomFinishDefinition>(row.Id, out _)
+                ? session.PurchaseFinish(row.Id)
+                : session.PurchaseFurniture(row.Id);
             if (Services.Session.WaitingForRoom)
             {
                 _waitingPurchase = row.Id;

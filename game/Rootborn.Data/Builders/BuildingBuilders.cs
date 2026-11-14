@@ -11,14 +11,16 @@ namespace Rootborn.Data.Builders
     {
         public static void Register(DefinitionBuilders b)
         {
-            b.Add("RoomFinishDefinition", (n, c) =>
+            // 판매 필드(priceItem, price, purchaseLocationId)는 나중에 더해져 잠긴 꾸밈에만 있다(가구와 같은 꼴). 없으면 팔지 않는다.
+            b.Add("RoomFinishDefinition", BuilderHelpers.AddedLater(new[] { "priceItem", "price", "purchaseLocationId" }, (n, c) =>
             {
                 var finish = new RoomFinishDefinition(n.Id, n.Str("slot"), n.Str("nameKey"), n.Str("sheet"), n.Str("art"),
-                    BuilderHelpers.StrictItemAmounts(n, "costItems", "costCounts"), n.Str("unlockToken"));
+                    BuilderHelpers.StrictItemAmounts(n, "costItems", "costCounts"), n.Str("unlockToken"),
+                    n.RefId("priceItem"), n.Int("price"), n.Str("purchaseLocationId"));
                 if (!finish.IsValid)
                     throw new InvalidOperationException("꾸밈이 올바르지 않다(id·slot·nameKey·sheet·art가 있고, 비용은 아이템과 1 이상의 개수)");
                 return finish;
-            });
+            }));
         }
     }
 }

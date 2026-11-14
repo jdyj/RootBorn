@@ -34,12 +34,14 @@ namespace Rootborn.Core.Building
     /// 꾸밈(벽지·바닥 종류) 하나. 어느 시트(<see cref="Sheet"/>)의 어느 조각 묶음(<see cref="Art"/>)을 쓰는지는 정의가 말하고,
     /// 조각의 자리는 시트의 좌표표가 말한다. 비용은 칸당이다(값은 시험용). 해금 토큰이 비면 처음부터 쓸 수 있다.
     /// 잘못된 값은 던지지 않고 <see cref="IsValid"/>로 알린다(로더가 읽기 오류로 모은다).
+    /// 잠긴 꾸밈은 가구처럼 가게에서 팔 수 있다(<see cref="IsForSale"/>, 사기는 <see cref="RoomFinishPurchase"/>) — 사면 해금 토큰을 얻는다.
     /// </summary>
     public sealed class RoomFinishDefinition
     {
         private readonly ItemAmount<string>[] _cost;
 
-        public RoomFinishDefinition(string id, string slot, string nameKey, string sheet, string art, IReadOnlyList<ItemAmount<string>> cost, string unlockToken)
+        public RoomFinishDefinition(string id, string slot, string nameKey, string sheet, string art, IReadOnlyList<ItemAmount<string>> cost, string unlockToken,
+            string priceItemId = null, int price = 0, string purchaseLocationId = null)
         {
             Id = id ?? string.Empty;
             Slot = slot ?? string.Empty;
@@ -47,6 +49,9 @@ namespace Rootborn.Core.Building
             Sheet = sheet ?? string.Empty;
             Art = art ?? string.Empty;
             UnlockToken = unlockToken ?? string.Empty;
+            PriceItemId = priceItemId ?? string.Empty;
+            Price = Math.Max(0, price);
+            PurchaseLocationId = purchaseLocationId ?? string.Empty;
             _cost = new ItemAmount<string>[cost?.Count ?? 0];
             for (int i = 0; i < _cost.Length; i++) _cost[i] = cost[i];
         }
@@ -57,6 +62,16 @@ namespace Rootborn.Core.Building
         public string Sheet { get; }
         public string Art { get; }
         public string UnlockToken { get; }
+
+        /// <summary>가게에서 살 때 내는 아이템 id(가구는 정의 객체지만 꾸밈은 비용처럼 id 글로 든다). 비었으면 팔지 않는다.</summary>
+        public string PriceItemId { get; }
+        /// <summary>가게 값(음수는 0). 0이면 팔지 않는다.</summary>
+        public int Price { get; }
+        /// <summary>파는 장소 id. 비었으면 팔지 않는다.</summary>
+        public string PurchaseLocationId { get; }
+
+        /// <summary>가게에서 판다: 값·값 아이템·해금 토큰·파는 장소가 모두 있다(가구 <c>FurnitureDefinition.IsForSale</c>와 같은 뜻).</summary>
+        public bool IsForSale => Price > 0 && PriceItemId.Length > 0 && UnlockToken.Length > 0 && PurchaseLocationId.Length > 0;
 
         /// <summary>칸당 비용. 복사본이다.</summary>
         public IReadOnlyList<ItemAmount<string>> Cost => _cost;

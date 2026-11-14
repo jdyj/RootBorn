@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Rootborn.Core.Building;
 using Rootborn.Core.Inventory;
+using Rootborn.Core.Placement;
 using Rootborn.Core.Save;
 using Rootborn.Core.World;
 
@@ -104,6 +105,27 @@ namespace Rootborn.Game
         /// <summary>그 꾸밈을 쓸 수 있다(해금 토큰이 없거나 얻었다).</summary>
         public bool IsFinishUnlocked(RoomFinishDefinition finish)
             => HouseFinishes.IsUnlocked(finish, FurnitureUnlocks);
+
+        /// <summary>그 장소의 가게에서 파는 꾸밈(정의 순서). 잠긴 꾸밈을 사는 길이다(가구 <see cref="FurnitureForSaleAt"/>와 같은 꼴).</summary>
+        public IReadOnlyList<RoomFinishDefinition> FinishesForSaleAt(string locationId)
+            => RoomFinishPurchase.ForSaleAt(_definitions.All<RoomFinishDefinition>(), locationId);
+
+        /// <summary>
+        /// 꾸밈을 산다: 값을 내고 해금 토큰을 얻는다(가구 해금과 같은 기록). 둘은 함께 바뀌고, 실패하면 아무것도 바뀌지 않는다.
+        /// 이미 가졌으면 값을 받지 않는다. 알림: <see cref="GameChangeTopics.HouseBuild"/>, <see cref="GameChangeTopics.Furniture"/>, <see cref="GameChangeTopics.Inventory"/>.
+        /// </summary>
+        public FurniturePurchaseResult PurchaseFinish(string finishId)
+        {
+            var finish = FindFinish(finishId);
+            if (finish == null) return FurniturePurchaseResult.NotForSale;
+            var priceItem = FindItem(finish.PriceItemId);
+            return Shared(() =>
+            {
+                var result = RoomFinishPurchase.Try(finish, priceItem, Inventory, FurnitureUnlocks);
+                return Saved(result, result == FurniturePurchaseResult.Purchased, null,
+                    GameChangeTopics.HouseBuild, GameChangeTopics.Furniture, GameChangeTopics.Inventory);
+            }, r => r == FurniturePurchaseResult.Purchased);
+        }
 
         /// <summary>꾸밈 한 번의 미리 보기(바꾸지 않는다). 집이 아니면 <see cref="HouseFinishReasons.NotInHouse"/>, 같이 쓰는 집이면 <see cref="HouseFinishReasons.SharedHouse"/>.</summary>
         public HouseFinishPreview PreviewHouseFinish(string finishId, string tool, CellPos pointer)

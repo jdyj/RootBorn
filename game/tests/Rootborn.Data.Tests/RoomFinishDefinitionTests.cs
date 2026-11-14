@@ -174,5 +174,27 @@ namespace Rootborn.Data.Tests
             var result = LoadOne(two);
             Assert.That(result.Errors.Any(e => e.Kind == "duplicate" && e.Type == "RoomFinishDefinition"), Is.True, string.Join("\n", result.Errors));
         }
+
+        // --- 가게 판매(나중에 더한 필드, 가구와 같은 꼴) ---
+
+        [Test]
+        public void WithoutSaleFields_ReadsAsNotForSale_OlderDataStillLoads()
+        {
+            var result = LoadOne(One());
+            Assert.That(result.Errors.Where(e => e.Type == "RoomFinishDefinition").Select(e => e.ToString()), Is.Empty, "시험 아이템의 빠진 필드는 보지 않는다");
+            var f = result.Definitions.Get<RoomFinishDefinition>("finish.wall.x");
+            Assert.That((f.PriceItemId, f.Price, f.PurchaseLocationId, f.IsForSale), Is.EqualTo(("", 0, "", false)));
+        }
+
+        [Test]
+        public void SaleFields_AreRead()
+        {
+            var json = One().Replace(@"""unlockToken"": """"",
+                @"""unlockToken"": ""unlock.finish.x"", ""priceItem"": { ""ref"": ""item.allowance"", ""type"": ""ItemDefinition"" }, ""price"": 7, ""purchaseLocationId"": ""location.shop""");
+            var result = LoadOne(json);
+            Assert.That(result.Errors.Where(e => e.Type == "RoomFinishDefinition").Select(e => e.ToString()), Is.Empty, "시험 아이템의 빠진 필드는 보지 않는다");
+            var f = result.Definitions.Get<RoomFinishDefinition>("finish.wall.x");
+            Assert.That((f.PriceItemId, f.Price, f.PurchaseLocationId, f.IsForSale), Is.EqualTo(("item.allowance", 7, "location.shop", true)));
+        }
     }
 }

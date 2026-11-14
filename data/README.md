@@ -216,7 +216,7 @@
 
 | type | 무엇 | 필드 |
 |---|---|---|
-| `RoomFinishDefinition` | 꾸밈 하나: 어느 자리(`slot`)에 무슨 그림(`art`)을 쓰는가, 칸당 비용, 해금 | `slot`(`wall` 벽지·`floor` 바닥·`band` 벽 윗면 띠 색(집 하나에 하나) — 닫힌 목록이 아니다), `nameKey`(비면 읽기 오류), `sheet`(조각 시트 PNG, 저장소 뿌리 기준 — `band`는 기본 벽 꾸밈과 같은 시트), `art`(조각 묶음 이름 = 키트의 벽 모양 이름 또는 바닥 명세 id, `band`는 좌표표 `bands`의 줄 이름), `costItems`(ref들), `costCounts`(칸당), `unlockToken`(빈 글이면 처음부터) |
+| `RoomFinishDefinition` | 꾸밈 하나: 어느 자리(`slot`)에 무슨 그림(`art`)을 쓰는가, 칸당 비용, 해금 | `slot`(`wall` 벽지·`floor` 바닥·`band` 벽 윗면 띠 색(집 하나에 하나) — 닫힌 목록이 아니다), `nameKey`(비면 읽기 오류), `sheet`(조각 시트 PNG, 저장소 뿌리 기준 — `band`는 기본 벽 꾸밈과 같은 시트), `art`(조각 묶음 이름 = 키트의 벽 모양 이름 또는 바닥 명세 id, `band`는 좌표표 `bands`의 줄 이름), `costItems`(ref들), `costCounts`(칸당), `unlockToken`(빈 글이면 처음부터), 판매(잠긴 꾸밈만, 넷 다 있어야 판다 — 가구와 같은 꼴): `priceItem`(ref), `price`, `purchaseLocationId`(장소 id). 사면 `unlockToken`을 얻는다(가구 해금과 같은 기록) |
 
 - id는 `finish.wall.<art>`, `finish.floor.<art에서 floor. 뺀 것>`. 해금은 가구와 같은 진행(`FurnitureUnlockProgress`)에 `unlock.finish.*` 토큰으로 든다.
 - 그림은 `sheet`의 좌표표(`data/atlases/<sheet>.atlas.json`)가 푼다: 조각 이름 `<art>/<조각>`, 문지방·문짝 `common/<조각>`, 띠 칠 `bands`.
@@ -228,7 +228,7 @@
 **꾸밈을 더하는 법** (코드는 고치지 않는다):
 
 1. 꾸밈이 쓸 벽 모양(`slot` wall) 또는 바닥(`slot` floor)이 키트에 있는지 본다(`python Tools/pixel-kit/kit.py room styles --list`). 없으면 먼저 키트에 더한다(스킬 `pixel-kit-room`). 벽 모양의 띠 두께는 16이어야 한다.
-2. `RoomFinishDefinition.json`에 덩어리를 더한다. id는 `finish.wall.<art>` / `finish.floor.<art에서 floor. 뺀 것>`, `nameKey`는 `<id>.name`, `sheet`는 같은 조각 시트, `art`는 키트의 벽 모양 이름 또는 바닥 명세 id. 처음부터 열 것이면 `unlockToken`을 빈 글로 둔다.
+2. `RoomFinishDefinition.json`에 덩어리를 더한다. id는 `finish.wall.<art>` / `finish.floor.<art에서 floor. 뺀 것>`, `nameKey`는 `<id>.name`, `sheet`는 같은 조각 시트, `art`는 키트의 벽 모양 이름 또는 바닥 명세 id. 처음부터 열 것이면 `unlockToken`을 빈 글로 둔다. 잠근 꾸밈은 가게에서 팔려면 `priceItem`·`price`·`purchaseLocationId`를 더한다(없으면 그 토큰을 얻을 다른 길이 있어야 한다).
 3. `python Tools/pixel-kit/kit.py room export-finishes --dry-run`으로 바뀔 파일을 보고, `--dry-run` 없이 돌려 시트 PNG와 좌표표(`data/atlases/art/world/finishes/finishes.png.atlas.json`)를 다시 낸다. 조각은 이름 순으로 다시 놓이므로 자리가 밀리지만 게임은 좌표표로 찾는다. 시트·좌표표는 손으로 고치지 않고 정의와 함께 커밋한다(`CommittedSheetTests`가 저장소의 시트가 지금 정의로 낸 것과 같은지 본다).
 4. 이름 문구를 `game/localization/ko.json`과 `en.json`에 둘 다 넣는다(`<nameKey>`).
 5. `dotnet test game/tests/Rootborn.Data.Tests`, `game/tests/Rootborn.World.Tests`(`RoomFinishArtTests`, `HouseMapTests`)와 키트 테스트를 돌린다.
