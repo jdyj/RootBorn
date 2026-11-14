@@ -129,9 +129,12 @@ namespace Rootborn.Data.Tests
 
         private static object ReadFixture(string file)
         {
-            var parts = file.Split('/');
-            var store = new FileSaveStore(Path.Combine(FixtureRoot, parts[0]));
-            return ReadWith(store, SaveShapeCoverage.ShapeFor(parts[2]), parts[1], parts[2]);
+            // <묶음>/<슬롯>/<파일>, 방 슬롯의 손님 세이브는 <묶음>/<방 슬롯>/guests/<플레이어 id>/<파일> — 파일의 폴더가 슬롯, 그 위가 저장소 뿌리.
+            var full = Path.Combine(FixtureRoot, file);
+            var slotDir = Path.GetDirectoryName(full);
+            var store = new FileSaveStore(Path.GetDirectoryName(slotDir));
+            var name = Path.GetFileName(full);
+            return ReadWith(store, SaveShapeCoverage.ShapeFor(name), Path.GetFileName(slotDir), name);
         }
 
         private static object ReadWith(FileSaveStore store, Type shape, string slot, string file)

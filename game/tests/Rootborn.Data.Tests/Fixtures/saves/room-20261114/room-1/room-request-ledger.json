@@ -1,0 +1,61 @@
+{
+  "Version": 1,
+  "Records": [
+    {
+      "PlayerId": "local-player",
+      "Piece": "house",
+      "RequestId": "f09ccef4a24f402e94c8097597d73172",
+      "Outcome": "applied",
+      "Amount": 0
+    },
+    {
+      "PlayerId": "local-player",
+      "Piece": "chests",
+      "RequestId": "1c33054cc8de462e86bd504db771e4f8",
+      "Outcome": "applied",
+      "Amount": 0
+    },
+    {
+      "PlayerId": "local-player",
+      "Piece": "chests",
+      "RequestId": "21df565b8af84c99a11d8ee99150b497",
+      "Outcome": "applied",
+      "Amount": 0
+    },
+    {
+      "PlayerId": "local-player",
+      "Piece": "house-build",
+      "RequestId": "700bc37c589345d7b17a531f3b7bf79d",
+      "Outcome": "applied",
+      "Amount": 0
+    },
+    {
+      "PlayerId": "local-player",
+      "Piece": "wallet",
+      "RequestId": "b574899db1ea4d51a1c197a77b462073",
+      "Outcome": "applied",
+      "Amount": 9913
+    },
+    {
+      "PlayerId": "local-player",
+      "Piece": "house-build",
+      "RequestId": "df083c07cbb243b2bcfd08fbec3097bf",
+      "Outcome": "applied",
+      "Amount": 0
+    },
+    {
+      "PlayerId": "local-player",
+      "Piece": "wallet",
+      "RequestId": "65aa4ce7927647ce8ab0a6169ed310a3",
+      "Outcome": "applied",
+      "Amount": 9913
+    },
+    {
+      "PlayerId": "local-player",
+      "Piece": "house-build",
+      "RequestId": "78ee7bb1da6b4a28af5bab600882b798",
+      "Outcome": "applied",
+      "Amount": 0
+    }
+  ]
+}

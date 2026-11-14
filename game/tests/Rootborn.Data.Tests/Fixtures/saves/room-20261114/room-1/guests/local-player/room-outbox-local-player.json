@@ -1,0 +1,18 @@
+{
+  "Version": 1,
+  "Requests": [
+    {
+      "Piece": "house-build",
+      "RequestId": "78ee7bb1da6b4a28af5bab600882b798",
+      "Kind": "finish",
+      "Amount": 1,
+      "Ids": [
+        "house",
+        "finish.floor.carpet",
+        "brush",
+        "4",
+        "4"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "Version": 1,
+  "SaveSlot": "local-player",
+  "PlayerId": "local-player",
+  "CurrentInterestId": "",
+  "PreviousInterestId": "",
+  "LastChangedDay": 0,
+  "ChangeCountForCurrentDay": 0,
+  "SelectionHistoryIds": [],
+  "ClaimedRewardIds": [],
+  "LastRecommendationSourceVersion": "",
+  "TodayInterestActionSummary": [],
+  "LastFollowUpInterestId": ""
+}

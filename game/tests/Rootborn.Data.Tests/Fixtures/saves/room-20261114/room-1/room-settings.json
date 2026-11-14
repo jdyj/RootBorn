@@ -1,0 +1,8 @@
+{
+  "Version": 1,
+  "SharedPieces": [
+    "house",
+    "wallet"
+  ],
+  "MaxPlayers": 0
+}

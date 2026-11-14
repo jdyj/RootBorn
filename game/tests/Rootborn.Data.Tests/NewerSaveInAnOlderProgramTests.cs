@@ -94,6 +94,41 @@ namespace Rootborn.Data.Tests
         }
 
         [Test]
+        public void RoomHouseBuildHolds_FromANewerProgram_KeepsTopLevelFields()
+        {
+            // 같이 쓰는 집의 꾸밈 조각(Core RoomHouseBuild)의 두 방 파일을 더 새 프로그램이 썼다: 맨 위에 모르는 필드, 높은 형식 버전, 모르는 종류의 잡기.
+            // 이 프로그램의 조각이 읽고(규칙 없이 — 서버를 다시 켠 직후) 다시 써도 맨 위 필드·버전·잡기가 남는다.
+            string finishFile = Rootborn.Core.Save.SaveFileNames.RoomPiece(Rootborn.Core.Room.RoomHouseBuild.PieceName);
+            string holdsFile = Rootborn.Core.Save.SaveFileNames.RoomHouseBuildHolds;
+            _dir.Write(Path.Combine(Slot, finishFile),
+                "{\"Version\":7,\"FrameId\":\"frame.house\",\"Band\":\"\"," +
+                "\"Finishes\":[{\"X\":3,\"Y\":4,\"Wall\":\"\",\"Floor\":\"finish.floor.a\"}]," +
+                "\"WallsAdded\":[{\"X\":5,\"Y\":6}]}");
+            _dir.Write(Path.Combine(Slot, holdsFile),
+                "{\"Version\":9," +
+                "\"Holds\":[{\"RequestId\":\"r1\",\"PlayerId\":\"p\",\"SurfaceId\":\"s\",\"Kind\":\"paint-wall\",\"FinishId\":\"f\",\"Tool\":\"\",\"X\":1,\"Y\":2,\"Count\":3}]," +
+                "\"WallHolds\":[{\"RequestId\":\"r2\",\"X\":5,\"Y\":6}],\"Future\":{\"a\":1}}");
+
+            var piece = new Rootborn.Core.Room.RoomHouseBuild();
+            piece.Load(_store, Slot);
+            Assert.That(piece.HeldCount, Is.EqualTo(1), "모르는 종류의 잡기도 버리지 않는다");
+            piece.Save(_store, Slot);
+
+            var holds = FileJson(holdsFile);
+            Assert.That((int)holds["Version"], Is.EqualTo(9), "형식 버전을 낮춰 쓰지 않는다");
+            Assert.That(holds["WallHolds"].AsArray().Count, Is.EqualTo(1), "맨 위 모르는 목록");
+            Assert.That((int)holds["Future"]["a"], Is.EqualTo(1), "맨 위 모르는 필드");
+            Assert.That(holds["Holds"].AsArray().Count, Is.EqualTo(1));
+            Assert.That((string)holds["Holds"][0]["Kind"], Is.EqualTo("paint-wall"), "모르는 종류의 잡기가 그대로 다시 쓰인다");
+            Assert.That((int)holds["Holds"][0]["Count"], Is.EqualTo(3));
+
+            var finishes = FileJson(finishFile);
+            Assert.That((int)finishes["Version"], Is.EqualTo(7));
+            Assert.That(finishes["WallsAdded"].AsArray().Count, Is.EqualTo(1));
+            Assert.That((string)finishes["Finishes"][0]["Floor"], Is.EqualTo("finish.floor.a"));
+        }
+
+        [Test]
         public void ABatch_KeepsUnknownFieldsToo()
         {
             _dir.Write(Path.Combine(Slot, "quest-log.json"), "{\"Version\":2,\"Quests\":[],\"Future\":true}");

@@ -1,0 +1,16 @@
+{
+  "Version": 1,
+  "Holds": [
+    {
+      "RequestId": "78ee7bb1da6b4a28af5bab600882b798",
+      "PlayerId": "local-player",
+      "SurfaceId": "house",
+      "Kind": "finish",
+      "FinishId": "finish.floor.carpet",
+      "Tool": "brush",
+      "X": 4,
+      "Y": 4,
+      "Count": 1
+    }
+  ]
+}

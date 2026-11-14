@@ -21,7 +21,9 @@ namespace Rootborn.Game.Tests
         {
             foreach (var group in Directory.GetDirectories(TestWorld.FixtureSaves))
                 foreach (var slot in Directory.GetDirectories(group))
-                    yield return new TestCaseData(Path.GetFileName(group) + "/" + Path.GetFileName(slot), Path.GetFileName(slot))
+                    // 방 슬롯(room-*)은 플레이어 슬롯이 아니다 — 방 세이브는 Game RoomHouseBuildCompatTests·Data OldRoomSaveTests가 본다.
+                    if (!File.Exists(Path.Combine(slot, SaveFileNames.RoomSettings)))
+                        yield return new TestCaseData(Path.GetFileName(group) + "/" + Path.GetFileName(slot), Path.GetFileName(slot))
                         .SetName("UnityFixtureSlot_" + Path.GetFileName(group) + "_" + Path.GetFileName(slot));
         }
 

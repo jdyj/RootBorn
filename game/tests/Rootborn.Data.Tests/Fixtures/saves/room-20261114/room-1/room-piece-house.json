@@ -1,0 +1,16 @@
+{
+  "Version": 1,
+  "NextNumber": 2,
+  "Placed": [
+    {
+      "InstanceId": "1",
+      "FurnitureId": "studentlife.snack.delivery.crate",
+      "SurfaceId": "house",
+      "AnchorX": 1,
+      "AnchorY": 1,
+      "Direction": 0,
+      "PlacedBy": "local-player",
+      "Day": 1
+    }
+  ]
+}

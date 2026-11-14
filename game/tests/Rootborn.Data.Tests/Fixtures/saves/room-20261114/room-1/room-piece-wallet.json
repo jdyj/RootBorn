@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Balance": 9913,
+  "Holds": [],
+  "Recent": [
+    {
+      "PlayerId": "local-player",
+      "Day": 1,
+      "Change": -87
+    }
+  ]
+}
