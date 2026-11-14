@@ -551,6 +551,36 @@ namespace Rootborn.Core.Tests
             return new RoomShares(new RoomShareSettings(new[] { RoomHouse.PieceName }), RoomPieceCatalog.CreateDefault(), () => "q" + (++next));
         }
 
+        /// <summary>
+        /// 해독할 수 없는 상태(더 새 방이 줄 모양을 바꿨다)는 "아직 모름"이다: Known이 켜지지 않고 기록·잡기도 바뀌지 않는다.
+        /// 그러면 게임 한 판은 떠도는 잡기를 판단하지 않는다(빈 잡기 목록으로 보고 돈 낸 표시를 지우지 않게). 해독되는 상태가 오면 그때 Known.
+        /// </summary>
+        [Test]
+        public void Client_AnUndecodableState_IsNotKnown_UntilADecodableOneComes()
+        {
+            var shares = Shares();
+            var client = shares.Find<RoomHouseBuildClient>();
+            var piece = Piece();
+            Finish(piece, "ana", "h1", FloorOak, HouseFinishTools.Brush, new CellPos(1, 2), 1);
+            var good = piece.State();
+            var bad = new RoomPieceState(RoomHouseBuild.PieceName, 0, new[] { "f|" + FrameId + "|new-field", "b|" });
+            Assert.That(RoomHouseBuildLines.TryDecode(bad.Ids, out _, null), Is.False, "전제: 해독할 수 없는 줄");
+
+            shares.Receive(bad);
+            Assert.That(client.Known, Is.False, "해독하지 못한 첫 상태는 아직 모름");
+            Assert.That(client.Data.Finishes, Is.Empty);
+            Assert.That(client.HasHold("h1"), Is.False);
+            shares.Receive(bad);
+            Assert.That(client.Known, Is.False, "같은 줄이 다시 와도 모름");
+
+            shares.Receive(good);
+            Assert.That(client.Known, Is.True, "해독되는 상태가 오면 안다");
+            Assert.That(client.HasHold("h1"), Is.True);
+
+            shares.Receive(bad);
+            Assert.That(client.HasHold("h1"), Is.True, "뒤에 해독하지 못한 상태는 마지막으로 해독한 것을 그대로 둔다");
+        }
+
         [Test]
         public void Client_DecodesData_AndHoldsOfAPlayer()
         {

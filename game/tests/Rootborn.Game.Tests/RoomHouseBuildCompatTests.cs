@@ -105,6 +105,24 @@ namespace Rootborn.Game.Tests
                 return shares;
             }
 
+            /// <summary>그 신원으로 들어오지만 그 조각의 상태는 아직 보내지 않는다(실제 서버처럼 게임 한 판이 시작한 뒤에 올 수 있다 — <see cref="SendState"/>).</summary>
+            public RoomShares JoinWithout(string playerId, RoomPieceCatalog playerCatalog, string laterPiece)
+            {
+                var shares = new RoomShares(Pieces.Settings, playerCatalog, () => Guid.NewGuid().ToString("N"));
+                shares.RoomPlayerId = playerId;
+                foreach (var piece in Pieces.Pieces)
+                    if (piece.Name != laterPiece) shares.Receive(piece.State());
+                _players.Add((playerId, shares));
+                return shares;
+            }
+
+            /// <summary>그 조각의 지금 상태를 그 사람에게 보낸다.</summary>
+            public void SendState(RoomShares to, string pieceName)
+            {
+                Assert.That(Pieces.TryGet(pieceName, out var piece), Is.True, "그 조각이 방에 있다: " + pieceName);
+                to.Receive(piece.State());
+            }
+
             public void Leave(RoomShares shares) => _players.RemoveAll(p => p.Shares == shares);
 
             /// <summary>그 사람의 보낼 요청(미룬 것 빼고)을 한 번 반영한다: 답이 있으면 방을 저장하고, 답을 그 사람에게, 바뀐 상태를 모두에게(서버 순서).</summary>
@@ -842,6 +860,61 @@ namespace Rootborn.Game.Tests
             Assert.That(backGame.HouseFloorAt(TopLeftRoom), Is.EqualTo(PaidFloor().Id), "돈을 낸 꾸밈이 된다");
             Assert.That(back.Build.HeldCount, Is.Zero);
             Assert.That(Money(backGame), Is.EqualTo(7), "한 번만");
+        }
+
+        // 11-14b 방을 옛 빌드(옛 방 + 옛 플레이어 쪽)로 한 번 연다: 보낼 목록의 쓰기 줄이 지워지고 돈 낸 표시만 남는다. 그 잡기 id를 돌려준다.
+        private static string ThroughAnOlderBuild(TempSaves saves, FileSaveStore guests, RoomHouseRules rules)
+        {
+            var old = new Room(saves.Store, RoomSlot, Older(rules));
+            var oldShares = old.Join(Guest, Older());
+            var oldGame = Play(guests, oldShares, knowsHouseBuild: false);
+            old.DeliverAll(oldShares);
+            oldGame.VisitLocation("location.town-square");
+            old.Pieces.Save(saves.Store, RoomSlot);
+            old.Leave(oldShares);
+            Assert.That(SavedOutbox(guests).Requests.Any(r => r.Piece == RoomHouseBuild.PieceName), Is.False, "전제: 옛 빌드가 쓰기 줄을 지웠다");
+            Assert.That(guests.TryRead<RoomHouseBuildPaidSaveData>(Guest, SaveFileNames.RoomHouseBuildPaid(Guest), out var paid) && paid.Holds.Length == 1, Is.True,
+                "전제: 돈 낸 표시 하나");
+            return paid.Holds[0];
+        }
+
+        private static string[] PaidHolds(FileSaveStore guests)
+        {
+            Assert.That(guests.TryRead<RoomHouseBuildPaidSaveData>(Guest, SaveFileNames.RoomHouseBuildPaid(Guest), out var paid), Is.True, "돈 낸 표시 파일이 있다");
+            return paid.Holds;
+        }
+
+        /// <summary>
+        /// 더 새 방이 꾸밈 상태 줄의 모양을 바꿔 해독하지 못하면 "아직 모름"이다: 저장해도 돈 낸 표시를 지우지 않고 그 잡기를 풀지 않는다
+        /// (빈 잡기 목록으로 보면 표시가 지워지고, 그 뒤 잡기가 풀려 낸 돈이 사라진다). 해독되는 상태가 오면 쓰기를 다시 보내 정상으로 돌아간다.
+        /// </summary>
+        [Test]
+        public void PaidRecord_AnUndecodableRoomState_KeepsTheRecord_ReleasesNothing_ThenADecodableOneSendsTheUse()
+        {
+            using var saves = new TempSaves();
+            CopyRoomFixture(saves, PaidFixture);
+            var guests = Guests(saves);
+            var rules = Rules();
+            string hold = ThroughAnOlderBuild(saves, guests, rules);
+
+            var back = new Room(saves.Store, RoomSlot, Current(rules));
+            var shares = back.JoinWithout(Guest, Current(), RoomHouseBuild.PieceName);
+            var game = Play(guests, shares);
+            var newer = new RoomPieceState(RoomHouseBuild.PieceName, 0, new[] { "f|" + HouseRoom.Frame.FrameId + "|new-field", "b|" });
+            Assert.That(RoomHouseBuildLines.TryDecode(newer.Ids, out _, null), Is.False, "전제: 해독할 수 없는 줄");
+            shares.Receive(newer);
+            game.VisitLocation("location.town-square");
+            Assert.That(PaidHolds(guests), Is.EqualTo(new[] { hold }), "해독하지 못한 상태로는 표시를 지우지 않는다");
+            Assert.That(HouseBuildRequests(shares), Is.Zero, "풀기도 쓰기도 보내지 않는다");
+            game.VisitLocation("location.town-square");
+            Assert.That(PaidHolds(guests), Is.EqualTo(new[] { hold }), "다시 저장해도 그대로");
+
+            back.SendState(shares, RoomHouseBuild.PieceName);
+            Assert.That(HouseBuildRequests(shares, RoomHouseBuild.Release), Is.Zero);
+            Assert.That(HouseBuildRequests(shares, RoomHouseBuild.Use), Is.EqualTo(1), "해독되는 상태가 오면 쓰기를 다시 보낸다");
+            back.DeliverAll(shares);
+            Assert.That(game.HouseFloorAt(TopLeftRoom), Is.EqualTo(PaidFloor().Id));
+            Assert.That(Money(game), Is.EqualTo(7), "돈은 한 번만");
         }
     }
 }

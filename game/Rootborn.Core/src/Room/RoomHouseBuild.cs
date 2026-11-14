@@ -342,7 +342,7 @@ namespace Rootborn.Core.Room
 
         public string Name => RoomHouseBuild.PieceName;
 
-        /// <summary>방이 꾸밈 상태를 알렸다.</summary>
+        /// <summary>방이 꾸밈 상태를 알렸고 해독했다(해독하지 못한 상태만 받았으면 false — 아직 모름).</summary>
         public bool Known { get; private set; }
 
         /// <summary>방이 마지막으로 알린 꾸밈 기록(처음에는 빈 기록 — null이 아니다).</summary>
@@ -401,24 +401,31 @@ namespace Rootborn.Core.Room
         /// <summary>잡은 것을 쓰지 못했다(돈을 내지 못했다).</summary>
         public void AddRelease(string holdId) => _outbox.Add(new RoomRequestSaveData { Piece = RoomHouseBuild.PieceName, RequestId = _outbox.NewId(), Kind = RoomHouseBuild.Release, Ids = new[] { holdId } });
 
+        // 해독하지 못한 상태는 "아직 모름"이다(더 새 방이 줄 모양을 바꿨다): Known을 켜지 않고 기록·잡기·거절된 쓰기를 그대로 둔다.
+        // Known이 켜진 채 잡기 목록이 비어 보이면 게임 한 판이 돈 낸 표시를 지우고 그 잡기를 풀어 낸 돈이 사라진다.
         public void Receive(RoomPieceState state)
         {
-            bool first = !Known;
-            Known = true;
+            bool first = !_received;
+            _received = true;
             if (!first && SameLines(state.Ids)) return;
             _lines = (string[])state.Ids.Clone();
             _linesVersion++;
             var holds = new List<KeyValuePair<string, string>>(4);
-            if (RoomHouseBuildLines.TryDecode(state.Ids, out var data, holds))
+            bool decoded = RoomHouseBuildLines.TryDecode(state.Ids, out var data, holds);
+            if (decoded)
             {
                 Data = data;
                 _holds.Clear();
                 _holds.AddRange(holds);
+                Known = true;
+                if (_refusedUses.Count > 0) ResendRefusedUses();
             }
 
-            if (_refusedUses.Count > 0) ResendRefusedUses();
             Changed?.Invoke();
         }
+
+        // 상태를 한 번이라도 받았다(해독했든 아니든 — 같은 줄이 다시 오면 넘기려고).
+        private bool _received;
 
         public void Receive(RoomRequestSaveData request, RoomAnswer answer)
         {
