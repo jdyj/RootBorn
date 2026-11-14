@@ -19,7 +19,7 @@ bash Scripts/remote-test/run.sh --setup                          # 원격 준비
 - **같은 커밋을 두 번 돌리지 않는다.** 같은 커밋·같은 인자의 실행이 돌고 있거나 받을 결과가 남아 있으면 그 실행에 붙는다(메모리 부족으로 거절된 실행과 취소된 실행에는 붙지 않는다). 여러 작업 폴더가 한 실행에 붙으면 모두 받아 간 뒤에 원격 폴더가 지워진다.
 
 - **커밋된 것만 간다.** 커밋하지 않은 변경은 원격 실행에 들어가지 않는다(HEAD가 더럽으면 경고한다).
-- 결과: `output/remote-test/<실행 id>/` — `run-id`, 받은 뒤 `fetched`, `remote.log`(원격 진행 줄), `exit-code`, `run.txt`(커밋, 화면 번호, 걸린 초, 최고 메모리), `summary.txt`(프로젝트별 전체·통과·실패·건너뜀과 실패 목록), `trx/`, `*.log`, `output/`(테스트가 찍은 PNG, 균형 보고 `output/balance/`의 파일). 종료 코드는 원격 `dotnet test`의 것이다(취소는 130, 정리 없이 죽은 실행은 137).
+- 결과: `output/remote-test/<실행 id>/` — `run-id`, 받은 뒤 `fetched`, `remote.log`(원격 진행 줄), `exit-code`, `run.txt`(커밋, 화면 번호, 걸린 초, 최고 메모리), `summary.txt`(프로젝트별 전체·통과·실패·건너뜀과 실패 목록), `trx/`, `*.log`, `output/`(테스트가 찍은 PNG, 균형 보고 `output/balance/`의 파일, 시뮬레이션 기록 `output/simulation/`의 `.txt`·`.md` — 같은 시드의 판을 이 PC 판과 견줄 때). 종료 코드는 원격 `dotnet test`의 것이다(취소는 130, 정리 없이 죽은 실행은 137).
 - 근거의 종류: 원격 Xvfb의 Host 테스트도 **장치 이벤트 주입(OS 입력 계층 미확인)**이다. 그리기는 소프트웨어 GL(`LIBGL_ALWAYS_SOFTWARE=1`)이라 GPU 렌더링과 픽셀 값이 1쯤 다를 수 있다.
 
 멈춤 감시: 원격 `dotnet test`는 `--blame-hang --blame-hang-timeout <ROOTBORN_TEST_HANG_MINUTES>m`(기본 10, 원격 `env.sh`의 값 — `--setup`이 없을 때만 더한다)로 돈다. 한 테스트가 그 시간 동안 끝나지 않으면 testhost를 죽이고 돌던 테스트 이름을 `trx/` 아래 `Sequence_*.xml`에 남기며, 결과 폴더째 받아진다(덤프는 만들지 않는다).
