@@ -204,7 +204,7 @@ namespace Rootborn.Data.Save
 
             if (!(old is System.Text.Json.Nodes.JsonObject oldObject)) return json;
             if (!(System.Text.Json.Nodes.JsonNode.Parse(json) is System.Text.Json.Nodes.JsonObject fresh)) return json;
-            return Merge(fresh, oldObject, shapeType) ? fresh.ToJsonString(Options) : json;
+            return Merge(fresh, oldObject, shapeType) ? Lf(fresh.ToJsonString(Options)) : json;
         }
 
         private static bool Merge(System.Text.Json.Nodes.JsonObject fresh, System.Text.Json.Nodes.JsonObject old, Type shapeType)
@@ -271,8 +271,15 @@ namespace Rootborn.Data.Save
         {
             // 버전 없이 만든 모양(옛 파일에서 읽은 것 포함)은 이 프로그램이 아는 버전으로 쓴다.
             if (data is IVersionedSave versioned && versioned.Version == SaveVersion.Unity) versioned.Version = versioned.KnownVersion;
-            return JsonSerializer.Serialize(data, Options);
+            return Lf(JsonSerializer.Serialize(data, Options));
         }
+
+        /// <summary>
+        /// 들여쓰기 줄바꿈을 \n 하나로. net8.0의 들여쓰기 출력은 운영체제의 줄바꿈(Windows는 \r\n)을 따르는데, 세이브 바이트가 운영체제마다 다르면
+        /// 같은 내용이 Windows 손님과 Linux 방에서 다른 바이트·다른 조각 수가 된다. JSON 출력에서 날것의 \r은 줄바꿈의 것뿐이다(글자 안의 \r은
+        /// 이스케이프된다). 읽기는 둘 다 받는다(JSON의 공백) — 옛 Windows 빌드가 쓴 \r\n 세이브도 그대로 읽힌다.
+        /// </summary>
+        private static string Lf(string json) => json.IndexOf('\r') < 0 ? json : json.Replace("\r\n", "\n");
 
         // 같은 폴더의 임시 파일에 쓰고 바꿔치기한다.
         private static void WriteReplacing(string path, string json)
@@ -380,7 +387,7 @@ namespace Rootborn.Data.Save
                 }
 
                 // 표시는 한 번에 생겨야 한다(임시 이름에 쓰고 바꿔치기). 표시가 생긴 순간부터 이 묶음은 "새것"이다.
-                WriteReplacing(Path.Combine(staging, BatchMark), JsonSerializer.Serialize(mark, Options));
+                WriteReplacing(Path.Combine(staging, BatchMark), Lf(JsonSerializer.Serialize(mark, Options)));
                 Step("mark");
                 ApplyLocked(folder, staging, mark);
             }

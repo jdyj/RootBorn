@@ -1,1 +1,4 @@
 *.sh text eol=lf
+# 세이브 고정 파일은 저장소에 LF로 있다(옛 Windows 빌드가 쓴 CRLF도 커밋 때 LF가 됐다). 체크아웃도 LF로 - 세이브를 LF로 쓰는 프로그램이
+# 다시 쓴 파일과 바이트로 견주는 테스트가 운영체제(core.autocrlf)에 기대지 않게. 옛 CRLF 세이브 읽기는 Data FileSaveStoreTests가 따로 본다.
+game/tests/Rootborn.Data.Tests/Fixtures/saves/** text eol=lf

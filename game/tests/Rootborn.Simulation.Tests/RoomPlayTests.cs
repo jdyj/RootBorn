@@ -229,10 +229,12 @@ namespace Rootborn.Simulation.Tests
         };
 
         /// <summary>
-        /// 꾸미는 도중 끊김이 요청 직후·허락 뒤·돈 낸 뒤 셋 다 지나가는 것으로 골라 둔 씨앗(각자 쓰는 지갑 951·954, 같이 쓰는 지갑 967·968). 셋 다 지나갔는지 세어 0이면 실패한다 —
+        /// 꾸미는 도중 끊김이 요청 직후·허락 뒤·돈 낸 뒤 셋 다 지나가는 것으로 골라 둔 씨앗(각자 쓰는 지갑 951·953, 같이 쓰는 지갑 967·968). 셋 다 지나갔는지 세어 0이면 실패한다 —
         /// 코드가 바뀌어 이 씨앗이 그 경우를 더 지나지 않게 되면 다른 씨앗을 고른다. 그 밖의 씨앗(ROOTBORN_SIM_ROOM_SEEDS=N이면 N-1개 더, 971부터)은 지나간 횟수를 따지지 않고 불변식만 본다.
+        /// 판은 운영체제와 무관하다(세이브 바이트가 \n — 2026-11-15 이 PC와 원격 Linux에서 기록이 같았다). 954는 세이브 줄 끝이 \r\n이던 Windows 판에서만
+        /// 지킴 검사를 지났으므로 953으로 바꿨다.
         /// </summary>
-        public static readonly (int Seed, bool Wallet)[] CuratedBuildFaults = { (951, false), (954, false), (967, true), (968, true) };
+        public static readonly (int Seed, bool Wallet)[] CuratedBuildFaults = { (951, false), (953, false), (967, true), (968, true) };
 
         public static IEnumerable<TestCaseData> BuildFaultRooms()
         {

@@ -182,6 +182,63 @@ namespace Rootborn.Data.Tests
             Assert.That(text, Does.Not.Contain("\\u"));
         }
 
+        // ---------- 줄 끝: 세이브 바이트는 운영체제와 무관하다(\n). 옛 Windows 빌드가 쓴 \r\n 세이브도 같게 읽는다. ----------
+        // 왜: 들여쓰기 줄바꿈이 운영체제를 따르면 같은 내용이 Windows와 Linux에서 다른 바이트가 되고, 손님 저장 묶음의 조각 수까지 달라진다
+        // (2026-11-14 방 시뮬레이션 씨앗 954가 두 플랫폼에서 다른 판이 됐다).
+
+        [Test]
+        public void Write_UsesLfLineEndings_OnEveryPlatform()
+        {
+            _store.Write("slot-0", "student.json", new StudentLifeProgressSaveData { NextGuideText = "첫 줄\r\n둘째 줄" });
+            using (var batch = _store.BeginBatch("slot-0"))
+            {
+                batch.Write("slot-0", "quest-log.json", new QuestLogSaveData());
+                batch.Commit();
+            }
+
+            foreach (var file in new[] { "student.json", "quest-log.json" })
+            {
+                byte[] bytes = File.ReadAllBytes(PathOf("slot-0", file));
+                Assert.That(Array.IndexOf(bytes, (byte)'\r'), Is.EqualTo(-1), file + ": 줄 끝에 \\r이 없다");
+                Assert.That(Array.IndexOf(bytes, (byte)'\n'), Is.GreaterThan(0), file + ": 들여쓴 여러 줄이다");
+            }
+
+            Assert.That(SaveJson.Serialize(new QuestLogSaveData()), Does.Not.Contain("\r"), "방이 옮기는 저장 묶음의 원문도 같다");
+            Assert.That(_store.TryRead<StudentLifeProgressSaveData>("slot-0", "student.json", out var read), Is.True);
+            Assert.That(read.NextGuideText, Is.EqualTo("첫 줄\r\n둘째 줄"), "글자 안의 줄바꿈은 이스케이프돼 그대로 돌아온다");
+        }
+
+        [Test]
+        public void ACrlfSaveFromAnOlderWindowsBuild_ReadsTheSame_AndIsRewrittenWithLf()
+        {
+            var data = new StudentLifeProgressSaveData { SaveSlot = "slot-0", Energy = 7, CurrentDay = 3, NextGuideText = "도서관" };
+            string lf = SaveJson.Serialize(data);
+            string crlf = lf.Replace("\n", "\r\n");
+            Directory.CreateDirectory(Path.Combine(_dir.Path, "slot-0"));
+            File.WriteAllText(PathOf("slot-0", "student.json"), crlf);
+
+            Assert.That(_store.TryRead<StudentLifeProgressSaveData>("slot-0", "student.json", out var read), Is.True);
+            Assert.That((read.Energy, read.CurrentDay, read.NextGuideText), Is.EqualTo((7, 3, "도서관")));
+            Assert.That(File.ReadAllText(PathOf("slot-0", "student.json")), Is.EqualTo(crlf), "읽기만 해서는 쓰지 않는다");
+
+            _store.Write("slot-0", "student.json", read);
+            Assert.That(File.ReadAllText(PathOf("slot-0", "student.json")), Is.EqualTo(lf), "다시 쓰면 같은 내용의 \\n 바이트");
+        }
+
+        [Test]
+        public void ACrlfSaveWithUnknownFields_KeepsThem_AndIsRewrittenWithLf()
+        {
+            Directory.CreateDirectory(Path.Combine(_dir.Path, "slot-0"));
+            File.WriteAllText(PathOf("slot-0", "quest-log.json"), "{\r\n  \"Version\": 2,\r\n  \"Quests\": [],\r\n  \"Future\": true\r\n}");
+            Assert.That(_store.TryRead<QuestLogSaveData>("slot-0", "quest-log.json", out var read), Is.True);
+
+            _store.Write("slot-0", "quest-log.json", read);
+
+            string text = File.ReadAllText(PathOf("slot-0", "quest-log.json"));
+            Assert.That(text, Does.Not.Contain("\r"));
+            Assert.That(text, Does.Contain("\"Future\": true"), "모르는 필드는 남는다");
+        }
+
         [Test]
         public void Delete_RemovesTheFile_AndMissingIsFine()
         {
