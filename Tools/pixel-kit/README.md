@@ -660,7 +660,7 @@ if/switch로 종류를 닫지 않는다.
 2. **LDtk에서 `Collision`·`Build`를 칠했을 때**: 편집기에서 저장하고 닫는다 → `room check <.ldtk>` → `room repaint <.ldtk> --dry-run` → `room repaint <.ldtk>` → `room check <.ldtk>`. `Wall`·`Ground`는 손으로 칠하지 않는다.
 3. 평면의 `frameId`를 올렸으면 방 폴더 `maps.json`(`room build`가 쓴다)과 `game/world/maps.json`의 `House` `build`를 같은 값으로 맞춘다. 같은지는 키트 시험 `test_room_ldtk.HouseRoomTests`가 본다.
 4. 테스트: 키트 테스트 전체(`python -m unittest discover -s Tools/pixel-kit/tests -t Tools/pixel-kit`), World `HouseMapTests`·`MapContractTests`, Host `HouseMapHostTests`·`HouseTilesHostTests`(`dotnet test game/tests/Rootborn.Host.Tests --filter "House"`). 게임 화면을 스크린샷으로 직접 열어 본다(빈 칸, 겹친 그림, 막힌 현관).
-5. **확인 못 한 것**: `Build` 층과 벽 문이 든 새 집 파일을 LDtk 편집기에서 연 것은 아직 아무도 확인하지 않았다(스키마 검사 테스트만 있다). 편집기에서 확인된 것은 `Collision`을 칠한 방뿐이다(스킬 `pixel-kit-room` "편집기에서 확인된 것").
+5. **편집기**: `Build` 층과 벽 문이 든 집 파일이 LDtk 편집기에서 오류 없이 열리는 것은 사용자가 확인했다(2026-11-14). 그 파일을 편집기에서 칠해 저장한 뒤 `repaint`하는 길은 아직 확인하지 않았다(스킬 `pixel-kit-room` "편집기에서 확인된 것").
 
 ### 벽 그림 규칙을 고칠 때
 
