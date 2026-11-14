@@ -1924,6 +1924,8 @@
   "ui.furniture.category.finish": "꾸미기",
   "ui.house-build.tab.wall": "벽지",
   "ui.house-build.tab.floor": "바닥",
+  "ui.house-build.tab.band": "벽 윗면 색",
+  "ui.house-build.band.current": "{0} (지금)",
   "finish.band.cream.name": "크림색",
   "finish.band.brown.name": "갈색",
   "finish.band.light.name": "밝은 회색",

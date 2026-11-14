@@ -1924,6 +1924,8 @@
   "ui.furniture.category.finish": "Decorate",
   "ui.house-build.tab.wall": "Wallpaper",
   "ui.house-build.tab.floor": "Floor",
+  "ui.house-build.tab.band": "Wall top color",
+  "ui.house-build.band.current": "{0} (current)",
   "finish.band.cream.name": "Cream",
   "finish.band.brown.name": "Brown",
   "finish.band.light.name": "Light gray",

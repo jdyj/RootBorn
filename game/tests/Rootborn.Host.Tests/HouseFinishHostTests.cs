@@ -122,7 +122,94 @@ namespace Rootborn.Host.Tests
             public Func<CellPos, string> Walls;
             public string WallAt(CellPos floorCell) => Walls?.Invoke(floorCell) ?? "";
             public string FloorAt(CellPos floorCell) => Floors.TryGetValue(floorCell, out string id) ? id : "";
-            public string BandColors => "";
+            /// <summary>띠 색 줄(비면 맵 기본).</summary>
+            public string Band = "";
+            public string BandColors => Band;
+        }
+
+        /// <summary>GPU 조합 텍스처 = 그 조회로 엔진 없이 조합한 것(칸마다 견준다, 투명은 같게 본다).</summary>
+        private void AssertGpuEquals(PlayerDriver player, IHouseFinishLookup lookup, string why)
+        {
+            WorldScreen world = player.Game.World;
+            using var sheets = new ComposedRoomTextures(player.Game.GraphicsDevice, _root);
+            RoomFinishDefinition Find(string id) => world.Content.Definitions.TryGet(id ?? "", out RoomFinishDefinition d) ? d : null;
+            ComposedMapTiles want = ComposedMapTiles.Compose(world.Current, new RoomTileCompositor(sheets.Sheet, new RoomFinishArt(Path.Combine(_root, "data"))), Find, lookup);
+            ComposedMapTiles got = world.ComposedTiles;
+            Assert.That((want.Ok, got?.Ok), Is.EqualTo((true, (bool?)true)), why);
+            uint[] gpu = Pixels(world.ComposedTexture);
+            int width = world.ComposedTexture.Width, different = 0;
+            for (int i = 0; i < want.Room.Cells.Count && different == 0; i++)
+            {
+                var (cell, wx, wy) = want.Room.Cells[i];
+                var (gotCell, gx, gy) = got.Room.Cells[i];
+                Assert.That(gotCell, Is.EqualTo(cell));
+                for (int p = 0; p < Size * Size; p++)
+                {
+                    uint a = want.Room.Pixels[(wy + p / Size) * want.Room.Width + wx + p % Size], b = gpu[(gy + p / Size) * width + gx + p % Size];
+                    if ((a >> 24) == 0) a = 0;
+                    if ((b >> 24) == 0) b = 0;
+                    if (a != b) { different++; TestContext.Progress.WriteLine(why + ": 다른 칸 " + cell + " (" + p % Size + ", " + p / Size + ")"); break; }
+                }
+            }
+            Assert.That(different, Is.EqualTo(0), why + ": GPU 조합 = 엔진 없이 같은 조회로 조합");
+        }
+
+        /// <summary>
+        /// 띠 색: 새 게임(입력) → 집 → P → 꾸미기 → 벽 윗면 색 탭 → 지금 색이 아닌 줄을 누름(무료, 미리 보기 없이) → 집을 한 번 다시 조합(그 줄의 띠 색)
+        /// → 끄고 이어 하기 → 같은 띠 색. 조작은 키·포인터뿐(장치 이벤트 주입, OS 입력 계층 미확인). 준비 단계 없음(무료).
+        /// 스크린샷: output/house-building/stage1b/house-decorate-3N-band*.png(직접 연다).
+        /// </summary>
+        [Test]
+        public void HOUSE_BUILD_012_BandColorFromPlacementScreen()
+        {
+            RoomFinishDefinition chosen;
+            using (PlayerDriver player = Open(null))
+            {
+                NewGame(player);
+                WorldScreen world = player.Game.World;
+                GameSession session = player.Game.Session;
+                string mapDefault = world.Current.Entry.Build.BandColors;
+                Assert.That(session.HouseBandColors(), Is.EqualTo(mapDefault));
+                player.OpenScreenWithKey(TestKey.P, ScreenCatalog.FurniturePlacement);
+                FurniturePlacementScreen screen = Placement(player);
+                player.PressButton(FurniturePlacementScreen.CategoryFinishId);
+                player.PressButton(FurniturePlacementScreen.FinishTabBandId);
+                Assert.That(screen.Finishes.Slot, Is.EqualTo(RoomFinishSlots.Band));
+                var list = (Rootborn.Ui.UiScrollList)player.Node(FurniturePlacementScreen.FinishBandListId);
+                IReadOnlyList<RoomFinishDefinition> bands = session.HouseFinishOptions(RoomFinishSlots.Band);
+                Assert.That(list.RowCount, Is.EqualTo(bands.Count));
+                int row = bands.ToList().FindIndex(b => b.Art != mapDefault);
+                chosen = bands[row];
+                player.Frames(1);
+                player.Screenshot("house-decorate-30-band-tab");
+
+                int composes = world.ComposeCount, money = session.Inventory.CountOf(session.Item("item.allowance"));
+                Assert.That(list.TryGetRowRect(row, out UiRect r), Is.True, "줄이 보인다");
+                Assert.That(player.Game.Ui.HitTest(r.CenterX, r.CenterY), Is.SameAs(list));
+                player.ClickAt(r.CenterX, r.CenterY);
+                player.Frames(2);
+                Assert.That(screen.FinishLastAction, Is.EqualTo("applied"));
+                Assert.That(session.HouseBandColors(), Is.EqualTo(chosen.Art));
+                Assert.That(session.Inventory.CountOf(session.Item("item.allowance")), Is.EqualTo(money), "무료");
+                Assert.That(world.ComposeCount, Is.EqualTo(composes + 1), "집을 한 번 다시 조합");
+                player.Frames(10);
+                Assert.That(world.ComposeCount, Is.EqualTo(composes + 1));
+                AssertGpuEquals(player, new TableLookup { Band = chosen.Art }, "띠 색을 바꾼 뒤");
+                player.Screenshot("house-decorate-31-band-after");
+                Assert.That(player.Game.Renderer.MissingImages, Is.Empty);
+            }
+
+            using (PlayerDriver again = Open(null))
+            {
+                Continue(again);
+                again.Frames(3);
+                Assert.That(again.Game.Session.HouseBandColors(), Is.EqualTo(chosen.Art), "이어 하기 뒤에도 그 띠 색");
+                AssertGpuEquals(again, new TableLookup { Band = chosen.Art }, "이어 하기 뒤");
+                again.OpenScreenWithKey(TestKey.P, ScreenCatalog.FurniturePlacement); // 집 전체 보기
+                again.Frames(1);
+                again.Screenshot("house-decorate-32-band-whole-after-continue");
+                Assert.That(again.Game.Renderer.MissingImages, Is.Empty);
+            }
         }
 
         /// <summary>GPU 조합 텍스처 = 같은 조회(그 방만 다른 바닥)로 엔진 없이 조합한 것(칸마다 견준다). 바뀐 방의 그림자 없는 바닥 부분은 그 꾸밈의 floor 조각 그대로.</summary>

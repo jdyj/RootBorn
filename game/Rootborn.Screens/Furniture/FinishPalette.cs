@@ -13,7 +13,8 @@ namespace Rootborn.Screens.Furniture
 {
     /// <summary>
     /// 가구 배치 화면의 "꾸미기" 분류(짓는 집의 방마다 벽지·바닥): 팔레트 안의 묶음(자리 탭, 도구 줄, 카드 격자, 쪽 넘기기)과 오른쪽 패널의 꾸밈 정보,
-    /// 그리고 월드 위 미리 보기. 노드는 한 번 만들고 값만 고친다. 규칙(대상 칸, 바뀌는 칸, 비용, 잠김, 거절 이유)은 GameSession(Core)이 정한다 —
+    /// 그리고 월드 위 미리 보기. 셋째 탭은 집 하나의 벽 윗면 띠 색: 카드·도구 대신 줄 목록이고, 줄을 누르면 바로 <see cref="GameSession.ApplyHouseBand"/>(무료라 미리 보기 없이).
+    /// 노드는 한 번 만들고 값만 고친다. 규칙(대상 칸, 바뀌는 칸, 비용, 잠김, 거절 이유)은 GameSession(Core)이 정한다 —
     /// 여기서는 포인터 칸이 바뀔 때만 <see cref="GameSession.PreviewHouseFinish"/>를 묻고, 누르면 <see cref="GameSession.ApplyHouseFinish"/> 하나를 부른다.
     ///
     /// 월드 위: 적용할 수 있는 미리 보기는 월드의 꾸밈 그림을 덮어 그리고(IPlacementView.ShowFinishPreview) 바뀔 칸을 밝힌다.
@@ -29,7 +30,13 @@ namespace Rootborn.Screens.Furniture
         private readonly FinishPaletteModel _model = new FinishPaletteModel(M.FinishPageSize);
 
         private UiNode _group, _info;
-        private FurnitureCategoryButton _tabWall, _tabFloor, _toolRoom, _toolBrush;
+        private FurnitureCategoryButton _tabWall, _tabFloor, _tabBand, _toolRoom, _toolBrush;
+        // 띠 색 탭: 줄 목록(보이는 줄만 그린다), 줄 글은 알림이 올 때만 다시 만든다(그리기가 매 프레임 묻는다).
+        private UiScrollList _bandList;
+        private IReadOnlyList<RoomFinishDefinition> _bands = Array.Empty<RoomFinishDefinition>();
+        private string[] _bandTexts = Array.Empty<string>();
+        private int _bandCurrent = -1;
+        private string _bandReason;
         private readonly UiSlot[] _cards = new UiSlot[M.FinishPageSize];
         private readonly UiFittedImage[] _upper = new UiFittedImage[M.FinishPageSize];
         private readonly UiFittedImage[] _lower = new UiFittedImage[M.FinishPageSize];
@@ -81,8 +88,13 @@ namespace Rootborn.Screens.Furniture
         public void Build(UiNode palette, UiNode settings, UiInsets pad)
         {
             _group = palette.Add(new UiNode { Id = S.FinishGroupId, Visible = false }).Centered(0f, 0f, M.PaletteW, M.PaletteH);
-            _tabWall = Tab(S.FinishTabWallId, 0, 2, () => SetSlot(RoomFinishSlots.Wall));
-            _tabFloor = Tab(S.FinishTabFloorId, 1, 2, () => SetSlot(RoomFinishSlots.Floor));
+            _tabWall = Tab(S.FinishTabWallId, 0, 3, () => SetSlot(RoomFinishSlots.Wall));
+            _tabFloor = Tab(S.FinishTabFloorId, 1, 3, () => SetSlot(RoomFinishSlots.Floor));
+            _tabBand = Tab(S.FinishTabBandId, 2, 3, () => SetSlot(RoomFinishSlots.Band));
+            _bandList = _group.Add(new UiScrollList { Id = S.FinishBandListId, RowHeight = M.FinishBandRowH, FontSize = M.FinishBandFont, Visible = false })
+                .Centered(M.FinishBandListX, M.FinishBandListY, M.FinishBandListW, M.FinishBandListH);
+            _bandList.RowText = BandRowText;
+            _bandList.RowClicked += PickBand;
             _toolRoom = _group.Add(new FurnitureCategoryButton { Id = S.FinishToolRoomId, FontSize = M.FinishToolFont })
                 .Centered(-M.FinishToolPitch / 2f, M.FinishToolY, M.FinishToolW, M.FinishToolH);
             _toolRoom.Clicked += () => SetTool(HouseFinishTools.Room);
@@ -176,17 +188,58 @@ namespace Rootborn.Screens.Furniture
             topic == ChangeTopics.HouseBuild || topic == ChangeTopics.Inventory || topic == ChangeTopics.Furniture || topic == ChangeTopics.Career
             || topic == ChangeTopics.Map || topic == ChangeTopics.Workspace || topic == GameChangeTopics.Room || topic == ChangeTopics.All;
 
+        // 띠 색 탭: 집 하나에 하나라 카드·도구·미리 보기 없이 줄 목록.
+        private bool BandTab => string.Equals(_model.Slot, RoomFinishSlots.Band, StringComparison.Ordinal);
+
         private void RefreshCards()
         {
             var session = Session;
-            _model.Set(_model.Slot, session?.HouseFinishOptions(_model.Slot), d => session != null && session.IsFinishUnlocked(d));
+            if (BandTab) _model.Set(_model.Slot, null, null); // 띠는 카드가 없다
+            else _model.Set(_model.Slot, session?.HouseFinishOptions(_model.Slot), d => session != null && session.IsFinishUnlocked(d));
             if (Picked != null && _model.Find(Picked) == null) { Picked = null; _held = null; }
+            RefreshBands();
             RefreshPage();
+            ApplyInfo();
+        }
+
+        // 띠 색 줄: 데이터 순서, 지금 색(GameSession.HouseBandColors와 같은 그림) 줄에 표시. 띠 탭일 때만 읽는다.
+        private void RefreshBands()
+        {
+            if (!BandTab) return;
+            var session = Session;
+            _bands = session?.HouseFinishOptions(RoomFinishSlots.Band) ?? (IReadOnlyList<RoomFinishDefinition>)Array.Empty<RoomFinishDefinition>();
+            string colors = session?.HouseBandColors() ?? string.Empty;
+            if (_bandTexts.Length != _bands.Count) _bandTexts = new string[_bands.Count];
+            _bandCurrent = -1;
+            for (int i = 0; i < _bands.Count; i++)
+            {
+                string name = _t(_bands[i].NameKey);
+                bool current = _bandCurrent < 0 && string.Equals(_bands[i].Art, colors, StringComparison.Ordinal);
+                if (current) _bandCurrent = i;
+                _bandTexts[i] = current ? _f("ui.house-build.band.current", new object[] { name }) : name;
+            }
+            _bandList.RowCount = _bands.Count;
+            _bandList.SelectedIndex = _bandCurrent;
+        }
+
+        private string BandRowText(int row) => row >= 0 && row < _bandTexts.Length ? _bandTexts[row] : string.Empty;
+
+        // 줄을 누르면 바로 바꾼다(무료 — 미리 보기 없이). 화면은 알림(HouseBuild)으로 다시 읽는다. 안 되면 Core의 이유를 보인다.
+        private void PickBand(int row)
+        {
+            var session = Session;
+            if (session == null || row < 0 || row >= _bands.Count) return;
+            string id = _bands[row].Id;
+            bool applied = session.ApplyHouseBand(id);
+            LastAction = applied ? "applied" : "refused";
+            _bandReason = applied ? null : session.PreviewHouseBand(id).ReasonKey;
+            RefreshBands(); // 거절이면 알림이 없다 — 누름이 옮긴 고른 줄을 지금 색으로 되돌린다
             ApplyInfo();
         }
 
         private void RefreshPage()
         {
+            bool band = BandTab;
             bool wall = string.Equals(_model.Slot, RoomFinishSlots.Wall, StringComparison.Ordinal);
             for (int i = 0; i < M.FinishPageSize; i++)
             {
@@ -220,7 +273,10 @@ namespace Rootborn.Screens.Furniture
             _previous.Visible = _next.Visible = _model.PageCount > 1;
             _pageText.Text = _model.PageCount > 1 ? _f("ui.furniture.page", new object[] { _model.Page + 1, _model.PageCount, _model.Count }) : string.Empty;
             _tabWall.Selected = wall;
-            _tabFloor.Selected = !wall;
+            _tabFloor.Selected = !wall && !band;
+            _tabBand.Selected = band;
+            _toolRoom.Visible = _toolBrush.Visible = !band;
+            _bandList.Visible = band;
             _toolRoom.Selected = string.Equals(_tool, HouseFinishTools.Room, StringComparison.Ordinal);
             _toolBrush.Selected = string.Equals(_tool, HouseFinishTools.Brush, StringComparison.Ordinal);
         }
@@ -230,10 +286,12 @@ namespace Rootborn.Screens.Furniture
             if (_group == null) return;
             _tabWall.Text = _t("ui.house-build.tab.wall");
             _tabFloor.Text = _t("ui.house-build.tab.floor");
+            _tabBand.Text = _t("ui.house-build.tab.band");
             _toolRoom.Text = _t("ui.house-build.tool.room");
             _toolBrush.Text = _t("ui.house-build.tool.brush");
             _previous.Text = _t("ui.furniture.page.previous");
             _next.Text = _t("ui.furniture.page.next");
+            RefreshBands();
             RefreshPage();
             ApplyInfo();
         }
@@ -242,6 +300,7 @@ namespace Rootborn.Screens.Furniture
         private void ApplyInfo()
         {
             if (_info == null) return;
+            if (BandTab) { ApplyBandInfo(); return; }
             RoomFinishDefinition picked = Picked;
             _name.Text = picked == null ? _t("ui.house-build.pick") : _t(picked.NameKey);
             if (picked == null) _price.Text = string.Empty;
@@ -266,6 +325,22 @@ namespace Rootborn.Screens.Furniture
             _reason.Text = reason == null ? string.Empty : _t(reason);
         }
 
+        // 띠 탭의 오른쪽 패널: 지금 색의 이름과 값(무료), 마지막 누름이 거절됐으면 그 이유. 칸·비용·가진 돈 줄은 비운다(칸이 없다).
+        private void ApplyBandInfo()
+        {
+            RoomFinishDefinition current = _bandCurrent >= 0 && _bandCurrent < _bands.Count ? _bands[_bandCurrent] : null;
+            _name.Text = current == null ? string.Empty : _t(current.NameKey);
+            if (current == null) _price.Text = string.Empty;
+            else if (current.Cost.Count == 0) _price.Text = _t("ui.house-build.free");
+            else
+            {
+                ItemAmount<string> each = current.Cost[0];
+                _price.Text = _f("ui.house-build.cost", new object[] { each.Count, _itemName(each.Item) });
+            }
+            _cells.Text = _cost.Text = _money.Text = string.Empty;
+            _reason.Text = _bandReason == null ? string.Empty : _t(_bandReason);
+        }
+
         private int Owned(string itemId)
         {
             var session = Session;
@@ -280,6 +355,7 @@ namespace Rootborn.Screens.Furniture
             if (string.Equals(slot, _model.Slot, StringComparison.Ordinal)) return;
             _model.Set(slot, null, null); // 자리만 바꾸고 첫 쪽으로(카드는 바로 아래에서 읽는다)
             Picked = null;
+            _bandReason = null;
             ResetPreview();
             RefreshCards();
         }

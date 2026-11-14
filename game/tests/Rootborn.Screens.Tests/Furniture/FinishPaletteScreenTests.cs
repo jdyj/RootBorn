@@ -645,6 +645,102 @@ namespace Rootborn.Screens.Tests.Furniture
             Assert.That(f.T.Session.HouseFloorAt(a), Is.EqualTo(f.Frame.DefaultFloor), "바뀌지 않는다");
         }
 
+        // ---------- 띠 색 탭 ----------
+
+        private static UiScrollList BandList(Fixture f) => (UiScrollList)f.T.Node(FurniturePlacementScreen.FinishBandListId);
+
+        private static void ClickBandRow(Fixture f, int row)
+        {
+            f.T.Emit();
+            UiScrollList list = BandList(f);
+            Assert.That(list.TryGetRowRect(row, out UiRect r), Is.True, "줄이 보인다: " + row);
+            Assert.That(f.T.Stack.Tree.HitTest(r.CenterX, r.CenterY), Is.SameAs(list));
+            f.T.Stack.Pointer(r.CenterX, r.CenterY, false, 0);
+            f.T.Stack.Pointer(r.CenterX, r.CenterY, true, 0);
+            f.T.Stack.Pointer(r.CenterX, r.CenterY, false, 0);
+        }
+
+        [Test]
+        public void BandTab_RowsAndApply()
+        {
+            using var f = new Fixture();
+            f.Decorate();
+            f.T.Emit();
+            var tabs = new[] { FurniturePlacementScreen.FinishTabWallId, FurniturePlacementScreen.FinishTabFloorId, FurniturePlacementScreen.FinishTabBandId }
+                .Select(id => f.T.Node(id).Rect).ToArray();
+            Assert.That(tabs.Select(r => r.Y).Distinct().Count(), Is.EqualTo(1), "탭 셋이 한 줄");
+            UiRect palette = f.T.Node(FurniturePlacementScreen.PaletteId).Rect;
+            Assert.That(tabs.All(r => r.X >= palette.X && r.Right <= palette.Right), Is.True, "팔레트 안");
+            Assert.That(BandList(f).IsActive, Is.False, "벽지 탭에서는 띠 목록이 없다");
+
+            f.T.Click(FurniturePlacementScreen.FinishTabBandId);
+            f.T.Emit();
+            Assert.That(f.Screen.Finishes.Slot, Is.EqualTo(RoomFinishSlots.Band));
+            Assert.That(((FurnitureCategoryButton)f.T.Node(FurniturePlacementScreen.FinishTabBandId)).Selected, Is.True);
+            Assert.That(((FurnitureCategoryButton)f.T.Node(FurniturePlacementScreen.FinishTabWallId)).Selected, Is.False);
+            Assert.That(Visible(f), Is.EqualTo(0), "띠 탭은 카드 대신 줄");
+            Assert.That(f.T.Node(FurniturePlacementScreen.FinishToolRoomId).IsActive || f.T.Node(FurniturePlacementScreen.FinishToolBrushId).IsActive, Is.False, "집 하나에 하나라 도구가 없다");
+
+            IReadOnlyList<RoomFinishDefinition> bands = f.T.Session.HouseFinishOptions(RoomFinishSlots.Band);
+            UiScrollList list = BandList(f);
+            Assert.That(list.IsActive, Is.True);
+            Assert.That(list.RowCount, Is.EqualTo(bands.Count).And.GreaterThan(1));
+            int current = bands.ToList().FindIndex(b => b.Art == f.T.Session.HouseBandColors());
+            Assert.That(current, Is.GreaterThanOrEqualTo(0), "전제: 지금 색이 목록에 있다");
+            for (int i = 0; i < bands.Count; i++)
+                Assert.That(list.RowText(i), Is.EqualTo(i == current
+                    ? f.T.Text.Format("ui.house-build.band.current", f.T.Text.Get(bands[i].NameKey)) : f.T.Text.Get(bands[i].NameKey)), "줄 " + i);
+            Assert.That(list.SelectedIndex, Is.EqualTo(current), "지금 색 줄을 고른 것으로 보인다");
+            Assert.That(f.Text(FurniturePlacementScreen.FinishNameId), Is.EqualTo(f.T.Text.Get(bands[current].NameKey)));
+            Assert.That(f.Text(FurniturePlacementScreen.FinishPriceId), Is.EqualTo(f.T.Text.Get("ui.house-build.free")));
+
+            int other = current == 0 ? 1 : 0;
+            int money = f.Money;
+            ClickBandRow(f, other);
+            Assert.That(f.T.Session.HouseBandColors(), Is.EqualTo(bands[other].Art), "줄을 누르면 바로 바뀐다(무료 — 미리 보기 없이)");
+            Assert.That(f.Money, Is.EqualTo(money));
+            Assert.That(f.Screen.FinishLastAction, Is.EqualTo("applied"));
+            Assert.That(list.RowText(other), Is.EqualTo(f.T.Text.Format("ui.house-build.band.current", f.T.Text.Get(bands[other].NameKey))), "지금 표시가 옮겨 간다");
+            Assert.That(list.RowText(current), Is.EqualTo(f.T.Text.Get(bands[current].NameKey)));
+            Assert.That(list.SelectedIndex, Is.EqualTo(other));
+            Assert.That(f.Text(FurniturePlacementScreen.FinishNameId), Is.EqualTo(f.T.Text.Get(bands[other].NameKey)));
+
+            ClickBandRow(f, other);
+            Assert.That(f.Screen.FinishLastAction, Is.EqualTo("refused"), "지금 색을 다시 누르면 바뀌는 것 없음");
+            Assert.That(f.Text(FurniturePlacementScreen.FinishReasonId), Is.EqualTo(f.T.Text.Get(HouseFinishReasons.NothingToChange)));
+
+            // 월드를 가리켜도 미리 보기를 묻지 않는다(고른 카드가 없다)
+            var (_, a, _) = f.FirstRoom();
+            f.Hover(a);
+            Assert.That(f.Screen.FinishPreview, Is.Null);
+            Assert.That(f.View.Shown.Where(p => p != null), Is.Empty);
+
+            f.T.Click(FurniturePlacementScreen.FinishTabWallId);
+            Assert.That(BandList(f).IsActive, Is.False, "다른 탭으로 가면 띠 목록이 숨는다");
+            Assert.That(Visible(f), Is.GreaterThan(0));
+            Assert.That(f.T.Node(FurniturePlacementScreen.FinishToolRoomId).IsActive, Is.True);
+        }
+
+        [Test]
+        public void BandTab_SharedHouse_ShowsReason_NothingChanges()
+        {
+            var rules = new Rootborn.Core.Room.RoomHouseRules(TestSession.Definitions.All<Rootborn.Core.Placement.FurnitureDefinition>(),
+                s => s == "house" ? new FurnitureRoom(House.World).Grid : null);
+            var pieces = new Rootborn.Core.Room.RoomPieceSet(new Rootborn.Core.Room.RoomShareSettings(new[] { Rootborn.Core.Room.RoomHouse.PieceName }),
+                Rootborn.Core.Room.RoomPieceCatalog.CreateDefault(rules));
+            var shares = new Rootborn.Core.Room.RoomShares(pieces.Settings, Rootborn.Core.Room.RoomPieceCatalog.CreateDefault(), () => "guest-r1");
+            foreach (var p in pieces.Pieces) shares.Receive(p.State());
+            using var f = new Fixture(shares: shares);
+            f.Decorate();
+            f.T.Click(FurniturePlacementScreen.FinishTabBandId);
+            var bands = f.T.Session.HouseFinishOptions(RoomFinishSlots.Band);
+            int other = bands.ToList().FindIndex(b => b.Art != f.T.Session.HouseBandColors());
+            ClickBandRow(f, other);
+            Assert.That(f.Screen.FinishLastAction, Is.EqualTo("refused"));
+            Assert.That(f.T.Session.HouseBandColors(), Is.EqualTo(f.Frame.DefaultBand));
+            Assert.That(f.Text(FurniturePlacementScreen.FinishReasonId), Is.EqualTo(f.T.Text.Get(HouseFinishReasons.SharedHouse)));
+        }
+
         private static IEnumerable<string> Languages() => LongText.MergedTables().Keys.OrderBy(k => k);
 
         [Test]
@@ -660,6 +756,13 @@ namespace Rootborn.Screens.Tests.Furniture
             f.Hover(a); // 돈 모자람 — 이유 줄까지 채운다
             Assert.That(f.Text(FurniturePlacementScreen.FinishReasonId), Is.Not.Empty);
             var measurer = new WideMeasurer();
+            CheckPanels(f, language, measurer);
+            f.T.Click(FurniturePlacementScreen.FinishTabBandId); // 띠 탭(줄 목록)도 같은 검사
+            CheckPanels(f, language, measurer);
+        }
+
+        private static void CheckPanels(Fixture f, string language, WideMeasurer measurer)
+        {
             for (int i = 0; i < 2; i++) { f.T.Stack.Layout(1920, 1080); f.T.Stack.Emit(new DrawList(), measurer); }
             f.T.Stack.Layout(1920, 1080);
             foreach (string panelId in new[] { FurniturePlacementScreen.PaletteId, "furniture.settings" })
@@ -669,10 +772,22 @@ namespace Rootborn.Screens.Tests.Furniture
                 {
                     var list = new DrawList();
                     node.Emit(list, measurer);
-                    foreach (DrawCommand text in list.Commands.Where(c => c.Kind == DrawKind.Text))
+                    // 요소가 스스로 자른(PushClip) 글은 잘린 안쪽만 보인다(띠 색 줄 목록) — LongTextScreenTests와 같이 보이는 부분만 본다.
+                    UiRect? clip = null;
+                    foreach (DrawCommand text in list.Commands)
                     {
-                        float right = text.Rect.X + measurer.Width(text.Text, text.FontSize), bottom = text.Rect.Y + measurer.LineHeight(text.FontSize);
-                        Assert.That(text.Rect.X >= panel.Rect.X - 0.5f && right <= panel.Rect.Right + 0.5f && text.Rect.Y >= panel.Rect.Y - 0.5f && bottom <= panel.Rect.Bottom + 0.5f,
+                        if (text.Kind == DrawKind.PushClip) { clip = text.Rect; continue; }
+                        if (text.Kind == DrawKind.PopClip) { clip = null; continue; }
+                        if (text.Kind != DrawKind.Text) continue;
+                        float left = text.Rect.X, top = text.Rect.Y;
+                        float right = left + measurer.Width(text.Text, text.FontSize), bottom = top + measurer.LineHeight(text.FontSize);
+                        if (clip is UiRect c)
+                        {
+                            Assert.That(c.X >= panel.Rect.X - 0.5f && c.Right <= panel.Rect.Right + 0.5f && c.Y >= panel.Rect.Y - 0.5f && c.Bottom <= panel.Rect.Bottom + 0.5f,
+                                Is.True, language + " " + node.Id + ": 자르는 영역이 패널 안");
+                            left = Math.Max(left, c.X); top = Math.Max(top, c.Y); right = Math.Min(right, c.Right); bottom = Math.Min(bottom, c.Bottom);
+                        }
+                        Assert.That(left >= panel.Rect.X - 0.5f && right <= panel.Rect.Right + 0.5f && top >= panel.Rect.Y - 0.5f && bottom <= panel.Rect.Bottom + 0.5f,
                             Is.True, language + " " + (node.Id ?? node.GetType().Name) + ": " + text.Text);
                         Assert.That(text.FontSize, Is.GreaterThanOrEqualTo(14f), node.Id);
                     }
@@ -712,6 +827,7 @@ namespace Rootborn.Screens.Tests.Furniture
             Assert.That(f.Text(FurniturePlacementScreen.FinishNameId), Is.EqualTo(f.T.Text.Get(floor.NameKey)).And.Not.EqualTo(koName));
             Assert.That(((FurnitureCategoryButton)f.T.Node(FurniturePlacementScreen.FinishTabFloorId)).Text, Is.EqualTo("Floor").And.Not.EqualTo(koTab));
             Assert.That(((FurnitureCategoryButton)f.T.Node(FurniturePlacementScreen.CategoryFinishId)).Text, Is.EqualTo("Decorate"));
+            Assert.That(((FurnitureCategoryButton)f.T.Node(FurniturePlacementScreen.FinishTabBandId)).Text, Is.EqualTo("Wall top color"));
             Assert.That(f.Text(FurniturePlacementScreen.FinishReasonId), Is.EqualTo(f.T.Text.Get(f.Screen.FinishPreview.ReasonKey)).And.Not.EqualTo(koReason));
         }
     }

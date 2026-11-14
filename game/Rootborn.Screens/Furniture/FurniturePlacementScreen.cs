@@ -59,6 +59,8 @@ namespace Rootborn.Screens.Furniture
             /// <summary>오른쪽 패널의 꾸밈 정보: 제목 바로 아래(FinishInfoGap)부터 이름, 칸당 값·바뀌는 칸·비용·가진 돈(한 줄씩), 이유(여러 줄)를 위에서 아래로. 줄은 칸 높이에 맞춰 줄인다.</summary>
             public const float FinishInfoW = 290f, FinishInfoGap = 12f, FinishLineGap = 4f, FinishNameH = 56f, FinishNameFont = 20f;
             public const float FinishLineH = 36f, FinishLineFont = 16f, FinishReasonH = 104f;
+            /// <summary>띠 색 탭(작성자 추천): 탭 줄 아래 줄 목록(보관 목록과 같은 폭·줄 높이·글자). 도구 줄 자리부터 쓴다(띠 탭에는 도구가 없다).</summary>
+            public const float FinishBandListX = 0f, FinishBandListY = 20f, FinishBandListW = 368f, FinishBandListH = 380f, FinishBandRowH = 48f, FinishBandFont = 18f;
 
             public const float PageButtonX = 112f, PageButtonY = -248f, PageButtonW = 128f, PageButtonH = 48f, PageButtonFont = 18f;
             public const float PageTextX = 0f, PageTextY = -324f, PageTextW = 368f, PageTextH = 64f, PageTextFont = 18f;
@@ -131,7 +133,9 @@ namespace Rootborn.Screens.Furniture
         public const string CategoryFurnitureId = "furniture.category.furniture", CategoryStoredId = "furniture.category.stored";
         public const string FurnitureGroupId = "furniture.group.furniture", StoredGroupId = "furniture.group.stored";
         public const string CategoryFinishId = "furniture.category.finish", FinishGroupId = "furniture.group.finish", FinishInfoId = "furniture.finish.info";
-        public const string FinishTabWallId = "furniture.finish.tab.wall", FinishTabFloorId = "furniture.finish.tab.floor";
+        public const string FinishTabWallId = "furniture.finish.tab.wall", FinishTabFloorId = "furniture.finish.tab.floor", FinishTabBandId = "furniture.finish.tab.band";
+        /// <summary>띠 색 탭의 줄 목록(집 하나에 하나 — 카드 대신 줄, 누르면 바로 바뀐다).</summary>
+        public const string FinishBandListId = "furniture.finish.band.list";
         public const string FinishToolRoomId = "furniture.finish.tool.room", FinishToolBrushId = "furniture.finish.tool.brush";
         public const string FinishPreviousId = "furniture.finish.page.previous", FinishNextId = "furniture.finish.page.next", FinishPageTextId = "furniture.finish.page.text";
         public const string FinishNameId = "furniture.finish.info.name", FinishPriceId = "furniture.finish.info.price", FinishCellsId = "furniture.finish.info.cells";
